@@ -473,6 +473,7 @@ private:
 
         bool                           mFastOpenInProgress;
         RefPtr<nsHttpConnection>       mConnectionNegotiatingFastOpen;
+        uint8_t                        mFastOpenStatus;
 
         RefPtr<nsConnectionEntry>      mEnt;
         nsCOMPtr<nsITimer>             mSynTimer;

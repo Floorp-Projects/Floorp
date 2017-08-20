@@ -89,6 +89,7 @@ SERVO_ARC_TYPE(StyleContext, ServoStyleContext)
 #undef SERVO_ARC_TYPE
 
 static Mutex* sServoFontMetricsLock = nullptr;
+static Mutex* sServoWidgetLock = nullptr;
 static RWLock* sServoLangFontPrefsLock = nullptr;
 
 static
@@ -862,12 +863,14 @@ Gecko_GetBody(RawGeckoPresContextBorrowed aPresContext)
   return aPresContext->Document()->GetBodyElement();
 }
 
-nscolor Gecko_GetLookAndFeelSystemColor(int32_t aId,
-                                        RawGeckoPresContextBorrowed aPresContext)
+nscolor
+Gecko_GetLookAndFeelSystemColor(int32_t aId,
+                                RawGeckoPresContextBorrowed aPresContext)
 {
   bool useStandinsForNativeColors = aPresContext && !aPresContext->IsChrome();
   nscolor result;
   LookAndFeel::ColorID colorId = static_cast<LookAndFeel::ColorID>(aId);
+  MutexAutoLock guard(*sServoWidgetLock);
   LookAndFeel::GetColor(colorId, useStandinsForNativeColors, &result);
   return result;
 }
@@ -2458,13 +2461,19 @@ InitializeServo()
   Servo_Initialize(URLExtraData::Dummy());
 
   sServoFontMetricsLock = new Mutex("Gecko_GetFontMetrics");
+  sServoWidgetLock = new Mutex("Servo::WidgetLock");
   sServoLangFontPrefsLock = new RWLock("nsPresContext::GetDefaultFont");
 }
 
 void
 ShutdownServo()
 {
+  MOZ_ASSERT(sServoFontMetricsLock);
+  MOZ_ASSERT(sServoWidgetLock);
+  MOZ_ASSERT(sServoLangFontPrefsLock);
+
   delete sServoFontMetricsLock;
+  delete sServoWidgetLock;
   delete sServoLangFontPrefsLock;
   Servo_Shutdown();
 }
