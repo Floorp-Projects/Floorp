@@ -1,8 +1,6 @@
 /* Any copyright is dedicated to the Public Domain.
  * http://creativecommons.org/publicdomain/zero/1.0/ */
 
-Cu.import("resource://gre/modules/PromiseUtils.jsm");
-
 /**
  * With e10s, plugins must run in their own process. This means we have
  * three processes at a minimum when we're running a plugin:
@@ -81,9 +79,6 @@ function preparePlugin(browser, pluginFallbackState) {
   });
 }
 
-// Allows tests to ensure crash handling is completely finished before exiting.
-let crashObserverDeferred = PromiseUtils.defer();
-
 add_task(async function setup() {
   // Bypass click-to-play
   setTestPluginEnabledState(Ci.nsIPluginTag.STATE_ENABLED);
@@ -113,10 +108,6 @@ add_task(async function setup() {
 
       pluginDumpFile.remove(false);
       extraFile.remove(false);
-
-      // Resolve and replace the deferred object so the next test can wait on it
-      crashObserverDeferred.resolve();
-      crashObserverDeferred = PromiseUtils.defer();
     });
   };
 
@@ -192,7 +183,6 @@ add_task(async function testChromeHearsPluginCrashFirst() {
       "Should have been showing crash report UI");
   });
   await BrowserTestUtils.closeWindow(win);
-  await crashObserverDeferred.promise;
 });
 
 /**
@@ -263,5 +253,4 @@ add_task(async function testContentHearsCrashFirst() {
   });
 
   await BrowserTestUtils.closeWindow(win);
-  await crashObserverDeferred.promise;
 });
