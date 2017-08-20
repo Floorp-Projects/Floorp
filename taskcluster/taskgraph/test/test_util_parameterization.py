@@ -40,30 +40,52 @@ class TestTimestamps(unittest.TestCase):
 
 class TestTaskRefs(unittest.TestCase):
 
+    def do(self, input, output):
+        taskid_for_edge_name = {'edge%d' % n: 'tid%d' % n for n in range(1, 4)}
+        self.assertEqual(resolve_task_references('subject', input, taskid_for_edge_name), output)
+
     def test_no_change(self):
-        input = {"key": "value", "numeric": 10, "list": ["a", True, False, None]}
-        self.assertEqual(resolve_task_references('lable', input, {}), input)
+        "resolve_task_references does nothing when there are no task references"
+        self.do({'in-a-list': ['stuff', {'property': '<edge1>'}]},
+                {'in-a-list': ['stuff', {'property': '<edge1>'}]})
 
-    def test_buried_replacement(self):
-        input = {"key": [{"key2": [{'task-reference': 'taskid=<toolchain>'}]}]}
-        self.assertEqual(resolve_task_references('lable', input, {'toolchain': 'abcd'}),
-                         {u'key': [{u'key2': [u'taskid=abcd']}]})
+    def test_in_list(self):
+        "resolve_task_references resolves task references in a list"
+        self.do({'in-a-list': ['stuff', {'task-reference': '<edge1>'}]},
+                {'in-a-list': ['stuff', 'tid1']})
 
-    def test_appears_with_other_keys(self):
-        input = [{'task-reference': '<toolchain>', 'another-key': True}]
-        self.assertEqual(resolve_task_references('lable', input, {'toolchain': 'abcd'}),
-                         [{'task-reference': '<toolchain>', 'another-key': True}])
+    def test_in_dict(self):
+        "resolve_task_references resolves task references in a dict"
+        self.do({'in-a-dict': {'stuff': {'task-reference': '<edge2>'}}},
+                {'in-a-dict': {'stuff': 'tid2'}})
 
-    def test_multiple_subs(self):
-        input = [{'task-reference': 'toolchain=<toolchain>, build=<build>'}]
-        self.assertEqual(
-            resolve_task_references('lable', input, {'toolchain': 'abcd', 'build': 'def'}),
-            ['toolchain=abcd, build=def'])
+    def test_multiple(self):
+        "resolve_task_references resolves multiple references in the same string"
+        self.do({'multiple': {'task-reference': 'stuff <edge1> stuff <edge2> after'}},
+                {'multiple': 'stuff tid1 stuff tid2 after'})
 
-    def test_escaped(self):
-        input = [{'task-reference': '<<><toolchain>>'}]
-        self.assertEqual(resolve_task_references('lable', input, {'toolchain': 'abcd'}),
-                         ['<abcd>'])
+    def test_embedded(self):
+        "resolve_task_references resolves ebmedded references"
+        self.do({'embedded': {'task-reference': 'stuff before <edge3> stuff after'}},
+                {'embedded': 'stuff before tid3 stuff after'})
+
+    def test_escaping(self):
+        "resolve_task_references resolves escapes in task references"
+        self.do({'escape': {'task-reference': '<<><edge3>>'}},
+                {'escape': '<tid3>'})
+
+    def test_multikey(self):
+        "resolve_task_references is ignored when there is another key in the dict"
+        self.do({'escape': {'task-reference': '<edge3>', 'another-key': True}},
+                {'escape': {'task-reference': '<edge3>', 'another-key': True}})
+
+    def test_invalid(self):
+        "resolve_task_references raises a KeyError on reference to an invalid task"
+        self.assertRaisesRegexp(
+            KeyError,
+            "task 'subject' has no dependency named 'no-such'",
+            lambda: resolve_task_references('subject', {'task-reference': '<no-such>'}, {})
+        )
 
 
 if __name__ == '__main__':
