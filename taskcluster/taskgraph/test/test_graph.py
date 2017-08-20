@@ -129,6 +129,31 @@ class TestGraph(unittest.TestCase):
         "postorder visit of a disjoint graph satisfies invariant"
         self.assert_postorder(self.disjoint.visit_postorder(), self.disjoint.nodes)
 
+    def assert_preorder(self, seq, all_nodes):
+        seen = set()
+        for e in seq:
+            for l, r, n in self.tree.edges:
+                if r == e:
+                    self.failUnless(l in seen)
+            seen.add(e)
+        self.assertEqual(seen, all_nodes)
+
+    def test_visit_preorder_tree(self):
+        "preorder visit of a tree satisfies invariant"
+        self.assert_preorder(self.tree.visit_preorder(), self.tree.nodes)
+
+    def test_visit_preorder_diamonds(self):
+        "preorder visit of a graph full of diamonds satisfies invariant"
+        self.assert_preorder(self.diamonds.visit_preorder(), self.diamonds.nodes)
+
+    def test_visit_preorder_multi_edges(self):
+        "preorder visit of a graph with duplicate edges satisfies invariant"
+        self.assert_preorder(self.multi_edges.visit_preorder(), self.multi_edges.nodes)
+
+    def test_visit_preorder_disjoint(self):
+        "preorder visit of a disjoint graph satisfies invariant"
+        self.assert_preorder(self.disjoint.visit_preorder(), self.disjoint.nodes)
+
     def test_links_dict(self):
         "link dict for a graph with multiple edges is correct"
         self.assertEqual(self.multi_edges.links_dict(), {
