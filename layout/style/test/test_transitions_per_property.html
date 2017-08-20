@@ -381,15 +381,13 @@ var transformTests = [
     expected: computeMatrix('rotatey(15deg)') },
   { start: 'none', end: 'rotatey(720deg)',
     expected_uncomputed: 'rotatey(180deg)',
-    expected: computeMatrix('rotatey(180deg)'),
-    skipped: isServo },
+    expected: computeMatrix('rotatey(180deg)') },
   { start: 'none', end: 'rotatex(60deg)',
     expected_uncomputed: 'rotatex(15deg)',
     expected: computeMatrix('rotatex(15deg)') },
   { start: 'none', end: 'rotatex(720deg)',
     expected_uncomputed: 'rotatex(180deg)',
-    expected: computeMatrix('rotatex(180deg)'),
-    skipped: isServo },
+    expected: computeMatrix('rotatex(180deg)') },
 
   // translate
   { start: 'translate(20px)', end: 'none',

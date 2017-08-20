@@ -74,7 +74,7 @@ bool OpenTypeGLAT_v1::GlatEntry::ParsePart(Buffer& table) {
   }
 
   //this->attributes.resize(this->num);
-  for (unsigned i = 0; i < this->num; ++i) {
+  for (int i = 0; i < this->num; ++i) {
     this->attributes.emplace_back();
     if (!table.ReadS16(&this->attributes[i])) {
       return parent->Error("GlatEntry: Failed to read attribute %u", i);
@@ -156,7 +156,7 @@ bool OpenTypeGLAT_v2::GlatEntry::ParsePart(Buffer& table) {
   }
 
   //this->attributes.resize(this->num);
-  for (unsigned i = 0; i < this->num; ++i) {
+  for (int i = 0; i < this->num; ++i) {
     this->attributes.emplace_back();
     if (!table.ReadS16(&this->attributes[i])) {
       return parent->Error("GlatEntry: Failed to read attribute %u", i);
