@@ -800,6 +800,8 @@ nsSocketTransport::nsSocketTransport()
     , mKeepaliveProbeCount(-1)
     , mFastOpenCallback(nullptr)
     , mFastOpenLayerHasBufferedData(false)
+    , mFastOpenStatus(TFO_NOT_TRIED)
+    , mFirstRetryError(NS_OK)
     , mDoNotRetryToConnect(false)
 {
     SOCKET_LOG(("creating nsSocketTransport @%p\n", this));
@@ -1570,11 +1572,10 @@ nsSocketTransport::InitiateSocket()
         status = PR_FAILURE;
         connectCalled = false;
         bool fastOpenNotSupported = false;
-        uint8_t tfoStatus = TFO_NOT_TRIED;
-        TCPFastOpenFinish(fd, code, fastOpenNotSupported, tfoStatus);
+        TCPFastOpenFinish(fd, code, fastOpenNotSupported, mFastOpenStatus);
 
         // If we have sent data, trigger a socket status event.
-        if (tfoStatus == TFO_DATA_SENT) {
+        if (mFastOpenStatus == TFO_DATA_SENT) {
             SendStatus(NS_NET_STATUS_SENDING_TO);
         }
 
@@ -1584,11 +1585,11 @@ nsSocketTransport::InitiateSocket()
         // event in order.
         mFastOpenLayerHasBufferedData = TCPFastOpenGetCurrentBufferSize(fd);
 
-        mFastOpenCallback->SetFastOpenStatus(tfoStatus);
+        mFastOpenCallback->SetFastOpenStatus(mFastOpenStatus);
         SOCKET_LOG(("called StartFastOpen - code=%d; fastOpen is %s "
                     "supported.\n", code,
                     fastOpenNotSupported ? "not" : ""));
-        SOCKET_LOG(("TFO status %d\n", tfoStatus));
+        SOCKET_LOG(("TFO status %d\n", mFastOpenStatus));
 
         if (fastOpenNotSupported) {
           // When TCP_FastOpen is turned off on the local host
@@ -1776,8 +1777,13 @@ nsSocketTransport::RecoverFromError()
             mFastOpenCallback->SetFastOpenConnected(mCondition, true);
         }
         mFastOpenCallback = nullptr;
+
     } else {
 
+        // This is only needed for telemetry.
+        if (NS_SUCCEEDED(mFirstRetryError)) {
+            mFirstRetryError = mCondition;
+        }
         if ((mState == STATE_CONNECTING) && mDNSRecord &&
             mSocketTransportService->IsTelemetryEnabledAndNotSleepPhase()) {
             if (mNetAddr.raw.family == AF_INET) {
@@ -2216,6 +2222,24 @@ nsSocketTransport::OnSocketReady(PRFileDesc *fd, int16_t outFlags)
         }
 
         PRStatus status = PR_ConnectContinue(fd, outFlags);
+
+#if defined(_WIN64) && defined(WIN95)
+#ifndef TCP_FASTOPEN
+#define TCP_FASTOPEN 15
+#endif
+
+        if (mFDFastOpenInProgress && mFastOpenCallback &&
+            (mFastOpenStatus == TFO_DATA_SENT)) {
+            PROsfd osfd = PR_FileDesc2NativeHandle(fd);
+            BOOL option = 0;
+            int len = sizeof(option);
+            PRInt32 rv = getsockopt((SOCKET)osfd, IPPROTO_TCP, TCP_FASTOPEN, (char*)&option, &len);
+            if ((rv != 0) && !option) {
+                // On error, I will let the normal necko paths pickup the error.
+                mFastOpenCallback->SetFastOpenStatus(TFO_NOT_TRIED);
+            }
+        }
+#endif
 
         if (gSocketTransportService->IsTelemetryEnabledAndNotSleepPhase() &&
             connectStarted) {
@@ -3581,6 +3605,13 @@ NS_IMETHODIMP
 nsSocketTransport::SetFastOpenCallback(TCPFastOpen *aFastOpen)
 {
   mFastOpenCallback = aFastOpen;
+  return NS_OK;
+}
+
+NS_IMETHODIMP
+nsSocketTransport::GetFirstRetryError(nsresult *aFirstRetryError)
+{
+  *aFirstRetryError = mFirstRetryError;
   return NS_OK;
 }
 

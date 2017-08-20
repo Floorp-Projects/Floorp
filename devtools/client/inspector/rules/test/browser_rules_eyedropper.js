@@ -101,6 +101,9 @@ function* testSelect(view, swatch, inspector, testActor) {
   let color = swatch.style.backgroundColor;
   is(color, EXPECTED_COLOR, "swatch changed colors");
 
+  ok(!swatch.eyedropperOpen, "swatch eye dropper is closed");
+  ok(!swatch.activeSwatch, "no active swatch");
+
   is((yield getComputedStyleProperty("div", null, "background-color")),
      EXPECTED_COLOR,
      "div's color set to body color after dropper");
