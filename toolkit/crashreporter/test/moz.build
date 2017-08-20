@@ -24,11 +24,6 @@ SOURCES += [
   'ExceptionThrower.cpp',
 ]
 
-if CONFIG['OS_TARGET'] == 'WINNT' and CONFIG['CPU_ARCH'] == 'x86_64':
-    SOURCES += [
-        'win64UnwindInfoTests.asm',
-    ]
-
 if CONFIG['CLANG_CL']:
     SOURCES['ExceptionThrower.cpp'].flags += [
         '-Xclang',
