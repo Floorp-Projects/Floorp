@@ -6,7 +6,6 @@
 #include <cstdio>
 #include <fstream>
 #include <string>
-#include <cstring>
 #include <sstream>
 
 #include "json/json.h"
@@ -32,12 +31,6 @@
 
 #endif
 
-#include "MinidumpAnalyzerUtils.h"
-
-#if XP_WIN && HAVE_64BIT_BUILD
-#include "MozStackFrameSymbolizer.h"
-#endif
-
 namespace CrashReporter {
 
 using std::ios;
@@ -61,7 +54,44 @@ using google_breakpad::ProcessResult;
 using google_breakpad::ProcessState;
 using google_breakpad::StackFrame;
 
-MinidumpAnalyzerOptions gMinidumpAnalyzerOptions;
+#ifdef XP_WIN
+
+static wstring UTF8ToWide(const string& aUtf8Str, bool *aSuccess = nullptr)
+{
+  wchar_t* buffer = nullptr;
+  int buffer_size = MultiByteToWideChar(CP_UTF8, 0, aUtf8Str.c_str(),
+                                        -1, nullptr, 0);
+  if (buffer_size == 0) {
+    if (aSuccess) {
+      *aSuccess = false;
+    }
+
+    return L"";
+  }
+
+  buffer = new wchar_t[buffer_size];
+
+  if (buffer == nullptr) {
+    if (aSuccess) {
+      *aSuccess = false;
+    }
+
+    return L"";
+  }
+
+  MultiByteToWideChar(CP_UTF8, 0, aUtf8Str.c_str(),
+                      -1, buffer, buffer_size);
+  wstring str = buffer;
+  delete [] buffer;
+
+  if (aSuccess) {
+    *aSuccess = true;
+  }
+
+  return str;
+}
+
+#endif
 
 struct ModuleCompare {
   bool operator() (const CodeModule* aLhs, const CodeModule* aRhs) const {
@@ -159,7 +189,6 @@ ConvertStackToJSON(const ProcessState& aProcessState,
     }
 
     frameNode["trust"] = FrameTrust(frame->trust);
-
     // The 'ip' field is equivalent to socorro's 'offset' field
     frameNode["ip"] = ToHex(frame->instruction);
 
@@ -290,14 +319,9 @@ ConvertProcessStateToJSON(const ProcessState& aProcessState, Json::Value& aRoot)
 
 static bool
 ProcessMinidump(Json::Value& aRoot, const string& aDumpFile) {
-#if XP_WIN && HAVE_64BIT_BUILD
-  MozStackFrameSymbolizer symbolizer;
-  MinidumpProcessor minidumpProcessor(&symbolizer, false);
-#else
   BasicSourceLineResolver resolver;
   // We don't have a valid symbol resolver so we pass nullptr instead.
   MinidumpProcessor minidumpProcessor(nullptr, &resolver);
-#endif
 
   // Process the minidump.
   Minidump dump(aDumpFile);
@@ -309,6 +333,7 @@ ProcessMinidump(Json::Value& aRoot, const string& aDumpFile) {
   ProcessState processState;
   rv = minidumpProcessor.Process(&dump, &processState);
   aRoot["status"] = ResultString(rv);
+
   ConvertProcessStateToJSON(processState, aRoot);
 
   return true;
@@ -333,6 +358,25 @@ OpenAppend(const string& aFilename)
   ofstream* file = new ofstream(aFilename.c_str(), mode);
 #endif // XP_WIN
   return file;
+}
+
+// Check if a file exists at the specified path
+
+static bool
+FileExists(const string& aPath)
+{
+#if defined(XP_WIN)
+  DWORD attrs = GetFileAttributes(UTF8ToWide(aPath).c_str());
+  return (attrs != INVALID_FILE_ATTRIBUTES);
+#else // Non-Windows
+  struct stat sb;
+  int ret = stat(aPath.c_str(), &sb);
+  if (ret == -1 || !(sb.st_mode & S_IFREG)) {
+    return false;
+  }
+
+  return true;
+#endif // XP_WIN
 }
 
 // Update the extra data file by adding the StackTraces field holding the
@@ -381,17 +425,6 @@ int main(int argc, char** argv)
   if (!FileExists(dumpPath)) {
     // The dump file does not exist
     return 1;
-  }
-
-  // Process command-line arguments
-  for (int i = 2; i < argc; ++i) {
-    if (std::strcmp(argv[i], "--force-use-module") == 0) {
-      if ((++ i) < argc) {
-        gMinidumpAnalyzerOptions.forceUseModule = argv[i];
-      } else {
-        return 1; // The module name wasn't specified on the command line.
-      }
-    }
   }
 
   // Try processing the minidump
