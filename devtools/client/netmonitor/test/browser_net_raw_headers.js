@@ -32,7 +32,7 @@ add_task(function* () {
 
   wait = waitForDOM(document, ".raw-headers-container textarea", 2);
   EventUtils.sendMouseEvent({ type: "click" },
-    document.querySelectorAll(".headers-summary .devtools-button")[1]);
+    document.querySelectorAll(".headers-summary .devtools-button")[2]);
   yield wait;
 
   testShowRawHeaders(getSortedRequests(store.getState()).get(0));
