@@ -1,0 +1,14 @@
+<!doctype html>
+<style>
+.foo input[type="range"]::-moz-range-thumb:hover {
+  color: red;
+}
+</style>
+<div>
+  <input type="range"></input>
+</div>
+<script>
+onload = function() {
+  document.querySelector('div').classList.add('foo');
+}
+</script>
