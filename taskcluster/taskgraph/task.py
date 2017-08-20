@@ -20,7 +20,6 @@ class Task(object):
     And later, as the task-graph processing proceeds:
 
     - task_id -- TaskCluster taskId under which this task will be created
-    - optimized -- true if this task need not be performed
 
     This class is just a convenience wraper for the data type and managing
     display, comparison, serialization, etc. It has no functionality of its own.
@@ -33,7 +32,6 @@ class Task(object):
         self.task = task
 
         self.task_id = None
-        self.optimized = False
 
         self.attributes['kind'] = kind
 
