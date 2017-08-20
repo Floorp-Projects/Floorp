@@ -342,7 +342,7 @@ var ProcessHangMonitor = {
                                             [addonName, brandBundle.getString("brandShortName")]);
 
       let linkText = bundle.getString("processHang.add-on.learn-more.text");
-      let linkURL = bundle.getString("processHang.add-on.learn-more.url");
+      let linkURL = "https://support.mozilla.org/kb/warning-unresponsive-script#w_other-causes";
 
       let link = doc.createElement("label");
       link.setAttribute("class", "text-link");
