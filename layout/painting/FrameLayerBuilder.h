@@ -569,6 +569,15 @@ public:
   nsIntPoint GetLastPaintOffset(PaintedLayer* aLayer);
 
   /**
+   * Return the resolution at which we expect to render aFrame's contents,
+   * assuming they are being painted to retained layers. This takes into account
+   * the resolution the contents of the ContainerLayer containing aFrame are
+   * being rendered at, as well as any currently-inactive transforms between
+   * aFrame and that container layer.
+   */
+  static gfxSize GetPaintedLayerScaleForFrame(nsIFrame* aFrame);
+
+  /**
    * Stores a Layer as the dedicated layer in the DisplayItemData for a given frame/key pair.
    *
    * Used when we optimize a PaintedLayer into an ImageLayer and want to retroactively update the
