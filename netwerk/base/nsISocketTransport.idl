@@ -271,4 +271,6 @@ interface nsISocketTransport : nsITransport
                           in long keepaliveRetryInterval);
 
     [noscript] void setFastOpenCallback(in TCPFastOpenPtr aFastOpen);
+
+    readonly attribute nsresult firstRetryError;
 };

@@ -2299,6 +2299,16 @@ nsHttpHandler::Observe(nsISupports *subject,
         } else {
             Telemetry::Accumulate(Telemetry::DNT_USAGE, 1);
         }
+
+        if (UseFastOpen()) {
+            Telemetry::Accumulate(Telemetry::TCP_FAST_OPEN_STATUS, 0);
+        } else if (!mFastOpenSupported) {
+            Telemetry::Accumulate(Telemetry::TCP_FAST_OPEN_STATUS, 1);
+        } else if (!mUseFastOpen) {
+            Telemetry::Accumulate(Telemetry::TCP_FAST_OPEN_STATUS, 2);
+        } else {
+            Telemetry::Accumulate(Telemetry::TCP_FAST_OPEN_STATUS, 3);
+        }
     } else if (!strcmp(topic, "profile-change-net-restore")) {
         // initialize connection manager
         rv = InitConnectionMgr();
