@@ -11,6 +11,7 @@
 #include "mozIPlacesAutoComplete.h"
 #include "SQLFunctions.h"
 #include "nsMathUtils.h"
+#include "nsUnicodeProperties.h"
 #include "nsUTF8Utils.h"
 #include "nsINavHistoryService.h"
 #include "nsPrintfCString.h"
@@ -33,41 +34,128 @@ namespace {
   typedef nsACString::const_char_iterator const_char_iterator;
 
   /**
-   * Get a pointer to the word boundary after aStart if aStart points to an
-   * ASCII letter (i.e. [a-zA-Z]).  Otherwise, return aNext, which we assume
-   * points to the next character in the UTF-8 sequence.
+   * Scan forward through UTF-8 text until the next potential character that
+   * could match a given codepoint when lower-cased (false positives are okay).
+   * This avoids having to actually parse the UTF-8 text, which is slow.
    *
-   * We define a word boundary as anything that's not [a-z] -- this lets us
-   * match CamelCase words.
+   * @param aStart
+   *        An iterator pointing to the first character position considered.
+   * @param aEnd
+   *        An interator pointing to past-the-end of the string.
    *
-   * @param aStart the beginning of the UTF-8 sequence
-   * @param aNext the next character in the sequence
-   * @param aEnd the first byte which is not part of the sequence
-   *
-   * @return a pointer to the next word boundary after aStart
+   * @return An iterator pointing to the first potential matching character
+   *         within the range [aStart, aEnd).
    */
   static
   MOZ_ALWAYS_INLINE const_char_iterator
-  nextWordBoundary(const_char_iterator const aStart,
-                   const_char_iterator const aNext,
-                   const_char_iterator const aEnd) {
-
+  nextSearchCandidate(const_char_iterator aStart,
+                      const_char_iterator aEnd,
+                      uint32_t aSearchFor)
+  {
     const_char_iterator cur = aStart;
-    if (('a' <= *cur && *cur <= 'z') ||
-        ('A' <= *cur && *cur <= 'Z')) {
 
-      // Since we'll halt as soon as we see a non-ASCII letter, we can do a
-      // simple byte-by-byte comparison here and avoid the overhead of a
-      // UTF8CharEnumerator.
-      do {
+    // If the character we search for is ASCII, then we can scan until we find
+    // it or its ASCII uppercase character, modulo the special cases
+    // U+0130 LATIN CAPITAL LETTER I WITH DOT ABOVE and U+212A KELVIN SIGN
+    // (which are the only non-ASCII characters that lower-case to ASCII ones).
+    // Since false positives are okay, we approximate ASCII lower-casing by
+    // bit-ORing with 0x20, for increased performance.
+    //
+    // If the character we search for is *not* ASCII, we can ignore everything
+    // that is, since all ASCII characters lower-case to ASCII.
+    //
+    // Because of how UTF-8 uses high-order bits, this will never land us
+    // in the middle of a codepoint.
+    //
+    // The assumptions about Unicode made here are verified in the test_casing
+    // gtest.
+    if (aSearchFor < 128) {
+      // When searching for I or K, we pick out the first byte of the UTF-8
+      // encoding of the corresponding special case character, and look for it
+      // in the loop below.  For other characters we fall back to 0xff, which
+      // is not a valid UTF-8 byte.
+      unsigned char target = (unsigned char)(aSearchFor | 0x20);
+      unsigned char special = 0xff;
+      if (target == 'i' || target == 'k') {
+        special = (target == 'i' ? 0xc4 : 0xe2);
+      }
+
+      while (cur < aEnd && (unsigned char)(*cur | 0x20) != target &&
+          (unsigned char)*cur != special) {
         cur++;
-      } while (cur < aEnd && 'a' <= *cur && *cur <= 'z');
-    }
-    else {
-      cur = aNext;
+      }
+    } else {
+      const_char_iterator cur = aStart;
+      while (cur < aEnd && (unsigned char)(*cur) < 128) {
+        cur++;
+      }
     }
 
     return cur;
+  }
+
+  /**
+   * Check whether a character position is on a word boundary of a UTF-8 string
+   * (rather than within a word).  We define "within word" to be any position
+   * between [a-zA-Z] and [a-z] -- this lets us match CamelCase words.
+   * TODO: support non-latin alphabets.
+   *
+   * @param aPos
+   *        An iterator pointing to the character position considered.  It must
+   *        *not* be the first byte of a string.
+   *
+   * @return true if boundary, false otherwise.
+   */
+  static
+  MOZ_ALWAYS_INLINE bool
+  isOnBoundary(const_char_iterator aPos) {
+    if ('a' <= *aPos && *aPos <= 'z') {
+      char prev = *(aPos - 1) | 0x20;
+      return !('a' <= prev && prev <= 'z');
+    }
+    return true;
+  }
+
+  /**
+   * Check whether a token string matches a particular position of a source
+   * string, case insensitively.
+   *
+   * @param aTokenStart
+   *        An iterator pointing to the start of the token string.
+   * @param aTokenEnd
+   *        An iterator pointing past-the-end of the token string.
+   * @param aSourceStart
+   *        An iterator pointing to the position of source string to start
+   *        matching at.
+   * @param aSourceEnd
+   *        An iterator pointing past-the-end of the source string.
+   *
+   * @return true if the string [aTokenStart, aTokenEnd) matches the start of
+   *         the string [aSourceStart, aSourceEnd, false otherwise.
+   */
+  static
+  MOZ_ALWAYS_INLINE bool
+  stringMatch(const_char_iterator aTokenStart,
+              const_char_iterator aTokenEnd,
+              const_char_iterator aSourceStart,
+              const_char_iterator aSourceEnd)
+  {
+    const_char_iterator tokenCur = aTokenStart, sourceCur = aSourceStart;
+
+    while (tokenCur < aTokenEnd) {
+      if (sourceCur >= aSourceEnd) {
+        return false;
+      }
+
+      bool error;
+      if (!CaseInsensitiveUTF8CharsEqual(sourceCur, tokenCur,
+                                         aSourceEnd, aTokenEnd,
+                                         &sourceCur, &tokenCur, &error)) {
+        return false;
+      }
+    }
+
+    return true;
   }
 
   enum FindInStringBehavior {
@@ -76,11 +164,7 @@ namespace {
   };
 
   /**
-   * findAnywhere and findOnBoundary do almost the same thing, so it's natural
-   * to implement them in terms of a single function.  They're both
-   * performance-critical functions, however, and checking aBehavior makes them
-   * a bit slower.  Our solution is to define findInString as MOZ_ALWAYS_INLINE
-   * and rely on the compiler to optimize out the aBehavior check.
+   * Common implementation for findAnywhere and findOnBoundary.
    *
    * @param aToken
    *        The token we're searching for
@@ -94,13 +178,13 @@ namespace {
    * @return true if aToken was found in aSourceString, false otherwise.
    */
   static
-  MOZ_ALWAYS_INLINE bool
+  bool
   findInString(const nsDependentCSubstring &aToken,
                const nsACString &aSourceString,
                FindInStringBehavior aBehavior)
   {
-    // CaseInsensitiveUTF8CharsEqual assumes that there's at least one byte in
-    // the both strings, so don't pass an empty token here.
+    // GetLowerUTF8Codepoint assumes that there's at least one byte in
+    // the string, so don't pass an empty token here.
     NS_PRECONDITION(!aToken.IsEmpty(), "Don't search for an empty token!");
 
     // We cannot match anything if there is nothing to search.
@@ -110,66 +194,44 @@ namespace {
 
     const_char_iterator tokenStart(aToken.BeginReading()),
                         tokenEnd(aToken.EndReading()),
+                        tokenNext,
                         sourceStart(aSourceString.BeginReading()),
-                        sourceEnd(aSourceString.EndReading());
+                        sourceEnd(aSourceString.EndReading()),
+                        sourceCur(sourceStart),
+                        sourceNext;
 
-    do {
-      // We are on a word boundary (if aBehavior == eFindOnBoundary).  See if
-      // aToken matches sourceStart.
+    uint32_t tokenFirstChar =
+      GetLowerUTF8Codepoint(tokenStart, tokenEnd, &tokenNext);
+    if (tokenFirstChar == uint32_t(-1)) {
+      return false;
+    }
 
-      // Check whether the first character in the token matches the character
-      // at sourceStart.  At the same time, get a pointer to the next character
-      // in both the token and the source.
-      const_char_iterator sourceNext, tokenCur;
-      bool error;
-      if (CaseInsensitiveUTF8CharsEqual(sourceStart, tokenStart,
-                                        sourceEnd, tokenEnd,
-                                        &sourceNext, &tokenCur, &error)) {
-
-        // We don't need to check |error| here -- if
-        // CaseInsensitiveUTF8CharCompare encounters an error, it'll also
-        // return false and we'll catch the error outside the if.
-
-        const_char_iterator sourceCur = sourceNext;
-        while (true) {
-          if (tokenCur >= tokenEnd) {
-            // We matched the whole token!
-            return true;
-          }
-
-          if (sourceCur >= sourceEnd) {
-            // We ran into the end of source while matching a token.  This
-            // means we'll never find the token we're looking for.
-            return false;
-          }
-
-          if (!CaseInsensitiveUTF8CharsEqual(sourceCur, tokenCur,
-                                             sourceEnd, tokenEnd,
-                                             &sourceCur, &tokenCur, &error)) {
-            // sourceCur doesn't match tokenCur (or there's an error), so break
-            // out of this loop.
-            break;
-          }
-        }
+    for (;;) {
+      // Scan forward to the next viable candidate (if any).
+      sourceCur = nextSearchCandidate(sourceCur, sourceEnd, tokenFirstChar);
+      if (sourceCur == sourceEnd) {
+        break;
       }
 
-      // If something went wrong above, get out of here!
-      if (MOZ_UNLIKELY(error)) {
+      // Check whether the first character in the token matches the character
+      // at sourceCur.  At the same time, get a pointer to the next character
+      // in the source.
+      uint32_t sourceFirstChar =
+        GetLowerUTF8Codepoint(sourceCur, sourceEnd, &sourceNext);
+      if (sourceFirstChar == uint32_t(-1)) {
         return false;
       }
 
-      // We didn't match the token.  If we're searching for matches on word
-      // boundaries, skip to the next word boundary.  Otherwise, advance
-      // forward one character, using the sourceNext pointer we saved earlier.
-
-      if (aBehavior == eFindOnBoundary) {
-        sourceStart = nextWordBoundary(sourceStart, sourceNext, sourceEnd);
-      }
-      else {
-        sourceStart = sourceNext;
+      if (sourceFirstChar == tokenFirstChar &&
+          (aBehavior != eFindOnBoundary || sourceCur == sourceStart ||
+              isOnBoundary(sourceCur)) &&
+          stringMatch(tokenNext, tokenEnd, sourceNext, sourceEnd))
+      {
+        return true;
       }
 
-    } while (sourceStart < sourceEnd);
+      sourceCur = sourceNext;
+    }
 
     return false;
   }
