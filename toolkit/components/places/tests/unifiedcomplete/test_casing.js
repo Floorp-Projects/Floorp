@@ -155,3 +155,59 @@ add_task(async function test_untrimmed_path_www_casing_2() {
   });
   await cleanup();
 });
+
+add_task(async function test_searching() {
+  let uri1 = NetUtil.newURI("http://dummy/1/");
+  let uri2 = NetUtil.newURI("http://dummy/2/");
+  let uri3 = NetUtil.newURI("http://dummy/3/");
+  let uri4 = NetUtil.newURI("http://dummy/4/");
+  let uri5 = NetUtil.newURI("http://dummy/5/");
+
+  await PlacesTestUtils.addVisits([
+    { uri: uri1, title: "uppercase lambda \u039B" },
+    { uri: uri2, title: "lowercase lambda \u03BB" },
+    { uri: uri3, title: "symbol \u212A" }, // kelvin
+    { uri: uri4, title: "uppercase K" },
+    { uri: uri5, title: "lowercase k" },
+  ]);
+
+  do_print("Search for lowercase lambda");
+  await check_autocomplete({
+    search: "\u03BB",
+    matches: [ { uri: uri1, title: "uppercase lambda \u039B" },
+               { uri: uri2, title: "lowercase lambda \u03BB" } ]
+  });
+
+  do_print("Search for uppercase lambda");
+  await check_autocomplete({
+    search: "\u039B",
+    matches: [ { uri: uri1, title: "uppercase lambda \u039B" },
+               { uri: uri2, title: "lowercase lambda \u03BB" } ]
+  });
+
+  do_print("Search for kelvin sign");
+  await check_autocomplete({
+    search: "\u212A",
+    matches: [ { uri: uri3, title: "symbol \u212A" },
+               { uri: uri4, title: "uppercase K" },
+               { uri: uri5, title: "lowercase k" } ]
+  });
+
+  do_print("Search for lowercase k");
+  await check_autocomplete({
+    search: "k",
+    matches: [ { uri: uri3, title: "symbol \u212A" },
+               { uri: uri4, title: "uppercase K" },
+               { uri: uri5, title: "lowercase k" } ]
+  });
+
+  do_print("Search for uppercase k");
+  await check_autocomplete({
+    search: "K",
+    matches: [ { uri: uri3, title: "symbol \u212A" },
+               { uri: uri4, title: "uppercase K" },
+               { uri: uri5, title: "lowercase k" } ]
+  });
+
+  await cleanup();
+});
