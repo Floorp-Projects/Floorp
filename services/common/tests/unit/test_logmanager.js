@@ -8,10 +8,6 @@ Cu.import("resource://services-common/logmanager.js");
 Cu.import("resource://gre/modules/Log.jsm");
 Cu.import("resource://gre/modules/FileUtils.jsm");
 
-function run_test() {
-  run_next_test();
-}
-
 // Returns an array of [consoleAppender, dumpAppender, [fileAppenders]] for
 // the specified log.  Note that fileAppenders will usually have length=1
 function getAppenders(log) {

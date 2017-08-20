@@ -8,10 +8,6 @@
 var imported = {};
 Components.utils.import("resource://gre/modules/Timer.jsm", imported);
 
-function run_test() {
-  run_next_test();
-}
-
 add_task(async function test_setTimeout() {
   let timeout1 = imported.setTimeout(() => do_throw("Should not be called"), 100);
   do_check_eq(typeof timeout1, "number", "setTimeout returns a number");

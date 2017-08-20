@@ -8,10 +8,6 @@
 
 var { CATEGORY_MASK } = require("devtools/client/performance/modules/categories");
 
-function run_test() {
-  run_next_test();
-}
-
 add_task(function test() {
   let { ThreadNode } = require("devtools/client/performance/modules/logic/tree-model");
   let url = (n) => `http://content/${n}`;

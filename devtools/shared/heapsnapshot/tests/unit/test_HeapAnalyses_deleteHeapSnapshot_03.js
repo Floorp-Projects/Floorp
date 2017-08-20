@@ -4,10 +4,6 @@
 
 // Test other dominatorTrees can still be retrieved after deleting a snapshot
 
-function run_test() {
-  run_next_test();
-}
-
 const breakdown = {
   by: "coarseType",
   objects: { by: "count", count: true, bytes: true },

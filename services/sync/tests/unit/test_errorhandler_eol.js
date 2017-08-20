@@ -48,10 +48,6 @@ async function setUp(server) {
   new FakeCryptoService();
 }
 
-function run_test() {
-  run_next_test();
-}
-
 function do_check_soft_eol(eh, start) {
   // We subtract 1000 because the stored value is in second precision.
   do_check_true(eh.earliestNextAlert >= (start + eh.MINIMUM_ALERT_INTERVAL_MSEC - 1000));

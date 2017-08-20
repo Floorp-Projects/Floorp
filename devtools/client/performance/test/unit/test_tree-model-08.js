@@ -6,10 +6,6 @@
  * Verifies if FrameNodes retain and parse their data appropriately.
  */
 
-function run_test() {
-  run_next_test();
-}
-
 add_task(function test() {
   let FrameUtils = require("devtools/client/performance/modules/logic/frame-utils");
   let { FrameNode } = require("devtools/client/performance/modules/logic/tree-model");

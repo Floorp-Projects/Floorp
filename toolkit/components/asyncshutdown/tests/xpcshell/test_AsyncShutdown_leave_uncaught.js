@@ -10,10 +10,6 @@
 Cu.import("resource://testing-common/PromiseTestUtils.jsm");
 PromiseTestUtils.thisTestLeaksUncaughtRejectionsAndShouldBeFixed();
 
-function run_test() {
-  run_next_test();
-}
-
 add_task(async function test_phase_simple_async() {
   do_print("Testing various combinations of a phase with a single condition");
   for (let kind of ["phase", "barrier", "xpcom-barrier", "xpcom-barrier-unwrapped"]) {

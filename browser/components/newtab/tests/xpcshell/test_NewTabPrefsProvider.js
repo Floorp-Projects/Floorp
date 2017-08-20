@@ -7,10 +7,6 @@ Cu.import("resource://gre/modules/Preferences.jsm");
 XPCOMUtils.defineLazyModuleGetter(this, "NewTabPrefsProvider",
     "resource:///modules/NewTabPrefsProvider.jsm");
 
-function run_test() {
-  run_next_test();
-}
-
 add_task(async function test_observe() {
   let prefsMap = NewTabPrefsProvider.prefs.prefsMap;
   for (let prefName of prefsMap.keys()) {

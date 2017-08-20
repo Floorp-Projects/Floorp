@@ -14,10 +14,6 @@ do_register_cleanup(function() {
   Services.prefs.setBoolPref("toolkit.osfile.log", false);
 });
 
-function run_test() {
-  run_next_test();
-}
-
 /**
  * Test OS.File.makeDir
  */

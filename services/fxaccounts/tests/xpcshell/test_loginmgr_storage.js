@@ -30,10 +30,6 @@ function setLoginMgrLoggedInState(loggedIn) {
 
 initTestLogging("Trace");
 
-function run_test() {
-  run_next_test();
-}
-
 function getLoginMgrData() {
   let logins = Services.logins.findLogins({}, FXA_PWDMGR_HOST, null, FXA_PWDMGR_REALM);
   if (logins.length == 0) {

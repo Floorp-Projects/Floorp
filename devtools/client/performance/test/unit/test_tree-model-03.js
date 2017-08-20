@@ -7,10 +7,6 @@
  * while at the same time filtering by duration.
  */
 
-function run_test() {
-  run_next_test();
-}
-
 add_task(function test() {
   let { ThreadNode } = require("devtools/client/performance/modules/logic/tree-model");
 

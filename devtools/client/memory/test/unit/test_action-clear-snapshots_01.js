@@ -9,10 +9,6 @@ let { takeSnapshotAndCensus, clearSnapshots } = require("devtools/client/memory/
 let { actions } = require("devtools/client/memory/constants");
 const { treeMapState } = require("devtools/client/memory/constants");
 
-function run_test() {
-  run_next_test();
-}
-
 add_task(function* () {
   let front = new StubbedMemoryFront();
   let heapWorker = new HeapAnalysesClient();

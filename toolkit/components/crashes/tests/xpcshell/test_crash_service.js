@@ -11,10 +11,6 @@ Cu.import("resource://testing-common/AppData.jsm", this);
 Cu.import("resource://testing-common/CrashManagerTest.jsm", this);
 var bsp = Cu.import("resource://gre/modules/CrashManager.jsm", {});
 
-function run_test() {
-  run_next_test();
-}
-
 add_task(async function test_instantiation() {
   Assert.ok(!bsp.gCrashManager, "CrashManager global instance not initially defined.");
 

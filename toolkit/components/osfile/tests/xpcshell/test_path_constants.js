@@ -7,11 +7,6 @@
 Cu.import("resource://gre/modules/ctypes.jsm", this);
 Cu.import("resource://testing-common/AppData.jsm", this);
 
-
-function run_test() {
-  run_next_test();
-}
-
 function compare_paths(ospath, key) {
   let file;
   try {

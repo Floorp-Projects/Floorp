@@ -16,10 +16,6 @@ const archive = do_get_file(ARCHIVE, false);
 const dir = do_get_profile().clone();
 dir.append("test_ZipUtils");
 
-function run_test() {
-  run_next_test();
-}
-
 function ensureExtracted(target) {
   target.append(SUBDIR);
   do_check_true(target.exists());

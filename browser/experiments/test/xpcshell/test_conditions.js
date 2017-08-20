@@ -38,10 +38,6 @@ function applicableFromManifestData(data, policy) {
   return entry.isApplicable();
 }
 
-function run_test() {
-  run_next_test();
-}
-
 add_task(async function test_setup() {
   createAppInfo();
   do_get_profile();

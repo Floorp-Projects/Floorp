@@ -24,10 +24,6 @@ const TEST_BYTES = [207, 128, 207, 140, 206, 187, 206, 187,
                     130, 32, 225, 188, 147, 206, 189, 32,
                     206, 188, 206, 173, 206, 179, 206, 177];
 
-function run_test() {
-  run_next_test();
-}
-
 add_test(function test_compress_string() {
   const INPUT = "hello";
 

@@ -10,10 +10,6 @@ Components.utils.import("resource://gre/modules/osfile.jsm");
  * (see bug 924916)
  */
 
-function run_test() {
-  run_next_test();
-}
-
 // Non-prototypical tests, operating on path names.
 add_task(async function test_nonproto() {
   // First, create a file we can mess with.

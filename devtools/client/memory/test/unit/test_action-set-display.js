@@ -14,10 +14,6 @@ let { setCensusDisplay } = require("devtools/client/memory/actions/census-displa
 let { takeSnapshotAndCensus } = require("devtools/client/memory/actions/snapshot");
 const { changeView } = require("devtools/client/memory/actions/view");
 
-function run_test() {
-  run_next_test();
-}
-
 // We test setting an invalid display, which triggers an assertion failure.
 EXPECTED_DTU_ASSERT_FAILURE_COUNT = 1;
 

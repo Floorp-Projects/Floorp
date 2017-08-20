@@ -31,10 +31,6 @@ async function clearFiles() {
   }
 }
 
-function run_test() {
-  run_next_test();
-}
-
 add_task(async function init() {
   await clearFiles();
 });

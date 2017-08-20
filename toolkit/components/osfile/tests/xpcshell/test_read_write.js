@@ -100,8 +100,3 @@ add_test_pair(async function read_write_all() {
   await test_with_options({}, "Not renaming, not flushing");
   await test_with_options({flush: true}, "Not renaming, flushing");
 });
-
-
-function run_test() {
-  run_next_test();
-}

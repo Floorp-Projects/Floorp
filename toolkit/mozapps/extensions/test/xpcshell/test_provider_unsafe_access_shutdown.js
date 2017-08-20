@@ -32,10 +32,6 @@ function mockAddonProvider(name) {
   return mockProvider;
 }
 
-function run_test() {
-  run_next_test();
-}
-
 add_task(async function unsafeProviderShutdown() {
   let firstProvider = mockAddonProvider("Mock1");
   AddonManagerPrivate.registerProvider(firstProvider);

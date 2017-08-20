@@ -139,7 +139,3 @@ add_task(async function test_canonicalJSON_with_deeply_nested_dicts() {
 
   do_check_eq(CanonicalJSON.stringify(records), expected);
 });
-
-function run_test() {
-  run_next_test();
-}
