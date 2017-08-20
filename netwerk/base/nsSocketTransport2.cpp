@@ -801,6 +801,7 @@ nsSocketTransport::nsSocketTransport()
     , mFastOpenCallback(nullptr)
     , mFastOpenLayerHasBufferedData(false)
     , mFastOpenStatus(TFO_NOT_TRIED)
+    , mFirstRetryError(NS_OK)
     , mDoNotRetryToConnect(false)
 {
     SOCKET_LOG(("creating nsSocketTransport @%p\n", this));
@@ -1776,8 +1777,13 @@ nsSocketTransport::RecoverFromError()
             mFastOpenCallback->SetFastOpenConnected(mCondition, true);
         }
         mFastOpenCallback = nullptr;
+
     } else {
 
+        // This is only needed for telemetry.
+        if (NS_SUCCEEDED(mFirstRetryError)) {
+            mFirstRetryError = mCondition;
+        }
         if ((mState == STATE_CONNECTING) && mDNSRecord &&
             mSocketTransportService->IsTelemetryEnabledAndNotSleepPhase()) {
             if (mNetAddr.raw.family == AF_INET) {
@@ -3599,6 +3605,13 @@ NS_IMETHODIMP
 nsSocketTransport::SetFastOpenCallback(TCPFastOpen *aFastOpen)
 {
   mFastOpenCallback = aFastOpen;
+  return NS_OK;
+}
+
+NS_IMETHODIMP
+nsSocketTransport::GetFirstRetryError(nsresult *aFirstRetryError)
+{
+  *aFirstRetryError = mFirstRetryError;
   return NS_OK;
 }
 
