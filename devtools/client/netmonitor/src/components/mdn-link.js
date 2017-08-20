@@ -19,10 +19,10 @@ const LEARN_MORE = L10N.getStr("netmonitor.headers.learnMore");
 function MDNLink({ url }) {
   return (
     a({
-      className: "learn-more-link",
-      title: url,
+      className: "devtools-button learn-more-link",
+      title: LEARN_MORE,
       onClick: (e) => onLearnMoreClick(e, url),
-    }, `[${LEARN_MORE}]`)
+    })
   );
 }
 

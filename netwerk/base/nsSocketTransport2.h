@@ -478,6 +478,8 @@ private:
     // A Fast Open callback.
     TCPFastOpen *mFastOpenCallback;
     bool mFastOpenLayerHasBufferedData;
+    uint8_t mFastOpenStatus;
+    nsresult mFirstRetryError;
 
     bool mDoNotRetryToConnect;
 };
