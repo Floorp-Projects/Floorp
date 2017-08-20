@@ -212,7 +212,7 @@
             "android-api-15", 
             "android-multilocale"
         ], 
-        "revision": "380ff1dcea35"
+        "revision": "bb700829af03"
     }, 
     "fa": {
         "platforms": [
@@ -571,7 +571,7 @@
             "android-api-15", 
             "android-multilocale"
         ], 
-        "revision": "54f69107b0c0"
+        "revision": "aee79cd84afb"
     }, 
     "sk": {
         "platforms": [
