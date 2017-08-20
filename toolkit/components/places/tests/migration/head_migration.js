@@ -42,6 +42,3 @@ var setupPlacesDatabase = async function(aFileName) {
 };
 
 // This works provided all tests in this folder use add_task.
-function run_test() {
-  run_next_test();
-}

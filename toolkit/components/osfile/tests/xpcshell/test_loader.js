@@ -9,10 +9,6 @@
 
 var { Loader } = Components.utils.import("resource://gre/modules/commonjs/toolkit/loader.js", {});
 
-function run_test() {
-  run_next_test();
-}
-
 
 add_task(async function() {
   let dataDir = Services.io.newFileURI(do_get_file("test_loader/", true)).spec + "/";

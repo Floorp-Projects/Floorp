@@ -272,7 +272,3 @@ var TESTS = [
 TESTS = TESTS.concat([test_rsa, test_dsa]);
 
 TESTS.forEach(add_test);
-
-function run_test() {
-  run_next_test();
-}

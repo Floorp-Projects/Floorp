@@ -5,10 +5,6 @@
 // Test that the HeapAnalyses{Client,Worker} bubbles errors properly when things
 // go wrong.
 
-function run_test() {
-  run_next_test();
-}
-
 add_task(function* () {
   const client = new HeapAnalysesClient();
 

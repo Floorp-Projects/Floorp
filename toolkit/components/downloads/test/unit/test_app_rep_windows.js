@@ -154,10 +154,6 @@ function registerTableUpdate(aTable, aFilename) {
 
 // Tests
 
-function run_test() {
-  run_next_test();
-}
-
 add_task(async function test_setup() {
   // Wait 10 minutes, that is half of the external xpcshell timeout.
   do_timeout(10 * 60 * 1000, function() {

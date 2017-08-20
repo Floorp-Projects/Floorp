@@ -13,10 +13,6 @@ let utils = require("devtools/client/memory/utils");
 let { snapshotState: states, viewState } = require("devtools/client/memory/constants");
 let { Preferences } = require("resource://gre/modules/Preferences.jsm");
 
-function run_test() {
-  run_next_test();
-}
-
 add_task(function* () {
   let s1 = utils.createSnapshot({ view: { state: viewState.CENSUS } });
   let s2 = utils.createSnapshot({ view: { state: viewState.CENSUS } });

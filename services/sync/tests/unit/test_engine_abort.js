@@ -66,7 +66,3 @@ add_task(async function test_processIncoming_abort() {
   engine._tracker.clearChangedIDs();
   await engine.finalize();
 });
-
-function run_test() {
-  run_next_test();
-}

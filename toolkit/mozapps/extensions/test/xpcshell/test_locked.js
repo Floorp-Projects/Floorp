@@ -537,8 +537,3 @@ add_task(async function run_test_1() {
      // We're expecting an error here.
    }
 });
-
-
-function run_test() {
- run_next_test();
-}

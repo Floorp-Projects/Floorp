@@ -5,10 +5,6 @@
 // Test that the HeapAnalyses{Client,Worker} can send SavedFrame stacks from
 // by-allocation-stack reports from the worker.
 
-function run_test() {
-  run_next_test();
-}
-
 add_task(function* test() {
   const client = new HeapAnalysesClient();
 

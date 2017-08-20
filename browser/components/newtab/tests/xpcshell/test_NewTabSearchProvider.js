@@ -12,10 +12,6 @@ XPCOMUtils.defineLazyModuleGetter(this, "ContentSearch",
 // ensure a profile exists
 do_get_profile();
 
-function run_test() {
-  run_next_test();
-}
-
 function hasProp(obj) {
   return function(aProp) {
     ok(obj.hasOwnProperty(aProp), `expect to have property ${aProp}`);

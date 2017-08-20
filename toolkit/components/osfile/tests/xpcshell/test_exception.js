@@ -107,7 +107,3 @@ add_test_pair(async function read_non_existent() {
     }
   }
 });
-
-function run_test() {
-  run_next_test();
-}

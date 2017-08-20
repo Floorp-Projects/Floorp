@@ -16,10 +16,6 @@ DummyLogger.prototype.warn = function warn(message) {
   this.messages.push(message);
 };
 
-function run_test() {
-  run_next_test();
-}
-
 add_test(function test_set_basic() {
   let now = new Date();
 

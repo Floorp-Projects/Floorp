@@ -490,10 +490,6 @@ async function check_initialized_cache(aExpectedToFind) {
   await check_cache(aExpectedToFind, !cacheEnabled);
 }
 
-function run_test() {
-  run_next_test();
-}
-
 add_task(async function setup() {
   // Setup for test
   createAppInfo("xpcshell@tests.mozilla.org", "XPCShell", "1", "1.9");

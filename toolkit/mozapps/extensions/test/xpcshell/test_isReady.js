@@ -1,9 +1,5 @@
 createAppInfo("xpcshell@tests.mozilla.org", "XPCShell", "1", "1.9.2");
 
-function run_test() {
-  run_next_test();
-}
-
 add_task(async function() {
   equal(AddonManager.isReady, false, "isReady should be false before startup");
 

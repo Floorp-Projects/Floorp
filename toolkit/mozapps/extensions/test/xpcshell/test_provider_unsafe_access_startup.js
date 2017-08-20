@@ -30,10 +30,6 @@ function mockAddonProvider(name) {
   return mockProvider;
 }
 
-function run_test() {
-  run_next_test();
-}
-
 add_task(async function unsafeProviderStartup() {
   let secondProvider = null;
 

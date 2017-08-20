@@ -3,10 +3,6 @@
 
 "use strict";
 
-function run_test() {
-  run_next_test();
-}
-
 function readFile(file) {
   let stream = Cc["@mozilla.org/network/file-input-stream;1"]
                .createInstance(Ci.nsIFileInputStream);

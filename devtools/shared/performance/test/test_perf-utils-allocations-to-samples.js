@@ -9,10 +9,6 @@
  * received from the profiler.
  */
 
-function run_test() {
-  run_next_test();
-}
-
 add_task(function () {
   const { getProfileThreadFromAllocations } = require("devtools/shared/performance/recording-utils");
   let output = getProfileThreadFromAllocations(TEST_DATA);
