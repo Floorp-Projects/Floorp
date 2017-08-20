@@ -9,8 +9,6 @@
 #include "prlink.h"
 #include "fpdfview.h"
 
-//#define USE_EXTERNAL_PDFIUM
-
 /* include windows.h for the HDC definitions that we need. */
 #include <windows.h>
 
@@ -83,9 +81,7 @@ private:
   FPDF_ClosePage_Pfn          mFPDF_ClosePage;
   FPDF_RenderPage_Pfn         mFPDF_RenderPage;
 
-#ifdef USE_EXTERNAL_PDFIUM
   PRLibrary*  mPRLibrary;
-#endif
 };
 
 } // namespace widget
