@@ -335,6 +335,14 @@ namespace places {
     mozIStorageFunction
   )
 
+  MatchAutoCompleteFunction::MatchAutoCompleteFunction()
+    : mCachedZero(new IntegerVariant(0))
+    , mCachedOne(new IntegerVariant(1))
+  {
+    static_assert(IntegerVariant::HasThreadSafeRefCnt::value,
+        "Caching assumes that variants have thread-safe refcounting");
+  }
+
   NS_IMETHODIMP
   MatchAutoCompleteFunction::OnFunctionCall(mozIStorageValueArray *aArguments,
                                             nsIVariant **_result)
@@ -358,7 +366,7 @@ namespace places {
         StringBeginsWith(url, NS_LITERAL_CSTRING("javascript:")) &&
         !HAS_BEHAVIOR(JAVASCRIPT) &&
         !StringBeginsWith(searchString, NS_LITERAL_CSTRING("javascript:"))) {
-      NS_ADDREF(*_result = new IntegerVariant(0));
+      NS_ADDREF(*_result = mCachedZero);
       return NS_OK;
     }
 
@@ -387,7 +395,7 @@ namespace places {
     }
 
     if (!matches) {
-      NS_ADDREF(*_result = new IntegerVariant(0));
+      NS_ADDREF(*_result = mCachedZero);
       return NS_OK;
     }
 
@@ -432,7 +440,7 @@ namespace places {
       }
     }
 
-    NS_ADDREF(*_result = new IntegerVariant(matches ? 1 : 0));
+    NS_ADDREF(*_result = (matches ? mCachedOne : mCachedZero));
     return NS_OK;
     #undef HAS_BEHAVIOR
   }
