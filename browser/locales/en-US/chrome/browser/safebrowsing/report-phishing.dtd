@@ -5,7 +5,7 @@
 <!-- Localization note (reportDeceptiveSiteMenu.title) - Label of the Help menu
   item. Either this or safeb.palm.notdeceptive.label from
   phishing-afterload-warning-message.dtd is shown. -->
-<!ENTITY reportDeceptiveSiteMenu.title      "Report deceptive site…">
+<!ENTITY reportDeceptiveSiteMenu.title      "Report Deceptive Site…">
 <!-- Localization note (reportDeceptiveSiteMenu.accesskey) - Because
   safeb.palm.notdeceptive.label from phishing-afterload-warning-message.dtd and
   reportDeceptiveSiteMenu.title are never shown at the same time, the same
