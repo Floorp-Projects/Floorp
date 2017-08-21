@@ -3200,7 +3200,7 @@ pref("idle_queue.long_period", 50);
 
 // Support the input event queue on the main thread of content process
 #ifdef NIGHTLY_BUILD
-pref("input_event_queue.supported", false);
+pref("input_event_queue.supported", true);
 #else
 pref("input_event_queue.supported", false);
 #endif
