@@ -378,17 +378,21 @@ GetFirefoxAppPath(nsCOMPtr<nsIFile> aPluginContainerPath,
 }
 
 static bool
-GetPluginContainerSigPath(nsCOMPtr<nsIFile> aPluginContainerPath,
-                          nsCOMPtr<nsIFile>& aOutPluginContainerSigPath)
+GetSigPath(const int aRelativeLayers,
+           const nsString& aTargetSigFileName,
+           nsCOMPtr<nsIFile> aExecutablePath,
+           nsCOMPtr<nsIFile>& aOutSigPath)
 {
   // The sig file will be located in
+  // xxxx/NightlyDebug.app/Contents/Resources/XUL.sig
+  // xxxx/NightlyDebug.app/Contents/Resources/firefox.sig
   // xxxx/NightlyDebug.app/Contents/MacOS/plugin-container.app/Contents/Resources/plugin-container.sig
-  // On MacOS the plugin-container.sig file is a few parent directories up from
-  // plugin-container.
-  // Start to search the path from the path of plugin-container.
-  MOZ_ASSERT(aPluginContainerPath);
-  nsCOMPtr<nsIFile> path = aPluginContainerPath;
-  for (int i = 0; i < 2; i++) {
+  // On MacOS the sig file is a few parent directories up from
+  // its executable file.
+  // Start to search the path from the path of the executable file we provided.
+  MOZ_ASSERT(aExecutablePath);
+  nsCOMPtr<nsIFile> path = aExecutablePath;
+  for (int i = 0; i < aRelativeLayers; i++) {
     nsCOMPtr<nsIFile> parent;
     if (NS_FAILED(path->GetParent(getter_AddRefs(parent)))) {
       return false;
@@ -396,9 +400,9 @@ GetPluginContainerSigPath(nsCOMPtr<nsIFile> aPluginContainerPath,
     path = parent;
   }
   MOZ_ASSERT(path);
-  aOutPluginContainerSigPath = path;
+  aOutSigPath = path;
   return NS_SUCCEEDED(path->Append(NS_LITERAL_STRING("Resources"))) &&
-         NS_SUCCEEDED(path->Append(NS_LITERAL_STRING("plugin-container.sig")));
+         NS_SUCCEEDED(path->Append(aTargetSigFileName));
 }
 #endif
 
@@ -433,7 +437,7 @@ GMPChild::MakeCDMHostVerificationPaths()
     nsCString sigFilePath;
 #if defined(XP_MACOSX)
     nsCOMPtr<nsIFile> sigFile;
-    if (GetPluginContainerSigPath(path, sigFile) &&
+    if (GetSigPath(2, NS_LITERAL_STRING("plugin-container.sig"), path, sigFile) &&
         NS_SUCCEEDED(sigFile->GetPath(str))) {
       sigFilePath = NS_ConvertUTF16toUTF8(str);
     } else {
@@ -464,9 +468,21 @@ GMPChild::MakeCDMHostVerificationPaths()
       NS_SUCCEEDED(appDir->Clone(getter_AddRefs(path))) &&
       NS_SUCCEEDED(path->Append(FIREFOX_FILE)) && FileExists(path) &&
       ResolveLinks(path) && NS_SUCCEEDED(path->GetPath(str))) {
+    nsCString filePath = NS_ConvertUTF16toUTF8(str);
+    nsCString sigFilePath;
+    nsCOMPtr<nsIFile> sigFile;
+    if (GetSigPath(2, NS_LITERAL_STRING("firefox.sig"), path, sigFile) &&
+        NS_SUCCEEDED(sigFile->GetPath(str))) {
+      sigFilePath = NS_ConvertUTF16toUTF8(str);
+    } else {
+      // Cannot successfully get the sig file path.
+      // Assume it is located at the same place as firefox alternatively.
+      sigFilePath = nsCString(NS_ConvertUTF16toUTF8(str) +
+                              NS_LITERAL_CSTRING(".sig"));
+    }
     paths.AppendElement(
-      MakePair(nsCString(NS_ConvertUTF16toUTF8(str)),
-               nsCString(NS_ConvertUTF16toUTF8(str) + NS_LITERAL_CSTRING(".sig"))));
+      MakePair(Move(filePath),
+               Move(sigFilePath)));
   }
 #else
   // Note: re-using 'path' var here, as on Windows/Linux we assume Firefox
@@ -486,9 +502,26 @@ GMPChild::MakeCDMHostVerificationPaths()
   if (NS_SUCCEEDED(appDir->Clone(getter_AddRefs(path))) &&
       NS_SUCCEEDED(path->Append(XUL_LIB_FILE)) && FileExists(path) &&
       ResolveLinks(path) && NS_SUCCEEDED(path->GetPath(str))) {
+    nsCString filePath = NS_ConvertUTF16toUTF8(str);
+    nsCString sigFilePath;
+#if defined(XP_MACOSX)
+    nsCOMPtr<nsIFile> sigFile;
+    if (GetSigPath(2, NS_LITERAL_STRING("XUL.sig"), path, sigFile) &&
+        NS_SUCCEEDED(sigFile->GetPath(str))) {
+      sigFilePath = NS_ConvertUTF16toUTF8(str);
+    } else {
+      // Cannot successfully get the sig file path.
+      // Assume it is located at the same place as XUL alternatively.
+      sigFilePath = nsCString(NS_ConvertUTF16toUTF8(str) +
+                              NS_LITERAL_CSTRING(".sig"));
+    }
+#else
+    sigFilePath = nsCString(NS_ConvertUTF16toUTF8(str) +
+                            NS_LITERAL_CSTRING(".sig"));
+#endif
     paths.AppendElement(
-      MakePair(nsCString(NS_ConvertUTF16toUTF8(str)),
-               nsCString(NS_ConvertUTF16toUTF8(str) + NS_LITERAL_CSTRING(".sig"))));
+      MakePair(Move(filePath),
+               Move(sigFilePath)));
   }
 
   return paths;
