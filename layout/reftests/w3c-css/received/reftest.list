@@ -49,8 +49,8 @@
 == css-multicol-1/multicol-basic-006.xht css-multicol-1/reference/multicol-basic-005-ref.xht
 == css-multicol-1/multicol-basic-007.xht css-multicol-1/reference/multicol-basic-005-ref.xht
 == css-multicol-1/multicol-basic-008.xht css-multicol-1/reference/multicol-basic-005-ref.xht
-fails-if(!styloVsGecko) == css-multicol-1/multicol-block-clip-001.xht css-multicol-1/multicol-block-clip-001-ref.xht
-fails-if(!styloVsGecko) == css-multicol-1/multicol-block-clip-002.xht css-multicol-1/multicol-block-clip-002-ref.xht
+fails-if((winWidget||OSX)&&!styloVsGecko) == css-multicol-1/multicol-block-no-clip-001.xht css-multicol-1/multicol-block-no-clip-001-ref.xht
+fails-if((winWidget||OSX)&&!styloVsGecko) == css-multicol-1/multicol-block-no-clip-002.xht css-multicol-1/multicol-block-no-clip-002-ref.xht
 fails-if(!styloVsGecko) == css-multicol-1/multicol-br-inside-avoidcolumn-001.xht css-multicol-1/multicol-br-inside-avoidcolumn-ref.xht
 fails-if(!styloVsGecko) == css-multicol-1/multicol-break-000.xht css-multicol-1/multicol-break-000-ref.xht
 fails-if(!styloVsGecko) == css-multicol-1/multicol-break-001.xht css-multicol-1/multicol-break-001-ref.xht
@@ -73,9 +73,9 @@ fuzzy(87,180) == css-multicol-1/multicol-count-001.xht css-multicol-1/multicol-c
 fails-if(!styloVsGecko) == css-multicol-1/multicol-count-002.xht css-multicol-1/multicol-count-002-ref.xht
 fails-if(!styloVsGecko) == css-multicol-1/multicol-count-computed-001.xht css-multicol-1/multicol-count-computed-ref.xht
 fails-if(!styloVsGecko) == css-multicol-1/multicol-count-computed-002.xht css-multicol-1/multicol-count-computed-2-ref.xht
-fails-if(!styloVsGecko) == css-multicol-1/multicol-count-computed-003.xht css-multicol-1/multicol-count-computed-003-ref.xht
+fails-if((winWidget||OSX||Android)&&!styloVsGecko) == css-multicol-1/multicol-count-computed-003.xht css-multicol-1/multicol-count-computed-003-ref.xht
 fuzzy-if(winWidget||OSX||gtkWidget,112,861) fails-if(Android) == css-multicol-1/multicol-count-computed-004.xht css-multicol-1/multicol-count-computed-004-ref.xht
-fails-if(!styloVsGecko) == css-multicol-1/multicol-count-computed-005.xht css-multicol-1/multicol-count-computed-003-ref.xht
+fails-if((winWidget||OSX||Android)&&!styloVsGecko) == css-multicol-1/multicol-count-computed-005.xht css-multicol-1/multicol-count-computed-003-ref.xht
 fails-if(!styloVsGecko) == css-multicol-1/multicol-count-large-001.xht css-multicol-1/multicol-count-large-ref.xht
 fuzzy(255,132) == css-multicol-1/multicol-count-large-002.xht css-multicol-1/multicol-count-large-2-ref.xht
 fuzzy(204,930) fuzzy-if(skiaContent,208,930) == css-multicol-1/multicol-count-negative-001.xht css-multicol-1/multicol-columns-invalid-001-ref.xht
@@ -205,7 +205,7 @@ fails-if(!styloVsGecko) == css-multicol-1/multicol-zero-height-001.xht css-multi
 == css-namespaces-3/syntax-010.xml css-namespaces-3/reftest/ref-lime-3.xml
 == css-namespaces-3/syntax-011.xml css-namespaces-3/reftest/ref-lime-6.xml
 == css-namespaces-3/syntax-012.xml css-namespaces-3/reftest/ref-lime-3.xml
-fails-if(stylo||styloVsGecko) == css-namespaces-3/syntax-013.xml css-namespaces-3/reftest/ref-lime-5.xml # bug 1388911
+fails-if(stylo||styloVsGecko) == css-namespaces-3/syntax-013.xml css-namespaces-3/reftest/ref-lime-5.xml
 == css-namespaces-3/syntax-014.xml css-namespaces-3/reftest/ref-lime-3.xml
 == css-namespaces-3/syntax-015.xml css-namespaces-3/reftest/ref-lime-1.xml
 fails-if(!styloVsGecko) == css-values-3/attr-color-invalid-cast.html css-values-3/reference/200-200-green.html
@@ -213,7 +213,6 @@ fails-if(!styloVsGecko) == css-values-3/attr-color-invalid-cast.html css-values-
 fails-if(!styloVsGecko) == css-values-3/attr-color-valid.html css-values-3/reference/200-200-green.html
 == css-values-3/attr-invalid-type-001.html css-values-3/reference/200-200-green.html
 == css-values-3/attr-invalid-type-002.html css-values-3/reference/200-200-green.html
-== css-values-3/attr-invalid-type-003.html css-values-3/reference/200-200-green.html
 fails-if(!styloVsGecko) == css-values-3/attr-length-invalid-cast.html css-values-3/reference/200-200-green.html
 == css-values-3/attr-length-invalid-fallback.html css-values-3/reference/200-200-green.html
 fails-if(!styloVsGecko) == css-values-3/attr-length-valid-zero-nofallback.html css-values-3/reference/200-200-green.html
@@ -246,7 +245,6 @@ skip == css-values-3/vh-support-transform-translate.html css-values-3/reference/
 == css-values-3/vh-support.html css-values-3/reference/all-green.html
 == css-values-3/vh-zero-support.html css-values-3/reference/all-green.html
 skip == css-values-3/vh_not_refreshing_on_chrome.html css-values-3/reference/vh_not_refreshing_on_chrome-ref.html
-skip == css-values-3/vh_not_refreshing_on_chrome_iframe.html css-values-3/reference/vh_not_refreshing_on_chrome-ref.html
 == css-writing-modes-3/abs-pos-non-replaced-icb-vlr-003.xht reference/ref-filled-green-100px-square.xht
 == css-writing-modes-3/abs-pos-non-replaced-icb-vlr-005.xht css-writing-modes-3/abs-pos-non-replaced-icb-vrl-004-ref.xht
 == css-writing-modes-3/abs-pos-non-replaced-icb-vlr-007.xht reference/ref-filled-green-100px-square.xht
@@ -996,7 +994,7 @@ fails-if(Android) == css-writing-modes-3/sizing-orthog-vlr-in-htb-003.xht css-wr
 == css-writing-modes-3/sizing-orthog-vlr-in-htb-004.xht css-writing-modes-3/sizing-orthog-vlr-in-htb-004-ref.xht
 == css-writing-modes-3/sizing-orthog-vlr-in-htb-006.xht css-writing-modes-3/sizing-orthog-vlr-in-htb-006-ref.xht
 == css-writing-modes-3/sizing-orthog-vlr-in-htb-007.xht css-writing-modes-3/sizing-orthog-vlr-in-htb-007-ref.xht
-fails-if((OSX||winWidget||Android)&&!styloVsGecko) == css-writing-modes-3/sizing-orthog-vlr-in-htb-008.xht css-writing-modes-3/sizing-orthog-vlr-in-htb-008-ref.xht
+== css-writing-modes-3/sizing-orthog-vlr-in-htb-008.xht css-writing-modes-3/sizing-orthog-vlr-in-htb-008-ref.xht
 fails-if(Android) == css-writing-modes-3/sizing-orthog-vlr-in-htb-009.xht css-writing-modes-3/sizing-orthog-vlr-in-htb-009-ref.xht
 == css-writing-modes-3/sizing-orthog-vlr-in-htb-010.xht css-writing-modes-3/sizing-orthog-vlr-in-htb-010-ref.xht
 == css-writing-modes-3/sizing-orthog-vlr-in-htb-011.xht css-writing-modes-3/sizing-orthog-vlr-in-htb-011-ref.xht
@@ -1006,7 +1004,7 @@ fails-if(Android) == css-writing-modes-3/sizing-orthog-vlr-in-htb-015.xht css-wr
 == css-writing-modes-3/sizing-orthog-vlr-in-htb-016.xht css-writing-modes-3/sizing-orthog-vlr-in-htb-016-ref.xht
 == css-writing-modes-3/sizing-orthog-vlr-in-htb-018.xht css-writing-modes-3/sizing-orthog-vlr-in-htb-018-ref.xht
 == css-writing-modes-3/sizing-orthog-vlr-in-htb-019.xht css-writing-modes-3/sizing-orthog-vlr-in-htb-019-ref.xht
-fails-if((OSX||winWidget||Android)&&!styloVsGecko) == css-writing-modes-3/sizing-orthog-vlr-in-htb-020.xht css-writing-modes-3/sizing-orthog-vlr-in-htb-020-ref.xht
+== css-writing-modes-3/sizing-orthog-vlr-in-htb-020.xht css-writing-modes-3/sizing-orthog-vlr-in-htb-020-ref.xht
 fails-if(Android) == css-writing-modes-3/sizing-orthog-vlr-in-htb-021.xht css-writing-modes-3/sizing-orthog-vlr-in-htb-015-ref.xht
 == css-writing-modes-3/sizing-orthog-vlr-in-htb-022.xht css-writing-modes-3/sizing-orthog-vlr-in-htb-022-ref.xht
 == css-writing-modes-3/sizing-orthog-vlr-in-htb-023.xht css-writing-modes-3/sizing-orthog-vlr-in-htb-023-ref.xht
@@ -1016,7 +1014,7 @@ fails-if(Android) == css-writing-modes-3/sizing-orthog-vrl-in-htb-003.xht css-wr
 == css-writing-modes-3/sizing-orthog-vrl-in-htb-004.xht css-writing-modes-3/sizing-orthog-vrl-in-htb-004-ref.xht
 == css-writing-modes-3/sizing-orthog-vrl-in-htb-006.xht css-writing-modes-3/sizing-orthog-vrl-in-htb-006-ref.xht
 == css-writing-modes-3/sizing-orthog-vrl-in-htb-007.xht css-writing-modes-3/sizing-orthog-vrl-in-htb-007-ref.xht
-fails-if((OSX||winWidget||Android)&&!styloVsGecko) == css-writing-modes-3/sizing-orthog-vrl-in-htb-008.xht css-writing-modes-3/sizing-orthog-vrl-in-htb-008-ref.xht
+== css-writing-modes-3/sizing-orthog-vrl-in-htb-008.xht css-writing-modes-3/sizing-orthog-vrl-in-htb-008-ref.xht
 fails-if(Android) == css-writing-modes-3/sizing-orthog-vrl-in-htb-009.xht css-writing-modes-3/sizing-orthog-vrl-in-htb-009-ref.xht
 == css-writing-modes-3/sizing-orthog-vrl-in-htb-010.xht css-writing-modes-3/sizing-orthog-vrl-in-htb-010-ref.xht
 == css-writing-modes-3/sizing-orthog-vrl-in-htb-011.xht css-writing-modes-3/sizing-orthog-vrl-in-htb-011-ref.xht
@@ -1026,7 +1024,7 @@ fails-if(Android) == css-writing-modes-3/sizing-orthog-vrl-in-htb-015.xht css-wr
 == css-writing-modes-3/sizing-orthog-vrl-in-htb-016.xht css-writing-modes-3/sizing-orthog-vrl-in-htb-016-ref.xht
 == css-writing-modes-3/sizing-orthog-vrl-in-htb-018.xht css-writing-modes-3/sizing-orthog-vrl-in-htb-018-ref.xht
 == css-writing-modes-3/sizing-orthog-vrl-in-htb-019.xht css-writing-modes-3/sizing-orthog-vrl-in-htb-019-ref.xht
-fails-if((OSX||winWidget||Android)&&!styloVsGecko) == css-writing-modes-3/sizing-orthog-vrl-in-htb-020.xht css-writing-modes-3/sizing-orthog-vrl-in-htb-020-ref.xht
+== css-writing-modes-3/sizing-orthog-vrl-in-htb-020.xht css-writing-modes-3/sizing-orthog-vrl-in-htb-020-ref.xht
 fails-if(Android) == css-writing-modes-3/sizing-orthog-vrl-in-htb-021.xht css-writing-modes-3/sizing-orthog-vrl-in-htb-015-ref.xht
 == css-writing-modes-3/sizing-orthog-vrl-in-htb-022.xht css-writing-modes-3/sizing-orthog-vrl-in-htb-022-ref.xht
 == css-writing-modes-3/sizing-orthog-vrl-in-htb-023.xht css-writing-modes-3/sizing-orthog-vrl-in-htb-023-ref.xht

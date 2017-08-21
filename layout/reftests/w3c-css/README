@@ -2,7 +2,7 @@ W3C CSS Test Suite Directory
 ----------------------------
 
 This directory is for tests that are sync'ed with the official
-W3C CSS test suites at http://test.csswg.org/.
+W3C CSS test suites at https://github.com/w3c/web-platform-tests/.
  
 submitted/ is for tests that are to be submitted to W3C.
 This directory is sync'ed automatically with the
@@ -14,10 +14,12 @@ This directory is sync'ed semi-automatically with the approved/
 directory in the CSSWG repository. The master copy is CSSWG's.
 Don't make changes here; they'll be overwritten by the next sync.
 
-import-tests.py automatically imports tests from a cloned hg repository
-of csswg tests, located at hg.csswg.org/test. Note that this will
-remove everything in the received/ directory when run, so don't
-store anything in there.
+import-tests.py automatically imports a selection of CSSWG tests
+from a clone of the https://github.com/w3c/web-platform-tests Git
+repository.
+
+Note that this will remove everything in the received/ directory when run,
+so don't store anything in there.
 
 failures.list is a list of reftests that fail in mozilla's
 implementation of a given css module. Since the tests in are
