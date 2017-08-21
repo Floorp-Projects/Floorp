@@ -1351,37 +1351,37 @@ nsHttpHandler::PrefsChanged(nsIPrefBranch *prefs, const char *pref)
     }
 
     if (PREF_CHANGED(HTTP_PREF("accept.default"))) {
-        nsXPIDLCString accept;
+        nsCString accept;
         rv = prefs->GetCharPref(HTTP_PREF("accept.default"),
                                   getter_Copies(accept));
         if (NS_SUCCEEDED(rv)) {
-            rv = SetAccept(accept);
+            rv = SetAccept(accept.get());
             MOZ_ASSERT(NS_SUCCEEDED(rv));
         }
     }
 
     if (PREF_CHANGED(HTTP_PREF("accept-encoding"))) {
-        nsXPIDLCString acceptEncodings;
+        nsCString acceptEncodings;
         rv = prefs->GetCharPref(HTTP_PREF("accept-encoding"),
                                   getter_Copies(acceptEncodings));
         if (NS_SUCCEEDED(rv)) {
-            rv = SetAcceptEncodings(acceptEncodings, false);
+            rv = SetAcceptEncodings(acceptEncodings.get(), false);
             MOZ_ASSERT(NS_SUCCEEDED(rv));
         }
     }
 
     if (PREF_CHANGED(HTTP_PREF("accept-encoding.secure"))) {
-        nsXPIDLCString acceptEncodings;
+        nsCString acceptEncodings;
         rv = prefs->GetCharPref(HTTP_PREF("accept-encoding.secure"),
                                   getter_Copies(acceptEncodings));
         if (NS_SUCCEEDED(rv)) {
-            rv = SetAcceptEncodings(acceptEncodings, true);
+            rv = SetAcceptEncodings(acceptEncodings.get(), true);
             MOZ_ASSERT(NS_SUCCEEDED(rv));
         }
     }
 
     if (PREF_CHANGED(HTTP_PREF("default-socket-type"))) {
-        nsXPIDLCString sval;
+        nsCString sval;
         rv = prefs->GetCharPref(HTTP_PREF("default-socket-type"),
                                 getter_Copies(sval));
         if (NS_SUCCEEDED(rv)) {
@@ -1393,7 +1393,7 @@ nsHttpHandler::PrefsChanged(nsIPrefBranch *prefs, const char *pref)
                         do_GetService(NS_SOCKETPROVIDERSERVICE_CONTRACTID));
                 if (sps) {
                     nsCOMPtr<nsISocketProvider> sp;
-                    rv = sps->GetSocketProvider(sval, getter_AddRefs(sp));
+                    rv = sps->GetSocketProvider(sval.get(), getter_AddRefs(sp));
                     if (NS_SUCCEEDED(rv)) {
                         // OK, this looks like a valid socket provider.
                         mDefaultSocketType.Assign(sval);
