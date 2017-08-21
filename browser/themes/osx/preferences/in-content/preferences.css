@@ -2,12 +2,7 @@
    - License, v. 2.0. If a copy of the MPL was not distributed with this file,
    - You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-%include ../../../shared/incontentprefs-old/preferences.inc.css
-
-prefpane .groupbox-title {
-  background: none;
-  margin-bottom: 0;
-}
+%include ../../../shared/incontentprefs/preferences.inc.css
 
 .actionsMenu > .menulist-label-box > .menulist-icon {
   margin-top: 2px;
@@ -19,16 +14,10 @@ prefpane .groupbox-title {
   padding-inline-start: 3px;
 }
 
-#fxaProfileImage {
-  -moz-user-focus: normal;
-}
-
-textbox + button {
-  margin-inline-start: -4px;
-}
-
 filefield + button {
   margin-inline-start: -8px;
+  margin-top: 4px;
+  margin-bottom: 4px;
 }
 
 #popupPolicyRow {
@@ -37,17 +26,4 @@ filefield + button {
   margin-bottom: 0 !important;
   padding-bottom: 0 !important;
   border-bottom: none;
-}
-
-#advancedPrefs {
-  margin-right: 0; /*override margin from normal preferences.css */
-  margin-left: 0;
-}
-
-/**
- * Dialog
- */
-
-#dialogTitle {
-  font-size: 1.1em;
 }
