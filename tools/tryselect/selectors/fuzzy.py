@@ -196,7 +196,8 @@ def format_header():
     return FZF_HEADER.format(shortcuts=', '.join(shortcuts), t=terminal)
 
 
-def run_fuzzy_try(update=False, query=None, templates=None, full=False, parameters=None, **kwargs):
+def run_fuzzy_try(update=False, query=None, templates=None, full=False, parameters=None,
+                  push=True, **kwargs):
     fzf = fzf_bootstrap(update)
 
     if not fzf:
@@ -204,7 +205,7 @@ def run_fuzzy_try(update=False, query=None, templates=None, full=False, paramete
         return
 
     vcs = VCSHelper.create()
-    vcs.check_working_directory()
+    vcs.check_working_directory(push)
 
     all_tasks = generate_tasks(parameters, full)
 
@@ -230,4 +231,4 @@ def run_fuzzy_try(update=False, query=None, templates=None, full=False, paramete
         return
 
     msg = "Pushed via 'mach try fuzzy', see diff for scheduled tasks"
-    return vcs.push_to_try(msg, selected, templates)
+    return vcs.push_to_try(msg, selected, templates, push=push)

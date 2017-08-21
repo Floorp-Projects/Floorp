@@ -11,7 +11,15 @@ from .templates import all_templates
 
 class BaseTryParser(ArgumentParser):
     name = 'try'
-    common_arguments = []
+    common_arguments = [
+        [['--no-push'],
+         {'dest': 'push',
+          'action': 'store_false',
+          'help': 'Do not push to try as a result of running this command (if '
+                  'specified this command will only print calculated try '
+                  'syntax and selection info).',
+          }],
+    ]
     arguments = []
     templates = []
 
