@@ -73,7 +73,8 @@
     // Create node.
     test(t => {
       var s = document.createElement('svg');
-      var innerScript = document.createElement('script');
+      var innerScript = document.createElementNS('http://www.w3.org/2000/svg',
+                                                 'script');
       innerScript.innerText = script.innerText;
       innerScript.nonce = 'abc';
       s.appendChild(innerScript);
