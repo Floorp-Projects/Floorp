@@ -50,3 +50,6 @@ The following is a list of conditions and expected behaviours for the ``update``
   - *for users who did not see the privacy policy*, the ``update`` ping is saved to disk and after the policy is displayed.
 - **If the download of the update retries or other fallback occur**: the ``update`` ping will not be generated
   multiple times, but only one time once the download is complete and verified.
+- **If automatic updates are disabled**: when the user forces a manual update, no ``update`` ping will be generated.
+- **If updates fail to apply**: in some cases the client will download the same update blob and generate a new ``update`` ping for the same target version and build id, with a different document id.
+- **If the build update channel contains the CCK keyword**, the update ping will not report it but rather report a vanilla channel name (e.g. ``mozilla-cck-test-beta`` gets reported as ``beta``).
