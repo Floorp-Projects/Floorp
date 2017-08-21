@@ -50,6 +50,8 @@
   overflow-y: auto;
   overflow-x: hidden;
   flex: auto;
+  border-top: 1px solid var(--theme-splitter-color);
+  margin-top: -1px;
 }
 
 .row-striped {
