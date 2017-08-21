@@ -2578,21 +2578,12 @@ NS_ShouldSecureUpgrade(nsIURI* aURI,
   NS_ENSURE_SUCCESS(rv, rv);
 
   if (!isHttps) {
-    // If any of the documents up the chain to the root doucment makes use of
-    // the CSP directive 'upgrade-insecure-requests', then it's time to fulfill
-    // the promise to CSP and mixed content blocking to upgrade the channel
-    // from http to https.
     if (aLoadInfo) {
-      // Please note that cross origin top level navigations are not subject
-      // to upgrade-insecure-requests, see:
-      // http://www.w3.org/TR/upgrade-insecure-requests/#examples
-      // Compare the principal we are navigating to (aChannelResultPrincipal)
-      // with the referring/triggering Principal.
-      bool crossOriginNavigation =
-        (aLoadInfo->GetExternalContentPolicyType() == nsIContentPolicy::TYPE_DOCUMENT) &&
-        (!aChannelResultPrincipal->Equals(aLoadInfo->TriggeringPrincipal()));
-
-      if (aLoadInfo->GetUpgradeInsecureRequests() && !crossOriginNavigation) {
+      // If any of the documents up the chain to the root document makes use of
+      // the CSP directive 'upgrade-insecure-requests', then it's time to fulfill
+      // the promise to CSP and mixed content blocking to upgrade the channel
+      // from http to https.
+      if (aLoadInfo->GetUpgradeInsecureRequests()) {
         // let's log a message to the console that we are upgrading a request
         nsAutoCString scheme;
         aURI->GetScheme(scheme);
