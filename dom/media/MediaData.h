@@ -17,9 +17,7 @@
 #include "mozilla/UniquePtr.h"
 #include "mozilla/UniquePtrExtensions.h"
 #include "mozilla/gfx/Rect.h"
-#include "nsIMemoryReporter.h"
-#include "nsRect.h"
-#include "nsSize.h"
+#include "nsString.h"
 #include "nsTArray.h"
 
 namespace mozilla {
