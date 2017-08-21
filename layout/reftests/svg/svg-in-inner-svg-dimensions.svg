@@ -1,0 +1,11 @@
+<svg xmlns="http://www.w3.org/2000/svg">
+  <title>Test that percentage width/height for inner-&lt;svg&gt; resolves against the nearest &lt;svg&gt; ancestor, not the outer-&lt;svg&gt;</title>
+  <rect width="100%" height="100%" fill="lime"/>
+  <!-- This red rect should be covered by the lime one below -->
+  <rect x="50" y="50" width="50" height="50" fill="red"/>
+  <svg width="100" height="100">
+    <svg viewBox="0 0 100 100">
+      <rect x="50" y="50" width="50" height="50" fill="lime"/>
+    </svg>
+  </svg>
+</svg>
