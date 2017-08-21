@@ -936,7 +936,7 @@ function createATouch(el, corx, cory, touchId) {
  *      each of which represents an action sequence.
  */
 async function performActions(msg) {
-  let chain = action.Chain.fromJson(msg.actions);
+  let chain = action.Chain.fromJSON(msg.actions);
   await action.dispatch(chain, seenEls, curContainer.frame);
 }
 
