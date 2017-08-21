@@ -18,6 +18,8 @@ jobs:
     symbol: I(dt16t)
   desktop-build:
     symbol: I(db)
+  valgrind-build:
+    symbol: I(vb)
   lint:
     symbol: I(lnt)
   android-gradle-build:
