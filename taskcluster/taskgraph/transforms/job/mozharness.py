@@ -175,11 +175,10 @@ def mozharness_on_docker_worker_setup(config, job, taskdesc):
         '--vcs-checkout', '/home/worker/workspace/build/src',
         '--tools-checkout', '/home/worker/workspace/build/tools',
         '--',
+        '/home/worker/workspace/build/src/{}'.format(
+            run.get('job-script', 'taskcluster/scripts/builder/build-linux.sh')
+        ),
     ]
-    command.append("/home/worker/workspace/build/src/{}".format(
-        run.get('job-script',
-                "taskcluster/scripts/builder/build-linux.sh"
-                )))
 
     worker['command'] = command
 
