@@ -260,6 +260,11 @@ CompositorBridgeParent::Setup()
 
   MOZ_ASSERT(!sCompositorMap);
   sCompositorMap = new CompositorMap;
+
+  gfxPrefs::SetWebRenderProfilerEnabledChangeCallback(
+    [](const GfxPrefValue& aValue) -> void {
+      CompositorBridgeParent::SetWebRenderProfilerEnabled(aValue.get_bool());
+  });
 }
 
 void
@@ -268,6 +273,7 @@ CompositorBridgeParent::Shutdown()
   MOZ_ASSERT(sCompositorMap);
   MOZ_ASSERT(sCompositorMap->empty());
   sCompositorMap = nullptr;
+  gfxPrefs::SetWebRenderProfilerEnabledChangeCallback(nullptr);
 }
 
 void
@@ -1695,7 +1701,8 @@ CompositorBridgeParent::AllocPWebRenderBridgeParent(const wr::PipelineId& aPipel
 
   MOZ_ASSERT(mWidget);
   RefPtr<widget::CompositorWidget> widget = mWidget;
-  RefPtr<wr::WebRenderAPI> api = wr::WebRenderAPI::Create(this, Move(widget), aSize);
+  RefPtr<wr::WebRenderAPI> api = wr::WebRenderAPI::Create(
+    gfxPrefs::WebRenderProfilerEnabled(), this, Move(widget), aSize);
   if (!api) {
     mWrBridge = WebRenderBridgeParent::CreateDestroyed();
     mWrBridge.get()->AddRef(); // IPDL reference
@@ -1750,6 +1757,18 @@ Maybe<TimeStamp>
 CompositorBridgeParent::GetTestingTimeStamp() const
 {
   return mIsTesting ? Some(mTestTime) : Nothing();
+}
+
+void
+CompositorBridgeParent::SetWebRenderProfilerEnabled(bool aEnabled)
+{
+  MonitorAutoLock lock(*sIndirectLayerTreesLock);
+  for (auto it = sIndirectLayerTrees.begin(); it != sIndirectLayerTrees.end(); it++) {
+    LayerTreeState* state = &it->second;
+    if (state->mWrBridge) {
+      state->mWrBridge->SetWebRenderProfilerEnabled(aEnabled);
+    }
+  }
 }
 
 void

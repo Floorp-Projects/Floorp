@@ -598,27 +598,6 @@ void RecordingPrefChanged(const char *aPrefName, void *aClosure)
   }
 }
 
-#define WR_DEBUG_PREF "gfx.webrender.debug"
-
-void
-WebRenderDebugPrefChangeCallback(const char* aPrefName, void*)
-{
-  int32_t flags = 0;
-  // TODO: It would be nice to get the bit patterns directly from the rust code.
-  if (Preferences::GetBool(WR_DEBUG_PREF".profiler", false)) {
-    flags |= (1 << 0);
-  }
-  if (Preferences::GetBool(WR_DEBUG_PREF".texture-cache", false)) {
-    flags |= (1 << 1);
-  }
-  if (Preferences::GetBool(WR_DEBUG_PREF".render-targets", false)) {
-    flags |= (1 << 2);
-  }
-
-  gfx::gfxVars::SetWebRenderDebugFlags(flags);
-}
-
-
 #if defined(USE_SKIA)
 static uint32_t GetSkiaGlyphCacheSize()
 {
@@ -1060,8 +1039,6 @@ gfxPlatform::ShutdownLayersIPC()
         layers::CompositorThreadHolder::Shutdown();
         if (gfxVars::UseWebRender()) {
           wr::RenderThread::ShutDown();
-
-          Preferences::UnregisterCallback(WebRenderDebugPrefChangeCallback, WR_DEBUG_PREF);
         }
 
     } else {
@@ -2519,11 +2496,6 @@ gfxPlatform::InitWebRenderConfig()
   if (gfxConfig::IsEnabled(Feature::WEBRENDER)) {
     gfxVars::SetUseWebRender(true);
     reporter.SetSuccessful();
-
-    if (XRE_IsParentProcess()) {
-      Preferences::RegisterPrefixCallbackAndCall(WebRenderDebugPrefChangeCallback,
-                                                 WR_DEBUG_PREF);
-    }
   }
 }
 
