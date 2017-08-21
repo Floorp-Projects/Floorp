@@ -4,7 +4,7 @@
 /*                                                                         */
 /*    FreeType initialization layer (body).                                */
 /*                                                                         */
-/*  Copyright 1996-2017 by                                                 */
+/*  Copyright 1996-2016 by                                                 */
 /*  David Turner, Robert Wilhelm, and Werner Lemberg.                      */
 /*                                                                         */
 /*  This file is part of the FreeType project, and may only be used,       */
@@ -230,10 +230,31 @@
 
 #define MAX_LENGTH  128
 
-  /* documentation is in ftmodapi.h */
+  /*
+   * Set default properties derived from the `FREETYPE_PROPERTIES'
+   * environment variable.
+   *
+   * `FREETYPE_PROPERTIES' has the following syntax form (broken here into
+   * multiple lines for better readability)
+   *
+   *   <optional whitespace>
+   *   <module-name1> ':'
+   *   <property-name1> '=' <property-value1>
+   *   <whitespace>
+   *   <module-name2> ':'
+   *   <property-name2> '=' <property-value2>
+   *   ...
+   *
+   * Example:
+   *
+   *   FREETYPE_PROPERTIES=truetype:interpreter-version=35 \
+   *                       cff:no-stem-darkening=1 \
+   *                       autofitter:warping=1
+   *
+   */
 
-  FT_EXPORT_DEF( void )
-  FT_Set_Default_Properties( FT_Library  library )
+  static void
+  ft_set_default_properties( FT_Library  library )
   {
     const char*  env;
     const char*  p;
@@ -305,8 +326,8 @@
 
 #else
 
-  FT_EXPORT_DEF( void )
-  FT_Set_Default_Properties( FT_Library  library )
+  static void
+  ft_set_default_properties( FT_Library  library )
   {
     FT_UNUSED( library );
   }
@@ -344,7 +365,7 @@
     else
       FT_Add_Default_Modules( *alibrary );
 
-    FT_Set_Default_Properties( *alibrary );
+    ft_set_default_properties( *alibrary );
 
     return error;
   }

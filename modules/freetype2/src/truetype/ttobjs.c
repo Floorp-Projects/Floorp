@@ -4,7 +4,7 @@
 /*                                                                         */
 /*    Objects manager (body).                                              */
 /*                                                                         */
-/*  Copyright 1996-2017 by                                                 */
+/*  Copyright 1996-2016 by                                                 */
 /*  David Turner, Robert Wilhelm, and Werner Lemberg.                      */
 /*                                                                         */
 /*  This file is part of the FreeType project, and may only be used,       */
@@ -147,43 +147,20 @@
   {
 
 #define TRICK_NAMES_MAX_CHARACTERS  19
-#define TRICK_NAMES_COUNT           18
+#define TRICK_NAMES_COUNT            9
 
     static const char trick_names[TRICK_NAMES_COUNT]
                                  [TRICK_NAMES_MAX_CHARACTERS + 1] =
     {
-      /*
-         PostScript names are given in brackets if they differ from the
-         family name.  The version numbers, together with the copyright or
-         release year data, are taken from fonts available to the
-         developers.
-
-         Note that later versions of the fonts might be no longer tricky;
-         for example, `MingLiU' version 7.00 (file `mingliu.ttc' from
-         Windows 7) is an ordinary TTC with non-tricky subfonts.
-       */
-
-      "cpop",               /* dftt-p7.ttf; version 1.00, 1992 [DLJGyShoMedium] */
-      "DFGirl-W6-WIN-BF",   /* dftt-h6.ttf; version 1.00, 1993 */
       "DFKaiSho-SB",        /* dfkaisb.ttf */
       "DFKaiShu",
-      "DFKai-SB",           /* kaiu.ttf; version 3.00, 1998 [DFKaiShu-SB-Estd-BF] */
-      "DLC",                /* dftt-m7.ttf; version 1.00, 1993 [DLCMingBold] */
-                            /* dftt-f5.ttf; version 1.00, 1993 [DLCFongSung] */
-      "DLCHayMedium",       /* dftt-b5.ttf; version 1.00, 1993 */
-      "DLCHayBold",         /* dftt-b7.ttf; version 1.00, 1993 */
-      "DLCKaiMedium",       /* dftt-k5.ttf; version 1.00, 1992 */
-      "DLCLiShu",           /* dftt-l5.ttf; version 1.00, 1992 */
-      "DLCRoundBold",       /* dftt-r7.ttf; version 1.00, 1993 */
+      "DFKai-SB",           /* kaiu.ttf */
       "HuaTianKaiTi?",      /* htkt2.ttf */
       "HuaTianSongTi?",     /* htst3.ttf */
-      "Ming(for ISO10646)", /* hkscsiic.ttf; version 0.12, 2007 [Ming] */
-                            /* iicore.ttf; version 0.07, 2007 [Ming] */
-      "MingLiU",            /* mingliu.ttf */
-                            /* mingliu.ttc; version 3.21, 2001 */
-      "MingMedium",         /* dftt-m5.ttf; version 1.00, 1993 [DLCMingMedium] */
-      "PMingLiU",           /* mingliu.ttc; version 3.21, 2001 */
-      "MingLi43",           /* mingli.ttf; version 1.00, 1992 */
+      "Ming(for ISO10646)", /* hkscsiic.ttf & iicore.ttf */
+      "MingLiU",            /* mingliu.ttf & mingliu.ttc */
+      "PMingLiU",           /* mingliu.ttc */
+      "MingLi43",           /* mingli.ttf */
     };
 
     int  nn;
@@ -265,7 +242,7 @@
   tt_check_trickyness_sfnt_ids( TT_Face  face )
   {
 #define TRICK_SFNT_IDS_PER_FACE   3
-#define TRICK_SFNT_IDS_NUM_FACES  19
+#define TRICK_SFNT_IDS_NUM_FACES  18
 
     static const tt_sfnt_id_rec sfnt_id[TRICK_SFNT_IDS_NUM_FACES]
                                        [TRICK_SFNT_IDS_PER_FACE] = {
@@ -289,7 +266,7 @@
         { 0x5A30CA3BUL, 0x00009063UL }, /* fpgm */
         { 0x13A42602UL, 0x0000007EUL }  /* prep */
       },
-      { /* DFKaiShu, variant */
+      { /* DFKaiShu2 */
         { 0x11E5EAD4UL, 0x00000350UL }, /* cvt  */
         { 0xA6E78C01UL, 0x00008998UL }, /* fpgm */
         { 0x13A42602UL, 0x0000007EUL }  /* prep */
@@ -363,11 +340,6 @@
         { 0x00000000UL, 0x00000000UL }, /* cvt  */
         { 0xF055FC48UL, 0x000001C2UL }, /* fpgm */
         { 0x3900DED3UL, 0x00001E18UL }  /* prep */
-      },
-        { /* MINGLI.TTF, 1992 */
-        { 0x00170003UL, 0x00000060UL }, /* cvt  */
-        { 0xDBB4306EUL, 0x000058AAUL }, /* fpgm */
-        { 0xD643482AUL, 0x00000035UL }  /* prep */
       }
     };
 
@@ -564,7 +536,6 @@
       goto Exit;
 
     /* check that we have a valid TrueType file */
-    FT_TRACE2(( "  " ));
     error = sfnt->init_face( stream, face, face_index, num_params, params );
 
     /* Stream may have changed. */
@@ -692,8 +663,6 @@
                                      named_style->coords );
           if ( error )
             goto Exit;
-
-          tt_apply_mvar( face );
         }
       }
     }
@@ -820,14 +789,14 @@
     exec->pedantic_hinting = pedantic;
 
     {
-      FT_Size_Metrics*  size_metrics = &exec->metrics;
-      TT_Size_Metrics*  tt_metrics   = &exec->tt_metrics;
+      FT_Size_Metrics*  metrics    = &exec->metrics;
+      TT_Size_Metrics*  tt_metrics = &exec->tt_metrics;
 
 
-      size_metrics->x_ppem   = 0;
-      size_metrics->y_ppem   = 0;
-      size_metrics->x_scale  = 0;
-      size_metrics->y_scale  = 0;
+      metrics->x_ppem   = 0;
+      metrics->y_ppem   = 0;
+      metrics->x_scale  = 0;
+      metrics->y_scale  = 0;
 
       tt_metrics->ppem  = 0;
       tt_metrics->scale = 0;
@@ -850,11 +819,6 @@
 
       FT_TRACE4(( "Executing `fpgm' table.\n" ));
       error = face->interpreter( exec );
-#ifdef FT_DEBUG_LEVEL_TRACE
-      if ( error )
-        FT_TRACE4(( "  interpretation failed with error code 0x%x\n",
-                    error ));
-#endif
     }
     else
       error = FT_Err_Ok;
@@ -918,12 +882,8 @@
       TT_Goto_CodeRange( exec, tt_coderange_cvt, 0 );
 
       FT_TRACE4(( "Executing `prep' table.\n" ));
+
       error = face->interpreter( exec );
-#ifdef FT_DEBUG_LEVEL_TRACE
-      if ( error )
-        FT_TRACE4(( "  interpretation failed with error code 0x%x\n",
-                    error ));
-#endif
     }
     else
       error = FT_Err_Ok;
@@ -1042,17 +1002,17 @@
 
     /* Set default metrics */
     {
-      TT_Size_Metrics*  tt_metrics = &size->ttmetrics;
+      TT_Size_Metrics*  metrics = &size->ttmetrics;
 
 
-      tt_metrics->rotated   = FALSE;
-      tt_metrics->stretched = FALSE;
+      metrics->rotated   = FALSE;
+      metrics->stretched = FALSE;
 
       /* set default engine compensation */
-      tt_metrics->compensations[0] = 0;   /* gray     */
-      tt_metrics->compensations[1] = 0;   /* black    */
-      tt_metrics->compensations[2] = 0;   /* white    */
-      tt_metrics->compensations[3] = 0;   /* reserved */
+      metrics->compensations[0] = 0;   /* gray     */
+      metrics->compensations[1] = 0;   /* black    */
+      metrics->compensations[2] = 0;   /* white    */
+      metrics->compensations[3] = 0;   /* reserved */
     }
 
     /* allocate function defs, instruction defs, cvt, and storage area */
@@ -1115,10 +1075,8 @@
 
     if ( size->bytecode_ready < 0 )
       error = tt_size_init_bytecode( (FT_Size)size, pedantic );
-    else
-      error = size->bytecode_ready;
 
-    if ( error )
+    if ( error || size->bytecode_ready )
       goto Exit;
 
     /* rescale CVT when needed */
@@ -1150,8 +1108,6 @@
 
       error = tt_size_run_prep( size, pedantic );
     }
-    else
-      error = size->cvt_ready;
 
   Exit:
     return error;
@@ -1228,32 +1184,26 @@
   /*    have been changed.                                                 */
   /*                                                                       */
   /* <Input>                                                               */
-  /*    size        :: A handle to the target size object.                 */
-  /*                                                                       */
-  /*    only_height :: Only recompute ascender, descender, and height.     */
+  /*    size :: A handle to the target size object.                        */
   /*                                                                       */
   FT_LOCAL_DEF( FT_Error )
-  tt_size_reset( TT_Size  size,
-                 FT_Bool  only_height )
+  tt_size_reset( TT_Size  size )
   {
     TT_Face           face;
-    FT_Size_Metrics*  size_metrics;
+    FT_Error          error = FT_Err_Ok;
+    FT_Size_Metrics*  metrics;
 
-
-    face = (TT_Face)size->root.face;
-
-    /* nothing to do for CFF2 */
-    if ( face->is_cff2 )
-      return FT_Err_Ok;
 
     size->ttmetrics.valid = FALSE;
 
-    size_metrics = &size->hinted_metrics;
+    face = (TT_Face)size->root.face;
+
+    metrics = &size->metrics;
 
     /* copy the result from base layer */
-    *size_metrics = size->root.metrics;
+    *metrics = size->root.metrics;
 
-    if ( size_metrics->x_ppem < 1 || size_metrics->y_ppem < 1 )
+    if ( metrics->x_ppem < 1 || metrics->y_ppem < 1 )
       return FT_THROW( Invalid_PPem );
 
     /* This bit flag, if set, indicates that the ppems must be       */
@@ -1262,62 +1212,48 @@
     /*                                                               */
     if ( face->header.Flags & 8 )
     {
-      /* the TT spec always asks for ROUND, not FLOOR or CEIL */
-      size_metrics->ascender = FT_PIX_ROUND(
-                                 FT_MulFix( face->root.ascender,
-                                            size_metrics->y_scale ) );
-      size_metrics->descender = FT_PIX_ROUND(
-                                 FT_MulFix( face->root.descender,
-                                            size_metrics->y_scale ) );
-      size_metrics->height = FT_PIX_ROUND(
-                               FT_MulFix( face->root.height,
-                                          size_metrics->y_scale ) );
-    }
+      metrics->x_scale = FT_DivFix( metrics->x_ppem << 6,
+                                    face->root.units_per_EM );
+      metrics->y_scale = FT_DivFix( metrics->y_ppem << 6,
+                                    face->root.units_per_EM );
 
-    size->ttmetrics.valid = TRUE;
-
-    if ( only_height )
-      return FT_Err_Ok;
-
-    if ( face->header.Flags & 8 )
-    {
-      /* base scaling values on integer ppem values, */
-      /* as mandated by the TrueType specification   */
-      size_metrics->x_scale = FT_DivFix( size_metrics->x_ppem << 6,
-                                         face->root.units_per_EM );
-      size_metrics->y_scale = FT_DivFix( size_metrics->y_ppem << 6,
-                                         face->root.units_per_EM );
-
-      size_metrics->max_advance = FT_PIX_ROUND(
-                                    FT_MulFix( face->root.max_advance_width,
-                                               size_metrics->x_scale ) );
+      metrics->ascender =
+        FT_PIX_ROUND( FT_MulFix( face->root.ascender, metrics->y_scale ) );
+      metrics->descender =
+        FT_PIX_ROUND( FT_MulFix( face->root.descender, metrics->y_scale ) );
+      metrics->height =
+        FT_PIX_ROUND( FT_MulFix( face->root.height, metrics->y_scale ) );
+      metrics->max_advance =
+        FT_PIX_ROUND( FT_MulFix( face->root.max_advance_width,
+                                 metrics->x_scale ) );
     }
 
     /* compute new transformation */
-    if ( size_metrics->x_ppem >= size_metrics->y_ppem )
+    if ( metrics->x_ppem >= metrics->y_ppem )
     {
-      size->ttmetrics.scale   = size_metrics->x_scale;
-      size->ttmetrics.ppem    = size_metrics->x_ppem;
+      size->ttmetrics.scale   = metrics->x_scale;
+      size->ttmetrics.ppem    = metrics->x_ppem;
       size->ttmetrics.x_ratio = 0x10000L;
-      size->ttmetrics.y_ratio = FT_DivFix( size_metrics->y_ppem,
-                                           size_metrics->x_ppem );
+      size->ttmetrics.y_ratio = FT_DivFix( metrics->y_ppem,
+                                           metrics->x_ppem );
     }
     else
     {
-      size->ttmetrics.scale   = size_metrics->y_scale;
-      size->ttmetrics.ppem    = size_metrics->y_ppem;
-      size->ttmetrics.x_ratio = FT_DivFix( size_metrics->x_ppem,
-                                           size_metrics->y_ppem );
+      size->ttmetrics.scale   = metrics->y_scale;
+      size->ttmetrics.ppem    = metrics->y_ppem;
+      size->ttmetrics.x_ratio = FT_DivFix( metrics->x_ppem,
+                                           metrics->y_ppem );
       size->ttmetrics.y_ratio = 0x10000L;
     }
-
-    size->metrics = size_metrics;
 
 #ifdef TT_USE_BYTECODE_INTERPRETER
     size->cvt_ready = -1;
 #endif /* TT_USE_BYTECODE_INTERPRETER */
 
-    return FT_Err_Ok;
+    if ( !error )
+      size->ttmetrics.valid = TRUE;
+
+    return error;
   }
 
 

@@ -60,6 +60,12 @@
 #define FT_COMPONENT  trace_cf2interp
 
 
+  /* some operators are not implemented yet */
+#define CF2_FIXME  FT_TRACE4(( "cf2_interpT2CharString:"            \
+                               " operator not implemented yet\n" ))
+
+
+
   FT_LOCAL_DEF( void )
   cf2_hintmask_init( CF2_HintMask  hintmask,
                      FT_Error*     error )
@@ -333,14 +339,14 @@
               FT_Bool         doConditionalLastRead )
   {
     CF2_Fixed  vals[14];
-    CF2_UInt   idx;
+    CF2_UInt   index;
     FT_Bool    isHFlex;
     CF2_Int    top, i, j;
 
 
     vals[0] = *curX;
     vals[1] = *curY;
-    idx     = 0;
+    index   = 0;
     isHFlex = FT_BOOL( readFromStack[9] == FALSE );
     top     = isHFlex ? 9 : 10;
 
@@ -348,7 +354,7 @@
     {
       vals[i + 2] = vals[i];
       if ( readFromStack[i] )
-        vals[i + 2] += cf2_stack_getReal( opStack, idx++ );
+        vals[i + 2] += cf2_stack_getReal( opStack, index++ );
     }
 
     if ( isHFlex )
@@ -358,7 +364,7 @@
     {
       FT_Bool    lastIsX = (FT_Bool)( cf2_fixedAbs( vals[10] - *curX ) >
                                         cf2_fixedAbs( vals[11] - *curY ) );
-      CF2_Fixed  lastVal = cf2_stack_getReal( opStack, idx );
+      CF2_Fixed  lastVal = cf2_stack_getReal( opStack, index );
 
 
       if ( lastIsX )
@@ -375,12 +381,12 @@
     else
     {
       if ( readFromStack[10] )
-        vals[12] = vals[10] + cf2_stack_getReal( opStack, idx++ );
+        vals[12] = vals[10] + cf2_stack_getReal( opStack, index++ );
       else
         vals[12] = *curX;
 
       if ( readFromStack[11] )
-        vals[13] = vals[11] + cf2_stack_getReal( opStack, idx );
+        vals[13] = vals[11] + cf2_stack_getReal( opStack, index );
       else
         vals[13] = *curY;
     }
@@ -775,16 +781,16 @@
 
       case cf2_cmdRLINETO:
         {
-          CF2_UInt  idx;
+          CF2_UInt  index;
           CF2_UInt  count = cf2_stack_count( opStack );
 
 
           FT_TRACE4(( " rlineto\n" ));
 
-          for ( idx = 0; idx < count; idx += 2 )
+          for ( index = 0; index < count; index += 2 )
           {
-            curX += cf2_stack_getReal( opStack, idx + 0 );
-            curY += cf2_stack_getReal( opStack, idx + 1 );
+            curX += cf2_stack_getReal( opStack, index + 0 );
+            curY += cf2_stack_getReal( opStack, index + 1 );
 
             cf2_glyphpath_lineTo( &glyphPath, curX, curY );
           }
@@ -796,7 +802,7 @@
       case cf2_cmdHLINETO:
       case cf2_cmdVLINETO:
         {
-          CF2_UInt  idx;
+          CF2_UInt  index;
           CF2_UInt  count = cf2_stack_count( opStack );
 
           FT_Bool  isX = FT_BOOL( op1 == cf2_cmdHLINETO );
@@ -804,9 +810,9 @@
 
           FT_TRACE4(( isX ? " hlineto\n" : " vlineto\n" ));
 
-          for ( idx = 0; idx < count; idx++ )
+          for ( index = 0; index < count; index++ )
           {
-            CF2_Fixed  v = cf2_stack_getReal( opStack, idx );
+            CF2_Fixed  v = cf2_stack_getReal( opStack, index );
 
 
             if ( isX )
@@ -827,33 +833,33 @@
       case cf2_cmdRRCURVETO:
         {
           CF2_UInt  count = cf2_stack_count( opStack );
-          CF2_UInt  idx   = 0;
+          CF2_UInt  index = 0;
 
 
           FT_TRACE4(( op1 == cf2_cmdRCURVELINE ? " rcurveline\n"
                                                : " rrcurveto\n" ));
 
-          while ( idx + 6 <= count )
+          while ( index + 6 <= count )
           {
-            CF2_Fixed  x1 = cf2_stack_getReal( opStack, idx + 0 ) + curX;
-            CF2_Fixed  y1 = cf2_stack_getReal( opStack, idx + 1 ) + curY;
-            CF2_Fixed  x2 = cf2_stack_getReal( opStack, idx + 2 ) + x1;
-            CF2_Fixed  y2 = cf2_stack_getReal( opStack, idx + 3 ) + y1;
-            CF2_Fixed  x3 = cf2_stack_getReal( opStack, idx + 4 ) + x2;
-            CF2_Fixed  y3 = cf2_stack_getReal( opStack, idx + 5 ) + y2;
+            CF2_Fixed  x1 = cf2_stack_getReal( opStack, index + 0 ) + curX;
+            CF2_Fixed  y1 = cf2_stack_getReal( opStack, index + 1 ) + curY;
+            CF2_Fixed  x2 = cf2_stack_getReal( opStack, index + 2 ) + x1;
+            CF2_Fixed  y2 = cf2_stack_getReal( opStack, index + 3 ) + y1;
+            CF2_Fixed  x3 = cf2_stack_getReal( opStack, index + 4 ) + x2;
+            CF2_Fixed  y3 = cf2_stack_getReal( opStack, index + 5 ) + y2;
 
 
             cf2_glyphpath_curveTo( &glyphPath, x1, y1, x2, y2, x3, y3 );
 
-            curX  = x3;
-            curY  = y3;
-            idx  += 6;
+            curX   = x3;
+            curY   = y3;
+            index += 6;
           }
 
           if ( op1 == cf2_cmdRCURVELINE )
           {
-            curX += cf2_stack_getReal( opStack, idx + 0 );
-            curY += cf2_stack_getReal( opStack, idx + 1 );
+            curX += cf2_stack_getReal( opStack, index + 0 );
+            curY += cf2_stack_getReal( opStack, index + 1 );
 
             cf2_glyphpath_lineTo( &glyphPath, curX, curY );
           }
@@ -1262,23 +1268,10 @@
                   continue; /* do not clear the stack */
 
                 case cf2_escRANDOM: /* in spec */
-                  {
-                    CF2_F16Dot16  r;
+                  FT_TRACE4(( " random\n" ));
 
-
-                    FT_TRACE4(( " random\n" ));
-
-                    /* only use the lower 16 bits of `random'  */
-                    /* to generate a number in the range (0;1] */
-                    r = (CF2_F16Dot16)
-                          ( ( decoder->current_subfont->random & 0xFFFF ) + 1 );
-
-                    decoder->current_subfont->random =
-                      cff_random( decoder->current_subfont->random );
-
-                    cf2_stack_pushFixed( opStack, r );
-                  }
-                  continue; /* do not clear the stack */
+                  CF2_FIXME;
+                  break;
 
                 case cf2_escMUL:
                   {
@@ -1600,35 +1593,35 @@
       case cf2_cmdRLINECURVE:
         {
           CF2_UInt  count = cf2_stack_count( opStack );
-          CF2_UInt  idx   = 0;
+          CF2_UInt  index = 0;
 
 
           FT_TRACE4(( " rlinecurve\n" ));
 
-          while ( idx + 6 < count )
+          while ( index + 6 < count )
           {
-            curX += cf2_stack_getReal( opStack, idx + 0 );
-            curY += cf2_stack_getReal( opStack, idx + 1 );
+            curX += cf2_stack_getReal( opStack, index + 0 );
+            curY += cf2_stack_getReal( opStack, index + 1 );
 
             cf2_glyphpath_lineTo( &glyphPath, curX, curY );
-            idx += 2;
+            index += 2;
           }
 
-          while ( idx < count )
+          while ( index < count )
           {
-            CF2_Fixed  x1 = cf2_stack_getReal( opStack, idx + 0 ) + curX;
-            CF2_Fixed  y1 = cf2_stack_getReal( opStack, idx + 1 ) + curY;
-            CF2_Fixed  x2 = cf2_stack_getReal( opStack, idx + 2 ) + x1;
-            CF2_Fixed  y2 = cf2_stack_getReal( opStack, idx + 3 ) + y1;
-            CF2_Fixed  x3 = cf2_stack_getReal( opStack, idx + 4 ) + x2;
-            CF2_Fixed  y3 = cf2_stack_getReal( opStack, idx + 5 ) + y2;
+            CF2_Fixed  x1 = cf2_stack_getReal( opStack, index + 0 ) + curX;
+            CF2_Fixed  y1 = cf2_stack_getReal( opStack, index + 1 ) + curY;
+            CF2_Fixed  x2 = cf2_stack_getReal( opStack, index + 2 ) + x1;
+            CF2_Fixed  y2 = cf2_stack_getReal( opStack, index + 3 ) + y1;
+            CF2_Fixed  x3 = cf2_stack_getReal( opStack, index + 4 ) + x2;
+            CF2_Fixed  y3 = cf2_stack_getReal( opStack, index + 5 ) + y2;
 
 
             cf2_glyphpath_curveTo( &glyphPath, x1, y1, x2, y2, x3, y3 );
 
-            curX  = x3;
-            curY  = y3;
-            idx  += 6;
+            curX   = x3;
+            curY   = y3;
+            index += 6;
           }
 
           cf2_stack_clear( opStack );
@@ -1638,42 +1631,42 @@
       case cf2_cmdVVCURVETO:
         {
           CF2_UInt  count, count1 = cf2_stack_count( opStack );
-          CF2_UInt  idx = 0;
+          CF2_UInt  index = 0;
 
 
           /* if `cf2_stack_count' isn't of the form 4n or 4n+1, */
           /* we enforce it by clearing the second bit           */
           /* (and sorting the stack indexing to suit)           */
-          count = count1 & ~2U;
-          idx  += count1 - count;
+          count  = count1 & ~2U;
+          index += count1 - count;
 
           FT_TRACE4(( " vvcurveto\n" ));
 
-          while ( idx < count )
+          while ( index < count )
           {
             CF2_Fixed  x1, y1, x2, y2, x3, y3;
 
 
-            if ( ( count - idx ) & 1 )
+            if ( ( count - index ) & 1 )
             {
-              x1 = cf2_stack_getReal( opStack, idx ) + curX;
+              x1 = cf2_stack_getReal( opStack, index ) + curX;
 
-              idx++;
+              index++;
             }
             else
               x1 = curX;
 
-            y1 = cf2_stack_getReal( opStack, idx + 0 ) + curY;
-            x2 = cf2_stack_getReal( opStack, idx + 1 ) + x1;
-            y2 = cf2_stack_getReal( opStack, idx + 2 ) + y1;
+            y1 = cf2_stack_getReal( opStack, index + 0 ) + curY;
+            x2 = cf2_stack_getReal( opStack, index + 1 ) + x1;
+            y2 = cf2_stack_getReal( opStack, index + 2 ) + y1;
             x3 = x2;
-            y3 = cf2_stack_getReal( opStack, idx + 3 ) + y2;
+            y3 = cf2_stack_getReal( opStack, index + 3 ) + y2;
 
             cf2_glyphpath_curveTo( &glyphPath, x1, y1, x2, y2, x3, y3 );
 
-            curX  = x3;
-            curY  = y3;
-            idx  += 4;
+            curX   = x3;
+            curY   = y3;
+            index += 4;
           }
 
           cf2_stack_clear( opStack );
@@ -1683,42 +1676,42 @@
       case cf2_cmdHHCURVETO:
         {
           CF2_UInt  count, count1 = cf2_stack_count( opStack );
-          CF2_UInt  idx = 0;
+          CF2_UInt  index = 0;
 
 
           /* if `cf2_stack_count' isn't of the form 4n or 4n+1, */
           /* we enforce it by clearing the second bit           */
           /* (and sorting the stack indexing to suit)           */
-          count = count1 & ~2U;
-          idx  += count1 - count;
+          count  = count1 & ~2U;
+          index += count1 - count;
 
           FT_TRACE4(( " hhcurveto\n" ));
 
-          while ( idx < count )
+          while ( index < count )
           {
             CF2_Fixed  x1, y1, x2, y2, x3, y3;
 
 
-            if ( ( count - idx ) & 1 )
+            if ( ( count - index ) & 1 )
             {
-              y1 = cf2_stack_getReal( opStack, idx ) + curY;
+              y1 = cf2_stack_getReal( opStack, index ) + curY;
 
-              idx++;
+              index++;
             }
             else
               y1 = curY;
 
-            x1 = cf2_stack_getReal( opStack, idx + 0 ) + curX;
-            x2 = cf2_stack_getReal( opStack, idx + 1 ) + x1;
-            y2 = cf2_stack_getReal( opStack, idx + 2 ) + y1;
-            x3 = cf2_stack_getReal( opStack, idx + 3 ) + x2;
+            x1 = cf2_stack_getReal( opStack, index + 0 ) + curX;
+            x2 = cf2_stack_getReal( opStack, index + 1 ) + x1;
+            y2 = cf2_stack_getReal( opStack, index + 2 ) + y1;
+            x3 = cf2_stack_getReal( opStack, index + 3 ) + x2;
             y3 = y2;
 
             cf2_glyphpath_curveTo( &glyphPath, x1, y1, x2, y2, x3, y3 );
 
-            curX  = x3;
-            curY  = y3;
-            idx  += 4;
+            curX   = x3;
+            curY   = y3;
+            index += 4;
           }
 
           cf2_stack_clear( opStack );
@@ -1729,7 +1722,7 @@
       case cf2_cmdHVCURVETO:
         {
           CF2_UInt  count, count1 = cf2_stack_count( opStack );
-          CF2_UInt  idx = 0;
+          CF2_UInt  index = 0;
 
           FT_Bool  alternate = FT_BOOL( op1 == cf2_cmdHVCURVETO );
 
@@ -1738,29 +1731,29 @@
           /* 8n+4, or 8n+5, we enforce it by clearing the     */
           /* second bit                                       */
           /* (and sorting the stack indexing to suit)         */
-          count = count1 & ~2U;
-          idx  += count1 - count;
+          count  = count1 & ~2U;
+          index += count1 - count;
 
           FT_TRACE4(( alternate ? " hvcurveto\n" : " vhcurveto\n" ));
 
-          while ( idx < count )
+          while ( index < count )
           {
             CF2_Fixed x1, x2, x3, y1, y2, y3;
 
 
             if ( alternate )
             {
-              x1 = cf2_stack_getReal( opStack, idx + 0 ) + curX;
+              x1 = cf2_stack_getReal( opStack, index + 0 ) + curX;
               y1 = curY;
-              x2 = cf2_stack_getReal( opStack, idx + 1 ) + x1;
-              y2 = cf2_stack_getReal( opStack, idx + 2 ) + y1;
-              y3 = cf2_stack_getReal( opStack, idx + 3 ) + y2;
+              x2 = cf2_stack_getReal( opStack, index + 1 ) + x1;
+              y2 = cf2_stack_getReal( opStack, index + 2 ) + y1;
+              y3 = cf2_stack_getReal( opStack, index + 3 ) + y2;
 
-              if ( count - idx == 5 )
+              if ( count - index == 5 )
               {
-                x3 = cf2_stack_getReal( opStack, idx + 4 ) + x2;
+                x3 = cf2_stack_getReal( opStack, index + 4 ) + x2;
 
-                idx++;
+                index++;
               }
               else
                 x3 = x2;
@@ -1770,16 +1763,16 @@
             else
             {
               x1 = curX;
-              y1 = cf2_stack_getReal( opStack, idx + 0 ) + curY;
-              x2 = cf2_stack_getReal( opStack, idx + 1 ) + x1;
-              y2 = cf2_stack_getReal( opStack, idx + 2 ) + y1;
-              x3 = cf2_stack_getReal( opStack, idx + 3 ) + x2;
+              y1 = cf2_stack_getReal( opStack, index + 0 ) + curY;
+              x2 = cf2_stack_getReal( opStack, index + 1 ) + x1;
+              y2 = cf2_stack_getReal( opStack, index + 2 ) + y1;
+              x3 = cf2_stack_getReal( opStack, index + 3 ) + x2;
 
-              if ( count - idx == 5 )
+              if ( count - index == 5 )
               {
-                y3 = cf2_stack_getReal( opStack, idx + 4 ) + y2;
+                y3 = cf2_stack_getReal( opStack, index + 4 ) + y2;
 
-                idx++;
+                index++;
               }
               else
                 y3 = y2;
@@ -1789,9 +1782,9 @@
 
             cf2_glyphpath_curveTo( &glyphPath, x1, y1, x2, y2, x3, y3 );
 
-            curX  = x3;
-            curY  = y3;
-            idx  += 4;
+            curX   = x3;
+            curY   = y3;
+            index += 4;
           }
 
           cf2_stack_clear( opStack );

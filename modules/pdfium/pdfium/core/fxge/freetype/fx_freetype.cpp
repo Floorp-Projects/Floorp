@@ -6,10 +6,6 @@
 
 #include "core/fxge/fx_freetype.h"
 
-/* In Freetype 2.8, the function ft_get_adobe_glyph_index (used below) will
-   not be defined by pstables.h unless this #define is set. */
-#define DEFINE_PS_TABLES
-
 #include "psnames/pstables.h"
 
 static int xyq_search_node(char* glyph_name,
