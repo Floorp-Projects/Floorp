@@ -314,7 +314,7 @@ var RootFront = protocol.FrontClassWithSpec(rootSpec, {
 
   getTemporaryChild: protocol.custom(function (id) {
     if (!this._temporaryHolder) {
-      this._temporaryHolder = protocol.Front(this.conn);
+      this._temporaryHolder = new protocol.Front(this.conn);
       this._temporaryHolder.actorID = this.actorID + "_temp";
       this._temporaryHolder = this.manage(this._temporaryHolder);
     }
