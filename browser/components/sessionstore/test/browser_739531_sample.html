@@ -7,8 +7,7 @@
 <script>
 
 function boom() {
-  var frame = document.getElementById("f");
-  var w = SpecialPowers.wrap(frame).contentWindow;
+  var w = document.getElementById("f").contentWindow;
   var d = w.document;
   d.designMode = "on";
   var r = d.documentElement;
