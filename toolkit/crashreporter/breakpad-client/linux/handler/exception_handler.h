@@ -191,7 +191,7 @@ class ExceptionHandler {
   struct CrashContext {
     siginfo_t siginfo;
     pid_t tid;  // the crashing thread.
-    struct ucontext context;
+    ucontext_t context;
 #if !defined(__ARM_EABI__) && !defined(__mips__)
     // #ifdef this out because FP state is not part of user ABI for Linux ARM.
     // In case of MIPS Linux FP state is already part of struct

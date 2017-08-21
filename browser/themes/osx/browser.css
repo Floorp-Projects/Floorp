@@ -31,34 +31,15 @@
   --arrowpanel-dimmed-even-further: hsla(210,4%,10%,.17);
 
   --urlbar-separator-color: hsla(0,0%,16%,.2);
+
+  --toolbox-border-bottom-color: #e1e1e2;
 }
 
 :root:-moz-lwtheme {
   --toolbar-bgcolor: rgba(255,255,255,.4);
   --toolbar-bgimage: none;
-}
 
-#navigator-toolbox::after {
-  -moz-box-ordinal-group: 101; /* tabs toolbar is 100 */
-  content: "";
-  display: -moz-box;
-  border-top: 1px solid hsla(0,0%,100%,.15);
-  border-bottom: 1px solid hsla(0,0%,0%,.15);
-  margin-top: -2px;
-  position: relative;
-  z-index: 2; /* navbar is at 1 */
-}
-
-@media (-moz-mac-yosemite-theme) {
-  #navigator-toolbox:-moz-window-inactive::after {
-    border-top-style: none;
-    border-bottom-color: hsla(0,0%,0%,.1);
-    margin-top: -1px;
-  }
-}
-
-:root[customizing] #navigator-toolbox::after {
-  display: none;
+  --toolbox-border-bottom-color: rgba(0,0,0,.3);
 }
 
 #navigator-toolbox toolbarbutton:-moz-lwtheme {
@@ -132,11 +113,6 @@
 #navigator-toolbox > toolbar:not(#TabsToolbar) {
   -moz-appearance: none;
   background: var(--toolbar-bgcolor);
-}
-
-#navigator-toolbox > toolbar:not(#toolbar-menubar):not(#TabsToolbar):not(#nav-bar) {
-  /* add extra padding to compensate the bottom border */
-  padding-bottom: 2px;
 }
 
 /* Draw the bottom border of the tabs toolbar when it's not using

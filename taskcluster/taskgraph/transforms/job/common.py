@@ -77,8 +77,8 @@ def docker_worker_add_gecko_vcs_env_vars(config, job, taskdesc):
 def support_vcs_checkout(config, job, taskdesc):
     """Update a job/task with parameters to enable a VCS checkout.
 
-    The configuration is intended for tasks using "run-task" and its
-    VCS checkout behavior.
+    This can only be used with ``run-task`` tasks, as the cache name is
+    reserved for ``run-task`` tasks.
     """
     level = config.params['level']
 
@@ -87,15 +87,7 @@ def support_vcs_checkout(config, job, taskdesc):
     if job['worker']['implementation'] in ('docker-worker', 'docker-engine'):
         taskdesc['worker'].setdefault('caches', []).append({
             'type': 'persistent',
-            # History of versions:
-            #
-            # ``level-%s-checkouts`` was initially used and contained a number
-            # of backwards incompatible changes, such as moving HG_STORE_PATH
-            # from a separate cache to this cache.
-            #
-            # ``v1`` was introduced to provide a clean break from the unversioned
-            # cache.
-            'name': 'level-%s-checkouts-v1' % level,
+            'name': 'level-%s-checkouts' % level,
             'mount-point': '/home/worker/checkouts',
         })
 
@@ -129,3 +121,40 @@ def docker_worker_setup_secrets(config, job, taskdesc):
     for sec in secrets:
         taskdesc['scopes'].append(SECRET_SCOPE.format(
             job['treeherder']['kind'], config.params['level'], sec))
+
+
+def docker_worker_add_tooltool(config, job, taskdesc, internal=False):
+    """Give the task access to tooltool.
+
+    Enables the tooltool cache. Adds releng proxy. Configures scopes.
+
+    By default, only public tooltool access will be granted. Access to internal
+    tooltool can be enabled via ``internal=True``.
+
+    This can only be used with ``run-task`` tasks, as the cache name is
+    reserved for use with ``run-task``.
+    """
+
+    assert job['worker']['implementation'] in ('docker-worker', 'docker-engine')
+
+    level = config.params['level']
+
+    taskdesc['worker'].setdefault('caches', []).append({
+        'type': 'persistent',
+        'name': 'level-%s-tooltool-cache' % level,
+        'mount-point': '/home/worker/tooltool-cache',
+    })
+
+    taskdesc['worker'].setdefault('env', {}).update({
+        'TOOLTOOL_CACHE': '/home/worker/tooltool-cache',
+    })
+
+    taskdesc['worker']['relengapi-proxy'] = True
+    taskdesc['scopes'].extend([
+        'docker-worker:relengapi-proxy:tooltool.download.public',
+    ])
+
+    if internal:
+        taskdesc['scopes'].extend([
+            'docker-worker:relengapi-proxy:tooltool.download.internal',
+        ])

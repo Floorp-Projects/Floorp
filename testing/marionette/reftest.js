@@ -119,9 +119,9 @@ reftest.Runner = class {
     }
     // Make sure the browser element is exactly 600x600, no matter
     // what size our window is
-    const window_style = `padding: 0px; margin: 0px; border:none;
+    const windowStyle = `padding: 0px; margin: 0px; border:none;
 min-width: 600px; min-height: 600px; max-width: 600px; max-height: 600px`;
-    browser.setAttribute("style", window_style);
+    browser.setAttribute("style", windowStyle);
 
     let doc = reftestWin.document.documentElement;
     while (doc.firstChild) {
@@ -293,6 +293,7 @@ min-width: 600px; min-height: 600px; max-width: 600px; max-height: 600px`;
       // For now the tbpl formatter only accepts one screenshot, so just
       // return the last one we took.
       let lastScreenshot = screenshotData[screenshotData.length - 1];
+      // eslint-disable-next-line camelcase
       result.extra.reftest_screenshots = lastScreenshot;
     }
 

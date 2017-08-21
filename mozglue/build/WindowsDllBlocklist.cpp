@@ -866,17 +866,20 @@ DllBlocklist_Initialize(uint32_t aInitFlags)
   }
 #endif
 
-#ifdef _M_IX86 // Minimize impact; crashes in BaseThreadInitThunk are vastly more frequent on x86
-  if(!Kernel32Intercept.AddDetour("BaseThreadInitThunk",
+#ifdef _M_IX86 // Minimize impact. Crashes in BaseThreadInitThunk are more frequent on x86
+
+  // Bug 1361410: WRusr.dll will overwrite our hook and cause a crash.
+  // Workaround: If we detect WRusr.dll, don't hook.
+  if (!GetModuleHandleW(L"WRusr.dll")) {
+    if(!Kernel32Intercept.AddDetour("BaseThreadInitThunk",
                                     reinterpret_cast<intptr_t>(patched_BaseThreadInitThunk),
                                     (void**) &stub_BaseThreadInitThunk)) {
 #ifdef DEBUG
-    printf_stderr("BaseThreadInitThunk hook failed\n");
+      printf_stderr("BaseThreadInitThunk hook failed\n");
 #endif
+    }
   }
 #endif // _M_IX86
-
-
 }
 
 MFBT_API void

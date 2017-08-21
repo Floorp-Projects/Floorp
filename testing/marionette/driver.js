@@ -356,7 +356,7 @@ GeckoDriver.prototype.sendAsync = function(name, data, commandID) {
   // is used for all chrome <-> content communication
   // this can be removed.
   if (commandID) {
-    payload.command_id = commandID;
+    payload.commandID = commandID;
   }
 
   if (!this.curBrowser.frameManager.currentRemoteFrame) {
@@ -1118,7 +1118,7 @@ GeckoDriver.prototype.get = async function(cmd, resp) {
   this.curBrowser.pendingCommands.push(() => {
     let parameters = {
       // TODO(ato): Bug 1242595
-      command_id: this.listener.activeMessageId,
+      commandID: this.listener.activeMessageId,
       pageTimeout: this.timeouts.pageLoad,
       startTime: new Date().getTime(),
     };
@@ -1237,7 +1237,7 @@ GeckoDriver.prototype.goBack = async function(cmd, resp) {
   this.curBrowser.pendingCommands.push(() => {
     let parameters = {
       // TODO(ato): Bug 1242595
-      command_id: this.listener.activeMessageId,
+      commandID: this.listener.activeMessageId,
       lastSeenURL: lastURL.toString(),
       pageTimeout: this.timeouts.pageLoad,
       startTime: new Date().getTime(),
@@ -1281,7 +1281,7 @@ GeckoDriver.prototype.goForward = async function(cmd, resp) {
   this.curBrowser.pendingCommands.push(() => {
     let parameters = {
       // TODO(ato): Bug 1242595
-      command_id: this.listener.activeMessageId,
+      commandID: this.listener.activeMessageId,
       lastSeenURL: lastURL.toString(),
       pageTimeout: this.timeouts.pageLoad,
       startTime: new Date().getTime(),
@@ -1319,7 +1319,7 @@ GeckoDriver.prototype.refresh = async function(cmd, resp) {
   this.curBrowser.pendingCommands.push(() => {
     let parameters = {
       // TODO(ato): Bug 1242595
-      command_id: this.listener.activeMessageId,
+      commandID: this.listener.activeMessageId,
       pageTimeout: this.timeouts.pageLoad,
       startTime: new Date().getTime(),
     };
@@ -1507,6 +1507,14 @@ GeckoDriver.prototype.setWindowRect = async function(cmd, resp) {
     });
   }
 
+  // Restore window and wait for the window state to change.
+  async function restoreWindow() {
+    return new Promise(resolve => {
+      win.addEventListener("sizemodechange", resolve, {once: true});
+      win.restore();
+    });
+  }
+
   // Synchronous resize to |width| and |height| dimensions.
   async function resizeWindow(width, height) {
     return new Promise(resolve => {
@@ -1542,8 +1550,14 @@ GeckoDriver.prototype.setWindowRect = async function(cmd, resp) {
     });
   }
 
-  if (win.windowState == win.STATE_FULLSCREEN) {
-    await exitFullscreen();
+  switch (win.windowState) {
+    case win.STATE_FULLSCREEN:
+      await exitFullscreen();
+      break;
+
+    case win.STATE_MINIMIZED:
+      await restoreWindow();
+      break;
   }
 
   if (height != null && width != null) {
@@ -1904,7 +1918,7 @@ GeckoDriver.prototype.switchToFrame = async function(cmd, resp) {
       // listener.
       this.switchToGlobalMessageManager();
     }
-    cmd.command_id = cmd.id;
+    cmd.commandID = cmd.id;
 
     let res = await this.listener.switchToFrame(cmd.parameters);
     if (res) {
@@ -2063,7 +2077,7 @@ GeckoDriver.prototype.multiAction = async function(cmd, resp) {
   assert.window(this.getCurrentWindow());
   assert.noUserPrompt(this.dialog);
 
-  let {value, max_length} = cmd.parameters;
+  let {value, max_length} = cmd.parameters;  // eslint-disable-line camelcase
 
   this.addFrameCloseListener("multi action chain");
   await this.listener.multiAction(value, max_length);
@@ -2228,7 +2242,7 @@ GeckoDriver.prototype.clickElement = async function(cmd, resp) {
       this.curBrowser.pendingCommands.push(() => {
         let parameters = {
           // TODO(ato): Bug 1242595
-          command_id: this.listener.activeMessageId,
+          commandID: this.listener.activeMessageId,
           pageTimeout: this.timeouts.pageLoad,
           startTime: new Date().getTime(),
         };
