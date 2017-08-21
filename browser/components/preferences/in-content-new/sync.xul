@@ -102,18 +102,16 @@
                      onkeypress="gSyncPane.openChangeProfileImage(event);"
                      tooltiptext="&profilePicture.tooltip;"/>
               <vbox flex="1" pack="center">
-                <hbox flex="1">
-                  <hbox flex="1" align="center">
-                    <label id="fxaDisplayName" hidden="true"/>
-                    <label id="fxaEmailAddress1"/>
-                  </hbox>
+                <hbox flex="1" align="center">
+                  <label id="fxaDisplayName" hidden="true"/>
+                  <label class="fxaEmailAddress" flex="1" crop="end"/>
                   <button id="fxaUnlinkButton"
                           class="accessory-button"
                           label="&disconnect3.label;"
                           accesskey="&disconnect3.accesskey;"/>
                 </hbox>
                 <hbox>
-                  <html:a id="verifiedManage" class="openLink" target="_blank"
+                  <html:a id="verifiedManage" class="openLink"
                           accesskey="&verifiedManage.accesskey;"
                           onkeypress="gSyncPane.openManageFirefoxAccount(event);">&verifiedManage.label;</html:a>
                 </hbox>
@@ -125,12 +123,12 @@
               <vbox>
                 <image class="fxaProfileImage"/>
               </vbox>
-              <vbox flex="1">
+              <vbox flex="1" pack="center">
                 <hbox>
-                  <vbox><image class="fxaLoginRejectedWarning"/></vbox>
+                  <image class="fxaLoginRejectedWarning"/>
                   <description flex="1">
                     &signedInUnverified.beforename.label;
-                    <label id="fxaEmailAddress2"/>
+                    <label class="fxaEmailAddress"/>
                     &signedInUnverified.aftername.label;
                   </description>
                 </hbox>
@@ -146,12 +144,12 @@
               <vbox>
                 <image class="fxaProfileImage"/>
               </vbox>
-              <vbox flex="1">
+              <vbox flex="1" pack="center">
                 <hbox>
-                  <vbox><image class="fxaLoginRejectedWarning"/></vbox>
+                  <image class="fxaLoginRejectedWarning"/>
                   <description flex="1">
                     &signedInLoginFailure.beforename.label;
-                    <label id="fxaEmailAddress3"/>
+                    <label class="fxaEmailAddress"/>
                     &signedInLoginFailure.aftername.label;
                   </description>
                 </hbox>
