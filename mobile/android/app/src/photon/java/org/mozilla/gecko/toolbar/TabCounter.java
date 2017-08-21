@@ -31,7 +31,7 @@ public class TabCounter extends ThemedRelativeLayout {
     public static final int MAX_VISIBLE_TABS = 99;
     public static final String SO_MANY_TABS_OPEN = "∞";
 
-    private static final float ONE_DIGIT_SIZE_RATIO = 0.7f;
+    private static final float ONE_DIGIT_SIZE_RATIO = 0.6f;
     private static final float TWO_DIGITS_SIZE_RATIO = 0.5f;
 
     public TabCounter(Context context) {
