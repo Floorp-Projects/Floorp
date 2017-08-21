@@ -29,6 +29,7 @@ typedef wr::WrImageKey ImageKey;
 typedef wr::WrFontKey FontKey;
 typedef wr::WrEpoch Epoch;
 typedef wr::WrExternalImageId ExternalImageId;
+typedef wr::WrDebugFlags DebugFlags;
 
 typedef mozilla::Maybe<mozilla::wr::WrImageMask> MaybeImageMask;
 typedef Maybe<ExternalImageId> MaybeExternalImageId;
@@ -43,6 +44,12 @@ inline Epoch NewEpoch(uint32_t aEpoch) {
   Epoch e;
   e.mHandle = aEpoch;
   return e;
+}
+
+inline DebugFlags NewDebugFlags(uint32_t aFlags) {
+  DebugFlags flags;
+  flags.mBits = aFlags;
+  return flags;
 }
 
 inline Maybe<wr::ImageFormat>
