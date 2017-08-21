@@ -14,9 +14,14 @@ EXPORTS.mozilla.mscom += [
     'MainThreadClientInfo.h',
     'MainThreadRuntime.h',
     'Objref.h',
+    'PassthruProxy.h',
     'ProxyStream.h',
     'Ptr.h',
     'Utils.h',
+]
+
+SOURCES += [
+    'VTableBuilder.c',
 ]
 
 UNIFIED_SOURCES += [
@@ -25,6 +30,7 @@ UNIFIED_SOURCES += [
     'MainThreadClientInfo.cpp',
     'MainThreadRuntime.cpp',
     'Objref.cpp',
+    'PassthruProxy.cpp',
     'ProxyStream.cpp',
     'Utils.cpp',
 ]

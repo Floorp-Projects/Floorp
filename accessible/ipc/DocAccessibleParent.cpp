@@ -15,6 +15,8 @@
 #if defined(XP_WIN)
 #include "AccessibleWrap.h"
 #include "Compatibility.h"
+#include "mozilla/mscom/PassthruProxy.h"
+#include "mozilla/mscom/Ptr.h"
 #include "nsWinUtils.h"
 #include "RootAccessible.h"
 #endif
@@ -630,11 +632,12 @@ DocAccessibleParent::MaybeInitWindowEmulation()
 
     SetEmulatedWindowHandle(aHwnd);
 
-    IAccessible* rawHWNDAcc = nullptr;
+    RefPtr<IAccessible> hwndAcc;
     if (SUCCEEDED(::AccessibleObjectFromWindow(aHwnd, OBJID_WINDOW,
                                                IID_IAccessible,
-                                               (void**)&rawHWNDAcc))) {
-      hWndAccHolder.Set(IDispatchHolder::COMPtrType(rawHWNDAcc));
+                                               getter_AddRefs(hwndAcc)))) {
+      RefPtr<IDispatch> wrapped(mscom::PassthruProxy::Wrap<IDispatch>(WrapNotNull(hwndAcc)));
+      hWndAccHolder.Set(IDispatchHolder::COMPtrType(mscom::ToProxyUniquePtr(Move(wrapped))));
     }
 
     Unused << SendEmulatedWindow(reinterpret_cast<uintptr_t>(mEmulatedWindowHandle),
@@ -668,11 +671,13 @@ DocAccessibleParent::SendParentCOMProxy()
     return;
   }
 
-  IAccessible* rawNative = nullptr;
-  outerDoc->GetNativeInterface((void**) &rawNative);
-  MOZ_ASSERT(rawNative);
+  RefPtr<IAccessible> nativeAcc;
+  outerDoc->GetNativeInterface(getter_AddRefs(nativeAcc));
+  MOZ_ASSERT(nativeAcc);
 
-  IDispatchHolder::COMPtrType ptr(rawNative);
+  RefPtr<IDispatch> wrapped(mscom::PassthruProxy::Wrap<IDispatch>(WrapNotNull(nativeAcc)));
+
+  IDispatchHolder::COMPtrType ptr(mscom::ToProxyUniquePtr(Move(wrapped)));
   IDispatchHolder holder(Move(ptr));
   if (!PDocAccessibleParent::SendParentCOMProxy(holder)) {
     return;
