@@ -6,12 +6,9 @@
 
 #include "MP4Decoder.h"
 #include "MediaContainerType.h"
-#include "MediaFormatReader.h"
 #include "MP4Demuxer.h"
 #include "nsMimeTypes.h"
-#include "mozilla/SharedThreadPool.h"
 #include "VideoUtils.h"
-
 #include "PDMFactory.h"
 
 namespace mozilla {
@@ -162,110 +159,6 @@ bool
 MP4Decoder::IsEnabled()
 {
   return MediaPrefs::MP4Enabled();
-}
-
-// sTestH264ExtraData represents the content of the avcC atom found in
-// an AVC1 h264 video. It contains the H264 SPS and PPS NAL.
-// the structure of the avcC atom is as follow:
-// write(0x1);  // version, always 1
-// write(sps[0].data[1]); // profile
-// write(sps[0].data[2]); // compatibility
-// write(sps[0].data[3]); // level
-// write(0xFC | 3); // reserved (6 bits), NULA length size - 1 (2 bits)
-// write(0xE0 | 1); // reserved (3 bits), num of SPS (5 bits)
-// write_word(sps[0].size); // 2 bytes for length of SPS
-// for(size_t i=0 ; i < sps[0].size ; ++i)
-//   write(sps[0].data[i]); // data of SPS
-// write(&b, pps.size());  // num of PPS
-// for(size_t i=0 ; i < pps.size() ; ++i) {
-//   write_word(pps[i].size);  // 2 bytes for length of PPS
-//   for(size_t j=0 ; j < pps[i].size ; ++j)
-//     write(pps[i].data[j]);  // data of PPS
-//   }
-// }
-// here we have a h264 Baseline, 640x360
-// We use a 640x360 extradata, as some video framework (Apple VT) will never
-// attempt to use hardware decoding for small videos.
-static const uint8_t sTestH264ExtraData[] = {
-  0x01, 0x42, 0xc0, 0x1e, 0xff, 0xe1, 0x00, 0x17, 0x67, 0x42,
-  0xc0, 0x1e, 0xbb, 0x40, 0x50, 0x17, 0xfc, 0xb8, 0x08, 0x80,
-  0x00, 0x00, 0x32, 0x00, 0x00, 0x0b, 0xb5, 0x07, 0x8b, 0x17,
-  0x50, 0x01, 0x00, 0x04, 0x68, 0xce, 0x32, 0xc8
-};
-
-static already_AddRefed<MediaDataDecoder>
-CreateTestH264Decoder(layers::KnowsCompositor* aKnowsCompositor,
-                      VideoInfo& aConfig,
-                      TaskQueue* aTaskQueue)
-{
-  aConfig.mMimeType = "video/avc";
-  aConfig.mId = 1;
-  aConfig.mDuration = media::TimeUnit::FromMicroseconds(40000);
-  aConfig.mImage = aConfig.mDisplay = nsIntSize(640, 360);
-  aConfig.mExtraData = new MediaByteBuffer();
-  aConfig.mExtraData->AppendElements(sTestH264ExtraData,
-                                     MOZ_ARRAY_LENGTH(sTestH264ExtraData));
-
-  RefPtr<PDMFactory> platform = new PDMFactory();
-  RefPtr<MediaDataDecoder> decoder(platform->CreateDecoder({ aConfig, aTaskQueue, aKnowsCompositor }));
-
-  return decoder.forget();
-}
-
-/* static */ already_AddRefed<dom::Promise>
-MP4Decoder::IsVideoAccelerated(layers::KnowsCompositor* aKnowsCompositor, nsIGlobalObject* aParent)
-{
-  MOZ_ASSERT(NS_IsMainThread());
-
-  ErrorResult rv;
-  RefPtr<dom::Promise> promise;
-  promise = dom::Promise::Create(aParent, rv);
-  if (rv.Failed()) {
-    rv.SuppressException();
-    return nullptr;
-  }
-
-  RefPtr<TaskQueue> taskQueue = new TaskQueue(
-    GetMediaThreadPool(MediaThreadType::PLATFORM_DECODER),
-    "MP4Decoder::IsVideoAccelerated::taskQueue");
-  VideoInfo config;
-  RefPtr<MediaDataDecoder> decoder(CreateTestH264Decoder(aKnowsCompositor, config, taskQueue));
-  if (!decoder) {
-    taskQueue->BeginShutdown();
-    taskQueue->AwaitShutdownAndIdle();
-    promise->MaybeResolve(NS_LITERAL_STRING("No; Failed to create H264 decoder"));
-    return promise.forget();
-  }
-
-  decoder->Init()
-    ->Then(aParent->AbstractMainThreadFor(TaskCategory::Other),
-           __func__,
-           [promise, decoder, taskQueue] (TrackInfo::TrackType aTrack) {
-             nsCString failureReason;
-             bool ok = decoder->IsHardwareAccelerated(failureReason);
-             nsAutoString result;
-             if (ok) {
-               result.AssignLiteral("Yes");
-             } else {
-               result.AssignLiteral("No");
-             }
-             if (failureReason.Length()) {
-               result.AppendLiteral("; ");
-               AppendUTF8toUTF16(failureReason, result);
-             }
-             decoder->Shutdown();
-             taskQueue->BeginShutdown();
-             taskQueue->AwaitShutdownAndIdle();
-             promise->MaybeResolve(result);
-           },
-           [promise, decoder, taskQueue] (MediaResult aError) {
-             decoder->Shutdown();
-             taskQueue->BeginShutdown();
-             taskQueue->AwaitShutdownAndIdle();
-             promise->MaybeResolve(NS_LITERAL_STRING("No; Failed to initialize H264 decoder"));
-           });
-
-  return promise.forget();
 }
 
 } // namespace mozilla

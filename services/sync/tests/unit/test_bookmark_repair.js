@@ -482,10 +482,12 @@ add_task(async function test_repair_server_deleted() {
     await validationPromise;
 
     // Now we will reach into the server and create a tombstone for that bookmark
+    // but with a last-modified in the past - this way our sync isn't going to
+    // pick up the record.
     server.insertWBO("foo", "bookmarks", new ServerWBO(bookmarkInfo.guid, encryptPayload({
       id: bookmarkInfo.guid,
       deleted: true,
-    }), Date.now() / 1000));
+    }), (Date.now() - 60000) / 1000));
 
     // sync again - we should have a few problems...
     _("Syncing again.");

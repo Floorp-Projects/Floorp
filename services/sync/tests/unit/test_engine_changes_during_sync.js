@@ -19,8 +19,6 @@ const LoginInfo = Components.Constructor(
  * read-only.
  */
 
-Log.repository.getLogger("Sqlite").level = Log.Level.Error;
-
 async function assertChildGuids(folderGuid, expectedChildGuids, message) {
   let tree = await PlacesUtils.promiseBookmarksTree(folderGuid);
   let childGuids = tree.children.map(child => child.guid);

@@ -1,0 +1,58 @@
+<!DOCTYPE html>
+<meta charset=utf-8>
+<title>Tests that animations respond to changes to variables</title>
+<script src="/resources/testharness.js"></script>
+<script src="/resources/testharnessreport.js"></script>
+<script src="../testcommon.js"></script>
+<style>
+:root {
+  --width: 100px;
+}
+.wider {
+  --width: 200px;
+}
+@keyframes widen {
+  to { margin-left: var(--width) }
+}
+</style>
+<body>
+<div id="log"></div>
+<script>
+
+test(() => {
+  const div = document.createElement('div');
+  document.body.append(div);
+
+  div.style.animation = 'widen step-start 100s';
+  assert_equals(getComputedStyle(div).marginLeft, '100px',
+                'Animation value before updating CSS variable');
+
+  div.classList.add('wider');
+
+  assert_equals(getComputedStyle(div).marginLeft, '200px',
+                'Animation value after updating CSS variable');
+
+  div.remove();
+}, 'Animation reflects changes to custom properties');
+
+test(() => {
+  const parent = document.createElement('div');
+  const child = document.createElement('div');
+  parent.append(child);
+  document.body.append(parent);
+
+  child.style.animation = 'widen step-start 100s';
+  assert_equals(getComputedStyle(child).marginLeft, '100px',
+                'Animation value before updating CSS variable');
+
+  parent.classList.add('wider');
+
+  assert_equals(getComputedStyle(child).marginLeft, '200px',
+                'Animation value after updating CSS variable');
+
+  parent.remove();
+  child.remove();
+}, 'Animation reflect changes to custom properties on parent');
+
+</script>
+</body>

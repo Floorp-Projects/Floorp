@@ -507,48 +507,6 @@ private:
   nsChangeHint mComputedHint;
 };
 
-// Get the nsBlockFrame which might contain ::first-letter/::first-line for the
-// given element.  Will return null if there is no such blockframe.
-static nsBlockFrame*
-GetBlockForElement(const Element* aElement)
-{
-  nsIFrame* frame = aElement->GetPrimaryFrame();
-  if (!frame) {
-    return nullptr;
-  }
-  // The first-letter frame will always be inside the content insertion frame,
-  // which will always be a block if we have a first-letter frame at all.
-  frame = frame->GetContentInsertionFrame();
-  if (!frame) {
-    // We're a leaf; certainly no first-letter frame.
-    return nullptr;
-  }
-
-  if (!frame->IsFrameOfType(nsIFrame::eBlockFrame)) {
-    return nullptr;
-  }
-
-  return static_cast<nsBlockFrame*>(frame);
-}
-
-// Find the first-letter frame for the given element, if any.  Returns null to
-// indicate there isn't one.
-static nsIFrame*
-FindFirstLetterFrameForElement(const Element* aElement)
-{
-  nsBlockFrame* f = GetBlockForElement(aElement);
-  return f ? f->GetFirstLetter() : nullptr;
-}
-
-// Find the first-line frame for the given element, if any.  Returns null to
-// indicate there isn't one.
-static nsIFrame*
-FindFirstLineFrameForElement(const Element* aElement)
-{
-  nsBlockFrame* f = GetBlockForElement(aElement);
-  return f ? f->GetFirstLineFrame() : nullptr;
-}
-
 static void
 UpdateBackdropIfNeeded(nsIFrame* aFrame,
                        ServoStyleSet& aStyleSet,
@@ -1002,37 +960,6 @@ ServoRestyleManager::SnapshotFor(Element* aElement)
   presShell->EnsureStyleFlush();
 
   return *snapshot;
-}
-
-/* static */ nsIFrame*
-ServoRestyleManager::FrameForPseudoElement(const Element* aElement,
-                                           nsIAtom* aPseudoTagOrNull)
-{
-  if (!aPseudoTagOrNull) {
-    return nsLayoutUtils::GetStyleFrame(aElement);
-  }
-
-  if (aPseudoTagOrNull == nsCSSPseudoElements::before) {
-    Element* pseudoElement = nsLayoutUtils::GetBeforePseudo(aElement);
-    return pseudoElement ? nsLayoutUtils::GetStyleFrame(pseudoElement) : nullptr;
-  }
-
-  if (aPseudoTagOrNull == nsCSSPseudoElements::after) {
-    Element* pseudoElement = nsLayoutUtils::GetAfterPseudo(aElement);
-    return pseudoElement ? nsLayoutUtils::GetStyleFrame(pseudoElement) : nullptr;
-  }
-
-  if (aPseudoTagOrNull == nsCSSPseudoElements::firstLetter) {
-    return FindFirstLetterFrameForElement(aElement);
-  }
-
-  if (aPseudoTagOrNull == nsCSSPseudoElements::firstLine) {
-    return FindFirstLineFrameForElement(aElement);
-  }
-
-  MOZ_CRASH("Unkown pseudo-element given to "
-            "ServoRestyleManager::FrameForPseudoElement");
-  return nullptr;
 }
 
 void

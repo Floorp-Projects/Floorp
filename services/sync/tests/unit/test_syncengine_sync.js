@@ -466,6 +466,7 @@ add_task(async function test_processIncoming_reconcile_locally_deleted_dupe_new(
   do_check_false((await engine._store.itemExists("DUPE_INCOMING")));
   do_check_eq("DUPE_LOCAL", (await engine._findDupe({id: "DUPE_INCOMING"})));
 
+  engine.lastModified = server.getCollection(user, engine.name).timestamp;
   await engine._sync();
 
   // After the sync, the server's payload for the original ID should be marked
@@ -539,6 +540,7 @@ add_task(async function test_processIncoming_reconcile_changed_dupe() {
   do_check_true((await engine._store.itemExists("DUPE_LOCAL")));
   do_check_eq("DUPE_LOCAL", (await engine._findDupe({id: "DUPE_INCOMING"})));
 
+  engine.lastModified = server.getCollection(user, engine.name).timestamp;
   await engine._sync();
 
   // The ID should have been changed to incoming.
@@ -577,6 +579,7 @@ add_task(async function test_processIncoming_reconcile_changed_dupe_new() {
   do_check_true((await engine._store.itemExists("DUPE_LOCAL")));
   do_check_eq("DUPE_LOCAL", (await engine._findDupe({id: "DUPE_INCOMING"})));
 
+  engine.lastModified = server.getCollection(user, engine.name).timestamp;
   await engine._sync();
 
   // The ID should have been changed to incoming.

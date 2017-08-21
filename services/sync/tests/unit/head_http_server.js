@@ -249,6 +249,7 @@ ServerCollection.prototype = {
    * @return the provided WBO.
    */
   insertWBO: function insertWBO(wbo) {
+    this.timestamp = Math.max(this.timestamp, wbo.modified);
     return this._wbos[wbo.id] = wbo;
   },
 
@@ -445,7 +446,7 @@ ServerCollection.prototype = {
           if (nextOffset) {
             response.setHeader("X-Weave-Next-Offset", "" + nextOffset);
           }
-          response.setHeader("X-Last-Modified", "" + this.timestamp);
+          response.setHeader("X-Last-Modified", "" + self.timestamp);
           break;
 
         case "POST":
@@ -466,16 +467,18 @@ ServerCollection.prototype = {
       response.setHeader("X-Weave-Timestamp",
                          "" + new_timestamp(),
                          false);
-      response.setStatusLine(request.httpVersion, statusCode, status);
-      response.bodyOutputStream.write(body, body.length);
 
       // Update the collection timestamp to the appropriate modified time.
       // This is either a value set by the handler, or the current time.
       if (request.method != "GET") {
-        this.timestamp = (response.newModified >= 0) ?
+        self.timestamp = (response.newModified >= 0) ?
                          response.newModified :
                          new_timestamp();
       }
+      response.setHeader("X-Last-Modified", "" + self.timestamp, false);
+
+      response.setStatusLine(request.httpVersion, statusCode, status);
+      response.bodyOutputStream.write(body, body.length);
     };
   }
 
@@ -492,6 +495,12 @@ function sync_httpd_setup(handlers) {
 
 /*
  * Track collection modified times. Return closures.
+ *
+ * XXX - DO NOT USE IN NEW TESTS
+ *
+ * This code has very limited and very hacky timestamp support - the test
+ * server now has more complete and correct support - using this helper
+ * may cause strangeness wrt timestamp headers and 412 responses.
  */
 function track_collections_helper() {
 
@@ -942,6 +951,25 @@ SyncServer.prototype = {
       }
       let [, collection, wboID] = match;
       let coll = this.getCollection(username, collection);
+
+      let checkXIUSFailure = () => {
+        if (req.hasHeader("x-if-unmodified-since")) {
+          let xius = parseFloat(req.getHeader("x-if-unmodified-since"));
+          // Sadly the way our tests are setup, we often end up with xius of
+          // zero (typically when syncing just one engine, so the date from
+          // info/collections isn't used) - so we allow that to work.
+          // Further, the Python server treats non-existing collections as
+          // having a timestamp of 0.
+          let collTimestamp = coll ? coll.timestamp : 0;
+          if (xius && xius < collTimestamp) {
+            this._log.info(`x-if-unmodified-since mismatch - request wants ${xius} but our collection has ${collTimestamp}`);
+            respond(412, "precondition failed", "precondition failed");
+            return true;
+          }
+        }
+        return false;
+      }
+
       switch (req.method) {
         case "GET": {
           if (!coll) {
@@ -949,9 +977,9 @@ SyncServer.prototype = {
               respond(404, "Not found", "Not found");
               return undefined;
             }
-            // *cries inside*: Bug 687299 - now fixed, so apparently the real
-            // sync server *will* 404 in this case - bug 1347807 is to change
-            // this to a 404 and fix a handful of test failures it causes.
+            // *cries inside*: - apparently the real sync server returned 200
+            // here for some time, then returned 404 for some time (bug 687299),
+            // and now is back to 200 (bug 963332).
             respond(200, "OK", "[]");
             return undefined;
           }
@@ -965,10 +993,12 @@ SyncServer.prototype = {
           }
           return wbo.handler()(req, resp);
         }
-        // TODO: implement handling of X-If-Unmodified-Since for write verbs.
         case "DELETE": {
           if (!coll) {
             respond(200, "OK", "{}");
+            return undefined;
+          }
+          if (checkXIUSFailure()) {
             return undefined;
           }
           if (wboID) {
@@ -1011,11 +1041,35 @@ SyncServer.prototype = {
           }
           return undefined;
         }
-        case "POST":
         case "PUT":
+          // PUT and POST have slightly different XIUS semantics - for PUT,
+          // the check is against the item, whereas for POST it is against
+          // the collection. So first, a special-case for PUT.
+          if (req.hasHeader("x-if-unmodified-since")) {
+            let xius = parseFloat(req.getHeader("x-if-unmodified-since"));
+            // treat and xius of zero as if it wasn't specified - this happens
+            // in some of our tests for a new collection.
+            if (xius > 0) {
+              let wbo = coll.wbo(wboID);
+              if (xius < wbo.modified) {
+                this._log.info(`x-if-unmodified-since mismatch - request wants ${xius} but wbo has ${wbo.modified}`);
+                respond(412, "precondition failed", "precondition failed");
+                return undefined;
+              }
+              wbo.handler()(req, resp);
+              coll.timestamp = resp.newModified;
+              return resp;
+            }
+          }
+          // fall through to post.
+        case "POST":
+          if (checkXIUSFailure()) {
+            return undefined;
+          }
           if (!coll) {
             coll = this.createCollection(username, collection);
           }
+
           if (wboID) {
             let wbo = coll.wbo(wboID);
             if (!wbo) {

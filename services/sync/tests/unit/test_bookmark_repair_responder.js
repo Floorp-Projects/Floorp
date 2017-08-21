@@ -13,8 +13,6 @@ Cu.import("resource://testing-common/services/sync/utils.js");
 
 initTestLogging("Trace");
 Log.repository.getLogger("Sync.Engine.Bookmarks").level = Log.Level.Trace;
-// sqlite logging generates lots of noise and typically isn't helpful here.
-Log.repository.getLogger("Sqlite").level = Log.Level.Error;
 
 // Disable validation so that we don't try to automatically repair the server
 // when we sync.
