@@ -30,6 +30,8 @@
   --arrowpanel-dimmed-even-further: hsla(0,0%,80%,.8);
 
   --urlbar-separator-color: ThreeDLightShadow;
+
+  --toolbox-border-bottom-color: ThreeDShadow;
 }
 
 @media (-moz-windows-default-theme) {
@@ -41,6 +43,8 @@
     --toolbar-non-lwt-bgimage: none;
 
     --panel-separator-color: hsla(210,4%,10%,.14);
+
+    --toolbox-border-bottom-color: #e1e1e2;
   }
 }
 
@@ -49,6 +53,8 @@
 
   --toolbar-bgcolor: rgba(255,255,255,.4);
   --toolbar-bgimage: none;
+
+  --toolbox-border-bottom-color: rgba(0,0,0,.3);
 }
 
 #menubar-items {
@@ -68,30 +74,6 @@
 #navigator-toolbox,
 #navigator-toolbox > toolbar {
   -moz-appearance: none;
-}
-
-#navigator-toolbox::after {
-  content: "";
-  display: -moz-box;
-  -moz-box-ordinal-group: 101; /* tabs toolbar is 100 */
-  border-bottom: 1px solid ThreeDShadow;
-}
-
-@media (-moz-windows-default-theme) {
-  @media (-moz-os-version: windows-win8),
-         (-moz-os-version: windows-win10) {
-    #navigator-toolbox::after {
-      border-bottom-color: #c2c2c2;
-    }
-  }
-}
-
-#navigator-toolbox:-moz-lwtheme::after {
-  border-bottom-color: rgba(0,0,0,.3);
-}
-
-:root[customizing] #navigator-toolbox::after {
-  display: none;
 }
 
 #navigator-toolbox > toolbar:not(#toolbar-menubar):not(#TabsToolbar) {
