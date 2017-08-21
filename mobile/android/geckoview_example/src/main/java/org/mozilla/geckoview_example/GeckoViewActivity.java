@@ -282,11 +282,12 @@ public class GeckoViewActivity extends Activity {
         }
 
         @Override
-        public void onLoadUri(final GeckoView view, final String uri,
-                              final TargetWindow where) {
-            Log.d(LOGTAG, "onLoadUriExternal=" + uri +
+        public boolean onLoadUri(final GeckoView view, final String uri,
+                                 final TargetWindow where) {
+            Log.d(LOGTAG, "onLoadUri=" + uri +
                           " where=" + where);
             view.loadUri(uri);
+            return true;
         }
     }
 }

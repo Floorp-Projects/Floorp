@@ -1,0 +1,12 @@
+<!DOCTYPE HTML>
+<html>
+<body>
+just a dummy page to check uir applies to top level navigations
+<script class="testbody" type="text/javascript">
+window.onload = function() {
+  window.opener.parent.postMessage({result: window.location.href}, "*");
+  window.close();
+}
+</script>
+</body>
+</html>

@@ -1474,12 +1474,14 @@ nsRefreshDriver::ObserverArray&
 nsRefreshDriver::ArrayFor(FlushType aFlushType)
 {
   switch (aFlushType) {
-    case FlushType::Style:
+    case FlushType::Event:
       return mObservers[0];
-    case FlushType::Layout:
+    case FlushType::Style:
       return mObservers[1];
-    case FlushType::Display:
+    case FlushType::Layout:
       return mObservers[2];
+    case FlushType::Display:
+      return mObservers[3];
     default:
       MOZ_CRASH("We don't track refresh observers for this flush type");
   }
@@ -1868,7 +1870,7 @@ nsRefreshDriver::Tick(int64_t aNowEpoch, TimeStamp aNowTime)
       }
     }
 
-    if (i == 0) {
+    if (i == 1) {
       // This is the FlushType::Style case.
 
       DispatchAnimationEvents();
@@ -1905,7 +1907,7 @@ nsRefreshDriver::Tick(int64_t aNowEpoch, TimeStamp aNowTime)
           mNeedToRecomputeVisibility = true;
         }
       }
-    } else if  (i == 1) {
+    } else if  (i == 2) {
       // This is the FlushType::Layout case.
       Maybe<AutoProfilerTracing> tracingLayoutFlush;
       AutoTArray<nsIPresShell*, 16> observers;

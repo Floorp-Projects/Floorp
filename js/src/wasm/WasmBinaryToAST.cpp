@@ -1253,6 +1253,19 @@ AstDecodeExpr(AstDecodeContext& c)
         if (!AstDecodeConversion(c, ValType::F32, ValType::F64, Op(op.b0)))
             return false;
         break;
+#ifdef ENABLE_WASM_THREAD_OPS
+      case uint16_t(Op::I32Extend8S):
+      case uint16_t(Op::I32Extend16S):
+        if (!AstDecodeConversion(c, ValType::I32, ValType::I32, Op(op.b0)))
+            return false;
+        break;
+      case uint16_t(Op::I64Extend8S):
+      case uint16_t(Op::I64Extend16S):
+      case uint16_t(Op::I64Extend32S):
+        if (!AstDecodeConversion(c, ValType::I64, ValType::I64, Op(op.b0)))
+            return false;
+        break;
+#endif
       case uint16_t(Op::I32Load8S):
       case uint16_t(Op::I32Load8U):
         if (!AstDecodeLoad(c, ValType::I32, 1, Op(op.b0)))
