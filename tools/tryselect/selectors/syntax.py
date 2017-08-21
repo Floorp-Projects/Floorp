@@ -57,13 +57,6 @@ class SyntaxParser(BaseTryParser):
           'help': 'When -u and paths are supplied run only the intersection of the '
                   'tests specified by the two arguments.',
           }],
-        [['--no-push'],
-         {'dest': 'push',
-          'action': 'store_false',
-          'help': 'Do not push to try as a result of running this command (if '
-                  'specified this command will only print calculated try '
-                  'syntax and selection info).',
-          }],
         [['--save'],
          {'dest': 'save',
           'action': 'store',
@@ -706,11 +699,10 @@ class AutoTry(object):
             for flavor, paths in paths_by_flavor.iteritems():
                 print("%s: %s" % (flavor, ",".join(paths)))
 
-        if kwargs["verbose"] or not kwargs["push"]:
+        if kwargs["verbose"]:
             print('The following try syntax was calculated:\n%s' % msg)
 
-        if kwargs["push"]:
-            self.vcs.push_to_try(msg)
+        self.vcs.push_to_try(msg, push=kwargs['push'])
 
         if kwargs["save"] is not None:
             self.save_config(kwargs["save"], msg)
