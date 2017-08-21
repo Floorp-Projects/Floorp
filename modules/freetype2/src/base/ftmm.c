@@ -4,7 +4,7 @@
 /*                                                                         */
 /*    Multiple Master font support (body).                                 */
 /*                                                                         */
-/*  Copyright 1996-2017 by                                                 */
+/*  Copyright 1996-2016 by                                                 */
 /*  David Turner, Robert Wilhelm, and Werner Lemberg.                      */
 /*                                                                         */
 /*  This file is part of the FreeType project, and may only be used,       */
@@ -22,7 +22,6 @@
 #include FT_MULTIPLE_MASTERS_H
 #include FT_INTERNAL_OBJECTS_H
 #include FT_SERVICE_MULTIPLE_MASTERS_H
-#include FT_SERVICE_METRICS_VARIATIONS_H
 
 
   /*************************************************************************/
@@ -54,34 +53,6 @@
       FT_FACE_LOOKUP_SERVICE( face,
                               *aservice,
                               MULTI_MASTERS );
-
-      if ( *aservice )
-        error = FT_Err_Ok;
-    }
-
-    return error;
-  }
-
-
-  static FT_Error
-  ft_face_get_mvar_service( FT_Face                        face,
-                            FT_Service_MetricsVariations  *aservice )
-  {
-    FT_Error  error;
-
-
-    *aservice = NULL;
-
-    if ( !face )
-      return FT_THROW( Invalid_Face_Handle );
-
-    error = FT_ERR( Invalid_Argument );
-
-    if ( FT_HAS_MULTIPLE_MASTERS( face ) )
-    {
-      FT_FACE_LOOKUP_SERVICE( face,
-                              *aservice,
-                              METRICS_VARIATIONS );
 
       if ( *aservice )
         error = FT_Err_Ok;
@@ -187,9 +158,8 @@
                                  FT_UInt    num_coords,
                                  FT_Fixed*  coords )
   {
-    FT_Error                      error;
-    FT_Service_MultiMasters       service_mm   = NULL;
-    FT_Service_MetricsVariations  service_mvar = NULL;
+    FT_Error                 error;
+    FT_Service_MultiMasters  service;
 
 
     /* check of `face' delayed to `ft_face_get_mm_service' */
@@ -197,20 +167,12 @@
     if ( !coords )
       return FT_THROW( Invalid_Argument );
 
-    error = ft_face_get_mm_service( face, &service_mm );
+    error = ft_face_get_mm_service( face, &service );
     if ( !error )
     {
       error = FT_ERR( Invalid_Argument );
-      if ( service_mm->set_var_design )
-        error = service_mm->set_var_design( face, num_coords, coords );
-    }
-
-    if ( !error )
-    {
-      (void)ft_face_get_mvar_service( face, &service_mvar );
-
-      if ( service_mvar && service_mvar->metrics_adjust )
-        service_mvar->metrics_adjust( face );
+      if ( service->set_var_design )
+        error = service->set_var_design( face, num_coords, coords );
     }
 
     /* enforce recomputation of auto-hinting data */
@@ -259,9 +221,8 @@
                                FT_UInt    num_coords,
                                FT_Fixed*  coords )
   {
-    FT_Error                      error;
-    FT_Service_MultiMasters       service_mm   = NULL;
-    FT_Service_MetricsVariations  service_mvar = NULL;
+    FT_Error                 error;
+    FT_Service_MultiMasters  service;
 
 
     /* check of `face' delayed to `ft_face_get_mm_service' */
@@ -269,20 +230,12 @@
     if ( !coords )
       return FT_THROW( Invalid_Argument );
 
-    error = ft_face_get_mm_service( face, &service_mm );
+    error = ft_face_get_mm_service( face, &service );
     if ( !error )
     {
       error = FT_ERR( Invalid_Argument );
-      if ( service_mm->set_mm_blend )
-        error = service_mm->set_mm_blend( face, num_coords, coords );
-    }
-
-    if ( !error )
-    {
-      (void)ft_face_get_mvar_service( face, &service_mvar );
-
-      if ( service_mvar && service_mvar->metrics_adjust )
-        service_mvar->metrics_adjust( face );
+      if ( service->set_mm_blend )
+        error = service->set_mm_blend( face, num_coords, coords );
     }
 
     /* enforce recomputation of auto-hinting data */
@@ -306,9 +259,8 @@
                                 FT_UInt    num_coords,
                                 FT_Fixed*  coords )
   {
-    FT_Error                      error;
-    FT_Service_MultiMasters       service_mm   = NULL;
-    FT_Service_MetricsVariations  service_mvar = NULL;
+    FT_Error                 error;
+    FT_Service_MultiMasters  service;
 
 
     /* check of `face' delayed to `ft_face_get_mm_service' */
@@ -316,20 +268,12 @@
     if ( !coords )
       return FT_THROW( Invalid_Argument );
 
-    error = ft_face_get_mm_service( face, &service_mm );
+    error = ft_face_get_mm_service( face, &service );
     if ( !error )
     {
       error = FT_ERR( Invalid_Argument );
-      if ( service_mm->set_mm_blend )
-        error = service_mm->set_mm_blend( face, num_coords, coords );
-    }
-
-    if ( !error )
-    {
-      (void)ft_face_get_mvar_service( face, &service_mvar );
-
-      if ( service_mvar && service_mvar->metrics_adjust )
-        service_mvar->metrics_adjust( face );
+      if ( service->set_mm_blend )
+        error = service->set_mm_blend( face, num_coords, coords );
     }
 
     /* enforce recomputation of auto-hinting data */

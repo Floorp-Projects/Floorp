@@ -340,11 +340,6 @@
       CFF_Builder*  builder = &decoder->builder;
       CFF_Driver    driver  = (CFF_Driver)FT_FACE_DRIVER( builder->face );
 
-      FT_Bool  no_stem_darkening_driver =
-                 driver->no_stem_darkening;
-      FT_Char  no_stem_darkening_font =
-                 builder->face->root.internal->no_stem_darkening;
-
       /* local error */
       FT_Error       error2 = FT_Err_Ok;
       CF2_BufferRec  buf;
@@ -373,14 +368,12 @@
                                &scaled );
 
       /* copy isCFF2 boolean from TT_Face to CF2_Font */
-      font->isCFF2 = builder->face->is_cff2;
+      font->isCFF2 = builder->face->isCFF2;
 
       font->renderingFlags = 0;
       if ( hinted )
         font->renderingFlags |= CF2_FlagsHinted;
-      if ( scaled && ( !no_stem_darkening_font        ||
-                       ( no_stem_darkening_font < 0 &&
-                         !no_stem_darkening_driver  ) ) )
+      if ( scaled && !driver->no_stem_darkening )
         font->renderingFlags |= CF2_FlagsDarkened;
 
       font->darkenParams[0] = driver->darken_params[0];
@@ -457,7 +450,7 @@
     FT_ASSERT( decoder && decoder->builder.face );
     FT_ASSERT( vec && len );
 
-    return cff_get_var_blend( decoder->builder.face, len, NULL, vec, NULL );
+    return cff_get_var_blend( decoder->builder.face, len, vec, NULL );
   }
 #endif
 

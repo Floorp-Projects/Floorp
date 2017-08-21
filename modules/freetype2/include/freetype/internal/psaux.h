@@ -5,7 +5,7 @@
 /*    Auxiliary functions and data structures related to PostScript fonts  */
 /*    (specification).                                                     */
 /*                                                                         */
-/*  Copyright 1996-2017 by                                                 */
+/*  Copyright 1996-2016 by                                                 */
 /*  David Turner, Robert Wilhelm, and Werner Lemberg.                      */
 /*                                                                         */
 /*  This file is part of the FreeType project, and may only be used,       */
@@ -817,7 +817,7 @@ FT_BEGIN_HEADER
 
   } PSAux_ServiceRec, *PSAux_Service;
 
-  /* backward compatible type definition */
+  /* backwards-compatible type definition */
   typedef PSAux_ServiceRec   PSAux_Interface;
 
 

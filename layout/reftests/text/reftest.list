@@ -29,7 +29,7 @@ HTTP(..) == lineheight-metrics-2a.html lineheight-metrics-2-ref.html
 HTTP(..) == lineheight-metrics-2b.html lineheight-metrics-2-ref.html
 == lineheight-percentage-1.html lineheight-percentage-1-ref.html
 == long-1.html long-ref.html
-fuzzy-if(Android,255,325) == pre-line-1.html pre-line-1-ref.html
+fuzzy-if(Android,255,147) == pre-line-1.html pre-line-1-ref.html
 == pre-line-2.html pre-line-2-ref.html
 == pre-line-3.html pre-line-3-ref.html
 == pre-line-4.html pre-line-4-ref.html

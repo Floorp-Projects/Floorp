@@ -4,7 +4,7 @@
 /*                                                                         */
 /*    CID objects manager (body).                                          */
 /*                                                                         */
-/*  Copyright 1996-2017 by                                                 */
+/*  Copyright 1996-2016 by                                                 */
 /*  David Turner, Robert Wilhelm, and Werner Lemberg.                      */
 /*                                                                         */
 /*  This file is part of the FreeType project, and may only be used,       */
@@ -113,16 +113,16 @@
     CID_Size  size = (CID_Size)cidsize;
 
 
-    if ( cidsize->internal->module_data )
+    if ( cidsize->internal )
     {
       PSH_Globals_Funcs  funcs;
 
 
       funcs = cid_size_get_globals_funcs( size );
       if ( funcs )
-        funcs->destroy( (PSH_Globals)cidsize->internal->module_data );
+        funcs->destroy( (PSH_Globals)cidsize->internal );
 
-      cidsize->internal->module_data = NULL;
+      cidsize->internal = NULL;
     }
   }
 
@@ -145,7 +145,7 @@
 
       error = funcs->create( cidsize->face->memory, priv, &globals );
       if ( !error )
-        cidsize->internal->module_data = globals;
+        cidsize->internal = (FT_Size_Internal)(void*)globals;
     }
 
     return error;
@@ -164,7 +164,7 @@
     funcs = cid_size_get_globals_funcs( (CID_Size)size );
 
     if ( funcs )
-      funcs->set_scale( (PSH_Globals)size->internal->module_data,
+      funcs->set_scale( (PSH_Globals)size->internal,
                         size->metrics.x_scale,
                         size->metrics.y_scale,
                         0, 0 );
