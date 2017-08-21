@@ -30,6 +30,7 @@
 #include "mozilla/ipc/BackgroundChild.h"
 #include "mozilla/SchedulerGroup.h"
 #include "mozilla/Services.h"
+#include "mozilla/SystemGroup.h"
 #include "nsXPCOMPrivate.h"
 #include "mozilla/ChaosMode.h"
 #include "mozilla/Telemetry.h"
@@ -241,6 +242,7 @@ struct nsThreadShutdownContext
     : mTerminatingThread(aTerminatingThread)
     , mJoiningThread(aJoiningThread)
     , mAwaitingShutdownAck(aAwaitingShutdownAck)
+    , mIsMainThreadJoining(NS_IsMainThread())
   {
     MOZ_COUNT_CTOR(nsThreadShutdownContext);
   }
@@ -254,6 +256,7 @@ struct nsThreadShutdownContext
   NotNull<nsThread*> MOZ_UNSAFE_REF("Thread manager is holding reference to joining thread")
     mJoiningThread;
   bool mAwaitingShutdownAck;
+  bool mIsMainThreadJoining;
 };
 
 // This event is responsible for notifying nsThread::Shutdown that it is time
@@ -456,7 +459,11 @@ nsThread::ThreadFunc(void* aArg)
     WrapNotNull(self->mShutdownContext);
   MOZ_ASSERT(context->mTerminatingThread == self);
   event = do_QueryObject(new nsThreadShutdownAckEvent(context));
-  context->mJoiningThread->Dispatch(event, NS_DISPATCH_NORMAL);
+  if (context->mIsMainThreadJoining) {
+    SystemGroup::Dispatch(TaskCategory::Other, event.forget());
+  } else {
+    context->mJoiningThread->Dispatch(event, NS_DISPATCH_NORMAL);
+  }
 
   // Release any observer of the thread here.
   self->SetObserver(nullptr);
