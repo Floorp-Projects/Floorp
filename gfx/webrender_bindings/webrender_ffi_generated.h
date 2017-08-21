@@ -2,7 +2,7 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-/* Generated with cbindgen:0.1.20 */
+/* Generated with cbindgen:0.1.21 */
 
 /* DO NOT MODIFY THIS MANUALLY! This file was generated using cbindgen.
  * To generate this file:
@@ -163,8 +163,8 @@ struct Arc_VecU8;
 
 struct DocumentHandle;
 
-struct LayerPixel;
-
+// The renderer is responsible for submitting to the GPU the work prepared by the
+// RenderBackend.
 struct Renderer;
 
 struct Vec_u8;
@@ -272,8 +272,14 @@ struct Epoch {
 
 typedef Epoch WrEpoch;
 
+// This type carries no valuable semantics for WR. However, it reflects the fact that
+// clients (Servo) may generate pipelines by different semi-independent sources.
+// These pipelines still belong to the same `IdNamespace` and the same `DocumentId`.
+// Having this extra Id field enables them to generate `PipelineId` without collision.
 typedef uint32_t PipelineSourceId;
 
+// From the point of view of WR, `PipelineId` is completely opaque and generic as long as
+// it's clonable, serializable, comparable, and hashable.
 struct PipelineId {
   PipelineSourceId mNamespace;
   uint32_t mHandle;
@@ -300,10 +306,18 @@ typedef TypedSize2D_f32__LayerPixel LayerSize;
 
 typedef LayerSize LayoutSize;
 
+// Describes the memory layout of a display list.
+//
+// A display list consists of some number of display list items, followed by a number of display
+// items.
 struct BuiltDisplayListDescriptor {
+  // The first IPC time stamp: before any work has been done
   uint64_t builder_start_time;
+  // The second IPC time stamp: after serialization
   uint64_t builder_finish_time;
+  // The third IPC time stamp: just before sending
   uint64_t send_start_time;
+  // The offset where DisplayItems stop and the Glyph list starts
   size_t glyph_offset;
 
   bool operator==(const BuiltDisplayListDescriptor& aOther) const {
@@ -374,8 +388,6 @@ struct TypedTransform3D_f32__LayoutPixel__LayoutPixel {
   }
 };
 
-typedef LayerPixel LayoutPixel;
-
 typedef TypedTransform3D_f32__LayoutPixel__LayoutPixel LayoutTransform;
 
 struct WrTransformProperty {
@@ -385,6 +397,10 @@ struct WrTransformProperty {
 
 typedef IdNamespace WrIdNamespace;
 
+// Represents RGBA screen colors with floating point numbers.
+//
+// All components must be between 0.0 and 1.0.
+// An alpha value of 1.0 is opaque while 0.0 is fully transparent.
 struct ColorF {
   float r;
   float g;
@@ -409,6 +425,7 @@ struct TypedPoint2D_f32__LayerPixel {
   }
 };
 
+// A 2d Rectangle optionally tagged with a unit.
 struct TypedRect_f32__LayerPixel {
   TypedPoint2D_f32__LayerPixel origin;
   TypedSize2D_f32__LayerPixel size;
@@ -497,20 +514,6 @@ struct GradientStop {
   }
 };
 
-struct SideOffsets2D_u32 {
-  uint32_t top;
-  uint32_t right;
-  uint32_t bottom;
-  uint32_t left;
-
-  bool operator==(const SideOffsets2D_u32& aOther) const {
-    return top == aOther.top &&
-           right == aOther.right &&
-           bottom == aOther.bottom &&
-           left == aOther.left;
-  }
-};
-
 struct SideOffsets2D_f32 {
   float top;
   float right;
@@ -518,6 +521,20 @@ struct SideOffsets2D_f32 {
   float left;
 
   bool operator==(const SideOffsets2D_f32& aOther) const {
+    return top == aOther.top &&
+           right == aOther.right &&
+           bottom == aOther.bottom &&
+           left == aOther.left;
+  }
+};
+
+struct SideOffsets2D_u32 {
+  uint32_t top;
+  uint32_t right;
+  uint32_t bottom;
+  uint32_t left;
+
+  bool operator==(const SideOffsets2D_u32& aOther) const {
     return top == aOther.top &&
            right == aOther.right &&
            bottom == aOther.bottom &&
@@ -655,6 +672,18 @@ struct WrExternalImageHandler {
  *      a. Alternatively, you can clone `https://github.com/rlhunt/cbindgen` and use a tagged release
  *   2. Run `cbindgen toolkit/library/rust/ --crate webrender_bindings -o gfx/webrender_bindings/webrender_ffi_generated.h`
  */
+
+extern void gfx_critical_note(const char *aMsg);
+
+extern bool gfx_use_wrench();
+
+extern bool is_glcontext_egl(void *aGlcontextPtr);
+
+extern bool is_in_compositor_thread();
+
+extern bool is_in_main_thread();
+
+extern bool is_in_render_thread();
 
 WR_INLINE
 const VecU8 *wr_add_ref_arc(const ArcVecU8 *aArc)
@@ -1012,6 +1041,7 @@ void wr_dp_push_text_shadow(WrState *aState,
                             TextShadow aShadow)
 WR_FUNC;
 
+// Push a 2 planar NV12 image.
 WR_INLINE
 void wr_dp_push_yuv_NV12_image(WrState *aState,
                                LayoutRect aBounds,
@@ -1022,6 +1052,7 @@ void wr_dp_push_yuv_NV12_image(WrState *aState,
                                ImageRendering aImageRendering)
 WR_FUNC;
 
+// Push a yuv interleaved image.
 WR_INLINE
 void wr_dp_push_yuv_interleaved_image(WrState *aState,
                                       LayoutRect aBounds,
@@ -1031,6 +1062,7 @@ void wr_dp_push_yuv_interleaved_image(WrState *aState,
                                       ImageRendering aImageRendering)
 WR_FUNC;
 
+// Push a 3 planar yuv image.
 WR_INLINE
 void wr_dp_push_yuv_planar_image(WrState *aState,
                                  LayoutRect aBounds,
@@ -1041,6 +1073,20 @@ void wr_dp_push_yuv_planar_image(WrState *aState,
                                  WrYuvColorSpace aColorSpace,
                                  ImageRendering aImageRendering)
 WR_FUNC;
+
+extern bool wr_moz2d_render_cb(ByteSlice aBlob,
+                               uint32_t aWidth,
+                               uint32_t aHeight,
+                               ImageFormat aFormat,
+                               MutByteSlice aOutput);
+
+extern void wr_notifier_external_event(WrWindowId aWindowId,
+                                       size_t aRawEvent);
+
+extern void wr_notifier_new_frame_ready(WrWindowId aWindowId);
+
+extern void wr_notifier_new_scroll_frame_ready(WrWindowId aWindowId,
+                                               bool aCompositeNeeded);
 
 WR_INLINE
 void wr_rendered_epochs_delete(WrRenderedEpochs *aPipelineEpochs)
@@ -1138,6 +1184,9 @@ WR_FUNC;
 } // namespace mozilla
 
 } // extern "C"
+
+static_assert(sizeof(float) == 4);
+static_assert(sizeof(double) == 8);
 
 /* DO NOT MODIFY THIS MANUALLY! This file was generated using cbindgen.
  * To generate this file:
