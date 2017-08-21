@@ -31,6 +31,7 @@ import org.json.JSONException;
 
 import org.mozilla.gecko.ActivityHandlerHelper;
 import org.mozilla.gecko.AppConstants;
+import org.mozilla.gecko.customtabs.CustomTabsActivity;
 import org.mozilla.gecko.DoorHangerPopup;
 import org.mozilla.gecko.GeckoAppShell;
 import org.mozilla.gecko.GeckoView;
@@ -276,14 +277,17 @@ public class WebAppActivity extends AppCompatActivity
     }
 
     @Override
-    public void onLoadUri(final GeckoView view, final String uri,
+    public boolean onLoadUri(final GeckoView view, final String uri,
                              final TargetWindow where) {
         if (isInScope(uri)) {
             view.loadUri(uri);
         } else {
-            final Intent intent = new Intent(Intent.ACTION_VIEW);
+            final Intent intent = new Intent(getIntent());
+            intent.setClassName(getApplicationContext(),
+                                CustomTabsActivity.class.getName());
             intent.setData(Uri.parse(uri));
             startActivity(intent);
         }
+        return true;
     }
 }

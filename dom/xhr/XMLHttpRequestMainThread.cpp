@@ -1106,12 +1106,10 @@ XMLHttpRequestMainThread::RequestErrorSteps(const ProgressEventType aEventType,
   FireReadystatechangeEvent();
 
   // Step 6
-  if (mUpload) {
+  if (mUpload && !mUploadComplete) {
 
     // Step 6-1
-    if (!mUploadComplete) {
-      mUploadComplete = true;
-    }
+    mUploadComplete = true;
 
     // Step 6-2
     if (mFlagHadUploadListenersOnSend) {

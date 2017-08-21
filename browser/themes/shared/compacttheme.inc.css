@@ -127,16 +127,6 @@ toolbar[brighttext] .toolbarbutton-1 {
   background-color: rgba(255,255,255,.3);
 }
 
-.tab-throbber[selected][progress] {
-  list-style-image: url("chrome://browser/skin/compacttheme/loading-inverted.png");
-}
-
-@media (min-resolution: 1.1dppx) {
-  .tab-throbber[selected][progress] {
-    list-style-image: url("chrome://browser/skin/compacttheme/loading-inverted@2x.png");
-  }
-}
-
 .tab-icon-sound[soundplaying],
 .tab-icon-sound[muted] {
   filter: none !important; /* removes drop-shadow filter */

@@ -3165,9 +3165,9 @@ MRsh::foldsTo(TempAllocator& alloc)
 
     switch (shift) {
       case 16:
-        return MSignExtend::New(alloc, lhs->getOperand(0), MSignExtend::Half);
+        return MSignExtendInt32::New(alloc, lhs->getOperand(0), MSignExtendInt32::Half);
       case 24:
-        return MSignExtend::New(alloc, lhs->getOperand(0), MSignExtend::Byte);
+        return MSignExtendInt32::New(alloc, lhs->getOperand(0), MSignExtendInt32::Byte);
     }
 
     return this;
@@ -4373,6 +4373,41 @@ MExtendInt32ToInt64::foldsTo(TempAllocator& alloc)
     if (input->isConstant()) {
         int32_t c = input->toConstant()->toInt32();
         int64_t res = isUnsigned() ? int64_t(uint32_t(c)) : int64_t(c);
+        return MConstant::NewInt64(alloc, res);
+    }
+
+    return this;
+}
+
+MDefinition*
+MSignExtendInt32::foldsTo(TempAllocator& alloc)
+{
+    MDefinition* input = this->input();
+    if (input->isConstant()) {
+        int32_t c = input->toConstant()->toInt32();
+        int32_t res;
+        switch (mode_) {
+          case Byte: res = int32_t(int8_t(c & 0xFF)); break;
+          case Half: res = int32_t(int16_t(c & 0xFFFF)); break;
+        }
+        return MConstant::New(alloc, Int32Value(res));
+    }
+
+    return this;
+}
+
+MDefinition*
+MSignExtendInt64::foldsTo(TempAllocator& alloc)
+{
+    MDefinition* input = this->input();
+    if (input->isConstant()) {
+        int64_t c = input->toConstant()->toInt64();
+        int64_t res;
+        switch (mode_) {
+          case Byte: res = int64_t(int8_t(c & 0xFF)); break;
+          case Half: res = int64_t(int16_t(c & 0xFFFF)); break;
+          case Word: res = int64_t(int32_t(c & 0xFFFFFFFFU)); break;
+        }
         return MConstant::NewInt64(alloc, res);
     }
 

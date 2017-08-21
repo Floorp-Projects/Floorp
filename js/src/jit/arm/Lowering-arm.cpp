@@ -1057,3 +1057,9 @@ LIRGeneratorARM::visitExtendInt32ToInt64(MExtendInt32ToInt64* ins)
 
     lir->setDef(0, def);
 }
+
+void
+LIRGeneratorARM::visitSignExtendInt64(MSignExtendInt64* ins)
+{
+    defineInt64(new(alloc()) LSignExtendInt64(useInt64RegisterAtStart(ins->input())), ins);
+}

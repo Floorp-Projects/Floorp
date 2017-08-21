@@ -542,8 +542,8 @@ public class CustomTabsActivity extends AppCompatActivity
     }
 
     @Override
-    public void onLoadUri(final GeckoView view, final String uriStr,
-                          final TargetWindow where) {
+    public boolean onLoadUri(final GeckoView view, final String uriStr,
+                             final TargetWindow where) {
         final Uri uri = Uri.parse(uriStr);
         if (!TextUtils.isEmpty(mCurrentUrl) &&
             Uri.parse(mCurrentUrl).getHost().equals(uri.getHost())) {
@@ -553,6 +553,7 @@ public class CustomTabsActivity extends AppCompatActivity
             intent.setData(uri);
             startActivity(intent);
         }
+        return true;
     }
 
     /* GeckoView.ProgressListener */
