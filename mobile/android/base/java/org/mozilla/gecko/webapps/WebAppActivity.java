@@ -31,11 +31,8 @@ import org.json.JSONException;
 
 import org.mozilla.gecko.ActivityHandlerHelper;
 import org.mozilla.gecko.AppConstants;
-<<<<<<< 99693e4feced612bcc473dd332e2dc15928b71df
-import org.mozilla.gecko.DoorHangerPopup;
-=======
 import org.mozilla.gecko.customtabs.CustomTabsActivity;
->>>>>>> Bug 1389236 - [3.1] Launch a custom tabs intent for out-of-scope URIs in the PWA's onLoadUri handler. r=snorp
+import org.mozilla.gecko.DoorHangerPopup;
 import org.mozilla.gecko.GeckoAppShell;
 import org.mozilla.gecko.GeckoView;
 import org.mozilla.gecko.GeckoViewSettings;
