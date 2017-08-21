@@ -113,6 +113,9 @@ public:
 #endif
 
   MOZ_MUST_USE inline bool init();
+  void infallibleInit() {
+    MOZ_RELEASE_ASSERT(init(), "Infallible TLS initialization failed");
+  }
 
   inline T get() const;
 
