@@ -9,5 +9,3 @@ transforms:
    - taskgraph.transforms.job:transforms
    - taskgraph.transforms.coalesce:transforms
    - taskgraph.transforms.task:transforms
-
-parse-commit: taskgraph.try_option_syntax:parse_message

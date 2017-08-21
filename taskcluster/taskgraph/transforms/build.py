@@ -44,8 +44,10 @@ def set_defaults(config, jobs):
 @transforms.add
 def set_env(config, jobs):
     """Set extra environment variables from try command line."""
+    env = {}
+    if config.params['try_mode'] == 'try_option_syntax':
+        env = config.params['try_options']['env'] or {}
     for job in jobs:
-        env = config.config['args'].env
         if env:
             job_env = {}
             if 'worker' in job:
