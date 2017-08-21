@@ -116,6 +116,10 @@ apply_patches() {
     # Patch to avoid using GDIPlusExt while rendering EMF
     echo "Applying patches/bug1367948_avoid_using_GDIPlusExt.patch"
     patch -p3 < patches/bug1367948_avoid_using_GDIPlusExt.patch
+
+    # Patch for compatibility with freetype 2.8
+    echo "Applying patches/bug1364714_freetype28_compat.patch"
+    patch -p3 < patches/bug1364714_freetype28_compat.patch
 }
 
 update_readme() {
