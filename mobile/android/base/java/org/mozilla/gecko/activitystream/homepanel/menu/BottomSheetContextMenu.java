@@ -146,6 +146,15 @@ import java.net.URISyntaxException;
             } else {
                 isSuccess = false;
             }
+
+            // We don't want to directly focus the dialog: just the list items.
+            // It's unclear if this is also fixed in the newer source code.
+            final View dialogView = window.findViewById(android.support.design.R.id.design_bottom_sheet);
+            if (dialogView != null) {
+                dialogView.setImportantForAccessibility(View.IMPORTANT_FOR_ACCESSIBILITY_NO);
+            } else {
+                isSuccess = false;
+            }
         }
 
         if (!isSuccess) {
