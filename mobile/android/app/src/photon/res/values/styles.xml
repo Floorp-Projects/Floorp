@@ -860,6 +860,11 @@
         <item name="android:layout_toLeftOf">@id/menu</item>
     </style>
 
+    <style name="UrlBar.TabCounter.Text">
+        <item name="android:fontFamily">sans-serif-medium</item>
+        <item name="android:textStyle">bold</item>
+    </style>
+
     <style name="UrlBar.EditCancel" parent="UrlBar.V15.EditCancel"/>
     <style name="UrlBar.Base.EditCancel" parent="UrlBar.ImageButton"/>
     <style name="UrlBar.V15.EditCancel" parent="UrlBar.Base.EditCancel">

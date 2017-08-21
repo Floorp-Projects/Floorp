@@ -60,7 +60,7 @@
     <!-- opacity: 20% -->
     <color name="photon_notification_bg_pressed">#33000000</color>
 
-    <color name="photon_toolbar_text_color">#3B3B3B</color>
+    <color name="photon_toolbar_text_color">#272727</color>
     <color name="photon_toolbar_text_color_private">#FFFFFF</color>
     <color name="photon_toolbar_image_tint">@color/photon_toolbar_text_color</color>
     <color name="photon_toolbar_image_tint_private">@color/photon_toolbar_text_color_private</color>
