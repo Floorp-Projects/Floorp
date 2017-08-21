@@ -444,6 +444,7 @@ task_description_schema = Schema({
 })
 
 GROUP_NAMES = {
+    'cram': 'Cram tests',
     'mocha': 'Mocha unit tests',
     'py': 'Python unit tests',
     'tc': 'Executed by TaskCluster',

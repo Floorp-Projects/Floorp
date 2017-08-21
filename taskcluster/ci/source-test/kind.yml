@@ -1,7 +1,7 @@
 # This Source Code Form is subject to the terms of the Mozilla Public
 # License, v. 2.0. If a copy of the MPL was not distributed with this
 # file, You can obtain one at http://mozilla.org/MPL/2.0/.
-
+---
 loader: taskgraph.loader.transform:loader
 
 transforms:
@@ -10,21 +10,22 @@ transforms:
    - taskgraph.transforms.task:transforms
 
 jobs-from:
-    - python-tests.yml
-    - mocha.yml
-    - mozlint.yml
-    - doc.yml
-    - webidl.yml
+   - cram.yml
+   - doc.yml
+   - mocha.yml
+   - mozlint.yml
+   - python-tests.yml
+   - webidl.yml
 
 # This is used by run-task based tasks to lookup which build task it
 # should depend on based on its own platform.
 dependent-build-platforms:
-    linux64-asan/opt:
-        label: build-linux64-asan/opt
-        target-name: target.tar.bz2
-    linux64/debug:
-        label: build-linux64/debug
-        target-name: target.tar.bz2
-    linux64.*:
-        label: build-linux64/opt
-        target-name: target.tar.bz2
+   linux64-asan/opt:
+      label: build-linux64-asan/opt
+      target-name: target.tar.bz2
+   linux64/debug:
+      label: build-linux64/debug
+      target-name: target.tar.bz2
+   linux64.*:
+      label: build-linux64/opt
+      target-name: target.tar.bz2
