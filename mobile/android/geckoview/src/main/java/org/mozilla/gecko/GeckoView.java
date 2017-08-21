@@ -148,9 +148,11 @@ public class GeckoView extends LayerView {
                 } else if ("GeckoView:OnLoadUri".equals(event)) {
                     final String uri = message.getString("uri");
                     final NavigationListener.TargetWindow where =
-                        NavigationListener.TargetWindow.get(
+                        NavigationListener.TargetWindow.forGeckoValue(
                             message.getInt("where"));
-                    listener.onLoadUri(GeckoView.this, uri, where);
+                    final boolean result =
+                        listener.onLoadUri(GeckoView.this, uri, where);
+                    callback.sendSuccess(result);
                 }
             }
         };
@@ -1391,9 +1393,7 @@ public class GeckoView extends LayerView {
         enum TargetWindow {
             DEFAULT(0),
             CURRENT(1),
-            NEW(2),
-            NEWTAB(3),
-            SWITCHTAB(4);
+            NEW(2);
 
             private static final TargetWindow[] sValues = TargetWindow.values();
             private int mValue;
@@ -1402,8 +1402,24 @@ public class GeckoView extends LayerView {
                 mValue = value;
             }
 
-            public static TargetWindow get(int value) {
+            public static TargetWindow forValue(int value) {
                 return sValues[value];
+            }
+
+            public static TargetWindow forGeckoValue(int value) {
+                // DEFAULT(0),
+                // CURRENT(1),
+                // NEW(2),
+                // NEWTAB(3),
+                // SWITCHTAB(4);
+                final TargetWindow[] sMap = {
+                    DEFAULT,
+                    CURRENT,
+                    NEW,
+                    NEW,
+                    NEW
+                };
+                return sMap[value];
             }
         }
 
@@ -1423,8 +1439,11 @@ public class GeckoView extends LayerView {
         * @param view The GeckoView that initiated the callback.
         * @param uri The URI to be loaded.
         * @param where The target window.
+        *
+        * @return True if the URI loading has been handled, false if Gecko
+        *         should handle the loading.
         */
-        void onLoadUri(GeckoView view, String uri, TargetWindow where);
+        boolean onLoadUri(GeckoView view, String uri, TargetWindow where);
     }
 
     /**

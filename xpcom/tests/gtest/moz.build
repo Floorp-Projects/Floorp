@@ -17,7 +17,7 @@ UNIFIED_SOURCES += [
     'TestCRT.cpp',
     'TestDafsa.cpp',
     'TestEncoding.cpp',
-    'TestEscapeURL.cpp',
+    'TestEscape.cpp',
     'TestEventPriorities.cpp',
     'TestEventTargetQI.cpp',
     'TestExpirationTracker.cpp',

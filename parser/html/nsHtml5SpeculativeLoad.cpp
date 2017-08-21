@@ -6,9 +6,12 @@
 #include "nsHtml5TreeOpExecutor.h"
 
 nsHtml5SpeculativeLoad::nsHtml5SpeculativeLoad()
+  :
 #ifdef DEBUG
- : mOpCode(eSpeculativeLoadUninitialized)
+  mOpCode(eSpeculativeLoadUninitialized),
 #endif
+  mIsAsync(false),
+  mIsDefer(false)
 {
   MOZ_COUNT_CTOR(nsHtml5SpeculativeLoad);
 }
@@ -52,12 +55,14 @@ nsHtml5SpeculativeLoad::Perform(nsHtml5TreeOpExecutor* aExecutor)
     case eSpeculativeLoadScript:
       aExecutor->PreloadScript(mUrlOrSizes, mCharsetOrSrcset,
                                mTypeOrCharsetSourceOrDocumentModeOrMetaCSPOrSizesOrIntegrity,
-                               mCrossOriginOrMedia, mReferrerPolicyOrIntegrity, false);
+                               mCrossOriginOrMedia, mReferrerPolicyOrIntegrity, false,
+                               mIsAsync, mIsDefer);
       break;
     case eSpeculativeLoadScriptFromHead:
       aExecutor->PreloadScript(mUrlOrSizes, mCharsetOrSrcset,
                                mTypeOrCharsetSourceOrDocumentModeOrMetaCSPOrSizesOrIntegrity,
-                               mCrossOriginOrMedia, mReferrerPolicyOrIntegrity, true);
+                               mCrossOriginOrMedia, mReferrerPolicyOrIntegrity, true,
+                               mIsAsync, mIsDefer);
       break;
     case eSpeculativeLoadStyle:
       aExecutor->PreloadStyle(mUrlOrSizes, mCharsetOrSrcset, mCrossOriginOrMedia, mReferrerPolicyOrIntegrity,

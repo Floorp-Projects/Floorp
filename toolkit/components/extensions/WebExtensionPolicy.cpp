@@ -251,7 +251,7 @@ WebExtensionPolicy::BackgroundPageHTML() const
 
   for (auto& script : mBackgroundScripts.Value()) {
     nsCString escaped;
-    escaped.Adopt(nsEscapeHTML(NS_ConvertUTF16toUTF8(script).get()));
+    nsAppendEscapedHTML(NS_ConvertUTF16toUTF8(script), escaped);
 
     result.AppendPrintf(kBackgroundPageHTMLScript, escaped.get());
   }
