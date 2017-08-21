@@ -140,6 +140,37 @@ add_task(async function test_setTitle_and_getTitle() {
 
   await extension.unload();
 });
+
+add_task(async function test_setTitle_activeTab() {
+  async function background() {
+    const tabs = await browser.tabs.query({active: true});
+    const tabId = tabs[0].id;
+
+    const title = "Customized browserAction title";
+    await browser.browserAction.setTitle({tabId, title});
+
+    browser.test.notifyPass("browserAction_setTitle_activeTab.done");
+  }
+
+  const extension = ExtensionTestUtils.loadExtension({
+    background,
+    manifest: {
+      "browser_action": {
+        "default_title": "Browser Action default title",
+      },
+    },
+  });
+
+  await extension.startup();
+
+  await extension.awaitFinish("browserAction_setTitle_activeTab.done");
+
+  is(BrowserActions.getNameForActiveTab(`{${extension.uuid}}`),
+     "Customized browserAction title",
+     "The browserAction title has been updated on the currently activeTab");
+
+  await extension.unload();
+});
 </script>
 
 </body>
