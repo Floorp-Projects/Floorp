@@ -90,7 +90,6 @@ endif
 ifneq '$(or $(MOZ_DEV_EDITION),$(NIGHTLY_BUILD))' ''
 	@$(MAKE) -C ../extensions/webcompat-reporter/locales AB_CD=$* XPI_NAME=locale-$*
 endif
-	@$(MAKE) -C ../../intl/locales AB_CD=$* XPI_NAME=locale-$*
 	@$(MAKE) -C ../../devtools/client/locales AB_CD=$* XPI_NAME=locale-$* XPI_ROOT_APPID='$(XPI_ROOT_APPID)'
 	@$(MAKE) -C ../../devtools/shim/locales AB_CD=$* XPI_NAME=locale-$* XPI_ROOT_APPID='$(XPI_ROOT_APPID)'
 	@$(MAKE) -B searchplugins AB_CD=$* XPI_NAME=locale-$*
@@ -111,7 +110,6 @@ endif
 ifndef RELEASE_OR_BETA
 	@$(MAKE) -C ../extensions/presentation/locale chrome AB_CD=$*
 endif
-	@$(MAKE) -C ../../intl/locales chrome AB_CD=$*
 	@$(MAKE) -C ../../devtools/client/locales chrome AB_CD=$*
 	@$(MAKE) -C ../../devtools/shim/locales chrome AB_CD=$*
 	@$(MAKE) chrome AB_CD=$*
