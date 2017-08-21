@@ -5,17 +5,19 @@
 <LinearLayout
     xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:app="http://schemas.android.com/apk/res-auto"
-    xmlns:gecko="http://schemas.android.com/apk/res-auto"
     xmlns:tools="http://schemas.android.com/tools"
     android:layout_width="match_parent"
     android:layout_height="wrap_content"
     android:orientation="vertical">
 
+    <!-- a11y: When the dialog first appears, the title is announced so there is no
+         need to allow refocusing the title. -->
     <RelativeLayout
         android:id="@+id/info_wrapper"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:padding="10dp">
+        android:padding="10dp"
+        android:importantForAccessibility="noHideDescendants">
 
         <org.mozilla.gecko.activitystream.homepanel.stream.StreamOverridablePageIconLayout
                 android:id="@+id/page_icon_layout"
