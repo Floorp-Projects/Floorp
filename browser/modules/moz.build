@@ -135,6 +135,7 @@ EXTRA_JS_MODULES += [
     'ContentObservers.js',
     'ContentSearch.jsm',
     'ContentWebRTC.jsm',
+    'ContextMenu.jsm',
     'DirectoryLinksProvider.jsm',
     'E10SUtils.jsm',
     'ExtensionsUI.jsm',
