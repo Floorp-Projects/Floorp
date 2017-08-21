@@ -1,0 +1,118 @@
+<!DOCTYPE HTML>
+<html>
+<head>
+  <title>Test Encrypted Media Extensions</title>
+  <script type="text/javascript" src="/tests/SimpleTest/SimpleTest.js"></script>
+  <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css" />
+  <script type="text/javascript" src="manifest.js"></script>
+  <script type="text/javascript" src="http://test1.mochi.test:8888/tests/dom/media/test/eme.js"></script>
+</head>
+<body>
+<pre id="test">
+<script class="testbody" type="text/javascript">
+var manager = new MediaTestManager;
+
+var EMEmanifest = [
+  {
+    name:"bipbop 10s",
+    tracks: [
+      {
+          name:"video",
+          type:"video/mp4; codecs=\"avc1.4d4015\"",
+          fragments:[ "bipbop-cenc-video-10s.mp4",
+                    ]
+      }
+    ],
+    keys: {
+      "7e571d037e571d037e571d037e571d11" : "7e5733337e5733337e5733337e573311",
+    },
+    sessionType:"temporary",
+    sessionCount:1,
+    duration:10.01
+  },
+];
+
+function startTest(test, token)
+{
+  manager.started(token);
+
+  let v = document.createElement("video");
+  v.controls = true;
+  v.autoplay = true;
+
+  document.body.appendChild(v);
+
+  var eventCounts = { play: 0, playing: 0};
+  function ForbiddenEvents(e) {
+    var v = e.target;
+    ok(v.readyState >= v.HAVE_FUTURE_DATA, "Must not have received event too early");
+    is(eventCounts[e.type], 0, "event should have only be fired once");
+    eventCounts[e.type]++;
+  }
+  // Log events for debugging.
+  var events = ["suspend", "play", "canplay", "canplaythrough", "loadstart", "loadedmetadata",
+                "loadeddata", "playing", "ended", "error", "stalled", "emptied", "abort",
+                "waiting", "pause", "durationchange", "seeking", "seeked"];
+  function logEvent(e) {
+    info("got " + e.type + " event");
+  }
+  events.forEach(function(e) {
+    v.addEventListener(e, logEvent);
+  });
+  v.addEventListener("play", ForbiddenEvents);
+  v.addEventListener("playing", ForbiddenEvents);
+
+  var gotWaitingForKey = 0;
+
+  let waitForKey = new EMEPromise;
+  v.addEventListener("waitingforkey", function() {
+    gotWaitingForKey += 1;
+    waitForKey.resolve();
+  });
+
+  v.addEventListener("loadedmetadata", function() {
+    ok(SpecialPowers.do_lookupGetter(v, "isEncrypted").apply(v),
+       TimeStamp(token) + " isEncrypted should be true");
+    is(v.isEncrypted, undefined, "isEncrypted should not be accessible from content");
+  });
+
+  let finish = new EMEPromise;
+  v.addEventListener("playing", function() {
+    ok(true, TimeStamp(token) + " got playing event");
+    // We expect only one waitingForKey as we delay until all sessions are ready.
+    // I.e. one waitingForKey should be fired, after which, we process all sessions,
+    // so it should not be possible to be blocked by a key after that point.
+    ok(gotWaitingForKey == 1,  "Expected number 1 wait, got: " + gotWaitingForKey);
+
+    finish.resolve();
+  });
+
+  Promise.all([
+    LoadInitData(v, test, token),
+    CreateAndSetMediaKeys(v, test, token),
+    LoadTest(test, v, token, false /* do not call endOfStream */),
+    waitForKey.promise])
+  .then(values => {
+    let initData = values[0];
+    return ProcessInitData(v, test, token, initData);
+  })
+  .then(sessions => {
+    Log(token, "Updated all sessions, loading complete");
+    finish.promise.then(() => CloseSessions(v, sessions));
+    return finish.promise;
+  })
+  .catch(reason => ok(false, reason))
+  .then(() => manager.finished(token));
+}
+
+function beginTest() {
+  manager.runTests(EMEmanifest, startTest);
+}
+
+SimpleTest.waitForExplicitFinish();
+SetupEMEPref(beginTest);
+
+</script>
+</pre>
+</body>
+</html>

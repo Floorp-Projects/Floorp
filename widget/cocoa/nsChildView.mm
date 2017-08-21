@@ -3343,6 +3343,7 @@ NSEvent* gLastDragMouseDownEvent = nil;
 #endif
 
     mTopLeftCornerMask = NULL;
+    mLastPressureStage = 0;
   }
 
   // register for things we'll take from other applications
@@ -6389,6 +6390,24 @@ provideDataForType:(NSString*)aType
   mGeckoChild->DispatchWindowEvent(command);
 
   return command.mSucceeded && command.mIsEnabled;
+}
+
+- (void)pressureChangeWithEvent:(NSEvent*)event
+{
+  NS_OBJC_BEGIN_TRY_ABORT_BLOCK
+
+  NSInteger stage = [event stage];
+  if (mLastPressureStage == 1 && stage == 2) {
+    NSUserDefaults* userDefaults = [NSUserDefaults standardUserDefaults];
+    if ([userDefaults integerForKey:@"com.apple.trackpad.forceClick"] == 1) {
+      // This is no public API to get configuration for current force click.
+      // This is filed as radar 29294285.
+      [self quickLookWithEvent:event];
+    }
+  }
+  mLastPressureStage = stage;
+
+  NS_OBJC_END_TRY_ABORT_BLOCK
 }
 
 nsresult

@@ -197,21 +197,6 @@ function AppendTrack(test, ms, track, token)
     Log(token, track.name + ": addSourceBuffer(" + track.type + ")");
     sb = ms.addSourceBuffer(track.type);
     sb.addEventListener("updateend", function() {
-      if (ms.readyState == "ended") {
-        /* We can get another updateevent as a result of calling ms.endOfStream() if
-           the highest end time of our source buffers is different from that of the
-           media source duration. Due to bug 1065207 this can happen because of
-           inaccuracies in the frame duration calculations. Check if we are already
-           "ended" and ignore the update event */
-        Log(token, track.name + ": updateend when readyState already 'ended'");
-        if (!resolved) {
-          // Needed if decoder knows this was the last fragment and ended by itself.
-          Log(token, track.name + ": but promise not resolved yet -> end of track");
-          resolve();
-          resolved = true;
-        }
-        return;
-      }
       Log(token, track.name + ": updateend for " + fragmentFile + ", " + SourceBufferToString(sb));
       addNextFragment();
     });
@@ -222,7 +207,7 @@ function AppendTrack(test, ms, track, token)
 
 //Returns a promise that is resolved when the media element is ready to have
 //its play() function called; when it's loaded MSE fragments.
-function LoadTest(test, elem, token)
+function LoadTest(test, elem, token, endOfStream = true)
 {
   if (!test.tracks) {
     ok(false, token + " test does not have a tracks list");
@@ -240,7 +225,9 @@ function LoadTest(test, elem, token)
         return AppendTrack(test, ms, track, token);
       })).then(function() {
         Log(token, "Tracks loaded, calling MediaSource.endOfStream()");
-        ms.endOfStream();
+        if (endOfStream) {
+          ms.endOfStream();
+        }
         resolve();
       }).catch(reject);
     }, {once: true});

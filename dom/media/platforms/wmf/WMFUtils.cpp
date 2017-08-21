@@ -15,6 +15,7 @@
 #include "nsWindowsHelpers.h"
 #include <initguid.h>
 #include <stdint.h>
+#include "mozilla/mscom/EnsureMTA.h"
 
 #ifdef WMF_MUST_DEFINE_AAC_MFT_CLSID
 // Some SDK versions don't define the AAC decoder CLSID.
@@ -220,14 +221,20 @@ MFStartup()
   // decltype is unusable for functions having default parameters
   DECL_FUNCTION_PTR(MFStartup, ULONG, DWORD);
   ENSURE_FUNCTION_PTR_(MFStartup, Mfplat.dll)
-  return MFStartupPtr(MF_WIN7_VERSION, MFSTARTUP_FULL);
+
+  hr = E_FAIL;
+  mozilla::mscom::EnsureMTA(
+    [&]() -> void { hr = MFStartupPtr(MF_WIN7_VERSION, MFSTARTUP_FULL); });
+  return hr;
 }
 
 HRESULT
 MFShutdown()
 {
   ENSURE_FUNCTION_PTR(MFShutdown, Mfplat.dll)
-  return (MFShutdownPtr)();
+  HRESULT hr = E_FAIL;
+  mozilla::mscom::EnsureMTA([&]() -> void { hr = (MFShutdownPtr)(); });
+  return hr;
 }
 
 HRESULT

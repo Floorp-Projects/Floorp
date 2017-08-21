@@ -24,6 +24,7 @@
 #include "nsPrintfCString.h"
 #include "nsThreadUtils.h"
 #include "VideoUtils.h"
+#include "mozilla/mscom/EnsureMTA.h"
 
 const CLSID CLSID_VideoProcessorMFT =
 {
@@ -648,6 +649,7 @@ private:
   uint32_t mWidth = 0;
   uint32_t mHeight = 0;
   UINT mDeviceManagerToken = 0;
+  bool mConfiuredForSize = false;
 };
 
 bool
@@ -778,22 +780,35 @@ D3D11DXVA2Manager::InitInternal(layers::KnowsCompositor* aKnowsCompositor,
     return hr;
   }
 
-  mTransform = new MFTDecoder();
-  hr = mTransform->Create(CLSID_VideoProcessorMFT);
-  if (!SUCCEEDED(hr)) {
-    aFailureReason = nsPrintfCString(
-      "MFTDecoder::Create(CLSID_VideoProcessorMFT) failed with code %X", hr);
-    return hr;
-  }
+  // The IMFTransform interface used by MFTDecoder is documented to require to
+  // run on an MTA thread.
+  // https://msdn.microsoft.com/en-us/library/windows/desktop/ee892371(v=vs.85).aspx#components
+  // The main thread (where this function is called) is STA, not MTA.
+  RefPtr<MFTDecoder> mft;
+  mozilla::mscom::EnsureMTA([&]() -> void {
+    mft = new MFTDecoder();
+    hr = mft->Create(CLSID_VideoProcessorMFT);
 
-  hr = mTransform->SendMFTMessage(MFT_MESSAGE_SET_D3D_MANAGER,
-                                  ULONG_PTR(mDXGIDeviceManager.get()));
+    if (!SUCCEEDED(hr)) {
+      aFailureReason = nsPrintfCString(
+        "MFTDecoder::Create(CLSID_VideoProcessorMFT) failed with code %X", hr);
+      return;
+    }
+
+    hr = mft->SendMFTMessage(MFT_MESSAGE_SET_D3D_MANAGER,
+                             ULONG_PTR(mDXGIDeviceManager.get()));
+    if (!SUCCEEDED(hr)) {
+      aFailureReason = nsPrintfCString("MFTDecoder::SendMFTMessage(MFT_MESSAGE_"
+                                       "SET_D3D_MANAGER) failed with code %X",
+                                       hr);
+      return;
+    }
+  });
+
   if (!SUCCEEDED(hr)) {
-    aFailureReason = nsPrintfCString("MFTDecoder::SendMFTMessage(MFT_MESSAGE_"
-                                     "SET_D3D_MANAGER) failed with code %X",
-                                     hr);
     return hr;
   }
+  mTransform = mft;
 
   RefPtr<ID3D11VideoDevice> videoDevice;
   hr = mDevice->QueryInterface(
@@ -947,14 +962,18 @@ D3D11DXVA2Manager::CopyToImage(IMFSample* aVideoSample,
     } else {
       // Our video sample is in NV12 format but our output texture is in BGRA.
       // Use MFT to do color conversion.
-      hr = mTransform->Input(aVideoSample);
+      hr = E_FAIL;
+      mozilla::mscom::EnsureMTA(
+        [&]() -> void { hr = mTransform->Input(aVideoSample); });
       NS_ENSURE_TRUE(SUCCEEDED(hr), hr);
 
       RefPtr<IMFSample> sample;
       hr = CreateOutputSample(sample, texture);
       NS_ENSURE_TRUE(SUCCEEDED(hr), hr);
 
-      hr = mTransform->Output(&sample);
+      hr = E_FAIL;
+      mozilla::mscom::EnsureMTA(
+        [&]() -> void { hr = mTransform->Output(&sample); });
       NS_ENSURE_TRUE(SUCCEEDED(hr), hr);
     }
   }
@@ -1029,14 +1048,19 @@ D3D11DXVA2Manager::CopyToBGRATexture(ID3D11Texture2D *aInTexture,
 
   inputSample->AddBuffer(inputBuffer);
 
-  hr = mTransform->Input(inputSample);
+  hr = E_FAIL;
+  mozilla::mscom::EnsureMTA(
+    [&]() -> void { hr = mTransform->Input(inputSample); });
   NS_ENSURE_TRUE(SUCCEEDED(hr), hr);
 
   RefPtr<IMFSample> outputSample;
   hr = CreateOutputSample(outputSample, texture);
   NS_ENSURE_TRUE(SUCCEEDED(hr), hr);
 
-  hr = mTransform->Output(&outputSample);
+  hr = E_FAIL;
+  mozilla::mscom::EnsureMTA(
+    [&]() -> void { hr = mTransform->Output(&outputSample); });
+  NS_ENSURE_TRUE(SUCCEEDED(hr), hr);
 
   texture.forget(aOutTexture);
 
@@ -1062,6 +1086,11 @@ HRESULT ConfigureOutput(IMFMediaType* aOutput, void* aData)
 HRESULT
 D3D11DXVA2Manager::ConfigureForSize(uint32_t aWidth, uint32_t aHeight)
 {
+  if (mConfiuredForSize && aWidth == mWidth && aHeight == mHeight) {
+    // If the size hasn't changed, don't reconfigure.
+    return S_OK;
+  }
+
   mWidth = aWidth;
   mHeight = aHeight;
 
@@ -1081,7 +1110,10 @@ D3D11DXVA2Manager::ConfigureForSize(uint32_t aWidth, uint32_t aHeight)
   hr = inputType->SetUINT32(MF_MT_ALL_SAMPLES_INDEPENDENT, TRUE);
   NS_ENSURE_TRUE(SUCCEEDED(hr), hr);
 
-  RefPtr<IMFAttributes> attr = mTransform->GetAttributes();
+  RefPtr<IMFAttributes> attr;
+  mozilla::mscom::EnsureMTA(
+    [&]() -> void { attr = mTransform->GetAttributes(); });
+  NS_ENSURE_TRUE(attr != nullptr, E_FAIL);
 
   hr = attr->SetUINT32(MF_XVP_PLAYBACK_MODE, TRUE);
   NS_ENSURE_TRUE(SUCCEEDED(hr), hr);
@@ -1103,8 +1135,14 @@ D3D11DXVA2Manager::ConfigureForSize(uint32_t aWidth, uint32_t aHeight)
   NS_ENSURE_TRUE(SUCCEEDED(hr), hr);
 
   gfx::IntSize size(mWidth, mHeight);
-  hr = mTransform->SetMediaTypes(inputType, outputType, ConfigureOutput, &size);
+  hr = E_FAIL;
+  mozilla::mscom::EnsureMTA([&]() -> void {
+    hr =
+      mTransform->SetMediaTypes(inputType, outputType, ConfigureOutput, &size);
+  });
   NS_ENSURE_TRUE(SUCCEEDED(hr), hr);
+
+  mConfiuredForSize = true;
 
   return S_OK;
 }
