@@ -5745,18 +5745,18 @@ HTMLMediaElement::UpdateReadyStateInternal()
   }
 
   enum NextFrameStatus nextFrameStatus = NextFrameStatus();
-  if (nextFrameStatus == NEXT_FRAME_UNAVAILABLE ||
-      (nextFrameStatus == NEXT_FRAME_UNAVAILABLE_BUFFERING &&
-       mWaitingForKey == WAITING_FOR_KEY)) {
-    if (mWaitingForKey != NOT_WAITING_FOR_KEY) {
+  if (mWaitingForKey == NOT_WAITING_FOR_KEY) {
+    if (nextFrameStatus == NEXT_FRAME_UNAVAILABLE && mDecoder &&
+        !mDecoder->IsEnded()) {
+      nextFrameStatus = mDecoder->NextFrameBufferedStatus();
+    }
+  } else if (mWaitingForKey == WAITING_FOR_KEY) {
+    if (nextFrameStatus == NEXT_FRAME_UNAVAILABLE ||
+        nextFrameStatus == NEXT_FRAME_UNAVAILABLE_BUFFERING) {
       // http://w3c.github.io/encrypted-media/#wait-for-key
       // Continuing 7.3.4 Queue a "waitingforkey" Event
       // 4. Queue a task to fire a simple event named waitingforkey
       // at the media element.
-      if (mWaitingForKey == WAITING_FOR_KEY) {
-        mWaitingForKey = WAITING_FOR_KEY_DISPATCHED;
-        DispatchAsyncEvent(NS_LITERAL_STRING("waitingforkey"));
-      }
       // 5. Set the readyState of media element to HAVE_METADATA.
       // NOTE: We'll change to HAVE_CURRENT_DATA or HAVE_METADATA
       // depending on whether we've loaded the first frame or not
@@ -5764,8 +5764,15 @@ HTMLMediaElement::UpdateReadyStateInternal()
       // 6. Suspend playback.
       // Note: Playback will already be stalled, as the next frame is
       // unavailable.
-    } else if (mDecoder && !mDecoder->IsEnded()) {
-      nextFrameStatus = mDecoder->NextFrameBufferedStatus();
+      mWaitingForKey = WAITING_FOR_KEY_DISPATCHED;
+      DispatchAsyncEvent(NS_LITERAL_STRING("waitingforkey"));
+    }
+  } else {
+    MOZ_ASSERT(mWaitingForKey == WAITING_FOR_KEY_DISPATCHED);
+    if (nextFrameStatus == NEXT_FRAME_AVAILABLE) {
+      // We have new frames after dispatching "waitingforkey".
+      // This means we've got the key and can reset mWaitingForKey now.
+      mWaitingForKey = NOT_WAITING_FOR_KEY;
     }
   }
 
@@ -5824,14 +5831,6 @@ HTMLMediaElement::UpdateReadyStateInternal()
     return;
   }
 
-  if (mDecoder && !mDecoder->IsEnded() &&
-      !mDecoder->GetResource()->IsExpectingMoreData()) {
-    LOG(LogLevel::Debug, ("MediaElement %p UpdateReadyStateInternal() "
-                          "Decoder fetched all data for media resource", this));
-    ChangeReadyState(nsIDOMHTMLMediaElement::HAVE_ENOUGH_DATA);
-    return;
-  }
-
   if (nextFrameStatus != MediaDecoderOwner::NEXT_FRAME_AVAILABLE) {
     LOG(LogLevel::Debug, ("MediaElement %p UpdateReadyStateInternal() "
                           "Next frame not available", this));
@@ -5844,12 +5843,6 @@ HTMLMediaElement::UpdateReadyStateInternal()
                           "Stream HAVE_ENOUGH_DATA", this));
     ChangeReadyState(nsIDOMHTMLMediaElement::HAVE_ENOUGH_DATA);
     return;
-  }
-
-  if (!mPaused || mAutoplaying) {
-    // We only want to reset mWaitingForKey if we have played all decoded data
-    // or if we haven't played anything yet.
-    mWaitingForKey = NOT_WAITING_FOR_KEY;
   }
 
   // Now see if we should set HAVE_ENOUGH_DATA.

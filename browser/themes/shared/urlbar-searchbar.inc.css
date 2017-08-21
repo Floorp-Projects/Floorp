@@ -113,7 +113,7 @@
 
 .urlbar-history-dropmarker {
   -moz-appearance: none;
-  list-style-image: url(chrome://browser/skin/arrow-dropdown-16.svg);
+  list-style-image: url(chrome://global/skin/icons/arrow-dropdown-16.svg);
   transition: opacity 0.15s ease;
 }
 

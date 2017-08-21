@@ -10,11 +10,11 @@
 }
 
 #eula-dialog[addontype="theme"] #icon {
-  list-style-image: url("chrome://mozapps/skin/extensions/themeGeneric.png");
+  list-style-image: url("chrome://mozapps/skin/extensions/themeGeneric.svg");
 }
 
 #eula-dialog[addontype="locale"] #icon {
-  list-style-image: url("chrome://mozapps/skin/extensions/localeGeneric.png");
+  list-style-image: url("chrome://mozapps/skin/extensions/localeGeneric.svg");
 }
 
 #eula-dialog[addontype="plugin"] #icon {
@@ -22,7 +22,7 @@
 }
 
 #eula-dialog[addontype="dictionary"] #icon {
-  list-style-image: url("chrome://mozapps/skin/extensions/dictionaryGeneric.png");
+  list-style-image: url("chrome://mozapps/skin/extensions/dictionaryGeneric.svg");
 }
 
 #heading-container {

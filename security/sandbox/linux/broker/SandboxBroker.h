@@ -65,6 +65,15 @@ class SandboxBroker final
     Policy(const Policy& aOther);
     ~Policy();
 
+    // Add permissions from AddDir/AddDynamic rules to any rules that
+    // exist for their descendents, and remove any descendent rules
+    // made redundant by this process.
+    //
+    // Call this after adding rules and before using the policy to
+    // prevent the descendent rules from shadowing the ancestor rules
+    // and removing permissions that we expect the file to have.
+    void FixRecursivePermissions();
+
     enum AddCondition {
       AddIfExistsNow,
       AddAlways,
@@ -86,6 +95,10 @@ class SandboxBroker final
     void AddPrefix(int aPerms, const char* aPath);
     // Adds a file or dir (end with /) if it exists, and a prefix otherwhise.
     void AddDynamic(int aPerms, const char* aPath);
+    // Adds permissions on all ancestors of a path.  (This doesn't
+    // include the root directory, but if the path is given with a
+    // trailing slash it includes the path without the slash.)
+    void AddAncestors(const char* aPath, int aPerms = MAY_ACCESS);
     // Default: add file if it exists when creating policy or if we're
     // conferring permission to create it (log files, etc.).
     void AddPath(int aPerms, const char* aPath) {

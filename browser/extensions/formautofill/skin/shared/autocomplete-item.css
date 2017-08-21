@@ -24,7 +24,17 @@ xul|richlistitem[originaltype="autofill-insecureWarning"] {
   --item-padding-horizontal: 10px;
   --col-spacer: 7px;
   --item-width: calc(50% - (var(--col-spacer) / 2));
-  --item-text-color: -moz-FieldText;
+  --label-text-color: #262626;
+  --comment-text-color: #646464;
+  --warning-text-color: #646464;
+  --option-btn-text-color: -moz-FieldText;
+
+  --default-font-size: 12;
+  --label-affix-font-size: 10;
+  --label-font-size: 12;
+  --comment-font-size: 10;
+  --warning-font-size: 10;
+  --option-btn-font-size: 11;
 }
 
 .autofill-item-box[size="small"] {
@@ -32,6 +42,10 @@ xul|richlistitem[originaltype="autofill-insecureWarning"] {
   --col-spacer: 0px;
   --row-spacer: 3px;
   --item-width: 100%;
+}
+
+.autofill-item-box:not([ac-image=""]) {
+  --comment-font-size: 11;
 }
 
 .autofill-footer,
@@ -53,7 +67,7 @@ xul|richlistitem[originaltype="autofill-insecureWarning"] {
   flex-wrap: wrap;
   align-items: center;
   background-color: #FFFFFF;
-  color: var(--item-text-color);
+  color: var(--label-text-color);
 }
 
 .autofill-item-box:last-child {
@@ -72,10 +86,35 @@ xul|richlistitem[originaltype="autofill-insecureWarning"] {
   text-align: start;
 }
 
+.autofill-item-box:not([ac-image=""]) > .profile-label-col::before {
+  margin-right: 5px;
+  float: left;
+  content: "";
+  width: 16px;
+  height: 16px;
+  background-image: var(--primary-icon);
+  background-size: 16px 16px;
+  -moz-context-properties: fill;
+  fill: #4D4D4D;
+}
+
+.autofill-item-box > .profile-label-col > .profile-label {
+  font-size: calc(var(--label-font-size) / var(--default-font-size) * 1em);
+}
+
+.autofill-item-box > .profile-label-col > .profile-label-affix {
+  font-weight: lighter;
+  font-size: calc(var(--label-affix-font-size) / var(--default-font-size) * 1em);
+}
+
 .autofill-item-box > .profile-comment-col {
   margin-inline-start: var(--col-spacer);
   text-align: end;
-  color: GrayText;
+  color: var(--comment-text-color);
+}
+
+.autofill-item-box > .profile-comment-col > .profile-comment {
+  font-size: calc(var(--comment-font-size) / var(--default-font-size) * 1em);
 }
 
 .autofill-item-box[size="small"] {
@@ -100,15 +139,18 @@ xul|richlistitem[originaltype="autofill-insecureWarning"] {
 
 .autofill-footer > .autofill-warning {
   padding: 2.5px 0;
-  color: #737373;
+  color: var(--warning-text-color);
   text-align: center;
   background-color: rgba(248,232,28,.2);
   border-bottom: 1px solid rgba(38,38,38,.15);
+  font-size: calc(var(--warning-font-size) / var(--default-font-size) * 1em);
 }
 
 .autofill-footer > .autofill-option-button {
-  height: 41px;
+  height: 40px;
   background-color: #EDEDED;
+  font-size: calc(var(--option-btn-font-size) / var(--default-font-size) * 1em);
+  color: var(--option-btn-text-color);
 }
 
 .autofill-footer[no-warning="true"] > .autofill-warning {
