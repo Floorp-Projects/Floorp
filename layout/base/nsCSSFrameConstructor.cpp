@@ -7284,7 +7284,7 @@ nsCSSFrameConstructor::MaybeConstructLazily(Operation aOperation,
     if (aChild->IsRootOfAnonymousSubtree() ||
         (aChild->HasFlag(NODE_IS_IN_SHADOW_TREE) &&
          !aChild->IsInNativeAnonymousSubtree()) ||
-        aChild->IsEditable() || aChild->IsXULElement()) {
+        aChild->IsXULElement()) {
       return false;
     }
   } else { // CONTENTAPPEND
@@ -7293,7 +7293,7 @@ nsCSSFrameConstructor::MaybeConstructLazily(Operation aOperation,
     for (nsIContent* child = aChild; child; child = child->GetNextSibling()) {
       NS_ASSERTION(!child->IsRootOfAnonymousSubtree(),
                    "Should be coming through the CONTENTAPPEND case");
-      if (child->IsXULElement() || child->IsEditable()) {
+      if (child->IsXULElement()) {
         return false;
       }
     }
