@@ -1062,7 +1062,10 @@ void
 AudioCallbackDriver::StateCallback(cubeb_state aState)
 {
   LOG(LogLevel::Debug, ("AudioCallbackDriver State: %d", aState));
-  if (aState == CUBEB_STATE_ERROR) {
+  // If we don't have an audio stream here, this means that the stream
+  // initialization has failed. A fallback on a SystemCallDriver will happen at
+  // the callsite of `cubeb_stream_init`.
+  if (aState == CUBEB_STATE_ERROR && mAudioStream) {
     // Fall back to a driver using a normal thread. If needed,
     // the graph will try to re-open an audio stream later.
     MonitorAutoLock lock(GraphImpl()->GetMonitor());
