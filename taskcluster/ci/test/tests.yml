@@ -114,7 +114,7 @@ crashtest:
             default: default
     run-on-projects:
         by-test-platform:
-            macosx64-stylo.*: ['autoland', 'mozilla-central', 'try']
+            .*-stylo.*: ['autoland', 'mozilla-central', 'try']
             default: built-projects
     chunks:
         by-test-platform:
@@ -429,6 +429,7 @@ mochitest:
             macosx.*: 5
             windows.*: 5
             linux32/debug: 16
+            linux32-stylo/debug: 16
             linux.*: 10
     e10s:
         by-test-platform:
@@ -443,7 +444,7 @@ mochitest:
     allow-software-gl-layers: false
     run-on-projects:
         by-test-platform:
-            linux64-stylo.*: ['autoland', 'mozilla-central', 'try']
+            linux.*-stylo.*: ['autoland', 'mozilla-central', 'try']
             macosx64-stylo/.*: ['mozilla-central', 'try']
             windows7-32-stylo.*: ['autoland', 'mozilla-central', 'try']
             default: built-projects
@@ -491,7 +492,8 @@ mochitest-a11y:
     run-on-projects:
         by-test-platform:
             linux64-qr/.*: ['mozilla-central', 'try']
-            linux64-stylo.*: ['autoland', 'mozilla-central', 'try']
+            linux.*-stylo.*: ['autoland', 'mozilla-central', 'try']
+            linux32-stylo/debug: ['try']
             linux64-stylo/debug: ['try']
             macosx64-stylo/.*: ['mozilla-central', 'try']
             windows7-32-stylo.*: ['autoland', 'mozilla-central', 'try']
@@ -515,6 +517,7 @@ mochitest-a11y:
     tier:
         by-test-platform:
             .*-stylo.*: 2
+            linux32-stylo/debug: 3
             linux64-stylo/debug: 3
             default: default
 
@@ -528,10 +531,11 @@ mochitest-browser-chrome:
     loopback-video: true
     chunks:
         by-test-platform:
-            linux64-jsdcov/opt: 35
             linux64/debug: 16
-            linux32/debug: 16
             linux64-asan/opt: 16
+            linux64-jsdcov/opt: 35
+            linux32/debug: 16
+            linux32-stylo/debug: 16
             default: 7
     e10s:
         by-test-platform:
@@ -544,6 +548,7 @@ mochitest-browser-chrome:
             linux64-ccov/opt: 7200
             linux64/debug: 5400
             linux32/debug: 5400
+            linux32-stylo/debug: 5400
             default: 3600
     run-on-projects:
         by-test-platform:
@@ -551,7 +556,7 @@ mochitest-browser-chrome:
             windows8-64.*: ['mozilla-release', 'mozilla-beta', 'mozilla-central', 'mozilla-inbound', 'autoland']
             windows8-64-devedition/opt: built-projects  # No dev edition outside of supported branches
             windows10.*: []
-            linux64-stylo.*: ['autoland', 'mozilla-central', 'try']
+            linux.*-stylo.*: ['autoland', 'mozilla-central', 'try']
             linux64-stylo/debug: ['try']
             macosx64-stylo/.*: ['mozilla-central', 'try']
             windows7-32-stylo.*: ['autoland', 'mozilla-central', 'try']
@@ -644,8 +649,9 @@ mochitest-chrome:
     run-on-projects:
         by-test-platform:
             windows7-32.*: ['try']
+            linux32-stylo/debug: ['try']
             linux64-stylo/debug: ['try']
-            linux64-stylo.*: ['autoland', 'mozilla-central', 'try']
+            linux.*-stylo.*: ['autoland', 'mozilla-central', 'try']
             macosx64-stylo/.*: ['mozilla-central', 'try']
             default: built-projects
     worker-type:
@@ -688,6 +694,7 @@ mochitest-chrome:
         by-test-platform:
             windows7-32.*: 2
             macosx64-stylo/.*: 2
+            linux32-stylo/debug: 3
             linux64-stylo/debug: 3
             default: default
 
@@ -700,8 +707,9 @@ mochitest-clipboard:
     instance-size: xlarge
     run-on-projects:
         by-test-platform:
+            linux32-stylo/debug: ['try']
             linux64-stylo/debug: ['try']
-            linux64-stylo.*: ['autoland', 'mozilla-central', 'try']
+            linux.*-stylo.*: ['autoland', 'mozilla-central', 'try']
             macosx64-stylo/.*: ['mozilla-central', 'try']
             default: built-projects
     worker-type:
@@ -744,6 +752,7 @@ mochitest-clipboard:
     tier:
         by-test-platform:
             macosx64-stylo/.*: 2
+            linux32-stylo/debug: 3
             linux64-stylo/debug: 3
             default: default
 
@@ -763,7 +772,7 @@ mochitest-devtools-chrome:
             default: 10
     run-on-projects:
         by-test-platform:
-            linux64-stylo.*: ['autoland', 'mozilla-central', 'try']
+            linux.*-stylo.*: ['autoland', 'mozilla-central', 'try']
             macosx64-stylo/.*: ['mozilla-central', 'try']
             windows7-32-stylo.*: ['autoland', 'mozilla-central', 'try']
             default: built-projects
@@ -812,7 +821,7 @@ mochitest-gpu:
             windows8-64.*: ['mozilla-release', 'mozilla-beta', 'mozilla-central', 'mozilla-inbound', 'autoland']
             windows8-64-devedition/opt: built-projects  # No dev edition outside of supported branches
             windows10.*: []
-            linux64-stylo.*: ['autoland', 'mozilla-central', 'try']
+            linux.*-stylo.*: ['autoland', 'mozilla-central', 'try']
             macosx64-stylo/.*: ['mozilla-central', 'try']
             windows7-32-stylo.*: ['autoland', 'mozilla-central', 'try']
             default: built-projects
@@ -903,7 +912,7 @@ mochitest-media:
             windows8-64.*: ['mozilla-release', 'mozilla-beta', 'mozilla-central', 'mozilla-inbound', 'autoland']
             windows8-64-devedition/opt: built-projects  # No dev edition outside of supported branches
             windows10.*: []
-            linux64-stylo.*: ['autoland', 'mozilla-central', 'try']
+            linux.*-stylo.*: ['autoland', 'mozilla-central', 'try']
             macosx64-stylo/.*: ['mozilla-central', 'try']
             windows7-32-stylo.*: ['autoland', 'mozilla-central', 'try']
             default: built-projects
@@ -988,7 +997,7 @@ mochitest-webgl:
             windows8-64.*: ['mozilla-release', 'mozilla-beta', 'mozilla-central', 'mozilla-inbound', 'autoland']
             windows8-64-devedition/opt: built-projects  # No dev edition outside of supported branches
             windows10.*: []
-            linux64-stylo.*: ['autoland', 'mozilla-central', 'try']
+            linux.*-stylo.*: ['autoland', 'mozilla-central', 'try']
             macosx64-stylo/.*: ['mozilla-central', 'try']
             windows7-32-stylo.*: ['autoland', 'mozilla-central', 'try']
             default: built-projects
@@ -1058,7 +1067,7 @@ reftest:
             windows8-64.*: ['mozilla-release', 'mozilla-beta', 'mozilla-central', 'mozilla-inbound', 'autoland']
             windows8-64-devedition/opt: built-projects  # No dev edition outside of supported branches
             windows10.*: []
-            linux64-stylo.*: ['autoland', 'mozilla-central', 'try']
+            linux.*-stylo.*: ['autoland', 'mozilla-central', 'try']
             macosx64-stylo.*: ['autoland', 'mozilla-central', 'try']
             windows7-32-stylo.*: ['autoland', 'mozilla-central', 'try']
             default: built-projects
