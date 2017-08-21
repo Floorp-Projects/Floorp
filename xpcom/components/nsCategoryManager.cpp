@@ -789,14 +789,14 @@ NS_CreateServicesFromCategory(const char* aCategory,
       continue;
     }
 
-    nsXPIDLCString contractID;
+    nsCString contractID;
     rv = categoryManager->GetCategoryEntry(aCategory, entryString.get(),
                                            getter_Copies(contractID));
     if (NS_FAILED(rv)) {
       continue;
     }
 
-    nsCOMPtr<nsISupports> instance = do_GetService(contractID);
+    nsCOMPtr<nsISupports> instance = do_GetService(contractID.get());
     if (!instance) {
       LogMessage("While creating services from category '%s', could not create service for entry '%s', contract ID '%s'",
                  aCategory, entryString.get(), contractID.get());
