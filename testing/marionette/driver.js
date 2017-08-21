@@ -461,22 +461,22 @@ GeckoDriver.prototype.addFrameCloseListener = function(action) {
 /**
  * Create a new browsing context for window and add to known browsers.
  *
- * @param {nsIDOMWindow} win
+ * @param {ChromeWindow} win
  *     Window for which we will create a browsing context.
  *
  * @return {string}
  *     Returns the unique server-assigned ID of the window.
  */
-GeckoDriver.prototype.addBrowser = function(win) {
-  let bc = new browser.Context(win, this);
-  let winId = getOuterWindowId(win);
+GeckoDriver.prototype.addBrowser = function(window) {
+  let bc = new browser.Context(window, this);
+  let winId = getOuterWindowId(window);
 
   this.browsers[winId] = bc;
   this.curBrowser = this.browsers[winId];
   if (!this.wins.has(winId)) {
     // add this to seenItems so we can guarantee
     // the user will get winId as this window's id
-    this.wins.set(winId, win);
+    this.wins.set(winId, window);
   }
 };
 
@@ -487,30 +487,30 @@ GeckoDriver.prototype.addBrowser = function(win) {
  * frame script will be loaded into it.  If isNewSession is true, we will
  * switch focus to the start frame when it registers.
  *
- * @param {nsIDOMWindow} win
+ * @param {ChromeWindow} win
  *     Window whose browser we need to access.
  * @param {boolean=} [false] isNewSession
  *     True if this is the first time we're talking to this browser.
  */
-GeckoDriver.prototype.startBrowser = function(win, isNewSession = false) {
-  this.mainFrame = win;
+GeckoDriver.prototype.startBrowser = function(window, isNewSession = false) {
+  this.mainFrame = window;
   this.curFrame = null;
-  this.addBrowser(win);
+  this.addBrowser(window);
   this.curBrowser.isNewSession = isNewSession;
-  this.whenBrowserStarted(win, isNewSession);
+  this.whenBrowserStarted(window, isNewSession);
 };
 
 /**
  * Callback invoked after a new session has been started in a browser.
  * Loads the Marionette frame script into the browser if needed.
  *
- * @param {nsIDOMWindow} win
+ * @param {ChromeWindow} window
  *     Window whose browser we need to access.
  * @param {boolean} isNewSession
  *     True if this is the first time we're talking to this browser.
  */
-GeckoDriver.prototype.whenBrowserStarted = function(win, isNewSession) {
-  let mm = win.window.messageManager;
+GeckoDriver.prototype.whenBrowserStarted = function(window, isNewSession) {
+  let mm = window.messageManager;
   if (mm) {
     if (!isNewSession) {
       // Loading the frame script corresponds to a situation we need to
@@ -539,8 +539,7 @@ GeckoDriver.prototype.whenBrowserStarted = function(win, isNewSession) {
       Preferences.set(CONTENT_LISTENER_PREF, true);
     }
   } else {
-    logger.error(
-        `Could not load listener into content for page ${win.location.href}`);
+    logger.error("Unable to load content frame script");
   }
 };
 
@@ -3716,15 +3715,6 @@ function copy(obj) {
   return obj;
 }
 
-/**
- * Get the outer window ID for the specified window.
- *
- * @param {nsIDOMWindow} win
- *     Window whose browser we need to access.
- *
- * @return {string}
- *     Returns the unique window ID.
- */
 function getOuterWindowId(win) {
   return win.QueryInterface(Ci.nsIInterfaceRequestor)
       .getInterface(Ci.nsIDOMWindowUtils)

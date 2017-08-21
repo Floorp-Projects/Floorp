@@ -1120,14 +1120,14 @@ function toEvents(tickDuration, seenEls, window) {
  *     Action to dispatch.
  * @param {action.InputState} inputState
  *     Input state for this action's input source.
- * @param {nsIDOMWindow} win
- *     Current window.
+ * @param {WindowProxy} window
+ *     Current window global.
  *
  * @return {Promise}
  *     Promise to dispatch at least a keydown event, and keypress if
  *     appropriate.
  */
-function dispatchKeyDown(a, inputState, win) {
+function dispatchKeyDown(a, inputState, window) {
   return new Promise(resolve => {
     let keyEvent = new action.Key(a.value);
     keyEvent.repeat = inputState.isPressed(keyEvent.key);
@@ -1135,10 +1135,11 @@ function dispatchKeyDown(a, inputState, win) {
     if (keyEvent.key in MODIFIER_NAME_LOOKUP) {
       inputState.setModState(keyEvent.key, true);
     }
+
     // Append a copy of |a| with keyUp subtype
     action.inputsToCancel.push(Object.assign({}, a, {subtype: action.KeyUp}));
     keyEvent.update(inputState);
-    event.sendKeyDown(a.value, keyEvent, win);
+    event.sendKeyDown(a.value, keyEvent, window);
 
     resolve();
   });
@@ -1151,26 +1152,28 @@ function dispatchKeyDown(a, inputState, win) {
  *     Action to dispatch.
  * @param {action.InputState} inputState
  *     Input state for this action's input source.
- * @param {nsIDOMWindow} win
- *     Current window.
+ * @param {WindowProxy} window
+ *     Current window global.
  *
  * @return {Promise}
  *     Promise to dispatch a keyup event.
  */
-function dispatchKeyUp(a, inputState, win) {
+function dispatchKeyUp(a, inputState, window) {
   return new Promise(resolve => {
     let keyEvent = new action.Key(a.value);
+
     if (!inputState.isPressed(keyEvent.key)) {
       resolve();
       return;
     }
+
     if (keyEvent.key in MODIFIER_NAME_LOOKUP) {
       inputState.setModState(keyEvent.key, false);
     }
     inputState.release(keyEvent.key);
     keyEvent.update(inputState);
-    event.sendKeyUp(a.value, keyEvent, win);
 
+    event.sendKeyUp(a.value, keyEvent, window);
     resolve();
   });
 }
@@ -1183,13 +1186,13 @@ function dispatchKeyUp(a, inputState, win) {
  *     Action to dispatch.
  * @param {action.InputState} inputState
  *     Input state for this action's input source.
- * @param {nsIDOMWindow} win
- *     Current window.
+ * @param {WindowProxy} window
+ *     Current window global.
  *
  * @return {Promise}
  *     Promise to dispatch at least a pointerdown event.
  */
-function dispatchPointerDown(a, inputState, win) {
+function dispatchPointerDown(a, inputState, window) {
   return new Promise(resolve => {
     if (inputState.isPressed(a.button)) {
       resolve();
@@ -1209,7 +1212,7 @@ function dispatchPointerDown(a, inputState, win) {
             inputState.x,
             inputState.y,
             mouseEvent,
-            win);
+            window);
         if (event.MouseButton.isSecondary(a.button)) {
           let contextMenuEvent = Object.assign({},
               mouseEvent, {type: "contextmenu"});
@@ -1217,7 +1220,7 @@ function dispatchPointerDown(a, inputState, win) {
               inputState.x,
               inputState.y,
               contextMenuEvent,
-              win);
+              window);
         }
         break;
 
@@ -1241,32 +1244,37 @@ function dispatchPointerDown(a, inputState, win) {
  *     Action to dispatch.
  * @param {action.InputState} inputState
  *     Input state for this action's input source.
- * @param {nsIDOMWindow} win
- *     Current window.
+ * @param {WindowProxy} window
+ *     Current window global.
  *
  * @return {Promise}
  *     Promise to dispatch at least a pointerup event.
  */
-function dispatchPointerUp(a, inputState, win) {
+function dispatchPointerUp(a, inputState, window) {
   return new Promise(resolve => {
     if (!inputState.isPressed(a.button)) {
       resolve();
       return;
     }
+
     inputState.release(a.button);
+
     switch (inputState.subtype) {
       case action.PointerType.Mouse:
         let mouseEvent = new action.Mouse("mouseup", a.button);
         mouseEvent.update(inputState);
-        event.synthesizeMouseAtPoint(inputState.x, inputState.y,
-            mouseEvent, win);
+        event.synthesizeMouseAtPoint(
+            inputState.x, inputState.y, mouseEvent, window);
         break;
+
       case action.PointerType.Pen:
       case action.PointerType.Touch:
         throw new UnsupportedOperationError("Only 'mouse' pointer type is supported");
+
       default:
         throw new TypeError(`Unknown pointer type: ${inputState.subtype}`);
     }
+
     resolve();
   });
 }
