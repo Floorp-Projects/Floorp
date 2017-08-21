@@ -180,16 +180,22 @@ function getCurrentActiveTour(browser) {
     let activeNavItemId = null;
     for (let item of items) {
       if (item.classList.contains("onboarding-active")) {
-        activeNavItemId = item.id;
-        break;
+        if (!activeNavItemId) {
+          activeNavItemId = item.id;
+        } else {
+          ok(false, "There are more than one item marked as active.");
+        }
       }
     }
     let activePageId = null;
     let pages = content.document.querySelectorAll(".onboarding-tour-page");
     for (let page of pages) {
       if (page.style.display != "none") {
-        activePageId = page.id;
-        break;
+        if (!activePageId) {
+          activePageId = page.id;
+        } else {
+          ok(false, "Thre are more than one tour page visible.");
+        }
       }
     }
     return { activeNavItemId, activePageId };
