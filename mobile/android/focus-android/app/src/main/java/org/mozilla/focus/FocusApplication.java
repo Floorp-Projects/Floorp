@@ -40,14 +40,8 @@ public class FocusApplication extends LocaleAwareApplication {
         final StrictMode.ThreadPolicy.Builder threadPolicyBuilder = new StrictMode.ThreadPolicy.Builder().detectAll();
         final StrictMode.VmPolicy.Builder vmPolicyBuilder = new StrictMode.VmPolicy.Builder().detectAll();
 
-        if (AppConstants.isBetaBuild()) {
-            threadPolicyBuilder.penaltyDialog();
-            vmPolicyBuilder.penaltyLog();
-        } else { // Dev/debug build
-            threadPolicyBuilder.penaltyDialog();
-            // We want only penaltyDeath(), but penaltLog() is needed print a stacktrace when a violation happens
-            vmPolicyBuilder.penaltyLog().penaltyDeath();
-        }
+        threadPolicyBuilder.penaltyDialog();
+        vmPolicyBuilder.penaltyLog();
 
         StrictMode.setThreadPolicy(threadPolicyBuilder.build());
         StrictMode.setVmPolicy(vmPolicyBuilder.build());
