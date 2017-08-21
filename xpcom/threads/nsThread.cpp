@@ -874,11 +874,11 @@ void canary_alarm_handler(int signum)
 
 #endif
 
-#define NOTIFY_EVENT_OBSERVERS(func_, params_)                                 \
+#define NOTIFY_EVENT_OBSERVERS(observers_, func_, params_)                     \
   do {                                                                         \
-    if (!mEventObservers.IsEmpty()) {                                          \
-      nsAutoTObserverArray<NotNull<nsCOMPtr<nsIThreadObserver>>, 2>::ForwardIterator \
-        iter_(mEventObservers);                                                \
+    if (!observers_.IsEmpty()) {                                               \
+      nsTObserverArray<nsCOMPtr<nsIThreadObserver>>::ForwardIterator           \
+        iter_(observers_);                                                     \
       nsCOMPtr<nsIThreadObserver> obs_;                                        \
       while (iter_.HasMore()) {                                                \
         obs_ = iter_.GetNext();                                                \
@@ -951,7 +951,7 @@ nsThread::ProcessNextEvent(bool aMayWait, bool* aResult)
     obs->OnProcessNextEvent(this, reallyWait);
   }
 
-  NOTIFY_EVENT_OBSERVERS(OnProcessNextEvent, (this, reallyWait));
+  NOTIFY_EVENT_OBSERVERS(EventQueue()->EventObservers(), OnProcessNextEvent, (this, reallyWait));
 
 #ifdef MOZ_CANARY
   Canary canary;
@@ -1039,7 +1039,7 @@ nsThread::ProcessNextEvent(bool aMayWait, bool* aResult)
     }
   }
 
-  NOTIFY_EVENT_OBSERVERS(AfterProcessNextEvent, (this, *aResult));
+  NOTIFY_EVENT_OBSERVERS(EventQueue()->EventObservers(), AfterProcessNextEvent, (this, *aResult));
 
   if (obs) {
     obs->AfterProcessNextEvent(this, *aResult);
@@ -1146,13 +1146,7 @@ nsThread::AddObserver(nsIThreadObserver* aObserver)
     return NS_ERROR_NOT_SAME_THREAD;
   }
 
-  NS_WARNING_ASSERTION(!mEventObservers.Contains(aObserver),
-                       "Adding an observer twice!");
-
-  if (!mEventObservers.AppendElement(WrapNotNull(aObserver))) {
-    NS_WARNING("Out of memory!");
-    return NS_ERROR_OUT_OF_MEMORY;
-  }
+  EventQueue()->AddObserver(aObserver);
 
   return NS_OK;
 }
@@ -1164,9 +1158,7 @@ nsThread::RemoveObserver(nsIThreadObserver* aObserver)
     return NS_ERROR_NOT_SAME_THREAD;
   }
 
-  if (aObserver && !mEventObservers.RemoveElement(aObserver)) {
-    NS_WARNING("Removing an observer that was never added!");
-  }
+  EventQueue()->RemoveObserver(aObserver);
 
   return NS_OK;
 }
