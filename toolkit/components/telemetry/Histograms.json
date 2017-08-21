@@ -13568,5 +13568,16 @@
     "n_buckets": 100,
     "bug_numbers": [1265472],
     "description": "Time in milliseconds to complete a WebAuthn get assertion."
+  },
+  "VIDEO_UNBLACKINGLISTING_DXVA_DRIVER_RUNTIME_STATUS": {
+    "record_in_processes": ["content"],
+    "alert_emails": ["ajones@mozilla.com", "bwu@mozilla.com", "tkuo@mozilla.com"],
+    "expires_in_version": "60",
+    "releaseChannelCollection": "opt-out",
+    "keyed": true,
+    "kind": "enumerated",
+    "n_values":  10,
+    "bug_numbers": [1393392],
+    "description": "The runtime status, sent when a remote HW video decoder is shutdown, of previously-blacklisted driver: 0:remote HW-decoding and GPU process didn't crash, 1:remote HW-decoding and GPU process crashed. The histogram is keyed by the blacklisted driver name."
   }
 }
