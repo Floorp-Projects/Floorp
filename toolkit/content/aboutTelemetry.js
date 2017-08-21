@@ -1866,6 +1866,16 @@ function setupPageHeader() {
 
   let subtitleElement = document.getElementById("page-subtitle");
   subtitleElement.appendChild(document.createTextNode(subtitleText));
+
+  let links = [
+    "https://docs.telemetry.mozilla.org/",
+    "https://firefox-source-docs.mozilla.org/toolkit/components/telemetry/telemetry/index.html",
+    "https://telemetry.mozilla.org/",
+  ];
+  let htmlLink = document.querySelectorAll("#home-section > ul > li > a");
+  htmlLink.forEach((a, index) => {
+    a.href = links[index];
+  });
 }
 
 function displayProcessesSelector(selectedSection) {
