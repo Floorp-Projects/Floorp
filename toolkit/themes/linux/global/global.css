@@ -126,8 +126,6 @@ statusbarpanel {
 
 sidebarheader {
   min-height: 25px;
-  background-color: -moz-Dialog;
-  color: -moz-dialogText;
   text-shadow: none;
 }
 
@@ -165,7 +163,7 @@ statusbarpanel:-moz-lwtheme {
   border-bottom-color: ThreeDHighlight;
   margin: 0 5px 5px;
 }
-  
+
 .outset {
   border: 1px solid ThreeDShadow;
   border-left-color: ThreeDHighlight;
@@ -181,7 +179,7 @@ separator[orient="vertical"] {
 
 separator.thin:not([orient="vertical"]) {
   height: 0.5em;
-}  
+}
 separator.thin[orient="vertical"] {
   width: 0.5em;
 }
@@ -204,7 +202,7 @@ separator.groove[orient="vertical"] {
 .small-margin {
   margin: 1px 2px;
 }
-    
+
 .plain {
   -moz-appearance: none;
   margin: 0 !important;
