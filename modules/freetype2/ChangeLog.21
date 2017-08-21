@@ -170,7 +170,7 @@
 	FTC_CACHE_TRYLOOP_END): New macros.
 
 	* src/cache/ftccache.c (FTC_Cache_NewNode), src/cache/ftcsbits.c
-	(ftc_snode_compare): Use FT_CACHE_TRYLOOP and FTC_CACE_TRYLOOP_END.
+	(ftc_snode_compare): Use FT_CACHE_TRYLOOP and FTC_CACHE_TRYLOOP_END.
 
 2005-05-23  Werner Lemberg  <wl@gnu.org>
 
@@ -617,7 +617,7 @@
 	`ft_get_adobe_glyph_index', a new function defined in `pstables.h'.
 	(ps_get_macintosh_name, ps_get_standard_strings): Updated.
 
-	* src/base/ftobjs.c (FT_Set_Char_Sizes): Handle fractional sizes
+	* src/base/ftobjs.c (FT_Set_Char_Size): Handle fractional sizes
 	more carefully.  This fixes Savannah bug #12263.
 
 2005-03-06  David Turner  <david@freetype.org>
@@ -1819,7 +1819,7 @@
 2004-08-11  Detlef Würkner  <TetiSoft@apg.lahn.de>
 
 	* src/base/ftrfork.c (FT_Raccess_Guess)
-	[!FT_CONFIG_OPTION_GUESSING_EMBEDDED_FORK]: Remove compiler
+	[!FT_CONFIG_OPTION_GUESSING_EMBEDDED_RFORK]: Remove compiler
 	warnings.
 
 2004-08-06  Adam Piotrowski  <st_intel@poczta.onet.pl>
@@ -2101,7 +2101,7 @@
 
 2004-06-08  David Turner  <david@freetype.org>
 
-	* include/freetype/freetype.h (FT_GlyphMetrics): Move `lsb_delta'
+	* include/freetype/freetype.h (FT_Glyph_Metrics): Move `lsb_delta'
 	and `rsb_delta' elements to...
 	(FT_GlyphSlotRec): Here to retain binary compatibility with older
 	FreeType versions.
@@ -2528,7 +2528,7 @@
 	* src/truetype/ttgload.c [TT_CONFIG_OPTION_GX_VAR_SUPPORT]: Include
 	ttgxvar.h.
 	(TT_Process_Simple_Glyph, load_truetype_glyph)
-	[TT_CONFIG_OPTION_GX_VAR_SUPPORT] :Support GX var fonts.
+	[TT_CONFIG_OPTION_GX_VAR_SUPPORT]: Support GX var fonts.
 
 	* src/truetype/ttobjs.c [TT_CONFIG_OPTION_GX_VAR_SUPPORT]: Include
 	ttgxvar.h.
@@ -2864,7 +2864,7 @@
 	(psh_blues_snap_stem): Don't use blue_shift but blue_threshold.
 
 	* src/pshinter/pshalgo.c (PSH_STRONG_THRESHOLD_MAXIMUM): New macro.
-	(psh_glyph_find_string_points): Use PSH_STRONG_THRESHOLD_MAXIMUM.
+	(psh_glyph_find_strong_points): Use PSH_STRONG_THRESHOLD_MAXIMUM.
 	(psh_glyph_find_blue_points): New function.  Needed for fonts like
 	p052003l.pfb (URW Palladio L Roman) which have flex curves at the
 	base line within blue zones, but the flex curves aren't covered by
@@ -3361,7 +3361,7 @@
 
 	* src/base/ftstroke.c: Include FT_INTERNAL_OBJECTS_H.
 	(FT_Outline_GetOutsideBorder): Inverse result.
-	(FT_Stroker_Rewind, FT_Glyph_Stroke, FT_GlyphStrokeBorder): New
+	(FT_Stroker_Rewind, FT_Glyph_Stroke, FT_Glyph_StrokeBorder): New
 	functions.
 	(FT_Stroker_EndSubPath): Close path if needed.
 	(FT_Stroker_Set, FT_Stroker_ParseOutline): Use FT_Stroker_Rewind.
@@ -3493,8 +3493,8 @@
 2003-12-23  David Turner  <david@freetype.org>
 
 	* include/freetype/internal/ftobjs.h (FT_PAD_FLOOR, FT_PAD_ROUND,
-	FT_PAD_CEIL, FT_PIX_FLOOR, FT_PIX_ROUND, FT_CEIL): New macros.  They
-	are used to avoid compiler warnings with very pedantic compilers.
+	FT_PAD_CEIL, FT_PIX_FLOOR, FT_PIX_ROUND, FT_PIX_CEIL): New macros.
+	They are used to avoid compiler warnings with very pedantic compilers.
 	Note that `(x) & -64' causes a warning if (x) is not signed.  Use
 	`(x) & ~63' instead!
 	Updated all related code.
@@ -4231,7 +4231,7 @@
 	(t42_parse_encoding): Use `ft_isdigit'.
 
 
-	* src/base/ftmm.c (ft_face_get_mm_service): Return FT_Err_OK if
+	* src/base/ftmm.c (ft_face_get_mm_service): Return FT_Err_Ok if
 	success.
 
 2003-10-05  Werner Lemberg  <wl@gnu.org>
@@ -4355,7 +4355,7 @@
 	new POSTSCRIPT_NAMES service.
 	* src/psaux/t1decode.h (t1_lookup_glyph_by_stdcharcode,
 	t1_decode_init): Use new POSTSCRIPT_NAMES service.
-	* src/psaux/t1cmap.h, src/psaux/t1decode.h: Dont' include
+	* src/psaux/t1cmap.h, src/psaux/t1decode.h: Don't include
 	FT_INTERNAL_POSTSCRIPT_NAMES_H.
 
 	* src/psnames/psmodule.c:  Don't include
@@ -4749,8 +4749,7 @@
 	* include/freetype/ttunpat.h: Fixing documentation comment.
 
 	* include/freetype/config/ftoption.h, devel/ftoption.h
-	(TT_CONFIG_OPTION_OPTION_COMPILE_UNPATENTED_HINTING): Replaced
-	with...
+	(TT_CONFIG_OPTION_COMPILE_UNPATENTED_HINTING): Replaced with...
 	(TT_CONFIG_OPTION_UNPATENTED_HINTING): This.  Updated all users.
 	(TT_CONFIG_OPTION_FORCE_UNPATENTED_HINTING): Removed.
 
@@ -5024,7 +5023,7 @@
 	drivers.
 
 	* src/base/ftobjs.c (FT_Set_Char_Size): Remove redundant code.
-	(FT_Set_Pixel_Size): Assign value to `metrics' after validation of
+	(FT_Set_Pixel_Sizes): Assign value to `metrics' after validation of
 	arguments.
 
 2003-06-20  Werner Lemberg  <wl@gnu.org>
@@ -5200,7 +5199,7 @@
 	* src/cid/cidload.c (cid_load_keyword): Handle
 	T1_FIELD_LOCATION_BBOX.
 	(parse_font_bbox): Commented out.
-	(cid_field_record): Comment out element for parsing FontBBox.
+	(cid_field_records): Comment out element for parsing FontBBox.
 
 	* src/type42/t42parse.c (t42_parse_font_bbox): Commented out.
 	(t42_keywords): Handle FontBBox with T1_FIELD_BBOX, not with
@@ -5916,7 +5915,7 @@
 2003-04-23  Werner Lemberg  <wl@gnu.org>
 
 	* src/pfr/pfrload.c (pfr_extra_item_load_font_id): Use FT_PtrDist
-	instead of FT_Uint for `len'.
+	instead of FT_UInt for `len'.
 
 2003-04-22  Werner Lemberg  <wl@gnu.org>
 
@@ -6550,7 +6549,7 @@
 	* src/cache/ftcsbits.c (ftc_sbit_node_load): Fixed a small bug that
 	caused problems with embedded bitmaps.
 
-	* src/otlayout/otlayout.h, src/otlyaout/otlconf.h,
+	* src/otlayout/otlayout.h, src/otlayout/otlconf.h,
 	src/otlayout/otlgsub.c, src/otlayout/otlgsub.h,
 	src/otlayout/otlparse.c, src/otlayout/otlparse.h,
 	src/otlayout/otlutils.h: Updating the OpenType Layout code, adding
@@ -7239,7 +7238,7 @@
 	(ft_smooth_render, ft_smooth_render_lcd, ft_smooth_render_lcd_v):
 	New functions.
 
-	(ft_smooth_locd_renderer_class, ft_smooth_lcdv_renderer_class): New
+	(ft_smooth_lcd_renderer_class, ft_smooth_lcdv_renderer_class): New
 	classes.
 
 	* src/truetype/ttobjs.c (TT_{Done,New}_GlyphZone): Renamed to...
@@ -7376,7 +7375,7 @@
 
 	* src/pcf/pcfdriver.c (PCF_Glyph_Load): Fix computation of
 	horiBearingX.
-	* src/bdf/bdfdrivr.c (BDF_GlyphLoad): Fix computation of
+	* src/bdf/bdfdrivr.c (BDF_Glyph_Load): Fix computation of
 	horiBearingY.
 
 2002-08-16  George Williams  <gww@silcom.com>
@@ -7581,7 +7580,7 @@
 
 	* include/freetype/cache/ftccache.h, src/cache/ftccache.i,
 	src/cache/ftccache.c [!FTC_CACHE_USE_LINEAR_HASHING]: Removed.
-	(FTC_CACHE_USE_LINEAR_HASHING: Removed also.
+	(FTC_CACHE_USE_LINEAR_HASHING): Removed also.
 
 	FT_CONFIG_OPTION_USE_CMAPS is now the default.
 
@@ -7603,7 +7602,7 @@
 
 	* src/cid/cidriver.c (Cid_Get_Char_Index, Cid_Get_Next_Char):
 	Removed.
-	(t1_cid_driver_class): Updated.
+	(t1cid_driver_class): Updated.
 	* src/truetype/ttdriver.c (tt_driver_class): Updated.
 	* src/type1/t1driver.c (Get_Char_Index, Get_Next_Char): Removed
 	(t1_driver_class): Updated.
@@ -7698,7 +7697,7 @@
 	  CFF_Done_SubFont -> cff_subfont_done
 	  CFF_Load_Font -> cff_font_load
 	  CFF_Done_Font -> cff_font_done
-	  CFF_Size_Get_Global_Funcs -> cff_size_get_global_funcs
+	  CFF_Size_Get_Globals_Funcs -> cff_size_get_globals_funcs
 	  CFF_Size_Done -> cff_size_done
 	  CFF_Size_Init -> cff_size_init
 	  CFF_Size_Reset -> cff_size_reset
@@ -8636,7 +8635,7 @@
 	src/pfr/*: New files.
 
 	* include/freetype/config/ftmodule.h,
-	include/freetype/internal/fttrace.h, src/Jamefile: Updated.
+	include/freetype/internal/fttrace.h, src/Jamfile: Updated.
 
 	* src/type1/t1gload.h (T1_Load_Glyph), src/type1/t1gload.c
 	(T1_Load_Glyph): Fixed incorrect parameter sign-ness in callback
@@ -9063,7 +9062,7 @@
 	  FT_Glyph_Name_Requester => FT_Face_GetGlyphNameFunc
 	  FT_Name_Index_Requester => FT_Face_GetGlyphNameIndexFunc
 
-	* src/base/ftapi.c: New file.  It contains backwards compatibility
+	* src/base/ftapi.c: New file.  It contains backward compatibility
 	functions.
 
 	* include/freetype/internal/psaux.h, src/cid/cidload.c,
@@ -9106,7 +9105,7 @@
 	FT_Realloc_Debug, FT_Free_Debug): Fix compiler warnings.
 	* src/base/ftcalc.c (FT_MulFix): Ditto.
 	* src/cff/cffdrivr.c (cff_get_name_index): Ditto.
-	* src/cff/cffobjs.c (CFF_Size_Get_Global_Funcs, CFF_Size_Init,
+	* src/cff/cffobjs.c (CFF_Size_Get_Globals_Funcs, CFF_Size_Init,
 	CFF_GlyphSlot_Init): Ditto.
 	* src/cid/cidobjs.c (CID_GlyphSlot_Init,
 	CID_Size_Get_Globals_Funcs): Ditto.
@@ -9247,7 +9246,7 @@
 	  {
 	  } PS_StructRec, *PS_Struct;
 
-	  typedef PS_StructRec  T1_Struct;  /* backwards-compatibility */
+	  typedef PS_StructRec  T1_Struct;  /* backward compatibility */
 
 	Hence, we increase the coherency of the source code by effectively
 	using the `Rec' prefix for structure types.
@@ -9384,7 +9383,7 @@
 	* src/pcf/pcfread.c (pcf_seek_to_table_type): Ditto.
 	* src/sfnt/sfdriver.c (get_sfnt_postscript_name): Ditto.
 	(pcf_get_bitmaps): The same for `sizebitmaps'.
-	* src/psaux/t1decode.c (T1_Decode_Parse_Charstrings): The same for
+	* src/psaux/t1decode.c (T1_Decoder_Parse_Charstrings): The same for
 	`orig_y'.
 	(t1operator_seac): Comment out more dead code.
 	* src/pshinter/pshalgo2.c (ps2_hints_apply): Add `DEBUG_HINTER'
@@ -9423,7 +9422,7 @@
 
 ----------------------------------------------------------------------------
 
-Copyright 2002-2016 by
+Copyright 2002-2017 by
 David Turner, Robert Wilhelm, and Werner Lemberg.
 
 This file is part of the FreeType project, and may only be used, modified,

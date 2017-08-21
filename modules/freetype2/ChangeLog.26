@@ -324,7 +324,7 @@
 
 2016-06-20  Alexei Podtelezhnikov  <apodtele@gmail.com>
 
-	[smooth] Sanitize memory managenent.
+	[smooth] Sanitize memory management.
 
 	* src/smooth/ftgrays.c (gray_convert_glyph): Cleaned up.
 
@@ -434,7 +434,7 @@
 	* src/truetype/ttinterp.c (Ins_SHPIX): Allow SHPIX to move points in
 	the twilight zone.  Otherwise, treat SHPIX the same as DELTAP.
 	Unbreaks various fonts such as older versions of Rokkitt and DTL
-	Argo T Light that would glitch severly after calling ALIGNRP after a
+	Argo T Light that would glitch severely after calling ALIGNRP after a
 	blocked SHPIX.
 
 2016-05-30  Werner Lemberg  <wl@gnu.org>
@@ -460,7 +460,7 @@
 	[smooth] Shrink bisection stack.
 
 	The convergence of Bézier flatteners is fast with the deviation
-	from straight line being assymptotically cut 4-fold on each bisection.
+	from straight line being asymptotically cut 4-fold on each bisection.
 	This justifies smaller bisection stack size.
 
 	* src/smooth/ftgrays.c (gray_TWorker): Remove common `bez_stack'.
@@ -563,26 +563,26 @@
 	* src/truetype/ttinterp.c (SUBPIXEL_HINTING): Replaced by...
 	(NO_SUBPIXEL_HINTING, SUBPIXEL_HINTING_INFINALITY,
 	SUBPIXEL_HINTING_MINIMAL): ...new macros.
-	(Direct_Move, Direct_Move_X, Direct_Move_Y): Handle backwards
+	(Direct_Move, Direct_Move_X, Direct_Move_Y): Handle backward
 	compatibility.
 	Updated.
 	(Ins_RS, Ins_FDEF, Ins_ENDF, Ins_CALL, Ins_LOOPCALL, Ins_MD):
 	Updated.
 	(Ins_INSTCTRL): Handle native ClearType mode flag.
 	Updated.
-	(Ins_FLIPPT, Ins_FLIPRGON, Ins_FLIPRGOFF): Handle backwards
+	(Ins_FLIPPT, Ins_FLIPRGON, Ins_FLIPRGOFF): Handle backward
 	compatibility.
 	(Move_Zp2_Point): Ditto.
 	(Ins_SHP): Updated.
-	(Ins_SHPIX): Handle backwards compatibility.
+	(Ins_SHPIX): Handle backward compatibility.
 	Updated.
 	(Ins_MSIRP, Ins_MDAP, Ins_MIAP, Ins_MDRP, Ins_MIRP): Updated.
 	(Ins_ALIGNRP): Updated.
-	(Ins_IUP, Ins_DELTAP): Handle backwards compatibility.
+	(Ins_IUP, Ins_DELTAP): Handle backward compatibility.
 	Updated.
 	(Ins_GETINFO): Handle v38 flags.
 	Updated.
-	(TT_RunIns): Handle backwards compatibility mode.
+	(TT_RunIns): Handle backward compatibility mode.
 	Updated.
 
 2016-05-17  Nikolaus Waxweiler  <madigens@gmail.com>
@@ -606,16 +606,16 @@
 
 	* src/truetype/ttinterp.h (TT_ExecContextRec): Define new fields
 	`subpixel_hinting_lean', `vertical_lcd_lean',
-	`backwards_compatibility', `iupx_called', iupy_called', and
+	`backward_compatibility', `iupx_called', iupy_called', and
 	`grayscale_cleartype' for new hinting mode.
 
 	* src/truetype/ttdriver.c (tt_property_set): Handle v38 and v40
 	interpreters conditionally.
 
 	* src/truetype/ttgload.c (TT_Hint_Glyph): Save phantom points unless
-	in v38 backwards compatibility mode.
+	in v38 backward compatibility mode.
 	Updated.
-	(compute_glyph_metrics): Add v38 backwards compatibility mode
+	(compute_glyph_metrics): Add v38 backward compatibility mode
 	constraint for adjusting advance widths.
 	Updated.
 	(tt_loader_init): Handle new flags `subpixel_hinting_lean',
@@ -979,7 +979,7 @@
 	* src/smooth/ftgrays.c (gray_render_conic, gray_render_cubic): Move
 	band clipping from here.
 	(gray_conic_to, gray_cubic_to): ... to here.
-	(gray_rander_line, gray_render_scanline): Initialize variables closer
+	(gray_render_line, gray_render_scanline): Initialize variables closer
 	to their use.
 
 2016-03-17  Alexei Podtelezhnikov  <apodtele@gmail.com>
@@ -1482,7 +1482,7 @@
 
 	Still handle `__FTERRORS_H__'.
 
-	We need this for backwards compatibility.
+	We need this for backward compatibility.
 
 	Problem reported by John Emmas <johne53@tiscali.co.uk>.
 
@@ -3408,7 +3408,7 @@
 	[raster,smooth] Microoptimizations.
 
 	* src/raster/ftraster.c (Insert_Y_Turn, Finalize_Profile_Table,
-	Bezier_Up, ): Use do-while loops.
+	Bezier_Up): Use do-while loops.
 
 	* src/smooth/ftgrays.c (gray_render_scanline, gray_render_line,
 	gray_convert_glyph): Ditto.
@@ -4222,7 +4222,7 @@
 
 	[truetype] Support selector index 3 of the INSTCTRL instruction.
 
-	This flag activates `native ClearType hinting', disabling backwards
+	This flag activates `native ClearType hinting', disabling backward
 	compatibility mode as described in Greg Hitchcocks whitepaper.  In
 	other words, it enables unrestricted functionality of all TrueType
 	instructions in ClearType.
@@ -5447,7 +5447,7 @@
 	[raster] Remove 5-level gray AA mode from monochrome rasterizer.
 
 	It was off by default and couldn't be turned on at runtime.  And the
-	smooth rasterizer superceded it over ten years ago.  No point in
+	smooth rasterizer superseded it over ten years ago.  No point in
 	keeping.  Comments suggested that it was there for compatibility
 	with FreeType 1.
 
@@ -5695,7 +5695,7 @@
 
 ----------------------------------------------------------------------------
 
-Copyright 2015-2016 by
+Copyright 2015-2017 by
 David Turner, Robert Wilhelm, and Werner Lemberg.
 
 This file is part of the FreeType project, and may only be used, modified,

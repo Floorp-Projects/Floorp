@@ -1,6 +1,6 @@
 # CMakeLists.txt
 #
-# Copyright 2013-2016 by
+# Copyright 2013-2017 by
 # David Turner, Robert Wilhelm, and Werner Lemberg.
 #
 # Written originally by John Cary <cary@txcorp.com>
@@ -153,8 +153,8 @@ endif ()
 
 
 set(VERSION_MAJOR "2")
-set(VERSION_MINOR "7")
-set(VERSION_PATCH "1")
+set(VERSION_MINOR "8")
+set(VERSION_PATCH "0")
 
 set(PROJECT_VERSION ${VERSION_MAJOR}.${VERSION_MINOR}.${VERSION_PATCH})
 set(SHARED_LIBRARY_VERSION ${VERSION_MAJOR}.${VERSION_MINOR})
