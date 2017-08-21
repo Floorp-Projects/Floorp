@@ -1,0 +1,20 @@
+---
+tryselect:
+    description: tools/tryselect integration tests
+    platform: linux64/opt
+    treeherder:
+        symbol: cram(try)
+        kind: test
+        tier: 2
+    worker-type: aws-provisioner-v1/gecko-t-linux-xlarge
+    worker:
+        docker-image: {in-tree: "lint"}
+        max-run-time: 1800
+    run:
+        using: mach
+        mach: cramtest tools/tryselect
+    when:
+        files-changed:
+            - testing/mach_commands.py
+            - third_party/python/cram/**
+            - tools/tryselect/**

@@ -48,3 +48,7 @@ with Files("update-packaging/**"):
 
 SPHINX_TREES['lint'] = 'lint/docs'
 SPHINX_TREES['compare-locales'] = 'compare-locales/docs'
+
+CRAMTEST_MANIFESTS += [
+    'tryselect/test/cram.ini',
+]
