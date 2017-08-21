@@ -2714,6 +2714,9 @@ ScrollFrameHelper::ScheduleSyntheticMouseMove()
     if (!mScrollActivityTimer) {
       return;
     }
+
+    mScrollActivityTimer->SetTarget(
+      mOuter->PresContext()->Document()->EventTargetFor(TaskCategory::Other));
   }
 
   mScrollActivityTimer->InitWithNamedFuncCallback(
