@@ -70,6 +70,12 @@ public:
     mEnded = aEnded;
   }
 
+  bool IsExpectingMoreData() override
+  {
+    MonitorAutoLock mon(mMonitor);
+    return !mEnded;
+  }
+
 private:
   size_t SizeOfExcludingThis(MallocSizeOf aMallocSizeOf) const override
   {

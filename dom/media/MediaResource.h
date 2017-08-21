@@ -214,6 +214,15 @@ public:
   // Returns true if all the data from aOffset to the end of the stream
   // is in cache. If the end of the stream is not known, we return false.
   virtual bool IsDataCachedToEndOfResource(int64_t aOffset) = 0;
+  // Returns true if we are expecting any more data to arrive
+  // sometime in the not-too-distant future, either from the network or from
+  // an appendBuffer call on a MediaSource element.
+  virtual bool IsExpectingMoreData()
+  {
+    // MediaDecoder::mDecoderPosition is roughly the same as Tell() which
+    // returns a position updated by latest Read() or ReadAt().
+    return !IsDataCachedToEndOfResource(Tell()) && !IsSuspended();
+  }
   // Returns true if this stream is suspended by the cache because the
   // cache is full. If true then the decoder should try to start consuming
   // data, otherwise we may not be able to make progress.
