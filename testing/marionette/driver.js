@@ -546,7 +546,7 @@ GeckoDriver.prototype.whenBrowserStarted = function(window, isNewSession) {
 /**
  * Recursively get all labeled text.
  *
- * @param {nsIDOMElement} el
+ * @param {Element} el
  *     The parent element.
  * @param {Array.<string>} lines
  *      Array that holds the text lines.
