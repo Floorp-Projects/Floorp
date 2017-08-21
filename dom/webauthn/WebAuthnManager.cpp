@@ -119,7 +119,7 @@ AssembleClientData(const nsAString& aOrigin, const CryptoBuffer& aChallenge,
   CollectedClientData clientDataObject;
   clientDataObject.mChallenge.Assign(challengeBase64);
   clientDataObject.mOrigin.Assign(aOrigin);
-  clientDataObject.mHashAlg.Assign(NS_LITERAL_STRING("S256"));
+  clientDataObject.mHashAlg.Assign(NS_LITERAL_STRING("SHA-256"));
 
   nsAutoString temp;
   if (NS_WARN_IF(!clientDataObject.ToJSON(temp))) {
