@@ -266,7 +266,7 @@ win32-add-on-devel/opt:
         config:
             - builds/taskcluster_firefox_windows_32_addondevel.py
             - balrog/production.py
-    run-on-projects: [ 'mozilla-beta', 'mozilla-release', 'mozilla-esr45' ]
+    run-on-projects: [ 'mozilla-release', 'mozilla-esr45' ]
     toolchains:
         - win32-clang-cl
         - win64-sccache
@@ -291,7 +291,7 @@ win64-add-on-devel/opt:
         config:
             - builds/taskcluster_firefox_windows_64_addondevel.py
             - balrog/production.py
-    run-on-projects: [ 'mozilla-beta', 'mozilla-release', 'mozilla-esr45' ]
+    run-on-projects: [ 'mozilla-release', 'mozilla-esr45' ]
     toolchains:
         - win64-clang-cl
         - win64-sccache
