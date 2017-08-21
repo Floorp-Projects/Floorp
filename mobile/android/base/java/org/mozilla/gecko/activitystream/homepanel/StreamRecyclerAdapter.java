@@ -6,6 +6,7 @@
 package org.mozilla.gecko.activitystream.homepanel;
 
 import android.database.Cursor;
+import android.support.annotation.NonNull;
 import android.support.v7.widget.RecyclerView;
 import android.util.Log;
 import android.view.LayoutInflater;
@@ -15,6 +16,7 @@ import android.view.ViewGroup;
 import org.mozilla.gecko.Telemetry;
 import org.mozilla.gecko.TelemetryContract;
 import org.mozilla.gecko.activitystream.ActivityStreamTelemetry;
+import org.mozilla.gecko.activitystream.homepanel.menu.ActivityStreamContextMenu;
 import org.mozilla.gecko.home.HomePager;
 import org.mozilla.gecko.activitystream.homepanel.model.Highlight;
 import org.mozilla.gecko.activitystream.homepanel.stream.HighlightItem;
@@ -29,7 +31,9 @@ import java.util.Collections;
 import java.util.EnumSet;
 import java.util.List;
 
-public class StreamRecyclerAdapter extends RecyclerView.Adapter<StreamItem> implements RecyclerViewClickSupport.OnItemClickListener {
+public class StreamRecyclerAdapter extends RecyclerView.Adapter<StreamItem> implements RecyclerViewClickSupport.OnItemClickListener,
+        RecyclerViewClickSupport.OnItemLongClickListener, StreamHighlightItemContextMenuListener {
+
     private static final String LOGTAG = StringUtils.safeSubstring("Gecko" + StreamRecyclerAdapter.class.getSimpleName(), 0, 23);
 
     private Cursor topSitesCursor;
@@ -84,7 +88,7 @@ public class StreamRecyclerAdapter extends RecyclerView.Adapter<StreamItem> impl
         } else if (type == WelcomePanel.LAYOUT_ID) {
             return new WelcomePanel(inflater.inflate(type, parent, false), this);
         } else if (type == HighlightItem.LAYOUT_ID) {
-            return new HighlightItem(inflater.inflate(type, parent, false), onUrlOpenListener, onUrlOpenInBackgroundListener);
+            return new HighlightItem(inflater.inflate(type, parent, false), this);
         } else if (type == HighlightsTitle.LAYOUT_ID) {
             return new HighlightsTitle(inflater.inflate(type, parent, false));
         } else {
@@ -118,23 +122,7 @@ public class StreamRecyclerAdapter extends RecyclerView.Adapter<StreamItem> impl
 
     @Override
     public void onItemClicked(RecyclerView recyclerView, int position, View v) {
-        if (getItemViewType(position) != HighlightItem.LAYOUT_ID) {
-            // Headers (containing topsites and/or the highlights title) do their own click handling as needed
-            return;
-        }
-
-        // The position this method receives is from RecyclerView.ViewHolder.getAdapterPosition, whose docs state:
-        // "Note that if you've called notifyDataSetChanged(), until the next layout pass, the return value of this
-        // method will be NO_POSITION."
-        //
-        // At the time of writing, we call notifyDataSetChanged for:
-        // - swapHighlights (can't do anything about this)
-        // - setTileSize (in theory, we might be able to do something hacky to get the existing highlights list)
-        //
-        // Given the low crash rate (34 crashes in 23 days), I don't think it's worth investigating further
-        // or adding a hack.
-        if (position == RecyclerView.NO_POSITION) {
-            Log.w(LOGTAG, "onItemClicked: received NO_POSITION. Returning");
+        if (!onItemClickIsValidHighlightItem(position)) {
             return;
         }
 
@@ -157,6 +145,68 @@ public class StreamRecyclerAdapter extends RecyclerView.Adapter<StreamItem> impl
         // not having a cursor to work with once url is opened and BrowserApp closes A-S home screen
         // and clears its resources (read: cursors). See Bug 1326018.
         onUrlOpenListener.onUrlOpen(highlight.getUrl(), EnumSet.of(HomePager.OnUrlOpenListener.Flags.ALLOW_SWITCH_TO_TAB));
+    }
+
+    @Override
+    public boolean onItemLongClicked(final RecyclerView recyclerView, final int position, final View v) {
+        if (!onItemClickIsValidHighlightItem(position)) {
+            return false;
+        }
+
+        final HighlightItem highlightItem = (HighlightItem) recyclerView.getChildViewHolder(v);
+        final int actualPosition = translatePositionToCursor(position);
+        openContextMenu(highlightItem, actualPosition, ActivityStreamTelemetry.Contract.INTERACTION_LONG_CLICK);
+        return true;
+    }
+
+    private boolean onItemClickIsValidHighlightItem(final int position) {
+        if (getItemViewType(position) != HighlightItem.LAYOUT_ID) {
+            // Headers (containing topsites and/or the highlights title) do their own click handling as needed
+            return false;
+        }
+
+        // The position this method receives is from RecyclerView.ViewHolder.getAdapterPosition, whose docs state:
+        // "Note that if you've called notifyDataSetChanged(), until the next layout pass, the return value of this
+        // method will be NO_POSITION."
+        //
+        // At the time of writing, we call notifyDataSetChanged for:
+        // - swapHighlights (can't do anything about this)
+        // - setTileSize (in theory, we might be able to do something hacky to get the existing highlights list)
+        //
+        // Given the low crash rate (34 crashes in 23 days), I don't think it's worth investigating further
+        // or adding a hack.
+        if (position == RecyclerView.NO_POSITION) {
+            Log.w(LOGTAG, "onItemClicked: received NO_POSITION. Returning");
+            return false;
+        }
+
+        return true;
+    }
+
+    @Override
+    public void openContextMenu(final HighlightItem highlightItem, final int actualPosition, @NonNull final String interactionExtra) {
+        final Highlight highlight = highlights.get(actualPosition);
+
+        ActivityStreamTelemetry.Extras.Builder extras = ActivityStreamTelemetry.Extras.builder()
+                .set(ActivityStreamTelemetry.Contract.SOURCE_TYPE, ActivityStreamTelemetry.Contract.TYPE_HIGHLIGHTS)
+                .set(ActivityStreamTelemetry.Contract.ACTION_POSITION, actualPosition)
+                .set(ActivityStreamTelemetry.Contract.INTERACTION, interactionExtra)
+                .forHighlightSource(highlight.getSource());
+
+        ActivityStreamContextMenu.show(highlightItem.itemView.getContext(),
+                highlightItem.getContextMenuAnchor(),
+                extras,
+                ActivityStreamContextMenu.MenuMode.HIGHLIGHT,
+                highlight,
+                /* shouldOverrideWithImageProvider */ true, // we use image providers in HighlightItem.pageIconLayout.
+                onUrlOpenListener, onUrlOpenInBackgroundListener,
+                highlightItem.getTileWidth(), highlightItem.getTileHeight());
+
+        Telemetry.sendUIEvent(
+                TelemetryContract.Event.SHOW,
+                TelemetryContract.Method.CONTEXT_MENU,
+                extras.build()
+        );
     }
 
     @Override
