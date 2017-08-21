@@ -366,7 +366,7 @@ action.PointerOrigin.get = function(obj) {
     origin = this[name];
   } else if (!element.isWebElementReference(obj)) {
     throw new InvalidArgumentError("Expected 'origin' to be a string or a " +
-      `web element reference, got: ${obj}`);
+      pprint`web element reference, got ${obj}`);
   }
   return origin;
 };
@@ -465,7 +465,7 @@ class InputState {
       if (!obj.pointerType &&
           (!obj.parameters || !obj.parameters.pointerType)) {
         throw new InvalidArgumentError(
-            pprint`Expected obj to have pointerType, got: ${obj}`);
+            pprint`Expected obj to have pointerType, got ${obj}`);
       }
       let pointerType = obj.pointerType || obj.parameters.pointerType;
       return new action.InputState[name](pointerType);
@@ -505,8 +505,10 @@ action.InputState.Key = class Key extends InputState {
     if (key in MODIFIER_NAME_LOOKUP) {
       this[MODIFIER_NAME_LOOKUP[key]] = value;
     } else {
-      throw new InvalidArgumentError("Expected 'key' to be one of " +
-          `${Object.keys(MODIFIER_NAME_LOOKUP)}; got: ${key}`);
+      throw new InvalidArgumentError(
+          "Expected 'key' to be one of " +
+          Object.keys(MODIFIER_NAME_LOOKUP) +
+          pprint`, got ${key}`);
     }
   }
 
@@ -574,7 +576,7 @@ action.InputState.Pointer = class Pointer extends InputState {
     super();
     this.pressed = new Set();
     assert.defined(subtype,
-        pprint`Expected subtype to be defined, got: ${subtype}`);
+        pprint`Expected subtype to be defined, got ${subtype}`);
     this.subtype = action.PointerType.get(subtype);
     this.x = 0;
     this.y = 0;
@@ -646,7 +648,7 @@ action.Action = class {
       throw new InvalidArgumentError("Missing id, type or subtype");
     }
     for (let attr of [id, type, subtype]) {
-      assert.string(attr, pprint`Expected string, got: ${attr}`);
+      assert.string(attr, pprint`Expected string, got ${attr}`);
     }
     this.id = id;
     this.type = type;
@@ -699,8 +701,8 @@ action.Action = class {
         // TODO key.value could be a single code point like "\uE012"
         // (see rawKey) or "grapheme cluster"
         assert.string(key,
-            pprint("Expected 'value' to be a string that represents single code point " +
-                `or grapheme cluster, got: ${key}`));
+            "Expected 'value' to be a string that represents single code point " +
+            pprint`or grapheme cluster, got ${key}`);
         item.value = key;
         break;
 
@@ -769,7 +771,8 @@ action.Chain = class extends Array {
    */
   static fromJson(actions) {
     assert.array(actions,
-        pprint`Expected 'actions' to be an Array, got: ${actions}`);
+        pprint`Expected 'actions' to be an array, got ${actions}`);
+
     let actionsByTick = new action.Chain();
     //  TODO check that each actionSequence in actions refers to a
     // different input ID
@@ -813,17 +816,19 @@ action.Sequence = class extends Array {
     let inputSourceState = InputState.fromJson(actionSequence);
     let id = actionSequence.id;
     assert.defined(id, "Expected 'id' to be defined");
-    assert.string(id, pprint`Expected 'id' to be a string, got: ${id}`);
+    assert.string(id, pprint`Expected 'id' to be a string, got ${id}`);
     let actionItems = actionSequence.actions;
-    assert.array(actionItems,
-        pprint("Expected 'actionSequence.actions' to be an Array, " +
-            `got: ${actionSequence.actions}`));
+    assert.array(
+        actionItems,
+        "Expected 'actionSequence.actions' to be an array, " +
+        pprint`got ${actionSequence.actions}`);
+
     if (!action.inputStateMap.has(id)) {
       action.inputStateMap.set(id, inputSourceState);
     } else if (!action.inputStateMap.get(id).is(inputSourceState)) {
       throw new InvalidArgumentError(
           `Expected ${id} to be mapped to ${inputSourceState}, ` +
-          `got: ${action.inputStateMap.get(id)}`);
+          `got ${action.inputStateMap.get(id)}`);
     }
     let actions = new action.Sequence();
     for (let actionItem of actionItems) {
@@ -884,14 +889,16 @@ action.processPointerAction = function(id, pointerParams, act) {
       action.inputStateMap.get(id).type !== act.type) {
     throw new InvalidArgumentError(
         `Expected 'id' ${id} to be mapped to InputState whose type is ` +
-        `${action.inputStateMap.get(id).type}, got: ${act.type}`);
+        action.inputStateMap.get(id).type +
+        pprint` , got ${act.type}`);
   }
   let pointerType = pointerParams.pointerType;
   if (action.inputStateMap.has(id) &&
       action.inputStateMap.get(id).subtype !== pointerType) {
     throw new InvalidArgumentError(
         `Expected 'id' ${id} to be mapped to InputState whose subtype is ` +
-        `${action.inputStateMap.get(id).subtype}, got: ${pointerType}`);
+        action.inputStateMap.get(id).subtype +
+        pprint` , got ${pointerType}`);
   }
   act.pointerType = pointerParams.pointerType;
 };
