@@ -257,16 +257,14 @@ def parse_message(message):
     # In order to run test jobs multiple times
     parser.add_argument('--rebuild', dest='trigger_tests', type=int, default=1)
     args, _ = parser.parse_known_args(parts)
-    return args
+    return vars(args)
 
 
 class TryOptionSyntax(object):
 
-    def __init__(self, message, full_task_graph):
+    def __init__(self, parameters, full_task_graph):
         """
-        Parse a "try syntax" formatted commit message.  This is the old "-b do -p
-        win32 -u all" format.  Aliases are applied to map short names to full
-        names.
+        Apply the try options in parameters.
 
         The resulting object has attributes:
 
@@ -305,28 +303,22 @@ class TryOptionSyntax(object):
         self.tag = None
         self.no_retry = False
 
-        parts = split_try_msg(message)
-        if not parts:
-            return None
-
-        args = parse_message(message)
-        assert args is not None
-
-        self.jobs = self.parse_jobs(args.jobs)
-        self.build_types = self.parse_build_types(args.build_types, full_task_graph)
-        self.platforms = self.parse_platforms(args.platforms, full_task_graph)
+        options = parameters['try_options']
+        self.jobs = self.parse_jobs(options['jobs'])
+        self.build_types = self.parse_build_types(options['build_types'], full_task_graph)
+        self.platforms = self.parse_platforms(options['platforms'], full_task_graph)
         self.unittests = self.parse_test_option(
-            "unittest_try_name", args.unittests, full_task_graph)
-        self.talos = self.parse_test_option("talos_try_name", args.talos, full_task_graph)
-        self.trigger_tests = args.trigger_tests
-        self.interactive = args.interactive
-        self.notifications = args.notifications
-        self.talos_trigger_tests = args.talos_trigger_tests
-        self.env = args.env
-        self.profile = args.profile
-        self.tag = args.tag
-        self.no_retry = args.no_retry
-        self.include_nightly = args.include_nightly
+            "unittest_try_name", options['unittests'], full_task_graph)
+        self.talos = self.parse_test_option("talos_try_name", options['talos'], full_task_graph)
+        self.trigger_tests = options['trigger_tests']
+        self.interactive = options['interactive']
+        self.notifications = options['notifications']
+        self.talos_trigger_tests = options['talos_trigger_tests']
+        self.env = options['env']
+        self.profile = options['profile']
+        self.tag = options['tag']
+        self.no_retry = options['no_retry']
+        self.include_nightly = options['include_nightly']
 
     def parse_jobs(self, jobs_arg):
         if not jobs_arg or jobs_arg == ['all']:
