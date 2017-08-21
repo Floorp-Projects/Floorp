@@ -805,9 +805,16 @@ H264::GetFrameType(const mozilla::MediaRawData* aSample)
     if (!p) {
       return FrameType::INVALID;
     }
-    if ((p[0] & 0x1f) == H264_NAL_IDR_SLICE) {
+    int8_t nalType = *p & 0x1f;
+    if (nalType == H264_NAL_IDR_SLICE) {
       // IDR NAL.
       return FrameType::I_FRAME;
+    } else if (nalType == H264_NAL_SEI) {
+      RefPtr<mozilla::MediaByteBuffer> decodedNAL = DecodeNALUnit(p, nalLen);
+      SEIRecoveryData data;
+      if (DecodeRecoverySEI(decodedNAL, data)) {
+        return FrameType::I_FRAME;
+      }
     }
   }
 
@@ -973,6 +980,74 @@ H264::CompareExtraData(const mozilla::MediaByteBuffer* aExtraData1,
     ++it2;
   }
   return true;
+}
+
+static inline bool
+ReadSEIInt(ByteReader& aBr, uint32_t& aOutput)
+{
+  uint8_t tmpByte;
+
+  aOutput = 0;
+  if (!aBr.CanRead8()) {
+    return false;
+  }
+  tmpByte = aBr.ReadU8();
+  while (tmpByte == 0xFF) {
+    aOutput += 255;
+    if (!aBr.CanRead8()) {
+      return false;
+    }
+    tmpByte = aBr.ReadU8();
+  }
+  aOutput += tmpByte;   // this is the last byte
+  return true;
+}
+
+/* static */ bool
+H264::DecodeRecoverySEI(const mozilla::MediaByteBuffer* aSEI,
+                        SEIRecoveryData& aDest)
+{
+  if (!aSEI) {
+    return false;
+  }
+  // sei_rbsp() as per 7.3.2.3 Supplemental enhancement information RBSP syntax
+  ByteReader br(aSEI);
+
+  do {
+    // sei_message() as per
+    // 7.3.2.3.1 Supplemental enhancement information message syntax
+    uint32_t payloadType = 0;
+    if (!ReadSEIInt(br, payloadType)) {
+      return false;
+    }
+
+    uint32_t payloadSize = 0;
+    if (!ReadSEIInt(br, payloadSize)) {
+      return false;
+    }
+
+    // sei_payload(payloadType, payloadSize) as per
+    // D.1 SEI payload syntax.
+    const uint8_t* p = br.Read(payloadSize);
+    if (!p) {
+      return false;
+    }
+    if (payloadType == 6) { // SEI_RECOVERY_POINT
+      if (payloadSize == 0) {
+        // Invalid content, ignore.
+        continue;
+      }
+      // D.1.7 Recovery point SEI message syntax
+      BitReader br(p, payloadSize * 8);
+      aDest.recovery_frame_cnt = br.ReadUE();
+      aDest.exact_match_flag = br.ReadBit();
+      aDest.broken_link_flag = br.ReadBit();
+      aDest.changing_slice_group_idc = br.ReadBits(2);
+      return true;
+    }
+  } while(br.CanRead8() && br.PeekU8() != 0x80); // more_rbsp_data() msg[offset] != 0x80
+  // ignore the trailing bits rbsp_trailing_bits();
+  return false;
 }
 
 #undef READUE
