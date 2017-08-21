@@ -29,11 +29,13 @@ function test() {
   var newTab = BrowserTestUtils.addTab(gBrowser);
   gBrowser.selectedTab = newTab;
   gTestBrowser = gBrowser.selectedBrowser;
-  newTab.linkedBrowser.stop()
 
-  BrowserTestUtils.browserLoaded(gTestBrowser, true /*includeSubFrames*/).then(MixedTest1A);
-  var url = gHttpTestRoot + "file_bug902350.html";
-  gTestBrowser.loadURI(url);
+  BrowserTestUtils.browserLoaded(gTestBrowser).then(() => {
+    // about:blank is expected to be loaded here.
+    var url = gHttpTestRoot + "file_bug902350.html";
+    BrowserTestUtils.browserLoaded(gTestBrowser, true /*includeSubFrames*/).then(MixedTest1A);
+    gTestBrowser.loadURI(url);
+  });
 }
 
 // Need to capture 2 loads, one for the main page and one for the iframe
