@@ -94,6 +94,7 @@ UNIFIED_SOURCES += [
     'RWLock.cpp',
     'SchedulerGroup.cpp',
     'SharedThreadPool.cpp',
+    'SynchronizedEventQueue.cpp',
     'SystemGroup.cpp',
     'TaskQueue.cpp',
     'ThreadEventQueue.cpp',
