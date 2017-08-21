@@ -16,11 +16,11 @@
   <string name="menu_rights">您的权利</string>
   <string name="menu_trackers_blocked_title">拦截的跟踪器数量</string>
   <string name="share_dialog_title">分享方式</string>
-  <string name="notification_erase_text">擦除浏览记录</string>
+  <string name="notification_erase_text">清除浏览记录</string>
   <string name="notification_action_open">打开</string>
-  <string name="notification_action_erase_and_open">擦除并打开</string>
-  <string name="shortcut_erase_short_label">擦除</string>
-  <string name="shortcut_erase_long_label">擦除浏览记录</string>
+  <string name="notification_action_erase_and_open">清除并打开</string>
+  <string name="shortcut_erase_short_label">清除</string>
+  <string name="shortcut_erase_long_label">清除浏览记录</string>
   <string name="text_selection_search_action">私密搜索</string>
   <string name="about_content"><![CDATA[<p xmlns:xliff="urn:oasis:names:tc:xliff:document:1.2">%1$s &#35753;&#24744;&#25484;&#25511;&#32447;&#19978;&#29983;&#27963;&#12290;</p>\n<p xmlns:xliff="urn:oasis:names:tc:xliff:document:1.2">"&#29992;&#20316;&#38544;&#31169;&#27983;&#35272;&#22120;&#65292;&#21487;&#20197;&#65306;\n  "<ul>"\n    "<li>&#30452;&#25509;&#22312;&#24212;&#29992;&#20013;&#25628;&#32034;&#21644;&#27983;&#35272;</li>"\n    "<li>&#25318;&#25130;&#36319;&#36394;&#22120;&#65288;&#20063;&#21487;&#35843;&#25972;&#20026;&#20801;&#35768;&#36319;&#36394;&#22120;&#65289;</li>"\n    "<li>&#33258;&#21160;&#28165;&#38500; Cookie&#12289;&#25628;&#32034;&#35760;&#24405;&#21644;&#27983;&#35272;&#35760;&#24405;</li>"\n  "</ul>\n</p>\n<p xmlns:xliff="urn:oasis:names:tc:xliff:document:1.2">%1$s &#30001; Mozilla &#20986;&#21697;&#12290;&#25105;&#20204;&#30340;&#20351;&#21629;&#26159;&#20419;&#25104;&#20581;&#24247;&#12289;&#24320;&#25918;&#30340;&#20114;&#32852;&#32593;&#12290;<br/>\n<a href="%2$s">&#35814;&#32454;&#20102;&#35299;</a></p>]]></string>
   <string name="preference_category_search">搜索</string>
@@ -48,6 +48,9 @@
   <string name="content_description_clear_input">清空输入内容</string>
   <string name="content_description_dismiss_input">关闭</string>
   <string name="content_description_erase">清除浏览记录</string>
+  <string name="content_description_fab_expand">展开</string>
+  <string name="content_description_open_tab">打开标签页</string>
+  <string name="content_description_close_tab">关闭标签页</string>
   <string name="content_description_lock">安全连接</string>
   <string name="accessibility_announcement_loading">正在载入</string>
   <string name="accessibility_announcement_loading_finished">网站已载入</string>
@@ -93,8 +96,16 @@
   <string name="contextmenu_image_share">分享图像</string>
   <string name="contextmenu_image_copy">复制图像地址</string>
   <string name="contextmenu_image_save">保存图像</string>
+  <string name="contextmenu_open_in_new_tab">在新标签页打开链接</string>
   <string name="contextmenu_image_warning"><![CDATA[清除 %1$s 的历史记录时，<b xmlns:xliff="urn:oasis:names:tc:xliff:document:1.2">&#19981;&#20250;&#21024;&#38500;</b>已保存和已分享的图像。]]></string>
   <string name="firstrun_defaultbrowser_title">强化您的隐私</string>
+  <string name="firstrun_defaultbrowser_text2">隐私浏览模式变得更强大了。能拦截广告，还能拦截在不同网站跟踪您，又拖慢网页载入的内容。</string>
+  <string name="firstrun_search_title">用你的方式搜你所寻</string>
+  <string name="firstrun_search_text">想搜点不一样的东西？可在设置里选择换个默认搜索引擎。</string>
+  <string name="firstrun_shortcut_title">在主屏幕中添加快捷方式</string>
+  <string name="firstrun_shortcut_text">快速用 %1$s 回到您喜爱的网站。只需在 %1$s 菜单中选择“添加到主屏幕”。</string>
+  <string name="firstrun_privacy_title">让隐私成为一种习惯</string>
+  <string name="firstrun_privacy_text">将 %1$s 设为您的默认浏览器，用其他应用打开网页时即可享受隐私浏览。</string>
   <string name="firstrun_close_button">明白了！</string>
   <string name="firstrun_skip_button">跳过</string>
   <string name="firstrun_next_button">下一步</string>
@@ -102,4 +113,6 @@
   <string name="dialog_addtohomescreen_title">添加到主屏幕</string>
   <string name="dialog_addtohomescreen_action_add">添加</string>
   <string name="dialog_addtohomescreen_action_cancel">取消</string>
+  <string name="dialog_opentab_title">指定用来打开链接的标签页</string>
+  <string name="dialog_opentab_action_open">打开</string>
 </resources>

@@ -48,6 +48,9 @@
   <string name="content_description_clear_input">Hapuskan input</string>
   <string name="content_description_dismiss_input">Abai</string>
   <string name="content_description_erase">Buang sejarah pelayaran</string>
+  <string name="content_description_fab_expand">Kembangkan</string>
+  <string name="content_description_open_tab">Buka tab</string>
+  <string name="content_description_close_tab">Tutup tab</string>
   <string name="content_description_lock">Sambungan selamat</string>
   <string name="accessibility_announcement_loading">Memuatkan</string>
   <string name="accessibility_announcement_loading_finished">Laman web dimuatkan</string>
@@ -93,8 +96,16 @@
   <string name="contextmenu_image_share">Kongsi imej</string>
   <string name="contextmenu_image_copy">Salin alamat imej</string>
   <string name="contextmenu_image_save">Simpan imej</string>
+  <string name="contextmenu_open_in_new_tab">Buka pautan dalam tab baru</string>
   <string name="contextmenu_image_warning"><![CDATA["Imej yang disimpan dan dikongsi "<b xmlns:xliff="urn:oasis:names:tc:xliff:document:1.2">tidak akan dihapuskan</b>" apabila anda padam sejarah %1$s."]]></string>
   <string name="firstrun_defaultbrowser_title">Tingkatkan privasi anda</string>
+  <string name="firstrun_defaultbrowser_text2">Membawa pelayaran peribadi ke tahap seterusnya, Sekat iklan dan kandungan lain yang menjejaki anda di serata laman dan melambatkan tempoh memuatkan halaman.</string>
+  <string name="firstrun_search_title">Carian anda, cara anda</string>
+  <string name="firstrun_search_text">Mencari sesuatu yang berlainan? Pilih enjin piawai lain dalam Tetapan.</string>
+  <string name="firstrun_shortcut_title">Letakkan pintasan dalam skrin utama</string>
+  <string name="firstrun_shortcut_text">Kembali ke laman kegemaran anda dalam %1$s dengan pantas. Hanya pilih \"Tambah ke skrin Utama\" dari dalam menu %1$s.</string>
+  <string name="firstrun_privacy_title">Jadikan privasi satu tabiat</string>
+  <string name="firstrun_privacy_text">Tetapkan %1$s sebagai pelayar piawai anda dan dapatkan manfaat daripada pelayaran peribadi apabila anda buka pautan halaman web dari aplikasi lain.</string>
   <string name="firstrun_close_button">OK, faham!</string>
   <string name="firstrun_skip_button">Langkau</string>
   <string name="firstrun_next_button">Seterusnya</string>
@@ -102,4 +113,6 @@
   <string name="dialog_addtohomescreen_title">Tambah ke Skrin Halaman utama</string>
   <string name="dialog_addtohomescreen_action_add">Tambah</string>
   <string name="dialog_addtohomescreen_action_cancel">Batal</string>
+  <string name="dialog_opentab_title">Buka pautan dalam tab yang dipilih</string>
+  <string name="dialog_opentab_action_open">Buka</string>
 </resources>

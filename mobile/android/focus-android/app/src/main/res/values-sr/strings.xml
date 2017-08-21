@@ -48,6 +48,9 @@
   <string name="content_description_clear_input">Празно поље</string>
   <string name="content_description_dismiss_input">Одбаци</string>
   <string name="content_description_erase">Избриши историјат прегледања</string>
+  <string name="content_description_fab_expand">Прошири</string>
+  <string name="content_description_open_tab">Отвори језичак</string>
+  <string name="content_description_close_tab">Затвори језичак</string>
   <string name="content_description_lock">Безбедна веза</string>
   <string name="accessibility_announcement_loading">Учитавање</string>
   <string name="accessibility_announcement_loading_finished">Веб сајт учитан</string>
@@ -93,8 +96,16 @@
   <string name="contextmenu_image_share">Подели слику</string>
   <string name="contextmenu_image_copy">Копирај адресу слике</string>
   <string name="contextmenu_image_save">Сачувај слику</string>
+  <string name="contextmenu_open_in_new_tab">Отвори везу у новом језичку</string>
   <string name="contextmenu_image_warning"><![CDATA["Сачуване и дељене слике "<b xmlns:xliff="urn:oasis:names:tc:xliff:document:1.2">&#1085;&#1077;&#1115;&#1077; &#1073;&#1080;&#1090;&#1080; &#1086;&#1073;&#1088;&#1080;&#1089;&#1072;&#1085;&#1077;</b>" када обришете %1$s историјат."]]></string>
   <string name="firstrun_defaultbrowser_title">Ојачајте вашу приватност</string>
+  <string name="firstrun_defaultbrowser_text2">Унапредите приватно прегледање. Блокирајте рекламе и други саржај који вас прати путем сајтова и убрзајте учитавање страница.</string>
+  <string name="firstrun_search_title">Ваше претраге, ваш начин</string>
+  <string name="firstrun_search_text">Тражите нешто другачије? Изаберите други подразумевани претраживач у поставкама.</string>
+  <string name="firstrun_shortcut_title">Додајте пречице на вашем почетном екрану</string>
+  <string name="firstrun_shortcut_text">Вратите се на ваше омиљене сајтове у %1$s-у лако. Само изаберите \"Додај на екран телефона\" из %1$s менија.</string>
+  <string name="firstrun_privacy_title">Учините приватност навиком</string>
+  <string name="firstrun_privacy_text">Поставите %1$s као ваш подразумевани прегледач и искусите приватно прегледање када отворите веб странице из других апликација.</string>
   <string name="firstrun_close_button">У реду, разумем!</string>
   <string name="firstrun_skip_button">Прескочи</string>
   <string name="firstrun_next_button">Следеће</string>
@@ -102,4 +113,6 @@
   <string name="dialog_addtohomescreen_title">Додај на почетни екран</string>
   <string name="dialog_addtohomescreen_action_add">Додај</string>
   <string name="dialog_addtohomescreen_action_cancel">Откажи</string>
+  <string name="dialog_opentab_title">Отвори везу у изабраном језичку</string>
+  <string name="dialog_opentab_action_open">Отвори</string>
 </resources>

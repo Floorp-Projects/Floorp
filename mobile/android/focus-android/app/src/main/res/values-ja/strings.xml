@@ -48,6 +48,9 @@
   <string name="content_description_clear_input">入力内容を消去</string>
   <string name="content_description_dismiss_input">閉じる</string>
   <string name="content_description_erase">閲覧履歴を消去</string>
+  <string name="content_description_fab_expand">開く</string>
+  <string name="content_description_open_tab">タブを開く</string>
+  <string name="content_description_close_tab">タブを閉じる</string>
   <string name="content_description_lock">安全な接続</string>
   <string name="accessibility_announcement_loading">読み込み中</string>
   <string name="accessibility_announcement_loading_finished">ウェブサイト読み込み完了</string>
@@ -93,8 +96,16 @@
   <string name="contextmenu_image_share">画像を共有</string>
   <string name="contextmenu_image_copy">画像アドレスをコピー</string>
   <string name="contextmenu_image_save">画像を保存</string>
+  <string name="contextmenu_open_in_new_tab">リンクを新しいタブで開く</string>
   <string name="contextmenu_image_warning"><![CDATA["保存、共有された画像は %1$s の履歴を消去しても "<b xmlns:xliff="urn:oasis:names:tc:xliff:document:1.2">&#21066;&#38500;&#12373;&#12428;&#12414;&#12379;&#12435;</b>。]]></string>
   <string name="firstrun_defaultbrowser_title">プライバシーを強化</string>
+  <string name="firstrun_defaultbrowser_text2">プライベートブラウジングを次のレベルへと進めましょう。サイトを越えてあなたを追跡したり、ページの読み込みを遅くしたりする可能性のある広告その他のコンテンツを自動的にブロック。</string>
+  <string name="firstrun_search_title">好きな方法で検索</string>
+  <string name="firstrun_search_text">何か違ったものを探していますか？ 設定で別の検索エンジンを既定として選んでみましょう。</string>
+  <string name="firstrun_shortcut_title">ホーム画面にショートカットを追加</string>
+  <string name="firstrun_shortcut_text">%1$s でもお気に入りのサイトへ素早く戻れます。%1$s のメニューから「ホーム画面に追加」を選択するだけ。</string>
+  <string name="firstrun_privacy_title">プライバシーを習慣に</string>
+  <string name="firstrun_privacy_text">%1$s を既定のブラウザーに設定して、他のアプリからウェブページを開いたときに、プライベートブラウジングの恩恵を受けましょう。</string>
   <string name="firstrun_close_button">了解</string>
   <string name="firstrun_skip_button">スキップ</string>
   <string name="firstrun_next_button">次へ</string>
@@ -102,4 +113,6 @@
   <string name="dialog_addtohomescreen_title">ホーム画面に追加</string>
   <string name="dialog_addtohomescreen_action_add">追加</string>
   <string name="dialog_addtohomescreen_action_cancel">キャンセル</string>
+  <string name="dialog_opentab_title">リンクを選択したタブで開く</string>
+  <string name="dialog_opentab_action_open">開く</string>
 </resources>

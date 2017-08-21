@@ -48,6 +48,9 @@
   <string name="content_description_clear_input">Cancella testo</string>
   <string name="content_description_dismiss_input">Chiudi</string>
   <string name="content_description_erase">Elimina cronologia di navigazione</string>
+  <string name="content_description_fab_expand">Espandi</string>
+  <string name="content_description_open_tab">Apri scheda</string>
+  <string name="content_description_close_tab">Chiudi scheda</string>
   <string name="content_description_lock">Connessione sicura</string>
   <string name="accessibility_announcement_loading">Caricamento…</string>
   <string name="accessibility_announcement_loading_finished">Sito web caricato</string>
@@ -93,8 +96,16 @@
   <string name="contextmenu_image_share">Condividi immagine</string>
   <string name="contextmenu_image_copy">Copia indirizzo immagine</string>
   <string name="contextmenu_image_save">Salva immagine</string>
+  <string name="contextmenu_open_in_new_tab">Apri link in nuova scheda</string>
   <string name="contextmenu_image_warning"><![CDATA["Le immagini salvate e condivise "<b xmlns:xliff="urn:oasis:names:tc:xliff:document:1.2">non verranno eliminate</b>" quando si elimina la cronologia di %1$s."]]></string>
   <string name="firstrun_defaultbrowser_title">Potenzia la tua privacy</string>
+  <string name="firstrun_defaultbrowser_text2">Porta la navigazione anonima al livello superiore. Blocca pubblicità e altri contenuti che cercano di seguirti attraverso siti diversi e rallentano il caricamento delle pagine.</string>
+  <string name="firstrun_search_title">La ricerca a modo tuo</string>
+  <string name="firstrun_search_text">Stavi cercando qualcos’altro? Scegli un altro motore di ricerca predefinito nelle Impostazioni.</string>
+  <string name="firstrun_shortcut_title">Aggiungi collegamenti alla schermata principale</string>
+  <string name="firstrun_shortcut_text">Ritorna più velocemente ai tuoi siti preferiti con %1$s. Seleziona “Agg. a schermata principale\" dal menu di %1$s.</string>
+  <string name="firstrun_privacy_title">Trasforma la privacy in un’abitudine</string>
+  <string name="firstrun_privacy_text">Imposta %1$s come browser predefinito e goditi i vantaggi della navigazione anonima quando apri pagine web da altre app.</string>
   <string name="firstrun_close_button">Ho capito!</string>
   <string name="firstrun_skip_button">Ignora</string>
   <string name="firstrun_next_button">Avanti</string>
@@ -102,4 +113,6 @@
   <string name="dialog_addtohomescreen_title">Agg. a schermata principale</string>
   <string name="dialog_addtohomescreen_action_add">Aggiungi</string>
   <string name="dialog_addtohomescreen_action_cancel">Annulla</string>
+  <string name="dialog_opentab_title">Apri link nella scheda selezionata</string>
+  <string name="dialog_opentab_action_open">Apri</string>
 </resources>

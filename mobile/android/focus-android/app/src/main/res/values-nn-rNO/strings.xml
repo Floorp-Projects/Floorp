@@ -48,6 +48,9 @@
   <string name="content_description_clear_input">Tøm skrivefeltet</string>
   <string name="content_description_dismiss_input">Lukk</string>
   <string name="content_description_erase">Slett nettlesarhistorikk</string>
+  <string name="content_description_fab_expand">Fald ut</string>
+  <string name="content_description_open_tab">Opne fane</string>
+  <string name="content_description_close_tab">Lukk fane</string>
   <string name="content_description_lock">Sikker tilkopling</string>
   <string name="accessibility_announcement_loading">Lastar</string>
   <string name="accessibility_announcement_loading_finished">Nettside lasta</string>
@@ -93,8 +96,16 @@
   <string name="contextmenu_image_share">Del bilde</string>
   <string name="contextmenu_image_copy">Kopier bildeadresse</string>
   <string name="contextmenu_image_save">Lagre bilde</string>
+  <string name="contextmenu_open_in_new_tab">Opne lenke i ny fane</string>
   <string name="contextmenu_image_warning"><![CDATA["Lagra og delte bilde "<b xmlns:xliff="urn:oasis:names:tc:xliff:document:1.2">vil ikkje bli fjerna</b>" når du slettar %1$s-historikken."]]></string>
   <string name="firstrun_defaultbrowser_title">Styrk personvernet ditt</string>
+  <string name="firstrun_defaultbrowser_text2">Ta privat nettlesing til neste nivå. Blokker annonsar og anna innhald som kan spore deg på tvers av nettstadar og som kan gjere nedlasting av nettsider tregare.</string>
+  <string name="firstrun_search_title">Ditt søk på din måte</string>
+  <string name="firstrun_search_text">Søkjer du etter noko anna? Vel ein annan standard-søkjemotor i innstillingar.</string>
+  <string name="firstrun_shortcut_title">Legg til snarvegar på startskjermen</string>
+  <string name="firstrun_shortcut_text">Gå raskt tilbake til favorittnettstadane dine i %1$s. Vel «Legg til på startskjermen» frå %1$s-menyen.</string>
+  <string name="firstrun_privacy_title">Gjer personvern til ein vane</string>
+  <string name="firstrun_privacy_text">Vel %1$s som standardnettleser, og få fordelane med privat nettlesing når du opnar nettsider frå andre apper.</string>
   <string name="firstrun_close_button">OK, eg forstår det!</string>
   <string name="firstrun_skip_button">Hopp over</string>
   <string name="firstrun_next_button">Neste</string>
@@ -102,4 +113,6 @@
   <string name="dialog_addtohomescreen_title">Legg til på startskjerm</string>
   <string name="dialog_addtohomescreen_action_add">Legg til</string>
   <string name="dialog_addtohomescreen_action_cancel">Avbryt</string>
+  <string name="dialog_opentab_title">Opne lenke i vald fane</string>
+  <string name="dialog_opentab_action_open">Opne</string>
 </resources>

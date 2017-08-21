@@ -48,6 +48,9 @@
   <string name="content_description_clear_input">Очистити поле</string>
   <string name="content_description_dismiss_input">Відхилити</string>
   <string name="content_description_erase">Стерти історію перегляду</string>
+  <string name="content_description_fab_expand">Розгорнути</string>
+  <string name="content_description_open_tab">Відкрити вкладку</string>
+  <string name="content_description_close_tab">Закрити вкладку</string>
   <string name="content_description_lock">Безпечне з\'єднання</string>
   <string name="accessibility_announcement_loading">Завантаження</string>
   <string name="accessibility_announcement_loading_finished">Веб-сайт завантажено</string>
@@ -93,8 +96,16 @@
   <string name="contextmenu_image_share">Поділитись зображенням</string>
   <string name="contextmenu_image_copy">Копіювати адресу зображення</string>
   <string name="contextmenu_image_save">Зберегти зображення</string>
+  <string name="contextmenu_open_in_new_tab">Відкрити посилання в новій вкладці</string>
   <string name="contextmenu_image_warning"><![CDATA["Збережені та поширені зображення "<b xmlns:xliff="urn:oasis:names:tc:xliff:document:1.2">&#1085;&#1077; &#1074;&#1080;&#1076;&#1072;&#1083;&#1103;&#1102;&#1090;&#1100;&#1089;&#1103;</b>" при стиранні історії %1$s."]]></string>
   <string name="firstrun_defaultbrowser_title">Прокачайте вашу приватність</string>
+  <string name="firstrun_defaultbrowser_text2">Перейдіть на вищий рівень приватного перегляду. Блокуйте рекламу та інший вміст, що може стежити за вами на сайтах і сповільнювати завантаження сторінок.</string>
+  <string name="firstrun_search_title">Ваш пошук, ваш шлях</string>
+  <string name="firstrun_search_text">Шукаєте щось інше? Оберіть інший пошуковий засіб в налаштуваннях.</string>
+  <string name="firstrun_shortcut_title">Додавайте ярлики на головний екран</string>
+  <string name="firstrun_shortcut_text">Швидко відкривайте свої улюблені сайти у %1$s. Просто оберіть \"Додати на головний екран\" в меню %1$s.</string>
+  <string name="firstrun_privacy_title">Зробіть приватність звичкою</string>
+  <string name="firstrun_privacy_text">Встановіть %1$s своїм типовим браузером та отримайте переваги приватного перегляду при переході на веб-сайти з інших програм.</string>
   <string name="firstrun_close_button">Гаразд, зрозуміло!</string>
   <string name="firstrun_skip_button">Пропустити</string>
   <string name="firstrun_next_button">Далі</string>
@@ -102,4 +113,6 @@
   <string name="dialog_addtohomescreen_title">Додати на головний екран</string>
   <string name="dialog_addtohomescreen_action_add">Додати</string>
   <string name="dialog_addtohomescreen_action_cancel">Скасувати</string>
+  <string name="dialog_opentab_title">Відкривайте посилання у вибраній вкладці</string>
+  <string name="dialog_opentab_action_open">Відкрити</string>
 </resources>

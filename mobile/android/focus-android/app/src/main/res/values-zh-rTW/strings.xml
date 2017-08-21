@@ -48,6 +48,9 @@
   <string name="content_description_clear_input">清除輸入內容</string>
   <string name="content_description_dismiss_input">結束輸入</string>
   <string name="content_description_erase">清除瀏覽紀錄</string>
+  <string name="content_description_fab_expand">展開</string>
+  <string name="content_description_open_tab">開啟分頁</string>
+  <string name="content_description_close_tab">關閉分頁</string>
   <string name="content_description_lock">安全連線</string>
   <string name="accessibility_announcement_loading">載入中</string>
   <string name="accessibility_announcement_loading_finished">網站已載入</string>
@@ -93,8 +96,16 @@
   <string name="contextmenu_image_share">分享圖片</string>
   <string name="contextmenu_image_copy">複製圖片網址</string>
   <string name="contextmenu_image_save">儲存圖片</string>
+  <string name="contextmenu_open_in_new_tab">用新分頁開啟鏈結</string>
   <string name="contextmenu_image_warning"><![CDATA[清除 %1$s 瀏覽紀錄時，已儲存並分享的圖片將<b xmlns:xliff="urn:oasis:names:tc:xliff:document:1.2">&#19981;&#26371;&#34987;&#21034;&#38500;</b>。]]></string>
   <string name="firstrun_defaultbrowser_title">加強您的隱私</string>
+  <string name="firstrun_defaultbrowser_text2">隱私瀏覽功能變得更強大了。現在可封鎖廣告，以及其他可在不同網站間追蹤您的上網紀錄，又拖慢網頁載入的追蹤器。</string>
+  <string name="firstrun_search_title">用你的方式搜尋</string>
+  <string name="firstrun_search_text">想找點不一樣的東西嗎？可在設定畫面中選擇不同的預設搜尋引擎。</string>
+  <string name="firstrun_shortcut_title">在主畫面加入捷徑</string>
+  <string name="firstrun_shortcut_text">只要選擇 %1$s 選單中的「新增至裝置主畫面」即可快速用 %1$s 回到您最愛的網站。</string>
+  <string name="firstrun_privacy_title">讓隱私成為一種習慣。</string>
+  <string name="firstrun_privacy_text">將 %1$s 設為您的預設瀏覽器，從其他程式開啟網頁時即可直接進入隱私瀏覽模式從中受益。</string>
   <string name="firstrun_close_button">好，知道了！</string>
   <string name="firstrun_skip_button">略過</string>
   <string name="firstrun_next_button">下一步</string>
@@ -102,4 +113,6 @@
   <string name="dialog_addtohomescreen_title">新增至裝置主畫面</string>
   <string name="dialog_addtohomescreen_action_add">新增</string>
   <string name="dialog_addtohomescreen_action_cancel">取消</string>
+  <string name="dialog_opentab_title">指定用來開啟鏈結的分頁</string>
+  <string name="dialog_opentab_action_open">開啟</string>
 </resources>

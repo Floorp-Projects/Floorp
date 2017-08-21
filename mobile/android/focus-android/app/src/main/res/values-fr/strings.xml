@@ -48,6 +48,9 @@
   <string name="content_description_clear_input">Effacer le texte saisi</string>
   <string name="content_description_dismiss_input">Fermer</string>
   <string name="content_description_erase">Effacer l’historique de navigation</string>
+  <string name="content_description_fab_expand">Développer</string>
+  <string name="content_description_open_tab">Ouvrir un onglet</string>
+  <string name="content_description_close_tab">Fermer l’onglet</string>
   <string name="content_description_lock">Connexion sécurisée</string>
   <string name="accessibility_announcement_loading">Chargement…</string>
   <string name="accessibility_announcement_loading_finished">Site web chargé</string>
@@ -93,8 +96,16 @@
   <string name="contextmenu_image_share">Partager l’image</string>
   <string name="contextmenu_image_copy">Copier l’adresse de l’image</string>
   <string name="contextmenu_image_save">Enregistrer l’image</string>
+  <string name="contextmenu_open_in_new_tab">Ouvrir le lien dans un nouvel onglet</string>
   <string name="contextmenu_image_warning"><![CDATA["Les images partagées ou enregistrées "<b xmlns:xliff="urn:oasis:names:tc:xliff:document:1.2">ne seront pas supprim&#233;es</b>" lorsque vous effacez l’historique de %1$s."]]></string>
   <string name="firstrun_defaultbrowser_title">Renforcez votre vie privée</string>
+  <string name="firstrun_defaultbrowser_text2">La navigation privée passe au niveau supérieur. Dites adieu aux publicités et autres traqueurs qui vous espionnent et ralentissent le chargement des pages web.</string>
+  <string name="firstrun_search_title">Recherchez à votre manière</string>
+  <string name="firstrun_search_text">Vous recherchez quelque chose de différent ? Choisissez un autre moteur de recherche par défaut dans les paramètres.</string>
+  <string name="firstrun_shortcut_title">Ajoutez des raccourcis sur votre écran d’accueil</string>
+  <string name="firstrun_shortcut_text">Retournez voir vos sites préférés dans %1$s rapidement. Sélectionnez simplement « Ajouter à l’écran d’accueil » depuis le menu de %1$s.</string>
+  <string name="firstrun_privacy_title">Reprenez votre vie privée en main</string>
+  <string name="firstrun_privacy_text">Définissez %1$s en tant que navigateur par défaut et bénéficiez d’une navigation privée dès que vous ouvrez les pages web à partir d’autres applications.</string>
   <string name="firstrun_close_button">OK</string>
   <string name="firstrun_skip_button">Ignorer</string>
   <string name="firstrun_next_button">Suivant</string>
@@ -102,4 +113,6 @@
   <string name="dialog_addtohomescreen_title">Ajouter à l’écran d’accueil</string>
   <string name="dialog_addtohomescreen_action_add">Ajouter</string>
   <string name="dialog_addtohomescreen_action_cancel">Annuler</string>
+  <string name="dialog_opentab_title">Ouvrir le lien dans l’onglet sélectionné</string>
+  <string name="dialog_opentab_action_open">Ouvrir</string>
 </resources>

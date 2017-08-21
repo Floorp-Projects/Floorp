@@ -22,7 +22,7 @@
   <string name="shortcut_erase_short_label">Radera</string>
   <string name="shortcut_erase_long_label">Radera webbhistorik</string>
   <string name="text_selection_search_action">Sök privat</string>
-  <string name="about_content"><![CDATA[<p xmlns:xliff="urn:oasis:names:tc:xliff:document:1.2">%1$s ger dig full kontroll.</p>\n<p xmlns:xliff="urn:oasis:names:tc:xliff:document:1.2">"Anv&#228;nd den som en privat webbl&#228;sare:\n  "<ul>"\n    "<li>S&#246;k och surfa direkt i appen</li>"\n    "<li>Blockera trackers (eller uppdatera inst&#228;llningar att till&#229;ta trackers)</li>"\n    "<li>Radera f&#246;r att ta bort kakor samt s&#246;k- och webbhistorik</li>"\n  "</ul>\n</p>\n<p xmlns:xliff="urn:oasis:names:tc:xliff:document:1.2">%1$s is produced by Mozilla. Our mission is to foster a healthy, open Internet.<br/>\n<a href="%2$s">Learn more</a></p>]]></string>
+  <string name="about_content"><![CDATA[<p xmlns:xliff="urn:oasis:names:tc:xliff:document:1.2">%1$s ger dig full kontroll.</p>\n<p xmlns:xliff="urn:oasis:names:tc:xliff:document:1.2">"Anv&#228;nd den som en privat webbl&#228;sare:\n  "<ul>"\n    "<li>S&#246;k och surfa direkt i appen</li>"\n    "<li>Blockera trackers (eller uppdatera inst&#228;llningar att till&#229;ta trackers)</li>"\n    "<li>Radera f&#246;r att ta bort kakor samt s&#246;k- och webbhistorik</li>"\n  "</ul>\n</p>\n<p xmlns:xliff="urn:oasis:names:tc:xliff:document:1.2">%1$s &#228;r utvecklad av Mozilla. V&#229;rt uppdrag &#228;r att fr&#228;mja ett h&#228;lsosamt, &#246;ppet Internet.<br/>\n<a href="%2$s">L&#228;s mer</a></p>]]></string>
   <string name="preference_category_search">Sök</string>
   <string name="preference_search_engine_default">Standard</string>
   <string name="preference_language">Språk</string>
@@ -48,6 +48,9 @@
   <string name="content_description_clear_input">Rensa inmatning</string>
   <string name="content_description_dismiss_input">Ignorera</string>
   <string name="content_description_erase">Radera webbhistorik</string>
+  <string name="content_description_fab_expand">Expandera</string>
+  <string name="content_description_open_tab">Öppna flik</string>
+  <string name="content_description_close_tab">Stäng flik</string>
   <string name="content_description_lock">Säker anslutning</string>
   <string name="accessibility_announcement_loading">Laddar</string>
   <string name="accessibility_announcement_loading_finished">Webbplats laddad</string>
@@ -93,8 +96,16 @@
   <string name="contextmenu_image_share">Dela bild</string>
   <string name="contextmenu_image_copy">Kopiera bildadress</string>
   <string name="contextmenu_image_save">Spara bild</string>
+  <string name="contextmenu_open_in_new_tab">Öppna länk i ny flik</string>
   <string name="contextmenu_image_warning"><![CDATA["Sparade och delade bilder "<b xmlns:xliff="urn:oasis:names:tc:xliff:document:1.2">kommer inte att raderas</b>" när du raderar %1$s historik."]]></string>
   <string name="firstrun_defaultbrowser_title">Stärk din integritet</string>
+  <string name="firstrun_defaultbrowser_text2">Ta privat surfning till nästa nivå. Blockera annonser och annat innehåll som kan spåra dig på webbplatser och slöa ner laddningen av webbsidor.</string>
+  <string name="firstrun_search_title">Sök som du vill</string>
+  <string name="firstrun_search_text">Letar du efter något annat? Välj en annan standardsökmotor i Inställningar.</string>
+  <string name="firstrun_shortcut_title">Lägg till genvägar till startskärmen</string>
+  <string name="firstrun_shortcut_text">Återgå till dina favoritwebbplatser i %1$s snabbt. Välj \"Lägg till på startskärmen\" från menyn %1$s.</string>
+  <string name="firstrun_privacy_title">Låt integritet bli en vana</string>
+  <string name="firstrun_privacy_text">Ange %1$s som standardwebbläsare och dra nytta av fördelarna med privat surfning när du öppnar webbsidor från andra appar.</string>
   <string name="firstrun_close_button">OK, jag förstår!</string>
   <string name="firstrun_skip_button">Hoppa över</string>
   <string name="firstrun_next_button">Nästa</string>
@@ -102,4 +113,6 @@
   <string name="dialog_addtohomescreen_title">Lägg till på startskärmen</string>
   <string name="dialog_addtohomescreen_action_add">Lägg till</string>
   <string name="dialog_addtohomescreen_action_cancel">Avbryt</string>
+  <string name="dialog_opentab_title">Öppna länk i vald flik</string>
+  <string name="dialog_opentab_action_open">Öppna</string>
 </resources>

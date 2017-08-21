@@ -48,6 +48,9 @@
   <string name="content_description_clear_input">ఇన్‌పుట్‌ను తుడిచివేయి</string>
   <string name="content_description_dismiss_input">విస్మరించు</string>
   <string name="content_description_erase">విహరణ చరిత్రను తుడిచేయి</string>
+  <string name="content_description_fab_expand">విస్తరింపచేయి</string>
+  <string name="content_description_open_tab">తెరిచివున్న ట్యాబు</string>
+  <string name="content_description_close_tab">ట్యాబును మూసివేయి</string>
   <string name="content_description_lock">సురక్షిత అనుసంధానం</string>
   <string name="accessibility_announcement_loading">వస్తోంది</string>
   <string name="accessibility_announcement_loading_finished">వెబ్‌సైటు లోడయింది</string>
@@ -93,6 +96,7 @@
   <string name="contextmenu_image_share">బొమ్మని పంచుకో</string>
   <string name="contextmenu_image_copy">చిత్ర చిరునామాను కాపీచేయి</string>
   <string name="contextmenu_image_save">చిత్రాన్ని భద్రపరచు</string>
+  <string name="contextmenu_open_in_new_tab">లంకెను కొత్త ట్యాబులో తెరువు</string>
   <string name="contextmenu_image_warning"><![CDATA["మీరు %1$s చరిత్రను తీసివేసినప్పుడు సేవ్ చేయబడిన మరియు పంచిన చిత్రాలు "<b xmlns:xliff="urn:oasis:names:tc:xliff:document:1.2">" &#3108;&#3146;&#3122;&#3095;&#3135;&#3074;&#3098;&#3116;&#3105;&#3125;&#3137; "</b>.]]></string>
   <string name="firstrun_defaultbrowser_title">మీ ప్రైవసీని శక్తిమంతం చేసుకోండి</string>
   <string name="firstrun_close_button">సరే, అర్థమయ్యింది!</string>
@@ -102,4 +106,5 @@
   <string name="dialog_addtohomescreen_title">ముంగిలి తెరకు చేర్చు</string>
   <string name="dialog_addtohomescreen_action_add">చేర్చు</string>
   <string name="dialog_addtohomescreen_action_cancel">రద్దుచేయి</string>
+  <string name="dialog_opentab_action_open">తెరువు</string>
 </resources>

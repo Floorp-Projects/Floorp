@@ -9,6 +9,7 @@
   <string name="menu_share">साझा करें…</string>
   <string name="menu_open_with_default_browser">%1$s के साथ खोलें</string>
   <string name="menu_open_with_a_browser">इसके साथ खोलें…</string>
+  <string name="menu_add_to_home_screen">मुख्य स्क्रीन में जोड़ें</string>
   <string name="menu_settings">सेटिंग्स</string>
   <string name="menu_about">के बारे में</string>
   <string name="menu_help">सहायता</string>
@@ -17,6 +18,7 @@
   <string name="share_dialog_title">इसके माध्यम से साझा करें</string>
   <string name="notification_erase_text">ब्राउज़िंग इतिहास मिटाएँ</string>
   <string name="notification_action_open">खोलें</string>
+  <string name="notification_action_erase_and_open">मिटा दें और खोलें</string>
   <string name="shortcut_erase_short_label">मिटाएँ</string>
   <string name="shortcut_erase_long_label">ब्राउज़िंग इतिहास मिटाएँ</string>
   <string name="text_selection_search_action">निजी तौर पर खोज</string>
@@ -33,6 +35,7 @@
   <string name="preference_privacy_block_content">अन्य सामग्री ट्रैकर्स को अवरुद्ध करें</string>
   <string name="preference_privacy_block_content_summary">कुछ वीडियो और वेब पृष्ठ भंग हो सकते हैं</string>
   <string name="preference_privacy_secure_mode">तरक़ीब</string>
+  <string name="preference_privacy_stealth_summary">ऐप्स को स्विच करते समय वेबपेज छिपाएं</string>
   <string name="preference_category_performance">प्रदर्शन</string>
   <string name="preference_performance_block_webfonts">वेब लिपियों को अवरुद्ध करें</string>
   <string name="preference_performance_block_webfonts_summary">अनुपस्थित प्रतीकों या छवियों के रूप में परिणाम हो सकता है</string>
@@ -45,6 +48,9 @@
   <string name="content_description_clear_input">इनपुट मिटाएँ</string>
   <string name="content_description_dismiss_input">निरस्त करें</string>
   <string name="content_description_erase">ब्राउज़िंग इतिहास मिटाएँ</string>
+  <string name="content_description_fab_expand">विस्तार</string>
+  <string name="content_description_open_tab">टैब खोलें</string>
+  <string name="content_description_close_tab">टैब बंद करें</string>
   <string name="content_description_lock">सुरक्षित संपर्क</string>
   <string name="accessibility_announcement_loading">लोड हो रहा है</string>
   <string name="accessibility_announcement_loading_finished">वेबसाइट लोड हो गया</string>
@@ -90,10 +96,23 @@
   <string name="contextmenu_image_share">चित्र साझा करें</string>
   <string name="contextmenu_image_copy">चित्र के पते की प्रतिलिपि लें</string>
   <string name="contextmenu_image_save">छवि सहेजें</string>
+  <string name="contextmenu_open_in_new_tab">नए टैब में कड़ी खोलें</string>
   <string name="contextmenu_image_warning"><![CDATA["सहेजे गए और साझा की गई छवियाँ "<b xmlns:xliff="urn:oasis:names:tc:xliff:document:1.2">&#2361;&#2335;&#2366;&#2312; &#2344;&#2361;&#2368;&#2306; &#2332;&#2366;&#2319;&#2305;&#2327;&#2368;</b>" जब आप %1$s इतिहास को मिटाएँगे."]]></string>
   <string name="firstrun_defaultbrowser_title">अपनी गोपनीयता को बढ़ाएँ</string>
+  <string name="firstrun_defaultbrowser_text2">निजी ब्राउज़िंग को अगले स्तर तक ले. विज्ञापन और अन्य सामग्री को ब्लॉक करे जो आपको सभी साइट को ट्रैक कर सकता हैं और पृष्ट लोड समय को बढ़ा देता हैं.</string>
+  <string name="firstrun_search_title">आपका खोज, आपका रास्ता</string>
+  <string name="firstrun_search_text">कुछ अलग खोंज रहे हैं? सेटिंग्स में दूसरा डिफ़ॉल्ट खोज इंजन चुने.</string>
+  <string name="firstrun_shortcut_title">अपने मुख्य स्क्रीन पर शॉर्टकट जोड़ें</string>
+  <string name="firstrun_shortcut_text">%1$s में अपनी पसंदीदा साइटों को तेज़ी से वापस जाएँ. बस %1$s मेनू से \"मुख्य स्क्रीन पर जोड़ें\" का चयन करें।</string>
+  <string name="firstrun_privacy_title">गोपनीयता एक आदत बनाये</string>
+  <string name="firstrun_privacy_text">%1$s को अपने तयशुदा ब्राउज़र के रूप में सेट करें और जब आप अन्य ऐप्स से वेबपृष्ठ खोलते हैं तब निजी ब्राउज़िंग के फायदे प्राप्त करें.</string>
   <string name="firstrun_close_button">ठीक है, समझ गया!</string>
   <string name="firstrun_skip_button">छोड़ें</string>
   <string name="firstrun_next_button">अगला</string>
   <string name="content_blocking_disabled">-</string>
+  <string name="dialog_addtohomescreen_title">मुख्य स्क्रीन में जोड़ें</string>
+  <string name="dialog_addtohomescreen_action_add">जोड़ें</string>
+  <string name="dialog_addtohomescreen_action_cancel">रद्द करें</string>
+  <string name="dialog_opentab_title">चयनित टैब में कड़ी खोलें</string>
+  <string name="dialog_opentab_action_open">खोलें</string>
 </resources>

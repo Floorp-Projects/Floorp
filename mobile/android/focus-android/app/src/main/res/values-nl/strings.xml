@@ -48,6 +48,9 @@
   <string name="content_description_clear_input">Invoer wissen</string>
   <string name="content_description_dismiss_input">Verwijderen</string>
   <string name="content_description_erase">Navigatiegeschiedenis wissen</string>
+  <string name="content_description_fab_expand">Uitvouwen</string>
+  <string name="content_description_open_tab">Tabblad openen</string>
+  <string name="content_description_close_tab">Tabblad sluiten</string>
   <string name="content_description_lock">Beveiligde verbinding</string>
   <string name="accessibility_announcement_loading">Laden</string>
   <string name="accessibility_announcement_loading_finished">Website geladen</string>
@@ -93,8 +96,16 @@
   <string name="contextmenu_image_share">Afbeelding delen</string>
   <string name="contextmenu_image_copy">Afbeeldingsadres kopiëren</string>
   <string name="contextmenu_image_save">Afbeelding opslaan</string>
+  <string name="contextmenu_open_in_new_tab">Koppeling openen in nieuw tabblad</string>
   <string name="contextmenu_image_warning"><![CDATA["Opgeslagen en gedeelde afbeeldingen "<b xmlns:xliff="urn:oasis:names:tc:xliff:document:1.2">worden niet verwijderd</b>" als u geschiedenis van %1$s wist."]]></string>
   <string name="firstrun_defaultbrowser_title">Vergroot uw privacy</string>
+  <string name="firstrun_defaultbrowser_text2">Breng privénavigatie naar een hoger niveau. Blokkeer advertenties en andere inhoud die u op websites kunnen volgen en laadtijden van pagina’s verlengen.</string>
+  <string name="firstrun_search_title">Zoeken op uw manier</string>
+  <string name="firstrun_search_text">Op zoek naar iets anders? Kies een andere standaardzoekmachine in Instellingen.</string>
+  <string name="firstrun_shortcut_title">Voeg koppelingen toe aan uw startscherm</string>
+  <string name="firstrun_shortcut_text">Keer snel terug naar uw favoriete websites in %1$s. Selecteer gewoon ‘Toevoegen aan startscherm’ vanuit het %1$s-menu.</string>
+  <string name="firstrun_privacy_title">Maak privacy een gewoonte</string>
+  <string name="firstrun_privacy_text">Stel %1$s in als uw standaardbrowser en ervaar de voordelen van privénavigatie als u webpagina’s opent vanuit andere apps.</string>
   <string name="firstrun_close_button">OK, begrepen!</string>
   <string name="firstrun_skip_button">Overslaan</string>
   <string name="firstrun_next_button">Volgende</string>
@@ -102,4 +113,6 @@
   <string name="dialog_addtohomescreen_title">Toevoegen aan startscherm</string>
   <string name="dialog_addtohomescreen_action_add">Toevoegen</string>
   <string name="dialog_addtohomescreen_action_cancel">Annuleren</string>
+  <string name="dialog_opentab_title">Koppeling openen in geselecteerde tabblad</string>
+  <string name="dialog_opentab_action_open">Openen</string>
 </resources>

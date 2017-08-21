@@ -48,6 +48,9 @@
   <string name="content_description_clear_input">Garbitu idatzitakoa</string>
   <string name="content_description_dismiss_input">Baztertu</string>
   <string name="content_description_erase">Ezabatu nabigatze-historia</string>
+  <string name="content_description_fab_expand">Zabaldu</string>
+  <string name="content_description_open_tab">Ireki fitxa</string>
+  <string name="content_description_close_tab">Itxi fitxa</string>
   <string name="content_description_lock">Konexio segurua</string>
   <string name="accessibility_announcement_loading">Kargatzen</string>
   <string name="accessibility_announcement_loading_finished">Webgunea kargatuta</string>
@@ -93,8 +96,16 @@
   <string name="contextmenu_image_share">Partekatu irudia</string>
   <string name="contextmenu_image_copy">Kopiatu irudiaren helbidea</string>
   <string name="contextmenu_image_save">Gorde irudia</string>
+  <string name="contextmenu_open_in_new_tab">Ireki lotura fitxa berrian</string>
   <string name="contextmenu_image_warning"><![CDATA["Deskargatutako eta partekatutako irudiak "<b xmlns:xliff="urn:oasis:names:tc:xliff:document:1.2">ez dira ezabatuko</b>" %1$s(r)en historia ezabatzean."]]></string>
   <string name="firstrun_defaultbrowser_title">Indartu zure pribatutasuna</string>
+  <string name="firstrun_defaultbrowser_text2">Eraman nabigatze pribatua hurrengo mailara. Blokeatu iragarkiak eta webguneetan zehar zure jarraipena egin edo orrien karga-denbora makal dezaketen edukiak.</string>
+  <string name="firstrun_search_title">Bilaketa, zure erara</string>
+  <string name="firstrun_search_text">Zerbait desberdinaren bila? Aukeratu beste bilaketa-motor lehenetsi bat ezarpenetan.</string>
+  <string name="firstrun_shortcut_title">Gehitu lasterbideak zure hasierako pantailan</string>
+  <string name="firstrun_shortcut_text">Itzuli azkar batean zure gogoko guneetara %1$s(r)en. Hautatu \'Gehitu hasierako pantailan\' %1$s menutik.</string>
+  <string name="firstrun_privacy_title">Egizu pribatutasuna zure ohitura</string>
+  <string name="firstrun_privacy_text">Ezarri %1$s nabigatzaile lehenetsi gisa eta eskuratu nabigatze pribatuaren onurak beste aplikazioetatik web orriak irekitzean.</string>
   <string name="firstrun_close_button">Ulertuta!</string>
   <string name="firstrun_skip_button">Saltatu</string>
   <string name="firstrun_next_button">Hurrengoa</string>
@@ -102,4 +113,6 @@
   <string name="dialog_addtohomescreen_title">Gehitu hasierako pantailan</string>
   <string name="dialog_addtohomescreen_action_add">Gehitu</string>
   <string name="dialog_addtohomescreen_action_cancel">Utzi</string>
+  <string name="dialog_opentab_title">Ireki lotura hautatutako fitxan</string>
+  <string name="dialog_opentab_action_open">Ireki</string>
 </resources>

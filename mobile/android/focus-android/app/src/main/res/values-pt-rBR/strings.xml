@@ -48,6 +48,9 @@
   <string name="content_description_clear_input">Limpar campo</string>
   <string name="content_description_dismiss_input">Dispensar</string>
   <string name="content_description_erase">Apagar o histórico de navegação</string>
+  <string name="content_description_fab_expand">Expandir</string>
+  <string name="content_description_open_tab">Abrir aba</string>
+  <string name="content_description_close_tab">Fechar aba</string>
   <string name="content_description_lock">Conexão segura</string>
   <string name="accessibility_announcement_loading">Carregando</string>
   <string name="accessibility_announcement_loading_finished">Site carregado</string>
@@ -93,8 +96,16 @@
   <string name="contextmenu_image_share">Compartilhar imagem</string>
   <string name="contextmenu_image_copy">Copiar endereço da imagem</string>
   <string name="contextmenu_image_save">Salvar imagem</string>
+  <string name="contextmenu_open_in_new_tab">Abrir link em nova aba</string>
   <string name="contextmenu_image_warning"><![CDATA["As imagens salvas e compartilhadas "<b xmlns:xliff="urn:oasis:names:tc:xliff:document:1.2">n&#227;o ser&#227;o exclu&#237;das</b>" ao apagar o histórico do %1$s."]]></string>
   <string name="firstrun_defaultbrowser_title">Potencialize sua privacidade</string>
+  <string name="firstrun_defaultbrowser_text2">Leve a navegação privativa ao próximo nível. Bloqueie propagandas e outros conteúdos que podem rastrear você entre os sites diminuir o tempo de carregamento das páginas.</string>
+  <string name="firstrun_search_title">Pesquise à sua maneira</string>
+  <string name="firstrun_search_text">Procurando algo diferente? Escolha outro mecanismo de busca padrão em Configurações.</string>
+  <string name="firstrun_shortcut_title">Adicione atalhos na sua tela principal</string>
+  <string name="firstrun_shortcut_text">Volte ao seus sites favoritos no %1$s rapidamente. Apenas selecione \"Adicionar à Tela principal\" pelo menu do %1$s.</string>
+  <string name="firstrun_privacy_title">Faça da privacidade um hábito</string>
+  <string name="firstrun_privacy_text">Defina o %1$s como seu navegador padrão e obtenha os benefícios da navegação privativa quando abrir páginas de outros aplicativos Android.</string>
   <string name="firstrun_close_button">Ok, entendi!</string>
   <string name="firstrun_skip_button">Pular</string>
   <string name="firstrun_next_button">Próximo</string>
@@ -102,4 +113,6 @@
   <string name="dialog_addtohomescreen_title">Adicionar à tela inicial</string>
   <string name="dialog_addtohomescreen_action_add">Adicionar</string>
   <string name="dialog_addtohomescreen_action_cancel">Cancelar</string>
+  <string name="dialog_opentab_title">Abrir link na aba selecionada</string>
+  <string name="dialog_opentab_action_open">Abrir</string>
 </resources>

@@ -48,6 +48,9 @@
   <string name="content_description_clear_input">Vymazat pole</string>
   <string name="content_description_dismiss_input">Zavřít</string>
   <string name="content_description_erase">Vymazat historii prohlížení</string>
+  <string name="content_description_fab_expand">Rozbalit</string>
+  <string name="content_description_open_tab">Otevřít panel</string>
+  <string name="content_description_close_tab">Zavřít panel</string>
   <string name="content_description_lock">Zabezpečené připojení</string>
   <string name="accessibility_announcement_loading">Načítání</string>
   <string name="accessibility_announcement_loading_finished">Stránka načtena</string>
@@ -93,8 +96,16 @@
   <string name="contextmenu_image_share">Sdílet obrázek</string>
   <string name="contextmenu_image_copy">Kopírovat adresu obrázku</string>
   <string name="contextmenu_image_save">Uložit obrázek</string>
+  <string name="contextmenu_open_in_new_tab">Otevřít odkaz v novém panelu</string>
   <string name="contextmenu_image_warning"><![CDATA["Uložené a sdílené obrázky "<b xmlns:xliff="urn:oasis:names:tc:xliff:document:1.2">nebudou smaz&#225;ny</b>" když smažete historii aplikace %1$s."]]></string>
   <string name="firstrun_defaultbrowser_title">Posuňte své soukromí na vyšší úroveň</string>
+  <string name="firstrun_defaultbrowser_text2">Anonymní prohlížení dostalo nový rozměr. Blokuje reklamy a další obsah, který vás sleduje napříč stránkami a zpomaluje načítání.</string>
+  <string name="firstrun_search_title">Vaše hledání, vaše cesta</string>
+  <string name="firstrun_search_text">Hledáte něco jiného? V nastavení si zvolte jiný vyhledávací modul jako výchozí.</string>
+  <string name="firstrun_shortcut_title">Přidejte si zkratky na vaši domovskou obrazovku</string>
+  <string name="firstrun_shortcut_text">S aplikací %1$s se můžete rychle vrátit ke svým oblíbeným stránkám. Použijte „Přidat na domovskou obrazovku“ z nabídky aplikace %1$s.</string>
+  <string name="firstrun_privacy_title">Udělejte ze soukromí zvyk</string>
+  <string name="firstrun_privacy_text">Nastavte si %1$s jako svůj výchozí prohlížeč a získejte výhody soukromého prohlížení kdykoliv otevřete odkaz z ostatních aplikací.</string>
   <string name="firstrun_close_button">OK, rozumím!</string>
   <string name="firstrun_skip_button">Přeskočit</string>
   <string name="firstrun_next_button">Další</string>
@@ -102,4 +113,6 @@
   <string name="dialog_addtohomescreen_title">Přidat na domovskou obrazovku</string>
   <string name="dialog_addtohomescreen_action_add">Přidat</string>
   <string name="dialog_addtohomescreen_action_cancel">Zrušit</string>
+  <string name="dialog_opentab_title">Otevřít odkaz ve vybraném panelu</string>
+  <string name="dialog_opentab_action_open">Otevřít</string>
 </resources>

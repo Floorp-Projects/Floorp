@@ -48,6 +48,9 @@
   <string name="content_description_clear_input">Eingabefeld leeren</string>
   <string name="content_description_dismiss_input">Schließen</string>
   <string name="content_description_erase">Browser-Chronik löschen</string>
+  <string name="content_description_fab_expand">Ausklappen</string>
+  <string name="content_description_open_tab">Tab öffnen</string>
+  <string name="content_description_close_tab">Tab schließen</string>
   <string name="content_description_lock">Sichere Verbindung</string>
   <string name="accessibility_announcement_loading">Wird geladen…</string>
   <string name="accessibility_announcement_loading_finished">Website geladen</string>
@@ -93,8 +96,16 @@
   <string name="contextmenu_image_share">Grafik teilen</string>
   <string name="contextmenu_image_copy">Grafikadresse kopieren</string>
   <string name="contextmenu_image_save">Grafik speichern</string>
+  <string name="contextmenu_open_in_new_tab">Link in neuem Tab öffnen</string>
   <string name="contextmenu_image_warning"><![CDATA["Gespeicherte und geteilte Grafiken "<b xmlns:xliff="urn:oasis:names:tc:xliff:document:1.2">werden nicht gel&#246;scht</b>, wenn Sie die Chronik von %1$s löschen.]]></string>
   <string name="firstrun_defaultbrowser_title">Stärken Sie Ihre Privatsphäre</string>
+  <string name="firstrun_defaultbrowser_text2">Privates Surfen auf einer höheren Stufe. Blockieren Sie Werbung und andere Inhalte, die Sie über Websites hinweg verfolgen können und Seitenladezeiten verlängern.</string>
+  <string name="firstrun_search_title">Ihre Suche, wie Sie möchten</string>
+  <string name="firstrun_search_text">Suchen Sie etwas anderes? Wählen Sie in den Einstellungen eine andere Standardsuchmaschine.</string>
+  <string name="firstrun_shortcut_title">Fügen Sie Verknüpfungen auf Ihrem Startbildschirm hinzu</string>
+  <string name="firstrun_shortcut_text">Kehren Sie schnell zu Ihren Lieblings-Websites in %1$s zurück. Wählen Sie einfach im %1$s-Menü „Zum Startbildschirm hinzufügen“.</string>
+  <string name="firstrun_privacy_title">Machen Sie Privatsphäre zur Gewohnheit</string>
+  <string name="firstrun_privacy_text">Verwenden Sie %1$s als Standardbrowser und nutzen Sie die Vorteile des privaten Surfens, wenn Sie aus anderen Apps Webseiten öffnen.</string>
   <string name="firstrun_close_button">Ok, verstanden!</string>
   <string name="firstrun_skip_button">Überspringen</string>
   <string name="firstrun_next_button">Weiter</string>
@@ -102,4 +113,6 @@
   <string name="dialog_addtohomescreen_title">Zum Startbildschirm hinzufügen</string>
   <string name="dialog_addtohomescreen_action_add">Hinzufügen</string>
   <string name="dialog_addtohomescreen_action_cancel">Abbrechen</string>
+  <string name="dialog_opentab_title">Link in gewähltem Tab öffnen</string>
+  <string name="dialog_opentab_action_open">Öffnen</string>
 </resources>

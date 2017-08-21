@@ -48,6 +48,9 @@
   <string name="content_description_clear_input">Sfeḍ anekcam</string>
   <string name="content_description_dismiss_input">Kkes</string>
   <string name="content_description_erase">Kkes amazray n tunigin</string>
+  <string name="content_description_fab_expand">Snefli</string>
+  <string name="content_description_open_tab">Ldi accer</string>
+  <string name="content_description_close_tab">Mdel accer</string>
   <string name="content_description_lock">Tuqqna taγelsant</string>
   <string name="accessibility_announcement_loading">Asali</string>
   <string name="accessibility_announcement_loading_finished">Asmel web yuli-d</string>
@@ -93,8 +96,16 @@
   <string name="contextmenu_image_share">Bḍu tugna</string>
   <string name="contextmenu_image_copy">Nγel tansa n tugna</string>
   <string name="contextmenu_image_save">Sekles tugna</string>
+  <string name="contextmenu_open_in_new_tab">Ldi aseɣwen deg iccer amaynut</string>
   <string name="contextmenu_image_warning"><![CDATA[Tugniwin ittwaskelsen akked ittwabḍan<b xmlns:xliff="urn:oasis:names:tc:xliff:document:1.2">"ur ttwaksent ara "</b>" m\'ara ad tekseḍ %1$samazray."]]></string>
   <string name="firstrun_defaultbrowser_title">Rmed tabaḍnit inek</string>
+  <string name="firstrun_defaultbrowser_text2">Iminig uslig ad yali deg uswir.Dayen ur tuγaleḍ ad twaliḍ adellel neγ imsfuγal i k-ṭṭafaren u saẓayen tulya n isemal web.</string>
+  <string name="firstrun_search_title">Anadi-ik, abrid-ik</string>
+  <string name="firstrun_search_text">Tettnadiḍ ayen-nniḍen? Fren amsadday-nniḍen n unadi amezwer deg iɣewwaṛen.</string>
+  <string name="firstrun_shortcut_title">Rnu anegzum ar ugdil-ik agejdan</string>
+  <string name="firstrun_shortcut_text">Uɣal ar yesmal-ik inurifen deg %1$s s zreb. Fren kan \"Rnu ar ugdil agejdan\" seg umuɣ %1$s.</string>
+  <string name="firstrun_privacy_title">Err tabaḍnit d tanumi</string>
+  <string name="firstrun_privacy_text">Sbadu %1$s d iminig-ik amezwar sakin faṛeṣ tagnit n tunigin tusligt ticki teldiḍ-d isebtar web seg isnasen-nniḍen.</string>
   <string name="firstrun_close_button">IH, Awi-t-id!</string>
   <string name="firstrun_skip_button">Suref</string>
   <string name="firstrun_next_button">Γer zdat</string>
@@ -102,4 +113,6 @@
   <string name="dialog_addtohomescreen_title">Rnu γer ugdil agejdan</string>
   <string name="dialog_addtohomescreen_action_add">Rnu</string>
   <string name="dialog_addtohomescreen_action_cancel">Sefsex</string>
+  <string name="dialog_opentab_title">Ldi aseɣwen deg iccer yettwafernen</string>
+  <string name="dialog_opentab_action_open">Ldi</string>
 </resources>

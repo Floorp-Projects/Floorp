@@ -48,6 +48,9 @@
   <string name="content_description_clear_input">Zapódaśe wuprozniś</string>
   <string name="content_description_dismiss_input">Zachyśiś</string>
   <string name="content_description_erase">Pśeglědowańsku historiju lašowaś</string>
+  <string name="content_description_fab_expand">Pokazaś</string>
+  <string name="content_description_open_tab">Rejtark wócyniś</string>
+  <string name="content_description_close_tab">Rejtark zacyniś</string>
   <string name="content_description_lock">Wěsty zwisk</string>
   <string name="accessibility_announcement_loading">Zacytanje</string>
   <string name="accessibility_announcement_loading_finished">Websedło jo se zacytało</string>
@@ -93,8 +96,16 @@
   <string name="contextmenu_image_share">Wobraz śěliś</string>
   <string name="contextmenu_image_copy">Wobrazowu adresu kopěrowaś</string>
   <string name="contextmenu_image_save">Wobraz składowaś</string>
+  <string name="contextmenu_open_in_new_tab">Wótkaz w nowem rejtarku wócyniś</string>
   <string name="contextmenu_image_warning"><![CDATA["Skłaźone a źělone wobraze "<b xmlns:xliff="urn:oasis:names:tc:xliff:document:1.2">se njewula&#353;uju</b>, gaž historiju %1$s lašujośo.]]></string>
   <string name="firstrun_defaultbrowser_title">Zmocniśo swóju priwatnosć</string>
+  <string name="firstrun_defaultbrowser_text2">Zwigniśo priwatne pśeglědowanje na pśiducu wušu rowninu. Blokěrujśo wabjenje a hynakše wopśimjeśe, kótarež móžośo pśez sedła slědowaś a zacyitańske case bokow pódlejšyś.</string>
+  <string name="firstrun_search_title">Wašo pytanje ako wy jo cośo</string>
+  <string name="firstrun_search_text">Pytaśo za něcym drugim? Wubjeŕśo drugu standardnu pytnicu w nastajenjach.</string>
+  <string name="firstrun_shortcut_title">Pśidajśo swójej startowej wobrazowce tastowe skrotconki</string>
+  <string name="firstrun_shortcut_text">Wrośćo se malsnjej k swójim nejlubšym sedłam w %1$s. Wubjeŕśo jadnorje „Startowej wobrazowce pśidaś“ z menija %1$s.</string>
+  <string name="firstrun_privacy_title">Pśiwucćo se priwatnosć</string>
+  <string name="firstrun_privacy_text">Nastajśo %1$s ako swój standardny wobglědowak a mějśo wužytk z priwatnego pśeglědowanja, gaž webboki z drugich nałoženjow wócynjaśo.</string>
   <string name="firstrun_close_button">W pórěźe, som zrozměł!</string>
   <string name="firstrun_skip_button">Pśeskócyś</string>
   <string name="firstrun_next_button">Dalej</string>
@@ -102,4 +113,6 @@
   <string name="dialog_addtohomescreen_title">Startowej wobrazowce pśidaś</string>
   <string name="dialog_addtohomescreen_action_add">Pśidaś</string>
   <string name="dialog_addtohomescreen_action_cancel">Pśetergnuś</string>
+  <string name="dialog_opentab_title">Wótkaz we wubranem rejtarku wócyniś</string>
+  <string name="dialog_opentab_action_open">Wócyniś</string>
 </resources>

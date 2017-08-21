@@ -48,6 +48,9 @@
   <string name="content_description_clear_input">Vymazať pole</string>
   <string name="content_description_dismiss_input">Zavrieť</string>
   <string name="content_description_erase">Vymazať históriu prehliadania</string>
+  <string name="content_description_fab_expand">Rozbaliť</string>
+  <string name="content_description_open_tab">Otvoriť kartu</string>
+  <string name="content_description_close_tab">Zavrieť kartu</string>
   <string name="content_description_lock">Zabezpečené pripojenie</string>
   <string name="accessibility_announcement_loading">Načítava sa</string>
   <string name="accessibility_announcement_loading_finished">Stránka bola načítaná</string>
@@ -93,8 +96,16 @@
   <string name="contextmenu_image_share">Zdieľať obrázok</string>
   <string name="contextmenu_image_copy">Kopírovať adresu obrázku</string>
   <string name="contextmenu_image_save">Uložiť obrázok</string>
+  <string name="contextmenu_open_in_new_tab">Otvoriť odkaz na novej karte</string>
   <string name="contextmenu_image_warning"><![CDATA["Uložené a zdieľané obrázky "<b xmlns:xliff="urn:oasis:names:tc:xliff:document:1.2">nebud&#250; vymazan&#233;</b>" pri vymazaní histórie aplikácie %1$s."]]></string>
   <string name="firstrun_defaultbrowser_title">Posuňte svoje súkromie na vyššiu úroveň</string>
+  <string name="firstrun_defaultbrowser_text2">Súkromné prehliadanie na úplne inej úrovni. Blokujte reklamy a ostatný obsah, ktorý vás môže sledovať naprieč stránkami.</string>
+  <string name="firstrun_search_title">Prehliadanie podľa vás</string>
+  <string name="firstrun_search_text">Hľadáte niečo iné? Vyberte si iný predvolený vyhľadávací modul v nastaveniach.</string>
+  <string name="firstrun_shortcut_title">Pridajte si na svoju domovskú obrazovku skratky</string>
+  <string name="firstrun_shortcut_text">S aplikáciou %1$s sa môžete vrátiť ku svojim obľúbeným stránkam prakticky okamžite. Stačí ak v ponuke aplikácie %1$s vyberiete možnosť „Pridať na úvodnú obrazovku“.</string>
+  <string name="firstrun_privacy_title">Zvyknite si na súkromie</string>
+  <string name="firstrun_privacy_text">Nastavte si %1$s ako svoj predvolený prehliadač a získajte výhody súkromného prehliadania vždy, keď otvoríte webové stránky z iných aplikácií.</string>
   <string name="firstrun_close_button">Ok, rozumiem!</string>
   <string name="firstrun_skip_button">Preskočiť</string>
   <string name="firstrun_next_button">Ďalej</string>
@@ -102,4 +113,6 @@
   <string name="dialog_addtohomescreen_title">Pridať na úvodnú obrazovku</string>
   <string name="dialog_addtohomescreen_action_add">Pridať</string>
   <string name="dialog_addtohomescreen_action_cancel">Zrušiť</string>
+  <string name="dialog_opentab_title">Otvoriť odkaz na zvolenej karte</string>
+  <string name="dialog_opentab_action_open">Otvoriť</string>
 </resources>

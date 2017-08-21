@@ -33,7 +33,7 @@
   <string name="preference_privacy_block_analytics">სტატისტიკური აღრიცხვის ელემენტების შეზღუდვა</string>
   <string name="preference_privacy_block_social">სოციალური ელემენტების შეზღუდვა</string>
   <string name="preference_privacy_block_content">სხვა მეთვალყურე ელემენტების შეზღუდვა</string>
-  <string name="preference_privacy_block_content_summary">შესაძლოა ზოგიერთმა საიტმა ან ვიდეომ, არ იმუშაოს გამართულად</string>
+  <string name="preference_privacy_block_content_summary">შესაძლოა ზოგიერთმა საიტმა, ან ვიდეომ არ იმუშაოს გამართულად</string>
   <string name="preference_privacy_secure_mode">ფარული რეჟიმი</string>
   <string name="preference_privacy_stealth_summary">ვებგვერდების დამალვა, პროგრამების გადართვისას</string>
   <string name="preference_category_performance">წარმადობა</string>
@@ -48,6 +48,9 @@
   <string name="content_description_clear_input">შეტანილის გასუფთავება</string>
   <string name="content_description_dismiss_input">დახურვა</string>
   <string name="content_description_erase">ისტორიის წაშლა</string>
+  <string name="content_description_fab_expand">გაშლა</string>
+  <string name="content_description_open_tab">ჩანართის გახსნა</string>
+  <string name="content_description_close_tab">ჩანართის დახურვა</string>
   <string name="content_description_lock">დაცული კავშირი</string>
   <string name="accessibility_announcement_loading">იტვირთება</string>
   <string name="accessibility_announcement_loading_finished">საიტი ჩაიტვირთა</string>
@@ -93,8 +96,16 @@
   <string name="contextmenu_image_share">სურათის გაზიარება</string>
   <string name="contextmenu_image_copy">სურათის მისამართის დაკოპირება</string>
   <string name="contextmenu_image_save">სურათის შენახვა</string>
+  <string name="contextmenu_open_in_new_tab">ბმულის ახალ ჩანართში გახსნა</string>
   <string name="contextmenu_image_warning"><![CDATA["შენახული და გაზიარებული სურათები "<b xmlns:xliff="urn:oasis:names:tc:xliff:document:1.2">&#4304;&#4320; &#4332;&#4304;&#4312;&#4328;&#4314;&#4308;&#4305;&#4304;</b>" %1$s-ის ისტორიის გასუფთავებისას."]]></string>
   <string name="firstrun_defaultbrowser_title">გააძლიერეთ პირადი მონაცემების დაცვა</string>
+  <string name="firstrun_defaultbrowser_text2">პირადი მონაცემების უსაფრთხოება ახალ დონეზეა აყვანილი. შეზღუდეთ სარეკლამო და სხვა შიგთავსი, რომლითაც საიტებზე თქვენი დევნაა შესაძლებელი და შეამცირეთ გვერდების ჩატვირთვის დრო.</string>
+  <string name="firstrun_search_title">მოიძიეთ გვერდები, თქვენებურად</string>
+  <string name="firstrun_search_text">რამე განსხვავებულს ეძებთ? აირჩიეთ სხვა საძიებო სისტემა ნაგულისხმევად, პარამეტრებიდან.</string>
+  <string name="firstrun_shortcut_title">მალსახმობების დამატება მთავარ ეკრანზე</string>
+  <string name="firstrun_shortcut_text">%1$s-ის დახმარებით, სწრაფად შეგიძლიათ დაუბრუნდეთ რჩეულ საიტებს. უბრალოდ, მიუთითეთ \"მთავარ ეკრანზე დამატება\", %1$s-ის მენიუდან.</string>
+  <string name="firstrun_privacy_title">ჩვევად აქციეთ პირადულობის დაცვა</string>
+  <string name="firstrun_privacy_text">დააყენეთ %1$s ნაგულისხმევ ბრაუზერად და ისარგებლეთ პირადულობის დაცვით, სხვა პროგრამებიდან ბმულებზე გადასვლის დროსაც.</string>
   <string name="firstrun_close_button">კარგი, გასაგებია!</string>
   <string name="firstrun_skip_button">გამოტოვება</string>
   <string name="firstrun_next_button">შემდეგი</string>
@@ -102,4 +113,6 @@
   <string name="dialog_addtohomescreen_title">მთავარ ეკრანზე დამატება</string>
   <string name="dialog_addtohomescreen_action_add">დამატება</string>
   <string name="dialog_addtohomescreen_action_cancel">გაუქმება</string>
+  <string name="dialog_opentab_title">ბმულის გახსნა მითითებულ ჩანართში</string>
+  <string name="dialog_opentab_action_open">გახსნა</string>
 </resources>

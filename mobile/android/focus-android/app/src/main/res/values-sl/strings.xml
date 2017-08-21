@@ -48,6 +48,9 @@
   <string name="content_description_clear_input">Počisti vnos</string>
   <string name="content_description_dismiss_input">Opusti</string>
   <string name="content_description_erase">Počisti zgodovino brskanja</string>
+  <string name="content_description_fab_expand">Razširi</string>
+  <string name="content_description_open_tab">Odpri zavihek</string>
+  <string name="content_description_close_tab">Zapri zavihek</string>
   <string name="content_description_lock">Varna povezava</string>
   <string name="accessibility_announcement_loading">Nalaganje</string>
   <string name="accessibility_announcement_loading_finished">Spletna stran naložena</string>
@@ -93,8 +96,16 @@
   <string name="contextmenu_image_share">Deli sliko</string>
   <string name="contextmenu_image_copy">Kopiraj naslov slike</string>
   <string name="contextmenu_image_save">Shrani sliko</string>
+  <string name="contextmenu_open_in_new_tab">Odpri povezavo v novem zavihku</string>
   <string name="contextmenu_image_warning"><![CDATA["Ob izbrisu zgodovine %1$sa shranjene in deljene slike "<b xmlns:xliff="urn:oasis:names:tc:xliff:document:1.2">ne bodo izbrisane</b>.]]></string>
   <string name="firstrun_defaultbrowser_title">Okrepite svojo zasebnost</string>
+  <string name="firstrun_defaultbrowser_text2">Zasebno brskanje na višjem nivoju. Zavračajte oglase in drugo vsebino, ki vam lahko sledi prek strani, in pohitrite svoje brskanje.</string>
+  <string name="firstrun_search_title">Vaše iskanje, na vaš način</string>
+  <string name="firstrun_search_text">Iščete nekaj drugačnega? V nastavitvah izberite drug privzeti iskalnik.</string>
+  <string name="firstrun_shortcut_title">Dodajte bližnjice na domač zaslon</string>
+  <string name="firstrun_shortcut_text">Hitro se vrnite na svoje priljubljene strani v %1$su. Preprosto izberite \"Dodaj na domač zaslon\" v %1$sovem meniju.</string>
+  <string name="firstrun_privacy_title">Naj zasebnost postane navada</string>
+  <string name="firstrun_privacy_text">Nastavite %1$s kot privzet brskalnik in uživajte prednosti zasebnega brskanja, ko odprete spletne strani v drugih aplikacijah.</string>
   <string name="firstrun_close_button">V redu, razumem!</string>
   <string name="firstrun_skip_button">Preskoči</string>
   <string name="firstrun_next_button">Naprej</string>
@@ -102,4 +113,6 @@
   <string name="dialog_addtohomescreen_title">Dodaj na domač zaslon</string>
   <string name="dialog_addtohomescreen_action_add">Dodaj</string>
   <string name="dialog_addtohomescreen_action_cancel">Prekliči</string>
+  <string name="dialog_opentab_title">Odpri povezavo v izbranem zavihku</string>
+  <string name="dialog_opentab_action_open">Odpri</string>
 </resources>

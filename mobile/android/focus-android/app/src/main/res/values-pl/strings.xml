@@ -48,6 +48,9 @@
   <string name="content_description_clear_input">Usuń tekst</string>
   <string name="content_description_dismiss_input">Odrzuć</string>
   <string name="content_description_erase">Usuń historię przeglądania</string>
+  <string name="content_description_fab_expand">Rozwiń</string>
+  <string name="content_description_open_tab">Otwórz kartę</string>
+  <string name="content_description_close_tab">Zamknij kartę</string>
   <string name="content_description_lock">Zabezpieczone połączenie</string>
   <string name="accessibility_announcement_loading">Wczytywanie</string>
   <string name="accessibility_announcement_loading_finished">Wczytano stronę</string>
@@ -93,8 +96,16 @@
   <string name="contextmenu_image_share">Udostępnij obraz</string>
   <string name="contextmenu_image_copy">Kopiuj adres obrazu</string>
   <string name="contextmenu_image_save">Zapisz obraz</string>
+  <string name="contextmenu_open_in_new_tab">Otwórz odnośnik w nowej karcie</string>
   <string name="contextmenu_image_warning"><![CDATA["Zapisane i udostępnione obrazy "<b xmlns:xliff="urn:oasis:names:tc:xliff:document:1.2">nie zostan&#261; usuni&#281;te</b>" po wyczyszczeniu historii programu %1$s."]]></string>
   <string name="firstrun_defaultbrowser_title">Nowy poziom prywatności</string>
+  <string name="firstrun_defaultbrowser_text2">Przejdź na wyższy poziom prywatności. Blokuj reklamy i inne elementy mogące Cię śledzić między stronami i wydłużające wczytywanie się stron.</string>
+  <string name="firstrun_search_title">Wyszukuj po swojemu</string>
+  <string name="firstrun_search_text">Szukasz czegoś innego? Wybierz inną domyślną wyszukiwarkę w ustawieniach.</string>
+  <string name="firstrun_shortcut_title">Dodawaj skróty do ekranu głównego</string>
+  <string name="firstrun_shortcut_text">Szybko wracaj do ulubionych stron w programie %1$s. Po prostu wybierz „Dodaj do ekranu głównego” z menu programu %1$s.</string>
+  <string name="firstrun_privacy_title">Prywatność na co dzień</string>
+  <string name="firstrun_privacy_text">Ustaw %1$s jako domyślną przeglądarkę i korzystaj z zalet przeglądania prywatnego podczas otwierania stron z innych aplikacji.</string>
   <string name="firstrun_close_button">OK!</string>
   <string name="firstrun_skip_button">Pomiń</string>
   <string name="firstrun_next_button">Dalej</string>
@@ -102,4 +113,6 @@
   <string name="dialog_addtohomescreen_title">Dodaj do ekranu głównego</string>
   <string name="dialog_addtohomescreen_action_add">Dodaj</string>
   <string name="dialog_addtohomescreen_action_cancel">Anuluj</string>
+  <string name="dialog_opentab_title">Otwórz odnośnik w wybranej karcie</string>
+  <string name="dialog_opentab_action_open">Otwórz</string>
 </resources>

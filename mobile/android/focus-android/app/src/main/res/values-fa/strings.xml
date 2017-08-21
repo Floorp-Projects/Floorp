@@ -48,6 +48,9 @@
   <string name="content_description_clear_input">پاک کردن وروردی</string>
   <string name="content_description_dismiss_input">رد کردن</string>
   <string name="content_description_erase">حذف تاریخچه مرور</string>
+  <string name="content_description_fab_expand">بازکردن</string>
+  <string name="content_description_open_tab">باز کردن زبانه‌</string>
+  <string name="content_description_close_tab">بستن زبانه</string>
   <string name="content_description_lock">اتصال امن</string>
   <string name="accessibility_announcement_loading">در حال بارگیری</string>
   <string name="accessibility_announcement_loading_finished">وب‌سایت بارگیری شد</string>
@@ -93,8 +96,16 @@
   <string name="contextmenu_image_share">اشتراک‌گذاری تصویر</string>
   <string name="contextmenu_image_copy">رونوشت از آدرس تصویر</string>
   <string name="contextmenu_image_save">ذخیره تصویر</string>
+  <string name="contextmenu_open_in_new_tab">بازکردن پیوند در زبانه جدید</string>
   <string name="contextmenu_image_warning"><![CDATA["وقتی شما تاریخ‌جه %1$s را پاک می‌کنید، تصاویر ذخیره یا هم‌رسان شده "<b xmlns:xliff="urn:oasis:names:tc:xliff:document:1.2">&#1662;&#1575;&#1705; &#1606;&#1582;&#1608;&#1575;&#1607;&#1606;&#1583; &#1588;&#1583;</b>.]]></string>
   <string name="firstrun_defaultbrowser_title">قدرت حریم‌شخصی خود را افزایش دهید</string>
+  <string name="firstrun_defaultbrowser_text2">مرور خصوصی را به سطحی بالاتر ببرید. تبلیغات و دیگر محتواهایی را مسدود کنید که می‌توانند شما را در سراسر سایت‌ها ردیابی و زمان‌های بارگذاری صفحه را خراب کنند.</string>
+  <string name="firstrun_search_title">جستجوی شما، به روش شما</string>
+  <string name="firstrun_search_text">به دنبال چیز متفاوتی هستید؟ موتور جستجوی پیش‌فرض دیگری را در تنظیمات انتخاب کنید.</string>
+  <string name="firstrun_shortcut_title">میان‌برها را به صفحه خانگی خود اضافه کنید</string>
+  <string name="firstrun_shortcut_text">در %1$s به سرعت به سایت‌های محبوب خود برگردید. فقط «افزودن به صفحه خانگی» را از منوی %1$s انتخاب کنید.</string>
+  <string name="firstrun_privacy_title">حفظ حریم خصوصی را به یک عادت تبدیل کنید</string>
+  <string name="firstrun_privacy_text">%1$s را به عنوان مرورگر پیش‌فرض خود انتخاب کنید و وقتی از اپ‌های دیگر صفحه‌های وب را باز می‌کنید از مزایای مرور خصوصی بهره‌مند شوید.</string>
   <string name="firstrun_close_button">باشه، گرفتم!</string>
   <string name="firstrun_skip_button">رد کردن</string>
   <string name="firstrun_next_button">بعدی</string>
@@ -102,4 +113,6 @@
   <string name="dialog_addtohomescreen_title">افزودن به صفحه‌ی خانه</string>
   <string name="dialog_addtohomescreen_action_add">افزودن</string>
   <string name="dialog_addtohomescreen_action_cancel">انصراف</string>
+  <string name="dialog_opentab_title">بازکردن پیوند در زبانه انتخاب شده</string>
+  <string name="dialog_opentab_action_open">باز کردن</string>
 </resources>

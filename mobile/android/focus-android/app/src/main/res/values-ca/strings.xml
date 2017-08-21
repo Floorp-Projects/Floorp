@@ -48,6 +48,9 @@
   <string name="content_description_clear_input">Esborra l\'entrada</string>
   <string name="content_description_dismiss_input">Descarta</string>
   <string name="content_description_erase">Esborra l\'historial de navegació</string>
+  <string name="content_description_fab_expand">Amplia</string>
+  <string name="content_description_open_tab">Obre la pestanya</string>
+  <string name="content_description_close_tab">Tanca la pestanya</string>
   <string name="content_description_lock">Connexió segura</string>
   <string name="accessibility_announcement_loading">S\'està carregant…</string>
   <string name="accessibility_announcement_loading_finished">S\'ha carregat el lloc web</string>
@@ -93,8 +96,16 @@
   <string name="contextmenu_image_share">Comparteix la imatge</string>
   <string name="contextmenu_image_copy">Copia l\'adreça de la imatge</string>
   <string name="contextmenu_image_save">Desa la imatge</string>
+  <string name="contextmenu_open_in_new_tab">Obre l\'enllaç en una pestanya nova</string>
   <string name="contextmenu_image_warning"><![CDATA["Les imatges que deseu i compartiu "<b xmlns:xliff="urn:oasis:names:tc:xliff:document:1.2">no s\'eliminaran</b>" quan esborreu l\'historial del %1$s."]]></string>
   <string name="firstrun_defaultbrowser_title">Potencieu la privadesa</string>
+  <string name="firstrun_defaultbrowser_text2">Porteu la navegació privada al nivell superior. Bloqueu anuncis i altre contingut que us fan el seguiment i alenteixen la càrrega de les pàgines.</string>
+  <string name="firstrun_search_title">Cerqueu com vulgueu</string>
+  <string name="firstrun_search_text">Busqueu una altra cosa? Trieu un altre motor de cerca per defecte als Paràmetres.</string>
+  <string name="firstrun_shortcut_title">Afegiu dreceres a la pantalla d\'inici</string>
+  <string name="firstrun_shortcut_text">Retorneu ràpidament als vostres llocs preferits amb el %1$s. Trieu «Afegeix a la pantalla d\'inici» en el menú del %1$s.</string>
+  <string name="firstrun_privacy_title">Feu de la privadesa un hàbit</string>
+  <string name="firstrun_privacy_text">Definiu el %1$s com a navegador per defecte i gaudiu d\'una navegació privada quan obriu pàgines web des d\'altres aplicacions.</string>
   <string name="firstrun_close_button">Entesos</string>
   <string name="firstrun_skip_button">Omet</string>
   <string name="firstrun_next_button">Següent</string>
@@ -102,4 +113,6 @@
   <string name="dialog_addtohomescreen_title">Afegeix a la pantalla d\'inici</string>
   <string name="dialog_addtohomescreen_action_add">Afegeix</string>
   <string name="dialog_addtohomescreen_action_cancel">Cancel·la</string>
+  <string name="dialog_opentab_title">Obre l\'enllaç en la pestanya seleccionada</string>
+  <string name="dialog_opentab_action_open">Obre</string>
 </resources>

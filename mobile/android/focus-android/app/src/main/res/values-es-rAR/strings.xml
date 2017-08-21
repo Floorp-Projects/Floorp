@@ -48,6 +48,9 @@
   <string name="content_description_clear_input">Borrar entrada</string>
   <string name="content_description_dismiss_input">Descartar</string>
   <string name="content_description_erase">Limpiar historial de navegación</string>
+  <string name="content_description_fab_expand">Expandir</string>
+  <string name="content_description_open_tab">Abrir pestaña</string>
+  <string name="content_description_close_tab">Cerrar pestaña</string>
   <string name="content_description_lock">Conexión segura</string>
   <string name="accessibility_announcement_loading">Cargando</string>
   <string name="accessibility_announcement_loading_finished">Sitio web cargado</string>
@@ -93,8 +96,16 @@
   <string name="contextmenu_image_share">Compartir imagen</string>
   <string name="contextmenu_image_copy">Copiar dirección de la imagen</string>
   <string name="contextmenu_image_save">Guardar imagen</string>
+  <string name="contextmenu_open_in_new_tab">Abrir enlace en nueva pestaña</string>
   <string name="contextmenu_image_warning"><![CDATA["La imágenes que guardaste y compartiste "<b xmlns:xliff="urn:oasis:names:tc:xliff:document:1.2">no ser&#225;n borradas</b>" cuando borres el historial de %1$s."]]></string>
   <string name="firstrun_defaultbrowser_title">Potenciá tu privacidad</string>
+  <string name="firstrun_defaultbrowser_text2">Llevá la navegación privada al siguiente nivel. Bloqueá publicidades y otro contenido que puede reastrearte en todos los sitios y empantanar los tiempos de carga de las páginas.</string>
+  <string name="firstrun_search_title">Tu búsqueda, tu manera</string>
+  <string name="firstrun_search_text">¿Buscás algo diferente? Elegí otro buscador predeterminado en la configuración.</string>
+  <string name="firstrun_shortcut_title">Agregar accesos directos a la pantalla principal</string>
+  <string name="firstrun_shortcut_text">Volvé a tus sitios favoritos en %1$s rápidamente. Seleccioná \"Agregar a pantalla de inicio\" en el menú de %1$s.</string>
+  <string name="firstrun_privacy_title">Hacé de la privacidad un hábito</string>
+  <string name="firstrun_privacy_text">Establecé %1$s como tu navegador predeterminado y obtené los beneficios de la navegación privada cuando abrís páginas web desde otras aplicaciones.</string>
   <string name="firstrun_close_button">Genial, ¡lo tengo!</string>
   <string name="firstrun_skip_button">Saltar</string>
   <string name="firstrun_next_button">Siguiente</string>
@@ -102,4 +113,6 @@
   <string name="dialog_addtohomescreen_title">Agregar a pantalla de inicio</string>
   <string name="dialog_addtohomescreen_action_add">Agregar</string>
   <string name="dialog_addtohomescreen_action_cancel">Cancelar</string>
+  <string name="dialog_opentab_title">Abrir enlace en una pestaña seleccionada</string>
+  <string name="dialog_opentab_action_open">Abrir</string>
 </resources>

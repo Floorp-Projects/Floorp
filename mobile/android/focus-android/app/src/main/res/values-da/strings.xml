@@ -1,0 +1,56 @@
+<?xml version='1.0' encoding='utf-8'?>
+<resources>
+  <string name="action_cancel">Annuller</string>
+  <string name="action_ok">OK</string>
+  <string name="urlbar_hint">Søg eller indtast adresse</string>
+  <string name="search_hint">Søg efter %1$s</string>
+  <string name="menu_share">Del…</string>
+  <string name="menu_open_with_default_browser">Åbn med %1$s</string>
+  <string name="menu_open_with_a_browser">Åbn med…</string>
+  <string name="menu_add_to_home_screen">Føj til startskærmen</string>
+  <string name="menu_settings">Indstillinger</string>
+  <string name="menu_about">Om</string>
+  <string name="menu_help">Hjælp</string>
+  <string name="menu_rights">Dine rettigheder</string>
+  <string name="share_dialog_title">Del via</string>
+  <string name="notification_erase_text">Ryd browser-historik</string>
+  <string name="notification_action_open">Åbn</string>
+  <string name="notification_action_erase_and_open">Slet og åbn</string>
+  <string name="shortcut_erase_short_label">Slet</string>
+  <string name="shortcut_erase_long_label">Ryd browser-historik</string>
+  <string name="text_selection_search_action">Søg privat</string>
+  <string name="preference_search_engine_default">Standard</string>
+  <string name="preference_language">Sprog</string>
+  <string name="preference_language_systemdefault">Systemstandard</string>
+  <string name="preference_category_privacy">Privatliv</string>
+  <string name="preference_category_performance">Ydelse</string>
+  <string name="preference_performance_block_webfonts">Bloker webskrifttyper</string>
+  <string name="preference_performance_block_images">Bloker billeder</string>
+  <string name="preference_category_mozilla">Mozilla</string>
+  <string name="preference_mozilla_telemetry">Send anonyme brugsdata</string>
+  <string name="preference_mozilla_telemetry_summary">Læs mere</string>
+  <string name="preference_about">Om %1$s</string>
+  <string name="content_description_fab_expand">Udvid</string>
+  <string name="content_description_close_tab">Luk faneblad</string>
+  <string name="content_description_lock">Sikker forbindelse</string>
+  <string name="content_description_customtab_exit">Tilbage til forrige app</string>
+  <string name="context_menu_paste_go">Indsæt og gå</string>
+  <string name="your_rights">Dine rettigheder</string>
+  <string name="external_app_prompt_title">Åbn link i en anden app</string>
+  <string name="external_app_prompt">Du kan forlade %1$s og åbne dette link i %2$s.</string>
+  <string name="external_app_prompt_no_app_title">Find en app der kan åbne linket</string>
+  <string name="external_app_prompt_no_app">Ingen app på din enhed kan åbne dette link. Du kan forlade %1$s og søge på %2$s efter en app der kan.</string>
+  <string name="external_multiple_apps_matched_exit">Afslut privat browsing?</string>
+  <string name="download_snackbar_open">Åbn</string>
+  <string name="download_dialog_title">Hent fil</string>
+  <string name="download_dialog_action_download">Hent</string>
+  <string name="errorpage_title">Problem med indlæsning af side</string>
+  <string name="errorpage_refresh">Prøv igen</string>
+  <string name="error_connectionfailure_title">Ude af stand til at oprette forbindelse</string>
+  <string name="error_hostLookup_title">Serveren blev ikke fundet</string>
+  <string name="error_malformedURI_title">Adressen er ikke gyldig</string>
+  <string name="error_redirectLoop_title">Denne side viderefører ikke forespørgslen korrekt</string>
+  <string name="error_unsupportedprotocol_title">Adressen kunne ikke forstås</string>
+  <string name="error_unsupportedprotocol_message"><![CDATA[<ul xmlns:xliff="urn:oasis:names:tc:xliff:document:1.2">"\n  "<li>Du er m&#229;ske n&#248;dt til at installere andet software for at &#229;bne denne adresse.</li>\n</ul>]]></string>
+  <string name="error_sslhandshake_title">Sikker forbindelse mislykkedes</string>
+</resources>

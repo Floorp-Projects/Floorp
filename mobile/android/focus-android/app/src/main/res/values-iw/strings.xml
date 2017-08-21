@@ -9,6 +9,7 @@
   <string name="menu_share">שיתוף…</string>
   <string name="menu_open_with_default_browser">פתיחה באמצעות %1$s</string>
   <string name="menu_open_with_a_browser">פתיחה באמצעות…</string>
+  <string name="menu_add_to_home_screen">הוספה למסך הבית</string>
   <string name="menu_settings">הגדרות</string>
   <string name="menu_about">אודות</string>
   <string name="menu_help">עזרה</string>
@@ -16,6 +17,8 @@
   <string name="menu_trackers_blocked_title">רכיבי מעקב חסומים</string>
   <string name="share_dialog_title">שיתוף באמצעות</string>
   <string name="notification_erase_text">מחיקת היסטורית גלישה</string>
+  <string name="notification_action_open">פתיחה</string>
+  <string name="notification_action_erase_and_open">מחיקה ופתיחה</string>
   <string name="shortcut_erase_short_label">מחיקה</string>
   <string name="shortcut_erase_long_label">מחיקת היסטורית גלישה</string>
   <string name="text_selection_search_action">חיפוש פרטי</string>
@@ -32,6 +35,7 @@
   <string name="preference_privacy_block_content">חסימת כלי מעקב אחרים</string>
   <string name="preference_privacy_block_content_summary">עלולה לשבש את פעילותם של דפי אינטרנט ומספר סרטונים</string>
   <string name="preference_privacy_secure_mode">חשאיות</string>
+  <string name="preference_privacy_stealth_summary">הסתרת דפי אינטרנט בעת מעבר בין יישומונים</string>
   <string name="preference_category_performance">ביצועים</string>
   <string name="preference_performance_block_webfonts">חסימת גופני רשת</string>
   <string name="preference_performance_block_webfonts_summary">עשוי לגרום לסמלים או תמונות חסרים</string>
@@ -44,6 +48,9 @@
   <string name="content_description_clear_input">מחיקת קלט</string>
   <string name="content_description_dismiss_input">התעלמות</string>
   <string name="content_description_erase">מחיקת היסטורית גלישה</string>
+  <string name="content_description_fab_expand">הרחבה</string>
+  <string name="content_description_open_tab">פתיחת לשונית</string>
+  <string name="content_description_close_tab">סגירת לשונית</string>
   <string name="content_description_lock">חיבור מאובטח</string>
   <string name="accessibility_announcement_loading">בטעינה</string>
   <string name="accessibility_announcement_loading_finished">האתר נטען</string>
@@ -61,6 +68,12 @@
   <string name="external_app_prompt_no_app_title">חיפוש יישומון שיוכל לפתוח את הקישור</string>
   <string name="external_app_prompt_no_app">אף אחד מהיישומים שבהתקן שלך יכולים לפתוח את הקישור הזה. ניתן לעזוב את %1$s כדי לחפש תחת %2$s יישומון שיכול לבצע זאת.</string>
   <string name="external_multiple_apps_matched_exit">האם ברצונך לצאת ממצב גלישה פרטית?</string>
+  <string name="download_snackbar_finished">%1$s הסתיים</string>
+  <string name="download_snackbar_open">פתיחה</string>
+  <string name="download_dialog_warning"><![CDATA["קבצים שהורדו "<b xmlns:xliff="urn:oasis:names:tc:xliff:document:1.2">&#1500;&#1488; &#1497;&#1497;&#1502;&#1495;&#1511;&#1493;</b>" בעת מחיקת ההיסטוריה של %1$s."]]></string>
+  <string name="download_dialog_title">הורדת קובץ</string>
+  <string name="download_dialog_action_cancel">ביטול</string>
+  <string name="download_dialog_action_download">הורדה</string>
   <string name="errorpage_title">בעיה בטעינת דף</string>
   <string name="errorpage_refresh">לנסות שוב</string>
   <string name="error_connectionfailure_title">לא ניתן להתחבר</string>
@@ -83,9 +96,18 @@
   <string name="contextmenu_image_share">שיתוף תמונה</string>
   <string name="contextmenu_image_copy">העתקת כתובת תמונה</string>
   <string name="contextmenu_image_save">שמירת תמונה</string>
+  <string name="contextmenu_open_in_new_tab">פתיחת קישור בלשונית חדשה</string>
   <string name="contextmenu_image_warning"><![CDATA["תמונות שמורות ומשותפות "<b xmlns:xliff="urn:oasis:names:tc:xliff:document:1.2">&#1500;&#1488; &#1497;&#1497;&#1502;&#1495;&#1511;&#1493;</b>" בעת מחיקת ההיסטוריה של %1$s."]]></string>
   <string name="firstrun_defaultbrowser_title">חיזוק הפרטיות שלך</string>
+  <string name="firstrun_search_title">החיפוש שלך, בדרך שלך</string>
+  <string name="firstrun_shortcut_title">הוספת קיצורי דרך למסך הבית שלך</string>
   <string name="firstrun_close_button">בסדר, הבנתי!</string>
   <string name="firstrun_skip_button">דילוג</string>
   <string name="firstrun_next_button">הבא</string>
+  <string name="content_blocking_disabled">-</string>
+  <string name="dialog_addtohomescreen_title">הוספה למסך הבית</string>
+  <string name="dialog_addtohomescreen_action_add">הוספה</string>
+  <string name="dialog_addtohomescreen_action_cancel">ביטול</string>
+  <string name="dialog_opentab_title">פתיחת קישור בלשונית שנבחרה</string>
+  <string name="dialog_opentab_action_open">פתיחה</string>
 </resources>

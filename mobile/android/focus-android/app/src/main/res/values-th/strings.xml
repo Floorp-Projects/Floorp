@@ -48,6 +48,9 @@
   <string name="content_description_clear_input">ล้างข้อมูลที่ป้อน</string>
   <string name="content_description_dismiss_input">ยกเลิก</string>
   <string name="content_description_erase">ล้างประวัติการท่องเว็บ</string>
+  <string name="content_description_fab_expand">ขยาย</string>
+  <string name="content_description_open_tab">เปิดแท็บ</string>
+  <string name="content_description_close_tab">ปิดแท็บ</string>
   <string name="content_description_lock">การเชื่อมต่อปลอดภัย</string>
   <string name="accessibility_announcement_loading">กำลังโหลด</string>
   <string name="accessibility_announcement_loading_finished">โหลดเว็บไซต์แล้ว</string>
@@ -93,8 +96,15 @@
   <string name="contextmenu_image_share">แบ่งปันภาพ</string>
   <string name="contextmenu_image_copy">คัดลอกที่อยู่ภาพ</string>
   <string name="contextmenu_image_save">บันทึกภาพ</string>
+  <string name="contextmenu_open_in_new_tab">เปิดลิงก์ในแท็บใหม่</string>
   <string name="contextmenu_image_warning"><![CDATA[ภาพที่บันทึกไว้และแบ่งปัน<b xmlns:xliff="urn:oasis:names:tc:xliff:document:1.2">&#3592;&#3632;&#3652;&#3617;&#3656;&#3606;&#3641;&#3585;&#3621;&#3610;</b>เมื่อคุณล้างประวัติของ %1$s]]></string>
   <string name="firstrun_defaultbrowser_title">เพิ่มความเป็นส่วนตัวของคุณ</string>
+  <string name="firstrun_defaultbrowser_text2">นำการท่องเว็บแบบส่วนตัวไปสู่ระดับถัดไป ปิดกั้นโฆษณาและเนื้อหาอื่น ๆ ที่สามารถติดตามคุณระหว่างไซต์และลดเวลาในการโหลดหน้า</string>
+  <string name="firstrun_search_title">การค้นหาของคุณในแบบของคุณ</string>
+  <string name="firstrun_search_text">กำลังค้นหาอย่างอื่น? เลือกเครื่องมือค้นหาเริ่มต้นอื่นในการตั้งค่า</string>
+  <string name="firstrun_shortcut_title">เพิ่มทางลัดไปยังหน้าจอหลักของคุณ</string>
+  <string name="firstrun_shortcut_text">กลับไปที่ไซต์โปรดของคุณใน %1$s ได้อย่างรวดเร็ว เพียงเลือก \"เพิ่มไปยังหน้าจอหลัก\" จากเมนู %1$s</string>
+  <string name="firstrun_privacy_text">ตั้ง %1$s เป็นเบราว์เซอร์เริ่มต้นของคุณและรับประโยชน์จากการท่องเว็บแบบส่วนตัวเมื่อคุณเปิดหน้าเว็บจากแอปอื่น ๆ</string>
   <string name="firstrun_close_button">ตกลง เข้าใจแล้ว!</string>
   <string name="firstrun_skip_button">ข้าม</string>
   <string name="firstrun_next_button">ถัดไป</string>
@@ -102,4 +112,6 @@
   <string name="dialog_addtohomescreen_title">เพิ่มไปยังหน้าจอหลัก</string>
   <string name="dialog_addtohomescreen_action_add">เพิ่ม</string>
   <string name="dialog_addtohomescreen_action_cancel">ยกเลิก</string>
+  <string name="dialog_opentab_title">เปิดลิงก์ในแท็บที่เลือก</string>
+  <string name="dialog_opentab_action_open">เปิด</string>
 </resources>

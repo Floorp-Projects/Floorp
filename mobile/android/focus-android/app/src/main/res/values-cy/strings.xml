@@ -48,6 +48,9 @@
   <string name="content_description_clear_input">Clirio\'r mewnbwn</string>
   <string name="content_description_dismiss_input">Cau</string>
   <string name="content_description_erase">Dileu\'r hanes pori</string>
+  <string name="content_description_fab_expand">Ehangu</string>
+  <string name="content_description_open_tab">Agor tab</string>
+  <string name="content_description_close_tab">Cau tab</string>
   <string name="content_description_lock">Cysylltiadau diogel</string>
   <string name="accessibility_announcement_loading">Llwytho</string>
   <string name="accessibility_announcement_loading_finished">Gwefan wedi ei lwytho</string>
@@ -93,8 +96,16 @@
   <string name="contextmenu_image_share">Rhannu delwedd</string>
   <string name="contextmenu_image_copy">Copïo cyfeiriad delwedd</string>
   <string name="contextmenu_image_save">Cadw delwedd</string>
+  <string name="contextmenu_open_in_new_tab">Agor dolen mewn tab newydd</string>
   <string name="contextmenu_image_warning"><![CDATA["Ni fydd delweddau sydd wedi eu cadw a\'u rhannu "<b xmlns:xliff="urn:oasis:names:tc:xliff:document:1.2">yn cael eu dileu</b>" pan fyddwch yn dileu hanes %1$s."]]></string>
   <string name="firstrun_defaultbrowser_title">Cryfhewch eich preifatrwydd</string>
+  <string name="firstrun_defaultbrowser_text2">Cymrwch bori preifat i\'r lefel nesaf. Rhwystrwch hysbysebion a chynnwys arall sy\'n gallu\'ch tracio ar draws wefannau ac arafu amserau llwytho tudalennau.</string>
+  <string name="firstrun_search_title">Chwilio, cynhwysfawr</string>
+  <string name="firstrun_search_text">Chwilio am rywbeth gwahanol? Dewiswch beiriant chwilio arall yn y Gosodiadau.</string>
+  <string name="firstrun_shortcut_title">Ychwanegu llwybrau byr i\'ch sgrin cartref</string>
+  <string name="firstrun_shortcut_text">Ewch i\'ch hoff wefannau yn %1$s yn gyflym. Dewiswch \"Ychwanegu i\'r Sgrin Cartref\" o ddewislen %1$s.</string>
+  <string name="firstrun_privacy_title">Arfer preifatrwydd</string>
+  <string name="firstrun_privacy_text">Gosodwch %1$s fel eich porwr ragosodedig a derbyn buddiannau pori preifat wrth agor tudalennau gwe mewn apiau eraill.</string>
   <string name="firstrun_close_button">Iawn!</string>
   <string name="firstrun_skip_button">Hepgor</string>
   <string name="firstrun_next_button">Nesaf</string>
@@ -102,4 +113,6 @@
   <string name="dialog_addtohomescreen_title">Ychwanegu i\'r sgrin Cartref</string>
   <string name="dialog_addtohomescreen_action_add">Ychwanegu</string>
   <string name="dialog_addtohomescreen_action_cancel">Diddymu</string>
+  <string name="dialog_opentab_title">Agor dolen mewn tab penodol</string>
+  <string name="dialog_opentab_action_open">Agor</string>
 </resources>
