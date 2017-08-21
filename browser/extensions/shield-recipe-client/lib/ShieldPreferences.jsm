@@ -41,9 +41,9 @@ this.ShieldPreferences = {
     // Disabled when MOZ_DATA_REPORTING is false since the FHR UI is also hidden
     // when data reporting is false.
     if (AppConstants.MOZ_DATA_REPORTING && Services.locale.getAppLocaleAsLangTag().startsWith("en")) {
-      Services.obs.addObserver(this, "advanced-pane-loaded");
+      Services.obs.addObserver(this, "privacy-pane-loaded");
       CleanupManager.addCleanupHandler(() => {
-        Services.obs.removeObserver(this, "advanced-pane-loaded");
+        Services.obs.removeObserver(this, "privacy-pane-loaded");
       });
     }
   },
@@ -51,10 +51,8 @@ this.ShieldPreferences = {
   observe(subject, topic, data) {
     switch (topic) {
       // Add the opt-out-study checkbox to the Privacy preferences when it is shown.
-      case "advanced-pane-loaded":
-        if (!Services.prefs.getBoolPref("browser.preferences.useOldOrganization", false)) {
-          this.injectOptOutStudyCheckbox(subject.document);
-        }
+      case "privacy-pane-loaded":
+        this.injectOptOutStudyCheckbox(subject.document);
         break;
       // If the FHR pref changes, set the opt-out-study pref to the value it is changing to.
       case NS_PREFBRANCH_PREFCHANGE_TOPIC_ID:
