@@ -62,12 +62,12 @@
   padding: 0 12px;
 }
 
-.tab-loading-burst {
+:root[sessionrestored] .tab-loading-burst {
   position: relative;
   overflow: hidden;
 }
 
-.tab-loading-burst::before {
+:root[sessionrestored] .tab-loading-burst::before {
   position: absolute;
   content: "";
   /* We set the width to be a percentage of the tab's width so that we can use
@@ -81,18 +81,18 @@
   margin-inline-start: calc(17px - 2.5%);
 }
 
-.tab-loading-burst[pinned]::before {
+:root[sessionrestored] .tab-loading-burst[pinned]::before {
   /* This is like the margin-inline-start rule above, except that icons for
      pinned tabs are 12px from the edge. */
   margin-inline-start: calc(20px - 2.5%);
 }
 
-.tab-loading-burst[bursting]::before {
+:root[sessionrestored] .tab-loading-burst[bursting]::before {
   background-image: url("chrome://browser/skin/tabbrowser/loading-burst.svg");
   background-position: center center;
   background-size: 100% auto;
   background-repeat: no-repeat;
-  animation: tab-burst-animation 1.8s var(--animation-easing-function);
+  animation: tab-burst-animation 375ms cubic-bezier(0,0,.58,1);
   -moz-context-properties: fill;
   fill: var(--tab-loading-fill);
 }

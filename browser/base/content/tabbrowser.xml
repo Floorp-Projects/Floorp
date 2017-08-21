@@ -729,8 +729,9 @@
                   // Only animate the "burst" indicating the page has loaded if
                   // the top-level page is the one that finished loading.
                   if (aWebProgress.isTopLevel && !aWebProgress.isLoadingDocument &&
+                      !this.mTabBrowser.tabAnimationsInProgress &&
                       Services.prefs.getBoolPref("toolkit.cosmeticAnimations.enabled")) {
-                    this.mTab.animateLoadingBurst();
+                    this.mTab.setAttribute("bursting", "true");
                   }
 
                   this.mTabBrowser._tabAttrModified(this.mTab, ["busy"]);
@@ -2915,6 +2916,7 @@
 
             aTab.style.maxWidth = ""; // ensure that fade-out transition happens
             aTab.removeAttribute("fadein");
+            aTab.removeAttribute("bursting");
 
             setTimeout(function(tab, tabbrowser) {
               if (tab.parentNode &&
@@ -7649,18 +7651,6 @@
        <method name="finishMediaBlockTimer">
         <body><![CDATA[
           TelemetryStopwatch.finish("TAB_MEDIA_BLOCKING_TIME_MS", this);
-        ]]></body>
-      </method>
-
-      <method name="animateLoadingBurst">
-        <body><![CDATA[
-          if (this.hasAttribute("bursting")) {
-            // Stop the animation if it's already playing so we can restart it.
-            this.removeAttribute("bursting");
-            let burst = document.getAnonymousElementByAttribute(this, "anonid", "tab-loading-burst");
-            window.getComputedStyle(burst).animationName;
-          }
-          this.setAttribute("bursting", "true");
         ]]></body>
       </method>
 
