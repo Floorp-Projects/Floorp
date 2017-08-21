@@ -2006,6 +2006,9 @@ public:
       }
       mMaster->UpdatePlaybackPosition(clockTime);
 
+      // Ensure readyState is updated before firing the 'ended' event.
+      mMaster->UpdateNextFrameStatus(MediaDecoderOwner::NEXT_FRAME_UNAVAILABLE);
+
       mMaster->mOnPlaybackEvent.Notify(MediaEventType::PlaybackEnded);
 
       mSentPlaybackEndedEvent = true;

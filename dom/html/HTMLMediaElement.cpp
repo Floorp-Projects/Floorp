@@ -5824,6 +5824,14 @@ HTMLMediaElement::UpdateReadyStateInternal()
     return;
   }
 
+  if (mDecoder && !mDecoder->IsEnded() &&
+      !mDecoder->GetResource()->IsExpectingMoreData()) {
+    LOG(LogLevel::Debug, ("MediaElement %p UpdateReadyStateInternal() "
+                          "Decoder fetched all data for media resource", this));
+    ChangeReadyState(nsIDOMHTMLMediaElement::HAVE_ENOUGH_DATA);
+    return;
+  }
+
   if (nextFrameStatus != MediaDecoderOwner::NEXT_FRAME_AVAILABLE) {
     LOG(LogLevel::Debug, ("MediaElement %p UpdateReadyStateInternal() "
                           "Next frame not available", this));

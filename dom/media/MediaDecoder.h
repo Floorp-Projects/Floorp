@@ -400,9 +400,8 @@ private:
 
   virtual MediaDecoderOwner::NextFrameStatus NextFrameStatus()
   {
-    return !IsEnded() ? mNextFrameStatus : MediaDecoderOwner::NEXT_FRAME_UNAVAILABLE;
+    return mNextFrameStatus;
   }
-
   virtual MediaDecoderOwner::NextFrameStatus NextFrameBufferedStatus();
 
   // Returns a string describing the state of the media player internal
