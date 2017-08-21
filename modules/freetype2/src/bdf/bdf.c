@@ -24,10 +24,9 @@ OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 THE SOFTWARE.
 */
 
-
 #define FT_MAKE_OPTION_SINGLE_OBJECT
-#include <ft2build.h>
 
+#include <ft2build.h>
 #include "bdflib.c"
 #include "bdfdrivr.c"
 

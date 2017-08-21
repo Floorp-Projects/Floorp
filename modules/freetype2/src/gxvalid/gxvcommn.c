@@ -4,7 +4,7 @@
 /*                                                                         */
 /*    TrueTypeGX/AAT common tables validation (body).                      */
 /*                                                                         */
-/*  Copyright 2004-2017 by                                                 */
+/*  Copyright 2004-2016 by                                                 */
 /*  suzuki toshiya, Masatake YAMATO, Red Hat K.K.,                         */
 /*  David Turner, Robert Wilhelm, and Werner Lemberg.                      */
 /*                                                                         */
@@ -454,7 +454,7 @@
   }
 
 
-  /* ================= Segment Single Format 2 Lookup Table ============== */
+  /* ================= Segment Single Format 2 Loolup Table ============== */
   /*
    * Apple spec says:
    *
