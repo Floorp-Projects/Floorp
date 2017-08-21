@@ -122,8 +122,6 @@
   skin/classic/browser/fxa/ios@2x.png                          (../shared/fxa/ios@2x.png)
 
 
-  skin/classic/browser/arrow-dropdown-12.svg          (../shared/icons/arrow-dropdown-12.svg)
-  skin/classic/browser/arrow-dropdown-16.svg          (../shared/icons/arrow-dropdown-16.svg)
   skin/classic/browser/arrow-left.svg                 (../shared/icons/arrow-left.svg)
   skin/classic/browser/back.svg                       (../shared/icons/back.svg)
   skin/classic/browser/back-12.svg                    (../shared/icons/back-12.svg)

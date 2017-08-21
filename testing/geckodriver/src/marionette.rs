@@ -1054,7 +1054,7 @@ impl MarionetteCommand {
             GetWindowRect => (Some("getWindowRect"), None),
             MinimizeWindow => (Some("WebDriver:MinimizeWindow"), None),
             MaximizeWindow => (Some("maximizeWindow"), None),
-            FullscreenWindow => (Some("fullscreenWindow"), None),
+            FullscreenWindow => (Some("fullscreen"), None),
             SwitchToWindow(ref x) => (Some("switchToWindow"), Some(x.to_marionette())),
             SwitchToFrame(ref x) => (Some("switchToFrame"), Some(x.to_marionette())),
             SwitchToParentFrame => (Some("switchToParentFrame"), None),

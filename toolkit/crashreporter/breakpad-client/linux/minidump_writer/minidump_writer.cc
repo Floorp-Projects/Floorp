@@ -1247,7 +1247,7 @@ class MinidumpWriter {
   const int fd_;  // File descriptor where the minidum should be written.
   const char* path_;  // Path to the file where the minidum should be written.
 
-  const struct ucontext* const ucontext_;  // also from the signal handler
+  const ucontext_t* const ucontext_;  // also from the signal handler
 #if !defined(__ARM_EABI__) && !defined(__mips__)
   const google_breakpad::fpstate_t* const float_state_;  // ditto
 #endif
