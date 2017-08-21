@@ -4,6 +4,7 @@
 "use strict";
 
 Cu.import("resource://gre/modules/FxAccountsCommon.js");
+Cu.import("resource://services-crypto/utils.js");
 const { FxAccountsWebChannel, FxAccountsWebChannelHelpers } =
     Cu.import("resource://gre/modules/FxAccountsWebChannel.jsm", {});
 
@@ -338,7 +339,8 @@ add_task(async function test_helpers_login_without_customize_sync() {
           do_check_false("verifiedCanLinkAccount" in accountData);
 
           // previously signed in user preference is updated.
-          do_check_eq(helpers.getPreviousAccountNameHashPref(), helpers.sha256("testuser@testuser.com"));
+          do_check_eq(helpers.getPreviousAccountNameHashPref(),
+                      CryptoUtils.sha256Base64("testuser@testuser.com"));
 
           resolve();
         });
