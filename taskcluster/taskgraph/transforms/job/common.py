@@ -149,7 +149,7 @@ def docker_worker_add_tooltool(config, job, taskdesc, internal=False):
         'TOOLTOOL_CACHE': '/home/worker/tooltool-cache',
     })
 
-    job['worker']['relengapi-proxy'] = True
+    taskdesc['worker']['relengapi-proxy'] = True
     taskdesc['scopes'].extend([
         'docker-worker:relengapi-proxy:tooltool.download.public',
     ])
