@@ -829,7 +829,7 @@ FeedWriter.prototype = {
       case "FeedWriter:PreferenceUpdated":
         // This is called when browser-feeds.js spots a pref change
         // This will happen when
-        // - about:preferences#applications changes
+        // - about:preferences#general changes
         // - another feed reader page changes the preference
         // - when this page itself changes the select and there isn't a redirect
         //   bookmarks and launching an external app means the page stays open after subscribe
