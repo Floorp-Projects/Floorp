@@ -29,7 +29,7 @@ add_task(async function() {
       let contextMenu = document.getElementById("contentAreaContextMenu");
       let contextMenuPromise =
         BrowserTestUtils.waitForEvent(contextMenu, "popupshown")
-                        .then(() => gContextMenuContentData.popupNode);
+                        .then(() => gContextMenuContentData.target);
 
       await ContentTask.spawn(tab.linkedBrowser,
                               { action, param, method, id }, async function(args) {

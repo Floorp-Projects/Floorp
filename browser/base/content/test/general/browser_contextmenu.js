@@ -23,7 +23,12 @@ Services.scriptloader.loadSubScript(chrome_base + "contextmenu_common.js", this)
 add_task(async function test_xul_text_link_label() {
   let url = chrome_base + "subtst_contextmenu_xul.xul";
 
-  await BrowserTestUtils.openNewForegroundTab(gBrowser, url);
+  await BrowserTestUtils.openNewForegroundTab({
+    gBrowser,
+    url,
+    waitForLoad: true,
+    waitForStateStop: true,
+  });
 
   await test_contextmenu("#test-xul-text-link-label",
     ["context-openlinkintab", true,
