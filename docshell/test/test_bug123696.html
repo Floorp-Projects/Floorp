@@ -29,8 +29,8 @@ function finishTest() {
 }
 
 function doReload() {
-  window.frames[0].frames[0].frameElement.onload = finishTest;
-  window.frames[0].frames[0].location.reload();
+  window.frames[0].frameElement.onload = finishTest;
+  window.frames[0].location.reload();
 }
 
 addLoadEvent(function() {
