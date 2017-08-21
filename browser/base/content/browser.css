@@ -411,7 +411,6 @@ toolbarbutton.webextension-menuitem > .toolbarbutton-icon {
 
 toolbarpaletteitem[removable="false"] {
   opacity: 0.5;
-  cursor: default;
 }
 
 %ifndef XP_MACOSX
