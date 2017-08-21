@@ -10,10 +10,12 @@ import android.support.design.widget.BottomSheetBehavior;
 import android.support.design.widget.BottomSheetDialog;
 import android.support.design.widget.NavigationView;
 import android.text.TextUtils;
+import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.MenuItem;
 import android.view.View;
 import android.view.ViewGroup;
+import android.view.Window;
 import android.widget.TextView;
 import org.mozilla.gecko.R;
 import org.mozilla.gecko.activitystream.ActivityStreamTelemetry;
@@ -30,6 +32,7 @@ import java.net.URISyntaxException;
 /* package-private */ class BottomSheetContextMenu
         extends ActivityStreamContextMenu {
 
+    private static final String LOGTAG = "GeckoASBottomSheet";
 
     private final BottomSheetDialog bottomSheetDialog;
 
@@ -118,7 +121,36 @@ import java.net.URISyntaxException;
             bsBehaviour.setPeekHeight(peekHeight);
         }
 
+        overrideBottomSheetDialogAccessibility();
         bottomSheetDialog.show();
+    }
+
+    /**
+     * Overrides the default accessibility properties of the {@link BottomSheetDialog}.
+     * We do this because the dialog has undesirable behavior.
+     */
+    private void overrideBottomSheetDialogAccessibility() {
+        boolean isSuccess = true;
+        final Window window = bottomSheetDialog.getWindow();
+        if (window != null) {
+            // The dialog layout contains a view, R.id.touch_outside, that is placed outside the visible dialog and is used
+            // to dismiss the dialog when tapped. However, it gets focused in Talkback which is unintuitive to Talkback
+            // users (who are accustomed to using the back button for such use cases) so we hide it for a11y here.
+            //
+            // NB: this is fixed in later versions of the support library than the we're using, see most recent source:
+            // https://android.googlesource.com/platform/frameworks/support/+/461d9c4b4b51cd552fc890d7feb001c6bd2097ea/design/res/layout/design_bottom_sheet_dialog.xml
+            // I opted not to update to save time (we have an AS deadline) and to prevent possible regressions.
+            final View tapToDismissView = window.findViewById(android.support.design.R.id.touch_outside);
+            if (tapToDismissView != null) {
+                tapToDismissView.setImportantForAccessibility(View.IMPORTANT_FOR_ACCESSIBILITY_NO);
+            } else {
+                isSuccess = false;
+            }
+        }
+
+        if (!isSuccess) {
+            Log.w(LOGTAG, "Unable to fully override Activity Stream bottom sheet accessibility behavior.");
+        }
     }
 
     public void dismiss() {
