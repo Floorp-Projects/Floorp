@@ -155,8 +155,8 @@ element.Store = class {
    *
    * @param {string} uuid
    *     Web element reference, or UUID.
-   * @param {(nsIDOMWindow|ShadowRoot)} container
-   * Window and an optional shadow root that contains the element.
+   * @param {Object.<string, (WindowProxy|Element)} container
+   *     Window and an optional shadow root that contains the element.
    *
    * @returns {nsIDOMElement}
    *     Element associated with reference.
@@ -881,24 +881,25 @@ element.isObscured = function(el) {
  * rectangle that is inside the viewport.
  *
  * @param {DOMRect} rect
- *     Element off a DOMRect sequence produced by calling |getClientRects|
- *     on a |DOMElement|.
- * @param {nsIDOMWindow} win
- *     Current browsing context.
+ *     Element off a DOMRect sequence produced by calling
+ *     <code>getClientRects</code> on an {@link Element}.
+ * @param {WindowProxy} window
+ *     Current window global.
  *
  * @return {Map.<string, number>}
- *     X and Y coordinates that denotes the in-view centre point of |rect|.
+ *     X and Y coordinates that denotes the in-view centre point of
+ *     <var>rect</var>.
  */
-element.getInViewCentrePoint = function(rect, win) {
+element.getInViewCentrePoint = function(rect, window) {
   const {max, min} = Math;
 
   let x = {
     left: max(0, min(rect.x, rect.x + rect.width)),
-    right: min(win.innerWidth, max(rect.x, rect.x + rect.width)),
+    right: min(window.innerWidth, max(rect.x, rect.x + rect.width)),
   };
   let y = {
     top: max(0, min(rect.y, rect.y + rect.height)),
-    bottom: min(win.innerHeight, max(rect.y, rect.y + rect.height)),
+    bottom: min(window.innerHeight, max(rect.y, rect.y + rect.height)),
   };
 
   return {
