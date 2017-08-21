@@ -21,7 +21,7 @@
   --chrome-background-color: hsl(240, 5%, 5%);
   --chrome-color: rgb(249, 249, 250);
   --chrome-secondary-background-color: hsl(240, 1%, 20%);
-  --chrome-navigator-toolbox-separator-color: hsla(240, 5%, 5%, .1);
+  --toolbox-border-bottom-color: hsla(240, 5%, 5%, .1);
   --chrome-nav-bar-separator-color: rgba(0,0,0,.2);
   --chrome-nav-buttons-background: hsla(240, 5%, 5%, .1);
   --chrome-nav-buttons-hover-background: hsla(240, 5%, 5%, .15);
@@ -40,7 +40,7 @@
   --chrome-background-color: #E3E4E6;
   --chrome-color: #18191a;
   --chrome-secondary-background-color: #f5f6f7;
-  --chrome-navigator-toolbox-separator-color: #cccccc;
+  --toolbox-border-bottom-color: #cccccc;
   --chrome-nav-bar-separator-color: #B6B6B8;
   --chrome-nav-buttons-background: #ffffff; /* --theme-body-background */
   --chrome-nav-buttons-hover-background: #DADBDB;
@@ -66,10 +66,6 @@ toolbar[brighttext] .toolbarbutton-1 {
 #browser-panel {
   background: var(--chrome-background-color);
   color: var(--chrome-color);
-}
-
-#navigator-toolbox:-moz-lwtheme::after {
-  border-bottom-color: var(--chrome-navigator-toolbox-separator-color);
 }
 
 #navigator-toolbox > toolbar:not(#TabsToolbar):not(#toolbar-menubar),
