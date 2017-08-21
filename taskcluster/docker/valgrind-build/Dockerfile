@@ -8,8 +8,11 @@ VOLUME /home/worker/tooltool-cache
 
 # Add build scripts; these are the entry points from the taskcluster worker, and
 # operate on environment variables
-ADD             bin /home/worker/bin
-RUN             chmod +x /home/worker/bin/*
+
+# %include taskcluster/docker/desktop-build/bin
+ADD topsrcdir/taskcluster/docker/desktop-build/bin /home/worker/bin
+
+RUN chmod +x /home/worker/bin/*
 
 # %include python/mozbuild/mozbuild/action/tooltool.py
 ADD topsrcdir/python/mozbuild/mozbuild/action/tooltool.py /builds/tooltool.py
@@ -33,6 +36,9 @@ ADD topsrcdir/taskcluster/docker/recipes/install-cmake.sh /setup/install-cmake.s
 # %include taskcluster/docker/recipes/centos6-build-system-setup.sh
 ADD topsrcdir/taskcluster/docker/recipes/centos6-build-system-setup.sh /setup/system-setup.sh
 
+# %include taskcluster/docker/recipes/centos-install-debug-symbols.sh
+ADD topsrcdir/taskcluster/docker/recipes/centos-install-debug-symbols.sh /setup/install-debug-symbols.sh
+
 # TODO remove once base image doesn't install Mercurial
 RUN pip uninstall -y Mercurial
 
@@ -46,7 +52,8 @@ ADD topsrcdir/taskcluster/docker/recipes/xvfb.sh /home/worker/scripts/xvfb.sh
 ADD topsrcdir/taskcluster/docker/recipes/run-task /home/worker/bin/run-task
 
 # Add configuration
-COPY            dot-config                    /home/worker/.config
+# %include taskcluster/docker/desktop-build/dot-config
+ADD topsrcdir/taskcluster/docker/desktop-build/dot-config /home/worker/.config
 
 # Generate machine uuid file
 RUN dbus-uuidgen --ensure=/var/lib/dbus/machine-id
@@ -55,12 +62,14 @@ RUN dbus-uuidgen --ensure=/var/lib/dbus/machine-id
 # if it's not found, which causes the build to fail.  Note that this needs to
 # be in the parent of the workspace directory and in the directory where
 # mozharness is run (not its --work-dir).  See Bug 1169652.
-ADD           oauth.txt /home/worker/
+# %include taskcluster/docker/desktop-build/oauth.txt
+ADD topsrcdir/taskcluster/docker/desktop-build/oauth.txt /home/worker/
 
 # stubbed out buildprops, which keeps mozharness from choking
 # Note that this needs to be in the parent of the workspace directory and in
 # the directory where mozharness is run (not its --work-dir)
-ADD           buildprops.json /home/worker/
+# %include taskcluster/docker/desktop-build/buildprops.json
+ADD topsrcdir/taskcluster/docker/desktop-build/buildprops.json /home/worker/
 
 # Move installation to base centos6-build image once Bug 1272629 is fixed
 # Install the screen package here to use with xvfb.
