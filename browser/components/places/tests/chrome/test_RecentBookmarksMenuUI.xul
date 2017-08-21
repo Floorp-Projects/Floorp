@@ -21,6 +21,8 @@
   <script type="application/javascript" src="chrome://browser/content/browser.js"/>
   <script type="application/javascript"
           src="chrome://browser/content/browser-places.js" />
+  <script type="application/javascript"
+          src="resource://testing-common/sinon-2.3.2.js" />
 
   <body xmlns="http://www.w3.org/1999/xhtml" />
 
@@ -33,6 +35,8 @@
   <script type="application/javascript">
   <![CDATA[
     "use strict"
+
+    const sandbox = sinon.sandbox.create();
 
     const BASE_URL = "http://example.org/browser/browser/components/places/tests/browser/";
 
@@ -108,7 +112,13 @@
 
       let bmToRemove = await PlacesUtils.bookmarks.fetch({url: `${BASE_URL}bookmark_dummy_9.html`});
 
+      const clock = sandbox.useFakeTimers();
+
       await PlacesUtils.bookmarks.remove(bmToRemove);
+
+      // Move the clock past the timeout to ensure any update happen.
+      clock.tick(RecentBookmarksMenuUI.ITEM_REMOVED_TIMEOUT + 1);
+      clock.restore();
 
       let recentItem = recentBmItem.nextSibling;
       for (let i = 8; i >= 9 - RecentBookmarksMenuUI.MAX_RESULTS; --i) {
@@ -124,13 +134,91 @@
       simulateHideMenu();
     });
 
+    add_task(async function test_remove_multiple_bookmarks() {
+      RecentBookmarksMenuUI.init(document.getElementById("fakeRecentBookmarks"));
+
+      is(bmMenu.children.length, RecentBookmarksMenuUI.MAX_RESULTS + 3,
+         "There should be MAX_RESULTS children plus the 2 separators and 1 menuitem.");
+
+      let bmToRemove = await PlacesUtils.bookmarks.fetch({url: `${BASE_URL}bookmark_dummy_8.html`});
+
+      const clock = sandbox.useFakeTimers();
+
+      sinon.stub(RecentBookmarksMenuUI, "_insertRecentMenuItems");
+
+      await PlacesUtils.bookmarks.remove(bmToRemove);
+
+      // Move the clock a little way and check we haven't re-pouplated.
+      clock.tick(RecentBookmarksMenuUI.ITEM_REMOVED_TIMEOUT - 10);
+
+      ok(RecentBookmarksMenuUI._insertRecentMenuItems.notCalled,
+         "should not have populated the recent bookmarks striaght away.")
+
+      bmToRemove = await PlacesUtils.bookmarks.fetch({url: `${BASE_URL}bookmark_dummy_7.html`});
+      await PlacesUtils.bookmarks.remove(bmToRemove);
+
+      // Move the clock a little way and check we haven't re-pouplated.
+      clock.tick(RecentBookmarksMenuUI.ITEM_REMOVED_TIMEOUT - 10);
+
+      ok(RecentBookmarksMenuUI._insertRecentMenuItems.notCalled,
+         "should not have populated the recent bookmarks striaght away.")
+
+      RecentBookmarksMenuUI._insertRecentMenuItems.restore();
+
+      // Move the clock past the timeout and check the menu is updated.
+      clock.tick(20);
+
+      let recentItem = recentBmItem.nextSibling;
+      for (let i = 6; i >= 7 - RecentBookmarksMenuUI.MAX_RESULTS; --i) {
+        is(recentItem.getAttribute("label"), `bm${i}`,
+           "Should have the expected title from the bookmark");
+        is(recentItem.getAttribute("targetURI"), `${BASE_URL}bookmark_dummy_${i}.html`,
+           "Should have the expected targetURI from the bookmark");
+        is(recentItem.getAttribute("simulated-places-node"), "true",
+           "Should be flagged as a simulated-places-node");
+        recentItem = recentItem.nextSibling;
+      }
+
+      clock.restore();
+
+      simulateHideMenu();
+    });
+
+    add_task(async function test_remove_non_shown_bookmark() {
+      RecentBookmarksMenuUI.init(document.getElementById("fakeRecentBookmarks"));
+
+      is(bmMenu.children.length, RecentBookmarksMenuUI.MAX_RESULTS + 3,
+         "There should be MAX_RESULTS children plus the 2 separators and 1 menuitem.");
+
+      let bmToRemove = await PlacesUtils.bookmarks.fetch({url: `${BASE_URL}bookmark_dummy_1.html`});
+
+      sandbox.stub(RecentBookmarksMenuUI, "_clearExistingItems");
+      sandbox.stub(RecentBookmarksMenuUI, "_insertRecentMenuItems");
+
+      const clock = sandbox.useFakeTimers();
+
+      await PlacesUtils.bookmarks.remove(bmToRemove);
+
+      // Move the clock past the timeout to ensure any update happen.
+      clock.tick(RecentBookmarksMenuUI.ITEM_REMOVED_TIMEOUT + 1);
+      clock.restore();
+
+      is(RecentBookmarksMenuUI._clearExistingItems.notCalled, true,
+         "Should not have cleared the existing items when a bookmark is removed that is not displayed.");
+      is(RecentBookmarksMenuUI._insertRecentMenuItems.notCalled, true,
+         "Should not have inserted new menu items when a bookmark is removed that is not displayed.");
+
+      sandbox.restore();
+      simulateHideMenu();
+    });
+
     add_task(async function test_hide_recently_bookmarked() {
       RecentBookmarksMenuUI.init(document.getElementById("fakeRecentBookmarks"));
 
       is(bmMenu.children.length, RecentBookmarksMenuUI.MAX_RESULTS + 3,
          "There should be MAX_RESULTS children plus the 2 separators and 1 menuitem.");
 
-      RecentBookmarksMenuUI.hideRecentlyBookmarked();
+      RecentBookmarksMenuUI.visible = false;
 
       is(Services.prefs.getBoolPref(RecentBookmarksMenuUI.RECENTLY_BOOKMARKED_PREF), false,
          "showRecentlyBookmarked pref should have been set to false");
@@ -153,7 +241,7 @@
       is(bmMenu.children.length, 3,
          "There should only be the original 3 items in the menu");
 
-      RecentBookmarksMenuUI.showRecentlyBookmarked();
+      RecentBookmarksMenuUI.visible = true;
 
       is(bmMenu.children.length, RecentBookmarksMenuUI.MAX_RESULTS + 3,
          "There should be MAX_RESULTS children plus the 2 separators and 1 menuitem.");

@@ -1297,6 +1297,15 @@ var PlacesToolbarHelper = {
 var RecentBookmarksMenuUI = {
   RECENTLY_BOOKMARKED_PREF: "browser.bookmarks.showRecentlyBookmarked",
   MAX_RESULTS: 5,
+  // This timeout affects how soon the recent menu items are updated when
+  // an onItemRemoved notification is received - when we receive a notification,
+  // we delay updating the UI in case another is received. If one is, then we
+  // we'll restart the wait again. It wants to be more than 16ms (60fps) but
+  // probably less than 100ms.
+  ITEM_REMOVED_TIMEOUT: 40,
+
+  _recentGuids: undefined,
+  _visible: undefined,
 
   QueryInterface: XPCOMUtils.generateQI([
     Ci.nsINavBookmarkObserver,
@@ -1304,25 +1313,55 @@ var RecentBookmarksMenuUI = {
     Ci.nsISupportsWeakReference
   ]),
 
-  showRecentlyBookmarked() {
-    Services.prefs.setBoolPref(this.RECENTLY_BOOKMARKED_PREF, true);
+  get visible() {
+    return this._visible;
   },
 
-  hideRecentlyBookmarked() {
-    Services.prefs.setBoolPref(this.RECENTLY_BOOKMARKED_PREF, false);
-  },
+  /**
+   * Set the visibility of the recently bookmarked menu items.
+   *
+   * @param {Boolean} show Set to true to show the menu items, false otherwise.
+   */
+  set visible(visible) {
+    // If we're not changing anything, bail early so that we're not unnecessarily
+    // doing things we don't need to.
+    if (visible == this._visible) {
+      return;
+    }
 
-  observe(subject, topic, data) {
-    if (topic == "nsPref:changed" && data == this.RECENTLY_BOOKMARKED_PREF) {
-      this._populateRecentBookmarks();
+    this._visible = visible;
+    Services.prefs.setBoolPref(this.RECENTLY_BOOKMARKED_PREF, visible);
+    this._clearExistingItems();
+
+    if (visible) {
+      this._insertRecentMenuItems();
     }
   },
 
+  /**
+   * Observer for observing pref changes.
+   */
+  observe(subject, topic, data) {
+    if (topic == "nsPref:changed" && data == this.RECENTLY_BOOKMARKED_PREF) {
+      this.visible = Services.prefs.getBoolPref(this.RECENTLY_BOOKMARKED_PREF, true);
+    }
+  },
+
+  /**
+   * Initializes the recent bookmarks menu items into a menu.
+   *
+   * @param {menuitem} aHeaderItem A DOM menuitem to insert the recent bookmarks
+   *                               into.
+   * @param {String} aExtraCSSClass Any extra CSS classes to insert onto the recent
+   *                                bookmark menuitems.
+   */
   init(aHeaderItem, aExtraCSSClass = "") {
     this.headerItem = aHeaderItem;
     this.extraCSSClass = aExtraCSSClass;
+    this._recentGuids = new Set();
 
-    this._populateRecentBookmarks();
+    // This also displays the initial list if necessary.
+    this.visible = Services.prefs.getBoolPref(this.RECENTLY_BOOKMARKED_PREF, true);
 
     // Add observers and listeners and remove them again when the menupopup closes.
 
@@ -1341,20 +1380,30 @@ var RecentBookmarksMenuUI = {
     };
 
     let onBookmarksMenuHidden = event => {
-      if (event.target == event.currentTarget) {
-        this._updatePlacesContextMenu(true);
-
-        Services.prefs.removeObserver(this.RECENTLY_BOOKMARKED_PREF, this);
-        PlacesUtils.bookmarks.removeObserver(this);
-        this._recentlyBookmarkedObserver = null;
-        if (placesContextMenu) {
-          placesContextMenu.removeEventListener("popupshowing", onPlacesContextMenuShowing);
-        }
-        bookmarksMenu.removeEventListener("popuphidden", onBookmarksMenuHidden);
-
-        delete this.headerItem;
-        delete this.extraCSSClass;
+      // If hide event is not targeted to the main menu (e.g. hiding a sub-menu),
+      // nothing to do.
+      if (event.target != event.currentTarget) {
+        return;
       }
+
+      // Cancel any item removed timers.
+      if (this._itemRemovedTimer) {
+        clearTimeout(this._itemRemovedTimer);
+      }
+
+      this._updatePlacesContextMenu(true);
+
+      Services.prefs.removeObserver(this.RECENTLY_BOOKMARKED_PREF, this);
+      PlacesUtils.bookmarks.removeObserver(this);
+      this._recentlyBookmarkedObserver = null;
+      if (placesContextMenu) {
+        placesContextMenu.removeEventListener("popupshowing", onPlacesContextMenuShowing);
+      }
+      bookmarksMenu.removeEventListener("popuphidden", onBookmarksMenuHidden);
+
+      this._visible = undefined;
+      delete this.headerItem;
+      delete this.extraCSSClass;
     };
 
     Services.prefs.addObserver(this.RECENTLY_BOOKMARKED_PREF, this, true);
@@ -1368,20 +1417,30 @@ var RecentBookmarksMenuUI = {
     bookmarksMenu.addEventListener("popuphidden", onBookmarksMenuHidden);
   },
 
-  _populateRecentBookmarks() {
+  /**
+   * Clears existing recent items from the menu and updates the separators
+   * according to this.visible.
+   */
+  _clearExistingItems() {
+    this._recentGuids.clear();
+
     while (this.headerItem.nextSibling &&
            this.headerItem.nextSibling.localName == "menuitem") {
       this.headerItem.nextSibling.remove();
     }
 
-    let shouldShow = Services.prefs.getBoolPref(this.RECENTLY_BOOKMARKED_PREF);
     let separator = this.headerItem.previousSibling;
-    this.headerItem.hidden = !shouldShow;
-    separator.hidden = !shouldShow;
+    this.headerItem.hidden = !this.visible;
+    separator.hidden = !this.visible;
+  },
 
-    if (!shouldShow) {
-      return;
-    }
+  /**
+   * Inserts recent bookmark items into the menu.
+   */
+  _insertRecentMenuItems() {
+    let separator = this.headerItem.previousSibling;
+    this.headerItem.hidden = !this.visible;
+    separator.hidden = !this.visible;
 
     let options = PlacesUtils.history.getNewQueryOptions();
     options.excludeQueries = true;
@@ -1417,11 +1476,18 @@ var RecentBookmarksMenuUI = {
       }
       item._placesNode = node;
       fragment.appendChild(item);
+      this._recentGuids.add(node.bookmarkGuid);
     }
     root.containerOpen = false;
     this.headerItem.parentNode.insertBefore(fragment, this.headerItem.nextSibling);
   },
 
+  /**
+   * Show the places related context menu for the bookmark items.
+   *
+   * @param {Boolean} shouldHidePrefUI Set to true to hide the UI for switching
+   *                                   the showRecentlyBookmarked pref.
+   */
   _updatePlacesContextMenu(shouldHidePrefUI = false) {
     let showItem = document.getElementById("placesContext_showRecentlyBookmarked");
     // On Mac the menuitem doesn't exist when we're in the Library window context.
@@ -1446,11 +1512,25 @@ var RecentBookmarksMenuUI = {
    * nsINavBookmarkObserver methods.
    */
 
-  onItemRemoved() {
+  /*
+   * Handles onItemRemoved notifications from the bookmarks service.
+   */
+  onItemRemoved(itemId, parentId, index, itemType, uri, guid) {
     // Update the menu when a bookmark has been removed.
     // The native menubar on Mac doesn't support live update, so this is
     // unlikely to be called there.
-    this._populateRecentBookmarks();
+    if (this._recentGuids.size == 0 ||
+        (guid && this._recentGuids.has(guid))) {
+
+      if (this._itemRemovedTimer) {
+        clearTimeout(this._itemRemovedTimer);
+      }
+
+      this._itemRemovedTimer = setTimeout(() => {
+        this._clearExistingItems();
+        this._insertRecentMenuItems();
+      }, this.ITEM_REMOVED_TIMEOUT);
+    }
   },
 
   skipTags: true,
