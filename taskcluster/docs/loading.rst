@@ -32,12 +32,3 @@ task-graph generation infrastructure expects.
 The ``transforms`` key in ``kind.yml`` is further documented in
 :doc:`transforms`.  For more information on how all of this works, consult the
 docstrings and comments in the source code itself.
-
-Try option syntax
------------------
-
-The ``parse-commit`` optional field specified in ``kind.yml`` links to a
-function to parse the command line options in the ``--message`` mach parameter.
-Currently, the only valid value is ``taskgraph.try_option_syntax:parse_message``.
-The parsed arguments are stored in ``config.config['args']``, it corresponds
-to the same object returned by ``parse_args`` from ``argparse`` Python module.
