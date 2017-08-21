@@ -103,6 +103,10 @@ separator.thin:not([orient="vertical"]) {
   margin: 2px 0;
 }
 
+#searchInput {
+  border-radius: 0;
+}
+
 /* Subcategory title */
 
 /**
