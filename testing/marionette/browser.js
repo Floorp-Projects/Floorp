@@ -461,7 +461,7 @@ browser.Windows = class extends Map {
  *
  * @enum {string}
  */
-this.WindowState = {
+const WindowState = {
   Maximized: "maximized",
   Minimized: "minimized",
   Normal: "normal",
