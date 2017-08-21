@@ -7,7 +7,6 @@
 #include "GLContext.h"
 #include "GLContextProvider.h"
 #include "mozilla/gfx/Logging.h"
-#include "mozilla/gfx/gfxVars.h"
 #include "mozilla/layers/CompositorBridgeParent.h"
 #include "mozilla/layers/CompositorThread.h"
 #include "mozilla/layers/LayersTypes.h"
@@ -66,7 +65,6 @@ RendererOGL::RendererOGL(RefPtr<RenderThread>&& aThread,
   , mRenderer(aRenderer)
   , mBridge(aBridge)
   , mWindowId(aWindowId)
-  , mDebugFlags({ 0 })
 {
   MOZ_ASSERT(mThread);
   MOZ_ASSERT(mGL);
@@ -129,13 +127,6 @@ RendererOGL::Update()
 bool
 RendererOGL::Render()
 {
-  uint32_t flags = gfx::gfxVars::WebRenderDebugFlags();
-
-  if (mDebugFlags.mBits != flags) {
-    mDebugFlags.mBits = flags;
-    wr_renderer_set_debug_flags(mRenderer, mDebugFlags);
-  }
-
   if (!mGL->MakeCurrent()) {
     gfxCriticalNote << "Failed to make render context current, can't draw.";
     // XXX This could cause oom in webrender since pending_texture_updates is not handled.
@@ -210,6 +201,12 @@ RendererOGL::Resume()
 #else
   return true;
 #endif
+}
+
+void
+RendererOGL::SetProfilerEnabled(bool aEnabled)
+{
+  wr_renderer_set_profiler_enabled(mRenderer, aEnabled);
 }
 
 void
