@@ -223,12 +223,18 @@ panelview {
 .subviewbutton.panel-subview-footer {
   box-sizing: border-box;
   min-height: 41px;
-  padding: 11px 12px;
 }
 
-.cui-widget-panelview .subviewbutton.panel-subview-footer {
+.cui-widget-panelview menuitem.subviewbutton.panel-subview-footer {
   margin: 4px 0 0;
-  -moz-box-pack: center;
+}
+
+.cui-widget-panelview .subviewbutton.panel-subview-footer > .menu-text {
+  -moz-box-flex: 1;
+}
+
+.cui-widget-panelview .subviewbutton.panel-subview-footer .menu-accel-container {
+  -moz-box-pack: end;
 }
 
 #appMenu-popup > arrowscrollbox > autorepeatbutton,
@@ -384,7 +390,8 @@ panelview[id^=PanelUI-webext-] {
 }
 
 panelview:not([mainview]) .toolbarbutton-text,
-.cui-widget-panel toolbarbutton:not([wrap]) > .toolbarbutton-text {
+.cui-widget-panel toolbarbutton:not([wrap]) > .toolbarbutton-text,
+#overflowMenu-customize-button > .toolbarbutton-text {
   text-align: start;
   display: -moz-box;
 }
@@ -1209,7 +1216,6 @@ panelview .toolbarbutton-1,
 
 .subviewbutton > .toolbarbutton-text {
   padding: 0;
-  padding-inline-start: 24px; /* This is 16px for the icon + 8px for the padding as defined above. */
 }
 
 .subviewbutton > .menu-right,
