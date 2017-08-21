@@ -1338,7 +1338,7 @@
 	(cff_compute_bias): Use `U' for constant.
 	* src/cid/cidload.c (cid_decrypt): Ditto.
 	* src/psaux/psobjs.c (T1_Decrypt): Ditto.
-	* src/psaux/t1decode.c (T1_Decoder_Parse_CharStrings): Ditto.
+	* src/psaux/t1decode.c (T1_Decoder_Parse_Charstrings): Ditto.
 	* src/sfnt/ttload.c (TT_Load_Kern): Remove unused `version'
 	variable.
 	* src/sfnt/ttsbit.c (TT_Load_SBit_Image): Remove unused `top'
@@ -1524,7 +1524,7 @@
 
 	* src/base/ftcalc.c (FT_DivFix): Fixed a bug in the 64-bit code that
 	created incorrect scale factors!
-	(FT_Round_Fix, FT_CeilFix, FT_FloorFix): Minor improvements.
+	(FT_RoundFix, FT_CeilFix, FT_FloorFix): Minor improvements.
 
 2001-05-12  Werner Lemberg  <wl@gnu.org>
 
@@ -2159,7 +2159,7 @@
 
 	* include/freetype/internal/t2types.h,
 	include/freetype/internal/cfftypes.h: Changed the structures for
-	CFF_Encoding and CFF_Encoding for the new implementations of the
+	CFF_Charset and CFF_Encoding for the new implementations of the
 	charset and encoding parsers in the CFF driver.
 
 	* src/cff/t2gload.c (t2_lookup_glyph_by_stdcharcode,
@@ -2597,7 +2597,7 @@
 
 ----------------------------------------------------------------------------
 
-Copyright 2000-2016 by
+Copyright 2000-2017 by
 David Turner, Robert Wilhelm, and Werner Lemberg.
 
 This file is part of the FreeType project, and may only be used, modified,

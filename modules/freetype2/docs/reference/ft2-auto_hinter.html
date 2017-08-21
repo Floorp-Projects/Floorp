@@ -3,7 +3,7 @@
 <html>
 <head>
 <meta http-equiv="Content-Type" content="text/html; charset=utf-8">
-<title>FreeType-2.7.1 API Reference</title>
+<title>FreeType-2.8 API Reference</title>
 <style type="text/css">
   a:link { color: #0000EF; }
   a:visited { color: #51188E; }
@@ -100,16 +100,17 @@
 <body>
 
 <table class="index-toc-link"><tr><td class="left">[<a href="ft2-index.html">Index</a>]</td><td class="right">[<a href="ft2-toc.html">TOC</a>]</td></tr></table>
-<h1>FreeType-2.7.1 API Reference</h1>
+<h1>FreeType-2.8 API Reference</h1>
 
 <h1 id="auto_hinter">The auto-hinter</h1>
 <h2>Synopsis</h2>
 <table class="synopsis">
-<tr><td><a href="#glyph-to-script-map">glyph-to-script-map</a></td><td><a href="#increase-x-height">increase-x-height</a></td></tr>
-<tr><td><a href="#FT_AUTOHINTER_SCRIPT_XXX">FT_AUTOHINTER_SCRIPT_XXX</a></td><td><a href="#FT_Prop_IncreaseXHeight">FT_Prop_IncreaseXHeight</a></td></tr>
-<tr><td><a href="#FT_Prop_GlyphToScriptMap">FT_Prop_GlyphToScriptMap</a></td><td><a href="#warping">warping</a></td></tr>
-<tr><td><a href="#fallback-script">fallback-script</a></td><td><a href="#no-stem-darkening(autofit)">no-stem-darkening</a></td></tr>
+<tr><td><a href="#glyph-to-script-map">glyph-to-script-map</a></td><td><a href="#FT_Prop_IncreaseXHeight">FT_Prop_IncreaseXHeight</a></td></tr>
+<tr><td><a href="#FT_AUTOHINTER_SCRIPT_XXX">FT_AUTOHINTER_SCRIPT_XXX</a></td><td><a href="#warping">warping</a></td></tr>
+<tr><td><a href="#FT_Prop_GlyphToScriptMap">FT_Prop_GlyphToScriptMap</a></td><td><a href="#no-stem-darkening(autofit)">no-stem-darkening</a></td></tr>
+<tr><td><a href="#fallback-script">fallback-script</a></td><td><a href="#FT_PARAM_TAG_STEM_DARKENING">FT_PARAM_TAG_STEM_DARKENING</a></td></tr>
 <tr><td><a href="#default-script">default-script</a></td><td><a href="#darkening-parameters(autofit)">darkening-parameters</a></td></tr>
+<tr><td><a href="#increase-x-height">increase-x-height</a></td><td></td></tr>
 </table>
 
 
@@ -397,11 +398,25 @@
 <div class="section">
 <h3 id="no-stem-darkening(autofit)">no-stem-darkening</h3>
 
-<p><b>Experimental</b> *only,* <b>requires</b> <b>linear</b> <b>alpha</b> <b>blending</b> <b>and</b> <b>gamma</b> <b>correction</b></p>
+<p><b>Experimental</b> <b>only</b>, <b>requires</b> <b>linear</b> <b>alpha</b> <b>blending</b> <b>and</b> <b>gamma</b> <b>correction</b></p>
 <p>Stem darkening emboldens glyphs at smaller sizes to make them more readable on common low-DPI screens when using linear alpha blending and gamma correction, see <a href="ft2-base_interface.html#FT_Render_Glyph">FT_Render_Glyph</a>. When not using linear alpha blending and gamma correction, glyphs will appear heavy and fuzzy!</p>
 <p>Gamma correction essentially lightens fonts since shades of grey are shifted to higher pixel values (=&nbsp;higher brightness) to match the original intention to the reality of our screens. The side-effect is that glyphs &lsquo;thin out&rsquo;. Mac OS&nbsp;X and Adobe's proprietary font rendering library implement a counter-measure: stem darkening at smaller sizes where shades of gray dominate. By emboldening a glyph slightly in relation to its pixel size, individual pixels get higher coverage of filled-in outlines and are therefore &lsquo;blacker&rsquo;. This counteracts the &lsquo;thinning out&rsquo; of glyphs, making text remain readable at smaller sizes. All glyphs that pass through the auto-hinter will be emboldened unless this property is set to TRUE.</p>
 <p>See the description of the CFF driver for algorithmic details. Total consistency with the CFF driver is currently not achieved because the emboldening method differs and glyphs must be scaled down on the Y-axis to keep outline points inside their precomputed blue zones. The smaller the size (especially 9ppem and down), the higher the loss of emboldening versus the CFF driver.</p>
-<p>This property can be set via the &lsquo;FREETYPE_PROPERTIES&rsquo; environment variable similar to the CFF driver.</p>
+<p>This property can be set via the &lsquo;FREETYPE_PROPERTIES&rsquo; environment variable similar to the CFF driver. It can also be set per face using <a href="ft2-base_interface.html#FT_Face_Properties">FT_Face_Properties</a> with <a href="ft2-auto_hinter.html#FT_PARAM_TAG_STEM_DARKENING">FT_PARAM_TAG_STEM_DARKENING</a>.</p>
+
+<hr>
+<table class="index-toc-link"><tr><td class="left">[<a href="ft2-index.html">Index</a>]</td><td class="middle">[<a href="#">Top</a>]</td><td class="right">[<a href="ft2-toc.html">TOC</a>]</td></tr></table></div>
+
+<div class="section">
+<h3 id="FT_PARAM_TAG_STEM_DARKENING">FT_PARAM_TAG_STEM_DARKENING</h3>
+<p>Defined in FT_AUTOHINTER_H (freetype/ftautoh.h).</p>
+<pre>
+#define <b>FT_PARAM_TAG_STEM_DARKENING</b> \
+          <a href="ft2-basic_types.html#FT_MAKE_TAG">FT_MAKE_TAG</a>( 'd', 'a', 'r', 'k' )
+</pre>
+
+<p>An <a href="ft2-base_interface.html#FT_Parameter">FT_Parameter</a> tag to be used with <a href="ft2-base_interface.html#FT_Face_Properties">FT_Face_Properties</a>. The corresponding Boolean argument specifies whether to apply stem darkening, overriding the global default values or the values set up with <a href="ft2-module_management.html#FT_Property_Set">FT_Property_Set</a> (see <a href="ft2-auto_hinter.html#no-stem-darkening(autofit)">no-stem-darkening</a> and <a href="ft2-cff_driver.html#no-stem-darkening(cff)">no-stem-darkening</a>).</p>
+<p>This is a passive setting that only takes effect if the font driver or autohinter honors it, which the CFF driver always does, but the autohinter only in &lsquo;light&rsquo; hinting mode (as of version 2.7.0).</p>
 
 <hr>
 <table class="index-toc-link"><tr><td class="left">[<a href="ft2-index.html">Index</a>]</td><td class="middle">[<a href="#">Top</a>]</td><td class="right">[<a href="ft2-toc.html">TOC</a>]</td></tr></table></div>
