@@ -28,6 +28,7 @@
 
         <org.mozilla.gecko.widget.themed.ThemedTextView
             android:id="@+id/counter_text"
+            style="@style/UrlBar.TabCounter.Text"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
             android:layout_gravity="center"
