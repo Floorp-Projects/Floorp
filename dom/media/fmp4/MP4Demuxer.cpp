@@ -436,7 +436,7 @@ MP4TrackDemuxer::GetNextSample()
   }
   if (mInfo->GetAsVideoInfo()) {
     sample->mExtraData = mInfo->GetAsVideoInfo()->mExtraData;
-    if (mIsH264) {
+    if (mIsH264 && !sample->mCrypto.mValid) {
       mp4_demuxer::H264::FrameType type =
         mp4_demuxer::H264::GetFrameType(sample);
       switch (type) {
