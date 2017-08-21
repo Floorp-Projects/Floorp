@@ -97,16 +97,12 @@
   }
 }
 
-.sidebar-search-container {
-  border-bottom: 1px solid #bdbdbd;
-}
-
 .search-box {
   -moz-appearance: searchfield;
   padding: 1px;
   font-size: 12px;
   cursor: text;
-  margin: 4px 8px 10px;
+  margin: 4px;
   border-width: 3px;
   border-style: solid;
   border-color: currentcolor;
