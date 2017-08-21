@@ -1646,6 +1646,14 @@ nsPrintEngine::ReconstructAndReflow(bool doSetPixelScale)
       continue;
     }
 
+    // When the print object has been marked as "print the document" (i.e,
+    // po->mDontPrint is false), mPresContext and mPresShell should be
+    // non-nullptr (i.e., should've been created for the print) since they
+    // are necessary to print the document.
+    MOZ_ASSERT(po->mPresContext && po->mPresShell,
+      "mPresContext and mPresShell shouldn't be nullptr when the print object "
+      "has been marked as \"print the document\"");
+
     UpdateZoomRatio(po, doSetPixelScale);
 
     po->mPresContext->SetPageScale(po->mZoomRatio);
@@ -1700,14 +1708,34 @@ nsPrintEngine::SetupToPrintContent()
   // when its script blocker goes out of scope.  In such case, this cannot do
   // its job as expected because some objects in mPrt have not been initialized
   // yet but they are necessary.
-  // Note: it shouldn't be possible for mPrt->mPrintObject to be null; we
-  // just check it for good measure, as we check its owner & members.
+  // Note: it shouldn't be possible for mPrt->mPrintObject to be null; we check
+  // it for good measure (after we check its owner) before we start
+  // dereferencing it below.
   if (NS_WARN_IF(!mPrt) ||
-      NS_WARN_IF(!mPrt->mPrintObject) ||
-      NS_WARN_IF(!mPrt->mPrintObject->mPresShell) ||
-      NS_WARN_IF(!mPrt->mPrintObject->mPresContext)) {
+      NS_WARN_IF(!mPrt->mPrintObject)) {
     return NS_ERROR_FAILURE;
   }
+
+  // If this is creating print preview, mPrt->mPrintObject->mPresContext and
+  // mPrt->mPrintObject->mPresShell need to be non-nullptr because this cannot
+  // initialize page sequence frame without them at end of this method since
+  // page sequence frame has already been destroyed or not been created yet.
+  if (mIsCreatingPrintPreview &&
+      (NS_WARN_IF(!mPrt->mPrintObject->mPresContext) ||
+       NS_WARN_IF(!mPrt->mPrintObject->mPresShell))) {
+    return NS_ERROR_FAILURE;
+  }
+
+  // If this is printing some documents (not print-previewing the documents),
+  // mPrt->mPrintObject->mPresContext and mPrt->mPrintObject->mPresShell can be
+  // nullptr only when mPrt->mPrintObject->mDontPrint is set to true.  E.g., if
+  // the document has a <frameset> element and it's printing only content in a
+  // <frame> element or all <frame> elements separately.
+  MOZ_ASSERT(
+    (!mIsCreatingPrintPreview && !mPrt->mPrintObject->IsPrintable()) ||
+    (mPrt->mPrintObject->mPresContext && mPrt->mPrintObject->mPresShell),
+    "mPresContext and mPresShell shouldn't be nullptr when printing the "
+    "document or creating print-preview");
 
   bool didReconstruction = false;
 
@@ -2384,6 +2412,10 @@ nsPrintEngine::CalcNumPrintablePages(int32_t& aNumPages)
   for (uint32_t i=0; i<mPrt->mPrintDocList.Length(); i++) {
     nsPrintObject* po = mPrt->mPrintDocList.ElementAt(i);
     NS_ASSERTION(po, "nsPrintObject can't be null!");
+    // Note: The po->mPresContext null-check below is necessary, because it's
+    // possible po->mPresContext might never have been set.  (e.g., if
+    // IsPrintable() returns false, ReflowPrintObject bails before setting
+    // mPresContext)
     if (po->mPresContext && po->mPresContext->IsRootPaginatedDocument()) {
       nsIPageSequenceFrame* pageSequence = po->mPresShell->GetPageSequenceFrame();
       nsIFrame * seqFrame = do_QueryFrame(pageSequence);
