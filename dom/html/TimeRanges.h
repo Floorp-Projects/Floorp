@@ -13,12 +13,12 @@
 #include "nsTArray.h"
 #include "nsWrapperCache.h"
 #include "mozilla/ErrorResult.h"
+#include "TimeUnits.h"
 
 namespace mozilla {
+
 namespace dom {
-
 class TimeRanges;
-
 } // namespace dom
 
 namespace dom {
@@ -35,6 +35,10 @@ public:
 
   TimeRanges();
   explicit TimeRanges(nsISupports* aParent);
+  explicit TimeRanges(const media::TimeIntervals& aTimeIntervals);
+  TimeRanges(nsISupports* aParent, const media::TimeIntervals& aTimeIntervals);
+
+  media::TimeIntervals ToTimeIntervals() const;
 
   void Add(double aStart, double aEnd);
 
@@ -53,7 +57,8 @@ public:
   // Mutate this TimeRange to be the intersection of this and aOtherRanges.
   void Intersection(const TimeRanges* aOtherRanges);
 
-  virtual JSObject* WrapObject(JSContext* aCx, JS::Handle<JSObject*> aGivenProto) override;
+  JSObject* WrapObject(JSContext* aCx,
+                       JS::Handle<JSObject*> aGivenProto) override;
 
   nsISupports* GetParentObject() const;
 
@@ -62,9 +67,9 @@ public:
     return mRanges.Length();
   }
 
-  virtual double Start(uint32_t aIndex, ErrorResult& aRv);
+  double Start(uint32_t aIndex, ErrorResult& aRv) const;
 
-  virtual double End(uint32_t aIndex, ErrorResult& aRv);
+  double End(uint32_t aIndex, ErrorResult& aRv) const;
 
   // Shift all values by aOffset seconds.
   void Shift(double aOffset);

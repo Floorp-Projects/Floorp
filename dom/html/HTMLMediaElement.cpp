@@ -2657,7 +2657,7 @@ HTMLMediaElement::SetCurrentTime(double aCurrentTime, ErrorResult& aRv)
  * on success, and NS_ERROR_FAILURE on failure.
  */
 static nsresult
-IsInRanges(dom::TimeRanges& aRanges,
+IsInRanges(TimeRanges& aRanges,
            double aValue,
            bool& aIsInRanges,
            int32_t& aIntervalIndex)
@@ -2740,13 +2740,13 @@ HTMLMediaElement::Seek(double aTime,
   }
 
   // Clamp the seek target to inside the seekable ranges.
-  RefPtr<dom::TimeRanges> seekable = new dom::TimeRanges(ToSupports(OwnerDoc()));
   media::TimeIntervals seekableIntervals = mDecoder->GetSeekable();
   if (seekableIntervals.IsInvalid()) {
     aRv.Throw(NS_ERROR_DOM_INVALID_STATE_ERR); // This will reject the promise.
     return promise.forget();
   }
-  seekableIntervals.ToTimeRanges(seekable);
+  RefPtr<TimeRanges> seekable =
+    new TimeRanges(ToSupports(OwnerDoc()), seekableIntervals);
   uint32_t length = 0;
   seekable->GetLength(&length);
   if (!length) {
@@ -2865,10 +2865,9 @@ NS_IMETHODIMP HTMLMediaElement::GetDuration(double* aDuration)
 already_AddRefed<TimeRanges>
 HTMLMediaElement::Seekable() const
 {
-  RefPtr<TimeRanges> ranges = new TimeRanges(ToSupports(OwnerDoc()));
-  if (mDecoder) {
-    mDecoder->GetSeekable().ToTimeRanges(ranges);
-  }
+  media::TimeIntervals seekable =
+    mDecoder ? mDecoder->GetSeekable() : media::TimeIntervals();
+  RefPtr<TimeRanges> ranges = new TimeRanges(ToSupports(OwnerDoc()), seekable);
   return ranges.forget();
 }
 
@@ -6549,13 +6548,9 @@ HTMLMediaElement::CopyInnerTo(Element* aDest, bool aPreallocateChildren)
 already_AddRefed<TimeRanges>
 HTMLMediaElement::Buffered() const
 {
-  RefPtr<TimeRanges> ranges = new TimeRanges(ToSupports(OwnerDoc()));
-  if (mDecoder) {
-    media::TimeIntervals buffered = mDecoder->GetBuffered();
-    if (!buffered.IsInvalid()) {
-      buffered.ToTimeRanges(ranges);
-    }
-  }
+  media::TimeIntervals buffered =
+    mDecoder ? mDecoder->GetBuffered() : media::TimeIntervals();
+  RefPtr<TimeRanges> ranges = new TimeRanges(ToSupports(OwnerDoc()), buffered);
   return ranges.forget();
 }
 
