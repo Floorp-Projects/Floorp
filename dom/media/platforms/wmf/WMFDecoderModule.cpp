@@ -29,6 +29,7 @@
 #include "nsWindowsHelpers.h"
 #include "prsystem.h"
 #include "nsIXULRuntime.h"
+#include "mozilla/mscom/EnsureMTA.h"
 
 extern const GUID CLSID_WebmMfVpxDec;
 
@@ -135,16 +136,22 @@ WMFDecoderModule::CreateAudioDecoder(const CreateDecoderParams& aParams)
 static bool
 CanCreateMFTDecoder(const GUID& aGuid)
 {
-  if (FAILED(wmf::MFStartup())) {
-    return false;
-  }
-  bool hasdecoder = false;
-  {
+  // The IMFTransform interface used by MFTDecoder is documented to require to
+  // run on an MTA thread.
+  // https://msdn.microsoft.com/en-us/library/windows/desktop/ee892371(v=vs.85).aspx#components
+  // Note: our normal SharedThreadPool task queues are initialized to MTA, but
+  // the main thread (which calls in here from our CanPlayType implementation)
+  // is not.
+  bool canCreateDecoder = false;
+  mozilla::mscom::EnsureMTA([&]() -> void {
+    if (FAILED(wmf::MFStartup())) {
+      return;
+    }
     RefPtr<MFTDecoder> decoder(new MFTDecoder());
-    hasdecoder = SUCCEEDED(decoder->Create(aGuid));
-  }
-  wmf::MFShutdown();
-  return hasdecoder;
+    canCreateDecoder = SUCCEEDED(decoder->Create(aGuid));
+    wmf::MFShutdown();
+  });
+  return canCreateDecoder;
 }
 
 template<const GUID& aGuid>

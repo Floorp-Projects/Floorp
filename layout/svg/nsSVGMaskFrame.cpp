@@ -226,6 +226,12 @@ nsSVGMaskFrame::GetMaskTransform(nsIFrame* aMaskedFrame)
   nsSVGEnum* maskContentUnits =
     &content->mEnumAttributes[SVGMaskElement::MASKCONTENTUNITS];
 
+  uint32_t flags =
+    nsSVGUtils::eBBoxIncludeFillGeometry |
+    (aMaskedFrame->StyleBorder()->mBoxDecorationBreak == StyleBoxDecorationBreak::Clone
+      ? nsSVGUtils::eIncludeOnlyCurrentFrameForNonSVGElement
+      : 0);
+
   return nsSVGUtils::AdjustMatrixForUnits(gfxMatrix(), maskContentUnits,
-                                          aMaskedFrame);
+                                          aMaskedFrame, flags);
 }

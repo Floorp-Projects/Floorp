@@ -354,7 +354,8 @@ SERVO_BINDING_FUNC(Servo_DeclarationBlock_GetCssText, void,
                    nsAString* result)
 SERVO_BINDING_FUNC(Servo_DeclarationBlock_SerializeOneValue, void,
                    RawServoDeclarationBlockBorrowed declarations,
-                   nsCSSPropertyID property, nsAString* buffer)
+                   nsCSSPropertyID property, nsAString* buffer,
+                   ServoStyleContextBorrowedOrNull computed_values)
 SERVO_BINDING_FUNC(Servo_DeclarationBlock_Count, uint32_t,
                    RawServoDeclarationBlockBorrowed declarations)
 SERVO_BINDING_FUNC(Servo_DeclarationBlock_GetNthProperty, bool,

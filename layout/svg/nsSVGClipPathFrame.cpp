@@ -465,7 +465,14 @@ nsSVGClipPathFrame::GetClipPathTransform(nsIFrame* aClippedFrame)
   nsSVGEnum* clipPathUnits =
     &content->mEnumAttributes[SVGClipPathElement::CLIPPATHUNITS];
 
-  return nsSVGUtils::AdjustMatrixForUnits(tm, clipPathUnits, aClippedFrame);
+  uint32_t flags =
+    nsSVGUtils::eBBoxIncludeFillGeometry |
+    (aClippedFrame->StyleBorder()->mBoxDecorationBreak == StyleBoxDecorationBreak::Clone
+      ? nsSVGUtils::eIncludeOnlyCurrentFrameForNonSVGElement
+      : 0);
+
+  return nsSVGUtils::AdjustMatrixForUnits(tm, clipPathUnits,
+                                          aClippedFrame, flags);
 }
 
 SVGBBox

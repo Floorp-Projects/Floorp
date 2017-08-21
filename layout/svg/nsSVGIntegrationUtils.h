@@ -78,12 +78,13 @@ public:
    * "bbox" for the element they're being applied to in order to make decisions
    * about positioning, and to resolve various lengths against. This method
    * provides the "bbox" for non-SVG frames. The bbox returned is in CSS px
-   * units, and is the union of all aNonSVGFrame's continuations' overflow
-   * areas, relative to the top-left of the union of all aNonSVGFrame's
+   * units, and aUnionContinuations decide whether bbox contains the area of
+   * current frame only or the union of all aNonSVGFrame's continuations'
+   * overflow areas, relative to the top-left of the union of all aNonSVGFrame's
    * continuations' border box rects.
    */
   static gfxRect
-  GetSVGBBoxForNonSVGFrame(nsIFrame* aNonSVGFrame);
+  GetSVGBBoxForNonSVGFrame(nsIFrame* aNonSVGFrame, bool aUnionContinuations);
 
   /**
    * Used to adjust a frame's pre-effects visual overflow rect to take account

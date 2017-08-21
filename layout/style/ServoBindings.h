@@ -384,10 +384,6 @@ void Gecko_NoteDirtyElement(RawGeckoElementBorrowed element);
 void Gecko_NoteAnimationOnlyDirtyElement(RawGeckoElementBorrowed element);
 
 // Incremental restyle.
-// Also, we might want a ComputedValues to ComputedValues API for animations?
-// Not if we do them in Gecko...
-nsStyleContext* Gecko_GetStyleContext(RawGeckoElementBorrowed element,
-                                      nsIAtom* aPseudoTagOrNull);
 mozilla::CSSPseudoElementType Gecko_GetImplementedPseudo(RawGeckoElementBorrowed element);
 // We'd like to return `nsChangeHint` here, but bindgen bitfield enums don't
 // work as return values with the Linux 32-bit ABI at the moment because

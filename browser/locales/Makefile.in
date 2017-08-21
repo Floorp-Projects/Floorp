@@ -19,8 +19,6 @@ PWD := $(CURDIR)
 # These are defaulted to be compatible with the files the wget-en-US target
 # pulls. You may override them if you provide your own files.
 ZIP_IN ?= $(ABS_DIST)/$(PACKAGE)
-WIN32_INSTALLER_IN ?= $(ABS_DIST)/$(PKG_INST_PATH)$(PKG_INST_BASENAME).exe
-RETRIEVE_WINDOWS_INSTALLER = 1
 
 MOZ_LANGPACK_EID=langpack-$(AB_CD)@firefox.mozilla.org
 # For Nightly, we know where to get the builds from to do local repacks
@@ -42,21 +40,6 @@ endif
 
 MOZ_SFX_PACKAGE=$(topsrcdir)/other-licenses/7zstub/firefox/7zSD.sfx
 MOZ_INSTALLER_PATH=$(topsrcdir)/browser/installer/windows
-
-ifeq (WINNT,$(OS_ARCH))
-UNINSTALLER_PACKAGE_HOOK = $(RM) -r $(STAGEDIST)/uninstall; \
-    $(NSINSTALL) -D $(STAGEDIST)/uninstall; \
-    cp ../installer/windows/l10ngen/helper.exe $(STAGEDIST)/uninstall; \
-    $(RM) $(ABS_DIST)/l10n-stage/setup.exe; \
-    cp ../installer/windows/l10ngen/setup.exe $(ABS_DIST)/l10n-stage; \
-    $(NULL)
-
-STUB_HOOK = $(NSINSTALL) -D '$(ABS_DIST)/$(PKG_INST_PATH)'; \
-    $(RM) '$(ABS_DIST)/$(PKG_INST_PATH)$(PKG_STUB_BASENAME).exe'; \
-    cp ../installer/windows/l10ngen/stub.exe '$(ABS_DIST)/$(PKG_INST_PATH)$(PKG_STUB_BASENAME).exe'; \
-    chmod 0755 '$(ABS_DIST)/$(PKG_INST_PATH)$(PKG_STUB_BASENAME).exe'; \
-    $(NULL)
-endif
 
 SEARCHPLUGINS_FILENAMES := $(shell $(call py_action,output_searchplugins_list,$(srcdir)/search/list.json $(AB_CD)))
 SEARCHPLUGINS_PATH := .deps/generated_$(AB_CD)
@@ -135,26 +118,25 @@ ifdef NIGHTLY_BUILD
 	@$(MAKE) -C ../extensions/webcompat-reporter/locales chrome AB_CD=$*
 endif
 
-repackage-win32-installer: WIN32_INSTALLER_OUT=$(ABS_DIST)/$(PKG_INST_PATH)$(PKG_INST_BASENAME).exe
-repackage-win32-installer: $(call ESCAPE_WILDCARD,$(WIN32_INSTALLER_IN)) $(SUBMAKEFILES) libs-$(AB_CD)
-	@echo 'Repackaging $(WIN32_INSTALLER_IN) into $(WIN32_INSTALLER_OUT).'
-	$(MAKE) -C $(DEPTH)/$(MOZ_BRANDING_DIRECTORY) export
+package-win32-installer: WIN32_INSTALLER_OUT=$(ABS_DIST)/$(PKG_INST_PATH)$(PKG_INST_BASENAME).exe
+package-win32-installer: MOZ_PKG_FORMAT=SFX7Z
+package-win32-installer: $(SUBMAKEFILES)
+	@echo 'Packaging $(WIN32_INSTALLER_OUT).'
 	$(MAKE) -C ../installer/windows CONFIG_DIR=l10ngen l10ngen/setup.exe l10ngen/7zSD.sfx
-	$(MAKE) repackage-zip \
-	  AB_CD=$(AB_CD) \
-	  MOZ_PKG_FORMAT=SFX7Z \
-	  ZIP_IN='$(WIN32_INSTALLER_IN)' \
-	  ZIP_OUT='$(WIN32_INSTALLER_OUT)' \
-	  SFX_HEADER='$(PWD)/../installer/windows/l10ngen/7zSD.sfx \
-	              $(topsrcdir)/browser/installer/windows/app.tag'
-
-ifeq (WINNT,$(OS_ARCH))
-repackage-win32-installer-%: unpack
-	@$(MAKE) repackage-win32-installer AB_CD=$* WIN32_INSTALLER_IN='$(WIN32_INSTALLER_IN)'
-
-repackage-zip-%: repackage-win32-installer-%
-else
-repackage-win32-installer-%: ;
+	$(RM) -r $(STAGEDIST)/uninstall
+	$(NSINSTALL) -D $(STAGEDIST)/uninstall
+	cp ../installer/windows/l10ngen/helper.exe $(STAGEDIST)/uninstall
+	$(RM) $(ABS_DIST)/l10n-stage/setup.exe
+	cp ../installer/windows/l10ngen/setup.exe $(ABS_DIST)/l10n-stage
+	$(NSINSTALL) -D '$(ABS_DIST)/$(PKG_INST_PATH)'
+	(cd $(DIST)/l10n-stage; \
+	  $(MAKE_PACKAGE))
+	mv -f '$(DIST)/l10n-stage/$(PACKAGE)' '$(WIN32_INSTALLER_OUT)'
+	if test -f '$(DIST)/l10n-stage/$(PACKAGE).asc'; then mv -f '$(DIST)/l10n-stage/$(PACKAGE).asc' '$(WIN32_INSTALLER_OUT).asc'; fi
+ifdef MOZ_STUB_INSTALLER
+	$(RM) '$(ABS_DIST)/$(PKG_INST_PATH)$(PKG_STUB_BASENAME).exe'
+	cp ../installer/windows/l10ngen/stub.exe '$(ABS_DIST)/$(PKG_INST_PATH)$(PKG_STUB_BASENAME).exe'
+	chmod 0755 '$(ABS_DIST)/$(PKG_INST_PATH)$(PKG_STUB_BASENAME).exe'
 endif
 
 
@@ -165,7 +147,14 @@ langpack: langpack-$(AB_CD)
 # tinderbox scripts. Alter it with caution.
 
 installers-%: IS_LANGUAGE_REPACK=1
-installers-%: clobber-% langpack-% repackage-win32-installer-% repackage-zip-%
+installers-%:
+	@$(MAKE) clobber-$*
+	@$(MAKE) libs-$*
+	@$(MAKE) package-langpack-$*
+	@$(MAKE) repackage-zip-$*
+ifeq (WINNT,$(OS_ARCH))
+	@$(MAKE) package-win32-installer AB_CD=$*
+endif
 	@echo 'repackaging done'
 
 ifdef MOZ_UPDATER
@@ -212,6 +201,6 @@ l10n-check::
 	@# not being reset, overwriting the value they would get with MOZ_SIMPLE_PACKAGE_NAME
 	@# reset.
 	$(MAKE) installers-x-test L10NBASEDIR='$(PWD)' \
-	    ZIP_IN='$(ZIP_IN)' WIN32_INSTALLER_IN='$(WIN32_INSTALLER_IN)' MOZ_SIMPLE_PACKAGE_NAME=
+	    ZIP_IN='$(ZIP_IN)' MOZ_SIMPLE_PACKAGE_NAME=
 	$(PYTHON) $(topsrcdir)/toolkit/mozapps/installer/unpack.py $(DIST)/l10n-stage/$(MOZ_PKG_DIR)$(_RESPATH)
 	cd $(DIST)/l10n-stage && test $$(cat $(MOZ_PKG_DIR)$(_RESPATH)/update.locale) = x-test

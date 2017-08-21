@@ -1261,11 +1261,16 @@ SyncEngine.prototype = {
       }
     }
 
-    // Mobile: check if we got the maximum that we requested; get the rest if so.
+    // History: check if we got the maximum that we requested; get the rest if so.
     if (handled.length == newitems.limit) {
+      // XXX - this block appears to have no test coverage (eg, throwing here,
+      // or commenting the entire block causes no tests to fail.)
+      // See bug 1368951 comment 3 for some insightful analysis of why this
+      // might not be doing what we expect anyway, so it may be the case that
+      // this needs both fixing *and* tests.
       let guidColl = new Collection(this.engineURL, null, this.service);
 
-      // Sort and limit so that on mobile we only get the last X records.
+      // Sort and limit so that we only get the last X records.
       guidColl.limit = this.downloadLimit;
       guidColl.newer = this.lastSync;
 
@@ -1735,6 +1740,7 @@ SyncEngine.prototype = {
       // Remove the key for future uses
       delete this._delete[key];
 
+      this._log.trace("doing post-sync deletions", {key, val});
       // Send a simple delete for the property
       if (key != "ids" || val.length <= 100)
         await doDelete(key, val);

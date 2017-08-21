@@ -140,6 +140,7 @@ async function resolveConflict(engine, collection, timestamp, buildTree,
     collection.insert(record.id, encryptPayload(record), timestamp);
   }
 
+  engine.lastModified = collection.timestamp;
   await sync_engine_and_validate_telem(engine, false);
 
   let expectedTree = buildTree(guids);

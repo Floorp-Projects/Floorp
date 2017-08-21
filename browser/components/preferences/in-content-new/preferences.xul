@@ -177,7 +177,7 @@
 
     <html:a class="help-button" target="_blank" aria-label="&helpButton2.label;">&helpButton2.label;</html:a>
 
-    <vbox class="main-content" flex="1">
+    <vbox class="main-content" flex="1" align="start">
       <vbox class="pane-container">
         <hbox class="search-container" pack="end">
           <textbox type="search" id="searchInput" hidden="true" clickSelectsAll="true"/>

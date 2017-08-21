@@ -750,7 +750,10 @@ add_task(async function test_sync_dateAdded() {
 
     let bzguid = await PlacesUtils.promiseItemGuid(bzid);
 
-
+    // last sync did a POST, which doesn't advance its lastModified value.
+    // Next sync of the engine doesn't hit info/collections, so lastModified
+    // remains stale. Setting it to null side-steps that.
+    engine.lastModified = null;
     await sync_engine_and_validate_telem(engine, false);
 
     let newRecord2 = await store.createRecord(item2GUID);
@@ -764,8 +767,8 @@ add_task(async function test_sync_dateAdded() {
 
     item2.dateAdded += 10000;
     collection.insert(item2GUID, encryptPayload(item2.cleartext), now / 1000 - 10);
-    engine.lastSync = now / 1000 - 20;
 
+    engine.lastModified = null;
     await sync_engine_and_validate_telem(engine, false);
 
     let newerRecord2 = await store.createRecord(item2GUID);

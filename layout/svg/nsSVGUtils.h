@@ -379,10 +379,13 @@ public:
    * bottom right of its bbox).
    *
    * If the bbox is empty, this will return a singular matrix.
+   *
+   * @param aFlags One or more of the BBoxFlags values defined below.
    */
   static gfxMatrix AdjustMatrixForUnits(const gfxMatrix &aMatrix,
                                         nsSVGEnum *aUnits,
-                                        nsIFrame *aFrame);
+                                        nsIFrame *aFrame,
+                                        uint32_t aFlags);
 
   enum BBoxFlags {
     eBBoxIncludeFill           = 1 << 0,
@@ -392,11 +395,15 @@ public:
     eBBoxIncludeMarkers        = 1 << 4,
     eBBoxIncludeClipped        = 1 << 5,
     // Normally a getBBox call on outer-<svg> should only return the
-    // bounds of the elements children.  This flag will cause the
+    // bounds of the elements children. This flag will cause the
     // element's bounds to be returned instead.
     eUseFrameBoundsForOuterSVG = 1 << 6,
     // https://developer.mozilla.org/en-US/docs/Web/API/Element/getBoundingClientRect
     eForGetClientRects         = 1 << 7,
+    // If the given frame is an HTML element, only include the region of the
+    // given frame, instead of all continuations of it, while computing bbox if
+    // this flag is set.
+    eIncludeOnlyCurrentFrameForNonSVGElement = 1 << 8,
   };
   /**
    * This function in primarily for implementing the SVG DOM function getBBox()
@@ -410,7 +417,7 @@ public:
    *   obtained.
    * @param aFlags One or more of the BBoxFlags values defined above.
    * @param aToBoundsSpace If not specified the returned rect is in aFrame's
-   *   element's "user space".  A matrix can optionally be pass to specify a
+   *   element's "user space". A matrix can optionally be pass to specify a
    *   transform from aFrame's user space to the bounds space of interest
    *   (typically this will be the ancestor nsSVGOuterSVGFrame, but it could be
    *   to any other coordinate space).
