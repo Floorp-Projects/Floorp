@@ -301,11 +301,7 @@ BrowserGlue.prototype = {
   observe: function BG_observe(subject, topic, data) {
     switch (topic) {
       case "notifications-open-settings":
-        if (Services.prefs.getBoolPref("browser.preferences.useOldOrganization")) {
-          this._openPreferences("content", { origin: "notifOpenSettings" });
-        } else {
-          this._openPreferences("privacy", { origin: "notifOpenSettings" });
-        }
+        this._openPreferences("privacy", { origin: "notifOpenSettings" });
         break;
       case "prefservice:after-app-defaults":
         this._onAppDefaults();

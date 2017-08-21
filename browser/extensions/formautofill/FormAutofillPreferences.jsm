@@ -29,8 +29,7 @@ const {ENABLED_AUTOFILL_ADDRESSES_PREF, ENABLED_AUTOFILL_CREDITCARDS_PREF} = For
 this.log = null;
 FormAutofillUtils.defineLazyLogGetter(this, this.EXPORTED_SYMBOLS[0]);
 
-function FormAutofillPreferences({useOldOrganization}) {
-  this.useOldOrganization = useOldOrganization;
+function FormAutofillPreferences() {
   this.bundle = Services.strings.createBundle(BUNDLE_URI);
 }
 
@@ -62,7 +61,7 @@ FormAutofillPreferences.prototype = {
    * @param  {XULDocument} document
    */
   createPreferenceGroup(document) {
-    let formAutofillGroup;
+    let formAutofillGroup = document.createElementNS(XUL_NS, "vbox");
     let addressAutofill = document.createElementNS(XUL_NS, "hbox");
     let addressAutofillCheckbox = document.createElementNS(XUL_NS, "checkbox");
     let savedAddressesBtn = document.createElementNS(XUL_NS, "button");
@@ -70,22 +69,8 @@ FormAutofillPreferences.prototype = {
     let creditCardAutofillCheckbox = document.createElementNS(XUL_NS, "checkbox");
     let savedCreditCardsBtn = document.createElementNS(XUL_NS, "button");
 
-    if (this.useOldOrganization) {
-      let caption = document.createElementNS(XUL_NS, "caption");
-      let captionLabel = document.createElementNS(XUL_NS, "label");
-
-      formAutofillGroup = document.createElementNS(XUL_NS, "groupbox");
-      formAutofillGroup.hidden = document.location.href != "about:preferences#privacy";
-      // Use .setAttribute because HTMLElement.dataset is not available on XUL elements
-      formAutofillGroup.setAttribute("data-category", "panePrivacy");
-      formAutofillGroup.appendChild(caption);
-      caption.appendChild(captionLabel);
-      captionLabel.textContent = this.bundle.GetStringFromName("preferenceGroupTitle");
-    } else {
-      formAutofillGroup = document.createElementNS(XUL_NS, "vbox");
-      savedAddressesBtn.className = "accessory-button";
-      savedCreditCardsBtn.className = "accessory-button";
-    }
+    savedAddressesBtn.className = "accessory-button";
+    savedCreditCardsBtn.className = "accessory-button";
 
     this.refs = {
       formAutofillGroup,
