@@ -8,30 +8,6 @@
   background-color: hsla(0,0%,100%,.97);
 }
 
-.panelUI-grid .toolbarbutton-1 {
-  margin-right: 0;
-  margin-left: 0;
-  margin-bottom: 0;
-}
-
-.subviewbutton > .toolbarbutton-text {
-  margin: 2px 0 !important; /* !important for overriding toolbarbutton.css */
-}
-
-.subviewbutton:-moz-any([image],[targetURI],.cui-withicon, .bookmark-item) > .toolbarbutton-text {
-  margin: 2px 6px !important; /* !important for overriding toolbarbutton.css */
-}
-
-/* START photon adjustments */
-
-photonpanelmultiview .subviewbutton > .toolbarbutton-text,
-photonpanelmultiview .subviewbutton:-moz-any([image],[targetURI],.cui-withicon, .bookmark-item) > .toolbarbutton-text,
-photonpanelmultiview .panel-banner-item > .toolbarbutton-multiline-text {
-  margin: 0 !important;  /* !important for overriding the rules above. */
-}
-
-/* END photon adjustments */
-
 .restoreallitem > .toolbarbutton-icon {
   display: none;
 }
@@ -41,21 +17,15 @@ photonpanelmultiview .panel-banner-item > .toolbarbutton-multiline-text {
 }
 
 .subviewbutton[checked="true"] {
-  background-position: top 5px left 4px;
+  background-position: top 7px left 4px;
 }
 
 .subviewbutton[checked="true"]:-moz-locale-dir(rtl) {
-  background-position: top 5px right 4px;
+  background-position: top 7px right 4px;
 }
 
 .subviewbutton:not(:-moz-any([image],[targetURI],.cui-withicon, .bookmark-item)) > .menu-iconic-left {
   display: none;
-}
-
-menu.subviewbutton,
-menuitem.subviewbutton:not(.panel-subview-footer) {
-  padding-top: 2px;
-  padding-bottom: 2px;
 }
 
 /* Override OSX-specific toolkit styles for the bookmarks panel */
@@ -72,17 +42,9 @@ menu.subviewbutton > .menu-right > image {
   -moz-appearance: menuarrow;
 }
 
-.widget-overflow-list .toolbarbutton-1 > .toolbarbutton-menubutton-dropmarker {
-  margin-inline-start: 4px;
-}
-
 .PanelUI-subView menuseparator,
 .cui-widget-panelview menuseparator {
   padding: 0 !important;
-}
-
-toolbarpaletteitem[place="palette"] > .toolbarbutton-1 > .toolbarbutton-menubutton-button {
-  padding: 3px 1px;
 }
 
 #PanelUI-remotetabs-tabslist > label[itemtype="client"] {

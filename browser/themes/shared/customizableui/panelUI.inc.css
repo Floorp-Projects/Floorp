@@ -1192,53 +1192,73 @@ toolbaritem[cui-areatype="menu-panel"][sdkstylewidget="true"]:not(.panel-wide-it
   display: none;
 }
 
-panelview .toolbarbutton-1,
-.subviewbutton,
-.widget-overflow-list .toolbarbutton-1,
-.panelUI-grid .toolbarbutton-1 > .toolbarbutton-menubutton-button {
-  -moz-appearance: none;
-  padding: 0 6px;
-  background-color: transparent;
-  border-radius: 2px;
-  border-style: solid;
-  border-color: transparent;
-}
-
+.subview-subheader,
 panelview .toolbarbutton-1,
 .subviewbutton,
 .widget-overflow-list .toolbarbutton-1 {
-  border-width: 1px;
+  -moz-appearance: none;
+  margin: 0;
+  min-height: 24px;
+  padding: 4px 12px;
+  background-color: transparent;
 }
 
-.subviewbutton.panel-subview-footer {
-  border-radius: 0;
-  border: none;
+.subviewbutton:focus {
+  outline: 0;
+}
+
+.subviewbutton > .toolbarbutton-text {
+  padding: 0;
+  padding-inline-start: 24px; /* This is 16px for the icon + 8px for the padding as defined above. */
+}
+
+.subviewbutton > .menu-right,
+.subviewbutton > .menu-accel-container > .menu-iconic-accel,
+.subviewbutton > .menu-iconic-left,
+.subviewbutton > .menu-iconic-text {
+  padding-bottom: 0;
+  padding-top: 0;
+}
+
+.subviewbutton-iconic > .toolbarbutton-text,
+.cui-withicon > .toolbarbutton-text,
+.subviewbutton[image] > .toolbarbutton-text,
+.subviewbutton[targetURI] > .toolbarbutton-text,
+.subviewbutton.restoreallitem > .toolbarbutton-text,
+.subviewbutton.bookmark-item > .toolbarbutton-text,
+.subviewbutton[checked="true"] > .toolbarbutton-text {
+  padding-inline-start: 8px; /* See '.subviewbutton-iconic > .toolbarbutton-text' rule above. */
+}
+
+.panel-banner-item > .toolbarbutton-multiline-text {
+  font: menu;
+  margin: 0;
+  padding: 0;
+  padding-inline-start: 8px; /* See '.subviewbutton-iconic > .toolbarbutton-text' rule above. */
+}
+
+.subviewbutton-iconic > .toolbarbutton-icon {
+  width: 16px;
+  height: 16px;
+  -moz-context-properties: fill;
+  fill: currentColor;
+}
+
+/* We don't always display: none this item, and if it has forced width (like above)
+ * or margin, that impacts the position of the label. Fix:
+ */
+.subviewbutton > .toolbarbutton-icon {
+  margin: 0;
 }
 
 .subviewbutton.panel-subview-footer > .menu-text {
   -moz-appearance: none;
-  margin-inline-start: 0px !important;
-  padding-inline-start: 6px;
   padding-inline-end: 6px;
   -moz-box-flex: 0;
-  text-align: center;
-}
-
-.subviewbutton.panel-subview-footer > .toolbarbutton-icon {
-  margin: 0;
-}
-
-panelview:not([mainView]) .subviewbutton.panel-subview-footer > .toolbarbutton-text {
-  text-align: center;
-  padding: 0;
 }
 
 .subviewbutton.panel-subview-footer > .menu-accel-container {
   padding-inline-start: 6px;
-}
-
-.subviewbutton:not(.panel-subview-footer) {
-  margin: 0;
 }
 
 #widget-overflow-fixed-list .toolbarbutton-1 > .toolbarbutton-text,
@@ -1280,54 +1300,7 @@ panelview:not([mainView]) .subviewbutton.panel-subview-footer > .toolbarbutton-t
   color: inherit;
 }
 
-.cui-widget-panelview .subviewbutton:not(.panel-subview-footer) {
-  margin-left: 4px;
-  margin-right: 4px;
-}
-
 /* START photon adjustments */
-
-.widget-overflow-list > toolbarpaletteitem[place=panel] .toolbarbutton-1,
-photonpanelmultiview .widget-overflow-list .toolbarbutton-1,
-photonpanelmultiview .PanelUI-subView .subviewbutton,
-photonpanelmultiview .cui-widget-panelview .subviewbutton:not(.panel-subview-footer),
-photonpanelmultiview .subview-subheader {
-  border-radius: 0;
-  border-width: 0;
-  margin: 0;
-  padding: 4px 12px;
-}
-
-photonpanelmultiview .subviewbutton:focus {
-  outline: 0;
-}
-
-photonpanelmultiview .subviewbutton > .toolbarbutton-text {
-  padding: 0;
-  padding-inline-start: 24px; /* This is 16px for the icon + 8px for the padding as defined above. */
-}
-
-photonpanelmultiview .subviewbutton-iconic > .toolbarbutton-text,
-photonpanelmultiview .cui-withicon > .toolbarbutton-text,
-photonpanelmultiview .subviewbutton[image] > .toolbarbutton-text,
-photonpanelmultiview .subviewbutton[checked="true"] > .toolbarbutton-text {
-  padding-inline-start: 8px; /* See '.subviewbutton-iconic > .toolbarbutton-text' rule above. */
-}
-
-photonpanelmultiview .panel-banner-item > .toolbarbutton-multiline-text {
-  font: menu;
-  padding: 0;
-  padding-inline-start: 8px; /* See '.subviewbutton-iconic > .toolbarbutton-text' rule above. */
-}
-
-photonpanelmultiview .subviewbutton-iconic > .toolbarbutton-icon {
-  width: 16px;
-}
-
-photonpanelmultiview .subviewbutton {
-  -moz-context-properties: fill;
-  fill: currentColor;
-}
 
 photonpanelmultiview .subviewbutton[checked="true"] {
   background: none;
@@ -1406,10 +1379,6 @@ photonpanelmultiview .panel-subview-footer {
   font: menu;
 }
 
-photonpanelmultiview panelview:not([mainView]) .subviewbutton.panel-subview-footer > .toolbarbutton-text {
-  text-align: start;
-}
-
 /* END photon adjustments */
 
 panelview .toolbarbutton-1 {
@@ -1423,11 +1392,6 @@ menuitem.subviewbutton@menuStateHover@,
 .widget-overflow-list .toolbarbutton-1@buttonStateHover@,
 .toolbaritem-combined-buttons@inAnyPanel@ > toolbarbutton@buttonStateHover@ {
   background-color: var(--arrowpanel-dimmed);
-  border-color: var(--panel-separator-color);
-}
-
-.toolbaritem-combined-buttons@inAnyPanel@@buttonStateHover@ {
-  border-color: var(--panel-separator-color);
 }
 
 panelview .toolbarbutton-1:-moz-any(@buttonStateActive@,[checked=true]),
@@ -1437,7 +1401,6 @@ menuitem.subviewbutton@menuStateActive@,
 .widget-overflow-list .toolbarbutton-1@buttonStateActive@,
 .toolbaritem-combined-buttons@inAnyPanel@ > toolbarbutton@buttonStateActive@ {
   background-color: var(--arrowpanel-dimmed-further);
-  border-color: var(--panel-separator-color);
   box-shadow: 0 1px 0 hsla(210,4%,10%,.03) inset;
 }
 
@@ -1710,14 +1673,12 @@ toolbaritem[overflowedItem=true],
   background-position: 0 center;
 }
 
-.widget-overflow-list .toolbarbutton-1,
-.widget-overflow-list .toolbarbutton-1 > .toolbarbutton-menubutton-button {
+.widget-overflow-list .toolbarbutton-1 {
   -moz-box-align: center;
   -moz-box-orient: horizontal;
 }
 
-.widget-overflow-list .toolbarbutton-1:not(.toolbarbutton-combined) > .toolbarbutton-text,
-.widget-overflow-list .toolbarbutton-1 > .toolbarbutton-menubutton-button > .toolbarbutton-text {
+.widget-overflow-list .toolbarbutton-1:not(.toolbarbutton-combined) > .toolbarbutton-text {
   text-align: start;
   padding-inline-start: .5em;
 }
@@ -2032,10 +1993,6 @@ menuitem[checked="true"].subviewbutton > .menu-iconic-left {
   #PanelUI-menu-button[badge-status="update-restart"] > .toolbarbutton-badge-stack > .toolbarbutton-badge {
     border: 1px solid -moz-dialog;
   }
-}
-
-.subviewbutton-iconic > .toolbarbutton-text {
-  padding-inline-start: 5px;
 }
 
 /* START photon adjustments */
