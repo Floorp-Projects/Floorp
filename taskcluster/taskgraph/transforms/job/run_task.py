@@ -22,10 +22,6 @@ run_task_schema = Schema({
     # if true (the default), perform a checkout in /home/worker/checkouts/gecko
     Required('checkout', default=True): bool,
 
-    # if true, perform a checkout of a comm-central based branch inside the
-    # gecko checkout
-    Required('comm-checkout', default=False): bool,
-
     # The command arguments to pass to the `run-task` script, after the
     # checkout arguments.  If a list, it will be passed directly; otherwise
     # it will be included in a single argument to `bash -cx`.
@@ -60,8 +56,6 @@ def docker_worker_run_task(config, job, taskdesc):
     command = ['/home/worker/bin/run-task']
     if run['checkout']:
         command.append('--vcs-checkout=~/checkouts/gecko')
-    if run['comm-checkout']:
-        command.append('--comm-checkout=/home/worker/checkouts/gecko/comm')
     command.append('--fetch-hgfingerprint')
     command.append('--')
     command.extend(run_command)
