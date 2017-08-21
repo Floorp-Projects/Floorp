@@ -4,7 +4,7 @@
 /*                                                                         */
 /*    FreeType PFR driver component.                                       */
 /*                                                                         */
-/*  Copyright 2002-2017 by                                                 */
+/*  Copyright 2002-2016 by                                                 */
 /*  David Turner, Robert Wilhelm, and Werner Lemberg.                      */
 /*                                                                         */
 /*  This file is part of the FreeType project, and may only be used,       */
@@ -15,16 +15,15 @@
 /*                                                                         */
 /***************************************************************************/
 
-
 #define FT_MAKE_OPTION_SINGLE_OBJECT
+
 #include <ft2build.h>
 
-#include "pfrcmap.c"
-#include "pfrdrivr.c"
-#include "pfrgload.c"
 #include "pfrload.c"
+#include "pfrgload.c"
+#include "pfrcmap.c"
 #include "pfrobjs.c"
+#include "pfrdrivr.c"
 #include "pfrsbit.c"
-
 
 /* END */

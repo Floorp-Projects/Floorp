@@ -4,7 +4,7 @@
 /*                                                                         */
 /*    FreeType Multiple Master font interface (specification).             */
 /*                                                                         */
-/*  Copyright 1996-2017 by                                                 */
+/*  Copyright 1996-2016 by                                                 */
 /*  David Turner, Robert Wilhelm, and Werner Lemberg.                      */
 /*                                                                         */
 /*  This file is part of the FreeType project, and may only be used,       */
@@ -43,10 +43,11 @@ FT_BEGIN_HEADER
   /*    Master fonts, i.e., the selection of specific design instances by  */
   /*    setting design axis coordinates.                                   */
   /*                                                                       */
-  /*    Besides Adobe MM fonts, the interface supports Apple's TrueType GX */
-  /*    and OpenType variation fonts.  Some of the routines only work with */
-  /*    Adobe MM fonts, others will work with all three types.  They are   */
-  /*    similar enough that a consistent interface makes sense.            */
+  /*    George Williams has extended this interface to make it work with   */
+  /*    both Type~1 Multiple Masters fonts and GX distortable (var)        */
+  /*    fonts.  Some of these routines only work with MM fonts, others     */
+  /*    will work with both types.  They are similar enough that a         */
+  /*    consistent interface makes sense.                                  */
   /*                                                                       */
   /*************************************************************************/
 
@@ -57,11 +58,10 @@ FT_BEGIN_HEADER
   /*    FT_MM_Axis                                                         */
   /*                                                                       */
   /* <Description>                                                         */
-  /*    A structure to model a given axis in design space for Multiple     */
-  /*    Masters fonts.                                                     */
+  /*    A simple structure used to model a given axis in design space for  */
+  /*    Multiple Masters fonts.                                            */
   /*                                                                       */
-  /*    This structure can't be used for TrueType GX or OpenType variation */
-  /*    fonts.                                                             */
+  /*    This structure can't be used for GX var fonts.                     */
   /*                                                                       */
   /* <Fields>                                                              */
   /*    name    :: The axis's name.                                        */
@@ -85,11 +85,10 @@ FT_BEGIN_HEADER
   /*    FT_Multi_Master                                                    */
   /*                                                                       */
   /* <Description>                                                         */
-  /*    A structure to model the axes and space of a Multiple Masters      */
+  /*    A structure used to model the axes and space of a Multiple Masters */
   /*    font.                                                              */
   /*                                                                       */
-  /*    This structure can't be used for TrueType GX or OpenType variation */
-  /*    fonts.                                                             */
+  /*    This structure can't be used for GX var fonts.                     */
   /*                                                                       */
   /* <Fields>                                                              */
   /*    num_axis    :: Number of axes.  Cannot exceed~4.                   */
@@ -116,35 +115,27 @@ FT_BEGIN_HEADER
   /*    FT_Var_Axis                                                        */
   /*                                                                       */
   /* <Description>                                                         */
-  /*    A structure to model a given axis in design space for Multiple     */
-  /*    Masters, TrueType GX, and OpenType variation fonts.                */
+  /*    A simple structure used to model a given axis in design space for  */
+  /*    Multiple Masters and GX var fonts.                                 */
   /*                                                                       */
   /* <Fields>                                                              */
   /*    name    :: The axis's name.                                        */
-  /*               Not always meaningful for TrueType GX or OpenType       */
-  /*               variation fonts.                                        */
+  /*               Not always meaningful for GX.                           */
   /*                                                                       */
   /*    minimum :: The axis's minimum design coordinate.                   */
   /*                                                                       */
   /*    def     :: The axis's default design coordinate.                   */
-  /*               FreeType computes meaningful default values for Adobe   */
-  /*               MM fonts.                                               */
+  /*               FreeType computes meaningful default values for MM; it  */
+  /*               is then an integer value, not in 16.16 format.          */
   /*                                                                       */
   /*    maximum :: The axis's maximum design coordinate.                   */
   /*                                                                       */
-  /*    tag     :: The axis's tag (the equivalent to `name' for TrueType   */
-  /*               GX and OpenType variation fonts).  FreeType provides    */
-  /*               default values for Adobe MM fonts if possible.          */
+  /*    tag     :: The axis's tag (the GX equivalent to `name').           */
+  /*               FreeType provides default values for MM if possible.    */
   /*                                                                       */
-  /*    strid   :: The axis name entry in the font's `name' table.  This   */
-  /*               is another (and often better) version of the `name'     */
-  /*               field for TrueType GX or OpenType variation fonts.  Not */
-  /*               meaningful for Adobe MM fonts.                          */
-  /*                                                                       */
-  /* <Note>                                                                */
-  /*    The fields `minimum', `def', and `maximum' are 16.16 fractional    */
-  /*    values for TrueType GX and OpenType variation fonts.  For Adobe MM */
-  /*    fonts, the values are integers.                                    */
+  /*    strid   :: The entry in `name' table (another GX version of        */
+  /*               `name').                                                */
+  /*               Not meaningful for MM.                                  */
   /*                                                                       */
   typedef struct  FT_Var_Axis_
   {
@@ -166,19 +157,15 @@ FT_BEGIN_HEADER
   /*    FT_Var_Named_Style                                                 */
   /*                                                                       */
   /* <Description>                                                         */
-  /*    A structure to model a named instance in a TrueType GX or OpenType */
-  /*    variation font.                                                    */
+  /*    A simple structure used to model a named style in a GX var font.   */
   /*                                                                       */
-  /*    This structure can't be used for Adobe MM fonts.                   */
+  /*    This structure can't be used for MM fonts.                         */
   /*                                                                       */
   /* <Fields>                                                              */
-  /*    coords :: The design coordinates for this instance.                */
+  /*    coords :: The design coordinates for this style.                   */
   /*              This is an array with one entry for each axis.           */
   /*                                                                       */
-  /*    strid  :: The entry in `name' table identifying this instance.     */
-  /*                                                                       */
-  /*    psid   :: The entry in `name' table identifying a PostScript name  */
-  /*              for this instance.                                       */
+  /*    strid  :: The entry in `name' table identifying this style.        */
   /*                                                                       */
   typedef struct  FT_Var_Named_Style_
   {
@@ -195,19 +182,17 @@ FT_BEGIN_HEADER
   /*    FT_MM_Var                                                          */
   /*                                                                       */
   /* <Description>                                                         */
-  /*    A structure to model the axes and space of a Adobe MM, TrueType    */
-  /*    GX, or OpenType variation font.                                    */
+  /*    A structure used to model the axes and space of a Multiple Masters */
+  /*    or GX var distortable font.                                        */
   /*                                                                       */
-  /*    Some fields are specific to one format and not to the others.      */
+  /*    Some fields are specific to one format and not to the other.       */
   /*                                                                       */
   /* <Fields>                                                              */
   /*    num_axis        :: The number of axes.  The maximum value is~4 for */
-  /*                       Adobe MM fonts; no limit in TrueType GX or      */
-  /*                       OpenType variation fonts.                       */
+  /*                       MM; no limit in GX.                             */
   /*                                                                       */
   /*    num_designs     :: The number of designs; should be normally       */
-  /*                       2^num_axis for Adobe MM fonts.  Not meaningful  */
-  /*                       for TrueType GX or OpenType variation fonts     */
+  /*                       2^num_axis for MM fonts.  Not meaningful for GX */
   /*                       (where every glyph could have a different       */
   /*                       number of designs).                             */
   /*                                                                       */
@@ -215,23 +200,21 @@ FT_BEGIN_HEADER
   /*                       a tuple of design coordinates that has a string */
   /*                       ID (in the `name' table) associated with it.    */
   /*                       The font can tell the user that, for example,   */
-  /*                       [Weight=1.5,Width=1.1] is `Bold'.  Another name */
-  /*                       for `named style' is `named instance'.          */
+  /*                       [Weight=1.5,Width=1.1] is `Bold'.               */
   /*                                                                       */
-  /*                       For Adobe Multiple Masters fonts, this value is */
-  /*                       always zero because the format does not support */
-  /*                       named styles.                                   */
+  /*                       For Type 1 Multiple Masters fonts, this value   */
+  /*                       is always zero because the format does not      */
+  /*                       support named styles.                           */
   /*                                                                       */
   /*    axis            :: An axis descriptor table.                       */
-  /*                       TrueType GX and OpenType variation fonts        */
-  /*                       contain slightly more data than Adobe MM fonts. */
+  /*                       GX fonts contain slightly more data than MM.    */
   /*                       Memory management of this pointer is done       */
   /*                       internally by FreeType.                         */
   /*                                                                       */
-  /*    namedstyle      :: A named style (instance) table.                 */
-  /*                       Only meaningful for TrueType GX and OpenType    */
-  /*                       variation fonts.  Memory management of this     */
-  /*                       pointer is done internally by FreeType.         */
+  /*    namedstyle      :: A named style table.                            */
+  /*                       Only meaningful with GX.                        */
+  /*                       Memory management of this pointer is done       */
+  /*                       internally by FreeType.                         */
   /*                                                                       */
   typedef struct  FT_MM_Var_
   {
@@ -250,10 +233,9 @@ FT_BEGIN_HEADER
   /*    FT_Get_Multi_Master                                                */
   /*                                                                       */
   /* <Description>                                                         */
-  /*    Retrieve a variation descriptor of a given Adobe MM font.          */
+  /*    Retrieve the Multiple Master descriptor of a given font.           */
   /*                                                                       */
-  /*    This function can't be used with TrueType GX or OpenType variation */
-  /*    fonts.                                                             */
+  /*    This function can't be used with GX fonts.                         */
   /*                                                                       */
   /* <Input>                                                               */
   /*    face    :: A handle to the source face.                            */
@@ -275,15 +257,13 @@ FT_BEGIN_HEADER
   /*    FT_Get_MM_Var                                                      */
   /*                                                                       */
   /* <Description>                                                         */
-  /*    Retrieve a variation descriptor for a given font.                  */
-  /*                                                                       */
-  /*    This function works with all supported variation formats.          */
+  /*    Retrieve the Multiple Master/GX var descriptor of a given font.    */
   /*                                                                       */
   /* <Input>                                                               */
   /*    face    :: A handle to the source face.                            */
   /*                                                                       */
   /* <Output>                                                              */
-  /*    amaster :: The variation descriptor.                               */
+  /*    amaster :: The Multiple Masters/GX var descriptor.                 */
   /*               Allocates a data structure, which the user must         */
   /*               deallocate with `free' after use.                       */
   /*                                                                       */
@@ -301,11 +281,10 @@ FT_BEGIN_HEADER
   /*    FT_Set_MM_Design_Coordinates                                       */
   /*                                                                       */
   /* <Description>                                                         */
-  /*    For Adobe MM fonts, choose an interpolated font design through     */
-  /*    design coordinates.                                                */
+  /*    For Multiple Masters fonts, choose an interpolated font design     */
+  /*    through design coordinates.                                        */
   /*                                                                       */
-  /*    This function can't be used with TrueType GX or OpenType variation */
-  /*    fonts.                                                             */
+  /*    This function can't be used with GX fonts.                         */
   /*                                                                       */
   /* <InOut>                                                               */
   /*    face       :: A handle to the source face.                         */
@@ -333,9 +312,8 @@ FT_BEGIN_HEADER
   /*    FT_Set_Var_Design_Coordinates                                      */
   /*                                                                       */
   /* <Description>                                                         */
-  /*    Choose an interpolated font design through design coordinates.     */
-  /*                                                                       */
-  /*    This function works with all supported variation formats.          */
+  /*    For Multiple Master or GX Var fonts, choose an interpolated font   */
+  /*    design through design coordinates.                                 */
   /*                                                                       */
   /* <InOut>                                                               */
   /*    face       :: A handle to the source face.                         */
@@ -363,10 +341,8 @@ FT_BEGIN_HEADER
   /*    FT_Get_Var_Design_Coordinates                                      */
   /*                                                                       */
   /* <Description>                                                         */
-  /*    Get the design coordinates of the currently selected interpolated  */
-  /*    font.                                                              */
-  /*                                                                       */
-  /*    This function works with all supported variation formats.          */
+  /*    For Multiple Master and GX Var fonts, get the design coordinates   */
+  /*    of the currently selected interpolated font.                       */
   /*                                                                       */
   /* <Input>                                                               */
   /*    face       :: A handle to the source face.                         */
@@ -393,10 +369,8 @@ FT_BEGIN_HEADER
   /*    FT_Set_MM_Blend_Coordinates                                        */
   /*                                                                       */
   /* <Description>                                                         */
-  /*    Choose an interpolated font design through normalized blend        */
-  /*    coordinates.                                                       */
-  /*                                                                       */
-  /*    This function works with all supported variation formats.          */
+  /*    For Multiple Masters and GX var fonts, choose an interpolated font */
+  /*    design through normalized blend coordinates.                       */
   /*                                                                       */
   /* <InOut>                                                               */
   /*    face       :: A handle to the source face.                         */
@@ -408,9 +382,8 @@ FT_BEGIN_HEADER
   /*                  use default values for the remaining axes.           */
   /*                                                                       */
   /*    coords     :: The design coordinates array (each element must be   */
-  /*                  between 0 and 1.0 for Adobe MM fonts, and between    */
-  /*                  -1.0 and 1.0 for TrueType GX and OpenType variation  */
-  /*                  fonts).                                              */
+  /*                  between 0 and 1.0 for MM fonts, and between -1.0 and */
+  /*                  1.0 for GX var fonts).                               */
   /*                                                                       */
   /* <Return>                                                              */
   /*    FreeType error code.  0~means success.                             */
@@ -427,18 +400,16 @@ FT_BEGIN_HEADER
   /*    FT_Get_MM_Blend_Coordinates                                        */
   /*                                                                       */
   /* <Description>                                                         */
-  /*    Get the normalized blend coordinates of the currently selected     */
-  /*    interpolated font.                                                 */
-  /*                                                                       */
-  /*    This function works with all supported variation formats.          */
+  /*    For Multiple Masters and GX var fonts, get the normalized blend    */
+  /*    coordinates of the currently selected interpolated font.           */
   /*                                                                       */
   /* <Input>                                                               */
   /*    face       :: A handle to the source face.                         */
   /*                                                                       */
   /*    num_coords :: The number of normalized blend coordinates to        */
   /*                  retrieve.  If it is larger than the number of axes,  */
-  /*                  set the excess values to~0.5 for Adobe MM fonts, and */
-  /*                  to~0 for TrueType GX and OpenType variation fonts.   */
+  /*                  set the excess values to~0.5 for MM fonts, and to~0  */
+  /*                  for GX var fonts.                                    */
   /*                                                                       */
   /* <Output>                                                              */
   /*    coords     :: The normalized blend coordinates array.              */
