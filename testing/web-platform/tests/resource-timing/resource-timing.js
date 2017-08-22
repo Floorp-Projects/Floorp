@@ -54,7 +54,7 @@ window.onload =
                     }
             },
             {
-                description: "Setting 'document.domain' does not affect same-origin checks",
+                description: "Setting 'document.domain' does not effect same-origin checks",
                 test:
                     function (test) {
                         initiateFetch(
@@ -74,7 +74,7 @@ window.onload =
                                 // verify that the following non-zero properties return their value.
                                 ["domainLookupStart", "domainLookupEnd", "connectStart", "connectEnd"]
                                     .forEach(function(property) {
-                                        assert_greater_than(entry[property], 0,
+                                        assert_greater_than(entry.connectEnd, 0,
                                             "Property should be non-zero because timing allow check ignores 'document.domain'.");
                                     });
                                 test.done();
