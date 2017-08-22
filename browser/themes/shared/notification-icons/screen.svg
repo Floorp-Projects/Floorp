@@ -1,7 +1,7 @@
 <!-- This Source Code Form is subject to the terms of the Mozilla Public
    - License, v. 2.0. If a copy of the MPL was not distributed with this
    - file, You can obtain one at http://mozilla.org/MPL/2.0/. -->
-<svg fill="context-fill" fill-opacity="context-fill-opacity" xmlns="http://www.w3.org/2000/svg"
-     width="32" height="32" viewBox="0 0 32 32">
-#include screen-icon.inc.svg
+<svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="context-fill" fill-opacity="context-fill-opacity">
+  <path d="M15 6H7a1 1 0 0 0-1 1v7a1 1 0 0 0 1 1h8a1 1 0 0 0 1-1V7a1 1 0 0 0-1-1zm-1 7H8V8h6z"/>
+  <path d="M4 8H2V3h6v1a1 1 0 0 0 2 0V2a1 1 0 0 0-1-1H1a1 1 0 0 0-1 1v7a1 1 0 0 0 1 1h3a1 1 0 0 0 0-2z"/>
 </svg>

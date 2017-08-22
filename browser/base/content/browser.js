@@ -673,7 +673,7 @@ var gPopupBlockerObserver = {
 
           const priority = notificationBox.PRIORITY_WARNING_MEDIUM;
           notificationBox.appendNotification(message, "popup-blocked",
-                                             "chrome://browser/skin/Info.png",
+                                             "chrome://browser/skin/notification-icons/popup.svg",
                                              priority, buttons);
         }
       }

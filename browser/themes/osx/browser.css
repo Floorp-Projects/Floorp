@@ -564,29 +564,6 @@ html|span.ac-emphasize-text-url {
   margin-bottom: -26px;
 }
 
-/* POPUP BLOCKER BUTTON */
-#page-report-button {
-  list-style-image: url("chrome://browser/skin/urlbar-popup-blocked.png");
-  -moz-image-region: rect(0, 16px, 16px, 0);
-}
-
-#page-report-button:hover:active,
-#page-report-button[open="true"] {
-  -moz-image-region: rect(0, 32px, 16px, 16px);
-}
-
-@media (min-resolution: 2dppx) {
-  #page-report-button {
-    list-style-image: url("chrome://browser/skin/urlbar-popup-blocked@2x.png");
-    -moz-image-region: rect(0, 32px, 32px, 0);
-  }
-
-  #page-report-button:hover:active,
-  #page-report-button[open="true"] {
-    -moz-image-region: rect(0, 64px, 32px, 32px);
-  }
-}
-
 /* BOOKMARKING PANEL */
 #editBookmarkPanelStarIcon {
   list-style-image: url("chrome://browser/skin/places/starred48.png");

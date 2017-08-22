@@ -110,15 +110,6 @@ toolbar[brighttext] .toolbarbutton-1 {
   color: #30e60b;
 }
 
-#identity-icon:-moz-lwtheme-brighttext,
-#tracking-protection-icon:-moz-lwtheme-brighttext,
-#connection-icon:-moz-lwtheme-brighttext,
-.notification-anchor-icon:-moz-lwtheme-brighttext,
-#blocked-permissions-container > .blocked-permission-icon:-moz-lwtheme-brighttext,
-#extension-icon:-moz-lwtheme-brighttext {
-  fill: rgba(255,255,255,.7);
-}
-
 #urlbar-zoom-button:-moz-lwtheme-brighttext:hover {
   background-color: rgba(255,255,255,.2);
 }
