@@ -47,7 +47,6 @@
   vertical-align: top;
 }
 
-#onboarding-notification-icon::after,
 #onboarding-overlay-button::after {
   background: #5ce6e6;
   font-size: 12px;
@@ -55,9 +54,6 @@
   text-align: center;
   color: #10404a;
   box-sizing: content-box;
-}
-
-#onboarding-overlay-button::after {
   content: attr(aria-label);
   display: inline-block;
   offset-inline-start: 39px;
@@ -482,33 +478,6 @@
   transform: translateY(0px);
 }
 
-#onboarding-notification-icon {
-  height: 36px;
-  background: url("img/overlay-icon.svg") no-repeat;
-  background-size: 36px;
-  background-position: 34px;
-  padding-inline-start: 190px;
-  position: absolute;
-  offset-block-start: 50%;
-  transform: translateY(-50%);
-}
-
-#onboarding-notification-icon:dir(rtl) {
-  background-position: right 34px center;
-}
-
-#onboarding-notification-icon::after {
-  --height: 22px;
-  --vpadding: 3px;
-  position: absolute;
-  content: attr(aria-label);
-  top: 0;
-  offset-inline-start: 73px;
-  line-height: calc(var(--height) - var(--vpadding) * 2);
-  border-radius: calc(var(--height) / 2);
-  padding: var(--vpadding) 10px;
-}
-
 #onboarding-notification-close-btn {
   position: absolute;
   offset-block-start: 50%;
@@ -564,11 +533,6 @@
   min-width: 130px;
 }
 
-@media all and (max-width: 960px) {
-  #onboarding-notification-icon {
-    display: none;
-  }
-}
 @media all and (max-width: 720px) {
   #onboarding-notification-body {
     width: 340px;
