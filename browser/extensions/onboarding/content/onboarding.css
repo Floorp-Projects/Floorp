@@ -361,10 +361,6 @@
   background-image: url("img/icons_singlesearch-colored.svg");
 }
 
-#onboarding-notification-bar[data-target-tour-id=onboarding-tour-singlesearch] #onboarding-notification-tour-icon {
-  background-image: url("img/icons_singlesearch-notification.svg");
-}
-
 #onboarding-tour-private-browsing {
   background-image: url("img/icons_private.svg");
 }
@@ -372,10 +368,6 @@
 #onboarding-tour-private-browsing.onboarding-active,
 #onboarding-tour-private-browsing:hover {
   background-image: url("img/icons_private-colored.svg");
-}
-
-#onboarding-notification-bar[data-target-tour-id=onboarding-tour-private-browsing] #onboarding-notification-tour-icon {
-  background-image: url("img/icons_private-notification.svg");
 }
 
 #onboarding-tour-addons {
@@ -387,10 +379,6 @@
   background-image: url("img/icons_addons-colored.svg");
 }
 
-#onboarding-notification-bar[data-target-tour-id=onboarding-tour-addons] #onboarding-notification-tour-icon {
-  background-image: url("img/icons_addons-notification.svg");
-}
-
 #onboarding-tour-customize {
   background-image: url("img/icons_customize.svg");
 }
@@ -400,11 +388,6 @@
   background-image: url("img/icons_customize-colored.svg");
 }
 
-#onboarding-notification-bar[data-target-tour-id=onboarding-tour-customize] #onboarding-notification-tour-icon {
-  background-image: url("img/icons_customize-notification.svg");
-}
-
-
 #onboarding-tour-default-browser {
   background-image: url("img/icons_default.svg");
 }
@@ -412,10 +395,6 @@
 #onboarding-tour-default-browser.onboarding-active,
 #onboarding-tour-default-browser:hover {
   background-image: url("img/icons_default-colored.svg");
-}
-
-#onboarding-notification-bar[data-target-tour-id=onboarding-tour-default-browser] #onboarding-notification-tour-icon {
-  background-image: url("img/icons_default-notification.svg");
 }
 
 #onboarding-tour-sync {
@@ -427,10 +406,6 @@
   background-image: url("img/icons_sync-colored.svg");
 }
 
-#onboarding-notification-bar[data-target-tour-id=onboarding-tour-sync] #onboarding-notification-tour-icon {
-  background-image: url("img/icons_sync-notification.svg");
-}
-
 #onboarding-tour-library {
   background-image: url("img/icons_library.svg");
 }
@@ -440,10 +415,6 @@
   background-image: url("img/icons_library-colored.svg");
 }
 
-#onboarding-notification-bar[data-target-tour-id=onboarding-tour-library] #onboarding-notification-tour-icon {
-  background-image: url("img/icons_library-notification.svg");
-}
-
 #onboarding-tour-performance {
   background-image: url("img/icons_performance.svg");
 }
@@ -451,10 +422,6 @@
 #onboarding-tour-performance.onboarding-active,
 #onboarding-tour-performance:hover {
   background-image: url("img/icons_performance-colored.svg");
-}
-
-#onboarding-notification-bar[data-target-tour-id=onboarding-tour-performance] #onboarding-notification-tour-icon {
-  background-image: url("img/icons_performance-notification.svg");
 }
 
 /* Tour Notifications */
@@ -520,6 +487,7 @@
   height: 64px;
   background-size: 64px;
   background-repeat: no-repeat;
+  background-image: url("chrome://branding/content/icon64.png");
 }
 
 #onboarding-notification-action-btn {
