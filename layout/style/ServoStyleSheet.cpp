@@ -211,7 +211,7 @@ ServoStyleSheet::ParseSheet(css::Loader* aLoader,
   Inner()->mContents =
     Servo_StyleSheet_FromUTF8Bytes(
         aLoader, this, &input, mParsingMode, extraData,
-        aLineNumber, aCompatMode
+        aLineNumber, aCompatMode, aReusableSheets
     ).Consume();
 
   Inner()->mURLData = extraData.forget();
