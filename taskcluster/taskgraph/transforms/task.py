@@ -740,6 +740,9 @@ def build_docker_worker_payload(config, task, task_def):
         payload['env']['TASKCLUSTER_VOLUMES'] = ';'.join(
             sorted(worker['volumes']))
 
+    if payload.get('cache') and skip_untrusted:
+        payload['env']['TASKCLUSTER_UNTRUSTED_CACHES'] = '1'
+
     if features:
         payload['features'] = features
     if capabilities:
