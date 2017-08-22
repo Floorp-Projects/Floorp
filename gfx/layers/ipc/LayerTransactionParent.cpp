@@ -116,6 +116,7 @@ LayerTransactionParent::Destroy()
       if (layer->GetCompositorAnimationsId()) {
         mAnimStorage->ClearById(layer->GetCompositorAnimationsId());
       }
+      layer->Disconnect();
     }
   }
   mCompositables.clear();
