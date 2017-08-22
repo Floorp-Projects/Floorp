@@ -23,7 +23,7 @@ import time
 import urllib2
 
 from mercurial.i18n import _
-from mercurial.node import hex, nullid
+from mercurial.node import hex
 from mercurial import (
     commands,
     error,
@@ -162,8 +162,6 @@ def robustcheckout(ui, url, dest, upstream=None, revision=None, branch=None,
         raise error.Abort('share base directory not defined; refusing to operate',
                           hint='define share.pool config option or pass --sharebase')
 
-    ui.warn('(using Mercurial %s)\n' % util.version())
-
     # worker.backgroundclose only makes things faster if running anti-virus,
     # which our automation doesn't. Disable it.
     ui.setconfig('worker', 'backgroundclose', False)
@@ -234,6 +232,18 @@ def _docheckout(ui, url, dest, upstream, revision, branch, purge, sharebase,
             ui.warn('(shared store does not belong to pooled storage; '
                     'deleting destination to improve efficiency)\n')
             destvfs.rmtree(forcibly=True)
+
+        storevfs = getvfs()(storepath, audit=False)
+        if storevfs.isfileorlink('store/lock'):
+            ui.warn('(shared store has an active lock; assuming it is left '
+                    'over from a previous process and that the store is '
+                    'corrupt; deleting store and destination just to be '
+                    'sure)\n')
+            destvfs.rmtree(forcibly=True)
+            deletesharedstore(storepath)
+
+        # FUTURE when we require generaldelta, this is where we can check
+        # for that.
 
     if destvfs.isfileorlink('.hg/wlock'):
         ui.warn('(dest has an active working directory lock; assuming it is '
@@ -312,60 +322,6 @@ def _docheckout(ui, url, dest, upstream, revision, branch, purge, sharebase,
 
         return False
 
-    # Perform sanity checking of store. We may or may not know the path to the
-    # local store. It depends if we have an existing destvfs pointing to a
-    # share. To ensure we always find a local store, perform the same logic
-    # that Mercurial's pooled storage does to resolve the local store path.
-    cloneurl = upstream or url
-
-    try:
-        clonepeer = hg.peer(ui, {}, cloneurl)
-        rootnode = clonepeer.lookup('0')
-    except error.RepoLookupError:
-        raise error.Abort('unable to resolve root revision from clone '
-                          'source')
-    except (error.Abort, ssl.SSLError, urllib2.URLError) as e:
-        if handlepullerror(e):
-            return callself()
-        raise
-
-    if rootnode == nullid:
-        raise error.Abort('source repo appears to be empty')
-
-    storepath = os.path.join(sharebase, hex(rootnode))
-    storevfs = getvfs()(storepath, audit=False)
-
-    if storevfs.isfileorlink('.hg/store/lock'):
-        ui.warn('(shared store has an active lock; assuming it is left '
-                'over from a previous process and that the store is '
-                'corrupt; deleting store and destination just to be '
-                'sure)\n')
-        if destvfs.exists():
-            destvfs.rmtree(forcibly=True)
-        storevfs.rmtree(forcibly=True)
-
-    if storevfs.exists() and not storevfs.exists('.hg/requires'):
-        ui.warn('(shared store missing requires file; this is a really '
-                'odd failure; deleting store and destination)\n')
-        if destvfs.exists():
-            destvfs.rmtree(forcibly=True)
-        storevfs.rmtree(forcibly=True)
-
-    if storevfs.exists('.hg/requires'):
-        requires = set(storevfs.read('.hg/requires').splitlines())
-        # FUTURE when we require generaldelta, this is where we can check
-        # for that.
-        required = {'dotencode', 'fncache'}
-
-        missing = required - requires
-        if missing:
-            ui.warn('(shared store missing requirements: %s; deleting '
-                    'store and destination to ensure optimal behavior)\n' %
-                    ', '.join(sorted(missing)))
-            if destvfs.exists():
-                destvfs.rmtree(forcibly=True)
-            storevfs.rmtree(forcibly=True)
-
     created = False
 
     if not destvfs.exists():
@@ -381,9 +337,10 @@ def _docheckout(ui, url, dest, upstream, revision, branch, purge, sharebase,
 
         if upstream:
             ui.write('(cloning from upstream repo %s)\n' % upstream)
+        cloneurl = upstream or url
 
         try:
-            res = hg.clone(ui, {}, clonepeer, dest=dest, update=False,
+            res = hg.clone(ui, {}, cloneurl, dest=dest, update=False,
                            shareopts={'pool': sharebase, 'mode': 'identity'})
         except (error.Abort, ssl.SSLError, urllib2.URLError) as e:
             if handlepullerror(e):
