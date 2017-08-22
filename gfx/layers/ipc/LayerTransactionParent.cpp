@@ -180,7 +180,7 @@ LayerTransactionParent::RecvUpdate(const TransactionInfo& aInfo)
   UpdateFwdTransactionId(aInfo.fwdTransactionId());
   AutoClearReadLocks clearLocks(mReadLocks);
 
-  if (mDestroyed || !layer_manager() || layer_manager()->IsDestroyed()) {
+  if (mDestroyed || !mLayerManager || mLayerManager->IsDestroyed()) {
     for (const auto& op : aInfo.toDestroy()) {
       DestroyActor(op);
     }
@@ -193,7 +193,7 @@ LayerTransactionParent::RecvUpdate(const TransactionInfo& aInfo)
 
   {
     AutoResolveRefLayers resolve(mCompositorBridge->GetCompositionManager(this));
-    layer_manager()->BeginTransaction();
+    mLayerManager->BeginTransaction();
   }
 
   // Not all edits require an update to the hit testing tree.
@@ -207,7 +207,7 @@ LayerTransactionParent::RecvUpdate(const TransactionInfo& aInfo)
     case Edit::TOpCreatePaintedLayer: {
       MOZ_LAYERS_LOG(("[ParentSide] CreatePaintedLayer"));
 
-      RefPtr<PaintedLayer> layer = layer_manager()->CreatePaintedLayer();
+      RefPtr<PaintedLayer> layer = mLayerManager->CreatePaintedLayer();
       if (!BindLayer(layer, edit.get_OpCreatePaintedLayer())) {
         return IPC_FAIL_NO_REASON(this);
       }
@@ -218,7 +218,7 @@ LayerTransactionParent::RecvUpdate(const TransactionInfo& aInfo)
     case Edit::TOpCreateContainerLayer: {
       MOZ_LAYERS_LOG(("[ParentSide] CreateContainerLayer"));
 
-      RefPtr<ContainerLayer> layer = layer_manager()->CreateContainerLayer();
+      RefPtr<ContainerLayer> layer = mLayerManager->CreateContainerLayer();
       if (!BindLayer(layer, edit.get_OpCreateContainerLayer())) {
         return IPC_FAIL_NO_REASON(this);
       }
@@ -229,7 +229,7 @@ LayerTransactionParent::RecvUpdate(const TransactionInfo& aInfo)
     case Edit::TOpCreateImageLayer: {
       MOZ_LAYERS_LOG(("[ParentSide] CreateImageLayer"));
 
-      RefPtr<ImageLayer> layer = layer_manager()->CreateImageLayer();
+      RefPtr<ImageLayer> layer = mLayerManager->CreateImageLayer();
       if (!BindLayer(layer, edit.get_OpCreateImageLayer())) {
         return IPC_FAIL_NO_REASON(this);
       }
@@ -240,7 +240,7 @@ LayerTransactionParent::RecvUpdate(const TransactionInfo& aInfo)
     case Edit::TOpCreateColorLayer: {
       MOZ_LAYERS_LOG(("[ParentSide] CreateColorLayer"));
 
-      RefPtr<ColorLayer> layer = layer_manager()->CreateColorLayer();
+      RefPtr<ColorLayer> layer = mLayerManager->CreateColorLayer();
       if (!BindLayer(layer, edit.get_OpCreateColorLayer())) {
         return IPC_FAIL_NO_REASON(this);
       }
@@ -251,7 +251,7 @@ LayerTransactionParent::RecvUpdate(const TransactionInfo& aInfo)
     case Edit::TOpCreateTextLayer: {
       MOZ_LAYERS_LOG(("[ParentSide] CreateTextLayer"));
 
-      RefPtr<TextLayer> layer = layer_manager()->CreateTextLayer();
+      RefPtr<TextLayer> layer = mLayerManager->CreateTextLayer();
       if (!BindLayer(layer, edit.get_OpCreateTextLayer())) {
         return IPC_FAIL_NO_REASON(this);
       }
@@ -262,7 +262,7 @@ LayerTransactionParent::RecvUpdate(const TransactionInfo& aInfo)
     case Edit::TOpCreateBorderLayer: {
       MOZ_LAYERS_LOG(("[ParentSide] CreateBorderLayer"));
 
-      RefPtr<BorderLayer> layer = layer_manager()->CreateBorderLayer();
+      RefPtr<BorderLayer> layer = mLayerManager->CreateBorderLayer();
       if (!BindLayer(layer, edit.get_OpCreateBorderLayer())) {
         return IPC_FAIL_NO_REASON(this);
       }
@@ -273,7 +273,7 @@ LayerTransactionParent::RecvUpdate(const TransactionInfo& aInfo)
     case Edit::TOpCreateCanvasLayer: {
       MOZ_LAYERS_LOG(("[ParentSide] CreateCanvasLayer"));
 
-      RefPtr<CanvasLayer> layer = layer_manager()->CreateCanvasLayer();
+      RefPtr<CanvasLayer> layer = mLayerManager->CreateCanvasLayer();
       if (!BindLayer(layer, edit.get_OpCreateCanvasLayer())) {
         return IPC_FAIL_NO_REASON(this);
       }
@@ -284,7 +284,7 @@ LayerTransactionParent::RecvUpdate(const TransactionInfo& aInfo)
     case Edit::TOpCreateRefLayer: {
       MOZ_LAYERS_LOG(("[ParentSide] CreateRefLayer"));
 
-      RefPtr<RefLayer> layer = layer_manager()->CreateRefLayer();
+      RefPtr<RefLayer> layer = mLayerManager->CreateRefLayer();
       if (!BindLayer(layer, edit.get_OpCreateRefLayer())) {
         return IPC_FAIL_NO_REASON(this);
       }
@@ -482,7 +482,7 @@ LayerTransactionParent::RecvUpdate(const TransactionInfo& aInfo)
 
   {
     AutoResolveRefLayers resolve(mCompositorBridge->GetCompositionManager(this));
-    layer_manager()->EndTransaction(TimeStamp(), LayerManager::END_NO_IMMEDIATE_REDRAW);
+    mLayerManager->EndTransaction(TimeStamp(), LayerManager::END_NO_IMMEDIATE_REDRAW);
   }
 
   if (!IsSameProcess()) {
@@ -736,7 +736,7 @@ LayerTransactionParent::RecvGetAnimationOpacity(const uint64_t& aCompositorAnima
                                                 bool* aHasAnimationOpacity)
 {
   *aHasAnimationOpacity = false;
-  if (mDestroyed || !layer_manager() || layer_manager()->IsDestroyed()) {
+  if (mDestroyed || !mLayerManager || mLayerManager->IsDestroyed()) {
     return IPC_FAIL_NO_REASON(this);
   }
 
@@ -758,7 +758,7 @@ mozilla::ipc::IPCResult
 LayerTransactionParent::RecvGetAnimationTransform(const uint64_t& aCompositorAnimationsId,
                                                   MaybeTransform* aTransform)
 {
-  if (mDestroyed || !layer_manager() || layer_manager()->IsDestroyed()) {
+  if (mDestroyed || !mLayerManager || mLayerManager->IsDestroyed()) {
     return IPC_FAIL_NO_REASON(this);
   }
 
@@ -804,7 +804,7 @@ mozilla::ipc::IPCResult
 LayerTransactionParent::RecvSetAsyncScrollOffset(const FrameMetrics::ViewID& aScrollID,
                                                  const float& aX, const float& aY)
 {
-  if (mDestroyed || !layer_manager() || layer_manager()->IsDestroyed()) {
+  if (mDestroyed || !mLayerManager || mLayerManager->IsDestroyed()) {
     return IPC_FAIL_NO_REASON(this);
   }
 
@@ -820,7 +820,7 @@ mozilla::ipc::IPCResult
 LayerTransactionParent::RecvSetAsyncZoom(const FrameMetrics::ViewID& aScrollID,
                                          const float& aValue)
 {
-  if (mDestroyed || !layer_manager() || layer_manager()->IsDestroyed()) {
+  if (mDestroyed || !mLayerManager || mLayerManager->IsDestroyed()) {
     return IPC_FAIL_NO_REASON(this);
   }
 
