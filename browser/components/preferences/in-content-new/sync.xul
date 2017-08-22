@@ -92,6 +92,8 @@
     <hbox>
       <vbox id="fxaContentWrapper" flex="1">
         <groupbox id="fxaGroup">
+          <caption class="search-header" hidden="true"><label>&paneSync1.title;</label></caption>
+
           <deck id="fxaLoginStatus" flex="1">
 
             <!-- logged in and verified and all is good -->
