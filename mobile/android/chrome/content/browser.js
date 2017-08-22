@@ -7101,7 +7101,7 @@ HTMLContextMenuItem.prototype = Object.create(ContextMenuItem.prototype, {
       }
 
       // If this is a menu item, show a new context menu with the submenu in it
-      if (elt instanceof Ci.nsIDOMHTMLMenuElement) {
+      if (elt instanceof HTMLMenuElement) {
         try {
           NativeWindow.contextmenus.menus = {};
 
@@ -7144,7 +7144,7 @@ HTMLContextMenuItem.prototype = Object.create(ContextMenuItem.prototype, {
         icon: elt.icon,
         label: elt.label,
         disabled: elt.disabled,
-        menu: elt instanceof Ci.nsIDOMHTMLMenuElement
+        menu: elt instanceof HTMLMenuElement
       };
     }
   },
