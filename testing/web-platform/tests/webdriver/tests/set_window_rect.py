@@ -15,6 +15,18 @@ def set_window_rect(session, rect):
 # 10.7.2 Set Window Rect
 
 
+def test_current_top_level_browsing_context_no_longer_open(session, create_window):
+    """
+    1. If the current top-level browsing context is no longer open,
+    return error with error code no such window.
+    """
+
+    session.window_handle = create_window()
+    session.close()
+    response = set_window_rect(session, {})
+    assert_error(response, "no such window")
+
+
 def test_handle_prompt_dismiss():
     """TODO"""
 
