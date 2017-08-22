@@ -51,11 +51,13 @@ public class MmaDelegate {
 
     public static final String USER_ATT_FOCUS_INSTALLED = "Focus Installed";
     public static final String USER_ATT_KLAR_INSTALLED = "Klar Installed";
+    public static final String USER_ATT_POCKET_INSTALLED = "Pocket Installed";
     public static final String USER_ATT_DEFAULT_BROWSER = "Default Browser";
     public static final String USER_ATT_SIGNED_IN = "Signed In Sync";
 
     public static final String PACKAGE_NAME_KLAR = "org.mozilla.klar";
     public static final String PACKAGE_NAME_FOCUS = "org.mozilla.focus";
+    public static final String PACKAGE_NAME_POCKET = "com.ideashower.readitlater.pro";
 
     private static final String TAG = "MmaDelegate";
     private static final String KEY_PREF_BOOLEAN_MMA_ENABLED = "mma.enabled";
@@ -114,6 +116,7 @@ public class MmaDelegate {
 
         attributes.put(USER_ATT_FOCUS_INSTALLED, ContextUtils.isPackageInstalled(context, PACKAGE_NAME_FOCUS));
         attributes.put(USER_ATT_KLAR_INSTALLED, ContextUtils.isPackageInstalled(context, PACKAGE_NAME_KLAR));
+        attributes.put(USER_ATT_POCKET_INSTALLED, ContextUtils.isPackageInstalled(context, PACKAGE_NAME_POCKET));
         attributes.put(USER_ATT_DEFAULT_BROWSER, isDefaultBrowser(context));
         attributes.put(USER_ATT_SIGNED_IN, FirefoxAccounts.firefoxAccountsExist(context));
 
