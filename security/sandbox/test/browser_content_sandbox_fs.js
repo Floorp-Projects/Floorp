@@ -453,13 +453,26 @@ async function testFileAccess() {
 
   let cookiesFile = GetProfileEntry("cookies.sqlite");
   if (cookiesFile.exists() && !cookiesFile.isDirectory()) {
-    tests.push({
-      desc:     "cookies file",
-      ok:       false,
-      browser:  webBrowser,
-      file:     cookiesFile,
-      minLevel: minProfileReadSandboxLevel(),
-    });
+    // On Linux, the temporary profile used for tests is in the system
+    // temp dir which content has read access to, so this test fails.
+    if (!isLinux()) {
+      tests.push({
+        desc:     "cookies file",
+        ok:       false,
+        browser:  webBrowser,
+        file:     cookiesFile,
+        minLevel: minProfileReadSandboxLevel(),
+      });
+    }
+    if (fileContentProcessEnabled) {
+      tests.push({
+        desc:     "cookies file",
+        ok:       true,
+        browser:  fileBrowser,
+        file:     cookiesFile,
+        minLevel: 0,
+      });
+    }
   } else {
     ok(false, `${cookiesFile.path} is a valid file`);
   }
@@ -468,7 +481,7 @@ async function testFileAccess() {
   tests = tests.filter((test) => (test.minLevel <= level));
 
   for (let test of tests) {
-    let testFunc = test.file.isDirectory ? readDir : readFile;
+    let testFunc = test.file.isDirectory() ? readDir : readFile;
     let okString = test.ok ? "allowed" : "blocked";
     let processType = test.browser === webBrowser ? "web" : "file";
 
