@@ -4209,7 +4209,9 @@ NSEvent* gLastDragMouseDownEvent = nil;
         if ([theEvent type] == NSLeftMouseDown) {
           NSPoint point = [NSEvent mouseLocation];
           FlipCocoaScreenCoordinate(point);
-          gfx::IntPoint pos = gfx::IntPoint::Truncate(point.x, point.y);
+          LayoutDeviceIntPoint devPoint =
+            mGeckoChild->CocoaPointsToDevPixels(point);
+          gfx::IntPoint pos = devPoint.ToUnknownPoint();
           consumeEvent = (BOOL)rollupListener->Rollup(popupsToRollup, true, &pos, nullptr);
         }
         else {
