@@ -330,8 +330,8 @@ private:
   // Used to prepare any necessary prediction for a resource on a page
   //   * confidence - value calculated by CalculateConfidence for this resource
   //   * flags - the flags taken from the resource
-  //   * uri - the URI of the resource
-  void SetupPrediction(int32_t confidence, uint32_t flags, nsIURI *uri);
+  //   * uri - the ascii spec of the URI of the resource
+  void SetupPrediction(int32_t confidence, uint32_t flags, const nsCString &uri);
 
   // Used to kick off a prefetch from RunPredictions if necessary
   //   * uri - the URI to prefetch
@@ -409,11 +409,11 @@ private:
   // Used to parse the data we store in cache metadata
   //   * key - the cache metadata key
   //   * value - the cache metadata value
-  //   * uri - (out) the URI this metadata entry was about
+  //   * uri - (out) the ascii spec of the URI this metadata entry was about
   //   * hitCount - (out) the number of times this URI has been seen
   //   * lastHit - (out) timestamp of the last time this URI was seen
   //   * flags - (out) flags for this metadata entry
-  bool ParseMetaDataEntry(const char *key, const char *value, nsIURI **uri,
+  bool ParseMetaDataEntry(const char *key, const char *value, nsCString &uri,
                           uint32_t &hitCount, uint32_t &lastHit,
                           uint32_t &flags);
 
