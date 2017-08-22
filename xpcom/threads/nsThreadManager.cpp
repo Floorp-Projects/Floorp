@@ -117,7 +117,10 @@ nsThreadManager::Init()
   mMainThread = new nsThread(WrapNotNull(queue), nsThread::MAIN_THREAD, 0);
 
   prioritizedRef->SetMutexRef(queue->MutexRef());
+
+#ifndef RELEASE_OR_BETA
   prioritizedRef->SetNextIdleDeadlineRef(mMainThread->NextIdleDeadlineRef());
+#endif
 
   nsresult rv = mMainThread->InitCurrentThread();
   if (NS_FAILED(rv)) {

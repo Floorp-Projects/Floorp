@@ -59,10 +59,12 @@ public:
   // least as long as the queue.
   void SetMutexRef(Mutex& aMutex) { mMutex = &aMutex; }
 
+#ifndef RELEASE_OR_BETA
   // nsThread.cpp sends telemetry containing the most recently computed idle
   // deadline. We store a reference to a field in nsThread where this deadline
   // will be stored so that it can be fetched quickly for telemetry.
   void SetNextIdleDeadlineRef(TimeStamp& aDeadline) { mNextIdleDeadline = &aDeadline; }
+#endif
 
   void EnableInputEventPrioritization(const MutexAutoLock& aProofOfLock) final;
 
@@ -81,9 +83,11 @@ private:
   // a pointer to it here.
   Mutex* mMutex = nullptr;
 
+#ifndef RELEASE_OR_BETA
   // Pointer to a place where the most recently computed idle deadline is
   // stored.
   TimeStamp* mNextIdleDeadline = nullptr;
+#endif
 
   // Try to process one high priority runnable after each normal
   // priority runnable. This gives the processing model HTML spec has for
