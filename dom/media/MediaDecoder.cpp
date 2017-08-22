@@ -565,7 +565,6 @@ void
 MediaDecoder::FinishShutdown()
 {
   MOZ_ASSERT(NS_IsMainThread());
-  mDecoderStateMachine->BreakCycles();
   SetStateMachine(nullptr);
   mVideoFrameContainer = nullptr;
   MediaShutdownManager::Instance().Unregister(this);
@@ -681,6 +680,11 @@ MediaDecoder::CallSeek(const SeekTarget& aTarget)
   MOZ_ASSERT(NS_IsMainThread());
   AbstractThread::AutoEnter context(AbstractMainThread());
   DiscardOngoingSeekIfExists();
+
+  // Since we don't have a listener for changes in IsLiveStream, our best bet
+  // is to ensure IsLiveStream is uptodate when seek begins. This value will be
+  // checked when seek is completed.
+  mDecoderStateMachine->DispatchIsLiveStream(IsLiveStream());
 
   mDecoderStateMachine->InvokeSeek(aTarget)
   ->Then(mAbstractMainThread, __func__, this,
@@ -804,9 +808,9 @@ MediaDecoder::FirstFrameLoaded(nsAutoPtr<MediaInfo> aInfo,
   AbstractThread::AutoEnter context(AbstractMainThread());
 
   LOG("FirstFrameLoaded, channels=%u rate=%u hasAudio=%d hasVideo=%d "
-      "mPlayState=%s",
+      "mPlayState=%s transportSeekable=%d",
       aInfo->mAudio.mChannels, aInfo->mAudio.mRate, aInfo->HasAudio(),
-      aInfo->HasVideo(), PlayStateStr());
+      aInfo->HasVideo(), PlayStateStr(), GetResource()->IsTransportSeekable());
 
   mInfo = aInfo.forget();
 

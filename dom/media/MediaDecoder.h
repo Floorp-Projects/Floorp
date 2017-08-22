@@ -120,15 +120,6 @@ public:
   // Called if the media file encounters a network error.
   void NetworkError();
 
-  // Get the current MediaResource being used.
-  // Note: The MediaResource is refcounted, but it outlives the MediaDecoder,
-  // so it's OK to use the reference returned by this function without
-  // refcounting, *unless* you need to store and use the reference after the
-  // MediaDecoder has been destroyed. You might need to do this if you're
-  // wrapping the MediaResource in some kind of byte stream interface to be
-  // passed to a platform decoder.
-  virtual MediaResource* GetResource() const = 0;
-
   // Return the principal of the current URI being played or downloaded.
   virtual already_AddRefed<nsIPrincipal> GetCurrentPrincipal();
 
@@ -490,6 +481,15 @@ protected:
     media::TimeUnit::FromMicroseconds(250000);
 
 private:
+  // Get the current MediaResource being used.
+  // Note: The MediaResource is refcounted, but it outlives the MediaDecoder,
+  // so it's OK to use the reference returned by this function without
+  // refcounting, *unless* you need to store and use the reference after the
+  // MediaDecoder has been destroyed. You might need to do this if you're
+  // wrapping the MediaResource in some kind of byte stream interface to be
+  // passed to a platform decoder.
+  virtual MediaResource* GetResource() const = 0;
+
   nsCString GetDebugInfo();
 
   // Called when the owner's activity changed.
@@ -510,6 +510,7 @@ private:
   void DisconnectMirrors();
 
   virtual bool CanPlayThroughImpl() = 0;
+  virtual bool IsLiveStream() = 0;
 
   // The state machine object for handling the decoding. It is safe to
   // call methods of this object from other threads. Its internal data

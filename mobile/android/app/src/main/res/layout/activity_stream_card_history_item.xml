@@ -27,7 +27,6 @@
                 android:layout_marginBottom="@dimen/activity_stream_base_margin"
                 android:layout_gravity="center"
                 tools:background="@drawable/favicon_globe" />
-        <!-- todo: overrideScaleType, scaleType=fitCnetetr -->
 
     </FrameLayout>
 

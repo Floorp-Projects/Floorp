@@ -90,7 +90,12 @@ public class VersioningDelegateHelper {
         // At this point we can be sure that all records in our guidsMap have been successfully
         // uploaded. Move syncVersions forward for each GUID en masse.
         final Bundle data = new Bundle();
-        data.putSerializable(BrowserContract.METHOD_PARAM_DATA, this.localVersionsOfGuids);
+        final int versionMapSizeBeforeUpdate;
+
+        synchronized (this.localVersionsOfGuids) {
+            data.putSerializable(BrowserContract.METHOD_PARAM_DATA, this.localVersionsOfGuids);
+            versionMapSizeBeforeUpdate = this.localVersionsOfGuids.size();
+        }
 
         final Bundle result = context.getContentResolver().call(
                 repositoryContentUri,
@@ -103,11 +108,21 @@ public class VersioningDelegateHelper {
             throw new IllegalStateException("Expected to receive a result after decrementing change counters");
         }
 
-        int changed = (int) result.getSerializable(BrowserContract.METHOD_RESULT);
-        if (changed != this.localVersionsOfGuids.size()) {
-            // TODO perhaps not worth throwing, but this shouldn't happen either...
-            throw new IllegalStateException("Decremented incorrect number of change counters");
+        final int changed = (int) result.getSerializable(BrowserContract.METHOD_RESULT);
+        final int versionMapSizeAfterUpdate = this.localVersionsOfGuids.size();
 
+        // None of these should happen, but something's clearly amiss. These strong assertions are
+        // here to help figure out root cause for Bug 1392078.
+        if (versionMapSizeBeforeUpdate != versionMapSizeAfterUpdate) {
+            throw new IllegalStateException("Version/guid map changed during syncVersion update");
+        }
+
+        if (changed < versionMapSizeBeforeUpdate) {
+            throw new IllegalStateException("Updated fewer sync versions than expected");
+        }
+
+        if (changed > versionMapSizeBeforeUpdate) {
+            throw new IllegalStateException("Updated more sync versions than expected");
         }
     }
 

@@ -175,7 +175,7 @@ html|*#webRTC-previewVideo {
 /* INSTALL ADDONS */
 
 .install-icon {
-  list-style-image: url(chrome://browser/skin/addons/addon-install-anchor.svg);
+  list-style-image: url(chrome://mozapps/skin/extensions/extensionGeneric-16.svg);
 }
 
 .popup-notification-icon[popupid="xpinstall-disabled"],

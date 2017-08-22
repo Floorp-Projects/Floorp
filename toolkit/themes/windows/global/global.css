@@ -135,12 +135,7 @@ statusbarpanel:not(.statusbar-resizerpanel):-moz-lwtheme {
 
 sidebarheader {
   min-height: 25px;
-  background-color: -moz-Dialog;
-  color: -moz-dialogText;
   text-shadow: none;
-  -moz-appearance: toolbox;
-  border-bottom: 1px solid ThreeDShadow;
-  border-top: 1px solid ThreeDHighlight;
 }
 
 sidebarheader > label {

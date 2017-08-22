@@ -219,10 +219,15 @@ public:
     OwnerThread()->DispatchStateChange(r.forget());
   }
 
-  // Drop reference to mResource. Only called during shutdown dance.
-  void BreakCycles() {
-    MOZ_ASSERT(NS_IsMainThread());
-    mResource = nullptr;
+  void DispatchIsLiveStream(bool aIsLiveStream)
+  {
+    RefPtr<MediaDecoderStateMachine> self = this;
+    nsCOMPtr<nsIRunnable> r = NS_NewRunnableFunction(
+      "MediaDecoderStateMachine::DispatchIsLiveStream",
+      [self, aIsLiveStream]() {
+        self->mIsLiveStream = aIsLiveStream;
+      });
+    OwnerThread()->DispatchStateChange(r.forget());
   }
 
   TimedMetadataEventSource& TimedMetadataEvent() {
@@ -584,6 +589,8 @@ private:
 
   bool mCanPlayThrough = false;
 
+  bool mIsLiveStream = false;
+
   // True if we shouldn't play our audio (but still write it to any capturing
   // streams). When this is true, the audio thread will never start again after
   // it has stopped.
@@ -632,9 +639,6 @@ private:
 
   // Data about MediaStreams that are being fed by the decoder.
   const RefPtr<OutputStreamManager> mOutputStreamManager;
-
-  // Media data resource from the decoder.
-  RefPtr<MediaResource> mResource;
 
   // Track the current video decode mode.
   VideoDecodeMode mVideoDecodeMode;

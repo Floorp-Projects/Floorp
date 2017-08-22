@@ -20,7 +20,6 @@
   skin/classic/browser/addons/addon-install-installed.svg      (../shared/addons/addon-install-installed.svg)
   skin/classic/browser/addons/addon-install-restart.svg        (../shared/addons/addon-install-restart.svg)
   skin/classic/browser/addons/addon-install-warning.svg        (../shared/addons/addon-install-warning.svg)
-* skin/classic/browser/addons/addon-install-anchor.svg         (../shared/addons/addon-install-anchor.svg)
 * skin/classic/browser/controlcenter/conn-not-secure.svg       (../shared/controlcenter/conn-not-secure.svg)
 * skin/classic/browser/controlcenter/connection.svg            (../shared/controlcenter/connection.svg)
 * skin/classic/browser/controlcenter/mcb-disabled.svg          (../shared/controlcenter/mcb-disabled.svg)
@@ -147,7 +146,6 @@
   skin/classic/browser/forget.svg                     (../shared/icons/forget.svg)
   skin/classic/browser/forward.svg                    (../shared/icons/forward.svg)
   skin/classic/browser/fullscreen.svg                 (../shared/icons/fullscreen.svg)
-  skin/classic/browser/fullscreen-enter.svg           (../shared/icons/fullscreen-enter.svg)
   skin/classic/browser/fullscreen-exit.svg            (../shared/icons/fullscreen-exit.svg)
   skin/classic/browser/history.svg                    (../shared/icons/history.svg)
   skin/classic/browser/home.svg                       (../shared/icons/home.svg)
@@ -175,6 +173,7 @@
   skin/classic/browser/synced-tabs.svg                (../shared/icons/synced-tabs.svg)
   skin/classic/browser/toolbar.svg                    (../shared/icons/toolbar.svg)
   skin/classic/browser/webIDE.svg                     (../shared/icons/webIDE.svg)
+  skin/classic/browser/window.svg                     (../shared/icons/window.svg)
   skin/classic/browser/zoom-in.svg                    (../shared/icons/zoom-in.svg)
   skin/classic/browser/zoom-out.svg                   (../shared/icons/zoom-out.svg)
 
