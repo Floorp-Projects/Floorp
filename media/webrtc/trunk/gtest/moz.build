@@ -31,7 +31,6 @@ USE_LIBS += [
     '/media/webrtc/trunk/third_party/gflags/gflags_gflags/gflags',
     '/testing/gtest/gtest',
     'media_libopus',
-    'mozglue',
     'speex',
     'webrtc',
     'webrtc_common',
@@ -576,4 +575,4 @@ if CONFIG['OS_TARGET'] in ['Darwin', 'Linux', 'WINNT']:
         # reinterpret_cast': conversion from 'DWORD' to 'HANDLE' of greater size
         CXXFLAGS += ['-wd4312']
 
-    Program('webrtc-gtest')
+    GeckoProgram('webrtc-gtest', linkage=None)
