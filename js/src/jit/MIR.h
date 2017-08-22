@@ -495,11 +495,10 @@ class MDefinition : public MNode
     friend class MBasicBlock;
 
   public:
-    enum Opcode {
-#   define DEFINE_OPCODES(op) Op_##op,
+    enum class Opcode : uint16_t {
+#   define DEFINE_OPCODES(op) op,
         MIR_OPCODE_LIST(DEFINE_OPCODES)
 #   undef DEFINE_OPCODES
-        Op_Invalid
     };
 
   private:
@@ -1204,7 +1203,7 @@ class MInstruction
 };
 
 #define INSTRUCTION_HEADER_WITHOUT_TYPEPOLICY(opcode)                       \
-    static const Opcode classOpcode = MDefinition::Op_##opcode;             \
+    static const Opcode classOpcode = Opcode::opcode;                       \
     using MThisOpcode = M##opcode;                                          \
     Opcode op() const override {                                            \
         return classOpcode;                                                 \
@@ -1362,7 +1361,7 @@ class MBinaryInstruction : public MAryInstruction<2>
         MDefinition* lhs = getOperand(0);
         MDefinition* rhs = getOperand(1);
 
-        return op() + lhs->id() + rhs->id();
+        return HashNumber(op()) + lhs->id() + rhs->id();
     }
     bool binaryCongruentTo(const MDefinition* ins) const
     {
@@ -1425,7 +1424,7 @@ class MTernaryInstruction : public MAryInstruction<3>
         MDefinition* second = getOperand(1);
         MDefinition* third = getOperand(2);
 
-        return op() + first->id() + second->id() + third->id();
+        return HashNumber(op()) + first->id() + second->id() + third->id();
     }
 };
 
@@ -1449,8 +1448,8 @@ class MQuaternaryInstruction : public MAryInstruction<4>
         MDefinition* third = getOperand(2);
         MDefinition* fourth = getOperand(3);
 
-        return op() + first->id() + second->id() +
-                      third->id() + fourth->id();
+        return HashNumber(op()) + first->id() + second->id() +
+            third->id() + fourth->id();
     }
 };
 
@@ -14153,7 +14152,7 @@ class MWasmLoadTls
     }
 
     HashNumber valueHash() const override {
-        return op() + offset();
+        return HashNumber(op()) + offset();
     }
 
     AliasSet getAliasSet() const override {
