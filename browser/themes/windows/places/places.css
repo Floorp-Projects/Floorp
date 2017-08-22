@@ -4,7 +4,8 @@
 
 /* Sidebars */
 
-:root {
+#history-panel,
+#bookmarksPanel {
   background-color: transparent;
 }
 
