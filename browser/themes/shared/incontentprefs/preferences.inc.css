@@ -41,7 +41,8 @@ groupbox + groupbox {
   margin-top: 16px;
 }
 
-groupbox + groupbox > .groupbox-body {
+groupbox + groupbox > .groupbox-body,
+groupbox + vbox groupbox > .groupbox-body {
   margin-top: 4px;
 }
 
@@ -549,7 +550,6 @@ separator.thin:not([orient="vertical"]) {
 }
 
 #fxaGroup {
-  margin-top: 16px;
   margin-bottom: 32px;
 }
 
