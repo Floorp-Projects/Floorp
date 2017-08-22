@@ -400,7 +400,7 @@ ScriptLoader::WaitForModuleFetch(ModuleLoadRequest* aRequest)
 
   RefPtr<ModuleScript> ms;
   MOZ_ALWAYS_TRUE(mFetchedModules.Get(aRequest->mURI, getter_AddRefs(ms)));
-  if (!ms || ms->InstantiationFailed()) {
+  if (!ms) {
     return GenericPromise::CreateAndReject(NS_ERROR_FAILURE, __func__);
   }
 
@@ -664,11 +664,6 @@ ScriptLoader::StartFetchingModuleDependencies(ModuleLoadRequest* aRequest)
   MOZ_ASSERT(aRequest->mModuleScript);
   MOZ_ASSERT(!aRequest->IsReadyToRun());
 
-  if (aRequest->mModuleScript->InstantiationFailed()) {
-    aRequest->LoadFailed();
-    return;
-  }
-
   aRequest->mProgress = ModuleLoadRequest::Progress::FetchingImports;
 
   nsCOMArray<nsIURI> urls;
@@ -763,12 +758,6 @@ HostResolveImportedModule(JSContext* aCx, unsigned argc, JS::Value* vp)
     return HandleModuleNotFound(aCx, script, string);
   }
 
-  if (ms->InstantiationFailed()) {
-    JS::Rooted<JS::Value> exception(aCx, ms->Exception());
-    JS_SetPendingException(aCx, exception);
-    return false;
-  }
-
   *vp = JS::ObjectValue(*ms->ModuleRecord());
   return true;
 }
@@ -802,71 +791,6 @@ ScriptLoader::ProcessLoadedModuleTree(ModuleLoadRequest* aRequest)
   if (aRequest->mWasCompiledOMT) {
     mDocument->UnblockOnload(false);
   }
-}
-
-bool
-ScriptLoader::InstantiateModuleTree(ModuleLoadRequest* aRequest)
-{
-  // Perform eager instantiation of the loaded module tree.
-
-  MOZ_ASSERT(aRequest);
-
-  LOG(("ScriptLoadRequest (%p): Instantiate module tree", aRequest));
-
-  ModuleScript* ms = aRequest->mModuleScript;
-  MOZ_ASSERT(ms);
-  if (!ms->ModuleRecord()) {
-    return false;
-  }
-
-  AutoJSAPI jsapi;
-  if (NS_WARN_IF(!jsapi.Init(ms->ModuleRecord()))) {
-    return false;
-  }
-
-  nsresult rv = EnsureModuleResolveHook(jsapi.cx());
-  NS_ENSURE_SUCCESS(rv, false);
-
-  JS::Rooted<JSObject*> module(jsapi.cx(), ms->ModuleRecord());
-  bool ok = NS_SUCCEEDED(nsJSUtils::ModuleInstantiate(jsapi.cx(), module));
-
-  JS::RootedValue exception(jsapi.cx());
-  if (!ok) {
-    LOG(("ScriptLoadRequest (%p): Instantiate failed", aRequest));
-    MOZ_ASSERT(jsapi.HasException());
-    if (!jsapi.StealException(&exception)) {
-      return false;
-    }
-    MOZ_ASSERT(!exception.isUndefined());
-  }
-
-  // Mark this module and any uninstantiated dependencies found via depth-first
-  // search as instantiated and record any error.
-
-  mozilla::Vector<ModuleLoadRequest*, 1> requests;
-  if (!requests.append(aRequest)) {
-    return false;
-  }
-
-  while (!requests.empty()) {
-    ModuleLoadRequest* request = requests.popCopy();
-    ModuleScript* ms = request->mModuleScript;
-    if (!ms->IsUninstantiated()) {
-      continue;
-    }
-
-    ms->SetInstantiationResult(exception);
-
-    for (auto import : request->mImports) {
-      if (import->mModuleScript->IsUninstantiated() &&
-          !requests.append(import))
-      {
-        return false;
-      }
-    }
-  }
-
-  return true;
 }
 
 nsresult
@@ -2069,6 +1993,9 @@ ScriptLoader::EvaluateScript(ScriptLoadRequest* aRequest)
     AutoCurrentScriptUpdater scriptUpdater(this, aRequest->mElement);
 
     if (aRequest->IsModuleRequest()) {
+      rv = EnsureModuleResolveHook(aes.cx());
+      NS_ENSURE_SUCCESS(rv, rv);
+
       // When a module is already loaded, it is not feched a second time and the
       // mDataType of the request might remain set to DataType::Unknown.
       MOZ_ASSERT(!aRequest->IsBytecode());
@@ -2076,15 +2003,11 @@ ScriptLoader::EvaluateScript(ScriptLoadRequest* aRequest)
       ModuleLoadRequest* request = aRequest->AsModuleRequest();
       MOZ_ASSERT(request->mModuleScript);
       MOZ_ASSERT(!request->mOffThreadToken);
-      ModuleScript* ms = request->mModuleScript;
-      MOZ_ASSERT(!ms->IsUninstantiated());
-      if (ms->InstantiationFailed()) {
-        JS::Rooted<JS::Value> exception(aes.cx(), ms->Exception());
-        JS_SetPendingException(aes.cx(), exception);
-        rv = NS_ERROR_FAILURE;
-      } else {
-        JS::Rooted<JSObject*> module(aes.cx(), ms->ModuleRecord());
-        MOZ_ASSERT(module);
+      JS::Rooted<JSObject*> module(aes.cx(),
+                                   request->mModuleScript->ModuleRecord());
+      MOZ_ASSERT(module);
+      rv = nsJSUtils::ModuleInstantiate(aes.cx(), module);
+      if (NS_SUCCEEDED(rv)) {
         rv = nsJSUtils::ModuleEvaluate(aes.cx(), module);
       }
       aRequest->mCacheInfo = nullptr;

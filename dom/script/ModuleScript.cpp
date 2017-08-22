@@ -30,7 +30,6 @@ NS_IMPL_CYCLE_COLLECTION_TRAVERSE_END
 
 NS_IMPL_CYCLE_COLLECTION_TRACE_BEGIN(ModuleScript)
   NS_IMPL_CYCLE_COLLECTION_TRACE_JS_MEMBER_CALLBACK(mModuleRecord)
-  NS_IMPL_CYCLE_COLLECTION_TRACE_JS_MEMBER_CALLBACK(mException)
 NS_IMPL_CYCLE_COLLECTION_TRACE_END
 
 NS_IMPL_CYCLE_COLLECTING_ADDREF(ModuleScript)
@@ -40,13 +39,11 @@ ModuleScript::ModuleScript(ScriptLoader* aLoader, nsIURI* aBaseURL,
                            JS::Handle<JSObject*> aModuleRecord)
  : mLoader(aLoader),
    mBaseURL(aBaseURL),
-   mModuleRecord(aModuleRecord),
-   mInstantiationState(Uninstantiated)
+   mModuleRecord(aModuleRecord)
 {
   MOZ_ASSERT(mLoader);
   MOZ_ASSERT(mBaseURL);
   MOZ_ASSERT(mModuleRecord);
-  MOZ_ASSERT(mException.isUndefined());
 
   // Make module's host defined field point to this module script object.
   // This is cleared in the UnlinkModuleRecord().
@@ -58,13 +55,10 @@ void
 ModuleScript::UnlinkModuleRecord()
 {
   // Remove module's back reference to this object request if present.
-  if (mModuleRecord) {
-    MOZ_ASSERT(JS::GetModuleHostDefinedField(mModuleRecord).toPrivate() ==
-               this);
-    JS::SetModuleHostDefinedField(mModuleRecord, JS::UndefinedValue());
-  }
+  MOZ_ASSERT(JS::GetModuleHostDefinedField(mModuleRecord).toPrivate() ==
+             this);
+  JS::SetModuleHostDefinedField(mModuleRecord, JS::UndefinedValue());
   mModuleRecord = nullptr;
-  mException.setUndefined();
 }
 
 ModuleScript::~ModuleScript()
@@ -74,22 +68,6 @@ ModuleScript::~ModuleScript()
     UnlinkModuleRecord();
   }
   DropJSObjects(this);
-}
-
-void
-ModuleScript::SetInstantiationResult(JS::Handle<JS::Value> aMaybeException)
-{
-  MOZ_ASSERT(mInstantiationState == Uninstantiated);
-  MOZ_ASSERT(mModuleRecord);
-  MOZ_ASSERT(mException.isUndefined());
-
-  if (aMaybeException.isUndefined()) {
-    mInstantiationState = Instantiated;
-  } else {
-    mModuleRecord = nullptr;
-    mException = aMaybeException;
-    mInstantiationState = Errored;
-  }
 }
 
 } // dom namespace
