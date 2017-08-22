@@ -47,10 +47,6 @@ public:
   }
 
 private:
-  static already_AddRefed<IStream> InitStream(const BYTE* aInitBuf,
-                                              const UINT aInitBufSize);
-
-private:
   RefPtr<IStream> mStream;
   BYTE*           mGlobalLockedBuf;
   HGLOBAL         mHGlobal;
