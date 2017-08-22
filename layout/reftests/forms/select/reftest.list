@@ -1,4 +1,4 @@
-fuzzy-if(Android,4,11) == out-of-bounds-selectedindex.html out-of-bounds-selectedindex-ref.html # test for bug 471741
+fuzzy-if(Android,4,12) == out-of-bounds-selectedindex.html out-of-bounds-selectedindex-ref.html # test for bug 471741
 == multiple.html multiple-ref.html
 == boguskids.html boguskids-ref.html
 == dynamic-boguskids.html boguskids-ref.html
