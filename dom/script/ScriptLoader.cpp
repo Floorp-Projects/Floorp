@@ -828,7 +828,7 @@ ScriptLoader::InstantiateModuleTree(ModuleLoadRequest* aRequest)
   NS_ENSURE_SUCCESS(rv, false);
 
   JS::Rooted<JSObject*> module(jsapi.cx(), ms->ModuleRecord());
-  bool ok = NS_SUCCEEDED(nsJSUtils::ModuleDeclarationInstantiation(jsapi.cx(), module));
+  bool ok = NS_SUCCEEDED(nsJSUtils::ModuleInstantiate(jsapi.cx(), module));
 
   JS::RootedValue exception(jsapi.cx());
   if (!ok) {
@@ -2085,7 +2085,7 @@ ScriptLoader::EvaluateScript(ScriptLoadRequest* aRequest)
       } else {
         JS::Rooted<JSObject*> module(aes.cx(), ms->ModuleRecord());
         MOZ_ASSERT(module);
-        rv = nsJSUtils::ModuleEvaluation(aes.cx(), module);
+        rv = nsJSUtils::ModuleEvaluate(aes.cx(), module);
       }
       aRequest->mCacheInfo = nullptr;
     } else {
