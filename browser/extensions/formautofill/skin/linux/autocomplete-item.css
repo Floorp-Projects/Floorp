@@ -5,18 +5,6 @@
 @namespace url("http://www.w3.org/1999/xhtml");
 
 
-.autofill-item-box > .profile-item-col > .profile-label {
-  font-size: .84em;
-}
-
-.autofill-item-box > .profile-item-col > .profile-comment {
-  font-size: .7em;
-}
-
-.autofill-footer > .autofill-warning {
-  font-size: .7em;
-}
-
-.autofill-footer > .autofill-option-button {
-  font-size: .77em;
+.autofill-item-box {
+  --default-font-size: 14.25;
 }

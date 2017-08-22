@@ -22,6 +22,7 @@ from taskgraph.transforms.job.common import (
     docker_worker_add_gecko_vcs_env_vars,
     docker_worker_setup_secrets,
     docker_worker_add_public_artifacts,
+    docker_worker_add_tooltool,
     generic_worker_add_public_artifacts,
     support_vcs_checkout,
 )
@@ -115,7 +116,6 @@ def mozharness_on_docker_worker_setup(config, job, taskdesc):
     if not taskdesc['worker']['docker-image']:
         taskdesc['worker']['docker-image'] = {"in-tree": "desktop-build"}
 
-    worker['relengapi-proxy'] = False  # but maybe enabled for tooltool below
     worker['taskcluster-proxy'] = run.get('taskcluster-proxy')
 
     docker_worker_add_public_artifacts(config, job, taskdesc)
@@ -158,21 +158,9 @@ def mozharness_on_docker_worker_setup(config, job, taskdesc):
     if run['need-xvfb']:
         env['NEED_XVFB'] = 'true'
 
-    # tooltool downloads
     if run['tooltool-downloads']:
-        worker['relengapi-proxy'] = True
-        worker['caches'].append({
-            'type': 'persistent',
-            'name': 'tooltool-cache',
-            'mount-point': '/home/worker/tooltool-cache',
-        })
-        taskdesc['scopes'].extend([
-            'docker-worker:relengapi-proxy:tooltool.download.public',
-        ])
-        if run['tooltool-downloads'] == 'internal':
-            taskdesc['scopes'].append(
-                'docker-worker:relengapi-proxy:tooltool.download.internal')
-        env['TOOLTOOL_CACHE'] = '/home/worker/tooltool-cache'
+        internal = run['tooltool-downloads'] == 'internal'
+        docker_worker_add_tooltool(config, job, taskdesc, internal=internal)
 
     # Retry if mozharness returns TBPL_RETRY
     worker['retry-exit-status'] = 4

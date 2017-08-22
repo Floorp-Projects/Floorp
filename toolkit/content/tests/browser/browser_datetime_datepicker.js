@@ -220,3 +220,43 @@ add_task(async function test_datepicker_step() {
 
   await helper.tearDown();
 });
+
+add_task(async function test_datepicker_abs_min() {
+  const inputValue = "0001-01-01";
+  await helper.openPicker(`data:text/html, <input type="date" value="${inputValue}">`);
+
+  Assert.deepEqual(
+    getCalendarText(),
+    [
+      "",   "1",  "2",  "3",  "4",  "5",  "6",
+      "7",  "8",  "9",  "10", "11", "12", "13",
+      "14", "15", "16", "17", "18", "19", "20",
+      "21", "22", "23", "24", "25", "26", "27",
+      "28", "29", "30", "31", "1",  "2",  "3",
+      "4",  "5",  "6",  "7",  "8",  "9",  "10",
+    ],
+    "0001-01",
+  );
+
+  await helper.tearDown();
+});
+
+add_task(async function test_datepicker_abs_max() {
+  const inputValue = "275760-09-13";
+  await helper.openPicker(`data:text/html, <input type="date" value="${inputValue}">`);
+
+  Assert.deepEqual(
+    getCalendarText(),
+    [
+      "31", "1", "2", "3",  "4",  "5",  "6",
+      "7",  "8", "9", "10", "11", "12", "13",
+      "",   "",  "",  "",   "",   "",   "",
+      "",   "",  "",  "",   "",   "",   "",
+      "",   "",  "",  "",   "",   "",   "",
+      "",   "",  "",  "",   "",   "",   "",
+    ],
+    "275760-09",
+  );
+
+  await helper.tearDown();
+});
