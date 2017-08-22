@@ -108,33 +108,12 @@ const DownloadsButton = {
 
     indicator.open = this._anchorRequested;
 
-    let widget = CustomizableUI.getWidget("downloads-button")
-                               .forWindow(window);
-     // Determine if the indicator is located on an invisible toolbar.
-     if (!isElementVisible(indicator.parentNode) && !widget.overflowed) {
-       return null;
-     }
+    // Determine if the indicator is located on an invisible toolbar.
+    if (!window.toolbar.visible) {
+      return null;
+    }
 
     return DownloadsIndicatorView.indicatorAnchor;
-  },
-
-  /**
-   * Checks whether the indicator is, or will soon be visible in the browser
-   * window.
-   *
-   * @param aCallback
-   *        Called once the indicator overlay has loaded. Gets a boolean
-   *        argument representing the indicator visibility.
-   */
-  checkIsVisible(aCallback) {
-    DownloadsOverlayLoader.ensureOverlayLoaded(this.kIndicatorOverlay, () => {
-      if (!this._placeholder) {
-        aCallback(false);
-      } else {
-        let element = DownloadsIndicatorView.indicator || this._placeholder;
-        aCallback(isElementVisible(element.parentNode));
-      }
-    });
   },
 
   /**
@@ -162,6 +141,36 @@ const DownloadsButton = {
       this._anchorRequested = true;
       aCallback(this._getAnchorInternal());
     });
+  },
+
+  unhideAndPlace() {
+    if (this._placeholder.hasAttribute("hidden")) {
+      this._navBar.setAttribute("hasdownloads", "true");
+      this._placeholder.removeAttribute("hidden");
+      let insertionPoint = document.getElementById("urlbar-container");
+      while (insertionPoint && insertionPoint.nextElementSibling) {
+        let next = insertionPoint.nextElementSibling;
+        if (!next.hidden &&
+            (next.nodeName == "toolbarspring" ||
+             next.id == "downloads-button" || /* also have to ignore ourselves... */
+             next.id == "search-container" ||
+             next.id == "urlbar-search-splitter")) {
+          insertionPoint = next;
+        } else {
+          break;
+        }
+      }
+      if (insertionPoint && insertionPoint.nextElementSibling != this._placeholder &&
+          insertionPoint.nextElementSibling != this._placeholder.nextElementSibling) {
+        insertionPoint.insertAdjacentElement("afterend", this._placeholder);
+      }
+    }
+  },
+
+  hide() {
+    DownloadsPanel.hidePanel();
+    this._navBar.removeAttribute("hasdownloads");
+    this._placeholder.setAttribute("hidden", "true");
   },
 
   /**
@@ -252,12 +261,6 @@ const DownloadsIndicatorView = {
       return;
     }
 
-    // If we don't have a _placeholder, there's no chance that the overlay
-    // will load correctly: bail (and don't set _operational to true!)
-    if (!DownloadsButton._placeholder) {
-      return;
-    }
-
     DownloadsOverlayLoader.ensureOverlayLoaded(
       DownloadsButton.kIndicatorOverlay,
       () => {
@@ -339,21 +342,7 @@ const DownloadsIndicatorView = {
       return;
     }
 
-    let anchor = DownloadsButton._placeholder;
-    let widgetGroup = CustomizableUI.getWidget("downloads-button");
-    let widget = widgetGroup.forWindow(window);
-    if (widget.overflowed || widgetGroup.areaType == CustomizableUI.TYPE_MENU_PANEL) {
-      if (anchor && this._isAncestorPanelOpen(anchor)) {
-        // If the containing panel is open, don't do anything, because the
-        // notification would appear under the open panel. See
-        // https://bugzilla.mozilla.org/show_bug.cgi?id=984023
-        return;
-      }
-
-      // Otherwise, try to use the anchor of the panel:
-      anchor = widget.anchor;
-    }
-    if (!anchor || !isElementVisible(anchor.parentNode)) {
+    if (!window.toolbar.visible) {
       // Our container isn't visible, so can't show the animation:
       return;
     }
@@ -365,6 +354,7 @@ const DownloadsIndicatorView = {
     // container.
     // Note: no notifier animation for download finished in Photon
     let notifier = this.notifier;
+    let anchor = DownloadsButton._placeholder;
 
     if (aType == "start") {
       // Show the notifier before measuring for size/placement. Being hidden by default
@@ -423,7 +413,9 @@ const DownloadsIndicatorView = {
       this._hasDownloads = aValue;
 
       // If there is at least one download, ensure that the view elements are
+      // operational
       if (aValue) {
+        DownloadsButton.unhideAndPlace();
         this._ensureOperational();
       }
     }
@@ -445,7 +437,6 @@ const DownloadsIndicatorView = {
 
     if (this._percentComplete !== aValue) {
       this._percentComplete = aValue;
-      this._refreshAttention();
 
       if (this._percentComplete >= 0) {
         this.indicator.setAttribute("progress", "true");
@@ -471,28 +462,13 @@ const DownloadsIndicatorView = {
     }
     if (this._attention != aValue) {
       this._attention = aValue;
-      this._refreshAttention();
+      if (this._attention == DownloadsCommon.ATTENTION_NONE) {
+        this.indicator.removeAttribute("attention");
+      } else {
+        this.indicator.setAttribute("attention", this._attention);
+      }
     }
     return this._attention;
-  },
-
-  _refreshAttention() {
-    // Check if the downloads button is in the menu panel, to determine which
-    // button needs to get a badge.
-    let widgetGroup = CustomizableUI.getWidget("downloads-button");
-    let inMenu = widgetGroup.areaType == CustomizableUI.TYPE_MENU_PANEL;
-
-    // For arrow-Styled indicator, suppress success attention if we have
-    // progress in toolbar
-    let suppressAttention = !inMenu &&
-      this._attention == DownloadsCommon.ATTENTION_SUCCESS &&
-      this._percentComplete >= 0;
-
-    if (suppressAttention || this._attention == DownloadsCommon.ATTENTION_NONE) {
-      this.indicator.removeAttribute("attention");
-    } else {
-      this.indicator.setAttribute("attention", this._attention);
-    }
   },
   _attention: DownloadsCommon.ATTENTION_NONE,
 
@@ -504,14 +480,7 @@ const DownloadsIndicatorView = {
   },
 
   onCommand(aEvent) {
-    // If the downloads button is in the menu panel, open the Library
-    let widgetGroup = CustomizableUI.getWidget("downloads-button");
-    if (widgetGroup.areaType == CustomizableUI.TYPE_MENU_PANEL) {
-      DownloadsPanel.showDownloadsHistory();
-    } else {
-      DownloadsPanel.showPanel();
-    }
-
+    DownloadsPanel.showPanel();
     aEvent.stopPropagation();
   },
 
@@ -563,11 +532,6 @@ const DownloadsIndicatorView = {
   },
 
   get indicatorAnchor() {
-    let widget = CustomizableUI.getWidget("downloads-button")
-                               .forWindow(window);
-    if (widget.overflowed) {
-      return widget.anchor;
-    }
     return document.getElementById("downloads-indicator-anchor");
   },
 

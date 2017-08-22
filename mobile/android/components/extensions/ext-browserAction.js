@@ -84,7 +84,7 @@ class BrowserAction {
       }
     }
 
-    if (!tab || tab.selected) {
+    if (!tab || tab.getActive()) {
       BrowserActions.update(this.uuid, {[prop]: value});
     }
   }

@@ -11,7 +11,6 @@ browser.jar:
 * skin/classic/browser/syncedtabs/sidebar.css     (syncedtabs/sidebar.css)
 * skin/classic/browser/browser.css
 * skin/classic/browser/compacttheme.css
-  skin/classic/browser/Info.png
   skin/classic/browser/menuPanel-customize.png
   skin/classic/browser/menuPanel-customize@2x.png
   skin/classic/browser/menuPanel-exit.png
@@ -33,15 +32,14 @@ browser.jar:
 * skin/classic/browser/controlcenter/panel.css        (controlcenter/panel.css)
 * skin/classic/browser/customizableui/panelUI.css (customizableui/panelUI.css)
 * skin/classic/browser/downloads/allDownloadsViewOverlay.css   (downloads/allDownloadsViewOverlay.css)
-  skin/classic/browser/downloads/download-glow-menuPanel.png (downloads/download-glow-menuPanel.png)
 * skin/classic/browser/downloads/downloads.css        (downloads/downloads.css)
   skin/classic/browser/feeds/feedIcon.png             (feeds/feedIcon.png)
   skin/classic/browser/feeds/feedIcon16.png           (feeds/feedIcon16.png)
   skin/classic/browser/feeds/subscribe.css            (feeds/subscribe.css)
 * skin/classic/browser/newtab/newTab.css              (newtab/newTab.css)
-* skin/classic/browser/notification-icons/geo-blocked.svg  (notification-icons/geo-blocked.svg)
+  skin/classic/browser/notification-icons/geo-blocked.svg  (notification-icons/geo-blocked.svg)
   skin/classic/browser/notification-icons/geo-detailed.svg (notification-icons/geo-detailed.svg)
-* skin/classic/browser/notification-icons/geo.svg          (notification-icons/geo.svg)
+  skin/classic/browser/notification-icons/geo.svg          (notification-icons/geo.svg)
   skin/classic/browser/places/allBookmarks.png        (places/allBookmarks.png)
   skin/classic/browser/places/bookmarksMenu.png       (places/bookmarksMenu.png)
   skin/classic/browser/places/bookmarksToolbar.png    (places/bookmarksToolbar.png)

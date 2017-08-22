@@ -37,6 +37,10 @@ class L10n {
         return "XHR";
       case "webconsole.requestsFilterButton.label":
         return "Requests";
+      case "messageRepeats.tooltip2":
+        return "#1 repeat;#1 repeats";
+      case "webconsole.filteredMessages.label":
+        return "#1 item hidden by filters;#1 items hidden by filters";
       default:
         return str;
     }

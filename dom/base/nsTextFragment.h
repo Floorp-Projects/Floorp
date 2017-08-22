@@ -221,8 +221,12 @@ public:
     uint32_t mInHeap : 1;
     uint32_t mIs2b : 1;
     uint32_t mIsBidi : 1;
+    // Note that when you change the bits of mLength, you also need to change
+    // NS_MAX_TEXT_FRAGMENT_LENGTH.
     uint32_t mLength : 29;
   };
+
+#define NS_MAX_TEXT_FRAGMENT_LENGTH (static_cast<uint32_t>(0x1FFFFFFF))
 
   size_t SizeOfExcludingThis(mozilla::MallocSizeOf aMallocSizeOf) const;
 

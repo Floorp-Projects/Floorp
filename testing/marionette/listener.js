@@ -937,7 +937,7 @@ function createATouch(el, corx, cory, touchId) {
  */
 async function performActions(msg) {
   let chain = action.Chain.fromJson(msg.actions);
-  await action.dispatch(chain, seenEls, curContainer);
+  await action.dispatch(chain, seenEls, curContainer.frame);
 }
 
 /**
@@ -948,7 +948,7 @@ async function performActions(msg) {
  */
 async function releaseActions() {
   await action.dispatchTickActions(
-      action.inputsToCancel.reverse(), 0, seenEls, curContainer);
+      action.inputsToCancel.reverse(), 0, seenEls, curContainer.frame);
   action.inputsToCancel.length = 0;
   action.inputStateMap.clear();
 }

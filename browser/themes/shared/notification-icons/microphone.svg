@@ -1,7 +1,7 @@
 <!-- This Source Code Form is subject to the terms of the Mozilla Public
    - License, v. 2.0. If a copy of the MPL was not distributed with this
    - file, You can obtain one at http://mozilla.org/MPL/2.0/. -->
-<svg fill="context-fill" fill-opacity="context-fill-opacity" xmlns="http://www.w3.org/2000/svg"
-     width="32" height="32" viewBox="0 0 32 32">
-#include microphone-icon.inc.svg
+<svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="context-fill" fill-opacity="context-fill-opacity">
+  <path d="M8 11a2 2 0 0 0 2-2V3a2 2 0 1 0-4 0v6a2 2 0 0 0 2 2z"/>
+  <path d="M12 9V7.5a.5.5 0 0 0-1 0V9a3 3 0 0 1-6 0V7.5a.5.5 0 0 0-1 0V9a4 4 0 0 0 3 3.858V14H5.5a.5.5 0 0 0 0 1h5a.5.5 0 0 0 0-1H9v-1.142A4 4 0 0 0 12 9z"/>
 </svg>

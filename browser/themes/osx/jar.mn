@@ -10,7 +10,6 @@ browser.jar:
 * skin/classic/browser/syncedtabs/sidebar.css          (syncedtabs/sidebar.css)
 * skin/classic/browser/browser.css
 * skin/classic/browser/compacttheme.css
-  skin/classic/browser/Info.png
   skin/classic/browser/subtle-pattern.png
   skin/classic/browser/menu-back.png
   skin/classic/browser/menu-forward.png
@@ -38,20 +37,10 @@ browser.jar:
   skin/classic/browser/slowStartup-16.png
   skin/classic/browser/toolbarbutton-dropmarker.png
   skin/classic/browser/toolbarbutton-dropmarker@2x.png
-  skin/classic/browser/urlbar-popup-blocked.png
-  skin/classic/browser/urlbar-popup-blocked@2x.png
-  skin/classic/browser/webRTC-sharingDevice-menubar.png
-  skin/classic/browser/webRTC-sharingDevice-menubar@2x.png
-  skin/classic/browser/webRTC-sharingMicrophone-menubar.png
-  skin/classic/browser/webRTC-sharingMicrophone-menubar@2x.png
-  skin/classic/browser/webRTC-sharingScreen-menubar.png
-  skin/classic/browser/webRTC-sharingScreen-menubar@2x.png
   skin/classic/browser/webRTC-indicator.css
 * skin/classic/browser/controlcenter/panel.css        (controlcenter/panel.css)
 * skin/classic/browser/customizableui/panelUI.css    (customizableui/panelUI.css)
 * skin/classic/browser/downloads/allDownloadsViewOverlay.css (downloads/allDownloadsViewOverlay.css)
-  skin/classic/browser/downloads/download-glow-menuPanel.png (downloads/download-glow-menuPanel.png)
-  skin/classic/browser/downloads/download-glow-menuPanel@2x.png (downloads/download-glow-menuPanel@2x.png)
 * skin/classic/browser/downloads/downloads.css              (downloads/downloads.css)
   skin/classic/browser/feeds/subscribe.css                  (feeds/subscribe.css)
   skin/classic/browser/feeds/feedIcon.png                   (feeds/feedIcon.png)
@@ -60,8 +49,8 @@ browser.jar:
   skin/classic/browser/setDesktopBackground.css
   skin/classic/browser/monitor.png
   skin/classic/browser/monitor_16-10.png
-* skin/classic/browser/notification-icons/geo-blocked.svg  (notification-icons/geo-blocked.svg)
-* skin/classic/browser/notification-icons/geo.svg          (notification-icons/geo.svg)
+  skin/classic/browser/notification-icons/geo-blocked.svg  (notification-icons/geo-blocked.svg)
+  skin/classic/browser/notification-icons/geo.svg          (notification-icons/geo.svg)
   skin/classic/browser/places/allBookmarks.png              (places/allBookmarks.png)
 * skin/classic/browser/places/places.css                    (places/places.css)
   skin/classic/browser/places/organizer.css                 (places/organizer.css)
