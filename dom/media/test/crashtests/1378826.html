@@ -1,0 +1,46 @@
+<!DOCTYPE html>
+<html class="reftest-wait">
+<head>
+<title>Bug 1378826 : Removing last video track from recorder stream crashes.</title>
+</head>
+<body>
+<canvas id="canvas"></canvas>
+<script type="text/javascript">
+
+function wait(ms) {
+  return new Promise(resolve => setTimeout(resolve, ms));
+}
+
+function boom() {
+  let canvas = document.getElementById("canvas");
+  let ctx = canvas.getContext('2d');
+  ctx.fillRect(10, 10, 100, 100);
+  let stream = canvas.captureStream();
+  let rec = new MediaRecorder(stream);
+  // At the time of fixing this bug onstop would fire, but this may change in
+  // future. As such defensively listen for onerror too to prevent this test
+  // timing out.
+  let stoppedPromise = new Promise(y => (rec.onstop = y,
+                                         rec.onerror = e => y));
+  rec.onstart = () => {
+    // Remove the video track from the stream we're recording
+    stream.removeTrack(stream.getTracks()[0]);
+    // Recorder should stop or error in response to the above
+    return stoppedPromise
+    .then(() => {
+      // Little wait to help get bad writes if they're going to happen
+      wait(100)
+      .then(() => {
+        // Didn't crash, finish
+        document.documentElement.removeAttribute("class");
+      });
+    });
+  };
+  rec.start();
+}
+
+window.onload = boom;
+
+</script>
+</body>
+</html>
