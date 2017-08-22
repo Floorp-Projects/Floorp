@@ -18,6 +18,17 @@ function promiseSettingsDialogClose() {
   });
 }
 
+function assertAllSitesNotListed(win) {
+  let frameDoc = win.gSubDialog._topDialog._frame.contentDocument;
+  let removeBtn = frameDoc.getElementById("removeSelected");
+  let removeAllBtn = frameDoc.getElementById("removeAll");
+  let sitesList = frameDoc.getElementById("sitesList");
+  let sites = sitesList.getElementsByTagName("richlistitem");
+  is(sites.length, 0, "Should not list all sites");
+  is(removeBtn.disabled, true, "Should disable the removeSelected button");
+  is(removeAllBtn.disabled, true, "Should disable the removeAllBtn button");
+}
+
 // Test selecting and removing all sites one by one
 add_task(async function() {
   await SpecialPowers.pushPrefEnv({set: [["browser.storageManager.enabled", true]]});
@@ -70,7 +81,7 @@ add_task(async function() {
   frameDoc = win.gSubDialog._topDialog._frame.contentDocument;
   cancelBtn = frameDoc.getElementById("cancel");
   removeAllSitesOneByOne();
-  assertAllSitesNotListed();
+  assertAllSitesNotListed(win);
   cancelBtn.doCommand();
   await settingsDialogClosePromise;
   await openSiteDataSettingsDialog();
@@ -82,7 +93,7 @@ add_task(async function() {
   frameDoc = win.gSubDialog._topDialog._frame.contentDocument;
   saveBtn = frameDoc.getElementById("save");
   removeAllSitesOneByOne();
-  assertAllSitesNotListed();
+  assertAllSitesNotListed(win);
   saveBtn.doCommand();
   await cancelPromise;
   await settingsDialogClosePromise;
@@ -96,13 +107,13 @@ add_task(async function() {
   frameDoc = win.gSubDialog._topDialog._frame.contentDocument;
   saveBtn = frameDoc.getElementById("save");
   removeAllSitesOneByOne();
-  assertAllSitesNotListed();
+  assertAllSitesNotListed(win);
   saveBtn.doCommand();
   await acceptPromise;
   await settingsDialogClosePromise;
   await updatePromise;
   await openSiteDataSettingsDialog();
-  assertAllSitesNotListed();
+  assertAllSitesNotListed(win);
 
   mockSiteDataManager.unregister();
   await BrowserTestUtils.removeTab(gBrowser.selectedTab);
@@ -116,17 +127,6 @@ add_task(async function() {
       sites[i].click();
       removeBtn.doCommand();
     }
-  }
-
-  function assertAllSitesNotListed() {
-    frameDoc = win.gSubDialog._topDialog._frame.contentDocument;
-    let removeBtn = frameDoc.getElementById("removeSelected");
-    let removeAllBtn = frameDoc.getElementById("removeAll");
-    let sitesList = frameDoc.getElementById("sitesList");
-    let sites = sitesList.getElementsByTagName("richlistitem");
-    is(sites.length, 0, "Should not list all sites");
-    is(removeBtn.disabled, true, "Should disable the removeSelected button");
-    is(removeAllBtn.disabled, true, "Should disable the removeAllBtn button");
   }
 });
 
@@ -372,6 +372,67 @@ add_task(async function() {
   expected = prefStrBundle.getString("persistent");
   let status = siteItems[0].getAttribute("status");
   is(status, expected, "Should mark persisted status across scheme, port and origin attributes");
+
+  mockSiteDataManager.unregister();
+  await BrowserTestUtils.removeTab(gBrowser.selectedTab);
+});
+
+// Test dynamically clearing all site data
+add_task(async function() {
+  await SpecialPowers.pushPrefEnv({set: [["browser.storageManager.enabled", true]]});
+  mockSiteDataManager.register(SiteDataManager);
+  mockSiteDataManager.fakeSites = [
+    {
+      usage: 1024,
+      principal: Services.scriptSecurityManager
+                         .createCodebasePrincipalFromOrigin("https://account.xyz.com"),
+      persisted: true
+    },
+    {
+      usage: 1024,
+      principal: Services.scriptSecurityManager
+                         .createCodebasePrincipalFromOrigin("https://shopping.xyz.com"),
+      persisted: false
+    },
+  ];
+  let fakeHosts = mockSiteDataManager.fakeSites.map(site => site.principal.URI.host);
+
+  // Test the initial state
+  let updatePromise = promiseSiteDataManagerSitesUpdated();
+  await openPreferencesViaOpenPreferencesAPI("privacy", { leaveOpen: true });
+  await updatePromise;
+  await openSiteDataSettingsDialog();
+  let doc = gBrowser.selectedBrowser.contentDocument;
+  assertSitesListed(doc, fakeHosts);
+
+  // Add more sites dynamically
+  mockSiteDataManager.fakeSites.push({
+    usage: 1024,
+    principal: Services.scriptSecurityManager
+                       .createCodebasePrincipalFromOrigin("http://cinema.bar.com"),
+    persisted: true
+  }, {
+    usage: 1024,
+    principal: Services.scriptSecurityManager
+                       .createCodebasePrincipalFromOrigin("http://email.bar.com"),
+    persisted: false
+  });
+
+  // Test clearing all site data dynamically
+  let win = gBrowser.selectedBrowser.contentWindow;
+  let frameDoc = win.gSubDialog._topDialog._frame.contentDocument;
+  updatePromise = promiseSiteDataManagerSitesUpdated();
+  let acceptRemovePromise = promiseAlertDialogOpen("accept");
+  let settingsDialogClosePromise = promiseSettingsDialogClose();
+  let removeAllBtn = frameDoc.getElementById("removeAll");
+  let saveBtn = frameDoc.getElementById("save");
+  removeAllBtn.doCommand();
+  saveBtn.doCommand();
+  await acceptRemovePromise;
+  await settingsDialogClosePromise;
+  await updatePromise;
+  await openSiteDataSettingsDialog();
+  assertAllSitesNotListed(win);
 
   mockSiteDataManager.unregister();
   await BrowserTestUtils.removeTab(gBrowser.selectedTab);
