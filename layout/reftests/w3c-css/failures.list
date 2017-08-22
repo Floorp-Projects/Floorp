@@ -66,10 +66,10 @@ fails-if((OSX||winWidget||Android)&&!styloVsGecko) css-writing-modes-3/sizing-or
 fails-if((OSX||winWidget||Android)&&!styloVsGecko) css-writing-modes-3/sizing-orthog-htb-in-vlr-020.xht
 fails-if((OSX||winWidget||Android)&&!styloVsGecko) css-writing-modes-3/sizing-orthog-htb-in-vrl-008.xht
 fails-if((OSX||winWidget||Android)&&!styloVsGecko) css-writing-modes-3/sizing-orthog-htb-in-vrl-020.xht
-fails-if((OSX||winWidget||Android)&&!styloVsGecko) css-writing-modes-3/sizing-orthog-vlr-in-htb-008.xht
-fails-if((OSX||winWidget||Android)&&!styloVsGecko) css-writing-modes-3/sizing-orthog-vlr-in-htb-020.xht
-fails-if((OSX||winWidget||Android)&&!styloVsGecko) css-writing-modes-3/sizing-orthog-vrl-in-htb-008.xht
-fails-if((OSX||winWidget||Android)&&!styloVsGecko) css-writing-modes-3/sizing-orthog-vrl-in-htb-020.xht
+css-writing-modes-3/sizing-orthog-vlr-in-htb-008.xht
+css-writing-modes-3/sizing-orthog-vlr-in-htb-020.xht
+css-writing-modes-3/sizing-orthog-vrl-in-htb-008.xht
+css-writing-modes-3/sizing-orthog-vrl-in-htb-020.xht
 fails-if(Android) css-writing-modes-3/sizing-orthog-htb-in-vlr-003.xht
 fails-if(Android) css-writing-modes-3/sizing-orthog-htb-in-vlr-009.xht
 fails-if(Android) css-writing-modes-3/sizing-orthog-htb-in-vlr-015.xht
@@ -111,13 +111,13 @@ fuzzy-if(winWidget,110,1200) css-writing-modes-3/table-column-order-slr-007.xht
 fuzzy-if(OSX||winWidget,110,1200) css-writing-modes-3/table-column-order-srl-006.xht
 fuzzy-if(OSX||winWidget,75,404)   css-writing-modes-3/text-align-v??-0??.xht
 fuzzy-if(OSX||winWidget,215,780)  css-writing-modes-3/text-baseline-???-00?.xht
-skip-if(stylo) fuzzy-if(OSX,15,16)    css-writing-modes-3/text-combine-upright-decorations-001.html
+fuzzy-if(OSX,15,16)    css-writing-modes-3/text-combine-upright-decorations-001.html
 fuzzy-if(OSX||winWidget,255,480)  css-writing-modes-3/text-indent-v??-0??.xht
 fuzzy-if(OSX||winWidget,226,960)  css-writing-modes-3/text-orientation-016.xht
 fuzzy-if(OSX||winWidget,223,720)  css-writing-modes-3/vertical-alignment-*.xht
 fuzzy-if(OSX||winWidget,153,612)  css-writing-modes-3/writing-mode-vertical-??-00?.*
 fuzzy(255,960) css-writing-modes-3/text-combine-upright-value-all-00?.html
-fuzzy(255,960) fails-if(stylo) css-writing-modes-3/text-combine-upright-value-all-001.html
+fuzzy(255,960) css-writing-modes-3/text-combine-upright-value-all-001.html
 
 # Bug 1167911
 skip css-writing-modes-3/abs-pos-non-replaced-icb-vlr-021.xht
@@ -186,8 +186,8 @@ css-writing-modes-3/text-combine-upright-layout-rules-001.html
 
 # Fuzzy annotations for multicol tests are due to AA differences.
 # fails-if(!stylo) annotations need to be triaged later. (Bug 1299006)
-fails-if(!styloVsGecko) css-multicol-1/multicol-block-clip-001.xht
-fails-if(!styloVsGecko) css-multicol-1/multicol-block-clip-002.xht
+fails-if((winWidget||OSX)&&!styloVsGecko) css-multicol-1/multicol-block-no-clip-001.xht
+fails-if((winWidget||OSX)&&!styloVsGecko) css-multicol-1/multicol-block-no-clip-002.xht
 fails-if(!styloVsGecko) css-multicol-1/multicol-br-inside-avoidcolumn-001.xht
 fails-if(!styloVsGecko) css-multicol-1/multicol-break-000.xht
 fails-if(!styloVsGecko) css-multicol-1/multicol-break-001.xht
@@ -210,9 +210,9 @@ fuzzy(87,180) css-multicol-1/multicol-count-001.xht
 fails-if(!styloVsGecko) css-multicol-1/multicol-count-002.xht
 fails-if(!styloVsGecko) css-multicol-1/multicol-count-computed-001.xht
 fails-if(!styloVsGecko) css-multicol-1/multicol-count-computed-002.xht
-fails-if(!styloVsGecko) css-multicol-1/multicol-count-computed-003.xht
+fails-if((winWidget||OSX||Android)&&!styloVsGecko) css-multicol-1/multicol-count-computed-003.xht
 fuzzy-if(winWidget||OSX||gtkWidget,112,861) fails-if(Android) css-multicol-1/multicol-count-computed-004.xht
-fails-if(!styloVsGecko) css-multicol-1/multicol-count-computed-005.xht
+fails-if((winWidget||OSX||Android)&&!styloVsGecko) css-multicol-1/multicol-count-computed-005.xht
 fails-if(!styloVsGecko) css-multicol-1/multicol-count-large-001.xht
 fuzzy(255,132) css-multicol-1/multicol-count-large-002.xht
 fuzzy(204,930) fuzzy-if(skiaContent,208,930) css-multicol-1/multicol-count-negative-001.xht

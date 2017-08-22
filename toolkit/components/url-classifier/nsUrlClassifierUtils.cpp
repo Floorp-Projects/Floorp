@@ -331,10 +331,10 @@ nsUrlClassifierUtils::GetProtocolVersion(const nsACString& aProvider,
   if (prefBranch) {
       nsPrintfCString prefName("browser.safebrowsing.provider.%s.pver",
                                nsCString(aProvider).get());
-      nsXPIDLCString version;
+      nsCString version;
       nsresult rv = prefBranch->GetCharPref(prefName.get(), getter_Copies(version));
 
-      aVersion = NS_SUCCEEDED(rv) ? version : DEFAULT_PROTOCOL_VERSION;
+      aVersion = NS_SUCCEEDED(rv) ? version.get() : DEFAULT_PROTOCOL_VERSION;
   } else {
       aVersion = DEFAULT_PROTOCOL_VERSION;
   }

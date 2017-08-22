@@ -173,12 +173,12 @@ nsClipboard::SetData(nsITransferable *aTransferable,
         nsCOMPtr<nsISupportsCString> flavor = do_QueryElementAt(flavors, i);
 
         if (flavor) {
-            nsXPIDLCString flavorStr;
+            nsCString flavorStr;
             flavor->ToString(getter_Copies(flavorStr));
 
             // special case text/unicode since we can handle all of
             // the string types
-            if (!strcmp(flavorStr, kUnicodeMime)) {
+            if (flavorStr.EqualsLiteral(kUnicodeMime)) {
                 gtk_target_list_add(list, gdk_atom_intern("UTF8_STRING", FALSE), 0, 0);
                 gtk_target_list_add(list, gdk_atom_intern("COMPOUND_TEXT", FALSE), 0, 0);
                 gtk_target_list_add(list, gdk_atom_intern("TEXT", FALSE), 0, 0);
@@ -201,7 +201,7 @@ nsClipboard::SetData(nsITransferable *aTransferable,
             }
 
             // Add this to our list of valid targets
-            GdkAtom atom = gdk_atom_intern(flavorStr, FALSE);
+            GdkAtom atom = gdk_atom_intern(flavorStr.get(), FALSE);
             gtk_target_list_add(list, atom, 0, 0);
         }
     }
@@ -270,12 +270,12 @@ nsClipboard::GetData(nsITransferable *aTransferable, int32_t aWhichClipboard)
         currentFlavor = do_QueryElementAt(flavors, i);
 
         if (currentFlavor) {
-            nsXPIDLCString flavorStr;
+            nsCString flavorStr;
             currentFlavor->ToString(getter_Copies(flavorStr));
 
             // Special case text/unicode since we can convert any
             // string into text/unicode
-            if (!strcmp(flavorStr, kUnicodeMime)) {
+            if (flavorStr.EqualsLiteral(kUnicodeMime)) {
                 gchar* new_text = wait_for_text(clipboard);
                 if (new_text) {
                     // Convert utf-8 into our unicode format.
@@ -295,16 +295,16 @@ nsClipboard::GetData(nsITransferable *aTransferable, int32_t aWhichClipboard)
 
             // For images, we must wrap the data in an nsIInputStream then return instead of break,
             // because that code below won't help us.
-            if (!strcmp(flavorStr, kJPEGImageMime) ||
-                !strcmp(flavorStr, kJPGImageMime) ||
-                !strcmp(flavorStr, kPNGImageMime) ||
-                !strcmp(flavorStr, kGIFImageMime)) {
+            if (flavorStr.EqualsLiteral(kJPEGImageMime) ||
+                flavorStr.EqualsLiteral(kJPGImageMime) ||
+                flavorStr.EqualsLiteral(kPNGImageMime) ||
+                flavorStr.EqualsLiteral(kGIFImageMime)) {
                 // Emulate support for image/jpg
-                if (!strcmp(flavorStr, kJPGImageMime)) {
+                if (flavorStr.EqualsLiteral(kJPGImageMime)) {
                     flavorStr.Assign(kJPEGImageMime);
                 }
 
-                GdkAtom atom = gdk_atom_intern(flavorStr, FALSE);
+                GdkAtom atom = gdk_atom_intern(flavorStr.get(), FALSE);
 
                 GtkSelectionData *selectionData = wait_for_contents(clipboard, atom);
                 if (!selectionData)
@@ -315,21 +315,21 @@ nsClipboard::GetData(nsITransferable *aTransferable, int32_t aWhichClipboard)
                                       (const char*)gtk_selection_data_get_data(selectionData),
                                       gtk_selection_data_get_length(selectionData), 
                                       NS_ASSIGNMENT_COPY);
-                aTransferable->SetTransferData(flavorStr, byteStream, sizeof(nsIInputStream*));
+                aTransferable->SetTransferData(flavorStr.get(), byteStream, sizeof(nsIInputStream*));
                 gtk_selection_data_free(selectionData);
                 return NS_OK;
             }
 
             // Get the atom for this type and try to request it off
             // the clipboard.
-            GdkAtom atom = gdk_atom_intern(flavorStr, FALSE);
+            GdkAtom atom = gdk_atom_intern(flavorStr.get(), FALSE);
             GtkSelectionData *selectionData;
             selectionData = wait_for_contents(clipboard, atom);
             if (selectionData) {
                 const guchar *clipboardData = gtk_selection_data_get_data(selectionData);
                 length = gtk_selection_data_get_length(selectionData);
                 // Special case text/html since we can convert into UCS2
-                if (!strcmp(flavorStr, kHTMLMime)) {
+                if (flavorStr.EqualsLiteral(kHTMLMime)) {
                     char16_t* htmlBody= nullptr;
                     int32_t htmlBodyLen = 0;
                     // Convert text/html into our unicode format
@@ -356,7 +356,7 @@ nsClipboard::GetData(nsITransferable *aTransferable, int32_t aWhichClipboard)
 
     if (foundData) {
         nsCOMPtr<nsISupports> wrapper;
-        nsPrimitiveHelpers::CreatePrimitiveForData(foundFlavor.get(),
+        nsPrimitiveHelpers::CreatePrimitiveForData(foundFlavor,
                                                    data, length,
                                                    getter_AddRefs(wrapper));
         aTransferable->SetTransferData(foundFlavor.get(),
@@ -603,8 +603,8 @@ nsClipboard::SelectionGetEvent(GtkClipboard     *aClipboard,
     }
 
     void *primitive_data = nullptr;
-    nsPrimitiveHelpers::CreateDataFromPrimitive(target_name, item,
-                                                &primitive_data, len);
+    nsPrimitiveHelpers::CreateDataFromPrimitive(nsDependentCString(target_name),
+                                                item, &primitive_data, len);
 
     if (primitive_data) {
         // Check to see if the selection data is text/html

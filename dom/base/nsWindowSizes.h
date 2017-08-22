@@ -113,7 +113,8 @@ struct nsStyleSizes
 {
 #define FOR_EACH_SIZE(macro) \
   macro(Style, mComputedValuesDom) \
-  macro(Style, mComputedValuesNonDom)
+  macro(Style, mComputedValuesNonDom) \
+  macro(Style, mComputedValuesVisited)
 
   nsStyleSizes()
     :

@@ -18,18 +18,18 @@
 
 #define IS_ZERO_WIDTH_SPACE(u) ((u) == 0x200B)
 
-void ToLowerCase(nsAString&);
-void ToUpperCase(nsAString&);
+void ToLowerCase(nsAString& aString);
+void ToUpperCase(nsAString& aString);
 
 void ToLowerCase(const nsAString& aSource, nsAString& aDest);
 void ToUpperCase(const nsAString& aSource, nsAString& aDest);
 
-uint32_t ToLowerCase(uint32_t);
-uint32_t ToUpperCase(uint32_t);
-uint32_t ToTitleCase(uint32_t);
+uint32_t ToLowerCase(uint32_t aChar);
+uint32_t ToUpperCase(uint32_t aChar);
+uint32_t ToTitleCase(uint32_t aChar);
 
-void ToLowerCase(const char16_t*, char16_t*, uint32_t);
-void ToUpperCase(const char16_t*, char16_t*, uint32_t);
+void ToLowerCase(const char16_t *aIn, char16_t *aOut, uint32_t aLen);
+void ToUpperCase(const char16_t *aIn, char16_t *aOut, uint32_t aLen);
 
 inline bool IsUpperCase(uint32_t c) {
   return ToLowerCase(c) != c;
@@ -107,8 +107,21 @@ CaseInsensitiveCompare(const char* aLeft, const char* aRight,
                        uint32_t aLeftBytes, uint32_t aRightBytes);
 
 /**
+ * Calculates the lower-case of the codepoint of the UTF8 sequence starting at
+ * aStr.  Sets aNext to the byte following the end of the sequence.
+ *
+ * If the sequence is invalid, or if computing the codepoint would take us off
+ * the end of the string (as marked by aEnd), returns -1 and does not set
+ * aNext.  Note that this function doesn't check that aStr < aEnd -- it assumes
+ * you've done that already.
+ */
+uint32_t
+GetLowerUTF8Codepoint(const char* aStr, const char* aEnd, const char **aNext);
+
+/**
  * This function determines whether the UTF-8 sequence pointed to by aLeft is
- * case-insensitively-equal to the UTF-8 sequence pointed to by aRight.
+ * case-insensitively-equal to the UTF-8 sequence pointed to by aRight, as
+ * defined by having matching lower-cased codepoints.
  *
  * aLeftEnd marks the first memory location past aLeft that is not part of
  * aLeft; aRightEnd similarly marks the end of aRight.

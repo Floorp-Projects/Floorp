@@ -358,6 +358,12 @@ XPCOM_API(void) NS_CycleCollectorSuspect3(void* aPtr,
                                           nsCycleCollectingAutoRefCnt* aRefCnt,
                                           bool* aShouldDelete);
 
+XPCOM_API(void)
+NS_CycleCollectorSuspectUsingNursery(void* aPtr,
+                                     nsCycleCollectionParticipant* aCp,
+                                     nsCycleCollectingAutoRefCnt* aRefCnt,
+                                     bool* aShouldDelete);
+
 #endif
 
 /**
