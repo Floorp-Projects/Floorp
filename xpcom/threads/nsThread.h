@@ -105,7 +105,9 @@ public:
     EventQueue()->EnableInputEventPrioritization();
   }
 
+#ifndef RELEASE_OR_BETA
   mozilla::TimeStamp& NextIdleDeadlineRef() { return mNextIdleDeadline; }
+#endif
 
   mozilla::SynchronizedEventQueue* EventQueue() { return mEvents.get(); }
 
