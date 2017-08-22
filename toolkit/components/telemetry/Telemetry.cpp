@@ -564,41 +564,33 @@ TelemetryImpl::SetHistogramRecordingEnabled(const nsACString &id, bool aEnabled)
 }
 
 NS_IMETHODIMP
-TelemetryImpl::GetHistogramSnapshots(JSContext *cx, JS::MutableHandle<JS::Value> ret)
+TelemetryImpl::SnapshotHistograms(unsigned int aDataset, bool aSubsession,
+                                  bool aClearHistograms, JSContext* aCx,
+                                  JS::MutableHandleValue aResult)
 {
-  return TelemetryHistogram::CreateHistogramSnapshots(cx, ret, false, false);
-}
-
-NS_IMETHODIMP
-TelemetryImpl::SnapshotSubsessionHistograms(bool clearSubsession,
-                                            JSContext *cx,
-                                            JS::MutableHandle<JS::Value> ret)
-{
-#if !defined(MOZ_WIDGET_ANDROID)
-  return TelemetryHistogram::CreateHistogramSnapshots(cx, ret, true,
-                                                      clearSubsession);
-#else
-  return NS_OK;
+#if defined(MOZ_WIDGET_ANDROID)
+  if (aSubsession) {
+    return NS_OK;
+  }
 #endif
+  return TelemetryHistogram::CreateHistogramSnapshots(aCx, aResult, aDataset,
+                                                      aSubsession,
+                                                      aClearHistograms);
 }
 
 NS_IMETHODIMP
-TelemetryImpl::GetKeyedHistogramSnapshots(JSContext *cx, JS::MutableHandle<JS::Value> ret)
+TelemetryImpl::SnapshotKeyedHistograms(unsigned int aDataset, bool aSubsession,
+                                       bool aClearHistograms, JSContext* aCx,
+                                       JS::MutableHandleValue aResult)
 {
-  return TelemetryHistogram::GetKeyedHistogramSnapshots(cx, ret, false, false);
-}
-
-NS_IMETHODIMP
-TelemetryImpl::SnapshotSubsessionKeyedHistograms(bool clearSubsession,
-                                                 JSContext *cx,
-                                                 JS::MutableHandle<JS::Value> ret)
-{
-#if !defined(MOZ_WIDGET_ANDROID)
-  return TelemetryHistogram::GetKeyedHistogramSnapshots(cx, ret, true,
-                                                        clearSubsession);
-#else
-  return NS_OK;
+#if defined(MOZ_WIDGET_ANDROID)
+  if (aSubsession) {
+    return NS_OK;
+  }
 #endif
+  return TelemetryHistogram::GetKeyedHistogramSnapshots(aCx, aResult, aDataset,
+                                                        aSubsession,
+                                                        aClearHistograms);
 }
 
 bool
@@ -1117,23 +1109,6 @@ TelemetryImpl::GetLateWrites(JSContext *cx, JS::MutableHandle<JS::Value> ret)
 
   ret.setObject(*report);
   return NS_OK;
-}
-
-NS_IMETHODIMP
-TelemetryImpl::RegisteredHistograms(uint32_t aDataset, uint32_t *aCount,
-                                    char*** aHistograms)
-{
-  return
-    TelemetryHistogram::RegisteredHistograms(aDataset, aCount, aHistograms);
-}
-
-NS_IMETHODIMP
-TelemetryImpl::RegisteredKeyedHistograms(uint32_t aDataset, uint32_t *aCount,
-                                         char*** aHistograms)
-{
-  return
-    TelemetryHistogram::RegisteredKeyedHistograms(aDataset, aCount,
-                                                  aHistograms);
 }
 
 NS_IMETHODIMP

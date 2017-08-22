@@ -13,9 +13,13 @@ const OUTER_VALUE = "outer-value-" + RAND;
 function getEstimateChars() {
   let snap;
   if (gMultiProcessBrowser) {
-    snap = Services.telemetry.histogramSnapshots.content.FX_SESSION_RESTORE_DOM_STORAGE_SIZE_ESTIMATE_CHARS;
+    snap = Services.telemetry.snapshotHistograms(Ci.nsITelemetry.DATASET_RELEASE_CHANNEL_OPTIN,
+                                                 false /* subsession */,
+                                                 false /* clear */).content.FX_SESSION_RESTORE_DOM_STORAGE_SIZE_ESTIMATE_CHARS;
   } else {
-    snap = Services.telemetry.histogramSnapshots.parent.FX_SESSION_RESTORE_DOM_STORAGE_SIZE_ESTIMATE_CHARS;
+    snap = Services.telemetry.snapshotHistograms(Ci.nsITelemetry.DATASET_RELEASE_CHANNEL_OPTIN,
+                                                 false,
+                                                 false).parent.FX_SESSION_RESTORE_DOM_STORAGE_SIZE_ESTIMATE_CHARS;
   }
   if (!snap) {
     return 0;

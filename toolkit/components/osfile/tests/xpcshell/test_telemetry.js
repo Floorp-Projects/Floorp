@@ -27,12 +27,16 @@ add_task(async function test_startup() {
   let LAUNCH = "OSFILE_WORKER_LAUNCH_MS";
   let READY = "OSFILE_WORKER_READY_MS";
 
-  let before = Services.telemetry.histogramSnapshots.parent;
+  let before = Services.telemetry.snapshotHistograms(Ci.nsITelemetry.DATASET_RELEASE_CHANNEL_OPTIN,
+                                                     false,
+                                                     false).parent;
 
   // Launch the OS.File worker
   await File.getCurrentDirectory();
 
-  let after = Services.telemetry.histogramSnapshots.parent;
+  let after = Services.telemetry.snapshotHistograms(Ci.nsITelemetry.DATASET_RELEASE_CHANNEL_OPTIN,
+                                                    false,
+                                                    false).parent;
 
 
   do_print("Ensuring that we have recorded measures for histograms");
@@ -47,13 +51,17 @@ add_task(async function test_startup() {
 add_task(async function test_writeAtomic() {
   let LABEL = "OSFILE_WRITEATOMIC_JANK_MS";
 
-  let before = Services.telemetry.histogramSnapshots.parent;
+  let before = Services.telemetry.snapshotHistograms(Ci.nsITelemetry.DATASET_RELEASE_CHANNEL_OPTIN,
+                                                     false,
+                                                     false).parent;
 
   // Perform a write.
   let path = Path.join(Constants.Path.profileDir, "test_osfile_telemetry.tmp");
   await File.writeAtomic(path, LABEL, { tmpPath: path + ".tmp" } );
 
-  let after = Services.telemetry.histogramSnapshots.parent;
+  let after = Services.telemetry.snapshotHistograms(Ci.nsITelemetry.DATASET_RELEASE_CHANNEL_OPTIN,
+                                                    false,
+                                                    false).parent;
 
   do_check_eq(getCount(after[LABEL]), getCount(before[LABEL]) + 1);
 });

@@ -60,20 +60,12 @@ const char*
 GetHistogramName(mozilla::Telemetry::HistogramID id);
 
 nsresult
-CreateHistogramSnapshots(JSContext *cx, JS::MutableHandle<JS::Value> ret,
-                         bool subsession, bool clearSubsession);
+CreateHistogramSnapshots(JSContext* aCx, JS::MutableHandleValue aResult, unsigned int aDataset,
+                         bool aSubsession, bool aClearSubsession);
 
 nsresult
-RegisteredHistograms(uint32_t aDataset, uint32_t *aCount,
-                     char*** aHistograms);
-
-nsresult
-RegisteredKeyedHistograms(uint32_t aDataset, uint32_t *aCount,
-                          char*** aHistograms);
-
-nsresult
-GetKeyedHistogramSnapshots(JSContext *cx, JS::MutableHandle<JS::Value> ret,
-                           bool subsession, bool clearSubsession);
+GetKeyedHistogramSnapshots(JSContext *aCx, JS::MutableHandleValue aResult, unsigned int aDataset,
+                           bool aSubsession, bool aClearSubsession);
 
 size_t
 GetMapShallowSizesOfExcludingThis(mozilla::MallocSizeOf aMallocSizeOf);
