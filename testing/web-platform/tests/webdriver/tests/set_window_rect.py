@@ -54,7 +54,6 @@ def test_handle_prompt_accept(new_session):
 
     _, session = new_session(
         {"alwaysMatch": {"unhandledPromptBehavior": "accept"}})
-    session.url = inline("<title>WD doc title</title>")
     original = session.window.rect
 
     # step 2
@@ -114,7 +113,6 @@ def test_handle_prompt_missing_value(session, create_dialog):
     original = session.window.rect
 
     # step 2
-    session.url = inline("<title>WD doc title</title>")
     create_dialog("alert", text="dismiss #1", result_var="dismiss1")
 
     result = set_window_rect(session, {"x": int(original["x"]),
