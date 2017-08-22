@@ -286,24 +286,12 @@ NS_DEFINE_STATIC_IID_ACCESSOR(nsXPCOMCycleCollectionParticipant,
 #define NS_CYCLE_COLLECTION_CLASSNAME(_class)                                  \
         _class::NS_CYCLE_COLLECTION_INNERCLASS
 
-#define NS_IMPL_QUERY_CYCLE_COLLECTION(_class)                                 \
-  if ( aIID.Equals(NS_GET_IID(nsXPCOMCycleCollectionParticipant)) ) {          \
-    *aInstancePtr = NS_CYCLE_COLLECTION_PARTICIPANT(_class);                   \
-    return NS_OK;                                                              \
-  } else
-
-#define NS_IMPL_QUERY_CYCLE_COLLECTION_ISUPPORTS(_class)                       \
-  if ( aIID.Equals(NS_GET_IID(nsCycleCollectionISupports)) ) {                 \
-    *aInstancePtr = NS_CYCLE_COLLECTION_CLASSNAME(_class)::Upcast(this);       \
-    return NS_OK;                                                              \
-  } else
-
 // The IIDs for nsXPCOMCycleCollectionParticipant and nsCycleCollectionISupports
 // are special in that they only differ in their last byte.  This allows for the
 // optimization below where we first check the first three words of the IID and
 // if we find a match we check the last word to decide which case we have to
 // deal with.
-#define NS_INTERFACE_MAP_ENTRY_CYCLE_COLLECTION(_class)                        \
+#define NS_INTERFACE_MAP_ENTRIES_CYCLE_COLLECTION(_class)                      \
   if (TopThreeWordsEquals(aIID, NS_GET_IID(nsXPCOMCycleCollectionParticipant), \
                           NS_GET_IID(nsCycleCollectionISupports)) &&           \
        /* The calls to LowWordEquals here are repeated inside the if branch.   \
@@ -326,21 +314,12 @@ NS_DEFINE_STATIC_IID_ACCESSOR(nsXPCOMCycleCollectionParticipant,
     }                                                                          \
   } else
 
-#define NS_INTERFACE_MAP_ENTRY_CYCLE_COLLECTION_ISUPPORTS(_class)              \
-  NS_IMPL_QUERY_CYCLE_COLLECTION_ISUPPORTS(_class)
-
-#define NS_INTERFACE_MAP_ENTRIES_CYCLE_COLLECTION(_class)                      \
-  NS_INTERFACE_MAP_ENTRY_CYCLE_COLLECTION(_class)                              \
-  NS_INTERFACE_MAP_ENTRY_CYCLE_COLLECTION_ISUPPORTS(_class)
-
 #define NS_INTERFACE_MAP_BEGIN_CYCLE_COLLECTION(_class)                        \
   NS_INTERFACE_MAP_BEGIN(_class)                                               \
     NS_INTERFACE_MAP_ENTRIES_CYCLE_COLLECTION(_class)
 
 #define NS_INTERFACE_MAP_BEGIN_CYCLE_COLLECTION_INHERITED(_class)              \
-  NS_INTERFACE_MAP_BEGIN(_class)                                               \
-    NS_INTERFACE_MAP_ENTRY_CYCLE_COLLECTION(_class)                            \
-    NS_INTERFACE_MAP_ENTRY_CYCLE_COLLECTION_ISUPPORTS(_class)
+  NS_INTERFACE_MAP_BEGIN_CYCLE_COLLECTION(_class)
 
 #define NS_INTERFACE_TABLE_TO_MAP_SEGUE_CYCLE_COLLECTION(_class)  \
   if (rv == NS_OK) return rv; \
