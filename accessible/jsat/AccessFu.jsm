@@ -306,9 +306,11 @@ this.AccessFu = { // jshint ignore:line
         break;
       case 'Accessibility:NextObject':
       case 'Accessibility:PreviousObject': {
-        let rule = data ?
-          data.rule.substr(0, 1).toUpperCase() + data.rule.substr(1).toLowerCase() :
-          'Simple';
+        let rule = 'Simple';
+        if (data && data.rule && data.rule.length) {
+          rule = data.rule.substr(0, 1).toUpperCase() +
+            data.rule.substr(1).toLowerCase();
+        }
         let method = event.replace(/Accessibility:(\w+)Object/, 'move$1');
         this.Input.moveCursor(method, rule, 'gesture');
         break;
