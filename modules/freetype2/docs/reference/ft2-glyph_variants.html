@@ -3,7 +3,7 @@
 <html>
 <head>
 <meta http-equiv="Content-Type" content="text/html; charset=utf-8">
-<title>FreeType-2.7.1 API Reference</title>
+<title>FreeType-2.8 API Reference</title>
 <style type="text/css">
   a:link { color: #0000EF; }
   a:visited { color: #51188E; }
@@ -100,9 +100,9 @@
 <body>
 
 <table class="index-toc-link"><tr><td class="left">[<a href="ft2-index.html">Index</a>]</td><td class="right">[<a href="ft2-toc.html">TOC</a>]</td></tr></table>
-<h1>FreeType-2.7.1 API Reference</h1>
+<h1>FreeType-2.8 API Reference</h1>
 
-<h1 id="glyph_variants">Glyph Variants</h1>
+<h1 id="glyph_variants">Unicode Variation Sequences</h1>
 <h2>Synopsis</h2>
 <table class="synopsis">
 <tr><td><a href="#FT_Face_GetCharVariantIndex">FT_Face_GetCharVariantIndex</a></td><td><a href="#FT_Face_GetVariantsOfChar">FT_Face_GetVariantsOfChar</a></td></tr>
@@ -111,12 +111,14 @@
 </table>
 
 
-<p>Many CJK characters have variant forms. They are a sort of grey area somewhere between being totally irrelevant and semantically distinct; for this reason, the Unicode consortium decided to introduce Ideographic Variation Sequences (IVS), consisting of a Unicode base character and one of 240 variant selectors (U+E0100-U+E01EF), instead of further extending the already huge code range for CJK characters.</p>
-<p>An IVS is registered and unique; for further details please refer to Unicode Technical Standard #37, the Ideographic Variation Database:</p>
-<p><a href="http://www.unicode.org/reports/tr37/">http://www.unicode.org/reports/tr37/</a></p>
-<p>To date (November 2014), the character with the most variants is U+9089, having 32 such IVS.</p>
-<p>Adobe and MS decided to support IVS with a new cmap subtable (format&nbsp;14). It is an odd subtable because it is not a mapping of input code points to glyphs, but contains lists of all variants supported by the font.</p>
-<p>A variant may be either &lsquo;default&rsquo; or &lsquo;non-default&rsquo;. A default variant is the one you will get for that code point if you look it up in the standard Unicode cmap. A non-default variant is a different glyph.</p>
+<p>Many characters, especially for CJK scripts, have variant forms. They are a sort of grey area somewhere between being totally irrelevant and semantically distinct; for this reason, the Unicode consortium decided to introduce Variation Sequences (VS), consisting of a Unicode base character and a variation selector instead of further extending the already huge number of characters.</p>
+<p>Unicode maintains two different sets, namely &lsquo;Standardized Variation Sequences&rsquo; and registered &lsquo;Ideographic Variation Sequences&rsquo; (IVS), collected in the &lsquo;Ideographic Variation Database&rsquo; (IVD).</p>
+<p><a href="http://unicode.org/Public/UCD/latest/ucd/StandardizedVariants.txt">http://unicode.org/Public/UCD/latest/ucd/StandardizedVariants.txt</a> <a href="http://unicode.org/reports/tr37/">http://unicode.org/reports/tr37/</a> <a href="http://unicode.org/ivd/">http://unicode.org/ivd/</a></p>
+<p>To date (January 2017), the character with the most ideographic variations is U+9089, having 32 such IVS.</p>
+<p>Three Mongolian Variation Selectors have the values U+180B-U+180D; 256 generic Variation Selectors are encoded in the ranges U+FE00-U+FE0F and U+E0100-U+E01EF. IVS currently use Variation Selectors from the range U+E0100-U+E01EF only.</p>
+<p>A VS consists of the base character value followed by a single Variation Selector. For example, to get the first variation of U+9089, you have to write the character sequence &lsquo;U+9089 U+E0100&rsquo;.</p>
+<p>Adobe and MS decided to support both standardized and ideographic VS with a new cmap subtable (format&nbsp;14). It is an odd subtable because it is not a mapping of input code points to glyphs, but contains lists of all variations supported by the font.</p>
+<p>A variation may be either &lsquo;default&rsquo; or &lsquo;non-default&rsquo; for a given font. A default variation is the one you will get for that code point if you look it up in the standard Unicode cmap. A non-default variation is a different glyph.</p>
 
 <div class="section">
 <h3 id="FT_Face_GetCharVariantIndex">FT_Face_GetCharVariantIndex</h3>
@@ -166,7 +168,7 @@
                                    <a href="ft2-basic_types.html#FT_ULong">FT_ULong</a>  variantSelector );
 </pre>
 
-<p>Check whether this variant of this Unicode character is the one to be found in the &lsquo;cmap&rsquo;.</p>
+<p>Check whether this variation of this Unicode character is the one to be found in the &lsquo;cmap&rsquo;.</p>
 
 <h4>input</h4>
 <table class="fields">
@@ -182,7 +184,7 @@
 </table>
 
 <h4>return</h4>
-<p>1&nbsp;if found in the standard (Unicode) cmap, 0&nbsp;if found in the variation selector cmap, or -1 if it is not a variant.</p>
+<p>1&nbsp;if found in the standard (Unicode) cmap, 0&nbsp;if found in the variation selector cmap, or -1 if it is not a variation.</p>
 
 <h4>note</h4>
 <p>This function is only meaningful if the font has a variation selector cmap subtable.</p>
@@ -201,7 +203,7 @@
   <b>FT_Face_GetVariantSelectors</b>( <a href="ft2-base_interface.html#FT_Face">FT_Face</a>  face );
 </pre>
 
-<p>Return a zero-terminated list of Unicode variant selectors found in the font.</p>
+<p>Return a zero-terminated list of Unicode variation selectors found in the font.</p>
 
 <h4>input</h4>
 <table class="fields">
@@ -211,7 +213,7 @@
 </table>
 
 <h4>return</h4>
-<p>A pointer to an array of selector code points, or NULL if there is no valid variant selector cmap subtable.</p>
+<p>A pointer to an array of selector code points, or NULL if there is no valid variation selector cmap subtable.</p>
 
 <h4>note</h4>
 <p>The last item in the array is&nbsp;0; the array is owned by the <a href="ft2-base_interface.html#FT_Face">FT_Face</a> object but can be overwritten or released on the next call to a FreeType function.</p>
@@ -231,7 +233,7 @@
                              <a href="ft2-basic_types.html#FT_ULong">FT_ULong</a>  charcode );
 </pre>
 
-<p>Return a zero-terminated list of Unicode variant selectors found for the specified character code.</p>
+<p>Return a zero-terminated list of Unicode variation selectors found for the specified character code.</p>
 
 <h4>input</h4>
 <table class="fields">
@@ -244,7 +246,7 @@
 </table>
 
 <h4>return</h4>
-<p>A pointer to an array of variant selector code points that are active for the given character, or NULL if the corresponding list is empty.</p>
+<p>A pointer to an array of variation selector code points that are active for the given character, or NULL if the corresponding list is empty.</p>
 
 <h4>note</h4>
 <p>The last item in the array is&nbsp;0; the array is owned by the <a href="ft2-base_interface.html#FT_Face">FT_Face</a> object but can be overwritten or released on the next call to a FreeType function.</p>
@@ -264,7 +266,7 @@
                              <a href="ft2-basic_types.html#FT_ULong">FT_ULong</a>  variantSelector );
 </pre>
 
-<p>Return a zero-terminated list of Unicode character codes found for the specified variant selector.</p>
+<p>Return a zero-terminated list of Unicode character codes found for the specified variation selector.</p>
 
 <h4>input</h4>
 <table class="fields">
@@ -272,12 +274,12 @@
 <p>A handle to the source face object.</p>
 </td></tr>
 <tr><td class="val" id="variantSelector">variantSelector</td><td class="desc">
-<p>The variant selector code point in Unicode.</p>
+<p>The variation selector code point in Unicode.</p>
 </td></tr>
 </table>
 
 <h4>return</h4>
-<p>A list of all the code points that are specified by this selector (both default and non-default codes are returned) or NULL if there is no valid cmap or the variant selector is invalid.</p>
+<p>A list of all the code points that are specified by this selector (both default and non-default codes are returned) or NULL if there is no valid cmap or the variation selector is invalid.</p>
 
 <h4>note</h4>
 <p>The last item in the array is&nbsp;0; the array is owned by the <a href="ft2-base_interface.html#FT_Face">FT_Face</a> object but can be overwritten or released on the next call to a FreeType function.</p>

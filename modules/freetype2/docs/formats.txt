@@ -7,9 +7,12 @@ Table fields
   wrapper format
     The format used to represent the font data.  In the table below it
     is  used only  if the  font format  differs.  Possible  values are
-    `SFNT' (binary), `PS'  (a text header, followed by  binary or text
-    data), `LZW'  (compressed with  either `gzip' or  `compress'), and
-    `BZ2' (compressed with `bzip2`).
+
+      SFNT  binary
+      PFB   binary
+      PS    a text header, followed by  binary or text data
+      LZW   compressed with  either `gzip' or `compress'
+      BZ2   compressed with `bzip2'.
 
   font format
     How the font is to be accessed, possibly after converting the file
@@ -95,6 +98,9 @@ which isn't supported yet please send a mail too.
 
 
   ---     PS      TYPE_1  ---        type1    T1_SPEC.pdf
+                                              (PFA, Type 1 font resource)
+  PFB     PS      TYPE_1  ---        type1    T1_SPEC.pdf,
+                                              5040.Download_Fonts.pdf
                                               (`normal' Type 1 font)
   ---     PS      TYPE_1  CID        cid      PLRM.pdf (CID Font Type 0;
                                               Type 9 font)
@@ -186,7 +192,7 @@ which isn't supported yet please send a mail too.
 
 ------------------------------------------------------------------------
 
-Copyright 2004-2016 by
+Copyright 2004-2017 by
 David Turner, Robert Wilhelm, and Werner Lemberg.
 
 This  file is  part  of the  FreeType  project, and  may  only be  used,
@@ -197,3 +203,7 @@ accept it fully.
 
 
 --- end of formats.txt ---
+
+Local Variables:
+coding: utf-8
+End:
