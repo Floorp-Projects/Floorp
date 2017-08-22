@@ -315,10 +315,10 @@ RDFContentSinkImpl::~RDFContentSinkImpl()
             // XXX we should save line numbers on the context stack: this'd
             // be about 1000x more helpful.
             if (resource && MOZ_LOG_TEST(gLog, LogLevel::Debug)) {
-                nsXPIDLCString uri;
+                nsCString uri;
                 resource->GetValue(getter_Copies(uri));
                 MOZ_LOG(gLog, LogLevel::Debug,
-                       ("rdfxml:   uri=%s", (const char*) uri));
+                       ("rdfxml:   uri=%s", uri.get()));
             }
 
             NS_IF_RELEASE(resource);

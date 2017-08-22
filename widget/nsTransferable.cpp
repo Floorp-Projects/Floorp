@@ -139,9 +139,9 @@ DataStruct::WriteCache(nsISupports* aData, uint32_t aDataLen)
   if (cacheFile) {
     // remember the file name
     if (!mCacheFileName) {
-      nsXPIDLCString fName;
+      nsCString fName;
       cacheFile->GetNativeLeafName(fName);
-      mCacheFileName = strdup(fName);
+      mCacheFileName = strdup(fName.get());
     }
 
     // write out the contents of the clipboard
@@ -155,7 +155,7 @@ DataStruct::WriteCache(nsISupports* aData, uint32_t aDataLen)
     if (!outStr) return NS_ERROR_FAILURE;
 
     void* buff = nullptr;
-    nsPrimitiveHelpers::CreateDataFromPrimitive ( mFlavor.get(), aData, &buff, aDataLen );
+    nsPrimitiveHelpers::CreateDataFromPrimitive ( mFlavor, aData, &buff, aDataLen );
     if ( buff ) {
       uint32_t ignored;
       outStr->Write(reinterpret_cast<char*>(buff), aDataLen, &ignored);
@@ -203,7 +203,7 @@ DataStruct::ReadCache(nsISupports** aData, uint32_t* aDataLen)
 
     // make sure we got all the data ok
     if (NS_SUCCEEDED(rv) && *aDataLen == size) {
-      nsPrimitiveHelpers::CreatePrimitiveForData(mFlavor.get(), data.get(),
+      nsPrimitiveHelpers::CreatePrimitiveForData(mFlavor, data.get(),
                                                  fileSize, aData);
       return *aData ? NS_OK : NS_ERROR_FAILURE;
     }

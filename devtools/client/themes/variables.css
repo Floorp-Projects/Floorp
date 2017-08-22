@@ -242,4 +242,25 @@
   --toolbarbutton-checked-background: var(--theme-selection-background);
   --toolbarbutton-checked-color: var(--theme-selection-color);
   --toolbarbutton-checked-border-color: var(--toolbarbutton-border-color);
+
+  /* Firefox Colors CSS Variables v1.0.3
+   * Colors are taken from: https://github.com/FirefoxUX/design-tokens */
+  --magenta-65: #dd00a9;
+
+  --blue-50: #0a84ff;
+  --blue-55: #0074e8;
+  --blue-60: #0060df;
+  --blue-70: #003eaa;
+
+  --green-70: #058b00;
+
+  --grey-10: #f9f9fa;
+  --grey-20: #ededf0;
+  --grey-30: #d7d7db;
+  --grey-40: #b1b1b3;
+  --grey-50: #737373;
+  --grey-60: #4a4a4f;
+  --grey-70: #38383d;
+  --grey-80: #2a2a2e;
+  --grey-90: #0c0c0d;
 }
