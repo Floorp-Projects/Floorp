@@ -3,6 +3,7 @@
 # You can obtain one at http://mozilla.org/MPL/2.0/.
 
 import time
+import pprint
 import psutil
 import mozcrash
 import traceback
@@ -106,6 +107,8 @@ def run_browser(command, minidump_dir, timeout=None, on_started=None,
     wait_for_quit_timeout = 5
     event = Event()
     reader = Reader(event)
+
+    LOG.info("Using env: %s" % pprint.pformat(kwargs['env']))
 
     kwargs['storeOutput'] = False
     kwargs['processOutputLine'] = reader
