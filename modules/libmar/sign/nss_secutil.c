@@ -14,14 +14,6 @@
 #include <unistd.h>
 #endif
 
-static char consoleName[] =  {
-#ifdef XP_UNIX
-  "/dev/tty"
-#else
-  "CON:"
-#endif
-};
-
 #if defined(_WINDOWS)
 static char * quiet_fgets (char *buf, int length, FILE *input)
 {
@@ -68,6 +60,14 @@ GetPasswordString(void *arg, char *prompt)
 
 #ifndef _WINDOWS
   if (isInputTerminal) {
+    static char consoleName[] =  {
+#ifdef XP_UNIX
+      "/dev/tty"
+#else
+      "CON:"
+#endif
+    };
+
     input = fopen(consoleName, "r");
     if (input == NULL) {
       fprintf(stderr, "Error opening input terminal for read\n");
