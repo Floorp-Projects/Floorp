@@ -83,10 +83,10 @@ public:
     : mFrame(aFrame)
     , mFrameInUse(aFrameInUse)
     , mMaxChainLength(aMaxChainLength)
+    , mBrokeReference(false)
   {
     MOZ_GUARD_OBJECT_NOTIFIER_INIT;
     MOZ_ASSERT(aFrame && aFrameInUse && aChainCounter);
-    MOZ_ASSERT(!(*mFrameInUse), "Undetected reference loop!");
     MOZ_ASSERT(aMaxChainLength > 0);
     MOZ_ASSERT(*aChainCounter == noChain ||
                (*aChainCounter >= 0 && *aChainCounter < aMaxChainLength));
@@ -99,6 +99,11 @@ public:
   }
 
   ~AutoReferenceChainGuard() {
+    if (mBrokeReference) {
+      // We didn't change mFrameInUse or mChainCounter
+      return;
+    }
+
     *mFrameInUse = false;
 
     // If we fail this assert then there were more destructor calls than
@@ -122,6 +127,7 @@ public:
    */
   MOZ_MUST_USE bool Reference() {
     if (MOZ_UNLIKELY(*mFrameInUse)) {
+      mBrokeReference = true;
       ReportErrorToConsole();
       return false;
     }
@@ -130,12 +136,16 @@ public:
     // reference loop/chain, or else they called Reference() more than once
     MOZ_ASSERT(*mChainCounter >= 0);
 
-    (*mChainCounter)--;
-
-    if (MOZ_UNLIKELY(*mChainCounter < 0)) {
+    if (MOZ_UNLIKELY(*mChainCounter < 1)) {
+      mBrokeReference = true;
       ReportErrorToConsole();
       return false;
     }
+
+    // Only set these once we know we're returing true.
+    *mFrameInUse = true;
+    (*mChainCounter)--;
+
     return true;
   }
 
@@ -156,6 +166,7 @@ private:
   bool* mFrameInUse;
   int16_t* mChainCounter;
   const int16_t mMaxChainLength;
+  bool mBrokeReference;
   MOZ_DECL_USE_GUARD_OBJECT_NOTIFIER
 };
 
