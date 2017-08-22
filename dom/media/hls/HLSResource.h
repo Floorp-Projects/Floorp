@@ -86,11 +86,6 @@ public:
     return false;
   }
 
-  bool IsExpectingMoreData() override
-  {
-    return false;
-  }
-
   java::GeckoHLSResourceWrapper::GlobalRef GetResourceWrapper() {
     return mHLSResourceWrapper;
   }

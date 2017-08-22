@@ -258,18 +258,18 @@ let creditCardTestCases = [{
       comment: JSON.stringify(matchingProfiles[0]),
       label: JSON.stringify({
         primary: "Timothy Berners-Lee",
-        secondary: "************6785",
+        secondary: "****6785",
       }),
-      image: "",
+      image: "chrome://formautofill/content/icon-credit-card-generic.svg",
     }, {
       value: "",
       style: "autofill-profile",
       comment: JSON.stringify(matchingProfiles[1]),
       label: JSON.stringify({
         primary: "John Doe",
-        secondary: "************1234",
+        secondary: "****1234",
       }),
-      image: "",
+      image: "chrome://formautofill/content/icon-credit-card-generic.svg",
     }],
   },
 }, {
@@ -287,28 +287,31 @@ let creditCardTestCases = [{
       style: "autofill-profile",
       comment: JSON.stringify(matchingProfiles[0]),
       label: JSON.stringify({
-        primary: "************6785",
+        primaryAffix: "****",
+        primary: "6785",
         secondary: "Timothy Berners-Lee",
       }),
-      image: "",
+      image: "chrome://formautofill/content/icon-credit-card-generic.svg",
     }, {
       value: "",
       style: "autofill-profile",
       comment: JSON.stringify(matchingProfiles[1]),
       label: JSON.stringify({
-        primary: "************1234",
+        primaryAffix: "****",
+        primary: "1234",
         secondary: "John Doe",
       }),
-      image: "",
+      image: "chrome://formautofill/content/icon-credit-card-generic.svg",
     }, {
       value: "",
       style: "autofill-profile",
       comment: JSON.stringify(matchingProfiles[2]),
       label: JSON.stringify({
-        primary: "************5678",
+        primaryAffix: "****",
+        primary: "5678",
         secondary: "",
       }),
-      image: "",
+      image: "chrome://formautofill/content/icon-credit-card-generic.svg",
     }],
   },
 }, {

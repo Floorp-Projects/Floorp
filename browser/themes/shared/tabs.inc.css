@@ -503,14 +503,10 @@
   list-style-image: url(chrome://browser/skin/tabbrowser/newtab.svg);
 }
 
-.tabs-newtab-button {
-  width: 36px;
-}
-
 /* All tabs button and menupopup */
 
 #alltabs-button {
-  list-style-image: url(chrome://browser/skin/arrow-dropdown-16.svg);
+  list-style-image: url(chrome://global/skin/icons/arrow-dropdown-16.svg);
 }
 
 .alltabs-item > .menu-iconic-left > .menu-iconic-icon {

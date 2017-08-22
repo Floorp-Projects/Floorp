@@ -26,11 +26,11 @@
 
     <div id="categories">
       <div class="heading">
-        <span id="ping-type" hidden="true" class="change-ping"></span>
-        <div class="controls">
-          <span id="older-ping" hidden="true">&lt;&lt;</span>
+        <span id="ping-type" class="change-ping dropdown"></span>
+        <div id="controls" hidden="true">
+          <span id="older-ping">&lt;&lt;</span>
           <span id="ping-date" class="change-ping"></span>
-          <span id="newer-ping" hidden="true">&gt;&gt;</span>
+          <span id="newer-ping">&gt;&gt;</span>
         </div>
       </div>
       <div id="category-home" class="category has-data selected" value="home-section">
@@ -106,7 +106,7 @@
         <div id="current-ping-picker">
           <input id="show-subsession-data" type="checkbox" checked="checked" />&aboutTelemetry.showSubsessionData;
         </div>
-        <div id="archived-ping-picker" class="hidden">
+        <div id="archived-ping-picker">
           <h4 class="title">&aboutTelemetry.choosePing;</h4>
           <div>
             <h4 class="title">&aboutTelemetry.archivePingType;</h4>
@@ -190,19 +190,19 @@
       </section>
 
       <section id="slow-sql-section">
-        <p id="sql-warning" class="hidden">&aboutTelemetry.fullSqlWarning;</p>
+        <p id="sql-warning">&aboutTelemetry.fullSqlWarning;</p>
         <div id="slow-sql-tables" class="data"></div>
       </section>
 
       <section id="chrome-hangs-section">
         <a id="chrome-hangs-fetch-symbols" href="">&aboutTelemetry.fetchStackSymbols;</a>
-        <a id="chrome-hangs-hide-symbols" class="hidden" href="">&aboutTelemetry.hideStackSymbols;</a>
+        <a id="chrome-hangs-hide-symbols" href="">&aboutTelemetry.hideStackSymbols;</a>
         <div id="chrome-hangs" class="data"></div>
       </section>
 
       <section id="late-writes-section">
         <a id="late-writes-fetch-symbols" href="">&aboutTelemetry.fetchStackSymbols;</a>
-        <a id="late-writes-hide-symbols" class="hidden" href="">&aboutTelemetry.hideStackSymbols;</a>
+        <a id="late-writes-hide-symbols" href="">&aboutTelemetry.hideStackSymbols;</a>
         <div id="late-writes" class="data"></div>
       </section>
 
@@ -212,7 +212,7 @@
 
       <section id="captured-stacks-section">
         <a id="captured-stacks-fetch-symbols" href="">&aboutTelemetry.fetchStackSymbols;</a>
-        <a id="captured-stacks-hide-symbols" class="hidden" href="">&aboutTelemetry.hideStackSymbols;</a>
+        <a id="captured-stacks-hide-symbols" href="">&aboutTelemetry.hideStackSymbols;</a>
         <div id="captured-stacks" class="data"></div>
       </section>
     </div>

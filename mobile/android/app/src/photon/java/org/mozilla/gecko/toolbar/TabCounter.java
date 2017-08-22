@@ -11,6 +11,7 @@ import android.animation.ObjectAnimator;
 import android.content.Context;
 import android.support.annotation.NonNull;
 import android.util.AttributeSet;
+import android.util.TypedValue;
 import android.view.LayoutInflater;
 
 import org.mozilla.gecko.R;
@@ -29,6 +30,9 @@ public class TabCounter extends ThemedRelativeLayout {
 
     public static final int MAX_VISIBLE_TABS = 99;
     public static final String SO_MANY_TABS_OPEN = "∞";
+
+    private static final float ONE_DIGIT_SIZE_RATIO = 0.7f;
+    private static final float TWO_DIGITS_SIZE_RATIO = 0.5f;
 
     public TabCounter(Context context) {
         this(context, null);
@@ -172,6 +176,8 @@ public class TabCounter extends ThemedRelativeLayout {
             return;
         }
 
+        adjustTextSize(count);
+
         text.setText(formatForDisplay(count));
         this.count = count;
 
@@ -186,7 +192,22 @@ public class TabCounter extends ThemedRelativeLayout {
         return String.valueOf(count);
     }
 
+    private void adjustTextSize(int newCount) {
+        final float oldRatio = (this.count < MAX_VISIBLE_TABS && this.count >= 10) ? TWO_DIGITS_SIZE_RATIO : ONE_DIGIT_SIZE_RATIO;
+        final float newRatio = (newCount < MAX_VISIBLE_TABS && newCount >= 10) ? TWO_DIGITS_SIZE_RATIO : ONE_DIGIT_SIZE_RATIO;
+
+        if (this.count == 0 || newRatio != oldRatio) {
+            final int sizeInPixel = (int) (box.getWidth() * newRatio);
+            if (sizeInPixel > 0) {
+                // Only apply the size when we calculate a valid value.
+                text.setTextSize(TypedValue.COMPLEX_UNIT_PX, sizeInPixel);
+            }
+        }
+    }
+
     void setCount(int count) {
+        adjustTextSize(count);
+
         text.setText(formatForDisplay(count));
         this.count = count;
     }

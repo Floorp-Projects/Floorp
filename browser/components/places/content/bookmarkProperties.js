@@ -150,7 +150,7 @@ var BookmarkPropertiesPanel = {
   /**
    * Determines the initial data for the item edited or added by this dialog
    */
-  _determineItemInfo() {
+  async _determineItemInfo() {
     let dialogInfo = window.arguments[0];
     this._action = dialogInfo.action == "add" ? ACTION_ADD : ACTION_EDIT;
     this._hiddenRows = dialogInfo.hiddenRows ? dialogInfo.hiddenRows : [];
@@ -178,7 +178,7 @@ var BookmarkPropertiesPanel = {
                       "uri property should be a uri object");
             this._uri = dialogInfo.uri;
             if (typeof(this._title) != "string") {
-              this._title = this._getURITitleFromHistory(this._uri) ||
+              this._title = await PlacesUtils.history.fetch(this._uri) ||
                             this._uri.spec;
             }
           } else {
@@ -221,7 +221,7 @@ var BookmarkPropertiesPanel = {
 
           if (!this._title) {
             if (this._feedURI) {
-              this._title = this._getURITitleFromHistory(this._feedURI) ||
+              this._title = await PlacesUtils.history.fetch(this._feedURI) ||
                             this._feedURI.spec;
             } else
               this._title = this._strings.getString("newLivemarkDefault");
@@ -241,33 +241,33 @@ var BookmarkPropertiesPanel = {
   },
 
   /**
-   * This method returns the title string corresponding to a given URI.
-   * If none is available from the bookmark service (probably because
-   * the given URI doesn't appear in bookmarks or history), we synthesize
-   * a title from the first 100 characters of the URI.
-   *
-   * @param aURI
-   *        nsIURI object for which we want the title
-   *
-   * @returns a title string
-   */
-  _getURITitleFromHistory: function BPP__getURITitleFromHistory(aURI) {
-    NS_ASSERT(aURI instanceof Ci.nsIURI);
-
-    // get the title from History
-    return PlacesUtils.history.getPageTitle(aURI);
-  },
-
-  /**
    * This method should be called by the onload of the Bookmark Properties
    * dialog to initialize the state of the panel.
    */
   async onDialogLoad() {
-    this._determineItemInfo();
+    await this._determineItemInfo();
 
     document.title = this._getDialogTitle();
-    var acceptButton = document.documentElement.getButton("accept");
+
+    // Disable the buttons until we have all the information required.
+    let acceptButton = document.documentElement.getButton("accept");
+    acceptButton.disabled = true;
+
+    // Allow initialization to complete in a truely async manner so that we're
+    // not blocking the main thread.
+    this._initDialog().catch(ex => {
+      Components.utils.reportError(`Failed to initialize dialog: ${ex}`);
+    });
+  },
+
+  /**
+   * Initializes the dialog, gathering the required bookmark data. This function
+   * will enable the accept button (if appropraite) when it is complete.
+   */
+  async _initDialog() {
+    let acceptButton = document.documentElement.getButton("accept");
     acceptButton.label = this._getAcceptLabel();
+    let acceptButtonDisabled = false;
 
     // Do not use sizeToContent, otherwise, due to bug 90276, the dialog will
     // grow at every opening.
@@ -313,7 +313,7 @@ var BookmarkPropertiesPanel = {
         gEditItemOverlay.initPanel({ node: this._node,
                                      hiddenRows: this._hiddenRows,
                                      focusedElement: "first" });
-        acceptButton.disabled = gEditItemOverlay.readOnly;
+        acceptButtonDisabled = gEditItemOverlay.readOnly;
         break;
       case ACTION_ADD:
         this._node = await this._promiseNewItem();
@@ -333,7 +333,7 @@ var BookmarkPropertiesPanel = {
         // if this is an uri related dialog disable accept button until
         // the user fills an uri value.
         if (this._itemType == BOOKMARK_ITEM)
-          acceptButton.disabled = !this._inputIsValid();
+          acceptButtonDisabled = !this._inputIsValid();
         break;
     }
 
@@ -348,6 +348,8 @@ var BookmarkPropertiesPanel = {
         }
       }
     }
+    // Only enable the accept button once we've finished everything.
+    acceptButton.disabled = acceptButtonDisabled;
   },
 
   // nsIDOMEventListener
