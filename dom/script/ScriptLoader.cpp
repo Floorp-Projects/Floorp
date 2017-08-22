@@ -116,6 +116,7 @@ NS_IMPL_CYCLE_COLLECTION(ScriptLoader,
                          mDeferRequests,
                          mXSLTRequests,
                          mParserBlockingRequest,
+                         mBytecodeEncodingQueue,
                          mPreloads,
                          mPendingChildLoaders,
                          mFetchedModules)
@@ -133,6 +134,7 @@ ScriptLoader::ScriptLoader(nsIDocument *aDocument)
     mDocumentParsingDone(false),
     mBlockingDOMContentLoaded(false),
     mLoadEventFired(false),
+    mGiveUpEncoding(false),
     mReporter(new ConsoleReportCollector())
 {
 }
@@ -2232,6 +2234,7 @@ ScriptLoader::EvaluateScript(ScriptLoadRequest* aRequest)
     // Even if we are not saving the bytecode of the current script, we have
     // to trigger the encoding of the bytecode, as the current script can
     // call functions of a script for which we are recording the bytecode.
+    LOG(("ScriptLoadRequest (%p): ScriptLoader = %p", aRequest, this));
     MaybeTriggerBytecodeEncoding();
   }
 
@@ -2257,22 +2260,33 @@ ScriptLoader::LoadEventFired()
 void
 ScriptLoader::MaybeTriggerBytecodeEncoding()
 {
+  // If we already gave up, ensure that we are not going to enqueue any script,
+  // and that we finalize them properly.
+  if (mGiveUpEncoding) {
+    LOG(("ScriptLoader (%p): Keep giving-up bytecode encoding.", this));
+    GiveUpBytecodeEncoding();
+    return;
+  }
+
   // We wait for the load event to be fired before saving the bytecode of
   // any script to the cache. It is quite common to have load event
   // listeners trigger more JavaScript execution, that we want to save as
   // part of this start-up bytecode cache.
   if (!mLoadEventFired) {
+    LOG(("ScriptLoader (%p): Wait for the load-end event to fire.", this));
     return;
   }
 
   // No need to fire any event if there is no bytecode to be saved.
   if (mBytecodeEncodingQueue.isEmpty()) {
+    LOG(("ScriptLoader (%p): No script in queue to be encoded.", this));
     return;
   }
 
   // Wait until all scripts are loaded before saving the bytecode, such that
   // we capture most of the intialization of the page.
   if (HasPendingRequests()) {
+    LOG(("ScriptLoader (%p): Wait for other pending request to finish.", this));
     return;
   }
 
@@ -2284,12 +2298,17 @@ ScriptLoader::MaybeTriggerBytecodeEncoding()
                       this, &ScriptLoader::EncodeBytecode);
   if (NS_FAILED(NS_IdleDispatchToCurrentThread(encoder.forget()))) {
     GiveUpBytecodeEncoding();
+    return;
   }
+
+  LOG(("ScriptLoader (%p): Schedule bytecode encoding.", this));
 }
 
 void
 ScriptLoader::EncodeBytecode()
 {
+  LOG(("ScriptLoader (%p): Start bytecode encoding.", this));
+
   // If any script got added in the previous loop cycle, wait until all
   // remaining script executions are completed, such that we capture most of
   // the initialization.
@@ -2385,6 +2404,10 @@ ScriptLoader::EncodeRequestBytecode(JSContext* aCx, ScriptLoadRequest* aRequest)
 void
 ScriptLoader::GiveUpBytecodeEncoding()
 {
+  // If the document went away prematurely, we still want to set this, in order
+  // to avoid queuing more scripts.
+  mGiveUpEncoding = true;
+
   // Ideally we prefer to properly end the incremental encoder, such that we
   // would not keep a large buffer around.  If we cannot, we fallback on the
   // removal of all request from the current list and these large buffers would
