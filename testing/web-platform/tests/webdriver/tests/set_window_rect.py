@@ -135,22 +135,65 @@ def test_handle_prompt_missing_value(session, create_dialog):
     assert_dialog_handled(session, "dismiss #3")
 
 
-@pytest.mark.parametrize("data", [
-    {"height": None, "width": None, "x": "a", "y": "b"},
-    {"height": "a", "width": "b", "x": None, "y": None},
-    {"height": None, "width": None, "x": 10.1, "y": 10.1},
-    {"height": 10.1, "width": 10.1, "x": None, "y": None},
-    {"height": True, "width": False, "x": None, "y": None},
-    {"height": None, "width": None, "x": True, "y": False},
-    {"height": [], "width": [], "x": None, "y": None},
-    {"height": None, "width": None, "x": [], "y": []},
-    {"height": [], "width": [], "x": [], "y": []},
-    {"height": {}, "width": {}, "x": None, "y": None},
-    {"height": None, "width": None, "x": {}, "y": {}},
+@pytest.mark.parametrize("rect", [
+    {"width": "a"},
+    {"height": "b"},
+    {"width": "a", "height": "b"},
+    {"x": "a"},
+    {"y": "b"},
+    {"x": "a", "y": "b"},
+    {"width": "a", "height": "b", "x": "a", "y": "b"},
+
+    {"width": True},
+    {"height": False},
+    {"width": True, "height": False},
+    {"x": True},
+    {"y": False},
+    {"x": True, "y": False},
+    {"width": True, "height": False, "x": True, "y": False},
+
+    {"width": []},
+    {"height": []},
+    {"width": [], "height": []},
+    {"x": []},
+    {"y": []},
+    {"x": [], "y": []},
+    {"width": [], "height": [], "x": [], "y": []},
+
+    {"height": {}},
+    {"width": {}},
+    {"height": {}, "width": {}},
+    {"x": {}},
+    {"y": {}},
+    {"x": {}, "y": {}},
+    {"width": {}, "height": {}, "x": {}, "y": {}},
 ])
-def test_invalid_params(session, data):
-    # step 8-9
-    response = set_window_rect(session, data)
+def test_invalid_types(session, rect):
+    """
+    8. If width or height is neither null nor a Number from 0 to 2^64 -
+    1, return error with error code invalid argument.
+
+    9. If x or y is neither null nor a Number from -(263) to 263 - 1,
+    return error with error code invalid argument.
+    """
+    response = set_window_rect(session, rect)
+    assert_error(response, "invalid argument")
+
+
+@pytest.mark.parametrize("rect", [
+    {"width": -1},
+    {"height": -2},
+    {"width": -1, "height": -2},
+])
+def test_out_of_bounds(session, rect):
+    """
+    8. If width or height is neither null nor a Number from 0 to 2^64 -
+    1, return error with error code invalid argument.
+
+    9. If x or y is neither null nor a Number from -(263) to 263 - 1,
+    return error with error code invalid argument.
+    """
+    response = set_window_rect(session, rect)
     assert_error(response, "invalid argument")
 
 
@@ -168,7 +211,6 @@ def test_fully_exit_fullscreen(session):
       document's top layer, except for document's fullscreen element.
 
       3. Exit fullscreen document.
-
     """
 
     session.window.fullscreen()
