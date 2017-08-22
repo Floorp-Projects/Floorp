@@ -42,17 +42,14 @@ add_task(async function test_onboarding_notification_bar() {
   await ContentTask.spawn(tab.linkedBrowser, {}, function() {
     let doc = content.document;
     let footer = doc.getElementById("onboarding-notification-bar");
-    let icon = doc.getElementById("onboarding-notification-icon")
+
+    is(footer.getAttribute("aria-labelledby"), doc.getElementById("onboarding-notification-tour-title").id,
+      "Notification bar should be labelled by the notification tour title text");
 
     is(footer.getAttribute("aria-live"), "polite",
       "Notification bar should be a live region");
-    is(footer.getAttribute("aria-labelledby"), icon.id,
-      "Notification bar should be labelled by the notification icon text");
-    ok(icon.getAttribute("aria-label"),
-      "Notification icon should have a text alternative");
     // Presentational elements
     [
-      "onboarding-notification-icon",
       "onboarding-notification-message-section",
       "onboarding-notification-tour-icon",
       "onboarding-notification-body"
