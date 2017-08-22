@@ -936,7 +936,6 @@ toolbaritem[cui-areatype="menu-panel"][sdkstylewidget="true"]:not(.panel-wide-it
 .fxaSyncIllustration {
   width: 180px;
   height: var(--panel-ui-sync-illustration-height);
-  list-style-image: url(chrome://browser/skin/fxa/sync-illustration.svg);
   -moz-context-properties: fill;
   fill: #cdcdcd;
 }

@@ -107,6 +107,14 @@ public:
     SetHTMLAttr(nsGkAtoms::rel, aRel, aRv);
   }
   nsDOMTokenList* RelList();
+  void GetNonce(nsAString& aNonce) const
+  {
+    GetHTMLAttr(nsGkAtoms::nonce, aNonce);
+  }
+  void SetNonce(const nsAString& aNonce, ErrorResult& aRv)
+  {
+    SetHTMLAttr(nsGkAtoms::nonce, aNonce, aRv);
+  }
   // XPCOM GetMedia is fine.
   void SetMedia(const nsAString& aMedia, ErrorResult& aRv)
   {

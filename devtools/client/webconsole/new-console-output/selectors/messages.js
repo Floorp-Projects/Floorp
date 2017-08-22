@@ -41,6 +41,10 @@ function getVisibleMessages(state) {
   return state.messages.visibleMessages;
 }
 
+function getFilteredMessagesCount(state) {
+  return state.messages.filteredMessagesCount;
+}
+
 function getAllRepeatById(state) {
   return state.messages.repeatById;
 }
@@ -57,6 +61,7 @@ module.exports = {
   getAllGroupsById,
   getCurrentGroup,
   getVisibleMessages,
+  getFilteredMessagesCount,
   getAllRepeatById,
   getAllNetworkMessagesUpdateById,
   getAllMessagesObjectPropertiesById,
