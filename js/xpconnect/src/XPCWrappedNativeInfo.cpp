@@ -333,13 +333,13 @@ XPCNativeInterface::NewInstance(nsIInterfaceInfo* aInfo)
     if (!failed) {
         for (i = 0; i < constCount; i++) {
             RootedValue constant(cx);
-            nsXPIDLCString namestr;
+            nsCString namestr;
             if (NS_FAILED(aInfo->GetConstant(i, &constant, getter_Copies(namestr)))) {
                 failed = true;
                 break;
             }
 
-            str = JS_AtomizeAndPinString(cx, namestr);
+            str = JS_AtomizeAndPinString(cx, namestr.get());
             if (!str) {
                 NS_ERROR("bad constant name");
                 failed = true;

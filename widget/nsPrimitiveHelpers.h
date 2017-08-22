@@ -20,7 +20,7 @@ public:
     // Given some data and the flavor it corresponds to, creates the appropriate
     // nsISupports* wrapper for passing across IDL boundaries. The length parameter
     // should not include the null if the data is null terminated.
-  static void CreatePrimitiveForData ( const char* aFlavor, const void* aDataBuff,
+  static void CreatePrimitiveForData ( const nsACString& aFlavor, const void* aDataBuff,
                                          uint32_t aDataLen, nsISupports** aPrimitive ) ;
 
     // A specific case of CreatePrimitive for windows CF_HTML handling in DataTransfer
@@ -30,7 +30,7 @@ public:
     // Given a nsISupports* primitive and the flavor it represents, creates a new data
     // buffer with the data in it. This data will be null terminated, but the length
     // parameter does not reflect that.
-  static void CreateDataFromPrimitive ( const char* aFlavor, nsISupports* aPrimitive, 
+  static void CreateDataFromPrimitive ( const nsACString& aFlavor, nsISupports* aPrimitive, 
                                          void** aDataBuff, uint32_t aDataLen ) ;
 
 }; // class nsPrimitiveHelpers
@@ -47,7 +47,7 @@ public:
     // the note below).
     //
     // NOTE: this assumes that it can use 'free' to dispose of the old buffer.
-  static nsresult ConvertPlatformToDOMLinebreaks ( const char* inFlavor, void** ioData, int32_t* ioLengthInBytes ) ;
+  static nsresult ConvertPlatformToDOMLinebreaks ( const nsACString& inFlavor, void** ioData, int32_t* ioLengthInBytes ) ;
 
 }; // class nsLinebreakHelpers
 
