@@ -394,14 +394,13 @@ class Onboarding {
     this._tourItems = [];
     this._tourPages = [];
 
-    let { body } = this._window.document;
     this._overlayIcon = this._renderOverlayButton();
     this._overlayIcon.addEventListener("click", this);
-    body.insertBefore(this._overlayIcon, body.firstChild);
+    this._window.document.body.appendChild(this._overlayIcon);
 
     this._overlay = this._renderOverlay();
     this._overlay.addEventListener("click", this);
-    body.appendChild(this._overlay);
+    this._window.document.body.appendChild(this._overlay);
 
     this._loadJS(TOUR_AGENT_JS_URI);
 
@@ -828,11 +827,8 @@ class Onboarding {
     let tooltip = this._bundle.formatStringFromName(tooltipStringId, [BRAND_SHORT_NAME], 1);
     button.setAttribute("aria-label", tooltip);
     button.id = "onboarding-overlay-button";
-    button.setAttribute("aria-haspopup", true);
-    button.setAttribute("aria-controls", "onboarding-overlay-dialog");
     let img = this._window.document.createElement("img");
     img.id = "onboarding-overlay-button-icon";
-    img.setAttribute("role", "presentation");
     img.src = "resource://onboarding/img/overlay-icon.svg";
     button.appendChild(img);
     return button;
