@@ -95,11 +95,6 @@ ModuleLoadRequest::DependenciesLoaded()
 
   LOG(("ScriptLoadRequest (%p): Module dependencies loaded", this));
 
-  if (!mLoader->InstantiateModuleTree(this)) {
-    LoadFailed();
-    return;
-  }
-
   SetReady();
   mLoader->ProcessLoadedModuleTree(this);
   mLoader = nullptr;
