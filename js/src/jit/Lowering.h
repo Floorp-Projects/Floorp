@@ -131,7 +131,7 @@ class LIRGenerator : public LIRGeneratorSpecific
     void visitLsh(MLsh* ins);
     void visitRsh(MRsh* ins);
     void visitUrsh(MUrsh* ins);
-    void visitSignExtend(MSignExtend* ins);
+    void visitSignExtendInt32(MSignExtendInt32* ins);
     void visitRotate(MRotate* ins);
     void visitFloor(MFloor* ins);
     void visitCeil(MCeil* ins);

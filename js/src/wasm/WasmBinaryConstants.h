@@ -306,6 +306,15 @@ enum class Op
     F32ReinterpretI32                    = 0xbe,
     F64ReinterpretI64                    = 0xbf,
 
+#ifdef ENABLE_WASM_THREAD_OPS
+    // Sign extension
+    I32Extend8S                          = 0xc0,
+    I32Extend16S                         = 0xc1,
+    I64Extend8S                          = 0xc2,
+    I64Extend16S                         = 0xc3,
+    I64Extend32S                         = 0xc4,
+#endif
+
     AtomicPrefix                         = 0xfe,
     MozPrefix                            = 0xff,
 

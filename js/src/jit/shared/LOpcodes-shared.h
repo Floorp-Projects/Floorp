@@ -112,7 +112,8 @@
     _(BitOpV)                       \
     _(ShiftI)                       \
     _(ShiftI64)                     \
-    _(SignExtend)                   \
+    _(SignExtendInt32)              \
+    _(SignExtendInt64)              \
     _(UrshD)                        \
     _(Return)                       \
     _(Throw)                        \

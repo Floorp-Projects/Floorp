@@ -73,6 +73,13 @@ static constexpr FloatRegister ScratchDoubleReg = { FloatRegisters::f18, FloatRe
 static constexpr FloatRegister SecondScratchFloat32Reg = { FloatRegisters::f16, FloatRegister::Single };
 static constexpr FloatRegister SecondScratchDoubleReg = { FloatRegisters::f16, FloatRegister::Double };
 
+struct ScratchDoubleScope : public AutoFloatRegisterScope
+{
+    explicit ScratchDoubleScope(MacroAssembler& masm)
+      : AutoFloatRegisterScope(masm, ScratchDoubleReg)
+    { }
+};
+
 // Registers used in the GenerateFFIIonExit Disable Activation block.
 // None of these may be the second scratch register (t8).
 static constexpr Register WasmIonExitRegReturnData = JSReturnReg_Data;

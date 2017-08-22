@@ -6,13 +6,14 @@
 
 #include "nsEscape.h"
 #include "gtest/gtest.h"
+#include "mozilla/ArrayUtils.h"
 
 using namespace mozilla;
 
 // Testing for failure here would be somewhat hard in automation. Locally you
 // could use something like ulimit to create a failure.
 
-TEST(EscapeURL, FallibleNoEscape)
+TEST(Escape, FallibleNoEscape)
 {
   // Tests the fallible version of NS_EscapeURL works as expected when no
   // escaping is necessary.
@@ -26,7 +27,7 @@ TEST(EscapeURL, FallibleNoEscape)
   EXPECT_EQ(toEscape.BeginReading(), escaped.BeginReading());
 }
 
-TEST(EscapeURL, FallibleEscape)
+TEST(Escape, FallibleEscape)
 {
   // Tests the fallible version of NS_EscapeURL works as expected when
   // escaping is necessary.
@@ -39,7 +40,7 @@ TEST(EscapeURL, FallibleEscape)
   EXPECT_STREQ(escaped.BeginReading(), kExpected);
 }
 
-TEST(EscapeURL, BadEscapeSequences)
+TEST(Escape, BadEscapeSequences)
 {
   {
     char bad[] = "%s\0fa";
@@ -67,3 +68,68 @@ TEST(EscapeURL, BadEscapeSequences)
     EXPECT_STREQ(bad, "%s/%s");
   }
 }
+
+TEST(Escape, nsAppendEscapedHTML)
+{
+  const char* srcs[] = {
+    "a",
+    "bcdefgh",
+    "<",
+    ">",
+    "&",
+    "\"",
+    "'",
+    "'bad'",
+    "Foo<T>& foo",
+    "'\"&><abc",
+    "",
+  };
+
+  const char* dsts1[] = {
+    "a",
+    "bcdefgh",
+    "&lt;",
+    "&gt;",
+    "&amp;",
+    "&quot;",
+    "&#39;",
+    "&#39;bad&#39;",
+    "Foo&lt;T&gt;&amp; foo",
+    "&#39;&quot;&amp;&gt;&lt;abc",
+    "",
+  };
+
+  const char* dsts2[] = {
+    "a",
+    "abcdefgh",
+    "abcdefgh&lt;",
+    "abcdefgh&lt;&gt;",
+    "abcdefgh&lt;&gt;&amp;",
+    "abcdefgh&lt;&gt;&amp;&quot;",
+    "abcdefgh&lt;&gt;&amp;&quot;&#39;",
+    "abcdefgh&lt;&gt;&amp;&quot;&#39;&#39;bad&#39;",
+    "abcdefgh&lt;&gt;&amp;&quot;&#39;&#39;bad&#39;Foo&lt;T&gt;&amp; foo",
+    "abcdefgh&lt;&gt;&amp;&quot;&#39;&#39;bad&#39;Foo&lt;T&gt;&amp; foo&#39;&quot;&amp;&gt;&lt;abc",
+    "abcdefgh&lt;&gt;&amp;&quot;&#39;&#39;bad&#39;Foo&lt;T&gt;&amp; foo&#39;&quot;&amp;&gt;&lt;abc",
+  };
+
+  ASSERT_EQ(ArrayLength(srcs), ArrayLength(dsts1));
+  ASSERT_EQ(ArrayLength(srcs), ArrayLength(dsts2));
+
+  // Test when the destination is empty.
+  for (size_t i = 0; i < ArrayLength(srcs); i++) {
+    nsCString src(srcs[i]);
+    nsCString dst;
+    nsAppendEscapedHTML(src, dst);
+    ASSERT_TRUE(dst.Equals(dsts1[i]));
+  }
+
+  // Test when the destination is non-empty.
+  nsCString dst;
+  for (size_t i = 0; i < ArrayLength(srcs); i++) {
+    nsCString src(srcs[i]);
+    nsAppendEscapedHTML(src, dst);
+    ASSERT_TRUE(dst.Equals(dsts2[i]));
+  }
+}
+

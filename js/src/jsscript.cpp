@@ -2072,6 +2072,10 @@ ScriptSource::addSizeOfIncludingThis(mozilla::MallocSizeOf mallocSizeOf,
 bool
 ScriptSource::xdrEncodeTopLevel(JSContext* cx, HandleScript script)
 {
+    // Encoding failures are reported by the xdrFinalizeEncoder function.
+    if (containsAsmJS())
+        return true;
+
     xdrEncoder_ = js::MakeUnique<XDRIncrementalEncoder>(cx);
     if (!xdrEncoder_) {
         ReportOutOfMemory(cx);
@@ -2089,8 +2093,12 @@ ScriptSource::xdrEncodeTopLevel(JSContext* cx, HandleScript script)
     }
 
     RootedScript s(cx, script);
-    if (!xdrEncoder_->codeScript(&s))
-        return false;
+    if (!xdrEncoder_->codeScript(&s)) {
+        if (xdrEncoder_->resultCode() == JS::TranscodeResult_Throw)
+            return false;
+        // Encoding failures are reported by the xdrFinalizeEncoder function.
+        return true;
+    }
 
     failureCase.release();
     return true;

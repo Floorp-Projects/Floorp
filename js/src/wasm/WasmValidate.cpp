@@ -579,6 +579,15 @@ DecodeFunctionBodyExprs(const ModuleEnvironment& env, const Sig& sig, const ValT
             CHECK(iter.readConversion(ValType::I64, ValType::F64, &nothing));
           case uint16_t(Op::F64PromoteF32):
             CHECK(iter.readConversion(ValType::F32, ValType::F64, &nothing));
+#ifdef ENABLE_WASM_THREAD_OPS
+          case uint16_t(Op::I32Extend8S):
+          case uint16_t(Op::I32Extend16S):
+            CHECK(iter.readConversion(ValType::I32, ValType::I32, &nothing));
+          case uint16_t(Op::I64Extend8S):
+          case uint16_t(Op::I64Extend16S):
+          case uint16_t(Op::I64Extend32S):
+            CHECK(iter.readConversion(ValType::I64, ValType::I64, &nothing));
+#endif
           case uint16_t(Op::I32Load8S):
           case uint16_t(Op::I32Load8U): {
             LinearMemoryAddress<Nothing> addr;
