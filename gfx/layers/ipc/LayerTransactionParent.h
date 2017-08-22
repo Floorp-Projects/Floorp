@@ -58,8 +58,6 @@ protected:
 public:
   void Destroy();
 
-  HostLayerManager* layer_manager() const { return mLayerManager; }
-
   void SetLayerManager(HostLayerManager* aLayerManager, CompositorAnimationStorage* aAnimStorage);
 
   uint64_t GetId() const { return mId; }
