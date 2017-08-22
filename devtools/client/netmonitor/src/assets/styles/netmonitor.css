@@ -138,11 +138,11 @@ body,
 }
 
 .status-bar-label.dom-content-loaded {
-  color: blue;
+  color: var(--theme-highlight-blue);
 }
 
 .status-bar-label.load {
-  color: red;
+  color: var(--theme-highlight-red);
 }
 
 /* Request list empty panel */
