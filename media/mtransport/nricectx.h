@@ -324,6 +324,8 @@ class NrIceCtx {
   // StartGathering.
   nsresult SetProxyServer(const NrIceProxyServer& proxy_server);
 
+  void SetCtxFlags(bool default_route_only, bool proxy_only);
+
   // Start ICE gathering
   nsresult StartGathering(bool default_route_only, bool proxy_only);
 

@@ -942,9 +942,8 @@ abort:
   return NS_OK;
 }
 
-nsresult NrIceCtx::StartGathering(bool default_route_only, bool proxy_only) {
+void NrIceCtx::SetCtxFlags(bool default_route_only, bool proxy_only) {
   ASSERT_ON_THREAD(sts_target_);
-  SetGatheringState(ICE_CTX_GATHER_STARTED);
 
   if (default_route_only) {
     nr_ice_ctx_add_flags(ctx_, NR_ICE_CTX_FLAGS_ONLY_DEFAULT_ADDRS);
@@ -957,6 +956,13 @@ nsresult NrIceCtx::StartGathering(bool default_route_only, bool proxy_only) {
   } else {
     nr_ice_ctx_remove_flags(ctx_, NR_ICE_CTX_FLAGS_ONLY_PROXY);
   }
+}
+
+nsresult NrIceCtx::StartGathering(bool default_route_only, bool proxy_only) {
+  ASSERT_ON_THREAD(sts_target_);
+  SetGatheringState(ICE_CTX_GATHER_STARTED);
+
+  SetCtxFlags(default_route_only, proxy_only);
 
   // This might start gathering for the first time, or again after
   // renegotiation, or might do nothing at all if gathering has already
