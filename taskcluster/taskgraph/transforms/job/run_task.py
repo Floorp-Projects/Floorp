@@ -55,7 +55,7 @@ def docker_worker_run_task(config, job, taskdesc):
         run_command = ['bash', '-cx', run_command]
     command = ['/home/worker/bin/run-task']
     if run['checkout']:
-        command.append('--vcs-checkout=~/checkouts/gecko')
+        command.append('--vcs-checkout=/home/worker/checkouts/gecko')
     command.append('--fetch-hgfingerprint')
     command.append('--')
     command.extend(run_command)
@@ -80,7 +80,7 @@ def native_engine_run_task(config, job, taskdesc):
         run_command = ['bash', '-cx', run_command]
     command = ['./run-task']
     if run['checkout']:
-        command.append('--vcs-checkout=~/checkouts/gecko')
+        command.append('--vcs-checkout=/home/worker/checkouts/gecko')
     command.append('--')
     command.extend(run_command)
     worker['command'] = command
