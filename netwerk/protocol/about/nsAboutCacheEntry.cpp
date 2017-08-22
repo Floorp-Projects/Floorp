@@ -381,7 +381,8 @@ nsAboutCacheEntry::Channel::WriteCacheEntryDescription(nsICacheEntry *entry)
         uri->SchemeIs("javascript", &isJS);
         uri->SchemeIs("data", &isData);
     }
-    char* escapedStr = nsEscapeHTML(str.get());
+    nsAutoCString escapedStr;
+    nsAppendEscapedHTML(str, escapedStr);
     if (NS_SUCCEEDED(rv) && !(isJS || isData)) {
         buffer.AppendLiteral("<a href=\"");
         buffer.Append(escapedStr);
@@ -392,7 +393,6 @@ nsAboutCacheEntry::Channel::WriteCacheEntryDescription(nsICacheEntry *entry)
     } else {
         buffer.Append(escapedStr);
     }
-    free(escapedStr);
     buffer.AppendLiteral("</td>\n"
                          "  </tr>\n");
 
@@ -529,9 +529,7 @@ nsAboutCacheEntry::Channel::OnMetaDataElement(char const * key, char const * val
     mBuffer->Append(key);
     mBuffer->AppendLiteral(":</th>\n"
                            "    <td>");
-    char* escapedValue = nsEscapeHTML(value);
-    mBuffer->Append(escapedValue);
-    free(escapedValue);
+    nsAppendEscapedHTML(nsDependentCString(value), *mBuffer);
     mBuffer->AppendLiteral("</td>\n"
                            "  </tr>\n");
 

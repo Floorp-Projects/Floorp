@@ -79,6 +79,8 @@ function* test(testDriver) {
     flushApzRepaints(testDriver);
   });
 
+  yield synthesizeNativeMouseMoveAndWaitForMoveEvent(box, 10, 10, testDriver);
+
   // Take over control of the refresh driver and compositor
   var utils = SpecialPowers.DOMWindowUtils;
   utils.advanceTimeAndRefresh(0);
@@ -86,7 +88,6 @@ function* test(testDriver) {
   // Trigger an APZ scroll using a wheel event. If APZ is waiting for a
   // content response, it will wait for takeSnapshots to finish running before
   // it starts scrolling, which will cause the checks in takeSnapshots to fail.
-  yield synthesizeNativeMouseMoveAndWaitForMoveEvent(box, 10, 10, testDriver);
   yield synthesizeNativeWheelAndWaitForScrollEvent(box, 10, 10, 0, -50, testDriver);
 }
 

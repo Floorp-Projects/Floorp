@@ -300,7 +300,7 @@ public:
                           const nsAString& aType,
                           const nsAString& aCrossOrigin,
                           const nsAString& aIntegrity,
-                          bool aScriptFromHead,
+                          bool aScriptFromHead, bool aAsync, bool aDefer,
                           const mozilla::net::ReferrerPolicy aReferrerPolicy);
 
   /**

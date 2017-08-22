@@ -3364,19 +3364,34 @@ class LShiftI64 : public LInstructionHelper<INT64_PIECES, INT64_PIECES + 1, 0>
 };
 
 // Sign extension
-class LSignExtend : public LInstructionHelper<1, 1, 0>
+class LSignExtendInt32 : public LInstructionHelper<1, 1, 0>
 {
-    MSignExtend::Mode mode_;
+    MSignExtendInt32::Mode mode_;
 
   public:
-    LIR_HEADER(SignExtend);
-    explicit LSignExtend(const LAllocation& num, MSignExtend::Mode mode)
+    LIR_HEADER(SignExtendInt32);
+    explicit LSignExtendInt32(const LAllocation& num, MSignExtendInt32::Mode mode)
       : mode_(mode)
     {
         setOperand(0, num);
     }
 
-    MSignExtend::Mode mode() { return mode_; }
+    MSignExtendInt32::Mode mode() { return mode_; }
+};
+
+class LSignExtendInt64 : public LInstructionHelper<INT64_PIECES, INT64_PIECES, 0>
+{
+  public:
+    LIR_HEADER(SignExtendInt64)
+    explicit LSignExtendInt64(const LInt64Allocation& input) {
+        setInt64Operand(0, input);
+    }
+
+    const MSignExtendInt64* mir() const {
+        return mir_->toSignExtendInt64();
+    }
+
+    MSignExtendInt64::Mode mode() const { return mir()->mode(); }
 };
 
 class LUrshD : public LBinaryMath<1>
