@@ -32,6 +32,8 @@
   border: none;
   /* Set to none so no grey contrast background in the high-contrast mode */
   background: none;
+  /* make sure the icon stay above the activity-stream searchbar */
+  z-index: 10;
 }
 
 /* Keyboard focus styling */
@@ -43,7 +45,7 @@
 }
 
 #onboarding-overlay-button-icon {
-  width: 36px;
+  width: 32px;
   vertical-align: top;
 }
 
@@ -87,7 +89,7 @@
  }
 
 .onboarding-close-btn::before {
-  content: url(chrome://global/skin/icons/close.svg);
+  content: url("chrome://global/skin/icons/close.svg");
   -moz-context-properties: fill, fill-opacity;
   fill-opacity: 0;
 }
@@ -532,4 +534,10 @@
 
 #onboarding-notification-action-btn:active {
   background-color: #dadada;
+}
+
+@media (min-resolution: 2dppx) {
+  #onboarding-notification-tour-icon {
+    background-image: url("chrome://branding/content/icon128.png");
+  }
 }
