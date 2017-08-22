@@ -9,10 +9,10 @@ import android.view.View;
 
 import org.mozilla.gecko.R;
 
-public class HighlightsTitle extends StreamViewHolder {
+public class HighlightsTitleRow extends StreamViewHolder {
     public static final int LAYOUT_ID = R.layout.activity_stream_main_highlightstitle;
 
-    public HighlightsTitle(final View itemView) {
+    public HighlightsTitleRow(final View itemView) {
         super(itemView);
     }
 }
