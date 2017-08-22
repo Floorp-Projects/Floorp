@@ -419,7 +419,7 @@ bool nsMIMEInfoWin::GetDllLaunchInfo(nsIFile * aDll,
     // Replace embedded environment variables.
     uint32_t bufLength = 
       ::ExpandEnvironmentStringsW(appFilesystemCommand.get(),
-                                  L"", 0);
+                                  nullptr, 0);
     if (bufLength == 0) // Error
       return false;
 
