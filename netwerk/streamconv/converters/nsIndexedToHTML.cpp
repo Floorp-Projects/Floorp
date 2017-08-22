@@ -680,7 +680,7 @@ nsIndexedToHTML::OnIndexAvailable(nsIRequest *aRequest,
 
     // We don't know the file's character set yet, so retrieve the raw bytes
     // which will be decoded by the HTML parser.
-    nsXPIDLCString loc;
+    nsCString loc;
     aIndex->GetLocation(getter_Copies(loc));
 
     // Adjust the length in case unescaping shortened the string.

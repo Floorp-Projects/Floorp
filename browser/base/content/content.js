@@ -236,9 +236,6 @@ const PREF_BLOCKLIST_CLOCK_SKEW_SECONDS = "services.blocklist.clock_skew_seconds
 
 const PREF_SSL_IMPACT_ROOTS = ["security.tls.version.", "security.ssl3."];
 
-const PREF_SSL_IMPACT = PREF_SSL_IMPACT_ROOTS.reduce((prefs, root) => {
-  return prefs.concat(Services.prefs.getChildList(root));
-}, []);
 
 /**
  * Retrieve the array of CSS selectors corresponding to the provided node. The first item
@@ -502,7 +499,10 @@ var AboutNetAndCertErrorListener = {
   },
 
   changedCertPrefs() {
-    for (let prefName of PREF_SSL_IMPACT) {
+    let prefSSLImpact = PREF_SSL_IMPACT_ROOTS.reduce((prefs, root) => {
+       return prefs.concat(Services.prefs.getChildList(root));
+    }, []);
+    for (let prefName of prefSSLImpact) {
       if (Services.prefs.prefHasUserValue(prefName)) {
         return true;
       }

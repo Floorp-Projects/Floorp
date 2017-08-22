@@ -197,6 +197,35 @@
 
 using namespace mozilla;
 
+struct NurseryPurpleBufferEntry
+{
+  void* mPtr;
+  nsCycleCollectionParticipant* mParticipant;
+  nsCycleCollectingAutoRefCnt* mRefCnt;
+};
+
+#define NURSERY_PURPLE_BUFFER_SIZE 2048
+bool gNurseryPurpleBufferEnabled = true;
+NurseryPurpleBufferEntry gNurseryPurpleBufferEntry[NURSERY_PURPLE_BUFFER_SIZE];
+uint32_t gNurseryPurpleBufferEntryCount = 0;
+
+void ClearNurseryPurpleBuffer();
+
+void SuspectUsingNurseryPurpleBuffer(void* aPtr,
+                                     nsCycleCollectionParticipant* aCp,
+                                     nsCycleCollectingAutoRefCnt* aRefCnt)
+{
+  MOZ_ASSERT(NS_IsMainThread(), "Wrong thread!");
+  MOZ_ASSERT(gNurseryPurpleBufferEnabled);
+  if (gNurseryPurpleBufferEntryCount == NURSERY_PURPLE_BUFFER_SIZE) {
+    ClearNurseryPurpleBuffer();
+  }
+
+  gNurseryPurpleBufferEntry[gNurseryPurpleBufferEntryCount] =
+    { aPtr, aCp, aRefCnt };
+  ++gNurseryPurpleBufferEntryCount;
+}
+
 //#define COLLECT_TIME_DEBUG
 
 // Enable assertions that are useful for diagnosing errors in graph construction.
@@ -1039,6 +1068,13 @@ public:
   template<class PurpleVisitor>
   void VisitEntries(PurpleVisitor& aVisitor)
   {
+    Maybe<AutoRestore<bool>> ar;
+    if (NS_IsMainThread()) {
+      ar.emplace(gNurseryPurpleBufferEnabled);
+      gNurseryPurpleBufferEnabled = false;
+      ClearNurseryPurpleBuffer();
+    }
+
     if (mEntries.IsEmpty()) {
       return;
     }
@@ -1289,6 +1325,7 @@ public:
 
   void Suspect(void* aPtr, nsCycleCollectionParticipant* aCp,
                nsCycleCollectingAutoRefCnt* aRefCnt);
+  void SuspectNurseryEntries();
   uint32_t SuspectedCount();
   void ForgetSkippable(js::SliceBudget& aBudget, bool aRemoveChildlessNodes,
                        bool aAsyncSnowWhiteFreeing);
@@ -3492,6 +3529,17 @@ nsCycleCollector::Suspect(void* aPtr, nsCycleCollectionParticipant* aParti,
 }
 
 void
+nsCycleCollector::SuspectNurseryEntries()
+{
+  MOZ_ASSERT(NS_IsMainThread(), "Wrong thread!");
+  while (gNurseryPurpleBufferEntryCount) {
+    NurseryPurpleBufferEntry& entry =
+      gNurseryPurpleBufferEntry[--gNurseryPurpleBufferEntryCount];
+    mPurpleBuf.Put(entry.mPtr, entry.mParticipant, entry.mRefCnt);
+  }
+}
+
+void
 nsCycleCollector::CheckThreadSafety()
 {
 #ifdef DEBUG
@@ -3893,6 +3941,10 @@ uint32_t
 nsCycleCollector::SuspectedCount()
 {
   CheckThreadSafety();
+  if (NS_IsMainThread()) {
+    return gNurseryPurpleBufferEntryCount + mPurpleBuf.Count();
+  }
+
   return mPurpleBuf.Count();
 }
 
@@ -3900,6 +3952,10 @@ void
 nsCycleCollector::Shutdown(bool aDoCollect)
 {
   CheckThreadSafety();
+
+  if (NS_IsMainThread()) {
+    gNurseryPurpleBufferEnabled = false;
+  }
 
   // Always delete snow white objects.
   FreeSnowWhite(true);
@@ -4036,6 +4092,30 @@ NS_CycleCollectorSuspect3(void* aPtr, nsCycleCollectionParticipant* aCp,
     return;
   }
   SuspectAfterShutdown(aPtr, aCp, aRefCnt, aShouldDelete);
+}
+
+void ClearNurseryPurpleBuffer()
+{
+  MOZ_ASSERT(NS_IsMainThread(), "Wrong thread!");
+  CollectorData* data = sCollectorData.get();
+  MOZ_ASSERT(data);
+  MOZ_ASSERT(data->mCollector);
+  data->mCollector->SuspectNurseryEntries();
+}
+
+void
+NS_CycleCollectorSuspectUsingNursery(void* aPtr,
+                                     nsCycleCollectionParticipant* aCp,
+                                     nsCycleCollectingAutoRefCnt* aRefCnt,
+                                     bool* aShouldDelete)
+{
+  MOZ_ASSERT(NS_IsMainThread(), "Wrong thread!");
+  if (!gNurseryPurpleBufferEnabled) {
+    NS_CycleCollectorSuspect3(aPtr, aCp, aRefCnt, aShouldDelete);
+    return;
+  }
+
+  SuspectUsingNurseryPurpleBuffer(aPtr, aCp, aRefCnt);
 }
 
 uint32_t

@@ -54,10 +54,23 @@ def use_toolchains(config, jobs):
                 % (alias, job))
         aliases[alias] = job
 
+    if config.kind == 'toolchain':
+        def get_alias(key):
+            if key in aliases:
+                raise Exception(
+                    "Toolchain job %s can't use the alias %s as dependency. "
+                    "Please use %s instead."
+                    % (job['name'], key, aliases[key])
+                )
+            return key
+    else:
+        def get_alias(key):
+            return aliases.get(key, key)
+
     for job in jobs:
         env = job.setdefault('worker', {}).setdefault('env', {})
 
-        toolchains = [aliases.get(t, t)
+        toolchains = [get_alias(t)
                       for t in job.pop('toolchains', [])]
 
         if config.kind == 'toolchain' and job['name'] in toolchains:
