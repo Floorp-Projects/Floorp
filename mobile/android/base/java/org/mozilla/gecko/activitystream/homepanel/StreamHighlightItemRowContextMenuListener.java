@@ -5,7 +5,7 @@
 package org.mozilla.gecko.activitystream.homepanel;
 
 import android.support.annotation.NonNull;
-import org.mozilla.gecko.activitystream.homepanel.stream.HighlightItem;
+import org.mozilla.gecko.activitystream.homepanel.stream.HighlightItemRow;
 
 /**
  * Provides a method to open the context menu for a highlight item.
@@ -13,9 +13,6 @@ import org.mozilla.gecko.activitystream.homepanel.stream.HighlightItem;
  * I tried declaring this inside StreamRecyclerAdapter but I got cyclical inheritance warnings
  * (I don't understand why) so it's here instead.
  */
-public interface StreamHighlightItemContextMenuListener {
-    /**
-     * @param position position of item in RecyclerView
-     */
-    void openContextMenu(HighlightItem highlightItem, int position, @NonNull final String interactionExtra);
+public interface StreamHighlightItemRowContextMenuListener {
+    void openContextMenu(HighlightItemRow highlightItem, int position, @NonNull final String interactionExtra);
 }
