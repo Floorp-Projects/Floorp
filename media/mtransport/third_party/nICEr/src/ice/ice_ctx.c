@@ -746,6 +746,10 @@ int nr_ice_set_local_addresses(nr_ice_ctx *ctx,
       addr_ct = force_addr_ct;
     }
 
+    r_log(LOG_ICE, LOG_DEBUG,
+          "ICE(%s): use only default local addresses: %s\n",
+          ctx->label,
+          (char*)(ctx->flags & NR_ICE_CTX_FLAGS_ONLY_DEFAULT_ADDRS?"yes":"no"));
     if ((!addr_ct) || (ctx->flags & NR_ICE_CTX_FLAGS_ONLY_DEFAULT_ADDRS)) {
       /* Get just the default IPv4 and IPv6 addrs */
       if(!nr_ice_get_default_local_address(ctx, NR_IPV4, local_addrs, addr_ct,
