@@ -20,7 +20,7 @@ import org.mozilla.gecko.activitystream.homepanel.menu.ActivityStreamContextMenu
 import org.mozilla.gecko.activitystream.homepanel.model.RowModel;
 import org.mozilla.gecko.home.HomePager;
 import org.mozilla.gecko.activitystream.homepanel.model.Highlight;
-import org.mozilla.gecko.activitystream.homepanel.stream.HighlightItem;
+import org.mozilla.gecko.activitystream.homepanel.stream.HighlightItemRow;
 import org.mozilla.gecko.activitystream.homepanel.stream.HighlightsTitle;
 import org.mozilla.gecko.activitystream.homepanel.stream.StreamViewHolder;
 import org.mozilla.gecko.activitystream.homepanel.stream.TopPanel;
@@ -38,7 +38,7 @@ import java.util.List;
  * Every item is in a single adapter: Top Sites, Welcome panel, Highlights.
  */
 public class StreamRecyclerAdapter extends RecyclerView.Adapter<StreamViewHolder> implements RecyclerViewClickSupport.OnItemClickListener,
-        RecyclerViewClickSupport.OnItemLongClickListener, StreamHighlightItemContextMenuListener {
+        RecyclerViewClickSupport.OnItemLongClickListener, StreamHighlightItemRowContextMenuListener {
 
     private static final String LOGTAG = StringUtils.safeSubstring("Gecko" + StreamRecyclerAdapter.class.getSimpleName(), 0, 23);
 
@@ -117,7 +117,7 @@ public class StreamRecyclerAdapter extends RecyclerView.Adapter<StreamViewHolder
         } else if (type == RowItemType.WELCOME.getViewType()) {
             return new WelcomePanel(inflater.inflate(WelcomePanel.LAYOUT_ID, parent, false), this);
         } else if (type == RowItemType.HIGHLIGHT_ITEM.getViewType()) {
-            return new HighlightItem(inflater.inflate(HighlightItem.LAYOUT_ID, parent, false), this);
+            return new HighlightItemRow(inflater.inflate(HighlightItemRow.LAYOUT_ID, parent, false), this);
         } else if (type == RowItemType.HIGHLIGHTS_TITLE.getViewType()) {
             return new HighlightsTitle(inflater.inflate(HighlightsTitle.LAYOUT_ID, parent, false));
         } else {
@@ -134,7 +134,7 @@ public class StreamRecyclerAdapter extends RecyclerView.Adapter<StreamViewHolder
         int type = getItemViewType(position);
         if (type == RowItemType.HIGHLIGHT_ITEM.getViewType()) {
             final Highlight highlight = (Highlight) recyclerViewModel.get(position);
-            ((HighlightItem) holder).bind(highlight, position, tilesSize);
+            ((HighlightItemRow) holder).bind(highlight, position, tilesSize);
         } else if (type == RowItemType.TOP_PANEL.getViewType()) {
             ((TopPanel) holder).bind(topSitesCursor, tiles, tilesSize);
         }
@@ -172,7 +172,7 @@ public class StreamRecyclerAdapter extends RecyclerView.Adapter<StreamViewHolder
             return false;
         }
 
-        final HighlightItem highlightItem = (HighlightItem) recyclerView.getChildViewHolder(v);
+        final HighlightItemRow highlightItem = (HighlightItemRow) recyclerView.getChildViewHolder(v);
         openContextMenu(highlightItem, position, ActivityStreamTelemetry.Contract.INTERACTION_LONG_CLICK);
         return true;
     }
@@ -202,7 +202,7 @@ public class StreamRecyclerAdapter extends RecyclerView.Adapter<StreamViewHolder
     }
 
     @Override
-    public void openContextMenu(final HighlightItem highlightItem, final int position, @NonNull final String interactionExtra) {
+    public void openContextMenu(final HighlightItemRow highlightItem, final int position, @NonNull final String interactionExtra) {
         final Highlight highlight = (Highlight) recyclerViewModel.get(position);
 
         ActivityStreamTelemetry.Extras.Builder extras = ActivityStreamTelemetry.Extras.builder()
