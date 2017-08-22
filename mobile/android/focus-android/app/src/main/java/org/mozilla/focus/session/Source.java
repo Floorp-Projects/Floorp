@@ -40,6 +40,11 @@ public enum Source {
     CUSTOM_TAB,
 
     /**
+     * Open as a new tab from the (context( menu.
+     */
+    MENU,
+
+    /**
      * Only used internally if we need to temporarily create a session object with no specific source.
      */
     NONE

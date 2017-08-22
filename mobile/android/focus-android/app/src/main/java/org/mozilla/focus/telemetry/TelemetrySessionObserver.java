@@ -44,13 +44,14 @@ public class TelemetrySessionObserver extends NonNullObserver<List<Session>> {
                 TelemetryWrapper.openHomescreenShortcutEvent();
                 break;
 
-            case USER_ENTERED:
-                // We report this event from the UI components - The event depends on how the user
-                // interacted with the UI.
-                break;
-
             case CUSTOM_TAB:
                 TelemetryWrapper.customTabsIntentEvent(session.getCustomTabConfig().getOptionsList());
+                break;
+
+            case USER_ENTERED:
+            case MENU:
+                // We report those events from the UI level - The events depends on how the user
+                // interacted with the UI.
                 break;
 
             default:

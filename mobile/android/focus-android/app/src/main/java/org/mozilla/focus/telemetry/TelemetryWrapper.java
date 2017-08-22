@@ -108,6 +108,7 @@ public final class TelemetryWrapper {
         private static final String SEARCH = "search";
         private static final String CANCEL = "cancel";
         private static final String ADD_TO_HOMESCREEN = "add_to_homescreen";
+        private static final String TAB = "tab";
     }
 
     private static class Extra {
@@ -376,6 +377,10 @@ public final class TelemetryWrapper {
 
     public static void copyImageEvent() {
         TelemetryEvent.create(Category.ACTION, Method.COPY, Object.BROWSER_CONTEXTMENU, Value.IMAGE).queue();
+    }
+
+    public static void openLinkInNewTabEvent() {
+        TelemetryEvent.create(Category.ACTION, Method.OPEN, Object.BROWSER_CONTEXTMENU, Value.TAB).queue();
     }
 
     public static void openWebContextMenuEvent() {

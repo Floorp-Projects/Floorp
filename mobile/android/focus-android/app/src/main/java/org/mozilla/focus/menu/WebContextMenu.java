@@ -22,6 +22,8 @@ import android.view.View;
 import android.widget.TextView;
 
 import org.mozilla.focus.R;
+import org.mozilla.focus.session.SessionManager;
+import org.mozilla.focus.session.Source;
 import org.mozilla.focus.telemetry.TelemetryWrapper;
 import org.mozilla.focus.utils.UrlUtils;
 import org.mozilla.focus.web.Download;
@@ -95,6 +97,7 @@ public class WebContextMenu {
                                               final @NonNull IWebView.HitTarget hitTarget) {
         navigationView.inflateMenu(R.menu.menu_browser_context);
 
+        navigationView.getMenu().findItem(R.id.menu_new_tab).setVisible(hitTarget.isLink);
         navigationView.getMenu().findItem(R.id.menu_link_share).setVisible(hitTarget.isLink);
         navigationView.getMenu().findItem(R.id.menu_link_copy).setVisible(hitTarget.isLink);
         navigationView.getMenu().findItem(R.id.menu_image_share).setVisible(hitTarget.isImage);
@@ -109,6 +112,11 @@ public class WebContextMenu {
                 dialog.dismiss();
 
                 switch (item.getItemId()) {
+                    case R.id.menu_new_tab: {
+                        SessionManager.getInstance().createSession(Source.MENU, hitTarget.linkURL);
+                        TelemetryWrapper.openLinkInNewTabEvent();
+                        return true;
+                    }
                     case R.id.menu_link_share: {
                         TelemetryWrapper.shareLinkEvent();
                         final Intent shareIntent = new Intent(Intent.ACTION_SEND);
@@ -135,6 +143,9 @@ public class WebContextMenu {
                     case R.id.menu_image_copy:
                         final ClipboardManager clipboard = (ClipboardManager)
                                 dialog.getContext().getSystemService(Context.CLIPBOARD_SERVICE);
+                        if (clipboard == null) {
+                            return true;
+                        }
                         final Uri uri;
 
                         if (item.getItemId() == R.id.menu_link_copy) {
