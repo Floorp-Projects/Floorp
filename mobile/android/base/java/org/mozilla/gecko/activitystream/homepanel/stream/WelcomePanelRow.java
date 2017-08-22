@@ -15,7 +15,7 @@ import android.widget.Button;
 import org.mozilla.gecko.GeckoSharedPrefs;
 import org.mozilla.gecko.R;
 
-public class WelcomePanel extends StreamViewHolder implements View.OnClickListener {
+public class WelcomePanelRow extends StreamViewHolder implements View.OnClickListener {
     public static final int LAYOUT_ID = R.layout.activity_stream_main_welcomepanel;
 
     public static final String PREF_WELCOME_DISMISSED = "activitystream.welcome_dismissed";
@@ -23,7 +23,7 @@ public class WelcomePanel extends StreamViewHolder implements View.OnClickListen
     private final RecyclerView.Adapter<StreamViewHolder> adapter;
     private final Context context;
 
-    public WelcomePanel(final View itemView, final RecyclerView.Adapter<StreamViewHolder> adapter) {
+    public WelcomePanelRow(final View itemView, final RecyclerView.Adapter<StreamViewHolder> adapter) {
         super(itemView);
 
         this.adapter = adapter;
@@ -54,7 +54,7 @@ public class WelcomePanel extends StreamViewHolder implements View.OnClickListen
         final SharedPreferences sharedPrefs = GeckoSharedPrefs.forApp(context);
 
         sharedPrefs.edit()
-                .putBoolean(WelcomePanel.PREF_WELCOME_DISMISSED, true)
+                .putBoolean(WelcomePanelRow.PREF_WELCOME_DISMISSED, true)
                 .apply();
 
         adapter.notifyItemChanged(getAdapterPosition());

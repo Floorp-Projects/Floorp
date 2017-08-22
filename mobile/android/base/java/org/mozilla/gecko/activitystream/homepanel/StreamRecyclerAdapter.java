@@ -24,7 +24,7 @@ import org.mozilla.gecko.activitystream.homepanel.model.Highlight;
 import org.mozilla.gecko.activitystream.homepanel.stream.HighlightItemRow;
 import org.mozilla.gecko.activitystream.homepanel.stream.HighlightsTitleRow;
 import org.mozilla.gecko.activitystream.homepanel.stream.StreamViewHolder;
-import org.mozilla.gecko.activitystream.homepanel.stream.WelcomePanel;
+import org.mozilla.gecko.activitystream.homepanel.stream.WelcomePanelRow;
 import org.mozilla.gecko.util.StringUtils;
 import org.mozilla.gecko.widget.RecyclerViewClickSupport;
 
@@ -115,7 +115,7 @@ public class StreamRecyclerAdapter extends RecyclerView.Adapter<StreamViewHolder
         if (type == RowItemType.TOP_PANEL.getViewType()) {
             return new TopPanelRow(inflater.inflate(TopPanelRow.LAYOUT_ID, parent, false), onUrlOpenListener, onUrlOpenInBackgroundListener);
         } else if (type == RowItemType.WELCOME.getViewType()) {
-            return new WelcomePanel(inflater.inflate(WelcomePanel.LAYOUT_ID, parent, false), this);
+            return new WelcomePanelRow(inflater.inflate(WelcomePanelRow.LAYOUT_ID, parent, false), this);
         } else if (type == RowItemType.HIGHLIGHT_ITEM.getViewType()) {
             return new HighlightItemRow(inflater.inflate(HighlightItemRow.LAYOUT_ID, parent, false), this);
         } else if (type == RowItemType.HIGHLIGHTS_TITLE.getViewType()) {
