@@ -23,6 +23,7 @@ class ModuleScript final : public nsISupports
   RefPtr<ScriptLoader> mLoader;
   nsCOMPtr<nsIURI> mBaseURL;
   JS::Heap<JSObject*> mModuleRecord;
+  JS::Heap<JS::Value> mError;
 
   ~ModuleScript();
 
@@ -31,12 +32,17 @@ public:
   NS_DECL_CYCLE_COLLECTION_SCRIPT_HOLDER_CLASS(ModuleScript)
 
   ModuleScript(ScriptLoader* aLoader,
-               nsIURI* aBaseURL,
-               JS::Handle<JSObject*> aModuleRecord);
+               nsIURI* aBaseURL);
+
+  void SetModuleRecord(JS::Handle<JSObject*> aModuleRecord);
+  void SetPreInstantiationError(const JS::Value& aError);
 
   ScriptLoader* Loader() const { return mLoader; }
   JSObject* ModuleRecord() const { return mModuleRecord; }
   nsIURI* BaseURL() const { return mBaseURL; }
+
+  bool IsErrored() const;
+  JS::Value Error() const;
 
   void UnlinkModuleRecord();
 };
