@@ -256,18 +256,29 @@ class FormatProvider(MachCommandBase):
             os.rename(temp, target)
         return target
 
+    # List of file extension to consider (should start with dot)
+    _format_include_extensions = ('.cpp', '.c', '.h')
+    # File contaning all paths to exclude from formatting
+    _format_ignore_file = '.clang-format-ignore'
+
+    def _get_clang_format_diff_command(self):
+        if self.repository.name == 'hg':
+            args = ["hg", "diff", "-U0", "-r" ".^"]
+            for dot_extension in self._format_include_extensions:
+                args += ['--include', 'glob:**{0}'.format(dot_extension)]
+            args += ['--exclude', 'listfile:{0}'.format(self._format_ignore_file)]
+        else:
+            args = ["git", "diff", "--no-color", "-U0", "HEAD", "--"]
+            for dot_extension in self._format_include_extensions:
+                args += ['*{0}'.format(dot_extension)]
+        return args
+
     def run_clang_format_diff(self, clang_format_diff, show):
         # Run clang-format on the diff
         # Note that this will potentially miss a lot things
         from subprocess import Popen, PIPE
 
-        if self.repository.name == 'hg':
-            diff_process = Popen(["hg", "diff", "-U0", "-r", ".^",
-                                  "--include", "glob:**.c", "--include", "glob:**.cpp",
-                                  "--include", "glob:**.h",
-                                  "--exclude", "listfile:.clang-format-ignore"], stdout=PIPE)
-        else:
-	    diff_process = Popen(["git", "diff", "--no-color", "-U0", "HEAD","--","*.c","*.cpp","*.h"], stdout=PIPE)
+        diff_process = Popen(self._get_clang_format_diff_command(), stdout=PIPE)
         args = [sys.executable, clang_format_diff, "-p1"]
         if not show:
             args.append("-i")
@@ -275,8 +286,7 @@ class FormatProvider(MachCommandBase):
         return cf_process.communicate()[0]
 
     def generate_path_list(self, paths):
-        pathToThirdparty = os.path.join(self.topsrcdir,
-                                        ".clang-format-ignore")
+        pathToThirdparty = os.path.join(self.topsrcdir, self._format_ignore_file)
         ignored_dir = []
         for line in open(pathToThirdparty):
             # Remove comments and empty lines
@@ -286,7 +296,7 @@ class FormatProvider(MachCommandBase):
 
         # Generates the list of regexp
         ignored_dir_re = '(%s)' % '|'.join(ignored_dir)
-        extensions = ('.cpp', '.c', '.h')
+        extensions = self._format_include_extensions
 
         path_list = []
         for f in paths:
