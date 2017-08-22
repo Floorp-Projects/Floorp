@@ -27,11 +27,13 @@
   padding: 0;
   position: absolute;
   cursor: pointer;
-  top: 34px;
-  offset-inline-start: 34px;
+  top: 12px;
+  offset-inline-start: 12px;
   border: none;
   /* Set to none so no grey contrast background in the high-contrast mode */
   background: none;
+   /* make sure the icon above the activity-stream searchbar */
+  z-index: 10;
 }
 
 /* Keyboard focus styling */
@@ -43,7 +45,7 @@
 }
 
 #onboarding-overlay-button-icon {
-  width: 36px;
+  width: 32px;
   vertical-align: top;
 }
 
