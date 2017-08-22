@@ -106,10 +106,6 @@ function testPrincipal(principal, wantXrays = true) {
       var trapDidRun = false;
       var proxy = new Proxy({}, new Proxy({}, {get: (_, trap) => {
         return function(_, arg) {
-          if (trap === "has" && arg === "__exposedProps__") {
-            // Tolerate this case until bug 1392026 is fixed.
-            return false;
-          }
           trapDidRun = true;
           throw new Error("proxy trap '" + trap + "' was called.");
         }
