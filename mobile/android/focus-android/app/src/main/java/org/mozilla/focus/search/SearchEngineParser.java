@@ -100,9 +100,6 @@ import java.nio.charset.StandardCharsets;
             if (tag.equals("Param")) {
                 final String name = parser.getAttributeValue(null, "name");
                 final String value = parser.getAttributeValue(null, "value");
-                if (value.equals(SEARCH_TERM_VALUE)) {
-                    searchEngine.searchTermsParamName = name;
-                }
                 uri = uri.buildUpon().appendQueryParameter(name, value).build();
                 parser.nextTag();
             } else {

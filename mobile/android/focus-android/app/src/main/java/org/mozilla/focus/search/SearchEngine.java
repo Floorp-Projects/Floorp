@@ -37,7 +37,6 @@ public class SearchEngine {
     // moving into memory - hence we probably want to keep this field for now:
     @SuppressFBWarnings(value = "URF_UNREAD_FIELD", justification = "Needed for future versions, reflects on-disk format")
     /* package */ Uri suggestUri;
-    /* package */ String searchTermsParamName;
 
     /* package */ SearchEngine(String identifier) {
         this.identifier = identifier;
@@ -74,10 +73,6 @@ public class SearchEngine {
         } else {
             return null;
         }
-    }
-
-    public String getSearchTermsParamName() {
-        return searchTermsParamName;
     }
 
     /**

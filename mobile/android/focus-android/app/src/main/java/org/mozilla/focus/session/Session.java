@@ -26,6 +26,8 @@ public class Session {
     private final NonNullMutableLiveData<Integer> trackersBlocked;
     private CustomTabConfig customTabConfig;
     private Bundle webviewState;
+    private String searchTerms;
+    private String searchUrl;
     private boolean isRecorded;
     private boolean isSearch;
 
@@ -126,6 +128,22 @@ public class Session {
 
     public void setSearch(boolean isSearch) {
         this.isSearch = isSearch;
+    }
+
+    public void setSearchTerms(String searchTerms) {
+        this.searchTerms = searchTerms;
+    }
+
+    public String getSearchTerms() {
+        return searchTerms;
+    }
+
+    public String getSearchUrl() {
+        return searchUrl;
+    }
+
+    public void setSearchUrl(String searchUrl) {
+        this.searchUrl = searchUrl;
     }
 
     public boolean isSameAs(@NonNull Session session) {

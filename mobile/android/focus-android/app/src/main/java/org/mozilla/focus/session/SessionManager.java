@@ -142,6 +142,13 @@ public class SessionManager {
         addSession(session);
     }
 
+    public void createSession(@NonNull Source source, @NonNull String url, boolean isSearch, String searchTerms) {
+        final Session session = new Session(source, url);
+        session.setSearch(isSearch);
+        session.setSearchTerms(searchTerms);
+        addSession(session);
+    }
+
     private void createSession(Context context, Source source, SafeIntent intent, String url) {
         final Session session = CustomTabConfig.isCustomTabIntent(intent)
                 ? new Session(url, CustomTabConfig.parseCustomTabIntent(context, intent))
