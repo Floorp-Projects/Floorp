@@ -21,7 +21,7 @@ import org.mozilla.gecko.activitystream.homepanel.model.RowModel;
 import org.mozilla.gecko.home.HomePager;
 import org.mozilla.gecko.activitystream.homepanel.model.Highlight;
 import org.mozilla.gecko.activitystream.homepanel.stream.HighlightItemRow;
-import org.mozilla.gecko.activitystream.homepanel.stream.HighlightsTitle;
+import org.mozilla.gecko.activitystream.homepanel.stream.HighlightsTitleRow;
 import org.mozilla.gecko.activitystream.homepanel.stream.StreamViewHolder;
 import org.mozilla.gecko.activitystream.homepanel.stream.TopPanel;
 import org.mozilla.gecko.activitystream.homepanel.stream.WelcomePanel;
@@ -119,7 +119,7 @@ public class StreamRecyclerAdapter extends RecyclerView.Adapter<StreamViewHolder
         } else if (type == RowItemType.HIGHLIGHT_ITEM.getViewType()) {
             return new HighlightItemRow(inflater.inflate(HighlightItemRow.LAYOUT_ID, parent, false), this);
         } else if (type == RowItemType.HIGHLIGHTS_TITLE.getViewType()) {
-            return new HighlightsTitle(inflater.inflate(HighlightsTitle.LAYOUT_ID, parent, false));
+            return new HighlightsTitleRow(inflater.inflate(HighlightsTitleRow.LAYOUT_ID, parent, false));
         } else {
             throw new IllegalStateException("Missing inflation for ViewType " + type);
         }
