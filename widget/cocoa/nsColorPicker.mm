@@ -54,11 +54,11 @@ HexStrToInt(NSString* str)
 
 - (void)open:(NSColor*)aInitialColor title:(NSString*)aTitle
 {
-  [mColorPanel setTitle:aTitle];
-  [mColorPanel setColor:aInitialColor];
   [mColorPanel setTarget:self];
   [mColorPanel setAction:@selector(colorChanged:)];
   [mColorPanel setDelegate:self];
+  [mColorPanel setTitle:aTitle];
+  [mColorPanel setColor:aInitialColor];
   [mColorPanel makeKeyAndOrderFront:nil];
 }
 
@@ -80,11 +80,9 @@ HexStrToInt(NSString* str)
 
 - (void)dealloc
 {
-  if ([mColorPanel delegate] == self) {
-    [mColorPanel setTarget:nil];
-    [mColorPanel setAction:nil];
-    [mColorPanel setDelegate:nil];
-  }
+  [mColorPanel setTarget:nil];
+  [mColorPanel setAction:nil];
+  [mColorPanel setDelegate:nil];
 
   mColorPanel = nil;
   mColorPicker = nullptr;

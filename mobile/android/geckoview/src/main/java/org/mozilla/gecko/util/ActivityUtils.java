@@ -14,6 +14,8 @@ import android.view.View;
 import android.view.Window;
 import android.view.WindowManager;
 
+import org.mozilla.gecko.AppConstants;
+
 public class ActivityUtils {
     private ActivityUtils() {
     }
@@ -37,6 +39,13 @@ public class ActivityUtils {
                 }
             } else {
                 newVis = View.SYSTEM_UI_FLAG_VISIBLE;
+            }
+
+            if (AppConstants.Versions.feature23Plus) {
+                // We also have to set SYSTEM_UI_FLAG_LIGHT_STATUS_BAR with to current system ui status
+                // to support both light and dark status bar.
+                final int oldVis = window.getDecorView().getSystemUiVisibility();
+                newVis |= (oldVis & View.SYSTEM_UI_FLAG_LIGHT_STATUS_BAR);
             }
 
             window.getDecorView().setSystemUiVisibility(newVis);

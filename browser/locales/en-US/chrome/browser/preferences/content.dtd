@@ -14,20 +14,22 @@
 <!ENTITY  popupExceptions.label                                 "Exceptions…">
 <!ENTITY  popupExceptions.accesskey                             "E">
 
-<!ENTITY  permissionSettingsButton2.label                       "Settings…">
-
 <!ENTITY  notificationPermissions.label                         "Notifications">
-<!ENTITY  notificationSettingsButton.accesskey                  "n">
+<!ENTITY  notificationSettingsButton.label                      "Settings…">
+<!ENTITY  notificationSettingsButton.accesskey                  "t">
 <!ENTITY  notificationPermissionsLearnMore.label                "Learn more">
 
 <!ENTITY  locationPermissions.label                             "Location">
-<!ENTITY  locationSettingsButton.accesskey                      "l">
+<!ENTITY  locationSettingsButton.label                          "Settings…">
+<!ENTITY  locationSettingsButton.accesskey                      "t">
 
 <!ENTITY  cameraPermissions.label                               "Camera">
-<!ENTITY  cameraSettingsButton.accesskey                        "c">
+<!ENTITY  cameraSettingsButton.label                            "Settings…">
+<!ENTITY  cameraSettingsButton.accesskey                        "t">
 
 <!ENTITY  microphonePermissions.label                           "Microphone">
-<!ENTITY  microphoneSettingsButton.accesskey                    "m">
+<!ENTITY  microphoneSettingsButton.label                        "Settings…">
+<!ENTITY  microphoneSettingsButton.accesskey                    "t">
 
 <!ENTITY  fontsAndColors.label        "Fonts &amp; Colors">
 

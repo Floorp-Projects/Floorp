@@ -10,7 +10,6 @@
 #include "nsIChannel.h"
 #include "nsIURI.h"
 #include "nsISeekableStream.h"
-#include "nsIStreamingProtocolController.h"
 #include "nsIStreamListener.h"
 #include "nsIChannelEventSink.h"
 #include "nsIInterfaceRequestor.h"
@@ -244,12 +243,6 @@ public:
    */
   virtual nsresult GetCachedRanges(MediaByteRangeSet& aRanges) = 0;
 
-  // Returns true if the resource is a live stream.
-  virtual bool IsLiveStream()
-  {
-    return GetLength() == -1;
-  }
-
   virtual size_t SizeOfExcludingThis(MallocSizeOf aMallocSizeOf) const {
     return 0;
   }
@@ -335,6 +328,9 @@ public:
   {
     return nullptr;
   }
+
+  // Returns true if the resource is a live stream.
+  bool IsLiveStream() { return GetLength() == -1; }
 
   size_t SizeOfExcludingThis(MallocSizeOf aMallocSizeOf) const override
   {

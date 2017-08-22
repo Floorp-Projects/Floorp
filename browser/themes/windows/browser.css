@@ -766,23 +766,6 @@ treechildren.searchbar-treebody::-moz-tree-row(selected) {
   -moz-image-region: rect(0, 48px, 16px, 32px);
 }
 
-/* Reader mode button */
-
-#reader-mode-button {
-  list-style-image: url("chrome://browser/skin/readerMode.svg");
-  -moz-image-region: rect(0, 16px, 16px, 0);
-}
-
-#reader-mode-button:hover,
-#reader-mode-button[readeractive]:hover {
-  -moz-image-region: rect(0, 32px, 16px, 16px);
-}
-
-#reader-mode-button:hover:active,
-#reader-mode-button[readeractive] {
-  -moz-image-region: rect(0, 48px, 16px, 32px);
-}
-
 /* bookmarking panel */
 
 #editBookmarkPanelStarIcon {
@@ -813,8 +796,9 @@ treechildren.searchbar-treebody::-moz-tree-row(selected) {
 
 %include ../shared/sidebar.inc.css
 
-#sidebar {
-  background-color: Window;
+#sidebar-box {
+  background-color: -moz-Field;
+  color: -moz-FieldText;
 }
 
 #sidebar-header {

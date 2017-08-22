@@ -16,12 +16,6 @@
 }
 
 @media (-moz-windows-default-theme) {
-  .sidebar-header,
-  #sidebar-header {
-    -moz-appearance: none;
-    border-bottom: none;
-  }
-
   .menu-accel,
   .menu-iconic-accel {
     color: graytext;
