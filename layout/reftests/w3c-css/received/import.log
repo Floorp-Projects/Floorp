@@ -1,4 +1,4 @@
-Importing revision: b369eca1d18725d94f7ce99862de113de393b69f
+Importing revision: a574530634a7e3f1c4e4f0385ec8e32620468def
 from repository: https://github.com/w3c/web-platform-tests.git
 Importing css-conditional-3/OWNERS to css-conditional-3/OWNERS
 Importing css-conditional-3/at-media-whitespace-optional-001.html to css-conditional-3/at-media-whitespace-optional-001.html
@@ -96,10 +96,10 @@ Importing css-multicol-1/reference/multicol-basic-005-ref.xht to css-multicol-1/
 Importing css-multicol-1/multicol-basic-006.xht to css-multicol-1/multicol-basic-006.xht
 Importing css-multicol-1/multicol-basic-007.xht to css-multicol-1/multicol-basic-007.xht
 Importing css-multicol-1/multicol-basic-008.xht to css-multicol-1/multicol-basic-008.xht
-Importing css-multicol-1/multicol-block-clip-001.xht to css-multicol-1/multicol-block-clip-001.xht
-Importing css-multicol-1/multicol-block-clip-001-ref.xht to css-multicol-1/multicol-block-clip-001-ref.xht
-Importing css-multicol-1/multicol-block-clip-002.xht to css-multicol-1/multicol-block-clip-002.xht
-Importing css-multicol-1/multicol-block-clip-002-ref.xht to css-multicol-1/multicol-block-clip-002-ref.xht
+Importing css-multicol-1/multicol-block-no-clip-001.xht to css-multicol-1/multicol-block-no-clip-001.xht
+Importing css-multicol-1/multicol-block-no-clip-001-ref.xht to css-multicol-1/multicol-block-no-clip-001-ref.xht
+Importing css-multicol-1/multicol-block-no-clip-002.xht to css-multicol-1/multicol-block-no-clip-002.xht
+Importing css-multicol-1/multicol-block-no-clip-002-ref.xht to css-multicol-1/multicol-block-no-clip-002-ref.xht
 Importing css-multicol-1/multicol-br-inside-avoidcolumn-001.xht to css-multicol-1/multicol-br-inside-avoidcolumn-001.xht
 Importing css-multicol-1/multicol-br-inside-avoidcolumn-ref.xht to css-multicol-1/multicol-br-inside-avoidcolumn-ref.xht
 Importing css-multicol-1/multicol-break-000.xht to css-multicol-1/multicol-break-000.xht
@@ -265,7 +265,7 @@ Importing css-multicol-1/multicol-rule-ridge-000.xht to css-multicol-1/multicol-
 Importing css-multicol-1/multicol-rule-samelength-001.xht to css-multicol-1/multicol-rule-samelength-001.xht
 Importing css-multicol-1/multicol-rule-samelength-001-ref.xht to css-multicol-1/multicol-rule-samelength-001-ref.xht
 Importing css-multicol-1/multicol-rule-shorthand-001.xht to css-multicol-1/multicol-rule-shorthand-001.xht
-Warning: href attribute found empty in /Users/mozilla/web-platform-tests/css/css-multicol-1/multicol-rule-shorthand-2.xht
+Warning: href attribute found empty in ../../../../web-platform-tests/css/css-multicol-1/multicol-rule-shorthand-2.xht
 Importing css-multicol-1/multicol-rule-solid-000.xht to css-multicol-1/multicol-rule-solid-000.xht
 Importing css-multicol-1/multicol-rule-solid-000-ref.xht to css-multicol-1/multicol-rule-solid-000-ref.xht
 Importing css-multicol-1/multicol-rule-stacking-001.xht to css-multicol-1/multicol-rule-stacking-001.xht
@@ -410,6 +410,7 @@ Importing css-values-3/support/test-inner-half-size.png to css-values-3/support/
 Importing css-values-3/support/test-outer.png to css-values-3/support/test-outer.png
 Importing css-values-3/support/test-tl.png to css-values-3/support/test-tl.png
 Importing css-values-3/support/test-tr.png to css-values-3/support/test-tr.png
+Importing css-values-3/support/vh_not_refreshing_on_chrome_iframe.html to css-values-3/support/vh_not_refreshing_on_chrome_iframe.html
 Importing css-values-3/support/support/README to css-values-3/support/support/README
 Importing css-values-3/support/support/swatch-green.png to css-values-3/support/support/swatch-green.png
 Importing css-values-3/support/support/swatch-red.png to css-values-3/support/support/swatch-red.png
@@ -419,7 +420,6 @@ Importing css-values-3/attr-color-invalid-fallback.html to css-values-3/attr-col
 Importing css-values-3/attr-color-valid.html to css-values-3/attr-color-valid.html
 Importing css-values-3/attr-invalid-type-001.html to css-values-3/attr-invalid-type-001.html
 Importing css-values-3/attr-invalid-type-002.html to css-values-3/attr-invalid-type-002.html
-Importing css-values-3/attr-invalid-type-003.html to css-values-3/attr-invalid-type-003.html
 Importing css-values-3/attr-length-invalid-cast.html to css-values-3/attr-length-invalid-cast.html
 Importing css-values-3/attr-length-invalid-fallback.html to css-values-3/attr-length-invalid-fallback.html
 Importing css-values-3/attr-length-valid-zero-nofallback.html to css-values-3/attr-length-valid-zero-nofallback.html
@@ -456,7 +456,6 @@ Importing css-values-3/vh-support.html to css-values-3/vh-support.html
 Importing css-values-3/vh-zero-support.html to css-values-3/vh-zero-support.html
 Importing css-values-3/vh_not_refreshing_on_chrome.html to css-values-3/vh_not_refreshing_on_chrome.html
 Importing css-values-3/reference/vh_not_refreshing_on_chrome-ref.html to css-values-3/reference/vh_not_refreshing_on_chrome-ref.html
-Importing css-values-3/vh_not_refreshing_on_chrome_iframe.html to css-values-3/vh_not_refreshing_on_chrome_iframe.html
 Importing css-writing-modes-3/OWNERS to css-writing-modes-3/OWNERS
 Importing css-writing-modes-3/support/100x100-lime.png to css-writing-modes-3/support/100x100-lime.png
 Importing css-writing-modes-3/support/100x100-red.png to css-writing-modes-3/support/100x100-red.png

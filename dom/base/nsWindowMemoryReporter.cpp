@@ -496,6 +496,12 @@ CollectWindowReports(nsGlobalWindow *aWindow,
   aWindowTotalSizes->mStyleSizes.mComputedValuesNonDom +=
     windowSizes.mStyleSizes.mComputedValuesNonDom;
 
+  REPORT_SIZE("/layout/computed-values/visited",
+              windowSizes.mStyleSizes.mComputedValuesVisited,
+              "Memory used by ComputedValues objects used for visited styles.");
+  aWindowTotalSizes->mStyleSizes.mComputedValuesVisited +=
+    windowSizes.mStyleSizes.mComputedValuesVisited;
+
 #undef REPORT_SIZE
 #undef REPORT_COUNT
 }
@@ -659,7 +665,8 @@ nsWindowMemoryReporter::CollectReports(nsIHandleReportCallback* aHandleReport,
 
   REPORT("window-objects/layout/computed-values",
          windowTotalSizes.mStyleSizes.mComputedValuesDom +
-         windowTotalSizes.mStyleSizes.mComputedValuesNonDom,
+         windowTotalSizes.mStyleSizes.mComputedValuesNonDom +
+         windowTotalSizes.mStyleSizes.mComputedValuesVisited,
          "This is the sum of all windows' 'layout/computed-values/' "
          "numbers.");
 

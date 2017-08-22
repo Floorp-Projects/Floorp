@@ -59,6 +59,8 @@ namespace places {
 class MatchAutoCompleteFunction final : public mozIStorageFunction
 {
 public:
+  MatchAutoCompleteFunction();
+
   NS_DECL_THREADSAFE_ISUPPORTS
   NS_DECL_MOZISTORAGEFUNCTION
 
@@ -72,6 +74,13 @@ public:
 
 private:
   ~MatchAutoCompleteFunction() {}
+
+  /**
+   * IntegerVariants for 0 and 1 are frequently used in awesomebar queries,
+   * so we cache them to avoid allocating memory repeatedly.
+   */
+  nsCOMPtr<nsIVariant> mCachedZero;
+  nsCOMPtr<nsIVariant> mCachedOne;
 
   /**
    * Argument Indexes

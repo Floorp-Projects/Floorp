@@ -39,6 +39,10 @@
   font-size: 11px;
 }
 
+.accordion div:last-child ._content {
+  border-bottom: none;
+}
+
 .arrow {
   vertical-align: middle;
   display: inline-block;
