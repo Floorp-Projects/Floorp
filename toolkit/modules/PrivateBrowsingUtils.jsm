@@ -35,11 +35,12 @@ this.PrivateBrowsingUtils = {
 
   isBrowserPrivate(aBrowser) {
     let chromeWin = aBrowser.ownerGlobal;
-    if (chromeWin.gMultiProcessBrowser || !aBrowser.isConnected) {
+    if (chromeWin.gMultiProcessBrowser || !aBrowser.contentWindow) {
       // In e10s we have to look at the chrome window's private
       // browsing status since the only alternative is to check the
       // content window, which is in another process.  If the browser
-      // is lazy then the content window doesn't exist.
+      // is lazy or is running in windowless configuration then the
+      // content window doesn't exist.
       return this.isWindowPrivate(chromeWin);
     }
     return this.privacyContextFromWindow(aBrowser.contentWindow).usePrivateBrowsing;
