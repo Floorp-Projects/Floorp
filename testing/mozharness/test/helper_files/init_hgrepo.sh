@@ -7,9 +7,8 @@ if [ -z "$dest" ]; then
 fi
 
 rm -rf $dest
-mkdir $dest
+hg init $dest
 cd $dest
-hg init
 
 echo "Hello world $RANDOM" > hello.txt
 hg add hello.txt
