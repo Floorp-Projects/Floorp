@@ -15,7 +15,31 @@ def set_window_rect(session, rect):
 # 10.7.2 Set Window Rect
 
 
-def test_prompt_accept(new_session):
+def test_handle_prompt_dismiss():
+    """TODO"""
+
+
+def test_handle_prompt_accept(new_session):
+    """
+    2. Handle any user prompts and return its value if it is an error.
+
+    [...]
+
+    In order to handle any user prompts a remote end must take the
+    following steps:
+
+      [...]
+
+      2. Perform the following substeps based on the current session's
+      user prompt handler:
+
+        [...]
+
+        - accept state
+           Accept the current user prompt.
+
+    """
+
     _, session = new_session(
         {"alwaysMatch": {"unhandledPromptBehavior": "accept"}})
     session.url = inline("<title>WD doc title</title>")
@@ -41,7 +65,40 @@ def test_prompt_accept(new_session):
     assert_dialog_handled(session, "dismiss #3")
 
 
+def test_handle_prompt_dismiss_and_notify():
+    """TODO"""
+
+
+def test_handle_prompt_accept_and_notify():
+    """TODO"""
+
+
+def test_handle_prompt_ignore():
+    """TODO"""
+
+
 def test_handle_prompt_missing_value(session, create_dialog):
+    """
+    2. Handle any user prompts and return its value if it is an error.
+
+    [...]
+
+    In order to handle any user prompts a remote end must take the
+    following steps:
+
+      [...]
+
+      2. Perform the following substeps based on the current session's
+      user prompt handler:
+
+        [...]
+
+        - missing value default state
+           1. Dismiss the current user prompt.
+           2. Return error with error code unexpected alert open.
+
+    """
+
     original = session.window.rect
 
     # step 2
