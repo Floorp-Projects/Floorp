@@ -331,7 +331,7 @@ SetThreadAffinity(unsigned int cpu)
   MOZ_ALWAYS_TRUE(thread_policy_set(mach_thread_self(), THREAD_AFFINITY_POLICY,
                                     &policy.affinity_tag, 1) == KERN_SUCCESS);
 #elif defined(XP_WIN)
-  MOZ_ALWAYS_TRUE(SetThreadIdealProcessor(GetCurrentThread(), cpu) != -1);
+  MOZ_ALWAYS_TRUE(SetThreadIdealProcessor(GetCurrentThread(), cpu) != (DWORD)-1);
 #endif
 }
 
