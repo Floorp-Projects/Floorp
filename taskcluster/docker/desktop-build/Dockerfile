@@ -33,9 +33,6 @@ ADD topsrcdir/taskcluster/docker/recipes/install-cmake.sh /setup/install-cmake.s
 # %include taskcluster/docker/recipes/centos6-build-system-setup.sh
 ADD topsrcdir/taskcluster/docker/recipes/centos6-build-system-setup.sh /setup/system-setup.sh
 
-# %include taskcluster/docker/recipes/centos-install-debug-symbols.sh
-ADD topsrcdir/taskcluster/docker/recipes/centos-install-debug-symbols.sh /setup/install-debug-symbols.sh
-
 # TODO remove once base image doesn't install Mercurial
 RUN pip uninstall -y Mercurial
 

@@ -2767,7 +2767,22 @@ public class BrowserProvider extends SharedBrowserDatabaseProvider {
                 compiledStatement.clearBindings();
                 compiledStatement.bindLong(1, syncVersion); // NB: 1-based index.
                 compiledStatement.bindString(2, guid);
-                changed += compiledStatement.executeUpdateDelete();
+
+                // We expect this to be 1.
+                final int didUpdate = compiledStatement.executeUpdateDelete();
+
+                // These strong assertions are here to help figure out root cause of Bug 1392078.
+                // This will throw if there are duplicate GUIDs present.
+                if (didUpdate > 1) {
+                    throw new IllegalStateException("Modified more than a single GUID during syncVersion update");
+                }
+
+                // This will throw if the requested GUID is missing from the database.
+                if (didUpdate == 0) {
+                    throw new IllegalStateException("Expected to modify syncVersion for a guid, but did not");
+                }
+
+                changed += didUpdate;
             }
 
             markWriteSuccessful(db);

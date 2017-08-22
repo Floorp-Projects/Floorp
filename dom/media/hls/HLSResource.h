@@ -81,11 +81,6 @@ public:
 
   bool IsTransportSeekable() override { return true; }
 
-  bool IsLiveStream() override
-  {
-    return false;
-  }
-
   java::GeckoHLSResourceWrapper::GlobalRef GetResourceWrapper() {
     return mHLSResourceWrapper;
   }

@@ -7,6 +7,7 @@
     android:layout_height="match_parent"
     android:layout_marginBottom="@dimen/activity_stream_base_margin">
 
+    <!-- centerInside will center smaller favicons and draw a colored border around them. -->
     <org.mozilla.gecko.widget.FaviconView
         android:id="@+id/favicon"
         android:layout_width="match_parent"
@@ -16,6 +17,8 @@
         android:scaleType="centerInside"
         gecko:overrideScaleType="false" />
 
+    <!-- scrollHorizontally=false allows drags on the TextView to scroll the ViewPager.
+         See https://stackoverflow.com/a/18171834/2219998 -->
     <TextView
         android:id="@+id/title"
         android:layout_width="match_parent"
@@ -24,12 +27,12 @@
         android:padding="5dp"
         android:drawablePadding="2dp"
         android:maxLines="1"
-        android:singleLine="true"
         android:ellipsize="end"
         android:gravity="center"
         android:textColor="@android:color/white"
         android:textSize="12sp"
         android:layout_gravity="bottom"
+        android:scrollHorizontally="false"
         tools:text="Lorem Ipsum here is a title" />
 
 </FrameLayout>

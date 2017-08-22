@@ -27,8 +27,6 @@ include protocol PParentToChildStream; //FIXME: bug #792908
 include protocol PStunAddrsRequest;
 include protocol PFileChannel;
 
-include protocol PRtspController;
-include protocol PRtspChannel;
 include IPCStream;
 include URIParams;
 include NeckoChannelParams;
@@ -59,8 +57,6 @@ nested(upto inside_cpow) sync protocol PNecko
   manages PDataChannel;
   manages PSimpleChannel;
   manages PFileChannel;
-  manages PRtspController;
-  manages PRtspChannel;
   manages PChannelDiverter;
   manages PTransportProvider;
   manages PAltDataOutputStream;
@@ -109,8 +105,6 @@ parent:
   async PSimpleChannel(uint32_t channelId);
   async PFileChannel(uint32_t channelId);
 
-  async PRtspController();
-  async PRtspChannel(RtspChannelConnectArgs args);
   async PChannelDiverter(ChannelDiverterArgs channel);
 
   /**

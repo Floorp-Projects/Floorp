@@ -22,10 +22,6 @@
 #include "mozilla/net/AltDataOutputStreamParent.h"
 #include "mozilla/Unused.h"
 #include "mozilla/net/FileChannelParent.h"
-#ifdef NECKO_PROTOCOL_rtsp
-#include "mozilla/net/RtspControllerParent.h"
-#include "mozilla/net/RtspChannelParent.h"
-#endif
 #include "mozilla/net/DNSRequestParent.h"
 #include "mozilla/net/ChannelDiverterParent.h"
 #include "mozilla/net/IPCTransportProvider.h"
@@ -576,64 +572,6 @@ NeckoParent::RecvPFileChannelConstructor(PFileChannelParent* actor,
   DebugOnly<bool> rv = p->Init(channelId);
   MOZ_ASSERT(rv);
   return IPC_OK();
-}
-
-PRtspControllerParent*
-NeckoParent::AllocPRtspControllerParent()
-{
-#ifdef NECKO_PROTOCOL_rtsp
-  RtspControllerParent* p = new RtspControllerParent();
-  p->AddRef();
-  return p;
-#else
-  return nullptr;
-#endif
-}
-
-bool
-NeckoParent::DeallocPRtspControllerParent(PRtspControllerParent* actor)
-{
-#ifdef NECKO_PROTOCOL_rtsp
-  RtspControllerParent* p = static_cast<RtspControllerParent*>(actor);
-  p->Release();
-#endif
-  return true;
-}
-
-PRtspChannelParent*
-NeckoParent::AllocPRtspChannelParent(const RtspChannelConnectArgs& aArgs)
-{
-#ifdef NECKO_PROTOCOL_rtsp
-  nsCOMPtr<nsIURI> uri = DeserializeURI(aArgs.uri());
-  RtspChannelParent *p = new RtspChannelParent(uri);
-  p->AddRef();
-  return p;
-#else
-  return nullptr;
-#endif
-}
-
-mozilla::ipc::IPCResult
-NeckoParent::RecvPRtspChannelConstructor(
-                      PRtspChannelParent* aActor,
-                      const RtspChannelConnectArgs& aConnectArgs)
-{
-#ifdef NECKO_PROTOCOL_rtsp
-  RtspChannelParent* p = static_cast<RtspChannelParent*>(aActor);
-  return p->Init(aConnectArgs);
-#else
-  return IPC_FAIL_NO_REASON(this);
-#endif
-}
-
-bool
-NeckoParent::DeallocPRtspChannelParent(PRtspChannelParent* actor)
-{
-#ifdef NECKO_PROTOCOL_rtsp
-  RtspChannelParent* p = static_cast<RtspChannelParent*>(actor);
-  p->Release();
-#endif
-  return true;
 }
 
 PTCPSocketParent*
