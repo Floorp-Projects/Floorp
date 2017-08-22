@@ -518,7 +518,7 @@ gbjar.sources += ['java/org/mozilla/gecko/' + x for x in [
     'activitystream/homepanel/model/TopSite.java',
     'activitystream/homepanel/model/WebpageModel.java',
     'activitystream/homepanel/stream/HighlightItemRow.java',
-    'activitystream/homepanel/stream/HighlightsTitle.java',
+    'activitystream/homepanel/stream/HighlightsTitleRow.java',
     'activitystream/homepanel/stream/StreamOverridablePageIconLayout.java',
     'activitystream/homepanel/stream/StreamViewHolder.java',
     'activitystream/homepanel/stream/TopPanel.java',
