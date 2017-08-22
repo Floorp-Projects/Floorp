@@ -11,7 +11,10 @@
     android:orientation="vertical">
 
     <!-- a11y: When the dialog first appears, the title is announced so there is no
-         need to allow refocusing the title. -->
+         need to allow refocusing the title.
+
+         Also, we override the a11y title of the dialog in code. If you change the text in id/url or id/title,
+         update the code! -->
     <RelativeLayout
         android:id="@+id/info_wrapper"
         android:layout_width="match_parent"
