@@ -15,6 +15,8 @@ class Statement;
 namespace mozilla {
 namespace storage {
 
+class StatementRow;
+
 class StatementJSHelper : public nsIXPCScriptable
 {
 public:
@@ -54,14 +56,24 @@ private:
   virtual ~StatementParamsHolder();
 };
 
-class StatementRowHolder final: public StatementJSObjectHolder {
+class StatementRowHolder final: public nsISupports {
 public:
-  explicit StatementRowHolder(nsIXPConnectJSObjectHolder* aHolder)
-    : StatementJSObjectHolder(aHolder) {
+  NS_DECL_ISUPPORTS
+
+  explicit StatementRowHolder(StatementRow* aRow)
+    : mRow(aRow)
+  {
+  }
+
+  StatementRow* Get() const {
+    MOZ_ASSERT(mRow);
+    return mRow;
   }
 
 private:
   virtual ~StatementRowHolder();
+
+  RefPtr<StatementRow> mRow;
 };
 
 } // namespace storage
