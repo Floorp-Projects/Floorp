@@ -648,6 +648,7 @@ this.MessageChannel = {
       sender: data.sender,
       messageManager: target,
       channelId: data.channelId,
+      respondingSide: true,
     };
     deferred.promise = new Promise((resolve, reject) => {
       deferred.reject = reject;
@@ -770,6 +771,25 @@ this.MessageChannel = {
     };
     this.pendingResponses.add(deferred);
     deferred.promise.then(cleanup, cleanup);
+  },
+
+  /**
+   * Aborts pending message response for the specific channel.
+   *
+   * @param {string} channelId
+   *    A string for channelId of the response.
+   * @param {object} reason
+   *    An object describing the reason the response was aborted.
+   *    Will be passed to the promise rejection handler of the aborted
+   *    response.
+   */
+  abortChannel(channelId, reason) {
+    for (let response of this.pendingResponses) {
+      if (channelId === response.channelId && response.respondingSide) {
+        this.pendingResponses.delete(response);
+        response.reject(reason);
+      }
+    }
   },
 
   /**
