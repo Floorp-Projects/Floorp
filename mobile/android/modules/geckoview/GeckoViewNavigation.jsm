@@ -13,6 +13,8 @@ Cu.import("resource://gre/modules/XPCOMUtils.jsm");
 
 XPCOMUtils.defineLazyModuleGetter(this, "EventDispatcher",
   "resource://gre/modules/Messaging.jsm");
+XPCOMUtils.defineLazyModuleGetter(this, "Services",
+  "resource://gre/modules/Services.jsm");
 
 var dump = Cu.import("resource://gre/modules/AndroidLog.jsm", {})
            .AndroidLog.d.bind(null, "ViewNavigation");
@@ -80,11 +82,6 @@ class GeckoViewNavigation extends GeckoViewModule {
       throw Cr.NS_ERROR_ABORT;
     }
 
-    if (aWhere === Ci.nsIBrowserDOMWindow.OPEN_DEFAULTWINDOW ||
-        aWhere === Ci.nsIBrowserDOMWindow.OPEN_CURRENTWINDOW) {
-      return this.browser.contentWindow;
-    }
-
     let message = {
       type: "GeckoView:OnLoadUri",
       uri: aUri.spec,
@@ -94,7 +91,17 @@ class GeckoViewNavigation extends GeckoViewModule {
 
     debug("dispatch " + JSON.stringify(message));
 
-    this.eventDispatcher.sendRequest(message);
+    let handled = undefined;
+    this.eventDispatcher.sendRequestForResult(message).then(response => {
+      handled = response;
+    });
+    Services.tm.spinEventLoopUntil(() => handled !== undefined);
+
+    if (!handled &&
+        (aWhere === Ci.nsIBrowserDOMWindow.OPEN_DEFAULTWINDOW ||
+         aWhere === Ci.nsIBrowserDOMWindow.OPEN_CURRENTWINDOW)) {
+      return this.browser.contentWindow;
+    }
 
     throw Cr.NS_ERROR_ABORT;
   }

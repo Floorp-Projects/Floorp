@@ -487,6 +487,7 @@ class ScriptSource
     // possible to get source at all.
     bool sourceRetrievable_:1;
     bool hasIntroductionOffset_:1;
+    bool containsAsmJS_:1;
 
     const char16_t* chunkChars(JSContext* cx, UncompressedSourceCache::AutoHoldEntry& holder,
                                size_t chunk);
@@ -520,7 +521,8 @@ class ScriptSource
         introductionType_(nullptr),
         xdrEncoder_(nullptr),
         sourceRetrievable_(false),
-        hasIntroductionOffset_(false)
+        hasIntroductionOffset_(false),
+        containsAsmJS_(false)
     {
     }
 
@@ -638,6 +640,11 @@ class ScriptSource
         MOZ_ASSERT(offset <= (uint32_t)INT32_MAX);
         introductionOffset_ = offset;
         hasIntroductionOffset_ = true;
+    }
+
+    bool containsAsmJS() const { return containsAsmJS_; }
+    void setContainsAsmJS() {
+        containsAsmJS_ = true;
     }
 
     // Return wether an XDR encoder is present or not.

@@ -459,7 +459,7 @@ class CodeGenerator final : public CodeGeneratorSpecific
     void visitRotate(LRotate* ins);
 
     void visitRandom(LRandom* ins);
-    void visitSignExtend(LSignExtend* ins);
+    void visitSignExtendInt32(LSignExtendInt32* ins);
 
 #ifdef DEBUG
     void emitDebugForceBailing(LInstruction* lir);

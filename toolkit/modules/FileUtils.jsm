@@ -36,10 +36,11 @@ this.FileUtils = {
    *          leaf name of a file.
    * @return  nsIFile object for the file specified. The file is NOT created
    *          if it does not exist, however all required directories along
-   *          the way are.
+   *          the way are if pathArray has more than one item.
    */
   getFile: function FileUtils_getFile(key, pathArray, followLinks) {
-    var file = this.getDir(key, pathArray.slice(0, -1), true, followLinks);
+    var file = this.getDir(key, pathArray.slice(0, -1), pathArray.length > 1,
+                           followLinks);
     file.append(pathArray[pathArray.length - 1]);
     return file;
   },

@@ -28,6 +28,7 @@
 #include "nsITooltipListener.h"
 #include "mozilla/Attributes.h"
 #include "mozilla/dom/TabContext.h"
+#include "mozilla/dom/CoalescedMouseData.h"
 #include "mozilla/dom/CoalescedWheelData.h"
 #include "mozilla/DOMEventTargetHelper.h"
 #include "mozilla/EventDispatcher.h"
@@ -70,6 +71,7 @@ namespace dom {
 class TabChild;
 class TabGroup;
 class ClonedMessageData;
+class CoalescedMouseData;
 class CoalescedWheelData;
 
 class TabChildGlobal : public DOMEventTargetHelper,
@@ -269,6 +271,7 @@ class TabChild final : public TabChildBase,
                        public mozilla::ipc::IShmemAllocator
 {
   typedef mozilla::dom::ClonedMessageData ClonedMessageData;
+  typedef mozilla::dom::CoalescedMouseData CoalescedMouseData;
   typedef mozilla::dom::CoalescedWheelData CoalescedWheelData;
   typedef mozilla::layout::RenderFrameChild RenderFrameChild;
   typedef mozilla::layers::APZEventState APZEventState;
@@ -708,6 +711,8 @@ public:
     return mWidgetNativeData;
   }
 
+  void MaybeDispatchCoalescedMouseMoveEvents();
+
 protected:
   virtual ~TabChild();
 
@@ -875,7 +880,9 @@ private:
   // takes time, some repeated events can be skipped to not flood child process.
   mozilla::TimeStamp mLastWheelProcessedTimeFromParent;
   mozilla::TimeDuration mLastWheelProcessingDuration;
+  CoalescedMouseData mCoalescedMouseData;
   CoalescedWheelData mCoalescedWheelData;
+  RefPtr<CoalescedMouseMoveFlusher> mCoalescedMouseEventFlusher;
 
   RefPtr<layers::IAPZCTreeManager> mApzcTreeManager;
 
@@ -890,6 +897,7 @@ private:
 #if defined(ACCESSIBILITY)
   PDocAccessibleChild* mTopLevelDocAccessibleChild;
 #endif
+  bool mCoalesceMouseMoveEvents;
 
   bool mPendingDocShellIsActive;
   bool mPendingDocShellPreserveLayers;

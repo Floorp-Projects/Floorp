@@ -4083,6 +4083,7 @@ PresShell::DoFlushPendingNotifications(mozilla::ChangesToFlush aFlush)
                                FlushType::Count,
                                const char*> flushTypeNames = {
     "",
+    "Event",
     "Content",
     "ContentAndNotify",
     // As far as the profiler is concerned, EnsurePresShellInitAndFrames and

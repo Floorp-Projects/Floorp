@@ -1680,6 +1680,7 @@ var gBrowserInit = {
 
     SessionStore.promiseAllWindowsRestored.then(() => {
       this._schedulePerWindowIdleTasks();
+      document.documentElement.setAttribute("sessionrestored", "true");
     });
 
     Services.obs.notifyObservers(window, "browser-delayed-startup-finished");
