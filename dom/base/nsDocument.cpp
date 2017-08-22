@@ -10146,23 +10146,12 @@ nsDocument::ScrollToRef()
     return;
   }
 
-  char* tmpstr = ToNewCString(mScrollToRef);
-  if (!tmpstr) {
-    return;
-  }
-
-  nsUnescape(tmpstr);
-  nsAutoCString unescapedRef;
-  unescapedRef.Assign(tmpstr);
-  free(tmpstr);
-
-  nsresult rv = NS_ERROR_FAILURE;
-  // We assume that the bytes are in UTF-8, as it says in the spec:
-  // http://www.w3.org/TR/html4/appendix/notes.html#h-B.2.1
-  NS_ConvertUTF8toUTF16 ref(unescapedRef);
-
   nsCOMPtr<nsIPresShell> shell = GetShell();
   if (shell) {
+    nsresult rv = NS_ERROR_FAILURE;
+    // We assume that the bytes are in UTF-8, as it says in the spec:
+    // http://www.w3.org/TR/html4/appendix/notes.html#h-B.2.1
+    NS_ConvertUTF8toUTF16 ref(mScrollToRef);
     // Check an empty string which might be caused by the UTF-8 conversion
     if (!ref.IsEmpty()) {
       // Note that GoToAnchor will handle flushing layout as needed.
@@ -10173,9 +10162,16 @@ nsDocument::ScrollToRef()
 
     // If UTF-8 URI failed then try to assume the string as a
     // document's charset.
-
     if (NS_FAILED(rv)) {
       auto encoding = GetDocumentCharacterSet();
+      char* tmpstr = ToNewCString(mScrollToRef);
+      if (!tmpstr) {
+        return;
+      }
+      nsUnescape(tmpstr);
+      nsAutoCString unescapedRef;
+      unescapedRef.Assign(tmpstr);
+      free(tmpstr);
 
       rv = encoding->DecodeWithoutBOMHandling(unescapedRef, ref);
 

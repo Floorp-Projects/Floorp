@@ -11720,14 +11720,6 @@ nsDocShell::ScrollToAnchor(bool aCurHasRef, bool aNewHasRef,
     bool scroll = aLoadType != LOAD_HISTORY &&
                   aLoadType != LOAD_RELOAD_NORMAL;
 
-    char* str = ToNewCString(aNewHash);
-    if (!str) {
-      return NS_ERROR_OUT_OF_MEMORY;
-    }
-
-    // nsUnescape modifies the string that is passed into it.
-    nsUnescape(str);
-
     // We assume that the bytes are in UTF-8, as it says in the
     // spec:
     // http://www.w3.org/TR/html4/appendix/notes.html#h-B.2.1
@@ -11738,12 +11730,11 @@ nsDocShell::ScrollToAnchor(bool aCurHasRef, bool aNewHasRef,
     // In that case, we should just fall through to using the
     // page's charset.
     nsresult rv = NS_ERROR_FAILURE;
-    NS_ConvertUTF8toUTF16 uStr(str);
+    NS_ConvertUTF8toUTF16 uStr(aNewHash);
     if (!uStr.IsEmpty()) {
-      rv = shell->GoToAnchor(NS_ConvertUTF8toUTF16(str), scroll,
+      rv = shell->GoToAnchor(uStr, scroll,
                              nsIPresShell::SCROLL_SMOOTH_AUTO);
     }
-    free(str);
 
     // Above will fail if the anchor name is not UTF-8.  Need to
     // convert from document charset to unicode.
