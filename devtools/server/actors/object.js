@@ -262,8 +262,31 @@ ObjectActor.prototype = {
   },
 
   /**
+   * Creates an actor to iterate over an object symbols properties.
+   */
+  onEnumSymbols: function () {
+    let actor = new SymbolIteratorActor(this);
+    this.registeredPool.addActor(actor);
+    this.iterators.add(actor);
+    return { iterator: actor.grip() };
+  },
+
+  /**
    * Handle a protocol request to provide the prototype and own properties of
    * the object.
+   *
+   * @returns {Object} An object containing the data of this.obj, of the following form:
+   *          - {string} from: this.obj's actorID.
+   *          - {Object} prototype: The descriptor of this.obj's prototype.
+   *          - {Object} ownProperties: an object where the keys are the names of the
+   *                     this.obj's ownProperties, and the values the descriptors of
+   *                     the properties.
+   *          - {Array} ownSymbols: An array containing all descriptors of this.obj's
+   *                    ownSymbols. Here we have an array, and not an object like for
+   *                    ownProperties, because we can have multiple symbols with the same
+   *                    name in this.obj, e.g. `{[Symbol()]: "a", [Symbol()]: "b"}`.
+   *          - {Object} safeGetterValues: an object that maps this.obj's property names
+   *                     with safe getters descriptors.
    */
   onPrototypeAndProperties: function () {
     let ownProperties = Object.create(null);
@@ -750,6 +773,7 @@ ObjectActor.prototype.requestTypes = {
   "fulfillmentStack": ObjectActor.prototype.onFulfillmentStack,
   "rejectionStack": ObjectActor.prototype.onRejectionStack,
   "enumEntries": ObjectActor.prototype.onEnumEntries,
+  "enumSymbols": ObjectActor.prototype.onEnumSymbols,
 };
 
 /**
@@ -832,7 +856,7 @@ PropertyIteratorActor.prototype = {
   },
 
   all() {
-    return this.slice({ start: 0, count: this.length });
+    return this.slice({ start: 0, count: this.iterator.size });
   }
 };
 
@@ -1123,6 +1147,58 @@ function enumWeakSetEntries(objectActor) {
     }
   };
 }
+
+/**
+ * Creates an actor to iterate over an object's symbols.
+ *
+ * @param objectActor ObjectActor
+ *        The object actor.
+ */
+function SymbolIteratorActor(objectActor) {
+  const symbols =  objectActor.obj.getOwnPropertySymbols();
+
+  this.iterator = {
+    size: symbols.length,
+    symbolDescription(index) {
+      const symbol = symbols[index];
+      return {
+        name: symbol.toString(),
+        descriptor: objectActor._propertyDescriptor(symbol, true)
+      };
+    }
+  };
+}
+
+SymbolIteratorActor.prototype = {
+  actorPrefix: "symbolIterator",
+
+  grip() {
+    return {
+      type: this.actorPrefix,
+      actor: this.actorID,
+      count: this.iterator.size
+    };
+  },
+
+  slice({ start, count }) {
+    let ownSymbols = [];
+    for (let i = start, m = start + count; i < m; i++) {
+      ownSymbols.push(this.iterator.symbolDescription(i));
+    }
+    return {
+      ownSymbols
+    };
+  },
+
+  all() {
+    return this.slice({ start: 0, count: this.iterator.size });
+  }
+};
+
+SymbolIteratorActor.prototype.requestTypes = {
+  "slice": SymbolIteratorActor.prototype.slice,
+  "all": SymbolIteratorActor.prototype.all,
+};
 
 /**
  * Functions for adding information to ObjectActor grips for the purpose of
