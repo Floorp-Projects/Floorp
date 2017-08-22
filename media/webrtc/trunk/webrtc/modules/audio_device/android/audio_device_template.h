@@ -104,7 +104,7 @@ class AudioDeviceTemplate : public AudioDeviceGeneric {
       uint16_t index,
       char name[kAdmMaxDeviceNameSize],
       char guid[kAdmMaxGuidSize]) override {
-    FATAL() << "Should never be called";
+    LOG(INFO) << __FUNCTION__;
     return -1;
   }
 
@@ -125,7 +125,7 @@ class AudioDeviceTemplate : public AudioDeviceGeneric {
 
   int32_t SetPlayoutDevice(
       AudioDeviceModule::WindowsDeviceType device) override {
-    FATAL() << "Should never be called";
+    LOG(INFO) << __FUNCTION__;
     return -1;
   }
 
@@ -138,7 +138,7 @@ class AudioDeviceTemplate : public AudioDeviceGeneric {
 
   int32_t SetRecordingDevice(
       AudioDeviceModule::WindowsDeviceType device) override {
-    FATAL() << "Should never be called";
+    LOG(INFO) << __FUNCTION__;
     return -1;
   }
 
@@ -220,9 +220,7 @@ class AudioDeviceTemplate : public AudioDeviceGeneric {
   }
 
   int32_t SetAGC(bool enable) override {
-    if (enable) {
-      FATAL() << "Should never be called";
-    }
+    LOG(INFO) << __FUNCTION__;
     return -1;
   }
 
@@ -233,13 +231,13 @@ class AudioDeviceTemplate : public AudioDeviceGeneric {
 
   int32_t SetWaveOutVolume(
       uint16_t volumeLeft, uint16_t volumeRight) override {
-     FATAL() << "Should never be called";
+    LOG(INFO) << __FUNCTION__;
     return -1;
   }
 
   int32_t WaveOutVolume(
       uint16_t& volumeLeft, uint16_t& volumeRight) const override {
-    FATAL() << "Should never be called";
+    LOG(INFO) << __FUNCTION__;
     return -1;
   }
 
@@ -289,7 +287,7 @@ class AudioDeviceTemplate : public AudioDeviceGeneric {
   }
 
   int32_t SpeakerVolumeStepSize(uint16_t& stepSize) const override {
-    FATAL() << "Should never be called";
+    LOG(INFO) << __FUNCTION__;
     return -1;
   }
 
@@ -299,72 +297,78 @@ class AudioDeviceTemplate : public AudioDeviceGeneric {
   }
 
   int32_t SetMicrophoneVolume(uint32_t volume) override {
-    FATAL() << "Should never be called";
+    LOG(INFO) << __FUNCTION__;
     return -1;
   }
 
   int32_t MicrophoneVolume(uint32_t& volume) const override {
-    FATAL() << "Should never be called";
+    LOG(INFO) << __FUNCTION__;
     return -1;
   }
 
   int32_t MaxMicrophoneVolume(uint32_t& maxVolume) const override {
-    FATAL() << "Should never be called";
+    LOG(INFO) << __FUNCTION__;
     return -1;
   }
 
   int32_t MinMicrophoneVolume(uint32_t& minVolume) const override {
-    FATAL() << "Should never be called";
+    LOG(INFO) << __FUNCTION__;
     return -1;
   }
 
   int32_t MicrophoneVolumeStepSize(uint16_t& stepSize) const override {
-    FATAL() << "Should never be called";
+    LOG(INFO) << __FUNCTION__;
     return -1;
   }
 
   int32_t SpeakerMuteIsAvailable(bool& available) override {
-    FATAL() << "Should never be called";
+    LOG(INFO) << __FUNCTION__;
+    available = false;
     return -1;
   }
 
   int32_t SetSpeakerMute(bool enable) override {
-    FATAL() << "Should never be called";
+    LOG(INFO) << __FUNCTION__;
     return -1;
   }
 
   int32_t SpeakerMute(bool& enabled) const override {
-    FATAL() << "Should never be called";
+    LOG(INFO) << __FUNCTION__;
+    enabled = false;
     return -1;
   }
 
   int32_t MicrophoneMuteIsAvailable(bool& available) override {
-    FATAL() << "Not implemented";
+    LOG(INFO) << __FUNCTION__;
+    available = false;
     return -1;
   }
 
   int32_t SetMicrophoneMute(bool enable) override {
-    FATAL() << "Not implemented";
+    LOG(INFO) << __FUNCTION__;
     return -1;
   }
 
   int32_t MicrophoneMute(bool& enabled) const override {
-    FATAL() << "Not implemented";
+    LOG(INFO) << __FUNCTION__;
+    enabled = false;
     return -1;
   }
 
   int32_t MicrophoneBoostIsAvailable(bool& available) override {
-    FATAL() << "Should never be called";
+    LOG(INFO) << __FUNCTION__;
+    available = false;
     return -1;
   }
 
   int32_t SetMicrophoneBoost(bool enable) override {
-    FATAL() << "Should never be called";
+    LOG(INFO) << __FUNCTION__;
     return -1;
   }
 
   int32_t MicrophoneBoost(bool& enabled) const override {
-    FATAL() << "Should never be called";
+    LOG(INFO) << __FUNCTION__;
+    enabled = false;
     return -1;
   }
 
@@ -383,7 +387,7 @@ class AudioDeviceTemplate : public AudioDeviceGeneric {
   // TODO(henrika): add support.
   int32_t StereoPlayout(bool& enabled) const override {
     enabled = false;
-    FATAL() << "Should never be called";
+    LOG(INFO) << __FUNCTION__;
     return -1;
   }
 
@@ -406,13 +410,13 @@ class AudioDeviceTemplate : public AudioDeviceGeneric {
 
   int32_t SetPlayoutBuffer(
       const AudioDeviceModule::BufferType type, uint16_t sizeMS) override {
-    FATAL() << "Should never be called";
+    LOG(INFO) << __FUNCTION__;
     return -1;
   }
 
   int32_t PlayoutBuffer(
       AudioDeviceModule::BufferType& type, uint16_t& sizeMS) const override {
-    FATAL() << "Should never be called";
+    LOG(INFO) << __FUNCTION__;
     return -1;
   }
 
@@ -432,7 +436,7 @@ class AudioDeviceTemplate : public AudioDeviceGeneric {
   }
 
   int32_t CPULoad(uint16_t& load) const override {
-    FATAL() << "Should never be called";
+    LOG(INFO) << __FUNCTION__;
     return -1;
   }
 
@@ -468,17 +472,17 @@ class AudioDeviceTemplate : public AudioDeviceGeneric {
 
   // TODO(henrika): remove
   int32_t SetPlayoutSampleRate(const uint32_t samplesPerSec) override {
-    FATAL() << "Should never be called";
+    LOG(INFO) << __FUNCTION__;
     return -1;
   }
 
   int32_t SetLoudspeakerStatus(bool enable) override {
-    FATAL() << "Should never be called";
+    LOG(INFO) << __FUNCTION__;
     return -1;
   }
 
   int32_t GetLoudspeakerStatus(bool& enable) const override {
-    FATAL() << "Should never be called";
+    LOG(INFO) << __FUNCTION__;
     return -1;
   }
 
