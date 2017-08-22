@@ -243,6 +243,17 @@ public class StringUtils {
         return uri.getQueryParameterNames();
     }
 
+    /**
+     * @return  the index of the path segment of URLs
+     */
+    public static int pathStartIndex(String text) {
+        if (text.contains("://")) {
+            return text.indexOf('/', text.indexOf("://") + 3);
+        } else {
+            return text.indexOf('/');
+        }
+    }
+
     public static String safeSubstring(@NonNull final String str, final int start, final int end) {
         return str.substring(
                 Math.max(0, start),

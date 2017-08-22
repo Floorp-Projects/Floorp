@@ -40,7 +40,7 @@ body {
   flex-direction: column;
   font-size: 18px;
   pointer-events: none;
-  padding: 12px 21px 15px 21px;
+  padding: 12px 8px;
 }
 
 .header {
@@ -61,7 +61,8 @@ body {
 }
 
 #ping-type {
-  align-self: center;
+  flex-grow: 1;
+  text-align: center;
   pointer-events: all;
   cursor: pointer;
 }
@@ -73,8 +74,21 @@ body {
   text-align: center;
 }
 
-.controls {
+.dropdown {
+  background-image: url(chrome://global/skin/icons/arrow-dropdown-16.svg);
+  background-position: right 8px center;
+  background-repeat: no-repeat;
+  -moz-context-properties: fill;
+  fill: currentColor;
+}
+
+body[dir=rtl] .dropdown {
+  background-position-x: left 8px;
+}
+
+#controls {
   display: flex;
+  margin-top: 4px;
   justify-content: space-between;
 }
 
@@ -135,8 +149,8 @@ section:not(.active) {
   border-bottom-style: solid;
 }
 
-#ping-picker.hidden {
-  display: none;
+.hidden {
+  display: none !important;
 }
 
 #ping-picker {

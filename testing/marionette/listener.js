@@ -121,7 +121,7 @@ var sandboxName = "default";
  * to continue observing the current page load.
  */
 var loadListener = {
-  command_id: null,
+  commandID: null,
   seenBeforeUnload: false,
   seenUnload: false,
   timeout: null,
@@ -131,7 +131,7 @@ var loadListener = {
   /**
    * Start listening for page unload/load events.
    *
-   * @param {number} command_id
+   * @param {number} commandID
    *     ID of the currently handled message between the driver and
    *     listener.
    * @param {number} timeout
@@ -143,8 +143,8 @@ var loadListener = {
    *     If true wait for page unload events, otherwise only for page
    *     load events.
    */
-  start(command_id, timeout, startTime, waitForUnloaded = true) {
-    this.command_id = command_id;
+  start(commandID, timeout, startTime, waitForUnloaded = true) {
+    this.commandID = commandID;
     this.timeout = timeout;
 
     this.seenBeforeUnload = false;
@@ -272,7 +272,7 @@ var loadListener = {
       case "hashchange":
       case "popstate":
         this.stop();
-        sendOk(this.command_id);
+        sendOk(this.commandID);
         break;
 
       case "DOMContentLoaded":
@@ -304,13 +304,13 @@ var loadListener = {
       case "interactive":
         if (documentURI.startsWith("about:certerror")) {
           this.stop();
-          sendError(new InsecureCertificateError(), this.command_id);
+          sendError(new InsecureCertificateError(), this.commandID);
           finished = true;
 
         } else if (/about:.*(error)\?/.exec(documentURI)) {
           this.stop();
           sendError(new UnknownError(`Reached error page: ${documentURI}`),
-              this.command_id);
+              this.commandID);
           finished = true;
 
         // Return early with a page load strategy of eager, and also
@@ -324,7 +324,7 @@ var loadListener = {
             documentURI != "about:blank") ||
             /about:blocked\?/.exec(documentURI)) {
           this.stop();
-          sendOk(this.command_id);
+          sendOk(this.commandID);
           finished = true;
         }
 
@@ -332,7 +332,7 @@ var loadListener = {
 
       case "complete":
         this.stop();
-        sendOk(this.command_id);
+        sendOk(this.commandID);
         finished = true;
 
         break;
@@ -366,7 +366,7 @@ var loadListener = {
           logger.debug("Canceled page load listener because no navigation " +
               "has been detected");
           this.stop();
-          sendOk(this.command_id);
+          sendOk(this.commandID);
         }
         break;
 
@@ -374,7 +374,7 @@ var loadListener = {
         this.stop();
         sendError(
             new TimeoutError(`Timeout loading page after ${this.timeout}ms`),
-            this.command_id);
+            this.commandID);
         break;
     }
   },
@@ -393,7 +393,7 @@ var loadListener = {
       case "outer-window-destroyed":
         if (curWinID === winID) {
           this.stop();
-          sendOk(this.command_id);
+          sendOk(this.commandID);
         }
         break;
     }
@@ -403,7 +403,7 @@ var loadListener = {
    * Continue to listen for page load events after the frame script has been
    * reloaded.
    *
-   * @param {number} command_id
+   * @param {number} commandID
    *     ID of the currently handled message between the driver and
    *     listener.
    * @param {number} timeout
@@ -412,8 +412,8 @@ var loadListener = {
    * @param {number} startTime
    *     Unix timestap when the navitation request got triggered.
    */
-  waitForLoadAfterFramescriptReload(command_id, timeout, startTime) {
-    this.start(command_id, timeout, startTime, false);
+  waitForLoadAfterFramescriptReload(commandID, timeout, startTime) {
+    this.start(commandID, timeout, startTime, false);
   },
 
   /**
@@ -422,7 +422,7 @@ var loadListener = {
    *
    * @param {function} trigger
    *     Callback that triggers the page load.
-   * @param {number} command_id
+   * @param {number} commandID
    *     ID of the currently handled message between the driver and listener.
    * @param {number} pageTimeout
    *     Timeout in milliseconds the method has to wait for the page
@@ -433,7 +433,7 @@ var loadListener = {
    * @param {string=} url
    *     Optional URL, which is used to check if a page load is expected.
    */
-  navigate(trigger, command_id, timeout, loadEventExpected = true,
+  navigate(trigger, commandID, timeout, loadEventExpected = true,
       useUnloadTimer = false) {
 
     // Only wait if the page load strategy is not `none`
@@ -443,7 +443,7 @@ var loadListener = {
 
     if (loadEventExpected) {
       let startTime = new Date().getTime();
-      this.start(command_id, timeout, startTime, true);
+      this.start(commandID, timeout, startTime, true);
     }
 
     return (async () => {
@@ -451,7 +451,7 @@ var loadListener = {
 
     })().then(val => {
       if (!loadEventExpected) {
-        sendOk(command_id);
+        sendOk(commandID);
         return;
       }
 
@@ -468,7 +468,7 @@ var loadListener = {
         this.stop();
       }
 
-      sendError(err, command_id);
+      sendError(err, commandID);
     });
   },
 };
@@ -507,7 +507,7 @@ function dispatch(fn) {
   }
 
   return function(msg) {
-    let id = msg.json.command_id;
+    let id = msg.json.commandID;
 
     let req = (async () => {
       if (typeof msg.json == "undefined" || msg.json instanceof Array) {
@@ -1158,7 +1158,7 @@ function cancelRequest() {
  * navigate request). This is most of of the work of a navigate request,
  * but doesn't assume DOMContentLoaded is yet to fire.
  *
- * @param {number} command_id
+ * @param {number} commandID
  *     ID of the currently handled message between the driver and
  *     listener.
  * @param {number} pageTimeout
@@ -1168,10 +1168,10 @@ function cancelRequest() {
  *     Unix timestap when the navitation request got triggred.
  */
 function waitForPageLoaded(msg) {
-  let {command_id, pageTimeout, startTime} = msg.json;
+  let {commandID, pageTimeout, startTime} = msg.json;
 
   loadListener.waitForLoadAfterFramescriptReload(
-      command_id, pageTimeout, startTime);
+      commandID, pageTimeout, startTime);
 }
 
 /**
@@ -1181,7 +1181,7 @@ function waitForPageLoaded(msg) {
  * (in chrome space).
  */
 function get(msg) {
-  let {command_id, pageTimeout, url, loadEventExpected = null} = msg.json;
+  let {commandID, pageTimeout, url, loadEventExpected = null} = msg.json;
 
   try {
     if (typeof url == "string") {
@@ -1192,7 +1192,7 @@ function get(msg) {
         }
       } catch (e) {
         let err = new InvalidArgumentError("Malformed URL: " + e.message);
-        sendError(err, command_id);
+        sendError(err, commandID);
         return;
       }
     }
@@ -1203,10 +1203,10 @@ function get(msg) {
 
     loadListener.navigate(() => {
       curContainer.frame.location = url;
-    }, command_id, pageTimeout, loadEventExpected);
+    }, commandID, pageTimeout, loadEventExpected);
 
   } catch (e) {
-    sendError(e, command_id);
+    sendError(e, commandID);
   }
 }
 
@@ -1214,7 +1214,7 @@ function get(msg) {
  * Cause the browser to traverse one step backward in the joint history
  * of the current browsing context.
  *
- * @param {number} command_id
+ * @param {number} commandID
  *     ID of the currently handled message between the driver and
  *     listener.
  * @param {number} pageTimeout
@@ -1222,15 +1222,15 @@ function get(msg) {
  *     finished loading.
  */
 function goBack(msg) {
-  let {command_id, pageTimeout} = msg.json;
+  let {commandID, pageTimeout} = msg.json;
 
   try {
     loadListener.navigate(() => {
       curContainer.frame.history.back();
-    }, command_id, pageTimeout);
+    }, commandID, pageTimeout);
 
   } catch (e) {
-    sendError(e, command_id);
+    sendError(e, commandID);
   }
 }
 
@@ -1238,7 +1238,7 @@ function goBack(msg) {
  * Cause the browser to traverse one step forward in the joint history
  * of the current browsing context.
  *
- * @param {number} command_id
+ * @param {number} commandID
  *     ID of the currently handled message between the driver and
  *     listener.
  * @param {number} pageTimeout
@@ -1246,15 +1246,15 @@ function goBack(msg) {
  *     finished loading.
  */
 function goForward(msg) {
-  let {command_id, pageTimeout} = msg.json;
+  let {commandID, pageTimeout} = msg.json;
 
   try {
     loadListener.navigate(() => {
       curContainer.frame.history.forward();
-    }, command_id, pageTimeout);
+    }, commandID, pageTimeout);
 
   } catch (e) {
-    sendError(e, command_id);
+    sendError(e, commandID);
   }
 }
 
@@ -1262,7 +1262,7 @@ function goForward(msg) {
  * Causes the browser to reload the page in in current top-level browsing
  * context.
  *
- * @param {number} command_id
+ * @param {number} commandID
  *     ID of the currently handled message between the driver and
  *     listener.
  * @param {number} pageTimeout
@@ -1270,7 +1270,7 @@ function goForward(msg) {
  *     finished loading.
  */
 function refresh(msg) {
-  let {command_id, pageTimeout} = msg.json;
+  let {commandID, pageTimeout} = msg.json;
 
   try {
     // We need to move to the top frame before navigating
@@ -1279,10 +1279,10 @@ function refresh(msg) {
 
     loadListener.navigate(() => {
       curContainer.frame.location.reload(true);
-    }, command_id, pageTimeout);
+    }, commandID, pageTimeout);
 
   } catch (e) {
-    sendError(e, command_id);
+    sendError(e, commandID);
   }
 }
 
@@ -1342,7 +1342,7 @@ function getActiveElement() {
 /**
  * Send click event to element.
  *
- * @param {number} command_id
+ * @param {number} commandID
  *     ID of the currently handled message between the driver and
  *     listener.
  * @param {WebElement} id
@@ -1352,7 +1352,7 @@ function getActiveElement() {
  *     finished loading.
  */
 function clickElement(msg) {
-  let {command_id, id, pageTimeout} = msg.json;
+  let {commandID, id, pageTimeout} = msg.json;
 
   try {
     let loadEventExpected = true;
@@ -1369,10 +1369,10 @@ function clickElement(msg) {
           capabilities.get("moz:accessibilityChecks"),
           capabilities.get("specificationLevel") >= 1
       );
-    }, command_id, pageTimeout, loadEventExpected, true);
+    }, commandID, pageTimeout, loadEventExpected, true);
 
   } catch (e) {
-    sendError(e, command_id);
+    sendError(e, commandID);
   }
 }
 
@@ -1578,7 +1578,7 @@ function switchToParentFrame(msg) {
   sendSyncMessage(
       "Marionette:switchedToFrame", {frameValue: parentElement});
 
-  sendOk(msg.json.command_id);
+  sendOk(msg.json.commandID);
 }
 
 /**
@@ -1586,7 +1586,7 @@ function switchToParentFrame(msg) {
  * its index in window.frames, or the iframe's name or id.
  */
 function switchToFrame(msg) {
-  let command_id = msg.json.command_id;
+  let commandID = msg.json.commandID;
   let foundFrame = null;
   let frames = [];
   let parWindow = null;
@@ -1618,7 +1618,7 @@ function switchToFrame(msg) {
       curContainer.frame.focus();
     }
 
-    sendOk(command_id);
+    sendOk(commandID);
     return;
   }
 
@@ -1628,7 +1628,7 @@ function switchToFrame(msg) {
     try {
       wantedFrame = seenEls.get(id, curContainer);
     } catch (e) {
-      sendError(e, command_id);
+      sendError(e, commandID);
     }
 
     if (frames.length > 0) {
@@ -1679,7 +1679,7 @@ function switchToFrame(msg) {
             curContainer.frame.focus();
           }
 
-          sendOk(command_id);
+          sendOk(commandID);
           return;
         }
       } catch (e) {
@@ -1699,7 +1699,7 @@ function switchToFrame(msg) {
   if (foundFrame === null) {
     let failedFrame = msg.json.id || msg.json.element;
     let err = new NoSuchFrameError(`Unable to locate frame: ${failedFrame}`);
-    sendError(err, command_id);
+    sendError(err, commandID);
     return;
   }
 
@@ -1714,7 +1714,7 @@ function switchToFrame(msg) {
     // notify our parent to handle the switch
     curContainer.frame = content;
     let rv = {win: parWindow, frame: foundFrame};
-    sendResponse(rv, command_id);
+    sendResponse(rv, commandID);
 
   } else {
     curContainer.frame = curContainer.frame.contentWindow;
@@ -1723,7 +1723,7 @@ function switchToFrame(msg) {
       curContainer.frame.focus();
     }
 
-    sendOk(command_id);
+    sendOk(commandID);
   }
 }
 

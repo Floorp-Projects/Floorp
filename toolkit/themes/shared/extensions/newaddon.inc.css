@@ -44,11 +44,11 @@
 }
 
 .addon-info[type="theme"] #icon {
-  list-style-image: url("chrome://mozapps/skin/extensions/themeGeneric.png");
+  list-style-image: url("chrome://mozapps/skin/extensions/themeGeneric.svg");
 }
 
 .addon-info[type="locale"] #icon {
-  list-style-image: url("chrome://mozapps/skin/extensions/localeGeneric.png");
+  list-style-image: url("chrome://mozapps/skin/extensions/localeGeneric.svg");
 }
 
 .addon-info[type="plugin"] #icon {
@@ -56,7 +56,7 @@
 }
 
 .addon-info[type="dictionary"] #icon {
-  list-style-image: url("chrome://mozapps/skin/extensions/dictionaryGeneric.png");
+  list-style-image: url("chrome://mozapps/skin/extensions/dictionaryGeneric.svg");
 }
 
 #name {

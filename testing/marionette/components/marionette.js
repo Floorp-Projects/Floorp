@@ -176,6 +176,7 @@ MarionetteComponent.prototype = {
     Ci.nsICommandLineHandler,
     Ci.nsIMarionette,
   ]),
+  // eslint-disable-next-line camelcase
   _xpcom_categories: [
     {category: "command-line-handler", entry: "b-marionette"},
     {category: "profile-after-change", service: true},
