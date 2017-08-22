@@ -458,19 +458,40 @@ def test_negative_x_y(session):
                                   "state": original["state"]})
 
 
-def test_x_y_as_current(session):
-    original = session.window.rect
+def test_move_to_same_position(session):
+    original_position = session.window.position
+    position = session.window.position = (int(original_position[0]), int(original_position[1]))
+    assert position == original_position
 
-    # step 13
-    response = set_window_rect(session, {"x": int(original["x"]),
-                                         "y": int(original["y"])})
 
-    # step 14
-    assert_success(response, {"x": original["x"],
-                              "y": original["y"],
-                              "width": original["width"],
-                              "height": original["height"],
-                              "state": original["state"]})
+def test_move_to_same_x(session):
+    original_x = session.window.position[0]
+    position = session.window.position = (int(original_x), 345)
+    assert position == (original_x, 345)
+
+
+def test_move_to_same_y(session):
+    original_y = session.window.position[1]
+    position = session.window.position = (456, int(original_y))
+    assert position == (456, original_y)
+
+
+def test_resize_to_same_size(session):
+    original_size = session.window.size
+    size = session.window.size = (int(original_size[0]), int(original_size[1]))
+    assert size == original_size
+
+
+def test_resize_to_same_width(session):
+    original_width = session.window.size[0]
+    size = session.window.size = (int(original_width), 345)
+    assert size == (original_width, 345)
+
+
+def test_resize_to_same_height(session):
+    original_height = session.window.size[1]
+    size = session.window.size = (456, int(original_height))
+    assert size == (456, original_height)
 
 
 def test_payload(session):
