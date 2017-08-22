@@ -5,10 +5,13 @@
 package org.mozilla.focus.session;
 
 import android.app.Notification;
+import android.app.NotificationChannel;
+import android.app.NotificationManager;
 import android.app.PendingIntent;
 import android.app.Service;
 import android.content.Context;
 import android.content.Intent;
+import android.os.Build;
 import android.os.IBinder;
 import android.support.annotation.Nullable;
 import android.support.v4.app.NotificationCompat;
@@ -24,6 +27,8 @@ import org.mozilla.focus.telemetry.TelemetryWrapper;
 public class SessionNotificationService extends Service {
     private static final int NOTIFICATION_ID = 83;
 
+    private static final String NOTIFICATION_CHANNEL_ID = "browsing-session";
+
     private static final String ACTION_START = "start";
     private static final String ACTION_ERASE = "erase";
 
@@ -31,7 +36,11 @@ public class SessionNotificationService extends Service {
         final Intent intent = new Intent(context, SessionNotificationService.class);
         intent.setAction(ACTION_START);
 
-        context.startService(intent);
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
+            context.startForegroundService(intent);
+        } else {
+            context.startService(intent);
+        }
     }
 
     /* package */ static void stop(Context context) {
@@ -49,6 +58,7 @@ public class SessionNotificationService extends Service {
 
         switch (action) {
             case ACTION_START:
+                createNotificationChannelIfNeeded();
                 startForeground(NOTIFICATION_ID, buildNotification());
                 break;
 
@@ -74,7 +84,7 @@ public class SessionNotificationService extends Service {
     }
 
     private Notification buildNotification() {
-        return new NotificationCompat.Builder(this)
+        return new NotificationCompat.Builder(this, NOTIFICATION_CHANNEL_ID)
                 .setOngoing(true)
                 .setSmallIcon(R.drawable.ic_notification)
                 .setContentTitle(getString(R.string.app_name))
@@ -117,6 +127,31 @@ public class SessionNotificationService extends Service {
         intent.setFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
 
         return PendingIntent.getActivity(this, 2, intent, PendingIntent.FLAG_UPDATE_CURRENT);
+    }
+
+    public void createNotificationChannelIfNeeded() {
+        if (Build.VERSION.SDK_INT < Build.VERSION_CODES.O) {
+            // Notification channels are only available on Android O or higher.
+            return;
+        }
+
+        final NotificationManager notificationManager = getSystemService(NotificationManager.class);
+        if (notificationManager == null) {
+            return;
+        }
+
+        final String notificationChannelName = getString(R.string.notification_browsing_session_channel_name);
+        final String notificationChannelDescription = getString(R.string.notification_browsing_session_channel_description);
+
+        final NotificationChannel channel = new NotificationChannel(
+                NOTIFICATION_CHANNEL_ID, notificationChannelName, NotificationManager.IMPORTANCE_MIN);
+        channel.setImportance(NotificationManager.IMPORTANCE_LOW);
+        channel.setDescription(notificationChannelDescription);
+        channel.enableLights(false);
+        channel.enableVibration(false);
+        channel.setShowBadge(true);
+
+        notificationManager.createNotificationChannel(channel);
     }
 
     @Nullable
