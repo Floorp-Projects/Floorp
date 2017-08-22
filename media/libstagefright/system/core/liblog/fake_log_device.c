@@ -151,7 +151,7 @@ static LogState *createLogState()
 {
     size_t i;
 
-    for (i = 0; i < sizeof(openLogTable); i++) {
+    for (i = 0; i < MAX_OPEN_LOGS; i++) {
         if (openLogTable[i] == NULL) {
             openLogTable[i] = calloc(1, sizeof(LogState));
             openLogTable[i]->fakeFd = FAKE_FD_BASE + i;
