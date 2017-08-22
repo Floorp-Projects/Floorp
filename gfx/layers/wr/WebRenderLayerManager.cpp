@@ -243,6 +243,10 @@ WebRenderLayerManager::CreateWebRenderCommandsFromDisplayList(nsDisplayList* aDi
       continue;
     }
 
+    if (item->BackfaceIsHidden() && aSc.IsBackfaceVisible()) {
+      continue;
+    }
+
     savedItems.AppendToTop(item);
 
     bool forceNewLayerData = false;
