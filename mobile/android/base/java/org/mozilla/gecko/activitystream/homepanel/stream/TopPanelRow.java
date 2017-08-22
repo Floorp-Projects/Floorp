@@ -17,7 +17,7 @@ import org.mozilla.gecko.TelemetryContract;
 import org.mozilla.gecko.activitystream.homepanel.topsites.TopSitesPagerAdapter;
 import org.mozilla.gecko.home.HomePager;
 
-public class TopPanel extends StreamViewHolder {
+public class TopPanelRow extends StreamViewHolder {
     public static final int LAYOUT_ID = R.layout.activity_stream_main_toppanel;
 
     private final ViewPager topSitesPager;
@@ -45,7 +45,7 @@ public class TopPanel extends StreamViewHolder {
 
     private final SwipeListener swipeListener = new SwipeListener();
 
-    public TopPanel(View itemView, HomePager.OnUrlOpenListener onUrlOpenListener, HomePager.OnUrlOpenInBackgroundListener onUrlOpenInBackgroundListener) {
+    public TopPanelRow(View itemView, HomePager.OnUrlOpenListener onUrlOpenListener, HomePager.OnUrlOpenInBackgroundListener onUrlOpenInBackgroundListener) {
         super(itemView);
 
         topSitesPager = (ViewPager) itemView.findViewById(R.id.topsites_pager);

@@ -18,12 +18,12 @@ import org.mozilla.gecko.TelemetryContract;
 import org.mozilla.gecko.activitystream.ActivityStreamTelemetry;
 import org.mozilla.gecko.activitystream.homepanel.menu.ActivityStreamContextMenu;
 import org.mozilla.gecko.activitystream.homepanel.model.RowModel;
+import org.mozilla.gecko.activitystream.homepanel.stream.TopPanelRow;
 import org.mozilla.gecko.home.HomePager;
 import org.mozilla.gecko.activitystream.homepanel.model.Highlight;
 import org.mozilla.gecko.activitystream.homepanel.stream.HighlightItemRow;
 import org.mozilla.gecko.activitystream.homepanel.stream.HighlightsTitleRow;
 import org.mozilla.gecko.activitystream.homepanel.stream.StreamViewHolder;
-import org.mozilla.gecko.activitystream.homepanel.stream.TopPanel;
 import org.mozilla.gecko.activitystream.homepanel.stream.WelcomePanel;
 import org.mozilla.gecko.util.StringUtils;
 import org.mozilla.gecko.widget.RecyclerViewClickSupport;
@@ -113,7 +113,7 @@ public class StreamRecyclerAdapter extends RecyclerView.Adapter<StreamViewHolder
         final LayoutInflater inflater = LayoutInflater.from(parent.getContext());
 
         if (type == RowItemType.TOP_PANEL.getViewType()) {
-            return new TopPanel(inflater.inflate(TopPanel.LAYOUT_ID, parent, false), onUrlOpenListener, onUrlOpenInBackgroundListener);
+            return new TopPanelRow(inflater.inflate(TopPanelRow.LAYOUT_ID, parent, false), onUrlOpenListener, onUrlOpenInBackgroundListener);
         } else if (type == RowItemType.WELCOME.getViewType()) {
             return new WelcomePanel(inflater.inflate(WelcomePanel.LAYOUT_ID, parent, false), this);
         } else if (type == RowItemType.HIGHLIGHT_ITEM.getViewType()) {
@@ -136,7 +136,7 @@ public class StreamRecyclerAdapter extends RecyclerView.Adapter<StreamViewHolder
             final Highlight highlight = (Highlight) recyclerViewModel.get(position);
             ((HighlightItemRow) holder).bind(highlight, position, tilesSize);
         } else if (type == RowItemType.TOP_PANEL.getViewType()) {
-            ((TopPanel) holder).bind(topSitesCursor, tiles, tilesSize);
+            ((TopPanelRow) holder).bind(topSitesCursor, tiles, tilesSize);
         }
     }
 
