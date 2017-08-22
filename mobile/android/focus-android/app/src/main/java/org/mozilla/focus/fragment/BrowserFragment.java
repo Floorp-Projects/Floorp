@@ -28,6 +28,7 @@ import android.support.v4.app.DialogFragment;
 import android.support.v4.app.Fragment;
 import android.support.v4.app.FragmentManager;
 import android.support.v4.content.ContextCompat;
+import android.text.TextUtils;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
@@ -913,7 +914,7 @@ public class BrowserFragment extends WebFragment implements View.OnClickListener
 
     public void loadUrl(final String url) {
         final IWebView webView = getWebView();
-        if (webView != null) {
+        if (webView != null && !TextUtils.isEmpty(url)) {
             webView.loadUrl(url);
         }
     }

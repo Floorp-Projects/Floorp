@@ -11,6 +11,7 @@ import android.content.res.Resources;
 import android.os.Bundle;
 import android.support.annotation.NonNull;
 import android.support.annotation.Nullable;
+import android.text.TextUtils;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
@@ -63,7 +64,7 @@ public abstract class WebFragment extends LocaleAwareFragment {
 
         if (savedInstanceState == null) {
             final String url = getInitialUrl();
-            if (url != null) {
+            if (!TextUtils.isEmpty(url)) {
                 webView.loadUrl(url);
             }
         } else {
