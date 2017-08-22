@@ -16,7 +16,7 @@ import android.widget.TextView;
 import org.mozilla.gecko.R;
 import org.mozilla.gecko.activitystream.ActivityStreamTelemetry;
 import org.mozilla.gecko.activitystream.Utils;
-import org.mozilla.gecko.activitystream.homepanel.StreamHighlightItemContextMenuListener;
+import org.mozilla.gecko.activitystream.homepanel.StreamHighlightItemRowContextMenuListener;
 import org.mozilla.gecko.activitystream.homepanel.model.Highlight;
 import org.mozilla.gecko.util.DrawableUtil;
 import org.mozilla.gecko.util.TouchTargetUtil;
@@ -28,7 +28,7 @@ import java.net.URI;
 import java.net.URISyntaxException;
 import java.util.UUID;
 
-public class HighlightItem extends StreamViewHolder {
+public class HighlightItemRow extends StreamViewHolder {
     private static final String LOGTAG = "GeckoHighlightItem";
 
     public static final int LAYOUT_ID = R.layout.activity_stream_card_history_item;
@@ -43,7 +43,7 @@ public class HighlightItem extends StreamViewHolder {
     private final ImageView pageSourceIconView;
     private final ImageView menuButton;
 
-    public HighlightItem(final View itemView, final StreamHighlightItemContextMenuListener contextMenuListener) {
+    public HighlightItemRow(final View itemView, final StreamHighlightItemRowContextMenuListener contextMenuListener) {
         super(itemView);
 
         pageTitleView = (TextView) itemView.findViewById(R.id.card_history_label);
@@ -60,7 +60,7 @@ public class HighlightItem extends StreamViewHolder {
         menuButton.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
-                contextMenuListener.openContextMenu(HighlightItem.this, position,
+                contextMenuListener.openContextMenu(HighlightItemRow.this, position,
                         ActivityStreamTelemetry.Contract.INTERACTION_MENU_BUTTON);
             }
         });
