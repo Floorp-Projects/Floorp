@@ -309,15 +309,15 @@ def main(args):
             with open(requires_path, 'rb') as fh:
                 wanted_requirements = set(fh.read().splitlines())
 
-                missing = wanted_requirements - our_requirements
-                if missing:
-                    print('requirements for populated cache %s differ from '
-                          'this task' % cache)
-                    print('cache requirements: %s' % ' '.join(sorted(
-                        wanted_requirements)))
-                    print('our requirements:   %s' % ' '.join(sorted(
-                        our_requirements)))
-                    return 1
+            missing = wanted_requirements - our_requirements
+            if missing:
+                print('requirements for populated cache %s differ from '
+                      'this task' % cache)
+                print('cache requirements: %s' % ' '.join(sorted(
+                    wanted_requirements)))
+                print('our requirements:   %s' % ' '.join(sorted(
+                    our_requirements)))
+                return 1
 
         # The cache has content and no requirements file. This shouldn't
         # happen because run-task should be the first thing that touches a
