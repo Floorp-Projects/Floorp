@@ -238,6 +238,15 @@ ContentAreaDropListener.prototype =
     return links;
   },
 
+  queryLinks: function(aDataTransfer, aCount)
+  {
+    let links = this._getDropLinks(aDataTransfer);
+    if (aCount) {
+      aCount.value = links.length;
+    }
+    return links;
+  },
+
   _eventTargetIsDisabled: function(aEvent)
   {
     let ownerDoc = aEvent.originalTarget.ownerDocument;

@@ -16,6 +16,7 @@
 #include "mozilla/dom/ContentBridgeParent.h"
 #include "mozilla/dom/ContentParent.h"
 #include "mozilla/dom/DataTransfer.h"
+#include "mozilla/dom/DataTransferItemList.h"
 #include "mozilla/dom/Event.h"
 #include "mozilla/dom/indexedDB/ActorsParent.h"
 #include "mozilla/dom/IPCBlobUtils.h"
@@ -101,6 +102,7 @@
 #include "PartialSHistory.h"
 #include "ProcessPriorityManager.h"
 #include "nsString.h"
+#include "NullPrincipal.h"
 
 #ifdef XP_WIN
 #include "mozilla/plugins/PluginWidgetParent.h"
@@ -538,12 +540,32 @@ TabParent::RecvDropLinks(nsTArray<nsString>&& aLinks)
 {
   nsCOMPtr<nsIBrowser> browser = do_QueryInterface(mFrameElement);
   if (browser) {
+    // Verify that links have not been modified by the child. If links have
+    // not been modified then it's safe to load those links using the
+    // SystemPrincipal. If they have been modified by web content, then
+    // we use a NullPrincipal which still allows to load web links.
+    bool loadUsingSystemPrincipal = true;
+    if (aLinks.Length() != mVerifyDropLinks.Length()) {
+      loadUsingSystemPrincipal = false;
+    }
     UniquePtr<const char16_t*[]> links;
     links = MakeUnique<const char16_t*[]>(aLinks.Length());
     for (uint32_t i = 0; i < aLinks.Length(); i++) {
+      if (loadUsingSystemPrincipal) {
+        if (!aLinks[i].Equals(mVerifyDropLinks[i])) {
+          loadUsingSystemPrincipal = false;
+        }
+      }
       links[i] = aLinks[i].get();
     }
-    browser->DropLinks(aLinks.Length(), links.get());
+    mVerifyDropLinks.Clear();
+    nsCOMPtr<nsIPrincipal> triggeringPrincipal;
+    if (loadUsingSystemPrincipal) {
+      triggeringPrincipal = nsContentUtils::GetSystemPrincipal();
+    } else {
+      triggeringPrincipal = NullPrincipal::Create();
+    }
+    browser->DropLinks(aLinks.Length(), links.get(), triggeringPrincipal);
   }
   return IPC_OK();
 }
@@ -1174,6 +1196,78 @@ TabParent::GetLayoutDeviceToCSSScale()
     : 0.0f);
 }
 
+bool
+TabParent::QueryDropLinksForVerification()
+{
+  // Before sending the dragEvent, we query the links being dragged and
+  // store them on the parent, to make sure the child can not modify links.
+  nsCOMPtr<nsIDragSession> dragSession = nsContentUtils::GetDragSession();
+  if (!dragSession) {
+    NS_WARNING("No dragSession to query links for verification");
+    return false;
+  }
+
+  nsCOMPtr<nsIDOMDataTransfer> initialDataTransfer;
+  dragSession->GetDataTransfer(getter_AddRefs(initialDataTransfer));
+  if (!initialDataTransfer) {
+    NS_WARNING("No initialDataTransfer to query links for verification");
+    return false;
+  }
+
+  nsCOMPtr<nsIDroppedLinkHandler> dropHandler =
+    do_GetService("@mozilla.org/content/dropped-link-handler;1");
+  if (!dropHandler) {
+    NS_WARNING("No dropHandler to query links for verification");
+    return false;
+  }
+
+  // No more than one drop event can happen simultaneously; reset the link
+  // verification array and store all links that are being dragged.
+  mVerifyDropLinks.Clear();
+
+  uint32_t linksCount = 0;
+  nsIDroppedLinkItem** droppedLinkedItems = nullptr;
+  dropHandler->QueryLinks(initialDataTransfer,
+                          &linksCount, &droppedLinkedItems);
+
+  // Since the entire event is cancelled if one of the links is invalid,
+  // we can store all links on the parent side without any prior
+  // validation checks.
+  nsresult rv = NS_OK;
+  for (uint32_t i = 0; i < linksCount; i++) {
+    nsString tmp;
+    rv = droppedLinkedItems[i]->GetUrl(tmp);
+    if (NS_FAILED(rv)) {
+      NS_WARNING("Failed to query url for verification");
+      break;
+    }
+    mVerifyDropLinks.AppendElement(tmp);
+
+    rv = droppedLinkedItems[i]->GetName(tmp);
+    if (NS_FAILED(rv)) {
+      NS_WARNING("Failed to query name for verification");
+      break;
+    }
+    mVerifyDropLinks.AppendElement(tmp);
+
+    rv = droppedLinkedItems[i]->GetType(tmp);
+    if (NS_FAILED(rv)) {
+      NS_WARNING("Failed to query type for verification");
+      break;
+    }
+    mVerifyDropLinks.AppendElement(tmp);
+  }
+  for (uint32_t i = 0; i < linksCount; i++) {
+    NS_IF_RELEASE(droppedLinkedItems[i]);
+  }
+  free(droppedLinkedItems);
+  if (NS_FAILED(rv)) {
+    mVerifyDropLinks.Clear();
+    return false;
+  }
+  return true;
+}
+
 void
 TabParent::SendRealDragEvent(WidgetDragEvent& aEvent, uint32_t aDragAction,
                              uint32_t aDropEffect)
@@ -1182,6 +1276,11 @@ TabParent::SendRealDragEvent(WidgetDragEvent& aEvent, uint32_t aDragAction,
     return;
   }
   aEvent.mRefPoint += GetChildProcessOffset();
+  if (aEvent.mMessage == eDrop) {
+    if (!QueryDropLinksForVerification()) {
+      return;
+    }
+  }
   DebugOnly<bool> ret =
     PBrowserParent::SendRealDragEvent(aEvent, aDragAction, aDropEffect);
   NS_WARNING_ASSERTION(ret, "PBrowserParent::SendRealDragEvent() failed");
