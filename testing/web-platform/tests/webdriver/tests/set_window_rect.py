@@ -231,6 +231,52 @@ def test_x_y_floats(session):
     assert value["y"] == 450.5
 
 
+@pytest.mark.parametrize("rect", [
+    {},
+
+    {"width": None},
+    {"height": None},
+    {"width": None, "height": None},
+
+    {"x": None},
+    {"y": None},
+    {"x": None, "y": None},
+
+    {"width": None, "x": None},
+    {"width": None, "y": None},
+    {"height": None, "x": None},
+    {"height": None, "Y": None},
+
+    {"width": None, "height": None, "x": None, "y": None},
+
+    {"width": 200},
+    {"height": 200},
+    {"x": 200},
+    {"y": 200},
+    {"width": 200, "x": 200},
+    {"height": 200, "x": 200},
+    {"width": 200, "y": 200},
+    {"height": 200, "y": 200},
+])
+def test_no_change(session, rect):
+    """
+    13. If width and height are not null:
+
+    [...]
+
+    14. If x and y are not null:
+
+    [...]
+
+    15. Return success with the JSON serialization of the current
+    top-level browsing context's window rect.
+    """
+
+    original = session.window.rect
+    response = set_window_rect(session, rect)
+    assert_success(response, original)
+
+
     original = session.window.rect
 
 
