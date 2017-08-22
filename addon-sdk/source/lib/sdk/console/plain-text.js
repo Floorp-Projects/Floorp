@@ -62,16 +62,6 @@ function PlainTextConsole(print, innerID) {
     }
   });
 
-  // We defined the `__exposedProps__` in our console chrome object.
-  //
-  // Meanwhile we're investigating with the platform team if `__exposedProps__`
-  // are needed, or are just a left-over.
-
-  console.__exposedProps__ = Object.keys(ConsoleAPI.prototype).reduce(function(exposed, prop) {
-    exposed[prop] = "r";
-    return exposed;
-  }, {});
-
   Object.freeze(console);
   return console;
 };

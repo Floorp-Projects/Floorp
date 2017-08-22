@@ -7,5 +7,5 @@ function run_test() {
   contentSB.foo = chromeSB.foo;
   do_check_eq(Cu.evalInSandbox('foo.a', contentSB), undefined, "Default deny with no __exposedProps__");
   Cu.evalInSandbox('this.foo.__exposedProps__ = {a: "r"}', chromeSB);
-  do_check_eq(Cu.evalInSandbox('foo.a', contentSB), 2, "works with __exposedProps__");
+  do_check_eq(Cu.evalInSandbox('foo.a', contentSB), undefined, "Still not allowed with __exposedProps__");
 }
