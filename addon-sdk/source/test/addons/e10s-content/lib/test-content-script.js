@@ -444,7 +444,7 @@ exports["test Highlight toString Behavior"] = createProxyTest("", function (help
   let strToString = helper.rawWindow.Object.prototype.toString.call("");
   assert.ok(/\[object String.*\]/.test(strToString), "strings are strings");
 
-  let o = {__exposedProps__:{}};
+  let o = {};
   let objToString = helper.rawWindow.Object.prototype.toString.call(o);
   assert.ok(/\[object Object.*\]/.test(objToString), "objects are objects");
 
@@ -622,10 +622,6 @@ exports["test Functions"] = createProxyTest("", function (helper) {
   helper.rawWindow.isEqual = function isEqual(a, b) {
     return a == b;
   };
-  // bug 784116: workaround in order to allow proxy code to cache proxies on
-  // these functions:
-  helper.rawWindow.callFunction.__exposedProps__ = {__proxy: 'rw'};
-  helper.rawWindow.isEqual.__exposedProps__ = {__proxy: 'rw'};
 
   helper.createWorker(
     'new ' + function ContentScriptScope() {
