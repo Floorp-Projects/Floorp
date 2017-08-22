@@ -197,6 +197,43 @@ def test_out_of_bounds(session, rect):
     assert_error(response, "invalid argument")
 
 
+def test_width_height_floats(session):
+    """
+    8. If width or height is neither null nor a Number from 0 to 2^64 -
+    1, return error with error code invalid argument.
+    """
+
+    response = set_window_rect(session, {"width": 200.5, "height": 400})
+    value = assert_success(response)
+    assert value["width"] == 200.2
+    assert value["height"] == 400
+
+    response = set_window_rect(session, {"width": 300, "height": 450.5})
+    value = assert_success(response)
+    assert value["width"] == 300
+    assert value["height"] == 450.5
+
+
+def test_x_y_floats(session):
+    """
+    9. If x or y is neither null nor a Number from -(263) to 263 - 1,
+    return error with error code invalid argument.
+    """
+
+    response = set_window_rect(session, {"x": 200.5, "y": 400})
+    value = assert_success(response)
+    assert value["x"] == 200.2
+    assert value["y"] == 400
+
+    response = set_window_rect(session, {"x": 300, "y": 450.5})
+    value = assert_success(response)
+    assert value["x"] == 300
+    assert value["y"] == 450.5
+
+
+    original = session.window.rect
+
+
 def test_fully_exit_fullscreen(session):
     """
     10. Fully exit fullscreen.
@@ -212,7 +249,6 @@ def test_fully_exit_fullscreen(session):
 
       3. Exit fullscreen document.
     """
-
     session.window.fullscreen()
     assert session.execute_script("return window.fullScreen") is True
 
