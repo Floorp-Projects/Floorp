@@ -847,7 +847,6 @@ var SlowSQL = {
       this.renderTable(table, mainThread);
 
       slowSqlDiv.appendChild(table);
-      slowSqlDiv.appendChild(document.createElement("hr"));
     }
 
     // Other threads
@@ -857,7 +856,6 @@ var SlowSQL = {
       this.renderTable(table, otherThreads);
 
       slowSqlDiv.appendChild(table);
-      slowSqlDiv.appendChild(document.createElement("hr"));
     }
   },
 
