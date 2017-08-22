@@ -277,9 +277,6 @@ def test_no_change(session, rect):
     assert_success(response, original)
 
 
-    original = session.window.rect
-
-
 def test_fully_exit_fullscreen(session):
     """
     10. Fully exit fullscreen.
@@ -304,15 +301,18 @@ def test_fully_exit_fullscreen(session):
     assert value["height"] == 400
     assert value["state"] == "normal"
 
+    assert session.execute_script("return window.fullScreen") is False
 
-def test_restore_window_from_minimized(session):
+
+def test_restore_from_minimized(session):
     """
-    11. Restore the window.
+    12. If the visibility state of the top-level browsing context's
+    active document is hidden, restore the window.
 
     [...]
 
-    To restore the window, given an operating system level window with an
-    associated top-level browsing context, run implementation-specific
+    To restore the window, given an operating system level window with
+    an associated top-level browsing context, run implementation-specific
     steps to restore or unhide the window to the visible screen. Do not
     return from this operation until the visibility state of the top-level
     browsing context's active document has reached the visible state,
@@ -328,28 +328,33 @@ def test_restore_window_from_minimized(session):
     assert value["height"] == 450
     assert value["state"] == "normal"
 
+    assert session.execute_script("return document.hidden") is False
 
-def test_restore_window_from_maximized(session):
+
+def test_restore_from_maximized(session):
     """
-    11. Restore the window.
+    12. If the visibility state of the top-level browsing context's
+    active document is hidden, restore the window.
 
     [...]
 
-    To restore the window, given an operating system level window with an
-    associated top-level browsing context, run implementation-specific
+    To restore the window, given an operating system level window with
+    an associated top-level browsing context, run implementation-specific
     steps to restore or unhide the window to the visible screen. Do not
     return from this operation until the visibility state of the top-level
-    browsing context’s active document has reached the visible state,
+    browsing context's active document has reached the visible state,
     or until the operation times out.
     """
 
+    original_size = session.window.size
     session.window.maximize()
+    assert session.window.size != original_size
     assert session.window.state == "maximized"
 
-    response = set_window_rect(session, {"width": 500, "height": 500})
+    response = set_window_rect(session, {"width": 400, "height": 400})
     value = assert_success(response)
-    assert value["width"] == 500
-    assert value["height"] == 500
+    assert value["width"] == 400
+    assert value["height"] == 400
     assert value["state"] == "normal"
 
 
