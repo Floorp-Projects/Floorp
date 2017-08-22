@@ -70,8 +70,7 @@ SharedSurface::ProdCopy(SharedSurface* src, SharedSurface* dest,
             gl->BlitHelper()->BlitFramebufferToTexture(destTex,
                                                        src->mSize,
                                                        dest->mSize,
-                                                       destTarget,
-                                                       true);
+                                                       destTarget);
         } else if (dest->mAttachType == AttachmentType::GLRenderbuffer) {
             GLuint destRB = dest->ProdRenderbuffer();
             ScopedFramebufferForRenderbuffer destWrapper(gl, destRB);
@@ -79,8 +78,7 @@ SharedSurface::ProdCopy(SharedSurface* src, SharedSurface* dest,
             gl->BlitHelper()->BlitFramebufferToFramebuffer(0,
                                                            destWrapper.FB(),
                                                            src->mSize,
-                                                           dest->mSize,
-                                                           true);
+                                                           dest->mSize);
         } else {
             MOZ_CRASH("GFX: Unhandled dest->mAttachType 1.");
         }
@@ -117,8 +115,7 @@ SharedSurface::ProdCopy(SharedSurface* src, SharedSurface* dest,
             gl->BlitHelper()->BlitTextureToFramebuffer(srcTex,
                                                        src->mSize,
                                                        dest->mSize,
-                                                       srcTarget,
-                                                       !!gl->Screen());
+                                                       srcTarget);
         } else if (src->mAttachType == AttachmentType::GLRenderbuffer) {
             GLuint srcRB = src->ProdRenderbuffer();
             ScopedFramebufferForRenderbuffer srcWrapper(gl, srcRB);
@@ -126,8 +123,7 @@ SharedSurface::ProdCopy(SharedSurface* src, SharedSurface* dest,
             gl->BlitHelper()->BlitFramebufferToFramebuffer(srcWrapper.FB(),
                                                            0,
                                                            src->mSize,
-                                                           dest->mSize,
-                                                           true);
+                                                           dest->mSize);
         } else {
             MOZ_CRASH("GFX: Unhandled src->mAttachType 2.");
         }

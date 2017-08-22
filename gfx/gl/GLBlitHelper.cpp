@@ -37,7 +37,7 @@ namespace gl {
 
 // --
 
-const char kFragHeader_Tex2D[] = "\
+const char* const kFragHeader_Tex2D = "\
     #define SAMPLER sampler2D                                                \n\
     #if __VERSION__ >= 130                                                   \n\
         #define TEXTURE texture                                              \n\
@@ -45,7 +45,7 @@ const char kFragHeader_Tex2D[] = "\
         #define TEXTURE texture2D                                            \n\
     #endif                                                                   \n\
 ";
-const char kFragHeader_Tex2DRect[] = "\
+const char* const kFragHeader_Tex2DRect = "\
     #define SAMPLER sampler2DRect                                            \n\
     #if __VERSION__ >= 130                                                   \n\
         #define TEXTURE texture                                              \n\
@@ -53,13 +53,13 @@ const char kFragHeader_Tex2DRect[] = "\
         #define TEXTURE texture2DRect                                        \n\
     #endif                                                                   \n\
 ";
-const char kFragHeader_TexExt[] = "\
+const char* const kFragHeader_TexExt = "\
     #extension GL_OES_EGL_image_external : require                           \n\
     #define SAMPLER samplerExternalOES                                       \n\
     #define TEXTURE texture2D                                                \n\
 ";
 
-const char kFragBody_RGBA[] = "\
+const char* const kFragBody_RGBA = "\
     VARYING vec2 vTexCoord0;                                                 \n\
     uniform SAMPLER uTex0;                                                   \n\
                                                                              \n\
@@ -68,7 +68,7 @@ const char kFragBody_RGBA[] = "\
         FRAG_COLOR = TEXTURE(uTex0, vTexCoord0);                             \n\
     }                                                                        \n\
 ";
-const char kFragBody_CrYCb[] = "\
+const char* const kFragBody_CrYCb = "\
     VARYING vec2 vTexCoord0;                                                 \n\
     uniform SAMPLER uTex0;                                                   \n\
     uniform mat4 uColorMatrix;                                               \n\
@@ -81,7 +81,7 @@ const char kFragBody_CrYCb[] = "\
         FRAG_COLOR = vec4(rgb.rgb, 1.0);                                     \n\
     }                                                                        \n\
 ";
-const char kFragBody_NV12[] = "\
+const char* const kFragBody_NV12 = "\
     VARYING vec2 vTexCoord0;                                                 \n\
     VARYING vec2 vTexCoord1;                                                 \n\
     uniform SAMPLER uTex0;                                                   \n\
@@ -97,7 +97,7 @@ const char kFragBody_NV12[] = "\
         FRAG_COLOR = vec4(rgb.rgb, 1.0);                                     \n\
     }                                                                        \n\
 ";
-const char kFragBody_PlanarYUV[] = "\
+const char* const kFragBody_PlanarYUV = "\
     VARYING vec2 vTexCoord0;                                                 \n\
     VARYING vec2 vTexCoord1;                                                 \n\
     uniform SAMPLER uTex0;                                                   \n\
