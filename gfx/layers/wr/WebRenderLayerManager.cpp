@@ -444,12 +444,12 @@ PaintItemByDrawTarget(nsDisplayItem* aItem,
   MOZ_ASSERT(aDT);
 
   aDT->ClearRect(aImageRect.ToUnknownRect());
-  RefPtr<gfxContext> context = gfxContext::CreateOrNull(aDT, aOffset.ToUnknownPoint());
+  RefPtr<gfxContext> context = gfxContext::CreateOrNull(aDT);
   MOZ_ASSERT(context);
 
+  context->SetMatrix(gfxMatrix::Translation(-aOffset.x, -aOffset.y));
   switch (aItem->GetType()) {
   case DisplayItemType::TYPE_MASK:
-    context->SetMatrix(gfxMatrix::Translation(-aOffset.x, -aOffset.y));
     static_cast<nsDisplayMask*>(aItem)->PaintMask(aDisplayListBuilder, context);
     break;
   case DisplayItemType::TYPE_FILTER:
