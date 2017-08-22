@@ -5357,8 +5357,8 @@ pref("urlclassifier.phishTable", "googpub-phish-shavar,test-phish-simple");
 #endif
 
 // Tables for application reputation
-pref("urlclassifier.downloadAllowTable", "goog-downloadwhite-proto");
-pref("urlclassifier.downloadBlockTable", "goog-badbinurl-proto");
+pref("urlclassifier.downloadAllowTable", "goog-downloadwhite-digest256");
+pref("urlclassifier.downloadBlockTable", "goog-badbinurl-shavar");
 
 // Tables for login reputation
 pref("urlclassifier.passwordAllowTable", "goog-passwordwhite-proto");

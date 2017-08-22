@@ -154,9 +154,14 @@ IsAllowedOnCurrentPlatform(uint32_t aThreatType)
     // Bug 1388582 - Google server would respond 404 error if the request
     // contains PHA on non-mobile platform.
     return ANDROID_PLATFORM == platform;
-  default:
-    return true;
+  case MALICIOUS_BINARY:
+  case CSD_DOWNLOAD_WHITELIST:
+    // Bug 1392204 - 'goog-downloadwhite-proto' and 'goog-badbinurl-proto'
+    // are not available on android.
+    return ANDROID_PLATFORM != platform;
   }
+  // We allow every threat type not listed in the switch cases.
+  return true;
 }
 
 } // end of namespace safebrowsing.
