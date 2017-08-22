@@ -154,11 +154,7 @@ html|*#webRTC-previewVideo {
 
 .popup-notification-icon[popupid="drmContentPlaying"],
 .drm-icon {
-  list-style-image: url("chrome://browser/skin/drm-icon.svg#chains");
-}
-
-.drm-icon:hover:active {
-  list-style-image: url("chrome://browser/skin/drm-icon.svg#chains-pressed");
+  list-style-image: url("chrome://browser/skin/drm-icon.svg");
 }
 
 #eme-notification-icon[firstplay=true] {
