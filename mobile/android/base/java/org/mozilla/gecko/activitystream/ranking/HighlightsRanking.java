@@ -133,12 +133,12 @@ public class HighlightsRanking {
         return looselyMapCursor(cursor, new Func1<Cursor, HighlightCandidate>() {
             @Override
             public HighlightCandidate call(Cursor cursor) {
-                try {
-                    return HighlightCandidate.fromCursor(cursor, cursorIndices);
-                } catch (HighlightCandidate.InvalidHighlightCandidateException e) {
-                    Log.w(LOG_TAG, "Skipping invalid highlight item", e);
+                final HighlightCandidate candidate = HighlightCandidate.fromCursor(cursor, cursorIndices);
+                if (candidate == null) {
+                    Log.w(LOG_TAG, "Skipping invalid highlight item.");
                     return null;
                 }
+                return candidate;
             }
         });
     }
