@@ -58,11 +58,11 @@ protected:
 
   void ToBlob(JSContext* aCx, nsIGlobalObject* global, BlobCallback& aCallback,
               const nsAString& aType, JS::Handle<JS::Value> aParams,
-              ErrorResult& aRv);
+              bool aUsePlaceholder, ErrorResult& aRv);
 
   void ToBlob(JSContext* aCx, nsIGlobalObject* aGlobal, EncodeCompleteCallback* aCallback,
               const nsAString& aType, JS::Handle<JS::Value> aParams,
-              ErrorResult& aRv);
+              bool aUsePlaceholder, ErrorResult& aRv);
 
   virtual already_AddRefed<nsICanvasRenderingContextInternal>
   CreateContext(CanvasContextType aContextType);
