@@ -1451,8 +1451,6 @@ SdpAttribute::IsAllowedAtMediaLevel(AttributeType type)
       return false;
     case kImageattrAttribute:
       return true;
-    case kInactiveAttribute:
-      return true;
     case kLabelAttribute:
       return true;
     case kMaxptimeAttribute:
@@ -1464,8 +1462,6 @@ SdpAttribute::IsAllowedAtMediaLevel(AttributeType type)
     case kMsidSemanticAttribute:
       return false;
     case kPtimeAttribute:
-      return true;
-    case kRecvonlyAttribute:
       return true;
     case kRemoteCandidatesAttribute:
       return true;
@@ -1482,10 +1478,6 @@ SdpAttribute::IsAllowedAtMediaLevel(AttributeType type)
     case kRtpmapAttribute:
       return true;
     case kSctpmapAttribute:
-      return true;
-    case kSendonlyAttribute:
-      return true;
-    case kSendrecvAttribute:
       return true;
     case kSetupAttribute:
       return true;
@@ -1541,8 +1533,6 @@ SdpAttribute::IsAllowedAtSessionLevel(AttributeType type)
       return true;
     case kImageattrAttribute:
       return false;
-    case kInactiveAttribute:
-      return true;
     case kLabelAttribute:
       return false;
     case kMaxptimeAttribute:
@@ -1555,8 +1545,6 @@ SdpAttribute::IsAllowedAtSessionLevel(AttributeType type)
       return false;
     case kPtimeAttribute:
       return false;
-    case kRecvonlyAttribute:
-      return true;
     case kRemoteCandidatesAttribute:
       return false;
     case kRidAttribute:
@@ -1573,10 +1561,6 @@ SdpAttribute::IsAllowedAtSessionLevel(AttributeType type)
       return false;
     case kSctpmapAttribute:
       return false;
-    case kSendonlyAttribute:
-      return true;
-    case kSendrecvAttribute:
-      return true;
     case kSetupAttribute:
       return true;
     case kSimulcastAttribute:
@@ -1629,8 +1613,6 @@ SdpAttribute::GetAttributeTypeString(AttributeType type)
       return "identity";
     case kImageattrAttribute:
       return "imageattr";
-    case kInactiveAttribute:
-      return "inactive";
     case kLabelAttribute:
       return "label";
     case kMaxptimeAttribute:
@@ -1643,8 +1625,6 @@ SdpAttribute::GetAttributeTypeString(AttributeType type)
       return "msid-semantic";
     case kPtimeAttribute:
       return "ptime";
-    case kRecvonlyAttribute:
-      return "recvonly";
     case kRemoteCandidatesAttribute:
       return "remote-candidates";
     case kRidAttribute:
@@ -1661,10 +1641,6 @@ SdpAttribute::GetAttributeTypeString(AttributeType type)
       return "rtpmap";
     case kSctpmapAttribute:
       return "sctpmap";
-    case kSendonlyAttribute:
-      return "sendonly";
-    case kSendrecvAttribute:
-      return "sendrecv";
     case kSetupAttribute:
       return "setup";
     case kSimulcastAttribute:
