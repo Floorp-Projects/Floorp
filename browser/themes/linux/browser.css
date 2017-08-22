@@ -573,11 +573,6 @@ html|span.ac-emphasize-text-url {
   border-top: 1px solid GrayText;
 }
 
-/* Popup blocker button */
-#page-report-button {
-  list-style-image: url("chrome://browser/skin/Info.png");
-}
-
 /* Bookmarking panel */
 #editBookmarkPanelStarIcon {
   list-style-image: url("chrome://browser/skin/places/starred48.png");
@@ -725,8 +720,6 @@ html|span.ac-emphasize-text-url {
 %include ../shared/fullscreen/warning.inc.css
 %include ../shared/ctrlTab.inc.css
 %include ../shared/plugin-doorhanger.inc.css
-
-%include downloads/indicator.css
 
 .gcli-panel {
   padding: 0;

@@ -733,25 +733,74 @@ a.learn-more-link.webconsole-learn-more-link {
   -moz-user-focus: normal;
 }
 
-.webconsole-filterbar-wrapper {
-  flex-grow: 0;
+/*
+  This element contains the different toolbars in the console
+    - primary, containing the clear messages button and the text search input.
+      It can expand as much as it need.
+    - filtered messages, containing the "X items hidden by filters" and the reset filters button.
+      It should be on the same row than the primary bar if it fits there, or on its own 100% row if it is wrapped.
+    - secondary, containing the filter buttons (Error, Warning, …).
+      It should be on its own 100% row.
+
+  Basically here's what we can have :
+
+  -----------------------------------------------------------------------------------------------------------
+  | Clear button - Open filter bar button - Filter Input | X items hidden by filters - Reset Filters button |
+  -----------------------------------------------------------------------------------------------------------
+  | Error - Warning - Log - Info - Debug - CSS - Network - XHR                                              |
+  -----------------------------------------------------------------------------------------------------------
+
+  or
+
+  ------------------------------------------------------------------------------------
+  | Clear button - Open filter bar button - Filter Input                             |
+  ------------------------------------------------------------------------------------
+  |                                X items hidden by filters  - Reset Filters button |
+  ------------------------------------------------------------------------------------
+  | Error - Warning - Log - Info - Debug - CSS - Network - XHR                       |
+  ------------------------------------------------------------------------------------
+*/
+.webconsole-filteringbar-wrapper {
+  display: flex;
+  /* Wrap so the "Hidden messages" bar can go to its own row if needed */
+  flex-wrap: wrap;
+}
+
+.webconsole-filterbar-primary {
+  display: flex;
+  /* We want the toolbar (which contain the text search input) to be at least 200px
+  so we don't allow to shrink it */
+  flex: 1 0 200px;
+}
+
+.devtools-toolbar.webconsole-filterbar-secondary {
+  height: initial;
+  /* This toolbar should always take the whole horizontal space */
+  width: 100%;
+}
+
+.webconsole-filterbar-primary .devtools-plaininput {
+  flex: 1 1 100%;
+}
+
+.webconsole-filterbar-filtered-messages {
+  /* Needed so the bar takes the whole horizontal space when it is wrapped */
+  flex-grow: 1;
+  color: var(--theme-comment);
+  text-align: end;
+}
+
+.webconsole-filterbar-filtered-messages .filter-message-text {
+  font-style: italic;
+}
+
+.webconsole-filterbar-filtered-messages .reset-filters-button {
+  margin-inline-start: 0.5em;
 }
 
 .webconsole-output {
   flex: 1;
   overflow: auto;
-}
-
-.webconsole-filterbar-primary {
-  display: flex;
-}
-
-.devtools-toolbar.webconsole-filterbar-secondary {
-  height: initial;
-}
-
-.webconsole-filterbar-primary .devtools-plaininput {
-  flex: 1 1 100%;
 }
 
 .webconsole-output-wrapper .message {

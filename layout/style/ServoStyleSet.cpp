@@ -1455,9 +1455,11 @@ ServoStyleSet::StyleRuleMap()
 {
   if (!mStyleRuleMap) {
     mStyleRuleMap = new ServoStyleRuleMap(this);
-    nsIDocument* doc = mPresContext->Document();
-    doc->AddObserver(mStyleRuleMap);
-    doc->CSSLoader()->AddObserver(mStyleRuleMap);
+    if (mPresContext) {
+      nsIDocument* doc = mPresContext->Document();
+      doc->AddObserver(mStyleRuleMap);
+      doc->CSSLoader()->AddObserver(mStyleRuleMap);
+    }
   }
   return mStyleRuleMap;
 }

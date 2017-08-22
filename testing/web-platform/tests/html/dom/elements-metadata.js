@@ -55,6 +55,7 @@ var metadataElements = {
   },
   style: {
     media: "string",
+    nonce: "string",
     type: "string",
   },
 };

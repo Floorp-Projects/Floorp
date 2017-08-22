@@ -188,11 +188,13 @@ def test_payload(session):
     assert isinstance(rect["y"], (int, float))
 
 
-def test_exit_fullscreen_on_second_call(session):
+def test_fullscreen_twice_is_idempotent(session):
+    assert session.execute_script("return window.fullScreen") is False
+
     first_response = fullscreen(session)
     assert_success(first_response)
-    assert session.execute_script("return window.fullScreen") == True
+    assert session.execute_script("return window.fullScreen") is True
 
     second_response = fullscreen(session)
     assert_success(second_response)
-    assert session.execute_script("return window.fullScreen") == False
+    assert session.execute_script("return window.fullScreen") is True

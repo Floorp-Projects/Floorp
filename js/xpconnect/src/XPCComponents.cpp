@@ -754,6 +754,14 @@ nsXPCComponents_Classes::Resolve(nsIXPConnectWrappedNative* wrapper,
     return NS_OK;
 }
 
+NS_IMETHODIMP
+nsXPCComponents_Classes::Initialize(nsIJSCID* cid,
+                                    const char* str)
+{
+    return cid->Initialize(str);
+}
+
+
 /***************************************************************************/
 /***************************************************************************/
 /***************************************************************************/

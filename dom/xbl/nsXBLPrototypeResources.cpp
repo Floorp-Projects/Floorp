@@ -179,6 +179,11 @@ nsXBLPrototypeResources::ComputeServoStyleSet(nsPresContext* aPresContext)
     mServoStyleSet->AppendStyleSheet(SheetType::Doc, sheet->AsServo());
   }
   mServoStyleSet->UpdateStylistIfNeeded();
+
+  // The PresContext of the bound document could be destroyed anytime later,
+  // which shouldn't be used for XBL styleset, so we clear it here to avoid
+  // dangling pointer.
+  mServoStyleSet->ClearPresContext();
 }
 
 void

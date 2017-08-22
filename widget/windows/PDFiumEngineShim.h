@@ -9,34 +9,33 @@
 #include "prlink.h"
 #include "fpdfview.h"
 
-//#define USE_EXTERNAL_PDFIUM
-
 /* include windows.h for the HDC definitions that we need. */
 #include <windows.h>
 
 namespace mozilla {
 namespace widget {
 
-typedef void (*FPDF_InitLibrary_Pfn)();
-typedef void (*FPDF_DestroyLibrary_Pfn)();
+typedef void (STDCALL *FPDF_InitLibrary_Pfn)();
+typedef void (STDCALL *FPDF_DestroyLibrary_Pfn)();
 
-typedef FPDF_DOCUMENT (*FPDF_LoadDocument_Pfn)(FPDF_STRING file_path,
-                                               FPDF_BYTESTRING password);
+typedef FPDF_DOCUMENT (STDCALL *FPDF_LoadDocument_Pfn)(FPDF_STRING file_path,
+                                                      FPDF_BYTESTRING password);
 
-typedef void(*FPDF_CloseDocument_Pfn)(FPDF_DOCUMENT aDocument);
+typedef void(STDCALL *FPDF_CloseDocument_Pfn)(FPDF_DOCUMENT aDocument);
 
-typedef int (*FPDF_GetPageCount_Pfn)(FPDF_DOCUMENT aDocument);
+typedef int (STDCALL *FPDF_GetPageCount_Pfn)(FPDF_DOCUMENT aDocument);
 
-typedef FPDF_PAGE (*FPDF_LoadPage_Pfn)(FPDF_DOCUMENT aDocument, int aPageIndex);
-typedef void (*FPDF_ClosePage_Pfn)(FPDF_PAGE aPage);
-typedef void (*FPDF_RenderPage_Pfn)(HDC aDC,
-                                    FPDF_PAGE aPage,
-                                    int aStartX,
-                                    int aStartY,
-                                    int aSizeX,
-                                    int aSizeY,
-                                    int aRotate,
-                                    int aFlags);
+typedef FPDF_PAGE (STDCALL *FPDF_LoadPage_Pfn)(FPDF_DOCUMENT aDocument,
+                                               int aPageIndex);
+typedef void (STDCALL *FPDF_ClosePage_Pfn)(FPDF_PAGE aPage);
+typedef void (STDCALL *FPDF_RenderPage_Pfn)(HDC aDC,
+                                            FPDF_PAGE aPage,
+                                            int aStartX,
+                                            int aStartY,
+                                            int aSizeX,
+                                            int aSizeY,
+                                            int aRotate,
+                                            int aFlags);
 
 /**
  * This class exposes an interface to the PDFium library and
@@ -82,9 +81,7 @@ private:
   FPDF_ClosePage_Pfn          mFPDF_ClosePage;
   FPDF_RenderPage_Pfn         mFPDF_RenderPage;
 
-#ifdef USE_EXTERNAL_PDFIUM
   PRLibrary*  mPRLibrary;
-#endif
 };
 
 } // namespace widget

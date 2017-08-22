@@ -1,12 +1,6 @@
 <!-- This Source Code Form is subject to the terms of the Mozilla Public
    - License, v. 2.0. If a copy of the MPL was not distributed with this
    - file, You can obtain one at http://mozilla.org/MPL/2.0/. -->
-<svg fill="context-fill" fill-opacity="context-fill-opacity" xmlns="http://www.w3.org/2000/svg"
-     width="32" height="32" viewBox="0 0 32 32">
-  <defs>
-#include clip-path.inc.svg
-#include desktop-notification-icon.inc.svg
-  </defs>
-  <use clip-path="url(#blocked-clipPath)" href="#desktop-notification-icon"/>
-#include strikeout.inc.svg
+<svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="context-fill" fill-opacity="context-fill-opacity">
+  <path d="M15.961 3.039L14 5v4.577a.423.423 0 0 1-.423.423H12a1 1 0 0 0-1 1v1.194l-1.491-1.827a.978.978 0 0 0-.558-.318L7 12h1.26l2.966 3.633A1 1 0 0 0 13 15v-3h.577A2.426 2.426 0 0 0 16 9.577V3.423a2.4 2.4 0 0 0-.039-.384zm-1.254-1.746A1.013 1.013 0 0 0 14 1H2.423A2.426 2.426 0 0 0 0 3.423v6.154A2.426 2.426 0 0 0 2.423 12h.163l-1.293 1.293a1 1 0 1 0 1.414 1.414l12-12a1 1 0 0 0 0-1.414zM2.423 10A.423.423 0 0 1 2 9.577V3.423A.423.423 0 0 1 2.423 3h9.163l-2 2H4.5a.5.5 0 0 0 0 1h4.086l-1 1H4.5a.5.5 0 0 0 0 1h2.086l-2 2z"/>
 </svg>

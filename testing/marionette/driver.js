@@ -461,22 +461,22 @@ GeckoDriver.prototype.addFrameCloseListener = function(action) {
 /**
  * Create a new browsing context for window and add to known browsers.
  *
- * @param {nsIDOMWindow} win
+ * @param {ChromeWindow} win
  *     Window for which we will create a browsing context.
  *
  * @return {string}
  *     Returns the unique server-assigned ID of the window.
  */
-GeckoDriver.prototype.addBrowser = function(win) {
-  let bc = new browser.Context(win, this);
-  let winId = getOuterWindowId(win);
+GeckoDriver.prototype.addBrowser = function(window) {
+  let bc = new browser.Context(window, this);
+  let winId = getOuterWindowId(window);
 
   this.browsers[winId] = bc;
   this.curBrowser = this.browsers[winId];
   if (!this.wins.has(winId)) {
     // add this to seenItems so we can guarantee
     // the user will get winId as this window's id
-    this.wins.set(winId, win);
+    this.wins.set(winId, window);
   }
 };
 
@@ -487,30 +487,30 @@ GeckoDriver.prototype.addBrowser = function(win) {
  * frame script will be loaded into it.  If isNewSession is true, we will
  * switch focus to the start frame when it registers.
  *
- * @param {nsIDOMWindow} win
+ * @param {ChromeWindow} win
  *     Window whose browser we need to access.
  * @param {boolean=} [false] isNewSession
  *     True if this is the first time we're talking to this browser.
  */
-GeckoDriver.prototype.startBrowser = function(win, isNewSession = false) {
-  this.mainFrame = win;
+GeckoDriver.prototype.startBrowser = function(window, isNewSession = false) {
+  this.mainFrame = window;
   this.curFrame = null;
-  this.addBrowser(win);
+  this.addBrowser(window);
   this.curBrowser.isNewSession = isNewSession;
-  this.whenBrowserStarted(win, isNewSession);
+  this.whenBrowserStarted(window, isNewSession);
 };
 
 /**
  * Callback invoked after a new session has been started in a browser.
  * Loads the Marionette frame script into the browser if needed.
  *
- * @param {nsIDOMWindow} win
+ * @param {ChromeWindow} window
  *     Window whose browser we need to access.
  * @param {boolean} isNewSession
  *     True if this is the first time we're talking to this browser.
  */
-GeckoDriver.prototype.whenBrowserStarted = function(win, isNewSession) {
-  let mm = win.window.messageManager;
+GeckoDriver.prototype.whenBrowserStarted = function(window, isNewSession) {
+  let mm = window.messageManager;
   if (mm) {
     if (!isNewSession) {
       // Loading the frame script corresponds to a situation we need to
@@ -539,15 +539,14 @@ GeckoDriver.prototype.whenBrowserStarted = function(win, isNewSession) {
       Preferences.set(CONTENT_LISTENER_PREF, true);
     }
   } else {
-    logger.error(
-        `Could not load listener into content for page ${win.location.href}`);
+    logger.error("Unable to load content frame script");
   }
 };
 
 /**
  * Recursively get all labeled text.
  *
- * @param {nsIDOMElement} el
+ * @param {Element} el
  *     The parent element.
  * @param {Array.<string>} lines
  *      Array that holds the text lines.
@@ -3018,7 +3017,9 @@ GeckoDriver.prototype.setScreenOrientation = function(cmd, resp) {
 
 /**
  * Synchronously minimizes the user agent window as if the user pressed
- * the minimize button, or restores it if it is already minimized.
+ * the minimize button.
+ *
+ * No action is taken if the window is already minimized.
  *
  * Not supported on Fennec.
  *
@@ -3037,22 +3038,22 @@ GeckoDriver.prototype.minimizeWindow = async function(cmd, resp) {
   const win = assert.window(this.getCurrentWindow());
   assert.noUserPrompt(this.dialog);
 
-  await new Promise(resolve => {
-    win.addEventListener("sizemodechange", resolve, {once: true});
-
-    if (win.windowState == win.STATE_MINIMIZED) {
-      win.restore();
-    } else {
+  let state = WindowState.from(win.windowState);
+  if (state != WindowState.Minimized) {
+    await new Promise(resolve => {
+      win.addEventListener("sizemodechange", resolve, {once: true});
       win.minimize();
-    }
-  });
+    });
+  }
 
   return this.curBrowser.rect;
 };
 
 /**
  * Synchronously maximizes the user agent window as if the user pressed
- * the maximize button, or restores it if it is already maximized.
+ * the maximize button.
+ *
+ * No action is taken if the window is already maximized.
  *
  * Not supported on Fennec.
  *
@@ -3092,48 +3093,44 @@ GeckoDriver.prototype.maximizeWindow = async function(cmd, resp) {
     });
   }
 
-  let modeChangeEv;
-  await new TimedPromise(resolve => {
-    modeChangeEv = resolve;
-    win.addEventListener("sizemodechange", modeChangeEv, {once: true});
-
-    if (win.windowState == win.STATE_MAXIMIZED) {
-      win.restore();
-    } else {
+  let state = WindowState.from(win.windowState);
+  if (state != WindowState.Maximized) {
+    await new TimedPromise(resolve => {
+      win.addEventListener("sizemodechange", resolve, {once: true});
       win.maximize();
-    }
-  }, {throws: null});
-  win.removeEventListener("sizemodechange", modeChangeEv);
+    }, {throws: null});
 
-  // Transitioning into a window state is asynchronous on Linux, and we
-  // cannot rely on sizemodechange to accurately tell us when the
-  // transition has completed.
-  //
-  // To counter for this we wait for the window size to change, which
-  // it usually will.  On platforms where the transition is synchronous,
-  // the wait will have the cost of one iteration because the size will
-  // have changed as part of the transition.  Where the platform
-  // is asynchronous, the cost may be greater as we have to poll
-  // continuously until we see a change, but it ensures conformity in
-  // behaviour.
-  //
-  // Certain window managers, however, do not have a concept of maximised
-  // windows and here sizemodechange may never fire.  Indeed, if the
-  // window covers the maximum available screen real estate, the window
-  // size may also not change.  In this circumstance, which admittedly
-  // is a somewhat bizarre edge case, we assume that the timeout of
-  // waiting for sizemodechange to fire is sufficient to give the window
-  // enough time to transition itself into whatever form or shape the
-  // WM is programmed to give it.
-  await windowSizeChange();
+    // Transitioning into a window state is asynchronous on Linux,
+    // and we cannot rely on sizemodechange to accurately tell us when
+    // the transition has completed.
+    //
+    // To counter for this we wait for the window size to change, which
+    // it usually will.  On platforms where the transition is synchronous,
+    // the wait will have the cost of one iteration because the size
+    // will have changed as part of the transition.  Where the platform is
+    // asynchronous, the cost may be greater as we have to poll
+    // continuously until we see a change, but it ensures conformity in
+    // behaviour.
+    //
+    // Certain window managers, however, do not have a concept of
+    // maximised windows and here sizemodechange may never fire.  Indeed,
+    // if the window covers the maximum available screen real estate,
+    // the window size may also not change.  In this circumstance,
+    // which admittedly is a somewhat bizarre edge case, we assume that
+    // the timeout of waiting for sizemodechange to fire is sufficient
+    // to give the window enough time to transition itself into whatever
+    // form or shape the WM is programmed to give it.
+    await windowSizeChange();
+  }
 
   return this.curBrowser.rect;
 };
 
 /**
  * Synchronously sets the user agent window to full screen as if the user
- * had done "View > Enter Full Screen", or restores it if it is already
- * in full screen.
+ * had done "View > Enter Full Screen".
+ *
+ * No action is taken if the window is already in full screen mode.
  *
  * Not supported on Fennec.
  *
@@ -3147,15 +3144,18 @@ GeckoDriver.prototype.maximizeWindow = async function(cmd, resp) {
  * @throws {UnexpectedAlertOpenError}
  *     A modal dialog is open, blocking this operation.
  */
-GeckoDriver.prototype.fullscreen = async function(cmd, resp) {
+GeckoDriver.prototype.fullscreenWindow = async function(cmd, resp) {
   assert.firefox();
   const win = assert.window(this.getCurrentWindow());
   assert.noUserPrompt(this.dialog);
 
-  await new Promise(resolve => {
-    win.addEventListener("sizemodechange", resolve, {once: true});
-    win.fullScreen = !win.fullScreen;
-  });
+  let state = WindowState.from(win.windowState);
+  if (state != WindowState.Fullscreen) {
+    await new Promise(resolve => {
+      win.addEventListener("sizemodechange", resolve, {once: true});
+      win.fullScreen = true;
+    });
+  }
 
   return this.curBrowser.rect;
 };
@@ -3593,7 +3593,7 @@ GeckoDriver.prototype.commands = {
   "WebDriver:FindElement": GeckoDriver.prototype.findElement,
   "WebDriver:FindElements": GeckoDriver.prototype.findElements,
   "WebDriver:Forward": GeckoDriver.prototype.goForward,
-  "WebDriver:FullscreenWindow": GeckoDriver.prototype.fullscreen,
+  "WebDriver:FullscreenWindow": GeckoDriver.prototype.fullscreenWindow,
   "WebDriver:GetActiveElement": GeckoDriver.prototype.getActiveElement,
   "WebDriver:GetActiveFrame": GeckoDriver.prototype.getActiveFrame,
   "WebDriver:GetAlertText": GeckoDriver.prototype.getTextFromDialog,
@@ -3653,7 +3653,7 @@ GeckoDriver.prototype.commands = {
   "executeScript": GeckoDriver.prototype.executeScript,
   "findElement": GeckoDriver.prototype.findElement,
   "findElements": GeckoDriver.prototype.findElements,
-  "fullscreen": GeckoDriver.prototype.fullscreen,
+  "fullscreen": GeckoDriver.prototype.fullscreenWindow,
   "getActiveElement": GeckoDriver.prototype.getActiveElement,
   "getActiveFrame": GeckoDriver.prototype.getActiveFrame,
   "getChromeWindowHandle": GeckoDriver.prototype.getChromeWindowHandle,
@@ -3715,15 +3715,6 @@ function copy(obj) {
   return obj;
 }
 
-/**
- * Get the outer window ID for the specified window.
- *
- * @param {nsIDOMWindow} win
- *     Window whose browser we need to access.
- *
- * @return {string}
- *     Returns the unique window ID.
- */
 function getOuterWindowId(win) {
   return win.QueryInterface(Ci.nsIInterfaceRequestor)
       .getInterface(Ci.nsIDOMWindowUtils)

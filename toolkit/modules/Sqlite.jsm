@@ -771,14 +771,11 @@ ConnectionData.prototype = Object.freeze({
           handledRow = true;
 
           try {
-            onRow(row);
-          } catch (e) {
-            if (e instanceof StopIteration) {
+            onRow(row, () => {
               userCancelled = true;
               pending.cancel();
-              break;
-            }
-
+            });
+          } catch (e) {
             self._log.warn("Exception when calling onRow callback", e);
           }
         }
@@ -1283,14 +1280,14 @@ OpenedConnection.prototype = Object.freeze({
    * handler. Otherwise, the buffering may consume unacceptable amounts of
    * resources.
    *
-   * If a `StopIteration` is thrown during execution of an `onRow` handler,
-   * the execution of the statement is immediately cancelled. Subsequent
-   * rows will not be processed and no more `onRow` invocations will be made.
-   * The promise is resolved immediately.
+   * If the second parameter of an `onRow` handler is called during execution
+   * of the `onRow` handler, the execution of the statement is immediately
+   * cancelled. Subsequent rows will not be processed and no more `onRow`
+   * invocations will be made. The promise is resolved immediately.
    *
-   * If a non-`StopIteration` exception is thrown by the `onRow` handler, the
-   * exception is logged and processing of subsequent rows occurs as if nothing
-   * happened. The promise is still resolved (not rejected).
+   * If an exception is thrown by the `onRow` handler, the exception is logged
+   * and processing of subsequent rows occurs as if nothing happened. The
+   * promise is still resolved (not rejected).
    *
    * The return value is a promise that will be resolved when the statement
    * has completed fully.

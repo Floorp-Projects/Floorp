@@ -20,6 +20,7 @@ const actionTypes = {
   FILTER_TOGGLE: "FILTER_TOGGLE",
   FILTER_TEXT_SET: "FILTER_TEXT_SET",
   FILTERS_CLEAR: "FILTERS_CLEAR",
+  DEFAULT_FILTERS_RESET: "DEFAULT_FILTERS_RESET",
   FILTER_BAR_TOGGLE: "FILTER_BAR_TOGGLE",
 };
 
@@ -40,6 +41,33 @@ const prefs = {
     }
   }
 };
+
+const FILTERS = {
+  CSS: "css",
+  DEBUG: "debug",
+  ERROR: "error",
+  INFO: "info",
+  LOG: "log",
+  NET: "net",
+  NETXHR: "netxhr",
+  TEXT: "text",
+  WARN: "warn",
+};
+
+const DEFAULT_FILTERS_VALUES = {
+  [FILTERS.TEXT]: "",
+  [FILTERS.ERROR]: true,
+  [FILTERS.WARN]: true,
+  [FILTERS.LOG]: true,
+  [FILTERS.INFO]: true,
+  [FILTERS.DEBUG]: true,
+  [FILTERS.CSS]: false,
+  [FILTERS.NET]: false,
+  [FILTERS.NETXHR]: false,
+};
+
+const DEFAULT_FILTERS = Object.keys(DEFAULT_FILTERS_VALUES)
+  .filter(filter => DEFAULT_FILTERS_VALUES[filter] !== false);
 
 const chromeRDPEnums = {
   MESSAGE_SOURCE: {
@@ -92,7 +120,11 @@ const jstermCommands = {
 };
 
 // Combine into a single constants object
-module.exports = Object.assign({},
+module.exports = Object.assign({
+  FILTERS,
+  DEFAULT_FILTERS,
+  DEFAULT_FILTERS_VALUES,
+},
   actionTypes,
   chromeRDPEnums,
   jstermCommands,

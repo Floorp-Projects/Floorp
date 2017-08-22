@@ -6,10 +6,9 @@
 module.exports = {
   PluralForm: {
     get: function (occurence, str) {
-      // @TODO Remove when loading the actual strings from webconsole.properties
-      // is done in the L10n fixture.
-      if (str === "messageRepeats.tooltip2") {
-        return `${occurence} repeats`;
+      if (str.includes(";")) {
+        const [singular, plural] = str.split(";");
+        return occurence > 1 ? plural : singular;
       }
 
       return str;

@@ -1,22 +1,30 @@
 from tests.support.inline import inline
 from tests.support.asserts import assert_error, assert_success
 
+
 alert_doc = inline("<script>window.alert()</script>")
 
+
+def maximize(session):
+    return session.transport.send("POST", "session/%s/window/maximize" % session.session_id)
+
+
 # 10.7.3 Maximize Window
-def test_maximize_no_browsing_context(session, create_window):
-    # Step 1
+
+
+def test_no_browsing_context(session, create_window):
+    # step 1
     session.window_handle = create_window()
     session.close()
-    result = session.transport.send("POST", "session/%s/window/maximize" % session.session_id)
-    assert_error(result, "no such window")
+    response = maximize(session)
+    assert_error(response, "no such window")
 
 
 def test_handle_user_prompt(session):
-    # Step 2
+    # step 2
     session.url = alert_doc
-    result = session.transport.send("POST", "session/%s/window/maximize" % session.session_id)
-    assert_error(result, "unexpected alert open")
+    response = maximize(session)
+    assert_error(response, "unexpected alert open")
 
 
 def test_maximize(session):
@@ -24,8 +32,8 @@ def test_maximize(session):
     assert session.window.state == "normal"
 
     # step 4
-    result = session.transport.send("POST", "session/%s/window/maximize" % session.session_id)
-    assert_success(result)
+    response = maximize(session)
+    assert_success(response)
 
     assert before_size != session.window.size
     assert session.window.state == "maximized"
@@ -35,25 +43,37 @@ def test_payload(session):
     before_size = session.window.size
     assert session.window.state == "normal"
 
-    result = session.transport.send("POST", "session/%s/window/maximize" % session.session_id)
+    response = maximize(session)
 
     # step 5
-    assert result.status == 200
-    assert isinstance(result.body["value"], dict)
+    assert response.status == 200
+    assert isinstance(response.body["value"], dict)
 
-    rect = result.body["value"]
-    assert "width" in rect
-    assert "height" in rect
-    assert "x" in rect
-    assert "y" in rect
-    assert "state" in rect
-    assert isinstance(rect["width"], (int, float))
-    assert isinstance(rect["height"], (int, float))
-    assert isinstance(rect["x"], (int, float))
-    assert isinstance(rect["y"], (int, float))
-    assert isinstance(rect["state"], basestring)
+    value = response.body["value"]
+    assert "width" in value
+    assert "height" in value
+    assert "x" in value
+    assert "y" in value
+    assert "state" in value
+    assert isinstance(value["width"], (int, float))
+    assert isinstance(value["height"], (int, float))
+    assert isinstance(value["x"], (int, float))
+    assert isinstance(value["y"], (int, float))
+    assert isinstance(value["state"], basestring)
 
     assert before_size != session.window.size
+    assert session.window.state == "maximized"
+
+
+def test_maximize_twice_is_idempotent(session):
+    assert session.window.state == "normal"
+
+    first_response = maximize(session)
+    assert_success(first_response)
+    assert session.window.state == "maximized"
+
+    second_response = maximize(session)
+    assert_success(second_response)
     assert session.window.state == "maximized"
 
 

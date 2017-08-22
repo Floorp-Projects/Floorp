@@ -8,17 +8,7 @@
 const Immutable = require("devtools/client/shared/vendor/immutable");
 const constants = require("devtools/client/webconsole/new-console-output/constants");
 
-const FilterState = Immutable.Record({
-  css: false,
-  debug: true,
-  error: true,
-  info: true,
-  log: true,
-  net: false,
-  netxhr: false,
-  text: "",
-  warn: true,
-});
+const FilterState = Immutable.Record(constants.DEFAULT_FILTERS_VALUES);
 
 function filters(state = new FilterState(), action) {
   switch (action.type) {
@@ -28,9 +18,15 @@ function filters(state = new FilterState(), action) {
       return state.set(filter, active);
     case constants.FILTERS_CLEAR:
       return new FilterState();
+    case constants.DEFAULT_FILTERS_RESET:
+      return state.withMutations(record => {
+        constants.DEFAULT_FILTERS.forEach(filterName => {
+          record.set(filterName, constants.DEFAULT_FILTERS_VALUES[filterName]);
+        });
+      });
     case constants.FILTER_TEXT_SET:
       let {text} = action;
-      return state.set("text", text);
+      return state.set(constants.FILTERS.TEXT, text);
   }
 
   return state;

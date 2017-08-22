@@ -79,7 +79,7 @@ StackingContextHelper::StackingContextHelper(const StackingContextHelper& aParen
   : mBuilder(&aBuilder)
 {
   nsRect visibleRect;
-  bool is2d = aTransformPtr && aTransformPtr->Is2D() && !aPerspectivePtr;
+  bool is2d = !aTransformPtr || (aTransformPtr->Is2D() && !aPerspectivePtr);
   if (is2d) {
     nsRect itemBounds = aDisplayList->GetClippedBoundsWithRespectToASR(aDisplayListBuilder, aItem->GetActiveScrolledRoot());
     nsRect childrenVisible = aItem->GetVisibleRectForChildren();

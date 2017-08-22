@@ -149,7 +149,10 @@ class FxDesktopBuild(BuildScript, TryToolsMixin, object):
                 self.info('Build variant has `artifact_build_variant_in_try`: "%s".' % variant)
             else:
                 if not c.get('build_variant'):
-                    variant = 'artifact'
+                    if c.get('debug_build'):
+                        variant = 'debug-artifact'
+                    else:
+                        variant = 'artifact'
                 elif c.get('build_variant') in ['debug', 'cross-debug']:
                     variant = 'debug-artifact'
 

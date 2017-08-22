@@ -570,8 +570,26 @@ NS_IMETHODIMP nsJSCID::GetValid(bool* aValid)
 NS_IMETHODIMP nsJSCID::Equals(nsIJSID* other, bool* _retval)
     {return mDetails->Equals(other, _retval);}
 
-NS_IMETHODIMP nsJSCID::Initialize(const char* idString)
-    {return mDetails->Initialize(idString);}
+NS_IMETHODIMP
+nsJSCID::Initialize(const char* str)
+{
+    if (str[0] == '{') {
+        NS_ENSURE_SUCCESS(mDetails->Initialize(str), NS_ERROR_FAILURE);
+    } else {
+        nsCOMPtr<nsIComponentRegistrar> registrar;
+        NS_GetComponentRegistrar(getter_AddRefs(registrar));
+        NS_ENSURE_TRUE(registrar, NS_ERROR_FAILURE);
+
+        nsCID* cid;
+        if (NS_FAILED(registrar->ContractIDToCID(str, &cid)))
+            return NS_ERROR_FAILURE;
+        bool success = mDetails->InitWithName(*cid, str);
+        free(cid);
+        if (!success)
+            return NS_ERROR_FAILURE;
+    }
+    return NS_OK;
+}
 
 NS_IMETHODIMP nsJSCID::ToString(char** _retval)
     {ResolveName(); return mDetails->ToString(_retval);}
@@ -593,21 +611,8 @@ nsJSCID::NewID(const char* str)
     }
 
     RefPtr<nsJSCID> idObj = new nsJSCID();
-    if (str[0] == '{') {
-        NS_ENSURE_SUCCESS(idObj->Initialize(str), nullptr);
-    } else {
-        nsCOMPtr<nsIComponentRegistrar> registrar;
-        NS_GetComponentRegistrar(getter_AddRefs(registrar));
-        NS_ENSURE_TRUE(registrar, nullptr);
-
-        nsCID* cid;
-        if (NS_FAILED(registrar->ContractIDToCID(str, &cid)))
-            return nullptr;
-        bool success = idObj->mDetails->InitWithName(*cid, str);
-        free(cid);
-        if (!success)
-            return nullptr;
-    }
+    if (NS_FAILED(idObj->Initialize(str)))
+        return nullptr;
     return idObj.forget();
 }
 
