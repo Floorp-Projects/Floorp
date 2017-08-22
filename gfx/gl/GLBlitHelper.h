@@ -190,6 +190,14 @@ private:
 #endif
 };
 
+extern const char* const kFragHeader_Tex2D;
+extern const char* const kFragHeader_Tex2DRect;
+extern const char* const kFragHeader_TexExt;
+extern const char* const kFragBody_RGBA;
+extern const char* const kFragBody_CrYCb;
+extern const char* const kFragBody_NV12;
+extern const char* const kFragBody_PlanarYUV;
+
 } // namespace gl
 } // namespace mozilla
 
