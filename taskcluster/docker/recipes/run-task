@@ -37,6 +37,20 @@ FALLBACK_FINGERPRINT = {
         ":bf:d7:b8:40:84:01:48:9c:26:ce:d9"}
 
 
+NON_EMPTY_VOLUME = '''
+error: volume %s is not empty
+
+Our Docker image policy requires volumes to be empty.
+
+The volume was likely populated as part of building the Docker image.
+Change the Dockerfile and anything run from it to not create files in
+any VOLUME.
+
+A lesser possibility is that you stumbled upon a TaskCluster platform bug
+where it fails to use new volumes for tasks.
+'''
+
+
 def print_line(prefix, m):
     now = datetime.datetime.utcnow()
     print(b'[%s %sZ] %s' % (prefix, now.isoformat(), m), end=b'')
@@ -333,6 +347,42 @@ def main(args):
                   'file; the cache names for this task are likely '
                   'mis-configured')
             return 1
+
+    if 'TASKCLUSTER_VOLUMES' in os.environ:
+        volumes = os.environ['TASKCLUSTER_VOLUMES'].split(';')
+        del os.environ['TASKCLUSTER_VOLUMES']
+    else:
+        volumes = []
+
+    # Sanitize volumes.
+    for volume in volumes:
+        # If a volume is a cache, it was dealt with above.
+        if volume in caches:
+            print_line(b'volume', b'volume %s is a cache\n' % volume)
+            continue
+
+        # The only time we should see files in the volume is if the Docker
+        # image build put files there.
+        #
+        # For the sake of simplicity, our policy is that volumes should be
+        # empty. This also has the advantage that an empty volume looks
+        # a lot like an empty cache. Tasks can rely on caches being
+        # swapped in and out on any volume without any noticeable change
+        # of behavior.
+        volume_files = os.listdir(volume)
+        if volume_files:
+            print(NON_EMPTY_VOLUME % volume)
+            print('entries in root directory: %s' %
+                  ' '.join(sorted(volume_files)))
+            return 1
+
+        # The volume is almost certainly owned by root:root. Chown it so it
+        # is writable.
+
+        if running_as_root:
+            print_line(b'volume', b'changing ownership of volume %s '
+                                  b'to %d:%d\n' % (volume, uid, gid))
+            set_dir_permissions(volume, uid, gid)
 
     # Change ownership of requested paths.
     # FUTURE: parse argument values for user/group if we don't want to
