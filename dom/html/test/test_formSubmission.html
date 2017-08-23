@@ -5,7 +5,7 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=523771
 -->
 <head>
   <title>Test for Bug 523771</title>
-  <script type="text/javascript" src="/tests/SimpleTest/SimpleTest.js"></script>        
+  <script type="text/javascript" src="/tests/SimpleTest/SimpleTest.js"></script>
   <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css" />
   <meta http-equiv="Content-Type" content="text/html;charset=utf-8">
 </head>
@@ -254,7 +254,7 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=523771
           <input type=email name="n20_8" value="foo@mózillä.órg"></td>
     </tr>
   </table>
-  
+
   <p>
     File input:
     <input type=file name="file_1" class="setfile">
@@ -290,7 +290,7 @@ t_6_v</textarea>
 </textarea>
     <textarea name="t8">
 
- t_8_v 
+ t_8_v&#0032;
 </textarea>
     <textarea name="t9_&#13;_&#10;_&#13;&#10;_ _&quot;">t_9_&#13;_&#10;_&#13;&#10;_ _&quot;_v</textarea>
     <textarea name="t10" value="t_10_bogus">t_10_v</textarea>
@@ -298,7 +298,7 @@ t_6_v</textarea>
 
   <p>
     Select one:
-  
+
     <select name="sel_1"></select>
     <select name="sel_1b"><option></option></select>
     <select name="sel_1c"><option selected></option></select>
@@ -339,7 +339,7 @@ t_6_v</textarea>
 
   <p>
     Select multiple:
-  
+
     <select multiple name="msel_1"></select>
     <select multiple name="msel_1b"><option></option></select>
     <select multiple name="msel_1c"><option selected></option></select>
@@ -605,11 +605,11 @@ function checkMPSubmission(sub, expected, test) {
 
   is(sub.length, expected.length,
      "Correct number of multipart items in " + test);
-  
+
   if (sub.length != expected.length) {
     alert(JSON.stringify(sub));
   }
-  
+
   var i;
   for (i = 0; i < expected.length; ++i) {
     if (!("fileName" in expected[i])) {
@@ -662,7 +662,7 @@ function checkURLSubmission(sub, expected) {
 }
 
 function checkPlainSubmission(sub, expected) {
-  
+
   is(sub,
      expected.map(function(v) {
        return v.name + "=" +
@@ -716,7 +716,6 @@ function* runTest() {
   var form = $("form");
 
   // multipart/form-data
-
   var iframe = $("target_iframe");
   iframe.onload = function() { gen.next(); };
 
@@ -781,7 +780,7 @@ function* runTest() {
   xhr.send(new FormData(form));
   yield undefined; // Wait for XHR load
   checkMPSubmission(JSON.parse(xhr.responseText), expectedSub, "send form using XHR and FormData");
-  
+
   // Send disabled form using XHR and FormData
   setDisabled(document.querySelectorAll("input, select, textarea"), true);
   xhr.open("POST", "form_submit_server.sjs");
@@ -789,7 +788,7 @@ function* runTest() {
   yield undefined;
   checkMPSubmission(JSON.parse(xhr.responseText), [], "send disabled form using XHR and FormData");
   setDisabled(document.querySelectorAll("input, select, textarea"), false);
-  
+
   // Send FormData
   function addToFormData(fd) {
     fd.append("aName", "aValue");
