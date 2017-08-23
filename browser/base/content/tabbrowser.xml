@@ -5382,7 +5382,7 @@
                 }];
 
                 notificationBox.appendNotification(message, "refresh-blocked",
-                                                   "chrome://browser/skin/Info.png",
+                                                   "chrome://browser/skin/notification-icons/popup.svg",
                                                    notificationBox.PRIORITY_INFO_MEDIUM,
                                                    buttons);
               }

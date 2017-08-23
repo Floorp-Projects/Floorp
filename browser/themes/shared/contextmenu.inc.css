@@ -47,5 +47,7 @@
 }
 
 #context-media-eme-learnmore {
-  list-style-image: url("chrome://browser/skin/drm-icon.svg#chains");
+  list-style-image: url("chrome://browser/skin/drm-icon.svg");
+  -moz-context-properties: fill;
+  fill: currentColor;
 }

@@ -353,7 +353,7 @@ add_test(function test_processInputSourceActionSequenceValidation() {
   actionSequence.id = "some_id";
   actionSequence.actions = -1;
   check(`actionSequence.actions: ${getTypeString(actionSequence.actions)}`,
-      /Expected 'actionSequence.actions' to be an Array/);
+      /Expected 'actionSequence.actions' to be an array/);
   action.inputStateMap.clear();
 
   run_next_test();
@@ -492,7 +492,7 @@ add_test(function test_extractActionChainValidation() {
     Assert.throws(() => action.Chain.fromJson(actions),
         InvalidArgumentError, message);
     Assert.throws(() => action.Chain.fromJson(actions),
-        /Expected 'actions' to be an Array/, message);
+        /Expected 'actions' to be an array/, message);
   }
   run_next_test();
 });

@@ -87,31 +87,79 @@ def test_invalid_params(session, data):
     assert_error(response, "invalid argument")
 
 
-def test_fullscreened(session):
-    original = session.window.rect
+def test_fully_exit_fullscreen(session):
+    """
+    10. Fully exit fullscreen.
 
-    # step 10
+    [...]
+
+    To fully exit fullscreen a document document, run these steps:
+
+      1. If document's fullscreen element is null, terminate these steps.
+
+      2. Unfullscreen elements whose fullscreen flag is set, within
+      document's top layer, except for document's fullscreen element.
+
+      3. Exit fullscreen document.
+
+    """
+
     session.window.fullscreen()
-    assert session.window.state == "fullscreen"
+    assert session.execute_script("return window.fullScreen") is True
+
     response = set_window_rect(session, {"width": 400, "height": 400})
-    assert_success(response, {"x": original["x"],
-                              "y": original["y"],
-                              "width": 400.0,
-                              "height": 400.0,
-                              "state": "normal"})
+    value = assert_success(response)
+    assert value["width"] == 400
+    assert value["height"] == 400
+    assert value["state"] == "normal"
 
 
-def test_minimized(session):
-    # step 11
+def test_restore_window_from_minimized(session):
+    """
+    11. Restore the window.
+
+    [...]
+
+    To restore the window, given an operating system level window with an
+    associated top-level browsing context, run implementation-specific
+    steps to restore or unhide the window to the visible screen. Do not
+    return from this operation until the visibility state of the top-level
+    browsing context's active document has reached the visible state,
+    or until the operation times out.
+    """
+
     session.window.minimize()
-    assert session.window.state == "minimized"
+    assert session.execute_script("return document.hidden") is True
 
-    response = set_window_rect(session, {"width": 400, "height": 400})
-    assert session.window.state != "minimized"
-    rect = assert_success(response)
-    assert rect["width"] == 400
-    assert rect["height"] == 400
-    assert rect["state"] == "normal"
+    response = set_window_rect(session, {"width": 450, "height": 450})
+    value = assert_success(response)
+    assert value["width"] == 450
+    assert value["height"] == 450
+    assert value["state"] == "normal"
+
+
+def test_restore_window_from_maximized(session):
+    """
+    11. Restore the window.
+
+    [...]
+
+    To restore the window, given an operating system level window with an
+    associated top-level browsing context, run implementation-specific
+    steps to restore or unhide the window to the visible screen. Do not
+    return from this operation until the visibility state of the top-level
+    browsing context’s active document has reached the visible state,
+    or until the operation times out.
+    """
+
+    session.window.maximize()
+    assert session.window.state == "maximized"
+
+    response = set_window_rect(session, {"width": 500, "height": 500})
+    value = assert_success(response)
+    assert value["width"] == 500
+    assert value["height"] == 500
+    assert value["state"] == "normal"
 
 
 def test_height_width(session):

@@ -245,26 +245,30 @@ class Window(object):
     @property
     @command
     def size(self):
+        """Gets the window size as a tuple of `(width, height)`."""
         rect = self.rect
         return (rect["width"], rect["height"])
 
     @size.setter
     @command
-    def size(self, data):
-        width, height = data
+    def size(self, new_size):
+        """Set window size by passing a tuple of `(width, height)`."""
+        width, height = new_size
         body = {"width": width, "height": height}
         self.session.send_session_command("POST", "window/rect", body)
 
     @property
     @command
     def position(self):
+        """Gets the window position as a tuple of `(x, y)`."""
         rect = self.rect
         return (rect["x"], rect["y"])
 
     @position.setter
     @command
-    def position(self, data):
-        data = x, y
+    def position(self, new_position):
+        """Set window position by passing a tuple of `(x, y)`."""
+        x, y = new_position
         body = {"x": x, "y": y}
         self.session.send_session_command("POST", "window/rect", body)
 

@@ -564,29 +564,6 @@ html|span.ac-emphasize-text-url {
   margin-bottom: -26px;
 }
 
-/* POPUP BLOCKER BUTTON */
-#page-report-button {
-  list-style-image: url("chrome://browser/skin/urlbar-popup-blocked.png");
-  -moz-image-region: rect(0, 16px, 16px, 0);
-}
-
-#page-report-button:hover:active,
-#page-report-button[open="true"] {
-  -moz-image-region: rect(0, 32px, 16px, 16px);
-}
-
-@media (min-resolution: 2dppx) {
-  #page-report-button {
-    list-style-image: url("chrome://browser/skin/urlbar-popup-blocked@2x.png");
-    -moz-image-region: rect(0, 32px, 32px, 0);
-  }
-
-  #page-report-button:hover:active,
-  #page-report-button[open="true"] {
-    -moz-image-region: rect(0, 64px, 32px, 32px);
-  }
-}
-
 /* BOOKMARKING PANEL */
 #editBookmarkPanelStarIcon {
   list-style-image: url("chrome://browser/skin/places/starred48.png");
@@ -1259,8 +1236,6 @@ html|*.addon-webext-perm-list {
 %include ../shared/fullscreen/warning.inc.css
 %include ../shared/ctrlTab.inc.css
 %include ../shared/plugin-doorhanger.inc.css
-
-%include downloads/indicator.css
 
 /* On mac, the popup notification contents are indented by default and so
   the default closebutton margins from notification.css require adjustment */

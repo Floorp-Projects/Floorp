@@ -15,6 +15,8 @@ interface HTMLStyleElement : HTMLElement {
            [CEReactions, SetterThrows, Pure]
            attribute DOMString media;
            [CEReactions, SetterThrows, Pure]
+           attribute DOMString nonce;
+           [CEReactions, SetterThrows, Pure]
            attribute DOMString type;
            [SetterThrows, Pure, Pref="layout.css.scoped-style.enabled"]
            attribute boolean scoped;

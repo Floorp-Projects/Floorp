@@ -129,5 +129,10 @@ this.updateAppInfo = function(options) {
   };
 
   registrar.registerFactory(id, "XULAppInfo", cid, factory);
+
+  // Ensure that Cc actually maps cid to the new shim AppInfo. This is
+  // needed when JSM global sharing is enabled, because some prior
+  // code may already have looked up |Cc[cid]|.
+  Cc.initialize(Cc[cid], cid);
 };
 

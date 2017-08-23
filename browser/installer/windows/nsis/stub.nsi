@@ -47,7 +47,6 @@ Var CanWriteToInstallDir
 Var HasRequiredSpaceAvailable
 Var IsDownloadFinished
 Var DownloadSizeBytes
-Var HalfOfDownload
 Var DownloadReset
 Var ExistingTopDir
 Var SpaceAvailableBytes
@@ -55,10 +54,8 @@ Var InitialInstallDir
 Var HandleDownload
 Var CanSetAsDefault
 Var InstallCounterStep
-Var InstallStepSize
 Var InstallTotalSteps
 Var ProgressCompleted
-Var ProgressTotal
 
 Var ExitCode
 Var FirefoxLaunchCode
@@ -94,6 +91,7 @@ Var PreviousInstallArch
 Var ProfileCleanupPromptType
 Var ProfileCleanupHeaderString
 Var ProfileCleanupButtonString
+Var AppLaunchWaitTickCount
 
 ; Uncomment the following to prevent pinging the metrics server when testing
 ; the stub installer
@@ -159,32 +157,32 @@ Var ProfileCleanupButtonString
 ; Interval for the install timer
 !define InstallIntervalMS 100
 
-; The first step for the install progress bar. By starting with a large step
-; immediate feedback is given to the user.
-!define InstallProgressFirstStep 20
-
-; The finish step size to quickly increment the progress bar after the
-; installation has finished.
-!define InstallProgressFinishStep 40
-
 ; Number of steps for the install progress.
 ; This might not be enough when installing on a slow network drive so it will
-; fallback to downloading the full installer if it reaches this number. The size
-; of the install progress step is increased when the full installer finishes
-; instead of waiting.
+; fallback to downloading the full installer if it reaches this number.
 
-; Approximately 150 seconds with a 100 millisecond timer and a first step of 20
-; as defined by InstallProgressFirstStep.
-!define /math InstallCleanTotalSteps ${InstallProgressFirstStep} + 1500
+; Approximately 150 seconds with a 100 millisecond timer.
+!define InstallCleanTotalSteps 1500
 
-; Approximately 165 seconds (minus 0.2 seconds for each file that is removed)
-; with a 100 millisecond timer and a first step of 20 as defined by
-; InstallProgressFirstStep .
-!define /math InstallPaveOverTotalSteps ${InstallProgressFirstStep} + 1800
+; Approximately 165 seconds with a 100 millisecond timer.
+!define InstallPaveOverTotalSteps 1650
 
 ; Blurb duty cycle
 !define BlurbDisplayMS 19500
 !define BlurbBlankMS 500
+
+; Interval between checks for the application window and progress bar updates.
+!define AppLaunchWaitIntervalMS 100
+
+; Total time to wait for the application to start before just exiting.
+!define AppLaunchWaitTimeoutMS 10000
+
+; Maximum value of the download/install/launch progress bar, and the end values
+; for each individual stage.
+!define PROGRESS_BAR_TOTAL_STEPS 500 
+!define PROGRESS_BAR_DOWNLOAD_END_STEP 300
+!define PROGRESS_BAR_INSTALL_END_STEP 475
+!define PROGRESS_BAR_APP_LAUNCH_END_STEP 500
 
 ; Amount of physical memory required for the 64-bit build to be selected (2 GB).
 ; Machines with this or less RAM get the 32-bit build, even with a 64-bit OS.
@@ -548,7 +546,6 @@ Function .onUserAbort
   ${NSD_KillTimer} OnDownload
   ${NSD_KillTimer} CheckInstall
   ${NSD_KillTimer} FinishInstall
-  ${NSD_KillTimer} FinishProgressBar
   ${NSD_KillTimer} DisplayDownloadError
   ${NSD_KillTimer} NextBlurb
   ${NSD_KillTimer} ClearBlurb
@@ -889,17 +886,7 @@ FunctionEnd
 
 Function SetProgressBars
   SendMessage $Progressbar ${PBM_SETPOS} $ProgressCompleted 0
-  ${ITBL3SetProgressValue} "$ProgressCompleted" "$ProgressTotal"
-FunctionEnd
-
-Function RemoveFileProgressCallback
-  IntOp $InstallCounterStep $InstallCounterStep + 2
-  System::Int64Op $ProgressCompleted + $InstallStepSize
-  Pop $ProgressCompleted
-  Call SetProgressBars
-  System::Int64Op $ProgressCompleted + $InstallStepSize
-  Pop $ProgressCompleted
-  Call SetProgressBars
+  ${ITBL3SetProgressValue} "$ProgressCompleted" "${PROGRESS_BAR_TOTAL_STEPS}"
 FunctionEnd
 
 Function NextBlurb
@@ -1005,16 +992,10 @@ Function OnDownload
     ${EndIf}
 
     StrCpy $DownloadSizeBytes "$4"
-    System::Int64Op $4 / 2
-    Pop $HalfOfDownload
-    System::Int64Op $HalfOfDownload / $InstallTotalSteps
-    Pop $InstallStepSize
     SendMessage $Progressbar ${PBM_SETMARQUEE} 0 0 ; start=1|stop=0 interval(ms)=+N
     ${RemoveStyle} $Progressbar ${PBS_MARQUEE}
-    System::Int64Op $HalfOfDownload + $DownloadSizeBytes
-    Pop $ProgressTotal
     StrCpy $ProgressCompleted 0
-    SendMessage $Progressbar ${PBM_SETRANGE32} $ProgressCompleted $ProgressTotal
+    SendMessage $Progressbar ${PBM_SETRANGE32} $ProgressCompleted ${PROGRESS_BAR_TOTAL_STEPS}
   ${EndIf}
 
   ; Don't update the status until after the download starts
@@ -1042,10 +1023,6 @@ Function OnDownload
     ${If} $2 == 0
       ${NSD_KillTimer} OnDownload
       StrCpy $IsDownloadFinished "true"
-      ; The first step of the install progress bar is determined by the
-      ; InstallProgressFirstStep define and provides the user with immediate
-      ; feedback.
-      StrCpy $InstallCounterStep "${InstallProgressFirstStep}"
       System::Call "kernel32::GetTickCount()l .s"
       Pop $EndDownloadPhaseTickCount
 
@@ -1070,13 +1047,9 @@ Function OnDownload
 
       ; Update the progress bars first in the UI change so they take affect
       ; before other UI changes.
-      StrCpy $ProgressCompleted "$DownloadSizeBytes"
+      StrCpy $ProgressCompleted "${PROGRESS_BAR_DOWNLOAD_END_STEP}"
       Call SetProgressBars
-      System::Int64Op $InstallStepSize * ${InstallProgressFirstStep}
-      Pop $R9
-      System::Int64Op $ProgressCompleted + $R9
-      Pop $ProgressCompleted
-      Call SetProgressBars
+
       ; Disable the Cancel button during the install
       GetDlgItem $5 $HWNDPARENT 2
       EnableWindow $5 0
@@ -1155,8 +1128,7 @@ Function OnDownload
       ${GetShortcutsLogPath} $0
       Delete "$0"
 
-      GetFunctionAddress $0 RemoveFileProgressCallback
-      ${RemovePrecompleteEntries} $0
+      ${RemovePrecompleteEntries} "false"
 
       ; Delete the install.log and let the full installer create it. When the
       ; installer closes it we can detect that it has completed.
@@ -1174,19 +1146,21 @@ Function OnDownload
       Exec "$\"$PLUGINSDIR\download.exe$\" /INI=$PLUGINSDIR\${CONFIG_INI}"
       ${NSD_CreateTimer} CheckInstall ${InstallIntervalMS}
     ${Else}
-      ${If} $HalfOfDownload != "true"
-      ${AndIf} $3 > $HalfOfDownload
-        StrCpy $HalfOfDownload "true"
-      ${EndIf}
       StrCpy $DownloadedBytes "$3"
-      StrCpy $ProgressCompleted "$DownloadedBytes"
+      System::Int64Op $DownloadedBytes * ${PROGRESS_BAR_DOWNLOAD_END_STEP}
+      Pop $ProgressCompleted
+      System::Int64Op $ProgressCompleted / $DownloadSizeBytes
+      Pop $ProgressCompleted
       Call SetProgressBars
     ${EndIf}
   ${EndIf}
 FunctionEnd
 
 Function SendPing
+  ${NSD_KillTimer} NextBlurb
+  ${NSD_KillTimer} ClearBlurb
   HideWindow
+
   ${If} $CheckboxSendPing == 1
     ; Get the tick count for the completion of all phases.
     System::Call "kernel32::GetTickCount()l .s"
@@ -1462,8 +1436,7 @@ Function CheckInstall
     Return
   ${EndIf}
 
-  System::Int64Op $ProgressCompleted + $InstallStepSize
-  Pop $ProgressCompleted
+  IntOp $ProgressCompleted $ProgressCompleted + 1
   Call SetProgressBars
 
   ${If} ${FileExists} "$INSTDIR\install.log"
@@ -1486,31 +1459,13 @@ Function CheckInstall
       Delete "$PLUGINSDIR\${CONFIG_INI}"
       System::Call "kernel32::GetTickCount()l .s"
       Pop $EndInstallPhaseTickCount
-      System::Int64Op $InstallStepSize * ${InstallProgressFinishStep}
-      Pop $InstallStepSize
-      ${NSD_CreateTimer} FinishInstall ${InstallIntervalMS}
+      Call FinishInstall
     ${EndUnless}
   ${EndIf}
 FunctionEnd
 
 Function FinishInstall
-  ; The full installer has completed but the progress bar still needs to finish
-  ; so increase the size of the step.
-  IntOp $InstallCounterStep $InstallCounterStep + ${InstallProgressFinishStep}
-  ${If} $InstallTotalSteps < $InstallCounterStep
-    StrCpy $InstallCounterStep "$InstallTotalSteps"
-  ${EndIf}
-
-  ${If} $InstallTotalSteps != $InstallCounterStep
-    System::Int64Op $ProgressCompleted + $InstallStepSize
-    Pop $ProgressCompleted
-    Call SetProgressBars
-    Return
-  ${EndIf}
-
-  ${NSD_KillTimer} FinishInstall
-
-  StrCpy $ProgressCompleted "$ProgressTotal"
+  StrCpy $ProgressCompleted "${PROGRESS_BAR_INSTALL_END_STEP}"
   Call SetProgressBars
 
   ${If} ${FileExists} "$INSTDIR\${FileMainEXE}.moz-upgrade"
@@ -1520,24 +1475,8 @@ Function FinishInstall
 
   StrCpy $ExitCode "${ERR_SUCCESS}"
 
-  StrCpy $InstallCounterStep 0
-  ${NSD_CreateTimer} FinishProgressBar ${InstallIntervalMS}
-FunctionEnd
-
-Function FinishProgressBar
-  IntOp $InstallCounterStep $InstallCounterStep + 1
-
-  ${If} $InstallCounterStep < 10
-    Return
-  ${EndIf}
-
-  ${NSD_KillTimer} FinishProgressBar
-  ${NSD_KillTimer} NextBlurb
-  ${NSD_KillTimer} ClearBlurb
-
   Call CopyPostSigningData
   Call LaunchApp
-  Call SendPing
 FunctionEnd
 
 Function RelativeGotoPage
@@ -1656,6 +1595,9 @@ Function LaunchApp
     GetFunctionAddress $0 LaunchAppFromElevatedProcess
     UAC::ExecCodeSegment $0
   ${EndIf}
+
+  StrCpy $AppLaunchWaitTickCount 0
+  ${NSD_CreateTimer} WaitForAppLaunch ${AppLaunchWaitIntervalMS}
 FunctionEnd
 
 Function LaunchAppFromElevatedProcess
@@ -1665,6 +1607,33 @@ Function LaunchAppFromElevatedProcess
     Exec "$\"$INSTDIR\${FileMainEXE}$\" -reset-profile -migration"
   ${Else}
     Exec "$\"$INSTDIR\${FileMainEXE}$\""
+  ${EndIf}
+FunctionEnd
+
+Function WaitForAppLaunch
+  FindWindow $0 "${MainWindowClass}"
+  FindWindow $1 "${DialogWindowClass}"
+  ${If} $0 <> 0
+  ${OrIf} $1 <> 0
+    ${NSD_KillTimer} WaitForAppLaunch
+    StrCpy $ProgressCompleted "${PROGRESS_BAR_APP_LAUNCH_END_STEP}"
+    Call SetProgressBars
+    Call SendPing
+    Return
+  ${EndIf}
+
+  IntOp $AppLaunchWaitTickCount $AppLaunchWaitTickCount + 1
+  IntOp $0 $AppLaunchWaitTickCount * ${AppLaunchWaitIntervalMS}
+  ${If} $0 >= ${AppLaunchWaitTimeoutMS}
+    ; We've waited an unreasonably long time, so just exit.
+    ${NSD_KillTimer} WaitForAppLaunch
+    Call SendPing
+    Return
+  ${EndIf}
+
+  ${If} $ProgressCompleted < ${PROGRESS_BAR_APP_LAUNCH_END_STEP}
+    IntOp $ProgressCompleted $ProgressCompleted + 1
+    Call SetProgressBars
   ${EndIf}
 FunctionEnd
 

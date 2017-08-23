@@ -107,7 +107,7 @@ element.Store = class {
   /**
    * Make an element seen.
    *
-   * @param {nsIDOMElement} el
+   * @param {Element} el
    *    Element to add to set of seen elements.
    *
    * @return {string}
@@ -155,10 +155,10 @@ element.Store = class {
    *
    * @param {string} uuid
    *     Web element reference, or UUID.
-   * @param {(nsIDOMWindow|ShadowRoot)} container
-   * Window and an optional shadow root that contains the element.
+   * @param {Object.<string, (WindowProxy|Element)} container
+   *     Window and an optional shadow root that contains the element.
    *
-   * @returns {nsIDOMElement}
+   * @returns {Element}
    *     Element associated with reference.
    *
    * @throws {NoSuchElementError}
@@ -216,38 +216,41 @@ element.Store = class {
  * See the |element.Strategy| enum for a full list of supported
  * search strategies that can be passed to |strategy|.
  *
- * Available flags for |opts|:
+ * Available flags for <var>opts</var>:
  *
- *     |all|
- *       If true, a multi-element search selector is used and a sequence
- *       of elements will be returned.  Otherwise a single element.
+ * <dl>
+ *   <dt><code>all</code>
+ *   <dd>
+ *     If true, a multi-element search selector is used and a sequence
+ *     of elements will be returned.  Otherwise a single element.
  *
- *     |timeout|
- *       Duration to wait before timing out the search.  If |all| is
- *       false, a NoSuchElementError is thrown if unable to find
- *       the element within the timeout duration.
+ *   <dt><code>timeout</code>
+ *   <dd>
+ *     Duration to wait before timing out the search.  If <code>all</code>
+ *     is false, a {@link NoSuchElementError} is thrown if unable to
+ *     find the element within the timeout duration.
  *
- *     |startNode|
- *       Element to use as the root of the search.
+ *   <dt><code>startNode</code>
+ *   <dd>Element to use as the root of the search.
  *
- * @param {Object.<string, Window>} container
+ * @param {Object.<string, WindowProxy>} container
  *     Window object and an optional shadow root that contains the
  *     root shadow DOM element.
  * @param {string} strategy
  *     Search strategy whereby to locate the element(s).
  * @param {string} selector
  *     Selector search pattern.  The selector must be compatible with
- *     the chosen search |strategy|.
+ *     the chosen search <var>strategy</var>.
  * @param {Object.<string, ?>} opts
  *     Options.
  *
- * @return {Promise.<(nsIDOMElement|Array.<nsIDOMElement>)>}
+ * @return {Promise.<(Element|Array.<Element>)>}
  *     Single element or a sequence of elements.
  *
  * @throws InvalidSelectorError
- *     If |strategy| is unknown.
+ *     If <var>strategy</var> is unknown.
  * @throws InvalidSelectorError
- *     If |selector| is malformed.
+ *     If <var>selector</var> is malformed.
  * @throws NoSuchElementError
  *     If a single element is requested, this error will throw if the
  *     element is not found.
@@ -637,7 +640,7 @@ element.generateUUID = function() {
  * Check if the element is detached from the current frame as well as
  * the optional shadow root (when inside a Shadow DOM context).
  *
- * @param {nsIDOMElement} el
+ * @param {Element} el
  *     Element to be checked.
  * @param {Container} container
  *     Container with |frame|, which is the window object that contains
@@ -881,24 +884,25 @@ element.isObscured = function(el) {
  * rectangle that is inside the viewport.
  *
  * @param {DOMRect} rect
- *     Element off a DOMRect sequence produced by calling |getClientRects|
- *     on a |DOMElement|.
- * @param {nsIDOMWindow} win
- *     Current browsing context.
+ *     Element off a DOMRect sequence produced by calling
+ *     <code>getClientRects</code> on an {@link Element}.
+ * @param {WindowProxy} window
+ *     Current window global.
  *
  * @return {Map.<string, number>}
- *     X and Y coordinates that denotes the in-view centre point of |rect|.
+ *     X and Y coordinates that denotes the in-view centre point of
+ *     <var>rect</var>.
  */
-element.getInViewCentrePoint = function(rect, win) {
+element.getInViewCentrePoint = function(rect, window) {
   const {max, min} = Math;
 
   let x = {
     left: max(0, min(rect.x, rect.x + rect.width)),
-    right: min(win.innerWidth, max(rect.x, rect.x + rect.width)),
+    right: min(window.innerWidth, max(rect.x, rect.x + rect.width)),
   };
   let y = {
     top: max(0, min(rect.y, rect.y + rect.height)),
-    bottom: min(win.innerHeight, max(rect.y, rect.y + rect.height)),
+    bottom: min(window.innerHeight, max(rect.y, rect.y + rect.height)),
   };
 
   return {
