@@ -31,7 +31,6 @@ module.exports = {
     "new-cap": ["error", {"capIsNew": false}],
     "new-parens": "error",
     "no-bitwise": "off",
-    "no-caller": "error",
     "no-catch-shadow": "error",
     "no-comma-dangle": "off",
     "no-console": "off",

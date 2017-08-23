@@ -38,8 +38,8 @@ function run_test_1() {
   AddonManager.getAddonsByTypes(["extension", "theme", "locale"], function(aAddons) {
     do_check_eq(aAddons.length, 0);
 
-    Services.obs.addObserver(function() {
-      Services.obs.removeObserver(arguments.callee, "addons-background-update-complete");
+    Services.obs.addObserver(function observer() {
+      Services.obs.removeObserver(observer, "addons-background-update-complete");
 
       do_execute_soon(run_test_2);
     }, "addons-background-update-complete");
@@ -100,8 +100,8 @@ function run_test_2() {
   let completeCount = 0;
   let sawCompleteNotification = false;
 
-  Services.obs.addObserver(function() {
-    Services.obs.removeObserver(arguments.callee, "addons-background-update-complete");
+  Services.obs.addObserver(function observer() {
+    Services.obs.removeObserver(observer, "addons-background-update-complete");
 
     do_check_eq(installCount, 3);
     sawCompleteNotification = true;

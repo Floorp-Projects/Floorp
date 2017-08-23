@@ -50,8 +50,8 @@ profileDir.append("extensions");
 
 function load_blocklist(aFile) {
   return new Promise((resolve, reject) => {
-    Services.obs.addObserver(function() {
-      Services.obs.removeObserver(arguments.callee, "blocklist-updated");
+    Services.obs.addObserver(function observer() {
+      Services.obs.removeObserver(observer, "blocklist-updated");
 
       resolve();
     }, "blocklist-updated");

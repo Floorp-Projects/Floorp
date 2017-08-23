@@ -54,8 +54,8 @@ function delayMS(aDelay) {
 // Return a promise that resolves when the specified observer topic is notified
 function promise_observer(aTopic) {
   return new Promise(resolve => {
-    Services.obs.addObserver(function observe(aSubject, aObsTopic, aData) {
-      Services.obs.removeObserver(arguments.callee, aObsTopic);
+    Services.obs.addObserver(function observer(aSubject, aObsTopic, aData) {
+      Services.obs.removeObserver(observer, aObsTopic);
       resolve([aSubject, aData]);
     }, aTopic);
   });
@@ -153,13 +153,13 @@ function promise_open_compatibility_window(aInactiveAddonIds) {
              getService(Ci.nsIWindowWatcher);
     var win = ww.openWindow(null, URI_EXTENSION_UPDATE_DIALOG, "", features, variant);
 
-    win.addEventListener("load", function() {
+    win.addEventListener("load", function listener() {
       function page_shown(aEvent) {
         if (aEvent.target.pageid)
           info("Page " + aEvent.target.pageid + " shown");
       }
 
-      win.removeEventListener("load", arguments.callee);
+      win.removeEventListener("load", listener);
 
       info("Compatibility dialog opened");
 

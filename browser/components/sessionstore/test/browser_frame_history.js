@@ -151,13 +151,13 @@ add_task(async function() {
 function waitForLoadsInBrowser(aBrowser, aLoadCount) {
   return new Promise(resolve => {
     let loadCount = 0;
-    aBrowser.addEventListener("load", function(aEvent) {
+    aBrowser.addEventListener("load", function listener(aEvent) {
       if (++loadCount < aLoadCount) {
         info("Got " + loadCount + " loads, waiting until we have " + aLoadCount);
         return;
       }
 
-      aBrowser.removeEventListener("load", arguments.callee, true);
+      aBrowser.removeEventListener("load", listener, true);
       resolve();
     }, true);
   });

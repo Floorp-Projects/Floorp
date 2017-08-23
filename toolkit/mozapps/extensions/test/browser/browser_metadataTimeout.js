@@ -61,13 +61,13 @@ function promise_open_compatibility_window(aInactiveAddonIds) {
              getService(Ci.nsIWindowWatcher);
     var win = ww.openWindow(null, URI_EXTENSION_UPDATE_DIALOG, "", features, variant);
 
-    win.addEventListener("load", function() {
+    win.addEventListener("load", function listener() {
       function page_shown(aEvent) {
         if (aEvent.target.pageid)
           info("Page " + aEvent.target.pageid + " shown");
       }
 
-      win.removeEventListener("load", arguments.callee);
+      win.removeEventListener("load", listener);
 
       info("Compatibility dialog opened");
 
