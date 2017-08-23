@@ -9,6 +9,7 @@ os_posix = 0
 os_macosx = 0
 os_bsd = 0
 os_linux = 0
+os_solaris = 0
 
 if CONFIG['OS_ARCH'] == 'WINNT':
     os_win = 1
@@ -21,6 +22,9 @@ else:
                                'NetBSD', 'OpenBSD']:
         os_bsd = 1
         libevent_include_suffix = 'bsd'
+    elif CONFIG['OS_ARCH'] == 'SunOS':
+        os_solaris = 1
+        libevent_include_suffix = 'solaris'
     else:
         os_linux = 1
         if CONFIG['OS_TARGET'] == 'Android':
