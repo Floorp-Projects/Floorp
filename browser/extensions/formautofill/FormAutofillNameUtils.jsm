@@ -277,7 +277,7 @@ var FormAutofillNameUtils = {
   },
 
   joinNameParts({given, middle, family}) {
-    if (this._isCJKName(given) && this._isCJKName(family) && middle == "") {
+    if (this._isCJKName(given) && this._isCJKName(family) && !middle) {
       return family + given;
     }
     return [given, middle, family].filter(part => part && part.length).join(" ");
