@@ -1,0 +1,89 @@
+<!doctype html>
+<meta charset=utf-8>
+<title>Insert non-async module script</title>
+<script src=/resources/testharness.js></script>
+<script src=/resources/testharnessreport.js></script>
+<script>
+  setup({allow_uncaught_exception: true});
+
+  const test = async_test("Test error event properties");
+
+  let errorCount = 0;
+  let eventCount = 0;
+  window.addEventListener("error", handleError);
+  window.addEventListener("load", handleLoaded);
+
+  function handleEvent(event) {
+    eventCount++;
+    test.step(() => assert_equals(typeof event, "object"));
+    test.step(() => assert_true(event instanceof Event));
+  }
+
+  function handleError(event) {
+    errorCount++;
+    test.step(() => assert_equals(typeof event, "object"));
+    test.step(() => assert_true(event instanceof ErrorEvent));
+    switch (errorCount) {
+      case 1:
+        test.step(() => assert_true(event.error instanceof SyntaxError));
+        test.step(() => assert_true(event.filename.endsWith("/bad_local_export.js")));
+        test.step(() => assert_equals(event.lineno, 3));
+        test.step(() => assert_equals(event.colno, 7));
+        break;
+      case 2:
+        test.step(() => assert_true(event.error instanceof TypeError));
+        test.step(() => assert_true(event.filename.endsWith("/import_resolve_failure.js")));
+        test.step(() => assert_equals(event.lineno, 2));
+        test.step(() => assert_equals(event.colno, 16));
+        break;
+      case 3:
+        test.step(() => assert_true(event.error instanceof TypeError));
+        test.step(() => assert_true(event.filename.endsWith("/indirect_export_resolve_failure.js")));
+        test.step(() => assert_equals(event.lineno, 2));
+        test.step(() => assert_equals(event.colno, 19));
+        break;
+      case 4:
+        test.step(() => assert_true(event.error instanceof SyntaxError));
+        test.step(() => assert_true(event.filename.endsWith("/missing_import.js")));
+        test.step(() => assert_equals(event.lineno, 2));
+        test.step(() => assert_equals(event.colno, 8));
+        break;
+      case 5:
+        test.step(() => assert_true(event.error instanceof SyntaxError));
+        test.step(() => assert_true(event.filename.endsWith("/missing_indirect_export.js")));
+        test.step(() => assert_equals(event.lineno, 2));
+        test.step(() => assert_equals(event.colno, 11));
+        break;
+      case 6:
+        test.step(() => assert_true(event.error instanceof ReferenceError));
+        test.step(() => assert_true(event.filename.endsWith("/module_eval_error.js")));
+        test.step(() => assert_equals(event.lineno, 3));
+        test.step(() => assert_equals(event.colno, 0));
+        break;
+      }
+  }
+
+  function testNoError() {
+    test.step(() => assert_unreached("No event expected here"));
+    test.done();
+  }
+
+  function handleLoaded() {
+    test.step(() => assert_equals(eventCount, 2));
+    test.step(() => assert_equals(errorCount, 6));
+    test.done();
+  }
+
+</script>
+
+<!-- Errors that fire an event on the script element -->
+<script type="module" src="" onerror="handleEvent(event)"></script>
+<script type="module" src="./does_not_exist" onerror="handleEvent(event)"></script>
+
+<!-- Errors that fire an error event on the global -->
+<script type="module" src="./support/bad_local_export.js" onerror="handleEvent(event)"></script>
+<script type="module" src="./support/import_resolve_failure.js" onerror="testNoError()"></script>
+<script type="module" src="./support/indirect_export_resolve_failure.js" onerror="testNoError()"></script>
+<script type="module" src="./support/missing_import.js" onerror="testNoError()"></script>
+<script type="module" src="./support/missing_indirect_export.js" --onerror="testNoError()"></script>
+<script type="module" src="./support/module_eval_error.js" onerror="testNoError()"></script>
