@@ -6115,21 +6115,6 @@
     "releaseChannelCollection": "opt-out",
     "description": "Firefox: If the spinner interstitial displays during tab switching, records the time in ms the graphic is visible. This probe is similar to FX_TAB_SWITCH_SPINNER_VISIBLE_MS, but is for truly degenerate cases."
   },
-  "FX_TAB_SWITCH_REQUEST_TAB_WARMING_STATE": {
-    "record_in_processes": ["main"],
-    "expires_in_version": "63",
-    "alert_emails": ["mconley@mozilla.com"],
-    "releaseChannelCollection": "opt-out",
-    "kind": "categorical",
-    "labels": [
-      "disqualified",
-      "notWarmed",
-      "stillLoading",
-      "loaded"
-    ],
-    "bug_numbers": [1385453],
-    "description": "Firefox: When a tab is selected, records whether or not the tab was speculatively 'warmed up' to improve tab switch time."
-  },
   "FX_TAB_CLICK_MS": {
     "record_in_processes": ["main", "content"],
     "expires_in_version": "default",
