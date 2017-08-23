@@ -51,5 +51,3 @@ if CONFIG['_MSC_VER']:
 DEFINES['topsrcdir'] = '%s/js/src' % TOPSRCDIR
 FINAL_TARGET_PP_FILES += ['gdb-tests-gdb.py.in']
 OBJDIR_FILES.js.src.gdb += ['!/dist/bin/gdb-tests-gdb.py']
-
-NO_PGO = True

@@ -24,5 +24,3 @@ elif CONFIG['MOZ_WIDGET_TOOLKIT'] == 'windows':
     OS_LIBS += [
         'gdiplus',
     ]
-
-NO_PGO = True
