@@ -1168,13 +1168,6 @@ MediaDecoder::HasSuspendTaint() const
 }
 
 bool
-MediaDecoder::IsTransportSeekable()
-{
-  MOZ_ASSERT(NS_IsMainThread());
-  return GetResource()->IsTransportSeekable();
-}
-
-bool
 MediaDecoder::IsMediaSeekable()
 {
   MOZ_ASSERT(NS_IsMainThread());
