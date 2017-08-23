@@ -4189,10 +4189,12 @@
             init() {
               this.log("START");
 
+              XPCOMUtils.defineLazyPreferenceGetter(this, "WARMING_ENABLED",
+                                                    "browser.tabs.remote.warmup.enabled", false);
               XPCOMUtils.defineLazyPreferenceGetter(this, "MAX_WARMING_TABS",
-                                                    "browser.tabs.remote.maxWarmingTabs", 3);
+                                                    "browser.tabs.remote.warmup.maxTabs", 3);
               XPCOMUtils.defineLazyPreferenceGetter(this, "WARMING_UNLOAD_DELAY" /* ms */,
-                                                    "browser.tabs.remote.warmingUnloadDelayMs", 2000);
+                                                    "browser.tabs.remote.warmup.unloadDelayMs", 2000);
 
               // If we minimized the window before the switcher was activated,
               // we might have set  the preserveLayers flag for the current
@@ -4743,6 +4745,10 @@
             },
 
             canWarmTab(tab) {
+              if (!this.WARMING_ENABLED) {
+                return false;
+              }
+
               // If the tab is not yet inserted, closing, not remote,
               // crashed, already visible, or already requested, warming
               // up the tab makes no sense.
@@ -4788,24 +4794,26 @@
                 return;
               }
 
-              let warmingState = "disqualified";
+              if (this.WARMING_ENABLED) {
+                let warmingState = "disqualified";
 
-              if (this.warmingTabs.has(tab)) {
-                let tabState = this.getTabState(tab);
-                if (tabState == this.STATE_LOADING) {
-                  warmingState = "stillLoading";
-                } else if (tabState == this.STATE_LOADED) {
-                  warmingState = "loaded";
+                if (this.warmingTabs.has(tab)) {
+                  let tabState = this.getTabState(tab);
+                  if (tabState == this.STATE_LOADING) {
+                    warmingState = "stillLoading";
+                  } else if (tabState == this.STATE_LOADED) {
+                    warmingState = "loaded";
+                  }
+                } else if (this.canWarmTab(tab)) {
+                  warmingState = "notWarmed";
                 }
-              } else if (this.canWarmTab(tab)) {
-                warmingState = "notWarmed";
+
+                Services.telemetry
+                        .getHistogramById("FX_TAB_SWITCH_REQUEST_TAB_WARMING_STATE")
+                        .add(warmingState);
+
+                this.unwarmTab(tab);
               }
-
-              Services.telemetry
-                      .getHistogramById("FX_TAB_SWITCH_REQUEST_TAB_WARMING_STATE")
-                      .add(warmingState);
-
-              this.unwarmTab(tab);
 
               this._requestingTab = true;
               this.logState("requestTab " + this.tinfo(tab));
