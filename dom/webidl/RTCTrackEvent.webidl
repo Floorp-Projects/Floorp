@@ -11,6 +11,7 @@ dictionary RTCTrackEventInit : EventInit {
     required RTCRtpReceiver        receiver;
     required MediaStreamTrack      track;
     sequence<MediaStream> streams = [];
+    required RTCRtpTransceiver     transceiver;
 };
 
 [Pref="media.peerconnection.enabled",
@@ -24,4 +25,5 @@ interface RTCTrackEvent : Event {
 
     [Frozen, Cached, Pure]
     readonly        attribute sequence<MediaStream> streams; // workaround
+    readonly        attribute RTCRtpTransceiver transceiver;
 };

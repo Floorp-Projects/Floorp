@@ -43,4 +43,9 @@ interface MediaStream : EventTarget {
 
     [ChromeOnly, Throws]
     static Promise<long> countUnderlyingStreams();
+
+    // Webrtc allows the remote side to name a stream whatever it wants, and we
+    // need to surface this to content.
+    [ChromeOnly]
+    void assignId(DOMString id);
 };
