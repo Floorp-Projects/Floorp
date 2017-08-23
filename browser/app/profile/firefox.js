@@ -1549,11 +1549,6 @@ pref("browser.tabs.remote.autostart.1", false);
 pref("browser.tabs.remote.autostart.2", true);
 #endif
 
-// For speculatively warming up tabs to improve perceived
-// performance while using the async tab switcher.
-pref("browser.tabs.remote.maxWarmingTabs", 3);
-pref("browser.tabs.remote.warmingUnloadDelayMs", 2000);
-
 // For the about:tabcrashed page
 pref("browser.tabs.crashReporting.sendReport", true);
 pref("browser.tabs.crashReporting.includeURL", false);
