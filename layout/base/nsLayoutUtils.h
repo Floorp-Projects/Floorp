@@ -3066,6 +3066,9 @@ public:
   static nsRect ComputeGeometryBox(nsIFrame* aFrame,
                                    StyleGeometryBox aGeometryBox);
 
+  static nsPoint ComputeOffsetToUserSpace(nsDisplayListBuilder* aBuilder,
+                                          nsIFrame* aFrame);
+
 private:
   static uint32_t sFontSizeInflationEmPerLine;
   static uint32_t sFontSizeInflationMinTwips;
