@@ -14,7 +14,10 @@ import sys
 import which
 
 from mach.mixin.process import ProcessExecutionMixin
-from mozversioncontrol import get_repository_object
+from mozversioncontrol import (
+    get_repository_from_build_config,
+    get_repository_object,
+)
 
 from .backend.configenvironment import ConfigEnvironment
 from .controller.clobber import Clobberer
@@ -286,6 +289,13 @@ class MozbuildObject(ProcessExecutionMixin):
     def repository(self):
         '''Get a `mozversioncontrol.Repository` object for the
         top source directory.'''
+        # We try to obtain a repo using the configured VCS info first.
+        # If we don't have a configure context, fall back to auto-detection.
+        try:
+            return get_repository_from_build_config(self)
+        except BuildEnvironmentNotFoundException:
+            pass
+
         return get_repository_object(self.topsrcdir)
 
     @memoized_property
