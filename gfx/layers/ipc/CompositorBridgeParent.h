@@ -450,8 +450,6 @@ public:
   RefPtr<WebRenderBridgeParent> GetWebRenderBridgeParent() const;
   Maybe<TimeStamp> GetTestingTimeStamp() const;
 
-  static void SetWebRenderProfilerEnabled(bool aEnabled);
-
   static CompositorBridgeParent* GetCompositorBridgeParentFromLayersId(const uint64_t& aLayersId);
 
 #if defined(MOZ_WIDGET_ANDROID)

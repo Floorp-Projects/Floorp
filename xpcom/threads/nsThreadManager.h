@@ -55,6 +55,9 @@ public:
   }
 
   void EnableMainThreadEventPrioritization();
+  void FlushInputEventPrioritization();
+  void SuspendInputEventPrioritization();
+  void ResumeInputEventPrioritization();
 
 private:
   nsThreadManager()

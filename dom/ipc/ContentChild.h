@@ -621,6 +621,18 @@ public:
   virtual mozilla::ipc::IPCResult
   RecvResetCodeCoverageCounters() override;
 
+  virtual mozilla::ipc::IPCResult
+  RecvSetInputEventQueueEnabled() override;
+
+  virtual mozilla::ipc::IPCResult
+  RecvFlushInputEventQueue() override;
+
+  virtual mozilla::ipc::IPCResult
+  RecvSuspendInputEventQueue() override;
+
+  virtual mozilla::ipc::IPCResult
+  RecvResumeInputEventQueue() override;
+
 #if defined(XP_WIN) && defined(ACCESSIBILITY)
   bool
   SendGetA11yContentId();

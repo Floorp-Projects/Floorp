@@ -9,7 +9,7 @@ use gleam::gl;
 use webrender_api::*;
 use webrender::renderer::{ReadPixelsFormat, Renderer, RendererOptions};
 use webrender::renderer::{ExternalImage, ExternalImageHandler, ExternalImageSource};
-use webrender::renderer::{DebugFlags, PROFILER_DBG};
+use webrender::renderer::DebugFlags;
 use webrender::{ApiRecordingReceiver, BinaryRecorder};
 use thread_profiler::register_thread_with_profiler;
 use moz2d_renderer::Moz2dImageRenderer;
@@ -462,12 +462,22 @@ pub unsafe extern "C" fn wr_renderer_readback(renderer: &mut Renderer,
                               &mut slice);
 }
 
+/// cbindgen:field-names=[mBits]
+#[repr(C)]
+pub struct WrDebugFlags {
+    bits: u32,
+}
+
 #[no_mangle]
-pub extern "C" fn wr_renderer_set_profiler_enabled(renderer: &mut Renderer,
-                                                   enabled: bool) {
-    let mut flags = renderer.get_debug_flags();
-    flags.set(PROFILER_DBG, enabled);
-    renderer.set_debug_flags(flags);
+pub extern "C" fn wr_renderer_get_debug_flags(renderer: &mut Renderer) -> WrDebugFlags {
+    WrDebugFlags { bits: renderer.get_debug_flags().bits() }
+}
+
+#[no_mangle]
+pub extern "C" fn wr_renderer_set_debug_flags(renderer: &mut Renderer, flags: WrDebugFlags) {
+    if let Some(dbg_flags) = DebugFlags::from_bits(flags.bits) {
+        renderer.set_debug_flags(dbg_flags);
+    }
 }
 
 #[no_mangle]
@@ -550,7 +560,6 @@ pub extern "C" fn wr_window_new(window_id: WrWindowId,
                                 window_height: u32,
                                 gl_context: *mut c_void,
                                 thread_pool: *mut WrThreadPool,
-                                enable_profiler: bool,
                                 out_handle: &mut *mut DocumentHandle,
                                 out_renderer: &mut *mut Renderer,
                                 out_max_texture_size: *mut u32)
@@ -580,12 +589,9 @@ pub extern "C" fn wr_window_new(window_id: WrWindowId,
         Arc::clone(&(*thread_pool).0)
     };
 
-    let mut debug_flags = DebugFlags::empty();
-    debug_flags.set(PROFILER_DBG, enable_profiler);
     let opts = RendererOptions {
         enable_aa: true,
         enable_subpixel_aa: true,
-        debug_flags: debug_flags,
         recorder: recorder,
         blob_image_renderer: Some(Box::new(Moz2dImageRenderer::new(workers.clone()))),
         workers: Some(workers.clone()),

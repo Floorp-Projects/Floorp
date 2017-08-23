@@ -21,24 +21,24 @@ InputEventStatistics::InputEventStatistics()
 {
   MOZ_ASSERT(Preferences::IsServiceAvailable());
   uint32_t inputDuration =
-    Preferences::GetUint("prioritized_input_events.default_duration_per_event",
+    Preferences::GetUint("input_event_queue.default_duration_per_event",
                          sDefaultInputDuration);
 
   TimeDuration defaultDuration = TimeDuration::FromMilliseconds(inputDuration);
 
   uint32_t count =
-    Preferences::GetUint("prioritized_input_events.count_for_prediction",
+    Preferences::GetUint("input_event_queue.count_for_prediction",
                          sInputCountForPrediction);
 
   mLastInputDurations =
     MakeUnique<TimeDurationCircularBuffer>(count, defaultDuration);
 
   uint32_t maxDuration =
-    Preferences::GetUint("prioritized_input_events.duration.max",
+    Preferences::GetUint("input_event_queue.duration.max",
                          sMaxReservedTimeForHandlingInput);
 
   uint32_t minDuration =
-    Preferences::GetUint("prioritized_input_events.duration.min",
+    Preferences::GetUint("input_event_queue.duration.min",
                          sMinReservedTimeForHandlingInput);
 
   mMaxInputDuration = TimeDuration::FromMilliseconds(maxDuration);
