@@ -996,13 +996,13 @@ DisplayListBuilder::TopmostClipId()
   return Some(mClipIdStack.back());
 }
 
-Maybe<layers::FrameMetrics::ViewID>
+layers::FrameMetrics::ViewID
 DisplayListBuilder::TopmostScrollId()
 {
   if (mScrollIdStack.empty()) {
-    return Nothing();
+    return layers::FrameMetrics::NULL_SCROLL_ID;
   }
-  return Some(mScrollIdStack.back());
+  return mScrollIdStack.back();
 }
 
 Maybe<layers::FrameMetrics::ViewID>
