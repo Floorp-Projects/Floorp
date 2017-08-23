@@ -241,7 +241,7 @@ class PromiseDebugInfo : public NativeObject
         // create the object now and change it's slots' values around a bit.
         Rooted<PromiseDebugInfo*> debugInfo(cx, FromPromise(promise));
         if (!debugInfo) {
-            Value idVal(promise->getFixedSlot(PromiseSlot_DebugInfo));
+            RootedValue idVal(cx, promise->getFixedSlot(PromiseSlot_DebugInfo));
             debugInfo = create(cx, promise);
             if (!debugInfo) {
                 cx->clearPendingException();
