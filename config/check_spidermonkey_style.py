@@ -249,24 +249,23 @@ def check_style():
     non_js_inclnames = set()        # type: set(inclname)
     js_names = dict()               # type: dict(filename, inclname)
 
-    repo = get_repository_from_env()
+    with get_repository_from_env() as repo:
+        # Select the appropriate files.
+        for filename in repo.get_files_in_working_directory():
+            for non_js_dir in non_js_dirnames:
+                if filename.startswith(non_js_dir) and filename.endswith('.h'):
+                    inclname = 'mozilla/' + filename.split('/')[-1]
+                    non_js_inclnames.add(inclname)
 
-    # Select the appropriate files.
-    for filename in repo.get_files_in_working_directory():
-        for non_js_dir in non_js_dirnames:
-            if filename.startswith(non_js_dir) and filename.endswith('.h'):
-                inclname = 'mozilla/' + filename.split('/')[-1]
-                non_js_inclnames.add(inclname)
+            if filename.startswith('js/public/') and filename.endswith('.h'):
+                inclname = 'js/' + filename[len('js/public/'):]
+                js_names[filename] = inclname
 
-        if filename.startswith('js/public/') and filename.endswith('.h'):
-            inclname = 'js/' + filename[len('js/public/'):]
-            js_names[filename] = inclname
-
-        if filename.startswith('js/src/') and \
-           not filename.startswith(tuple(ignored_js_src_dirs)) and \
-           filename.endswith(('.c', '.cpp', '.h', '.tbl', '.msg')):
-            inclname = filename[len('js/src/'):]
-            js_names[filename] = inclname
+            if filename.startswith('js/src/') and \
+               not filename.startswith(tuple(ignored_js_src_dirs)) and \
+               filename.endswith(('.c', '.cpp', '.h', '.tbl', '.msg')):
+                inclname = filename[len('js/src/'):]
+                js_names[filename] = inclname
 
     all_inclnames = non_js_inclnames | set(js_names.values())
 
