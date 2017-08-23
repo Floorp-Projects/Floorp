@@ -25,8 +25,7 @@
   list-style-image: var(--bookmark_star-icon) !important;
 }
 
-:root[lwthemeicons~="--bookmark_menu-icon"] #bookmarks-menu-button:-moz-lwtheme,
-:root[lwthemeicons~="--bookmark_menu-icon"] #bookmarks-menu-button[cui-areatype='toolbar'] > .toolbarbutton-menubutton-dropmarker > .dropmarker-icon:-moz-lwtheme {
+:root[lwthemeicons~="--bookmark_menu-icon"] #bookmarks-menu-button:-moz-lwtheme {
   list-style-image: var(--bookmark_menu-icon) !important;
 }
 
@@ -129,7 +128,6 @@
 :root[lwthemeicons~="--reload-icon"] #reload-button:-moz-lwtheme,
 :root[lwthemeicons~="--stop-icon"] #stop-button:-moz-lwtheme,
 :root[lwthemeicons~="--bookmark_star-icon"] #bookmarks-menu-button:-moz-lwtheme,
-:root[lwthemeicons~="--bookmark_menu-icon"] #bookmarks-menu-button[cui-areatype='toolbar'] > .toolbarbutton-menubutton-dropmarker > .dropmarker-icon:-moz-lwtheme,
 :root[lwthemeicons~="--downloads-icon"] #downloads-button:-moz-lwtheme,
 :root[lwthemeicons~="--home-icon"] #home-button:-moz-lwtheme,
 :root[lwthemeicons~="--app_menu-icon"] #PanelUI-menu-button:-moz-lwtheme,

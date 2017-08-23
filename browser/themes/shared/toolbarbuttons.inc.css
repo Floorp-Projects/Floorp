@@ -267,15 +267,17 @@ toolbarbutton.bookmark-item:not(.subviewbutton) {
   padding: 4px;
 }
 
-.bookmark-item > .toolbarbutton-icon,
-#personal-bookmarks[cui-areatype="toolbar"] > #bookmarks-toolbar-placeholder > .toolbarbutton-icon {
+toolbarbutton.bookmark-item:not(#bookmarks-toolbar-placeholder) {
+  max-width: 13em;
+}
+
+.bookmark-item > .toolbarbutton-icon {
   width: 16px;
   height: 16px;
 }
 
 /* Force the display of the label for bookmarks */
-.bookmark-item > .toolbarbutton-text,
-#personal-bookmarks[cui-areatype="toolbar"] > #bookmarks-toolbar-placeholder > .toolbarbutton-text {
+.bookmark-item > .toolbarbutton-text {
   display: -moz-box !important;
 }
 
