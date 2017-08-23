@@ -217,13 +217,6 @@ def main(args):
     parser = argparse.ArgumentParser()
     parser.add_argument('--user', default='worker', help='user to run as')
     parser.add_argument('--group', default='worker', help='group to run as')
-    # We allow paths to be chowned by the --user:--group before permissions are
-    # dropped. This is often necessary for caches/volumes, since they default
-    # to root:root ownership.
-    parser.add_argument('--chown', action='append',
-                        help='Directory to chown to --user:--group')
-    parser.add_argument('--chown-recursive', action='append',
-                        help='Directory to recursively chown to --user:--group')
     parser.add_argument('--vcs-checkout',
                         help='Directory where Gecko checkout should be created')
     parser.add_argument('--comm-checkout',
@@ -241,10 +234,6 @@ def main(args):
         args.vcs_checkout = os.path.expanduser(args.vcs_checkout)
     if args.tools_checkout:
         args.tools_checkout = os.path.expanduser(args.tools_checkout)
-    if args.chown:
-        args.chown = [os.path.expanduser(p) for p in args.chown]
-    if args.chown_recursive:
-        args.chown_recursive = [os.path.expanduser(p) for p in args.chown_recursive]
     if 'HG_STORE_PATH' in os.environ:
         os.environ['HG_STORE_PATH'] = os.path.expanduser(os.environ['HG_STORE_PATH'])
 
@@ -320,6 +309,8 @@ def main(args):
             # And make it read-only as a precaution against deletion.
             os.chmod(requires_path, stat.S_IRUSR | stat.S_IRGRP | stat.S_IROTH)
 
+            set_dir_permissions(cache, uid, gid)
+
         # The cache has content and we have a requirements file. Validate
         # requirements alignment.
         elif os.path.exists(requires_path):
@@ -338,6 +329,8 @@ def main(args):
                 print('our requirements:   %s' % ' '.join(sorted(
                     our_requirements)))
                 return 1
+
+            chown_recursive(cache, user.pw_name, group.gr_name, uid, gid)
 
         # The cache has content and no requirements file. This shouldn't
         # happen because run-task should be the first thing that touches a
@@ -383,25 +376,6 @@ def main(args):
             print_line(b'volume', b'changing ownership of volume %s '
                                   b'to %d:%d\n' % (volume, uid, gid))
             set_dir_permissions(volume, uid, gid)
-
-    # Change ownership of requested paths.
-    # FUTURE: parse argument values for user/group if we don't want to
-    # use --user/--group.
-    for path in args.chown or []:
-        if not running_as_root:
-            print_line(b'set_dir_permissions', b'--chown not allowed when not running as root')
-            return 1
-
-        print_line(b'chown', b'changing ownership of %s to %s:%s\n' % (
-                   path, user.pw_name, group.gr_name))
-        set_dir_permissions(path, uid, gid)
-
-    for path in args.chown_recursive or []:
-        if not running_as_root:
-            print_line(b'set_dir_permissions', b'--chown-recursive not allowed when not running as root')
-            return 1
-
-        chown_recursive(path, user.pw_name, group.gr_name, uid, gid)
 
     def prepare_checkout_dir(checkout):
         if not checkout:
