@@ -25,6 +25,7 @@ let Tabbar = createClass({
 
   propTypes: {
     children: PropTypes.array,
+    menuDocument: PropTypes.object,
     onSelect: PropTypes.func,
     showAllTabsMenu: PropTypes.bool,
     activeTabId: PropTypes.string,
@@ -33,6 +34,7 @@ let Tabbar = createClass({
 
   getDefaultProps: function () {
     return {
+      menuDocument: window.parent.document,
       showAllTabsMenu: false,
     };
   },
@@ -197,7 +199,7 @@ let Tabbar = createClass({
     let screenX = target.ownerDocument.defaultView.mozInnerScreenX;
     let screenY = target.ownerDocument.defaultView.mozInnerScreenY;
     menu.popup(rect.left + screenX, rect.bottom + screenY,
-      { doc: window.parent.document });
+      { doc: this.props.menuDocument });
 
     return menu;
   },
