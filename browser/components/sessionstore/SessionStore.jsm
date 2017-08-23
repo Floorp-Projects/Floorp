@@ -3075,8 +3075,9 @@ var SessionStoreInternal = {
     else if (winData.hidden)
       delete winData.hidden;
 
-    var sidebar = aWindow.document.getElementById("sidebar-box").getAttribute("sidebarcommand");
-    if (sidebar)
+    let sidebarBox = aWindow.document.getElementById("sidebar-box");
+    let sidebar = sidebarBox.getAttribute("sidebarcommand");
+    if (sidebar && sidebarBox.getAttribute("checked") == "true")
       winData.sidebar = sidebar;
     else if (winData.sidebar)
       delete winData.sidebar;
@@ -4089,8 +4090,9 @@ var SessionStoreInternal = {
           break;
         }
       }
-      var sidebar = aWindow.document.getElementById("sidebar-box");
-      if (sidebar.getAttribute("sidebarcommand") != aSidebar) {
+      let sidebarBox = aWindow.document.getElementById("sidebar-box");
+      if (aSidebar && (sidebarBox.getAttribute("sidebarcommand") != aSidebar ||
+                       !sidebarBox.getAttribute("checked"))) {
         aWindow.SidebarUI.showInitially(aSidebar);
       }
       // since resizing/moving a window brings it to the foreground,
