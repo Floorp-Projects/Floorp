@@ -713,7 +713,8 @@ CreateFilteredListFromArrayLike(JSContext* cx, HandleValue v, AutoIdVector& prop
 }
 
 
-// ES8 rev 0c1bd3004329336774cbc90de727cd0cf5f11e93 9.5.11 Proxy.[[OwnPropertyKeys]]()
+// ES2018 draft rev aab1ea3bd4d03c85d6f4a91503b4169346ab7271
+// 9.5.11 Proxy.[[OwnPropertyKeys]]()
 bool
 ScriptedProxyHandler::ownPropertyKeys(JSContext* cx, HandleObject proxy, AutoIdVector& props) const
 {
@@ -748,28 +749,44 @@ ScriptedProxyHandler::ownPropertyKeys(JSContext* cx, HandleObject proxy, AutoIdV
     if (!CreateFilteredListFromArrayLike(cx, trapResultArray, trapResult))
         return false;
 
-    // Step 9.
+    // Steps 9, 18.
+    Rooted<GCHashSet<jsid>> uncheckedResultKeys(cx, GCHashSet<jsid>(cx));
+    if (!uncheckedResultKeys.init(trapResult.length()))
+        return false;
+
+    for (size_t i = 0, len = trapResult.length(); i < len; i++) {
+        MOZ_ASSERT(!JSID_IS_VOID(trapResult[i]));
+
+        auto ptr = uncheckedResultKeys.lookupForAdd(trapResult[i]);
+        if (ptr)
+            return js::Throw(cx, trapResult[i], JSMSG_OWNKEYS_DUPLICATE);
+
+        if (!uncheckedResultKeys.add(ptr, trapResult[i]))
+            return false;
+    }
+
+    // Step 10.
     bool extensibleTarget;
     if (!IsExtensible(cx, target, &extensibleTarget))
         return false;
 
-    // Steps 10-11.
+    // Steps 11-13.
     AutoIdVector targetKeys(cx);
     if (!GetPropertyKeys(cx, target, JSITER_OWNONLY | JSITER_HIDDEN | JSITER_SYMBOLS, &targetKeys))
         return false;
 
-    // Steps 12-13.
+    // Steps 14-15.
     AutoIdVector targetConfigurableKeys(cx);
     AutoIdVector targetNonconfigurableKeys(cx);
 
-    // Step 14.
+    // Step 16.
     Rooted<PropertyDescriptor> desc(cx);
     for (size_t i = 0; i < targetKeys.length(); ++i) {
-        // Step 14a.
+        // Step 16.a.
         if (!GetOwnPropertyDescriptor(cx, target, targetKeys[i], &desc))
             return false;
 
-        // Steps 14b-c.
+        // Steps 16.b-c.
         if (desc.object() && !desc.configurable()) {
             if (!targetNonconfigurableKeys.append(targetKeys[i]))
                 return false;
@@ -779,61 +796,47 @@ ScriptedProxyHandler::ownPropertyKeys(JSContext* cx, HandleObject proxy, AutoIdV
         }
     }
 
-    // Step 15.
+    // Step 17.
     if (extensibleTarget && targetNonconfigurableKeys.empty())
         return props.appendAll(trapResult);
 
-    // Step 16.
-    // The algorithm below always removes all occurences of the same key
-    // at once, so we can use a set here.
-    Rooted<GCHashSet<jsid>> uncheckedResultKeys(cx, GCHashSet<jsid>(cx));
-    if (!uncheckedResultKeys.init(trapResult.length()))
-        return false;
-
-    for (size_t i = 0, len = trapResult.length(); i < len; i++) {
-        MOZ_ASSERT(!JSID_IS_VOID(trapResult[i]));
-
-        if (!uncheckedResultKeys.put(trapResult[i]))
-            return false;
-    }
-
-    // Step 17.
+    // Step 19.
     for (size_t i = 0; i < targetNonconfigurableKeys.length(); ++i) {
         MOZ_ASSERT(!JSID_IS_VOID(targetNonconfigurableKeys[i]));
 
         auto ptr = uncheckedResultKeys.lookup(targetNonconfigurableKeys[i]);
 
-        // Step 17a.
+        // Step 19.a.
         if (!ptr)
             return js::Throw(cx, targetNonconfigurableKeys[i], JSMSG_CANT_SKIP_NC);
 
-        // Step 17b.
+        // Step 19.b.
         uncheckedResultKeys.remove(ptr);
     }
 
-    // Step 18.
+    // Step 20.
     if (extensibleTarget)
         return props.appendAll(trapResult);
 
-    // Step 19.
+    // Step 21.
     for (size_t i = 0; i < targetConfigurableKeys.length(); ++i) {
         MOZ_ASSERT(!JSID_IS_VOID(targetConfigurableKeys[i]));
 
         auto ptr = uncheckedResultKeys.lookup(targetConfigurableKeys[i]);
 
-        // Step 19a.
+        // Step 21.a.
         if (!ptr)
             return js::Throw(cx, targetConfigurableKeys[i], JSMSG_CANT_REPORT_E_AS_NE);
 
-        // Step 19b.
+        // Step 21.b.
         uncheckedResultKeys.remove(ptr);
     }
 
-    // Step 20.
+    // Step 22.
     if (!uncheckedResultKeys.empty())
         return js::Throw(cx, uncheckedResultKeys.all().front(), JSMSG_CANT_REPORT_NEW);
 
-    // Step 21.
+    // Step 23.
     return props.appendAll(trapResult);
 }
 
