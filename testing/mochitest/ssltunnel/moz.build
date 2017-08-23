@@ -21,3 +21,5 @@ DISABLE_STL_WRAPPING = True
 
 if CONFIG['GNU_CXX']:
     CXXFLAGS += ['-Wno-shadow']
+
+NO_PGO = True
