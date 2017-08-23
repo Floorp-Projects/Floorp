@@ -328,6 +328,11 @@ public:
   void BeginFrame();
   void EndFrame();
 
+  void AddTemporaryItem(nsDisplayItem* aItem)
+  {
+    mTemporaryItems.AppendElement(aItem);
+  }
+
   void SetWillComputePluginGeometry(bool aWillComputePluginGeometry)
   {
     mWillComputePluginGeometry = aWillComputePluginGeometry;
@@ -813,6 +818,13 @@ public:
                                                  nsDisplayItem* aItem,
                                                  nsIFrame* aFrame,
                                                  nsCSSPropertyID aProperty);
+
+  /**
+   * Merges the display items in |aMergedItems| and returns a new temporary
+   * display item.
+   * The display items in |aMergedItems| have to be mergeable with each other.
+   */
+  nsDisplayItem* MergeItems(nsTArray<nsDisplayItem*>& aMergedItems);
 
   /**
    * A helper class to temporarily set the value of
@@ -1544,6 +1556,7 @@ private:
   nsDisplayList*                 mScrollInfoItemsForHoisting;
   nsTArray<ActiveScrolledRoot*>  mActiveScrolledRoots;
   nsTArray<DisplayItemClipChain*> mClipChainsToDestroy;
+  nsTArray<nsDisplayItem*> mTemporaryItems;
   const ActiveScrolledRoot*      mActiveScrolledRootForRootScrollframe;
   nsDisplayListBuilderMode       mMode;
   ViewID                         mCurrentScrollParentId;
@@ -1597,10 +1610,13 @@ class nsDisplayItemLink {
   // destructors.
 protected:
   nsDisplayItemLink() : mAbove(nullptr) {}
+  nsDisplayItemLink(const nsDisplayItemLink&) : mAbove(nullptr) {}
   nsDisplayItem* mAbove;
 
   friend class nsDisplayList;
 };
+
+class nsDisplayWrapList;
 
 /**
  * This is the unit of rendering and event testing. Each instance of this
@@ -1653,7 +1669,6 @@ public:
     , mClip(nullptr)
     , mActiveScrolledRoot(nullptr)
     , mReferenceFrame(nullptr)
-    , mAnimatedGeometryRoot(nullptr)
     , mForceNotVisible(false)
     , mDisableSubpixelAA(false)
 #ifdef MOZ_DUMP_PAINTING
@@ -1671,6 +1686,38 @@ public:
     DisplayItemType type = GetType();
     this->~nsDisplayItem();
     aBuilder->Destroy(type, this);
+  }
+
+  /**
+   * Downcasts this item to nsDisplayWrapList, if possible.
+   */
+  virtual const nsDisplayWrapList* AsDisplayWrapList() const { return nullptr; }
+
+  /**
+   * Create a clone of this item.
+   */
+  virtual nsDisplayItem* Clone(nsDisplayListBuilder* aBuilder) const
+  {
+    return nullptr;
+  }
+
+  /**
+   * The custom copy-constructor is implemented to prevent copying the saved
+   * state of the item.
+   * This is currently only used when creating temporary items for merging.
+   */
+  nsDisplayItem(const nsDisplayItem& aOther)
+    : mFrame(aOther.mFrame)
+    , mClipChain(aOther.mClipChain)
+    , mClip(aOther.mClip)
+    , mActiveScrolledRoot(aOther.mActiveScrolledRoot)
+    , mReferenceFrame(aOther.mReferenceFrame)
+    , mAnimatedGeometryRoot(aOther.mAnimatedGeometryRoot)
+    , mToReferenceFrame(aOther.mToReferenceFrame)
+    , mVisibleRect(aOther.mVisibleRect)
+    , mForceNotVisible(aOther.mForceNotVisible)
+    , mDisableSubpixelAA(aOther.mDisableSubpixelAA)
+  {
   }
 
   struct HitTestState {
@@ -2064,17 +2111,26 @@ public:
                                  nsRegion* aVisibleRegion);
 
   /**
+   * Checks if the given display item can be merged with this item.
+   * @return true if the merging is possible, otherwise false.
+   */
+  virtual bool CanMerge(const nsDisplayItem* aItem) const { return false; }
+
+  /**
    * Try to merge with the other item (which is below us in the display
    * list). This gets used by nsDisplayClip to coalesce clipping operations
    * (optimization), by nsDisplayOpacity to merge rendering for the same
    * content element into a single opacity group (correctness), and will be
    * used by nsDisplayOutline to merge multiple outlines for the same element
    * (also for correctness).
-   * @return true if the merge was successful and the other item should be deleted
    */
-  virtual bool TryMerge(nsDisplayItem* aItem) {
-    return false;
-  }
+  virtual void Merge(const nsDisplayItem* aItem) {}
+
+  /**
+   * Merges the given display list to this item.
+   */
+  virtual void MergeDisplayListFromItem(nsDisplayListBuilder* aBuilder,
+                                        const nsDisplayItem* aItem) {}
 
   /**
    * Appends the underlying frames of all display items that have been
@@ -2160,6 +2216,8 @@ public:
    * actually applying the opacity. Otherwise returns false.
    */
   virtual bool CanApplyOpacity() const { return false; }
+
+  bool ForceNotVisible() const { return mForceNotVisible; }
 
   /**
    * For debugging and stuff
@@ -2256,10 +2314,25 @@ public:
 
   bool BackfaceIsHidden() const { return mFrame->BackfaceIsHidden(); }
 
+  bool In3DContextAndBackfaceIsHidden() const
+  {
+    return Frame()->In3DContextAndBackfaceIsHidden();
+  }
+
+  bool HasSameTypeAndClip(const nsDisplayItem* aOther) const
+  {
+    return GetType() == aOther->GetType() &&
+           GetClipChain() == aOther->GetClipChain();
+  }
+
+  bool HasSameContent(const nsDisplayItem* aOther) const
+  {
+    return mFrame->GetContent() == aOther->Frame()->GetContent();
+  }
+
 protected:
   friend class nsDisplayList;
-
-  nsDisplayItem() { mAbove = nullptr; }
+  nsDisplayItem() = delete;
 
   typedef bool (*PrefFunc)(void);
   bool ShouldUseAdvancedLayer(LayerManager* aManager, PrefFunc aFunc) const;
@@ -3921,12 +3994,43 @@ public:
     mBaseVisibleRect = mVisibleRect;
     mListPtr = &mList;
   }
+
+  /**
+   * A custom copy-constructor that does not copy mList, as this would mutate
+   * the other item.
+   */
+  nsDisplayWrapList(const nsDisplayWrapList& aOther)
+    : nsDisplayItem(aOther)
+    , mListPtr(&mList)
+    , mMergedFrames(aOther.mMergedFrames)
+    , mBounds(aOther.mBounds)
+    , mBaseVisibleRect(aOther.mBaseVisibleRect)
+    , mOverrideZIndex(aOther.mOverrideZIndex)
+    , mHasZIndexOverride(aOther.mHasZIndexOverride)
+  {
+    MOZ_COUNT_CTOR(nsDisplayWrapList);
+  }
+
   virtual ~nsDisplayWrapList();
+
+  virtual const nsDisplayWrapList* AsDisplayWrapList() const override
+  {
+    return this;
+  }
 
   virtual void Destroy(nsDisplayListBuilder* aBuilder) override {
     mList.DeleteAll(aBuilder);
     nsDisplayItem::Destroy(aBuilder);
   }
+
+  /**
+   * Creates a new nsDisplayWrapList that holds a pointer to the display list
+   * owned by the given nsDisplayItem. The new nsDisplayWrapList will be added
+   * to the bottom of this item's contents.
+   */
+  virtual void MergeDisplayListFromItem(nsDisplayListBuilder* aBuilder,
+                                        const nsDisplayItem* aItem) override;
+
   /**
    * Call this if the wrapped list is changed.
    */
@@ -3954,9 +4058,18 @@ public:
   virtual void Paint(nsDisplayListBuilder* aBuilder, gfxContext* aCtx) override;
   virtual bool ComputeVisibility(nsDisplayListBuilder* aBuilder,
                                  nsRegion* aVisibleRegion) override;
-  virtual bool TryMerge(nsDisplayItem* aItem) override {
+
+  virtual bool CanMerge(const nsDisplayItem* aItem) const override
+  {
     return false;
   }
+
+  virtual void Merge(const nsDisplayItem* aItem) override
+  {
+    MOZ_ASSERT(CanMerge(aItem));
+    MergeFromTrackingMergedFrames(static_cast<const nsDisplayWrapList*>(aItem));
+  }
+
   virtual void GetMergedFrames(nsTArray<nsIFrame*>* aFrames) const override
   {
     aFrames->AppendElements(mMergedFrames);
@@ -4032,15 +4145,14 @@ public:
                                        nsDisplayListBuilder* aDisplayListBuilder) override;
 
 protected:
-  nsDisplayWrapList() {}
+  nsDisplayWrapList() = delete;
 
-  void MergeFromTrackingMergedFrames(nsDisplayWrapList* aOther)
+  void MergeFromTrackingMergedFrames(const nsDisplayWrapList* aOther)
   {
-    mList.AppendToBottom(&aOther->mList);
     mBounds.UnionRect(mBounds, aOther->mBounds);
     mVisibleRect.UnionRect(mVisibleRect, aOther->mVisibleRect);
     mMergedFrames.AppendElement(aOther->mFrame);
-    mMergedFrames.AppendElements(mozilla::Move(aOther->mMergedFrames));
+    mMergedFrames.AppendElements(aOther->mMergedFrames);
   }
 
   nsDisplayList mList;
@@ -4079,7 +4191,7 @@ public:
   nsresult WrapListsInPlace(nsDisplayListBuilder* aBuilder, nsIFrame* aFrame,
                             const nsDisplayListSet& aLists);
 protected:
-  nsDisplayWrapper() {}
+  nsDisplayWrapper() = default;
 };
 
 /**
@@ -4096,6 +4208,12 @@ public:
   virtual ~nsDisplayOpacity();
 #endif
 
+  virtual nsDisplayWrapList* Clone(nsDisplayListBuilder* aBuilder) const override
+  {
+    MOZ_COUNT_CTOR(nsDisplayOpacity);
+    return new (aBuilder) nsDisplayOpacity(*this);
+  }
+
   virtual nsRegion GetOpaqueRegion(nsDisplayListBuilder* aBuilder,
                                    bool* aSnap) const override;
   virtual already_AddRefed<Layer> BuildLayer(nsDisplayListBuilder* aBuilder,
@@ -4106,7 +4224,15 @@ public:
                                    const ContainerLayerParameters& aParameters) override;
   virtual bool ComputeVisibility(nsDisplayListBuilder* aBuilder,
                                  nsRegion* aVisibleRegion) override;
-  virtual bool TryMerge(nsDisplayItem* aItem) override;
+
+  virtual bool CanMerge(const nsDisplayItem* aItem) const override
+  {
+    // items for the same content element should be merged into a single
+    // compositing group
+    // aItem->GetUnderlyingFrame() returns non-null because it's nsDisplayOpacity
+    return HasSameTypeAndClip(aItem) && HasSameContent(aItem);
+  }
+
   virtual void ComputeInvalidationRegion(nsDisplayListBuilder* aBuilder,
                                          const nsDisplayItemGeometry* aGeometry,
                                          nsRegion* aInvalidRegion) const override
@@ -4152,6 +4278,12 @@ public:
   virtual ~nsDisplayBlendMode();
 #endif
 
+  virtual nsDisplayWrapList* Clone(nsDisplayListBuilder* aBuilder) const override
+  {
+    MOZ_COUNT_CTOR(nsDisplayBlendMode);
+    return new (aBuilder) nsDisplayBlendMode(*this);
+  }
+
   nsRegion GetOpaqueRegion(nsDisplayListBuilder* aBuilder,
                            bool* aSnap) const override;
 
@@ -4177,11 +4309,14 @@ public:
                                nsDisplayListBuilder* aDisplayListBuilder) override;
   virtual bool ComputeVisibility(nsDisplayListBuilder* aBuilder,
                                  nsRegion* aVisibleRegion) override;
-  virtual bool TryMerge(nsDisplayItem* aItem) override;
+
+  virtual bool CanMerge(const nsDisplayItem* aItem) const override;
+
   virtual bool ShouldFlattenAway(nsDisplayListBuilder* aBuilder) override
   {
     return false;
   }
+
   NS_DISPLAY_DECL_NAME("BlendMode", TYPE_BLEND_MODE)
 
 private:
@@ -4205,6 +4340,12 @@ public:
     virtual ~nsDisplayBlendContainer();
 #endif
 
+    virtual nsDisplayWrapList* Clone(nsDisplayListBuilder* aBuilder) const override
+    {
+      MOZ_COUNT_CTOR(nsDisplayBlendContainer);
+      return new (aBuilder) nsDisplayBlendContainer(*this);
+    }
+
     virtual already_AddRefed<Layer> BuildLayer(nsDisplayListBuilder* aBuilder,
                                                LayerManager* aManager,
                                                const ContainerLayerParameters& aContainerParameters) override;
@@ -4216,7 +4357,14 @@ public:
                                  nsTArray<WebRenderParentCommand>& aParentCommands,
                                  mozilla::layers::WebRenderLayerManager* aManager,
                                  nsDisplayListBuilder* aDisplayListBuilder) override;
-    virtual bool TryMerge(nsDisplayItem* aItem) override;
+
+    virtual bool CanMerge(const nsDisplayItem* aItem) const override
+    {
+      // Items for the same content element should be merged into a single
+      // compositing group.
+      return HasSameTypeAndClip(aItem) && HasSameContent(aItem);
+    }
+
     virtual bool ShouldFlattenAway(nsDisplayListBuilder* aBuilder) override
     {
       return false;
@@ -4277,6 +4425,16 @@ public:
 #ifdef NS_BUILD_REFCNT_LOGGING
   virtual ~nsDisplayOwnLayer();
 #endif
+  nsDisplayOwnLayer(const nsDisplayOwnLayer& aOther)
+    : nsDisplayWrapList(aOther)
+    , mFlags(aOther.mFlags)
+    , mScrollTarget(aOther.mFlags)
+    , mThumbData(aOther.mThumbData)
+    , mForceActive(aOther.mForceActive)
+  {
+    MOZ_COUNT_CTOR(nsDisplayOwnLayer);
+  }
+
   virtual bool ShouldBuildLayerEvenIfInvisible(nsDisplayListBuilder* aBuilder) const override;
   virtual already_AddRefed<Layer> BuildLayer(nsDisplayListBuilder* aBuilder,
                                              LayerManager* aManager,
@@ -4291,14 +4449,18 @@ public:
   virtual LayerState GetLayerState(nsDisplayListBuilder* aBuilder,
                                    LayerManager* aManager,
                                    const ContainerLayerParameters& aParameters) override;
-  virtual bool TryMerge(nsDisplayItem* aItem) override
+
+  virtual bool CanMerge(const nsDisplayItem* aItem) const override
   {
     // Don't allow merging, each sublist must have its own layer
     return false;
   }
-  virtual bool ShouldFlattenAway(nsDisplayListBuilder* aBuilder) override {
+
+  virtual bool ShouldFlattenAway(nsDisplayListBuilder* aBuilder) override
+  {
     return false;
   }
+
   uint32_t GetFlags() { return mFlags; }
   bool IsScrollThumbLayer() const;
   NS_DISPLAY_DECL_NAME("OwnLayer", TYPE_OWN_LAYER)
@@ -4389,6 +4551,12 @@ public:
 #endif
 
   void SetClipChain(const DisplayItemClipChain* aClipChain) override;
+  virtual nsDisplayWrapList* Clone(nsDisplayListBuilder* aBuilder) const override
+  {
+    MOZ_COUNT_CTOR(nsDisplayStickyPosition);
+    return new (aBuilder) nsDisplayStickyPosition(*this);
+  }
+
   virtual already_AddRefed<Layer> BuildLayer(nsDisplayListBuilder* aBuilder,
                                              LayerManager* aManager,
                                              const ContainerLayerParameters& aContainerParameters) override;
@@ -4399,7 +4567,12 @@ public:
   {
     return mozilla::LAYER_ACTIVE;
   }
-  virtual bool TryMerge(nsDisplayItem* aItem) override;
+
+  virtual bool CanMerge(const nsDisplayItem* aItem) const override
+  {
+    // Items with the same fixed position frame can be merged.
+    return HasSameTypeAndClip(aItem) && mFrame == aItem->Frame();
+  }
 };
 
 class nsDisplayFixedPosition : public nsDisplayOwnLayer {
@@ -4418,6 +4591,12 @@ public:
   virtual ~nsDisplayFixedPosition();
 #endif
 
+  virtual nsDisplayWrapList* Clone(nsDisplayListBuilder* aBuilder) const override
+  {
+    MOZ_COUNT_CTOR(nsDisplayFixedPosition);
+    return new (aBuilder) nsDisplayFixedPosition(*this);
+  }
+
   virtual already_AddRefed<Layer> BuildLayer(nsDisplayListBuilder* aBuilder,
                                              LayerManager* aManager,
                                              const ContainerLayerParameters& aContainerParameters) override;
@@ -4428,7 +4607,12 @@ public:
   {
     return mozilla::LAYER_ACTIVE_FORCE;
   }
-  virtual bool TryMerge(nsDisplayItem* aItem) override;
+
+  virtual bool CanMerge(const nsDisplayItem* aItem) const override
+  {
+    // Items with the same fixed position frame can be merged.
+    return HasSameTypeAndClip(aItem) && mFrame == aItem->Frame();
+  }
 
   virtual bool ShouldFixToViewport(nsDisplayListBuilder* aBuilder) const override
   {
@@ -4592,6 +4776,14 @@ public:
   virtual ~nsDisplaySVGEffects();
 #endif
 
+  nsDisplaySVGEffects(const nsDisplaySVGEffects& aOther)
+    : nsDisplayWrapList(aOther)
+    , mEffectsBounds(aOther.mEffectsBounds)
+    , mHandleOpacity(aOther.mHandleOpacity)
+  {
+    MOZ_COUNT_CTOR(nsDisplaySVGEffects);
+  }
+
   virtual nsRegion GetOpaqueRegion(nsDisplayListBuilder* aBuilder,
                                    bool* aSnap) const override;
   virtual void HitTest(nsDisplayListBuilder* aBuilder, const nsRect& aRect,
@@ -4632,9 +4824,25 @@ public:
   virtual ~nsDisplayMask();
 #endif
 
+  virtual nsDisplayWrapList* Clone(nsDisplayListBuilder* aBuilder) const override
+  {
+    MOZ_COUNT_CTOR(nsDisplayMask);
+    return new (aBuilder) nsDisplayMask(*this);
+  }
+
   NS_DISPLAY_DECL_NAME("Mask", TYPE_MASK)
 
-  virtual bool TryMerge(nsDisplayItem* aItem) override;
+  virtual bool CanMerge(const nsDisplayItem* aItem) const override;
+
+  virtual void Merge(const nsDisplayItem* aItem) override
+  {
+    nsDisplayWrapList::Merge(aItem);
+
+    const nsDisplayMask* other = static_cast<const nsDisplayMask*>(aItem);
+    mEffectsBounds.UnionRect(mEffectsBounds,
+      other->mEffectsBounds + other->mFrame->GetOffsetTo(mFrame));
+  }
+
   virtual already_AddRefed<Layer> BuildLayer(nsDisplayListBuilder* aBuilder,
                                              LayerManager* aManager,
                                              const ContainerLayerParameters& aContainerParameters) override;
@@ -4696,9 +4904,30 @@ public:
   virtual ~nsDisplayFilter();
 #endif
 
+  virtual nsDisplayWrapList* Clone(nsDisplayListBuilder* aBuilder) const override
+  {
+    MOZ_COUNT_CTOR(nsDisplayFilter);
+    return new (aBuilder) nsDisplayFilter(*this);
+  }
+
   NS_DISPLAY_DECL_NAME("Filter", TYPE_FILTER)
 
-  virtual bool TryMerge(nsDisplayItem* aItem) override;
+  virtual bool CanMerge(const nsDisplayItem* aItem) const override
+  {
+    // Items for the same content element should be merged into a single
+    // compositing group.
+    return HasSameTypeAndClip(aItem) && HasSameContent(aItem);
+  }
+
+  virtual void Merge(const nsDisplayItem* aItem) override
+  {
+    nsDisplayWrapList::Merge(aItem);
+
+    const nsDisplayFilter* other = static_cast<const nsDisplayFilter*>(aItem);
+    mEffectsBounds.UnionRect(mEffectsBounds,
+      other->mEffectsBounds + other->mFrame->GetOffsetTo(mFrame));
+  }
+
   virtual already_AddRefed<Layer> BuildLayer(nsDisplayListBuilder* aBuilder,
                                              LayerManager* aManager,
                                              const ContainerLayerParameters& aContainerParameters) override;
@@ -4874,7 +5103,11 @@ public:
   virtual bool ShouldBuildLayerEvenIfInvisible(nsDisplayListBuilder* aBuilder) const override;
   virtual bool ComputeVisibility(nsDisplayListBuilder *aBuilder,
                                  nsRegion *aVisibleRegion) override;
-  virtual bool TryMerge(nsDisplayItem *aItem) override;
+
+  virtual bool CanMerge(const nsDisplayItem* aItem) const override
+  {
+    return false;
+  }
 
   virtual uint32_t GetPerFrameKey() const override {
     return (mIndex << TYPE_BITS) | nsDisplayItem::GetPerFrameKey();
