@@ -3,7 +3,7 @@
 #
 
 
-# Copyright 2002-2016 by
+# Copyright 2002-2017 by
 # David Turner, Robert Wilhelm, and Werner Lemberg.
 #
 # This file is part of the FreeType project, and may only be used, modified,
@@ -34,8 +34,8 @@ endif
 
 # gzip support sources
 #
-# All source and header files get loaded by `ftgzip.c' only if SYTEM_ZLIB is
-# not defined (regardless whether we have a `single' or a `multi' build).
+# All source and header files get loaded by `ftgzip.c' only if SYSTEM_ZLIB
+# is not defined (regardless whether we have a `single' or a `multi' build).
 # However, it doesn't harm if we add everything as a dependency
 # unconditionally.
 #

@@ -244,7 +244,7 @@
 
 	All public FreeType enumeration and flag values are uppercase...
 
-	* include/tttables.h (FT_Sfnt_Tag): Implement it.  For backwards
+	* include/tttables.h (FT_Sfnt_Tag): Implement it.  For backward
 	compatibility, retain the old values as macros.
 
 	* src/base/ftfstype.c (FT_Get_FSType_Flags), src/sfnt/sfdriver.c
@@ -1223,7 +1223,7 @@
 
 2014-10-14  Werner Lemberg  <wl@gnu.org>
 
-	[autofit] Adjust Devenagari character range.
+	[autofit] Adjust Devanagari character range.
 
 	* src/autofit/afranges.c (af_deva_uniranges): Omit characters that
 	are common to all other Indic scripts.
@@ -4767,7 +4767,7 @@
 	* src/cache/ftcmanag.c (FTC_Manager_Check): Fix cast.
 	* src/cache/ftcmanag.h (FTC_ManagerRec): Ditto.
 
-	* src/cff/cf2arrst.c (cf2_arrstack_setNum_Elements): Use cast.
+	* src/cff/cf2arrst.c (cf2_arrstack_setNumElements): Use cast.
 	* src/cff/cf2ft.c (cf2_freeSeacComponent): Ditto.
 	* src/cff/cffobjs.c (remove_subset_prefix, remove_style): Ditto.
 
@@ -5145,7 +5145,7 @@
 
 ----------------------------------------------------------------------------
 
-Copyright 2013-2016 by
+Copyright 2013-2017 by
 David Turner, Robert Wilhelm, and Werner Lemberg.
 
 This file is part of the FreeType project, and may only be used, modified,

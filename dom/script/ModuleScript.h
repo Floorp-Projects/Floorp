@@ -20,17 +20,10 @@ class ScriptLoader;
 
 class ModuleScript final : public nsISupports
 {
-  enum InstantiationState {
-    Uninstantiated,
-    Instantiated,
-    Errored
-  };
-
   RefPtr<ScriptLoader> mLoader;
   nsCOMPtr<nsIURI> mBaseURL;
   JS::Heap<JSObject*> mModuleRecord;
-  JS::Heap<JS::Value> mException;
-  InstantiationState mInstantiationState;
+  JS::Heap<JS::Value> mError;
 
   ~ModuleScript();
 
@@ -39,30 +32,17 @@ public:
   NS_DECL_CYCLE_COLLECTION_SCRIPT_HOLDER_CLASS(ModuleScript)
 
   ModuleScript(ScriptLoader* aLoader,
-               nsIURI* aBaseURL,
-               JS::Handle<JSObject*> aModuleRecord);
+               nsIURI* aBaseURL);
+
+  void SetModuleRecord(JS::Handle<JSObject*> aModuleRecord);
+  void SetPreInstantiationError(const JS::Value& aError);
 
   ScriptLoader* Loader() const { return mLoader; }
   JSObject* ModuleRecord() const { return mModuleRecord; }
-  JS::Value Exception() const { return mException; }
   nsIURI* BaseURL() const { return mBaseURL; }
 
-  void SetInstantiationResult(JS::Handle<JS::Value> aMaybeException);
-
-  bool IsUninstantiated() const
-  {
-    return mInstantiationState == Uninstantiated;
-  }
-
-  bool IsInstantiated() const
-  {
-    return mInstantiationState == Instantiated;
-  }
-
-  bool InstantiationFailed() const
-  {
-    return mInstantiationState == Errored;
-  }
+  bool IsErrored() const;
+  JS::Value Error() const;
 
   void UnlinkModuleRecord();
 };

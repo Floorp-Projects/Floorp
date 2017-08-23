@@ -38,28 +38,6 @@ const EXPECTED_REFLOWS_FIRST_OPEN = [
 
   {
     stack: [
-      "adjustSiteIconStart@chrome://global/content/bindings/autocomplete.xml",
-      "set_siteIconStart@chrome://global/content/bindings/autocomplete.xml",
-      "_openAutocompletePopup@chrome://browser/content/urlbarBindings.xml",
-      "openAutocompletePopup@chrome://browser/content/urlbarBindings.xml",
-      "openPopup@chrome://global/content/bindings/autocomplete.xml",
-      "set_popupOpen@chrome://global/content/bindings/autocomplete.xml",
-    ],
-  },
-
-  {
-    stack: [
-      "adjustSiteIconStart@chrome://global/content/bindings/autocomplete.xml",
-      "_reuseAcItem@chrome://global/content/bindings/autocomplete.xml",
-      "_appendCurrentResult@chrome://global/content/bindings/autocomplete.xml",
-      "_invalidate@chrome://global/content/bindings/autocomplete.xml",
-      "invalidate@chrome://global/content/bindings/autocomplete.xml",
-    ],
-    times: 9, // This number should only ever go down - never up.
-  },
-
-  {
-    stack: [
       "adjustHeight@chrome://global/content/bindings/autocomplete.xml",
       "onxblpopupshown@chrome://global/content/bindings/autocomplete.xml"
     ],

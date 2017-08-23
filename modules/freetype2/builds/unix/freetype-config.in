@@ -1,6 +1,6 @@
 #! /bin/sh
 #
-# Copyright 2000-2016 by
+# Copyright 2000-2017 by
 # David Turner, Robert Wilhelm, and Werner Lemberg.
 #
 # This file is part of the FreeType project, and may only be used, modified,
@@ -12,11 +12,55 @@
 LC_ALL=C
 export LC_ALL
 
-prefix="%prefix%"
-exec_prefix="%exec_prefix%"
-exec_prefix_set="no"
-includedir="%includedir%"
-libdir="%libdir%"
+
+# if `pkg-config' is available, use values from `freetype2.pc'
+pkg-config --version >/dev/null 2>&1
+if test $? -eq 0 ; then
+  # note that option `--variable' is not affected by the
+  # PKG_CONFIG_SYSROOT_DIR environment variable
+  if test "x$SYSROOT" != "x" ; then
+    PKG_CONFIG_SYSROOT_DIR="$SYSROOT"
+    export PKG_CONFIG_SYSROOT_DIR
+  fi
+
+  prefix=`pkg-config --variable prefix freetype2`
+  exec_prefix=`pkg-config --variable exec_prefix freetype2`
+
+  includedir=`pkg-config --variable includedir freetype2`
+  libdir=`pkg-config --variable libdir freetype2`
+
+  version=`pkg-config --modversion freetype2`
+
+  cflags=`pkg-config --cflags freetype2`
+  dynamic_libs=`pkg-config --libs freetype2`
+  static_libs=`pkg-config --static --libs freetype2`
+else
+  prefix="%prefix%"
+  exec_prefix="%exec_prefix%"
+
+  includedir="%includedir%"
+  libdir="%libdir%"
+
+  version=%ft_version%
+
+  cflags="-I${SYSROOT}$includedir/freetype2"
+  dynamic_libs="-lfreetype"
+  static_libs="%LIBSSTATIC_CONFIG%"
+  if test "${SYSROOT}$libdir" != "/usr/lib"   &&
+     test "${SYSROOT}$libdir" != "/usr/lib64" ; then
+    libs_L="-L${SYSROOT}$libdir"
+  fi
+fi
+
+orig_prefix=$prefix
+orig_exec_prefix=$exec_prefix
+
+orig_includedir=$includedir
+orig_libdir=$libdir
+
+include_suffix=`echo $includedir | sed "s|$prefix||"`
+lib_suffix=`echo $libdir | sed "s|$exec_prefix||"`
+
 
 usage()
 {
@@ -39,13 +83,16 @@ Options:
                          library
   --static               make command line options display flags
                          for static linking
+  --help                 display this help and exit
 EOF
   exit $1
 }
 
+
 if test $# -eq 0 ; then
   usage 1 1>&2
 fi
+
 
 while test $# -gt 0 ; do
   case "$1" in
@@ -74,8 +121,8 @@ while test $# -gt 0 ; do
     echo_exec_prefix=yes
     ;;
   --version)
-    echo %ft_version%
-    exit 0
+    echo_version=yes
+    break
     ;;
   --ftversion)
     echo_ft_version=yes
@@ -92,6 +139,9 @@ while test $# -gt 0 ; do
   --static)
     show_static=yes
     ;;
+  --help)
+    usage 0
+    ;;
   *)
     usage 1 1>&2
     ;;
@@ -99,10 +149,25 @@ while test $# -gt 0 ; do
   shift
 done
 
+
 if test "$local_prefix" = "yes" ; then
   if test "$exec_prefix_set" != "yes" ; then
     exec_prefix=$prefix
   fi
+fi
+
+if test "$local_prefix" = "yes" ; then
+  includedir=${prefix}${include_suffix}
+  if test "$exec_prefix_set" = "yes" ; then
+    libdir=${exec_prefix}${lib_suffix}
+  else
+    libdir=${prefix}${lib_suffix}
+  fi
+fi
+
+
+if test "$echo_version" = "yes" ; then
+  echo $version
 fi
 
 if test "$echo_prefix" = "yes" ; then
@@ -111,15 +176,6 @@ fi
 
 if test "$echo_exec_prefix" = "yes" ; then
   echo ${SYSROOT}$exec_prefix
-fi
-
-if test "$exec_prefix_set" = "yes" ; then
-  libdir=$exec_prefix/lib
-else
-  if test "$local_prefix" = "yes" ; then
-    includedir=$prefix/include
-    libdir=$prefix/lib
-  fi
 fi
 
 if test "$echo_ft_version" = "yes" ; then
@@ -136,26 +192,20 @@ if test "$echo_ft_version" = "yes" ; then
 fi
 
 if test "$echo_cflags" = "yes" ; then
-  echo -I${SYSROOT}$includedir/freetype2
+  echo $cflags | sed "s|$orig_includedir/freetype2|$includedir/freetype2|"
 fi
 
 if test "$echo_libs" = "yes" ; then
-  libs="-lfreetype"
-  staticlibs="%LIBSSTATIC_CONFIG%"
   if test "$show_static" = "yes" ; then
-    libs="$staticlibs"
-  fi
-  if test "${SYSROOT}$libdir" != "/usr/lib"  &&
-     test "${SYSROOT}$libdir" != "/usr/lib64"; then
-    echo -L${SYSROOT}$libdir $libs
+    libs="$libs_L $static_libs"
   else
-    echo $libs
+    libs="$libs_L $dynamic_libs"
   fi
+  echo $libs | sed "s|$orig_libdir|$libdir|"
 fi
 
 if test "$echo_libtool" = "yes" ; then
-  convlib="libfreetype.la"
-  echo ${SYSROOT}$libdir/$convlib
+  echo ${SYSROOT}$libdir/libfreetype.la
 fi
 
 # EOF

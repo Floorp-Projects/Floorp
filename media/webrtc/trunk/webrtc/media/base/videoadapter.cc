@@ -133,11 +133,13 @@ bool VideoAdapter::AdaptFrameResolution(int in_width,
                              static_cast<int>(step_up_));
   }
   if (scale_) {
-    if (max_pixel_count == std::numeric_limits<int>::max()) {
-      max_pixel_count = in_width * in_height;
-    }
-    // approximates (width/scale_resolution_by_) * (height/scale_resolution_by_)
-    max_pixel_count = (max_pixel_count / scale_resolution_by_) / scale_resolution_by_;
+    // We calculate the scaled pixel count from the in_width and in_height,
+    // which is the input resolution. We then take the minimum of the scaled
+    // resolution and the current max_pixel_count. This will allow the
+    // quality scaler to reduce the resolution in response to load, but we
+    // will never go above the requested scaled resolution.
+    int scaled_pixel_count = (in_width*in_height/scale_resolution_by_)/scale_resolution_by_;
+    max_pixel_count = std::min(max_pixel_count, scaled_pixel_count);
   }
 
   // Drop the input frame if necessary.

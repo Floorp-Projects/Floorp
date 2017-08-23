@@ -862,9 +862,6 @@ with modules["URILOADER"]:
 # 25: NS_ERROR_MODULE_CONTENT
 # =======================================================================
 with modules["CONTENT"]:
-    # Error codes for image loading
-    errors["NS_ERROR_IMAGE_SRC_CHANGED"] = FAILURE(4)
-    errors["NS_ERROR_IMAGE_BLOCKED"] = FAILURE(5)
     # Error codes for content policy blocking
     errors["NS_ERROR_CONTENT_BLOCKED"] = FAILURE(6)
     errors["NS_ERROR_CONTENT_BLOCKED_SHOW_ALT"] = FAILURE(7)

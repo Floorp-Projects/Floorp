@@ -20,3 +20,4 @@ let d = moduleRepo['d'] = parseModule("import { a } from 'c'; a;");
 // Attempting to instantiate 'd' throws an error because depdency 'a' of
 // instantiated module 'c' is not instantiated.
 d.declarationInstantiation();
+d.evaluation();

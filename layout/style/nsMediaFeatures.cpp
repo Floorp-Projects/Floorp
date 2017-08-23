@@ -18,6 +18,7 @@
 #include "nsCSSRuleProcessor.h"
 #include "nsDeviceContext.h"
 #include "nsIBaseWindow.h"
+#include "nsIDocShell.h"
 #include "nsIDocument.h"
 #include "nsIWidget.h"
 #include "nsContentUtils.h"
@@ -304,33 +305,44 @@ GetDisplayMode(nsPresContext* aPresContext, const nsMediaFeature*,
                nsCSSValue& aResult)
 {
   nsCOMPtr<nsISupports> container;
+  RefPtr<nsIDocShell> docShell;
+
+  if (!aPresContext) {
+    aResult.SetIntValue(NS_STYLE_DISPLAY_MODE_BROWSER, eCSSUnit_Enumerated);
+    return;
+  }
+
   if (aPresContext) {
     // Calling GetRootPresContext() can be slow, so make sure to call it
     // just once.
     nsRootPresContext* root = aPresContext->GetRootPresContext();
     if (root && root->Document()) {
       container = root->Document()->GetContainer();
+      docShell = root->GetDocShell();
     }
   }
+
   nsCOMPtr<nsIBaseWindow> baseWindow = do_QueryInterface(container);
-  if (!baseWindow) {
-    aResult.SetIntValue(NS_STYLE_DISPLAY_MODE_BROWSER, eCSSUnit_Enumerated);
-    return;
+  if (baseWindow) {
+    nsCOMPtr<nsIWidget> mainWidget;
+    baseWindow->GetMainWidget(getter_AddRefs(mainWidget));
+    nsSizeMode mode = mainWidget ? mainWidget->SizeMode() : nsSizeMode_Normal;
+
+    if (mode == nsSizeMode_Fullscreen) {
+      aResult.SetIntValue(NS_STYLE_DISPLAY_MODE_FULLSCREEN, eCSSUnit_Enumerated);
+      return;
+    }
   }
-  nsCOMPtr<nsIWidget> mainWidget;
-  baseWindow->GetMainWidget(getter_AddRefs(mainWidget));
-  int32_t displayMode;
-  nsSizeMode mode = mainWidget ? mainWidget->SizeMode() : nsSizeMode_Normal;
-  // Background tabs are always in 'browser' mode for now.
-  // If new modes are supported, please ensure not cause the regression in
-  // Bug 1259641.
-  switch (mode) {
-    case nsSizeMode_Fullscreen:
-      displayMode = NS_STYLE_DISPLAY_MODE_FULLSCREEN;
-      break;
-    default:
-      displayMode = NS_STYLE_DISPLAY_MODE_BROWSER;
-      break;
+
+  static_assert(nsIDocShell::DISPLAY_MODE_BROWSER == NS_STYLE_DISPLAY_MODE_BROWSER &&
+                nsIDocShell::DISPLAY_MODE_MINIMAL_UI == NS_STYLE_DISPLAY_MODE_MINIMAL_UI &&
+                nsIDocShell::DISPLAY_MODE_STANDALONE == NS_STYLE_DISPLAY_MODE_STANDALONE &&
+                nsIDocShell::DISPLAY_MODE_FULLSCREEN == NS_STYLE_DISPLAY_MODE_FULLSCREEN,
+                "nsIDocShell display modes must mach nsStyleConsts.h");
+
+  uint32_t displayMode = NS_STYLE_DISPLAY_MODE_BROWSER;
+  if (docShell) {
+    docShell->GetDisplayMode(&displayMode);
   }
 
   aResult.SetIntValue(displayMode, eCSSUnit_Enumerated);

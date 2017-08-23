@@ -69,8 +69,10 @@ add_task(async function(){
   await BrowserTestUtils.removeTab(tab1);
   await BrowserTestUtils.removeTab(tab2);
 
+  // Make sure the preload browser does not keep any of the new processes alive.
+  gBrowser.removePreloadedBrowser();
+
   // Since we kept alive all the processes, we can shut down the ones that do
   // not host any tabs reliably.
   ppmm.releaseCachedProcesses();
-  is(ppmm.childCount, originalChildCount, "We're back to the original process count.");
 });

@@ -325,9 +325,9 @@ nsRange::CreateRange(nsIDOMNode* aStartContainer, uint32_t aStartOffset,
  * nsISupports
  ******************************************************/
 
-NS_IMPL_CYCLE_COLLECTING_ADDREF(nsRange)
-NS_IMPL_CYCLE_COLLECTING_RELEASE_WITH_LAST_RELEASE(nsRange,
-                                                   DoSetRange(nullptr, 0, nullptr, 0, nullptr))
+NS_IMPL_MAIN_THREAD_ONLY_CYCLE_COLLECTING_ADDREF(nsRange)
+NS_IMPL_MAIN_THREAD_ONLY_CYCLE_COLLECTING_RELEASE_WITH_LAST_RELEASE(nsRange,
+                                                                    DoSetRange(nullptr, 0, nullptr, 0, nullptr))
 
 // QueryInterface implementation for nsRange
 NS_INTERFACE_MAP_BEGIN_CYCLE_COLLECTION(nsRange)

@@ -447,6 +447,17 @@ public:
     NS_LOG_ADDREF(this, count, #_class, sizeof(*this));                       \
     return count;
 
+#define NS_IMPL_CC_MAIN_THREAD_ONLY_NATIVE_ADDREF_BODY(_class)     \
+    MOZ_ASSERT_TYPE_OK_FOR_REFCOUNTING(_class)                     \
+    MOZ_ASSERT(int32_t(mRefCnt) >= 0, "illegal refcnt");           \
+    NS_ASSERT_OWNINGTHREAD(_class);                                \
+    nsrefcnt count =                                               \
+      mRefCnt.incr<NS_CycleCollectorSuspectUsingNursery>(          \
+        static_cast<void*>(this),                                  \
+        _class::NS_CYCLE_COLLECTION_INNERCLASS::GetParticipant()); \
+    NS_LOG_ADDREF(this, count, #_class, sizeof(*this));            \
+    return count;
+
 #define NS_IMPL_CC_NATIVE_RELEASE_BODY(_class)                                \
     MOZ_ASSERT(int32_t(mRefCnt) > 0, "dup release");                          \
     NS_ASSERT_OWNINGTHREAD(_class);                                           \
@@ -454,6 +465,16 @@ public:
       mRefCnt.decr(static_cast<void*>(this),                                  \
                    _class::NS_CYCLE_COLLECTION_INNERCLASS::GetParticipant()); \
     NS_LOG_RELEASE(this, count, #_class);                                     \
+    return count;
+
+#define NS_IMPL_CC_MAIN_THREAD_ONLY_NATIVE_RELEASE_BODY(_class)    \
+    MOZ_ASSERT(int32_t(mRefCnt) > 0, "dup release");               \
+    NS_ASSERT_OWNINGTHREAD(_class);                                \
+    nsrefcnt count =                                               \
+      mRefCnt.decr<NS_CycleCollectorSuspectUsingNursery>(          \
+        static_cast<void*>(this),                                  \
+        _class::NS_CYCLE_COLLECTION_INNERCLASS::GetParticipant()); \
+    NS_LOG_RELEASE(this, count, #_class);                          \
     return count;
 
 #define NS_IMPL_CYCLE_COLLECTING_NATIVE_ADDREF(_class)                        \
@@ -507,6 +528,19 @@ protected:                                                                    \
   NS_DECL_OWNINGTHREAD                                                        \
 public:
 
+#define NS_INLINE_DECL_MAIN_THREAD_ONLY_CYCLE_COLLECTING_NATIVE_REFCOUNTING(_class) \
+public:                                                                             \
+  NS_METHOD_(MozExternalRefCountType) AddRef(void) {                                \
+    NS_IMPL_CC_MAIN_THREAD_ONLY_NATIVE_ADDREF_BODY(_class)                          \
+  }                                                                                 \
+  NS_METHOD_(MozExternalRefCountType) Release(void) {                               \
+    NS_IMPL_CC_MAIN_THREAD_ONLY_NATIVE_RELEASE_BODY(_class)                         \
+  }                                                                                 \
+  typedef mozilla::FalseType HasThreadSafeRefCnt;                                   \
+protected:                                                                          \
+  nsCycleCollectingAutoRefCnt mRefCnt;                                              \
+  NS_DECL_OWNINGTHREAD                                                              \
+public:
 
 ///////////////////////////////////////////////////////////////////////////////
 

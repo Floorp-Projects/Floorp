@@ -6,7 +6,7 @@ I. Configuration macros
 
 There are  several ways to enable  debugging features in a  FreeType 2
 builds.  This is  controlled through the definition  of special macros
-located in the file `ftoptions.h'.  The macros are:
+located in the file `ftoption.h'.  The macros are:
 
 
   FT_DEBUG_LEVEL_ERROR
@@ -191,7 +191,7 @@ behaviour of FreeType at runtime.
 
 ------------------------------------------------------------------------
 
-Copyright 2002-2016 by
+Copyright 2002-2017 by
 David Turner, Robert Wilhelm, and Werner Lemberg.
 
 This  file is  part  of the  FreeType  project, and  may  only be  used,

@@ -83,6 +83,8 @@ public:
   // Same but rounds the rectangle to ints after transforming.
   wr::LayoutRect ToRelativeLayoutRectRounded(const LayoutDeviceRect& aRect) const;
 
+  bool IsBackfaceVisible() const { return mTransform.IsBackfaceVisible(); }
+
 private:
   wr::DisplayListBuilder* mBuilder;
   LayerPoint mOrigin;
