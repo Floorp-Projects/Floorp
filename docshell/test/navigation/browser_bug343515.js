@@ -38,8 +38,13 @@ function test() {
   // Lots of callbacks going on here
   waitForExplicitFinish();
 
-  // Begin the test
-  step1();
+  // Begin the test. First, we disable tab warming because it's
+  // possible for the mouse to be over one of the tabs during
+  // this test, warm it up, and cause this test to fail intermittently
+  // in automation.
+  SpecialPowers.pushPrefEnv({
+    set: [["browser.tabs.remote.warmup.enabled", false]],
+  }).then(step1);
 }
 
 function step1() {
