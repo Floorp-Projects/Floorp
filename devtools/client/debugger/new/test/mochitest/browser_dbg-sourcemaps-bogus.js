@@ -18,7 +18,7 @@ add_task(function*() {
   yield addBreakpoint(dbg, "bogus-map.js", 4);
   invokeInTab("runCode");
   yield waitForPaused(dbg);
-  assertPausedLocation(dbg, "bogus-map.js", 4);
+  assertPausedLocation(dbg);
 
   // Make sure that only the single generated source exists. The
   // sourcemap failed to download.
