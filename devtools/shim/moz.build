@@ -19,4 +19,8 @@ if CONFIG['MOZ_DEVTOOLS'] != 'server':
         'devtools-startup.manifest',
     ]
 
+    DIRS += [
+      'locales',
+    ]
+
 XPCSHELL_TESTS_MANIFESTS += ['tests/unit/xpcshell.ini']

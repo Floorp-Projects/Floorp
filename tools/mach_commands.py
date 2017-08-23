@@ -8,7 +8,6 @@ import sys
 import os
 import stat
 import platform
-import errno
 import re
 
 from mach.decorators import (
@@ -18,7 +17,6 @@ from mach.decorators import (
 )
 
 from mozbuild.base import MachCommandBase, MozbuildObject
-import mozversioncontrol
 
 
 @CommandProvider
@@ -230,7 +228,7 @@ class FormatProvider(MachCommandBase):
         target = os.path.join(self._mach_context.state_dir, os.path.basename(root))
 
         if not os.path.exists(target):
-            tooltool_url = "https://api.pub.build.mozilla.org/tooltool/sha512/"
+            tooltool_url = "https://tooltool.mozilla-releng.net/sha512/"
             if self.prompt and raw_input("Download clang-format executables from {0} (yN)? ".format(tooltool_url)).lower() != 'y':  # noqa: E501,F821
                 print("Download aborted.")
                 return None
@@ -263,7 +261,7 @@ class FormatProvider(MachCommandBase):
         # Note that this will potentially miss a lot things
         from subprocess import Popen, PIPE
 
-        if isinstance(self.repository, mozversioncontrol.HgRepository):
+        if self.repository.name == 'hg':
             diff_process = Popen(["hg", "diff", "-U0", "-r", ".^",
                                   "--include", "glob:**.c", "--include", "glob:**.cpp",
                                   "--include", "glob:**.h",
@@ -329,9 +327,10 @@ class FormatProvider(MachCommandBase):
         cf_process = Popen(args)
         if show:
             # show the diff
-            if isinstance(self.repository, mozversioncontrol.HgRepository):
+            if self.repository.name == 'hg':
                 cf_process = Popen(["hg", "diff"] + path_list)
             else:
+                assert self.repository.name == 'git'
                 cf_process = Popen(["git", "diff"] + path_list)
         return cf_process.communicate()[0]
 

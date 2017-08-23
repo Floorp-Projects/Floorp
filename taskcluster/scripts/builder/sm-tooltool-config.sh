@@ -2,7 +2,7 @@
 
 set -xe
 
-: ${TOOLTOOL_SERVER:=https://api.pub.build.mozilla.org/tooltool/}
+: ${TOOLTOOL_SERVER:=https://tooltool.mozilla-releng.net/}
 : ${SPIDERMONKEY_VARIANT:=plain}
 : ${UPLOAD_DIR:=$HOME/artifacts/}
 : ${WORK:=$HOME/workspace}

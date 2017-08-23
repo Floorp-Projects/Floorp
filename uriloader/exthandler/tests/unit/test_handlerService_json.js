@@ -33,6 +33,44 @@ add_task(async function test_store_keeps_unknown_properties() {
 });
 
 /**
+ * Runs the asyncInit method, ensuring that it successfully inits the store
+ * and calls the handlersvc-store-initialized topic.
+ */
+add_task(async function test_async_init() {
+  await deleteHandlerStore();
+  await copyTestDataToHandlerStore();
+  gHandlerService.asyncInit();
+  await TestUtils.topicObserved("handlersvc-store-initialized");
+  await assertAllHandlerInfosMatchTestData();
+
+  await unloadHandlerStore();
+});
+
+/**
+ * Races the asyncInit method against the sync init (implicit in enumerate),
+ * to ensure that the store will be synchronously initialized without any
+ * ill effects.
+ */
+add_task(async function test_race_async_init() {
+  await deleteHandlerStore();
+  await copyTestDataToHandlerStore();
+  let storeInitialized = false;
+  // Pass a callback to synchronously observe the topic, as a promise would
+  // resolve asynchronously
+  TestUtils.topicObserved("handlersvc-store-initialized", () => {
+    storeInitialized = true;
+    return true;
+  });
+  gHandlerService.asyncInit();
+  do_check_false(storeInitialized);
+  gHandlerService.enumerate();
+  do_check_true(storeInitialized);
+  await assertAllHandlerInfosMatchTestData();
+
+  await unloadHandlerStore();
+});
+
+/**
  * Tests the migration from an existing RDF data source.
  */
 add_task(async function test_migration_rdf_present() {

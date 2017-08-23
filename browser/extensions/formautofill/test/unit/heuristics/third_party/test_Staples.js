@@ -38,8 +38,11 @@ runHeuristicsTest([
     fixturePath: "PaymentBilling_ac_on.html",
     expectedResult: [
       [
-//      {"section": "", "addressType": "", "contactType": "", "fieldName": "cc-number"},
-//      {"section": "", "addressType": "", "contactType": "", "fieldName": "cc-exp"},
+        {"section": "", "addressType": "", "contactType": "", "fieldName": "cc-number"},
+
+        // Since this is a custom fixture with force autocomplete="on", we can
+        // fix this later even this should be detected as cc-exp.
+        {"section": "", "addressType": "", "contactType": "", "fieldName": "cc-exp-month"},
 //      {"section": "", "addressType": "", "contactType": "", "fieldName": "cc-csc"},
       ],
     ],

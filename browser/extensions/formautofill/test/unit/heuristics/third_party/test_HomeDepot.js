@@ -14,9 +14,17 @@ runHeuristicsTest([
         {"section": "", "addressType": "", "contactType": "", "fieldName": "address-line1"},
         {"section": "", "addressType": "", "contactType": "", "fieldName": "postal-code"},
         {"section": "", "addressType": "billing", "contactType": "", "fieldName": "street-address"}, // <select>
+
+        // FIXME: bug 1392944 - the uncommented cc-exp-month and cc-exp-year are
+        // both invisible <input> elements, and the following two <select>
+        // elements are the correct ones. BTW, they are both applied
+        // autocomplete attr.
         {"section": "", "addressType": "", "contactType": "", "fieldName": "cc-exp-month"},
         {"section": "", "addressType": "", "contactType": "", "fieldName": "cc-exp-year"},
-//      {"section": "", "addressType": "", "contactType": "", "fieldName": "cc-number"},
+        {"section": "", "addressType": "", "contactType": "", "fieldName": "cc-number"},
+//      {"section": "", "addressType": "", "contactType": "", "fieldName": "cc-exp-month"},
+//      {"section": "", "addressType": "", "contactType": "", "fieldName": "cc-exp-year"},
+
 //      {"section": "", "addressType": "", "contactType": "", "fieldName": "cc-csc"},
       ],
     ],

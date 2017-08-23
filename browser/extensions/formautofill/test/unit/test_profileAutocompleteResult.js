@@ -54,7 +54,7 @@ let addressTestCases = [{
     searchResult: Ci.nsIAutoCompleteResult.RESULT_SUCCESS,
     defaultIndex: 0,
     items: [{
-      value: "Sesame Street",
+      value: "",
       style: "autofill-profile",
       comment: JSON.stringify(matchingProfiles[0]),
       label: JSON.stringify({
@@ -63,7 +63,7 @@ let addressTestCases = [{
       }),
       image: "",
     }, {
-      value: "Mozilla",
+      value: "",
       style: "autofill-profile",
       comment: JSON.stringify(matchingProfiles[1]),
       label: JSON.stringify({
@@ -84,7 +84,7 @@ let addressTestCases = [{
     searchResult: Ci.nsIAutoCompleteResult.RESULT_SUCCESS,
     defaultIndex: 0,
     items: [{
-      value: "1-345-345-3456.",
+      value: "",
       style: "autofill-profile",
       comment: JSON.stringify(matchingProfiles[0]),
       label: JSON.stringify({
@@ -93,7 +93,7 @@ let addressTestCases = [{
       }),
       image: "",
     }, {
-      value: "1-650-903-0800",
+      value: "",
       style: "autofill-profile",
       comment: JSON.stringify(matchingProfiles[1]),
       label: JSON.stringify({
@@ -102,7 +102,7 @@ let addressTestCases = [{
       }),
       image: "",
     }, {
-      value: "1-000-000-0000",
+      value: "",
       style: "autofill-profile",
       comment: JSON.stringify(matchingProfiles[2]),
       label: JSON.stringify({
@@ -123,7 +123,7 @@ let addressTestCases = [{
     searchResult: Ci.nsIAutoCompleteResult.RESULT_SUCCESS,
     defaultIndex: 0,
     items: [{
-      value: "123 Sesame Street.",
+      value: "",
       style: "autofill-profile",
       comment: JSON.stringify(matchingProfiles[0]),
       label: JSON.stringify({
@@ -132,7 +132,7 @@ let addressTestCases = [{
       }),
       image: "",
     }, {
-      value: "331 E. Evelyn Avenue",
+      value: "",
       style: "autofill-profile",
       comment: JSON.stringify(matchingProfiles[1]),
       label: JSON.stringify({
@@ -141,7 +141,7 @@ let addressTestCases = [{
       }),
       image: "",
     }, {
-      value: "321, No Name St. 2nd line 3rd line",
+      value: "",
       style: "autofill-profile",
       comment: JSON.stringify(matchingProfiles[2]),
       label: JSON.stringify({
@@ -162,7 +162,7 @@ let addressTestCases = [{
     searchResult: Ci.nsIAutoCompleteResult.RESULT_SUCCESS,
     defaultIndex: 0,
     items: [{
-      value: "123 Sesame Street.",
+      value: "",
       style: "autofill-profile",
       comment: JSON.stringify(matchingProfiles[0]),
       label: JSON.stringify({
@@ -171,7 +171,7 @@ let addressTestCases = [{
       }),
       image: "",
     }, {
-      value: "331 E. Evelyn Avenue",
+      value: "",
       style: "autofill-profile",
       comment: JSON.stringify(matchingProfiles[1]),
       label: JSON.stringify({
@@ -180,7 +180,7 @@ let addressTestCases = [{
       }),
       image: "",
     }, {
-      value: "321, No Name St.",
+      value: "",
       style: "autofill-profile",
       comment: JSON.stringify(matchingProfiles[2]),
       label: JSON.stringify({

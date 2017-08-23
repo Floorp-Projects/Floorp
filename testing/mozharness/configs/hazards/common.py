@@ -24,7 +24,7 @@ config = {
     "exes": {
         'gittool.py': '%(abs_tools_dir)s/buildfarm/utils/gittool.py',
         'tooltool.py': '/tools/tooltool.py',
-        "virtualenv": [PYTHON_DIR + "/bin/python", "/tools/misc-python/virtualenv.py"],
+        "virtualenv": "/tools/virtualenv/bin/virtualenv",
     },
 
     "force_clobber": True,

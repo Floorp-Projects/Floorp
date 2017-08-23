@@ -9,6 +9,8 @@ var prefs = Cc["@mozilla.org/preferences-service;1"]
 Services.scriptloader.loadSubScript("chrome://mochitests/content/browser/" +
     "security/sandbox/test/browser_content_sandbox_utils.js", this);
 
+const FONT_EXTENSIONS = [ "otf", "ttf", "ttc", "otc", "dfont" ];
+
 /*
  * This test exercises file I/O from web and file content processes using
  * OS.File methods to validate that calls that are meant to be blocked by
@@ -21,14 +23,13 @@ Services.scriptloader.loadSubScript("chrome://mochitests/content/browser/" +
 function createFile(path) {
   Components.utils.import("resource://gre/modules/osfile.jsm");
   let encoder = new TextEncoder();
-  let array = encoder.encode("WRITING FROM CONTENT PROCESS");
+  let array = encoder.encode("TEST FILE DUMMY DATA");
   return OS.File.writeAtomic(path, array).then(function(value) {
     return true;
   }, function(reason) {
     return false;
   });
 }
-
 
 // Creates a symlink at |path| and returns a promise that resolves with true
 // if the symlink was successfully created, otherwise false. Include imports
@@ -246,6 +247,46 @@ async function createTempFile() {
   }
 }
 
+// Build a list of nonexistent font file paths (lower and upper case) with
+// all the font extensions we want the sandbox to allow read access to.
+// Generate paths within base directory |baseDir|.
+function getFontTestPaths(baseDir) {
+  baseDir = baseDir + "/";
+
+  let basename = uuid();
+  let testPaths = [];
+
+  for (let ext of FONT_EXTENSIONS) {
+    // lower case filename
+    let lcFilename = baseDir + (basename + "lc." + ext).toLowerCase();
+    testPaths.push(lcFilename);
+    // upper case filename
+    let ucFilename = baseDir + (basename + "UC." + ext).toUpperCase();
+    testPaths.push(ucFilename);
+  }
+  return testPaths;
+}
+
+// Build a list of nonexistent invalid font file paths. Specifically,
+// paths that include the valid font extensions but should fail to load.
+// For example, if a font extension happens to be a substring of the filename
+// but isn't the extension. Generate paths within base directory |baseDir|.
+function getBadFontTestPaths(baseDir) {
+  baseDir = baseDir + "/";
+
+  let basename = uuid();
+  let testPaths = [];
+
+  for (let ext of FONT_EXTENSIONS) {
+    let filename = baseDir + basename + "." + ext + ".txt";
+    testPaths.push(filename);
+
+    filename = baseDir + basename + "." + ext + ext + ".txt";
+    testPaths.push(filename);
+  }
+  return testPaths;
+}
+
 // Test reading files and dirs from web and file content processes.
 async function testFileAccess() {
   // for tests that run in a web content process
@@ -275,6 +316,53 @@ async function testFileAccess() {
   // Each entry in the array represents a test file or directory
   // that will be read from either a web or file process.
   let tests = [];
+
+  // Test that Mac content processes can read files with font extensions
+  // and fail to read files that include the font extension as a
+  // non-extension substring.
+  if (isMac()) {
+    // Use the same directory for valid/invalid font path tests to ensure
+    // the font isn't allowed because the directory is already allowed.
+    let fontTestDir = "/private/tmp";
+    let fontTestPaths = getFontTestPaths(fontTestDir);
+    let badFontTestPaths = getBadFontTestPaths(fontTestDir);
+
+    // before we start creating dummy font files,
+    // register a cleanup func to remove them
+    registerCleanupFunction(async function() {
+      for (let fontPath of fontTestPaths.concat(badFontTestPaths)) {
+        await OS.File.remove(fontPath, {ignoreAbsent: true});
+      }
+    });
+
+    // create each dummy font file and add a test for it
+    for (let fontPath of fontTestPaths) {
+      let result = await createFile(fontPath);
+      Assert.ok(result, `${fontPath} created`);
+
+      let fontFile = GetFile(fontPath);
+      tests.push({
+        desc:     "font file",                  // description
+        ok:       true,                         // expected to succeed?
+        browser:  webBrowser,                   // browser to run test in
+        file:     fontFile,                     // nsIFile object
+        minLevel: minHomeReadSandboxLevel(),    // min level to enable test
+      });
+    }
+    for (let fontPath of badFontTestPaths) {
+      let result = await createFile(fontPath);
+      Assert.ok(result, `${fontPath} created`);
+
+      let fontFile = GetFile(fontPath);
+      tests.push({
+        desc:     "invalid font file",          // description
+        ok:       false,                        // expected to succeed?
+        browser:  webBrowser,                   // browser to run test in
+        file:     fontFile,                     // nsIFile object
+        minLevel: minHomeReadSandboxLevel(),    // min level to enable test
+      });
+    }
+  }
 
   // The Linux test runners create the temporary profile in the same
   // system temp dir we give write access to, so this gives a false
@@ -453,13 +541,26 @@ async function testFileAccess() {
 
   let cookiesFile = GetProfileEntry("cookies.sqlite");
   if (cookiesFile.exists() && !cookiesFile.isDirectory()) {
-    tests.push({
-      desc:     "cookies file",
-      ok:       false,
-      browser:  webBrowser,
-      file:     cookiesFile,
-      minLevel: minProfileReadSandboxLevel(),
-    });
+    // On Linux, the temporary profile used for tests is in the system
+    // temp dir which content has read access to, so this test fails.
+    if (!isLinux()) {
+      tests.push({
+        desc:     "cookies file",
+        ok:       false,
+        browser:  webBrowser,
+        file:     cookiesFile,
+        minLevel: minProfileReadSandboxLevel(),
+      });
+    }
+    if (fileContentProcessEnabled) {
+      tests.push({
+        desc:     "cookies file",
+        ok:       true,
+        browser:  fileBrowser,
+        file:     cookiesFile,
+        minLevel: 0,
+      });
+    }
   } else {
     ok(false, `${cookiesFile.path} is a valid file`);
   }
@@ -468,7 +569,7 @@ async function testFileAccess() {
   tests = tests.filter((test) => (test.minLevel <= level));
 
   for (let test of tests) {
-    let testFunc = test.file.isDirectory ? readDir : readFile;
+    let testFunc = test.file.isDirectory() ? readDir : readFile;
     let okString = test.ok ? "allowed" : "blocked";
     let processType = test.browser === webBrowser ? "web" : "file";
 

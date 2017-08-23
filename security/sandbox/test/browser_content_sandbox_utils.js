@@ -89,3 +89,9 @@ function GetDir(path) {
 function GetDirFromEnvVariable(varName) {
   return GetDir(environment.get(varName));
 }
+
+function GetFile(path) {
+  let file = Cc["@mozilla.org/file/local;1"].createInstance(Ci.nsIFile);
+  file.initWithPath(path);
+  return (file);
+}
