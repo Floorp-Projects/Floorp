@@ -456,7 +456,9 @@ WebRenderBridgeParent::GetRootCompositorBridgeParent() const
   // indirection to unravel.
   CompositorBridgeParent::LayerTreeState* lts =
       CompositorBridgeParent::GetIndirectShadowTree(GetLayersId());
-  MOZ_ASSERT(lts);
+  if (!lts) {
+    return nullptr;
+  }
   return lts->mParent;
 }
 
