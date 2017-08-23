@@ -71,7 +71,6 @@ import java.util.concurrent.Future;
                         extras,
                         ActivityStreamContextMenu.MenuMode.TOPSITE,
                         topSite,
-                        /* shouldOverrideWithImageProvider */ false, // we only use favicons for top sites.
                         onUrlOpenListener, onUrlOpenInBackgroundListener,
                         faviconView.getWidth(), faviconView.getHeight());
 

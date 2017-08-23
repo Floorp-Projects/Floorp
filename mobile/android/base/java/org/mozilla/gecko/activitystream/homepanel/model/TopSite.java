@@ -6,7 +6,6 @@
 package org.mozilla.gecko.activitystream.homepanel.model;
 
 import android.database.Cursor;
-import android.support.annotation.NonNull;
 import android.support.annotation.Nullable;
 
 import org.mozilla.gecko.db.BrowserContract;
@@ -75,11 +74,8 @@ public class TopSite implements Item {
         return isPinned;
     }
 
-    @NonNull
-    @Override
-    public String getImageUrl() {
-        final String imageUrl = metadata.getImageUrl();
-        return imageUrl != null ? imageUrl : "";
+    public Metadata getMetadata() {
+        return metadata;
     }
 
     @Override
