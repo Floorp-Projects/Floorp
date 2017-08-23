@@ -50,6 +50,7 @@ function TabboxPanel({
   return (
     Tabbar({
       activeTabId,
+      menuDocument: window.parent.document,
       onSelect: selectTab,
       renderOnlySelected: true,
       showAllTabsMenu: true,
