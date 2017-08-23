@@ -83,8 +83,7 @@ function waitForAnIceCandidate(pc) {
   });
 }
 
-function checkTrackStats(pc, rtpSenderOrReceiver, outbound) {
-  var track = rtpSenderOrReceiver.track;
+function checkTrackStats(pc, track, outbound) {
   var audio = (track.kind == "audio");
   var msg = pc + " stats " + (outbound ? "outbound " : "inbound ") +
       (audio ? "audio" : "video") + " rtp track id " + track.id;
@@ -106,8 +105,8 @@ function checkTrackStats(pc, rtpSenderOrReceiver, outbound) {
 
 var checkAllTrackStats = pc => {
   return Promise.all([].concat(
-    pc._pc.getSenders().map(sender => checkTrackStats(pc, sender, true)),
-    pc._pc.getReceivers().map(receiver => checkTrackStats(pc, receiver, false))));
+    pc.getExpectedActiveReceiveTracks().map(track => checkTrackStats(pc, track, false)),
+    pc.getExpectedSendTracks().map(track => checkTrackStats(pc, track, true))));
 }
 
 // Commands run once at the beginning of each test, even when performing a
@@ -183,11 +182,11 @@ var commandsPeerConnectionInitial = [
 
 var commandsGetUserMedia = [
   function PC_LOCAL_GUM(test) {
-    return test.pcLocal.getAllUserMedia(test.pcLocal.constraints);
+    return test.pcLocal.getAllUserMediaAndAddStreams(test.pcLocal.constraints);
   },
 
   function PC_REMOTE_GUM(test) {
-    return test.pcRemote.getAllUserMedia(test.pcRemote.constraints);
+    return test.pcRemote.getAllUserMediaAndAddStreams(test.pcRemote.constraints);
   },
 ];
 
@@ -212,32 +211,6 @@ var commandsPeerConnectionOfferAnswer = [
       send_message({"type": "remote_expected_tracks",
                     "expected_tracks": test.pcRemote.expectedLocalTrackInfoById});
     }
-  },
-
-  function PC_LOCAL_GET_EXPECTED_REMOTE_TRACKS(test) {
-    if (test.testOptions.steeplechase) {
-      return test.getSignalingMessage("remote_expected_tracks").then(
-          message => {
-            test.pcLocal.expectedRemoteTrackInfoById = message.expected_tracks;
-          });
-    }
-
-    // Deep copy, as similar to steeplechase as possible
-    test.pcLocal.expectedRemoteTrackInfoById =
-      JSON.parse(JSON.stringify(test.pcRemote.expectedLocalTrackInfoById));
-  },
-
-  function PC_REMOTE_GET_EXPECTED_REMOTE_TRACKS(test) {
-    if (test.testOptions.steeplechase) {
-      return test.getSignalingMessage("local_expected_tracks").then(
-          message => {
-            test.pcRemote.expectedRemoteTrackInfoById = message.expected_tracks;
-          });
-    }
-
-    // Deep copy, as similar to steeplechase as possible
-    test.pcRemote.expectedRemoteTrackInfoById =
-      JSON.parse(JSON.stringify(test.pcLocal.expectedLocalTrackInfoById));
   },
 
   function PC_LOCAL_CREATE_OFFER(test) {
@@ -435,19 +408,13 @@ var commandsPeerConnectionOfferAnswer = [
 
   function PC_LOCAL_CHECK_ICE_CONNECTIONS(test) {
     return test.pcLocal.getStats().then(stats => {
-      test.pcLocal.checkStatsIceConnections(stats,
-                                            test._offer_constraints,
-                                            test._offer_options,
-                                            test.testOptions);
+      test.pcLocal.checkStatsIceConnections(stats, test.testOptions);
     });
   },
 
   function PC_REMOTE_CHECK_ICE_CONNECTIONS(test) {
     return test.pcRemote.getStats().then(stats => {
-      test.pcRemote.checkStatsIceConnections(stats,
-                                             test._offer_constraints,
-                                             test._offer_options,
-                                             test.testOptions);
+      test.pcRemote.checkStatsIceConnections(stats, test.testOptions);
     });
   },
 

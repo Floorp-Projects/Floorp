@@ -16,7 +16,7 @@
     var options = { mandatory: { OfferToReceiveVideo: true } }; // obsolete
 
     pc.createOffer(options).then(() => ok(false, "createOffer must fail"),
-                                 e => is(e.name, "InternalError",
+                                 e => is(e.name, "InvalidStateError",
                                          "createOffer must fail"))
     .catch(e => ok(false, e.message))
     .then(() => {

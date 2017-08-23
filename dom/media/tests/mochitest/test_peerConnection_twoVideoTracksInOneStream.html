@@ -19,12 +19,6 @@
           test._local_offer.sdp = test._local_offer.sdp.replace(
               /a=msid:[^\s]*/g,
               "a=msid:foo");
-        },
-        function PC_REMOTE_OVERRIDE_EXPECTED_STREAM_IDS(test) {
-          Object.keys(
-              test.pcRemote.expectedRemoteTrackInfoById).forEach(trackId => {
-                test.pcRemote.expectedRemoteTrackInfoById[trackId].streamId = "foo";
-              });
         }
     ]);
     test.chain.insertAfter("PC_LOCAL_GET_ANSWER", [
@@ -32,12 +26,6 @@
           test._remote_answer.sdp = test._remote_answer.sdp.replace(
               /a=msid:[^\s]*/g,
               "a=msid:foo");
-        },
-        function PC_LOCAL_OVERRIDE_EXPECTED_STREAM_IDS(test) {
-          Object.keys(
-              test.pcLocal.expectedRemoteTrackInfoById).forEach(trackId => {
-                test.pcLocal.expectedRemoteTrackInfoById[trackId].streamId = "foo";
-              });
         }
     ]);
     test.setMediaConstraints([{video: true}, {video: true}],

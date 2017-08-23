@@ -36,50 +36,28 @@
           emitter2.start();
           const newstream = emitter2.stream();
           const newtrack = newstream.getVideoTracks()[0];
-          return test.pcLocal.senderReplaceTrack(0, newtrack, newstream.id)
+          var sender = test.pcLocal._pc.getSenders()[0];
+          return test.pcLocal.senderReplaceTrack(sender, newtrack, newstream)
             .then(() => {
               test.setMediaConstraints([{video: true}, {video: true}],
                                        [{video: true}]);
-              // Use fake:true here since the native fake device on linux
-              // doesn't change color as needed by checkVideoPlaying() below.
-              return test.pcLocal.getAllUserMedia([{video: true, fake: true}]);
             });
         },
       ],
       [
-        function PC_REMOTE_CHECK_ORIGINAL_TRACK_ENDED(test) {
+        function PC_REMOTE_CHECK_ORIGINAL_TRACK_NOT_ENDED(test) {
+          is(test.pcRemote._pc.getTransceivers().length, 1,
+              "pcRemote should have one transceiver");
+          const track = test.pcRemote._pc.getTransceivers()[0].receiver.track;
+
           const vremote = test.pcRemote.remoteMediaElements.find(
-              elem => elem.id.includes(emitter1.stream().getTracks()[0].id));
+              elem => elem.id.includes(track.id));
           if (!vremote) {
             return Promise.reject(new Error("Couldn't find video element"));
           }
-          ok(vremote.ended, "Original track should have ended after renegotiation");
-        },
-        function PC_REMOTE_CHECK_REPLACED_TRACK_FLOW(test) {
-          const vremote = test.pcRemote.remoteMediaElements.find(
-              elem => elem.id.includes(test.pcLocal._pc.getSenders()[0].track.id));
-          if (!vremote) {
-            return Promise.reject(new Error("Couldn't find video element"));
-          }
-          return addFinallyToPromise(helper.checkVideoPlaying(vremote))
-            .finally(() => emitter2.stop())
-            .then(() => {
-              const px = helper._helper.getPixel(vremote, 10, 10);
-              const isBlue = helper._helper.isPixel(
-                  px, CaptureStreamTestHelper.prototype.blue, 5);
-              const isGrey = helper._helper.isPixel(
-                  px, CaptureStreamTestHelper.prototype.grey, 5);
-              ok(isBlue || isGrey, "replaced track should be blue or grey");
-            });
-        },
-        function PC_REMOTE_CHECK_ADDED_TRACK_FLOW(test) {
-          const vremote = test.pcRemote.remoteMediaElements.find(
-              elem => elem.id.includes(test.pcLocal._pc.getSenders()[1].track.id));
-          if (!vremote) {
-            return Promise.reject(new Error("Couldn't find video element"));
-          }
+          ok(!vremote.ended, "Original track should not have ended after renegotiation (replaceTrack is not signalled!)");
           return helper.checkVideoPlaying(vremote);
-        },
+        }
       ]
     );
 

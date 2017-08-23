@@ -29,21 +29,30 @@
           // 0, but the remote side will keep its old pipeline and packet
           // count.
           test.pcLocal.disableRtpCountChecking = true;
-          return test.pcLocal.getAllUserMedia([{audio: true}]);
+          return test.pcLocal.getAllUserMediaAndAddStreams([{audio: true}]);
         },
       ],
       [
         function PC_REMOTE_CHECK_ADDED_TRACK(test) {
-          is(test.pcRemote._pc.getReceivers().length, 1,
-              "pcRemote should still have one receiver");
-          const track = test.pcRemote._pc.getReceivers()[0].track;
-          isnot(originalTrack.id, track.id, "Receiver should have changed");
+          is(test.pcRemote._pc.getTransceivers().length, 2,
+              "pcRemote should have two transceivers");
+          const track = test.pcRemote._pc.getTransceivers()[1].receiver.track;
 
           const analyser = new AudioStreamAnalyser(
               new AudioContext(), new MediaStream([track]));
           const freq = analyser.binIndexForFrequency(TEST_AUDIO_FREQ);
           return analyser.waitForAnalysisSuccess(arr => arr[freq] > 200);
         },
+        function PC_REMOTE_CHECK_REMOVED_TRACK(test) {
+          is(test.pcRemote._pc.getTransceivers().length, 2,
+              "pcRemote should have two transceivers");
+          const track = test.pcRemote._pc.getTransceivers()[0].receiver.track;
+
+          const analyser = new AudioStreamAnalyser(
+              new AudioContext(), new MediaStream([track]));
+          const freq = analyser.binIndexForFrequency(TEST_AUDIO_FREQ);
+          return analyser.waitForAnalysisSuccess(arr => arr[freq] < 50);
+        }
       ]
     );
 

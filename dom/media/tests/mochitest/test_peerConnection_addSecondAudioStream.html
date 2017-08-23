@@ -18,7 +18,7 @@
         function PC_LOCAL_ADD_SECOND_STREAM(test) {
           test.setMediaConstraints([{audio: true}, {audio: true}],
                                    [{audio: true}]);
-          return test.pcLocal.getAllUserMedia([{audio: true}]);
+          return test.pcLocal.getAllUserMediaAndAddStreams([{audio: true}]);
         },
       ],
       [
