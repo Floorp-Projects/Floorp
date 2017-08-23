@@ -1163,7 +1163,6 @@ public:
     return std::max(aOffset, mSize);
   }
   bool    IsDataCachedToEndOfResource(int64_t aOffset) override { return true; }
-  bool    IsSuspendedByCache() override { return true; }
   bool    IsSuspended() override { return true; }
   bool    IsTransportSeekable() override { return true; }
 
