@@ -34,7 +34,6 @@ public:
   {
     return false;
   }
-  bool IsSuspended() override { return false; }
   nsresult ReadFromCache(char* aBuffer, int64_t aOffset,
                          uint32_t aCount) override
   {

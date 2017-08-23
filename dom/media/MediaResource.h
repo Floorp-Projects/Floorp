@@ -202,8 +202,6 @@ public:
   // Returns true if all the data from aOffset to the end of the stream
   // is in cache. If the end of the stream is not known, we return false.
   virtual bool IsDataCachedToEndOfResource(int64_t aOffset) = 0;
-  // Returns true if this stream has been suspended.
-  virtual bool IsSuspended() = 0;
   // Reads only data which is cached in the media cache. If you try to read
   // any data which overlaps uncached data, or if aCount bytes otherwise can't
   // be read, this function will return failure. This function be called from
@@ -459,6 +457,8 @@ public:
   // Resume the current load since data is wanted again
   nsresult CacheClientResume();
 
+  bool IsSuspended();
+
   void ThrottleReadahead(bool bThrottle) override;
 
   // Main thread
@@ -491,7 +491,6 @@ public:
   int64_t GetNextCachedData(int64_t aOffset) override;
   int64_t GetCachedDataEnd(int64_t aOffset) override;
   bool    IsDataCachedToEndOfResource(int64_t aOffset) override;
-  bool    IsSuspended() override;
   bool    IsTransportSeekable() override;
 
   size_t SizeOfExcludingThis(MallocSizeOf aMallocSizeOf) const override {
