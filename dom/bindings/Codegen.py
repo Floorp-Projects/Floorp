@@ -7843,10 +7843,12 @@ class CGPerSignatureCall(CGThing):
             not getter):
             cgThings.append(CGGeneric(fill(
                 """
-                CustomElementReactionsStack* reactionsStack = GetCustomElementReactionsStack(${obj});
                 Maybe<AutoCEReaction> ceReaction;
-                if (reactionsStack) {
-                  ceReaction.emplace(reactionsStack);
+                if (CustomElementRegistry::IsCustomElementEnabled()) {
+                  CustomElementReactionsStack* reactionsStack = GetCustomElementReactionsStack(${obj});
+                  if (reactionsStack) {
+                    ceReaction.emplace(reactionsStack);
+                  }
                 }
                 """, obj=objectName)))
 
