@@ -21,7 +21,7 @@
                                    [{video: true}]);
           // Use fake:true here since the native fake device on linux doesn't
           // change color as needed by checkVideoPlaying() below.
-          return test.pcLocal.getAllUserMedia([{video: true, fake: true}]);
+          return test.pcLocal.getAllUserMediaAndAddStreams([{video: true, fake: true}]);
         },
       ],
       [

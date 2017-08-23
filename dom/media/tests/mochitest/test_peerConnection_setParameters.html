@@ -17,10 +17,11 @@ function parameterstest(pc) {
   var sender = pc.getSenders()[0];
 
   var testParameters = (params, errorName, errorMsg) => {
+    info("Trying to set " + JSON.stringify(params));
 
     var validateParameters = (a, b) => {
       var validateEncoding = (a, b) => {
-        is(a.rid, b.rid || "", "same rid");
+        is(a.rid, b.rid, "same rid");
         is(a.maxBitrate, b.maxBitrate, "same maxBitrate");
         is(a.scaleResolutionDownBy, b.scaleResolutionDownBy,
            "same scaleResolutionDownBy");

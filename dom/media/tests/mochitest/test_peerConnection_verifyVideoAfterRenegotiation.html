@@ -78,7 +78,7 @@ runNetworkTest(() => {
         h2.drawColor(canvas2, h2.blue);
         stream2 = canvas2.captureStream(0);
 
-        // can't use test.pcLocal.getAllUserMedia([{video: true}]);
+        // can't use test.pcLocal.getAllUserMediaAndAddStreams([{video: true}]);
         // because it doesn't let us substitute the capture stream
         test.pcLocal.attachLocalStream(stream2);
       }

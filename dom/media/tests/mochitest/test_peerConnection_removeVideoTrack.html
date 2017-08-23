@@ -2,6 +2,7 @@
 <html>
 <head>
   <script type="application/javascript" src="pc.js"></script>
+  <script type="application/javascript" src="/tests/dom/canvas/test/captureStream_common.js"></script>
 </head>
 <body>
 <pre id="test">
@@ -36,12 +37,14 @@
       ],
       [
         function PC_REMOTE_CHECK_FLOW_STOPPED(test) {
-          is(test.pcRemote._pc.getReceivers().length, 0,
-             "pcRemote should have no more receivers");
-          is(receivedTrack.readyState, "ended",
-             "The received track should have ended");
-          is(element.ended, true,
-             "Element playing the removed track should have ended");
+          is(test.pcRemote._pc.getTransceivers().length, 1,
+              "pcRemote should have one transceiver");
+          const track = test.pcRemote._pc.getTransceivers()[0].receiver.track;
+
+          const vAdded = test.pcRemote.remoteMediaElements.find(
+              elem => elem.id.includes(track.id));
+          const helper = new VideoStreamHelper();
+          return helper.checkVideoPaused(vAdded, 10, 10, 16, 5000);
         },
       ]
     );

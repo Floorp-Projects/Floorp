@@ -25,7 +25,7 @@
           test.pcLocal.expectIceChecking();
           // Use fake:true here since the native fake device on linux doesn't
           // change color as needed by checkVideoPlaying() below.
-          return test.pcLocal.getAllUserMedia([{video: true, fake: true}]);
+          return test.pcLocal.getAllUserMediaAndAddStreams([{video: true, fake: true}]);
         },
         function PC_REMOTE_EXPECT_ICE_CHECKING(test) {
           test.pcRemote.expectIceChecking();

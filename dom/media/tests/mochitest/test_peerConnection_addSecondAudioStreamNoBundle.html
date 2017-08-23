@@ -22,7 +22,7 @@
           // Since this is a NoBundle variant, adding a track will cause us to
           // go back to checking.
           test.pcLocal.expectIceChecking();
-          return test.pcLocal.getAllUserMedia([{audio: true}]);
+          return test.pcLocal.getAllUserMediaAndAddStreams([{audio: true}]);
         },
         function PC_REMOTE_EXPECT_ICE_CHECKING(test) {
           test.pcRemote.expectIceChecking();
