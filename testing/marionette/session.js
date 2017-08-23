@@ -276,8 +276,7 @@ session.Proxy = class {
         }
         if (typeof json.socksProxy != "undefined") {
           [p.socksProxy, p.socksProxyPort] = fromHost("socks", json.socksProxy);
-          p.socksProxyVersion = assert.positiveInteger(
-              json.socksProxyVersion);
+          p.socksVersion = assert.positiveInteger(json.socksVersion);
         }
         break;
 
@@ -312,7 +311,7 @@ session.Proxy = class {
       httpProxy: toHost(this.httpProxy, this.httpProxyPort),
       sslProxy: toHost(this.sslProxy, this.sslProxyPort),
       socksProxy: toHost(this.socksProxy, this.socksProxyPort),
-      socksProxyVersion: this.socksProxyVersion,
+      socksVersion: this.socksVersion,
       proxyAutoconfigUrl: this.proxyAutoconfigUrl,
     });
   }

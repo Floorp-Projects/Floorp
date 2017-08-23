@@ -58,6 +58,26 @@ class TestProxyCapabilities(MarionetteTestCase):
             "ftpProxy": "{}:21".format(proxy_hostname),
             "httpProxy": "{}:80".format(proxy_hostname),
             "sslProxy": "{}:443".format(proxy_hostname),
+            "socksProxy": proxy_hostname,
+            "socksVersion": 4,
+        }}
+
+        self.marionette.start_session(capabilities)
+        self.assertEqual(self.marionette.session_capabilities["proxy"],
+                         capabilities["proxy"])
+
+    def test_proxy_type_manual_socks_requires_version(self):
+        proxy_port = 4444
+        proxy_hostname = "marionette.test"
+        proxy_host = "{}:{}".format(proxy_hostname, proxy_port)
+        capabilities = {"proxy": {
+            "proxyType": "manual",
+            "socksProxy": proxy_host,
+        }}
+
+        with self.assertRaises(errors.SessionNotCreatedException):
+            self.marionette.start_session(capabilities)
+
     def test_proxy_type_pac(self):
         pac_url = "http://marionette.test"
         capabilities = {"proxy": {"proxyType": "pac", "proxyAutoconfigUrl": pac_url}}
@@ -96,3 +116,9 @@ class TestProxyCapabilities(MarionetteTestCase):
         with self.assertRaises(errors.SessionNotCreatedException):
             self.marionette.start_session({"proxy": {"proxyType": "pac",
                                                      "proxyAutoconfigUrl": None}})
+
+    def test_missing_socks_version_for_manual(self):
+        capabilities = {"proxy": {"proxyType": "manual", "socksProxy": "marionette.test"}}
+
+        with self.assertRaises(errors.SessionNotCreatedException):
+            self.marionette.start_session(capabilities)
