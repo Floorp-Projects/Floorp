@@ -64,7 +64,6 @@ DIRS += [
     'taskcluster',
     'testing/mozbase',
     'third_party/python',
-    'tools',
 ]
 
 if not CONFIG['JS_STANDALONE']:
@@ -96,6 +95,7 @@ if not CONFIG['JS_STANDALONE']:
 
     DIRS += [
         'build',
+        'tools',
         'probes',
     ]
 
