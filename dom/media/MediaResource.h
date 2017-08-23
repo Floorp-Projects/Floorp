@@ -202,14 +202,6 @@ public:
   // Returns true if all the data from aOffset to the end of the stream
   // is in cache. If the end of the stream is not known, we return false.
   virtual bool IsDataCachedToEndOfResource(int64_t aOffset) = 0;
-  // Returns true if this stream is suspended by the cache because the
-  // cache is full. If true then the decoder should try to start consuming
-  // data, otherwise we may not be able to make progress.
-  // MediaDecoder::NotifySuspendedStatusChanged is called when this
-  // changes.
-  // For resources using the media cache, this returns true only when all
-  // streams for the same resource are all suspended.
-  virtual bool IsSuspendedByCache() = 0;
   // Returns true if this stream has been suspended.
   virtual bool IsSuspended() = 0;
   // Reads only data which is cached in the media cache. If you try to read
@@ -499,7 +491,6 @@ public:
   int64_t GetNextCachedData(int64_t aOffset) override;
   int64_t GetCachedDataEnd(int64_t aOffset) override;
   bool    IsDataCachedToEndOfResource(int64_t aOffset) override;
-  bool    IsSuspendedByCache() override;
   bool    IsSuspended() override;
   bool    IsTransportSeekable() override;
 
@@ -542,6 +533,7 @@ public:
   nsresult GetCachedRanges(MediaByteRangeSet& aRanges) override;
 
 protected:
+  bool IsSuspendedByCache();
   // These are called on the main thread by Listener.
   nsresult OnStartRequest(nsIRequest* aRequest);
   nsresult OnStopRequest(nsIRequest* aRequest, nsresult aStatus);

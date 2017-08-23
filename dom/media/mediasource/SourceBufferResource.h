@@ -69,11 +69,6 @@ public:
     return GetLength();
   }
   bool IsDataCachedToEndOfResource(int64_t aOffset) override { return false; }
-  bool IsSuspendedByCache() override
-  {
-    UNIMPLEMENTED();
-    return false;
-  }
   bool IsSuspended() override
   {
     UNIMPLEMENTED();
