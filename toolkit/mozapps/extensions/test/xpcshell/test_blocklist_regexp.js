@@ -54,8 +54,8 @@ MockRegistrar.register("@mozilla.org/embedcomp/window-watcher;1", WindowWatcher)
 
 
 function load_blocklist(aFile, aCallback) {
-  Services.obs.addObserver(function() {
-    Services.obs.removeObserver(arguments.callee, "blocklist-updated");
+  Services.obs.addObserver(function observer() {
+    Services.obs.removeObserver(observer, "blocklist-updated");
 
     do_execute_soon(aCallback);
   }, "blocklist-updated");

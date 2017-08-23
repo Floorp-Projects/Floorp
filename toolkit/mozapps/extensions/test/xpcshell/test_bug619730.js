@@ -15,8 +15,8 @@ gPort = gTestserver.identity.primaryPort;
 mapFile("/data/test_bug619730.xml", gTestserver);
 
 function load_blocklist(file, aCallback) {
-  Services.obs.addObserver(function() {
-    Services.obs.removeObserver(arguments.callee, "blocklist-updated");
+  Services.obs.addObserver(function observer() {
+    Services.obs.removeObserver(observer, "blocklist-updated");
 
     do_execute_soon(aCallback);
   }, "blocklist-updated");

@@ -1,9 +1,9 @@
 function test() {
   waitForExplicitFinish();
 
-  Services.ww.registerNotification(function(aSubject, aTopic, aData) {
+  Services.ww.registerNotification(function notification(aSubject, aTopic, aData) {
     if (aTopic == "domwindowopened") {
-      Services.ww.unregisterNotification(arguments.callee);
+      Services.ww.unregisterNotification(notification);
 
       ok(true, "duplicateTabIn opened a new window");
 

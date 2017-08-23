@@ -85,9 +85,9 @@ add_task(async function test() {
 
             // only watch for a confirmation dialog every other time being called
             if (showMode) {
-                Services.ww.registerNotification(function(aSubject, aTopic, aData) {
+                Services.ww.registerNotification(function notification(aSubject, aTopic, aData) {
                     if (aTopic == "domwindowclosed")
-                        Services.ww.unregisterNotification(arguments.callee);
+                        Services.ww.unregisterNotification(notification);
                     else if (aTopic == "domwindowopened") {
                         let targetWin = aSubject.QueryInterface(Ci.nsIDOMEventTarget);
                         SimpleTest.waitForFocus(function() {
@@ -97,9 +97,9 @@ add_task(async function test() {
                 });
             }
 
-            Services.obs.addObserver(function(aSubject, aTopic, aData) {
+            Services.obs.addObserver(function observer(aSubject, aTopic, aData) {
                 if (aTopic == "passwordmgr-password-toggle-complete") {
-                    Services.obs.removeObserver(arguments.callee, aTopic);
+                    Services.obs.removeObserver(observer, aTopic);
                     func();
                 }
             }, "passwordmgr-password-toggle-complete");
@@ -177,9 +177,9 @@ add_task(async function test() {
 
         function lastStep() {
             // cleanup
-            Services.ww.registerNotification(function(aSubject, aTopic, aData) {
+            Services.ww.registerNotification(function notification(aSubject, aTopic, aData) {
                 // unregister ourself
-                Services.ww.unregisterNotification(arguments.callee);
+                Services.ww.unregisterNotification(notification);
 
                 pwmgr.removeAllLogins();
                 finish();
