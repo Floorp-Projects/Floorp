@@ -971,15 +971,6 @@ fn parser_maintains_current_line() {
 }
 
 #[test]
-fn cdc_regression_test() {
-    let mut input = ParserInput::new("-->x");
-    let mut parser = Parser::new(&mut input);
-    parser.skip_cdc_and_cdo();
-    assert_eq!(parser.next(), Ok(&Token::Ident("x".into())));
-    assert_eq!(parser.next(), Err(BasicParseError::EndOfInput));
-}
-
-#[test]
 fn parse_entirely_reports_first_error() {
     #[derive(PartialEq, Debug)]
     enum E { Foo }
