@@ -152,7 +152,6 @@ public:
   mozilla::ipc::IPCResult RecvGetAPZTestData(APZTestData* data) override;
 
   void ActorDestroy(ActorDestroyReason aWhy) override;
-  void SetWebRenderProfilerEnabled(bool aEnabled);
 
   void Pause();
   bool Resume();

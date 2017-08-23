@@ -548,7 +548,9 @@ class MDefinition : public MNode
         setBlockAndKind(block, Kind::Definition);
     }
 
-    static HashNumber addU32ToHash(HashNumber hash, uint32_t data);
+    static HashNumber addU32ToHash(HashNumber hash, uint32_t data) {
+        return data + (hash << 6) + (hash << 16) - hash;
+    }
 
   public:
     explicit MDefinition(Opcode op)
@@ -1334,6 +1336,8 @@ class MNullaryInstruction
     explicit MNullaryInstruction(Opcode op)
       : MAryInstruction(op)
     { }
+
+    HashNumber valueHash() const override;
 };
 
 class MUnaryInstruction : public MAryInstruction<1>
@@ -1344,6 +1348,8 @@ class MUnaryInstruction : public MAryInstruction<1>
     {
         initOperand(0, ins);
     }
+
+    HashNumber valueHash() const override;
 
   public:
     NAMED_OPERANDS((0, input))
@@ -1368,13 +1374,8 @@ class MBinaryInstruction : public MAryInstruction<2>
     }
 
   protected:
-    HashNumber valueHash() const
-    {
-        MDefinition* lhs = getOperand(0);
-        MDefinition* rhs = getOperand(1);
+    HashNumber valueHash() const override;
 
-        return HashNumber(op()) + lhs->id() + rhs->id();
-    }
     bool binaryCongruentTo(const MDefinition* ins) const
     {
         if (op() != ins->op())
@@ -1430,15 +1431,7 @@ class MTernaryInstruction : public MAryInstruction<3>
         initOperand(2, third);
     }
 
-  protected:
-    HashNumber valueHash() const
-    {
-        MDefinition* first = getOperand(0);
-        MDefinition* second = getOperand(1);
-        MDefinition* third = getOperand(2);
-
-        return HashNumber(op()) + first->id() + second->id() + third->id();
-    }
+    HashNumber valueHash() const override;
 };
 
 class MQuaternaryInstruction : public MAryInstruction<4>
@@ -1455,17 +1448,7 @@ class MQuaternaryInstruction : public MAryInstruction<4>
         initOperand(3, fourth);
     }
 
-  protected:
-    HashNumber valueHash() const
-    {
-        MDefinition* first = getOperand(0);
-        MDefinition* second = getOperand(1);
-        MDefinition* third = getOperand(2);
-        MDefinition* fourth = getOperand(3);
-
-        return HashNumber(op()) + first->id() + second->id() +
-            third->id() + fourth->id();
-    }
+    HashNumber valueHash() const override;
 };
 
 template <class T>
@@ -14198,7 +14181,7 @@ class MWasmLoadTls
     }
 
     HashNumber valueHash() const override {
-        return HashNumber(op()) + offset();
+        return addU32ToHash(HashNumber(op()), offset());
     }
 
     AliasSet getAliasSet() const override {

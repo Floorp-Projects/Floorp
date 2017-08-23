@@ -3602,7 +3602,7 @@ Selection::ScrollIntoView(SelectionRegion aRegion,
   if (!mFrameSelection)
     return NS_OK;//nothing to do
 
-  nsCOMPtr<nsIPresShell> presShell = mFrameSelection->GetShell();
+  nsIPresShell* presShell = mFrameSelection->GetShell();
   if (!presShell)
     return NS_OK;
 
@@ -3612,6 +3612,11 @@ Selection::ScrollIntoView(SelectionRegion aRegion,
   if (!(aFlags & Selection::SCROLL_SYNCHRONOUS))
     return PostScrollSelectionIntoViewEvent(aRegion, aFlags,
       aVertical, aHorizontal);
+
+  // From this point on, the presShell may get destroyed by the calls below, so
+  // hold on to it using a strong reference to ensure the safety of the
+  // accesses to frame pointers in the callees.
+  nsCOMPtr<nsIPresShell> kungFuDeathGrip(presShell);
 
   // Now that text frame character offsets are always valid (though not
   // necessarily correct), the worst that will happen if we don't flush here

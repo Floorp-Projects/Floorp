@@ -28,7 +28,6 @@ public:
               bool* aUseANGLE,
               RefPtr<widget::CompositorWidget>&& aWidget,
               layers::SynchronousTask* aTask,
-              bool aEnableProfiler,
               LayoutDeviceIntSize aSize,
               layers::SyncHandle* aHandle)
     : mDocHandle(aDocHandle)
@@ -37,7 +36,6 @@ public:
     , mBridge(aBridge)
     , mCompositorWidget(Move(aWidget))
     , mTask(aTask)
-    , mEnableProfiler(aEnableProfiler)
     , mSize(aSize)
     , mSyncHandle(aHandle)
   {
@@ -74,7 +72,7 @@ public:
     wr::Renderer* wrRenderer = nullptr;
     if (!wr_window_new(aWindowId, mSize.width, mSize.height, gl.get(),
                        aRenderThread.ThreadPool().Raw(),
-                       this->mEnableProfiler, mDocHandle, &wrRenderer,
+                       mDocHandle, &wrRenderer,
                        mMaxTextureSize)) {
       // wr_window_new puts a message into gfxCriticalNote if it returns false
       return;
@@ -110,7 +108,6 @@ private:
   layers::CompositorBridgeParentBase* mBridge;
   RefPtr<widget::CompositorWidget> mCompositorWidget;
   layers::SynchronousTask* mTask;
-  bool mEnableProfiler;
   LayoutDeviceIntSize mSize;
   layers::SyncHandle* mSyncHandle;
 };
@@ -142,8 +139,7 @@ private:
 
 //static
 already_AddRefed<WebRenderAPI>
-WebRenderAPI::Create(bool aEnableProfiler,
-                     layers::CompositorBridgeParentBase* aBridge,
+WebRenderAPI::Create(layers::CompositorBridgeParentBase* aBridge,
                      RefPtr<widget::CompositorWidget>&& aWidget,
                      LayoutDeviceIntSize aSize)
 {
@@ -163,7 +159,7 @@ WebRenderAPI::Create(bool aEnableProfiler,
   // the next time we need to access the DocumentHandle object.
   layers::SynchronousTask task("Create Renderer");
   auto event = MakeUnique<NewRenderer>(&docHandle, aBridge, &maxTextureSize, &useANGLE,
-                                       Move(aWidget), &task, aEnableProfiler, aSize,
+                                       Move(aWidget), &task, aSize,
                                        &syncHandle);
   RenderThread::Get()->RunEvent(id, Move(event));
 
@@ -526,39 +522,6 @@ void
 WebRenderAPI::DeleteFont(wr::FontKey aKey)
 {
   wr_api_delete_font(mDocHandle, aKey);
-}
-
-class EnableProfiler : public RendererEvent
-{
-public:
-  explicit EnableProfiler(bool aEnabled)
-    : mEnabled(aEnabled)
-  {
-    MOZ_COUNT_CTOR(EnableProfiler);
-  }
-
-  ~EnableProfiler()
-  {
-    MOZ_COUNT_DTOR(EnableProfiler);
-  }
-
-  virtual void Run(RenderThread& aRenderThread, WindowId aWindowId) override
-  {
-    auto renderer = aRenderThread.GetRenderer(aWindowId);
-    if (renderer) {
-      renderer->SetProfilerEnabled(mEnabled);
-    }
-  }
-
-private:
-  bool mEnabled;
-};
-
-void
-WebRenderAPI::SetProfilerEnabled(bool aEnabled)
-{
-  auto event = MakeUnique<EnableProfiler>(aEnabled);
-  RunOnRenderThread(Move(event));
 }
 
 class FrameStartTime : public RendererEvent

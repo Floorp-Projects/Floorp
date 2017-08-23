@@ -637,7 +637,7 @@ nsEditingSession::OnStateChange(nsIWebProgress *aWebProgress,
         nsCOMPtr<nsIURI> uri;
         channel->GetURI(getter_AddRefs(uri));
         if (uri) {
-          nsXPIDLCString spec;
+          nsCString spec;
           uri->GetSpec(spec);
           printf(" **** STATE_START: CHANNEL URI=%s, flags=%x\n",
                  spec.get(), aStateFlags);
@@ -720,7 +720,7 @@ nsEditingSession::OnStateChange(nsIWebProgress *aWebProgress,
         nsCOMPtr<nsIURI> uri;
         channel->GetURI(getter_AddRefs(uri));
         if (uri) {
-          nsXPIDLCString spec;
+          nsCString spec;
           uri->GetSpec(spec);
           printf(" **** STATE_STOP: CHANNEL URI=%s, flags=%x\n",
                  spec.get(), aStateFlags);
@@ -905,7 +905,7 @@ nsEditingSession::EndDocumentLoad(nsIWebProgress *aWebProgress,
   printf("======= EndDocumentLoad ========\n");
   printf("with status %d, ", aStatus);
   nsCOMPtr<nsIURI> uri;
-  nsXPIDLCString spec;
+  nsCString spec;
   if (NS_SUCCEEDED(aChannel->GetURI(getter_AddRefs(uri)))) {
     uri->GetSpec(spec);
     printf(" uri %s\n", spec.get());
@@ -1027,7 +1027,7 @@ nsEditingSession::EndPageLoad(nsIWebProgress *aWebProgress,
   printf("======= EndPageLoad ========\n");
   printf("  with status %d, ", aStatus);
   nsCOMPtr<nsIURI> uri;
-  nsXPIDLCString spec;
+  nsCString spec;
   if (NS_SUCCEEDED(aChannel->GetURI(getter_AddRefs(uri)))) {
     uri->GetSpec(spec);
     printf("uri %s\n", spec.get());

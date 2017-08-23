@@ -280,7 +280,7 @@ nsIconChannel::MakeInputStream(nsIInputStream** _retval,
 {
   NS_OBJC_BEGIN_TRY_ABORT_BLOCK_NSRESULT;
 
-  nsXPIDLCString contentType;
+  nsCString contentType;
   nsAutoCString fileExt;
   nsCOMPtr<nsIFile> fileloc; // file we want an icon for
   uint32_t desiredImageSize;
