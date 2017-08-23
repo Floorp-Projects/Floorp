@@ -11,6 +11,7 @@ import subprocess
 import tarfile
 import tempfile
 
+from mozbuild.util import memoize
 from mozpack.archive import (
     create_tar_gz_from_files,
 )
@@ -163,3 +164,24 @@ def build_from_context(docker_bin, context_path, prefix, tag=None):
             raise Exception('error building image')
     finally:
         shutil.rmtree(d)
+
+
+@memoize
+def parse_volumes(image):
+    """Parse VOLUME entries from a Dockerfile for an image."""
+    volumes = set()
+
+    with open(os.path.join(IMAGE_DIR, image, 'Dockerfile'), 'rb') as fh:
+        for line in fh:
+            line = line.strip()
+            if not line.startswith(b'VOLUME '):
+                continue
+
+            v = line.split(None, 1)[1]
+            if v.startswith(b'['):
+                raise ValueError('cannot parse array syntax for VOLUME; '
+                                 'convert to multiple entries')
+
+            volumes |= set(v.split())
+
+    return volumes
