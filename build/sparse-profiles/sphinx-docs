@@ -1,0 +1,17 @@
+%include build/sparse-profiles/mach
+
+[include]
+# Code for generating docs.
+glob:tools/docs/**
+
+# Potential docs sources
+glob:**/*.rst
+
+# Python API docs.
+glob:**/*.py
+
+# moz.build files are read to discover location of docs.
+glob:**/moz.build
+
+# Read to set the version of the docs.
+path:config/milestone.txt
