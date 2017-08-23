@@ -992,7 +992,7 @@ Classifier::ScanStoreDir(nsIFile* aDirectory, nsTArray<nsCString>& aTables)
     // Both v2 and v4 contain .pset file
     nsCString suffix(NS_LITERAL_CSTRING(".pset"));
 
-    int32_t dot = leafName.RFind(suffix, 0);
+    int32_t dot = leafName.RFind(suffix);
     if (dot != -1) {
       leafName.Cut(dot, suffix.Length());
       aTables.AppendElement(leafName);
@@ -1582,7 +1582,7 @@ Classifier::LoadMetadata(nsIFile* aDirectory, nsACString& aResult)
     rv = file->GetNativeLeafName(tableName);
     NS_ENSURE_SUCCESS(rv, rv);
 
-    int32_t dot = tableName.RFind(METADATA_SUFFIX, 0);
+    int32_t dot = tableName.RFind(METADATA_SUFFIX);
     if (dot == -1) {
       continue;
     }
