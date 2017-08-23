@@ -33,6 +33,18 @@ const ADDRESS_COMPUTE_TESTCASES = [
       "name": "Timothy John Berners-Lee",
     },
   },
+  {
+    description: "Has split CJK names",
+    address: {
+      "given-name": "德明",
+      "family-name": "孫",
+    },
+    expectedResult: {
+      "given-name": "德明",
+      "family-name": "孫",
+      "name": "孫德明",
+    },
+  },
 
   // Address
   {
