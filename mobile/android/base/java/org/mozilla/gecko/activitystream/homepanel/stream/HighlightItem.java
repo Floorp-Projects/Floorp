@@ -111,7 +111,7 @@ public class HighlightItem extends StreamItem {
 
         updateUiForSource(highlight.getSource());
         updatePageDomain();
-        pageIconLayout.updateIcon(highlight.getUrl(), highlight.getMetadataSlow().getImageUrl());
+        pageIconLayout.updateIcon(highlight.getUrl(), highlight.getImageUrl());
     }
 
     private void updateUiForSource(Utils.HighlightSource source) {
