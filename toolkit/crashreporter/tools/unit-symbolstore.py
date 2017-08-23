@@ -21,6 +21,7 @@ from mozpack.manifests import InstallManifest
 import mozpack.path as mozpath
 
 import symbolstore
+from symbolstore import normpath
 
 # Some simple functions to mock out files that the platform-specific dumpers will accept.
 # dump_syms itself will not be run (we mock that call out), but we can't override
@@ -78,6 +79,11 @@ class HelperMixin(object):
         d = os.path.dirname(f)
         if d and not os.path.exists(d):
             os.makedirs(d)
+
+    def make_file(self, path):
+        self.make_dirs(path)
+        with open(path, 'wb') as f:
+            pass
 
     def add_test_files(self, files):
         for f in files:
@@ -163,7 +169,6 @@ class TestCopyDebug(HelperMixin, unittest.TestCase):
         d = symbolstore.Dumper_Win32(dump_syms='dump_syms',
                                      symbol_path=self.symbol_dir,
                                      copy_debug=True)
-        d.FixFilenameCase = lambda f: f
         d.Process(test_file)
         self.assertTrue(os.path.isfile(os.path.join(self.symbol_dir, code_file, code_id, code_file[:-1] + '_')))
 
@@ -237,15 +242,13 @@ class TestGeneratedFilePath(HelperMixin, unittest.TestCase):
 
 
 if target_platform() == 'WINNT':
-    class TestFixFilenameCase(HelperMixin, unittest.TestCase):
-        def test_fix_filename_case(self):
+    class TestNormpath(HelperMixin, unittest.TestCase):
+        def test_normpath(self):
             # self.test_dir is going to be 8.3 paths...
             junk = os.path.join(self.test_dir, 'x')
             with open(junk, 'wb') as o:
                 o.write('x')
-            d = symbolstore.Dumper_Win32(dump_syms='dump_syms',
-                                         symbol_path=self.test_dir)
-            fixed_dir = os.path.dirname(d.FixFilenameCase(junk))
+            fixed_dir = os.path.dirname(normpath(junk))
             files = [
                 'one\\two.c',
                 'three\\Four.d',
@@ -258,7 +261,7 @@ if target_platform() == 'WINNT':
                 self.make_dirs(full_path)
                 with open(full_path, 'wb') as o:
                     o.write('x')
-                fixed_path = d.FixFilenameCase(full_path.lower())
+                fixed_path = normpath(full_path.lower())
                 fixed_path = os.path.relpath(fixed_path, fixed_dir)
                 self.assertEqual(rel_path, fixed_path)
 
@@ -323,8 +326,8 @@ class TestInstallManifest(HelperMixin, unittest.TestCase):
         self.manifest = InstallManifest()
         self.canonical_mapping = {}
         for s in ['src1', 'src2']:
-            srcfile = os.path.join(self.srcdir, s)
-            objfile = os.path.join(self.objdir, s)
+            srcfile = normpath(os.path.join(self.srcdir, s))
+            objfile = normpath(os.path.join(self.objdir, s))
             self.canonical_mapping[objfile] = srcfile
             self.manifest.add_copy(srcfile, s)
         self.manifest_file = os.path.join(self.test_dir, 'install-manifest')
@@ -400,10 +403,14 @@ class TestFileMapping(HelperMixin, unittest.TestCase):
         file_mapping = {}
         dumped_files = []
         expected_files = []
+        self.make_dirs(os.path.join(self.objdir, 'x', 'y'))
         for s, o in files:
             srcfile = os.path.join(self.srcdir, s)
-            expected_files.append(srcfile)
-            file_mapping[os.path.join(self.objdir, o)] = srcfile
+            self.make_file(srcfile)
+            expected_files.append(normpath(srcfile))
+            objfile = os.path.join(self.objdir, o)
+            self.make_file(objfile)
+            file_mapping[normpath(objfile)] = normpath(srcfile)
             dumped_files.append(os.path.join(self.objdir, 'x', 'y',
                                              '..', '..', o))
         # mock the dump_syms output
@@ -479,10 +486,15 @@ class TestFunctional(HelperMixin, unittest.TestCase):
     def testSymbolstore(self):
         if self.skip_test:
             raise unittest.SkipTest('Skipping test in non-Firefox product')
+        dist_include_manifest = os.path.join(buildconfig.topobjdir,
+                                             '_build_manifests/install/dist_include')
+        dist_include = os.path.join(buildconfig.topobjdir, 'dist/include')
         output = subprocess.check_output([sys.executable,
                                           self.script_path,
                                           '--vcs-info',
                                           '-s', self.topsrcdir,
+                                          '--install-manifest=%s,%s' % (dist_include_manifest,
+                                                                        dist_include),
                                           self.dump_syms,
                                           self.test_dir,
                                           self.target_bin],
@@ -493,14 +505,23 @@ class TestFunctional(HelperMixin, unittest.TestCase):
         symbol_file = os.path.join(self.test_dir, lines[0])
         self.assertTrue(os.path.isfile(symbol_file))
         symlines = open(symbol_file, 'r').readlines()
-        file_lines = filter(lambda x: x.startswith('FILE') and 'nsBrowserApp.cpp' in x, symlines)
-        self.assertTrue(len(file_lines) >= 1,
-                         'should have nsBrowserApp.cpp FILE line')
-        filename = file_lines[0].split(None, 2)[2]
-
-        # Skip this check for local git repositories.
-        if os.path.isdir(mozpath.join(self.topsrcdir, '.hg')):
-            self.assertEqual('hg:', filename[:3])
+        file_lines = [l for l in symlines if l.startswith('FILE')]
+        def check_hg_path(lines, match):
+            match_lines = [l for l in file_lines if match in l]
+            self.assertTrue(len(match_lines) >= 1,
+                            'should have a FILE line for ' + match)
+            # Skip this check for local git repositories.
+            if not os.path.isdir(mozpath.join(self.topsrcdir, '.hg')):
+                return
+            for line in match_lines:
+                filename = line.split(None, 2)[2]
+                self.assertEqual('hg:', filename[:3])
+        # Check that nsBrowserApp.cpp is listed as a FILE line, and that
+        # it was properly mapped to the source repo.
+        check_hg_path(file_lines, 'nsBrowserApp.cpp')
+        # Also check Assertions.h to verify that files from dist/include
+        # are properly mapped.
+        check_hg_path(file_lines, 'mfbt/Assertions.h')
 
 
 if __name__ == '__main__':
