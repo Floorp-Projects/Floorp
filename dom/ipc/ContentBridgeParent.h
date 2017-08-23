@@ -81,12 +81,6 @@ public:
     return PContentBridgeParent::SendDeactivate(aTab);
   }
 
-  virtual bool SendParentActivated(PBrowserParent* aTab,
-                                   const bool& aActivated) override
-  {
-    return PContentBridgeParent::SendParentActivated(aTab, aActivated);
-  }
-
 protected:
   virtual ~ContentBridgeParent();
 
