@@ -532,9 +532,9 @@
 }
 
 #onboarding-notification-body {
-  width: 420px;
+  width: 500px;
   margin: 0 15px;
-  color: #0c0c0d;;
+  color: #0c0c0d;
   display: inline-block;
   max-height: 100%;
   overflow: auto;
