@@ -856,6 +856,10 @@
                 <label id="extension" class="urlbar-display urlbar-display-extension" value="&urlbar.extension.label;"/>
               </box>
               <hbox id="page-action-buttons">
+                <hbox id="userContext-icons" hidden="true">
+                  <label id="userContext-label"/>
+                  <image id="userContext-indicator"/>
+                </hbox>
                 <image id="page-report-button"
                        class="urlbar-icon"
                        hidden="true"
@@ -869,6 +873,7 @@
                        onclick="FullZoom.reset();"
                        tooltip="dynamic-shortcut-tooltip"
                        hidden="true"/>
+                <box id="pageActionSeparator"/>
                 <image id="pageActionButton"
                        class="urlbar-icon"
                        tooltiptext="&pageActionButton.tooltip;"
@@ -887,10 +892,6 @@
                     <image id="star-button-animatable-image"/>
                   </hbox>
                 </hbox>
-              </hbox>
-              <hbox id="userContext-icons" hidden="true">
-                <label id="userContext-label"/>
-                <image id="userContext-indicator"/>
               </hbox>
             </textbox>
         </toolbaritem>
