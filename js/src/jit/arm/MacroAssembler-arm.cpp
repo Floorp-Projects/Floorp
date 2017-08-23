@@ -346,41 +346,36 @@ MacroAssemblerARM::ma_movPatchable(ImmPtr imm, Register dest, Assembler::Conditi
     ma_movPatchable(Imm32(int32_t(imm.value)), dest, c);
 }
 
-/* static */ void
-MacroAssemblerARM::ma_mov_patch(Imm32 imm_, Register dest, Assembler::Condition c,
-                                RelocStyle rs, Instruction* i)
+/* static */
+template<class Iter>
+void
+MacroAssemblerARM::ma_mov_patch(Imm32 imm32, Register dest, Assembler::Condition c,
+                                RelocStyle rs, Iter iter)
 {
-    MOZ_ASSERT(i);
-    int32_t imm = imm_.value;
+    MOZ_ASSERT(iter.cur());
 
     // Make sure the current instruction is not an artificial guard inserted
     // by the assembler buffer.
-    i = i->skipPool();
+    iter.skipPool();
 
+    int32_t imm = imm32.value;
     switch(rs) {
       case L_MOVWT:
-        Assembler::as_movw_patch(dest, Imm16(imm & 0xffff), c, i);
-        i = i->next();
-        Assembler::as_movt_patch(dest, Imm16(imm >> 16 & 0xffff), c, i);
+        Assembler::as_movw_patch(dest, Imm16(imm & 0xffff), c, iter.cur());
+        Assembler::as_movt_patch(dest, Imm16(imm >> 16 & 0xffff), c, iter.next());
         break;
       case L_LDR:
-        Assembler::WritePoolEntry(i, c, imm);
+        Assembler::WritePoolEntry(iter.cur(), c, imm);
         break;
     }
 }
 
-/* static */ void
-MacroAssemblerARM::ma_mov_patch(ImmPtr imm, Register dest, Assembler::Condition c,
-                                RelocStyle rs, Instruction* i)
-{
-    ma_mov_patch(Imm32(int32_t(imm.value)), dest, c, rs, i);
-}
-
-Instruction*
-MacroAssemblerARM::offsetToInstruction(CodeOffset offs)
-{
-    return editSrc(BufferOffset(offs.offset()));
-}
+template void
+MacroAssemblerARM::ma_mov_patch(Imm32 imm32, Register dest, Assembler::Condition c,
+                                RelocStyle rs, InstructionIterator iter);
+template void
+MacroAssemblerARM::ma_mov_patch(Imm32 imm32, Register dest, Assembler::Condition c,
+                                RelocStyle rs, BufferInstructionIterator iter);
 
 void
 MacroAssemblerARM::ma_mov(Register src, Register dest, SBit s, Assembler::Condition c)

@@ -2252,22 +2252,33 @@ class InstMOV : public InstALU
     static InstMOV* AsTHIS (const Instruction& i);
 };
 
-
 class InstructionIterator
 {
   private:
-    Instruction* i;
-
+    Instruction* inst_;
   public:
-    explicit InstructionIterator(Instruction* i_);
-
+    explicit InstructionIterator(Instruction* inst) : inst_(inst) {
+        skipPool();
+    }
+    void skipPool() {
+        inst_ = inst_->skipPool();
+    }
     Instruction* next() {
-        i = i->next();
+        inst_ = inst_->next();
         return cur();
     }
     Instruction* cur() const {
-        return i;
+        return inst_;
     }
+};
+
+class BufferInstructionIterator : public ARMBuffer::AssemblerBufferInstIterator
+{
+  public:
+    BufferInstructionIterator(BufferOffset bo, ARMBuffer* buffer)
+      : ARMBuffer::AssemblerBufferInstIterator(bo, buffer)
+    {}
+    void skipPool();
 };
 
 static const uint32_t NumIntArgRegs = 4;
