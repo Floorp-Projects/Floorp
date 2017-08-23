@@ -501,6 +501,8 @@ WebGLContext::DeleteBuffer(WebGLBuffer* buffer)
     ////
 
     buffer->RequestDelete();
+
+    InvalidateBufferFetching();
 }
 
 bool
