@@ -975,3 +975,5 @@ you can use these alternative items. Otherwise, their values should be empty.  -
 
 <!ENTITY sendToDevice.label3 "Send Page to Device">
 <!ENTITY sendToDevice.syncNotReady.label "Syncing Devices…">
+
+<!ENTITY libraryButton.tooltip "View history, saved bookmarks, and more">
