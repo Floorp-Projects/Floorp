@@ -145,7 +145,7 @@ typedef Vector<Type, 0, SystemAllocPolicy> VectorName;
 // about:memory stats.
 
 template <class T>
-struct ShareableBase : RefCounted<T>
+struct ShareableBase : AtomicRefCounted<T>
 {
     using SeenSet = HashSet<const T*, DefaultHasher<const T*>, SystemAllocPolicy>;
 
