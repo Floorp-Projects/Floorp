@@ -4774,23 +4774,6 @@
                 return;
               }
 
-              let warmingState = "disqualified";
-
-              if (this.warmingTabs.has(tab)) {
-                let tabState = this.getTabState(tab);
-                if (tabState == this.STATE_LOADING) {
-                  warmingState = "stillLoading";
-                } else if (tabState == this.STATE_LOADED) {
-                  warmingState = "loaded";
-                }
-              } else if (this.canWarmTab(tab)) {
-                warmingState = "notWarmed";
-              }
-
-              Services.telemetry
-                      .getHistogramById("FX_TAB_SWITCH_REQUEST_TAB_WARMING_STATE")
-                      .add(warmingState);
-
               this.unwarmTab(tab);
 
               this._requestingTab = true;
