@@ -1422,15 +1422,6 @@ WebRenderBridgeParent::RecvInitReadLocks(ReadLockArray&& aReadLocks)
   return IPC_OK();
 }
 
-void
-WebRenderBridgeParent::SetWebRenderProfilerEnabled(bool aEnabled)
-{
-  if (mWidget) {
-    // Only set the flag to "root" WebRenderBridgeParent.
-    mApi->SetProfilerEnabled(aEnabled);
-  }
-}
-
 TextureFactoryIdentifier
 WebRenderBridgeParent::GetTextureFactoryIdentifier()
 {

@@ -898,8 +898,12 @@ pref("gfx.webrender.force-angle", true);
 
 pref("gfx.webrender.highlight-painted-layers", false);
 pref("gfx.webrender.layers-free", false);
-pref("gfx.webrender.profiler.enabled", false);
 pref("gfx.webrender.blob-images", false);
+
+// WebRender debugging utilities.
+pref("gfx.webrender.debug.texture-cache", false);
+pref("gfx.webrender.debug.render-targets", false);
+pref("gfx.webrender.debug.profiler", false);
 
 // Whether webrender should be used as much as possible.
 pref("gfx.webrendest.enabled", false);
