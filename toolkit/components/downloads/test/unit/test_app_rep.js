@@ -99,14 +99,8 @@ add_task(async function test_setup() {
   });
 });
 
-function check_telemetry(aCount,
-                         aShouldBlockCount,
+function check_telemetry(aShouldBlockCount,
                          aListCounts) {
-  let count = Cc["@mozilla.org/base/telemetry;1"]
-                .getService(Ci.nsITelemetry)
-                .getHistogramById("APPLICATION_REPUTATION_COUNT")
-                .snapshot();
-  do_check_eq(count.counts[1], aCount);
   let local = Cc["@mozilla.org/base/telemetry;1"]
                 .getService(Ci.nsITelemetry)
                 .getHistogramById("APPLICATION_REPUTATION_LOCAL")
@@ -124,15 +118,9 @@ function check_telemetry(aCount,
                 .snapshot();
   // SHOULD_BLOCK = true
   do_check_eq(shouldBlock.counts[1], aShouldBlockCount);
-  // Sanity check that SHOULD_BLOCK total adds up to the COUNT.
-  do_check_eq(shouldBlock.counts[0] + shouldBlock.counts[1], aCount);
 }
 
 function get_telemetry_counts() {
-  let count = Cc["@mozilla.org/base/telemetry;1"]
-                .getService(Ci.nsITelemetry)
-                .getHistogramById("APPLICATION_REPUTATION_COUNT")
-                .snapshot();
   let local = Cc["@mozilla.org/base/telemetry;1"]
                 .getService(Ci.nsITelemetry)
                 .getHistogramById("APPLICATION_REPUTATION_LOCAL")
@@ -141,8 +129,7 @@ function get_telemetry_counts() {
                 .getService(Ci.nsITelemetry)
                 .getHistogramById("APPLICATION_REPUTATION_SHOULD_BLOCK")
                 .snapshot();
-  return { total: count.counts[1],
-           shouldBlock: shouldBlock.counts[1],
+  return { shouldBlock: shouldBlock.counts[1],
            listCounts: local.counts };
 }
 
@@ -154,7 +141,7 @@ add_test(function test_nullSourceURI() {
   }, function onComplete(aShouldBlock, aStatus) {
     do_check_eq(Cr.NS_ERROR_UNEXPECTED, aStatus);
     do_check_false(aShouldBlock);
-    check_telemetry(counts.total + 1, counts.shouldBlock, counts.listCounts);
+    check_telemetry(counts.shouldBlock, counts.listCounts);
     run_next_test();
   });
 });
@@ -171,7 +158,7 @@ add_test(function test_nullCallback() {
     if (ex.result != Cr.NS_ERROR_INVALID_POINTER)
       throw ex;
     // We don't even increment the count here, because there's no callback.
-    check_telemetry(counts.total, counts.shouldBlock, counts.listCounts);
+    check_telemetry(counts.shouldBlock, counts.listCounts);
     run_next_test();
   }
 });
@@ -239,7 +226,7 @@ add_test(function test_unlisted() {
   }, function onComplete(aShouldBlock, aStatus) {
     do_check_eq(Cr.NS_OK, aStatus);
     do_check_false(aShouldBlock);
-    check_telemetry(counts.total + 1, counts.shouldBlock, listCounts);
+    check_telemetry(counts.shouldBlock, listCounts);
     run_next_test();
   });
 });
@@ -258,7 +245,7 @@ add_test(function test_non_uri() {
   }, function onComplete(aShouldBlock, aStatus) {
     do_check_eq(Cr.NS_OK, aStatus);
     do_check_false(aShouldBlock);
-    check_telemetry(counts.total + 1, counts.shouldBlock, listCounts);
+    check_telemetry(counts.shouldBlock, listCounts);
     run_next_test();
   });
 });
@@ -275,7 +262,7 @@ add_test(function test_local_blacklist() {
   }, function onComplete(aShouldBlock, aStatus) {
     do_check_eq(Cr.NS_OK, aStatus);
     do_check_true(aShouldBlock);
-    check_telemetry(counts.total + 1, counts.shouldBlock + 1, listCounts);
+    check_telemetry(counts.shouldBlock + 1, listCounts);
     run_next_test();
   });
 });
@@ -293,7 +280,7 @@ add_test(function test_referer_blacklist() {
   }, function onComplete(aShouldBlock, aStatus) {
     do_check_eq(Cr.NS_OK, aStatus);
     do_check_true(aShouldBlock);
-    check_telemetry(counts.total + 1, counts.shouldBlock + 1, listCounts);
+    check_telemetry(counts.shouldBlock + 1, listCounts);
     run_next_test();
   });
 });
@@ -311,7 +298,7 @@ add_test(function test_blocklist_trumps_allowlist() {
   }, function onComplete(aShouldBlock, aStatus) {
     do_check_eq(Cr.NS_OK, aStatus);
     do_check_true(aShouldBlock);
-    check_telemetry(counts.total + 1, counts.shouldBlock + 1, listCounts);
+    check_telemetry(counts.shouldBlock + 1, listCounts);
     run_next_test();
   });
 });
@@ -353,7 +340,7 @@ add_test(function test_redirect_on_blocklist() {
   }, function onComplete(aShouldBlock, aStatus) {
     do_check_eq(Cr.NS_OK, aStatus);
     do_check_true(aShouldBlock);
-    check_telemetry(counts.total + 1, counts.shouldBlock + 1, listCounts);
+    check_telemetry(counts.shouldBlock + 1, listCounts);
     run_next_test();
   });
 });
