@@ -68,3 +68,8 @@ document.getElementById("onboarding-overlay")
     Mozilla.UITour.hideHighlight();
   }
 });
+
+document.getElementById("onboarding-overlay-button").addEventListener("Agent:Destroy", () => {
+  Mozilla.UITour.hideHighlight();
+  Mozilla.UITour.hideMenu("urlbar");
+});
