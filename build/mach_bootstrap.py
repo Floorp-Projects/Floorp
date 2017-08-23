@@ -154,11 +154,27 @@ def bootstrap(topsrcdir, mozilla_dir=None):
     sys.path[0:0] = [os.path.join(mozilla_dir, path)
                      for path in search_path(mozilla_dir,
                                              'build/virtualenv_packages.txt')]
+    import mach.base
     import mach.main
     from mozboot.util import get_state_dir
 
     from mozbuild.util import patch_main
     patch_main()
+
+    def resolve_repository():
+        import mozversioncontrol
+
+        try:
+            # This API doesn't respect the vcs binary choices from configure.
+            # If we ever need to use the VCS binary here, consider something
+            # more robust.
+            return mozversioncontrol.get_repository_object(path=mozilla_dir)
+        except mozversioncontrol.InvalidRepoPath:
+            return None
+        # This is mainly to catch failures resolving the VCS binary path.
+        # TODO Change mozversioncontrol to raise non-generic exception.
+        except Exception:
+            return None
 
     def telemetry_handler(context, data):
         # We have not opted-in to telemetry
@@ -282,6 +298,9 @@ def bootstrap(topsrcdir, mozilla_dir=None):
         if key == 'post_dispatch_handler':
             return post_dispatch_handler
 
+        if key == 'repository':
+            return resolve_repository()
+
         raise AttributeError(key)
 
     driver = mach.main.Mach(os.getcwd())
@@ -297,8 +316,16 @@ def bootstrap(topsrcdir, mozilla_dir=None):
         driver.define_category(category, meta['short'], meta['long'],
             meta['priority'])
 
+    repo = resolve_repository()
+
     for path in MACH_MODULES:
-        driver.load_commands_from_file(os.path.join(mozilla_dir, path))
+        # Sparse checkouts may not have all mach_commands.py files. Ignore
+        # errors from missing files.
+        try:
+            driver.load_commands_from_file(os.path.join(mozilla_dir, path))
+        except mach.base.MissingFileError:
+            if not repo or not repo.sparse_checkout_present():
+                raise
 
     return driver
 
