@@ -475,7 +475,6 @@ var BrowserApp = {
 
     if (ParentalControls.parentalControlsEnabled) {
         let isBlockListEnabled = ParentalControls.isAllowed(ParentalControls.BLOCK_LIST);
-        Services.prefs.setBoolPref("browser.safebrowsing.forbiddenURIs.enabled", isBlockListEnabled);
         Services.prefs.setBoolPref("browser.safebrowsing.allowOverride", !isBlockListEnabled);
 
         let isTelemetryEnabled = ParentalControls.isAllowed(ParentalControls.TELEMETRY);
