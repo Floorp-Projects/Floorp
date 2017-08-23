@@ -77,6 +77,7 @@ public class SearchEngineSelectionTest {
                 .className("android.webkit.WebView"));
 
         /* Go to Settings and select the Search Engine */
+        assertTrue(TestHelper.inlineAutocompleteEditText.waitForExists(waitingTime));
         TestHelper.menuButton.perform(click());
         TestHelper.settingsMenuItem.click();
         TestHelper.settingsHeading.waitForExists(waitingTime);

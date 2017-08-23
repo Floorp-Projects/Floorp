@@ -140,7 +140,7 @@ public class RestartTest {
                 .getApplicationContext();
         final Intent intent = context.getPackageManager()
                 .getLaunchIntentForPackage(FOCUS_DEBUG_APP);
-        context.startActivity(intent);
+        mActivityTestRule.launchActivity(intent);
 
         // Make sure website can be loaded without issue
         TestHelper.inlineAutocompleteEditText.waitForExists(waitingTime);
