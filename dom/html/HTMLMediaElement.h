@@ -227,7 +227,7 @@ public:
 
   // Called by the media decoder to indicate whether the media cache has
   // suspended the channel.
-  virtual void NotifySuspendedByCache(bool aIsSuspended) final override;
+  virtual void NotifySuspendedByCache(bool aSuspendedByCache) final override;
 
   virtual bool IsActive() const final override;
 
