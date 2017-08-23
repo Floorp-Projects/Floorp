@@ -13,6 +13,7 @@ modules += [
     'immutable.js',
     'jsol.js',
     'jszip.js',
+    'lodash.js',
     'react-addons-shallow-compare.js',
 ]
 
