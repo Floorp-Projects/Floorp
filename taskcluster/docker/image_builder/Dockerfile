@@ -21,7 +21,8 @@ ADD download-and-compress /usr/local/bin/download-and-compress
 ADD setup.sh            /setup/setup.sh
 RUN bash /setup/setup.sh
 
-# Setup a workspace that won't use AUFS
+# Setup a workspace that won't use AUFS.
+VOLUME /home/worker/checkouts
 VOLUME /home/worker/workspace
 
 # Set variable normally configured at login, by the shells parent process, these
