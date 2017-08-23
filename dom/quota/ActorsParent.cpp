@@ -5237,7 +5237,7 @@ QuotaManager::EnsureOriginIsInitializedInternal(
       return NS_OK;
     }
   } else {
-    rv = EnsureTemporaryStorageIsInitialized(aPersistenceType);
+    rv = EnsureTemporaryStorageIsInitialized();
     if (NS_WARN_IF(NS_FAILED(rv))) {
       return rv;
     }
@@ -5304,18 +5304,16 @@ QuotaManager::EnsureOriginIsInitializedInternal(
 }
 
 nsresult
-QuotaManager::EnsureTemporaryStorageIsInitialized(
-                                               PersistenceType aPersistenceType)
+QuotaManager::EnsureTemporaryStorageIsInitialized()
 {
   AssertIsOnIOThread();
-  MOZ_ASSERT(aPersistenceType != PERSISTENCE_TYPE_PERSISTENT);
   MOZ_ASSERT(mStorageInitialized);
 
   if (mTemporaryStorageInitialized) {
     return NS_OK;
   }
 
-  nsresult rv = InitializeRepository(aPersistenceType);
+  nsresult rv = InitializeRepository(PERSISTENCE_TYPE_DEFAULT);
   if (NS_WARN_IF(NS_FAILED(rv))) {
     // We have to cleanup partially initialized quota.
     RemoveQuota();
@@ -5323,7 +5321,7 @@ QuotaManager::EnsureTemporaryStorageIsInitialized(
     return rv;
   }
 
-  rv = InitializeRepository(ComplementaryPersistenceType(aPersistenceType));
+  rv = InitializeRepository(PERSISTENCE_TYPE_TEMPORARY);
   if (NS_WARN_IF(NS_FAILED(rv))) {
     // We have to cleanup partially initialized quota.
     RemoveQuota();
@@ -7178,8 +7176,7 @@ GetOriginUsageOp::DoDirectoryWork(QuotaManager* aQuotaManager)
       return rv;
     }
 
-    rv = aQuotaManager->EnsureTemporaryStorageIsInitialized(
-                                                    PERSISTENCE_TYPE_TEMPORARY);
+    rv = aQuotaManager->EnsureTemporaryStorageIsInitialized();
     if (NS_WARN_IF(NS_FAILED(rv))) {
       return rv;
     }
