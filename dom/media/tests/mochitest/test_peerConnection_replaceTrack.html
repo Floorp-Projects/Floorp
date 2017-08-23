@@ -47,19 +47,21 @@
         isnot(newTrack, sender.track, "replacing with a different track");
         ok(!pc.getLocalStreams().some(s => s == newStream),
            "from a different stream");
-        return sender.replaceTrack(newTrack);
+        // Use wrapper function, since it updates expected tracks
+        return wrapper.senderReplaceTrack(sender, newTrack, newStream);
       })
       .then(() => {
         is(pc.getSenders().length, oldSenderCount, "same sender count");
         is(sender.track, newTrack, "sender.track has been replaced");
         ok(!pc.getSenders().map(sn => sn.track).some(t => t == oldTrack),
            "old track not among senders");
-        ok(pc.getLocalStreams().some(s => s.getTracks()
+        // Spec does not say we add this new track to any stream
+        ok(!pc.getLocalStreams().some(s => s.getTracks()
                                            .some(t => t == sender.track)),
-           "track exists among pc's local streams");
+           "track does not exist among pc's local streams");
         return sender.replaceTrack(audiotrack)
           .then(() => ok(false, "replacing with different kind should fail"),
-                e => is(e.name, "IncompatibleMediaStreamTrackError",
+                e => is(e.name, "TypeError",
                         "replacing with different kind should fail"));
       });
   }
@@ -130,15 +132,18 @@
         sourceNode.connect(destNode);
         var newTrack = destNode.stream.getAudioTracks()[0];
 
-        return sender.replaceTrack(newTrack)
+        return test.pcLocal.senderReplaceTrack(
+            sender, newTrack, destNode.stream)
           .then(() => {
             is(pc.getSenders().length, oldSenderCount, "same sender count");
             ok(!pc.getSenders().some(sn => sn.track == oldTrack),
                "Replaced track should be removed from senders");
-            ok(allLocalStreamsHaveSender(pc),
-               "Shouldn't have any streams without a corresponding sender");
+            // TODO: Should PC remove local streams when there are no senders
+            // associated with it? getLocalStreams() isn't in the spec anymore,
+            // so I guess it is pretty arbitrary?
             is(sender.track, newTrack, "sender.track has been replaced");
-            ok(pc.getLocalStreams().some(s => s.getTracks()
+            // Spec does not say we add this new track to any stream
+            ok(!pc.getLocalStreams().some(s => s.getTracks()
                                                .some(t => t == sender.track)),
                "track exists among pc's local streams");
           });
@@ -151,22 +156,27 @@
     ]);
     test.chain.append([
       function PC_LOCAL_INVALID_ADD_VIDEOTRACKS(test) {
-        var stream = test.pcLocal._pc.getLocalStreams()[0];
-        var track = stream.getVideoTracks()[0];
-        try {
-          test.pcLocal._pc.addTrack(track, stream);
-          ok(false, "addTrack existing track should fail");
-        } catch (e) {
-          is(e.name, "InvalidParameterError",
-             "addTrack existing track should fail");
-        }
-        try {
-          test.pcLocal._pc.addTrack(track, stream);
-          ok(false, "addTrack existing track should fail");
-        } catch (e) {
-          is(e.name, "InvalidParameterError",
-             "addTrack existing track should fail");
-        }
+        let videoTransceivers = test.pcLocal._pc.getTransceivers()
+          .filter(transceiver => {
+            return !transceiver.stopped &&
+                   transceiver.receiver.track.kind == "video" &&
+                   transceiver.sender.track;
+          });
+
+        ok(videoTransceivers.length,
+           "There is at least one non-stopped video transceiver with a track.");
+
+        videoTransceivers.forEach(transceiver => {
+            var stream = test.pcLocal._pc.getLocalStreams()[0];;
+            var track = transceiver.sender.track;
+            try {
+              test.pcLocal._pc.addTrack(track, stream);
+              ok(false, "addTrack existing track should fail");
+            } catch (e) {
+              is(e.name, "InvalidAccessError",
+                 "addTrack existing track should fail");
+            }
+          });
       }
     ]);
     test.run();
