@@ -881,7 +881,7 @@ PlacesController.prototype = {
         let tag = node.title;
         let URIs = PlacesUtils.tagging.getURIsForTag(tag);
         if (PlacesUIUtils.useAsyncTransactions) {
-          transactions.push(PlacesTransactions.Untag({ tag, uris: URIs }));
+          transactions.push(PlacesTransactions.Untag({ tag, urls: URIs }));
         } else {
           for (var j = 0; j < URIs.length; j++) {
             let txn = new PlacesUntagURITransaction(URIs[j], [tag]);
