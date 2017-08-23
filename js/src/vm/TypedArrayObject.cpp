@@ -660,13 +660,12 @@ class TypedArrayObjectTemplate : public TypedArrayObject
             }
 
             memset(buf, 0, nbytes);
-         }
+        }
 
-        RootedObject tmp(cx, NewObjectWithGroup<TypedArrayObject>(cx, group, allocKind, newKind));
-        if (!tmp)
+        TypedArrayObject* obj = NewObjectWithGroup<TypedArrayObject>(cx, group, allocKind, newKind);
+        if (!obj)
             return nullptr;
 
-        TypedArrayObject* obj = &tmp->as<TypedArrayObject>();
         initTypedArraySlots(cx, obj, len);
         initTypedArrayData(cx, obj, len, buf.forget(), allocKind);
 
