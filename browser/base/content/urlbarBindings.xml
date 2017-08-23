@@ -41,8 +41,8 @@ file, You can obtain one at http://mozilla.org/MPL/2.0/.
                       allowevents="true"
                       inputmode="url"
                       xbl:inherits="tooltiptext=inputtooltiptext,value,maxlength,disabled,size,readonly,placeholder,tabindex,accesskey,focused,textoverflow"/>
-          <xul:image anonid="go-button"
-                     class="urlbar-go-button"
+          <xul:image anonid="urlbar-go-button"
+                     class="urlbar-go-button urlbar-icon"
                      onclick="gURLBar.handleCommand(event);"
                      tooltiptext="&goEndCap.tooltip;"
                      xbl:inherits="pageproxystate,parentfocused=focused"/>
@@ -159,7 +159,7 @@ file, You can obtain one at http://mozilla.org/MPL/2.0/.
       ]]></destructor>
 
       <field name="goButton">
-        document.getAnonymousElementByAttribute(this, "anonid", "go-button");
+        document.getAnonymousElementByAttribute(this, "anonid", "urlbar-go-button");
       </field>
 
       <field name="_value">""</field>
