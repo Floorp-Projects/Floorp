@@ -133,11 +133,47 @@ function getFragDataLocation_bug1259702() {
   ok(true, 'WebGL getFragDataLocation() call after detatch fragment shader');
 }
 
+function deleteBuffer_bug1379995()
+{
+  var canvas = document.createElement('canvas');
+  var gl = null;
+  gl = canvas.getContext('webgl') || canvas.getContext('experimental-webgl');
+  if (!gl) {
+    todo(false, 'WebGL deleteBuffer test, webgl is unavailable.');
+    return;
+  }
+
+  var program = gl.createProgram();
+  var vShader = gl.createShader(gl.VERTEX_SHADER);
+  var fShader = gl.createShader(gl.FRAGMENT_SHADER);
+  gl.shaderSource(vShader,'attribute vec3 pos;void main(){gl_Position = vec4(pos, 2.0);}');
+  gl.shaderSource(fShader,'void main() {gl_FragColor = vec4(0.5, 0.5, 1.0, 1.0);}');
+  gl.compileShader(vShader);
+  gl.compileShader(fShader);
+  gl.attachShader(program, vShader);
+  gl.attachShader(program, fShader);
+  gl.linkProgram(program);
+  var buffer = gl.createBuffer();
+  var attr = gl.getAttribLocation(program, 'pos');
+  gl.bindBuffer(gl.ARRAY_BUFFER, buffer);
+  gl.enableVertexAttribArray(attr);
+  gl.bufferData(gl.ARRAY_BUFFER, new Float32Array([-1, 0, 0,0, 1, 0,0, -1, 0,1, 0, 0]),gl.STATIC_DRAW);
+  gl.useProgram(program);
+  gl.vertexAttribPointer(attr, 3, gl.FLOAT, false, 0, 0);
+  gl.drawArrays(gl.TRIANGLES, 0, 3);
+  gl.deleteBuffer(buffer);
+  // Call the drawArrays after deleteBuffer(). It should not hit the crash.
+  gl.drawArrays(gl.TRIANGLES, 0, 3);
+
+  ok(true, 'WebGL no crash for drawArrays() after deleteBuffer() call');
+}
+
 function run() {
   webGL2ClearBufferXXX_bug1252414();
   framebufferTexture2D_bug1257593();
   getFramebufferAttachmentParameter_bug1267100();
   getFragDataLocation_bug1259702();
+  deleteBuffer_bug1379995();
 
   SimpleTest.finish();
 }
