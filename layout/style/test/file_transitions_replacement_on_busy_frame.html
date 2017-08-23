@@ -7,6 +7,7 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=1167519
   <meta charset=utf-8>
   <script type="application/javascript"
     src="/tests/SimpleTest/paint_listener.js"></script>
+  <script src="animation_utils.js"></script>
   <style>
     #target {
       height: 100px;
@@ -41,24 +42,28 @@ window.addEventListener("load", function() {
   }
 
   var div = document.getElementById("target");
+
   // Start first transition
   div.style.transform = "translateX(300px)";
-  getComputedStyle(div);
+  const firstTransition = div.getAnimations()[0];
 
-  // Wait for a paint to ensure that the first transition has started.
-  waitForAllPaints(function() {
+  // Wait for first transition to start running on the main thread and
+  // compositor.
+  firstTransition.ready.then(waitForPaints).then(() => {
     var previousPropertyValue;
     var previousKeyframeValue;
-    var anim;
+    var secondTransition;
+
     requestAnimationFrame(function() {
       // Start second transition
-      div.style.transform = "translateX(0px)";
-      getComputedStyle(div).transform;
+      div.style.transform = "translateX(600px)";
+      secondTransition = div.getAnimations()[0];
 
-      anim = div.getAnimations()[0];
-      var properties = SpecialPowers.wrap(anim.effect).getProperties();
+      var properties =
+        SpecialPowers.wrap(secondTransition.effect).getProperties();
       previousPropertyValue = properties[0].values[0].value;
-      previousKeyframeValue = anim.effect.getKeyframes()[0].transform;
+      previousKeyframeValue =
+        secondTransition.effect.getKeyframes()[0].transform;
     });
 
     requestAnimationFrame(function() {
@@ -74,12 +79,14 @@ window.addEventListener("load", function() {
       // requestAnimationFrame callback is run (and it is during the paint
       // process that we update the transition start point).
       waitForAllPaints(function() {
-        var properties = SpecialPowers.wrap(anim.effect).getProperties();
+        var properties =
+          SpecialPowers.wrap(secondTransition.effect).getProperties();
         var currentPropertyValue = properties[0].values[0].value;
         isnot(currentPropertyValue, previousPropertyValue,
               "From value of transition is updated since the moment when " +
               "it was generated");
-        isnot(anim.effect.getKeyframes()[0].transform, previousKeyframeValue,
+        isnot(secondTransition.effect.getKeyframes()[0].transform,
+              previousKeyframeValue,
               "Keyframe value of transition is updated since the moment when " +
               "it was generated");
         finish();
