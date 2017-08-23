@@ -11,7 +11,6 @@ SOURCES += [
 
 DISABLE_STL_WRAPPING = True
 USE_STATIC_LIBS = True
-NO_PGO = True
 DEFINES['MOZ_NO_MOZALLOC'] = True
 # Avoid Lock_impl code depending on mozilla::Logger.
 DEFINES['NDEBUG'] = True

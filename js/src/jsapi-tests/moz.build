@@ -157,5 +157,3 @@ if CONFIG['_MSC_VER']:
 
 DEFINES['topsrcdir'] = '%s/js/src' % TOPSRCDIR
 OBJDIR_PP_FILES.js.src['jsapi-tests'] += ['jsapi-tests-gdb.py.in']
-
-NO_PGO = True
