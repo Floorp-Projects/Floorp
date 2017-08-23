@@ -112,7 +112,22 @@ CopyableCanvasRenderer::Destroy()
 already_AddRefed<SourceSurface>
 CopyableCanvasRenderer::ReadbackSurface()
 {
-  FirePreTransactionCallback();
+  struct ScopedFireTransactionCallback {
+    explicit ScopedFireTransactionCallback(CopyableCanvasRenderer* aRenderer)
+      : mRenderer(aRenderer)
+    {
+      mRenderer->FirePreTransactionCallback();
+    }
+
+    ~ScopedFireTransactionCallback()
+    {
+      mRenderer->FireDidTransactionCallback();
+    }
+
+    CopyableCanvasRenderer* mRenderer;
+  };
+
+  ScopedFireTransactionCallback callback(this);
   if (mAsyncRenderer) {
     MOZ_ASSERT(!mBufferProvider);
     MOZ_ASSERT(!mGLContext);
@@ -160,8 +175,6 @@ CopyableCanvasRenderer::ReadbackSurface()
     gfxUtils::PremultiplyDataSurface(resultSurf, resultSurf);
   }
   MOZ_ASSERT(resultSurf);
-
-  FireDidTransactionCallback();
 
   return resultSurf.forget();
 }

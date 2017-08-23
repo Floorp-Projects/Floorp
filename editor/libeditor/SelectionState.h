@@ -37,7 +37,7 @@ public:
   void StoreRange(nsRange* aRange);
   already_AddRefed<nsRange> GetRange();
 
-  NS_INLINE_DECL_CYCLE_COLLECTING_NATIVE_REFCOUNTING(RangeItem)
+  NS_INLINE_DECL_MAIN_THREAD_ONLY_CYCLE_COLLECTING_NATIVE_REFCOUNTING(RangeItem)
   NS_DECL_CYCLE_COLLECTION_NATIVE_CLASS(RangeItem)
 
   nsCOMPtr<nsINode> mStartContainer;

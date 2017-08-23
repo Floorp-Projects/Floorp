@@ -28,13 +28,20 @@
 // Assertions and debug printing, defined here instead of in the header above
 // to make `assert` invisible to C++.
 #ifdef DEBUG
-#define assert(b, info) if (!(b)) AssertionFailed(__FILE__ + ":" + __LINE__ + ": " + info)
-#define dbg(msg) DumpMessage(callFunction(std_Array_pop, \
-                                          StringSplitString(__FILE__, '/')) \
-                             + '#' + __LINE__ + ': ' + msg)
+#define assert(b, info) \
+    do { \
+        if (!(b)) \
+            AssertionFailed(__FILE__ + ":" + __LINE__ + ": " + info) \
+    } while (false)
+#define dbg(msg) \
+    do { \
+        DumpMessage(callFunction(std_Array_pop, \
+                                 StringSplitString(__FILE__, '/')) + \
+                    '#' + __LINE__ + ': ' + msg) \
+    } while (false)
 #else
-#define assert(b, info) // Elided assertion.
-#define dbg(msg) // Elided debugging output.
+#define assert(b, info) do {} while (false) // Elided assertion.
+#define dbg(msg) do {} while (false) // Elided debugging output.
 #endif
 
 // All C++-implemented standard builtins library functions used in self-hosted

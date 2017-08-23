@@ -606,7 +606,7 @@ CodeGeneratorShared::encode(LSnapshot* snapshot)
         lirOpcode = ins->op();
         lirId = ins->id();
         if (ins->mirRaw()) {
-            mirOpcode = ins->mirRaw()->op();
+            mirOpcode = uint32_t(ins->mirRaw()->op());
             mirId = ins->mirRaw()->id();
             if (ins->mirRaw()->trackedPc())
                 pcOpcode = *ins->mirRaw()->trackedPc();
