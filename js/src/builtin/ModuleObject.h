@@ -24,6 +24,7 @@ class ModuleObject;
 
 namespace frontend {
 class ParseNode;
+class TokenStream;
 } /* namespace frontend */
 
 typedef Rooted<ModuleObject*> RootedModuleObject;
@@ -39,6 +40,8 @@ class ImportEntryObject : public NativeObject
         ModuleRequestSlot = 0,
         ImportNameSlot,
         LocalNameSlot,
+        LineNumberSlot,
+        ColumnNumberSlot,
         SlotCount
     };
 
@@ -48,10 +51,14 @@ class ImportEntryObject : public NativeObject
     static ImportEntryObject* create(JSContext* cx,
                                      HandleAtom moduleRequest,
                                      HandleAtom importName,
-                                     HandleAtom localName);
+                                     HandleAtom localName,
+                                     uint32_t lineNumber,
+                                     uint32_t columnNumber);
     JSAtom* moduleRequest() const;
     JSAtom* importName() const;
     JSAtom* localName() const;
+    uint32_t lineNumber() const;
+    uint32_t columnNumber() const;
 };
 
 typedef Rooted<ImportEntryObject*> RootedImportEntryObject;
@@ -66,6 +73,8 @@ class ExportEntryObject : public NativeObject
         ModuleRequestSlot,
         ImportNameSlot,
         LocalNameSlot,
+        LineNumberSlot,
+        ColumnNumberSlot,
         SlotCount
     };
 
@@ -76,11 +85,15 @@ class ExportEntryObject : public NativeObject
                                      HandleAtom maybeExportName,
                                      HandleAtom maybeModuleRequest,
                                      HandleAtom maybeImportName,
-                                     HandleAtom maybeLocalName);
+                                     HandleAtom maybeLocalName,
+                                     uint32_t lineNumber,
+                                     uint32_t columnNumber);
     JSAtom* exportName() const;
     JSAtom* moduleRequest() const;
     JSAtom* importName() const;
     JSAtom* localName() const;
+    uint32_t lineNumber() const;
+    uint32_t columnNumber() const;
 };
 
 typedef Rooted<ExportEntryObject*> RootedExportEntryObject;
@@ -304,7 +317,8 @@ class ModuleObject : public NativeObject
 class MOZ_STACK_CLASS ModuleBuilder
 {
   public:
-    explicit ModuleBuilder(JSContext* cx, HandleModuleObject module);
+    explicit ModuleBuilder(JSContext* cx, HandleModuleObject module,
+                           const frontend::TokenStream& tokenStream);
 
     bool processImport(frontend::ParseNode* pn);
     bool processExport(frontend::ParseNode* pn);
@@ -329,6 +343,7 @@ class MOZ_STACK_CLASS ModuleBuilder
 
     JSContext* cx_;
     RootedModuleObject module_;
+    const frontend::TokenStream& tokenStream_;
     RootedAtomVector requestedModules_;
     RootedAtomVector importedBoundNames_;
     RootedImportEntryVector importEntries_;
@@ -339,9 +354,10 @@ class MOZ_STACK_CLASS ModuleBuilder
 
     ImportEntryObject* importEntryFor(JSAtom* localName) const;
 
-    bool appendExportEntry(HandleAtom exportName, HandleAtom localName);
+    bool appendExportEntry(HandleAtom exportName, HandleAtom localName,
+                           frontend::ParseNode* node = nullptr);
     bool appendExportFromEntry(HandleAtom exportName, HandleAtom moduleRequest,
-                               HandleAtom importName);
+                               HandleAtom importName, frontend::ParseNode* node);
 
     bool maybeAppendRequestedModule(HandleAtom module);
 
