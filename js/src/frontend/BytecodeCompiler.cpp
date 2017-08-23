@@ -418,6 +418,9 @@ BytecodeCompiler::compileModule()
     module->init(script);
 
     ModuleBuilder builder(cx, module, parser->tokenStream);
+    if (!builder.init())
+        return nullptr;
+
     ModuleSharedContext modulesc(cx, module, enclosingScope, builder);
     ParseNode* pn = parser->moduleBody(&modulesc);
     if (!pn)

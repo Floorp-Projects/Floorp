@@ -99,6 +99,7 @@ class GlobalObject : public NativeObject
         MODULE_PROTO,
         IMPORT_ENTRY_PROTO,
         EXPORT_ENTRY_PROTO,
+        REQUESTED_MODULE_PROTO,
         REGEXP_STATICS,
         RUNTIME_CODEGEN_ENABLED,
         DEBUGGERS,
@@ -491,6 +492,11 @@ class GlobalObject : public NativeObject
         return value.isUndefined() ? nullptr : &value.toObject();
     }
 
+    JSObject* maybeGetRequestedModulePrototype() {
+        Value value = getSlot(REQUESTED_MODULE_PROTO);
+        return value.isUndefined() ? nullptr : &value.toObject();
+    }
+
     JSObject* getModulePrototype() {
         JSObject* proto = maybeGetModulePrototype();
         MOZ_ASSERT(proto);
@@ -505,6 +511,12 @@ class GlobalObject : public NativeObject
 
     JSObject* getExportEntryPrototype() {
         JSObject* proto = maybeGetExportEntryPrototype();
+        MOZ_ASSERT(proto);
+        return proto;
+    }
+
+    JSObject* getRequestedModulePrototype() {
+        JSObject* proto = maybeGetRequestedModulePrototype();
         MOZ_ASSERT(proto);
         return proto;
     }
@@ -769,6 +781,7 @@ class GlobalObject : public NativeObject
     static bool initModuleProto(JSContext* cx, Handle<GlobalObject*> global);
     static bool initImportEntryProto(JSContext* cx, Handle<GlobalObject*> global);
     static bool initExportEntryProto(JSContext* cx, Handle<GlobalObject*> global);
+    static bool initRequestedModuleProto(JSContext* cx, Handle<GlobalObject*> global);
 
     // Implemented in builtin/TypedObject.cpp
     static bool initTypedObjectModule(JSContext* cx, Handle<GlobalObject*> global);
