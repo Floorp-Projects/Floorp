@@ -46,8 +46,8 @@ static const unsigned COMPILATION_LIFO_DEFAULT_CHUNK_SIZE = 64 * 1024;
 static const uint32_t BAD_CODE_RANGE = UINT32_MAX;
 
 ModuleGenerator::ModuleGenerator(UniqueChars* error, mozilla::Atomic<bool>* cancelled)
-  : tier_(Tier(-1)),
-    compileMode_(CompileMode::Once),
+  : compileMode_(CompileMode(-1)),
+    tier_(Tier(-1)),
     error_(error),
     cancelled_(cancelled),
     linkDataTier_(nullptr),
@@ -239,8 +239,9 @@ bool
 ModuleGenerator::init(UniqueModuleEnvironment env, const CompileArgs& args,
                       CompileMode compileMode, Metadata* maybeAsmJSMetadata)
 {
-    env_ = Move(env);
+    compileArgs_ = &args;
     compileMode_ = compileMode;
+    env_ = Move(env);
 
     if (!funcToCodeRange_.appendN(BAD_CODE_RANGE, env_->funcSigs.length()))
         return false;
@@ -1272,8 +1273,7 @@ ModuleGenerator::finishModule(const ShareableBytes& bytecode)
     if (!code)
         return nullptr;
 
-    return SharedModule(js_new<Module>(compileMode_,
-                                       Move(assumptions_),
+    SharedModule module(js_new<Module>(Move(assumptions_),
                                        *code,
                                        Move(maybeDebuggingBytes),
                                        Move(linkData_),
@@ -1282,10 +1282,17 @@ ModuleGenerator::finishModule(const ShareableBytes& bytecode)
                                        Move(env_->dataSegments),
                                        Move(env_->elemSegments),
                                        bytecode));
+    if (!module)
+        return nullptr;
+
+    if (compileMode_ == CompileMode::Tier1)
+        module->startTier2(*compileArgs_);
+
+    return module;
 }
 
 bool
-ModuleGenerator::finishTier2(const ShareableBytes& bytecode, SharedModule module)
+ModuleGenerator::finishTier2(Module& module)
 {
     MOZ_ASSERT(compileMode_ == CompileMode::Tier2);
     MOZ_ASSERT(tier_ == Tier::Ion);
@@ -1294,14 +1301,14 @@ ModuleGenerator::finishTier2(const ShareableBytes& bytecode, SharedModule module
     if (cancelled_ && *cancelled_)
         return false;
 
-    UniqueConstCodeSegment codeSegment = finishCodeSegment(bytecode);
+    UniqueConstCodeSegment codeSegment = finishCodeSegment(module.bytecode());
     if (!codeSegment)
         return false;
 
-    module->finishTier2(linkData_.takeLinkData(tier_),
-                        metadata_->takeMetadata(tier_),
-                        Move(codeSegment),
-                        Move(env_));
+    module.finishTier2(linkData_.takeLinkData(tier_),
+                       metadata_->takeMetadata(tier_),
+                       Move(codeSegment),
+                       Move(env_));
     return true;
 }
 

@@ -179,35 +179,12 @@ wasm::GetTier(const CompileArgs& args, CompileMode compileMode, ModuleKind kind)
     }
 }
 
-namespace js {
-namespace wasm {
-
-struct Tier2GeneratorTask
-{
-    // The module that wants the results of the compilation.
-    SharedModule            module;
-
-    // The arguments for the compilation.
-    SharedCompileArgs       compileArgs;
-
-    // A flag that is set by the cancellation code and checked by any running
-    // module generator to short-circuit compilation.
-    mozilla::Atomic<bool>   cancelled;
-
-    Tier2GeneratorTask(Module& module, const CompileArgs& compileArgs)
-      : module(&module),
-        compileArgs(&compileArgs),
-        cancelled(false)
-    {}
-};
-
-}
-}
-
 static bool
 Compile(ModuleGenerator& mg, const ShareableBytes& bytecode, const CompileArgs& args,
         UniqueChars* error, CompileMode compileMode)
 {
+    MOZ_RELEASE_ASSERT(wasm::HaveSignalHandlers());
+
     auto env = js::MakeUnique<ModuleEnvironment>();
     if (!env)
         return false;
@@ -225,80 +202,30 @@ Compile(ModuleGenerator& mg, const ShareableBytes& bytecode, const CompileArgs& 
     if (!DecodeModuleTail(d, &mg.mutableEnv()))
         return false;
 
+    MOZ_ASSERT(!*error, "unreported error");
     return true;
 }
 
-
 SharedModule
-wasm::Compile(const ShareableBytes& bytecode, const CompileArgs& args, UniqueChars* error)
+wasm::CompileInitialTier(const ShareableBytes& bytecode, const CompileArgs& args, UniqueChars* error)
 {
-    MOZ_RELEASE_ASSERT(wasm::HaveSignalHandlers());
-
     ModuleGenerator mg(error, nullptr);
 
     CompileMode mode = GetInitialCompileMode(args);
-    if (!::Compile(mg, bytecode, args, error, mode))
+    if (!Compile(mg, bytecode, args, error, mode))
         return nullptr;
 
-    MOZ_ASSERT(!*error, "unreported error in decoding");
-
-    SharedModule module = mg.finishModule(bytecode);
-    if (!module)
-        return nullptr;
-
-    if (mode == CompileMode::Tier1) {
-        MOZ_ASSERT(BackgroundWorkPossible());
-
-        auto task = js::MakeUnique<Tier2GeneratorTask>(*module, args);
-        if (!task) {
-            module->unblockOnTier2GeneratorFinished(CompileMode::Once);
-            return nullptr;
-        }
-
-        if (!StartOffThreadWasmTier2Generator(&*task)) {
-            module->unblockOnTier2GeneratorFinished(CompileMode::Once);
-            return nullptr;
-        }
-
-        mozilla::Unused << task.release();
-    }
-
-    return module;
+    return mg.finishModule(bytecode);
 }
 
-// This runs on a helper thread.
 bool
-wasm::GenerateTier2(Tier2GeneratorTask* task)
+wasm::CompileTier2(Module& module, const CompileArgs& args, Atomic<bool>* cancelled)
 {
-    UniqueChars     error;
-    ModuleGenerator mg(&error, &task->cancelled);
+    UniqueChars error;
+    ModuleGenerator mg(&error, cancelled);
 
-    bool res =
-        ::Compile(mg, task->module->bytecode(), *task->compileArgs, &error, CompileMode::Tier2) &&
-        mg.finishTier2(task->module->bytecode(), task->module);
+    if (!Compile(mg, module.bytecode(), args, &error, CompileMode::Tier2))
+        return false;
 
-    // If the task was cancelled then res will be false.
-    task->module->unblockOnTier2GeneratorFinished(res ? CompileMode::Tier2 : CompileMode::Once);
-
-    return res;
-}
-
-// This runs on the main thread.  The task will be deleted in the HelperThread
-// system.
-void
-wasm::CancelTier2GeneratorTask(Tier2GeneratorTask* task)
-{
-    task->cancelled = true;
-
-    // GenerateTier2 will also unblock and set the mode to Once, after the
-    // compilation fails, if the compilation gets to run at all.  Do it here in
-    // any case - there's no reason to wait, and we won't be depending on
-    // anything else happening.
-    task->module->unblockOnTier2GeneratorFinished(CompileMode::Once);
-}
-
-void
-wasm::DeleteTier2GeneratorTask(Tier2GeneratorTask* task)
-{
-    js_delete(task);
+    return mg.finishTier2(module);
 }
