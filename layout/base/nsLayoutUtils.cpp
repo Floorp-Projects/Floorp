@@ -7851,6 +7851,8 @@ nsLayoutUtils::Initialize()
 #ifdef MOZ_STYLO
   if (PR_GetEnv("STYLO_FORCE_ENABLED")) {
     sStyloEnabled = true;
+  } else if (PR_GetEnv("STYLO_FORCE_DISABLED")) {
+    sStyloEnabled = false;
   } else {
     Preferences::AddBoolVarCache(&sStyloEnabled,
                                  "layout.css.servo.enabled");
