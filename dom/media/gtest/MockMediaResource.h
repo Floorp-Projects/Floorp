@@ -43,7 +43,6 @@ public:
     return bytesRead == aCount ? NS_OK : NS_ERROR_FAILURE;
   }
 
-  bool IsTransportSeekable() override { return true; }
   nsresult Open();
   nsresult GetCachedRanges(MediaByteRangeSet& aRanges) override;
 

@@ -72,11 +72,6 @@ public:
   nsresult ReadFromCache(char* aBuffer,
                          int64_t aOffset,
                          uint32_t aCount) override;
-  bool IsTransportSeekable() override
-  {
-    UNIMPLEMENTED();
-    return true;
-  }
 
   nsresult GetCachedRanges(MediaByteRangeSet& aRanges) override
   {

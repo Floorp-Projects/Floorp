@@ -55,8 +55,6 @@ public:
     return NS_OK;
   }
 
-  bool IsTransportSeekable() override { return true; }
-
   void SetEnded(bool aEnded)
   {
     MonitorAutoLock mon(mMonitor);
