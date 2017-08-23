@@ -40,12 +40,18 @@ public:
       return;
     }
 
-    // Dispatching can fail during early startup, particularly when
-    // MOZ_PROFILER_STARTUP is used.
-    nsresult rv = SystemGroup::Dispatch(TaskCategory::Other,
-                                        do_AddRef(this));
-    if (NS_SUCCEEDED(rv)) {
-      mHasEverBeenSuccessfullyDispatched = true;
+    // We can hit this code very early during startup, at a time where the
+    // thread manager hasn't been initialized with the main thread yet.
+    // In that case, calling SystemGroup::Dispatch would assert, so we make
+    // sure that NS_GetMainThread succeeds before attempting to dispatch this
+    // runnable.
+    nsCOMPtr<nsIThread> mainThread;
+    nsresult rv = NS_GetMainThread(getter_AddRefs(mainThread));
+    if (NS_SUCCEEDED(rv) && mainThread) {
+      rv = SystemGroup::Dispatch(TaskCategory::Other, do_AddRef(this));
+      if (NS_SUCCEEDED(rv)) {
+        mHasEverBeenSuccessfullyDispatched = true;
+      }
     }
   }
 
