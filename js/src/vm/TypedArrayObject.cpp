@@ -566,7 +566,7 @@ class TypedArrayObjectTemplate : public TypedArrayObject
             return nullptr;
 
         Rooted<TypedArrayObject*> tarray(cx, &tmp->as<TypedArrayObject>());
-        initTypedArraySlots(cx, tarray, len);
+        initTypedArraySlots(tarray, len);
 
         // Template objects do not need memory for its elements, since there
         // won't be any elements to store. Therefore, we set the pointer to
@@ -583,7 +583,7 @@ class TypedArrayObjectTemplate : public TypedArrayObject
     }
 
     static void
-    initTypedArraySlots(JSContext* cx, TypedArrayObject* tarray, int32_t len)
+    initTypedArraySlots(TypedArrayObject* tarray, int32_t len)
     {
         MOZ_ASSERT(len >= 0);
         tarray->setFixedSlot(TypedArrayObject::BUFFER_SLOT, NullValue());
@@ -666,7 +666,7 @@ class TypedArrayObjectTemplate : public TypedArrayObject
         if (!obj)
             return nullptr;
 
-        initTypedArraySlots(cx, obj, len);
+        initTypedArraySlots(obj, len);
         initTypedArrayData(cx, obj, len, buf.forget(), allocKind);
 
         return obj;
@@ -1256,10 +1256,10 @@ TypedArrayObjectTemplate<T>::fromTypedArray(JSContext* cx, HandleObject other, b
     // Steps 17.e-h or 24.1.1.4 step 8.
     MOZ_ASSERT(!obj->isSharedMemory());
     if (isShared) {
-        if (!ElementSpecific<T, SharedOps>::setFromTypedArray(cx, obj, srcArray, 0))
+        if (!ElementSpecific<T, SharedOps>::setFromTypedArray(obj, srcArray, 0))
             return nullptr;
     } else {
-        if (!ElementSpecific<T, UnsharedOps>::setFromTypedArray(cx, obj, srcArray, 0))
+        if (!ElementSpecific<T, UnsharedOps>::setFromTypedArray(obj, srcArray, 0))
             return nullptr;
     }
 
@@ -1479,15 +1479,15 @@ TypedArrayObject::protoAccessors[] = {
 
 template<typename T>
 static inline bool
-SetFromTypedArray(JSContext* cx, Handle<TypedArrayObject*> target,
-                  Handle<TypedArrayObject*> source, uint32_t offset)
+SetFromTypedArray(Handle<TypedArrayObject*> target, Handle<TypedArrayObject*> source,
+                  uint32_t offset)
 {
     // WARNING: |source| may be an unwrapped typed array from a different
     // compartment. Proceed with caution!
 
     if (target->isSharedMemory() || source->isSharedMemory())
-        return ElementSpecific<T, SharedOps>::setFromTypedArray(cx, target, source, offset);
-    return ElementSpecific<T, UnsharedOps>::setFromTypedArray(cx, target, source, offset);
+        return ElementSpecific<T, SharedOps>::setFromTypedArray(target, source, offset);
+    return ElementSpecific<T, UnsharedOps>::setFromTypedArray(target, source, offset);
 }
 
 template<typename T>
@@ -1584,7 +1584,7 @@ TypedArrayObject::set_impl(JSContext* cx, const CallArgs& args)
         switch (target->type()) {
 #define SET_FROM_TYPED_ARRAY(T, N) \
           case Scalar::N: \
-            if (!SetFromTypedArray<T>(cx, target, srcTypedArray, offset)) \
+            if (!SetFromTypedArray<T>(target, srcTypedArray, offset)) \
                 return false; \
             break;
 JS_FOR_EACH_TYPED_ARRAY(SET_FROM_TYPED_ARRAY)
