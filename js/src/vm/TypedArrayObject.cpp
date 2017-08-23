@@ -977,7 +977,7 @@ class TypedArrayObjectTemplate : public TypedArrayObject
     }
 
     static bool
-    AllocateArrayBuffer(JSContext* cx, HandleValue ctor,
+    AllocateArrayBuffer(JSContext* cx, HandleObject ctor,
                         uint32_t count, uint32_t unit,
                         MutableHandle<ArrayBufferObject*> buffer);
 
@@ -1042,16 +1042,14 @@ JS_FOR_EACH_TYPED_ARRAY(CREATE_TYPED_ARRAY)
 // byteLength = count * unit
 template<typename T>
 /* static */ bool
-TypedArrayObjectTemplate<T>::AllocateArrayBuffer(JSContext* cx, HandleValue ctor,
+TypedArrayObjectTemplate<T>::AllocateArrayBuffer(JSContext* cx, HandleObject ctor,
                                                  uint32_t count, uint32_t unit,
                                                  MutableHandle<ArrayBufferObject*> buffer)
 {
     // ES 2016 draft Mar 25, 2016 24.1.1.1 step 1 (partially).
     // ES 2016 draft Mar 25, 2016 9.1.14 steps 1-2.
-    MOZ_ASSERT(ctor.isObject());
     RootedObject proto(cx);
-    RootedObject ctorObj(cx, &ctor.toObject());
-    if (!GetPrototypeFromConstructor(cx, ctorObj, &proto))
+    if (!GetPrototypeFromConstructor(cx, ctor, &proto))
         return false;
     JSObject* arrayBufferProto = GlobalObject::getOrCreateArrayBufferPrototype(cx, cx->global());
     if (!arrayBufferProto)
@@ -1104,10 +1102,9 @@ TypedArrayObjectTemplate<T>::CloneArrayBufferNoCopy(JSContext* cx,
     // Step 1 (skipped).
 
     // Step 2.a.
-    JSObject* ctorObj = GetSpeciesConstructor(cx, srcBuffer, isWrapped, override);
-    if (!ctorObj)
+    RootedObject cloneCtor(cx, GetSpeciesConstructor(cx, srcBuffer, isWrapped, override));
+    if (!cloneCtor)
         return false;
-    RootedValue cloneCtor(cx, ObjectValue(*ctorObj));
 
     // Step 2.b.
     if (srcBuffer->isDetached()) {
@@ -1225,10 +1222,9 @@ TypedArrayObjectTemplate<T>::fromTypedArray(JSContext* cx, HandleObject other, b
         }
     } else {
         // Steps 17.a-b.
-        JSObject* ctorObj = GetSpeciesConstructor(cx, srcData, isWrapped, override);
-        if (!ctorObj)
+        RootedObject bufferCtor(cx, GetSpeciesConstructor(cx, srcData, isWrapped, override));
+        if (!bufferCtor)
             return nullptr;
-        RootedValue bufferCtor(cx, ObjectValue(*ctorObj));
 
         // Steps 14-15, 17.c.
         if (!AllocateArrayBuffer(cx, bufferCtor, elementLength, BYTES_PER_ELEMENT, &buffer))
