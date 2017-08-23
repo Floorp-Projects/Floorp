@@ -4025,23 +4025,32 @@ ContainerState::ProcessDisplayItems(nsDisplayList* aList,
     if (itemType == DisplayItemType::TYPE_LAYER_EVENT_REGIONS) {
       nsDisplayLayerEventRegions* eventRegions =
         static_cast<nsDisplayLayerEventRegions*>(item);
+
       if (eventRegions->IsEmpty()) {
         continue;
       }
     }
 
-    // Peek ahead to the next item and try merging with it or swapping with it
-    // if necessary.
-    nsDisplayItem* aboveItem;
-    while ((aboveItem = aList->GetBottom()) != nullptr) {
-      if (aboveItem->TryMerge(item)) {
-        aList->RemoveBottom();
-        item->Destroy(mBuilder);
-        item = aboveItem;
-        itemType = item->GetType();
-      } else {
+    // Peek ahead to the next item and see if it can be merged with the current
+    // item. We create a list of consecutive items that can be merged together.
+    AutoTArray<nsDisplayItem*, 1> mergedItems;
+    mergedItems.AppendElement(item);
+    for (nsDisplayItem* peek = item->GetAbove(); peek; peek = peek->GetAbove()) {
+      if (!item->CanMerge(peek)) {
         break;
       }
+
+      mergedItems.AppendElement(peek);
+
+      // Move the iterator forward since we will merge this item.
+      i = peek;
+    }
+
+    if (mergedItems.Length() > 1) {
+      // We have items that can be merged together. Merge them into a temporary
+      // item and process that item immediately.
+      item = mBuilder->MergeItems(mergedItems);
+      MOZ_ASSERT(item && itemType == item->GetType());
     }
 
     nsDisplayList* childItems = item->GetSameCoordinateSystemChildren();
