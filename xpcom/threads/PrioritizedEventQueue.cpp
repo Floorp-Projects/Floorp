@@ -46,7 +46,7 @@ PrioritizedEventQueue<InnerQueueT>::PutEvent(already_AddRefed<nsIRunnable>&& aEv
     }
   }
 
-  if (priority == EventPriority::Input && !mWriteToInputQueue) {
+  if (priority == EventPriority::Input && mInputQueueState == STATE_DISABLED) {
     priority = EventPriority::Normal;
   }
 
@@ -132,7 +132,7 @@ PrioritizedEventQueue<InnerQueueT>::GetEvent(EventPriority* aPriority,
   bool normalPending = mNormalQueue->HasPendingEvent(aProofOfLock);
   size_t inputCount = mInputQueue->Count(aProofOfLock);
 
-  if (mReadFromInputQueue && mInputHandlingStartTime.IsNull() && inputCount > 0) {
+  if (mInputQueueState == STATE_ENABLED && mInputHandlingStartTime.IsNull() && inputCount > 0) {
     mInputHandlingStartTime =
       InputEventStatistics::Get()
       .GetInputHandlingStartTime(inputCount);
@@ -161,21 +161,27 @@ PrioritizedEventQueue<InnerQueueT>::GetEvent(EventPriority* aPriority,
 
   if (mProcessHighPriorityQueue) {
     queue = EventPriority::High;
-  } else if (inputCount > 0 && TimeStamp::Now() > mInputHandlingStartTime
-             && mReadFromInputQueue) {
+  } else if (inputCount > 0 && (mInputQueueState == STATE_FLUSHING ||
+                                (mInputQueueState == STATE_ENABLED &&
+                                 TimeStamp::Now() > mInputHandlingStartTime))) {
     queue = EventPriority::Input;
   } else if (normalPending) {
+    MOZ_ASSERT(mInputQueueState != STATE_FLUSHING,
+               "Shouldn't consume normal event when flusing input events");
     queue = EventPriority::Normal;
   } else if (highPending) {
     queue = EventPriority::High;
-  } else if (inputCount > 0 && mReadFromInputQueue) {
+  } else if (inputCount > 0 && mInputQueueState != STATE_SUSPEND) {
+    MOZ_ASSERT(mInputQueueState != STATE_DISABLED,
+               "Shouldn't consume input events when the input queue is disabled");
     queue = EventPriority::Input;
   } else {
     // We may not actually return an idle event in this case.
     queue = EventPriority::Idle;
   }
 
-  MOZ_ASSERT_IF(queue == EventPriority::Input, mReadFromInputQueue);
+  MOZ_ASSERT_IF(queue == EventPriority::Input,
+                mInputQueueState != STATE_DISABLED && mInputQueueState != STATE_SUSPEND);
 
   mProcessHighPriorityQueue = highPending;
 
@@ -266,46 +272,41 @@ PrioritizedEventQueue<InnerQueueT>::Count(const MutexAutoLock& aProofOfLock) con
   MOZ_CRASH("unimplemented");
 }
 
-// This is used to flush pending events in nsChainedEventQueue::mNormalQueue
-// before starting event prioritization.
-template<class InnerQueueT>
-class PrioritizedEventQueue<InnerQueueT>::EnablePrioritizationRunnable final
-  : public mozilla::Runnable
-{
-public:
-  explicit EnablePrioritizationRunnable(PrioritizedEventQueue<InnerQueueT>* aQueue)
-    : Runnable("EnablePrioritizationRunnable")
-    , mQueue(aQueue)
-  {}
-
-  NS_IMETHOD Run() override
-  {
-    // Do don't need to do this with the lock held because mReadFromInputQueue
-    // is only read from the main thread.
-    MOZ_ASSERT(NS_IsMainThread());
-    MOZ_ASSERT(mQueue->mWriteToInputQueue);
-    MOZ_ASSERT(!mQueue->mReadFromInputQueue);
-    mQueue->mReadFromInputQueue = true;
-    return NS_OK;
-  }
-
-private:
-  // This is a weak pointer. It's guaranteed to stay alive until this runnable
-  // runs since it functions as the event loop in which the runnable is posted.
-  PrioritizedEventQueue<InnerQueueT>* mQueue;
-};
-
 template<class InnerQueueT>
 void
 PrioritizedEventQueue<InnerQueueT>::EnableInputEventPrioritization(const MutexAutoLock& aProofOfLock)
 {
-  MOZ_ASSERT(!mWriteToInputQueue);
-  MOZ_ASSERT(!mReadFromInputQueue);
-  mWriteToInputQueue = true;
+  MOZ_ASSERT(mInputQueueState == STATE_DISABLED);
+  mInputQueueState = STATE_ENABLED;
   mInputHandlingStartTime = TimeStamp();
+}
 
-  RefPtr<EnablePrioritizationRunnable> runnable = new EnablePrioritizationRunnable(this);
-  PutEvent(runnable.forget(), EventPriority::Normal, aProofOfLock);
+template<class InnerQueueT>
+void
+PrioritizedEventQueue<InnerQueueT>::
+FlushInputEventPrioritization(const MutexAutoLock& aProofOfLock)
+{
+  MOZ_ASSERT(mInputQueueState == STATE_ENABLED || mInputQueueState == STATE_SUSPEND);
+  mInputQueueState =
+    mInputQueueState == STATE_ENABLED ? STATE_FLUSHING : STATE_SUSPEND;
+}
+
+template<class InnerQueueT>
+void
+PrioritizedEventQueue<InnerQueueT>::
+SuspendInputEventPrioritization(const MutexAutoLock& aProofOfLock)
+{
+  MOZ_ASSERT(mInputQueueState == STATE_ENABLED || mInputQueueState == STATE_FLUSHING);
+  mInputQueueState = STATE_SUSPEND;
+}
+
+template<class InnerQueueT>
+void
+PrioritizedEventQueue<InnerQueueT>::
+ResumeInputEventPrioritization(const MutexAutoLock& aProofOfLock)
+{
+  MOZ_ASSERT(mInputQueueState == STATE_SUSPEND);
+  mInputQueueState = STATE_ENABLED;
 }
 
 namespace mozilla {

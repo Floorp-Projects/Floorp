@@ -176,6 +176,30 @@ ThreadEventQueue<InnerQueueT>::EnableInputEventPrioritization()
 }
 
 template<class InnerQueueT>
+void
+ThreadEventQueue<InnerQueueT>::FlushInputEventPrioritization()
+{
+  MutexAutoLock lock(mLock);
+  mBaseQueue->FlushInputEventPrioritization(lock);
+}
+
+template<class InnerQueueT>
+void
+ThreadEventQueue<InnerQueueT>::SuspendInputEventPrioritization()
+{
+  MutexAutoLock lock(mLock);
+  mBaseQueue->SuspendInputEventPrioritization(lock);
+}
+
+template<class InnerQueueT>
+void
+ThreadEventQueue<InnerQueueT>::ResumeInputEventPrioritization()
+{
+  MutexAutoLock lock(mLock);
+  mBaseQueue->ResumeInputEventPrioritization(lock);
+}
+
+template<class InnerQueueT>
 already_AddRefed<nsISerialEventTarget>
 ThreadEventQueue<InnerQueueT>::PushEventQueue()
 {

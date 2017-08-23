@@ -99,6 +99,7 @@ protected:
   wr::WindowId mWindowId;
   TimeStamp mFrameStartTime;
   RefPtr<layers::SyncObjectHost> mSyncObject;
+  wr::DebugFlags mDebugFlags;
 };
 
 } // namespace wr
