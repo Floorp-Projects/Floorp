@@ -470,7 +470,7 @@ impl<'a> Tokenizer<'a> {
                 }
                 b'-' => {
                     if self.starts_with(b"-->") {
-                        self.advance(4)
+                        self.advance(3)
                     } else {
                         return
                     }
