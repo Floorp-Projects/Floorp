@@ -113,11 +113,9 @@ js::StartOffThreadWasmTier2Generator(wasm::Tier2GeneratorTask* task)
     return true;
 }
 
-void
-js::CancelOffThreadWasmTier2Generator()
+static void
+CancelOffThreadWasmTier2GeneratorLocked(AutoLockHelperThreadState& lock)
 {
-    AutoLockHelperThreadState lock;
-
     if (!HelperThreadState().threads)
         return;
 
@@ -158,6 +156,13 @@ js::CancelOffThreadWasmTier2Generator()
             break;
         }
     }
+}
+
+void
+js::CancelOffThreadWasmTier2Generator()
+{
+    AutoLockHelperThreadState lock;
+    CancelOffThreadWasmTier2GeneratorLocked(lock);
 }
 
 bool
@@ -254,14 +259,10 @@ IonBuilderMatches(const CompilationSelector& selector, jit::IonBuilder* builder)
     return selector.match(BuilderMatches{builder});
 }
 
-void
-js::CancelOffThreadIonCompile(const CompilationSelector& selector, bool discardLazyLinkList)
+static void
+CancelOffThreadIonCompileLocked(const CompilationSelector& selector, bool discardLazyLinkList,
+                                AutoLockHelperThreadState& lock)
 {
-    if (!JitDataStructuresExist(selector))
-        return;
-
-    AutoLockHelperThreadState lock;
-
     if (!HelperThreadState().threads)
         return;
 
@@ -323,6 +324,16 @@ js::CancelOffThreadIonCompile(const CompilationSelector& selector, bool discardL
             }
         }
     }
+}
+
+void
+js::CancelOffThreadIonCompile(const CompilationSelector& selector, bool discardLazyLinkList)
+{
+    if (!JitDataStructuresExist(selector))
+        return;
+
+    AutoLockHelperThreadState lock;
+    CancelOffThreadIonCompileLocked(selector, discardLazyLinkList, lock);
 }
 
 #ifdef DEBUG
@@ -1020,10 +1031,16 @@ GlobalHelperThreadState::hasActiveThreads(const AutoLockHelperThreadState&)
 void
 GlobalHelperThreadState::waitForAllThreads()
 {
-    CancelOffThreadIonCompile();
-    CancelOffThreadWasmTier2Generator();
-
     AutoLockHelperThreadState lock;
+    waitForAllThreadsLocked(lock);
+}
+
+void
+GlobalHelperThreadState::waitForAllThreadsLocked(AutoLockHelperThreadState& lock)
+{
+    CancelOffThreadIonCompileLocked(CompilationSelector(AllCompilations()), false, lock);
+    CancelOffThreadWasmTier2GeneratorLocked(lock);
+
     while (hasActiveThreads(lock))
         wait(lock, CONSUMER);
 }
