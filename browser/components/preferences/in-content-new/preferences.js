@@ -230,7 +230,8 @@ function search(aQuery, aAttribute, aSubquery, aSubAttribute) {
       let attributeValue = element.getAttribute(aAttribute);
       if (attributeValue == aQuery) {
         if (!element.classList.contains("header") &&
-             aSubquery && aSubAttribute) {
+            element.localName !== "preferences" &&
+            aSubquery && aSubAttribute) {
           let subAttributeValue = element.getAttribute(aSubAttribute);
           element.hidden = subAttributeValue != aSubquery;
         } else {
