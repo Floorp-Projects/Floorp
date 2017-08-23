@@ -4,7 +4,7 @@ MAINTAINER    Nick Alexander <nalexander@mozilla.com>
 
 # BEGIN ../desktop-build/Dockerfile
 
-# TODO remove when base image is updated
+VOLUME /home/worker/checkouts
 VOLUME /home/worker/workspace
 VOLUME /home/worker/tooltool-cache
 

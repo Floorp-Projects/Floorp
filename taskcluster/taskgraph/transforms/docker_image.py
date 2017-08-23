@@ -102,6 +102,11 @@ def fill_template(config, tasks):
                     'name': 'level-{}-imagebuilder-v1'.format(config.params['level']),
                     'mount-point': '/home/worker/checkouts',
                 }],
+                'volumes': [
+                    # Keep in sync with Dockerfile.
+                    '/home/worker/checkouts',
+                    '/home/worker/workspace',
+                ],
                 'artifacts': [{
                     'type': 'file',
                     'path': '/home/worker/workspace/artifacts/image.tar.zst',

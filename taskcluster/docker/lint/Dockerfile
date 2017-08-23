@@ -4,6 +4,9 @@ MAINTAINER    Andrew Halberstadt <ahalberstadt@mozilla.com>
 RUN useradd -d /home/worker -s /bin/bash -m worker
 WORKDIR /home/worker
 
+VOLUME /home/worker/.cache
+VOLUME /home/worker/checkouts
+
 RUN mkdir /build
 # %include python/mozbuild/mozbuild/action/tooltool.py
 ADD topsrcdir/python/mozbuild/mozbuild/action/tooltool.py /build/tooltool.py

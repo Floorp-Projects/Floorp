@@ -747,6 +747,8 @@ def build_docker_worker_payload(config, task, task_def):
             name=task['coalesce-name'])
         payload['supersederUrl'] = "https://coalesce.mozilla-releng.net/v1/list/" + key
 
+    check_caches_are_volumes(task)
+
 
 @payload_builder('generic-worker')
 def build_generic_worker_payload(config, task, task_def):
@@ -1154,6 +1156,30 @@ def build_task(config, tasks):
             'attributes': attributes,
             'optimizations': task.get('optimizations', []),
         }
+
+
+def check_caches_are_volumes(task):
+    """Ensures that all cache paths are defined as volumes.
+
+    Caches and volumes are the only filesystem locations whose content
+    isn't defined by the Docker image itself. Some caches are optional
+    depending on the job environment. We want paths that are potentially
+    caches to have as similar behavior regardless of whether a cache is
+    used. To help enforce this, we require that all paths used as caches
+    to be declared as Docker volumes. This check won't catch all offenders.
+    But it is better than nothing.
+    """
+    volumes = set(task['worker']['volumes'])
+    paths = set(c['mount-point'] for c in task['worker'].get('caches', []))
+    missing = paths - volumes
+
+    if not missing:
+        return
+
+    raise Exception('task %s (image %s) has caches that are not declared as '
+                    'Docker volumes: %s' % (task['label'],
+                                            task['worker']['docker-image'],
+                                            ', '.join(sorted(missing))))
 
 
 @transforms.add
