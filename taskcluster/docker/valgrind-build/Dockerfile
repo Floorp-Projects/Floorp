@@ -2,7 +2,7 @@
 FROM          taskcluster/centos6-build-upd:0.1.7.20170801103900
 MAINTAINER    Dustin J. Mitchell <dustin@mozilla.com>
 
-# TODO remove when base image is updated
+VOLUME /home/worker/checkouts
 VOLUME /home/worker/workspace
 VOLUME /home/worker/tooltool-cache
 
