@@ -31,8 +31,6 @@ browser.jar:
   skin/classic/browser/privatebrowsing-mask@2x.png
   skin/classic/browser/privatebrowsing-mask-short.png
   skin/classic/browser/privatebrowsing-mask-short@2x.png
-  skin/classic/browser/reload-stop-go.png
-  skin/classic/browser/reload-stop-go@2x.png
   skin/classic/browser/searchbar.css
   skin/classic/browser/slowStartup-16.png
   skin/classic/browser/toolbarbutton-dropmarker.png
@@ -92,8 +90,6 @@ browser.jar:
   skin/classic/browser/yosemite/menuPanel-exit@2x.png                  (menuPanel-exit-yosemite@2x.png)
   skin/classic/browser/yosemite/menuPanel-help.png                     (menuPanel-help-yosemite.png)
   skin/classic/browser/yosemite/menuPanel-help@2x.png                  (menuPanel-help-yosemite@2x.png)
-  skin/classic/browser/yosemite/reload-stop-go.png                     (reload-stop-go-yosemite.png)
-  skin/classic/browser/yosemite/reload-stop-go@2x.png                  (reload-stop-go-yosemite@2x.png)
 #ifdef E10S_TESTING_ONLY
   skin/classic/browser/e10s-64@2x.png (../shared/e10s-64@2x.png)
 #endif
@@ -111,5 +107,3 @@ browser.jar:
 % override chrome://browser/skin/menuPanel-exit@2x.png                     chrome://browser/skin/yosemite/menuPanel-exit@2x.png                    os=Darwin osversion>=10.10
 % override chrome://browser/skin/menuPanel-help.png                        chrome://browser/skin/yosemite/menuPanel-help.png                       os=Darwin osversion>=10.10
 % override chrome://browser/skin/menuPanel-help@2x.png                     chrome://browser/skin/yosemite/menuPanel-help@2x.png                    os=Darwin osversion>=10.10
-% override chrome://browser/skin/reload-stop-go.png                        chrome://browser/skin/yosemite/reload-stop-go.png                       os=Darwin osversion>=10.10
-% override chrome://browser/skin/reload-stop-go@2x.png                     chrome://browser/skin/yosemite/reload-stop-go@2x.png                    os=Darwin osversion>=10.10
