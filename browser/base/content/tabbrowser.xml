@@ -4538,7 +4538,7 @@
                 if (this.unloadTimer) {
                   this.clearTimer(this.unloadTimer);
                 }
-                this.onUnloadTimeout();
+                this.unloadNonRequiredTabs();
               }
 
               if (numPending == 0) {
@@ -4551,10 +4551,20 @@
             // Fires when we're ready to unload unused tabs.
             onUnloadTimeout() {
               this.logState("onUnloadTimeout");
-              this.unloadTimer = null;
-              this.warmingTabs = new WeakSet();
               this.preActions();
+              this.unloadTimer = null;
 
+              this.unloadNonRequiredTabs();
+
+              this.postActions();
+            },
+
+            // If there are any non-visible and non-requested tabs in
+            // STATE_LOADED, sets them to STATE_UNLOADING. Also queues
+            // up the unloadTimer to run onUnloadTimeout if there are still
+            // tabs in the process of unloading.
+            unloadNonRequiredTabs() {
+              this.warmingTabs = new WeakSet();
               let numPending = 0;
 
               // Unload any tabs that can be unloaded.
@@ -4580,8 +4590,6 @@
                 // Keep the timer going since there may be more tabs to unload.
                 this.unloadTimer = this.setTimer(() => this.onUnloadTimeout(), this.UNLOAD_DELAY);
               }
-
-              this.postActions();
             },
 
             // Fires when an ongoing load has taken too long.
