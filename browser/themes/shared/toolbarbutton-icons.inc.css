@@ -20,6 +20,7 @@ toolbar[brighttext] .toolbarbutton-1 {
 #reload-button:-moz-locale-dir(rtl) > .toolbarbutton-icon,
 #library-button:-moz-locale-dir(rtl) > .toolbarbutton-icon,
 #nav-bar-overflow-button:-moz-locale-dir(rtl) > .toolbarbutton-icon,
+#PlacesChevron:-moz-locale-dir(rtl) > .toolbarbutton-icon,
 #panic-button:-moz-locale-dir(rtl) > .toolbarbutton-icon {
   transform: scaleX(-1);
 }
