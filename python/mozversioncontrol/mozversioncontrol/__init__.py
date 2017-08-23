@@ -212,6 +212,29 @@ class MissingConfigureInfo(MissingVCSInfo):
     """Represents error finding VCS info from configure data."""
 
 
+def get_repository_from_build_config(config):
+    """Obtain a repository from the build configuration.
+
+    Accepts an object that has a ``topsrcdir`` and ``subst`` attribute.
+    """
+    flavor = config.substs.get('VCS_CHECKOUT_TYPE')
+
+    # If in build mode, only use what configure found. That way we ensure
+    # that everything in the build system can be controlled via configure.
+    if not flavor:
+        raise MissingConfigureInfo('could not find VCS_CHECKOUT_TYPE '
+                                   'in build config; check configure '
+                                   'output and verify it could find a '
+                                   'VCS binary')
+
+    if flavor == 'hg':
+        return HgRepository(config.topsrcdir, hg=config.substs['HG'])
+    elif flavor == 'git':
+        return GitRepository(config.topsrcdir, git=config.substs['GIT'])
+    else:
+        raise MissingVCSInfo('unknown VCS_CHECKOUT_TYPE value: %s' % flavor)
+
+
 def get_repository_from_env():
     """Obtain a repository object by looking at the environment.
 
@@ -223,25 +246,7 @@ def get_repository_from_env():
     try:
         import buildconfig
 
-        flavor = buildconfig.substs.get('VCS_CHECKOUT_TYPE')
-
-        # If in build mode, only use what configure found. That way we ensure
-        # that everything in the build system can be controlled via configure.
-        if not flavor:
-            raise MissingConfigureInfo('could not find VCS_CHECKOUT_TYPE '
-                                       'in build config; check configure '
-                                       'output and verify it could find a '
-                                       'VCS binary')
-
-        if flavor == 'hg':
-            return HgRepository(buildconfig.topsrcdir,
-                                hg=buildconfig.substs['HG'])
-        elif flavor == 'git':
-            return GitRepository(buildconfig.topsrcdir,
-                                 git=buildconfig.substs['GIT'])
-        else:
-            raise MissingVCSInfo('unknown VCS_CHECKOUT_TYPE value: %s' % flavor)
-
+        return get_repository_from_build_config(buildconfig)
     except ImportError:
         pass
 
