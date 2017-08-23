@@ -51,7 +51,8 @@ lazy_static! {
         // Disable safebrowsing components
         ("browser.safebrowsing.blockedURIs.enabled", Pref::new(false)),
         ("browser.safebrowsing.downloads.enabled", Pref::new(false)),
-        ("browser.safebrowsing.passwords.enabled", Pref::new(false)),
+        ("browser.safebrowsing.enabled", Pref::new(false)),
+        ("browser.safebrowsing.forbiddenURIs.enabled", Pref::new(false)),
         ("browser.safebrowsing.malware.enabled", Pref::new(false)),
         ("browser.safebrowsing.phishing.enabled", Pref::new(false)),
 

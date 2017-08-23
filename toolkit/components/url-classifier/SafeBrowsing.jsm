@@ -41,7 +41,6 @@ const tablePreferences = [
   "urlclassifier.malwareTable",
   "urlclassifier.downloadBlockTable",
   "urlclassifier.downloadAllowTable",
-  "urlclassifier.passwordAllowTable",
   "urlclassifier.trackingTable",
   "urlclassifier.trackingWhitelistTable",
   "urlclassifier.blockedTable",
@@ -110,9 +109,6 @@ this.SafeBrowsing = {
     for (let i = 0; i < this.downloadAllowLists.length; ++i) {
       this.registerTableWithURLs(this.downloadAllowLists[i]);
     }
-    for (let i = 0; i < this.passwordAllowLists.length; ++i) {
-      this.registerTableWithURLs(this.passwordAllowLists[i]);
-    }
     for (let i = 0; i < this.trackingProtectionLists.length; ++i) {
       this.registerTableWithURLs(this.trackingProtectionLists[i]);
     }
@@ -134,7 +130,6 @@ this.SafeBrowsing = {
   initialized:          false,
   phishingEnabled:      false,
   malwareEnabled:       false,
-  passwordsEnabled:     false,
   trackingEnabled:      false,
   blockedEnabled:       false,
   trackingAnnotations:  false,
@@ -145,7 +140,6 @@ this.SafeBrowsing = {
   malwareLists:                 [],
   downloadBlockLists:           [],
   downloadAllowLists:           [],
-  passwordAllowLists:           [],
   trackingProtectionLists:      [],
   trackingProtectionWhitelists: [],
   blockedLists:                 [],
@@ -213,7 +207,6 @@ this.SafeBrowsing = {
 
     this.phishingEnabled = Services.prefs.getBoolPref("browser.safebrowsing.phishing.enabled");
     this.malwareEnabled = Services.prefs.getBoolPref("browser.safebrowsing.malware.enabled");
-    this.passwordsEnabled = Services.prefs.getBoolPref("browser.safebrowsing.passwords.enabled");
     this.trackingEnabled = Services.prefs.getBoolPref("privacy.trackingprotection.enabled") || Services.prefs.getBoolPref("privacy.trackingprotection.pbmode.enabled");
     this.blockedEnabled = Services.prefs.getBoolPref("browser.safebrowsing.blockedURIs.enabled");
     this.trackingAnnotations = Services.prefs.getBoolPref("privacy.trackingprotection.annotate_channels");
@@ -227,7 +220,6 @@ this.SafeBrowsing = {
      this.malwareLists,
      this.downloadBlockLists,
      this.downloadAllowLists,
-     this.passwordAllowLists,
      this.trackingProtectionLists,
      this.trackingProtectionWhitelists,
      this.blockedLists,
@@ -328,8 +320,7 @@ this.SafeBrowsing = {
 
   controlUpdateChecking() {
     log("phishingEnabled:", this.phishingEnabled, "malwareEnabled:",
-        this.malwareEnabled, "passwordsEnabled:", this.passwordsEnabled,
-        "trackingEnabled:", this.trackingEnabled,
+        this.malwareEnabled, "trackingEnabled:", this.trackingEnabled,
         "blockedEnabled:", this.blockedEnabled, "trackingAnnotations",
         this.trackingAnnotations, "flashBlockEnabled", this.flashBlockEnabled,
         "flashInfobarListEnabled:", this.flashInfobarListEnabled);
@@ -363,13 +354,6 @@ this.SafeBrowsing = {
         listManager.enableUpdate(this.downloadAllowLists[i]);
       } else {
         listManager.disableUpdate(this.downloadAllowLists[i]);
-      }
-    }
-    for (let i = 0; i < this.passwordAllowLists.length; ++i) {
-      if (this.passwordsEnabled) {
-        listManager.enableUpdate(this.passwordAllowLists[i]);
-      } else {
-        listManager.disableUpdate(this.passwordAllowLists[i]);
       }
     }
     for (let i = 0; i < this.trackingProtectionLists.length; ++i) {
