@@ -221,8 +221,8 @@ class Module : public JS::WasmModule
     // finished; it is passed the tier-variant data for Tier 2, which it
     // installs in the module and makes visible.
 
-    void finishTier2Generator(UniqueLinkDataTier linkData2, UniqueMetadataTier metadata2,
-                              UniqueConstCodeSegment code2, UniqueModuleEnvironment env2);
+    void finishTier2(UniqueLinkDataTier linkData2, UniqueMetadataTier metadata2,
+                     UniqueConstCodeSegment code2, UniqueModuleEnvironment env2);
 
     // Wait until Ion-compiled code is available, which will be true either
     // immediately (first-level compile was Ion and is already done), not at all

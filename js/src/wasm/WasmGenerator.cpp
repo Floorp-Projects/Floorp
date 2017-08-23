@@ -1181,20 +1181,20 @@ ModuleGenerator::finishMetadata(const ShareableBytes& bytecode)
     return true;
 }
 
-bool
-ModuleGenerator::finishCommon(const ShareableBytes& bytecode)
+UniqueConstCodeSegment
+ModuleGenerator::finishCodeSegment(const ShareableBytes& bytecode)
 {
     MOZ_ASSERT(!activeFuncDef_);
     MOZ_ASSERT(finishedFuncDefs_);
 
     if (!finishFuncExports())
-        return false;
+        return nullptr;
 
     if (!finishCodegen())
-        return false;
+        return nullptr;
 
     if (!finishMetadata(bytecode))
-        return false;
+        return nullptr;
 
     // Assert CodeRanges are sorted.
 #ifdef DEBUG
@@ -1215,9 +1215,9 @@ ModuleGenerator::finishCommon(const ShareableBytes& bytecode)
 #endif
 
     if (!finishLinkData())
-        return false;
+        return nullptr;
 
-    return true;
+    return CodeSegment::create(tier_, masm_, bytecode, *linkDataTier_, *metadata_);
 }
 
 UniqueJumpTable
@@ -1227,19 +1227,17 @@ ModuleGenerator::createJumpTable(const CodeSegment& codeSegment)
     MOZ_ASSERT(!isAsmJS());
 
     uint32_t tableSize = env_->numFuncImports() + env_->numFuncDefs();
-    uintptr_t* jumpTable = reinterpret_cast<uintptr_t*>(js_calloc(tableSize, sizeof(uintptr_t)));
+    UniqueJumpTable jumpTable(js_pod_calloc<void*>(tableSize));
     if (!jumpTable)
         return nullptr;
 
-    UniqueJumpTable jumpTable_ = UniqueJumpTable(jumpTable, JS::FreePolicy());
-
-    uintptr_t codeBase = reinterpret_cast<uintptr_t>(codeSegment.base());
+    uint8_t* codeBase = codeSegment.base();
     for (const CodeRange& codeRange : metadataTier_->codeRanges) {
         if (codeRange.isFunction())
             jumpTable[codeRange.funcIndex()] = codeBase + codeRange.funcTierEntry();
     }
 
-    return jumpTable_;
+    return jumpTable;
 }
 
 SharedModule
@@ -1247,14 +1245,7 @@ ModuleGenerator::finishModule(const ShareableBytes& bytecode)
 {
     MOZ_ASSERT(compileMode_ == CompileMode::Once || compileMode_ == CompileMode::Tier1);
 
-    if (!finishCommon(bytecode))
-        return nullptr;
-
-    UniqueConstCodeSegment codeSegment = CodeSegment::create(tier_,
-                                                             masm_,
-                                                             bytecode,
-                                                             *linkDataTier_,
-                                                             *metadata_);
+    UniqueConstCodeSegment codeSegment = finishCodeSegment(bytecode);
     if (!codeSegment)
         return nullptr;
 
@@ -1298,27 +1289,19 @@ ModuleGenerator::finishTier2(const ShareableBytes& bytecode, SharedModule module
 {
     MOZ_ASSERT(compileMode_ == CompileMode::Tier2);
     MOZ_ASSERT(tier_ == Tier::Ion);
+    MOZ_ASSERT(!metadata_->debugEnabled);
 
     if (cancelled_ && *cancelled_)
         return false;
 
-    if (!finishCommon(bytecode))
-        return false;
-
-    UniqueConstCodeSegment codeSegment = CodeSegment::create(tier_,
-                                                             masm_,
-                                                             bytecode,
-                                                             *linkDataTier_,
-                                                             *metadata_);
+    UniqueConstCodeSegment codeSegment = finishCodeSegment(bytecode);
     if (!codeSegment)
         return false;
 
-    MOZ_ASSERT(!metadata_->debugEnabled);
-
-    module->finishTier2Generator(linkData_.takeLinkData(tier_),
-                                 metadata_->takeMetadata(tier_),
-                                 Move(codeSegment),
-                                 Move(env_));
+    module->finishTier2(linkData_.takeLinkData(tier_),
+                        metadata_->takeMetadata(tier_),
+                        Move(codeSegment),
+                        Move(env_));
     return true;
 }
 
