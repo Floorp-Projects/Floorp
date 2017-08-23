@@ -159,6 +159,25 @@ add_task(async function test_get() {
   do_check_eq(profileStorage.creditCards.get("INVALID_GUID"), null);
 });
 
+add_task(async function test_getByFilter() {
+  let path = getTempFile(TEST_STORE_FILE_NAME).path;
+  await prepareTestCreditCards(path);
+
+  let profileStorage = new ProfileStorage(path);
+  await profileStorage.initialize();
+
+  let filter = {info: {fieldName: "cc-name"}, searchString: "Tim"};
+  let creditCards = profileStorage.creditCards.getByFilter(filter);
+  do_check_eq(creditCards.length, 1);
+  do_check_credit_card_matches(creditCards[0], TEST_CREDIT_CARD_2);
+
+  // TODO: Uncomment this after decryption lands (bug 1389413).
+  // filter = {info: {fieldName: "cc-number"}, searchString: "11"};
+  // creditCards = profileStorage.creditCards.getByFilter(filter);
+  // do_check_eq(creditCards.length, 1);
+  // do_check_credit_card_matches(creditCards[0], TEST_CREDIT_CARD_2);
+});
+
 add_task(async function test_add() {
   let path = getTempFile(TEST_STORE_FILE_NAME).path;
   await prepareTestCreditCards(path);
