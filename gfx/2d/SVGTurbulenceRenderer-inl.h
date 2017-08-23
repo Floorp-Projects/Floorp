@@ -108,14 +108,6 @@ SVGTurbulenceRenderer<Type,Stitch,f32x4_t,i32x4_t,u8x16_t>::SVGTurbulenceRendere
   }
 }
 
-template<typename T>
-static void
-Swap(T& a, T& b) {
-  T c = a;
-  a = b;
-  b = c;
-}
-
 template<TurbulenceType Type, bool Stitch, typename f32x4_t, typename i32x4_t, typename u8x16_t>
 void
 SVGTurbulenceRenderer<Type,Stitch,f32x4_t,i32x4_t,u8x16_t>::InitFromSeed(int32_t aSeed)
