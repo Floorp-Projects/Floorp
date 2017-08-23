@@ -60,6 +60,7 @@ public class WebAppActivity extends AppCompatActivity
 
     private boolean mIsFullScreenMode;
     private boolean mIsFullScreenContent;
+    private boolean mCanGoBack;
     private Uri mScope;
 
     @Override
@@ -145,6 +146,8 @@ public class WebAppActivity extends AppCompatActivity
     public void onBackPressed() {
         if (mIsFullScreenContent) {
             mGeckoView.exitFullScreen();
+        } else if (mCanGoBack) {
+            mGeckoView.goBack();
         } else {
             super.onBackPressed();
         }
@@ -319,6 +322,7 @@ public class WebAppActivity extends AppCompatActivity
 
     @Override
     public void onCanGoBack(GeckoView view, boolean canGoBack) {
+        mCanGoBack = canGoBack;
     }
 
     @Override
