@@ -630,6 +630,7 @@
 
   <string name="activity_stream_welcome_title">&activity_stream_welcome_title;</string>
   <string name="activity_stream_welcome_content">&activity_stream_welcome_content1;</string>
+  <string name="activity_stream_welcome_dismiss">&activity_stream_welcome_dismiss;</string>
 
   <string name="private_tab_panel_title">&private_tab_panel_title;</string>
   <string name="private_tab_panel_description">&private_tab_panel_description;</string>
