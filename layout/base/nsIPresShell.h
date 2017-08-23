@@ -514,20 +514,12 @@ public:
   virtual void NotifyCounterStylesAreDirty() = 0;
 
   /**
-   * Destroy the frames for aContent.  Note that this may destroy frames
-   * for an ancestor instead - aDestroyedFramesFor contains the content node
-   * where frames were actually destroyed (which should be used in the
-   * CreateFramesFor call).  The frame tree state will be captured before
-   * the frames are destroyed in the frame constructor.
+   * Destroy the frames for aElement, and reconstruct them asynchronously if
+   * needed.
+   *
+   * Note that this may destroy frames for an ancestor instead.
    */
-  virtual void DestroyFramesFor(nsIContent*  aContent,
-                                nsIContent** aDestroyedFramesFor) = 0;
-  /**
-   * Create new frames for aContent.  It will use the last captured layout
-   * history state captured in the frame constructor to restore the state
-   * in the new frame tree.
-   */
-  virtual void CreateFramesFor(nsIContent* aContent) = 0;
+  virtual void DestroyFramesFor(mozilla::dom::Element* aElement) = 0;
 
   void PostRecreateFramesFor(mozilla::dom::Element* aElement);
   void RestyleForAnimation(mozilla::dom::Element* aElement,
