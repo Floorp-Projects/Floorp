@@ -1,7 +1,7 @@
 use mozprofile::preferences::Pref;
 
 lazy_static! {
-    pub static ref DEFAULT: [(&'static str, Pref); 78] = [
+    pub static ref DEFAULT: [(&'static str, Pref); 79] = [
         // Disable automatic downloading of new releases
         ("app.update.auto", Pref::new(false)),
 
@@ -51,6 +51,7 @@ lazy_static! {
         // Disable safebrowsing components
         ("browser.safebrowsing.blockedURIs.enabled", Pref::new(false)),
         ("browser.safebrowsing.downloads.enabled", Pref::new(false)),
+        ("browser.safebrowsing.passwords.enabled", Pref::new(false)),
         ("browser.safebrowsing.malware.enabled", Pref::new(false)),
         ("browser.safebrowsing.phishing.enabled", Pref::new(false)),
 
