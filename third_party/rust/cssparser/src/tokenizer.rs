@@ -411,76 +411,6 @@ impl<'a> Tokenizer<'a> {
     fn starts_with(&self, needle: &[u8]) -> bool {
         self.input.as_bytes()[self.position..].starts_with(needle)
     }
-
-    pub fn skip_whitespace(&mut self) {
-        while !self.is_eof() {
-            match_byte! { self.next_byte_unchecked(),
-                b' ' | b'\t' => {
-                    self.advance(1)
-                },
-                b'\n' | b'\x0C' => {
-                    self.advance(1);
-                    self.seen_newline(false);
-                },
-                b'\r' => {
-                    self.advance(1);
-                    self.seen_newline(true);
-                },
-                b'/' => {
-                    if self.starts_with(b"/*") {
-                        consume_comment(self);
-                    } else {
-                        return
-                    }
-                }
-                _ => {
-                    return
-                }
-            }
-        }
-    }
-
-    pub fn skip_cdc_and_cdo(&mut self) {
-        while !self.is_eof() {
-            match_byte! { self.next_byte_unchecked(),
-                b' ' | b'\t' => {
-                    self.advance(1)
-                },
-                b'\n' | b'\x0C' => {
-                    self.advance(1);
-                    self.seen_newline(false);
-                },
-                b'\r' => {
-                    self.advance(1);
-                    self.seen_newline(true);
-                },
-                b'/' => {
-                    if self.starts_with(b"/*") {
-                        consume_comment(self);
-                    } else {
-                        return
-                    }
-                }
-                b'<' => {
-                    if self.starts_with(b"<!--") {
-                        self.advance(4)
-                    } else {
-                        return
-                    }
-                }
-                b'-' => {
-                    if self.starts_with(b"-->") {
-                        self.advance(3)
-                    } else {
-                        return
-                    }
-                }
-                _ => {
-                    return
-                }
-            }
-        }
-    }
 }
 
 /// A position from the start of the input, counted in UTF-8 bytes.
@@ -584,7 +514,9 @@ fn next_token<'a>(tokenizer: &mut Tokenizer<'a>) -> Result<Token<'a>, ()> {
         }
         b'/' => {
             if tokenizer.starts_with(b"/*") {
-                Comment(consume_comment(tokenizer))
+                let contents = consume_comment(tokenizer);
+                check_for_source_map(tokenizer, contents);
+                Comment(contents)
             } else {
                 tokenizer.advance(1);
                 Delim('/')
@@ -695,9 +627,7 @@ fn consume_comment<'a>(tokenizer: &mut Tokenizer<'a>) -> &'a str {
                 tokenizer.advance(1);
                 if tokenizer.next_byte() == Some(b'/') {
                     tokenizer.advance(1);
-                    let contents = tokenizer.slice(start_position..end_position);
-                    check_for_source_map(tokenizer, contents);
-                    return contents
+                    return tokenizer.slice(start_position..end_position)
                 }
             }
             b'\n' | b'\x0C' => {
@@ -713,9 +643,7 @@ fn consume_comment<'a>(tokenizer: &mut Tokenizer<'a>) -> &'a str {
             }
         }
     }
-    let contents = tokenizer.slice_from(start_position);
-    check_for_source_map(tokenizer, contents);
-    contents
+    tokenizer.slice_from(start_position)
 }
 
 fn consume_string<'a>(tokenizer: &mut Tokenizer<'a>, single_quote: bool) -> Token<'a> {

@@ -342,29 +342,15 @@ where P: QualifiedRuleParser<'i, QualifiedRule = R, Error = E> +
 
     fn next(&mut self) -> Option<Result<R, PreciseParseError<'i, E>>> {
         loop {
-            if self.is_stylesheet {
-                self.input.skip_cdc_and_cdo()
-            } else {
-                self.input.skip_whitespace()
-            }
             let start = self.input.state();
-
-            let at_keyword;
-            match self.input.next_byte() {
-                Some(b'@') => {
-                    match self.input.next_including_whitespace_and_comments() {
-                        Ok(&Token::AtKeyword(ref name)) => at_keyword = Some(name.clone()),
-                        _ => at_keyword = None,
-                    }
-                    // FIXME: move this back inside `match` when lifetimes are non-lexical
-                    if at_keyword.is_none() {
-                        self.input.reset(&start)
-                    }
-                }
-                Some(_) => at_keyword = None,
-                None => return None
-            }
-
+            // FIXME: remove intermediate variable when lifetimes are non-lexical
+            let at_keyword = match self.input.next_including_whitespace_and_comments() {
+                Ok(&Token::WhiteSpace(_)) | Ok(&Token::Comment(_)) => continue,
+                Ok(&Token::CDO) | Ok(&Token::CDC) if self.is_stylesheet => continue,
+                Ok(&Token::AtKeyword(ref name)) => Some(name.clone()),
+                Ok(_) => None,
+                Err(_) => return None,
+            };
             if let Some(name) = at_keyword {
                 let first_stylesheet_rule = self.is_stylesheet && !self.any_rule_so_far;
                 self.any_rule_so_far = true;
@@ -376,6 +362,7 @@ where P: QualifiedRuleParser<'i, QualifiedRule = R, Error = E> +
                 }
             } else {
                 self.any_rule_so_far = true;
+                self.input.reset(&start);
                 return Some(parse_qualified_rule(self.input, &mut self.parser)
                             .map_err(|e| PreciseParseError {
                                 error: e,
@@ -413,27 +400,20 @@ pub fn parse_one_rule<'i, 't, R, P, E>(input: &mut Parser<'i, 't>, parser: &mut 
 where P: QualifiedRuleParser<'i, QualifiedRule = R, Error = E> +
          AtRuleParser<'i, AtRule = R, Error = E> {
     input.parse_entirely(|input| {
-        input.skip_whitespace();
-        let start = input.state();
-
-        let at_keyword;
-        if input.next_byte() == Some(b'@') {
-            match *input.next_including_whitespace_and_comments()? {
-                Token::AtKeyword(ref name) => at_keyword = Some(name.clone()),
-                _ => at_keyword = None,
+        loop {
+            let start = input.state();
+            // FIXME: remove intermediate variable when lifetimes are non-lexical
+            let at_keyword = match *input.next_including_whitespace_and_comments()? {
+                Token::WhiteSpace(_) | Token::Comment(_) => continue,
+                Token::AtKeyword(ref name) => Some(name.clone()),
+                _ => None
+            };
+            if let Some(name) = at_keyword {
+                return parse_at_rule(&start, name, input, parser).map_err(|e| e.error)
+            } else {
+                input.reset(&start);
+                return parse_qualified_rule(input, parser)
             }
-            // FIXME: move this back inside `match` when lifetimes are non-lexical
-            if at_keyword.is_none() {
-                input.reset(&start)
-            }
-        } else {
-            at_keyword = None
-        }
-
-        if let Some(name) = at_keyword {
-            parse_at_rule(&start, name, input, parser).map_err(|e| e.error)
-        } else {
-            parse_qualified_rule(input, parser)
         }
     })
 }

@@ -288,32 +288,6 @@ impl<'i: 't, 't> Parser<'i, 't> {
         }
     }
 
-    /// Advance the input until the next token that’s not whitespace or a comment.
-    #[inline]
-    pub fn skip_whitespace(&mut self) {
-        // If we just consumed `{`, `[`, `(`, or `function(`, leave whitespace
-        // or comments inside the block or function up to the nested parser.
-        if self.at_start_of.is_some() {
-            return
-        }
-
-        self.input.tokenizer.skip_whitespace()
-    }
-
-    #[inline]
-    pub(crate) fn skip_cdc_and_cdo(&mut self) {
-        self.input.tokenizer.skip_cdc_and_cdo()
-    }
-
-    #[inline]
-    pub(crate) fn next_byte(&self) -> Option<u8> {
-        let byte = self.input.tokenizer.next_byte();
-        if self.stop_before.contains(Delimiters::from_byte(byte)) {
-            return None
-        }
-        byte
-    }
-
     /// Restore the internal state of the parser (including position within the input)
     /// to what was previously saved by the `Parser::position` method.
     ///
@@ -390,8 +364,14 @@ impl<'i: 't, 't> Parser<'i, 't> {
     ///
     /// This only returns a closing token when it is unmatched (and therefore an error).
     pub fn next(&mut self) -> Result<&Token<'i>, BasicParseError<'i>> {
-        self.skip_whitespace();
-        self.next_including_whitespace_and_comments()
+        loop {
+            match self.next_including_whitespace_and_comments() {
+                Err(e) => return Err(e),
+                Ok(&Token::WhiteSpace(_)) | Ok(&Token::Comment(_)) => {},
+                _ => break
+            }
+        }
+        Ok(self.input.cached_token_ref())
     }
 
     /// Same as `Parser::next`, but does not skip whitespace tokens.
@@ -479,7 +459,6 @@ impl<'i: 't, 't> Parser<'i, 't> {
     where F: for<'tt> FnMut(&mut Parser<'i, 'tt>) -> Result<T, ParseError<'i, E>> {
         let mut values = vec![];
         loop {
-            self.skip_whitespace();  // Unnecessary for correctness, but may help try() in parse_one rewind less.
             values.push(self.parse_until_before(Delimiter::Comma, &mut parse_one)?);
             match self.next() {
                 Err(_) => return Ok(values),
