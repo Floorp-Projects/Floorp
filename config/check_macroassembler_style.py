@@ -242,21 +242,20 @@ def check_style():
     # We infer from each file the signature of each MacroAssembler function.
     defs = dict()       # type: dict(signature => ['x86', 'x64'])
 
-    repo = get_repository_from_env()
+    with get_repository_from_env() as repo:
+        # Select the appropriate files.
+        for filename in repo.get_files_in_working_directory():
+            if not filename.startswith('js/src/jit/'):
+                continue
+            if 'MacroAssembler' not in filename:
+                continue
 
-    # Select the appropriate files.
-    for filename in repo.get_files_in_working_directory():
-        if not filename.startswith('js/src/jit/'):
-            continue
-        if 'MacroAssembler' not in filename:
-            continue
+            filename = os.path.join(repo.path, filename)
 
-        filename = os.path.join(repo.path, filename)
-
-        if filename.endswith('MacroAssembler.h'):
-            decls = append_signatures(decls, get_macroassembler_declaration(filename))
-        else:
-            defs = append_signatures(defs, get_macroassembler_definitions(filename))
+            if filename.endswith('MacroAssembler.h'):
+                decls = append_signatures(decls, get_macroassembler_declaration(filename))
+            else:
+                defs = append_signatures(defs, get_macroassembler_definitions(filename))
 
     # Compare declarations and definitions output.
     difflines = difflib.unified_diff(generate_file_content(decls),
