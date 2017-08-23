@@ -21,9 +21,11 @@ if (arguments.length != 3) {
 
 const { classes: Cc, interfaces: Ci, utils: Cu, results: Cr } = Components;
 
-var { NetUtil } = Cu.import("resource://gre/modules/NetUtil.jsm", {});
-var { FileUtils } = Cu.import("resource://gre/modules/FileUtils.jsm", {});
-var { Services } = Cu.import("resource://gre/modules/Services.jsm", {});
+const { FileUtils } = Cu.import("resource://gre/modules/FileUtils.jsm", {});
+const { NetUtil } = Cu.import("resource://gre/modules/NetUtil.jsm", {});
+const { PSMToolUtils } =
+  Cu.import(`file:///${__LOCATION__.parent.path}/PSMToolUtils.jsm`, {});
+const { Services } = Cu.import("resource://gre/modules/Services.jsm", {});
 
 var gCertDB = Cc["@mozilla.org/security/x509certdb;1"]
                 .getService(Ci.nsIX509CertDB);
@@ -87,47 +89,9 @@ function readFileToString(filename) {
   return buf;
 }
 
-function stripComments(buf) {
-  let lines = buf.split("\n");
-  let entryRegex = /^\s*\/\//;
-  let data = "";
-  for (let i = 0; i < lines.length; ++i) {
-    let match = entryRegex.exec(lines[i]);
-    if (!match) {
-      data = data + lines[i];
-    }
-  }
-  return data;
-}
-
-function download(filename) {
-  let req = Cc["@mozilla.org/xmlextras/xmlhttprequest;1"]
-              .createInstance(Ci.nsIXMLHttpRequest);
-  req.open("GET", filename, false); // doing the request synchronously
-  try {
-    req.send();
-  } catch (e) {
-    throw new Error(`ERROR: problem downloading '${filename}': ${e}`);
-  }
-
-  if (req.status != 200) {
-    throw new Error("ERROR: problem downloading '" + filename + "': status " +
-                    req.status);
-  }
-
-  let resultDecoded;
-  try {
-    resultDecoded = atob(req.responseText);
-  } catch (e) {
-    throw new Error("ERROR: could not decode data as base64 from '" + filename +
-                    "': " + e);
-  }
-  return resultDecoded;
-}
-
 function downloadAsJson(filename) {
-  // we have to filter out '//' comments, while not mangling the json
-  let result = download(filename).replace(/^(\s*)?\/\/[^\n]*\n/mg, "");
+  let jsonWithComments = PSMToolUtils.downloadFile(filename, true);
+  let result = PSMToolUtils.stripComments(jsonWithComments);
   let data = null;
   try {
     data = JSON.parse(result);
@@ -209,7 +173,7 @@ function downloadAndParseChromeCerts(filename, certNameToSKD, certSKDToName) {
   const IN_PUB_KEY = 3;
   let state = PRE_NAME;
 
-  let lines = download(filename).split("\n");
+  let lines = PSMToolUtils.downloadFile(filename, true).split("\n");
   let pemCert = "";
   let pemPubKey = "";
   let hash = "";
@@ -408,7 +372,7 @@ function loadNSSCertinfo(extraCertificates) {
 }
 
 function parseJson(filename) {
-  let json = stripComments(readFileToString(filename));
+  let json = PSMToolUtils.stripComments(readFileToString(filename));
   return JSON.parse(json);
 }
 

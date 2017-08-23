@@ -9,18 +9,17 @@
 // 3. run `[path to]/run-mozilla.sh [path to]/xpcshell genRootCAHashes.js \
 //                                  [absolute path to]/RootHashes.inc'
 
-var Cc = Components.classes;
-var Ci = Components.interfaces;
-var Cu = Components.utils;
-var Cr = Components.results;
+const { classes: Cc, interfaces: Ci, utils: Cu, results: Cr } = Components;
 
 const nsX509CertDB = "@mozilla.org/security/x509certdb;1";
 const CertDb = Components.classes[nsX509CertDB].getService(Ci.nsIX509CertDB);
 
-Cu.import("resource://gre/modules/Services.jsm");
-Cu.import("resource://gre/modules/FileUtils.jsm");
-Cu.import("resource://gre/modules/NetUtil.jsm");
 const { CommonUtils } = Cu.import("resource://services-common/utils.js", {});
+const { FileUtils } = Cu.import("resource://gre/modules/FileUtils.jsm", {});
+const { NetUtil } = Cu.import("resource://gre/modules/NetUtil.jsm", {});
+const { PSMToolUtils } =
+  Cu.import(`file:///${__LOCATION__.parent.path}/PSMToolUtils.jsm`, {});
+const { Services } = Cu.import("resource://gre/modules/Services.jsm", {});
 
 const FILENAME_OUTPUT = "RootHashes.inc";
 const FILENAME_TRUST_ANCHORS = "KnownRootHashes.json";
@@ -79,20 +78,6 @@ function hexSlice(bytes, start, end) {
   return ret;
 }
 
-function stripComments(buf) {
-  let lines = buf.split("\n");
-  let entryRegex = /^\s*\/\//;
-  let data = "";
-  for (let i = 0; i < lines.length; i++) {
-    let match = entryRegex.exec(lines[i]);
-    if (!match) {
-      data = data + lines[i];
-    }
-  }
-  return data;
-}
-
-
 // Load the trust anchors JSON object from disk
 function loadTrustAnchors(file) {
   if (file.exists()) {
@@ -100,7 +85,7 @@ function loadTrustAnchors(file) {
                    .createInstance(Ci.nsIFileInputStream);
     stream.init(file, -1, 0, 0);
     let buf = NetUtil.readInputStreamToString(stream, stream.available());
-    return JSON.parse(stripComments(buf));
+    return JSON.parse(PSMToolUtils.stripComments(buf));
   }
   // If there's no input file, bootstrap.
   return { roots: [], maxBin: 0 };
