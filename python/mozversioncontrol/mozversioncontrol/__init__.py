@@ -204,7 +204,8 @@ class HgRepository(Repository):
     def get_files_in_working_directory(self):
         # Can return backslashes on Windows. Normalize to forward slashes.
         return list(p.replace('\\', '/') for p in
-                    self._run('files', '-0').split('\0'))
+                    self._run_in_client([b'files', b'-0']).split(b'\0')
+                    if p)
 
 
 class GitRepository(Repository):
@@ -233,7 +234,7 @@ class GitRepository(Repository):
         self._run('reset', path)
 
     def get_files_in_working_directory(self):
-        return self._run('ls-files', '-z').split('\0')
+        return self._run('ls-files', '-z').split(b'\0')
 
 
 class InvalidRepoPath(Exception):
