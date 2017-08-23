@@ -175,17 +175,6 @@ public:
   // each read.
   virtual bool ShouldCacheReads() = 0;
 
-  already_AddRefed<MediaByteBuffer> CachedReadAt(int64_t aOffset, uint32_t aCount)
-  {
-    RefPtr<MediaByteBuffer> bytes = new MediaByteBuffer();
-    bool ok = bytes->SetLength(aCount, fallible);
-    NS_ENSURE_TRUE(ok, nullptr);
-    char* curr = reinterpret_cast<char*>(bytes->Elements());
-    nsresult rv = ReadFromCache(curr, aOffset, aCount);
-    NS_ENSURE_SUCCESS(rv, nullptr);
-    return bytes.forget();
-  }
-
   // Report the current offset in bytes from the start of the stream.
   // This is used to approximate where we currently are in the playback of a
   // media.
@@ -777,6 +766,19 @@ public:
     bytes->SetLength(curr - start);
     return bytes.forget();
   }
+
+  already_AddRefed<MediaByteBuffer> CachedMediaReadAt(int64_t aOffset,
+                                                      uint32_t aCount) const
+  {
+    RefPtr<MediaByteBuffer> bytes = new MediaByteBuffer();
+    bool ok = bytes->SetLength(aCount, fallible);
+    NS_ENSURE_TRUE(ok, nullptr);
+    char* curr = reinterpret_cast<char*>(bytes->Elements());
+    nsresult rv = mResource->ReadFromCache(curr, aOffset, aCount);
+    NS_ENSURE_SUCCESS(rv, nullptr);
+    return bytes.forget();
+  }
+
   // Get the length of the stream in bytes. Returns -1 if not known.
   // This can change over time; after a seek operation, a misbehaving
   // server may give us a resource of a different length to what it had

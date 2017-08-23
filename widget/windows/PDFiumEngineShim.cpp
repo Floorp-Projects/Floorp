@@ -35,9 +35,7 @@ PDFiumEngineShim::PDFiumEngineShim()
   , mFPDF_LoadPage(nullptr)
   , mFPDF_ClosePage(nullptr)
   , mFPDF_RenderPage(nullptr)
-#ifdef USE_EXTERNAL_PDFIUM
   , mPRLibrary(nullptr)
-#endif
   , mInitialized(false)
 {
 }
@@ -50,11 +48,9 @@ PDFiumEngineShim::~PDFiumEngineShim()
 
   sPDFiumEngineShim = nullptr;
 
-#ifdef USE_EXTERNAL_PDFIUM
   if (mPRLibrary) {
     PR_UnloadLibrary(mPRLibrary);
   }
-#endif
 }
 
 bool
@@ -64,13 +60,7 @@ PDFiumEngineShim::Init()
     return true;
   }
 
-#ifdef USE_EXTERNAL_PDFIUM
-  nsAutoString PDFiumPath;
-  mozilla::Preferences::GetString("print.load_external_pdfium", PDFiumPath);
-  NS_ENSURE_FALSE(PDFiumPath.IsEmpty(), false);
-
-  nsAutoCString filePath = NS_ConvertUTF16toUTF8(PDFiumPath);
-  mPRLibrary = PR_LoadLibrary(filePath.get());
+  mPRLibrary = PR_LoadLibrary("pdfium.dll");
   NS_ENSURE_TRUE(mPRLibrary, false);
 
   mFPDF_InitLibrary = (FPDF_InitLibrary_Pfn)PR_FindFunctionSymbol(
@@ -104,17 +94,6 @@ PDFiumEngineShim::Init()
   mFPDF_RenderPage = (FPDF_RenderPage_Pfn)PR_FindFunctionSymbol(
     mPRLibrary, "FPDF_RenderPage");
   NS_ENSURE_TRUE(mFPDF_RenderPage, false);
-
-#else
-  mFPDF_InitLibrary = (FPDF_InitLibrary_Pfn) FPDF_InitLibrary;
-  mFPDF_DestroyLibrary = (FPDF_DestroyLibrary_Pfn) FPDF_DestroyLibrary;
-  mFPDF_LoadDocument = (FPDF_LoadDocument_Pfn) FPDF_LoadDocument;
-  mFPDF_CloseDocument = (FPDF_CloseDocument_Pfn) FPDF_CloseDocument;
-  mFPDF_GetPageCount = (FPDF_GetPageCount_Pfn) FPDF_GetPageCount;
-  mFPDF_LoadPage = (FPDF_LoadPage_Pfn) FPDF_LoadPage;
-  mFPDF_ClosePage = (FPDF_ClosePage_Pfn) FPDF_ClosePage;
-  mFPDF_RenderPage = (FPDF_RenderPage_Pfn) FPDF_RenderPage;
-#endif
 
   mFPDF_InitLibrary();
   mInitialized = true;

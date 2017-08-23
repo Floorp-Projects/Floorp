@@ -44,6 +44,8 @@ interface nsIXPCComponents_Interfaces : nsISupports
 [scriptable, uuid(978ff520-d26c-11d2-9842-006008962422)]
 interface nsIXPCComponents_Classes : nsISupports
 {
+  // Make it so that |cid| gets mapped to |idString|.
+  void initialize(in nsIJSCID cid, in string idString);
 };
 
 /**

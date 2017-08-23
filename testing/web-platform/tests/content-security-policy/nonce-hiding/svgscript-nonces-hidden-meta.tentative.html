@@ -52,7 +52,7 @@
       assert_equals(script.nonce, 'abc');
     }, "Writing 'nonce' content attribute.");
 
-    // Set the IDL attribute to 'bar'
+    // Set the IDL attribute to 'bar' (doesn't work on SVGScriptElement)
     test(t => {
       script.nonce = 'bar';
       assert_equals(script.nonce, 'bar');

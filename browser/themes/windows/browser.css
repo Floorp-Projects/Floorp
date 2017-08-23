@@ -750,22 +750,6 @@ treechildren.searchbar-treebody::-moz-tree-row(selected) {
   border-top: 1px solid GrayText;
 }
 
-/* popup blocker button */
-
-#page-report-button {
-  list-style-image: url("chrome://browser/skin/urlbar-popup-blocked.png");
-  -moz-image-region: rect(0, 16px, 16px, 0);
-}
-
-#page-report-button:hover {
-  -moz-image-region: rect(0, 32px, 16px, 16px);
-}
-
-#page-report-button:hover:active,
-#page-report-button[open="true"] {
-  -moz-image-region: rect(0, 48px, 16px, 32px);
-}
-
 /* bookmarking panel */
 
 #editBookmarkPanelStarIcon {
@@ -1089,8 +1073,6 @@ notification[value="translation"] {
 %include ../shared/fullscreen/warning.inc.css
 %include ../shared/ctrlTab.inc.css
 %include ../shared/plugin-doorhanger.inc.css
-
-%include downloads/indicator.css
 
 /* Error counter */
 

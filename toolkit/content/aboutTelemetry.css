@@ -165,7 +165,7 @@ section:not(.active) {
   padding: 24px;
   flex-direction: column;
   background-color: white;
-  border: 1px solid var(--in-content-header-border-color);
+  border: 1px solid var(--in-content-box-border-color);
   margin: 12px 0px;
 }
 

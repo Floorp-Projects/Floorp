@@ -9,9 +9,6 @@ bookmarks =
 pager =
 purge =
 
-[format]
-dotencode = 0
-
 [ui]
 username = Client Builder <cltbld@mozilla.com>
 merge = internal:merge

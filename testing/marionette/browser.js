@@ -46,20 +46,20 @@ browser.getBrowserForTab = function(tab) {
 /**
  * Return the tab browser for the specified chrome window.
  *
- * @param {nsIDOMWindow} win
- *     The window whose tabbrowser needs to be accessed.
+ * @param {ChromeWindow} win
+ *     Window whose <code>tabbrowser</code> needs to be accessed.
  *
  * @return {Tab}
  *     Tab browser or null if it's not a browser window.
  */
-browser.getTabBrowser = function(win) {
+browser.getTabBrowser = function(window) {
   // Fennec
-  if ("BrowserApp" in win) {
-    return win.BrowserApp;
+  if ("BrowserApp" in window) {
+    return window.BrowserApp;
 
   // Firefox
-  } else if ("gBrowser" in win) {
-    return win.gBrowser;
+  } else if ("gBrowser" in window) {
+    return window.gBrowser;
   }
 
   return null;
@@ -70,11 +70,6 @@ browser.getTabBrowser = function(win) {
  *
  * Browsing contexts handle interactions with the browser, according to
  * the current environment (Firefox, Fennec).
- *
- * @param {nsIDOMWindow} win
- *     The window whose browser needs to be accessed.
- * @param {GeckoDriver} driver
- *     Reference to the driver the browser is attached to.
  */
 browser.Context = class {
 
@@ -84,13 +79,13 @@ browser.Context = class {
    * @param {GeckoDriver} driver
    *     Reference to driver instance.
    */
-  constructor(win, driver) {
-    this.window = win;
+  constructor(window, driver) {
+    this.window = window;
     this.driver = driver;
 
     // In Firefox this is <xul:tabbrowser> (not <xul:browser>!)
     // and BrowserApp in Fennec
-    this.tabBrowser = browser.getTabBrowser(win);
+    this.tabBrowser = browser.getTabBrowser(this.window);
 
     this.knownFrames = [];
 
@@ -298,7 +293,7 @@ browser.Context = class {
    * @param {number=} index
    *     Tab index to switch to. If the parameter is undefined,
    *     the currently selected tab will be used.
-   * @param {nsIDOMWindow=} win
+   * @param {ChromeWindow=} window
    *     Switch to this window before selecting the tab.
    * @param {boolean=} focus
    *      A boolean value which determins whether to focus
@@ -307,10 +302,10 @@ browser.Context = class {
    * @throws UnsupportedOperationError
    *     If tab handling for the current application isn't supported.
    */
-  switchToTab(index, win, focus = true) {
-    if (win) {
-      this.window = win;
-      this.tabBrowser = browser.getTabBrowser(win);
+  switchToTab(index, window = undefined, focus = true) {
+    if (window) {
+      this.window = window;
+      this.tabBrowser = browser.getTabBrowser(this.window);
     }
 
     if (!this.tabBrowser) {
@@ -461,7 +456,7 @@ browser.Windows = class extends Map {
  *
  * @enum {string}
  */
-const WindowState = {
+this.WindowState = {
   Maximized: "maximized",
   Minimized: "minimized",
   Normal: "normal",

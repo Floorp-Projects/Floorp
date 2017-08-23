@@ -171,9 +171,9 @@ this.PlacesDBUtils = {
         await db.execute(
           "PRAGMA integrity_check",
           null,
-          r => {
+          (r, cancel) => {
             row = r;
-            throw StopIteration;
+            cancel();
           });
         if (row.getResultByIndex(0) === "ok") {
           logs.push("The database is sane");

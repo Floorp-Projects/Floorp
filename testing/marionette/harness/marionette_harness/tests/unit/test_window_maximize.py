@@ -45,10 +45,6 @@ class TestWindowMaximize(MarionetteTestCase):
                 "current height {current} should be greater than or equal to max height {max}"
                 .format(delta=delta, current=actual["height"], max=self.max["height"] - delta))
 
-    def assert_window_restored(self, actual):
-        self.assertEqual(self.original_size["width"], actual["width"])
-        self.assertEqual(self.original_size["height"], actual["height"])
-
     def assert_window_rect(self, rect):
         self.assertIn("width", rect)
         self.assertIn("height", rect)
@@ -66,19 +62,21 @@ class TestWindowMaximize(MarionetteTestCase):
         self.assertEqual(maximize_resp, window_rect_resp)
         self.assert_window_maximized(maximize_resp)
 
-    def test_maximize_twice_restores(self):
+    def test_maximize_twice_is_idempotent(self):
         maximized = self.marionette.maximize_window()
         self.assert_window_maximized(maximized)
 
-        restored = self.marionette.maximize_window()
-        self.assert_window_restored(restored)
+        still_maximized = self.marionette.maximize_window()
+        self.assert_window_maximized(still_maximized)
 
     def test_stress(self):
         for i in range(1, 25):
             expect_maximized = bool(i % 2)
 
-            rect = self.marionette.maximize_window()
             if expect_maximized:
+                rect = self.marionette.maximize_window()
                 self.assert_window_maximized(rect)
             else:
-                self.assert_window_restored(rect)
+                rect = self.marionette.set_window_rect(width=800, height=600)
+                self.assertEqual(800, rect["width"])
+                self.assertEqual(600, rect["height"])
