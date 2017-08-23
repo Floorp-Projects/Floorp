@@ -4250,19 +4250,6 @@ PropagateBits(Element* aElement, uint32_t aBits, nsINode* aStopAt)
   return curr;
 }
 
-// Invokes PropagateBits on the parent element if |aNode| is not the document.
-static inline Element*
-PropagateBitsFromParent(nsINode* aNode, uint32_t aBits, nsINode* aStopAt)
-{
-  MOZ_ASSERT(aNode->IsElement() || aNode == aNode->OwnerDoc());
-  if (!aNode->IsElement()) {
-    return nullptr;
-  }
-
-  Element* parent = aNode->AsElement()->GetFlattenedTreeParentElementForStyle();
-  return PropagateBits(parent, aBits, aStopAt);
-}
-
 // Notes that a given element is "dirty" with respect to the given descendants
 // bit (which may be one of dirty descendants, dirty animation descendants, or
 // need frame construction for descendants).
@@ -4341,7 +4328,7 @@ NoteDirtyElement(Element* aElement, uint32_t aBit)
   // propagating bits as wel go.
   const bool reachedDocRoot = !parent || !PropagateBits(parent, aBit, existingRoot);
 
-  if (!reachedDocRoot) {
+  if (!reachedDocRoot || existingRoot == doc) {
       // We're a descendant of the existing root. All that's left to do is to
       // make sure the bit we propagated is also registered on the root.
       doc->SetServoRestyleRoot(existingRoot, existingBits | aBit);
@@ -4349,7 +4336,8 @@ NoteDirtyElement(Element* aElement, uint32_t aBit)
     // We reached the root without crossing the pre-existing restyle root. We
     // now need to find the nearest common ancestor, so climb up from the
     // existing root, extending bits along the way.
-    if (Element* commonAncestor = PropagateBitsFromParent(existingRoot, existingBits, aElement)) {
+    Element* rootParent = existingRoot->GetFlattenedTreeParentElementForStyle();
+    if (Element* commonAncestor = PropagateBits(rootParent, existingBits, aElement)) {
       // We found a common ancestor. Make that the new style root, and clear the
       // bits between the new style root and the document root.
       doc->SetServoRestyleRoot(commonAncestor, existingBits | aBit);
