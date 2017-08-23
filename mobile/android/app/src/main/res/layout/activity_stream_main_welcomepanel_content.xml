@@ -61,7 +61,7 @@
         android:layout_alignLeft="@+id/title_welcome"
         android:layout_alignStart="@+id/title_welcome"
         android:elevation="1dp"
-        android:text="@string/activity_stream_dismiss"
+        android:text="@string/activity_stream_welcome_dismiss"
         android:theme="@style/ActivityStreamButton"/>
 
 </RelativeLayout>
