@@ -47,14 +47,14 @@ def check_single_file(filename):
 def check_files():
     result = True
 
-    repo = get_repository_from_env()
-    root = repo.path
+    with get_repository_from_env() as repo:
+        root = repo.path
 
-    for filename in repo.get_files_in_working_directory():
-        if filename.endswith('.msg'):
-            if filename not in ignore_files:
-                if not check_single_file(os.path.join(root, filename)):
-                    result = False
+        for filename in repo.get_files_in_working_directory():
+            if filename.endswith('.msg'):
+                if filename not in ignore_files:
+                    if not check_single_file(os.path.join(root, filename)):
+                        result = False
 
     return result
 
