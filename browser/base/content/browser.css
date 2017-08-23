@@ -772,6 +772,10 @@ toolbarspring {
   -moz-box-flex: 80;
 }
 
+#widget-overflow-list > toolbarspring {
+  display: none;
+}
+
 /* ::::: Unified Back-/Forward Button ::::: */
 .unified-nav-current {
   font-weight: bold;
