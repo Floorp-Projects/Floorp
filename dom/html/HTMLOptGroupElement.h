@@ -8,15 +8,13 @@
 #define mozilla_dom_HTMLOptGroupElement_h
 
 #include "mozilla/Attributes.h"
-#include "nsIDOMHTMLOptGroupElement.h"
 #include "nsGenericHTMLElement.h"
 
 namespace mozilla {
 class EventChainPreVisitor;
 namespace dom {
 
-class HTMLOptGroupElement final : public nsGenericHTMLElement,
-                                  public nsIDOMHTMLOptGroupElement
+class HTMLOptGroupElement final : public nsGenericHTMLElement
 {
 public:
   explicit HTMLOptGroupElement(already_AddRefed<mozilla::dom::NodeInfo>& aNodeInfo);
@@ -25,9 +23,6 @@ public:
 
   // nsISupports
   NS_DECL_ISUPPORTS_INHERITED
-
-  // nsIDOMHTMLOptGroupElement
-  NS_DECL_NSIDOMHTMLOPTGROUPELEMENT
 
   // nsINode
   virtual nsresult InsertChildAt(nsIContent* aKid, uint32_t aIndex,

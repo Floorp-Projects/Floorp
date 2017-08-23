@@ -6,10 +6,6 @@
  * Tests if a call tree model can be correctly computed from a samples array.
  */
 
-function run_test() {
-  run_next_test();
-}
-
 add_task(function test() {
   const { ThreadNode } = require("devtools/client/performance/modules/logic/tree-model");
 

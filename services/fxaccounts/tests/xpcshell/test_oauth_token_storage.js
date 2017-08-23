@@ -120,9 +120,6 @@ async function createMockFxA() {
 }
 
 // The tests.
-function run_test() {
-  run_next_test();
-}
 
 add_task(async function testCacheStorage() {
   let fxa = await createMockFxA();

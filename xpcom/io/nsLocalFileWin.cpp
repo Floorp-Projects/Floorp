@@ -1205,7 +1205,7 @@ CleanupHandlerPath(nsString& aPath)
   aPath.Append(' ');
 
   // case insensitive
-  uint32_t index = aPath.Find(".exe ", true);
+  int32_t index = aPath.Find(".exe ", true);
   if (index == kNotFound)
     index = aPath.Find(".dll ", true);
   if (index == kNotFound)

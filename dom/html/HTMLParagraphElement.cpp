@@ -21,12 +21,9 @@ HTMLParagraphElement::~HTMLParagraphElement()
 {
 }
 
-NS_IMPL_ISUPPORTS_INHERITED(HTMLParagraphElement, nsGenericHTMLElement,
-                            nsIDOMHTMLParagraphElement)
+NS_IMPL_ISUPPORTS_INHERITED0(HTMLParagraphElement, nsGenericHTMLElement)
 
 NS_IMPL_ELEMENT_CLONE(HTMLParagraphElement)
-
-NS_IMPL_STRING_ATTR(HTMLParagraphElement, Align, align)
 
 bool
 HTMLParagraphElement::ParseAttribute(int32_t aNamespaceID,

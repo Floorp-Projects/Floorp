@@ -70,6 +70,7 @@ module.exports = {
     "mozilla/import-headjs-globals": "warn",
     "mozilla/mark-test-function-used": "warn",
     "mozilla/no-arbitrary-setTimeout": "error",
+    "mozilla/no-useless-run-test": "error",
     "no-shadow": "error"
   }
 };

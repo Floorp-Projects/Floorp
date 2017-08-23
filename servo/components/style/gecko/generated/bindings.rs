@@ -1071,11 +1071,6 @@ extern "C" {
                                                    RawGeckoElementBorrowed);
 }
 extern "C" {
-    pub fn Gecko_GetStyleContext(element: RawGeckoElementBorrowed,
-                                 aPseudoTagOrNull: *mut nsIAtom)
-     -> *mut nsStyleContext;
-}
-extern "C" {
     pub fn Gecko_GetImplementedPseudo(element: RawGeckoElementBorrowed)
      -> CSSPseudoElementType;
 }
@@ -1922,6 +1917,10 @@ extern "C" {
      -> ServoStyleContextStrong;
 }
 extern "C" {
+    pub fn Servo_Element_IsDisplayNone(element: RawGeckoElementBorrowed)
+     -> bool;
+}
+extern "C" {
     pub fn Servo_StyleSheet_FromUTF8Bytes(loader: *mut Loader,
                                           gecko_stylesheet:
                                               *mut ServoStyleSheet,
@@ -1961,11 +1960,7 @@ extern "C" {
 extern "C" {
     pub fn Servo_StyleSheet_GetOrigin(sheet:
                                           RawServoStyleSheetContentsBorrowed)
-     -> OriginFlags;
-}
-extern "C" {
-    pub fn Servo_StyleSheet_GetSourceMapURL(sheet: RawServoStyleSheetContentsBorrowed,
-                                            result: *mut nsAString);
+     -> u8;
 }
 extern "C" {
     pub fn Servo_StyleSet_Init(pres_context: RawGeckoPresContextOwned)

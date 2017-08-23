@@ -9,7 +9,6 @@
 #define mozilla_dom_HTMLHRElement_h
 
 #include "nsGenericHTMLElement.h"
-#include "nsIDOMHTMLHRElement.h"
 #include "nsMappedAttributes.h"
 #include "nsAttrValueInlines.h"
 #include "nsRuleData.h"
@@ -17,17 +16,13 @@
 namespace mozilla {
 namespace dom {
 
-class HTMLHRElement final : public nsGenericHTMLElement,
-                            public nsIDOMHTMLHRElement
+class HTMLHRElement final : public nsGenericHTMLElement
 {
 public:
   explicit HTMLHRElement(already_AddRefed<mozilla::dom::NodeInfo>& aNodeInfo);
 
   // nsISupports
   NS_DECL_ISUPPORTS_INHERITED
-
-  // nsIDOMHTMLHRElement
-  NS_DECL_NSIDOMHTMLHRELEMENT
 
   virtual bool ParseAttribute(int32_t aNamespaceID,
                               nsIAtom* aAttribute,

@@ -27,10 +27,6 @@ function do_check_not_setEqual(a, b) {
   do_check_false(setEqual(a, b));
 }
 
-function run_test() {
-  run_next_test();
-}
-
 add_test(function test_setEqual() {
   do_check_setEqual(EMPTY, EMPTY);
   do_check_setEqual(EMPTY, new Set());

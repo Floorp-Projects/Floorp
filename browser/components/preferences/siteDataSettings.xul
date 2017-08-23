@@ -16,6 +16,7 @@
         xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul"
         style="width: 45em;"
         onload="gSiteDataSettings.init();"
+        onkeypress="gSiteDataSettings.onKeyPress(event);"
         persist="screenX screenY width height">
 
   <script src="chrome://browser/content/preferences/siteDataSettings.js"/>

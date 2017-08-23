@@ -65,7 +65,6 @@
 #include "mozilla/ReflowInput.h"
 #include "nsIImageLoadingContent.h"
 #include "nsCopySupport.h"
-#include "nsIDOMHTMLFrameSetElement.h"
 #include "nsIDOMHTMLImageElement.h"
 #ifdef MOZ_XUL
 #include "nsIXULDocument.h"
@@ -3568,6 +3567,13 @@ nsDocumentViewer::GetContentSizeInternal(int32_t* aWidth, int32_t* aHeight,
     prefWidth = aMaxWidth;
   }
 
+  nsAutoPtr<nsPresState> frameState;
+  nsIScrollableFrame *scrollFrame = presShell->GetRootScrollFrameAsScrollable();
+  nsIStatefulFrame *statefulFrame = do_QueryFrame(scrollFrame);
+  if (statefulFrame) {
+    statefulFrame->SaveState(getter_Transfers(frameState));
+  }
+
   nsresult rv = presShell->ResizeReflow(prefWidth, NS_UNCONSTRAINEDSIZE);
   NS_ENSURE_SUCCESS(rv, rv);
 
@@ -3583,6 +3589,12 @@ nsDocumentViewer::GetContentSizeInternal(int32_t* aWidth, int32_t* aHeight,
     NS_ENSURE_SUCCESS(rv, rv);
 
     shellArea = presContext->GetVisibleArea();
+
+    // the first reflow reset our scroll, now set it back
+    if (frameState && presShell->GetRootScrollFrameAsScrollable() == scrollFrame) {
+      statefulFrame->RestoreState(frameState);
+      scrollFrame->ScrollToRestoredPosition();
+    }
   }
 
   // Protect against bogus returns here

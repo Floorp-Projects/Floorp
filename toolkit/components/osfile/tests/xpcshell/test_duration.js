@@ -100,7 +100,3 @@ add_task(async function duration() {
   await file.stat();
   await file.close();
 });
-
-function run_test() {
-  run_next_test();
-}

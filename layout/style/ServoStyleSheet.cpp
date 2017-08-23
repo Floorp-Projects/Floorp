@@ -466,7 +466,8 @@ ServoStyleSheet::SizeOfIncludingThis(MallocSizeOf aMallocSizeOf) const
 OriginFlags
 ServoStyleSheet::GetOrigin()
 {
-  return Servo_StyleSheet_GetOrigin(Inner()->mContents);
+  return static_cast<OriginFlags>(
+    Servo_StyleSheet_GetOrigin(Inner()->mContents));
 }
 
 } // namespace mozilla

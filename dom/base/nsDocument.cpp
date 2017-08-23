@@ -1506,7 +1506,8 @@ nsIDocument::nsIDocument()
     mChildDocumentUseCounters(0),
     mNotifiedPageForUseCounter(0),
     mIncCounters(),
-    mUserHasInteracted(false)
+    mUserHasInteracted(false),
+    mServoRestyleRootDirtyBits(0)
 {
   SetIsInDocument();
   for (auto& cnt : mIncCounters) {

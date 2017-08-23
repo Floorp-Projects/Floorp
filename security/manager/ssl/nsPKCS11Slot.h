@@ -9,7 +9,6 @@
 
 #include "ScopedNSSTypes.h"
 #include "nsIPKCS11Module.h"
-#include "nsIPKCS11ModuleDB.h"
 #include "nsIPKCS11Slot.h"
 #include "nsISupports.h"
 #include "nsNSSShutDown.h"
@@ -61,25 +60,5 @@ private:
   virtual void virtualDestroyNSSReference() override;
   void destructorSafeDestroyNSSReference();
 };
-
-class nsPKCS11ModuleDB : public nsIPKCS11ModuleDB
-                       , public nsNSSShutDownObject
-{
-public:
-  NS_DECL_ISUPPORTS
-  NS_DECL_NSIPKCS11MODULEDB
-
-  nsPKCS11ModuleDB();
-
-protected:
-  virtual ~nsPKCS11ModuleDB();
-
-  // Nothing to release.
-  virtual void virtualDestroyNSSReference() override {}
-};
-
-#define NS_PKCS11MODULEDB_CID \
-{ 0xff9fbcd7, 0x9517, 0x4334, \
-  { 0xb9, 0x7a, 0xce, 0xed, 0x78, 0x90, 0x99, 0x74 }}
 
 #endif // nsPKCS11Slot_h

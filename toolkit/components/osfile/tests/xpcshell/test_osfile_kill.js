@@ -94,7 +94,3 @@ add_task(async function test_kill_race() {
   ok(secondResolved,
      "The second request was resolved so we avoided the bug. Victory!");
 });
-
-function run_test() {
-  run_next_test();
-}

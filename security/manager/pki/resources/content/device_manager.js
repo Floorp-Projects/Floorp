@@ -12,8 +12,6 @@ const nsPK11TokenDB = "@mozilla.org/security/pk11tokendb;1";
 const nsIPK11TokenDB = Components.interfaces.nsIPK11TokenDB;
 const nsIDialogParamBlock = Components.interfaces.nsIDialogParamBlock;
 const nsDialogParamBlock = "@mozilla.org/embedcomp/dialogparam;1";
-const nsIPKCS11 = Components.interfaces.nsIPKCS11;
-const nsPKCS11ContractID = "@mozilla.org/security/pkcs11;1";
 
 var { Services } = Components.utils.import("resource://gre/modules/Services.jsm", {});
 
@@ -40,10 +38,6 @@ function LoadModules() {
   Services.obs.addObserver(smartCardObserver, "smartcard-remove");
 
   RefreshDeviceList();
-}
-
-function getPKCS11() {
-  return Components.classes[nsPKCS11ContractID].getService(nsIPKCS11);
 }
 
 function getNSSString(name) {
@@ -356,7 +350,7 @@ function deleteSelected() {
   if (selected_module &&
       doConfirm(getNSSString("DelModuleWarning"))) {
     try {
-      getPKCS11().deleteModule(selected_module.name);
+      secmoddb.deleteModule(selected_module.name);
     } catch (e) {
       doPrompt(getNSSString("DelModuleError"));
       return false;

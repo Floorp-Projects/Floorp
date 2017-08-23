@@ -30,10 +30,6 @@ MockAppender.prototype = {
   }
 };
 
-function run_test() {
-  run_next_test();
-}
-
 add_task(function test_Logger() {
   let log = Log.repository.getLogger("test.logger");
   let appender = new MockAppender(new Log.BasicFormatter());

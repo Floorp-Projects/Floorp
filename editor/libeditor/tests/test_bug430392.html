@@ -34,7 +34,6 @@ function test() {
   var tests = [["adding returns", () => {
     getSelection().collapse(edit.firstChild, 0);
     synthesizeKey("VK_RIGHT", {});
-    synthesizeKey("VK_RIGHT", {});
     synthesizeKey("VK_RETURN", {});
     synthesizeKey("VK_RETURN", {});
     synthesizeKey("VK_BACK_SPACE", {});
@@ -44,7 +43,6 @@ function test() {
            ?  undefined : " A; B ; C "],
   ["adding shift-returns", () => {
     getSelection().collapse(edit.firstChild, 0);
-    synthesizeKey("VK_RIGHT", {});
     synthesizeKey("VK_RIGHT", {});
     synthesizeKey("VK_RETURN", {shiftKey: true});
     synthesizeKey("VK_RETURN", {shiftKey: true});

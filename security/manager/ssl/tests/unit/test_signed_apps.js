@@ -114,10 +114,6 @@ function truncateEntry(entry, entryInput) {
   return [entry, content];
 }
 
-function run_test() {
-  run_next_test();
-}
-
 function check_open_result(name, expectedRv) {
   return function openSignedAppFileCallback(rv, aZipReader, aSignerCert) {
     do_print("openSignedAppFileCallback called for " + name);

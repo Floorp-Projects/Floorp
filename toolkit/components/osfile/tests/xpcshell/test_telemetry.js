@@ -57,7 +57,3 @@ add_task(async function test_writeAtomic() {
 
   do_check_eq(getCount(after[LABEL]), getCount(before[LABEL]) + 1);
 });
-
-function run_test() {
-  run_next_test();
-}

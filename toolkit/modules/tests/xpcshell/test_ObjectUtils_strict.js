@@ -23,7 +23,3 @@ add_task(async function test_strict() {
   loose.c = 3;
   strict.c; // Should not throw.
 });
-
-function run_test() {
-  run_next_test();
-}

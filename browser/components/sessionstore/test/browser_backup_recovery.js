@@ -30,6 +30,9 @@ add_task(async function init() {
 });
 
 add_task(async function test_creation() {
+  // Cancel all pending session saves so they won't get in our way.
+  SessionSaver.cancel();
+
   // Create dummy sessionstore backups
   let OLD_BACKUP = Path.join(Constants.Path.profileDir, "sessionstore.baklz4");
   let OLD_UPGRADE_BACKUP = Path.join(Constants.Path.profileDir, "sessionstore.baklz4-0000000");

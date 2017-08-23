@@ -506,9 +506,17 @@ project_flag('MOZ_ANDROID_HISTORY',
              help='Enable Android History instead of Places',
              set_as_define=True)
 
-project_flag('MOZ_ALLOW_LEGACY_EXTENSIONS',
-             help='Allow legacy browser extensions',
-             default=True, set_as_define=True)
+option(env='MOZ_ALLOW_LEGACY_EXTENSIONS',
+       default=milestone.is_nightly,
+       help='Allow legacy browser extensions')
+
+@depends('MOZ_ALLOW_LEGACY_EXTENSIONS')
+def legacy_extensions(value):
+    if bool(value):
+        return True
+
+set_config('MOZ_ALLOW_LEGACY_EXTENSIONS', legacy_extensions)
+set_define('MOZ_ALLOW_LEGACY_EXTENSIONS', legacy_extensions)
 
 @depends('MOZ_PLACES', 'MOZ_ANDROID_HISTORY')
 def check_places_and_android_history(places, android_history):
@@ -574,11 +582,7 @@ def stylo_config(value, _, target):
 
     # If nothing is specified, default to building stylo where possible.
     if value.origin == 'default':
-        if target.os == 'GNU' and target.bitness == 32:
-            # The clang setup we use in automation is a little unusual, and
-            # doesn't play well with bindgen on 32-bit Linux.
-            pass
-        elif target.os == 'Android':
+        if target.os == 'Android':
             # Stylo on Android is happening Later(tm).
             pass
         else:

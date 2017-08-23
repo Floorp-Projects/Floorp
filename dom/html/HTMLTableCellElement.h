@@ -8,15 +8,13 @@
 
 #include "mozilla/Attributes.h"
 #include "nsGenericHTMLElement.h"
-#include "nsIDOMHTMLTableCellElement.h"
 
 namespace mozilla {
 namespace dom {
 
 class HTMLTableElement;
 
-class HTMLTableCellElement final : public nsGenericHTMLElement,
-                                   public nsIDOMHTMLTableCellElement
+class HTMLTableCellElement final : public nsGenericHTMLElement
 {
 public:
   explicit HTMLTableCellElement(already_AddRefed<mozilla::dom::NodeInfo>& aNodeInfo)
@@ -27,9 +25,6 @@ public:
 
   // nsISupports
   NS_DECL_ISUPPORTS_INHERITED
-
-  // nsIDOMHTMLTableCellElement
-  NS_DECL_NSIDOMHTMLTABLECELLELEMENT
 
   uint32_t ColSpan() const
   {

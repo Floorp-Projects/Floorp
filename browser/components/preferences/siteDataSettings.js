@@ -297,5 +297,11 @@ let gSiteDataSettings = {
     if (siteItems.length > 0) {
       this._removeSiteItems(siteItems);
     }
+  },
+
+  onKeyPress(e) {
+    if (e.keyCode == KeyEvent.DOM_VK_ESCAPE) {
+      this.close();
+    }
   }
 };

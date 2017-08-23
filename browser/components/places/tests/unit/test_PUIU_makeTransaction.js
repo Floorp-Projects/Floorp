@@ -328,7 +328,3 @@ add_test(function check_annotations() {
   do_check_eq(others.length, 3);
   run_next_test();
 });
-
-function run_test() {
-  run_next_test();
-}

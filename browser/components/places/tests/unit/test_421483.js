@@ -12,10 +12,6 @@ var gluesvc = Cc["@mozilla.org/browser/browserglue;1"].
 // Avoid default bookmarks import.
 gluesvc.observe(null, "initial-migration-will-import-default-bookmarks", "");
 
-function run_test() {
-  run_next_test();
-}
-
 add_task(async function smart_bookmarks_disabled() {
   Services.prefs.setIntPref("browser.places.smartBookmarksVersion", -1);
   await rebuildSmartBookmarks();

@@ -9,10 +9,6 @@
 
 const { ProfilerFront } = require("devtools/shared/fronts/profiler");
 
-function run_test() {
-  run_next_test();
-}
-
 add_task(function* () {
   let [client, form] = yield getChromeActors();
   let front = new ProfilerFront(client, form);

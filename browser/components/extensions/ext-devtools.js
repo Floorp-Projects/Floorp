@@ -54,7 +54,8 @@ global.getDevToolsTargetForContext = async (context) => {
   }
 
   const tab = context.devToolsToolbox.target.tab;
-  context.devToolsTarget = DevToolsShim.getTargetForTab(tab);
+  context.devToolsTarget = DevToolsShim.createTargetForTab(tab);
+
   await context.devToolsTarget.makeRemote();
 
   return context.devToolsTarget;

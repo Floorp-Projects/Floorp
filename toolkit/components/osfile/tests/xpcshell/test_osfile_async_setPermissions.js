@@ -97,7 +97,3 @@ add_task(async function test_file_setPermissions() {
     await OS.File.remove(path);
   }
 });
-
-function run_test() {
-  run_next_test();
-}

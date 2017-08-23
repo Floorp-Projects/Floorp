@@ -33,6 +33,9 @@ SERVO_BINDING_FUNC(Servo_Element_HasPseudoComputedValues, bool,
 SERVO_BINDING_FUNC(Servo_Element_GetPseudoComputedValues,
                    ServoStyleContextStrong,
                    RawGeckoElementBorrowed node, size_t index)
+SERVO_BINDING_FUNC(Servo_Element_IsDisplayNone,
+                   bool,
+                   RawGeckoElementBorrowed element)
 
 // Styleset and Stylesheet management
 SERVO_BINDING_FUNC(Servo_StyleSheet_FromUTF8Bytes, RawServoStyleSheetContentsStrong,
@@ -55,8 +58,10 @@ SERVO_BINDING_FUNC(Servo_StyleSheet_Clone, RawServoStyleSheetContentsStrong,
 SERVO_BINDING_FUNC(Servo_StyleSheet_SizeOfIncludingThis, size_t,
                    mozilla::MallocSizeOf malloc_size_of,
                    RawServoStyleSheetContentsBorrowed sheet)
-SERVO_BINDING_FUNC(Servo_StyleSheet_GetOrigin,
-                   mozilla::OriginFlags,
+// We'd like to return `OriginFlags` here, but bindgen bitfield enums don't
+// work as return values with the Linux 32-bit ABI at the moment because
+// they wrap the value in a struct.
+SERVO_BINDING_FUNC(Servo_StyleSheet_GetOrigin, uint8_t,
                    RawServoStyleSheetContentsBorrowed sheet)
 SERVO_BINDING_FUNC(Servo_StyleSet_Init, RawServoStyleSet*, RawGeckoPresContextOwned pres_context)
 SERVO_BINDING_FUNC(Servo_StyleSet_RebuildCachedData, void,

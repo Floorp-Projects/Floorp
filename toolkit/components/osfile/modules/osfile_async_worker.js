@@ -356,14 +356,12 @@ if (this.Components) {
    DirectoryIterator_prototype_next: function next(dir) {
      return withDir(dir,
        function do_next() {
-         try {
-           return File.DirectoryIterator.Entry.toMsg(this.next());
-         } catch (x) {
-           if (x == StopIteration) {
-             OpenedDirectoryIterators.remove(dir);
-           }
-           throw x;
+         let {value, done} = this.next();
+         if (done) {
+           OpenedDirectoryIterators.remove(dir);
+           return {value: undefined, done: true};
          }
+         return {value: File.DirectoryIterator.Entry.toMsg(value), done: false};
        }, false);
    },
    DirectoryIterator_prototype_nextBatch: function nextBatch(dir, size) {

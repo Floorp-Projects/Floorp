@@ -12,10 +12,6 @@ function waitForThirtyMilliseconds() {
   }
 }
 
-function run_test() {
-  run_next_test();
-}
-
 const BREAKDOWN = {
   by: "internalType",
   then: { by: "count", count: true, bytes: true }

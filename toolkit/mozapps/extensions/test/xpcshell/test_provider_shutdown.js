@@ -37,10 +37,6 @@ function mockAddonProvider(aName) {
   return mockProvider;
 }
 
-function run_test() {
-  run_next_test();
-}
-
 // Helper to find a particular shutdown blocker's status in the JSON blob
 function findInStatus(aStatus, aName) {
   for (let {name, state} of aStatus.state) {

@@ -372,7 +372,7 @@ var Agent = {
       if (!iterator.exists()) {
         return;
       }
-      for (let entry in iterator) {
+      for (let entry of iterator) {
         if (entry.isDir) {
           continue;
         }

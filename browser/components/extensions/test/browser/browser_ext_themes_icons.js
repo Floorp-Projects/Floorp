@@ -14,22 +14,7 @@ const ENCODED_IMAGE_DATA = "PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmci
    */
 function verifyButtonProperties(selector, shouldHaveCustomStyling, message) {
   try {
-    let element;
-    // This selector is different than the others because it's the only
-    // toolbarbutton that we ship by default that has type="menu-button",
-    // which don't place a unique ID on the associated dropmarker-icon.
-    if (selector == "#bookmarks-menu-button > .toolbarbutton-menubutton-dropmarker > .dropmarker-icon") {
-      if (message.includes("panel")) {
-        // The dropmarker isn't shown in the menupanel.
-        return;
-      }
-      element = document.querySelector("#bookmarks-menu-button");
-      element = document.getAnonymousElementByAttribute(element, "class", "toolbarbutton-menubutton-dropmarker");
-      element = document.getAnonymousElementByAttribute(element, "class", "dropmarker-icon");
-    } else {
-      element = document.querySelector(selector);
-    }
-
+    let element = document.querySelector(selector);
     let listStyleImage = getComputedStyle(element).listStyleImage;
     info(`listStyleImage for fox.svg is ${listStyleImage}`);
     is(listStyleImage.includes("moz-extension:"), shouldHaveCustomStyling, message);

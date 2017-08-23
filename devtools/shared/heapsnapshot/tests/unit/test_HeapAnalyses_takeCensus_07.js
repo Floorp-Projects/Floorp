@@ -5,10 +5,6 @@
 // Test that the HeapAnalyses{Client,Worker} can take censuses and return
 // an inverted CensusTreeNode.
 
-function run_test() {
-  run_next_test();
-}
-
 const BREAKDOWN = {
   by: "coarseType",
   objects: {

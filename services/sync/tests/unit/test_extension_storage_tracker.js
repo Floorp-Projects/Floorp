@@ -37,7 +37,3 @@ add_task(async function test_changing_extension_storage_changes_score() {
 
   Svc.Obs.notify("weave:engine:stop-tracking");
 });
-
-function run_test() {
-  run_next_test();
-}

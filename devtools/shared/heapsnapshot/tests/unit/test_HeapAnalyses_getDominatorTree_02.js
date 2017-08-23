@@ -5,10 +5,6 @@
 // Test the HeapAnalyses{Client,Worker} "getDominatorTree" request with bad
 // dominator tree ids.
 
-function run_test() {
-  run_next_test();
-}
-
 const breakdown = {
   by: "coarseType",
   objects: { by: "count", count: true, bytes: true },

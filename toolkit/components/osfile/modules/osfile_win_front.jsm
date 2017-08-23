@@ -811,9 +811,9 @@
       *
       * Skip special directories "." and "..".
       *
-      * @return {File.Entry} The next entry in the directory.
-      * @throws {StopIteration} Once all files in the directory have been
-      * encountered.
+      * @return By definition of the iterator protocol, either
+      * `{value: {File.Entry}, done: false}` if there is an unvisited entry
+      * in the directory, or `{value: undefined, done: true}`, otherwise.
       */
      File.DirectoryIterator.prototype.next = function next() {
          // FIXME: If we start supporting "\\?\"-prefixed paths, do not forget
@@ -824,9 +824,12 @@
            if (name == "." || name == "..") {
              continue;
            }
-           return new File.DirectoryIterator.Entry(entry, this._path);
+           return {
+             value: new File.DirectoryIterator.Entry(entry, this._path),
+             done: false
+           };
          }
-         throw StopIteration;
+         return {value: undefined, done: true};
      };
 
      File.DirectoryIterator.prototype.close = function close() {

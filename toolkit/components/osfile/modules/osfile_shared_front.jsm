@@ -190,9 +190,9 @@ AbstractFile.AbstractIterator = function AbstractIterator() {
 };
 AbstractFile.AbstractIterator.prototype = {
   /**
-   * Allow iterating with |for|
+   * Allow iterating with |for-of|
    */
-  __iterator__: function __iterator__() {
+  [Symbol.iterator]() {
     return this;
   },
   /**
@@ -207,7 +207,7 @@ AbstractFile.AbstractIterator.prototype = {
    */
   forEach: function forEach(cb) {
     let index = 0;
-    for (let entry in this) {
+    for (let entry of this) {
       cb(entry, index++, this);
     }
   },
@@ -225,7 +225,7 @@ AbstractFile.AbstractIterator.prototype = {
   nextBatch: function nextBatch(length) {
     let array = [];
     let i = 0;
-    for (let entry in this) {
+    for (let entry of this) {
       array.push(entry);
       if (++i >= length) {
         return array;
@@ -503,7 +503,7 @@ AbstractFile.removeRecursive = function(path, options = {}) {
   }
 
   try {
-    for (let entry in iterator) {
+    for (let entry of iterator) {
       if (entry.isDir) {
         if (entry.isLink) {
           // Unlike Unix symlinks, NTFS junctions or NTFS symlinks to

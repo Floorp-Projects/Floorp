@@ -110,7 +110,3 @@ add_task(async function test_all_files_corrupt() {
   Assert.equal(s.counts[1], 1, "One probe for the 'true' bucket.");
   Assert.equal(s.counts[0], 0, "No probes in the 'false' bucket.");
 });
-
-function run_test() {
-  run_next_test();
-}

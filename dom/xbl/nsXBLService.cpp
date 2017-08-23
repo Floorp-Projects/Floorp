@@ -125,37 +125,10 @@ public:
     // Destroy the frames for mBoundElement. Do this after getting the binding,
     // since if the binding fetch fails then we don't want to destroy the
     // frames.
-    nsIContent* destroyedFramesFor = nullptr;
-    nsIPresShell* shell = doc->GetShell();
-    if (shell) {
-      shell->DestroyFramesFor(mBoundElement, &destroyedFramesFor);
+    if (nsIPresShell* shell = doc->GetShell()) {
+      shell->DestroyFramesFor(mBoundElement->AsElement());
     }
     MOZ_ASSERT(!mBoundElement->GetPrimaryFrame());
-
-    // If |mBoundElement| is (in addition to having binding |mBinding|)
-    // also a descendant of another element with binding |mBinding|,
-    // then we might have just constructed it due to the
-    // notification of its parent.  (We can know about both if the
-    // binding loads were triggered from the DOM rather than frame
-    // construction.)  So we have to check both whether the element
-    // has a primary frame and whether it's in the frame manager maps
-    // before sending a ContentInserted notification, or bad things
-    // will happen.
-    MOZ_ASSERT(shell == doc->GetShell());
-    if (shell) {
-      nsIFrame* childFrame = mBoundElement->GetPrimaryFrame();
-      if (!childFrame) {
-        // Check if it's in the display:none or display:contents maps.
-        nsFrameManager* fm = shell->FrameManager();
-        nsStyleContext* sc = fm->GetDisplayNoneStyleFor(mBoundElement);
-        if (!sc) {
-          sc = fm->GetDisplayContentsStyleFor(mBoundElement);
-        }
-        if (!sc) {
-          shell->CreateFramesFor(destroyedFramesFor);
-        }
-      }
-    }
   }
 
   nsXBLBindingRequest(nsIURI* aURI, nsIContent* aBoundElement)

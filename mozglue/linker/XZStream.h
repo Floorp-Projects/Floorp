@@ -6,6 +6,7 @@
 #define XZSTREAM_h
 
 #include <cstdlib>
+#include <stdint.h>
 
 #define XZ_DEC_DYNALLOC
 #include "xz.h"

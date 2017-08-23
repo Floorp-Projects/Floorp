@@ -27,10 +27,6 @@ function AutoCompleteResult(aValues, aDefaultIndex) {
 }
 AutoCompleteResult.prototype = Object.create(AutoCompleteResultBase.prototype);
 
-function run_test() {
-  run_next_test();
-}
-
 /**
  * An immediate search should be executed synchronously.
  */

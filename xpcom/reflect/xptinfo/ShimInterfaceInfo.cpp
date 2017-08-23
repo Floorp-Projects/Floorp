@@ -48,46 +48,27 @@
 #include "nsIDOMHTMLAnchorElement.h"
 #include "nsIDOMHTMLAreaElement.h"
 #include "nsIDOMHTMLBaseElement.h"
-#include "nsIDOMHTMLBodyElement.h"
 #include "nsIDOMHTMLButtonElement.h"
 #include "nsIDOMHTMLCanvasElement.h"
 #include "nsIDOMHTMLCollection.h"
-#include "nsIDOMHTMLDirectoryElement.h"
 #include "nsIDOMHTMLDocument.h"
 #include "nsIDOMHTMLElement.h"
-#include "nsIDOMHTMLFieldSetElement.h"
 #include "nsIDOMHTMLFormElement.h"
 #include "nsIDOMHTMLFrameElement.h"
-#include "nsIDOMHTMLFrameSetElement.h"
-#include "nsIDOMHTMLHRElement.h"
-#include "nsIDOMHTMLHeadElement.h"
 #include "nsIDOMHTMLHtmlElement.h"
 #include "nsIDOMHTMLIFrameElement.h"
 #include "nsIDOMHTMLImageElement.h"
 #include "nsIDOMHTMLInputElement.h"
-#include "nsIDOMHTMLLIElement.h"
-#include "nsIDOMHTMLLabelElement.h"
 #include "nsIDOMHTMLLinkElement.h"
-#include "nsIDOMHTMLMapElement.h"
 #include "nsIDOMHTMLMediaElement.h"
-#include "nsIDOMHTMLMenuElement.h"
 #include "nsIDOMHTMLMenuItemElement.h"
-#include "nsIDOMHTMLMetaElement.h"
-#include "nsIDOMHTMLOListElement.h"
 #include "nsIDOMHTMLObjectElement.h"
-#include "nsIDOMHTMLOptGroupElement.h"
 #include "nsIDOMHTMLOptionElement.h"
 #include "nsIDOMHTMLOptionsCollection.h"
-#include "nsIDOMHTMLParagraphElement.h"
-#include "nsIDOMHTMLPreElement.h"
-#include "nsIDOMHTMLQuoteElement.h"
 #include "nsIDOMHTMLScriptElement.h"
 #include "nsIDOMHTMLSelectElement.h"
 #include "nsIDOMHTMLSourceElement.h"
-#include "nsIDOMHTMLStyleElement.h"
-#include "nsIDOMHTMLTableCellElement.h"
 #include "nsIDOMHTMLTextAreaElement.h"
-#include "nsIDOMHTMLUListElement.h"
 #include "nsIDOMKeyEvent.h"
 #include "nsIDOMMediaList.h"
 #include "nsIDOMMouseEvent.h"
@@ -174,46 +155,28 @@
 #include "mozilla/dom/HTMLAnchorElementBinding.h"
 #include "mozilla/dom/HTMLAreaElementBinding.h"
 #include "mozilla/dom/HTMLBaseElementBinding.h"
-#include "mozilla/dom/HTMLBodyElementBinding.h"
 #include "mozilla/dom/HTMLButtonElementBinding.h"
 #include "mozilla/dom/HTMLCanvasElementBinding.h"
 #include "mozilla/dom/HTMLCollectionBinding.h"
-#include "mozilla/dom/HTMLDirectoryElementBinding.h"
 #include "mozilla/dom/HTMLDocumentBinding.h"
 #include "mozilla/dom/HTMLElementBinding.h"
-#include "mozilla/dom/HTMLFieldSetElementBinding.h"
 #include "mozilla/dom/HTMLFormElementBinding.h"
 #include "mozilla/dom/HTMLFrameElementBinding.h"
 #include "mozilla/dom/HTMLFrameSetElementBinding.h"
-#include "mozilla/dom/HTMLHRElementBinding.h"
-#include "mozilla/dom/HTMLHeadElementBinding.h"
 #include "mozilla/dom/HTMLHtmlElementBinding.h"
 #include "mozilla/dom/HTMLIFrameElementBinding.h"
 #include "mozilla/dom/HTMLImageElementBinding.h"
 #include "mozilla/dom/HTMLInputElementBinding.h"
-#include "mozilla/dom/HTMLLIElementBinding.h"
-#include "mozilla/dom/HTMLLabelElementBinding.h"
 #include "mozilla/dom/HTMLLinkElementBinding.h"
-#include "mozilla/dom/HTMLMapElementBinding.h"
 #include "mozilla/dom/HTMLMediaElementBinding.h"
-#include "mozilla/dom/HTMLMenuElementBinding.h"
 #include "mozilla/dom/HTMLMenuItemElementBinding.h"
-#include "mozilla/dom/HTMLMetaElementBinding.h"
-#include "mozilla/dom/HTMLOListElementBinding.h"
 #include "mozilla/dom/HTMLObjectElementBinding.h"
-#include "mozilla/dom/HTMLOptGroupElementBinding.h"
 #include "mozilla/dom/HTMLOptionElementBinding.h"
 #include "mozilla/dom/HTMLOptionsCollectionBinding.h"
-#include "mozilla/dom/HTMLParagraphElementBinding.h"
-#include "mozilla/dom/HTMLPreElementBinding.h"
-#include "mozilla/dom/HTMLQuoteElementBinding.h"
 #include "mozilla/dom/HTMLScriptElementBinding.h"
 #include "mozilla/dom/HTMLSelectElementBinding.h"
 #include "mozilla/dom/HTMLSourceElementBinding.h"
-#include "mozilla/dom/HTMLStyleElementBinding.h"
-#include "mozilla/dom/HTMLTableCellElementBinding.h"
 #include "mozilla/dom/HTMLTextAreaElementBinding.h"
-#include "mozilla/dom/HTMLUListElementBinding.h"
 #include "mozilla/dom/KeyEventBinding.h"
 #include "mozilla/dom/ListBoxObjectBinding.h"
 #include "mozilla/dom/MediaListBinding.h"
@@ -358,46 +321,27 @@ const ComponentsInterfaceShimEntry kComponentsInterfaceShimMap[] =
   DEFINE_SHIM(HTMLAnchorElement),
   DEFINE_SHIM(HTMLAreaElement),
   DEFINE_SHIM(HTMLBaseElement),
-  DEFINE_SHIM(HTMLBodyElement),
   DEFINE_SHIM(HTMLButtonElement),
   DEFINE_SHIM(HTMLCanvasElement),
   DEFINE_SHIM(HTMLCollection),
-  DEFINE_SHIM(HTMLDirectoryElement),
   DEFINE_SHIM(HTMLDocument),
   DEFINE_SHIM(HTMLElement),
-  DEFINE_SHIM(HTMLFieldSetElement),
   DEFINE_SHIM(HTMLFormElement),
   DEFINE_SHIM(HTMLFrameElement),
-  DEFINE_SHIM(HTMLFrameSetElement),
-  DEFINE_SHIM(HTMLHRElement),
-  DEFINE_SHIM(HTMLHeadElement),
   DEFINE_SHIM(HTMLHtmlElement),
   DEFINE_SHIM(HTMLIFrameElement),
   DEFINE_SHIM(HTMLImageElement),
   DEFINE_SHIM(HTMLInputElement),
-  DEFINE_SHIM(HTMLLIElement),
-  DEFINE_SHIM(HTMLLabelElement),
   DEFINE_SHIM(HTMLLinkElement),
-  DEFINE_SHIM(HTMLMapElement),
   DEFINE_SHIM(HTMLMediaElement),
-  DEFINE_SHIM(HTMLMenuElement),
   DEFINE_SHIM(HTMLMenuItemElement),
-  DEFINE_SHIM(HTMLMetaElement),
-  DEFINE_SHIM(HTMLOListElement),
   DEFINE_SHIM(HTMLObjectElement),
-  DEFINE_SHIM(HTMLOptGroupElement),
   DEFINE_SHIM(HTMLOptionElement),
   DEFINE_SHIM(HTMLOptionsCollection),
-  DEFINE_SHIM(HTMLParagraphElement),
-  DEFINE_SHIM(HTMLPreElement),
-  DEFINE_SHIM(HTMLQuoteElement),
   DEFINE_SHIM(HTMLScriptElement),
   DEFINE_SHIM(HTMLSelectElement),
   DEFINE_SHIM(HTMLSourceElement),
-  DEFINE_SHIM(HTMLStyleElement),
-  DEFINE_SHIM(HTMLTableCellElement),
   DEFINE_SHIM(HTMLTextAreaElement),
-  DEFINE_SHIM(HTMLUListElement),
   DEFINE_SHIM(KeyEvent),
   DEFINE_SHIM_WITH_CUSTOM_INTERFACE(nsIListBoxObject, ListBoxObject),
   DEFINE_SHIM(MediaList),
