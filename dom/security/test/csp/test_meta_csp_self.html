@@ -1,0 +1,69 @@
+<!DOCTYPE HTML>
+<html>
+<head>
+  <title>Bug 1387871 - CSP: Test 'self' within meta csp in  data: URI iframe</title>
+  <script type="text/javascript" src="/tests/SimpleTest/SimpleTest.js"></script>
+  <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css" />
+</head>
+<body>
+<iframe style="width:100%;" id="testframe"></iframe>
+
+<script class="testbody" type="text/javascript">
+
+SimpleTest.waitForExplicitFinish();
+
+/* Description of the test:
+ * We load a data: URI into an iframe which provides a meta-csp
+ * including the keyword 'self'. We make sure 'self' does not
+ * allow a data: image to load.
+ */
+
+window.addEventListener("message", receiveMessage);
+function receiveMessage(event) {
+  window.removeEventListener("message", receiveMessage);
+  is(event.data.result, "dataFrameReady", "sanity: received msg from loaded frame");
+
+  var frame = document.getElementById("testframe");
+
+  // make sure the img was blocked
+  var img = SpecialPowers.wrap(frame).contentDocument.getElementById("testimg");
+  is(img.width, 0, "img should be blocked -  width should be 0");
+  is(img.height, 0, "img should be blocked - height should be 0");
+
+  // sanity check, make sure 'self' translates into data
+  var principal = SpecialPowers.wrap(frame).contentDocument.nodePrincipal;
+  var cspJSON = principal.cspJSON;
+
+  // parse the cspJSON in a csp-object
+  var cspOBJ = JSON.parse(cspJSON);
+  ok(cspOBJ, "sanity: was able to parse the CSP JSON");
+
+  // make sure we only got one policy
+  var policies = cspOBJ["csp-policies"];
+  is(policies.length, 1, "sanity: received one CSP policy");
+
+  var policy = policies[0];
+  var val = policy['img-src'];
+  is(val.toString(), "data://", "'self' should translate into data");
+  SimpleTest.finish();
+}
+
+SpecialPowers.pushPrefEnv(
+  {'set':[["security.data_uri.unique_opaque_origin", true]]},
+  function() {
+    let DATA_URI = `data:text/html,
+      <html>
+      <head>
+        <meta http-equiv="Content-Security-Policy" content="img-src 'self'">
+      </head>
+      <body onload="parent.postMessage({result:'dataFrameReady'},'*');">
+        data: URI frame with meta-csp including 'self'<br/>
+        <img id="testimg" src="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAUAAAAFCAYAAACNbyblAAAAHElEQVQI12P4//8/w38GIAXDIBKE0DHxgljNBAAO9TXL0Y4OHwAAAABJRU5ErkJggg==" />
+      </body>
+      </html>`;
+    document.getElementById("testframe").src = DATA_URI;
+  });
+
+</script>
+</body>
+</html>

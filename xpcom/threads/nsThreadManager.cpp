@@ -437,20 +437,30 @@ nsThreadManager::DispatchToMainThread(nsIRunnable *aEvent, uint32_t aPriority)
 void
 nsThreadManager::EnableMainThreadEventPrioritization()
 {
-  static bool sIsInitialized = false;
-  if (sIsInitialized) {
-    return;
-  }
-  sIsInitialized = true;
-  MOZ_ASSERT(Preferences::IsServiceAvailable());
-  bool enable =
-    Preferences::GetBool("prioritized_input_events.enabled", false);
-
-  if (!enable) {
-    return;
-  }
+  MOZ_ASSERT(NS_IsMainThread());
   InputEventStatistics::Get().SetEnable(true);
   mMainThread->EnableInputEventPrioritization();
+}
+
+void
+nsThreadManager::FlushInputEventPrioritization()
+{
+  MOZ_ASSERT(NS_IsMainThread());
+  mMainThread->FlushInputEventPrioritization();
+}
+
+void
+nsThreadManager::SuspendInputEventPrioritization()
+{
+  MOZ_ASSERT(NS_IsMainThread());
+  mMainThread->SuspendInputEventPrioritization();
+}
+
+void
+nsThreadManager::ResumeInputEventPrioritization()
+{
+  MOZ_ASSERT(NS_IsMainThread());
+  mMainThread->ResumeInputEventPrioritization();
 }
 
 NS_IMETHODIMP

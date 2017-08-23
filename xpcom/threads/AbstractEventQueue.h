@@ -56,6 +56,9 @@ public:
   virtual size_t Count(const MutexAutoLock& aProofOfLock) const = 0;
 
   virtual void EnableInputEventPrioritization(const MutexAutoLock& aProofOfLock) = 0;
+  virtual void FlushInputEventPrioritization(const MutexAutoLock& aProofOfLock) = 0;
+  virtual void SuspendInputEventPrioritization(const MutexAutoLock& aProofOfLock) = 0;
+  virtual void ResumeInputEventPrioritization(const MutexAutoLock& aProofOfLock) = 0;
 
   virtual ~AbstractEventQueue() {}
 };

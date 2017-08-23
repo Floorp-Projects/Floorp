@@ -31,6 +31,9 @@ public:
   already_AddRefed<nsIRunnable> PeekEvent(const MutexAutoLock& aProofOfLock);
 
   void EnableInputEventPrioritization(const MutexAutoLock& aProofOfLock) final {}
+  void FlushInputEventPrioritization(const MutexAutoLock& aProofOfLock) final {}
+  void SuspendInputEventPrioritization(const MutexAutoLock& aProofOfLock) final {}
+  void ResumeInputEventPrioritization(const MutexAutoLock& aProofOfLock) final {}
 
 private:
   mozilla::Queue<nsCOMPtr<nsIRunnable>> mQueue;

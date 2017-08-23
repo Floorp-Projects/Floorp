@@ -85,7 +85,7 @@ protected:
     explicit nsHTTPIndex(nsIInterfaceRequestor* aRequestor);
     nsresult CommonInit(void);
     nsresult Init(nsIURI* aBaseURL);
-    void        GetDestination(nsIRDFResource* r, nsXPIDLCString& dest);
+    void        GetDestination(nsIRDFResource* r, nsACString& dest);
     bool        isWellknownContainerURI(nsIRDFResource *r);
     nsresult    AddElement(nsIRDFResource *parent, nsIRDFResource *prop,
                            nsIRDFNode *child);

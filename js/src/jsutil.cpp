@@ -10,6 +10,7 @@
 
 #include "mozilla/Assertions.h"
 #include "mozilla/MathAlgorithms.h"
+#include "mozilla/Maybe.h"
 #include "mozilla/PodOperations.h"
 #include "mozilla/ThreadLocal.h"
 
@@ -59,8 +60,20 @@ GetThreadType(void) {
     return threadType.get();
 }
 
+static inline bool
+IsHelperThreadType(uint32_t thread)
+{
+    return thread != THREAD_TYPE_NONE && thread != THREAD_TYPE_COOPERATING;
+}
+
 void
 SimulateOOMAfter(uint64_t allocations, uint32_t thread, bool always) {
+    Maybe<AutoLockHelperThreadState> lock;
+    if (IsHelperThreadType(targetThread) || IsHelperThreadType(thread)) {
+        lock.emplace();
+        HelperThreadState().waitForAllThreadsLocked(lock.ref());
+    }
+
     MOZ_ASSERT(counter + allocations > counter);
     MOZ_ASSERT(thread > js::THREAD_TYPE_NONE && thread < js::THREAD_TYPE_MAX);
     targetThread = thread;
@@ -70,8 +83,12 @@ SimulateOOMAfter(uint64_t allocations, uint32_t thread, bool always) {
 
 void
 ResetSimulatedOOM() {
-    if (targetThread != THREAD_TYPE_NONE && targetThread != THREAD_TYPE_COOPERATING)
-        HelperThreadState().waitForAllThreads();
+    Maybe<AutoLockHelperThreadState> lock;
+    if (IsHelperThreadType(targetThread)) {
+        lock.emplace();
+        HelperThreadState().waitForAllThreadsLocked(lock.ref());
+    }
+
     targetThread = THREAD_TYPE_NONE;
     maxAllocations = UINT64_MAX;
     failAlways = false;

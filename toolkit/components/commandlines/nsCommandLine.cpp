@@ -565,11 +565,11 @@ nsCommandLine::EnumerateValidators(EnumerateValidatorsCallback aCallback, void *
   while (NS_SUCCEEDED(strenum->HasMore(&hasMore)) && hasMore) {
     strenum->GetNext(entry);
 
-    nsXPIDLCString contractID;
+    nsCString contractID;
     rv = catman->GetCategoryEntry("command-line-validator",
 				  entry.get(),
 				  getter_Copies(contractID));
-    if (!contractID)
+    if (contractID.IsVoid())
       continue;
 
     nsCOMPtr<nsICommandLineValidator> clv(do_GetService(contractID.get()));

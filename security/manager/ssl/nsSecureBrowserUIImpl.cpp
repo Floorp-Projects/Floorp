@@ -577,7 +577,7 @@ nsSecureBrowserUIImpl::OnStateChange(nsIWebProgress* aWebProgress,
   }
 
   if (MOZ_LOG_TEST(gSecureDocLog, LogLevel::Debug)) {
-    nsXPIDLCString reqname;
+    nsCString reqname;
     aRequest->GetName(reqname);
     MOZ_LOG(gSecureDocLog, LogLevel::Debug,
            ("SecureUI:%p: %p %p OnStateChange %x %s\n", this, aWebProgress,

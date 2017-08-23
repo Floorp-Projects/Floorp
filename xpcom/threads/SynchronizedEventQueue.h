@@ -66,6 +66,9 @@ public:
   virtual void SetObserver(nsIThreadObserver* aObserver) = 0;
 
   virtual void EnableInputEventPrioritization() = 0;
+  virtual void FlushInputEventPrioritization() = 0;
+  virtual void SuspendInputEventPrioritization() = 0;
+  virtual void ResumeInputEventPrioritization() = 0;
 
 protected:
   virtual ~SynchronizedEventQueue() {}
