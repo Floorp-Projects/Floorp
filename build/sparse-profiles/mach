@@ -1,0 +1,12 @@
+[include]
+# Various mach commands call config.guess to resolve the default objdir name.
+path:build/autoconf/config.guess
+# Used for bootstrapping the mach driver.
+path:build/mach_bootstrap.py
+path:build/virtualenv_packages.txt
+path:mach
+# Various dependencies. There is room to trim fat, especially in
+# third_party/python.
+path:python/
+path:testing/mozbase/
+path:third_party/python/
