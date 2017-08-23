@@ -20,6 +20,12 @@ runNetworkTest(function (options) {
     [
       function PC_LOCAL_SWAP_VIDEO_TRACKS(test) {
         return getUserMedia({video: true}).then(stream => {
+          var videoTransceiver = test.pcLocal._pc.getTransceivers()[1];
+          is(videoTransceiver.currentDirection, "sendonly",
+             "Video transceiver's current direction is sendonly");
+          is(videoTransceiver.direction, "sendrecv",
+             "Video transceiver's desired direction is sendrecv");
+
           const localStream = test.pcLocal._pc.getLocalStreams()[0];
           ok(localStream, "Should have local stream");
 
@@ -33,29 +39,24 @@ runNetworkTest(function (options) {
           isnot(videoSenderIndex, -1, "Should have video sender");
 
           test.pcLocal.removeSender(videoSenderIndex);
+          is(videoTransceiver.direction, "recvonly",
+             "Video transceiver should be recvonly after removeTrack");
           test.pcLocal.attachLocalTrack(stream.getTracks()[0], localStream);
+          is(videoTransceiver.direction, "recvonly",
+             "Video transceiver should be recvonly after addTrack");
 
-          const addTrackPromise = haveEvent(remoteStream, "addtrack",
-              wait(50000, new Error("No addtrack event")))
+          eventsPromise = haveEvent(remoteStream, "addtrack",
+              wait(50000, new Error("No addtrack event for " + newTrack.id)))
             .then(trackEvent => {
               ok(trackEvent instanceof MediaStreamTrackEvent,
                  "Expected event to be instance of MediaStreamTrackEvent");
               is(trackEvent.type, "addtrack",
                  "Expected addtrack event type");
-              is(trackEvent.track.id, newTrack.id, "Expected track in event");
+              is(test.pcRemote.getWebrtcTrackId(trackEvent.track), newTrack.id, "Expected track in event");
               is(trackEvent.track.readyState, "live",
                  "added track should be live");
             })
             .then(() => haveNoEvent(remoteStream, "addtrack"));
-
-          const remoteTrack = test.pcRemote._pc.getReceivers()
-              .map(r => r.track)
-              .find(t => t.kind == "video");
-          ok(remoteTrack, "Should have received remote track");
-          const endedPromise = haveEvent(remoteTrack, "ended",
-              wait(50000, new Error("No ended event")));
-
-          eventsPromise = Promise.all([addTrackPromise, endedPromise]);
 
           remoteStream.addEventListener("removetrack",
                                         function onRemovetrack(trackEvent) {
