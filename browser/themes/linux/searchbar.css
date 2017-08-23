@@ -10,7 +10,6 @@
   margin: 0;
 }
 
-/* Engine button */
 .searchbar-engine-image {
   height: 16px;
   width: 16px;
@@ -18,28 +17,8 @@
   margin-inline-start: -1px;
 }
 
-/* Search go button */
 .search-go-container {
   -moz-box-align: center;
-}
-
-.search-go-button {
-  padding: 1px;
-  list-style-image: url("chrome://browser/skin/reload-stop-go.png");
-  -moz-image-region: rect(0, 42px, 14px, 28px);
-  width: 14px;
-}
-
-.search-go-button:hover {
-  -moz-image-region: rect(14px, 42px, 28px, 28px);
-}
-
-.search-go-button:hover:active {
-  -moz-image-region: rect(28px, 42px, 42px, 28px);
-}
-
-.search-go-button:-moz-locale-dir(rtl) {
-  transform: scaleX(-1);
 }
 
 menuitem[cmd="cmd_clearhistory"] {
@@ -91,19 +70,6 @@ menuitem[cmd="cmd_clearhistory"][disabled] {
 
   .searchbar-search-button:hover:active {
     -moz-image-region: rect(0, 120px, 40px, 80px);
-  }
-
-  .search-go-button {
-    list-style-image: url("chrome://browser/skin/reload-stop-go@2x.png");
-    -moz-image-region: rect(0, 84px, 28px, 56px);
-  }
-
-  .search-go-button:hover {
-    -moz-image-region: rect(28px, 84px, 56px, 56px);
-  }
-
-  .search-go-button:hover:active {
-    -moz-image-region: rect(56px, 84px, 84px, 56px);
   }
 }
 

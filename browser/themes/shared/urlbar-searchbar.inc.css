@@ -111,22 +111,6 @@
 
 /* URL bar and page action buttons */
 
-.urlbar-history-dropmarker {
-  -moz-appearance: none;
-  list-style-image: url(chrome://global/skin/icons/arrow-dropdown-16.svg);
-  transition: opacity 0.15s ease;
-}
-
-#urlbar[switchingtabs] > .urlbar-textbox-container > .urlbar-history-dropmarker {
-  transition: none;
-}
-
-#navigator-toolbox:not(:hover) > #nav-bar:not([customizing="true"]) > #nav-bar-customization-target > #urlbar-container > #urlbar:not([focused]) > .urlbar-textbox-container > .urlbar-history-dropmarker {
-  opacity: 0;
-}
-
-/* Page actions */
-
 #page-action-buttons {
   -moz-box-align: center;
   /* Add more space between the last icon and the urlbar's edge. */
@@ -146,6 +130,37 @@
 
 .urlbar-icon:hover {
   fill-opacity: 0.8;
+}
+
+.urlbar-go-button,
+.search-go-button {
+  list-style-image: url("chrome://browser/skin/back.svg");
+  width: 26px;
+}
+
+.urlbar-go-button:-moz-locale-dir(ltr),
+.search-go-button:-moz-locale-dir(ltr) {
+  transform: scaleX(-1);
+}
+
+.urlbar-go-button:hover,
+.search-go-button:hover {
+  fill: #058b00;
+  fill-opacity: 1;
+}
+
+.urlbar-history-dropmarker {
+  -moz-appearance: none;
+  list-style-image: url(chrome://global/skin/icons/arrow-dropdown-16.svg);
+  transition: opacity 0.15s ease;
+}
+
+#urlbar[switchingtabs] > .urlbar-textbox-container > .urlbar-history-dropmarker {
+  transition: none;
+}
+
+#navigator-toolbox:not(:hover) > #nav-bar:not([customizing="true"]) > #nav-bar-customization-target > #urlbar-container > #urlbar:not([focused]) > .urlbar-textbox-container > .urlbar-history-dropmarker {
+  opacity: 0;
 }
 
 #pageActionButton {
