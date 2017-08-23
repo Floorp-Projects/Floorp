@@ -70,8 +70,7 @@ public class ActivityStreamPanel extends FrameLayout {
         rv.addItemDecoration(new HighlightsDividerItemDecoration(context));
 
         RecyclerViewClickSupport.addTo(rv)
-                .setOnItemClickListener(adapter)
-                .setOnItemLongClickListener(adapter);
+                .setOnItemClickListener(adapter);
 
         final Resources resources = getResources();
         desiredTileWidth = resources.getDimensionPixelSize(R.dimen.activity_stream_desired_tile_width);

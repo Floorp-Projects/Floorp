@@ -16,7 +16,7 @@
         <item
             android:id="@+id/dismiss"
             android:icon="@drawable/as_dismiss"
-            android:title="@string/activity_stream_remove"/>
+            android:title="@string/activity_stream_dismiss"/>
 
         <item
             android:id="@+id/delete"
