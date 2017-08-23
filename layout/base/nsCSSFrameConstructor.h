@@ -318,7 +318,7 @@ public:
    * aFlags == REMOVE_FOR_RECONSTRUCTION means the caller will reconstruct the
    *   frames later.
    * In both the above cases, this method will in some cases try to reconstruct
-   * the frames (aDidReconstruct is then set to true), it's just that in the
+   * the frames (and true will be returned in that case), it's just that in the
    * former case aChild isn't in the document so no frames will be created for
    * it.  Ancestors may have been reframed though.
    * aFlags == REMOVE_DESTROY_FRAMES is the same as REMOVE_FOR_RECONSTRUCTION
@@ -328,11 +328,10 @@ public:
    * only when aFlags == REMOVE_DESTROY_FRAMES, otherwise it will only be
    * captured if we reconstructed frames for an ancestor.
    */
-  void ContentRemoved(nsIContent* aContainer,
+  bool ContentRemoved(nsIContent* aContainer,
                       nsIContent* aChild,
                       nsIContent* aOldNextSibling,
-                      RemoveFlags aFlags,
-                      bool*       aDidReconstruct);
+                      RemoveFlags aFlags);
 
   void CharacterDataChanged(nsIContent* aContent,
                             CharacterDataChangeInfo* aInfo);
@@ -364,10 +363,11 @@ public:
 
   /**
    * Destroy the frames for aContent.  Note that this may destroy frames
-   * for an ancestor instead - aDidReconstruct contains whether a reconstruct
-   * was posted for any ancestor.
+   * for an ancestor instead.
+   *
+   * Returns whether a reconstruct was posted for any ancestor.
    */
-  void DestroyFramesFor(nsIContent* aContent, bool* aDidReconstruct);
+  bool DestroyFramesFor(mozilla::dom::Element* aElement);
 
   // Request to create a continuing frame.  This method never returns null.
   nsIFrame* CreateContinuingFrame(nsPresContext*    aPresContext,
