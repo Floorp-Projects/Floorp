@@ -923,6 +923,7 @@
                        oncommand="PanelUI.showSubView('appMenu-libraryView', this, null, event);"
                        closemenu="none"
                        cui-areatype="toolbar"
+                       tooltiptext="&libraryButton.tooltip;"
                        label="&places.library.title;">
           <box class="toolbarbutton-animatable-box">
             <image class="toolbarbutton-animatable-image"/>
