@@ -139,7 +139,7 @@ class Module : public JS::WasmModule
     // patched by the debugger. Subsequent instances must then create copies
     // by linking the `unlinkedCodeForDebugging_`.
 
-    mutable mozilla::Atomic<bool> codeIsBusy_;
+    mutable Atomic<bool>    codeIsBusy_;
 
     // The lock guards the mode_ member, and the lock/cond pair are used to
     // allow threads to wait for the availability of Ion code and signal the
@@ -166,9 +166,10 @@ class Module : public JS::WasmModule
                       HandleWasmMemoryObject memory,
                       const ValVector& globalImports) const;
 
+    class Tier2GeneratorTaskImpl;
+
   public:
-    Module(CompileMode mode,
-           Assumptions&& assumptions,
+    Module(Assumptions&& assumptions,
            const Code& code,
            UniqueConstBytes unlinkedCodeForDebugging,
            LinkData&& linkData,
@@ -188,7 +189,7 @@ class Module : public JS::WasmModule
         bytecode_(&bytecode),
         codeIsBusy_(false),
         tier2Lock_(js::mutexid::WasmTier2GeneratorComplete),
-        mode_(mode)
+        mode_(CompileMode::Once)
     {
         MOZ_ASSERT_IF(metadata().debugEnabled, unlinkedCodeForDebugging_);
     }
@@ -215,12 +216,13 @@ class Module : public JS::WasmModule
                      HandleObject instanceProto,
                      MutableHandleWasmInstanceObject instanceObj) const;
 
-    // Tiered compilation support: these run on the compilation thread.
+    // Tier-2 compilation may be initiated after the Module is constructed at
+    // most once, ideally before any client can attempt to serialize the Module.
+    // When tier-2 compilation completes, ModuleGenerator calls finishTier2()
+    // from a helper thread, passing tier-variant data which will be installed
+    // and made visible.
 
-    // Will be invoked once the second-tier compilation of the module is
-    // finished; it is passed the tier-variant data for Tier 2, which it
-    // installs in the module and makes visible.
-
+    void startTier2(const CompileArgs& args);
     void finishTier2(UniqueLinkDataTier linkData2, UniqueMetadataTier metadata2,
                      UniqueConstCodeSegment code2, UniqueModuleEnvironment env2);
 

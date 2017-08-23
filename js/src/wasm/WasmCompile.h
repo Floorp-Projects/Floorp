@@ -67,7 +67,13 @@ typedef RefPtr<const CompileArgs> SharedCompileArgs;
 //  - *error is null and the caller should report out-of-memory.
 
 SharedModule
-Compile(const ShareableBytes& bytecode, const CompileArgs& args, UniqueChars* error);
+CompileInitialTier(const ShareableBytes& bytecode, const CompileArgs& args, UniqueChars* error);
+
+// Attempt to compile the second tier of the given wasm::Module, returning whether
+// tier-2 compilation succeeded and Module::finishTier2 was called.
+
+bool
+CompileTier2(Module& module, const CompileArgs& args, Atomic<bool>* cancelled);
 
 // Select whether debugging is available based on the available compilers, the
 // configuration options, and the nature of the module.  Note debugging can be

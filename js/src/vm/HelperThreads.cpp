@@ -101,16 +101,19 @@ js::StartOffThreadWasmCompile(wasm::CompileTask* task, wasm::CompileMode mode)
     return true;
 }
 
-bool
-js::StartOffThreadWasmTier2Generator(wasm::Tier2GeneratorTask* task)
+void
+js::StartOffThreadWasmTier2Generator(wasm::UniqueTier2GeneratorTask task)
 {
+    MOZ_ASSERT(CanUseExtraThreads());
+
     AutoLockHelperThreadState lock;
 
-    if (!HelperThreadState().wasmTier2GeneratorWorklist(lock).append(task))
-        return false;
+    if (!HelperThreadState().wasmTier2GeneratorWorklist(lock).append(task.get()))
+        return;
+
+    Unused << task.release();
 
     HelperThreadState().notifyOne(GlobalHelperThreadState::PRODUCER, lock);
-    return true;
 }
 
 static void
@@ -127,8 +130,7 @@ CancelOffThreadWasmTier2GeneratorLocked(AutoLockHelperThreadState& lock)
         for (size_t i = 0; i < worklist.length(); i++) {
             wasm::Tier2GeneratorTask* task = worklist[i];
             HelperThreadState().remove(worklist, &i);
-            CancelTier2GeneratorTask(task);
-            DeleteTier2GeneratorTask(task);
+            js_delete(task);
         }
     }
 
@@ -142,7 +144,7 @@ CancelOffThreadWasmTier2GeneratorLocked(AutoLockHelperThreadState& lock)
     for (auto& helper : *HelperThreadState().threads) {
         if (helper.wasmTier2GeneratorTask()) {
             // Set a flag that causes compilation to shortcut itself.
-            CancelTier2GeneratorTask(helper.wasmTier2GeneratorTask());
+            helper.wasmTier2GeneratorTask()->cancel();
 
             // Wait for the generator task to finish.  This avoids a shutdown race where
             // the shutdown code is trying to shut down helper threads and the ongoing
@@ -1882,18 +1884,12 @@ HelperThread::handleWasmTier2GeneratorWorkload(AutoLockHelperThreadState& locked
     MOZ_ASSERT(idle());
 
     currentTask.emplace(HelperThreadState().wasmTier2GeneratorWorklist(locked).popCopy());
-    bool success = false;
 
     wasm::Tier2GeneratorTask* task = wasmTier2GeneratorTask();
     {
         AutoUnlockHelperThreadState unlock(locked);
-        success = wasm::GenerateTier2(task);
+        task->execute();
     }
-
-    // We silently ignore failures.  Such failures must be resource exhaustion
-    // or cancellation, because all error checking was performed by the initial
-    // compilation.
-    mozilla::Unused << success;
 
     // During shutdown the main thread will wait for any ongoing (cancelled)
     // tier-2 generation to shut down normally.  To do so, it waits on the
@@ -1901,7 +1897,7 @@ HelperThread::handleWasmTier2GeneratorWorkload(AutoLockHelperThreadState& locked
     HelperThreadState().incWasmTier2GeneratorsFinished(locked);
     HelperThreadState().notifyAll(GlobalHelperThreadState::CONSUMER, locked);
 
-    wasm::DeleteTier2GeneratorTask(task);
+    js_delete(task);
     currentTask.reset();
 }
 
