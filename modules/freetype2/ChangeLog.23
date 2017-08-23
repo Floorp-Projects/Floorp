@@ -607,7 +607,7 @@
 	(ft_black_render): Initialize `worker->gray_lines' (problem found by
 	valgrind).
 
-	(FT_RASTER_OPTION_ANTI_ALIASING, DEBUG_RASTER): Dont' #undef, just
+	(FT_RASTER_OPTION_ANTI_ALIASING, DEBUG_RASTER): Don't #undef, just
 	comment out.
 
 2009-09-12  suzuki toshiya  <mpsuzuki@hiroshima-u.ac.jp>
@@ -671,7 +671,7 @@
 	* src/raster/rules.mk: Don't handle ftmisc.h.  It is needed for
 	stand-alone mode only.
 
-	* src/raster/ftmisc.h (FT_MemoryRec , FT_Alloc_Func, FT_Free_Func,
+	* src/raster/ftmisc.h (FT_MemoryRec, FT_Alloc_Func, FT_Free_Func,
 	FT_Realloc_Func): Copy declarations from ftsystem.h.
 
 2009-09-02  Bram Tassyns  <bramt@enfocus.be>
@@ -929,7 +929,7 @@
 	type1: Fix a data type mismatching with its source.
 
 	* include/freetype/internal/t1types.h: The type of
-	T1_Face->buildchar is matched with T1_Decorder->top.
+	T1_Face->buildchar is matched with T1_Decoder->top.
 
 2009-07-31  suzuki toshiya  <mpsuzuki@hiroshima-u.ac.jp>
 
@@ -944,7 +944,7 @@
 
 	pfr: Fix a data type mismatching with its source.
 
-	* src/pfr/pfrtypes.h: The type of PFR_PhysFont->chars_offset
+	* src/pfr/pfrtypes.h: The type of PFR_PhyFont->chars_offset
 	is extended from FT_UInt32 to FT_Offset, because it is
 	calculated with the pointer difference in pfr_phy_font_load().
 
@@ -975,8 +975,8 @@
 	psaux: Fix a data type mismatching with its source.
 
 	* include/freetype/internal/psaux.h: The type of
-	T1_DecorderRec.buildchar is matched with
-	T1_DecorderRec.top.
+	T1_DecoderRec.buildchar is matched with
+	T1_DecoderRec.top.
 
 2009-07-31  suzuki toshiya  <mpsuzuki@hiroshima-u.ac.jp>
 
@@ -2125,7 +2125,7 @@
 	code unconditionally.
 	Add support for random numbers and update remaining code
 	accordingly; this should work now.
-	(t1_operator_seac): Updated.
+	(t1operator_seac): Updated.
 	* src/psaux/pshrec.c: Include FT_INTERNAL_CALC_H.
 	(ps_hints_t1stem3, t1_hints_stem): Updated.
 
@@ -2594,14 +2594,14 @@
 	Position Independent Code (PIC) support in smooth renderer.
 
 	* src/smooth/ftsmooth.h declare ft_smooth_renderer_class,
-	ft_smooth_lcd_renderer_class and ft_smooth_lcd_v_renderer_class
+	ft_smooth_lcd_renderer_class and ft_smooth_lcdv_renderer_class
 	using macros from ftrender.h,
 	when FT_CONFIG_OPTION_PIC is defined create and destroy
 	functions will be declared.
 	* src/smooth/ftsmooth.c when FT_CONFIG_OPTION_PIC is defined
 	the following structs:
 	ft_smooth_renderer_class, ft_smooth_lcd_renderer_class
-	and ft_smooth_lcd_v_renderer_class
+	and ft_smooth_lcdv_renderer_class
 	will have functions to init or create and destroy them
 	instead of being allocated in the global scope.
 	And macros will be used from ftspic.h in order to access
@@ -4156,7 +4156,7 @@
 2008-09-05  suzuki toshiya  <mpsuzuki@hiroshima-u.ac.jp>
 
 	* builds/unix/configure.raw: Clear FT2_EXTRA_LIBS when Carbon or
-	ApplicationService framework is missing.  Although this value is not
+	ApplicationServices framework is missing.  Although this value is not
 	used in building of FreeType2, it is written in `freetype2.pc' and
 	`freetype-config'.
 
@@ -4861,7 +4861,7 @@
 2008-04-14  Werner Lemberg  <wl@gnu.org>
 
 	* src/pcf/pcfdrivr.c (PCF_Face_Init): Protect call to
-	`FT_Stream_OpenLZW' with `FT_CONFIG_OPTION_USE_LZ'.  From Savannah
+	`FT_Stream_OpenLZW' with `FT_CONFIG_OPTION_USE_LZW'.  From Savannah
 	bug #22909.
 
 2008-04-13  Werner Lemberg  <wl@gnu.org>
@@ -5243,7 +5243,7 @@
 	functions related to cmap type 14 support to the
 	`FT_Object_ActionName' scheme:
 
-	  FT_Get_Char_Variant_index     -> FT_Face_GetCharVariantIndex
+	  FT_Get_Char_Variant_Index     -> FT_Face_GetCharVariantIndex
 	  FT_Get_Char_Variant_IsDefault -> FT_Face_GetCharVariantIsDefault
 	  FT_Get_Variant_Selectors      -> FT_Face_GetVariantSelectors
 	  FT_Get_Variants_Of_Char       -> FT_Face_GetVariantsOfChar
@@ -5383,7 +5383,7 @@
 	* include/freetype/ftotval.h (FT_VALIDATE_MATH): New macro.
 	(FT_VALIDATE_OT): Updated.
 
-	* src/otvalid/otmath.c: New file.
+	* src/otvalid/otvmath.c: New file.
 
 	* src/otvalid/otvalid.c: Include otvmath.c.
 	* src/otvalid/otvmod.c (otv_validate): Handle `MATH' table.
@@ -5530,7 +5530,7 @@
 	* src/truetype/ttinterp.c (Ins_IUP): Add missing variable
 	initialization.
 
-	* src/autofit/aflatin.c (af_latin_metric_init_blues): Get rid of an
+	* src/autofit/aflatin.c (af_latin_metrics_init_blues): Get rid of an
 	infinite loop in the case of degenerate fonts.
 
 2007-06-26  Rahul Bhalerao  <b.rahul.pm@gmail.com>
@@ -5965,7 +5965,7 @@
 	* include/freetype/config/ftstdlib.h,
 	include/freetype/internal/ftobjs.h: As suggested by Graham Asher,
 	ensure that ft_isalnum, ft_isdigit, etc., use hard-coded values
-	instead on relying on the locale-dependent functions provided by
+	instead of relying on the locale-dependent functions provided by
 	<ctypes.h>.
 
 2007-05-15  Graham Asher  <graham.asher@btinternet.com>
@@ -7023,7 +7023,7 @@
 	(_ft_lcd_filter_fir): This.
 	Update parameters.
 	(_ft_lcd_filter_legacy) [USE_LEGACY]: New filter function.
-	(FT_Library_Set_LcdFilter): Update parameters.
+	(FT_Library_SetLcdFilter): Update parameters.
 	Handle new filter modes.
 
 	* include/internal/ftobjs.h: Include FT_LCD_FILTER_H.
@@ -7366,7 +7366,7 @@
 	to recognize a few fonts that require the automatic unpatented
 	loader.
 
-	* src/smooth/ftgrays.c: Optmize the performance of the anti-aliased
+	* src/smooth/ftgrays.c: Optimize the performance of the anti-aliased
 	rasterizer.  The speed improvement is between 15% and 25%, depending
 	on the font data.
 
@@ -7857,7 +7857,7 @@
 2006-05-18  Werner Lemberg  <wl@gnu.org>
 
 	* src/truetype/ttgload.c (TT_Load_Composite_Glyph)
-	[FT_CONFIG_OPTION_BYTECODE_INTERPRETER]: Make it compilable again.
+	[TT_CONFIG_OPTION_BYTECODE_INTERPRETER]: Make it compilable again.
 
 2006-05-17  David Turner  <david@freetype.org>
 
@@ -7932,7 +7932,7 @@
 
 ----------------------------------------------------------------------------
 
-Copyright 2006-2016 by
+Copyright 2006-2017 by
 David Turner, Robert Wilhelm, and Werner Lemberg.
 
 This file is part of the FreeType project, and may only be used, modified,

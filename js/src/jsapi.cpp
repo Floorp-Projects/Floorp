@@ -4879,21 +4879,21 @@ JS::GetModuleHostDefinedField(JSObject* module)
 }
 
 JS_PUBLIC_API(bool)
-JS::ModuleDeclarationInstantiation(JSContext* cx, JS::HandleObject moduleArg)
+JS::ModuleInstantiate(JSContext* cx, JS::HandleObject moduleArg)
 {
     AssertHeapIsIdle();
     CHECK_REQUEST(cx);
     assertSameCompartment(cx, moduleArg);
-    return ModuleObject::DeclarationInstantiation(cx, moduleArg.as<ModuleObject>());
+    return ModuleObject::Instantiate(cx, moduleArg.as<ModuleObject>());
 }
 
 JS_PUBLIC_API(bool)
-JS::ModuleEvaluation(JSContext* cx, JS::HandleObject moduleArg)
+JS::ModuleEvaluate(JSContext* cx, JS::HandleObject moduleArg)
 {
     AssertHeapIsIdle();
     CHECK_REQUEST(cx);
     assertSameCompartment(cx, moduleArg);
-    return ModuleObject::Evaluation(cx, moduleArg.as<ModuleObject>());
+    return ModuleObject::Evaluate(cx, moduleArg.as<ModuleObject>());
 }
 
 JS_PUBLIC_API(JSObject*)
@@ -4912,6 +4912,20 @@ JS::GetModuleScript(JSContext* cx, JS::HandleObject moduleArg)
     CHECK_REQUEST(cx);
     assertSameCompartment(cx, moduleArg);
     return moduleArg->as<ModuleObject>().script();
+}
+
+JS_PUBLIC_API(bool)
+JS::IsModuleErrored(JSObject* moduleArg)
+{
+    AssertHeapIsIdle();
+    return moduleArg->as<ModuleObject>().status() == MODULE_STATUS_ERRORED;
+}
+
+JS_PUBLIC_API(JS::Value)
+JS::GetModuleError(JSObject* moduleArg)
+{
+    AssertHeapIsIdle();
+    return moduleArg->as<ModuleObject>().error();
 }
 
 JS_PUBLIC_API(JSObject*)

@@ -189,7 +189,7 @@
 
 	* src/base/ftdbgmem.c (_ft_debug_file, _ft_debug_lineno)
 	[FT_DEBUG_MEMORY]: New global variables, replacing...
-	(FT_MemTable_Rec) [FT_DEBUG_MEMORY]: Remove `filename' and
+	(FT_MemTableRec) [FT_DEBUG_MEMORY]: Remove `filename' and
 	`line_no'.  Update all callers.
 	(ft_mem_debug_alloc) [FT_DEBUG_MEMORY]: Avoid possible integer
 	overflow.
@@ -494,7 +494,7 @@
 	FTC_MruList_Init, FTC_MruList_Reset, FTC_MruList_Done,
 	FTC_MruList_New, FTC_MruList_Remove, FTC_MruList_RemoveSelection):
 	Declare as FT_LOCAL_DEF.
-	(FTC_MruListFind, FTC_MruList_Lookup) [!FTC_INLINE]: Compile
+	(FTC_MruList_Find, FTC_MruList_Lookup) [!FTC_INLINE]: Compile
 	conditionally.
 	Declare as FT_LOCAL_DEF.
 
@@ -605,7 +605,7 @@
 
 	* docs/release: Minor additions and clarifications.
 
-	* docs/CHANGES: Updated to reflect many fixes for backwards
+	* docs/CHANGES: Updated to reflect many fixes for backward
 	compatibility.  Still incomplete.
 
 2006-02-26  David Turner  <david@freetype.org>
@@ -814,7 +814,7 @@
 	* include/freetype/ftcache.h (FTC_IMAGE_TYPE_COMPARE,
 	FTC_IMAGE_TYPE_HASH), src/cache/ftcbasic.c (FTC_OldFontRec,
 	FTC_OldImageDescRec, FTC_ImageCache_Lookup, FTC_Image_Cache_New,
-	FTC_OldImage_Desc, FTC_OLD_IMAGE_FORMAT, ftc_old_image_xxx,
+	FTC_OldImageDesc, FTC_OLD_IMAGE_FORMAT, ftc_old_image_xxx,
 	ftc_image_type_from_old_desc, FTC_Image_Cache_Lookup,
 	FTC_SBitCache_Lookup, FTC_SBit_Cache_New, FTC_SBit_Cache_Lookup)
 	[FT_CONFIG_OPTION_OLD_INTERNALS]: Try to revive old functions of the
@@ -2458,8 +2458,8 @@
 
 	* src/gxvalid/gxvbsln.c (GXV_BSLN_VALUE_EMPTY): Add `U'.
 
-	* src/gxvalid/gxmort1.c (GXV_MORT_SUBTABLE_TYPE1_HEADER_SIZE),
-	src/gxvalid/gxmort2.c (GXV_MORT_SUBTABLE_TYPE2_HEADER_SIZE): Fix
+	* src/gxvalid/gxvmort1.c (GXV_MORT_SUBTABLE_TYPE1_HEADER_SIZE),
+	src/gxvalid/gxvmort2.c (GXV_MORT_SUBTABLE_TYPE2_HEADER_SIZE): Fix
 	typo.
 
 	* src/gxvalid/gxvmorx0.c, src/gxvalid/gxvmorx1.c,
@@ -2787,7 +2787,7 @@
 2005-06-15  Kirill Smelkov  <kirr@mns.spb.ru>
 
 	The next release will be 2.2.0, so don't worry about source code
-	backwards compatibility.
+	backward compatibility.
 
 	* include/freetype/ftimage.h (FT_Outline_MoveToFunc,
 	FT_Outline_LineToFunc, FT_Outline_ConicToFunc,
@@ -2821,7 +2821,7 @@
 
 ----------------------------------------------------------------------------
 
-Copyright 2005-2016 by
+Copyright 2005-2017 by
 David Turner, Robert Wilhelm, and Werner Lemberg.
 
 This file is part of the FreeType project, and may only be used, modified,

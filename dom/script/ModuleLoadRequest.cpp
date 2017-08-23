@@ -48,10 +48,16 @@ ModuleLoadRequest::Cancel()
   ScriptLoadRequest::Cancel();
   mModuleScript = nullptr;
   mProgress = ScriptLoadRequest::Progress::Ready;
+  CancelImports();
+  mReady.RejectIfExists(NS_ERROR_DOM_ABORT_ERR, __func__);
+}
+
+void
+ModuleLoadRequest::CancelImports()
+{
   for (size_t i = 0; i < mImports.Length(); i++) {
     mImports[i]->Cancel();
   }
-  mReady.RejectIfExists(NS_ERROR_FAILURE, __func__);
 }
 
 void
@@ -84,7 +90,25 @@ ModuleLoadRequest::ModuleLoaded()
   LOG(("ScriptLoadRequest (%p): Module loaded", this));
 
   mModuleScript = mLoader->GetFetchedModule(mURI);
+  if (!mModuleScript || mModuleScript->IsErrored()) {
+    ModuleErrored();
+    return;
+  }
+
   mLoader->StartFetchingModuleDependencies(this);
+}
+
+void
+ModuleLoadRequest::ModuleErrored()
+{
+  LOG(("ScriptLoadRequest (%p): Module errored", this));
+
+  mLoader->CheckModuleDependenciesLoaded(this);
+  MOZ_ASSERT(!mModuleScript || mModuleScript->IsErrored());
+
+  CancelImports();
+  SetReady();
+  LoadFinished();
 }
 
 void
@@ -95,24 +119,32 @@ ModuleLoadRequest::DependenciesLoaded()
 
   LOG(("ScriptLoadRequest (%p): Module dependencies loaded", this));
 
-  if (!mLoader->InstantiateModuleTree(this)) {
-    LoadFailed();
-    return;
-  }
+  MOZ_ASSERT(mModuleScript);
 
+  mLoader->CheckModuleDependenciesLoaded(this);
   SetReady();
-  mLoader->ProcessLoadedModuleTree(this);
-  mLoader = nullptr;
-  mParent = nullptr;
+  LoadFinished();
 }
 
 void
 ModuleLoadRequest::LoadFailed()
 {
+  // We failed to load the source text or an error occurred unrelated to the
+  // content of the module (e.g. OOM).
+
   LOG(("ScriptLoadRequest (%p): Module load failed", this));
 
+  MOZ_ASSERT(!mModuleScript);
+
   Cancel();
+  LoadFinished();
+}
+
+void
+ModuleLoadRequest::LoadFinished()
+{
   mLoader->ProcessLoadedModuleTree(this);
+
   mLoader = nullptr;
   mParent = nullptr;
 }

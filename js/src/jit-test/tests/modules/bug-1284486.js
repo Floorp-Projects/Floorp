@@ -1,9 +1,5 @@
-// |jit-test| error: InternalError
-
 // This tests that attempting to perform ModuleDeclarationInstantation a second
-// time after a failure throws an error. Doing this would be a bug in the module
-// loader, which is expected to throw away modules if there is an error
-// instantiating them.
+// time after a failure re-throws the same error.
 //
 // The first attempt fails becuase module 'a' is not available. The second
 // attempt fails because of the previous failure (it would otherwise succeed as
@@ -12,15 +8,32 @@
 // This test exercises the path where the previously instantiated module is
 // encountered as an import.
 
-let moduleRepo = {};
-setModuleResolveHook(function(module, specifier) {
-    return moduleRepo[specifier];
-});
+load(libdir + "dummyModuleResolveHook.js");
+
+let b = moduleRepo['b'] = parseModule("export var b = 3; export var c = 4;");
+let c = moduleRepo['c'] = parseModule("export * from 'a'; export * from 'b';");
+
+let e1;
+let threw = false;
 try {
-    let b = moduleRepo['b'] = parseModule("export var b = 3; export var c = 4;");
-    let c = moduleRepo['c'] = parseModule("export * from 'a'; export * from 'b';");
     c.declarationInstantiation();
-} catch (exc) {}
+} catch (exc) {
+    threw = true;
+    e1 = exc;
+}
+assertEq(threw, true);
+assertEq(typeof e1 === "undefined", false);
+
 let a = moduleRepo['a'] = parseModule("export var a = 1; export var b = 2;");
 let d = moduleRepo['d'] = parseModule("import { a } from 'c'; a;");
-d.declarationInstantiation();
+
+threw = false;
+let e2;
+try {
+    d.declarationInstantiation();
+} catch (exc) {
+    threw = true;
+    e2 = exc;
+}
+assertEq(threw, true);
+assertEq(e1, e2);

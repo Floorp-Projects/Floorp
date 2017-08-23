@@ -1171,9 +1171,10 @@ nsHttpConnectionMgr::ProcessPendingQForEntry(nsConnectionEntry *ent, bool consid
     dispatchedSuccessfully |=
         DispatchPendingQ(pendingQ, ent, considerAll);
 
-    // Put the leftovers into connection entry
-    for (const auto& transactionInfo : pendingQ) {
-        ent->InsertTransaction(transactionInfo);
+    // Put the leftovers into connection entry, in the same order as they
+    // were before to keep the natural ordering.
+    for (const auto& transactionInfo : Reversed(pendingQ)) {
+        ent->InsertTransaction(transactionInfo, true);
     }
 
     // Only remove empty pendingQ when considerAll is true.

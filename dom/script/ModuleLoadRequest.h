@@ -46,9 +46,15 @@ public:
   void Cancel() override;
 
   void ModuleLoaded();
+  void ModuleErrored();
   void DependenciesLoaded();
   void LoadFailed();
 
+ private:
+  void LoadFinished();
+  void CancelImports();
+
+ public:
   // Is this a request for a top level module script or an import?
   bool mIsTopLevel;
 

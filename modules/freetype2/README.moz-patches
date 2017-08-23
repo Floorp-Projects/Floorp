@@ -1,5 +1,5 @@
-This directory contains freetype2 v2.7 downloaded from
-http://savannah.nongnu.org/download/freetype/
+This directory contains freetype2 v2.8 downloaded from
+https://download.savannah.gnu.org/releases/freetype/
 
 There are currently no local changes applied to the freetype tree,
 except that the file docs/LICENSE.TXT has been copied to the top-level

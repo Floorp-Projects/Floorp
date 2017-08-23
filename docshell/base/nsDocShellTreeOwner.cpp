@@ -992,7 +992,6 @@ nsDocShellTreeOwner::HandleEvent(nsIDOMEvent* aEvent)
           if (webBrowserChrome) {
             nsCOMPtr<nsITabChild> tabChild = do_QueryInterface(webBrowserChrome);
             if (tabChild) {
-              // Bug 1370843 - Explicitly pass triggeringPrincipal
               nsresult rv = tabChild->RemoteDropLinks(linksCount, links);
               for (uint32_t i = 0; i < linksCount; i++) {
                 NS_RELEASE(links[i]);

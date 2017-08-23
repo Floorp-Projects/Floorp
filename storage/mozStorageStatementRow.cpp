@@ -7,6 +7,7 @@
 #include "nsMemory.h"
 #include "nsString.h"
 
+#include "mozilla/dom/MozStorageStatementRowBinding.h"
 #include "mozStorageStatementRow.h"
 #include "mozStorageStatement.h"
 
@@ -20,137 +21,137 @@ namespace storage {
 ////////////////////////////////////////////////////////////////////////////////
 //// StatementRow
 
-StatementRow::StatementRow(Statement *aStatement)
-: mStatement(aStatement)
+NS_IMPL_CYCLE_COLLECTION_WRAPPERCACHE(StatementRow, mWindow)
+
+NS_INTERFACE_TABLE_HEAD(StatementRow)
+  NS_WRAPPERCACHE_INTERFACE_TABLE_ENTRY
+  NS_INTERFACE_TABLE(StatementRow, nsISupports)
+  NS_INTERFACE_TABLE_TO_MAP_SEGUE_CYCLE_COLLECTION(StatementRow)
+NS_INTERFACE_MAP_END
+
+NS_IMPL_CYCLE_COLLECTING_ADDREF(StatementRow)
+NS_IMPL_CYCLE_COLLECTING_RELEASE(StatementRow)
+
+StatementRow::StatementRow(nsPIDOMWindowInner* aWindow, Statement *aStatement)
+: mWindow(aWindow),
+  mStatement(aStatement)
 {
 }
 
-NS_IMPL_ISUPPORTS(
-  StatementRow,
-  mozIStorageStatementRow,
-  nsIXPCScriptable
-)
-
-////////////////////////////////////////////////////////////////////////////////
-//// nsIXPCScriptable
-
-#define XPC_MAP_CLASSNAME         StatementRow
-#define XPC_MAP_QUOTED_CLASSNAME "StatementRow"
-#define XPC_MAP_FLAGS (XPC_SCRIPTABLE_WANT_GETPROPERTY | \
-                       XPC_SCRIPTABLE_WANT_RESOLVE | \
-                       XPC_SCRIPTABLE_ALLOW_PROP_MODS_DURING_RESOLVE)
-#include "xpc_map_end.h"
-
-NS_IMETHODIMP
-StatementRow::GetProperty(nsIXPConnectWrappedNative *aWrapper,
-                          JSContext *aCtx,
-                          JSObject *aScopeObj,
-                          jsid aId,
-                          JS::Value *_vp,
-                          bool *_retval)
+JSObject*
+StatementRow::WrapObject(JSContext* aCx, JS::Handle<JSObject*> aGivenProto)
 {
-  NS_ENSURE_TRUE(mStatement, NS_ERROR_NOT_INITIALIZED);
+  return dom::MozStorageStatementRowBinding::Wrap(aCx, this, aGivenProto);
+}
 
-  JS::RootedObject scope(aCtx, aScopeObj);
-  if (JSID_IS_STRING(aId)) {
-    ::JSAutoByteString idBytes(aCtx, JSID_TO_STRING(aId));
-    NS_ENSURE_TRUE(!!idBytes, NS_ERROR_OUT_OF_MEMORY);
-    nsDependentCString jsid(idBytes.ptr());
-
-    uint32_t idx;
-    nsresult rv = mStatement->GetColumnIndex(jsid, &idx);
-    NS_ENSURE_SUCCESS(rv, rv);
-    int32_t type;
-    rv = mStatement->GetTypeOfIndex(idx, &type);
-    NS_ENSURE_SUCCESS(rv, rv);
-
-    if (type == mozIStorageValueArray::VALUE_TYPE_INTEGER ||
-        type == mozIStorageValueArray::VALUE_TYPE_FLOAT) {
-      double dval;
-      rv = mStatement->GetDouble(idx, &dval);
-      NS_ENSURE_SUCCESS(rv, rv);
-      *_vp = ::JS_NumberValue(dval);
-    }
-    else if (type == mozIStorageValueArray::VALUE_TYPE_TEXT) {
-      uint32_t bytes;
-      const char16_t *sval = reinterpret_cast<const char16_t *>(
-        static_cast<mozIStorageStatement *>(mStatement)->
-          AsSharedWString(idx, &bytes)
-      );
-      JSString *str = ::JS_NewUCStringCopyN(aCtx, sval, bytes / 2);
-      if (!str) {
-        *_retval = false;
-        return NS_OK;
-      }
-      _vp->setString(str);
-    }
-    else if (type == mozIStorageValueArray::VALUE_TYPE_BLOB) {
-      uint32_t length;
-      const uint8_t *blob = static_cast<mozIStorageStatement *>(mStatement)->
-        AsSharedBlob(idx, &length);
-      JSObject *obj = ::JS_NewArrayObject(aCtx, length);
-      if (!obj) {
-        *_retval = false;
-        return NS_OK;
-      }
-      _vp->setObject(*obj);
-
-      // Copy the blob over to the JS array.
-      for (uint32_t i = 0; i < length; i++) {
-        if (!::JS_DefineElement(aCtx, scope, i, blob[i], JSPROP_ENUMERATE)) {
-          *_retval = false;
-          return NS_OK;
-        }
-      }
-    }
-    else if (type == mozIStorageValueArray::VALUE_TYPE_NULL) {
-      _vp->setNull();
-    }
-    else {
-      NS_ERROR("unknown column type returned, what's going on?");
-    }
+void
+StatementRow::NamedGetter(JSContext* aCx,
+                          const nsAString& aName,
+                          bool& aFound,
+                          JS::MutableHandle<JS::Value> aResult,
+                          mozilla::ErrorResult& aRv)
+{
+  if (!mStatement) {
+    aRv.Throw(NS_ERROR_NOT_INITIALIZED);
+    return;
   }
 
-  return NS_OK;
-}
+  nsCString name = NS_ConvertUTF16toUTF8(aName);
 
-NS_IMETHODIMP
-StatementRow::Resolve(nsIXPConnectWrappedNative *aWrapper,
-                      JSContext *aCtx,
-                      JSObject *aScopeObj,
-                      jsid aId,
-                      bool *aResolvedp,
-                      bool *_retval)
-{
-  JS::Rooted<JSObject*> scopeObj(aCtx, aScopeObj);
-
-  NS_ENSURE_TRUE(mStatement, NS_ERROR_NOT_INITIALIZED);
-  // We do not throw at any point after this because we want to allow the
-  // prototype chain to be checked for the property.
-
-  if (JSID_IS_STRING(aId)) {
-    ::JSAutoByteString idBytes(aCtx, JSID_TO_STRING(aId));
-    NS_ENSURE_TRUE(!!idBytes, NS_ERROR_OUT_OF_MEMORY);
-    nsDependentCString name(idBytes.ptr());
-
-    uint32_t idx;
+  uint32_t idx;
+  {
     nsresult rv = mStatement->GetColumnIndex(name, &idx);
     if (NS_FAILED(rv)) {
       // It's highly likely that the name doesn't exist, so let the JS engine
       // check the prototype chain and throw if that doesn't have the property
       // either.
-      *aResolvedp = false;
-      return NS_OK;
+      aFound = false;
+      return;
     }
-
-    JS::Rooted<jsid> id(aCtx, aId);
-    *_retval = ::JS_DefinePropertyById(aCtx, scopeObj, id, JS::UndefinedHandleValue,
-                                       JSPROP_RESOLVING);
-    *aResolvedp = true;
-    return NS_OK;
   }
 
-  return NS_OK;
+  int32_t type;
+  aRv = mStatement->GetTypeOfIndex(idx, &type);
+  if (aRv.Failed()) {
+    return;
+  }
+
+  switch (type) {
+  case mozIStorageValueArray::VALUE_TYPE_INTEGER:
+  case mozIStorageValueArray::VALUE_TYPE_FLOAT: {
+    double dval;
+    aRv = mStatement->GetDouble(idx, &dval);
+    if (aRv.Failed()) {
+      return;
+    }
+    aResult.set(::JS_NumberValue(dval));
+    break;
+  }
+  case mozIStorageValueArray::VALUE_TYPE_TEXT: {
+    uint32_t bytes;
+    const char16_t *sval = reinterpret_cast<const char16_t *>(
+        static_cast<mozIStorageStatement *>(mStatement)->
+          AsSharedWString(idx, &bytes)
+      );
+    JSString *str = ::JS_NewUCStringCopyN(aCx, sval, bytes / 2);
+    if (!str) {
+      aRv.Throw(NS_ERROR_UNEXPECTED);
+      return;
+    }
+    aResult.setString(str);
+    break;
+  }
+  case mozIStorageValueArray::VALUE_TYPE_BLOB: {
+    uint32_t length;
+    const uint8_t *blob = static_cast<mozIStorageStatement *>(mStatement)->
+      AsSharedBlob(idx, &length);
+    JS::Rooted<JSObject*> obj(aCx, ::JS_NewArrayObject(aCx, length));
+    if (!obj) {
+      aRv.Throw(NS_ERROR_UNEXPECTED);
+      return;
+    }
+    aResult.setObject(*obj);
+
+    // Copy the blob over to the JS array.
+    for (uint32_t i = 0; i < length; i++) {
+      if (!::JS_DefineElement(aCx, obj, i, blob[i], JSPROP_ENUMERATE)) {
+        aRv.Throw(NS_ERROR_UNEXPECTED);
+        return;
+      }
+    }
+    break;
+  }
+  case mozIStorageValueArray::VALUE_TYPE_NULL:
+    aResult.setNull();
+    break;
+  default:
+    NS_ERROR("unknown column type returned, what's going on?");
+    break;
+  }
+  aFound = true;
+}
+
+void
+StatementRow::GetSupportedNames(nsTArray<nsString>& aNames)
+{
+  if (!mStatement) {
+    return;
+  }
+
+  uint32_t columnCount;
+  nsresult rv = mStatement->GetColumnCount(&columnCount);
+  if (NS_WARN_IF(NS_FAILED(rv))) {
+    return;
+  }
+
+  for (uint32_t i = 0; i < columnCount; i++) {
+    nsAutoCString name;
+    nsresult rv = mStatement->GetColumnName(i, name);
+    if (NS_WARN_IF(NS_FAILED(rv))) {
+      return;
+    }
+    aNames.AppendElement(NS_ConvertUTF8toUTF16(name));
+  }
 }
 
 } // namespace storage
