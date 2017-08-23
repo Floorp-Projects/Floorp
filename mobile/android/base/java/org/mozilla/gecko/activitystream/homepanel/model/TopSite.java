@@ -75,10 +75,11 @@ public class TopSite implements Item {
         return isPinned;
     }
 
-    @Override
     @NonNull
-    public Metadata getMetadataSlow() {
-        return metadata;
+    @Override
+    public String getImageUrl() {
+        final String imageUrl = metadata.getImageUrl();
+        return imageUrl != null ? imageUrl : "";
     }
 
     @Override
