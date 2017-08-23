@@ -1430,6 +1430,12 @@ private:
 public:
   bool mWillReparent;
 #endif
+
+private:
+  void RecordNavigationTiming(ReadyState aReadyState);
+  bool mDOMLoadingSet : 1;
+  bool mDOMInteractiveSet : 1;
+  bool mDOMCompleteSet : 1;
 };
 
 class nsDocumentOnStack
