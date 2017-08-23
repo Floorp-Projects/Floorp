@@ -437,10 +437,12 @@ ServoRestyleManager::ClearRestyleStateFromSubtree(Element* aElement)
 struct ServoRestyleManager::TextPostTraversalState
 {
 public:
-  TextPostTraversalState(ServoStyleContext& aParentContext,
+  TextPostTraversalState(Element& aParentElement,
+                         ServoStyleContext* aParentContext,
                          bool aDisplayContentsParentStyleChanged,
                          ServoRestyleState& aParentRestyleState)
-    : mParentContext(aParentContext)
+    : mParentElement(aParentElement)
+    , mParentContext(aParentContext)
     , mParentRestyleState(aParentRestyleState)
     , mStyle(nullptr)
     , mShouldPostHints(aDisplayContentsParentStyleChanged)
@@ -454,7 +456,7 @@ public:
   {
     if (!mStyle) {
       mStyle = mParentRestyleState.StyleSet().ResolveStyleForText(
-        aTextNode, &mParentContext);
+        aTextNode, &ParentStyle());
     }
     MOZ_ASSERT(mStyle);
     return *mStyle;
@@ -497,7 +499,18 @@ public:
   }
 
 private:
-  ServoStyleContext& mParentContext;
+  ServoStyleContext& ParentStyle() {
+    if (!mParentContext) {
+      mLazilyResolvedParentContext =
+        mParentRestyleState.StyleSet().ResolveServoStyle(&mParentElement);
+      mParentContext = mLazilyResolvedParentContext;
+    }
+    return *mParentContext;
+  }
+
+  Element& mParentElement;
+  ServoStyleContext* mParentContext;
+  RefPtr<ServoStyleContext> mLazilyResolvedParentContext;
   ServoRestyleState& mParentRestyleState;
   RefPtr<nsStyleContext> mStyle;
   bool mShouldPostHints;
@@ -741,11 +754,9 @@ ServoRestyleManager::ProcessPostTraversal(
     thisFrameRestyleState ? *thisFrameRestyleState : aRestyleState;
 
   RefPtr<ServoStyleContext> upToDateContext =
-    (wasRestyled || !oldStyleContext)
+    wasRestyled
       ? aRestyleState.StyleSet().ResolveServoStyle(aElement)
       : oldStyleContext;
-
-  MOZ_ASSERT(upToDateContext);
 
   if (wasRestyled && oldStyleContext) {
     MOZ_ASSERT(styleFrame || displayContentsStyle);
@@ -809,7 +820,8 @@ ServoRestyleManager::ProcessPostTraversal(
   bool recreatedAnyContext = wasRestyled;
   if (traverseElementChildren || traverseTextChildren) {
     StyleChildrenIterator it(aElement);
-    TextPostTraversalState textState(*upToDateContext,
+    TextPostTraversalState textState(*aElement,
+                                     upToDateContext,
                                      displayContentsStyle && wasRestyled,
                                      childrenRestyleState);
     for (nsIContent* n = it.GetNextChild(); n; n = it.GetNextChild()) {
