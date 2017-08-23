@@ -65,6 +65,9 @@ this.sidebarAction = class extends ExtensionAPI {
                                      extension);
 
     // We need to ensure our elements are available before session restore.
+    for (let window of windowTracker.browserWindows()) {
+      this.createMenuItem(window, this.defaults);
+    }
     this.windowOpenListener = (window) => {
       this.createMenuItem(window, this.defaults);
     };
