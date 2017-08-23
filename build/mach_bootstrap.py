@@ -284,23 +284,23 @@ def bootstrap(topsrcdir, mozilla_dir=None):
 
         raise AttributeError(key)
 
-    mach = mach.main.Mach(os.getcwd())
-    mach.populate_context_handler = populate_context
+    driver = mach.main.Mach(os.getcwd())
+    driver.populate_context_handler = populate_context
 
-    if not mach.settings_paths:
+    if not driver.settings_paths:
         # default global machrc location
-        mach.settings_paths.append(get_state_dir()[0])
+        driver.settings_paths.append(get_state_dir()[0])
     # always load local repository configuration
-    mach.settings_paths.append(mozilla_dir)
+    driver.settings_paths.append(mozilla_dir)
 
     for category, meta in CATEGORIES.items():
-        mach.define_category(category, meta['short'], meta['long'],
+        driver.define_category(category, meta['short'], meta['long'],
             meta['priority'])
 
     for path in MACH_MODULES:
-        mach.load_commands_from_file(os.path.join(mozilla_dir, path))
+        driver.load_commands_from_file(os.path.join(mozilla_dir, path))
 
-    return mach
+    return driver
 
 
 # Hook import such that .pyc/.pyo files without a corresponding .py file in
