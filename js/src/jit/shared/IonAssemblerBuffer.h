@@ -151,7 +151,6 @@ class AssemblerBuffer
 {
   protected:
     typedef BufferSlice<SliceSize> Slice;
-    typedef AssemblerBuffer<SliceSize, Inst> AssemblerBuffer_;
 
     // Doubly-linked list of BufferSlices, with the most recent in tail position.
     Slice* head;
@@ -409,24 +408,29 @@ class AssemblerBuffer
         return BufferOffset(bufferSize);
     }
 
+    typedef AssemblerBuffer<SliceSize, Inst> ThisClass;
+
     class AssemblerBufferInstIterator
     {
-        BufferOffset bo;
-        AssemblerBuffer_* m_buffer;
+        BufferOffset bo_;
+        ThisClass* buffer_;
 
       public:
-        explicit AssemblerBufferInstIterator(BufferOffset off, AssemblerBuffer_* buffer)
-          : bo(off), m_buffer(buffer)
+        explicit AssemblerBufferInstIterator(BufferOffset bo, ThisClass* buffer)
+          : bo_(bo), buffer_(buffer)
         { }
-
+        void advance(int offset) {
+            bo_ = BufferOffset(bo_.getOffset() + offset);
+        }
         Inst* next() {
-            Inst* i = m_buffer->getInst(bo);
-            bo = BufferOffset(bo.getOffset() + i->size());
+            advance(cur()->size());
             return cur();
         }
-
-        Inst* cur() {
-            return m_buffer->getInst(bo);
+        Inst* peek() {
+            return buffer_->getInst(BufferOffset(bo_.getOffset() + cur()->size()));
+        }
+        Inst* cur() const {
+            return buffer_->getInst(bo_);
         }
     };
 };
