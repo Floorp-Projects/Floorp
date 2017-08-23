@@ -55,7 +55,8 @@ add_task(function*() {
 
   yield editExpression(dbg, "oo");
   is(getLabel(dbg, 1), "foo()");
-  is(getValue(dbg, 1), "");
+  // There is no "value" element for functions.
+  is(findElement(dbg, "expressionValue", 1), null);
 
   yield addExpression(dbg, "location");
   is(getLabel(dbg, 2), "location");

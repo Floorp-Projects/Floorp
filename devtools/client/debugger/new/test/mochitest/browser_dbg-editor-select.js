@@ -29,17 +29,17 @@ add_task(function*() {
   // Call the function that we set a breakpoint in.
   invokeInTab("main");
   yield waitForPaused(dbg);
-  assertPausedLocation(dbg, simple1, 4);
+  assertPausedLocation(dbg);
 
   // Step through to another file and make sure it's paused in the
   // right place.
   yield stepIn(dbg);
-  assertPausedLocation(dbg, simple2, 2);
+  assertPausedLocation(dbg);
 
   // Step back out to the initial file.
   yield stepOut(dbg);
   yield stepOut(dbg);
-  assertPausedLocation(dbg, simple1, 5);
+  assertPausedLocation(dbg);
   yield resume(dbg);
 
   // Make sure that we can set a breakpoint on a line out of the
@@ -49,6 +49,6 @@ add_task(function*() {
 
   invokeInTab("testModel");
   yield waitForPaused(dbg);
-  assertPausedLocation(dbg, longSrc, 66);
+  assertPausedLocation(dbg);
   ok(isElementVisible(dbg, "breakpoint"), "Breakpoint is visible");
 });

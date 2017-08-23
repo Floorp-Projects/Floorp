@@ -11,7 +11,7 @@ function getScopeNodeValue(dbg, index) {
 
 function expandNode(dbg, index) {
   let onLoadProperties = onLoadObjectProperties(dbg);
-  clickElement(dbg, "scopeNode", index);
+  findElement(dbg, "scopeNode", index).click();
   return onLoadProperties;
 }
 
@@ -23,14 +23,14 @@ function onLoadObjectProperties(dbg) {
   return waitForDispatch(dbg, "LOAD_OBJECT_PROPERTIES");
 }
 
-add_task(async function() {
-  const dbg = await initDebugger("doc-script-mutate.html");
+add_task(function*() {
+  const dbg = yield initDebugger("doc-script-mutate.html");
 
   toggleScopes(dbg);
 
   let onPaused = waitForPaused(dbg);
   invokeInTab("mutate");
-  await onPaused;
+  yield onPaused;
 
   is(
     getScopeNodeLabel(dbg, 2),
@@ -43,16 +43,16 @@ add_task(async function() {
     'The third element in the scope panel is "phonebook"'
   );
 
-  // Expand `phonebook`
-  await expandNode(dbg, 3);
+  info("Expand `phonebook`");
+  yield expandNode(dbg, 3);
   is(
     getScopeNodeLabel(dbg, 4),
     "S",
     'The fourth element in the scope panel is "S"'
   );
 
-  // Expand `S`
-  await expandNode(dbg, 4);
+  info("Expand `S`");
+  yield expandNode(dbg, 4);
   is(
     getScopeNodeLabel(dbg, 5),
     "sarah",
@@ -64,8 +64,8 @@ add_task(async function() {
     'The sixth element in the scope panel is "serena"'
   );
 
-  // Expand `sarah`
-  await expandNode(dbg, 5);
+  info("Expand `sarah`");
+  yield expandNode(dbg, 5);
   is(
     getScopeNodeLabel(dbg, 6),
     "lastName",
@@ -79,8 +79,8 @@ add_task(async function() {
 
   info("Resuming");
   onPaused = waitForPaused(dbg);
-  await resume(dbg);
-  await onPaused;
+  yield resume(dbg);
+  yield onPaused;
 
   is(
     getScopeNodeLabel(dbg, 2),
