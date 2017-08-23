@@ -138,7 +138,18 @@ CompositorManagerParent::ActorDestroy(ActorDestroyReason aReason)
 void
 CompositorManagerParent::DeallocPCompositorManagerParent()
 {
+  MessageLoop::current()->PostTask(
+          NewRunnableMethod("layers::CompositorManagerParent::DeferredDestroy",
+                            this,
+                            &CompositorManagerParent::DeferredDestroy));
+
   Release();
+}
+
+void
+CompositorManagerParent::DeferredDestroy()
+{
+  mCompositorThreadHolder = nullptr;
 }
 
 PCompositorBridgeParent*
