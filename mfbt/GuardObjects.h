@@ -116,7 +116,7 @@ public:
      * this assert might also fire if init is not called because the guard
      * object's implementation is not using the above macros correctly.)
      */
-    MOZ_ASSERT(mStatementDone);
+    MOZ_ASSERT(mStatementDone, "Guard object should not be used as a temporary.");
   }
 
   void init(GuardObjectNotifier& aNotifier)

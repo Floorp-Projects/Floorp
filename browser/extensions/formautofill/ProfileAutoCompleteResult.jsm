@@ -267,6 +267,11 @@ class AddressResult extends ProfileAutoCompleteResult {
 
     return labels;
   }
+
+  getValueAt(index) {
+    this._checkIndexBounds(index);
+    return "";
+  }
 }
 
 class CreditCardResult extends ProfileAutoCompleteResult {

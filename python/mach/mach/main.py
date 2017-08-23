@@ -10,6 +10,7 @@ from collections import Iterable
 
 import argparse
 import codecs
+import errno
 import imp
 import logging
 import os
@@ -20,6 +21,7 @@ import uuid
 from .base import (
     CommandContext,
     MachError,
+    MissingFileError,
     NoCommandError,
     UnknownCommandError,
     UnrecognizedArgumentError,
@@ -27,9 +29,7 @@ from .base import (
 )
 
 from .decorators import (
-    CommandArgument,
     CommandProvider,
-    Command,
 )
 
 from .config import ConfigSettings
@@ -263,7 +263,13 @@ To see more help for a specific command, run:
 
             module_name = 'mach.commands.%s' % uuid.uuid1().get_hex()
 
-        imp.load_source(module_name, path)
+        try:
+            imp.load_source(module_name, path)
+        except IOError as e:
+            if e.errno != errno.ENOENT:
+                raise
+
+            raise MissingFileError('%s does not exist' % path)
 
     def load_commands_from_entry_point(self, group='mach.providers'):
         """Scan installed packages for mach command provider entry points. An

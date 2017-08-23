@@ -44,14 +44,27 @@ HandlerService.prototype = {
         path: OS.Path.join(OS.Constants.Path.profileDir, "handlers.json"),
         dataPostProcessor: this._dataPostProcessor.bind(this),
       });
+    }
+
+    // Always call this even if this.__store was set, since it may have been
+    // set by asyncInit, which might not have completed yet.
+    this._ensureStoreInitialized();
+    return this.__store;
+  },
+
+  __storeInitialized: false,
+  _ensureStoreInitialized() {
+    if (!this.__storeInitialized) {
+      this.__storeInitialized = true;
       this.__store.ensureDataReady();
 
       // We have to inject new default protocol handlers only if we haven't
       // already done this when migrating data from the RDF back-end.
       let alreadyInjected = this._migrateFromRDFIfNeeded();
       this._injectDefaultProtocolHandlersIfNeeded(alreadyInjected);
+
+      Services.obs.notifyObservers(null, "handlersvc-store-initialized");
     }
-    return this.__store;
   },
 
   _dataPostProcessor(data) {
@@ -218,6 +231,7 @@ HandlerService.prototype = {
         await this.__store.finalize();
       }
       this.__store = null;
+      this.__storeInitialized = false;
     })().catch(Cu.reportError);
   },
 
@@ -230,6 +244,22 @@ HandlerService.prototype = {
     promise.then(() => {
       Services.obs.notifyObservers(null, "handlersvc-json-replace-complete");
     });
+  },
+
+  // nsIHandlerService
+  asyncInit() {
+    if (!this.__store) {
+      this.__store = new JSONFile({
+        path: OS.Path.join(OS.Constants.Path.profileDir, "handlers.json"),
+        dataPostProcessor: this._dataPostProcessor.bind(this),
+      });
+      this.__store.load().then(() => {
+        // __store can be null if we called _onDBChange in the mean time.
+        if (this.__store) {
+          this._ensureStoreInitialized();
+        }
+      }).catch(Cu.reportError);
+    }
   },
 
   // nsIHandlerService

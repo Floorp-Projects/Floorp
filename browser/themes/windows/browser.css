@@ -681,7 +681,7 @@ html|span.ac-emphasize-text-url {
 .autocomplete-richlistitem:hover,
 treechildren.searchbar-treebody::-moz-tree-row(hover) {
   background-color: var(--arrowpanel-dimmed);
-  border-color: hsla(0, 0%, 0%, 0.1);
+  border-color: var(--panel-separator-color);
 }
 
 .autocomplete-richlistitem[selected],

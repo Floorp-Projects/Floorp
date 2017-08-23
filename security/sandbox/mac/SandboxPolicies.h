@@ -342,6 +342,19 @@ static const char contentSandboxRules[] = R"(
       (require-any
         (vnode-type REGULAR-FILE)
         (vnode-type DIRECTORY))))
+
+  ; bug 1382260
+  ; We may need to load fonts from outside of the standard
+  ; font directories whitelisted above. This is typically caused
+  ; by a font manager. For now, whitelist any file with a
+  ; font extension. Limit this to the common font types:
+  ; files ending in .otf, .ttf, .ttc, .otc, and .dfont.
+  (allow file-read*
+    (regex #"\.[oO][tT][fF]$"           ; otf
+           #"\.[tT][tT][fF]$"           ; ttf
+           #"\.[tT][tT][cC]$"           ; ttc
+           #"\.[oO][tT][cC]$"           ; otc
+           #"\.[dD][fF][oO][nN][tT]$")) ; dfont
 )";
 
 }

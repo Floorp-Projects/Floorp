@@ -1,0 +1,15 @@
+# -*- Mode: python; indent-tabs-mode: nil; tab-width: 40 -*-
+# vim: set filetype=python:
+# This Source Code Form is subject to the terms of the Mozilla Public
+# License, v. 2.0. If a copy of the MPL was not distributed with this
+# file, You can obtain one at http://mozilla.org/MPL/2.0/.
+
+XPCSHELL_TESTS_MANIFESTS += ['tests/xpcshell.ini']
+
+# This JSM is only used by the xpcshell scripts in this directory and not by
+# Firefox itself, so we only register the JSM as a test module to:
+#  - Avoid bloat.
+#  - Make tests slightly cleaner.
+# xpcshell scripts can instead import the JSM using a file:// URL constructed
+# using the built in |__LOCATION__| nsIFile constant.
+TESTING_JS_MODULES.psm += ['PSMToolUtils.jsm']

@@ -46,14 +46,15 @@ runHeuristicsTest([
     fixturePath: "Payment.html",
     expectedResult: [
       [
-/* TODO: credit card
-        {"section": "", "addressType": "", "contactType": "", "fieldName": "cc-type"},
-        {"section": "", "addressType": "", "contactType": "", "fieldName": "cc-number"}, // ac-off
+//      {"section": "", "addressType": "", "contactType": "", "fieldName": "cc-type"},
+//      {"section": "", "addressType": "", "contactType": "", "fieldName": "cc-number"}, // ac-off
         {"section": "", "addressType": "", "contactType": "", "fieldName": "cc-exp-month"},
-        {"section": "", "addressType": "", "contactType": "", "fieldName": "cc-exp-year"},
-        {"section": "", "addressType": "", "contactType": "", "fieldName": "cc-csc"}, // ac-off
-        {"section": "", "addressType": "", "contactType": "", "fieldName": "cc-name"}, // ac-off
-*/
+
+        // FIXME: bug 1392940 - the below element can not match to "cc-exp-year" regexp directly.
+//      {"section": "", "addressType": "", "contactType": "", "fieldName": "cc-exp-year"},
+
+//      {"section": "", "addressType": "", "contactType": "", "fieldName": "cc-csc"}, // ac-off
+//      {"section": "", "addressType": "", "contactType": "", "fieldName": "cc-name"}, // ac-off
       ],
       [],
       [],

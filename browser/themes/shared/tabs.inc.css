@@ -296,9 +296,14 @@
 /* Tab Overflow */
 .tabbrowser-arrowscrollbox > .arrowscrollbox-overflow-start-indicator:not([collapsed]),
 .tabbrowser-arrowscrollbox > .arrowscrollbox-overflow-end-indicator:not([collapsed]) {
+  width: 18px;
   background-image: url(chrome://browser/skin/tabbrowser/tab-overflow-indicator.png);
-  background-size: 100% 100%;
-  width: 19px;
+  background-size: 17px 100%;
+  border-left: 1px solid;
+  border-image: linear-gradient(rgba(255,255,255,.2),
+                                rgba(255,255,255,.2) calc(100% - 1px - var(--tab-toolbar-navbar-overlap)),
+                                transparent calc(100% - 1px - var(--tab-toolbar-navbar-overlap)));
+  border-image-slice: 1;
   pointer-events: none;
   position: relative;
   z-index: 3; /* the selected tab's z-index + 1 */
@@ -310,13 +315,13 @@
 }
 
 .tabbrowser-arrowscrollbox > .arrowscrollbox-overflow-start-indicator:not([collapsed]) {
-  margin-inline-start: -2px;
+  margin-inline-start: -1px;
   margin-inline-end: -17px;
 }
 
 .tabbrowser-arrowscrollbox > .arrowscrollbox-overflow-end-indicator:not([collapsed]) {
   margin-inline-start: -17px;
-  margin-inline-end: -2px;
+  margin-inline-end: -1px;
 }
 
 .tabbrowser-arrowscrollbox > .arrowscrollbox-overflow-start-indicator[collapsed],

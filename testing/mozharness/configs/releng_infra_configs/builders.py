@@ -10,8 +10,7 @@ PLATFORM_CONFIG = {
     'linux64': {
         'exes': {
             'gittool.py': '/usr/local/bin/gittool.py',
-            'python': '/tools/buildbot/bin/python',
-            'virtualenv': ['/tools/buildbot/bin/python', '/tools/misc-python/virtualenv.py'],
+            'virtualenv': '/tools/virtualenv/bin/virtualenv',
         },
         'env': {
             'DISPLAY': ':2',
@@ -20,8 +19,7 @@ PLATFORM_CONFIG = {
     'macosx': {
         'exes': {
             'gittool.py': '/usr/local/bin/gittool.py',
-            'python': '/tools/buildbot/bin/python',
-            'virtualenv': ['/tools/buildbot/bin/python', '/tools/misc-python/virtualenv.py'],
+            'virtualenv': '/tools/virtualenv/bin/virtualenv',
         },
     },
     'win32': {

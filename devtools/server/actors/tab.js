@@ -685,8 +685,10 @@ TabActor.prototype = {
     if (!this.attached) {
       return;
     }
+
+    subject.QueryInterface(Ci.nsIDocShell);
+
     if (topic == "webnavigation-create") {
-      subject.QueryInterface(Ci.nsIDocShell);
       this._onDocShellCreated(subject);
     } else if (topic == "webnavigation-destroy") {
       this._onDocShellDestroy(subject);

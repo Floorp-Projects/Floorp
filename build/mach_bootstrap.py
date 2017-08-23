@@ -154,11 +154,27 @@ def bootstrap(topsrcdir, mozilla_dir=None):
     sys.path[0:0] = [os.path.join(mozilla_dir, path)
                      for path in search_path(mozilla_dir,
                                              'build/virtualenv_packages.txt')]
+    import mach.base
     import mach.main
     from mozboot.util import get_state_dir
 
     from mozbuild.util import patch_main
     patch_main()
+
+    def resolve_repository():
+        import mozversioncontrol
+
+        try:
+            # This API doesn't respect the vcs binary choices from configure.
+            # If we ever need to use the VCS binary here, consider something
+            # more robust.
+            return mozversioncontrol.get_repository_object(path=mozilla_dir)
+        except mozversioncontrol.InvalidRepoPath:
+            return None
+        # This is mainly to catch failures resolving the VCS binary path.
+        # TODO Change mozversioncontrol to raise non-generic exception.
+        except Exception:
+            return None
 
     def telemetry_handler(context, data):
         # We have not opted-in to telemetry
@@ -282,25 +298,36 @@ def bootstrap(topsrcdir, mozilla_dir=None):
         if key == 'post_dispatch_handler':
             return post_dispatch_handler
 
+        if key == 'repository':
+            return resolve_repository()
+
         raise AttributeError(key)
 
-    mach = mach.main.Mach(os.getcwd())
-    mach.populate_context_handler = populate_context
+    driver = mach.main.Mach(os.getcwd())
+    driver.populate_context_handler = populate_context
 
-    if not mach.settings_paths:
+    if not driver.settings_paths:
         # default global machrc location
-        mach.settings_paths.append(get_state_dir()[0])
+        driver.settings_paths.append(get_state_dir()[0])
     # always load local repository configuration
-    mach.settings_paths.append(mozilla_dir)
+    driver.settings_paths.append(mozilla_dir)
 
     for category, meta in CATEGORIES.items():
-        mach.define_category(category, meta['short'], meta['long'],
+        driver.define_category(category, meta['short'], meta['long'],
             meta['priority'])
 
-    for path in MACH_MODULES:
-        mach.load_commands_from_file(os.path.join(mozilla_dir, path))
+    repo = resolve_repository()
 
-    return mach
+    for path in MACH_MODULES:
+        # Sparse checkouts may not have all mach_commands.py files. Ignore
+        # errors from missing files.
+        try:
+            driver.load_commands_from_file(os.path.join(mozilla_dir, path))
+        except mach.base.MissingFileError:
+            if not repo or not repo.sparse_checkout_present():
+                raise
+
+    return driver
 
 
 # Hook import such that .pyc/.pyo files without a corresponding .py file in

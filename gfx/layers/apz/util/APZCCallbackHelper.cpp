@@ -251,11 +251,17 @@ APZCCallbackHelper::UpdateRootFrame(FrameMetrics& aMetrics)
 
   MOZ_ASSERT(aMetrics.GetUseDisplayPortMargins());
 
-  if (gfxPrefs::APZAllowZooming()) {
+  if (gfxPrefs::APZAllowZooming() && aMetrics.GetScrollOffsetUpdated()) {
     // If zooming is disabled then we don't really want to let APZ fiddle
     // with these things. In theory setting the resolution here should be a
     // no-op, but setting the SPCSPS is bad because it can cause a stale value
     // to be returned by window.innerWidth/innerHeight (see bug 1187792).
+    //
+    // We also skip this codepath unless the metrics has a scroll offset update
+    // type other eNone, because eNone just means that this repaint request
+    // was triggered by APZ in response to a main-thread update. In this
+    // scenario we don't want to update the main-thread resolution because
+    // it can trigger unnecessary reflows.
 
     float presShellResolution = shell->GetResolution();
 

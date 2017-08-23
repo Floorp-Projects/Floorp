@@ -225,6 +225,20 @@ const TESTCASES = [
       contactType: "",
     },
   },
+  {
+    description: "Verify credit card number",
+    document: `<form>
+                 <label for="targetElement"> Card Number</label>
+                 <input id="targetElement" type="text">
+               </form>`,
+    elementId: "targetElement",
+    expectedReturnValue: {
+      fieldName: "cc-number",
+      section: "",
+      addressType: "",
+      contactType: "",
+    },
+  },
 ];
 
 TESTCASES.forEach(testcase => {

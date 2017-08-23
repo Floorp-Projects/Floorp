@@ -1802,7 +1802,7 @@ class PackageFrontend(MachCommandBase):
             cache_dir = os.path.join(self._mach_context.state_dir, 'toolchains')
 
         tooltool_url = (tooltool_url or
-                        'https://api.pub.build.mozilla.org/tooltool').rstrip('/')
+                        'https://tooltool.mozilla-releng.net').rstrip('/')
 
         cache = ArtifactCache(cache_dir=cache_dir, log=self.log,
                               skip_cache=skip_cache)

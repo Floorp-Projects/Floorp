@@ -483,6 +483,16 @@ BrowserGlue.prototype = {
       case "sync-ui-state:update":
         this._updateFxaBadges();
         break;
+      case "handlersvc-store-initialized":
+        // Initialize PdfJs when running in-process and remote. This only
+        // happens once since PdfJs registers global hooks. If the PdfJs
+        // extension is installed the init method below will be overridden
+        // leaving initialization to the extension.
+        // parent only: configure default prefs, set up pref observers, register
+        // pdf content handler, and initializes parent side message manager
+        // shim for privileged api access.
+        PdfJs.init(true);
+        break;
     }
   },
 
@@ -518,6 +528,7 @@ BrowserGlue.prototype = {
     os.addObserver(this, "flash-plugin-hang");
     os.addObserver(this, "xpi-signature-changed");
     os.addObserver(this, "sync-ui-state:update");
+    os.addObserver(this, "handlersvc-store-initialized");
 
     this._flashHangCount = 0;
     this._firstWindowReady = new Promise(resolve => this._firstWindowLoaded = resolve);
@@ -857,20 +868,12 @@ BrowserGlue.prototype = {
 
   // the first browser window has finished initializing
   _onFirstWindowLoaded: function BG__onFirstWindowLoaded(aWindow) {
-    // Initialize PdfJs when running in-process and remote. This only
-    // happens once since PdfJs registers global hooks. If the PdfJs
-    // extension is installed the init method below will be overridden
-    // leaving initialization to the extension.
-    // parent only: configure default prefs, set up pref observers, register
-    // pdf content handler, and initializes parent side message manager
-    // shim for privileged api access.
-    PdfJs.init(true);
-    // child only: similar to the call above for parent - register content
-    // handler and init message manager child shim for privileged api access.
-    // With older versions of the extension installed, this load will fail
-    // passively.
+    // Set up listeners and, if PdfJs is enabled, register the PDF stream converter.
+    // We delay all of the parent's initialization other than stream converter
+    // registration, because it requires file IO from nsHandlerService-json.js
     Services.ppmm.loadProcessScript("resource://pdf.js/pdfjschildbootstrap.js", true);
     if (PdfJs.enabled) {
+      PdfJs.ensureRegistered();
       Services.ppmm.loadProcessScript("resource://pdf.js/pdfjschildbootstrap-enabled.js", true);
     }
 
@@ -1150,6 +1153,12 @@ BrowserGlue.prototype = {
       setTimeout(function() {
         Services.tm.idleDispatchToMainThread(Services.startup.trackStartupCrashEnd);
       }, STARTUP_CRASHES_END_DELAY_MS);
+    });
+
+    Services.tm.idleDispatchToMainThread(() => {
+      let handlerService = Cc["@mozilla.org/uriloader/handler-service;1"].
+                           getService(Ci.nsIHandlerService);
+      handlerService.asyncInit();
     });
   },
 

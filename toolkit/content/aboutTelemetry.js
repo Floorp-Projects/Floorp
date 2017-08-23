@@ -321,19 +321,29 @@ var PingPicker = {
     document.getElementById("older-ping")
             .addEventListener("click", () => this._movePingIndex(1));
 
+    let pingPickerNeedHide = false;
+    let pingPicker = document.getElementById("ping-picker");
+    pingPicker.addEventListener("mouseenter", () => pingPickerNeedHide = false);
+    pingPicker.addEventListener("mouseleave", () => pingPickerNeedHide = true);
     document.addEventListener("click", (ev) => {
-      if (ev.target.querySelector("#ping-picker")) {
-        document.getElementById("ping-picker").classList.add("hidden");
+      if (pingPickerNeedHide) {
+        pingPicker.classList.add("hidden");
       }
     });
     document.getElementById("choose-payload")
             .addEventListener("change", () => displayPingData(gPingData));
     document.getElementById("processes")
             .addEventListener("change", () => displayPingData(gPingData));
-    Array.from(document.querySelectorAll(".change-ping")).forEach(el =>
-      el.addEventListener("click", () =>
-        document.getElementById("ping-picker").classList.remove("hidden"))
-    );
+    Array.from(document.querySelectorAll(".change-ping")).forEach(el => {
+      el.addEventListener("click", (event) => {
+        if (!pingPicker.classList.contains("hidden")) {
+          pingPicker.classList.add("hidden");
+        } else {
+          pingPicker.classList.remove("hidden")
+          event.stopPropagation();
+        }
+      });
+    });
   },
 
   onPingSourceChanged() {

@@ -4,12 +4,15 @@
 
 from __future__ import absolute_import, print_function, unicode_literals
 
+import abc
+import errno
 import os
 import re
 import subprocess
 import which
 
 from distutils.version import LooseVersion
+
 
 def get_tool_path(tool):
     """Obtain the path of `tool`."""
@@ -33,7 +36,10 @@ def get_tool_path(tool):
                     '|mach bootstrap| to ensure your environment is up to '
                     'date.' % tool)
 
+
 class Repository(object):
+    __metaclass__ = abc.ABCMeta
+
     '''A class wrapping utility methods around version control repositories.'''
     def __init__(self, path, tool):
         self.path = os.path.abspath(path)
@@ -59,29 +65,43 @@ class Repository(object):
         self.version = LooseVersion(match.group(1))
         return self.version
 
+    @abc.abstractproperty
+    def name(self):
+        """Name of the tool."""
+
+    @abc.abstractmethod
+    def sparse_checkout_present(self):
+        """Whether the working directory is using a sparse checkout.
+
+        A sparse checkout is defined as a working directory that only
+        materializes a subset of files in a given revision.
+
+        Returns a bool.
+        """
+
+    @abc.abstractmethod
     def get_modified_files(self):
         '''Return a list of files that are modified in this repository's
         working copy.'''
-        raise NotImplementedError
 
+    @abc.abstractmethod
     def get_added_files(self):
         '''Return a list of files that are added in this repository's
         working copy.'''
-        raise NotImplementedError
 
+    @abc.abstractmethod
     def add_remove_files(self, path):
         '''Add and remove files under `path` in this repository's working copy.
         '''
-        raise NotImplementedError
 
+    @abc.abstractmethod
     def forget_add_remove_files(self, path):
         '''Undo the effects of a previous add_remove_files call for `path`.
         '''
-        raise NotImplementedError
 
+    @abc.abstractmethod
     def get_files_in_working_directory(self):
         """Obtain a list of managed files in the working directory."""
-        raise NotImplementedError
 
 
 class HgRepository(Repository):
@@ -89,6 +109,27 @@ class HgRepository(Repository):
     def __init__(self, path, hg='hg'):
         super(HgRepository, self).__init__(path, tool=hg)
         self._env[b'HGPLAIN'] = b'1'
+
+    @property
+    def name(self):
+        return 'hg'
+
+    def sparse_checkout_present(self):
+        # We assume a sparse checkout is enabled if the .hg/sparse file
+        # has data. Strictly speaking, we should look for a requirement in
+        # .hg/requires. But since the requirement is still experimental
+        # as of Mercurial 4.3, it's probably more trouble than its worth
+        # to verify it.
+        sparse = os.path.join(self.path, '.hg', 'sparse')
+
+        try:
+            st = os.stat(sparse)
+            return st.st_size > 0
+        except OSError as e:
+            if e.errno != errno.ENOENT:
+                raise
+
+            return False
 
     def get_modified_files(self):
         # Use --no-status to print just the filename.
@@ -118,6 +159,14 @@ class GitRepository(Repository):
     def __init__(self, path, git='git'):
         super(GitRepository, self).__init__(path, tool=git)
 
+    @property
+    def name(self):
+        return 'git'
+
+    def sparse_checkout_present(self):
+        # Not yet implemented.
+        return False
+
     def get_modified_files(self):
         return self._run('diff', '--diff-filter=M', '--name-only').splitlines()
 
@@ -138,14 +187,14 @@ class InvalidRepoPath(Exception):
     """Represents a failure to find a VCS repo at a specified path."""
 
 
-def get_repository_object(path):
+def get_repository_object(path, hg='hg', git='git'):
     '''Get a repository object for the repository at `path`.
     If `path` is not a known VCS repository, raise an exception.
     '''
     if os.path.isdir(os.path.join(path, '.hg')):
-        return HgRepository(path)
+        return HgRepository(path, hg=hg)
     elif os.path.exists(os.path.join(path, '.git')):
-        return GitRepository(path)
+        return GitRepository(path, git=git)
     else:
         raise InvalidRepoPath('Unknown VCS, or not a source checkout: %s' %
                               path)

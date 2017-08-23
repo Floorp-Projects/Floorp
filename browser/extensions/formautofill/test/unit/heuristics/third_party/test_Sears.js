@@ -53,11 +53,12 @@ runHeuristicsTest([
       [],
       [], // search
       [ // credit card
-//      {"section": "", "addressType": "", "contactType": "", "fieldName": "cc-number"},
+        {"section": "", "addressType": "", "contactType": "", "fieldName": "cc-number"},
+        // FIXME: bug 1392958 - Cardholder name field should be detected as cc-name
 //      {"section": "", "addressType": "", "contactType": "", "fieldName": "cc-name"},
 //      {"section": "", "addressType": "", "contactType": "", "fieldName": "cc-csc"},
-//      {"section": "", "addressType": "", "contactType": "", "fieldName": "cc-exp-month"},
-//      {"section": "", "addressType": "", "contactType": "", "fieldName": "cc-exp-year"},
+        {"section": "", "addressType": "", "contactType": "", "fieldName": "cc-exp-month"},
+        {"section": "", "addressType": "", "contactType": "", "fieldName": "cc-exp-year"},
       ],
       [ // Another billing address
         {"section": "", "addressType": "", "contactType": "", "fieldName": "given-name"},
@@ -73,7 +74,17 @@ runHeuristicsTest([
       [ // check out
         {"section": "", "addressType": "", "contactType": "", "fieldName": "given-name"},
         {"section": "", "addressType": "", "contactType": "", "fieldName": "family-name"},
-        {"section": "", "addressType": "", "contactType": "", "fieldName": "address-level1"}, // TODO: Wrong. This is for Driver's license.
+
+        // FIXME: bug 1392950 - the bank routing number should not be detected
+        // as cc-number.
+        {"section": "", "addressType": "", "contactType": "", "fieldName": "cc-number"},
+
+        // FIXME: bug 1392934 - this should be detected as address-level1 since
+        // it's for Driver's license or state identification.
+        {"section": "", "addressType": "", "contactType": "", "fieldName": "address-level1"},
+
+        // FIXME: bug 1392947 - this is for birthday actually.
+        {"section": "", "addressType": "", "contactType": "", "fieldName": "cc-exp-year"},
 //      {"section": "", "addressType": "", "contactType": "", "fieldName": "bday-month"},
 //      {"section": "", "addressType": "", "contactType": "", "fieldName": "bday-day"},
 //      {"section": "", "addressType": "", "contactType": "", "fieldName": "bday-year"},

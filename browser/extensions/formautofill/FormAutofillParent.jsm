@@ -42,6 +42,8 @@ XPCOMUtils.defineLazyModuleGetter(this, "FormAutofillPreferences",
                                   "resource://formautofill/FormAutofillPreferences.jsm");
 XPCOMUtils.defineLazyModuleGetter(this, "FormAutofillDoorhanger",
                                   "resource://formautofill/FormAutofillDoorhanger.jsm");
+XPCOMUtils.defineLazyModuleGetter(this, "MasterPassword",
+                                  "resource://formautofill/MasterPassword.jsm");
 XPCOMUtils.defineLazyModuleGetter(this, "RecentWindow",
                                   "resource:///modules/RecentWindow.jsm");
 
@@ -251,14 +253,40 @@ FormAutofillParent.prototype = {
    * @param  {nsIFrameMessageManager} target
    *         Content's message manager.
    */
-  _getRecords({collectionName, searchString, info}, target) {
-    let records;
+  async _getRecords({collectionName, searchString, info}, target) {
     let collection = this.profileStorage[collectionName];
-
     if (!collection) {
-      records = [];
-    } else if (info && info.fieldName) {
-      records = collection.getByFilter({searchString, info});
+      target.sendAsyncMessage("FormAutofill:Records", []);
+      return;
+    }
+
+    let records = [];
+    if (info && info.fieldName &&
+      !(MasterPassword.isEnabled && info.fieldName == "cc-number")) {
+      if (info.fieldName == "cc-number") {
+        for (let record of collection.getAll()) {
+          let number = await MasterPassword.decrypt(record["cc-number-encrypted"]);
+          if (number.startsWith(searchString)) {
+            records.push(record);
+          }
+        }
+      } else {
+        let lcSearchString = searchString.toLowerCase();
+        let result = collection.getAll().filter(record => {
+          // Return true if string is not provided and field exists.
+          // TODO: We'll need to check if the address is for billing or shipping.
+          //       (Bug 1358941)
+          let name = record[info.fieldName];
+
+          if (!searchString) {
+            return !!name;
+          }
+
+          return name && name.toLowerCase().startsWith(lcSearchString);
+        });
+
+        records = result;
+      }
     } else {
       records = collection.getAll();
     }
