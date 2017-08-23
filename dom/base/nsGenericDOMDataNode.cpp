@@ -135,9 +135,9 @@ NS_INTERFACE_MAP_BEGIN(nsGenericDOMDataNode)
   NS_INTERFACE_MAP_ENTRY_AMBIGUOUS(nsISupports, nsIContent)
 NS_INTERFACE_MAP_END
 
-NS_IMPL_CYCLE_COLLECTING_ADDREF(nsGenericDOMDataNode)
-NS_IMPL_CYCLE_COLLECTING_RELEASE_WITH_LAST_RELEASE(nsGenericDOMDataNode,
-                                                   nsNodeUtils::LastRelease(this))
+NS_IMPL_MAIN_THREAD_ONLY_CYCLE_COLLECTING_ADDREF(nsGenericDOMDataNode)
+NS_IMPL_MAIN_THREAD_ONLY_CYCLE_COLLECTING_RELEASE_WITH_LAST_RELEASE(nsGenericDOMDataNode,
+                                                                    nsNodeUtils::LastRelease(this))
 
 
 void

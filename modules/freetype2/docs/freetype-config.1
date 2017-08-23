@@ -1,4 +1,4 @@
-.TH FREETYPE-CONFIG 1 "December 2016" "FreeType 2.7.1"
+.TH FREETYPE-CONFIG 1 "May 2017" "FreeType 2.8"
 .
 .
 .SH NAME
@@ -21,6 +21,14 @@ FreeType library, such as linker flags and compilation parameters.
 Alternatively, it can be used to query information about the
 FreeType library version installed on the system, such as the
 installation (directory path) prefix or the FreeType version number.
+.
+.PP
+If
+.BR pkg-config (1)
+is found in the path,
+.B freetype-config
+acts as a wrapper for
+.BR pkg-config .
 .
 .PP
 This program is part of the FreeType package.
@@ -50,7 +58,8 @@ Return the executable prefix value of the installed FreeType library
 .
 .TP
 .B \-\-ftversion
-Return the FreeType version number.
+Return the FreeType version number, directly derived from file
+`freetype.h'.
 .
 .TP
 .B \-\-version
@@ -72,31 +81,60 @@ Return compiler flags for compiling against the installed FreeType library.
 .B \-\-static
 Make command line options display flags for static linking.
 .
+.TP
+.B \-\-help
+Show help and exit.
+.
 .
 .SS Path override options
 .
 These affect any selected output option, except the libtool version
-returned by `--version'.
+returned by
+.BR \-\-version .
 .
 .TP
 .BI \-\-prefix= PREFIX
-Override `--prefix' value with
+Override
+.B \-\-prefix
+value with
 .IR PREFIX .
+.
+This also sets
+.BI \-\-exec-prefix= PREFIX
+if option
+.B \-\-exec-prefix
+is not explicitly given.
 .
 .TP
 .BI \-\-exec-prefix= EPREFIX
-Override `--exec-prefix' value with
+Override
+.B \-\-exec-prefix
+value with
 .IR EPREFIX .
 .
 .
 .SH BUGS
 In case the libraries FreeType links to are located in non-standard
-directories, the output from option
+directories, and
+.BR pkg-config (1)
+is not available, the output from option
 .B \-\-libs
 might be incomplete.
+.
 It is thus recommended to use the
 .BR pkg-config (1)
 interface instead, which is able to correctly resolve all dependencies.
+.
+.PP
+Setting
+.B \-\-exec-prefix
+(either explicitly or implicitly) might return incorrect results if
+combined with option
+.BR \-\-static .
+.
+The same problem can occur if you set the
+.B SYSROOT
+environment variable.
 .
 .
 .SH AUTHOR

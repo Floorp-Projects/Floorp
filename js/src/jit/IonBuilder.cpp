@@ -2797,9 +2797,9 @@ IonBuilder::improveTypesAtTest(MDefinition* ins, bool trueBranch, MTest* test)
     // tests means it's one of null, undefined, false, 0, "", and objects
     // emulating undefined
     switch (ins->op()) {
-      case MDefinition::Op_Not:
+      case MDefinition::Opcode::Not:
         return improveTypesAtTest(ins->toNot()->getOperand(0), !trueBranch, test);
-      case MDefinition::Op_IsObject: {
+      case MDefinition::Opcode::IsObject: {
         MDefinition* subject = ins->getOperand(0);
         TemporaryTypeSet* oldType = subject->resultTypeSet();
 
@@ -2826,7 +2826,7 @@ IonBuilder::improveTypesAtTest(MDefinition* ins, bool trueBranch, MTest* test)
 
         return replaceTypeSet(subject, type, test);
       }
-      case MDefinition::Op_Phi: {
+      case MDefinition::Opcode::Phi: {
         bool branchIsAnd = true;
         if (!detectAndOrStructure(ins->toPhi(), &branchIsAnd)) {
             // Just fall through to the default behavior.
@@ -2864,7 +2864,7 @@ IonBuilder::improveTypesAtTest(MDefinition* ins, bool trueBranch, MTest* test)
         return Ok();
       }
 
-      case MDefinition::Op_Compare:
+      case MDefinition::Opcode::Compare:
         return improveTypesAtCompare(ins->toCompare(), trueBranch, test);
 
       default:
@@ -3312,15 +3312,15 @@ JSOpToMDefinition(JSOp op)
 {
     switch (op) {
       case JSOP_ADD:
-        return MDefinition::Op_Add;
+        return MDefinition::Opcode::Add;
       case JSOP_SUB:
-        return MDefinition::Op_Sub;
+        return MDefinition::Opcode::Sub;
       case JSOP_MUL:
-        return MDefinition::Op_Mul;
+        return MDefinition::Opcode::Mul;
       case JSOP_DIV:
-        return MDefinition::Op_Div;
+        return MDefinition::Opcode::Div;
       case JSOP_MOD:
-        return MDefinition::Op_Mod;
+        return MDefinition::Opcode::Mod;
       default:
         MOZ_CRASH("unexpected binary opcode");
     }

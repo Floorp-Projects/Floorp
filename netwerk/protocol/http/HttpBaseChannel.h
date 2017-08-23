@@ -364,10 +364,7 @@ public: /* Necko internal use only... */
     // |EnsureUploadStreamIsCloneableComplete| to main thread.
     virtual void OnCopyComplete(nsresult aStatus);
 
-    void SetIsTrackingResource()
-    {
-      mIsTrackingResource = true;
-    }
+    void SetIsTrackingResource();
 
     const uint64_t& ChannelId() const
     {

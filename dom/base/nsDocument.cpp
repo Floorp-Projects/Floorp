@@ -4044,6 +4044,9 @@ nsDocument::CreateShell(nsPresContext* aContext, nsViewManager* aViewManager,
   if (docShell && docShell->IsInvisible())
     shell->SetNeverPainting(true);
 
+  MOZ_LOG(gDocumentLeakPRLog, LogLevel::Debug, ("DOCUMENT %p with PressShell %p and DocShell %p",
+                                                this, shell.get(), docShell.get()));
+
   mExternalResourceMap.ShowViewers();
 
   UpdateFrameRequestCallbackSchedulingState();
@@ -5580,6 +5583,9 @@ nsDocument::UnblockDOMContentLoaded()
   if (--mBlockDOMContentLoaded != 0 || mDidFireDOMContentLoaded) {
     return;
   }
+
+  MOZ_LOG(gDocumentLeakPRLog, LogLevel::Debug, ("DOCUMENT %p UnblockDOMContentLoaded", this));
+
   mDidFireDOMContentLoaded = true;
 
   MOZ_ASSERT(mReadyState == READYSTATE_INTERACTIVE);
@@ -8935,6 +8941,7 @@ nsDocument::Destroy()
 
   mIsGoingAway = true;
 
+  ScriptLoader()->Destroy();
   SetScriptGlobalObject(nullptr);
   RemovedFromDocShell();
 

@@ -1,0 +1,28 @@
+From: Jonathan Kew <jkew@mozilla.com>
+
+Bug 1364714 - Patch pdfium for compatibility with freetype 2.8, where the ft_get_adobe_glyph_index function is guarded by DEFINE_PS_TABLES.
+
+diff --git a/modules/pdfium/pdfium/core/fxge/freetype/fx_freetype.cpp b/modules/pdfium/pdfium/core/fxge/freetype/fx_freetype.cpp
+--- a/modules/pdfium/pdfium/core/fxge/freetype/fx_freetype.cpp
++++ b/modules/pdfium/pdfium/core/fxge/freetype/fx_freetype.cpp
+@@ -1,16 +1,20 @@
+ // Copyright 2014 PDFium Authors. All rights reserved.
+ // Use of this source code is governed by a BSD-style license that can be
+ // found in the LICENSE file.
+ 
+ // Original code copyright 2014 Foxit Software Inc. http://www.foxitsoftware.com
+ 
+ #include "core/fxge/fx_freetype.h"
+ 
++/* In Freetype 2.8, the function ft_get_adobe_glyph_index (used below) will
++   not be defined by pstables.h unless this #define is set. */
++#define DEFINE_PS_TABLES
++
+ #include "psnames/pstables.h"
+ 
+ static int xyq_search_node(char* glyph_name,
+                            int name_offset,
+                            int table_offset,
+                            wchar_t unicode) {
+   int i, count;
+ 
