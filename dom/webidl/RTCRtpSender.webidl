@@ -69,11 +69,20 @@ dictionary RTCRtpParameters {
 [Pref="media.peerconnection.enabled",
  JSImplementation="@mozilla.org/dom/rtpsender;1"]
 interface RTCRtpSender {
-  readonly attribute MediaStreamTrack track;
+  readonly attribute MediaStreamTrack? track;
   Promise<void> setParameters (optional RTCRtpParameters parameters);
   RTCRtpParameters getParameters();
-  Promise<void> replaceTrack(MediaStreamTrack track);
+  Promise<void> replaceTrack(MediaStreamTrack? withTrack);
   Promise<RTCStatsReport> getStats();
   [Pref="media.peerconnection.dtmf.enabled"]
   readonly attribute RTCDTMFSender? dtmf;
+  // Ugh, can't use a ChromeOnly attibute sequence<MediaStream>...
+  [ChromeOnly]
+  sequence<MediaStream> getStreams();
+  [ChromeOnly]
+  void setStreams(sequence<MediaStream> streams);
+  [ChromeOnly]
+  void setTrack(MediaStreamTrack? track);
+  [ChromeOnly]
+  void checkWasCreatedByPc(RTCPeerConnection pc);
 };
