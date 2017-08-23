@@ -5,52 +5,160 @@
 from __future__ import absolute_import, print_function, unicode_literals
 
 import ConfigParser
-import argparse
 import os
 import re
 import sys
 from collections import defaultdict
 
 import mozpack.path as mozpath
+from ..cli import BaseTryParser
 from ..vcs import VCSHelper
 
 
-def arg_parser():
-    parser = argparse.ArgumentParser()
-    parser.add_argument('paths', nargs='*', help='Paths to search for tests to run on try.')
-    parser.add_argument('-b', '--build', dest='builds', default='do',
-                        help='Build types to run (d for debug, o for optimized).')
-    parser.add_argument('-p', '--platform', dest='platforms', action='append',
-                        help='Platforms to run (required if not found in the environment as '
-                             'AUTOTRY_PLATFORM_HINT).')
-    parser.add_argument('-u', '--unittests', dest='tests', action='append',
-                        help='Test suites to run in their entirety.')
-    parser.add_argument('-t', '--talos', dest='talos', action='append',
-                        help='Talos suites to run.')
-    parser.add_argument('-j', '--jobs', dest='jobs', action='append',
-                        help='Job tasks to run.')
-    parser.add_argument('--tag', dest='tags', action='append',
-                        help='Restrict tests to the given tag (may be specified multiple times).')
-    parser.add_argument('--and', action='store_true', dest='intersection',
-                        help='When -u and paths are supplied run only the intersection of the '
-                             'tests specified by the two arguments.')
-    parser.add_argument('--no-push', dest='push', action='store_false',
-                        help='Do not push to try as a result of running this command (if '
-                        'specified this command will only print calculated try '
-                        'syntax and selection info).')
-    parser.add_argument('--save', dest='save', action='store',
-                        help='Save the command line arguments for future use with --preset.')
-    parser.add_argument('--preset', dest='load', action='store',
-                        help='Load a saved set of arguments. Additional arguments will override '
-                             'saved ones.')
-    parser.add_argument('--list', action='store_true',
-                        help='List all saved try strings')
-    parser.add_argument('-v', '--verbose', dest='verbose', action='store_true', default=False,
-                        help='Print detailed information about the resulting test selection '
-                        'and commands performed.')
-    for arg, opts in AutoTry.pass_through_arguments.items():
-        parser.add_argument(arg, **opts)
-    return parser
+class SyntaxParser(BaseTryParser):
+    name = 'syntax'
+    arguments = [
+        [['paths'],
+         {'nargs': '*',
+          'help': 'Paths to search for tests to run on try.',
+          }],
+        [['-b', '--build'],
+         {'dest': 'builds',
+          'default': 'do',
+          'help': 'Build types to run (d for debug, o for optimized).',
+          }],
+        [['-p', '--platform'],
+         {'dest': 'platforms',
+          'action': 'append',
+          'help': 'Platforms to run (required if not found in the environment as '
+                  'AUTOTRY_PLATFORM_HINT).',
+          }],
+        [['-u', '--unittests'],
+         {'dest': 'tests',
+          'action': 'append',
+          'help': 'Test suites to run in their entirety.',
+          }],
+        [['-t', '--talos'],
+         {'action': 'append',
+          'help': 'Talos suites to run.',
+          }],
+        [['-j', '--jobs'],
+         {'action': 'append',
+          'help': 'Job tasks to run.',
+          }],
+        [['--tag'],
+         {'dest': 'tags',
+          'action': 'append',
+          'help': 'Restrict tests to the given tag (may be specified multiple times).',
+          }],
+        [['--and'],
+         {'action': 'store_true',
+          'dest': 'intersection',
+          'help': 'When -u and paths are supplied run only the intersection of the '
+                  'tests specified by the two arguments.',
+          }],
+        [['--save'],
+         {'dest': 'save',
+          'action': 'store',
+          'help': 'Save the command line arguments for future use with --preset.',
+          }],
+        [['--preset'],
+         {'dest': 'load',
+          'action': 'store',
+          'help': 'Load a saved set of arguments. Additional arguments will override '
+                  'saved ones.',
+          }],
+        [['--list'],
+         {'action': 'store_true',
+          'help': 'List all saved try strings',
+          }],
+        [['--no-artifact'],
+         {'action': 'store_true',
+          'help': 'Disable artifact builds even if --enable-artifact-builds is set '
+                  'in the mozconfig.',
+          }],
+        [['-v', '--verbose'],
+         {'dest': 'verbose',
+          'action': 'store_true',
+          'default': False,
+          'help': 'Print detailed information about the resulting test selection '
+                  'and commands performed.',
+          }],
+    ]
+
+    # Arguments we will accept on the command line and pass through to try
+    # syntax with no further intervention. The set is taken from
+    # http://trychooser.pub.build.mozilla.org with a few additions.
+    #
+    # Note that the meaning of store_false and store_true arguments is
+    # not preserved here, as we're only using these to echo the literal
+    # arguments to another consumer. Specifying either store_false or
+    # store_true here will have an equivalent effect.
+    pass_through_arguments = {
+        '--rebuild': {
+            'action': 'store',
+            'dest': 'rebuild',
+            'help': 'Re-trigger all test jobs (up to 20 times)',
+        },
+        '--rebuild-talos': {
+            'action': 'store',
+            'dest': 'rebuild_talos',
+            'help': 'Re-trigger all talos jobs',
+        },
+        '--interactive': {
+            'action': 'store_true',
+            'dest': 'interactive',
+            'help': 'Allow ssh-like access to running test containers',
+        },
+        '--no-retry': {
+            'action': 'store_true',
+            'dest': 'no_retry',
+            'help': 'Do not retrigger failed tests',
+        },
+        '--setenv': {
+            'action': 'append',
+            'dest': 'setenv',
+            'help': 'Set the corresponding variable in the test environment for'
+                    'applicable harnesses.',
+        },
+        '-f': {
+            'action': 'store_true',
+            'dest': 'failure_emails',
+            'help': 'Request failure emails only',
+        },
+        '--failure-emails': {
+            'action': 'store_true',
+            'dest': 'failure_emails',
+            'help': 'Request failure emails only',
+        },
+        '-e': {
+            'action': 'store_true',
+            'dest': 'all_emails',
+            'help': 'Request all emails',
+        },
+        '--all-emails': {
+            'action': 'store_true',
+            'dest': 'all_emails',
+            'help': 'Request all emails',
+        },
+        '--artifact': {
+            'action': 'store_true',
+            'dest': 'artifact',
+            'help': 'Force artifact builds where possible.',
+        },
+        '--upload-xdbs': {
+            'action': 'store_true',
+            'dest': 'upload_xdbs',
+            'help': 'Upload XDB compilation db files generated by hazard build',
+        },
+    }
+
+    def __init__(self, *args, **kwargs):
+        BaseTryParser.__init__(self, *args, **kwargs)
+
+        group = self.add_argument_group("pass-through arguments")
+        for arg, opts in self.pass_through_arguments.items():
+            group.add_argument(arg, **opts)
 
 
 class TryArgumentTokenizer(object):
@@ -203,73 +311,6 @@ class AutoTry(object):
         "xpcshell",
     ]
 
-    # Arguments we will accept on the command line and pass through to try
-    # syntax with no further intervention. The set is taken from
-    # http://trychooser.pub.build.mozilla.org with a few additions.
-    #
-    # Note that the meaning of store_false and store_true arguments is
-    # not preserved here, as we're only using these to echo the literal
-    # arguments to another consumer. Specifying either store_false or
-    # store_true here will have an equivalent effect.
-    pass_through_arguments = {
-        '--rebuild': {
-            'action': 'store',
-            'dest': 'rebuild',
-            'help': 'Re-trigger all test jobs (up to 20 times)',
-        },
-        '--rebuild-talos': {
-            'action': 'store',
-            'dest': 'rebuild_talos',
-            'help': 'Re-trigger all talos jobs',
-        },
-        '--interactive': {
-            'action': 'store_true',
-            'dest': 'interactive',
-            'help': 'Allow ssh-like access to running test containers',
-        },
-        '--no-retry': {
-            'action': 'store_true',
-            'dest': 'no_retry',
-            'help': 'Do not retrigger failed tests',
-        },
-        '--setenv': {
-            'action': 'append',
-            'dest': 'setenv',
-            'help': 'Set the corresponding variable in the test environment for'
-                    'applicable harnesses.',
-        },
-        '-f': {
-            'action': 'store_true',
-            'dest': 'failure_emails',
-            'help': 'Request failure emails only',
-        },
-        '--failure-emails': {
-            'action': 'store_true',
-            'dest': 'failure_emails',
-            'help': 'Request failure emails only',
-        },
-        '-e': {
-            'action': 'store_true',
-            'dest': 'all_emails',
-            'help': 'Request all emails',
-        },
-        '--all-emails': {
-            'action': 'store_true',
-            'dest': 'all_emails',
-            'help': 'Request all emails',
-        },
-        '--artifact': {
-            'action': 'store_true',
-            'dest': 'artifact',
-            'help': 'Force artifact builds where possible.',
-        },
-        '--upload-xdbs': {
-            'action': 'store_true',
-            'dest': 'upload_xdbs',
-            'help': 'Upload XDB compilation db files generated by hazard build',
-        },
-    }
-
     def __init__(self, topsrcdir, resolver_func, mach_context):
         self.topsrcdir = topsrcdir
         self._resolver_func = resolver_func
@@ -298,7 +339,7 @@ class AutoTry(object):
         except (ConfigParser.NoSectionError, ConfigParser.NoOptionError):
             return None
 
-        kwargs = vars(arg_parser().parse_args(self.split_try_string(data)))
+        kwargs = vars(SyntaxParser().parse_args(self.split_try_string(data)))
 
         return kwargs
 
@@ -461,11 +502,11 @@ class AutoTry(object):
         if paths:
             parts.append("--try-test-paths %s" % " ".join(sorted(paths)))
 
-        args_by_dest = {v['dest']: k for k, v in AutoTry.pass_through_arguments.items()}
+        args_by_dest = {v['dest']: k for k, v in SyntaxParser.pass_through_arguments.items()}
         for dest, value in extras.iteritems():
             assert dest in args_by_dest
             arg = args_by_dest[dest]
-            action = AutoTry.pass_through_arguments[arg]['action']
+            action = SyntaxParser.pass_through_arguments[arg]['action']
             if action == 'store':
                 parts.append(arg)
                 parts.append(value)
@@ -581,7 +622,7 @@ class AutoTry(object):
             print("Error parsing --tags argument:\n%s" % e.message)
             sys.exit(1)
 
-        extra_values = {k['dest'] for k in AutoTry.pass_through_arguments.values()}
+        extra_values = {k['dest'] for k in SyntaxParser.pass_through_arguments.values()}
         extra_args = {k: v for k, v in kwargs.items()
                       if k in extra_values and v}
 
@@ -658,11 +699,10 @@ class AutoTry(object):
             for flavor, paths in paths_by_flavor.iteritems():
                 print("%s: %s" % (flavor, ",".join(paths)))
 
-        if kwargs["verbose"] or not kwargs["push"]:
+        if kwargs["verbose"]:
             print('The following try syntax was calculated:\n%s' % msg)
 
-        if kwargs["push"]:
-            self.vcs.push_to_try(msg)
+        self.vcs.push_to_try(msg, push=kwargs['push'])
 
         if kwargs["save"] is not None:
             self.save_config(kwargs["save"], msg)

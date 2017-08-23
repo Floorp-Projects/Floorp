@@ -10,48 +10,11 @@ tasks. They live under taskcluster/taskgraph/templates.
 from __future__ import absolute_import, print_function, unicode_literals
 
 import os
-from abc import ABCMeta, abstractmethod, abstractproperty
-from argparse import ArgumentParser
+from abc import ABCMeta, abstractmethod
 
 from mozbuild.base import BuildEnvironmentNotFoundException, MozbuildObject
 
 here = os.path.abspath(os.path.dirname(__file__))
-
-
-class TemplateParser(ArgumentParser):
-    __metaclass__ = ABCMeta
-
-    @abstractproperty
-    def arguments(self):
-        pass
-
-    @abstractproperty
-    def templates(self):
-        pass
-
-    def __init__(self, *args, **kwargs):
-        ArgumentParser.__init__(self, *args, **kwargs)
-
-        for cli, kwargs in self.arguments:
-            self.add_argument(*cli, **kwargs)
-
-        self.templates = {t: all_templates[t]() for t in self.templates}
-
-        group = self.add_argument_group("template arguments")
-        for template in self.templates.values():
-            template.add_arguments(group)
-
-    def parse_known_args(self, *args, **kwargs):
-        args, remainder = ArgumentParser.parse_known_args(self, *args, **kwargs)
-
-        if self.templates:
-            args.templates = {}
-            for name, cls in self.templates.iteritems():
-                context = cls.context(**vars(args))
-                if context is not None:
-                    args.templates[name] = context
-
-        return args, remainder
 
 
 class Template(object):

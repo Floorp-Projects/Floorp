@@ -427,8 +427,8 @@
 
 .autocomplete-richlistitem:hover,
 treechildren.searchbar-treebody::-moz-tree-row(hover) {
-  background-color: hsla(0, 0%, 0%, 0.06);
-  border-color: hsla(0, 0%, 0%, 0.1);
+  background-color: var(--arrowpanel-dimmed);
+  border-color: var(--panel-separator-color);
 }
 
 .autocomplete-richlistitem[selected],

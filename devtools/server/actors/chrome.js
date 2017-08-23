@@ -104,8 +104,10 @@ ChromeActor.prototype.observe = function (subject, topic, data) {
   if (!this.attached) {
     return;
   }
+
+  subject.QueryInterface(Ci.nsIDocShell);
+
   if (topic == "chrome-webnavigation-create") {
-    subject.QueryInterface(Ci.nsIDocShell);
     this._onDocShellCreated(subject);
   } else if (topic == "chrome-webnavigation-destroy") {
     this._onDocShellDestroy(subject);

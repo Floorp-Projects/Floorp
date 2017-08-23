@@ -466,6 +466,24 @@ def exposed_vcs_checkout_type(vcs_checkout_type, hg, git, automation):
 
 set_config('VCS_CHECKOUT_TYPE', exposed_vcs_checkout_type)
 
+# Obtain a Repository interface for the current VCS repository.
+@depends(check_build_environment, exposed_vcs_checkout_type, hg, git)
+@imports(_from='mozversioncontrol', _import='get_repository_object')
+def vcs_repository(build_env, vcs_checkout_type, hg, git):
+    if vcs_checkout_type == 'hg':
+        return get_repository_object(build_env.topsrcdir, hg=hg)
+    elif vcs_checkout_type == 'git':
+        return get_repository_object(build_env.topsrcdir, git=git)
+    elif vcs_checkout_type:
+        raise FatalCheckError('unhandled VCS type: %s' % vcs_checkout_type)
+
+@depends_if(vcs_repository)
+@checking('for sparse checkout')
+def vcs_sparse_checkout(repo):
+    return repo.sparse_checkout_present()
+
+set_config('VCS_SPARSE_CHECKOUT', vcs_sparse_checkout)
+
 # Host and target systems
 # ==============================================================
 option('--host', nargs=1, help='Define the system type performing the build')

@@ -1,4 +1,4 @@
-#!/usr/bin/env python
+#!/usr/bin/env python2.7
 
 # tooltool is a lookaside cache implemented in Python
 # Copyright (C) 2011 John H. Ford <john@johnford.info>
@@ -999,7 +999,7 @@ def main(argv, _skip_logging=False):
 
     # default the options list if not provided
     if not options_obj.base_url:
-        options_obj.base_url = ['https://api.pub.build.mozilla.org/tooltool/']
+        options_obj.base_url = ['https://tooltool.mozilla-releng.net/']
 
     # ensure all URLs have a trailing slash
     def add_slash(url):

@@ -32,7 +32,7 @@ config = {
         'LC_ALL': 'C',
         'XPCOM_DEBUG_BREAK': 'stack-and-abort',
         ## 64 bit specific
-        'PATH': '/tools/python/bin:/tools/buildbot/bin:/opt/local/bin:/usr/bin:'
+        'PATH': '/tools/python/bin:/opt/local/bin:/usr/bin:'
                 '/bin:/usr/sbin:/sbin:/usr/local/bin:/usr/X11/bin',
         ##
     },

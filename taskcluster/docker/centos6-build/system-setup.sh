@@ -284,7 +284,7 @@ curl https://raw.githubusercontent.com/mozilla/build-tooltool/master/tooltool.py
 
 tooltool_fetch() {
     cat >manifest.tt
-    python $BUILD/tooltool.py fetch
+    python2.7 $BUILD/tooltool.py fetch
     rm manifest.tt
 }
 

@@ -71,9 +71,22 @@ def _read_certificate(certificate_path):
     return ''.join(contents.splitlines()[1:-1])
 
 
-def is_mitmproxy_cert_installed():
+def is_mitmproxy_cert_installed(browser_install):
     """Verify mitmxproy CA cert was added to Firefox"""
-    # TODO: Bug 1366071
+    from mozharness.mozilla.firefox.autoconfig import read_autoconfig_file
+    try:
+        # read autoconfig file, confirm mitmproxy cert is in there
+        certificate = _read_certificate(DEFAULT_CERT_PATH)
+        contents = read_autoconfig_file(browser_install)
+        if (MITMPROXY_SETTINGS % {'cert': certificate}) in contents:
+            LOG.info("Verified mitmproxy CA certificate is installed in Firefox")
+        else:
+            LOG.info("Firefox autoconfig file contents:")
+            LOG.info(contents)
+            return False
+    except:
+        LOG.info("Failed to read Firefox autoconfig file, when verifying CA certificate install")
+        return False
     return True
 
 
@@ -89,7 +102,7 @@ def install_mitmproxy_cert(mitmproxy_proc, browser_path, scripts_path):
     LOG.info('Calling configure_mitmproxy with browser folder: %s' % browser_install)
     configure_mitmproxy(browser_install, scripts_path)
     # cannot continue if failed to add CA cert to Firefox, need to check
-    if not is_mitmproxy_cert_installed():
+    if not is_mitmproxy_cert_installed(browser_install):
         LOG.error('Aborting: failed to install mitmproxy CA cert into Firefox')
         stop_mitmproxy_playback(mitmproxy_proc)
         sys.exit()
