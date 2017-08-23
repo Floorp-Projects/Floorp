@@ -1602,10 +1602,27 @@ var PlacesControllerDragHelper = {
         // Adjust insertion index to prevent reversal of dragged items. When you
         // drag multiple elts upward: need to increment index or each successive
         // elt will be inserted at the same index, each above the previous.
-        let dragginUp = insertionPoint.itemId == unwrapped.parent &&
-                        index < (await PlacesUtils.bookmarks.fetch(unwrapped.itemGuid)).index;
-        if (index != -1 && dragginUp)
-          index += movedCount++;
+        if (index != -1 && unwrapped.itemGuid) {
+          // Note: we use the parent from the existing bookmark as the sidebar
+          // gives us an unwrapped.parent that is actually a query and not the real
+          // parent.
+          let existingBookmark = await PlacesUtils.bookmarks.fetch(unwrapped.itemGuid);
+          let dragginUp = parentGuid == existingBookmark.parentGuid &&
+                          index < existingBookmark.index;
+
+          if (dragginUp) {
+            index += movedCount++;
+          } else if (PlacesUIUtils.useAsyncTransactions) {
+            if (index == existingBookmark.index) {
+              // We're moving to the same index, so there's nothing for us to do.
+              continue;
+            }
+            // If we're dragging down, we need to go one lower to insert at
+            // the real point as moving the element changes the index of
+            // everything below by 1.
+            index--;
+          }
+        }
 
         // If dragging over a tag container we should tag the item.
         if (insertionPoint.isTag) {
@@ -1638,7 +1655,11 @@ var PlacesControllerDragHelper = {
         }
       }
     }
-
+    // Check if we actually have something to add, if we don't it probably wasn't
+    // valid, or it was moving to the same location, so just ignore it.
+    if (!transactions.length) {
+      return;
+    }
     if (PlacesUIUtils.useAsyncTransactions) {
       await PlacesTransactions.batch(transactions);
     } else {
