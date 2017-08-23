@@ -18,6 +18,7 @@ import time
 from copy import deepcopy
 
 from mozbuild.util import memoize
+from mozbuild import schedules
 from taskgraph.util.attributes import TRUNK_PROJECTS
 from taskgraph.util.hash import hash_path
 from taskgraph.util.treeherder import split_symbol
@@ -179,6 +180,10 @@ task_description_schema = Schema({
         {'seta': None},
         # skip this task if none of the given file patterns match
         {'skip-unless-changed': [basestring]},
+        # skip this task if unless the change files' SCHEDULES contains any of these components
+        {'skip-unless-schedules': list(schedules.ALL_COMPONENTS)},
+        # skip if SETA or skip-unless-schedules says to
+        {'skip-unless-schedules-or-seta': list(schedules.ALL_COMPONENTS)},
     ),
 
     # the provisioner-id/worker-type for the task.  The following parameters will
