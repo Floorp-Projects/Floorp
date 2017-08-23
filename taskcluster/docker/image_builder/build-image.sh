@@ -26,7 +26,6 @@ CONTEXT_FILE=/home/worker/workspace/context.tar
 
 # Run ./mach taskcluster-build-image with --context-only to build context
 run-task \
-  --chown-recursive "/home/worker/workspace" \
   --vcs-checkout "/home/worker/checkouts/gecko" \
   -- \
   /home/worker/checkouts/gecko/mach taskcluster-build-image \
