@@ -625,7 +625,7 @@
   <string name="activity_stream_highlights">&activity_stream_highlights;</string>
   <string name="activity_stream_highlight_label_bookmarked">&activity_stream_highlight_label_bookmarked;</string>
   <string name="activity_stream_highlight_label_visited">&activity_stream_highlight_label_visited;</string>
-  <string name="activity_stream_dismiss">&activity_stream_dismiss;</string>
+  <string name="activity_stream_remove">&activity_stream_remove;</string>
   <string name="activity_stream_delete_history">&activity_stream_delete_history;</string>
 
   <string name="activity_stream_welcome_title">&activity_stream_welcome_title;</string>
