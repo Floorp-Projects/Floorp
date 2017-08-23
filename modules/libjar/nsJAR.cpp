@@ -380,10 +380,10 @@ nsJAR::GetSigningCert(const nsACString& aFilename, nsIX509Cert** aSigningCert)
     //-- Verify the item against the manifest
     if (!manItem->entryVerified)
     {
-      nsXPIDLCString entryData;
+      nsCString entryData;
       rv = LoadEntry(aFilename, entryData);
       if (NS_FAILED(rv)) return rv;
-      rv = VerifyEntry(manItem, entryData, entryData.Length());
+      rv = VerifyEntry(manItem, entryData.get(), entryData.Length());
       if (NS_FAILED(rv)) return rv;
     }
     requestedStatus = manItem->status;
@@ -552,12 +552,12 @@ nsJAR::ParseManifest()
     return NS_ERROR_FILE_CORRUPTED; // More than one MF file
   }
 
-  nsXPIDLCString manifestBuffer;
+  nsCString manifestBuffer;
   rv = LoadEntry(manifestFilename, manifestBuffer);
   if (NS_FAILED(rv)) return rv;
 
   //-- Parse it
-  rv = ParseOneFile(manifestBuffer, JAR_MF);
+  rv = ParseOneFile(manifestBuffer.get(), JAR_MF);
   if (NS_FAILED(rv)) return rv;
 
   //-- (2)Signature (SF) file
@@ -585,7 +585,7 @@ nsJAR::ParseManifest()
   int32_t extension = sigFilename.RFindChar('.') + 1;
   NS_ASSERTION(extension != 0, "Manifest Parser: Missing file extension.");
   (void)sigFilename.Cut(extension, 2);
-  nsXPIDLCString sigBuffer;
+  nsCString sigBuffer;
   {
     nsAutoCString tempFilename(sigFilename); tempFilename.Append("rsa", 3);
     rv = LoadEntry(tempFilename, sigBuffer);
@@ -629,7 +629,7 @@ nsJAR::ParseManifest()
   // is null, and ParseOneFile will mark the relevant entries as invalid.
   // if ParseOneFile fails, then it has no effect, and we can safely
   // continue to the next SF file, or return.
-  ParseOneFile(manifestBuffer, JAR_SF);
+  ParseOneFile(manifestBuffer.get(), JAR_SF);
   mParsedManifest = true;
 
   return NS_OK;

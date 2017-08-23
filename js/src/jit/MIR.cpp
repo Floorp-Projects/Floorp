@@ -224,12 +224,6 @@ MDefinition::printName(GenericPrinter& out) const
 }
 
 HashNumber
-MDefinition::addU32ToHash(HashNumber hash, uint32_t data)
-{
-    return data + (hash << 6) + (hash << 16) - hash;
-}
-
-HashNumber
 MDefinition::valueHash() const
 {
     HashNumber out = HashNumber(op());
@@ -238,6 +232,66 @@ MDefinition::valueHash() const
     if (MDefinition* dep = dependency())
         out = addU32ToHash(out, dep->id());
     return out;
+}
+
+HashNumber
+MNullaryInstruction::valueHash() const
+{
+    HashNumber hash = HashNumber(op());
+    if (MDefinition* dep = dependency())
+        hash = addU32ToHash(hash, dep->id());
+    MOZ_ASSERT(hash == MDefinition::valueHash());
+    return hash;
+}
+
+HashNumber
+MUnaryInstruction::valueHash() const
+{
+    HashNumber hash = HashNumber(op());
+    hash = addU32ToHash(hash, getOperand(0)->id());
+    if (MDefinition* dep = dependency())
+        hash = addU32ToHash(hash, dep->id());
+    MOZ_ASSERT(hash == MDefinition::valueHash());
+    return hash;
+}
+
+HashNumber
+MBinaryInstruction::valueHash() const
+{
+    HashNumber hash = HashNumber(op());
+    hash = addU32ToHash(hash, getOperand(0)->id());
+    hash = addU32ToHash(hash, getOperand(1)->id());
+    if (MDefinition* dep = dependency())
+        hash = addU32ToHash(hash, dep->id());
+    MOZ_ASSERT(hash == MDefinition::valueHash());
+    return hash;
+}
+
+HashNumber
+MTernaryInstruction::valueHash() const
+{
+    HashNumber hash = HashNumber(op());
+    hash = addU32ToHash(hash, getOperand(0)->id());
+    hash = addU32ToHash(hash, getOperand(1)->id());
+    hash = addU32ToHash(hash, getOperand(2)->id());
+    if (MDefinition* dep = dependency())
+        hash = addU32ToHash(hash, dep->id());
+    MOZ_ASSERT(hash == MDefinition::valueHash());
+    return hash;
+}
+
+HashNumber
+MQuaternaryInstruction::valueHash() const
+{
+    HashNumber hash = HashNumber(op());
+    hash = addU32ToHash(hash, getOperand(0)->id());
+    hash = addU32ToHash(hash, getOperand(1)->id());
+    hash = addU32ToHash(hash, getOperand(2)->id());
+    hash = addU32ToHash(hash, getOperand(3)->id());
+    if (MDefinition* dep = dependency())
+        hash = addU32ToHash(hash, dep->id());
+    MOZ_ASSERT(hash == MDefinition::valueHash());
+    return hash;
 }
 
 bool
