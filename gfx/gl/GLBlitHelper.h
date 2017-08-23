@@ -47,7 +47,7 @@ class DrawBlitProg final
     const GLBlitHelper& mParent;
     const GLuint mProg;
     const GLint mLoc_u1ForYFlip;
-    const GLint mLoc_uClipRect;
+    const GLint mLoc_uSrcRect;
     const GLint mLoc_uTexSize0;
     const GLint mLoc_uTexSize1;
     const GLint mLoc_uDivisors;
@@ -71,7 +71,7 @@ public:
     struct BaseArgs final {
         gfx::IntSize destSize;
         bool yFlip;
-        gfx::IntRect clipRect;
+        gfx::IntRect srcRect;
         gfx::IntSize texSize0;
     };
     struct YUVArgs final {
@@ -130,8 +130,10 @@ public:
                    OriginPos destOrigin);
 #ifdef MOZ_WIDGET_ANDROID
     // Blit onto the current FB.
-    bool BlitImage(layers::SurfaceTextureImage* stImage);
-    bool BlitImage(layers::EGLImageImage* eglImage);
+    bool BlitImage(layers::SurfaceTextureImage* stImage, const gfx::IntSize& destSize,
+                   OriginPos destOrigin) const;
+    bool BlitImage(layers::EGLImageImage* eglImage, const gfx::IntSize& destSize,
+                   OriginPos destOrigin) const;
 #endif
 #ifdef XP_MACOSX
     bool BlitImage(layers::MacIOSurfaceImage* srcImage, const gfx::IntSize& destSize,
