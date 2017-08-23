@@ -1608,20 +1608,6 @@ nsresult MediaPipelineTransmit::ReplaceTrack(RefPtr<MediaStreamTrack>& domtrack)
   return NS_OK;
 }
 
-void MediaPipeline::DisconnectTransport_s(TransportInfo &info) {
-  MOZ_ASSERT(info.transport_);
-  ASSERT_ON_THREAD(sts_thread_);
-
-  info.transport_->SignalStateChange.disconnect(this);
-  // We do this even if we're a transmitter, since we are still possibly
-  // registered to receive RTCP.
-  TransportLayerDtls *dtls = static_cast<TransportLayerDtls *>(
-      info.transport_->GetLayer(TransportLayerDtls::ID()));
-  MOZ_ASSERT(dtls);  // DTLS is mandatory
-  MOZ_ASSERT(dtls->downward());
-  dtls->downward()->SignalPacketReceived.disconnect(this);
-}
-
 nsresult MediaPipeline::ConnectTransport_s(TransportInfo &info) {
   MOZ_ASSERT(info.transport_);
   ASSERT_ON_THREAD(sts_thread_);

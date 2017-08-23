@@ -234,8 +234,6 @@ class MediaPipeline : public sigslot::has_slots<> {
   virtual nsresult TransportReady_s(TransportInfo &info);
   void UpdateRtcpMuxState(TransportInfo &info);
 
-  // Unhooks from signals
-  void DisconnectTransport_s(TransportInfo &info);
   nsresult ConnectTransport_s(TransportInfo &info);
 
   TransportInfo* GetTransportInfo_s(TransportFlow *flow);
