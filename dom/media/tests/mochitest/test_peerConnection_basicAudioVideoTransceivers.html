@@ -1,0 +1,31 @@
+﻿<!DOCTYPE HTML>
+<html>
+<head>
+  <script type="application/javascript" src="pc.js"></script>
+</head>
+<body>
+<pre id="test">
+<script type="application/javascript">
+  createHTML({
+    bug: "1290948",
+    title: "Basic audio/video with addTransceiver"
+  });
+
+  var test;
+  runNetworkTest(function (options) {
+    test = new PeerConnectionTest(options);
+    test.setMediaConstraints([{audio: true}, {video: true}],
+                             [{audio: true}, {video: true}]);
+    test.chain.replace("PC_LOCAL_GUM",
+      [
+        function PC_LOCAL_GUM_TRANSCEIVERS(test) {
+          return test.pcLocal.getAllUserMediaAndAddTransceivers(test.pcLocal.constraints);
+        }
+      ]);
+
+    test.run();
+  });
+</script>
+</pre>
+</body>
+</html>
