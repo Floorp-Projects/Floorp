@@ -307,15 +307,11 @@ public abstract class ActivityStreamContextMenu
         return true;
     }
 
-    /**
-     * @param shouldOverrideIconWithImageProvider true if the favicon should be replaced with an image provider,
-     *                                            if applicable, false otherwise.
-     */
+
     @RobocopTarget
     public static ActivityStreamContextMenu show(Context context,
                                                       View anchor, ActivityStreamTelemetry.Extras.Builder telemetryExtraBuilder,
                                                       final MenuMode menuMode, final Item item,
-                                                      final boolean shouldOverrideIconWithImageProvider,
                                                       HomePager.OnUrlOpenListener onUrlOpenListener,
                                                       HomePager.OnUrlOpenInBackgroundListener onUrlOpenInBackgroundListener,
                                                       final int tilesWidth, final int tilesHeight) {
@@ -324,7 +320,7 @@ public abstract class ActivityStreamContextMenu
         if (!HardwareUtils.isTablet()) {
             menu = new BottomSheetContextMenu(context,
                     telemetryExtraBuilder, menuMode,
-                    item, shouldOverrideIconWithImageProvider, onUrlOpenListener, onUrlOpenInBackgroundListener,
+                    item, onUrlOpenListener, onUrlOpenInBackgroundListener,
                     tilesWidth, tilesHeight);
         } else {
             menu = new PopupContextMenu(context,
