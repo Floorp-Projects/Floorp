@@ -98,15 +98,14 @@
 #identity-box.grantedPermissions > #identity-icon {
   list-style-image: url(chrome://browser/skin/identity-icon-notice.svg);
 }
+
 #urlbar[pageproxystate="valid"] > #identity-box.chromeUI > #identity-icon {
   list-style-image: url(chrome://branding/content/identity-icons-brand.svg);
 }
-#urlbar[pageproxystate="invalid"] > #identity-box > #identity-icon {
-  fill-opacity: .3;
-}
 
-#urlbar[actiontype="searchengine"] > #identity-box > #identity-icon {
+#urlbar[pageproxystate="invalid"] > #identity-box > #identity-icon {
   list-style-image: url(chrome://global/skin/icons/autocomplete-search.svg);
+  fill-opacity: .4;
 }
 
 #urlbar[actiontype="extension"] > #identity-box > #identity-icon {
