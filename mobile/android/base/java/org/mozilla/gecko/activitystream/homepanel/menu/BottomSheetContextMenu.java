@@ -89,7 +89,7 @@ import java.net.URISyntaxException;
         pageIconLayout.setLayoutParams(layoutParams);
 
         // We're matching the specific icon behavior for highlights and top sites.
-        final String overrideIconURL = !shouldOverrideIconWithImageProvider ? null : item.getMetadataSlow().getImageUrl();
+        final String overrideIconURL = !shouldOverrideIconWithImageProvider ? null : item.getImageUrl();
         pageIconLayout.updateIcon(item.getUrl(), overrideIconURL);
 
         navigationView = (NavigationView) content.findViewById(R.id.menu);

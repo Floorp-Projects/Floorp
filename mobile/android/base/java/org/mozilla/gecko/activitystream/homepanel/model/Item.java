@@ -12,13 +12,14 @@ public interface Item {
     String getUrl();
 
     /**
-     * Returns the metadata associated with this stream item.
+     * Returns the image URL associated with this stream item.
      *
-     * This operation could be slow in some implementations (see {@link Highlight#getMetadataSlow()}), hence the name.
-     * imo, it is better to expose this possibility in the interface for all implementations rather than hide this fact.
+     * Some implementations may be slow due to lazy loading: see {@link Highlight#getImageUrl()}.
+     *
+     * @return the image URL, or the empty String when there is none.
      */
     @NonNull
-    Metadata getMetadataSlow();
+    String getImageUrl();
 
     /**
      * @return True if the item is bookmarked, false otherwise. Might return 'null' if the bookmark
