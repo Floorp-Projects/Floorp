@@ -25,6 +25,7 @@ import org.mozilla.gecko.util.DrawableUtil;
 import org.mozilla.gecko.util.TouchTargetUtil;
 import org.mozilla.gecko.util.URIUtils;
 import org.mozilla.gecko.util.ViewUtil;
+import org.mozilla.gecko.widget.FaviconView;
 
 import java.lang.ref.WeakReference;
 import java.net.URI;
@@ -40,7 +41,7 @@ public class HighlightItem extends StreamItem {
     private Highlight highlight;
     private int position;
 
-    private final StreamOverridablePageIconLayout pageIconLayout;
+    private final StreamPageIconLayout pageIconLayout;
     private final TextView pageTitleView;
     private final TextView pageSourceView;
     private final TextView pageDomainView;
@@ -56,7 +57,7 @@ public class HighlightItem extends StreamItem {
         tilesMargin = itemView.getResources().getDimensionPixelSize(R.dimen.activity_stream_base_margin);
 
         pageTitleView = (TextView) itemView.findViewById(R.id.card_history_label);
-        pageIconLayout = (StreamOverridablePageIconLayout) itemView.findViewById(R.id.icon);
+        pageIconLayout = (StreamPageIconLayout) itemView.findViewById(R.id.icon);
         pageSourceView = (TextView) itemView.findViewById(R.id.card_history_source);
         pageDomainView = (TextView) itemView.findViewById(R.id.page);
         pageSourceIconView = (ImageView) itemView.findViewById(R.id.source_icon);
@@ -81,7 +82,6 @@ public class HighlightItem extends StreamItem {
                         extras,
                         ActivityStreamContextMenu.MenuMode.HIGHLIGHT,
                         highlight,
-                        /* shouldOverrideWithImageProvider */ true, // we use image providers in pageIconLayout.
                         onUrlOpenListener, onUrlOpenInBackgroundListener,
                         pageIconLayout.getWidth(), pageIconLayout.getHeight());
 
@@ -111,7 +111,7 @@ public class HighlightItem extends StreamItem {
 
         updateUiForSource(highlight.getSource());
         updatePageDomain();
-        pageIconLayout.updateIcon(highlight.getUrl(), highlight.getImageUrl());
+        pageIconLayout.updateIcon(highlight.getUrl(), highlight.getMetadataSlow().getImageUrl());
     }
 
     private void updateUiForSource(Utils.HighlightSource source) {

@@ -24,7 +24,7 @@ import org.mozilla.gecko.widget.FaviconView;
 import java.util.concurrent.Future;
 
 /**
- * A layout that represents page icons in Activity Stream, which can be overridden with a custom URL.
+ * A layout that represents page icons in Activity Stream.
  *
  * Under the hood, it switches between multiple icon views because favicons (in FaviconView)
  * are handled differently from other types of page images.
@@ -34,7 +34,7 @@ import java.util.concurrent.Future;
  * composable switcher layout abstracts the switching state from the FaviconView and keeps it simple, but will
  * use slightly more resources.
  */
-public class StreamOverridablePageIconLayout extends FrameLayout implements IconCallback {
+public class StreamPageIconLayout extends FrameLayout implements IconCallback {
 
     private enum UIMode {
         FAVICON_IMAGE, NONFAVICON_IMAGE
@@ -45,9 +45,9 @@ public class StreamOverridablePageIconLayout extends FrameLayout implements Icon
 
     private @Nullable Future<IconResponse> ongoingFaviconLoad;
 
-    public StreamOverridablePageIconLayout(final Context context, final AttributeSet attrs) {
+    public StreamPageIconLayout(final Context context, final AttributeSet attrs) {
         super(context, attrs);
-        LayoutInflater.from(context).inflate(R.layout.activity_stream_overridable_page_icon_layout, this, true);
+        LayoutInflater.from(context).inflate(R.layout.activity_stream_page_icon_layout, this, true);
         initViews();
     }
 

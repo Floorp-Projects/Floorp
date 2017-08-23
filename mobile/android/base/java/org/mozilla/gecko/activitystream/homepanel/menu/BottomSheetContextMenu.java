@@ -6,6 +6,8 @@ package org.mozilla.gecko.activitystream.homepanel.menu;
 
 import android.app.Activity;
 import android.content.Context;
+import android.os.AsyncTask;
+import android.support.annotation.Nullable;
 import android.support.design.widget.BottomSheetBehavior;
 import android.support.design.widget.BottomSheetDialog;
 import android.support.design.widget.NavigationView;
@@ -18,10 +20,13 @@ import android.widget.TextView;
 import org.mozilla.gecko.R;
 import org.mozilla.gecko.activitystream.ActivityStreamTelemetry;
 import org.mozilla.gecko.activitystream.homepanel.model.Item;
-import org.mozilla.gecko.activitystream.homepanel.stream.StreamOverridablePageIconLayout;
 import org.mozilla.gecko.home.HomePager;
+import org.mozilla.gecko.icons.IconCallback;
+import org.mozilla.gecko.icons.IconResponse;
+import org.mozilla.gecko.icons.Icons;
 import org.mozilla.gecko.util.StringUtils;
 import org.mozilla.gecko.util.URIUtils;
+import org.mozilla.gecko.widget.FaviconView;
 
 import java.lang.ref.WeakReference;
 import java.net.URI;
@@ -42,7 +47,6 @@ import java.net.URISyntaxException;
                                   final ActivityStreamTelemetry.Extras.Builder telemetryExtraBuilder,
                                   final MenuMode mode,
                                   final Item item,
-                                  final boolean shouldOverrideIconWithImageProvider,
                                   HomePager.OnUrlOpenListener onUrlOpenListener,
                                   HomePager.OnUrlOpenInBackgroundListener onUrlOpenInBackgroundListener,
                                   final int tilesWidth, final int tilesHeight) {
@@ -81,16 +85,22 @@ import java.net.URISyntaxException;
         }
 
         // Copy layouted parameters from the Highlights / TopSites items to ensure consistency
-        final StreamOverridablePageIconLayout pageIconLayout =
-                (StreamOverridablePageIconLayout) content.findViewById(R.id.page_icon_layout);
-        final ViewGroup.LayoutParams layoutParams = pageIconLayout.getLayoutParams();
+        final FaviconView faviconView = (FaviconView) content.findViewById(R.id.icon);
+        ViewGroup.LayoutParams layoutParams = faviconView.getLayoutParams();
         layoutParams.width = tilesWidth;
         layoutParams.height = tilesHeight;
-        pageIconLayout.setLayoutParams(layoutParams);
+        faviconView.setLayoutParams(layoutParams);
 
-        // We're matching the specific icon behavior for highlights and top sites.
-        final String overrideIconURL = !shouldOverrideIconWithImageProvider ? null : item.getImageUrl();
-        pageIconLayout.updateIcon(item.getUrl(), overrideIconURL);
+        Icons.with(context)
+                .pageUrl(item.getUrl())
+                .skipNetwork()
+                .build()
+                .execute(new IconCallback() {
+                    @Override
+                    public void onIconResponse(IconResponse response) {
+                        faviconView.updateImage(response);
+                    }
+                });
 
         navigationView = (NavigationView) content.findViewById(R.id.menu);
         navigationView.setNavigationItemSelectedListener(this);
