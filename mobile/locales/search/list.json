@@ -671,6 +671,13 @@
         ]
       }
     },
+    "wo": {
+      "default": {
+        "visibleDefaultEngines": [
+          "google", "yahoo-france", "bing", "duckduckgo", "wikipedia-wo"
+        ]
+      }
+    },
     "xh": {
       "default": {
         "visibleDefaultEngines": [
