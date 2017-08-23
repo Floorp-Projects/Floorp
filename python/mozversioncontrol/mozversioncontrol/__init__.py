@@ -42,14 +42,28 @@ def get_tool_path(tool):
 
 
 class Repository(object):
+    """A class wrapping utility methods around version control repositories.
+
+    This class is abstract and never instantiated. Obtain an instance by
+    calling a ``get_repository_*()`` helper function.
+
+    Clients are recommended to use the object as a context manager. But not
+    all methods require this.
+    """
+
     __metaclass__ = abc.ABCMeta
 
-    '''A class wrapping utility methods around version control repositories.'''
     def __init__(self, path, tool):
         self.path = os.path.abspath(path)
         self._tool = get_tool_path(tool)
         self._env = os.environ.copy()
         self._version = None
+
+    def __enter__(self):
+        return self
+
+    def __exit__(self, exc_type, exc_value, exc_tb):
+        pass
 
     def _run(self, *args):
         return subprocess.check_output((self._tool, ) + args,
@@ -111,12 +125,47 @@ class Repository(object):
 class HgRepository(Repository):
     '''An implementation of `Repository` for Mercurial repositories.'''
     def __init__(self, path, hg='hg'):
+        import hglib.client
+
         super(HgRepository, self).__init__(path, tool=hg)
         self._env[b'HGPLAIN'] = b'1'
+
+        # Setting this modifies a global variable and makes all future hglib
+        # instances use this binary. Since the tool path was validated, this
+        # should be OK. But ideally hglib would offer an API that defines
+        # per-instance binaries.
+        hglib.HGPATH = self._tool
+
+        # Without connect=False this spawns a persistent process. We want
+        # the process lifetime tied to a context manager.
+        self._client = hglib.client.hgclient(self.path, encoding=b'UTF-8',
+                                             configs=None, connect=False)
 
     @property
     def name(self):
         return 'hg'
+
+    def __enter__(self):
+        if self._client.server is None:
+            # The cwd if the spawned process should be the repo root to ensure
+            # relative paths are normalized to it.
+            old_cwd = os.getcwd()
+            try:
+                os.chdir(self.path)
+                self._client.open()
+            finally:
+                os.chdir(old_cwd)
+
+        return self
+
+    def __exit__(self, exc_type, exc_val, exc_tb):
+        self._client.close()
+
+    def _run_in_client(self, args):
+        if not self._client.server:
+            raise Exception('active HgRepository context manager required')
+
+        return self._client.rawcommand(args)
 
     def sparse_checkout_present(self):
         # We assume a sparse checkout is enabled if the .hg/sparse file
