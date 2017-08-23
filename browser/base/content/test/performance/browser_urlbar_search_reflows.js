@@ -4,6 +4,9 @@
 // time. On slower builds, we need to boost our allowed test time.
 requestLongerTimeout(5);
 
+XPCOMUtils.defineLazyModuleGetter(this, "PlacesTestUtils",
+                                  "resource://testing-common/PlacesTestUtils.jsm");
+
 /**
  * WHOA THERE: We should never be adding new things to EXPECTED_REFLOWS. This
  * is a whitelist that should slowly go away as we improve the performance of
@@ -145,10 +148,59 @@ const EXPECTED_REFLOWS_SECOND_OPEN = [
   },
 ];
 
+/**
+ * Returns a Promise that resolves once the AwesomeBar popup for a particular
+ * window has appeared after having done a search for its input text.
+ *
+ * @param win (browser window)
+ *        The window to do the search in.
+ * @returns Promise
+ */
+async function promiseAutocompleteResultPopup(win) {
+  let URLBar = win.gURLBar;
+  URLBar.controller.startSearch(URLBar.value);
+  await BrowserTestUtils.waitForEvent(URLBar.popup, "popupshown");
+  await BrowserTestUtils.waitForCondition(() => {
+    return URLBar.controller.searchStatus >=
+      Ci.nsIAutoCompleteController.STATUS_COMPLETE_NO_MATCH;
+  });
+  let matchCount = URLBar.popup._matchCount;
+  await BrowserTestUtils.waitForCondition(() => {
+    return URLBar.popup.richlistbox.childNodes.length == matchCount;
+  });
+
+  URLBar.controller.stopSearch();
+  // There are several setTimeout(fn, 0); calls inside autocomplete.xml
+  // that we need to wait for. Since those have higher priority than
+  // idle callbacks, we can be sure they will have run once this
+  // idle callback is called. The timeout seems to be required in
+  // automation - presumably because the machines can be pretty busy
+  // especially if it's GC'ing from previous tests.
+  await new Promise(resolve => win.requestIdleCallback(resolve, { timeout: 1000 }));
+
+  let hiddenPromise = BrowserTestUtils.waitForEvent(URLBar.popup, "popuphidden");
+  EventUtils.synthesizeKey("VK_ESCAPE", {}, win);
+  await hiddenPromise;
+}
+
 const SEARCH_TERM = "urlbar-reflows";
 
 add_task(async function setup() {
-  await addDummyHistoryEntries();
+  const NUM_VISITS = 10;
+  let visits = [];
+
+  for (let i = 0; i < NUM_VISITS; ++i) {
+    visits.push({
+      uri: `http://example.com/urlbar-reflows-${i}`,
+      title: `Reflow test for URL bar entry #${i}`,
+    });
+  }
+
+  await PlacesTestUtils.addVisits(visits);
+
+  registerCleanupFunction(async function() {
+    await PlacesTestUtils.clearHistory();
+  });
 });
 
 /**
@@ -183,29 +235,7 @@ add_task(async function() {
       oldResultsAdded();
     };
 
-    URLBar.controller.startSearch(URLBar.value);
-    await BrowserTestUtils.waitForEvent(URLBar.popup, "popupshown");
-    await BrowserTestUtils.waitForCondition(() => {
-      return URLBar.controller.searchStatus >=
-        Ci.nsIAutoCompleteController.STATUS_COMPLETE_NO_MATCH;
-    });
-    let matchCount = URLBar.popup._matchCount;
-    await BrowserTestUtils.waitForCondition(() => {
-      return URLBar.popup.richlistbox.childNodes.length == matchCount;
-    });
-
-    URLBar.controller.stopSearch();
-    // There are several setTimeout(fn, 0); calls inside autocomplete.xml
-    // that we need to wait for. Since those have higher priority than
-    // idle callbacks, we can be sure they will have run once this
-    // idle callback is called. The timeout seems to be required in
-    // automation - presumably because the machines can be pretty busy
-    // especially if it's GC'ing from previous tests.
-    await new Promise(resolve => win.requestIdleCallback(resolve, { timeout: 1000 }));
-
-    let hiddenPromise = BrowserTestUtils.waitForEvent(URLBar.popup, "popuphidden");
-    EventUtils.synthesizeKey("VK_ESCAPE", {}, win);
-    await hiddenPromise;
+    await promiseAutocompleteResultPopup(win);
   };
 
   await withReflowObserver(testFn, EXPECTED_REFLOWS_FIRST_OPEN, win);
