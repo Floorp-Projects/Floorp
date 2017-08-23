@@ -60,8 +60,19 @@ function connect_background() {
   });
 }
 function connect_contentScript(testType) {
+  let isUnloading = false;
+  addEventListener("pagehide", () => { isUnloading = true; }, {once: true});
+
   let port = browser.runtime.connect({name: "port from frame"});
   port.onMessage.addListener(msg => {
+    // The background page sends a reply as soon as we call runtime.connect().
+    // It is possible that the reply reaches this frame before the
+    // window.close() request has been processed.
+    if (!isUnloading) {
+      browser.test.log(`Ignorting unexpected reply ("${msg}") because the page is not being unloaded.`);
+      return;
+    }
+
     // The frame has been removed, so we should not get a reply.
     browser.test.fail(`Unexpected reply: ${msg}`);
   });
