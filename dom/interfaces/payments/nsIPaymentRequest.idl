@@ -5,6 +5,7 @@
 
 #include "nsISupports.idl"
 #include "nsIVariant.idl"
+#include "nsIPrincipal.idl"
 
 interface nsIArray;
 
@@ -77,6 +78,7 @@ interface nsIPaymentOptions : nsISupports
 interface nsIPaymentRequest : nsISupports
 {
   readonly attribute uint64_t tabId;
+  readonly attribute nsIPrincipal topLevelPrincipal;
   readonly attribute AString requestId;
   readonly attribute nsIArray paymentMethods;
   readonly attribute nsIPaymentDetails paymentDetails;

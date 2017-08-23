@@ -42,6 +42,7 @@ public:
    */
   nsresult
   CreatePayment(nsPIDOMWindowInner* aWindow,
+                nsIPrincipal* aTopLevelPrincipal,
                 const Sequence<PaymentMethodData>& aMethodData,
                 const PaymentDetailsInit& aDetails,
                 const PaymentOptions& aOptions,
