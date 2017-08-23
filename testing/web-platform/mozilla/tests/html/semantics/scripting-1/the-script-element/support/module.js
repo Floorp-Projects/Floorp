@@ -1,2 +1,2 @@
-export default 42;
+export let x = 42;
 moduleRan = true;
