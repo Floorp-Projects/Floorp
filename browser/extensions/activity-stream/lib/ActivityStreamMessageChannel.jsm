@@ -11,6 +11,7 @@ Cu.import("resource://gre/modules/RemotePageManager.jsm");
 const {actionCreators: ac, actionTypes: at, actionUtils: au} = Cu.import("resource://activity-stream/common/Actions.jsm", {});
 
 const ABOUT_NEW_TAB_URL = "about:newtab";
+const ABOUT_HOME_URL = "about:home";
 
 const DEFAULT_OPTIONS = {
   dispatch(action) {
@@ -128,7 +129,7 @@ this.ActivityStreamMessageChannel = class ActivityStreamMessageChannel {
   createChannel() {
     //  Receive AboutNewTab's Remote Pages instance, if it exists, on override
     const channel = this.pageURL === ABOUT_NEW_TAB_URL && AboutNewTab.override(true);
-    this.channel = channel || new RemotePages(this.pageURL);
+    this.channel = channel || new RemotePages([ABOUT_HOME_URL, ABOUT_NEW_TAB_URL]);
     this.channel.addMessageListener("RemotePage:Init", this.onNewTabInit);
     this.channel.addMessageListener("RemotePage:Load", this.onNewTabLoad);
     this.channel.addMessageListener("RemotePage:Unload", this.onNewTabUnload);
