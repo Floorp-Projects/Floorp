@@ -7635,7 +7635,6 @@
 
           // Prepare connection to host beforehand.
           SessionStore.speculativeConnectOnTabHover(this);
-          tabContainer.tabbrowser.warmupTab(this);
         ]]></body>
       </method>
 
