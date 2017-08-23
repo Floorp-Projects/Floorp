@@ -94,7 +94,6 @@ public class StreamRecyclerAdapter extends RecyclerView.Adapter<StreamViewHolder
             recyclerViewModel.add(makeRowModelFromType(type));
         }
         topStoriesQueue = Collections.emptyList();
-        loadTopStories();
     }
 
     void setOnUrlOpenListeners(HomePager.OnUrlOpenListener onUrlOpenListener, HomePager.OnUrlOpenInBackgroundListener onUrlOpenInBackgroundListener) {
@@ -305,14 +304,20 @@ public class StreamRecyclerAdapter extends RecyclerView.Adapter<StreamViewHolder
         notifyDataSetChanged();
     }
 
-    private void loadTopStories() {
-        List<TopStory> newStories = makePlaceholderStories();
-        topStoriesQueue = newStories;
-
+    public void swapTopStories(List<TopStory> newStories) {
         final int insertionIndex = indexOfType(RowItemType.TOP_STORIES_TITLE, recyclerViewModel) + 1;
-        for (int i = 0; i < Math.min(MAX_TOP_STORIES, newStories.size()); i++) {
-            recyclerViewModel.add(insertionIndex + i, newStories.get(i));
+        int numOldStories = getNumOfTypeShown(RowItemType.TOP_STORIES_ITEM);
+        while (numOldStories > 0) {
+            recyclerViewModel.remove(insertionIndex);
+            numOldStories--;
         }
+
+        topStoriesQueue = newStories;
+        for (int i = 0; i < Math.min(MAX_TOP_STORIES, topStoriesQueue.size()); i++) {
+            recyclerViewModel.add(insertionIndex + i, topStoriesQueue.get(i));
+        }
+
+        notifyDataSetChanged();
     }
 
     /**
@@ -353,15 +358,6 @@ public class StreamRecyclerAdapter extends RecyclerView.Adapter<StreamViewHolder
             }
         }
         return count;
-    }
-
-    private List<TopStory> makePlaceholderStories() {
-        final List<TopStory> stories = new LinkedList<>();
-        final String[] TITLES = { "Placeholder 1", "Placeholder 2", "Placeholder 3"};
-        for (String title : TITLES) {
-            stories.add(new TopStory(title, "https://www.mozilla.org/"));
-        }
-        return stories;
     }
 
     public void swapTopSitesCursor(Cursor cursor) {
