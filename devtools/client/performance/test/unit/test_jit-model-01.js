@@ -8,10 +8,6 @@
  * FrameNode, and the returning of that data is as expected.
  */
 
-function run_test() {
-  run_next_test();
-}
-
 add_task(function test() {
   let { JITOptimizations } = require("devtools/client/performance/modules/logic/jit");
 

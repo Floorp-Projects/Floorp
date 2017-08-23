@@ -15,14 +15,12 @@
 #include "nsGkAtoms.h"
 #include "nsContentCreatorFunctions.h"
 #include "mozilla/ErrorResult.h"
-#include "nsIDOMHTMLMenuElement.h"
 #include "mozilla/dom/BindingDeclarations.h"
 #include "mozilla/dom/DOMRect.h"
 #include "mozilla/dom/ValidityState.h"
 #include "mozilla/dom/Element.h"
 
 class nsDOMTokenList;
-class nsIDOMHTMLMenuElement;
 class nsIFormControlFrame;
 class nsIFrame;
 class nsILayoutHistoryState;

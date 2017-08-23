@@ -19,10 +19,6 @@ updateAppInfo({
   platformVersion: "",
 });
 
-function run_test() {
-  run_next_test();
-}
-
 add_task(async function init() {
   // Make sure that we have a profile before initializing SessionFile
   let profd = do_get_profile();

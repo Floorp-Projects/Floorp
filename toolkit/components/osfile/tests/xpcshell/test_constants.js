@@ -4,10 +4,6 @@ Components.utils.import("resource://gre/modules/osfile.jsm");
 Components.utils.import("resource://gre/modules/Services.jsm");
 Components.utils.import("resource://gre/modules/Services.jsm", this);
 
-function run_test() {
-  run_next_test();
-}
-
 // Test that OS.Constants is defined correctly.
 add_task(async function check_definition() {
   do_check_true(OS.Constants != null);

@@ -220,7 +220,3 @@ add_test(function test_newFile() {
   do_check_eq(file.path, testpath);
   run_next_test();
 });
-
-function run_test() {
-  run_next_test();
-}

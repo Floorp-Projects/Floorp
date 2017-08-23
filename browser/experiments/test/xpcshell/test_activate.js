@@ -24,10 +24,6 @@ function ManifestEntry(data) {
   this.maxActiveSeconds = data.maxActiveSeconds || 5 * SEC_IN_ONE_DAY;
 }
 
-function run_test() {
-  run_next_test();
-}
-
 add_task(async function test_setup() {
   loadAddonManager();
   gPolicy = new Experiments.Policy();

@@ -5,10 +5,6 @@ Components.utils.import("resource://services-common/observers.js");
 
 var gSubject = {};
 
-function run_test() {
-  run_next_test();
-}
-
 add_test(function test_function_observer() {
   let foo = false;
 

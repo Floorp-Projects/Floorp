@@ -14,7 +14,7 @@ function gatherFiles(path, fileRegex) {
   const iterator = new OS.File.DirectoryIterator(path);
 
   try {
-    for (let child in iterator) {
+    for (let child of iterator) {
       // Don't descend into test directories. Saves us some time and
       // there's no reason to.
       if (child.isDir && !child.path.endsWith("/test")) {

@@ -76,10 +76,6 @@ Object.defineProperty(discovery.device, "name", {
   }
 });
 
-function run_test() {
-  run_next_test();
-}
-
 add_task(function* () {
   // At startup, no remote devices are known
   deepEqual(discovery.getRemoteDevicesWithService("devtools"), []);

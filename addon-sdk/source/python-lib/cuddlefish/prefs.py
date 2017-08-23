@@ -58,6 +58,8 @@ DEFAULT_NO_CONNECTIONS_PREFS = {
     'browser.safebrowsing.downloads.remote.url': 'http://localhost/safebrowsing-dummy/downloads',
     'browser.safebrowsing.malware.enabled' : False,
     'browser.safebrowsing.phishing.enabled' : False,
+    'browser.safebrowsing.blockedURIs.enabled' : False,
+    'browser.safebrowsing.passwords.enabled' : False,
     'browser.safebrowsing.provider.google.updateURL': 'http://localhost/safebrowsing-dummy/update',
     'browser.safebrowsing.provider.google.gethashURL': 'http://localhost/safebrowsing-dummy/gethash',
     'browser.safebrowsing.provider.google4.updateURL': 'http://localhost/safebrowsing4-dummy/update',

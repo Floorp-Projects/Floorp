@@ -7,10 +7,6 @@
 
 let { setFilterString } = require("devtools/client/memory/actions/filter");
 
-function run_test() {
-  run_next_test();
-}
-
 add_task(function* () {
   let store = Store();
   const { getState, dispatch } = store;

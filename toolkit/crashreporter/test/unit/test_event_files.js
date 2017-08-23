@@ -8,10 +8,6 @@ var {utils: Cu} = Components;
 Cu.import("resource://gre/modules/Services.jsm", this);
 Cu.import("resource://testing-common/AppData.jsm", this);
 
-function run_test() {
-  run_next_test();
-}
-
 add_task(async function test_setup() {
   do_get_profile();
   await makeFakeAppDir();

@@ -8,7 +8,6 @@
 
 #include "mozilla/Attributes.h"
 #include "nsGenericHTMLElement.h"
-#include "nsIDOMHTMLBodyElement.h"
 #include "nsIStyleRule.h"
 
 namespace mozilla {
@@ -19,8 +18,7 @@ namespace dom {
 
 class OnBeforeUnloadEventHandlerNonNull;
 
-class HTMLBodyElement final : public nsGenericHTMLElement,
-                              public nsIDOMHTMLBodyElement
+class HTMLBodyElement final : public nsGenericHTMLElement
 {
 public:
   using Element::GetText;
@@ -33,9 +31,6 @@ public:
 
   // nsISupports
   NS_DECL_ISUPPORTS_INHERITED
-
-  // nsIDOMHTMLBodyElement
-  NS_DECL_NSIDOMHTMLBODYELEMENT
 
   // Event listener stuff; we need to declare only the ones we need to
   // forward to window that don't come from nsIDOMHTMLBodyElement.
@@ -53,41 +48,61 @@ public:
 #undef WINDOW_EVENT_HELPER
 #undef EVENT
 
-  void GetText(DOMString& aText)
+  void GetText(nsAString& aText)
   {
     GetHTMLAttr(nsGkAtoms::text, aText);
+  }
+  void SetText(const nsAString& aText)
+  {
+    SetHTMLAttr(nsGkAtoms::text, aText);
   }
   void SetText(const nsAString& aText, ErrorResult& aError)
   {
     SetHTMLAttr(nsGkAtoms::text, aText, aError);
   }
-  void GetLink(DOMString& aLink)
+  void GetLink(nsAString& aLink)
   {
     GetHTMLAttr(nsGkAtoms::link, aLink);
+  }
+  void SetLink(const nsAString& aLink)
+  {
+    SetHTMLAttr(nsGkAtoms::link, aLink);
   }
   void SetLink(const nsAString& aLink, ErrorResult& aError)
   {
     SetHTMLAttr(nsGkAtoms::link, aLink, aError);
   }
-  void GetVLink(DOMString& aVLink)
+  void GetVLink(nsAString& aVLink)
   {
     GetHTMLAttr(nsGkAtoms::vlink, aVLink);
+  }
+  void SetVLink(const nsAString& aVLink)
+  {
+    SetHTMLAttr(nsGkAtoms::vlink, aVLink);
   }
   void SetVLink(const nsAString& aVLink, ErrorResult& aError)
   {
     SetHTMLAttr(nsGkAtoms::vlink, aVLink, aError);
   }
-  void GetALink(DOMString& aALink)
+  void GetALink(nsAString& aALink)
   {
     GetHTMLAttr(nsGkAtoms::alink, aALink);
+  }
+  void SetALink(const nsAString& aALink)
+  {
+    SetHTMLAttr(nsGkAtoms::alink, aALink);
   }
   void SetALink(const nsAString& aALink, ErrorResult& aError)
   {
     SetHTMLAttr(nsGkAtoms::alink, aALink, aError);
   }
-  void GetBgColor(DOMString& aBgColor)
+  void GetBgColor(nsAString& aBgColor)
   {
     GetHTMLAttr(nsGkAtoms::bgcolor, aBgColor);
+  }
+  void SetBgColor(const nsAString& aBgColor)
+  {
+    SetHTMLAttr(nsGkAtoms::bgcolor, aBgColor);
   }
   void SetBgColor(const nsAString& aBgColor, ErrorResult& aError)
   {

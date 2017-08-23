@@ -6,10 +6,6 @@ Cu.import("resource://services-common/utils.js");
 
 var {bytesAsHex: b2h} = CommonUtils;
 
-function run_test() {
-  run_next_test();
-}
-
 add_task(function test_pbkdf2() {
   let symmKey16 = CryptoUtils.pbkdf2Generate("secret phrase", "DNXPzPpiwn", 4096, 16);
   do_check_eq(symmKey16.length, 16);

@@ -21,7 +21,3 @@ add_test_pair(async function test_osfile_writeAtomic_zerobytes() {
   // Checking if writeAtomic supports writing encoded zero-byte strings
   Assert.equal(string2, string1, "Read the expected (empty) string.");
 });
-
-function run_test() {
-  run_next_test();
-}

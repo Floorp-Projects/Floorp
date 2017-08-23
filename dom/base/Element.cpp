@@ -1123,12 +1123,9 @@ Element::CreateShadowRoot(ErrorResult& aError)
     return nullptr;
   }
 
-  nsIDocument* doc = GetComposedDoc();
-  nsIContent* destroyedFramesFor = nullptr;
-  if (doc) {
-    nsIPresShell* shell = doc->GetShell();
-    if (shell) {
-      shell->DestroyFramesFor(this, &destroyedFramesFor);
+  if (nsIDocument* doc = GetComposedDoc()) {
+    if (nsIPresShell* shell = doc->GetShell()) {
+      shell->DestroyFramesFor(this);
       MOZ_ASSERT(!shell->FrameManager()->GetDisplayContentsStyleFor(this));
     }
   }
@@ -1170,17 +1167,6 @@ Element::CreateShadowRoot(ErrorResult& aError)
   xblBinding->SetBoundElement(this);
 
   SetXBLBinding(xblBinding);
-
-  // Recreate the frame for the bound content because binding a ShadowRoot
-  // changes how things are rendered.
-  if (doc) {
-    MOZ_ASSERT(doc == GetComposedDoc());
-    nsIPresShell* shell = doc->GetShell();
-    if (shell) {
-      shell->CreateFramesFor(destroyedFramesFor);
-    }
-  }
-
   return shadowRoot.forget();
 }
 
@@ -1914,7 +1900,7 @@ Element::UnbindFromTree(bool aDeep, bool aNullParent)
   // Computed style data isn't useful for detached nodes, and we'll need to
   // recompute it anyway if we ever insert the nodes back into a document.
   if (IsStyledByServo()) {
-    ClearServoData();
+    ClearServoData(document);
   } else {
     MOZ_ASSERT(!HasServoData());
   }
@@ -4159,12 +4145,21 @@ Element::UpdateIntersectionObservation(DOMIntersectionObserver* aObserver, int32
 }
 
 void
-Element::ClearServoData() {
+Element::ClearServoData(nsIDocument* aDoc) {
   MOZ_ASSERT(IsStyledByServo());
 #ifdef MOZ_STYLO
   Servo_Element_ClearData(this);
   UnsetFlags(ELEMENT_HAS_DIRTY_DESCENDANTS_FOR_SERVO |
              ELEMENT_HAS_ANIMATION_ONLY_DIRTY_DESCENDANTS_FOR_SERVO);
+
+  // Since this element is losing its servo data, nothing under it may have
+  // servo data either, so we can forget restyles rooted at this element. This
+  // is necessary for correctness, since we invoke ClearServoData in various
+  // places where an element's flattened tree parent changes, and such a change
+  // may also make an element invalid to be used as a restyle root.
+  if (aDoc && aDoc->GetServoRestyleRoot() == this) {
+    aDoc->ClearServoRestyleRoot();
+  }
 #else
   MOZ_CRASH("Accessing servo node data in non-stylo build");
 #endif
@@ -4217,36 +4212,16 @@ Element::AddSizeOfExcludingThis(SizeOfState& aState, nsStyleSizes& aSizes,
   }
 }
 
-struct DirtyDescendantsBit {
-  static bool HasBit(const Element* aElement)
-  {
-    return aElement->HasDirtyDescendantsForServo();
-  }
-  static void SetBit(Element* aElement)
-  {
-    aElement->SetHasDirtyDescendantsForServo();
-  }
-};
-
-struct AnimationOnlyDirtyDescendantsBit {
-  static bool HasBit(const Element* aElement)
-  {
-    return aElement->HasAnimationOnlyDirtyDescendantsForServo();
-  }
-  static void SetBit(Element* aElement)
-  {
-    aElement->SetHasAnimationOnlyDirtyDescendantsForServo();
-  }
-};
-
 #ifdef DEBUG
-template<typename Traits>
-bool
-BitIsPropagated(const Element* aElement)
+static bool
+BitIsPropagated(const Element* aElement, uint32_t aBit, nsINode* aRestyleRoot)
 {
   const Element* curr = aElement;
   while (curr) {
-    if (!Traits::HasBit(curr)) {
+    if (curr == aRestyleRoot) {
+      return true;
+    }
+    if (!curr->HasFlag(aBit)) {
       return false;
     }
     nsINode* parentNode = curr->GetParentNode();
@@ -4259,39 +4234,163 @@ BitIsPropagated(const Element* aElement)
 }
 #endif
 
-template<typename Traits>
-void
-NoteDirtyElement(Element* aElement)
+// Sets |aBits| on aElement and all of its flattened-tree ancestors up to and
+// including aStopAt or the root element (whichever is encountered first).
+static inline Element*
+PropagateBits(Element* aElement, uint32_t aBits, nsINode* aStopAt)
 {
-  MOZ_ASSERT(aElement->IsInComposedDoc());
-  nsIDocument* doc = aElement->GetComposedDoc();
-  nsIPresShell* shell = doc->GetShell();
-  NS_ENSURE_TRUE_VOID(shell);
-  shell->EnsureStyleFlush();
-
-  Element* parent = aElement->GetFlattenedTreeParentElementForStyle();
-  if (!parent || !parent->HasServoData()) {
-    // The bits only apply to styled elements.
-    return;
-  }
-
-  Element* curr = parent;
-  while (curr && !Traits::HasBit(curr)) {
-    Traits::SetBit(curr);
+  Element* curr = aElement;
+  while (curr && !curr->HasAllFlags(aBits)) {
+    curr->SetFlags(aBits);
+    if (curr == aStopAt) {
+      break;
+    }
     curr = curr->GetFlattenedTreeParentElementForStyle();
   }
 
-  MOZ_ASSERT(BitIsPropagated<Traits>(parent));
+  return curr;
+}
+
+// Invokes PropagateBits on the parent element if |aNode| is not the document.
+static inline Element*
+PropagateBitsFromParent(nsINode* aNode, uint32_t aBits, nsINode* aStopAt)
+{
+  MOZ_ASSERT(aNode->IsElement() || aNode == aNode->OwnerDoc());
+  if (!aNode->IsElement()) {
+    return nullptr;
+  }
+
+  Element* parent = aNode->AsElement()->GetFlattenedTreeParentElementForStyle();
+  return PropagateBits(parent, aBits, aStopAt);
+}
+
+// Notes that a given element is "dirty" with respect to the given descendants
+// bit (which may be one of dirty descendants, dirty animation descendants, or
+// need frame construction for descendants).
+//
+// This function operates on the dirty element itself, despite the fact that the
+// bits are generally used to describe descendants. This allows restyle roots
+// to be scoped as tightly as possible. On the first call to NoteDirtyElement
+// since the last restyle, we don't set any descendant bits at all, and just set
+// the element as the restyle root.
+//
+// Because the style traversal handles multiple tasks (styling, animation-ticking,
+// and lazy frame construction), there are potentially three separate kinds of
+// dirtiness to track. Rather than maintaining three separate restyle roots, we
+// use a single root, and always bubble it up to be the nearest common ancestor
+// of all the dirty content in the tree. This means that we need to track the
+// types of dirtiness that the restyle root corresponds to, so
+// SetServoRestyleRoot accepts a bitfield along with an element.
+//
+// The overall algorithm is as follows:
+// * When the first dirty element is noted, we just set as the restyle root.
+// * When additional dirty elements are noted, we propagate the given bit up
+//   the tree, until we either reach the restyle root or the document root.
+// * If we reach the document root, we then propagate the bits associated with
+//   the restyle root up the tree until we cross the path of the new root. Once
+//   we find this common ancestor, we record it as the restyle root, and then
+//   clear the bits between the new restyle root and the document root.
+// * If we have dirty content beneath multiple "document style traversal roots"
+//   (which are the main DOM + each piece of document-level native-anoymous
+//   content), we set the restyle root to the nsINode of the document itself.
+//   This is the bail-out case where we traverse everything.
+static void
+NoteDirtyElement(Element* aElement, uint32_t aBit)
+{
+  MOZ_ASSERT(aElement->IsInComposedDoc());
+  MOZ_ASSERT(aElement->IsStyledByServo());
+
+  Element* parent = aElement->GetFlattenedTreeParentElementForStyle();
+  if (MOZ_LIKELY(parent)) {
+    // If our parent is unstyled, we can inductively assume that it will be
+    // traversed when the time is right, and that the traversal will reach us
+    // when it happens. Nothing left to do.
+    if (!parent->HasServoData()) {
+      return;
+    }
+
+    // Similarly, if our parent already has the bit we're propagating, we can
+    // assume everything is already set up.
+    if (parent->HasFlag(aBit)) {
+      MOZ_ASSERT(aElement->GetComposedDoc()->GetServoRestyleRoot());
+      return;
+    }
+
+    // If the parent is styled but is display:none, we're done.
+    //
+    // We check for a frame to reduce the cases where we need the FFI call.
+    if (!parent->GetPrimaryFrame() && Servo_Element_IsDisplayNone(parent)) {
+      return;
+    }
+  }
+
+  nsIDocument* doc = aElement->GetComposedDoc();
+  if (nsIPresShell* shell = doc->GetShell()) {
+    shell->EnsureStyleFlush();
+  }
+
+  // If there's no existing restyle root, or if the root is already aElement,
+  // just note the root+bits and return.
+  nsINode* existingRoot = doc->GetServoRestyleRoot();
+  uint32_t existingBits = existingRoot ? doc->GetServoRestyleRootDirtyBits() : 0;
+  if (!existingRoot || existingRoot == aElement) {
+    doc->SetServoRestyleRoot(aElement, existingBits | aBit);
+    return;
+  }
+
+  // There is an existing restyle root - walk up the tree from our element,
+  // propagating bits as wel go.
+  const bool reachedDocRoot = !parent || !PropagateBits(parent, aBit, existingRoot);
+
+  if (!reachedDocRoot) {
+      // We're a descendant of the existing root. All that's left to do is to
+      // make sure the bit we propagated is also registered on the root.
+      doc->SetServoRestyleRoot(existingRoot, existingBits | aBit);
+  } else {
+    // We reached the root without crossing the pre-existing restyle root. We
+    // now need to find the nearest common ancestor, so climb up from the
+    // existing root, extending bits along the way.
+    if (Element* commonAncestor = PropagateBitsFromParent(existingRoot, existingBits, aElement)) {
+      // We found a common ancestor. Make that the new style root, and clear the
+      // bits between the new style root and the document root.
+      doc->SetServoRestyleRoot(commonAncestor, existingBits | aBit);
+      Element* curr = commonAncestor;
+      while ((curr = curr->GetFlattenedTreeParentElementForStyle())) {
+        MOZ_ASSERT(curr->HasFlag(aBit));
+        curr->UnsetFlags(aBit);
+      }
+    } else {
+      // We didn't find a common ancestor element. That means we're descended
+      // from two different document style roots, so the common ancestor is the
+      // document.
+      doc->SetServoRestyleRoot(doc, existingBits | aBit);
+    }
+  }
+
+  MOZ_ASSERT(aElement == doc->GetServoRestyleRoot() ||
+             BitIsPropagated(parent, aBit, doc->GetServoRestyleRoot()));
+  MOZ_ASSERT(doc->GetServoRestyleRootDirtyBits() & aBit);
 }
 
 void
 Element::NoteDirtyForServo()
 {
-  NoteDirtyElement<DirtyDescendantsBit>(this);
+  NoteDirtyElement(this, ELEMENT_HAS_DIRTY_DESCENDANTS_FOR_SERVO);
 }
 
 void
 Element::NoteAnimationOnlyDirtyForServo()
 {
-  NoteDirtyElement<AnimationOnlyDirtyDescendantsBit>(this);
+  NoteDirtyElement(this, ELEMENT_HAS_ANIMATION_ONLY_DIRTY_DESCENDANTS_FOR_SERVO);
+}
+
+void
+Element::NoteDescendantsNeedFramesForServo()
+{
+  // Since lazy frame construction can be required for non-element nodes, this
+  // Note() method operates on the parent of the frame-requiring content, unlike
+  // the other Note() methods above (which operate directly on the element that
+  // needs processing).
+  NoteDirtyElement(this, NODE_DESCENDANTS_NEED_FRAMES);
+  SetFlags(NODE_DESCENDANTS_NEED_FRAMES);
 }

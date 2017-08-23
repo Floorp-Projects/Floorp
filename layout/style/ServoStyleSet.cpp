@@ -859,17 +859,22 @@ bool
 ServoStyleSet::StyleDocument(ServoTraversalFlags aBaseFlags)
 {
   PreTraverse(aBaseFlags);
+  AutoPrepareTraversal guard(this);
+  const SnapshotTable& snapshots = Snapshots();
 
   // Restyle the document from the root element and each of the document level
   // NAC subtree roots.
   bool postTraversalRequired = false;
-  DocumentStyleRootIterator iter(mPresContext->Document());
+
+  nsIDocument* doc = mPresContext->Document();
+  Element* rootElement = doc->GetRootElement();
+  // NB: We distinguish between the main document and document-level NAC here.
+  const bool isInitialForMainDoc = rootElement && !rootElement->HasServoData();
+
+  // Do the first traversal.
+  DocumentStyleRootIterator iter(doc->GetServoRestyleRoot());
   while (Element* root = iter.GetNextStyleRoot()) {
     MOZ_ASSERT(MayTraverseFrom(const_cast<Element*>(root)));
-    AutoPrepareTraversal guard(this);
-    const SnapshotTable& snapshots = Snapshots();
-    bool isInitial = !root->HasServoData();
-    auto flags = aBaseFlags;
 
     // If there were text nodes inserted into the document (but not elements),
     // there may be lazy frame construction to do even if no styling is required.
@@ -880,38 +885,45 @@ ServoStyleSet::StyleDocument(ServoTraversalFlags aBaseFlags)
     // parallelizing over.
     //
     // We only allow the parallel traversal in active (foreground) tabs.
+    auto flags = aBaseFlags;
     if (!root->IsInNativeAnonymousSubtree() && mPresContext->PresShell()->IsActive()) {
       flags |= ServoTraversalFlags::ParallelTraversal;
     }
 
-    // Do the first traversal.
     bool required = Servo_TraverseSubtree(root, mRawSet.get(), &snapshots, flags);
-    MOZ_ASSERT_IF(isInitial, !required);
     postTraversalRequired |= required;
+  }
 
-    // If there are still animation restyles needed, trigger a second traversal to
-    // update CSS animations or transitions' styles.
-    //
-    // We don't need to do this for SMIL since SMIL only updates its animation
-    // values once at the begin of a tick. As a result, even if the previous
-    // traversal caused, for example, the font-size to change, the SMIL style
-    // won't be updated until the next tick anyway.
-    if (mPresContext->EffectCompositor()->PreTraverse(flags)) {
-      if (isInitial) {
-        // We're doing initial styling, and the additional animation
-        // traversal will change the styles that were set by the first traversal.
-        // This would normally require a post-traversal to update the style
-        // contexts, but since this is actually the initial styling, there are
-        // no style contexts to update and no frames to apply the change hints to,
-        // so we just do a forgetful traversal and clear the flags on the way.
-        flags |= ServoTraversalFlags::Forgetful |
-                 ServoTraversalFlags::ClearAnimationOnlyDirtyDescendants;
-      }
-
-      required = Servo_TraverseSubtree(root, mRawSet.get(), &snapshots, flags);
-      MOZ_ASSERT_IF(isInitial, !required);
-      postTraversalRequired |= required;
+  // If there are still animation restyles needed, trigger a second traversal to
+  // update CSS animations or transitions' styles.
+  //
+  // Note that we need to check the style root again, because doing another
+  // PreTraverse on the EffectCompositor might alter the style root. But we
+  // don't need to worry about NAC, since document-level NAC shouldn't have
+  // animations.
+  //
+  // We don't need to do this for SMIL since SMIL only updates its animation
+  // values once at the begin of a tick. As a result, even if the previous
+  // traversal caused, for example, the font-size to change, the SMIL style
+  // won't be updated until the next tick anyway.
+  if (mPresContext->EffectCompositor()->PreTraverse(aBaseFlags)) {
+    nsINode* styleRoot = doc->GetServoRestyleRoot();
+    Element* root = styleRoot->IsElement() ? styleRoot->AsElement() : rootElement;
+    auto flags = aBaseFlags;
+    flags |= ServoTraversalFlags::ParallelTraversal;
+    if (isInitialForMainDoc) {
+      // We're doing initial styling, and the additional animation
+      // traversal will change the styles that were set by the first traversal.
+      // This would normally require a post-traversal to update the style
+      // contexts, but since this is actually the initial styling, there are
+      // no style contexts to update and no frames to apply the change hints to,
+      // so we just do a forgetful traversal and clear the flags on the way.
+      flags |= ServoTraversalFlags::Forgetful |
+               ServoTraversalFlags::ClearAnimationOnlyDirtyDescendants;
     }
+
+    bool required = Servo_TraverseSubtree(root, mRawSet.get(), &snapshots, flags);
+    postTraversalRequired |= required;
   }
 
   return postTraversalRequired;
@@ -949,6 +961,10 @@ void
 ServoStyleSet::StyleNewChildren(Element* aParent)
 {
   MOZ_ASSERT(aParent->HasServoData(), "Should have called StyleNewSubtree");
+  if (Servo_Element_IsDisplayNone(aParent)) {
+    return;
+  }
+
   PreTraverseSync();
   AutoPrepareTraversal guard(this);
 
@@ -1018,10 +1034,25 @@ ServoStyleSet::StyleSubtreeForReconstruct(Element* aRoot)
 {
   MOZ_ASSERT(MayTraverseFrom(aRoot));
   MOZ_ASSERT(aRoot->HasServoData());
+
+  // If the restyle root is beneath |aRoot|, there won't be any descendants bit
+  // leading us to aRoot. In this case, we need to traverse from the restyle
+  // root instead.
+  nsIDocument* doc = mPresContext->Document();
+  nsINode* restyleRoot = doc->GetServoRestyleRoot();
+  if (!restyleRoot) {
+    return;
+  }
+  Element* el = restyleRoot->IsElement() ? restyleRoot->AsElement() : nullptr;
+  if (el && nsContentUtils::ContentIsFlattenedTreeDescendantOf(el, aRoot)) {
+    MOZ_ASSERT(MayTraverseFrom(el));
+    aRoot = el;
+    doc->ClearServoRestyleRoot();
+  }
+
   auto flags = ServoTraversalFlags::Forgetful |
                ServoTraversalFlags::AggressivelyForgetful |
-               ServoTraversalFlags::ClearDirtyDescendants |
-               ServoTraversalFlags::ClearAnimationOnlyDirtyDescendants;
+               ServoTraversalFlags::ClearDirtyBits;
   PreTraverse(flags);
 
   AutoPrepareTraversal guard(this);
@@ -1387,8 +1418,7 @@ ServoStyleSet::MayTraverseFrom(Element* aElement)
     return false;
   }
 
-  RefPtr<ServoStyleContext> sc = Servo_ResolveStyleAllowStale(parent).Consume();
-  return sc->StyleDisplay()->mDisplay != StyleDisplay::None;
+  return !Servo_Element_IsDisplayNone(parent);
 }
 
 void

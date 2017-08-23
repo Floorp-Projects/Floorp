@@ -23,10 +23,6 @@ const {
   selectSnapshotForDiffingAndRefresh,
 } = require("devtools/client/memory/actions/diffing");
 
-function run_test() {
-  run_next_test();
-}
-
 const EXPECTED_INDIVIDUAL_STATES = [
   individualsState.COMPUTING_DOMINATOR_TREE,
   individualsState.FETCHING,

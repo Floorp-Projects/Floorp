@@ -5,10 +5,6 @@ const Cu = Components.utils;
 Cu.import("resource://gre/modules/lz4.js");
 Cu.import("resource://gre/modules/osfile.jsm");
 
-function run_test() {
-  run_next_test();
-}
-
 function compare_arrays(a, b) {
   return Array.prototype.join.call(a) == Array.prototype.join.call(a);
 }

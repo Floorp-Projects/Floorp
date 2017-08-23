@@ -279,10 +279,6 @@ toolbarpaletteitem[place=toolbar] > toolbarspring {
   display: none;
 }
 
-#personal-bookmarks[cui-areatype="toolbar"]:not([overflowedItem=true]) > #bookmarks-toolbar-placeholder > .toolbarbutton-icon {
-  margin-inline-end: 5px;
-}
-
 #customization-palette > toolbarpaletteitem > label {
   text-align: center;
   margin-left: 0;

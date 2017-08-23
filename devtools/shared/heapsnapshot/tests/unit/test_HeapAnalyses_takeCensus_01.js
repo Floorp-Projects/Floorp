@@ -4,10 +4,6 @@
 
 // Test that the HeapAnalyses{Client,Worker} can take censuses.
 
-function run_test() {
-  run_next_test();
-}
-
 add_task(function* () {
   const client = new HeapAnalysesClient();
 

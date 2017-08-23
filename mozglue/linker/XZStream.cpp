@@ -1,8 +1,8 @@
 #include "XZStream.h"
 
 #include <algorithm>
-#include <cstring>
 #include "mozilla/Assertions.h"
+#include "mozilla/CheckedInt.h"
 #include "Logging.h"
 
 // LZMA dictionary size, should have a minimum size for the given compression
@@ -72,6 +72,9 @@ XZStream::Init()
   }
 
   mUncompSize = ParseUncompressedSize();
+  if (!mUncompSize) {
+    return false;
+  }
 
   return true;
 }
@@ -164,13 +167,21 @@ XZStream::ParseIndexSize() const
              footer + kFooterSize - sizeof(kFooterMagic),
              sizeof(kFooterMagic))) {
     // Not a valid footer at stream end.
+    ERROR("XZ parsing: Invalid footer at end of stream");
     return 0;
   }
   // Backward size is a 32 bit LE integer field positioned after the 32 bit CRC32
   // code. It encodes the index size as a multiple of 4 bytes with a minimum
   // size of 4 bytes.
-  const uint32_t backwardSize = *(footer + 4);
-  return (backwardSize + 1) * 4;
+  const uint32_t backwardSizeRaw = *(footer + 4);
+  // Check for overflow.
+  mozilla::CheckedInt<size_t> backwardSizeBytes(backwardSizeRaw);
+  backwardSizeBytes = (backwardSizeBytes + 1) * 4;
+  if (!backwardSizeBytes.isValid()) {
+    ERROR("XZ parsing: Cannot parse index size");
+    return 0;
+  }
+  return backwardSizeBytes.value();
 }
 
 size_t
@@ -186,29 +197,41 @@ XZStream::ParseUncompressedSize() const
   const uint8_t* end = mInBuf + mBuffers.in_size;
   const uint8_t* index = end - kFooterSize - indexSize;
 
-  // The index consists of a one byte indicator followed by a VLI field for the
-  // number of records (1 expected) followed by a list of records. One record
-  // contains a VLI field for unpadded size followed by a VLI field for
-  // uncompressed size.
+  // The xz stream index consists of three concatenated elements:
+  //  (1) 1 byte indicator (always OxOO)
+  //  (2) a Variable Length Integer (VLI) field for the number of records
+  //  (3) a list of records
+  // See https://tukaani.org/xz/xz-file-format-1.0.4.txt
+  // Each record contains a VLI field for unpadded size followed by a var field for
+  // uncompressed size. We only support xz streams with a single record.
+
   if (memcmp(reinterpret_cast<const void*>(kIndexIndicator),
              index, sizeof(kIndexIndicator))) {
-    // Not a valid index.
+    ERROR("XZ parsing: Invalid stream index");
     return 0;
   }
 
   index += sizeof(kIndexIndicator);
   uint64_t numRecords = 0;
   index += ParseVarLenInt(index, end - index, &numRecords);
-  if (!numRecords) {
+  // Only streams with a single record are supported.
+  if (numRecords != 1) {
+    ERROR("XZ parsing: Multiple records not supported");
     return 0;
   }
   uint64_t unpaddedSize = 0;
   index += ParseVarLenInt(index, end - index, &unpaddedSize);
   if (!unpaddedSize) {
+    ERROR("XZ parsing: Unpadded size is 0");
     return 0;
   }
   uint64_t uncompressedSize = 0;
   index += ParseVarLenInt(index, end - index, &uncompressedSize);
+  mozilla::CheckedInt<size_t> checkedSize(uncompressedSize);
+  if (!checkedSize.isValid()) {
+    ERROR("XZ parsing: Uncompressed stream size is too large");
+    return 0;
+  }
 
-  return uncompressedSize;
+  return checkedSize.value();
 }

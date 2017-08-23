@@ -215,7 +215,7 @@ function test_iter_dir() {
   let iterator = new OS.File.DirectoryIterator(parent);
   info("test_iter_dir: iterator created");
   let encountered_tmp_file = false;
-  for (let entry in iterator) {
+  for (let entry of iterator) {
     // Checking that |name| can be decoded properly
     info("test_iter_dir: encountering entry " + entry.name);
 
@@ -266,7 +266,7 @@ function test_iter_dir() {
   // Testing nextBatch()
   iterator = new OS.File.DirectoryIterator(parent);
   let allentries = [];
-  for (let x in iterator) {
+  for (let x of iterator) {
     allentries.push(x);
   }
   iterator.close();

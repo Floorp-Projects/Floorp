@@ -70,9 +70,11 @@ enum class ServoTraversalFlags : uint32_t {
   // Actively seeks out and clears change hints that may have been posted into
   // the tree. Nonsensical without also passing Forgetful.
   AggressivelyForgetful = 1 << 4,
-  // Clears the dirty descendants bit in the subtree.
-  ClearDirtyDescendants = 1 << 5,
-  // Clears the animation-only dirty descendants bit in the subtree.
+  // Clears all the dirty bits (dirty descendants, animation-only dirty-descendants,
+  // needs frame, descendants need frames) on the elements traversed.
+  // in the subtree.
+  ClearDirtyBits = 1 << 5,
+  // Clears only the animation-only dirty descendants bit in the subtree.
   ClearAnimationOnlyDirtyDescendants = 1 << 6,
   // Allows the traversal to run in parallel if there are sufficient cores on
   // the machine.

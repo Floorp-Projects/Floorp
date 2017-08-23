@@ -15,10 +15,6 @@ updateAppInfo({
   platformVersion: "",
 });
 
-function run_test() {
-  run_next_test();
-}
-
 function promise_check_exist(path, shouldExist) {
   return (async function() {
     do_print("Ensuring that " + path + (shouldExist ? " exists" : " does not exist"));

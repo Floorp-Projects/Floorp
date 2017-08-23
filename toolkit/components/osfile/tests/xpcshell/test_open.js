@@ -5,10 +5,6 @@
 
 Components.utils.import("resource://gre/modules/osfile.jsm");
 
-function run_test() {
-  run_next_test();
-}
-
 /**
  * Test OS.File.open for reading:
  * - with an existing file (should succeed);

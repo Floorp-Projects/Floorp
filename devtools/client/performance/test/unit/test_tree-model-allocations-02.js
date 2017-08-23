@@ -7,10 +7,6 @@
  * allocation frame nodes. Inverted version of test_tree-model-allocations-01.js
  */
 
-function run_test() {
-  run_next_test();
-}
-
 add_task(function () {
   let { ThreadNode } = require("devtools/client/performance/modules/logic/tree-model");
   const { getProfileThreadFromAllocations } = require("devtools/shared/performance/recording-utils");

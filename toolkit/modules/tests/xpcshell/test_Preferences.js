@@ -5,10 +5,6 @@ var {classes: Cc, interfaces: Ci, results: Cr, utils: Cu, manager: Cm} = Compone
 
 Cu.import("resource://gre/modules/Preferences.jsm");
 
-function run_test() {
-  run_next_test();
-}
-
 add_test(function test_set_get_pref() {
   Preferences.set("test_set_get_pref.integer", 1);
   do_check_eq(Preferences.get("test_set_get_pref.integer"), 1);

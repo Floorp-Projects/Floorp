@@ -19,7 +19,7 @@ interface nsIDOMHTMLDocument : nsIDOMDocument
            attribute DOMString            domain;
            attribute DOMString            cookie;
 
-  readonly attribute nsIDOMHTMLHeadElement head;
+  readonly attribute nsISupports          head;
            attribute nsIDOMHTMLElement    body;
 
   readonly attribute nsIDOMHTMLCollection images;

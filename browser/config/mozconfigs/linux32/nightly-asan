@@ -2,6 +2,8 @@
 ac_add_options --disable-debug
 ac_add_options --enable-optimize="-O2 -g"
 
+. $topsrcdir/build/mozconfig.stylo
+
 # ASan specific options on Linux
 ac_add_options --enable-valgrind
 

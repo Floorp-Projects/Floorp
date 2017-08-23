@@ -474,7 +474,3 @@ add_task(async function checkQueuedDelete() {
   Assert.ok(_deleteCalled);
   await sm.finalize();
 });
-
-function run_test() {
-  run_next_test();
-}

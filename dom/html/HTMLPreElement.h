@@ -9,14 +9,12 @@
 
 #include "mozilla/Attributes.h"
 
-#include "nsIDOMHTMLPreElement.h"
 #include "nsGenericHTMLElement.h"
 
 namespace mozilla {
 namespace dom {
 
-class HTMLPreElement final : public nsGenericHTMLElement,
-                             public nsIDOMHTMLPreElement
+class HTMLPreElement final : public nsGenericHTMLElement
 {
 public:
   explicit HTMLPreElement(already_AddRefed<mozilla::dom::NodeInfo>& aNodeInfo)
@@ -26,10 +24,6 @@ public:
 
   // nsISupports
   NS_DECL_ISUPPORTS_INHERITED
-
-  // nsIDOMHTMLPreElement
-  NS_IMETHOD GetWidth(int32_t* aWidth) override;
-  NS_IMETHOD SetWidth(int32_t aWidth) override;
 
   virtual bool ParseAttribute(int32_t aNamespaceID,
                                 nsIAtom* aAttribute,
