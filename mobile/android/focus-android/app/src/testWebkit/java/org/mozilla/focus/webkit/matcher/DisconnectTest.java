@@ -55,6 +55,7 @@ public class DisconnectTest {
     public void matches() throws Exception {
         final UrlMatcher matcher = UrlMatcher.loadMatcher(RuntimeEnvironment.application, R.raw.blocklist, new int[] { R.raw.google_mapping }, R.raw.entitylist);
 
+
         // Enable everything
         SharedPreferences prefs = PreferenceManager.getDefaultSharedPreferences(RuntimeEnvironment.application);
         prefs.edit()
@@ -62,7 +63,7 @@ public class DisconnectTest {
                 .putBoolean(RuntimeEnvironment.application.getString(R.string.pref_key_privacy_block_analytics), true)
                 .putBoolean(RuntimeEnvironment.application.getString(R.string.pref_key_privacy_block_other), true)
                 .putBoolean(RuntimeEnvironment.application.getString(R.string.pref_key_privacy_block_social), true)
-                .commit();
+                .apply();
 
         // We check that our google_mapping was loaded correctly. We do these checks per-category, so we have:
         // ads:
@@ -86,7 +87,7 @@ public class DisconnectTest {
                 .putBoolean(RuntimeEnvironment.application.getString(R.string.pref_key_privacy_block_analytics), true)
                 .putBoolean(RuntimeEnvironment.application.getString(R.string.pref_key_privacy_block_other), true)
                 .putBoolean(RuntimeEnvironment.application.getString(R.string.pref_key_privacy_block_social), false)
-                .commit();
+                .apply();
 
         // ads:
         assertTrue(matcher.matches(Uri.parse("http://admeld.com/foobar"), Uri.parse("http://mozilla.org")));
@@ -108,7 +109,7 @@ public class DisconnectTest {
                 .putBoolean(RuntimeEnvironment.application.getString(R.string.pref_key_privacy_block_analytics), false)
                 .putBoolean(RuntimeEnvironment.application.getString(R.string.pref_key_privacy_block_other), false)
                 .putBoolean(RuntimeEnvironment.application.getString(R.string.pref_key_privacy_block_social), false)
-                .commit();
+                .apply();
 
         // ads:
         assertFalse(matcher.matches(Uri.parse("http://admeld.com/foobar"), Uri.parse("http://mozilla.org")));
