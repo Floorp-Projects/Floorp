@@ -139,6 +139,21 @@ public class Highlight implements Item {
     }
 
     /**
+     * Returns the image URL associated with this Highlight.
+     *
+     * This implementation may be slow: see {@link #getMetadataSlow()}.
+     *
+     * @return the image URL, or the empty String if there is none.
+     */
+    @NonNull
+    @Override
+    public String getImageUrl() {
+        final Metadata metadata = getMetadataSlow();
+        final String imageUrl = metadata.getImageUrl();
+        return imageUrl != null ? imageUrl : "";
+    }
+
+    /**
      * Returns the image url in the highlight's metadata. This value does not provide valid image url but is
      * consistent across invocations and can be used to compare against other Highlight's fast image urls.
      * See {@link #getMetadataSlow()} for a description of why we use this method.
