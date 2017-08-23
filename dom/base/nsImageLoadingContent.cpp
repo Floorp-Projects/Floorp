@@ -1372,8 +1372,6 @@ nsImageLoadingContent::PrepareNextRequest(ImageLoadType aImageLoadType)
   // available. bz says the web depends on this behavior.
   // Otherwise, we get rid of any half-baked request that might be sitting there
   // and make this one current.
-  // TODO: Bug 583491
-  // Investigate/Cleanup NS_ERROR_IMAGE_SRC_CHANGED use in nsImageFrame.cpp
   return HaveSize(mCurrentRequest) ?
            PreparePendingRequest(aImageLoadType) :
            PrepareCurrentRequest(aImageLoadType);

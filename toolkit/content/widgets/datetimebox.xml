@@ -1235,6 +1235,10 @@
           capture: true,
           mozSystemGroup: true
         });
+        // This is to open the picker when input element is clicked (this
+        // includes padding area).
+        this.mInputElement.addEventListener("click", this,
+                                            { mozSystemGroup: true });
         // This is to close the picker when input element blurs.
         this.mInputElement.addEventListener("blur", this,
                                             { mozSystemGroup: true });
@@ -1252,13 +1256,17 @@
           capture: true,
           mozSystemGroup: true
         });
+        this.mInputElement.removeEventListener("click", this,
+                                               { mozSystemGroup: true });
+        this.mInputElement.removeEventListener("blur", this,
+                                               { mozSystemGroup: true });
       ]]>
       </destructor>
 
       <property name="EVENTS" readonly="true">
         <getter>
         <![CDATA[
-          return ["click", "focus", "blur", "copy", "cut", "paste", "mousedown"];
+          return ["focus", "blur", "copy", "cut", "paste", "mousedown"];
         ]]>
         </getter>
       </property>
@@ -1799,12 +1807,9 @@
         <parameter name="aEvent"/>
         <body>
         <![CDATA[
-          this.log("onClick originalTarget: " + aEvent.originalTarget);
+          this.log("onClick originalTarget: " + aEvent.originalTarget +
+                   " target: " + aEvent.target);
 
-          // XXX: .originalTarget is not expected.
-          // When clicking on one of the inner text boxes, the .originalTarget is
-          // a HTMLDivElement and when clicking on the reset button, it's a
-          // HTMLButtonElement.
           if (aEvent.defaultPrevented || this.isDisabled() || this.isReadonly()) {
             return;
           }

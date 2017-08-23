@@ -234,7 +234,13 @@ nsChannelClassifier::nsChannelClassifier(nsIChannel *aChannel)
     mTrackingProtectionEnabled(Nothing()),
     mTrackingAnnotationEnabled(Nothing())
 {
+  LOG(("nsChannelClassifier::nsChannelClassifier %p", this));
   MOZ_ASSERT(mChannel);
+}
+
+nsChannelClassifier::~nsChannelClassifier()
+{
+  LOG(("nsChannelClassifier::~nsChannelClassifier %p", this));
 }
 
 bool

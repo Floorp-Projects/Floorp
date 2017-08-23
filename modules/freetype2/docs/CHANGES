@@ -1,4 +1,111 @@
 
+CHANGES BETWEEN 2.7.1 and 2.8
+
+  I. IMPORTANT CHANGES
+
+    - Support for OpenType Variation Fonts is now complete.   The last
+      missing part was handling the `VVAR' and `MVAR' tables, which is
+      available with this release.
+
+    - A new  function `FT_Face_Properties' allows the  control of some
+      module  and   library  properties  per  font.    Currently,  the
+      following properties can be  handled: stem darkening, LCD filter
+      weights, and the random seed for the `random' CFF operator.
+
+    - The PCF change to show more `colourful' family names (introduced
+      in version 2.7.1) was too radical; it can now be configured with
+      PCF_CONFIG_OPTION_LONG_FAMILY_NAMES   at   compile   time.    If
+      activated, it can  be switched off at run time  with the new pcf
+      property  `no-long-family-names'.  If  the `FREETYPE_PROPERTIES'
+      environment variable is available, you can say
+
+        FREETYPE_PROPERTIES=pcf:no-long-family-names=1
+
+    - Support  for  the  following  scripts  has  been  added  to  the
+      auto-hinter.
+
+        Adlam, Avestan, Bamum, Buhid, Carian, Chakma, Coptic, Cypriot,
+        Deseret, Glagolitic, Gothic, Kayah, Lisu, N'Ko, Ol Chiki, Old
+        Turkic, Osage, Osmanya, Saurashtra, Shavian, Sundanese, Tai
+        Viet, Tifinagh, Unified Canadian Syllabics, Vai
+
+
+  II. IMPORTANT BUG FIXES
+
+    - `Light' auto-hinting  mode no  longer uses TrueType  metrics for
+      TrueType  fonts.   This bug  was  introduced  in version  2.4.6,
+      causing   horizontal  scaling   also.    Almost  all   GNU/Linux
+      distributions (with Fedora as  a notable exception) disabled the
+      corresponding patch for good reasons; chances are thus high that
+      you won't notice a difference.
+
+      If  optical backward  compatibility for  legacy applications  is
+      necessary, you might enable the AF_CONFIG_OPTION_TT_SIZE_METRICS
+      configuration option.   However, it  is strongly  recommended to
+      avoid that, adjusting font sizes instead.
+
+    - If a TrueType font gets loaded with FT_LOAD_NO_HINTING, FreeType
+      now scales  the font linearly  again (bug introduced  in version
+      2.4.6).
+
+    - CVE-2017-8105,  CVE-2017-8287:  Older   FreeType  versions  have
+      out-of-bounds  writes  caused  by  heap-based  buffer  overflows
+      related to Type 1 fonts.
+
+        https://cve.mitre.org/cgi-bin/cvename.cgi?name=CVE-2017-8105
+        https://cve.mitre.org/cgi-bin/cvename.cgi?name=CVE-2017-8287
+
+
+  III. MISCELLANEOUS
+
+    - A  new function  `FT_Set_Default_Properties' has  been added  to
+      parse    the    `FREETYPE_PROPERTIES'    environment    variable
+      (previously, it  was internal only).   `FT_Init_FreeType' always
+      call this  function, but  `FT_New_Library' does not  (similar to
+      `FT_Add_Default_Modules').
+
+    - To be in sync with OpenType version 1.7 and newer, macros
+
+        FT_PARAM_TAG_IGNORE_PREFERRED_FAMILY,
+        FT_PARAM_TAG_IGNORE_PREFERRED_SUBFAMILY,
+        TT_NAME_ID_PREFERRED_FAMILY
+        TT_NAME_ID_PREFERRED_SUBFAMILY
+
+      are renamed to
+
+        FT_PARAM_TAG_IGNORE_TYPOGRAPHIC_FAMILY,
+        FT_PARAM_TAG_IGNORE_TYPOGRAPHIC_SUBFAMILY,
+        TT_NAME_ID_TYPOGRAPHIC_FAMILY
+        TT_NAME_ID_TYPOGRAPHIC_SUBFAMILY
+
+      The old macro names are deprecated (but still available).
+
+    - Support for SFNT `name' tables has been improved.
+
+      . Format  1 `name' tables  are now supported.  Use  new function
+        `FT_Get_Sfnt_LangTag' to access associated language tags.
+
+      . Language, encoding, and name IDs have been updated to OpenType
+        version 1.8.1.
+
+    - The new CFF  engine now handles the `random'  operator.  All CFF
+      opcodes are now supported.
+
+    - The CFF module  has a new property `random-seed'  to control the
+      pseudo-random number generation for the `random' operator.
+
+    - The `freetype-config' script is now a wrapper of `pkg-config' if
+      this program is available in the path.
+
+    - FT_LOAD_TARGET_LCD  is now  a  variant of  FT_LOAD_TARGET_LIGHT;
+      this should provide better rendering results.
+
+    - A mode to display  light auto-hinting with sub-pixel positioning
+      has been added to `ftdiff'.
+
+
+======================================================================
+
 CHANGES BETWEEN 2.7 and 2.7.1
 
   I. IMPORTANT CHANGES
@@ -17,6 +124,12 @@ CHANGES BETWEEN 2.7 and 2.7.1
 
     - Handling of  raw CID fonts was partially  broken (bug introduced
       in 2.6.4).
+
+    - CVE-2016-10328:  Older  FreeType versions had  an  out-of-bounds
+      write caused by a heap-based  buffer overflow related to the CFF
+      fonts.
+
+        http://cve.mitre.org/cgi-bin/cvename.cgi?name=CVE-2016-10328
 
 
   III. MISCELLANEOUS
@@ -195,7 +308,7 @@ CHANGES BETWEEN 2.6.3 and 2.6.4
 
     - Type 42 fonts as created by LilyPond are now supported.
 
-    - Minor rendering improvments in the auto-hinter.
+    - Minor rendering improvements in the auto-hinter.
 
     - For experimental  reasons, the old  CFF engine now  supports all
       CFF operators except `random', including the deprecated Multiple
@@ -240,7 +353,7 @@ CHANGES BETWEEN 2.6.2 and 2.6.3
       to the user.   The exception to this  is `__FTERRORS_H__', which
       must be  sometimes undefined by  the user to get  FreeType error
       strings:  Both this  form and  the new  `FTERRORS_H_' macro  are
-      accepted for backwards compatibility.
+      accepted for backward compatibility.
 
     - Minor improvements mainly to the Type 1 driver.
 
@@ -481,17 +594,17 @@ CHANGES BETWEEN 2.5.5 and 2.6
       compiler warnings.
 
     - Function `FT_Bitmap_New'  has been renamed  to `FT_Bitmap_Init',
-      since  this name  better reflects  its function.   For backwards
+      since  this name  better reflects  its  function.   For backward
       compatibility, the old function name is still available.
 
     - Function   `FT_Get_X11_Font_Format'   has    been   renamed   to
       `FT_Get_Font_Format',  since  this   name  better  reflects  its
-      function.  For backwards compatibility, the old function name is
+      function.  For backward compatibility,  the old function name is
       still available.
 
       Additionally, the header  file macro for this  function has been
       renamed to  `FT_FONT_FORMATS_H' (the old name  `FT_XFREE86_H' is
-      retained for backwards compatibility).
+      retained for backward compatibility).
 
     - Various improvements to the `ftgrid' demo program.
 
@@ -925,7 +1038,7 @@ index ebcf189..3f2ce6b 100644
   II. MISCELLANEOUS
 
     - The  (top-level)  `configure'  script   now  respects  the  MAKE
-      environment variable to specify a `make' binary.   For backwards
+      environment variable  to specify a `make' binary.   For backward
       compatibility, GNUMAKE still overrides MAKE, though.
 
     - The `ftview'  and `ftdiff'  demo programs have  been redesigned,
@@ -2144,7 +2257,7 @@ CHANGES BETWEEN 2.1.10 and 2.1.9
       probably using a different pitch, and to further manipulate it.
 
     - A new  API `FT_Outline_Embolden'  (in FT_OUTLINE_H) gives  finer
-      control how  outlines are embolded.
+      control how outlines are emboldened.
 
     - `FT_GlyphSlot_Embolden' (in FT_SYNTHESIS_H)  now handles bitmaps
       also (code contributed  by Chia I Wu).  Note that this  function
@@ -2263,7 +2376,7 @@ CHANGES BETWEEN 2.1.8 and 2.1.7
       correctly  treated as a  CID, similar  to FreeType's  CID driver
       module.  Note that CID CMap support is still missing.
 
-    - The FT_FACE_FLAGS_GLYPH_NAMES flag is now  set correctly for all
+    - The FT_FACE_FLAG_GLYPH_NAMES flag  is now  set correctly for all
       font formats.
 
     - Some subsetted Type 1  fonts weren't parsed correctly.  This bug
@@ -2554,7 +2667,7 @@ CHANGES BETWEEN 2.1.5 and 2.1.4
 
     - FT_ENCODING_MS_{SJIS,GB2312,BIG5,WANSUNG,JOHAB}      are     now
       deprecated               in               favour              of
-      FT_ENCODING_{SJIS,GB2312,GIB5,WANSONG,JOHAB}  -- those encodings
+      FT_ENCODING_{SJIS,GB2312,BIG5,WANSUNG,JOHAB}  -- those encodings
       are not specific to Microsoft.
 
 
@@ -4676,7 +4789,7 @@ Extensions support:
 
 ------------------------------------------------------------------------
 
-Copyright 2000-2016 by
+Copyright 2000-2017 by
 David Turner, Robert Wilhelm, and Werner Lemberg.
 
 This  file  is  part  of the  FreeType  project, and may  only be  used,

@@ -418,6 +418,9 @@ nsLoadGroup::GetDefaultLoadRequest(nsIRequest * *aRequest)
 NS_IMETHODIMP
 nsLoadGroup::SetDefaultLoadRequest(nsIRequest *aRequest)
 {
+    LOG(("nsLoadGroup::SetDefaultLoadRequest this=%p default-request=%p",
+         this, aRequest));
+
     mDefaultLoadRequest = aRequest;
     // Inherit the group load flags from the default load request
     if (mDefaultLoadRequest) {
@@ -757,6 +760,9 @@ nsLoadGroup::GetRootLoadGroup(nsILoadGroup * *aRootLoadGroup)
 NS_IMETHODIMP
 nsLoadGroup::OnEndPageLoad(nsIChannel *aDefaultChannel)
 {
+    LOG(("nsLoadGroup::OnEndPageLoad this=%p default-request=%p",
+         this, aDefaultChannel));
+
     // for the moment, nothing to do here.
     return NS_OK;
 }
