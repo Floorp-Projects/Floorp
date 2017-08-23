@@ -64,7 +64,14 @@ WebGLQuery::Delete()
 static void
 DispatchAvailableRunnable(WebGLQuery* query)
 {
-    NS_DispatchToCurrentThread(new AvailableRunnable(query));
+    RefPtr<AvailableRunnable> runnable = new AvailableRunnable(query);
+
+    nsIDocument* document = query->mContext->GetOwnerDoc();
+    if (document) {
+        document->Dispatch(TaskCategory::Other, runnable.forget());
+        return;
+    }
+    NS_DispatchToCurrentThread(runnable.forget());
 }
 
 ////

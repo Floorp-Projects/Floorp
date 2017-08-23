@@ -514,6 +514,7 @@ public:
     void AssertCachedGlobalState();
 
     dom::HTMLCanvasElement* GetCanvas() const { return mCanvasElement; }
+    nsIDocument* GetOwnerDoc() const;
 
     // WebIDL WebGLRenderingContext API
     void Commit();
