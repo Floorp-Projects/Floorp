@@ -110,6 +110,11 @@ public class NetworkUtils {
         }
     }
 
+    public static boolean isWifi(@NonNull final Context context) {
+        final ConnectivityManager connectivityManager = (ConnectivityManager) context.getSystemService(Context.CONNECTIVITY_SERVICE);
+        return getConnectionType(connectivityManager) == ConnectionType.WIFI;
+    }
+
     public static ConnectionType getConnectionType(ConnectivityManager connectivityManager) {
         if (connectivityManager == null) {
             return ConnectionType.NONE;
