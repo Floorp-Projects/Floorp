@@ -198,11 +198,11 @@ enum ReactionRecordSlots {
     ReactionRecordSlot_OnFulfilled,
     ReactionRecordSlot_OnRejected,
     ReactionRecordSlot_Resolve,
-    ReactionRecordSlot_Generator = ReactionRecordSlot_Resolve,
     ReactionRecordSlot_Reject,
     ReactionRecordSlot_IncumbentGlobalObject,
     ReactionRecordSlot_Flags,
     ReactionRecordSlot_HandlerArg,
+    ReactionRecordSlot_Generator,
     ReactionRecordSlots,
 };
 
@@ -250,7 +250,7 @@ class PromiseReactionRecord : public NativeObject
         int32_t flags = this->flags();
         flags |= REACTION_FLAG_ASYNC_GENERATOR;
         setFixedSlot(ReactionRecordSlot_Flags, Int32Value(flags));
-        MOZ_ASSERT(getFixedSlot(ReactionRecordSlot_Generator).isNullOrUndefined());
+
         setFixedSlot(ReactionRecordSlot_Generator, ObjectValue(*asyncGenObj));
     }
     bool isAsyncGenerator() {
@@ -534,8 +534,7 @@ EnqueuePromiseReactionJob(JSContext* cx, HandleObject reactionObj,
     // This is relevant for some html APIs like fetch that derive information
     // from said global.
     mozilla::Maybe<AutoCompartment> ac2;
-    bool promiseNeedsWrapping = false;
-    if (handler.isObject() && handler.toObject().compartment() != cx->compartment()) {
+    if (handler.isObject()) {
         RootedObject handlerObj(cx, &handler.toObject());
 
         // The unwrapping has to be unchecked because we specifically want to
@@ -545,7 +544,6 @@ EnqueuePromiseReactionJob(JSContext* cx, HandleObject reactionObj,
         handlerObj = UncheckedUnwrap(handlerObj);
         MOZ_ASSERT(handlerObj);
         ac2.emplace(cx, handlerObj);
-        promiseNeedsWrapping = true;
 
         // We need to wrap the reaction to store it on the job function.
         if (!cx->compartment()->wrap(cx, &reactionVal))
@@ -575,7 +573,7 @@ EnqueuePromiseReactionJob(JSContext* cx, HandleObject reactionObj,
     // handler's compartment above, because we should pass objects from a
     // single compartment to the enqueuePromiseJob callback.
     RootedObject promise(cx, reaction->promise());
-    if (promiseNeedsWrapping && promise && promise->is<PromiseObject>()) {
+    if (promise && promise->is<PromiseObject>()) {
       if (!cx->compartment()->wrap(cx, &promise))
           return false;
     }
