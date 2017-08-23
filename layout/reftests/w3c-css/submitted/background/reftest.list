@@ -3,7 +3,7 @@
 == background-repeat-space-1b.html background-repeat-space-1-ref.html
 == background-repeat-space-1c.html background-repeat-space-1-ref.html
 == background-repeat-space-2.html background-repeat-space-2-ref.html
-== background-repeat-space-3.html background-repeat-space-3-ref.html
+fuzzy-if(webrender,1-1,96-96) == background-repeat-space-3.html background-repeat-space-3-ref.html
 == background-repeat-space-4.html background-repeat-space-4-ref.html
 == background-repeat-space-5.html background-repeat-space-5-ref.html
 == background-repeat-space-6.html background-repeat-space-6-ref.html
