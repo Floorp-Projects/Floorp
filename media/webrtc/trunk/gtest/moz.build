@@ -17,8 +17,6 @@ DEFINES['WEBRTC_INTELLIGIBILITY_ENHANCER'] = 0
 # Hit build errors on windows with xutility otherwise
 DISABLE_STL_WRAPPING = True
 
-NO_PGO = True
-
 LOCAL_INCLUDES += [
     '../',
     '/',

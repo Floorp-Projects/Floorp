@@ -37,8 +37,6 @@ USE_STATIC_LIBS = True
 # Don't use STL wrappers; nptest isn't Gecko code
 DISABLE_STL_WRAPPING = True
 
-NO_PGO = True
-
 if CONFIG['MOZ_WIDGET_TOOLKIT'] == 'windows':
     RCFILE  = 'nptest.rc'
     RESFILE = 'nptest.res'
