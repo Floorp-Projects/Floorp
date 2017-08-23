@@ -299,7 +299,7 @@ public:
                                     bool* aCreated);
 
   nsresult
-  EnsureTemporaryStorageIsInitialized(PersistenceType aPersistenceType);
+  EnsureTemporaryStorageIsInitialized();
 
   void
   OriginClearCompleted(PersistenceType aPersistenceType,
