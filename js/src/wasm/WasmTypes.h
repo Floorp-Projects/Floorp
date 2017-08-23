@@ -20,6 +20,7 @@
 #define wasm_types_h
 
 #include "mozilla/Alignment.h"
+#include "mozilla/Atomics.h"
 #include "mozilla/EnumeratedArray.h"
 #include "mozilla/HashFunctions.h"
 #include "mozilla/Maybe.h"
@@ -74,6 +75,7 @@ typedef MutableHandle<WasmTableObject*> MutableHandleWasmTableObject;
 
 namespace wasm {
 
+using mozilla::Atomic;
 using mozilla::DebugOnly;
 using mozilla::EnumeratedArray;
 using mozilla::Maybe;

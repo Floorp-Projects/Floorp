@@ -217,10 +217,11 @@ class MOZ_STACK_CLASS ModuleGenerator
     typedef EnumeratedArray<Trap, Trap::Limit, CallableOffsets> TrapExitOffsetArray;
 
     // Constant parameters
-    Tier                            tier_;
+    SharedCompileArgs               compileArgs_;
     CompileMode                     compileMode_;
+    Tier                            tier_;
     UniqueChars*                    error_;
-    mozilla::Atomic<bool>*          cancelled_;
+    Atomic<bool>*                   cancelled_;
 
     // Data that is moved into the result of finish()
     Assumptions                     assumptions_;
@@ -285,7 +286,7 @@ class MOZ_STACK_CLASS ModuleGenerator
     MOZ_MUST_USE bool initWasm(const CompileArgs& args);
 
   public:
-    explicit ModuleGenerator(UniqueChars* error, mozilla::Atomic<bool>* cancelled);
+    explicit ModuleGenerator(UniqueChars* error, Atomic<bool>* cancelled);
     ~ModuleGenerator();
 
     MOZ_MUST_USE bool init(UniqueModuleEnvironment env, const CompileArgs& args,
@@ -339,7 +340,7 @@ class MOZ_STACK_CLASS ModuleGenerator
 
     // Finish compilation of the given bytecode, installing tier-variant parts
     // for Tier 2 into module.
-    MOZ_MUST_USE bool finishTier2(const ShareableBytes& bytecode, SharedModule module);
+    MOZ_MUST_USE bool finishTier2(Module& module);
 };
 
 // A FunctionGenerator encapsulates the generation of a single function body.
