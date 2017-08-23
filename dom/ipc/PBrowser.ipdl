@@ -622,6 +622,8 @@ child:
 
     async SizeModeChanged(nsSizeMode sizeMode);
 
+    async ParentActivated(bool aActivated);
+
     async SetKeyboardIndicators(UIStateChangeType showAccelerators,
                                 UIStateChangeType showFocusRings);
 

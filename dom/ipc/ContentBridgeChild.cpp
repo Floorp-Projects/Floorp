@@ -221,13 +221,6 @@ ContentBridgeChild::RecvDeactivate(PBrowserChild* aTab)
   return tab->RecvDeactivate();
 }
 
-mozilla::ipc::IPCResult
-ContentBridgeChild::RecvParentActivated(PBrowserChild* aTab, const bool& aActivated)
-{
-  TabChild* tab = static_cast<TabChild*>(aTab);
-  return tab->RecvParentActivated(aActivated);
-}
-
 already_AddRefed<nsIEventTarget>
 ContentBridgeChild::GetConstructedEventTarget(const Message& aMsg)
 {
