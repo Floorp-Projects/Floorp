@@ -17,12 +17,32 @@ proxy.registerPathHandler("/", (request, response) => {
 });
 
 add_task(async function test_webRequest_auth_proxy() {
-  async function background() {
-    browser.webRequest.onAuthRequired.addListener((details) => {
+  async function background(port) {
+    browser.webRequest.onBeforeRequest.addListener(details => {
+      browser.test.log(`details ${JSON.stringify(details)}\n`);
+      browser.test.assertEq("localhost", details.proxyInfo.host, "proxy host");
+      browser.test.assertEq(port, details.proxyInfo.port, "proxy port");
+      browser.test.assertEq("http", details.proxyInfo.type, "proxy type");
+      browser.test.assertEq("", details.proxyInfo.username, "proxy username not set");
+    }, {urls: ["<all_urls>"]});
+    browser.webRequest.onAuthRequired.addListener(details => {
       browser.test.assertTrue(details.isProxy, "proxied request");
-      browser.test.sendMessage("done", details.challenger);
+      browser.test.assertEq("localhost", details.proxyInfo.host, "proxy host");
+      browser.test.assertEq(port, details.proxyInfo.port, "proxy port");
+      browser.test.assertEq("http", details.proxyInfo.type, "proxy type");
+      browser.test.assertEq("localhost", details.challenger.host, "proxy host");
+      browser.test.assertEq(port, details.challenger.port, "proxy port");
       return {authCredentials: {username: "puser", password: "ppass"}};
     }, {urls: ["<all_urls>"]}, ["blocking"]);
+    browser.webRequest.onCompleted.addListener(details => {
+      browser.test.log(`details ${JSON.stringify(details)}\n`);
+      browser.test.assertEq("localhost", details.proxyInfo.host, "proxy host");
+      browser.test.assertEq(port, details.proxyInfo.port, "proxy port");
+      browser.test.assertEq("http", details.proxyInfo.type, "proxy type");
+      browser.test.assertEq("", details.proxyInfo.username, "proxy username not set by onAuthRequired");
+      browser.test.assertEq(undefined, details.proxyInfo.password, "no proxy password");
+      browser.test.sendMessage("done");
+    }, {urls: ["<all_urls>"]});
 
     await browser.proxy.register("proxy.js");
     browser.test.sendMessage("pac-ready");
@@ -37,7 +57,7 @@ add_task(async function test_webRequest_auth_proxy() {
         "<all_urls>",
       ],
     },
-    background,
+    background: `(${background})(${proxy.identity.primaryPort})`,
     files: {
       "proxy.js": `
         function FindProxyForURL(url, host) {
@@ -51,9 +71,7 @@ add_task(async function test_webRequest_auth_proxy() {
 
   let contentPage = await ExtensionTestUtils.loadContentPage(`http://mozilla.org/`);
 
-  let challenger = await handlingExt.awaitMessage("done");
-  equal(challenger.host, "localhost", "proxy host");
-  equal(challenger.port, proxy.identity.primaryPort, "proxy port");
+  await handlingExt.awaitMessage("done");
   await contentPage.close();
   await handlingExt.unload();
 }).only();

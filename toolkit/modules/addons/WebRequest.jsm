@@ -847,6 +847,18 @@ HttpObserverManager = {
       }
     }
 
+    if (channel instanceof Ci.nsIProxiedChannel && channel.proxyInfo) {
+      let pi = channel.proxyInfo;
+      data.proxyInfo = {
+        host: pi.host,
+        port: pi.port,
+        type: pi.type,
+        username: pi.username,
+        proxyDNS: pi.flags == Ci.nsIProxyInfo.TRANSPARENT_PROXY_RESOLVES_HOST,
+        failoverTimeout: pi.failoverTimeout,
+      };
+    }
+
     return Object.assign(data, extraData);
   },
 
