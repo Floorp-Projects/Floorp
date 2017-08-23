@@ -59,3 +59,7 @@ class FailedCommandError(Exception):
         Exception.__init__(self, message)
         self.exit_code = exit_code
         self.reason = reason
+
+
+class MissingFileError(MachError):
+    """Attempted to load a mach commands file that doesn't exist."""
