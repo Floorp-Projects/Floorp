@@ -740,3 +740,7 @@ skip script test262/language/expressions/class/dstr-meth-static-obj-ptrn-rest-ob
 skip script test262/language/expressions/class/dstr-gen-meth-static-dflt-obj-ptrn-rest-obj-nested-rest.js
 skip script test262/language/expressions/class/dstr-async-gen-meth-static-dflt-obj-ptrn-rest-obj-nested-rest.js
 skip script test262/language/expressions/class/dstr-gen-meth-static-dflt-obj-ptrn-rest-nested-obj.js
+
+# https://github.com/tc39/test262/pull/1170
+skip script test262/language/module-code/namespace/internals/define-own-property.js
+skip script test262/language/module-code/namespace/internals/set.js
