@@ -125,12 +125,10 @@ class MacroAssemblerARM : public Assembler
     void ma_movPatchable(Imm32 imm, Register dest, Assembler::Condition c);
     void ma_movPatchable(ImmPtr imm, Register dest, Assembler::Condition c);
 
+    // To be used with Iter := InstructionIterator or BufferInstructionIterator.
+    template<class Iter>
     static void ma_mov_patch(Imm32 imm, Register dest, Assembler::Condition c,
-                             RelocStyle rs, Instruction* i);
-    static void ma_mov_patch(ImmPtr imm, Register dest, Assembler::Condition c,
-                             RelocStyle rs, Instruction* i);
-
-    Instruction* offsetToInstruction(CodeOffset offs);
+                             RelocStyle rs, Iter iter);
 
     // ALU based ops
     // mov
