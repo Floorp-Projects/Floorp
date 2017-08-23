@@ -1154,7 +1154,8 @@ function notify(observers, notification, args = [], information = {}) {
       continue;
     }
 
-    if (information.isDescendantRemoval && observer.skipDescendantsOnItemRemoval) {
+    if (information.isDescendantRemoval && observer.skipDescendantsOnItemRemoval &&
+        !(PlacesUtils.bookmarks.userContentRoots.includes(information.parentGuid))) {
       continue;
     }
 
@@ -2234,7 +2235,10 @@ async function(db, folderGuids, options) {
                                          source ],
                                        // Notify observers that this item is being
                                        // removed as a descendent.
-                                       { isDescendantRemoval: true });
+                                       {
+                                         isDescendantRemoval: true,
+                                         parentGuid: item.parentGuid
+                                       });
 
     let isUntagging = item._grandParentId == PlacesUtils.tagsFolderId;
     if (isUntagging) {
