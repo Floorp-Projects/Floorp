@@ -185,7 +185,6 @@ ChromiumCDMChild::SetTimer(int64_t aDelayMs, void* aContext)
 cdm::Time
 ChromiumCDMChild::GetCurrentWallTime()
 {
-  MOZ_ASSERT(IsOnMessageLoopThread());
   return base::Time::Now().ToDoubleT();
 }
 
