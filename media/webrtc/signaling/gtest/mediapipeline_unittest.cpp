@@ -243,7 +243,8 @@ class TestAgent {
   TestAgent() :
       audio_config_(109, "opus", 48000, 960, 2, 64000, false),
       audio_conduit_(mozilla::AudioSessionConduit::Create()),
-      audio_pipeline_() {
+      audio_pipeline_(),
+      use_bundle_(false) {
   }
 
   static void ConnectRtp(TestAgent *client, TestAgent *server) {
@@ -261,38 +262,24 @@ class TestAgent {
                                   server->bundle_transport_);
   }
 
-  virtual void CreatePipelines_s(bool aIsRtcpMux) = 0;
-
-  void Start() {
-    MOZ_MTLOG(ML_DEBUG, "Starting");
-    audio_pipeline_->Init();
-  }
-
-  void StopInt() {
-  }
+  virtual void CreatePipeline(bool aIsRtcpMux) = 0;
 
   void Stop() {
     MOZ_MTLOG(ML_DEBUG, "Stopping");
 
     if (audio_pipeline_)
-      audio_pipeline_->ShutdownMedia_m();
-
-    mozilla::SyncRunnable::DispatchToThread(
-      test_utils->sts_target(),
-      WrapRunnable(this, &TestAgent::StopInt));
+      audio_pipeline_->Stop();
   }
 
   void Shutdown_s() {
     audio_rtp_transport_.Shutdown();
     audio_rtcp_transport_.Shutdown();
     bundle_transport_.Shutdown();
-    if (audio_pipeline_)
-      audio_pipeline_->DetachTransport_s();
   }
 
   void Shutdown() {
     if (audio_pipeline_)
-      audio_pipeline_->ShutdownMedia_m();
+      audio_pipeline_->Shutdown_m();
     if (audio_stream_track_)
       audio_stream_track_->Stop();
 
@@ -329,6 +316,11 @@ class TestAgent {
     return audio_pipeline_->rtcp_packets_received();
   }
 
+
+  void SetUsingBundle(bool use_bundle) {
+    use_bundle_ = use_bundle;
+  }
+
  protected:
   mozilla::AudioCodecConfig audio_config_;
   RefPtr<mozilla::MediaSessionConduit> audio_conduit_;
@@ -340,11 +332,12 @@ class TestAgent {
   TransportInfo audio_rtp_transport_;
   TransportInfo audio_rtcp_transport_;
   TransportInfo bundle_transport_;
+  bool use_bundle_;
 };
 
 class TestAgentSend : public TestAgent {
  public:
-  TestAgentSend() : use_bundle_(false) {
+  TestAgentSend() {
     mozilla::MediaConduitErrorCode err =
         static_cast<mozilla::AudioSessionConduit *>(audio_conduit_.get())->
         ConfigureSendMediaCodec(&audio_config_);
@@ -353,13 +346,26 @@ class TestAgentSend : public TestAgent {
     audio_stream_track_ = new FakeAudioStreamTrack();
   }
 
-  virtual void CreatePipelines_s(bool aIsRtcpMux) {
+  virtual void CreatePipeline(bool aIsRtcpMux) {
 
     std::string test_pc;
 
     if (aIsRtcpMux) {
       ASSERT_FALSE(audio_rtcp_transport_.flow_);
     }
+
+    RefPtr<MediaPipelineTransmit> audio_pipeline =
+      new mozilla::MediaPipelineTransmit(
+        test_pc,
+        nullptr,
+        test_utils->sts_target(),
+        false,
+        audio_stream_track_.get(),
+        audio_conduit_);
+
+    audio_pipeline->Start();
+
+    audio_pipeline_ = audio_pipeline;
 
     RefPtr<TransportFlow> rtp(audio_rtp_transport_.flow_);
     RefPtr<TransportFlow> rtcp(audio_rtcp_transport_.flow_);
@@ -369,25 +375,9 @@ class TestAgentSend : public TestAgent {
       rtcp = nullptr;
     }
 
-    audio_pipeline_ = new mozilla::MediaPipelineTransmit(
-        test_pc,
-        nullptr,
-        test_utils->sts_target(),
-        audio_stream_track_.get(),
-        "audio_track_fake_uuid",
-        1,
-        audio_conduit_,
-        rtp,
-        rtcp,
-        nsAutoPtr<MediaPipelineFilter>());
+    audio_pipeline_->UpdateTransport_m(
+        rtp, rtcp, nsAutoPtr<MediaPipelineFilter>(nullptr));
   }
-
-  void SetUsingBundle(bool use_bundle) {
-    use_bundle_ = use_bundle;
-  }
-
- private:
-  bool use_bundle_;
 };
 
 
@@ -404,8 +394,8 @@ class TestAgentReceive : public TestAgent {
     EXPECT_EQ(mozilla::kMediaConduitNoError, err);
   }
 
-  virtual void CreatePipelines_s(bool aIsRtcpMux) {
-      std::string test_pc;
+  virtual void CreatePipeline(bool aIsRtcpMux) {
+    std::string test_pc;
 
     if (aIsRtcpMux) {
       ASSERT_FALSE(audio_rtcp_transport_.flow_);
@@ -415,11 +405,20 @@ class TestAgentReceive : public TestAgent {
         test_pc,
         nullptr,
         test_utils->sts_target(),
-        new FakeSourceMediaStream(), "audio_track_fake_uuid", 1, 1,
         static_cast<mozilla::AudioSessionConduit *>(audio_conduit_.get()),
-        audio_rtp_transport_.flow_,
-        audio_rtcp_transport_.flow_,
-        bundle_filter_);
+        nullptr);
+
+    audio_pipeline_->Start();
+
+    RefPtr<TransportFlow> rtp(audio_rtp_transport_.flow_);
+    RefPtr<TransportFlow> rtcp(audio_rtcp_transport_.flow_);
+
+    if (use_bundle_) {
+      rtp = bundle_transport_.flow_;
+      rtcp = nullptr;
+    }
+
+    audio_pipeline_->UpdateTransport_m(rtp, rtcp, bundle_filter_);
   }
 
   void SetBundleFilter(nsAutoPtr<MediaPipelineFilter> filter) {
@@ -428,8 +427,7 @@ class TestAgentReceive : public TestAgent {
 
   void UpdateFilter_s(
       nsAutoPtr<MediaPipelineFilter> filter) {
-    audio_pipeline_->UpdateTransport_s(1,
-                                       audio_rtp_transport_.flow_,
+    audio_pipeline_->UpdateTransport_s(audio_rtp_transport_.flow_,
                                        audio_rtcp_transport_.flow_,
                                        filter);
   }
@@ -442,8 +440,6 @@ class TestAgentReceive : public TestAgent {
 class MediaPipelineTest : public ::testing::Test {
  public:
   ~MediaPipelineTest() {
-    p1_.Stop();
-    p2_.Stop();
     p1_.Shutdown();
     p2_.Shutdown();
   }
@@ -494,16 +490,8 @@ class MediaPipelineTest : public ::testing::Test {
     // Setup transport flows
     InitTransports(aIsRtcpMux);
 
-    mozilla::SyncRunnable::DispatchToThread(
-      test_utils->sts_target(),
-      WrapRunnable(&p1_, &TestAgent::CreatePipelines_s, aIsRtcpMux), NS_DISPATCH_SYNC);
-
-    mozilla::SyncRunnable::DispatchToThread(
-      test_utils->sts_target(),
-      WrapRunnable(&p2_, &TestAgent::CreatePipelines_s, aIsRtcpMux), NS_DISPATCH_SYNC);
-
-    p2_.Start();
-    p1_.Start();
+    p1_.CreatePipeline(aIsRtcpMux);
+    p2_.CreatePipeline(aIsRtcpMux);
 
     if (bundle) {
       PR_Sleep(ms_until_filter_update);
