@@ -101,8 +101,12 @@ public:
 private:
     void AddRef() {
       MOZ_ASSERT(mRefCount >= 0, "AddRef() during/after Finalize()/dtor.");
-      mRefCount++;
-      NS_LOG_ADDREF(this, mRefCount, mName, sizeof(*this));
+#ifdef NS_BUILD_REFCNT_LOGGING
+      int currCount = ++mRefCount;
+      NS_LOG_ADDREF(this, currCount, mName, sizeof(*this));
+#else
+      ++mRefCount;
+#endif
     }
 
     void Release() {
@@ -118,7 +122,9 @@ private:
         ++mRefCount;
         return;
       }
+#ifdef NS_BUILD_REFCNT_LOGGING
       NS_LOG_RELEASE(this, currCount, mName);
+#endif
 
       if (0 == currCount) {
         mRefCount = detail::DEAD;

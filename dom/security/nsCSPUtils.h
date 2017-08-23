@@ -259,6 +259,9 @@ class nsCSPHostSrc : public nsCSPBaseSrc {
     inline void setGeneratedFromSelfKeyword() const
       { mGeneratedFromSelfKeyword = true; }
 
+    inline void setIsUniqueOrigin() const
+      { mIsUniqueOrigin = true; }
+
     inline void setWithinFrameAncestorsDir(bool aValue) const
       { mWithinFrameAncstorsDir = aValue; }
 
@@ -280,6 +283,7 @@ class nsCSPHostSrc : public nsCSPBaseSrc {
     nsString mPort;
     nsString mPath;
     mutable bool mGeneratedFromSelfKeyword;
+    mutable bool mIsUniqueOrigin;
     mutable bool mWithinFrameAncstorsDir;
 };
 

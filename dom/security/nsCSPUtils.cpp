@@ -281,6 +281,15 @@ CSP_CreateHostSrcFromSelfURI(nsIURI* aSelfURI)
   aSelfURI->GetScheme(scheme);
   hostsrc->setScheme(NS_ConvertUTF8toUTF16(scheme));
 
+  // An empty host (e.g. for data:) indicates it's effectively a unique origin.
+  // Please note that we still need to set the scheme on hostsrc (see above),
+  // because it's used for reporting.
+  if (host.EqualsLiteral("")) {
+    hostsrc->setIsUniqueOrigin();
+    // no need to query the port in that case.
+    return hostsrc;
+  }
+
   int32_t port;
   aSelfURI->GetPort(&port);
   // Only add port if it's not default port.
@@ -523,6 +532,7 @@ nsCSPSchemeSrc::toString(nsAString& outStr) const
 nsCSPHostSrc::nsCSPHostSrc(const nsAString& aHost)
   : mHost(aHost)
   , mGeneratedFromSelfKeyword(false)
+  , mIsUniqueOrigin(false)
   , mWithinFrameAncstorsDir(false)
 {
   ToLowerCase(mHost);
@@ -624,7 +634,7 @@ nsCSPHostSrc::permits(nsIURI* aUri, const nsAString& aNonce, bool aWasRedirected
                  aUri->GetSpecOrDefault().get()));
   }
 
-  if (mInvalidated) {
+  if (mInvalidated || mIsUniqueOrigin) {
     return false;
   }
 

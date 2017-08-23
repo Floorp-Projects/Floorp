@@ -1353,11 +1353,11 @@ nsIOService::PrefsChanged(nsIPrefBranch *prefs, const char *pref)
 void
 nsIOService::ParsePortList(nsIPrefBranch *prefBranch, const char *pref, bool remove)
 {
-    nsXPIDLCString portList;
+    nsCString portList;
 
     // Get a pref string and chop it up into a list of ports.
     prefBranch->GetCharPref(pref, getter_Copies(portList));
-    if (portList) {
+    if (!portList.IsVoid()) {
         nsTArray<nsCString> portListArray;
         ParseString(portList, ',', portListArray);
         uint32_t index;

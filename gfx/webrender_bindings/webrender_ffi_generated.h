@@ -611,6 +611,14 @@ struct WrWindowId {
   }
 };
 
+struct WrDebugFlags {
+  uint32_t mBits;
+
+  bool operator==(const WrDebugFlags& aOther) const {
+    return mBits == aOther.mBits;
+  }
+};
+
 struct WrExternalImage {
   WrExternalImageType image_type;
   uint32_t handle;
@@ -1067,6 +1075,10 @@ WrRenderedEpochs *wr_renderer_flush_rendered_epochs(Renderer *aRenderer)
 WR_FUNC;
 
 WR_INLINE
+WrDebugFlags wr_renderer_get_debug_flags(Renderer *aRenderer)
+WR_FUNC;
+
+WR_INLINE
 void wr_renderer_readback(Renderer *aRenderer,
                           uint32_t aWidth,
                           uint32_t aHeight,
@@ -1081,13 +1093,13 @@ void wr_renderer_render(Renderer *aRenderer,
 WR_FUNC;
 
 WR_INLINE
-void wr_renderer_set_external_image_handler(Renderer *aRenderer,
-                                            WrExternalImageHandler *aExternalImageHandler)
+void wr_renderer_set_debug_flags(Renderer *aRenderer,
+                                 WrDebugFlags aFlags)
 WR_FUNC;
 
 WR_INLINE
-void wr_renderer_set_profiler_enabled(Renderer *aRenderer,
-                                      bool aEnabled)
+void wr_renderer_set_external_image_handler(Renderer *aRenderer,
+                                            WrExternalImageHandler *aExternalImageHandler)
 WR_FUNC;
 
 WR_INLINE
@@ -1128,7 +1140,6 @@ bool wr_window_new(WrWindowId aWindowId,
                    uint32_t aWindowHeight,
                    void *aGlContext,
                    WrThreadPool *aThreadPool,
-                   bool aEnableProfiler,
                    DocumentHandle **aOutHandle,
                    Renderer **aOutRenderer,
                    uint32_t *aOutMaxTextureSize)

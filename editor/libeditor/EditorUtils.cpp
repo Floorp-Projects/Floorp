@@ -157,6 +157,27 @@ EditorUtils::IsDescendantOf(nsINode* aNode,
 }
 
 bool
+EditorUtils::IsDescendantOf(nsINode* aNode,
+                            nsINode* aParent,
+                            nsIContent** aChild)
+{
+  MOZ_ASSERT(aNode && aParent && aChild);
+  *aChild = nullptr;
+  if (aNode == aParent) {
+    return false;
+  }
+
+  for (nsCOMPtr<nsINode> node = aNode; node; node = node->GetParentNode()) {
+    if (node->GetParentNode() == aParent) {
+      *aChild = node->AsContent();
+      return true;
+    }
+  }
+
+  return false;
+}
+
+bool
 EditorUtils::IsDescendantOf(nsIDOMNode* aNode,
                             nsIDOMNode* aParent,
                             int32_t* aOffset)

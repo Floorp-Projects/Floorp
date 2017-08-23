@@ -67,10 +67,11 @@ public:
 #endif
 
   void EnableInputEventPrioritization(const MutexAutoLock& aProofOfLock) final;
+  void FlushInputEventPrioritization(const MutexAutoLock& aProofOfLock) final;
+  void SuspendInputEventPrioritization(const MutexAutoLock& aProofOfLock) final;
+  void ResumeInputEventPrioritization(const MutexAutoLock& aProofOfLock) final;
 
 private:
-  class EnablePrioritizationRunnable;
-
   // Returns a null TimeStamp if we're not in the idle period.
   mozilla::TimeStamp GetIdleDeadline();
 
@@ -108,14 +109,14 @@ private:
 
   TimeStamp mInputHandlingStartTime;
 
-  // When we enable input event prioritization, we immediately begin adding new
-  // input events to the input event queue (and set
-  // mWriteToInputQueue). However, we do not begin processing events from the
-  // input queue until all events that were in the normal priority queue have
-  // been processed. That ensures that input events will not jump ahead of
-  // events that were in the queue before prioritization was enabled.
-  bool mWriteToInputQueue = false;
-  bool mReadFromInputQueue = false;
+  enum InputEventQueueState
+  {
+    STATE_DISABLED,
+    STATE_FLUSHING,
+    STATE_SUSPEND,
+    STATE_ENABLED
+  };
+  InputEventQueueState mInputQueueState = STATE_DISABLED;
 };
 
 class EventQueue;

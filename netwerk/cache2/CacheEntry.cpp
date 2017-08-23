@@ -1333,14 +1333,14 @@ NS_IMETHODIMP CacheEntry::GetSecurityInfo(nsISupports * *aSecurityInfo)
 
   NS_ENSURE_SUCCESS(mFileStatus, NS_ERROR_NOT_AVAILABLE);
 
-  nsXPIDLCString info;
+  nsCString info;
   nsCOMPtr<nsISupports> secInfo;
   nsresult rv;
 
   rv = mFile->GetElement("security-info", getter_Copies(info));
   NS_ENSURE_SUCCESS(rv, rv);
 
-  if (info) {
+  if (!info.IsVoid()) {
     rv = NS_DeserializeObject(info, getter_AddRefs(secInfo));
     NS_ENSURE_SUCCESS(rv, rv);
   }

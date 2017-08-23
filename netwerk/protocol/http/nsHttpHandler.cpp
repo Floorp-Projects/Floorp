@@ -261,6 +261,8 @@ nsHttpHandler::nsHttpHandler()
 {
     LOG(("Creating nsHttpHandler [this=%p].\n", this));
 
+    mUserAgentOverride.SetIsVoid(true);
+
     MOZ_ASSERT(!gHttpHandler, "HTTP handler already created!");
     gHttpHandler = this;
     nsCOMPtr<nsIXULRuntime> runtime = do_GetService("@mozilla.org/xre/runtime;1");
@@ -827,7 +829,7 @@ nsHttpHandler::UserAgent()
         return mSpoofedUserAgent;
     }
 
-    if (mUserAgentOverride) {
+    if (!mUserAgentOverride.IsVoid()) {
         LOG(("using general.useragent.override : %s\n", mUserAgentOverride.get()));
         return mUserAgentOverride;
     }
@@ -1320,12 +1322,12 @@ nsHttpHandler::PrefsChanged(nsIPrefBranch *prefs, const char *pref)
     }
 
     if (PREF_CHANGED(HTTP_PREF("version"))) {
-        nsXPIDLCString httpVersion;
+        nsCString httpVersion;
         prefs->GetCharPref(HTTP_PREF("version"), getter_Copies(httpVersion));
-        if (httpVersion) {
-            if (!PL_strcmp(httpVersion, "1.1"))
+        if (!httpVersion.IsVoid()) {
+            if (httpVersion.EqualsLiteral("1.1"))
                 mHttpVersion = NS_HTTP_VERSION_1_1;
-            else if (!PL_strcmp(httpVersion, "0.9"))
+            else if (httpVersion.EqualsLiteral("0.9"))
                 mHttpVersion = NS_HTTP_VERSION_0_9;
             else
                 mHttpVersion = NS_HTTP_VERSION_1_0;
@@ -1333,10 +1335,10 @@ nsHttpHandler::PrefsChanged(nsIPrefBranch *prefs, const char *pref)
     }
 
     if (PREF_CHANGED(HTTP_PREF("proxy.version"))) {
-        nsXPIDLCString httpVersion;
+        nsCString httpVersion;
         prefs->GetCharPref(HTTP_PREF("proxy.version"), getter_Copies(httpVersion));
-        if (httpVersion) {
-            if (!PL_strcmp(httpVersion, "1.1"))
+        if (!httpVersion.IsVoid()) {
+            if (httpVersion.EqualsLiteral("1.1"))
                 mProxyHttpVersion = NS_HTTP_VERSION_1_1;
             else
                 mProxyHttpVersion = NS_HTTP_VERSION_1_0;
@@ -1386,7 +1388,7 @@ nsHttpHandler::PrefsChanged(nsIPrefBranch *prefs, const char *pref)
                                 getter_Copies(sval));
         if (NS_SUCCEEDED(rv)) {
             if (sval.IsEmpty())
-                mDefaultSocketType.Adopt(nullptr);
+                mDefaultSocketType.SetIsVoid(true);
             else {
                 // verify that this socket type is actually valid
                 nsCOMPtr<nsISocketProviderService> sps(

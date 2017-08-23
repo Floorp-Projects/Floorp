@@ -2091,7 +2091,7 @@ nsStyleImageRequest::~nsStyleImageRequest()
         mDocGroup->Dispatch(TaskCategory::Other, task.forget());
       } else {
         // if Resolve was not called at some point, mDocGroup is not set.
-        NS_DispatchToMainThread(task.forget());
+        SystemGroup::Dispatch(TaskCategory::Other, task.forget());
       }
     }
   }

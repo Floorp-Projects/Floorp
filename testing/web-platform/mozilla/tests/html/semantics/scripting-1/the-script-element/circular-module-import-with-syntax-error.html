@@ -1,0 +1,26 @@
+<!doctype html>
+<meta charset=utf-8>
+<title>Load a module with circular imports and syntax error</title>
+<script src=/resources/testharness.js></script>
+<script src=/resources/testharnessreport.js></script>
+<script>
+  setup({allow_uncaught_exception: true});
+  var test = async_test("Load module with circular imports and syntax error")
+  window.addEventListener("error", scriptError);
+  function scriptError() {
+    // An error is expected
+    test.done();
+  }
+  function scriptLoaded() {
+    test.step(() => assert_unreached("Should not load"));
+    test.done();
+  }
+  function testNoError() {
+    test.step(() => assert_unreached("No event expected here"));
+    test.done();
+  }
+</script>
+<script type="module"
+        src="./support/circular_error1.js"
+        onerror="testNoError()"
+        onload="scriptLoaded()"></script>
