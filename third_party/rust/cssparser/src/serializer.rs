@@ -2,8 +2,10 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
+use dtoa_short::{self, Notation};
 use std::ascii::AsciiExt;
 use std::fmt::{self, Write};
+use std::str;
 
 use super::Token;
 
@@ -41,7 +43,6 @@ pub trait ToCss {
     }
 }
 
-
 #[inline]
 fn write_numeric<W>(value: f32, int_value: Option<i32>, has_sign: bool, dest: &mut W)
                     -> fmt::Result where W: fmt::Write {
@@ -50,15 +51,18 @@ fn write_numeric<W>(value: f32, int_value: Option<i32>, has_sign: bool, dest: &m
         dest.write_str("+")?;
     }
 
-    if value == 0.0 && value.is_sign_negative() {
+    let notation = if value == 0.0 && value.is_sign_negative() {
         // Negative zero. Work around #20596.
-        dest.write_str("-0")?
+        dest.write_str("-0")?;
+        Notation { decimal_point: false, scientific: false }
     } else {
-        write!(dest, "{}", value)?
-    }
+        dtoa_short::write(dest, value)?
+    };
 
     if int_value.is_none() && value.fract() == 0. {
-        dest.write_str(".0")?;
+        if !notation.decimal_point && !notation.scientific {
+            dest.write_str(".0")?;
+        }
     }
     Ok(())
 }
@@ -267,7 +271,7 @@ impl<'a, W> fmt::Write for CssStringWriter<'a, W> where W: fmt::Write {
 }
 
 
-macro_rules! impl_tocss_for_number {
+macro_rules! impl_tocss_for_int {
     ($T: ty) => {
         impl<'a> ToCss for $T {
             fn to_css<W>(&self, dest: &mut W) -> fmt::Result where W: fmt::Write {
@@ -277,17 +281,27 @@ macro_rules! impl_tocss_for_number {
     }
 }
 
-impl_tocss_for_number!(f32);
-impl_tocss_for_number!(f64);
-impl_tocss_for_number!(i8);
-impl_tocss_for_number!(u8);
-impl_tocss_for_number!(i16);
-impl_tocss_for_number!(u16);
-impl_tocss_for_number!(i32);
-impl_tocss_for_number!(u32);
-impl_tocss_for_number!(i64);
-impl_tocss_for_number!(u64);
+impl_tocss_for_int!(i8);
+impl_tocss_for_int!(u8);
+impl_tocss_for_int!(i16);
+impl_tocss_for_int!(u16);
+impl_tocss_for_int!(i32);
+impl_tocss_for_int!(u32);
+impl_tocss_for_int!(i64);
+impl_tocss_for_int!(u64);
 
+macro_rules! impl_tocss_for_float {
+    ($T: ty) => {
+        impl<'a> ToCss for $T {
+            fn to_css<W>(&self, dest: &mut W) -> fmt::Result where W: fmt::Write {
+                dtoa_short::write(dest, *self).map(|_| ())
+            }
+        }
+    }
+}
+
+impl_tocss_for_float!(f32);
+impl_tocss_for_float!(f64);
 
 /// A category of token. See the `needs_separator_when_before` method.
 #[derive(Copy, Clone, Eq, PartialEq, Debug)]

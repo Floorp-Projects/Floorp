@@ -68,6 +68,7 @@ fn parse_border_spacing(_context: &ParserContext, input: &mut Parser)
 
 #![recursion_limit="200"]  // For color::parse_color_keyword
 
+extern crate dtoa_short;
 #[macro_use] extern crate cssparser_macros;
 #[macro_use] extern crate matches;
 #[macro_use] extern crate procedural_masquerade;
