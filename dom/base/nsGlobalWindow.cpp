@@ -1038,7 +1038,8 @@ nsPIDOMWindow<T>::nsPIDOMWindow(nsPIDOMWindowOuter *aOuterWindow)
   mMarkedCCGeneration(0), mServiceWorkersTestingEnabled(false),
   mLargeAllocStatus(LargeAllocStatus::NONE),
   mHasTriedToCacheTopInnerWindow(false),
-  mNumOfIndexedDBDatabases(0)
+  mNumOfIndexedDBDatabases(0),
+  mNumOfOpenWebSockets(0)
 {
   if (aOuterWindow) {
     mTimeoutManager =
@@ -4495,6 +4496,32 @@ nsPIDOMWindowInner::HasActiveIndexedDBDatabases()
   return mTopInnerWindow ?
     mTopInnerWindow->mNumOfIndexedDBDatabases > 0 :
     mNumOfIndexedDBDatabases > 0;
+}
+
+void
+nsPIDOMWindowInner::UpdateWebSocketCount(int32_t aDelta)
+{
+  MOZ_ASSERT(NS_IsMainThread());
+
+  if (aDelta == 0) {
+    return;
+  }
+
+  uint32_t& counter = mTopInnerWindow ? mTopInnerWindow->mNumOfOpenWebSockets
+                                      : mNumOfOpenWebSockets;
+
+  MOZ_DIAGNOSTIC_ASSERT(aDelta > 0 || ((aDelta + counter) < counter));
+
+  counter += aDelta;
+}
+
+bool
+nsPIDOMWindowInner::HasOpenWebSockets() const
+{
+  MOZ_ASSERT(NS_IsMainThread());
+
+  return (mTopInnerWindow ? mTopInnerWindow->mNumOfOpenWebSockets
+                          : mNumOfOpenWebSockets) > 0;
 }
 
 void
