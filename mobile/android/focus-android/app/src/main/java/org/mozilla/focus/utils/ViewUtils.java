@@ -26,6 +26,13 @@ import java.lang.ref.WeakReference;
 
 public class ViewUtils {
     /**
+     * Flag of imeOptions: used to request that the IME does not update any personalized data such
+     * as typing history and personalized language model based on what the user typed on this text
+     * editing object.
+     */
+    public static final int IME_FLAG_NO_PERSONALIZED_LEARNING = 0x01000000;
+
+    /**
      * Runnable to show the keyboard for a specific view.
      */
     private static class ShowKeyboard implements Runnable {

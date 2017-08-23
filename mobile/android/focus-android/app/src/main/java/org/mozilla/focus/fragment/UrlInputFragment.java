@@ -150,6 +150,7 @@ public class UrlInputFragment extends LocaleAwareFragment implements View.OnClic
 
         urlView = (InlineAutocompleteEditText) view.findViewById(R.id.url_edit);
         urlView.setOnFilterListener(this);
+        urlView.setImeOptions(urlView.getImeOptions() | ViewUtils.IME_FLAG_NO_PERSONALIZED_LEARNING);
 
         toolbarBackgroundView = view.findViewById(R.id.toolbar_background);
         urlInputBackgroundView = view.findViewById(R.id.url_input_background);
