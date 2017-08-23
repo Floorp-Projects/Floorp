@@ -8,6 +8,9 @@ echo "running as" $(id)
 
 set -v
 
+mkdir -p ${WORKSPACE}/nexus/conf
+cp /home/worker/workspace/build/src/taskcluster/scripts/builder/build-android-dependencies/nexus.xml ${WORKSPACE}/nexus/conf/nexus.xml
+
 # Populate /home/worker/workspace/build/src/java_home.
 . $WORKSPACE/build/src/taskcluster/scripts/builder/build-android-dependencies/repackage-jdk-centos.sh
 

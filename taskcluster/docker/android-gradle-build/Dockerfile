@@ -113,8 +113,6 @@ RUN tar zxf nexus-${NEXUS_VERSION}-bundle.tar.gz \
 # So that we don't have to RUN_AS_USER=root.
 RUN chown -R worker:worker /opt/sonatype/nexus/
 
-COPY nexus.xml /home/worker/workspace/nexus/conf/nexus.xml
-
 # Back to the centos6-build workdir, matching desktop-build.
 WORKDIR /home/worker
 
