@@ -78,6 +78,12 @@ var SidebarUI = {
         xulStore.removeValue(document.documentURI, "sidebar-box", "checked");
       }
 
+      if (this._box.hasAttribute("positionend")) {
+        document.persist("sidebar-box", "positionend");
+      } else {
+        xulStore.removeValue(document.documentURI, "sidebar-box", "positionend");
+      }
+
       document.persist("sidebar-box", "width");
       document.persist("sidebar-title", "value");
     }
