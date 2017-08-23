@@ -47,7 +47,7 @@
 
 #navigator-toolbox > toolbar[customizing]:not(#toolbar-menubar):not(#TabsToolbar):not(#nav-bar) {
   outline: 1px dashed;
-  outline-offset: -4px;
+  outline-offset: -3px;
   -moz-outline-radius: 2px;
   /* Avoid the toolbar having no height when there's no items in it */
   min-height: 22px;
