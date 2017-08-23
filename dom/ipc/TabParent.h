@@ -753,6 +753,12 @@ private:
 
   bool mHasContentOpener;
 
+  // When dropping links we perform a roundtrip from
+  // Parent (SendRealDragEvent) -> Child -> Parent (RecvDropLinks)
+  // and have to ensure that the child did not modify links to be loaded.
+  bool QueryDropLinksForVerification();
+  nsTArray<nsString> mVerifyDropLinks;
+
 #ifdef DEBUG
   int32_t mActiveSupressDisplayportCount;
 #endif

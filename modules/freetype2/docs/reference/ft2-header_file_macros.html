@@ -3,7 +3,7 @@
 <html>
 <head>
 <meta http-equiv="Content-Type" content="text/html; charset=utf-8">
-<title>FreeType-2.7.1 API Reference</title>
+<title>FreeType-2.8 API Reference</title>
 <style type="text/css">
   a:link { color: #0000EF; }
   a:visited { color: #51188E; }
@@ -100,29 +100,30 @@
 <body>
 
 <table class="index-toc-link"><tr><td class="left">[<a href="ft2-index.html">Index</a>]</td><td class="right">[<a href="ft2-toc.html">TOC</a>]</td></tr></table>
-<h1>FreeType-2.7.1 API Reference</h1>
+<h1>FreeType-2.8 API Reference</h1>
 
 <h1 id="header_file_macros">Header File Macros</h1>
 <h2>Synopsis</h2>
 <table class="synopsis">
-<tr><td><a href="#FT_CONFIG_CONFIG_H">FT_CONFIG_CONFIG_H</a></td><td><a href="#FT_BZIP2_H">FT_BZIP2_H</a></td></tr>
-<tr><td><a href="#FT_CONFIG_STANDARD_LIBRARY_H">FT_CONFIG_STANDARD_LIBRARY_H</a></td><td><a href="#FT_WINFONTS_H">FT_WINFONTS_H</a></td></tr>
-<tr><td><a href="#FT_CONFIG_OPTIONS_H">FT_CONFIG_OPTIONS_H</a></td><td><a href="#FT_GLYPH_H">FT_GLYPH_H</a></td></tr>
-<tr><td><a href="#FT_CONFIG_MODULES_H">FT_CONFIG_MODULES_H</a></td><td><a href="#FT_BITMAP_H">FT_BITMAP_H</a></td></tr>
-<tr><td><a href="#FT_FREETYPE_H">FT_FREETYPE_H</a></td><td><a href="#FT_BBOX_H">FT_BBOX_H</a></td></tr>
-<tr><td><a href="#FT_ERRORS_H">FT_ERRORS_H</a></td><td><a href="#FT_CACHE_H">FT_CACHE_H</a></td></tr>
-<tr><td><a href="#FT_MODULE_ERRORS_H">FT_MODULE_ERRORS_H</a></td><td><a href="#FT_CACHE_IMAGE_H">FT_CACHE_IMAGE_H</a></td></tr>
-<tr><td><a href="#FT_SYSTEM_H">FT_SYSTEM_H</a></td><td><a href="#FT_CACHE_SMALL_BITMAPS_H">FT_CACHE_SMALL_BITMAPS_H</a></td></tr>
-<tr><td><a href="#FT_IMAGE_H">FT_IMAGE_H</a></td><td><a href="#FT_CACHE_CHARMAP_H">FT_CACHE_CHARMAP_H</a></td></tr>
-<tr><td><a href="#FT_TYPES_H">FT_TYPES_H</a></td><td><a href="#FT_MAC_H">FT_MAC_H</a></td></tr>
-<tr><td><a href="#FT_LIST_H">FT_LIST_H</a></td><td><a href="#FT_MULTIPLE_MASTERS_H">FT_MULTIPLE_MASTERS_H</a></td></tr>
-<tr><td><a href="#FT_OUTLINE_H">FT_OUTLINE_H</a></td><td><a href="#FT_SFNT_NAMES_H">FT_SFNT_NAMES_H</a></td></tr>
-<tr><td><a href="#FT_SIZES_H">FT_SIZES_H</a></td><td><a href="#FT_OPENTYPE_VALIDATE_H">FT_OPENTYPE_VALIDATE_H</a></td></tr>
-<tr><td><a href="#FT_MODULE_H">FT_MODULE_H</a></td><td><a href="#FT_GX_VALIDATE_H">FT_GX_VALIDATE_H</a></td></tr>
-<tr><td><a href="#FT_RENDER_H">FT_RENDER_H</a></td><td><a href="#FT_PFR_H">FT_PFR_H</a></td></tr>
-<tr><td><a href="#FT_AUTOHINTER_H">FT_AUTOHINTER_H</a></td><td><a href="#FT_STROKER_H">FT_STROKER_H</a></td></tr>
-<tr><td><a href="#FT_CFF_DRIVER_H">FT_CFF_DRIVER_H</a></td><td><a href="#FT_SYNTHESIS_H">FT_SYNTHESIS_H</a></td></tr>
-<tr><td><a href="#FT_TRUETYPE_DRIVER_H">FT_TRUETYPE_DRIVER_H</a></td><td><a href="#FT_FONT_FORMATS_H">FT_FONT_FORMATS_H</a></td></tr>
+<tr><td><a href="#FT_CONFIG_CONFIG_H">FT_CONFIG_CONFIG_H</a></td><td><a href="#FT_LZW_H">FT_LZW_H</a></td></tr>
+<tr><td><a href="#FT_CONFIG_STANDARD_LIBRARY_H">FT_CONFIG_STANDARD_LIBRARY_H</a></td><td><a href="#FT_BZIP2_H">FT_BZIP2_H</a></td></tr>
+<tr><td><a href="#FT_CONFIG_OPTIONS_H">FT_CONFIG_OPTIONS_H</a></td><td><a href="#FT_WINFONTS_H">FT_WINFONTS_H</a></td></tr>
+<tr><td><a href="#FT_CONFIG_MODULES_H">FT_CONFIG_MODULES_H</a></td><td><a href="#FT_GLYPH_H">FT_GLYPH_H</a></td></tr>
+<tr><td><a href="#FT_FREETYPE_H">FT_FREETYPE_H</a></td><td><a href="#FT_BITMAP_H">FT_BITMAP_H</a></td></tr>
+<tr><td><a href="#FT_ERRORS_H">FT_ERRORS_H</a></td><td><a href="#FT_BBOX_H">FT_BBOX_H</a></td></tr>
+<tr><td><a href="#FT_MODULE_ERRORS_H">FT_MODULE_ERRORS_H</a></td><td><a href="#FT_CACHE_H">FT_CACHE_H</a></td></tr>
+<tr><td><a href="#FT_SYSTEM_H">FT_SYSTEM_H</a></td><td><a href="#FT_CACHE_IMAGE_H">FT_CACHE_IMAGE_H</a></td></tr>
+<tr><td><a href="#FT_IMAGE_H">FT_IMAGE_H</a></td><td><a href="#FT_CACHE_SMALL_BITMAPS_H">FT_CACHE_SMALL_BITMAPS_H</a></td></tr>
+<tr><td><a href="#FT_TYPES_H">FT_TYPES_H</a></td><td><a href="#FT_CACHE_CHARMAP_H">FT_CACHE_CHARMAP_H</a></td></tr>
+<tr><td><a href="#FT_LIST_H">FT_LIST_H</a></td><td><a href="#FT_MAC_H">FT_MAC_H</a></td></tr>
+<tr><td><a href="#FT_OUTLINE_H">FT_OUTLINE_H</a></td><td><a href="#FT_MULTIPLE_MASTERS_H">FT_MULTIPLE_MASTERS_H</a></td></tr>
+<tr><td><a href="#FT_SIZES_H">FT_SIZES_H</a></td><td><a href="#FT_SFNT_NAMES_H">FT_SFNT_NAMES_H</a></td></tr>
+<tr><td><a href="#FT_MODULE_H">FT_MODULE_H</a></td><td><a href="#FT_OPENTYPE_VALIDATE_H">FT_OPENTYPE_VALIDATE_H</a></td></tr>
+<tr><td><a href="#FT_RENDER_H">FT_RENDER_H</a></td><td><a href="#FT_GX_VALIDATE_H">FT_GX_VALIDATE_H</a></td></tr>
+<tr><td><a href="#FT_AUTOHINTER_H">FT_AUTOHINTER_H</a></td><td><a href="#FT_PFR_H">FT_PFR_H</a></td></tr>
+<tr><td><a href="#FT_CFF_DRIVER_H">FT_CFF_DRIVER_H</a></td><td><a href="#FT_STROKER_H">FT_STROKER_H</a></td></tr>
+<tr><td><a href="#FT_TRUETYPE_DRIVER_H">FT_TRUETYPE_DRIVER_H</a></td><td><a href="#FT_SYNTHESIS_H">FT_SYNTHESIS_H</a></td></tr>
+<tr><td><a href="#FT_PCF_DRIVER_H">FT_PCF_DRIVER_H</a></td><td><a href="#FT_FONT_FORMATS_H">FT_FONT_FORMATS_H</a></td></tr>
 <tr><td><a href="#FT_TYPE1_TABLES_H">FT_TYPE1_TABLES_H</a></td><td><a href="#FT_TRIGONOMETRY_H">FT_TRIGONOMETRY_H</a></td></tr>
 <tr><td><a href="#FT_TRUETYPE_IDS_H">FT_TRUETYPE_IDS_H</a></td><td><a href="#FT_LCD_FILTER_H">FT_LCD_FILTER_H</a></td></tr>
 <tr><td><a href="#FT_TRUETYPE_TABLES_H">FT_TRUETYPE_TABLES_H</a></td><td><a href="#FT_UNPATENTED_HINTING_H">FT_UNPATENTED_HINTING_H</a></td></tr>
@@ -130,7 +131,6 @@
 <tr><td><a href="#FT_BDF_H">FT_BDF_H</a></td><td><a href="#FT_GASP_H">FT_GASP_H</a></td></tr>
 <tr><td><a href="#FT_CID_H">FT_CID_H</a></td><td><a href="#FT_ADVANCES_H">FT_ADVANCES_H</a></td></tr>
 <tr><td><a href="#FT_GZIP_H">FT_GZIP_H</a></td><td><a href="#':'">':'</a></td></tr>
-<tr><td><a href="#FT_LZW_H">FT_LZW_H</a></td><td></td></tr>
 </table>
 
 
@@ -350,6 +350,17 @@
 </pre>
 
 <p>A macro used in #include statements to name the file containing structures and macros related to the TrueType driver module.</p>
+
+<hr>
+<table class="index-toc-link"><tr><td class="left">[<a href="ft2-index.html">Index</a>]</td><td class="middle">[<a href="#">Top</a>]</td><td class="right">[<a href="ft2-toc.html">TOC</a>]</td></tr></table></div>
+
+<div class="section">
+<h3 id="FT_PCF_DRIVER_H">FT_PCF_DRIVER_H</h3>
+<pre>
+#define <b>FT_PCF_DRIVER_H</b>  &lt;freetype/ftpcfdrv.h&gt;
+</pre>
+
+<p>A macro used in #include statements to name the file containing structures and macros related to the PCF driver module.</p>
 
 <hr>
 <table class="index-toc-link"><tr><td class="left">[<a href="ft2-index.html">Index</a>]</td><td class="middle">[<a href="#">Top</a>]</td><td class="right">[<a href="ft2-toc.html">TOC</a>]</td></tr></table></div>

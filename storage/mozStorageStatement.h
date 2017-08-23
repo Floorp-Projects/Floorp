@@ -26,6 +26,7 @@ namespace mozilla {
 namespace storage {
 class StatementJSHelper;
 class Connection;
+class StatementRowHolder;
 
 class Statement final : public mozIStorageStatement
                       , public mozIStorageValueArray
@@ -97,7 +98,7 @@ private:
      * the row and params objects.
      */
     nsMainThreadPtrHandle<nsIXPConnectJSObjectHolder> mStatementParamsHolder;
-    nsMainThreadPtrHandle<nsIXPConnectJSObjectHolder> mStatementRowHolder;
+    nsMainThreadPtrHandle<StatementRowHolder> mStatementRowHolder;
 
   /**
    * Internal version of finalize that allows us to tell it if it is being
@@ -111,6 +112,12 @@ private:
 
   friend class StatementJSHelper;
 };
+
+inline nsISupports*
+ToSupports(Statement* p)
+{
+  return NS_ISUPPORTS_CAST(mozIStorageStatement*, p);
+}
 
 } // namespace storage
 } // namespace mozilla

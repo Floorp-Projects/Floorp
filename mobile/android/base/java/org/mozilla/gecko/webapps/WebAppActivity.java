@@ -12,6 +12,7 @@ import java.util.List;
 import android.annotation.TargetApi;
 import android.app.ActivityManager;
 import android.content.Intent;
+import android.content.pm.ActivityInfo;
 import android.graphics.Bitmap;
 import android.net.Uri;
 import android.os.Build;
@@ -34,6 +35,7 @@ import org.mozilla.gecko.AppConstants;
 import org.mozilla.gecko.customtabs.CustomTabsActivity;
 import org.mozilla.gecko.DoorHangerPopup;
 import org.mozilla.gecko.GeckoAppShell;
+import org.mozilla.gecko.GeckoScreenOrientation;
 import org.mozilla.gecko.GeckoView;
 import org.mozilla.gecko.GeckoViewSettings;
 import org.mozilla.gecko.icons.decoders.FaviconDecoder;
@@ -41,6 +43,7 @@ import org.mozilla.gecko.icons.decoders.LoadFaviconResult;
 import org.mozilla.gecko.permissions.Permissions;
 import org.mozilla.gecko.prompts.PromptService;
 import org.mozilla.gecko.R;
+import org.mozilla.gecko.util.ActivityUtils;
 import org.mozilla.gecko.util.ColorUtil;
 import org.mozilla.gecko.util.FileUtils;
 
@@ -51,11 +54,12 @@ public class WebAppActivity extends AppCompatActivity
     public static final String MANIFEST_PATH = "MANIFEST_PATH";
     private static final String SAVED_INTENT = "savedIntent";
 
-    private TextView mUrlView;
     private GeckoView mGeckoView;
     private PromptService mPromptService;
     private DoorHangerPopup mDoorHangerPopup;
 
+    private boolean mIsFullScreenMode;
+    private boolean mIsFullScreenContent;
     private Uri mScope;
 
     @Override
@@ -75,23 +79,16 @@ public class WebAppActivity extends AppCompatActivity
 
         super.onCreate(savedInstanceState);
 
-        setContentView(R.layout.customtabs_activity);
-
-        final Toolbar toolbar = (Toolbar) findViewById(R.id.actionbar);
-        setSupportActionBar(toolbar);
-
-        final ActionBar actionBar = getSupportActionBar();
-        actionBar.setCustomView(R.layout.webapps_action_bar_custom_view);
-        actionBar.setDisplayShowCustomEnabled(true);
-        actionBar.setDisplayShowTitleEnabled(false);
-        actionBar.hide();
-
-        final View customView = actionBar.getCustomView();
-        mUrlView = (TextView) customView.findViewById(R.id.webapps_action_bar_url);
-
-        mGeckoView = (GeckoView) findViewById(R.id.gecko_view);
-
+        mGeckoView = new GeckoView(this);
         mGeckoView.setNavigationListener(this);
+        mGeckoView.setContentListener(new GeckoView.ContentListener() {
+            public void onTitleChange(GeckoView view, String title) {}
+            public void onContextMenu(GeckoView view, int screenX, int screenY,
+                               String uri, String elementSrc) {}
+            public void onFullScreen(GeckoView view, boolean fullScreen) {
+                updateFullScreenContent(fullScreen);
+            }
+        });
 
         mPromptService = new PromptService(this, mGeckoView.getEventDispatcher());
         mDoorHangerPopup = new DoorHangerPopup(this, mGeckoView.getEventDispatcher());
@@ -103,6 +100,8 @@ public class WebAppActivity extends AppCompatActivity
         if (u != null) {
             mGeckoView.loadUri(u.toString());
         }
+
+        setContentView(mGeckoView);
 
         loadManifest(getIntent().getStringExtra(MANIFEST_PATH));
     }
@@ -135,15 +134,23 @@ public class WebAppActivity extends AppCompatActivity
         outState.putParcelable(SAVED_INTENT, getIntent());
     }
 
-    private void loadManifest(String manifestPath) {
-        if (AppConstants.Versions.feature21Plus) {
-            loadManifestV21(manifestPath);
+    @Override
+    public void onWindowFocusChanged(boolean hasFocus) {
+        if (hasFocus) {
+            updateFullScreen();
         }
     }
 
-    // The customisations defined in the manifest only work on Android API 21+
-    @TargetApi(Build.VERSION_CODES.LOLLIPOP)
-    private void loadManifestV21(String manifestPath) {
+    @Override
+    public void onBackPressed() {
+        if (mIsFullScreenContent) {
+            mGeckoView.exitFullScreen();
+        } else {
+            super.onBackPressed();
+        }
+    }
+
+    private void loadManifest(String manifestPath) {
         if (TextUtils.isEmpty(manifestPath)) {
             Log.e(LOGTAG, "Missing manifest");
             return;
@@ -153,20 +160,31 @@ public class WebAppActivity extends AppCompatActivity
             final File manifestFile = new File(manifestPath);
             final JSONObject manifest = FileUtils.readJSONObjectFromFile(manifestFile);
             final JSONObject manifestField = manifest.getJSONObject("manifest");
-            final Integer color = readColorFromManifest(manifestField);
-            final String name = readNameFromManifest(manifestField);
-            final Bitmap icon = readIconFromManifest(manifest);
-            mScope = readScopeFromManifest(manifest, manifestPath);
-            final ActivityManager.TaskDescription taskDescription = (color == null)
-                    ? new ActivityManager.TaskDescription(name, icon)
-                    : new ActivityManager.TaskDescription(name, icon, color);
 
-            updateStatusBarColorV21(color);
-            setTaskDescription(taskDescription);
+            if (AppConstants.Versions.feature21Plus) {
+                loadManifestV21(manifest, manifestField);
+            }
 
+            updateScreenOrientation(manifestField);
+            updateDisplayMode(manifestField);
         } catch (IOException | JSONException e) {
             Log.e(LOGTAG, "Failed to read manifest", e);
         }
+    }
+
+    // The customisations defined in the manifest only work on Android API 21+
+    @TargetApi(Build.VERSION_CODES.LOLLIPOP)
+    private void loadManifestV21(JSONObject manifest, JSONObject manifestField) {
+        final Integer color = readColorFromManifest(manifestField);
+        final String name = readNameFromManifest(manifestField);
+        final Bitmap icon = readIconFromManifest(manifest);
+        mScope = readScopeFromManifest(manifest);
+        final ActivityManager.TaskDescription taskDescription = (color == null)
+            ? new ActivityManager.TaskDescription(name, icon)
+            : new ActivityManager.TaskDescription(name, icon, color);
+
+        updateStatusBarColorV21(color);
+        setTaskDescription(taskDescription);
     }
 
     @TargetApi(Build.VERSION_CODES.LOLLIPOP)
@@ -176,6 +194,44 @@ public class WebAppActivity extends AppCompatActivity
             window.addFlags(WindowManager.LayoutParams.FLAG_DRAWS_SYSTEM_BAR_BACKGROUNDS);
             window.setStatusBarColor(ColorUtil.darken(themeColor, 0.25));
         }
+    }
+
+    private void updateScreenOrientation(JSONObject manifest) {
+        String orientString = manifest.optString("orientation", null);
+        if (orientString == null) {
+            return;
+        }
+
+        GeckoScreenOrientation.ScreenOrientation orientation =
+            GeckoScreenOrientation.screenOrientationFromString(orientString);
+        int activityOrientation = GeckoScreenOrientation.screenOrientationToAndroidOrientation(orientation);
+
+        setRequestedOrientation(activityOrientation);
+    }
+
+    private void updateDisplayMode(JSONObject manifest) {
+        String displayMode = manifest.optString("display");
+
+        updateFullScreenMode(displayMode.equals("fullscreen"));
+
+        GeckoViewSettings.DisplayMode mode;
+        switch (displayMode) {
+            case "standalone":
+                mode = GeckoViewSettings.DisplayMode.STANDALONE;
+                break;
+            case "fullscreen":
+                mode = GeckoViewSettings.DisplayMode.FULLSCREEN;
+                break;
+            case "minimal-ui":
+                mode = GeckoViewSettings.DisplayMode.MINIMAL_UI;
+                break;
+            case "browser":
+            default:
+                mode = GeckoViewSettings.DisplayMode.BROWSER;
+                break;
+        }
+
+        mGeckoView.getSettings().setInt(GeckoViewSettings.DISPLAY_MODE, mode.value());
     }
 
     private Integer readColorFromManifest(JSONObject manifest) {
@@ -210,7 +266,7 @@ public class WebAppActivity extends AppCompatActivity
         return loadIconResult.getBestBitmap(GeckoAppShell.getPreferredIconSize());
     }
 
-    private Uri readScopeFromManifest(JSONObject manifest, String manifestPath) {
+    private Uri readScopeFromManifest(JSONObject manifest) {
         final String scopeStr = manifest.optString("scope", null);
         if (scopeStr == null) {
             return null;
@@ -259,13 +315,6 @@ public class WebAppActivity extends AppCompatActivity
     /* GeckoView.NavigationListener */
     @Override
     public void onLocationChange(GeckoView view, String url) {
-        if (isInScope(url)) {
-            getSupportActionBar().hide();
-        } else {
-            getSupportActionBar().show();
-        }
-
-        mUrlView.setText(url);
     }
 
     @Override
@@ -289,5 +338,24 @@ public class WebAppActivity extends AppCompatActivity
             startActivity(intent);
         }
         return true;
+    }
+
+    private void updateFullScreen() {
+        boolean fullScreen = mIsFullScreenContent || mIsFullScreenMode;
+        if (ActivityUtils.isFullScreen(this) == fullScreen) {
+            return;
+        }
+
+        ActivityUtils.setFullScreen(this, fullScreen);
+    }
+
+    private void updateFullScreenContent(boolean fullScreen) {
+        mIsFullScreenContent = fullScreen;
+        updateFullScreen();
+    }
+
+    private void updateFullScreenMode(boolean fullScreen) {
+        mIsFullScreenMode = fullScreen;
+        updateFullScreen();
     }
 }

@@ -76,7 +76,7 @@ MDefinition::PrintOpcodeName(GenericPrinter& out, MDefinition::Opcode op)
         MIR_OPCODE_LIST(NAME)
 #undef NAME
     };
-    const char* name = names[op];
+    const char* name = names[unsigned(op)];
     size_t len = strlen(name);
     for (size_t i = 0; i < len; i++)
         out.printf("%c", tolower(name[i]));
@@ -99,34 +99,34 @@ EvaluateConstantOperands(TempAllocator& alloc, MBinaryInstruction* ins, bool* pt
     double ret = JS::GenericNaN();
 
     switch (ins->op()) {
-      case MDefinition::Op_BitAnd:
+      case MDefinition::Opcode::BitAnd:
         ret = double(lhs->toInt32() & rhs->toInt32());
         break;
-      case MDefinition::Op_BitOr:
+      case MDefinition::Opcode::BitOr:
         ret = double(lhs->toInt32() | rhs->toInt32());
         break;
-      case MDefinition::Op_BitXor:
+      case MDefinition::Opcode::BitXor:
         ret = double(lhs->toInt32() ^ rhs->toInt32());
         break;
-      case MDefinition::Op_Lsh:
+      case MDefinition::Opcode::Lsh:
         ret = double(uint32_t(lhs->toInt32()) << (rhs->toInt32() & 0x1F));
         break;
-      case MDefinition::Op_Rsh:
+      case MDefinition::Opcode::Rsh:
         ret = double(lhs->toInt32() >> (rhs->toInt32() & 0x1F));
         break;
-      case MDefinition::Op_Ursh:
+      case MDefinition::Opcode::Ursh:
         ret = double(uint32_t(lhs->toInt32()) >> (rhs->toInt32() & 0x1F));
         break;
-      case MDefinition::Op_Add:
+      case MDefinition::Opcode::Add:
         ret = lhs->numberToDouble() + rhs->numberToDouble();
         break;
-      case MDefinition::Op_Sub:
+      case MDefinition::Opcode::Sub:
         ret = lhs->numberToDouble() - rhs->numberToDouble();
         break;
-      case MDefinition::Op_Mul:
+      case MDefinition::Opcode::Mul:
         ret = lhs->numberToDouble() * rhs->numberToDouble();
         break;
-      case MDefinition::Op_Div:
+      case MDefinition::Opcode::Div:
         if (ins->toDiv()->isUnsigned()) {
             if (rhs->isInt32(0)) {
                 if (ins->toDiv()->trapOnError())
@@ -139,7 +139,7 @@ EvaluateConstantOperands(TempAllocator& alloc, MBinaryInstruction* ins, bool* pt
             ret = NumberDiv(lhs->numberToDouble(), rhs->numberToDouble());
         }
         break;
-      case MDefinition::Op_Mod:
+      case MDefinition::Opcode::Mod:
         if (ins->toMod()->isUnsigned()) {
             if (rhs->isInt32(0)) {
                 if (ins->toMod()->trapOnError())
@@ -232,7 +232,7 @@ MDefinition::addU32ToHash(HashNumber hash, uint32_t data)
 HashNumber
 MDefinition::valueHash() const
 {
-    HashNumber out = op();
+    HashNumber out = HashNumber(op());
     for (size_t i = 0, e = numOperands(); i < e; i++)
         out = addU32ToHash(out, getOperand(i)->id());
     if (MDefinition* dep = dependency())
@@ -297,16 +297,16 @@ MInstruction::foldsToStore(TempAllocator& alloc)
 
     MDefinition* value;
     switch (store->op()) {
-      case Op_StoreFixedSlot:
+      case Opcode::StoreFixedSlot:
         value = store->toStoreFixedSlot()->value();
         break;
-      case Op_StoreSlot:
+      case Opcode::StoreSlot:
         value = store->toStoreSlot()->value();
         break;
-      case Op_StoreElement:
+      case Opcode::StoreElement:
         value = store->toStoreElement()->value();
         break;
-      case Op_StoreUnboxedObjectOrNull:
+      case Opcode::StoreUnboxedObjectOrNull:
         value = store->toStoreUnboxedObjectOrNull()->value();
         break;
       default:
@@ -893,6 +893,7 @@ jit::IonCompilationCanUseNurseryPointers()
 #endif // DEBUG
 
 MConstant::MConstant(TempAllocator& alloc, const js::Value& vp, CompilerConstraintList* constraints)
+  : MNullaryInstruction(classOpcode)
 {
     setResultType(MIRTypeFromValue(vp));
 
@@ -948,6 +949,7 @@ MConstant::MConstant(TempAllocator& alloc, const js::Value& vp, CompilerConstrai
 }
 
 MConstant::MConstant(JSObject* obj)
+  : MNullaryInstruction(classOpcode)
 {
     MOZ_ASSERT_IF(IsInsideNursery(obj), IonCompilationCanUseNurseryPointers());
     setResultType(MIRType::Object);
@@ -956,6 +958,7 @@ MConstant::MConstant(JSObject* obj)
 }
 
 MConstant::MConstant(float f)
+  : MNullaryInstruction(classOpcode)
 {
     setResultType(MIRType::Float32);
     payload_.f = f;
@@ -963,6 +966,7 @@ MConstant::MConstant(float f)
 }
 
 MConstant::MConstant(int64_t i)
+  : MNullaryInstruction(classOpcode)
 {
     setResultType(MIRType::Int64);
     payload_.i64 = i;
@@ -2936,16 +2940,16 @@ CanProduceNegativeZero(MDefinition* def)
     // Test if this instruction can produce negative zero even when bailing out
     // and changing types.
     switch (def->op()) {
-        case MDefinition::Op_Constant:
+        case MDefinition::Opcode::Constant:
             if (def->type() == MIRType::Double && def->toConstant()->toDouble() == -0.0)
                 return true;
             MOZ_FALLTHROUGH;
-        case MDefinition::Op_BitAnd:
-        case MDefinition::Op_BitOr:
-        case MDefinition::Op_BitXor:
-        case MDefinition::Op_BitNot:
-        case MDefinition::Op_Lsh:
-        case MDefinition::Op_Rsh:
+        case MDefinition::Opcode::BitAnd:
+        case MDefinition::Opcode::BitOr:
+        case MDefinition::Opcode::BitXor:
+        case MDefinition::Opcode::BitNot:
+        case MDefinition::Opcode::Lsh:
+        case MDefinition::Opcode::Rsh:
             return false;
         default:
             return true;
@@ -2965,7 +2969,7 @@ NeedNegativeZeroCheck(MDefinition* def)
 
         MDefinition* use_def = use->consumer()->toDefinition();
         switch (use_def->op()) {
-          case MDefinition::Op_Add: {
+          case MDefinition::Opcode::Add: {
             // If add is truncating -0 and 0 are observed as the same.
             if (use_def->toAdd()->isTruncated())
                 break;
@@ -3001,7 +3005,7 @@ NeedNegativeZeroCheck(MDefinition* def)
             // been evaluated as int32 and the addition's result cannot be -0.
             break;
           }
-          case MDefinition::Op_Sub: {
+          case MDefinition::Opcode::Sub: {
             // If sub is truncating -0 and 0 are observed as the same
             if (use_def->toSub()->isTruncated())
                 break;
@@ -3023,15 +3027,15 @@ NeedNegativeZeroCheck(MDefinition* def)
 
             MOZ_FALLTHROUGH;
           }
-          case MDefinition::Op_StoreElement:
-          case MDefinition::Op_StoreElementHole:
-          case MDefinition::Op_FallibleStoreElement:
-          case MDefinition::Op_LoadElement:
-          case MDefinition::Op_LoadElementHole:
-          case MDefinition::Op_LoadUnboxedScalar:
-          case MDefinition::Op_LoadTypedArrayElementHole:
-          case MDefinition::Op_CharCodeAt:
-          case MDefinition::Op_Mod:
+          case MDefinition::Opcode::StoreElement:
+          case MDefinition::Opcode::StoreElementHole:
+          case MDefinition::Opcode::FallibleStoreElement:
+          case MDefinition::Opcode::LoadElement:
+          case MDefinition::Opcode::LoadElementHole:
+          case MDefinition::Opcode::LoadUnboxedScalar:
+          case MDefinition::Opcode::LoadTypedArrayElementHole:
+          case MDefinition::Opcode::CharCodeAt:
+          case MDefinition::Opcode::Mod:
             // Only allowed to remove check when definition is the second operand
             if (use_def->getOperand(0) == def)
                 return true;
@@ -3040,20 +3044,20 @@ NeedNegativeZeroCheck(MDefinition* def)
                     return true;
             }
             break;
-          case MDefinition::Op_BoundsCheck:
+          case MDefinition::Opcode::BoundsCheck:
             // Only allowed to remove check when definition is the first operand
             if (use_def->toBoundsCheck()->getOperand(1) == def)
                 return true;
             break;
-          case MDefinition::Op_ToString:
-          case MDefinition::Op_FromCharCode:
-          case MDefinition::Op_TableSwitch:
-          case MDefinition::Op_Compare:
-          case MDefinition::Op_BitAnd:
-          case MDefinition::Op_BitOr:
-          case MDefinition::Op_BitXor:
-          case MDefinition::Op_Abs:
-          case MDefinition::Op_TruncateToInt32:
+          case MDefinition::Opcode::ToString:
+          case MDefinition::Opcode::FromCharCode:
+          case MDefinition::Opcode::TableSwitch:
+          case MDefinition::Opcode::Compare:
+          case MDefinition::Opcode::BitAnd:
+          case MDefinition::Opcode::BitOr:
+          case MDefinition::Opcode::BitXor:
+          case MDefinition::Opcode::Abs:
+          case MDefinition::Opcode::TruncateToInt32:
             // Always allowed to remove check. No matter which operand.
             break;
           default:
@@ -3101,15 +3105,15 @@ MBinaryArithInstruction::New(TempAllocator& alloc, Opcode op,
                              MDefinition* left, MDefinition* right)
 {
     switch (op) {
-      case Op_Add:
+      case Opcode::Add:
         return MAdd::New(alloc, left, right);
-      case Op_Sub:
+      case Opcode::Sub:
         return MSub::New(alloc, left, right);
-      case Op_Mul:
+      case Opcode::Mul:
         return MMul::New(alloc, left, right);
-      case Op_Div:
+      case Opcode::Div:
         return MDiv::New(alloc, left, right);
-      case Op_Mod:
+      case Opcode::Mod:
         return MMod::New(alloc, left, right);
       default:
         MOZ_CRASH("unexpected binary opcode");
@@ -4957,7 +4961,8 @@ OperandIndexMap::init(TempAllocator& alloc, JSObject* templateObject)
 }
 
 MObjectState::MObjectState(MObjectState* state)
-  : numSlots_(state->numSlots_),
+  : MVariadicInstruction(classOpcode),
+    numSlots_(state->numSlots_),
     numFixedSlots_(state->numFixedSlots_),
     operandIndex_(state->operandIndex_)
 {
@@ -4967,6 +4972,7 @@ MObjectState::MObjectState(MObjectState* state)
 }
 
 MObjectState::MObjectState(JSObject *templateObject, OperandIndexMap* operandIndex)
+  : MVariadicInstruction(classOpcode)
 {
     // This instruction is only used as a summary for bailout paths.
     setResultType(MIRType::Object);
@@ -5089,6 +5095,7 @@ MObjectState::Copy(TempAllocator& alloc, MObjectState* state)
 }
 
 MArrayState::MArrayState(MDefinition* arr)
+  : MVariadicInstruction(classOpcode)
 {
     // This instruction is only used as a summary for bailout paths.
     setResultType(MIRType::Object);
@@ -5158,7 +5165,7 @@ MArgumentState::Copy(TempAllocator& alloc, MArgumentState* state)
 MNewArray::MNewArray(TempAllocator& alloc, CompilerConstraintList* constraints, uint32_t length,
                      MConstant* templateConst, gc::InitialHeap initialHeap, jsbytecode* pc,
                      bool vmCall)
-  : MUnaryInstruction(templateConst),
+  : MUnaryInstruction(classOpcode, templateConst),
     length_(length),
     initialHeap_(initialHeap),
     convertDoubleElements_(false),

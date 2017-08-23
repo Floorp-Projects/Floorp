@@ -151,7 +151,7 @@ nsHttpConnection::Init(nsHttpConnectionInfo *info,
                        nsIInterfaceRequestor *callbacks,
                        PRIntervalTime rtt)
 {
-    LOG(("nsHttpConnection::Init this=%p", this));
+    LOG(("nsHttpConnection::Init this=%p sockettransport=%p", this, transport));
     NS_ENSURE_ARG_POINTER(info);
     NS_ENSURE_TRUE(!mConnInfo, NS_ERROR_ALREADY_INITIALIZED);
 

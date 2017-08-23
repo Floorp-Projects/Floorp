@@ -559,6 +559,8 @@ nsHostResolver::Init()
         return NS_ERROR_FAILURE;
     }
 
+    LOG(("nsHostResolver::Init this=%p", this));
+
     mShutdown = false;
 
 #if TTL_AVAILABLE
