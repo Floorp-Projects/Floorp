@@ -378,7 +378,8 @@ public class BrowserSearch extends HomeFragment
                 info.url = cursor.getString(cursor.getColumnIndexOrThrow(BrowserContract.Combined.URL));
                 info.title = cursor.getString(cursor.getColumnIndexOrThrow(BrowserContract.Combined.TITLE));
 
-                int bookmarkId = cursor.getInt(cursor.getColumnIndexOrThrow(BrowserContract.Combined.BOOKMARK_ID));
+                final int bookmarkColumn = cursor.getColumnIndexOrThrow(BrowserContract.Combined.BOOKMARK_ID);
+                int bookmarkId = cursor.isNull(bookmarkColumn) ? -1 : cursor.getInt(bookmarkColumn);
                 info.bookmarkId = bookmarkId;
 
                 int historyId = cursor.getInt(cursor.getColumnIndexOrThrow(BrowserContract.Combined.HISTORY_ID));
