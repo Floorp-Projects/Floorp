@@ -1337,18 +1337,18 @@ fn find_descriptor(data: &[u8], esds: &mut ES_Descriptor) -> Result<()> {
         let des = &mut Cursor::new(remains);
         let tag = des.read_u8()?;
 
-        let mut end = 0;
+        let mut end: u32 = 0;   // It's u8 without declaration type that is incorrect.
         // MSB of extend_or_len indicates more bytes, up to 4 bytes.
         for _ in 0..4 {
             let extend_or_len = des.read_u8()?;
-            end = (end << 7) + (extend_or_len & 0x7F);
+            end = (end << 7) + (extend_or_len & 0x7F) as u32;
             if (extend_or_len & 0x80) == 0 {
-                end += des.position() as u8;
+                end += des.position() as u32;
                 break;
             }
         };
 
-        if end as usize > remains.len() {
+        if (end as usize) > remains.len() || (end as u64) < des.position() {
             return Err(Error::InvalidData("Invalid descriptor."));
         }
 
