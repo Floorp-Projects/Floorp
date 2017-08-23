@@ -906,18 +906,6 @@ MediaDecoder::PlaybackEnded()
 }
 
 void
-MediaDecoder::NotifySuspendedStatusChanged()
-{
-  MOZ_ASSERT(NS_IsMainThread());
-  MOZ_DIAGNOSTIC_ASSERT(!IsShutdown());
-  AbstractThread::AutoEnter context(AbstractMainThread());
-  if (MediaResource* r = GetResource()) {
-    bool suspended = r->IsSuspendedByCache();
-    GetOwner()->NotifySuspendedByCache(suspended);
-  }
-}
-
-void
 MediaDecoder::DownloadProgressed()
 {
   MOZ_ASSERT(NS_IsMainThread());
