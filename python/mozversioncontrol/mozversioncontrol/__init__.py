@@ -64,6 +64,10 @@ class Repository(object):
         self.version = LooseVersion(match.group(1))
         return self.version
 
+    @abc.abstractproperty
+    def name(self):
+        """Name of the tool."""
+
     @abc.abstractmethod
     def get_modified_files(self):
         '''Return a list of files that are modified in this repository's
@@ -95,6 +99,10 @@ class HgRepository(Repository):
         super(HgRepository, self).__init__(path, tool=hg)
         self._env[b'HGPLAIN'] = b'1'
 
+    @property
+    def name(self):
+        return 'hg'
+
     def get_modified_files(self):
         # Use --no-status to print just the filename.
         return self._run('status', '--modified', '--no-status').splitlines()
@@ -122,6 +130,10 @@ class GitRepository(Repository):
     '''An implementation of `Repository` for Git repositories.'''
     def __init__(self, path, git='git'):
         super(GitRepository, self).__init__(path, tool=git)
+
+    @property
+    def name(self):
+        return 'git'
 
     def get_modified_files(self):
         return self._run('diff', '--diff-filter=M', '--name-only').splitlines()
