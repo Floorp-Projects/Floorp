@@ -605,6 +605,8 @@ GLBlitHelper::BlitImageToFramebuffer(layers::Image* srcImage,
     case ImageFormat::D3D11_YCBCR_IMAGE:
         return BlitImage((layers::D3D11YCbCrImage*)srcImage, destSize,
                          destOrigin);
+    case ImageFormat::D3D9_RGB32_TEXTURE:
+        return false; // todo
 #endif
     default:
         gfxCriticalError() << "Unhandled srcImage->GetFormat(): "
