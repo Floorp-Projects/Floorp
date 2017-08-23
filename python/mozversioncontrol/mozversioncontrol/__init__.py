@@ -4,12 +4,14 @@
 
 from __future__ import absolute_import, print_function, unicode_literals
 
+import abc
 import os
 import re
 import subprocess
 import which
 
 from distutils.version import LooseVersion
+
 
 def get_tool_path(tool):
     """Obtain the path of `tool`."""
@@ -33,7 +35,10 @@ def get_tool_path(tool):
                     '|mach bootstrap| to ensure your environment is up to '
                     'date.' % tool)
 
+
 class Repository(object):
+    __metaclass__ = abc.ABCMeta
+
     '''A class wrapping utility methods around version control repositories.'''
     def __init__(self, path, tool):
         self.path = os.path.abspath(path)
@@ -59,29 +64,29 @@ class Repository(object):
         self.version = LooseVersion(match.group(1))
         return self.version
 
+    @abc.abstractmethod
     def get_modified_files(self):
         '''Return a list of files that are modified in this repository's
         working copy.'''
-        raise NotImplementedError
 
+    @abc.abstractmethod
     def get_added_files(self):
         '''Return a list of files that are added in this repository's
         working copy.'''
-        raise NotImplementedError
 
+    @abc.abstractmethod
     def add_remove_files(self, path):
         '''Add and remove files under `path` in this repository's working copy.
         '''
-        raise NotImplementedError
 
+    @abc.abstractmethod
     def forget_add_remove_files(self, path):
         '''Undo the effects of a previous add_remove_files call for `path`.
         '''
-        raise NotImplementedError
 
+    @abc.abstractmethod
     def get_files_in_working_directory(self):
         """Obtain a list of managed files in the working directory."""
-        raise NotImplementedError
 
 
 class HgRepository(Repository):
