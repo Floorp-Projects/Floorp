@@ -34,6 +34,9 @@ class EditDialog {
       await this.loadInitialValues(this._record);
     }
     this.attachEventListeners();
+    // For testing only: loadInitialValues for credit card is an async method, and tests
+    // need to wait until the values have been filled before editing the fields.
+    window.dispatchEvent(new CustomEvent("FormReady"));
   }
 
   uninit() {

@@ -1,5 +1,5 @@
-/* exported MANAGE_ADDRESSES_DIALOG_URL, EDIT_ADDRESS_DIALOG_URL, BASE_URL,
-            TEST_ADDRESS_1, TEST_ADDRESS_2, TEST_ADDRESS_3, TEST_ADDRESS_4, TEST_ADDRESS_5,
+/* exported MANAGE_ADDRESSES_DIALOG_URL, EDIT_ADDRESS_DIALOG_URL, EDIT_CREDIT_CARD_DIALOG_URL,
+            BASE_URL, TEST_ADDRESS_1, TEST_ADDRESS_2, TEST_ADDRESS_3, TEST_ADDRESS_4, TEST_ADDRESS_5,
             TEST_CREDIT_CARD_1, TEST_CREDIT_CARD_2, TEST_CREDIT_CARD_3, FORM_URL,
             FTU_PREF, ENABLED_PREF, SYNC_USERNAME_PREF, SYNC_ADDRESSES_PREF,
             sleep, expectPopupOpen, openPopupOn, expectPopupClose, closePopup, clickDoorhangerButton,
@@ -10,6 +10,7 @@
 
 const MANAGE_ADDRESSES_DIALOG_URL = "chrome://formautofill/content/manageAddresses.xhtml";
 const EDIT_ADDRESS_DIALOG_URL = "chrome://formautofill/content/editAddress.xhtml";
+const EDIT_CREDIT_CARD_DIALOG_URL = "chrome://formautofill/content/editCreditCard.xhtml";
 const BASE_URL = "http://mochi.test:8888/browser/browser/extensions/formautofill/test/browser/";
 const FORM_URL = "http://mochi.test:8888/browser/browser/extensions/formautofill/test/browser/autocomplete_basic.html";
 const FTU_PREF = "extensions.formautofill.firstTimeUse";
