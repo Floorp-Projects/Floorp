@@ -5777,7 +5777,7 @@ pref("security.mixed_content.hsts_priming_request_timeout", 2000);
 // a NullPrincipal as the security context.
 // Otherwise it will inherit the origin from parent node, this is the legacy
 // behavior of Firefox.
-pref("security.data_uri.unique_opaque_origin", false);
+pref("security.data_uri.unique_opaque_origin", true);
 
 // TODO: Bug 1380959: Block toplevel data: URI navigations
 // If true, all toplevel data: URI navigations will be blocked.
