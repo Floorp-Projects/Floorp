@@ -140,7 +140,7 @@ public:
         WebRenderCanvasRendererAsync* data =
           static_cast<WebRenderCanvasRendererAsync*>(canvasData->GetCanvasRenderer());
 
-        if (isRecycled) {
+        if (!isRecycled) {
           nsHTMLCanvasFrame* canvasFrame = static_cast<nsHTMLCanvasFrame*>(mFrame);
           if (!canvasFrame->InitializeCanvasRenderer(aDisplayListBuilder, data)) {
             return true;

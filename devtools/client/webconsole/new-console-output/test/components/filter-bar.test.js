@@ -9,12 +9,14 @@ const { render, mount, shallow } = require("enzyme");
 const { createFactory, DOM } = require("devtools/client/shared/vendor/react");
 const Provider = createFactory(require("react-redux").Provider);
 
+const actions = require("devtools/client/webconsole/new-console-output/actions/index");
 const FilterButton = require("devtools/client/webconsole/new-console-output/components/filter-button");
 const FilterBar = createFactory(require("devtools/client/webconsole/new-console-output/components/filter-bar"));
 const { getAllUi } = require("devtools/client/webconsole/new-console-output/selectors/ui");
+const { getAllFilters } = require("devtools/client/webconsole/new-console-output/selectors/filters");
 const {
   MESSAGES_CLEAR,
-  MESSAGE_LEVEL
+  FILTERS,
 } = require("devtools/client/webconsole/new-console-output/constants");
 
 const { setupStore } = require("devtools/client/webconsole/new-console-output/test/helpers");
@@ -47,6 +49,140 @@ describe("FilterBar component:", () => {
     expect(toolbar.children().eq(2).attr("value")).toBe("");
   });
 
+  it("displays the number of hidden messages when there are one hidden message", () => {
+    const store = setupStore([
+      "console.log('foobar', 'test')"
+    ]);
+    // Filter-out LOG messages
+    store.dispatch(actions.filterToggle(FILTERS.LOG));
+
+    const wrapper = mount(Provider({store}, FilterBar({ serviceContainer })));
+    const toolbar = wrapper.find(".webconsole-filterbar-filtered-messages");
+    expect(toolbar.exists()).toBeTruthy();
+
+    const message = toolbar.find(".filter-message-text");
+    expect(message.text()).toBe("1 item hidden by filters");
+    expect(message.prop("title")).toBe("log: 1");
+  });
+
+  it("Reset filters when the Reset filters button is clicked.", () => {
+    const store = setupStore([
+      "console.log('foobar', 'test')"
+    ]);
+    // Filter-out LOG messages
+    store.dispatch(actions.filterToggle(FILTERS.LOG));
+    const wrapper = mount(Provider({store}, FilterBar({serviceContainer})));
+
+    const resetFiltersButton = wrapper.find(
+      ".webconsole-filterbar-filtered-messages .devtools-button");
+    resetFiltersButton.simulate("click");
+
+    // Toolbar is now hidden
+    const toolbar = wrapper.find(".webconsole-filterbar-filtered-messages");
+    expect(toolbar.exists()).toBeFalsy();
+    expect(getAllFilters(store.getState()).get(FILTERS.LOG)).toBeTruthy();
+  });
+
+  it("displays the number of hidden messages when a search hide messages", () => {
+    const store = setupStore([
+      "console.log('foobar', 'test')",
+      "console.info('info message');",
+      "console.warn('danger, will robinson!')",
+      "console.debug('debug message');",
+      "console.error('error message');",
+    ]);
+    store.dispatch(actions.filterTextSet("qwerty"));
+
+    const wrapper = mount(Provider({store}, FilterBar({ serviceContainer })));
+    const toolbar = wrapper.find(".webconsole-filterbar-filtered-messages");
+    expect(toolbar.exists()).toBeTruthy();
+
+    const message = toolbar.find(".filter-message-text");
+    expect(message.text()).toBe("5 items hidden by filters");
+    expect(message.prop("title")).toBe("text: 5");
+  });
+
+  it("displays the number of hidden messages when there are multiple ones", () => {
+    const store = setupStore([
+      "console.log('foobar', 'test')",
+      "console.info('info message');",
+      "console.warn('danger, will robinson!')",
+      "console.debug('debug message');",
+      "console.error('error message');",
+      "console.log('foobar', 'test')",
+      "console.info('info message');",
+      "console.warn('danger, will robinson!')",
+      "console.debug('debug message');",
+      "console.error('error message');",
+    ]);
+
+    store.dispatch(actions.filterToggle(FILTERS.ERROR));
+    store.dispatch(actions.filterToggle(FILTERS.WARN));
+    store.dispatch(actions.filterToggle(FILTERS.LOG));
+    store.dispatch(actions.filterToggle(FILTERS.INFO));
+    store.dispatch(actions.filterToggle(FILTERS.DEBUG));
+    store.dispatch(actions.filterTextSet("qwerty"));
+
+    const wrapper = mount(Provider({store}, FilterBar({ serviceContainer })));
+    const message = wrapper.find(".filter-message-text");
+
+    expect(message.prop("title")).toBe("text: 10");
+  });
+
+  it("displays expected tooltip when there is text & level hidden-messages", () => {
+    const store = setupStore([
+      "console.log('foobar', 'test')",
+      "console.info('info message');",
+      "console.warn('danger, will robinson!')",
+      "console.debug('debug message');",
+      "console.error('error message');",
+      "console.log('foobar', 'test')",
+      "console.info('info message');",
+      "console.warn('danger, will robinson!')",
+      "console.debug('debug message');",
+      "console.error('error message');",
+    ]);
+
+    store.dispatch(actions.filterToggle(FILTERS.ERROR));
+    store.dispatch(actions.filterToggle(FILTERS.WARN));
+    store.dispatch(actions.filterToggle(FILTERS.LOG));
+    store.dispatch(actions.filterToggle(FILTERS.INFO));
+    store.dispatch(actions.filterToggle(FILTERS.DEBUG));
+
+    const wrapper = mount(Provider({store}, FilterBar({ serviceContainer })));
+    const toolbar = wrapper.find(".webconsole-filterbar-filtered-messages");
+    expect(toolbar.exists()).toBeTruthy();
+
+    const message = toolbar.find(".filter-message-text");
+    expect(message.text()).toBe("10 items hidden by filters");
+    expect(message.prop("title")).toBe("error: 2, warn: 2, log: 2, info: 2, debug: 2");
+  });
+
+  it("does not display the number of hidden messages when there are no messages", () => {
+    const store = setupStore([]);
+    const wrapper = mount(Provider({store}, FilterBar({ serviceContainer })));
+    const toolbar = wrapper.find(".webconsole-filterbar-filtered-messages");
+    expect(toolbar.exists()).toBeFalsy();
+  });
+
+  it("does not display the number of hidden non-default filters (CSS, Network,…)", () => {
+    const store = setupStore([
+      "Unknown property ‘such-unknown-property’.  Declaration dropped.",
+      "GET request",
+      "XHR GET request"
+    ]);
+    const wrapper = mount(Provider({store}, FilterBar({ serviceContainer })));
+
+    // Let's make sure those non-default filters are off.
+    const filters = getAllFilters(store.getState());
+    expect(filters.get(FILTERS.CSS)).toBe(false);
+    expect(filters.get(FILTERS.NET)).toBe(false);
+    expect(filters.get(FILTERS.NETXHR)).toBe(false);
+
+    const toolbar = wrapper.find(".webconsole-filterbar-filtered-messages");
+    expect(toolbar.exists()).toBeFalsy();
+  });
+
   it("displays filter bar when button is clicked", () => {
     const store = setupStore([]);
 
@@ -69,15 +205,15 @@ describe("FilterBar component:", () => {
     );
 
     let buttons = [
-      filterBtn({ label: "Errors", filterKey: MESSAGE_LEVEL.ERROR }),
-      filterBtn({ label: "Warnings", filterKey: MESSAGE_LEVEL.WARN }),
-      filterBtn({ label: "Logs", filterKey: MESSAGE_LEVEL.LOG }),
-      filterBtn({ label: "Info", filterKey: MESSAGE_LEVEL.INFO }),
-      filterBtn({ label: "Debug", filterKey: MESSAGE_LEVEL.DEBUG }),
+      filterBtn({ label: "Errors", filterKey: FILTERS.ERROR }),
+      filterBtn({ label: "Warnings", filterKey: FILTERS.WARN }),
+      filterBtn({ label: "Logs", filterKey: FILTERS.LOG }),
+      filterBtn({ label: "Info", filterKey: FILTERS.INFO }),
+      filterBtn({ label: "Debug", filterKey: FILTERS.DEBUG }),
       DOM.span({
         className: "devtools-separator",
       }),
-      filterBtn({ label: "CSS", filterKey: "css" }),
+      filterBtn({ label: "CSS", filterKey: "css", active: false }),
       filterBtn({ label: "XHR", filterKey: "netxhr", active: false }),
       filterBtn({ label: "Requests", filterKey: "net", active: false }),
     ];

@@ -5150,6 +5150,10 @@ nsDisplayText::nsDisplayText(nsDisplayListBuilder* aBuilder, nsTextFrame* aFrame
 
     // TODO: Paint() checks mDisableSubpixelAA, we should too.
     RenderToContext(captureCtx, mTextDrawer, aBuilder, true);
+
+    if (!mTextDrawer->CanSerializeFonts()) {
+      mTextDrawer = nullptr;
+    }
   }
 }
 
@@ -5159,9 +5163,7 @@ nsDisplayText::GetLayerState(nsDisplayListBuilder* aBuilder,
                              const ContainerLayerParameters& aParameters)
 {
   // Basic things that all advanced backends need
-  if (!mTextDrawer ||
-      !mTextDrawer->CanSerializeFonts() ||
-      XRE_IsParentProcess()) {
+  if (!mTextDrawer) {
     return mozilla::LAYER_NONE;
   }
 

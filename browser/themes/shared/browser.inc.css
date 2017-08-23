@@ -16,6 +16,8 @@
 }
 %endif
 
+%include downloads/indicator.inc.css
+
 /* Toolbar / content area border */
 
 #navigator-toolbox::after {

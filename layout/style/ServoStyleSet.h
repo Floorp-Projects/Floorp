@@ -421,6 +421,11 @@ public:
   // Returns the style rule map.
   ServoStyleRuleMap* StyleRuleMap();
 
+  // Clear mPresContext. This is needed after XBL ServoStyleSet is created.
+  void ClearPresContext() {
+    mPresContext = nullptr;
+  }
+
   /**
    * Returns true if a modification to an an attribute with the specified
    * local name might require us to restyle the element.

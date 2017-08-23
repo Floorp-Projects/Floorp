@@ -4,10 +4,6 @@
 
 /*** Status and progress indicator ***/
 
-#downloads-button {
-  --downloads-indicator-image: url("chrome://browser/skin/downloads/download-icons.svg#arrow-with-bar");
-}
-
 #downloads-indicator-anchor {
   min-width: 16px;
   min-height: 16px;
@@ -27,11 +23,6 @@
 }
 #downloads-button[progress] > #downloads-indicator-anchor > #downloads-indicator-progress-outer {
   background: url("chrome://browser/skin/downloads/download-icons.svg#progress-bar-bg") center no-repeat;
-}
-
-#downloads-button[attention="success"] {
-  list-style-image: url("chrome://browser/skin/downloads/download-glow-menuPanel.png");
-  -moz-image-region: auto;
 }
 
 #downloads-indicator-icon {

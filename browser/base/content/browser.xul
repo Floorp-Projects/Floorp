@@ -903,17 +903,18 @@
         </toolbaritem>
 
         <!-- This is a placeholder for the Downloads Indicator.  It is visible
-             during the customization of the toolbar, in the palette, and before
-             the Downloads Indicator overlay is loaded. -->
+             before the Downloads Indicator overlay is loaded. -->
         <toolbarbutton id="downloads-button"
+                       hidden="true"
                        class="toolbarbutton-1 chromeclass-toolbar-additional badged-button"
+                       skipintoolbarset="true"
+                       overflows="false"
                        key="key_openDownloads"
                        oncommand="DownloadsIndicatorView.onCommand(event);"
                        ondrop="DownloadsIndicatorView.onDrop(event);"
                        ondragover="DownloadsIndicatorView.onDragOver(event);"
                        ondragenter="DownloadsIndicatorView.onDragOver(event);"
                        label="&downloads.label;"
-                       removable="true"
                        cui-areatype="toolbar"
                        tooltip="dynamic-shortcut-tooltip"/>
 
