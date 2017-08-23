@@ -101,13 +101,12 @@ return /******/ (function(modules) { // webpackBootstrap
 Object.defineProperty(exports, "__esModule", {
   value: true
 });
-exports.unreachable = exports.warn = exports.utf8StringToString = exports.stringToUTF8String = exports.stringToPDFString = exports.stringToBytes = exports.string32 = exports.shadow = exports.setVerbosityLevel = exports.ReadableStream = exports.removeNullCharacters = exports.readUint32 = exports.readUint16 = exports.readInt8 = exports.log2 = exports.loadJpegStream = exports.isEvalSupported = exports.isLittleEndian = exports.createValidAbsoluteUrl = exports.isSameOrigin = exports.isNodeJS = exports.isSpace = exports.isString = exports.isNum = exports.isInt = exports.isEmptyObj = exports.isBool = exports.isArrayBuffer = exports.isArray = exports.info = exports.globalScope = exports.getVerbosityLevel = exports.getLookupTableFactory = exports.deprecated = exports.createObjectURL = exports.createPromiseCapability = exports.createBlob = exports.bytesToString = exports.assert = exports.arraysToBytes = exports.arrayByteLength = exports.FormatError = exports.XRefParseException = exports.Util = exports.UnknownErrorException = exports.UnexpectedResponseException = exports.TextRenderingMode = exports.StreamType = exports.StatTimer = exports.PasswordResponses = exports.PasswordException = exports.PageViewport = exports.NotImplementedException = exports.NativeImageDecoding = exports.MissingPDFException = exports.MissingDataException = exports.MessageHandler = exports.InvalidPDFException = exports.AbortException = exports.CMapCompressionType = exports.ImageKind = exports.FontType = exports.AnnotationType = exports.AnnotationFlag = exports.AnnotationFieldFlag = exports.AnnotationBorderStyleType = exports.UNSUPPORTED_FEATURES = exports.VERBOSITY_LEVELS = exports.OPS = exports.IDENTITY_MATRIX = exports.FONT_IDENTITY_MATRIX = undefined;
+exports.unreachable = exports.warn = exports.utf8StringToString = exports.stringToUTF8String = exports.stringToPDFString = exports.stringToBytes = exports.string32 = exports.shadow = exports.setVerbosityLevel = exports.ReadableStream = exports.removeNullCharacters = exports.readUint32 = exports.readUint16 = exports.readInt8 = exports.log2 = exports.loadJpegStream = exports.isEvalSupported = exports.isLittleEndian = exports.createValidAbsoluteUrl = exports.isSameOrigin = exports.isNodeJS = exports.isSpace = exports.isString = exports.isNum = exports.isInt = exports.isEmptyObj = exports.isBool = exports.isArrayBuffer = exports.isArray = exports.info = exports.getVerbosityLevel = exports.getLookupTableFactory = exports.deprecated = exports.createObjectURL = exports.createPromiseCapability = exports.createBlob = exports.bytesToString = exports.assert = exports.arraysToBytes = exports.arrayByteLength = exports.FormatError = exports.XRefParseException = exports.Util = exports.UnknownErrorException = exports.UnexpectedResponseException = exports.TextRenderingMode = exports.StreamType = exports.StatTimer = exports.PasswordResponses = exports.PasswordException = exports.PageViewport = exports.NotImplementedException = exports.NativeImageDecoding = exports.MissingPDFException = exports.MissingDataException = exports.MessageHandler = exports.InvalidPDFException = exports.AbortException = exports.CMapCompressionType = exports.ImageKind = exports.FontType = exports.AnnotationType = exports.AnnotationFlag = exports.AnnotationFieldFlag = exports.AnnotationBorderStyleType = exports.UNSUPPORTED_FEATURES = exports.VERBOSITY_LEVELS = exports.OPS = exports.IDENTITY_MATRIX = exports.FONT_IDENTITY_MATRIX = undefined;
 
 __w_pdfjs_require__(36);
 
 var _streams_polyfill = __w_pdfjs_require__(37);
 
-var globalScope = typeof window !== 'undefined' && window.Math === Math ? window : typeof global !== 'undefined' && global.Math === Math ? global : typeof self !== 'undefined' && self.Math === Math ? self : undefined;
 var FONT_IDENTITY_MATRIX = [0.001, 0, 0, 0.001, 0, 0];
 const NativeImageDecoding = {
   NONE: 'none',
@@ -1426,7 +1425,6 @@ exports.createObjectURL = createObjectURL;
 exports.deprecated = deprecated;
 exports.getLookupTableFactory = getLookupTableFactory;
 exports.getVerbosityLevel = getVerbosityLevel;
-exports.globalScope = globalScope;
 exports.info = info;
 exports.isArray = isArray;
 exports.isArrayBuffer = isArrayBuffer;
@@ -4706,11 +4704,12 @@ var Parser = function ParserClosure() {
           b += a;
         }
         adler32 = b % 65521 << 16 | a % 65521;
-        if (this.imageCache.adler32 === adler32) {
+        let cacheEntry = this.imageCache[adler32];
+        if (cacheEntry !== undefined) {
           this.buf2 = _primitives.Cmd.get('EI');
           this.shift();
-          this.imageCache[adler32].reset();
-          return this.imageCache[adler32];
+          cacheEntry.reset();
+          return cacheEntry;
         }
       }
       if (cipherTransform) {
@@ -33151,7 +33150,7 @@ var Jbig2Image = function Jbig2ImageClosure() {
     }
     return prev & 0x7FFFFFFF;
   }
-  var SegmentTypes = ['SymbolDictionary', null, null, null, 'IntermediateTextRegion', null, 'ImmediateTextRegion', 'ImmediateLosslessTextRegion', null, null, null, null, null, null, null, null, 'patternDictionary', null, null, null, 'IntermediateHalftoneRegion', null, 'ImmediateHalftoneRegion', 'ImmediateLosslessHalftoneRegion', null, null, null, null, null, null, null, null, null, null, null, null, 'IntermediateGenericRegion', null, 'ImmediateGenericRegion', 'ImmediateLosslessGenericRegion', 'IntermediateGenericRefinementRegion', null, 'ImmediateGenericRefinementRegion', 'ImmediateLosslessGenericRefinementRegion', null, null, null, null, 'PageInformation', 'EndOfPage', 'EndOfStripe', 'EndOfFile', 'Profiles', 'Tables', null, null, null, null, null, null, null, null, 'Extension'];
+  var SegmentTypes = ['SymbolDictionary', null, null, null, 'IntermediateTextRegion', null, 'ImmediateTextRegion', 'ImmediateLosslessTextRegion', null, null, null, null, null, null, null, null, 'PatternDictionary', null, null, null, 'IntermediateHalftoneRegion', null, 'ImmediateHalftoneRegion', 'ImmediateLosslessHalftoneRegion', null, null, null, null, null, null, null, null, null, null, null, null, 'IntermediateGenericRegion', null, 'ImmediateGenericRegion', 'ImmediateLosslessGenericRegion', 'IntermediateGenericRefinementRegion', null, 'ImmediateGenericRefinementRegion', 'ImmediateLosslessGenericRefinementRegion', null, null, null, null, 'PageInformation', 'EndOfPage', 'EndOfStripe', 'EndOfFile', 'Profiles', 'Tables', null, null, null, null, null, null, null, null, 'Extension'];
   var CodingTemplates = [[{
     x: -1,
     y: -2
@@ -33714,6 +33713,134 @@ var Jbig2Image = function Jbig2ImageClosure() {
     }
     return bitmap;
   }
+  function decodePatternDictionary(mmr, patternWidth, patternHeight, maxPatternIndex, template, decodingContext) {
+    let at = [];
+    at.push({
+      x: -patternWidth,
+      y: 0
+    });
+    if (template === 0) {
+      at.push({
+        x: -3,
+        y: -1
+      });
+      at.push({
+        x: 2,
+        y: -2
+      });
+      at.push({
+        x: -2,
+        y: -2
+      });
+    }
+    let collectiveWidth = (maxPatternIndex + 1) * patternWidth;
+    let collectiveBitmap = decodeBitmap(mmr, collectiveWidth, patternHeight, template, false, null, at, decodingContext);
+    let patterns = [],
+        i = 0,
+        patternBitmap,
+        xMin,
+        xMax,
+        y;
+    while (i <= maxPatternIndex) {
+      patternBitmap = [];
+      xMin = patternWidth * i;
+      xMax = xMin + patternWidth;
+      for (y = 0; y < patternHeight; y++) {
+        patternBitmap.push(collectiveBitmap[y].subarray(xMin, xMax));
+      }
+      patterns.push(patternBitmap);
+      i++;
+    }
+    return patterns;
+  }
+  function decodeHalftoneRegion(mmr, patterns, template, regionWidth, regionHeight, defaultPixelValue, enableSkip, combinationOperator, gridWidth, gridHeight, gridOffsetX, gridOffsetY, gridVectorX, gridVectorY, decodingContext) {
+    let skip = null;
+    if (enableSkip) {
+      throw new Jbig2Error('skip is not supported');
+    }
+    if (combinationOperator !== 0) {
+      throw new Jbig2Error('operator ' + combinationOperator + ' is not supported in halftone region');
+    }
+    let regionBitmap = [];
+    let i, j, row;
+    for (i = 0; i < regionHeight; i++) {
+      row = new Uint8Array(regionWidth);
+      if (defaultPixelValue) {
+        for (j = 0; j < regionWidth; j++) {
+          row[j] = defaultPixelValue;
+        }
+      }
+      regionBitmap.push(row);
+    }
+    let numberOfPatterns = patterns.length;
+    let pattern0 = patterns[0];
+    let patternWidth = pattern0[0].length,
+        patternHeight = pattern0.length;
+    let bitsPerValue = (0, _util.log2)(numberOfPatterns);
+    let at = [];
+    at.push({
+      x: template <= 1 ? 3 : 2,
+      y: -1
+    });
+    if (template === 0) {
+      at.push({
+        x: -3,
+        y: -1
+      });
+      at.push({
+        x: 2,
+        y: -2
+      });
+      at.push({
+        x: -2,
+        y: -2
+      });
+    }
+    let grayScaleBitPlanes = [];
+    for (i = bitsPerValue - 1; i >= 0; i--) {
+      grayScaleBitPlanes[i] = decodeBitmap(mmr, gridWidth, gridHeight, template, false, skip, at, decodingContext);
+    }
+    let mg, ng, bit, patternIndex, patternBitmap, x, y, patternRow, regionRow;
+    for (mg = 0; mg < gridHeight; mg++) {
+      for (ng = 0; ng < gridWidth; ng++) {
+        bit = 0;
+        patternIndex = 0;
+        for (j = bitsPerValue - 1; j >= 0; j--) {
+          bit = grayScaleBitPlanes[j][mg][ng] ^ bit;
+          patternIndex |= bit << j;
+        }
+        patternBitmap = patterns[patternIndex];
+        x = gridOffsetX + mg * gridVectorY + ng * gridVectorX >> 8;
+        y = gridOffsetY + mg * gridVectorX - ng * gridVectorY >> 8;
+        if (x >= 0 && x + patternWidth <= regionWidth && y >= 0 && y + patternHeight <= regionHeight) {
+          for (i = 0; i < patternHeight; i++) {
+            regionRow = regionBitmap[y + i];
+            patternRow = patternBitmap[i];
+            for (j = 0; j < patternWidth; j++) {
+              regionRow[x + j] |= patternRow[j];
+            }
+          }
+        } else {
+          let regionX, regionY;
+          for (i = 0; i < patternHeight; i++) {
+            regionY = y + i;
+            if (regionY < 0 || regionY >= regionHeight) {
+              continue;
+            }
+            regionRow = regionBitmap[regionY];
+            patternRow = patternBitmap[i];
+            for (j = 0; j < patternWidth; j++) {
+              regionX = x + j;
+              if (regionX >= 0 && regionX < regionWidth) {
+                regionRow[regionX] |= patternRow[j];
+              }
+            }
+          }
+        }
+      }
+    }
+    return regionBitmap;
+  }
   function readSegmentHeader(data, start) {
     var segmentHeader = {};
     segmentHeader.number = (0, _util.readUint32)(data, start);
@@ -33929,6 +34056,42 @@ var Jbig2Image = function Jbig2ImageClosure() {
         }
         args = [textRegion, header.referredTo, data, position, end];
         break;
+      case 16:
+        let patternDictionary = {};
+        let patternDictionaryFlags = data[position++];
+        patternDictionary.mmr = !!(patternDictionaryFlags & 1);
+        patternDictionary.template = patternDictionaryFlags >> 1 & 3;
+        patternDictionary.patternWidth = data[position++];
+        patternDictionary.patternHeight = data[position++];
+        patternDictionary.maxPatternIndex = (0, _util.readUint32)(data, position);
+        position += 4;
+        args = [patternDictionary, header.number, data, position, end];
+        break;
+      case 22:
+      case 23:
+        let halftoneRegion = {};
+        halftoneRegion.info = readRegionSegmentInformation(data, position);
+        position += RegionSegmentInformationFieldLength;
+        let halftoneRegionFlags = data[position++];
+        halftoneRegion.mmr = !!(halftoneRegionFlags & 1);
+        halftoneRegion.template = halftoneRegionFlags >> 1 & 3;
+        halftoneRegion.enableSkip = !!(halftoneRegionFlags & 8);
+        halftoneRegion.combinationOperator = halftoneRegionFlags >> 4 & 7;
+        halftoneRegion.defaultPixelValue = halftoneRegionFlags >> 7 & 1;
+        halftoneRegion.gridWidth = (0, _util.readUint32)(data, position);
+        position += 4;
+        halftoneRegion.gridHeight = (0, _util.readUint32)(data, position);
+        position += 4;
+        halftoneRegion.gridOffsetX = (0, _util.readUint32)(data, position) & 0xFFFFFFFF;
+        position += 4;
+        halftoneRegion.gridOffsetY = (0, _util.readUint32)(data, position) & 0xFFFFFFFF;
+        position += 4;
+        halftoneRegion.gridVectorX = (0, _util.readUint16)(data, position);
+        position += 2;
+        halftoneRegion.gridVectorY = (0, _util.readUint16)(data, position);
+        position += 2;
+        args = [halftoneRegion, header.referredTo, data, position, end];
+        break;
       case 38:
       case 39:
         var genericRegion = {};
@@ -34120,6 +34283,24 @@ var Jbig2Image = function Jbig2ImageClosure() {
     },
     onImmediateLosslessTextRegion: function SimpleSegmentVisitor_onImmediateLosslessTextRegion() {
       this.onImmediateTextRegion.apply(this, arguments);
+    },
+    onPatternDictionary(dictionary, currentSegment, data, start, end) {
+      let patterns = this.patterns;
+      if (!patterns) {
+        this.patterns = patterns = {};
+      }
+      let decodingContext = new DecodingContext(data, start, end);
+      patterns[currentSegment] = decodePatternDictionary(dictionary.mmr, dictionary.patternWidth, dictionary.patternHeight, dictionary.maxPatternIndex, dictionary.template, decodingContext);
+    },
+    onImmediateHalftoneRegion(region, referredSegments, data, start, end) {
+      let patterns = this.patterns[referredSegments[0]];
+      let regionInfo = region.info;
+      let decodingContext = new DecodingContext(data, start, end);
+      let bitmap = decodeHalftoneRegion(region.mmr, patterns, region.template, regionInfo.width, regionInfo.height, region.defaultPixelValue, region.enableSkip, region.combinationOperator, region.gridWidth, region.gridHeight, region.gridOffsetX, region.gridOffsetY, region.gridVectorX, region.gridVectorY, decodingContext);
+      this.drawBitmap(regionInfo, bitmap);
+    },
+    onImmediateLosslessHalftoneRegion() {
+      this.onImmediateHalftoneRegion.apply(this, arguments);
     }
   };
   function Jbig2Image() {}
@@ -39856,8 +40037,8 @@ exports.Type1Parser = Type1Parser;
 "use strict";
 
 
-var pdfjsVersion = '1.9.441';
-var pdfjsBuild = '8c8d8fa2';
+var pdfjsVersion = '1.9.456';
+var pdfjsBuild = 'cb10c03d';
 var pdfjsCoreWorker = __w_pdfjs_require__(17);
 exports.WorkerMessageHandler = pdfjsCoreWorker.WorkerMessageHandler;
 
