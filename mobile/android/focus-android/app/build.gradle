@@ -109,16 +109,23 @@ android {
         focusWebkitRelease {
             java.srcDir 'src/focusRelease/java'
             manifest.srcFile 'src/focusRelease/AndroidManifest.xml'
-        }
-        focusGeckoRelease {
-            java.srcDir 'src/focusRelease/java'
-            manifest.srcFile 'src/focusRelease/AndroidManifest.xml'
+            res.srcDir 'src/focusRelease/res'
         }
         klarWebkitRelease {
             java.srcDir 'src/klarRelease/java'
+            res.srcDir 'src/klarRelease/res'
         }
-        klarGeckoRelease {
-            java.srcDir 'src/klarRelease/java'
+        focusWebkitBeta {
+            res.srcDir 'src/focusBeta/res'
+        }
+        klarWebkitBeta {
+            res.srcDir 'src/klarBeta/res'
+        }
+        focusWebkitDebug {
+            res.srcDir 'src/focusDebug/res'
+        }
+        klarWebkitDebug {
+            res.srcDir 'src/klarDebug/res'
         }
     }
 }
@@ -194,20 +201,6 @@ def replacePlaceholdersInFile(basePath, fileName, placeholders) {
     }
 
     file.write(content, 'UTF-8')
-}
-
-afterEvaluate {
-    android.applicationVariants.all { variant ->
-        variant.outputs.each { output ->
-            output.processResources.doFirst {
-                // prepare placeholder map from manifestPlaceholders including applicationId placeholder
-                def placeholders = variant.mergedFlavor.manifestPlaceholders + [applicationId: variant.applicationId]
-
-                // TODO: Fix later..
-                //replacePlaceholdersInFile(resDir, 'xml-v25/shortcuts.xml', placeholders)
-            }
-        }
-    }
 }
 
 // -------------------------------------------------------------------------------------------------
