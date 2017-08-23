@@ -332,7 +332,7 @@
             "android-api-15", 
             "android-multilocale"
         ], 
-        "revision": "40fd8270c5eb"
+        "revision": "2e261b4f4ce8"
     }, 
     "hy-AM": {
         "platforms": [
@@ -563,7 +563,7 @@
             "android-api-15", 
             "android-multilocale"
         ], 
-        "revision": "1153c0e65cf3"
+        "revision": "feadb219c763"
     }, 
     "ru": {
         "platforms": [
