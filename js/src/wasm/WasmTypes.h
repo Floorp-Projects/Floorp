@@ -1357,7 +1357,7 @@ struct TlsData
 
     // When compiling with tiering, the jumpTable has one entry for each
     // baseline-compiled function.
-    uintptr_t* jumpTable;
+    void** jumpTable;
 
     // The globalArea must be the last field.  Globals for the module start here
     // and are inline in this structure.  16-byte alignment is required for SIMD

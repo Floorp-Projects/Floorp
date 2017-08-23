@@ -298,8 +298,8 @@ Module::compiledSerialize(uint8_t* compiledBegin, size_t compiledSize) const
 }
 
 void
-Module::finishTier2Generator(UniqueLinkDataTier linkData2, UniqueMetadataTier metadata2,
-                             UniqueConstCodeSegment code2, UniqueModuleEnvironment env2)
+Module::finishTier2(UniqueLinkDataTier linkData2, UniqueMetadataTier metadata2,
+                    UniqueConstCodeSegment code2, UniqueModuleEnvironment env2)
 {
     // Install the data in the data structures. They will not be visible yet.
 
@@ -316,8 +316,8 @@ Module::finishTier2Generator(UniqueLinkDataTier linkData2, UniqueMetadataTier me
 
     // And we update the jump vector.
 
-    uintptr_t* jumpTable = code().jumpTable();
-    uintptr_t base = reinterpret_cast<uintptr_t>(code().segment(Tier::Ion).base());
+    void** jumpTable = code().jumpTable();
+    uint8_t* base = code().segment(Tier::Ion).base();
 
     for (auto cr : metadata(Tier::Ion).codeRanges) {
         if (!cr.isFunction())

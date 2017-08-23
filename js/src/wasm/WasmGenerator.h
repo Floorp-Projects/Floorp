@@ -273,7 +273,8 @@ class MOZ_STACK_CLASS ModuleGenerator
     MOZ_MUST_USE bool finishLinkData();
     void generateBytecodeHash(const ShareableBytes& bytecode);
     MOZ_MUST_USE bool finishMetadata(const ShareableBytes& bytecode);
-    MOZ_MUST_USE bool finishCommon(const ShareableBytes& bytecode);
+    MOZ_MUST_USE UniqueConstCodeSegment finishCodeSegment(const ShareableBytes& bytecode);
+    UniqueJumpTable createJumpTable(const CodeSegment& codeSegment);
     MOZ_MUST_USE bool addFuncImport(const Sig& sig, uint32_t globalDataOffset);
     MOZ_MUST_USE bool allocateGlobalBytes(uint32_t bytes, uint32_t align, uint32_t* globalDataOff);
     MOZ_MUST_USE bool allocateGlobal(GlobalDesc* global);
@@ -332,9 +333,6 @@ class MOZ_STACK_CLASS ModuleGenerator
     void bumpMinMemoryLength(uint32_t newMinMemoryLength);
     MOZ_MUST_USE bool addGlobal(ValType type, bool isConst, uint32_t* index);
     MOZ_MUST_USE bool addExport(CacheableChars&& fieldChars, uint32_t funcIndex);
-
-    // Create the patch table.
-    UniqueJumpTable createJumpTable(const CodeSegment& codeSegment);
 
     // Finish compilation of the given bytecode.
     SharedModule finishModule(const ShareableBytes& bytecode);
