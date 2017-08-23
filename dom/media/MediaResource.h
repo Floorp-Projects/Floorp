@@ -211,10 +211,6 @@ public:
   virtual nsresult ReadFromCache(char* aBuffer,
                                  int64_t aOffset,
                                  uint32_t aCount) = 0;
-  // Returns true if the resource can be seeked to unbuffered ranges, i.e.
-  // for an HTTP network stream this returns true if HTTP1.1 Byte Range
-  // requests are supported by the connection/server.
-  virtual bool IsTransportSeekable() = 0;
 
   /**
    * Fills aRanges with MediaByteRanges representing the data which is cached
@@ -288,6 +284,11 @@ public:
 
   // The mode is initially MODE_PLAYBACK.
   virtual void SetReadMode(MediaCacheStream::ReadMode aMode) = 0;
+
+  // Returns true if the resource can be seeked to unbuffered ranges, i.e.
+  // for an HTTP network stream this returns true if HTTP1.1 Byte Range
+  // requests are supported by the connection/server.
+  virtual bool IsTransportSeekable() = 0;
 
   /**
    * Open the stream. This creates a stream listener and returns it in

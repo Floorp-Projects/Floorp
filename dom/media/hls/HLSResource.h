@@ -77,8 +77,6 @@ public:
     return NS_OK;
   }
 
-  bool IsTransportSeekable() override { return true; }
-
   java::GeckoHLSResourceWrapper::GlobalRef GetResourceWrapper() {
     return mHLSResourceWrapper;
   }
