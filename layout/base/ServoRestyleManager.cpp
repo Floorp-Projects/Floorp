@@ -1012,16 +1012,7 @@ ServoRestyleManager::DoProcessPendingRestyles(ServoTraversalFlags aFlags)
     aFlags |= ServoTraversalFlags::ForCSSRuleChanges;
   }
 
-  while (doc->GetServoRestyleRoot()) {
-    // Do the servo traversal.
-    bool needsPostTraversal = styleSet->StyleDocument(aFlags);
-
-    // If we don't need a post-traversal, we're done.
-    if (!needsPostTraversal) {
-      doc->ClearServoRestyleRoot();
-      break;
-    }
-
+  while (styleSet->StyleDocument(aFlags)) {
     ClearSnapshots();
 
     nsStyleChangeList currentChanges(StyleBackendType::Servo);
@@ -1085,6 +1076,8 @@ ServoRestyleManager::DoProcessPendingRestyles(ServoTraversalFlags aFlags)
       IncrementRestyleGeneration();
     }
   }
+
+  doc->ClearServoRestyleRoot();
 
   FlushOverflowChangedTracker();
 
