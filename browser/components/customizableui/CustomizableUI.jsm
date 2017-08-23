@@ -4280,6 +4280,10 @@ OverflowableToolbar.prototype = {
   },
 
   _onPanelHiding(aEvent) {
+    if (aEvent.target != this._panel) {
+      // Ignore context menus, <select> popups, etc.
+      return;
+    }
     this._chevron.open = false;
     this._panel.removeEventListener("dragover", this);
     this._panel.removeEventListener("dragend", this);
