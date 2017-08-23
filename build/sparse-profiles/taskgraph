@@ -22,6 +22,10 @@ path:tools/lint/
 # for new-style try pushes
 path:try_task_config.json
 
+# Moz.build files are read in filesystem mode
+glob:**/moz.build
+glob:**/*.mozbuild
+
 # Tooltool manifests also need to be opened. Assume they
 # are all somewhere in "tooltool-manifests" directories.
 glob:**/tooltool-manifests/**

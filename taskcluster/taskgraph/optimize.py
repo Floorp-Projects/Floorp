@@ -24,9 +24,13 @@ from .taskgraph import TaskGraph
 from .util.seta import is_low_value_task
 from .util.taskcluster import find_task_id
 from .util.parameterization import resolve_task_references
+from mozbuild.util import memoize
 from slugid import nice as slugid
+from mozbuild.frontend import reader
 
 logger = logging.getLogger(__name__)
+
+TOPSRCDIR = os.path.abspath(os.path.join(__file__, '../../../'))
 
 
 def optimize_task_graph(target_task_graph, params, do_not_optimize,
@@ -71,6 +75,8 @@ def _make_default_strategies():
         'index-search': IndexSearch(),
         'seta': SETA(),
         'skip-unless-changed': SkipUnlessChanged(),
+        'skip-unless-schedules': SkipUnlessSchedules(),
+        'skip-unless-schedules-or-seta': Either(SkipUnlessSchedules(), SETA()),
     }
 
 
@@ -244,6 +250,37 @@ class OptimizationStrategy(object):
         return False
 
 
+class Either(OptimizationStrategy):
+    """Given one or more optimization strategies, remove a task if any of them
+    says to, and replace with a task if any finds a replacement (preferring the
+    earliest).  By default, each substrategy gets the same arg, but split_args
+    can return a list of args for each strategy, if desired."""
+    def __init__(self, *substrategies, **kwargs):
+        self.substrategies = substrategies
+        self.split_args = kwargs.pop('split_args', None)
+        if not self.split_args:
+            self.split_args = lambda arg: [arg] * len(substrategies)
+        if kwargs:
+            raise TypeError("unexpected keyword args")
+
+    def _for_substrategies(self, arg, fn):
+        for sub, arg in zip(self.substrategies, self.split_args(arg)):
+            rv = fn(sub, arg)
+            if rv:
+                return rv
+        return False
+
+    def should_remove_task(self, task, params, arg):
+        return self._for_substrategies(
+            arg,
+            lambda sub, arg: sub.should_remove_task(task, params, arg))
+
+    def should_replace_task(self, task, params, arg):
+        return self._for_substrategies(
+            arg,
+            lambda sub, arg: sub.should_replace_task(task, params, arg))
+
+
 class IndexSearch(OptimizationStrategy):
     def should_remove_task(self, task, params, index_paths):
         "If this task has no dependencies, don't run it.."
@@ -300,3 +337,30 @@ class SkipUnlessChanged(OptimizationStrategy):
                          task.label)
             return True
         return False
+
+
+class SkipUnlessSchedules(OptimizationStrategy):
+
+    @memoize
+    def scheduled_by_push(self, repository, revision):
+        changed_files = files_changed.get_changed_files(repository, revision)
+
+        config = reader.EmptyConfig(TOPSRCDIR)
+        rdr = reader.BuildReader(config)
+        components = set()
+        for p, m in rdr.files_info(changed_files).items():
+            components |= set(m['SCHEDULES'].components)
+
+        return components
+
+    def should_remove_task(self, task, params, conditions):
+        if params.get('pushlog_id') == -1:
+            return False
+
+        scheduled = self.scheduled_by_push(params['head_repository'], params['head_rev'])
+        conditions = set(conditions)
+        # if *any* of the condition components are scheduled, do not optimize
+        if conditions & scheduled:
+            return False
+
+        return True
