@@ -437,8 +437,10 @@ function ModuleDeclarationEnvironmentSetup(module)
         let resolution = callFunction(module.resolveExport, module, e.exportName);
         assert(resolution.resolved || resolution.module,
                "Unexpected failure to resolve export in ModuleDeclarationEnvironmentSetup");
-        if (!resolution.resolved)
-            return ResolutionError(resolution, "indirectExport", e.exportName)
+        if (!resolution.resolved) {
+            return ResolutionError(resolution, "indirectExport", e.exportName,
+                                   e.lineNumber, e.columnNumber)
+        }
     }
 
     // Steps 5-6
@@ -460,8 +462,10 @@ function ModuleDeclarationEnvironmentSetup(module)
             if (!resolution.resolved && !resolution.module)
                 resolution.module = module;
 
-            if (!resolution.resolved)
-                return ResolutionError(resolution, "import", imp.importName);
+            if (!resolution.resolved) {
+                return ResolutionError(resolution, "import", imp.importName,
+                                       imp.lineNumber, imp.columnNumber);
+            }
 
             CreateImportBinding(env, imp.localName, resolution.module, resolution.bindingName);
         }
@@ -471,7 +475,7 @@ function ModuleDeclarationEnvironmentSetup(module)
 }
 
 // 15.2.1.16.4.3 ResolutionError(module)
-function ResolutionError(resolution, kind, name)
+function ResolutionError(resolution, kind, name, line, column)
 {
     let module = resolution.module;
     assert(module !== null,
@@ -484,21 +488,22 @@ function ResolutionError(resolution, kind, name)
     assert(kind === "import" || kind === "indirectExport",
            "Unexpected kind in ResolutionError");
 
-    let message;
+    assert(line > 0,
+           "Line number should be present for all imports and indirect exports");
+
+    let errorNumber;
     if (kind === "import") {
-        message = resolution.ambiguous ? JSMSG_AMBIGUOUS_IMPORT
-                                       : JSMSG_MISSING_IMPORT;
+        errorNumber = resolution.ambiguous ? JSMSG_AMBIGUOUS_IMPORT
+                                           : JSMSG_MISSING_IMPORT;
     } else {
-        message = resolution.ambiguous ? JSMSG_AMBIGUOUS_INDIRECT_EXPORT
-                                       : JSMSG_MISSING_INDIRECT_EXPORT;
+        errorNumber = resolution.ambiguous ? JSMSG_AMBIGUOUS_INDIRECT_EXPORT
+                                           : JSMSG_MISSING_INDIRECT_EXPORT;
     }
 
-    try {
-        ThrowSyntaxError(message, name);
-    } catch (error) {
-        RecordModuleError(module, error);
-        throw error;
-    }
+    let message = GetErrorMessage(errorNumber) + ": " + name;
+    let error = CreateModuleSyntaxError(module, line, column, message);
+    RecordModuleError(module, error);
+    throw error;
 }
 
 // 15.2.1.16.5 ModuleEvaluate()
