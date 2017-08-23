@@ -3105,8 +3105,14 @@ HTMLEditRules::DeleteNonTableElements(nsINode* aNode)
     return mHTMLEditor->DeleteNode(aNode->AsDOMNode());
   }
 
-  for (int32_t i = aNode->GetChildCount() - 1; i >= 0; --i) {
-    nsresult rv = DeleteNonTableElements(aNode->GetChildAt(i));
+  AutoTArray<nsCOMPtr<nsIContent>, 10> childList;
+  for (nsIContent* child = aNode->GetFirstChild();
+       child; child = child->GetNextSibling()) {
+    childList.AppendElement(child);
+  }
+
+  for (const auto& child: childList) {
+    nsresult rv = DeleteNonTableElements(child);
     NS_ENSURE_SUCCESS(rv, rv);
   }
   return NS_OK;
