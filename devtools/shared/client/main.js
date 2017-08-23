@@ -283,6 +283,7 @@ DebuggerClient.requester = function (packetSkeleton, config = {}) {
       if (thisCallback) {
         thisCallback(response);
       }
+      return response;
     }, "DebuggerClient.requester request callback"));
   }, "DebuggerClient.requester");
 };
@@ -702,45 +703,53 @@ DebuggerClient.prototype = {
     if (!packet.to) {
       throw Error("'" + type + "' request packet has no destination.");
     }
+
+    // The onResponse callback might modify the response, so we need to call
+    // it and resolve the promise with its result if it's truthy.
+    const safeOnResponse = response => {
+      if (!onResponse) {
+        return response;
+      }
+      return onResponse(response) || response;
+    };
+
     if (this._closed) {
       let msg = "'" + type + "' request packet to " +
                 "'" + packet.to + "' " +
                "can't be sent as the connection is closed.";
       let resp = { error: "connectionClosed", message: msg };
-      if (onResponse) {
-        onResponse(resp);
-      }
-      return promise.reject(resp);
+      return promise.reject(safeOnResponse(resp));
     }
 
     let request = new Request(packet);
     request.format = "json";
     request.stack = getStack();
-    if (onResponse) {
-      request.on("json-reply", onResponse);
-    }
-
-    this._sendOrQueueRequest(request);
 
     // Implement a Promise like API on the returned object
     // that resolves/rejects on request response
     let deferred = promise.defer();
     function listenerJson(resp) {
-      request.off("json-reply", listenerJson);
-      request.off("bulk-reply", listenerBulk);
+      removeRequestListeners();
       if (resp.error) {
-        deferred.reject(resp);
+        deferred.reject(safeOnResponse(resp));
       } else {
-        deferred.resolve(resp);
+        deferred.resolve(safeOnResponse(resp));
       }
     }
     function listenerBulk(resp) {
+      removeRequestListeners();
+      deferred.resolve(safeOnResponse(resp));
+    }
+
+    const removeRequestListeners = () => {
       request.off("json-reply", listenerJson);
       request.off("bulk-reply", listenerBulk);
-      deferred.resolve(resp);
-    }
+    };
+
     request.on("json-reply", listenerJson);
     request.on("bulk-reply", listenerBulk);
+
+    this._sendOrQueueRequest(request);
     request.then = deferred.promise.then.bind(deferred.promise);
 
     return request;
