@@ -5,6 +5,7 @@
 from __future__ import absolute_import, print_function, unicode_literals
 
 import abc
+import errno
 import os
 import re
 import subprocess
@@ -69,6 +70,16 @@ class Repository(object):
         """Name of the tool."""
 
     @abc.abstractmethod
+    def sparse_checkout_present(self):
+        """Whether the working directory is using a sparse checkout.
+
+        A sparse checkout is defined as a working directory that only
+        materializes a subset of files in a given revision.
+
+        Returns a bool.
+        """
+
+    @abc.abstractmethod
     def get_modified_files(self):
         '''Return a list of files that are modified in this repository's
         working copy.'''
@@ -103,6 +114,23 @@ class HgRepository(Repository):
     def name(self):
         return 'hg'
 
+    def sparse_checkout_present(self):
+        # We assume a sparse checkout is enabled if the .hg/sparse file
+        # has data. Strictly speaking, we should look for a requirement in
+        # .hg/requires. But since the requirement is still experimental
+        # as of Mercurial 4.3, it's probably more trouble than its worth
+        # to verify it.
+        sparse = os.path.join(self.path, '.hg', 'sparse')
+
+        try:
+            st = os.stat(sparse)
+            return st.st_size > 0
+        except OSError as e:
+            if e.errno != errno.ENOENT:
+                raise
+
+            return False
+
     def get_modified_files(self):
         # Use --no-status to print just the filename.
         return self._run('status', '--modified', '--no-status').splitlines()
@@ -135,6 +163,10 @@ class GitRepository(Repository):
     def name(self):
         return 'git'
 
+    def sparse_checkout_present(self):
+        # Not yet implemented.
+        return False
+
     def get_modified_files(self):
         return self._run('diff', '--diff-filter=M', '--name-only').splitlines()
 
@@ -155,14 +187,14 @@ class InvalidRepoPath(Exception):
     """Represents a failure to find a VCS repo at a specified path."""
 
 
-def get_repository_object(path):
+def get_repository_object(path, hg='hg', git='git'):
     '''Get a repository object for the repository at `path`.
     If `path` is not a known VCS repository, raise an exception.
     '''
     if os.path.isdir(os.path.join(path, '.hg')):
-        return HgRepository(path)
+        return HgRepository(path, hg=hg)
     elif os.path.exists(os.path.join(path, '.git')):
-        return GitRepository(path)
+        return GitRepository(path, git=git)
     else:
         raise InvalidRepoPath('Unknown VCS, or not a source checkout: %s' %
                               path)
