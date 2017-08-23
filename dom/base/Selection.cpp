@@ -1647,7 +1647,7 @@ Selection::GetIndicesForInterval(nsINode* aBeginNode, int32_t aBeginOffset,
   return NS_OK;
 }
 
-NS_IMETHODIMP
+nsresult
 Selection::GetPrimaryFrameForAnchorNode(nsIFrame** aReturnFrame)
 {
   if (!aReturnFrame)
@@ -1667,22 +1667,66 @@ Selection::GetPrimaryFrameForAnchorNode(nsIFrame** aReturnFrame)
   return NS_ERROR_FAILURE;
 }
 
-NS_IMETHODIMP
+nsresult
 Selection::GetPrimaryFrameForFocusNode(nsIFrame** aReturnFrame,
                                        int32_t* aOffsetUsed,
                                        bool aVisual)
 {
-  if (!aReturnFrame)
+  if (!aReturnFrame) {
     return NS_ERROR_NULL_POINTER;
+  }
 
-  nsCOMPtr<nsIContent> content = do_QueryInterface(GetFocusNode());
-  if (!content || !mFrameSelection)
+  *aReturnFrame = nullptr;
+  nsINode* focusNode = GetFocusNode();
+  if (!focusNode->IsContent() || !mFrameSelection) {
     return NS_ERROR_FAILURE;
+  }
 
+  nsCOMPtr<nsIContent> content = focusNode->AsContent();
   int32_t frameOffset = 0;
-  *aReturnFrame = 0;
-  if (!aOffsetUsed)
+  if (!aOffsetUsed) {
     aOffsetUsed = &frameOffset;
+  }
+
+  nsresult rv =
+    GetPrimaryOrCaretFrameForNodeOffset(content, FocusOffset(), aReturnFrame,
+                                        aOffsetUsed, aVisual);
+  if (NS_SUCCEEDED(rv)) {
+    return rv;
+  }
+
+  // If content is whitespace only, we promote focus node to parent because
+  // whitespace only node might have no frame.
+
+  if (!content->TextIsOnlyWhitespace()) {
+    return NS_ERROR_FAILURE;
+  }
+
+  nsCOMPtr<nsIContent> parent = content->GetParent();
+  if (NS_WARN_IF(!parent)) {
+    return NS_ERROR_FAILURE;
+  }
+  int32_t offset = parent->IndexOf(content);
+
+  return GetPrimaryOrCaretFrameForNodeOffset(parent, offset, aReturnFrame,
+                                             aOffsetUsed, aVisual);
+}
+
+nsresult
+Selection::GetPrimaryOrCaretFrameForNodeOffset(nsIContent* aContent,
+                                               uint32_t aOffset,
+                                               nsIFrame** aReturnFrame,
+                                               int32_t* aOffsetUsed,
+                                               bool aVisual) const
+{
+  MOZ_ASSERT(aReturnFrame);
+  MOZ_ASSERT(aOffsetUsed);
+
+  *aReturnFrame = nullptr;
+
+  if (!mFrameSelection) {
+    return NS_ERROR_FAILURE;
+  }
 
   CaretAssociationHint hint = mFrameSelection->GetHint();
 
@@ -1690,14 +1734,17 @@ Selection::GetPrimaryFrameForFocusNode(nsIFrame** aReturnFrame,
     nsBidiLevel caretBidiLevel = mFrameSelection->GetCaretBidiLevel();
 
     return nsCaret::GetCaretFrameForNodeOffset(mFrameSelection,
-      content, FocusOffset(), hint, caretBidiLevel, aReturnFrame, aOffsetUsed);
+                                               aContent, aOffset, hint,
+                                               caretBidiLevel, aReturnFrame,
+                                               aOffsetUsed);
   }
 
-  *aReturnFrame = mFrameSelection->
-    GetFrameForNodeOffset(content, FocusOffset(),
-                          hint, aOffsetUsed);
-  if (!*aReturnFrame)
+  *aReturnFrame =
+    mFrameSelection->GetFrameForNodeOffset(aContent, aOffset,
+                                           hint, aOffsetUsed);
+  if (!*aReturnFrame) {
     return NS_ERROR_FAILURE;
+  }
 
   return NS_OK;
 }
