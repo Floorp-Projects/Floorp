@@ -316,14 +316,14 @@ DrawBlitProg::DrawBlitProg(const GLBlitHelper* const parent, const GLuint prog)
     : mParent(*parent)
     , mProg(prog)
     , mLoc_u1ForYFlip(mParent.mGL->fGetUniformLocation(mProg, "u1ForYFlip"))
-    , mLoc_uClipRect(mParent.mGL->fGetUniformLocation(mProg, "uClipRect"))
+    , mLoc_uSrcRect(mParent.mGL->fGetUniformLocation(mProg, "uSrcRect"))
     , mLoc_uTexSize0(mParent.mGL->fGetUniformLocation(mProg, "uTexSize0"))
     , mLoc_uTexSize1(mParent.mGL->fGetUniformLocation(mProg, "uTexSize1"))
     , mLoc_uDivisors(mParent.mGL->fGetUniformLocation(mProg, "uDivisors"))
     , mLoc_uColorMatrix(mParent.mGL->fGetUniformLocation(mProg, "uColorMatrix"))
 {
     MOZ_ASSERT(mLoc_u1ForYFlip != -1);
-    MOZ_ASSERT(mLoc_uClipRect != -1);
+    MOZ_ASSERT(mLoc_uSrcRect != -1);
     MOZ_ASSERT(mLoc_uTexSize0 != -1);
     if (mLoc_uColorMatrix != -1) {
         MOZ_ASSERT(mLoc_uTexSize1 != -1);
@@ -351,9 +351,9 @@ DrawBlitProg::Draw(const BaseArgs& args, const YUVArgs* const argsYUV) const
     // --
 
     gl->fUniform1f(mLoc_u1ForYFlip, args.yFlip ? 1 : 0);
-    gl->fUniform4f(mLoc_uClipRect,
-                   args.clipRect.x, args.clipRect.y,
-                   args.clipRect.width, args.clipRect.height);
+    gl->fUniform4f(mLoc_uSrcRect,
+                   args.srcRect.x, args.srcRect.y,
+                   args.srcRect.width, args.srcRect.height);
     gl->fUniform2f(mLoc_uTexSize0, args.texSize0.width, args.texSize0.height);
 
     MOZ_ASSERT(bool(argsYUV) == (mLoc_uColorMatrix != -1));
@@ -429,7 +429,7 @@ GLBlitHelper::GLBlitHelper(GLContext* const gl)
         ATTRIBUTE vec2 aVert;                                                \n\
                                                                              \n\
         uniform float u1ForYFlip;                                            \n\
-        uniform vec4 uClipRect;                                              \n\
+        uniform vec4 uSrcRect;                                               \n\
         uniform vec2 uTexSize0;                                              \n\
         uniform vec2 uTexSize1;                                              \n\
         uniform vec2 uDivisors;                                              \n\
@@ -444,7 +444,7 @@ GLBlitHelper::GLBlitHelper(GLContext* const gl)
                                                                              \n\
             vec2 texCoord = aVert;                                           \n\
             texCoord.y = abs(u1ForYFlip - texCoord.y);                       \n\
-            texCoord = texCoord * uClipRect.zw + uClipRect.xy;               \n\
+            texCoord = texCoord * uSrcRect.zw + uSrcRect.xy;                 \n\
                                                                              \n\
             vTexCoord0 = texCoord / uTexSize0;                               \n\
             vTexCoord1 = texCoord / (uTexSize1 * uDivisors);                 \n\
@@ -588,7 +588,8 @@ GLBlitHelper::BlitImageToFramebuffer(layers::Image* srcImage,
 
 #ifdef MOZ_WIDGET_ANDROID
     case ImageFormat::SURFACE_TEXTURE:
-        return BlitImage(static_cast<layers::SurfaceTextureImage*>(srcImage));
+        return BlitImage(static_cast<layers::SurfaceTextureImage*>(srcImage), destSize,
+                         destOrigin);
 
     case ImageFormat::EGLIMAGE:
         return BlitImage(static_cast<layers::EGLImageImage*>(srcImage), destSize,
@@ -619,7 +620,8 @@ GLBlitHelper::BlitImageToFramebuffer(layers::Image* srcImage,
 
 #ifdef MOZ_WIDGET_ANDROID
 bool
-GLBlitHelper::BlitImage(layers::SurfaceTextureImage* srcImage)
+GLBlitHelper::BlitImage(layers::SurfaceTextureImage* srcImage, const gfx::IntSize&,
+                        const OriginPos) const
 {
     // FIXME
     const auto& srcOrigin = srcImage->GetOriginPos();
@@ -630,7 +632,7 @@ GLBlitHelper::BlitImage(layers::SurfaceTextureImage* srcImage)
 
 bool
 GLBlitHelper::BlitImage(layers::EGLImageImage* const srcImage,
-                        const gfx::IntSize& destSize, const OriginPos destOrigin)
+                        const gfx::IntSize& destSize, const OriginPos destOrigin) const
 {
     const EGLImage eglImage = srcImage->GetImage();
     const EGLSync eglSync = srcImage->GetSync();
@@ -651,9 +653,9 @@ GLBlitHelper::BlitImage(layers::EGLImageImage* const srcImage,
 
     const auto& srcOrigin = srcImage->GetOriginPos();
     const bool yFlip = destOrigin != srcOrigin;
-    const gfx::IntRect clipRect(0, 0, 1, 1);
-    const gfx::IntSize texSizeDivisor(1, 1);
-    const DrawBlitProg::DrawArgs baseArgs = { destSize, yFlip, clipRect, texSizeDivisor };
+    const gfx::IntRect srcRect(0, 0, 1, 1);
+    const gfx::IntSize srcSize(1, 1);
+    const DrawBlitProg::BaseArgs baseArgs = { destSize, yFlip, srcRect, srcSize };
 
     const auto& prog = GetDrawBlitProg({kFragHeader_Tex2D, kFragBody_RGBA});
     MOZ_RELEASE_ASSERT(prog);
