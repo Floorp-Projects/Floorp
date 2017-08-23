@@ -225,6 +225,26 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=1345361
     });
   }
 
+  function testCrossOriginTopLevelPrincipal() {
+    return new Promise((resolve, reject) => {
+      var ifrr = document.createElement('iframe');
+
+      window.addEventListener("message", function(event) {
+        is(event.data, "successful",
+          "Expected 'successful', but got '" + event.data + "'");
+        gScript.addMessageListener("check-complete", function checkCompleteHandler() {
+          gScript.removeMessageListener("check-complete", checkCompleteHandler);
+          resolve();
+        });
+        gScript.sendAsyncMessage("check-cross-origin-top-level-principal");
+      });
+
+      ifrr.setAttribute('allowpaymentrequest', '');
+      ifrr.src = "https://test1.example.com:443/tests/dom/payments/test/simple_payment_request.html";
+      document.body.appendChild(ifrr);
+    });
+  }
+
   function teardown() {
     gScript.addMessageListener("teardown-complete", function teardownCompleteHandler() {
       gScript.removeMessageListener("teardown-complete", teardownCompleteHandler);
@@ -241,6 +261,7 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=1345361
     .then(testWithNonBasicCardMethods)
     .then(testWithDuplicateShippingOptionsParameters)
     .then(testMultipleRequests)
+    .then(testCrossOriginTopLevelPrincipal)
     .then(teardown)
     .catch( e => {
       ok(false, "Unexpected error: " + e.name);
