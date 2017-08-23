@@ -76,8 +76,8 @@ add_task(async function test() {
         }
 
         function cleanUp() {
-            Services.ww.registerNotification(function(aSubject, aTopic, aData) {
-                Services.ww.unregisterNotification(arguments.callee);
+            Services.ww.registerNotification(function notification(aSubject, aTopic, aData) {
+                Services.ww.unregisterNotification(notification);
                 Services.logins.removeAllLogins();
                 doc.getElementById("passwordCol").hidden = true;
                 resolve();

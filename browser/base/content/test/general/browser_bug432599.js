@@ -82,15 +82,15 @@ var titleElement = document.getElementById("editBookmarkPanelTitle");
 var removeElement = document.getElementById("editBookmarkPanelRemoveButton");
 
 function checkBookmarksPanel(invoker, phase) {
-  let onPopupShown = function(aEvent) {
+  let onPopupShown = function popupShownListener(aEvent) {
     if (aEvent.originalTarget == popupElement) {
-      popupElement.removeEventListener("popupshown", arguments.callee);
+      popupElement.removeEventListener("popupshown", popupShownListener);
       checkBookmarksPanel(invoker, phase + 1);
     }
   };
-  let onPopupHidden = function(aEvent) {
+  let onPopupHidden = function listener(aEvent) {
     if (aEvent.originalTarget == popupElement) {
-      popupElement.removeEventListener("popuphidden", arguments.callee);
+      popupElement.removeEventListener("popuphidden", listener);
       if (phase < 4) {
         checkBookmarksPanel(invoker, phase + 1);
       } else {

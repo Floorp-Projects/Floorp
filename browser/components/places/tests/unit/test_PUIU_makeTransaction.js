@@ -14,25 +14,25 @@ function waitForBookmarkNotification(aNotification, aCallback, aProperty) {
     // nsINavBookmarkObserver
     QueryInterface: XPCOMUtils.generateQI([Ci.nsINavBookmarkObserver]),
     onBeginUpdateBatch: function onBeginUpdateBatch() {
-      return this.validate(arguments.callee.name, arguments);
+      return this.validate("onBeginUpdateBatch", arguments);
     },
     onEndUpdateBatch: function onEndUpdateBatch() {
-      return this.validate(arguments.callee.name, arguments);
+      return this.validate("onEndUpdateBatch", arguments);
     },
     onItemAdded: function onItemAdded(aItemId, aParentId, aIndex, aItemType,
                                       aURI, aTitle) {
-      return this.validate(arguments.callee.name, { id: aItemId,
+      return this.validate("onItemAdded", { id: aItemId,
                                                     index: aIndex,
                                                     type: aItemType,
                                                     url: aURI ? aURI.spec : null,
                                                     title: aTitle });
     },
     onItemRemoved: function onItemRemoved() {
-      return this.validate(arguments.callee.name, arguments);
+      return this.validate("onItemRemoved", arguments);
     },
     onItemChanged: function onItemChanged(id, property, aIsAnno,
                                           aNewValue, aLastModified, type) {
-      return this.validate(arguments.callee.name,
+      return this.validate("onItemChanged",
                            { id,
                              get index() {
                                return PlacesUtils.bookmarks.getItemIndex(this.id);
@@ -50,11 +50,11 @@ function waitForBookmarkNotification(aNotification, aCallback, aProperty) {
                            });
     },
     onItemVisited: function onItemVisited() {
-      return this.validate(arguments.callee.name, arguments);
+      return this.validate("onItemVisited", arguments);
     },
     onItemMoved: function onItemMoved(aItemId, aOldParentId, aOldIndex,
                                       aNewParentId, aNewIndex, aItemType) {
-      this.validate(arguments.callee.name, { id: aItemId,
+      this.validate("onItemMoved", { id: aItemId,
                                              index: aNewIndex,
                                              type: aItemType });
     }

@@ -1335,8 +1335,8 @@ async function updateAllSystemAddons(xml, testserver) {
 
   await serveSystemUpdate(xml, function() {
     return new Promise(resolve => {
-      Services.obs.addObserver(function() {
-        Services.obs.removeObserver(arguments.callee, "addons-background-update-complete");
+      Services.obs.addObserver(function observer() {
+        Services.obs.removeObserver(observer, "addons-background-update-complete");
 
         resolve();
       }, "addons-background-update-complete");

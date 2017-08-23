@@ -23,9 +23,9 @@ function checkAnimationState() {
 
   info("tab didn't close immediately, so the tab opening animation must have started moving");
   info("waiting for the tab to close asynchronously");
-  tab.addEventListener("transitionend", function(event) {
+  tab.addEventListener("transitionend", function listener(event) {
     if (event.propertyName == "max-width") {
-      tab.removeEventListener("transitionend", arguments.callee);
+      tab.removeEventListener("transitionend", listener);
       executeSoon(function() {
         ok(!tab.parentNode, "tab removed asynchronously");
         finish();

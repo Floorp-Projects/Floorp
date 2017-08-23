@@ -156,9 +156,6 @@ module.exports = {
     // Allow use of bitwise operators.
     "no-bitwise": "off",
 
-    // Disallow use of arguments.caller or arguments.callee.
-    "no-caller": "error",
-
     // Disallow the catch clause parameter name being the same as a variable in
     // the outer scope, to avoid confusion.
     "no-catch-shadow": "off",

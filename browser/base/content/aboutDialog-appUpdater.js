@@ -370,7 +370,7 @@ appUpdater.prototype =
       if (this.backgroundUpdateEnabled) {
         this.selectPanel("applying");
         let self = this;
-        Services.obs.addObserver(function(aSubject, aTopic, aData) {
+        Services.obs.addObserver(function observer(aSubject, aTopic, aData) {
           // Update the UI when the background updater is finished
           let status = aData;
           if (status == "applied" || status == "applied-service" ||
@@ -391,7 +391,7 @@ appUpdater.prototype =
             self.setupDownloadingUI();
             return;
           }
-          Services.obs.removeObserver(arguments.callee, "update-staged");
+          Services.obs.removeObserver(observer, "update-staged");
         }, "update-staged");
       } else {
         this.selectPanel("apply");

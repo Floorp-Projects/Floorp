@@ -47,6 +47,7 @@ this.NS_ASSERT = function NS_ASSERT(condition, message) {
     }
   } catch (ex) {}
 
+  // eslint-disable-next-line no-caller
   var caller = arguments.callee.caller;
   var assertionText = "ASSERT: " + message + "\n";
 

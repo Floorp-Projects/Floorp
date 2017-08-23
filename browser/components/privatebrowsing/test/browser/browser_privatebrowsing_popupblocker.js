@@ -22,9 +22,9 @@ add_task(async function test() {
 
         function checkMenuItem(callback) {
           dump("CMI: in\n");
-          aWindow.document.addEventListener("popupshown", function(event) {
+          aWindow.document.addEventListener("popupshown", function listener(event) {
             dump("CMI: popupshown\n");
-            aWindow.document.removeEventListener("popupshown", arguments.callee);
+            aWindow.document.removeEventListener("popupshown", listener);
 
             if (aExpectedDisabled)
               is(aWindow.document.getElementById("blockedPopupAllowSite").getAttribute("disabled"), "true",

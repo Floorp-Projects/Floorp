@@ -71,9 +71,9 @@ function test2Setup() {
   var contentAreaContextMenu = document.getElementById("contentAreaContextMenu");
   var contextMenu = new nsContextMenu(contentAreaContextMenu);
 
-  gBrowser.tabContainer.addEventListener("TabOpen", function(event) {
+  gBrowser.tabContainer.addEventListener("TabOpen", function listener(event) {
     test2tab = event.target;
-    gBrowser.tabContainer.removeEventListener("TabOpen", arguments.callee);
+    gBrowser.tabContainer.removeEventListener("TabOpen", listener);
   });
   contextMenu.openFrameInTab();
   ok(test2tab, "openFrameInTab() opened a tab");
@@ -107,10 +107,10 @@ function test3Setup() {
   var contentAreaContextMenu = document.getElementById("contentAreaContextMenu");
   var contextMenu = new nsContextMenu(contentAreaContextMenu);
 
-  Services.ww.registerNotification(function(aSubject, aTopic, aData) {
+  Services.ww.registerNotification(function notification(aSubject, aTopic, aData) {
     if (aTopic == "domwindowopened")
       test3window = aSubject;
-    Services.ww.unregisterNotification(arguments.callee);
+    Services.ww.unregisterNotification(notification);
   });
 
   contextMenu.openFrame();

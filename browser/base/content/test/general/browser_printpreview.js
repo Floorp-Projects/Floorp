@@ -49,18 +49,18 @@ function testClosePrintPreviewWithClosingWindowShortcutKey() {
 
 function openPrintPreview(aCallback) {
   document.getElementById("cmd_printPreview").doCommand();
-  executeSoon(function() {
+  executeSoon(function waitForPrintPreview() {
     if (gInPrintPreviewMode) {
       executeSoon(aCallback);
       return;
     }
-    executeSoon(arguments.callee);
+    executeSoon(waitForPrintPreview);
   });
 }
 
 function checkPrintPreviewClosed(aCallback) {
   let count = 0;
-  executeSoon(function() {
+  executeSoon(function waitForPrintPreviewClosed() {
     if (!gInPrintPreviewMode) {
       executeSoon(function() { aCallback(count < 1000); });
       return;
@@ -69,6 +69,6 @@ function checkPrintPreviewClosed(aCallback) {
       // The test might fail.
       PrintUtils.exitPrintPreview();
     }
-    executeSoon(arguments.callee);
+    executeSoon(waitForPrintPreviewClosed);
   });
 }

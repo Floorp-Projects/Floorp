@@ -154,6 +154,8 @@ module.exports = {
     // Use [] instead of Array()
     "no-array-constructor": "error",
 
+    "no-caller": "error",
+
     // Disallow modifying variables of class declarations.
     "no-class-assign": "error",
 
