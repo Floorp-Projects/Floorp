@@ -83,7 +83,3 @@ add_task(async function test_formValidatorIgnoresMissingClients() {
   let expected = validator.emptyProblemData();
   deepEqual(problemData, expected);
 });
-
-function run_test() {
-  run_next_test();
-}

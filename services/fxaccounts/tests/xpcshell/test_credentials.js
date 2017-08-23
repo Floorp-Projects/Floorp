@@ -97,10 +97,6 @@ add_task(async function test_client_stretch_kdf() {
 // End of tests
 // Utility functions follow
 
-function run_test() {
-  run_next_test();
-}
-
 // turn formatted test vectors into normal hex strings
 function h(hexStr) {
   return hexStr.replace(/\s+/g, "");

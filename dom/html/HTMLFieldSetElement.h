@@ -9,7 +9,6 @@
 
 #include "mozilla/Attributes.h"
 #include "nsGenericHTMLElement.h"
-#include "nsIDOMHTMLFieldSetElement.h"
 #include "nsIConstraintValidation.h"
 #include "mozilla/dom/HTMLFormElement.h"
 #include "mozilla/dom/ValidityState.h"
@@ -19,7 +18,6 @@ class EventChainPreVisitor;
 namespace dom {
 
 class HTMLFieldSetElement final : public nsGenericHTMLFormElement,
-                                  public nsIDOMHTMLFieldSetElement,
                                   public nsIConstraintValidation
 {
 public:
@@ -33,9 +31,6 @@ public:
 
   // nsISupports
   NS_DECL_ISUPPORTS_INHERITED
-
-  // nsIDOMHTMLFieldSetElement
-  NS_DECL_NSIDOMHTMLFIELDSETELEMENT
 
   // nsIContent
   virtual nsresult GetEventTargetParent(
@@ -75,14 +70,17 @@ public:
     SetHTMLBoolAttr(nsGkAtoms::disabled, aValue, aRv);
   }
 
-  // XPCOM GetName is OK for us
+  void GetName(nsAString& aValue)
+  {
+    GetHTMLAttr(nsGkAtoms::name, aValue);
+  }
 
   void SetName(const nsAString& aValue, ErrorResult& aRv)
   {
     SetHTMLAttr(nsGkAtoms::name, aValue, aRv);
   }
 
-  // XPCOM GetType is OK for us
+  NS_IMETHOD GetType(nsAString & aType);
 
   nsIHTMLCollection* Elements();
 

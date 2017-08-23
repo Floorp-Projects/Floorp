@@ -264,6 +264,20 @@ public:
     return !!(mFlags & aFlag);
   }
 
+  // Identical to HasFlag, but more explicit about its handling of multiple
+  // flags.
+  bool HasAnyOfFlags(FlagsType aFlags) const
+  {
+    MOZ_ASSERT((aFlags & kWrapperFlagsMask) == 0, "Bad flag mask");
+    return !!(mFlags & aFlags);
+  }
+
+  bool HasAllFlags(FlagsType aFlags) const
+  {
+    MOZ_ASSERT((aFlags & kWrapperFlagsMask) == 0, "Bad flag mask");
+    return (mFlags & aFlags) == aFlags;
+  }
+
   void SetFlags(FlagsType aFlagsToSet)
   {
     MOZ_ASSERT((aFlagsToSet & kWrapperFlagsMask) == 0, "Bad flag mask");

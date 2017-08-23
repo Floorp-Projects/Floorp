@@ -31,32 +31,6 @@ add_task(async function test_default_tour_open_the_right_page() {
   await BrowserTestUtils.removeTab(tab);
 });
 
-add_task(async function test_first_tour_is_active_by_default() {
-  resetOnboardingDefaultState();
-  await SpecialPowers.pushPrefEnv({set: [
-    ["browser.onboarding.tour-type", "new"],
-    ["browser.onboarding.tourset-version", 1],
-    ["browser.onboarding.seen-tourset-version", 1],
-    ["browser.onboarding.newtour", "private,addons,customize"],
-  ]});
-
-  let tab = await openTab(ABOUT_NEWTAB_URL);
-  await promiseOnboardingOverlayLoaded(tab.linkedBrowser);
-  await BrowserTestUtils.synthesizeMouseAtCenter(OVERLAY_ICON_ID, {}, tab.linkedBrowser);
-  await promiseOnboardingOverlayOpened(tab.linkedBrowser);
-
-  info("Make sure the default tour is selected");
-  let doc = content && content.document;
-  let dom = doc.querySelector(PRIVATE_BROWSING_TOUR_ID);
-  ok(dom.classList.contains(CLASS_ACTIVE), "default tour is selected");
-  let dom2 = doc.querySelector(ADDONS_TOUR_ID);
-  ok(!dom2.classList.contains(CLASS_ACTIVE), "none default tour should not be selected");
-  let dom3 = doc.querySelector(CUSTOMIZE_TOUR_ID);
-  ok(!dom3.classList.contains(CLASS_ACTIVE), "none default tour should not be selected");
-
-  await BrowserTestUtils.removeTab(tab);
-});
-
 add_task(async function test_select_first_uncomplete_tour() {
   resetOnboardingDefaultState();
   await SpecialPowers.pushPrefEnv({set: [
@@ -73,13 +47,9 @@ add_task(async function test_select_first_uncomplete_tour() {
   await promiseOnboardingOverlayOpened(tab.linkedBrowser);
 
   info("Make sure the first uncomplete tour is selected");
-  let doc = content && content.document;
-  let dom = doc.querySelector(PRIVATE_BROWSING_TOUR_ID);
-  ok(!dom.classList.contains(CLASS_ACTIVE), "the first tour is set completed and should not be selected");
-  let dom2 = doc.querySelector(ADDONS_TOUR_ID);
-  ok(dom2.classList.contains(CLASS_ACTIVE), "the first uncomplete tour is selected");
-  let dom3 = doc.querySelector(CUSTOMIZE_TOUR_ID);
-  ok(!dom3.classList.contains(CLASS_ACTIVE), "other tour should not be selected");
+  let { activeNavItemId, activePageId } = await getCurrentActiveTour(tab.linkedBrowser);
+  is(`#${activeNavItemId}`, ADDONS_TOUR_ID, "default tour is active");
+  is(activePageId, "onboarding-tour-addons-page", "default tour page is shown");
 
   await BrowserTestUtils.removeTab(tab);
 });
@@ -102,13 +72,9 @@ add_task(async function test_select_first_tour_when_all_tours_are_complete() {
   await promiseOnboardingOverlayOpened(tab.linkedBrowser);
 
   info("Make sure the first tour is selected when all tours are completed");
-  let doc = content && content.document;
-  let dom = doc.querySelector(PRIVATE_BROWSING_TOUR_ID);
-  ok(dom.classList.contains(CLASS_ACTIVE), "should be selected when all tours are completed");
-  let dom2 = doc.querySelector(ADDONS_TOUR_ID);
-  ok(!dom2.classList.contains(CLASS_ACTIVE), "other tour should not be selected");
-  let dom3 = doc.querySelector(CUSTOMIZE_TOUR_ID);
-  ok(!dom3.classList.contains(CLASS_ACTIVE), "other tour should not be selected");
+  let { activeNavItemId, activePageId } = await getCurrentActiveTour(tab.linkedBrowser);
+  is(`#${activeNavItemId}`, PRIVATE_BROWSING_TOUR_ID, "default tour is active");
+  is(activePageId, "onboarding-tour-private-browsing-page", "default tour page is shown");
 
   await BrowserTestUtils.removeTab(tab);
 });

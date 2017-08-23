@@ -29,11 +29,6 @@ function Blocklist() {
 }
 
 
-function run_test() {
-  run_next_test();
-}
-
-
 add_task(async function test_sends_serialized_data() {
   const blocklist = Blocklist();
   blocklist._gfxEntries = [SAMPLE_GFX_RECORD];

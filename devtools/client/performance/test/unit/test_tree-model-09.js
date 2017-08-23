@@ -6,10 +6,6 @@
  * Tests that when displaying only content nodes, platform nodes are generalized.
  */
 
-function run_test() {
-  run_next_test();
-}
-
 add_task(function test() {
   let { ThreadNode } = require("devtools/client/performance/modules/logic/tree-model");
   let url = (n) => `http://content/${n}`;

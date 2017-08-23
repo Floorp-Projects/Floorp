@@ -6,6 +6,23 @@ const {DevToolsShim} = Cu.import("chrome://devtools-shim/content/DevToolsShim.js
 const {gDevTools} = DevToolsShim;
 
 /**
+ * Helper that returns the id of the last additional/extension tool for a provided
+ * toolbox.
+ *
+ * @param {Object} toolbox
+ *        The DevTools toolbox object.
+ * @param {string} label
+ *        The expected label for the additional tool.
+ * @returns {string} the id of the last additional panel.
+ */
+function getAdditionalPanelId(toolbox, label) {
+  // Copy the tools array and pop the last element from it.
+  const panelDef = toolbox.getAdditionalTools().slice().pop();
+  is(panelDef.label, label, "Additional panel label is the expected label");
+  return panelDef.id;
+}
+
+/**
  * this test file ensures that:
  *
  * - the devtools page gets only a subset of the runtime API namespace.
@@ -232,5 +249,110 @@ add_task(async function test_devtools_inspectedWindow_eval() {
 
   await extension.unload();
 
+  await BrowserTestUtils.removeTab(tab);
+});
+
+/**
+ * This test asserts that both the page and the panel can use devtools.inspectedWindow.
+ * See regression in Bug https://bugzilla.mozilla.org/show_bug.cgi?id=1392531
+ */
+add_task(async function test_devtools_inspectedWindow_eval_in_page_and_panel() {
+  const TEST_TARGET_URL = "http://mochi.test:8888/";
+  let tab = await BrowserTestUtils.openNewForegroundTab(gBrowser, TEST_TARGET_URL);
+
+  async function devtools_page() {
+    await browser.devtools.panels.create("test-eval", "fake-icon.png", "devtools_panel.html");
+
+    browser.test.onMessage.addListener(async (msg, ...args) => {
+      if (msg !== "inspectedWindow-eval-request") {
+        browser.test.fail(`Unexpected test message received: ${msg}`);
+        return;
+      }
+
+      const [evalResult, errorResult] = await browser.devtools.inspectedWindow.eval(...args);
+      browser.test.sendMessage("inspectedWindow-page-eval-result", {
+        evalResult,
+        errorResult,
+      });
+    });
+
+    browser.test.sendMessage("devtools_panel_created");
+  }
+
+  function devtools_panel() {
+    browser.test.onMessage.addListener(async (msg, ...args) => {
+      if (msg !== "inspectedWindow-eval-request") {
+        browser.test.fail(`Unexpected test message received: ${msg}`);
+        return;
+      }
+
+      const [evalResult, errorResult] = await browser.devtools.inspectedWindow.eval(...args);
+      browser.test.sendMessage("inspectedWindow-panel-eval-result", {
+        evalResult,
+        errorResult,
+      });
+    });
+    browser.test.sendMessage("devtools_panel_initialized");
+  }
+
+  let extension = ExtensionTestUtils.loadExtension({
+    manifest: {
+      devtools_page: "devtools_page.html",
+    },
+    files: {
+      "devtools_page.html": `<!DOCTYPE html>
+      <html>
+       <head>
+         <meta charset="utf-8">
+         <script text="text/javascript" src="devtools_page.js"></script>
+       </head>
+       <body>
+       </body>
+      </html>`,
+      "devtools_page.js": devtools_page,
+      "devtools_panel.html":  `<!DOCTYPE html>
+      <html>
+       <head>
+         <meta charset="utf-8">
+       </head>
+       <body>
+         DEVTOOLS PANEL
+         <script src="devtools_panel.js"></script>
+       </body>
+      </html>`,
+      "devtools_panel.js": devtools_panel,
+    },
+  });
+
+  await extension.startup();
+
+  const target = gDevTools.getTargetForTab(tab);
+  const toolbox = await gDevTools.showToolbox(target, "webconsole");
+  info("developer toolbox opened");
+
+  info("Wait for devtools_panel_created event");
+  await extension.awaitMessage("devtools_panel_created");
+
+  info("Switch to the extension test panel");
+  await gDevTools.showToolbox(target, getAdditionalPanelId(toolbox, "test-eval"));
+
+  info("Wait for devtools_panel_initialized event");
+  await extension.awaitMessage("devtools_panel_initialized");
+
+  info(`test inspectedWindow.eval with eval(window.location.href)`);
+  extension.sendMessage(`inspectedWindow-eval-request`, "window.location.href");
+
+  info("Wait for response from the page");
+  let {evalResult} = await extension.awaitMessage(`inspectedWindow-page-eval-result`);
+  Assert.deepEqual(evalResult, TEST_TARGET_URL, "Got the expected eval result in the page");
+
+  info("Wait for response from the panel");
+  ({evalResult} = await extension.awaitMessage(`inspectedWindow-panel-eval-result`));
+  Assert.deepEqual(evalResult, TEST_TARGET_URL, "Got the expected eval result in the panel");
+
+  // Cleanup
+  await gDevTools.closeToolbox(target);
+  await target.destroy();
+  await extension.unload();
   await BrowserTestUtils.removeTab(tab);
 });

@@ -5,10 +5,6 @@
 
 var {OS: {File, Path, Constants}} = Components.utils.import("resource://gre/modules/osfile.jsm", {});
 
-function run_test() {
-  run_next_test();
-}
-
 add_task(async function testFileError_with_writeAtomic() {
   let DEFAULT_CONTENTS = "default contents" + Math.random();
   let path = Path.join(Constants.Path.tmpDir,

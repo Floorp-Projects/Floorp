@@ -249,12 +249,15 @@ static const struct {
   { "goog-phish-proto",    SOCIAL_ENGINEERING},              // 5
 
   // For application reputation
-  { "goog-badbinurl-proto", MALICIOUS_BINARY},         // 7
+  { "goog-badbinurl-proto", MALICIOUS_BINARY},            // 7
   { "goog-downloadwhite-proto", CSD_DOWNLOAD_WHITELIST},  // 9
+
+  // For login reputation
+  { "goog-passwordwhite-proto", CSD_WHITELIST}, // 8
 
   // For testing purpose.
   { "test-phish-proto",    SOCIAL_ENGINEERING_PUBLIC}, // 2
-  { "test-unwanted-proto", UNWANTED_SOFTWARE}, // 3
+  { "test-unwanted-proto", UNWANTED_SOFTWARE},         // 3
 };
 
 NS_IMETHODIMP

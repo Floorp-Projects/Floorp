@@ -1564,6 +1564,9 @@ nsUrlClassifierDBService::ReadTablesFromPrefs()
   Preferences::GetCString(DOWNLOAD_ALLOW_TABLE_PREF, tables);
   AppendTables(tables, allTables);
 
+  Preferences::GetCString(PASSWORD_ALLOW_TABLE_PREF, tables);
+  AppendTables(tables, allTables);
+
   Preferences::GetCString(TRACKING_TABLE_PREF, tables);
   AppendTables(tables, allTables);
   AppendTables(tables, mTrackingProtectionTables);

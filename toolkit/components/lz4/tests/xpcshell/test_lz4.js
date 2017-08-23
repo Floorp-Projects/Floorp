@@ -5,10 +5,6 @@
 var WORKER_SOURCE_URI = "chrome://test_lz4/content/worker_lz4.js";
 do_load_manifest("data/chrome.manifest");
 
-function run_test() {
-  run_next_test();
-}
-
 
 add_task(function() {
   let worker = new ChromeWorker(WORKER_SOURCE_URI);

@@ -423,21 +423,21 @@ toolbarpaletteitem[place="toolbar"] {
 %endif
 
 #bookmarks-toolbar-placeholder,
+#bookmarks-toolbar-button,
 toolbarpaletteitem > #personal-bookmarks > #PlacesToolbar,
-#personal-bookmarks[cui-areatype="menu-panel"] > #PlacesToolbar,
-#personal-bookmarks[cui-areatype="toolbar"][overflowedItem=true] > #PlacesToolbar {
+#personal-bookmarks:-moz-any([overflowedItem=true], [cui-areatype="menu-panel"]) > #PlacesToolbar {
   display: none;
+}
+
+toolbarpaletteitem[place="toolbar"] > #personal-bookmarks > #bookmarks-toolbar-placeholder,
+toolbarpaletteitem[place="palette"] > #personal-bookmarks > #bookmarks-toolbar-button,
+#personal-bookmarks:-moz-any([overflowedItem=true], [cui-areatype="menu-panel"]) > #bookmarks-toolbar-button {
+  display: -moz-box;
 }
 
 #PlacesToolbarDropIndicatorHolder {
   position: absolute;
   top: 25%;
-}
-
-toolbarpaletteitem > #personal-bookmarks > #bookmarks-toolbar-placeholder,
-#personal-bookmarks[cui-areatype="menu-panel"] > #bookmarks-toolbar-placeholder,
-#personal-bookmarks[cui-areatype="toolbar"][overflowedItem=true] > #bookmarks-toolbar-placeholder {
-  display: -moz-box;
 }
 
 #nav-bar-customization-target > #personal-bookmarks,
@@ -784,10 +784,6 @@ toolbarspring {
   unicode-bidi: plaintext;
 }
 
-toolbarbutton.bookmark-item {
-  max-width: 13em;
-}
-
 /* Apply crisp rendering for favicons at exactly 2dppx resolution */
 @media (resolution: 2dppx) {
   #alltabs-popup > .menuitem-iconic > .menu-iconic-left > .menu-iconic-icon,
@@ -796,8 +792,7 @@ toolbarbutton.bookmark-item {
   }
 
   .bookmark-item > .toolbarbutton-icon,
-  .bookmark-item > .menu-iconic-left > .menu-iconic-icon,
-  #personal-bookmarks[cui-areatype="toolbar"] > #bookmarks-toolbar-placeholder > .toolbarbutton-icon {
+  .bookmark-item > .menu-iconic-left > .menu-iconic-icon {
     image-rendering: -moz-crisp-edges;
   }
   /* Synced Tabs sidebar */

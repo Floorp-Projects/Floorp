@@ -11,6 +11,7 @@ const {DevToolsShim} = Cu.import("chrome://devtools-shim/content/DevToolsShim.js
 
 // Load gDevToolsBrowser toolbox lazily as they need gDevTools to be fully initialized
 loader.lazyRequireGetter(this, "TargetFactory", "devtools/client/framework/target", true);
+loader.lazyRequireGetter(this, "TabTarget", "devtools/client/framework/target", true);
 loader.lazyRequireGetter(this, "Toolbox", "devtools/client/framework/toolbox", true);
 loader.lazyRequireGetter(this, "ToolboxHostManager", "devtools/client/framework/toolbox-host-manager", true);
 loader.lazyRequireGetter(this, "gDevToolsBrowser", "devtools/client/framework/devtools-browser", true);
@@ -580,6 +581,17 @@ DevTools.prototype = {
    */
   initBrowserToolboxProcessForAddon: function (addonID) {
     BrowserToolboxProcess.init({ addonID });
+  },
+
+  /**
+   * Compatibility layer for web-extensions. Used by DevToolsShim for
+   * browser/components/extensions/ext-devtools.js
+   *
+   * web-extensions need to use dedicated instances of TabTarget and cannot reuse the
+   * cached instances managed by DevTools target factory.
+   */
+  createTargetForTab: function (tab) {
+    return new TabTarget(tab);
   },
 
   /**

@@ -4,10 +4,6 @@
 
 // Test that the HeapAnalyses{Client,Worker} can delete heap snapshots.
 
-function run_test() {
-  run_next_test();
-}
-
 const breakdown = {
   by: "coarseType",
   objects: { by: "count", count: true, bytes: true },

@@ -7,7 +7,7 @@
 #include "CertBlocklist.h"
 #include "ContentSignatureVerifier.h"
 #include "NSSErrorsService.h"
-#include "PKCS11.h"
+#include "PKCS11ModuleDB.h"
 #include "PSMContentListener.h"
 #include "SecretDecoderRing.h"
 #include "TransportSecurityInfo.h"
@@ -146,7 +146,6 @@ NS_DEFINE_NAMED_CID(NS_FORMPROCESSOR_CID);
 #ifdef MOZ_XUL
 NS_DEFINE_NAMED_CID(NS_CERTTREE_CID);
 #endif
-NS_DEFINE_NAMED_CID(NS_PKCS11_CID);
 NS_DEFINE_NAMED_CID(NS_CRYPTO_HASH_CID);
 NS_DEFINE_NAMED_CID(NS_CRYPTO_HMAC_CID);
 NS_DEFINE_NAMED_CID(NS_NTLMAUTHMODULE_CID);
@@ -174,7 +173,7 @@ static const mozilla::Module::CIDEntry kNSSCIDs[] = {
   { &kNS_SECRETDECODERRING_CID, false, nullptr,
     Constructor<SecretDecoderRing> },
   { &kNS_PK11TOKENDB_CID, false, nullptr, Constructor<nsPK11TokenDB> },
-  { &kNS_PKCS11MODULEDB_CID, false, nullptr, Constructor<nsPKCS11ModuleDB> },
+  { &kNS_PKCS11MODULEDB_CID, false, nullptr, Constructor<PKCS11ModuleDB> },
   { &kNS_PSMCONTENTLISTEN_CID, false, nullptr, PSMContentListenerConstructor },
   { &kNS_X509CERT_CID, false, nullptr,
     Constructor<nsNSSCertificate, nullptr, ProcessRestriction::AnyProcess> },
@@ -185,7 +184,6 @@ static const mozilla::Module::CIDEntry kNSSCIDs[] = {
 #ifdef MOZ_XUL
   { &kNS_CERTTREE_CID, false, nullptr, Constructor<nsCertTree> },
 #endif
-  { &kNS_PKCS11_CID, false, nullptr, Constructor<PKCS11> },
   { &kNS_CRYPTO_HASH_CID, false, nullptr,
     Constructor<nsCryptoHash, nullptr, ProcessRestriction::AnyProcess> },
   { &kNS_CRYPTO_HMAC_CID, false, nullptr,
@@ -243,7 +241,6 @@ static const mozilla::Module::ContractIDEntry kNSSContracts[] = {
 #ifdef MOZ_XUL
   { NS_CERTTREE_CONTRACTID, &kNS_CERTTREE_CID },
 #endif
-  { NS_PKCS11_CONTRACTID, &kNS_PKCS11_CID },
   { NS_CRYPTO_HASH_CONTRACTID, &kNS_CRYPTO_HASH_CID },
   { NS_CRYPTO_HMAC_CONTRACTID, &kNS_CRYPTO_HMAC_CID },
   { "@mozilla.org/uriloader/psm-external-content-listener;1", &kNS_PSMCONTENTLISTEN_CID },

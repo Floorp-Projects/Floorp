@@ -31,7 +31,7 @@ fn almost_equals(a: &Json, b: &Json) -> bool {
         (_, &Json::I64(b)) => almost_equals(a, &Json::F64(b as f64)),
         (_, &Json::U64(b)) => almost_equals(a, &Json::F64(b as f64)),
 
-        (&Json::F64(a), &Json::F64(b)) => (a - b).abs() < 1e-6,
+        (&Json::F64(a), &Json::F64(b)) => (a - b).abs() <= a.abs() * 1e-6,
 
         (&Json::Boolean(a), &Json::Boolean(b)) => a == b,
         (&Json::String(ref a), &Json::String(ref b)) => a == b,
@@ -1002,5 +1002,27 @@ fn parse_comments() {
         while let Ok(_) = parser.next_including_whitespace() {
         }
         assert_eq!(parser.current_source_map_url(), test.1);
+    }
+}
+
+#[test]
+fn roundtrip_percentage_token() {
+    fn test_roundtrip(value: &str) {
+        let mut input = ParserInput::new(value);
+        let mut parser = Parser::new(&mut input);
+        let token = parser.next().unwrap();
+        assert_eq!(token.to_css_string(), value);
+    }
+    // Test simple number serialization
+    for i in 0..101 {
+        test_roundtrip(&format!("{}%", i));
+        for j in 0..10 {
+            if j != 0 {
+                test_roundtrip(&format!("{}.{}%", i, j));
+            }
+            for k in 1..10 {
+                test_roundtrip(&format!("{}.{}{}%", i, j, k));
+            }
+        }
     }
 }

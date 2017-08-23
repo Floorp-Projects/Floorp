@@ -102,7 +102,3 @@ add_task(async function test_record() {
   Assert.ok(duration2 <= Math.ceil((t2 - t1) / 1000) + 1,
     "Duration is reasonable");
 });
-
-function run_test() {
-  run_next_test();
-}

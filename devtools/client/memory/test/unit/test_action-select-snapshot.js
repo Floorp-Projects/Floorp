@@ -10,10 +10,6 @@
 let actions = require("devtools/client/memory/actions/snapshot");
 let { snapshotState: states } = require("devtools/client/memory/constants");
 
-function run_test() {
-  run_next_test();
-}
-
 add_task(function* () {
   let front = new StubbedMemoryFront();
   yield front.attach();

@@ -4,10 +4,6 @@
 
 Cu.import("resource://gre/modules/PromiseUtils.jsm", this);
 
-function run_test() {
-  run_next_test();
-}
-
 add_task(async function test_no_condition() {
   for (let kind of ["phase", "barrier", "xpcom-barrier", "xpcom-barrier-unwrapped"]) {
     do_print("Testing a barrier with no condition (" + kind + ")");

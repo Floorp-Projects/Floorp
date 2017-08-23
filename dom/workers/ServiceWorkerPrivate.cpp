@@ -1510,6 +1510,15 @@ public:
 
     if (mMarkLaunchServiceWorkerEnd) {
       mInterceptedChannel->SetLaunchServiceWorkerEnd(TimeStamp::Now());
+
+      // A probe to measure sw launch time for telemetry.
+      TimeStamp launchStartTime = TimeStamp();
+      mInterceptedChannel->GetLaunchServiceWorkerStart(&launchStartTime);
+
+      TimeStamp launchEndTime = TimeStamp();
+      mInterceptedChannel->GetLaunchServiceWorkerEnd(&launchEndTime);
+      Telemetry::AccumulateTimeDelta(Telemetry::SERVICE_WORKER_LAUNCH_TIME,
+                                     launchStartTime, launchEndTime);
     }
 
     mInterceptedChannel->SetDispatchFetchEventEnd(TimeStamp::Now());

@@ -18,12 +18,6 @@ Components.utils.import("resource://testing-common/httpd.js");
 const profileDir = gProfD.clone();
 profileDir.append("extensions");
 
-
-function run_test() {
-  // Kick off the task-based tests...
-  run_next_test();
-}
-
 // Install one extension
 // Start download of update check (but delay HTTP response)
 // Cancel update check

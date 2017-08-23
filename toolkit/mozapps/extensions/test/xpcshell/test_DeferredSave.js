@@ -142,10 +142,6 @@ function delay(aDelayMS) {
   });
 }
 
-function run_test() {
-  run_next_test();
-}
-
 // Modify set data once, ask for save, make sure it saves cleanly
 add_task(async function test_basic_save_succeeds() {
   setQuickMockTimer();

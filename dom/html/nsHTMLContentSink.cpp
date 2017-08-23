@@ -49,7 +49,6 @@
 #include "nsIDocument.h"
 #include "nsStubDocumentObserver.h"
 #include "nsIHTMLDocument.h"
-#include "nsIDOMHTMLMapElement.h"
 #include "nsICookieService.h"
 #include "nsTArray.h"
 #include "nsIScriptSecurityManager.h"

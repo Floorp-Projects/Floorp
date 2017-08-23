@@ -12,11 +12,6 @@ const DB_SCHEMA = XPIScope.DB_SCHEMA;
 
 createAppInfo("xpcshell@tests.mozilla.org", "XPCShell", "1", "1.9.2");
 
-function run_test() {
-  // Kick off the task-based tests...
-  run_next_test();
-}
-
 // Test for a preference to either exist with a specified value, or not exist at all
 function checkPending() {
   try {

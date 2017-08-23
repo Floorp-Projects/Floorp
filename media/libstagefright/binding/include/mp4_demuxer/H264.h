@@ -404,6 +404,41 @@ struct SPSData
   SPSData();
 };
 
+struct SEIRecoveryData
+{
+  /*
+    recovery_frame_cnt specifies the recovery point of output pictures in output
+    order. All decoded pictures in output order are indicated to be correct or
+    approximately correct in content starting at the output order position of
+    the reference picture having the frame_num equal to the frame_num of the VCL
+    NAL units for the current access unit incremented by recovery_frame_cnt in
+    modulo MaxFrameNum arithmetic. recovery_frame_cnt shall be in the range of 0
+    to MaxFrameNum − 1, inclusive.
+  */
+  uint32_t recovery_frame_cnt = 0;
+  /*
+    exact_match_flag indicates whether decoded pictures at and subsequent to the
+    specified recovery point in output order derived by starting the decoding
+    process at the access unit associated with the recovery point SEI message
+    shall be an exact match to the pictures that would be produced by starting
+    the decoding process at the location of a previous IDR access unit in the
+    NAL unit stream. The value 0 indicates that the match need not be exact and
+    the value 1 indicates that the match shall be exact.
+  */
+  bool exact_match_flag = false;
+  /*
+    broken_link_flag indicates the presence or absence of a broken link in the
+    NAL unit stream at the location of the recovery point SEI message */
+  bool broken_link_flag = false;
+  /*
+    changing_slice_group_idc equal to 0 indicates that decoded pictures are
+    correct or approximately correct in content at and subsequent to the
+    recovery point in output order when all macroblocks of the primary coded
+    pictures are decoded within the changing slice group period
+  */
+  uint8_t changing_slice_group_idc = 0;
+};
+
 class H264
 {
 public:
@@ -454,6 +489,10 @@ private:
   // Read HRD parameters, all data is ignored.
   static void hrd_parameters(BitReader& aBr);
   static uint8_t NumSPS(const mozilla::MediaByteBuffer* aExtraData);
+  // Decode SEI payload and return true if the SEI NAL indicates a recovery
+  // point.
+  static bool DecodeRecoverySEI(const mozilla::MediaByteBuffer* aSEI,
+                                SEIRecoveryData& aDest);
 };
 
 } // namespace mp4_demuxer

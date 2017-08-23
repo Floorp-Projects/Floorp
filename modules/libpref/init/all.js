@@ -5344,9 +5344,8 @@ pref("dom.flyweb.enabled", false);
 // Enable mapped array buffer by default.
 pref("dom.mapped_arraybuffer.enabled", true);
 
-// The tables used for Safebrowsing phishing and malware checks.
+// The tables used for Safebrowsing phishing and malware checks
 pref("urlclassifier.malwareTable", "goog-malware-shavar,goog-unwanted-shavar,test-malware-simple,test-unwanted-simple,test-harmful-simple");
-
 #ifdef MOZILLA_OFFICIAL
 // In the official build, we are allowed to use google's private
 // phishing list "goog-phish-shavar". See Bug 1288840.
@@ -5355,37 +5354,50 @@ pref("urlclassifier.phishTable", "goog-phish-shavar,test-phish-simple");
 pref("urlclassifier.phishTable", "googpub-phish-shavar,test-phish-simple");
 #endif
 
-// Tables for application reputation.
+// Tables for application reputation
 pref("urlclassifier.downloadAllowTable", "goog-downloadwhite-proto");
 pref("urlclassifier.downloadBlockTable", "goog-badbinurl-proto");
 
-pref("urlclassifier.disallow_completions", "test-malware-simple,test-harmful-simple,test-phish-simple,test-unwanted-simple,test-track-simple,test-trackwhite-simple,test-block-simple,goog-downloadwhite-digest256,base-track-digest256,mozstd-trackwhite-digest256,content-track-digest256,mozplugin-block-digest256,mozplugin2-block-digest256,block-flash-digest256,except-flash-digest256,allow-flashallow-digest256,except-flashallow-digest256,block-flashsubdoc-digest256,except-flashsubdoc-digest256,except-flashinfobar-digest256");
+// Tables for login reputation
+pref("urlclassifier.passwordAllowTable", "goog-passwordwhite-proto");
 
-// The table and update/gethash URLs for Safebrowsing phishing and malware
-// checks.
+// Tables for tracking protection
 pref("urlclassifier.trackingTable", "test-track-simple,base-track-digest256");
 pref("urlclassifier.trackingWhitelistTable", "test-trackwhite-simple,mozstd-trackwhite-digest256");
 
-// The number of random entries to send with a gethash request.
+// These tables will never trigger a gethash call.
+pref("urlclassifier.disallow_completions", "test-malware-simple,test-harmful-simple,test-phish-simple,test-unwanted-simple,test-track-simple,test-trackwhite-simple,test-block-simple,goog-downloadwhite-digest256,base-track-digest256,mozstd-trackwhite-digest256,content-track-digest256,mozplugin-block-digest256,mozplugin2-block-digest256,block-flash-digest256,except-flash-digest256,allow-flashallow-digest256,except-flashallow-digest256,block-flashsubdoc-digest256,except-flashsubdoc-digest256,except-flashinfobar-digest256");
+
+// Number of random entries to send with a gethash request
 pref("urlclassifier.gethashnoise", 4);
 
-// Gethash timeout for Safebrowsing.
+// Gethash timeout for Safe Browsing
 pref("urlclassifier.gethash.timeout_ms", 5000);
-// Update server response timeout for Safebrowsing.
+// Update server response timeout for Safe Browsing
 pref("urlclassifier.update.response_timeout_ms", 30000);
-// Download update timeout for Safebrowsing.
+// Download update timeout for Safe Browsing
 pref("urlclassifier.update.timeout_ms", 90000);
 
-// Name of the about: page contributed by safebrowsing to handle display of error
-// pages on phishing/malware hits.  (bug 399233)
+// Name of the about: page to display Safe Browsing warnings (bug 399233)
 pref("urlclassifier.alternate_error_page", "blocked");
 
-// Enable phishing protection
+// Enable phishing & malware protection.
 pref("browser.safebrowsing.phishing.enabled", true);
-
-// Enable malware protection
 pref("browser.safebrowsing.malware.enabled", true);
+pref("browser.safebrowsing.debug", false);
 
+// Allow users to ignore Safe Browsing warnings.
+pref("browser.safebrowsing.allowOverride", true);
+
+#ifdef MOZILLA_OFFICIAL
+// Normally the "client ID" sent in updates is appinfo.name, but for
+// official Firefox releases from Mozilla we use a special identifier.
+pref("browser.safebrowsing.id", "navclient-auto-ffox");
+#else
+pref("browser.safebrowsing.id", "Firefox");
+#endif
+
+// Download protection
 pref("browser.safebrowsing.downloads.enabled", true);
 pref("browser.safebrowsing.downloads.remote.enabled", true);
 pref("browser.safebrowsing.downloads.remote.timeout_ms", 10000);
@@ -5394,9 +5406,11 @@ pref("browser.safebrowsing.downloads.remote.block_dangerous",            true);
 pref("browser.safebrowsing.downloads.remote.block_dangerous_host",       true);
 pref("browser.safebrowsing.downloads.remote.block_potentially_unwanted", true);
 pref("browser.safebrowsing.downloads.remote.block_uncommon",             true);
-pref("browser.safebrowsing.debug", false);
 
-// The protocol version we communicate with google server.
+// Password protection
+pref("browser.safebrowsing.passwords.enabled", false);
+
+// Google Safe Browsing provider (legacy)
 pref("browser.safebrowsing.provider.google.pver", "2.2");
 pref("browser.safebrowsing.provider.google.lists", "goog-badbinurl-shavar,goog-downloadwhite-digest256,goog-phish-shavar,googpub-phish-shavar,goog-malware-shavar,goog-unwanted-shavar");
 pref("browser.safebrowsing.provider.google.updateURL", "https://safebrowsing.google.com/safebrowsing/downloads?client=SAFEBROWSING_ID&appver=%MAJOR_VERSION%&pver=2.2&key=%GOOGLE_API_KEY%");
@@ -5407,9 +5421,9 @@ pref("browser.safebrowsing.provider.google.reportMalwareMistakeURL", "https://%L
 pref("browser.safebrowsing.provider.google.advisoryURL", "https://developers.google.com/safe-browsing/v4/advisory");
 pref("browser.safebrowsing.provider.google.advisoryName", "Google Safe Browsing");
 
-// Prefs for v4.
+// Google Safe Browsing provider
 pref("browser.safebrowsing.provider.google4.pver", "4");
-pref("browser.safebrowsing.provider.google4.lists", "goog-badbinurl-proto,goog-downloadwhite-proto,goog-phish-proto,googpub-phish-proto,goog-malware-proto,goog-unwanted-proto,goog-harmful-proto");
+pref("browser.safebrowsing.provider.google4.lists", "goog-badbinurl-proto,goog-downloadwhite-proto,goog-phish-proto,googpub-phish-proto,goog-malware-proto,goog-unwanted-proto,goog-harmful-proto,goog-passwordwhite-proto");
 pref("browser.safebrowsing.provider.google4.updateURL", "https://safebrowsing.googleapis.com/v4/threatListUpdates:fetch?$ct=application/x-protobuf&key=%GOOGLE_API_KEY%&$httpMethod=POST");
 pref("browser.safebrowsing.provider.google4.gethashURL", "https://safebrowsing.googleapis.com/v4/fullHashes:find?$ct=application/x-protobuf&key=%GOOGLE_API_KEY%&$httpMethod=POST");
 pref("browser.safebrowsing.provider.google4.reportURL", "https://safebrowsing.google.com/safebrowsing/diagnostic?client=%NAME%&hl=%LOCALE%&site=");
@@ -5420,11 +5434,7 @@ pref("browser.safebrowsing.provider.google4.advisoryName", "Google Safe Browsing
 
 pref("browser.safebrowsing.reportPhishURL", "https://%LOCALE%.phish-report.mozilla.com/?hl=%LOCALE%&url=");
 
-// The table and global pref for blocking plugin content
-pref("browser.safebrowsing.blockedURIs.enabled", true);
-pref("urlclassifier.blockedTable", "test-block-simple,mozplugin-block-digest256");
-
-// The protocol version we communicate with mozilla server.
+// Mozilla Safe Browsing provider (for tracking protection and plugin blocking)
 pref("browser.safebrowsing.provider.mozilla.pver", "2.2");
 pref("browser.safebrowsing.provider.mozilla.lists", "base-track-digest256,mozstd-trackwhite-digest256,content-track-digest256,mozplugin-block-digest256,mozplugin2-block-digest256,block-flash-digest256,except-flash-digest256,allow-flashallow-digest256,except-flashallow-digest256,block-flashsubdoc-digest256,except-flashsubdoc-digest256,except-flashinfobar-digest256");
 pref("browser.safebrowsing.provider.mozilla.updateURL", "https://shavar.services.mozilla.com/downloads?client=SAFEBROWSING_ID&appver=%MAJOR_VERSION%&pver=2.2");
@@ -5438,6 +5448,11 @@ pref("browser.safebrowsing.provider.mozilla.lists.base.description", "mozstdDesc
 pref("browser.safebrowsing.provider.mozilla.lists.content.name", "mozfullName");
 pref("browser.safebrowsing.provider.mozilla.lists.content.description", "mozfullDesc2");
 
+// The table and global pref for blocking plugin content
+pref("browser.safebrowsing.blockedURIs.enabled", true);
+pref("urlclassifier.blockedTable", "test-block-simple,mozplugin-block-digest256");
+
+// Flash blocking tables
 pref("urlclassifier.flashAllowTable", "allow-flashallow-digest256");
 pref("urlclassifier.flashAllowExceptTable", "except-flashallow-digest256");
 pref("urlclassifier.flashTable", "block-flash-digest256");
@@ -5448,17 +5463,6 @@ pref("urlclassifier.flashInfobarTable", "except-flashinfobar-digest256");
 
 pref("plugins.http_https_only", true);
 pref("plugins.flashBlock.enabled", false);
-
-// Allow users to ignore Safe Browsing warnings.
-pref("browser.safebrowsing.allowOverride", true);
-
-#ifdef MOZILLA_OFFICIAL
-// Normally the "client ID" sent in updates is appinfo.name, but for
-// official Firefox releases from Mozilla we use a special identifier.
-pref("browser.safebrowsing.id", "navclient-auto-ffox");
-#else
-pref("browser.safebrowsing.id", "Firefox");
-#endif
 
 // Turn off Spatial navigation by default.
 pref("snav.enabled", false);

@@ -423,9 +423,7 @@ ServoRestyleManager::ClearRestyleStateFromSubtree(Element* aElement)
 
   bool wasRestyled;
   Unused << Servo_TakeChangeHint(aElement, &wasRestyled);
-  aElement->UnsetHasDirtyDescendantsForServo();
-  aElement->UnsetHasAnimationOnlyDirtyDescendantsForServo();
-  aElement->UnsetFlags(NODE_DESCENDANTS_NEED_FRAMES);
+  aElement->UnsetFlags(Element::kAllServoDescendantBits);
 }
 
 /**
@@ -634,14 +632,6 @@ UpdateFramePseudoElementStyles(nsIFrame* aFrame,
     aFrame, aRestyleState.StyleSet(), aRestyleState.ChangeList());
 }
 
-static inline bool
-NeedsToTraverseElementChildren(const Element& aParent)
-{
-  return aParent.HasAnimationOnlyDirtyDescendantsForServo() ||
-         aParent.HasDirtyDescendantsForServo() ||
-         aParent.HasFlag(NODE_DESCENDANTS_NEED_FRAMES);
-}
-
 bool
 ServoRestyleManager::ProcessPostTraversal(
   Element* aElement,
@@ -813,10 +803,9 @@ ServoRestyleManager::ProcessPostTraversal(
   }
 
   const bool traverseElementChildren =
-    NeedsToTraverseElementChildren(*aElement);
-  const bool descendantsNeedFrames =
-    aElement->HasFlag(NODE_DESCENDANTS_NEED_FRAMES);
-  const bool traverseTextChildren = wasRestyled || descendantsNeedFrames;
+    aElement->HasAnyOfFlags(Element::kAllServoDescendantBits);
+  const bool traverseTextChildren =
+    wasRestyled || aElement->HasFlag(NODE_DESCENDANTS_NEED_FRAMES);
   bool recreatedAnyContext = wasRestyled;
   if (traverseElementChildren || traverseTextChildren) {
     StyleChildrenIterator it(aElement);
@@ -871,10 +860,7 @@ ServoRestyleManager::ProcessPostTraversal(
     }
   }
 
-  aElement->UnsetHasDirtyDescendantsForServo();
-  aElement->UnsetFlags(NODE_DESCENDANTS_NEED_FRAMES);
-  aElement->UnsetHasAnimationOnlyDirtyDescendantsForServo();
-
+  aElement->UnsetFlags(Element::kAllServoDescendantBits);
   return recreatedAnyContext;
 }
 
@@ -956,8 +942,19 @@ ServoRestyleManager::SnapshotFor(Element* aElement)
   ServoElementSnapshot* snapshot = mSnapshots.LookupOrAdd(aElement, aElement);
   aElement->SetFlags(ELEMENT_HAS_SNAPSHOT);
 
-  nsIPresShell* presShell = mPresContext->PresShell();
-  presShell->EnsureStyleFlush();
+  // Now that we have a snapshot, make sure a restyle is triggered.
+  //
+  // If we have any later siblings, we need to flag the restyle on the parent,
+  // so that a traversal from the restyle root is guaranteed to reach those
+  // siblings (since the snapshot may generate hints for later siblings).
+  if (aElement->GetNextElementSibling()) {
+    Element* parent = aElement->GetFlattenedTreeParentElementForStyle();
+    MOZ_ASSERT(parent);
+    parent->NoteDirtyForServo();
+    parent->SetHasDirtyDescendantsForServo();
+  } else {
+    aElement->NoteDirtyForServo();
+  }
 
   return *snapshot;
 }
@@ -1003,7 +1000,16 @@ ServoRestyleManager::DoProcessPendingRestyles(ServoTraversalFlags aFlags)
     aFlags |= ServoTraversalFlags::ForCSSRuleChanges;
   }
 
-  while (styleSet->StyleDocument(aFlags)) {
+  while (doc->GetServoRestyleRoot()) {
+    // Do the servo traversal.
+    bool needsPostTraversal = styleSet->StyleDocument(aFlags);
+
+    // If we don't need a post-traversal, we're done.
+    if (!needsPostTraversal) {
+      doc->ClearServoRestyleRoot();
+      break;
+    }
+
     ClearSnapshots();
 
     nsStyleChangeList currentChanges(StyleBackendType::Servo);
@@ -1013,7 +1019,7 @@ ServoRestyleManager::DoProcessPendingRestyles(ServoTraversalFlags aFlags)
     // lazy frame construction).
     {
       AutoRestyleTimelineMarker marker(mPresContext->GetDocShell(), false);
-      DocumentStyleRootIterator iter(doc);
+      DocumentStyleRootIterator iter(doc->GetServoRestyleRoot());
       while (Element* root = iter.GetNextStyleRoot()) {
         nsTArray<nsIFrame*> wrappersToRestyle;
         ServoRestyleState state(*styleSet, currentChanges, wrappersToRestyle);
@@ -1022,6 +1028,8 @@ ServoRestyleManager::DoProcessPendingRestyles(ServoTraversalFlags aFlags)
                                /* aParentWasRestyled = */ false);
       }
     }
+
+    doc->ClearServoRestyleRoot();
 
     // Process the change hints.
     //
@@ -1156,8 +1164,6 @@ ServoRestyleManager::ContentStateChanged(nsIContent* aContent,
   EventStates previousState = aElement->StyleState() ^ aChangedBits;
   snapshot.AddState(previousState);
 
-  aElement->NoteDirtyForServo();
-
   if (restyleHint || changeHint) {
     Servo_NoteExplicitHints(aElement, restyleHint, changeHint);
   }
@@ -1275,8 +1281,6 @@ ServoRestyleManager::TakeSnapshotForAttributeChange(Element* aElement,
   if (influencesOtherPseudoClassState) {
     snapshot.AddOtherPseudoClassState(aElement);
   }
-
-  aElement->NoteDirtyForServo();
 }
 
 // For some attribute changes we must restyle the whole subtree:

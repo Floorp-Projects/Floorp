@@ -61,13 +61,6 @@ var FUNC_OVERONE = "cubic-bezier(0.25, 0, 0.75, 3)";
 // After resolving Bug 1387080, we can remove this variable.
 const isServo = SpecialPowers.DOMWindowUtils.isStyledByServo;
 
-// The following properties will be skipped while using Servo backend.
-var skippedProperties = {
-    "stroke-dasharray": true,       // Bug 1387986
-    "stroke-dashoffset": true,      // Bug 1369614
-    "stroke-width": true,           // Bug 1369614
-};
-
 var supported_properties = {
     "border-bottom-left-radius": [ test_radius_transition ],
     "border-bottom-right-radius": [ test_radius_transition ],
@@ -988,11 +981,6 @@ function sample_array(array, count) {
 // the properties not in our test list above (and not transition
 // properties themselves).
 for (prop in gCSSProperties) {
-  // Bug 1387080, we should remove this after passing all tests.
-  if (isServo && (prop in skippedProperties)) {
-    continue;
-  }
-
   var info = gCSSProperties[prop];
   if (!(prop in supported_properties) &&
       info.type != CSS_TYPE_TRUE_SHORTHAND &&
@@ -1071,11 +1059,6 @@ div.style.setProperty("transition-duration", "4s", "");
 div.style.setProperty("transition-delay", "-1s", "");
 div.style.setProperty("transition-timing-function", "linear", "");
 for (prop in supported_properties) {
-  // Bug 1387080, we should remove this after passing all tests.
-  if (isServo && (prop in skippedProperties)) {
-    continue;
-  }
-
   var tinfo = supported_properties[prop];
   var info = gCSSProperties[prop];
 

@@ -180,20 +180,12 @@ toolbar[brighttext] .toolbarbutton-1 {
   list-style-image: url("chrome://browser/skin/home.svg");
 }
 
-#bookmarks-menu-button {
+#bookmarks-toolbar-button,
+#bookmarks-toolbar-placeholder {
   list-style-image: url("chrome://browser/skin/bookmark-hollow.svg");
 }
 
-#bookmarks-menu-button[starred] {
-  list-style-image: url("chrome://browser/skin/bookmark.svg");
-}
-
-toolbar:not([brighttext]) #bookmarks-menu-button[starred] > .toolbarbutton-menubutton-button {
-  -moz-context-properties: fill;
-  fill: var(--toolbarbutton-icon-fill-attention);
-}
-
-#bookmarks-menu-button > .toolbarbutton-icon {
+#bookmarks-menu-button {
   list-style-image: url("chrome://browser/skin/bookmark-star-on-tray.svg");
 }
 

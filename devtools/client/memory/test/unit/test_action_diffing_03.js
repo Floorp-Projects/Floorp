@@ -13,10 +13,6 @@ const {
 const { takeSnapshot } = require("devtools/client/memory/actions/snapshot");
 const { changeView } = require("devtools/client/memory/actions/view");
 
-function run_test() {
-  run_next_test();
-}
-
 // We test that you (1) cannot select a snapshot that is not in a diffable
 // state, and (2) cannot select more than 2 snapshots for diffing. Both attempts
 // trigger assertion failures.

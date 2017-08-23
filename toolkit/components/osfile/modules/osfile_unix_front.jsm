@@ -732,16 +732,16 @@
       *
       * Skip special directories "." and "..".
       *
-      * @return {File.Entry} The next entry in the directory.
-      * @throws {StopIteration} Once all files in the directory have been
-      * encountered.
+      * @return By definition of the iterator protocol, either
+      * `{value: {File.Entry}, done: false}` if there is an unvisited entry
+      * in the directory, or `{value: undefined, done: true}`, otherwise.
       */
      File.DirectoryIterator.prototype.next = function next() {
        if (!this._exists) {
          throw File.Error.noSuchFile("DirectoryIterator.prototype.next", this._path);
        }
        if (this._closed) {
-         throw StopIteration;
+         return {value: undefined, done: true};
        }
        for (let entry = UnixFile.readdir(this._dir);
             entry != null && !entry.isNull();
@@ -764,10 +764,13 @@
            isSymLink = contents.d_type == Const.DT_LNK;
          }
 
-         return new File.DirectoryIterator.Entry(isDir, isSymLink, name, this._path);
+         return {
+           value: new File.DirectoryIterator.Entry(isDir, isSymLink, name, this._path),
+           done: false
+         };
        }
        this.close();
-       throw StopIteration;
+       return {value: undefined, done: true};
      };
 
      /**
