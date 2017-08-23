@@ -54,6 +54,7 @@ NS_DEFINE_STATIC_IID_ACCESSOR(SchedulerEventTarget, NS_DISPATCHEREVENTTARGET_IID
 
 static Atomic<uint64_t> gEarliestUnprocessedVsync(0);
 
+#ifdef EARLY_BETA_OR_EARLIER
 class MOZ_RAII AutoCollectVsyncTelemetry final
 {
 public:
@@ -62,18 +63,14 @@ public:
     : mIsBackground(aRunnable->IsBackground())
   {
     MOZ_GUARD_OBJECT_NOTIFIER_INIT;
-#ifdef EARLY_BETA_OR_EARLIER
     aRunnable->GetName(mKey);
     mStart = TimeStamp::Now();
-#endif
   }
   ~AutoCollectVsyncTelemetry()
   {
-#ifdef EARLY_BETA_OR_EARLIER
     if (Telemetry::CanRecordBase()) {
       CollectTelemetry();
     }
-#endif
   }
 
 private:
@@ -127,6 +124,7 @@ AutoCollectVsyncTelemetry::CollectTelemetry()
 
   Telemetry::Accumulate(Telemetry::CONTENT_JS_KNOWN_TICK_DELAY_MS, duration);
 }
+#endif
 
 } // namespace
 
@@ -383,7 +381,9 @@ SchedulerGroup::Runnable::Run()
   nsresult result;
 
   {
+#ifdef EARLY_BETA_OR_EARLIER
     AutoCollectVsyncTelemetry telemetry(this);
+#endif
     result = mRunnable->Run();
   }
 
