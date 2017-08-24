@@ -77,19 +77,6 @@ private:
     return NS_OK;
   }
 
-  size_t SizeOfExcludingThis(MallocSizeOf aMallocSizeOf) const override
-  {
-    // Not owned:
-    // - mBuffer
-    size_t size = MediaResource::SizeOfExcludingThis(aMallocSizeOf);
-    return size;
-  }
-
-  size_t SizeOfIncludingThis(MallocSizeOf aMallocSizeOf) const override
-  {
-    return aMallocSizeOf(this) + SizeOfExcludingThis(aMallocSizeOf);
-  }
-
 private:
   const uint8_t * mBuffer;
   uint32_t mLength;
