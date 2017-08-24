@@ -31,11 +31,6 @@ class SourceBufferResource final : public MediaResource
 public:
   SourceBufferResource();
   nsresult Close();
-  already_AddRefed<nsIPrincipal> GetCurrentPrincipal() override
-  {
-    UNIMPLEMENTED();
-    return nullptr;
-  }
   nsresult ReadAt(int64_t aOffset,
                   char* aBuffer,
                   uint32_t aCount,

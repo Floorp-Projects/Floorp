@@ -160,9 +160,6 @@ public:
   NS_METHOD_(MozExternalRefCountType) AddRef(void);
   NS_METHOD_(MozExternalRefCountType) Release(void);
 
-  // Get the current principal for the channel
-  virtual already_AddRefed<nsIPrincipal> GetCurrentPrincipal() = 0;
-
   // These methods are called off the main thread.
   // Read up to aCount bytes from the stream. The read starts at
   // aOffset in the stream, seeking to that location initially if
@@ -289,6 +286,9 @@ public:
   // for an HTTP network stream this returns true if HTTP1.1 Byte Range
   // requests are supported by the connection/server.
   virtual bool IsTransportSeekable() = 0;
+
+  // Get the current principal for the channel
+  virtual already_AddRefed<nsIPrincipal> GetCurrentPrincipal() = 0;
 
   /**
    * Open the stream. This creates a stream listener and returns it in
