@@ -261,7 +261,7 @@ public class PasswordsRepositorySession extends
             // Note that while this counts as "reconciliation", we're probably over-counting.
             // Currently, locallyModified above is _always_ true if a record exists locally,
             // and so we'll consider any deletions of already present records as reconciliations.
-            storeDelegate.onRecordStoreReconciled(record.guid, null);
+            storeDelegate.onRecordStoreReconciled(record.guid, null, null);
             storeRecordDeletion(remoteRecord);
             return;
           }
@@ -340,7 +340,7 @@ public class PasswordsRepositorySession extends
         // of reconcileRecords.
         Logger.debug(LOG_TAG, "Calling delegate callback with guid " + replaced.guid +
                               "(" + replaced.androidID + ")");
-        storeDelegate.onRecordStoreReconciled(record.guid, null);
+        storeDelegate.onRecordStoreReconciled(record.guid, existingRecord.guid, null);
         storeDelegate.onRecordStoreSucceeded(record.guid);
         return;
       }
