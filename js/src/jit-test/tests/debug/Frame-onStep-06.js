@@ -48,14 +48,6 @@ check("x << 1");
 check("x >> 1");
 check("x >>> 1");
 
-g.eval("function lastStep() { throw StopIteration; }");
-g.eval("function emptyIterator() { debugger; log += 'x'; return { next: lastStep }; }");
-g.eval("var customEmptyIterator = { __iterator__: emptyIterator };");
-g.log = '';
-g.eval("for (i in customEmptyIterator);\n" +
-       "log += 'y';\n");
-assertEq(g.log, 'dxsy');
-
 g.eval("var getter = { get x() { debugger; return log += 'x'; } }");
 check("getter.x");
 
