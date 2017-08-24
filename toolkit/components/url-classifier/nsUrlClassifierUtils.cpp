@@ -5,6 +5,7 @@
 #include "nsEscape.h"
 #include "nsString.h"
 #include "nsIURI.h"
+#include "nsIURL.h"
 #include "nsUrlClassifierUtils.h"
 #include "nsTArray.h"
 #include "nsReadableUtils.h"
@@ -13,6 +14,10 @@
 #include "safebrowsing.pb.h"
 #include "mozilla/Sprintf.h"
 #include "mozilla/Mutex.h"
+#include "nsIRedirectHistoryEntry.h"
+#include "nsIHttpChannelInternal.h"
+#include "mozIThirdPartyUtil.h"
+#include "nsIDocShell.h"
 
 #define DEFAULT_PROTOCOL_VERSION "2.2"
 
@@ -457,6 +462,248 @@ nsUrlClassifierUtils::MakeFindFullHashRequestV4(const char** aListNames,
   nsCString out;
   rv = Base64URLEncode(s.size(),
                        (const uint8_t*)s.c_str(),
+                       Base64URLEncodePaddingPolicy::Include,
+                       out);
+  NS_ENSURE_SUCCESS(rv, rv);
+
+  aRequest = out;
+
+  return NS_OK;
+}
+
+// Remove ref, query, userpass, anypart which may contain sensitive data
+static nsresult
+GetSpecWithoutSensitiveData(nsIURI* aUri, nsACString &aSpec)
+{
+  if (NS_WARN_IF(!aUri)) {
+    return NS_ERROR_INVALID_ARG;
+  }
+
+  nsCOMPtr<nsIURI> clone;
+  // Clone to make the uri mutable
+  nsresult rv = aUri->CloneIgnoringRef(getter_AddRefs(clone));
+  nsCOMPtr<nsIURL> url(do_QueryInterface(clone));
+  if (url) {
+    rv = url->SetQuery(EmptyCString());
+    NS_ENSURE_SUCCESS(rv, rv);
+
+    rv = url->SetRef(EmptyCString());
+    NS_ENSURE_SUCCESS(rv, rv);
+
+    rv = url->SetUserPass(EmptyCString());
+    NS_ENSURE_SUCCESS(rv, rv);
+
+    rv = url->GetAsciiSpec(aSpec);
+    NS_ENSURE_SUCCESS(rv, rv);
+  }
+  return NS_OK;
+}
+
+static nsresult
+AddThreatSourceFromChannel(ThreatHit& aHit, nsIChannel *aChannel,
+                           ThreatHit_ThreatSourceType aType)
+{
+  if (NS_WARN_IF(!aChannel)) {
+    return NS_ERROR_INVALID_ARG;
+  }
+
+  nsresult rv;
+
+  auto matchingSource = aHit.add_resources();
+  matchingSource->set_type(aType);
+
+  nsCOMPtr<nsIURI> uri;
+  rv = aChannel->GetURI(getter_AddRefs(uri));
+  NS_ENSURE_SUCCESS(rv, rv);
+
+  nsCString spec;
+  rv = GetSpecWithoutSensitiveData(uri, spec);
+  NS_ENSURE_SUCCESS(rv, rv);
+  matchingSource->set_url(spec.get());
+
+  nsCOMPtr<nsIHttpChannel> httpChannel =
+    do_QueryInterface(aChannel);
+  if (httpChannel) {
+    nsCOMPtr<nsIURI> referrer;
+    rv = httpChannel->GetReferrer(getter_AddRefs(referrer));
+    if (NS_SUCCEEDED(rv) && referrer) {
+      nsCString referrerSpec;
+      rv = GetSpecWithoutSensitiveData(referrer, referrerSpec);
+      NS_ENSURE_SUCCESS(rv, rv);
+      matchingSource->set_referrer(referrerSpec.get());
+    }
+  }
+
+  nsCOMPtr<nsIHttpChannelInternal> httpChannelInternal =
+    do_QueryInterface(aChannel);
+  if (httpChannelInternal) {
+    nsCString remoteIp;
+    rv = httpChannelInternal->GetRemoteAddress(remoteIp);
+    if (NS_SUCCEEDED(rv) && !remoteIp.IsEmpty()) {
+      matchingSource->set_remote_ip(remoteIp.get());
+    }
+  }
+  return NS_OK;
+}
+static nsresult
+AddThreatSourceFromRedirectEntry(ThreatHit& aHit,
+                                 nsIRedirectHistoryEntry *aRedirectEntry,
+                                 ThreatHit_ThreatSourceType aType)
+{
+  if (NS_WARN_IF(!aRedirectEntry)) {
+    return NS_ERROR_INVALID_ARG;
+  }
+
+  nsresult rv;
+
+  nsCOMPtr<nsIPrincipal> principal;
+  rv = aRedirectEntry->GetPrincipal(getter_AddRefs(principal));
+  NS_ENSURE_SUCCESS(rv, rv);
+
+  nsCOMPtr<nsIURI> uri;
+  rv = principal->GetURI(getter_AddRefs(uri));
+  NS_ENSURE_SUCCESS(rv, rv);
+
+  nsCString spec;
+  rv = GetSpecWithoutSensitiveData(uri, spec);
+  NS_ENSURE_SUCCESS(rv, rv);
+  auto source = aHit.add_resources();
+  source->set_url(spec.get());
+  source->set_type(aType);
+
+  nsCOMPtr<nsIURI> referrer;
+  rv = aRedirectEntry->GetReferrerURI(getter_AddRefs(referrer));
+  if (NS_SUCCEEDED(rv) && referrer) {
+    nsCString referrerSpec;
+    rv = GetSpecWithoutSensitiveData(referrer, referrerSpec);
+    NS_ENSURE_SUCCESS(rv, rv);
+    source->set_referrer(referrerSpec.get());
+  }
+
+  nsCString remoteIp;
+  rv = aRedirectEntry->GetRemoteAddress(remoteIp);
+  if (NS_SUCCEEDED(rv) && !remoteIp.IsEmpty()) {
+    source->set_remote_ip(remoteIp.get());
+  }
+  return NS_OK;
+}
+
+// Add top level tab url and redirect threatsources to threatHit message
+static nsresult
+AddTabThreatSources(ThreatHit& aHit, nsIChannel *aChannel)
+{
+  if (NS_WARN_IF(!aChannel)) {
+    return NS_ERROR_INVALID_ARG;
+  }
+
+  nsresult rv;
+  nsCOMPtr<mozIDOMWindowProxy> win;
+  nsCOMPtr<mozIThirdPartyUtil> thirdPartyUtil =
+    do_GetService(THIRDPARTYUTIL_CONTRACTID, &rv);
+  NS_ENSURE_SUCCESS(rv, rv);
+
+  rv = thirdPartyUtil->GetTopWindowForChannel(aChannel, getter_AddRefs(win));
+  NS_ENSURE_SUCCESS(rv, rv);
+
+  auto* pwin = nsPIDOMWindowOuter::From(win);
+  nsCOMPtr<nsIDocShell> docShell = pwin->GetDocShell();
+  if (!docShell) {
+    return NS_OK;
+  }
+
+  nsCOMPtr<nsIChannel> topChannel;
+  docShell->GetCurrentDocumentChannel(getter_AddRefs(topChannel));
+  if (!topChannel) {
+    return NS_OK;
+  }
+
+  nsCOMPtr<nsIURI> uri;
+  rv = aChannel->GetURI(getter_AddRefs(uri));
+  NS_ENSURE_SUCCESS(rv, rv);
+
+  nsCOMPtr<nsIURI> topUri;
+  rv = topChannel->GetURI(getter_AddRefs(topUri));
+  NS_ENSURE_SUCCESS(rv, rv);
+
+  bool isTopUri = false;
+  rv = topUri->Equals(uri, &isTopUri);
+  if (NS_SUCCEEDED(rv) && !isTopUri) {
+    nsCOMPtr<nsILoadInfo> loadInfo = aChannel->GetLoadInfo();
+    if (loadInfo && loadInfo->RedirectChain().Length()) {
+      AddThreatSourceFromRedirectEntry(aHit, loadInfo->RedirectChain()[0],
+                                       ThreatHit_ThreatSourceType_TAB_RESOURCE);
+    }
+  }
+
+  // Set top level tab_url threatshource
+  rv = AddThreatSourceFromChannel(aHit, topChannel,
+                                  ThreatHit_ThreatSourceType_TAB_URL);
+  Unused << NS_WARN_IF(NS_FAILED(rv));
+
+  // Set tab_redirect threatshources if there's any
+  nsCOMPtr<nsILoadInfo> topLoadInfo = topChannel->GetLoadInfo();
+  if (!topLoadInfo) {
+    return NS_OK;
+  }
+
+  nsIRedirectHistoryEntry* redirectEntry;
+  size_t length = topLoadInfo->RedirectChain().Length();
+  for (size_t i = 0; i < length; i++) {
+    redirectEntry = topLoadInfo->RedirectChain()[i];
+    AddThreatSourceFromRedirectEntry(aHit, redirectEntry,
+                                     ThreatHit_ThreatSourceType_TAB_REDIRECT);
+  }
+
+  return NS_OK;
+}
+
+NS_IMETHODIMP
+nsUrlClassifierUtils::MakeThreatHitReport(nsIChannel *aChannel,
+                                          const nsACString& aListName,
+                                          const nsACString& aHashBase64,
+                                          nsACString &aRequest)
+{
+  if (NS_WARN_IF(aListName.IsEmpty()) ||
+      NS_WARN_IF(aHashBase64.IsEmpty()) ||
+      NS_WARN_IF(!aChannel)) {
+    return NS_ERROR_INVALID_ARG;
+  }
+
+  ThreatHit hit;
+  nsresult rv;
+
+  uint32_t threatType;
+  rv = ConvertListNameToThreatType(aListName, &threatType);
+  NS_ENSURE_SUCCESS(rv, rv);
+  hit.set_threat_type(static_cast<ThreatType>(threatType));
+
+  hit.set_platform_type(GetPlatformType());
+
+  nsCString hash;
+  rv = Base64Decode(aHashBase64, hash);
+  if (NS_FAILED(rv) || hash.Length() != COMPLETE_SIZE) {
+    return NS_ERROR_FAILURE;
+  }
+
+  auto threatEntry = hit.mutable_entry();
+  threatEntry->set_hash(hash.get(), hash.Length());
+
+  // Set matching source
+  rv = AddThreatSourceFromChannel(hit, aChannel,
+                                  ThreatHit_ThreatSourceType_MATCHING_URL);
+  Unused << NS_WARN_IF(NS_FAILED(rv));
+  // Set tab url, tab resource url and redirect sources
+  rv = AddTabThreatSources(hit, aChannel);
+  Unused << NS_WARN_IF(NS_FAILED(rv));
+
+  hit.set_allocated_client_info(CreateClientInfo());
+
+  std::string s;
+  hit.SerializeToString(&s);
+
+  nsCString out;
+  rv = Base64URLEncode(s.size(),
+                       reinterpret_cast<const uint8_t*>(s.c_str()),
                        Base64URLEncodePaddingPolicy::Include,
                        out);
   NS_ENSURE_SUCCESS(rv, rv);

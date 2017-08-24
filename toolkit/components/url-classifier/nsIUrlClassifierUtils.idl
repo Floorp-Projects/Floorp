@@ -8,6 +8,7 @@
  */
 
 interface nsIURI;
+interface nsIChannel;
 
 /**
  * Interface for parseFindFullHashResponseV4 callback
@@ -133,6 +134,19 @@ interface nsIUrlClassifierUtils : nsISupports
                                      [array, size_is(aPrefixCount)] in string aPrefixes,
                                      in uint32_t aListCount,
                                      in uint32_t aPrefixCount);
+
+  /**
+   * Make ThreatHit report request body.
+   *
+   * @param aChannel channel which encountered the threat.
+   * @param aListName listname represented in string.
+   * @param aHashBase64 hash-based hit represented in base64.
+   *
+   * @returns A base64 encoded string.
+   */
+  ACString makeThreatHitReport(in nsIChannel aChannel,
+                               in ACString aListName,
+                               in ACString aHashBase64);
 
   /**
    * Parse V4 FindFullHash response.

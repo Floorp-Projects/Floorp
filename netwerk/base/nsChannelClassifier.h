@@ -89,6 +89,8 @@ private:
     bool AddonMayLoad(nsIChannel *aChannel, nsIURI *aUri);
     void AddShutdownObserver();
     void RemoveShutdownObserver();
+    nsresult SendThreatHitReport(nsIChannel *aChannel,
+                                 const nsACString& aProvider);
 public:
     // If we are blocking content, update the corresponding flag in the respective
     // docshell and call nsISecurityEventSink::onSecurityChange.
