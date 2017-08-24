@@ -25,7 +25,6 @@ var { Task } = require("devtools/shared/task");
  */
 var Prefs = new PrefsHelper("devtools.debugger", {
   chromeDebuggingHost: ["Char", "chrome-debugging-host"],
-  chromeDebuggingPort: ["Int", "chrome-debugging-port"],
   chromeDebuggingWebSocket: ["Bool", "chrome-debugging-websocket"],
 });
 
@@ -33,15 +32,24 @@ var gToolbox, gClient;
 
 var connect = Task.async(function* () {
   window.removeEventListener("load", connect);
+
   // Initiate the connection
+  const params = new URLSearchParams(window.location.search);
+
+  // A port needs to be passed in from the query string, for instance:
+  // `./mach run -chrome chrome://devtools/content/framework/toolbox-process-window.xul?port=6080`
+  if (!params.get("port")) {
+    throw new Error("Must specify a port on the query string");
+  }
+
   let transport = yield DebuggerClient.socketConnect({
     host: Prefs.chromeDebuggingHost,
-    port: Prefs.chromeDebuggingPort,
+    port: params.get("port"),
     webSocket: Prefs.chromeDebuggingWebSocket,
   });
   gClient = new DebuggerClient(transport);
   yield gClient.connect();
-  let addonID = getParameterByName("addonID");
+  let addonID = params.get("addonID");
 
   if (addonID) {
     let { addons } = yield gClient.listAddons();
@@ -215,11 +223,4 @@ function quitApp() {
   if (shouldProceed) {
     Services.startup.quit(Ci.nsIAppStartup.eForceQuit);
   }
-}
-
-function getParameterByName(name) {
-  name = name.replace(/[\[]/, "\\\[").replace(/[\]]/, "\\\]");
-  let regex = new RegExp("[\\?&]" + name + "=([^&#]*)");
-  let results = regex.exec(window.location.search);
-  return results == null ? "" : decodeURIComponent(results[1].replace(/\+/g, " "));
 }
