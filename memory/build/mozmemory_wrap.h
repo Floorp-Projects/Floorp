@@ -37,6 +37,7 @@
  *   - jemalloc_purge_freed_pages
  *   - jemalloc_free_dirty_pages
  *   - jemalloc_thread_local_arena
+ *   - jemalloc_ptr_info
  *   (these functions are native to mozjemalloc)
  *
  * These functions are all exported as part of libmozglue (see
@@ -207,5 +208,7 @@
 #define jemalloc_free_dirty_pages_impl   mozmem_jemalloc_impl(jemalloc_free_dirty_pages)
 #define jemalloc_thread_local_arena_impl \
           mozmem_jemalloc_impl(jemalloc_thread_local_arena)
+#define jemalloc_ptr_info_impl \
+          mozmem_jemalloc_impl(jemalloc_ptr_info)
 
 #endif /* mozmemory_wrap_h */
