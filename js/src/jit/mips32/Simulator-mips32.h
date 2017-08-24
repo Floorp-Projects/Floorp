@@ -36,6 +36,7 @@
 #include "jit/IonTypes.h"
 #include "threading/Thread.h"
 #include "vm/MutexIDs.h"
+#include "wasm/WasmCode.h"
 
 namespace js {
 
@@ -297,6 +298,9 @@ class Simulator {
     void handleWasmInterrupt();
     void startInterrupt(WasmActivation* act);
 
+    // Handle any wasm faults, returning true if the fault was handled.
+    bool handleWasmFault(int32_t addr, unsigned numBytes);
+
     // Executes one instruction.
     void instructionDecode(SimInstruction* instr);
     // Execute one instruction placed in a branch delay slot.
@@ -350,8 +354,9 @@ class Simulator {
     int icount_;
     int break_count_;
 
-    // wasm async interrupt support
+    // wasm async interrupt / fault support
     bool wasm_interrupt_;
+    wasm::SharedCode wasm_code_;
 
     // Debugger input.
     char* lastDebuggerInput_;

@@ -1621,33 +1621,100 @@ Simulator::get_pc() const
 void
 Simulator::startInterrupt(WasmActivation* activation)
 {
-    MOZ_CRASH("NIY");
+    JS::ProfilingFrameIterator::RegisterState state;
+    state.pc = (void*) get_pc();
+    state.fp = (void*) getRegister(fp);
+    state.sp = (void*) getRegister(sp);
+    state.lr = (void*) getRegister(ra);
+    activation->startInterrupt(state);
 }
 
+// The signal handler only redirects the PC to the interrupt stub when the PC is
+// in function code. However, this guard is racy for the simulator since the
+// signal handler samples PC in the middle of simulating an instruction and thus
+// the current PC may have advanced once since the signal handler's guard. So we
+// re-check here.
 void
 Simulator::handleWasmInterrupt()
 {
-    MOZ_CRASH("NIY");
+    void* pc = (void*)get_pc();
+    void* fp = (void*)getRegister(Register::fp);
+
+    WasmActivation* activation = wasm::ActivationIfInnermost(TlsContext.get());
+    const wasm::CodeSegment* segment;
+    const wasm::Code* code = activation->compartment()->wasm.lookupCode(pc, &segment);
+    if (!code || !segment->containsFunctionPC(pc))
+        return;
+
+    // fp can be null during the prologue/epilogue of the entry function.
+    if (!fp)
+        return;
+
+    startInterrupt(activation);
+    set_pc(int32_t(segment->interruptCode()));
 }
 
-// The MIPS cannot do unaligned reads and writes.  On some MIPS platforms an
-// interrupt is caused.  On others it does a funky rotation thing.  For now we
-// simply disallow unaligned reads, but at some point we may want to move to
-// emulating the rotate behaviour.  Note that simulator runs have the runtime
-// system running directly on the host system and only generated code is
-// executed in the simulator.  Since the host is typically IA32 we will not
-// get the correct MIPS-like behaviour on unaligned accesses.
 
+// WebAssembly memories contain an extra region of guard pages (see
+// WasmArrayRawBuffer comment). The guard pages catch out-of-bounds accesses
+// using a signal handler that redirects PC to a stub that safely reports an
+// error. However, if the handler is hit by the simulator, the PC is in C++ code
+// and cannot be redirected. Therefore, we must avoid hitting the handler by
+// redirecting in the simulator before the real handler would have been hit.
+bool
+Simulator::handleWasmFault(int32_t addr, unsigned numBytes)
+{
+    JSContext* cx = TlsContext.get();
+    WasmActivation* act = wasm::ActivationIfInnermost(cx);
+    if (!act)
+        return false;
+
+    void* pc = reinterpret_cast<void*>(get_pc());
+    uint8_t* fp = reinterpret_cast<uint8_t*>(getRegister(Register::fp));
+
+    // Cache the wasm::Code to avoid lookup on every load/store.
+    if (!wasm_code_ || !wasm_code_->containsCodePC(pc))
+        wasm_code_ = act->compartment()->wasm.lookupCode(pc);
+    if (!wasm_code_)
+        return false;
+
+    wasm::Instance* instance = wasm::LookupFaultingInstance(*wasm_code_, pc, fp);
+    if (!instance || !instance->memoryAccessInGuardRegion((uint8_t*)addr, numBytes))
+        return false;
+
+    LLBit_ = false;
+
+    const wasm::CodeSegment* segment;
+    const wasm::MemoryAccess* memoryAccess = instance->code().lookupMemoryAccess(pc, &segment);
+    if (!memoryAccess) {
+        startInterrupt(act);
+        if (!instance->code().containsCodePC(pc, &segment))
+            MOZ_CRASH("Cannot map PC to trap handler");
+        set_pc(int32_t(segment->outOfBoundsCode()));
+        return true;
+    }
+
+    MOZ_ASSERT(memoryAccess->hasTrapOutOfLineCode());
+    set_pc(int32_t(memoryAccess->trapOutOfLineCode(segment->base())));
+    return true;
+}
+
+// MIPS memory instructions (except lwl/r and swl/r) trap on unaligned memory
+// access enabling the OS to handle them via trap-and-emulate.
+// Note that simulator runs have the runtime system running directly on the host
+// system and only generated code is executed in the simulator.
+// Since the host is typically IA32 it will not trap on unaligned memory access.
+// We assume that that executing correct generated code will not produce unaligned
+// memory access, so we explicitly check for address alignment and trap.
+// Note that trapping does not occur when executing wasm code, which requires that
+// unaligned memory access provides correct result.
 int
 Simulator::readW(uint32_t addr, SimInstruction* instr)
 {
-    if (addr < 0x400) {
-        // This has to be a NULL-dereference, drop into debugger.
-        printf("Memory read from bad address: 0x%08x, pc=0x%08" PRIxPTR "\n",
-               addr, reinterpret_cast<intptr_t>(instr));
-        MOZ_CRASH();
-    }
-    if ((addr & kPointerAlignmentMask) == 0) {
+    if (handleWasmFault(addr, 4))
+        return -1;
+
+    if ((addr & kPointerAlignmentMask) == 0 || wasm::InCompiledCode(reinterpret_cast<void *>(get_pc()))) {
         intptr_t* ptr = reinterpret_cast<intptr_t*>(addr);
         return *ptr;
     }
@@ -1661,13 +1728,10 @@ Simulator::readW(uint32_t addr, SimInstruction* instr)
 void
 Simulator::writeW(uint32_t addr, int value, SimInstruction* instr)
 {
-    if (addr < 0x400) {
-        // This has to be a NULL-dereference, drop into debugger.
-        printf("Memory write to bad address: 0x%08x, pc=0x%08" PRIxPTR "\n",
-               addr, reinterpret_cast<intptr_t>(instr));
-        MOZ_CRASH();
-    }
-    if ((addr & kPointerAlignmentMask) == 0) {
+    if (handleWasmFault(addr, 4))
+        return;
+
+    if ((addr & kPointerAlignmentMask) == 0 || wasm::InCompiledCode(reinterpret_cast<void *>(get_pc()))) {
         intptr_t* ptr = reinterpret_cast<intptr_t*>(addr);
         LLBit_ = false;
         *ptr = value;
@@ -1682,7 +1746,10 @@ Simulator::writeW(uint32_t addr, int value, SimInstruction* instr)
 double
 Simulator::readD(uint32_t addr, SimInstruction* instr)
 {
-    if ((addr & kDoubleAlignmentMask) == 0) {
+    if (handleWasmFault(addr, 8))
+        return NAN;
+
+    if ((addr & kDoubleAlignmentMask) == 0 || wasm::InCompiledCode(reinterpret_cast<void *>(get_pc()))) {
         double* ptr = reinterpret_cast<double*>(addr);
         return *ptr;
     }
@@ -1696,7 +1763,10 @@ Simulator::readD(uint32_t addr, SimInstruction* instr)
 void
 Simulator::writeD(uint32_t addr, double value, SimInstruction* instr)
 {
-    if ((addr & kDoubleAlignmentMask) == 0) {
+    if (handleWasmFault(addr, 8))
+        return;
+
+    if ((addr & kDoubleAlignmentMask) == 0 || wasm::InCompiledCode(reinterpret_cast<void *>(get_pc()))) {
         double* ptr = reinterpret_cast<double*>(addr);
         LLBit_ = false;
         *ptr = value;
@@ -1711,7 +1781,10 @@ Simulator::writeD(uint32_t addr, double value, SimInstruction* instr)
 uint16_t
 Simulator::readHU(uint32_t addr, SimInstruction* instr)
 {
-    if ((addr & 1) == 0) {
+    if (handleWasmFault(addr, 2))
+        return 0xffff;
+
+    if ((addr & 1) == 0 || wasm::InCompiledCode(reinterpret_cast<void *>(get_pc()))) {
         uint16_t* ptr = reinterpret_cast<uint16_t*>(addr);
         return *ptr;
     }
@@ -1725,7 +1798,10 @@ Simulator::readHU(uint32_t addr, SimInstruction* instr)
 int16_t
 Simulator::readH(uint32_t addr, SimInstruction* instr)
 {
-    if ((addr & 1) == 0) {
+    if (handleWasmFault(addr, 2))
+        return -1;
+
+    if ((addr & 1) == 0 || wasm::InCompiledCode(reinterpret_cast<void *>(get_pc()))) {
         int16_t* ptr = reinterpret_cast<int16_t*>(addr);
         return *ptr;
     }
@@ -1739,7 +1815,10 @@ Simulator::readH(uint32_t addr, SimInstruction* instr)
 void
 Simulator::writeH(uint32_t addr, uint16_t value, SimInstruction* instr)
 {
-    if ((addr & 1) == 0) {
+    if (handleWasmFault(addr, 2))
+        return;
+
+    if ((addr & 1) == 0 || wasm::InCompiledCode(reinterpret_cast<void *>(get_pc()))) {
         uint16_t* ptr = reinterpret_cast<uint16_t*>(addr);
         LLBit_ = false;
         *ptr = value;
@@ -1754,7 +1833,10 @@ Simulator::writeH(uint32_t addr, uint16_t value, SimInstruction* instr)
 void
 Simulator::writeH(uint32_t addr, int16_t value, SimInstruction* instr)
 {
-    if ((addr & 1) == 0) {
+    if (handleWasmFault(addr, 2))
+        return;
+
+    if ((addr & 1) == 0 || wasm::InCompiledCode(reinterpret_cast<void *>(get_pc()))) {
         int16_t* ptr = reinterpret_cast<int16_t*>(addr);
         LLBit_ = false;
         *ptr = value;
@@ -1769,6 +1851,9 @@ Simulator::writeH(uint32_t addr, int16_t value, SimInstruction* instr)
 uint32_t
 Simulator::readBU(uint32_t addr)
 {
+    if (handleWasmFault(addr, 1))
+        return 0xff;
+
     uint8_t* ptr = reinterpret_cast<uint8_t*>(addr);
     return *ptr;
 }
@@ -1776,6 +1861,9 @@ Simulator::readBU(uint32_t addr)
 int32_t
 Simulator::readB(uint32_t addr)
 {
+    if (handleWasmFault(addr, 1))
+        return -1;
+
     int8_t* ptr = reinterpret_cast<int8_t*>(addr);
     return *ptr;
 }
@@ -1783,6 +1871,9 @@ Simulator::readB(uint32_t addr)
 void
 Simulator::writeB(uint32_t addr, uint8_t value)
 {
+    if (handleWasmFault(addr, 1))
+        return;
+
     uint8_t* ptr = reinterpret_cast<uint8_t*>(addr);
     LLBit_ = false;
     *ptr = value;
@@ -1791,6 +1882,9 @@ Simulator::writeB(uint32_t addr, uint8_t value)
 void
 Simulator::writeB(uint32_t addr, int8_t value)
 {
+    if (handleWasmFault(addr, 1))
+        return;
+
     int8_t* ptr = reinterpret_cast<int8_t*>(addr);
     LLBit_ = false;
     *ptr = value;
