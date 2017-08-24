@@ -722,7 +722,7 @@ xul|*.radio-label-box {
 
   .category {
     padding-inline-start: 13px; /* make category icons align center */
-    margin-inline-end: 40px;
+    margin-inline-end: 35px;
   }
 
   .help-button {
