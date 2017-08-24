@@ -1,8 +1,10 @@
 # WebVR Reftests
 default-preferences pref(dom.vr.puppet.enabled,true) pref(dom.vr.test.enabled,true) pref(dom.vr.require-gesture,false) pref(dom.vr.puppet.submitframe,1)
 
-# VR SubmitFrame is only implemented for D3D11 now.
+# VR SubmitFrame is only implemented for D3D11 and MacOSX now.
 # We need to continue to investigate why these reftests can be run well in local,
-# but will be suspended until terminating on reftest debug build.
-skip-if(!winWidget||!layersGPUAccelerated||isDebugBuild) == draw_rect.html wrapper.html?draw_rect.png
-skip-if(!winWidget||!layersGPUAccelerated||isDebugBuild) == change_size.html wrapper.html?change_size.png
+# but will be suspended until terminating on reftest D3D11 debug build.
+skip-if(Android||gtkWidget||(winWidget&&isDebugBuild)||!layersGPUAccelerated) == draw_rect.html wrapper.html?draw_rect.png
+# On MacOSX platform, getting different color interpolation result.
+# For lower resolution Mac hardware, we need to adjust it to fuzzy-if(cocoaWidget,1,1200).
+fuzzy-if(cocoaWidget,1,600) skip-if(Android||gtkWidget||(winWidget&&isDebugBuild)||!layersGPUAccelerated) == change_size.html wrapper.html?change_size.png
