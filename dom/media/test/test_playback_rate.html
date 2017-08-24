@@ -86,7 +86,7 @@ function afterNullPlaybackRate(e) {
   t.timestamp = Date.now();
   t.oldCurrentTime = t.currentTime;
   t.playbackRate = VERY_FAST_RATE;
-  is(t.playbackRate, FAST_RATE, t.name + ": Playback rate should be clamped to " + FAST_RATE + ".");
+  is(t.playbackRate, VERY_FAST_RATE, t.name + ": Playback rate should be clamped to " + VERY_FAST_RATE + ".");
 }
 
 function onended(e) {
@@ -159,7 +159,7 @@ function startTest(test, token) {
     is(element.playbackRate, 1.0, test.name + ": playbackRate should be initially 1.0");
     is(element.defaultPlaybackRate, 1.0, test.name + ": defaultPlaybackRate should be initially 1.0");
     element.playbackRate = VERY_SLOW_RATE;
-    is(element.playbackRate, SLOW_RATE, test.name + ": PlaybackRate should be clamped to " + SLOW_RATE + ".");
+    is(element.playbackRate, VERY_SLOW_RATE, test.name + ": PlaybackRate should be " + VERY_SLOW_RATE + ".");
     element.play();
     element.playbackRate = SLOW_RATE;
   });
