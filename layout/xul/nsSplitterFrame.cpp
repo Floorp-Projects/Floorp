@@ -884,7 +884,7 @@ nsSplitterFrameInner::EnsureOrient()
 {
   bool isHorizontal = !(mParentBox->GetStateBits() & NS_STATE_IS_HORIZONTAL);
   if (isHorizontal)
-    mOuter->mState |= NS_STATE_IS_HORIZONTAL;
+    mOuter->AddStateBits(NS_STATE_IS_HORIZONTAL);
   else
     mOuter->RemoveStateBits(NS_STATE_IS_HORIZONTAL);
 }
