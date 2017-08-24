@@ -1493,7 +1493,7 @@ NativeFileWatcherService::Observe(nsISupports* aSubject, const char* aTopic,
   MOZ_ASSERT(NS_IsMainThread());
 
   if (!strcmp("xpcom-shutdown-threads", aTopic)) {
-    nsresult rv = Uninit();
+    DebugOnly<nsresult> rv = Uninit();
     MOZ_ASSERT(NS_SUCCEEDED(rv));
     return NS_OK;
   }
