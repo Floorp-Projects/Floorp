@@ -76,7 +76,6 @@ public class HomeScreen {
                     .setIntent(new Intent(shortcutIntent))
                     .build();
             shortcutManager.requestPinShortcut(shortcut, null);
-            MainActivity.requestShortcut(shortcutManager, shortcut);
         }
     }
 

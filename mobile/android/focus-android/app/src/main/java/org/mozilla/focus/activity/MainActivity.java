@@ -244,9 +244,4 @@ public class MainActivity extends LocaleAwareAppCompatActivity {
 
         super.onBackPressed();
     }
-
-    @TargetApi(26)
-    public static void requestShortcut(ShortcutManager shortcutManager, ShortcutInfo shortcut) {
-        shortcutManager.requestPinShortcut(shortcut, null);
-    }
 }
