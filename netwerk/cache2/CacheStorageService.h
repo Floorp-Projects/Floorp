@@ -85,8 +85,8 @@ public:
   void DropPrivateBrowsingEntries();
 
   // Takes care of deleting any pending trashes for both cache1 and cache2
-  // as well as the cache directory of an inactive cache version when requested.
-  static void CleaupCacheDirectories(uint32_t aVersion, uint32_t aActive);
+  // as well as old cache directory.
+  static void CleaupCacheDirectories();
 
   static CacheStorageService* Self() { return sSelf; }
   static nsISupports* SelfISupports() { return static_cast<nsICacheStorageService*>(Self()); }

@@ -2,11 +2,6 @@ function run_test()
 {
   do_get_profile();
 
-  if (!newCacheBackEndUsed()) {
-    do_check_true(true, "This test doesn't run when the old cache back end is used since the behavior is different");
-    return;
-  }
-
   var mc = new MultipleCallbacks(3, function() {
     var storage = getCacheStorage("disk");
     storage.asyncEvictStorage(
@@ -25,7 +20,7 @@ function run_test()
         );
       })
     );
-  }, !newCacheBackEndUsed());
+  });
 
   asyncOpenCacheEntry("http://mem1/", "memory", Ci.nsICacheStorage.OPEN_NORMALLY, null,
     new OpenCallback(NEW, "m2m", "m2d", function(entry) {

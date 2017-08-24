@@ -4,11 +4,6 @@ function run_test()
 {
   do_get_profile();
 
-  if (!newCacheBackEndUsed()) {
-    do_check_true(true, "This test checks only cache2 specific behavior.");
-    return;
-  }
-
   const kChunkSize = (256 * 1024);
 
   var payload = "";

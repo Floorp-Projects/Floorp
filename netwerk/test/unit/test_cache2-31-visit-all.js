@@ -7,10 +7,6 @@ function run_test()
               LoadContextInfo.custom(false, { userContextId: 3 })];
 
   do_get_profile();
-  if (!newCacheBackEndUsed()) {
-    do_check_true(true, "This test checks only cache2 specific behavior.");
-    return;
-  }
 
   var mc = new MultipleCallbacks(8, function() {
     do_execute_soon(function() {
