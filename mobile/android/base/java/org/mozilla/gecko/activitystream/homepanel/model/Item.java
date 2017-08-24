@@ -1,5 +1,6 @@
 package org.mozilla.gecko.activitystream.homepanel.model;
 
+import android.support.annotation.NonNull;
 import android.support.annotation.Nullable;
 
 /**
@@ -9,6 +10,16 @@ public interface Item {
     String getTitle();
 
     String getUrl();
+
+    /**
+     * Returns the image URL associated with this stream item.
+     *
+     * Some implementations may be slow due to lazy loading: see {@link Highlight#getImageUrl()}.
+     *
+     * @return the image URL, or the empty String when there is none.
+     */
+    @NonNull
+    String getImageUrl();
 
     /**
      * @return True if the item is bookmarked, false otherwise. Might return 'null' if the bookmark

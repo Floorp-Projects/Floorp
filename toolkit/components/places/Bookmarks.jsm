@@ -1328,7 +1328,7 @@ function insertBookmark(item, parent) {
     // bookmark just after having created it.
     let hasExistingGuid = item.hasOwnProperty("guid");
     if (!hasExistingGuid)
-      item.guid = (await db.executeCached("SELECT GENERATE_GUID() AS guid"))[0].getResultByName("guid");
+      item.guid = PlacesUtils.history.makeGuid();
 
     let isTagging = parent._parentId == PlacesUtils.tagsFolderId;
 

@@ -4,7 +4,7 @@ MAINTAINER    Nick Alexander <nalexander@mozilla.com>
 
 # BEGIN ../desktop-build/Dockerfile
 
-# TODO remove when base image is updated
+VOLUME /home/worker/checkouts
 VOLUME /home/worker/workspace
 VOLUME /home/worker/tooltool-cache
 
@@ -112,8 +112,6 @@ RUN tar zxf nexus-${NEXUS_VERSION}-bundle.tar.gz \
 
 # So that we don't have to RUN_AS_USER=root.
 RUN chown -R worker:worker /opt/sonatype/nexus/
-
-COPY nexus.xml /home/worker/workspace/nexus/conf/nexus.xml
 
 # Back to the centos6-build workdir, matching desktop-build.
 WORKDIR /home/worker

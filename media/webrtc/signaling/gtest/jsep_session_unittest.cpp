@@ -1003,10 +1003,14 @@ protected:
   ValidateDisabledMSection(const SdpMediaSection* msection)
   {
     ASSERT_EQ(1U, msection->GetFormats().size());
-    // Maybe validate that no attributes are present except rtpmap and
-    // inactive? How?
+
+    auto& attrs = msection->GetAttributeList();
+    ASSERT_TRUE(attrs.HasAttribute(SdpAttribute::kMidAttribute));
+    ASSERT_TRUE(attrs.HasAttribute(SdpAttribute::kDirectionAttribute));
     ASSERT_EQ(SdpDirectionAttribute::kInactive,
               msection->GetDirectionAttribute().mValue);
+    // attribute list is missing a length function to check if these are
+    // all the attributes in it
     if (msection->GetMediaType() == SdpMediaSection::kAudio) {
       ASSERT_EQ("0", msection->GetFormats()[0]);
       const SdpRtpmapAttributeList::Rtpmap* rtpmap(msection->FindRtpmap("0"));

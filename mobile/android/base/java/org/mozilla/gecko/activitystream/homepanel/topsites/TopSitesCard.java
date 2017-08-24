@@ -26,7 +26,6 @@ import org.mozilla.gecko.icons.IconResponse;
 import org.mozilla.gecko.icons.Icons;
 import org.mozilla.gecko.util.DrawableUtil;
 import org.mozilla.gecko.util.StringUtils;
-import org.mozilla.gecko.util.TouchTargetUtil;
 import org.mozilla.gecko.util.URIUtils;
 import org.mozilla.gecko.util.ViewUtil;
 import org.mozilla.gecko.widget.FaviconView;
@@ -72,6 +71,7 @@ import java.util.concurrent.Future;
                         extras,
                         ActivityStreamContextMenu.MenuMode.TOPSITE,
                         topSite,
+                        /* shouldOverrideWithImageProvider */ false, // we only use favicons for top sites.
                         onUrlOpenListener, onUrlOpenInBackgroundListener,
                         faviconView.getWidth(), faviconView.getHeight());
 
@@ -110,24 +110,40 @@ import java.util.concurrent.Future;
         }
         TextViewCompat.setCompoundDrawablesRelativeWithIntrinsicBounds(title, pinDrawable, null, null, null);
 
-        final URI topSiteURI;
+        setTopSiteTitle(topSite);
+    }
+
+    private void setTopSiteTitle(final TopSite topSite) {
+        URI topSiteURI = null; // not final so we can use in the Exception case.
+        boolean wasException = false;
         try {
             topSiteURI = new URI(topSite.getUrl());
         } catch (final URISyntaxException e) {
-            // If this is not a valid URI, there is not much processing we can do on it.
-            // Also, see comment below regarding setCenteredText.
-            setTopSiteTitle(title, topSite.getUrl());
-            return;
+            wasException = true;
         }
 
-        // Our AsyncTask calls setCenteredText(), which needs to have all drawable's in place to correctly
-        // layout the text, so we need to wait with requesting the title until we've set our pin icon.
-        final UpdateCardTitleAsyncTask titleAsyncTask = new UpdateCardTitleAsyncTask(itemView.getContext(),
-                topSiteURI, title);
-        titleAsyncTask.execute();
+        // At a high level, the logic is: if the path empty, use "subdomain.domain", otherwise use the
+        // page title. From a UX perspective, people refer to domains by their name ("it's on wikipedia")
+        // and it's a clean look. However, if a url has a path, it will not fit on the screen with the domain
+        // so we need an alternative: the page title is an easy win (though not always perfect, e.g. when SEO
+        // keywords are added). If we ever want better titles, we could create a heuristic to pull the title
+        // from parts of the URL, page title, etc.
+        if (wasException || !URIUtils.isPathEmpty(topSiteURI)) {
+            // See comment below regarding setCenteredText.
+            final String pageTitle = topSite.getTitle();
+            final String updateText = !TextUtils.isEmpty(pageTitle) ? pageTitle : topSite.getUrl();
+            setTopSiteTitleHelper(title, updateText);
+
+        } else {
+            // Our AsyncTask calls setCenteredText(), which needs to have all drawable's in place to correctly
+            // layout the text, so we need to wait with requesting the title until we've set our pin icon.
+            final UpdateCardTitleAsyncTask titleAsyncTask = new UpdateCardTitleAsyncTask(itemView.getContext(),
+                    topSiteURI, title);
+            titleAsyncTask.execute();
+        }
     }
 
-    private static void setTopSiteTitle(final TextView textView, final String title) {
+    private static void setTopSiteTitleHelper(final TextView textView, final String title) {
         // We use consistent padding all around the title, and the top padding is never modified,
         // so we can pass that in as the default padding:
         ViewUtil.setCenteredText(textView, title, textView.getPaddingTop());
@@ -168,7 +184,7 @@ import java.util.concurrent.Future;
             } else {
                 updateText = StringUtils.stripCommonSubdomains(hostText);
             }
-            setTopSiteTitle(titleView, updateText);
+            setTopSiteTitleHelper(titleView, updateText);
         }
 
         /**

@@ -595,6 +595,10 @@ var BrowserPageActions = {
   onContextMenu(event) {
     let node = event.originalTarget;
     this._contextAction = this.actionForNode(node);
+    // Don't show the menu if there's no action where the user clicked!
+    if (!this._contextAction) {
+      event.preventDefault();
+    }
   },
 
   /**

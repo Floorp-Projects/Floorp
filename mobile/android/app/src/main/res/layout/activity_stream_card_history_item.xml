@@ -17,7 +17,7 @@
         android:layout_width="wrap_content"
         android:layout_height="wrap_content">
 
-        <org.mozilla.gecko.activitystream.homepanel.stream.StreamPageIconLayout
+        <org.mozilla.gecko.activitystream.homepanel.stream.StreamOverridablePageIconLayout
                 android:id="@+id/icon"
                 android:layout_width="@dimen/favicon_bg"
                 android:layout_height="@dimen/favicon_bg"

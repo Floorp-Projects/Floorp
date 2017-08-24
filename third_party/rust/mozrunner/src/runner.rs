@@ -1,6 +1,7 @@
 use mozprofile::prefreader::PrefReaderError;
 use mozprofile::profile::Profile;
 use std::ascii::AsciiExt;
+use std::collections::HashMap;
 use std::convert::From;
 use std::env;
 use std::error::Error;
@@ -16,6 +17,8 @@ pub trait Runner {
     fn args(&mut self) -> &mut Vec<String>;
 
     fn build_command(&self, &mut Command);
+
+    fn envs(&mut self) -> &mut HashMap<String, String>;
 
     fn is_running(&self) -> bool;
 
@@ -70,6 +73,7 @@ impl From<PrefReaderError> for RunnerError {
 pub struct FirefoxRunner {
     pub binary: PathBuf,
     args: Vec<String>,
+    envs: HashMap<String, String>,
     process: Option<process::Child>,
     pub ret_code: Option<process::ExitStatus>,
     pub profile: Profile
@@ -82,11 +86,16 @@ impl FirefoxRunner {
             None => try!(Profile::new(None))
         };
 
+        let mut envs = HashMap::new();
+        envs.insert("MOZ_NO_REMOTE".to_string(), "1".to_string());
+        envs.insert("NO_EM_RESTART".to_string(), "1".to_string());
+
         Ok(FirefoxRunner {
             binary: binary.to_path_buf(),
             process: None,
             ret_code: None,
             args: Vec::new(),
+            envs: envs,
             profile: prof
         })
     }
@@ -113,15 +122,18 @@ impl Runner for FirefoxRunner {
 
     fn build_command(&self, command: &mut Command) {
         command
-            .env("MOZ_NO_REMOTE", "1")
-            .env("NO_EM_RESTART", "1")
-            .args(&self.args[..]);
+            .args(&self.args[..])
+            .envs(&self.envs);
 
         if !self.args.iter().any(|x| is_profile_arg(x)) {
             command.arg("-profile").arg(&self.profile.path);
         }
         command.stdout(Stdio::inherit())
             .stderr(Stdio::inherit());
+    }
+
+    fn envs(&mut self) -> &mut HashMap<String, String> {
+        &mut self.envs
     }
 
     fn is_running(&self) -> bool {

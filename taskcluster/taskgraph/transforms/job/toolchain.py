@@ -59,6 +59,10 @@ def add_optimizations(config, run, taskdesc):
     files.append('taskcluster/taskgraph/transforms/job/toolchain.py')
     # The script
     files.append('taskcluster/scripts/misc/{}'.format(run['script']))
+    # Tooltool manifest if any is defined:
+    tooltool_manifest = taskdesc['worker']['env'].get('TOOLTOOL_MANIFEST')
+    if tooltool_manifest:
+        files.append(tooltool_manifest)
 
     digest = hash_paths(GECKO, files)
 
@@ -118,9 +122,6 @@ def docker_worker_toolchain(config, job, taskdesc):
 
     worker['command'] = [
         '/home/worker/bin/run-task',
-        # Various caches/volumes are default owned by root:root.
-        '--chown-recursive', '/home/worker/workspace',
-        '--chown-recursive', '/home/worker/tooltool-cache',
         '--vcs-checkout=/home/worker/workspace/build/src',
         '--',
         'bash',

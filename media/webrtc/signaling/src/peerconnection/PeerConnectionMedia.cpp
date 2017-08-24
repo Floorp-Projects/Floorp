@@ -952,6 +952,12 @@ PeerConnectionMedia::EnsureIceGathering_s(bool aDefaultRouteOnly,
     return;
   }
 
+  // Belt and suspenders - in e10s mode, the call below to SetStunAddrs
+  // needs to have the proper flags set on ice ctx.  For non-e10s,
+  // setting those flags happens in StartGathering.  We could probably
+  // just set them here, and only do it here.
+  mIceCtxHdlr->ctx()->SetCtxFlags(aDefaultRouteOnly, aProxyOnly);
+
   if (mStunAddrs.Length()) {
     mIceCtxHdlr->ctx()->SetStunAddrs(mStunAddrs);
   }

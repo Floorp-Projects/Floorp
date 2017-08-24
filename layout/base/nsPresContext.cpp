@@ -1081,7 +1081,12 @@ nsPresContext::DoChangeCharSet(NotNull<const Encoding*> aCharSet)
 {
   UpdateCharSet(aCharSet);
   mDeviceContext->FlushFontCache();
-  RebuildAllStyleData(NS_STYLE_HINT_REFLOW, nsRestyleHint(0));
+  // In Stylo, if a document contains one or more <script> elements, frame
+  // construction might happen earlier than the UpdateCharSet(), so we need to
+  // restyle descendants to make their style data up-to-date.
+  RebuildAllStyleData(NS_STYLE_HINT_REFLOW,
+                      mDocument->IsStyledByServo()
+                      ? eRestyle_ForceDescendants : nsRestyleHint(0));
 }
 
 void

@@ -84,12 +84,11 @@ ObjectActor.prototype = {
       "actor": this.actorID
     };
 
-    // If it's a proxy, lie and tell that it belongs to an invented
-    // "Proxy" class, and avoid calling the [[IsExtensible]] trap
-    if (this.obj.isProxy) {
+    // If it's a proxy, lie and tell that it belongs to an invented "Proxy" class.
+    // The `isProxy` function detects them even behind non-opaque security wrappers,
+    // which is useful to avoid running proxy traps through transparent wrappers.
+    if (isProxy(this.obj)) {
       g.class = "Proxy";
-      g.proxyTarget = this.hooks.createValueGrip(this.obj.proxyTarget);
-      g.proxyHandler = this.hooks.createValueGrip(this.obj.proxyHandler);
     } else {
       try {
         g.class = this.obj.class;
@@ -99,7 +98,7 @@ ObjectActor.prototype = {
       } catch (e) {
         // Handle cases where the underlying object's calls to isExtensible, etc throw.
         // This is possible with ProxyObjects like CPOWs. Note these are different from
-        // scripted Proxies created via `new Proxy`, which match this.obj.isProxy above.
+        // scripted Proxies created via `new Proxy`, which match isProxy(this.obj) above.
       }
     }
 
@@ -263,8 +262,31 @@ ObjectActor.prototype = {
   },
 
   /**
+   * Creates an actor to iterate over an object symbols properties.
+   */
+  onEnumSymbols: function () {
+    let actor = new SymbolIteratorActor(this);
+    this.registeredPool.addActor(actor);
+    this.iterators.add(actor);
+    return { iterator: actor.grip() };
+  },
+
+  /**
    * Handle a protocol request to provide the prototype and own properties of
    * the object.
+   *
+   * @returns {Object} An object containing the data of this.obj, of the following form:
+   *          - {string} from: this.obj's actorID.
+   *          - {Object} prototype: The descriptor of this.obj's prototype.
+   *          - {Object} ownProperties: an object where the keys are the names of the
+   *                     this.obj's ownProperties, and the values the descriptors of
+   *                     the properties.
+   *          - {Array} ownSymbols: An array containing all descriptors of this.obj's
+   *                    ownSymbols. Here we have an array, and not an object like for
+   *                    ownProperties, because we can have multiple symbols with the same
+   *                    name in this.obj, e.g. `{[Symbol()]: "a", [Symbol()]: "b"}`.
+   *          - {Object} safeGetterValues: an object that maps this.obj's property names
+   *                     with safe getters descriptors.
    */
   onPrototypeAndProperties: function () {
     let ownProperties = Object.create(null);
@@ -320,7 +342,7 @@ ObjectActor.prototype = {
     let level = 0, i = 0;
 
     // Do not search safe getters in proxy objects.
-    if (obj.isProxy) {
+    if (isProxy(obj)) {
       return safeGetterValues;
     }
 
@@ -335,7 +357,7 @@ ObjectActor.prototype = {
     }
 
     // Stop iterating when the prototype chain ends or a proxy is found.
-    while (obj && !obj.isProxy) {
+    while (obj && !isProxy(obj)) {
       let getters = this._findSafeGetters(obj);
       for (let name of getters) {
         // Avoid overwriting properties from prototypes closer to this.obj. Also
@@ -751,6 +773,7 @@ ObjectActor.prototype.requestTypes = {
   "fulfillmentStack": ObjectActor.prototype.onFulfillmentStack,
   "rejectionStack": ObjectActor.prototype.onRejectionStack,
   "enumEntries": ObjectActor.prototype.onEnumEntries,
+  "enumSymbols": ObjectActor.prototype.onEnumSymbols,
 };
 
 /**
@@ -833,7 +856,7 @@ PropertyIteratorActor.prototype = {
   },
 
   all() {
-    return this.slice({ start: 0, count: this.length });
+    return this.slice({ start: 0, count: this.iterator.size });
   }
 };
 
@@ -1126,6 +1149,58 @@ function enumWeakSetEntries(objectActor) {
 }
 
 /**
+ * Creates an actor to iterate over an object's symbols.
+ *
+ * @param objectActor ObjectActor
+ *        The object actor.
+ */
+function SymbolIteratorActor(objectActor) {
+  const symbols =  objectActor.obj.getOwnPropertySymbols();
+
+  this.iterator = {
+    size: symbols.length,
+    symbolDescription(index) {
+      const symbol = symbols[index];
+      return {
+        name: symbol.toString(),
+        descriptor: objectActor._propertyDescriptor(symbol, true)
+      };
+    }
+  };
+}
+
+SymbolIteratorActor.prototype = {
+  actorPrefix: "symbolIterator",
+
+  grip() {
+    return {
+      type: this.actorPrefix,
+      actor: this.actorID,
+      count: this.iterator.size
+    };
+  },
+
+  slice({ start, count }) {
+    let ownSymbols = [];
+    for (let i = start, m = start + count; i < m; i++) {
+      ownSymbols.push(this.iterator.symbolDescription(i));
+    }
+    return {
+      ownSymbols
+    };
+  },
+
+  all() {
+    return this.slice({ start: 0, count: this.iterator.size });
+  }
+};
+
+SymbolIteratorActor.prototype.requestTypes = {
+  "slice": SymbolIteratorActor.prototype.slice,
+  "all": SymbolIteratorActor.prototype.all,
+};
+
+/**
  * Functions for adding information to ObjectActor grips for the purpose of
  * having customized output. This object holds arrays mapped by
  * Debugger.Object.prototype.class.
@@ -1389,18 +1464,28 @@ DebuggerServer.ObjectActorPreviewers = {
   }],
 
   Proxy: [function ({obj, hooks}, grip, rawObj) {
+    // The `isProxy` getter of the debuggee object only detects proxies without
+    // security wrappers. If false, the target and handler are not available.
+    let hasTargetAndHandler = obj.isProxy;
+    if (hasTargetAndHandler) {
+      grip.proxyTarget = hooks.createValueGrip(obj.proxyTarget);
+      grip.proxyHandler = hooks.createValueGrip(obj.proxyHandler);
+    }
+
     grip.preview = {
       kind: "Object",
       ownProperties: Object.create(null),
-      ownPropertiesLength: 2
+      ownPropertiesLength: 2 * hasTargetAndHandler
     };
 
     if (hooks.getGripDepth() > 1) {
       return true;
     }
 
-    grip.preview.ownProperties["<target>"] = {value: grip.proxyTarget};
-    grip.preview.ownProperties["<handler>"] = {value: grip.proxyHandler};
+    if (hasTargetAndHandler) {
+      grip.preview.ownProperties["<target>"] = {value: grip.proxyTarget};
+      grip.preview.ownProperties["<handler>"] = {value: grip.proxyHandler};
+    }
 
     return true;
   }],
@@ -2368,6 +2453,41 @@ function arrayBufferGrip(buffer, pool) {
   pool.addActor(actor);
   pool.arrayBufferActors.set(buffer, actor);
   return actor.grip();
+}
+
+/**
+ * Determines whether the referent of a debuggee object is a scripted proxy.
+ * Non-opaque security wrappers are unwrapped first before the check.
+ *
+ * @param obj Debugger.Object
+ *        The debuggee object to be checked.
+ */
+function isProxy(obj) {
+  // Check if the object is a proxy without security wrappers.
+  if (obj.isProxy) {
+    return true;
+  }
+
+  // No need to remove opaque wrappers since they prevent proxy traps from running.
+  if (obj.class === "Opaque") {
+    return false;
+  }
+
+  // Attempt to unwrap. If the debugger can't unwrap, then proxy traps won't be
+  // allowed to run either, so the object can be safely assumed to not be a proxy.
+  let unwrapped;
+  try {
+    unwrapped = obj.unwrap();
+  } catch (err) {
+    return false;
+  }
+
+  if (!unwrapped || unwrapped === obj) {
+    return false;
+  }
+
+  // Recursively check whether the unwrapped object is a proxy.
+  return isProxy(unwrapped);
 }
 
 exports.ObjectActor = ObjectActor;

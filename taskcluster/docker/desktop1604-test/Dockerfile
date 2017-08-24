@@ -4,6 +4,14 @@ MAINTAINER    Joel Maher <joel.maher@gmail.com>
 RUN useradd -d /home/worker -s /bin/bash -m worker
 WORKDIR /home/worker
 
+# We need to declare all potentially cache volumes as caches. Also,
+# making high I/O paths volumes increase I/O throughput because of
+# AUFS slowness.
+VOLUME /home/worker/.cache
+VOLUME /home/worker/checkouts
+VOLUME /home/worker/tooltool-cache
+VOLUME /home/worker/workspace
+
 # %include python/mozbuild/mozbuild/action/tooltool.py
 ADD topsrcdir/python/mozbuild/mozbuild/action/tooltool.py /setup/tooltool.py
 
@@ -36,12 +44,6 @@ ADD topsrcdir/taskcluster/docker/recipes/run-task /home/worker/bin/run-task
 
 # %include taskcluster/scripts/tester/test-linux.sh
 ADD topsrcdir/taskcluster/scripts/tester/test-linux.sh /home/worker/bin/test-linux.sh
-
-# This will create a host mounted filesystem when the cache is stripped
-# on Try. This cancels out some of the performance losses of aufs. See
-# bug 1291940.
-VOLUME /home/worker/checkouts
-VOLUME /home/worker/workspace
 
 # Set variable normally configured at login, by the shells parent process, these
 # are taken from GNU su manual
@@ -78,9 +80,6 @@ ENV PATH $PATH:/home/worker/bin
 
 # TODO Re-enable worker when bug 1093833 lands
 #USER          worker
-
-# clean up
-RUN rm -Rf .cache && mkdir -p .cache
 
 # Disable Ubuntu update prompt
 # http://askubuntu.com/questions/515161/ubuntu-12-04-disable-release-notification-of-14-04-in-update-manager

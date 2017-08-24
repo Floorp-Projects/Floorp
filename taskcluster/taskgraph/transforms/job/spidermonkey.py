@@ -36,15 +36,13 @@ def docker_worker_spidermonkey(config, job, taskdesc):
 
     worker = taskdesc['worker']
     worker['artifacts'] = []
-    worker['caches'] = []
-
-    if int(config.params['level']) > 1:
-        worker['caches'].append({
-            'type': 'persistent',
-            'name': 'level-{}-{}-build-spidermonkey-workspace'.format(
-                config.params['level'], config.params['project']),
-            'mount-point': "/home/worker/workspace",
-        })
+    worker.setdefault('caches', []).append({
+        'type': 'persistent',
+        'name': 'level-{}-{}-build-spidermonkey-workspace'.format(
+            config.params['level'], config.params['project']),
+        'mount-point': "/home/worker/workspace",
+        'skip-untrusted': True,
+    })
 
     docker_worker_add_public_artifacts(config, job, taskdesc)
     docker_worker_add_tooltool(config, job, taskdesc)
@@ -67,8 +65,6 @@ def docker_worker_spidermonkey(config, job, taskdesc):
 
     worker['command'] = [
         '/home/worker/bin/run-task',
-        '--chown-recursive', '/home/worker/workspace',
-        '--chown-recursive', '/home/worker/tooltool-cache',
         '--vcs-checkout', '/home/worker/workspace/build/src',
         '--',
         '/bin/bash',

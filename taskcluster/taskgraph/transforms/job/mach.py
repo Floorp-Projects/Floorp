@@ -29,7 +29,7 @@ def docker_worker_mach(config, job, taskdesc):
     run = job['run']
 
     # defer to the run_task implementation
-    run['command'] = 'cd ~/checkouts/gecko && ./mach ' + run['mach']
+    run['command'] = 'cd /home/worker/checkouts/gecko && ./mach ' + run['mach']
     run['checkout'] = True
     del run['mach']
     if job['worker']['implementation'] == 'docker-worker':

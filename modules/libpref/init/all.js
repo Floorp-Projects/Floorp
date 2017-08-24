@@ -4970,7 +4970,9 @@ pref("extensions.webextensions.identity.redirectDomain", "extensions.allizom.org
 pref("extensions.webextensions.themes.enabled", false);
 pref("extensions.webextensions.themes.icons.enabled", false);
 pref("extensions.webextensions.remote", false);
-// Whether or not the moz-extension resource loads are remoted
+// Whether or not the moz-extension resource loads are remoted. For debugging
+// purposes only. Setting this to false will break moz-extension URI loading
+// unless other process sandboxing and extension remoting prefs are changed.
 pref("extensions.webextensions.protocol.remote", true);
 
 // Report Site Issue button
@@ -5347,8 +5349,8 @@ pref("urlclassifier.phishTable", "googpub-phish-shavar,test-phish-simple");
 #endif
 
 // Tables for application reputation
-pref("urlclassifier.downloadAllowTable", "goog-downloadwhite-proto");
-pref("urlclassifier.downloadBlockTable", "goog-badbinurl-proto");
+pref("urlclassifier.downloadAllowTable", "goog-downloadwhite-digest256");
+pref("urlclassifier.downloadBlockTable", "goog-badbinurl-shavar");
 
 // Tables for login reputation
 pref("urlclassifier.passwordAllowTable", "goog-passwordwhite-proto");

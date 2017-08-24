@@ -454,7 +454,7 @@ import java.util.concurrent.ConcurrentHashMap;
 
         // There's book-keeping which needs to happen with versions, and so we need to pass
         // along the new localVersion.
-        delegate.onRecordStoreReconciled(replaced.guid, replaced.localVersion);
+        delegate.onRecordStoreReconciled(replaced.guid, existingRecord.guid, replaced.localVersion);
         delegate.onRecordStoreSucceeded(replaced.guid);
         return true;
     }

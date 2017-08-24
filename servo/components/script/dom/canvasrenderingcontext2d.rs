@@ -51,7 +51,7 @@ use std::sync::Arc;
 use unpremultiplytable::UNPREMULTIPLY_TABLE;
 
 #[must_root]
-#[derive(JSTraceable, Clone, HeapSizeOf)]
+#[derive(Clone, HeapSizeOf, JSTraceable)]
 #[allow(dead_code)]
 enum CanvasFillOrStrokeStyle {
     Color(RGBA),
@@ -81,7 +81,7 @@ pub struct CanvasRenderingContext2D {
 }
 
 #[must_root]
-#[derive(JSTraceable, Clone, HeapSizeOf)]
+#[derive(Clone, HeapSizeOf, JSTraceable)]
 struct CanvasContextState {
     global_alpha: f64,
     global_composition: CompositionOrBlending,
@@ -798,6 +798,13 @@ impl CanvasRenderingContext2DMethods for CanvasRenderingContext2D {
             .send(CanvasMsg::Canvas2d(Canvas2dMsg::IsPointInPath(x, y, fill_rule, sender)))
             .unwrap();
         receiver.recv().unwrap()
+    }
+
+    // https://html.spec.whatwg.org/multipage/#dom-context-2d-filltext
+    fn FillText(&self, text: DOMString, x: f64, y: f64, max_width: Option<f64>) {
+        let parsed_text: String = text.into();
+        self.ipc_renderer.send(CanvasMsg::Canvas2d(Canvas2dMsg::FillText(parsed_text, x, y, max_width))).unwrap();
+        self.mark_as_dirty();
     }
 
     // https://html.spec.whatwg.org/multipage/#dom-context-2d-drawimage

@@ -231,7 +231,9 @@ public class testActivityStreamContextMenu extends BaseTest {
     private void testMenuForItem(Item item, boolean bookmarked, boolean pinned, boolean visited) {
         final View anchor = new View(getActivity());
         final ActivityStreamContextMenu menu = ActivityStreamContextMenu.show(
-                getActivity(), anchor, ActivityStreamTelemetry.Extras.builder(), ActivityStreamContextMenu.MenuMode.HIGHLIGHT, item, null, null, 100, 100);
+                getActivity(), anchor, ActivityStreamTelemetry.Extras.builder(),
+                ActivityStreamContextMenu.MenuMode.HIGHLIGHT, item,
+                false, null, null, 100, 100);
 
         final int expectedBookmarkString;
         if (bookmarked) {

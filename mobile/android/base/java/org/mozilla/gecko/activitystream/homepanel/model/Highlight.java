@@ -6,6 +6,7 @@
 package org.mozilla.gecko.activitystream.homepanel.model;
 
 import android.database.Cursor;
+import android.support.annotation.NonNull;
 import android.support.annotation.Nullable;
 import android.support.annotation.VisibleForTesting;
 import android.text.TextUtils;
@@ -129,11 +130,27 @@ public class Highlight implements Item {
      * - {@link #getFastImageURLForComparison()}
      * - {@link #hasFastImageURL()}
      */
+    @NonNull
     public Metadata getMetadataSlow() {
         if (metadata == null) {
             metadata = new Metadata(metadataJSON);
         }
         return metadata;
+    }
+
+    /**
+     * Returns the image URL associated with this Highlight.
+     *
+     * This implementation may be slow: see {@link #getMetadataSlow()}.
+     *
+     * @return the image URL, or the empty String if there is none.
+     */
+    @NonNull
+    @Override
+    public String getImageUrl() {
+        final Metadata metadata = getMetadataSlow();
+        final String imageUrl = metadata.getImageUrl();
+        return imageUrl != null ? imageUrl : "";
     }
 
     /**

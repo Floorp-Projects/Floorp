@@ -1,33 +1,40 @@
 <?xml version="1.0" encoding="utf-8"?>
+<!-- This Source Code Form is subject to the terms of the Mozilla Public
+   - License, v. 2.0. If a copy of the MPL was not distributed with this
+   - file, You can obtain one at http://mozilla.org/MPL/2.0/. -->
 <LinearLayout
     xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:app="http://schemas.android.com/apk/res-auto"
-    xmlns:gecko="http://schemas.android.com/apk/res-auto"
     xmlns:tools="http://schemas.android.com/tools"
     android:layout_width="match_parent"
     android:layout_height="wrap_content"
     android:orientation="vertical">
 
+    <!-- a11y: When the dialog first appears, the title is announced so there is no
+         need to allow refocusing the title.
+
+         Also, we override the a11y title of the dialog in code. If you change the text in id/url or id/title,
+         update the code! -->
     <RelativeLayout
         android:id="@+id/info_wrapper"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:padding="10dp">
+        android:padding="10dp"
+        android:importantForAccessibility="noHideDescendants">
 
-        <org.mozilla.gecko.widget.FaviconView
-            android:id="@+id/icon"
-            android:layout_width="@dimen/favicon_bg"
-            android:layout_height="@dimen/favicon_bg"
-            android:layout_gravity="center"
-            gecko:enableRoundCorners="false"
-            tools:background="@drawable/favicon_globe"/>
+        <org.mozilla.gecko.activitystream.homepanel.stream.StreamOverridablePageIconLayout
+                android:id="@+id/page_icon_layout"
+                android:layout_width="@dimen/favicon_bg"
+                android:layout_height="@dimen/favicon_bg"
+                android:layout_gravity="center"
+                tools:background="@drawable/favicon_globe"/>
 
         <TextView
             android:id="@+id/url"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:layout_toEndOf="@id/icon"
-            android:layout_toRightOf="@id/icon"
+            android:layout_toEndOf="@id/page_icon_layout"
+            android:layout_toRightOf="@id/page_icon_layout"
             android:paddingLeft="@dimen/activity_stream_base_margin"
             android:paddingStart="@dimen/activity_stream_base_margin"
             android:textColor="@color/activity_stream_subtitle"
@@ -39,8 +46,8 @@
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
             android:layout_below="@id/url"
-            android:layout_toEndOf="@id/icon"
-            android:layout_toRightOf="@id/icon"
+            android:layout_toEndOf="@id/page_icon_layout"
+            android:layout_toRightOf="@id/page_icon_layout"
             android:ellipsize="end"
             android:maxLines="3"
             android:paddingLeft="@dimen/activity_stream_base_margin"
