@@ -5315,7 +5315,7 @@ SVGTextFrame::DoReflow()
     kid->MarkIntrinsicISizesDirty();
   }
 
-  mState |= NS_STATE_SVG_TEXT_IN_REFLOW;
+  AddStateBits(NS_STATE_SVG_TEXT_IN_REFLOW);
 
   nscoord inlineSize = kid->GetPrefISize(renderingContext);
   WritingMode wm = kid->GetWritingMode();
