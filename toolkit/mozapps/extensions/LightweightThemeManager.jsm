@@ -23,8 +23,6 @@ const ADDON_TYPE_WEBEXT      = "webextension-theme";
 
 const URI_EXTENSION_STRINGS  = "chrome://mozapps/locale/extensions/extensions.properties";
 
-const STRING_TYPE_NAME       = "type.%ID%.name";
-
 const DEFAULT_MAX_USED_THEMES_COUNT = 30;
 
 const MAX_PREVIEW_SECONDS = 30;
@@ -901,6 +899,6 @@ function _persistProgressListener(successCallback) {
 
 AddonManagerPrivate.registerProvider(LightweightThemeManager, [
   new AddonManagerPrivate.AddonType("theme", URI_EXTENSION_STRINGS,
-                                    STRING_TYPE_NAME,
+                                    "type.themes.name",
                                     AddonManager.VIEW_TYPE_LIST, 5000)
 ]);
