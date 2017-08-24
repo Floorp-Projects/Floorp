@@ -990,6 +990,7 @@ parent:
                        bool aCalledFromJS,
                        bool aPositionSpecified,
                        bool aSizeSpecified,
+                       OptionalURIParams aURIToLoad,
                        nsCString aFeatures,
                        nsCString aBaseURI,
                        float aFullZoom,

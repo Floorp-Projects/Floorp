@@ -112,6 +112,20 @@ interface nsIBrowserDOMWindow : nsISupports
                       in nsIPrincipal aTriggeringPrincipal);
 
   /**
+   * As above, but return the nsIFrameLoaderOwner for the new window.
+   *
+   * Additional Parameters:
+   * @param aNextTabParentId The TabParent to associate the window with.
+   * @param aName The name to give the window opened in the new tab.
+   * @return The nsIFrameLoaderOwner for the newly opened window.
+   */
+  nsIFrameLoaderOwner
+  createContentWindowInFrame(in nsIURI aURI, in nsIOpenURIInFrameParams params,
+                             in short aWhere, in long aFlags,
+                             in unsigned long long aNextTabParentId,
+                             in AString aName);
+
+  /**
    * Load a URI.
 
    * @param aURI the URI to open. null is not allowed. To create the window
@@ -132,16 +146,17 @@ interface nsIBrowserDOMWindow : nsISupports
    * As above, but return the nsIFrameLoaderOwner for the new window.
    *
    * Additional Parameters:
-   * @param aNextTabParentId The TabParent to associate the window with
+   * @param aNextTabParentId The TabParent to associate the window with.
    * @param aName The name to give the window opened in the new tab.
    * @return The nsIFrameLoaderOwner for the newly opened window.
    // XXXbz is this the right API?
    // See bug 537428
    */
-  nsIFrameLoaderOwner openURIInFrame(in nsIURI aURI, in nsIOpenURIInFrameParams params,
-                                     in short aWhere, in long aFlags,
-                                     in unsigned long long aNextTabParentId,
-                                     in AString aName);
+  nsIFrameLoaderOwner
+  openURIInFrame(in nsIURI aURI, in nsIOpenURIInFrameParams params,
+                 in short aWhere, in long aFlags,
+                 in unsigned long long aNextTabParentId,
+                 in AString aName);
 
   /**
    * @param  aWindow the window to test.
