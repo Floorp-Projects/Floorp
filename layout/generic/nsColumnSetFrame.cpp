@@ -31,7 +31,7 @@ public:
    * Returns the frame's visual overflow rect instead of the frame's bounds.
    */
   virtual nsRect GetBounds(nsDisplayListBuilder* aBuilder,
-                           bool* aSnap) override
+                           bool* aSnap) const override
   {
     *aSnap = false;
     return static_cast<nsColumnSetFrame*>(mFrame)->CalculateBounds(ToReferenceFrame());

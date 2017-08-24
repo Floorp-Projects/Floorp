@@ -901,7 +901,7 @@ public:
 #endif
 
   nsRect GetBounds(nsDisplayListBuilder* aBuilder,
-                           bool* aSnap) override;
+                   bool* aSnap) const override;
 
   NS_DISPLAY_DECL_NAME("PluginReadback", TYPE_PLUGIN_READBACK)
 
@@ -921,21 +921,24 @@ public:
 };
 
 static nsRect
-GetDisplayItemBounds(nsDisplayListBuilder* aBuilder, nsDisplayItem* aItem, nsIFrame* aFrame)
+GetDisplayItemBounds(nsDisplayListBuilder* aBuilder,
+                     const nsDisplayItem* aItem,
+                     nsIFrame* aFrame)
 {
   // XXX For slightly more accurate region computations we should pixel-snap this
   return aFrame->GetContentRectRelativeToSelf() + aItem->ToReferenceFrame();
 }
 
 nsRect
-nsDisplayPluginReadback::GetBounds(nsDisplayListBuilder* aBuilder, bool* aSnap)
+nsDisplayPluginReadback::GetBounds(nsDisplayListBuilder* aBuilder,
+                                   bool* aSnap) const
 {
   *aSnap = false;
   return GetDisplayItemBounds(aBuilder, this, mFrame);
 }
 
 nsRect
-nsDisplayPlugin::GetBounds(nsDisplayListBuilder* aBuilder, bool* aSnap)
+nsDisplayPlugin::GetBounds(nsDisplayListBuilder* aBuilder, bool* aSnap) const
 {
   *aSnap = true;
   return GetDisplayItemBounds(aBuilder, this, mFrame);
@@ -1011,7 +1014,7 @@ nsDisplayPlugin::ComputeVisibility(nsDisplayListBuilder* aBuilder,
 
 nsRegion
 nsDisplayPlugin::GetOpaqueRegion(nsDisplayListBuilder* aBuilder,
-                                 bool* aSnap)
+                                 bool* aSnap) const
 {
   *aSnap = false;
   nsRegion result;
@@ -1314,7 +1317,7 @@ nsPluginFrame::PrintPlugin(gfxContext& aRenderingContext,
 }
 
 nsRect
-nsPluginFrame::GetPaintedRect(nsDisplayPlugin* aItem)
+nsPluginFrame::GetPaintedRect(const nsDisplayPlugin* aItem) const
 {
   if (!mInstanceOwner)
     return nsRect();
