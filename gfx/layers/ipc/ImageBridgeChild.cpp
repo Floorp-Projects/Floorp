@@ -351,38 +351,6 @@ ImageBridgeChild::GetSingleton()
 }
 
 void
-ImageBridgeChild::ReleaseTextureClientNow(TextureClient* aClient)
-{
-  MOZ_ASSERT(InImageBridgeChildThread());
-  RELEASE_MANUALLY(aClient);
-}
-
-/* static */ void
-ImageBridgeChild::DispatchReleaseTextureClient(TextureClient* aClient)
-{
-  if (!aClient) {
-    return;
-  }
-
-  RefPtr<ImageBridgeChild> imageBridge = ImageBridgeChild::GetSingleton();
-  if (!imageBridge) {
-    // TextureClient::Release should normally happen in the ImageBridgeChild
-    // thread because it usually generate some IPDL messages.
-    // However, if we take this branch it means that the ImageBridgeChild
-    // has already shut down, along with the TextureChild, which means no
-    // message will be sent and it is safe to run this code from any thread.
-    RELEASE_MANUALLY(aClient);
-    return;
-  }
-
-  RefPtr<Runnable> runnable = WrapRunnable(
-    imageBridge,
-    &ImageBridgeChild::ReleaseTextureClientNow,
-    aClient);
-  imageBridge->GetMessageLoop()->PostTask(runnable.forget());
-}
-
-void
 ImageBridgeChild::UpdateImageClient(RefPtr<ImageContainer> aContainer)
 {
   if (!aContainer) {
