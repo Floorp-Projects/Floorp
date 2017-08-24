@@ -16,7 +16,7 @@
 #include "nsIDOMElement.h"
 #include "nsIURL.h"
 #include "nsIChannel.h"
-#include "nsXPIDLString.h"
+#include "nsString.h"
 #include "plstr.h"
 #include "nsIContent.h"
 #include "nsIDocument.h"

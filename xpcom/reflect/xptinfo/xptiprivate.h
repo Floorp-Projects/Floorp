@@ -41,7 +41,7 @@
 #include "nsCOMArray.h"
 #include "nsQuickSort.h"
 
-#include "nsXPIDLString.h"
+#include "nsString.h"
 
 #include "nsIInputStream.h"
 

@@ -6,14 +6,10 @@
 
 /* nsStringFwd.h --- forward declarations for string classes */
 
-#ifndef nsStringFwd_h___
-#define nsStringFwd_h___
+#ifndef nsStringFwd_h
+#define nsStringFwd_h
 
 #include "nscore.h"
-
-#ifndef MOZILLA_INTERNAL_API
-#error Internal string headers are not available from external-linkage code.
-#endif
 
 namespace mozilla {
 namespace detail {
@@ -49,6 +45,5 @@ class nsDependentCSubstring;
 class nsPromiseFlatCString;
 class nsCStringComparator;
 class nsDefaultCStringComparator;
-class nsXPIDLCString; // deprecated
 
-#endif /* !defined(nsStringFwd_h___) */
+#endif /* !defined(nsStringFwd_h) */

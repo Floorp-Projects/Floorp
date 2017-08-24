@@ -18,7 +18,6 @@
 #include "nsNameSpaceManager.h"
 #include "nsString.h"
 #include "nsUnicharUtils.h"
-#include "nsXPIDLString.h"
 #include "nsIServiceManager.h"
 #include "nsIDocumentEncoder.h"
 #include "nsGkAtoms.h"

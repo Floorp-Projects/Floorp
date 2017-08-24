@@ -33,7 +33,7 @@
 #include "nsIDOMWindow.h"
 #include "nsIServiceManager.h"
 #include "nsIScriptError.h"
-#include "nsXPIDLString.h"
+#include "nsString.h"
 #include "nsReadableUtils.h"
 #include "nsGkAtoms.h"
 #include "nsIXPConnect.h"

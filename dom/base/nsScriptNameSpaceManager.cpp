@@ -17,7 +17,7 @@
 #include "nsIInterfaceInfoManager.h"
 #include "nsIInterfaceInfo.h"
 #include "xptinfo.h"
-#include "nsXPIDLString.h"
+#include "nsString.h"
 #include "nsReadableUtils.h"
 #include "nsHashKeys.h"
 #include "nsDOMClassInfo.h"

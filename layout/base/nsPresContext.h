@@ -17,6 +17,7 @@
 #include "nsCOMPtr.h"
 #include "nsIPresShell.h"
 #include "nsRect.h"
+#include "nsStringFwd.h"
 #include "nsFont.h"
 #include "gfxFontConstants.h"
 #include "nsIAtom.h"
@@ -46,7 +47,6 @@
 #include "mozilla/StaticPresData.h"
 #include "mozilla/StyleBackendType.h"
 
-class nsAString;
 class nsBidi;
 class nsIPrintSettings;
 class nsDocShell;

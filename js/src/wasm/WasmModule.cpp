@@ -230,6 +230,94 @@ LinkData::sizeOfExcludingThis(MallocSizeOf mallocSizeOf) const
     return sum;
 }
 
+class Module::Tier2GeneratorTaskImpl : public Tier2GeneratorTask
+{
+    SharedModule            module_;
+    SharedCompileArgs       compileArgs_;
+    Atomic<bool>            cancelled_;
+    bool                    finished_;
+
+  public:
+    Tier2GeneratorTaskImpl(Module& module, const CompileArgs& compileArgs)
+      : module_(&module),
+        compileArgs_(&compileArgs),
+        cancelled_(false),
+        finished_(false)
+    {}
+
+    ~Tier2GeneratorTaskImpl() override {
+        if (!finished_)
+            module_->unblockOnTier2GeneratorFinished(CompileMode::Once);
+    }
+
+    void cancel() override {
+        cancelled_ = true;
+    }
+
+    void execute() override {
+        MOZ_ASSERT(!finished_);
+        finished_ = CompileTier2(*module_, *compileArgs_, &cancelled_);
+    }
+};
+
+void
+Module::startTier2(const CompileArgs& args)
+{
+    MOZ_ASSERT(mode_ == CompileMode::Once);
+
+    // If a Module initiates tier-2 compilation, we must ensure that eventually
+    // unblockOnTier2GeneratorFinished() is called. Since we must ensure
+    // Tier2GeneratorTaskImpl objects are destroyed *anyway*, we use
+    // ~Tier2GeneratorTaskImpl() to call unblockOnTier2GeneratorFinished() if it
+    // hasn't been already.
+
+    UniqueTier2GeneratorTask task(js_new<Tier2GeneratorTaskImpl>(*this, args));
+    if (!task)
+        return;
+
+    {
+        LockGuard<Mutex> l(tier2Lock_);
+        mode_ = CompileMode::Tier1;
+    }
+
+    StartOffThreadWasmTier2Generator(Move(task));
+}
+
+void
+Module::finishTier2(UniqueLinkDataTier linkData2, UniqueMetadataTier metadata2,
+                    UniqueConstCodeSegment code2, UniqueModuleEnvironment env2)
+{
+    // Install the data in the data structures. They will not be visible yet.
+
+    metadata().setTier2(Move(metadata2));
+    linkData().setTier2(Move(linkData2));
+    code().setTier2(Move(code2));
+    for (uint32_t i = 0; i < elemSegments_.length(); i++)
+        elemSegments_[i].setTier2(Move(env2->elemSegments[i].elemCodeRangeIndices(Tier::Ion)));
+
+    // Now that all the code and metadata is valid, make tier 2 code visible and
+    // unblock anyone waiting on it.
+
+    metadata().commitTier2();
+    unblockOnTier2GeneratorFinished(CompileMode::Tier2);
+
+    // And we update the jump vector.
+
+    void** jumpTable = code().jumpTable();
+    uint8_t* base = code().segment(Tier::Ion).base();
+
+    for (auto cr : metadata(Tier::Ion).codeRanges) {
+        if (!cr.isFunction())
+            continue;
+
+        // This is a racy write that we just want to be visible, atomically,
+        // eventually.  All hardware we care about will do this right.  But
+        // we depend on the compiler not splitting the store.
+
+        jumpTable[cr.funcIndex()] = base + cr.funcTierEntry();
+    }
+}
+
 /* virtual */ size_t
 Module::bytecodeSerializedSize() const
 {
@@ -295,40 +383,6 @@ Module::compiledSerialize(uint8_t* compiledBegin, size_t compiledSize) const
     cursor = SerializeVector(cursor, elemSegments_);
     cursor = code_->serialize(cursor, linkData_);
     MOZ_RELEASE_ASSERT(cursor == compiledBegin + compiledSize);
-}
-
-void
-Module::finishTier2Generator(UniqueLinkDataTier linkData2, UniqueMetadataTier metadata2,
-                             UniqueConstCodeSegment code2, UniqueModuleEnvironment env2)
-{
-    // Install the data in the data structures. They will not be visible yet.
-
-    metadata().setTier2(Move(metadata2));
-    linkData().setTier2(Move(linkData2));
-    code().setTier2(Move(code2));
-    for (uint32_t i = 0; i < elemSegments_.length(); i++)
-        elemSegments_[i].setTier2(Move(env2->elemSegments[i].elemCodeRangeIndices(Tier::Ion)));
-
-    // Set the flag atomically to make the tier 2 data visible everywhere at
-    // once.
-
-    metadata().commitTier2();
-
-    // And we update the jump vector.
-
-    uintptr_t* jumpTable = code().jumpTable();
-    uintptr_t base = reinterpret_cast<uintptr_t>(code().segment(Tier::Ion).base());
-
-    for (auto cr : metadata(Tier::Ion).codeRanges) {
-        if (!cr.isFunction())
-            continue;
-
-        // This is a racy write that we just want to be visible, atomically,
-        // eventually.  All hardware we care about will do this right.  But
-        // we depend on the compiler not splitting the store.
-
-        jumpTable[cr.funcIndex()] = base + cr.funcTierEntry();
-    }
 }
 
 void
@@ -420,8 +474,7 @@ Module::deserialize(const uint8_t* bytecodeBegin, size_t bytecodeSize,
     MOZ_RELEASE_ASSERT(cursor == compiledBegin + compiledSize);
     MOZ_RELEASE_ASSERT(!!maybeMetadata == code->metadata().isAsmJS());
 
-    return js_new<Module>(CompileMode::Tier2, // Serialized code is always Tier 2
-                          Move(assumptions),
+    return js_new<Module>(Move(assumptions),
                           *code,
                           nullptr,            // Serialized code is never debuggable
                           Move(linkData),
@@ -522,7 +575,7 @@ wasm::DeserializeModule(PRFileDesc* bytecodeFile, PRFileDesc* maybeCompiledFile,
         return nullptr;
 
     UniqueChars error;
-    return Compile(*bytecode, *args, &error);
+    return CompileInitialTier(*bytecode, *args, &error);
 }
 
 /* virtual */ void

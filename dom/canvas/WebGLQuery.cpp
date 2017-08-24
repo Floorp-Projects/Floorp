@@ -61,6 +61,19 @@ WebGLQuery::Delete()
     LinkedListElement<WebGLQuery>::removeFrom(mContext->mQueries);
 }
 
+static void
+DispatchAvailableRunnable(WebGLQuery* query)
+{
+    RefPtr<AvailableRunnable> runnable = new AvailableRunnable(query);
+
+    nsIDocument* document = query->mContext->GetOwnerDoc();
+    if (document) {
+        document->Dispatch(TaskCategory::Other, runnable.forget());
+        return;
+    }
+    NS_DispatchToCurrentThread(runnable.forget());
+}
+
 ////
 
 static GLenum
@@ -126,7 +139,7 @@ WebGLQuery::EndQuery()
 
     ////
 
-    NS_DispatchToCurrentThread(new AvailableRunnable(this));
+    DispatchAvailableRunnable(this);
 }
 
 void
@@ -254,7 +267,7 @@ WebGLQuery::QueryCounter(const char* funcName, GLenum target)
     gl->MakeCurrent();
     gl->fQueryCounter(mGLName, mTarget);
 
-    NS_DispatchToCurrentThread(new AvailableRunnable(this));
+    DispatchAvailableRunnable(this);
 }
 
 ////

@@ -52,7 +52,7 @@
 #include "nsIXMLContentSink.h"
 #include "nsRDFCID.h"
 #include "nsTArray.h"
-#include "nsXPIDLString.h"
+#include "nsString.h"
 #include "mozilla/Logging.h"
 #include "rdf.h"
 #include "rdfutil.h"

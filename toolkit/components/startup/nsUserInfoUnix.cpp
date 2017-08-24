@@ -12,7 +12,6 @@
 #include <sys/utsname.h>
 
 #include "nsString.h"
-#include "nsXPIDLString.h"
 #include "nsReadableUtils.h"
 #include "nsNativeCharsetUtils.h"
 

@@ -12,6 +12,7 @@
 #include "nsISupportsImpl.h"
 #include "nsITextServicesDocument.h"
 #include "nsIWeakReferenceUtils.h"
+#include "nsStringFwd.h"
 #include "nsTArray.h"
 #include "nscore.h"
 
@@ -27,7 +28,6 @@ class nsIEditor;
 class nsISelection;
 class nsISelectionController;
 class nsITextServicesFilter;
-class nsString;
 
 /** implementation of a text services object.
  *

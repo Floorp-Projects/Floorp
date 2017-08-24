@@ -8,10 +8,10 @@
 #define nsIContentSerializer_h
 
 #include "nsISupports.h"
+#include "nsStringFwd.h"
 
 class nsIContent;
 class nsIDocument;
-class nsAString;
 
 namespace mozilla {
 class Encoding;

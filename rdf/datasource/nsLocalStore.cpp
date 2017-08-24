@@ -22,7 +22,7 @@
 #include "nsIRDFService.h"
 #include "nsIServiceManager.h"
 #include "nsRDFCID.h"
-#include "nsXPIDLString.h"
+#include "nsString.h"
 #include "plstr.h"
 #include "rdf.h"
 #include "nsCOMPtr.h"

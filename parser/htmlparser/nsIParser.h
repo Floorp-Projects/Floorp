@@ -33,7 +33,6 @@
 
 class nsIContentSink;
 class nsIRequestObserver;
-class nsString;
 class nsIURI;
 class nsIChannel;
 namespace mozilla {

@@ -837,5 +837,6 @@ GlobalObject::ensureModulePrototypesCreated(JSContext *cx, Handle<GlobalObject*>
 {
     return getOrCreateObject(cx, global, MODULE_PROTO, initModuleProto) &&
            getOrCreateObject(cx, global, IMPORT_ENTRY_PROTO, initImportEntryProto) &&
-           getOrCreateObject(cx, global, EXPORT_ENTRY_PROTO, initExportEntryProto);
+           getOrCreateObject(cx, global, EXPORT_ENTRY_PROTO, initExportEntryProto) &&
+           getOrCreateObject(cx, global, REQUESTED_MODULE_PROTO, initRequestedModuleProto);
 }

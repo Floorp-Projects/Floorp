@@ -704,4 +704,17 @@
 #define MOZ_FORMAT_PRINTF(stringIndex, firstToCheck)
 #endif
 
+/**
+ * To manually declare an XPCOM ABI-compatible virtual function, the following
+ * macros can be used to handle the non-standard ABI used on Windows for COM
+ * compatibility. E.g.:
+ *
+ *   virtual ReturnType MOZ_XPCOM_ABI foo();
+ */
+#if defined(XP_WIN)
+#  define MOZ_XPCOM_ABI         __stdcall
+#else
+#  define MOZ_XPCOM_ABI
+#endif
+
 #endif /* mozilla_Attributes_h */

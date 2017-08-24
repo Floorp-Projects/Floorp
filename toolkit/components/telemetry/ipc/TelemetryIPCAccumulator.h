@@ -8,12 +8,11 @@
 
 #include "mozilla/AlreadyAddRefed.h"
 #include "mozilla/Maybe.h"
+#include "nsStringFwd.h"
 #include "TelemetryComms.h"
 
 class nsIRunnable;
 class nsITimer;
-class nsAString;
-class nsCString;
 
 namespace mozilla {
 
