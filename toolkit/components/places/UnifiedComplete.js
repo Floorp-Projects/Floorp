@@ -1380,9 +1380,9 @@ Search.prototype = {
         // like a URL, then we'll probably have a result.
         let gotResult = false;
         let [ query, params ] = this._urlQuery;
-        await conn.executeCached(query, params, row => {
+        await conn.executeCached(query, params, (row, cancel) => {
           gotResult = true;
-          this._onResultRow(row);
+          this._onResultRow(row, cancel);
         });
         return gotResult;
       }
@@ -1391,9 +1391,9 @@ Search.prototype = {
 
     let gotResult = false;
     let [ query, params ] = this._hostQuery;
-    await conn.executeCached(query, params, row => {
+    await conn.executeCached(query, params, (row, cancel) => {
       gotResult = true;
-      this._onResultRow(row);
+      this._onResultRow(row, cancel);
     });
     return gotResult;
   },
