@@ -2174,7 +2174,7 @@ nestegg_duration(nestegg * ctx, uint64_t * duration)
     return -1;
 
   if (unscaled_duration != unscaled_duration ||
-      unscaled_duration < 0 || unscaled_duration > (double) UINT64_MAX ||
+      unscaled_duration < 0 || unscaled_duration >= (double) UINT64_MAX ||
       (uint64_t) unscaled_duration > UINT64_MAX / tc_scale)
     return -1;
 
