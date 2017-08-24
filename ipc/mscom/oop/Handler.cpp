@@ -107,8 +107,8 @@ Handler::GetUnmarshalClass(REFIID riid, void* pv, DWORD dwDestContext,
                            void* pvDestContext, DWORD mshlflags,
                            CLSID* pCid)
 {
-  return mUnmarshal->GetUnmarshalClass(riid, pv, dwDestContext, pvDestContext,
-                                       mshlflags, pCid);
+  return mUnmarshal->GetUnmarshalClass(MarshalAs(riid), pv, dwDestContext,
+                                       pvDestContext, mshlflags, pCid);
 }
 
 HRESULT
@@ -187,12 +187,9 @@ Handler::MarshalInterface(IStream* pStm, REFIID riid, void* pv,
   if (FAILED(hr)) {
     return hr;
   }
-
-  // When marshaling without a handler, we just use the riid as passed in.
-  REFIID marshalAs = riid;
-#else
-  REFIID marshalAs = MarshalAs(riid);
 #endif // defined(MOZ_MSCOM_REMARSHAL_NO_HANDLER)
+
+  REFIID marshalAs = MarshalAs(riid);
 
   hr = mInnerUnk->QueryInterface(marshalAs, getter_AddRefs(unkToMarshal));
   if (FAILED(hr)) {
