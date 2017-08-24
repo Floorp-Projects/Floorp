@@ -9,6 +9,7 @@
 
 #include "nsError.h"
 #include "nscore.h"
+#include "nsString.h"
 
 class nsISupports;
 
