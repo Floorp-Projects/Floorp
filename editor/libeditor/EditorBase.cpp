@@ -3753,12 +3753,6 @@ EditorBase::IsTextNode(nsIDOMNode* aNode)
   return (nodeType == nsIDOMNode::TEXT_NODE);
 }
 
-bool
-EditorBase::IsTextNode(nsINode* aNode)
-{
-  return aNode->NodeType() == nsIDOMNode::TEXT_NODE;
-}
-
 nsCOMPtr<nsIDOMNode>
 EditorBase::GetChildAt(nsIDOMNode* aParent, int32_t aOffset)
 {
@@ -5021,18 +5015,6 @@ EditorBase::FinalizeSelection()
   nsContentUtils::AddScriptRunner(
                     new RepaintSelectionRunner(selectionController));
   return NS_OK;
-}
-
-Element*
-EditorBase::GetRoot()
-{
-  if (!mRootElement) {
-    // Let GetRootElement() do the work
-    nsCOMPtr<nsIDOMElement> root;
-    GetRootElement(getter_AddRefs(root));
-  }
-
-  return mRootElement;
 }
 
 Element*
