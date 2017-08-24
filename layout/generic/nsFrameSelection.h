@@ -703,7 +703,8 @@ private:
                                                       Selection* aSel);
 
   RefPtr<mozilla::dom::Selection>
-    mDomSelections[mozilla::kPresentSelectionTypeCount];
+    mDomSelections[
+      sizeof(mozilla::kPresentSelectionTypes) / sizeof(mozilla::SelectionType)];
 
   // Table selection support.
   nsITableCellLayout* GetCellLayout(nsIContent *aCellContent) const;

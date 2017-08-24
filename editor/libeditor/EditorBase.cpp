@@ -2887,8 +2887,7 @@ EditorBase::SplitNodeImpl(nsIContent& aExistingRightNode,
 {
   // Remember all selection points.
   AutoTArray<SavedRange, 10> savedRanges;
-  for (size_t i = 0; i < kPresentSelectionTypeCount; ++i) {
-    SelectionType selectionType(ToSelectionType(1 << i));
+  for (SelectionType selectionType : kPresentSelectionTypes) {
     SavedRange range;
     range.mSelection = GetSelection(selectionType);
     if (selectionType == SelectionType::eNormal) {
@@ -3036,8 +3035,7 @@ EditorBase::JoinNodesImpl(nsINode* aNodeToKeep,
 
   // Remember all selection points.
   AutoTArray<SavedRange, 10> savedRanges;
-  for (size_t i = 0; i < kPresentSelectionTypeCount; ++i) {
-    SelectionType selectionType(ToSelectionType(1 << i));
+  for (SelectionType selectionType : kPresentSelectionTypes) {
     SavedRange range;
     range.mSelection = GetSelection(selectionType);
     if (selectionType == SelectionType::eNormal) {
