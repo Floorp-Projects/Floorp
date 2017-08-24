@@ -178,6 +178,8 @@ private:
 
     void AddFamily(const nsAString& aFamilyName, bool aSystemFont);
 
+    void ActivateFontsFromDir(nsIFile* aDir);
+
 #ifdef MOZ_BUNDLED_FONTS
     void ActivateBundledFonts();
 #endif
