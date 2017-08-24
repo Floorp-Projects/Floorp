@@ -206,7 +206,6 @@
     macro(isPrototypeOf, isPrototypeOf, "isPrototypeOf") \
     macro(IterableToList, IterableToList, "IterableToList") \
     macro(iterate, iterate, "iterate") \
-    macro(iteratorIntrinsic, iteratorIntrinsic, "__iterator__") \
     macro(join, join, "join") \
     macro(js, js, "js") \
     macro(keys, keys, "keys") \
