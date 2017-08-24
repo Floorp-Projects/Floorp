@@ -1066,10 +1066,11 @@ ShutdownXPCOM(nsIServiceManager* aServMgr)
   Omnijar::CleanUp();
 
   HangMonitor::Shutdown();
-  BackgroundHangMonitor::Shutdown();
 
   delete sMainHangMonitor;
   sMainHangMonitor = nullptr;
+
+  BackgroundHangMonitor::Shutdown();
 
   NS_LogTerm();
 
