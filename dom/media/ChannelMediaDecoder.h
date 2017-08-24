@@ -87,6 +87,8 @@ public:
 
 private:
   MediaResource* GetResource() const override final;
+  void PinForSeek() override;
+  void UnpinForSeek() override;
 
   // Create a new state machine to run this decoder.
   MediaDecoderStateMachine* CreateStateMachine();
@@ -142,6 +144,10 @@ private:
 
   // True if mPlaybackBytesPerSecond is a reliable estimate.
   bool mPlaybackRateReliable = true;
+
+  // True when our media stream has been pinned. We pin the stream
+  // while seeking.
+  bool mPinnedForSeek = false;
 };
 
 } // namespace mozilla
