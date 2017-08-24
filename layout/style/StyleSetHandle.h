@@ -34,6 +34,7 @@ class nsIDocument;
 class nsStyleContext;
 class nsStyleSet;
 class nsPresContext;
+class gfxFontFeatureValueSet;
 struct TreeMatchContext;
 
 namespace mozilla {
@@ -183,6 +184,7 @@ public:
 
     inline bool AppendFontFaceRules(nsTArray<nsFontFaceRuleContainer>& aArray);
     inline nsCSSCounterStyleRule* CounterStyleRuleForName(nsIAtom* aName);
+    inline already_AddRefed<gfxFontFeatureValueSet> BuildFontFeatureValueSet();
 
     inline bool EnsureUniqueInnerOnCSSSheets();
     inline void SetNeedsRestyleAfterEnsureUniqueInner();
