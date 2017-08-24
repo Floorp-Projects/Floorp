@@ -542,55 +542,6 @@ js::GetPropertyKeys(JSContext* cx, HandleObject obj, unsigned flags, AutoIdVecto
                     props);
 }
 
-size_t sCustomIteratorCount = 0;
-
-static inline bool
-GetCustomIterator(JSContext* cx, HandleObject obj, unsigned flags, MutableHandleObject objp)
-{
-    if (MOZ_UNLIKELY(!CheckRecursionLimit(cx)))
-        return false;
-
-    RootedValue rval(cx);
-    /* Check whether we have a valid __iterator__ method. */
-    HandlePropertyName name = cx->names().iteratorIntrinsic;
-    if (!GetProperty(cx, obj, obj, name, &rval))
-        return false;
-
-    /* If there is no custom __iterator__ method, we are done here. */
-    if (MOZ_LIKELY(!rval.isObject())) {
-        objp.set(nullptr);
-        return true;
-    }
-
-    if (!cx->runningWithTrustedPrincipals())
-        ++sCustomIteratorCount;
-
-    /* Otherwise call it and return that object. */
-    {
-        FixedInvokeArgs<1> args(cx);
-
-        args[0].setBoolean((flags & JSITER_FOREACH) == 0);
-
-        RootedValue thisv(cx, ObjectValue(*obj));
-        if (!js::Call(cx, rval, thisv, args, &rval))
-            return false;
-    }
-
-    if (rval.isPrimitive()) {
-        // Ignore the stack when throwing. We can't tell whether we were
-        // supposed to skip over a new.target or not.
-        JSAutoByteString bytes;
-        if (!AtomToPrintableString(cx, name, &bytes))
-            return false;
-        RootedValue val(cx, ObjectValue(*obj));
-        ReportValueError2(cx, JSMSG_BAD_TRAP_RETURN_VALUE,
-                          JSDVG_IGNORE_STACK, val, nullptr, bytes.ptr());
-        return false;
-    }
-    objp.set(&rval.toObject());
-    return true;
-}
-
 static bool legacy_iterator_next(JSContext* cx, unsigned argc, Value* vp);
 
 static inline PropertyIteratorObject*
@@ -926,9 +877,6 @@ CanStoreInIteratorCache(JSContext* cx, JSObject* obj)
                 return false;
             if (MOZ_UNLIKELY(clasp->getNewEnumerate() || clasp->getEnumerate()))
                 return false;
-
-            if (MOZ_UNLIKELY(obj->as<NativeObject>().containsPure(cx->names().iteratorIntrinsic)))
-                return false;
         } else {
             MOZ_ASSERT(obj->is<UnboxedPlainObject>());
         }
@@ -997,18 +945,12 @@ js::GetIterator(JSContext* cx, HandleObject obj, unsigned flags)
             return Proxy::enumerate(cx, obj);
     }
 
-    RootedObject res(cx);
-    if (!GetCustomIterator(cx, obj, flags, &res))
-        return nullptr;
-    if (res) {
-        assertSameCompartment(cx, res);
-        return res;
-    }
 
     AutoIdVector keys(cx);
     if (!Snapshot(cx, obj, flags, &keys))
         return nullptr;
 
+    JSObject* res;
     if (flags & JSITER_FOREACH) {
         MOZ_ASSERT(numGuards == 0);
         res = VectorToValueIterator(cx, obj, flags, keys);
