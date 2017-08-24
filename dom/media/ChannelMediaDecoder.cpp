@@ -192,12 +192,6 @@ ChannelMediaDecoder::Clone(MediaDecoderInit& aInit)
   return decoder.forget();
 }
 
-MediaResource*
-ChannelMediaDecoder::GetResource() const
-{
-  return mResource;
-}
-
 MediaDecoderStateMachine* ChannelMediaDecoder::CreateStateMachine()
 {
   MOZ_ASSERT(NS_IsMainThread());
