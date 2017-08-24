@@ -1279,7 +1279,11 @@ class Install(MachCommandBase):
 @SettingsProvider
 class RunSettings():
     config_settings = [
-        ('runprefs.*', 'string'),
+        ('runprefs.*', 'string', """
+Pass a pref into Firefox when using `mach run`, of the form `foo.bar=value`.
+Prefs will automatically be cast into the appropriate type. Integers can be
+single quoted to force them to be strings.
+""".strip()),
     ]
 
 @CommandProvider
