@@ -108,8 +108,8 @@ UINT nsClipboard::GetFormat(const char* aMimeStr, bool aMapHTMLMime)
            strcmp(aMimeStr, kFilePromiseMime) == 0) {
     format = CF_HDROP;
   }
-  else if (strcmp(aMimeStr, kNativeHTMLMime) == 0 ||
-           aMapHTMLMime && strcmp(aMimeStr, kHTMLMime) == 0) {
+  else if ((strcmp(aMimeStr, kNativeHTMLMime) == 0) ||
+           (aMapHTMLMime && strcmp(aMimeStr, kHTMLMime) == 0)) {
     format = CF_HTML;
   }
   else if (strcmp(aMimeStr, kCustomTypesMime) == 0) {
