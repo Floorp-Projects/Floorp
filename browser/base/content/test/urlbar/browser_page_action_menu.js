@@ -308,6 +308,11 @@ add_task(async function sendToDevice_notSignedIn() {
       null,
       {
         attrs: {
+          label: "Sign in to Sync..."
+        },
+      },
+      {
+        attrs: {
           label: "Learn About Sending Tabs..."
         },
       }
