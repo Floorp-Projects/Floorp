@@ -60,3 +60,4 @@ fails == background-position-important.html background-position-ref.html # This 
 == change-animation-name-to-none-in-rule.html change-animation-name-in-rule-ref.html
 == change-animation-name-to-other-in-rule.html change-animation-name-in-rule-ref.html
 == change-animation-name-to-non-existent-in-rule.html change-animation-name-in-rule-ref.html
+== no-style-sharing-with-animations.html no-style-sharing-with-animations-ref.html
