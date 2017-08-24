@@ -220,14 +220,14 @@ ProxyMessenger = {
       responseType,
     });
 
-    if (!extension.isEmbedded || !extension.remote) {
+    if (!(extension.isEmbedded || recipient.toProxyScript) || !extension.remote) {
       return promise1;
     }
 
-    // If we have a remote, embedded extension, the legacy side is
-    // running in a different process than the WebExtension side.
-    // As a result, we need to dispatch the message to both the parent
-    // and extension processes, and manually merge the results.
+    // If we have a proxy script sandbox or a remote, embedded extension, where
+    // the legacy side is running in a different process than the WebExtension
+    // side. As a result, we need to dispatch the message to both the parent and
+    // extension processes, and manually merge the results.
     let promise2 = MessageChannel.sendMessage(Services.ppmm.getChildAt(0), messageName, data, {
       sender,
       recipient,
