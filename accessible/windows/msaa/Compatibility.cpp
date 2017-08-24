@@ -139,7 +139,7 @@ Compatibility::Init()
 
   HMODULE jawsHandle = ::GetModuleHandleW(L"jhook");
   if (jawsHandle)
-    sConsumers |= (IsModuleVersionLessThan(jawsHandle, 8, 2173)) ?
+    sConsumers |= (IsModuleVersionLessThan(jawsHandle, 18, 4315)) ?
                    OLDJAWS : JAWS;
 
   if (::GetModuleHandleW(L"gwm32inc"))
