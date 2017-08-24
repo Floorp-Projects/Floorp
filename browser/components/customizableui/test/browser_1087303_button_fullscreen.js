@@ -11,6 +11,8 @@ add_task(async function() {
   CustomizableUI.addWidgetToArea("fullscreen-button", CustomizableUI.AREA_FIXED_OVERFLOW_PANEL);
   registerCleanupFunction(() => CustomizableUI.reset());
 
+  await waitForOverflowButtonShown();
+
   await document.getElementById("nav-bar").overflowable.show();
 
   let fullscreenButton = document.getElementById("fullscreen-button");

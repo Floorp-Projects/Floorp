@@ -25,6 +25,8 @@ add_task(async function testSyncRemoteTabsButtonFunctionality() {
   // add the sync remote tabs button to the panel
   CustomizableUI.addWidgetToArea("sync-button", CustomizableUI.AREA_FIXED_OVERFLOW_PANEL);
 
+  await waitForOverflowButtonShown();
+
   // check the button's functionality
   await document.getElementById("nav-bar").overflowable.show();
   info("The panel menu was opened");

@@ -11,6 +11,8 @@ add_task(async function() {
   CustomizableUI.addWidgetToArea("add-ons-button", CustomizableUI.AREA_FIXED_OVERFLOW_PANEL);
   info("Check addons button existence and functionality");
 
+  await waitForOverflowButtonShown();
+
   await document.getElementById("nav-bar").overflowable.show();
   info("Menu panel was opened");
 

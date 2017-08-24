@@ -15,6 +15,8 @@ add_task(async function() {
   }, async function() {
     info("Check print button existence and functionality");
 
+    await waitForOverflowButtonShown();
+
     await document.getElementById("nav-bar").overflowable.show();
     info("Menu panel was opened");
 

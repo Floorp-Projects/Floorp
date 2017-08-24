@@ -13,6 +13,7 @@ add_task(async function() {
   CustomizableUI.addWidgetToArea("characterencoding-button",
                                   CustomizableUI.AREA_FIXED_OVERFLOW_PANEL);
 
+  await waitForOverflowButtonShown();
   registerCleanupFunction(() => CustomizableUI.reset());
 
   await document.getElementById("nav-bar").overflowable.show();
@@ -23,8 +24,9 @@ add_task(async function() {
      "The Character encoding button is initially disabled");
 
   let panelHidePromise = promiseOverflowHidden(window);
-  await document.getElementById("nav-bar").overflowable._panel.hidePopup();
+  document.getElementById("nav-bar").overflowable._panel.hidePopup();
   await panelHidePromise;
+  info("Panel hidden");
 
   let newTab = await BrowserTestUtils.openNewForegroundTab(gBrowser, TEST_PAGE, true, true);
 
@@ -50,8 +52,9 @@ add_task(async function() {
      "There should be 1 checked detector.");
 
   panelHidePromise = promiseOverflowHidden(window);
-  await document.getElementById("nav-bar").overflowable._panel.hidePopup();
+  document.getElementById("nav-bar").overflowable._panel.hidePopup();
   await panelHidePromise;
+  info("Panel hidden");
 
   await BrowserTestUtils.removeTab(newTab);
 });

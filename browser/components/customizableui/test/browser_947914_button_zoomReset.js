@@ -14,6 +14,8 @@ add_task(async function() {
   CustomizableUI.addWidgetToArea("zoom-controls", CustomizableUI.AREA_FIXED_OVERFLOW_PANEL);
   registerCleanupFunction(() => CustomizableUI.reset());
 
+  await waitForOverflowButtonShown();
+
   await document.getElementById("nav-bar").overflowable.show();
   info("Menu panel was opened");
 

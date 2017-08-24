@@ -63,6 +63,8 @@ async function openPrefsFromMenuPanel(expectedPanelId, entryPoint) {
   Services.prefs.setCharPref("identity.fxaccounts.remote.signup.uri", "http://example.com/");
   CustomizableUI.addWidgetToArea("sync-button", CustomizableUI.AREA_FIXED_OVERFLOW_PANEL);
 
+  await waitForOverflowButtonShown();
+
   // check the button's functionality
   await document.getElementById("nav-bar").overflowable.show();
 

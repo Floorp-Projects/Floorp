@@ -12,6 +12,9 @@ function isFullscreenSizeMode() {
 // Observers should be disabled when in customization mode.
 add_task(async function() {
   CustomizableUI.addWidgetToArea("fullscreen-button", CustomizableUI.AREA_FIXED_OVERFLOW_PANEL);
+
+  await waitForOverflowButtonShown();
+
   // Show the panel so it isn't hidden and has bindings applied etc.:
   await document.getElementById("nav-bar").overflowable.show();
 
