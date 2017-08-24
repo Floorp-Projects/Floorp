@@ -21,8 +21,8 @@ use prim_store::{PrimitiveStore, RadialGradientPrimitiveCpu, TextRunMode};
 use prim_store::{RectanglePrimitive, TextRunPrimitiveCpu, TextShadowPrimitiveCpu};
 use prim_store::{BoxShadowPrimitiveCpu, TexelRect, YuvImagePrimitiveCpu};
 use profiler::{FrameProfileCounters, GpuCacheProfileCounters, TextureCacheProfileCounters};
-use render_task::{AlphaRenderItem, ClipWorkItem, MaskCacheKey, RenderTask, RenderTaskIndex};
-use render_task::{RenderTaskId, RenderTaskLocation};
+use render_task::{AlphaRenderItem, ClipWorkItem, RenderTask};
+use render_task::{RenderTaskTree, RenderTaskId, RenderTaskLocation};
 use resource_cache::ResourceCache;
 use clip_scroll_node::{ClipInfo, ClipScrollNode, NodeType};
 use clip_scroll_tree::ClipScrollTree;
@@ -31,7 +31,7 @@ use euclid::{SideOffsets2D, vec2, vec3};
 use tiling::{ContextIsolation, StackingContextIndex};
 use tiling::{ClipScrollGroup, ClipScrollGroupIndex, CompositeOps, DisplayListMap, Frame};
 use tiling::{PackedLayer, PackedLayerIndex, PrimitiveFlags, PrimitiveRunCmd, RenderPass};
-use tiling::{RenderTargetContext, RenderTaskCollection, ScrollbarPrimitive, StackingContext};
+use tiling::{RenderTargetContext, ScrollbarPrimitive, StackingContext};
 use util::{self, pack_as_float, subtract_rect, recycle_vec};
 use util::{MatrixHelpers, RectHelpers};
 
@@ -1276,6 +1276,7 @@ impl FrameBuilder {
                                                 display_lists: &DisplayListMap,
                                                 resource_cache: &mut ResourceCache,
                                                 gpu_cache: &mut GpuCache,
+                                                render_tasks: &mut RenderTaskTree,
                                                 profile_counters: &mut FrameProfileCounters,
                                                 device_pixel_ratio: f32) {
         profile_scope!("cull");
@@ -1285,6 +1286,7 @@ impl FrameBuilder {
                                                            display_lists,
                                                            resource_cache,
                                                            gpu_cache,
+                                                           render_tasks,
                                                            profile_counters,
                                                            device_pixel_ratio);
     }
@@ -1338,18 +1340,15 @@ impl FrameBuilder {
 
     fn build_render_task(&mut self,
                          clip_scroll_tree: &ClipScrollTree,
-                         gpu_cache: &mut GpuCache)
-                         -> (RenderTask, usize) {
+                         gpu_cache: &mut GpuCache,
+                         render_tasks: &mut RenderTaskTree)
+                         -> RenderTaskId {
         profile_scope!("build_render_task");
 
         let mut next_z = 0;
-        let mut next_task_index = RenderTaskIndex(0);
-
         let mut sc_stack: Vec<StackingContextIndex> = Vec::new();
-        let mut current_task = RenderTask::new_alpha_batch(next_task_index,
-                                                           DeviceIntPoint::zero(),
+        let mut current_task = RenderTask::new_alpha_batch(DeviceIntPoint::zero(),
                                                            RenderTaskLocation::Fixed);
-        next_task_index.0 += 1;
         // A stack of the alpha batcher tasks. We create them on the way down,
         // and then actually populate with items and dependencies on the way up.
         let mut alpha_task_stack = Vec::new();
@@ -1358,7 +1357,7 @@ impl FrameBuilder {
         // The stacking contexts that fall into this category are
         //  - ones with `ContextIsolation::Items`, for their actual items to be backed
         //  - immediate children of `ContextIsolation::Items`
-        let mut preserve_3d_map: FastHashMap<StackingContextIndex, RenderTask> = FastHashMap::default();
+        let mut preserve_3d_map: FastHashMap<StackingContextIndex, RenderTaskId> = FastHashMap::default();
         // The plane splitter stack, using a simple BSP tree.
         let mut splitter_stack = Vec::new();
 
@@ -1383,8 +1382,7 @@ impl FrameBuilder {
 
                     if stacking_context.isolation == ContextIsolation::Full && composite_count == 0 {
                         alpha_task_stack.push(current_task);
-                        current_task = RenderTask::new_dynamic_alpha_batch(next_task_index, stacking_context_rect);
-                        next_task_index.0 += 1;
+                        current_task = RenderTask::new_dynamic_alpha_batch(stacking_context_rect);
                     }
 
                     if parent_isolation == Some(ContextIsolation::Items) ||
@@ -1393,8 +1391,7 @@ impl FrameBuilder {
                             splitter_stack.push(BspSplitter::new());
                         }
                         alpha_task_stack.push(current_task);
-                        current_task = RenderTask::new_dynamic_alpha_batch(next_task_index, stacking_context_rect);
-                        next_task_index.0 += 1;
+                        current_task = RenderTask::new_dynamic_alpha_batch(stacking_context_rect);
                         //Note: technically, we shouldn't make a new alpha task for "preserve-3d" contexts
                         // that have no child items (only other stacking contexts). However, we don't know if
                         // there are any items at this time (in `PushStackingContext`).
@@ -1409,8 +1406,7 @@ impl FrameBuilder {
 
                     for _ in 0..composite_count {
                         alpha_task_stack.push(current_task);
-                        current_task = RenderTask::new_dynamic_alpha_batch(next_task_index, stacking_context_rect);
-                        next_task_index.0 += 1;
+                        current_task = RenderTask::new_dynamic_alpha_batch(stacking_context_rect);
                     }
                 }
                 PrimitiveRunCmd::PopStackingContext => {
@@ -1428,43 +1424,46 @@ impl FrameBuilder {
 
                     if stacking_context.isolation == ContextIsolation::Full && composite_count == 0 {
                         let mut prev_task = alpha_task_stack.pop().unwrap();
+                        let current_task_id = render_tasks.add(current_task);
                         let item = AlphaRenderItem::HardwareComposite(stacking_context_index,
-                                                                      current_task.id,
+                                                                      current_task_id,
                                                                       HardwareCompositeOp::PremultipliedAlpha,
                                                                       next_z);
                         next_z += 1;
-                        prev_task.as_alpha_batch().items.push(item);
-                        prev_task.children.push(current_task);
+                        prev_task.as_alpha_batch_mut().items.push(item);
+                        prev_task.children.push(current_task_id);
                         current_task = prev_task;
                     }
 
                     for filter in &stacking_context.composite_ops.filters {
                         let mut prev_task = alpha_task_stack.pop().unwrap();
+                        let current_task_id = render_tasks.add(current_task);
                         let item = AlphaRenderItem::Blend(stacking_context_index,
-                                                          current_task.id,
+                                                          current_task_id,
                                                           *filter,
                                                           next_z);
                         next_z += 1;
-                        prev_task.as_alpha_batch().items.push(item);
-                        prev_task.children.push(current_task);
+                        prev_task.as_alpha_batch_mut().items.push(item);
+                        prev_task.children.push(current_task_id);
                         current_task = prev_task;
                     }
 
                     if let Some(mix_blend_mode) = stacking_context.composite_ops.mix_blend_mode {
-                        let readback_task =
-                            RenderTask::new_readback(stacking_context_index,
-                                                     stacking_context.screen_bounds);
+                        let backdrop_task =
+                            RenderTask::new_readback(stacking_context.screen_bounds);
+                        let source_task_id = render_tasks.add(current_task);
+                        let backdrop_task_id = render_tasks.add(backdrop_task);
 
                         let mut prev_task = alpha_task_stack.pop().unwrap();
                         let item = AlphaRenderItem::Composite(stacking_context_index,
-                                                              readback_task.id,
-                                                              current_task.id,
+                                                              source_task_id,
+                                                              backdrop_task_id,
                                                               mix_blend_mode,
                                                               next_z);
                         next_z += 1;
-                        prev_task.as_alpha_batch().items.push(item);
-                        prev_task.children.push(current_task);
-                        prev_task.children.push(readback_task);
+                        prev_task.as_alpha_batch_mut().items.push(item);
+                        prev_task.children.push(source_task_id);
+                        prev_task.children.push(backdrop_task_id);
                         current_task = prev_task;
                     }
 
@@ -1473,13 +1472,14 @@ impl FrameBuilder {
                         //Note: we don't register the dependent tasks here. It's only done
                         // when we are out of the `preserve-3d` branch (see the code below),
                         // since this is only where the parent task is known.
-                        preserve_3d_map.insert(stacking_context_index, current_task);
+                        let current_task_id = render_tasks.add(current_task);
+                        preserve_3d_map.insert(stacking_context_index, current_task_id);
                         current_task = alpha_task_stack.pop().unwrap();
                     }
 
                     if parent_isolation != Some(ContextIsolation::Items) &&
                        stacking_context.isolation == ContextIsolation::Items {
-                        debug!("\tsplitter[{}]: flush {:?}", splitter_stack.len(), current_task.id);
+                        debug!("\tsplitter[{}]: flush", splitter_stack.len());
                         let mut splitter = splitter_stack.pop().unwrap();
                         // Flush the accumulated plane splits onto the task tree.
                         // Notice how this is done before splitting in order to avoid duplicate tasks.
@@ -1487,7 +1487,7 @@ impl FrameBuilder {
                         // Z axis is directed at the screen, `sort` is ascending, and we need back-to-front order.
                         for poly in splitter.sort(vec3(0.0, 0.0, 1.0)) {
                             let sc_index = StackingContextIndex(poly.anchor);
-                            let task_id = preserve_3d_map[&sc_index].id;
+                            let task_id = preserve_3d_map[&sc_index];
                             debug!("\t\tproduce {:?} -> {:?} for {:?}", sc_index, poly, task_id);
                             let pp = &poly.points;
                             let gpu_blocks = [
@@ -1497,7 +1497,7 @@ impl FrameBuilder {
                             ];
                             let handle = gpu_cache.push_per_frame_blocks(&gpu_blocks);
                             let item = AlphaRenderItem::SplitComposite(sc_index, task_id, handle, next_z);
-                            current_task.as_alpha_batch().items.push(item);
+                            current_task.as_alpha_batch_mut().items.push(item);
                         }
                         preserve_3d_map.clear();
                         next_z += 1;
@@ -1515,7 +1515,7 @@ impl FrameBuilder {
                         continue
                     }
 
-                    debug!("\trun of {} items into {:?}", prim_count, current_task.id);
+                    debug!("\trun of {} items", prim_count);
 
                     for i in 0..prim_count {
                         let prim_index = PrimitiveIndex(first_prim_index.0 + i);
@@ -1524,15 +1524,15 @@ impl FrameBuilder {
                             let prim_metadata = self.prim_store.get_metadata(prim_index);
 
                             // Add any dynamic render tasks needed to render this primitive
-                            if let Some(ref render_task) = prim_metadata.render_task {
-                                current_task.children.push(render_task.clone());
+                            if let Some(render_task_id) = prim_metadata.render_task_id {
+                                current_task.children.push(render_task_id);
                             }
-                            if let Some(ref clip_task) = prim_metadata.clip_task {
-                                current_task.children.push(clip_task.clone());
+                            if let Some(clip_task_id) = prim_metadata.clip_task_id {
+                                current_task.children.push(clip_task_id);
                             }
 
                             let item = AlphaRenderItem::Primitive(Some(group_index), prim_index, next_z);
-                            current_task.as_alpha_batch().items.push(item);
+                            current_task.as_alpha_batch_mut().items.push(item);
                             next_z += 1;
                         }
                     }
@@ -1542,8 +1542,7 @@ impl FrameBuilder {
 
         debug_assert!(alpha_task_stack.is_empty());
         debug_assert!(preserve_3d_map.is_empty());
-        debug_assert_eq!(current_task.id, RenderTaskId::Static(RenderTaskIndex(0)));
-        (current_task, next_task_index.0)
+        render_tasks.add(current_task)
     }
 
     pub fn build(&mut self,
@@ -1578,19 +1577,21 @@ impl FrameBuilder {
 
         self.update_scroll_bars(clip_scroll_tree, gpu_cache);
 
+        let mut render_tasks = RenderTaskTree::new();
+
         self.build_layer_screen_rects_and_cull_layers(&screen_rect,
                                                       clip_scroll_tree,
                                                       display_lists,
                                                       resource_cache,
                                                       gpu_cache,
+                                                      &mut render_tasks,
                                                       &mut profile_counters,
                                                       device_pixel_ratio);
 
-        let (main_render_task, static_render_task_count) = self.build_render_task(clip_scroll_tree, gpu_cache);
-        let mut render_tasks = RenderTaskCollection::new(static_render_task_count);
+        let main_render_task_id = self.build_render_task(clip_scroll_tree, gpu_cache, &mut render_tasks);
 
         let mut required_pass_count = 0;
-        main_render_task.max_depth(0, &mut required_pass_count);
+        render_tasks.max_depth(main_render_task_id, 0, &mut required_pass_count);
 
         resource_cache.block_until_all_resources_added(gpu_cache, texture_cache_profile);
 
@@ -1601,12 +1602,11 @@ impl FrameBuilder {
         // Do the allocations now, assigning each tile's tasks to a render
         // pass and target as required.
         for index in 0..required_pass_count {
-            passes.push(RenderPass::new(index as isize,
-                                        index == required_pass_count-1,
+            passes.push(RenderPass::new(index == required_pass_count-1,
                                         cache_size));
         }
 
-        main_render_task.assign_to_passes(passes.len() - 1, &mut passes);
+        render_tasks.assign_to_passes(main_render_task_id, passes.len() - 1, &mut passes);
 
         for pass in &mut passes {
             let ctx = RenderTargetContext {
@@ -1626,6 +1626,8 @@ impl FrameBuilder {
 
         let gpu_cache_updates = gpu_cache.end_frame(gpu_cache_profile);
 
+        render_tasks.build();
+
         resource_cache.end_frame();
 
         Frame {
@@ -1636,7 +1638,7 @@ impl FrameBuilder {
             passes,
             cache_size,
             layer_texture_data: self.packed_layers.clone(),
-            render_task_data: render_tasks.render_task_data,
+            render_tasks,
             deferred_resolves,
             gpu_cache_updates: Some(gpu_cache_updates),
         }
@@ -1660,6 +1662,7 @@ struct LayerRectCalculationAndCullingPass<'a> {
     profile_counters: &'a mut FrameProfileCounters,
     device_pixel_ratio: f32,
     stacking_context_stack: Vec<StackingContextIndex>,
+    render_tasks: &'a mut RenderTaskTree,
 
     /// A cached clip info stack, which should handle the most common situation,
     /// which is that we are using the same clip info stack that we were using
@@ -1678,6 +1681,7 @@ impl<'a> LayerRectCalculationAndCullingPass<'a> {
                       display_lists: &'a DisplayListMap,
                       resource_cache: &'a mut ResourceCache,
                       gpu_cache: &'a mut GpuCache,
+                      render_tasks: &'a mut RenderTaskTree,
                       profile_counters: &'a mut FrameProfileCounters,
                       device_pixel_ratio: f32) {
 
@@ -1693,6 +1697,7 @@ impl<'a> LayerRectCalculationAndCullingPass<'a> {
             stacking_context_stack: Vec::new(),
             current_clip_stack: Vec::new(),
             current_clip_info: None,
+            render_tasks,
         };
         pass.run();
     }
@@ -1977,7 +1982,8 @@ impl<'a> LayerRectCalculationAndCullingPass<'a> {
                                                                    &packed_layer.transform,
                                                                    self.device_pixel_ratio,
                                                                    display_list,
-                                                                   TextRunMode::Normal);
+                                                                   TextRunMode::Normal,
+                                                                   &mut self.render_tasks);
 
             stacking_context.screen_bounds = stacking_context.screen_bounds.union(&prim_screen_rect);
             stacking_context.isolated_items_bounds = stacking_context.isolated_items_bounds.union(&prim_local_rect);
@@ -1988,7 +1994,7 @@ impl<'a> LayerRectCalculationAndCullingPass<'a> {
                 // stacking context. This means that two primitives which are only clipped
                 // by the stacking context stack can share clip masks during render task
                 // assignment to targets.
-                let (mask_key, mask_rect, extra) = match prim_metadata.clip_cache_info {
+                let (cache_key, mask_rect, extra) = match prim_metadata.clip_cache_info {
                     Some(ref info) => {
                         // Take into account the actual clip info of the primitive, and
                         // mutate the current bounds accordingly.
@@ -2001,22 +2007,24 @@ impl<'a> LayerRectCalculationAndCullingPass<'a> {
                             }
                             _ => prim_screen_rect,
                         };
-                        (MaskCacheKey::Primitive(prim_index),
+                        (None,
                          mask_rect,
                          Some((packed_layer_index, info.strip_aligned())))
                     }
                     None => {
-                        //Note: can't use `prim_bounding_rect` since
-                        // the primitive ID is not a part of the task key
-                        (MaskCacheKey::ClipNode(clip_and_scroll.clip_node_id()),
+                        (Some(clip_and_scroll.clip_node_id()),
                          clip_bounds,
                          None)
                     }
                 };
-                prim_metadata.clip_task = RenderTask::new_mask(mask_rect,
-                                                               mask_key,
-                                                               &self.current_clip_stack,
-                                                               extra)
+                let clip_task = RenderTask::new_mask(cache_key,
+                                                     mask_rect,
+                                                     &self.current_clip_stack,
+                                                     extra);
+                let render_tasks = &mut self.render_tasks;
+                prim_metadata.clip_task_id = clip_task.map(|clip_task| {
+                    render_tasks.add(clip_task)
+                });
             }
 
             self.profile_counters.visible_primitives.inc();
