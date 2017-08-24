@@ -23,17 +23,19 @@ class Documentation(MachCommandBase):
     """Helps manage in-tree documentation."""
 
     @Command('doc', category='devenv',
-        description='Generate and display documentation from the tree.')
+             description='Generate and display documentation from the tree.')
     @CommandArgument('what', nargs='*', metavar='DIRECTORY [, DIRECTORY]',
-        help='Path(s) to documentation to build and display.')
+                     help='Path(s) to documentation to build and display.')
     @CommandArgument('--format', default='html',
-        help='Documentation format to write.')
+                     help='Documentation format to write.')
     @CommandArgument('--outdir', default=None, metavar='DESTINATION',
-        help='Where to write output.')
-    @CommandArgument('--no-open', dest='auto_open', default=True, action='store_false',
-        help="Don't automatically open HTML docs in a browser.")
+                     help='Where to write output.')
+    @CommandArgument('--no-open', dest='auto_open', default=True,
+                     action='store_false',
+                     help="Don't automatically open HTML docs in a browser.")
     @CommandArgument('--http', const=':6666', metavar='ADDRESS', nargs='?',
-        help='Serve documentation on an HTTP server, e.g. ":6666".')
+                     help='Serve documentation on an HTTP server, '
+                          'e.g. ":6666".')
     def build_docs(self, what=None, format=None, outdir=None, auto_open=True, http=None):
         self._activate_virtualenv()
         self.virtualenv_manager.install_pip_package('sphinx_rtd_theme==0.1.6')
