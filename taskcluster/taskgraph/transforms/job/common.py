@@ -73,7 +73,7 @@ def docker_worker_add_gecko_vcs_env_vars(config, job, taskdesc):
     })
 
 
-def support_vcs_checkout(config, job, taskdesc):
+def support_vcs_checkout(config, job, taskdesc, sparse=False):
     """Update a job/task with parameters to enable a VCS checkout.
 
     This can only be used with ``run-task`` tasks, as the cache name is
@@ -84,9 +84,16 @@ def support_vcs_checkout(config, job, taskdesc):
     # native-engine does not support caches (yet), so we just do a full clone
     # every time :(
     if job['worker']['implementation'] in ('docker-worker', 'docker-engine'):
+        name = 'level-%s-checkouts' % level
+
+        # Sparse checkouts need their own cache because they can interfere
+        # with clients that aren't sparse aware.
+        if sparse:
+            name += '-sparse'
+
         taskdesc['worker'].setdefault('caches', []).append({
             'type': 'persistent',
-            'name': 'level-%s-checkouts' % level,
+            'name': name,
             'mount-point': '/home/worker/checkouts',
         })
 
