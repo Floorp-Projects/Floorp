@@ -11,17 +11,19 @@ import android.support.annotation.NonNull;
 import android.support.annotation.Nullable;
 import android.support.annotation.WorkerThread;
 import android.text.TextUtils;
-import android.util.Log;
 import ch.boye.httpclientandroidlib.conn.util.InetAddressUtils;
 import org.mozilla.gecko.util.publicsuffix.PublicSuffix;
 
 import java.lang.ref.WeakReference;
 import java.net.URI;
 import java.net.URISyntaxException;
+import java.util.regex.Pattern;
 
 /** Utilities for operating on URLs. */
 public class URIUtils {
     private static final String LOGTAG = "GeckoURIUtils";
+
+    private static final Pattern EMPTY_PATH = Pattern.compile("/*");
 
     private URIUtils() {}
 
@@ -33,6 +35,18 @@ public class URIUtils {
         } catch (final URISyntaxException e) {
             return null;
         }
+    }
+
+    /**
+     * Returns true if {@link URI#getPath()} is not empty, false otherwise where empty means the given path contains
+     * characters other than "/".
+     *
+     * This is necessary because the URI method will return "/" for "http://google.com/".
+     */
+    public static boolean isPathEmpty(@NonNull final URI uri) {
+        final String path = uri.getPath();
+        return TextUtils.isEmpty(path) || EMPTY_PATH.matcher(path).matches();
+
     }
 
     /**

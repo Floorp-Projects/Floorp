@@ -11,8 +11,6 @@ var EventEmitter = require("devtools/shared/event-emitter");
 var {getStack, callFunctionWithAsyncStack} = require("devtools/shared/platform/stack");
 var {settleAll} = require("devtools/shared/DevToolsUtils");
 
-exports.emit = EventEmitter.emit;
-
 /**
  * Types: named marshallers/demarshallers.
  *

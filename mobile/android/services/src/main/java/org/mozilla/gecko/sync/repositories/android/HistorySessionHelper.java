@@ -149,7 +149,7 @@ import java.util.ArrayList;
 
         Logger.debug(LOG_TAG, "Calling delegate callback with guid " + preparedToStore.guid +
                 "(" + preparedToStore.androidID + ")");
-        delegate.onRecordStoreReconciled(preparedToStore.guid, null);
+        delegate.onRecordStoreReconciled(preparedToStore.guid, existingRecord.guid, null);
         delegate.onRecordStoreSucceeded(preparedToStore.guid);
 
         return true;

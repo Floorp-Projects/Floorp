@@ -429,8 +429,6 @@
            position="bottomcenter topright"
            tabspecific="true"
            noautofocus="true"
-           context="pageActionPanelContextMenu"
-           oncontextmenu="BrowserPageActions.onContextMenu(event);"
            copyURL-title="&copyURLCmd.label;"
            emailLink-title="&emailPageCmd.label;"
            sendToDevice-title="&sendToDevice.label3;"
@@ -439,6 +437,8 @@
                             mainViewId="pageActionPanelMainView"
                             viewCacheId="appMenu-viewCache">
         <panelview id="pageActionPanelMainView"
+                   context="pageActionPanelContextMenu"
+                   oncontextmenu="BrowserPageActions.onContextMenu(event);"
                    class="PanelUI-subView">
           <vbox class="panel-subview-body"/>
         </panelview>
@@ -879,12 +879,12 @@
                       context="pageActionPanelContextMenu"
                       oncontextmenu="BrowserPageActions.onContextMenu(event);"
                       onclick="BrowserPageActions.bookmark.onUrlbarNodeClicked(event);">
-                  <image id="star-button" class="urlbar-icon">
-                    <observes element="bookmarkThisPageBroadcaster" attribute="starred"/>
-                    <observes element="bookmarkThisPageBroadcaster" attribute="tooltiptext"/>
-                  </image>
+                  <image id="star-button"
+                         class="urlbar-icon"
+                         observes="bookmarkThisPageBroadcaster"/>
                   <hbox id="star-button-animatable-box">
-                    <image id="star-button-animatable-image"/>
+                    <image id="star-button-animatable-image"
+                           observes="bookmarkThisPageBroadcaster"/>
                   </hbox>
                 </hbox>
               </hbox>

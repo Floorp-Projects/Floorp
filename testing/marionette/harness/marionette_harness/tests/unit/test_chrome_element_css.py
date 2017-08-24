@@ -21,7 +21,7 @@ class TestChromeElementCSS(MarionetteTestCase):
         with self.marionette.using_context("chrome"):
             identity_icon = self.marionette.find_element(By.ID, "identity-icon")
             favicon_image = identity_icon.value_of_css_property("list-style-image")
-            self.assertIn("identity-icon.svg", favicon_image)
+            self.assertIn("chrome://", favicon_image)
             identity_box = self.marionette.find_element(By.ID, "identity-box")
             expected_bg_colour = self.get_element_computed_style(
                 identity_box, "backgroundColor")

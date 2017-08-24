@@ -14,18 +14,14 @@ import android.view.ViewGroup;
 import android.widget.ImageView;
 import android.widget.TextView;
 import org.mozilla.gecko.R;
-import org.mozilla.gecko.Telemetry;
-import org.mozilla.gecko.TelemetryContract;
 import org.mozilla.gecko.activitystream.ActivityStreamTelemetry;
 import org.mozilla.gecko.activitystream.Utils;
-import org.mozilla.gecko.activitystream.homepanel.menu.ActivityStreamContextMenu;
+import org.mozilla.gecko.activitystream.homepanel.StreamHighlightItemContextMenuListener;
 import org.mozilla.gecko.activitystream.homepanel.model.Highlight;
-import org.mozilla.gecko.home.HomePager;
 import org.mozilla.gecko.util.DrawableUtil;
 import org.mozilla.gecko.util.TouchTargetUtil;
 import org.mozilla.gecko.util.URIUtils;
 import org.mozilla.gecko.util.ViewUtil;
-import org.mozilla.gecko.widget.FaviconView;
 
 import java.lang.ref.WeakReference;
 import java.net.URI;
@@ -38,66 +34,39 @@ public class HighlightItem extends StreamItem {
     public static final int LAYOUT_ID = R.layout.activity_stream_card_history_item;
     private static final double SIZE_RATIO = 0.75;
 
-    private Highlight highlight;
     private int position;
 
-    private final StreamPageIconLayout pageIconLayout;
+    private final StreamOverridablePageIconLayout pageIconLayout;
     private final TextView pageTitleView;
     private final TextView pageSourceView;
     private final TextView pageDomainView;
     private final ImageView pageSourceIconView;
+    private final ImageView menuButton;
 
-    private int tilesMargin;
-
-    public HighlightItem(final View itemView,
-                         final HomePager.OnUrlOpenListener onUrlOpenListener,
-                         final HomePager.OnUrlOpenInBackgroundListener onUrlOpenInBackgroundListener) {
+    public HighlightItem(final View itemView, final StreamHighlightItemContextMenuListener contextMenuListener) {
         super(itemView);
 
-        tilesMargin = itemView.getResources().getDimensionPixelSize(R.dimen.activity_stream_base_margin);
-
         pageTitleView = (TextView) itemView.findViewById(R.id.card_history_label);
-        pageIconLayout = (StreamPageIconLayout) itemView.findViewById(R.id.icon);
+        pageIconLayout = (StreamOverridablePageIconLayout) itemView.findViewById(R.id.icon);
         pageSourceView = (TextView) itemView.findViewById(R.id.card_history_source);
         pageDomainView = (TextView) itemView.findViewById(R.id.page);
         pageSourceIconView = (ImageView) itemView.findViewById(R.id.source_icon);
 
-        final ImageView menuButton = (ImageView) itemView.findViewById(R.id.menu);
-
+        menuButton = (ImageView) itemView.findViewById(R.id.menu);
         menuButton.setImageDrawable(
                 DrawableUtil.tintDrawable(menuButton.getContext(), R.drawable.menu, Color.LTGRAY));
-
         TouchTargetUtil.ensureTargetHitArea(menuButton, itemView);
-
+        ViewUtil.enableTouchRipple(menuButton);
         menuButton.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
-                ActivityStreamTelemetry.Extras.Builder extras = ActivityStreamTelemetry.Extras.builder()
-                        .set(ActivityStreamTelemetry.Contract.SOURCE_TYPE, ActivityStreamTelemetry.Contract.TYPE_HIGHLIGHTS)
-                        .set(ActivityStreamTelemetry.Contract.ACTION_POSITION, position)
-                        .forHighlightSource(highlight.getSource());
-
-                ActivityStreamContextMenu.show(itemView.getContext(),
-                        menuButton,
-                        extras,
-                        ActivityStreamContextMenu.MenuMode.HIGHLIGHT,
-                        highlight,
-                        onUrlOpenListener, onUrlOpenInBackgroundListener,
-                        pageIconLayout.getWidth(), pageIconLayout.getHeight());
-
-                Telemetry.sendUIEvent(
-                        TelemetryContract.Event.SHOW,
-                        TelemetryContract.Method.CONTEXT_MENU,
-                        extras.build()
-                );
+                contextMenuListener.openContextMenu(HighlightItem.this, position,
+                        ActivityStreamTelemetry.Contract.INTERACTION_MENU_BUTTON);
             }
         });
-
-        ViewUtil.enableTouchRipple(menuButton);
     }
 
     public void bind(Highlight highlight, int position, int tilesWidth) {
-        this.highlight = highlight;
         this.position = position;
 
         final String backendHightlightTitle = highlight.getTitle();
@@ -110,8 +79,8 @@ public class HighlightItem extends StreamItem {
         pageIconLayout.setLayoutParams(layoutParams);
 
         updateUiForSource(highlight.getSource());
-        updatePageDomain();
-        pageIconLayout.updateIcon(highlight.getUrl(), highlight.getMetadataSlow().getImageUrl());
+        updatePageDomain(highlight);
+        pageIconLayout.updateIcon(highlight.getUrl(), highlight.getImageUrl());
     }
 
     private void updateUiForSource(Utils.HighlightSource source) {
@@ -133,7 +102,7 @@ public class HighlightItem extends StreamItem {
         }
     }
 
-    private void updatePageDomain() {
+    private void updatePageDomain(final Highlight highlight) {
         final URI highlightURI;
         try {
             highlightURI = new URI(highlight.getUrl());
@@ -146,6 +115,18 @@ public class HighlightItem extends StreamItem {
         final UpdatePageDomainAsyncTask updatePageDomainTask = new UpdatePageDomainAsyncTask(itemView.getContext(),
                 highlightURI, pageDomainView);
         updatePageDomainTask.execute();
+    }
+
+    public View getContextMenuAnchor() {
+        return menuButton;
+    }
+
+    public int getTileWidth() {
+        return pageIconLayout.getWidth();
+    }
+
+    public int getTileHeight() {
+        return pageIconLayout.getHeight();
     }
 
     /** Updates the text of the given view to the host second level domain. */

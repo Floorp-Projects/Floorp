@@ -169,17 +169,13 @@ def mozharness_on_docker_worker_setup(config, job, taskdesc):
 
     command = [
         '/home/worker/bin/run-task',
-        # Various caches/volumes are default owned by root:root.
-        '--chown-recursive', '/home/worker/workspace',
-        '--chown-recursive', '/home/worker/tooltool-cache',
         '--vcs-checkout', '/home/worker/workspace/build/src',
         '--tools-checkout', '/home/worker/workspace/build/tools',
         '--',
+        '/home/worker/workspace/build/src/{}'.format(
+            run.get('job-script', 'taskcluster/scripts/builder/build-linux.sh')
+        ),
     ]
-    command.append("/home/worker/workspace/build/src/{}".format(
-        run.get('job-script',
-                "taskcluster/scripts/builder/build-linux.sh"
-                )))
 
     worker['command'] = command
 

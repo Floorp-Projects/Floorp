@@ -2927,9 +2927,8 @@ PresShell::DestroyFramesFor(Element* aElement)
   ++mChangeNestCount;
 
   nsCSSFrameConstructor* fc = FrameConstructor();
-  bool didReconstruct;
   fc->BeginUpdate();
-  fc->DestroyFramesFor(aElement, &didReconstruct);
+  bool didReconstruct = fc->DestroyFramesFor(aElement);
   fc->EndUpdate();
 
   // XXXmats doesn't frame state need to be restored in this case?
@@ -4491,11 +4490,8 @@ PresShell::ContentRemoved(nsIDocument *aDocument,
     }
   }
 
-  bool didReconstruct;
   mFrameConstructor->ContentRemoved(aMaybeContainer, aChild, oldNextSibling,
-                                    nsCSSFrameConstructor::REMOVE_CONTENT,
-                                    &didReconstruct);
-
+                                    nsCSSFrameConstructor::REMOVE_CONTENT);
 
   if (aChild->NodeType() == nsIDOMNode::DOCUMENT_TYPE_NODE) {
     MOZ_ASSERT(container == aDocument);

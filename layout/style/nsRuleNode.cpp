@@ -2841,14 +2841,6 @@ nsRuleNode::SetDefaultOnRoot(const nsStyleStructID aSID, GeckoStyleContext* aCon
     case eStyleStruct_Font:
     {
       nsStyleFont* fontData = new (mPresContext) nsStyleFont(mPresContext);
-      nscoord minimumFontSize = mPresContext->MinFontSize(fontData->mLanguage);
-
-      if (minimumFontSize > 0 && !mPresContext->IsChrome()) {
-        fontData->mFont.size = std::max(fontData->mSize, minimumFontSize);
-      }
-      else {
-        fontData->mFont.size = fontData->mSize;
-      }
       aContext->SetStyle(eStyleStruct_Font, fontData);
       return fontData;
     }
