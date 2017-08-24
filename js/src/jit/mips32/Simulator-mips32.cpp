@@ -1143,10 +1143,10 @@ GetCachePageLocked(SimulatorProcess::ICacheMap& i_cache, void* page)
     SimulatorProcess::ICacheMap::AddPtr p = i_cache.lookupForAdd(page);
     if (p)
         return p->value();
-
+    AutoEnterOOMUnsafeRegion oomUnsafe;
     CachePage* new_page = js_new<CachePage>();
-    if (!i_cache.add(p, page, new_page))
-        return nullptr;
+    if (!new_page || !i_cache.add(p, page, new_page))
+         oomUnsafe.crash("Simulator CachePage");
     return new_page;
 }
 
@@ -1350,11 +1350,10 @@ class Redirection
             }
         }
 
+        AutoEnterOOMUnsafeRegion oomUnsafe;
         Redirection* redir = (Redirection*)js_malloc(sizeof(Redirection));
         if (!redir) {
-            MOZ_ReportAssertionFailure("[unhandlable oom] Simulator redirection",
-                                       __FILE__, __LINE__);
-            MOZ_CRASH();
+            oomUnsafe.crash("Simulator redirection");
         }
         new(redir) Redirection(nativeFunction, type);
         return redir;
