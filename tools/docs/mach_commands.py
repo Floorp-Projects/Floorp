@@ -38,8 +38,10 @@ class Documentation(MachCommandBase):
     @CommandArgument('--http', const=':6666', metavar='ADDRESS', nargs='?',
                      help='Serve documentation on an HTTP server, '
                           'e.g. ":6666".')
+    @CommandArgument('--upload', action='store_true',
+                     help='Upload generated files to S3')
     def build_docs(self, what=None, format=None, outdir=None, auto_open=True,
-                   http=None, archive=False):
+                   http=None, archive=False, upload=False):
         self._activate_virtualenv()
         self.virtualenv_manager.install_pip_package('sphinx_rtd_theme==0.1.6')
 
@@ -86,6 +88,9 @@ class Documentation(MachCommandBase):
                 moztreedocs.create_tarball(archive_path, savedir)
                 print('Archived to %s' % archive_path)
 
+            if upload:
+                self._s3_upload(savedir)
+
             index_path = os.path.join(savedir, 'index.html')
             if not http and auto_open and os.path.isfile(index_path):
                 webbrowser.open(index_path)
@@ -124,21 +129,12 @@ class Documentation(MachCommandBase):
             if os.path.isfile(os.path.join(p, 'conf.py')):
                 return p
 
-    @Command('doc-upload', category='devenv',
-        description='Generate and upload documentation from the tree.')
-    @CommandArgument('what', nargs='*', metavar='DIRECTORY [, DIRECTORY]',
-        help='Path(s) to documentation to build and upload.')
-    def upload_docs(self, what=None):
-        self._activate_virtualenv()
+    def _s3_upload(self, root):
         self.virtualenv_manager.install_pip_package('boto3==1.4.4')
-
-        outdir = os.path.join(self.topobjdir, 'docs')
-        self.build_docs(what=what, outdir=outdir, format='html')
 
         from moztreedocs import distribution_files
         from moztreedocs.upload import s3_upload
-        files = distribution_files(os.path.join(outdir, 'html',
-                                                'Mozilla_Source_Tree_Docs'))
+        files = distribution_files(root)
         s3_upload(files)
 
 
