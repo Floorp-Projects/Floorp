@@ -7,7 +7,6 @@
 #ifndef mozilla_BackgroundHangMonitor_h
 #define mozilla_BackgroundHangMonitor_h
 
-#include "mozilla/CPUUsageWatcher.h"
 #include "mozilla/HangAnnotations.h"
 #include "mozilla/Monitor.h"
 #include "mozilla/RefPtr.h"
