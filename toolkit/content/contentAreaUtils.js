@@ -169,15 +169,13 @@ function saveImageURL(aURL, aFileName, aFilePickerTitleKey, aShouldBypassCache,
 }
 
 // This is like saveDocument, but takes any browser/frame-like element
-// (nsIFrameLoaderOwner) and saves the current document inside it,
+// and saves the current document inside it,
 // whether in-process or out-of-process.
 function saveBrowser(aBrowser, aSkipPrompt, aOuterWindowID = 0) {
   if (!aBrowser) {
     throw "Must have a browser when calling saveBrowser";
   }
-  let persistable = aBrowser.QueryInterface(Ci.nsIFrameLoaderOwner)
-                    .frameLoader
-                    .QueryInterface(Ci.nsIWebBrowserPersistable);
+  let persistable = aBrowser.frameLoader;
   let stack = Components.stack.caller;
   persistable.startPersistence(aOuterWindowID, {
     onDocumentReady(document) {

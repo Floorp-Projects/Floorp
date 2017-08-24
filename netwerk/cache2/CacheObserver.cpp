@@ -23,14 +23,6 @@ namespace net {
 
 CacheObserver* CacheObserver::sSelf = nullptr;
 
-static uint32_t const kDefaultUseNewCache = 1; // Use the new cache by default
-uint32_t CacheObserver::sUseNewCache = kDefaultUseNewCache;
-
-static bool sUseNewCacheTemp = false; // Temp trigger to not lose early adopters
-
-static int32_t const kAutoDeleteCacheVersion = -1; // Auto-delete off by default
-static int32_t sAutoDeleteCacheVersion = kAutoDeleteCacheVersion;
-
 static int32_t const kDefaultHalfLifeExperiment = -1; // Disabled
 int32_t CacheObserver::sHalfLifeExperiment = kDefaultHalfLifeExperiment;
 
@@ -150,14 +142,6 @@ CacheObserver::Shutdown()
 void
 CacheObserver::AttachToPreferences()
 {
-  sAutoDeleteCacheVersion = mozilla::Preferences::GetInt(
-    "browser.cache.auto_delete_cache_version", kAutoDeleteCacheVersion);
-
-  mozilla::Preferences::AddUintVarCache(
-    &sUseNewCache, "browser.cache.use_new_backend", kDefaultUseNewCache);
-  mozilla::Preferences::AddBoolVarCache(
-    &sUseNewCacheTemp, "browser.cache.use_new_backend_temp", false);
-
   mozilla::Preferences::AddBoolVarCache(
     &sUseDiskCache, "browser.cache.disk.enable", kDefaultUseDiskCache);
   mozilla::Preferences::AddBoolVarCache(
@@ -290,25 +274,6 @@ uint32_t CacheObserver::MemoryCacheCapacity()
 
   // Result is in bytes.
   return sAutoMemoryCacheCapacity = capacity;
-}
-
-// static
-bool CacheObserver::UseNewCache()
-{
-  uint32_t useNewCache = sUseNewCache;
-
-  if (sUseNewCacheTemp)
-    useNewCache = 1;
-
-  switch (useNewCache) {
-    case 0: // use the old cache backend
-      return false;
-
-    case 1: // use the new cache backend
-      return true;
-  }
-
-  return true;
 }
 
 // static
@@ -528,8 +493,7 @@ CacheObserver::Observe(nsISupports* aSubject,
   }
 
   if (!strcmp(aTopic, "browser-delayed-startup-finished")) {
-    uint32_t activeVersion = UseNewCache() ? 1 : 0;
-    CacheStorageService::CleaupCacheDirectories(sAutoDeleteCacheVersion, activeVersion);
+    CacheStorageService::CleaupCacheDirectories();
     return NS_OK;
   }
 

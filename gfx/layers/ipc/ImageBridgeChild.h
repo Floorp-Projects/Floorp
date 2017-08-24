@@ -205,7 +205,6 @@ public:
                                                     TextureFlags aFlag);
   void UpdateAsyncCanvasRenderer(AsyncCanvasRenderer* aClient);
   void UpdateImageClient(RefPtr<ImageContainer> aContainer);
-  static void DispatchReleaseTextureClient(TextureClient* aClient);
 
   /**
    * Flush all Images sent to CompositableHost.
@@ -237,8 +236,6 @@ private:
     RefPtr<ImageClient>* result,
     CompositableType aType,
     ImageContainer* aImageContainer);
-
-  void ReleaseTextureClientNow(TextureClient* aClient);
 
   void UpdateAsyncCanvasRendererNow(AsyncCanvasRenderer* aClient);
   void UpdateAsyncCanvasRendererSync(

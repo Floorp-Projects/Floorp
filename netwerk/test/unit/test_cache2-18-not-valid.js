@@ -2,11 +2,6 @@ function run_test()
 {
   do_get_profile();
 
-  if (!newCacheBackEndUsed()) {
-    do_check_true(true, "This test doesn't run when the old cache back end is used since the behavior is different");
-    return;
-  }
-
   // Open for write, write but expect it to fail, since other callback will recreate (and doom)
   // the first entry before it opens output stream (note: in case of problems the DOOMED flag
   // can be removed, it is not the test failure when opening the output stream on recreated entry.

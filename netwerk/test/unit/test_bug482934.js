@@ -75,11 +75,6 @@ function run_test()
   do_get_profile();
   evict_cache_entries();
 
-  if (!newCacheBackEndUsed()) {
-    do_check_true(true, "This test doesn't run when the old cache back end is used since it depends on the new APIs.");
-    return;
-  }
-
   do_test_pending();
 
   cache_storage = getCacheStorage("disk");

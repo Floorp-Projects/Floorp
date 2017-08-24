@@ -123,7 +123,7 @@ class GeckoViewNavigation extends GeckoViewModule {
 
     if (aWhere === Ci.nsIBrowserDOMWindow.OPEN_DEFAULTWINDOW ||
         aWhere === Ci.nsIBrowserDOMWindow.OPEN_CURRENTWINDOW) {
-      return this.browser.QueryInterface(Ci.nsIFrameLoaderOwner);
+      return this.browser;
     }
 
     throw Cr.NS_ERROR_ABORT;
