@@ -317,6 +317,9 @@ pref("browser.urlbar.maxRichResults", 10);
 // autocomplete.xml.
 pref("browser.urlbar.delay", 50);
 
+// The maximum number of historical search results to show.
+pref("browser.urlbar.maxHistoricalSearchSuggestions", 1);
+
 // The default behavior for the urlbar can be configured to use any combination
 // of the match filters with each additional filter adding more results (union).
 pref("browser.urlbar.suggest.history",              true);
