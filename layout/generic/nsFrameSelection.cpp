@@ -144,34 +144,31 @@ nsPeekOffsetStruct::nsPeekOffsetStruct(nsSelectionAmount aAmount,
 {
 }
 
-static int8_t
+// Array which contains index of each SelecionType in Selection::mDOMSelections.
+// For avoiding using if nor switch to retrieve the index, this needs to have
+// -1 for SelectionTypes which won't be created its Selection instance.
+static const int8_t kIndexOfSelections[] = {
+  -1,    // SelectionType::eInvalid
+  -1,    // SelectionType::eNone
+  0,     // SelectionType::eNormal
+  1,     // SelectionType::eSpellCheck
+  2,     // SelectionType::eIMERawClause
+  3,     // SelectionType::eIMESelectedRawClause
+  4,     // SelectionType::eIMEConvertedClause
+  5,     // SelectionType::eIMESelectedClause
+  6,     // SelectionType::eAccessibility
+  7,     // SelectionType::eFind
+  8,     // SelectionType::eURLSecondary
+  9,     // SelectionType::eURLStrikeout
+};
+
+inline int8_t
 GetIndexFromSelectionType(SelectionType aSelectionType)
 {
-  switch (aSelectionType) {
-    case SelectionType::eNormal:
-      return 0;
-    case SelectionType::eSpellCheck:
-      return 1;
-    case SelectionType::eIMERawClause:
-      return 2;
-    case SelectionType::eIMESelectedRawClause:
-      return 3;
-    case SelectionType::eIMEConvertedClause:
-      return 4;
-    case SelectionType::eIMESelectedClause:
-      return 5;
-    case SelectionType::eAccessibility:
-      return 6;
-    case SelectionType::eFind:
-      return 7;
-    case SelectionType::eURLSecondary:
-      return 8;
-    case SelectionType::eURLStrikeout:
-      return 9;
-    default:
-      return -1;
-  }
-  /* NOTREACHED */
+  // The enum value of eInvalid is -1 and the others are sequential value
+  // starting from 0.  Therefore, |SelectionType + 1| is the index of
+  // kIndexOfSelections.
+  return kIndexOfSelections[static_cast<int8_t>(aSelectionType) + 1];
 }
 
 /*
