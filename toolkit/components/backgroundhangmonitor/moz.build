@@ -23,8 +23,6 @@ if CONFIG['NIGHTLY_BUILD'] and \
 
     XPCSHELL_TESTS_MANIFESTS += ['tests/xpcshell.ini']
 
-DEFINES['MOZ_ENABLE_BACKGROUND_HANG_MONITOR'] = 1
-
 XPIDL_SOURCES += [
     'nsIHangDetails.idl',
 ]
