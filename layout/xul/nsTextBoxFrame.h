@@ -56,7 +56,7 @@ public:
                   nsPoint              aPt,
                   const nscolor*       aOverrideColor);
 
-  nsRect GetComponentAlphaBounds();
+  nsRect GetComponentAlphaBounds() const;
 
   virtual bool ComputesOwnOverflowArea() override;
 

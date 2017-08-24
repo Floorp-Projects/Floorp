@@ -3090,7 +3090,9 @@ public:
   {
     return new nsDisplayItemGenericImageGeometry(this, aBuilder);
   }
-  virtual nsRect GetComponentAlphaBounds(nsDisplayListBuilder* aBuilder) override {
+
+  virtual nsRect GetComponentAlphaBounds(nsDisplayListBuilder* aBuilder) const override
+  {
     bool snap;
     return GetBounds(aBuilder, &snap);
   }

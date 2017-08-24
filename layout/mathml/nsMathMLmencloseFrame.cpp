@@ -761,7 +761,7 @@ public:
   }
 #endif
 
-  virtual uint32_t GetPerFrameKey() override {
+  virtual uint32_t GetPerFrameKey() const override {
     return (mType << TYPE_BITS) | nsDisplayItem::GetPerFrameKey();
   }
 
