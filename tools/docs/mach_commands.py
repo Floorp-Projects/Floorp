@@ -66,9 +66,8 @@ class Documentation(MachCommandBase):
                 failed.append((path, 'could not find docs at this location'))
                 continue
 
-            # find project name to use as a namespace within `outdir`
-            project = self._find_project_name(docdir)
-            savedir = os.path.join(format_outdir, project)
+            props = self._project_properties(docdir)
+            savedir = os.path.join(format_outdir, props['project'])
 
             args = [
                 'sphinx',
@@ -84,12 +83,12 @@ class Documentation(MachCommandBase):
 
             if archive:
                 archive_path = os.path.join(outdir,
-                                            '%s.tar.gz' %  project)
+                                            '%s.tar.gz' % props['project'])
                 moztreedocs.create_tarball(archive_path, savedir)
                 print('Archived to %s' % archive_path)
 
             if upload:
-                self._s3_upload(savedir)
+                self._s3_upload(savedir, props['project'], props['version'])
 
             index_path = os.path.join(savedir, 'index.html')
             if not http and auto_open and os.path.isfile(index_path):
@@ -113,14 +112,23 @@ class Documentation(MachCommandBase):
             print('listening on %s:%d' % addr)
             httpd.start(block=True)
 
-    def _find_project_name(self, path):
+    def _project_properties(self, path):
         import imp
         path = os.path.join(path, 'conf.py')
         with open(path, 'r') as fh:
             conf = imp.load_module('doc_conf', fh, path,
                                    ('.py', 'r', imp.PY_SOURCE))
 
-        return conf.project.replace(' ', '_')
+        # Prefer the Mozilla project name, falling back to Sphinx's
+        # default variable if it isn't defined.
+        project = getattr(conf, 'moz_project_name', None)
+        if not project:
+            project = conf.project.replace(' ', '_')
+
+        return {
+            'project': project,
+            'version': getattr(conf, 'version', None)
+        }
 
     def _find_doc_dir(self, path):
         search_dirs = ('doc', 'docs')
@@ -129,13 +137,30 @@ class Documentation(MachCommandBase):
             if os.path.isfile(os.path.join(p, 'conf.py')):
                 return p
 
-    def _s3_upload(self, root):
+    def _s3_upload(self, root, project, version=None):
         self.virtualenv_manager.install_pip_package('boto3==1.4.4')
 
         from moztreedocs import distribution_files
         from moztreedocs.upload import s3_upload
-        files = distribution_files(root)
-        s3_upload(files)
+
+        # Files are uploaded to multiple locations:
+        #
+        # <project>/latest
+        # <project>/<version>
+        #
+        # This allows multiple projects and versions to be stored in the
+        # S3 bucket.
+
+        files = list(distribution_files(root))
+
+        s3_upload(files, key_prefix='%s/latest' % project)
+        if version:
+            s3_upload(files, key_prefix='%s/%s' % (project, version))
+
+        # Until we redirect / to main/latest, upload the main docs
+        # to the root.
+        if project == 'main':
+            s3_upload(files)
 
 
 def die(msg, exit_code=1):
