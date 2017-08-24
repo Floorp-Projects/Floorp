@@ -1,0 +1,25 @@
+<!DOCTYPE html>
+<html class="reftest-wait">
+<style>
+#target {
+  animation: red 100s;
+}
+@keyframes red {
+  0% { background-color: red; }
+  100% { background-color: red; }
+}
+div {
+  background-color: green;
+  width: 100px;
+  height: 100px;
+}
+</style>
+<div id="target"></div>
+<script>
+document.addEventListener('MozReftestInvalidate', () => {
+  requestAnimationFrame(() => {
+    document.styleSheets[0].cssRules[0].style.animationName = 'none';
+    document.documentElement.classList.remove('reftest-wait');
+  });
+}, false);
+</script>

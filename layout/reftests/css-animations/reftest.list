@@ -57,3 +57,6 @@ fails == background-position-important.html background-position-ref.html # This 
 == content-on-pseudo-element-at-beginning.html content-on-pseudo-element-ref.html
 == content-on-pseudo-element-at-half.html content-on-pseudo-element-ref.html
 == reframe-and-animation-starts-at-the-same-time.html reframe-and-animation-starts-at-the-same-time-ref.html
+== change-animation-name-to-none-in-rule.html change-animation-name-in-rule-ref.html
+== change-animation-name-to-other-in-rule.html change-animation-name-in-rule-ref.html
+== change-animation-name-to-non-existent-in-rule.html change-animation-name-in-rule-ref.html
