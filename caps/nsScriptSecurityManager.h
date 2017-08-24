@@ -16,12 +16,12 @@
 #include "nsCOMPtr.h"
 #include "nsIObserver.h"
 #include "nsServiceManagerUtils.h"
+#include "nsStringFwd.h"
 #include "plstr.h"
 #include "js/TypeDecls.h"
 
 #include <stdint.h>
 
-class nsCString;
 class nsIIOService;
 class nsIStringBundle;
 class SystemPrincipal;

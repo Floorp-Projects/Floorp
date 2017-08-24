@@ -51,7 +51,7 @@
 #include "mozilla/dom/Event.h"
 #include "nsRDFCID.h"
 #include "nsStyleConsts.h"
-#include "nsXPIDLString.h"
+#include "nsString.h"
 #include "nsXULControllers.h"
 #include "nsIBoxObject.h"
 #include "nsPIBoxObject.h"

@@ -8,7 +8,7 @@
 #include "nsIURI.h"
 #include "nsIURL.h"
 #include "nsExternalProtocolHandler.h"
-#include "nsXPIDLString.h"
+#include "nsString.h"
 #include "nsReadableUtils.h"
 #include "nsCOMPtr.h"
 #include "nsContentUtils.h"

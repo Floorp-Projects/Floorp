@@ -14,7 +14,6 @@
 #include "nsIPrincipal.h"
 
 class nsIMutableArray;
-class nsString;
 
 //
 // DataStruct

@@ -24,6 +24,7 @@ class ModuleObject;
 
 namespace frontend {
 class ParseNode;
+class TokenStream;
 } /* namespace frontend */
 
 typedef Rooted<ModuleObject*> RootedModuleObject;
@@ -39,6 +40,8 @@ class ImportEntryObject : public NativeObject
         ModuleRequestSlot = 0,
         ImportNameSlot,
         LocalNameSlot,
+        LineNumberSlot,
+        ColumnNumberSlot,
         SlotCount
     };
 
@@ -48,10 +51,14 @@ class ImportEntryObject : public NativeObject
     static ImportEntryObject* create(JSContext* cx,
                                      HandleAtom moduleRequest,
                                      HandleAtom importName,
-                                     HandleAtom localName);
+                                     HandleAtom localName,
+                                     uint32_t lineNumber,
+                                     uint32_t columnNumber);
     JSAtom* moduleRequest() const;
     JSAtom* importName() const;
     JSAtom* localName() const;
+    uint32_t lineNumber() const;
+    uint32_t columnNumber() const;
 };
 
 typedef Rooted<ImportEntryObject*> RootedImportEntryObject;
@@ -66,6 +73,8 @@ class ExportEntryObject : public NativeObject
         ModuleRequestSlot,
         ImportNameSlot,
         LocalNameSlot,
+        LineNumberSlot,
+        ColumnNumberSlot,
         SlotCount
     };
 
@@ -76,15 +85,45 @@ class ExportEntryObject : public NativeObject
                                      HandleAtom maybeExportName,
                                      HandleAtom maybeModuleRequest,
                                      HandleAtom maybeImportName,
-                                     HandleAtom maybeLocalName);
+                                     HandleAtom maybeLocalName,
+                                     uint32_t lineNumber,
+                                     uint32_t columnNumber);
     JSAtom* exportName() const;
     JSAtom* moduleRequest() const;
     JSAtom* importName() const;
     JSAtom* localName() const;
+    uint32_t lineNumber() const;
+    uint32_t columnNumber() const;
 };
 
 typedef Rooted<ExportEntryObject*> RootedExportEntryObject;
 typedef Handle<ExportEntryObject*> HandleExportEntryObject;
+
+class RequestedModuleObject : public NativeObject
+{
+  public:
+    enum
+    {
+        ModuleSpecifierSlot = 0,
+        LineNumberSlot,
+        ColumnNumberSlot,
+        SlotCount
+    };
+
+    static const Class class_;
+    static JSObject* initClass(JSContext* cx, HandleObject obj);
+    static bool isInstance(HandleValue value);
+    static RequestedModuleObject* create(JSContext* cx,
+                                         HandleAtom moduleSpecifier,
+                                         uint32_t lineNumber,
+                                         uint32_t columnNumber);
+    JSAtom* moduleSpecifier() const;
+    uint32_t lineNumber() const;
+    uint32_t columnNumber() const;
+};
+
+typedef Rooted<RequestedModuleObject*> RootedRequestedModuleObject;
+typedef Handle<RequestedModuleObject*> HandleRequestedModuleObject;
 
 class IndirectBindingMap
 {
@@ -304,7 +343,9 @@ class ModuleObject : public NativeObject
 class MOZ_STACK_CLASS ModuleBuilder
 {
   public:
-    explicit ModuleBuilder(JSContext* cx, HandleModuleObject module);
+    explicit ModuleBuilder(JSContext* cx, HandleModuleObject module,
+                           const frontend::TokenStream& tokenStream);
+    bool init();
 
     bool processImport(frontend::ParseNode* pn);
     bool processExport(frontend::ParseNode* pn);
@@ -322,14 +363,20 @@ class MOZ_STACK_CLASS ModuleBuilder
 
   private:
     using AtomVector = GCVector<JSAtom*>;
-    using RootedAtomVector = JS::Rooted<AtomVector>;
     using ImportEntryVector = GCVector<ImportEntryObject*>;
+    using RequestedModuleVector = GCVector<RequestedModuleObject*>;
+    using AtomSet = JS::GCHashSet<JSAtom*>;
+    using RootedAtomVector = JS::Rooted<AtomVector>;
     using RootedImportEntryVector = JS::Rooted<ImportEntryVector>;
     using RootedExportEntryVector = JS::Rooted<ExportEntryVector>;
+    using RootedRequestedModuleVector = JS::Rooted<RequestedModuleVector>;
+    using RootedAtomSet = JS::Rooted<AtomSet>;
 
     JSContext* cx_;
     RootedModuleObject module_;
-    RootedAtomVector requestedModules_;
+    const frontend::TokenStream& tokenStream_;
+    RootedAtomSet requestedModuleSpecifiers_;
+    RootedRequestedModuleVector requestedModules_;
     RootedAtomVector importedBoundNames_;
     RootedImportEntryVector importEntries_;
     RootedExportEntryVector exportEntries_;
@@ -339,14 +386,15 @@ class MOZ_STACK_CLASS ModuleBuilder
 
     ImportEntryObject* importEntryFor(JSAtom* localName) const;
 
-    bool appendExportEntry(HandleAtom exportName, HandleAtom localName);
+    bool appendExportEntry(HandleAtom exportName, HandleAtom localName,
+                           frontend::ParseNode* node = nullptr);
     bool appendExportFromEntry(HandleAtom exportName, HandleAtom moduleRequest,
-                               HandleAtom importName);
+                               HandleAtom importName, frontend::ParseNode* node);
 
-    bool maybeAppendRequestedModule(HandleAtom module);
+    bool maybeAppendRequestedModule(HandleAtom specifier, frontend::ParseNode* node);
 
     template <typename T>
-    ArrayObject* createArray(const GCVector<T>& vector);
+    ArrayObject* createArray(const JS::Rooted<GCVector<T>>& vector);
 };
 
 } // namespace js

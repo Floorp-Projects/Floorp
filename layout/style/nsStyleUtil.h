@@ -10,11 +10,11 @@
 #include "nsString.h"
 #include "nsTArrayForwardDeclare.h"
 #include "gfxFontFamilyList.h"
+#include "nsStringFwd.h"
 #include "nsStyleStruct.h"
 #include "nsCRT.h"
 
 class nsCSSValue;
-class nsStringComparator;
 class nsStyleCoord;
 class nsIContent;
 class nsIPrincipal;

@@ -13,7 +13,6 @@
 #include "nsClipboard.h"
 #include "nsString.h"
 #include "nsISupportsPrimitives.h"
-#include "nsXPIDLString.h"
 #include "nsPrimitiveHelpers.h"
 #include "nsMemory.h"
 #include "nsIFile.h"

@@ -30,7 +30,6 @@
 #include "nsIFactory.h"
 #include "nsRDFCID.h"
 #include "nsString.h"
-#include "nsXPIDLString.h"
 #include "nsNetUtil.h"
 #include "nsIURI.h"
 #include "PLDHashTable.h"

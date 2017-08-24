@@ -6,7 +6,7 @@
 
 #include "mozilla/ModuleUtils.h"
 #include "nsIServiceManager.h"
-#include "nsXPIDLString.h"
+#include "nsString.h"
 
 #include "nsEmbedCID.h"
 

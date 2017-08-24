@@ -26,7 +26,6 @@
 #include "mozilla/dom/BindingDeclarations.h"
 
 class nsIStackFrame;
-class nsString;
 
 nsresult
 NS_GetNameAndMessageForDOMNSResult(nsresult aNSResult, nsACString& aName,

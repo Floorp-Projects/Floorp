@@ -21,7 +21,7 @@
 #include "nsIDOMWindow.h"
 #include "nsIDOMDocumentType.h"
 #include "nsCOMPtr.h"
-#include "nsXPIDLString.h"
+#include "nsString.h"
 #include "nsIHttpChannelInternal.h"
 #include "nsIURI.h"
 #include "nsIServiceManager.h"

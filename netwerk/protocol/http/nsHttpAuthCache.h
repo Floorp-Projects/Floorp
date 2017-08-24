@@ -10,10 +10,9 @@
 #include "nsTArray.h"
 #include "nsAutoPtr.h"
 #include "nsCOMPtr.h"
+#include "nsStringFwd.h"
 #include "plhash.h"
 #include "nsIObserver.h"
-
-class nsCString;
 
 namespace mozilla {
 

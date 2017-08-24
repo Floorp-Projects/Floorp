@@ -42,7 +42,6 @@
 #include "nsIServiceManager.h"
 #include "nsRDFCID.h"
 #include "nsString.h"
-#include "nsXPIDLString.h"
 #include "rdf.h"
 
 #define RDF_SEQ_LIST_LIMIT   8

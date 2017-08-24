@@ -9,8 +9,8 @@
 
 #include "nsISupports.h"
 #include "nsCOMPtr.h"
+#include "nsStringFwd.h"
 class nsIContent;
-class nsAString;
 class nsISelectionController;
 class nsFrameSelection;
 class nsTextControlFrame;

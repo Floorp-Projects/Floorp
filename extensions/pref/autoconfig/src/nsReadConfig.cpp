@@ -17,7 +17,6 @@
 #include "nsIServiceManager.h"
 #include "nsIStringBundle.h"
 #include "nsToolkitCompsCID.h"
-#include "nsXPIDLString.h"
 #include "nsNetUtil.h"
 #include "nsString.h"
 #include "nsCRT.h"

@@ -7,8 +7,8 @@
 #define nsIFormControlFrame_h___
 
 #include "nsQueryFrame.h"
+#include "nsStringFwd.h"
 
-class nsAString;
 class nsIAtom;
 
 /**

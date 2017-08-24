@@ -11,12 +11,10 @@
 #include "mozilla/dom/BindingDeclarations.h"
 #include "mozilla/dom/Event.h"
 #include "mozilla/dom/Nullable.h"
+#include "nsStringFwd.h"
 
 #define IDBVERSIONCHANGEEVENT_IID \
   {0x3b65d4c3, 0x73ad, 0x492e, {0xb1, 0x2d, 0x15, 0xf9, 0xda, 0xc2, 0x08, 0x4b}}
-
-class nsAString;
-class nsDependentString;
 
 namespace mozilla {
 

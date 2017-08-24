@@ -8,10 +8,10 @@
 #define NS_ISMILATTR_H_
 
 #include "nscore.h"
+#include "nsStringFwd.h"
 
 class nsSMILValue;
 class nsIContent;
-class nsAString;
 
 namespace mozilla {
 namespace dom {

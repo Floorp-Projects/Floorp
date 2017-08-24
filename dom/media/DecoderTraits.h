@@ -8,9 +8,7 @@
 #define DecoderTraits_h_
 
 #include "nsCOMPtr.h"
-
-class nsAString;
-class nsACString;
+#include "nsStringFwd.h"
 
 namespace mozilla {
 

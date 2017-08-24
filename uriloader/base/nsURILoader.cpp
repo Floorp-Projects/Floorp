@@ -32,7 +32,6 @@
 #include "nsIDocShellTreeOwner.h"
 #include "nsIThreadRetargetableStreamListener.h"
 
-#include "nsXPIDLString.h"
 #include "nsString.h"
 #include "nsThreadUtils.h"
 #include "nsReadableUtils.h"

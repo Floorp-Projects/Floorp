@@ -6,11 +6,11 @@
 #define nsIDocumentTransformer_h__
 
 #include "nsISupports.h"
+#include "nsStringFwd.h"
 
 class nsIDocument;
 class nsIDOMNode;
 class nsIURI;
-class nsString;
 
 #define NS_ITRANSFORMOBSERVER_IID \
 { 0x04b2d17c, 0xe98d, 0x45f5, \

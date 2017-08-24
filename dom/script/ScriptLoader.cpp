@@ -542,38 +542,32 @@ ScriptLoader::CreateModuleScript(ModuleLoadRequest* aRequest)
   return rv;
 }
 
-static bool
-CreateTypeError(JSContext* aCx, ModuleScript* aScript, const nsString& aMessage,
-                JS::MutableHandle<JS::Value> aError)
-{
-  JS::Rooted<JSObject*> module(aCx, aScript->ModuleRecord());
-  JS::Rooted<JSScript*> script(aCx, JS::GetModuleScript(aCx, module));
-  JS::Rooted<JSString*> filename(aCx);
-  filename = JS_NewStringCopyZ(aCx, JS_GetScriptFilename(script));
-  if (!filename) {
-    return false;
-  }
-
-  JS::Rooted<JSString*> message(aCx, JS_NewUCStringCopyZ(aCx, aMessage.get()));
-  if (!message) {
-    return false;
-  }
-
-  return JS::CreateError(aCx, JSEXN_TYPEERR, nullptr, filename, 0, 0, nullptr,
-                         message, aError);
-}
-
 static nsresult
 HandleResolveFailure(JSContext* aCx, ModuleScript* aScript,
-                     const nsAString& aSpecifier)
+                     const nsAString& aSpecifier,
+                     uint32_t aLineNumber, uint32_t aColumnNumber)
 {
-  // TODO: How can we get the line number of the failed import?
+  nsAutoCString url;
+  aScript->BaseURL()->GetAsciiSpec(url);
+
+  JS::Rooted<JSString*> filename(aCx);
+  filename = JS_NewStringCopyZ(aCx, url.get());
+  if (!filename) {
+    return NS_ERROR_OUT_OF_MEMORY;
+  }
 
   nsAutoString message(NS_LITERAL_STRING("Error resolving module specifier: "));
   message.Append(aSpecifier);
 
+  JS::Rooted<JSString*> string(aCx, JS_NewUCStringCopyZ(aCx, message.get()));
+  if (!string) {
+    return NS_ERROR_OUT_OF_MEMORY;
+  }
+
   JS::Rooted<JS::Value> error(aCx);
-  if (!CreateTypeError(aCx, aScript, message, &error)) {
+  if (!JS::CreateError(aCx, JSEXN_TYPEERR, nullptr, filename, aLineNumber,
+                       aColumnNumber, nullptr, string, &error))
+  {
     return NS_ERROR_OUT_OF_MEMORY;
   }
 
@@ -654,21 +648,26 @@ ResolveRequestedModules(ModuleLoadRequest* aRequest, nsCOMArray<nsIURI>& aUrls)
 
   JSContext* cx = jsapi.cx();
   JS::Rooted<JSObject*> moduleRecord(cx, ms->ModuleRecord());
-  JS::Rooted<JSObject*> specifiers(cx, JS::GetRequestedModules(cx, moduleRecord));
+  JS::Rooted<JSObject*> requestedModules(cx);
+  requestedModules = JS::GetRequestedModules(cx, moduleRecord);
+  MOZ_ASSERT(requestedModules);
 
   uint32_t length;
-  if (!JS_GetArrayLength(cx, specifiers, &length)) {
+  if (!JS_GetArrayLength(cx, requestedModules, &length)) {
     return NS_ERROR_FAILURE;
   }
 
-  JS::Rooted<JS::Value> val(cx);
+  JS::Rooted<JS::Value> element(cx);
   for (uint32_t i = 0; i < length; i++) {
-    if (!JS_GetElement(cx, specifiers, i, &val)) {
+    if (!JS_GetElement(cx, requestedModules, i, &element)) {
       return NS_ERROR_FAILURE;
     }
 
+    JS::Rooted<JSString*> str(cx, JS::GetRequestedModuleSpecifier(cx, element));
+    MOZ_ASSERT(str);
+
     nsAutoJSString specifier;
-    if (!specifier.init(cx, val)) {
+    if (!specifier.init(cx, str)) {
       return NS_ERROR_FAILURE;
     }
 
@@ -676,7 +675,11 @@ ResolveRequestedModules(ModuleLoadRequest* aRequest, nsCOMArray<nsIURI>& aUrls)
     ModuleScript* ms = aRequest->mModuleScript;
     nsCOMPtr<nsIURI> uri = ResolveModuleSpecifier(ms, specifier);
     if (!uri) {
-      nsresult rv = HandleResolveFailure(cx, ms, specifier);
+      uint32_t lineNumber = 0;
+      uint32_t columnNumber = 0;
+      JS::GetRequestedModuleSourcePos(cx, element, &lineNumber, &columnNumber);
+
+      nsresult rv = HandleResolveFailure(cx, ms, specifier, lineNumber, columnNumber);
       NS_ENSURE_SUCCESS(rv, rv);
       return NS_ERROR_FAILURE;
     }
