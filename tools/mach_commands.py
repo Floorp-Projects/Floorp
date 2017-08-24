@@ -271,6 +271,20 @@ class FormatProvider(MachCommandBase):
             args = ["git", "diff", "--no-color", "-U0", "HEAD", "--"]
             for dot_extension in self._format_include_extensions:
                 args += ['*{0}'.format(dot_extension)]
+            # git-diff doesn't support an 'exclude-from-files' param, but
+            # allow to add individual exclude pattern since v1.9, see
+            # https://git-scm.com/docs/gitglossary#gitglossary-aiddefpathspecapathspec
+            with open(self._format_ignore_file, 'rb') as exclude_pattern_file:
+                for pattern in exclude_pattern_file.readlines():
+                    pattern = pattern.rstrip()
+                    pattern = pattern.replace('.*', '**')
+                    if not pattern or pattern.startswith('#'):
+                        continue  # empty or comment
+                    magics = ['exclude']
+                    if pattern.startswith('^'):
+                        magics += ['top']
+                        pattern = pattern[1:]
+                    args += [':({0}){1}'.format(','.join(magics), pattern)]
         return args
 
     def run_clang_format_diff(self, clang_format_diff, show):
