@@ -2,11 +2,6 @@ function run_test()
 {
   do_get_profile();
 
-  if (!newCacheBackEndUsed()) {
-    do_check_true(true, "This test doesn't run when the old cache back end is used since the behavior is different");
-    return;
-  }
-
   // Open for write, delay the actual write
   asyncOpenCacheEntry("http://a/", "disk", Ci.nsICacheStorage.OPEN_NORMALLY, null,
     new OpenCallback(NEW|DONTFILL, "a1m", "a1d", function(entry) {

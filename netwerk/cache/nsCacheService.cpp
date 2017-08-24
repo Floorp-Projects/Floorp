@@ -1314,10 +1314,7 @@ nsCacheService::CreateSession(const char *          clientID,
 {
     *result = nullptr;
 
-    if (net::CacheObserver::UseNewCache())
-        return NS_ERROR_NOT_IMPLEMENTED;
-
-    return CreateSessionInternal(clientID, storagePolicy, streamBased, result);
+    return NS_ERROR_NOT_IMPLEMENTED;
 }
 
 nsresult
@@ -1475,10 +1472,7 @@ nsCacheService::IsStorageEnabledForPolicy_Locked(nsCacheStoragePolicy  storagePo
 
 NS_IMETHODIMP nsCacheService::VisitEntries(nsICacheVisitor *visitor)
 {
-    if (net::CacheObserver::UseNewCache())
-        return NS_ERROR_NOT_IMPLEMENTED;
-
-    return VisitEntriesInternal(visitor);
+    return NS_ERROR_NOT_IMPLEMENTED;
 }
 
 nsresult nsCacheService::VisitEntriesInternal(nsICacheVisitor *visitor)
@@ -1537,10 +1531,7 @@ void nsCacheService::FireClearNetworkCacheStoredAnywhereNotification()
 
 NS_IMETHODIMP nsCacheService::EvictEntries(nsCacheStoragePolicy storagePolicy)
 {
-    if (net::CacheObserver::UseNewCache())
-        return NS_ERROR_NOT_IMPLEMENTED;
-
-    return EvictEntriesInternal(storagePolicy);
+    return NS_ERROR_NOT_IMPLEMENTED;
 }
 
 nsresult nsCacheService::EvictEntriesInternal(nsCacheStoragePolicy storagePolicy)
@@ -3108,33 +3099,7 @@ nsCacheService::SetDiskSmartSize()
 nsresult
 nsCacheService::SetDiskSmartSize_Locked()
 {
-    nsresult rv;
-
-    if (mozilla::net::CacheObserver::UseNewCache()) {
-        return NS_ERROR_NOT_AVAILABLE;
-    }
-
-    if (!mObserver->DiskCacheParentDirectory())
-        return NS_ERROR_NOT_AVAILABLE;
-
-    if (!mDiskDevice)
-        return NS_ERROR_NOT_AVAILABLE;
-
-    if (!mObserver->SmartSizeEnabled())
-        return NS_ERROR_NOT_AVAILABLE;
-
-    nsAutoString cachePath;
-    rv = mObserver->DiskCacheParentDirectory()->GetPath(cachePath);
-    if (NS_SUCCEEDED(rv)) {
-        nsCOMPtr<nsIRunnable> event =
-            new nsGetSmartSizeEvent(cachePath, mDiskDevice->getCacheSize(),
-                                    mObserver->ShouldUseOldMaxSmartSize());
-        DispatchToCacheIOThread(event);
-    } else {
-        return NS_ERROR_FAILURE;
-    }
-
-    return NS_OK;
+    return NS_ERROR_NOT_AVAILABLE;
 }
 
 void
