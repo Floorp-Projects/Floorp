@@ -25,6 +25,7 @@ class TestFirefoxRefresh(MarionetteTestCase):
     _formHistoryFieldName = "some-very-unique-marionette-only-firefox-reset-field"
     _formHistoryValue = "special-pumpkin-value"
 
+    _formAutofillAvailable = False
     _formAutofillAddressGuid = None
 
     _expectedURLs = ["about:robots", "about:mozilla"]
@@ -104,6 +105,8 @@ class TestFirefoxRefresh(MarionetteTestCase):
           print error
 
     def createFormAutofill(self):
+        if not self._formAutofillAvailable:
+            return
         self._formAutofillAddressGuid = self.runAsyncCode("""
           const TEST_ADDRESS_1 = {
             "given-name": "John",
@@ -248,6 +251,9 @@ class TestFirefoxRefresh(MarionetteTestCase):
         self.assertEqual(formHistoryCount, 1, "There should be only 1 entry in the form history")
 
     def checkFormAutofill(self):
+        if not self._formAutofillAvailable:
+            return
+
         formAutofillResults = self.runAsyncCode("""
           return global.profileStorage.initialize().then(() => {
             return global.profileStorage.addresses.getAll()
@@ -357,7 +363,14 @@ class TestFirefoxRefresh(MarionetteTestCase):
           global.profSvc = Cc["@mozilla.org/toolkit/profile-service;1"].getService(Ci.nsIToolkitProfileService);
           global.Preferences = Cu.import("resource://gre/modules/Preferences.jsm", {}).Preferences;
           global.FormHistory = Cu.import("resource://gre/modules/FormHistory.jsm", {}).FormHistory;
-          global.profileStorage = Cu.import("resource://formautofill/ProfileStorage.jsm", {}).profileStorage;
+        """)
+        self._formAutofillAvailable = self.runCode("""
+          try {
+            global.profileStorage = Cu.import("resource://formautofill/ProfileStorage.jsm", {}).profileStorage;
+          } catch(e) {
+            return false;
+          }
+          return true;
         """)
 
     def runCode(self, script, *args, **kwargs):
