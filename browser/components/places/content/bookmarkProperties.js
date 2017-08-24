@@ -382,6 +382,7 @@ var BookmarkPropertiesPanel = {
     if (this._batching)
       return;
     if (PlacesUIUtils.useAsyncTransactions) {
+      this._topUndoEntry = PlacesTransactions.topUndoEntry;
       this._batchBlockingDeferred = PromiseUtils.defer();
       PlacesTransactions.batch(async () => {
         await this._batchBlockingDeferred.promise;
@@ -394,7 +395,7 @@ var BookmarkPropertiesPanel = {
 
   _endBatch() {
     if (!this._batching)
-      return;
+      return false;
 
     if (PlacesUIUtils.useAsyncTransactions) {
       this._batchBlockingDeferred.resolve();
@@ -403,6 +404,9 @@ var BookmarkPropertiesPanel = {
       PlacesUtils.transactionManager.endBatch(false);
     }
     this._batching = false;
+    let changed = this._topUndoEntry != PlacesTransactions.topUndoEntry;
+    delete this._topUndoEntry;
+    return changed;
   },
 
   // nsISupports
@@ -446,11 +450,14 @@ var BookmarkPropertiesPanel = {
     // changes done as part of Undo may change the panel contents and by
     // that force it to commit more transactions.
     gEditItemOverlay.uninitPanel(true);
-    this._endBatch();
-    if (PlacesUIUtils.useAsyncTransactions)
-      PlacesTransactions.undo().catch(Components.utils.reportError);
-    else
+    let changed = this._endBatch();
+    if (PlacesUIUtils.useAsyncTransactions) {
+      if (changed) {
+        PlacesTransactions.undo().catch(Components.utils.reportError);
+      }
+    } else {
       PlacesUtils.transactionManager.undoTransaction();
+    }
     window.arguments[0].performed = false;
   },
 
