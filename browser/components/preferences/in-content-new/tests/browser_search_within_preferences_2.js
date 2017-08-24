@@ -48,9 +48,9 @@ add_task(async function() {
     }
   }
 
-  // Ensure the "Forget this Email" button exists in the hidden child of the <xul:deck>.
+  // Ensure the "Forget this email" button exists in the hidden child of the <xul:deck>.
   let unlinkFxaAccount = weavePrefsDeck.childNodes[1].querySelector("#unverifiedUnlinkFxaAccount");
-  is(unlinkFxaAccount.label, "Forget this Email", "The Forget this Email button should exist");
+  is(unlinkFxaAccount.label, "Forget this email", "The Forget this email button should exist");
 
   // Performs search.
   searchInput.focus();

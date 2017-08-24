@@ -5,6 +5,7 @@ All notable changes to this program is documented in this file.
 ## Unreleased
 
 ### Added
+- Added crashreporter environment variables to better control the browser in case of crashes.
 - Added preference `dom.file.createInChild` set to true to allow file object creation in content processes.
 - New window `state` field on the window rect response object, returned from [`GetWindowRect`], [`SetWindowRect`], [`MinimizeWindow`], [`MaximizeWindow`], and [`FullscreenWindow`] commands
 
@@ -18,6 +19,7 @@ All notable changes to this program is documented in this file.
 - To make sure no browser process is left behind when the [`New Session` command](https://docs.rs/webdriver/0.27.0/webdriver/command/enum.WebDriverCommand.html#variant.NewSession) fails, the process is closed immediately now.
 - The `proxyType` `noproxy` has been replaced with `direct` in accordance with recent WebDriver specification changes
 - `/moz/addon/install` command accepts an `addon` parameter, in lieu of `path`, containing an addon as a Base64 string
+- [mozrunner crate](https://crates.io/crates/mozrunner) upgraded to version 0.4.2
 
 ## 0.18.0 (2017-07-10)
 

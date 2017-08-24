@@ -157,8 +157,6 @@ def mozharness_test_on_docker(config, job, taskdesc):
     # assemble the command line
     command = [
         '/home/worker/bin/run-task',
-        # The workspace cache/volume is default owned by root:root.
-        '--chown', '/home/worker/workspace',
     ]
 
     # Support vcs checkouts regardless of whether the task runs from

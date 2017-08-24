@@ -843,14 +843,15 @@ Stream list for highlights sourced from th user's bookmarks. -->
 Stream list for highlights sourced from th user's bookmarks. -->
 <!ENTITY activity_stream_highlight_label_visited "Visited">
 
-<!-- LOCALIZATION NOTE (activity_stream_dismiss): This label is shown in the Activity Stream context menu,
+<!-- LOCALIZATION NOTE (activity_stream_remove): This label is shown in the Activity Stream context menu,
 and allows hiding a URL/page from highlights or topsites. The page remains in history/bookmarks, but
 is simply hidden from the Activity Stream panel. -->
-<!ENTITY activity_stream_dismiss "Dismiss">
+<!ENTITY activity_stream_remove "Remove">
 <!ENTITY activity_stream_delete_history "Delete from History">
 
 <!ENTITY activity_stream_welcome_title "Welcome to your Highlights">
 <!ENTITY activity_stream_welcome_content1 "&brandShortName; now creates highlights of things you\'ve discovered on the web so you can find your way back to great articles, videos, bookmarks, and other pages.">
+<!ENTITY activity_stream_welcome_dismiss "Dismiss">
 
 <!ENTITY private_tab_panel_title "Private Browsing + Tracking Protection">
 <!ENTITY private_tab_panel_description "&brandShortName; blocks parts of the pages that may track your browsing activity.">

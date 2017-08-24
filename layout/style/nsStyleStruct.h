@@ -1057,6 +1057,8 @@ public:
                           (aArrayLen - 1) * sizeof(nsCSSShadowItem));
   }
 
+  void operator delete(void* aPtr) { ::operator delete(aPtr); }
+
   explicit nsCSSShadowArray(uint32_t aArrayLen) :
     mLength(aArrayLen)
   {
