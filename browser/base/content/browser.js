@@ -1590,6 +1590,9 @@ var gBrowserInit = {
       }
     });
 
+    // Prepare preloaded browser for the next new tab to open.
+    gBrowser.requestPreloadBrowser();
+
     this.delayedStartupFinished = true;
 
     _resolveDelayedStartup();

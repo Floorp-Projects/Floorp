@@ -2099,6 +2099,40 @@
         </body>
       </method>
 
+      <field name="_preloadBrowserMinUserIdleSeconds">1</field>
+      <field name="_preloadBrowserMinIdlePeriodMs">40</field>
+      <method name="requestPreloadBrowser">
+        <body><![CDATA[
+          // Do nothing if we have a preloaded browser already or we're about
+          // to create one or preloading is disabled.
+          if (this._preloadedBrowser ||
+              this._preloadBrowserIdleObserver ||
+              !this._isPreloadingEnabled()) {
+            return;
+          }
+
+          this._preloadBrowserIdleObserver = (aSubject, aTopic) => {
+            if (aTopic != "idle") {
+              return;
+            }
+
+            Services.idle.removeIdleObserver(this._preloadBrowserIdleObserver,
+                                             this._preloadBrowserMinUserIdleSeconds);
+            this._preloadBrowserIdleObserver = null;
+
+            let idleCallback = deadline => {
+              if (deadline.timeRemaining() < this._preloadBrowserMinIdlePeriodMs) {
+                window.requestIdleCallback(idleCallback);
+              } else {
+                this._createPreloadBrowser();
+              }
+            };
+            window.requestIdleCallback(idleCallback);
+          };
+          Services.idle.addIdleObserver(this._preloadBrowserIdleObserver, this._preloadBrowserMinUserIdleSeconds);
+        ]]></body>
+      </method>
+
       <method name="_createPreloadBrowser">
         <body>
           <![CDATA[
@@ -2106,6 +2140,12 @@
             // or preloading of newtab pages is disabled.
             if (this._preloadedBrowser || !this._isPreloadingEnabled()) {
               return;
+            }
+
+            if (this._preloadBrowserIdleObserver) {
+              Services.idle.removeIdleObserver(this._preloadBrowserIdleObserver,
+                                               this._preloadBrowserMinUserIdleSeconds);
+              this._preloadBrowserIdleObserver = null;
             }
 
             let remoteType =
@@ -5854,6 +5894,12 @@
           }
 
           Services.prefs.removeObserver("accessibility.typeaheadfind", this);
+
+          if (this._preloadBrowserIdleObserver) {
+            Services.idle.removeIdleObserver(this._preloadBrowserIdleObserver,
+                                             this._preloadBrowserMinUserIdleSeconds);
+            this._preloadBrowserIdleObserver = null;
+          }
         ]]>
       </destructor>
 
@@ -6925,7 +6971,7 @@
           this.mTabstrip._updateScrollButtonsDisabledState();
 
           // Preload the next about:newtab if there isn't one already.
-          this.tabbrowser._createPreloadBrowser();
+          this.tabbrowser.requestPreloadBrowser();
         ]]></body>
       </method>
 
