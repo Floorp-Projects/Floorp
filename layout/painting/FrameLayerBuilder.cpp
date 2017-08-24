@@ -5854,60 +5854,36 @@ FrameLayerBuilder::GetDedicatedLayer(nsIFrame* aFrame, DisplayItemType aDisplayI
   return nullptr;
 }
 
-static gfxSize
-PredictScaleForContent(nsIFrame* aFrame, nsIFrame* aAncestorWithScale,
-                       const gfxSize& aScale)
-{
-  Matrix4x4 transform = Matrix4x4::Scaling(aScale.width, aScale.height, 1.0);
-  if (aFrame != aAncestorWithScale) {
-    // aTransform is applied first, then the scale is applied to the result
-    transform = nsLayoutUtils::GetTransformToAncestor(aFrame, aAncestorWithScale)*transform;
-  }
-  Matrix transform2d;
-  if (transform.CanDraw2D(&transform2d)) {
-     return ThebesMatrix(transform2d).ScaleFactors(true);
-  }
-  return gfxSize(1.0, 1.0);
-}
-
 gfxSize
 FrameLayerBuilder::GetPaintedLayerScaleForFrame(nsIFrame* aFrame)
 {
   MOZ_ASSERT(aFrame, "need a frame");
-  nsIFrame* last = nullptr;
-  for (nsIFrame* f = aFrame; f; f = nsLayoutUtils::GetCrossDocParentFrame(f)) {
-    last = f;
 
-    if (nsLayoutUtils::IsPopup(f)) {
-      // Don't examine ancestors of a popup. It won't make sense to check
-      // the transform from some content inside the popup to some content
-      // which is an ancestor of the popup.
-      break;
-    }
+  nsPresContext* presCtx = aFrame->PresContext()->GetRootPresContext();
 
-    const SmallPointerArray<DisplayItemData>& array = aFrame->DisplayItemData();
-
-    for (uint32_t i = 0; i < array.Length(); i++) {
-      Layer* layer = DisplayItemData::AssertDisplayItemData(array.ElementAt(i))->mLayer;
-      ContainerLayer* container = layer->AsContainerLayer();
-      if (!container ||
-          !layer->Manager()->IsWidgetLayerManager()) {
-        continue;
-      }
-      for (Layer* l = container->GetFirstChild(); l; l = l->GetNextSibling()) {
-        PaintedDisplayItemLayerUserData* data =
-            static_cast<PaintedDisplayItemLayerUserData*>
-              (l->GetUserData(&gPaintedDisplayItemLayerUserData));
-        if (data) {
-          return PredictScaleForContent(aFrame, f, gfxSize(data->mXScale, data->mYScale));
-        }
-      }
-    }
+  if (!presCtx) {
+    presCtx = aFrame->PresContext();
+    MOZ_ASSERT(presCtx);
   }
 
-  float presShellResolution = last->PresContext()->PresShell()->GetResolution();
-  return PredictScaleForContent(aFrame, last,
-      gfxSize(presShellResolution, presShellResolution));
+  nsIFrame* root = presCtx->PresShell()->GetRootFrame();
+
+  MOZ_ASSERT(root);
+
+  float resolution = presCtx->PresShell()->GetResolution();
+
+  Matrix4x4 transform = Matrix4x4::Scaling(resolution, resolution, 1.0);
+  if (aFrame != root) {
+    // aTransform is applied first, then the scale is applied to the result
+    transform = nsLayoutUtils::GetTransformToAncestor(aFrame, root) * transform;
+  }
+
+  Matrix transform2d;
+  if (transform.CanDraw2D(&transform2d)) {
+    return ThebesMatrix(transform2d).ScaleFactors(true);
+  }
+
+  return gfxSize(1.0, 1.0);
 }
 
 #ifdef MOZ_DUMP_PAINTING
