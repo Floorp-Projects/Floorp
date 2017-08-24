@@ -3,7 +3,6 @@
 const BASE_PROBE_NAME = "browser.engagement.navigation.";
 const SCALAR_CONTEXT_MENU = BASE_PROBE_NAME + "contextmenu";
 const SCALAR_ABOUT_NEWTAB = BASE_PROBE_NAME + "about_newtab";
-const SCALAR_ABOUT_ACTIVITYSTREAM = BASE_PROBE_NAME + "activitystream";
 
 add_task(async function setup() {
   // Create two new search engines. Mark one as the default engine, so
@@ -91,25 +90,14 @@ add_task(async function test_context_menu() {
 });
 
 add_task(async function test_about_newtab() {
-  // Test newtab search event.
-  const ACTIVITY_STREAM_ENABLED = Services.prefs.getBoolPref("browser.newtabpage.activity-stream.enabled");
-  if (ACTIVITY_STREAM_ENABLED === true) {
-    Services.prefs.setBoolPref("browser.newtabpage.activity-stream.enabled", false);
-  }
-
   // Let's reset the counts.
   Services.telemetry.clearScalars();
   Services.telemetry.clearEvents();
   let search_hist = getAndClearKeyedHistogram("SEARCH_COUNTS");
 
   let tab = await BrowserTestUtils.openNewForegroundTab(gBrowser, "about:newtab", false);
-  // browser.newtab.preload preloads a new tab before pref change actually happens.
-  // We need to throw away the first tab we open because it will not be up to date.
-  await BrowserTestUtils.removeTab(tab);
-  tab = await BrowserTestUtils.openNewForegroundTab(gBrowser, "about:newtab", false);
   await ContentTask.spawn(tab.linkedBrowser, null, async function() {
     await ContentTaskUtils.waitForCondition(() => !content.document.hidden);
-    await ContentTaskUtils.waitForCondition(() => content.document.querySelector("#newtab-search-text"));
   });
 
   info("Trigger a simple serch, just text + enter.");
@@ -131,56 +119,6 @@ add_task(async function test_about_newtab() {
   let events = Services.telemetry.snapshotEvents(Ci.nsITelemetry.DATASET_RELEASE_CHANNEL_OPTIN, false);
   events = (events.parent || []).filter(e => e[1] == "navigation" && e[2] == "search");
   checkEvents(events, [["navigation", "search", "about_newtab", "enter", {engine: "other-MozSearch"}]]);
-
-  Services.prefs.clearUserPref("browser.newtabpage.activity-stream.enabled");
-
-  await BrowserTestUtils.removeTab(tab);
-});
-
-add_task(async function test_about_newtab_activitystream() {
-  // Test activitystream search event.
-  const ACTIVITY_STREAM_ENABLED = Services.prefs.getBoolPref("browser.newtabpage.activity-stream.enabled");
-  if (ACTIVITY_STREAM_ENABLED === false) {
-    Services.prefs.setBoolPref("browser.newtabpage.activity-stream.enabled", true);
-  }
-  // Let's reset the counts.
-  Services.telemetry.clearScalars();
-  Services.telemetry.clearEvents();
-  let search_hist = getAndClearKeyedHistogram("SEARCH_COUNTS");
-
-  let tab = await BrowserTestUtils.openNewForegroundTab(gBrowser, "about:newtab", false);
-  // browser.newtab.preload preloads a new tab before pref change actually happens.
-  // We need to throw away the first tab we open because it will not be up to date.
-  await BrowserTestUtils.removeTab(tab);
-  tab = await BrowserTestUtils.openNewForegroundTab(gBrowser, "about:newtab", false);
-  await ContentTask.spawn(tab.linkedBrowser, null, async function() {
-    await ContentTaskUtils.waitForCondition(() => !content.document.hidden);
-  });
-
-  info("Trigger a simple serch, just text + enter.");
-  let p = BrowserTestUtils.browserLoaded(tab.linkedBrowser);
-  await ContentTask.spawn(tab.linkedBrowser, null, async function() {
-    await ContentTaskUtils.waitForCondition(() => content.document.querySelector("#newtab-search-text"));
-  });
-  await typeInSearchField(tab.linkedBrowser, "test query", "newtab-search-text");
-  await BrowserTestUtils.synthesizeKey("VK_RETURN", {}, tab.linkedBrowser);
-  await p;
-
-  // Check if the scalars contain the expected values.
-  const scalars = getParentProcessScalars(Ci.nsITelemetry.DATASET_RELEASE_CHANNEL_OPTIN, true, false);
-  checkKeyedScalar(scalars, SCALAR_ABOUT_ACTIVITYSTREAM, "search_enter", 1);
-  Assert.equal(Object.keys(scalars[SCALAR_ABOUT_ACTIVITYSTREAM]).length, 1,
-    "This search must only increment one entry in the scalar.");
-
-  // Make sure SEARCH_COUNTS contains identical values.
-  checkKeyedHistogram(search_hist, "other-MozSearch.activitystream", 1);
-
-  // Also check events.
-  let events = Services.telemetry.snapshotEvents(Ci.nsITelemetry.DATASET_RELEASE_CHANNEL_OPTIN, false);
-  events = (events.parent || []).filter(e => e[1] == "navigation" && e[2] == "search");
-  checkEvents(events, [["navigation", "search", "activitystream", "enter", {engine: "other-MozSearch"}]]);
-
-  Services.prefs.clearUserPref("browser.newtabpage.activity-stream.enabled");
 
   await BrowserTestUtils.removeTab(tab);
 });
