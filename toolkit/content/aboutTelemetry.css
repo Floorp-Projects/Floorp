@@ -264,10 +264,12 @@ body[dir="rtl"] .bar {
 
 th, td, table {
   text-align: start;
+  word-break: break-all;
   border-collapse: collapse;
 }
 
 table {
+  table-layout: fixed;
   width: 100%;
   font-size: 15px;
   margin-bottom: 2em;
