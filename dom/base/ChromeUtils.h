@@ -139,6 +139,12 @@ public:
                            JS::HandleObject aObj,
                            bool aUnwrap,
                            nsAString& aRetval);
+
+  static void ShallowClone(GlobalObject& aGlobal,
+                           JS::HandleObject aObj,
+                           JS::HandleObject aTarget,
+                           JS::MutableHandleObject aRetval,
+                           ErrorResult& aRv);
 };
 
 } // namespace dom
