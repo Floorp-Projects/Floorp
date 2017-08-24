@@ -15,9 +15,18 @@ function getGlobalState(key)
 {
   var data;
   getObjectState(key, function(x) {
-    data = x.wrappedJSObject.data;
+    data = x && x.wrappedJSObject.data;
   });
   return data;
+}
+
+function finishBlockedRequest(request, response, query)
+{
+  response.setStatusLine(request.httpVersion, 200, "OK");
+  response.setHeader("Cache-Control", "no-cache", false);
+  response.setHeader("Content-Type", "application/javascript", false);
+  response.write("window.script_executed_" + query[1] + " = true; ok(true, 'Script " + query[1] + " executed');");
+  response.finish();
 }
 
 function handleRequest(request, response)
@@ -25,8 +34,14 @@ function handleRequest(request, response)
   var query = request.queryString.split('&');
   switch (query[0]) {
     case "blocked":
-      setGlobalState(response, query[1]);
-      response.processAsync();
+      var alreadyUnblocked = getGlobalState(query[1]);
+      if (alreadyUnblocked) {
+        // the unblock request came before the blocked request, just go on and finish synchronously
+        finishBlockedRequest(request, response, query);
+      } else {
+        setGlobalState(response, query[1]);
+        response.processAsync();
+      }
       break;
 
     case "unblock":
@@ -36,11 +51,12 @@ function handleRequest(request, response)
       response.write("\x89PNG"); // just a broken image is enough for our purpose
 
       var blockedResponse = getGlobalState(query[1]);
-      blockedResponse.setStatusLine(request.httpVersion, 200, "OK");
-      blockedResponse.setHeader("Cache-Control", "no-cache", false);
-      blockedResponse.setHeader("Content-Type", "application/javascript", false);
-      blockedResponse.write("window.script_executed_" + query[1] + " = true; ok(true, 'Script " + query[1] + " executed');");
-      blockedResponse.finish();
+      if (!blockedResponse) {
+        // the unblock request came before the blocked request, remember to not block it
+        setGlobalState(true, query[1]);
+      } else {
+        finishBlockedRequest(request, blockedResponse, query);
+      }
       break;
 
     default:
