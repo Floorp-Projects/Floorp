@@ -586,7 +586,7 @@ nsDisplayXULImage::AllocateGeometry(nsDisplayListBuilder* aBuilder)
 void
 nsDisplayXULImage::ComputeInvalidationRegion(nsDisplayListBuilder* aBuilder,
                                              const nsDisplayItemGeometry* aGeometry,
-                                             nsRegion* aInvalidRegion)
+                                             nsRegion* aInvalidRegion) const
 {
   auto boxFrame = static_cast<nsImageBoxFrame*>(mFrame);
   auto geometry =
@@ -629,7 +629,7 @@ nsDisplayXULImage::GetImage()
 }
 
 nsRect
-nsDisplayXULImage::GetDestRect()
+nsDisplayXULImage::GetDestRect() const
 {
   Maybe<nsPoint> anchorPoint;
   return static_cast<nsImageBoxFrame*>(mFrame)->GetDestRect(ToReferenceFrame(), anchorPoint);
