@@ -6723,7 +6723,11 @@ HTMLMediaElement::SetPlaybackRate(double aPlaybackRate, ErrorResult& aRv)
     return;
   }
 
-  mPlaybackRate = ClampPlaybackRate(aPlaybackRate);
+  if (mPlaybackRate == aPlaybackRate) {
+    return;
+  }
+
+  mPlaybackRate = aPlaybackRate;
 
   if (mPlaybackRate != 0.0 &&
       (mPlaybackRate > THRESHOLD_HIGH_PLAYBACKRATE_AUDIO ||
@@ -6734,7 +6738,7 @@ HTMLMediaElement::SetPlaybackRate(double aPlaybackRate, ErrorResult& aRv)
   }
 
   if (mDecoder) {
-    mDecoder->SetPlaybackRate(mPlaybackRate);
+    mDecoder->SetPlaybackRate(ClampPlaybackRate(mPlaybackRate));
   }
   DispatchAsyncEvent(NS_LITERAL_STRING("ratechange"));
 }
