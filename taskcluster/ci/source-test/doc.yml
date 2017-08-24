@@ -40,7 +40,7 @@ doc-upload:
         taskcluster-proxy: true
     run:
         using: run-task
-        command: cd /home/worker/checkouts/gecko && ./mach doc-upload
+        command: cd /home/worker/checkouts/gecko && ./mach doc --upload --no-open
     scopes:
         - secrets:get:project/releng/gecko/build/level-{level}/gecko-docs-upload
     when:
