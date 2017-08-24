@@ -7642,7 +7642,7 @@ HTMLMediaElement::ReportCanPlayTelemetry()
       [thread, abstractThread]() {
 #if XP_WIN
         // Windows Media Foundation requires MSCOM to be inited.
-        HRESULT hr = CoInitializeEx(0, COINIT_MULTITHREADED);
+        DebugOnly<HRESULT> hr = CoInitializeEx(0, COINIT_MULTITHREADED);
         MOZ_ASSERT(hr == S_OK);
 #endif
         bool aac = MP4Decoder::IsSupportedType(
