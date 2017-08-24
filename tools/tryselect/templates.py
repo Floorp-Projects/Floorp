@@ -40,7 +40,7 @@ class Artifact(Template):
 
     def context(self, artifact, no_artifact, **kwargs):
         if artifact:
-            return {'enabled': 1}
+            return {'enabled': '1'}
 
         if no_artifact:
             return
@@ -49,7 +49,7 @@ class Artifact(Template):
         try:
             if build.substs.get("MOZ_ARTIFACT_BUILDS"):
                 print("Artifact builds enabled, pass --no-artifact to disable")
-                return {'enabled': 1}
+                return {'enabled': '1'}
         except BuildEnvironmentNotFoundException:
             pass
 
