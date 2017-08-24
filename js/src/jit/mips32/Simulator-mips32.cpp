@@ -1452,25 +1452,11 @@ Simulator::setFpuRegisterFloat(int fpureg, float value)
 }
 
 void
-Simulator::setFpuRegisterFloat(int fpureg, int64_t value)
-{
-    setFpuRegister(fpureg, value & 0xffffffff);
-    setFpuRegister(fpureg + 1, value >> 32);
-}
-
-void
 Simulator::setFpuRegisterDouble(int fpureg, double value)
 {
     MOZ_ASSERT((fpureg >= 0) && (fpureg < Simulator::FPURegister::kNumFPURegisters)
            && ((fpureg % 2) == 0));
     *mozilla::BitwiseCast<double*>(&FPUregisters_[fpureg]) = value;
-}
-
-void
-Simulator::setFpuRegisterDouble(int fpureg, int64_t value)
-{
-    setFpuRegister(fpureg, value & 0xffffffff);
-    setFpuRegister(fpureg + 1, value >> 32);
 }
 
 // Get the register from the architecture state. This function does handle
@@ -2625,7 +2611,6 @@ Simulator::decodeTypeRegister(SimInstruction* instr)
           case rs_s:
             float f, ft_value, fs_value;
             uint32_t cc, fcsr_cc;
-            int64_t  i64;
             fs_value = getFpuRegisterFloat(fs_reg);
             ft_value = getFpuRegisterFloat(ft_reg);
             cc = instr->fcccValue();
@@ -2729,33 +2714,11 @@ Simulator::decodeTypeRegister(SimInstruction* instr)
                 }
                 break;
               }
-              case ff_cvt_l_fmt: {  // Mips32r2: Truncate float to 64-bit long-word.
-                float rounded = truncf(fs_value);
-                i64 = static_cast<int64_t>(rounded);
-                setFpuRegisterFloat(fd_reg, i64);
-                break;
-              }
-              case ff_round_l_fmt: {  // Mips32r2 instruction.
-                float rounded =
-                    fs_value > 0 ? std::floor(fs_value + 0.5) : std::ceil(fs_value - 0.5);
-                i64 = static_cast<int64_t>(rounded);
-                setFpuRegisterFloat(fd_reg, i64);
-                break;
-              }
-              case ff_trunc_l_fmt: {  // Mips32r2 instruction.
-                float rounded = truncf(fs_value);
-                i64 = static_cast<int64_t>(rounded);
-                setFpuRegisterFloat(fd_reg, i64);
-                break;
-              }
-              case ff_floor_l_fmt:  // Mips32r2 instruction.
-                i64 = static_cast<int64_t>(std::floor(fs_value));
-                setFpuRegisterFloat(fd_reg, i64);
-                break;
-              case ff_ceil_l_fmt:  // Mips32r2 instruction.
-                i64 = static_cast<int64_t>(std::ceil(fs_value));
-                setFpuRegisterFloat(fd_reg, i64);
-                break;
+              case ff_cvt_l_fmt:
+              case ff_round_l_fmt:
+              case ff_trunc_l_fmt:
+              case ff_floor_l_fmt:
+              case ff_ceil_l_fmt:
               case ff_cvt_ps_s:
               case ff_c_f_fmt:
                 MOZ_CRASH();
@@ -2893,33 +2856,11 @@ Simulator::decodeTypeRegister(SimInstruction* instr)
               case ff_cvt_s_fmt:  // Convert double to float (single).
                 setFpuRegisterFloat(fd_reg, static_cast<float>(ds_value));
                 break;
-              case ff_cvt_l_fmt: {  // Mips32r2: Truncate double to 64-bit long-word.
-                double rounded = trunc(ds_value);
-                i64 = static_cast<int64_t>(rounded);
-                setFpuRegisterDouble(fd_reg, i64);
-                break;
-              }
-              case ff_trunc_l_fmt: {  // Mips32r2 instruction.
-                double rounded = trunc(ds_value);
-                i64 = static_cast<int64_t>(rounded);
-                setFpuRegisterDouble(fd_reg, i64);
-                break;
-              }
-              case ff_round_l_fmt: {  // Mips32r2 instruction.
-                double rounded =
-                    ds_value > 0 ? std::floor(ds_value + 0.5) : std::ceil(ds_value - 0.5);
-                i64 = static_cast<int64_t>(rounded);
-                setFpuRegisterDouble(fd_reg, i64);
-                break;
-              }
-              case ff_floor_l_fmt:  // Mips32r2 instruction.
-                i64 = static_cast<int64_t>(std::floor(ds_value));
-                setFpuRegisterDouble(fd_reg, i64);
-                break;
-              case ff_ceil_l_fmt:  // Mips32r2 instruction.
-                i64 = static_cast<int64_t>(std::ceil(ds_value));
-                setFpuRegisterDouble(fd_reg, i64);
-                break;
+              case ff_cvt_l_fmt:
+              case ff_trunc_l_fmt:
+              case ff_round_l_fmt:
+              case ff_floor_l_fmt:
+              case ff_ceil_l_fmt:
               case ff_c_f_fmt:
                 MOZ_CRASH();
                 break;
@@ -2958,13 +2899,7 @@ Simulator::decodeTypeRegister(SimInstruction* instr)
             break;
           case rs_l:
             switch (instr->functionFieldRaw()) {
-              case ff_cvt_d_fmt:  // Mips32r2 instruction.
-                // Watch the signs here, we want 2 32-bit vals
-                // to make a sign-64.
-                i64 = static_cast<uint32_t>(getFpuRegister(fs_reg));
-                i64 |= static_cast<int64_t>(getFpuRegister(fs_reg + 1)) << 32;
-                setFpuRegisterDouble(fd_reg, static_cast<double>(i64));
-                break;
+              case ff_cvt_d_fmt:
               case ff_cvt_s_fmt:
                 MOZ_CRASH();
                 break;
