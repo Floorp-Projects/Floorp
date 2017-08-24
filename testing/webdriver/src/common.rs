@@ -189,6 +189,7 @@ pub enum LocatorStrategy {
     CSSSelector,
     LinkText,
     PartialLinkText,
+    TagName,
     XPath,
 }
 
@@ -200,6 +201,7 @@ impl LocatorStrategy {
             "css selector" => Ok(LocatorStrategy::CSSSelector),
             "link text" => Ok(LocatorStrategy::LinkText),
             "partial link text" => Ok(LocatorStrategy::PartialLinkText),
+            "tag name" => Ok(LocatorStrategy::TagName),
             "xpath" => Ok(LocatorStrategy::XPath),
             x => Err(WebDriverError::new(ErrorStatus::InvalidArgument,
                                          format!("Unknown locator strategy {}", x)))
@@ -213,6 +215,7 @@ impl ToJson for LocatorStrategy {
             LocatorStrategy::CSSSelector => "css selector",
             LocatorStrategy::LinkText => "link text",
             LocatorStrategy::PartialLinkText => "partial link text",
+            LocatorStrategy::TagName => "tag name",
             LocatorStrategy::XPath => "xpath"
         }.to_string())
     }
