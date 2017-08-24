@@ -39,6 +39,7 @@
 #include "nsIWindowMediator.h"
 #include "nsNativeCharsetUtils.h"
 #include "nsIAppStartup.h"
+#include "mozilla/Assertions.h"
 #include "mozilla/dom/Location.h"
 
 #include <windows.h>
@@ -109,7 +110,7 @@ struct Win32Mutex {
             // Make sure we release it if we own it.
             Unlock();
 
-            BOOL rc = CloseHandle( mHandle );
+            BOOL rc MOZ_UNUSED_ATTRIBUTE = CloseHandle( mHandle );
 #if MOZ_DEBUG_DDE
             if ( !rc ) {
                 printf( "CloseHandle error = 0x%08X\n", (int)GetLastError() );
