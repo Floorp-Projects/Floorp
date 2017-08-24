@@ -42,7 +42,7 @@ class FilterPath(object):
         return os.path.isdir(self.path)
 
     def join(self, *args):
-        return FilterPath(os.path.join(self.path, *args))
+        return FilterPath(os.path.join(self, *args))
 
     def match(self, patterns):
         return any(mozpath.match(self.path, pattern.path) for pattern in patterns)
@@ -82,7 +82,7 @@ def filterpaths(paths, linter, **lintargs):
         return paths
 
     def normalize(path):
-        if '*' not in path and not os.path.isabs(path):
+        if not os.path.isabs(path):
             path = os.path.join(root, path)
         return FilterPath(path)
 
@@ -139,18 +139,16 @@ def filterpaths(paths, linter, **lintargs):
             # If the specified path is a file it must be both
             # matched by an include directive and not matched
             # by an exclude directive.
-            if not path.match(includeglobs) or any(e.contains(path) for e in excludepaths):
+            if not path.match(includeglobs):
                 continue
 
             keep.add(path)
         elif path.isdir:
             # If the specified path is a directory, use a
             # FileFinder to resolve all relevant globs.
-            path.exclude = [os.path.relpath(e.path, root) for e in exclude]
+            path.exclude = [e.path for e in excludeglobs]
             for pattern in includeglobs:
                 for p, f in path.finder.find(pattern.path):
-                    if extensions and os.path.splitext(p)[1][1:] not in extensions:
-                        continue
                     keep.add(path.join(p))
 
     # Only pass paths we couldn't exclude here to the underlying linter

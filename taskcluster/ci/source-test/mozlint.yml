@@ -57,26 +57,6 @@ mozlint-flake8:
             - 'python/mozlint/**'
             - 'tools/lint/**'
 
-mozlint-test-manifest:
-    description: lint test manifests
-    platform: lint/opt
-    treeherder:
-        symbol: tm
-        kind: test
-        tier: 1
-    worker-type: aws-provisioner-v1/gecko-t-linux-xlarge
-    worker:
-        docker-image: {in-tree: "lint"}
-        max-run-time: 1800
-    run:
-        using: mach
-        mach: lint -l test-disable -f treeherder
-    when:
-        files-changed:
-            - '**/*.ini'
-            - 'python/mozlint/**'
-            - 'tools/lint/**'
-
 mozlint-yaml:
     description: yamllint run over the gecko codebase
     platform: lint/opt
