@@ -4,13 +4,13 @@ export MOZBUILD_STATE_PATH=$TMP/mozbuild
 cachedir=$MOZBUILD_STATE_PATH/cache/taskgraph
 mkdir -p $cachedir
 
-cat >> $cachedir/target_task_set << EOF
+cat > $cachedir/target_task_set << EOF
 test/foo-opt
 test/foo-debug
 build-baz
 EOF
 
-cat >> $cachedir/full_task_set << EOF
+cat > $cachedir/full_task_set << EOF
 test/foo-opt
 test/foo-debug
 test/bar-opt
