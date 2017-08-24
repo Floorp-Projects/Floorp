@@ -275,7 +275,7 @@ private:
     MozPromiseHolder<SizeOfPromise> mCallback;
   };
 
-  virtual void AddSizeOfResources(ResourceSizes* aSizes);
+  virtual void AddSizeOfResources(ResourceSizes* aSizes) = 0;
 
   VideoFrameContainer* GetVideoFrameContainer()
   {

@@ -83,12 +83,6 @@ public:
 
   void Detach() { mDecoder = nullptr; }
 
-private:
-  friend class HLSResourceCallbacksSupport;
-
-  void onDataAvailable();
-  void onError(int aErrorCode);
-
   size_t SizeOfExcludingThis(MallocSizeOf aMallocSizeOf) const override
   {
     size_t size = MediaResource::SizeOfExcludingThis(aMallocSizeOf);
@@ -99,6 +93,12 @@ private:
   {
     return aMallocSizeOf(this) + SizeOfExcludingThis(aMallocSizeOf);
   }
+
+private:
+  friend class HLSResourceCallbacksSupport;
+
+  void onDataAvailable();
+  void onError(int aErrorCode);
 
   HLSDecoder* mDecoder;
   nsCOMPtr<nsIChannel> mChannel;

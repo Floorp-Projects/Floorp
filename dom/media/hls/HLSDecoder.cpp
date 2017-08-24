@@ -92,6 +92,15 @@ HLSDecoder::Load(nsIChannel* aChannel)
   return InitializeStateMachine();
 }
 
+void
+HLSDecoder::AddSizeOfResources(ResourceSizes* aSizes)
+{
+  MOZ_ASSERT(NS_IsMainThread());
+  if (mResource) {
+    aSizes->mByteSize += mResource->SizeOfIncludingThis(aSizes->mMallocSizeOf);
+  }
+}
+
 already_AddRefed<nsIPrincipal>
 HLSDecoder::GetCurrentPrincipal()
 {
