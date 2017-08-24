@@ -187,7 +187,6 @@ bool nsNotifyAddrListener::findMac(char *gateway)
 
         if (status == NO_ERROR) {
             for (DWORD i = 0; i < pIpNetTable->dwNumEntries; ++i) {
-                DWORD dwCurrIndex = pIpNetTable->table[i].dwIndex;
                 char hw[256];
 
                 if (!macAddr(pIpNetTable->table[i].bPhysAddr,
