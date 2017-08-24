@@ -98,7 +98,7 @@
                   "is_default": {
                     "type": "boolean",
                     "optional": true,
-                    "description": "Sets the default engine to a built-in engine only."
+                    "deprecated": "Unsupported on Firefox at this time."
                   }
                 }
               }
