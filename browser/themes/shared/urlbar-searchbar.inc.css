@@ -23,16 +23,16 @@
 }
 
 #urlbar:-moz-lwtheme,
-.searchbar-textbox:-moz-lwtheme {
-  background-color: hsla(0,0%,100%,.8);
-  color: black;
+#navigator-toolbox .searchbar-textbox:-moz-lwtheme {
+  background-color: var(--url-and-searchbar-background-color, hsla(0,0%,100%,.8));
+  color: var(--url-and-searchbar-color, black);
 }
 
 #urlbar:-moz-lwtheme:hover,
 #urlbar:-moz-lwtheme[focused="true"],
-.searchbar-textbox:-moz-lwtheme:hover,
-.searchbar-textbox:-moz-lwtheme[focused="true"] {
-  background-color: white;
+#navigator-toolbox .searchbar-textbox:-moz-lwtheme:hover,
+#navigator-toolbox .searchbar-textbox:-moz-lwtheme[focused="true"] {
+  background-color: var(--url-and-searchbar-background-color, white);
 }
 
 :root[uidensity=compact] #urlbar,
