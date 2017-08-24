@@ -291,6 +291,7 @@ nsHtml5TreeOpExecutor::ContinueInterruptedParsingAsync()
     // Now we set up a repetitive idle scheduler for flushing background list.
     gBackgroundFlushRunner =
       IdleTaskRunner::Create(&BackgroundFlushCallback,
+                             "nsHtml5TreeOpExecutor::BackgroundFlushCallback",
                              250, // The hard deadline: 250ms.
                              nsContentSink::sInteractiveParseTime / 1000, // Required budget.
                              true, // repeating
