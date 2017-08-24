@@ -46,7 +46,7 @@ ia2Accessible::QueryInterface(REFIID iid, void** ppv)
     *ppv = static_cast<IAccessible2_3*>(this);
   else if (IID_IAccessible2_2 == iid)
     *ppv = static_cast<IAccessible2_2*>(this);
-  else if (IID_IAccessible2 == iid && !Compatibility::IsIA2Off())
+  else if (IID_IAccessible2 == iid)
     *ppv = static_cast<IAccessible2*>(this);
 
   if (*ppv) {
