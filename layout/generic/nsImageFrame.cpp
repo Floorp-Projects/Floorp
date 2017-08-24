@@ -993,7 +993,7 @@ nsImageFrame::Reflow(nsPresContext*          aPresContext,
   if (HaveFixedSize(aReflowInput)) {
     mState |= IMAGE_SIZECONSTRAINED;
   } else {
-    mState &= ~IMAGE_SIZECONSTRAINED;
+    RemoveStateBits(IMAGE_SIZECONSTRAINED);
   }
 
   // XXXldb These two bits are almost exact opposites (except in the

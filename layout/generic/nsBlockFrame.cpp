@@ -1229,7 +1229,7 @@ nsBlockFrame::Reflow(nsPresContext*           aPresContext,
 
   LazyMarkLinesDirty();
 
-  mState &= ~NS_FRAME_FIRST_REFLOW;
+  RemoveStateBits(NS_FRAME_FIRST_REFLOW);
 
   // Now reflow...
   ReflowDirtyLines(state);

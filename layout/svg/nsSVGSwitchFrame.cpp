@@ -172,7 +172,7 @@ nsSVGSwitchFrame::ReflowSVG()
     (GetParent()->GetStateBits() & NS_FRAME_FIRST_REFLOW) == 0;
 
   if (outerSVGHasHadFirstReflow) {
-    mState &= ~NS_FRAME_FIRST_REFLOW; // tell our children
+    RemoveStateBits(NS_FRAME_FIRST_REFLOW); // tell our children
   }
 
   nsOverflowAreas overflowRects;
@@ -201,8 +201,8 @@ nsSVGSwitchFrame::ReflowSVG()
 
   // Remove state bits after FinishAndStoreOverflow so that it doesn't
   // invalidate on first reflow:
-  mState &= ~(NS_FRAME_FIRST_REFLOW | NS_FRAME_IS_DIRTY |
-              NS_FRAME_HAS_DIRTY_CHILDREN);
+  RemoveStateBits(NS_FRAME_FIRST_REFLOW | NS_FRAME_IS_DIRTY |
+                  NS_FRAME_HAS_DIRTY_CHILDREN);
 }
 
 SVGBBox
