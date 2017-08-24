@@ -189,7 +189,6 @@ Structure:
 
     "js" : {
       "setProto": <unsigned integer>, // Number of times __proto__ is set
-      "customIter": <unsigned integer> // Number of times __iterator__ is used (i.e., is found for a for-in loop)
     }
 
 maximalNumberOfConcurrentThreads

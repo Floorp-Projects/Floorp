@@ -546,15 +546,6 @@ JS_SetProtoCalled(JSContext*)
     return sSetProtoCalled;
 }
 
-// Defined in jsiter.cpp.
-extern size_t sCustomIteratorCount;
-
-JS_FRIEND_API(size_t)
-JS_GetCustomIteratorCount(JSContext* cx)
-{
-    return sCustomIteratorCount;
-}
-
 JS_FRIEND_API(unsigned)
 JS_PCToLineNumber(JSScript* script, jsbytecode* pc, unsigned* columnp)
 {
