@@ -16,6 +16,7 @@ body {
 #categories {
   padding-top: 0px;
   overflow-y: auto;
+  margin-bottom: 42px;
 }
 
 .main-content.search > section > *:not(.data) {
