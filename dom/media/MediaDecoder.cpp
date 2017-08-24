@@ -700,15 +700,6 @@ MediaDecoder::GetCurrentTime()
   return mLogicalPosition;
 }
 
-already_AddRefed<nsIPrincipal>
-MediaDecoder::GetCurrentPrincipal()
-{
-  MOZ_ASSERT(NS_IsMainThread());
-  MediaResource* r = GetResource();
-  AbstractThread::AutoEnter context(AbstractMainThread());
-  return r ? r->GetCurrentPrincipal() : nullptr;
-}
-
 void
 MediaDecoder::OnMetadataUpdate(TimedMetadata&& aMetadata)
 {
