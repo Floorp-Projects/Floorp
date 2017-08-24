@@ -300,7 +300,7 @@ printf_stderr(const char *fmt, ...)
 
 
 #ifdef _M_IX86
-typedef MOZ_NORETURN void (__fastcall* BaseThreadInitThunk_func)(BOOL aIsInitialThread, void* aStartAddress, void* aThreadParam);
+typedef void (__fastcall* BaseThreadInitThunk_func)(BOOL aIsInitialThread, void* aStartAddress, void* aThreadParam);
 static BaseThreadInitThunk_func stub_BaseThreadInitThunk = nullptr;
 #endif
 
