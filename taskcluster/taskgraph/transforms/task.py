@@ -1206,15 +1206,36 @@ def check_run_task_caches(config, tasks):
         (level-\d+-checkouts|level-\d+-tooltool-cache)
     ''', re.VERBOSE)
 
+    re_sparse_checkout_cache = re.compile('^level-\d+-checkouts-sparse')
+
     suffix = _run_task_suffix()
 
     for task in tasks:
         payload = task['task'].get('payload', {})
         command = payload.get('command') or ['']
-        command = command[0] if isinstance(command[0], basestring) else ''
-        run_task = command.endswith('run-task')
+
+        main_command = command[0] if isinstance(command[0], basestring) else ''
+        run_task = main_command.endswith('run-task')
+
+        require_sparse_cache = False
+        have_sparse_cache = False
+
+        if run_task:
+            for arg in command[1:]:
+                if not isinstance(arg, basestring):
+                    continue
+
+                if arg == '--':
+                    break
+
+                if arg.startswith('--sparse-profile'):
+                    require_sparse_cache = True
+                    break
 
         for cache in payload.get('cache', {}):
+            if re_sparse_checkout_cache.match(cache):
+                have_sparse_cache = True
+
             if not re_reserved_caches.match(cache):
                 continue
 
@@ -1230,6 +1251,11 @@ def check_run_task_caches(config, tasks):
                     'but the cache name is not dependent on the contents '
                     'of run-task; change the cache name to conform to the '
                     'naming requirements' % (task['label'], cache))
+
+        if require_sparse_cache and not have_sparse_cache:
+            raise Exception('%s is using a sparse checkout but not using '
+                            'a sparse checkout cache; change the checkout '
+                            'cache name so it is sparse aware' % task['label'])
 
         yield task
 

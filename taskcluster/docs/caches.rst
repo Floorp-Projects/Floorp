@@ -55,6 +55,10 @@ Version Control Caches
    This cache name pattern is managed by ``run-task`` and must only be
    used with ``run-task``.
 
+``level-{{level}}-checkouts-sparse-{{hash}}``
+   This is like the above but is used when the checkout is sparse (contains
+   a subset of files).
+
 ``level-{{level}}-checkouts-{{version}}`` (deprecated)
    This cache holds version control checkouts, each in a subdirectory named
    after the repo (e.g., ``gecko``).
