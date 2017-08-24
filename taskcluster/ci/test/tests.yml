@@ -14,6 +14,10 @@ awsy:
     e10s: true
     instance-size: xlarge
     allow-software-gl-layers: false
+    run-on-projects:
+        by-test-platform:
+            .*-devedition/.*: [] # don't run on devedition
+            default: built-projects
     mozharness:
         script: awsy_script.py
         config:
@@ -194,7 +198,7 @@ gtest:
             linux64-qr/.*: ['mozilla-central', 'try']
             windows.*-pgo/.*: [] # permafails on pgo
             windows.*-nightly/.*: [] # permafails on nightly too
-            windows.*-devedition/.*: [] # permafails here too
+            .*-devedition/.*: [] # don't run on devedition
             default: built-projects
     mozharness:
         script: desktop_unittest.py
