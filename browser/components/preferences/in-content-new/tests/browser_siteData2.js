@@ -1,8 +1,6 @@
 "use strict";
 const { SiteDataManager } = Cu.import("resource:///modules/SiteDataManager.jsm", {});
-
 const REMOVE_DIALOG_URL = "chrome://browser/content/preferences/siteDataRemoveSelected.xul";
-const { DownloadUtils } = Cu.import("resource://gre/modules/DownloadUtils.jsm", {});
 
 function promiseSettingsDialogClose() {
   return new Promise(resolve => {
@@ -311,67 +309,6 @@ add_task(async function() {
   await updatePromise;
   await openSiteDataSettingsDialog();
   assertSitesListed(doc, fakeHosts.filter(host => !host.includes("xyz")));
-
-  mockSiteDataManager.unregister();
-  await BrowserTestUtils.removeTab(gBrowser.selectedTab);
-});
-
-// Test grouping and listing sites across scheme, port and origin attributes by host
-add_task(async function() {
-  await SpecialPowers.pushPrefEnv({set: [["browser.storageManager.enabled", true]]});
-  const quotaUsage = 1024;
-  mockSiteDataManager.register(SiteDataManager);
-  mockSiteDataManager.fakeSites = [
-    {
-      usage: quotaUsage,
-      principal: Services.scriptSecurityManager
-                         .createCodebasePrincipalFromOrigin("https://account.xyz.com^userContextId=1"),
-      persisted: true
-    },
-    {
-      usage: quotaUsage,
-      principal: Services.scriptSecurityManager
-                         .createCodebasePrincipalFromOrigin("https://account.xyz.com"),
-      persisted: false
-    },
-    {
-      usage: quotaUsage,
-      principal: Services.scriptSecurityManager
-                         .createCodebasePrincipalFromOrigin("https://account.xyz.com:123"),
-      persisted: false
-    },
-    {
-      usage: quotaUsage,
-      principal: Services.scriptSecurityManager
-                         .createCodebasePrincipalFromOrigin("http://account.xyz.com"),
-      persisted: false
-    },
-  ];
-
-  let updatedPromise = promiseSiteDataManagerSitesUpdated();
-  await openPreferencesViaOpenPreferencesAPI("privacy", { leaveOpen: true });
-  await updatedPromise;
-  await openSiteDataSettingsDialog();
-  let win = gBrowser.selectedBrowser.contentWindow;
-  let dialogFrame = win.gSubDialog._topDialog._frame;
-  let frameDoc = dialogFrame.contentDocument;
-
-  let siteItems = frameDoc.getElementsByTagName("richlistitem");
-  is(siteItems.length, 1, "Should group sites across scheme, port and origin attributes");
-
-  let expected = "account.xyz.com";
-  let host = siteItems[0].getAttribute("host");
-  is(host, expected, "Should group and list sites by host");
-
-  let prefStrBundle = frameDoc.getElementById("bundlePreferences");
-  expected = prefStrBundle.getFormattedString("siteUsage",
-    DownloadUtils.convertByteUnits(quotaUsage * mockSiteDataManager.fakeSites.length));
-  let usage = siteItems[0].getAttribute("usage");
-  is(usage, expected, "Should sum up usages across scheme, port and origin attributes");
-
-  expected = prefStrBundle.getString("persistent");
-  let status = siteItems[0].getAttribute("status");
-  is(status, expected, "Should mark persisted status across scheme, port and origin attributes");
 
   mockSiteDataManager.unregister();
   await BrowserTestUtils.removeTab(gBrowser.selectedTab);
