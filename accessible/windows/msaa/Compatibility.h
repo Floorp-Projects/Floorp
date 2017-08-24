@@ -20,14 +20,14 @@ class Compatibility
 {
 public:
   /**
-   * Return true if IAccessible2 disabled.
-   */
-  static bool IsIA2Off() { return !!(sConsumers & OLDJAWS); }
-
-  /**
    * Return true if JAWS mode is enabled.
    */
   static bool IsJAWS() { return !!(sConsumers & (JAWS | OLDJAWS)); }
+
+  /**
+   * Return true if using an e10s incompatible Jaws.
+   */
+  static bool IsOldJAWS() { return !!(sConsumers & OLDJAWS); }
 
   /**
    * Return true if WE mode is enabled.
