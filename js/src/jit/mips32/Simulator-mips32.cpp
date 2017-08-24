@@ -35,6 +35,7 @@
 
 #include <float.h>
 
+#include "jit/AtomicOperations.h"
 #include "jit/mips32/Assembler-mips32.h"
 #include "vm/Runtime.h"
 #include "wasm/WasmInstance.h"
@@ -380,6 +381,7 @@ SimInstruction::instructionType() const
           case ff_movz:
           case ff_movn:
           case ff_movci:
+          case ff_sync:
             return kRegisterType;
           default:
             return kUnsupported;
@@ -448,6 +450,8 @@ SimInstruction::instructionType() const
       case op_ldc1:
       case op_swc1:
       case op_sdc1:
+      case op_ll:
+      case op_sc:
         return kImmediateType;
         // 26 bits immediate type instructions. e.g.: j imm26.
       case op_j:
@@ -1275,6 +1279,9 @@ Simulator::Simulator()
         FPUregisters_[i] = 0;
     }
     FCSR_ = 0;
+    LLBit_ = false;
+    LLAddr_ = 0;
+    lastLLValue_ = 0;
 
     // The ra and pc are initialized to a known bad value that will cause an
     // access violation if the simulator ever tries to execute it.
@@ -1676,6 +1683,7 @@ Simulator::writeW(uint32_t addr, int value, SimInstruction* instr)
     }
     if ((addr & kPointerAlignmentMask) == 0) {
         intptr_t* ptr = reinterpret_cast<intptr_t*>(addr);
+        LLBit_ = false;
         *ptr = value;
         return;
     }
@@ -1704,6 +1712,7 @@ Simulator::writeD(uint32_t addr, double value, SimInstruction* instr)
 {
     if ((addr & kDoubleAlignmentMask) == 0) {
         double* ptr = reinterpret_cast<double*>(addr);
+        LLBit_ = false;
         *ptr = value;
         return;
     }
@@ -1746,6 +1755,7 @@ Simulator::writeH(uint32_t addr, uint16_t value, SimInstruction* instr)
 {
     if ((addr & 1) == 0) {
         uint16_t* ptr = reinterpret_cast<uint16_t*>(addr);
+        LLBit_ = false;
         *ptr = value;
         return;
     }
@@ -1760,6 +1770,7 @@ Simulator::writeH(uint32_t addr, int16_t value, SimInstruction* instr)
 {
     if ((addr & 1) == 0) {
         int16_t* ptr = reinterpret_cast<int16_t*>(addr);
+        LLBit_ = false;
         *ptr = value;
         return;
     }
@@ -1787,6 +1798,7 @@ void
 Simulator::writeB(uint32_t addr, uint8_t value)
 {
     uint8_t* ptr = reinterpret_cast<uint8_t*>(addr);
+    LLBit_ = false;
     *ptr = value;
 }
 
@@ -1794,7 +1806,58 @@ void
 Simulator::writeB(uint32_t addr, int8_t value)
 {
     int8_t* ptr = reinterpret_cast<int8_t*>(addr);
+    LLBit_ = false;
     *ptr = value;
+}
+
+int
+Simulator::loadLinkedW(uint32_t addr, SimInstruction* instr)
+{
+    if ((addr & kPointerAlignmentMask) == 0) {
+        volatile int32_t* ptr = reinterpret_cast<volatile int32_t*>(addr);
+        int32_t value = *ptr;
+        lastLLValue_ = value;
+        LLAddr_ = addr;
+        // Note that any memory write or "external" interrupt should reset this value to false.
+        LLBit_ = true;
+        return value;
+    }
+    printf("Unaligned read at 0x%08x, pc=0x%08" PRIxPTR "\n",
+           addr,
+           reinterpret_cast<intptr_t>(instr));
+    MOZ_CRASH();
+    return 0;
+}
+
+int
+Simulator::storeConditionalW(uint32_t addr, int value, SimInstruction* instr)
+{
+    // Correct behavior in this case, as defined by architecture, is to just return 0,
+    // but there is no point at allowing that. It is certainly an indicator of a bug.
+    if (addr != LLAddr_) {
+        printf("SC to bad address: 0x%08x, pc=0x%08" PRIxPTR ", expected: 0x%08x\n",
+               addr, reinterpret_cast<intptr_t>(instr), LLAddr_);
+        MOZ_CRASH();
+    }
+
+    if ((addr & kPointerAlignmentMask) == 0) {
+        SharedMem<int32_t*> ptr = SharedMem<int32_t*>::shared(reinterpret_cast<int32_t*>(addr));
+
+        if (!LLBit_) {
+            return 0;
+        }
+
+        LLBit_ = false;
+        LLAddr_ = 0;
+        int32_t expected = lastLLValue_;
+        int32_t old = AtomicOperations::compareExchangeSeqCst(ptr, expected, int32_t(value));
+        return (old == expected) ? 1:0;
+    }
+    printf("Unaligned SC at 0x%08x, pc=0x%08" PRIxPTR "\n",
+           addr,
+           reinterpret_cast<intptr_t>(instr));
+    MOZ_CRASH();
+    return 0;
 }
 
 uintptr_t
@@ -2405,6 +2468,7 @@ Simulator::configureTypeRegister(SimInstruction* instr,
           case ff_movn:
           case ff_movz:
           case ff_movci:
+          case ff_sync:
             // No action taken on decode.
             break;
           case ff_div:
@@ -2961,6 +3025,20 @@ Simulator::decodeTypeRegister(SimInstruction* instr)
                 softwareInterrupt(instr);
             }
             break;
+          case ff_sync:
+            switch(instr->bits(10, 6)){
+                case 0x0:
+                case 0x4:
+                case 0x10:
+                case 0x11:
+                case 0x12:
+                case 0x13:
+                  AtomicOperations::fenceSeqCst();
+                  break;
+                default:
+                  MOZ_CRASH();
+            }
+            break;
             // Conditional moves.
           case ff_movn:
             if (rt) setRegister(rd_reg, rs);
@@ -3248,6 +3326,14 @@ Simulator::decodeTypeImmediate(SimInstruction* instr)
       case op_sdc1:
         addr = rs + se_imm16;
         break;
+      case op_ll:
+        addr = rs + se_imm16;
+        alu_out = loadLinkedW(addr, instr);
+        break;
+      case op_sc:
+        addr = rs + se_imm16;
+        alu_out = storeConditionalW(addr,rt,instr);
+        break;
       default:
         MOZ_CRASH();
     }
@@ -3293,6 +3379,8 @@ Simulator::decodeTypeImmediate(SimInstruction* instr)
       case op_lbu:
       case op_lhu:
       case op_lwr:
+      case op_ll:
+      case op_sc:
         setRegister(rt_reg, alu_out);
         break;
       case op_sb:
