@@ -57,23 +57,10 @@ async function childIsOpen() {
   window.setTimeout(reportTimes, 0);
 }
 
-/* eslint-disable no-useless-concat */
-var kidHTML = "<html><meta charset='utf-8'><script>" +
-              "var e = 'MozAfterPaint';" +
-              "function done() {" +
-              "  window.removeEventListener(e, done, true);" +
-              "  window.opener.childIsOpen();" +
-              "  window.close();" +
-              "}" +
-              "window.addEventListener(e, done, true);" +
-              "</" + "script>TPAINT</html>";
-/* eslint-enable no-useless-concat */
-var kidURI = "data:text/html," + encodeURI(kidHTML);
-
 async function openWindow() {
   await TalosContentProfiler.resume("tpaint");
   kidStartTime = window.performance.now();
-  kid = window.open(kidURI);
+  kid = window.open("file_tpaint_win.html");
 }
 
 if (auto)
