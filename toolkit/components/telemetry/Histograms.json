@@ -1981,14 +1981,6 @@
     "n_buckets": 50,
     "description": "HTTP page channel: Open -> first byte of reply received (ms)"
   },
-  "HTTP_PAGE_OPEN_TO_FIRST_FROM_CACHE": {
-    "record_in_processes": ["main", "content"],
-    "expires_in_version": "never",
-    "kind": "exponential",
-    "high": 30000,
-    "n_buckets": 50,
-    "description": "HTTP page channel: Open -> cache read start (ms)"
-  },
   "HTTP_PAGE_OPEN_TO_FIRST_FROM_CACHE_V2": {
     "record_in_processes": ["main", "content"],
     "expires_in_version": "never",
@@ -1996,14 +1988,6 @@
     "high": 30000,
     "n_buckets": 50,
     "description": "HTTP page channel: Open -> cache read start (ms), [cache2]"
-  },
-  "HTTP_PAGE_CACHE_READ_TIME": {
-    "record_in_processes": ["main", "content"],
-    "expires_in_version": "never",
-    "kind": "exponential",
-    "high": 30000,
-    "n_buckets": 50,
-    "description": "HTTP page channel: Cache read time (ms)"
   },
   "HTTP_PAGE_CACHE_READ_TIME_V2": {
     "record_in_processes": ["main", "content"],
@@ -2021,14 +2005,6 @@
     "n_buckets": 50,
     "description": "HTTP page channel: Positive cache validation time (ms)"
   },
-  "HTTP_PAGE_COMPLETE_LOAD": {
-    "record_in_processes": ["main", "content"],
-    "expires_in_version": "never",
-    "kind": "exponential",
-    "high": 30000,
-    "n_buckets": 50,
-    "description": "HTTP page channel: Overall load time - all (ms)"
-  },
   "HTTP_PAGE_COMPLETE_LOAD_V2": {
     "record_in_processes": ["main", "content"],
     "expires_in_version": "never",
@@ -2037,14 +2013,6 @@
     "n_buckets": 50,
     "description": "HTTP page channel: Overall load time - all (ms) [cache2]"
   },
-  "HTTP_PAGE_COMPLETE_LOAD_CACHED": {
-    "record_in_processes": ["main", "content"],
-    "expires_in_version": "never",
-    "kind": "exponential",
-    "high": 30000,
-    "n_buckets": 50,
-    "description": "HTTP page channel: Overall load time - cache hits (ms)"
-  },
   "HTTP_PAGE_COMPLETE_LOAD_CACHED_V2": {
     "record_in_processes": ["main", "content"],
     "expires_in_version": "never",
@@ -2052,14 +2020,6 @@
     "high": 30000,
     "n_buckets": 50,
     "description": "HTTP page channel: Overall load time - cache hits (ms) [cache2]"
-  },
-  "HTTP_PAGE_COMPLETE_LOAD_NET": {
-    "record_in_processes": ["main", "content"],
-    "expires_in_version": "never",
-    "kind": "exponential",
-    "high": 30000,
-    "n_buckets": 50,
-    "description": "HTTP page channel: Overall load time - network (ms)"
   },
   "HTTP_PAGE_COMPLETE_LOAD_NET_V2": {
     "record_in_processes": ["main", "content"],
@@ -2129,14 +2089,6 @@
     "n_buckets": 50,
     "description": "HTTP subitem channel: Open -> first byte of reply received (ms)"
   },
-  "HTTP_SUB_OPEN_TO_FIRST_FROM_CACHE": {
-    "record_in_processes": ["main", "content"],
-    "expires_in_version": "never",
-    "kind": "exponential",
-    "high": 30000,
-    "n_buckets": 50,
-    "description": "HTTP subitem channel: Open -> cache read start (ms)"
-  },
   "HTTP_SUB_OPEN_TO_FIRST_FROM_CACHE_V2": {
     "record_in_processes": ["main", "content"],
     "expires_in_version": "never",
@@ -2144,14 +2096,6 @@
     "high": 30000,
     "n_buckets": 50,
     "description": "HTTP subitem channel: Open -> cache read start (ms) [cache2]"
-  },
-  "HTTP_SUB_CACHE_READ_TIME": {
-    "record_in_processes": ["main", "content"],
-    "expires_in_version": "never",
-    "kind": "exponential",
-    "high": 30000,
-    "n_buckets": 50,
-    "description": "HTTP subitem channel: Cache read time (ms)"
   },
   "HTTP_SUB_CACHE_READ_TIME_V2": {
     "record_in_processes": ["main", "content"],
@@ -2169,14 +2113,6 @@
     "n_buckets": 50,
     "description": "HTTP subitem channel: Positive cache validation time (ms)"
   },
-  "HTTP_SUB_COMPLETE_LOAD": {
-    "record_in_processes": ["main", "content"],
-    "expires_in_version": "never",
-    "kind": "exponential",
-    "high": 30000,
-    "n_buckets": 50,
-    "description": "HTTP subitem channel: Overall load time - all (ms)"
-  },
   "HTTP_SUB_COMPLETE_LOAD_V2": {
     "record_in_processes": ["main", "content"],
     "expires_in_version": "never",
@@ -2185,14 +2121,6 @@
     "n_buckets": 50,
     "description": "HTTP subitem channel: Overall load time - all (ms) [cache2]"
   },
-  "HTTP_SUB_COMPLETE_LOAD_CACHED": {
-    "record_in_processes": ["main", "content"],
-    "expires_in_version": "never",
-    "kind": "exponential",
-    "high": 30000,
-    "n_buckets": 50,
-    "description": "HTTP subitem channel: Overall load time - cache hits (ms)"
-  },
   "HTTP_SUB_COMPLETE_LOAD_CACHED_V2": {
     "record_in_processes": ["main", "content"],
     "expires_in_version": "never",
@@ -2200,14 +2128,6 @@
     "high": 30000,
     "n_buckets": 50,
     "description": "HTTP subitem channel: Overall load time - cache hits (ms) [cache2]"
-  },
-  "HTTP_SUB_COMPLETE_LOAD_NET": {
-    "record_in_processes": ["main", "content"],
-    "expires_in_version": "never",
-    "kind": "exponential",
-    "high": 30000,
-    "n_buckets": 50,
-    "description": "HTTP subitem channel: Overall load time - network (ms)"
   },
   "HTTP_SUB_COMPLETE_LOAD_NET_V2": {
     "record_in_processes": ["main", "content"],
@@ -3006,13 +2926,6 @@
     "expires_in_version": "never",
     "kind": "boolean",
     "description": "Fraction of sockets that used a nsConnectionEntry with history - size 300."
-  },
-  "HTTP_CACHE_DISPOSITION_2": {
-    "record_in_processes": ["main", "content"],
-    "expires_in_version": "never",
-    "kind": "enumerated",
-    "n_values": 5,
-    "description": "HTTP Cache Hit, Reval, Failed-Reval, Miss"
   },
   "HTTP_CACHE_DISPOSITION_2_V2": {
     "record_in_processes": ["main", "content"],

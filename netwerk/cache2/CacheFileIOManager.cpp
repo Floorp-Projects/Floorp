@@ -4265,10 +4265,6 @@ CacheFileIOManager::UpdateSmartCacheSize(int64_t aFreeSpace)
 
   nsresult rv;
 
-  if (!CacheObserver::UseNewCache()) {
-    return NS_ERROR_NOT_AVAILABLE;
-  }
-
   if (!CacheObserver::SmartCacheSizeEnabled()) {
     return NS_ERROR_NOT_AVAILABLE;
   }
