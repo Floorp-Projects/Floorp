@@ -149,7 +149,7 @@ typedef media::IntervalSet<int64_t> MediaByteRangeSet;
  * access, so the FileMediaResource implementation class bypasses the cache.
  * MediaResource::Create automatically chooses the best implementation class.
  */
-class MediaResource : public nsISupports
+class MediaResource
 {
 public:
   // Our refcounting is threadsafe, and when our refcount drops to zero
@@ -157,7 +157,8 @@ public:
   // Note that this means it's safe for references to this object to be
   // released on a non main thread, but the destructor will always run on
   // the main thread.
-  NS_DECL_THREADSAFE_ISUPPORTS
+  NS_METHOD_(MozExternalRefCountType) AddRef(void);
+  NS_METHOD_(MozExternalRefCountType) Release(void);
 
   // Get the current principal for the channel
   virtual already_AddRefed<nsIPrincipal> GetCurrentPrincipal() = 0;
@@ -235,6 +236,8 @@ protected:
 
 private:
   void Destroy();
+  mozilla::ThreadSafeAutoRefCnt mRefCnt;
+  NS_DECL_OWNINGTHREAD
 };
 
 class BaseMediaResource : public MediaResource {

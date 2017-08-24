@@ -74,7 +74,6 @@ MediaResource::Destroy()
 
 NS_IMPL_ADDREF(MediaResource)
 NS_IMPL_RELEASE_WITH_DESTROY(MediaResource, Destroy())
-NS_IMPL_QUERY_INTERFACE0(MediaResource)
 
 ChannelMediaResource::ChannelMediaResource(MediaResourceCallback* aCallback,
                                            nsIChannel* aChannel,
