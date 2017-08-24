@@ -1,13 +1,12 @@
 [package]
 name = "lazy_static"
-# NB: When modifying, also modify html_root_url in lib.rs
-version = "0.2.8"
+version = "0.2.2"
 authors = ["Marvin Löbel <loebel.marvin@gmail.com>"]
-license = "MIT/Apache-2.0"
+license = "MIT"
 
 description = "A macro for declaring lazily evaluated statics in Rust."
 readme = "README.md"
-documentation = "https://docs.rs/lazy_static"
+documentation = "http://rust-lang-nursery.github.io/lazy-static.rs/lazy_static/index.html"
 
 repository = "https://github.com/rust-lang-nursery/lazy-static.rs"
 keywords = ["macro", "lazy", "static"]
