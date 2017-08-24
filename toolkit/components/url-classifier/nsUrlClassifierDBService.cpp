@@ -51,6 +51,13 @@
 #include "mozilla/dom/URLClassifierChild.h"
 #include "mozilla/ipc/URIUtils.h"
 #include "nsProxyRelease.h"
+#include "UrlClassifierTelemetryUtils.h"
+#include "nsIURLFormatter.h"
+#include "nsIUploadChannel.h"
+#include "nsStringStream.h"
+#include "nsNetUtil.h"
+#include "nsToolkitCompsCID.h"
+#include "nsIClassifiedChannel.h"
 
 namespace mozilla {
 namespace safebrowsing {
@@ -1921,6 +1928,196 @@ nsUrlClassifierDBService::ClassifyLocalWithTables(nsIURI *aURI,
   }
   return NS_OK;
 }
+
+class ThreatHitReportListener final
+  : public nsIStreamListener
+{
+public:
+  NS_DECL_ISUPPORTS
+  NS_DECL_NSIREQUESTOBSERVER
+  NS_DECL_NSISTREAMLISTENER
+
+  ThreatHitReportListener() = default;
+
+private:
+  ~ThreatHitReportListener() = default;
+};
+
+NS_IMPL_ISUPPORTS(ThreatHitReportListener, nsIStreamListener, nsIRequestObserver)
+
+NS_IMETHODIMP
+ThreatHitReportListener::OnStartRequest(nsIRequest* aRequest, nsISupports* aContext)
+{
+  nsCOMPtr<nsIHttpChannel> httpChannel = do_QueryInterface(aRequest);
+  if (httpChannel) {
+    nsresult rv;
+    nsresult status = NS_OK;
+    rv = httpChannel->GetStatus(&status);
+    NS_ENSURE_SUCCESS(rv, rv);
+
+    uint8_t netErrCode = NS_FAILED(status) ?
+      mozilla::safebrowsing::NetworkErrorToBucket(status) : 0;
+    mozilla::Telemetry::Accumulate(
+      mozilla::Telemetry::URLCLASSIFIER_THREATHIT_NETWORK_ERROR, netErrCode);
+
+    uint32_t requestStatus;
+    rv = httpChannel->GetResponseStatus(&requestStatus);
+    NS_ENSURE_SUCCESS(rv, rv);
+    mozilla::Telemetry::Accumulate(mozilla::Telemetry::URLCLASSIFIER_THREATHIT_REMOTE_STATUS,
+                                   mozilla::safebrowsing::HTTPStatusToBucket(requestStatus));
+    if (LOG_ENABLED()) {
+      nsAutoCString errorName, spec;
+      mozilla::GetErrorName(status, errorName);
+      nsCOMPtr<nsIURI> uri;
+      rv = httpChannel->GetURI(getter_AddRefs(uri));
+      if (NS_SUCCEEDED(rv) && uri) {
+        uri->GetAsciiSpec(spec);
+      }
+
+      nsCOMPtr<nsIURLFormatter> urlFormatter =
+      do_GetService("@mozilla.org/toolkit/URLFormatterService;1");
+
+      // Trim sensitive log data
+      nsString trimmedSpec;
+      rv = urlFormatter->TrimSensitiveURLs(NS_ConvertUTF8toUTF16(spec), trimmedSpec);
+      if (NS_SUCCEEDED(rv)) {
+        LOG(("ThreatHitReportListener::OnStartRequest "
+             "(status=%s, uri=%s, this=%p)", errorName.get(),
+             NS_ConvertUTF16toUTF8(trimmedSpec).get(), this));
+
+      }
+    }
+
+    LOG(("ThreatHit report response %d %d", requestStatus, netErrCode));
+  }
+
+  return NS_OK;
+}
+
+NS_IMETHODIMP
+ThreatHitReportListener::OnDataAvailable(nsIRequest* aRequest,
+                                           nsISupports* aContext,
+                                           nsIInputStream* aInputStream,
+                                           uint64_t aOffset,
+                                           uint32_t aCount)
+{
+  return NS_OK;
+}
+NS_IMETHODIMP
+ThreatHitReportListener::OnStopRequest(nsIRequest* aRequest, nsISupports* aContext,
+                                         nsresult aStatus)
+{
+  return aStatus;
+}
+
+NS_IMETHODIMP
+nsUrlClassifierDBService::SendThreatHitReport(nsIChannel *aChannel)
+{
+  NS_ENSURE_ARG_POINTER(aChannel);
+  nsresult rv;
+
+  nsCOMPtr<nsIClassifiedChannel> classifiedChannel =
+    do_QueryInterface(aChannel, &rv);
+  NS_ENSURE_SUCCESS(rv, rv);
+  if (!classifiedChannel) {
+    return NS_ERROR_FAILURE;
+  }
+
+  nsAutoCString provider;
+  rv = classifiedChannel->GetMatchedProvider(provider);
+  if (NS_FAILED(rv) || provider.IsEmpty()) {
+    return NS_ERROR_FAILURE;
+  }
+
+  nsAutoCString listName;
+  rv = classifiedChannel->GetMatchedList(listName);
+  if (NS_FAILED(rv) || listName.IsEmpty()) {
+    return NS_ERROR_FAILURE;
+  }
+
+  nsAutoCString fullHash;
+  rv = classifiedChannel->GetMatchedFullHash(fullHash);
+  if (NS_FAILED(rv) || fullHash.IsEmpty()) {
+    return NS_ERROR_FAILURE;
+  }
+
+  nsPrintfCString reportUrlPref("browser.safebrowsing.provider.%s.dataSharingURL",
+                                provider.get());
+
+  nsCOMPtr<nsIURLFormatter> formatter(
+    do_GetService("@mozilla.org/toolkit/URLFormatterService;1"));
+  if (!formatter) {
+    return NS_ERROR_UNEXPECTED;
+  }
+
+  nsString urlStr;
+  rv = formatter->FormatURLPref(NS_ConvertUTF8toUTF16(reportUrlPref), urlStr);
+  NS_ENSURE_SUCCESS(rv, rv);
+
+  if (urlStr.IsEmpty() || NS_LITERAL_STRING("about:blank").Equals(urlStr)) {
+    LOG(("%s is missing a ThreatHit data reporting URL.", provider.get()));
+    return NS_OK;
+  }
+
+  nsCOMPtr<nsIUrlClassifierUtils> utilsService =
+    do_GetService(NS_URLCLASSIFIERUTILS_CONTRACTID);
+  if (!utilsService) {
+    return NS_ERROR_FAILURE;
+  }
+
+  nsAutoCString reportBody;
+  rv = utilsService->MakeThreatHitReport(aChannel, listName, fullHash, reportBody);
+  NS_ENSURE_SUCCESS(rv, rv);
+
+  nsAutoCString reportUriStr = NS_ConvertUTF16toUTF8(urlStr);
+  reportUriStr.Append("&$req=");
+  reportUriStr.Append(reportBody);
+
+  nsCOMPtr<nsIURI> reportURI;
+  rv = NS_NewURI(getter_AddRefs(reportURI), reportUriStr);
+  NS_ENSURE_SUCCESS(rv, rv);
+
+  uint32_t loadFlags = nsIChannel::INHIBIT_CACHING |
+                       nsIChannel::LOAD_BYPASS_CACHE;
+
+  nsCOMPtr<nsIChannel> reportChannel;
+  rv = NS_NewChannel(getter_AddRefs(reportChannel),
+                     reportURI,
+                     nsContentUtils::GetSystemPrincipal(),
+                     nsILoadInfo::SEC_ALLOW_CROSS_ORIGIN_DATA_IS_NULL,
+                     nsIContentPolicy::TYPE_OTHER,
+                     nullptr,  // aLoadGroup
+                     nullptr,
+                     loadFlags);
+  NS_ENSURE_SUCCESS(rv, rv);
+
+  // Safe Browsing has a separate cookie jar
+  nsCOMPtr<nsILoadInfo> loadInfo = reportChannel->GetLoadInfo();
+  mozilla::OriginAttributes attrs;
+  attrs.mFirstPartyDomain.AssignLiteral(NECKO_SAFEBROWSING_FIRST_PARTY_DOMAIN);
+  if (loadInfo) {
+    loadInfo->SetOriginAttributes(attrs);
+  }
+
+  nsCOMPtr<nsIHttpChannel> httpChannel(do_QueryInterface(reportChannel));
+  NS_ENSURE_TRUE(httpChannel, rv);
+
+  rv = httpChannel->SetRequestMethod(NS_LITERAL_CSTRING("POST"));
+  NS_ENSURE_SUCCESS(rv, rv);
+  // Disable keepalive.
+  rv = httpChannel->SetRequestHeader(NS_LITERAL_CSTRING("Connection"), NS_LITERAL_CSTRING("close"), false);
+  NS_ENSURE_SUCCESS(rv, rv);
+
+  RefPtr<ThreatHitReportListener> listener = new ThreatHitReportListener();
+  rv = reportChannel->AsyncOpen2(listener);
+  if (NS_FAILED(rv)) {
+    LOG(("Failure to send Safe Browsing ThreatHit report"));
+    return rv;
+  }
+
+  return NS_OK;
+}
+
 
 NS_IMETHODIMP
 nsUrlClassifierDBService::Lookup(nsIPrincipal* aPrincipal,

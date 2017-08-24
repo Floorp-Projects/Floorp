@@ -35,6 +35,8 @@
 #include "nsPIDOMWindow.h"
 #include "nsXULAppAPI.h"
 #include "nsQueryObject.h"
+#include "nsIUrlClassifierDBService.h"
+#include "nsIURLFormatter.h"
 
 #include "mozilla/ErrorNames.h"
 #include "mozilla/Logging.h"
@@ -867,7 +869,7 @@ nsChannelClassifier::SetBlockedContent(nsIChannel *channel,
     state |= nsIWebProgressListener::STATE_BLOCKED_UNSAFE_CONTENT;
   }
 
-  eventSink->OnSecurityChange(nullptr, state);
+  eventSink->OnSecurityChange(channel, state);
 
   // Log a warning to the web console.
   nsCOMPtr<nsIURI> uri;
@@ -1161,6 +1163,30 @@ nsChannelClassifier::IsTrackerWhitelisted(nsIURI* aWhiteListURI,
   return uriClassifier->AsyncClassifyLocalWithTables(aWhiteListURI, trackingWhitelist, aCallback);
 }
 
+nsresult
+nsChannelClassifier::SendThreatHitReport(nsIChannel *aChannel,
+                                         const nsACString& aProvider)
+{
+
+  nsAutoCString provider(aProvider);
+  nsPrintfCString reportEnablePref("browser.safebrowsing.provider.%s.dataSharing.enabled",
+                                   provider.get());
+  if (!Preferences::GetBool(reportEnablePref.get(), false)) {
+    return NS_OK;
+  }
+
+  nsCOMPtr<nsIURIClassifier> uriClassifier =
+    do_GetService(NS_URLCLASSIFIERDBSERVICE_CONTRACTID);
+  if (!uriClassifier) {
+    return NS_ERROR_UNEXPECTED;
+  }
+
+  nsresult rv = uriClassifier->SendThreatHitReport(mChannel);
+  NS_ENSURE_SUCCESS(rv, rv);
+
+  return NS_OK;
+}
+
 NS_IMETHODIMP
 nsChannelClassifier::OnClassifyComplete(nsresult aErrorCode,
                                         const nsACString& aList,
@@ -1215,6 +1241,13 @@ nsChannelClassifier::OnClassifyCompleteInternal(nsresult aErrorCode,
         // Do update the security state of the document and fire a security
         // change event.
         SetBlockedContent(mChannel, aErrorCode, aList, aProvider, aFullHash);
+
+        if (aErrorCode == NS_ERROR_MALWARE_URI ||
+            aErrorCode == NS_ERROR_PHISHING_URI ||
+            aErrorCode == NS_ERROR_UNWANTED_URI ||
+            aErrorCode == NS_ERROR_HARMFUL_URI) {
+          SendThreatHitReport(mChannel, aProvider);
+        }
 
         mChannel->Cancel(aErrorCode);
       }
