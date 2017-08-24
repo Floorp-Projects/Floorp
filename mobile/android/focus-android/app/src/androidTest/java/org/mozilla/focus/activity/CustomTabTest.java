@@ -10,62 +10,48 @@ import android.content.Intent;
 import android.graphics.Bitmap;
 import android.graphics.Canvas;
 import android.graphics.Color;
-import android.graphics.drawable.Drawable;
 import android.net.Uri;
-import android.os.SystemClock;
 import android.preference.PreferenceManager;
 import android.support.customtabs.CustomTabsIntent;
 import android.support.test.InstrumentationRegistry;
+import android.support.test.espresso.Espresso;
+import android.support.test.espresso.web.webdriver.Locator;
 import android.support.test.rule.ActivityTestRule;
 import android.support.test.runner.AndroidJUnit4;
-import android.support.test.uiautomator.UiObject;
-import android.support.test.uiautomator.UiSelector;
-
-import junit.framework.Assert;
 
 import org.junit.After;
 import org.junit.Rule;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.mozilla.focus.R;
-import org.mozilla.focus.utils.AppConstants;
 
 import java.io.IOException;
 
 import okhttp3.mockwebserver.MockResponse;
 import okhttp3.mockwebserver.MockWebServer;
 
+import static android.support.test.espresso.Espresso.onView;
 import static android.support.test.espresso.action.ViewActions.click;
-import static org.mozilla.focus.activity.TestHelper.mDevice;
-import static org.mozilla.focus.activity.TestHelper.waitingTime;
+import static android.support.test.espresso.assertion.ViewAssertions.matches;
+import static android.support.test.espresso.matcher.ViewMatchers.isDisplayed;
+import static android.support.test.espresso.matcher.ViewMatchers.withContentDescription;
+import static android.support.test.espresso.matcher.ViewMatchers.withId;
+import static android.support.test.espresso.matcher.ViewMatchers.withText;
+import static android.support.test.espresso.web.assertion.WebViewAssertions.webMatches;
+import static android.support.test.espresso.web.sugar.Web.onWebView;
+import static android.support.test.espresso.web.webdriver.DriverAtoms.findElement;
+import static android.support.test.espresso.web.webdriver.DriverAtoms.getText;
+import static org.hamcrest.core.IsEqual.equalTo;
 import static org.mozilla.focus.fragment.FirstrunFragment.FIRSTRUN_PREF;
 
 @RunWith(AndroidJUnit4.class)
 public class CustomTabTest {
     private static final String MENU_ITEM_LABEL = "TestItem4223";
     private static final String ACTION_BUTTON_DESCRIPTION = "TestButton1337";
+    private static final String TEST_PAGE_HEADER_ID = "header";
+    private static final String TEST_PAGE_HEADER_TEXT = "focus test page";
 
     private MockWebServer webServer;
-
-    private UiObject titleMsg = TestHelper.mDevice.findObject(new UiSelector()
-            .description("focus test page")
-            .enabled(true));
-
-    private UiObject actionButton = TestHelper.mDevice.findObject(new UiSelector()
-            .description(ACTION_BUTTON_DESCRIPTION)
-            .enabled(true));
-
-    private UiObject shareMenuitem = TestHelper.mDevice.findObject(new UiSelector()
-            .text("Share…")
-            .enabled(true));
-
-    private UiObject customMenuItem = TestHelper.mDevice.findObject(new UiSelector()
-            .text(MENU_ITEM_LABEL)
-            .enabled(true));
-
-    private UiObject closeButton = TestHelper.mDevice.findObject(new UiSelector()
-            .description("Return to previous app")
-            .enabled(true));
 
     @Rule
     public ActivityTestRule<MainActivity> activityTestRule  = new ActivityTestRule<>(
@@ -85,26 +71,33 @@ public class CustomTabTest {
             activityTestRule.launchActivity(createCustomTabIntent());
 
             // Wait for website to load
-            Assert.assertTrue(titleMsg.waitForExists(waitingTime));
+            onWebView()
+                    .withElement(findElement(Locator.ID, TEST_PAGE_HEADER_ID))
+                    .check(webMatches(getText(), equalTo(TEST_PAGE_HEADER_TEXT)));
 
             // Verify action button is visible
-            Assert.assertTrue(actionButton.waitForExists(waitingTime));
+            onView(withContentDescription(ACTION_BUTTON_DESCRIPTION))
+                    .check(matches(isDisplayed()));
 
-            // Open the menu
-            TestHelper.menuButton.perform(click());
+            // Open menu
+            onView(withId(R.id.menu))
+                    .perform(click());
 
             // Verify share action is visible
-            Assert.assertTrue(shareMenuitem.waitForExists(waitingTime));
+            onView(withId(R.id.share))
+                    .check(matches(isDisplayed()));
 
             // Verify custom menu item is visible
-            Assert.assertTrue(customMenuItem.waitForExists(waitingTime));
+            onView(withText(MENU_ITEM_LABEL))
+                    .check(matches(isDisplayed()));
 
-            // Close menu again
-            mDevice.pressBack();
+            // Close the menu again
+            Espresso.pressBack();
 
             // Verify close button is visible - Click it to close custom tab.
-            Assert.assertTrue(closeButton.waitForExists(waitingTime));
-            closeButton.click();
+            onView(withId(R.id.customtab_close))
+                    .check(matches(isDisplayed()))
+                    .perform(click());
         } finally {
             stopWebServer();
         }
@@ -117,13 +110,10 @@ public class CustomTabTest {
 
         final PendingIntent pendingIntent = PendingIntent.getActivity(appContext, 0, new Intent(), 0);
 
-        final Drawable drawable = appContext.getResources().getDrawable(R.drawable.ic_delete, null);
-        Assert.assertNotNull(drawable);
-
         final CustomTabsIntent customTabsIntent = new CustomTabsIntent.Builder()
                 .addMenuItem(MENU_ITEM_LABEL, pendingIntent)
                 .addDefaultShareMenuItem()
-                .setActionButton(toBitmap(drawable), ACTION_BUTTON_DESCRIPTION, pendingIntent, true)
+                .setActionButton(createTestBitmap(), ACTION_BUTTON_DESCRIPTION, pendingIntent, true)
                 .setToolbarColor(Color.MAGENTA)
                 .build();
 
@@ -162,12 +152,10 @@ public class CustomTabTest {
         }
     }
 
-    private Bitmap toBitmap(Drawable drawable) {
-        Bitmap bitmap = Bitmap.createBitmap(drawable.getIntrinsicWidth(),
-                drawable.getIntrinsicHeight(), Bitmap.Config.ARGB_8888);
-        Canvas canvas = new Canvas(bitmap);
-        drawable.setBounds(0, 0, canvas.getWidth(), canvas.getHeight());
-        drawable.draw(canvas);
+    private Bitmap createTestBitmap() {
+        final Bitmap bitmap = Bitmap.createBitmap(100, 100, Bitmap.Config.ARGB_8888);
+        final Canvas canvas = new Canvas(bitmap);
+        canvas.drawColor(Color.GREEN);
         return bitmap;
     }
 }
