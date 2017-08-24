@@ -717,7 +717,7 @@
       <vbox class="panel-subview-body">
         <toolbarbutton id="appMenu-library-bookmarks-button"
                        class="subviewbutton subviewbutton-iconic subviewbutton-nav"
-                       label="&bookmarksMenuButton.label;"
+                       label="&bookmarksSubview.label;"
                        closemenu="none"
                        oncommand="BookmarkingUI.showSubView(this);"/>
         <toolbarbutton id="appMenu-library-history-button"
