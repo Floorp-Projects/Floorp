@@ -4,6 +4,7 @@
 
 from __future__ import absolute_import, unicode_literals
 
+import io
 import mimetypes
 import os
 
@@ -11,7 +12,7 @@ import boto3
 import requests
 
 
-def s3_upload(root):
+def s3_upload(files):
     region = 'us-west-2'
     level = os.environ.get('MOZ_SCM_LEVEL', '1')
     bucket = {
@@ -40,26 +41,15 @@ def s3_upload(root):
         session = boto3.session.Session(region_name=region)
     s3 = session.client('s3')
 
-    try:
-        old_cwd = os.getcwd()
-        os.chdir(root)
-
-        for dir, dirs, filenames in os.walk('.'):
-            if dir == '.':
-                # ignore a few things things in the root directory
-                bad = [d for d in dirs if
-                       d.startswith('.') or d in ('_venv', '_staging')]
-                for b in bad:
-                    dirs.remove(b)
-            for filename in filenames:
-                pathname = os.path.join(dir, filename)[2:]  # strip '.''
-                content_type, content_encoding = mimetypes.guess_type(pathname)
-                extra_args = {}
-                if content_type:
-                    extra_args['ContentType'] = content_type
-                if content_encoding:
-                    extra_args['ContentEncoding'] = content_encoding
-                print('uploading', pathname)
-                s3.upload_file(pathname, bucket, pathname, ExtraArgs=extra_args)
-    finally:
-        os.chdir(old_cwd)
+    for path, f in files:
+        content_type, content_encoding = mimetypes.guess_type(path)
+        extra_args = {}
+        if content_type:
+            extra_args['ContentType'] = content_type
+        if content_encoding:
+            extra_args['ContentEncoding'] = content_encoding
+        print('uploading', path)
+        # The file types returned by mozpack behave like file objects. But they
+        # don't accept an argument to read(). So we wrap in a BytesIO.
+        s3.upload_fileobj(io.BytesIO(f.read()), bucket, path,
+                          ExtraArgs=extra_args)
