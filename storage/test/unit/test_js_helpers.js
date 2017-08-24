@@ -17,14 +17,14 @@ function test_params_enumerate() {
   );
 
   // Make sure they are right.
-  let expected = ["a", "b", "c"];
+  let expected = [0, 1, 2, "a", "b", "c", "length"];
   let index = 0;
   for (let name in stmt.params) {
     if (name == "QueryInterface")
       continue;
     do_check_eq(name, expected[index++]);
   }
-  do_check_eq(index, 3);
+  do_check_eq(index, 7);
 }
 
 function test_params_prototype() {
