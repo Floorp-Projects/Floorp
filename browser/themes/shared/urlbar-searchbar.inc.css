@@ -133,40 +133,6 @@
   margin-inline-end: 3px;
 }
 
-#pageActionSeparator {
-  /* This draws the separator the same way that #urlbar-display-box draws its
-     left and right borders, which end up looking like separators.  It might not
-     be the best way in this case, but it makes sure that all these vertical
-     lines in the urlbar look the same: same height, vertical position, etc. */
-  border-inline-start: 1px solid var(--urlbar-separator-color);
-  border-image: linear-gradient(transparent 15%, var(--urlbar-separator-color) 15%, var(--urlbar-separator-color) 85%, transparent 85%);
-  border-image-slice: 1;
-  width: 1px;
-  min-height: 30px;
-  display: none;
-}
-
-:root[uidensity=compact] #pageActionSeparator {
-  min-height: 26px;
-}
-
-:root[uidensity=touch] #pageActionSeparator {
-  min-height: 32px;
-}
-
-:not(#pageActionSeparator):not([hidden]) ~ #pageActionSeparator {
-  /* Show the separator between the page actions and other elements when at
-     least of the latter is shown. */
-  display: -moz-box;
-}
-
-#userContext-icons,
-#urlbar-zoom-button,
-#pageActionSeparator {
-  margin-left: 6px;
-  margin-right: 6px;
-}
-
 .urlbar-icon {
   padding: 0 6px;
   /* 16x16 icon with border-box sizing */
@@ -276,6 +242,7 @@
 /* Zoom button */
 
 #urlbar-zoom-button {
+  margin: 0 3px;
   font-size: .8em;
   padding: 0 8px;
   border-radius: 1em;
