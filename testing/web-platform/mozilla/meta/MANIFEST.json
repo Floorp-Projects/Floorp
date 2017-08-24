@@ -18,6 +18,11 @@
      {}
     ]
    ],
+   "html/semantics/scripting-1/the-script-element/support/bad_local_export.js": [
+    [
+     {}
+    ]
+   ],
    "html/semantics/scripting-1/the-script-element/support/circular_error1.js": [
     [
      {}
@@ -33,12 +38,32 @@
      {}
     ]
    ],
+   "html/semantics/scripting-1/the-script-element/support/import_resolve_failure.js": [
+    [
+     {}
+    ]
+   ],
+   "html/semantics/scripting-1/the-script-element/support/indirect_export_resolve_failure.js": [
+    [
+     {}
+    ]
+   ],
    "html/semantics/scripting-1/the-script-element/support/missing_import.js": [
     [
      {}
     ]
    ],
+   "html/semantics/scripting-1/the-script-element/support/missing_indirect_export.js": [
+    [
+     {}
+    ]
+   ],
    "html/semantics/scripting-1/the-script-element/support/module.js": [
+    [
+     {}
+    ]
+   ],
+   "html/semantics/scripting-1/the-script-element/support/module_eval_error.js": [
     [
      {}
     ]
@@ -482,6 +507,12 @@
    "html/semantics/scripting-1/the-script-element/create-module-script.html": [
     [
      "/_mozilla/html/semantics/scripting-1/the-script-element/create-module-script.html",
+     {}
+    ]
+   ],
+   "html/semantics/scripting-1/the-script-element/module-error-reporting.html": [
+    [
+     "/_mozilla/html/semantics/scripting-1/the-script-element/module-error-reporting.html",
      {}
     ]
    ],
@@ -952,9 +983,17 @@
    "3214bced5d81e8001a321aea4c80675b6603b11d",
    "testharness"
   ],
+  "html/semantics/scripting-1/the-script-element/module-error-reporting.html": [
+   "5e3027bb28cfa54faee31015fbe2b5c920d52c18",
+   "testharness"
+  ],
   "html/semantics/scripting-1/the-script-element/reload-failed-module-script.html": [
    "7bfcf25ed4e793d00b0b33269bc3401545527420",
    "testharness"
+  ],
+  "html/semantics/scripting-1/the-script-element/support/bad_local_export.js": [
+   "4922a882dca470dc9e583af92e495d261abba551",
+   "support"
   ],
   "html/semantics/scripting-1/the-script-element/support/circular_error1.js": [
    "5f53c0df8ea4741dd79ae8441fc75b71e57553ea",
@@ -968,12 +1007,28 @@
    "a3687131ce1c869910fb71d98d1e0cdb8e707251",
    "support"
   ],
+  "html/semantics/scripting-1/the-script-element/support/import_resolve_failure.js": [
+   "3a8927f5cd778f90758b46083b19998987c3a462",
+   "support"
+  ],
+  "html/semantics/scripting-1/the-script-element/support/indirect_export_resolve_failure.js": [
+   "14dca5999dd3179ea2c4a1faccda545e74b8a0bd",
+   "support"
+  ],
   "html/semantics/scripting-1/the-script-element/support/missing_import.js": [
    "52d9e4b6332f11467c1a7d3d18893fdf8ce6ff72",
    "support"
   ],
+  "html/semantics/scripting-1/the-script-element/support/missing_indirect_export.js": [
+   "f125b760ddd301e23ad154312200f70b88f90875",
+   "support"
+  ],
   "html/semantics/scripting-1/the-script-element/support/module.js": [
-   "3de5a5a1fb12e698509ac14ba44d7b2b474330f4",
+   "c105f0b90bf9cd30b3a54c5d022eabaee2378b6d",
+   "support"
+  ],
+  "html/semantics/scripting-1/the-script-element/support/module_eval_error.js": [
+   "f2c2c2d6cda97a9e8514aee986d7edc92c1d9eed",
    "support"
   ],
   "html/syntax/parsing/math-parse01.html": [

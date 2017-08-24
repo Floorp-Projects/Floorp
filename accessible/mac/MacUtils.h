@@ -7,8 +7,9 @@
 #ifndef _MacUtils_H_
 #define _MacUtils_H_
 
+#include "nsStringFwd.h"
+
 @class NSString;
-class nsString;
 
 namespace mozilla {
 namespace a11y {

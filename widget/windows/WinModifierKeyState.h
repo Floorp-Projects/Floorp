@@ -8,9 +8,8 @@
 
 #include "mozilla/RefPtr.h"
 #include "mozilla/EventForwards.h"
+#include "nsStringFwd.h"
 #include <windows.h>
-
-class nsCString;
 
 namespace mozilla {
 namespace widget {

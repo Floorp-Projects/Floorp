@@ -9,8 +9,7 @@
 #include "nscore.h"
 #include "nsDebug.h"
 #include "nsISupportsImpl.h"
-
-class nsAString;
+#include "nsStringFwd.h"
 
 class txObject
 {

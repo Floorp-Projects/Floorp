@@ -10,6 +10,7 @@
 #include "mozilla/dom/ipc/IdType.h"
 
 #include "nsISupports.h"
+#include "nsStringFwd.h"
 #include "nsTArrayForwardDeclare.h"
 #include "mozilla/dom/CPOWManagerGetter.h"
 #include "mozilla/ipc/Shmem.h"
@@ -18,8 +19,6 @@
 #define NS_ICONTENTCHILD_IID                                    \
   { 0x4eed2e73, 0x94ba, 0x48a8,                                 \
     { 0xa2, 0xd1, 0xa5, 0xed, 0x86, 0xd7, 0xbb, 0xe4 } }
-
-class nsString;
 
 namespace IPC {
 class Principal;

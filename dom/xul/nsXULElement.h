@@ -29,6 +29,7 @@
 #include "nsLayoutCID.h"
 #include "nsAttrAndChildArray.h"
 #include "nsGkAtoms.h"
+#include "nsStringFwd.h"
 #include "nsStyledElement.h"
 #include "nsIFrameLoader.h"
 #include "nsFrameLoader.h" // Needed because we return an
@@ -41,7 +42,6 @@
 #include "mozilla/dom/DOMString.h"
 
 class nsIDocument;
-class nsString;
 class nsXULPrototypeDocument;
 
 class nsIObjectInputStream;

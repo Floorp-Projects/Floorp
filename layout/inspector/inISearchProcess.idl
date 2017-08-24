@@ -5,7 +5,6 @@
 
 #include "nsISupports.idl"
 
-interface nsAString;
 interface inISearchObserver;
 
 [scriptable, uuid(D5FA765B-2448-4686-B7C1-5FF13ACB0FC9)]

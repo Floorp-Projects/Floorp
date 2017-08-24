@@ -16,11 +16,11 @@
 #include "nsTArray.h"
 #include "nsIAtom.h"
 #include "nsCSSValue.h"
+#include "nsStringFwd.h"
 #include "mozilla/Attributes.h"
 #include "mozilla/dom/MediaList.h"
 
 class nsPresContext;
-class nsAString;
 struct nsMediaFeature;
 
 namespace mozilla {

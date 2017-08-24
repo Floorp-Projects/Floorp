@@ -11,7 +11,6 @@
 #include "nsIServiceManager.h"
 #include "nsIURL.h"
 #include "nsCOMPtr.h"
-#include "nsXPIDLString.h"
 #include "nsReadableUtils.h"
 #include "nsCRT.h"
 #include "nsString.h"

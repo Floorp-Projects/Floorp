@@ -31,7 +31,6 @@
 #include "nsIXPConnect.h"
 #include "nsEnumeratorUtils.h"
 #include "nsString.h"
-#include "nsXPIDLString.h"
 #include "nsReadableUtils.h"
 #include "nsITextToSubURI.h"
 #include "nsIInterfaceRequestor.h"

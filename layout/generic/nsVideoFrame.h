@@ -12,6 +12,7 @@
 #include "mozilla/Attributes.h"
 #include "nsContainerFrame.h"
 #include "nsIAnonymousContentCreator.h"
+#include "nsStringFwd.h"
 #include "nsTArrayForwardDeclare.h"
 #include "FrameLayerBuilder.h"
 
@@ -22,7 +23,6 @@ class LayerManager;
 } // namespace layers
 } // namespace mozilla
 
-class nsAString;
 class nsPresContext;
 class nsDisplayItem;
 

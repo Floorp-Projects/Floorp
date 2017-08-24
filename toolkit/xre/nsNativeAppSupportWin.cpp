@@ -12,7 +12,6 @@
 #include "nsIBrowserDOMWindow.h"
 #include "nsICommandLineRunner.h"
 #include "nsCOMPtr.h"
-#include "nsXPIDLString.h"
 #include "nsIComponentManager.h"
 #include "nsIServiceManager.h"
 #include "nsIDOMChromeWindow.h"

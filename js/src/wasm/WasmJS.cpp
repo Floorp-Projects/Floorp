@@ -390,7 +390,7 @@ wasm::Eval(JSContext* cx, Handle<TypedArrayObject*> code, HandleObject importObj
         return false;
 
     UniqueChars error;
-    SharedModule module = Compile(*bytecode, *compileArgs, &error);
+    SharedModule module = CompileInitialTier(*bytecode, *compileArgs, &error);
     if (!module) {
         if (error) {
             JS_ReportErrorNumberASCII(cx, GetErrorMessage, nullptr, JSMSG_WASM_COMPILE_ERROR,
@@ -892,7 +892,7 @@ WasmModuleObject::construct(JSContext* cx, unsigned argc, Value* vp)
         return false;
 
     UniqueChars error;
-    SharedModule module = Compile(*bytecode, *compileArgs, &error);
+    SharedModule module = CompileInitialTier(*bytecode, *compileArgs, &error);
     if (!module) {
         if (error) {
             JS_ReportErrorNumberASCII(cx, GetErrorMessage, nullptr, JSMSG_WASM_COMPILE_ERROR,
@@ -1923,7 +1923,7 @@ struct CompilePromiseTask : PromiseHelperTask
     {}
 
     void execute() override {
-        module = Compile(*bytecode, *compileArgs, &error);
+        module = CompileInitialTier(*bytecode, *compileArgs, &error);
     }
 
     bool resolve(JSContext* cx, Handle<PromiseObject*> promise) override {
@@ -2056,7 +2056,7 @@ struct InstantiatePromiseTask : PromiseHelperTask
     {}
 
     void execute() override {
-        module = Compile(*bytecode, *compileArgs, &error);
+        module = CompileInitialTier(*bytecode, *compileArgs, &error);
     }
 
     bool resolve(JSContext* cx, Handle<PromiseObject*> promise) override {

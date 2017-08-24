@@ -10,9 +10,8 @@
 #include "OMX_Core.h"
 #include "OMX_Types.h"
 
+#include "nsStringFwd.h"
 #include "OmxPromiseLayer.h"
-
-class nsACString;
 
 namespace mozilla {
 

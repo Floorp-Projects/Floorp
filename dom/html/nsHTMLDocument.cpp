@@ -11,7 +11,7 @@
 #include "mozilla/dom/HTMLAllCollection.h"
 #include "nsCOMPtr.h"
 #include "nsGlobalWindow.h"
-#include "nsXPIDLString.h"
+#include "nsString.h"
 #include "nsPrintfCString.h"
 #include "nsReadableUtils.h"
 #include "nsUnicharUtils.h"

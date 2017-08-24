@@ -15,7 +15,7 @@
 #include "mozilla/ReflowInput.h"
 #include "nsIServiceManager.h"
 #include "nsComponentManagerUtils.h"
-#include "nsXPIDLString.h"
+#include "nsString.h"
 #include "nsIAtom.h"
 #include "nsReadableUtils.h"
 #include "nsUnicharUtils.h"

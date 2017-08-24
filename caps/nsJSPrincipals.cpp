@@ -9,7 +9,6 @@
 #include "nsIObjectInputStream.h"
 #include "nsJSPrincipals.h"
 #include "plstr.h"
-#include "nsXPIDLString.h"
 #include "nsCOMPtr.h"
 #include "nsIServiceManager.h"
 #include "nsMemory.h"

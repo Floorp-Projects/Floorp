@@ -10,7 +10,7 @@
 #include "nsIWindowMediator.h"
 #include "nsIObserver.h"
 #include "nsTArray.h"
-#include "nsXPIDLString.h"
+#include "nsString.h"
 #include "nsWeakReference.h"
 #include "nsTObserverArray.h"
 

@@ -16,8 +16,8 @@
 [ptr] native nsIAtomPtr(nsIAtom);
 [ref] native nsStringRef(nsString);
 %{C++
+#include "nsStringFwd.h"
 class nsIAtom;
-class nsString;
 %}
 
 interface nsIRDFXMLSink;

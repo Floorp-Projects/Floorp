@@ -9,7 +9,6 @@
 #include "nsString.h"
 #include "windows.h"
 #include "nsCRT.h"
-#include "nsXPIDLString.h"
 
 #define SECURITY_WIN32
 #include "lm.h"
