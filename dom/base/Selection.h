@@ -287,6 +287,15 @@ public:
   void AddSelectionChangeBlocker();
   void RemoveSelectionChangeBlocker();
   bool IsBlockingSelectionChangeEvents() const;
+
+  /**
+   * Set the painting style for the range. The range must be a range in
+   * the selection. The textRangeStyle will be used by text frame
+   * when it is painting the selection.
+   */
+  nsresult SetTextRangeStyle(nsRange* aRange,
+                             const TextRangeStyle& aTextRangeStyle);
+
 private:
   friend class ::nsAutoScrollTimer;
 
