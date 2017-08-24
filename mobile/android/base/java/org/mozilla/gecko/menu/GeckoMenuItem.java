@@ -28,6 +28,7 @@ public class GeckoMenuItem implements MenuItem {
     public static final int SHOW_AS_ACTION_COLLAPSE_ACTION_VIEW = 8;
 
     public static final int ITEM_TYPE_DEFAULT = 0x00;
+    public static final int ITEM_TYPE_ICON = 0x01;
 
     // A View that can show a MenuItem should be able to initialize from
     // the properties of the MenuItem.
