@@ -18,12 +18,11 @@
 #include "StorageBaseStatementInternal.h"
 #include "mozilla/Attributes.h"
 
-class nsIXPConnectJSObjectHolder;
-
 namespace mozilla {
 namespace storage {
 
 class AsyncStatementJSHelper;
+class AsyncStatementParamsHolder;
 class Connection;
 
 class AsyncStatement final : public mozIStorageAsyncStatement
@@ -87,7 +86,7 @@ private:
   /**
    * Caches the JS 'params' helper for this statement.
    */
-  nsMainThreadPtrHandle<nsIXPConnectJSObjectHolder> mStatementParamsHolder;
+  nsMainThreadPtrHandle<AsyncStatementParamsHolder> mStatementParamsHolder;
 
   /**
    * Have we been explicitly finalized by the user?
