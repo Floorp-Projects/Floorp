@@ -2,6 +2,8 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
+%include ../shared.inc
+
 /* Sidebars */
 
 #bookmarksPanel,
@@ -18,8 +20,7 @@
   padding-bottom: 1px;
   margin: 0;
   height: 24px;
-  /* Default font size is 11px on mac, so this is 12px */
-  font-size: 1.0909rem;
+  font-size: 12px;
 }
 
 .sidebar-placesTree {
@@ -119,31 +120,50 @@
 
 #viewButton {
   -moz-appearance: none;
-  border-radius: 4px;
-  padding: 2px 4px;
-  margin: 4px 0;
-  margin-inline-end: 4px;
-  /* Default font size is 11px on mac, so this is 12px */
-  font-size: 1.0909rem;
+  padding-bottom: 1px;
+  padding-inline-start: 5px;
+  padding-inline-end: 0px;
+  margin: 0;
+  margin-inline-start: 4px;
+  min-width: 0px;
+  min-height: 0px;
+  border: 1px solid #a2a9b1;
+  border-radius: 10px;
+  background-image: linear-gradient(hsla(0,0%,100%,.75),hsla(0,0%,100%,.1));
+  box-shadow: inset 0 0 1px hsla(0,0%,100%,.85),
+                    0 1px hsla(0,0%,100%,.35);
+}
+
+#viewButton:hover:active,
+#viewButton[open=true] {
+  background-image: linear-gradient(hsla(0,0%,100%,.1),hsla(0,0%,100%,.75));
+  box-shadow: @roundButtonPressedShadow@;
+  color: -moz-dialogText;
+}
+
+#viewButton:-moz-window-inactive {
+  border-color: #b6b6b6;
+  background-image: linear-gradient(hsla(0,0%,100%,.3),hsla(0,0%,100%,0));
+}
+
+#viewButton .button-menu-dropmarker {
+  display: -moz-box;
+  list-style-image: url("chrome://global/skin/icons/menulist-dropmarker.png");
 }
 
 #viewButton:focus {
-  box-shadow: var(--focus-ring-box-shadow);
+  box-shadow: 0 1px 0 hsla(0, 0%, 0%, .15),
+              0 0 0 1px hsla(210, 100%, 60%, .45) inset,
+              0 0 0 2px hsla(210, 100%, 60%, .45);
+  border-color: hsla(210, 100%, 60%, 1);
 }
 
-#viewButton:hover {
-  background: hsla(240, 5%, 5%, 0.1);
+#sidebar-search-container {
+  padding: 4px;
 }
 
-#viewButton[open] {
-  background: hsla(240, 5%, 5%, 0.15);
-}
-
-#viewButton > .button-box > .button-menu-dropmarker {
-  display: -moz-box;
-  list-style-image: url("chrome://browser/skin/arrow-dropdown-12.svg");
-  width: 12px;
-  height: 12px;
+#search-box {
+  margin: 0;
 }
 
 /* Trees */
