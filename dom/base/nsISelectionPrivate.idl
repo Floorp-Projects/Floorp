@@ -23,7 +23,6 @@ struct ScrollAxis;
 
 [ptr] native nsIFrame(nsIFrame);
 [ptr] native RangeArray(nsTArray<nsRange*>);
-[ref] native constTextRangeStyleRef(const mozilla::TextRangeStyle);
 [ref] native nsPointRef(nsPoint);
 native nsDirection(nsDirection);
 native ScrollAxis(nsIPresShell::ScrollAxis);
@@ -81,14 +80,6 @@ interface nsISelectionPrivate : nsISelection
      * Returns cached value for nsTextFrame::GetPointFromOffset.
      */
     [noscript] void getCachedFrameOffset(in nsIFrame aFrame, in int32_t inOffset, in nsPointRef aPoint);
-
-    /**
-     * Set the painting style for the range. The range must be a range in
-     * the selection. The textRangeStyle will be used by text frame
-     * when it is painting the selection.
-     */
-    [noscript] void setTextRangeStyle(in nsIDOMRange range,
-                      in constTextRangeStyleRef textRangeStyle);
 
     /**
      * Get the direction of the selection.

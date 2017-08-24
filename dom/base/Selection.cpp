@@ -2134,8 +2134,8 @@ Selection::FindRangeData(nsIDOMRange* aRange)
   return nullptr;
 }
 
-NS_IMETHODIMP
-Selection::SetTextRangeStyle(nsIDOMRange* aRange,
+nsresult
+Selection::SetTextRangeStyle(nsRange* aRange,
                              const TextRangeStyle& aTextRangeStyle)
 {
   NS_ENSURE_ARG_POINTER(aRange);
