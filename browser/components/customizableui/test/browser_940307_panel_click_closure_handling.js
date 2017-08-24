@@ -12,6 +12,9 @@ add_task(async function plain_button() {
   button.setAttribute("label", "Button");
   gNavToolbox.palette.appendChild(button);
   CustomizableUI.addWidgetToArea(button.id, CustomizableUI.AREA_FIXED_OVERFLOW_PANEL);
+
+  await waitForOverflowButtonShown();
+
   await document.getElementById("nav-bar").overflowable.show();
   let hiddenAgain = promiseOverflowHidden(window);
   EventUtils.synthesizeMouseAtCenter(button, {});
@@ -38,6 +41,8 @@ add_task(async function menu_button_popup() {
   menuButton.appendChild(menuPopup);
   gNavToolbox.palette.appendChild(menuButton);
   CustomizableUI.addWidgetToArea(menuButton.id, CustomizableUI.AREA_FIXED_OVERFLOW_PANEL);
+
+  await waitForOverflowButtonShown();
 
   await document.getElementById("nav-bar").overflowable.show();
   let hiddenAgain = promiseOverflowHidden(window);
@@ -68,6 +73,9 @@ add_task(async function searchbar_in_panel() {
   gCustomizeMode.addToPanel(searchbar);
   let placement = CustomizableUI.getPlacementOfWidget("search-container");
   is(placement.area, CustomizableUI.AREA_FIXED_OVERFLOW_PANEL, "Should be in panel");
+
+  await waitForOverflowButtonShown();
+
   await document.getElementById("nav-bar").overflowable.show();
   await waitForCondition(() => "value" in searchbar && searchbar.value === "");
 
@@ -115,6 +123,9 @@ add_task(async function disabled_button_in_panel() {
   button.setAttribute("label", "Button");
   gNavToolbox.palette.appendChild(button);
   CustomizableUI.addWidgetToArea(button.id, CustomizableUI.AREA_FIXED_OVERFLOW_PANEL);
+
+  await waitForOverflowButtonShown();
+
   await document.getElementById("nav-bar").overflowable.show();
   EventUtils.synthesizeMouseAtCenter(button, {});
   is(PanelUI.overflowPanel.state, "open", "Popup stays open");

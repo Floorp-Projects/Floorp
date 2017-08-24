@@ -25,6 +25,9 @@ function checkSubviewButtonClass(menuId, buttonId, subviewId) {
     insertClassNameToMenuChildren(menu);
 
     CustomizableUI.addWidgetToArea(buttonId, CustomizableUI.AREA_FIXED_OVERFLOW_PANEL);
+
+    await waitForOverflowButtonShown();
+
     await document.getElementById("nav-bar").overflowable.show();
 
     let button = document.getElementById(buttonId);
