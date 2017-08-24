@@ -5,6 +5,16 @@
 "use strict";
 
 add_task(async function test() {
+  let bookmark = await PlacesUtils.bookmarks.insert({
+    parentGuid: PlacesUtils.bookmarks.toolbarGuid,
+    title: "Plain Bob",
+    url: "http://example.com"
+  });
+
+  registerCleanupFunction(async () => {
+    await PlacesUtils.bookmarks.remove(bookmark);
+  });
+
   let sidebarBox = document.getElementById("sidebar-box");
   is(sidebarBox.hidden, true, "The sidebar should be hidden");
 
