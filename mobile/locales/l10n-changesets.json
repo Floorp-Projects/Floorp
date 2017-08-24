@@ -687,7 +687,8 @@
     "wo": {
         "platforms": [
             "android", 
-            "android-api-15"
+            "android-api-15", 
+            "android-multilocale"
         ], 
         "revision": "default"
     }, 
