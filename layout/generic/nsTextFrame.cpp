@@ -4549,7 +4549,7 @@ nsContinuingTextFrame::Init(nsIContent*       aContent,
         nextContinuation = nextContinuation->GetNextContinuation();
       }
     }
-    mState |= NS_FRAME_IS_BIDI;
+    AddStateBits(NS_FRAME_IS_BIDI);
   } // prev frame is bidi
 }
 
@@ -10320,7 +10320,7 @@ nsTextFrame::IsEmpty()
   bool isEmpty =
     IsAllWhitespace(mContent->GetText(),
                     textStyle->mWhiteSpace != mozilla::StyleWhiteSpace::PreLine);
-  mState |= (isEmpty ? TEXT_IS_ONLY_WHITESPACE : TEXT_ISNOT_ONLY_WHITESPACE);
+  AddStateBits(isEmpty ? TEXT_IS_ONLY_WHITESPACE : TEXT_ISNOT_ONLY_WHITESPACE);
   return isEmpty;
 }
 

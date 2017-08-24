@@ -623,11 +623,11 @@ nsFrame::Init(nsIContent*       aContent,
     nsFrameState state = aPrevInFlow->GetStateBits();
 
     // Make bits that are currently off (see constructor) the same:
-    mState |= state & (NS_FRAME_INDEPENDENT_SELECTION |
-                       NS_FRAME_PART_OF_IBSPLIT |
-                       NS_FRAME_MAY_BE_TRANSFORMED |
-                       NS_FRAME_MAY_HAVE_GENERATED_CONTENT |
-                       NS_FRAME_CAN_HAVE_ABSPOS_CHILDREN);
+    AddStateBits(state & (NS_FRAME_INDEPENDENT_SELECTION |
+                          NS_FRAME_PART_OF_IBSPLIT |
+                          NS_FRAME_MAY_BE_TRANSFORMED |
+                          NS_FRAME_MAY_HAVE_GENERATED_CONTENT |
+                          NS_FRAME_CAN_HAVE_ABSPOS_CHILDREN));
   } else {
     PresContext()->ConstructedFrame();
   }
@@ -635,11 +635,11 @@ nsFrame::Init(nsIContent*       aContent,
     nsFrameState state = GetParent()->GetStateBits();
 
     // Make bits that are currently off (see constructor) the same:
-    mState |= state & (NS_FRAME_INDEPENDENT_SELECTION |
-                       NS_FRAME_GENERATED_CONTENT |
-                       NS_FRAME_IS_SVG_TEXT |
-                       NS_FRAME_IN_POPUP |
-                       NS_FRAME_IS_NONDISPLAY);
+    AddStateBits(state & (NS_FRAME_INDEPENDENT_SELECTION |
+                          NS_FRAME_GENERATED_CONTENT |
+                          NS_FRAME_IS_SVG_TEXT |
+                          NS_FRAME_IN_POPUP |
+                          NS_FRAME_IS_NONDISPLAY));
 
     if (HasAnyStateBits(NS_FRAME_IN_POPUP) && TrackingVisibility()) {
       // Assume all frames in popups are visible.
@@ -652,7 +652,7 @@ nsFrame::Init(nsIContent*       aContent,
        nsLayoutUtils::HasAnimationOfProperty(this, eCSSProperty_transform))) {
     // The frame gets reconstructed if we toggle the -moz-transform
     // property, so we can set this bit here and then ignore it.
-    mState |= NS_FRAME_MAY_BE_TRANSFORMED;
+    AddStateBits(NS_FRAME_MAY_BE_TRANSFORMED);
   }
   if (disp->mPosition == NS_STYLE_POSITION_STICKY &&
       !aPrevInFlow &&
@@ -6997,7 +6997,7 @@ nsFrame::IsFrameTreeTooDeep(const ReflowInput& aReflowInput,
 {
   if (aReflowInput.mReflowDepth >  MAX_FRAME_DEPTH) {
     NS_WARNING("frame tree too deep; setting zero size and returning");
-    mState |= NS_FRAME_TOO_DEEP_IN_FRAME_TREE;
+    AddStateBits(NS_FRAME_TOO_DEEP_IN_FRAME_TREE);
     ClearOverflowRects();
     aMetrics.ClearSize();
     aMetrics.SetBlockStartAscent(0);

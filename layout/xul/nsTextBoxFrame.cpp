@@ -645,7 +645,7 @@ nsTextBoxFrame::CalculateTitleForWidth(gfxContext&          aRenderingContext,
         mCroppedTitle = mTitle;
         if (HasRTLChars(mTitle) ||
             StyleVisibility()->mDirection == NS_STYLE_DIRECTION_RTL) {
-            mState |= NS_FRAME_IS_BIDI;
+            AddStateBits(NS_FRAME_IS_BIDI);
         }
         return titleWidth;  // fits, done.
     }
@@ -704,7 +704,7 @@ nsTextBoxFrame::CalculateTitleForWidth(gfxContext&          aRenderingContext,
                 }
 
                 if (UCS2_CHAR_IS_BIDI(*pos)) {
-                    mState |= NS_FRAME_IS_BIDI;
+                    AddStateBits(NS_FRAME_IS_BIDI);
                 }
                 pos = nextPos;
                 totalWidth += charWidth;
@@ -741,7 +741,7 @@ nsTextBoxFrame::CalculateTitleForWidth(gfxContext&          aRenderingContext,
                 }
 
                 if (UCS2_CHAR_IS_BIDI(*pos)) {
-                    mState |= NS_FRAME_IS_BIDI;
+                    AddStateBits(NS_FRAME_IS_BIDI);
                 }
                 prevPos = pos;
                 totalWidth += charWidth;
@@ -793,7 +793,7 @@ nsTextBoxFrame::CalculateTitleForWidth(gfxContext&          aRenderingContext,
                 }
 
                 if (UCS2_CHAR_IS_BIDI(*leftPos)) {
-                    mState |= NS_FRAME_IS_BIDI;
+                    AddStateBits(NS_FRAME_IS_BIDI);
                 }
 
                 leftString.Append(leftPos, length);
@@ -815,7 +815,7 @@ nsTextBoxFrame::CalculateTitleForWidth(gfxContext&          aRenderingContext,
                 }
 
                 if (UCS2_CHAR_IS_BIDI(*pos)) {
-                    mState |= NS_FRAME_IS_BIDI;
+                    AddStateBits(NS_FRAME_IS_BIDI);
                 }
 
                 rightString.Insert(pos, 0, length);

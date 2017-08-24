@@ -991,7 +991,7 @@ nsImageFrame::Reflow(nsPresContext*          aPresContext,
 
   // see if we have a frozen size (i.e. a fixed width and height)
   if (HaveFixedSize(aReflowInput)) {
-    mState |= IMAGE_SIZECONSTRAINED;
+    AddStateBits(IMAGE_SIZECONSTRAINED);
   } else {
     RemoveStateBits(IMAGE_SIZECONSTRAINED);
   }
@@ -999,7 +999,7 @@ nsImageFrame::Reflow(nsPresContext*          aPresContext,
   // XXXldb These two bits are almost exact opposites (except in the
   // middle of the initial reflow); remove IMAGE_GOTINITIALREFLOW.
   if (GetStateBits() & NS_FRAME_FIRST_REFLOW) {
-    mState |= IMAGE_GOTINITIALREFLOW;
+    AddStateBits(IMAGE_GOTINITIALREFLOW);
   }
 
   mComputedSize =

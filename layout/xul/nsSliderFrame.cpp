@@ -1532,7 +1532,7 @@ nsSliderFrame::EnsureOrient()
 
   bool isHorizontal = (scrollbarBox->GetStateBits() & NS_STATE_IS_HORIZONTAL) != 0;
   if (isHorizontal)
-      mState |= NS_STATE_IS_HORIZONTAL;
+      AddStateBits(NS_STATE_IS_HORIZONTAL);
   else
       RemoveStateBits(NS_STATE_IS_HORIZONTAL);
 }
