@@ -487,6 +487,15 @@ ChannelMediaDecoder::ShouldThrottleDownload()
   return stats.mDownloadRate > factor * stats.mPlaybackRate;
 }
 
+void
+ChannelMediaDecoder::AddSizeOfResources(ResourceSizes* aSizes)
+{
+  MOZ_ASSERT(NS_IsMainThread());
+  if (mResource) {
+    aSizes->mByteSize += mResource->SizeOfIncludingThis(aSizes->mMallocSizeOf);
+  }
+}
+
 already_AddRefed<nsIPrincipal>
 ChannelMediaDecoder::GetCurrentPrincipal()
 {
