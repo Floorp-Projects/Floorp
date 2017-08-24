@@ -223,6 +223,9 @@ CreateIterResultObject(JSContext* cx, HandleValue value, bool done);
 extern JSObject*
 InitLegacyIteratorClass(JSContext* cx, HandleObject obj);
 
+bool
+IsLegacyIterator(HandleValue v);
+
 extern JSObject*
 InitStopIterationClass(JSContext* cx, HandleObject obj);
 
