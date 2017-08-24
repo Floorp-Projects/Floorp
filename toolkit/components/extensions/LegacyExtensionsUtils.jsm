@@ -131,7 +131,7 @@ class EmbeddedExtension {
    * @returns {Promise<LegacyContextAPI>} A promise which resolve to the API exposed to the
    *   legacy context.
    */
-  startup(reason) {
+  startup() {
     if (this.started) {
       return Promise.reject(new Error("This embedded extension has already been started"));
     }
@@ -185,7 +185,7 @@ class EmbeddedExtension {
 
       // Run ambedded extension startup and catch any error during embedded extension
       // startup.
-      this.extension.startup(reason).catch((err) => {
+      this.extension.startup().catch((err) => {
         this.started = false;
         this.startupPromise = null;
         this.extension.off("startup", onBeforeStarted);
@@ -202,13 +202,13 @@ class EmbeddedExtension {
    *
    * @returns {Promise<void>} a promise that is resolved when the shutdown has been done
    */
-  shutdown(reason) {
+  shutdown() {
     EmbeddedExtensionManager.untrackEmbeddedExtension(this);
 
     // If there is a pending startup,  wait to be completed and then shutdown.
     if (this.startupPromise) {
       let promise = this.startupPromise.then(() => {
-        return this.extension.shutdown(reason);
+        return this.extension.shutdown();
       });
 
       AsyncShutdown.profileChangeTeardown.addBlocker(
@@ -220,7 +220,7 @@ class EmbeddedExtension {
 
     // Run shutdown now if the embedded webextension has been correctly started
     if (this.extension && this.started && !this.extension.hasShutdown) {
-      this.extension.shutdown(reason);
+      this.extension.shutdown();
     }
 
     return Promise.resolve();
