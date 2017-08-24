@@ -320,40 +320,70 @@ AtomicOperations::isLockfree(int32_t size)
 } // namespace jit
 } // namespace js
 
-#if defined(JS_CODEGEN_ARM)
-# include "jit/arm/AtomicOperations-arm.h"
-#elif defined(JS_CODEGEN_ARM64)
+// As explained above, our atomic operations are not portable even in principle,
+// so we must include platform+compiler specific definitions here.
+//
+// x86, x64, arm, and arm64 are maintained by Mozilla.  All other platform
+// setups are by platform maintainers' request and are not maintained by
+// Mozilla.
+//
+// If you are using a platform+compiler combination that causes an error below
+// (and if the problem isn't just that the compiler uses a different name for a
+// known architecture), you have basically three options:
+//
+//  - find an already-supported compiler for the platform and use that instead
+//
+//  - write your own support code for the platform+compiler and create a new
+//    case below
+//
+//  - include jit/none/AtomicOperations-feeling-lucky.h in a case for the
+//    platform below, if you have a gcc-compatible compiler and truly feel
+//    lucky.  You may have to add a little code to that file, too.
+//
+// Simulators are confusing.  These atomic primitives must be compatible with
+// the code that the JIT emits, but of course for an ARM simulator running on
+// x86 the primitives here will be for x86, not for ARM, while the JIT emits ARM
+// code.  Our ARM simulator solves that the easy way: by using these primitives
+// to implement its atomic operations.  For other simulators there may need to
+// be special cases below to provide simulator-compatible primitives, for
+// example, for our ARM64 simulator the primitives could in principle
+// participate in the memory exclusivity monitors implemented by the simulator.
+// Such a solution is likely to be difficult.
+
+#if defined(__x86_64__) || defined(_M_X64) || defined(__i386__) || defined(_M_IX86)
+# if defined(__clang__) || defined(__GNUC__) || defined(_MSC_VER)
+#  include "jit/x86-shared/AtomicOperations-x86-shared.h"
+# else
+#  error "No AtomicOperations support for this platform+compiler combination"
+# endif
+#elif defined(__arm__)
+# if defined(__clang__) || defined(__GNUC__)
+#  include "jit/arm/AtomicOperations-arm.h"
+# else
+#  error "No AtomicOperations support for this platform+compiler combination"
+# endif
+#elif defined(__aarch64__)
 # include "jit/arm64/AtomicOperations-arm64.h"
-#elif defined(JS_CODEGEN_MIPS32) || defined(JS_CODEGEN_MIPS64)
-# include "jit/mips-shared/AtomicOperations-mips-shared.h"
+#elif defined(__mips__)
+# if defined(__clang__) || defined(__GNUC__)
+#  include "jit/mips-shared/AtomicOperations-mips-shared.h"
+# else
+#  error "No AtomicOperations support for this platform+compiler combination"
+# endif
 #elif defined(__ppc__) || defined(__PPC__)
 # include "jit/none/AtomicOperations-feeling-lucky.h"
 #elif defined(__sparc__)
 # include "jit/none/AtomicOperations-feeling-lucky.h"
-#elif defined(JS_CODEGEN_NONE)
-  // You can disable the JIT with --disable-ion but you must still
-  // provide the atomic operations that will be used by the JS engine.
-  // When the JIT is disabled the operations are simply safe-for-races
-  // C++ realizations of atomics.  These operations cannot be written
-  // in portable C++, hence the default here is to crash.  See the
-  // top of the file for more guidance.
-# if defined(__ppc64__) || defined(__PPC64__) || defined(__ppc64le__) || defined(__PPC64LE__)
-#  include "jit/none/AtomicOperations-feeling-lucky.h"
-# elif defined(__aarch64__)
-#  include "jit/arm64/AtomicOperations-arm64.h"
-# elif defined(__alpha__)
-#  include "jit/none/AtomicOperations-feeling-lucky.h"
-# elif defined(__hppa__)
-#  include "jit/none/AtomicOperations-feeling-lucky.h"
-# elif defined(__sh__)
-#  include "jit/none/AtomicOperations-feeling-lucky.h"
-# else
-#  include "jit/none/AtomicOperations-none.h" // These MOZ_CRASH() always
-# endif
-#elif defined(JS_CODEGEN_X86) || defined(JS_CODEGEN_X64)
-# include "jit/x86-shared/AtomicOperations-x86-shared.h"
+#elif defined(__ppc64__) || defined(__PPC64__) || defined(__ppc64le__) || defined(__PPC64LE__)
+# include "jit/none/AtomicOperations-feeling-lucky.h"
+#elif defined(__alpha__)
+# include "jit/none/AtomicOperations-feeling-lucky.h"
+#elif defined(__hppa__)
+# include "jit/none/AtomicOperations-feeling-lucky.h"
+#elif defined(__sh__)
+# include "jit/none/AtomicOperations-feeling-lucky.h"
 #else
-# error "Atomic operations must be defined for this platform"
+# error "No AtomicOperations support provided for this platform"
 #endif
 
 #endif // jit_AtomicOperations_h
