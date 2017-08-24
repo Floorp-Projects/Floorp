@@ -10,6 +10,8 @@ const {
   DOM,
 } = require("devtools/client/shared/vendor/react");
 const { connect } = require("devtools/client/shared/vendor/react-redux");
+const { getTheme, addThemeObserver, removeThemeObserver } =
+  require("devtools/client/shared/theme");
 const Actions = require("../actions/index");
 const { HEADERS, REQUESTS_WATERFALL } = require("../constants");
 const { getWaterfallScale } = require("../selectors/index");
@@ -50,24 +52,34 @@ const RequestListHeader = createClass({
   componentDidMount() {
     // Create the object that takes care of drawing the waterfall canvas background
     this.background = new WaterfallBackground(document);
-    this.background.draw(this.props);
+    this.drawBackground();
     this.resizeWaterfall();
     window.addEventListener("resize", this.resizeWaterfall);
+    addThemeObserver(this.drawBackground);
   },
 
   componentDidUpdate() {
-    this.background.draw(this.props);
+    this.drawBackground();
   },
 
   componentWillUnmount() {
     this.background.destroy();
     this.background = null;
     window.removeEventListener("resize", this.resizeWaterfall);
+    removeThemeObserver(this.drawBackground);
   },
 
   onContextMenu(evt) {
     evt.preventDefault();
     this.contextMenu.open(evt);
+  },
+
+  drawBackground() {
+    // The background component is theme dependent, so add the current theme to the props.
+    let props = Object.assign({}, this.props, {
+      theme: getTheme()
+    });
+    this.background.draw(props);
   },
 
   resizeWaterfall() {
