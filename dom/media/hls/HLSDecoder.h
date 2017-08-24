@@ -37,6 +37,7 @@ public:
 
   void Pause() override;
 
+  already_AddRefed<nsIPrincipal> GetCurrentPrincipal() override;
   bool IsTransportSeekable() override { return true; }
   void Suspend() override;
   void Resume() override;

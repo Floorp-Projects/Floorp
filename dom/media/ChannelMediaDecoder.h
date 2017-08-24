@@ -78,6 +78,7 @@ public:
                 bool aIsPrivateBrowsing,
                 nsIStreamListener** aStreamListener);
 
+  already_AddRefed<nsIPrincipal> GetCurrentPrincipal() override;
   bool IsTransportSeekable() override;
   void SetLoadInBackground(bool aLoadInBackground) override;
   void Suspend() override;
