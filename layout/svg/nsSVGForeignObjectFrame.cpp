@@ -376,8 +376,8 @@ nsSVGForeignObjectFrame::ReflowSVG()
   FinishAndStoreOverflow(overflowAreas, mRect.Size());
 
   // Now unset the various reflow bits:
-  mState &= ~(NS_FRAME_FIRST_REFLOW | NS_FRAME_IS_DIRTY |
-              NS_FRAME_HAS_DIRTY_CHILDREN);
+  RemoveStateBits(NS_FRAME_FIRST_REFLOW | NS_FRAME_IS_DIRTY |
+                  NS_FRAME_HAS_DIRTY_CHILDREN);
 }
 
 void
