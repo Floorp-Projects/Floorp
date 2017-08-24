@@ -62,12 +62,8 @@ class StringBuffer
     MOZ_ALWAYS_INLINE bool isLatin1() const { return cb.constructed<Latin1CharBuffer>(); }
     MOZ_ALWAYS_INLINE bool isTwoByte() const { return !isLatin1(); }
 
-    MOZ_ALWAYS_INLINE Latin1CharBuffer& latin1Chars() { return cb.ref<Latin1CharBuffer>(); }
     MOZ_ALWAYS_INLINE TwoByteCharBuffer& twoByteChars() { return cb.ref<TwoByteCharBuffer>(); }
 
-    MOZ_ALWAYS_INLINE const Latin1CharBuffer& latin1Chars() const {
-        return cb.ref<Latin1CharBuffer>();
-    }
     MOZ_ALWAYS_INLINE const TwoByteCharBuffer& twoByteChars() const {
         return cb.ref<TwoByteCharBuffer>();
     }
@@ -83,6 +79,12 @@ class StringBuffer
       , reserved_(0)
     {
         cb.construct<Latin1CharBuffer>(cx);
+    }
+
+    MOZ_ALWAYS_INLINE Latin1CharBuffer& latin1Chars() { return cb.ref<Latin1CharBuffer>(); }
+
+    MOZ_ALWAYS_INLINE const Latin1CharBuffer& latin1Chars() const {
+        return cb.ref<Latin1CharBuffer>();
     }
 
     void clear() {
@@ -133,6 +135,11 @@ class StringBuffer
     }
     MOZ_MUST_USE bool append(char c) {
         return append(Latin1Char(c));
+    }
+
+    TwoByteCharBuffer& rawTwoByteBuffer() {
+        MOZ_ASSERT(hasEnsuredTwoByteChars_);
+        return twoByteChars();
     }
 
     inline MOZ_MUST_USE bool append(const char16_t* begin, const char16_t* end);
