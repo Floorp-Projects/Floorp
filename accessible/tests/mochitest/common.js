@@ -168,7 +168,13 @@ function addA11yLoadEvent(aFunc, aWindow) {
     );
   }
 
-  SimpleTest.waitForFocus(waitForDocLoad, aWindow);
+  if (aWindow &&
+      aWindow.document.activeElement &&
+      aWindow.document.activeElement.localName == "browser") {
+    waitForDocLoad();
+  } else {
+    SimpleTest.waitForFocus(waitForDocLoad, aWindow);
+  }
 }
 
 /**
