@@ -92,6 +92,7 @@
 }
 
 #userContext-label {
+  margin-inline-start: 0;
   margin-inline-end: 3px;
   color: var(--identity-tab-color);
 }
