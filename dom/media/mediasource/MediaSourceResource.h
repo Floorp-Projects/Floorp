@@ -43,7 +43,7 @@ public:
   bool IsDataCachedToEndOfResource(int64_t aOffset) override { UNIMPLEMENTED(); return false; }
   nsresult ReadFromCache(char* aBuffer, int64_t aOffset, uint32_t aCount) override { UNIMPLEMENTED(); return NS_ERROR_FAILURE; }
 
-  already_AddRefed<nsIPrincipal> GetCurrentPrincipal() override
+  already_AddRefed<nsIPrincipal> GetCurrentPrincipal()
   {
     return RefPtr<nsIPrincipal>(mPrincipal).forget();
   }
