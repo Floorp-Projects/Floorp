@@ -150,6 +150,8 @@ add_task(async function searchbar_context_move_to_panel_and_back() {
   let placement = CustomizableUI.getPlacementOfWidget("search-container");
   is(placement.area, CustomizableUI.AREA_FIXED_OVERFLOW_PANEL, "Should be in panel");
 
+  await waitForOverflowButtonShown();
+
   let shownPanelPromise = popupShown(overflowPanel);
   overflowButton.click();
   await shownPanelPromise;
@@ -172,6 +174,9 @@ add_task(async function searchbar_context_move_to_panel_and_back() {
 // show a context menu with options to move it.
 add_task(async function context_within_panel() {
   CustomizableUI.addWidgetToArea("new-window-button", CustomizableUI.AREA_FIXED_OVERFLOW_PANEL);
+
+  await waitForOverflowButtonShown();
+
   let shownPanelPromise = popupShown(overflowPanel);
   overflowButton.click();
   await shownPanelPromise;

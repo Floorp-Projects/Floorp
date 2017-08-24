@@ -13,6 +13,8 @@ add_task(async function() {
   CustomizableUI.addWidgetToArea("characterencoding-button",
                                   CustomizableUI.AREA_FIXED_OVERFLOW_PANEL);
 
+  await waitForOverflowButtonShown();
+
   let newTab = await BrowserTestUtils.openNewForegroundTab(gBrowser, TEST_PAGE, true, true);
 
   await document.getElementById("nav-bar").overflowable.show();
