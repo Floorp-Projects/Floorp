@@ -248,9 +248,7 @@ SpecialPowersObserverAPI.prototype = {
   },
 
   _sendReply(aMessage, aReplyName, aReplyMsg) {
-    let mm = aMessage.target
-                     .QueryInterface(Ci.nsIFrameLoaderOwner)
-                     .frameLoader
+    let mm = aMessage.target.frameLoader
                      .messageManager;
     mm.sendAsyncMessage(aReplyName, aReplyMsg);
   },
@@ -471,9 +469,7 @@ SpecialPowersObserverAPI.prototype = {
           sandboxOptions = {}
         }
         let sb = Components.utils.Sandbox(systemPrincipal, sandboxOptions);
-        let mm = aMessage.target
-                         .QueryInterface(Ci.nsIFrameLoaderOwner)
-                         .frameLoader
+        let mm = aMessage.target.frameLoader
                          .messageManager;
         sb.sendAsyncMessage = (name, message) => {
           mm.sendAsyncMessage("SPChromeScriptMessage",

@@ -232,7 +232,7 @@ this.EventManager.prototype = {
       {
         let evt = aEvent.QueryInterface(
           Ci.nsIAccessibleObjectAttributeChangedEvent);
-        if (evt.changedAttribute.toString() !== "aria-hidden") {
+        if (evt.changedAttribute !== "aria-hidden") {
           // Only handle aria-hidden attribute change.
           break;
         }

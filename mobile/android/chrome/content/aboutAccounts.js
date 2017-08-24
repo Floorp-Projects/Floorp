@@ -94,7 +94,6 @@ var wrapper = {
 
     let iframe = document.getElementById("remote");
     this.iframe = iframe;
-    this.iframe.QueryInterface(Ci.nsIFrameLoaderOwner);
     let docShell = this.iframe.frameLoader.docShell;
     docShell.QueryInterface(Ci.nsIWebProgress);
     docShell.addProgressListener(this.iframeListener,
