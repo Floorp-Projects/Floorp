@@ -5633,7 +5633,8 @@ nsDisplayWrapList::nsDisplayWrapList(nsDisplayListBuilder* aBuilder,
 
   mBaseVisibleRect = mVisibleRect;
 
-  mList.AppendToTop(aList);
+  mListPtr = &mList;
+  mListPtr->AppendToTop(aList);
   UpdateBounds(aBuilder);
 
   if (!aFrame || !aFrame->IsTransformed()) {
@@ -5650,7 +5651,7 @@ nsDisplayWrapList::nsDisplayWrapList(nsDisplayListBuilder* aBuilder,
   // (since nsDisplayTransform wraps all actual content), and that child
   // will have the correct reference frame set (since nsDisplayTransform
   // handles this explictly).
-  nsDisplayItem *i = mList.GetBottom();
+  nsDisplayItem *i = mListPtr->GetBottom();
   if (i && (!i->GetAbove() || i->GetType() == DisplayItemType::TYPE_TRANSFORM) &&
       i->Frame() == mFrame) {
     mReferenceFrame = i->ReferenceFrame();
@@ -5670,7 +5671,8 @@ nsDisplayWrapList::nsDisplayWrapList(nsDisplayListBuilder* aBuilder,
 
   mBaseVisibleRect = mVisibleRect;
 
-  mList.AppendToTop(aItem);
+  mListPtr = &mList;
+  mListPtr->AppendToTop(aItem);
   UpdateBounds(aBuilder);
 
   if (!aFrame || !aFrame->IsTransformed()) {
@@ -5693,7 +5695,7 @@ nsDisplayWrapList::~nsDisplayWrapList() {
 void
 nsDisplayWrapList::HitTest(nsDisplayListBuilder* aBuilder, const nsRect& aRect,
                            HitTestState* aState, nsTArray<nsIFrame*> *aOutFrames) {
-  mList.HitTest(aBuilder, aRect, aState, aOutFrames);
+  mListPtr->HitTest(aBuilder, aRect, aState, aOutFrames);
 }
 
 nsRect
@@ -5712,8 +5714,9 @@ nsDisplayWrapList::ComputeVisibility(nsDisplayListBuilder* aBuilder,
   nsRegion originalVisibleRegion = visibleRegion;
 
   bool retval =
-    mList.ComputeVisibilityForSublist(aBuilder, &visibleRegion, mVisibleRect);
-
+    mListPtr->ComputeVisibilityForSublist(aBuilder,
+                                          &visibleRegion,
+                                          mVisibleRect);
   nsRegion removed;
   // removed = originalVisibleRegion - visibleRegion
   removed.Sub(originalVisibleRegion, visibleRegion);
@@ -5729,7 +5732,7 @@ nsDisplayWrapList::GetOpaqueRegion(nsDisplayListBuilder* aBuilder,
                                    bool* aSnap) {
   *aSnap = false;
   nsRegion result;
-  if (mList.IsOpaque()) {
+  if (mListPtr->IsOpaque()) {
     // Everything within GetBounds that's visible is opaque.
     result = GetBounds(aBuilder, aSnap);
   }
@@ -5801,7 +5804,7 @@ RequiredLayerStateForChildren(nsDisplayListBuilder* aBuilder,
 nsRect nsDisplayWrapList::GetComponentAlphaBounds(nsDisplayListBuilder* aBuilder)
 {
   nsRect bounds;
-  for (nsDisplayItem* i = mList.GetBottom(); i; i = i->GetAbove()) {
+  for (nsDisplayItem* i = mListPtr->GetBottom(); i; i = i->GetAbove()) {
     bounds.UnionRect(bounds, i->GetComponentAlphaBounds(aBuilder));
   }
   return bounds;
