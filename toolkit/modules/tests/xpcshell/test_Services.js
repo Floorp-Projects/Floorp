@@ -42,6 +42,7 @@ function run_test() {
   checkService("droppedLinkHandler", Ci.nsIDroppedLinkHandler);
   checkService("eTLD", Ci.nsIEffectiveTLDService);
   checkService("focus", Ci.nsIFocusManager);
+  checkService("idle", Ci.nsIIdleService);
   checkService("io", Ci.nsIIOService);
   checkService("io", Ci.nsIIOService2);
   checkService("intl", Ci.mozIMozIntl);
