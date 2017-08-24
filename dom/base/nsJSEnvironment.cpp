@@ -1617,6 +1617,7 @@ nsJSContext::BeginCycleCollectionCallback()
   // Create an ICC timer even if ICC is globally disabled, because we could be manually triggering
   // an incremental collection, and we want to be sure to finish it.
   sICCRunner = IdleTaskRunner::Create(ICCRunnerFired,
+                                      "BeginCycleCollectionCallback::ICCRunnerFired",
                                       kICCIntersliceDelay,
                                       kIdleICCSliceBudget,
                                       true,
@@ -1835,7 +1836,8 @@ GCTimerFired(nsITimer *aTimer, void *aClosure)
   // Now start the actual GC after initial timer has fired.
   sInterSliceGCRunner = IdleTaskRunner::Create([aClosure](TimeStamp aDeadline) {
     return InterSliceGCRunnerFired(aDeadline, aClosure);
-  }, NS_INTERSLICE_GC_DELAY,
+  }, "GCTimerFired::InterSliceGCRunnerFired",
+     NS_INTERSLICE_GC_DELAY,
      sActiveIntersliceGCBudget,
      false,
      []{ return sShuttingDown; },
@@ -2138,7 +2140,9 @@ nsJSContext::MaybePokeCC()
     nsCycleCollector_dispatchDeferredDeletion();
 
     sCCRunner =
-      IdleTaskRunner::Create(CCRunnerFired, NS_CC_SKIPPABLE_DELAY,
+      IdleTaskRunner::Create(CCRunnerFired,
+                             "MaybePokeCC::CCRunnerFired",
+                             NS_CC_SKIPPABLE_DELAY,
                              kForgetSkippableSliceDuration, true,
                              []{ return sShuttingDown; },
                              TaskCategory::GarbageCollection);
@@ -2327,7 +2331,8 @@ DOMGCSliceCallback(JSContext* aCx, JS::GCProgress aProgress, const JS::GCDescrip
         sInterSliceGCRunner =
           IdleTaskRunner::Create([](TimeStamp aDeadline) {
             return InterSliceGCRunnerFired(aDeadline, nullptr);
-          }, NS_INTERSLICE_GC_DELAY,
+          }, "DOMGCSliceCallback::InterSliceGCRunnerFired",
+             NS_INTERSLICE_GC_DELAY,
              sActiveIntersliceGCBudget,
              false,
              []{ return sShuttingDown; },
