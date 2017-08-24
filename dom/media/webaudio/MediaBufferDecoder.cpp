@@ -173,17 +173,8 @@ MediaDecodeTask::CreateReader()
 {
   MOZ_ASSERT(NS_IsMainThread());
 
-  nsPIDOMWindowInner* parent = mDecodeJob.mContext->GetParentObject();
-  MOZ_ASSERT(parent);
-
-  nsCOMPtr<nsIPrincipal> principal;
-  nsCOMPtr<nsIScriptObjectPrincipal> sop = do_QueryInterface(parent);
-  if (sop) {
-    principal = sop->GetPrincipal();
-  }
-
   RefPtr<BufferMediaResource> resource =
-    new BufferMediaResource(static_cast<uint8_t*>(mBuffer), mLength, principal);
+    new BufferMediaResource(static_cast<uint8_t*>(mBuffer), mLength);
 
   mMainThread =
     mDecodeJob.mContext->GetOwnerGlobal()->AbstractMainThreadFor(TaskCategory::Other);

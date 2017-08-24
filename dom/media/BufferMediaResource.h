@@ -8,7 +8,6 @@
 
 #include "MediaResource.h"
 #include "nsISeekableStream.h"
-#include "nsIPrincipal.h"
 #include <algorithm>
 
 namespace mozilla {
@@ -20,13 +19,10 @@ namespace mozilla {
 class BufferMediaResource : public MediaResource
 {
 public:
-  BufferMediaResource(const uint8_t* aBuffer,
-                      uint32_t aLength,
-                      nsIPrincipal* aPrincipal)
+  BufferMediaResource(const uint8_t* aBuffer, uint32_t aLength)
     : mBuffer(aBuffer)
     , mLength(aLength)
     , mOffset(0)
-    , mPrincipal(aPrincipal)
   {
   }
 
@@ -85,7 +81,6 @@ private:
   {
     // Not owned:
     // - mBuffer
-    // - mPrincipal
     size_t size = MediaResource::SizeOfExcludingThis(aMallocSizeOf);
     return size;
   }
@@ -99,7 +94,6 @@ private:
   const uint8_t * mBuffer;
   uint32_t mLength;
   uint32_t mOffset;
-  nsCOMPtr<nsIPrincipal> mPrincipal;
 };
 
 } // namespace mozilla
