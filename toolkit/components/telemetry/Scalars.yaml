@@ -248,20 +248,6 @@ browser.engagement.navigation:
     record_in_processes:
       - 'main'
 
-  activitystream:
-    bug_numbers:
-      - 1381460
-    description: >
-      Count search events originating from Activity Stream. This is currently only tracking simple searches and saving them in the 'search_enter' key.
-    expires: never
-    kind: uint
-    keyed: true
-    notification_emails:
-      - aoprea@mozilla.com
-    release_channel_collection: opt-out
-    record_in_processes:
-      - 'main'
-
 # The following section contains the browser usage scalars.
 browser.usage:
   graphite:
