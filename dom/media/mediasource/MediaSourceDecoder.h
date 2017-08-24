@@ -74,6 +74,7 @@ private:
   bool IsLiveStream() override final { return !mEnded; }
 
   RefPtr<MediaSourceResource> mResource;
+  RefPtr<nsIPrincipal> mPrincipal;
 
   // The owning MediaSource holds a strong reference to this decoder, and
   // calls Attach/DetachMediaSource on this decoder to set and clear
