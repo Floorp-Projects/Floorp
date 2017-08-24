@@ -89,10 +89,7 @@ async function run_all_tests() {
 
 function run_test() {
   do_get_profile();
-  if (!newCacheBackEndUsed()) {
-    do_check_true(true, "This test checks only cache2 specific behavior.");
-    return;
-  }
+
   do_test_pending();
 
   Services.prefs.setBoolPref("network.http.rcwn.enabled", false);

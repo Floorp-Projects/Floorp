@@ -33,7 +33,7 @@ interface nsIWebBrowserPersistDocumentReceiver;
  *        The nsIWebBrowserPersistDocumentReceiver is a callback that
  *        will be fired once the document is ready for persisting.
  */
-[scriptable, uuid(f4c3fa8e-83e9-49f8-ac6f-951fc7541fe4)]
+[uuid(f4c3fa8e-83e9-49f8-ac6f-951fc7541fe4)]
 interface nsIWebBrowserPersistable : nsISupports
 {
   void startPersistence(in unsigned long long aOuterWindowID,

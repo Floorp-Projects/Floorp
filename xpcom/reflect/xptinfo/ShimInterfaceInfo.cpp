@@ -107,11 +107,13 @@
 #include "nsIDOMXULCommandEvent.h"
 #include "nsIDOMXULDocument.h"
 #include "nsIDOMXULElement.h"
+#include "nsIFrameLoader.h"
 #include "nsIListBoxObject.h"
 #include "nsIMenuBoxObject.h"
 #include "nsIScrollBoxObject.h"
 #include "nsISelection.h"
 #include "nsITreeBoxObject.h"
+#include "nsIWebBrowserPersistable.h"
 #include "nsIXMLHttpRequest.h"
 
 #include "mozilla/dom/AnimationEventBinding.h"
@@ -151,6 +153,7 @@
 #include "mozilla/dom/FileListBinding.h"
 #include "mozilla/dom/FocusEventBinding.h"
 #include "mozilla/dom/FormDataBinding.h"
+#include "mozilla/dom/FrameLoaderBinding.h"
 #include "mozilla/dom/HistoryBinding.h"
 #include "mozilla/dom/HTMLAnchorElementBinding.h"
 #include "mozilla/dom/HTMLAreaElementBinding.h"
@@ -316,6 +319,7 @@ const ComponentsInterfaceShimEntry kComponentsInterfaceShimMap[] =
   DEFINE_SHIM(FileList),
   DEFINE_SHIM(FocusEvent),
   DEFINE_SHIM(FormData),
+  DEFINE_SHIM_WITH_CUSTOM_INTERFACE(nsIFrameLoader, FrameLoader),
   DEFINE_SHIM_WITH_CUSTOM_INTERFACE(nsIDOMGeoPositionError, PositionError),
   DEFINE_SHIM(History),
   DEFINE_SHIM(HTMLAnchorElement),
@@ -377,6 +381,7 @@ const ComponentsInterfaceShimEntry kComponentsInterfaceShimMap[] =
   DEFINE_SHIM(TreeWalker),
   DEFINE_SHIM(UIEvent),
   DEFINE_SHIM(ValidityState),
+  DEFINE_SHIM_WITH_CUSTOM_INTERFACE(nsIWebBrowserPersistable, FrameLoader),
   DEFINE_SHIM(WheelEvent),
   DEFINE_SHIM(XMLDocument),
   DEFINE_SHIM_WITH_CUSTOM_INTERFACE(nsIXMLHttpRequestEventTarget, XMLHttpRequestEventTarget),

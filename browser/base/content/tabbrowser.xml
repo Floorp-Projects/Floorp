@@ -2119,7 +2119,7 @@
               if (aParams.remoteType) {
                 throw new Error("Cannot set opener window on a remote browser!");
               }
-              b.QueryInterface(Ci.nsIFrameLoaderOwner).presetOpenerWindow(aParams.openerWindow);
+              b.presetOpenerWindow(aParams.openerWindow);
             }
 
             if (!aParams.isPreloadBrowser && this.hasAttribute("autocompletepopup")) {
@@ -4136,7 +4136,7 @@
               this.setTabStateNoAction(tab, state);
 
               let browser = tab.linkedBrowser;
-              let {tabParent} = browser.QueryInterface(Ci.nsIFrameLoaderOwner).frameLoader;
+              let {tabParent} = browser.frameLoader;
               if (state == this.STATE_LOADING) {
                 this.assert(!this.minimizedOrFullyOccluded);
                 browser.docShellIsActive = true;
@@ -4723,7 +4723,7 @@
               this.requestedTab = tab;
 
               let browser = this.requestedTab.linkedBrowser;
-              let fl = browser.QueryInterface(Ci.nsIFrameLoaderOwner).frameLoader;
+              let fl = browser.frameLoader;
 
               if (fl && fl.tabParent && !this.activeSuppressDisplayport.has(fl.tabParent)) {
                 fl.tabParent.suppressDisplayport(true);

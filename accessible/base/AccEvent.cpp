@@ -258,11 +258,13 @@ a11y::MakeXPCEvent(AccEvent* aEvent)
 
   if (eventGroup & (1 << AccEvent::eObjectAttrChangedEvent)) {
     AccObjectAttrChangedEvent* oac = downcast_accEvent(aEvent);
+    nsString attribute;
+    oac->GetAttribute()->ToString(attribute);
     xpEvent = new xpcAccObjectAttributeChangedEvent(type,
                                                     ToXPC(acc),
                                                     ToXPCDocument(doc), domNode,
                                                     fromUser,
-                                                    oac->GetAttribute());
+                                                    attribute);
     return xpEvent.forget();
   }
 

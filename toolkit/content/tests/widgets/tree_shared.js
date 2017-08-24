@@ -1328,16 +1328,6 @@ function compareArrays(arr1, arr2) {
   return true;
 }
 
-function convertProperties(arr) {
-  var results = [];
-  var count = arr.Count();
-  for (let i = 0; i < count; i++)
-    results.push(arr.GetElementAt(i).QueryInterface(Components.interfaces.nsIAtom).toString());
-
-  results.sort();
-  return results.join(" ");
-}
-
 function convertDOMtoTreeRowInfo(treechildren, level, rowidx) {
   var obj = { rows: [] };
 

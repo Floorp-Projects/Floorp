@@ -370,7 +370,7 @@ _ContextualIdentityService.prototype = {
     return new Promise(resolve => {
       let tabParentIds = new Set();
       this._forEachContainerTab((tab, tabbrowser) => {
-        let frameLoader = tab.linkedBrowser.QueryInterface(Ci.nsIFrameLoaderOwner).frameLoader;
+        let frameLoader = tab.linkedBrowser.frameLoader;
 
         // We don't have tabParent in non-e10s mode.
         if (frameLoader.tabParent) {

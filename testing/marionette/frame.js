@@ -137,8 +137,7 @@ frame.Manager = class {
 
   getFrameMM(winId, frameId) {
     let oopFrame = this.getOopFrame(winId, frameId);
-    let mm = oopFrame.QueryInterface(Ci.nsIFrameLoaderOwner)
-        .frameLoader.messageManager;
+    let mm = oopFrame.frameLoader.messageManager;
     return mm;
   }
 

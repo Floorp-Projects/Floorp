@@ -17,7 +17,7 @@ function run_test()
     new OpenCallback(NORMAL|COMPLETE|NOTIFYBEFOREREAD, "x1m", "x1d", function(entry, beforeReading) {
       if (beforeReading) {
         ++order;
-        do_check_eq(order, newCacheBackEndUsed() ? 3 : 1);
+        do_check_eq(order, 3);
       } else {
         mc.fired();
       }
@@ -27,7 +27,7 @@ function run_test()
     new OpenCallback(NORMAL|NOTIFYBEFOREREAD, "x1m", "x1d", function(entry, beforeReading) {
       if (beforeReading) {
         ++order;
-        do_check_eq(order, newCacheBackEndUsed() ? 1 : 2);
+        do_check_eq(order, 1);
       } else {
         mc.fired();
       }
@@ -37,7 +37,7 @@ function run_test()
     new OpenCallback(NORMAL|NOTIFYBEFOREREAD, "x1m", "x1d", function(entry, beforeReading) {
       if (beforeReading) {
         ++order;
-        do_check_eq(order, newCacheBackEndUsed() ? 2 : 3);
+        do_check_eq(order, 2);
       } else {
         mc.fired();
       }

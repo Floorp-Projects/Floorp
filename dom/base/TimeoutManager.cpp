@@ -89,6 +89,20 @@ GetMaxBudget(bool aIsBackground)
   return maxBudget > 0 ? TimeDuration::FromMilliseconds(maxBudget)
                        : TimeDuration::Forever();
 }
+
+TimeDuration
+GetMinBudget(bool aIsBackground)
+{
+  // The minimum budget is computed by looking up the maximum allowed
+  // delay and computing how long time it would take to regenerate
+  // that budget using the regeneration factor. This number is
+  // expected to be negative.
+  return TimeDuration::FromMilliseconds(
+    - gBudgetThrottlingMaxDelay /
+    std::max(aIsBackground ? gBackgroundBudgetRegenerationFactor
+                           : gForegroundBudgetRegenerationFactor,
+             1));
+}
 } // namespace
 
 //
@@ -205,9 +219,7 @@ TimeoutManager::MinSchedulingDelay() const
       mExecutionBudget < TimeDuration()) {
     // Only throttle if execution budget is less than 0
     double factor = 1.0 / GetRegenerationFactor(mWindow.IsBackgroundInternal());
-    return TimeDuration::Min(
-      TimeDuration::FromMilliseconds(gBudgetThrottlingMaxDelay),
-      TimeDuration::Max(unthrottled, -mExecutionBudget.MultDouble(factor)));
+    return TimeDuration::Max(unthrottled, -mExecutionBudget.MultDouble(factor));
   }
   //
   return unthrottled;
@@ -333,9 +345,11 @@ TimeoutManager::UpdateBudget(const TimeStamp& aNow, const TimeDuration& aDuratio
   if (BudgetThrottlingEnabled(isBackground)) {
     double factor = GetRegenerationFactor(isBackground);
     TimeDuration regenerated = (aNow - mLastBudgetUpdate).MultDouble(factor);
-    // Clamp the budget to the maximum allowed budget.
-    mExecutionBudget = TimeDuration::Min(
-      GetMaxBudget(isBackground), mExecutionBudget - aDuration + regenerated);
+    // Clamp the budget to the range of minimum and maximum allowed budget.
+    mExecutionBudget = TimeDuration::Max(
+      GetMinBudget(isBackground),
+      TimeDuration::Min(GetMaxBudget(isBackground),
+                        mExecutionBudget - aDuration + regenerated));
   }
   mLastBudgetUpdate = aNow;
 }

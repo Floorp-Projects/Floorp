@@ -86,11 +86,6 @@ function run_test()
 {
   do_get_profile();
 
-  if (!newCacheBackEndUsed()) {
-    do_check_true(true, "This test doesn't run when the old cache back end is used since it depends on the new APIs.");
-    return;
-  }
-
   do_test_pending();
 
   Services.prefs.setBoolPref("network.http.rcwn.enabled", false);
