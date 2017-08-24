@@ -1922,6 +1922,8 @@ typedef int32_t (*Prototype_Int_DoubleIntInt)(double arg0, int32_t arg1, int32_t
 typedef int32_t (*Prototype_Int_IntDoubleIntInt)(int32_t arg0, double arg1, int32_t arg2,
                                                  int32_t arg3);
 typedef float (*Prototype_Float32_Float32)(float arg0);
+typedef float (*Prototype_Float32_Float32Float32)(float arg0, float arg1);
+typedef float (*Prototype_Float32_IntInt)(int arg0, int arg1);
 
 typedef double (*Prototype_DoubleInt)(double arg0, int32_t arg1);
 typedef double (*Prototype_Double_IntInt)(int32_t arg0, int32_t arg1);
@@ -2078,6 +2080,22 @@ Simulator::softwareInterrupt(SimInstruction* instr)
             fval0 = getFpuRegisterFloat(12);
             Prototype_Float32_Float32 target = reinterpret_cast<Prototype_Float32_Float32>(external);
             float fresult = target(fval0);
+            setCallResultFloat(fresult);
+            break;
+          }
+          case Args_Float32_Float32Float32: {
+            float fval0;
+            float fval1;
+            fval0 = getFpuRegisterFloat(12);
+            fval1 = getFpuRegisterFloat(14);
+            Prototype_Float32_Float32Float32 target = reinterpret_cast<Prototype_Float32_Float32Float32>(external);
+            float fresult = target(fval0,fval1);
+            setCallResultFloat(fresult);
+            break;
+          }
+          case Args_Float32_IntInt: {
+            Prototype_Float32_IntInt target = reinterpret_cast<Prototype_Float32_IntInt>(external);
+            float fresult = target(arg0, arg1);
             setCallResultFloat(fresult);
             break;
           }
@@ -2587,7 +2605,6 @@ Simulator::decodeTypeRegister(SimInstruction* instr)
             MOZ_CRASH();
             break;
           case rs_cfc1:
-            setRegister(rt_reg, alu_out);
           case rs_mfc1:
             setRegister(rt_reg, alu_out);
             break;
@@ -2742,6 +2759,21 @@ Simulator::decodeTypeRegister(SimInstruction* instr)
               case ff_cvt_ps_s:
               case ff_c_f_fmt:
                 MOZ_CRASH();
+                break;
+              case ff_movf_fmt:
+                if (testFCSRBit(fcsr_cc)) {
+                  setFpuRegisterFloat(fd_reg, getFpuRegisterFloat(fs_reg));
+                }
+                break;
+              case ff_movz_fmt:
+                if (rt == 0) {
+                  setFpuRegisterFloat(fd_reg, getFpuRegisterFloat(fs_reg));
+                }
+                break;
+              case ff_movn_fmt:
+                if (rt != 0) {
+                  setFpuRegisterFloat(fd_reg, getFpuRegisterFloat(fs_reg));
+                }
                 break;
               default:
                 MOZ_CRASH();
