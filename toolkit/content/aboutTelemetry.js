@@ -1865,6 +1865,9 @@ function adjustHeaderState(title = null) {
   let selected = document.querySelector(".category.selected .category-name");
   let selectedTitle = selected.textContent.trim();
   document.getElementById("sectionTitle").textContent = title ? title : selectedTitle;
+  if (selected.parentElement.id === "category-home") {
+    selectedTitle = bundle.GetStringFromName("allSections");
+  }
   let search = document.getElementById("search");
   let placeholder = bundle.formatStringFromName("filterPlaceholder", [ selectedTitle ], 1);
   search.setAttribute("placeholder", placeholder);
@@ -1906,8 +1909,6 @@ function show(selected) {
     }
   }
 
-  adjustHeaderState();
-
   let current_button = document.querySelector(".category.selected");
   if (current_button == selected)
     return;
@@ -1922,6 +1923,7 @@ function show(selected) {
   // Hack because subsection text appear selected. See Bug 1375114.
   document.getSelection().empty();
 
+  adjustHeaderState();
   displayProcessesSelector(selectedValue);
   adjustSearchState();
   changeUrlPath(selectedValue);
