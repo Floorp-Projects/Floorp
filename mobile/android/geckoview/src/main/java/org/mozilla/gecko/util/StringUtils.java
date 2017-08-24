@@ -5,6 +5,8 @@
 
 package org.mozilla.gecko.util;
 
+import android.graphics.Paint;
+import android.graphics.Rect;
 import android.net.Uri;
 import android.support.annotation.NonNull;
 import android.text.TextUtils;
@@ -300,5 +302,20 @@ public class StringUtils {
      */
     public static boolean caseInsensitiveStartsWith(String text, String prefix, int start) {
         return text.regionMatches(true, start, prefix, 0, prefix.length());
+    }
+
+    /**
+     * Measures the width of the given substring when rendered using the specified Paint.
+     *
+     * @param text      String to measure and return its width
+     * @param start     Index of the first char in the string to measure
+     * @param end       1 past the last char in the string measure
+     * @param textPaint the paint used to render the text
+     * @return          the width of the specified substring in screen pixels
+     */
+    public static int getTextWidth(final String text, final int start, final int end, final Paint textPaint) {
+        final Rect bounds = new Rect();
+        textPaint.getTextBounds(text, start, end, bounds);
+        return bounds.width();
     }
 }
