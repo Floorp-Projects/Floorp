@@ -1133,8 +1133,8 @@ NativeIteratorNext(JSContext* cx, NativeIterator* ni, MutableHandleValue rval, b
     return true;
 }
 
-MOZ_ALWAYS_INLINE bool
-IsIterator(HandleValue v)
+bool
+js::IsLegacyIterator(HandleValue v)
 {
     return v.isObject() && v.toObject().hasClass(&PropertyIteratorObject::class_);
 }
@@ -1142,7 +1142,7 @@ IsIterator(HandleValue v)
 MOZ_ALWAYS_INLINE bool
 legacy_iterator_next_impl(JSContext* cx, const CallArgs& args)
 {
-    MOZ_ASSERT(IsIterator(args.thisv()));
+    MOZ_ASSERT(IsLegacyIterator(args.thisv()));
 
     RootedObject thisObj(cx, &args.thisv().toObject());
 
@@ -1166,7 +1166,7 @@ static bool
 legacy_iterator_next(JSContext* cx, unsigned argc, Value* vp)
 {
     CallArgs args = CallArgsFromVp(argc, vp);
-    return CallNonGenericMethod<IsIterator, legacy_iterator_next_impl>(cx, args);
+    return CallNonGenericMethod<IsLegacyIterator, legacy_iterator_next_impl>(cx, args);
 }
 
 static const JSFunctionSpec legacy_iterator_methods[] = {
