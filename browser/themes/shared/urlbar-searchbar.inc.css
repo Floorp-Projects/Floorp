@@ -104,6 +104,7 @@
   list-style-image: url("chrome://browser/skin/device-desktop.svg");
 }
 
+.pageAction-sendToDevice-device.signintosync,
 #pageAction-panel-sendToDevice-fxa,
 #pageAction-urlbar-sendToDevice-fxa {
   list-style-image: url("chrome://browser/skin/sync.svg");
