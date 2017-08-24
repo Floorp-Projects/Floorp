@@ -145,7 +145,6 @@ EXTRA_JS_MODULES += [
     'offlineAppCache.jsm',
     'PageActions.jsm',
     'PermissionUI.jsm',
-    'PingCentre.jsm',
     'PluginContent.jsm',
     'ProcessHangMonitor.jsm',
     'ReaderParent.jsm',
