@@ -39,7 +39,7 @@ public class ExpectSuccessRepositorySessionStoreDelegate extends
   }
 
   @Override
-  public void onRecordStoreReconciled(String guid, Integer newVersion) {
+  public void onRecordStoreReconciled(String guid, String oldGuid, Integer newVersion) {
     log("Store reconciled record " + guid);
   }
 
