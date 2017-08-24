@@ -47,7 +47,8 @@ class Documentation(MachCommandBase):
             outdir = os.path.join(self.topobjdir, 'docs')
         if not what:
             what = [os.path.join(self.topsrcdir, 'tools')]
-        outdir = os.path.join(outdir, format)
+
+        format_outdir = os.path.join(outdir, format)
 
         generated = []
         failed = []
@@ -61,7 +62,7 @@ class Documentation(MachCommandBase):
 
             # find project name to use as a namespace within `outdir`
             project = self._find_project_name(docdir)
-            savedir = os.path.join(outdir, project)
+            savedir = os.path.join(format_outdir, project)
 
             args = [
                 'sphinx',
@@ -92,7 +93,8 @@ class Documentation(MachCommandBase):
             if len(addr) != 2:
                 return die('invalid address: %s' % http)
 
-            httpd = mozhttpd.MozHttpd(host=addr[0], port=addr[1], docroot=outdir)
+            httpd = mozhttpd.MozHttpd(host=addr[0], port=addr[1],
+                                      docroot=format_outdir)
             print('listening on %s:%d' % addr)
             httpd.start(block=True)
 
