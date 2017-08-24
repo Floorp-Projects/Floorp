@@ -13,9 +13,7 @@ function run_test()
     do_execute_soon(function() {
       syncWithCacheIOThread(function() {
 
-        var expectedConsumption = newCacheBackEndUsed()
-          ? 4096
-          : 48;
+        var expectedConsumption = 4096;
 
         storage.asyncVisitStorage(
           // Test should store 4 entries
@@ -32,7 +30,7 @@ function run_test()
         );
       });
     });
-  }, !newCacheBackEndUsed());
+  });
 
   asyncOpenCacheEntry("http://a/", "disk", Ci.nsICacheStorage.OPEN_NORMALLY, null,
     new OpenCallback(NEW, "a1m", "a1d", function(entry) {

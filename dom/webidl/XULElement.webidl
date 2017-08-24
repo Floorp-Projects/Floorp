@@ -5,7 +5,6 @@
  */
 
 interface XULControllers;
-interface MozFrameLoader;
 interface MozRDFCompositeDataSource;
 interface MozRDFResource;
 
@@ -116,7 +115,7 @@ interface XULElement : Element {
 [NoInterfaceObject]
 interface MozFrameLoaderOwner {
   [ChromeOnly]
-  readonly attribute MozFrameLoader? frameLoader;
+  readonly attribute FrameLoader? frameLoader;
 
   [ChromeOnly]
   void setIsPrerendered();

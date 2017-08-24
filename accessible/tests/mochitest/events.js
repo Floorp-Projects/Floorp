@@ -1745,7 +1745,7 @@ function objAttrChangedChecker(aID, aAttr) {
       return;
     }
 
-    is(event.changedAttribute.toString(), aAttr,
+    is(event.changedAttribute, aAttr,
       "Wrong attribute name of the object attribute changed event.");
   };
 
@@ -1754,7 +1754,7 @@ function objAttrChangedChecker(aID, aAttr) {
       var scEvent = aEvent.QueryInterface(
         nsIAccessibleObjectAttributeChangedEvent);
       return (aEvent.accessible == getAccessible(this.target)) &&
-        (scEvent.changedAttribute.toString() == aAttr);
+        (scEvent.changedAttribute == aAttr);
     }
     return false;
   };
