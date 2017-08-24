@@ -1344,10 +1344,10 @@ PluginInstanceParent::NPP_SetWindow(const NPWindow* aWindow)
 #if defined(XP_MACOSX) || defined(XP_WIN)
     double floatScaleFactor = 1.0;
     mNPNIface->getvalue(mNPP, NPNVcontentsScaleFactor, &floatScaleFactor);
-    int scaleFactor = ceil(floatScaleFactor);
     window.contentsScaleFactor = floatScaleFactor;
 #endif
 #if defined(XP_MACOSX)
+    int scaleFactor = ceil(floatScaleFactor);
     if (mShWidth != window.width * scaleFactor || mShHeight != window.height * scaleFactor) {
         if (mDrawingModel == NPDrawingModelCoreAnimation ||
             mDrawingModel == NPDrawingModelInvalidatingCoreAnimation) {
