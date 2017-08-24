@@ -406,7 +406,7 @@ class Context {
    *        only possible matching schema. If a function is passed, it
    *        will be evaluated when the error string is first needed, and
    *        must return a string.
-   * @param {string} choicesMessage
+   * @param {string|function} choicesMessage
    *        The message describing the valid what constitutes a valid
    *        value for this schema, which will be displayed when multiple
    *        schema choices are available and none match.
@@ -496,19 +496,23 @@ class Context {
     try {
       let result = callback();
 
-      return {result, choices: Array.from(choices)};
+      return {result, choices};
     } finally {
       this.currentChoices = currentChoices;
       this.choicePathIndex = choicePathIndex;
 
-      choices = Array.from(choices);
-      if (choices.length == 1) {
-        currentChoices.add(choices[0]);
-      } else if (choices.length) {
-        let n = choices.length - 1;
-        choices[n] = `or ${choices[n]}`;
+      if (choices.size == 1) {
+        for (let choice of choices) {
+          currentChoices.add(choice);
+        }
+      } else if (choices.size) {
+        this.error(null, () => {
+          let array = Array.from(choices, forceString);
+          let n = array.length - 1;
+          array[n] = `or ${array[n]}`;
 
-        this.error(null, `must either [${choices.join(", ")}]`);
+          return `must either [${array.join(", ")}]`;
+        });
       }
     }
   }
@@ -1248,10 +1252,11 @@ class ChoiceType extends Type {
     if (result) {
       return result;
     }
-    if (choices.length <= 1) {
+    if (choices.size <= 1) {
       return error;
     }
 
+    choices = Array.from(choices, forceString);
     let n = choices.length - 1;
     choices[n] = `or ${choices[n]}`;
 
