@@ -552,30 +552,16 @@ public:
 } // namespace dom
 
 inline bool
-IsValidSelectionType(RawSelectionType aRawSelectionType)
+IsValidRawSelectionType(RawSelectionType aRawSelectionType)
 {
-  switch (static_cast<SelectionType>(aRawSelectionType)) {
-    case SelectionType::eNone:
-    case SelectionType::eNormal:
-    case SelectionType::eSpellCheck:
-    case SelectionType::eIMERawClause:
-    case SelectionType::eIMESelectedRawClause:
-    case SelectionType::eIMEConvertedClause:
-    case SelectionType::eIMESelectedClause:
-    case SelectionType::eAccessibility:
-    case SelectionType::eFind:
-    case SelectionType::eURLSecondary:
-    case SelectionType::eURLStrikeout:
-      return true;
-    default:
-      return false;
-  }
+  return aRawSelectionType >= nsISelectionController::SELECTION_NONE &&
+         aRawSelectionType <= nsISelectionController::SELECTION_URLSTRIKEOUT;
 }
 
 inline SelectionType
 ToSelectionType(RawSelectionType aRawSelectionType)
 {
-  if (!IsValidSelectionType(aRawSelectionType)) {
+  if (!IsValidRawSelectionType(aRawSelectionType)) {
     return SelectionType::eInvalid;
   }
   return static_cast<SelectionType>(aRawSelectionType);
@@ -584,18 +570,22 @@ ToSelectionType(RawSelectionType aRawSelectionType)
 inline RawSelectionType
 ToRawSelectionType(SelectionType aSelectionType)
 {
+  MOZ_ASSERT(aSelectionType != SelectionType::eInvalid);
   return static_cast<RawSelectionType>(aSelectionType);
 }
 
-inline RawSelectionType ToRawSelectionType(TextRangeType aTextRangeType)
+inline RawSelectionType
+ToRawSelectionType(TextRangeType aTextRangeType)
 {
   return ToRawSelectionType(ToSelectionType(aTextRangeType));
 }
 
-inline bool operator &(SelectionType aSelectionType,
-                       RawSelectionType aRawSelectionTypes)
+inline SelectionTypeMask
+ToSelectionTypeMask(SelectionType aSelectionType)
 {
-  return (ToRawSelectionType(aSelectionType) & aRawSelectionTypes) != 0;
+  MOZ_ASSERT(aSelectionType != SelectionType::eInvalid);
+  return aSelectionType == SelectionType::eNone ? 0 :
+           (1 << (static_cast<uint8_t>(aSelectionType) - 1));
 }
 
 } // namespace mozilla
