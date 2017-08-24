@@ -2795,7 +2795,7 @@ nsTextEditorState::HasNonEmptyValue()
   if (mTextEditor && mBoundFrame && mEditorInitialized &&
       !mIsCommittingComposition) {
     bool empty;
-    nsresult rv = mTextEditor->GetDocumentIsEmpty(&empty);
+    nsresult rv = mTextEditor->DocumentIsEmpty(&empty);
     if (NS_SUCCEEDED(rv)) {
       return !empty;
     }
