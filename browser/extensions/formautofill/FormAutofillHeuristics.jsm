@@ -239,7 +239,7 @@ this.LabelUtils = {
     let mappedLabels = new Map();
     let unmappedLabels = [];
 
-    for (let label of doc.getElementsByTagName("label")) {
+    for (let label of doc.querySelectorAll("label")) {
       let id = label.htmlFor;
       if (!id) {
         let control = label.control;
