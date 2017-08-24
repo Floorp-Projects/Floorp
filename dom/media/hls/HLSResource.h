@@ -83,13 +83,13 @@ public:
 
   void Detach() { mDecoder = nullptr; }
 
-  size_t SizeOfExcludingThis(MallocSizeOf aMallocSizeOf) const override
+  size_t SizeOfExcludingThis(MallocSizeOf aMallocSizeOf) const
   {
-    size_t size = MediaResource::SizeOfExcludingThis(aMallocSizeOf);
-    return size;
+    // TODO: track JAVA wrappers.
+    return 0;
   }
 
-  size_t SizeOfIncludingThis(MallocSizeOf aMallocSizeOf) const override
+  size_t SizeOfIncludingThis(MallocSizeOf aMallocSizeOf) const
   {
     return aMallocSizeOf(this) + SizeOfExcludingThis(aMallocSizeOf);
   }
