@@ -26,18 +26,19 @@ interface nsISelectionDisplay;
 interface nsISelectionController : nsISelectionDisplay
 {
    // RawSelectionType values:
-   const short SELECTION_NONE=0;
-   const short SELECTION_NORMAL=1;
-   const short SELECTION_SPELLCHECK=2;
-   const short SELECTION_IME_RAWINPUT=4;
-   const short SELECTION_IME_SELECTEDRAWTEXT=8;
-   const short SELECTION_IME_CONVERTEDTEXT=16;
-   const short SELECTION_IME_SELECTEDCONVERTEDTEXT=32;
-   const short SELECTION_ACCESSIBILITY=64; // For accessibility API usage
-   const short SELECTION_FIND=128;
-   const short SELECTION_URLSECONDARY=256;
-   const short SELECTION_URLSTRIKEOUT=512;
-   const short NUM_SELECTIONTYPES=11;
+   const short SELECTION_NONE                      = 0;
+   const short SELECTION_NORMAL                    = 1;
+   const short SELECTION_SPELLCHECK                = 2;
+   const short SELECTION_IME_RAWINPUT              = 3;
+   const short SELECTION_IME_SELECTEDRAWTEXT       = 4;
+   const short SELECTION_IME_CONVERTEDTEXT         = 5;
+   const short SELECTION_IME_SELECTEDCONVERTEDTEXT = 6;
+   // For accessibility API usage
+   const short SELECTION_ACCESSIBILITY             = 7;
+   const short SELECTION_FIND                      = 8;
+   const short SELECTION_URLSECONDARY              = 9;
+   const short SELECTION_URLSTRIKEOUT              = 10;
+   const short NUM_SELECTIONTYPES                  = 11;
 
    // SelectionRegion values:
    const short SELECTION_ANCHOR_REGION = 0;
@@ -293,7 +294,15 @@ interface nsISelectionController : nsISelectionDisplay
 
 namespace mozilla {
 
+// RawSelectionType should be used to store nsISelectionController::SELECTION_*.
 typedef short RawSelectionType;
+
+// SelectionTypeMask should be used to store bit-mask of selection types.
+// The value can be retrieved with ToSelectionTypeMask() and checking if
+// a selection type is in a mask with |SelectionType & SelectionTypeMask|.
+typedef uint16_t SelectionTypeMask;
+
+// SelectionType should be used in internal handling because of type safe.
 enum class SelectionType : RawSelectionType
 {
   eInvalid = -1,
@@ -320,16 +329,29 @@ enum : size_t
 {
   // kSelectionTypeCount is number of SelectionType.
   kSelectionTypeCount = nsISelectionController::NUM_SELECTIONTYPES,
-  // kPresentSelectionTypeCount is number of SelectionType except "none".
-  kPresentSelectionTypeCount = kSelectionTypeCount - 1
+};
+
+// kPresentSelectionTypes is selection types which may be displayed.
+// I.e., selection types except eNone.
+static const SelectionType kPresentSelectionTypes[] = {
+  SelectionType::eNormal,
+  SelectionType::eSpellCheck,
+  SelectionType::eIMERawClause,
+  SelectionType::eIMESelectedRawClause,
+  SelectionType::eIMEConvertedClause,
+  SelectionType::eIMESelectedClause,
+  SelectionType::eAccessibility,
+  SelectionType::eFind,
+  SelectionType::eURLSecondary,
+  SelectionType::eURLStrikeout,
 };
 
 // Please include mozilla/dom/Selection.h for the following APIs.
 const char* ToChar(SelectionType aSelectionType);
+inline bool IsValidRawSelectionType(RawSelectionType aRawSelectionType);
 inline SelectionType ToSelectionType(RawSelectionType aRawSelectionType);
 inline RawSelectionType ToRawSelectionType(SelectionType aSelectionType);
-inline bool operator &(SelectionType aSelectionType,
-                       RawSelectionType aRawSelectionTypes);
+inline SelectionTypeMask ToSelectionTypeMask(SelectionType aSelectionType);
 
 } // namespace mozilla
 %}
