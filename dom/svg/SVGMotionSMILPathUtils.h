@@ -16,9 +16,9 @@
 #include "mozilla/RefPtr.h"
 #include "nsDebug.h"
 #include "nsSMILParserUtils.h"
+#include "nsStringFwd.h"
 #include "nsTArray.h"
 
-class nsAString;
 class nsSVGElement;
 
 namespace mozilla {

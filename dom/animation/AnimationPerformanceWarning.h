@@ -10,9 +10,8 @@
 #include <initializer_list>
 
 #include "mozilla/Maybe.h"
+#include "nsStringFwd.h"
 #include "nsTArray.h"
-
-class nsAString;
 
 namespace mozilla {
 

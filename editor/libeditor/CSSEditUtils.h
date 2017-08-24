@@ -8,6 +8,7 @@
 
 #include "mozilla/ChangeStyleTransaction.h" // for ChangeStyleTransaction
 #include "nsCOMPtr.h"               // for already_AddRefed
+#include "nsStringFwd.h"
 #include "nsTArray.h"               // for nsTArray
 #include "nscore.h"                 // for nsAString, nsresult, nullptr
 
@@ -18,7 +19,6 @@ class nsIDOMCSSStyleDeclaration;
 class nsIDOMElement;
 class nsIDOMNode;
 class nsINode;
-class nsString;
 
 namespace mozilla {
 

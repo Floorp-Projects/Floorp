@@ -34,9 +34,11 @@ add_task(function*() {
   yield addBreakpoint(dbg, 5);
   yield addBreakpoint(dbg, 2);
 
+  const syncedBps = waitForDispatch(dbg, "SYNC_BREAKPOINT", 2);
   yield reload(dbg, "simple1");
   yield waitForSelectedSource(dbg);
-  yield waitForDispatch(dbg, "SYNC_BREAKPOINT", 2);
+  yield syncedBps;
+
   assertEditorBreakpoint(dbg, 4);
   assertEditorBreakpoint(dbg, 5);
 });

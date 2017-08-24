@@ -9,30 +9,12 @@
 #include <string.h>
 #include <stdlib.h>
 
-#ifndef MOZILLA_INTERNAL_API
-// some of the includes make use of internal string types
-#define nsAString_h___
-#define nsString_h___
-#define nsStringFwd_h___
-#define nsReadableUtils_h___
-class nsACString;
-class nsAString;
-class nsString;
-class nsCString;
-template<class T> class nsReadingIterator;
-#endif
-
 #include "nsIContentSecurityPolicy.h"
 #include "nsNetUtil.h"
 #include "mozilla/dom/nsCSPContext.h"
 #include "nsIPrefService.h"
 #include "nsIPrefBranch.h"
-
-#ifndef MOZILLA_INTERNAL_API
-#undef nsString_h___
-#undef nsAString_h___
-#undef nsReadableUtils_h___
-#endif
+#include "nsStringFwd.h"
 
 /*
  * Testing the parser is non trivial, especially since we can not call

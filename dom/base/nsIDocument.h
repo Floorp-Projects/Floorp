@@ -21,6 +21,7 @@
 #include "nsIUUIDGenerator.h"
 #include "nsPIDOMWindow.h"               // for use in inline functions
 #include "nsPropertyTable.h"             // for member
+#include "nsStringFwd.h"
 #include "nsDataHashtable.h"             // for member
 #include "nsURIHashKey.h"                // for member
 #include "mozilla/net/ReferrerPolicy.h"  // for member
@@ -54,7 +55,6 @@ class ElementCreationOptionsOrString;
 
 class gfxUserFontSet;
 class imgIRequest;
-class nsAString;
 class nsBindingManager;
 class nsIDocShell;
 class nsDocShell;

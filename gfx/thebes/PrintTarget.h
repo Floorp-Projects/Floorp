@@ -9,6 +9,7 @@
 #include "mozilla/RefPtr.h"
 #include "mozilla/gfx/2D.h"
 #include "nsISupportsImpl.h"
+#include "nsStringFwd.h"
 
 namespace mozilla {
 namespace gfx {

@@ -371,9 +371,9 @@ typedef UniquePtr<MetadataTier> UniqueMetadataTier;
 
 class Metadata : public ShareableBase<Metadata>, public MetadataCacheablePod
 {
-    UniqueMetadataTier            metadata1_;
-    mutable UniqueMetadataTier    metadata2_;     // Access only when hasTier2() is true
-    mutable mozilla::Atomic<bool> hasTier2_;
+    UniqueMetadataTier         metadata1_;
+    mutable UniqueMetadataTier metadata2_;  // Access only when hasTier2() is true
+    mutable Atomic<bool>       hasTier2_;
 
   public:
     explicit Metadata(UniqueMetadataTier tier, ModuleKind kind = ModuleKind::Wasm)
@@ -444,7 +444,7 @@ class Metadata : public ShareableBase<Metadata>, public MetadataCacheablePod
 typedef RefPtr<Metadata> MutableMetadata;
 typedef RefPtr<const Metadata> SharedMetadata;
 
-typedef UniquePtr<uintptr_t, JS::FreePolicy> UniqueJumpTable;
+typedef mozilla::UniquePtr<void*[], JS::FreePolicy> UniqueJumpTable;
 
 // Code objects own executable code and the metadata that describe it. A single
 // Code object is normally shared between a module and all its instances.
@@ -463,7 +463,7 @@ class Code : public ShareableBase<Code>
     Code();
     Code(UniqueConstCodeSegment tier, const Metadata& metadata, UniqueJumpTable maybeJumpTable);
 
-    uintptr_t* jumpTable() const { return jumpTable_.get(); }
+    void** jumpTable() const { return jumpTable_.get(); }
 
     bool hasTier2() const { return metadata_->hasTier2(); }
     void setTier2(UniqueConstCodeSegment segment) const;

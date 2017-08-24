@@ -6,9 +6,9 @@
 #include "nsISupports.idl"
 
 %{C++
+#include "nsStringFwd.h"
 #include "nsTArrayForwardDeclare.h"
 template<class T> class nsCOMArray;
-class nsCString;
 %}
 [ptr] native StringArray(nsTArray<nsCString>);
 [ref] native StringArrayRef(const nsTArray<nsCString>);

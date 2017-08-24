@@ -6,7 +6,7 @@
 #include "nsISupports.h"
 #include "nsRegressionTester.h"
 
-#include "nsXPIDLString.h"
+#include "nsString.h"
 #include "nsReadableUtils.h"
 #include "nsIWindowWatcher.h"
 #include "nsPIDOMWindow.h"

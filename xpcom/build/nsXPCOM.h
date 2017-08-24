@@ -18,9 +18,6 @@
 #define DECL_STRUCT(c) typedef struct c c
 #endif
 
-DECL_CLASS(nsAString);
-DECL_CLASS(nsACString);
-
 DECL_CLASS(nsISupports);
 DECL_CLASS(nsIModule);
 DECL_CLASS(nsIComponentManager);
@@ -32,6 +29,7 @@ DECL_CLASS(nsIMemory);
 DECL_CLASS(nsIDebug2);
 
 #ifdef __cplusplus
+#include "nsStringFwd.h"
 namespace mozilla {
 struct Module;
 } // namespace mozilla

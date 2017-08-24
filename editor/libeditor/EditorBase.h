@@ -48,7 +48,6 @@ class nsISupports;
 class nsITransaction;
 class nsIWidget;
 class nsRange;
-class nsString;
 class nsTransactionManager;
 
 // This is int32_t instead of int16_t because nsIInlineSpellChecker.idl's

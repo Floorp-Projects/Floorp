@@ -75,14 +75,14 @@ add_task(function*() {
 
   invokeInTab("keepMeAlive");
   yield waitForPaused(dbg);
-  assertPausedLocation(dbg, entrySrc, 15);
+  assertPausedLocation(dbg);
 
   yield stepIn(dbg);
-  assertPausedLocation(dbg, "times2.js", 2);
+  assertPausedLocation(dbg);
   yield stepOver(dbg);
-  assertPausedLocation(dbg, "times2.js", 3);
+  assertPausedLocation(dbg);
 
   yield stepOut(dbg);
   yield stepOut(dbg);
-  assertPausedLocation(dbg, "entry.js", 16);
+  assertPausedLocation(dbg);
 });

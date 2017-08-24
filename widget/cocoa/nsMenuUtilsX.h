@@ -8,11 +8,11 @@
 
 #include "nscore.h"
 #include "nsMenuBaseX.h"
+#include "nsStringFwd.h"
 
 #import <Cocoa/Cocoa.h>
 
 class nsIContent;
-class nsString;
 class nsMenuBarX;
 
 // Namespace containing utility functions used in our native menu implementation.

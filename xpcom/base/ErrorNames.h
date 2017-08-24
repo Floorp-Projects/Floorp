@@ -8,8 +8,7 @@
 #define mozilla_ErrorNames_h
 
 #include "nsError.h"
-
-class nsACString;
+#include "nsStringFwd.h"
 
 namespace mozilla {
 

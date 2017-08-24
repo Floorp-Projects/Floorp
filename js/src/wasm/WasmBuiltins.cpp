@@ -37,7 +37,6 @@ using namespace js;
 using namespace jit;
 using namespace wasm;
 
-using mozilla::Atomic;
 using mozilla::BinarySearchIf;
 using mozilla::HashGeneric;
 using mozilla::IsNaN;
