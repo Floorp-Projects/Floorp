@@ -11,9 +11,9 @@
 #include "mozilla/dom/BorrowedAttrInfo.h"
 #include "mozilla/dom/FragmentOrElement.h"
 #include "nsIDOMDocumentFragment.h"
+#include "nsStringFwd.h"
 
 class nsIAtom;
-class nsAString;
 class nsIDocument;
 class nsIContent;
 

@@ -29,5 +29,5 @@ add_task(function*() {
   yield waitForDispatch(dbg, "LOAD_SOURCE_TEXT");
   is(dbg.win.cm.getValue(), "debugger");
   const source = getSelectedSource(getState()).toJS();
-  assertPausedLocation(dbg, source, 1);
+  assertPausedLocation(dbg);
 });

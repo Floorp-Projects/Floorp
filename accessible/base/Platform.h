@@ -8,8 +8,7 @@
 #define mozilla_a11y_Platform_h
 
 #include <stdint.h>
-
-class nsString;
+#include "nsStringFwd.h"
 
 namespace mozilla {
 namespace a11y {

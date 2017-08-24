@@ -5,7 +5,7 @@
 
 #include "nsIServiceManager.h"
 #include "nsIStringBundle.h"
-#include "nsXPIDLString.h"
+#include "nsString.h"
 #include "nsParserMsgUtils.h"
 #include "nsNetCID.h"
 #include "mozilla/Services.h"

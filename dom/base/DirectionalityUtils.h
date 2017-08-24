@@ -8,9 +8,9 @@
 #define DirectionalityUtils_h___
 
 #include "nscore.h"
+#include "nsStringFwd.h"
 
 class nsIContent;
-class nsAString;
 class nsAttrValue;
 class nsTextNode;
 

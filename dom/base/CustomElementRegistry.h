@@ -16,6 +16,7 @@
 #include "mozilla/dom/FunctionBinding.h"
 #include "nsCycleCollectionParticipant.h"
 #include "nsWrapperCache.h"
+#include "nsContentUtils.h"
 
 class nsDocument;
 
@@ -313,7 +314,11 @@ public:
 
 public:
   static bool IsCustomElementEnabled(JSContext* aCx = nullptr,
-                                     JSObject* aObject = nullptr);
+                                     JSObject* aObject = nullptr)
+  {
+    return nsContentUtils::IsCustomElementsEnabled() ||
+           nsContentUtils::IsWebComponentsEnabled();
+  }
 
   explicit CustomElementRegistry(nsPIDOMWindowInner* aWindow);
 

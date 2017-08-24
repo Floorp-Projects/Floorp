@@ -44,7 +44,7 @@
 #include "nsRDFBaseDataSources.h"
 #include "nsString.h"
 #include "nsReadableUtils.h"
-#include "nsXPIDLString.h"
+#include "nsString.h"
 #include "rdfutil.h"
 #include "PLDHashTable.h"
 #include "plstr.h"

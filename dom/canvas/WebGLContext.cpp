@@ -1408,6 +1408,16 @@ WebGLContext::GetCompositorBackendType() const
     return LayersBackend::LAYERS_NONE;
 }
 
+nsIDocument*
+WebGLContext::GetOwnerDoc() const
+{
+    MOZ_ASSERT(mCanvasElement);
+    if (!mCanvasElement) {
+        return nullptr;
+    }
+    return mCanvasElement->OwnerDoc();
+}
+
 void
 WebGLContext::Commit()
 {

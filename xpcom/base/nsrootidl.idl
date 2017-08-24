@@ -15,8 +15,7 @@ typedef int64_t PRTime;
 /*
  * Forward declarations for new string types
  */
-class nsAString;
-class nsACString;
+#include "nsStringFwd.h"
 
 /* 
  * Start commenting out the C++ versions of the below in the output header

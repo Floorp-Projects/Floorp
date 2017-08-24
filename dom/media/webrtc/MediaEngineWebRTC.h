@@ -43,12 +43,12 @@
 // Audio Engine
 #include "webrtc/voice_engine/include/voe_base.h"
 #include "webrtc/voice_engine/include/voe_codec.h"
-#include "webrtc/voice_engine/include/voe_hardware.h"
 #include "webrtc/voice_engine/include/voe_network.h"
 #include "webrtc/voice_engine/include/voe_audio_processing.h"
 #include "webrtc/voice_engine/include/voe_volume_control.h"
 #include "webrtc/voice_engine/include/voe_external_media.h"
 #include "webrtc/voice_engine/include/voe_audio_processing.h"
+#include "webrtc/modules/audio_device/include/audio_device.h"
 #include "webrtc/modules/audio_processing/include/audio_processing.h"
 
 // Video Engine
@@ -378,35 +378,36 @@ public:
 
   int GetNumOfRecordingDevices(int& aDevices)
   {
-    ScopedCustomReleasePtr<webrtc::VoEHardware> ptrVoEHw;
-    ptrVoEHw = webrtc::VoEHardware::GetInterface(mVoiceEngine);
-    if (!ptrVoEHw)  {
+    ScopedCustomReleasePtr<webrtc::VoEBase> ptrVoEBase;
+    ptrVoEBase = webrtc::VoEBase::GetInterface(mVoiceEngine);
+    if (!ptrVoEBase)  {
       return 1;
     }
-    return ptrVoEHw->GetNumOfRecordingDevices(aDevices);
+    aDevices = ptrVoEBase->audio_device_module()->RecordingDevices();
+    return 0;
   }
 
   int GetRecordingDeviceName(int aIndex, char (&aStrNameUTF8)[128],
                              char aStrGuidUTF8[128])
   {
-    ScopedCustomReleasePtr<webrtc::VoEHardware> ptrVoEHw;
-    ptrVoEHw = webrtc::VoEHardware::GetInterface(mVoiceEngine);
-    if (!ptrVoEHw)  {
+    ScopedCustomReleasePtr<webrtc::VoEBase> ptrVoEBase;
+    ptrVoEBase = webrtc::VoEBase::GetInterface(mVoiceEngine);
+    if (!ptrVoEBase)  {
       return 1;
     }
-    return ptrVoEHw->GetRecordingDeviceName(aIndex, aStrNameUTF8,
-                                            aStrGuidUTF8);
+    return ptrVoEBase->audio_device_module()->RecordingDeviceName(aIndex,
+                                                                  aStrNameUTF8,
+                                                                  aStrGuidUTF8);
   }
 
   int GetRecordingDeviceStatus(bool& aIsAvailable)
   {
-    ScopedCustomReleasePtr<webrtc::VoEHardware> ptrVoEHw;
-    ptrVoEHw = webrtc::VoEHardware::GetInterface(mVoiceEngine);
-    if (!ptrVoEHw)  {
+    ScopedCustomReleasePtr<webrtc::VoEBase> ptrVoEBase;
+    ptrVoEBase = webrtc::VoEBase::GetInterface(mVoiceEngine);
+    if (!ptrVoEBase)  {
       return 1;
     }
-    ptrVoEHw->GetRecordingDeviceStatus(aIsAvailable);
-    return 0;
+    return ptrVoEBase->audio_device_module()->RecordingIsAvailable(&aIsAvailable);
   }
 
   void GetChannelCount(uint32_t& aChannels)
@@ -428,12 +429,12 @@ public:
 
   int SetRecordingDevice(int aIndex)
   {
-    ScopedCustomReleasePtr<webrtc::VoEHardware> ptrVoEHw;
-    ptrVoEHw = webrtc::VoEHardware::GetInterface(mVoiceEngine);
-    if (!ptrVoEHw)  {
+    ScopedCustomReleasePtr<webrtc::VoEBase> ptrVoEBase;
+    ptrVoEBase = webrtc::VoEBase::GetInterface(mVoiceEngine);
+    if (!ptrVoEBase)  {
       return 1;
     }
-    return ptrVoEHw->SetRecordingDevice(aIndex);
+    return ptrVoEBase->audio_device_module()->SetRecordingDevice(aIndex);
   }
 
 protected:

@@ -9,11 +9,10 @@
 
 #include "nsContentUtils.h"
 #include "nsISupports.h"
+#include "nsStringFwd.h"
 #include "nsTArrayForwardDeclare.h"
 
-class nsACString;
 class nsIDocument;
-class nsString;
 
 #define NS_NSICONSOLEREPORTCOLLECTOR_IID \
   {0xdd98a481, 0xd2c4, 0x4203, {0x8d, 0xfa, 0x85, 0xbf, 0xd7, 0xdc, 0xd7, 0x05}}

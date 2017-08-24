@@ -10,7 +10,7 @@
 #include "CertVerifier.h" // For CertificateTransparencyInfo
 #include "nsISSLStatus.h"
 #include "nsCOMPtr.h"
-#include "nsXPIDLString.h"
+#include "nsString.h"
 #include "nsIX509Cert.h"
 #include "nsISerializable.h"
 #include "nsIClassInfo.h"

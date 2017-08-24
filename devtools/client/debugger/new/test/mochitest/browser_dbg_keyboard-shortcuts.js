@@ -30,17 +30,17 @@ add_task(function*() {
 
   yield reload(dbg);
   yield waitForPaused(dbg);
-  assertPausedLocation(dbg, "debugger-statements.html", 8);
+  assertPausedLocation(dbg);
 
   yield pressResume(dbg);
-  assertPausedLocation(dbg, "debugger-statements.html", 12);
+  assertPausedLocation(dbg);
 
   yield pressStepIn(dbg);
-  assertPausedLocation(dbg, "debugger-statements.html", 13);
+  assertPausedLocation(dbg);
 
   yield pressStepOut(dbg);
-  assertPausedLocation(dbg, "debugger-statements.html", 14);
+  assertPausedLocation(dbg);
 
   yield pressStepOver(dbg);
-  assertPausedLocation(dbg, "debugger-statements.html", 9);
+  assertPausedLocation(dbg);
 });

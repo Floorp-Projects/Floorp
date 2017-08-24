@@ -12,7 +12,7 @@
 #include "nsIWidget.h"
 
 #include "nsIStringBundle.h"
-#include "nsXPIDLString.h"
+#include "nsString.h"
 #include "nsIServiceManager.h"
 #include "nsCOMArray.h"
 #include "nsIFile.h"

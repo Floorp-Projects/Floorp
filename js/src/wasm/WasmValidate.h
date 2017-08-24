@@ -37,7 +37,7 @@ struct ModuleEnvironment
 {
     ModuleKind                kind;
     MemoryUsage               memoryUsage;
-    mozilla::Atomic<uint32_t> minMemoryLength;
+    Atomic<uint32_t>          minMemoryLength;
     Maybe<uint32_t>           maxMemoryLength;
 
     SigWithIdVector           sigs;

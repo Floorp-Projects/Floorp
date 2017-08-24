@@ -3,7 +3,7 @@
 
 // Tests the breakpoints are hit in various situations.
 
-add_task(function* () {
+add_task(function*() {
   const dbg = yield initDebugger("doc-scripts.html");
   const { selectors: { getSelectedSource }, getState } = dbg;
 
@@ -12,7 +12,7 @@ add_task(function* () {
   yield addBreakpoint(dbg, "scripts.html", 18);
   reload(dbg);
   yield waitForPaused(dbg);
-  assertPausedLocation(dbg, "scripts.html", 18);
+  assertPausedLocation(dbg);
   yield resume(dbg);
 
   const paused = waitForPaused(dbg);
@@ -28,5 +28,5 @@ add_task(function* () {
   yield addBreakpoint(dbg, source, 5);
   invokeInTab("evaledFunc");
   yield waitForPaused(dbg);
-  assertPausedLocation(dbg, source, 5);
+  assertPausedLocation(dbg);
 });

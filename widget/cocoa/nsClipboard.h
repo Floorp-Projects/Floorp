@@ -7,7 +7,7 @@
 #define nsClipboard_h_
 
 #include "nsIClipboard.h"
-#include "nsXPIDLString.h"
+#include "nsString.h"
 #include "mozilla/StaticPtr.h"
 
 #import <Cocoa/Cocoa.h>

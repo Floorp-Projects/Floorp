@@ -11,13 +11,13 @@
 #include "npapi.h"
 #include "npfunctions.h"
 #include "nscore.h"
+#include "nsStringFwd.h"
 #include "nsTArray.h"
 #include "nsError.h"
 #include "mozilla/EventForwards.h"
 #include "nsSize.h"
 #include "nsRect.h"
 
-class nsCString;
 class nsNPAPIPlugin;
 
 namespace mozilla {

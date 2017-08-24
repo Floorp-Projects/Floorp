@@ -81,7 +81,7 @@
 #include "nsRDFCID.h"
 #include "nsRDFBaseDataSources.h"
 #include "nsCOMArray.h"
-#include "nsXPIDLString.h"
+#include "nsString.h"
 #include "plstr.h"
 #include "prio.h"
 #include "prthread.h"
