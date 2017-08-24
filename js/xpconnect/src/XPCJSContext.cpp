@@ -233,11 +233,9 @@ class WatchdogManager : public nsIObserver
 
     NS_DECL_ISUPPORTS
     explicit WatchdogManager(XPCJSContext* aContext) : mContext(aContext)
-                                                     , mContextState(CONTEXT_INACTIVE)
     {
-        // All the timestamps start at zero except for context state change.
+        // All the timestamps start at zero.
         PodArrayZero(mTimestamps);
-        mTimestamps[TimestampContextStateChange] = PR_Now();
 
         // Enable the watchdog, if appropriate.
         RefreshWatchdog();
@@ -279,8 +277,7 @@ class WatchdogManager : public nsIObserver
     // Context statistics. These live on the watchdog manager, are written
     // from the main thread, and are read from the watchdog thread (holding
     // the lock in each case).
-    void
-    RecordContextActivity(bool active)
+    void RecordContextActivity(XPCJSContext* aContext, bool active)
     {
         // The watchdog reads this state, so acquire the lock before writing it.
         MOZ_ASSERT(NS_IsMainThread());
@@ -289,32 +286,51 @@ class WatchdogManager : public nsIObserver
             lock.emplace(mWatchdog);
 
         // Write state.
-        mTimestamps[TimestampContextStateChange] = PR_Now();
-        mContextState = active ? CONTEXT_ACTIVE : CONTEXT_INACTIVE;
+        aContext->mLastStateChange = PR_Now();
+        aContext->mActive = active ? XPCJSContext::CONTEXT_ACTIVE :
+            XPCJSContext::CONTEXT_INACTIVE;
 
         // The watchdog may be hibernating, waiting for the context to go
         // active. Wake it up if necessary.
         if (active && mWatchdog && mWatchdog->Hibernating())
             mWatchdog->WakeUp();
     }
-    bool IsContextActive() { return mContextState == CONTEXT_ACTIVE; }
+    bool IsContextActive() { return mContext->mActive == XPCJSContext::CONTEXT_ACTIVE; }
     PRTime TimeSinceLastContextStateChange()
     {
-        return PR_Now() - GetTimestamp(TimestampContextStateChange);
+        // Called on the watchdog thread with the lock held.
+        MOZ_ASSERT(!NS_IsMainThread());
+        return PR_Now() - GetContextTimestamp(mContext);
     }
 
     // Note - Because of the context activity timestamp, these are read and
     // written from both threads.
     void RecordTimestamp(WatchdogTimestampCategory aCategory)
     {
+        // Calls to get a context state change must include a context.
+        MOZ_ASSERT(aCategory != TimestampContextStateChange,
+                   "Use RecordContextActivity to update this");
+
         // The watchdog thread always holds the lock when it runs.
         Maybe<AutoLockWatchdog> maybeLock;
         if (NS_IsMainThread() && mWatchdog)
             maybeLock.emplace(mWatchdog);
+
         mTimestamps[aCategory] = PR_Now();
     }
+
+    PRTime GetContextTimestamp(XPCJSContext* aContext)
+    {
+        Maybe<AutoLockWatchdog> maybeLock;
+        if (NS_IsMainThread() && mWatchdog)
+            maybeLock.emplace(mWatchdog);
+        return aContext->mLastStateChange;
+    }
+
     PRTime GetTimestamp(WatchdogTimestampCategory aCategory)
     {
+        MOZ_ASSERT(aCategory != TimestampContextStateChange,
+                   "Use GetContextTimestamp to retrieve this");
         // The watchdog thread always holds the lock when it runs.
         Maybe<AutoLockWatchdog> maybeLock;
         if (NS_IsMainThread() && mWatchdog)
@@ -367,8 +383,8 @@ class WatchdogManager : public nsIObserver
     XPCJSContext* mContext;
     nsAutoPtr<Watchdog> mWatchdog;
 
-    enum { CONTEXT_ACTIVE, CONTEXT_INACTIVE } mContextState;
-    PRTime mTimestamps[TimestampCount];
+    // We store ContextStateChange on the contexts themselves.
+    PRTime mTimestamps[kWatchdogTimestampCategoryCount - 1];
 };
 
 NS_IMPL_ISUPPORTS(WatchdogManager, nsIObserver)
@@ -446,7 +462,9 @@ WatchdogMain(void* arg)
 PRTime
 XPCJSContext::GetWatchdogTimestamp(WatchdogTimestampCategory aCategory)
 {
-    return mWatchdogManager->GetTimestamp(aCategory);
+    return aCategory == TimestampContextStateChange ?
+        mWatchdogManager->GetContextTimestamp(this) :
+        mWatchdogManager->GetTimestamp(aCategory);
 }
 
 void
@@ -464,7 +482,7 @@ XPCJSContext::ActivityCallback(void* arg, bool active)
     }
 
     XPCJSContext* self = static_cast<XPCJSContext*>(arg);
-    self->mWatchdogManager->RecordContextActivity(active);
+    self->mWatchdogManager->RecordContextActivity(self, active);
 }
 
 static inline bool
@@ -812,7 +830,9 @@ XPCJSContext::XPCJSContext()
    mWatchdogManager(new WatchdogManager(this)),
    mSlowScriptSecondHalf(false),
    mTimeoutAccumulated(false),
-   mPendingResult(NS_OK)
+   mPendingResult(NS_OK),
+   mActive(CONTEXT_INACTIVE),
+   mLastStateChange(PR_Now())
 {
     MOZ_COUNT_CTOR_INHERITED(XPCJSContext, CycleCollectedJSContext);
     MOZ_RELEASE_ASSERT(!gTlsContext.get());
