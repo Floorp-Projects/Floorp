@@ -129,35 +129,45 @@ class GeckoViewNavigation extends GeckoViewModule {
     throw Cr.NS_ERROR_ABORT;
   }
 
-  // nsIBrowserDOMWindow::openURI implementation.
-  openURI(aUri, aOpener, aWhere, aFlags, aTriggeringPrincipal) {
-    return this.createContentWindow(aUri, aOpener, aWhere, aFlags,
-                                    aTriggeringPrincipal);
-  }
-
-  // nsIBrowserDOMWindow::openURIInFrame implementation.
-  openURIInFrame(aUri, aParams, aWhere, aFlags, aNextTabParentId, aName) {
-    debug("openURIInFrame: aUri=" + (aUri && aUri.spec) +
+  // nsIBrowserDOMWindow.
+  createContentWindowInFrame(aUri, aParams, aWhere, aFlags, aNextTabParentId,
+                             aName) {
+    debug("createContentWindowInFrame: aUri=" + (aUri && aUri.spec) +
           " aParams=" + aParams +
           " aWhere=" + aWhere +
           " aFlags=" + aFlags +
           " aNextTabParentId=" + aNextTabParentId +
           " aName=" + aName);
 
-    if (aWhere === Ci.nsIBrowserDOMWindow.OPEN_DEFAULTWINDOW ||
-        aWhere === Ci.nsIBrowserDOMWindow.OPEN_CURRENTWINDOW) {
+    let handled = this.handleLoadUri(aUri, null, aWhere, aFlags, null);
+    if (!handled &&
+        (aWhere === Ci.nsIBrowserDOMWindow.OPEN_DEFAULTWINDOW ||
+         aWhere === Ci.nsIBrowserDOMWindow.OPEN_CURRENTWINDOW)) {
       return this.browser;
     }
 
     throw Cr.NS_ERROR_ABORT;
   }
 
+  // nsIBrowserDOMWindow.
+  openURI(aUri, aOpener, aWhere, aFlags, aTriggeringPrincipal) {
+    return this.createContentWindow(aUri, aOpener, aWhere, aFlags,
+                                    aTriggeringPrincipal);
+  }
+
+  // nsIBrowserDOMWindow.
+  openURIInFrame(aUri, aParams, aWhere, aFlags, aNextTabParentId, aName) {
+    return this.createContentWindowInFrame(aUri, aParams, aWhere, aFlags,
+                                           aNextTabParentId, aName);
+  }
+
+  // nsIBrowserDOMWindow.
   isTabContentWindow(aWindow) {
     debug("isTabContentWindow " + this.browser.contentWindow === aWindow);
     return this.browser.contentWindow === aWindow;
   }
 
-  // nsIBrowserDOMWindow::canClose implementation.
+  // nsIBrowserDOMWindow.
   canClose() {
     debug("canClose");
     return false;
