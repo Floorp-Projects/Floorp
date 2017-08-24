@@ -1336,15 +1336,6 @@ MediaDecoder::SizeOfAudioQueue()
   return 0;
 }
 
-void MediaDecoder::AddSizeOfResources(ResourceSizes* aSizes)
-{
-  MOZ_ASSERT(NS_IsMainThread());
-  if (GetResource()) {
-    aSizes->mByteSize +=
-      GetResource()->SizeOfIncludingThis(aSizes->mMallocSizeOf);
-  }
-}
-
 void
 MediaDecoder::NotifyDataArrivedInternal()
 {
