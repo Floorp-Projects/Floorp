@@ -362,6 +362,13 @@ MediaSourceDecoder::NotifyInitDataArrived()
   }
 }
 
+already_AddRefed<nsIPrincipal>
+MediaSourceDecoder::GetCurrentPrincipal()
+{
+  MOZ_ASSERT(NS_IsMainThread());
+  return mResource ? mResource->GetCurrentPrincipal() : nullptr;
+}
+
 #undef MSE_DEBUG
 #undef MSE_DEBUGV
 

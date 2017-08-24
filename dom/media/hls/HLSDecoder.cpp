@@ -92,6 +92,13 @@ HLSDecoder::Load(nsIChannel* aChannel)
   return InitializeStateMachine();
 }
 
+already_AddRefed<nsIPrincipal>
+HLSDecoder::GetCurrentPrincipal()
+{
+  MOZ_ASSERT(NS_IsMainThread());
+  return mResource ? mResource->GetCurrentPrincipal() : nullptr;
+}
+
 nsresult
 HLSDecoder::Play()
 {
