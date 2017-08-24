@@ -530,7 +530,6 @@ class nsDisplayBullet final : public nsDisplayItem {
 public:
   nsDisplayBullet(nsDisplayListBuilder* aBuilder, nsBulletFrame* aFrame)
     : nsDisplayItem(aBuilder, aFrame)
-    , mDisableSubpixelAA(false)
   {
     MOZ_COUNT_CTOR(nsDisplayBullet);
   }
@@ -576,10 +575,6 @@ public:
     return GetBounds(aBuilder, &snap);
   }
 
-  virtual void DisableComponentAlpha() override {
-    mDisableSubpixelAA = true;
-  }
-
   virtual nsDisplayItemGeometry* AllocateGeometry(nsDisplayListBuilder* aBuilder) override
   {
     return new nsDisplayBulletGeometry(this, aBuilder);
@@ -609,7 +604,6 @@ public:
   }
 
 protected:
-  bool mDisableSubpixelAA;
   Maybe<BulletRenderer> mBulletRenderer;
 };
 

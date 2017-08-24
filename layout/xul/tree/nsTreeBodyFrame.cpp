@@ -2774,9 +2774,9 @@ nsTreeBodyFrame::HandleEvent(nsPresContext* aPresContext,
 
 class nsDisplayTreeBody final : public nsDisplayItem {
 public:
-  nsDisplayTreeBody(nsDisplayListBuilder* aBuilder, nsFrame* aFrame) :
-    nsDisplayItem(aBuilder, aFrame),
-    mDisableSubpixelAA(false) {
+  nsDisplayTreeBody(nsDisplayListBuilder* aBuilder, nsFrame* aFrame)
+    : nsDisplayItem(aBuilder, aFrame)
+  {
     MOZ_COUNT_CTOR(nsDisplayTreeBody);
   }
 #ifdef NS_BUILD_REFCNT_LOGGING
@@ -2826,11 +2826,6 @@ public:
     bool snap;
     return GetBounds(aBuilder, &snap);
   }
-  virtual void DisableComponentAlpha() override {
-    mDisableSubpixelAA = true;
-  }
-
-  bool mDisableSubpixelAA;
 };
 
 // Painting routines
