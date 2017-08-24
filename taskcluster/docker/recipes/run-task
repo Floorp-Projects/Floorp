@@ -318,7 +318,8 @@ def main(args):
 
     for cache in caches:
         if not os.path.isdir(cache):
-            print('cache %s is not a directory; this should never happen')
+            print('error: cache %s is not a directory; this should never '
+                  'happen' % cache)
             return 1
 
         requires_path = os.path.join(cache, '.cacherequires')
@@ -369,7 +370,7 @@ def main(args):
                     fh.write(b'\n'.join(sorted(our_requirements)))
 
             elif missing:
-                print('requirements for populated cache %s differ from '
+                print('error: requirements for populated cache %s differ from '
                       'this task' % cache)
                 print('cache requirements: %s' % ' '.join(sorted(
                     wanted_requirements)))
@@ -387,9 +388,10 @@ def main(args):
         # happen because run-task should be the first thing that touches a
         # cache.
         else:
-            print('cache %s is not empty and is missing a .cacherequires '
-                  'file; the cache names for this task are likely '
-                  'mis-configured')
+            print('error: cache %s is not empty and is missing a '
+                  '.cacherequires file; the cache names for this task are '
+                  'likely mis-configured or TASKCLUSTER_CACHES is not set '
+                  'properly' % cache)
             return 1
 
     if 'TASKCLUSTER_VOLUMES' in os.environ:
