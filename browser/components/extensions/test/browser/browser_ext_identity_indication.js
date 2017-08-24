@@ -4,7 +4,7 @@
 
 function confirmDefaults() {
   let identityIconURL = getComputedStyle(document.getElementById("identity-icon")).listStyleImage;
-  is(identityIconURL, "url(\"chrome://browser/skin/identity-icon.svg\")", "Identity icon should be the default identity icon");
+  is(identityIconURL, "url(\"chrome://global/skin/icons/autocomplete-search.svg\")", "Identity icon should be the search icon");
 
   let connectionIconURL = getComputedStyle(document.getElementById("connection-icon")).listStyleImage;
   is(connectionIconURL, "none", "Connection icon should not be displayed");
