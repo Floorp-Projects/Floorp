@@ -216,14 +216,6 @@ public:
    */
   virtual nsresult GetCachedRanges(MediaByteRangeSet& aRanges) = 0;
 
-  virtual size_t SizeOfExcludingThis(MallocSizeOf aMallocSizeOf) const {
-    return 0;
-  }
-
-  virtual size_t SizeOfIncludingThis(MallocSizeOf aMallocSizeOf) const {
-    return aMallocSizeOf(this) + SizeOfExcludingThis(aMallocSizeOf);
-  }
-
 protected:
   virtual ~MediaResource() {};
 
@@ -315,18 +307,17 @@ public:
   // Returns true if the resource is a live stream.
   bool IsLiveStream() { return GetLength() == -1; }
 
-  size_t SizeOfExcludingThis(MallocSizeOf aMallocSizeOf) const override
+  virtual size_t SizeOfExcludingThis(MallocSizeOf aMallocSizeOf) const
   {
     // Might be useful to track in the future:
     // - mChannel
     // - mURI (possibly owned, looks like just a ref from mChannel)
     // Not owned:
     // - mCallback
-    size_t size = MediaResource::SizeOfExcludingThis(aMallocSizeOf);
-    return size;
+    return 0;
   }
 
-  size_t SizeOfIncludingThis(MallocSizeOf aMallocSizeOf) const override
+  virtual size_t SizeOfIncludingThis(MallocSizeOf aMallocSizeOf) const
   {
     return aMallocSizeOf(this) + SizeOfExcludingThis(aMallocSizeOf);
   }
