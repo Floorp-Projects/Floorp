@@ -2081,7 +2081,11 @@ public:
    * system as this item (i.e., they have the same reference frame),
    * return the list.
    */
-  virtual nsDisplayList* GetSameCoordinateSystemChildren() { return nullptr; }
+  virtual nsDisplayList* GetSameCoordinateSystemChildren() const
+  {
+    return nullptr;
+  }
+
   virtual void UpdateBounds(nsDisplayListBuilder* aBuilder) {}
   /**
    * Do UpdateBounds() for items with frames establishing or extending
@@ -2103,7 +2107,7 @@ public:
    * If this has a child list, return it, even if the children are in
    * a different coordinate system to this item.
    */
-  virtual nsDisplayList* GetChildren() { return nullptr; }
+  virtual nsDisplayList* GetChildren() const { return nullptr; }
 
   /**
    * Returns the visible rect.
@@ -3872,6 +3876,7 @@ public:
   {
     MOZ_COUNT_CTOR(nsDisplayWrapList);
     mBaseVisibleRect = mVisibleRect;
+    mListPtr = &mList;
   }
   virtual ~nsDisplayWrapList();
 
@@ -3885,8 +3890,8 @@ public:
   virtual void UpdateBounds(nsDisplayListBuilder* aBuilder) override
   {
     nsRect visibleRect;
-    mBounds = mList.GetClippedBoundsWithRespectToASR(aBuilder, mActiveScrolledRoot,
-                                                     &visibleRect);
+    mBounds =
+      mListPtr->GetClippedBoundsWithRespectToASR(aBuilder, mActiveScrolledRoot, &visibleRect);
     // The display list may contain content that's visible outside the visible
     // rect (i.e. the current dirty rect) passed in when the item was created.
     // This happens when the dirty rect has been restricted to the visual
@@ -3935,15 +3940,16 @@ public:
 
   virtual nsRect GetComponentAlphaBounds(nsDisplayListBuilder* aBuilder) override;
 
-  virtual nsDisplayList* GetSameCoordinateSystemChildren() override
+  virtual nsDisplayList* GetSameCoordinateSystemChildren() const override
   {
-    NS_ASSERTION(mList.IsEmpty() || !ReferenceFrame() ||
-                 !mList.GetBottom()->ReferenceFrame() ||
-                 mList.GetBottom()->ReferenceFrame() == ReferenceFrame(),
+    NS_ASSERTION(mListPtr->IsEmpty() || !ReferenceFrame() ||
+                 !mListPtr->GetBottom()->ReferenceFrame() ||
+                 mListPtr->GetBottom()->ReferenceFrame() == ReferenceFrame(),
                  "Children must have same reference frame");
-    return &mList;
+    return mListPtr;
   }
-  virtual nsDisplayList* GetChildren() override { return &mList; }
+
+  virtual nsDisplayList* GetChildren() const override { return mListPtr; }
 
   virtual int32_t ZIndex() const override
   {
@@ -3991,6 +3997,7 @@ protected:
   }
 
   nsDisplayList mList;
+  nsDisplayList* mListPtr;
   // The frames from items that have been merged into this item, excluding
   // this item's own frame.
   nsTArray<nsIFrame*> mMergedFrames;
@@ -4776,7 +4783,10 @@ public:
     return GetBounds(aBuilder, &snap);
   }
 
-  virtual nsDisplayList* GetChildren() override { return mStoredList.GetChildren(); }
+  virtual nsDisplayList* GetChildren() const override
+  {
+    return mStoredList.GetChildren();
+  }
 
   virtual void HitTest(nsDisplayListBuilder *aBuilder, const nsRect& aRect,
                        HitTestState *aState, nsTArray<nsIFrame*> *aOutFrames) override;
@@ -5139,8 +5149,17 @@ public:
     mList.RecomputeVisibility(aBuilder, aVisibleRegion);
     return true;
   }
-  virtual nsDisplayList* GetSameCoordinateSystemChildren() override { return mList.GetChildren(); }
-  virtual nsDisplayList* GetChildren() override { return mList.GetChildren(); }
+
+  virtual nsDisplayList* GetSameCoordinateSystemChildren() const override
+  {
+    return mList.GetChildren();
+  }
+
+  virtual nsDisplayList* GetChildren() const override
+  {
+    return mList.GetChildren();
+  }
+
   virtual nsRect GetComponentAlphaBounds(nsDisplayListBuilder* aBuilder) override
   {
     return mList.GetComponentAlphaBounds(aBuilder);
