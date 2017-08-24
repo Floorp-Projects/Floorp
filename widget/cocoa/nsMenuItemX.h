@@ -10,10 +10,10 @@
 #include "nsMenuBaseX.h"
 #include "nsMenuGroupOwnerX.h"
 #include "nsChangeObserver.h"
+#include "nsStringFwd.h"
 
 #import <Cocoa/Cocoa.h>
 
-class nsString;
 class nsMenuItemIconX;
 class nsMenuX;
 

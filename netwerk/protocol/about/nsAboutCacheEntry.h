@@ -17,7 +17,6 @@ class nsIAsyncOutputStream;
 class nsIInputStream;
 class nsILoadContextInfo;
 class nsIURI;
-class nsCString;
 
 class nsAboutCacheEntry final : public nsIAboutModule
 {

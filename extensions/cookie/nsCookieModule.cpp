@@ -10,7 +10,7 @@
 #include "nsPopupWindowManager.h"
 #include "nsICategoryManager.h"
 #include "nsCookiePermission.h"
-#include "nsXPIDLString.h"
+#include "nsString.h"
 
 // Define the constructor function for the objects
 NS_GENERIC_FACTORY_SINGLETON_CONSTRUCTOR(nsIPermissionManager,

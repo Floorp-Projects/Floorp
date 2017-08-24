@@ -23,6 +23,7 @@
 #include "nsIContent.h"
 #include "nsISelectionController.h"
 #include "nsQueryFrame.h"
+#include "nsStringFwd.h"
 #include "nsCoord.h"
 #include "nsColor.h"
 #include "nsFrameManagerBase.h"
@@ -49,7 +50,6 @@ class nsViewManager;
 class nsView;
 class nsIPageSequenceFrame;
 class nsCanvasFrame;
-class nsAString;
 class nsCaret;
 namespace mozilla {
 class AccessibleCaretEventHub;

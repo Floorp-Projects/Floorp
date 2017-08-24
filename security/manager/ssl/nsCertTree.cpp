@@ -23,7 +23,7 @@
 #include "nsTHashtable.h"
 #include "nsUnicharUtils.h"
 #include "nsXPCOMCID.h"
-#include "nsXPIDLString.h"
+#include "nsString.h"
 #include "pkix/pkixtypes.h"
 
 using namespace mozilla;

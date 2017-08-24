@@ -11,9 +11,8 @@
 
 #include "nsISMILType.h"
 #include "nsCSSPropertyID.h"
+#include "nsStringFwd.h"
 #include "mozilla/Attributes.h"
-
-class nsAString;
 
 namespace mozilla {
 struct AnimationValue;

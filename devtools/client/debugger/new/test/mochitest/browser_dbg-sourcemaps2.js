@@ -31,5 +31,5 @@ add_task(function*() {
   invokeInTab("logMessage");
 
   yield waitForPaused(dbg);
-  assertPausedLocation(dbg, "main.js", 4);
+  assertPausedLocation(dbg);
 });

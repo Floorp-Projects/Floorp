@@ -13,7 +13,6 @@
 
 class nsAttrValue;
 class nsIAtom;
-class nsString;
 
 namespace mozilla {
 class DOMSVGStringList;

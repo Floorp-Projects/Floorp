@@ -14,9 +14,9 @@
 #include "mozilla/Attributes.h"           // for final
 #include "nsCOMPtr.h"                     // for member
 #include "nsCycleCollectionParticipant.h" // for NS_DECL_CYCLE_*
+#include "nsStringFwd.h"
 #include "plhash.h"                       // for typedef PLHashNumber
 
-class nsAString;
 class nsBindingManager;
 class nsIAtom;
 class nsIDocument;

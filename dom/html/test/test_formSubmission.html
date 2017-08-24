@@ -5,7 +5,7 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=523771
 -->
 <head>
   <title>Test for Bug 523771</title>
-  <script type="text/javascript" src="/tests/SimpleTest/SimpleTest.js"></script>        
+  <script type="text/javascript" src="/tests/SimpleTest/SimpleTest.js"></script>
   <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css" />
   <meta http-equiv="Content-Type" content="text/html;charset=utf-8">
 </head>
@@ -254,7 +254,7 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=523771
           <input type=email name="n20_8" value="foo@mózillä.órg"></td>
     </tr>
   </table>
-  
+
   <p>
     File input:
     <input type=file name="file_1" class="setfile">
@@ -290,7 +290,7 @@ t_6_v</textarea>
 </textarea>
     <textarea name="t8">
 
- t_8_v 
+ t_8_v&#0032;
 </textarea>
     <textarea name="t9_&#13;_&#10;_&#13;&#10;_ _&quot;">t_9_&#13;_&#10;_&#13;&#10;_ _&quot;_v</textarea>
     <textarea name="t10" value="t_10_bogus">t_10_v</textarea>
@@ -298,7 +298,7 @@ t_6_v</textarea>
 
   <p>
     Select one:
-  
+
     <select name="sel_1"></select>
     <select name="sel_1b"><option></option></select>
     <select name="sel_1c"><option selected></option></select>
@@ -339,7 +339,7 @@ t_6_v</textarea>
 
   <p>
     Select multiple:
-  
+
     <select multiple name="msel_1"></select>
     <select multiple name="msel_1b"><option></option></select>
     <select multiple name="msel_1c"><option selected></option></select>
@@ -449,7 +449,7 @@ function onFilesOpened(files) {
   emptyFile = { name: "", type: "application/octet-stream" };
 
   // Now, actually run the tests; see below.
-  onFilesSet();
+  runAllTestVariants();
 };
 
 var expectedSub = [
@@ -605,11 +605,11 @@ function checkMPSubmission(sub, expected, test) {
 
   is(sub.length, expected.length,
      "Correct number of multipart items in " + test);
-  
+
   if (sub.length != expected.length) {
     alert(JSON.stringify(sub));
   }
-  
+
   var i;
   for (i = 0; i < expected.length; ++i) {
     if (!("fileName" in expected[i])) {
@@ -662,7 +662,7 @@ function checkURLSubmission(sub, expected) {
 }
 
 function checkPlainSubmission(sub, expected) {
-  
+
   is(sub,
      expected.map(function(v) {
        return v.name + "=" +
@@ -678,13 +678,27 @@ function setDisabled(list, state) {
   });
 }
 
+/*
+ * The below test function uses callbacks that invoke gen.next() rather than
+ * creating and resolving Promises.  I'm trying to minimize churn since these
+ * changes want to be uplifted.  Some kind soul might want to clean this all up
+ * at some point.
+ */
 var gen;
-function onFilesSet() {
-  gen = runTest();
-  gen.next();
+$("target_iframe").onload = function() { gen.next(); };
+// Run the suite of tests for this variant, returning a Promise that will be
+// resolved when the batch completes.  Then and only then runTestVariant may
+// be invoked to run a different variation.
+function runTestVariant(variantLabel) {
+  info("starting test variant: " + variantLabel);
+  return new Promise((resolve) => {
+    // Instantiate the generator.
+    gen = runTestVariantUsingWeirdGenDriver(resolve);
+    // Run the generator to the first yield, at which point it is self-driving.
+    gen.next();
+  });
 }
-
-function* runTest() {
+function* runTestVariantUsingWeirdGenDriver(finishedVariant) {
   // Set up the expectedSub array
   fileReader1 = new FileReader;
   fileReader1.readAsBinaryString(myFile1);
@@ -716,11 +730,12 @@ function* runTest() {
   var form = $("form");
 
   // multipart/form-data
-
   var iframe = $("target_iframe");
-  iframe.onload = function() { gen.next(); };
 
   // Make normal submission
+  form.action = "form_submit_server.sjs";
+  form.method = "POST";
+  form.enctype = "multipart/form-data";
   form.submit();
   yield undefined; // Wait for iframe to load as a result of the submission
   var submission = JSON.parse(iframe.contentDocument.documentElement.textContent);
@@ -781,7 +796,7 @@ function* runTest() {
   xhr.send(new FormData(form));
   yield undefined; // Wait for XHR load
   checkMPSubmission(JSON.parse(xhr.responseText), expectedSub, "send form using XHR and FormData");
-  
+
   // Send disabled form using XHR and FormData
   setDisabled(document.querySelectorAll("input, select, textarea"), true);
   xhr.open("POST", "form_submit_server.sjs");
@@ -789,7 +804,7 @@ function* runTest() {
   yield undefined;
   checkMPSubmission(JSON.parse(xhr.responseText), [], "send disabled form using XHR and FormData");
   setDisabled(document.querySelectorAll("input, select, textarea"), false);
-  
+
   // Send FormData
   function addToFormData(fd) {
     fd.append("aName", "aValue");
@@ -812,6 +827,71 @@ function* runTest() {
   yield undefined;
   checkMPSubmission(JSON.parse(xhr.responseText),
                     expectedSub.concat(expectedAugment), "send augmented FormData");
+
+  finishedVariant();
+}
+
+/**
+ * Install our service-worker (parameterized by appending "?MODE"), which will
+ * invoke skipWaiting() and clients.claim() to begin controlling us ASAP.  We
+ * wait on the controllerchange event
+ */
+async function installAndBeControlledByServiceWorker(mode) {
+  const scriptURL = "sw_formSubmission.js?" + mode;
+  const controllerChanged = new Promise((resolve) => {
+    navigator.serviceWorker.addEventListener(
+      "controllerchange", () => { resolve(); }, { once: true });
+  });
+
+  info("installing ServiceWorker: " + scriptURL);
+  const swr = await navigator.serviceWorker.register(scriptURL,
+                                                     { scope: "./" });
+  await controllerChanged;
+  ok(navigator.serviceWorker.controller.scriptURL.endsWith(scriptURL),
+     "controlled by the SW we expected");
+  info("became controlled by ServiceWorker.");
+
+  return swr;
+}
+
+async function runAllTestVariants() {
+  // Run the test as it has historically been run, with no ServiceWorkers
+  // anywhere!
+  await runTestVariant("no ServiceWorker");
+
+  // Uncomment the below if something in the test seems broken and you're not
+  // sure whether it's a side-effect of the multiple passes or not.
+  //await runTestVariant("no ServiceWorker second paranoia time");
+
+  // Ensure ServiceWorkers are enabled and that testing mode (which disables
+  // security checks) is on too.
+  await SpecialPowers.pushPrefEnv({"set": [
+    ["dom.serviceWorkers.enabled", true],
+    ["dom.serviceWorkers.testing.enabled", true]
+  ]});
+
+  // Now run the test with a ServiceWorker that covers the scope but has no
+  // fetch handler, so the optimization case will not actually dispatch a
+  // "fetch" event, but some stuff will happen that can change things enough
+  // to break them like in https://bugzilla.mozilla.org/show_bug.cgi?id=1383518.
+  await installAndBeControlledByServiceWorker("no-fetch");
+  await runTestVariant("ServiceWorker that does not listen for fetch events");
+
+  // Now the ServiceWorker does have a "fetch" event listener, but it will reset
+  // interception every time.  This is similar to the prior case but different
+  // enough that it could break things in a different exciting way.
+  await installAndBeControlledByServiceWorker("reset-fetch");
+  await runTestVariant("ServiceWorker that resets all fetches");
+
+  // Now the ServiceWorker resolves the fetch event with `fetch(event.request)`
+  // which makes little sense but is a thing that can happen.
+  const swr = await installAndBeControlledByServiceWorker("proxy-fetch");
+  await runTestVariant("ServiceWorker that proxies all fetches");
+
+  // cleanup.
+  info("unregistering ServiceWorker");
+  await swr.unregister();
+  info("ServiceWorker uninstalled");
 
   SimpleTest.finish();
 }

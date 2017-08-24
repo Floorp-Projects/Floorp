@@ -12,6 +12,8 @@ SOURCES += [
 
 SharedLibrary('modules-test')
 
+NO_PGO = True
+
 if CONFIG['COMPILE_ENVIRONMENT']:
     shared_library = '!%smodules-test%s' % (CONFIG['DLL_PREFIX'], CONFIG['DLL_SUFFIX'])
     TEST_HARNESS_FILES.xpcshell.toolkit.components.telemetry.tests.unit += [shared_library]

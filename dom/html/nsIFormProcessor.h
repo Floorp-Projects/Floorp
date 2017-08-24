@@ -15,9 +15,9 @@
 #define nsIFormProcessor_h__
 
 #include "nsISupports.h"
+#include "nsStringFwd.h"
 #include "nsTArrayForwardDeclare.h"
 
-class nsString;
 class nsIDOMHTMLElement;
 
 // {0ae53c0f-8ea2-4916-bedc-717443c3e185}

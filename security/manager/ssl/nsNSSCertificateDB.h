@@ -15,7 +15,6 @@
 #include "nsNSSShutDown.h"
 #include "nsString.h"
 
-class nsCString;
 class nsIArray;
 
 class nsNSSCertificateDB final : public nsIX509CertDB

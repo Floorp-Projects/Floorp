@@ -9,10 +9,10 @@
 
 #include "mozilla/Attributes.h"
 #include "nsSMILTimeValueSpecParams.h"
+#include "nsStringFwd.h"
 #include "nsReferencedElement.h"
 #include "nsIDOMEventListener.h"
 
-class nsAString;
 class nsSMILTimeValue;
 class nsSMILTimedElement;
 class nsSMILTimeContainer;

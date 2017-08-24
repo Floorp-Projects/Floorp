@@ -16,7 +16,7 @@
 #include "nsISupportsPrimitives.h"
 #include "IEnumFE.h"
 #include "nsPrimitiveHelpers.h"
-#include "nsXPIDLString.h"
+#include "nsString.h"
 #include "nsImageClipboard.h"
 #include "nsCRT.h"
 #include "nsPrintfCString.h"

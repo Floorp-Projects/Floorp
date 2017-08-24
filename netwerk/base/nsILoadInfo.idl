@@ -16,8 +16,7 @@ interface nsIURI;
 #include "nsTArray.h"
 #include "mozilla/BasePrincipal.h"
 #include "mozilla/LoadTainting.h"
-
-class nsCString;
+#include "nsStringFwd.h"
 %}
 
 [ref] native nsIRedirectHistoryEntryArray(const nsTArray<nsCOMPtr<nsIRedirectHistoryEntry>>);

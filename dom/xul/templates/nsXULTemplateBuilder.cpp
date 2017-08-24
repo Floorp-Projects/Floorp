@@ -54,7 +54,7 @@
 #include "nsTArray.h"
 #include "nsTemplateMatch.h"
 #include "nsTemplateRule.h"
-#include "nsXPIDLString.h"
+#include "nsString.h"
 #include "nsWhitespaceTokenizer.h"
 #include "nsGkAtoms.h"
 #include "nsXULElement.h"

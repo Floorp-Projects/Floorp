@@ -9,14 +9,12 @@
 
 #include <stdint.h>
 #include "nsCOMPtr.h"
+#include "nsStringFwd.h"
 
 class nsContentList;
 class nsIAtom;
 class nsIContent;
 class nsINode;
-// Can't use nsStringFwd.h because that's internal-API-only.
-class nsString;
-class nsAString;
 
 namespace mozilla {
 namespace dom {

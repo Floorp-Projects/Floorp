@@ -22,7 +22,7 @@
 #include "nsIPrefLocalizedString.h"
 #include "nsIStringBundle.h"
 #include "nsITextToSubURI.h"
-#include "nsXPIDLString.h"
+#include "nsString.h"
 #include <algorithm>
 #include "nsIChannel.h"
 

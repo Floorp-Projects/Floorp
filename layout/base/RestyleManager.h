@@ -10,8 +10,8 @@
 #include "mozilla/OverflowChangedTracker.h"
 #include "nsChangeHint.h"
 #include "nsPresContext.h"
+#include "nsStringFwd.h"
 
-class nsCString;
 class nsCSSFrameConstructor;
 class nsStyleChangeList;
 
