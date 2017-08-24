@@ -406,7 +406,7 @@ this.FormAutofillHeuristics = {
       return fieldScanner.fieldDetails;
     }
 
-     return fieldScanner.trimmedFieldDetail;
+    return fieldScanner.trimmedFieldDetail;
   },
 
   getInfo(element) {
