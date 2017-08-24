@@ -46,9 +46,6 @@ static char sccsid[] = "@(#)realpath.c	8.1 (Berkeley) 2/16/94";
 #include "base/string_util.h"
 #include "SandboxBroker.h"
 
-// base::strlcpy
-using namespace base;
-
 // Original copy in, but not usable from here:
 // toolkit/crashreporter/google-breakpad/src/common/linux/linux_libc_support.cc
 static size_t my_strlcat(char* s1, const char* s2, size_t len) {
@@ -60,7 +57,7 @@ static size_t my_strlcat(char* s1, const char* s2, size_t len) {
   if (pos1 == len)
     return pos1;
 
-  return pos1 + strlcpy(s1 + pos1, s2, len - pos1);
+  return pos1 + base::strlcpy(s1 + pos1, s2, len - pos1);
 }
 
 namespace mozilla {
@@ -112,7 +109,7 @@ char* SandboxBroker::SymlinkPath(const Policy* policy,
         if (path[1] == '\0')
             return (resolved);
         resolved_len = 1;
-        left_len = strlcpy(left, path + 1, sizeof(left));
+        left_len = base::strlcpy(left, path + 1, sizeof(left));
     } else {
         if (getcwd(resolved, PATH_MAX) == NULL) {
             if (m)
@@ -124,7 +121,7 @@ char* SandboxBroker::SymlinkPath(const Policy* policy,
             return (NULL);
         }
         resolved_len = strlen(resolved);
-        left_len = strlcpy(left, path, sizeof(left));
+        left_len = base::strlcpy(left, path, sizeof(left));
     }
     if (left_len >= sizeof(left) || resolved_len >= PATH_MAX) {
         if (m)
@@ -274,7 +271,7 @@ char* SandboxBroker::SymlinkPath(const Policy* policy,
                     return (NULL);
                 }
             }
-            left_len = strlcpy(left, symlink, sizeof(left));
+            left_len = base::strlcpy(left, symlink, sizeof(left));
             backup_allowed = 0;
         } else if (!S_ISDIR(sb.st_mode) && p != NULL) {
             if (m)
