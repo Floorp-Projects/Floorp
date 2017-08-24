@@ -19,12 +19,6 @@
 
 namespace mozilla {
 
-MediaResource*
-HLSDecoder::GetResource() const
-{
-  return mResource;
-}
-
 void
 HLSDecoder::Shutdown()
 {
