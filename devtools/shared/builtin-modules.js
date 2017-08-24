@@ -14,7 +14,7 @@
  */
 
 const { Cu, CC, Cc, Ci } = require("chrome");
-const { Loader } = Cu.import("resource://gre/modules/commonjs/toolkit/loader.js", {});
+const { Loader } = Cu.import("resource://devtools/shared/base-loader.js", {});
 const promise = Cu.import("resource://gre/modules/Promise.jsm", {}).Promise;
 const jsmScope = Cu.import("resource://gre/modules/Services.jsm", {});
 const { Services } = jsmScope;
