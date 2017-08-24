@@ -4158,6 +4158,8 @@ PresShell::DoFlushPendingNotifications(mozilla::ChangesToFlush aFlush)
 
       mPresContext->FlushCounterStyles();
 
+      mPresContext->FlushFontFeatureValues();
+
       // Flush any requested SMIL samples.
       if (mDocument->HasAnimationController()) {
         mDocument->GetAnimationController()->FlushResampleRequests();
@@ -4549,6 +4551,7 @@ nsIPresShell::RestyleForCSSRuleChanges()
 
   if (mPresContext) {
     mPresContext->RebuildCounterStyles();
+    mPresContext->RebuildFontFeatureValues();
   }
 
   if (!mDidInitialize) {
@@ -9151,6 +9154,8 @@ PresShell::WillDoReflow()
   mDocument->FlushUserFontSet();
 
   mPresContext->FlushCounterStyles();
+
+  mPresContext->FlushFontFeatureValues();
 
   mFrameConstructor->BeginUpdate();
 
