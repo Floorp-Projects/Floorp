@@ -4,7 +4,7 @@
 "use strict";
 
 var Cu = Components.utils;
-const loaders = Cu.import("resource://gre/modules/commonjs/toolkit/loader.js", {});
+const loaders = Cu.import("resource://devtools/shared/base-loader.js", {});
 const { devtools } = Cu.import("resource://devtools/shared/Loader.jsm", {});
 const { joinURI } = devtools.require("devtools/shared/path");
 const { assert } = devtools.require("devtools/shared/DevToolsUtils");
