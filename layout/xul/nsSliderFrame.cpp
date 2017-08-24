@@ -1534,7 +1534,7 @@ nsSliderFrame::EnsureOrient()
   if (isHorizontal)
       mState |= NS_STATE_IS_HORIZONTAL;
   else
-      mState &= ~NS_STATE_IS_HORIZONTAL;
+      RemoveStateBits(NS_STATE_IS_HORIZONTAL);
 }
 
 

@@ -237,14 +237,14 @@ nsBoxFrame::CacheAttributes()
   if (orient)
     mState |= NS_STATE_IS_HORIZONTAL;
   else
-    mState &= ~NS_STATE_IS_HORIZONTAL;
+    RemoveStateBits(NS_STATE_IS_HORIZONTAL);
 
   bool normal = true;
   GetInitialDirection(normal);
   if (normal)
     mState |= NS_STATE_IS_DIRECTION_NORMAL;
   else
-    mState &= ~NS_STATE_IS_DIRECTION_NORMAL;
+    RemoveStateBits(NS_STATE_IS_DIRECTION_NORMAL);
 
   GetInitialVAlignment(mValign);
   GetInitialHAlignment(mHalign);
@@ -254,14 +254,14 @@ nsBoxFrame::CacheAttributes()
   if (equalSize)
         mState |= NS_STATE_EQUAL_SIZE;
     else
-        mState &= ~NS_STATE_EQUAL_SIZE;
+        RemoveStateBits(NS_STATE_EQUAL_SIZE);
 
   bool autostretch = !!(mState & NS_STATE_AUTO_STRETCH);
   GetInitialAutoStretch(autostretch);
   if (autostretch)
         mState |= NS_STATE_AUTO_STRETCH;
      else
-        mState &= ~NS_STATE_AUTO_STRETCH;
+        RemoveStateBits(NS_STATE_AUTO_STRETCH);
 
 
 #ifdef DEBUG_LAYOUT
@@ -272,9 +272,9 @@ nsBoxFrame::CacheAttributes()
         if (debug)
             mState |= NS_STATE_SET_TO_DEBUG;
         else
-            mState &= ~NS_STATE_SET_TO_DEBUG;
+            RemoveStateBits(NS_STATE_SET_TO_DEBUG);
   } else {
-        mState &= ~NS_STATE_DEBUG_WAS_SET;
+        RemoveStateBits(NS_STATE_DEBUG_WAS_SET);
   }
 #endif
 }
@@ -982,7 +982,7 @@ nsBoxFrame::SetXULDebug(nsBoxLayoutState& aState, bool aDebug)
      if (aDebug) {
          mState |= NS_STATE_CURRENTLY_IN_DEBUG;
      } else {
-         mState &= ~NS_STATE_CURRENTLY_IN_DEBUG;
+         RemoveStateBits(NS_STATE_CURRENTLY_IN_DEBUG);
      }
 
      SetDebugOnChildList(aState, mFirstChild, aDebug);
@@ -1176,14 +1176,14 @@ nsBoxFrame::AttributeChanged(int32_t aNameSpaceID,
       if (orient)
         mState |= NS_STATE_IS_HORIZONTAL;
       else
-        mState &= ~NS_STATE_IS_HORIZONTAL;
+        RemoveStateBits(NS_STATE_IS_HORIZONTAL);
 
       bool normal = true;
       GetInitialDirection(normal);
       if (normal)
         mState |= NS_STATE_IS_DIRECTION_NORMAL;
       else
-        mState &= ~NS_STATE_IS_DIRECTION_NORMAL;
+        RemoveStateBits(NS_STATE_IS_DIRECTION_NORMAL);
 
       GetInitialVAlignment(mValign);
       GetInitialHAlignment(mHalign);
@@ -1193,7 +1193,7 @@ nsBoxFrame::AttributeChanged(int32_t aNameSpaceID,
       if (equalSize)
         mState |= NS_STATE_EQUAL_SIZE;
       else
-        mState &= ~NS_STATE_EQUAL_SIZE;
+        RemoveStateBits(NS_STATE_EQUAL_SIZE);
 
 #ifdef DEBUG_LAYOUT
       bool debug = mState & NS_STATE_SET_TO_DEBUG;
@@ -1204,9 +1204,9 @@ nsBoxFrame::AttributeChanged(int32_t aNameSpaceID,
         if (debug)
           mState |= NS_STATE_SET_TO_DEBUG;
         else
-          mState &= ~NS_STATE_SET_TO_DEBUG;
+          RemoveStateBits(NS_STATE_SET_TO_DEBUG);
       } else {
-        mState &= ~NS_STATE_DEBUG_WAS_SET;
+        RemoveStateBits(NS_STATE_DEBUG_WAS_SET);
       }
 #endif
 
@@ -1215,7 +1215,7 @@ nsBoxFrame::AttributeChanged(int32_t aNameSpaceID,
       if (autostretch)
         mState |= NS_STATE_AUTO_STRETCH;
       else
-        mState &= ~NS_STATE_AUTO_STRETCH;
+        RemoveStateBits(NS_STATE_AUTO_STRETCH);
     }
     else if (aAttribute == nsGkAtoms::left ||
              aAttribute == nsGkAtoms::top ||
@@ -1223,7 +1223,7 @@ nsBoxFrame::AttributeChanged(int32_t aNameSpaceID,
              aAttribute == nsGkAtoms::bottom ||
              aAttribute == nsGkAtoms::start ||
              aAttribute == nsGkAtoms::end) {
-      mState &= ~NS_STATE_STACK_NOT_POSITIONED;
+      RemoveStateBits(NS_STATE_STACK_NOT_POSITIONED);
     }
     else if (aAttribute == nsGkAtoms::mousethrough) {
       UpdateMouseThrough();
