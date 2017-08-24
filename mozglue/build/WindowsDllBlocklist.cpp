@@ -301,7 +301,7 @@ printf_stderr(const char *fmt, ...)
 
 #ifdef _M_IX86
 typedef void (__fastcall* BaseThreadInitThunk_func)(BOOL aIsInitialThread, void* aStartAddress, void* aThreadParam);
-static MOZ_NORETURN BaseThreadInitThunk_func stub_BaseThreadInitThunk = nullptr;
+static BaseThreadInitThunk_func stub_BaseThreadInitThunk = nullptr;
 #endif
 
 typedef NTSTATUS (NTAPI *LdrLoadDll_func) (PWCHAR filePath, PULONG flags, PUNICODE_STRING moduleFileName, PHANDLE handle);
