@@ -30,18 +30,22 @@ class Documentation(MachCommandBase):
                      help='Documentation format to write.')
     @CommandArgument('--outdir', default=None, metavar='DESTINATION',
                      help='Where to write output.')
+    @CommandArgument('--archive', action='store_true',
+                     help='Write a gzipped tarball of generated docs')
     @CommandArgument('--no-open', dest='auto_open', default=True,
                      action='store_false',
                      help="Don't automatically open HTML docs in a browser.")
     @CommandArgument('--http', const=':6666', metavar='ADDRESS', nargs='?',
                      help='Serve documentation on an HTTP server, '
                           'e.g. ":6666".')
-    def build_docs(self, what=None, format=None, outdir=None, auto_open=True, http=None):
+    def build_docs(self, what=None, format=None, outdir=None, auto_open=True,
+                   http=None, archive=False):
         self._activate_virtualenv()
         self.virtualenv_manager.install_pip_package('sphinx_rtd_theme==0.1.6')
 
         import sphinx
         import webbrowser
+        import moztreedocs
 
         if not outdir:
             outdir = os.path.join(self.topobjdir, 'docs')
@@ -75,6 +79,12 @@ class Documentation(MachCommandBase):
                 failed.append((path, 'sphinx return code %d' % result))
             else:
                 generated.append(savedir)
+
+            if archive:
+                archive_path = os.path.join(outdir,
+                                            '%s.tar.gz' %  project)
+                moztreedocs.create_tarball(archive_path, savedir)
+                print('Archived to %s' % archive_path)
 
             index_path = os.path.join(savedir, 'index.html')
             if not http and auto_open and os.path.isfile(index_path):
