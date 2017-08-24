@@ -27,7 +27,7 @@ public:
   explicit SharedPlanarYCbCrImage(ImageClient* aCompositable);
 
 protected:
-  ~SharedPlanarYCbCrImage();
+  virtual ~SharedPlanarYCbCrImage();
 
 public:
   virtual TextureClient* GetTextureClient(KnowsCompositor* aForwarder) override;

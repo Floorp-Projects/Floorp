@@ -35,14 +35,6 @@ SharedPlanarYCbCrImage::SharedPlanarYCbCrImage(ImageClient* aCompositable)
 
 SharedPlanarYCbCrImage::~SharedPlanarYCbCrImage() {
   MOZ_COUNT_DTOR(SharedPlanarYCbCrImage);
-
-  if (mCompositable->GetAsyncHandle() && !InImageBridgeChildThread()) {
-    if (mTextureClient) {
-      ADDREF_MANUALLY(mTextureClient);
-      ImageBridgeChild::DispatchReleaseTextureClient(mTextureClient);
-      mTextureClient = nullptr;
-    }
-  }
 }
 
 size_t

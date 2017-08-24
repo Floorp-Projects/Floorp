@@ -1,10 +1,6 @@
 function run_test()
 {
   do_get_profile();
-  if (!newCacheBackEndUsed()) {
-    do_check_true(true, "This test checks only cache2 specific behavior.");
-    return;
-  }
 
   // Open for write, write
   asyncOpenCacheEntry("http://a/", "pin", Ci.nsICacheStorage.OPEN_TRUNCATE, LoadContextInfo.default,

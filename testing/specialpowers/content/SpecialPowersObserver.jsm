@@ -233,9 +233,7 @@ SpecialPowersObserver.prototype.receiveMessage = function(aMessage) {
   switch (aMessage.name) {
     case "SPPingService":
       if (aMessage.json.op == "ping") {
-        aMessage.target
-                .QueryInterface(Ci.nsIFrameLoaderOwner)
-                .frameLoader
+        aMessage.target.frameLoader
                 .messageManager
                 .sendAsyncMessage("SPPingService", { op: "pong" });
       }
@@ -277,22 +275,16 @@ SpecialPowersObserver.prototype.receiveMessage = function(aMessage) {
         });
 
         Promise.all(promises).then(function() {
-          aMessage.target
-                  .QueryInterface(Ci.nsIFrameLoaderOwner)
-                  .frameLoader
+          aMessage.target.frameLoader
                   .messageManager
                   .sendAsyncMessage("SpecialPowers.FilesCreated", filePaths);
         }, function(e) {
-          aMessage.target
-                  .QueryInterface(Ci.nsIFrameLoaderOwner)
-                  .frameLoader
+          aMessage.target.frameLoader
                   .messageManager
                   .sendAsyncMessage("SpecialPowers.FilesError", e.toString());
         });
       } catch (e) {
-          aMessage.target
-                  .QueryInterface(Ci.nsIFrameLoaderOwner)
-                  .frameLoader
+          aMessage.target.frameLoader
                   .messageManager
                   .sendAsyncMessage("SpecialPowers.FilesError", e.toString());
       }
