@@ -162,6 +162,11 @@ protected:
   // correctly restore state when it is returned.
   RefPtr<gfx::DrawTarget> mLoanedDrawTarget;
   gfx::Matrix mLoanedTransform;
+
+  // This flag denotes whether or not a transform was already applied
+  // to mLoanedDrawTarget and thus needs to be reset to mLoanedTransform
+  // upon returning the drawtarget.
+  bool mSetTransform;
 };
 
 /**
@@ -298,12 +303,13 @@ public:
                                                DrawIterator* aIter = nullptr);
 
   /**
-   * Borrow a draw target for recording. The aOutTransform is not applied
-   * to the returned DrawTarget, BUT it is required to be painting in the right
-   * location whenever drawing does happen.
+   * Borrow a draw target for recording. The required transform for correct painting
+   * is not applied to the returned DrawTarget by default, BUT it is
+   * required to be whenever drawing does happen.
    */
   RefPtr<CapturedPaintState> BorrowDrawTargetForRecording(PaintState& aPaintState,
-                                                          DrawIterator* aIter);
+                                                          DrawIterator* aIter,
+                                                          bool aSetTransform = false);
 
   nsIntRegion ExpandDrawRegion(PaintState& aPaintState,
                                DrawIterator* aIter,
@@ -385,6 +391,7 @@ protected:
    * ReturnDrawTarget will by default restore the transform on the draw target.
    * But it is the callers responsibility to restore the clip.
    * The caller should flush the draw target, if necessary.
+   * If aSetTransform is false, the required transform will be set in aOutTransform.
    */
   gfx::DrawTarget*
   BorrowDrawTargetForQuadrantUpdate(const gfx::IntRect& aBounds,
