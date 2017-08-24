@@ -872,8 +872,8 @@ add_task(async function test_cancel_midway_restart_tryToKeepPartialData() {
   do_check_true(download.stopped);
   do_check_true(download.hasPartialData);
 
-  // We should have kept the partial data and an empty target file placeholder.
-  do_check_true(await OS.File.exists(download.target.path));
+  // The target file should not exist, but we should have kept the partial data.
+  do_check_false(await OS.File.exists(download.target.path));
   await promiseVerifyContents(download.target.partFilePath, TEST_DATA_SHORT);
   do_check_false(download.target.exists);
   do_check_eq(download.target.size, 0);
@@ -921,10 +921,15 @@ add_task(async function test_cancel_midway_restart_tryToKeepPartialData() {
 add_task(async function test_cancel_midway_restart_removePartialData() {
   let download = await promiseStartDownload_tryToKeepPartialData();
   await download.cancel();
+
+  do_check_true(download.hasPartialData);
+  await promiseVerifyContents(download.target.partFilePath, TEST_DATA_SHORT);
+  do_check_false(download.target.exists);
+  do_check_eq(download.target.size, 0);
+
   await download.removePartialData();
 
   do_check_false(download.hasPartialData);
-  do_check_false(await OS.File.exists(download.target.path));
   do_check_false(await OS.File.exists(download.target.partFilePath));
   do_check_false(download.target.exists);
   do_check_eq(download.target.size, 0);
@@ -957,7 +962,6 @@ add_task(async function test_cancel_midway_restart_tryToKeepPartialData_false() 
   await promiseVerifyContents(download.target.partFilePath, TEST_DATA_SHORT);
 
   await download.removePartialData();
-  do_check_false(await OS.File.exists(download.target.path));
   do_check_false(await OS.File.exists(download.target.partFilePath));
 
   // Restart the download from the beginning.
@@ -969,7 +973,6 @@ add_task(async function test_cancel_midway_restart_tryToKeepPartialData_false() 
 
   // While the download is in progress, we should still have a ".part" file.
   do_check_false(download.hasPartialData);
-  do_check_true(await OS.File.exists(download.target.path));
   do_check_true(await OS.File.exists(download.target.partFilePath));
 
   // On Unix, verify that the file with the partially downloaded data is not
@@ -983,7 +986,6 @@ add_task(async function test_cancel_midway_restart_tryToKeepPartialData_false() 
 
   // The ".part" file should be deleted now that the download is canceled.
   do_check_false(download.hasPartialData);
-  do_check_false(await OS.File.exists(download.target.path));
   do_check_false(await OS.File.exists(download.target.partFilePath));
 
   // The third time, we'll request and obtain the entire response again.
@@ -1216,7 +1218,6 @@ add_task(async function test_finalize_tryToKeepPartialData() {
   await download.finalize();
 
   do_check_true(download.hasPartialData);
-  do_check_true(await OS.File.exists(download.target.path));
   do_check_true(await OS.File.exists(download.target.partFilePath));
 
   // Clean up.
@@ -1227,7 +1228,6 @@ add_task(async function test_finalize_tryToKeepPartialData() {
   await download.finalize(true);
 
   do_check_false(download.hasPartialData);
-  do_check_false(await OS.File.exists(download.target.path));
   do_check_false(await OS.File.exists(download.target.partFilePath));
 });
 
@@ -1849,6 +1849,7 @@ var promiseBlockedDownload = async function(options) {
 
   do_check_true(download.stopped);
   do_check_false(download.succeeded);
+  do_check_false(await OS.File.exists(download.target.path));
 
   cleanup();
   return download;
@@ -1956,7 +1957,6 @@ add_task(async function test_blocked_applicationReputation_confirmBlock() {
   });
 
   do_check_true(download.hasBlockedData);
-  do_check_eq((await OS.File.stat(download.target.path)).size, 0);
   do_check_true(await OS.File.exists(download.target.partFilePath));
 
   await download.confirmBlock();
@@ -1983,7 +1983,6 @@ add_task(async function test_blocked_applicationReputation_unblock() {
   });
 
   do_check_true(download.hasBlockedData);
-  do_check_eq((await OS.File.stat(download.target.path)).size, 0);
   do_check_true(await OS.File.exists(download.target.partFilePath));
 
   await download.unblock();
