@@ -404,9 +404,8 @@ this.FormAutofillHeuristics = {
     }
     if (allowDuplicates) {
       return fieldScanner.fieldDetails;
-    } else {
-      return fieldScanner.trimmedFieldDetail;
     }
+
   },
 
   getInfo(element) {
