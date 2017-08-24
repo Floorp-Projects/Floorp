@@ -202,10 +202,6 @@ let FlyWebView = {
         panel.setAttribute("class", "PanelUI-subView");
         panel.setAttribute("flex", "1");
 
-        let label = aDocument.createElement("label");
-        label.setAttribute("class", "panel-subview-header");
-        label.setAttribute("value", gFlyWebBundle.GetStringFromName("flyweb-button.label"));
-
         let empty = aDocument.createElement("description");
         empty.id = "flyweb-items-empty";
         empty.setAttribute("mousethrough", "always");
@@ -215,7 +211,6 @@ let FlyWebView = {
         items.id = "flyweb-items";
         items.setAttribute("class", "panel-subview-body");
 
-        panel.appendChild(label);
         panel.appendChild(empty);
         panel.appendChild(items);
 
