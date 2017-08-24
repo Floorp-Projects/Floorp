@@ -156,17 +156,12 @@ enum CacheDisposition {
 void
 AccumulateCacheHitTelemetry(CacheDisposition hitOrMiss)
 {
-    if (!CacheObserver::UseNewCache()) {
-        Telemetry::Accumulate(Telemetry::HTTP_CACHE_DISPOSITION_2, hitOrMiss);
-    }
-    else {
-        Telemetry::Accumulate(Telemetry::HTTP_CACHE_DISPOSITION_2_V2, hitOrMiss);
+    Telemetry::Accumulate(Telemetry::HTTP_CACHE_DISPOSITION_2_V2, hitOrMiss);
 
-        int32_t experiment = CacheObserver::HalfLifeExperiment();
-        if (experiment > 0 && hitOrMiss == kCacheMissed) {
-            Telemetry::Accumulate(Telemetry::HTTP_CACHE_MISS_HALFLIFE_EXPERIMENT_2,
-                                  experiment - 1);
-        }
+    int32_t experiment = CacheObserver::HalfLifeExperiment();
+    if (experiment > 0 && hitOrMiss == kCacheMissed) {
+        Telemetry::Accumulate(Telemetry::HTTP_CACHE_MISS_HALFLIFE_EXPERIMENT_2,
+                              experiment - 1);
     }
 }
 
@@ -5534,27 +5529,11 @@ nsHttpChannel::InstallCacheListener(int64_t offset)
         do_CreateInstance(kStreamListenerTeeCID, &rv);
     if (NS_FAILED(rv)) return rv;
 
-    nsCOMPtr<nsIEventTarget> cacheIOTarget;
-    if (!CacheObserver::UseNewCache()) {
-        nsCOMPtr<nsICacheStorageService> serv(services::GetCacheStorageService());
-        if (!serv) {
-            return NS_ERROR_NOT_AVAILABLE;
-        }
-
-        serv->GetIoTarget(getter_AddRefs(cacheIOTarget));
-    }
-
-    if (!cacheIOTarget) {
-        LOG(("nsHttpChannel::InstallCacheListener sync tee %p rv=%" PRIx32
-             " cacheIOTarget=%p",
-             tee.get(), static_cast<uint32_t>(rv), cacheIOTarget.get()));
-        rv = tee->Init(mListener, out, nullptr);
-    } else {
-        LOG(("nsHttpChannel::InstallCacheListener async tee %p", tee.get()));
-        rv = tee->InitAsync(mListener, cacheIOTarget, out, nullptr);
-    }
-
+    LOG(("nsHttpChannel::InstallCacheListener sync tee %p rv=%" PRIx32,
+         tee.get(), static_cast<uint32_t>(rv)));
+    rv = tee->Init(mListener, out, nullptr);
     if (NS_FAILED(rv)) return rv;
+
     mListener = tee;
     return NS_OK;
 }
