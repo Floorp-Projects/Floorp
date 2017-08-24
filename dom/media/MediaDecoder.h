@@ -490,6 +490,12 @@ private:
   // passed to a platform decoder.
   virtual MediaResource* GetResource() const = 0;
 
+  // Ensures our media resource has been pinned.
+  virtual void PinForSeek() = 0;
+
+  // Ensures our media resource has been unpinned.
+  virtual void UnpinForSeek() = 0;
+
   nsCString GetDebugInfo();
 
   // Called when the owner's activity changed.
@@ -539,12 +545,6 @@ protected:
 
   MozPromiseRequestHolder<SeekPromise> mSeekRequest;
 
-  // Ensures our media stream has been pinned.
-  void PinForSeek();
-
-  // Ensures our media stream has been unpinned.
-  void UnpinForSeek();
-
   const char* PlayStateStr();
 
   void OnMetadataUpdate(TimedMetadata&& aMetadata);
@@ -561,10 +561,6 @@ protected:
   const RefPtr<FrameStatistics> mFrameStats;
 
   RefPtr<VideoFrameContainer> mVideoFrameContainer;
-
-  // True when our media stream has been pinned. We pin the stream
-  // while seeking.
-  bool mPinnedForSeek;
 
   // True if the decoder has been directed to minimize its preroll before
   // playback starts. After the first time playback starts, we don't attempt

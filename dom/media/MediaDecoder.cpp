@@ -366,7 +366,6 @@ MediaDecoder::MediaDecoder(MediaDecoderInit& aInit)
   , mAbstractMainThread(aInit.mOwner->AbstractMainThread())
   , mFrameStats(new FrameStatistics())
   , mVideoFrameContainer(aInit.mOwner->GetVideoFrameContainer())
-  , mPinnedForSeek(false)
   , mMinimizePreroll(aInit.mMinimizePreroll)
   , mFiredMetadataLoaded(false)
   , mIsDocumentVisible(false)
@@ -1367,31 +1366,6 @@ MediaDecoder::FireTimeUpdate()
   MOZ_ASSERT(NS_IsMainThread());
   MOZ_DIAGNOSTIC_ASSERT(!IsShutdown());
   GetOwner()->FireTimeUpdate(true);
-}
-
-void
-MediaDecoder::PinForSeek()
-{
-  MOZ_ASSERT(NS_IsMainThread());
-  MediaResource* resource = GetResource();
-  if (!resource || mPinnedForSeek) {
-    return;
-  }
-  mPinnedForSeek = true;
-  resource->Pin();
-}
-
-void
-MediaDecoder::UnpinForSeek()
-{
-  MOZ_ASSERT(NS_IsMainThread());
-  MOZ_DIAGNOSTIC_ASSERT(!IsShutdown());
-  MediaResource* resource = GetResource();
-  if (!resource || !mPinnedForSeek) {
-    return;
-  }
-  mPinnedForSeek = false;
-  resource->Unpin();
 }
 
 bool

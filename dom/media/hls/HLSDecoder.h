@@ -45,6 +45,8 @@ public:
 
 private:
   MediaResource* GetResource() const override final;
+  void PinForSeek() override {}
+  void UnpinForSeek() override {}
 
   MediaDecoderStateMachine* CreateStateMachine();
 
