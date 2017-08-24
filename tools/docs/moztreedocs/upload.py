@@ -12,7 +12,15 @@ import boto3
 import requests
 
 
-def s3_upload(files):
+def s3_upload(files, key_prefix=None):
+    """Upload files to an S3 bucket.
+
+    ``files`` is an iterable of ``(path, BaseFile)`` (typically from a
+    mozpack Finder).
+
+    Keys in the bucket correspond to source filenames. If ``key_prefix`` is
+    defined, key names will be ``<key_prefix>/<path>``.
+    """
     region = 'us-west-2'
     level = os.environ.get('MOZ_SCM_LEVEL', '1')
     bucket = {
@@ -48,8 +56,15 @@ def s3_upload(files):
             extra_args['ContentType'] = content_type
         if content_encoding:
             extra_args['ContentEncoding'] = content_encoding
-        print('uploading', path)
+
+        if key_prefix:
+            key = '%s/%s' % (key_prefix, path)
+        else:
+            key = path
+
+        print('uploading %s to %s' % (path, key))
+
         # The file types returned by mozpack behave like file objects. But they
         # don't accept an argument to read(). So we wrap in a BytesIO.
-        s3.upload_fileobj(io.BytesIO(f.read()), bucket, path,
+        s3.upload_fileobj(io.BytesIO(f.read()), bucket, key,
                           ExtraArgs=extra_args)

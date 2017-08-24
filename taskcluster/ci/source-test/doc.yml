@@ -12,13 +12,12 @@ doc-generate:
         artifacts:
             - type: file
               name: public/docs.tar.gz
-              path: /home/worker/checkouts/gecko/docs.tar.gz
+              path: /home/worker/checkouts/gecko/docs-out/main.tar.gz
     run:
         using: run-task
         command: >
             cd /home/worker/checkouts/gecko &&
-            ./mach doc --outdir docs-out --no-open --archive &&
-            mv docs-out/Mozilla_Source_Tree_Docs.tar.gz docs.tar.gz
+            ./mach doc --outdir docs-out --no-open --archive
     when:
         files-changed:
             - '**/*.py'
