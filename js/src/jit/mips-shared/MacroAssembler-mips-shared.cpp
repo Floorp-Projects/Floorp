@@ -1487,7 +1487,7 @@ void
 MacroAssembler::Push(Register reg)
 {
     ma_push(reg);
-    adjustFrame(sizeof(intptr_t));
+    adjustFrame(int32_t(sizeof(intptr_t)));
 }
 
 void
@@ -1495,7 +1495,7 @@ MacroAssembler::Push(const Imm32 imm)
 {
     ma_li(ScratchRegister, imm);
     ma_push(ScratchRegister);
-    adjustFrame(sizeof(intptr_t));
+    adjustFrame(int32_t(sizeof(intptr_t)));
 }
 
 void
@@ -1503,7 +1503,7 @@ MacroAssembler::Push(const ImmWord imm)
 {
     ma_li(ScratchRegister, imm);
     ma_push(ScratchRegister);
-    adjustFrame(sizeof(intptr_t));
+    adjustFrame(int32_t(sizeof(intptr_t)));
 }
 
 void
@@ -1517,28 +1517,28 @@ MacroAssembler::Push(const ImmGCPtr ptr)
 {
     ma_li(ScratchRegister, ptr);
     ma_push(ScratchRegister);
-    adjustFrame(sizeof(intptr_t));
+    adjustFrame(int32_t(sizeof(intptr_t)));
 }
 
 void
 MacroAssembler::Push(FloatRegister f)
 {
     ma_push(f);
-    adjustFrame(sizeof(double));
+    adjustFrame(int32_t(sizeof(double)));
 }
 
 void
 MacroAssembler::Pop(Register reg)
 {
     ma_pop(reg);
-    adjustFrame(-sizeof(intptr_t));
+    adjustFrame(-int32_t(sizeof(intptr_t)));
 }
 
 void
 MacroAssembler::Pop(FloatRegister f)
 {
     ma_pop(f);
-    adjustFrame(-sizeof(double));
+    adjustFrame(-int32_t(sizeof(double)));
 }
 
 void

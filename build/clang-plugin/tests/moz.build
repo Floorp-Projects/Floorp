@@ -10,6 +10,7 @@ Library('clang-plugin-tests')
 SOURCES += [
     'TestAssertWithAssignment.cpp',
     'TestBadImplicitConversionCtor.cpp',
+    'TestCanRunScript.cpp',
     'TestCustomHeap.cpp',
     'TestDanglingOnTemporary.cpp',
     'TestExplicitOperatorBool.cpp',

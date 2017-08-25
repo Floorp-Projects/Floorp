@@ -65,6 +65,12 @@ AST_MATCHER(FunctionDecl, hasNoAddRefReleaseOnReturnAttr) {
   return hasCustomAnnotation(&Node, "moz_no_addref_release_on_return");
 }
 
+/// This matcher will match any function declaration that is marked as being
+/// allowed to run script.
+AST_MATCHER(FunctionDecl, hasCanRunScriptAnnotation) {
+  return hasCustomAnnotation(&Node, "moz_can_run_script");
+}
+
 /// This matcher will match all arithmetic binary operators.
 AST_MATCHER(BinaryOperator, binaryArithmeticOperator) {
   BinaryOperatorKind OpCode = Node.getOpcode();
@@ -137,10 +143,14 @@ AST_MATCHER(MemberExpr, isAddRefOrRelease) {
   return false;
 }
 
-/// This matcher will select classes which are refcounted.
+/// This matcher will select classes which are refcounted AND have an mRefCnt
+/// member.
 AST_MATCHER(CXXRecordDecl, hasRefCntMember) {
   return isClassRefCounted(&Node) && getClassRefCntMember(&Node);
 }
+
+/// This matcher will select classes which are refcounted.
+AST_MATCHER(CXXRecordDecl, isRefCounted) { return isClassRefCounted(&Node); }
 
 AST_MATCHER(QualType, hasVTable) { return typeHasVTable(Node); }
 
@@ -239,6 +249,17 @@ AST_MATCHER(CXXRecordDecl, isLambdaDecl) { return Node.isLambda(); }
 
 AST_MATCHER(QualType, isRefPtr) { return typeIsRefPtr(Node); }
 
+AST_MATCHER(QualType, isSmartPtrToRefCounted) {
+  auto *D = getNonTemplateSpecializedCXXRecordDecl(Node);
+  if (!D) {
+    return false;
+  }
+
+  D = D->getCanonicalDecl();
+
+  return D && hasCustomAnnotation(D, "moz_is_smartptr_to_refcounted");
+}
+
 AST_MATCHER(CXXRecordDecl, hasBaseClasses) {
   const CXXRecordDecl *Decl = Node.getCanonicalDecl();
 
@@ -260,6 +281,50 @@ AST_MATCHER(FunctionDecl, isMozMustReturnFromCaller) {
   const FunctionDecl *Decl = Node.getCanonicalDecl();
   return Decl && hasCustomAnnotation(Decl, "moz_must_return_from_caller");
 }
+
+#if CLANG_VERSION_FULL < 309
+/// DISCLAIMER: This is a copy/paste from the Clang source code starting from
+/// Clang 3.9, so that this matcher is supported in lower versions.
+///
+/// \brief Matches declaration of the function the statement belongs to
+///
+/// Given:
+/// \code
+/// F& operator=(const F& o) {
+///   std::copy_if(o.begin(), o.end(), begin(), [](V v) { return v > 0; });
+///   return *this;
+/// }
+/// \endcode
+/// returnStmt(forFunction(hasName("operator=")))
+///   matches 'return *this'
+///   but does match 'return > 0'
+AST_MATCHER_P(Stmt, forFunction, internal::Matcher<FunctionDecl>,
+              InnerMatcher) {
+  const auto &Parents = Finder->getASTContext().getParents(Node);
+
+  llvm::SmallVector<ast_type_traits::DynTypedNode, 8> Stack(Parents.begin(),
+                                                            Parents.end());
+  while(!Stack.empty()) {
+    const auto &CurNode = Stack.back();
+    Stack.pop_back();
+    if(const auto *FuncDeclNode = CurNode.get<FunctionDecl>()) {
+      if(InnerMatcher.matches(*FuncDeclNode, Finder, Builder)) {
+        return true;
+      }
+    } else if(const auto *LambdaExprNode = CurNode.get<LambdaExpr>()) {
+      if(InnerMatcher.matches(*LambdaExprNode->getCallOperator(),
+                              Finder, Builder)) {
+        return true;
+      }
+    } else {
+      for(const auto &Parent: Finder->getASTContext().getParents(CurNode))
+        Stack.push_back(Parent);
+    }
+  }
+  return false;
+}
+#endif
+
 }
 }
 

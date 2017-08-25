@@ -113,6 +113,14 @@ class FloatRegister : public FloatRegisterMIPSShared
       : reg_(Encoding(FloatRegisters::invalid_freg)), kind_(Codes::Double)
     { }
 
+    static uint32_t SetSize(SetType x) {
+        // Count the number of non-aliased registers.
+        x |= x >> Codes::TotalPhys;
+        x &= Codes::AllPhysMask;
+        static_assert(Codes::AllPhysMask <= 0xffffffff, "We can safely use CountPopulation32");
+        return mozilla::CountPopulation32(x);
+    }
+
     bool operator==(const FloatRegister& other) const {
         MOZ_ASSERT(!isInvalid());
         MOZ_ASSERT(!other.isInvalid());

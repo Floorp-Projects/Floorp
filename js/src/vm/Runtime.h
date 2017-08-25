@@ -455,6 +455,10 @@ struct JSRuntime : public js::MallocProvider<JSRuntime>
 
     /* Call this to accumulate telemetry data. */
     js::ActiveThreadData<JSAccumulateTelemetryDataCallback> telemetryCallback;
+
+    /* Call this to accumulate use counter data. */
+    js::ActiveThreadData<JSSetUseCounterCallback> useCounterCallback;
+
   public:
     // Accumulates data for Firefox telemetry. |id| is the ID of a JS_TELEMETRY_*
     // histogram. |key| provides an additional key to identify the histogram.
@@ -462,6 +466,13 @@ struct JSRuntime : public js::MallocProvider<JSRuntime>
     void addTelemetry(int id, uint32_t sample, const char* key = nullptr);
 
     void setTelemetryCallback(JSRuntime* rt, JSAccumulateTelemetryDataCallback callback);
+
+    // Sets the use counter for a specific feature, measuring the presence or
+    // absence of usage of a feature on a specific web page and document which
+    // the passed JSObject belongs to.
+    void setUseCounter(JSObject* obj, JSUseCounter counter);
+
+    void setUseCounterCallback(JSRuntime* rt, JSSetUseCounterCallback callback);
 
   public:
     js::UnprotectedData<js::OffThreadPromiseRuntimeState> offThreadPromiseState;

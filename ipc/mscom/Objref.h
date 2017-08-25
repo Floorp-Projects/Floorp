@@ -29,6 +29,16 @@ StripHandlerFromOBJREF(NotNull<IStream*> aStream,
                        const uint64_t aStart,
                        const uint64_t aEnd);
 
+/**
+ * Given a buffer containing a serialized proxy to an interface, this function
+ * returns the length of the serialized data.
+ * @param aStream IStream containing a serialized proxy. The stream pointer
+ *                must be positioned at the beginning of the OBJREF.
+ * @return The size of the serialized proxy, or 0 on error.
+ */
+uint32_t
+GetOBJREFSize(NotNull<IStream*> aStream);
+
 } // namespace mscom
 } // namespace mozilla
 
