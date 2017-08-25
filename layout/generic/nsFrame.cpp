@@ -10722,7 +10722,7 @@ nsIFrame::AddSizeOfExcludingThisForTree(nsWindowSizes& aSizes) const
     ServoStyleContext* sc = mStyleContext->AsServo();
     if (!aSizes.mState.HaveSeenPtr(sc)) {
       sc->AddSizeOfIncludingThis(aSizes,
-                                 &aSizes.mStyleSizes.mComputedValuesNonDom);
+                                 &aSizes.mLayoutComputedValuesNonDom);
     }
   }
 
