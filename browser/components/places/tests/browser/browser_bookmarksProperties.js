@@ -311,7 +311,7 @@ gTests.push({
     folderTree.addEventListener("DOMAttrModified", function onDOMAttrModified(event) {
       if (event.attrName != "place")
         return;
-      folderTree.removeEventListener("DOMAttrModified", arguments.callee);
+      folderTree.removeEventListener("DOMAttrModified", onDOMAttrModified);
       executeSoon(async function() {
         await self._addObserver;
         let bookmark = await PlacesUtils.bookmarks.fetch({url: TEST_URL});

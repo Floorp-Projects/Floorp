@@ -14,11 +14,11 @@ function test() {
 
   var frameCount = 0;
   let tab = BrowserTestUtils.addTab(gBrowser, testURL);
-  tab.linkedBrowser.addEventListener("load", function(aEvent) {
+  tab.linkedBrowser.addEventListener("load", function listener(aEvent) {
     // wait for all frames to load completely
     if (frameCount++ < 2)
       return;
-    tab.linkedBrowser.removeEventListener("load", arguments.callee, true);
+    tab.linkedBrowser.removeEventListener("load", listener, true);
 
     let iframes = tab.linkedBrowser.contentWindow.frames;
     // eslint-disable-next-line no-unsanitized/property
@@ -26,20 +26,20 @@ function test() {
 
     frameCount = 0;
     let tab2 = gBrowser.duplicateTab(tab);
-    tab2.linkedBrowser.addEventListener("load", function(eventTab2) {
+    tab2.linkedBrowser.addEventListener("load", function loadListener(eventTab2) {
       // wait for all frames to load (and reload!) completely
       if (frameCount++ < 2)
         return;
-      tab2.linkedBrowser.removeEventListener("load", arguments.callee, true);
+      tab2.linkedBrowser.removeEventListener("load", loadListener, true);
 
-      executeSoon(function() {
+      executeSoon(function innerHTMLPoller() {
         let iframesTab2 = tab2.linkedBrowser.contentWindow.frames;
         if (iframesTab2[1].document.body.innerHTML !== uniqueValue) {
           // Poll again the value, since we can't ensure to run
           // after SessionStore has injected innerHTML value.
           // See bug 521802.
           info("Polling for innerHTML value");
-          setTimeout(arguments.callee, 100);
+          setTimeout(innerHTMLPoller, 100);
           return;
         }
 

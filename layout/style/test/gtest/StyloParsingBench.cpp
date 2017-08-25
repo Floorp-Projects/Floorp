@@ -31,7 +31,7 @@ static void ServoParsingBench() {
     RefPtr<RawServoStyleSheetContents> stylesheet =
       Servo_StyleSheet_FromUTF8Bytes(
         nullptr, nullptr, &css, eAuthorSheetFeatures,
-        data, 0, eCompatibility_FullStandards
+        data, 0, eCompatibility_FullStandards, nullptr
       ).Consume();
   }
 }

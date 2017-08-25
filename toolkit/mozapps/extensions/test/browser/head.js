@@ -399,8 +399,8 @@ function open_manager(aView, aCallback, aLoadCallback, aLongerTimeout) {
     }
 
     info("Loading manager window in tab");
-    Services.obs.addObserver(function(aSubject, aTopic, aData) {
-      Services.obs.removeObserver(arguments.callee, aTopic);
+    Services.obs.addObserver(function observer(aSubject, aTopic, aData) {
+      Services.obs.removeObserver(observer, aTopic);
       if (aSubject.location.href != MANAGER_URI) {
         info("Ignoring load event for " + aSubject.location.href);
         return;
@@ -425,10 +425,10 @@ function close_manager(aManagerWindow, aCallback, aLongerTimeout) {
     ok(aManagerWindow != null, "Should have an add-ons manager window to close");
     is(aManagerWindow.location, MANAGER_URI, "Should be closing window with correct URI");
 
-    aManagerWindow.addEventListener("unload", function() {
+    aManagerWindow.addEventListener("unload", function listener() {
       try {
         dump("Manager window unload handler\n");
-        this.removeEventListener("unload", arguments.callee);
+        this.removeEventListener("unload", listener);
         resolve();
       } catch (e) {
         reject(e);

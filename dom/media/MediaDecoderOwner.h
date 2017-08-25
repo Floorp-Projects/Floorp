@@ -117,7 +117,7 @@ public:
 
   // Called by the media decoder to indicate whether the media cache has
   // suspended the channel.
-  virtual void NotifySuspendedByCache(bool aIsSuspended) = 0;
+  virtual void NotifySuspendedByCache(bool aSuspendedByCache) = 0;
 
   // called to notify that the principal of the decoder's media resource has changed.
   virtual void NotifyDecoderPrincipalChanged() = 0;

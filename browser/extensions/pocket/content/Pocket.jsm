@@ -19,6 +19,16 @@ var Pocket = {
   get site() { return Services.prefs.getCharPref("extensions.pocket.site"); },
   get listURL() { return "https://" + Pocket.site + "/?src=ff_ext"; },
 
+  openList(event) {
+    let win = event.view;
+    let where = win.whereToOpenLink(event);
+    // Never override the current tab unless it's blank:
+    if (where == "current" && !win.isTabEmpty(win.gBrowser.selectedTab)) {
+      where = "tab";
+    }
+    win.openUILinkIn(this.listURL, where);
+  },
+
   /**
    * Functions related to the Pocket panel UI.
    */

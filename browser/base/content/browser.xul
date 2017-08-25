@@ -1057,7 +1057,7 @@
                      class="toolbarbutton-1 chromeclass-toolbar-additional"
                      removable="true"
                      type="menu"
-                     label="&bookmarksMenuButton.label;"
+                     label="&bookmarksMenuButton2.label;"
                      tooltip="dynamic-shortcut-tooltip"
                      anchor="dropmarker"
                      ondragenter="PlacesMenuDNDHandler.onDragEnter(event);"
