@@ -1022,27 +1022,6 @@ js::ThrowStopIteration(JSContext* cx)
 
 /*** Iterator objects ****************************************************************************/
 
-bool
-js::IteratorConstructor(JSContext* cx, unsigned argc, Value* vp)
-{
-    CallArgs args = CallArgsFromVp(argc, vp);
-    if (args.length() == 0) {
-        ReportMissingArg(cx, args.calleev(), 0);
-        return false;
-    }
-
-    bool keyonly = false;
-    if (args.length() >= 2)
-        keyonly = ToBoolean(args[1]);
-    unsigned flags = JSITER_OWNONLY | (keyonly ? 0 : (JSITER_FOREACH | JSITER_KEYVALUE));
-
-    RootedObject iterobj(cx, ValueToIterator(cx, flags, args[0]));
-    if (!iterobj)
-        return false;
-    args.rval().setObject(*iterobj);
-    return true;
-}
-
 MOZ_ALWAYS_INLINE bool
 NativeIteratorNext(JSContext* cx, NativeIterator* ni, MutableHandleValue rval, bool* done)
 {
@@ -1111,12 +1090,6 @@ legacy_iterator_next(JSContext* cx, unsigned argc, Value* vp)
     return CallNonGenericMethod<IsLegacyIterator, legacy_iterator_next_impl>(cx, args);
 }
 
-static const JSFunctionSpec legacy_iterator_methods[] = {
-    JS_SELF_HOSTED_SYM_FN(iterator, "LegacyIteratorShim", 0, 0),
-    JS_FN("next",      legacy_iterator_next,       0, 0),
-    JS_FS_END
-};
-
 size_t
 PropertyIteratorObject::sizeOfMisc(mozilla::MallocSizeOf mallocSizeOf) const
 {
@@ -1153,7 +1126,6 @@ const ClassOps PropertyIteratorObject::classOps_ = {
 
 const Class PropertyIteratorObject::class_ = {
     "Iterator",
-    JSCLASS_HAS_CACHED_PROTO(JSProto_Iterator) |
     JSCLASS_HAS_PRIVATE |
     JSCLASS_BACKGROUND_FINALIZE,
     &PropertyIteratorObject::classOps_
@@ -1631,44 +1603,6 @@ GlobalObject::initStringIteratorProto(JSContext* cx, Handle<GlobalObject*> globa
 
     global->setReservedSlot(STRING_ITERATOR_PROTO, ObjectValue(*proto));
     return true;
-}
-
-JSObject*
-js::InitLegacyIteratorClass(JSContext* cx, HandleObject obj)
-{
-    Handle<GlobalObject*> global = obj.as<GlobalObject>();
-
-    if (global->getPrototype(JSProto_Iterator).isObject())
-        return &global->getPrototype(JSProto_Iterator).toObject();
-
-    RootedObject iteratorProto(cx);
-    iteratorProto = GlobalObject::createBlankPrototype(cx, global,
-                                                       &PropertyIteratorObject::class_);
-    if (!iteratorProto)
-        return nullptr;
-
-    NativeIterator* ni = NativeIterator::allocateIterator(cx, 0, 0);
-    if (!ni)
-        return nullptr;
-
-    iteratorProto->as<PropertyIteratorObject>().setNativeIterator(ni);
-    ni->init(nullptr, nullptr, 0 /* flags */, 0, 0);
-
-    Rooted<JSFunction*> ctor(cx);
-    ctor = GlobalObject::createConstructor(cx, IteratorConstructor, cx->names().Iterator, 2);
-    if (!ctor)
-        return nullptr;
-    if (!LinkConstructorAndPrototype(cx, ctor, iteratorProto))
-        return nullptr;
-    if (!DefinePropertiesAndFunctions(cx, iteratorProto, nullptr, legacy_iterator_methods))
-        return nullptr;
-    if (!GlobalObject::initBuiltinConstructor(cx, global, JSProto_Iterator,
-                                              ctor, iteratorProto))
-    {
-        return nullptr;
-    }
-
-    return &global->getPrototype(JSProto_Iterator).toObject();
 }
 
 JSObject*

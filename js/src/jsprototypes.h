@@ -84,7 +84,7 @@
     real(CompileError,          InitViaClassSpec,       ERROR_CLASP(JSEXN_WASMCOMPILEERROR)) \
     real(LinkError,             InitViaClassSpec,       ERROR_CLASP(JSEXN_WASMLINKERROR)) \
     real(RuntimeError,          InitViaClassSpec,       ERROR_CLASP(JSEXN_WASMRUNTIMEERROR)) \
-    real(Iterator,              InitLegacyIteratorClass,OCLASP(PropertyIterator)) \
+    imaginary(Iterator,         dummy,                  dummy) \
     real(StopIteration,         InitStopIterationClass, OCLASP(StopIteration)) \
     real(ArrayBuffer,           InitViaClassSpec,       OCLASP(ArrayBuffer)) \
     real(Int8Array,             InitViaClassSpec,       TYPED_ARRAY_CLASP(Int8)) \
