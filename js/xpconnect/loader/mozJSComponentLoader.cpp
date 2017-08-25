@@ -130,10 +130,10 @@ Debug(JSContext* cx, unsigned argc, Value* vp)
 }
 
 static const JSFunctionSpec gGlobalFun[] = {
-    JS_FS("dump",    Dump,   1,0),
-    JS_FS("debug",   Debug,  1,0),
-    JS_FS("atob",    Atob,   1,0),
-    JS_FS("btoa",    Btoa,   1,0),
+    JS_FN("dump",    Dump,   1,0),
+    JS_FN("debug",   Debug,  1,0),
+    JS_FN("atob",    Atob,   1,0),
+    JS_FN("btoa",    Btoa,   1,0),
     JS_FS_END
 };
 

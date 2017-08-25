@@ -374,9 +374,9 @@ struct JSFunctionSpecWithHelp {
 };
 
 #define JS_FN_HELP(name,call,nargs,flags,usage,help)                          \
-    {name, call, nargs, (flags) | JSPROP_ENUMERATE | JSFUN_STUB_GSOPS, nullptr, usage, help}
+    {name, call, nargs, (flags) | JSPROP_ENUMERATE, nullptr, usage, help}
 #define JS_INLINABLE_FN_HELP(name,call,nargs,flags,native,usage,help)         \
-    {name, call, nargs, (flags) | JSPROP_ENUMERATE | JSFUN_STUB_GSOPS, &js::jit::JitInfo_##native,\
+    {name, call, nargs, (flags) | JSPROP_ENUMERATE, &js::jit::JitInfo_##native,\
      usage, help}
 #define JS_FS_HELP_END                                                        \
     {nullptr, nullptr, 0, 0, nullptr, nullptr}
