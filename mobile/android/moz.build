@@ -6,6 +6,7 @@
 
 with Files('**'):
     BUG_COMPONENT = ('Firefox for Android', 'Build Config & IDE Support')
+    SCHEDULES.exclusive = ['android']
 
 with Files('bouncer/**'):
     BUG_COMPONENT = ('Firefox for Android', 'Distributions')
