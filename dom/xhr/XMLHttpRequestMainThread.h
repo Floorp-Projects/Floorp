@@ -335,6 +335,13 @@ public:
        const Nullable<DocumentOrBlobOrArrayBufferViewOrArrayBufferOrFormDataOrURLSearchParamsOrUSVString>& aData,
        ErrorResult& aRv) override;
 
+  virtual void
+  SendInputStream(nsIInputStream* aInputStream, ErrorResult& aRv) override
+  {
+    BodyExtractor<nsIInputStream> body(aInputStream);
+    aRv = SendInternal(&body);
+  }
+
   void
   RequestErrorSteps(const ProgressEventType aEventType,
                     const nsresult aOptionalException,

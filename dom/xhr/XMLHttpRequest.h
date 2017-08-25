@@ -82,6 +82,9 @@ public:
        ErrorResult& aRv) = 0;
 
   virtual void
+  SendInputStream(nsIInputStream* aInputStream, ErrorResult& aRv) = 0;
+
+  virtual void
   Abort(ErrorResult& aRv) = 0;
 
   virtual void
