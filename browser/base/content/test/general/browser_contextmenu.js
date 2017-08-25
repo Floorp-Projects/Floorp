@@ -184,8 +184,6 @@ add_task(async function test_video_ok() {
      "context-savevideo",          true,
      "context-video-saveimage",    true,
      "context-sendvideo",          true,
-     "context-castvideo",          null,
-       [], null
     ]
   );
 });
@@ -231,8 +229,6 @@ add_task(async function test_video_bad() {
      "context-savevideo",          true,
      "context-video-saveimage",    false,
      "context-sendvideo",          true,
-     "context-castvideo",          null,
-       [], null
     ]
   );
 });
@@ -257,8 +253,6 @@ add_task(async function test_video_bad2() {
      "context-savevideo",          false,
      "context-video-saveimage",    false,
      "context-sendvideo",          false,
-     "context-castvideo",          null,
-       [], null
     ]
   );
 });
@@ -319,8 +313,6 @@ add_task(async function test_video_in_iframe() {
      "context-savevideo",          true,
      "context-video-saveimage",    true,
      "context-sendvideo",          true,
-     "context-castvideo",          null,
-       [], null,
      "frame",                null,
          ["context-showonlythisframe", true,
           "context-openframeintab",    true,
