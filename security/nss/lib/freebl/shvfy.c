@@ -19,6 +19,8 @@
 #include "pqg.h"
 #include "blapii.h"
 
+#ifndef NSS_FIPS_DISABLED
+
 /*
  * Most modern version of Linux support a speed optimization scheme where an
  * application called prelink modifies programs and shared libraries to quickly
@@ -537,3 +539,23 @@ BLAPI_VerifySelf(const char *name)
     }
     return blapi_SHVerify(name, (PRFuncPtr)decodeInt, PR_TRUE);
 }
+
+#else /* NSS_FIPS_DISABLED */
+
+PRBool
+BLAPI_SHVerifyFile(const char *shName)
+{
+    return PR_FALSE;
+}
+PRBool
+BLAPI_SHVerify(const char *name, PRFuncPtr addr)
+{
+    return PR_FALSE;
+}
+PRBool
+BLAPI_VerifySelf(const char *name)
+{
+    return PR_FALSE;
+}
+
+#endif /* NSS_FIPS_DISABLED */
