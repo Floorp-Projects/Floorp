@@ -1,0 +1,66 @@
+<?xml version="1.0"?>
+<?xml-stylesheet href="chrome://global/skin" type="text/css"?>
+<?xml-stylesheet href="chrome://mochikit/content/tests/SimpleTest/test.css"
+                 type="text/css"?>
+
+
+<window xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul"
+        title="Testing DOMLocalization in XUL environment">
+
+  <script type="application/javascript"
+          src="chrome://mochikit/content/tests/SimpleTest/SimpleTest.js" />
+  <script type="application/javascript">
+  <![CDATA[
+  const { DOMLocalization } =
+    Components.utils.import("resource://gre/modules/DOMLocalization.jsm", {});
+  const { MessageContext } =
+    Components.utils.import("resource://gre/modules/MessageContext.jsm", {});
+
+  function * generateMessages(locales, resourceIds) {
+    const mc = new MessageContext(locales);
+    mc.addMessages(`
+file-menu
+    .label = File
+    .accesskey = F
+new-tab
+    .label = New Tab
+    .accesskey = N
+`);
+    yield mc;
+  }
+
+  SimpleTest.waitForExplicitFinish();
+
+
+  const domLoc = new DOMLocalization(
+    window,
+    [],
+    generateMessages
+  );
+
+  async function foo() {
+    domLoc.connectRoot(document);
+    await domLoc.translateRoots();
+
+    is(document.getElementById('file-menu').getAttribute('label'), 'File');
+    is(document.getElementById('file-menu').getAttribute('accesskey'), 'F');
+
+    is(document.getElementById('new-tab').getAttribute('label'), 'New Tab');
+    is(document.getElementById('new-tab').getAttribute('accesskey'), 'N');
+    SimpleTest.finish();
+  }
+
+  window.onload = foo;
+
+  ]]>
+  </script>
+
+  <menubar id="main-menubar">
+    <menu id="file-menu" data-l10n-id="file-menu">
+      <menupopup id="menu_FilePopup">
+        <menuitem id="new-tab" data-l10n-id="new-tab">
+        </menuitem>
+      </menupopup>
+    </menu>
+  </menubar>
+</window>

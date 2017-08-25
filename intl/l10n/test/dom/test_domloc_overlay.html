@@ -1,0 +1,56 @@
+<!DOCTYPE HTML>
+<html>
+<head>
+  <meta charset="utf-8">
+  <title>Test DOMLocalization's DOMOverlay functionality</title>
+  <script type="application/javascript" src="chrome://mochikit/content/tests/SimpleTest/SimpleTest.js"></script>
+  <link rel="stylesheet" type="text/css" href="chrome://mochikit/content/tests/SimpleTest/test.css">
+  <script type="application/javascript">
+  "use strict";
+  const { DOMLocalization } =
+    Components.utils.import("resource://gre/modules/DOMLocalization.jsm", {});
+  const { MessageContext } =
+    Components.utils.import("resource://gre/modules/MessageContext.jsm", {});
+
+  function * mockGenerateMessages(locales, resourceIds) {
+    const mc = new MessageContext(locales);
+    mc.addMessages('title = <strong>Hello</strong> World');
+    mc.addMessages('title2 = This is <a>a link</a>!');
+    yield mc;
+  }
+
+  window.onload = async function () {
+    SimpleTest.waitForExplicitFinish();
+
+    const domLoc = new DOMLocalization(
+      window,
+      [],
+      mockGenerateMessages
+    );
+
+    const p1 = document.querySelectorAll('p')[0];
+    const p2 = document.querySelectorAll('p')[1];
+    const a = p2.querySelector('a');
+    a.addEventListener('click', function() {
+      SimpleTest.finish();
+    });
+
+    await domLoc.translateFragment(document.body);
+
+
+    is(p1.querySelector('strong').textContent, "Hello");
+
+    is(p2.querySelector('a').getAttribute('href'), "http://www.mozilla.org");
+    is(p2.querySelector('a').textContent, "a link");
+
+    a.click();
+  };
+  </script>
+</head>
+<body>
+  <p data-l10n-id="title" />
+  <p data-l10n-id="title2">
+    <a href="http://www.mozilla.org"></a>
+  </p>
+</body>
+</html>

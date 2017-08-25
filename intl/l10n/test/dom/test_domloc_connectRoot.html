@@ -1,0 +1,39 @@
+<!DOCTYPE HTML>
+<html>
+<head>
+  <meta charset="utf-8">
+  <title>Test DOMLocalization.prototype.connectRoot</title>
+  <script type="application/javascript" src="chrome://mochikit/content/tests/SimpleTest/SimpleTest.js"></script>
+  <link rel="stylesheet" type="text/css" href="chrome://mochikit/content/tests/SimpleTest/test.css">
+  <script type="application/javascript">
+  "use strict";
+  const { DOMLocalization } =
+    Components.utils.import("resource://gre/modules/DOMLocalization.jsm", {});
+
+  function * mockGenerateMessages(locales, resourceIds) {
+  }
+
+  window.onload = async function () {
+    SimpleTest.waitForExplicitFinish();
+
+    const domLoc = new DOMLocalization(
+      window,
+      [],
+      mockGenerateMessages
+    );
+
+
+    const frag = document.querySelectorAll('div')[0];
+    domLoc.connectRoot(frag);
+
+    is(domLoc.roots.has(frag), true);
+
+    SimpleTest.finish();
+  };
+  </script>
+</head>
+<body>
+  <div>
+  </div>
+</body>
+</html>
