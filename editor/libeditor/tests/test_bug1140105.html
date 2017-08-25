@@ -38,13 +38,11 @@ SimpleTest.waitForFocus(function() {
   var allHas = {};
   var editor = getEditor();
 
-  var atomService = SpecialPowers.Cc["@mozilla.org/atom-service;1"].getService(SpecialPowers.Ci.nsIAtomService);
-  var propAtom = atomService.getAtom("font");
-  editor.getInlineProperty(propAtom, "face", "Arial", firstHas, anyHas, allHas);
+  editor.getInlineProperty("font", "face", "Arial", firstHas, anyHas, allHas);
   is(firstHas.value, true, "Test for Arial: firstHas: true expected");
   is(anyHas.value, true, "Test for Arial: anyHas: true expected");
   is(allHas.value, true, "Test for Arial: allHas: true expected");
-  editor.getInlineProperty(propAtom, "face", "Courier", firstHas, anyHas, allHas);
+  editor.getInlineProperty("font", "face", "Courier", firstHas, anyHas, allHas);
   is(firstHas.value, false, "Test for Courier: firstHas: false expected");
   is(anyHas.value, false, "Test for Courier: anyHas: false expected");
   is(allHas.value, false, "Test for Courier: allHas: false expected");
