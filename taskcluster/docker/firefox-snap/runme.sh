@@ -69,14 +69,15 @@ cat $TARGET.checksums
 cat signing_manifest.json
 
 
-# Upload Beta snaps to Ubuntu Snap Store (edge, aka testing channel)
-# TODO: Parametrize "edge" channel
+# Upload Beta snaps to Ubuntu Snap Store (No channel)
+# TODO: Add a release channel once ready for broader audience
 # TODO: Don't filter out non-beta releases
+# TODO: Parametrize channel depending on beta vs release
 # TODO: Make this part an independent task
 if [[ $VERSION =~ ^[0-9]+\.0b[0-9]+$ ]]; then
-  echo "Beta version detected. Uploading to Ubuntu Store (edge channel)..."
+  echo "Beta version detected. Uploading to Ubuntu Store (no channel)..."
   bash "$SCRIPT_DIRECTORY/fetch_macaroons.sh" 'http://taskcluster/secrets/v1/secret/project/releng/snapcraft/firefox/edge'
-  snapcraft push "$TARGET_FULL_PATH" --release 'edge'
+  snapcraft push "$TARGET_FULL_PATH"
 else
   echo "Non-beta version detected. Nothing else to do."
 fi
