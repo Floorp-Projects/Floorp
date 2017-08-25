@@ -927,15 +927,7 @@ nsChromeRegistryChrome::ManifestResource(ManifestProcessingContext& cx, int line
     return;
   }
 
-  // By default, Firefox resources are not content-accessible unless the
-  // manifests opts in.
-  bool contentAccessible = (flags & nsChromeRegistry::CONTENT_ACCESSIBLE);
-
-  uint32_t substitutionFlags = 0;
-  if (contentAccessible) {
-    substitutionFlags |= nsIResProtocolHandler::ALLOW_CONTENT_ACCESS;
-  }
-  rv = rph->SetSubstitutionWithFlags(host, resolved, substitutionFlags);
+  rv = rph->SetSubstitution(host, resolved);
   if (NS_FAILED(rv)) {
     LogMessageWithContext(cx.GetManifestURI(), lineno, nsIScriptError::warningFlag,
                           "Warning: cannot set substitution for '%s'.",

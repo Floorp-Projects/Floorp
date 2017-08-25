@@ -53,7 +53,6 @@
 #include "nsIURIFixup.h"
 #include "nsCDefaultURIFixup.h"
 #include "nsIChromeRegistry.h"
-#include "nsIResProtocolHandler.h"
 #include "nsIContentSecurityPolicy.h"
 #include "nsIAsyncVerifyRedirectCallback.h"
 #include "mozilla/Preferences.h"
@@ -916,9 +915,10 @@ nsScriptSecurityManager::CheckLoadURIFlags(nsIURI *aSourceURI,
     NS_ENSURE_SUCCESS(rv, rv);
     if (hasFlags) {
         if (aFlags & nsIScriptSecurityManager::ALLOW_CHROME) {
-            // For now, don't change behavior for moz-icon:// and just allow it.
-            if (!targetScheme.EqualsLiteral("chrome")
-                    && !targetScheme.EqualsLiteral("resource")) {
+
+            // For now, don't change behavior for resource:// or moz-icon:// and
+            // just allow them.
+            if (!targetScheme.EqualsLiteral("chrome")) {
                 return NS_OK;
             }
 
@@ -939,50 +939,14 @@ nsScriptSecurityManager::CheckLoadURIFlags(nsIURI *aSourceURI,
                 return NS_OK;
             }
 
-            if (targetScheme.EqualsLiteral("resource")) {
-                // Mochitests that need to load resource:// URIs not declared
-                // content-accessible in manifests should set the preference
-                // "security.all_resource_uri_content_accessible" true.
-                static bool sSecurityPrefCached = false;
-                static bool sAllResourceUriContentAccessible = false;
-                if (!sSecurityPrefCached) {
-                    sSecurityPrefCached = true;
-                    Preferences::AddBoolVarCache(
-                            &sAllResourceUriContentAccessible,
-                            "security.all_resource_uri_content_accessible",
-                            false);
-                }
-                if (sAllResourceUriContentAccessible) {
-                    return NS_OK;
-                }
-
-                nsCOMPtr<nsIProtocolHandler> ph;
-                rv = sIOService->GetProtocolHandler("resource", getter_AddRefs(ph));
-                NS_ENSURE_SUCCESS(rv, rv);
-                if (!ph) {
-                    return NS_ERROR_DOM_BAD_URI;
-                }
-
-                nsCOMPtr<nsIResProtocolHandler> rph = do_QueryInterface(ph);
-                if (!rph) {
-                    return NS_ERROR_DOM_BAD_URI;
-                }
-
+            // Allow the load only if the chrome package is whitelisted.
+            nsCOMPtr<nsIXULChromeRegistry> reg(do_GetService(
+                                                 NS_CHROMEREGISTRY_CONTRACTID));
+            if (reg) {
                 bool accessAllowed = false;
-                rph->AllowContentToAccess(aTargetBaseURI, &accessAllowed);
+                reg->AllowContentToAccess(aTargetBaseURI, &accessAllowed);
                 if (accessAllowed) {
                     return NS_OK;
-                }
-            } else {
-                // Allow the load only if the chrome package is whitelisted.
-                nsCOMPtr<nsIXULChromeRegistry> reg(
-                        do_GetService(NS_CHROMEREGISTRY_CONTRACTID));
-                if (reg) {
-                    bool accessAllowed = false;
-                    reg->AllowContentToAccess(aTargetBaseURI, &accessAllowed);
-                    if (accessAllowed) {
-                        return NS_OK;
-                    }
                 }
             }
         }
