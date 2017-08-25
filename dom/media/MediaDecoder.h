@@ -358,14 +358,6 @@ private:
     return mAbstractMainThread;
   }
 
-  typedef MozPromise<RefPtr<CDMProxy>, bool /* aIgnored */,
-                     /* IsExclusive = */ true>
-    CDMProxyPromise;
-
-  // Resolved when a CDMProxy is available and the capabilities are known or
-  // rejected when this decoder is about to shut down.
-  RefPtr<CDMProxyPromise> RequestCDMProxy() const;
-
   void SetCDMProxy(CDMProxy* aProxy);
 
   void EnsureTelemetryReported();
@@ -517,9 +509,6 @@ private:
   //
   // Explicitly prievate to force access via accessors.
   RefPtr<MediaDecoderStateMachine> mDecoderStateMachine;
-
-  MozPromiseHolder<CDMProxyPromise> mCDMProxyPromiseHolder;
-  RefPtr<CDMProxyPromise> mCDMProxyPromise;
 
 protected:
   void NotifyDataArrivedInternal();
