@@ -2450,14 +2450,6 @@ JSFunction*
 js::DefineFunction(JSContext* cx, HandleObject obj, HandleId id, Native native,
                    unsigned nargs, unsigned flags, AllocKind allocKind /* = AllocKind::FUNCTION */)
 {
-    /*
-     * JSFUN_STUB_GSOPS is a request flag only, not stored in fun->flags or
-     * the defined property's attributes. This allows us to encode another,
-     * internal flag using the same bit, JSFUN_EXPR_CLOSURE -- see jsfun.h
-     * for more on this.
-     */
-    flags &= ~JSFUN_STUB_GSOPS;
-
     RootedAtom atom(cx, IdToFunctionName(cx, id));
     if (!atom)
         return nullptr;

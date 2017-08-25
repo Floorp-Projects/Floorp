@@ -658,26 +658,26 @@ RegisterXPCTestComponents(JSContext* cx, unsigned argc, Value* vp)
 #endif
 
 static const JSFunctionSpec glob_functions[] = {
-    JS_FS("print",           Print,          0,0),
-    JS_FS("readline",        ReadLine,       1,0),
-    JS_FS("load",            Load,           1,0),
-    JS_FS("quit",            Quit,           0,0),
-    JS_FS("version",         Version,        1,0),
-    JS_FS("dumpXPC",         DumpXPC,        1,0),
-    JS_FS("dump",            Dump,           1,0),
-    JS_FS("gc",              GC,             0,0),
+    JS_FN("print",           Print,          0,0),
+    JS_FN("readline",        ReadLine,       1,0),
+    JS_FN("load",            Load,           1,0),
+    JS_FN("quit",            Quit,           0,0),
+    JS_FN("version",         Version,        1,0),
+    JS_FN("dumpXPC",         DumpXPC,        1,0),
+    JS_FN("dump",            Dump,           1,0),
+    JS_FN("gc",              GC,             0,0),
 #ifdef JS_GC_ZEAL
-    JS_FS("gczeal",          GCZeal,         1,0),
+    JS_FN("gczeal",          GCZeal,         1,0),
 #endif
-    JS_FS("options",         Options,        0,0),
-    JS_FS("sendCommand",     SendCommand,    1,0),
-    JS_FS("atob",            xpc::Atob,      1,0),
-    JS_FS("btoa",            xpc::Btoa,      1,0),
-    JS_FS("setInterruptCallback", SetInterruptCallback, 1,0),
-    JS_FS("simulateActivityCallback", SimulateActivityCallback, 1,0),
-    JS_FS("registerAppManifest", RegisterAppManifest, 1, 0),
+    JS_FN("options",         Options,        0,0),
+    JS_FN("sendCommand",     SendCommand,    1,0),
+    JS_FN("atob",            xpc::Atob,      1,0),
+    JS_FN("btoa",            xpc::Btoa,      1,0),
+    JS_FN("setInterruptCallback", SetInterruptCallback, 1,0),
+    JS_FN("simulateActivityCallback", SimulateActivityCallback, 1,0),
+    JS_FN("registerAppManifest", RegisterAppManifest, 1, 0),
 #ifdef ENABLE_TESTS
-    JS_FS("registerXPCTestComponents", RegisterXPCTestComponents, 0, 0),
+    JS_FN("registerXPCTestComponents", RegisterXPCTestComponents, 0, 0),
 #endif
     JS_FS_END
 };

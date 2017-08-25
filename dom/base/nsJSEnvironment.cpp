@@ -1098,10 +1098,10 @@ JProfSaveCircularJS(JSContext *cx, unsigned argc, JS::Value *vp)
 }
 
 static const JSFunctionSpec JProfFunctions[] = {
-    JS_FS("JProfStartProfiling",        JProfStartProfilingJS,      0, 0),
-    JS_FS("JProfStopProfiling",         JProfStopProfilingJS,       0, 0),
-    JS_FS("JProfClearCircular",         JProfClearCircularJS,       0, 0),
-    JS_FS("JProfSaveCircular",          JProfSaveCircularJS,        0, 0),
+    JS_FN("JProfStartProfiling",        JProfStartProfilingJS,      0, 0),
+    JS_FN("JProfStopProfiling",         JProfStopProfilingJS,       0, 0),
+    JS_FN("JProfClearCircular",         JProfClearCircularJS,       0, 0),
+    JS_FN("JProfSaveCircular",          JProfSaveCircularJS,        0, 0),
     JS_FS_END
 };
 

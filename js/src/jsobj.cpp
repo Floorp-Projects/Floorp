@@ -2977,10 +2977,6 @@ static bool
 DefineFunctionFromSpec(JSContext* cx, HandleObject obj, const JSFunctionSpec* fs, unsigned flags,
                        DefineAsIntrinsic intrinsic)
 {
-    // JSFUN_STUB_GSOPS is a request flag only, not stored in fun->flags or
-    // the defined property's attributes.
-    flags &= ~JSFUN_STUB_GSOPS;
-
     RootedId id(cx);
     if (!PropertySpecNameToId(cx, fs->name, &id))
         return false;
