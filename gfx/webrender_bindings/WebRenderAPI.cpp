@@ -435,9 +435,25 @@ ResourceUpdateQueue::ResourceUpdateQueue()
   mUpdates = wr_resource_updates_new();
 }
 
+ResourceUpdateQueue::ResourceUpdateQueue(ResourceUpdateQueue&& aFrom)
+{
+  mUpdates = aFrom.mUpdates;
+  aFrom.mUpdates = nullptr;
+}
+
+ResourceUpdateQueue&
+ResourceUpdateQueue::operator=(ResourceUpdateQueue&& aFrom)
+{
+  mUpdates = aFrom.mUpdates;
+  aFrom.mUpdates = nullptr;
+  return *this;
+}
+
 ResourceUpdateQueue::~ResourceUpdateQueue()
 {
-  wr_resource_updates_delete(mUpdates);
+  if (mUpdates) {
+    wr_resource_updates_delete(mUpdates);
+  }
 }
 
 void
