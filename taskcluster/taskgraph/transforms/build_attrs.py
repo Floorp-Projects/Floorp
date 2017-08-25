@@ -4,6 +4,7 @@
 from __future__ import absolute_import, print_function, unicode_literals
 
 from taskgraph.transforms.base import TransformSequence
+from taskgraph.util.platforms import platform_family
 
 transforms = TransformSequence()
 
@@ -30,4 +31,19 @@ def set_build_attributes(config, jobs):
             'build_type': build_type,
         })
 
+        yield job
+
+
+@transforms.add
+def set_schedules_optimization(config, jobs):
+    """Set the `skip-unless-affected` optimization based on the build platform."""
+    for job in jobs:
+        # don't add skip-unless-schedules if there's already a when defined
+        if 'when' in job:
+            yield job
+            continue
+
+        build_platform = job['attributes']['build_platform']
+        job.setdefault('optimization',
+                       {'skip-unless-schedules': [platform_family(build_platform)]})
         yield job
