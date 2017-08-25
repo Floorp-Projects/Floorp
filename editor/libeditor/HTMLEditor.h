@@ -229,12 +229,6 @@ public:
   }
   nsresult GetElementZIndex(Element* aElement, int32_t* aZindex);
 
-  nsresult AddDefaultProperty(nsIAtom* aProperty,
-                              const nsAString& aAttribute,
-                              const nsAString& aValue);
-  nsresult RemoveDefaultProperty(nsIAtom* aProperty,
-                                 const nsAString& aAttribute,
-                                 const nsAString& aValue);
   nsresult SetInlineProperty(nsIAtom* aProperty,
                              const nsAString& aAttribute,
                              const nsAString& aValue);
@@ -759,7 +753,6 @@ protected:
                                 const nsAString* aAttribute,
                                 nsIContent** aOutLeftNode = nullptr,
                                 nsIContent** aOutRightNode = nullptr);
-  nsresult ApplyDefaultProperties();
   nsresult RemoveStyleInside(nsIContent& aNode,
                              nsIAtom* aProperty,
                              const nsAString* aAttribute,
@@ -820,8 +813,7 @@ protected:
                                  bool* aFirst,
                                  bool* aAny,
                                  bool* aAll,
-                                 nsAString* outValue,
-                                 bool aCheckDefaults = true);
+                                 nsAString* outValue);
   bool HasStyleOrIdOrClass(Element* aElement);
   nsresult RemoveElementIfNoStyleOrIdOrClass(Element& aElement);
 
@@ -901,9 +893,6 @@ protected:
   // Maintain a list of associated style sheets and their urls.
   nsTArray<nsString> mStyleSheetURLs;
   nsTArray<RefPtr<StyleSheet>> mStyleSheets;
-
-  // an array for holding default style settings
-  nsTArray<PropItem*> mDefaultStyles;
 
 protected:
   // ANONYMOUS UTILS
