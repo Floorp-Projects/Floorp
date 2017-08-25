@@ -76,12 +76,6 @@ extern const js::ClassExtension XPC_WN_JSClassExtension;
       ? XPC_WN_MaybeResolvingDeletePropertyStub \
       : XPC_WN_CannotDeletePropertyStub, \
     \
-    /* getProperty */ \
-    nullptr, \
-    \
-    /* setProperty */ \
-    nullptr, \
-    \
     /* enumerate */ \
     ((_flags) & XPC_SCRIPTABLE_WANT_NEWENUMERATE) \
     ? nullptr /* We will use newEnumerate set below in this case */ \

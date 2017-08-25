@@ -616,8 +616,6 @@ XPC_WN_NoHelper_Resolve(JSContext* cx, HandleObject obj, HandleId id, bool* reso
 static const js::ClassOps XPC_WN_NoHelper_JSClassOps = {
     XPC_WN_OnlyIWrite_AddPropertyStub, // addProperty
     XPC_WN_CannotDeletePropertyStub,   // delProperty
-    nullptr,                           // getProperty
-    nullptr,                           // setProperty
     XPC_WN_Shared_Enumerate,           // enumerate
     nullptr,                           // newEnumerate
     XPC_WN_NoHelper_Resolve,           // resolve
@@ -1057,8 +1055,6 @@ XPC_WN_ModsAllowed_Proto_Resolve(JSContext* cx, HandleObject obj, HandleId id, b
 static const js::ClassOps XPC_WN_ModsAllowed_Proto_JSClassOps = {
     nullptr,                            // addProperty
     nullptr,                            // delProperty
-    nullptr,                            // getProperty
-    nullptr,                            // setProperty
     XPC_WN_Shared_Proto_Enumerate,      // enumerate
     nullptr,                            // newEnumerate
     XPC_WN_ModsAllowed_Proto_Resolve,   // resolve
@@ -1138,8 +1134,6 @@ XPC_WN_NoMods_Proto_Resolve(JSContext* cx, HandleObject obj, HandleId id, bool* 
 static const js::ClassOps XPC_WN_NoMods_Proto_JSClassOps = {
     XPC_WN_OnlyIWrite_Proto_AddPropertyStub,   // addProperty
     XPC_WN_CannotDeletePropertyStub,           // delProperty
-    nullptr,                                   // getProperty
-    nullptr,                                   // setProperty
     XPC_WN_Shared_Proto_Enumerate,             // enumerate
     nullptr,                                   // newEnumerate
     XPC_WN_NoMods_Proto_Resolve,               // resolve
@@ -1235,8 +1229,6 @@ static_assert(((XPC_WRAPPER_FLAGS >> JSCLASS_RESERVED_SLOTS_SHIFT) &
 static const js::ClassOps XPC_WN_Tearoff_JSClassOps = {
     XPC_WN_OnlyIWrite_AddPropertyStub,  // addProperty
     XPC_WN_CannotDeletePropertyStub,    // delProperty
-    nullptr,                            // getProperty
-    nullptr,                            // setProperty
     XPC_WN_TearOff_Enumerate,           // enumerate
     nullptr,                            // newEnumerate
     XPC_WN_TearOff_Resolve,             // resolve
