@@ -52,9 +52,6 @@ public:
 
   virtual mozilla::ipc::IPCResult RecvDeactivate(PBrowserChild* aTab) override;
 
-  virtual mozilla::ipc::IPCResult RecvParentActivated(PBrowserChild* aTab,
-                                                      const bool& aActivated) override;
-
   virtual already_AddRefed<nsIEventTarget> GetEventTargetFor(TabChild* aTabChild) override;
 
   FORWARD_SHMEM_ALLOCATOR_TO(PContentBridgeChild)

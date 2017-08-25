@@ -44,20 +44,14 @@ async function run_tests_in_principal(principal, title) {
   const [,, threadClient] = await attachTestTabAndResume(gClient, title);
   gThreadClient = threadClient;
 
-  // Bug 1390701 should remove the following condition.
-  if (principal === null) {
-    // Test objects created in the debuggee.
-    await testPrincipal(undefined, false);
-  }
+  // Test objects created in the debuggee.
+  await testPrincipal(undefined, false);
 
-  // Bug 1390701 should remove the following condition.
-  if (false) {
-    // Test objects created in a new system principal with Xrays.
-    await testPrincipal(systemPrincipal, true);
+  // Test objects created in a new system principal with Xrays.
+  await testPrincipal(systemPrincipal, true);
 
-    // Test objects created in a new system principal without Xrays.
-    await testPrincipal(systemPrincipal, false);
-  }
+  // Test objects created in a new system principal without Xrays.
+  await testPrincipal(systemPrincipal, false);
 
   // Test objects created in a new null principal with Xrays.
   await testPrincipal(null, true);

@@ -48,7 +48,7 @@ public:
       mCallback = Move(aCallback);
       mAsync = aAsync;
       if (IsAsync()) {
-        // Don't call do_GetCurrentThread() is this is called synchronously
+        // Don't call do_GetCurrentThread() if this is called synchronously
         // because 1. it's unnecessary, and 2. more importantly, it might create
         // one if called from a native thread, and the thread will be leaked.
         mTargetThread = do_GetCurrentThread();

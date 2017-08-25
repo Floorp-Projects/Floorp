@@ -3483,13 +3483,6 @@ ContentChild::RecvDeactivate(PBrowserChild* aTab)
 }
 
 mozilla::ipc::IPCResult
-ContentChild::RecvParentActivated(PBrowserChild* aTab, const bool& aActivated)
-{
-  TabChild* tab = static_cast<TabChild*>(aTab);
-  return tab->RecvParentActivated(aActivated);
-}
-
-mozilla::ipc::IPCResult
 ContentChild::RecvProvideAnonymousTemporaryFile(const uint64_t& aID,
                                                 const FileDescOrError& aFDOrError)
 {
@@ -3627,13 +3620,17 @@ ContentChild::RecvResumeInputEventQueue()
 already_AddRefed<nsIEventTarget>
 ContentChild::GetSpecificMessageEventTarget(const Message& aMsg)
 {
-  if (aMsg.type() == PJavaScript::Msg_DropTemporaryStrongReferences__ID
-      || aMsg.type() == PJavaScript::Msg_DropObject__ID
-      || aMsg.type() == PContent::Msg_NotifyVisited__ID) {
-    return do_AddRef(SystemGroup::EventTargetFor(TaskCategory::Other));
+  switch(aMsg.type()) {
+    case PJavaScript::Msg_DropTemporaryStrongReferences__ID:
+    case PJavaScript::Msg_DropObject__ID:
+    case PContent::Msg_NotifyVisited__ID:
+    case PContent::Msg_DataStoragePut__ID:
+    case PContent::Msg_DataStorageRemove__ID:
+    case PContent::Msg_DataStorageClear__ID:
+      return do_AddRef(SystemGroup::EventTargetFor(TaskCategory::Other));
+    default:
+      return nullptr;
   }
-
-  return nullptr;
 }
 
 #ifdef NIGHTLY_BUILD

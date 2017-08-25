@@ -30,23 +30,6 @@ CallQueryReferent(T* aSource, DestinationType** aDestination)
 }
 
 
-class MOZ_STACK_CLASS nsQueryReferent final : public nsCOMPtr_helper
-{
-public:
-  nsQueryReferent(nsIWeakReference* aWeakPtr, nsresult* aError)
-    : mWeakPtr(aWeakPtr)
-    , mErrorPtr(aError)
-  {
-  }
-
-  virtual nsresult NS_FASTCALL operator()(const nsIID& aIID, void**) const
-    override;
-
-private:
-  nsIWeakReference* MOZ_NON_OWNING_REF mWeakPtr;
-  nsresult*          mErrorPtr;
-};
-
 inline const nsQueryReferent
 do_QueryReferent(nsIWeakReference* aRawPtr, nsresult* aError = 0)
 {
