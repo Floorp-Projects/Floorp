@@ -2576,16 +2576,16 @@ FragmentOrElement::FireNodeRemovedForChildren()
 }
 
 void
-FragmentOrElement::AddSizeOfExcludingThis(SizeOfState& aState,
-                                          nsStyleSizes& aSizes,
+FragmentOrElement::AddSizeOfExcludingThis(nsWindowSizes& aSizes,
                                           size_t* aNodeSize) const
 {
-  nsIContent::AddSizeOfExcludingThis(aState, aSizes, aNodeSize);
-  *aNodeSize += mAttrsAndChildren.SizeOfExcludingThis(aState.mMallocSizeOf);
+  nsIContent::AddSizeOfExcludingThis(aSizes, aNodeSize);
+  *aNodeSize +=
+    mAttrsAndChildren.SizeOfExcludingThis(aSizes.mState.mMallocSizeOf);
 
   nsDOMSlots* slots = GetExistingDOMSlots();
   if (slots) {
-    *aNodeSize += slots->SizeOfIncludingThis(aState.mMallocSizeOf);
+    *aNodeSize += slots->SizeOfIncludingThis(aSizes.mState.mMallocSizeOf);
   }
 }
 

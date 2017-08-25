@@ -406,12 +406,11 @@ HTMLAnchorElement::IntrinsicState() const
 }
 
 void
-HTMLAnchorElement::AddSizeOfExcludingThis(SizeOfState& aState,
-                                          nsStyleSizes& aSizes,
+HTMLAnchorElement::AddSizeOfExcludingThis(nsWindowSizes& aSizes,
                                           size_t* aNodeSize) const
 {
-  nsGenericHTMLElement::AddSizeOfExcludingThis(aState, aSizes, aNodeSize);
-  *aNodeSize += Link::SizeOfExcludingThis(aState);
+  nsGenericHTMLElement::AddSizeOfExcludingThis(aSizes, aNodeSize);
+  *aNodeSize += Link::SizeOfExcludingThis(aSizes.mState);
 }
 
 } // namespace dom
