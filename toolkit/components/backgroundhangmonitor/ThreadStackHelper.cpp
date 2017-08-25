@@ -247,6 +247,10 @@ GetPathAfterComponent(const char* filename, const char (&component)[LEN]) {
 void
 ThreadStackHelper::CollectPseudoEntry(const js::ProfileEntry& aEntry)
 {
+  HangStack::Frame* backFrame = mStackToFill->empty()
+    ? nullptr
+    : &mStackToFill->back();
+
   // For non-js frames we just include the raw label.
   if (!aEntry.isJs()) {
     const char* label = aEntry.label();
@@ -260,6 +264,12 @@ ThreadStackHelper::CollectPseudoEntry(const js::ProfileEntry& aEntry)
   }
 
   if (!IsChromeJSScript(aEntry.script())) {
+    // NOTE: Deduplicate consecutive (content script) frames.
+    if (backFrame &&
+        backFrame->GetKind() == HangStack::Frame::Kind::STRING &&
+        !strcmp(backFrame->AsString(), "(content script)")) {
+      return;
+    }
     TryAppendFrame(HangStack::Frame("(content script)"));
     return;
   }
