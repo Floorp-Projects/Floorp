@@ -13,6 +13,9 @@ use std::time::{Instant, Duration};
 use std::cell::{Cell, UnsafeCell};
 use std::ptr;
 use std::mem;
+use std::thread::LocalKey;
+#[cfg(not(feature = "nightly"))]
+use std::panic;
 use smallvec::SmallVec;
 use rand::{self, XorShiftRng, Rng};
 use thread_parker::ThreadParker;
@@ -21,7 +24,6 @@ use util::UncheckedOptionExt;
 
 static NUM_THREADS: AtomicUsize = ATOMIC_USIZE_INIT;
 static HASHTABLE: AtomicUsize = ATOMIC_USIZE_INIT;
-thread_local!(static THREAD_DATA: ThreadData = ThreadData::new());
 
 // Even with 3x more buckets than threads, the memory overhead per thread is
 // still only a few hundred bytes per thread.
@@ -149,6 +151,31 @@ impl ThreadData {
             park_token: Cell::new(DEFAULT_PARK_TOKEN),
         }
     }
+}
+
+// Returns a ThreadData structure for the current thread
+unsafe fn get_thread_data(local: &mut Option<ThreadData>) -> &ThreadData {
+    // Try to read from thread-local storage, but return None if the TLS has
+    // already been destroyed.
+    #[cfg(feature = "nightly")]
+    fn try_get_tls(key: &'static LocalKey<ThreadData>) -> Option<*const ThreadData> {
+        key.try_with(|x| x as *const ThreadData).ok()
+    }
+    #[cfg(not(feature = "nightly"))]
+    fn try_get_tls(key: &'static LocalKey<ThreadData>) -> Option<*const ThreadData> {
+        panic::catch_unwind(|| key.with(|x| x as *const ThreadData)).ok()
+    }
+
+    // Unlike word_lock::ThreadData, parking_lot::ThreadData is always expensive
+    // to construct. Try to use a thread-local version if possible.
+    thread_local!(static THREAD_DATA: ThreadData = ThreadData::new());
+    if let Some(tls) = try_get_tls(&THREAD_DATA) {
+        return &*tls;
+    }
+
+    // Otherwise just create a ThreadData on the stack
+    *local = Some(ThreadData::new());
+    local.as_ref().unwrap()
 }
 
 impl Drop for ThreadData {
@@ -512,7 +539,8 @@ unsafe fn park_internal(key: usize,
                         timeout: Option<Instant>)
                         -> ParkResult {
     // Grab our thread data, this also ensures that the hash table exists
-    let thread_data = &*THREAD_DATA.with(|x| x as *const ThreadData);
+    let mut thread_data = None;
+    let thread_data = get_thread_data(&mut thread_data);
 
     // Lock the bucket for the given key
     let bucket = lock_bucket(key);

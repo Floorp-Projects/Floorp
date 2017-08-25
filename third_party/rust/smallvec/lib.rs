@@ -5,9 +5,37 @@
 //! Small vectors in various sizes. These store a certain number of elements inline, and fall back
 //! to the heap for larger allocations.  This can be a useful optimization for improving cache
 //! locality and reducing allocator traffic for workloads that fit within the inline buffer.
+//!
+//! ## no_std support
+//!
+//! By default, `smallvec` depends on `libstd`. However, it can be configured to use the unstable
+//! `liballoc` API instead, for use on platforms that have `liballoc` but not `libstd`.  This
+//! configuration is currently unstable and is not guaranteed to work on all versions of Rust.
+//!
+//! To depend on `smallvec` without `libstd`, use `default-features = false` in the `smallvec`
+//! section of Cargo.toml to disable its `"std"` feature.
+
+#![cfg_attr(not(feature = "std"), no_std)]
+#![cfg_attr(not(feature = "std"), feature(alloc))]
+
+
+#[cfg(not(feature = "std"))]
+#[cfg_attr(test, macro_use)]
+extern crate alloc;
+
+#[cfg(not(feature = "std"))]
+use alloc::Vec;
 
 #[cfg(feature="heapsizeof")]
 extern crate heapsize;
+
+#[cfg(feature = "serde")]
+extern crate serde;
+
+#[cfg(not(feature = "std"))]
+mod std {
+    pub use core::*;
+}
 
 use std::borrow::{Borrow, BorrowMut};
 use std::cmp;
@@ -18,8 +46,16 @@ use std::mem;
 use std::ops;
 use std::ptr;
 use std::slice;
+#[cfg(feature = "std")]
+use std::io;
 #[cfg(feature="heapsizeof")]
 use std::os::raw::c_void;
+#[cfg(feature = "serde")]
+use serde::ser::{Serialize, Serializer, SerializeSeq};
+#[cfg(feature = "serde")]
+use serde::de::{Deserialize, Deserializer, SeqAccess, Visitor};
+#[cfg(feature = "serde")]
+use std::marker::PhantomData;
 
 #[cfg(feature="heapsizeof")]
 use heapsize::{HeapSizeOf, heap_size_of};
@@ -68,6 +104,36 @@ impl<T> VecLike<T> for Vec<T> {
     #[inline]
     fn push(&mut self, value: T) {
         Vec::push(self, value);
+    }
+}
+
+/// Trait to be implemented by a collection that can be extended from a slice
+///
+/// ## Example
+///
+/// ```rust
+/// use smallvec::{ExtendFromSlice, SmallVec8};
+///
+/// fn initialize<V: ExtendFromSlice<u8>>(v: &mut V) {
+///     v.extend_from_slice(b"Test!");
+/// }
+///
+/// let mut vec = Vec::new();
+/// initialize(&mut vec);
+/// assert_eq!(&vec, b"Test!");
+///
+/// let mut small_vec = SmallVec8::new();
+/// initialize(&mut small_vec);
+/// assert_eq!(&small_vec as &[_], b"Test!");
+/// ```
+pub trait ExtendFromSlice<T>: VecLike<T> {
+    /// Extends a collection from a slice of its element type
+    fn extend_from_slice(&mut self, other: &[T]);
+}
+
+impl<T: Clone> ExtendFromSlice<T> for Vec<T> {
+    fn extend_from_slice(&mut self, other: &[T]) {
+        Vec::extend_from_slice(self, other)
     }
 }
 
@@ -229,6 +295,25 @@ impl<A: Array> SmallVec<A> {
                 ptr: ptr,
                 capacity: cap
             }
+        }
+    }
+
+    /// Constructs a new `SmallVec` on the stack from an `A` without
+    /// copying elements.
+    ///
+    /// ```rust
+    /// use smallvec::SmallVec;
+    ///
+    /// let buf = [1, 2, 3, 4, 5];
+    /// let small_vec: SmallVec<_> = SmallVec::from_buf(buf);
+    ///
+    /// assert_eq!(&*small_vec, &[1, 2, 3, 4, 5]);
+    /// ```
+    #[inline]
+    pub fn from_buf(buf: A) -> SmallVec<A> {
+        SmallVec {
+            len: A::size(),
+            data: SmallVecData::Inline { array: buf },
         }
     }
 
@@ -520,6 +605,24 @@ impl<A: Array> SmallVec<A> {
             }
         }
     }
+
+    /// Retains only the elements specified by the predicate.
+    ///
+    /// In other words, remove all elements `e` such that `f(&e)` returns `false`.
+    /// This method operates in place and preserves the order of the retained
+    /// elements.
+    pub fn retain<F: FnMut(&A::Item) -> bool>(&mut self, mut f: F) {
+        let mut del = 0;
+        let len = self.len;
+        for i in 0..len {
+            if !f(&self[i]) {
+                del += 1;
+            } else if del > 0 {
+                self.swap(i - del, i);
+            }
+        }
+        self.truncate(len - del);
+    }
 }
 
 impl<A: Array> SmallVec<A> where A::Item: Copy {
@@ -617,6 +720,73 @@ impl<A: Array> BorrowMut<[A::Item]> for SmallVec<A> {
     }
 }
 
+#[cfg(feature = "std")]
+impl<A: Array<Item = u8>> io::Write for SmallVec<A> {
+    #[inline]
+    fn write(&mut self, buf: &[u8]) -> io::Result<usize> {
+        self.extend_from_slice(buf);
+        Ok(buf.len())
+    }
+
+    #[inline]
+    fn write_all(&mut self, buf: &[u8]) -> io::Result<()> {
+        self.extend_from_slice(buf);
+        Ok(())
+    }
+
+    #[inline]
+    fn flush(&mut self) -> io::Result<()> {
+        Ok(())
+    }
+}
+
+#[cfg(feature = "serde")]
+impl<A: Array> Serialize for SmallVec<A> where A::Item: Serialize {
+    fn serialize<S: Serializer>(&self, serializer: S) -> Result<S::Ok, S::Error> {
+        let mut state = serializer.serialize_seq(Some(self.len()))?;
+        for item in self {
+            state.serialize_element(&item)?;
+        }
+        state.end()
+    }
+}
+
+#[cfg(feature = "serde")]
+impl<'de, A: Array> Deserialize<'de> for SmallVec<A> where A::Item: Deserialize<'de> {
+    fn deserialize<D: Deserializer<'de>>(deserializer: D) -> Result<Self, D::Error> {
+        deserializer.deserialize_seq(SmallVecVisitor{phantom: PhantomData})
+    }
+}
+
+#[cfg(feature = "serde")]
+struct SmallVecVisitor<A> {
+    phantom: PhantomData<A>
+}
+
+#[cfg(feature = "serde")]
+impl<'de, A: Array> Visitor<'de> for SmallVecVisitor<A>
+where A::Item: Deserialize<'de>,
+{
+    type Value = SmallVec<A>;
+
+    fn expecting(&self, formatter: &mut fmt::Formatter) -> fmt::Result {
+        formatter.write_str("a sequence")
+    }
+
+    fn visit_seq<B>(self, mut seq: B) -> Result<Self::Value, B::Error>
+        where
+            B: SeqAccess<'de>,
+    {
+        let mut values = SmallVec::new();
+
+        while let Some(value) = seq.next_element()? {
+            values.push(value);
+        }
+
+        Ok(values)
+    }
+}
+
 impl<'a, A: Array> From<&'a [A::Item]> for SmallVec<A> where A::Item: Clone {
     #[inline]
     fn from(slice: &'a [A::Item]) -> SmallVec<A> {
@@ -649,6 +819,11 @@ impl_index!(ops::RangeFrom<usize>, [A::Item]);
 impl_index!(ops::RangeTo<usize>, [A::Item]);
 impl_index!(ops::RangeFull, [A::Item]);
 
+impl<A: Array> ExtendFromSlice<A::Item> for SmallVec<A> where A::Item: Copy {
+    fn extend_from_slice(&mut self, other: &[A::Item]) {
+        SmallVec::extend_from_slice(self, other)
+    }
+}
 
 impl<A: Array> VecLike<A::Item> for SmallVec<A> {
     #[inline]
@@ -895,8 +1070,21 @@ impl_array!(1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 20, 24, 32, 3
 #[cfg(test)]
 pub mod tests {
     use SmallVec;
-    use std::borrow::ToOwned;
+
     use std::iter::FromIterator;
+
+    #[cfg(feature = "std")]
+    use std::borrow::ToOwned;
+    #[cfg(not(feature = "std"))]
+    use alloc::borrow::ToOwned;
+    #[cfg(feature = "std")]
+    use std::rc::Rc;
+    #[cfg(not(feature = "std"))]
+    use alloc::rc::Rc;
+    #[cfg(not(feature = "std"))]
+    use alloc::boxed::Box;
+    #[cfg(not(feature = "std"))]
+    use alloc::vec::Vec;
 
     #[cfg(feature="heapsizeof")]
     use heapsize::HeapSizeOf;
@@ -1239,6 +1427,7 @@ pub mod tests {
         assert!(c > b);
     }
 
+    #[cfg(feature = "std")]
     #[test]
     fn test_hash() {
         use std::hash::Hash;
@@ -1420,5 +1609,78 @@ pub mod tests {
         let small_vec: SmallVec<[u8; 1]> = SmallVec::from_vec(vec);
         assert_eq!(&*small_vec, &[1, 2, 3, 4, 5]);
         drop(small_vec);
+    }
+
+    #[test]
+    fn test_retain() {
+        // Test inline data storate
+        let mut sv: SmallVec<[i32; 5]> = SmallVec::from_slice(&[1, 2, 3, 3, 4]);
+        sv.retain(|&i| i != 3);
+        assert_eq!(sv.pop(), Some(4));
+        assert_eq!(sv.pop(), Some(2));
+        assert_eq!(sv.pop(), Some(1));
+        assert_eq!(sv.pop(), None);
+
+        // Test spilled data storage
+        let mut sv: SmallVec<[i32; 3]> = SmallVec::from_slice(&[1, 2, 3, 3, 4]);
+        sv.retain(|&i| i != 3);
+        assert_eq!(sv.pop(), Some(4));
+        assert_eq!(sv.pop(), Some(2));
+        assert_eq!(sv.pop(), Some(1));
+        assert_eq!(sv.pop(), None);
+
+        // Test that drop implementations are called for inline.
+        let one = Rc::new(1);
+        let mut sv: SmallVec<[Rc<i32>; 3]> = SmallVec::new();
+        sv.push(Rc::clone(&one));
+        assert_eq!(Rc::strong_count(&one), 2);
+        sv.retain(|_| false);
+        assert_eq!(Rc::strong_count(&one), 1);
+
+        // Test that drop implementations are called for spilled data.
+        let mut sv: SmallVec<[Rc<i32>; 1]> = SmallVec::new();
+        sv.push(Rc::clone(&one));
+        sv.push(Rc::new(2));
+        assert_eq!(Rc::strong_count(&one), 2);
+        sv.retain(|_| false);
+        assert_eq!(Rc::strong_count(&one), 1);
+    }
+
+    #[cfg(feature = "std")]
+    #[test]
+    fn test_write() {
+        use io::Write;
+
+        let data = [1, 2, 3, 4, 5];
+
+        let mut small_vec: SmallVec<[u8; 2]> = SmallVec::new();
+        let len = small_vec.write(&data[..]).unwrap();
+        assert_eq!(len, 5);
+        assert_eq!(small_vec.as_ref(), data.as_ref());
+
+        let mut small_vec: SmallVec<[u8; 2]> = SmallVec::new();
+        small_vec.write_all(&data[..]).unwrap();
+        assert_eq!(small_vec.as_ref(), data.as_ref());
+    }
+
+    extern crate bincode;
+
+    #[cfg(feature = "serde")]
+    #[test]
+    fn test_serde() {
+        use self::bincode::{serialize, deserialize, Bounded};
+        let mut small_vec: SmallVec<[i32; 2]> = SmallVec::new();
+        small_vec.push(1);
+        let encoded = serialize(&small_vec, Bounded(100)).unwrap();
+        let decoded: SmallVec<[i32; 2]> = deserialize(&encoded).unwrap();
+        assert_eq!(small_vec, decoded);
+        small_vec.push(2);
+        // Spill the vec
+        small_vec.push(3);
+        small_vec.push(4);
+        // Check again after spilling.
+        let encoded = serialize(&small_vec, Bounded(100)).unwrap();
+        let decoded: SmallVec<[i32; 2]> = deserialize(&encoded).unwrap();
+        assert_eq!(small_vec, decoded);
     }
 }
