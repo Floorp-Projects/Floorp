@@ -1761,4 +1761,26 @@ MacroAssembler::comment(const char* msg)
     Assembler::comment(msg);
 }
 
+
+void
+MacroAssembler::wasmTruncateDoubleToInt32(FloatRegister input, Register output, Label* oolEntry)
+{
+    as_truncwd(ScratchFloat32Reg, input);
+    as_cfc1(ScratchRegister, Assembler::FCSR);
+    moveFromFloat32(ScratchFloat32Reg, output);
+    as_ext(ScratchRegister, ScratchRegister, 6, 1);
+    ma_b(ScratchRegister, Imm32(0), oolEntry, Assembler::NotEqual);
+}
+
+
+void
+MacroAssembler::wasmTruncateFloat32ToInt32(FloatRegister input, Register output, Label* oolEntry)
+{
+    as_truncws(ScratchFloat32Reg, input);
+    as_cfc1(ScratchRegister, Assembler::FCSR);
+    moveFromFloat32(ScratchFloat32Reg, output);
+    as_ext(ScratchRegister, ScratchRegister, 6, 1);
+    ma_b(ScratchRegister, Imm32(0), oolEntry, Assembler::NotEqual);
+}
+
 //}}} check_macroassembler_style

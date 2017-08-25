@@ -1459,46 +1459,30 @@ CodeGeneratorMIPSShared::visitWasmTruncateToInt32(LWasmTruncateToInt32* lir)
     MWasmTruncateToInt32* mir = lir->mir();
     MIRType fromType = mir->input()->type();
 
+    MOZ_ASSERT(fromType == MIRType::Double || fromType == MIRType::Float32);
+
     auto* ool = new (alloc()) OutOfLineWasmTruncateCheck(mir, input);
     addOutOfLineCode(ool, mir);
 
+    Label* oolEntry = ool->entry();
     if (mir->isUnsigned()) {
-        // When the input value is Infinity, NaN, or rounds to an integer outside the
-        // range [INT64_MIN; INT64_MAX + 1[, the Invalid Operation flag is set in the FCSR.
         if (fromType == MIRType::Double)
-            masm.as_truncld(ScratchDoubleReg, input);
+            masm.wasmTruncateDoubleToUInt32(input, output, oolEntry);
         else if (fromType == MIRType::Float32)
-            masm.as_truncls(ScratchDoubleReg, input);
+            masm.wasmTruncateFloat32ToUInt32(input, output, oolEntry);
         else
-            MOZ_CRASH("unexpected type in visitWasmTruncateToInt32");
-
-        // Check that the result is in the uint32_t range.
-        masm.moveFromDoubleHi(ScratchDoubleReg, output);
-        masm.as_cfc1(ScratchRegister, Assembler::FCSR);
-        masm.as_ext(ScratchRegister, ScratchRegister, 16, 1);
-        masm.ma_or(output, ScratchRegister);
-        masm.ma_b(output, Imm32(0), ool->entry(), Assembler::NotEqual);
-
-        masm.moveFromFloat32(ScratchDoubleReg, output);
+            MOZ_CRASH("unexpected type");
         return;
     }
 
-    // When the input value is Infinity, NaN, or rounds to an integer outside the
-    // range [INT32_MIN; INT32_MAX + 1[, the Invalid Operation flag is set in the FCSR.
     if (fromType == MIRType::Double)
-        masm.as_truncwd(ScratchFloat32Reg, input);
+        masm.wasmTruncateDoubleToInt32(input, output, oolEntry);
     else if (fromType == MIRType::Float32)
-        masm.as_truncws(ScratchFloat32Reg, input);
+        masm.wasmTruncateFloat32ToInt32(input, output, oolEntry);
     else
-        MOZ_CRASH("unexpected type in visitWasmTruncateToInt32");
-
-    // Check that the result is in the int32_t range.
-    masm.as_cfc1(output, Assembler::FCSR);
-    masm.as_ext(output, output, 16, 1);
-    masm.ma_b(output, Imm32(0), ool->entry(), Assembler::NotEqual);
+        MOZ_CRASH("unexpected type");
 
     masm.bind(ool->rejoin());
-    masm.moveFromFloat32(ScratchFloat32Reg, output);
 }
 
 void
@@ -1507,7 +1491,7 @@ CodeGeneratorMIPSShared::visitOutOfLineWasmTruncateCheck(OutOfLineWasmTruncateCh
     FloatRegister input = ool->input();
     MIRType fromType = ool->fromType();
     MIRType toType = ool->toType();
-
+    bool isUnsigned = ool->isUnsigned();
     // Eagerly take care of NaNs.
     Label inputIsNaN;
     if (fromType == MIRType::Double)
@@ -1517,48 +1501,59 @@ CodeGeneratorMIPSShared::visitOutOfLineWasmTruncateCheck(OutOfLineWasmTruncateCh
     else
         MOZ_CRASH("unexpected type in visitOutOfLineWasmTruncateCheck");
 
-    Label fail;
-
-    // Handle special values (not needed for unsigned values).
-    if (!ool->isUnsigned()) {
-        if (toType == MIRType::Int32) {
-            // MWasmTruncateToInt32
-            if (fromType == MIRType::Double) {
-                // we've used truncwd. the only valid double values that can
-                // truncate to INT32_MIN are in ]INT32_MIN - 1; INT32_MIN].
-                masm.loadConstantDouble(double(INT32_MIN) - 1.0, ScratchDoubleReg);
-                masm.branchDouble(Assembler::DoubleLessThanOrEqual, input, ScratchDoubleReg, &fail);
-
-                masm.loadConstantDouble(double(INT32_MIN), ScratchDoubleReg);
-                masm.branchDouble(Assembler::DoubleGreaterThan, input, ScratchDoubleReg, &fail);
-
-                masm.as_truncwd(ScratchFloat32Reg, ScratchDoubleReg);
-                masm.jump(ool->rejoin());
-            }
-        } else if (toType == MIRType::Int64) {
-            if (fromType == MIRType::Double) {
-                masm.loadConstantDouble(double(INT64_MIN), ScratchDoubleReg);
-                masm.branchDouble(Assembler::DoubleLessThan, input, ScratchDoubleReg, &fail);
-
-                masm.loadConstantDouble(double(INT64_MAX) + 1.0, ScratchDoubleReg);
-                masm.branchDouble(Assembler::DoubleGreaterThanOrEqual, input,
-                                  ScratchDoubleReg, &fail);
-                masm.jump(ool->rejoin());
-            }
+    // By default test for the following inputs and bail:
+    // signed:   ] -Inf, INTXX_MIN - 1.0 ] and [ INTXX_MAX + 1.0 : +Inf [
+    // unsigned: ] -Inf, -1.0 ] and [ UINTXX_MAX + 1.0 : +Inf [
+    // Note: we cannot always represent those exact values. As a result
+    // this changes the actual comparison a bit.
+    double minValue, maxValue;
+    Assembler::DoubleCondition minCond = Assembler::DoubleLessThanOrEqual;
+    Assembler::DoubleCondition maxCond = Assembler::DoubleGreaterThanOrEqual;
+    if (toType == MIRType::Int64) {
+        if (isUnsigned) {
+            minValue = -1;
+            maxValue = double(UINT64_MAX) + 1.0;
+        } else {
+            // In the float32/double range there exists no value between
+            // INT64_MIN and INT64_MIN - 1.0. Making INT64_MIN the lower-bound.
+            minValue = double(INT64_MIN);
+            minCond = Assembler::DoubleLessThan;
+            maxValue = double(INT64_MAX) + 1.0;
         }
     } else {
-        if (toType == MIRType::Int64) {
-            if (fromType == MIRType::Double) {
-                masm.loadConstantDouble(double(-1), ScratchDoubleReg);
-                masm.branchDouble(Assembler::DoubleLessThanOrEqual, input, ScratchDoubleReg, &fail);
-
-                masm.loadConstantDouble(double(UINT64_MAX) + 1.0, ScratchDoubleReg);
-                masm.branchDouble(Assembler::DoubleGreaterThanOrEqual, input,
-                                  ScratchDoubleReg, &fail);
-                masm.jump(ool->rejoin());
+        if (isUnsigned) {
+            minValue = -1;
+            maxValue = double(UINT32_MAX) + 1.0;
+        } else {
+            if (fromType == MIRType::Float32) {
+                // In the float32 range there exists no value between
+                // INT32_MIN and INT32_MIN - 1.0. Making INT32_MIN the lower-bound.
+                minValue = double(INT32_MIN);
+                minCond = Assembler::DoubleLessThan;
+            } else {
+                minValue = double(INT32_MIN) - 1.0;
             }
-       }
+            maxValue = double(INT32_MAX) + 1.0;
+        }
     }
+
+    Label fail;
+
+    if (fromType == MIRType::Double) {
+        masm.loadConstantDouble(minValue, ScratchDoubleReg);
+        masm.branchDouble(minCond, input, ScratchDoubleReg, &fail);
+
+        masm.loadConstantDouble(maxValue, ScratchDoubleReg);
+        masm.branchDouble(maxCond, input, ScratchDoubleReg, &fail);
+    } else {
+        masm.loadConstantFloat32(float(minValue), ScratchFloat32Reg);
+        masm.branchFloat(minCond, input, ScratchFloat32Reg, &fail);
+
+        masm.loadConstantFloat32(float(maxValue), ScratchFloat32Reg);
+        masm.branchFloat(maxCond, input, ScratchFloat32Reg, &fail);
+    }
+
+    masm.jump(ool->rejoin());
 
     // Handle errors.
     masm.bind(&fail);
