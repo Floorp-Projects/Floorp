@@ -1174,7 +1174,7 @@ wasm::GenerateInterruptExit(MacroAssembler& masm, Label* throwLabel)
     // Reclaim the reserve space.
     masm.addToStackPtr(Imm32(2 * sizeof(intptr_t)));
     masm.as_jr(HeapReg);
-    masm.loadPtr(Address(StackPointer, -sizeof(intptr_t)), HeapReg);
+    masm.loadPtr(Address(StackPointer, -int32_t(sizeof(intptr_t))), HeapReg);
 #elif defined(JS_CODEGEN_ARM)
     {
         // Be careful not to clobber scratch registers before they are saved.

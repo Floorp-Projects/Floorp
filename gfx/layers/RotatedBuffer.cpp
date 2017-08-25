@@ -310,9 +310,11 @@ RotatedContentBuffer::BorrowDrawTargetForQuadrantUpdate(const IntRect& aBounds,
 
   if (aSetTransform) {
     mLoanedDrawTarget->SetTransform(transform);
+    mSetTransform = true;
   } else {
     MOZ_ASSERT(aOutMatrix);
     *aOutMatrix = transform;
+    mSetTransform = false;
   }
 
   return mLoanedDrawTarget;
@@ -324,7 +326,9 @@ BorrowDrawTarget::ReturnDrawTarget(gfx::DrawTarget*& aReturned)
   MOZ_ASSERT(mLoanedDrawTarget);
   MOZ_ASSERT(aReturned == mLoanedDrawTarget);
   if (mLoanedDrawTarget) {
-    mLoanedDrawTarget->SetTransform(mLoanedTransform);
+    if (mSetTransform) {
+      mLoanedDrawTarget->SetTransform(mLoanedTransform);
+    }
     mLoanedDrawTarget = nullptr;
   }
   aReturned = nullptr;
@@ -743,7 +747,8 @@ RotatedContentBuffer::BeginPaint(PaintedLayer* aLayer,
 
 RefPtr<CapturedPaintState>
 RotatedContentBuffer::BorrowDrawTargetForRecording(PaintState& aPaintState,
-                                                   DrawIterator* aIter)
+                                                   DrawIterator* aIter,
+                                                   bool aSetTransform)
 {
   if (aPaintState.mMode == SurfaceMode::SURFACE_NONE) {
     return nullptr;
@@ -752,7 +757,7 @@ RotatedContentBuffer::BorrowDrawTargetForRecording(PaintState& aPaintState,
   Matrix transform;
   DrawTarget* result = BorrowDrawTargetForQuadrantUpdate(aPaintState.mRegionToDraw.GetBounds(),
                                                          BUFFER_BOTH, aIter,
-                                                         false,
+                                                         aSetTransform,
                                                          &transform);
   if (!result) {
     return nullptr;
@@ -831,21 +836,17 @@ RotatedContentBuffer::BorrowDrawTargetForPainting(PaintState& aPaintState,
                                                   DrawIterator* aIter /* = nullptr */)
 {
   RefPtr<CapturedPaintState> capturedState =
-    BorrowDrawTargetForRecording(aPaintState, aIter);
+    BorrowDrawTargetForRecording(aPaintState, aIter, true);
 
   if (!capturedState) {
     return nullptr;
   }
 
-  // BorrowDrawTargetForRecording doesn't apply the transform, so we have to.
-  RefPtr<DrawTarget> target = capturedState->mTarget;
-  target->SetTransform(capturedState->mTargetTransform);
-
   if (!RotatedContentBuffer::PrepareDrawTargetForPainting(capturedState)) {
     return nullptr;
   }
 
-  return target;
+  return capturedState->mTarget;
 }
 
 already_AddRefed<SourceSurface>
