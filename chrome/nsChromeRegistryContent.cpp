@@ -114,7 +114,7 @@ nsChromeRegistryContent::RegisterSubstitution(const SubstitutionMapping& aSubsti
       return;
   }
 
-  rv = sph->SetSubstitutionWithFlags(aSubstitution.path, resolvedURI, aSubstitution.flags);
+  rv = sph->SetSubstitution(aSubstitution.path, resolvedURI);
   if (NS_FAILED(rv))
     return;
 }
