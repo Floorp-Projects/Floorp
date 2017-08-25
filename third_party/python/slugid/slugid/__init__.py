@@ -34,10 +34,15 @@ Usage:
    >>> slugid.v4()
    -9OpXaCORAaFh4sJRk7PUA
 """
+from .slugid import decode, encode, nice, v4
 
 __title__ = 'slugid'
-__version__ = '1.0.6'
+__version__ = '1.0.7'
 __author__ = 'Peter Moore'
 __license__ = 'MPL 2.0'
-
-from .slugid import decode, encode, nice, v4
+__all__ = [
+     'decode',
+     'encode',
+     'nice',
+     'v4',
+]
