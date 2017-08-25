@@ -37,7 +37,7 @@
 //! reference count and the two mutex bits in the same atomic word.
 
 #![warn(missing_docs)]
-#![cfg_attr(feature = "nightly", feature(const_fn))]
+#![cfg_attr(feature = "nightly", feature(const_fn, thread_local_state))]
 #![cfg_attr(all(feature = "nightly", target_os = "linux"), feature(integer_atomics))]
 #![cfg_attr(feature = "nightly", feature(asm))]
 
