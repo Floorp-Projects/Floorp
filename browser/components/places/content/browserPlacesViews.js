@@ -1063,9 +1063,6 @@ PlacesToolbar.prototype = {
       button = document.createElement("toolbarbutton");
       button.className = "bookmark-item";
       button.setAttribute("label", aChild.title || "");
-      let icon = aChild.icon;
-      if (icon)
-        button.setAttribute("image", icon);
 
       if (PlacesUtils.containerTypes.includes(type)) {
         button.setAttribute("type", "menu");
@@ -1241,7 +1238,16 @@ PlacesToolbar.prototype = {
                                      : (childRect.right > scrollRect.right);
 
       }
-      child.style.visibility = childOverflowed ? "hidden" : "visible";
+      if (childOverflowed) {
+        child.removeAttribute("image");
+        child.style.visibility = "hidden";
+      } else {
+        let icon = child._placesNode.icon;
+        if (icon)
+          child.setAttribute("image", icon);
+        child.style.visibility = "visible";
+      }
+
     }
 
     // We rebuild the chevron on popupShowing, so if it is open
@@ -1253,11 +1259,20 @@ PlacesToolbar.prototype = {
   nodeInserted:
   function PT_nodeInserted(aParentPlacesNode, aPlacesNode, aIndex) {
     let parentElt = this._getDOMNodeForPlacesNode(aParentPlacesNode);
-    if (parentElt == this._rootElt) {
+    if (parentElt == this._rootElt) { // Node is on the toolbar.
       let children = this._rootElt.childNodes;
-      this._insertNewItem(aPlacesNode, this._rootElt,
-        aIndex < children.length ? children[aIndex] : null);
-      this.updateChevron();
+      let button = this._insertNewItem(aPlacesNode, this._rootElt,
+                                       children[aIndex] || null);
+      let prevSiblingOverflowed = aIndex > 0 && aIndex <= children.length &&
+                                  children[aIndex - 1].style.visibility == "hidden";
+      if (prevSiblingOverflowed) {
+        button.style.visibility = "hidden";
+      } else {
+        let icon = aPlacesNode.icon;
+        if (icon)
+          button.setAttribute("image", icon);
+        this.updateChevron();
+      }
       return;
     }
 
@@ -1273,9 +1288,11 @@ PlacesToolbar.prototype = {
     if (elt.localName == "menupopup")
       elt = elt.parentNode;
 
-    if (parentElt == this._rootElt) {
+    if (parentElt == this._rootElt) { // Node is on the toolbar.
+      let overflowed = elt.style.visibility == "hidden";
       this._removeChild(elt);
-      this.updateChevron();
+      if (!overflowed)
+        this.updateChevron();
       return;
     }
 
@@ -1287,10 +1304,7 @@ PlacesToolbar.prototype = {
                         aOldParentPlacesNode, aOldIndex,
                         aNewParentPlacesNode, aNewIndex) {
     let parentElt = this._getDOMNodeForPlacesNode(aNewParentPlacesNode);
-    if (parentElt == this._rootElt) {
-      // Container is on the toolbar.
-
-      // Move the element.
+    if (parentElt == this._rootElt) { // Node is on the toolbar.
       let elt = this._getDOMNodeForPlacesNode(aPlacesNode);
 
       // Here we need the <menu>.
@@ -1324,9 +1338,7 @@ PlacesToolbar.prototype = {
     if (elt.localName == "menupopup")
       elt = elt.parentNode;
 
-    if (elt.parentNode == this._rootElt) {
-      // Node is on the toolbar.
-
+    if (elt.parentNode == this._rootElt) { // Node is on the toolbar.
       // All livemarks have a feedURI, so use it as our indicator.
       if (aAnno == PlacesUtils.LMANNO_FEEDURI) {
         elt.setAttribute("livemark", true);
@@ -1357,9 +1369,9 @@ PlacesToolbar.prototype = {
     if (elt.localName == "menupopup")
       elt = elt.parentNode;
 
-    if (elt.parentNode == this._rootElt) {
-      // Node is on the toolbar
-      this.updateChevron();
+    if (elt.parentNode == this._rootElt) { // Node is on the toolbar.
+      if (elt.style.visibility != "hidden")
+        this.updateChevron();
     }
   },
 
@@ -1516,7 +1528,9 @@ PlacesToolbar.prototype = {
   notify: function PT_notify(aTimer) {
     if (aTimer == this._updateChevronTimer) {
       this._updateChevronTimer = null;
-      this._updateChevronTimerCallback();
+      BrowserUtils.promiseLayoutFlushed(document, "layout", () => {
+        window.requestAnimationFrame(this._updateChevronTimerCallback);
+      });
     } else if (aTimer == this._ibTimer) {
       // * Timer to turn off indicator bar.
       this._dropIndicator.collapsed = true;
@@ -1922,6 +1936,7 @@ PlacesPanelMenuView.prototype = {
       this._domNodes.set(aChild, button);
 
     aInsertionNode.insertBefore(button, aBefore);
+    return button;
   },
 
   nodeInserted:
