@@ -112,8 +112,8 @@
   "tourDone": {
     "message": "Готово"
   },
-  "termsAndPrivacyNoticeCloudServices": {
-    "message": "Використовуючи Firefox Screenshots, ви погоджуєтеся з умовами хмарних послуг Firefox: $TERMSANDPRIVACYNOTICETERMSLINK$ та $TERMSANDPRIVACYNOTICEPRIVACYLINK$.",
+  "termsAndPrivacyNotice2": {
+    "message": "Використовуючи Firefox Screenshots, ви погоджуєтеся з нашими $TERMSANDPRIVACYNOTICETERMSLINK$ та $TERMSANDPRIVACYNOTICEPRIVACYLINK$.",
     "placeholders": {
       "termsandprivacynoticetermslink": {
         "content": "$1"
@@ -128,5 +128,8 @@
   },
   "termsAndPrivacyNoticyPrivacyLink": {
     "message": "Повідомленням про приватність"
+  },
+  "libraryLabel": {
+    "message": "Знімки екрану"
   }
 }

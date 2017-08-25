@@ -112,8 +112,8 @@
   "tourDone": {
     "message": "เสร็จสิ้น"
   },
-  "termsAndPrivacyNoticeCloudServices": {
-    "message": "เพื่อใช้ Firefox Screenshots คุณยอมรับ $TERMSANDPRIVACYNOTICETERMSLINK$ และ $TERMSANDPRIVACYNOTICEPRIVACYLINK$ ของบริการกลุ่มเมฆ Firefox",
+  "termsAndPrivacyNotice2": {
+    "message": "เพื่อใช้ Firefox Screenshots คุณยอมรับ $TERMSANDPRIVACYNOTICETERMSLINK$ และ $TERMSANDPRIVACYNOTICEPRIVACYLINK$ ของเรา",
     "placeholders": {
       "termsandprivacynoticetermslink": {
         "content": "$1"
@@ -128,5 +128,8 @@
   },
   "termsAndPrivacyNoticyPrivacyLink": {
     "message": "ประกาศความเป็นส่วนตัว"
+  },
+  "libraryLabel": {
+    "message": "ภาพหน้าจอ"
   }
 }

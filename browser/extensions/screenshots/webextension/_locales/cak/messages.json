@@ -112,7 +112,7 @@
   "tourDone": {
     "message": "Xb'an"
   },
-  "termsAndPrivacyNoticeCloudServices": {
+  "termsAndPrivacyNotice2": {
     "message": "Rik'in rokisaxik ri Firefox Chapoj Wachib'äl, nawoqaj $TERMSANDPRIVACYNOTICETERMSLINK$ chuqa' $TERMSANDPRIVACYNOTICEPRIVACYLINK$.",
     "placeholders": {
       "termsandprivacynoticetermslink": {
@@ -128,5 +128,8 @@
   },
   "termsAndPrivacyNoticyPrivacyLink": {
     "message": "Rutzijol Ichinanem"
+  },
+  "libraryLabel": {
+    "message": "Chapoj taq wachib'äl"
   }
 }

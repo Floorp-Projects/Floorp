@@ -1,5 +1,29 @@
 /* Created from build/server/static/css/onboarding.css */
 window.onboardingCss = `
+.loader {
+  background: #2e2d30;
+  border-radius: 2px;
+  height: 4px;
+  overflow: hidden;
+  position: relative;
+  width: 200px; }
+  #shot-index .loader {
+    background-color: #dedede; }
+
+.loader-inner {
+  animation: bounce infinite alternate 1250ms cubic-bezier(0.7, 0, 0.3, 1);
+  background: #04d1e6;
+  border-radius: 2px;
+  height: 4px;
+  transform: translateX(-40px);
+  width: 50px; }
+
+@keyframes bounce {
+  0% {
+    transform: translateX(-40px); }
+  100% {
+    transform: translate(190px); } }
+
 @keyframes fade-in {
   0% {
     opacity: 0; }
@@ -16,13 +40,13 @@ window.onboardingCss = `
 
 @keyframes pulse {
   0% {
-    opacity: .3;
+    opacity: 0.3;
     transform: scale(1); }
   70% {
-    opacity: .25;
+    opacity: 0.25;
     transform: scale(1.04); }
   100% {
-    opacity: .3;
+    opacity: 0.3;
     transform: scale(1); } }
 
 @keyframes slide-left {
@@ -33,10 +57,20 @@ window.onboardingCss = `
     opacity: 1;
     transform: translate3d(0, 0, 0); } }
 
+@keyframes bounce-in {
+  0% {
+    opacity: 0;
+    transform: scale(1); }
+  60% {
+    opacity: 1;
+    transform: scale(1.02); }
+  100% {
+    transform: scale(1); } }
+
 html,
 body {
   box-sizing: border-box;
-  font-family: -apple-system, BlinkMacSystemFont, sans-serif;
+  font-family: -apple-system, BlinkMacSystemFont, "segoe ui", "helvetica neue", helvetica, ubuntu, roboto, noto, arial, sans-serif;
   height: 100%;
   margin: 0;
   width: 100%; }
@@ -62,7 +96,7 @@ body {
   align-items: center;
   flex-direction: column;
   justify-content: center;
-  background-color: #f5f5f7;
+  background-color: #f6f6f8;
   border-radius: 5px;
   height: 520px;
   overflow: hidden;
@@ -145,7 +179,7 @@ body {
 
 .goto-slide {
   background: transparent;
-  background-color: #f5f5f7;
+  background-color: #f6f6f8;
   border-radius: 50%;
   border: 0;
   flex: 0 0 9px;
@@ -231,14 +265,14 @@ body {
   opacity: 1; }
 
 .active-slide-1 #prev,
-.active-slide-3 #next {
+.active-slide-4 #next {
   display: none; }
 
 #done {
   background-image: url("MOZ_EXTENSION/icons/done.svg");
   display: none; }
 
-.active-slide-3 #done {
+.active-slide-4 #done {
   display: inline-block; }
 
 /* for smaller screen sizes */

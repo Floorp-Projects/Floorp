@@ -1,0 +1,32 @@
+{
+  "addonAuthorsList": {
+    "message": "Mozilla <screenshots-feedback@mozilla.com>"
+  },
+  "saveScreenshotSelectedArea": {
+    "message": "Guardar"
+  },
+  "saveScreenshotVisibleArea": {
+    "message": "Guardar lo visible"
+  },
+  "saveScreenshotFullPage": {
+    "message": "Guardar la páxina completa"
+  },
+  "cancelScreenshot": {
+    "message": "Encaboxar"
+  },
+  "downloadScreenshot": {
+    "message": "Baxar"
+  },
+  "notificationLinkCopiedTitle": {
+    "message": "Copióse l'enllaz"
+  },
+  "unshootablePageErrorTitle": {
+    "message": "Nun pue capturase esta páxina."
+  },
+  "unshootablePageErrorDetails": {
+    "message": "Esta páxina web nun ye estándar, asina que nun pues capturala."
+  },
+  "tourDone": {
+    "message": "Fecho"
+  }
+}
