@@ -70,6 +70,7 @@ SpecialPowersObserver.prototype._loadFrameScript = function() {
   if (!this._isFrameScriptLoaded) {
     // Register for any messages our API needs us to handle
     this._messageManager.addMessageListener("SPPrefService", this);
+    this._messageManager.addMessageListener("SPProcessCrashManagerWait", this);
     this._messageManager.addMessageListener("SPProcessCrashService", this);
     this._messageManager.addMessageListener("SPPingService", this);
     this._messageManager.addMessageListener("SpecialPowers.Quit", this);
@@ -140,6 +141,7 @@ SpecialPowersObserver.prototype.uninit = function() {
 
   if (this._isFrameScriptLoaded) {
     this._messageManager.removeMessageListener("SPPrefService", this);
+    this._messageManager.removeMessageListener("SPProcessCrashManagerWait", this);
     this._messageManager.removeMessageListener("SPProcessCrashService", this);
     this._messageManager.removeMessageListener("SPPingService", this);
     this._messageManager.removeMessageListener("SpecialPowers.Quit", this);

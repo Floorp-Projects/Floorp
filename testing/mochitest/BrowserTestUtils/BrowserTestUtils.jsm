@@ -1001,12 +1001,15 @@ this.BrowserTestUtils = {
    *        True if it is expected that the tab crashed page will be shown
    *        for this browser. If so, the Promise will only resolve once the
    *        tab crash page has loaded.
+   * @param (bool) shouldClearMinidumps
+   *        True if the minidumps left behind by the crash should be removed.
    *
    * @returns (Promise)
    * @resolves An Object with key-value pairs representing the data from the
    *           crash report's extra file (if applicable).
    */
-  async crashBrowser(browser, shouldShowTabCrashPage=true) {
+  async crashBrowser(browser, shouldShowTabCrashPage=true,
+                     shouldClearMinidumps=true) {
     let extra = {};
     let KeyValueParser = {};
     if (AppConstants.MOZ_CRASHREPORTER) {
@@ -1107,8 +1110,10 @@ this.BrowserTestUtils = {
               }
             }
 
-            removeFile(minidumpDirectory, dumpID + '.dmp');
-            removeFile(minidumpDirectory, dumpID + '.extra');
+            if (shouldClearMinidumps) {
+              removeFile(minidumpDirectory, dumpID + '.dmp');
+              removeFile(minidumpDirectory, dumpID + '.extra');
+            }
           });
         }
 
