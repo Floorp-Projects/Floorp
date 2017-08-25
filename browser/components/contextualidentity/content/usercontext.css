@@ -39,51 +39,51 @@
 }
 
 [data-identity-icon="fingerprint"] {
-  --identity-icon: url("chrome://browser/content/usercontext-fingerprint.svg");
+  --identity-icon: url("resource://usercontext-content/fingerprint.svg");
 }
 
 [data-identity-icon="briefcase"] {
-  --identity-icon: url("chrome://browser/content/usercontext-briefcase.svg");
+  --identity-icon: url("resource://usercontext-content/briefcase.svg");
 }
 
 [data-identity-icon="dollar"] {
-  --identity-icon: url("chrome://browser/content/usercontext-dollar.svg");
+  --identity-icon: url("resource://usercontext-content/dollar.svg");
 }
 
 [data-identity-icon="cart"] {
-  --identity-icon: url("chrome://browser/content/usercontext-cart.svg");
+  --identity-icon: url("resource://usercontext-content/cart.svg");
 }
 
 [data-identity-icon="circle"] {
-  --identity-icon: url("chrome://browser/content/usercontext-circle.svg");
+  --identity-icon: url("resource://usercontext-content/circle.svg");
 }
 
 [data-identity-icon="vacation"] {
-  --identity-icon: url("chrome://browser/content/usercontext-vacation.svg");
+  --identity-icon: url("resource://usercontext-content/vacation.svg");
 }
 
 [data-identity-icon="gift"] {
-  --identity-icon: url("chrome://browser/content/usercontext-gift.svg");
+  --identity-icon: url("resource://usercontext-content/gift.svg");
 }
 
 [data-identity-icon="food"] {
-  --identity-icon: url("chrome://browser/content/usercontext-food.svg");
+  --identity-icon: url("resource://usercontext-content/food.svg");
 }
 
 [data-identity-icon="fruit"] {
-  --identity-icon: url("chrome://browser/content/usercontext-fruit.svg");
+  --identity-icon: url("resource://usercontext-content/fruit.svg");
 }
 
 [data-identity-icon="pet"] {
-  --identity-icon: url("chrome://browser/content/usercontext-pet.svg");
+  --identity-icon: url("resource://usercontext-content/pet.svg");
 }
 
 [data-identity-icon="tree"] {
-  --identity-icon: url("chrome://browser/content/usercontext-tree.svg");
+  --identity-icon: url("resource://usercontext-content/tree.svg");
 }
 
 [data-identity-icon="chill"] {
-  --identity-icon: url("chrome://browser/content/usercontext-chill.svg");
+  --identity-icon: url("resource://usercontext-content/chill.svg");
 }
 
 #userContext-indicator {
