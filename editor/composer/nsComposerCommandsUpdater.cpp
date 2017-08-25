@@ -5,6 +5,7 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
 #include "mozilla/mozalloc.h"           // for operator new
+#include "mozilla/dom/Selection.h"
 #include "nsAString.h"
 #include "nsComponentManagerUtils.h"    // for do_CreateInstance
 #include "nsComposerCommandsUpdater.h"
@@ -341,9 +342,7 @@ nsComposerCommandsUpdater::SelectionIsCollapsed()
     return false;
   }
 
-  bool selectionCollapsed = false;
-  domSelection->GetIsCollapsed(&selectionCollapsed);
-  return selectionCollapsed;
+  return domSelection->AsSelection()->IsCollapsed();
 }
 
 already_AddRefed<nsPICommandUpdater>

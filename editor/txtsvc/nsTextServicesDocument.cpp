@@ -495,23 +495,18 @@ nsTextServicesDocument::LastSelectedBlock(TSDBlockSelectionStatus *aSelStatus,
     return NS_ERROR_FAILURE;
   }
 
-  nsCOMPtr<nsISelection> domSelection;
-  nsresult rv = mSelCon->GetSelection(nsISelectionController::SELECTION_NORMAL,
-                                      getter_AddRefs(domSelection));
-  if (NS_FAILED(rv)) {
+  RefPtr<Selection> selection =
+    mSelCon->GetDOMSelection(nsISelectionController::SELECTION_NORMAL);
+  if (NS_WARN_IF(!selection)) {
     UNLOCK_DOC(this);
-    return rv;
+    return NS_ERROR_FAILURE;
   }
-
-  RefPtr<Selection> selection = domSelection->AsSelection();
-
-  bool isCollapsed = selection->IsCollapsed();
 
   nsCOMPtr<nsIContentIterator> iter;
   RefPtr<nsRange> range;
   nsCOMPtr<nsIDOMNode>         parent;
 
-  if (isCollapsed) {
+  if (selection->IsCollapsed()) {
     // We have a caret. Check if the caret is in a text node.
     // If it is, make the text node's block the current block.
     // If the caret isn't in a text node, search forwards in
@@ -524,7 +519,7 @@ nsTextServicesDocument::LastSelectedBlock(TSDBlockSelectionStatus *aSelStatus,
       return NS_ERROR_FAILURE;
     }
 
-    rv = range->GetStartContainer(getter_AddRefs(parent));
+    nsresult rv = range->GetStartContainer(getter_AddRefs(parent));
 
     if (NS_FAILED(rv)) {
       UNLOCK_DOC(this);
@@ -605,6 +600,7 @@ nsTextServicesDocument::LastSelectedBlock(TSDBlockSelectionStatus *aSelStatus,
         return rv;
       }
 
+      bool isCollapsed;
       rv = range->GetCollapsed(&isCollapsed);
 
       if (NS_FAILED(rv)) {
@@ -714,7 +710,7 @@ nsTextServicesDocument::LastSelectedBlock(TSDBlockSelectionStatus *aSelStatus,
 
     // Create an iterator for the range.
 
-    rv = CreateContentIterator(range, getter_AddRefs(iter));
+    nsresult rv = CreateContentIterator(range, getter_AddRefs(iter));
 
     if (NS_FAILED(rv)) {
       UNLOCK_DOC(this);
@@ -780,7 +776,7 @@ nsTextServicesDocument::LastSelectedBlock(TSDBlockSelectionStatus *aSelStatus,
     return NS_ERROR_FAILURE;
   }
 
-  rv = range->GetEndContainer(getter_AddRefs(parent));
+  nsresult rv = range->GetEndContainer(getter_AddRefs(parent));
 
   if (NS_FAILED(rv)) {
     UNLOCK_DOC(this);
@@ -808,6 +804,7 @@ nsTextServicesDocument::LastSelectedBlock(TSDBlockSelectionStatus *aSelStatus,
     return rv;
   }
 
+  bool isCollapsed;
   rv = range->GetCollapsed(&isCollapsed);
 
   if (NS_FAILED(rv)) {
@@ -2295,26 +2292,17 @@ nsTextServicesDocument::GetSelection(nsITextServicesDocument::TSDBlockSelectionS
     return NS_OK;
   }
 
-  nsCOMPtr<nsISelection> selection;
-  bool isCollapsed;
-
-  nsresult rv = mSelCon->GetSelection(nsISelectionController::SELECTION_NORMAL,
-                                      getter_AddRefs(selection));
-
-  NS_ENSURE_SUCCESS(rv, rv);
-
+  RefPtr<Selection> selection =
+    mSelCon->GetDOMSelection(nsISelectionController::SELECTION_NORMAL);
   NS_ENSURE_TRUE(selection, NS_ERROR_FAILURE);
-
-  rv = selection->GetIsCollapsed(&isCollapsed);
-
-  NS_ENSURE_SUCCESS(rv, rv);
 
   // XXX: If we expose this method publicly, we need to
   //      add LOCK_DOC/UNLOCK_DOC calls!
 
   // LOCK_DOC(this);
 
-  if (isCollapsed) {
+  nsresult rv;
+  if (selection->IsCollapsed()) {
     rv = GetCollapsedSelection(aSelStatus, aSelOffset, aSelLength);
   } else {
     rv = GetUncollapsedSelection(aSelStatus, aSelOffset, aSelLength);
