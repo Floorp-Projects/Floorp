@@ -73,7 +73,7 @@ HLSDecoder::Load(nsIChannel* aChannel)
     return rv;
   }
 
-  mResource = new HLSResource(this, aChannel, uri);
+  mResource = MakeUnique<HLSResource>(this, aChannel, uri);
 
   rv = MediaShutdownManager::Instance().Register(this);
   if (NS_WARN_IF(NS_FAILED(rv))) {
