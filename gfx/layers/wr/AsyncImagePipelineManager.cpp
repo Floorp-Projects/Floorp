@@ -58,9 +58,8 @@ AsyncImagePipelineManager::DeleteOldAsyncImages()
 {
   MOZ_ASSERT(!mDestroyed);
   for (wr::ImageKey key : mKeysToDelete) {
-    mApi->Resources().DeleteImage(key);
+    mApi->DeleteImage(key);
   }
-  mApi->UpdateResources(mApi->Resources());
   mKeysToDelete.Clear();
 }
 
@@ -126,9 +125,9 @@ AsyncImagePipelineManager::RemoveAsyncImagePipeline(const wr::PipelineId& aPipel
   if (auto entry = mAsyncImagePipelines.Lookup(id)) {
     AsyncImagePipeline* holder = entry.Data();
     ++mAsyncImageEpoch; // Update webrender epoch
-    mApi->ClearDisplayList(wr::NewEpoch(mAsyncImageEpoch), aPipelineId);
+    mApi->ClearRootDisplayList(wr::NewEpoch(mAsyncImageEpoch), aPipelineId);
     for (wr::ImageKey key : holder->mKeys) {
-      mApi->Resources().DeleteImage(key);
+      mApi->DeleteImage(key);
     }
     entry.Remove();
     RemovePipeline(aPipelineId, wr::NewEpoch(mAsyncImageEpoch));
@@ -190,7 +189,7 @@ AsyncImagePipelineManager::GenerateImageKeyForTextureHost(TextureHost* aTexture,
 
     wr::ImageKey key = GenerateImageKey();
     aKeys.AppendElement(key);
-    mApi->Resources().AddImage(key, descriptor, slice);
+    mApi->AddImage(key, descriptor, slice);
     dSurf->Unmap();
   }
   return false;
@@ -310,9 +309,9 @@ AsyncImagePipelineManager::ApplyAsyncImages()
     wr::BuiltDisplayList dl;
     wr::LayoutSize builderContentSize;
     builder.Finalize(builderContentSize, dl);
-    mApi->SetDisplayList(gfx::Color(0.f, 0.f, 0.f, 0.f), epoch, LayerSize(pipeline->mScBounds.Width(), pipeline->mScBounds.Height()),
-                         pipelineId, builderContentSize,
-                         dl.dl_desc, dl.dl.inner.data, dl.dl.inner.length);
+    mApi->SetRootDisplayList(gfx::Color(0.f, 0.f, 0.f, 0.f), epoch, LayerSize(pipeline->mScBounds.Width(), pipeline->mScBounds.Height()),
+                             pipelineId, builderContentSize,
+                             dl.dl_desc, dl.dl.inner.data, dl.dl.inner.length);
   }
   DeleteOldAsyncImages();
   mKeysToDelete.SwapElements(keysToDelete);
