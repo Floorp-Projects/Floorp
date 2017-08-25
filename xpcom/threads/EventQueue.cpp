@@ -38,9 +38,15 @@ EventQueue::GetEvent(EventPriority* aPriority,
 }
 
 bool
-EventQueue::HasPendingEvent(const MutexAutoLock& aProofOfLock)
+EventQueue::IsEmpty(const MutexAutoLock& aProofOfLock)
 {
-  return !mQueue.IsEmpty();
+  return mQueue.IsEmpty();
+}
+
+bool
+EventQueue::HasReadyEvent(const MutexAutoLock& aProofOfLock)
+{
+  return !IsEmpty(aProofOfLock);
 }
 
 already_AddRefed<nsIRunnable>

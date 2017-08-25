@@ -16,11 +16,12 @@ banner = """/* This file is auto-generated, see gen-histogram-data.py.  */
 """
 
 
-def print_array_entry(output, histogram, name_index, exp_index, label_index, label_count):
+def print_array_entry(output, histogram, name_index, exp_index, label_index,
+                      label_count, key_index, key_count):
     cpp_guard = histogram.cpp_guard()
     if cpp_guard:
         print("#if defined(%s)" % cpp_guard, file=output)
-    print("  { %s, %s, %s, %s, %d, %d, %s, %d, %d, %s, %s },"
+    print("  { %s, %s, %s, %s, %d, %d, %s, %d, %d, %d, %d, %s, %s },"
           % (histogram.low(),
              histogram.high(),
              histogram.n_buckets(),
@@ -30,6 +31,8 @@ def print_array_entry(output, histogram, name_index, exp_index, label_index, lab
              histogram.dataset(),
              label_index,
              label_count,
+             key_index,
+             key_count,
              " | ".join(histogram.record_in_processes_enum()),
              "true" if histogram.keyed() else "false"), file=output)
     if cpp_guard:
@@ -40,6 +43,8 @@ def write_histogram_table(output, histograms):
     string_table = StringTable()
     label_table = []
     label_count = 0
+    keys_table = []
+    keys_count = 0
 
     print("constexpr HistogramInfo gHistogramInfos[] = {", file=output)
     for histogram in histograms:
@@ -53,9 +58,15 @@ def write_histogram_table(output, histograms):
             label_table.append((histogram.name(), string_table.stringIndexes(labels)))
             label_count += len(labels)
 
-        print_array_entry(output, histogram,
-                          name_index, exp_index,
-                          label_index, len(labels))
+        keys = histogram.keys()
+        key_index = 0
+        if len(keys) > 0:
+            key_index = keys_count
+            keys_table.append((histogram.name(), string_table.stringIndexes(keys)))
+            keys_count += len(keys)
+
+        print_array_entry(output, histogram, name_index, exp_index,
+                          label_index, len(labels), key_index, len(keys))
     print("};\n", file=output)
 
     strtab_name = "gHistogramStringTable"
@@ -65,6 +76,11 @@ def write_histogram_table(output, histograms):
 
     print("\nconst uint32_t gHistogramLabelTable[] = {", file=output)
     for name, indexes in label_table:
+        print("/* %s */ %s," % (name, ", ".join(map(str, indexes))), file=output)
+    print("};", file=output)
+
+    print("\nconst uint32_t gHistogramKeyTable[] = {", file=output)
+    for name, indexes in keys_table:
         print("/* %s */ %s," % (name, ", ".join(map(str, indexes))), file=output)
     print("};", file=output)
 

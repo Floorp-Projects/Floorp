@@ -149,9 +149,9 @@ ThreadEventQueue<InnerQueueT>::HasPendingEvent()
 
   // We always get events from the topmost queue when there are nested queues.
   if (mNestedQueues.IsEmpty()) {
-    return mBaseQueue->HasPendingEvent(lock);
+    return mBaseQueue->HasReadyEvent(lock);
   } else {
-    return mNestedQueues.LastElement().mQueue->HasPendingEvent(lock);
+    return mNestedQueues.LastElement().mQueue->HasReadyEvent(lock);
   }
 }
 
@@ -160,7 +160,7 @@ bool
 ThreadEventQueue<InnerQueueT>::ShutdownIfNoPendingEvents()
 {
   MutexAutoLock lock(mLock);
-  if (mNestedQueues.IsEmpty() && !mBaseQueue->HasPendingEvent(lock)) {
+  if (mNestedQueues.IsEmpty() && mBaseQueue->IsEmpty(lock)) {
     mEventsAreDoomed = true;
     return true;
   }

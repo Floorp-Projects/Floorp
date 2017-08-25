@@ -268,8 +268,7 @@ private:
 // AddSizeOfExcludingThis from its super-class. AddSizeOfIncludingThis() need
 // not be defined, it is inherited from nsINode.
 #define NS_DECL_ADDSIZEOFEXCLUDINGTHIS \
-  virtual void AddSizeOfExcludingThis(mozilla::SizeOfState& aState, \
-                                      nsStyleSizes& aSizes, \
+  virtual void AddSizeOfExcludingThis(nsWindowSizes& aSizes, \
                                       size_t* aNodeSize) const override;
 
 // Categories of node properties
@@ -332,20 +331,18 @@ public:
   // The following members don't need to be measured:
   // - nsIContent: mPrimaryFrame, because it's non-owning and measured elsewhere
   //
-  virtual void AddSizeOfExcludingThis(mozilla::SizeOfState& aState,
-                                      nsStyleSizes& aSizes,
+  virtual void AddSizeOfExcludingThis(nsWindowSizes& aSizes,
                                       size_t* aNodeSize) const;
 
   // SizeOfIncludingThis doesn't need to be overridden by sub-classes because
   // sub-classes of nsINode are guaranteed to be laid out in memory in such a
   // way that |this| points to the start of the allocated object, even in
-  // methods of nsINode's sub-classes, so aState.mMallocSizeOf(this) is always
-  // safe to call no matter which object it was invoked on.
-  virtual void AddSizeOfIncludingThis(mozilla::SizeOfState& aState,
-                                      nsStyleSizes& aSizes,
+  // methods of nsINode's sub-classes, so aSizes.mState.mMallocSizeOf(this) is
+  // always safe to call no matter which object it was invoked on.
+  virtual void AddSizeOfIncludingThis(nsWindowSizes& aSizes,
                                       size_t* aNodeSize) const {
-    *aNodeSize += aState.mMallocSizeOf(this);
-    AddSizeOfExcludingThis(aState, aSizes, aNodeSize);
+    *aNodeSize += aSizes.mState.mMallocSizeOf(this);
+    AddSizeOfExcludingThis(aSizes, aNodeSize);
   }
 
   friend class nsNodeUtils;

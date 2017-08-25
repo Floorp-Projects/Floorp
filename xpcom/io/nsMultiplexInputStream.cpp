@@ -60,6 +60,10 @@ private:
   {
   }
 
+  // This method resets mIsSeekable, mIsIPCSerializable, mIsCloneable and
+  // mIsAsyncInputStream values.
+  void UpdateQIMap();
+
   struct MOZ_STACK_CLASS ReadSegmentsState
   {
     nsCOMPtr<nsIInputStream> mThisStream;
@@ -73,17 +77,17 @@ private:
                             const char* aFromRawSegment, uint32_t aToOffset,
                             uint32_t aCount, uint32_t* aWriteCount);
 
-  bool IsSeekable() const;
-  bool IsIPCSerializable() const;
-  bool IsCloneable() const;
-  bool IsAsyncInputStream() const;
-
   Mutex mLock; // Protects access to all data members.
   nsTArray<nsCOMPtr<nsIInputStream>> mStreams;
   uint32_t mCurrentStream;
   bool mStartedReadingCurrent;
   nsresult mStatus;
   nsCOMPtr<nsIInputStreamCallback> mAsyncWaitCallback;
+
+  bool mIsSeekable;
+  bool mIsIPCSerializable;
+  bool mIsCloneable;
+  bool mIsAsyncInputStream;
 };
 
 NS_IMPL_ADDREF(nsMultiplexInputStream)
@@ -95,13 +99,13 @@ NS_IMPL_CLASSINFO(nsMultiplexInputStream, nullptr, nsIClassInfo::THREADSAFE,
 NS_INTERFACE_MAP_BEGIN(nsMultiplexInputStream)
   NS_INTERFACE_MAP_ENTRY(nsIMultiplexInputStream)
   NS_INTERFACE_MAP_ENTRY_AMBIGUOUS(nsIInputStream, nsIMultiplexInputStream)
-  NS_INTERFACE_MAP_ENTRY_CONDITIONAL(nsISeekableStream, IsSeekable())
+  NS_INTERFACE_MAP_ENTRY_CONDITIONAL(nsISeekableStream, mIsSeekable)
   NS_INTERFACE_MAP_ENTRY_CONDITIONAL(nsIIPCSerializableInputStream,
-                                     IsIPCSerializable())
+                                     mIsIPCSerializable)
   NS_INTERFACE_MAP_ENTRY_CONDITIONAL(nsICloneableInputStream,
-                                     IsCloneable())
+                                     mIsCloneable)
   NS_INTERFACE_MAP_ENTRY_CONDITIONAL(nsIAsyncInputStream,
-                                     IsAsyncInputStream())
+                                     mIsAsyncInputStream)
   NS_INTERFACE_MAP_ENTRY_AMBIGUOUS(nsISupports, nsIMultiplexInputStream)
   NS_IMPL_QUERY_CLASSINFO(nsMultiplexInputStream)
 NS_INTERFACE_MAP_END
@@ -154,6 +158,7 @@ nsMultiplexInputStream::nsMultiplexInputStream()
     mStartedReadingCurrent(false),
     mStatus(NS_OK)
 {
+  UpdateQIMap();
 }
 
 NS_IMETHODIMP
@@ -168,18 +173,28 @@ NS_IMETHODIMP
 nsMultiplexInputStream::AppendStream(nsIInputStream* aStream)
 {
   MutexAutoLock lock(mLock);
-  return mStreams.AppendElement(aStream) ? NS_OK : NS_ERROR_OUT_OF_MEMORY;
+  if (!mStreams.AppendElement(aStream)) {
+    return NS_ERROR_OUT_OF_MEMORY;
+  }
+
+  UpdateQIMap();
+  return NS_OK;
 }
 
 NS_IMETHODIMP
 nsMultiplexInputStream::InsertStream(nsIInputStream* aStream, uint32_t aIndex)
 {
   MutexAutoLock lock(mLock);
-  mStreams.InsertElementAt(aIndex, aStream);
+  if (!mStreams.InsertElementAt(aIndex, aStream)) {
+    return NS_ERROR_OUT_OF_MEMORY;
+  }
+
   if (mCurrentStream > aIndex ||
       (mCurrentStream == aIndex && mStartedReadingCurrent)) {
     ++mCurrentStream;
   }
+
+  UpdateQIMap();
   return NS_OK;
 }
 
@@ -194,6 +209,7 @@ nsMultiplexInputStream::RemoveStream(uint32_t aIndex)
     mStartedReadingCurrent = false;
   }
 
+  UpdateQIMap();
   return NS_OK;
 }
 
@@ -1046,52 +1062,43 @@ nsMultiplexInputStream::Clone(nsIInputStream** aClone)
   return NS_OK;
 }
 
-bool
-nsMultiplexInputStream::IsSeekable() const
+void
+nsMultiplexInputStream::UpdateQIMap()
 {
-  for (uint32_t i = 0, len = mStreams.Length(); i < len; ++i) {
-    nsCOMPtr<nsISeekableStream> substream = do_QueryInterface(mStreams[i]);
-    if (!substream) {
-      return false;
-    }
-  }
-  return true;
-}
+  mIsSeekable = true;
+  mIsIPCSerializable = true;
+  mIsCloneable = true;
+  mIsAsyncInputStream = false;
 
-bool
-nsMultiplexInputStream::IsIPCSerializable() const
-{
   for (uint32_t i = 0, len = mStreams.Length(); i < len; ++i) {
-    nsCOMPtr<nsIIPCSerializableInputStream> substream = do_QueryInterface(mStreams[i]);
-    if (!substream) {
-      return false;
+    if (mIsSeekable) {
+      nsCOMPtr<nsISeekableStream> substream = do_QueryInterface(mStreams[i]);
+      if (!substream) {
+        mIsSeekable = false;
+      }
     }
-  }
-  return true;
-}
 
-bool
-nsMultiplexInputStream::IsCloneable() const
-{
-  for (uint32_t i = 0, len = mStreams.Length(); i < len; ++i) {
-    nsCOMPtr<nsICloneableInputStream> substream = do_QueryInterface(mStreams[i]);
-    if (!substream) {
-      return false;
+    if (mIsIPCSerializable) {
+      nsCOMPtr<nsIIPCSerializableInputStream> substream = do_QueryInterface(mStreams[i]);
+      if (!substream) {
+        mIsIPCSerializable = false;
+      }
     }
-  }
-  return true;
-}
 
-bool
-nsMultiplexInputStream::IsAsyncInputStream() const
-{
-  // nsMultiplexInputStream is nsIAsyncInputStream if at least 1 of the
-  // substream implements that interface.
-  for (uint32_t i = 0, len = mStreams.Length(); i < len; ++i) {
-    nsCOMPtr<nsIAsyncInputStream> substream = do_QueryInterface(mStreams[i]);
-    if (substream) {
-      return true;
+    if (mIsCloneable) {
+      nsCOMPtr<nsICloneableInputStream> substream = do_QueryInterface(mStreams[i]);
+      if (!substream) {
+        mIsCloneable = false;
+      }
+    }
+
+    if (!mIsAsyncInputStream) {
+      // nsMultiplexInputStream is nsIAsyncInputStream if at least 1 of the
+      // substream implements that interface.
+      nsCOMPtr<nsIAsyncInputStream> substream = do_QueryInterface(mStreams[i]);
+      if (substream) {
+        mIsAsyncInputStream = true;
+      }
     }
   }
-  return false;
 }

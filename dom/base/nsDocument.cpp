@@ -12574,8 +12574,7 @@ nsDocument::GetVisibilityState(nsAString& aState)
 /* virtual */ void
 nsIDocument::DocAddSizeOfExcludingThis(nsWindowSizes& aSizes) const
 {
-  nsINode::AddSizeOfExcludingThis(aSizes.mState, aSizes.mStyleSizes,
-                                  &aSizes.mDOMOtherSize);
+  nsINode::AddSizeOfExcludingThis(aSizes, &aSizes.mDOMOtherSize);
 
   if (mPresShell) {
     mPresShell->AddSizeOfIncludingThis(aSizes);
@@ -12622,8 +12621,7 @@ SizeOfOwnedSheetArrayExcludingThis(const nsTArray<RefPtr<StyleSheet>>& aSheets,
 }
 
 void
-nsDocument::AddSizeOfExcludingThis(SizeOfState& aState,
-                                   nsStyleSizes& aSizes,
+nsDocument::AddSizeOfExcludingThis(nsWindowSizes& aSizes,
                                    size_t* aNodeSize) const
 {
   // This AddSizeOfExcludingThis() overrides the one from nsINode.  But
@@ -12637,8 +12635,7 @@ static void
 AddSizeOfNodeTree(nsIContent* aNode, nsWindowSizes& aWindowSizes)
 {
   size_t nodeSize = 0;
-  aNode->AddSizeOfIncludingThis(aWindowSizes.mState, aWindowSizes.mStyleSizes,
-                                &nodeSize);
+  aNode->AddSizeOfIncludingThis(aWindowSizes, &nodeSize);
 
   // This is where we transfer the nodeSize obtained from
   // nsINode::AddSizeOfIncludingThis() to a value in nsWindowSizes.

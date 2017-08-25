@@ -164,6 +164,8 @@ NS_IMPL_ISUPPORTS(TabChildSHistoryListener,
 
 static const char BEFORE_FIRST_PAINT[] = "before-first-paint";
 
+nsTArray<TabChild*>* TabChild::sActiveTabs;
+
 typedef nsDataHashtable<nsUint64HashKey, TabChild*> TabChildMap;
 static TabChildMap* sTabChildren;
 StaticMutex sTabChildrenMutex;
@@ -1117,6 +1119,14 @@ TabChild::ActorDestroy(ActorDestroyReason why)
 
 TabChild::~TabChild()
 {
+  if (sActiveTabs) {
+    sActiveTabs->RemoveElement(this);
+    if (sActiveTabs->IsEmpty()) {
+      delete sActiveTabs;
+      sActiveTabs = nullptr;
+    }
+  }
+
   DestroyWindow();
 
   nsCOMPtr<nsIWebBrowser> webBrowser = do_QueryInterface(WebNavigation());
@@ -2587,6 +2597,19 @@ TabChild::InternalSetDocShellIsActive(bool aIsActive, bool aPreserveLayers)
     }
 
     docShell->SetIsActive(aIsActive);
+  }
+
+  if (aIsActive) {
+    if (!sActiveTabs) {
+      sActiveTabs = new nsTArray<TabChild*>();
+    }
+    sActiveTabs->AppendElement(this);
+  } else {
+    if (sActiveTabs) {
+      sActiveTabs->RemoveElement(this);
+      // We don't delete sActiveTabs here when it's empty since that
+      // could cause a lot of churn. Instead, we wait until ~TabChild.
+    }
   }
 
   if (aIsActive) {

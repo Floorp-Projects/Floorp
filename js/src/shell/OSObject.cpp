@@ -445,8 +445,6 @@ class FileObject : public JSObject {
 static const js::ClassOps FileObjectClassOps = {
     nullptr,               /* addProperty */
     nullptr,               /* delProperty */
-    nullptr,               /* getProperty */
-    nullptr,               /* setProperty */
     nullptr,               /* enumerate */
     nullptr,               /* newEnumerate */
     nullptr,               /* resolve */

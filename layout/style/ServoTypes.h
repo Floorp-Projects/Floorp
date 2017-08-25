@@ -18,7 +18,7 @@
  * so don't add significant include dependencies to this file.
  */
 
-struct nsStyleSizes;
+class nsWindowSizes;
 struct ServoNodeData;
 namespace mozilla {
 
@@ -235,8 +235,7 @@ public:
 #undef STYLE_STRUCT_LIST_IGNORE_VARIABLES
   const nsStyleVariables* GetStyleVariables() const;
 
-  void AddSizeOfExcludingThis(mozilla::SizeOfState& aState,
-                              nsStyleSizes& aSizes) const;
+  void AddSizeOfExcludingThis(nsWindowSizes& aSizes) const;
 
 private:
   mozilla::ServoCustomPropertiesMap custom_properties;

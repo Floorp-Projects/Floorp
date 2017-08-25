@@ -12,6 +12,12 @@ char *to_char(const uint8_t *x) {
   return reinterpret_cast<char *>(const_cast<unsigned char *>(x));
 }
 
+void print_bn(std::string label, BIGNUM *x) {
+  char *xc = BN_bn2hex(x);
+  std::cout << label << ": " << std::hex << xc << std::endl;
+  OPENSSL_free(xc);
+}
+
 // Check that the two numbers are equal.
 void check_equal(BIGNUM *b, mp_int *m, size_t max_size) {
   char *bnBc = BN_bn2hex(b);

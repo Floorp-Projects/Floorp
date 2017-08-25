@@ -1,4 +1,4 @@
-#!/bin/sh
+#!/bin/bash
 
 set -xe
 
@@ -11,8 +11,10 @@ test $CANDIDATES_DIR
 : WORKSPACE                     ${WORKSPACE:=/home/worker/workspace}
 : ARTIFACTS_DIR                 ${ARTIFACTS_DIR:=/home/worker/artifacts}
 
+SCRIPT_DIRECTORY="$( cd "$( dirname "${BASH_SOURCE[0]}" )" && pwd )"
 
 TARGET="firefox-${VERSION}.snap"
+TARGET_FULL_PATH="$ARTIFACTS_DIR/$TARGET"
 
 mkdir -p "$ARTIFACTS_DIR"
 rm -rf "${WORKSPACE}/source" && mkdir -p "${WORKSPACE}/source/opt" "${WORKSPACE}/source/usr/bin"
@@ -44,13 +46,13 @@ sed -e "s/@VERSION@/${VERSION}/g" -e "s/@BUILD_NUMBER@/${BUILD_NUMBER}/g" snapcr
 cd ${WORKSPACE}
 snapcraft
 
-mv *.snap "$ARTIFACTS_DIR/$TARGET"
+mv *.snap "$TARGET_FULL_PATH"
 
 cd $ARTIFACTS_DIR
 
 # Generate checksums file
-size=$(stat --printf="%s" $ARTIFACTS_DIR/$TARGET)
-sha=$(sha512sum $ARTIFACTS_DIR/$TARGET | awk '{print $1}')
+size=$(stat --printf="%s" "$TARGET_FULL_PATH")
+sha=$(sha512sum "$TARGET_FULL_PATH" | awk '{print $1}')
 echo "$sha sha512 $size $TARGET" > $TARGET.checksums
 
 echo "Generating signing manifest"
@@ -64,3 +66,17 @@ EOF
 find . -ls
 cat $TARGET.checksums
 cat signing_manifest.json
+
+
+# Upload Beta snaps to Ubuntu Snap Store (No channel)
+# TODO: Add a release channel once ready for broader audience
+# TODO: Don't filter out non-beta releases
+# TODO: Parametrize channel depending on beta vs release
+# TODO: Make this part an independent task
+if [[ $VERSION =~ ^[0-9]+\.0b[0-9]+$ ]]; then
+  echo "Beta version detected. Uploading to Ubuntu Store (no channel)..."
+  bash "$SCRIPT_DIRECTORY/fetch_macaroons.sh" 'http://taskcluster/secrets/v1/secret/project/releng/snapcraft/firefox/edge'
+  snapcraft push "$TARGET_FULL_PATH"
+else
+  echo "Non-beta version detected. Nothing else to do."
+fi

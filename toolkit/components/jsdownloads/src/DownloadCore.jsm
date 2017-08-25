@@ -434,8 +434,18 @@ this.Download.prototype = {
 
         // Execute the actual download through the saver object.
         this._saverExecuting = true;
-        await this.saver.execute(DS_setProgressBytes.bind(this),
-                                 DS_setProperties.bind(this));
+        try {
+          await this.saver.execute(DS_setProgressBytes.bind(this),
+                                   DS_setProperties.bind(this));
+        } catch (ex) {
+          // Remove the target file placeholder and all partial data when
+          // needed, independently of which code path failed. In some cases, the
+          // component executing the download may have already removed the file.
+          if (!this.hasPartialData && !this.hasBlockedData) {
+            await this.saver.removeData();
+          }
+          throw ex;
+        }
 
         // Now that the actual saving finished, read the actual file size on
         // disk, that may be different from the amount of data transferred.
@@ -446,14 +456,11 @@ this.Download.prototype = {
         // without any asynchronous operations in the middle, so that another
         // cancellation request cannot start in the meantime and stay unhandled.
         if (this._promiseCanceled) {
-          try {
-            await OS.File.remove(this.target.path);
-          } catch (ex) {
-            Cu.reportError(ex);
-          }
-
-          this.target.exists = false;
-          this.target.size = 0;
+          // To keep the internal state of the Download object consistent, we
+          // just delete the target and effectively cancel the download. Since
+          // the DownloadSaver succeeded, we already renamed the ".part" file to
+          // the final name, and this results in all the data being deleted.
+          await this.saver.removeData();
 
           // Cancellation exceptions will be changed in the catch block below.
           throw new DownloadError();
@@ -637,13 +644,9 @@ this.Download.prototype = {
     }
 
     this._promiseConfirmBlock = (async () => {
-      try {
-        await OS.File.remove(this.target.partFilePath);
-      } catch (ex) {
-        await this.refresh();
-        this._promiseConfirmBlock = null;
-        throw ex;
-      }
+      // This call never throws exceptions. If the removal fails, the blocked
+      // data remains stored on disk in the ".part" file.
+      await this.saver.removeData();
 
       this.hasBlockedData = false;
       this._notifyChange();
@@ -811,7 +814,7 @@ this.Download.prototype = {
             await this._promiseCanceled;
           }
           // Ask the saver object to remove any partial data.
-          await this.saver.removePartialData();
+          await this.saver.removeData();
           // For completeness, clear the number of bytes transferred.
           if (this.currentBytes != 0 || this.hasPartialData) {
             this.currentBytes = 0;
@@ -1662,7 +1665,7 @@ this.DownloadSaver.prototype = {
    * @resolves When the download has finished successfully.
    * @rejects JavaScript exception if the download failed.
    */
-  execute: function DS_execute(aSetProgressBytesFn, aSetPropertiesFn) {
+  async execute(aSetProgressBytesFn, aSetPropertiesFn) {
     throw new Error("Not implemented.");
   },
 
@@ -1674,7 +1677,8 @@ this.DownloadSaver.prototype = {
   },
 
   /**
-   * Removes any partial data kept as part of a canceled or failed download.
+   * Removes any target file placeholder and any partial data kept as part of a
+   * canceled, failed, or temporarily blocked download.
    *
    * This method is never called until the promise returned by "execute" is
    * either resolved or rejected, and the "execute" method is not called again
@@ -1682,11 +1686,9 @@ this.DownloadSaver.prototype = {
    *
    * @return {Promise}
    * @resolves When the operation has finished successfully.
-   * @rejects JavaScript exception.
+   * @rejects Never.
    */
-  removePartialData: function DS_removePartialData() {
-    return Promise.resolve();
-  },
+  async removeData() {},
 
   /**
    * This can be called by the saver implementation when the download is already
@@ -1827,7 +1829,7 @@ this.DownloadCopySaver.prototype = {
   /**
    * Implements "DownloadSaver.execute".
    */
-  execute: function DCS_execute(aSetProgressBytesFn, aSetPropertiesFn) {
+  async execute(aSetProgressBytesFn, aSetPropertiesFn) {
     let copySaver = this;
 
     this._canceled = false;
@@ -1837,280 +1839,259 @@ this.DownloadCopySaver.prototype = {
     let partFilePath = download.target.partFilePath;
     let keepPartialData = download.tryToKeepPartialData;
 
-    return (async () => {
-      // Add the download to history the first time it is started in this
-      // session.  If the download is restarted in a different session, a new
-      // history visit will be added.  We do this just to avoid the complexity
-      // of serializing this state between sessions, since adding a new visit
-      // does not have any noticeable side effect.
-      if (!this.alreadyAddedToHistory) {
-        this.addToHistory();
-        this.alreadyAddedToHistory = true;
+    // Add the download to history the first time it is started in this
+    // session.  If the download is restarted in a different session, a new
+    // history visit will be added.  We do this just to avoid the complexity
+    // of serializing this state between sessions, since adding a new visit
+    // does not have any noticeable side effect.
+    if (!this.alreadyAddedToHistory) {
+      this.addToHistory();
+      this.alreadyAddedToHistory = true;
+    }
+
+    // To reduce the chance that other downloads reuse the same final target
+    // file name, we should create a placeholder as soon as possible, before
+    // starting the network request.  The placeholder is also required in case
+    // we are using a ".part" file instead of the final target while the
+    // download is in progress.
+    try {
+      // If the file already exists, don't delete its contents yet.
+      let file = await OS.File.open(targetPath, { write: true });
+      await file.close();
+    } catch (ex) {
+      if (!(ex instanceof OS.File.Error)) {
+        throw ex;
+      }
+      // Throw a DownloadError indicating that the operation failed because of
+      // the target file.  We cannot translate this into a specific result
+      // code, but we preserve the original message using the toString method.
+      let error = new DownloadError({ message: ex.toString() });
+      error.becauseTargetFailed = true;
+      throw error;
+    }
+
+    let deferSaveComplete = PromiseUtils.defer();
+
+    if (this._canceled) {
+      // Don't create the BackgroundFileSaver object if we have been
+      // canceled meanwhile.
+      throw new DownloadError({ message: "Saver canceled." });
+    }
+
+    // Create the object that will save the file in a background thread.
+    let backgroundFileSaver = new BackgroundFileSaverStreamListener();
+    try {
+      // When the operation completes, reflect the status in the promise
+      // returned by this download execution function.
+      backgroundFileSaver.observer = {
+        onTargetChange() { },
+        onSaveComplete: (aSaver, aStatus) => {
+          // Send notifications now that we can restart if needed.
+          if (Components.isSuccessCode(aStatus)) {
+            // Save the hash before freeing backgroundFileSaver.
+            this._sha256Hash = aSaver.sha256Hash;
+            this._signatureInfo = aSaver.signatureInfo;
+            this._redirects = aSaver.redirects;
+            deferSaveComplete.resolve();
+          } else {
+            // Infer the origin of the error from the failure code, because
+            // BackgroundFileSaver does not provide more specific data.
+            let properties = { result: aStatus, inferCause: true };
+            deferSaveComplete.reject(new DownloadError(properties));
+          }
+          // Free the reference cycle, to release resources earlier.
+          backgroundFileSaver.observer = null;
+          this._backgroundFileSaver = null;
+        },
+      };
+
+      // Create a channel from the source, and listen to progress
+      // notifications.
+      let channel = NetUtil.newChannel({
+        uri: download.source.url,
+        loadUsingSystemPrincipal: true,
+      });
+      if (channel instanceof Ci.nsIPrivateBrowsingChannel) {
+        channel.setPrivate(download.source.isPrivate);
+      }
+      if (channel instanceof Ci.nsIHttpChannel &&
+          download.source.referrer) {
+        channel.referrer = NetUtil.newURI(download.source.referrer);
       }
 
-      // To reduce the chance that other downloads reuse the same final target
-      // file name, we should create a placeholder as soon as possible, before
-      // starting the network request.  The placeholder is also required in case
-      // we are using a ".part" file instead of the final target while the
-      // download is in progress.
-      try {
-        // If the file already exists, don't delete its contents yet.
-        let file = await OS.File.open(targetPath, { write: true });
-        await file.close();
-      } catch (ex) {
-        if (!(ex instanceof OS.File.Error)) {
-          throw ex;
-        }
-        // Throw a DownloadError indicating that the operation failed because of
-        // the target file.  We cannot translate this into a specific result
-        // code, but we preserve the original message using the toString method.
-        let error = new DownloadError({ message: ex.toString() });
-        error.becauseTargetFailed = true;
-        throw error;
+      // This makes the channel be corretly throttled during page loads
+      // and also prevents its caching.
+      if (channel instanceof Ci.nsIHttpChannelInternal) {
+        channel.channelIsForDownload = true;
       }
 
-      try {
-        let deferSaveComplete = PromiseUtils.defer();
-
-        if (this._canceled) {
-          // Don't create the BackgroundFileSaver object if we have been
-          // canceled meanwhile.
-          throw new DownloadError({ message: "Saver canceled." });
-        }
-
-        // Create the object that will save the file in a background thread.
-        let backgroundFileSaver = new BackgroundFileSaverStreamListener();
+      // If we have data that we can use to resume the download from where
+      // it stopped, try to use it.
+      let resumeAttempted = false;
+      let resumeFromBytes = 0;
+      if (channel instanceof Ci.nsIResumableChannel && this.entityID &&
+          partFilePath && keepPartialData) {
         try {
-          // When the operation completes, reflect the status in the promise
-          // returned by this download execution function.
-          backgroundFileSaver.observer = {
-            onTargetChange() { },
-            onSaveComplete: (aSaver, aStatus) => {
-              // Send notifications now that we can restart if needed.
-              if (Components.isSuccessCode(aStatus)) {
-                // Save the hash before freeing backgroundFileSaver.
-                this._sha256Hash = aSaver.sha256Hash;
-                this._signatureInfo = aSaver.signatureInfo;
-                this._redirects = aSaver.redirects;
-                deferSaveComplete.resolve();
-              } else {
-                // Infer the origin of the error from the failure code, because
-                // BackgroundFileSaver does not provide more specific data.
-                let properties = { result: aStatus, inferCause: true };
-                deferSaveComplete.reject(new DownloadError(properties));
-              }
-              // Free the reference cycle, to release resources earlier.
-              backgroundFileSaver.observer = null;
-              this._backgroundFileSaver = null;
-            },
-          };
-
-          // Create a channel from the source, and listen to progress
-          // notifications.
-          let channel = NetUtil.newChannel({
-            uri: download.source.url,
-            loadUsingSystemPrincipal: true,
-          });
-          if (channel instanceof Ci.nsIPrivateBrowsingChannel) {
-            channel.setPrivate(download.source.isPrivate);
+          let stat = await OS.File.stat(partFilePath);
+          channel.resumeAt(stat.size, this.entityID);
+          resumeAttempted = true;
+          resumeFromBytes = stat.size;
+        } catch (ex) {
+          if (!(ex instanceof OS.File.Error) || !ex.becauseNoSuchFile) {
+            throw ex;
           }
-          if (channel instanceof Ci.nsIHttpChannel &&
-              download.source.referrer) {
-            channel.referrer = NetUtil.newURI(download.source.referrer);
+        }
+      }
+
+      channel.notificationCallbacks = {
+        QueryInterface: XPCOMUtils.generateQI([Ci.nsIInterfaceRequestor]),
+        getInterface: XPCOMUtils.generateQI([Ci.nsIProgressEventSink]),
+        onProgress: function DCSE_onProgress(aRequest, aContext, aProgress,
+                                             aProgressMax) {
+          let currentBytes = resumeFromBytes + aProgress;
+          let totalBytes = aProgressMax == -1 ? -1 : (resumeFromBytes +
+                                                      aProgressMax);
+          aSetProgressBytesFn(currentBytes, totalBytes, aProgress > 0 &&
+                              partFilePath && keepPartialData);
+        },
+        onStatus() { },
+      };
+
+      // If the callback was set, handle it now before opening the channel.
+      if (download.source.adjustChannel) {
+        await download.source.adjustChannel(channel);
+      }
+
+      // Open the channel, directing output to the background file saver.
+      backgroundFileSaver.QueryInterface(Ci.nsIStreamListener);
+      channel.asyncOpen2({
+        onStartRequest: function(aRequest, aContext) {
+          backgroundFileSaver.onStartRequest(aRequest, aContext);
+
+          // Check if the request's response has been blocked by Windows
+          // Parental Controls with an HTTP 450 error code.
+          if (aRequest instanceof Ci.nsIHttpChannel &&
+              aRequest.responseStatus == 450) {
+            // Set a flag that can be retrieved later when handling the
+            // cancellation so that the proper error can be thrown.
+            this.download._blockedByParentalControls = true;
+            aRequest.cancel(Cr.NS_BINDING_ABORTED);
+            return;
           }
 
-          // This makes the channel be corretly throttled during page loads
-          // and also prevents its caching.
-          if (channel instanceof Ci.nsIHttpChannelInternal) {
-            channel.channelIsForDownload = true;
+          aSetPropertiesFn({ contentType: channel.contentType });
+
+          // Ensure we report the value of "Content-Length", if available,
+          // even if the download doesn't generate any progress events
+          // later.
+          if (channel.contentLength >= 0) {
+            aSetProgressBytesFn(0, channel.contentLength);
           }
 
-          // If we have data that we can use to resume the download from where
-          // it stopped, try to use it.
-          let resumeAttempted = false;
-          let resumeFromBytes = 0;
-          if (channel instanceof Ci.nsIResumableChannel && this.entityID &&
-              partFilePath && keepPartialData) {
-            try {
-              let stat = await OS.File.stat(partFilePath);
-              channel.resumeAt(stat.size, this.entityID);
-              resumeAttempted = true;
-              resumeFromBytes = stat.size;
-            } catch (ex) {
-              if (!(ex instanceof OS.File.Error) || !ex.becauseNoSuchFile) {
-                throw ex;
+          // If the URL we are downloading from includes a file extension
+          // that matches the "Content-Encoding" header, for example ".gz"
+          // with a "gzip" encoding, we should save the file in its encoded
+          // form.  In all other cases, we decode the body while saving.
+          if (channel instanceof Ci.nsIEncodedChannel &&
+              channel.contentEncodings) {
+            let uri = channel.URI;
+            if (uri instanceof Ci.nsIURL && uri.fileExtension) {
+              // Only the first, outermost encoding is considered.
+              let encoding = channel.contentEncodings.getNext();
+              if (encoding) {
+                channel.applyConversion =
+                  gExternalHelperAppService.applyDecodingForExtension(
+                                            uri.fileExtension, encoding);
               }
             }
           }
 
-          channel.notificationCallbacks = {
-            QueryInterface: XPCOMUtils.generateQI([Ci.nsIInterfaceRequestor]),
-            getInterface: XPCOMUtils.generateQI([Ci.nsIProgressEventSink]),
-            onProgress: function DCSE_onProgress(aRequest, aContext, aProgress,
-                                                 aProgressMax) {
-              let currentBytes = resumeFromBytes + aProgress;
-              let totalBytes = aProgressMax == -1 ? -1 : (resumeFromBytes +
-                                                          aProgressMax);
-              aSetProgressBytesFn(currentBytes, totalBytes, aProgress > 0 &&
-                                  partFilePath && keepPartialData);
-            },
-            onStatus() { },
-          };
-
-          // If the callback was set, handle it now before opening the channel.
-          if (download.source.adjustChannel) {
-            await download.source.adjustChannel(channel);
-          }
-
-          // Open the channel, directing output to the background file saver.
-          backgroundFileSaver.QueryInterface(Ci.nsIStreamListener);
-          channel.asyncOpen2({
-            onStartRequest: function(aRequest, aContext) {
-              backgroundFileSaver.onStartRequest(aRequest, aContext);
-
-              // Check if the request's response has been blocked by Windows
-              // Parental Controls with an HTTP 450 error code.
-              if (aRequest instanceof Ci.nsIHttpChannel &&
-                  aRequest.responseStatus == 450) {
-                // Set a flag that can be retrieved later when handling the
-                // cancellation so that the proper error can be thrown.
-                this.download._blockedByParentalControls = true;
-                aRequest.cancel(Cr.NS_BINDING_ABORTED);
-                return;
-              }
-
-              aSetPropertiesFn({ contentType: channel.contentType });
-
-              // Ensure we report the value of "Content-Length", if available,
-              // even if the download doesn't generate any progress events
-              // later.
-              if (channel.contentLength >= 0) {
-                aSetProgressBytesFn(0, channel.contentLength);
-              }
-
-              // If the URL we are downloading from includes a file extension
-              // that matches the "Content-Encoding" header, for example ".gz"
-              // with a "gzip" encoding, we should save the file in its encoded
-              // form.  In all other cases, we decode the body while saving.
-              if (channel instanceof Ci.nsIEncodedChannel &&
-                  channel.contentEncodings) {
-                let uri = channel.URI;
-                if (uri instanceof Ci.nsIURL && uri.fileExtension) {
-                  // Only the first, outermost encoding is considered.
-                  let encoding = channel.contentEncodings.getNext();
-                  if (encoding) {
-                    channel.applyConversion =
-                      gExternalHelperAppService.applyDecodingForExtension(
-                                                uri.fileExtension, encoding);
-                  }
-                }
-              }
-
-              if (keepPartialData) {
-                // If the source is not resumable, don't keep partial data even
-                // if we were asked to try and do it.
-                if (aRequest instanceof Ci.nsIResumableChannel) {
-                  try {
-                    // If reading the ID succeeds, the source is resumable.
-                    this.entityID = aRequest.entityID;
-                  } catch (ex) {
-                    if (!(ex instanceof Components.Exception) ||
-                        ex.result != Cr.NS_ERROR_NOT_RESUMABLE) {
-                      throw ex;
-                    }
-                    keepPartialData = false;
-                  }
-                } else {
-                  keepPartialData = false;
-                }
-              }
-
-              // Enable hashing and signature verification before setting the
-              // target.
-              backgroundFileSaver.enableSha256();
-              backgroundFileSaver.enableSignatureInfo();
-              if (partFilePath) {
-                // If we actually resumed a request, append to the partial data.
-                if (resumeAttempted) {
-                  // TODO: Handle Cr.NS_ERROR_ENTITY_CHANGED
-                  backgroundFileSaver.enableAppend();
-                }
-
-                // Use a part file, determining if we should keep it on failure.
-                backgroundFileSaver.setTarget(new FileUtils.File(partFilePath),
-                                              keepPartialData);
-              } else {
-                // Set the final target file, and delete it on failure.
-                backgroundFileSaver.setTarget(new FileUtils.File(targetPath),
-                                              false);
-              }
-            }.bind(copySaver),
-
-            onStopRequest(aRequest, aContext, aStatusCode) {
+          if (keepPartialData) {
+            // If the source is not resumable, don't keep partial data even
+            // if we were asked to try and do it.
+            if (aRequest instanceof Ci.nsIResumableChannel) {
               try {
-                backgroundFileSaver.onStopRequest(aRequest, aContext,
-                                                  aStatusCode);
-              } finally {
-                // If the data transfer completed successfully, indicate to the
-                // background file saver that the operation can finish.  If the
-                // data transfer failed, the saver has been already stopped.
-                if (Components.isSuccessCode(aStatusCode)) {
-                  backgroundFileSaver.finish(Cr.NS_OK);
+                // If reading the ID succeeds, the source is resumable.
+                this.entityID = aRequest.entityID;
+              } catch (ex) {
+                if (!(ex instanceof Components.Exception) ||
+                    ex.result != Cr.NS_ERROR_NOT_RESUMABLE) {
+                  throw ex;
                 }
+                keepPartialData = false;
               }
-            },
-
-            onDataAvailable(aRequest, aContext, aInputStream,
-                                      aOffset, aCount) {
-              backgroundFileSaver.onDataAvailable(aRequest, aContext,
-                                                  aInputStream, aOffset,
-                                                  aCount);
-            },
-          });
-
-          // We should check if we have been canceled in the meantime, after
-          // all the previous asynchronous operations have been executed and
-          // just before we set the _backgroundFileSaver property.
-          if (this._canceled) {
-            throw new DownloadError({ message: "Saver canceled." });
+            } else {
+              keepPartialData = false;
+            }
           }
 
-          // If the operation succeeded, store the object to allow cancellation.
-          this._backgroundFileSaver = backgroundFileSaver;
-        } catch (ex) {
-          // In case an error occurs while setting up the chain of objects for
-          // the download, ensure that we release the resources of the saver.
-          backgroundFileSaver.finish(Cr.NS_ERROR_FAILURE);
-          // Since we're not going to handle deferSaveComplete.promise below,
-          // we need to make sure that the rejection is handled.
-          deferSaveComplete.promise.catch(() => {});
-          throw ex;
-        }
+          // Enable hashing and signature verification before setting the
+          // target.
+          backgroundFileSaver.enableSha256();
+          backgroundFileSaver.enableSignatureInfo();
+          if (partFilePath) {
+            // If we actually resumed a request, append to the partial data.
+            if (resumeAttempted) {
+              // TODO: Handle Cr.NS_ERROR_ENTITY_CHANGED
+              backgroundFileSaver.enableAppend();
+            }
 
-        // We will wait on this promise in case no error occurred while setting
-        // up the chain of objects for the download.
-        await deferSaveComplete.promise;
-
-        await this._checkReputationAndMove(aSetPropertiesFn);
-      } catch (ex) {
-        // Ensure we always remove the placeholder for the final target file on
-        // failure, independently of which code path failed.  In some cases, the
-        // background file saver may have already removed the file.
-        try {
-          await OS.File.remove(targetPath);
-        } catch (e2) {
-          // If we failed during the operation, we report the error but use the
-          // original one as the failure reason of the download.  Note that on
-          // Windows we may get an access denied error instead of a no such file
-          // error if the file existed before, and was recently deleted.
-          if (!(e2 instanceof OS.File.Error &&
-                (e2.becauseNoSuchFile || e2.becauseAccessDenied))) {
-            Cu.reportError(e2);
+            // Use a part file, determining if we should keep it on failure.
+            backgroundFileSaver.setTarget(new FileUtils.File(partFilePath),
+                                          keepPartialData);
+          } else {
+            // Set the final target file, and delete it on failure.
+            backgroundFileSaver.setTarget(new FileUtils.File(targetPath),
+                                          false);
           }
-        }
-        throw ex;
+        }.bind(copySaver),
+
+        onStopRequest(aRequest, aContext, aStatusCode) {
+          try {
+            backgroundFileSaver.onStopRequest(aRequest, aContext,
+                                              aStatusCode);
+          } finally {
+            // If the data transfer completed successfully, indicate to the
+            // background file saver that the operation can finish.  If the
+            // data transfer failed, the saver has been already stopped.
+            if (Components.isSuccessCode(aStatusCode)) {
+              backgroundFileSaver.finish(Cr.NS_OK);
+            }
+          }
+        },
+
+        onDataAvailable(aRequest, aContext, aInputStream,
+                                  aOffset, aCount) {
+          backgroundFileSaver.onDataAvailable(aRequest, aContext,
+                                              aInputStream, aOffset,
+                                              aCount);
+        },
+      });
+
+      // We should check if we have been canceled in the meantime, after
+      // all the previous asynchronous operations have been executed and
+      // just before we set the _backgroundFileSaver property.
+      if (this._canceled) {
+        throw new DownloadError({ message: "Saver canceled." });
       }
-    })();
+
+      // If the operation succeeded, store the object to allow cancellation.
+      this._backgroundFileSaver = backgroundFileSaver;
+    } catch (ex) {
+      // In case an error occurs while setting up the chain of objects for
+      // the download, ensure that we release the resources of the saver.
+      backgroundFileSaver.finish(Cr.NS_ERROR_FAILURE);
+      // Since we're not going to handle deferSaveComplete.promise below,
+      // we need to make sure that the rejection is handled.
+      deferSaveComplete.promise.catch(() => {});
+      throw ex;
+    }
+
+    // We will wait on this promise in case no error occurred while setting
+    // up the chain of objects for the download.
+    await deferSaveComplete.promise;
+
+    await this._checkReputationAndMove(aSetPropertiesFn);
   },
 
   /**
@@ -2141,11 +2122,7 @@ this.DownloadCopySaver.prototype = {
       // download did not use a partial file path, meaning it
       // currently has its final filename.
       if (!DownloadIntegration.shouldKeepBlockedData() || !partFilePath) {
-        try {
-          await OS.File.remove(partFilePath || targetPath);
-        } catch (ex) {
-          Cu.reportError(ex);
-        }
+        await this.removeData();
       } else {
         newProperties.hasBlockedData = true;
       }
@@ -2175,20 +2152,34 @@ this.DownloadCopySaver.prototype = {
   },
 
   /**
-   * Implements "DownloadSaver.removePartialData".
+   * Implements "DownloadSaver.removeData".
    */
-  removePartialData() {
-    return (async () => {
-      if (this.download.target.partFilePath) {
-        try {
-          await OS.File.remove(this.download.target.partFilePath);
-        } catch (ex) {
-          if (!(ex instanceof OS.File.Error) || !ex.becauseNoSuchFile) {
-            throw ex;
-          }
+  async removeData() {
+    // Defined inline so removeData can be shared with DownloadLegacySaver.
+    async function _tryToRemoveFile(path) {
+      try {
+        await OS.File.remove(path);
+      } catch (ex) {
+        // On Windows we may get an access denied error instead of a no such
+        // file error if the file existed before, and was recently deleted. This
+        // is likely to happen when the component that executed the download has
+        // just deleted the target file itself.
+        if (!(ex instanceof OS.File.Error &&
+              (ex.becauseNoSuchFile || ex.becauseAccessDenied))) {
+          Cu.reportError(ex);
         }
       }
-    })();
+    }
+
+    if (this.download.target.partFilePath) {
+      await _tryToRemoveFile(this.download.target.partFilePath);
+    }
+
+    if (this.download.target.path) {
+      await _tryToRemoveFile(this.download.target.path);
+      this.download.target.exists = false;
+      this.download.target.size = 0;
+    }
   },
 
   /**
@@ -2421,7 +2412,7 @@ this.DownloadLegacySaver.prototype = {
   /**
    * Implements "DownloadSaver.execute".
    */
-  execute: function DLS_execute(aSetProgressBytesFn, aSetPropertiesFn) {
+  async execute(aSetProgressBytesFn, aSetPropertiesFn) {
     // Check if this is not the first execution of the download.  The Download
     // object guarantees that this function is not re-entered during execution.
     if (this.firstExecutionFinished) {
@@ -2431,7 +2422,8 @@ this.DownloadLegacySaver.prototype = {
         this.copySaver.entityID = this.entityID;
         this.copySaver.alreadyAddedToHistory = true;
       }
-      return this.copySaver.execute.apply(this.copySaver, arguments);
+      await this.copySaver.execute.apply(this.copySaver, arguments);
+      return;
     }
 
     this.setProgressBytesFn = aSetProgressBytesFn;
@@ -2439,75 +2431,58 @@ this.DownloadLegacySaver.prototype = {
       this.onProgressBytes(this.currentBytes, this.totalBytes);
     }
 
-    return (async () => {
-      try {
-        // Wait for the component that executes the download to finish.
-        await this.deferExecuted.promise;
+    try {
+      // Wait for the component that executes the download to finish.
+      await this.deferExecuted.promise;
 
-        // At this point, the "request" property has been populated.  Ensure we
-        // report the value of "Content-Length", if available, even if the
-        // download didn't generate any progress events.
-        if (!this.progressWasNotified &&
-            this.request instanceof Ci.nsIChannel &&
-            this.request.contentLength >= 0) {
-          aSetProgressBytesFn(0, this.request.contentLength);
-        }
-
-        // If the component executing the download provides the path of a
-        // ".part" file, it means that it expects the listener to move the file
-        // to its final target path when the download succeeds.  In this case,
-        // an empty ".part" file is created even if no data was received from
-        // the source.
-        //
-        // When no ".part" file path is provided the download implementation may
-        // not have created the target file (if no data was received from the
-        // source).  In this case, ensure that an empty file is created as
-        // expected.
-        if (!this.download.target.partFilePath) {
-          try {
-            // This atomic operation is more efficient than an existence check.
-            let file = await OS.File.open(this.download.target.path,
-                                          { create: true });
-            await file.close();
-          } catch (ex) {
-            if (!(ex instanceof OS.File.Error) || !ex.becauseExists) {
-              throw ex;
-            }
-          }
-        }
-
-        await this._checkReputationAndMove(aSetPropertiesFn);
-
-      } catch (ex) {
-        // Ensure we always remove the final target file on failure,
-        // independently of which code path failed.  In some cases, the
-        // component executing the download may have already removed the file.
-        try {
-          await OS.File.remove(this.download.target.path);
-        } catch (e2) {
-          // If we failed during the operation, we report the error but use the
-          // original one as the failure reason of the download.  Note that on
-          // Windows we may get an access denied error instead of a no such file
-          // error if the file existed before, and was recently deleted.
-          if (!(e2 instanceof OS.File.Error &&
-                (e2.becauseNoSuchFile || e2.becauseAccessDenied))) {
-            Cu.reportError(e2);
-          }
-        }
-        // In case the operation failed, ensure we stop downloading data.  Since
-        // we never re-enter this function, deferCanceled is always available.
-        this.deferCanceled.resolve();
-        throw ex;
-      } finally {
-        // We don't need the reference to the request anymore.  We must also set
-        // deferCanceled to null in order to free any indirect references it
-        // may hold to the request.
-        this.request = null;
-        this.deferCanceled = null;
-        // Allow the download to restart through a DownloadCopySaver.
-        this.firstExecutionFinished = true;
+      // At this point, the "request" property has been populated.  Ensure we
+      // report the value of "Content-Length", if available, even if the
+      // download didn't generate any progress events.
+      if (!this.progressWasNotified &&
+          this.request instanceof Ci.nsIChannel &&
+          this.request.contentLength >= 0) {
+        aSetProgressBytesFn(0, this.request.contentLength);
       }
-    })();
+
+      // If the component executing the download provides the path of a
+      // ".part" file, it means that it expects the listener to move the file
+      // to its final target path when the download succeeds.  In this case,
+      // an empty ".part" file is created even if no data was received from
+      // the source.
+      //
+      // When no ".part" file path is provided the download implementation may
+      // not have created the target file (if no data was received from the
+      // source).  In this case, ensure that an empty file is created as
+      // expected.
+      if (!this.download.target.partFilePath) {
+        try {
+          // This atomic operation is more efficient than an existence check.
+          let file = await OS.File.open(this.download.target.path,
+                                        { create: true });
+          await file.close();
+        } catch (ex) {
+          if (!(ex instanceof OS.File.Error) || !ex.becauseExists) {
+            throw ex;
+          }
+        }
+      }
+
+      await this._checkReputationAndMove(aSetPropertiesFn);
+
+    } catch (ex) {
+      // In case the operation failed, ensure we stop downloading data.  Since
+      // we never re-enter this function, deferCanceled is always available.
+      this.deferCanceled.resolve();
+      throw ex;
+    } finally {
+      // We don't need the reference to the request anymore.  We must also set
+      // deferCanceled to null in order to free any indirect references it
+      // may hold to the request.
+      this.request = null;
+      this.deferCanceled = null;
+      // Allow the download to restart through a DownloadCopySaver.
+      this.firstExecutionFinished = true;
+    }
   },
 
   _checkReputationAndMove() {
@@ -2533,13 +2508,13 @@ this.DownloadLegacySaver.prototype = {
   },
 
   /**
-   * Implements "DownloadSaver.removePartialData".
+   * Implements "DownloadSaver.removeData".
    */
-  removePartialData() {
+  removeData() {
     // DownloadCopySaver and DownloadLeagcySaver use the same logic for removing
     // partially downloaded data, though this implementation isn't shared by
     // other saver types, thus it isn't found on their shared prototype.
-    return DownloadCopySaver.prototype.removePartialData.call(this);
+    return DownloadCopySaver.prototype.removeData.call(this);
   },
 
   /**
@@ -2642,88 +2617,86 @@ this.DownloadPDFSaver.prototype = {
   /**
    * Implements "DownloadSaver.execute".
    */
-  execute(aSetProgressBytesFn, aSetPropertiesFn) {
-    return (async () => {
-      if (!this.download.source.windowRef) {
-        throw new DownloadError({
-          message: "PDF saver must be passed an open window, and cannot be restarted.",
-          becauseSourceFailed: true,
-        });
-      }
+  async execute(aSetProgressBytesFn, aSetPropertiesFn) {
+    if (!this.download.source.windowRef) {
+      throw new DownloadError({
+        message: "PDF saver must be passed an open window, and cannot be restarted.",
+        becauseSourceFailed: true,
+      });
+    }
 
-      let win = this.download.source.windowRef.get();
+    let win = this.download.source.windowRef.get();
 
-      // Set windowRef to null to avoid re-trying.
-      this.download.source.windowRef = null;
+    // Set windowRef to null to avoid re-trying.
+    this.download.source.windowRef = null;
 
-      if (!win) {
-        throw new DownloadError({
-          message: "PDF saver can't save a window that has been closed.",
-          becauseSourceFailed: true,
-        });
-      }
+    if (!win) {
+      throw new DownloadError({
+        message: "PDF saver can't save a window that has been closed.",
+        becauseSourceFailed: true,
+      });
+    }
 
-      this.addToHistory();
+    this.addToHistory();
 
-      let targetPath = this.download.target.path;
+    let targetPath = this.download.target.path;
 
-      // An empty target file must exist for the PDF printer to work correctly.
-      let file = await OS.File.open(targetPath, { truncate: true });
-      await file.close();
+    // An empty target file must exist for the PDF printer to work correctly.
+    let file = await OS.File.open(targetPath, { truncate: true });
+    await file.close();
 
-      let printSettings = gPrintSettingsService.newPrintSettings;
+    let printSettings = gPrintSettingsService.newPrintSettings;
 
-      printSettings.printToFile = true;
-      printSettings.outputFormat = Ci.nsIPrintSettings.kOutputFormatPDF;
-      printSettings.toFileName = targetPath;
+    printSettings.printToFile = true;
+    printSettings.outputFormat = Ci.nsIPrintSettings.kOutputFormatPDF;
+    printSettings.toFileName = targetPath;
 
-      printSettings.printSilent = true;
-      printSettings.showPrintProgress = false;
+    printSettings.printSilent = true;
+    printSettings.showPrintProgress = false;
 
-      printSettings.printBGImages = true;
-      printSettings.printBGColors = true;
-      printSettings.printFrameType = Ci.nsIPrintSettings.kFramesAsIs;
-      printSettings.headerStrCenter = "";
-      printSettings.headerStrLeft = "";
-      printSettings.headerStrRight = "";
-      printSettings.footerStrCenter = "";
-      printSettings.footerStrLeft = "";
-      printSettings.footerStrRight = "";
+    printSettings.printBGImages = true;
+    printSettings.printBGColors = true;
+    printSettings.printFrameType = Ci.nsIPrintSettings.kFramesAsIs;
+    printSettings.headerStrCenter = "";
+    printSettings.headerStrLeft = "";
+    printSettings.headerStrRight = "";
+    printSettings.footerStrCenter = "";
+    printSettings.footerStrLeft = "";
+    printSettings.footerStrRight = "";
 
-      this._webBrowserPrint = win.QueryInterface(Ci.nsIInterfaceRequestor)
-                                 .getInterface(Ci.nsIWebBrowserPrint);
+    this._webBrowserPrint = win.QueryInterface(Ci.nsIInterfaceRequestor)
+                               .getInterface(Ci.nsIWebBrowserPrint);
 
-      try {
-        await new Promise((resolve, reject) => {
-          this._webBrowserPrint.print(printSettings, {
-            onStateChange(webProgress, request, stateFlags, status) {
-              if (stateFlags & Ci.nsIWebProgressListener.STATE_STOP) {
-                if (!Components.isSuccessCode(status)) {
-                  reject(new DownloadError({ result: status,
-                                             inferCause: true }));
-                } else {
-                  resolve();
-                }
+    try {
+      await new Promise((resolve, reject) => {
+        this._webBrowserPrint.print(printSettings, {
+          onStateChange(webProgress, request, stateFlags, status) {
+            if (stateFlags & Ci.nsIWebProgressListener.STATE_STOP) {
+              if (!Components.isSuccessCode(status)) {
+                reject(new DownloadError({ result: status,
+                                           inferCause: true }));
+              } else {
+                resolve();
               }
-            },
-            onProgressChange(webProgress, request, curSelfProgress,
-                                       maxSelfProgress, curTotalProgress,
-                                       maxTotalProgress) {
-              aSetProgressBytesFn(curTotalProgress, maxTotalProgress, false);
-            },
-            onLocationChange() {},
-            onStatusChange() {},
-            onSecurityChange() {},
-          });
+            }
+          },
+          onProgressChange(webProgress, request, curSelfProgress,
+                                     maxSelfProgress, curTotalProgress,
+                                     maxTotalProgress) {
+            aSetProgressBytesFn(curTotalProgress, maxTotalProgress, false);
+          },
+          onLocationChange() {},
+          onStatusChange() {},
+          onSecurityChange() {},
         });
-      } finally {
-        // Remove the print object to avoid leaks
-        this._webBrowserPrint = null;
-      }
+      });
+    } finally {
+      // Remove the print object to avoid leaks
+      this._webBrowserPrint = null;
+    }
 
-      let fileInfo = await OS.File.stat(targetPath);
-      aSetProgressBytesFn(fileInfo.size, fileInfo.size, false);
-    })();
+    let fileInfo = await OS.File.stat(targetPath);
+    aSetProgressBytesFn(fileInfo.size, fileInfo.size, false);
   },
 
   /**

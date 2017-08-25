@@ -581,18 +581,6 @@ nsAutoLowPriorityIO::~nsAutoLowPriorityIO()
 
 namespace mozilla {
 
-PRThread*
-GetCurrentVirtualThread()
-{
-  return PR_GetCurrentThread();
-}
-
-PRThread*
-GetCurrentPhysicalThread()
-{
-  return PR_GetCurrentThread();
-}
-
 nsIEventTarget*
 GetCurrentThreadEventTarget()
 {

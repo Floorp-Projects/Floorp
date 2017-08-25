@@ -1,3 +1,6 @@
+with Files("**"):
+    BUG_COMPONENT = ("Firefox", "Device Permissions")
+
 DEFINES['MOZ_APP_VERSION'] = CONFIG['MOZ_APP_VERSION']
 DEFINES['MOZ_APP_MAXVERSION'] = CONFIG['MOZ_APP_MAXVERSION']
 

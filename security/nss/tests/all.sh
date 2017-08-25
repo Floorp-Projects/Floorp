@@ -107,6 +107,8 @@
 #
 ########################################################################
 
+RUN_FIPS=""
+
 ############################## run_tests ###############################
 # run test suites defined in TESTS variable, skip scripts defined in
 # TESTS_SKIP variable
@@ -187,7 +189,7 @@ run_cycle_upgrade_db()
     init_directories
 
     if [ -r "${OLDHOSTDIR}/cert.log" ]; then
-        DIRS="alicedir bobdir CA cert_extensions client clientCA dave eccurves eve ext_client ext_server fips SDR server serverCA stapling tools/copydir cert.log cert.done tests.*"
+        DIRS="alicedir bobdir CA cert_extensions client clientCA dave eccurves eve ext_client ext_server $RUN_FIPS SDR server serverCA stapling tools/copydir cert.log cert.done tests.*"
         for i in $DIRS
         do
             cp -r ${OLDHOSTDIR}/${i} ${HOSTDIR} #2> /dev/null
@@ -273,7 +275,12 @@ run_cycles()
 cycles="standard pkix upgradedb sharedb"
 CYCLES=${NSS_CYCLES:-$cycles}
 
-tests="cipher lowhash libpkix cert dbtests tools fips sdr crmf smime ssl ocsp merge pkits ec gtests ssl_gtests"
+if [ -n "$NSS_FORCE_FIPS" ]; then
+    RUN_FIPS="fips"
+    export NSS_TEST_ENABLE_FIPS=1
+fi
+
+tests="cipher lowhash libpkix cert dbtests tools $RUN_FIPS sdr crmf smime ssl ocsp merge pkits ec gtests ssl_gtests"
 # Don't run chains tests when we have a gyp build.
 if [ "$OBJDIR" != "Debug" -a "$OBJDIR" != "Release" ]; then
   tests="$tests chains"

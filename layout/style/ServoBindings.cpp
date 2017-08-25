@@ -228,8 +228,7 @@ ServoComputedData::GetStyleVariables() const
 MOZ_DEFINE_MALLOC_SIZE_OF(ServoStyleStructsMallocSizeOf)
 
 void
-ServoComputedData::AddSizeOfExcludingThis(SizeOfState& aState,
-                                          nsStyleSizes& aSizes) const
+ServoComputedData::AddSizeOfExcludingThis(nsWindowSizes& aSizes) const
 {
   // XXX WARNING: GetStyleFoo() returns an nsStyleFoo pointer. This nsStyleFoo
   // sits within a servo_arc::Arc, i.e. it is preceded by a word-sized
@@ -248,15 +247,15 @@ ServoComputedData::AddSizeOfExcludingThis(SizeOfState& aState,
   // 1389305), but that's not available right now.
   //
   // Also, we use ServoStyleStructsMallocSizeOf rather than
-  // |aState.mMallocSizeOf| to better distinguish in DMD's output the memory
-  // measured here.
+  // |aSizes.mState.mMallocSizeOf| to better distinguish in DMD's output the
+  // memory measured here.
 #define STYLE_STRUCT(name_, cb_) \
   static_assert(alignof(nsStyle##name_) <= sizeof(size_t), \
                 "alignment will break AddSizeOfExcludingThis()"); \
   const char* p##name_ = reinterpret_cast<const char*>(GetStyle##name_()); \
   p##name_ -= sizeof(size_t); \
-  if (!aState.HaveSeenPtr(p##name_)) { \
-    aSizes.NS_STYLE_SIZES_FIELD(name_) += \
+  if (!aSizes.mState.HaveSeenPtr(p##name_)) { \
+    aSizes.mServoStyleSizes.NS_STYLE_SIZES_FIELD(name_) += \
       ServoStyleStructsMallocSizeOf(p##name_); \
   }
   #define STYLE_STRUCT_LIST_IGNORE_VARIABLES
@@ -264,9 +263,9 @@ ServoComputedData::AddSizeOfExcludingThis(SizeOfState& aState,
 #undef STYLE_STRUCT
 #undef STYLE_STRUCT_LIST_IGNORE_VARIABLES
 
-  if (visited_style.mPtr && !aState.HaveSeenPtr(visited_style.mPtr)) {
+  if (visited_style.mPtr && !aSizes.mState.HaveSeenPtr(visited_style.mPtr)) {
     visited_style.mPtr->AddSizeOfIncludingThis(
-      aState, aSizes, &aSizes.mComputedValuesVisited);
+      aSizes, &aSizes.mLayoutComputedValuesVisited);
   }
 
   // Measurement of the following members may be added later if DMD finds it is

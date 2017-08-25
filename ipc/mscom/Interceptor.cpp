@@ -9,6 +9,7 @@
 #include "mozilla/dom/ContentChild.h"
 #include "mozilla/Move.h"
 #include "mozilla/mscom/DispatchForwarder.h"
+#include "mozilla/mscom/FastMarshaler.h"
 #include "mozilla/mscom/Interceptor.h"
 #include "mozilla/mscom/InterceptorLog.h"
 #include "mozilla/mscom/MainThreadInvoker.h"
@@ -192,49 +193,13 @@ Interceptor::GetClassForHandler(DWORD aDestContext, void* aDestContextPtr,
   return mEventSink->GetHandler(WrapNotNull(aHandlerClsid));
 }
 
-/**
- * When we are marshaling to the parent process main thread, we want to turn
- * off COM's ping functionality. That functionality is designed to free
- * strong references held by defunct client processes. Since our content
- * processes cannot outlive our parent process, we turn off pings when we know
- * that the COM client is going to be our parent process. This provides a
- * significant performance boost in a11y code due to large numbers of remote
- * objects being created and destroyed within a short period of time.
- */
-DWORD
-Interceptor::GetMarshalFlags(DWORD aDestContext, DWORD aMarshalFlags)
-{
-  // Only worry about local contexts.
-  if (aDestContext != MSHCTX_LOCAL) {
-    return aMarshalFlags;
-  }
-
-  // Get the caller TID. We check for S_FALSE to ensure that the caller is a
-  // different process from ours, which is the only scenario we care about.
-  DWORD callerTid;
-  if (::CoGetCallerTID(&callerTid) != S_FALSE) {
-    return aMarshalFlags;
-  }
-
-  // Now we compare the caller TID to our parent main thread TID.
-  const DWORD chromeMainTid =
-    dom::ContentChild::GetSingleton()->GetChromeMainThreadId();
-  if (callerTid != chromeMainTid) {
-    return aMarshalFlags;
-  }
-
-  // The caller is our parent main thread. Disable ping functionality.
-  return aMarshalFlags | MSHLFLAGS_NOPING;
-}
-
 HRESULT
 Interceptor::GetUnmarshalClass(REFIID riid, void* pv, DWORD dwDestContext,
                                void* pvDestContext, DWORD mshlflags,
                                CLSID* pCid)
 {
   return mStdMarshal->GetUnmarshalClass(riid, pv, dwDestContext, pvDestContext,
-                                        GetMarshalFlags(dwDestContext,
-                                                        mshlflags), pCid);
+                                        mshlflags, pCid);
 }
 
 HRESULT
@@ -243,10 +208,7 @@ Interceptor::GetMarshalSizeMax(REFIID riid, void* pv, DWORD dwDestContext,
                                DWORD* pSize)
 {
   HRESULT hr = mStdMarshal->GetMarshalSizeMax(riid, pv, dwDestContext,
-                                              pvDestContext,
-                                              GetMarshalFlags(dwDestContext,
-                                                              mshlflags),
-                                              pSize);
+                                              pvDestContext, mshlflags, pSize);
   if (FAILED(hr)) {
     return hr;
   }
@@ -285,44 +247,30 @@ Interceptor::MarshalInterface(IStream* pStm, REFIID riid, void* pv,
 #endif // defined(MOZ_MSCOM_REMARSHAL_NO_HANDLER)
 
   hr = mStdMarshal->MarshalInterface(pStm, riid, pv, dwDestContext,
-                                     pvDestContext,
-                                     GetMarshalFlags(dwDestContext, mshlflags));
+                                     pvDestContext, mshlflags);
   if (FAILED(hr)) {
     return hr;
   }
 
 #if defined(MOZ_MSCOM_REMARSHAL_NO_HANDLER)
-  if (XRE_IsContentProcess()) {
-    const DWORD chromeMainTid =
-      dom::ContentChild::GetSingleton()->GetChromeMainThreadId();
+  if (XRE_IsContentProcess() && IsCallerExternalProcess()) {
+    // The caller isn't our chrome process, so do not provide a handler.
 
-    /*
-     * CoGetCallerTID() gives us the caller's thread ID when that thread resides
-     * in a single-threaded apartment. Since our chrome main thread does live
-     * inside an STA, we will therefore be able to check whether the caller TID
-     * equals our chrome main thread TID. This enables us to distinguish
-     * between our chrome thread vs other out-of-process callers.
-     */
-    DWORD callerTid;
-    if (::CoGetCallerTID(&callerTid) == S_FALSE && callerTid != chromeMainTid) {
-      // The caller isn't our chrome process, so do not provide a handler.
-
-      // First, save the current position that marks the current end of the
-      // OBJREF in the stream.
-      ULARGE_INTEGER endPos;
-      hr = pStm->Seek(seekTo, STREAM_SEEK_CUR, &endPos);
-      if (FAILED(hr)) {
-        return hr;
-      }
-
-      // Now strip out the handler.
-      if (!StripHandlerFromOBJREF(WrapNotNull(pStm), objrefPos.QuadPart,
-                                  endPos.QuadPart)) {
-        return E_FAIL;
-      }
-
-      return S_OK;
+    // First, save the current position that marks the current end of the
+    // OBJREF in the stream.
+    ULARGE_INTEGER endPos;
+    hr = pStm->Seek(seekTo, STREAM_SEEK_CUR, &endPos);
+    if (FAILED(hr)) {
+      return hr;
     }
+
+    // Now strip out the handler.
+    if (!StripHandlerFromOBJREF(WrapNotNull(pStm), objrefPos.QuadPart,
+                                endPos.QuadPart)) {
+      return E_FAIL;
+    }
+
+    return S_OK;
   }
 #endif // defined(MOZ_MSCOM_REMARSHAL_NO_HANDLER)
 
@@ -648,18 +596,24 @@ Interceptor::ThreadSafeQueryInterface(REFIID aIid, IUnknown** aOutInterface)
   }
 
   if (aIid == IID_IMarshal) {
+    HRESULT hr;
+
     if (!mStdMarshalUnk) {
-      HRESULT hr = ::CoGetStdMarshalEx(static_cast<IWeakReferenceSource*>(this),
-                                       SMEXF_SERVER,
-                                       getter_AddRefs(mStdMarshalUnk));
+      if (XRE_IsContentProcess()) {
+        hr = FastMarshaler::Create(static_cast<IWeakReferenceSource*>(this),
+                                   getter_AddRefs(mStdMarshalUnk));
+      } else {
+        hr = ::CoGetStdMarshalEx(static_cast<IWeakReferenceSource*>(this),
+                                 SMEXF_SERVER, getter_AddRefs(mStdMarshalUnk));
+      }
+
       if (FAILED(hr)) {
         return hr;
       }
     }
 
     if (!mStdMarshal) {
-      HRESULT hr = mStdMarshalUnk->QueryInterface(IID_IMarshal,
-                                                  (void**)&mStdMarshal);
+      hr = mStdMarshalUnk->QueryInterface(IID_IMarshal, (void**)&mStdMarshal);
       if (FAILED(hr)) {
         return hr;
       }

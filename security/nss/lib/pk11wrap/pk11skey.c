@@ -182,6 +182,10 @@ PK11_FreeSymKey(PK11SymKey *symKey)
     PK11SlotInfo *slot;
     PRBool freeit = PR_TRUE;
 
+    if (!symKey) {
+        return;
+    }
+
     if (PR_ATOMIC_DECREMENT(&symKey->refCount) == 0) {
         PK11SymKey *parent = symKey->parent;
 

@@ -222,6 +222,9 @@ protected:
                                  const nsString& aNewValue,
                                  const PrincipalInfo& aPrincipalInfo,
                                  const bool& aIsPrivate) override;
+
+  bool
+  GetMessageSchedulerGroups(const Message& aMsg, nsTArray<RefPtr<SchedulerGroup>>& aGroups) override;
 };
 
 class BackgroundChildImpl::ThreadLocal final

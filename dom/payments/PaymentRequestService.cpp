@@ -237,6 +237,10 @@ PaymentRequestService::RequestPayment(nsIPaymentActionRequest* aRequest)
       rv = request->GetTabId(&tabId);
       NS_ENSURE_SUCCESS(rv, rv);
 
+      nsCOMPtr<nsIPrincipal> topLevelPrincipal;
+      rv = request->GetTopLevelPrincipal(getter_AddRefs(topLevelPrincipal));
+      NS_ENSURE_SUCCESS(rv, rv);
+
       nsCOMPtr<nsIArray> methodData;
       rv = request->GetMethodData(getter_AddRefs(methodData));
       NS_ENSURE_SUCCESS(rv, rv);
@@ -250,7 +254,8 @@ PaymentRequestService::RequestPayment(nsIPaymentActionRequest* aRequest)
       NS_ENSURE_SUCCESS(rv, rv);
 
       nsCOMPtr<nsIPaymentRequest> payment =
-        new payments::PaymentRequest(tabId, requestId, methodData, details, options);
+        new payments::PaymentRequest(tabId, requestId, topLevelPrincipal,
+                                     methodData, details, options);
 
       if (!mRequestQueue.AppendElement(payment, mozilla::fallible)) {
         return NS_ERROR_OUT_OF_MEMORY;

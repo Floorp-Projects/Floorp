@@ -87,8 +87,6 @@ enum {
 const ClassOps DebuggerFrame::classOps_ = {
     nullptr,    /* addProperty */
     nullptr,    /* delProperty */
-    nullptr,    /* getProperty */
-    nullptr,    /* setProperty */
     nullptr,    /* enumerate   */
     nullptr,    /* newEnumerate */
     nullptr,    /* resolve     */
@@ -121,8 +119,6 @@ const Class DebuggerArguments::class_ = {
 const ClassOps DebuggerEnvironment::classOps_ = {
     nullptr,    /* addProperty */
     nullptr,    /* delProperty */
-    nullptr,    /* getProperty */
-    nullptr,    /* setProperty */
     nullptr,    /* enumerate   */
     nullptr,    /* newEnumerate */
     nullptr,    /* resolve     */
@@ -149,8 +145,6 @@ enum {
 const ClassOps DebuggerObject::classOps_ = {
     nullptr,    /* addProperty */
     nullptr,    /* delProperty */
-    nullptr,    /* getProperty */
-    nullptr,    /* setProperty */
     nullptr,    /* enumerate   */
     nullptr,    /* newEnumerate */
     nullptr,    /* resolve     */
@@ -177,8 +171,6 @@ enum {
 static const ClassOps DebuggerScript_classOps = {
     nullptr,    /* addProperty */
     nullptr,    /* delProperty */
-    nullptr,    /* getProperty */
-    nullptr,    /* setProperty */
     nullptr,    /* enumerate   */
     nullptr,    /* newEnumerate */
     nullptr,    /* resolve     */
@@ -206,8 +198,6 @@ enum {
 static const ClassOps DebuggerSource_classOps = {
     nullptr,    /* addProperty */
     nullptr,    /* delProperty */
-    nullptr,    /* getProperty */
-    nullptr,    /* setProperty */
     nullptr,    /* enumerate   */
     nullptr,    /* newEnumerate */
     nullptr,    /* resolve     */
@@ -3311,8 +3301,6 @@ Debugger::findZoneEdges(Zone* zone, js::gc::ZoneComponentFinder& finder)
 const ClassOps Debugger::classOps_ = {
     nullptr,    /* addProperty */
     nullptr,    /* delProperty */
-    nullptr,    /* getProperty */
-    nullptr,    /* setProperty */
     nullptr,    /* enumerate   */
     nullptr,    /* newEnumerate */
     nullptr,    /* resolve     */

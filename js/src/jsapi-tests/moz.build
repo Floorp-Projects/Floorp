@@ -17,7 +17,6 @@ UNIFIED_SOURCES += [
     'testCallArgs.cpp',
     'testCallNonGenericMethodOnProxy.cpp',
     'testChromeBuffer.cpp',
-    'testClassGetter.cpp',
     'testCloneScript.cpp',
     'testDateToLocaleString.cpp',
     'testDebugger.cpp',

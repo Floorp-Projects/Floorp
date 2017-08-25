@@ -12,6 +12,7 @@
 #include "mozilla/dom/PaymentRequestChild.h"
 #include "nsContentUtils.h"
 #include "nsString.h"
+#include "nsIPrincipal.h"
 
 namespace mozilla {
 namespace dom {
@@ -390,6 +391,7 @@ GetSelectedShippingOption(const PaymentDetailsInit& aDetails,
 
 nsresult
 PaymentRequestManager::CreatePayment(nsPIDOMWindowInner* aWindow,
+                                     nsIPrincipal* aTopLevelPrincipal,
                                      const Sequence<PaymentMethodData>& aMethodData,
                                      const PaymentDetailsInit& aDetails,
                                      const PaymentOptions& aOptions,
@@ -397,6 +399,7 @@ PaymentRequestManager::CreatePayment(nsPIDOMWindowInner* aWindow,
 {
   MOZ_ASSERT(NS_IsMainThread());
   NS_ENSURE_ARG_POINTER(aRequest);
+  NS_ENSURE_ARG_POINTER(aTopLevelPrincipal);
   *aRequest = nullptr;
   nsresult rv;
 
@@ -460,6 +463,7 @@ PaymentRequestManager::CreatePayment(nsPIDOMWindowInner* aWindow,
   ConvertOptions(aOptions, options);
 
   IPCPaymentCreateActionRequest action(internalId,
+                                       IPC::Principal(aTopLevelPrincipal),
                                        methodData,
                                        details,
                                        options);

@@ -929,8 +929,6 @@ DataViewObject::CreatePrototype(JSContext* cx, JSProtoKey key)
 static const ClassOps DataViewObjectClassOps = {
     nullptr, /* addProperty */
     nullptr, /* delProperty */
-    nullptr, /* getProperty */
-    nullptr, /* setProperty */
     nullptr, /* enumerate */
     nullptr, /* newEnumerate */
     nullptr, /* resolve */

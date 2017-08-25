@@ -62,8 +62,6 @@ static const js::ClassOps SimpleGlobalClassOps = {
     nullptr,
     nullptr,
     nullptr,
-    nullptr,
-    nullptr,
     JS_NewEnumerateStandardClasses,
     JS_ResolveStandardClass,
     JS_MayResolveStandardClass,

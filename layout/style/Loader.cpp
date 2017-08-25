@@ -472,7 +472,7 @@ SheetLoadData::ScheduleLoadEventIfNeeded(nsresult aStatus)
 
   mStatus = aStatus;
 
-  nsCOMPtr<nsIThread> thread = do_GetMainThread();
+  nsCOMPtr<nsIThread> thread = do_GetCurrentThread();
   nsCOMPtr<nsIThreadInternal> internalThread = do_QueryInterface(thread);
   if (NS_SUCCEEDED(internalThread->AddObserver(this))) {
     // Make sure to block onload here

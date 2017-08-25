@@ -693,18 +693,19 @@ NS_IMPL_ISUPPORTS(nsNodeWeakReference,
 
 nsNodeWeakReference::~nsNodeWeakReference()
 {
-  if (mNode) {
-    NS_ASSERTION(mNode->Slots()->mWeakReference == this,
+  nsINode* node = static_cast<nsINode*>(mObject);
+
+  if (node) {
+    NS_ASSERTION(node->Slots()->mWeakReference == this,
                  "Weak reference has wrong value");
-    mNode->Slots()->mWeakReference = nullptr;
+    node->Slots()->mWeakReference = nullptr;
   }
 }
 
 NS_IMETHODIMP
-nsNodeWeakReference::QueryReferent(const nsIID& aIID, void** aInstancePtr)
+nsNodeWeakReference::QueryReferentFromScript(const nsIID& aIID, void** aInstancePtr)
 {
-  return mNode ? mNode->QueryInterface(aIID, aInstancePtr) :
-                 NS_ERROR_NULL_POINTER;
+  return QueryReferent(aIID, aInstancePtr);
 }
 
 size_t
@@ -2576,16 +2577,16 @@ FragmentOrElement::FireNodeRemovedForChildren()
 }
 
 void
-FragmentOrElement::AddSizeOfExcludingThis(SizeOfState& aState,
-                                          nsStyleSizes& aSizes,
+FragmentOrElement::AddSizeOfExcludingThis(nsWindowSizes& aSizes,
                                           size_t* aNodeSize) const
 {
-  nsIContent::AddSizeOfExcludingThis(aState, aSizes, aNodeSize);
-  *aNodeSize += mAttrsAndChildren.SizeOfExcludingThis(aState.mMallocSizeOf);
+  nsIContent::AddSizeOfExcludingThis(aSizes, aNodeSize);
+  *aNodeSize +=
+    mAttrsAndChildren.SizeOfExcludingThis(aSizes.mState.mMallocSizeOf);
 
   nsDOMSlots* slots = GetExistingDOMSlots();
   if (slots) {
-    *aNodeSize += slots->SizeOfIncludingThis(aState.mMallocSizeOf);
+    *aNodeSize += slots->SizeOfIncludingThis(aSizes.mState.mMallocSizeOf);
   }
 }
 

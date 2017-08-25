@@ -694,8 +694,6 @@ void FunctionDeclaration::trace(JSTracer* trc)
 ModuleObject::classOps_ = {
     nullptr,        /* addProperty */
     nullptr,        /* delProperty */
-    nullptr,        /* getProperty */
-    nullptr,        /* setProperty */
     nullptr,        /* enumerate   */
     nullptr,        /* newEnumerate */
     nullptr,        /* resolve     */

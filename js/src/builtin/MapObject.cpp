@@ -129,8 +129,6 @@ namespace {
 static const ClassOps MapIteratorObjectClassOps = {
     nullptr, /* addProperty */
     nullptr, /* delProperty */
-    nullptr, /* getProperty */
-    nullptr, /* setProperty */
     nullptr, /* enumerate */
     nullptr, /* newEnumerate */
     nullptr, /* resolve */
@@ -288,8 +286,6 @@ CreateMapPrototype(JSContext* cx, JSProtoKey key)
 const ClassOps MapObject::classOps_ = {
     nullptr, // addProperty
     nullptr, // delProperty
-    nullptr, // getProperty
-    nullptr, // setProperty
     nullptr, // enumerate
     nullptr, // newEnumerate
     nullptr, // resolve
@@ -868,8 +864,6 @@ MapObject::clear(JSContext* cx, HandleObject obj)
 static const ClassOps SetIteratorObjectClassOps = {
     nullptr, /* addProperty */
     nullptr, /* delProperty */
-    nullptr, /* getProperty */
-    nullptr, /* setProperty */
     nullptr, /* enumerate */
     nullptr, /* newEnumerate */
     nullptr, /* resolve */
@@ -1014,8 +1008,6 @@ CreateSetPrototype(JSContext* cx, JSProtoKey key)
 const ClassOps SetObject::classOps_ = {
     nullptr, // addProperty
     nullptr, // delProperty
-    nullptr, // getProperty
-    nullptr, // setProperty
     nullptr, // enumerate
     nullptr, // newEnumerate
     nullptr, // resolve

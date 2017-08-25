@@ -44,12 +44,12 @@ add_task(async function() {
   // Drag an item and drop it onto the nav-bar customization target, but
   // not over a particular item.
   await startCustomizing();
-  let homeButton = document.getElementById("home-button");
-  simulateItemDrag(homeButton, navbar.customizationTarget);
+  let downloadsButton = document.getElementById("downloads-button");
+  simulateItemDrag(downloadsButton, navbar.customizationTarget);
 
   await endCustomizing();
 
-  is(homeButton.previousSibling.id, lastVisible.id,
+  is(downloadsButton.previousSibling.id, lastVisible.id,
      "The downloads button should be placed after the last visible item.");
 
   await resetCustomization();

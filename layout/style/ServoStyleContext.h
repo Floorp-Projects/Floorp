@@ -103,8 +103,7 @@ public:
   // The |aCVsSize| outparam on this function is where the actual CVs size
   // value is added. It's done that way because the callers know which value
   // the size should be added to.
-  void AddSizeOfIncludingThis(SizeOfState& aState, nsStyleSizes& aSizes,
-                              size_t* aCVsSize) const
+  void AddSizeOfIncludingThis(nsWindowSizes& aSizes, size_t* aCVsSize) const
   {
     // XXX WARNING: similar to ServoComputedData::AddSizeOfExcludingThis(),
     // but here we need to step back 4 or 8 bytes to get past the servo_arc::Arc
@@ -119,7 +118,7 @@ public:
     // |aState.mMallocSizeOf| to better distinguish in DMD's output the memory
     // measured here.
     *aCVsSize += ServoComputedValuesMallocSizeOf(p);
-    mSource.AddSizeOfExcludingThis(aState, aSizes);
+    mSource.AddSizeOfExcludingThis(aSizes);
   }
 
 private:
