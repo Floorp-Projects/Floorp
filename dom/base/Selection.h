@@ -482,10 +482,10 @@ private:
 
   RefPtr<nsRange> mAnchorFocusRange;
   // mCachedRange is set by RemoveAllRangesTemporarily() and used by
-  // Collapse().  If there is a range which will be released by Clear(),
-  // RemoveAllRangesTemporarily() stores it with this.  If Collapse() is
-  // called without existing ranges, it'll reuse this range for saving the
-  // creating cost.
+  // Collapse() and SetBaseAndExtent().  If there is a range which will be
+  // released by Clear(), RemoveAllRangesTemporarily() stores it with this.
+  // If Collapse() is called without existing ranges, it'll reuse this range
+  // for saving the creation cost.
   RefPtr<nsRange> mCachedRange;
   RefPtr<nsFrameSelection> mFrameSelection;
   RefPtr<nsAutoScrollTimer> mAutoScrollTimer;
