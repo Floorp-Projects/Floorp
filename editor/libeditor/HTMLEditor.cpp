@@ -1566,15 +1566,16 @@ HTMLEditor::InsertElementAtSelection(nsIDOMElement* aElement,
       }
     }
 
-    nsCOMPtr<nsIDOMNode> parentSelectedNode;
-    rv = selection->GetAnchorNode(getter_AddRefs(parentSelectedNode));
+    nsINode* parentSelectedNode = selection->GetAnchorNode();
     if (parentSelectedNode) {
       int32_t offsetForInsert = selection->AnchorOffset();
       // Adjust position based on the node we are going to insert.
-      NormalizeEOLInsertPosition(element, address_of(parentSelectedNode),
+      nsCOMPtr<nsIDOMNode> parentSelectedDOMNode =
+        GetAsDOMNode(parentSelectedNode);
+      NormalizeEOLInsertPosition(element, address_of(parentSelectedDOMNode),
                                  &offsetForInsert);
 
-      rv = InsertNodeAtPoint(node, address_of(parentSelectedNode),
+      rv = InsertNodeAtPoint(node, address_of(parentSelectedDOMNode),
                              &offsetForInsert, false);
       NS_ENSURE_SUCCESS(rv, rv);
       // Set caret after element, but check for special case
@@ -1588,10 +1589,10 @@ HTMLEditor::InsertElementAtSelection(nsIDOMElement* aElement,
       if (HTMLEditUtils::IsTable(node)) {
         if (IsLastEditableChild(element)) {
           nsCOMPtr<nsIDOMNode> brNode;
-          rv = CreateBR(parentSelectedNode, offsetForInsert + 1,
+          rv = CreateBR(parentSelectedDOMNode, offsetForInsert + 1,
                         address_of(brNode));
           NS_ENSURE_SUCCESS(rv, rv);
-          selection->Collapse(parentSelectedNode, offsetForInsert+1);
+          selection->Collapse(parentSelectedDOMNode, offsetForInsert+1);
         }
       }
     }
@@ -2444,9 +2445,7 @@ HTMLEditor::GetSelectedElement(const nsAString& aTagName,
       // Link tag is a special case - we return the anchor node
       //  found for any selection that is totally within a link,
       //  included a collapsed selection (just a caret in a link)
-      nsCOMPtr<nsIDOMNode> anchorNode;
-      rv = selection->GetAnchorNode(getter_AddRefs(anchorNode));
-      NS_ENSURE_SUCCESS(rv, rv);
+      nsCOMPtr<nsINode> anchorNode = selection->GetAnchorNode();
       int32_t anchorOffset = -1;
       if (anchorNode) {
         anchorOffset = selection->AnchorOffset();
@@ -2462,7 +2461,7 @@ HTMLEditor::GetSelectedElement(const nsAString& aTagName,
       if (anchorNode) {
         nsCOMPtr<nsIDOMElement> parentLinkOfAnchor;
         rv = GetElementOrParentByTagName(NS_LITERAL_STRING("href"),
-                                         anchorNode,
+                                         GetAsDOMNode(anchorNode),
                                          getter_AddRefs(parentLinkOfAnchor));
         // XXX: ERROR_HANDLING  can parentLinkOfAnchor be null?
         if (NS_SUCCEEDED(rv) && parentLinkOfAnchor) {
@@ -2483,16 +2482,14 @@ HTMLEditor::GetSelectedElement(const nsAString& aTagName,
           // We found a link node parent
           if (bNodeFound) {
             // GetElementOrParentByTagName addref'd this, so we don't need to do it here
-            *aReturn = parentLinkOfAnchor;
-            NS_IF_ADDREF(*aReturn);
+            parentLinkOfAnchor.forget(aReturn);
             return NS_OK;
           }
         } else if (anchorOffset >= 0) {
           // Check if link node is the only thing selected
-          nsCOMPtr<nsIDOMNode> anchorChild;
-          anchorChild = GetChildAt(anchorNode,anchorOffset);
+          nsINode* anchorChild = anchorNode->GetChildAt(anchorOffset);
           if (anchorChild && HTMLEditUtils::IsLink(anchorChild) &&
-              anchorNode == GetAsDOMNode(focusNode) &&
+              anchorNode == focusNode &&
               focusOffset == anchorOffset + 1) {
             selectedElement = do_QueryInterface(anchorChild);
             bNodeFound = true;
@@ -3577,16 +3574,15 @@ HTMLEditor::SelectAll()
   RefPtr<Selection> selection = GetSelection();
   NS_ENSURE_STATE(selection);
 
-  nsCOMPtr<nsIDOMNode> anchorNode;
-  nsresult rv = selection->GetAnchorNode(getter_AddRefs(anchorNode));
-  NS_ENSURE_SUCCESS(rv, rv);
+  nsINode* anchorNode = selection->GetAnchorNode();
+  if (NS_WARN_IF(!anchorNode) || NS_WARN_IF(!anchorNode->IsContent())) {
+    return NS_ERROR_FAILURE;
+  }
 
-  nsCOMPtr<nsIContent> anchorContent = do_QueryInterface(anchorNode, &rv);
-  NS_ENSURE_SUCCESS(rv, rv);
-
-  nsIContent *rootContent;
+  nsIContent* anchorContent = anchorNode->AsContent();
+  nsIContent* rootContent;
   if (anchorContent->HasIndependentSelection()) {
-    rv = selection->SetAncestorLimiter(nullptr);
+    nsresult rv = selection->SetAncestorLimiter(nullptr);
     NS_ENSURE_SUCCESS(rv, rv);
     rootContent = mRootElement;
   } else {

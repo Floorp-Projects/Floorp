@@ -3201,40 +3201,31 @@ HTMLEditor::GetSelectedOrParentTableElement(nsAString& aTagName,
       *aSelectedCount = selection->RangeCount();
       aTagName = tdName;
   } else {
-    nsCOMPtr<nsIDOMNode> anchorNode;
-    rv = selection->GetAnchorNode(getter_AddRefs(anchorNode));
-    if (NS_FAILED(rv)) {
-      return rv;
+    nsCOMPtr<nsINode> anchorNode = selection->GetAnchorNode();
+    if (NS_WARN_IF(!anchorNode)) {
+      return NS_ERROR_FAILURE;
     }
-    NS_ENSURE_TRUE(anchorNode, NS_ERROR_FAILURE);
-
-    nsCOMPtr<nsIDOMNode> selectedNode;
 
     // Get child of anchor node, if exists
-    bool hasChildren;
-    anchorNode->HasChildNodes(&hasChildren);
-
-    if (hasChildren) {
+    if (anchorNode->HasChildNodes()) {
       int32_t anchorOffset = selection->AnchorOffset();
-      selectedNode = GetChildAt(anchorNode, anchorOffset);
+      nsINode* selectedNode = anchorNode->GetChildAt(anchorOffset);
       if (!selectedNode) {
         selectedNode = anchorNode;
         // If anchor doesn't have a child, we can't be selecting a table element,
         //  so don't do the following:
       } else {
-        nsCOMPtr<nsIAtom> atom = EditorBase::GetTag(selectedNode);
-
-        if (atom == nsGkAtoms::td) {
+        if (selectedNode->IsHTMLElement(nsGkAtoms::td)) {
           tableOrCellElement = do_QueryInterface(selectedNode);
           aTagName = tdName;
           // Each cell is in its own selection range,
           //  so count signals multiple-cell selection
           *aSelectedCount = selection->RangeCount();
-        } else if (atom == nsGkAtoms::table) {
+        } else if (selectedNode->IsHTMLElement(nsGkAtoms::table)) {
           tableOrCellElement = do_QueryInterface(selectedNode);
           aTagName.AssignLiteral("table");
           *aSelectedCount = 1;
-        } else if (atom == nsGkAtoms::tr) {
+        } else if (selectedNode->IsHTMLElement(nsGkAtoms::tr)) {
           tableOrCellElement = do_QueryInterface(selectedNode);
           aTagName.AssignLiteral("tr");
           *aSelectedCount = 1;
@@ -3243,7 +3234,7 @@ HTMLEditor::GetSelectedOrParentTableElement(nsAString& aTagName,
     }
     if (!tableOrCellElement) {
       // Didn't find a table element -- find a cell parent
-      rv = GetElementOrParentByTagName(tdName, anchorNode,
+      rv = GetElementOrParentByTagName(tdName, GetAsDOMNode(anchorNode),
                                        getter_AddRefs(tableOrCellElement));
       if (NS_FAILED(rv)) {
         return rv;
