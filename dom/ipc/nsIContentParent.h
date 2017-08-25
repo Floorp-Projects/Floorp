@@ -94,9 +94,6 @@ public:
 
   virtual bool SendDeactivate(PBrowserParent* aTab) = 0;
 
-  virtual bool SendParentActivated(PBrowserParent* aTab,
-                                   const bool& aActivated) = 0;
-
   virtual int32_t Pid() const = 0;
 
   virtual mozilla::ipc::PParentToChildStreamParent*

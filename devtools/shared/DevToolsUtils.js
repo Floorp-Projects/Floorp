@@ -248,13 +248,31 @@ exports.isSafeJSObject = function (obj) {
     return true;
   }
 
-  let principal = Cu.getObjectPrincipal(obj);
-  if (Services.scriptSecurityManager.isSystemPrincipal(principal)) {
-    // allow chrome objects
+  // Xray wrappers protect against unintended code execution.
+  if (Cu.isXrayWrapper(obj)) {
     return true;
   }
 
-  return Cu.isXrayWrapper(obj);
+  // If there aren't Xrays, only allow chrome objects.
+  let principal = Cu.getObjectPrincipal(obj);
+  if (!Services.scriptSecurityManager.isSystemPrincipal(principal)) {
+    return false;
+  }
+
+  // Scripted proxy objects without Xrays can run their proxy traps.
+  if (Cu.isProxy(obj)) {
+    return false;
+  }
+
+  // Even if `obj` looks safe, an unsafe object in its prototype chain may still
+  // run unintended code, e.g. when using the `instanceof` operator.
+  let proto = Object.getPrototypeOf(obj);
+  if (proto && !exports.isSafeJSObject(proto)) {
+    return false;
+  }
+
+  // Allow non-problematic chrome objects.
+  return true;
 };
 
 exports.dumpn = function (str) {
