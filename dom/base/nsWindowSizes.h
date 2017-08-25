@@ -111,15 +111,8 @@ struct nsArenaSizes {
 
 struct nsStyleSizes
 {
-#define FOR_EACH_SIZE(macro) \
-  macro(Style, mComputedValuesDom) \
-  macro(Style, mComputedValuesNonDom) \
-  macro(Style, mComputedValuesVisited)
-
   nsStyleSizes()
     :
-      FOR_EACH_SIZE(ZERO_SIZE)
-
       #define STYLE_STRUCT(name_, cb_) \
         NS_STYLE_SIZES_FIELD(name_)(0),
       #define STYLE_STRUCT_LIST_IGNORE_VARIABLES
@@ -132,8 +125,6 @@ struct nsStyleSizes
 
   void addToTabSizes(nsTabSizes* aSizes) const
   {
-    FOR_EACH_SIZE(ADD_TO_TAB_SIZES)
-
     #define STYLE_STRUCT(name_, cb_) \
       aSizes->add(nsTabSizes::Style, NS_STYLE_SIZES_FIELD(name_));
     #define STYLE_STRUCT_LIST_IGNORE_VARIABLES
@@ -146,8 +137,6 @@ struct nsStyleSizes
   {
     size_t total = 0;
 
-    FOR_EACH_SIZE(ADD_TO_TOTAL_SIZE)
-
     #define STYLE_STRUCT(name_, cb_) \
       total += NS_STYLE_SIZES_FIELD(name_);
     #define STYLE_STRUCT_LIST_IGNORE_VARIABLES
@@ -158,8 +147,6 @@ struct nsStyleSizes
     return total;
   }
 
-  FOR_EACH_SIZE(DECL_SIZE)
-
   #define STYLE_STRUCT(name_, cb_) \
     size_t NS_STYLE_SIZES_FIELD(name_);
   #define STYLE_STRUCT_LIST_IGNORE_VARIABLES
@@ -169,8 +156,6 @@ struct nsStyleSizes
 
   // Present just to absorb the trailing comma in the constructor.
   int dummy;
-
-#undef FOR_EACH_SIZE
 };
 
 class nsWindowSizes
@@ -190,6 +175,9 @@ class nsWindowSizes
   macro(Other, mLayoutTextRunsSize) \
   macro(Other, mLayoutPresContextSize) \
   macro(Other, mLayoutFramePropertiesSize) \
+  macro(Style, mLayoutComputedValuesDom) \
+  macro(Style, mLayoutComputedValuesNonDom) \
+  macro(Style, mLayoutComputedValuesVisited) \
   macro(Other, mPropertyTablesSize) \
 
 public:

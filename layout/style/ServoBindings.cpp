@@ -265,7 +265,7 @@ ServoComputedData::AddSizeOfExcludingThis(nsWindowSizes& aSizes) const
 
   if (visited_style.mPtr && !aSizes.mState.HaveSeenPtr(visited_style.mPtr)) {
     visited_style.mPtr->AddSizeOfIncludingThis(
-      aSizes, &aSizes.mStyleSizes.mComputedValuesVisited);
+      aSizes, &aSizes.mLayoutComputedValuesVisited);
   }
 
   // Measurement of the following members may be added later if DMD finds it is
