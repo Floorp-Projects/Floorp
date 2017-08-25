@@ -139,6 +139,9 @@ interface XMLHttpRequest : XMLHttpRequestEventTarget {
   [ChromeOnly, Exposed=Window]
   void setOriginAttributes(optional OriginAttributesDictionary originAttributes);
 
+  [ChromeOnly, Throws]
+  void sendInputStream(InputStream body);
+
   // Only works on MainThread.
   // Its permanence is to be evaluated in bug 1368540 for Firefox 60.
   [ChromeOnly]

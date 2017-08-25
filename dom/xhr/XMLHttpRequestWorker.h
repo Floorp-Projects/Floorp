@@ -172,6 +172,12 @@ public:
        ErrorResult& aRv) override;
 
   virtual void
+  SendInputStream(nsIInputStream* aInputStream, ErrorResult& aRv) override
+  {
+    MOZ_CRASH("nsIInputStream is not a valid argument for XHR in workers.");
+  }
+
+  virtual void
   Abort(ErrorResult& aRv) override;
 
   virtual void
