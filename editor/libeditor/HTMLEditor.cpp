@@ -2454,9 +2454,7 @@ HTMLEditor::GetSelectedElement(const nsAString& aTagName,
         selection->GetAnchorOffset(&anchorOffset);
       }
 
-      nsCOMPtr<nsIDOMNode> focusNode;
-      rv = selection->GetFocusNode(getter_AddRefs(focusNode));
-      NS_ENSURE_SUCCESS(rv, rv);
+      nsCOMPtr<nsINode> focusNode = selection->GetFocusNode();
       int32_t focusOffset = -1;
       if (focusNode) {
         selection->GetFocusOffset(&focusOffset);
@@ -2477,7 +2475,7 @@ HTMLEditor::GetSelectedElement(const nsAString& aTagName,
             // Link node must be the same for both ends of selection.
             nsCOMPtr<nsIDOMElement> parentLinkOfFocus;
             rv = GetElementOrParentByTagName(NS_LITERAL_STRING("href"),
-                                             focusNode,
+                                             GetAsDOMNode(focusNode),
                                              getter_AddRefs(parentLinkOfFocus));
             if (NS_SUCCEEDED(rv) && parentLinkOfFocus == parentLinkOfAnchor) {
               bNodeFound = true;
@@ -2496,7 +2494,8 @@ HTMLEditor::GetSelectedElement(const nsAString& aTagName,
           nsCOMPtr<nsIDOMNode> anchorChild;
           anchorChild = GetChildAt(anchorNode,anchorOffset);
           if (anchorChild && HTMLEditUtils::IsLink(anchorChild) &&
-              anchorNode == focusNode && focusOffset == anchorOffset + 1) {
+              anchorNode == GetAsDOMNode(focusNode) &&
+              focusOffset == anchorOffset + 1) {
             selectedElement = do_QueryInterface(anchorChild);
             bNodeFound = true;
           }
@@ -5013,13 +5012,11 @@ HTMLEditor::GetActiveEditingHost()
   // We're HTML editor for contenteditable
   RefPtr<Selection> selection = GetSelection();
   NS_ENSURE_TRUE(selection, nullptr);
-  nsCOMPtr<nsIDOMNode> focusNode;
-  nsresult rv = selection->GetFocusNode(getter_AddRefs(focusNode));
-  NS_ENSURE_SUCCESS(rv, nullptr);
-  nsCOMPtr<nsIContent> content = do_QueryInterface(focusNode);
-  if (!content) {
+  nsINode* focusNode = selection->GetFocusNode();
+  if (NS_WARN_IF(!focusNode) || NS_WARN_IF(!focusNode->IsContent())) {
     return nullptr;
   }
+  nsIContent* content = focusNode->AsContent();
 
   // If the active content isn't editable, or it has independent selection,
   // we're not active.
