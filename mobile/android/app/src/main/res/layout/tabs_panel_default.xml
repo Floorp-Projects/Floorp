@@ -31,7 +31,9 @@
                 android:minWidth="@dimen/tabs_panel_button_width"
                 android:src="@drawable/tabs_panel_nav_back"
                 android:contentDescription="@string/back"
-                android:background="@drawable/action_bar_button_inverse"/>
+                android:background="@drawable/action_bar_button_inverse"
+                gecko:dividerVerticalPadding="@dimen/tab_panel_divider_vertical_padding"
+                gecko:rightDivider="@drawable/tab_indicator_divider"/>
 
             <org.mozilla.gecko.widget.IconTabWidget android:id="@+id/tab_widget"
                                                     android:layout_width="wrap_content"
