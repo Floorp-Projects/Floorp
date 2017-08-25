@@ -2059,12 +2059,7 @@ function urlStateRestore() {
 }
 
 function openJsonInFirefoxJsonViewer(json) {
-  json = unescape(encodeURIComponent(json));
-  try {
-    window.open("data:application/json;base64," + btoa(json));
-  } catch (e)  {
-    show(document.querySelector(".category[value=raw-payload-section]"));
-  }
+  window.open("data:application/json;base64," + btoa(json));
 }
 
 function onLoad() {
