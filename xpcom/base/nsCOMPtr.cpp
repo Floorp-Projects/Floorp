@@ -110,6 +110,17 @@ nsCOMPtr_base::assign_from_gs_contractid_with_error(
 }
 
 void
+nsCOMPtr_base::assign_from_query_referent(
+    const nsQueryReferent& aQueryReferent, const nsIID& aIID)
+{
+  void* newRawPtr;
+  if (NS_FAILED(aQueryReferent(aIID, &newRawPtr))) {
+    newRawPtr = nullptr;
+  }
+  assign_assuming_AddRef(static_cast<nsISupports*>(newRawPtr));
+}
+
+void
 nsCOMPtr_base::assign_from_helper(const nsCOMPtr_helper& aHelper,
                                   const nsIID& aIID)
 {

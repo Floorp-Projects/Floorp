@@ -54,8 +54,6 @@ child:
 
     async Deactivate(PBrowser aTab);
 
-    async ParentActivated(PBrowser aTab, bool aActivated);
-
     async PIPCBlobInputStream(nsID aID, uint64_t aSize);
 
 parent:
