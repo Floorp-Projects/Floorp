@@ -179,7 +179,6 @@ public:
   virtual State GetState() const = 0;
 
   // Event handlers for various events.
-  virtual void HandleCDMProxyReady() { }
   virtual void HandleAudioCaptured() { }
   virtual void HandleAudioDecoded(AudioData* aAudio)
   {
@@ -317,7 +316,6 @@ protected:
  *
  * Transition to other states when decoding metadata is done:
  *   SHUTDOWN if failing to decode metadata.
- *   WAIT_FOR_CDM if the media is encrypted and CDM is not available.
  *   DECODING_FIRSTFRAME otherwise.
  */
 class MediaDecoderStateMachine::DecodeMetadataState
@@ -377,58 +375,6 @@ private:
   }
 
   MozPromiseRequestHolder<MediaFormatReader::MetadataPromise> mMetadataRequest;
-};
-
-/**
- * Purpose: wait for the CDM to start decoding.
- *
- * Transition to other states when CDM is ready:
- *   SEEKING if any pending seek request.
- *   DECODING_FIRSTFRAME otherwise.
- */
-class MediaDecoderStateMachine::WaitForCDMState
-  : public MediaDecoderStateMachine::StateObject
-{
-public:
-  explicit WaitForCDMState(Master* aPtr) : StateObject(aPtr) { }
-
-  void Enter() { MOZ_ASSERT(!mMaster->mVideoDecodeSuspended); }
-
-  void Exit() override
-  {
-    // mPendingSeek is either moved in HandleCDMProxyReady() or should be
-    // rejected here before transition to SHUTDOWN.
-    mPendingSeek.RejectIfExists(__func__);
-  }
-
-  State GetState() const override
-  {
-    return DECODER_STATE_WAIT_FOR_CDM;
-  }
-
-  void HandleCDMProxyReady() override;
-
-  RefPtr<MediaDecoder::SeekPromise> HandleSeek(SeekTarget aTarget) override
-  {
-    SLOG("Not Enough Data to seek at this stage, queuing seek");
-    mPendingSeek.RejectIfExists(__func__);
-    mPendingSeek.mTarget.emplace(aTarget);
-    return mPendingSeek.mPromise.Ensure(__func__);
-  }
-
-  void HandleVideoSuspendTimeout() override
-  {
-    // Do nothing since no decoders are created yet.
-  }
-
-  void HandleResumeVideoDecoding(const TimeUnit&) override
-  {
-    // We never suspend video decoding in this state.
-    MOZ_ASSERT(false, "Shouldn't have suspended video decoding.");
-  }
-
-private:
-  SeekJob mPendingSeek;
 };
 
 /**
@@ -2245,13 +2191,7 @@ DecodeMetadataState::OnMetadataRead(MetadataHolder&& aMetadata)
     Move(aMetadata.mTags),
     MediaDecoderEventVisibility::Observable);
 
-  if (Info().IsEncrypted() && !mMaster->mCDMProxy) {
-    // Metadata parsing was successful but we're still waiting for CDM caps
-    // to become available so that we can build the correct decryptor/decoder.
-    SetState<WaitForCDMState>();
-  } else {
-    SetState<DecodingFirstFrameState>();
-  }
+  SetState<DecodingFirstFrameState>();
 }
 
 void
@@ -2260,20 +2200,8 @@ DormantState::HandlePlayStateChanged(MediaDecoder::PlayState aPlayState)
 {
   if (aPlayState == MediaDecoder::PLAY_STATE_PLAYING) {
     // Exit dormant when the user wants to play.
-    MOZ_ASSERT(!Info().IsEncrypted() || mMaster->mCDMProxy);
     MOZ_ASSERT(mMaster->mSentFirstFrameLoadedEvent);
     SetSeekingState(Move(mPendingSeek), EventVisibility::Suppressed);
-  }
-}
-
-void
-MediaDecoderStateMachine::
-WaitForCDMState::HandleCDMProxyReady()
-{
-  if (mPendingSeek.Exists()) {
-    SetSeekingState(Move(mPendingSeek), EventVisibility::Observable);
-  } else {
-    SetState<DecodingFirstFrameState>();
   }
 }
 
@@ -2611,8 +2539,6 @@ ShutdownState::Enter()
   // dispose of the timer.
   master->CancelSuspendTimer();
 
-  master->mCDMProxyPromise.DisconnectIfExists();
-
   if (master->IsPlaying()) {
     master->StopPlayback();
   }
@@ -2902,12 +2828,6 @@ nsresult MediaDecoderStateMachine::Init(MediaDecoder* aDecoder)
 
   mMediaSink = CreateMediaSink(mAudioCaptured);
 
-  aDecoder->RequestCDMProxy()->Then(
-    OwnerThread(), __func__, this,
-    &MediaDecoderStateMachine::OnCDMProxyReady,
-    &MediaDecoderStateMachine::OnCDMProxyNotReady)
-  ->Track(mCDMProxyPromise);
-
   nsresult rv = mReader->Init();
   NS_ENSURE_SUCCESS(rv, rv);
 
@@ -3008,7 +2928,6 @@ MediaDecoderStateMachine::ToStateStr(State aState)
 {
   switch (aState) {
     case DECODER_STATE_DECODING_METADATA:   return "DECODING_METADATA";
-    case DECODER_STATE_WAIT_FOR_CDM:        return "WAIT_FOR_CDM";
     case DECODER_STATE_DORMANT:             return "DORMANT";
     case DECODER_STATE_DECODING_FIRSTFRAME: return "DECODING_FIRSTFRAME";
     case DECODER_STATE_DECODING:            return "DECODING";
@@ -3747,23 +3666,6 @@ void MediaDecoderStateMachine::OnMediaSinkAudioError(nsresult aResult)
   // Otherwise notify media decoder/element about this error for it makes
   // no sense to play an audio-only file without sound output.
   DecodeError(MediaResult(NS_ERROR_DOM_MEDIA_MEDIASINK_ERR, __func__));
-}
-
-void
-MediaDecoderStateMachine::OnCDMProxyReady(RefPtr<CDMProxy> aProxy)
-{
-  MOZ_ASSERT(OnTaskQueue());
-  mCDMProxyPromise.Complete();
-  mCDMProxy = aProxy;
-  mReader->SetCDMProxy(aProxy);
-  mStateObj->HandleCDMProxyReady();
-}
-
-void
-MediaDecoderStateMachine::OnCDMProxyNotReady()
-{
-  MOZ_ASSERT(OnTaskQueue());
-  mCDMProxyPromise.Complete();
 }
 
 void
