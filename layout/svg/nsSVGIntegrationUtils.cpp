@@ -1105,7 +1105,7 @@ nsSVGIntegrationUtils::PaintFilter(const PaintFramesParams& aParams)
 
   gfxMatrix tm =
     scaleMatrix * nsSVGUtils::GetCSSPxToDevPxMatrix(frame);
-  nsFilterInstance::PaintFilteredFrame(frame, context.GetDrawTarget(),
+  nsFilterInstance::PaintFilteredFrame(frame, &context,
                                        tm, &callback, &dirtyRegion,
                                        aParams.imgParams);
 
