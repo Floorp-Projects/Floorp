@@ -77,6 +77,7 @@ def _make_default_strategies():
         'skip-unless-changed': SkipUnlessChanged(),
         'skip-unless-schedules': SkipUnlessSchedules(),
         'skip-unless-schedules-or-seta': Either(SkipUnlessSchedules(), SETA()),
+        'only-if-dependencies-run': OnlyIfDependenciesRun(),
     }
 
 
@@ -279,6 +280,18 @@ class Either(OptimizationStrategy):
         return self._for_substrategies(
             arg,
             lambda sub, arg: sub.should_replace_task(task, params, arg))
+
+
+class OnlyIfDependenciesRun(OptimizationStrategy):
+    """Run this taks only if its dependencies run."""
+
+    # This takes advantage of the behavior of the second phase of optimization:
+    # a task can only be replaced if it has no un-optimized dependencies. So if
+    # should_replace_task is called, then a task has no un-optimized
+    # dependencies and can be removed (indicated by returning True)
+
+    def should_replace_task(self, task, params, arg):
+        return True
 
 
 class IndexSearch(OptimizationStrategy):
