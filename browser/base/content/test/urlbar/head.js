@@ -8,6 +8,8 @@ XPCOMUtils.defineLazyModuleGetter(this, "PlacesTestUtils",
   "resource://testing-common/PlacesTestUtils.jsm");
 XPCOMUtils.defineLazyModuleGetter(this, "Preferences",
   "resource://gre/modules/Preferences.jsm");
+XPCOMUtils.defineLazyModuleGetter(this, "HttpServer",
+  "resource://testing-common/httpd.js");
 
 /**
  * Waits for the next top-level document load in the current browser.  The URI
@@ -129,6 +131,19 @@ function is_element_hidden(element, msg) {
   ok(is_hidden(element), msg || "Element should be hidden");
 }
 
+function runHttpServer(scheme, host, port = -1) {
+  let httpserver = new HttpServer();
+  try {
+    httpserver.start(port);
+    port = httpserver.identity.primaryPort;
+    httpserver.identity.setPrimary(scheme, host, port);
+  } catch (ex) {
+    info("We can't launch our http server successfully.")
+  }
+  is(httpserver.identity.has(scheme, host, port), true, `${scheme}://${host}:${port} is listening.`);
+  return httpserver;
+}
+
 function promisePopupEvent(popup, eventSuffix) {
   let endState = {shown: "open", hidden: "closed"}[eventSuffix];
 
@@ -152,11 +167,16 @@ function promisePopupHidden(popup) {
   return promisePopupEvent(popup, "hidden");
 }
 
-function promiseSearchComplete(win = window) {
+function promiseSearchComplete(win = window, dontAnimate = false) {
   return promisePopupShown(win.gURLBar.popup).then(() => {
     function searchIsComplete() {
-      return win.gURLBar.controller.searchStatus >=
-        Ci.nsIAutoCompleteController.STATUS_COMPLETE_NO_MATCH;
+      let isComplete = win.gURLBar.controller.searchStatus >=
+                       Ci.nsIAutoCompleteController.STATUS_COMPLETE_NO_MATCH;
+      if (isComplete) {
+        info(`Restore popup dontAnimate value to ${dontAnimate}`);
+        win.gURLBar.popup.setAttribute("dontanimate", dontAnimate);
+      }
+      return isComplete;
     }
 
     // Wait until there are at least two matches.
@@ -167,7 +187,10 @@ function promiseSearchComplete(win = window) {
 function promiseAutocompleteResultPopup(inputText,
                                         win = window,
                                         fireInputEvent = false) {
+  let dontAnimate = !!win.gURLBar.popup.getAttribute("dontanimate");
   waitForFocus(() => {
+    info(`Disable popup animation. Change dontAnimate value from ${dontAnimate} to true.`);
+    win.gURLBar.popup.setAttribute("dontanimate", "true");
     win.gURLBar.focus();
     win.gURLBar.value = inputText;
     if (fireInputEvent) {
@@ -179,7 +202,7 @@ function promiseAutocompleteResultPopup(inputText,
     win.gURLBar.controller.startSearch(inputText);
   }, win);
 
-  return promiseSearchComplete(win);
+  return promiseSearchComplete(win, dontAnimate);
 }
 
 function promiseNewSearchEngine(basename) {
@@ -255,8 +278,6 @@ function promisePageActionViewShown() {
 function promiseSpeculativeConnection(httpserver) {
   return BrowserTestUtils.waitForCondition(() => {
     if (httpserver) {
-      is(httpserver.connectionNumber, 1,
-         `${httpserver.connectionNumber} speculative connection has been setup.`)
       return httpserver.connectionNumber == 1;
     }
     return false;

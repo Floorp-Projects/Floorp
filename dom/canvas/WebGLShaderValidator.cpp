@@ -145,8 +145,8 @@ WebGLContext::CreateShaderValidator(GLenum shaderType) const
     resources.MaxVertexUniformVectors = mGLMaxVertexUniformVectors;
     resources.MaxVaryingVectors = mGLMaxVaryingVectors;
     resources.MaxVertexTextureImageUnits = mGLMaxVertexTextureImageUnits;
-    resources.MaxCombinedTextureImageUnits = mGLMaxTextureUnits;
-    resources.MaxTextureImageUnits = mGLMaxTextureImageUnits;
+    resources.MaxCombinedTextureImageUnits = mGLMaxCombinedTextureImageUnits;
+    resources.MaxTextureImageUnits = mGLMaxFragmentTextureImageUnits;
     resources.MaxFragmentUniformVectors = mGLMaxFragmentUniformVectors;
 
     const bool hasMRTs = (IsWebGL2() ||

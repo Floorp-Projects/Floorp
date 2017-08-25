@@ -94,11 +94,11 @@ class TTest(object):
 
         # As we transition to Stylo, we need to set env vars and output data properly
         if browser_config['stylo']:
-            setup.env['STYLO_FORCE_ENABLED'] = 1
+            setup.env['STYLO_FORCE_ENABLED'] = '1'
 
         # During the Stylo transition, measure different number of threads
         if browser_config.get('stylothreads', 0) > 0:
-            setup.env['STYLO_THREADS'] = browser_config['stylothreads']
+            setup.env['STYLO_THREADS'] = str(browser_config['stylothreads'])
 
         test_config['url'] = utils.interpolate(
             test_config['url'],

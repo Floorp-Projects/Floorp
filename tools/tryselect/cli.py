@@ -19,6 +19,19 @@ class BaseTryParser(ArgumentParser):
                   'specified this command will only print calculated try '
                   'syntax and selection info).',
           }],
+        [['--save'],
+         {'default': None,
+          'help': 'Save selection for future use with --preset.',
+          }],
+        [['--preset'],
+         {'default': None,
+          'help': 'Load a saved selection.',
+          }],
+        [['--list-presets'],
+         {'action': 'store_true',
+          'default': False,
+          'help': 'List available preset selections.',
+          }],
     ]
     arguments = []
     templates = []

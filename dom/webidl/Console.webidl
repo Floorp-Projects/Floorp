@@ -51,7 +51,6 @@ namespace console {
 dictionary ConsoleEvent {
   (unsigned long long or DOMString) ID;
   (unsigned long long or DOMString) innerID;
-  any originAttributes = null;
   DOMString addonId = "";
   DOMString level = "";
   DOMString filename = "";

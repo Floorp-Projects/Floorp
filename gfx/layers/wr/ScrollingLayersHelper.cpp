@@ -127,7 +127,7 @@ ScrollingLayersHelper::ScrollingLayersHelper(nsDisplayItem* aItem,
   FrameMetrics::ViewID scrollId = aItem->GetActiveScrolledRoot()
       ? nsLayoutUtils::ViewIDForASR(aItem->GetActiveScrolledRoot())
       : FrameMetrics::NULL_SCROLL_ID;
-  if (aBuilder.TopmostScrollId() != Some(scrollId)) {
+  if (aBuilder.TopmostScrollId() != scrollId) {
     Maybe<wr::WrClipId> clipId = mBuilder->TopmostClipId();
     mBuilder->PushClipAndScrollInfo(scrollId, clipId.ptrOr(nullptr));
     mPushedClipAndScroll = true;
@@ -150,7 +150,7 @@ ScrollingLayersHelper::DefineAndPushScrollLayers(nsDisplayItem* aItem,
       nullptr, aItem->ReferenceFrame(), ContainerLayerParameters(), nullptr);
   MOZ_ASSERT(metadata);
   FrameMetrics::ViewID scrollId = metadata->GetMetrics().GetScrollId();
-  if (aBuilder.TopmostScrollId() == Some(scrollId)) {
+  if (aBuilder.TopmostScrollId() == scrollId) {
     // it's already been pushed, so we don't need to recurse any further.
     return;
   }

@@ -32,6 +32,7 @@ XPCOMUtils.defineLazyModuleGetter(this, "InsecurePasswordUtils",
 
 const formFillController = Cc["@mozilla.org/satchel/form-fill-controller;1"]
                              .getService(Ci.nsIFormFillController);
+const {ADDRESSES_COLLECTION_NAME, CREDITCARDS_COLLECTION_NAME} = FormAutofillUtils;
 
 // Register/unregister a constructor as a factory.
 function AutocompleteFactory() {}
@@ -103,12 +104,16 @@ AutofillProfileAutoCompleteSearch.prototype = {
     let handler = FormAutofillContent.getFormHandler(focusedInput);
     let allFieldNames = handler.allFieldNames;
     let filledRecordGUID = isAddressField ? handler.address.filledRecordGUID : handler.creditCard.filledRecordGUID;
+    let searchPermitted = isAddressField ?
+                          FormAutofillUtils.isAutofillAddressesEnabled :
+                          FormAutofillUtils.isAutofillCreditCardsEnabled;
 
     // Fallback to form-history if ...
+    //   - specified autofill feature is pref off.
     //   - no profile can fill the currently-focused input.
     //   - the current form has already been populated.
     //   - (address only) less than 3 inputs are covered by all saved fields in the storage.
-    if (!savedFieldNames.has(info.fieldName) || filledRecordGUID || (isAddressField &&
+    if (!searchPermitted || !savedFieldNames.has(info.fieldName) || filledRecordGUID || (isAddressField &&
         allFieldNames.filter(field => savedFieldNames.has(field)).length < FormAutofillUtils.AUTOFILL_FIELDS_THRESHOLD)) {
       let formHistory = Cc["@mozilla.org/autocomplete/search;1?name=form-history"]
                           .createInstance(Ci.nsIAutoCompleteSearch);
@@ -121,7 +126,7 @@ AutofillProfileAutoCompleteSearch.prototype = {
       return;
     }
 
-    let collectionName = isAddressField ? "addresses" : "creditCards";
+    let collectionName = isAddressField ? ADDRESSES_COLLECTION_NAME : CREDITCARDS_COLLECTION_NAME;
 
     this._getRecords({collectionName, info, searchString}).then((records) => {
       if (this.forceStop) {
@@ -341,12 +346,13 @@ var FormAutofillContent = {
     Services.obs.addObserver(this, "earlyformsubmit");
 
     let autofillEnabled = Services.cpmm.initialProcessData.autofillEnabled;
-    if (autofillEnabled ||
-        // If storage hasn't be initialized yet autofillEnabled is undefined but we need to ensure
-        // autocomplete is registered before the focusin so register it in this case as long as the
-        // pref is true.
-        (autofillEnabled === undefined &&
-         Services.prefs.getBoolPref("extensions.formautofill.addresses.enabled"))) {
+    // If storage hasn't be initialized yet autofillEnabled is undefined but we need to ensure
+    // autocomplete is registered before the focusin so register it in this case as long as the
+    // pref is true.
+    let shouldEnableAutofill = autofillEnabled === undefined &&
+                               (FormAutofillUtils.isAutofillAddressesEnabled ||
+                               FormAutofillUtils.isAutofillCreditCardsEnabled);
+    if (autofillEnabled || shouldEnableAutofill) {
       ProfileAutocomplete.ensureRegistered();
     }
 

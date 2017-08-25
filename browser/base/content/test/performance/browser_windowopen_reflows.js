@@ -17,7 +17,6 @@ const EXPECTED_REFLOWS = [
     stack: [
       "select@chrome://global/content/bindings/textbox.xml",
       "focusAndSelectUrlBar@chrome://browser/content/browser.js",
-      "_delayedStartup@chrome://browser/content/browser.js",
     ],
   },
 ];

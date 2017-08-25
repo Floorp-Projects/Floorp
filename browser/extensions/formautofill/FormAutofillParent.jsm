@@ -50,7 +50,7 @@ XPCOMUtils.defineLazyModuleGetter(this, "RecentWindow",
 this.log = null;
 FormAutofillUtils.defineLazyLogGetter(this, this.EXPORTED_SYMBOLS[0]);
 
-const ENABLED_PREF = "extensions.formautofill.addresses.enabled";
+const {ENABLED_AUTOFILL_ADDRESSES_PREF, ENABLED_AUTOFILL_CREDITCARDS_PREF} = FormAutofillUtils;
 
 function FormAutofillParent() {
   // Lazily load the storage JSM to avoid disk I/O until absolutely needed.
@@ -91,7 +91,8 @@ FormAutofillParent.prototype = {
     Services.mm.addMessageListener("FormAutofill:OnFormSubmit", this);
 
     // Observing the pref and storage changes
-    Services.prefs.addObserver(ENABLED_PREF, this);
+    Services.prefs.addObserver(ENABLED_AUTOFILL_ADDRESSES_PREF, this);
+    Services.prefs.addObserver(ENABLED_AUTOFILL_CREDITCARDS_PREF, this);
     Services.obs.addObserver(this, "formautofill-storage-changed");
   },
 
@@ -154,11 +155,12 @@ FormAutofillParent.prototype = {
    * @returns {boolean} whether form autofill is active (enabled and has data)
    */
   _computeStatus() {
-    if (!Services.prefs.getBoolPref(ENABLED_PREF)) {
-      return false;
-    }
+    const savedFieldNames = Services.ppmm.initialProcessData.autofillSavedFieldNames;
 
-    return Services.ppmm.initialProcessData.autofillSavedFieldNames.size > 0;
+    return (Services.prefs.getBoolPref(ENABLED_AUTOFILL_ADDRESSES_PREF) ||
+           Services.prefs.getBoolPref(ENABLED_AUTOFILL_CREDITCARDS_PREF)) &&
+           savedFieldNames &&
+           savedFieldNames.size > 0;
   },
 
   /**
@@ -236,7 +238,8 @@ FormAutofillParent.prototype = {
     Services.ppmm.removeMessageListener("FormAutofill:RemoveAddresses", this);
     Services.ppmm.removeMessageListener("FormAutofill:RemoveCreditCards", this);
     Services.obs.removeObserver(this, "advanced-pane-loaded");
-    Services.prefs.removeObserver(ENABLED_PREF, this);
+    Services.prefs.removeObserver(ENABLED_AUTOFILL_ADDRESSES_PREF, this);
+    Services.prefs.removeObserver(ENABLED_AUTOFILL_CREDITCARDS_PREF, this);
   },
 
   /**

@@ -26,7 +26,7 @@ use profiler::{Profiler, BackendProfileCounters};
 use profiler::{GpuProfileTag, RendererProfileTimers, RendererProfileCounters};
 use record::ApiRecordingReceiver;
 use render_backend::RenderBackend;
-use render_task::RenderTaskData;
+use render_task::RenderTaskTree;
 use std;
 use std::cmp;
 use std::collections::VecDeque;
@@ -41,7 +41,7 @@ use std::thread;
 use texture_cache::TextureCache;
 use rayon::ThreadPool;
 use rayon::Configuration as ThreadPoolConfig;
-use tiling::{AlphaBatchKind, BlurCommand, CompositePrimitiveInstance, Frame, PrimitiveBatch, RenderTarget};
+use tiling::{AlphaBatchKind, BlurCommand, Frame, PrimitiveBatch, RenderTarget};
 use tiling::{AlphaRenderTarget, CacheClipInstance, PrimitiveInstance, ColorRenderTarget, RenderTargetKind};
 use time::precise_time_ns;
 use thread_profiler::{register_thread_with_profiler, write_profile};
@@ -727,29 +727,25 @@ fn create_prim_shader(name: &'static str,
 
     debug!("PrimShader {}", name);
 
-    let includes = &["prim_shared"];
-
     let vertex_descriptor = match vertex_format {
         VertexFormat::PrimitiveInstances => DESC_PRIM_INSTANCES,
         VertexFormat::Blur => DESC_BLUR,
         VertexFormat::Clip => DESC_CLIP,
     };
 
-    device.create_program_with_prefix(name,
-                                      includes,
-                                      Some(prefix),
-                                      &vertex_descriptor)
+    device.create_program(name,
+                          &prefix,
+                          &vertex_descriptor)
 }
 
 fn create_clip_shader(name: &'static str, device: &mut Device) -> Result<Program, ShaderError> {
     let prefix = format!("#define WR_MAX_VERTEX_TEXTURE_WIDTH {}\n
-                          #define WR_FEATURE_TRANSFORM",
+                          #define WR_FEATURE_TRANSFORM\n",
                           MAX_VERTEX_TEXTURE_WIDTH);
 
     debug!("ClipShader {}", name);
 
-    let includes = &["prim_shared", "clip_shared"];
-    device.create_program_with_prefix(name, includes, Some(prefix), &DESC_CLIP)
+    device.create_program(name, &prefix, &DESC_CLIP)
 }
 
 struct GpuDataTextures {
@@ -767,7 +763,7 @@ impl GpuDataTextures {
 
     fn init_frame(&mut self, device: &mut Device, frame: &mut Frame) {
         self.layer_texture.init(device, &mut frame.layer_texture_data);
-        self.render_task_texture.init(device, &mut frame.render_task_data);
+        self.render_task_texture.init(device, &mut frame.render_tasks.task_data);
 
         device.bind_texture(TextureSampler::Layers, self.layer_texture.id);
         device.bind_texture(TextureSampler::RenderTasks, self.render_task_texture.id);
@@ -1603,21 +1599,6 @@ impl Renderer {
         }
     }
 
-/*
-    fn update_shaders(&mut self) {
-        let update_uniforms = !self.pending_shader_updates.is_empty();
-
-        for path in self.pending_shader_updates.drain(..) {
-            panic!("todo");
-            //self.device.refresh_shader(path);
-        }
-
-        if update_uniforms {
-            self.update_uniform_locations();
-        }
-    }
-*/
-
     fn update_gpu_cache(&mut self, frame: &mut Frame) {
         let _gm = GpuMarker::new(self.device.rc_gl(), "gpu cache update");
         for update_list in self.pending_gpu_cache_updates.drain(..) {
@@ -1742,7 +1723,7 @@ impl Renderer {
     fn submit_batch(&mut self,
                     batch: &PrimitiveBatch,
                     projection: &Transform3D<f32>,
-                    render_task_data: &[RenderTaskData],
+                    render_tasks: &RenderTaskTree,
                     render_target: Option<(TextureId, i32)>,
                     target_dimensions: DeviceUintSize) {
         let transform_kind = batch.key.flags.transform_kind();
@@ -1756,7 +1737,7 @@ impl Renderer {
                       });
 
         let marker = match batch.key.kind {
-            AlphaBatchKind::Composite => {
+            AlphaBatchKind::Composite { .. } => {
                 self.ps_composite.bind(&mut self.device, projection);
                 GPU_TAG_PRIM_COMPOSITE
             }
@@ -1845,63 +1826,64 @@ impl Renderer {
         };
 
         // Handle special case readback for composites.
-        if batch.key.kind == AlphaBatchKind::Composite {
-            // composites can't be grouped together because
-            // they may overlap and affect each other.
-            debug_assert!(batch.instances.len() == 1);
-            let instance = CompositePrimitiveInstance::from(&batch.instances[0]);
-            let cache_texture = self.texture_resolver.resolve(&SourceTexture::CacheRGBA8);
+        match batch.key.kind {
+            AlphaBatchKind::Composite { task_id, source_id, backdrop_id } => {
+                // composites can't be grouped together because
+                // they may overlap and affect each other.
+                debug_assert!(batch.instances.len() == 1);
+                let cache_texture = self.texture_resolver.resolve(&SourceTexture::CacheRGBA8);
 
-            // TODO(gw): This code branch is all a bit hacky. We rely
-            // on pulling specific values from the render target data
-            // and also cloning the single primitive instance to be
-            // able to pass to draw_instanced_batch(). We should
-            // think about a cleaner way to achieve this!
+                // Before submitting the composite batch, do the
+                // framebuffer readbacks that are needed for each
+                // composite operation in this batch.
+                let cache_texture_dimensions = self.device.get_texture_dimensions(cache_texture);
 
-            // Before submitting the composite batch, do the
-            // framebuffer readbacks that are needed for each
-            // composite operation in this batch.
-            let cache_texture_dimensions = self.device.get_texture_dimensions(cache_texture);
+                let source = render_tasks.get(source_id);
+                let backdrop = render_tasks.get(task_id);
+                let readback = render_tasks.get(backdrop_id);
 
-            let backdrop = &render_task_data[instance.task_index.0 as usize];
-            let readback = &render_task_data[instance.backdrop_task_index.0 as usize];
-            let source = &render_task_data[instance.src_task_index.0 as usize];
+                let (readback_rect, readback_layer) = readback.get_target_rect();
+                let (backdrop_rect, _) = backdrop.get_target_rect();
+                let backdrop_screen_origin = backdrop.as_alpha_batch().screen_origin;
+                let source_screen_origin = source.as_alpha_batch().screen_origin;
 
-            // Bind the FBO to blit the backdrop to.
-            // Called per-instance in case the layer (and therefore FBO)
-            // changes. The device will skip the GL call if the requested
-            // target is already bound.
-            let cache_draw_target = (cache_texture, readback.data[4] as i32);
-            self.device.bind_draw_target(Some(cache_draw_target), Some(cache_texture_dimensions));
+                // Bind the FBO to blit the backdrop to.
+                // Called per-instance in case the layer (and therefore FBO)
+                // changes. The device will skip the GL call if the requested
+                // target is already bound.
+                let cache_draw_target = (cache_texture, readback_layer.0 as i32);
+                self.device.bind_draw_target(Some(cache_draw_target), Some(cache_texture_dimensions));
 
-            let src_x = backdrop.data[0] - backdrop.data[4] + source.data[4];
-            let src_y = backdrop.data[1] - backdrop.data[5] + source.data[5];
+                let src_x = backdrop_rect.origin.x - backdrop_screen_origin.x + source_screen_origin.x;
+                let src_y = backdrop_rect.origin.y - backdrop_screen_origin.y + source_screen_origin.y;
 
-            let dest_x = readback.data[0];
-            let dest_y = readback.data[1];
+                let dest_x = readback_rect.origin.x;
+                let dest_y = readback_rect.origin.y;
 
-            let width = readback.data[2];
-            let height = readback.data[3];
+                let width = readback_rect.size.width;
+                let height = readback_rect.size.height;
 
-            let mut src = DeviceIntRect::new(DeviceIntPoint::new(src_x as i32, src_y as i32),
-                                             DeviceIntSize::new(width as i32, height as i32));
-            let mut dest = DeviceIntRect::new(DeviceIntPoint::new(dest_x as i32, dest_y as i32),
-                                              DeviceIntSize::new(width as i32, height as i32));
+                let mut src = DeviceIntRect::new(DeviceIntPoint::new(src_x as i32, src_y as i32),
+                                                 DeviceIntSize::new(width as i32, height as i32));
+                let mut dest = DeviceIntRect::new(DeviceIntPoint::new(dest_x as i32, dest_y as i32),
+                                                  DeviceIntSize::new(width as i32, height as i32));
 
-            // Need to invert the y coordinates and flip the image vertically when
-            // reading back from the framebuffer.
-            if render_target.is_none() {
-                src.origin.y = target_dimensions.height as i32 - src.size.height - src.origin.y;
-                dest.origin.y += dest.size.height;
-                dest.size.height = -dest.size.height;
+                // Need to invert the y coordinates and flip the image vertically when
+                // reading back from the framebuffer.
+                if render_target.is_none() {
+                    src.origin.y = target_dimensions.height as i32 - src.size.height - src.origin.y;
+                    dest.origin.y += dest.size.height;
+                    dest.size.height = -dest.size.height;
+                }
+
+                self.device.blit_render_target(render_target,
+                                               Some(src),
+                                               dest);
+
+                // Restore draw target to current pass render target + layer.
+                self.device.bind_draw_target(render_target, Some(target_dimensions));
             }
-
-            self.device.blit_render_target(render_target,
-                                           Some(src),
-                                           dest);
-
-            // Restore draw target to current pass render target + layer.
-            self.device.bind_draw_target(render_target, Some(target_dimensions));
+            _ => {}
         }
 
         let _gm = self.gpu_profile.add_marker(marker);
@@ -1915,7 +1897,7 @@ impl Renderer {
                          target: &ColorRenderTarget,
                          target_size: DeviceUintSize,
                          clear_color: Option<[f32; 4]>,
-                         render_task_data: &[RenderTaskData],
+                         render_tasks: &RenderTaskTree,
                          projection: &Transform3D<f32>) {
         {
             let _gm = self.gpu_profile.add_marker(GPU_TAG_SETUP_TARGET);
@@ -2026,7 +2008,7 @@ impl Renderer {
                                .rev() {
                 self.submit_batch(batch,
                                   &projection,
-                                  render_task_data,
+                                  render_tasks,
                                   render_target,
                                   target_size);
             }
@@ -2057,7 +2039,7 @@ impl Renderer {
 
                 self.submit_batch(batch,
                                   &projection,
-                                  render_task_data,
+                                  render_tasks,
                                   render_target,
                                   target_size);
             }
@@ -2344,7 +2326,7 @@ impl Renderer {
                                            target,
                                            *size,
                                            clear_color,
-                                           &frame.render_task_data,
+                                           &frame.render_tasks,
                                            &projection);
 
                 }

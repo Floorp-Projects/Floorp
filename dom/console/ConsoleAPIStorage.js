@@ -129,11 +129,6 @@ ConsoleAPIStorageService.prototype = {
 
     let storage = _consoleStorage.get(aId);
 
-    // Clone originAttributes to prevent "TypeError: can't access dead object"
-    // exceptions when cached console messages are retrieved/filtered
-    // by the devtools webconsole actor.
-    aEvent.originAttributes = Cu.cloneInto(aEvent.originAttributes, {});
-
     storage.push(aEvent);
 
     // truncate

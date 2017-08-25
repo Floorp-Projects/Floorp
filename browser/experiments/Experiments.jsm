@@ -55,7 +55,6 @@ const PREF_FORCE_SAMPLE         = "force-sample-value"; // experiments.force-sam
 const PREF_TELEMETRY_ENABLED      = "toolkit.telemetry.enabled";
 
 const URI_EXTENSION_STRINGS     = "chrome://mozapps/locale/extensions/extensions.properties";
-const STRING_TYPE_NAME          = "type.%ID%.name";
 
 const CACHE_WRITE_RETRY_DELAY_SEC = 60 * 3;
 const MANIFEST_FETCH_TIMEOUT_MSEC = 60 * 3 * 1000; // 3 minutes
@@ -538,7 +537,7 @@ Experiments.Experiments.prototype = {
       AddonManagerPrivate.registerProvider(gAddonProvider, [
           new AddonManagerPrivate.AddonType("experiment",
                                             URI_EXTENSION_STRINGS,
-                                            STRING_TYPE_NAME,
+                                            "type.experiment.name",
                                             AddonManager.VIEW_TYPE_LIST,
                                             11000,
                                             AddonManager.TYPE_UI_HIDE_EMPTY),

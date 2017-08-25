@@ -2,7 +2,7 @@
 
 add_task(async function test_cancelEditAddressDialog() {
   await new Promise(resolve => {
-    let win = window.openDialog(EDIT_ADDRESS_DIALOG_URL, null, null, null);
+    let win = window.openDialog(EDIT_ADDRESS_DIALOG_URL);
     win.addEventListener("load", () => {
       win.addEventListener("unload", () => {
         ok(true, "Edit address dialog is closed");
@@ -28,7 +28,7 @@ add_task(async function test_cancelEditAddressDialogWithESC() {
 
 add_task(async function test_saveAddress() {
   await new Promise(resolve => {
-    let win = window.openDialog(EDIT_ADDRESS_DIALOG_URL, null, null, null);
+    let win = window.openDialog(EDIT_ADDRESS_DIALOG_URL);
     win.addEventListener("load", () => {
       win.addEventListener("unload", () => {
         ok(true, "Edit address dialog is closed");
@@ -75,12 +75,13 @@ add_task(async function test_editAddress() {
   let addresses = await getAddresses();
   await new Promise(resolve => {
     let win = window.openDialog(EDIT_ADDRESS_DIALOG_URL, null, null, addresses[0]);
-    win.addEventListener("load", () => {
+    win.addEventListener("FormReady", () => {
       win.addEventListener("unload", () => {
         ok(true, "Edit address dialog is closed");
         resolve();
       }, {once: true});
       EventUtils.synthesizeKey("VK_TAB", {}, win);
+      EventUtils.synthesizeKey("VK_RIGHT", {}, win);
       EventUtils.synthesizeKey("test", {}, win);
       win.document.querySelector("#save").click();
     }, {once: true});

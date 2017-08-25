@@ -1,0 +1,59 @@
+/* This Source Code Form is subject to the terms of the Mozilla Public
+ * License, v. 2.0. If a copy of the MPL was not distributed with this
+ * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
+
+body {
+  font-size: 1rem;
+}
+
+form,
+label,
+div,
+p {
+  display: flex;
+}
+
+form {
+  flex-wrap: wrap;
+}
+
+label,
+p {
+  margin: 0 0 0.5em;
+}
+
+label > span,
+div > span {
+  box-sizing: border-box;
+  padding-inline-end: 0.7em;
+  align-self: center;
+  text-align: end;
+  -moz-user-select: none;
+}
+
+option {
+  padding: 0.3em 0.5em;
+}
+
+textarea {
+  resize: none;
+}
+
+button {
+  font-size: 1.2em;
+  padding: 3px 2em;
+  margin-inline-start: 10px;
+  margin-inline-end: 0;
+}
+
+input,
+select {
+  box-sizing: border-box;
+  flex: 1 0 auto;
+}
+
+#controls-container {
+  flex: 0 1 100%;
+  justify-content: end;
+  margin: 1em 0 0;
+}

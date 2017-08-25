@@ -1,0 +1,8 @@
+[package]
+name = "ident_case"
+version = "1.0.0"
+authors = ["Ted Driggs <ted.driggs@outlook.com>"]
+license = "MIT/Apache-2.0"
+description = "Utility for applying case rules to Rust identifiers."
+repository = "https://github.com/TedDriggs/ident_case"
+readme = "README.md"
