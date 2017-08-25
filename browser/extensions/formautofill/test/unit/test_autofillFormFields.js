@@ -503,6 +503,19 @@ function do_test(testcases, testFn) {
         let formLike = FormLikeFactory.createFromForm(form);
         let handler = new FormAutofillHandler(formLike);
         let promises = [];
+        // Replace the interal decrypt method with MasterPassword API
+        handler._decrypt = async (cipherText, reauth) => {
+          let string;
+          try {
+            string = await MasterPassword.decrypt(cipherText, reauth);
+          } catch (e) {
+            if (e.result != Cr.NS_ERROR_ABORT) {
+              throw e;
+            }
+            do_print("User canceled master password entry");
+          }
+          return string;
+        };
 
         handler.collectFormFields();
         let handlerInfo = handler[testcase.expectedFillingForm];

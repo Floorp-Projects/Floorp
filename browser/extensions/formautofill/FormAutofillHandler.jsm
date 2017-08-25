@@ -12,14 +12,13 @@ this.EXPORTED_SYMBOLS = ["FormAutofillHandler"];
 
 const {classes: Cc, interfaces: Ci, utils: Cu, results: Cr} = Components;
 
+Cu.import("resource://gre/modules/Services.jsm");
 Cu.import("resource://gre/modules/XPCOMUtils.jsm");
 
 Cu.import("resource://formautofill/FormAutofillUtils.jsm");
 
 XPCOMUtils.defineLazyModuleGetter(this, "FormAutofillHeuristics",
                                   "resource://formautofill/FormAutofillHeuristics.jsm");
-XPCOMUtils.defineLazyModuleGetter(this, "MasterPassword",
-                                  "resource://formautofill/MasterPassword.jsm");
 
 this.log = null;
 FormAutofillUtils.defineLazyLogGetter(this, this.EXPORTED_SYMBOLS[0]);
@@ -284,15 +283,14 @@ FormAutofillHandler.prototype = {
       // card number. Otherwise, the number can be decrypted with the default
       // password.
       if (profile["cc-number-encrypted"]) {
-        try {
-          profile["cc-number"] = await MasterPassword.decrypt(profile["cc-number-encrypted"], true);
-        } catch (e) {
-          if (e.result == Cr.NS_ERROR_ABORT) {
-            log.warn("User canceled master password entry");
-            return;
-          }
-          throw e;
+        let decrypted = await this._decrypt(profile["cc-number-encrypted"], true);
+
+        if (!decrypted) {
+          // Early return if the decrypted is empty or undefined
+          return;
         }
+
+        profile["cc-number"] = decrypted;
       }
       targetSet = this.creditCard;
     } else if (FormAutofillUtils.isAddressField(focusedDetail.fieldName)) {
@@ -572,5 +570,16 @@ FormAutofillHandler.prototype = {
     }
 
     return data;
+  },
+
+  async _decrypt(cipherText, reauth) {
+    return new Promise((resolve) => {
+      Services.cpmm.addMessageListener("FormAutofill:DecryptedString", function getResult(result) {
+        Services.cpmm.removeMessageListener("FormAutofill:DecryptedString", getResult);
+        resolve(result.data);
+      });
+
+      Services.cpmm.sendAsyncMessage("FormAutofill:GetDecryptedString", {cipherText, reauth});
+    });
   },
 };
