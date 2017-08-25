@@ -364,7 +364,11 @@ AtomicOperations::isLockfreeJS(int32_t size)
 #  error "No AtomicOperations support for this platform+compiler combination"
 # endif
 #elif defined(__aarch64__)
-# include "jit/arm64/AtomicOperations-arm64.h"
+# if defined(__clang__) || defined(__GNUC__)
+#  include "jit/arm64/AtomicOperations-arm64.h"
+# else
+#  error "No AtomicOperations support for this platform+compiler combination"
+# endif
 #elif defined(__mips__)
 # if defined(__clang__) || defined(__GNUC__)
 #  include "jit/mips-shared/AtomicOperations-mips-shared.h"
