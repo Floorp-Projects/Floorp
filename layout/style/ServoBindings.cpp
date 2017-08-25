@@ -10,7 +10,6 @@
 #include "ErrorReporter.h"
 #include "GeckoProfiler.h"
 #include "gfxFontFamilyList.h"
-#include "gfxFontFeatures.h"
 #include "nsAnimationManager.h"
 #include "nsAttrValueInlines.h"
 #include "nsCSSCounterStyleRule.h"
@@ -1342,31 +1341,6 @@ Gecko_nsFont_Destroy(nsFont* aDest)
   aDest->~nsFont();
 }
 
-nsTArrayBorrowed_uint32_t
-Gecko_AppendFeatureValueHashEntry(gfxFontFeatureValueSet* aFontFeatureValues,
-                                  nsIAtom* aFamily, uint32_t aAlternate, nsIAtom* aName)
-{
-  MOZ_ASSERT(NS_IsMainThread());
-  return aFontFeatureValues->AppendFeatureValueHashEntry(
-    nsDependentAtomString(aFamily),
-    nsDependentAtomString(aName),
-    aAlternate
-  );
-}
-
-void
-Gecko_nsFont_SetFontFeatureValuesLookup(nsFont* aFont,
-                                        const RawGeckoPresContext* aPresContext)
-{
-  aFont->featureValueLookup = aPresContext->GetFontFeatureValuesLookup();
-}
-
-void
-Gecko_nsFont_ResetFontFeatureValuesLookup(nsFont* aFont)
-{
-  aFont->featureValueLookup = nullptr;
-}
-
 
 void
 Gecko_ClearAlternateValues(nsFont* aFont, size_t aLength)
@@ -1389,7 +1363,6 @@ Gecko_CopyAlternateValuesFrom(nsFont* aDest, const nsFont* aSrc)
 {
   aDest->alternateValues.Clear();
   aDest->alternateValues.AppendElements(aSrc->alternateValues);
-  aDest->featureValueLookup = aSrc->featureValueLookup;
 }
 
 void

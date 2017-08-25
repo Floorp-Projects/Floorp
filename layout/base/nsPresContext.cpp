@@ -278,8 +278,6 @@ nsPresContext::nsPresContext(nsIDocument* aDocument, nsPresContextType aType)
     mPendingViewportChange(false),
     mCounterStylesDirty(true),
     mPostedFlushCounterStyles(false),
-    mFontFeatureValuesDirty(true),
-    mPostedFlushFontFeatureValues(false),
     mSuppressResizeReflow(false),
     mIsVisual(false),
     mFireAfterPaintEvents(false),
@@ -2071,7 +2069,6 @@ nsPresContext::RebuildAllStyleData(nsChangeHint aExtraHint,
   }
   mDocument->RebuildUserFontSet();
   RebuildCounterStyles();
-  RebuildFontFeatureValues();
 
   RestyleManager()->RebuildAllStyleData(aExtraHint, aRestyleHint);
 }
@@ -3127,42 +3124,6 @@ nsPresContext::GetBidiEngine()
     mBidiEngine.reset(new nsBidi());
   }
   return *mBidiEngine;
-}
-
-void
-nsPresContext::FlushFontFeatureValues()
-{
-  if (!mShell) {
-    return; // we've been torn down
-  }
-
-  if (mFontFeatureValuesDirty) {
-    StyleSetHandle styleSet = mShell->StyleSet();
-    mFontFeatureValuesLookup = styleSet->BuildFontFeatureValueSet();
-    mFontFeatureValuesDirty = false;
-  }
-}
-
-void
-nsPresContext::RebuildFontFeatureValues()
-{
-  if (!mShell) {
-    return; // we've been torn down
-  }
-
-  mFontFeatureValuesDirty = true;
-  mShell->SetNeedStyleFlush();
-
-  if (!mPostedFlushFontFeatureValues) {
-    nsCOMPtr<nsIRunnable> ev =
-      NewRunnableMethod("nsPresContext::HandleRebuildFontFeatureValues",
-                        this, &nsPresContext::HandleRebuildFontFeatureValues);
-    nsresult rv =
-      Document()->Dispatch(TaskCategory::Other, ev.forget());
-    if (NS_SUCCEEDED(rv)) {
-      mPostedFlushFontFeatureValues = true;
-    }
-  }
 }
 
 nsRootPresContext::nsRootPresContext(nsIDocument* aDocument,

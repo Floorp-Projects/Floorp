@@ -46,7 +46,6 @@ headers = [
     "mozilla/ServoPropPrefList.h",
     "mozilla/StyleAnimationValue.h",
     "gfxFontConstants.h",
-    "gfxFontFeatures.h",
     "nsThemeConstants.h",
     "mozilla/css/Loader.h",
     "mozilla/dom/AnimationEffectReadOnlyBinding.h",
@@ -167,7 +166,6 @@ whitelist-types = [
     "GeckoFontMetrics",
     "gfxAlternateValue",
     "gfxFontFeature",
-    "gfxFontFeatureValueSet",
     "gfxFontVariation",
     "GridNamedArea",
     "HalfCorner",
@@ -422,7 +420,6 @@ structs-types = [
     "StyleBasicShapeType",
     "StyleShapeSource",
     "StyleTransition",
-    "gfxFontFeatureValueSet",
     "nsBorderColors",
     "nsCSSCounterStyleRule",
     "nsCSSFontFaceRule",
@@ -506,7 +503,6 @@ structs-types = [
 ]
 array-types = [
     { cpp-type = "uintptr_t", rust-type = "usize" },
-    { cpp-type = "uint32_t", rust-type = "u32" },
 ]
 servo-owned-types = [
     { name = "RawServoStyleSet", opaque = true },

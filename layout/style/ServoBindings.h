@@ -109,7 +109,6 @@ namespace mozilla {
     MOZ_IMPLICIT nsTArrayBorrowed_##type_(nsTArray<type_>* aArray)  \
       : mArray(aArray) {}                                           \
   }
-DEFINE_ARRAY_TYPE_FOR(uint32_t);
 DEFINE_ARRAY_TYPE_FOR(uintptr_t);
 #undef DEFINE_ARRAY_TYPE_FOR
 
@@ -301,12 +300,6 @@ void Gecko_CopyFontFamilyFrom(nsFont* dst, const nsFont* src);
 void Gecko_nsFont_InitSystem(nsFont* dst, int32_t font_id,
                              const nsStyleFont* font, RawGeckoPresContextBorrowed pres_context);
 void Gecko_nsFont_Destroy(nsFont* dst);
-
-nsTArrayBorrowed_uint32_t Gecko_AppendFeatureValueHashEntry(
-  gfxFontFeatureValueSet* value_set, nsIAtom* family, uint32_t alternate, nsIAtom* name);
-void Gecko_nsFont_SetFontFeatureValuesLookup(nsFont* font,
-                                             const RawGeckoPresContext* pres_context);
-void Gecko_nsFont_ResetFontFeatureValuesLookup(nsFont* font);
 
 // Font variant alternates
 void Gecko_ClearAlternateValues(nsFont* font, size_t length);

@@ -180,9 +180,9 @@ public:
   NS_DECL_ISUPPORTS_INHERITED
 
 #ifdef DEBUG
-  void List(FILE* out = stdout, int32_t aIndent = 0) const final;
+  virtual void List(FILE* out = stdout, int32_t aIndent = 0) const override;
 #endif
-  already_AddRefed<mozilla::css::Rule> Clone() const final;
+  virtual already_AddRefed<mozilla::css::Rule> Clone() const override;
 
   // nsIDOMCSSFontFeatureValuesRule interface
   NS_DECL_NSIDOMCSSFONTFEATUREVALUESRULE
@@ -201,7 +201,7 @@ public:
     return mFeatureValues;
   }
 
-  size_t SizeOfIncludingThis(mozilla::MallocSizeOf aMallocSizeOf) const final;
+  virtual size_t SizeOfIncludingThis(mozilla::MallocSizeOf aMallocSizeOf) const override;
 
 protected:
   ~nsCSSFontFeatureValuesRule() {}
