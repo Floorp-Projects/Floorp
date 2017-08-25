@@ -117,14 +117,13 @@ nsresult
 SubstitutingProtocolHandler::CollectSubstitutions(InfallibleTArray<SubstitutionMapping>& aMappings)
 {
   for (auto iter = mSubstitutions.ConstIter(); !iter.Done(); iter.Next()) {
-    SubstitutionEntry& entry = iter.Data();
-    nsCOMPtr<nsIURI> uri = entry.baseURI;
+    nsCOMPtr<nsIURI> uri = iter.Data();
     SerializedURI serialized;
     if (uri) {
       nsresult rv = uri->GetSpec(serialized.spec);
       NS_ENSURE_SUCCESS(rv, rv);
     }
-    SubstitutionMapping substitution = { mScheme, nsCString(iter.Key()), serialized, entry.flags };
+    SubstitutionMapping substitution = { mScheme, nsCString(iter.Key()), serialized };
     aMappings.AppendElement(substitution);
   }
 
@@ -132,7 +131,7 @@ SubstitutingProtocolHandler::CollectSubstitutions(InfallibleTArray<SubstitutionM
 }
 
 nsresult
-SubstitutingProtocolHandler::SendSubstitution(const nsACString& aRoot, nsIURI* aBaseURI, uint32_t aFlags)
+SubstitutingProtocolHandler::SendSubstitution(const nsACString& aRoot, nsIURI* aBaseURI)
 {
   if (GeckoProcessType_Content == XRE_GetProcessType()) {
     return NS_OK;
@@ -151,7 +150,6 @@ SubstitutingProtocolHandler::SendSubstitution(const nsACString& aRoot, nsIURI* a
     nsresult rv = aBaseURI->GetSpec(mapping.resolvedURI.spec);
     NS_ENSURE_SUCCESS(rv, rv);
   }
-  mapping.flags = aFlags;
 
   for (uint32_t i = 0; i < parents.Length(); i++) {
     Unused << parents[i]->SendRegisterChromeItem(mapping);
@@ -295,18 +293,10 @@ SubstitutingProtocolHandler::AllowPort(int32_t port, const char *scheme, bool *_
 nsresult
 SubstitutingProtocolHandler::SetSubstitution(const nsACString& root, nsIURI *baseURI)
 {
-  // Add-ons use this API but they should not be able to make anything
-  // content-accessible.
-  return SetSubstitutionWithFlags(root, baseURI, 0);
-}
-
-nsresult
-SubstitutingProtocolHandler::SetSubstitutionWithFlags(const nsACString& root, nsIURI *baseURI, uint32_t flags)
-{
   if (!baseURI) {
     mSubstitutions.Remove(root);
     NotifyObservers(root, baseURI);
-    return SendSubstitution(root, baseURI, flags);
+    return SendSubstitution(root, baseURI);
   }
 
   // If baseURI isn't a same-scheme URI, we can set the substitution immediately.
@@ -320,11 +310,9 @@ SubstitutingProtocolHandler::SetSubstitutionWithFlags(const nsACString& root, ns
       return NS_ERROR_INVALID_ARG;
     }
 
-    SubstitutionEntry& entry = mSubstitutions.GetOrInsert(root);
-    entry.baseURI = baseURI;
-    entry.flags = flags;
+    mSubstitutions.Put(root, baseURI);
     NotifyObservers(root, baseURI);
-    return SendSubstitution(root, baseURI, flags);
+    return SendSubstitution(root, baseURI);
   }
 
   // baseURI is a same-type substituting URI, let's resolve it first.
@@ -336,11 +324,9 @@ SubstitutingProtocolHandler::SetSubstitutionWithFlags(const nsACString& root, ns
   rv = mIOService->NewURI(newBase, nullptr, nullptr, getter_AddRefs(newBaseURI));
   NS_ENSURE_SUCCESS(rv, rv);
 
-  SubstitutionEntry& entry = mSubstitutions.GetOrInsert(root);
-  entry.baseURI = newBaseURI;
-  entry.flags = flags;
+  mSubstitutions.Put(root, newBaseURI);
   NotifyObservers(root, baseURI);
-  return SendSubstitution(root, newBaseURI, flags);
+  return SendSubstitution(root, newBaseURI);
 }
 
 nsresult
@@ -348,29 +334,10 @@ SubstitutingProtocolHandler::GetSubstitution(const nsACString& root, nsIURI **re
 {
   NS_ENSURE_ARG_POINTER(result);
 
-  SubstitutionEntry entry;
-  if (mSubstitutions.Get(root, &entry)) {
-    nsCOMPtr<nsIURI> baseURI = entry.baseURI;
-    baseURI.forget(result);
+  if (mSubstitutions.Get(root, result))
     return NS_OK;
-  }
 
-  uint32_t flags;
-  return GetSubstitutionInternal(root, result, &flags);
-}
-
-nsresult
-SubstitutingProtocolHandler::GetSubstitutionFlags(const nsACString& root, uint32_t* flags)
-{
-  *flags = 0;
-  SubstitutionEntry entry;
-  if (mSubstitutions.Get(root, &entry)) {
-    *flags = entry.flags;
-    return NS_OK;
-  }
-
-  nsCOMPtr<nsIURI> baseURI;
-  return GetSubstitutionInternal(root, getter_AddRefs(baseURI), flags);
+  return GetSubstitutionInternal(root, result);
 }
 
 nsresult
