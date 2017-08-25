@@ -8,25 +8,39 @@
 #include "nssilock.h"
 #include "seccomon.h"
 #include "secerr.h"
+#include "prinit.h"
 
 #define GLOBAL_BYTES_SIZE 100
 static PRUint8 globalBytes[GLOBAL_BYTES_SIZE];
 static unsigned long globalNumCalls = 0;
 static PZLock *rng_lock = NULL;
+static PRCallOnceType coRNGInit;
+static const PRCallOnceType pristineCallOnce;
 
-SECStatus
-RNG_RNGInit(void)
+static PRStatus
+rng_init(void)
 {
     rng_lock = PZ_NewLock(nssILockOther);
     if (!rng_lock) {
         PORT_SetError(SEC_ERROR_LIBRARY_FAILURE);
-        return SECFailure;
+        return PR_FAILURE;
     }
     /* --- LOCKED --- */
     PZ_Lock(rng_lock);
     memset(globalBytes, 0, GLOBAL_BYTES_SIZE);
     PZ_Unlock(rng_lock);
     /* --- UNLOCKED --- */
+
+    return PR_SUCCESS;
+}
+
+SECStatus
+RNG_RNGInit(void)
+{
+    /* Allow only one call to initialize the context */
+    if (PR_CallOnce(&coRNGInit, rng_init) != PR_SUCCESS) {
+        return SECFailure;
+    }
 
     return SECSuccess;
 }
@@ -97,8 +111,11 @@ RNG_GenerateGlobalRandomBytes(void *dest, size_t len)
 void
 RNG_RNGShutdown(void)
 {
-    PZ_DestroyLock(rng_lock);
-    rng_lock = NULL;
+    if (rng_lock) {
+        PZ_DestroyLock(rng_lock);
+        rng_lock = NULL;
+    }
+    coRNGInit = pristineCallOnce;
 }
 
 /* Test functions are not implemented! */

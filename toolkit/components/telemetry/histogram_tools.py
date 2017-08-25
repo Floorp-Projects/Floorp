@@ -17,7 +17,23 @@ from collections import OrderedDict
 # Constants.
 MAX_LABEL_LENGTH = 20
 MAX_LABEL_COUNT = 100
+MAX_KEY_COUNT = 30
+MAX_KEY_LENGTH = 20
 MIN_CATEGORICAL_BUCKET_COUNT = 50
+CPP_IDENTIFIER_PATTERN = '^[a-z][a-z0-9_]+[a-z0-9]$'
+
+ALWAYS_ALLOWED_KEYS = [
+    'kind',
+    'description',
+    'cpp_guard',
+    'expires_in_version',
+    'alert_emails',
+    'keyed',
+    'releaseChannelCollection',
+    'bug_numbers',
+    'keys',
+    'record_in_processes',
+]
 
 BASE_DOC_URL = ("https://gecko.readthedocs.io/en/latest/toolkit/components/"
                 "telemetry/telemetry/")
@@ -70,10 +86,6 @@ def exponential_buckets(dmin, dmax, n_buckets):
     return ret_array
 
 
-always_allowed_keys = ['kind', 'description', 'cpp_guard', 'expires_in_version',
-                       'alert_emails', 'keyed', 'releaseChannelCollection',
-                       'bug_numbers', 'record_in_processes']
-
 whitelists = None
 
 
@@ -118,6 +130,7 @@ symbol that should guard C/C++ definitions associated with the histogram."""
         self._name = name
         self._description = definition['description']
         self._kind = definition['kind']
+        self._keys = definition.get('keys', [])
         self._cpp_guard = definition.get('cpp_guard')
         self._keyed = definition.get('keyed', False)
         self._expiration = definition.get('expires_in_version')
@@ -172,6 +185,10 @@ associated with the histogram.  Returns None if no guarding is necessary."""
         """Returns True if this a keyed histogram, false otherwise."""
         return self._keyed
 
+    def keys(self):
+        """Returns a list of allowed keys for keyed histogram, [] for others."""
+        return self._keys
+
     def dataset(self):
         """Returns the dataset this histogram belongs into."""
         return self._dataset
@@ -224,15 +241,15 @@ associated with the histogram.  Returns None if no guarding is necessary."""
         self.set_bucket_parameters(*fn(definition))
 
     def verify_attributes(self, name, definition):
-        global always_allowed_keys
-        general_keys = always_allowed_keys + ['low', 'high', 'n_buckets']
+        global ALWAYS_ALLOWED_KEYS
+        general_keys = ALWAYS_ALLOWED_KEYS + ['low', 'high', 'n_buckets']
 
         table = {
-            'boolean': always_allowed_keys,
-            'flag': always_allowed_keys,
-            'count': always_allowed_keys,
-            'enumerated': always_allowed_keys + ['n_values'],
-            'categorical': always_allowed_keys + ['labels', 'n_values'],
+            'boolean': ALWAYS_ALLOWED_KEYS,
+            'flag': ALWAYS_ALLOWED_KEYS,
+            'count': ALWAYS_ALLOWED_KEYS,
+            'enumerated': ALWAYS_ALLOWED_KEYS + ['n_values'],
+            'categorical': ALWAYS_ALLOWED_KEYS + ['labels', 'n_values'],
             'linear': general_keys,
             'exponential': general_keys,
         }
@@ -248,6 +265,7 @@ associated with the histogram.  Returns None if no guarding is necessary."""
 
         self.check_name(name)
         self.check_keys(name, definition, allowed_keys)
+        self.check_keys_field(name, definition)
         self.check_field_types(name, definition)
         self.check_whitelisted_kind(name, definition)
         self.check_whitelistable_fields(name, definition)
@@ -312,11 +330,10 @@ associated with the histogram.  Returns None if no guarding is necessary."""
 
         # To make it easier to generate C++ identifiers from this etc., we restrict
         # the label values to a strict pattern.
-        pattern = '^[a-z][a-z0-9_]+[a-z0-9]$'
-        invalid = filter(lambda l: not re.match(pattern, l, re.IGNORECASE), labels)
+        invalid = filter(lambda l: not re.match(CPP_IDENTIFIER_PATTERN, l, re.IGNORECASE), labels)
         if len(invalid) > 0:
             raise ParserError('Label values for %s are not matching pattern "%s": %s' %
-                              (name, pattern, ', '.join(invalid)))
+                              (name, CPP_IDENTIFIER_PATTERN, ', '.join(invalid)))
 
     def check_record_in_processes(self, name, definition):
         if not self._strict_type_checks:
@@ -335,6 +352,33 @@ associated with the histogram.  Returns None if no guarding is necessary."""
             if not utils.is_valid_process_name(process):
                 raise ParserError('Histogram "%s" has unknown process "%s" in %s.\n%s' %
                                   (name, process, field, DOC_URL))
+
+    def check_keys_field(self, name, definition):
+        keys = definition.get('keys')
+        if not self._strict_type_checks or keys is None:
+            return
+
+        if not definition.get('keyed', False):
+            raise ValueError("'keys' field is not valid for %s; only allowed for keyed histograms."
+                             % (name))
+
+        if len(keys) == 0:
+            raise ValueError('The key list for %s cannot be empty' % (name))
+
+        if len(keys) > MAX_KEY_COUNT:
+            raise ValueError('Label count for %s exceeds limit of %d' % (name, MAX_KEY_COUNT))
+
+        invalid = filter(lambda k: len(k) > MAX_KEY_LENGTH, keys)
+        if len(invalid) > 0:
+            raise ValueError('"keys" values for %s are exceeding length "%d": %s' %
+                             (name, MAX_KEY_LENGTH, ', '.join(invalid)))
+
+        # To make it easier to generate C++ identifiers from this etc., we restrict
+        # the key strings to a strict pattern.
+        invalid = filter(lambda k: not re.match(CPP_IDENTIFIER_PATTERN, k, re.IGNORECASE), keys)
+        if len(invalid) > 0:
+            raise ValueError('"keys" values for %s are not matching pattern "%s": %s' %
+                             (name, CPP_IDENTIFIER_PATTERN, ', '.join(invalid)))
 
     def check_whitelisted_kind(self, name, definition):
         # We don't need to run any of these checks on the server.
@@ -400,6 +444,7 @@ associated with the histogram.  Returns None if no guarding is necessary."""
             "alert_emails": basestring,
             "labels": basestring,
             "record_in_processes": basestring,
+            "keys": basestring,
         }
 
         # For the server-side, where _strict_type_checks==False, we want to

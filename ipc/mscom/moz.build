@@ -11,20 +11,28 @@ EXPORTS.mozilla.mscom += [
     'COMApartmentRegion.h',
     'COMPtrHolder.h',
     'EnsureMTA.h',
+    'FastMarshaler.h',
     'MainThreadClientInfo.h',
     'MainThreadRuntime.h',
     'Objref.h',
+    'PassthruProxy.h',
     'ProxyStream.h',
     'Ptr.h',
     'Utils.h',
 ]
 
+SOURCES += [
+    'VTableBuilder.c',
+]
+
 UNIFIED_SOURCES += [
     'AgileReference.cpp',
     'EnsureMTA.cpp',
+    'FastMarshaler.cpp',
     'MainThreadClientInfo.cpp',
     'MainThreadRuntime.cpp',
     'Objref.cpp',
+    'PassthruProxy.cpp',
     'ProxyStream.cpp',
     'Utils.cpp',
 ]

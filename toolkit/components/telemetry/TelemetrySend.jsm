@@ -1198,7 +1198,7 @@ var TelemetrySendImpl = {
 
     const compressedPingSizeKB = Math.floor(payloadStream.data.length / 1024);
     Telemetry.getHistogramById("TELEMETRY_COMPRESS").add(Utils.monotonicNow() - startTime);
-    request.send(payloadStream);
+    request.sendInputStream(payloadStream);
 
     return deferred.promise;
   },

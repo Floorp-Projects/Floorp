@@ -95,14 +95,6 @@ class ThreadLocal
   };
 #endif
 
-  bool initialized() const {
-#ifdef MOZ_HAS_THREAD_LOCAL
-    return true;
-#else
-    return mInited;
-#endif
-  }
-
 public:
   // __thread does not allow non-trivial constructors, but we can
   // instead rely on zero-initialization.
@@ -112,7 +104,18 @@ public:
   {}
 #endif
 
+  bool initialized() const {
+#ifdef MOZ_HAS_THREAD_LOCAL
+    return true;
+#else
+    return mInited;
+#endif
+  }
+
   MOZ_MUST_USE inline bool init();
+  void infallibleInit() {
+    MOZ_RELEASE_ASSERT(init(), "Infallible TLS initialization failed");
+  }
 
   inline T get() const;
 

@@ -74,7 +74,7 @@ async function expectFocusOnF6(backward, expectedDocument, expectedElement, onCo
   }
 
   is(fm.focusedWindow.document.documentElement.id, expectedDocument, desc + " document matches");
-  is(fm.focusedElement, expectedElement, desc + " element matches (wanted: " + expectedElement.id + " got: " + fm.focusedElement.id + ")");
+  is(fm.focusedElement, expectedElement, desc + " element matches");
 
   if (onContent) {
     window.messageManager.removeMessageListener("BrowserTest:FocusChanged", focusChangedListener);
@@ -171,32 +171,15 @@ add_task(async function() {
 });
 
 // Navigate when the downloads panel is open
-add_task(async function test_download_focus() {
+add_task(async function() {
   await pushPrefs(["accessibility.tabfocus", 7]);
-
-  let testTargetFile = FileUtils.getFile("TmpD", ["dm-ui-test.file"]);
-  testTargetFile.createUnique(Ci.nsIFile.NORMAL_FILE_TYPE, FileUtils.PERMS_FILE);
-  registerCleanupFunction(() => testTargetFile.remove(false));
-  let downloadsList = await Downloads.getList(Downloads.PUBLIC);
-  let download = {
-    source: "http://www.example.com/test-download.txt",
-    target: testTargetFile.path,
-    succeeded: true,
-    startTime: new Date(),
-  };
-  await downloadsList.add(await Downloads.createDownload(download));
-
-  await BrowserTestUtils.waitForCondition(() => {
-    let btn = document.getElementById("downloads-button");
-    return !btn.hidden && btn.getBoundingClientRect().width > 0;
-  });
 
   let popupShownPromise = BrowserTestUtils.waitForEvent(document, "popupshown", true);
   EventUtils.synthesizeMouseAtCenter(document.getElementById("downloads-button"), { });
   await popupShownPromise;
 
   gURLBar.focus();
-  await expectFocusOnF6(false, "main-window", document.getElementById("downloadsListBox"),
+  await expectFocusOnF6(false, "main-window", document.getElementById("downloadsHistory"),
                                 false, "focus with downloads panel open panel");
   await expectFocusOnF6(false, "html1", "html1",
                                 true, "focus with downloads panel open");
@@ -206,7 +189,7 @@ add_task(async function test_download_focus() {
   // Now go backwards
   await expectFocusOnF6(true, "html1", "html1",
                                true, "back focus with downloads panel open");
-  await expectFocusOnF6(true, "main-window", document.getElementById("downloadsListBox"),
+  await expectFocusOnF6(true, "main-window", document.getElementById("downloadsHistory"),
                                false, "back focus with downloads panel open");
   await expectFocusOnF6(true, "main-window", gURLBar.inputField,
                                false, "back focus downloads panel open urlbar");

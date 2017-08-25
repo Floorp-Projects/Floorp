@@ -331,71 +331,14 @@ private:
 
 public:
   virtual void
-  Send(JSContext* /*aCx*/, ErrorResult& aRv) override
-  {
-    aRv = SendInternal(nullptr);
-  }
+  Send(JSContext* aCx,
+       const Nullable<DocumentOrBlobOrArrayBufferViewOrArrayBufferOrFormDataOrURLSearchParamsOrUSVString>& aData,
+       ErrorResult& aRv) override;
 
   virtual void
-  Send(JSContext* /*aCx*/, const ArrayBuffer& aArrayBuffer,
-       ErrorResult& aRv) override
+  SendInputStream(nsIInputStream* aInputStream, ErrorResult& aRv) override
   {
-    BodyExtractor<const ArrayBuffer> body(&aArrayBuffer);
-    aRv = SendInternal(&body);
-  }
-
-  virtual void
-  Send(JSContext* /*aCx*/, const ArrayBufferView& aArrayBufferView,
-       ErrorResult& aRv) override
-  {
-    BodyExtractor<const ArrayBufferView> body(&aArrayBufferView);
-    aRv = SendInternal(&body);
-  }
-
-  virtual void
-  Send(JSContext* /*aCx*/, Blob& aBlob, ErrorResult& aRv) override
-  {
-    BodyExtractor<nsIXHRSendable> body(&aBlob);
-    aRv = SendInternal(&body);
-  }
-
-  virtual void Send(JSContext* /*aCx*/, URLSearchParams& aURLSearchParams,
-                    ErrorResult& aRv) override
-  {
-    BodyExtractor<nsIXHRSendable> body(&aURLSearchParams);
-    aRv = SendInternal(&body);
-  }
-
-  virtual void
-  Send(JSContext* /*aCx*/, nsIDocument& aDoc, ErrorResult& aRv) override
-  {
-    BodyExtractor<nsIDocument> body(&aDoc);
-    aRv = SendInternal(&body);
-  }
-
-  virtual void
-  Send(JSContext* aCx, const nsAString& aString, ErrorResult& aRv) override
-  {
-    if (DOMStringIsNull(aString)) {
-      Send(aCx, aRv);
-    } else {
-      BodyExtractor<const nsAString> body(&aString);
-      aRv = SendInternal(&body);
-    }
-  }
-
-  virtual void
-  Send(JSContext* /*aCx*/, FormData& aFormData, ErrorResult& aRv) override
-  {
-    BodyExtractor<nsIXHRSendable> body(&aFormData);
-    aRv = SendInternal(&body);
-  }
-
-  virtual void
-  Send(JSContext* aCx, nsIInputStream* aStream, ErrorResult& aRv) override
-  {
-    NS_ASSERTION(aStream, "Null should go to string version");
-    BodyExtractor<nsIInputStream> body(aStream);
+    BodyExtractor<nsIInputStream> body(aInputStream);
     aRv = SendInternal(&body);
   }
 

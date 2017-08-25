@@ -333,7 +333,15 @@ function test()
   clear();
   SimpleTest.finish();
 }
-window.onload = function() { setTimeout(test, 0); };
+
+// These tests depends on the Ahem font being loaded and rendered so wait for
+// font to load, then wait a frame for them to be rendered too.
+window.onload = function() {
+  document.fonts.ready.then(function() {
+    requestAnimationFrame(test);
+  });
+};
+
 SimpleTest.waitForExplicitFinish();
 </script>
 </pre>

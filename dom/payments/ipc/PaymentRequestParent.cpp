@@ -73,6 +73,7 @@ PaymentRequestParent::RecvRequestPayment(const IPCPaymentActionRequest& aRequest
       rv = createAction->InitRequest(request.requestId(),
                                      callback,
                                      mTabId,
+                                     request.topLevelPrincipal(),
                                      methodData,
                                      details,
                                      options);

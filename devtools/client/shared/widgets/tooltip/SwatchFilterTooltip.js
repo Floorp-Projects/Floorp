@@ -8,7 +8,7 @@ const {Task} = require("devtools/shared/task");
 const {CSSFilterEditorWidget} = require("devtools/client/shared/widgets/FilterWidget");
 const SwatchBasedEditorTooltip = require("devtools/client/shared/widgets/tooltip/SwatchBasedEditorTooltip");
 
-const Heritage = require("sdk/core/heritage");
+const {extend} = require("devtools/shared/extend");
 
 const XHTML_NS = "http://www.w3.org/1999/xhtml";
 
@@ -36,7 +36,7 @@ function SwatchFilterTooltip(document, cssIsValid) {
   this._onUpdate = this._onUpdate.bind(this);
 }
 
-SwatchFilterTooltip.prototype = Heritage.extend(SwatchBasedEditorTooltip.prototype, {
+SwatchFilterTooltip.prototype = extend(SwatchBasedEditorTooltip.prototype, {
   /**
    * Fill the tooltip with a new instance of the CSSFilterEditorWidget
    * widget initialized with the given filter value, and return a promise

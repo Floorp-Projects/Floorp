@@ -25,6 +25,9 @@ with Files("newtab/**"):
 with Files("pageinfo/**"):
     BUG_COMPONENT = ("Firefox", "Page Info Window")
 
+with Files("test/about/**"):
+    BUG_COMPONENT = ("Firefox", "General")
+
 with Files("test/alerts/**"):
     BUG_COMPONENT = ("Toolkit", "Notifications and Alerts")
 
@@ -34,6 +37,9 @@ with Files("test/captivePortal/**"):
 with Files("test/chrome/**"):
     BUG_COMPONENT = ("Firefox", "General")
 
+with Files("test/contextMenu/**"):
+    BUG_COMPONENT = ("Firefox", "Menus")
+
 with Files("test/forms/**"):
     BUG_COMPONENT = ("Core", "Layout: Form Controls")
 
@@ -42,6 +48,9 @@ with Files("test/newtab/**"):
 
 with Files("test/pageinfo/**"):
     BUG_COMPONENT = ("Firefox", "Page Info Window")
+
+with Files("test/performance/**"):
+    BUG_COMPONENT = ("Firefox", "General")
 
 with Files("test/performance/browser_appmenu_reflows.js"):
     BUG_COMPONENT = ("Firefox", "Menus")
@@ -64,8 +73,14 @@ with Files("test/referrer/**"):
 with Files("test/siteIdentity/**"):
     BUG_COMPONENT = ("Firefox", "Site Identity and Permission Panels")
 
+with Files("test/sidebar/**"):
+    BUG_COMPONENT = ("Firefox", "General")
+
 with Files("test/static/**"):
     BUG_COMPONENT = ("Firefox", "General")
+
+with Files("test/sync/**"):
+    BUG_COMPONENT = ("Firefox", "Sync")
 
 with Files("test/tabPrompts/**"):
     BUG_COMPONENT = ("Firefox", "Tabbed Browser")
@@ -75,6 +90,9 @@ with Files("test/tabcrashed/**"):
 
 with Files("test/tabs/**"):
     BUG_COMPONENT = ("Firefox", "Tabbed Browser")
+
+with Files("test/touch/**"):
+    BUG_COMPONENT = ("Firefox", "General")
 
 with Files("test/urlbar/**"):
     BUG_COMPONENT = ("Firefox", "Location Bar")
