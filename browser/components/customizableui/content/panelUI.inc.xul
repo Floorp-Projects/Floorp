@@ -79,7 +79,6 @@
     </panelview>
 
     <panelview id="PanelUI-history" flex="1">
-      <label value="&appMenuHistory.label;" class="panel-subview-header"/>
       <vbox class="panel-subview-body">
         <toolbarbutton id="appMenuViewHistorySidebar"
                        label="&appMenuHistory.viewSidebar.label;"
@@ -130,7 +129,6 @@
 
     <panelview id="PanelUI-remotetabs" flex="1" class="PanelUI-subView"
                descriptionheightworkaround="true">
-      <label value="&appMenuRemoteTabs.label;" class="panel-subview-header"/>
       <vbox class="panel-subview-body">
         <!-- this widget has 3 boxes in the body, but only 1 is ever visible -->
         <!-- When Sync is ready to sync -->
@@ -227,7 +225,6 @@
     </panelview>
 
     <panelview id="PanelUI-bookmarks" flex="1" class="PanelUI-subView">
-      <label value="&bookmarksMenu.label;" class="panel-subview-header"/>
       <vbox class="panel-subview-body">
         <toolbarbutton id="panelMenuBookmarkThisPage"
                        class="subviewbutton subviewbutton-iconic"
@@ -263,31 +260,21 @@
     </panelview>
 
     <panelview id="PanelUI-feeds" flex="1" oncommand="FeedHandler.subscribeToFeed(null, event);">
-      <label value="&feedsMenu2.label;" class="panel-subview-header"/>
     </panelview>
 
     <panelview id="PanelUI-containers" flex="1">
-      <label value="&containersMenu.label;" class="panel-subview-header"/>
       <vbox id="PanelUI-containersItems"/>
     </panelview>
 
     <panelview id="PanelUI-helpView" flex="1" class="PanelUI-subView">
-      <label value="&helpMenu.label;" class="panel-subview-header"/>
       <vbox id="PanelUI-helpItems" class="panel-subview-body"/>
     </panelview>
 
     <panelview id="PanelUI-developer" flex="1">
-      <label value="&webDeveloperMenu.label;" class="panel-subview-header"/>
       <vbox id="PanelUI-developerItems" class="panel-subview-body"/>
     </panelview>
 
-    <panelview id="PanelUI-sidebar" flex="1">
-      <label value="&appMenuSidebars.label;" class="panel-subview-header"/>
-      <vbox id="PanelUI-sidebarItems" class="panel-subview-body"/>
-    </panelview>
-
     <panelview id="PanelUI-characterEncodingView" flex="1">
-      <label value="&charsetMenu2.label;" class="panel-subview-header"/>
       <vbox class="panel-subview-body">
         <vbox id="PanelUI-characterEncodingView-pinned"
               class="PanelUI-characterEncodingView-list"/>
@@ -717,7 +704,7 @@
       <vbox class="panel-subview-body">
         <toolbarbutton id="appMenu-library-bookmarks-button"
                        class="subviewbutton subviewbutton-iconic subviewbutton-nav"
-                       label="&bookmarksMenuButton.label;"
+                       label="&bookmarksSubview.label;"
                        closemenu="none"
                        oncommand="BookmarkingUI.showSubView(this);"/>
         <toolbarbutton id="appMenu-library-history-button"

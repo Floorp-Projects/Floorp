@@ -12,6 +12,8 @@ add_task(async function() {
     info("Check cut button existence and functionality");
     CustomizableUI.addWidgetToArea("edit-controls", CustomizableUI.AREA_FIXED_OVERFLOW_PANEL);
 
+    await waitForOverflowButtonShown();
+
     let testText = "cut text test";
 
     gURLBar.focus();

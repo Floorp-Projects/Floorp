@@ -137,10 +137,10 @@
           } else {
             // Need to wait until XUL overlays are loaded. See bug 554279.
             let self = this;
-            document.addEventListener("readystatechange", function(event) {
+            document.addEventListener("readystatechange", function listener(event) {
               if (document.readyState != "complete")
                 return;
-              document.removeEventListener("readystatechange", arguments.callee);
+              document.removeEventListener("readystatechange", listener);
               self._init();
             });
           }

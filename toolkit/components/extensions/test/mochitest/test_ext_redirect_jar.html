@@ -59,7 +59,7 @@ function getExtension() {
             s.onload = () => resolve(['loaded', s.contentWindow.location.href]);
             s.onerror = () => resolve(['error']);
             document.documentElement.appendChild(s);
-            setTimeout(() => resolve(['timed_out']), 2000);
+            setTimeout(() => resolve(['timed_out']), 5000);
           });`,
         });
         return result;

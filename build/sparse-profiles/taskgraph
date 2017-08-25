@@ -1,0 +1,24 @@
+%include build/sparse-profiles/mach
+
+[include]
+# This file is read as part of validating the taskgraph.
+path:browser/locales/all-locales
+
+# Lots of random files in here are read. Just pull in the whole thing.
+path:build/
+
+# This file is read as part of validating the taskgraph.
+path:mobile/locales/l10n-changesets.json
+
+# The main meat of this profile.
+path:taskcluster/
+
+# Various files in these directories are read by taskgraph. Just pull
+# them all in.
+path:testing/config/tooltool-manifests/
+path:testing/mozharness/
+path:tools/lint/
+
+# Tooltool manifests also need to be opened. Assume they
+# are all somewhere in "tooltool-manifests" directories.
+glob:**/tooltool-manifests/**

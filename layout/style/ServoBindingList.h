@@ -45,7 +45,8 @@ SERVO_BINDING_FUNC(Servo_StyleSheet_FromUTF8Bytes, RawServoStyleSheetContentsStr
                    mozilla::css::SheetParsingMode parsing_mode,
                    RawGeckoURLExtraData* extra_data,
                    uint32_t line_number_offset,
-                   nsCompatibility quirks_mode)
+                   nsCompatibility quirks_mode,
+                   mozilla::css::LoaderReusableStyleSheets* reusable_sheets)
 SERVO_BINDING_FUNC(Servo_StyleSheet_Empty, RawServoStyleSheetContentsStrong,
                    mozilla::css::SheetParsingMode parsing_mode)
 SERVO_BINDING_FUNC(Servo_StyleSheet_HasRules, bool,

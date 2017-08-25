@@ -33,7 +33,7 @@ public:
   BackgroundMTAData()
   {
     nsCOMPtr<nsIRunnable> runnable = new EnterMTARunnable();
-    nsresult rv = NS_NewNamedThread("COM MTA",
+    mozilla::DebugOnly<nsresult> rv = NS_NewNamedThread("COM MTA",
                                     getter_AddRefs(mThread), runnable);
     NS_WARNING_ASSERTION(NS_SUCCEEDED(rv), "NS_NewNamedThread failed");
     MOZ_ASSERT(NS_SUCCEEDED(rv));
