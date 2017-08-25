@@ -223,7 +223,7 @@ GetDosDeviceNames()
   std::vector<wchar_t> buf;
   buf.resize(1024);
   DWORD rv = GetLogicalDriveStringsW(buf.size(), buf.data());
-  if (rv == 0) {
+  if (rv == 0 || rv > buf.size()) {
     return v;
   }
 
@@ -248,9 +248,8 @@ GetDosDeviceNames()
 static std::wstring
 GetDeviceMapping(const std::wstring& aDosDeviceName)
 {
-  const size_t len = 256;
-  wchar_t buf[len] = { 0 };
-  DWORD rv = QueryDosDeviceW(aDosDeviceName.c_str(), buf, len);
+  wchar_t buf[MAX_PATH] = { 0 };
+  DWORD rv = QueryDosDeviceW(aDosDeviceName.c_str(), buf, MAX_PATH);
   if (rv == 0) {
     return std::wstring(L"");
   }
