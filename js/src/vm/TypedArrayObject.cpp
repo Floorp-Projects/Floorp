@@ -1067,28 +1067,70 @@ TypedArrayObjectTemplate<T>::AllocateArrayBuffer(JSContext* cx, HandleValue ctor
 }
 
 static bool
-IsArrayBufferSpecies(JSContext* cx, JSFunction* species)
+IsArrayBufferConstructor(const Value& v)
 {
-    return IsSelfHostedFunctionWithName(species, cx->names().ArrayBufferSpecies);
+    return v.isObject() &&
+           v.toObject().is<JSFunction>() &&
+           v.toObject().as<JSFunction>().isNative() &&
+           v.toObject().as<JSFunction>().native() == ArrayBufferObject::class_constructor;
 }
 
-static JSObject*
+static bool
+IsArrayBufferSpecies(JSContext* cx, HandleObject origBuffer)
+{
+    RootedValue ctor(cx);
+    if (!GetPropertyPure(cx, origBuffer, NameToId(cx->names().constructor), ctor.address()))
+        return false;
+
+    if (!IsArrayBufferConstructor(ctor))
+        return false;
+
+    RootedObject ctorObj(cx, &ctor.toObject());
+    RootedId speciesId(cx, SYMBOL_TO_JSID(cx->wellKnownSymbols().species));
+    JSFunction* getter;
+    if (!GetGetterPure(cx, ctorObj, speciesId, &getter))
+        return false;
+
+    if (!getter)
+        return false;
+
+    return IsSelfHostedFunctionWithName(getter, cx->names().ArrayBufferSpecies);
+}
+
+static bool
 GetSpeciesConstructor(JSContext* cx, HandleObject obj, bool isWrapped,
-                      SpeciesConstructorOverride override)
+                      SpeciesConstructorOverride override, MutableHandleValue ctor)
 {
     if (!GlobalObject::ensureConstructor(cx, cx->global(), JSProto_ArrayBuffer))
-        return nullptr;
-    RootedObject defaultCtor(cx, &cx->global()->getConstructor(JSProto_ArrayBuffer).toObject());
+        return false;
+    RootedValue defaultCtor(cx, cx->global()->getConstructor(JSProto_ArrayBuffer));
 
     // Use the current global's ArrayBuffer if the override is set.
-    if (override == SpeciesConstructorOverride::ArrayBuffer)
-        return defaultCtor;
+    if (override == SpeciesConstructorOverride::ArrayBuffer) {
+        ctor.set(defaultCtor);
+        return true;
+    }
+
+    if (!isWrapped) {
+        // As an optimization, avoid calling into self-hosted code if |obj|'s
+        // constructor is the built-in ArrayBuffer and the constructor's
+        // species property is the original ArrayBuffer[@@species] function.
+        if (IsArrayBufferSpecies(cx, obj))
+            ctor.set(defaultCtor);
+        else if (!SpeciesConstructor(cx, obj, defaultCtor, ctor))
+            return false;
+
+        return true;
+    }
 
     RootedObject wrappedObj(cx, obj);
-    if (isWrapped && !cx->compartment()->wrap(cx, &wrappedObj))
-        return nullptr;
+    if (!cx->compartment()->wrap(cx, &wrappedObj))
+        return false;
 
-    return SpeciesConstructor(cx, wrappedObj, defaultCtor, IsArrayBufferSpecies);
+    if (!SpeciesConstructor(cx, wrappedObj, defaultCtor, ctor))
+        return false;
+
+    return true;
 }
 
 // ES 2017 draft rev 8633ffd9394b203b8876bb23cb79aff13eb07310 24.1.1.4.
@@ -1104,10 +1146,9 @@ TypedArrayObjectTemplate<T>::CloneArrayBufferNoCopy(JSContext* cx,
     // Step 1 (skipped).
 
     // Step 2.a.
-    JSObject* ctorObj = GetSpeciesConstructor(cx, srcBuffer, isWrapped, override);
-    if (!ctorObj)
+    RootedValue cloneCtor(cx);
+    if (!GetSpeciesConstructor(cx, srcBuffer, isWrapped, override, &cloneCtor))
         return false;
-    RootedValue cloneCtor(cx, ObjectValue(*ctorObj));
 
     // Step 2.b.
     if (srcBuffer->isDetached()) {
@@ -1225,10 +1266,9 @@ TypedArrayObjectTemplate<T>::fromTypedArray(JSContext* cx, HandleObject other, b
         }
     } else {
         // Steps 17.a-b.
-        JSObject* ctorObj = GetSpeciesConstructor(cx, srcData, isWrapped, override);
-        if (!ctorObj)
+        RootedValue bufferCtor(cx);
+        if (!GetSpeciesConstructor(cx, srcData, isWrapped, override, &bufferCtor))
             return nullptr;
-        RootedValue bufferCtor(cx, ObjectValue(*ctorObj));
 
         // Steps 14-15, 17.c.
         if (!AllocateArrayBuffer(cx, bufferCtor, elementLength, BYTES_PER_ELEMENT, &buffer))
