@@ -1567,12 +1567,9 @@ HTMLEditor::InsertElementAtSelection(nsIDOMElement* aElement,
     }
 
     nsCOMPtr<nsIDOMNode> parentSelectedNode;
-    int32_t offsetForInsert;
     rv = selection->GetAnchorNode(getter_AddRefs(parentSelectedNode));
-    // XXX: ERROR_HANDLING bad XPCOM usage
-    if (NS_SUCCEEDED(rv) &&
-        NS_SUCCEEDED(selection->GetAnchorOffset(&offsetForInsert)) &&
-        parentSelectedNode) {
+    if (parentSelectedNode) {
+      int32_t offsetForInsert = selection->AnchorOffset();
       // Adjust position based on the node we are going to insert.
       NormalizeEOLInsertPosition(element, address_of(parentSelectedNode),
                                  &offsetForInsert);
