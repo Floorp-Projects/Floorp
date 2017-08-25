@@ -592,9 +592,9 @@ static const js::Class SandboxWriteToProtoClass = {
 };
 
 static const JSFunctionSpec SandboxFunctions[] = {
-    JS_FS("dump",    SandboxDump,    1,0),
-    JS_FS("debug",   SandboxDebug,   1,0),
-    JS_FS("importFunction", SandboxImport, 1,0),
+    JS_FN("dump",    SandboxDump,    1,0),
+    JS_FN("debug",   SandboxDebug,   1,0),
+    JS_FN("importFunction", SandboxImport, 1,0),
     JS_FS_END
 };
 
