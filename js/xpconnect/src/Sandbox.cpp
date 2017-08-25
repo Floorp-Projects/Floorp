@@ -549,8 +549,8 @@ sandbox_addProperty(JSContext* cx, HandleObject obj, HandleId id, HandleValue v)
 #define XPCONNECT_SANDBOX_CLASS_METADATA_SLOT (XPCONNECT_GLOBAL_EXTRA_SLOT_OFFSET)
 
 static const js::ClassOps SandboxClassOps = {
-    nullptr, nullptr, nullptr, nullptr,
-    nullptr, JS_NewEnumerateStandardClasses, JS_ResolveStandardClass,
+    nullptr, nullptr, nullptr,
+    JS_NewEnumerateStandardClasses, JS_ResolveStandardClass,
     JS_MayResolveStandardClass,
     sandbox_finalize,
     nullptr, nullptr, nullptr, JS_GlobalObjectTraceHook,
@@ -574,8 +574,8 @@ static const js::Class SandboxClass = {
 // Note to whomever comes here to remove addProperty hooks: billm has promised
 // to do the work for this class.
 static const js::ClassOps SandboxWriteToProtoClassOps = {
-    sandbox_addProperty, nullptr, nullptr, nullptr,
-    nullptr, JS_NewEnumerateStandardClasses, JS_ResolveStandardClass,
+    sandbox_addProperty, nullptr, nullptr,
+    JS_NewEnumerateStandardClasses, JS_ResolveStandardClass,
     JS_MayResolveStandardClass,
     sandbox_finalize,
     nullptr, nullptr, nullptr, JS_GlobalObjectTraceHook,
