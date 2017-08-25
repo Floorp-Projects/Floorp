@@ -246,7 +246,6 @@
 
     <item name="activity_stream_base_margin" type="dimen">10dp</item>
     <item name="activity_stream_desired_tile_width" type="dimen">90dp</item>
-    <item name="activity_stream_desired_tile_height" type="dimen">70dp</item>
 
     <!-- Default touch target size for buttons/imageviews that might be of small size -->
     <item name="touch_target_size" type="dimen">48dp</item>
