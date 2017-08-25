@@ -53,8 +53,13 @@ struct Line {
 class ResourceUpdateQueue {
 public:
   ResourceUpdateQueue();
-
   ~ResourceUpdateQueue();
+  ResourceUpdateQueue(ResourceUpdateQueue&&);
+  ResourceUpdateQueue(ResourceUpdateQueue&) = delete;
+  ResourceUpdateQueue(const ResourceUpdateQueue&) = delete;
+  ResourceUpdateQueue& operator=(ResourceUpdateQueue&&);
+  ResourceUpdateQueue& operator=(ResourceUpdateQueue&) = delete;
+  ResourceUpdateQueue& operator=(const ResourceUpdateQueue&) = delete;
 
   void AddImage(wr::ImageKey aKey,
                 const ImageDescriptor& aDescriptor,
