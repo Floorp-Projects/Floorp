@@ -213,7 +213,11 @@ bool nsNotifyAddrListener::findMac(char *gateway)
                     sha1.finish(digest);
                     nsCString newString(reinterpret_cast<char*>(digest),
                                         SHA1Sum::kHashSize);
-                    Base64Encode(newString, output);
+                    nsresult rv = Base64Encode(newString, output);
+                    if (NS_FAILED(rv)) {
+                        found = false;
+                        break;
+                    }
                     LOG(("networkid: id %s\n", output.get()));
                     if (mNetworkId != output) {
                         // new id

@@ -351,7 +351,9 @@ nsHttpNTLMAuth::GenerateCredentials(nsIHttpAuthenticableChannel *authChannel,
 
             uint32_t length;
             uint8_t* certArray;
-            cert->GetRawDER(&length, &certArray);
+            rv = cert->GetRawDER(&length, &certArray);
+            if (NS_FAILED(rv))
+                return rv;
 
             // If there is a server certificate, we pass it along the
             // first time we call GetNextToken().
