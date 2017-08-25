@@ -516,6 +516,13 @@ WebRenderLayerManager::GenerateFallbackData(nsDisplayItem* aItem,
     clippedBounds = itemBounds.Intersect(clip.GetClipRect());
   }
 
+  // nsDisplayItem::Paint() may refer the variables that come from ComputeVisibility().
+  // So we should call ComputeVisibility() before painting. e.g.: nsDisplayBoxShadowInner
+  // uses mVisibleRegion in Paint() and mVisibleRegion is computed in
+  // nsDisplayBoxShadowInner::ComputeVisibility().
+  nsRegion visibleRegion(clippedBounds);
+  aItem->ComputeVisibility(aDisplayListBuilder, &visibleRegion);
+
   const int32_t appUnitsPerDevPixel = aItem->Frame()->PresContext()->AppUnitsPerDevPixel();
   LayerRect bounds = ViewAs<LayerPixel>(
       LayoutDeviceRect::FromAppUnits(clippedBounds, appUnitsPerDevPixel),
