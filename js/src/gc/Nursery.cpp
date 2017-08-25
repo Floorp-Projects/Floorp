@@ -465,6 +465,22 @@ js::TenuringTracer::TenuringTracer(JSRuntime* rt, Nursery* nursery)
 {
 }
 
+inline float
+js::Nursery::calcPromotionRate(bool *validForTenuring) const {
+    float used = float(previousGC.nurseryUsedBytes);
+    float capacity = float(previousGC.nurseryCapacity);
+    float tenured = float(previousGC.tenuredBytes);
+
+    if (validForTenuring) {
+        /*
+         * We can only use promotion rates if they're likely to be valid,
+         * they're only valid if the nursury was at least 90% full.
+         */
+        *validForTenuring = used > capacity * 0.9f;
+    }
+    return tenured / used;
+}
+
 void
 js::Nursery::renderProfileJSON(JSONPrinter& json) const
 {
@@ -490,8 +506,7 @@ js::Nursery::renderProfileJSON(JSONPrinter& json) const
 
     json.property("reason", JS::gcreason::ExplainReason(previousGC.reason));
     json.property("bytes_tenured", previousGC.tenuredBytes);
-    json.floatProperty("promotion_rate",
-                       100.0 * previousGC.tenuredBytes / double(previousGC.nurseryUsedBytes), 2);
+    json.floatProperty("promotion_rate", calcPromotionRate(nullptr), 0);
     json.property("nursery_bytes", previousGC.nurseryUsedBytes);
     json.property("new_nursery_bytes", numChunks() * ChunkSize);
 
@@ -609,14 +624,13 @@ js::Nursery::collect(JS::gcreason::Reason reason)
     JS::AutoSuppressGCAnalysis nogc;
 
     TenureCountCache tenureCounts;
-    double promotionRate = 0;
     previousGC.reason = JS::gcreason::NO_REASON;
     if (!isEmpty())
-        promotionRate = doCollection(reason, tenureCounts);
+        doCollection(reason, tenureCounts);
 
     // Resize the nursery.
     startProfile(ProfileKey::Resize);
-    maybeResizeNursery(reason, promotionRate);
+    maybeResizeNursery(reason);
     endProfile(ProfileKey::Resize);
 
     // If we are promoting the nursery, or exhausted the store buffer with
@@ -624,16 +638,20 @@ js::Nursery::collect(JS::gcreason::Reason reason)
     // the nursery is full, look for object groups that are getting promoted
     // excessively and try to pretenure them.
     startProfile(ProfileKey::Pretenure);
+    bool validPromotionRate;
+    const float promotionRate = calcPromotionRate(&validPromotionRate);
     uint32_t pretenureCount = 0;
-    if (promotionRate > 0.8 || IsFullStoreBufferReason(reason)) {
-        JSContext* cx = TlsContext.get();
-        for (auto& entry : tenureCounts.entries) {
-            if (entry.count >= 3000) {
-                ObjectGroup* group = entry.group;
-                if (group->canPreTenure()) {
-                    AutoCompartment ac(cx, group);
-                    group->setShouldPreTenure(cx);
-                    pretenureCount++;
+    if (validPromotionRate) {
+        if (promotionRate > 0.8 || IsFullStoreBufferReason(reason)) {
+            JSContext* cx = TlsContext.get();
+            for (auto& entry : tenureCounts.entries) {
+                if (entry.count >= 3000) {
+                    ObjectGroup* group = entry.group;
+                    if (group->canPreTenure()) {
+                        AutoCompartment ac(cx, group);
+                        group->setShouldPreTenure(cx);
+                        pretenureCount++;
+                    }
                 }
             }
         }
@@ -685,7 +703,7 @@ js::Nursery::collect(JS::gcreason::Reason reason)
     }
 }
 
-double
+void
 js::Nursery::doCollection(JS::gcreason::Reason reason,
                           TenureCountCache& tenureCounts)
 {
@@ -696,7 +714,8 @@ js::Nursery::doCollection(JS::gcreason::Reason reason,
     AutoDisableProxyCheck disableStrictProxyChecking;
     mozilla::DebugOnly<AutoEnterOOMUnsafeRegion> oomUnsafeRegion;
 
-    size_t initialNurserySize = spaceToEnd();
+    const size_t initialNurseryCapacity = spaceToEnd();
+    const size_t initialNurseryUsedBytes = initialNurseryCapacity - freeSpace();
 
     // Move objects pointed to by roots from the nursery to the major heap.
     TenuringTracer mover(rt, this);
@@ -793,11 +812,9 @@ js::Nursery::doCollection(JS::gcreason::Reason reason,
     endProfile(ProfileKey::CheckHashTables);
 
     previousGC.reason = reason;
-    previousGC.nurseryUsedBytes = initialNurserySize;
+    previousGC.nurseryCapacity = initialNurseryCapacity;
+    previousGC.nurseryUsedBytes = initialNurseryUsedBytes;
     previousGC.tenuredBytes = mover.tenuredSize;
-
-    // Calculate and return the promotion rate.
-    return mover.tenuredSize / double(initialNurserySize);
 }
 
 void
@@ -923,7 +940,7 @@ js::Nursery::setStartPosition()
 }
 
 void
-js::Nursery::maybeResizeNursery(JS::gcreason::Reason reason, double promotionRate)
+js::Nursery::maybeResizeNursery(JS::gcreason::Reason reason)
 {
     static const double GrowThreshold   = 0.05;
     static const double ShrinkThreshold = 0.01;
@@ -942,19 +959,26 @@ js::Nursery::maybeResizeNursery(JS::gcreason::Reason reason, double promotionRat
         return;
 #endif
 
+    bool canUsePromotionRate;
+    const float promotionRate = calcPromotionRate(&canUsePromotionRate);
+
     newMaxNurseryChunks = runtime()->gc.tunables.gcMaxNurseryBytes() >> ChunkShift;
     if (newMaxNurseryChunks != maxNurseryChunks_) {
         maxNurseryChunks_ = newMaxNurseryChunks;
         /* The configured maximum nursery size is changing */
-        int extraChunks = numChunks() - newMaxNurseryChunks;
+        const int extraChunks = numChunks() - newMaxNurseryChunks;
         if (extraChunks > 0) {
             /* We need to shrink the nursery */
             shrinkAllocableSpace(extraChunks);
 
-            previousPromotionRate_ = promotionRate;
+            if (canUsePromotionRate)
+                previousPromotionRate_ = promotionRate;
             return;
         }
     }
+
+    if (!canUsePromotionRate)
+        return;
 
     if (promotionRate > GrowThreshold)
         growAllocableSpace();
