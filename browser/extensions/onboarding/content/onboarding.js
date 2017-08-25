@@ -238,7 +238,7 @@ var onboardingTourset = {
           <img src="resource://onboarding/img/figure_library.svg" role="presentation"/>
         </section>
         <aside class="onboarding-tour-button-container">
-          <button id="onboarding-tour-library-button" class="onboarding-tour-action-button" data-l10n-id="onboarding.tour-library.button"></button>
+          <button id="onboarding-tour-library-button" class="onboarding-tour-action-button" data-l10n-id="onboarding.tour-library.button2"></button>
         </aside>
       `;
       return div;
