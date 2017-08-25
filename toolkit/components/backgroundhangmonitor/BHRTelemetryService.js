@@ -29,6 +29,7 @@ BHRTelemetryService.prototype = Object.freeze({
   TRANSMIT_HANG_COUNT: 50,
 
   resetPayload() {
+    this.startTime = +new Date();
     this.payload = {
       modules: [],
       hangs: [],
@@ -90,6 +91,7 @@ BHRTelemetryService.prototype = Object.freeze({
     // testing.
     if (Services.prefs.getBoolPref("toolkit.telemetry.bhrPing.enabled", false) &&
         this.payload.hangs.length > 0) {
+      this.payload.timeSinceLastPing = new Date() - this.startTime;
       TelemetryController.submitExternalPing("bhr", this.payload, {
         addEnvironment: true,
       });
