@@ -140,7 +140,7 @@ add_task(async function test_options_ui_iframe_height() {
 
   let onceAboutAddonsLoaded = waitAboutAddonsLoaded();
 
-  BrowserApp.selectOrAddTab("about:addons", {
+  BrowserApp.addTab("about:addons", {
     selected: true,
     parentId: BrowserApp.selectedTab.id,
   });
@@ -252,7 +252,7 @@ add_task(async function test_options_ui_open_aboutaddons_details() {
 
   let onceAboutAddonsLoaded = waitAboutAddonsLoaded();
 
-  BrowserApp.selectOrAddTab("about:addons", {
+  BrowserApp.addTab("about:addons", {
     selected: true,
     parentId: BrowserApp.selectedTab.id,
   });
@@ -361,17 +361,45 @@ add_task(async function test_options_ui_open_in_tab() {
   is(addonOptionsTab.currentURI.spec, optionsURL,
      "Got the expected extension url opened in the addon options tab");
 
+  const waitTabClosed = (nativeTab) => {
+    return new Promise(resolve => {
+      let {BrowserApp} = Services.wm.getMostRecentWindow("navigator:browser");
+      let expectedBrowser = nativeTab.browser;
+
+      let tabCloseListener = (event) => {
+        let browser = event.target;
+        if (browser !== expectedBrowser) {
+          return;
+        }
+
+        BrowserApp.deck.removeEventListener("TabClose", tabCloseListener);
+        resolve();
+      };
+
+      BrowserApp.deck.addEventListener("TabClose", tabCloseListener);
+    });
+  };
+
+  let onceOptionsTabClosed = waitTabClosed(addonOptionsTab);
+  let onceAboutAddonsClosed = waitTabClosed(aboutAddonsTab);
+
+  info("Close the opened about:addons and options tab");
   BrowserApp.closeTab(addonOptionsTab);
   BrowserApp.closeTab(aboutAddonsTab);
 
-  info("Wait runtime.openOptionsPage to open the options in a new tab");
-  onceAddonOptionsLoaded = waitDOMContentLoaded(url => url.endsWith("options.html"));
-  extension.sendMessage("runtime.openOptionsPage");
-  await onceAddonOptionsLoaded;
+  info("Wait the tabs to be closed");
+  await Promise.all([onceOptionsTabClosed, onceAboutAddonsClosed]);
 
+  const oldSelectedTab = BrowserApp.selectedTab;
+  info("Call runtime.openOptionsPage");
+  extension.sendMessage("runtime.openOptionsPage");
+
+  info("Wait runtime.openOptionsPage to open the options in a new tab");
   optionsURL = await extension.awaitMessage("options-page-loaded");
   is(BrowserApp.selectedTab.currentURI.spec, optionsURL,
-      "runtime.openOptionsPage has opened the options in a new tab");
+     "runtime.openOptionsPage has opened the expected extension page");
+  ok(BrowserApp.selectedTab !== oldSelectedTab,
+     "runtime.openOptionsPage has opened a new tab");
 
   BrowserApp.closeTab(BrowserApp.selectedTab);
 
