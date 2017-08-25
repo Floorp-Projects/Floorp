@@ -38,7 +38,7 @@ function runFindOperation(params, message) {
     });
     mm.sendAsyncMessage(`ext-Finder:${message}`, params);
   });
-};
+}
 
 this.find = class extends ExtensionAPI {
   getAPI(context) {
