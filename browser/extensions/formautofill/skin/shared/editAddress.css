@@ -10,30 +10,31 @@ label > span {
 input,
 select {
   width: calc(50% - 9.5em);
+  margin: 0;
 }
 
 #given-name-container,
 #additional-name-container,
 #address-level1-container,
 #postal-code-container,
-#country-container {
+#country-container,
+#family-name-container,
+#organization-container,
+#address-level2-container,
+#tel-container {
   flex: 0 1 50%;
 }
 
 #family-name-container,
 #organization-container,
-#street-address-container,
 #address-level2-container,
-#email-container,
 #tel-container {
-  flex: 0 1 100%;
+  padding-inline-end: 50%;
 }
 
-#family-name,
-#organization,
-#address-level2,
-#tel {
-  flex: 0 0 auto;
+#street-address-container,
+#email-container {
+  flex: 0 1 100%;
 }
 
 #street-address,
@@ -42,7 +43,7 @@ select {
 }
 
 #country-warning-message {
-  flex: 1;
+  flex: 1 0 auto;
   align-items: center;
   text-align: start;
   color: #737373;

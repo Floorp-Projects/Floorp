@@ -17,9 +17,9 @@ form {
   flex-wrap: wrap;
 }
 
-label,
-p {
-  margin: 0 0 0.5em;
+form > label,
+form > p {
+  margin: 0 0 0.5em !important;
 }
 
 label > span,
