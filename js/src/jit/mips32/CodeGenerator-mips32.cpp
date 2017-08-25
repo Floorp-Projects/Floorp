@@ -691,6 +691,25 @@ CodeGeneratorMIPS::visitWrapInt64ToInt32(LWrapInt64ToInt32* lir)
 }
 
 void
+CodeGeneratorMIPS::visitSignExtendInt64(LSignExtendInt64* lir)
+{
+    Register64 input = ToRegister64(lir->getInt64Operand(0));
+    Register64 output = ToOutRegister64(lir);
+    switch (lir->mode()) {
+      case MSignExtendInt64::Byte:
+        masm.move8SignExtend(input.low, output.low);
+        break;
+      case MSignExtendInt64::Half:
+        masm.move16SignExtend(input.low, output.low);
+        break;
+      case MSignExtendInt64::Word:
+        masm.move32(input.low, output.low);
+        break;
+    }
+    masm.ma_sra(output.high, output.low, Imm32(31));
+}
+
+void
 CodeGeneratorMIPS::visitClzI64(LClzI64* lir)
 {
     Register64 input = ToRegister64(lir->getInt64Operand(0));
