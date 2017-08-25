@@ -229,6 +229,30 @@ public:
   }
   nsresult GetElementZIndex(Element* aElement, int32_t* aZindex);
 
+  nsresult AddDefaultProperty(nsIAtom* aProperty,
+                              const nsAString& aAttribute,
+                              const nsAString& aValue);
+  nsresult RemoveDefaultProperty(nsIAtom* aProperty,
+                                 const nsAString& aAttribute,
+                                 const nsAString& aValue);
+  nsresult SetInlineProperty(nsIAtom* aProperty,
+                             const nsAString& aAttribute,
+                             const nsAString& aValue);
+  nsresult GetInlineProperty(nsIAtom* aProperty,
+                             const nsAString& aAttribute,
+                             const nsAString& aValue,
+                             bool* aFirst,
+                             bool* aAny,
+                             bool* aAll);
+  nsresult GetInlinePropertyWithAttrValue(nsIAtom* aProperty,
+                                          const nsAString& aAttr,
+                                          const nsAString& aValue,
+                                          bool* aFirst,
+                                          bool* aAny,
+                                          bool* aAll,
+                                          nsAString& outValue);
+  nsresult RemoveInlineProperty(nsIAtom* aProperty,
+                                const nsAString& aAttribute);
 protected:
   virtual ~HTMLEditor();
 

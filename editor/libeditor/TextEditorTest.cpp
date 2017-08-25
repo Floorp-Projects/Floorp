@@ -171,16 +171,18 @@ nsresult TextEditorTest::TestTextProperties()
 
   const nsString& empty = EmptyString();
 
-  rv = htmlEditor->GetInlineProperty(nsGkAtoms::b, empty, empty, &first,
-                                     &any, &all);
+  NS_NAMED_LITERAL_STRING(b, "b");
+  NS_NAMED_LITERAL_STRING(i, "i");
+  NS_NAMED_LITERAL_STRING(u, "u");
+
+  rv = htmlEditor->GetInlineProperty(b, empty, empty, &first, &any, &all);
   TEST_RESULT(rv);
   NS_ASSERTION(false==first, "first should be false");
   NS_ASSERTION(false==any, "any should be false");
   NS_ASSERTION(false==all, "all should be false");
-  rv = htmlEditor->SetInlineProperty(nsGkAtoms::b, empty, empty);
+  rv = htmlEditor->SetInlineProperty(b, empty, empty);
   TEST_RESULT(rv);
-  rv = htmlEditor->GetInlineProperty(nsGkAtoms::b, empty, empty, &first,
-                                     &any, &all);
+  rv = htmlEditor->GetInlineProperty(b, empty, empty, &first, &any, &all);
   TEST_RESULT(rv);
   NS_ASSERTION(true==first, "first should be true");
   NS_ASSERTION(true==any, "any should be true");
@@ -189,10 +191,9 @@ nsresult TextEditorTest::TestTextProperties()
 
   // remove the bold we just set
   printf("set the whole first text node to not bold\n");
-  rv = htmlEditor->RemoveInlineProperty(nsGkAtoms::b, empty);
+  rv = htmlEditor->RemoveInlineProperty(b, empty);
   TEST_RESULT(rv);
-  rv = htmlEditor->GetInlineProperty(nsGkAtoms::b, empty, empty, &first,
-                                     &any, &all);
+  rv = htmlEditor->GetInlineProperty(b, empty, empty, &first, &any, &all);
   TEST_RESULT(rv);
   NS_ASSERTION(false==first, "first should be false");
   NS_ASSERTION(false==any, "any should be false");
@@ -203,26 +204,23 @@ nsresult TextEditorTest::TestTextProperties()
   printf("set the first text node (1, length-1) to bold and italic, and (2, length-1) to underline.\n");
   selection->Collapse(textNode, 1);
   selection->Extend(textNode, length-1);
-  rv = htmlEditor->SetInlineProperty(nsGkAtoms::b, empty, empty);
+  rv = htmlEditor->SetInlineProperty(b, empty, empty);
   TEST_RESULT(rv);
-  rv = htmlEditor->GetInlineProperty(nsGkAtoms::b, empty, empty, &first,
-                                     &any, &all);
+  rv = htmlEditor->GetInlineProperty(b, empty, empty, &first, &any, &all);
   TEST_RESULT(rv);
   NS_ASSERTION(true==first, "first should be true");
   NS_ASSERTION(true==any, "any should be true");
   NS_ASSERTION(true==all, "all should be true");
   mEditor->DebugDumpContent();
   // make all that same text italic
-  rv = htmlEditor->SetInlineProperty(nsGkAtoms::i, empty, empty);
+  rv = htmlEditor->SetInlineProperty(i, empty, empty);
   TEST_RESULT(rv);
-  rv = htmlEditor->GetInlineProperty(nsGkAtoms::i, empty, empty, &first,
-                                     &any, &all);
+  rv = htmlEditor->GetInlineProperty(i, empty, empty, &first, &any, &all);
   TEST_RESULT(rv);
   NS_ASSERTION(true==first, "first should be true");
   NS_ASSERTION(true==any, "any should be true");
   NS_ASSERTION(true==all, "all should be true");
-  rv = htmlEditor->GetInlineProperty(nsGkAtoms::b, empty, empty, &first,
-                                     &any, &all);
+  rv = htmlEditor->GetInlineProperty(b, empty, empty, &first, &any, &all);
   TEST_RESULT(rv);
   NS_ASSERTION(true==first, "first should be true");
   NS_ASSERTION(true==any, "any should be true");
@@ -243,10 +241,9 @@ nsresult TextEditorTest::TestTextProperties()
   NS_ASSERTION(length==915, "wrong text node");
   selection->Collapse(textNode, 1);
   selection->Extend(textNode, length-2);
-  rv = htmlEditor->SetInlineProperty(nsGkAtoms::u, empty, empty);
+  rv = htmlEditor->SetInlineProperty(u, empty, empty);
   TEST_RESULT(rv);
-  rv = htmlEditor->GetInlineProperty(nsGkAtoms::u, empty, empty, &first,
-                                     &any, &all);
+  rv = htmlEditor->GetInlineProperty(u, empty, empty, &first, &any, &all);
   TEST_RESULT(rv);
   NS_ASSERTION(true==first, "first should be true");
   NS_ASSERTION(true==any, "any should be true");
