@@ -1313,6 +1313,10 @@ var Histogram = {
 
 var Search = {
 
+  blacklist: [
+    "raw-payload-section"
+  ],
+
   // Pass if: all non-empty array items match (case-sensitive)
   isPassText(subject, filter) {
     for (let item of filter) {
@@ -1841,17 +1845,19 @@ function displayProcessesSelector(selectedSection) {
   processes.hidden = !whitelist.includes(selectedSection);
 }
 
-function adjustSearchState() {
+function refreshSearch() {
   let selectedSection = document.querySelector(".category.selected").getAttribute("value");
-  let blacklist = [
-    "raw-payload-section"
-  ];
   let search = document.getElementById("search");
-  search.hidden = blacklist.includes(selectedSection);
-  // Filter element on section change.
-  if (!blacklist.includes(selectedSection)) {
+  if (!Search.blacklist.includes(selectedSection)) {
     Search.search(search.value);
   }
+}
+
+function adjustSearchState() {
+  let selectedSection = document.querySelector(".category.selected").getAttribute("value");
+  let search = document.getElementById("search");
+  search.hidden = Search.blacklist.includes(selectedSection);
+  Search.search(""); // reinitialize search state.
 }
 
 function adjustSection() {
@@ -2084,8 +2090,8 @@ function onLoad() {
 
   // Update ping data when async Telemetry init is finished.
   Telemetry.asyncFetchTelemetryData(async () => {
-    await PingPicker.update();
     urlStateRestore();
+    await PingPicker.update();
   });
 }
 
@@ -2339,8 +2345,8 @@ function displayPingData(ping, updatePayloadList = false) {
   try {
     PingPicker.render();
     displayRichPingData(ping, updatePayloadList);
-    adjustSearchState();
     adjustSection();
+    refreshSearch();
   } catch (err) {
     console.log(err);
     PingPicker._showRawPingData();
