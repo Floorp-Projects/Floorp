@@ -127,6 +127,7 @@ EventEmitter.decorate = function(objectToDecorate) {
   let emitter = new EventEmitter();
   objectToDecorate.on = emitter.on.bind(emitter);
   objectToDecorate.off = emitter.off.bind(emitter);
+  objectToDecorate.once = emitter.once.bind(emitter);
   objectToDecorate.emit = emitter.emit.bind(emitter);
 };
 EventEmitter.prototype = {
@@ -149,6 +150,20 @@ EventEmitter.prototype = {
         l => l !== listener && l._originalListener !== listener
       ));
     }
+  },
+  once(event, listener) {
+    return new Promise(resolve => {
+      let handler = (_, first, ...rest) => {
+        this.off(event, handler);
+        if (listener) {
+          listener(event, first, ...rest);
+        }
+        resolve(first);
+      };
+
+      handler._originalListener = listener;
+      this.on(event, handler);
+    });
   },
   // All arguments to this method will be sent to listeners
   emit(event, ...args) {

@@ -61,7 +61,7 @@ describe("Localization Feed", () => {
     it("should use strings for other locale", () => {
       const locale = "it";
       sandbox.stub(global.Services.locale, "negotiateLanguages")
-        .returns([locale]);
+        .returns([locale, DEFAULT_LOCALE]);
 
       feed.updateLocale();
 
@@ -74,7 +74,7 @@ describe("Localization Feed", () => {
     it("should use some fallback strings for partial locale", () => {
       const locale = "ru";
       sandbox.stub(global.Services.locale, "negotiateLanguages")
-        .returns([locale]);
+        .returns([locale, DEFAULT_LOCALE]);
 
       feed.updateLocale();
 
@@ -87,16 +87,33 @@ describe("Localization Feed", () => {
         too: TEST_STRINGS[DEFAULT_LOCALE].too
       });
     });
-    it("should use all default strings for unknown locale", () => {
-      const locale = "xyz";
+    it("should use multiple fallback strings before default", () => {
+      const primaryLocale = "ru";
+      const secondaryLocale = "it";
       sandbox.stub(global.Services.locale, "negotiateLanguages")
-        .returns([locale]);
+        .returns([primaryLocale, secondaryLocale, DEFAULT_LOCALE]);
+
       feed.updateLocale();
 
       assert.calledOnce(feed.store.dispatch);
       const arg = feed.store.dispatch.firstCall.args[0];
       assert.propertyVal(arg, "type", at.LOCALE_UPDATED);
-      assert.propertyVal(arg.data, "locale", locale);
+      assert.propertyVal(arg.data, "locale", primaryLocale);
+      assert.deepEqual(arg.data.strings, {
+        foo: TEST_STRINGS[primaryLocale].foo,
+        too: TEST_STRINGS[secondaryLocale].too
+      });
+    });
+    it("should use all default strings for unknown locale", () => {
+      sandbox.stub(global.Services.locale, "negotiateLanguages")
+        .returns([DEFAULT_LOCALE]);
+
+      feed.updateLocale();
+
+      assert.calledOnce(feed.store.dispatch);
+      const arg = feed.store.dispatch.firstCall.args[0];
+      assert.propertyVal(arg, "type", at.LOCALE_UPDATED);
+      assert.propertyVal(arg.data, "locale", DEFAULT_LOCALE);
       assert.deepEqual(arg.data.strings, TEST_STRINGS[DEFAULT_LOCALE]);
     });
   });
