@@ -6,11 +6,10 @@
 
 import json
 import os
-import shutil
-import tempfile
 
 from buildconfig import substs
 from mozbuild.base import MozbuildObject
+from mozfile import TemporaryDirectory
 from mozhttpd import MozHttpd
 from mozprofile import FirefoxProfile, Profile, Preferences
 from mozprofile.permissions import ServerLocations
@@ -32,9 +31,7 @@ if __name__ == '__main__':
                        port=PORT,
                        options='primary,privileged')
 
-    # TODO: mozfile.TemporaryDirectory
-    profilePath = tempfile.mkdtemp()
-    try:
+    with TemporaryDirectory() as profilePath:
         # TODO: refactor this into mozprofile
         prefpath = os.path.join(
             build.topsrcdir, "testing", "profiles", "prefs_general.js")
@@ -89,5 +86,3 @@ if __name__ == '__main__':
         runner.start(debug_args=debug_args, interactive=interactive)
         runner.wait()
         httpd.stop()
-    finally:
-        shutil.rmtree(profilePath)
