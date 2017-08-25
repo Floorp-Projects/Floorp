@@ -702,8 +702,12 @@ var DownloadsView = {
     let count = this._downloads.length;
     let hiddenCount = count - this.kItemCountLimit;
 
-    if (count <= 0) {
-      DownloadsButton.hide();
+    if (count > 0) {
+      DownloadsCommon.log("Setting the panel's hasdownloads attribute to true.");
+      DownloadsPanel.panel.setAttribute("hasdownloads", "true");
+    } else {
+      DownloadsCommon.log("Removing the panel's hasdownloads attribute.");
+      DownloadsPanel.panel.removeAttribute("hasdownloads");
     }
 
     // If we've got some hidden downloads, we should activate the

@@ -10,11 +10,11 @@ const kTestToolbarId = "test-empty-drag";
 add_task(async function() {
   await createToolbarWithPlacements(kTestToolbarId, []);
   await startCustomizing();
-  let libraryButton = document.getElementById("library-button");
+  let downloadButton = document.getElementById("downloads-button");
   let customToolbar = document.getElementById(kTestToolbarId);
-  simulateItemDrag(libraryButton, customToolbar);
-  assertAreaPlacements(kTestToolbarId, ["library-button"]);
-  ok(libraryButton.parentNode && libraryButton.parentNode.parentNode == customToolbar,
+  simulateItemDrag(downloadButton, customToolbar);
+  assertAreaPlacements(kTestToolbarId, ["downloads-button"]);
+  ok(downloadButton.parentNode && downloadButton.parentNode.parentNode == customToolbar,
      "Button should really be in toolbar");
   await endCustomizing();
   removeCustomToolbars();
