@@ -1323,7 +1323,6 @@ PromiseConstructor(JSContext* cx, unsigned argc, Value* vp)
 
     // Steps 3-10.
     RootedObject newTarget(cx, &args.newTarget().toObject());
-    bool needsWrapping = false;
 
     // If the constructor is called via an Xray wrapper, then the newTarget
     // hasn't been unwrapped. We want that because, while the actual instance
@@ -1352,6 +1351,9 @@ PromiseConstructor(JSContext* cx, unsigned argc, Value* vp)
     // just end up with a rejected Promise. Really, we want to chain the two
     // Promises, with the unprivileged one resolved with the resolution of the
     // privileged one.
+
+    bool needsWrapping = false;
+    RootedObject proto(cx);
     if (IsWrapper(newTarget)) {
         JSObject* unwrappedNewTarget = CheckedUnwrap(newTarget);
         MOZ_ASSERT(unwrappedNewTarget);
@@ -1367,15 +1369,15 @@ PromiseConstructor(JSContext* cx, unsigned argc, Value* vp)
             // Promise subclasses don't get the special Xray treatment, so
             // we only need to do the complex wrapping and unwrapping scheme
             // described above for instances of Promise itself.
-            if (newTarget == promiseCtor)
+            if (newTarget == promiseCtor) {
                 needsWrapping = true;
+                if (!GetBuiltinPrototype(cx, JSProto_Promise, &proto))
+                    return false;
+            }
         }
     }
 
-    RootedObject proto(cx);
     if (needsWrapping) {
-        if (!GetPrototypeFromConstructor(cx, newTarget, &proto))
-            return false;
         if (!cx->compartment()->wrap(cx, &proto))
             return false;
     } else {

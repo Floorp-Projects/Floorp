@@ -133,7 +133,6 @@ StatementJSHelper::getParams(Statement *aStatement,
                              JS::Value *_params)
 {
   MOZ_ASSERT(NS_IsMainThread());
-  nsresult rv;
 
 #ifdef DEBUG
   int32_t state;
@@ -142,32 +141,32 @@ StatementJSHelper::getParams(Statement *aStatement,
                "Invalid state to get the params object - all calls will fail!");
 #endif
 
+  JS::RootedObject scope(aCtx, aScopeObj);
+
   if (!aStatement->mStatementParamsHolder) {
-    JS::RootedObject scope(aCtx, aScopeObj);
-    nsCOMPtr<mozIStorageStatementParams> params =
-      new StatementParams(aStatement);
+    dom::GlobalObject global(aCtx, scope);
+    if (global.Failed()) {
+      return NS_ERROR_UNEXPECTED;
+    }
+
+    nsCOMPtr<nsPIDOMWindowInner> window = do_QueryInterface(global.GetAsSupports());
+
+    RefPtr<StatementParams> params(new StatementParams(window, aStatement));
     NS_ENSURE_TRUE(params, NS_ERROR_OUT_OF_MEMORY);
 
-    nsCOMPtr<nsIXPConnectJSObjectHolder> holder;
-    nsCOMPtr<nsIXPConnect> xpc(Service::getXPConnect());
-    rv = xpc->WrapNativeHolder(
-      aCtx,
-      ::JS_GetGlobalForObject(aCtx, scope),
-      params,
-      NS_GET_IID(mozIStorageStatementParams),
-      getter_AddRefs(holder)
-    );
-    NS_ENSURE_SUCCESS(rv, rv);
-    RefPtr<StatementParamsHolder> paramsHolder =
-      new StatementParamsHolder(holder);
+    RefPtr<StatementParamsHolder> paramsHolder = new StatementParamsHolder(params);
+    NS_ENSURE_TRUE(paramsHolder, NS_ERROR_OUT_OF_MEMORY);
+
     aStatement->mStatementParamsHolder =
-      new nsMainThreadPtrHolder<nsIXPConnectJSObjectHolder>(
+      new nsMainThreadPtrHolder<StatementParamsHolder>(
         "Statement::mStatementParamsHolder", paramsHolder);
   }
 
-  JS::Rooted<JSObject*> obj(aCtx);
-  obj = aStatement->mStatementParamsHolder->GetJSObject();
-  NS_ENSURE_STATE(obj);
+  RefPtr<StatementParams> params(aStatement->mStatementParamsHolder->Get());
+  JSObject* obj = params->WrapObject(aCtx, nullptr);
+  if (!obj) {
+    return NS_ERROR_UNEXPECTED;
+  }
 
   _params->setObject(*obj);
   return NS_OK;
@@ -242,33 +241,14 @@ StatementJSHelper::Resolve(nsIXPConnectWrappedNative *aWrapper,
   return NS_OK;
 }
 
-////////////////////////////////////////////////////////////////////////////////
-//// StatementJSObjectHolder
-
-NS_IMPL_ISUPPORTS(StatementJSObjectHolder, nsIXPConnectJSObjectHolder);
-
-JSObject*
-StatementJSObjectHolder::GetJSObject()
-{
-  return mHolder->GetJSObject();
-}
-
-StatementJSObjectHolder::StatementJSObjectHolder(nsIXPConnectJSObjectHolder* aHolder)
-  : mHolder(aHolder)
-{
-  MOZ_ASSERT(NS_IsMainThread());
-  MOZ_ASSERT(mHolder);
-}
+NS_IMPL_ISUPPORTS0(StatementParamsHolder);
 
 StatementParamsHolder::~StatementParamsHolder()
 {
   MOZ_ASSERT(NS_IsMainThread());
   // We are considered dead at this point, so any wrappers for row or params
   // need to lose their reference to the statement.
-  nsCOMPtr<nsIXPConnectWrappedNative> wrapper = do_QueryInterface(mHolder);
-  nsCOMPtr<mozIStorageStatementParams> iObj = do_QueryWrappedNative(wrapper);
-  StatementParams *obj = static_cast<StatementParams *>(iObj.get());
-  obj->mStatement = nullptr;
+  mParams->mStatement = nullptr;
 }
 
 NS_IMPL_ISUPPORTS0(StatementRowHolder);

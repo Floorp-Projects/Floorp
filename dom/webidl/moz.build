@@ -699,6 +699,8 @@ WEBIDL_FILES = [
     'MouseEvent.webidl',
     'MouseScrollEvent.webidl',
     'MozSelfSupport.webidl',
+    'MozStorageAsyncStatementParams.webidl',
+    'MozStorageStatementParams.webidl',
     'MozStorageStatementRow.webidl',
     'MozTimeManager.webidl',
     'MozWakeLock.webidl',

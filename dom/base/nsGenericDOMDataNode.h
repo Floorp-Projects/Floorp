@@ -228,6 +228,11 @@ public:
     rv = ReplaceData(aOffset, aCount, aData);
   }
 
+  uint32_t TextDataLength() const
+  {
+    return mText.GetLength();
+  }
+
   //----------------------------------------
 
 #ifdef DEBUG

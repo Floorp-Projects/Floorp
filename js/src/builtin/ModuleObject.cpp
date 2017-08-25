@@ -524,12 +524,61 @@ ModuleNamespaceObject::ProxyHandler::getOwnPropertyDescriptor(JSContext* cx, Han
     return true;
 }
 
+static bool
+ValidatePropertyDescriptor(JSContext* cx, Handle<PropertyDescriptor> desc,
+                           bool expectedWritable, bool expectedEnumerable,
+                           bool expectedConfigurable, HandleValue expectedValue,
+                           ObjectOpResult& result)
+{
+    if (desc.isAccessorDescriptor())
+        return result.fail(JSMSG_CANT_REDEFINE_PROP);
+
+    if (desc.hasWritable() && desc.writable() != expectedWritable)
+        return result.fail(JSMSG_CANT_REDEFINE_PROP);
+
+    if (desc.hasEnumerable() && desc.enumerable() != expectedEnumerable)
+        return result.fail(JSMSG_CANT_REDEFINE_PROP);
+
+    if (desc.hasConfigurable() && desc.configurable() != expectedConfigurable)
+        return result.fail(JSMSG_CANT_REDEFINE_PROP);
+
+    if (desc.hasValue()) {
+        bool same;
+        if (!SameValue(cx, desc.value(), expectedValue, &same))
+            return false;
+        if (!same)
+            return result.fail(JSMSG_CANT_REDEFINE_PROP);
+    }
+
+    return result.succeed();
+}
+
 bool
 ModuleNamespaceObject::ProxyHandler::defineProperty(JSContext* cx, HandleObject proxy, HandleId id,
                                                     Handle<PropertyDescriptor> desc,
                                                     ObjectOpResult& result) const
 {
-    return result.failReadOnly();
+    if (JSID_IS_SYMBOL(id)) {
+        if (JSID_TO_SYMBOL(id) == cx->wellKnownSymbols().toStringTag) {
+            RootedValue value(cx, StringValue(cx->names().Module));
+            return ValidatePropertyDescriptor(cx, desc, false, false, false, value, result);
+        }
+        return result.fail(JSMSG_CANT_DEFINE_PROP_OBJECT_NOT_EXTENSIBLE);
+    }
+
+    const IndirectBindingMap& bindings = proxy->as<ModuleNamespaceObject>().bindings();
+    ModuleEnvironmentObject* env;
+    Shape* shape;
+    if (!bindings.lookup(id, &env, &shape))
+        return result.fail(JSMSG_CANT_DEFINE_PROP_OBJECT_NOT_EXTENSIBLE);
+
+    RootedValue value(cx, env->getSlot(shape->slot()));
+    if (value.isMagic(JS_UNINITIALIZED_LEXICAL)) {
+        ReportRuntimeLexicalError(cx, JSMSG_UNINITIALIZED_LEXICAL, id);
+        return false;
+    }
+
+    return ValidatePropertyDescriptor(cx, desc, true, true, false, value, result);
 }
 
 bool

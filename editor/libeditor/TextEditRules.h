@@ -115,6 +115,11 @@ public:
    */
   static void FillBufWithPWChars(nsAString* aOutString, int32_t aLength);
 
+  bool HasBogusNode()
+  {
+    return !!mBogusNode;
+  }
+
 protected:
 
   void InitFields();

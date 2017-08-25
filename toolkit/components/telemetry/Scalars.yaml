@@ -861,6 +861,21 @@ network.tcp:
     record_in_processes:
       - 'main'
 
+# The following section contains probes that record timestamps.
+timestamps:
+  first_paint:
+    bug_numbers:
+      - 1386186
+    description: >
+     Record the timestamp of the first content window paint, in milliseconds since process start.
+    expires: never
+    kind: uint
+    notification_emails:
+      - hkirschner@mozilla.com
+    release_channel_collection: opt-out
+    record_in_processes:
+      - main
+
 # The following section is for probes testing the Telemetry system. They will not be
 # submitted in pings and are only used for testing.
 telemetry.test:

@@ -857,3 +857,5 @@ is simply hidden from the Activity Stream panel. -->
 <!ENTITY private_tab_panel_description "&brandShortName; blocks parts of the pages that may track your browsing activity.">
 <!ENTITY private_tab_panel_description2 "We won\'t remember any history, but downloaded files and new bookmarks will still be saved to your device.">
 <!ENTITY private_tab_learn_more "Want to learn more?">
+
+<!ENTITY fullscreen_warning "Entered full screen">

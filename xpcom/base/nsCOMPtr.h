@@ -345,7 +345,7 @@ template<class T>
 char TestForIID(...);
 
 template<class T>
-class nsCOMPtr final
+class MOZ_IS_REFPTR nsCOMPtr final
 #ifdef NSCAP_FEATURE_USE_BASE
   : private nsCOMPtr_base
 #endif

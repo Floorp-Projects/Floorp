@@ -428,6 +428,29 @@ inline bool inThirdPartyPath(const Decl *D, ASTContext *context) {
   return inThirdPartyPath(Loc, SM);
 }
 
+inline CXXRecordDecl* getNonTemplateSpecializedCXXRecordDecl(QualType Q) {
+  auto *D = Q->getAsCXXRecordDecl();
+
+  if (!D) {
+    auto TemplateQ = Q->getAs<TemplateSpecializationType>();
+    if (!TemplateQ) {
+      return nullptr;
+    }
+
+    auto TemplateDecl = TemplateQ->getTemplateName().getAsTemplateDecl();
+    if (!TemplateDecl) {
+      return nullptr;
+    }
+
+    D = dyn_cast_or_null<CXXRecordDecl>(TemplateDecl->getTemplatedDecl());
+    if (!D) {
+      return nullptr;
+    }
+  }
+
+  return D;
+}
+
 inline bool inThirdPartyPath(const Decl *D) {
   return inThirdPartyPath(D, &D->getASTContext());
 }
