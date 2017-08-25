@@ -1900,7 +1900,12 @@ Element::UnbindFromTree(bool aDeep, bool aNullParent)
   // Computed style data isn't useful for detached nodes, and we'll need to
   // recompute it anyway if we ever insert the nodes back into a document.
   if (IsStyledByServo()) {
-    ClearServoData(document);
+    if (document) {
+      ClearServoData(document);
+    } else {
+      MOZ_ASSERT(!HasServoData());
+      MOZ_ASSERT(!HasAnyOfFlags(kAllServoDescendantBits | NODE_NEEDS_FRAME));
+    }
   } else {
     MOZ_ASSERT(!HasServoData());
   }
@@ -4147,6 +4152,7 @@ Element::UpdateIntersectionObservation(DOMIntersectionObserver* aObserver, int32
 void
 Element::ClearServoData(nsIDocument* aDoc) {
   MOZ_ASSERT(IsStyledByServo());
+  MOZ_ASSERT(aDoc);
 #ifdef MOZ_STYLO
   Servo_Element_ClearData(this);
   // Since this element is losing its servo data, nothing under it may have
