@@ -102,7 +102,7 @@ def main():
     allowed_dupes = []
     for filename in args.dupes_files:
         pp = Preprocessor()
-        pp.context.update(buildconfig.defines)
+        pp.context.update(buildconfig.defines['ALLDEFINES'])
         if args.D:
             pp.context.update(args.D)
         for undefine in args.U:

@@ -33,8 +33,8 @@ from mozbuild.android_version_code import android_version_code
 
 def _defines():
     CONFIG = defaultdict(lambda: None)
-    CONFIG.update(buildconfig.substs)
-    DEFINES = dict(buildconfig.defines)
+    CONFIG.update(buildconfig.substs.iteritems())
+    DEFINES = dict(buildconfig.defines.iteritems())
 
     for var in ('MOZ_ANDROID_ACTIVITY_STREAM'
                 'MOZ_ANDROID_ANR_REPORTER',
