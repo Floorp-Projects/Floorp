@@ -9,6 +9,7 @@
 
 #include "mozilla/Attributes.h"
 #include "mozilla/dom/HTMLMediaElement.h"
+#include "MediaPrefs.h"
 
 namespace mozilla {
 
@@ -139,6 +140,22 @@ public:
 
   already_AddRefed<VideoPlaybackQuality> GetVideoPlaybackQuality();
 
+
+  bool MozOrientationLockEnabled() const
+  {
+    return MediaPrefs::VideoOrientationLockEnabled();
+  }
+
+  bool MozIsOrientationLocked() const
+  {
+    return mIsOrientationLocked;
+  }
+
+  void SetMozIsOrientationLocked(bool aLock)
+  {
+    mIsOrientationLocked = aLock;
+  }
+
 protected:
   virtual ~HTMLVideoElement();
 
@@ -150,6 +167,8 @@ protected:
 
   bool mUseScreenWakeLock;
   RefPtr<WakeLock> mScreenWakeLock;
+
+  bool mIsOrientationLocked;
 
 private:
   static void MapAttributesIntoRule(const nsMappedAttributes* aAttributes,
