@@ -1606,10 +1606,10 @@ nsFrameLoader::SwapWithOtherRemoteLoader(nsFrameLoader* aOther,
   aOther->mRemoteBrowser->SetOwnerElement(ourContent);
 
   // Update window activation state for the swapped owner content.
-  Unused << mRemoteBrowser->Manager()->AsContentParent()->SendParentActivated(
-    mRemoteBrowser, ParentWindowIsActive(otherContent->OwnerDoc()));
-  Unused << aOther->mRemoteBrowser->Manager()->AsContentParent()->SendParentActivated(
-    aOther->mRemoteBrowser, ParentWindowIsActive(ourContent->OwnerDoc()));
+  Unused << mRemoteBrowser->SendParentActivated(
+    ParentWindowIsActive(otherContent->OwnerDoc()));
+  Unused << aOther->mRemoteBrowser->SendParentActivated(
+    ParentWindowIsActive(ourContent->OwnerDoc()));
 
   MaybeUpdatePrimaryTabParent(eTabParentChanged);
   aOther->MaybeUpdatePrimaryTabParent(eTabParentChanged);
