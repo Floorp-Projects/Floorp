@@ -117,12 +117,14 @@ PlacesViewBase.prototype = {
    *
    * @param aPlacesNode
    *        a places result node.
+   * @param aAllowMissing
+   *        whether the node may be missing
    * @throws if there is no DOM node set for aPlacesNode.
    */
   _getDOMNodeForPlacesNode:
-  function PVB__getDOMNodeForPlacesNode(aPlacesNode) {
+  function PVB__getDOMNodeForPlacesNode(aPlacesNode, aAllowMissing = false) {
     let node = this._domNodes.get(aPlacesNode, null);
-    if (!node) {
+    if (!node && !aAllowMissing) {
       throw new Error("No DOM node set for aPlacesNode.\nnode.type: " +
                       aPlacesNode.type + ". node.parent: " + aPlacesNode);
     }
@@ -1038,10 +1040,29 @@ PlacesToolbar.prototype = {
 
     let fragment = document.createDocumentFragment();
     let cc = this._resultNode.childCount;
-    for (let i = 0; i < cc; ++i) {
-      this._insertNewItem(this._resultNode.getChild(i), fragment);
+    if (cc > 0) {
+      // There could be a lot of nodes, but we only want to build the ones that
+      // are likely to be shown, not all of them. Then we'll lazily create the
+      // missing nodes when needed.
+      // We don't want to cause reflows at every node insertion to calculate
+      // a precise size, thus we guess a size from the first node.
+      let button = this._insertNewItem(this._resultNode.getChild(0),
+                                       this._rootElt);
+      requestAnimationFrame(() => {
+        // May have been destroyed in the meanwhile.
+        if (!this._resultNode || !this._rootElt)
+          return;
+        // We assume a button with just the icon will be more or less a square,
+        // then compensate the measurement error by considering a larger screen
+        // width. Moreover the window could be bigger than the screen.
+        let size = button.clientHeight;
+        let limit = Math.min(cc, parseInt((window.screen.width * 1.5) / size));
+        for (let i = 1; i < limit; ++i) {
+          this._insertNewItem(this._resultNode.getChild(i), fragment);
+        }
+        this._rootElt.appendChild(fragment);
+      });
     }
-    this._rootElt.appendChild(fragment);
 
     if (this._chevronPopup.hasAttribute("type")) {
       // Chevron has already been initialized, but since we are forcing
@@ -1101,14 +1122,17 @@ PlacesToolbar.prototype = {
       aInsertionNode.insertBefore(button, aBefore);
     else
       aInsertionNode.appendChild(button);
+    return button;
   },
 
   _updateChevronPopupNodesVisibility:
   function PT__updateChevronPopupNodesVisibility() {
-    for (let i = 0, node = this._chevronPopup._startMarker.nextSibling;
-         node != this._chevronPopup._endMarker;
-         i++, node = node.nextSibling) {
-      node.hidden = this._rootElt.childNodes[i].style.visibility != "hidden";
+    // Note the toolbar by default builds less nodes than the chevron popup.
+    for (let toolbarNode = this._rootElt.firstChild,
+         node = this._chevronPopup._startMarker.nextSibling;
+         toolbarNode && node;
+         toolbarNode = toolbarNode.nextSibling, node = node.nextSibling) {
+      node.hidden = toolbarNode.style.visibility != "hidden";
     }
   },
 
@@ -1133,7 +1157,9 @@ PlacesToolbar.prototype = {
         // This handler updates nodes visibility in both the toolbar
         // and the chevron popup when a window resize does not change
         // the overflow status of the toolbar.
-        this.updateChevron();
+        if (aEvent.target == aEvent.currentTarget) {
+          this.updateChevron();
+        }
         break;
       case "overflow":
         if (!this._isOverflowStateEventRelevant(aEvent))
@@ -1229,15 +1255,14 @@ PlacesToolbar.prototype = {
   _updateChevronTimerCallback: function PT__updateChevronTimerCallback() {
     let scrollRect = this._rootElt.getBoundingClientRect();
     let childOverflowed = false;
-    for (let i = 0; i < this._rootElt.childNodes.length; i++) {
-      let child = this._rootElt.childNodes[i];
+    for (let child of this._rootElt.childNodes) {
       // Once a child overflows, all the next ones will.
       if (!childOverflowed) {
         let childRect = child.getBoundingClientRect();
         childOverflowed = this.isRTL ? (childRect.left < scrollRect.left)
                                      : (childRect.right > scrollRect.right);
-
       }
+
       if (childOverflowed) {
         child.removeAttribute("image");
         child.style.visibility = "hidden";
@@ -1247,7 +1272,6 @@ PlacesToolbar.prototype = {
           child.setAttribute("image", icon);
         child.style.visibility = "visible";
       }
-
     }
 
     // We rebuild the chevron on popupShowing, so if it is open
@@ -1261,6 +1285,23 @@ PlacesToolbar.prototype = {
     let parentElt = this._getDOMNodeForPlacesNode(aParentPlacesNode);
     if (parentElt == this._rootElt) { // Node is on the toolbar.
       let children = this._rootElt.childNodes;
+      // Nothing to do if it's a never-visible node, but note it's possible
+      // we are appending.
+      if (aIndex > children.length)
+        return;
+
+      // Note that childCount is already accounting for the node being added,
+      // thus we must subtract one node from it.
+      if (this._resultNode.childCount - 1 > children.length) {
+        if (aIndex == children.length) {
+          // If we didn't build all the nodes and new node is being appended,
+          // we can skip it as well.
+          return;
+        }
+        // Keep the number of built nodes consistent.
+        this._rootElt.removeChild(this._rootElt.lastChild);
+      }
+
       let button = this._insertNewItem(aPlacesNode, this._rootElt,
                                        children[aIndex] || null);
       let prevSiblingOverflowed = aIndex > 0 && aIndex <= children.length &&
@@ -1282,15 +1323,23 @@ PlacesToolbar.prototype = {
   nodeRemoved:
   function PT_nodeRemoved(aParentPlacesNode, aPlacesNode, aIndex) {
     let parentElt = this._getDOMNodeForPlacesNode(aParentPlacesNode);
-    let elt = this._getDOMNodeForPlacesNode(aPlacesNode);
-
-    // Here we need the <menu>.
-    if (elt.localName == "menupopup")
-      elt = elt.parentNode;
-
     if (parentElt == this._rootElt) { // Node is on the toolbar.
+      let elt = this._getDOMNodeForPlacesNode(aPlacesNode, true);
+      // Nothing to do if it's a never-visible node.
+      if (!elt)
+        return;
+
+      // Here we need the <menu>.
+      if (elt.localName == "menupopup")
+        elt = elt.parentNode;
+
       let overflowed = elt.style.visibility == "hidden";
       this._removeChild(elt);
+      if (this._resultNode.childCount > this._rootElt.childNodes.length) {
+        // A new node should be built to keep a coherent number of children.
+        this._insertNewItem(this._resultNode.getChild(this._rootElt.childNodes.length),
+                            this._rootElt);
+      }
       if (!overflowed)
         this.updateChevron();
       return;
@@ -1305,14 +1354,38 @@ PlacesToolbar.prototype = {
                         aNewParentPlacesNode, aNewIndex) {
     let parentElt = this._getDOMNodeForPlacesNode(aNewParentPlacesNode);
     if (parentElt == this._rootElt) { // Node is on the toolbar.
-      let elt = this._getDOMNodeForPlacesNode(aPlacesNode);
+      // Do nothing if the node will never be visible.
+      let lastBuiltIndex = this._rootElt.childNodes.length - 1;
+      if (aOldIndex > lastBuiltIndex && aNewIndex > lastBuiltIndex + 1)
+        return;
 
-      // Here we need the <menu>.
-      if (elt.localName == "menupopup")
-        elt = elt.parentNode;
+      let elt = this._getDOMNodeForPlacesNode(aPlacesNode, true);
+      if (elt) {
+        // Here we need the <menu>.
+        if (elt.localName == "menupopup")
+          elt = elt.parentNode;
+        this._removeChild(elt);
+      }
 
-      this._removeChild(elt);
-      this._rootElt.insertBefore(elt, this._rootElt.childNodes[aNewIndex]);
+      if (aNewIndex > lastBuiltIndex + 1) {
+        if (this._resultNode.childCount > this._rootElt.childNodes.length) {
+          // If the element was built and becomes non built, another node should
+          // be built to keep a coherent number of children.
+          this._insertNewItem(this._resultNode.getChild(this._rootElt.childNodes.length),
+                              this._rootElt);
+        }
+        return;
+      }
+
+      if (!elt) {
+        // The node has not been inserted yet, so we must create it.
+        elt = this._insertNewItem(aPlacesNode, this._rootElt, this._rootElt.childNodes[aNewIndex]);
+        let icon = aPlacesNode.icon;
+        if (icon)
+          elt.setAttribute("image", icon);
+      } else {
+        this._rootElt.insertBefore(elt, this._rootElt.childNodes[aNewIndex]);
+      }
 
       // The chevron view may get nodeMoved after the toolbar.  In such a case,
       // we should ensure (by manually swapping menuitems) that the actual nodes
@@ -1330,8 +1403,9 @@ PlacesToolbar.prototype = {
 
   nodeAnnotationChanged:
   function PT_nodeAnnotationChanged(aPlacesNode, aAnno) {
-    let elt = this._getDOMNodeForPlacesNode(aPlacesNode);
-    if (elt == this._rootElt)
+    let elt = this._getDOMNodeForPlacesNode(aPlacesNode, true);
+    // Nothing to do if it's a never-visible node.
+    if (!elt || elt == this._rootElt)
       return;
 
     // We're notified for the menupopup, not the containing toolbarbutton.
@@ -1356,11 +1430,10 @@ PlacesToolbar.prototype = {
   },
 
   nodeTitleChanged: function PT_nodeTitleChanged(aPlacesNode, aNewTitle) {
-    let elt = this._getDOMNodeForPlacesNode(aPlacesNode);
+    let elt = this._getDOMNodeForPlacesNode(aPlacesNode, true);
 
-    // There's no UI representation for the root node, thus there's
-    // nothing to be done when the title changes.
-    if (elt == this._rootElt)
+    // Nothing to do if it's a never-visible node.
+    if (!elt || elt == this._rootElt)
       return;
 
     PlacesViewBase.prototype.nodeTitleChanged.apply(this, arguments);
@@ -1376,7 +1449,11 @@ PlacesToolbar.prototype = {
   },
 
   invalidateContainer: function PT_invalidateContainer(aPlacesNode) {
-    let elt = this._getDOMNodeForPlacesNode(aPlacesNode);
+    let elt = this._getDOMNodeForPlacesNode(aPlacesNode, true);
+    // Nothing to do if it's a never-visible node.
+    if (!elt)
+      return;
+
     if (elt == this._rootElt) {
       // Container is the toolbar itself.
       this._rebuild();
@@ -1528,9 +1605,11 @@ PlacesToolbar.prototype = {
   notify: function PT_notify(aTimer) {
     if (aTimer == this._updateChevronTimer) {
       this._updateChevronTimer = null;
-      BrowserUtils.promiseLayoutFlushed(document, "layout", () => {
-        window.requestAnimationFrame(this._updateChevronTimerCallback);
-      });
+      // TODO: This should use promiseLayoutFlushed("layout"), so that
+      // _updateChevronTimerCallback can use getBoundsWithoutFlush. But for
+      // yet unknown reasons doing that causes intermittent failures, apparently
+      // due the flush not happening in a meaningful time.
+      window.requestAnimationFrame(this._updateChevronTimerCallback.bind(this));
     } else if (aTimer == this._ibTimer) {
       // * Timer to turn off indicator bar.
       this._dropIndicator.collapsed = true;
