@@ -1678,7 +1678,7 @@ Selection::GetPrimaryFrameForFocusNode(nsIFrame** aReturnFrame,
 
   *aReturnFrame = nullptr;
   nsINode* focusNode = GetFocusNode();
-  if (!focusNode->IsContent() || !mFrameSelection) {
+  if (!focusNode || !focusNode->IsContent() || !mFrameSelection) {
     return NS_ERROR_FAILURE;
   }
 
