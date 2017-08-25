@@ -30,21 +30,18 @@ this.LocalizationFeed = class LocalizationFeed {
   }
 
   updateLocale() {
-    // Just take the first element in the result array, as it should be
-    // the best locale
-    let locale = Services.locale.negotiateLanguages(
+    // Order locales based on what we have available with fallback always first
+    const locales = Services.locale.negotiateLanguages(
       Services.locale.getAppLocalesAsLangTags(), // desired locales
       Object.keys(this.allStrings), // available locales
       DEFAULT_LOCALE // fallback
-    )[0];
+    ).reverse();
 
-    let strings = this.allStrings[locale];
+    // Start with default (first) locale then merge in strings of better locales
+    const strings = Object.assign({}, ...locales.map(l => this.allStrings[l]));
 
-    // Use the default strings for any that are missing
-    if (locale !== DEFAULT_LOCALE) {
-      strings = Object.assign({}, this.allStrings[DEFAULT_LOCALE], strings || {});
-    }
-
+    // Use the best (last) locale as the primary locale
+    const locale = locales.pop();
     this.store.dispatch(ac.BroadcastToContent({
       type: at.LOCALE_UPDATED,
       data: {

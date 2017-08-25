@@ -1,4 +1,24 @@
-Components.utils.importGlobalProperties(["URL"]);
+const {utils: Cu} = Components;
+Cu.import("resource://gre/modules/XPCOMUtils.jsm");
+
+XPCOMUtils.defineLazyServiceGetter(this, "IDNService", "@mozilla.org/network/idn-service;1", "nsIIDNService");
+
+Cu.importGlobalProperties(["URL"]);
+
+/**
+ * Properly convert internationalized domain names.
+ * @param {string} host Domain hostname.
+ * @returns {string} Hostname suitable to be displayed.
+ */
+function handleIDNHost(hostname) {
+  try {
+    return IDNService.convertToDisplayIDN(hostname, {});
+  } catch (e) {
+    // If something goes wrong (e.g. host is an IP address) just fail back
+    // to the full domain.
+    return hostname;
+  }
+}
 
 /**
  * shortURL - Creates a short version of a link's url, used for display purposes
@@ -20,7 +40,8 @@ this.shortURL = function shortURL(link) {
     return "";
   }
   const {eTLD} = link;
-  const hostname = (link.hostname || new URL(link.url).hostname).replace(/^www\./i, "");
+  const asciiHost = (link.hostname || new URL(link.url).hostname).replace(/^www\./i, "");
+  const hostname = handleIDNHost(asciiHost);
 
   // Remove the eTLD (e.g., com, net) and the preceding period from the hostname
   const eTLDLength = (eTLD || "").length || (hostname.match(/\.com$/) && 3);
