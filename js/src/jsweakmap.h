@@ -364,26 +364,6 @@ class WeakMap : public HashMap<Key, Value, HashPolicy, RuntimeAllocPolicy>,
     }
 };
 
-/* WeakMap methods exposed so they can be installed in the self-hosting global. */
-
-extern JSObject*
-InitBareWeakMapCtor(JSContext* cx, js::HandleObject obj);
-
-extern bool
-WeakMap_has(JSContext* cx, unsigned argc, Value* vp);
-
-extern bool
-WeakMap_get(JSContext* cx, unsigned argc, Value* vp);
-
-extern bool
-WeakMap_set(JSContext* cx, unsigned argc, Value* vp);
-
-extern bool
-WeakMap_delete(JSContext* cx, unsigned argc, Value* vp);
-
-extern JSObject*
-InitWeakMapClass(JSContext* cx, HandleObject obj);
-
 
 class ObjectValueMap : public WeakMap<HeapPtr<JSObject*>, HeapPtr<Value>,
                                       MovableCellHasher<HeapPtr<JSObject*>>>
