@@ -228,32 +228,31 @@ WebRenderAPI::GenerateFrame(const nsTArray<wr::WrOpacityProperty>& aOpacityArray
 }
 
 void
-WebRenderAPI::SetDisplayList(gfx::Color aBgColor,
-                             Epoch aEpoch,
-                             mozilla::LayerSize aViewportSize,
-                             wr::WrPipelineId pipeline_id,
-                             const LayoutSize& content_size,
-                             wr::BuiltDisplayListDescriptor dl_descriptor,
-                             uint8_t *dl_data,
-                             size_t dl_size)
+WebRenderAPI::SetRootDisplayList(gfx::Color aBgColor,
+                                 Epoch aEpoch,
+                                 mozilla::LayerSize aViewportSize,
+                                 wr::WrPipelineId pipeline_id,
+                                 const LayoutSize& content_size,
+                                 wr::BuiltDisplayListDescriptor dl_descriptor,
+                                 uint8_t *dl_data,
+                                 size_t dl_size)
 {
-    wr_api_set_display_list(mDocHandle,
-                            ToColorF(aBgColor),
-                            aEpoch,
-                            aViewportSize.width, aViewportSize.height,
-                            pipeline_id,
-                            content_size,
-                            dl_descriptor,
-                            dl_data,
-                            dl_size,
-                            mResources.Raw());
+    wr_api_set_root_display_list(mDocHandle,
+                                 ToColorF(aBgColor),
+                                 aEpoch,
+                                 aViewportSize.width, aViewportSize.height,
+                                 pipeline_id,
+                                 content_size,
+                                 dl_descriptor,
+                                 dl_data,
+                                 dl_size);
 }
 
 void
-WebRenderAPI::ClearDisplayList(Epoch aEpoch,
-                               wr::WrPipelineId pipeline_id)
+WebRenderAPI::ClearRootDisplayList(Epoch aEpoch,
+                                   wr::WrPipelineId pipeline_id)
 {
-  wr_api_clear_display_list(mDocHandle, aEpoch, pipeline_id, mResources.Raw());
+  wr_api_clear_root_display_list(mDocHandle, aEpoch, pipeline_id);
 }
 
 void
@@ -425,60 +424,44 @@ WebRenderAPI::SetRootPipeline(PipelineId aPipeline)
 }
 
 void
-WebRenderAPI::UpdateResources(ResourceUpdateQueue& aUpdates)
+WebRenderAPI::AddImage(ImageKey key, const ImageDescriptor& aDescriptor,
+                       Range<uint8_t> aBytes)
 {
-  wr_api_update_resources(mDocHandle, mResources.Raw());
-}
-
-ResourceUpdateQueue::ResourceUpdateQueue()
-{
-  mUpdates = wr_resource_updates_new();
-}
-
-ResourceUpdateQueue::~ResourceUpdateQueue()
-{
-  wr_resource_updates_delete(mUpdates);
+  wr_api_add_image(mDocHandle,
+                   key,
+                   &aDescriptor,
+                   RangeToByteSlice(aBytes));
 }
 
 void
-ResourceUpdateQueue::AddImage(ImageKey key, const ImageDescriptor& aDescriptor,
-                              Range<uint8_t> aBytes)
+WebRenderAPI::AddBlobImage(ImageKey key, const ImageDescriptor& aDescriptor,
+                           Range<uint8_t> aBytes)
 {
-  wr_resource_updates_add_image(mUpdates,
-                                key,
-                                &aDescriptor,
-                                RangeToByteSlice(aBytes));
+  wr_api_add_blob_image(mDocHandle,
+                        key,
+                        &aDescriptor,
+                        RangeToByteSlice(aBytes));
 }
 
 void
-ResourceUpdateQueue::AddBlobImage(ImageKey key, const ImageDescriptor& aDescriptor,
-                                  Range<uint8_t> aBytes)
+WebRenderAPI::AddExternalImage(ImageKey key,
+                               const ImageDescriptor& aDescriptor,
+                               ExternalImageId aExtID,
+                               wr::WrExternalImageBufferType aBufferType,
+                               uint8_t aChannelIndex)
 {
-  wr_resource_updates_add_blob_image(mUpdates,
-                                     key,
-                                     &aDescriptor,
-                                     RangeToByteSlice(aBytes));
+  wr_api_add_external_image(mDocHandle,
+                            key,
+                            &aDescriptor,
+                            aExtID,
+                            aBufferType,
+                            aChannelIndex);
 }
 
 void
-ResourceUpdateQueue::AddExternalImage(ImageKey key,
-                                      const ImageDescriptor& aDescriptor,
-                                      ExternalImageId aExtID,
-                                      wr::WrExternalImageBufferType aBufferType,
-                                      uint8_t aChannelIndex)
-{
-  wr_resource_updates_add_external_image(mUpdates,
-                                         key,
-                                         &aDescriptor,
-                                         aExtID,
-                                         aBufferType,
-                                         aChannelIndex);
-}
-
-void
-ResourceUpdateQueue::AddExternalImageBuffer(ImageKey aKey,
-                                            const ImageDescriptor& aDescriptor,
-                                            ExternalImageId aHandle)
+WebRenderAPI::AddExternalImageBuffer(ImageKey aKey,
+                                     const ImageDescriptor& aDescriptor,
+                                     ExternalImageId aHandle)
 {
   auto channelIndex = 0;
   AddExternalImage(aKey, aDescriptor, aHandle,
@@ -487,58 +470,58 @@ ResourceUpdateQueue::AddExternalImageBuffer(ImageKey aKey,
 }
 
 void
-ResourceUpdateQueue::UpdateImageBuffer(ImageKey aKey,
-                                       const ImageDescriptor& aDescriptor,
-                                       Range<uint8_t> aBytes)
+WebRenderAPI::UpdateImageBuffer(ImageKey aKey,
+                                const ImageDescriptor& aDescriptor,
+                                Range<uint8_t> aBytes)
 {
-  wr_resource_updates_update_image(mUpdates,
-                                   aKey,
-                                   &aDescriptor,
-                                   RangeToByteSlice(aBytes));
+  wr_api_update_image(mDocHandle,
+                      aKey,
+                      &aDescriptor,
+                      RangeToByteSlice(aBytes));
 }
 
 void
-ResourceUpdateQueue::UpdateBlobImage(ImageKey aKey,
-                                     const ImageDescriptor& aDescriptor,
-                                     Range<uint8_t> aBytes)
+WebRenderAPI::UpdateBlobImage(ImageKey aKey,
+                              const ImageDescriptor& aDescriptor,
+                              Range<uint8_t> aBytes)
 {
-  wr_resource_updates_update_blob_image(mUpdates,
-                                        aKey,
-                                        &aDescriptor,
-                                        RangeToByteSlice(aBytes));
+  wr_api_update_blob_image(mDocHandle,
+                           aKey,
+                           &aDescriptor,
+                           RangeToByteSlice(aBytes));
 }
 
 void
-ResourceUpdateQueue::UpdateExternalImage(ImageKey aKey,
-                                         const ImageDescriptor& aDescriptor,
-                                         ExternalImageId aExtID,
-                                         wr::WrExternalImageBufferType aBufferType,
-                                         uint8_t aChannelIndex)
+WebRenderAPI::UpdateExternalImage(ImageKey aKey,
+                                  const ImageDescriptor& aDescriptor,
+                                  ExternalImageId aExtID,
+                                  wr::WrExternalImageBufferType aBufferType,
+                                  uint8_t aChannelIndex)
 {
-  wr_resource_updates_update_external_image(mUpdates,
-                                            aKey,
-                                            &aDescriptor,
-                                            aExtID,
-                                            aBufferType,
-                                            aChannelIndex);
+  wr_api_update_external_image(mDocHandle,
+                               aKey,
+                               &aDescriptor,
+                               aExtID,
+                               aBufferType,
+                               aChannelIndex);
 }
 
 void
-ResourceUpdateQueue::DeleteImage(ImageKey aKey)
+WebRenderAPI::DeleteImage(ImageKey aKey)
 {
-  wr_resource_updates_delete_image(mUpdates, aKey);
+  wr_api_delete_image(mDocHandle, aKey);
 }
 
 void
-ResourceUpdateQueue::AddRawFont(wr::FontKey aKey, Range<uint8_t> aBytes, uint32_t aIndex)
+WebRenderAPI::AddRawFont(wr::FontKey aKey, Range<uint8_t> aBytes, uint32_t aIndex)
 {
-  wr_resource_updates_add_raw_font(mUpdates, aKey, &aBytes[0], aBytes.length(), aIndex);
+  wr_api_add_raw_font(mDocHandle, aKey, &aBytes[0], aBytes.length(), aIndex);
 }
 
 void
-ResourceUpdateQueue::DeleteFont(wr::FontKey aKey)
+WebRenderAPI::DeleteFont(wr::FontKey aKey)
 {
-  wr_resource_updates_delete_font(mUpdates, aKey);
+  wr_api_delete_font(mDocHandle, aKey);
 }
 
 class FrameStartTime : public RendererEvent
