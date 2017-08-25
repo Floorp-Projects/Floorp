@@ -1095,20 +1095,9 @@ nsSVGIntegrationUtils::PaintFilter(const PaintFramesParams& aParams)
   RegularFramePaintCallback callback(aParams.builder, aParams.layerManager,
                                      offsets.offsetToUserSpaceInDevPx);
   nsRegion dirtyRegion = aParams.dirtyRect - offsets.offsetToBoundingBox;
-  gfxSize scaleFactors = context.CurrentMatrix().ScaleFactors(true);
-  gfxMatrix scaleMatrix(scaleFactors.width, 0.0f,
-                        0.0f, scaleFactors.height,
-                        0.0f, 0.0f);
-  gfxMatrix reverseScaleMatrix = scaleMatrix;
-  DebugOnly<bool> invertible = reverseScaleMatrix.Invert();
-  MOZ_ASSERT(invertible);
-  context.SetMatrix(reverseScaleMatrix * context.CurrentMatrix());
 
-  gfxMatrix tm =
-    scaleMatrix * nsSVGUtils::GetCSSPxToDevPxMatrix(frame);
-  nsFilterInstance::PaintFilteredFrame(frame, &context,
-                                       tm, &callback, &dirtyRegion,
-                                       aParams.imgParams);
+  nsFilterInstance::PaintFilteredFrame(frame, &context, &callback,
+                                       &dirtyRegion, aParams.imgParams);
 
   if (opacity != 1.0f) {
     context.PopGroupAndBlend();
