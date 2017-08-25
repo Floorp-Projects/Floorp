@@ -7,6 +7,7 @@
   <browser id="thebrowser" type="content" remote="true" />
   <script type="application/javascript"><![CDATA[
     Components.utils.import("resource://gre/modules/Services.jsm");
+    Components.utils.import("resource://testing-common/BrowserTestUtils.jsm");
 
     const ok = window.opener.wrappedJSObject.ok;
     const is = window.opener.wrappedJSObject.is;
@@ -18,24 +19,19 @@
       ok(subject instanceof Components.interfaces.nsIPropertyBag2,
          'Subject implements nsIPropertyBag2.');
 
-      var waitCrash = Promise.resolve();
       var dumpID;
       if ('nsICrashReporter' in Components.interfaces) {
         dumpID = subject.getPropertyAsAString('dumpID');
         ok(dumpID, "dumpID is present and not an empty string");
-        waitCrash = Services.crashmanager.ensureCrashIsPresent(dumpID);
       }
 
       Services.obs.removeObserver(crashObserver, 'ipc:content-shutdown');
-      waitCrash.then(done);
+      done();
     }
 
     Services.obs.addObserver(crashObserver, 'ipc:content-shutdown');
 
-    document.getElementById('thebrowser')
-            .QueryInterface(Components.interfaces.nsIFrameLoaderOwner)
-            .frameLoader.messageManager
-            .loadFrameScript('chrome://mochitests/content/chrome/dom/ipc/tests/process_error_contentscript.js', true);
+    BrowserTestUtils.crashBrowser(document.getElementById('thebrowser'));
   ]]></script>
 
 </window>

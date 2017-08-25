@@ -49,6 +49,7 @@ function SpecialPowers(window) {
                             "SpecialPowers.RemoveFiles",
                             "SPPingService",
                             "SPLoadExtension",
+                            "SPProcessCrashManagerWait",
                             "SPStartupExtension",
                             "SPUnloadExtension",
                             "SPExtensionMessage"];
