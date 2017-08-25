@@ -217,6 +217,7 @@ nsStyleSet::nsStyleSet()
     mInGC(false),
     mAuthorStyleDisabled(false),
     mInReconstruct(false),
+    mInitFontFeatureValuesLookup(true),
     mNeedsRestyleAfterEnsureUniqueInner(false),
     mUsesViewportUnits(false),
     mDirty(0),
@@ -2282,29 +2283,6 @@ nsStyleSet::CounterStyleRuleForName(nsIAtom* aName)
   return nullptr;
 }
 
-already_AddRefed<gfxFontFeatureValueSet>
-nsStyleSet::BuildFontFeatureValueSet()
-{
-  nsTArray<nsCSSFontFeatureValuesRule*> rules;
-  AppendFontFeatureValuesRules(rules);
-
-  if (rules.IsEmpty()) {
-    return nullptr;
-  }
-
-  RefPtr<gfxFontFeatureValueSet> set = new gfxFontFeatureValueSet();
-  for (nsCSSFontFeatureValuesRule* rule : rules) {
-    const nsTArray<FontFamilyName>& familyList = rule->GetFamilyList().GetFontlist();
-    const nsTArray<gfxFontFeatureValueSet::FeatureValues>&
-      featureValues = rule->GetFeatureValues();
-
-    for (const FontFamilyName& f : familyList) {
-      set->AddFontFeatureValues(f.mName, featureValues);
-    }
-  }
-  return set.forget();
-}
-
 bool
 nsStyleSet::AppendFontFeatureValuesRules(
                                  nsTArray<nsCSSFontFeatureValuesRule*>& aArray)
@@ -2323,6 +2301,40 @@ nsStyleSet::AppendFontFeatureValuesRules(
     }
   }
   return true;
+}
+
+already_AddRefed<gfxFontFeatureValueSet>
+nsStyleSet::GetFontFeatureValuesLookup()
+{
+  if (mInitFontFeatureValuesLookup) {
+    mInitFontFeatureValuesLookup = false;
+
+    nsTArray<nsCSSFontFeatureValuesRule*> rules;
+    AppendFontFeatureValuesRules(rules);
+
+    mFontFeatureValuesLookup = new gfxFontFeatureValueSet();
+
+    uint32_t i, numRules = rules.Length();
+    for (i = 0; i < numRules; i++) {
+      nsCSSFontFeatureValuesRule *rule = rules[i];
+
+      const nsTArray<FontFamilyName>& familyList = rule->GetFamilyList().GetFontlist();
+      const nsTArray<gfxFontFeatureValueSet::FeatureValues>&
+        featureValues = rule->GetFeatureValues();
+
+      // for each family
+      size_t f, numFam;
+
+      numFam = familyList.Length();
+      for (f = 0; f < numFam; f++) {
+        mFontFeatureValuesLookup->AddFontFeatureValues(familyList[f].mName,
+                                                       featureValues);
+      }
+    }
+  }
+
+  RefPtr<gfxFontFeatureValueSet> lookup = mFontFeatureValuesLookup;
+  return lookup.forget();
 }
 
 bool

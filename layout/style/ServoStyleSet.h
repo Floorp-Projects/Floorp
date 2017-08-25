@@ -373,9 +373,6 @@ public:
 
   nsCSSCounterStyleRule* CounterStyleRuleForName(nsIAtom* aName);
 
-  // Get all the currently-active font feature values set.
-  already_AddRefed<gfxFontFeatureValueSet> BuildFontFeatureValueSet();
-
   already_AddRefed<ServoStyleContext>
   GetBaseContextForElement(dom::Element* aElement,
                            ServoStyleContext* aParentContext,
