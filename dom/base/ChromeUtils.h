@@ -124,6 +124,27 @@ public:
                 const nsAString& aUrl,
                 const dom::CompileScriptOptionsDictionary& aOptions,
                 ErrorResult& aRv);
+
+  static void WaiveXrays(GlobalObject& aGlobal,
+                         JS::HandleValue aVal,
+                         JS::MutableHandleValue aRetval,
+                         ErrorResult& aRv);
+
+  static void UnwaiveXrays(GlobalObject& aGlobal,
+                           JS::HandleValue aVal,
+                           JS::MutableHandleValue aRetval,
+                           ErrorResult& aRv);
+
+  static void GetClassName(GlobalObject& aGlobal,
+                           JS::HandleObject aObj,
+                           bool aUnwrap,
+                           nsAString& aRetval);
+
+  static void ShallowClone(GlobalObject& aGlobal,
+                           JS::HandleObject aObj,
+                           JS::HandleObject aTarget,
+                           JS::MutableHandleObject aRetval,
+                           ErrorResult& aRv);
 };
 
 } // namespace dom

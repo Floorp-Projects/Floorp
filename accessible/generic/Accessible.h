@@ -900,19 +900,6 @@ public:
     { return !(mStateFlags & eIgnoreDOMUIEvent); }
 
   /**
-   * Get/set survivingInUpdate bit on child indicating that parent recollects
-   * its children.
-   */
-  bool IsSurvivingInUpdate() const { return mStateFlags & eSurvivingInUpdate; }
-  void SetSurvivingInUpdate(bool aIsSurviving)
-  {
-    if (aIsSurviving)
-      mStateFlags |= eSurvivingInUpdate;
-    else
-      mStateFlags &= ~eSurvivingInUpdate;
-  }
-
-  /**
    * Get/set repositioned bit indicating that the accessible was moved in
    * the accessible tree, i.e. the accessible tree structure differs from DOM.
    */
@@ -1039,11 +1026,10 @@ protected:
     eGroupInfoDirty = 1 << 5, // accessible needs to update group info
     eKidsMutating = 1 << 6, // subtree is being mutated
     eIgnoreDOMUIEvent = 1 << 7, // don't process DOM UI events for a11y events
-    eSurvivingInUpdate = 1 << 8, // parent drops children to recollect them
-    eRelocated = 1 << 9, // accessible was moved in tree
-    eNoXBLKids = 1 << 10, // accessible don't allows XBL children
-    eNoKidsFromDOM = 1 << 11, // accessible doesn't allow children from DOM
-    eHasTextKids = 1 << 12, // accessible have a text leaf in children
+    eRelocated = 1 << 8, // accessible was moved in tree
+    eNoXBLKids = 1 << 9, // accessible don't allows XBL children
+    eNoKidsFromDOM = 1 << 10, // accessible doesn't allow children from DOM
+    eHasTextKids = 1 << 11, // accessible have a text leaf in children
 
     eLastStateFlag = eNoKidsFromDOM
   };
@@ -1144,7 +1130,7 @@ protected:
   nsTArray<Accessible*> mChildren;
   int32_t mIndexInParent;
 
-  static const uint8_t kStateFlagsBits = 13;
+  static const uint8_t kStateFlagsBits = 12;
   static const uint8_t kContextFlagsBits = 3;
   static const uint8_t kTypeBits = 6;
   static const uint8_t kGenericTypesBits = 16;

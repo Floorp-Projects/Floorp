@@ -445,6 +445,19 @@ JSRuntime::setTelemetryCallback(JSRuntime* rt, JSAccumulateTelemetryDataCallback
 }
 
 void
+JSRuntime::setUseCounter(JSObject* obj, JSUseCounter counter)
+{
+    if (useCounterCallback)
+        (*useCounterCallback)(obj, counter);
+}
+
+void
+JSRuntime::setUseCounterCallback(JSRuntime* rt, JSSetUseCounterCallback callback)
+{
+    rt->useCounterCallback = callback;
+}
+
+void
 JSRuntime::addSizeOfIncludingThis(mozilla::MallocSizeOf mallocSizeOf, JS::RuntimeSizes* rtSizes)
 {
     // Several tables in the runtime enumerated below can be used off thread.

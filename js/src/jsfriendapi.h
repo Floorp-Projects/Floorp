@@ -172,6 +172,24 @@ typedef void
 extern JS_FRIEND_API(void)
 JS_SetAccumulateTelemetryCallback(JSContext* cx, JSAccumulateTelemetryDataCallback callback);
 
+/*
+ * Use counter names passed to the accumulate use counter callback.
+ *
+ * It's OK to for these enum values to change as they will be mapped to a
+ * fixed member of the mozilla::UseCounter enum by the callback.
+ */
+
+enum class JSUseCounter {
+    ASMJS,
+    WASM
+};
+
+typedef void
+(*JSSetUseCounterCallback)(JSObject* obj, JSUseCounter counter);
+
+extern JS_FRIEND_API(void)
+JS_SetSetUseCounterCallback(JSContext* cx, JSSetUseCounterCallback callback);
+
 extern JS_FRIEND_API(bool)
 JS_GetIsSecureContext(JSCompartment* compartment);
 

@@ -34,3 +34,21 @@ XRE_StartupTimelineRecord(int aEvent, TimeStamp aWhen)
 {
   StartupTimeline::Record((StartupTimeline::Event)aEvent, aWhen);
 }
+
+void StartupTimeline::RecordOnce(Event ev) {
+
+  if (HasRecord(ev)) {
+    return;
+  }
+
+  Record(ev);
+
+  // Record first paint timestamp as a scalar.
+  if (ev == FIRST_PAINT) {
+    bool error = false;
+    uint32_t firstPaintTime = (uint32_t) (Get(ev) - TimeStamp::ProcessCreation(&error)).ToMilliseconds();
+    if (!error) {
+      Telemetry::ScalarSet(Telemetry::ScalarID::TIMESTAMPS_FIRST_PAINT, firstPaintTime);
+    }
+  }
+}
