@@ -762,7 +762,7 @@
               flex="1" />
     <vbox>
       <!-- Please don't remove the wrapping hbox/vbox/box for these elements. It's used to properly compute the search tooltip position. -->
-      <hbox>
+      <hbox pack="end">
         <button id="viewCertificatesButton"
                 class="accessory-button"
                 label="&viewCerts2.label;"
@@ -785,7 +785,7 @@
                                 &certmgr.delete2.label;"/>
       </hbox>
       <!-- Please don't remove the wrapping hbox/vbox/box for these elements. It's used to properly compute the search tooltip position. -->
-      <hbox>
+      <hbox pack="end">
         <button id="viewSecurityDevicesButton"
                 class="accessory-button"
                 label="&viewSecurityDevices2.label;"

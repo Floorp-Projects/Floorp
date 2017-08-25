@@ -665,7 +665,7 @@ html|input.urlbar-input[textoverflow]:not([focused]) {
 }
 
 #urlbar[pageproxystate="invalid"] > #page-action-buttons > .urlbar-icon,
-#urlbar[pageproxystate="invalid"] > #page-action-buttons > .urlbar-icon-wrapper > .urlbar-icon,
+#urlbar[pageproxystate="invalid"] > #page-action-buttons > .urlbar-icon-wrapper,
 #urlbar[pageproxystate="invalid"] > #page-action-buttons > #pageActionSeparator,
 .urlbar-go-button[pageproxystate="valid"],
 .urlbar-go-button:not([parentfocused="true"]),

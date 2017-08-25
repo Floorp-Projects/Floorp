@@ -7,7 +7,7 @@ add_task(async function test_first_time_save() {
   await SpecialPowers.pushPrefEnv({
     "set": [
       [FTU_PREF, true],
-      [ENABLED_PREF, true],
+      [ENABLED_AUTOFILL_ADDRESSES_PREF, true],
     ],
   });
 
@@ -78,7 +78,7 @@ add_task(async function test_first_time_save_with_sync_account() {
   await SpecialPowers.pushPrefEnv({
     "set": [
       [FTU_PREF, true],
-      [ENABLED_PREF, true],
+      [ENABLED_AUTOFILL_ADDRESSES_PREF, true],
       [SYNC_USERNAME_PREF, "foo@bar.com"],
     ],
   });

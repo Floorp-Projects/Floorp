@@ -1837,6 +1837,12 @@ nsDocShell::MaybeResetInitTiming(bool aReset)
   }
 }
 
+nsDOMNavigationTiming*
+nsDocShell::GetNavigationTiming() const
+{
+  return mTiming;
+}
+
 //
 // Bug 13871: Prevent frameset spoofing
 //

@@ -288,6 +288,8 @@ public:
   mozilla::HTMLEditor* GetHTMLEditorInternal();
   nsresult SetHTMLEditorInternal(mozilla::HTMLEditor* aHTMLEditor);
 
+  nsDOMNavigationTiming* GetNavigationTiming() const;
+
 private:
   bool CanSetOriginAttributes();
 

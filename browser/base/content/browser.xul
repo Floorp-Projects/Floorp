@@ -393,14 +393,14 @@
       <menuitem id="placesContext_hideRecentlyBookmarked"
                 label="&hideRecentlyBookmarked.label;"
                 accesskey="&hideRecentlyBookmarked.accesskey;"
-                oncommand="BookmarkingUI.hideRecentlyBookmarked();"
+                oncommand="RecentBookmarksMenuUI.visible = false;"
                 closemenu="single"
                 ignoreitem="true"
                 hidden="true"/>
       <menuitem id="placesContext_showRecentlyBookmarked"
                 label="&showRecentlyBookmarked.label;"
                 accesskey="&showRecentlyBookmarked.accesskey;"
-                oncommand="BookmarkingUI.showRecentlyBookmarked();"
+                oncommand="RecentBookmarksMenuUI.visible = true;"
                 closemenu="single"
                 ignoreitem="true"
                 hidden="true"/>

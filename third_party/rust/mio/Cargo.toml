@@ -1,0 +1,47 @@
+[package]
+
+name          = "mio"
+version       = "0.6.9"
+license       = "MIT"
+authors       = ["Carl Lerche <me@carllerche.com>"]
+description   = "Lightweight non-blocking IO"
+documentation = "https://docs.rs/mio"
+homepage      = "https://github.com/carllerche/mio"
+repository    = "https://github.com/carllerche/mio"
+readme        = "README.md"
+keywords      = ["io", "async", "non-blocking"]
+categories    = ["asynchronous"]
+exclude       = [
+  ".gitignore",
+  ".travis.yml",
+  "deploy.sh",
+  "test/**/*",
+]
+
+[features]
+with-deprecated = []
+default = ["with-deprecated"]
+
+[dependencies]
+lazycell = "0.4.0"
+log      = "0.3.1"
+slab     = "0.3.0"
+net2     = "0.2.29"
+iovec    = "0.1.0"
+
+[target.'cfg(unix)'.dependencies]
+libc   = "0.2.19"
+
+[target.'cfg(windows)'.dependencies]
+winapi = "0.2.1"
+miow   = "0.2.1"
+kernel32-sys = "0.2"
+
+[dev-dependencies]
+env_logger = { version = "0.3.0", default-features = false }
+tempdir    = "0.3.4"
+bytes      = "0.3.0"
+
+[[test]]
+name = "test"
+path = "test/mod.rs"

@@ -17,13 +17,13 @@ import com.robotium.solo.Condition;
 import org.mozilla.gecko.GeckoProfile;
 import org.mozilla.gecko.R;
 import org.mozilla.gecko.activitystream.ActivityStreamTelemetry;
+import org.mozilla.gecko.activitystream.homepanel.model.WebpageModel;
 import org.mozilla.gecko.activitystream.ranking.HighlightCandidateCursorIndices;
 import org.mozilla.gecko.db.BrowserContract;
 import org.mozilla.gecko.db.BrowserDB;
 import org.mozilla.gecko.db.DBUtils;
 import org.mozilla.gecko.activitystream.homepanel.menu.ActivityStreamContextMenu;
 import org.mozilla.gecko.activitystream.homepanel.model.Highlight;
-import org.mozilla.gecko.activitystream.homepanel.model.Item;
 import org.mozilla.gecko.activitystream.homepanel.model.TopSite;
 
 /**
@@ -228,7 +228,7 @@ public class testActivityStreamContextMenu extends BaseTest {
      * Test that the menu shows the expected menu items for a given URL, and that these items have
      * the correct state.
      */
-    private void testMenuForItem(Item item, boolean bookmarked, boolean pinned, boolean visited) {
+    private void testMenuForItem(WebpageModel item, boolean bookmarked, boolean pinned, boolean visited) {
         final View anchor = new View(getActivity());
         final ActivityStreamContextMenu menu = ActivityStreamContextMenu.show(
                 getActivity(), anchor, ActivityStreamTelemetry.Extras.builder(),

@@ -59,7 +59,10 @@ endif
 # builds. It is called from the tinderbox scripts. Alter it with caution.
 
 installers-%: IS_LANGUAGE_REPACK=1
-installers-%: clobber-stage repackage-zip-%
+installers-%:
+	@$(MAKE) clobber-stage
+	@$(MAKE) libs-$*
+	@$(MAKE) repackage-zip-$*
 	@echo 'repackaging done'
 
 # When we unpack fennec on MacOS X the platform.ini and application.ini are in slightly

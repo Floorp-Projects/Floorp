@@ -23,4 +23,7 @@ if CONFIG['MOZ_PULSEAUDIO']:
 if CONFIG['MOZ_RUST_SIMD']:
     gkrust_features += ['simd-accel']
 
+if CONFIG['MOZ_CUBEB_REMOTING']:
+    gkrust_features += ['cubeb-remoting']
+
 gkrust_features += ['no-static-ideograph-encoder-tables']

@@ -13,9 +13,9 @@
 #include "nsIFrame.h"
 #include "nsINode.h"
 #include "nsISelectionController.h"
-#include "nsRange.h"
 
 class nsPresContext;
+class nsRange;
 
 struct nsRect;
 
@@ -37,6 +37,67 @@ enum LineBreakType
 
 class MOZ_STACK_CLASS ContentEventHandler
 {
+private:
+  /**
+   * RawRange is a helper class of ContentEventHandler class.  The caller is
+   * responsible for making sure the start/end nodes are in document order.
+   * This is enforced by assertions in DEBUG builds.
+   */
+  class MOZ_STACK_CLASS RawRange final
+  {
+  public:
+    RawRange()
+      : mStartOffset(0)
+      , mEndOffset(0)
+    {
+    }
+
+    void Clear()
+    {
+      mRoot = mStartContainer = mEndContainer = nullptr;
+      mStartOffset = mEndOffset = 0;
+    }
+
+    bool IsPositioned() const
+    {
+      return mStartContainer && mEndContainer;
+    }
+    bool Collapsed() const
+    {
+      return mStartContainer == mEndContainer &&
+             mStartOffset == mEndOffset &&
+             IsPositioned();
+    }
+    nsINode* GetStartContainer() const { return mStartContainer; }
+    nsINode* GetEndContainer() const { return mEndContainer; }
+    uint32_t StartOffset() const { return mStartOffset; }
+    uint32_t EndOffset() const { return mEndOffset; }
+
+    nsresult CollapseTo(nsINode* aContainer, uint32_t aOffset)
+    {
+      return SetStartAndEnd(aContainer, aOffset, aContainer, aOffset);
+    }
+    nsresult SetStart(nsINode* aStartContainer, uint32_t aStartOffset);
+    nsresult SetEnd(nsINode* aEndContainer, uint32_t aEndOffset);
+    nsresult SetEndAfter(nsINode* aEndContainer);
+    void SetStartAndEnd(const nsRange* aRange);
+    nsresult SetStartAndEnd(nsINode* aStartContainer, uint32_t aStartOffset,
+                            nsINode* aEndContainer, uint32_t aEndOffset);
+
+    nsresult SelectNodeContents(nsINode* aNodeToSelectContents);
+
+  private:
+    bool IsValidOffset(nsINode* aContainer, uint32_t aOffset) const;
+    nsINode* IsValidBoundary(nsINode* aNode) const;
+    inline void AssertStartIsBeforeOrEqualToEnd();
+
+    nsCOMPtr<nsINode> mRoot;
+    nsCOMPtr<nsINode> mStartContainer;
+    nsCOMPtr<nsINode> mEndContainer;
+    uint32_t mStartOffset;
+    uint32_t mEndOffset;
+  };
+
 public:
   typedef dom::Selection Selection;
 
@@ -76,11 +137,9 @@ protected:
   // is called, i.e., handling eQuerySelectedText, it's the specified selection
   // by WidgetQueryContentEvent::mInput::mSelectionType.
   RefPtr<Selection> mSelection;
-  // mFirstSelectedRange is the first selected range of mSelection.  If
-  // mSelection is normal selection, this must not be nullptr if Init()
-  // succeed.  Otherwise, this may be nullptr if there are no selection
-  // ranges.
-  RefPtr<nsRange> mFirstSelectedRange;
+  // mFirstSelectedRawRange is initialized from the first range of mSelection,
+  // if it exists.  Otherwise, it is reset by Clear().
+  RawRange mFirstSelectedRawRange;
   nsCOMPtr<nsIContent> mRootContent;
 
   nsresult Init(WidgetQueryContentEvent* aEvent);
@@ -164,33 +223,6 @@ public:
     {
       return IsValid() && mNode->IsElement() && !mOffset && mAfterOpenTag;
     }
-    nsresult SetToRangeStart(nsRange* aRange) const
-    {
-      if (!IsValid()) {
-        return NS_ERROR_FAILURE;
-      }
-      ErrorResult errorResult;
-      aRange->SetStart(*mNode, mOffset, errorResult);
-      return errorResult.StealNSResult();
-    }
-    nsresult SetToRangeEnd(nsRange* aRange) const
-    {
-      if (!IsValid()) {
-        return NS_ERROR_FAILURE;
-      }
-      ErrorResult errorResult;
-      aRange->SetEnd(*mNode, mOffset, errorResult);
-      return errorResult.StealNSResult();
-    }
-    nsresult SetToRangeEndAfter(nsRange* aRange) const
-    {
-      if (!IsValid()) {
-        return NS_ERROR_FAILURE;
-      }
-      ErrorResult errorResult;
-      aRange->SetEndAfter(*mNode, errorResult);
-      return errorResult.StealNSResult();
-    }
   };
 
   // NodePositionBefore isn't good name if mNode isn't an element node nor
@@ -261,13 +293,13 @@ protected:
                                    nsString& aString,
                                    LineBreakType aLineBreakType);
   // Get the contents of aRange as plain text.
-  nsresult GenerateFlatTextContent(nsRange* aRange,
+  nsresult GenerateFlatTextContent(const RawRange& aRawRange,
                                    nsString& aString,
                                    LineBreakType aLineBreakType);
   // Get offset of start of aRange.  Note that the result includes the length
   // of line breaker caused by the start of aContent because aRange never
   // includes the line breaker caused by its start node.
-  nsresult GetStartOffset(nsRange* aRange,
+  nsresult GetStartOffset(const RawRange& aRawRange,
                           uint32_t* aOffset,
                           LineBreakType aLineBreakType);
   // Check if we should insert a line break before aContent.
@@ -287,21 +319,21 @@ protected:
   // QueryContentRect() sets the rect of aContent's frame(s) to aEvent.
   nsresult QueryContentRect(nsIContent* aContent,
                             WidgetQueryContentEvent* aEvent);
-  // Make the DOM range from the offset of FlatText and the text length.
+  // Initialize aRawRange from the offset of FlatText and the text length.
   // If aExpandToClusterBoundaries is true, the start offset and the end one are
   // expanded to nearest cluster boundaries.
-  nsresult SetRangeFromFlatTextOffset(nsRange* aRange,
-                                      uint32_t aOffset,
-                                      uint32_t aLength,
-                                      LineBreakType aLineBreakType,
-                                      bool aExpandToClusterBoundaries,
-                                      uint32_t* aNewOffset = nullptr,
-                                      nsIContent** aLastTextNode = nullptr);
-  // If the aRange isn't in text node but next to a text node, this method
-  // modifies it in the text node.  Otherwise, not modified.
-  nsresult AdjustCollapsedRangeMaybeIntoTextNode(nsRange* aCollapsedRange);
+  nsresult SetRawRangeFromFlatTextOffset(RawRange* aRawRange,
+                                         uint32_t aOffset,
+                                         uint32_t aLength,
+                                         LineBreakType aLineBreakType,
+                                         bool aExpandToClusterBoundaries,
+                                         uint32_t* aNewOffset = nullptr,
+                                         nsIContent** aLastTextNode = nullptr);
+  // If the aCollapsedRawRange isn't in text node but next to a text node,
+  // this method modifies it in the text node.  Otherwise, not modified.
+  nsresult AdjustCollapsedRangeMaybeIntoTextNode(RawRange& aCollapsedRawRange);
   // Find the first frame for the range and get the start offset in it.
-  nsresult GetStartFrameAndOffset(const nsRange* aRange,
+  nsresult GetStartFrameAndOffset(const RawRange& aRawRange,
                                   nsIFrame*& aFrame,
                                   int32_t& aOffsetInFrame);
   // Convert the frame relative offset to be relative to the root frame of the
@@ -316,15 +348,15 @@ protected:
   typedef nsTArray<mozilla::FontRange> FontRangeArray;
   static void AppendFontRanges(FontRangeArray& aFontRanges,
                                nsIContent* aContent,
-                               int32_t aBaseOffset,
-                               int32_t aXPStartOffset,
-                               int32_t aXPEndOffset,
+                               uint32_t aBaseOffset,
+                               uint32_t aXPStartOffset,
+                               uint32_t aXPEndOffset,
                                LineBreakType aLineBreakType);
-  nsresult GenerateFlatFontRanges(nsRange* aRange,
+  nsresult GenerateFlatFontRanges(const RawRange& aRawRange,
                                   FontRangeArray& aFontRanges,
                                   uint32_t& aLength,
                                   LineBreakType aLineBreakType);
-  nsresult QueryTextRectByRange(nsRange* aRange,
+  nsresult QueryTextRectByRange(const RawRange& aRawRange,
                                 LayoutDeviceIntRect& aRect,
                                 WritingMode& aWritingMode);
 
@@ -366,13 +398,13 @@ protected:
   // This returns invalid FrameAndNodeOffset if there is no content which
   // should affect to computing text rect in the range.  mOffsetInNode is start
   // offset in the frame.
-  FrameAndNodeOffset GetFirstFrameInRangeForTextRect(nsRange* aRange);
+  FrameAndNodeOffset GetFirstFrameInRangeForTextRect(const RawRange& aRawRange);
 
   // Get last frame before the end of the given range for computing text rect.
   // This returns invalid FrameAndNodeOffset if there is no content which
   // should affect to computing text rect in the range.  mOffsetInNode is end
   // offset in the frame.
-  FrameAndNodeOffset GetLastFrameInRangeForTextRect(nsRange* aRange);
+  FrameAndNodeOffset GetLastFrameInRangeForTextRect(const RawRange& aRawRange);
 
   struct MOZ_STACK_CLASS FrameRelativeRect final
   {

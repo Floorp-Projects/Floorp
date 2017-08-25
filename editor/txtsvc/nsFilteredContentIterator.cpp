@@ -4,6 +4,7 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
 #include "mozilla/mozalloc.h"
+#include "mozilla/Move.h"
 #include "nsComponentManagerUtils.h"
 #include "nsContentUtils.h"
 #include "nsDebug.h"
@@ -18,6 +19,8 @@
 #include "nsISupportsUtils.h"
 #include "nsITextServicesFilter.h"
 #include "nsRange.h"
+
+using namespace mozilla;
 
 //------------------------------------------------------------
 nsFilteredContentIterator::nsFilteredContentIterator(nsITextServicesFilter* aFilter) :
@@ -78,17 +81,62 @@ nsFilteredContentIterator::Init(nsINode* aRoot)
 nsresult
 nsFilteredContentIterator::Init(nsIDOMRange* aRange)
 {
-  NS_ENSURE_TRUE(mPreIterator, NS_ERROR_FAILURE);
-  NS_ENSURE_TRUE(mIterator, NS_ERROR_FAILURE);
-  NS_ENSURE_ARG_POINTER(aRange);
-  mIsOutOfRange    = false;
-  mDirection       = eForward;
+  if (NS_WARN_IF(!aRange)) {
+    return NS_ERROR_INVALID_ARG;
+  }
+
+  nsRange* range = static_cast<nsRange*>(aRange);
+  if (NS_WARN_IF(!range->IsPositioned())) {
+    return NS_ERROR_INVALID_ARG;
+  }
+
+  mRange = range->CloneRange();
+
+  return InitWithRange();
+}
+
+//------------------------------------------------------------
+nsresult
+nsFilteredContentIterator::Init(nsINode* aStartContainer, uint32_t aStartOffset,
+                                nsINode* aEndContainer, uint32_t aEndOffset)
+{
+  RefPtr<nsRange> range;
+  nsresult rv = nsRange::CreateRange(aStartContainer, aStartOffset,
+                                     aEndContainer, aEndOffset,
+                                     getter_AddRefs(range));
+  if (NS_WARN_IF(NS_FAILED(rv)) || NS_WARN_IF(!range) ||
+      NS_WARN_IF(!range->IsPositioned())) {
+    return NS_ERROR_INVALID_ARG;
+  }
+
+  MOZ_ASSERT(range->GetStartContainer() == aStartContainer);
+  MOZ_ASSERT(range->GetEndContainer() == aEndContainer);
+  MOZ_ASSERT(range->StartOffset() == aStartOffset);
+  MOZ_ASSERT(range->EndOffset() == aEndOffset);
+
+  mRange = Move(range);
+
+  return InitWithRange();
+}
+
+nsresult
+nsFilteredContentIterator::InitWithRange()
+{
+  MOZ_ASSERT(mRange);
+  MOZ_ASSERT(mRange->IsPositioned());
+
+  if (NS_WARN_IF(!mPreIterator) || NS_WARN_IF(!mIterator)) {
+    return NS_ERROR_FAILURE;
+  }
+
+  mIsOutOfRange = false;
+  mDirection = eForward;
   mCurrentIterator = mPreIterator;
 
-  mRange = static_cast<nsRange*>(aRange)->CloneRange();
-
   nsresult rv = mPreIterator->Init(mRange);
-  NS_ENSURE_SUCCESS(rv, rv);
+  if (NS_WARN_IF(NS_FAILED(rv))) {
+    return rv;
+  }
   return mIterator->Init(mRange);
 }
 

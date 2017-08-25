@@ -264,16 +264,21 @@ add_task(async function test_devtools_inspectedWindow_eval_in_page_and_panel() {
     await browser.devtools.panels.create("test-eval", "fake-icon.png", "devtools_panel.html");
 
     browser.test.onMessage.addListener(async (msg, ...args) => {
-      if (msg !== "inspectedWindow-eval-request") {
-        browser.test.fail(`Unexpected test message received: ${msg}`);
-        return;
+      switch (msg) {
+        case "inspectedWindow-page-eval-request": {
+          const [evalResult, errorResult] = await browser.devtools.inspectedWindow.eval(...args);
+          browser.test.sendMessage("inspectedWindow-page-eval-result", {
+            evalResult,
+            errorResult,
+          });
+          break;
+        }
+        case "inspectedWindow-panel-eval-request":
+          // Ignore the test message expected by the devtools panel.
+          break;
+        default:
+          browser.test.fail(`Unexpected test message received: ${msg}`);
       }
-
-      const [evalResult, errorResult] = await browser.devtools.inspectedWindow.eval(...args);
-      browser.test.sendMessage("inspectedWindow-page-eval-result", {
-        evalResult,
-        errorResult,
-      });
     });
 
     browser.test.sendMessage("devtools_panel_created");
@@ -281,16 +286,21 @@ add_task(async function test_devtools_inspectedWindow_eval_in_page_and_panel() {
 
   function devtools_panel() {
     browser.test.onMessage.addListener(async (msg, ...args) => {
-      if (msg !== "inspectedWindow-eval-request") {
-        browser.test.fail(`Unexpected test message received: ${msg}`);
-        return;
+      switch (msg) {
+        case "inspectedWindow-panel-eval-request": {
+          const [evalResult, errorResult] = await browser.devtools.inspectedWindow.eval(...args);
+          browser.test.sendMessage("inspectedWindow-panel-eval-result", {
+            evalResult,
+            errorResult,
+          });
+          break;
+        }
+        case "inspectedWindow-page-eval-request":
+          // Ignore the test message expected by the devtools page.
+          break;
+        default:
+          browser.test.fail(`Unexpected test message received: ${msg}`);
       }
-
-      const [evalResult, errorResult] = await browser.devtools.inspectedWindow.eval(...args);
-      browser.test.sendMessage("inspectedWindow-panel-eval-result", {
-        evalResult,
-        errorResult,
-      });
     });
     browser.test.sendMessage("devtools_panel_initialized");
   }
@@ -339,12 +349,15 @@ add_task(async function test_devtools_inspectedWindow_eval_in_page_and_panel() {
   info("Wait for devtools_panel_initialized event");
   await extension.awaitMessage("devtools_panel_initialized");
 
-  info(`test inspectedWindow.eval with eval(window.location.href)`);
-  extension.sendMessage(`inspectedWindow-eval-request`, "window.location.href");
+  info(`test inspectedWindow.eval with eval(window.location.href) from the devtools page`);
+  extension.sendMessage(`inspectedWindow-page-eval-request`, "window.location.href");
 
   info("Wait for response from the page");
   let {evalResult} = await extension.awaitMessage(`inspectedWindow-page-eval-result`);
   Assert.deepEqual(evalResult, TEST_TARGET_URL, "Got the expected eval result in the page");
+
+  info(`test inspectedWindow.eval with eval(window.location.href) from the devtools panel`);
+  extension.sendMessage(`inspectedWindow-panel-eval-request`, "window.location.href");
 
   info("Wait for response from the panel");
   ({evalResult} = await extension.awaitMessage(`inspectedWindow-panel-eval-result`));

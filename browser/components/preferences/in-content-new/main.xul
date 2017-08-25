@@ -780,54 +780,54 @@
 #ifdef MOZ_UPDATER
   <vbox id="updateBox">
     <deck id="updateDeck" orient="vertical">
-      <hbox id="checkForUpdates" align="center">
+      <hbox id="checkForUpdates" align="start">
         <spacer flex="1"/>
         <button id="checkForUpdatesButton"
                 label="&update.checkForUpdatesButton.label;"
                 accesskey="&update.checkForUpdatesButton.accesskey;"
                 oncommand="gAppUpdater.checkForUpdates();"/>
       </hbox>
-      <hbox id="downloadAndInstall" align="center">
+      <hbox id="downloadAndInstall" align="start">
         <spacer flex="1"/>
         <button id="downloadAndInstallButton"
                 oncommand="gAppUpdater.startDownload();"/>
                 <!-- label and accesskey will be filled by JS -->
       </hbox>
-      <hbox id="apply" align="center">
+      <hbox id="apply" align="start">
         <spacer flex="1"/>
         <button id="updateButton"
                 label="&update.updateButton.label3;"
                 accesskey="&update.updateButton.accesskey;"
                 oncommand="gAppUpdater.buttonRestartAfterDownload();"/>
       </hbox>
-      <hbox id="checkingForUpdates" align="center">
+      <hbox id="checkingForUpdates" align="start">
         <image class="update-throbber"/><label>&update.checkingForUpdates;</label>
         <spacer flex="1"/>
         <button label="&update.checkForUpdatesButton.label;"
                 accesskey="&update.checkForUpdatesButton.accesskey;"
                 disabled="true"/>
       </hbox>
-      <hbox id="downloading" align="center">
+      <hbox id="downloading" align="start">
         <image class="update-throbber"/><label>&update.downloading.start;</label><label id="downloadStatus"/><label>&update.downloading.end;</label>
       </hbox>
-      <hbox id="applying" align="center">
+      <hbox id="applying" align="start">
         <image class="update-throbber"/><label>&update.applying;</label>
       </hbox>
-      <hbox id="downloadFailed" align="center">
+      <hbox id="downloadFailed" align="start">
         <label>&update.failed.start;</label><label id="failedLink" class="text-link">&update.failed.linkText;</label><label>&update.failed.end;</label>
         <spacer flex="1"/>
         <button label="&update.checkForUpdatesButton.label;"
                 accesskey="&update.checkForUpdatesButton.accesskey;"
                 oncommand="gAppUpdater.checkForUpdates();"/>
       </hbox>
-      <hbox id="adminDisabled" align="center">
+      <hbox id="adminDisabled" align="start">
         <label>&update.adminDisabled;</label>
         <spacer flex="1"/>
         <button label="&update.checkForUpdatesButton.label;"
                 accesskey="&update.checkForUpdatesButton.accesskey;"
                 disabled="true"/>
       </hbox>
-      <hbox id="noUpdatesFound" align="center">
+      <hbox id="noUpdatesFound" align="start">
         <image class="face-smile"/>
         <label>&update.noUpdatesFound;</label>
         <spacer flex="1"/>
@@ -835,31 +835,33 @@
                 accesskey="&update.checkForUpdatesButton.accesskey;"
                 oncommand="gAppUpdater.checkForUpdates();"/>
       </hbox>
-      <hbox id="otherInstanceHandlingUpdates" align="center">
+      <hbox id="otherInstanceHandlingUpdates" align="start">
         <label>&update.otherInstanceHandlingUpdates;</label>
         <spacer flex="1"/>
         <button label="&update.checkForUpdatesButton.label;"
                 accesskey="&update.checkForUpdatesButton.accesskey;"
                 disabled="true"/>
       </hbox>
-      <hbox id="manualUpdate" align="center">
+      <hbox id="manualUpdate" align="start">
         <image class="face-sad"/>
-        <label>&update.manual.start;</label><label id="manualLink" class="text-link"/><label>&update.manual.end;</label>
-        <spacer flex="1"/>
-        <button label="&update.checkForUpdatesButton.label;"
-                accesskey="&update.checkForUpdatesButton.accesskey;"
-                disabled="true"/>
-      </hbox>
-      <hbox id="unsupportedSystem" align="center">
         <description flex="1">
-          <label>&update.unsupported.start;</label><label id="unsupportedLink" class="text-link">&update.unsupported.linkText;</label><label>&update.unsupported.end;</label>
+          <label>&update.manual.start;</label><label id="manualLink" class="text-link"/><label>&update.manual.end;</label>
         </description>
         <spacer flex="1"/>
         <button label="&update.checkForUpdatesButton.label;"
                 accesskey="&update.checkForUpdatesButton.accesskey;"
                 disabled="true"/>
       </hbox>
-      <hbox id="restarting" align="center">
+      <hbox id="unsupportedSystem" align="start">
+        <description flex="1">
+          <label>&update.unsupported.start;</label><label id="unsupportedLink" class="learnMore text-link">&update.unsupported.linkText;</label><label>&update.unsupported.end;</label>
+        </description>
+        <spacer flex="1"/>
+        <button label="&update.checkForUpdatesButton.label;"
+                accesskey="&update.checkForUpdatesButton.accesskey;"
+                disabled="true"/>
+      </hbox>
+      <hbox id="restarting" align="start">
         <image class="update-throbber"/><label>&update.restarting;</label>
         <spacer flex="1"/>
         <button label="&update.updateButton.label3;"

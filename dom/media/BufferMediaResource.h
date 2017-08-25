@@ -68,7 +68,6 @@ private:
     return std::max(aOffset, int64_t(mLength));
   }
   bool IsDataCachedToEndOfResource(int64_t aOffset) override { return true; }
-  bool IsSuspended() override { return false; }
   nsresult ReadFromCache(char* aBuffer,
                          int64_t aOffset,
                          uint32_t aCount) override
@@ -87,8 +86,6 @@ private:
     aRanges += MediaByteRange(0, int64_t(mLength));
     return NS_OK;
   }
-
-  bool IsTransportSeekable() override { return true; }
 
   size_t SizeOfExcludingThis(MallocSizeOf aMallocSizeOf) const override
   {

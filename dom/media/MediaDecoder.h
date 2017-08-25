@@ -199,7 +199,7 @@ public:
   bool IsMediaSeekable();
   // Returns true if seeking is supported on a transport level (e.g. the server
   // supports range requests, we are playing a file, etc.).
-  bool IsTransportSeekable();
+  virtual bool IsTransportSeekable() = 0;
 
   // Return the time ranges that can be seeked into.
   virtual media::TimeIntervals GetSeekable();

@@ -222,6 +222,8 @@ public:
     return res.forget();
   }
 
+  bool ShouldNotifyInvalidation() const { return mShouldNotifyInvalidation; }
+
 private:
   /**
    * Take a snapshot of the parent context, and copy
@@ -319,6 +321,10 @@ private:
   typedef nsTHashtable<nsRefPtrHashKey<WebRenderCanvasData>> CanvasDataSet;
   // Store of WebRenderCanvasData objects for use in empty transactions
   CanvasDataSet mLastCanvasDatas;
+
+  // True if the layers-free transaction has invalidation region and then
+  // we should send notification after EndTransaction
+  bool mShouldNotifyInvalidation;
 };
 
 } // namespace layers

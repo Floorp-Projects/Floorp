@@ -1,0 +1,17 @@
+[package]
+name = "audioipc-server"
+version = "0.1.0"
+authors = ["Dan Glastonbury <dan.glastonbury@gmail.com>"]
+description = "Remote cubeb server"
+
+[dependencies]
+audioipc = { path = "../audioipc" }
+cubeb = { path = "../../cubeb-rs/cubeb-api" }
+cubeb-core = { path = "../../cubeb-rs/cubeb-core" }
+error-chain = "0.10.0"
+lazycell = "^0.4"
+log = "^0.3.6"
+mio = "0.6.7"
+mio-uds = "0.6.4"
+slab = "0.3.0"
+

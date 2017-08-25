@@ -124,6 +124,7 @@ const char* mozilla::dom::ContentPrefs::gInitPrefs[] = {
   "media.apple.forcevda",
   "media.clearkey.persistent-license.enabled",
   "media.cubeb.backend",
+  "media.cubeb.sandbox",
   "media.cubeb_latency_msg_frames",
   "media.cubeb_latency_playback_ms",
   "media.decoder-doctor.wmf-disabled-is-failure",

@@ -64,10 +64,6 @@
 #include "ExpandedPrincipal.h"
 #include "SystemPrincipal.h"
 
-#ifdef MOZ_CRASHREPORTER
-#include "nsExceptionHandler.h"
-#endif
-
 #ifdef XP_WIN
 #include <windows.h>
 #endif
