@@ -1,0 +1,22 @@
+[package]
+
+name = "cubeb"
+version = "0.3.0"
+authors = ["Dan Glastonbury <dglastonbury@mozilla.com>"]
+license = "ISC"
+readme = "README.md"
+keywords = ["cubeb"]
+repository = "https://github.com/djg/cubeb-rs"
+homepage = "https://github.com/djg/cubeb-rs"
+description = """
+Bindings to libcubeb for interacting with system audio from rust.
+"""
+categories = ["api-bindings"]
+
+[badges]
+travis-ci = { repository = "djg/cubeb-rs" }
+appveyor = { repository = "djg/cubeb-rs" }
+
+[dependencies]
+cubeb-core = { path = "../cubeb-core" }
+libcubeb-sys = { path = "libcubeb-sys" }

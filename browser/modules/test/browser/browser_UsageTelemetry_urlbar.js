@@ -92,6 +92,10 @@ add_task(async function setup() {
   // test when it selects results in the urlbar.
   await PlacesTestUtils.clearHistory();
 
+  // Clear historical search suggestions to avoid interference from previous
+  // tests.
+  await SpecialPowers.pushPrefEnv({"set": [["browser.urlbar.maxHistoricalSearchSuggestions", 0]]});
+
   // Make sure to restore the engine once we're done.
   registerCleanupFunction(async function() {
     Services.telemetry.canRecordExtended = oldCanRecord;

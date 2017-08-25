@@ -128,7 +128,7 @@ nsDOMNavigationTiming::NotifyLoadEventStart()
 
     profiler_tracing("Navigation", "Load", TRACING_INTERVAL_START);
 
-    if (IsTopLevelContentDocument()) {
+    if (IsTopLevelContentDocumentInContentProcess()) {
       Telemetry::AccumulateTimeDelta(Telemetry::TIME_TO_LOAD_EVENT_START_MS,
                                      mNavigationStartTimeStamp);
     }
@@ -144,7 +144,7 @@ nsDOMNavigationTiming::NotifyLoadEventEnd()
 
     profiler_tracing("Navigation", "Load", TRACING_INTERVAL_END);
 
-    if (IsTopLevelContentDocument()) {
+    if (IsTopLevelContentDocumentInContentProcess()) {
       Telemetry::AccumulateTimeDelta(Telemetry::TIME_TO_LOAD_EVENT_END_MS,
                                      mNavigationStartTimeStamp);
     }
@@ -170,11 +170,6 @@ nsDOMNavigationTiming::NotifyDOMLoading(nsIURI* aURI)
     mDOMLoadingSet = true;
 
     profiler_add_marker("Navigation::DOMLoading");
-
-    if (IsTopLevelContentDocument()) {
-      Telemetry::AccumulateTimeDelta(Telemetry::TIME_TO_DOM_LOADING_MS,
-                                     mNavigationStartTimeStamp);
-    }
   }
 }
 
@@ -187,11 +182,6 @@ nsDOMNavigationTiming::NotifyDOMInteractive(nsIURI* aURI)
     mDOMInteractiveSet = true;
 
     profiler_add_marker("Navigation::DOMInteractive");
-
-    if (IsTopLevelContentDocument()) {
-      Telemetry::AccumulateTimeDelta(Telemetry::TIME_TO_DOM_INTERACTIVE_MS,
-                                     mNavigationStartTimeStamp);
-    }
   }
 }
 
@@ -204,11 +194,6 @@ nsDOMNavigationTiming::NotifyDOMComplete(nsIURI* aURI)
     mDOMCompleteSet = true;
 
     profiler_add_marker("Navigation::DOMComplete");
-
-    if (IsTopLevelContentDocument()) {
-      Telemetry::AccumulateTimeDelta(Telemetry::TIME_TO_DOM_COMPLETE_MS,
-                                     mNavigationStartTimeStamp);
-    }
   }
 }
 
@@ -222,7 +207,7 @@ nsDOMNavigationTiming::NotifyDOMContentLoadedStart(nsIURI* aURI)
 
     profiler_tracing("Navigation", "DOMContentLoaded", TRACING_INTERVAL_START);
 
-    if (IsTopLevelContentDocument()) {
+    if (IsTopLevelContentDocumentInContentProcess()) {
       Telemetry::AccumulateTimeDelta(Telemetry::TIME_TO_DOM_CONTENT_LOADED_START_MS,
                                      mNavigationStartTimeStamp);
     }
@@ -239,7 +224,7 @@ nsDOMNavigationTiming::NotifyDOMContentLoadedEnd(nsIURI* aURI)
 
     profiler_tracing("Navigation", "DOMContentLoaded", TRACING_INTERVAL_END);
 
-    if (IsTopLevelContentDocument()) {
+    if (IsTopLevelContentDocumentInContentProcess()) {
       Telemetry::AccumulateTimeDelta(Telemetry::TIME_TO_DOM_CONTENT_LOADED_END_MS,
                                      mNavigationStartTimeStamp);
     }
@@ -307,9 +292,12 @@ nsDOMNavigationTiming::GetUnloadEventEnd()
 }
 
 bool
-nsDOMNavigationTiming::IsTopLevelContentDocument() const
+nsDOMNavigationTiming::IsTopLevelContentDocumentInContentProcess() const
 {
   if (!mDocShell) {
+    return false;
+  }
+  if (!XRE_IsContentProcess()) {
     return false;
   }
   nsCOMPtr<nsIDocShellTreeItem> rootItem;

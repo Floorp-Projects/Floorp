@@ -1,0 +1,14 @@
+[package]
+name = "libcubeb-sys"
+version = "0.1.0"
+authors = ["Dan Glastonbury <dglastonbury@mozilla.com>"]
+repository = "https://github.com/djg/cubeb-rs"
+license = "ISC"
+description = "Native bindings to the cubeb library"
+
+[lib]
+name = "libcubeb_sys"
+path = "lib.rs"
+
+[dependencies]
+cubeb-core = { path = "../../cubeb-core" }

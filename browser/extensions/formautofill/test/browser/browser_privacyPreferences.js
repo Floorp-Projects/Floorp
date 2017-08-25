@@ -2,20 +2,20 @@
 
 const PAGE_PREFS = "about:preferences";
 const PAGE_PRIVACY = PAGE_PREFS + "#privacy";
-const GROUP_AUTOFILL = "#passwordsGroup";
-const CHECKBOX_AUTOFILL = "#addressAutofill checkbox";
-const PREF_AUTOFILL_ENABLED = "extensions.formautofill.addresses.enabled";
-const TEST_SELECTORS = {
-  group: GROUP_AUTOFILL,
-  checkbox: CHECKBOX_AUTOFILL,
+const SELECTORS = {
+  group: "#passwordsGroup",
+  addressAutofillCheckbox: "#addressAutofill checkbox",
+  creditCardAutofillCheckbox: "#creditCardAutofill checkbox",
+  savedAddressesBtn: "#addressAutofill button",
+  savedCreditCardsBtn: "#creditCardAutofill button",
 };
 
 // Visibility of form autofill group should be hidden when opening
 // preferences page.
 add_task(async function test_aboutPreferences() {
   await BrowserTestUtils.withNewTab({gBrowser, url: PAGE_PREFS}, async function(browser) {
-    await ContentTask.spawn(browser, TEST_SELECTORS, (args) => {
-      is(content.document.querySelector(args.group).hidden, true,
+    await ContentTask.spawn(browser, SELECTORS, (selectors) => {
+      is(content.document.querySelector(selectors.group).hidden, true,
         "Form Autofill group should be hidden");
     });
   });
@@ -25,25 +25,48 @@ add_task(async function test_aboutPreferences() {
 // directly to privacy page. Checkbox is checked by default.
 add_task(async function test_aboutPreferencesPrivacy() {
   await BrowserTestUtils.withNewTab({gBrowser, url: PAGE_PRIVACY}, async function(browser) {
-    await ContentTask.spawn(browser, TEST_SELECTORS, (args) => {
-      is(content.document.querySelector(args.group).hidden, false,
+    await ContentTask.spawn(browser, SELECTORS, (selectors) => {
+      is(content.document.querySelector(selectors.group).hidden, false,
         "Form Autofill group should be visible");
-      is(content.document.querySelector(args.checkbox).checked, true,
-        "Checkbox should be checked");
+      is(content.document.querySelector(selectors.addressAutofillCheckbox).checked, true,
+        "Autofill addresses checkbox should be checked");
+      is(content.document.querySelector(selectors.creditCardAutofillCheckbox).checked, true,
+        "Autofill credit cards checkbox should be checked");
     });
   });
 });
 
-// Checkbox should be unchecked when form autofill is disabled.
+add_task(async function test_openManageAutofillDialogs() {
+  await BrowserTestUtils.withNewTab({gBrowser, url: PAGE_PRIVACY}, async function(browser) {
+    const args = [SELECTORS, MANAGE_ADDRESSES_DIALOG_URL, MANAGE_CREDIT_CARDS_DIALOG_URL];
+    await ContentTask.spawn(browser, args, ([selectors, addrUrl, ccUrl]) => {
+      function testManageDialogOpened(expectedUrl) {
+        return {open: openUrl => is(openUrl, expectedUrl, "Manage dialog called")};
+      }
+
+      let realgSubDialog = content.window.gSubDialog;
+      content.window.gSubDialog = testManageDialogOpened(addrUrl);
+      content.document.querySelector(selectors.savedAddressesBtn).click();
+      content.window.gSubDialog = testManageDialogOpened(ccUrl);
+      content.document.querySelector(selectors.savedCreditCardsBtn).click();
+      content.window.gSubDialog = realgSubDialog;
+    });
+  });
+});
+
+// Checkbox should be unchecked when form autofill addresses and credit cards are disabled.
 add_task(async function test_autofillDisabledCheckbox() {
-  SpecialPowers.pushPrefEnv({set: [[PREF_AUTOFILL_ENABLED, false]]});
+  SpecialPowers.pushPrefEnv({set: [[ENABLED_AUTOFILL_ADDRESSES_PREF, false]]});
+  SpecialPowers.pushPrefEnv({set: [[ENABLED_AUTOFILL_CREDITCARDS_PREF, false]]});
 
   await BrowserTestUtils.withNewTab({gBrowser, url: PAGE_PRIVACY}, async function(browser) {
-    await ContentTask.spawn(browser, TEST_SELECTORS, (args) => {
-      is(content.document.querySelector(args.group).hidden, false,
+    await ContentTask.spawn(browser, SELECTORS, (selectors) => {
+      is(content.document.querySelector(selectors.group).hidden, false,
         "Form Autofill group should be visible");
-      is(content.document.querySelector(args.checkbox).checked, false,
-        "Checkbox should be unchecked when Form Autofill is disabled");
+      is(content.document.querySelector(selectors.addressAutofillCheckbox).checked, false,
+        "Checkbox should be unchecked when Autofill Addresses is disabled");
+      is(content.document.querySelector(selectors.creditCardAutofillCheckbox).checked, false,
+        "Checkbox should be unchecked when Autofill Credit Cards is disabled");
     });
   });
 });

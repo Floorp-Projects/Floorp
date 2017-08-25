@@ -1,0 +1,15 @@
+[package]
+name = "cubeb-core"
+version = "0.1.0"
+authors = ["Dan Glastonbury <dglastonbury@mozilla.com>"]
+license = "ISC"
+keywords = ["cubeb"]
+repository = "https://github.com/djg/cubeb-rs"
+homepage = "https://github.com/djg/cubeb-rs"
+description = """
+Common types and definitions for cubeb rust and C bindings.
+"""
+categories = ["api-bindings"]
+
+[dependencies]
+bitflags = "0.9"

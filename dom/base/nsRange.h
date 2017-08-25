@@ -316,6 +316,25 @@ private:
                                       nsINode** aFarthestAncestor);
 
 public:
+  /**
+   * Compute the root node of aNode for initializing range classes.
+   * When aNode is in an anonymous subtree, this returns the shadow root or
+   * binding parent.  Otherwise, the root node of the document or document
+   * fragment.  If this returns nullptr, that means aNode can be neither the
+   * start container nor end container of any range.
+   */
+  static nsINode* ComputeRootNode(nsINode* aNode)
+  {
+    return ComputeRootNode(aNode, false);
+  }
+
+  /**
+   * Return true if aStartContainer/aStartOffset and aEndContainer/aEndOffset
+   * are valid start and end points for a range.  Otherwise, return false.
+   */
+  static bool IsValidPoints(nsINode* aStartContainer, uint32_t aStartOffset,
+                            nsINode* aEndContainer, uint32_t aEndOffset);
+
 /******************************************************************************
  *  Utility routine to detect if a content node starts before a range and/or
  *  ends after a range.  If neither it is contained inside the range.
@@ -368,7 +387,10 @@ public:
 protected:
   void RegisterCommonAncestor(nsINode* aNode);
   void UnregisterCommonAncestor(nsINode* aNode);
-  nsINode* IsValidBoundary(nsINode* aNode);
+  nsINode* IsValidBoundary(nsINode* aNode) const
+  {
+    return ComputeRootNode(aNode, mMaySpanAnonymousSubtrees);
+  }
 
   /**
    * XXX nsRange should accept 0 - UINT32_MAX as offset.  However, users of
@@ -381,6 +403,9 @@ protected:
     return aOffset <= INT32_MAX;
   }
   static bool IsValidOffset(nsINode* aNode, uint32_t aOffset);
+
+  static nsINode* ComputeRootNode(nsINode* aNode,
+                                  bool aMaySpanAnonymousSubtrees);
 
   // CharacterDataChanged set aNotInsertedYet to true to disable an assertion
   // and suppress re-registering a range common ancestor node since

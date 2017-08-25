@@ -126,6 +126,7 @@ add_task(async function test_page_contextmenu_unconfigured() {
   checkPopup([
     { label: "Not Connected to Sync", disabled: true },
     "----",
+    { label: "Sign in to Sync..." },
     { label: "Learn About Sending Tabs..." }
   ]);
 

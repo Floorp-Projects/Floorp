@@ -32,6 +32,8 @@ public:
   /* nsIContentIterator */
   virtual nsresult Init(nsINode* aRoot) override;
   virtual nsresult Init(nsIDOMRange* aRange) override;
+  virtual nsresult Init(nsINode* aStartContainer, uint32_t aStartOffset,
+                        nsINode* aEndContainer, uint32_t aEndOffset) override;
   virtual void First() override;
   virtual void Last() override;
   virtual void Next() override;
@@ -48,6 +50,11 @@ protected:
   nsFilteredContentIterator() : mDidSkip(false), mIsOutOfRange(false) { }
 
   virtual ~nsFilteredContentIterator();
+
+  /**
+   * Callers must guarantee that mRange isn't nullptr and it's positioned.
+   */
+  nsresult InitWithRange();
 
   // enum to give us the direction
   typedef enum {eDirNotSet, eForward, eBackward} eDirectionType;

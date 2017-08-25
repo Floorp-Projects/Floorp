@@ -11,7 +11,7 @@ import android.support.annotation.Nullable;
 
 import org.mozilla.gecko.db.BrowserContract;
 
-public class TopSite implements Item {
+public class TopSite implements WebpageModel {
     private final long id;
     private final String url;
     private final String title;

@@ -252,20 +252,16 @@ async function evaluateSearchResults(keyword, searchReults) {
 const mockSiteDataManager = {
 
   _SiteDataManager: null,
-  _originalGetQuotaUsage: null,
+  _originalQMS: null,
   _originalRemoveQuotaUsage: null,
 
-  _getQuotaUsage() {
-    let results = [];
-    this.fakeSites.forEach(site => {
-      results.push({
-        origin: site.principal.origin,
-        usage: site.usage,
-        persisted: site.persisted
-      });
-    });
-    this._SiteDataManager._getQuotaUsagePromise = Promise.resolve(results);
-    return this._SiteDataManager._getQuotaUsagePromise;
+  getUsage(onUsageResult) {
+    let result = this.fakeSites.map(site => ({
+      origin: site.principal.origin,
+      usage: site.usage,
+      persisted: site.persisted
+    }));
+    onUsageResult({ result });
   },
 
   _removeQuotaUsage(site) {
@@ -277,15 +273,15 @@ const mockSiteDataManager = {
 
   register(SiteDataManager) {
     this._SiteDataManager = SiteDataManager;
-    this._originalGetQuotaUsage = this._SiteDataManager._getQuotaUsage;
-    this._SiteDataManager._getQuotaUsage = this._getQuotaUsage.bind(this);
+    this._originalQMS = this._SiteDataManager._qms;
+    this._SiteDataManager._qms = this;
     this._originalRemoveQuotaUsage = this._SiteDataManager._removeQuotaUsage;
     this._SiteDataManager._removeQuotaUsage = this._removeQuotaUsage.bind(this);
     this.fakeSites = null;
   },
 
   unregister() {
-    this._SiteDataManager._getQuotaUsage = this._originalGetQuotaUsage;
+    this._SiteDataManager._qms = this._originalQMS;
     this._SiteDataManager._removeQuotaUsage = this._originalRemoveQuotaUsage;
   }
 };

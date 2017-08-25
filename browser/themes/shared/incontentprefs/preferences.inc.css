@@ -21,7 +21,6 @@
   /* A workaround to keep the container always float on the `top: 0` (Bug 1377009) */
   display: block;
   width: 664px;
-  min-width: 530px;
 }
 
 #mainPrefPane {
@@ -104,6 +103,10 @@ separator.thin:not([orient="vertical"]) {
   margin: 2px 0;
 }
 
+#searchInput {
+  border-radius: 0;
+}
+
 /* Subcategory title */
 
 /**
@@ -158,6 +161,7 @@ separator.thin:not([orient="vertical"]) {
 
 #startupTable {
   margin-top: 32px;
+  margin-inline-end: -4px;
   border-collapse: collapse;
 }
 
@@ -203,7 +207,7 @@ separator.thin:not([orient="vertical"]) {
 }
 
 .content-cell-item {
-  margin: 0 4px;
+  margin: 2px 4px;
 }
 
 #getStarted {
@@ -239,23 +243,32 @@ separator.thin:not([orient="vertical"]) {
   margin-bottom: 32px;
 }
 
-#updateBox button {
+#updateDeck > hbox > button {
   margin-top: 0;
   margin-bottom: 0;
+  margin-inline-end: 0;
 }
 
-#updateRadioGroup radio {
+#updateDeck > hbox > label {
+  -moz-box-flex: 1;
+}
+
+#manualLink {
+  margin-inline-start: 6px !important;
+}
+
+#updateRadioGroup > radio {
   height: 30px;
   margin: 2px 0;
 }
 
 #filter {
-  margin-inline-start: 0;
-  margin-bottom: 8px;
+  margin: 4px 0 8px 0;
 }
 
 #handlersView {
   height: 25em;
+  margin-inline-end: 0;
 }
 
 #handlersView > richlistitem {
@@ -535,6 +548,10 @@ separator.thin:not([orient="vertical"]) {
   margin-bottom: 4px;
 }
 
+#noFxaSignIn {
+  margin-inline-start: 8px;
+}
+
 .fxaSyncIllustration {
   list-style-image: url("chrome://browser/skin/preferences/in-content-new/sync-devices.svg");
   width: 312px;
@@ -613,7 +630,9 @@ separator.thin:not([orient="vertical"]) {
 .update-throbber {
   width: 16px;
   min-height: 16px;
-  margin-inline-end: 3px;
+  margin-inline-end: 8px;
+  margin-top: 7px;
+  margin-bottom: 7px;
   list-style-image: url("chrome://global/skin/icons/loading.png");
 }
 
@@ -663,6 +682,8 @@ separator.thin:not([orient="vertical"]) {
   width: 20px;
   height: 20px;
   margin-inline-end: 8px;
+  margin-top: 5px;
+  margin-bottom: 5px;
 }
 
 .face-smile {
@@ -670,6 +691,8 @@ separator.thin:not([orient="vertical"]) {
   width: 20px;
   height: 20px;
   margin-inline-end: 8px;
+  margin-top: 5px;
+  margin-bottom: 5px;
 }
 
 .search-container {

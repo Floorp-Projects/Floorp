@@ -17,10 +17,10 @@ import org.mozilla.gecko.R;
 import org.mozilla.gecko.Telemetry;
 import org.mozilla.gecko.TelemetryContract;
 import org.mozilla.gecko.activitystream.ActivityStreamTelemetry;
+import org.mozilla.gecko.activitystream.homepanel.model.WebpageModel;
 import org.mozilla.gecko.annotation.RobocopTarget;
 import org.mozilla.gecko.db.BrowserDB;
 import org.mozilla.gecko.home.HomePager;
-import org.mozilla.gecko.activitystream.homepanel.model.Item;
 import org.mozilla.gecko.reader.SavedReaderViewHelper;
 import org.mozilla.gecko.util.Clipboard;
 import org.mozilla.gecko.util.HardwareUtils;
@@ -35,11 +35,12 @@ public abstract class ActivityStreamContextMenu
 
     public enum MenuMode {
         HIGHLIGHT,
-        TOPSITE
+        TOPSITE,
+        TOPSTORY
     }
 
     private final Context context;
-    private final Item item;
+    private final WebpageModel item;
 
     private final ActivityStreamTelemetry.Extras.Builder telemetryExtraBuilder;
 
@@ -57,7 +58,7 @@ public abstract class ActivityStreamContextMenu
     /* package-private */ ActivityStreamContextMenu(final Context context,
                                                     final ActivityStreamTelemetry.Extras.Builder telemetryExtraBuilder,
                                                     final MenuMode mode,
-                                                    final Item item,
+                                                    final WebpageModel item,
                                                     HomePager.OnUrlOpenListener onUrlOpenListener,
                                                     HomePager.OnUrlOpenInBackgroundListener onUrlOpenInBackgroundListener) {
         this.context = context;
@@ -148,7 +149,7 @@ public abstract class ActivityStreamContextMenu
         (new UIAsyncTask.WithoutParams<Boolean>(ThreadUtils.getBackgroundHandler()) {
             @Override
             protected Boolean doInBackground() {
-                final Item item = ActivityStreamContextMenu.this.item;
+                final WebpageModel item = ActivityStreamContextMenu.this.item;
 
                 final Cursor cursor = BrowserDB.from(context).getHistoryForURL(context.getContentResolver(), item.getUrl());
                 // It's tempting to throw here, but crashing because of a (hopefully) inconsequential
@@ -314,7 +315,7 @@ public abstract class ActivityStreamContextMenu
     @RobocopTarget
     public static ActivityStreamContextMenu show(Context context,
                                                       View anchor, ActivityStreamTelemetry.Extras.Builder telemetryExtraBuilder,
-                                                      final MenuMode menuMode, final Item item,
+                                                      final MenuMode menuMode, final WebpageModel item,
                                                       final boolean shouldOverrideIconWithImageProvider,
                                                       HomePager.OnUrlOpenListener onUrlOpenListener,
                                                       HomePager.OnUrlOpenInBackgroundListener onUrlOpenInBackgroundListener,

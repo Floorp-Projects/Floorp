@@ -214,7 +214,7 @@ MoofParser::Metadata()
   }
   RefPtr<MediaByteBuffer> metadata = new MediaByteBuffer();
   if (!metadata->SetLength(totalLength.value(), fallible)) {
-    // OOM
+    LOG(Moof, "OOM");
     return nullptr;
   }
 
@@ -336,13 +336,19 @@ MoofParser::ParseStbl(Box& aBox)
       Sgpd sgpd(box);
       if (sgpd.IsValid() && sgpd.mGroupingType == "seig") {
         mTrackSampleEncryptionInfoEntries.Clear();
-        mTrackSampleEncryptionInfoEntries.AppendElements(sgpd.mEntries);
+        if (!mTrackSampleEncryptionInfoEntries.AppendElements(sgpd.mEntries, mozilla::fallible)) {
+          LOG(Moof, "OOM");
+          return;
+        }
       }
     } else if (box.IsType("sbgp")) {
       Sbgp sbgp(box);
       if (sbgp.IsValid() && sbgp.mGroupingType == "seig") {
         mTrackSampleToGroupEntries.Clear();
-        mTrackSampleToGroupEntries.AppendElements(sbgp.mEntries);
+        if (!mTrackSampleToGroupEntries.AppendElements(sbgp.mEntries, mozilla::fallible)) {
+          LOG(Moof, "OOM");
+          return;
+        }
       }
     }
   }
@@ -458,7 +464,7 @@ Moof::Moof(Box& aBox, Trex& aTrex, Mvhd& aMvhd, Mdhd& aMdhd, Edts& aEdts, Sinf& 
 }
 
 bool
-Moof::GetAuxInfo(AtomType aType, nsTArray<MediaByteRange>* aByteRanges)
+Moof::GetAuxInfo(AtomType aType, FallibleTArray<MediaByteRange>* aByteRanges)
 {
   aByteRanges->Clear();
 
@@ -484,22 +490,34 @@ Moof::GetAuxInfo(AtomType aType, nsTArray<MediaByteRange>* aByteRanges)
   }
 
   if (saio->mOffsets.Length() == 1) {
-    aByteRanges->SetCapacity(saiz->mSampleInfoSize.Length());
+    if (!aByteRanges->SetCapacity(saiz->mSampleInfoSize.Length(), mozilla::fallible)) {
+      LOG(Moof, "OOM");
+      return false;
+    }
     uint64_t offset = mRange.mStart + saio->mOffsets[0];
     for (size_t i = 0; i < saiz->mSampleInfoSize.Length(); i++) {
-      aByteRanges->AppendElement(
-        MediaByteRange(offset, offset + saiz->mSampleInfoSize[i]));
+      if (!aByteRanges->AppendElement(
+           MediaByteRange(offset, offset + saiz->mSampleInfoSize[i]), mozilla::fallible)) {
+        LOG(Moof, "OOM");
+        return false;
+      }
       offset += saiz->mSampleInfoSize[i];
     }
     return true;
   }
 
   if (saio->mOffsets.Length() == saiz->mSampleInfoSize.Length()) {
-    aByteRanges->SetCapacity(saiz->mSampleInfoSize.Length());
+    if (!aByteRanges->SetCapacity(saiz->mSampleInfoSize.Length(), mozilla::fallible)) {
+      LOG(Moof, "OOM");
+      return false;
+    }
     for (size_t i = 0; i < saio->mOffsets.Length(); i++) {
       uint64_t offset = mRange.mStart + saio->mOffsets[i];
-      aByteRanges->AppendElement(
-        MediaByteRange(offset, offset + saiz->mSampleInfoSize[i]));
+      if (!aByteRanges->AppendElement(
+            MediaByteRange(offset, offset + saiz->mSampleInfoSize[i]), mozilla::fallible)) {
+        LOG(Moof, "OOM");
+        return false;
+      }
     }
     return true;
   }
@@ -510,7 +528,7 @@ Moof::GetAuxInfo(AtomType aType, nsTArray<MediaByteRange>* aByteRanges)
 bool
 Moof::ProcessCenc()
 {
-  nsTArray<MediaByteRange> cencRanges;
+  FallibleTArray<MediaByteRange> cencRanges;
   if (!GetAuxInfo(AtomType("cenc"), &cencRanges) ||
       cencRanges.Length() != mIndex.Length()) {
     return false;
@@ -538,18 +556,30 @@ Moof::ParseTraf(Box& aBox, Trex& aTrex, Mvhd& aMvhd, Mdhd& aMdhd, Edts& aEdts, S
         Sgpd sgpd(box);
         if (sgpd.IsValid() && sgpd.mGroupingType == "seig") {
           mFragmentSampleEncryptionInfoEntries.Clear();
-          mFragmentSampleEncryptionInfoEntries.AppendElements(sgpd.mEntries);
+          if (!mFragmentSampleEncryptionInfoEntries.AppendElements(sgpd.mEntries, mozilla::fallible)) {
+            LOG(Moof, "OOM");
+            return;
+          }
         }
       } else if (box.IsType("sbgp")) {
         Sbgp sbgp(box);
         if (sbgp.IsValid() && sbgp.mGroupingType == "seig") {
           mFragmentSampleToGroupEntries.Clear();
-          mFragmentSampleToGroupEntries.AppendElements(sbgp.mEntries);
+          if (!mFragmentSampleToGroupEntries.AppendElements(sbgp.mEntries, mozilla::fallible)) {
+            LOG(Moof, "OOM");
+            return;
+          }
         }
       } else if (box.IsType("saiz")) {
-        mSaizs.AppendElement(Saiz(box, aSinf.mDefaultEncryptionType));
+        if (!mSaizs.AppendElement(Saiz(box, aSinf.mDefaultEncryptionType), mozilla::fallible)) {
+          LOG(Moof, "OOM");
+          return;
+        }
       } else if (box.IsType("saio")) {
-        mSaios.AppendElement(Saio(box, aSinf.mDefaultEncryptionType));
+        if (!mSaios.AppendElement(Saio(box, aSinf.mDefaultEncryptionType), mozilla::fallible)) {
+          LOG(Moof, "OOM");
+          return;
+        }
       }
     }
   }
@@ -1008,7 +1038,10 @@ Sbgp::Sbgp(Box& aBox)
     uint32_t groupDescriptionIndex = reader->ReadU32();
 
     SampleToGroupEntry entry(sampleCount, groupDescriptionIndex);
-    mEntries.AppendElement(entry);
+    if (!mEntries.AppendElement(entry, mozilla::fallible)) {
+      LOG(Sbgp, "OOM");
+      return;
+    }
   }
 
   mValid = true;
@@ -1070,7 +1103,10 @@ Sgpd::Sgpd(Box& aBox)
     if (!valid) {
       return;
     }
-    mEntries.AppendElement(entry);
+    if (!mEntries.AppendElement(entry, mozilla::fallible)) {
+      LOG(Sgpd, "OOM");
+      return;
+    }
   }
 
   mValid = true;

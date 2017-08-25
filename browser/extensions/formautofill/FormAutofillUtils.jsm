@@ -114,6 +114,13 @@ this.FormAutofillUtils = {
       .join(this.getAddressSeparator());
   },
 
+  fmtMaskedCreditCardLabel(maskedCCNum = "") {
+    return {
+      affix: "****",
+      label: maskedCCNum.replace(/^\**/, ""),
+    };
+  },
+
   defineLazyLogGetter(scope, logPrefix) {
     XPCOMUtils.defineLazyGetter(scope, "log", () => {
       let ConsoleAPI = Cu.import("resource://gre/modules/Console.jsm", {}).ConsoleAPI;
