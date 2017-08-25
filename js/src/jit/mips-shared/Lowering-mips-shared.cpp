@@ -770,5 +770,5 @@ LIRGeneratorMIPSShared::visitExtendInt32ToInt64(MExtendInt32ToInt64* ins)
 void
 LIRGeneratorMIPSShared::visitSignExtendInt64(MSignExtendInt64* ins)
 {
-    MOZ_CRASH("NYI : SignExtendInt64");
+    defineInt64(new(alloc()) LSignExtendInt64(useInt64RegisterAtStart(ins->input())), ins);
 }
