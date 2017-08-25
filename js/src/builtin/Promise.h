@@ -19,7 +19,11 @@ enum PromiseSlots {
     PromiseSlot_ReactionsOrResult,
     PromiseSlot_RejectFunction,
     PromiseSlot_AwaitGenerator = PromiseSlot_RejectFunction,
-    PromiseSlot_DebugInfo,
+    PromiseSlot_AllocationSite,
+    PromiseSlot_ResolutionSite,
+    PromiseSlot_AllocationTime,
+    PromiseSlot_ResolutionTime,
+    PromiseSlot_Id,
     PromiseSlots,
 };
 
@@ -73,10 +77,14 @@ class PromiseObject : public NativeObject
 
     static void onSettled(JSContext* cx, Handle<PromiseObject*> promise);
 
-    double allocationTime();
-    double resolutionTime();
-    JSObject* allocationSite();
-    JSObject* resolutionSite();
+    double allocationTime() { return getFixedSlot(PromiseSlot_AllocationTime).toNumber(); }
+    double resolutionTime() { return getFixedSlot(PromiseSlot_ResolutionTime).toNumber(); }
+    JSObject* allocationSite() {
+        return getFixedSlot(PromiseSlot_AllocationSite).toObjectOrNull();
+    }
+    JSObject* resolutionSite() {
+        return getFixedSlot(PromiseSlot_ResolutionSite).toObjectOrNull();
+    }
     double lifetime();
     double timeToResolution() {
         MOZ_ASSERT(state() != JS::PromiseState::Pending);
