@@ -794,11 +794,11 @@ HttpObserverManager = {
 
     if (loadInfo) {
       let originPrincipal = loadInfo.triggeringPrincipal;
-      if (originPrincipal.URI) {
+      if (!originPrincipal.isNullPrincipal && originPrincipal.URI) {
         data.originUrl = originPrincipal.URI.spec;
       }
       let docPrincipal = loadInfo.loadingPrincipal;
-      if (docPrincipal && docPrincipal.URI) {
+      if (docPrincipal && !docPrincipal.isNullPrincipal && docPrincipal.URI) {
         data.documentUrl = docPrincipal.URI.spec;
       }
 
