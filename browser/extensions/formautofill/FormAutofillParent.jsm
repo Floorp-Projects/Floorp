@@ -92,6 +92,7 @@ FormAutofillParent.prototype = {
     Services.ppmm.addMessageListener("FormAutofill:RemoveAddresses", this);
     Services.ppmm.addMessageListener("FormAutofill:RemoveCreditCards", this);
     Services.ppmm.addMessageListener("FormAutofill:OpenPreferences", this);
+    Services.ppmm.addMessageListener("FormAutofill:GetDecryptedString", this);
     Services.mm.addMessageListener("FormAutofill:OnFormSubmit", this);
 
     // Observing the pref and storage changes
@@ -223,6 +224,21 @@ FormAutofillParent.prototype = {
       case "FormAutofill:OpenPreferences": {
         const win = RecentWindow.getMostRecentBrowserWindow();
         win.openPreferences("panePrivacy", {origin: "autofillFooter"});
+        break;
+      }
+      case "FormAutofill:GetDecryptedString": {
+        let {cipherText, reauth} = data;
+        let string;
+        try {
+          string = await MasterPassword.decrypt(cipherText, reauth);
+        } catch (e) {
+          if (e.result != Cr.NS_ERROR_ABORT) {
+            throw e;
+          }
+          log.warn("User canceled master password entry");
+        }
+        target.sendAsyncMessage("FormAutofill:DecryptedString", string);
+        break;
       }
     }
   },
