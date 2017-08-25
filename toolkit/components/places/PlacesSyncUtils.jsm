@@ -1947,6 +1947,9 @@ async function fetchQueryItem(db, bookmarkItem) {
 
 function addRowToChangeRecords(row, changeRecords) {
   let syncId = BookmarkSyncUtils.guidToSyncId(row.getResultByName("guid"));
+  if (syncId in changeRecords) {
+    throw new Error(`Duplicate entry for ${syncId} in changeset`);
+  }
   let modifiedAsPRTime = row.getResultByName("modified");
   let modified = modifiedAsPRTime / MICROSECONDS_PER_SECOND;
   if (Number.isNaN(modified) || modified <= 0) {
@@ -1976,7 +1979,7 @@ function addRowToChangeRecords(row, changeRecords) {
 var pullSyncChanges = async function(db) {
   let changeRecords = {};
 
-  await db.executeCached(`
+  let rows = await db.executeCached(`
     WITH RECURSIVE
     syncedItems(id, guid, modified, syncChangeCounter, syncStatus) AS (
       SELECT b.id, b.guid, b.lastModified, b.syncChangeCounter, b.syncStatus
@@ -1995,8 +1998,10 @@ var pullSyncChanges = async function(db) {
     SELECT guid, dateRemoved AS modified, 1 AS syncChangeCounter,
            :deletedSyncStatus, 1 AS tombstone
     FROM moz_bookmarks_deleted`,
-    { deletedSyncStatus: PlacesUtils.bookmarks.SYNC_STATUS.NORMAL },
-    row => addRowToChangeRecords(row, changeRecords));
+    { deletedSyncStatus: PlacesUtils.bookmarks.SYNC_STATUS.NORMAL });
+  for (let row of rows) {
+    addRowToChangeRecords(row, changeRecords);
+  }
 
   return changeRecords;
 };
