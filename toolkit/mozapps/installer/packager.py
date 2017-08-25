@@ -226,7 +226,7 @@ def main():
                         help='Extra files not to be considered as resources')
     args = parser.parse_args()
 
-    defines = dict(buildconfig.defines)
+    defines = dict(buildconfig.defines['ALLDEFINES'])
     if args.ignore_errors:
         errors.ignore_errors()
 
