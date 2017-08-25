@@ -50,7 +50,11 @@ XPCOMUtils.defineLazyModuleGetter(this, "RecentWindow",
 this.log = null;
 FormAutofillUtils.defineLazyLogGetter(this, this.EXPORTED_SYMBOLS[0]);
 
-const {ENABLED_AUTOFILL_ADDRESSES_PREF, ENABLED_AUTOFILL_CREDITCARDS_PREF} = FormAutofillUtils;
+const {
+  ENABLED_AUTOFILL_ADDRESSES_PREF,
+  ENABLED_AUTOFILL_CREDITCARDS_PREF,
+  CREDITCARDS_COLLECTION_NAME,
+} = FormAutofillUtils;
 
 function FormAutofillParent() {
   // Lazily load the storage JSM to avoid disk I/O until absolutely needed.
@@ -244,7 +248,8 @@ FormAutofillParent.prototype = {
 
   /**
    * Get the records from profile store and return results back to content
-   * process.
+   * process. It will decrypt the credit card number and append
+   * "cc-number-decrypted" to each record if MasterPassword isn't set.
    *
    * @private
    * @param  {string} data.collectionName
@@ -263,35 +268,43 @@ FormAutofillParent.prototype = {
       return;
     }
 
+    let recordsInCollection = collection.getAll();
+    if (!info || !info.fieldName || !recordsInCollection.length) {
+      target.sendAsyncMessage("FormAutofill:Records", recordsInCollection);
+      return;
+    }
+
+    let isCCAndMPEnabled = collectionName == CREDITCARDS_COLLECTION_NAME && MasterPassword.isEnabled;
+    // We don't filter "cc-number" when MasterPassword is set.
+    if (isCCAndMPEnabled && info.fieldName == "cc-number") {
+      recordsInCollection = recordsInCollection.filter(record => !!record["cc-number"]);
+      target.sendAsyncMessage("FormAutofill:Records", recordsInCollection);
+      return;
+    }
+
     let records = [];
-    if (info && info.fieldName &&
-      !(MasterPassword.isEnabled && info.fieldName == "cc-number")) {
-      if (info.fieldName == "cc-number") {
-        for (let record of collection.getAll()) {
-          let number = await MasterPassword.decrypt(record["cc-number-encrypted"]);
-          if (number.startsWith(searchString)) {
-            records.push(record);
-          }
-        }
-      } else {
-        let lcSearchString = searchString.toLowerCase();
-        let result = collection.getAll().filter(record => {
-          // Return true if string is not provided and field exists.
-          // TODO: We'll need to check if the address is for billing or shipping.
-          //       (Bug 1358941)
-          let name = record[info.fieldName];
+    let lcSearchString = searchString.toLowerCase();
 
-          if (!searchString) {
-            return !!name;
-          }
-
-          return name && name.toLowerCase().startsWith(lcSearchString);
-        });
-
-        records = result;
+    for (let record of recordsInCollection) {
+      let fieldValue = record[info.fieldName];
+      if (!fieldValue) {
+        continue;
       }
-    } else {
-      records = collection.getAll();
+
+      // Cache the decrypted "cc-number" in each record for content to preview
+      // when MasterPassword isn't set.
+      if (!isCCAndMPEnabled && record["cc-number-encrypted"]) {
+        record["cc-number-decrypted"] = await MasterPassword.decrypt(record["cc-number-encrypted"]);
+      }
+
+      // Filter "cc-number" based on the decrypted one.
+      if (info.fieldName == "cc-number") {
+        fieldValue = record["cc-number-decrypted"];
+      }
+
+      if (!lcSearchString || String(fieldValue).toLowerCase().startsWith(lcSearchString)) {
+        records.push(record);
+      }
     }
 
     target.sendAsyncMessage("FormAutofill:Records", records);
