@@ -1683,6 +1683,15 @@ public:
   }
 
   /**
+   * If the current layers participates in a preserve-3d
+   * context (returns true for Combines3DTransformWithAncestors),
+   * returns the combined transform up to the preserve-3d (nearest
+   * ancestor that doesn't Extend3DContext()). Otherwise returns
+   * the local transform.
+   */
+  gfx::Matrix4x4 ComputeTransformToPreserve3DRoot();
+
+  /**
    * @param aTransformToSurface the composition of the transforms
    * from the parent layer (if any) to the destination pixel grid.
    *
