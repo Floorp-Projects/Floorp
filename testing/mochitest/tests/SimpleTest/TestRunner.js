@@ -638,8 +638,13 @@ TestRunner.testFinished = function(tests) {
     }
 
     SpecialPowers.executeAfterFlushingMessageQueue(function() {
-        cleanUpCrashDumpFiles();
-        SpecialPowers.flushPermissions(function () { SpecialPowers.flushPrefEnv(runNextTest); });
+        SpecialPowers.waitForCrashes(TestRunner._expectingProcessCrash)
+                     .then(() => {
+            cleanUpCrashDumpFiles();
+            SpecialPowers.flushPermissions(function () {
+                SpecialPowers.flushPrefEnv(runNextTest);
+            });
+        });
     });
 };
 
