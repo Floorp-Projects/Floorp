@@ -343,4 +343,4 @@ this.L10nRegistry = L10nRegistry;
 this.FileSource = FileSource;
 this.IndexedFileSource = IndexedFileSource;
 
-this.EXPORTED_SYMBOLS = [];
+this.EXPORTED_SYMBOLS = ['L10nRegistry', 'FileSource', 'IndexedFileSource'];
