@@ -2230,7 +2230,7 @@ add_task(async function test_pullChanges_restore_json_tracked() {
     ], "Pulling items restored from JSON backup should not mark them as syncing");
 
     let tombstones = await PlacesTestUtils.fetchSyncTombstones();
-    ok(tombstones.map(({ guid }) => guid), [syncedFolder.guid],
+    deepEqual(tombstones.map(({ guid }) => guid), [syncedFolder.guid],
       "Tombstones should exist after restoring from JSON backup");
 
     await PlacesSyncUtils.bookmarks.markChangesAsSyncing(changes);
@@ -2905,6 +2905,81 @@ add_task(async function test_ensureMobileQuery() {
 
   let changes = await PlacesSyncUtils.bookmarks.pullChanges();
   ok(!(queryGuid in changes), "Should not track mobile query");
+
+  await PlacesUtils.bookmarks.eraseEverything();
+  await PlacesSyncUtils.bookmarks.reset();
+});
+
+add_task(async function test_remove_stale_tombstones() {
+  do_print("Insert and delete synced bookmark");
+  {
+    await PlacesUtils.bookmarks.insert({
+      guid: "bookmarkAAAA",
+      parentGuid: PlacesUtils.bookmarks.toolbarGuid,
+      url: "http://example.com/a",
+      title: "A",
+      source: PlacesUtils.bookmarks.SOURCES.SYNC,
+    });
+    await PlacesUtils.bookmarks.remove("bookmarkAAAA");
+    let tombstones = await PlacesTestUtils.fetchSyncTombstones();
+    deepEqual(tombstones.map(({ guid }) => guid), ["bookmarkAAAA"],
+      "Should store tombstone for deleted synced bookmark");
+  }
+
+  do_print("Reinsert deleted bookmark");
+  {
+    // Different parent, URL, and title, but same GUID.
+    await PlacesUtils.bookmarks.insert({
+      guid: "bookmarkAAAA",
+      parentGuid: PlacesUtils.bookmarks.unfiledGuid,
+      url: "http://example.com/a-restored",
+      title: "A (Restored)",
+    });
+
+    let tombstones = await PlacesTestUtils.fetchSyncTombstones();
+    deepEqual(tombstones, [],
+      "Should remove tombstone for reinserted bookmark");
+  }
+
+  do_print("Insert tree and erase everything");
+  {
+    await PlacesUtils.bookmarks.insertTree({
+      guid: PlacesUtils.bookmarks.menuGuid,
+      source: PlacesUtils.bookmarks.SOURCES.SYNC,
+      children: [{
+        guid: "bookmarkBBBB",
+        url: "http://example.com/b",
+        title: "B",
+      }, {
+        guid: "bookmarkCCCC",
+        url: "http://example.com/c",
+        title: "C",
+      }],
+    });
+    await PlacesUtils.bookmarks.eraseEverything();
+    let tombstones = await PlacesTestUtils.fetchSyncTombstones();
+    deepEqual(tombstones.map(({ guid }) => guid).sort(), ["bookmarkBBBB",
+      "bookmarkCCCC"], "Should store tombstones after erasing everything");
+  }
+
+  do_print("Reinsert tree");
+  {
+    await PlacesUtils.bookmarks.insertTree({
+      guid: PlacesUtils.bookmarks.mobileGuid,
+      children: [{
+        guid: "bookmarkBBBB",
+        url: "http://example.com/b",
+        title: "B",
+      }, {
+        guid: "bookmarkCCCC",
+        url: "http://example.com/c",
+        title: "C",
+      }],
+    });
+    let tombstones = await PlacesTestUtils.fetchSyncTombstones();
+    deepEqual(tombstones.map(({ guid }) => guid).sort(), [],
+      "Should remove tombstones after reinserting tree");
+  }
 
   await PlacesUtils.bookmarks.eraseEverything();
   await PlacesSyncUtils.bookmarks.reset();

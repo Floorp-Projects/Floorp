@@ -181,7 +181,6 @@ add_task(async function test_uploading() {
 
     PlacesUtils.bookmarks.setItemTitle(bmk_id, "New Title");
 
-    await store.wipe();
     await engine.resetClient();
 
     ping = await sync_engine_and_validate_telem(engine, false);
