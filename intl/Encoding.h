@@ -35,6 +35,9 @@ class Encoder;
 
 extern "C" {
 
+mozilla::Encoding const*
+mozilla_encoding_for_name(uint8_t const* name, size_t name_len);
+
 nsresult
 mozilla_encoding_decode_to_nsstring(mozilla::Encoding const** encoding,
                                     uint8_t const* src,
@@ -260,7 +263,7 @@ public:
   static inline NotNull<const mozilla::Encoding*> ForName(
     Span<const char> aName)
   {
-    return WrapNotNull(encoding_for_name(
+    return WrapNotNull(mozilla_encoding_for_name(
       reinterpret_cast<const uint8_t*>(aName.Elements()), aName.Length()));
   }
 
