@@ -532,6 +532,7 @@ mochitest-browser-chrome:
     chunks:
         by-test-platform:
             linux64/debug: 16
+            linux64-stylo/debug: 16
             linux64-asan/opt: 16
             linux64-jsdcov/opt: 35
             linux32/debug: 16
@@ -547,6 +548,7 @@ mochitest-browser-chrome:
             linux64-jsdcov/opt: 7200
             linux64-ccov/opt: 7200
             linux64/debug: 5400
+            linux64-stylo/debug: 5400
             linux32/debug: 5400
             linux32-stylo/debug: 5400
             default: 3600
@@ -557,7 +559,6 @@ mochitest-browser-chrome:
             windows8-64-devedition/opt: built-projects  # No dev edition outside of supported branches
             windows10.*: []
             linux.*-stylo.*: ['autoland', 'mozilla-central', 'try']
-            linux64-stylo/debug: ['try']
             macosx64-stylo/.*: ['mozilla-central', 'try']
             windows7-32-stylo.*: ['autoland', 'mozilla-central', 'try']
             default: built-projects
@@ -594,7 +595,6 @@ mochitest-browser-chrome:
     tier:
         by-test-platform:
             .*-stylo.*: 2
-            linux64-stylo/debug: 3
             default: default
 
 mochitest-browser-screenshots:
