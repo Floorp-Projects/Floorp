@@ -78,6 +78,7 @@ extern crate dtoa_short;
 #[cfg(test)] extern crate rustc_serialize;
 #[cfg(feature = "serde")] extern crate serde;
 #[cfg(feature = "heapsize")] #[macro_use] extern crate heapsize;
+extern crate smallvec;
 
 pub use cssparser_macros::*;
 
