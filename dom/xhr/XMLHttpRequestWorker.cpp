@@ -2027,29 +2027,8 @@ XMLHttpRequestWorker::GetUpload(ErrorResult& aRv)
 }
 
 void
-XMLHttpRequestWorker::Send(JSContext* aCx, ErrorResult& aRv)
-{
-  mWorkerPrivate->AssertIsOnWorkerThread();
-
-  if (mCanceled) {
-    aRv.ThrowUncatchableException();
-    return;
-  }
-
-  if (!mProxy) {
-    aRv.Throw(NS_ERROR_DOM_INVALID_STATE_ERR);
-    return;
-  }
-
-  RefPtr<SendRunnable> sendRunnable =
-    new SendRunnable(mWorkerPrivate, mProxy, NullString());
-
-  // Nothing to clone.
-  SendInternal(sendRunnable, aRv);
-}
-
-void
-XMLHttpRequestWorker::Send(JSContext* aCx, const nsAString& aBody,
+XMLHttpRequestWorker::Send(JSContext* aCx,
+                           const Nullable<DocumentOrBlobOrArrayBufferViewOrArrayBufferOrFormDataOrURLSearchParamsOrUSVString>& aData,
                            ErrorResult& aRv)
 {
   mWorkerPrivate->AssertIsOnWorkerThread();
@@ -2064,181 +2043,116 @@ XMLHttpRequestWorker::Send(JSContext* aCx, const nsAString& aBody,
     return;
   }
 
-  RefPtr<SendRunnable> sendRunnable =
-    new SendRunnable(mWorkerPrivate, mProxy, aBody);
+  RefPtr<SendRunnable> sendRunnable;
 
-  // Nothing to clone.
-  SendInternal(sendRunnable, aRv);
-}
-
-void
-XMLHttpRequestWorker::Send(JSContext* aCx, JS::Handle<JSObject*> aBody,
-                           ErrorResult& aRv)
-{
-  MOZ_ASSERT(aBody);
-
-  mWorkerPrivate->AssertIsOnWorkerThread();
-
-  if (mCanceled) {
-    aRv.ThrowUncatchableException();
-    return;
+  if (aData.IsNull()) {
+    sendRunnable = new SendRunnable(mWorkerPrivate, mProxy, NullString());
+    // Nothing to clone.
   }
 
-  if (!mProxy) {
-    aRv.Throw(NS_ERROR_DOM_INVALID_STATE_ERR);
-    return;
+  else if (aData.Value().IsDocument()) {
+    MOZ_CRASH("Documents are not exposed to workers.");
   }
 
-  JS::Rooted<JS::Value> valToClone(aCx);
-  if (JS_IsArrayBufferObject(aBody) || JS_IsArrayBufferViewObject(aBody)) {
-    valToClone.setObject(*aBody);
-  }
-  else {
-    JS::Rooted<JS::Value> obj(aCx, JS::ObjectValue(*aBody));
-    JSString* bodyStr = JS::ToString(aCx, obj);
-    if (!bodyStr) {
-      aRv.Throw(NS_ERROR_OUT_OF_MEMORY);
+  else if (aData.Value().IsBlob()) {
+    RefPtr<Blob> blob = &aData.Value().GetAsBlob();
+    MOZ_ASSERT(blob);
+
+    RefPtr<BlobImpl> blobImpl = blob->Impl();
+    MOZ_ASSERT(blobImpl);
+
+    aRv = blobImpl->SetMutable(false);
+    if (NS_WARN_IF(aRv.Failed())) {
       return;
     }
-    valToClone.setString(bodyStr);
+
+    JS::Rooted<JS::Value> value(aCx);
+    if (!GetOrCreateDOMReflector(aCx, blob, &value)) {
+      aRv.Throw(NS_ERROR_FAILURE);
+      return;
+    }
+
+    sendRunnable = new SendRunnable(mWorkerPrivate, mProxy, EmptyString());
+
+    sendRunnable->Write(aCx, value, aRv);
+    if (NS_WARN_IF(aRv.Failed())) {
+      return;
+    }
   }
 
-  RefPtr<SendRunnable> sendRunnable =
-    new SendRunnable(mWorkerPrivate, mProxy, EmptyString());
+  else if (aData.Value().IsArrayBuffer()) {
+    sendRunnable = new SendRunnable(mWorkerPrivate, mProxy, EmptyString());
 
-  sendRunnable->Write(aCx, valToClone, aRv);
-  if (NS_WARN_IF(aRv.Failed())) {
-    return;
+    JS::Rooted<JS::Value> value(aCx);
+    value.setObject(*aData.Value().GetAsArrayBuffer().Obj());
+
+    sendRunnable->Write(aCx, value, aRv);
+    if (NS_WARN_IF(aRv.Failed())) {
+      return;
+    }
   }
 
+  else if (aData.Value().IsArrayBufferView()) {
+    const ArrayBufferView& body = aData.Value().GetAsArrayBufferView();
+
+    if (JS_IsTypedArrayObject(body.Obj()) &&
+        JS_GetTypedArraySharedness(body.Obj())) {
+      // Throw if the object is mapping shared memory (must opt in).
+      aRv.ThrowTypeError<MSG_TYPEDARRAY_IS_SHARED>(NS_LITERAL_STRING("Argument of XMLHttpRequest.send"));
+      return;
+    }
+
+    sendRunnable = new SendRunnable(mWorkerPrivate, mProxy, EmptyString());
+
+    JS::Rooted<JS::Value> value(aCx);
+    value.setObject(*body.Obj());
+
+    sendRunnable->Write(aCx, value, aRv);
+    if (NS_WARN_IF(aRv.Failed())) {
+      return;
+    }
+  }
+
+  else if (aData.Value().IsFormData()) {
+    JS::Rooted<JS::Value> value(aCx);
+    if (!GetOrCreateDOMReflector(aCx, &aData.Value().GetAsFormData(),
+                                 &value)) {
+      aRv.Throw(NS_ERROR_FAILURE);
+      return;
+    }
+
+    sendRunnable = new SendRunnable(mWorkerPrivate, mProxy, EmptyString());
+
+    sendRunnable->Write(aCx, value, aRv);
+    if (NS_WARN_IF(aRv.Failed())) {
+      return;
+    }
+  }
+
+  else if (aData.Value().IsURLSearchParams()) {
+    JS::Rooted<JS::Value> value(aCx);
+    if (!GetOrCreateDOMReflector(aCx, &aData.Value().GetAsURLSearchParams(),
+                                 &value)) {
+      aRv.Throw(NS_ERROR_FAILURE);
+      return;
+    }
+
+    sendRunnable = new SendRunnable(mWorkerPrivate, mProxy, EmptyString());
+
+    sendRunnable->Write(aCx, value, aRv);
+    if (NS_WARN_IF(aRv.Failed())) {
+      return;
+    }
+  }
+
+  else if (aData.Value().IsUSVString()) {
+    sendRunnable = new SendRunnable(mWorkerPrivate, mProxy,
+                                    aData.Value().GetAsUSVString());
+    // Nothing to clone.
+  }
+
+  MOZ_ASSERT(sendRunnable);
   SendInternal(sendRunnable, aRv);
-}
-
-void
-XMLHttpRequestWorker::Send(JSContext* aCx, Blob& aBody, ErrorResult& aRv)
-{
-  mWorkerPrivate->AssertIsOnWorkerThread();
-
-  if (mCanceled) {
-    aRv.ThrowUncatchableException();
-    return;
-  }
-
-  if (!mProxy) {
-    aRv.Throw(NS_ERROR_DOM_INVALID_STATE_ERR);
-    return;
-  }
-
-  JS::Rooted<JS::Value> value(aCx);
-  if (!GetOrCreateDOMReflector(aCx, &aBody, &value)) {
-    aRv.Throw(NS_ERROR_FAILURE);
-    return;
-  }
-
-  RefPtr<BlobImpl> blobImpl = aBody.Impl();
-  MOZ_ASSERT(blobImpl);
-
-  aRv = blobImpl->SetMutable(false);
-  if (NS_WARN_IF(aRv.Failed())) {
-    return;
-  }
-
-  RefPtr<SendRunnable> sendRunnable =
-    new SendRunnable(mWorkerPrivate, mProxy, EmptyString());
-
-  sendRunnable->Write(aCx, value, aRv);
-  if (NS_WARN_IF(aRv.Failed())) {
-    return;
-  }
-
-  SendInternal(sendRunnable, aRv);
-}
-
-void
-XMLHttpRequestWorker::Send(JSContext* aCx, FormData& aBody, ErrorResult& aRv)
-{
-  mWorkerPrivate->AssertIsOnWorkerThread();
-
-  if (mCanceled) {
-    aRv.ThrowUncatchableException();
-    return;
-  }
-
-  if (!mProxy) {
-    aRv.Throw(NS_ERROR_DOM_INVALID_STATE_ERR);
-    return;
-  }
-
-  JS::Rooted<JS::Value> value(aCx);
-  if (!GetOrCreateDOMReflector(aCx, &aBody, &value)) {
-    aRv.Throw(NS_ERROR_FAILURE);
-    return;
-  }
-
-  RefPtr<SendRunnable> sendRunnable =
-    new SendRunnable(mWorkerPrivate, mProxy, EmptyString());
-
-  sendRunnable->Write(aCx, value, aRv);
-  if (NS_WARN_IF(aRv.Failed())) {
-    return;
-  }
-
-  SendInternal(sendRunnable, aRv);
-}
-
-void
-XMLHttpRequestWorker::Send(JSContext* aCx, URLSearchParams& aBody,
-                           ErrorResult& aRv)
-{
-  mWorkerPrivate->AssertIsOnWorkerThread();
-
-  if (mCanceled) {
-    aRv.ThrowUncatchableException();
-    return;
-  }
-
-  if (!mProxy) {
-    aRv.Throw(NS_ERROR_DOM_INVALID_STATE_ERR);
-    return;
-  }
-
-  JS::Rooted<JS::Value> value(aCx);
-  if (!GetOrCreateDOMReflector(aCx, &aBody, &value)) {
-    aRv.Throw(NS_ERROR_FAILURE);
-    return;
-  }
-
-  RefPtr<SendRunnable> sendRunnable =
-    new SendRunnable(mWorkerPrivate, mProxy, EmptyString());
-
-  sendRunnable->Write(aCx, value, aRv);
-  if (NS_WARN_IF(aRv.Failed())) {
-    return;
-  }
-
-  SendInternal(sendRunnable, aRv);
-}
-
-void
-XMLHttpRequestWorker::Send(JSContext* aCx, const ArrayBuffer& aBody,
-                           ErrorResult& aRv)
-{
-  JS::Rooted<JSObject*> obj(mWorkerPrivate->GetJSContext(), aBody.Obj());
-  return Send(aCx, obj, aRv);
-}
-
-void
-XMLHttpRequestWorker::Send(JSContext* aCx, const ArrayBufferView& aBody,
-                           ErrorResult& aRv)
-{
-  if (JS_IsTypedArrayObject(aBody.Obj()) &&
-      JS_GetTypedArraySharedness(aBody.Obj())) {
-    // Throw if the object is mapping shared memory (must opt in).
-    aRv.ThrowTypeError<MSG_TYPEDARRAY_IS_SHARED>(NS_LITERAL_STRING("Argument of XMLHttpRequest.send"));
-    return;
-  }
-  JS::Rooted<JSObject*> obj(aCx, aBody.Obj());
-  return Send(aCx, obj, aRv);
 }
 
 void
