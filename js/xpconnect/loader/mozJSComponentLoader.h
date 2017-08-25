@@ -39,9 +39,9 @@ namespace mozilla {
     { 0xbb, 0xef, 0xf0, 0xcc, 0xb5, 0xfa, 0x64, 0xb6 }}
 #define MOZJSCOMPONENTLOADER_CONTRACTID "@mozilla.org/moz/jsloader;1"
 
-class mozJSComponentLoader : public mozilla::ModuleLoader,
-                             public xpcIJSModuleLoader,
-                             public nsIObserver
+class mozJSComponentLoader final : public mozilla::ModuleLoader,
+                                   public xpcIJSModuleLoader,
+                                   public nsIObserver
 {
  public:
     NS_DECL_ISUPPORTS
@@ -71,18 +71,6 @@ class mozJSComponentLoader : public mozilla::ModuleLoader,
  protected:
     virtual ~mozJSComponentLoader();
 
-    static mozJSComponentLoader* sSelf;
-
-    nsresult ReallyInit();
-    void UnloadModules();
-
-    void CreateLoaderGlobal(JSContext* aCx,
-                            const nsACString& aLocation,
-                            JSAddonId* aAddonID,
-                            JS::MutableHandleObject aGlobal);
-
-    bool ReuseGlobal(bool aIsAddon, nsIURI* aComponent);
-
     friend class mozilla::ScriptPreloader;
 
     JSObject* CompilationScope(JSContext* aCx)
@@ -96,6 +84,19 @@ class mozJSComponentLoader : public mozilla::ModuleLoader,
         }
         return xpc::CompilationScope();
     }
+
+ private:
+    static mozJSComponentLoader* sSelf;
+
+    nsresult ReallyInit();
+    void UnloadModules();
+
+    void CreateLoaderGlobal(JSContext* aCx,
+                            const nsACString& aLocation,
+                            JSAddonId* aAddonID,
+                            JS::MutableHandleObject aGlobal);
+
+    bool ReuseGlobal(bool aIsAddon, nsIURI* aComponent);
 
     JSObject* GetSharedGlobal(JSContext* aCx);
 
@@ -175,8 +176,6 @@ class mozJSComponentLoader : public mozilla::ModuleLoader,
         char* location;
         nsCString resolvedURL;
     };
-
-    friend class ModuleEntry;
 
     static size_t DataEntrySizeOfExcludingThis(const nsACString& aKey, ModuleEntry* const& aData,
                                                mozilla::MallocSizeOf aMallocSizeOf, void* arg);
