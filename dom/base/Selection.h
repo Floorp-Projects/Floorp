@@ -215,6 +215,14 @@ public:
   void RemoveRange(nsRange& aRange, mozilla::ErrorResult& aRv);
   void RemoveAllRanges(mozilla::ErrorResult& aRv);
 
+  /**
+   * RemoveAllRangesTemporarily() is useful if the caller will add one or more
+   * ranges later.  This tries to cache a removing range if it's possible.
+   * If a range is not referred by anything else this selection, the range
+   * can be reused later.  Otherwise, this works as same as RemoveAllRanges().
+   */
+  nsresult RemoveAllRangesTemporarily();
+
   void Stringify(nsAString& aResult);
 
   bool ContainsNode(nsINode& aNode, bool aPartlyContained, mozilla::ErrorResult& aRv);
@@ -473,6 +481,12 @@ private:
   AutoTArray<RangeData, 1> mRanges;
 
   RefPtr<nsRange> mAnchorFocusRange;
+  // mCachedRange is set by RemoveAllRangesTemporarily() and used by
+  // Collapse().  If there is a range which will be released by Clear(),
+  // RemoveAllRangesTemporarily() stores it with this.  If Collapse() is
+  // called without existing ranges, it'll reuse this range for saving the
+  // creating cost.
+  RefPtr<nsRange> mCachedRange;
   RefPtr<nsFrameSelection> mFrameSelection;
   RefPtr<nsAutoScrollTimer> mAutoScrollTimer;
   FallibleTArray<nsCOMPtr<nsISelectionListener>> mSelectionListeners;

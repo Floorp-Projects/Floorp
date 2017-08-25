@@ -786,6 +786,7 @@ NS_IMPL_CYCLE_COLLECTION_UNLINK_BEGIN(Selection)
   // we don't want to notify the listeners during JS GC (they could be
   // in JS!).
   NS_IMPL_CYCLE_COLLECTION_UNLINK(mSelectionListeners)
+  NS_IMPL_CYCLE_COLLECTION_UNLINK(mCachedRange)
   tmp->RemoveAllRanges();
   NS_IMPL_CYCLE_COLLECTION_UNLINK(mFrameSelection)
   NS_IMPL_CYCLE_COLLECTION_UNLINK_PRESERVED_WRAPPER
@@ -798,6 +799,7 @@ NS_IMPL_CYCLE_COLLECTION_TRAVERSE_BEGIN(Selection)
     }
   }
   NS_IMPL_CYCLE_COLLECTION_TRAVERSE(mAnchorFocusRange)
+  NS_IMPL_CYCLE_COLLECTION_TRAVERSE(mCachedRange)
   NS_IMPL_CYCLE_COLLECTION_TRAVERSE(mFrameSelection)
   NS_IMPL_CYCLE_COLLECTION_TRAVERSE(mSelectionListeners)
 NS_IMPL_CYCLE_COLLECTION_TRAVERSE_END
@@ -2290,6 +2292,32 @@ Selection::RemoveAllRanges(ErrorResult& aRv)
   }
 }
 
+nsresult
+Selection::RemoveAllRangesTemporarily()
+{
+  if (!mCachedRange) {
+    // Look for a range which isn't referred by other than this instance.
+    // If there is, it'll be released by calling Clear().  So, we can reuse it
+    // when we need to create a range.
+    for (auto& rangeData : mRanges) {
+      auto& range = rangeData.mRange;
+      if (range->GetRefCount() == 1 ||
+          (range->GetRefCount() == 2 && range == mAnchorFocusRange)) {
+        mCachedRange = range;
+        break;
+      }
+    }
+  }
+
+  // Then, remove all ranges.
+  ErrorResult result;
+  RemoveAllRanges(result);
+  if (result.Failed()) {
+    mCachedRange = nullptr;
+  }
+  return result.StealNSResult();
+}
+
 /** AddRange adds the specified range to the selection
  *  @param aRange is the range to be added
  */
@@ -2331,6 +2359,10 @@ Selection::AddRangeInternal(nsRange& aRange, nsIDocument* aDocument,
     // associated with context object. Otherwise, this method must do nothing."
     return;
   }
+
+  // If a range is being added, we don't need cached range because Collapse()
+  // won't use it.
+  mCachedRange = nullptr;
 
   // AddTableCellRange might flush frame.
   RefPtr<Selection> kungFuDeathGrip(this);
@@ -2588,7 +2620,9 @@ Selection::Collapse(nsINode& aContainer, uint32_t aOffset, ErrorResult& aRv)
   // If the old range isn't referred by anybody other than this method,
   // we should reuse it for reducing the recreation cost.
   if (oldRange && oldRange->GetRefCount() == 1) {
-    range = oldRange;
+    range = Move(oldRange);
+  } else if (mCachedRange) {
+    range = Move(mCachedRange);
   } else {
     range = new nsRange(container);
   }
@@ -4044,6 +4078,11 @@ Selection::SetBaseAndExtent(nsINode& aAnchorNode, uint32_t aAnchorOffset,
     // Return with no error
     return;
   }
+
+  // Since a range will be created, we don't need the cached range because
+  // Collapse() won't use it.
+  // TODO: We should use the cache.
+  mCachedRange = nullptr;
 
   SelectionBatcher batch(this);
 
