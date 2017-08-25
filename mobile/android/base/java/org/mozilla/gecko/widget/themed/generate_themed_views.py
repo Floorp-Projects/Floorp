@@ -63,6 +63,9 @@ views = [
     dict(VIEW_NAME_SUFFIX='ListView',
          BASE_TYPE='android.widget.ListView',
          STYLE_CONSTRUCTOR=1),
+    dict(VIEW_NAME_SUFFIX='ProgressBar',
+         BASE_TYPE='android.widget.ProgressBar',
+         STYLE_CONSTRUCTOR=1),
 ]
 
 for view in views:

@@ -127,3 +127,32 @@ lazy_static! {
 fn item_name_shadowing() {
     assert_eq!(*ITEM_NAME_TEST, X);
 }
+
+use std::sync::atomic::AtomicBool;
+use std::sync::atomic::ATOMIC_BOOL_INIT;
+use std::sync::atomic::Ordering::SeqCst;
+
+static PRE_INIT_FLAG: AtomicBool = ATOMIC_BOOL_INIT;
+
+lazy_static! {
+    static ref PRE_INIT: () = {
+        PRE_INIT_FLAG.store(true, SeqCst);
+        ()
+    };
+}
+
+#[test]
+fn pre_init() {
+    assert_eq!(PRE_INIT_FLAG.load(SeqCst), false);
+    lazy_static::initialize(&PRE_INIT);
+    assert_eq!(PRE_INIT_FLAG.load(SeqCst), true);
+}
+
+lazy_static! {
+    static ref LIFETIME_NAME: for<'a> fn(&'a u8) = { fn f(_: &u8) {} f };
+}
+
+#[test]
+fn lifetime_name() {
+    let _ = LIFETIME_NAME;
+}

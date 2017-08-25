@@ -725,6 +725,15 @@
 
                 if (this.mTab.hasAttribute("busy")) {
                   this.mTab.removeAttribute("busy");
+
+                  // Only animate the "burst" indicating the page has loaded if
+                  // the top-level page is the one that finished loading.
+                  if (aWebProgress.isTopLevel && !aWebProgress.isLoadingDocument &&
+                      !this.mTabBrowser.tabAnimationsInProgress &&
+                      Services.prefs.getBoolPref("toolkit.cosmeticAnimations.enabled")) {
+                    this.mTab.setAttribute("bursting", "true");
+                  }
+
                   this.mTabBrowser._tabAttrModified(this.mTab, ["busy"]);
                   if (!this.mTab.selected)
                     this.mTab.setAttribute("unread", "true");
@@ -2907,6 +2916,7 @@
 
             aTab.style.maxWidth = ""; // ensure that fade-out transition happens
             aTab.removeAttribute("fadein");
+            aTab.removeAttribute("bursting");
 
             setTimeout(function(tab, tabbrowser) {
               if (tab.parentNode &&
@@ -7355,6 +7365,9 @@
           <xul:spacer flex="1"/>
           <xul:hbox class="tab-bottom-line"/>
         </xul:vbox>
+        <xul:hbox xbl:inherits="pinned,bursting"
+                  anonid="tab-loading-burst"
+                  class="tab-loading-burst"/>
         <xul:hbox xbl:inherits="pinned,selected=visuallyselected,titlechanged,attention"
                   class="tab-content" align="center">
           <xul:hbox xbl:inherits="fadein,pinned,busy,progress,selected=visuallyselected"
@@ -7745,6 +7758,14 @@
 
         if (this._overPlayingIcon) {
           this.toggleMuteAudio();
+        }
+      ]]>
+      </handler>
+      <handler event="animationend">
+      <![CDATA[
+        let anonid = event.originalTarget.getAttribute("anonid");
+        if (anonid == "tab-loading-burst") {
+          this.removeAttribute("bursting");
         }
       ]]>
       </handler>

@@ -5,13 +5,14 @@
 <!DOCTYPE html>
 <html xmlns="http://www.w3.org/1999/xhtml" width="620">
 <head>
-  <title data-localization="addNewDialogTitle"/>
-  <link rel="stylesheet" href="chrome://formautofill-shared/skin/editAddress.css" />
-  <link rel="stylesheet" href="chrome://formautofill/skin/editAddress.css" />
-  <script src="chrome://formautofill/content/editAddress.js"></script>
+  <title data-localization="addNewAddressTitle"/>
+  <link rel="stylesheet" href="chrome://formautofill-shared/skin/editDialog.css"/>
+  <link rel="stylesheet" href="chrome://formautofill-shared/skin/editAddress.css"/>
+  <link rel="stylesheet" href="chrome://formautofill/skin/editDialog.css"/>
+  <script src="chrome://formautofill/content/editDialog.js"></script>
 </head>
 <body>
-  <form autocomplete="off">
+  <form id="form" autocomplete="off">
     <label id="given-name-container">
       <span data-localization="givenName"/>
       <input id="given-name" type="text"/>
@@ -67,8 +68,17 @@
   </div>
   <script type="application/javascript"><![CDATA[
     "use strict";
-    // Localize strings before DOMContentLoaded to prevent flash
-    window.dialog.localizeDocument();
+    /* global EditAddress */
+    new EditAddress({
+      title: document.querySelector("title"),
+      form: document.getElementById("form"),
+      addressLevel1Label: document.querySelector("#address-level1-container > span"),
+      postalCodeLabel: document.querySelector("#postal-code-container > span"),
+      country: document.getElementById("country"),
+      controlsContainer: document.getElementById("controls-container"),
+      cancel: document.getElementById("cancel"),
+      save: document.getElementById("save"),
+    }, window.arguments && window.arguments[0]);
   ]]></script>
 </body>
 </html>

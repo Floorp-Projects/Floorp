@@ -1513,15 +1513,8 @@ class CreditCards extends AutofillRecords {
       let ccNumber = creditCard["cc-number"].replace(/\s/g, "");
       delete creditCard["cc-number"];
 
-      if (!/^\d+$/.test(ccNumber)) {
-        throw new Error("Credit card number contains invalid characters.");
-      }
-
-      // Based on the information on wiki[1], the shortest valid length should be
-      // 12 digits(Maestro).
-      // [1] https://en.wikipedia.org/wiki/Payment_card_number
-      if (ccNumber.length < 12) {
-        throw new Error("Invalid credit card number because length is under 12 digits.");
+      if (!FormAutofillUtils.isCCNumber(ccNumber)) {
+        throw new Error("Credit card number contains invalid characters or is under 12 digits.");
       }
 
       creditCard["cc-number-encrypted"] = await MasterPassword.encrypt(ccNumber);

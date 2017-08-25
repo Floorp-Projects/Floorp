@@ -1287,6 +1287,7 @@ var CustomizableUIInternal = {
   createSpecialWidget(aId, aDocument) {
     let nodeName = "toolbar" + aId.match(/spring|spacer|separator/)[0];
     let node = aDocument.createElementNS(kNSXUL, nodeName);
+    node.className = "chromeclass-toolbar-additional";
     node.id = this.ensureSpecialWidgetId(aId);
     return node;
   },

@@ -76,9 +76,6 @@
     <color name="photon_home_list_divider">@color/photon_two_line_page_row_bg</color>
     <color name="photon_home_list_divider_private">@color/photon_two_line_page_row_bg_private</color>
 
-    <color name="progress_start">#00DCFC</color>
-    <color name="progress_end">#00A2FE</color>
-
     <color name="photon_url_bar_blocked">#D70022</color>
     <color name="photon_url_bar_blocked_private">#D70022</color>
     <color name="photon_url_bar_certificate_owner">#05A700</color>

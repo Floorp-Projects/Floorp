@@ -12,6 +12,7 @@ from distutils.spawn import find_executable
 
 from mozboot.util import get_state_dir
 
+from .. import preset as pset
 from ..cli import BaseTryParser
 from ..tasks import generate_tasks
 from ..vcs import VCSHelper
@@ -197,7 +198,10 @@ def format_header():
 
 
 def run_fuzzy_try(update=False, query=None, templates=None, full=False, parameters=None,
-                  push=True, **kwargs):
+                  save=False, preset=None, list_presets=False, push=True, **kwargs):
+    if list_presets:
+        return pset.list_presets(section='fuzzy')
+
     fzf = fzf_bootstrap(update)
 
     if not fzf:
@@ -218,17 +222,30 @@ def run_fuzzy_try(update=False, query=None, templates=None, full=False, paramete
         # but is guaranteed to be available on all platforms.
         '--preview', 'python -c "print(\\"\\n\\".join(sorted([s.strip(\\"\'\\") for s in \\"{+}\\".split()])))"',  # noqa
         '--preview-window=right:20%',
+        '--print-query',
     ]
 
     if query:
         cmd.extend(['-f', query])
+    elif preset:
+        value = pset.load(preset, section='fuzzy')[0]
+        cmd.extend(['-f', value])
 
     proc = subprocess.Popen(cmd, stdout=subprocess.PIPE, stdin=subprocess.PIPE)
-    selected = proc.communicate('\n'.join(all_tasks))[0].splitlines()
+    out = proc.communicate('\n'.join(all_tasks))[0].splitlines()
+
+    selected = []
+    if out:
+        query = out[0]
+        selected = out[1:]
 
     if not selected:
         print("no tasks selected")
         return
 
-    msg = "Pushed via 'mach try fuzzy', see diff for scheduled tasks"
+    if save:
+        pset.save('fuzzy', save, query)
+
+    query = " with query: {}".format(query) if query else ""
+    msg = "Pushed via 'mach try fuzzy'{}".format(query)
     return vcs.push_to_try(msg, selected, templates, push=push)

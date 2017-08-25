@@ -13,7 +13,7 @@ use euclid::{Size2D};
 use gpu_cache::{GpuCacheAddress, GpuBlockData, GpuCache, GpuCacheHandle, GpuDataRequest, ToGpuBlocks};
 use mask_cache::{ClipMode, ClipRegion, ClipSource, MaskCacheInfo};
 use renderer::MAX_VERTEX_TEXTURE_WIDTH;
-use render_task::{RenderTask, RenderTaskLocation};
+use render_task::{RenderTask, RenderTaskId, RenderTaskTree};
 use resource_cache::{ImageProperties, ResourceCache};
 use std::{mem, usize};
 use util::{pack_as_float, TransformedRect, recycle_vec};
@@ -119,12 +119,6 @@ pub enum PrimitiveKind {
     Line,
 }
 
-#[derive(Debug, Copy, Clone, Eq, PartialEq, Hash)]
-pub enum PrimitiveCacheKey {
-    BoxShadow(BoxShadowPrimitiveCacheKey),
-    TextShadow(PrimitiveIndex),
-}
-
 impl GpuCacheHandle {
     pub fn as_int(&self, gpu_cache: &GpuCache) -> i32 {
         let address = gpu_cache.get_address(self);
@@ -153,8 +147,8 @@ pub struct PrimitiveMetadata {
     // text-shadow, this creates a render task chain
     // that implements a 2-pass separable blur on a
     // text run.
-    pub render_task: Option<RenderTask>,
-    pub clip_task: Option<RenderTask>,
+    pub render_task_id: Option<RenderTaskId>,
+    pub clip_task_id: Option<RenderTaskId>,
 
     // TODO(gw): In the future, we should just pull these
     //           directly from the DL item, instead of
@@ -165,7 +159,7 @@ pub struct PrimitiveMetadata {
 
 impl PrimitiveMetadata {
     pub fn needs_clipping(&self) -> bool {
-        self.clip_task.is_some()
+        self.clip_task_id.is_some()
     }
 }
 
@@ -842,8 +836,8 @@ impl PrimitiveStore {
                     prim_kind: PrimitiveKind::Rectangle,
                     cpu_prim_index: SpecificPrimitiveIndex(self.cpu_rectangles.len()),
                     gpu_location: GpuCacheHandle::new(),
-                    render_task: None,
-                    clip_task: None,
+                    render_task_id: None,
+                    clip_task_id: None,
                     local_rect: *local_rect,
                     local_clip_rect: *local_clip_rect,
                 };
@@ -860,8 +854,8 @@ impl PrimitiveStore {
                     prim_kind: PrimitiveKind::Line,
                     cpu_prim_index: SpecificPrimitiveIndex(self.cpu_lines.len()),
                     gpu_location: GpuCacheHandle::new(),
-                    render_task: None,
-                    clip_task: None,
+                    render_task_id: None,
+                    clip_task_id: None,
                     local_rect: *local_rect,
                     local_clip_rect: *local_clip_rect,
                 };
@@ -877,8 +871,8 @@ impl PrimitiveStore {
                     prim_kind: PrimitiveKind::TextRun,
                     cpu_prim_index: SpecificPrimitiveIndex(self.cpu_text_runs.len()),
                     gpu_location: GpuCacheHandle::new(),
-                    render_task: None,
-                    clip_task: None,
+                    render_task_id: None,
+                    clip_task_id: None,
                     local_rect: *local_rect,
                     local_clip_rect: *local_clip_rect,
                 };
@@ -894,8 +888,8 @@ impl PrimitiveStore {
                     prim_kind: PrimitiveKind::TextShadow,
                     cpu_prim_index: SpecificPrimitiveIndex(self.cpu_text_shadows.len()),
                     gpu_location: GpuCacheHandle::new(),
-                    render_task: None,
-                    clip_task: None,
+                    render_task_id: None,
+                    clip_task_id: None,
                     local_rect: *local_rect,
                     local_clip_rect: *local_clip_rect,
                 };
@@ -911,8 +905,8 @@ impl PrimitiveStore {
                     prim_kind: PrimitiveKind::Image,
                     cpu_prim_index: SpecificPrimitiveIndex(self.cpu_images.len()),
                     gpu_location: GpuCacheHandle::new(),
-                    render_task: None,
-                    clip_task: None,
+                    render_task_id: None,
+                    clip_task_id: None,
                     local_rect: *local_rect,
                     local_clip_rect: *local_clip_rect,
                 };
@@ -928,8 +922,8 @@ impl PrimitiveStore {
                     prim_kind: PrimitiveKind::YuvImage,
                     cpu_prim_index: SpecificPrimitiveIndex(self.cpu_yuv_images.len()),
                     gpu_location: GpuCacheHandle::new(),
-                    render_task: None,
-                    clip_task: None,
+                    render_task_id: None,
+                    clip_task_id: None,
                     local_rect: *local_rect,
                     local_clip_rect: *local_clip_rect,
                 };
@@ -945,8 +939,8 @@ impl PrimitiveStore {
                     prim_kind: PrimitiveKind::Border,
                     cpu_prim_index: SpecificPrimitiveIndex(self.cpu_borders.len()),
                     gpu_location: GpuCacheHandle::new(),
-                    render_task: None,
-                    clip_task: None,
+                    render_task_id: None,
+                    clip_task_id: None,
                     local_rect: *local_rect,
                     local_clip_rect: *local_clip_rect,
                 };
@@ -962,8 +956,8 @@ impl PrimitiveStore {
                     prim_kind: PrimitiveKind::AlignedGradient,
                     cpu_prim_index: SpecificPrimitiveIndex(self.cpu_gradients.len()),
                     gpu_location: GpuCacheHandle::new(),
-                    render_task: None,
-                    clip_task: None,
+                    render_task_id: None,
+                    clip_task_id: None,
                     local_rect: *local_rect,
                     local_clip_rect: *local_clip_rect,
                 };
@@ -980,8 +974,8 @@ impl PrimitiveStore {
                     prim_kind: PrimitiveKind::AngleGradient,
                     cpu_prim_index: SpecificPrimitiveIndex(self.cpu_gradients.len()),
                     gpu_location: GpuCacheHandle::new(),
-                    render_task: None,
-                    clip_task: None,
+                    render_task_id: None,
+                    clip_task_id: None,
                     local_rect: *local_rect,
                     local_clip_rect: *local_clip_rect,
                 };
@@ -998,8 +992,8 @@ impl PrimitiveStore {
                     prim_kind: PrimitiveKind::RadialGradient,
                     cpu_prim_index: SpecificPrimitiveIndex(self.cpu_radial_gradients.len()),
                     gpu_location: GpuCacheHandle::new(),
-                    render_task: None,
-                    clip_task: None,
+                    render_task_id: None,
+                    clip_task_id: None,
                     local_rect: *local_rect,
                     local_clip_rect: *local_clip_rect,
                 };
@@ -1008,31 +1002,6 @@ impl PrimitiveStore {
                 metadata
             }
             PrimitiveContainer::BoxShadow(box_shadow) => {
-                let cache_key = PrimitiveCacheKey::BoxShadow(BoxShadowPrimitiveCacheKey {
-                    blur_radius: Au::from_f32_px(box_shadow.blur_radius),
-                    border_radius: Au::from_f32_px(box_shadow.border_radius),
-                    inverted: box_shadow.inverted != 0.0,
-                    shadow_rect_size: Size2D::new(Au::from_f32_px(box_shadow.bs_rect.size.width),
-                                                  Au::from_f32_px(box_shadow.bs_rect.size.height)),
-                });
-
-                // The actual cache size is calculated during prepare_prim_for_render().
-                // This is necessary since the size may change depending on the device
-                // pixel ratio (for example, during zoom or moving the window to a
-                // monitor with a different device pixel ratio).
-                let cache_size = DeviceIntSize::zero();
-
-                // Create a render task for this box shadow primitive. This renders a small
-                // portion of the box shadow to a render target. That portion is then
-                // stretched over the actual primitive rect by the box shadow primitive
-                // shader, to reduce the number of pixels that the expensive box
-                // shadow shader needs to run on.
-                // TODO(gw): In the future, we can probably merge the box shadow
-                // primitive (stretch) shader with the generic cached primitive shader.
-                let render_task = RenderTask::new_prim_cache(cache_key,
-                                                             cache_size,
-                                                             PrimitiveIndex(prim_index));
-
                 let metadata = PrimitiveMetadata {
                     opacity: PrimitiveOpacity::translucent(),
                     clips,
@@ -1040,8 +1009,8 @@ impl PrimitiveStore {
                     prim_kind: PrimitiveKind::BoxShadow,
                     cpu_prim_index: SpecificPrimitiveIndex(self.cpu_box_shadows.len()),
                     gpu_location: GpuCacheHandle::new(),
-                    render_task: Some(render_task),
-                    clip_task: None,
+                    render_task_id: None,
+                    clip_task_id: None,
                     local_rect: *local_rect,
                     local_clip_rect: *local_clip_rect,
                 };
@@ -1094,7 +1063,8 @@ impl PrimitiveStore {
                                    layer_transform: &LayerToWorldTransform,
                                    device_pixel_ratio: f32,
                                    display_list: &BuiltDisplayList,
-                                   text_run_mode: TextRunMode)
+                                   text_run_mode: TextRunMode,
+                                   render_tasks: &mut RenderTaskTree)
                                    -> &mut PrimitiveMetadata {
         let (prim_kind, cpu_prim_index) = {
             let metadata = &self.cpu_metadata[prim_index.0];
@@ -1114,7 +1084,8 @@ impl PrimitiveStore {
                                              layer_transform,
                                              device_pixel_ratio,
                                              display_list,
-                                             TextRunMode::Shadow);
+                                             TextRunMode::Shadow,
+                                             render_tasks);
             }
         }
 
@@ -1148,12 +1119,30 @@ impl PrimitiveStore {
                 // in device space. The shader adds a 1-pixel border around
                 // the patch, in order to prevent bilinear filter artifacts as
                 // the patch is clamped / mirrored across the box shadow rect.
-                let box_shadow_cpu = &self.cpu_box_shadows[cpu_prim_index.0];
-                let edge_size = box_shadow_cpu.edge_size.ceil() * device_pixel_ratio;
+                let box_shadow = &self.cpu_box_shadows[cpu_prim_index.0];
+                let edge_size = box_shadow.edge_size.ceil() * device_pixel_ratio;
                 let edge_size = edge_size as i32 + 2;   // Account for bilinear filtering
                 let cache_size = DeviceIntSize::new(edge_size, edge_size);
-                let location = RenderTaskLocation::Dynamic(None, cache_size);
-                metadata.render_task.as_mut().unwrap().location = location;
+
+                let cache_key = BoxShadowPrimitiveCacheKey {
+                    blur_radius: Au::from_f32_px(box_shadow.blur_radius),
+                    border_radius: Au::from_f32_px(box_shadow.border_radius),
+                    inverted: box_shadow.inverted != 0.0,
+                    shadow_rect_size: Size2D::new(Au::from_f32_px(box_shadow.bs_rect.size.width),
+                                                  Au::from_f32_px(box_shadow.bs_rect.size.height)),
+                };
+
+                // Create a render task for this box shadow primitive. This renders a small
+                // portion of the box shadow to a render target. That portion is then
+                // stretched over the actual primitive rect by the box shadow primitive
+                // shader, to reduce the number of pixels that the expensive box
+                // shadow shader needs to run on.
+                // TODO(gw): In the future, we can probably merge the box shadow
+                // primitive (stretch) shader with the generic cached primitive shader.
+                let render_task = RenderTask::new_box_shadow(cache_key, cache_size, prim_index);
+                let render_task_id = render_tasks.add(render_task);
+
+                metadata.render_task_id = Some(render_task_id);
             }
             PrimitiveKind::TextShadow => {
                 let shadow = &mut self.cpu_text_shadows[cpu_prim_index.0];
@@ -1165,13 +1154,13 @@ impl PrimitiveStore {
                 let cache_width = (metadata.local_rect.size.width * device_pixel_ratio).ceil() as i32;
                 let cache_height = (metadata.local_rect.size.height * device_pixel_ratio).ceil() as i32;
                 let cache_size = DeviceIntSize::new(cache_width, cache_height);
-                let cache_key = PrimitiveCacheKey::TextShadow(prim_index);
                 let blur_radius = device_length(shadow.shadow.blur_radius,
                                                 device_pixel_ratio);
-                metadata.render_task = Some(RenderTask::new_blur(cache_key,
-                                                                 cache_size,
-                                                                 blur_radius,
-                                                                 prim_index));
+                let render_task = RenderTask::new_blur(cache_size,
+                                                       blur_radius,
+                                                       prim_index,
+                                                       render_tasks);
+                metadata.render_task_id = Some(render_tasks.add(render_task));
             }
             PrimitiveKind::TextRun => {
                 let text = &mut self.cpu_text_runs[cpu_prim_index.0];

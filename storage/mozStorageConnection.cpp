@@ -1451,8 +1451,8 @@ Connection::AsyncClone(bool aReadOnly,
     flags = (~SQLITE_OPEN_CREATE & flags);
   }
 
-  RefPtr<Connection> clone = new Connection(mStorageService, flags,
-                                              mAsyncOnly);
+  // Force the cloned connection to only implement the async connection API.
+  RefPtr<Connection> clone = new Connection(mStorageService, flags, true);
 
   RefPtr<AsyncInitializeClone> initEvent =
     new AsyncInitializeClone(this, clone, aReadOnly, aCallback);
@@ -1591,8 +1591,7 @@ Connection::Clone(bool aReadOnly,
     flags = (~SQLITE_OPEN_CREATE & flags);
   }
 
-  RefPtr<Connection> clone = new Connection(mStorageService, flags,
-                                              mAsyncOnly);
+  RefPtr<Connection> clone = new Connection(mStorageService, flags, mAsyncOnly);
 
   nsresult rv = initializeClone(clone, aReadOnly);
   if (NS_FAILED(rv)) {
@@ -1600,6 +1599,20 @@ Connection::Clone(bool aReadOnly,
   }
 
   NS_IF_ADDREF(*_connection = clone);
+  return NS_OK;
+}
+
+NS_IMETHODIMP
+Connection::Interrupt()
+{
+  MOZ_ASSERT(threadOpenedOn == NS_GetCurrentThread());
+  if (!mDBConn) {
+    return NS_ERROR_NOT_INITIALIZED;
+  }
+  if (!mAsyncOnly || !(mFlags & SQLITE_OPEN_READONLY)) {
+    return NS_ERROR_INVALID_ARG;
+  }
+  ::sqlite3_interrupt(mDBConn);
   return NS_OK;
 }
 
