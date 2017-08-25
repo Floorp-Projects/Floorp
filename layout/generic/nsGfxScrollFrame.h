@@ -487,6 +487,7 @@ public:
   nsIFrame* mScrollCornerBox;
   nsIFrame* mResizerBox;
   nsContainerFrame* mOuter;
+  const nsIFrame* mReferenceFrameDuringPainting;
   RefPtr<AsyncScroll> mAsyncScroll;
   RefPtr<AsyncSmoothMSDScroll> mAsyncSmoothMSDScroll;
   RefPtr<ScrollbarActivity> mScrollbarActivity;

@@ -577,8 +577,6 @@ child:
 
     async Deactivate(PBrowser aTab);
 
-    async ParentActivated(PBrowser aTab, bool aActivated);
-
     async PParentToChildStream();
 
     async ProvideAnonymousTemporaryFile(uint64_t aID, FileDescOrError aFD);
