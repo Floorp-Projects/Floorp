@@ -696,29 +696,6 @@ XPC_WN_MaybeResolvingDeletePropertyStub(JSContext* cx, HandleObject obj, HandleI
         return Throw(rv, cx);                                                 \
     return retval;
 
-#define POST_HELPER_STUB_WITH_OBJECTOPRESULT(failMethod)                      \
-    if (NS_FAILED(rv))                                                        \
-        return Throw(rv, cx);                                                 \
-    return retval ? result.succeed() : result.failMethod();
-
-bool
-XPC_WN_Helper_GetProperty(JSContext* cx, HandleObject obj, HandleId id,
-                          MutableHandleValue vp)
-{
-    PRE_HELPER_STUB
-    GetProperty(wrapper, cx, obj, id, vp.address(), &retval);
-    POST_HELPER_STUB
-}
-
-bool
-XPC_WN_Helper_SetProperty(JSContext* cx, HandleObject obj, HandleId id,
-                          MutableHandleValue vp, ObjectOpResult& result)
-{
-    PRE_HELPER_STUB
-    SetProperty(wrapper, cx, obj, id, vp.address(), &retval);
-    POST_HELPER_STUB_WITH_OBJECTOPRESULT(failReadOnly)
-}
-
 bool
 XPC_WN_Helper_Call(JSContext* cx, unsigned argc, Value* vp)
 {
