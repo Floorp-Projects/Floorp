@@ -1887,7 +1887,7 @@ talos-tp6:
     run-on-projects:
         by-test-platform:
             windows.*: ['mozilla-beta', 'mozilla-central', 'mozilla-inbound', 'autoland', 'try', 'date']
-            macosx.*: ['mozilla-beta', 'mozilla-central', 'mozilla-inbound', 'autoland', 'try', 'date']
+            macosx.*: ['mozilla-beta', 'mozilla-central', 'try']
             default: []
     max-run-time: 3600
     mozharness:
@@ -1915,7 +1915,7 @@ talos-tp6-stylo:
     run-on-projects:
         by-test-platform:
             windows.*: ['mozilla-beta', 'mozilla-central', 'mozilla-inbound', 'autoland', 'try']
-            macosx64-stylo/.*: []
+            macosx.*: ['mozilla-beta', 'mozilla-central', 'try']
             default: []
     max-run-time: 3600
     mozharness:
@@ -1941,7 +1941,7 @@ talos-tp6-stylo-threads:
     run-on-projects:
         by-test-platform:
             windows.*: ['mozilla-beta', 'mozilla-central', 'mozilla-inbound', 'autoland', 'try']
-            macosx64-stylo/.*: []
+            macosx.*: ['mozilla-beta', 'mozilla-central', 'try']
             default: []
     max-run-time: 3600
     mozharness:

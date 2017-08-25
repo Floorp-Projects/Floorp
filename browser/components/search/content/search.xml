@@ -59,7 +59,7 @@
           </xul:hbox>
         </xul:box>
         <xul:hbox class="search-go-container">
-          <xul:image class="search-go-button" hidden="true"
+          <xul:image class="search-go-button urlbar-icon" hidden="true"
                      anonid="search-go-button"
                      onclick="handleSearchCommand(event);"
                      tooltiptext="&contentSearchSubmit.tooltip;"/>

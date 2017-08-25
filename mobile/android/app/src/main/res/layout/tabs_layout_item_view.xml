@@ -23,7 +23,7 @@
        <org.mozilla.gecko.widget.FadedSingleColorTextView
                android:id="@+id/title"
                android:layout_width="0dip"
-               android:layout_height="wrap_content"
+               android:layout_height="match_parent"
                android:layout_weight="1.0"
                style="@style/TabLayoutItemTextAppearance"
                android:textSize="14sp"
@@ -41,8 +41,8 @@
              we'll need to override getBaseLine() and return image height, but we assume this won't happen -->
         <ImageView android:id="@+id/close"
                      style="@style/TabsItemClose"
-                     android:layout_width="wrap_content"
-                     android:layout_height="wrap_content"
+                     android:layout_width="24dp"
+                     android:layout_height="24dp"
                      android:scaleType="center"
                      android:baselineAlignBottom="true"
                      android:background="@android:color/transparent"

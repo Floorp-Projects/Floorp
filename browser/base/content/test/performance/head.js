@@ -1,3 +1,8 @@
+"use strict";
+
+XPCOMUtils.defineLazyModuleGetter(this, "PlacesTestUtils",
+  "resource://testing-common/PlacesTestUtils.jsm");
+
 /**
  * Async utility function for ensuring that no unexpected uninterruptible
  * reflows occur during some period of time in a window.
@@ -89,6 +94,12 @@ async function withReflowObserver(testFn, expectedReflows = [], win = window) {
       // Stack trace is empty. Reflow was triggered by native code, which
       // we ignore.
       if (path === "") {
+        return;
+      }
+
+      // synthesizeKey from EventUtils.js causes us to reflow. That's the test
+      // harness and we don't care about that, so we'll filter that out.
+      if (path.startsWith("synthesizeKey@chrome://mochikit/content/tests/SimpleTest/EventUtils.js")) {
         return;
       }
 
@@ -223,4 +234,26 @@ async function removeAllButFirstTab() {
   gBrowser.removeAllTabsBut(gBrowser.tabs[0]);
   await BrowserTestUtils.waitForCondition(() => gBrowser.tabs.length == 1);
   await SpecialPowers.popPrefEnv();
+}
+
+/**
+ * Adds some entries to the Places database so that we can
+ * do semi-realistic look-ups in the URL bar.
+ */
+async function addDummyHistoryEntries() {
+  const NUM_VISITS = 10;
+  let visits = [];
+
+  for (let i = 0; i < NUM_VISITS; ++i) {
+    visits.push({
+      uri: `http://example.com/urlbar-reflows-${i}`,
+      title: `Reflow test for URL bar entry #${i}`,
+    });
+  }
+
+  await PlacesTestUtils.addVisits(visits);
+
+  registerCleanupFunction(async function() {
+    await PlacesTestUtils.clearHistory();
+  });
 }

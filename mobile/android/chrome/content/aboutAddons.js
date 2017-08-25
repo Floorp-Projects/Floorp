@@ -95,27 +95,48 @@ var ContextMenus = {
     Addons.uninstall(this.target.addon);
     this.target = null;
   }
+};
+
+function sendEMPong() {
+  Services.obs.notifyObservers(window, "EM-pong");
 }
 
-function init() {
+async function init() {
   window.addEventListener("popstate", onPopState);
 
   AddonManager.addInstallListener(Addons);
   AddonManager.addAddonListener(Addons);
-  Addons.init();
+
+  await Addons.init();
   showAddons();
   ContextMenus.init();
-}
 
+  Services.obs.addObserver(sendEMPong, "EM-ping");
+
+  // The addons list has been loaded and rendered, send a notification
+  // if the openOptionsPage is waiting to be able to select an addon details page.
+  Services.obs.notifyObservers(window, "EM-loaded");
+}
 
 function uninit() {
   AddonManager.removeInstallListener(Addons);
   AddonManager.removeAddonListener(Addons);
+
+  Services.obs.removeObserver(sendEMPong, "EM-ping");
 }
 
 function openLink(url) {
   let BrowserApp = gChromeWin.BrowserApp;
   BrowserApp.addTab(url, { selected: true, parentId: BrowserApp.selectedTab.id });
+}
+
+function openOptionsInTab(url) {
+  let BrowserApp = gChromeWin.BrowserApp;
+  BrowserApp.selectOrAddTab(url, {
+    startsWith: true,
+    selected: true,
+    parentId: BrowserApp.selectedTab.id
+  });
 }
 
 function onPopState(aEvent) {
@@ -135,6 +156,16 @@ function onPopState(aEvent) {
     detailItem.addon = null;
 
     showAddons();
+  }
+}
+
+function showAddonDetails(addonId) {
+  const listItem = Addons._getElementForAddon(addonId);
+  if (listItem) {
+    Addons.showDetails(listItem);
+    history.pushState({ id: addonId }, document.title);
+  } else {
+    throw new Error(`Addon not found: ${addonId}`);
   }
 }
 
@@ -278,29 +309,29 @@ var Addons = {
     return element;
   },
 
-  init: function init() {
-    let self = this;
-    AddonManager.getAllAddons(function(aAddons) {
-      // Clear all content before filling the addons
-      let list = document.getElementById("addons-list");
-      list.innerHTML = "";
+  init: async function init() {
+    const aAddons = await AddonManager.getAllAddons();
 
-      aAddons.sort(function(a, b) {
-        return a.name.localeCompare(b.name);
-      });
-      for (let i = 0; i < aAddons.length; i++) {
-        // Don't create item for system add-ons.
-        if (aAddons[i].isSystem)
-          continue;
+    // Clear all content before filling the addons
+    let list = document.getElementById("addons-list");
+    list.innerHTML = "";
 
-        let item = self._createItemForAddon(aAddons[i]);
-        list.appendChild(item);
-      }
-
-      // Add a "Browse all Firefox Add-ons" item to the bottom of the list.
-      let browseItem = self._createBrowseItem();
-      list.appendChild(browseItem);
+    aAddons.sort(function(a, b) {
+      return a.name.localeCompare(b.name);
     });
+
+    for (let i = 0; i < aAddons.length; i++) {
+      // Don't create item for system add-ons.
+      if (aAddons[i].isSystem)
+        continue;
+
+      let item = this._createItemForAddon(aAddons[i]);
+      list.appendChild(item);
+    }
+
+    // Add a "Browse all Firefox Add-ons" item to the bottom of the list.
+    let browseItem = this._createBrowseItem();
+    list.appendChild(browseItem);
 
     document.getElementById("uninstall-btn").addEventListener("click", Addons.uninstallCurrent.bind(this));
     document.getElementById("cancel-btn").addEventListener("click", Addons.cancelUninstall.bind(this));
@@ -372,6 +403,14 @@ var Addons = {
         detailItem.setAttribute("optionsURL", addon.optionsURL);
         this.createWebExtensionOptions(optionsBox, addon.optionsURL, addon.optionsBrowserStyle);
         break;
+      case AddonManager.OPTIONS_TYPE_TAB:
+        // Keep the usual layout for any options related the legacy (or system) add-ons
+        // when the options are opened in a new tab from a single button in the addon
+        // details page.
+        optionsBox.classList.add("inner");
+
+        this.createOptionsInTabButton(optionsBox, addon);
+        break;
       case AddonManager.OPTIONS_TYPE_INLINE:
         // Keep the usual layout for any options related the legacy (or system) add-ons.
         optionsBox.classList.add("inner");
@@ -381,6 +420,30 @@ var Addons = {
     }
 
     showAddonOptions();
+  },
+
+  createOptionsInTabButton: function(destination, addon) {
+    let frame = destination.querySelector("iframe#addon-options");
+    let button = destination.querySelector("button#open-addon-options");
+
+    if (frame) {
+      // Remove any existent options frame (e.g. when the addon updates
+      // contains the open_in_tab options for the first time).
+
+      frame.remove();
+    }
+
+    if (!button) {
+      button = document.createElement("button");
+      button.setAttribute("id", "open-addon-options");
+      button.textContent = gStringBundle.GetStringFromName("addon.options");
+      destination.appendChild(button);
+    }
+
+    button.onclick = async () => {
+      const {optionsURL} = addon;
+      openOptionsInTab(optionsURL);
+    };
   },
 
   createWebExtensionOptions: async function(destination, optionsURL, browserStyle) {

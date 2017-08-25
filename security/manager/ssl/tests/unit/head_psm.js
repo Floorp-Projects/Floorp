@@ -768,14 +768,6 @@ function add_prevented_cert_override_test(aHost, aExpectedBits, aExpectedError) 
   add_connection_test(aHost, aExpectedError);
 }
 
-function loginToDBWithDefaultPassword() {
-  let tokenDB = Cc["@mozilla.org/security/pk11tokendb;1"]
-                  .getService(Ci.nsIPK11TokenDB);
-  let token = tokenDB.getInternalKeyToken();
-  token.initPassword("");
-  token.login(/* force */ false);
-}
-
 // Helper for asyncTestCertificateUsages.
 class CertVerificationResult {
   constructor(certName, usageString, successExpected, resolve) {

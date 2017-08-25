@@ -83,8 +83,12 @@ pub struct DebugRenderer {
 
 impl DebugRenderer {
     pub fn new(device: &mut Device) -> DebugRenderer {
-        let font_program = device.create_program("debug_font", "shared_other", &DESC_FONT).unwrap();
-        let color_program = device.create_program("debug_color", "shared_other", &DESC_COLOR).unwrap();
+        let font_program = device.create_program("debug_font",
+                                                 "",
+                                                 &DESC_FONT).unwrap();
+        let color_program = device.create_program("debug_color",
+                                                  "",
+                                                  &DESC_COLOR).unwrap();
 
         let font_vao = device.create_vao(&DESC_FONT, 32);
         let line_vao = device.create_vao(&DESC_COLOR, 32);

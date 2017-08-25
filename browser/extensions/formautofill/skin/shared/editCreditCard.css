@@ -1,0 +1,28 @@
+/* This Source Code Form is subject to the terms of the Mozilla Public
+ * License, v. 2.0. If a copy of the MPL was not distributed with this
+ * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
+
+form {
+  justify-content: center;
+  /* Add extra space to ensure invalid input box is displayed properly */
+  padding: 2px;
+}
+
+form > label,
+form > div {
+  flex: 1 0 100%;
+  align-self: center;
+  font-size: 1.3em;
+  margin: 0 0 0.5em !important;
+}
+
+select {
+  flex: 0 0 5em;
+  margin: 0;
+  margin-inline-end: 0.7em;
+}
+
+label > span,
+div > span {
+  flex: 0 0 9.5em;
+}

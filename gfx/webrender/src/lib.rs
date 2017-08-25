@@ -141,3 +141,6 @@ pub use renderer::{ExternalImage, ExternalImageSource, ExternalImageHandler};
 pub use renderer::{GraphicsApi, GraphicsApiInfo, ReadPixelsFormat, Renderer, RendererOptions};
 
 pub use webrender_api as api;
+
+#[doc(hidden)]
+pub use device::build_shader_strings;

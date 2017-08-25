@@ -31,6 +31,7 @@
 
   /* Url and search bars */
   --url-and-searchbar-background-color: rgb(71, 71, 73);
+  --url-and-searchbar-color: var(--chrome-color);
   --urlbar-separator-color: #5F6670;
 }
 
@@ -49,6 +50,7 @@
   --chrome-selection-background-color: #4c9ed9;
 }
 
+.toolbarbutton-animatable-box[brighttext],
 toolbar[brighttext] .toolbarbutton-1 {
   fill: rgba(249, 249, 250, .7);
 }
@@ -94,13 +96,6 @@ toolbar[brighttext] .toolbarbutton-1 {
 }
 
 /* URL bar and search bar*/
-#urlbar,
-#navigator-toolbox .searchbar-textbox {
-  background-color: var(--url-and-searchbar-background-color) !important;
-  background-image: none !important;
-  color: inherit !important;
-}
-
 #urlbar:not([focused="true"]),
 .searchbar-textbox:not([focused="true"]) {
   border-color: var(--chrome-nav-bar-controls-border-color);

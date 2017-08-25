@@ -28,10 +28,6 @@ browser.jar:
   skin/classic/browser/privatebrowsing-mask-titlebar.png
   skin/classic/browser/privatebrowsing-mask-titlebar-win7.png
   skin/classic/browser/privatebrowsing-mask-titlebar-win7-tall.png
-  skin/classic/browser/reload-stop-go.png
-  skin/classic/browser/reload-stop-go@2x.png
-  skin/classic/browser/reload-stop-go-win7.png
-  skin/classic/browser/reload-stop-go-win7@2x.png
   skin/classic/browser/searchbar.css
   skin/classic/browser/setDesktopBackground.css
   skin/classic/browser/slowStartup-16.png
@@ -103,8 +99,6 @@ browser.jar:
 
 % override chrome://browser/skin/privatebrowsing-mask-tabstrip.png    chrome://browser/skin/privatebrowsing-mask-tabstrip-win7.png  os=WINNT osversion<=6.1
 % override chrome://browser/skin/privatebrowsing-mask-titlebar.png    chrome://browser/skin/privatebrowsing-mask-titlebar-win7.png  os=WINNT osversion<=6.1
-% override chrome://browser/skin/reload-stop-go.png                   chrome://browser/skin/reload-stop-go-win7.png                 os=WINNT osversion<=6.1
-% override chrome://browser/skin/reload-stop-go@2x.png                chrome://browser/skin/reload-stop-go-win7@2x.png              os=WINNT osversion<=6.1
 % override chrome://browser/skin/toolbarbutton-dropdown-arrow.png     chrome://browser/skin/toolbarbutton-dropdown-arrow-win7.png   os=WINNT osversion<=6.1
 
 % override chrome://browser/skin/tabbrowser/tab-background-start.png     chrome://browser/skin/tabbrowser/tab-background-start-preWin10.png     os=WINNT osversion<=6.3

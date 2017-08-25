@@ -541,11 +541,11 @@ WebGLTexture::ValidateTexImageSpecification(const char* funcName, TexImageTarget
      * INVALID_VALUE, or possibly GL_OOM.
      *
      * However, we have needed to set our maximums lower in the past to prevent resource
-     * corruption. Therefore we have mImplMaxTextureSize, which is neither necessarily
+     * corruption. Therefore we have mGLMaxTextureSize, which is neither necessarily
      * lower nor higher than MAX_TEXTURE_SIZE.
      *
-     * Note that mImplMaxTextureSize must be >= than the advertized MAX_TEXTURE_SIZE.
-     * For simplicity, we advertize MAX_TEXTURE_SIZE as mImplMaxTextureSize.
+     * Note that mGLMaxTextureSize must be >= than the advertized MAX_TEXTURE_SIZE.
+     * For simplicity, we advertize MAX_TEXTURE_SIZE as mGLMaxTextureSize.
      */
 
     uint32_t maxWidthHeight = 0;
@@ -555,30 +555,30 @@ WebGLTexture::ValidateTexImageSpecification(const char* funcName, TexImageTarget
     MOZ_ASSERT(level <= 31);
     switch (target.get()) {
     case LOCAL_GL_TEXTURE_2D:
-        maxWidthHeight = mContext->mImplMaxTextureSize >> level;
+        maxWidthHeight = mContext->mGLMaxTextureSize >> level;
         maxDepth = 1;
-        maxLevel = CeilingLog2(mContext->mImplMaxTextureSize);
+        maxLevel = CeilingLog2(mContext->mGLMaxTextureSize);
         break;
 
     case LOCAL_GL_TEXTURE_3D:
-        maxWidthHeight = mContext->mImplMax3DTextureSize >> level;
+        maxWidthHeight = mContext->mGLMax3DTextureSize >> level;
         maxDepth = maxWidthHeight;
-        maxLevel = CeilingLog2(mContext->mImplMax3DTextureSize);
+        maxLevel = CeilingLog2(mContext->mGLMax3DTextureSize);
         break;
 
     case LOCAL_GL_TEXTURE_2D_ARRAY:
-        maxWidthHeight = mContext->mImplMaxTextureSize >> level;
+        maxWidthHeight = mContext->mGLMaxTextureSize >> level;
         // "The maximum number of layers for two-dimensional array textures (depth)
         //  must be at least MAX_ARRAY_TEXTURE_LAYERS for all levels."
-        maxDepth = mContext->mImplMaxArrayTextureLayers;
-        maxLevel = CeilingLog2(mContext->mImplMaxTextureSize);
+        maxDepth = mContext->mGLMaxArrayTextureLayers;
+        maxLevel = CeilingLog2(mContext->mGLMaxTextureSize);
         break;
 
     default: // cube maps
         MOZ_ASSERT(IsCubeMap());
-        maxWidthHeight = mContext->mImplMaxCubeMapTextureSize >> level;
+        maxWidthHeight = mContext->mGLMaxCubeMapTextureSize >> level;
         maxDepth = 1;
-        maxLevel = CeilingLog2(mContext->mImplMaxCubeMapTextureSize);
+        maxLevel = CeilingLog2(mContext->mGLMaxCubeMapTextureSize);
         break;
     }
 

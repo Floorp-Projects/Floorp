@@ -16,11 +16,21 @@ const ALTERNATIVE_COUNTRY_NAMES = {
   "US": ["US", "United States of America", "United States", "America", "U.S.", "USA", "U.S.A.", "U.S.A"],
 };
 
+const ADDRESSES_COLLECTION_NAME = "addresses";
+const CREDITCARDS_COLLECTION_NAME = "creditCards";
+const ENABLED_AUTOFILL_ADDRESSES_PREF = "extensions.formautofill.addresses.enabled";
+const ENABLED_AUTOFILL_CREDITCARDS_PREF = "extensions.formautofill.creditCards.enabled";
+
 Cu.import("resource://gre/modules/XPCOMUtils.jsm");
 Cu.import("resource://gre/modules/Services.jsm");
 
 this.FormAutofillUtils = {
   get AUTOFILL_FIELDS_THRESHOLD() { return 3; },
+
+  ADDRESSES_COLLECTION_NAME,
+  CREDITCARDS_COLLECTION_NAME,
+  ENABLED_AUTOFILL_ADDRESSES_PREF,
+  ENABLED_AUTOFILL_CREDITCARDS_PREF,
 
   _fieldNameInfo: {
     "name": "name",
@@ -62,6 +72,13 @@ this.FormAutofillUtils = {
 
   isCreditCardField(fieldName) {
     return this._fieldNameInfo[fieldName] == "creditCard";
+  },
+
+  isCCNumber(ccNumber) {
+    // Based on the information on wiki[1], the shortest valid length should be
+    // 12 digits(Maestro).
+    // [1] https://en.wikipedia.org/wiki/Payment_card_number
+    return ccNumber ? ccNumber.replace(/\s/g, "").match(/^\d{12,}$/) : false;
   },
 
   getCategoryFromFieldName(fieldName) {
@@ -471,3 +488,8 @@ this.FormAutofillUtils.defineLazyLogGetter(this, this.EXPORTED_SYMBOLS[0]);
 XPCOMUtils.defineLazyGetter(FormAutofillUtils, "stringBundle", function() {
   return Services.strings.createBundle("chrome://formautofill/locale/formautofill.properties");
 });
+
+XPCOMUtils.defineLazyPreferenceGetter(this.FormAutofillUtils,
+                                      "isAutofillAddressesEnabled", ENABLED_AUTOFILL_ADDRESSES_PREF);
+XPCOMUtils.defineLazyPreferenceGetter(this.FormAutofillUtils,
+                                      "isAutofillCreditCardsEnabled", ENABLED_AUTOFILL_CREDITCARDS_PREF);

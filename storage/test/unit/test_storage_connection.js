@@ -431,6 +431,7 @@ add_task(async function test_clone_trivial_async() {
   do_print("AsyncClone connection");
   let clone = await asyncClone(db, true);
   do_check_true(clone instanceof Ci.mozIStorageAsyncConnection);
+  do_check_false(clone instanceof Ci.mozIStorageConnection);
   do_print("Close connection");
   await asyncClose(db);
   do_print("Close clone");
@@ -442,6 +443,7 @@ add_task(async function test_clone_no_optional_param_async() {
   do_print("Testing async cloning");
   let adb1 = await openAsyncDatabase(getTestDB(), null);
   do_check_true(adb1 instanceof Ci.mozIStorageAsyncConnection);
+  do_check_false(adb1 instanceof Ci.mozIStorageConnection);
 
   do_print("Cloning database");
 
