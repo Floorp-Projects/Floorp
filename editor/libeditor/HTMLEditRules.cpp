@@ -4554,38 +4554,6 @@ HTMLEditRules::CreateStyleForInsertText(Selection& aSelection,
   nsCOMPtr<nsINode> node = aSelection.GetRangeAt(0)->GetStartContainer();
   int32_t offset = aSelection.GetRangeAt(0)->StartOffset();
 
-  // next examine our present style and make sure default styles are either
-  // present or explicitly overridden.  If neither, add the default style to
-  // the TypeInState
-  int32_t length = mHTMLEditor->mDefaultStyles.Length();
-  for (int32_t j = 0; j < length; j++) {
-    PropItem* propItem = mHTMLEditor->mDefaultStyles[j];
-    MOZ_ASSERT(propItem);
-    bool bFirst, bAny, bAll;
-
-    // GetInlineProperty also examine TypeInState.  The only gotcha here is
-    // that a cleared property looks like an unset property.  For now I'm
-    // assuming that's not a problem: that default styles will always be
-    // multivalue styles (like font face or size) where clearing the style
-    // means we want to go back to the default.  If we ever wanted a "toggle"
-    // style like bold for a default, though, I'll have to add code to detect
-    // the difference between unset and explicitly cleared, else user would
-    // never be able to unbold, for instance.
-    nsAutoString curValue;
-    NS_ENSURE_STATE(mHTMLEditor);
-    nsresult rv =
-      mHTMLEditor->GetInlinePropertyBase(*propItem->tag, &propItem->attr,
-                                         nullptr, &bFirst, &bAny, &bAll,
-                                         &curValue, false);
-    NS_ENSURE_SUCCESS(rv, rv);
-
-    if (!bAny) {
-      // no style set for this prop/attr
-      mHTMLEditor->mTypeInState->SetProp(propItem->tag, propItem->attr,
-                                         propItem->value);
-    }
-  }
-
   nsCOMPtr<Element> rootElement = aDoc.GetRootElement();
   NS_ENSURE_STATE(rootElement);
 
@@ -7341,7 +7309,7 @@ HTMLEditRules::ReapplyCachedStyles()
                                              &(mCachedStyles[i].attr),
                                              &(mCachedStyles[i].value),
                                              &bFirst, &bAny, &bAll,
-                                             &curValue, false);
+                                             &curValue);
         NS_ENSURE_SUCCESS(rv, rv);
       }
       // This style has disappeared through deletion.  Let's add the styles to
