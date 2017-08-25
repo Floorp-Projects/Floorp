@@ -639,9 +639,7 @@ array_length_setter(JSContext* cx, HandleObject obj, HandleId id, MutableHandleV
         // This array .length property was found on the prototype
         // chain. Ideally the setter should not have been called, but since
         // we're here, do an impression of SetPropertyByDefining.
-        const Class* clasp = obj->getClass();
-        return DefineProperty(cx, obj, cx->names().length, vp,
-                              clasp->getGetProperty(), clasp->getSetProperty(),
+        return DefineProperty(cx, obj, cx->names().length, vp, nullptr, nullptr,
                               JSPROP_ENUMERATE, result);
     }
 
