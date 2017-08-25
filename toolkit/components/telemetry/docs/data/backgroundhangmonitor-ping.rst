@@ -19,6 +19,7 @@ Structure:
       ... // common ping data
       "environment": { ... },
       "payload": {
+        "timeSinceLastPing": <number>, // uptime since last backgroundhangmonitor ping (ms).
         "modules": [
           [
             <string>, // Name of the file holding the debug information.
