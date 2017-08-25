@@ -20,7 +20,6 @@
 #include "jshashutil.h"
 #include "jsiter.h"
 #include "jsstr.h"
-#include "jsweakmap.h"
 #include "jswrapper.h"
 #include "selfhosted.out.h"
 
@@ -35,7 +34,7 @@
 #include "builtin/SIMD.h"
 #include "builtin/Stream.h"
 #include "builtin/TypedObject.h"
-#include "builtin/WeakSetObject.h"
+#include "builtin/WeakMapObject.h"
 #include "gc/Marking.h"
 #include "gc/Policy.h"
 #include "jit/AtomicOperations.h"
@@ -2324,10 +2323,8 @@ static const JSFunctionSpec intrinsic_functions[] = {
 
     JS_FN("std_TypedArray_buffer",               js::TypedArray_bufferGetter,  1,0),
 
-    JS_FN("std_WeakMap_has",                     WeakMap_has,                  1,0),
-    JS_FN("std_WeakMap_get",                     WeakMap_get,                  2,0),
+    JS_FN("std_WeakMap_get",                     WeakMap_get,                  1,0),
     JS_FN("std_WeakMap_set",                     WeakMap_set,                  2,0),
-    JS_FN("std_WeakMap_delete",                  WeakMap_delete,               1,0),
 
     JS_FN("std_SIMD_Int8x16_extractLane",        simd_int8x16_extractLane,     2,0),
     JS_FN("std_SIMD_Int16x8_extractLane",        simd_int16x8_extractLane,     2,0),
@@ -2532,10 +2529,6 @@ static const JSFunctionSpec intrinsic_functions[] = {
     JS_INLINABLE_FN("IsSetObject", intrinsic_IsInstanceOfBuiltin<SetObject>, 1, 0,
                     IntrinsicIsSetObject),
     JS_FN("CallSetMethodIfWrapped", CallNonGenericSelfhostedMethod<Is<SetObject>>, 2, 0),
-
-    JS_FN("IsWeakSet", intrinsic_IsInstanceOfBuiltin<WeakSetObject>, 1,0),
-    JS_FN("CallWeakSetMethodIfWrapped",
-          CallNonGenericSelfhostedMethod<Is<WeakSetObject>>, 2, 0),
 
     JS_FN("IsReadableStreamBYOBRequest",
           intrinsic_IsInstanceOfBuiltin<ReadableStreamBYOBRequest>, 1, 0),
