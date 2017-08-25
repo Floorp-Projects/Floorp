@@ -1,6 +1,7 @@
 /* Any copyright is dedicated to the Public Domain.
    http://creativecommons.org/publicdomain/zero/1.0/ */
 
+Cu.import("resource://services-common/utils.js");
 Cu.import("resource://gre/modules/PlacesSyncUtils.jsm");
 Cu.import("resource://services-sync/constants.js");
 Cu.import("resource://services-sync/engines/bookmarks.js");
@@ -322,7 +323,7 @@ add_task(async function test_tracking() {
 
   function createBmk() {
     return PlacesUtils.bookmarks.insertBookmark(
-      folder, Utils.makeURI("http://getfirefox.com"),
+      folder, CommonUtils.makeURI("http://getfirefox.com"),
       PlacesUtils.bookmarks.DEFAULT_INDEX, "Get Firefox!");
   }
 
@@ -417,7 +418,7 @@ add_task(async function test_tracker_sql_batching() {
       for (let i = 0; i < numItems; i++) {
         let syncBmkID = PlacesUtils.bookmarks.insertBookmark(
                           PlacesUtils.bookmarks.unfiledBookmarksFolder,
-                          Utils.makeURI("https://example.org/" + i),
+                          CommonUtils.makeURI("https://example.org/" + i),
                           PlacesUtils.bookmarks.DEFAULT_INDEX,
                           "Sync Bookmark " + i);
         createdIDs.push(syncBmkID);
@@ -454,7 +455,7 @@ add_task(async function test_onItemAdded() {
 
     _("Insert a bookmark using the sync API");
     let syncBmkID = PlacesUtils.bookmarks.insertBookmark(syncFolderID,
-      Utils.makeURI("https://example.org/sync"),
+      CommonUtils.makeURI("https://example.org/sync"),
       PlacesUtils.bookmarks.DEFAULT_INDEX,
       "Sync Bookmark");
     let syncBmkGUID = await engine._store.GUIDForId(syncBmkID);
@@ -566,7 +567,7 @@ add_task(async function test_onItemChanged_itemDates() {
     _("Insert a bookmark");
     let fx_id = PlacesUtils.bookmarks.insertBookmark(
       PlacesUtils.bookmarks.bookmarksMenuFolder,
-      Utils.makeURI("http://getfirefox.com"),
+      CommonUtils.makeURI("http://getfirefox.com"),
       PlacesUtils.bookmarks.DEFAULT_INDEX,
       "Get Firefox!");
     let fx_guid = await engine._store.GUIDForId(fx_id);
@@ -602,7 +603,7 @@ add_task(async function test_onItemChanged_changeBookmarkURI() {
     _("Insert a bookmark");
     let fx_id = PlacesUtils.bookmarks.insertBookmark(
       PlacesUtils.bookmarks.bookmarksMenuFolder,
-      Utils.makeURI("http://getfirefox.com"),
+      CommonUtils.makeURI("http://getfirefox.com"),
       PlacesUtils.bookmarks.DEFAULT_INDEX,
       "Get Firefox!");
     let fx_guid = await engine._store.GUIDForId(fx_id);
@@ -617,7 +618,7 @@ add_task(async function test_onItemChanged_changeBookmarkURI() {
 
     _("Change the bookmark's URI");
     PlacesUtils.bookmarks.changeBookmarkURI(fx_id,
-      Utils.makeURI("https://www.mozilla.org/firefox"));
+      CommonUtils.makeURI("https://www.mozilla.org/firefox"));
     await verifyTrackedItems([fx_guid]);
     do_check_eq(tracker.score, SCORE_INCREMENT_XLARGE);
   } finally {
@@ -641,7 +642,7 @@ add_task(async function test_onItemTagged() {
     _("Folder GUID: " + folderGUID);
 
     _("Track changes to tags");
-    let uri = Utils.makeURI("http://getfirefox.com");
+    let uri = CommonUtils.makeURI("http://getfirefox.com");
     let b = PlacesUtils.bookmarks.insertBookmark(
       folder, uri,
       PlacesUtils.bookmarks.DEFAULT_INDEX, "Get Firefox!");
@@ -670,7 +671,7 @@ add_task(async function test_onItemUntagged() {
     await stopTracking();
 
     _("Insert tagged bookmarks");
-    let uri = Utils.makeURI("http://getfirefox.com");
+    let uri = CommonUtils.makeURI("http://getfirefox.com");
     let fx1ID = PlacesUtils.bookmarks.insertBookmark(
       PlacesUtils.bookmarks.bookmarksMenuFolder, uri,
       PlacesUtils.bookmarks.DEFAULT_INDEX, "Get Firefox!");
@@ -805,7 +806,7 @@ add_task(async function test_onItemKeywordChanged() {
       PlacesUtils.bookmarks.bookmarksMenuFolder, "Parent",
       PlacesUtils.bookmarks.DEFAULT_INDEX);
     _("Track changes to keywords");
-    let uri = Utils.makeURI("http://getfirefox.com");
+    let uri = CommonUtils.makeURI("http://getfirefox.com");
     let b = PlacesUtils.bookmarks.insertBookmark(
       folder, uri,
       PlacesUtils.bookmarks.DEFAULT_INDEX, "Get Firefox!");
@@ -911,7 +912,7 @@ add_task(async function test_onItemPostDataChanged() {
     _("Insert a bookmark");
     let fx_id = PlacesUtils.bookmarks.insertBookmark(
       PlacesUtils.bookmarks.bookmarksMenuFolder,
-      Utils.makeURI("http://getfirefox.com"),
+      CommonUtils.makeURI("http://getfirefox.com"),
       PlacesUtils.bookmarks.DEFAULT_INDEX,
       "Get Firefox!");
     let fx_guid = await engine._store.GUIDForId(fx_id);
@@ -941,7 +942,7 @@ add_task(async function test_onItemAnnoChanged() {
       PlacesUtils.bookmarks.DEFAULT_INDEX);
     _("Track changes to annos.");
     let b = PlacesUtils.bookmarks.insertBookmark(
-      folder, Utils.makeURI("http://getfirefox.com"),
+      folder, CommonUtils.makeURI("http://getfirefox.com"),
       PlacesUtils.bookmarks.DEFAULT_INDEX, "Get Firefox!");
     let bGUID = await engine._store.GUIDForId(b);
     _("New item is " + b);
@@ -983,7 +984,7 @@ add_task(async function test_onItemAdded_filtered_root() {
     _("Insert a bookmark underneath the new root");
     let untrackedBmkID = PlacesUtils.bookmarks.insertBookmark(
       rootID,
-      Utils.makeURI("http://getthunderbird.com"),
+      CommonUtils.makeURI("http://getthunderbird.com"),
       PlacesUtils.bookmarks.DEFAULT_INDEX,
       "Get Thunderbird!");
     let untrackedBmkGUID = await engine._store.GUIDForId(untrackedBmkID);
@@ -992,7 +993,7 @@ add_task(async function test_onItemAdded_filtered_root() {
     _("Insert a bookmark underneath the Places root");
     let rootBmkID = PlacesUtils.bookmarks.insertBookmark(
       PlacesUtils.bookmarks.placesRoot,
-      Utils.makeURI("http://getfirefox.com"),
+      CommonUtils.makeURI("http://getfirefox.com"),
       PlacesUtils.bookmarks.DEFAULT_INDEX, "Get Firefox!");
     let rootBmkGUID = await engine._store.GUIDForId(rootBmkID);
     _(`New Places root bookmark GUID: ${rootBmkGUID}`);
@@ -1015,7 +1016,7 @@ add_task(async function test_onItemDeleted_filtered_root() {
     _("Insert a bookmark underneath the Places root");
     let rootBmkID = PlacesUtils.bookmarks.insertBookmark(
       PlacesUtils.bookmarks.placesRoot,
-      Utils.makeURI("http://getfirefox.com"),
+      CommonUtils.makeURI("http://getfirefox.com"),
       PlacesUtils.bookmarks.DEFAULT_INDEX, "Get Firefox!");
     let rootBmkGUID = await engine._store.GUIDForId(rootBmkID);
     _(`New Places root bookmark GUID: ${rootBmkGUID}`);
@@ -1040,7 +1041,7 @@ add_task(async function test_onPageAnnoChanged() {
     await stopTracking();
 
     _("Insert a bookmark without an annotation");
-    let pageURI = Utils.makeURI("http://getfirefox.com");
+    let pageURI = CommonUtils.makeURI("http://getfirefox.com");
     PlacesUtils.bookmarks.insertBookmark(
       PlacesUtils.bookmarks.bookmarksMenuFolder,
       pageURI,
@@ -1073,8 +1074,8 @@ add_task(async function test_onFaviconChanged() {
   try {
     await stopTracking();
 
-    let pageURI = Utils.makeURI("http://getfirefox.com");
-    let iconURI = Utils.makeURI("http://getfirefox.com/icon");
+    let pageURI = CommonUtils.makeURI("http://getfirefox.com");
+    let iconURI = CommonUtils.makeURI("http://getfirefox.com/icon");
     PlacesUtils.bookmarks.insertBookmark(
       PlacesUtils.bookmarks.bookmarksMenuFolder,
       pageURI,
@@ -1118,7 +1119,7 @@ add_task(async function test_onLivemarkAdded() {
       parentGuid: PlacesUtils.bookmarks.menuGuid,
       // Use a local address just in case, to avoid potential aborts for
       // non-local connections.
-      feedURI: Utils.makeURI("http://localhost:0"),
+      feedURI: CommonUtils.makeURI("http://localhost:0"),
     });
     // Prevent the livemark refresh timer from requesting the URI.
     livemark.terminate();
@@ -1142,7 +1143,7 @@ add_task(async function test_onLivemarkDeleted() {
     _("Insert a livemark");
     let livemark = await PlacesUtils.livemarks.addLivemark({
       parentGuid: PlacesUtils.bookmarks.menuGuid,
-      feedURI: Utils.makeURI("http://localhost:0"),
+      feedURI: CommonUtils.makeURI("http://localhost:0"),
     });
     livemark.terminate();
 
@@ -1167,14 +1168,14 @@ add_task(async function test_onItemMoved() {
   try {
     let fx_id = PlacesUtils.bookmarks.insertBookmark(
       PlacesUtils.bookmarks.bookmarksMenuFolder,
-      Utils.makeURI("http://getfirefox.com"),
+      CommonUtils.makeURI("http://getfirefox.com"),
       PlacesUtils.bookmarks.DEFAULT_INDEX,
       "Get Firefox!");
     let fx_guid = await engine._store.GUIDForId(fx_id);
     _("Firefox GUID: " + fx_guid);
     let tb_id = PlacesUtils.bookmarks.insertBookmark(
       PlacesUtils.bookmarks.bookmarksMenuFolder,
-      Utils.makeURI("http://getthunderbird.com"),
+      CommonUtils.makeURI("http://getthunderbird.com"),
       PlacesUtils.bookmarks.DEFAULT_INDEX,
       "Get Thunderbird!");
     let tb_guid = await engine._store.GUIDForId(tb_id);
@@ -1310,7 +1311,7 @@ add_task(async function test_onItemMoved_setItemIndex() {
 
     let tb_id = PlacesUtils.bookmarks.insertBookmark(
       folder_id,
-      Utils.makeURI("http://getthunderbird.com"),
+      CommonUtils.makeURI("http://getthunderbird.com"),
       PlacesUtils.bookmarks.DEFAULT_INDEX,
       "Thunderbird");
     let tb_guid = await engine._store.GUIDForId(tb_id);
@@ -1318,7 +1319,7 @@ add_task(async function test_onItemMoved_setItemIndex() {
 
     let fx_id = PlacesUtils.bookmarks.insertBookmark(
       folder_id,
-      Utils.makeURI("http://getfirefox.com"),
+      CommonUtils.makeURI("http://getfirefox.com"),
       PlacesUtils.bookmarks.DEFAULT_INDEX,
       "Firefox");
     let fx_guid = await engine._store.GUIDForId(fx_id);
@@ -1326,7 +1327,7 @@ add_task(async function test_onItemMoved_setItemIndex() {
 
     let moz_id = PlacesUtils.bookmarks.insertBookmark(
       PlacesUtils.bookmarks.bookmarksMenuFolder,
-      Utils.makeURI("https://mozilla.org"),
+      CommonUtils.makeURI("https://mozilla.org"),
       PlacesUtils.bookmarks.DEFAULT_INDEX,
       "Mozilla"
     );
@@ -1372,14 +1373,14 @@ add_task(async function test_onItemDeleted_removeFolderTransaction() {
     _(`Folder GUID: ${folder_guid}`);
     let fx_id = PlacesUtils.bookmarks.insertBookmark(
       folder_id,
-      Utils.makeURI("http://getfirefox.com"),
+      CommonUtils.makeURI("http://getfirefox.com"),
       PlacesUtils.bookmarks.DEFAULT_INDEX,
       "Get Firefox!");
     let fx_guid = await engine._store.GUIDForId(fx_id);
     _(`Firefox GUID: ${fx_guid}`);
     let tb_id = PlacesUtils.bookmarks.insertBookmark(
       folder_id,
-      Utils.makeURI("http://getthunderbird.com"),
+      CommonUtils.makeURI("http://getthunderbird.com"),
       PlacesUtils.bookmarks.DEFAULT_INDEX,
       "Get Thunderbird!");
     let tb_guid = await engine._store.GUIDForId(tb_id);
@@ -1438,12 +1439,12 @@ add_task(async function test_treeMoved() {
     // Create a couple of bookmarks in the second folder.
     PlacesUtils.bookmarks.insertBookmark(
       folder2_id,
-      Utils.makeURI("http://getfirefox.com"),
+      CommonUtils.makeURI("http://getfirefox.com"),
       PlacesUtils.bookmarks.DEFAULT_INDEX,
       "Get Firefox!");
     PlacesUtils.bookmarks.insertBookmark(
       folder2_id,
-      Utils.makeURI("http://getthunderbird.com"),
+      CommonUtils.makeURI("http://getthunderbird.com"),
       PlacesUtils.bookmarks.DEFAULT_INDEX,
       "Get Thunderbird!");
 
@@ -1467,12 +1468,12 @@ add_task(async function test_onItemDeleted() {
   try {
     PlacesUtils.bookmarks.insertBookmark(
       PlacesUtils.bookmarks.bookmarksMenuFolder,
-      Utils.makeURI("http://getfirefox.com"),
+      CommonUtils.makeURI("http://getfirefox.com"),
       PlacesUtils.bookmarks.DEFAULT_INDEX,
       "Get Firefox!");
     let tb_id = PlacesUtils.bookmarks.insertBookmark(
       PlacesUtils.bookmarks.bookmarksMenuFolder,
-      Utils.makeURI("http://getthunderbird.com"),
+      CommonUtils.makeURI("http://getthunderbird.com"),
       PlacesUtils.bookmarks.DEFAULT_INDEX,
       "Get Thunderbird!");
     let tb_guid = await engine._store.GUIDForId(tb_id);
@@ -1612,7 +1613,7 @@ add_task(async function test_onItemDeleted_removeFolderChildren() {
   try {
     let fx_id = PlacesUtils.bookmarks.insertBookmark(
       PlacesUtils.mobileFolderId,
-      Utils.makeURI("http://getfirefox.com"),
+      CommonUtils.makeURI("http://getfirefox.com"),
       PlacesUtils.bookmarks.DEFAULT_INDEX,
       "Get Firefox!");
     let fx_guid = await engine._store.GUIDForId(fx_id);
@@ -1620,7 +1621,7 @@ add_task(async function test_onItemDeleted_removeFolderChildren() {
 
     let tb_id = PlacesUtils.bookmarks.insertBookmark(
       PlacesUtils.mobileFolderId,
-      Utils.makeURI("http://getthunderbird.com"),
+      CommonUtils.makeURI("http://getthunderbird.com"),
       PlacesUtils.bookmarks.DEFAULT_INDEX,
       "Get Thunderbird!");
     let tb_guid = await engine._store.GUIDForId(tb_id);
@@ -1628,7 +1629,7 @@ add_task(async function test_onItemDeleted_removeFolderChildren() {
 
     let moz_id = PlacesUtils.bookmarks.insertBookmark(
       PlacesUtils.bookmarks.bookmarksMenuFolder,
-      Utils.makeURI("https://mozilla.org"),
+      CommonUtils.makeURI("https://mozilla.org"),
       PlacesUtils.bookmarks.DEFAULT_INDEX,
       "Mozilla"
     );
@@ -1669,13 +1670,13 @@ add_task(async function test_onItemDeleted_tree() {
     // Create a couple of bookmarks in the second folder.
     let fx_id = PlacesUtils.bookmarks.insertBookmark(
       folder2_id,
-      Utils.makeURI("http://getfirefox.com"),
+      CommonUtils.makeURI("http://getfirefox.com"),
       PlacesUtils.bookmarks.DEFAULT_INDEX,
       "Get Firefox!");
     let fx_guid = await engine._store.GUIDForId(fx_id);
     let tb_id = PlacesUtils.bookmarks.insertBookmark(
       folder2_id,
-      Utils.makeURI("http://getthunderbird.com"),
+      CommonUtils.makeURI("http://getthunderbird.com"),
       PlacesUtils.bookmarks.DEFAULT_INDEX,
       "Get Thunderbird!");
     let tb_guid = await engine._store.GUIDForId(tb_id);
