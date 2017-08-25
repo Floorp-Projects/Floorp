@@ -361,7 +361,6 @@ MediaDecoder::MediaDecoder(MediaDecoderInit& aInit)
   : mWatchManager(this, aInit.mOwner->AbstractMainThread())
   , mLogicalPosition(0.0)
   , mDuration(std::numeric_limits<double>::quiet_NaN())
-  , mCDMProxyPromise(mCDMProxyPromiseHolder.Ensure(__func__))
   , mOwner(aInit.mOwner)
   , mAbstractMainThread(aInit.mOwner->AbstractMainThread())
   , mFrameStats(new FrameStatistics())
@@ -436,8 +435,6 @@ MediaDecoder::Shutdown()
 
   // Unwatch all watch targets to prevent further notifications.
   mWatchManager.Shutdown();
-
-  mCDMProxyPromiseHolder.RejectIfExists(true, __func__);
 
   DiscardOngoingSeekIfExists();
 
@@ -1382,19 +1379,18 @@ MediaDecoder::CanPlayThrough()
   return val;
 }
 
-RefPtr<MediaDecoder::CDMProxyPromise>
-MediaDecoder::RequestCDMProxy() const
-{
-  return mCDMProxyPromise;
-}
-
 void
 MediaDecoder::SetCDMProxy(CDMProxy* aProxy)
 {
   MOZ_ASSERT(NS_IsMainThread());
-  MOZ_ASSERT(aProxy);
-
-  mCDMProxyPromiseHolder.ResolveIfExists(aProxy, __func__);
+  RefPtr<CDMProxy> proxy = aProxy;
+  RefPtr<MediaFormatReader> reader = mReader;
+  nsCOMPtr<nsIRunnable> r = NS_NewRunnableFunction(
+    "MediaFormatReader::SetCDMProxy",
+    [reader, proxy]() {
+    reader->SetCDMProxy(proxy);
+    });
+  mReader->OwnerThread()->Dispatch(r.forget());
 }
 
 bool
