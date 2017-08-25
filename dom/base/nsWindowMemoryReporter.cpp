@@ -600,6 +600,11 @@ nsWindowMemoryReporter::CollectReports(nsIHandleReportCallback* aHandleReport,
   REPORT("window-objects/dom/event-targets", windowTotalSizes.mDOMEventTargetsSize,
          "This is the sum of all windows' 'dom/event-targets' numbers.");
 
+  REPORT("window-objects/dom/performance",
+         windowTotalSizes.mDOMPerformanceUserEntries +
+         windowTotalSizes.mDOMPerformanceResourceEntries,
+         "This is the sum of all windows' 'dom/performance/' numbers.");
+
   REPORT("window-objects/dom/other", windowTotalSizes.mDOMOtherSize,
          "This is the sum of all windows' 'dom/other' numbers.");
 
