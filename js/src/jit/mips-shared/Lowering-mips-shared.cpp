@@ -756,7 +756,7 @@ LIRGeneratorMIPSShared::visitCopySign(MCopySign* ins)
     lir->setTemp(0, temp());
     lir->setTemp(1, temp());
 
-    lir->setOperand(0, useRegister(lhs));
+    lir->setOperand(0, useRegisterAtStart(lhs));
     lir->setOperand(1, useRegister(rhs));
     defineReuseInput(lir, ins, 0);
 }
