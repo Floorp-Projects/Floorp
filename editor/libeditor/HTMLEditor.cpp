@@ -2451,17 +2451,17 @@ HTMLEditor::GetSelectedElement(const nsAString& aTagName,
       NS_ENSURE_SUCCESS(rv, rv);
       int32_t anchorOffset = -1;
       if (anchorNode) {
-        selection->GetAnchorOffset(&anchorOffset);
+        anchorOffset = selection->AnchorOffset();
       }
 
       nsCOMPtr<nsINode> focusNode = selection->GetFocusNode();
       int32_t focusOffset = -1;
       if (focusNode) {
-        selection->GetFocusOffset(&focusOffset);
+        focusOffset = selection->FocusOffset();
       }
 
       // Link node must be the same for both ends of selection
-      if (NS_SUCCEEDED(rv) && anchorNode) {
+      if (anchorNode) {
         nsCOMPtr<nsIDOMElement> parentLinkOfAnchor;
         rv = GetElementOrParentByTagName(NS_LITERAL_STRING("href"),
                                          anchorNode,
