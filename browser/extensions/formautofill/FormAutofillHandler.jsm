@@ -392,13 +392,13 @@ FormAutofillHandler.prototype = {
    * @param {Object} focusedInput
    *        A focused input element for determining credit card or address fields.
    */
-  async previewFormFields(profile, focusedInput) {
+  previewFormFields(profile, focusedInput) {
     log.debug("preview profile in autofillFormFields:", profile);
 
     // Always show the decrypted credit card number when Master Password is
     // disabled.
-    if (profile["cc-number-encrypted"] && !MasterPassword.isEnabled) {
-      profile["cc-number"] = await MasterPassword.decrypt(profile["cc-number-encrypted"], true);
+    if (profile["cc-number-decrypted"]) {
+      profile["cc-number"] = profile["cc-number-decrypted"];
     }
 
     let fieldDetails = this.getFieldDetailsByElement(focusedInput);
