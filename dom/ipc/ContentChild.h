@@ -491,8 +491,6 @@ public:
 
   virtual mozilla::ipc::IPCResult RecvDeactivate(PBrowserChild* aTab) override;
 
-  virtual mozilla::ipc::IPCResult RecvParentActivated(PBrowserChild* aTab, const bool& aActivated) override;
-
   mozilla::ipc::IPCResult
   RecvRefreshScreens(nsTArray<ScreenDetails>&& aScreens) override;
 

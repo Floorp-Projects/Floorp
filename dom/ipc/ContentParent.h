@@ -607,12 +607,6 @@ public:
     return PContentParent::SendDeactivate(aTab);
   }
 
-  virtual bool SendParentActivated(PBrowserParent* aTab,
-                                   const bool& aActivated) override
-  {
-    return PContentParent::SendParentActivated(aTab, aActivated);
-  }
-
   virtual bool
   DeallocPURLClassifierLocalParent(PURLClassifierLocalParent* aActor) override;
 
