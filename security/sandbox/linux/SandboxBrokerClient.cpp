@@ -35,7 +35,8 @@ SandboxBrokerClient::~SandboxBrokerClient()
 
 int
 SandboxBrokerClient::DoCall(const Request* aReq, const char* aPath,
-                            void* aResponseBuff, bool expectFd)
+                            const char* aPath2, void* aResponseBuff,
+                            bool expectFd)
 {
   // Remap /proc/self to the actual pid, so that the broker can open
   // it.  This happens here instead of in the broker to follow the
@@ -63,15 +64,25 @@ SandboxBrokerClient::DoCall(const Request* aReq, const char* aPath,
     }
   }
 
-  struct iovec ios[2];
+  struct iovec ios[3];
   int respFds[2];
 
   // Set up iovecs for request + path.
   ios[0].iov_base = const_cast<Request*>(aReq);
   ios[0].iov_len = sizeof(*aReq);
   ios[1].iov_base = const_cast<char*>(path);
-  ios[1].iov_len = strlen(path);
+  ios[1].iov_len = strlen(path) + 1;
+  if (aPath2 != nullptr) {
+    ios[2].iov_base = const_cast<char*>(aPath2);
+    ios[2].iov_len = strlen(aPath2) + 1;
+  } else {
+    ios[2].iov_base = nullptr;
+    ios[2].iov_len = 0;
+  }
   if (ios[1].iov_len > kMaxPathLen) {
+    return -ENAMETOOLONG;
+  }
+  if (ios[2].iov_len > kMaxPathLen) {
     return -ENAMETOOLONG;
   }
 
@@ -79,12 +90,12 @@ SandboxBrokerClient::DoCall(const Request* aReq, const char* aPath,
   if (socketpair(AF_UNIX, SOCK_SEQPACKET, 0, respFds) < 0) {
     return -errno;
   }
-  const ssize_t sent = SendWithFd(mFileDesc, ios, 2, respFds[1]);
+  const ssize_t sent = SendWithFd(mFileDesc, ios, 3, respFds[1]);
   const int sendErrno = errno;
   MOZ_ASSERT(sent < 0 ||
              static_cast<size_t>(sent) == ios[0].iov_len
-                                        + ios[1].iov_len);
-
+                                        + ios[1].iov_len
+                                        + ios[2].iov_len);
   close(respFds[1]);
   if (sent < 0) {
     close(respFds[0]);
@@ -145,7 +156,7 @@ int
 SandboxBrokerClient::Open(const char* aPath, int aFlags)
 {
   Request req = { SANDBOX_FILE_OPEN, aFlags, 0 };
-  int maybeFd = DoCall(&req, aPath, nullptr, true);
+  int maybeFd = DoCall(&req, aPath, nullptr, nullptr, true);
   if (maybeFd >= 0) {
     // NSPR has opinions about file flags.  Fix O_CLOEXEC.
     if ((aFlags & O_CLOEXEC) == 0) {
@@ -159,56 +170,77 @@ int
 SandboxBrokerClient::Access(const char* aPath, int aMode)
 {
   Request req = { SANDBOX_FILE_ACCESS, aMode, 0 };
-  return DoCall(&req, aPath, nullptr, false);
+  return DoCall(&req, aPath, nullptr, nullptr, false);
 }
 
 int
 SandboxBrokerClient::Stat(const char* aPath, statstruct* aStat)
 {
   Request req = { SANDBOX_FILE_STAT, 0, sizeof(statstruct) };
-  return DoCall(&req, aPath, (void*)aStat, false);
+  return DoCall(&req, aPath, nullptr, (void*)aStat, false);
 }
 
 int
 SandboxBrokerClient::LStat(const char* aPath, statstruct* aStat)
 {
   Request req = { SANDBOX_FILE_STAT, O_NOFOLLOW, sizeof(statstruct) };
-  return DoCall(&req, aPath, (void*)aStat, false);
+  return DoCall(&req, aPath, nullptr, (void*)aStat, false);
 }
 
 int
 SandboxBrokerClient::Chmod(const char* aPath, int aMode)
 {
   Request req = {SANDBOX_FILE_CHMOD, aMode, 0};
-  return DoCall(&req, aPath, nullptr, false);
+  return DoCall(&req, aPath, nullptr, nullptr, false);
+}
+
+int
+SandboxBrokerClient::Link(const char* aOldPath, const char* aNewPath)
+{
+  Request req = {SANDBOX_FILE_LINK, 0, 0};
+  return DoCall(&req, aOldPath, aNewPath, nullptr, false);
+}
+
+int
+SandboxBrokerClient::Symlink(const char* aOldPath, const char* aNewPath)
+{
+  Request req = {SANDBOX_FILE_SYMLINK, 0, 0};
+  return DoCall(&req, aOldPath, aNewPath, nullptr, false);
+}
+
+int
+SandboxBrokerClient::Rename(const char* aOldPath, const char* aNewPath)
+{
+  Request req = {SANDBOX_FILE_RENAME, 0, 0};
+  return DoCall(&req, aOldPath, aNewPath, nullptr, false);
 }
 
 int
 SandboxBrokerClient::Mkdir(const char* aPath, int aMode)
 {
   Request req = {SANDBOX_FILE_MKDIR, aMode, 0};
-  return DoCall(&req, aPath, nullptr, false);
+  return DoCall(&req, aPath, nullptr, nullptr, false);
 }
 
 int
 SandboxBrokerClient::Unlink(const char* aPath)
 {
   Request req = {SANDBOX_FILE_UNLINK, 0, 0};
-  return DoCall(&req, aPath, nullptr, false);
+  return DoCall(&req, aPath, nullptr, nullptr, false);
 }
 
 int
 SandboxBrokerClient::Rmdir(const char* aPath)
 {
   Request req = {SANDBOX_FILE_RMDIR, 0, 0};
-  return DoCall(&req, aPath, nullptr, false);
+  return DoCall(&req, aPath, nullptr, nullptr, false);
 }
 
 int
 SandboxBrokerClient::Readlink(const char* aPath, void* aBuff, size_t aSize)
 {
   Request req = {SANDBOX_FILE_READLINK, 0, aSize};
-  return DoCall(&req, aPath, aBuff, false);
+  return DoCall(&req, aPath, nullptr, aBuff, false);
 }
 
 } // namespace mozilla

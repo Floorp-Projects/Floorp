@@ -358,28 +358,12 @@ TextEditRules::DidDoAction(Selection* aSelection,
 NS_IMETHODIMP_(bool)
 TextEditRules::DocumentIsEmpty()
 {
-  if (mBogusNode) {
-    return true;
+  bool retVal = false;
+  if (!mTextEditor || NS_FAILED(mTextEditor->DocumentIsEmpty(&retVal))) {
+    retVal = true;
   }
 
-  // Even if there is no bogus node, we should detect as empty document
-  // if all children are text node and these are no content.
-  if (NS_WARN_IF(!mTextEditor)) {
-    return true;
-  }
-  Element* rootElement = mTextEditor->GetRoot();
-  if (!rootElement) {
-    return true;
-  }
-
-  for (nsIContent* child = rootElement->GetFirstChild();
-       child; child = child->GetNextSibling()) {
-    if (!EditorBase::IsTextNode(child) ||
-        child->Length()) {
-      return false;
-    }
-  }
-  return true;
+  return retVal;
 }
 
 void

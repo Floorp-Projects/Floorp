@@ -67,10 +67,7 @@ public:
     sStartupTimeline[ev] = when;
   }
 
-  static void RecordOnce(Event ev) {
-    if (!HasRecord(ev))
-      Record(ev);
-  }
+  static void RecordOnce(Event ev);
 #endif
 
   static bool HasRecord(Event ev) {

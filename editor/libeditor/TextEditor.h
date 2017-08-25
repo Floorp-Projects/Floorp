@@ -78,6 +78,7 @@ public:
                   nsISelectionController* aSelCon, uint32_t aFlags,
                   const nsAString& aValue) override;
 
+  nsresult DocumentIsEmpty(bool* aIsEmpty);
   NS_IMETHOD GetDocumentIsEmpty(bool* aDocumentIsEmpty) override;
 
   NS_IMETHOD DeleteSelection(EDirection aAction,

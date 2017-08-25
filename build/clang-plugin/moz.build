@@ -11,6 +11,7 @@ SOURCES += ['!ThirdPartyPaths.cpp']
 UNIFIED_SOURCES += [
     'ArithmeticArgChecker.cpp',
     'AssertAssignmentChecker.cpp',
+    'CanRunScriptChecker.cpp',
     'CustomTypeAnnotation.cpp',
     'DanglingOnTemporaryChecker.cpp',
     'DiagnosticsMatcher.cpp',

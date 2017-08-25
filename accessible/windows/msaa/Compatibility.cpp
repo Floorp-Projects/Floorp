@@ -139,7 +139,7 @@ Compatibility::Init()
 
   HMODULE jawsHandle = ::GetModuleHandleW(L"jhook");
   if (jawsHandle)
-    sConsumers |= (IsModuleVersionLessThan(jawsHandle, 8, 2173)) ?
+    sConsumers |= (IsModuleVersionLessThan(jawsHandle, 18, 4315)) ?
                    OLDJAWS : JAWS;
 
   if (::GetModuleHandleW(L"gwm32inc"))
@@ -224,11 +224,15 @@ ReadCOMRegDefaultString(const nsString& aRegPath, nsAString& aOutBuf)
 {
   aOutBuf.Truncate();
 
+  nsAutoString fullyQualifiedRegPath;
+  fullyQualifiedRegPath.AppendLiteral(u"SOFTWARE\\Classes\\");
+  fullyQualifiedRegPath.Append(aRegPath);
+
   // Get the required size and type of the registry value.
   // We expect either REG_SZ or REG_EXPAND_SZ.
   DWORD type;
   DWORD bufLen = 0;
-  LONG result = ::RegGetValue(HKEY_CLASSES_ROOT, aRegPath.get(),
+  LONG result = ::RegGetValue(HKEY_LOCAL_MACHINE, fullyQualifiedRegPath.get(),
                               nullptr, RRF_RT_ANY, &type, nullptr, &bufLen);
   if (result != ERROR_SUCCESS || (type != REG_SZ && type != REG_EXPAND_SZ)) {
     return false;
@@ -239,7 +243,7 @@ ReadCOMRegDefaultString(const nsString& aRegPath, nsAString& aOutBuf)
 
   aOutBuf.SetLength((bufLen + 1) / sizeof(char16_t));
 
-  result = ::RegGetValue(HKEY_CLASSES_ROOT, aRegPath.get(), nullptr,
+  result = ::RegGetValue(HKEY_LOCAL_MACHINE, fullyQualifiedRegPath.get(), nullptr,
                          flags, nullptr, aOutBuf.BeginWriting(), &bufLen);
   if (result != ERROR_SUCCESS) {
     aOutBuf.Truncate();

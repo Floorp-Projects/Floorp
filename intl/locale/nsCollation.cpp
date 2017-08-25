@@ -4,6 +4,7 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
 #include "nsCollation.h"
+#include "mozilla/intl/LocaleService.h"
 #include "nsIServiceManager.h"
 #include "nsString.h"
 
@@ -117,7 +118,20 @@ nsCollation::Initialize(const nsACString& locale)
 {
   NS_ENSURE_TRUE((!mInit), NS_ERROR_ALREADY_INITIALIZED);
 
-  mLocale = locale;
+  // Check whether locale parameter is valid.  If no, use application locale
+  UErrorCode status = U_ZERO_ERROR;
+  UCollator* collator = ucol_open(PromiseFlatCString(locale).get(), &status);
+  if (U_SUCCESS(status)) {
+    mLocale = locale;
+  } else {
+    status = U_ZERO_ERROR;
+    mozilla::LocaleService::GetInstance()->GetAppLocaleAsLangTag(mLocale);
+    collator = ucol_open(mLocale.get(), &status);
+    if (NS_WARN_IF(U_FAILURE(status))) {
+      return NS_ERROR_UNEXPECTED;
+    }
+  }
+  ucol_close(collator);
 
   mInit = true;
   return NS_OK;

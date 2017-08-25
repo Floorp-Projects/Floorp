@@ -950,6 +950,7 @@ const DownloadsViewPrototype = {
    */
   onDownloadBatchEnded() {
     this._loading = false;
+    this._updateViews();
   },
 
   /**
@@ -1029,6 +1030,19 @@ const DownloadsViewPrototype = {
   _updateView() {
     throw Components.results.NS_ERROR_NOT_IMPLEMENTED;
   },
+
+  /**
+   * Computes aggregate values and propagates the changes to our views.
+   */
+  _updateViews() {
+    // Do not update the status indicators during batch loads of download items.
+    if (this._loading) {
+      return;
+    }
+
+    this._refreshProperties();
+    this._views.forEach(this._updateView, this);
+  },
 };
 
 // DownloadsIndicatorData
@@ -1063,13 +1077,6 @@ DownloadsIndicatorDataCtor.prototype = {
     if (this._views.length == 0) {
       this._itemCount = 0;
     }
-  },
-
-  // Callback functions from DownloadsData
-
-  onDataLoadCompleted() {
-    DownloadsViewPrototype.onDataLoadCompleted.call(this);
-    this._updateViews();
   },
 
   onDownloadAdded(download) {
@@ -1148,20 +1155,6 @@ DownloadsIndicatorDataCtor.prototype = {
     return aValue;
   },
   _attentionSuppressed: false,
-
-  /**
-   * Computes aggregate values and propagates the changes to our views.
-   */
-  _updateViews() {
-    // Do not update the status indicators during batch loads of download items.
-    if (this._loading) {
-      return;
-    }
-
-    this._refreshProperties();
-
-    this._views.forEach(this._updateView, this);
-  },
 
   /**
    * Updates the specified view with the current aggregate values.
@@ -1297,15 +1290,6 @@ DownloadsSummaryData.prototype = {
     }
   },
 
-  // Callback functions from DownloadsData - see the documentation in
-  // DownloadsViewPrototype for more information on what these functions
-  // are used for.
-
-  onDataLoadCompleted() {
-    DownloadsViewPrototype.onDataLoadCompleted.call(this);
-    this._updateViews();
-  },
-
   onDownloadAdded(download) {
     DownloadsViewPrototype.onDownloadAdded.call(this, download);
     this._downloads.unshift(download);
@@ -1330,19 +1314,6 @@ DownloadsSummaryData.prototype = {
   },
 
   // Propagation of properties to our views
-
-  /**
-   * Computes aggregate values and propagates the changes to our views.
-   */
-  _updateViews() {
-    // Do not update the status indicators during batch loads of download items.
-    if (this._loading) {
-      return;
-    }
-
-    this._refreshProperties();
-    this._views.forEach(this._updateView, this);
-  },
 
   /**
    * Updates the specified view with the current aggregate values.

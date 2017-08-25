@@ -29,7 +29,6 @@ XPIDL_SOURCES += [
     'mozIStorageService.idl',
     'mozIStorageStatement.idl',
     'mozIStorageStatementCallback.idl',
-    'mozIStorageStatementParams.idl',
     'mozIStorageVacuumParticipant.idl',
     'mozIStorageValueArray.idl',
 ]
@@ -47,6 +46,8 @@ EXPORTS.mozilla += [
 # NOTE When adding something to this list, you probably need to add it to the
 #      storage.h file too.
 EXPORTS.mozilla.storage += [
+    'mozStorageAsyncStatementParams.h',
+    'mozStorageStatementParams.h',
     'mozStorageStatementRow.h',
     'StatementCache.h',
     'Variant.h',

@@ -35,7 +35,10 @@ class SandboxBrokerClient final : private SandboxBrokerCommon {
   int Stat(const char* aPath, statstruct* aStat);
   int LStat(const char* aPath, statstruct* aStat);
   int Chmod(const char* aPath, int aMode);
+  int Link(const char* aPath, const char* aPath2);
   int Mkdir(const char* aPath, int aMode);
+  int Symlink(const char* aOldPath, const char* aNewPath);
+  int Rename(const char* aOldPath, const char* aNewPath);
   int Unlink(const char* aPath);
   int Rmdir(const char* aPath);
   int Readlink(const char* aPath, void* aBuf, size_t aBufSize);
@@ -45,6 +48,7 @@ class SandboxBrokerClient final : private SandboxBrokerCommon {
 
   int DoCall(const Request* aReq,
              const char* aPath,
+             const char* aPath2,
              void *aReponseBuff,
              bool expectFd);
 };

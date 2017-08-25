@@ -636,4 +636,6 @@
   <string name="private_tab_panel_description">&private_tab_panel_description;</string>
   <string name="private_tab_panel_description2">&private_tab_panel_description2;</string>
   <string name="private_tab_learn_more">&private_tab_learn_more;</string>
+
+  <string name="fullscreen_warning">&fullscreen_warning;</string>
 </resources>

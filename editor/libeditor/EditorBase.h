@@ -877,7 +877,10 @@ public:
   virtual bool AreNodesSameType(nsIContent* aNode1, nsIContent* aNode2);
 
   static bool IsTextNode(nsIDOMNode* aNode);
-  static bool IsTextNode(nsINode* aNode);
+  static bool IsTextNode(nsINode* aNode)
+  {
+    return aNode->NodeType() == nsIDOMNode::TEXT_NODE;
+  }
 
   static nsCOMPtr<nsIDOMNode> GetChildAt(nsIDOMNode* aParent, int32_t aOffset);
   static nsIContent* GetNodeAtRangeOffsetPoint(nsINode* aParentOrNode,
@@ -969,7 +972,16 @@ public:
   /**
    * Fast non-refcounting editor root element accessor
    */
-  Element* GetRoot();
+  Element* GetRoot()
+  {
+    if (!mRootElement) {
+      // Let GetRootElement() do the work
+      nsCOMPtr<nsIDOMElement> root;
+      GetRootElement(getter_AddRefs(root));
+    }
+
+    return mRootElement;
+  }
 
   /**
    * Likewise, but gets the editor's root instead, which is different for HTML

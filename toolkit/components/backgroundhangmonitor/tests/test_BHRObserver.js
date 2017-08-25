@@ -28,6 +28,10 @@ add_task(async function test_BHRObserver() {
     return;
   }
 
+  let telSvc = Cc["@mozilla.org/bhr-telemetry-service;1"].getService().wrappedJSObject;
+  ok(telSvc, "Should have BHRTelemetryService");
+  let beforeLen = telSvc.payload.hangs.length;
+
   if (Services.appinfo.OS === "Linux" || Services.appinfo.OS === "Android") {
     // We use the rt_tgsigqueueinfo syscall on Linux which requires a
     // certain kernel version. It's not an error if the system running
@@ -111,6 +115,45 @@ add_task(async function test_BHRObserver() {
       equal(typeof hang.annotations[key], "string");
     });
 
+  });
+
+  // Check that the telemetry service collected pings which make sense
+  ok(telSvc.payload.hangs.length - beforeLen >= 3);
+  ok(Array.isArray(telSvc.payload.modules));
+  telSvc.payload.modules.forEach(module => {
+    ok(Array.isArray(module));
+    equal(module.length, 2);
+    equal(typeof module[0], "string");
+    equal(typeof module[1], "string");
+  });
+
+  telSvc.payload.hangs.forEach(hang => {
+    ok(hang.duration > 0);
+    ok(hang.thread == "Gecko" || hang.thread == "Gecko_Child");
+    equal(typeof hang.runnableName, "string");
+
+    // hang.stack
+    ok(Array.isArray(hang.stack));
+    ok(hang.stack.length > 0);
+    hang.stack.forEach(entry => {
+      // Each stack frame entry is either a native or pseudostack entry. A
+      // native stack entry is an array with module index (number), and offset
+      // (hex string), while the pseudostack entry is a bare string.
+      if (Array.isArray(entry)) {
+        equal(entry.length, 2);
+        equal(typeof entry[0], "number");
+        ok(entry[0] < telSvc.payload.hangs.length);
+        equal(typeof entry[1], "string");
+      } else {
+        equal(typeof entry, "string");
+      }
+    });
+
+    // hang.annotations
+    equal(typeof hang.annotations, "object");
+    Object.keys(hang.annotations).forEach(key => {
+      equal(typeof hang.annotations[key], "string");
+    });
   });
 
   do_send_remote_message("bhr_hangs_detected");
