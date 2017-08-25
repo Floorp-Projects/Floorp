@@ -19,19 +19,14 @@ mapping:
       artifact: {{ artifact_base_url }}/target.stub-installer.exe
       s3_key: {{ s3_prefix }}{{ platform }}/{{ locale }}/Firefox Installer.exe
     {% endif %}
-  {% endif %}
-
-  {% if platform == "win64" %}
+  {% elif platform == "win64" %}
     complete_mar:
       artifact: {{ artifact_base_url }}/target.complete.mar
       s3_key: {{ s3_prefix }}update/{{ platform }}/{{ locale }}/firefox-{{ version }}.complete.mar
     full_installer:
       artifact: {{ artifact_base_url }}/target.installer.exe
       s3_key: {{ s3_prefix }}{{ platform }}/{{ locale }}/Firefox Setup {{ version }}.exe
-  {% endif %}
-
-
-  {% if platform == "mac" %}
+  {% else %}
     complete_mar:
       artifact: {{ artifact_base_url }}/target.complete.mar
       s3_key: {{ s3_prefix }}update/{{ platform }}/{{ locale }}/firefox-{{ version }}.complete.mar
