@@ -13,14 +13,14 @@ function initializeMemoryCollector(callback, args) {
     var os = Components.classes["@mozilla.org/observer-service;1"].
         getService(Components.interfaces.nsIObserverService);
 
-    os.addObserver(function() {
+    os.addObserver(function observer() {
         var os = Components.classes["@mozilla.org/observer-service;1"].
             getService(Components.interfaces.nsIObserverService);
 
         memTimer.cancel();
         memTimer = null;
 
-        os.removeObserver(arguments.callee, "child-memory-reporter-update");
+        os.removeObserver(observer, "child-memory-reporter-update");
         os.addObserver(collectAndReport, "child-memory-reporter-update");
         gMemCallback();
     }, "child-memory-reporter-update");

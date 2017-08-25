@@ -396,10 +396,10 @@ add_test(function() {
     is_in_list(aManager, "addons://list/plugin", false, false);
 
     gBrowser.loadURI("http://example.com/");
-    gBrowser.addEventListener("pageshow", function(event) {
+    gBrowser.addEventListener("pageshow", function listener(event) {
       if (event.target.location != "http://example.com/")
         return;
-      gBrowser.removeEventListener("pageshow", arguments.callee);
+      gBrowser.removeEventListener("pageshow", listener);
       info("Part 2");
 
       executeSoon(function() {
@@ -408,20 +408,20 @@ add_test(function() {
 
         go_back();
 
-        gBrowser.addEventListener("pageshow", function(event) {
+        gBrowser.addEventListener("pageshow", function listener(event) {
           if (event.target.location != "about:addons")
             return;
-          gBrowser.removeEventListener("pageshow", arguments.callee);
+          gBrowser.removeEventListener("pageshow", listener);
 
           wait_for_view_load(gBrowser.contentWindow.wrappedJSObject, function(aManager) {
             info("Part 3");
             is_in_list(aManager, "addons://list/plugin", false, true);
 
             executeSoon(() => go_forward());
-            gBrowser.addEventListener("pageshow", function(event) {
+            gBrowser.addEventListener("pageshow", function listener(event) {
               if (event.target.location != "http://example.com/")
                 return;
-              gBrowser.removeEventListener("pageshow", arguments.callee);
+              gBrowser.removeEventListener("pageshow", listener);
               info("Part 4");
 
               executeSoon(function() {
@@ -430,10 +430,10 @@ add_test(function() {
 
                 go_back();
 
-                gBrowser.addEventListener("pageshow", function(event) {
+                gBrowser.addEventListener("pageshow", function listener(event) {
                   if (event.target.location != "about:addons")
                     return;
-                  gBrowser.removeEventListener("pageshow", arguments.callee);
+                  gBrowser.removeEventListener("pageshow", listener);
                   wait_for_view_load(gBrowser.contentWindow.wrappedJSObject, function(aManager) {
                     info("Part 5");
                     is_in_list(aManager, "addons://list/plugin", false, true);
@@ -539,10 +539,10 @@ add_test(function() {
         is_in_detail(aManager, "addons://search/", true, false);
 
         gBrowser.loadURI("http://example.com/");
-        gBrowser.addEventListener("pageshow", function(event) {
+        gBrowser.addEventListener("pageshow", function listener(event) {
           if (event.target.location != "http://example.com/")
             return;
-          gBrowser.removeEventListener("pageshow", arguments.callee);
+          gBrowser.removeEventListener("pageshow", listener);
 
           info("Part 4");
           executeSoon(function() {
@@ -550,10 +550,10 @@ add_test(function() {
             ok(!gBrowser.canGoForward, "Should not be able to go forward");
 
             go_back();
-            gBrowser.addEventListener("pageshow", function(event) {
+            gBrowser.addEventListener("pageshow", function listener(event) {
                 if (event.target.location != "about:addons")
                 return;
-              gBrowser.removeEventListener("pageshow", arguments.callee);
+              gBrowser.removeEventListener("pageshow", listener);
 
               wait_for_view_load(gBrowser.contentWindow.wrappedJSObject, function(aManager) {
                 info("Part 5");
@@ -590,10 +590,10 @@ add_test(function() {
       is_in_list(aManager, "addons://list/plugin", true, false);
 
       gBrowser.reload();
-      gBrowser.addEventListener("pageshow", function(event) {
+      gBrowser.addEventListener("pageshow", function listener(event) {
         if (event.target.location != "about:addons")
           return;
-        gBrowser.removeEventListener("pageshow", arguments.callee);
+        gBrowser.removeEventListener("pageshow", listener);
 
         wait_for_view_load(gBrowser.contentWindow.wrappedJSObject, function(aManager) {
           info("Part 3");
@@ -626,10 +626,10 @@ add_test(function() {
       is_in_detail(aManager, "addons://list/extension", true, false);
 
       gBrowser.reload();
-      gBrowser.addEventListener("pageshow", function(event) {
+      gBrowser.addEventListener("pageshow", function listener(event) {
         if (event.target.location != "about:addons")
           return;
-        gBrowser.removeEventListener("pageshow", arguments.callee);
+        gBrowser.removeEventListener("pageshow", listener);
 
         wait_for_view_load(gBrowser.contentWindow.wrappedJSObject, function(aManager) {
           info("Part 3");
@@ -812,10 +812,10 @@ add_test(function() {
   var tab = BrowserTestUtils.addTab(gBrowser, "about:addons");
   var browser = gBrowser.getBrowserForTab(tab);
 
-  browser.addEventListener("pageshow", function(event) {
+  browser.addEventListener("pageshow", function listener(event) {
     if (event.target.location.href != "about:addons")
       return;
-    browser.removeEventListener("pageshow", arguments.callee, true);
+    browser.removeEventListener("pageshow", listener, true);
 
     wait_for_manager_load(browser.contentWindow.wrappedJSObject, function() {
       wait_for_view_load(browser.contentWindow.wrappedJSObject, function(aManager) {

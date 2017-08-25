@@ -655,6 +655,7 @@ separator.thin:not([orient="vertical"]) {
 .help-button:visited {
   color: var(--in-content-category-text);
   text-decoration: none;
+  border-radius: 2px;
 }
 
 .face-sad {

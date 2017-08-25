@@ -533,12 +533,6 @@ protected:
   // Called on the main thread only.
   virtual void DownloadProgressed();
 
-  // Called by MediaResource when the "cache suspended" status changes.
-  // If MediaResource::IsSuspendedByCache returns true, then the decoder
-  // should stop buffering or otherwise waiting for download progress and
-  // start consuming data, if possible, because the cache is full.
-  void NotifySuspendedStatusChanged();
-
   // Called by MediaResource when the principal of the resource has
   // changed. Called on main thread only.
   void NotifyPrincipalChanged();

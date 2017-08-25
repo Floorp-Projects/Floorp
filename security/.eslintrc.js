@@ -26,9 +26,6 @@ module.exports = {
     // Disallow use of alert(), confirm(), and prompt().
     "no-alert": "error",
 
-    // Disallow use of arguments.caller or arguments.callee.
-    "no-caller": "error",
-
     // Disallow likely erroneous `switch` scoped lexical declarations in
     // case/default clauses.
     "no-case-declarations": "error",

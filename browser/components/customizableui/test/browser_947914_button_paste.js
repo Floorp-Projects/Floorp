@@ -15,6 +15,8 @@ add_task(async function() {
     let clipboard = Cc["@mozilla.org/widget/clipboardhelper;1"].getService(Ci.nsIClipboardHelper);
     globalClipboard = Services.clipboard.kGlobalClipboard;
 
+    await waitForOverflowButtonShown();
+
     await document.getElementById("nav-bar").overflowable.show();
     info("Menu panel was opened");
 

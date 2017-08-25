@@ -17,10 +17,6 @@ add_task(async function testAddOnBeforeCreatedWidget() {
     onBeforeCreated(doc) {
       let view = doc.createElement("panelview");
       view.id = kWidgetId + "idontexistyet";
-      let label = doc.createElement("label");
-      label.setAttribute("value", "Hello world");
-      label.className = "panel-subview-header";
-      view.appendChild(label);
       document.getElementById("PanelUI-multiView").appendChild(view);
       onBeforeCreatedCalled = true;
     },
@@ -60,6 +56,7 @@ add_task(async function testAddOnBeforeCreatedWidget() {
       await panelHiddenPromise;
 
       CustomizableUI.addWidgetToArea(kWidgetId, CustomizableUI.AREA_FIXED_OVERFLOW_PANEL);
+      await waitForOverflowButtonShown();
       await document.getElementById("nav-bar").overflowable.show();
 
       viewShownDeferred = Promise.defer();

@@ -220,25 +220,10 @@ panelview {
   padding: 4px 4px;
 }
 
-.panel-subview-header,
 .subviewbutton.panel-subview-footer {
   box-sizing: border-box;
   min-height: 41px;
   padding: 11px 12px;
-}
-
-.panel-subview-header {
-  margin: -4px -4px 4px;
-  border-bottom: 1px solid var(--panel-separator-color);
-  color: GrayText;
-  font-variant: small-caps;
-  /* Workaround for min-height not being accounted for in vertical layout. */
-  height: 41px;
-}
-
-.cui-widget-panelview .panel-subview-header,
-photonpanelmultiview .panel-subview-header {
-  display: none;
 }
 
 .cui-widget-panelview .subviewbutton.panel-subview-footer {

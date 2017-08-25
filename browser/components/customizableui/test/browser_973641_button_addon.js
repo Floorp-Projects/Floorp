@@ -34,6 +34,8 @@ add_task(async function() {
   CustomizableUI.addWidgetToArea(kButton, CustomizableUI.AREA_FIXED_OVERFLOW_PANEL);
   ok(!navBar.contains(addonButton), "Addon button was removed from the browser bar");
 
+  await waitForOverflowButtonShown();
+
   // check the addon button's functionality in the Panel Menu
   await document.getElementById("nav-bar").overflowable.show();
   var panelMenu = document.getElementById("widget-overflow-mainView");
