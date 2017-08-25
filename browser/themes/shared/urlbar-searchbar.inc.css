@@ -23,16 +23,16 @@
 }
 
 #urlbar:-moz-lwtheme,
-.searchbar-textbox:-moz-lwtheme {
-  background-color: hsla(0,0%,100%,.8);
-  color: black;
+#navigator-toolbox .searchbar-textbox:-moz-lwtheme {
+  background-color: var(--url-and-searchbar-background-color, hsla(0,0%,100%,.8));
+  color: var(--url-and-searchbar-color, black);
 }
 
 #urlbar:-moz-lwtheme:hover,
 #urlbar:-moz-lwtheme[focused="true"],
-.searchbar-textbox:-moz-lwtheme:hover,
-.searchbar-textbox:-moz-lwtheme[focused="true"] {
-  background-color: white;
+#navigator-toolbox .searchbar-textbox:-moz-lwtheme:hover,
+#navigator-toolbox .searchbar-textbox:-moz-lwtheme[focused="true"] {
+  background-color: var(--url-and-searchbar-background-color, white);
 }
 
 :root[uidensity=compact] #urlbar,
@@ -111,26 +111,45 @@
 
 /* URL bar and page action buttons */
 
-.urlbar-history-dropmarker {
-  -moz-appearance: none;
-  list-style-image: url(chrome://global/skin/icons/arrow-dropdown-16.svg);
-  transition: opacity 0.15s ease;
-}
-
-#urlbar[switchingtabs] > .urlbar-textbox-container > .urlbar-history-dropmarker {
-  transition: none;
-}
-
-#navigator-toolbox:not(:hover) > #nav-bar:not([customizing="true"]) > #nav-bar-customization-target > #urlbar-container > #urlbar:not([focused]) > .urlbar-textbox-container > .urlbar-history-dropmarker {
-  opacity: 0;
-}
-
-/* Page actions */
-
 #page-action-buttons {
   -moz-box-align: center;
   /* Add more space between the last icon and the urlbar's edge. */
   margin-inline-end: 3px;
+}
+
+#pageActionSeparator {
+  /* This draws the separator the same way that #urlbar-display-box draws its
+     left and right borders, which end up looking like separators.  It might not
+     be the best way in this case, but it makes sure that all these vertical
+     lines in the urlbar look the same: same height, vertical position, etc. */
+  border-inline-start: 1px solid var(--urlbar-separator-color);
+  border-image: linear-gradient(transparent 15%, var(--urlbar-separator-color) 15%, var(--urlbar-separator-color) 85%, transparent 85%);
+  border-image-slice: 1;
+  width: 1px;
+  height: 28px;
+  visibility: hidden;
+}
+
+:root[uidensity=compact] #pageActionSeparator {
+  height: 24px;
+}
+
+:root[uidensity=touch] #pageActionSeparator {
+  height: 30px;
+}
+
+:not(#pageActionSeparator):not([hidden]) ~ #pageActionSeparator {
+  /* Show the separator between the page actions and other elements when at
+     least of the latter is shown. */
+  visibility: visible;
+  margin-left: 6px;
+  margin-right: 6px;
+}
+
+#userContext-icons,
+#urlbar-zoom-button {
+  margin-left: 6px;
+  margin-right: 6px;
 }
 
 .urlbar-icon {
@@ -146,6 +165,37 @@
 
 .urlbar-icon:hover {
   fill-opacity: 0.8;
+}
+
+.urlbar-go-button,
+.search-go-button {
+  list-style-image: url("chrome://browser/skin/back.svg");
+  width: 26px;
+}
+
+.urlbar-go-button:-moz-locale-dir(ltr),
+.search-go-button:-moz-locale-dir(ltr) {
+  transform: scaleX(-1);
+}
+
+.urlbar-go-button:hover,
+.search-go-button:hover {
+  fill: #058b00;
+  fill-opacity: 1;
+}
+
+.urlbar-history-dropmarker {
+  -moz-appearance: none;
+  list-style-image: url(chrome://global/skin/icons/arrow-dropdown-16.svg);
+  transition: opacity 0.15s ease;
+}
+
+#urlbar[switchingtabs] > .urlbar-textbox-container > .urlbar-history-dropmarker {
+  transition: none;
+}
+
+#navigator-toolbox:not(:hover) > #nav-bar:not([customizing="true"]) > #nav-bar-customization-target > #urlbar-container > #urlbar:not([focused]) > .urlbar-textbox-container > .urlbar-history-dropmarker {
+  opacity: 0;
 }
 
 #pageActionButton {
@@ -242,7 +292,6 @@
 /* Zoom button */
 
 #urlbar-zoom-button {
-  margin: 0 3px;
   font-size: .8em;
   padding: 0 8px;
   border-radius: 1em;

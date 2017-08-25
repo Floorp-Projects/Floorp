@@ -108,6 +108,12 @@ class Theme {
         case "toolbar":
           this.lwtStyles.toolbarColor = cssColor;
           break;
+        case "toolbar_field":
+          this.lwtStyles.toolbar_field = cssColor;
+          break;
+        case "toolbar_field_text":
+          this.lwtStyles.toolbar_field_text = cssColor;
+          break;
       }
     }
   }

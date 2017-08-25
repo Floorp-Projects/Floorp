@@ -84,7 +84,7 @@ WebGLContext::ActiveTexture(GLenum texture)
         return;
 
     if (texture < LOCAL_GL_TEXTURE0 ||
-        texture >= LOCAL_GL_TEXTURE0 + uint32_t(mGLMaxTextureUnits))
+        texture >= LOCAL_GL_TEXTURE0 + mGLMaxTextureUnits)
     {
         return ErrorInvalidEnum(
             "ActiveTexture: texture unit %d out of range. "
@@ -430,7 +430,7 @@ WebGLContext::DeleteTexture(WebGLTexture* tex)
         mBoundReadFramebuffer->DetachTexture(funcName, tex);
 
     GLuint activeTexture = mActiveTexture;
-    for (int32_t i = 0; i < mGLMaxTextureUnits; i++) {
+    for (uint32_t i = 0; i < mGLMaxTextureUnits; i++) {
         if (mBound2DTextures[i] == tex ||
             mBoundCubeMapTextures[i] == tex ||
             mBound3DTextures[i] == tex ||
@@ -2257,8 +2257,8 @@ WebGLContext::Viewport(GLint x, GLint y, GLsizei width, GLsizei height)
     if (width < 0 || height < 0)
         return ErrorInvalidValue("viewport: negative size");
 
-    width = std::min(width, (GLsizei)mImplMaxViewportDims[0]);
-    height = std::min(height, (GLsizei)mImplMaxViewportDims[1]);
+    width = std::min(width, (GLsizei)mGLMaxViewportDims[0]);
+    height = std::min(height, (GLsizei)mGLMaxViewportDims[1]);
 
     MakeContextCurrent();
     gl->fViewport(x, y, width, height);

@@ -28,7 +28,6 @@ XPCOMUtils.defineLazyModuleGetter(
   this, "setTimeout", "resource://gre/modules/Timer.jsm");
 
 const URI_EXTENSION_STRINGS  = "chrome://mozapps/locale/extensions/extensions.properties";
-const STRING_TYPE_NAME       = "type.%ID%.name";
 
 const SEC_IN_A_DAY           = 24 * 60 * 60;
 // How long to wait after a user enabled EME before attempting to download CDMs.
@@ -688,7 +687,7 @@ var GMPProvider = {
 
 AddonManagerPrivate.registerProvider(GMPProvider, [
   new AddonManagerPrivate.AddonType("plugin", URI_EXTENSION_STRINGS,
-                                    STRING_TYPE_NAME,
+                                    "type.plugin.name",
                                     AddonManager.VIEW_TYPE_LIST, 6000,
                                     AddonManager.TYPE_SUPPORTS_ASK_TO_ACTIVATE)
 ]);

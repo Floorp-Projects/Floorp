@@ -31,30 +31,22 @@ Hacking Task Graphs
 
 The recommended process for changing task graphs is this:
 
-1. Find a recent decision task on the project or branch you are working on, and
-   download its ``parameters.yml`` artifact.  Alternately, you
-   can simply take note of the artifact URL, or just the decision task's
-   ``task-id``.  This file contains all of the inputs to the task-graph
-   generation process.  Its contents are simple enough if you would like to
-   modify it, and it is documented in :doc:`parameters`.
-
-2. Run one of the ``mach taskgraph`` subcommands (see :doc:`taskgraph`) to
-   generate a baseline against which to measure your changes, passing the
-   parameters you found in the previous step.  For example:
+1. Run one of the ``mach taskgraph`` subcommands (see :doc:`mach`) to
+   generate a baseline against which to measure your changes.
 
    .. code-block:: none
 
-       ./mach taskgraph tasks --json -p parameters.yml > old-tasks.json
-       ./mach taskgraph tasks --json -p url/to/parameters.yml > old-tasks.json
-       ./mach taskgraph tasks --json -p task-id=<task-id> > old-tasks.json
+       ./mach taskgraph tasks --json > old-tasks.json
 
-3. Make your modifications under ``taskcluster/``.
+2. Make your modifications under ``taskcluster/``.
 
-4. Run the same ``mach taskgraph`` command, sending the output to a new file,
+3. Run the same ``mach taskgraph`` command, sending the output to a new file,
    and use ``diff`` to compare the old and new files.  Make sure your changes
-   have the desired effect and no undesirable side-effects.
+   have the desired effect and no undesirable side-effects.  A plain unified
+   diff should be useful for most changes, but in some cases it may be helpful
+   to post-process the JSON to strip distracting changes.
 
-5. When you are satisfied with the changes, push them to try to ensure that the
+4. When you are satisfied with the changes, push them to try to ensure that the
    modified tasks work as expected.
 
 Hacking Actions
@@ -67,8 +59,7 @@ If you are working on an action task and wish to test it out locally, use the
 
         ./mach taskgraph test-action-task \
             --task-id I4gu9KDmSZWu3KHx6ba6tw --task-group-id sMO4ybV9Qb2tmcI1sDHClQ \
-            -p parameters.yml --input input.yml \
-            hello_world_action
+            --input input.yml hello_world_action
 
 This invocation will run the hello world callback with the given inputs and
 print any created tasks to stdout, rather than actually creating them.
@@ -254,110 +245,3 @@ If you make another change not described here that turns out to be simple or
 common, please include an update to this file in your patch.
 
 
-Schedule a Task on Try
-----------------------
-
-There are two methods for scheduling a task on try.
-
-The first method is a command line string called ``try syntax`` which is passed
-into the decision task via the commit message. An example try syntax might look
-like:
-
-.. parsed-literal::
-
-    try: -b o -p linux64 -u mochitest-1 -t none
-
-This gets parsed by ``taskgraph.try_option_syntax:TryOptionSyntax`` and returns
-a list of matching task labels. For more information see the
-`TryServer wiki page <https://wiki.mozilla.org/Try>`_.
-
-The second method uses a checked-in file called ``try_task_config.json`` which
-lives at the root of the source dir. The format of this file is either a list
-of task labels, or a JSON object where task labels make up the keys. For
-example, the ``try_task_config.json`` file might look like:
-
-.. parsed-literal::
-
-    {
-      "tasks": [
-        "test-windows10-64/opt-web-platform-tests-12",
-        "test-windows7-32/opt-reftest-1",
-        "test-windows7-32/opt-reftest-2",
-        "test-windows7-32/opt-reftest-3",
-        "build-linux64/debug",
-        "source-test-mozlint-eslint"
-      ]
-    }
-
-Very simply, this will run any task label that gets passed in as well as their
-dependencies. While it is possible to manually commit this file and push to
-try, it is mainly meant to be a generation target for various `tryselect`_
-choosers.
-
-A list of all possible task labels can be obtained by running:
-
-.. parsed-literal::
-
-    $ ./mach taskgraph tasks
-
-A list of task labels relevant to a tree (defaults to mozilla-central) can be
-obtained with:
-
-.. parsed-literal::
-
-    $ ./mach taskgraph target
-
-Modifying Task Behavior on Try
-``````````````````````````````
-
-It's possible to alter the definition of a task with templates. Templates are
-`JSON-e`_ files that live in the `taskgraph module`_. Templates can be specified
-from the ``try_task_config.json`` like this:
-
-.. parsed-literal::
-
-    {
-      "tasks": [...],
-      "templates": {
-        artifact: {"enabled": 1}
-      }
-    }
-
-Each key in the templates object denotes a new template to apply, and the value
-denotes extra context to use while rendering. When specified, a template will
-be applied to every task no matter what. If the template should only be applied
-to certain kinds of tasks, this needs to be specified in the template itself
-using JSON-e `condition statements`_.
-
-The context available to the JSON-e render aims to match that of ``actions``.
-It looks like this:
-
-.. parsed-literal::
-
-    {
-      "task": {
-        "payload": {
-          "env": { ... },
-          ...
-        }
-        "extra": {
-          "treeherder": { ... },
-          ...
-        },
-        "tags": { "kind": "<kind>", ... },
-        ...
-      },
-      "input": {
-        "enabled": 1,
-        ...
-      },
-      "taskId": "<task id>"
-    }
-
-See the `existing templates`_ for examples.
-
-.. _tryselect: https://dxr.mozilla.org/mozilla-central/source/tools/tryselect
-.. _JSON-e: https://taskcluster.github.io/json-e/
-.. _taskgraph module: https://dxr.mozilla.org/mozilla-central/source/taskcluster/taskgraph/templates
-.. _condition statements: https://taskcluster.github.io/json-e/#%60$if%60%20-%20%60then%60%20-%20%60else%60
-.. _existing templates: https://dxr.mozilla.org/mozilla-central/source/taskcluster/taskgraph/templates

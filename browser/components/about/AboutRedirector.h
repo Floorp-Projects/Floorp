@@ -28,6 +28,9 @@ protected:
 private:
   static bool sUseOldPreferences;
   static bool sActivityStreamEnabled;
+  static bool sActivityStreamAboutHomeEnabled;
+
+  static void LoadActivityStreamPrefs();
 };
 
 } // namespace browser

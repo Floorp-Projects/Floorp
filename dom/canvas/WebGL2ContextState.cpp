@@ -97,10 +97,10 @@ WebGL2Context::GetParameter(JSContext* cx, GLenum pname, ErrorResult& rv)
       return JS::Int32Value(mPixelStore_UnpackSkipRows);
 
     case LOCAL_GL_MAX_3D_TEXTURE_SIZE:
-      return JS::Int32Value(mImplMax3DTextureSize);
+      return JS::Int32Value(mGLMax3DTextureSize);
 
     case LOCAL_GL_MAX_ARRAY_TEXTURE_LAYERS:
-      return JS::Int32Value(mImplMaxArrayTextureLayers);
+      return JS::Int32Value(mGLMaxArrayTextureLayers);
 
     case LOCAL_GL_MAX_VARYING_COMPONENTS: {
       // On OS X Core Profile this is buggy.  The spec says that the

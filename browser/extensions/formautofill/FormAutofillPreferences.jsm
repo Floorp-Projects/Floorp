@@ -13,11 +13,6 @@ this.EXPORTED_SYMBOLS = ["FormAutofillPreferences"];
 const {classes: Cc, interfaces: Ci, utils: Cu, results: Cr} = Components;
 // Add addresses enabled flag in telemetry environment for recording the number of
 // users who disable/enable the address autofill feature.
-const PREF_AUTOFILL_ENABLED = "extensions.formautofill.addresses.enabled";
-// Add credit card enabled flag in telemetry environment for recording the number of
-// users who disable/enable the credit card autofill feature.
-// TODO: Add const PREF_CREDITCARD_ENABLED = "extensions.formautofill.creditCards.enabled";
-//       when the credit card preferences UI is ready
 const BUNDLE_URI = "chrome://formautofill/locale/formautofill.properties";
 const MANAGE_ADDRESSES_URL = "chrome://formautofill/content/manageAddresses.xhtml";
 const XUL_NS = "http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul";
@@ -25,6 +20,12 @@ const XUL_NS = "http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul";
 Cu.import("resource://gre/modules/Services.jsm");
 Cu.import("resource://gre/modules/XPCOMUtils.jsm");
 Cu.import("resource://formautofill/FormAutofillUtils.jsm");
+
+const {ENABLED_AUTOFILL_ADDRESSES_PREF} = FormAutofillUtils;
+// Add credit card enabled flag in telemetry environment for recording the number of
+// users who disable/enable the credit card autofill feature.
+// TODO: Add const PREF_CREDITCARD_ENABLED = "extensions.formautofill.creditCards.enabled";
+//       when the credit card preferences UI is ready
 
 this.log = null;
 FormAutofillUtils.defineLazyLogGetter(this, this.EXPORTED_SYMBOLS[0]);
@@ -35,15 +36,6 @@ function FormAutofillPreferences({useOldOrganization}) {
 }
 
 FormAutofillPreferences.prototype = {
-  /**
-   * Check if Form Autofill feature is enabled.
-   *
-   * @returns {boolean}
-   */
-  get isAutofillEnabled() {
-    return Services.prefs.getBoolPref(PREF_AUTOFILL_ENABLED);
-  },
-
   /**
    * Create the Form Autofill preference group.
    *
@@ -104,7 +96,7 @@ FormAutofillPreferences.prototype = {
     addressAutofillCheckbox.setAttribute("label", this.bundle.GetStringFromName("enableAddressAutofill"));
 
     // Manually set the checked state
-    if (this.isAutofillEnabled) {
+    if (FormAutofillUtils.isAutofillAddressesEnabled) {
       addressAutofillCheckbox.setAttribute("checked", true);
     }
 
@@ -127,7 +119,7 @@ FormAutofillPreferences.prototype = {
 
         if (target == this.refs.addressAutofillCheckbox) {
           // Set preference directly instead of relying on <Preference>
-          Services.prefs.setBoolPref(PREF_AUTOFILL_ENABLED, target.checked);
+          Services.prefs.setBoolPref(ENABLED_AUTOFILL_ADDRESSES_PREF, target.checked);
         } else if (target == this.refs.savedAddressesBtn) {
           target.ownerGlobal.gSubDialog.open(MANAGE_ADDRESSES_URL);
         }
