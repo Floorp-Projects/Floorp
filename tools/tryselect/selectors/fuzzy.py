@@ -108,7 +108,7 @@ class FuzzyParser(BaseTryParser):
                   "defaults to latest parameters.yml from mozilla-central",
           }],
     ]
-    templates = ['artifact']
+    templates = ['artifact', 'env']
 
 
 def run(cmd, cwd=None):
