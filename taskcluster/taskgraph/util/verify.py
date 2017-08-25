@@ -9,6 +9,30 @@ import os
 base_path = os.path.join(os.getcwd(), "taskcluster/docs/")
 
 
+class VerificationSequence(object):
+    """
+    Container for a sequence of verifications over a TaskGraph. Each
+    verification is represented as a callable taking (task, taskgraph,
+    scratch_pad), called for each task in the taskgraph.
+    """
+    def __init__(self):
+        self.verifications = {}
+
+    def __call__(self, graph_name, graph):
+        for verification in self.verifications.get(graph_name, []):
+            graph.for_each_task(verification, scratch_pad={})
+        return graph_name, graph
+
+    def add(self, graph_name):
+        def wrap(func):
+            self.verifications.setdefault(graph_name, []).append(func)
+            return func
+        return wrap
+
+
+verifications = VerificationSequence()
+
+
 def verify_docs(filename, identifiers, appearing_as):
 
     # We ignore identifiers starting with '_' for the sake of tests.
@@ -40,6 +64,7 @@ def verify_docs(filename, identifiers, appearing_as):
                 )
 
 
+@verifications.add('full_task_graph')
 def verify_task_graph_symbol(task, taskgraph, scratch_pad):
     """
         This function verifies that tuple
@@ -67,6 +92,7 @@ def verify_task_graph_symbol(task, taskgraph, scratch_pad):
                 scratch_pad[key] = task.label
 
 
+@verifications.add('full_task_graph')
 def verify_gecko_v2_routes(task, taskgraph, scratch_pad):
     """
         This function ensures that any two
