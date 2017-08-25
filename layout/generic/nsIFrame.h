@@ -865,7 +865,7 @@ public:
    * Gets the primary frame of the Content's flattened tree
    * parent, if one exists.
    */
-  nsIFrame* GetFlattenedTreeParentPrimaryFrame() const;
+  inline nsIFrame* GetFlattenedTreeParentPrimaryFrame() const;
 
   /**
    * Return the placeholder for this frame (which must be out-of-flow).
