@@ -16,7 +16,7 @@ GlobalResolve(JSContext* cx, JS::HandleObject obj, JS::HandleId id, bool* resolv
 BEGIN_TEST(testRedefineGlobalEval)
 {
     static const JSClassOps clsOps = {
-        nullptr, nullptr, nullptr, nullptr,
+        nullptr, nullptr,
         nullptr, JS_NewEnumerateStandardClasses, GlobalResolve, nullptr, nullptr,
         nullptr, nullptr, nullptr,
         JS_GlobalObjectTraceHook

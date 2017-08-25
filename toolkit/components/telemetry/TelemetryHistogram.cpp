@@ -1059,8 +1059,6 @@ void internal_JSHistogram_finalize(JSFreeOp*, JSObject*);
 static const JSClassOps sJSHistogramClassOps = {
   nullptr, /* addProperty */
   nullptr, /* delProperty */
-  nullptr, /* getProperty */
-  nullptr, /* setProperty */
   nullptr, /* enumerate */
   nullptr, /* newEnumerate */
   nullptr, /* resolve */
@@ -1298,8 +1296,6 @@ void internal_JSKeyedHistogram_finalize(JSFreeOp*, JSObject*);
 static const JSClassOps sJSKeyedHistogramClassOps = {
   nullptr, /* addProperty */
   nullptr, /* delProperty */
-  nullptr, /* getProperty */
-  nullptr, /* setProperty */
   nullptr, /* enumerate */
   nullptr, /* newEnumerate */
   nullptr, /* resolve */

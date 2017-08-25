@@ -954,8 +954,6 @@ CreateFunctionPrototype(JSContext* cx, JSProtoKey key)
 static const ClassOps JSFunctionClassOps = {
     nullptr,                 /* addProperty */
     nullptr,                 /* delProperty */
-    nullptr,                 /* getProperty */
-    nullptr,                 /* setProperty */
     fun_enumerate,
     nullptr,                 /* newEnumerate */
     fun_resolve,

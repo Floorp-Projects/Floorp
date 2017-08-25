@@ -948,8 +948,6 @@ const Class UnboxedExpandoObject::class_ = {
 static const ClassOps UnboxedPlainObjectClassOps = {
     nullptr,        /* addProperty */
     nullptr,        /* delProperty */
-    nullptr,        /* getProperty */
-    nullptr,        /* setProperty */
     nullptr,        /* enumerate   */
     UnboxedPlainObject::newEnumerate,
     nullptr,        /* resolve     */
@@ -1644,8 +1642,6 @@ UnboxedArrayObject::newEnumerate(JSContext* cx, HandleObject obj, AutoIdVector& 
 static const ClassOps UnboxedArrayObjectClassOps = {
     nullptr,        /* addProperty */
     nullptr,        /* delProperty */
-    nullptr,        /* getProperty */
-    nullptr,        /* setProperty */
     nullptr,        /* enumerate   */
     UnboxedArrayObject::newEnumerate,
     nullptr,        /* resolve     */

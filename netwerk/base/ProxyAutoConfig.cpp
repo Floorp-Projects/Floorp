@@ -681,7 +681,7 @@ private:
 static const JSClassOps sJSContextWrapperGlobalClassOps = {
   nullptr, nullptr, nullptr, nullptr,
   nullptr, nullptr, nullptr, nullptr,
-  nullptr, nullptr, nullptr, nullptr,
+  nullptr, nullptr,
   JS_GlobalObjectTraceHook
 };
 

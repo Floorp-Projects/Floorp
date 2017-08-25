@@ -16,8 +16,6 @@ BEGIN_TEST(testResolveRecursion)
     static const JSClassOps my_resolve_classOps = {
         nullptr, // add
         nullptr, // delete
-        nullptr, // get
-        nullptr, // set
         nullptr, // enumerate
         nullptr, // newEnumerate
         my_resolve
@@ -158,8 +156,6 @@ const JSClass* getGlobalClass() override {
     static const JSClassOps myGlobalClassOps = {
         nullptr, // add
         nullptr, // delete
-        nullptr, // get
-        nullptr, // set
         nullptr, // enumerate
         nullptr, // newEnumerate
         my_resolve,

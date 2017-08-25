@@ -639,8 +639,6 @@ struct JS_STATIC_CLASS ClassOps
     /* Function pointer members (may be null). */
     JSAddPropertyOp     addProperty;
     JSDeletePropertyOp  delProperty;
-    JSGetterOp          getProperty;
-    JSSetterOp          setProperty;
     JSEnumerateOp       enumerate;
     JSNewEnumerateOp    newEnumerate;
     JSResolveOp         resolve;
@@ -757,8 +755,6 @@ struct JS_STATIC_CLASS JSClassOps
     /* Function pointer members (may be null). */
     JSAddPropertyOp     addProperty;
     JSDeletePropertyOp  delProperty;
-    JSGetterOp          getProperty;
-    JSSetterOp          setProperty;
     JSEnumerateOp       enumerate;
     JSNewEnumerateOp    newEnumerate;
     JSResolveOp         resolve;
@@ -982,10 +978,6 @@ struct JS_STATIC_CLASS Class
 static_assert(offsetof(JSClassOps, addProperty) == offsetof(ClassOps, addProperty),
               "ClassOps and JSClassOps must be consistent");
 static_assert(offsetof(JSClassOps, delProperty) == offsetof(ClassOps, delProperty),
-              "ClassOps and JSClassOps must be consistent");
-static_assert(offsetof(JSClassOps, getProperty) == offsetof(ClassOps, getProperty),
-              "ClassOps and JSClassOps must be consistent");
-static_assert(offsetof(JSClassOps, setProperty) == offsetof(ClassOps, setProperty),
               "ClassOps and JSClassOps must be consistent");
 static_assert(offsetof(JSClassOps, enumerate) == offsetof(ClassOps, enumerate),
               "ClassOps and JSClassOps must be consistent");

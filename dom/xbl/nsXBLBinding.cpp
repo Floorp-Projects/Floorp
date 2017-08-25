@@ -86,7 +86,7 @@ XBLEnumerate(JSContext *cx, JS::Handle<JSObject*> obj)
 }
 
 static const JSClassOps gPrototypeJSClassOps = {
-    nullptr, nullptr, nullptr, nullptr,
+    nullptr, nullptr,
     XBLEnumerate, nullptr, nullptr,
     nullptr, XBLFinalize,
     nullptr, nullptr, nullptr, nullptr
