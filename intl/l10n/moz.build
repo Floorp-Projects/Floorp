@@ -5,11 +5,14 @@
 # file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
 EXTRA_JS_MODULES += [
+    'DOMLocalization.jsm',
     'L10nRegistry.jsm',
     'Localization.jsm',
     'MessageContext.jsm',
 ]
 
 XPCSHELL_TESTS_MANIFESTS += ['test/xpcshell.ini']
+
+MOCHITEST_CHROME_MANIFESTS += ['test/chrome.ini']
 
 FINAL_LIBRARY = 'xul'

@@ -1,0 +1,49 @@
+<!DOCTYPE HTML>
+<html>
+<head>
+  <meta charset="utf-8">
+  <title>Test DOMLocalization.prototype.translateFragment</title>
+  <script type="application/javascript" src="chrome://mochikit/content/tests/SimpleTest/SimpleTest.js"></script>
+  <link rel="stylesheet" type="text/css" href="chrome://mochikit/content/tests/SimpleTest/test.css">
+  <script type="application/javascript">
+  "use strict";
+  const { DOMLocalization } =
+    Components.utils.import("resource://gre/modules/DOMLocalization.jsm", {});
+  const { MessageContext } =
+    Components.utils.import("resource://gre/modules/MessageContext.jsm", {});
+
+  function * mockGenerateMessages(locales, resourceIds) {
+    const mc = new MessageContext(locales);
+    mc.addMessages('title = Hello World');
+    mc.addMessages('subtitle = Welcome to Fluent');
+    yield mc;
+  }
+
+  window.onload = async function () {
+    SimpleTest.waitForExplicitFinish();
+
+    const domLoc = new DOMLocalization(
+      window,
+      [],
+      mockGenerateMessages
+    );
+
+    const frag = document.querySelectorAll('div')[0];
+    const h1 = document.querySelectorAll('h1')[0];
+    const p1 = document.querySelectorAll('p')[0];
+
+    await domLoc.translateFragment(frag);
+    is(h1.textContent, "Hello World");
+    is(p1.textContent, "Welcome to Fluent");
+
+    SimpleTest.finish();
+  };
+  </script>
+</head>
+<body>
+  <div>
+    <h1 data-l10n-id="title" />
+    <p data-l10n-id="subtitle" />
+  </div>
+</body>
+</html>
