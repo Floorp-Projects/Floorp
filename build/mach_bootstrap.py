@@ -169,11 +169,8 @@ def bootstrap(topsrcdir, mozilla_dir=None):
             # If we ever need to use the VCS binary here, consider something
             # more robust.
             return mozversioncontrol.get_repository_object(path=mozilla_dir)
-        except mozversioncontrol.InvalidRepoPath:
-            return None
-        # This is mainly to catch failures resolving the VCS binary path.
-        # TODO Change mozversioncontrol to raise non-generic exception.
-        except Exception:
+        except (mozversioncontrol.InvalidRepoPath,
+                mozversioncontrol.MissingVCSTool):
             return None
 
     def telemetry_handler(context, data):
