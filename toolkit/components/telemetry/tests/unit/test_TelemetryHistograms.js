@@ -947,3 +947,37 @@ function test_keyed_subsession() {
   Assert.ok(!(KEY in subsession));
   Assert.equal(h.subsessionSnapshot(KEY).sum, 0);
 });
+
+add_task(function* test_keyed_keys() {
+  let h = Telemetry.getKeyedHistogramById("TELEMETRY_TEST_KEYED_KEYS");
+  h.clear();
+  Telemetry.clearScalars();
+
+  // The |add| method should not throw for keys that are not allowed.
+  h.add("testkey", true);
+  h.add("thirdKey", false);
+  h.add("not-allowed", true);
+
+  // Check that we have the expected keys.
+  let snap = h.snapshot();
+  Assert.ok(Object.keys(snap).length, 2, "Only 2 keys must be recorded.");
+  Assert.ok("testkey" in snap, "'testkey' must be recorded.");
+  Assert.ok("thirdKey" in snap, "'thirdKey' must be recorded.");
+  Assert.deepEqual(snap.testkey.counts, [0, 1, 0],
+                   "'testkey' must contain the correct value.");
+  Assert.deepEqual(snap.thirdKey.counts, [1, 0, 0],
+                   "'thirdKey' must contain the correct value.");
+
+  // Keys that are not allowed must not be recorded.
+  Assert.ok(!("not-allowed" in snap), "'not-allowed' must not be recorded.");
+
+  // Check that these failures were correctly tracked.
+  const parentScalars =
+    Telemetry.snapshotKeyedScalars(Ci.nsITelemetry.DATASET_RELEASE_CHANNEL_OPTIN, false).parent;
+  const scalarName = "telemetry.accumulate_unknown_histogram_keys";
+  Assert.ok(scalarName in parentScalars, "Accumulation to unallowed keys must be reported.");
+  Assert.ok("TELEMETRY_TEST_KEYED_KEYS" in parentScalars[scalarName],
+            "Accumulation to unallowed keys must be recorded with the correct key.");
+  Assert.equal(parentScalars[scalarName].TELEMETRY_TEST_KEYED_KEYS, 1,
+               "Accumulation to unallowed keys must report the correct value.");
+});

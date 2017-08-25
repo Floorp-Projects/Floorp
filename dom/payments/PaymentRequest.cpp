@@ -256,6 +256,8 @@ PaymentRequest::Constructor(const GlobalObject& aGlobal,
     aRv.Throw(NS_ERROR_UNEXPECTED);
     return nullptr;
   }
+
+  nsCOMPtr<nsIPrincipal> topLevelPrincipal;
   do {
     nsINode* parentNode = nsContentUtils::GetCrossDocParentNode(node);
     if (parentNode) {
@@ -269,6 +271,7 @@ PaymentRequest::Constructor(const GlobalObject& aGlobal,
         }
       }
     }
+    topLevelPrincipal = node->NodePrincipal();
     node = parentNode;
   } while (node);
 
@@ -289,8 +292,8 @@ PaymentRequest::Constructor(const GlobalObject& aGlobal,
 
   // Create PaymentRequest and set its |mId|
   RefPtr<PaymentRequest> request;
-  nsresult rv = manager->CreatePayment(window, aMethodData, aDetails,
-                                       aOptions, getter_AddRefs(request));
+  nsresult rv = manager->CreatePayment(window, topLevelPrincipal, aMethodData,
+                                       aDetails, aOptions, getter_AddRefs(request));
   if (NS_WARN_IF(NS_FAILED(rv))) {
     aRv.Throw(NS_ERROR_DOM_TYPE_ERR);
     return nullptr;

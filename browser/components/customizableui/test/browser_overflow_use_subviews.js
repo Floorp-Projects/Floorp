@@ -43,3 +43,28 @@ add_task(async function check_developer_subview_in_overflow() {
   expectedPanel.hidePopup();
   await Promise.resolve(); // wait for popup to hide fully.
 });
+
+/**
+ * This checks that non-subview-compatible items still work correctly.
+ * Ideally we should make the downloads panel and bookmarks/library item
+ * proper subview items, then this test can go away, and potentially we can
+ * simplify some of the subview anchoring code.
+ */
+add_task(async function check_downloads_panel_in_overflow() {
+  let navbar = document.getElementById(CustomizableUI.AREA_NAVBAR);
+  ok(navbar.hasAttribute("overflowing"), "Should still be overflowing");
+  let chevron = document.getElementById("nav-bar-overflow-button");
+  let shownPanelPromise = promisePanelElementShown(window, kOverflowPanel);
+  chevron.click();
+  await shownPanelPromise;
+
+  let button = document.getElementById("downloads-button");
+  button.click();
+  await waitForCondition(() => {
+    let panel = document.getElementById("downloadsPanel");
+    return panel && panel.state != "closed";
+  });
+  let downloadsPanel = document.getElementById("downloadsPanel");
+  isnot(downloadsPanel.state, "closed", "Should be attempting to show the downloads panel.");
+  downloadsPanel.hidePopup();
+});

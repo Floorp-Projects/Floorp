@@ -590,11 +590,13 @@ NS_IMPL_ISUPPORTS(PaymentRequest,
 
 PaymentRequest::PaymentRequest(const uint64_t aTabId,
                                const nsAString& aRequestId,
+                               nsIPrincipal* aTopLevelPrincipal,
                                nsIArray* aPaymentMethods,
                                nsIPaymentDetails* aPaymentDetails,
                                nsIPaymentOptions* aPaymentOptions)
   : mTabId(aTabId)
   , mRequestId(aRequestId)
+  , mTopLevelPrincipal(aTopLevelPrincipal)
   , mPaymentMethods(aPaymentMethods)
   , mPaymentDetails(aPaymentDetails)
   , mPaymentOptions(aPaymentOptions)
@@ -606,6 +608,16 @@ PaymentRequest::GetTabId(uint64_t* aTabId)
 {
   NS_ENSURE_ARG_POINTER(aTabId);
   *aTabId = mTabId;
+  return NS_OK;
+}
+
+NS_IMETHODIMP
+PaymentRequest::GetTopLevelPrincipal(nsIPrincipal** aTopLevelPrincipal)
+{
+  NS_ENSURE_ARG_POINTER(aTopLevelPrincipal);
+  MOZ_ASSERT(mTopLevelPrincipal);
+  nsCOMPtr<nsIPrincipal> principal = mTopLevelPrincipal;
+  principal.forget(aTopLevelPrincipal);
   return NS_OK;
 }
 

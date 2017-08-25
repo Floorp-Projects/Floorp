@@ -3,7 +3,7 @@
 # This Source Code Form is subject to the terms of the Mozilla Public
 # License, v. 2.0. If a copy of the MPL was not distributed with this
 # file, You can obtain one at http://mozilla.org/MPL/2.0/.
-################################################################################
+##########################################################################
 #
 # This is a collection of helper tools to get stuff done in NSS.
 #
@@ -23,13 +23,15 @@ class cfAction(argparse.Action):
     restorecon = None
 
     def __call__(self, parser, args, values, option_string=None):
-        if "noroot" not in values:
+        if not args.noroot:
             self.setDockerCommand()
+
+        if values:
+            files = [os.path.abspath(x) for x in values]
         else:
-            values.remove("noroot")
-        files = [os.path.join('/home/worker/nss',
-                              os.path.relpath(os.path.abspath(x), start=cwd))
-                     for x in values]
+            files = self.modifiedFiles()
+        files = [os.path.join('/home/worker/nss', os.path.relpath(x, start=cwd))
+                 for x in files]
 
         # First check if we can run docker.
         try:
@@ -59,9 +61,10 @@ class cfAction(argparse.Action):
             self.buildImage(docker_image, cf_docker_folder)
 
         command = self.docker_command + [
-                'run', '-v', cwd + ':/home/worker/nss:Z', '--rm', '-ti', docker_image
+            'run', '-v', cwd + ':/home/worker/nss:Z', '--rm', '-ti', docker_image
         ]
-        # The clang format script returns 1 if something's to do. We don't care.
+        # The clang format script returns 1 if something's to do. We don't
+        # care.
         subprocess.call(command + files)
         if self.restorecon is not None:
             subprocess.call([self.restorecon, '-R', cwd])
@@ -97,14 +100,40 @@ class cfAction(argparse.Action):
             self.restorecon = find_executable('restorecon')
             self.docker_command = ["sudo"] + self.docker_command
 
+    def modifiedFiles(self):
+        files = []
+        if os.path.exists(os.path.join(cwd, '.hg')):
+            st = subprocess.Popen(['hg', 'status', '-m', '-a'],
+                                  cwd=cwd, stdout=subprocess.PIPE)
+            for line in iter(st.stdout.readline, ''):
+                files += [line[2:].rstrip()]
+        elif os.path.exists(os.path.join(cwd, '.git')):
+            st = subprocess.Popen(['git', 'status', '--porcelain'],
+                                  cwd=cwd, stdout=subprocess.PIPE)
+            for line in iter(st.stdout.readline, ''):
+                if line[1] == 'M' or line[1] != 'D' and \
+                        (line[0] == 'M' or line[0] == 'A' or
+                         line[0] == 'C' or line[0] == 'U'):
+                    files += [line[3:].rstrip()]
+                elif line[0] == 'R':
+                    files += [line[line.index(' -> ', beg=4) + 4:]]
+        else:
+            print('Warning: neither mercurial nor git detected!')
+
+        def isFormatted(x):
+            return x[-2:] == '.c' or x[-3:] == '.cc' or x[-2:] == '.h'
+        return [x for x in files if isFormatted(x)]
+
 
 class buildAction(argparse.Action):
+
     def __call__(self, parser, args, values, option_string=None):
         cwd = os.path.dirname(os.path.abspath(__file__))
         subprocess.check_call([cwd + "/build.sh"] + values)
 
 
 class testAction(argparse.Action):
+
     def runTest(self, test, cycles="standard"):
         cwd = os.path.dirname(os.path.abspath(__file__))
         domsuf = os.getenv('DOMSUF', "localdomain")
@@ -115,8 +144,10 @@ class testAction(argparse.Action):
             "DOMSUF": domsuf,
             "HOST": host
         }
+        os_env = os.environ
+        os_env.update(env)
         command = cwd + "/tests/all.sh"
-        subprocess.check_call(command, env=env)
+        subprocess.check_call(command, env=os_env)
 
     def __call__(self, parser, args, values, option_string=None):
         self.runTest(values)
@@ -124,6 +155,7 @@ class testAction(argparse.Action):
 
 class commandsAction(argparse.Action):
     commands = []
+
     def __call__(self, parser, args, values, option_string=None):
         for c in commandsAction.commands:
             print(c)
@@ -142,11 +174,20 @@ def parse_arguments():
 
     parser_cf = subparsers.add_parser(
         'clang-format',
-        help='Run clang-format on all folders or provide a folder to format.')
+        help="""
+        Run clang-format.
+
+        By default this runs against any files that you have modified.  If
+        there are no modified files, it checks everything.
+        """)
     parser_cf.add_argument(
-        'cf_args',
+        '--noroot',
+        help='On linux, suppress the use of \'sudo\' for running docker.',
+        action='store_true')
+    parser_cf.add_argument(
+        '<file/dir>',
         nargs='*',
-        help="clang-format folders and noroot if you don't want to use sudo",
+        help="Specify files or directories to run clang-format on",
         action=cfAction)
 
     parser_test = subparsers.add_parser(

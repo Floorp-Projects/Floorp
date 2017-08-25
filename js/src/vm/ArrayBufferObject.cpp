@@ -109,8 +109,6 @@ CreateArrayBufferPrototype(JSContext* cx, JSProtoKey key)
 static const ClassOps ArrayBufferObjectClassOps = {
     nullptr,        /* addProperty */
     nullptr,        /* delProperty */
-    nullptr,        /* getProperty */
-    nullptr,        /* setProperty */
     nullptr,        /* enumerate */
     nullptr,        /* newEnumerate */
     nullptr,        /* resolve */

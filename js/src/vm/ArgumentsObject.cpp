@@ -894,8 +894,6 @@ ArgumentsObject::objectMovedDuringMinorGC(JSTracer* trc, JSObject* dst, JSObject
 const ClassOps MappedArgumentsObject::classOps_ = {
     nullptr,                 /* addProperty */
     ArgumentsObject::obj_delProperty,
-    nullptr,                 /* getProperty */
-    nullptr,                 /* setProperty */
     MappedArgumentsObject::obj_enumerate,
     nullptr,                 /* newEnumerate */
     MappedArgumentsObject::obj_resolve,
@@ -932,8 +930,6 @@ const Class MappedArgumentsObject::class_ = {
 const ClassOps UnmappedArgumentsObject::classOps_ = {
     nullptr,                 /* addProperty */
     ArgumentsObject::obj_delProperty,
-    nullptr,                 /* getProperty */
-    nullptr,                 /* setProperty */
     UnmappedArgumentsObject::obj_enumerate,
     nullptr,                 /* newEnumerate */
     UnmappedArgumentsObject::obj_resolve,

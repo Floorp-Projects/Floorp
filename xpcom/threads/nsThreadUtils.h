@@ -1681,6 +1681,18 @@ private:
 void
 NS_SetMainThread();
 
+// Used only on cooperatively scheduled "main" threads. Causes the thread to be
+// considered a main thread and also causes GetCurrentVirtualThread to return
+// aVirtualThread.
+void
+NS_SetMainThread(PRThread* aVirtualThread);
+
+// Used only on cooperatively scheduled "main" threads. Causes the thread to no
+// longer be considered a main thread. Also causes GetCurrentVirtualThread() to
+// return a unique value.
+void
+NS_UnsetMainThread();
+
 /**
  * Return the expiration time of the next timer to run on the current
  * thread.  If that expiration time is greater than aDefault, then

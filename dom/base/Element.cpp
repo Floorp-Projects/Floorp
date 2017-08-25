@@ -4176,10 +4176,9 @@ Element::SetCustomElementData(CustomElementData* aData)
 MOZ_DEFINE_MALLOC_SIZE_OF(ServoElementMallocSizeOf)
 
 void
-Element::AddSizeOfExcludingThis(SizeOfState& aState, nsStyleSizes& aSizes,
-                                size_t* aNodeSize) const
+Element::AddSizeOfExcludingThis(nsWindowSizes& aSizes, size_t* aNodeSize) const
 {
-  FragmentOrElement::AddSizeOfExcludingThis(aState, aSizes, aNodeSize);
+  FragmentOrElement::AddSizeOfExcludingThis(aSizes, aNodeSize);
 
   if (HasServoData()) {
     // Measure mServoData, excluding the ComputedValues. This measurement
@@ -4188,23 +4187,23 @@ Element::AddSizeOfExcludingThis(SizeOfState& aState, nsStyleSizes& aSizes,
     // output the memory measured within Servo code.
     *aNodeSize +=
       Servo_Element_SizeOfExcludingThisAndCVs(ServoElementMallocSizeOf,
-                                              &aState.mSeenPtrs, this);
+                                              &aSizes.mState.mSeenPtrs, this);
 
     // Now measure just the ComputedValues (and style structs) under
     // mServoData. This counts towards the relevant fields in |aSizes|.
     RefPtr<ServoStyleContext> sc;
     if (Servo_Element_HasPrimaryComputedValues(this)) {
       sc = Servo_Element_GetPrimaryComputedValues(this).Consume();
-      if (!aState.HaveSeenPtr(sc.get())) {
-        sc->AddSizeOfIncludingThis(aState, aSizes, &aSizes.mComputedValuesDom);
+      if (!aSizes.mState.HaveSeenPtr(sc.get())) {
+        sc->AddSizeOfIncludingThis(aSizes, &aSizes.mLayoutComputedValuesDom);
       }
 
       for (size_t i = 0; i < nsCSSPseudoElements::kEagerPseudoCount; i++) {
         if (Servo_Element_HasPseudoComputedValues(this, i)) {
           sc = Servo_Element_GetPseudoComputedValues(this, i).Consume();
-          if (!aState.HaveSeenPtr(sc.get())) {
-            sc->AddSizeOfIncludingThis(aState, aSizes,
-                                       &aSizes.mComputedValuesDom);
+          if (!aSizes.mState.HaveSeenPtr(sc.get())) {
+            sc->AddSizeOfIncludingThis(aSizes,
+                                       &aSizes.mLayoutComputedValuesDom);
           }
         }
       }

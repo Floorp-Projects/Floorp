@@ -25,6 +25,7 @@
 #if defined(MOZILLA_INTERNAL_API)
 #include "mozilla/ClearOnShutdown.h"
 #include "mozilla/mscom/EnsureMTA.h"
+HRESULT RegisterPassthruProxy();
 #else
 #include <stdlib.h>
 #endif // defined(MOZILLA_INTERNAL_API)
@@ -151,6 +152,16 @@ RegisterProxy()
     classObject->lpVtbl->Release(classObject);
     return nullptr;
   }
+
+#if defined(MOZILLA_INTERNAL_API)
+  hr = RegisterPassthruProxy();
+  MOZ_ASSERT(SUCCEEDED(hr));
+  if (FAILED(hr)) {
+    CoRevokeClassObject(regCookie);
+    classObject->lpVtbl->Release(classObject);
+    return nullptr;
+  }
+#endif // defined(MOZILLA_INTERNAL_API)
 
   // RegisteredProxy takes ownership of classObject and typeLib references
   auto result(MakeUnique<RegisteredProxy>(classObject, regCookie, typeLib));

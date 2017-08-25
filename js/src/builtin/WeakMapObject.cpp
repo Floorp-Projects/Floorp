@@ -316,8 +316,6 @@ WeakMap_construct(JSContext* cx, unsigned argc, Value* vp)
 static const ClassOps WeakMapObjectClassOps = {
     nullptr, /* addProperty */
     nullptr, /* delProperty */
-    nullptr, /* getProperty */
-    nullptr, /* setProperty */
     nullptr, /* enumerate */
     nullptr, /* newEnumerate */
     nullptr, /* resolve */

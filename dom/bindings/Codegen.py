@@ -476,8 +476,6 @@ class CGDOMJSClass(CGThing):
             static const js::ClassOps sClassOps = {
               ${addProperty}, /* addProperty */
               nullptr,               /* delProperty */
-              nullptr,               /* getProperty */
-              nullptr,               /* setProperty */
               nullptr,               /* enumerate */
               ${newEnumerate}, /* newEnumerate */
               ${resolve}, /* resolve */
@@ -767,8 +765,6 @@ class CGInterfaceObjectJSClass(CGThing):
                 static const js::ClassOps sInterfaceObjectClassOps = {
                     nullptr,               /* addProperty */
                     nullptr,               /* delProperty */
-                    nullptr,               /* getProperty */
-                    nullptr,               /* setProperty */
                     nullptr,               /* enumerate */
                     nullptr,               /* newEnumerate */
                     nullptr,               /* resolve */

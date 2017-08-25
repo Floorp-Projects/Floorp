@@ -616,8 +616,6 @@ XPC_WN_NoHelper_Resolve(JSContext* cx, HandleObject obj, HandleId id, bool* reso
 static const js::ClassOps XPC_WN_NoHelper_JSClassOps = {
     XPC_WN_OnlyIWrite_AddPropertyStub, // addProperty
     XPC_WN_CannotDeletePropertyStub,   // delProperty
-    nullptr,                           // getProperty
-    nullptr,                           // setProperty
     XPC_WN_Shared_Enumerate,           // enumerate
     nullptr,                           // newEnumerate
     XPC_WN_NoHelper_Resolve,           // resolve
@@ -695,29 +693,6 @@ XPC_WN_MaybeResolvingDeletePropertyStub(JSContext* cx, HandleObject obj, HandleI
     if (NS_FAILED(rv))                                                        \
         return Throw(rv, cx);                                                 \
     return retval;
-
-#define POST_HELPER_STUB_WITH_OBJECTOPRESULT(failMethod)                      \
-    if (NS_FAILED(rv))                                                        \
-        return Throw(rv, cx);                                                 \
-    return retval ? result.succeed() : result.failMethod();
-
-bool
-XPC_WN_Helper_GetProperty(JSContext* cx, HandleObject obj, HandleId id,
-                          MutableHandleValue vp)
-{
-    PRE_HELPER_STUB
-    GetProperty(wrapper, cx, obj, id, vp.address(), &retval);
-    POST_HELPER_STUB
-}
-
-bool
-XPC_WN_Helper_SetProperty(JSContext* cx, HandleObject obj, HandleId id,
-                          MutableHandleValue vp, ObjectOpResult& result)
-{
-    PRE_HELPER_STUB
-    SetProperty(wrapper, cx, obj, id, vp.address(), &retval);
-    POST_HELPER_STUB_WITH_OBJECTOPRESULT(failReadOnly)
-}
 
 bool
 XPC_WN_Helper_Call(JSContext* cx, unsigned argc, Value* vp)
@@ -1080,8 +1055,6 @@ XPC_WN_ModsAllowed_Proto_Resolve(JSContext* cx, HandleObject obj, HandleId id, b
 static const js::ClassOps XPC_WN_ModsAllowed_Proto_JSClassOps = {
     nullptr,                            // addProperty
     nullptr,                            // delProperty
-    nullptr,                            // getProperty
-    nullptr,                            // setProperty
     XPC_WN_Shared_Proto_Enumerate,      // enumerate
     nullptr,                            // newEnumerate
     XPC_WN_ModsAllowed_Proto_Resolve,   // resolve
@@ -1161,8 +1134,6 @@ XPC_WN_NoMods_Proto_Resolve(JSContext* cx, HandleObject obj, HandleId id, bool* 
 static const js::ClassOps XPC_WN_NoMods_Proto_JSClassOps = {
     XPC_WN_OnlyIWrite_Proto_AddPropertyStub,   // addProperty
     XPC_WN_CannotDeletePropertyStub,           // delProperty
-    nullptr,                                   // getProperty
-    nullptr,                                   // setProperty
     XPC_WN_Shared_Proto_Enumerate,             // enumerate
     nullptr,                                   // newEnumerate
     XPC_WN_NoMods_Proto_Resolve,               // resolve
@@ -1258,8 +1229,6 @@ static_assert(((XPC_WRAPPER_FLAGS >> JSCLASS_RESERVED_SLOTS_SHIFT) &
 static const js::ClassOps XPC_WN_Tearoff_JSClassOps = {
     XPC_WN_OnlyIWrite_AddPropertyStub,  // addProperty
     XPC_WN_CannotDeletePropertyStub,    // delProperty
-    nullptr,                            // getProperty
-    nullptr,                            // setProperty
     XPC_WN_TearOff_Enumerate,           // enumerate
     nullptr,                            // newEnumerate
     XPC_WN_TearOff_Resolve,             // resolve

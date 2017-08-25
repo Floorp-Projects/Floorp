@@ -1957,8 +1957,6 @@ CheckHasNoSuchOwnProperty(JSContext* cx, JSObject* obj, jsid id)
             return false;
         if (obj->as<NativeObject>().contains(cx, id))
             return false;
-        if (obj->getClass()->getGetProperty())
-            return false;
     } else if (obj->is<UnboxedPlainObject>()) {
         if (obj->as<UnboxedPlainObject>().containsUnboxedOrExpandoProperty(cx, id))
             return false;

@@ -24,7 +24,7 @@ def main():
         # If we aren't clang, make sure we have gcc 4.8 at least
         if not cc_is_clang:
             try:
-                v = subprocess.check_output([cc, '-dumpversion'], stderr=sink)
+                v = subprocess.check_output([cc, '-dumpversion'], stderr=sink).decode("utf-8")
                 v = v.strip(' \r\n').split('.')
                 v = list(map(int, v))
                 if v[0] < 4 or (v[0] == 4 and v[1] < 8):

@@ -308,8 +308,6 @@ SavedFrame::finishSavedFrameInit(JSContext* cx, HandleObject ctor, HandleObject 
 static const ClassOps SavedFrameClassOps = {
     nullptr,                    // addProperty
     nullptr,                    // delProperty
-    nullptr,                    // getProperty
-    nullptr,                    // setProperty
     nullptr,                    // enumerate
     nullptr,                    // newEnumerate
     nullptr,                    // resolve

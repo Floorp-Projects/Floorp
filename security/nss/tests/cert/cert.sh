@@ -1975,19 +1975,19 @@ cert_test_ocspresp()
 cert_cleanup()
 {
   cert_log "$SCRIPTNAME: finished $SCRIPTNAME"
-  html "</TABLE><BR>" 
+  html "</TABLE><BR>"
   cd ${QADIR}
   . common/cleanup.sh
 }
 
 ################## main #################################################
 
-cert_init 
+cert_init
 cert_all_CA
-cert_extended_ssl 
-cert_ssl 
-cert_smime_client        
-if [ -z "$NSS_TEST_DISABLE_FIPS" ]; then
+cert_extended_ssl
+cert_ssl
+cert_smime_client
+if [[ -n "$NSS_TEST_ENABLE_FIPS" ]]; then
     cert_fips
 fi
 cert_eccurves
@@ -2004,7 +2004,7 @@ else
 fi
 
 if [ -n "$DO_DIST_ST" -a "$DO_DIST_ST" = "TRUE" ] ; then
-    cert_stresscerts 
+    cert_stresscerts
 fi
 
 cert_iopr_setup

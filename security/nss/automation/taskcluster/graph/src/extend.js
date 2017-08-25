@@ -91,9 +91,17 @@ queue.filter(task => {
 queue.map(task => {
   if (task.collection == "asan") {
     // CRMF and FIPS tests still leak, unfortunately.
-    if (task.tests == "crmf" || task.tests == "fips") {
+    if (task.tests == "crmf") {
       task.env.ASAN_OPTIONS = "detect_leaks=0";
     }
+  }
+
+  // We don't run FIPS SSL tests
+  if (task.tests == "ssl") {
+    if (!task.env) {
+      task.env = {};
+    }
+    task.env.NSS_SSL_TESTS = "crl iopr policy";
   }
 
   // Windows is slow.
@@ -319,6 +327,46 @@ async function scheduleLinux(name, base, args = "") {
 
   // The task that builds NSPR+NSS.
   let task_build = queue.scheduleTask(merge(build_base, {name}));
+
+  // Make builds run FIPS tests, which need an extra FIPS build.
+  if (base.collection == "make") {
+    let extra_build = queue.scheduleTask(merge(build_base, {
+      env: { NSS_FORCE_FIPS: "1" },
+      group: "FIPS",
+      name: `${name} w/ NSS_FORCE_FIPS`
+    }));
+
+    // The task that generates certificates.
+    let task_cert = queue.scheduleTask(merge(build_base, {
+      name: "Certificates",
+      command: [
+        "/bin/bash",
+        "-c",
+        "bin/checkout.sh && nss/automation/taskcluster/scripts/gen_certs.sh"
+      ],
+      parent: extra_build,
+      symbol: "Certs-F",
+      group: "FIPS",
+      env: { NSS_TEST_ENABLE_FIPS: "1" }
+    }));
+
+    // Schedule FIPS tests.
+    queue.scheduleTask(merge(base, {
+      parent: task_cert,
+      name: "FIPS",
+      command: [
+        "/bin/bash",
+        "-c",
+        "bin/checkout.sh && nss/automation/taskcluster/scripts/run_tests.sh"
+      ],
+      cycle: "standard",
+      kind: "test",
+      name: "FIPS tests",
+      symbol: "Tests-F",
+      tests: "fips",
+      group: "FIPS"
+    }));
+  }
 
   // The task that generates certificates.
   let task_cert = queue.scheduleTask(merge(build_base, {
@@ -703,6 +751,44 @@ async function scheduleWindows(name, base, build_script) {
     symbol: "B"
   });
 
+  // Make builds run FIPS tests, which need an extra FIPS build.
+  if (base.collection == "make") {
+    let extra_build = queue.scheduleTask(merge(build_base, {
+      env: { NSS_FORCE_FIPS: "1" },
+      group: "FIPS",
+      name: `${name} w/ NSS_FORCE_FIPS`
+    }));
+
+    // The task that generates certificates.
+    let task_cert = queue.scheduleTask(merge(build_base, {
+      name: "Certificates",
+      command: [
+        WINDOWS_CHECKOUT_CMD,
+        "bash -c nss/automation/taskcluster/windows/gen_certs.sh"
+      ],
+      parent: extra_build,
+      symbol: "Certs-F",
+      group: "FIPS",
+      env: { NSS_TEST_ENABLE_FIPS: "1" }
+    }));
+
+    // Schedule FIPS tests.
+    queue.scheduleTask(merge(base, {
+      parent: task_cert,
+      name: "FIPS",
+      command: [
+        WINDOWS_CHECKOUT_CMD,
+        "bash -c nss/automation/taskcluster/windows/run_tests.sh"
+      ],
+      cycle: "standard",
+      kind: "test",
+      name: "FIPS tests",
+      symbol: "Tests-F",
+      tests: "fips",
+      group: "FIPS"
+    }));
+  }
+
   // The task that builds NSPR+NSS.
   let task_build = queue.scheduleTask(merge(build_base, {name}));
 
@@ -779,9 +865,6 @@ function scheduleTests(task_build, task_cert, test_base) {
   }));
   queue.scheduleTask(merge(cert_base, {
     name: "DB tests", symbol: "DB", tests: "dbtests"
-  }));
-  queue.scheduleTask(merge(cert_base, {
-    name: "FIPS tests", symbol: "FIPS", tests: "fips"
   }));
   queue.scheduleTask(merge(cert_base, {
     name: "Merge tests", symbol: "Merge", tests: "merge"

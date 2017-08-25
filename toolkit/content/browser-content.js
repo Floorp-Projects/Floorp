@@ -4,6 +4,7 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
 /* eslint-env mozilla/frame-script */
+/* global sendAsyncMessage */
 
 var Cc = Components.classes;
 var Ci = Components.interfaces;
@@ -19,6 +20,8 @@ XPCOMUtils.defineLazyModuleGetter(this, "BrowserUtils",
   "resource://gre/modules/BrowserUtils.jsm");
 XPCOMUtils.defineLazyModuleGetter(this, "SelectContentHelper",
   "resource://gre/modules/SelectContentHelper.jsm");
+XPCOMUtils.defineLazyModuleGetter(this, "FindContent",
+  "resource://gre/modules/FindContent.jsm");
 
 var global = this;
 
@@ -1847,3 +1850,38 @@ addEventListener("mozshowdropdown-sourcetouch", event => {
     new SelectContentHelper(event.target, {isOpenedViaTouch: true}, this);
   }
 });
+
+let ExtFind = {
+  init() {
+    addMessageListener("ext-Finder:CollectResults", this);
+    addMessageListener("ext-Finder:HighlightResults", this);
+    addMessageListener("ext-Finder:clearHighlighting", this);
+  },
+
+  _findContent: null,
+
+  async receiveMessage(message) {
+    if (!this._findContent) {
+      this._findContent = new FindContent(docShell);
+    }
+
+    let data;
+    switch (message.name) {
+      case "ext-Finder:CollectResults":
+        this.finderInited = true;
+        data = await this._findContent.findRanges(message.data);
+        sendAsyncMessage("ext-Finder:CollectResultsFinished", data);
+        break;
+      case "ext-Finder:HighlightResults":
+        data = this._findContent.highlightResults(message.data);
+        sendAsyncMessage("ext-Finder:HighlightResultsFinished", data);
+        break;
+      case "ext-Finder:clearHighlighting":
+        this._findContent.highlighter.highlight(false);
+        break;
+    }
+  },
+}
+
+ExtFind.init();
+

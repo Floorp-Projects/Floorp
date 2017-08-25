@@ -1988,6 +1988,17 @@ MessageChannel::MessageTask::GetPriority(uint32_t* aPriority)
   return NS_OK;
 }
 
+bool
+MessageChannel::MessageTask::GetAffectedSchedulerGroups(nsTArray<RefPtr<SchedulerGroup>>& aGroups)
+{
+    if (!mChannel) {
+        return false;
+    }
+
+    mChannel->AssertWorkerThread();
+    return mChannel->mListener->GetMessageSchedulerGroups(mMessage, aGroups);
+}
+
 void
 MessageChannel::DispatchMessage(Message &&aMsg)
 {

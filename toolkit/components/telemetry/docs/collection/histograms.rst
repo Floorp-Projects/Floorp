@@ -149,6 +149,10 @@ Required. One of the histogram types described in the previous section. Differen
 ---------
 Optional, boolean, defaults to ``false``. Determines whether this is a *keyed histogram*.
 
+``keys``
+---------
+Optional, list of strings. Only valid for *keyed histograms*. Defines a case sensitive list of allowed keys that can be used for this histogram. The list is limited to 30 keys with a maximum length of 20 characters. When using a key that is not in the list, the accumulation is discarded and a warning is printed to the browser console.
+
 ``low``
 -------
 Optional, the default value is ``1``. This field represents the minimum value expected in the histogram. Note that all histograms automatically get a bucket with label ``0`` for counting values below the ``low`` value. If a histogram does not specify a ``low`` value, it will always have a ``"0"`` bucket (for negative or zero values) and a ``"1"`` bucket (for values between ``1`` and the next bucket).

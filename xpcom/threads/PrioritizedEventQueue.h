@@ -50,8 +50,10 @@ public:
                 const MutexAutoLock& aProofOfLock) final;
   already_AddRefed<nsIRunnable> GetEvent(EventPriority* aPriority,
                                          const MutexAutoLock& aProofOfLock) final;
-  bool HasPendingEvent(const MutexAutoLock& aProofOfLock) final;
+
+  bool IsEmpty(const MutexAutoLock& aProofOfLock) final;
   size_t Count(const MutexAutoLock& aProofOfLock) const final;
+  bool HasReadyEvent(const MutexAutoLock& aProofOfLock) final;
 
   // When checking the idle deadline, we need to drop whatever mutex protects
   // this queue. This method allows that mutex to be stored so that we can drop
@@ -72,6 +74,8 @@ public:
   void ResumeInputEventPrioritization(const MutexAutoLock& aProofOfLock) final;
 
 private:
+  EventPriority SelectQueue(bool aUpdateState, const MutexAutoLock& aProofOfLock);
+
   // Returns a null TimeStamp if we're not in the idle period.
   mozilla::TimeStamp GetIdleDeadline();
 

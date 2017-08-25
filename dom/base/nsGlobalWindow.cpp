@@ -2755,7 +2755,7 @@ EnablePrivilege(JSContext* cx, unsigned argc, JS::Value* vp)
 }
 
 static const JSFunctionSpec EnablePrivilegeSpec[] = {
-  JS_FS("enablePrivilege", EnablePrivilege, 1, 0),
+  JS_FN("enablePrivilege", EnablePrivilege, 1, 0),
   JS_FS_END
 };
 

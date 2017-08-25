@@ -171,6 +171,37 @@ public:
     mLock->Unlock();
   }
 
+  // Assert that aLock is the mutex passed to the constructor and that the
+  // current thread owns the mutex.  In coding patterns such as:
+  //
+  // void LockedMethod(const MutexAutoLock& aProofOfLock)
+  // {
+  //   aProofOfLock.AssertOwns(mMutex);
+  //   ...
+  // }
+  //
+  // Without this assertion, it could be that mMutex is not actually
+  // locked. It's possible to have code like:
+  //
+  // MutexAutoLock lock(someMutex);
+  // ...
+  // MutexAutoUnlock unlock(someMutex);
+  // ...
+  // LockedMethod(lock);
+  //
+  // and in such a case, simply asserting that the mutex pointers match is not
+  // sufficient; mutex ownership must be asserted as well.
+  //
+  // Note that if you are going to use the coding pattern presented above, you
+  // should use this method in preference to using AssertCurrentThreadOwns on
+  // the mutex you expected to be held, since this method provides stronger
+  // guarantees.
+  void AssertOwns(const T& aLock) const
+  {
+    MOZ_ASSERT(&aLock == mLock);
+    mLock->AssertCurrentThreadOwns();
+  }
+
 private:
   BaseAutoLock();
   BaseAutoLock(BaseAutoLock&);

@@ -25,7 +25,9 @@ public:
                 const MutexAutoLock& aProofOfLock) final;
   already_AddRefed<nsIRunnable> GetEvent(EventPriority* aPriority,
                                          const MutexAutoLock& aProofOfLock) final;
-  bool HasPendingEvent(const MutexAutoLock& aProofOfLock) final;
+
+  bool IsEmpty(const MutexAutoLock& aProofOfLock) final;
+  bool HasReadyEvent(const MutexAutoLock& aProofOfLock) final;
 
   size_t Count(const MutexAutoLock& aProofOfLock) const final;
   already_AddRefed<nsIRunnable> PeekEvent(const MutexAutoLock& aProofOfLock);
