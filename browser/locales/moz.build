@@ -5,3 +5,21 @@
 # file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
 JAR_MANIFESTS += ['jar.mn']
+
+with Files("**"):
+    BUG_COMPONENT = ("Toolkit", "Build Config")
+
+with Files("all-locales"):
+    BUG_COMPONENT = ("Core", "Localization")
+
+with Files("en-US/**"):
+    BUG_COMPONENT = ("Core", "Localization")
+
+with Files("search/**"):
+    BUG_COMPONENT = ("Firefox", "Search")
+
+with Files("searchplugins/**"):
+    BUG_COMPONENT = ("Firefox", "Search")
+
+with Files("shipped-locales"):
+    BUG_COMPONENT = ("Core", "Localization")
