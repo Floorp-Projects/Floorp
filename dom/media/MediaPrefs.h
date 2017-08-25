@@ -211,6 +211,7 @@ private:
 #ifdef MOZ_CUBEB_REMOTING
   DECL_MEDIA_PREF("media.cubeb.sandbox",                      CubebSandbox, bool, false);
 #endif // MOZ_CUBEB_REMOTING
+  DECL_MEDIA_PREF("media.videocontrols.lock-video-orientation",  VideoOrientationLockEnabled, bool, false);
 
 public:
   // Manage the singleton:
