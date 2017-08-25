@@ -241,8 +241,7 @@ WebRenderBridgeParent::RecvAddImage(const wr::ImageKey& aImageKey,
 
   wr::ImageDescriptor descriptor(aSize, aStride, aFormat);
   mActiveImageKeys.insert(wr::AsUint64(aImageKey));
-  mApi->AddImage(aImageKey, descriptor,
-                 aBuffer.AsSlice());
+  mApi->Resources().AddImage(aImageKey, descriptor, aBuffer.AsSlice());
 
   return IPC_OK();
 }
@@ -268,8 +267,7 @@ WebRenderBridgeParent::RecvAddBlobImage(const wr::ImageKey& aImageKey,
 
   wr::ImageDescriptor descriptor(aSize, aStride, aFormat);
   mActiveImageKeys.insert(wr::AsUint64(aImageKey));
-  mApi->AddBlobImage(aImageKey, descriptor,
-                     aBuffer.AsSlice());
+  mApi->Resources().AddBlobImage(aImageKey, descriptor, aBuffer.AsSlice());
 
   return IPC_OK();
 }
@@ -293,7 +291,7 @@ WebRenderBridgeParent::RecvAddRawFont(const wr::FontKey& aFontKey,
 
   auto slice = aBuffer.AsSlice();
   mFontKeys.insert(wr::AsUint64(aFontKey));
-  mApi->AddRawFont(aFontKey, slice, aFontIndex);
+  mApi->Resources().AddRawFont(aFontKey, slice, aFontIndex);
 
   return IPC_OK();
 }
@@ -313,7 +311,7 @@ WebRenderBridgeParent::RecvDeleteFont(const wr::FontKey& aFontKey)
 
   if (mFontKeys.find(wr::AsUint64(aFontKey)) != mFontKeys.end()) {
     mFontKeys.erase(wr::AsUint64(aFontKey));
-    mApi->DeleteFont(aFontKey);
+    mApi->Resources().DeleteFont(aFontKey);
   } else {
     MOZ_ASSERT_UNREACHABLE("invalid FontKey");
   }
@@ -338,7 +336,7 @@ WebRenderBridgeParent::RecvUpdateImage(const wr::ImageKey& aImageKey,
   }
 
   wr::ImageDescriptor descriptor(aSize, aFormat);
-  mApi->UpdateImageBuffer(aImageKey, descriptor, aBuffer.AsSlice());
+  mApi->Resources().UpdateImageBuffer(aImageKey, descriptor, aBuffer.AsSlice());
 
   return IPC_OK();
 }
@@ -614,7 +612,7 @@ WebRenderBridgeParent::ProcessWebRenderParentCommands(InfallibleTArray<WebRender
         IntSize size = dSurf->GetSize();
         wr::ImageDescriptor descriptor(size, map.mStride, dSurf->GetFormat());
         auto slice = Range<uint8_t>(map.mData, size.height * map.mStride);
-        mApi->AddImage(keys[0], descriptor, slice);
+        mApi->Resources().AddImage(keys[0], descriptor, slice);
 
         dSurf->Unmap();
         break;
@@ -682,9 +680,9 @@ WebRenderBridgeParent::ProcessWebRenderCommands(const gfx::IntSize &aSize,
     mApi->SetWindowParameters(size);
   }
   gfx::Color color = mWidget ? gfx::Color(0.3f, 0.f, 0.f, 1.f) : gfx::Color(0.f, 0.f, 0.f, 0.f);
-  mApi->SetRootDisplayList(color, aEpoch, LayerSize(aSize.width, aSize.height),
-                           mPipelineId, aContentSize,
-                           dlDesc, dl.mData, dl.mLength);
+  mApi->SetDisplayList(color, aEpoch, LayerSize(aSize.width, aSize.height),
+                       mPipelineId, aContentSize,
+                       dlDesc, dl.mData, dl.mLength);
 
   ScheduleComposition();
   DeleteOldImages();
@@ -859,7 +857,7 @@ WebRenderBridgeParent::RecvClearCachedResources()
   mCompositorBridge->ObserveLayerUpdate(GetLayersId(), GetChildLayerObserverEpoch(), false);
 
   // Clear resources
-  mApi->ClearRootDisplayList(wr::NewEpoch(GetNextWrEpoch()), mPipelineId);
+  mApi->ClearDisplayList(wr::NewEpoch(GetNextWrEpoch()), mPipelineId);
   // Schedule composition to clean up Pipeline
   mCompositorScheduler->ScheduleComposition();
   DeleteOldImages();
@@ -1231,8 +1229,9 @@ void
 WebRenderBridgeParent::DeleteOldImages()
 {
   for (wr::ImageKey key : mKeysToDelete) {
-    mApi->DeleteImage(key);
+    mApi->Resources().DeleteImage(key);
   }
+  mApi->UpdateResources(mApi->Resources());
   mKeysToDelete.clear();
 }
 
@@ -1302,7 +1301,7 @@ WebRenderBridgeParent::ClearResources()
   }
 
   uint32_t wrEpoch = GetNextWrEpoch();
-  mApi->ClearRootDisplayList(wr::NewEpoch(wrEpoch), mPipelineId);
+  mApi->ClearDisplayList(wr::NewEpoch(wrEpoch), mPipelineId);
   // Schedule composition to clean up Pipeline
   mCompositorScheduler->ScheduleComposition();
   // WrFontKeys and WrImageKeys are deleted during WebRenderAPI destruction.
