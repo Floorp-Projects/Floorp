@@ -39,3 +39,51 @@ if CONFIG['MOZ_ARTIFACT_BUILDS']:
     EXTRA_COMPONENTS += [
         '../build/prebuilt-interfaces.manifest',
     ]
+
+with Files("**"):
+    BUG_COMPONENT = ("Firefox", "General")
+
+with Files("Makefile.in"):
+    BUG_COMPONENT = ("Core", "Build Config")
+
+with Files("*.mk"):
+    BUG_COMPONENT = ("Core", "Build Config")
+
+with Files("**/moz.build"):
+    BUG_COMPONENT = ("Core", "Build Config")
+
+with Files("moz.configure"):
+    BUG_COMPONENT = ("Core", "Build Config")
+
+with Files("app.mozbuild"):
+    BUG_COMPONENT = ("Core", "Build Config")
+
+with Files("moz.build"):
+    BUG_COMPONENT = ("Core", "Build Config")
+
+with Files("confvars.sh"):
+    BUG_COMPONENT = ("Core", "Build Config")
+
+with Files("LICENSE"):
+    BUG_COMPONENT = ("Core", "Build Config")
+
+with Files("branding/**"):
+    BUG_COMPONENT = ("Firefox", "General")
+
+with Files("config/**"):
+    BUG_COMPONENT = ("Core", "Build Config")
+
+with Files("docs/**"):
+    BUG_COMPONENT = ("Toolkit", "Telemetry")
+
+with Files("docs/DirectoryLinksProvider.rst"):
+    BUG_COMPONENT = ("Firefox", "New Tab Page")
+
+with Files("fonts/**"):
+    BUG_COMPONENT = ("Core", "Graphics: Text")
+
+with Files("installer/**"):
+    BUG_COMPONENT = ("Firefox", "Installer")
+
+with Files("tools/**"):
+    BUG_COMPONENT = ("Firefox", "General")
