@@ -30,9 +30,9 @@ var SidebarUI = {
   POSITION_START_PREF: "sidebar.position_start",
   DEFAULT_SIDEBAR_ID: "viewBookmarksSidebar",
 
-  get lastOpenedId() {
-    return this._box.getAttribute("sidebarcommand");
-  },
+  // lastOpenedId is set in show() but unlike currentID it's not cleared out on hide
+  // and isn't persisted across windows
+  lastOpenedId: null,
 
   _box: null,
   // The constructor of this label accesses the browser element due to the
@@ -64,19 +64,12 @@ var SidebarUI = {
   },
 
   uninit() {
-    // If this is the last browser window, persist various values that should be
-    // remembered for after a restart / reopening a browser window.
-    let enumerator = Services.wm.getEnumerator("navigator:browser");
+    let enumerator = Services.wm.getEnumerator(null);
     enumerator.getNext();
     if (!enumerator.hasMoreElements()) {
       document.persist("sidebar-box", "sidebarcommand");
 
       let xulStore = Cc["@mozilla.org/xul/xulstore;1"].getService(Ci.nsIXULStore);
-      if (this._box.hasAttribute("checked")) {
-        document.persist("sidebar-box", "checked");
-      } else {
-        xulStore.removeValue(document.documentURI, "sidebar-box", "checked");
-      }
 
       if (this._box.hasAttribute("positionend")) {
         document.persist("sidebar-box", "positionend");
@@ -187,18 +180,12 @@ var SidebarUI = {
       // no source UI or no _box means we also can't adopt the state.
       return false;
     }
-
-    // Set sidebar command even if hidden, so that we keep the same sidebar
-    // even if it's currently closed.
-    let commandID = sourceUI._box.getAttribute("sidebarcommand");
-    if (commandID) {
-      this._box.setAttribute("sidebarcommand", commandID);
-    }
-
     if (sourceUI._box.hidden) {
       // just hidden means we have adopted the hidden state.
       return true;
     }
+
+    let commandID = sourceUI._box.getAttribute("sidebarcommand");
 
     // dynamically generated sidebars will fail this check, but we still
     // consider it adopted.
@@ -237,8 +224,7 @@ var SidebarUI = {
 
     // If we're not adopting settings from a parent window, set them now.
     let commandID = this._box.getAttribute("sidebarcommand");
-    let wasOpen = this._box.getAttribute("checked");
-    if (!commandID || !wasOpen) {
+    if (!commandID) {
       return;
     }
 
@@ -284,9 +270,10 @@ var SidebarUI = {
 
   /**
    * The ID of the current sidebar (ie, the ID of the broadcaster being used).
+   * This can be set even if the sidebar is hidden.
    */
   get currentID() {
-    return this.isOpen ? this.lastOpenedId : "";
+    return this._box.getAttribute("sidebarcommand");
   },
 
   get title() {
@@ -316,9 +303,9 @@ var SidebarUI = {
    * @return {Promise}
    */
   toggle(commandID = this.lastOpenedId, triggerNode) {
-    // First priority for a default value is this.lastOpenedId. If we still
-    // don't have a command ID, or the command doesn't exist anymore,
-    // then fallback to a default sidebar.
+    // First priority for a default value is this.lastOpenedId which is set during show()
+    // and not reset in hide(), unlike currentID. If show() hasn't been called or the command
+    // doesn't exist anymore, then fallback to a default sidebar.
     if (!commandID || !this.getBroadcasterById(commandID)) {
       commandID = this.DEFAULT_SIDEBAR_ID;
     }
@@ -383,6 +370,7 @@ var SidebarUI = {
 
       this._box.setAttribute("checked", "true");
       this._box.setAttribute("sidebarcommand", sidebarBroadcaster.id);
+      this.lastOpenedId = sidebarBroadcaster.id;
 
       let title = sidebarBroadcaster.getAttribute("sidebartitle") ||
                   sidebarBroadcaster.getAttribute("label");
@@ -458,6 +446,7 @@ var SidebarUI = {
     this.browser.docShell.createAboutBlankContentViewer(null);
 
     sidebarBroadcaster.removeAttribute("checked");
+    this._box.setAttribute("sidebarcommand", "");
     this._box.removeAttribute("checked");
     this._box.hidden = this._splitter.hidden = true;
 
