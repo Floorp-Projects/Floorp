@@ -8,8 +8,7 @@ var BUGNUMBER = 1293995;
 var summary =
   "Scripted proxies' [[OwnPropertyKeys]] should not throw if the trap " +
   "implementation returns duplicate properties and the object is " +
-  "non-extensible or has non-configurable properties." +
-  "Revised (bug 1389752): Throw TypeError for duplicate properties.";
+  "non-extensible or has non-configurable properties";
 
 print(BUGNUMBER + ": " + summary);
 
@@ -19,11 +18,11 @@ print(BUGNUMBER + ": " + summary);
 
 var target = Object.preventExtensions({ a: 1 });
 var proxy = new Proxy(target, { ownKeys(t) { return ["a", "a"]; } });
-assertThrowsInstanceOf(() => Object.getOwnPropertyNames(proxy), TypeError);
+assertDeepEq(Object.getOwnPropertyNames(proxy), ["a", "a"]);
 
 target = Object.freeze({ a: 1 });
 proxy = new Proxy(target, { ownKeys(t) { return ["a", "a"]; } });
-assertThrowsInstanceOf(() => Object.getOwnPropertyNames(proxy), TypeError);
+assertDeepEq(Object.getOwnPropertyNames(proxy), ["a", "a"]);
 
 /******************************************************************************/
 
