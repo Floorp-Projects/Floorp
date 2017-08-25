@@ -85,7 +85,6 @@ public:
    */
   static void PaintFilteredFrame(nsIFrame *aFilteredFrame,
                                  gfxContext* aCtx,
-                                 const gfxMatrix& aTransform,
                                  nsSVGFilterPaintCallback *aPaintCallback,
                                  const nsRegion* aDirtyArea,
                                  imgDrawingParams& aImgParams);

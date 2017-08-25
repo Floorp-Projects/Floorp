@@ -62,19 +62,35 @@ UserSpaceMetricsForFrame(nsIFrame* aFrame)
 void
 nsFilterInstance::PaintFilteredFrame(nsIFrame *aFilteredFrame,
                                      gfxContext* aCtx,
-                                     const gfxMatrix& aTransform,
                                      nsSVGFilterPaintCallback *aPaintCallback,
                                      const nsRegion *aDirtyArea,
                                      imgDrawingParams& aImgParams)
 {
   auto& filterChain = aFilteredFrame->StyleEffects()->mFilters;
   UniquePtr<UserSpaceMetrics> metrics = UserSpaceMetricsForFrame(aFilteredFrame);
+
+  gfxContextMatrixAutoSaveRestore autoSR(aCtx);
+  gfxSize scaleFactors = aCtx->CurrentMatrix().ScaleFactors(true);
+  gfxMatrix scaleMatrix(scaleFactors.width, 0.0f,
+                        0.0f, scaleFactors.height,
+                        0.0f, 0.0f);
+
+  gfxMatrix reverseScaleMatrix = scaleMatrix;
+  DebugOnly<bool> invertible = reverseScaleMatrix.Invert();
+  MOZ_ASSERT(invertible);
+  // Pull scale vector out of aCtx's transform, put all scale factors, which
+  // includes css and css-to-dev-px scale, into scaleMatrixInDevUnits.
+  aCtx->SetMatrix(reverseScaleMatrix * aCtx->CurrentMatrix());
+
+  gfxMatrix scaleMatrixInDevUnits =
+    scaleMatrix * nsSVGUtils::GetCSSPxToDevPxMatrix(aFilteredFrame);
+
   // Hardcode InputIsTainted to true because we don't want JS to be able to
   // read the rendered contents of aFilteredFrame.
   nsFilterInstance instance(aFilteredFrame, aFilteredFrame->GetContent(),
                             *metrics, filterChain, /* InputIsTainted */ true,
-                            aPaintCallback, aTransform, aDirtyArea, nullptr,
-                            nullptr, nullptr);
+                            aPaintCallback, scaleMatrixInDevUnits,
+                            aDirtyArea, nullptr, nullptr, nullptr);
   if (instance.IsInitialized()) {
     instance.Render(aCtx, aImgParams);
   }
