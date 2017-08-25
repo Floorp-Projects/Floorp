@@ -1054,6 +1054,10 @@ public abstract class GeckoApp extends GeckoActivity
     @Override // GeckoView.ContentListener
     public void onFullScreen(final GeckoView view, final boolean fullScreen) {
         ThreadUtils.assertOnUiThread();
+        if (fullScreen) {
+            SnackbarBuilder.builder(this).message(R.string.fullscreen_warning)
+                    .duration(Snackbar.LENGTH_LONG).buildAndShow();
+        }
         ActivityUtils.setFullScreen(this, fullScreen);
     }
 

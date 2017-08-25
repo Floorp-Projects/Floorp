@@ -643,4 +643,5 @@
 
   <string name="activity_stream_welcome_title">&activity_stream_welcome_title;</string>
   <string name="activity_stream_welcome_content">&activity_stream_welcome_content1;</string>
+  <string name="fullscreen_warning">&fullscreen_warning;</string>
 </resources>
