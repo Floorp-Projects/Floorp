@@ -607,8 +607,6 @@ typedef void
     \
     JSAddPropertyOp    getAddProperty() const { return cOps ? cOps->addProperty : nullptr; } \
     JSDeletePropertyOp getDelProperty() const { return cOps ? cOps->delProperty : nullptr; } \
-    JSGetterOp         getGetProperty() const { return cOps ? cOps->getProperty : nullptr; } \
-    JSSetterOp         getSetProperty() const { return cOps ? cOps->setProperty : nullptr; } \
     JSEnumerateOp      getEnumerate()   const { return cOps ? cOps->enumerate   : nullptr; } \
     JSNewEnumerateOp   getNewEnumerate()const { return cOps ? cOps->newEnumerate: nullptr; } \
     JSResolveOp        getResolve()     const { return cOps ? cOps->resolve     : nullptr; } \
