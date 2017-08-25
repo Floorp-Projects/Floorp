@@ -4079,11 +4079,6 @@ Selection::SetBaseAndExtent(nsINode& aAnchorNode, uint32_t aAnchorOffset,
     return;
   }
 
-  // Since a range will be created, we don't need the cached range because
-  // Collapse() won't use it.
-  // TODO: We should use the cache.
-  mCachedRange = nullptr;
-
   SelectionBatcher batch(this);
 
   int32_t relativePosition =
@@ -4100,18 +4095,28 @@ Selection::SetBaseAndExtent(nsINode& aAnchorNode, uint32_t aAnchorOffset,
     endOffset = aAnchorOffset;
   }
 
-  RefPtr<nsRange> newRange;
-  nsresult rv = nsRange::CreateRange(start, startOffset, end, endOffset,
-                                     getter_AddRefs(newRange));
-  // CreateRange returns IndexSizeError if any offset is out of bounds.
+  // If there is cached range, we should reuse it for saving the allocation
+  // const (and some other cost in nsRange::DoSetRange().
+  RefPtr<nsRange> newRange = Move(mCachedRange);
+
+  nsresult rv = NS_OK;
+  if (newRange) {
+    rv = newRange->SetStartAndEnd(start, startOffset, end, endOffset);
+  } else {
+    rv = nsRange::CreateRange(start, startOffset, end, endOffset,
+                              getter_AddRefs(newRange));
+  }
+
+  // nsRange::SetStartAndEnd() and nsRange::CreateRange() returns
+  // IndexSizeError if any offset is out of bounds.
   if (NS_FAILED(rv)) {
     aRv.Throw(rv);
     return;
   }
 
-  rv = RemoveAllRanges();
-  if (NS_FAILED(rv)) {
-    aRv.Throw(rv);
+  // Use non-virtual method instead of nsISelection::RemoveAllRanges().
+  RemoveAllRanges(aRv);
+  if (aRv.Failed()) {
     return;
   }
 
