@@ -49,6 +49,8 @@ public:
     return mDemuxer;
   }
 
+  bool IsTransportSeekable() override { return true; }
+
   // Returns a string describing the state of the MediaSource internal
   // buffered data. Used for debugging purposes.
   void GetMozDebugReaderData(nsACString& aString) override;

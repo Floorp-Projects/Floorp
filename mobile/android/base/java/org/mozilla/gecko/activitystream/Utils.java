@@ -14,7 +14,8 @@ import org.mozilla.gecko.activitystream.ranking.HighlightCandidateCursorIndices;
 public class Utils {
     public enum HighlightSource {
         VISITED,
-        BOOKMARKED
+        BOOKMARKED,
+        POCKET
     }
 
     public static HighlightSource highlightSource(final Cursor cursor, final HighlightCandidateCursorIndices cursorIndices) {
