@@ -3215,9 +3215,7 @@ HTMLEditor::GetSelectedOrParentTableElement(nsAString& aTagName,
     anchorNode->HasChildNodes(&hasChildren);
 
     if (hasChildren) {
-      int32_t anchorOffset;
-      rv = selection->GetAnchorOffset(&anchorOffset);
-      NS_ENSURE_SUCCESS(rv, rv);
+      int32_t anchorOffset = selection->AnchorOffset();
       selectedNode = GetChildAt(anchorNode, anchorOffset);
       if (!selectedNode) {
         selectedNode = anchorNode;

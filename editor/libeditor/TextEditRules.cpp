@@ -201,7 +201,7 @@ TextEditRules::BeforeEdit(EditAction action,
     mCachedSelectionOffset = 0;
   } else {
     mCachedSelectionNode = selection->GetAnchorNode();
-    selection->GetAnchorOffset(&mCachedSelectionOffset);
+    mCachedSelectionOffset = selection->AnchorOffset();
   }
 
   return NS_OK;
