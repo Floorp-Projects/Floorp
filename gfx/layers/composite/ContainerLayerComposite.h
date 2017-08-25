@@ -88,8 +88,6 @@ public:
     DefaultComputeEffectiveTransforms(aTransformToSurface);
   }
 
-  virtual const LayerIntRegion& GetShadowVisibleRegion() override;
-
   virtual void CleanupResources() override;
 
   virtual HostLayer* AsHostLayer() override { return this; }
@@ -184,8 +182,6 @@ public:
   {
     DefaultComputeEffectiveTransforms(aTransformToSurface);
   }
-
-  virtual const LayerIntRegion& GetShadowVisibleRegion() override;
 
   virtual void Cleanup() override;
 

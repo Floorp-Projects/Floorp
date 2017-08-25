@@ -262,6 +262,21 @@ bool ShouldProcessLayer(Layer* aLayer)
   return aLayer->AsContainerLayer()->UseIntermediateSurface();
 }
 
+/**
+ * Get accumulated transform of from the context creating layer to the
+ * given layer.
+ */
+static Matrix4x4
+GetAccTransformIn3DContext(Layer* aLayer) {
+  Matrix4x4 transform = aLayer->GetLocalTransform();
+  for (Layer* layer = aLayer->GetParent();
+       layer && layer->Extend3DContext();
+       layer = layer->GetParent()) {
+    transform = transform * layer->GetLocalTransform();
+  }
+  return transform;
+}
+
 void
 LayerManagerComposite::PostProcessLayers(Layer* aLayer,
                                          nsIntRegion& aOpaqueRegion,
@@ -292,7 +307,7 @@ LayerManagerComposite::PostProcessLayers(Layer* aLayer,
     // that it can later be intersected with our visible region.
     // If our transform is a perspective, there's no meaningful insideClip rect
     // we can compute (it would need to be a cone).
-    Matrix4x4 localTransform = aLayer->ComputeTransformToPreserve3DRoot();
+    Matrix4x4 localTransform = GetAccTransformIn3DContext(aLayer);
     if (!localTransform.HasPerspectiveComponent() && localTransform.Invert()) {
       LayerRect insideClipFloat =
         UntransformBy(ViewAs<ParentLayerToLayerMatrix4x4>(localTransform),
@@ -310,13 +325,6 @@ LayerManagerComposite::PostProcessLayers(Layer* aLayer,
   if (insideClip) {
     ancestorClipForChildren =
       Some(ViewAs<ParentLayerPixel>(*insideClip, PixelCastJustification::MovingDownToChildren));
-  }
-
-  nsIntRegion dummy;
-  nsIntRegion& opaqueRegion = aOpaqueRegion;
-  if (aLayer->Extend3DContext() ||
-      aLayer->Combines3DTransformWithAncestors()) {
-   opaqueRegion = dummy;
   }
 
   if (!ShouldProcessLayer(aLayer)) {
@@ -337,7 +345,7 @@ LayerManagerComposite::PostProcessLayers(Layer* aLayer,
         renderTargetClip = IntersectMaybeRects(renderTargetClip, Some(clip));
       }
 
-      PostProcessLayers(child, opaqueRegion, aVisibleRegion,
+      PostProcessLayers(child, aOpaqueRegion, aVisibleRegion,
                         renderTargetClip, ancestorClipForChildren);
     }
     return;
@@ -355,7 +363,7 @@ LayerManagerComposite::PostProcessLayers(Layer* aLayer,
   if (transform.Is2D(&transform2d)) {
     if (transform2d.IsIntegerTranslation()) {
       integerTranslation = Some(IntPoint::Truncate(transform2d.GetTranslation()));
-      localOpaque = opaqueRegion;
+      localOpaque = aOpaqueRegion;
       localOpaque.MoveBy(-*integerTranslation);
     }
   }
@@ -423,7 +431,7 @@ LayerManagerComposite::PostProcessLayers(Layer* aLayer,
     if (aRenderTargetClip) {
       localOpaque.AndWith(aRenderTargetClip->ToUnknownRect());
     }
-    opaqueRegion.OrWith(localOpaque);
+    aOpaqueRegion.OrWith(localOpaque);
   }
 }
 
