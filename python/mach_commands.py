@@ -205,6 +205,10 @@ class MachCommands(MachCommandBase):
                 if output:
                     file_displayed_test.append(True)
 
+            # Hack to make sure treeherder highlights pytest failures
+            if line.endswith('FAILED'):
+                line = line.replace('FAILED', 'TEST-UNEXPECTED-FAIL')
+
             _log(line)
 
         _log(test_path)
