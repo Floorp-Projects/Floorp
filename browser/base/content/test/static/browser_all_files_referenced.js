@@ -131,8 +131,6 @@ var whitelist = [
   // Bug 1339424 (wontfix?)
   {file: "chrome://browser/locale/taskbar.properties",
    platforms: ["linux", "macosx"]},
-  // Bug 1370766 will reference this file
-  {file: "chrome://formautofill/content/manageCreditCards.xhtml"},
   // Bug 1316187
   {file: "chrome://global/content/customizeToolbar.xul"},
   // Bug 1343837
