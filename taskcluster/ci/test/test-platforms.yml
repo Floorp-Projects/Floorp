@@ -280,6 +280,7 @@ macosx64/opt:
     build-platform: macosx64/opt
     test-sets:
         - macosx64-tests-talos
+        - macosx64-tests-talos-stylo
         - macosx64-tests
         - desktop-screenshot-capture
         - awsy
