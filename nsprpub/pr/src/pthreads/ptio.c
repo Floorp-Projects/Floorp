@@ -4746,7 +4746,7 @@ PR_IMPLEMENT(PRInt32) PR_FileDesc2NativeHandle(PRFileDesc *bottom)
 
 /* Expose OVERLAPPED if present. OVERLAPPED is implemented only on WIN95. */
 PR_IMPLEMENT(PRStatus)
-PR_FileDesc2PlatformOverlappedIOHandle(PRFileDesc *fd, void **ol)
+PR_EXPERIMENTAL_ONLY_IN_4_17_GetOverlappedIOHandle(PRFileDesc *fd, void **ol)
 {
     PR_SetError(PR_NOT_IMPLEMENTED_ERROR, 0);
     return PR_FAILURE;
