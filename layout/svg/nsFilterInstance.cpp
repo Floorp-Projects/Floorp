@@ -61,7 +61,7 @@ UserSpaceMetricsForFrame(nsIFrame* aFrame)
 
 void
 nsFilterInstance::PaintFilteredFrame(nsIFrame *aFilteredFrame,
-                                     DrawTarget* aDrawTarget,
+                                     gfxContext* aCtx,
                                      const gfxMatrix& aTransform,
                                      nsSVGFilterPaintCallback *aPaintCallback,
                                      const nsRegion *aDirtyArea,
@@ -76,7 +76,7 @@ nsFilterInstance::PaintFilteredFrame(nsIFrame *aFilteredFrame,
                             aPaintCallback, aTransform, aDirtyArea, nullptr,
                             nullptr, nullptr);
   if (instance.IsInitialized()) {
-    instance.Render(aDrawTarget, aImgParams);
+    instance.Render(aCtx, aImgParams);
   }
 }
 
@@ -473,7 +473,7 @@ nsFilterInstance::BuildSourceImage(imgDrawingParams& aImgParams)
 }
 
 void
-nsFilterInstance::Render(DrawTarget* aDrawTarget, imgDrawingParams& aImgParams)
+nsFilterInstance::Render(gfxContext* aCtx, imgDrawingParams& aImgParams)
 {
   MOZ_ASSERT(mTargetFrame, "Need a frame for rendering");
 
@@ -488,10 +488,8 @@ nsFilterInstance::Render(DrawTarget* aDrawTarget, imgDrawingParams& aImgParams)
     return;
   }
 
-  AutoRestoreTransform autoRestoreTransform(aDrawTarget);
-  Matrix newTM =
-    aDrawTarget->GetTransform().PreTranslate(filterRect.x, filterRect.y);
-  aDrawTarget->SetTransform(newTM);
+  gfxContextMatrixAutoSaveRestore autoSR(aCtx);
+  aCtx->SetMatrix(aCtx->CurrentMatrix().PreTranslate(filterRect.x, filterRect.y));
 
   ComputeNeededBoxes();
 
@@ -499,7 +497,7 @@ nsFilterInstance::Render(DrawTarget* aDrawTarget, imgDrawingParams& aImgParams)
   BuildSourcePaints(aImgParams);
 
   FilterSupport::RenderFilterDescription(
-    aDrawTarget, mFilterDescription, IntRectToRect(filterRect),
+    aCtx->GetDrawTarget(), mFilterDescription, IntRectToRect(filterRect),
     mSourceGraphic.mSourceSurface, mSourceGraphic.mSurfaceRect,
     mFillPaint.mSourceSurface, mFillPaint.mSurfaceRect,
     mStrokePaint.mSourceSurface, mStrokePaint.mSurfaceRect,
