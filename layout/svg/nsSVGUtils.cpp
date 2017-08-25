@@ -854,7 +854,7 @@ nsSVGUtils::PaintFrameWithEffects(nsIFrame *aFrame,
     }
 
     SVGPaintCallback paintCallback;
-    nsFilterInstance::PaintFilteredFrame(aFrame, target->GetDrawTarget(),
+    nsFilterInstance::PaintFilteredFrame(aFrame, target,
                                          aTransform, &paintCallback,
                                          dirtyRegion, aImgParams);
   } else {
