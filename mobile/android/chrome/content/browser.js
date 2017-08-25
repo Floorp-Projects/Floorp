@@ -6630,6 +6630,7 @@ var ExternalApps = {
     this._pageActionId = PageActions.add({
       title: Strings.browser.GetStringFromName("openInApp.pageAction"),
       icon: "drawable://icon_openinapp",
+      useTint: true,
 
       clickCallback: () => {
         UITelemetry.addEvent("launch.1", "pageaction", null, "helper");
