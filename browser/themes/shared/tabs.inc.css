@@ -62,6 +62,52 @@
   padding: 0 12px;
 }
 
+:root[sessionrestored] .tab-loading-burst {
+  position: relative;
+  overflow: hidden;
+}
+
+:root[sessionrestored] .tab-loading-burst::before {
+  position: absolute;
+  content: "";
+  /* We set the width to be a percentage of the tab's width so that we can use
+     the `scale` transform to scale it up to the full size of the tab when the
+     burst occurs. We also need to set the margin-inline-start so that the
+     center of the burst matches the center of the favicon. */
+  width: 5%;
+  height: 100%;
+  /* Center the burst over the .tab-loading-burst; it's 9px from the edge thanks
+     to .tab-content, plus 8px more since .tab-loading-burst is 16px wide. */
+  margin-inline-start: calc(17px - 2.5%);
+}
+
+:root[sessionrestored] .tab-loading-burst[pinned]::before {
+  /* This is like the margin-inline-start rule above, except that icons for
+     pinned tabs are 12px from the edge. */
+  margin-inline-start: calc(20px - 2.5%);
+}
+
+:root[sessionrestored] .tab-loading-burst[bursting]::before {
+  background-image: url("chrome://browser/skin/tabbrowser/loading-burst.svg");
+  background-position: center center;
+  background-size: 100% auto;
+  background-repeat: no-repeat;
+  animation: tab-burst-animation 375ms cubic-bezier(0,0,.58,1);
+  -moz-context-properties: fill;
+  fill: var(--tab-loading-fill);
+}
+
+@keyframes tab-burst-animation {
+  0% {
+    opacity: 0.4;
+    transform: scale(1);
+  }
+  100% {
+    opacity: 0;
+    transform: scale(40);
+  }
+}
+
 .tab-throbber,
 .tab-icon-image,
 .tab-sharing-icon-overlay,

@@ -6,11 +6,13 @@ toolbar[brighttext] {
   --toolbarbutton-icon-fill-attention: #45a1ff;
 }
 
+.toolbarbutton-animatable-box,
 .toolbarbutton-1 {
   -moz-context-properties: fill;
   fill: #4c4c4c;
 }
 
+.toolbarbutton-animatable-box[brighttext],
 toolbar[brighttext] .toolbarbutton-1 {
   fill: #fff;
 }
@@ -20,6 +22,7 @@ toolbar[brighttext] .toolbarbutton-1 {
 #reload-button:-moz-locale-dir(rtl) > .toolbarbutton-icon,
 #library-button:-moz-locale-dir(rtl) > .toolbarbutton-icon,
 #nav-bar-overflow-button:-moz-locale-dir(rtl) > .toolbarbutton-icon,
+#PlacesChevron:-moz-locale-dir(rtl) > .toolbarbutton-icon,
 #panic-button:-moz-locale-dir(rtl) > .toolbarbutton-icon {
   transform: scaleX(-1);
 }
@@ -455,30 +458,31 @@ toolbar[brighttext] .toolbarbutton-1 {
   }
 }
 
-#library-button[animate="bookmark"] {
-  position: relative;
-}
-
 #library-button[animate="bookmark"] > .toolbarbutton-icon {
   fill: transparent;
 }
 
-#library-button[animate="bookmark"] > .toolbarbutton-animatable-box {
+.toolbarbutton-animatable-box[animate="bookmark"] {
   position: absolute;
   overflow: hidden;
-  top: calc(50% - 27px); /* 27px is half the height of the sprite */
+  /* Position the sprite at the y-position of the library-button, then adjust
+     based on the size difference between half of the button height and half
+     of the sprite height. */
+  top: calc(var(--library-button-y) + var(--library-button-height) / 2 - 27px);
   /* Set a margin relative to the difference in widths of the .toolbarbutton-icon
-     and the .toolbar-animatable-box */
-  margin-inline-start: calc((16px + 2 * var(--toolbarbutton-inner-padding) - 22px) / 2);
+     and the .toolbar-animatable-box. This is correct even in RTL because the item
+     is positioned using `left`. */
+  left: calc(var(--library-icon-x) + (16px + 2 * var(--toolbarbutton-inner-padding) - 22px) / 2);
   /* Set the min- and max- width and height of the box equal to that
      of each frame of the SVG sprite (must use min- and max- due to bug 1379332). */
   min-width: 22px;
   max-width: 22px;
   min-height: 54px;
   max-height: 54px;
+  z-index: 2;
 }
 
-#library-button[animate="bookmark"] > .toolbarbutton-animatable-box > .toolbarbutton-animatable-image {
+.toolbarbutton-animatable-box[animate="bookmark"] > .toolbarbutton-animatable-image {
   height: var(--toolbarbutton-height);
   min-height: 54px; /* Minimum height must be equal to the height of the SVG sprite */
   background-image: url("chrome://browser/skin/library-bookmark-animation.svg");
@@ -490,12 +494,12 @@ toolbar[brighttext] .toolbarbutton-1 {
   stroke: var(--toolbarbutton-icon-fill-attention);
 }
 
-#library-button[animate="bookmark"]:-moz-locale-dir(rtl) > .toolbarbutton-animatable-box > .toolbarbutton-animatable-image {
+.toolbarbutton-animatable-box[animate="bookmark"]:-moz-locale-dir(rtl) > .toolbarbutton-animatable-image {
   animation-name: library-bookmark-animation-rtl;
   transform: scaleX(-1);
 }
 
-#library-button[animate="bookmark"][fade] > .toolbarbutton-animatable-box > .toolbarbutton-animatable-image {
+.toolbarbutton-animatable-box[animate="bookmark"][fade] > .toolbarbutton-animatable-image {
   animation-name: library-bookmark-fade;
   animation-duration: 2s;
   animation-timing-function: ease-out;

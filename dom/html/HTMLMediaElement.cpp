@@ -6668,14 +6668,16 @@ NS_IMETHODIMP HTMLMediaElement::GetMozFragmentEnd(double* aTime)
 
 static double ClampPlaybackRate(double aPlaybackRate)
 {
+  MOZ_ASSERT(aPlaybackRate >= 0.0);
+
   if (aPlaybackRate == 0.0) {
     return aPlaybackRate;
   }
-  if (Abs(aPlaybackRate) < MIN_PLAYBACKRATE) {
-    return aPlaybackRate < 0 ? -MIN_PLAYBACKRATE : MIN_PLAYBACKRATE;
+  if (aPlaybackRate < MIN_PLAYBACKRATE) {
+    return MIN_PLAYBACKRATE;
   }
-  if (Abs(aPlaybackRate) > MAX_PLAYBACKRATE) {
-    return aPlaybackRate < 0 ? -MAX_PLAYBACKRATE : MAX_PLAYBACKRATE;
+  if (aPlaybackRate > MAX_PLAYBACKRATE) {
+    return MAX_PLAYBACKRATE;
   }
   return aPlaybackRate;
 }
@@ -6717,14 +6719,18 @@ HTMLMediaElement::SetPlaybackRate(double aPlaybackRate, ErrorResult& aRv)
   // Changing the playback rate of a media that has more than two channels is
   // not supported.
   if (aPlaybackRate < 0) {
-    aRv.Throw(NS_ERROR_NOT_IMPLEMENTED);
+    aRv.Throw(NS_ERROR_DOM_NOT_SUPPORTED_ERR);
     return;
   }
 
-  mPlaybackRate = ClampPlaybackRate(aPlaybackRate);
+  if (mPlaybackRate == aPlaybackRate) {
+    return;
+  }
+
+  mPlaybackRate = aPlaybackRate;
 
   if (mPlaybackRate != 0.0 &&
-      (mPlaybackRate < 0 || mPlaybackRate > THRESHOLD_HIGH_PLAYBACKRATE_AUDIO ||
+      (mPlaybackRate > THRESHOLD_HIGH_PLAYBACKRATE_AUDIO ||
        mPlaybackRate < THRESHOLD_LOW_PLAYBACKRATE_AUDIO)) {
     SetMutedInternal(mMuted | MUTED_BY_INVALID_PLAYBACK_RATE);
   } else {
@@ -6732,7 +6738,7 @@ HTMLMediaElement::SetPlaybackRate(double aPlaybackRate, ErrorResult& aRv)
   }
 
   if (mDecoder) {
-    mDecoder->SetPlaybackRate(mPlaybackRate);
+    mDecoder->SetPlaybackRate(ClampPlaybackRate(mPlaybackRate));
   }
   DispatchAsyncEvent(NS_LITERAL_STRING("ratechange"));
 }

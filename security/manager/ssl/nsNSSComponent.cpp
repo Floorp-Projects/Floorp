@@ -2226,8 +2226,14 @@ NS_IMETHODIMP
 nsNSSComponent::Observe(nsISupports* aSubject, const char* aTopic,
                         const char16_t* someData)
 {
-  if (nsCRT::strcmp(aTopic, PROFILE_BEFORE_CHANGE_TOPIC) == 0) {
-    MOZ_LOG(gPIPNSSLog, LogLevel::Debug, ("receiving profile change topic\n"));
+  // In some tests, we don't receive a "profile-before-change" topic. However,
+  // we still have to shut down before the storage service shuts down, because
+  // closing the sql-backed softoken requires sqlite still be available. Thus,
+  // we observe "xpcom-shutdown" just in case.
+  if (nsCRT::strcmp(aTopic, PROFILE_BEFORE_CHANGE_TOPIC) == 0 ||
+      nsCRT::strcmp(aTopic, NS_XPCOM_SHUTDOWN_OBSERVER_ID) == 0) {
+    MOZ_LOG(gPIPNSSLog, LogLevel::Debug,
+            ("receiving profile change or XPCOM shutdown notification"));
     ShutdownNSS();
   } else if (nsCRT::strcmp(aTopic, NS_PREFBRANCH_PREFCHANGE_TOPIC_ID) == 0) {
     nsNSSShutDownPreventionLock locker;
@@ -2348,6 +2354,7 @@ nsNSSComponent::RegisterObservers()
   // keep a strong reference to this component. As a result, this will live at
   // least as long as the observer service.
   observerService->AddObserver(this, PROFILE_BEFORE_CHANGE_TOPIC, false);
+  observerService->AddObserver(this, NS_XPCOM_SHUTDOWN_OBSERVER_ID, false);
 
   return NS_OK;
 }

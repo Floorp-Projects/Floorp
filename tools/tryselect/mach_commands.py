@@ -40,7 +40,7 @@ def fuzzy_parser():
 def generic_parser():
     from tryselect.cli import BaseTryParser
     parser = BaseTryParser()
-    parser.add_argument('args', nargs=argparse.REMAINDER)
+    parser.add_argument('argv', nargs=argparse.REMAINDER)
     return parser
 
 
@@ -51,7 +51,7 @@ class TrySelect(MachCommandBase):
              category='ci',
              description='Push selected tasks to the try server',
              parser=generic_parser)
-    def try_default(self, args, **kwargs):
+    def try_default(self, argv, **kwargs):
         """Push selected tests to the try server.
 
         The |mach try| command is a frontend for scheduling tasks to
@@ -63,11 +63,20 @@ class TrySelect(MachCommandBase):
         default. Run |mach try syntax --help| for more information on
         scheduling with the `syntax` selector.
         """
-        parser = syntax_parser()
-        subargs = vars(parser.parse_args(args))
-        subargs.update(kwargs)
+        from tryselect import preset
+        if kwargs['list_presets']:
+            preset.list_presets()
+            return
+
+        # We do special handling of presets here so that `./mach try --preset foo`
+        # works no matter what subcommand 'foo' was saved with.
+        sub = 'syntax'
+        if kwargs['preset']:
+            _, section = preset.load(kwargs['preset'])
+            sub = 'syntax' if section == 'try' else section
+
         return self._mach_context.commands.dispatch(
-            'try', subcommand='syntax', context=self._mach_context, **subargs)
+            'try', subcommand=sub, context=self._mach_context, argv=argv, **kwargs)
 
     @SubCommand('try',
                 'fuzzy',

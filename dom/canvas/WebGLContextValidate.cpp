@@ -34,6 +34,66 @@
 #include "nsCocoaFeatures.h"
 #endif
 
+////////////////////
+// Minimum value constants defined in GLES 2.0.25 $6.2 "State Tables":
+const uint32_t kMinMaxVertexAttribs          =   8; // Page 164
+const uint32_t kMinMaxVertexUniformVectors   = 128; // Page 164
+const uint32_t kMinMaxFragmentUniformVectors =  16; // Page 164
+const uint32_t kMinMaxVaryingVectors         =   8; // Page 164
+
+const uint32_t kMinMaxVertexTextureImageUnits   = 0; // Page 164
+const uint32_t kMinMaxFragmentTextureImageUnits = 8; // Page 164
+const uint32_t kMinMaxCombinedTextureImageUnits = 8; // Page 164
+
+const uint32_t kMinMaxColorAttachments = 4;
+const uint32_t kMinMaxDrawBuffers      = 4;
+
+// These few deviate from the spec: (The minimum values in the spec are ridiculously low)
+const uint32_t kMinMaxTextureSize        = 1024; // ES2 spec says `64` (p162)
+const uint32_t kMinMaxCubeMapTextureSize =  512; // ES2 spec says `16` (p162)
+const uint32_t kMinMaxRenderbufferSize   = 1024; // ES2 spec says `1` (p164)
+
+// Minimum value constants defined in GLES 3.0.4 $6.2 "State Tables":
+const uint32_t kMinMax3DTextureSize      = 256;
+const uint32_t kMinMaxArrayTextureLayers = 256;
+
+////////////////////
+// "Common" but usable values to avoid WebGL fingerprinting:
+const uint32_t kCommonMaxTextureSize        = 2048;
+const uint32_t kCommonMaxCubeMapTextureSize = 2048;
+const uint32_t kCommonMaxRenderbufferSize   = 2048;
+
+const uint32_t kCommonMaxVertexTextureImageUnits   =  8;
+const uint32_t kCommonMaxFragmentTextureImageUnits =  8;
+const uint32_t kCommonMaxCombinedTextureImageUnits = 16;
+
+const uint32_t kCommonMaxVertexAttribs          =  16;
+const uint32_t kCommonMaxVertexUniformVectors   = 256;
+const uint32_t kCommonMaxFragmentUniformVectors = 224;
+const uint32_t kCommonMaxVaryingVectors         =   8;
+
+const uint32_t kCommonMaxViewportDims = 4096;
+
+// The following ranges came from a 2013 Moto E and an old macbook.
+const float kCommonAliasedPointSizeRangeMin =  1;
+const float kCommonAliasedPointSizeRangeMax = 63;
+const float kCommonAliasedLineWidthRangeMin =  1;
+const float kCommonAliasedLineWidthRangeMax =  5;
+
+template<class T>
+static bool
+RestrictCap(T* const cap, const T restrictedVal)
+{
+    if (*cap < restrictedVal) {
+        return false; // already too low!
+    }
+
+    *cap = restrictedVal;
+    return true;
+}
+
+////////////////////
+
 namespace mozilla {
 
 bool
@@ -366,14 +426,10 @@ WebGLContext::InitAndValidateGL(FailureReason* const out_failReason)
         return false;
     }
 
-    mMinCapability = gfxPrefs::WebGLMinCapabilityMode();
     mDisableExtensions = gfxPrefs::WebGLDisableExtensions();
     mLoseContextOnMemoryPressure = gfxPrefs::WebGLLoseContextOnMemoryPressure();
     mCanLoseContextInForeground = gfxPrefs::WebGLCanLoseContextInForeground();
     mRestoreWhenVisible = gfxPrefs::WebGLRestoreWhenVisible();
-
-    if (MinCapabilityMode())
-        mDisableFragHighP = true;
 
     // These are the default values, see 6.2 State tables in the
     // OpenGL ES 2.0.25 spec.
@@ -445,10 +501,7 @@ WebGLContext::InitAndValidateGL(FailureReason* const out_failReason)
 
     MakeContextCurrent();
 
-    if (MinCapabilityMode())
-        mGLMaxVertexAttribs = MINVALUE_GL_MAX_VERTEX_ATTRIBS;
-    else
-        gl->GetUIntegerv(LOCAL_GL_MAX_VERTEX_ATTRIBS, &mGLMaxVertexAttribs);
+    gl->GetUIntegerv(LOCAL_GL_MAX_VERTEX_ATTRIBS, &mGLMaxVertexAttribs);
 
     if (mGLMaxVertexAttribs < 8) {
         const nsPrintfCString reason("GL_MAX_VERTEX_ATTRIBS: %d is < 8!",
@@ -460,13 +513,11 @@ WebGLContext::InitAndValidateGL(FailureReason* const out_failReason)
     // Note: GL_MAX_TEXTURE_UNITS is fixed at 4 for most desktop hardware,
     // even though the hardware supports much more.  The
     // GL_MAX_COMBINED_TEXTURE_IMAGE_UNITS value is the accurate value.
-    if (MinCapabilityMode())
-        mGLMaxTextureUnits = MINVALUE_GL_MAX_COMBINED_TEXTURE_IMAGE_UNITS;
-    else
-        gl->fGetIntegerv(LOCAL_GL_MAX_COMBINED_TEXTURE_IMAGE_UNITS, &mGLMaxTextureUnits);
+    gl->GetUIntegerv(LOCAL_GL_MAX_COMBINED_TEXTURE_IMAGE_UNITS, &mGLMaxTextureUnits);
+    mGLMaxCombinedTextureImageUnits = mGLMaxTextureUnits;
 
     if (mGLMaxTextureUnits < 8) {
-        const nsPrintfCString reason("GL_MAX_COMBINED_TEXTURE_IMAGE_UNITS: %d is < 8!",
+        const nsPrintfCString reason("GL_MAX_COMBINED_TEXTURE_IMAGE_UNITS: %u is < 8!",
                                      mGLMaxTextureUnits);
         *out_failReason = { "FEATURE_FAILURE_WEBGL_T_UNIT", reason };
         return false;
@@ -478,101 +529,139 @@ WebGLContext::InitAndValidateGL(FailureReason* const out_failReason)
     mBound2DArrayTextures.SetLength(mGLMaxTextureUnits);
     mBoundSamplers.SetLength(mGLMaxTextureUnits);
 
-    gl->fGetIntegerv(LOCAL_GL_MAX_VIEWPORT_DIMS, (GLint*)mImplMaxViewportDims);
+    gl->fGetIntegerv(LOCAL_GL_MAX_VIEWPORT_DIMS, (GLint*)mGLMaxViewportDims);
 
     ////////////////
 
-    if (MinCapabilityMode()) {
-        mImplMaxTextureSize = MINVALUE_GL_MAX_TEXTURE_SIZE;
-        mImplMaxCubeMapTextureSize = MINVALUE_GL_MAX_CUBE_MAP_TEXTURE_SIZE;
-        mImplMaxRenderbufferSize = MINVALUE_GL_MAX_RENDERBUFFER_SIZE;
+    gl->fGetIntegerv(LOCAL_GL_MAX_TEXTURE_SIZE, (GLint*)&mGLMaxTextureSize);
+    gl->fGetIntegerv(LOCAL_GL_MAX_CUBE_MAP_TEXTURE_SIZE, (GLint*)&mGLMaxCubeMapTextureSize);
+    gl->fGetIntegerv(LOCAL_GL_MAX_RENDERBUFFER_SIZE, (GLint*)&mGLMaxRenderbufferSize);
 
-        mImplMax3DTextureSize = MINVALUE_GL_MAX_3D_TEXTURE_SIZE;
-        mImplMaxArrayTextureLayers = MINVALUE_GL_MAX_ARRAY_TEXTURE_LAYERS;
+    if (!gl->GetPotentialInteger(LOCAL_GL_MAX_3D_TEXTURE_SIZE, (GLint*)&mGLMax3DTextureSize))
+        mGLMax3DTextureSize = 0;
+    if (!gl->GetPotentialInteger(LOCAL_GL_MAX_ARRAY_TEXTURE_LAYERS, (GLint*)&mGLMaxArrayTextureLayers))
+        mGLMaxArrayTextureLayers = 0;
 
-        mGLMaxTextureImageUnits = MINVALUE_GL_MAX_TEXTURE_IMAGE_UNITS;
-        mGLMaxVertexTextureImageUnits = MINVALUE_GL_MAX_VERTEX_TEXTURE_IMAGE_UNITS;
-    } else {
-        gl->fGetIntegerv(LOCAL_GL_MAX_TEXTURE_SIZE, (GLint*)&mImplMaxTextureSize);
-        gl->fGetIntegerv(LOCAL_GL_MAX_CUBE_MAP_TEXTURE_SIZE, (GLint*)&mImplMaxCubeMapTextureSize);
-        gl->fGetIntegerv(LOCAL_GL_MAX_RENDERBUFFER_SIZE, (GLint*)&mImplMaxRenderbufferSize);
-
-        if (!gl->GetPotentialInteger(LOCAL_GL_MAX_3D_TEXTURE_SIZE, (GLint*)&mImplMax3DTextureSize))
-            mImplMax3DTextureSize = 0;
-        if (!gl->GetPotentialInteger(LOCAL_GL_MAX_ARRAY_TEXTURE_LAYERS, (GLint*)&mImplMaxArrayTextureLayers))
-            mImplMaxArrayTextureLayers = 0;
-
-        gl->fGetIntegerv(LOCAL_GL_MAX_TEXTURE_IMAGE_UNITS, &mGLMaxTextureImageUnits);
-        gl->fGetIntegerv(LOCAL_GL_MAX_VERTEX_TEXTURE_IMAGE_UNITS, &mGLMaxVertexTextureImageUnits);
-    }
+    gl->GetUIntegerv(LOCAL_GL_MAX_TEXTURE_IMAGE_UNITS, &mGLMaxFragmentTextureImageUnits);
+    gl->GetUIntegerv(LOCAL_GL_MAX_VERTEX_TEXTURE_IMAGE_UNITS, &mGLMaxVertexTextureImageUnits);
 
     ////////////////
 
     mGLMaxColorAttachments = 1;
     mGLMaxDrawBuffers = 1;
-    gl->GetPotentialInteger(LOCAL_GL_MAX_COLOR_ATTACHMENTS,
-                            (GLint*)&mGLMaxColorAttachments);
-    gl->GetPotentialInteger(LOCAL_GL_MAX_DRAW_BUFFERS, (GLint*)&mGLMaxDrawBuffers);
-
-    if (MinCapabilityMode()) {
-        mGLMaxColorAttachments = std::min(mGLMaxColorAttachments,
-                                          kMinMaxColorAttachments);
-        mGLMaxDrawBuffers = std::min(mGLMaxDrawBuffers, kMinMaxDrawBuffers);
-    }
 
     if (IsWebGL2()) {
-        mImplMaxColorAttachments = mGLMaxColorAttachments;
-        mImplMaxDrawBuffers = std::min(mGLMaxDrawBuffers, mImplMaxColorAttachments);
-    } else {
-        mImplMaxColorAttachments = 1;
-        mImplMaxDrawBuffers = 1;
+        UpdateMaxDrawBuffers();
     }
 
     ////////////////
 
-    if (MinCapabilityMode()) {
-        mGLMaxFragmentUniformVectors = MINVALUE_GL_MAX_FRAGMENT_UNIFORM_VECTORS;
-        mGLMaxVertexUniformVectors = MINVALUE_GL_MAX_VERTEX_UNIFORM_VECTORS;
-        mGLMaxVaryingVectors = MINVALUE_GL_MAX_VARYING_VECTORS;
+    if (gl->IsSupported(gl::GLFeature::ES2_compatibility)) {
+        gl->GetUIntegerv(LOCAL_GL_MAX_FRAGMENT_UNIFORM_VECTORS, &mGLMaxFragmentUniformVectors);
+        gl->GetUIntegerv(LOCAL_GL_MAX_VERTEX_UNIFORM_VECTORS, &mGLMaxVertexUniformVectors);
+        gl->GetUIntegerv(LOCAL_GL_MAX_VARYING_VECTORS, &mGLMaxVaryingVectors);
     } else {
-        if (gl->IsSupported(gl::GLFeature::ES2_compatibility)) {
-            gl->fGetIntegerv(LOCAL_GL_MAX_FRAGMENT_UNIFORM_VECTORS, &mGLMaxFragmentUniformVectors);
-            gl->fGetIntegerv(LOCAL_GL_MAX_VERTEX_UNIFORM_VECTORS, &mGLMaxVertexUniformVectors);
-            gl->fGetIntegerv(LOCAL_GL_MAX_VARYING_VECTORS, &mGLMaxVaryingVectors);
+        gl->GetUIntegerv(LOCAL_GL_MAX_FRAGMENT_UNIFORM_COMPONENTS, &mGLMaxFragmentUniformVectors);
+        mGLMaxFragmentUniformVectors /= 4;
+        gl->GetUIntegerv(LOCAL_GL_MAX_VERTEX_UNIFORM_COMPONENTS, &mGLMaxVertexUniformVectors);
+        mGLMaxVertexUniformVectors /= 4;
+
+        /* We are now going to try to read GL_MAX_VERTEX_OUTPUT_COMPONENTS
+         * and GL_MAX_FRAGMENT_INPUT_COMPONENTS, however these constants
+         * only entered the OpenGL standard at OpenGL 3.2. So we will try
+         * reading, and check OpenGL error for INVALID_ENUM.
+         *
+         * On the public_webgl list, "problematic GetParameter pnames"
+         * thread, the following formula was given:
+         *   maxVaryingVectors = min(GL_MAX_VERTEX_OUTPUT_COMPONENTS,
+         *                           GL_MAX_FRAGMENT_INPUT_COMPONENTS) / 4
+         */
+        uint32_t maxVertexOutputComponents = 0;
+        uint32_t maxFragmentInputComponents = 0;
+        bool ok = true;
+        ok &= gl->GetPotentialInteger(LOCAL_GL_MAX_VERTEX_OUTPUT_COMPONENTS,
+                                      (GLint*)&maxVertexOutputComponents);
+        ok &= gl->GetPotentialInteger(LOCAL_GL_MAX_FRAGMENT_INPUT_COMPONENTS,
+                                      (GLint*)&maxFragmentInputComponents);
+        if (ok) {
+            mGLMaxVaryingVectors = std::min(maxVertexOutputComponents,
+                                            maxFragmentInputComponents) / 4;
         } else {
-            gl->fGetIntegerv(LOCAL_GL_MAX_FRAGMENT_UNIFORM_COMPONENTS, &mGLMaxFragmentUniformVectors);
-            mGLMaxFragmentUniformVectors /= 4;
-            gl->fGetIntegerv(LOCAL_GL_MAX_VERTEX_UNIFORM_COMPONENTS, &mGLMaxVertexUniformVectors);
-            mGLMaxVertexUniformVectors /= 4;
-
-            /* We are now going to try to read GL_MAX_VERTEX_OUTPUT_COMPONENTS
-             * and GL_MAX_FRAGMENT_INPUT_COMPONENTS, however these constants
-             * only entered the OpenGL standard at OpenGL 3.2. So we will try
-             * reading, and check OpenGL error for INVALID_ENUM.
-             *
-             * On the public_webgl list, "problematic GetParameter pnames"
-             * thread, the following formula was given:
-             *   maxVaryingVectors = min(GL_MAX_VERTEX_OUTPUT_COMPONENTS,
-             *                           GL_MAX_FRAGMENT_INPUT_COMPONENTS) / 4
-             */
-            GLint maxVertexOutputComponents = 0;
-            GLint maxFragmentInputComponents = 0;
-
-            const bool ok = (gl->GetPotentialInteger(LOCAL_GL_MAX_VERTEX_OUTPUT_COMPONENTS,
-                                                     &maxVertexOutputComponents) &&
-                             gl->GetPotentialInteger(LOCAL_GL_MAX_FRAGMENT_INPUT_COMPONENTS,
-                                                     &maxFragmentInputComponents));
-
-            if (ok) {
-                mGLMaxVaryingVectors = std::min(maxVertexOutputComponents,
-                                                maxFragmentInputComponents) / 4;
-            } else {
-                mGLMaxVaryingVectors = 16;
-                // 16 = 64/4, and 64 is the min value for
-                // maxVertexOutputComponents in the OpenGL 3.2 spec.
-            }
+            mGLMaxVaryingVectors = 16;
+            // 16 = 64/4, and 64 is the min value for
+            // maxVertexOutputComponents in the OpenGL 3.2 spec.
         }
     }
+
+    ////////////////
+
+    gl->fGetFloatv(LOCAL_GL_ALIASED_LINE_WIDTH_RANGE, mGLAliasedLineWidthRange);
+
+    const GLenum driverPName = gl->IsCoreProfile() ? LOCAL_GL_POINT_SIZE_RANGE
+                                                   : LOCAL_GL_ALIASED_POINT_SIZE_RANGE;
+    gl->fGetFloatv(driverPName, mGLAliasedPointSizeRange);
+
+    ////////////////
+
+    if (gfxPrefs::WebGLMinCapabilityMode()) {
+        bool ok = true;
+
+        ok &= RestrictCap(&mGLMaxVertexTextureImageUnits  , kMinMaxVertexTextureImageUnits);
+        ok &= RestrictCap(&mGLMaxFragmentTextureImageUnits, kMinMaxFragmentTextureImageUnits);
+        ok &= RestrictCap(&mGLMaxCombinedTextureImageUnits, kMinMaxCombinedTextureImageUnits);
+
+        ok &= RestrictCap(&mGLMaxVertexAttribs         , kMinMaxVertexAttribs);
+        ok &= RestrictCap(&mGLMaxVertexUniformVectors  , kMinMaxVertexUniformVectors);
+        ok &= RestrictCap(&mGLMaxFragmentUniformVectors, kMinMaxFragmentUniformVectors);
+        ok &= RestrictCap(&mGLMaxVaryingVectors        , kMinMaxVaryingVectors);
+
+        ok &= RestrictCap(&mGLMaxColorAttachments, kMinMaxColorAttachments);
+        ok &= RestrictCap(&mGLMaxDrawBuffers     , kMinMaxDrawBuffers);
+
+        ok &= RestrictCap(&mGLMaxTextureSize       , kMinMaxTextureSize);
+        ok &= RestrictCap(&mGLMaxCubeMapTextureSize, kMinMaxCubeMapTextureSize);
+        ok &= RestrictCap(&mGLMax3DTextureSize     , kMinMax3DTextureSize);
+
+        ok &= RestrictCap(&mGLMaxArrayTextureLayers, kMinMaxArrayTextureLayers);
+        ok &= RestrictCap(&mGLMaxRenderbufferSize  , kMinMaxRenderbufferSize);
+
+        if (!ok) {
+            GenerateWarning("Unable to restrict WebGL limits to minimums.");
+            return false;
+        }
+
+        mDisableFragHighP = true;
+    } else if (nsContentUtils::ShouldResistFingerprinting()) {
+        bool ok = true;
+
+        ok &= RestrictCap(&mGLMaxTextureSize       , kCommonMaxTextureSize);
+        ok &= RestrictCap(&mGLMaxCubeMapTextureSize, kCommonMaxCubeMapTextureSize);
+        ok &= RestrictCap(&mGLMaxRenderbufferSize  , kCommonMaxRenderbufferSize);
+
+        ok &= RestrictCap(&mGLMaxVertexTextureImageUnits  , kCommonMaxVertexTextureImageUnits);
+        ok &= RestrictCap(&mGLMaxFragmentTextureImageUnits, kCommonMaxFragmentTextureImageUnits);
+        ok &= RestrictCap(&mGLMaxCombinedTextureImageUnits, kCommonMaxCombinedTextureImageUnits);
+
+        ok &= RestrictCap(&mGLMaxVertexAttribs         , kCommonMaxVertexAttribs);
+        ok &= RestrictCap(&mGLMaxVertexUniformVectors  , kCommonMaxVertexUniformVectors);
+        ok &= RestrictCap(&mGLMaxFragmentUniformVectors, kCommonMaxFragmentUniformVectors);
+        ok &= RestrictCap(&mGLMaxVaryingVectors        , kCommonMaxVaryingVectors);
+
+        ok &= RestrictCap(&mGLAliasedLineWidthRange[0], kCommonAliasedLineWidthRangeMin);
+        ok &= RestrictCap(&mGLAliasedLineWidthRange[1], kCommonAliasedLineWidthRangeMax);
+        ok &= RestrictCap(&mGLAliasedPointSizeRange[0], kCommonAliasedPointSizeRangeMin);
+        ok &= RestrictCap(&mGLAliasedPointSizeRange[1], kCommonAliasedPointSizeRangeMax);
+
+        ok &= RestrictCap(&mGLMaxViewportDims[0], kCommonMaxViewportDims);
+        ok &= RestrictCap(&mGLMaxViewportDims[1], kCommonMaxViewportDims);
+
+        if (!ok) {
+            GenerateWarning("Unable to restrict WebGL limits in order to resist fingerprinting");
+            return false;
+        }
+    }
+
+    ////////////////
 
     if (gl->IsCompatibilityProfile()) {
         gl->fEnable(LOCAL_GL_POINT_SPRITE);

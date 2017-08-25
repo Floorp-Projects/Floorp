@@ -98,12 +98,15 @@ spidermonkey
 Spidermonkey tasks check out the full gecko source tree, then compile only the
 spidermonkey portion.  Each task runs specific tests after the build.
 
-Tests
------
+test
+----
 
-Test tasks for Gecko products are divided into several kinds, but share a
-common implementation.  The process goes like this, based on a set of YAML
-files named in ``kind.yml``:
+The ``desktop-test`` kind defines tests for builds.  Its ``tests.yml`` defines
+the full suite of desktop tests and their particulars, leaving it to the
+transforms to determine how those particulars apply to the various platforms.
+
+The process of generating tests goes like this, based on a set of YAML files
+named in ``kind.yml``:
 
  * For each build task, determine the related test platforms based on the build
    platform.  For example, a Windows 2010 build might be tested on Windows 7
@@ -130,17 +133,8 @@ files named in ``kind.yml``:
 .. important::
 
     This process generates *all* test jobs, regardless of tree or try syntax.
-    It is up to a later stage of the task-graph generation (the target set) to
-    select the tests that will actually be performed.
-
-test
-....
-
-The ``desktop-test`` kind defines tests for builds.  Its ``tests.yml`` defines
-the full suite of desktop tests and their particulars, leaving it to the
-transforms to determine how those particulars apply to the various platforms.
-
-This kind includes both unit tests and talos.
+    It is up to a later stages of the task-graph generation (the target set and
+    optimization) to select the tests that will actually be performed.
 
 docker-image
 ------------

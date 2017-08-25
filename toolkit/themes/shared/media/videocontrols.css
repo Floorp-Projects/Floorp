@@ -88,6 +88,7 @@ audio > xul|videocontrols {
 .controlBar {
   position: relative;
   display: flex;
+  box-sizing: border-box;
   justify-content: center;
   align-items: center;
   overflow: hidden;

@@ -1,0 +1,64 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!-- This Source Code Form is subject to the terms of the Mozilla Public
+   - License, v. 2.0. If a copy of the MPL was not distributed with this
+   - file, You can obtain one at http://mozilla.org/MPL/2.0/. -->
+<!DOCTYPE html>
+<html xmlns="http://www.w3.org/1999/xhtml" width="500" style="width: 500px">
+<head>
+  <title data-localization="addNewCreditCardTitle"/>
+  <link rel="stylesheet" href="chrome://formautofill-shared/skin/editDialog.css"/>
+  <link rel="stylesheet" href="chrome://formautofill-shared/skin/editCreditCard.css"/>
+  <link rel="stylesheet" href="chrome://formautofill/skin/editDialog.css"/>
+  <script src="chrome://formautofill/content/editDialog.js"></script>
+</head>
+<body>
+  <form id="form" autocomplete="off">
+    <label>
+      <span data-localization="cardNumber"/>
+      <input id="cc-number" type="text"/>
+    </label>
+    <label>
+      <span data-localization="nameOnCard"/>
+      <input id="cc-name" type="text"/>
+    </label>
+    <div>
+      <span data-localization="cardExpires"/>
+      <select id="cc-exp-month">
+        <option/>
+        <option value="1">01</option>
+        <option value="2">02</option>
+        <option value="3">03</option>
+        <option value="4">04</option>
+        <option value="5">05</option>
+        <option value="6">06</option>
+        <option value="7">07</option>
+        <option value="8">08</option>
+        <option value="9">09</option>
+        <option value="10">10</option>
+        <option value="11">11</option>
+        <option value="12">12</option>
+      </select>
+      <select id="cc-exp-year">
+        <option/>
+      </select>
+    </div>
+  </form>
+  <div id="controls-container">
+    <button id="cancel" data-localization="cancel"/>
+    <button id="save" disabled="disabled" data-localization="save"/>
+  </div>
+  <script type="application/javascript"><![CDATA[
+    "use strict";
+    /* global EditCreditCard */
+    new EditCreditCard({
+      title: document.querySelector("title"),
+      form: document.getElementById("form"),
+      ccNumber: document.getElementById("cc-number"),
+      year: document.getElementById("cc-exp-year"),
+      controlsContainer: document.getElementById("controls-container"),
+      cancel: document.getElementById("cancel"),
+      save: document.getElementById("save"),
+    }, window.arguments && window.arguments[0]);
+  ]]></script>
+</body>
+</html>

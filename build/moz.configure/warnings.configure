@@ -110,6 +110,11 @@ check_and_add_gcc_warning('-Wformat')
 check_and_add_gcc_warning('-Wno-format',
                           when=depends(target)(lambda t: t.kernel == 'WINNT'))
 
+# When compiling for Windows with gcc, we encounter lots of "#pragma warning"'s
+# which is an MSVC-only pragma that GCC does not recognize.
+check_and_add_gcc_warning('-Wno-unknown-pragmas',
+                          when=depends(target)(lambda t: t.kernel == 'WINNT'))
+
 # We hit this all over the place with the gtest INSTANTIATE_TEST_CASE_P macro
 check_and_add_gcc_warning('-Wno-gnu-zero-variadic-macro-arguments')
 

@@ -61,6 +61,7 @@ following parameters::
   "userAttributes" -> "{                // A set of key-value pairs used to describe the user.
     "Focus Installed" -> true           // If Focus for Android is installed.
     "Klar Installed" -> true            // If Klar for Android is installed.
+    "Pocket Installed" -> true          // If Pocket for Android is installed.
     "Signed In Sync" -> true            // If the user has signed in to Mozilla account.
     "Default Browser" -> true           // If the user has set Fennec as default browser.
   }

@@ -5,7 +5,7 @@
 use gpu_cache::GpuCacheHandle;
 use internal_types::HardwareCompositeOp;
 use mask_cache::MaskCacheInfo;
-use prim_store::{PrimitiveCacheKey, PrimitiveIndex};
+use prim_store::{BoxShadowPrimitiveCacheKey, PrimitiveIndex};
 use std::{cmp, f32, i32, mem, usize};
 use tiling::{ClipScrollGroupIndex, PackedLayerIndex, RenderPass, RenderTargetIndex};
 use tiling::{RenderTargetKind, StackingContextIndex};
@@ -14,35 +14,98 @@ use api::{FilterOp, MixBlendMode};
 
 const FLOATS_PER_RENDER_TASK_INFO: usize = 12;
 
-#[derive(Debug, Copy, Clone, Eq, Hash, PartialEq)]
-pub struct RenderTaskIndex(pub usize);
+#[derive(Copy, Clone, PartialEq, Eq, Hash, Debug)]
+pub struct RenderTaskId(pub u32);       // TODO(gw): Make private when using GPU cache!
+
+#[derive(Debug, Copy, Clone)]
+pub struct RenderTaskAddress(pub u32);
+
+#[derive(Debug)]
+pub struct RenderTaskTree {
+    pub tasks: Vec<RenderTask>,
+    pub task_data: Vec<RenderTaskData>,
+}
+
+impl RenderTaskTree {
+    pub fn new() -> RenderTaskTree {
+        RenderTaskTree {
+            tasks: Vec::new(),
+            task_data: Vec::new(),
+        }
+    }
+
+    pub fn add(&mut self, task: RenderTask) -> RenderTaskId {
+        let id = RenderTaskId(self.tasks.len() as u32);
+        self.tasks.push(task);
+        id
+    }
+
+    pub fn max_depth(&self, id: RenderTaskId, depth: usize, max_depth: &mut usize) {
+        let depth = depth + 1;
+        *max_depth = cmp::max(*max_depth, depth);
+        let task = &self.tasks[id.0 as usize];
+        for child in &task.children {
+            self.max_depth(*child, depth, max_depth);
+        }
+    }
+
+    pub fn assign_to_passes(&self, id: RenderTaskId, pass_index: usize, passes: &mut Vec<RenderPass>) {
+        let task = &self.tasks[id.0 as usize];
+
+        for child in &task.children {
+            self.assign_to_passes(*child,
+                                  pass_index - 1,
+                                  passes);
+        }
+
+        // Sanity check - can be relaxed if needed
+        match task.location {
+            RenderTaskLocation::Fixed => {
+                debug_assert!(pass_index == passes.len() - 1);
+            }
+            RenderTaskLocation::Dynamic(..) => {
+                debug_assert!(pass_index < passes.len() - 1);
+            }
+        }
+
+        let pass = &mut passes[pass_index];
+        pass.add_render_task(id);
+    }
+
+    pub fn get(&self, id: RenderTaskId) -> &RenderTask {
+        &self.tasks[id.0 as usize]
+    }
+
+    pub fn get_mut(&mut self, id: RenderTaskId) -> &mut RenderTask {
+        &mut self.tasks[id.0 as usize]
+    }
+
+    pub fn get_task_address(&self, id: RenderTaskId) -> RenderTaskAddress {
+        let task = &self.tasks[id.0 as usize];
+        match task.kind {
+            RenderTaskKind::Alias(alias_id) => {
+                RenderTaskAddress(alias_id.0)
+            }
+            _ => {
+                RenderTaskAddress(id.0)
+            }
+        }
+    }
+
+    pub fn build(&mut self) {
+        for task in &mut self.tasks {
+            self.task_data.push(task.write_task_data());
+        }
+    }
+}
 
 #[derive(Debug, Copy, Clone, Eq, PartialEq, Hash)]
 pub enum RenderTaskKey {
-    /// Draw this primitive to a cache target.
-    CachePrimitive(PrimitiveCacheKey),
-    /// Draw the alpha mask for a primitive.
-    CacheMask(MaskCacheKey),
-    /// Apply a vertical blur pass of given radius for this primitive.
-    VerticalBlur(i32, PrimitiveIndex),
-    /// Apply a horizontal blur pass of given radius for this primitive.
-    HorizontalBlur(i32, PrimitiveIndex),
-    /// Allocate a block of space in target for framebuffer copy.
-    CopyFramebuffer(StackingContextIndex),
+    /// Draw this box shadow to a cache target.
+    BoxShadow(BoxShadowPrimitiveCacheKey),
+    /// Draw the alpha mask for a shared clip.
+    CacheMask(ClipId),
 }
-
-#[derive(Debug, Copy, Clone, Eq, PartialEq, Hash)]
-pub enum MaskCacheKey {
-    Primitive(PrimitiveIndex),
-    ClipNode(ClipId),
-}
-
-#[derive(Debug, Copy, Clone, PartialEq)]
-pub enum RenderTaskId {
-    Static(RenderTaskIndex),
-    Dynamic(RenderTaskKey),
-}
-
 
 #[derive(Debug, Clone)]
 pub enum RenderTaskLocation {
@@ -61,7 +124,7 @@ pub enum AlphaRenderItem {
 
 #[derive(Debug, Clone)]
 pub struct AlphaRenderTask {
-    screen_origin: DeviceIntPoint,
+    pub screen_origin: DeviceIntPoint,
     pub items: Vec<AlphaRenderItem>,
 }
 
@@ -99,14 +162,6 @@ pub struct RenderTaskData {
     pub data: [f32; FLOATS_PER_RENDER_TASK_INFO],
 }
 
-impl RenderTaskData {
-    pub fn empty() -> RenderTaskData {
-        RenderTaskData {
-            data: unsafe { mem::uninitialized() }
-        }
-    }
-}
-
 impl Default for RenderTaskData {
     fn default() -> RenderTaskData {
         RenderTaskData {
@@ -120,28 +175,25 @@ pub enum RenderTaskKind {
     Alpha(AlphaRenderTask),
     CachePrimitive(PrimitiveIndex),
     CacheMask(CacheMaskTask),
-    VerticalBlur(DeviceIntLength, PrimitiveIndex),
-    HorizontalBlur(DeviceIntLength, PrimitiveIndex),
+    VerticalBlur(DeviceIntLength),
+    HorizontalBlur(DeviceIntLength),
     Readback(DeviceIntRect),
+    Alias(RenderTaskId),
 }
 
-// TODO(gw): Consider storing these in a separate array and having
-//           primitives hold indices - this could avoid cloning
-//           when adding them as child tasks to tiles.
 #[derive(Debug, Clone)]
 pub struct RenderTask {
-    pub id: RenderTaskId,
+    pub cache_key: Option<RenderTaskKey>,
     pub location: RenderTaskLocation,
-    pub children: Vec<RenderTask>,
+    pub children: Vec<RenderTaskId>,
     pub kind: RenderTaskKind,
 }
 
 impl RenderTask {
-    pub fn new_alpha_batch(task_index: RenderTaskIndex,
-                           screen_origin: DeviceIntPoint,
+    pub fn new_alpha_batch(screen_origin: DeviceIntPoint,
                            location: RenderTaskLocation) -> RenderTask {
         RenderTask {
-            id: RenderTaskId::Static(task_index),
+            cache_key: None,
             children: Vec::new(),
             location,
             kind: RenderTaskKind::Alpha(AlphaRenderTask {
@@ -151,35 +203,43 @@ impl RenderTask {
         }
     }
 
-    pub fn new_dynamic_alpha_batch(task_index: RenderTaskIndex,
-                                   rect: &DeviceIntRect) -> RenderTask {
+    pub fn new_dynamic_alpha_batch(rect: &DeviceIntRect) -> RenderTask {
         let location = RenderTaskLocation::Dynamic(None, rect.size);
-        Self::new_alpha_batch(task_index, rect.origin, location)
+        Self::new_alpha_batch(rect.origin, location)
     }
 
-    pub fn new_prim_cache(key: PrimitiveCacheKey,
-                          size: DeviceIntSize,
+    pub fn new_prim_cache(size: DeviceIntSize,
                           prim_index: PrimitiveIndex) -> RenderTask {
         RenderTask {
-            id: RenderTaskId::Dynamic(RenderTaskKey::CachePrimitive(key)),
+            cache_key: None,
             children: Vec::new(),
             location: RenderTaskLocation::Dynamic(None, size),
             kind: RenderTaskKind::CachePrimitive(prim_index),
         }
     }
 
-    pub fn new_readback(key: StackingContextIndex,
-                    screen_rect: DeviceIntRect) -> RenderTask {
+    pub fn new_box_shadow(key: BoxShadowPrimitiveCacheKey,
+                          size: DeviceIntSize,
+                          prim_index: PrimitiveIndex) -> RenderTask {
         RenderTask {
-            id: RenderTaskId::Dynamic(RenderTaskKey::CopyFramebuffer(key)),
+            cache_key: Some(RenderTaskKey::BoxShadow(key)),
+            children: Vec::new(),
+            location: RenderTaskLocation::Dynamic(None, size),
+            kind: RenderTaskKind::CachePrimitive(prim_index),
+        }
+    }
+
+    pub fn new_readback(screen_rect: DeviceIntRect) -> RenderTask {
+        RenderTask {
+            cache_key: None,
             children: Vec::new(),
             location: RenderTaskLocation::Dynamic(None, screen_rect.size),
             kind: RenderTaskKind::Readback(screen_rect),
         }
     }
 
-    pub fn new_mask(task_rect: DeviceIntRect,
-                    mask_key: MaskCacheKey,
+    pub fn new_mask(key: Option<ClipId>,
+                    task_rect: DeviceIntRect,
                     raw_clips: &[ClipWorkItem],
                     extra_clip: Option<ClipWorkItem>)
                     -> Option<RenderTask> {
@@ -222,7 +282,7 @@ impl RenderTask {
         }
 
         Some(RenderTask {
-            id: RenderTaskId::Dynamic(RenderTaskKey::CacheMask(mask_key)),
+            cache_key: key.map(RenderTaskKey::CacheMask),
             children: Vec::new(),
             location: RenderTaskLocation::Dynamic(None, task_rect.size),
             kind: RenderTaskKind::CacheMask(CacheMaskTask {
@@ -249,42 +309,57 @@ impl RenderTask {
     //           |
     //           +---- This is stored as the input task to the primitive shader.
     //
-    pub fn new_blur(key: PrimitiveCacheKey,
-                    size: DeviceIntSize,
+    pub fn new_blur(size: DeviceIntSize,
                     blur_radius: DeviceIntLength,
-                    prim_index: PrimitiveIndex) -> RenderTask {
-        let prim_cache_task = RenderTask::new_prim_cache(key,
-                                                         size,
+                    prim_index: PrimitiveIndex,
+                    render_tasks: &mut RenderTaskTree) -> RenderTask {
+        let prim_cache_task = RenderTask::new_prim_cache(size,
                                                          prim_index);
+        let prim_cache_task_id = render_tasks.add(prim_cache_task);
 
         let blur_target_size = size + DeviceIntSize::new(2 * blur_radius.0,
                                                          2 * blur_radius.0);
 
         let blur_task_v = RenderTask {
-            id: RenderTaskId::Dynamic(RenderTaskKey::VerticalBlur(blur_radius.0, prim_index)),
-            children: vec![prim_cache_task],
+            cache_key: None,
+            children: vec![prim_cache_task_id],
             location: RenderTaskLocation::Dynamic(None, blur_target_size),
-            kind: RenderTaskKind::VerticalBlur(blur_radius, prim_index),
+            kind: RenderTaskKind::VerticalBlur(blur_radius),
         };
 
+        let blur_task_v_id = render_tasks.add(blur_task_v);
+
         let blur_task_h = RenderTask {
-            id: RenderTaskId::Dynamic(RenderTaskKey::HorizontalBlur(blur_radius.0, prim_index)),
-            children: vec![blur_task_v],
+            cache_key: None,
+            children: vec![blur_task_v_id],
             location: RenderTaskLocation::Dynamic(None, blur_target_size),
-            kind: RenderTaskKind::HorizontalBlur(blur_radius, prim_index),
+            kind: RenderTaskKind::HorizontalBlur(blur_radius),
         };
 
         blur_task_h
     }
 
-    pub fn as_alpha_batch<'a>(&'a mut self) -> &'a mut AlphaRenderTask {
+    pub fn as_alpha_batch_mut<'a>(&'a mut self) -> &'a mut AlphaRenderTask {
         match self.kind {
             RenderTaskKind::Alpha(ref mut task) => task,
             RenderTaskKind::CachePrimitive(..) |
             RenderTaskKind::CacheMask(..) |
             RenderTaskKind::VerticalBlur(..) |
             RenderTaskKind::Readback(..) |
-            RenderTaskKind::HorizontalBlur(..) => unreachable!(),
+            RenderTaskKind::HorizontalBlur(..) |
+            RenderTaskKind::Alias(..) => unreachable!(),
+        }
+    }
+
+    pub fn as_alpha_batch<'a>(&'a self) -> &'a AlphaRenderTask {
+        match self.kind {
+            RenderTaskKind::Alpha(ref task) => task,
+            RenderTaskKind::CachePrimitive(..) |
+            RenderTaskKind::CacheMask(..) |
+            RenderTaskKind::VerticalBlur(..) |
+            RenderTaskKind::Readback(..) |
+            RenderTaskKind::HorizontalBlur(..) |
+            RenderTaskKind::Alias(..) => unreachable!(),
         }
     }
 
@@ -292,8 +367,6 @@ impl RenderTask {
     // of render task that is provided to the GPU shaders
     // via a vertex texture.
     pub fn write_task_data(&self) -> RenderTaskData {
-        let (target_rect, target_index) = self.get_target_rect();
-
         // NOTE: The ordering and layout of these structures are
         //       required to match both the GPU structures declared
         //       in prim_shared.glsl, and also the uses in submit_batch()
@@ -304,6 +377,7 @@ impl RenderTask {
 
         match self.kind {
             RenderTaskKind::Alpha(ref task) => {
+                let (target_rect, target_index) = self.get_target_rect();
                 RenderTaskData {
                     data: [
                         target_rect.origin.x as f32,
@@ -322,6 +396,7 @@ impl RenderTask {
                 }
             }
             RenderTaskKind::CachePrimitive(..) => {
+                let (target_rect, target_index) = self.get_target_rect();
                 RenderTaskData {
                     data: [
                         target_rect.origin.x as f32,
@@ -340,6 +415,7 @@ impl RenderTask {
                 }
             }
             RenderTaskKind::CacheMask(ref task) => {
+                let (target_rect, target_index) = self.get_target_rect();
                 RenderTaskData {
                     data: [
                         target_rect.origin.x as f32,
@@ -357,8 +433,9 @@ impl RenderTask {
                     ],
                 }
             }
-            RenderTaskKind::VerticalBlur(blur_radius, _) |
-            RenderTaskKind::HorizontalBlur(blur_radius, _) => {
+            RenderTaskKind::VerticalBlur(blur_radius) |
+            RenderTaskKind::HorizontalBlur(blur_radius) => {
+                let (target_rect, target_index) = self.get_target_rect();
                 RenderTaskData {
                     data: [
                         target_rect.origin.x as f32,
@@ -377,6 +454,7 @@ impl RenderTask {
                 }
             }
             RenderTaskKind::Readback(..) => {
+                let (target_rect, target_index) = self.get_target_rect();
                 RenderTaskData {
                     data: [
                         target_rect.origin.x as f32,
@@ -394,10 +472,15 @@ impl RenderTask {
                     ]
                 }
             }
+            RenderTaskKind::Alias(..) => {
+                RenderTaskData {
+                    data: [0.0; 12],
+                }
+            }
         }
     }
 
-    fn get_target_rect(&self) -> (DeviceIntRect, RenderTargetIndex) {
+    pub fn get_target_rect(&self) -> (DeviceIntRect, RenderTargetIndex) {
         match self.location {
             RenderTaskLocation::Fixed => {
                 (DeviceIntRect::zero(), RenderTargetIndex(0))
@@ -409,34 +492,6 @@ impl RenderTask {
         }
     }
 
-    pub fn assign_to_passes(mut self, pass_index: usize, passes: &mut Vec<RenderPass>) {
-        for child in self.children.drain(..) {
-            child.assign_to_passes(pass_index - 1,
-                                   passes);
-        }
-
-        // Sanity check - can be relaxed if needed
-        match self.location {
-            RenderTaskLocation::Fixed => {
-                debug_assert!(pass_index == passes.len() - 1);
-            }
-            RenderTaskLocation::Dynamic(..) => {
-                debug_assert!(pass_index < passes.len() - 1);
-            }
-        }
-
-        let pass = &mut passes[pass_index];
-        pass.add_render_task(self);
-    }
-
-    pub fn max_depth(&self, depth: usize, max_depth: &mut usize) {
-        let depth = depth + 1;
-        *max_depth = cmp::max(*max_depth, depth);
-        for child in &self.children {
-            child.max_depth(depth, max_depth);
-        }
-    }
-
     pub fn target_kind(&self) -> RenderTargetKind {
         match self.kind {
             RenderTaskKind::Alpha(..) |
@@ -445,6 +500,19 @@ impl RenderTask {
             RenderTaskKind::Readback(..) |
             RenderTaskKind::HorizontalBlur(..) => RenderTargetKind::Color,
             RenderTaskKind::CacheMask(..) => RenderTargetKind::Alpha,
+            RenderTaskKind::Alias(..) => {
+                panic!("BUG: target_kind() called on invalidated task");
+            }
         }
+    }
+
+    pub fn set_alias(&mut self, id: RenderTaskId) {
+        debug_assert!(self.cache_key.is_some());
+        // TODO(gw): We can easily handle invalidation of tasks that
+        //           contain children in the future. Since we don't
+        //           have any cases of that yet, just assert to simplify
+        //           the current implementation.
+        debug_assert!(self.children.is_empty());
+        self.kind = RenderTaskKind::Alias(id);
     }
 }

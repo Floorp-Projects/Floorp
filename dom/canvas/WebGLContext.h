@@ -55,30 +55,6 @@
 class nsIDocShell;
 
 /*
- * Minimum value constants defined in 6.2 State Tables of OpenGL ES - 2.0.25
- *   https://bugzilla.mozilla.org/show_bug.cgi?id=686732
- *
- * Exceptions: some of the following values are set to higher values than in the spec because
- * the values in the spec are ridiculously low. They are explicitly marked below
- */
-#define MINVALUE_GL_MAX_TEXTURE_SIZE                  1024  // Different from the spec, which sets it to 64 on page 162
-#define MINVALUE_GL_MAX_CUBE_MAP_TEXTURE_SIZE         512   // Different from the spec, which sets it to 16 on page 162
-#define MINVALUE_GL_MAX_VERTEX_ATTRIBS                8     // Page 164
-#define MINVALUE_GL_MAX_FRAGMENT_UNIFORM_VECTORS      16    // Page 164
-#define MINVALUE_GL_MAX_VERTEX_UNIFORM_VECTORS        128   // Page 164
-#define MINVALUE_GL_MAX_VARYING_VECTORS               8     // Page 164
-#define MINVALUE_GL_MAX_TEXTURE_IMAGE_UNITS           8     // Page 164
-#define MINVALUE_GL_MAX_VERTEX_TEXTURE_IMAGE_UNITS    0     // Page 164
-#define MINVALUE_GL_MAX_RENDERBUFFER_SIZE             1024  // Different from the spec, which sets it to 1 on page 164
-#define MINVALUE_GL_MAX_COMBINED_TEXTURE_IMAGE_UNITS  8     // Page 164
-
-/*
- * Minimum value constants define in 6.2 State Tables of OpenGL ES - 3.0.4
- */
-#define MINVALUE_GL_MAX_3D_TEXTURE_SIZE             256
-#define MINVALUE_GL_MAX_ARRAY_TEXTURE_LAYERS        256
-
-/*
  * WebGL-only GLenums
  */
 #define LOCAL_GL_BROWSER_DEFAULT_WEBGL                       0x9244
@@ -332,9 +308,6 @@ class WebGLContext
         UNMASKED_RENDERER_WEBGL = 0x9246
     };
 
-    static const uint32_t kMinMaxColorAttachments;
-    static const uint32_t kMinMaxDrawBuffers;
-
     const uint32_t mMaxPerfWarnings;
     mutable uint64_t mNumPerfWarnings;
     const uint32_t mMaxAcceptableFBStatusInvals;
@@ -501,8 +474,6 @@ public:
     // Calls ForceClearFramebufferWithDefaultValues() for the Context's 'screen'.
     void ClearScreen();
     void ClearBackbufferIfNeeded();
-
-    bool MinCapabilityMode() const { return mMinCapability; }
 
     void RunContextLossTimer();
     void UpdateContextLossStatus();
@@ -1445,7 +1416,6 @@ protected:
     bool mResetLayer;
     bool mLayerIsMirror;
     bool mOptionsFrozen;
-    bool mMinCapability;
     bool mDisableExtensions;
     bool mIsMesa;
     bool mLoseContextOnMemoryPressure;
@@ -1472,28 +1442,28 @@ protected:
     webgl::ShaderValidator* CreateShaderValidator(GLenum shaderType) const;
 
     // some GL constants
-    uint32_t mGLMaxVertexAttribs;
-    int32_t mGLMaxTextureUnits;
-    int32_t mGLMaxTextureImageUnits;
-    int32_t mGLMaxVertexTextureImageUnits;
-    int32_t mGLMaxVaryingVectors;
-    int32_t mGLMaxFragmentUniformVectors;
-    int32_t mGLMaxVertexUniformVectors;
-    uint32_t  mGLMaxTransformFeedbackSeparateAttribs;
-    GLuint  mGLMaxUniformBufferBindings;
+    uint32_t mGLMaxTextureUnits;
 
-    // What is supported:
+    uint32_t mGLMaxVertexAttribs;
+    uint32_t mGLMaxFragmentUniformVectors;
+    uint32_t mGLMaxVertexUniformVectors;
+    uint32_t mGLMaxVaryingVectors;
+
+    uint32_t mGLMaxTransformFeedbackSeparateAttribs;
+    uint32_t mGLMaxUniformBufferBindings;
+
+    uint32_t mGLMaxVertexTextureImageUnits;
+    uint32_t mGLMaxFragmentTextureImageUnits;
+    uint32_t mGLMaxCombinedTextureImageUnits;
+
     uint32_t mGLMaxColorAttachments;
     uint32_t mGLMaxDrawBuffers;
-    // What we're allowing:
-    uint32_t mImplMaxColorAttachments;
-    uint32_t mImplMaxDrawBuffers;
 
-    uint32_t mImplMaxViewportDims[2];
+    uint32_t mGLMaxViewportDims[2];
 
 public:
     GLenum LastColorAttachmentEnum() const {
-        return LOCAL_GL_COLOR_ATTACHMENT0 + mImplMaxColorAttachments - 1;
+        return LOCAL_GL_COLOR_ATTACHMENT0 + mGLMaxColorAttachments - 1;
     }
 
     const decltype(mOptions)& Options() const { return mOptions; }
@@ -1502,11 +1472,11 @@ protected:
 
     // Texture sizes are often not actually the GL values. Let's be explicit that these
     // are implementation limits.
-    uint32_t mImplMaxTextureSize;
-    uint32_t mImplMaxCubeMapTextureSize;
-    uint32_t mImplMax3DTextureSize;
-    uint32_t mImplMaxArrayTextureLayers;
-    uint32_t mImplMaxRenderbufferSize;
+    uint32_t mGLMaxTextureSize;
+    uint32_t mGLMaxCubeMapTextureSize;
+    uint32_t mGLMax3DTextureSize;
+    uint32_t mGLMaxArrayTextureLayers;
+    uint32_t mGLMaxRenderbufferSize;
 
 public:
     GLuint MaxVertexAttribs() const {
@@ -1516,6 +1486,9 @@ public:
     GLuint GLMaxTextureUnits() const {
         return mGLMaxTextureUnits;
     }
+
+    float mGLAliasedLineWidthRange[2];
+    float mGLAliasedPointSizeRange[2];
 
     bool IsFormatValidForFB(TexInternalFormat format) const;
 
@@ -2083,6 +2056,8 @@ public:
 
 
     const decltype(mBound2DTextures)* TexListForElemType(GLenum elemType) const;
+
+    void UpdateMaxDrawBuffers();
 
     // Friend list
     friend class ScopedCopyTexImageSource;

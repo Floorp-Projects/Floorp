@@ -1244,7 +1244,27 @@ InitializeNSS(const char* dir, bool readOnly, bool loadPKCS11Modules)
   }
   MOZ_LOG(gCertVerifierLog, LogLevel::Debug,
           ("InitializeNSS(%s, %d, %d)", dir, readOnly, loadPKCS11Modules));
-  return ::NSS_Initialize(dir, "", "", SECMOD_DB, flags);
+  SECStatus srv = NSS_Initialize(dir, "", "", SECMOD_DB, flags);
+  if (srv != SECSuccess) {
+    return srv;
+  }
+
+  if (!readOnly) {
+    UniquePK11SlotInfo slot(PK11_GetInternalKeySlot());
+    if (!slot) {
+      return SECFailure;
+    }
+    // If the key DB doesn't have a password set, PK11_NeedUserInit will return
+    // true. For the SQL DB, we need to set a password or we won't be able to
+    // import any certificates or change trust settings.
+    if (PK11_NeedUserInit(slot.get())) {
+      srv = PK11_InitPin(slot.get(), nullptr, nullptr);
+      MOZ_ASSERT(srv == SECSuccess);
+      Unused << srv;
+    }
+  }
+
+  return SECSuccess;
 }
 
 void

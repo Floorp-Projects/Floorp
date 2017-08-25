@@ -236,10 +236,19 @@ var dataProviders = {
     data.styloBuild = AppConstants.MOZ_STYLO;
     data.styloDefault = Services.prefs.getDefaultBranch(null)
                                 .getBoolPref("layout.css.servo.enabled", false);
-    data.styloResult =
-      AppConstants.MOZ_STYLO &&
-      (!!env.get("STYLO_FORCE_ENABLED") ||
-       Services.prefs.getBoolPref("layout.css.servo.enabled", false));
+    data.styloResult = false;
+    // Perhaps a bit redundant in places, but this is easier to compare with the
+    // the real check in `nsLayoutUtils.cpp` to ensure they test the same way.
+    if (AppConstants.MOZ_STYLO) {
+      if (env.get("STYLO_FORCE_ENABLED")) {
+        data.styloResult = true;
+      } else if (env.get("STYLO_FORCE_DISABLED")) {
+        data.styloResult = false;
+      } else {
+        data.styloResult =
+          Services.prefs.getBoolPref("layout.css.servo.enabled", false);
+      }
+    }
 
     const keyGoogle = Services.urlFormatter.formatURL("%GOOGLE_API_KEY%").trim();
     data.keyGoogleFound = keyGoogle != "no-google-api-key" && keyGoogle.length > 0;
