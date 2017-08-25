@@ -2067,12 +2067,13 @@ public class BrowserApp extends GeckoApp
                 final String name = message.getString("name");
                 final String startUrl = message.getString("start_url");
                 final String manifestPath = message.getString("manifest_path");
+                final String manifestUrl = message.getString("manifest_url");
                 final LoadFaviconResult loadIconResult = FaviconDecoder
                     .decodeDataURI(this, message.getString("icon"));
                 if (loadIconResult != null) {
                     final Bitmap icon = loadIconResult
                         .getBestBitmap(GeckoAppShell.getPreferredIconSize());
-                    GeckoApplication.createAppShortcut(name, startUrl, manifestPath, icon);
+                    GeckoApplication.createAppShortcut(name, startUrl, manifestPath, manifestUrl, icon);
                 } else {
                     Log.e(LOGTAG, "Failed to load icon!");
                 }
