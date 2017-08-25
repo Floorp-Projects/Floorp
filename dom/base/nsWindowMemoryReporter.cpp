@@ -386,6 +386,26 @@ CollectWindowReports(nsGlobalWindow *aWindow,
   aWindowTotalSizes->mLayoutFramePropertiesSize +=
     windowSizes.mLayoutFramePropertiesSize;
 
+  REPORT_SIZE("/layout/computed-values/dom",
+              windowSizes.mLayoutComputedValuesDom,
+              "Memory used by ComputedValues objects accessible from DOM "
+              "elements.");
+  aWindowTotalSizes->mLayoutComputedValuesDom +=
+    windowSizes.mLayoutComputedValuesDom;
+
+  REPORT_SIZE("/layout/computed-values/non-dom",
+              windowSizes.mLayoutComputedValuesNonDom,
+              "Memory used by ComputedValues objects not accessible from DOM "
+              "elements.");
+  aWindowTotalSizes->mLayoutComputedValuesNonDom +=
+    windowSizes.mLayoutComputedValuesNonDom;
+
+  REPORT_SIZE("/layout/computed-values/visited",
+              windowSizes.mLayoutComputedValuesVisited,
+              "Memory used by ComputedValues objects used for visited styles.");
+  aWindowTotalSizes->mLayoutComputedValuesVisited +=
+    windowSizes.mLayoutComputedValuesVisited;
+
   REPORT_SIZE("/property-tables",
               windowSizes.mPropertyTablesSize,
               "Memory used for the property tables within a window.");
@@ -452,26 +472,6 @@ CollectWindowReports(nsGlobalWindow *aWindow,
                 "The sum of all memory used by frames which were too small "
                 "to be shown individually.");
   }
-
-  REPORT_SIZE("/layout/computed-values/dom",
-              windowSizes.mStyleSizes.mComputedValuesDom,
-              "Memory used by ComputedValues objects accessible from DOM "
-              "elements.");
-  aWindowTotalSizes->mStyleSizes.mComputedValuesDom +=
-    windowSizes.mStyleSizes.mComputedValuesDom;
-
-  REPORT_SIZE("/layout/computed-values/non-dom",
-              windowSizes.mStyleSizes.mComputedValuesNonDom,
-              "Memory used by ComputedValues objects not accessible from DOM "
-              "elements.");
-  aWindowTotalSizes->mStyleSizes.mComputedValuesNonDom +=
-    windowSizes.mStyleSizes.mComputedValuesNonDom;
-
-  REPORT_SIZE("/layout/computed-values/visited",
-              windowSizes.mStyleSizes.mComputedValuesVisited,
-              "Memory used by ComputedValues objects used for visited styles.");
-  aWindowTotalSizes->mStyleSizes.mComputedValuesVisited +=
-    windowSizes.mStyleSizes.mComputedValuesVisited;
 
   // There are many different kinds of style structs, but it is likely that
   // only a few matter. Implement a cutoff so we don't bloat about:memory with
@@ -630,6 +630,12 @@ nsWindowMemoryReporter::CollectReports(nsIHandleReportCallback* aHandleReport,
          windowTotalSizes.mLayoutFramePropertiesSize,
          "This is the sum of all windows' 'layout/frame-properties' numbers.");
 
+  REPORT("window-objects/layout/computed-values",
+         windowTotalSizes.mLayoutComputedValuesDom +
+         windowTotalSizes.mLayoutComputedValuesNonDom +
+         windowTotalSizes.mLayoutComputedValuesVisited,
+         "This is the sum of all windows' 'layout/computed-values/' numbers.");
+
   REPORT("window-objects/property-tables",
          windowTotalSizes.mPropertyTablesSize,
          "This is the sum of all windows' 'property-tables' numbers.");
@@ -661,13 +667,6 @@ nsWindowMemoryReporter::CollectReports(nsIHandleReportCallback* aHandleReport,
   REPORT("window-objects/layout/frames", frameTotal,
          "Memory used for layout frames within windows. "
          "This is the sum of all windows' 'layout/frames/' numbers.");
-
-  REPORT("window-objects/layout/computed-values",
-         windowTotalSizes.mStyleSizes.mComputedValuesDom +
-         windowTotalSizes.mStyleSizes.mComputedValuesNonDom +
-         windowTotalSizes.mStyleSizes.mComputedValuesVisited,
-         "This is the sum of all windows' 'layout/computed-values/' "
-         "numbers.");
 
   size_t styleTotal = 0;
 #define STYLE_STRUCT(name_, cb_) \

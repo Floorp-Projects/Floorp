@@ -4195,8 +4195,7 @@ Element::AddSizeOfExcludingThis(nsWindowSizes& aSizes, size_t* aNodeSize) const
     if (Servo_Element_HasPrimaryComputedValues(this)) {
       sc = Servo_Element_GetPrimaryComputedValues(this).Consume();
       if (!aSizes.mState.HaveSeenPtr(sc.get())) {
-        sc->AddSizeOfIncludingThis(aSizes,
-                                   &aSizes.mStyleSizes.mComputedValuesDom);
+        sc->AddSizeOfIncludingThis(aSizes, &aSizes.mLayoutComputedValuesDom);
       }
 
       for (size_t i = 0; i < nsCSSPseudoElements::kEagerPseudoCount; i++) {
@@ -4204,7 +4203,7 @@ Element::AddSizeOfExcludingThis(nsWindowSizes& aSizes, size_t* aNodeSize) const
           sc = Servo_Element_GetPseudoComputedValues(this, i).Consume();
           if (!aSizes.mState.HaveSeenPtr(sc.get())) {
             sc->AddSizeOfIncludingThis(aSizes,
-                                       &aSizes.mStyleSizes.mComputedValuesDom);
+                                       &aSizes.mLayoutComputedValuesDom);
           }
         }
       }
