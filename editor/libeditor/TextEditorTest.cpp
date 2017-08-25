@@ -109,11 +109,10 @@ nsresult TextEditorTest::TestInsertBreak()
   nsresult rv = mEditor->GetSelection(getter_AddRefs(selection));
   TEST_RESULT(rv);
   TEST_POINTER(selection.get());
-  nsCOMPtr<nsIDOMNode>anchor;
-  rv = selection->GetAnchorNode(getter_AddRefs(anchor));
+  nsCOMPtr<nsINode> anchor = selection->AsSelection()->GetAnchorNode();
   TEST_RESULT(rv);
   TEST_POINTER(anchor.get());
-  selection->Collapse(anchor, 0);
+  selection->AsSelection()->Collapse(anchor, 0);
   // insert one break
   printf("inserting a break\n");
   rv = mTextEditor->InsertLineBreak();
