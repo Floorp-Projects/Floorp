@@ -58,7 +58,7 @@ private:
 
   bool IsLiveStream() override final { return false; }
 
-  RefPtr<HLSResource> mResource;
+  UniquePtr<HLSResource> mResource;
 };
 
 } // namespace mozilla
