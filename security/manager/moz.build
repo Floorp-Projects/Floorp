@@ -7,11 +7,7 @@
 with Files("**"):
     BUG_COMPONENT = ("Core", "Security: PSM")
 
-DIRS += [
-    'locales',
-    'ssl',
-    'tools',
-]
+DIRS += ['ssl', 'locales']
 
 if CONFIG['MOZ_XUL'] and CONFIG['MOZ_BUILD_APP'] != 'mobile/android':
     DIRS += ['pki']
