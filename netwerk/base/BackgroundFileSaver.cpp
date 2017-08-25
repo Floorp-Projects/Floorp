@@ -908,7 +908,12 @@ BackgroundFileSaver::ExtractSignatureInfo(const nsAString& filePath)
             LOG(("Couldn't create NSS cert [this = %p]", this));
             break;
           }
-          nssCertList->AddCert(nssCert);
+          rv = nssCertList->AddCert(nssCert);
+          if (NS_FAILED(rv)) {
+            extractionSuccess = false;
+            LOG(("Couldn't add NSS cert to cert list [this = %p]", this));
+            break;
+          }
           nsString subjectName;
           nssCert->GetSubjectName(subjectName);
           LOG(("Adding cert %s [this = %p]",
