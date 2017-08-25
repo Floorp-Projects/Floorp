@@ -3774,7 +3774,6 @@ nsWindow::EnableDragDrop(bool aEnable)
 {
   NS_ASSERTION(mWnd, "nsWindow::EnableDragDrop() called after Destroy()");
 
-  nsresult rv = NS_ERROR_FAILURE;
   if (aEnable) {
     if (!mNativeDragTarget) {
       mNativeDragTarget = new nsNativeDragTarget(this);
@@ -7306,9 +7305,7 @@ nsWindow::OnDPIChanged(int32_t x, int32_t y, int32_t width, int32_t height)
   if (DefaultScaleOverride() > 0.0) {
     return;
   }
-  double oldScale = mDefaultScale;
   mDefaultScale = -1.0; // force recomputation of scale factor
-  double newScale = GetDefaultScaleInternal();
 
   if (mResizeState != RESIZING && mSizeMode == nsSizeMode_Normal) {
     // Limit the position (if not in the middle of a drag-move) & size,
@@ -7708,7 +7705,7 @@ VOID CALLBACK nsWindow::HookTimerForPopups(HWND hwnd, UINT uMsg, UINT idEvent, D
 {
   if (sHookTimerId != 0) {
     // if the window is nullptr then we need to use the ID to kill the timer
-    BOOL status = ::KillTimer(nullptr, sHookTimerId);
+    DebugOnly<BOOL> status = ::KillTimer(nullptr, sHookTimerId);
     NS_ASSERTION(status, "Hook Timer was not killed.");
     sHookTimerId = 0;
   }
