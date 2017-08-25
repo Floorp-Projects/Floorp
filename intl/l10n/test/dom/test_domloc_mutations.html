@@ -1,0 +1,57 @@
+<!DOCTYPE HTML>
+<html>
+<head>
+  <meta charset="utf-8">
+  <title>Test DOMLocalization's MutationObserver</title>
+  <script type="application/javascript" src="chrome://mochikit/content/tests/SimpleTest/SimpleTest.js"></script>
+  <link rel="stylesheet" type="text/css" href="chrome://mochikit/content/tests/SimpleTest/test.css">
+  <script type="application/javascript">
+  "use strict";
+  const { DOMLocalization } =
+    Components.utils.import("resource://gre/modules/DOMLocalization.jsm", {});
+  const { MessageContext } =
+    Components.utils.import("resource://gre/modules/MessageContext.jsm", {});
+
+  function * mockGenerateMessages(locales, resourceIds) {
+    const mc = new MessageContext(locales);
+    mc.addMessages('title = Hello World');
+    mc.addMessages('title2 = Hello Another World');
+    yield mc;
+  }
+
+  window.onload = async function () {
+    SimpleTest.waitForExplicitFinish();
+
+    const domLoc = new DOMLocalization(
+      window,
+      [],
+      mockGenerateMessages
+    );
+
+    const h1 = document.querySelectorAll('h1')[0];
+
+    domLoc.connectRoot(document.body);
+
+    await domLoc.translateRoots();
+
+    is(h1.textContent, "Hello World");
+
+
+    const mo = new MutationObserver(function onMutations(mutations) {
+      is(h1.textContent, "Hello Another World");
+      mo.disconnect();
+      SimpleTest.finish();
+    });
+
+    mo.observe(h1, { childList: true, characterData: true });
+
+    domLoc.setAttributes(h1, 'title2');
+  };
+  </script>
+</head>
+<body>
+  <div>
+    <h1 data-l10n-id="title"></h1>
+  </div>
+</body>
+</html>

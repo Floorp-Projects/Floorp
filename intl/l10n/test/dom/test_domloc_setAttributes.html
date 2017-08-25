@@ -1,0 +1,40 @@
+<!DOCTYPE HTML>
+<html>
+<head>
+  <meta charset="utf-8">
+  <title>Test DOMLocalization.prototype.setAttributes</title>
+  <script type="application/javascript" src="chrome://mochikit/content/tests/SimpleTest/SimpleTest.js"></script>
+  <link rel="stylesheet" type="text/css" href="chrome://mochikit/content/tests/SimpleTest/test.css">
+  <script type="application/javascript">
+  "use strict";
+  const { DOMLocalization } =
+    Components.utils.import("resource://gre/modules/DOMLocalization.jsm", {});
+
+  function * mockGenerateMessages(locales, resourceIds) {}
+
+  window.onload = function () {
+    SimpleTest.waitForExplicitFinish();
+
+    const domLoc = new DOMLocalization(
+      window,
+      [],
+      mockGenerateMessages
+    );
+
+    const p1 = document.querySelectorAll('p')[0];
+
+    domLoc.setAttributes(p1, 'title');
+    is(p1.getAttribute('data-l10n-id'), 'title');
+
+    domLoc.setAttributes(p1, 'title2', {userName: "John"});
+    is(p1.getAttribute('data-l10n-id'), 'title2');
+    is(p1.getAttribute('data-l10n-args'), JSON.stringify({userName: "John"}));
+
+    SimpleTest.finish();
+  };
+  </script>
+</head>
+<body>
+  <p />
+</body>
+</html>
