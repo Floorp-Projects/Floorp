@@ -9,6 +9,7 @@
 #include "AppleVTLinker.h"
 #include "mozilla/ArrayUtils.h"
 #include "nsDebug.h"
+#include "PlatformDecoderModule.h" // for sPDMLog
 
 #define LOG(...) MOZ_LOG(sPDMLog, mozilla::LogLevel::Debug, (__VA_ARGS__))
 
