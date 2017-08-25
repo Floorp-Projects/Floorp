@@ -693,18 +693,19 @@ NS_IMPL_ISUPPORTS(nsNodeWeakReference,
 
 nsNodeWeakReference::~nsNodeWeakReference()
 {
-  if (mNode) {
-    NS_ASSERTION(mNode->Slots()->mWeakReference == this,
+  nsINode* node = static_cast<nsINode*>(mObject);
+
+  if (node) {
+    NS_ASSERTION(node->Slots()->mWeakReference == this,
                  "Weak reference has wrong value");
-    mNode->Slots()->mWeakReference = nullptr;
+    node->Slots()->mWeakReference = nullptr;
   }
 }
 
 NS_IMETHODIMP
-nsNodeWeakReference::QueryReferent(const nsIID& aIID, void** aInstancePtr)
+nsNodeWeakReference::QueryReferentFromScript(const nsIID& aIID, void** aInstancePtr)
 {
-  return mNode ? mNode->QueryInterface(aIID, aInstancePtr) :
-                 NS_ERROR_NULL_POINTER;
+  return QueryReferent(aIID, aInstancePtr);
 }
 
 size_t
