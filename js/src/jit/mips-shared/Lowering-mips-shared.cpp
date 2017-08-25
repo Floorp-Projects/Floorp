@@ -337,7 +337,13 @@ LIRGeneratorMIPSShared::visitWasmLoad(MWasmLoad* ins)
     MDefinition* base = ins->base();
     MOZ_ASSERT(base->type() == MIRType::Int32);
 
-    LAllocation ptr = useRegisterAtStart(base);
+    LAllocation ptr;
+#ifdef JS_CODEGEN_MIPS32
+    if (ins->type() == MIRType::Int64)
+        ptr = useRegister(base);
+    else
+#endif
+        ptr = useRegisterAtStart(base);
 
     if (IsUnaligned(ins->access())) {
         if (ins->type() == MIRType::Int64) {
@@ -383,7 +389,7 @@ LIRGeneratorMIPSShared::visitWasmStore(MWasmStore* ins)
     LAllocation baseAlloc = useRegisterAtStart(base);
 
     if (IsUnaligned(ins->access())) {
-        if (ins->type() == MIRType::Int64) {
+        if (ins->access().type() == Scalar::Int64) {
             LInt64Allocation valueAlloc = useInt64RegisterAtStart(value);
             auto* lir = new(alloc()) LWasmUnalignedStoreI64(baseAlloc, valueAlloc, temp());
             if (ins->access().offset())
@@ -402,7 +408,7 @@ LIRGeneratorMIPSShared::visitWasmStore(MWasmStore* ins)
         return;
     }
 
-    if (ins->type() == MIRType::Int64) {
+    if (ins->access().type() == Scalar::Int64) {
         LInt64Allocation valueAlloc = useInt64RegisterAtStart(value);
         auto* lir = new(alloc()) LWasmStoreI64(baseAlloc, valueAlloc);
         if (ins->access().offset())

@@ -497,6 +497,7 @@ CodeGeneratorMIPS::emitWasmLoadI64(T* lir)
                 masm.ma_sra(output.high, output.low, Imm32(31));
         } else {
             ScratchRegisterScope scratch(masm);
+            MOZ_ASSERT(output.low != ptr);
             masm.ma_load_unaligned(output.low, BaseIndex(HeapReg, ptr, TimesOne),
                                    temp, SizeWord, isSigned ? SignExtend : ZeroExtend);
             masm.ma_addu(scratch, ptr, Imm32(INT64HIGH_OFFSET));
@@ -515,6 +516,7 @@ CodeGeneratorMIPS::emitWasmLoadI64(T* lir)
             masm.ma_sra(output.high, output.low, Imm32(31));
     } else {
         ScratchRegisterScope scratch(masm);
+        MOZ_ASSERT(output.low != ptr);
         masm.ma_load(output.low, BaseIndex(HeapReg, ptr, TimesOne), SizeWord);
         masm.ma_addu(scratch, ptr, Imm32(INT64HIGH_OFFSET));
         masm.ma_load(output.high, BaseIndex(HeapReg, scratch, TimesOne), SizeWord);
