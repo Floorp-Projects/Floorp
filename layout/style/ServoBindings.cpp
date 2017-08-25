@@ -255,7 +255,7 @@ ServoComputedData::AddSizeOfExcludingThis(nsWindowSizes& aSizes) const
   const char* p##name_ = reinterpret_cast<const char*>(GetStyle##name_()); \
   p##name_ -= sizeof(size_t); \
   if (!aSizes.mState.HaveSeenPtr(p##name_)) { \
-    aSizes.mStyleSizes.NS_STYLE_SIZES_FIELD(name_) += \
+    aSizes.mServoStyleSizes.NS_STYLE_SIZES_FIELD(name_) += \
       ServoStyleStructsMallocSizeOf(p##name_); \
   }
   #define STYLE_STRUCT_LIST_IGNORE_VARIABLES
