@@ -666,6 +666,16 @@
                               &button.ok.label;"/>
     </hbox>
   </hbox>
+
+  <vbox id="a11yPermissionsBox">
+    <description flex="1">
+      <checkbox id="a11yPrivacyCheckbox" label="&a11yPrivacy.checkbox.label;"
+                accesskey="&a11yPrivacy.checkbox.accesskey;"
+                oncommand="return gPrivacyPane.updateA11yPrefs(this.checked)"/>
+      <label id="a11yLearnMoreLink" class="learnMore text-link"
+              value="&a11yPrivacy.learnmore.label;"></label>
+    </description>
+  </vbox>
 </groupbox>
 
 <hbox id="dataCollectionCategory"
