@@ -5,12 +5,14 @@ Cu.import("resource://gre/modules/PlacesSyncUtils.jsm");
 Cu.import("resource://gre/modules/BookmarkHTMLUtils.jsm");
 Cu.import("resource://gre/modules/BookmarkJSONUtils.jsm");
 Cu.import("resource://gre/modules/Log.jsm");
+Cu.import("resource://services-common/utils.js");
 Cu.import("resource://services-sync/constants.js");
 Cu.import("resource://services-sync/engines.js");
 Cu.import("resource://services-sync/engines/bookmarks.js");
 Cu.import("resource://services-sync/service.js");
 Cu.import("resource://services-sync/util.js");
 Cu.import("resource://testing-common/services/sync/utils.js");
+
 
 initTestLogging("Trace");
 
@@ -102,7 +104,7 @@ add_task(async function bad_record_allIDs() {
   _("Ensure that bad Places queries don't cause an error in getAllIDs.");
   let badRecordID = PlacesUtils.bookmarks.insertBookmark(
       PlacesUtils.bookmarks.toolbarFolder,
-      Utils.makeURI("place:folder=1138"),
+      CommonUtils.makeURI("place:folder=1138"),
       PlacesUtils.bookmarks.DEFAULT_INDEX,
       null);
 
@@ -140,8 +142,8 @@ add_task(async function test_processIncoming_error_orderChildren() {
       PlacesUtils.bookmarks.toolbarFolder, "Folder 1", 0);
     let folder1_guid = await store.GUIDForId(folder1_id);
 
-    let fxuri = Utils.makeURI("http://getfirefox.com/");
-    let tburi = Utils.makeURI("http://getthunderbird.com/");
+    let fxuri = CommonUtils.makeURI("http://getfirefox.com/");
+    let tburi = CommonUtils.makeURI("http://getthunderbird.com/");
 
     let bmk1_id = PlacesUtils.bookmarks.insertBookmark(
       folder1_id, fxuri, PlacesUtils.bookmarks.DEFAULT_INDEX, "Get Firefox!");
@@ -229,8 +231,8 @@ async function test_restoreOrImport(aReplace) {
     let folder1_guid = await store.GUIDForId(folder1_id);
     _("Folder 1: " + folder1_id + ", " + folder1_guid);
 
-    let fxuri = Utils.makeURI("http://getfirefox.com/");
-    let tburi = Utils.makeURI("http://getthunderbird.com/");
+    let fxuri = CommonUtils.makeURI("http://getfirefox.com/");
+    let tburi = CommonUtils.makeURI("http://getthunderbird.com/");
 
     _("Create a single record.");
     let bmk1_id = PlacesUtils.bookmarks.insertBookmark(
@@ -745,7 +747,7 @@ add_task(async function test_sync_dateAdded() {
 
     // Also, add a local bookmark and make sure it's date added makes it up to the server
     let bzid = PlacesUtils.bookmarks.insertBookmark(
-      PlacesUtils.bookmarksMenuFolderId, Utils.makeURI("https://bugzilla.mozilla.org/"),
+      PlacesUtils.bookmarksMenuFolderId, CommonUtils.makeURI("https://bugzilla.mozilla.org/"),
       PlacesUtils.bookmarks.DEFAULT_INDEX, "Bugzilla");
 
     let bzguid = await PlacesUtils.promiseItemGuid(bzid);

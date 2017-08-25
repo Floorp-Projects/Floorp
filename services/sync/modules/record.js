@@ -25,6 +25,7 @@ Cu.import("resource://services-sync/main.js");
 Cu.import("resource://services-sync/resource.js");
 Cu.import("resource://services-sync/util.js");
 Cu.import("resource://services-common/async.js");
+Cu.import("resource://services-common/utils.js");
 
 this.WBORecord = function WBORecord(collection, id) {
   this.data = {};
@@ -68,7 +69,7 @@ WBORecord.prototype = {
   // WBO based on collection and ID.
   uri(base) {
     if (this.collection && this.id) {
-      let url = Utils.makeURI(base + this.collection + "/" + this.id);
+      let url = CommonUtils.makeURI(base + this.collection + "/" + this.id);
       url.QueryInterface(Ci.nsIURL);
       return url;
     }
@@ -123,7 +124,7 @@ CryptoWrapper.prototype = {
       throw new Error("Cannot compute HMAC without an HMAC key.");
     }
 
-    return Utils.bytesAsHex(Utils.digestUTF8(this.ciphertext, hasher));
+    return CommonUtils.bytesAsHex(Utils.digestUTF8(this.ciphertext, hasher));
   },
 
   /*
