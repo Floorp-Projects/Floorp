@@ -137,6 +137,7 @@ def make_task_description(config, jobs):
             del job['name']
 
         impl, os = worker_type_implementation(job['worker-type'])
+        job.setdefault('tags', {}).update({'os': os, 'worker-implementation': impl})
         worker = job.setdefault('worker', {})
         assert 'implementation' not in worker
         worker['implementation'] = impl
