@@ -1,0 +1,36 @@
+<!doctype html>
+<style>
+div { padding: 1px; }
+.test div { padding: 2px; }
+.test div div { padding: 3px; }
+.test div div div { background: orange; }
+.test div div div div { background: white; }
+.test div div div div div { background: red; }
+</style>
+<body>
+<script>
+let root = document.createElement('div');
+let p = root;
+for (let i = 0; i < 1000; ++i) {
+  p = p.appendChild(document.createElement('div'));
+  p.appendChild(document.createTextNode(i));
+}
+document.body.appendChild(root);
+
+// Flush styles.
+document.body.offsetTop;
+
+// Add 20 more top-level siblings to ensure that the style traversal goes
+// parallel before the deep tree is processed.
+//
+// Note that we need to make these children of the <html> element, not the
+// <body> element, because invalidations get processed by the parent when
+// enqueuing children, so the _parent_ needs to be at a level in the DOM
+// with enough dirty siblings to trigger a switch to parallel mode.
+for (let i = 0; i < 20; ++i) {
+  document.documentElement.appendChild(document.createElement('div'));
+}
+
+root.className = 'test';
+</script>
+</body>
