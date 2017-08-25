@@ -184,6 +184,9 @@ task_description_schema = Schema({
         {'skip-unless-schedules': list(schedules.ALL_COMPONENTS)},
         # skip if SETA or skip-unless-schedules says to
         {'skip-unless-schedules-or-seta': list(schedules.ALL_COMPONENTS)},
+        # only run this task if its dependencies will run (useful for follow-on tasks that
+        # are unnecessary if the parent tasks are not run)
+        {'only-if-dependencies-run': None}
     ),
 
     # the provisioner-id/worker-type for the task.  The following parameters will
