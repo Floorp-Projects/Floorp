@@ -1038,7 +1038,8 @@ JS_FOR_EACH_TYPED_ARRAY(CREATE_TYPED_ARRAY)
     }
 }
 
-// ES 2016 draft Mar 25, 2016 24.1.1.1.
+// ES2018 draft rev 2aea8f3e617b49df06414eb062ab44fad87661d3
+// 24.1.1.1 AllocateArrayBuffer ( constructor, byteLength )
 // byteLength = count * unit
 template<typename T>
 /* static */ bool
@@ -1046,18 +1047,29 @@ TypedArrayObjectTemplate<T>::AllocateArrayBuffer(JSContext* cx, HandleObject cto
                                                  uint32_t count, uint32_t unit,
                                                  MutableHandle<ArrayBufferObject*> buffer)
 {
-    // ES 2016 draft Mar 25, 2016 24.1.1.1 step 1 (partially).
-    // ES 2016 draft Mar 25, 2016 9.1.14 steps 1-2.
+    // 24.1.1.1 step 1 (partially).
     RootedObject proto(cx);
-    if (!GetPrototypeFromConstructor(cx, ctor, &proto))
-        return false;
-    JSObject* arrayBufferProto = GlobalObject::getOrCreateArrayBufferPrototype(cx, cx->global());
-    if (!arrayBufferProto)
-        return false;
-    if (proto == arrayBufferProto)
-        proto = nullptr;
 
-    // ES 2016 draft Mar 25, 2016 24.1.1.1 steps 1 (remaining part), 2-6.
+    JSFunction* arrayBufferCtor = GlobalObject::getOrCreateArrayBufferConstructor(cx, cx->global());
+    if (!arrayBufferCtor)
+        return false;
+
+    // As an optimization, skip the "prototype" lookup for %ArrayBuffer%.
+    if (ctor != arrayBufferCtor) {
+        // 9.1.13 OrdinaryCreateFromConstructor, steps 1-2.
+        if (!GetPrototypeFromConstructor(cx, ctor, &proto))
+            return false;
+
+        JSObject* arrayBufferProto = GlobalObject::getOrCreateArrayBufferPrototype(cx, cx->global());
+        if (!arrayBufferProto)
+            return false;
+
+        // Reset |proto| if it's the default %ArrayBufferPrototype%.
+        if (proto == arrayBufferProto)
+            proto = nullptr;
+    }
+
+    // 24.1.1.1 steps 1 (remaining part), 2-6.
     if (!maybeCreateArrayBuffer(cx, count, unit, proto, buffer))
         return false;
 
@@ -1074,9 +1086,9 @@ static JSObject*
 GetSpeciesConstructor(JSContext* cx, HandleObject obj, bool isWrapped,
                       SpeciesConstructorOverride override)
 {
-    if (!GlobalObject::ensureConstructor(cx, cx->global(), JSProto_ArrayBuffer))
+    RootedObject defaultCtor(cx, GlobalObject::getOrCreateArrayBufferConstructor(cx, cx->global()));
+    if (!defaultCtor)
         return nullptr;
-    RootedObject defaultCtor(cx, &cx->global()->getConstructor(JSProto_ArrayBuffer).toObject());
 
     // Use the current global's ArrayBuffer if the override is set.
     if (override == SpeciesConstructorOverride::ArrayBuffer)
