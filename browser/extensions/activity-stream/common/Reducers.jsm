@@ -189,14 +189,27 @@ function Sections(prevState = INITIAL_STATE.Sections, action) {
         }
         return section;
       });
-      // If section doesn't exist in prevState, create a new section object and
-      // append it to the sections state
+
+      // Invariant: Sections array sorted in increasing order of property `order`.
+      // If section doesn't exist in prevState, create a new section object. If
+      // the section has an order, insert it at the correct place in the array.
+      // Otherwise, prepend it and set the order to be minimal.
       if (!hasMatch) {
         const initialized = action.data.rows && action.data.rows.length > 0;
-        newState.push(Object.assign({title: "", initialized, rows: []}, action.data));
+        let order;
+        let index;
+        if (prevState.length > 0) {
+          order = action.data.order || prevState[0].order - 1;
+          index = newState.findIndex(section => section.order >= order);
+        } else {
+          order = action.data.order || 1;
+          index = 0;
+        }
+        const section = Object.assign({title: "", initialized, rows: [], order, enabled: false}, action.data);
+        newState.splice(index, 0, section);
       }
       return newState;
-    case at.SECTION_ROWS_UPDATE:
+    case at.SECTION_UPDATE:
       return prevState.map(section => {
         if (section && section.id === action.data.id) {
           return Object.assign({}, section, action.data);

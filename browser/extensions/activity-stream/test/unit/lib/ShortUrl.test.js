@@ -1,6 +1,21 @@
-const {shortURL} = require("common/ShortURL.jsm");
+const {shortURL} = require("lib/ShortURL.jsm");
+const {GlobalOverrider} = require("test/unit/utils");
 
 describe("shortURL", () => {
+  let globals;
+  let IDNStub;
+
+  beforeEach(() => {
+    IDNStub = sinon.stub().callsFake(id => id);
+
+    globals = new GlobalOverrider();
+    globals.set("IDNService", {convertToDisplayIDN: IDNStub});
+  });
+
+  afterEach(() => {
+    globals.restore();
+  });
+
   it("should return a blank string if url and hostname is falsey", () => {
     assert.equal(shortURL({url: ""}), "");
     assert.equal(shortURL({hostname: null}), "");
@@ -8,6 +23,13 @@ describe("shortURL", () => {
 
   it("should remove the eTLD, if provided", () => {
     assert.equal(shortURL({hostname: "com.blah.com", eTLD: "com"}), "com.blah");
+  });
+
+  it("should call convertToDisplayIDN when calling shortURL", () => {
+    shortURL({hostname: "com.blah.com", eTLD: "com"});
+
+    assert.calledOnce(IDNStub);
+    assert.calledWithExactly(IDNStub, "com.blah.com", {});
   });
 
   it("should use the hostname, if provided", () => {
