@@ -37,43 +37,6 @@ interface nsIHTMLEditor : nsISupports
 
   /* ------------ Inline property methods -------------- */
 
-
-  /**
-   * AddDefaultProperty() registers a default style property with the editor
-   *
-   * @param aProperty   the property to set by default
-   * @param aAttribute  the attribute of the property, if applicable.
-   *                    May be null.
-   *                    Example: aProperty="font", aAttribute="color"
-   * @param aValue      if aAttribute is not null, the value of the attribute.
-   *                    Example: aProperty="font", aAttribute="color",
-   *                             aValue="0x00FFFF"
-   */
-  void addDefaultProperty(in AString aProperty,
-                          in AString aAttribute,
-                          in AString aValue);
-
-  /**
-   * RemoveDefaultProperty() unregisters a default style property with the editor
-   *
-   * @param aProperty   the property to remove from defaults
-   * @param aAttribute  the attribute of the property, if applicable.
-   *                    May be null.
-   *                    Example: aProperty="font", aAttribute="color"
-   * @param aValue      if aAttribute is not null, the value of the attribute.
-   *                    Example: aProperty="font", aAttribute="color",
-   *                             aValue="0x00FFFF"
-   */
-  void removeDefaultProperty(in AString aProperty,
-                             in AString aAttribute,
-                             in AString aValue);
-
-  /**
-   * RemoveAllDefaultProperties() unregisters all default style properties with the editor
-   *
-   */
-  void removeAllDefaultProperties();
-
   /**
    * SetInlineProperty() sets the aggregate properties on the current selection
    *
