@@ -128,6 +128,11 @@ def make_task_description(config, jobs):
             'routes': job.get('routes', []),
         }
 
+        if 'linux' in dep_job.attributes.get('build_platform') and \
+                dep_job.attributes.get('nightly'):
+            task['routes'].append("project.releng.funsize.level-{level}.{project}".format(
+                project=config.params['project'], level=config.params['level']))
+
         yield task
 
 
