@@ -112,8 +112,8 @@
   "tourDone": {
     "message": "Готово"
   },
-  "termsAndPrivacyNoticeCloudServices": {
-    "message": "Используя Скриншоты Firefox, вы соглашаетесь с $TERMSANDPRIVACYNOTICETERMSLINK$ и $TERMSANDPRIVACYNOTICEPRIVACYLINK$ облачных сервисов Firefox.",
+  "termsAndPrivacyNotice2": {
+    "message": "Используя Firefox Screenshots, вы соглашаетесь с нашими $TERMSANDPRIVACYNOTICETERMSLINK$ и $TERMSANDPRIVACYNOTICEPRIVACYLINK$.",
     "placeholders": {
       "termsandprivacynoticetermslink": {
         "content": "$1"
@@ -128,5 +128,8 @@
   },
   "termsAndPrivacyNoticyPrivacyLink": {
     "message": "Уведомлением о приватности"
+  },
+  "libraryLabel": {
+    "message": "Скриншоты"
   }
 }

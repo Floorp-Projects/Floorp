@@ -1,6 +1,6 @@
 /* Created from build/server/static/css/inline-selection.css */
 window.inlineSelectionCss = `
-.button, .highlight-button-cancel, .highlight-button-save, .highlight-button-download {
+.button, .highlight-button-cancel, .highlight-button-save, .highlight-button-download, .preview-button-save {
   display: flex;
   align-items: center;
   justify-content: center;
@@ -19,28 +19,28 @@ window.inlineSelectionCss = `
   transition: background 150ms cubic-bezier(0.07, 0.95, 0, 1), border 150ms cubic-bezier(0.07, 0.95, 0, 1);
   user-select: none;
   white-space: nowrap; }
-  .button.small, .small.highlight-button-cancel, .small.highlight-button-save, .small.highlight-button-download {
+  .button.small, .small.highlight-button-cancel, .small.highlight-button-save, .small.highlight-button-download, .small.preview-button-save {
     height: 32px;
     line-height: 32px;
     padding: 0 8px; }
-  .button.tiny, .tiny.highlight-button-cancel, .tiny.highlight-button-save, .tiny.highlight-button-download {
+  .button.tiny, .tiny.highlight-button-cancel, .tiny.highlight-button-save, .tiny.highlight-button-download, .tiny.preview-button-save {
     font-size: 14px;
     height: 26px;
     border: 1px solid #c7c7c7; }
-    .button.tiny:hover, .tiny.highlight-button-cancel:hover, .tiny.highlight-button-save:hover, .tiny.highlight-button-download:hover, .button.tiny:focus, .tiny.highlight-button-cancel:focus, .tiny.highlight-button-save:focus, .tiny.highlight-button-download:focus {
+    .button.tiny:hover, .tiny.highlight-button-cancel:hover, .tiny.highlight-button-save:hover, .tiny.highlight-button-download:hover, .tiny.preview-button-save:hover, .button.tiny:focus, .tiny.highlight-button-cancel:focus, .tiny.highlight-button-save:focus, .tiny.highlight-button-download:focus, .tiny.preview-button-save:focus {
       background: #ebebeb;
       border-color: #989898; }
-    .button.tiny:active, .tiny.highlight-button-cancel:active, .tiny.highlight-button-save:active, .tiny.highlight-button-download:active {
+    .button.tiny:active, .tiny.highlight-button-cancel:active, .tiny.highlight-button-save:active, .tiny.highlight-button-download:active, .tiny.preview-button-save:active {
       background: #dedede;
       border-color: #989898; }
-  .button.block-button, .block-button.highlight-button-cancel, .block-button.highlight-button-save, .block-button.highlight-button-download {
+  .button.block-button, .block-button.highlight-button-cancel, .block-button.highlight-button-save, .block-button.highlight-button-download, .block-button.preview-button-save {
     display: flex;
     align-items: center;
     justify-content: center;
     box-sizing: border-box;
-    border: none;
+    border: 0;
     border-right: 1px solid #c7c7c7;
-    box-shadow: none;
+    box-shadow: 0;
     border-radius: 0;
     flex-shrink: 0;
     font-size: 20px;
@@ -48,25 +48,54 @@ window.inlineSelectionCss = `
     line-height: 100%;
     overflow: hidden; }
     @media (max-width: 719px) {
-      .button.block-button, .block-button.highlight-button-cancel, .block-button.highlight-button-save, .block-button.highlight-button-download {
+      .button.block-button, .block-button.highlight-button-cancel, .block-button.highlight-button-save, .block-button.highlight-button-download, .block-button.preview-button-save {
         justify-content: flex-start;
         font-size: 16px;
         height: 72px;
         margin-right: 10px;
         padding: 0 5px; } }
-    .button.block-button:hover, .block-button.highlight-button-cancel:hover, .block-button.highlight-button-save:hover, .block-button.highlight-button-download:hover {
+    .button.block-button:hover, .block-button.highlight-button-cancel:hover, .block-button.highlight-button-save:hover, .block-button.highlight-button-download:hover, .block-button.preview-button-save:hover {
       background: #ebebeb; }
-    .button.block-button:active, .block-button.highlight-button-cancel:active, .block-button.highlight-button-save:active, .block-button.highlight-button-download:active {
+    .button.block-button:active, .block-button.highlight-button-cancel:active, .block-button.highlight-button-save:active, .block-button.highlight-button-download:active, .block-button.preview-button-save:active {
       background: #dedede; }
+  .button.download, .download.highlight-button-cancel, .download.highlight-button-save, .download.highlight-button-download, .download.preview-button-save, .button.trash, .trash.highlight-button-cancel, .trash.highlight-button-save, .trash.highlight-button-download, .trash.preview-button-save, .button.share, .share.highlight-button-cancel, .share.highlight-button-save, .share.highlight-button-download, .share.preview-button-save, .button.flag, .flag.highlight-button-cancel, .flag.highlight-button-save, .flag.highlight-button-download, .flag.preview-button-save {
+    background-image: url("../img/icon-sprite.svg");
+    background-size: 480px 40px;
+    background-repeat: no-repeat;
+    background-position: 0 0;
+    margin-right: 10px;
+    transition: background-color 150ms cubic-bezier(0.07, 0.95, 0, 1); }
+  .button.download:hover, .download.highlight-button-cancel:hover, .download.highlight-button-save:hover, .download.highlight-button-download:hover, .download.preview-button-save:hover {
+    background-position: -40px 0; }
+  .button.download:active, .download.highlight-button-cancel:active, .download.highlight-button-save:active, .download.highlight-button-download:active, .download.preview-button-save:active {
+    background-position: -80px 0; }
+  .button.share, .share.highlight-button-cancel, .share.highlight-button-save, .share.highlight-button-download, .share.preview-button-save {
+    background-position: -120px 0; }
+    .button.share:hover, .share.highlight-button-cancel:hover, .share.highlight-button-save:hover, .share.highlight-button-download:hover, .share.preview-button-save:hover {
+      background-position: -160px 0; }
+    .button.share:active, .share.highlight-button-cancel:active, .share.highlight-button-save:active, .share.highlight-button-download:active, .share.preview-button-save:active, .button.share.active, .share.active.highlight-button-cancel, .share.active.highlight-button-save, .share.active.highlight-button-download, .share.active.preview-button-save {
+      background-position: -200px 0; }
+  .button.trash, .trash.highlight-button-cancel, .trash.highlight-button-save, .trash.highlight-button-download, .trash.preview-button-save {
+    background-position: -240px 0; }
+    .button.trash:hover, .trash.highlight-button-cancel:hover, .trash.highlight-button-save:hover, .trash.highlight-button-download:hover, .trash.preview-button-save:hover {
+      background-position: -280px 0; }
+    .button.trash:active, .trash.highlight-button-cancel:active, .trash.highlight-button-save:active, .trash.highlight-button-download:active, .trash.preview-button-save:active {
+      background-position: -320px 0; }
+  .button.flag, .flag.highlight-button-cancel, .flag.highlight-button-save, .flag.highlight-button-download, .flag.preview-button-save {
+    background-position: -360px 0; }
+    .button.flag:hover, .flag.highlight-button-cancel:hover, .flag.highlight-button-save:hover, .flag.highlight-button-download:hover, .flag.preview-button-save:hover {
+      background-position: -400px 0; }
+    .button.flag:active, .flag.highlight-button-cancel:active, .flag.highlight-button-save:active, .flag.highlight-button-download:active, .flag.preview-button-save:active {
+      background-position: -440px 0; }
 
 .inverse-color-scheme {
   background: #3e3d40;
-  color: #f5f5f7; }
+  color: #f6f6f8; }
   .inverse-color-scheme a {
     color: #e1e1e6; }
 
 .default-color-scheme {
-  background: #f5f5f7;
+  background: #f6f6f8;
   color: #3e3d40; }
   .default-color-scheme a {
     color: #009ec0; }
@@ -79,46 +108,70 @@ window.inlineSelectionCss = `
     text-decoration: underline; }
 
 .alt-color-scheme {
-  background: #31365A;
-  color: #f5f5f7; }
+  background: #31365a;
+  color: #f6f6f8; }
   .alt-color-scheme h1 {
-    color: #6F7FB6; }
+    color: #6f7fb6; }
   .alt-color-scheme a {
     color: #e1e1e6;
     text-decoration: underline; }
 
-.button.primary, .primary.highlight-button-cancel, .highlight-button-save, .primary.highlight-button-download {
+.button.primary, .primary.highlight-button-cancel, .highlight-button-save, .primary.highlight-button-download, .preview-button-save {
   background-color: #009ec0;
   color: #fff; }
-  .button.primary:hover, .primary.highlight-button-cancel:hover, .highlight-button-save:hover, .primary.highlight-button-download:hover, .button.primary:focus, .primary.highlight-button-cancel:focus, .highlight-button-save:focus, .primary.highlight-button-download:focus {
+  .button.primary:hover, .primary.highlight-button-cancel:hover, .highlight-button-save:hover, .primary.highlight-button-download:hover, .preview-button-save:hover, .button.primary:focus, .primary.highlight-button-cancel:focus, .highlight-button-save:focus, .primary.highlight-button-download:focus, .preview-button-save:focus {
     background-color: #00819c; }
-  .button.primary:active, .primary.highlight-button-cancel:active, .highlight-button-save:active, .primary.highlight-button-download:active {
+  .button.primary:active, .primary.highlight-button-cancel:active, .highlight-button-save:active, .primary.highlight-button-download:active, .preview-button-save:active {
     background-color: #006c83; }
 
-.button.secondary, .highlight-button-cancel, .secondary.highlight-button-save, .highlight-button-download {
-  background-color: #f5f5f7;
+.button.secondary, .highlight-button-cancel, .secondary.highlight-button-save, .highlight-button-download, .secondary.preview-button-save {
+  background-color: #f6f6f8;
   color: #3e3d40; }
-  .button.secondary:hover, .highlight-button-cancel:hover, .secondary.highlight-button-save:hover, .highlight-button-download:hover {
+  .button.secondary:hover, .highlight-button-cancel:hover, .secondary.highlight-button-save:hover, .highlight-button-download:hover, .secondary.preview-button-save:hover {
     background-color: #ebebeb; }
-  .button.secondary:hover, .highlight-button-cancel:hover, .secondary.highlight-button-save:hover, .highlight-button-download:hover {
+  .button.secondary:active, .highlight-button-cancel:active, .secondary.highlight-button-save:active, .highlight-button-download:active, .secondary.preview-button-save:active {
     background-color: #dedede; }
 
-.button.transparent, .transparent.highlight-button-cancel, .transparent.highlight-button-save, .transparent.highlight-button-download {
+.button.transparent, .transparent.highlight-button-cancel, .transparent.highlight-button-save, .transparent.highlight-button-download, .transparent.preview-button-save {
   background-color: transparent;
   color: #3e3d40; }
-  .button.transparent:hover, .transparent.highlight-button-cancel:hover, .transparent.highlight-button-save:hover, .transparent.highlight-button-download:hover, .button.transparent:focus, .transparent.highlight-button-cancel:focus, .transparent.highlight-button-save:focus, .transparent.highlight-button-download:focus, .button.transparent:active, .transparent.highlight-button-cancel:active, .transparent.highlight-button-save:active, .transparent.highlight-button-download:active {
+  .button.transparent:hover, .transparent.highlight-button-cancel:hover, .transparent.highlight-button-save:hover, .transparent.highlight-button-download:hover, .transparent.preview-button-save:hover, .button.transparent:focus, .transparent.highlight-button-cancel:focus, .transparent.highlight-button-save:focus, .transparent.highlight-button-download:focus, .transparent.preview-button-save:focus, .button.transparent:active, .transparent.highlight-button-cancel:active, .transparent.highlight-button-save:active, .transparent.highlight-button-download:active, .transparent.preview-button-save:active {
     background-color: rgba(0, 0, 0, 0.05); }
 
-.button.warning, .warning.highlight-button-cancel, .warning.highlight-button-save, .warning.highlight-button-download {
+.button.warning, .warning.highlight-button-cancel, .warning.highlight-button-save, .warning.highlight-button-download, .warning.preview-button-save {
   color: #fff;
   background: #d92215; }
-  .button.warning:hover, .warning.highlight-button-cancel:hover, .warning.highlight-button-save:hover, .warning.highlight-button-download:hover, .button.warning:focus, .warning.highlight-button-cancel:focus, .warning.highlight-button-save:focus, .warning.highlight-button-download:focus {
+  .button.warning:hover, .warning.highlight-button-cancel:hover, .warning.highlight-button-save:hover, .warning.highlight-button-download:hover, .warning.preview-button-save:hover, .button.warning:focus, .warning.highlight-button-cancel:focus, .warning.highlight-button-save:focus, .warning.highlight-button-download:focus, .warning.preview-button-save:focus {
     background: #b81d12; }
-  .button.warning:active, .warning.highlight-button-cancel:active, .warning.highlight-button-save:active, .warning.highlight-button-download:active {
+  .button.warning:active, .warning.highlight-button-cancel:active, .warning.highlight-button-save:active, .warning.highlight-button-download:active, .warning.preview-button-save:active {
     background: #a11910; }
 
 .subtitle-link {
   color: #009ec0; }
+
+.loader {
+  background: #2e2d30;
+  border-radius: 2px;
+  height: 4px;
+  overflow: hidden;
+  position: relative;
+  width: 200px; }
+  #shot-index .loader {
+    background-color: #dedede; }
+
+.loader-inner {
+  animation: bounce infinite alternate 1250ms cubic-bezier(0.7, 0, 0.3, 1);
+  background: #04d1e6;
+  border-radius: 2px;
+  height: 4px;
+  transform: translateX(-40px);
+  width: 50px; }
+
+@keyframes bounce {
+  0% {
+    transform: translateX(-40px); }
+  100% {
+    transform: translate(190px); } }
 
 @keyframes fade-in {
   0% {
@@ -136,13 +189,13 @@ window.inlineSelectionCss = `
 
 @keyframes pulse {
   0% {
-    opacity: .3;
+    opacity: 0.3;
     transform: scale(1); }
   70% {
-    opacity: .25;
+    opacity: 0.25;
     transform: scale(1.04); }
   100% {
-    opacity: .3;
+    opacity: 0.3;
     transform: scale(1); } }
 
 @keyframes slide-left {
@@ -152,6 +205,16 @@ window.inlineSelectionCss = `
   100% {
     opacity: 1;
     transform: translate3d(0, 0, 0); } }
+
+@keyframes bounce-in {
+  0% {
+    opacity: 0;
+    transform: scale(1); }
+  60% {
+    opacity: 1;
+    transform: scale(1.02); }
+  100% {
+    transform: scale(1); } }
 
 .mover-target {
   display: flex;
@@ -177,10 +240,10 @@ window.inlineSelectionCss = `
   pointer-events: none;
   position: absolute;
   z-index: 10000000000; }
-  .hover-highlight:before {
+  .hover-highlight::before {
     border: 2px dashed rgba(255, 255, 255, 0.4);
     bottom: 0;
-    content: '';
+    content: "";
     left: 0;
     position: absolute;
     right: 0;
@@ -356,10 +419,46 @@ window.inlineSelectionCss = `
   position: absolute;
   pointer-events: none;
   font-weight: bold;
-  font-family: sans-serif;
+  font-family: -apple-system, BlinkMacSystemFont, "segoe ui", "helvetica neue", helvetica, ubuntu, roboto, noto, arial, sans-serif;
   font-size: 70%;
   color: #000;
   text-shadow: -1px -1px 0 #fff, 1px -1px 0 #fff, -1px 1px 0 #fff, 1px 1px 0 #fff; }
+
+.preview-buttons {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  position: absolute;
+  right: 0;
+  top: -2px; }
+
+.preview-image {
+  position: relative;
+  height: 80%;
+  max-width: 100%;
+  margin: auto 2em;
+  text-align: center;
+  animation-delay: 50ms;
+  animation: bounce-in 300ms forwards ease-in-out; }
+
+.preview-image img {
+  display: block;
+  width: auto;
+  height: auto;
+  max-width: 100%;
+  max-height: 90%;
+  margin: 50px auto;
+  border: 1px solid rgba(255, 255, 255, 0.8); }
+
+.preview-button-save {
+  background-image: url("MOZ_EXTENSION/icons/cloud.svg");
+  background-position: 8px center;
+  background-repeat: no-repeat;
+  background-size: 20px 18px;
+  font-size: 18px;
+  margin: 5px;
+  min-width: 80px;
+  padding-left: 34px; }
 
 .fixed-container {
   align-items: center;
@@ -418,7 +517,7 @@ window.inlineSelectionCss = `
   justify-content: center;
   animation: pulse 125mm cubic-bezier(0.07, 0.95, 0, 1);
   color: #fff;
-  font-family: -apple-system, BlinkMacSystemFont, sans-serif;
+  font-family: -apple-system, BlinkMacSystemFont, "segoe ui", "helvetica neue", helvetica, ubuntu, roboto, noto, arial, sans-serif;
   font-size: 24px;
   line-height: 32px;
   text-align: center;
