@@ -24,6 +24,8 @@ this.uicontrol = (function() {
     The user is resizing the selection
   "cancelled":
     Everything has been cancelled
+  "previewing":
+    The user is previewing the full-screen/visible image
 
   A mousedown goes from crosshairs to dragging.
   A mouseup goes from dragging to selected
@@ -120,6 +122,8 @@ this.uicontrol = (function() {
     H6: true
   };
 
+  let captureType;
+
   let standardDisplayCallbacks = {
     cancel: () => {
       sendEvent("cancel-shot", "overlay-cancel-button");
@@ -134,6 +138,10 @@ this.uicontrol = (function() {
   };
 
   let standardOverlayCallbacks = {
+    cancel: () => {
+      sendEvent("cancel-shot", "cancel-preview-button");
+      exports.deactivate();
+    },
     onOpenMyShots: () => {
       sendEvent("goto-myshots", "selection-button");
       callBackground("openMyShots")
@@ -147,7 +155,8 @@ this.uicontrol = (function() {
       selectedPos = new Selection(
         window.scrollX, window.scrollY,
         window.scrollX + window.innerWidth, window.scrollY + window.innerHeight);
-      shooter.takeShot("visible", selectedPos);
+      captureType = 'visible';
+      setState("previewing");
     },
     onClickFullPage: () => {
       sendEvent("capture-full-page", "selection-button");
@@ -166,9 +175,18 @@ this.uicontrol = (function() {
       selectedPos = new Selection(
         0, 0,
         width, height);
-      shooter.takeShot("fullPage", selectedPos);
+      captureType = 'fullPage';
+      setState("previewing");
+    },
+    onSavePreview: () => {
+      sendEvent(`save-${captureType.replace(/([a-z])([A-Z])/g, '$1-$2').toLowerCase()}`, "save-preview-button");
+      shooter.takeShot(captureType, selectedPos, dataUrl);
+    },
+    onDownloadPreview: () => {
+      sendEvent(`download-${captureType.replace(/([a-z])([A-Z])/g, '$1-$2').toLowerCase()}`, "download-preview-button");
+      shooter.downloadShot(selectedPos);
     }
-  }
+  };
 
   /** Holds all the objects that handle events for each state: */
   let stateHandlers = {};
@@ -343,6 +361,16 @@ this.uicontrol = (function() {
   /** *********************************************
    * all stateHandlers
    */
+
+  let dataUrl;
+
+  stateHandlers.previewing = {
+    start() {
+      dataUrl = shooter.screenshotPage(selectedPos, captureType);
+      ui.iframe.usePreview();
+      ui.Preview.display(dataUrl);
+    }
+  };
 
   stateHandlers.onboarding = {
     start() {

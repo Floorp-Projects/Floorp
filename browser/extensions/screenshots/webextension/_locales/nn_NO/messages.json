@@ -112,8 +112,8 @@
   "tourDone": {
     "message": "Ferdig"
   },
-  "termsAndPrivacyNoticeCloudServices": {
-    "message": "Ved å bruke Firefox Screenshots, godtar du $TERMSANDPRIVACYNOTICETERMSLINK$ og $TERMSANDPRIVACYNOTICEPRIVACYLINK$ for Firefox Cloud Services.",
+  "termsAndPrivacyNotice2": {
+    "message": "Ved å bruke Firefox Screenshots, seier du deg samd i $TERMSANDPRIVACYNOTICETERMSLINK$ og $TERMSANDPRIVACYNOTICEPRIVACYLINK$.",
     "placeholders": {
       "termsandprivacynoticetermslink": {
         "content": "$1"
@@ -128,5 +128,8 @@
   },
   "termsAndPrivacyNoticyPrivacyLink": {
     "message": "Personvernmerknad"
+  },
+  "libraryLabel": {
+    "message": "Skjermbilde"
   }
 }

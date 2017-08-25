@@ -112,7 +112,7 @@
   "tourDone": {
     "message": "მზადაა"
   },
-  "termsAndPrivacyNoticeCloudServices": {
+  "termsAndPrivacyNotice2": {
     "message": "Firefox Screenshots-ის გამოყენებით, თქვენ ეთანხმებით $TERMSANDPRIVACYNOTICETERMSLINK$ და $TERMSANDPRIVACYNOTICEPRIVACYLINK$.",
     "placeholders": {
       "termsandprivacynoticetermslink": {
@@ -128,5 +128,8 @@
   },
   "termsAndPrivacyNoticyPrivacyLink": {
     "message": "პირადი მონაცემების შესახებ განცხადებას"
+  },
+  "libraryLabel": {
+    "message": "Screenshots"
   }
 }

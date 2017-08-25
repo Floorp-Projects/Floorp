@@ -112,8 +112,8 @@
   "tourDone": {
     "message": "انجام شد"
   },
-  "termsAndPrivacyNoticeCloudServices": {
-    "message": "با استفاده از سرویس تصاویرِ صفحه فایرفاکس، شما با شرایط سرویس‌های ابری فایرفاکس $TERMSANDPRIVACYNOTICETERMSLINK$ و $TERMSANDPRIVACYNOTICEPRIVACYLINK$ موافقت می‌کنید.",
+  "termsAndPrivacyNotice2": {
+    "message": "با استفاده از سرویس تصاویر صفحه فایرفاکس، شما با $TERMSANDPRIVACYNOTICETERMSLINK$ ما و $TERMSANDPRIVACYNOTICEPRIVACYLINK$ موافقت می‌کنید.",
     "placeholders": {
       "termsandprivacynoticetermslink": {
         "content": "$1"
@@ -128,5 +128,8 @@
   },
   "termsAndPrivacyNoticyPrivacyLink": {
     "message": "نکات حریم‌خصوصی"
+  },
+  "libraryLabel": {
+    "message": "تصاویر صفحه"
   }
 }

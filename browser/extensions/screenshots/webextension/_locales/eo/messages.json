@@ -112,7 +112,7 @@
   "tourDone": {
     "message": "Farita"
   },
-  "termsAndPrivacyNoticeCloudServices": {
+  "termsAndPrivacyNotice2": {
     "message": "Se vi uzas Firefox Screenshots, vi akceptas nian $TERMSANDPRIVACYNOTICETERMSLINK$ kaj $TERMSANDPRIVACYNOTICEPRIVACYLINK$.",
     "placeholders": {
       "termsandprivacynoticetermslink": {
@@ -128,5 +128,8 @@
   },
   "termsAndPrivacyNoticyPrivacyLink": {
     "message": "rimarkon pri privateco"
+  },
+  "libraryLabel": {
+    "message": "Ekrankopioj"
   }
 }

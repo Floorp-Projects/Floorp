@@ -112,8 +112,8 @@
   "tourDone": {
     "message": "تمّ"
   },
-  "termsAndPrivacyNoticeCloudServices": {
-    "message": "استخدامك لخدمات «لقطات شاشة فَيَرفُكس» يعني موافقتك على $TERMSANDPRIVACYNOTICETERMSLINK$ و $TERMSANDPRIVACYNOTICEPRIVACYLINK$.",
+  "termsAndPrivacyNotice2": {
+    "message": "استخدامك للقطات شاشة فَيَرفُكس يُعد موافقة على $TERMSANDPRIVACYNOTICETERMSLINK$ و $TERMSANDPRIVACYNOTICEPRIVACYLINK$.",
     "placeholders": {
       "termsandprivacynoticetermslink": {
         "content": "$1"
@@ -128,5 +128,8 @@
   },
   "termsAndPrivacyNoticyPrivacyLink": {
     "message": "تنويه الخصوصية"
+  },
+  "libraryLabel": {
+    "message": "لقطات الشاشة"
   }
 }

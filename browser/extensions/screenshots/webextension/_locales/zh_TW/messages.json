@@ -112,8 +112,8 @@
   "tourDone": {
     "message": "完成"
   },
-  "termsAndPrivacyNoticeCloudServices": {
-    "message": "繼續使用 Firefox Screenshots，代表您同意 Firefox 雲端服務的 $TERMSANDPRIVACYNOTICETERMSLINK$ 以及 $TERMSANDPRIVACYNOTICEPRIVACYLINK$。",
+  "termsAndPrivacyNotice2": {
+    "message": "使用 Firefox Screenshots 時，代表您同意我們的 $TERMSANDPRIVACYNOTICETERMSLINK$ 及 $TERMSANDPRIVACYNOTICEPRIVACYLINK$。",
     "placeholders": {
       "termsandprivacynoticetermslink": {
         "content": "$1"
@@ -128,5 +128,8 @@
   },
   "termsAndPrivacyNoticyPrivacyLink": {
     "message": "隱私權保護政策"
+  },
+  "libraryLabel": {
+    "message": "擷圖"
   }
 }

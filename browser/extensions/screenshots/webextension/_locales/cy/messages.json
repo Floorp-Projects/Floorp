@@ -112,8 +112,8 @@
   "tourDone": {
     "message": "Gorffen"
   },
-  "termsAndPrivacyNoticeCloudServices": {
-    "message": "Drwy ddefnyddio Firefox Screenshots, rydych yn cytuno i Firefox Cloud Services $TERMSANDPRIVACYNOTICETERMSLINK$ a $TERMSANDPRIVACYNOTICEPRIVACYLINK$.",
+  "termsAndPrivacyNotice2": {
+    "message": "Drwy ddefnyddio Firefox Screenshots, rydych yn cytuno i'n $TERMSANDPRIVACYNOTICETERMSLINK$ a'n $TERMSANDPRIVACYNOTICEPRIVACYLINK$.",
     "placeholders": {
       "termsandprivacynoticetermslink": {
         "content": "$1"
@@ -128,5 +128,8 @@
   },
   "termsAndPrivacyNoticyPrivacyLink": {
     "message": "Hysbysiad Preifatrwydd"
+  },
+  "libraryLabel": {
+    "message": "Rhannu ar Pinterest"
   }
 }

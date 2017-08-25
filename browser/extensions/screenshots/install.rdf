@@ -12,9 +12,9 @@
       </Description>
     </em:targetApplication>
     <em:type>2</em:type>
-    <em:version>10.12.0</em:version>
+    <em:version>16.1.0</em:version>
     <em:bootstrap>true</em:bootstrap>
-    <em:homepageURL>https://pageshot.net/</em:homepageURL>
+    <em:homepageURL>https://screenshots.firefox.com/</em:homepageURL>
     <em:multiprocessCompatible>true</em:multiprocessCompatible>
   </Description>
 </RDF>
