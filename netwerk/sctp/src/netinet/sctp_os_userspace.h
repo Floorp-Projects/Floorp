@@ -45,8 +45,8 @@
 #include <winsock2.h>
 #include <ws2tcpip.h>
 #include <iphlpapi.h>
-#include <Mswsock.h>
-#include <Windows.h>
+#include <mswsock.h>
+#include <windows.h>
 #include "user_environment.h"
 typedef CRITICAL_SECTION userland_mutex_t;
 #if WINVER < 0x0600
