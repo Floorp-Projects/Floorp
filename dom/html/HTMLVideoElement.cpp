@@ -47,6 +47,7 @@ NS_IMPL_ELEMENT_CLONE(HTMLVideoElement)
 HTMLVideoElement::HTMLVideoElement(already_AddRefed<NodeInfo>& aNodeInfo)
   : HTMLMediaElement(aNodeInfo)
   , mUseScreenWakeLock(true)
+  , mIsOrientationLocked(false)
 {
 }
 
