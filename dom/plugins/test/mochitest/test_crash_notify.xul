@@ -15,7 +15,7 @@
 </body>
 <script class="testbody" type="application/javascript">
 <![CDATA[
-Components.utils.import("resource://gre/modules/Services.jsm");
+Components.utils.import("resource://gre/modules/PromiseUtils.jsm");
 
 SimpleTest.waitForExplicitFinish();
 SimpleTest.expectChildProcessCrash();
@@ -23,6 +23,8 @@ SimpleTest.expectChildProcessCrash();
 var success = false;
 
 var observerFired = false;
+var observerDeferred = PromiseUtils.defer();
+var eventListenerDeferred = PromiseUtils.defer();
 
 var testObserver = {
   observe: function(subject, topic, data) {
@@ -46,6 +48,8 @@ var testObserver = {
     let extraFile = profD.clone();
     extraFile.append(id + ".extra");
     ok(extraFile.exists(), "extra file exists");
+
+    observerDeferred.resolve();
   },
 
   QueryInterface: function(iid) {
@@ -84,9 +88,7 @@ function onPluginCrashed(aEvent) {
            getService(Components.interfaces.nsIObserverService);
   os.removeObserver(testObserver, "plugin-crashed");
 
-  Services.crashmanager.ensureCrashIsPresent(aEvent.pluginDumpID).then(() => {
-    SimpleTest.finish();
-  });
+  eventListenerDeferred.resolve();
 }
 
 function runTests() {
@@ -101,6 +103,13 @@ function runTests() {
     pluginElement.crash();
   } catch (e) {
   }
+
+  Promise.all([
+    observerDeferred.promise,
+    eventListenerDeferred.promise
+  ]).then(() => {
+    SimpleTest.finish();
+  });
 }
 ]]>
 </script>
