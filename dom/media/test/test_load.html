@@ -94,7 +94,7 @@ var gTests = [
         document.body.appendChild(gMedia);
         gMedia.src = src;
       },
-    expectedEvents: ['ratechange',  'loadstart', 'durationchange', 'loadedmetadata', 'loadeddata']
+    expectedEvents: ['loadstart', 'durationchange', 'loadedmetadata', 'loadeddata']
   }, {
     // Test 1: adding video to doc, then adding source.
     create:
@@ -122,7 +122,7 @@ var gTests = [
         addSource(src, type);
         document.body.appendChild(gMedia);
       },
-    expectedEvents: ['ratechange', 'loadstart', 'error']
+    expectedEvents: ['loadstart', 'error']
   }, {
     // Test 4:  video with only bad source, loading, then adding a good source
     // -  should resume load.
@@ -170,7 +170,7 @@ var gTests = [
         addSource(src, type);
         gMedia.load();
       },
-    expectedEvents: ['emptied', 'ratechange',  'loadstart', 'durationchange', 'loadedmetadata', 'loadeddata']
+    expectedEvents: ['emptied',  'loadstart', 'durationchange', 'loadedmetadata', 'loadeddata']
   }
 ];
 

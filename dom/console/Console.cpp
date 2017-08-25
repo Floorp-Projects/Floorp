@@ -1507,13 +1507,6 @@ Console::PopulateConsoleNotificationInTheTargetScope(JSContext* aCx,
   ClearException ce(aCx);
   RootedDictionary<ConsoleEvent> event(aCx);
 
-  // Save the principal's OriginAttributes in the console event data
-  // so that we will be able to filter messages by origin attributes.
-  JS::Rooted<JS::Value> originAttributesValue(aCx);
-  if (ToJSValue(aCx, aData->mOriginAttributes, &originAttributesValue)) {
-    event.mOriginAttributes = originAttributesValue;
-  }
-
   event.mAddonId = aData->mAddonId;
 
   event.mID.Construct();

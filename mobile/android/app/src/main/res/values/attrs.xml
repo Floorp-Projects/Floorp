@@ -181,5 +181,11 @@
         <attr name="borderColorPrivate" format="color" />
     </declare-styleable>
 
+    <declare-styleable name="AnimatedProgressBar">
+        <attr name="wrapShiftDrawable" format="boolean" />
+        <attr name="shiftDuration" format="reference" />
+        <attr name="shiftInterpolator" format="reference" />
+    </declare-styleable>
+
 </resources>
 

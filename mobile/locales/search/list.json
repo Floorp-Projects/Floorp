@@ -667,7 +667,7 @@
     "vi": {
       "default": {
         "visibleDefaultEngines": [
-          "google", "amazondotcom", "twitter", "wikipedia-vi"
+          "google", "coccoc", "duckduckgo", "twitter", "wikipedia-vi"
         ]
       }
     },

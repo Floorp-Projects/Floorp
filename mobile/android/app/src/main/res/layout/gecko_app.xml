@@ -4,10 +4,11 @@
    - file, You can obtain one at http://mozilla.org/MPL/2.0/. -->
 
 <RelativeLayout xmlns:android="http://schemas.android.com/apk/res/android"
-                xmlns:gecko="http://schemas.android.com/apk/res-auto"
-                android:id="@+id/root_layout"
-                android:layout_width="match_parent"
-                android:layout_height="match_parent">
+    xmlns:gecko="http://schemas.android.com/apk/res-auto"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    android:id="@+id/root_layout"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent">
 
     <ViewStub android:id="@+id/tabs_panel"
               android:layout="@layout/tabs_panel_view"
@@ -141,14 +142,18 @@
 
         </LinearLayout>
 
-        <org.mozilla.gecko.toolbar.ToolbarProgressView android:id="@id/page_progress"
-                                                       android:layout_width="match_parent"
-                                                       android:layout_height="14dp"
-                                                       android:layout_marginTop="-8dp"
-                                                       android:layout_below="@id/browser_chrome"
-                                                       android:src="@drawable/progress"
-                                                       android:background="@null"
-                                                       android:visibility="gone" />
+        <org.mozilla.gecko.widget.AnimatedProgressBar
+            android:id="@id/page_progress"
+            style="@style/Base.Widget.AppCompat.ProgressBar.Horizontal"
+            android:layout_width="match_parent"
+            android:layout_height="2dp"
+            android:layout_below="@id/browser_chrome"
+            android:layout_marginTop="-2dp"
+            android:background="@null"
+            android:progressDrawable="@drawable/progressbar"
+            android:visibility="gone"
+            app:shiftDuration="@integer/shift_duration_suggestion"
+            app:wrapShiftDrawable="true" />
 
     </view>
 

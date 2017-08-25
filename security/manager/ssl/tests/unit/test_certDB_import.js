@@ -99,11 +99,6 @@ function testImportCACert() {
 }
 
 function run_test() {
-  // We have to set a password and login before we attempt to import anything.
-  // In particular, the SQL NSS DB requires the user to be authenticated to set
-  // certificate trust settings, which we do when we import CA certs.
-  loginToDBWithDefaultPassword();
-
   let certificateDialogsCID =
     MockRegistrar.register("@mozilla.org/nsCertificateDialogs;1",
                            gCertificateDialogs);

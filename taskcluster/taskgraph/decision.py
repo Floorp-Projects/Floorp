@@ -221,6 +221,7 @@ def write_artifact(filename, data):
 
 
 def get_action_yml(parameters):
+    # NOTE: when deleting this function, delete taskcluster/taskgraph/util/templates.py too
     templates = Templates(os.path.join(GECKO, "taskcluster/taskgraph"))
     action_parameters = parameters.copy()
 

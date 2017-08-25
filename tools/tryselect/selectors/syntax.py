@@ -4,13 +4,13 @@
 
 from __future__ import absolute_import, print_function, unicode_literals
 
-import ConfigParser
 import os
 import re
 import sys
 from collections import defaultdict
 
 import mozpack.path as mozpath
+from .. import preset
 from ..cli import BaseTryParser
 from ..vcs import VCSHelper
 
@@ -56,21 +56,6 @@ class SyntaxParser(BaseTryParser):
           'dest': 'intersection',
           'help': 'When -u and paths are supplied run only the intersection of the '
                   'tests specified by the two arguments.',
-          }],
-        [['--save'],
-         {'dest': 'save',
-          'action': 'store',
-          'help': 'Save the command line arguments for future use with --preset.',
-          }],
-        [['--preset'],
-         {'dest': 'load',
-          'action': 'store',
-          'help': 'Load a saved set of arguments. Additional arguments will override '
-                  'saved ones.',
-          }],
-        [['--list'],
-         {'action': 'store_true',
-          'help': 'List all saved try strings',
           }],
         [['--no-artifact'],
          {'action': 'store_true',
@@ -324,59 +309,8 @@ class AutoTry(object):
             self._resolver = self._resolver_func()
         return self._resolver
 
-    @property
-    def config_path(self):
-        return os.path.join(self.mach_context.state_dir, "autotry.ini")
-
-    def load_config(self, name):
-        config = ConfigParser.RawConfigParser()
-        success = config.read([self.config_path])
-        if not success:
-            return None
-
-        try:
-            data = config.get("try", name)
-        except (ConfigParser.NoSectionError, ConfigParser.NoOptionError):
-            return None
-
-        kwargs = vars(SyntaxParser().parse_args(self.split_try_string(data)))
-
-        return kwargs
-
-    def list_presets(self):
-        config = ConfigParser.RawConfigParser()
-        success = config.read([self.config_path])
-
-        data = []
-        if success:
-            try:
-                data = config.items("try")
-            except (ConfigParser.NoSectionError, ConfigParser.NoOptionError):
-                pass
-
-        if not data:
-            print("No presets found")
-
-        for name, try_string in data:
-            print("%s: %s" % (name, try_string))
-
     def split_try_string(self, data):
         return re.findall(r'(?:\[.*?\]|\S)+', data)
-
-    def save_config(self, name, data):
-        assert data.startswith("try: ")
-        data = data[len("try: "):]
-
-        parser = ConfigParser.RawConfigParser()
-        parser.read([self.config_path])
-
-        if not parser.has_section("try"):
-            parser.add_section("try")
-
-        parser.set("try", name, data)
-
-        with open(self.config_path, "w") as f:
-            parser.write(f)
 
     def paths_by_flavor(self, paths=None, tags=None):
         paths_by_flavor = defaultdict(set)
@@ -629,15 +563,16 @@ class AutoTry(object):
         return kwargs["builds"], platforms, tests, talos, jobs, paths, tags, extra_args
 
     def run(self, **kwargs):
-        if kwargs["list"]:
-            self.list_presets()
+        if kwargs["list_presets"]:
+            preset.list_presets(section='try')
             sys.exit()
 
-        if kwargs["load"] is not None:
-            defaults = self.load_config(kwargs["load"])
+        if kwargs["preset"]:
+            value = preset.load(kwargs["preset"], section='try')[0]
+            defaults = vars(SyntaxParser().parse_args(self.split_try_string(value)))
 
             if defaults is None:
-                print("No saved configuration called %s found in autotry.ini" % kwargs["load"],
+                print("No saved configuration called %s found in autotry.ini" % kwargs["preset"],
                       file=sys.stderr)
 
             for key, value in kwargs.iteritems():
@@ -684,15 +619,10 @@ class AutoTry(object):
             print(e.message)
             sys.exit(1)
 
-        if local_artifact_build:
-            if kwargs["no_artifact"]:
-                print('mozconfig has --enable-artifact-builds but '
-                      '--no-artifact specified, not including --artifact '
-                      'flag in try syntax')
-            else:
-                print('mozconfig has --enable-artifact-builds; including '
-                      '--artifact flag in try syntax (use --no-artifact '
-                      'to override)')
+        if local_artifact_build and not kwargs["no_artifact"]:
+            print('mozconfig has --enable-artifact-builds; including '
+                  '--artifact flag in try syntax (use --no-artifact '
+                  'to override)')
 
         if kwargs["verbose"] and paths_by_flavor:
             print('The following tests will be selected: ')
@@ -704,5 +634,7 @@ class AutoTry(object):
 
         self.vcs.push_to_try(msg, push=kwargs['push'])
 
-        if kwargs["save"] is not None:
-            self.save_config(kwargs["save"], msg)
+        if kwargs["save"]:
+            assert msg.startswith("try: ")
+            msg = msg[len("try: "):]
+            preset.save('try', kwargs["save"], msg)

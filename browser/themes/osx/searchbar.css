@@ -23,26 +23,9 @@
   list-style-image: url("chrome://mozapps/skin/places/defaultFavicon.svg");
 }
 
-.search-go-container {
-  -moz-box-align: center;
-  padding-inline-end: 6px;
-}
-
+.search-go-container,
 .searchbar-search-button-container {
   -moz-box-align: center;
-}
-
-.search-go-button {
-  list-style-image: url("chrome://browser/skin/reload-stop-go.png");
-  -moz-image-region: rect(0, 42px, 14px, 28px);
-}
-
-.search-go-button:hover:active {
-  -moz-image-region: rect(14px, 42px, 28px, 28px);
-}
-
-.search-go-button:-moz-locale-dir(rtl) {
-  transform: scaleX(-1);
 }
 
 .searchbar-search-button {
@@ -65,18 +48,6 @@
 }
 
 @media (min-resolution: 2dppx) {
-  .search-go-button {
-    list-style-image: url("chrome://browser/skin/reload-stop-go@2x.png");
-    -moz-image-region: rect(0, 84px, 28px, 56px);
-    width: 14px;
-  }
-
-  .search-go-button:hover:active {
-    list-style-image: url("chrome://browser/skin/reload-stop-go@2x.png");
-    -moz-image-region: rect(28px, 84px, 56px, 56px);
-    width: 14px;
-  }
-
   .searchbar-search-button {
     list-style-image: url("chrome://browser/skin/search-indicator@2x.png");
     width: 20px;

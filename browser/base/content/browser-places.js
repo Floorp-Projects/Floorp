@@ -79,13 +79,17 @@ var StarUI = {
   handleEvent(aEvent) {
     switch (aEvent.type) {
       case "animationend": {
-        let libraryButton = document.getElementById("library-button");
+        let animatableBox = document.getElementById("library-animatable-box");
         if (aEvent.animationName.startsWith("library-bookmark-animation")) {
-          libraryButton.setAttribute("fade", "true");
+          animatableBox.setAttribute("fade", "true");
         } else if (aEvent.animationName == "library-bookmark-fade") {
-          libraryButton.removeEventListener("animationend", this);
+          animatableBox.removeEventListener("animationend", this);
+          animatableBox.removeAttribute("animate");
+          animatableBox.removeAttribute("fade");
+          let libraryButton = document.getElementById("library-button");
+          // Put the 'fill' back in the normal icon.
           libraryButton.removeAttribute("animate");
-          libraryButton.removeAttribute("fade");
+          gNavToolbox.removeAttribute("animate");
         }
         break;
       }
@@ -146,10 +150,26 @@ var StarUI = {
                      libraryButton.getAttribute("cui-areatype") != "menu-panel" &&
                      libraryButton.getAttribute("overflowedItem") != "true" &&
                      libraryButton.closest("#nav-bar")) {
-            BrowserUtils.setToolbarButtonHeightProperty(libraryButton);
-            libraryButton.removeAttribute("fade");
+            let animatableBox = document.getElementById("library-animatable-box");
+            let navBar = document.getElementById("nav-bar");
+            let libraryIcon = document.getAnonymousElementByAttribute(libraryButton, "class", "toolbarbutton-icon");
+            let dwu = window.getInterface(Ci.nsIDOMWindowUtils);
+            let iconBounds = dwu.getBoundsWithoutFlushing(libraryIcon);
+            let libraryBounds = dwu.getBoundsWithoutFlushing(libraryButton);
+
+            animatableBox.style.setProperty("--library-button-y", libraryBounds.y + "px");
+            animatableBox.style.setProperty("--library-button-height", libraryBounds.height + "px");
+            animatableBox.style.setProperty("--library-icon-x", iconBounds.x + "px");
+            if (navBar.hasAttribute("brighttext")) {
+              animatableBox.setAttribute("brighttext", "true");
+            } else {
+              animatableBox.removeAttribute("brighttext");
+            }
+            animatableBox.removeAttribute("fade");
+            gNavToolbox.setAttribute("animate", "bookmark");
             libraryButton.setAttribute("animate", "bookmark");
-            libraryButton.addEventListener("animationend", this);
+            animatableBox.setAttribute("animate", "bookmark");
+            animatableBox.addEventListener("animationend", this);
           }
         }
         break;

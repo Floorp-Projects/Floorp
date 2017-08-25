@@ -85,6 +85,7 @@ async function setupAddressStorage() {
   await addAddress(MOCK_STORAGE[1]);
 }
 
+// TODO: Add form history fallback test cases for credit card fields. (bug 1393374)
 async function setupFormHistory() {
   await updateFormHistory([
     {op: "add", fieldname: "tel", value: "+1234567890"},
@@ -170,6 +171,20 @@ add_task(async function check_fallback_for_mismatched_field() {
   doKey("down");
   await expectPopup();
   checkMenuEntries(["foo@mozilla.com"], false);
+});
+
+// Display history search result if address autofill is disabled.
+add_task(async function check_search_result_for_pref_off() {
+  await SpecialPowers.pushPrefEnv({
+    set: [["extensions.formautofill.addresses.enabled", false]],
+  });
+
+  await setInput("#tel", "");
+  doKey("down");
+  await expectPopup();
+  checkMenuEntries(["+1234567890"], false);
+
+  await SpecialPowers.popPrefEnv();
 });
 
 // Autofill the address from dropdown menu.

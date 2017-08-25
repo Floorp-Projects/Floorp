@@ -231,6 +231,8 @@ macosx64-tests-talos:
     - talos-perf-reftest
     - talos-perf-reftest-singletons
     - talos-tp6
+    - talos-tp6-stylo
+    - talos-tp6-stylo-threads
 
 linux32-tests:
     - cppunit

@@ -1379,11 +1379,12 @@ var gBrowserInit = {
 
     gRemoteControl.updateVisualCue(Marionette.running);
 
-    let uriToLoad = this._getUriToLoad();
-    gIdentityHandler.initIdentityBlock(uriToLoad);
+    this._uriToLoadPromise.then(uriToLoad => {
+      gIdentityHandler.initIdentityBlock(uriToLoad);
+    });
 
     // Wait until chrome is painted before executing code not critical to making the window visible
-    this._boundDelayedStartup = this._delayedStartup.bind(this, uriToLoad);
+    this._boundDelayedStartup = this._delayedStartup.bind(this);
     window.addEventListener("MozAfterPaint", this._boundDelayedStartup);
 
     this._loadHandled = true;
@@ -1394,7 +1395,7 @@ var gBrowserInit = {
     this._boundDelayedStartup = null;
   },
 
-  _delayedStartup(uriToLoad) {
+  _delayedStartup() {
     let tmp = {};
     Cu.import("resource://gre/modules/TelemetryTimestamps.jsm", tmp);
     let TelemetryTimestamps = tmp.TelemetryTimestamps;
@@ -1408,8 +1409,7 @@ var gBrowserInit = {
 
     // This pageshow listener needs to be registered before we may call
     // swapBrowsersAndCloseOther() to receive pageshow events fired by that.
-    let mm = window.messageManager;
-    mm.addMessageListener("PageVisibility:Show", function(message) {
+    window.messageManager.addMessageListener("PageVisibility:Show", function(message) {
       if (message.target == gBrowser.selectedBrowser) {
         setTimeout(pageShowEventHandlers, 0, message.data.persisted);
       }
@@ -1440,89 +1440,7 @@ var gBrowserInit = {
     // e.g., start/home page, command line / startup uris to load, sessionstore
     gAboutNewTabService.QueryInterface(Ci.nsISupports);
 
-    if (uriToLoad && uriToLoad != "about:blank") {
-      if (uriToLoad instanceof Ci.nsIArray) {
-        let count = uriToLoad.length;
-        let specs = [];
-        for (let i = 0; i < count; i++) {
-          let urisstring = uriToLoad.queryElementAt(i, Ci.nsISupportsString);
-          specs.push(urisstring.data);
-        }
-
-        // This function throws for certain malformed URIs, so use exception handling
-        // so that we don't disrupt startup
-        try {
-          gBrowser.loadTabs(specs, {
-            inBackground: false,
-            replace: true,
-            triggeringPrincipal: Services.scriptSecurityManager.getSystemPrincipal(),
-          });
-        } catch (e) {}
-      } else if (uriToLoad instanceof XULElement) {
-        // swap the given tab with the default about:blank tab and then close
-        // the original tab in the other window.
-        let tabToOpen = uriToLoad;
-
-        // If this tab was passed as a window argument, clear the
-        // reference to it from the arguments array.
-        if (window.arguments[0] == tabToOpen) {
-          window.arguments[0] = null;
-        }
-
-        // Stop the about:blank load
-        gBrowser.stop();
-        // make sure it has a docshell
-        gBrowser.docShell;
-
-        // We must set usercontextid before updateBrowserRemoteness()
-        // so that the newly created remote tab child has correct usercontextid
-        if (tabToOpen.hasAttribute("usercontextid")) {
-          let usercontextid = tabToOpen.getAttribute("usercontextid");
-          gBrowser.selectedBrowser.setAttribute("usercontextid", usercontextid);
-        }
-
-        try {
-          // Make sure selectedBrowser has the same remote settings as the one
-          // we are swapping in.
-          gBrowser.updateBrowserRemoteness(gBrowser.selectedBrowser,
-                                           tabToOpen.linkedBrowser.isRemoteBrowser,
-                                           { remoteType: tabToOpen.linkedBrowser.remoteType });
-          gBrowser.swapBrowsersAndCloseOther(gBrowser.selectedTab, tabToOpen);
-        } catch (e) {
-          Cu.reportError(e);
-        }
-      } else if (window.arguments.length >= 3) {
-        // window.arguments[2]: referrer (nsIURI | string)
-        //                 [3]: postData (nsIInputStream)
-        //                 [4]: allowThirdPartyFixup (bool)
-        //                 [5]: referrerPolicy (int)
-        //                 [6]: userContextId (int)
-        //                 [7]: originPrincipal (nsIPrincipal)
-        //                 [8]: triggeringPrincipal (nsIPrincipal)
-        let referrerURI = window.arguments[2];
-        if (typeof(referrerURI) == "string") {
-          try {
-            referrerURI = makeURI(referrerURI);
-          } catch (e) {
-            referrerURI = null;
-          }
-        }
-        let referrerPolicy = (window.arguments[5] != undefined ?
-            window.arguments[5] : Ci.nsIHttpChannel.REFERRER_POLICY_UNSET);
-        let userContextId = (window.arguments[6] != undefined ?
-            window.arguments[6] : Ci.nsIScriptSecurityManager.DEFAULT_USER_CONTEXT_ID);
-        loadURI(uriToLoad, referrerURI, window.arguments[3] || null,
-                window.arguments[4] || false, referrerPolicy, userContextId,
-                // pass the origin principal (if any) and force its use to create
-                // an initial about:blank viewer if present:
-                window.arguments[7], !!window.arguments[7], window.arguments[8]);
-        window.focus();
-      } else {
-        // Note: loadOneOrMoreURIs *must not* be called if window.arguments.length >= 3.
-        // Such callers expect that window.arguments[0] is handled as a single URI.
-        loadOneOrMoreURIs(uriToLoad, Services.scriptSecurityManager.getSystemPrincipal());
-      }
-    }
+    this._handleURIToLoad();
 
     Services.obs.addObserver(gIdentityHandler, "perm-changed");
     Services.obs.addObserver(gRemoteControl, "remote-active");
@@ -1550,27 +1468,6 @@ var gBrowserInit = {
     PanelUI.init();
 
     UpdateUrlbarSearchSplitterState();
-
-    if (!(isBlankPageURL(uriToLoad) || uriToLoad == "about:privatebrowsing") ||
-        !focusAndSelectUrlBar()) {
-      if (gBrowser.selectedBrowser.isRemoteBrowser) {
-        // If the initial browser is remote, in order to optimize for first paint,
-        // we'll defer switching focus to that browser until it has painted.
-        let focusedElement = document.commandDispatcher.focusedElement;
-        mm.addMessageListener("Browser:FirstPaint", function onFirstPaint() {
-          mm.removeMessageListener("Browser:FirstPaint", onFirstPaint);
-          // If focus didn't move while we were waiting for first paint, we're okay
-          // to move to the browser.
-          if (document.commandDispatcher.focusedElement == focusedElement) {
-            gBrowser.selectedBrowser.focus();
-          }
-        });
-      } else {
-        // If the initial browser is not remote, we can focus the browser
-        // immediately with no paint performance impact.
-        gBrowser.selectedBrowser.focus();
-      }
-    }
 
     // Enable/Disable auto-hide tabbar
     gBrowser.tabContainer.updateVisibility();
@@ -1693,6 +1590,132 @@ var gBrowserInit = {
     TelemetryTimestamps.add("delayedStartupFinished");
   },
 
+  _handleURIToLoad() {
+    let initiallyFocusedElement = document.commandDispatcher.focusedElement;
+
+    let firstBrowserPaintDeferred = {};
+    firstBrowserPaintDeferred.promise = new Promise(resolve => {
+      firstBrowserPaintDeferred.resolve = resolve;
+    });
+
+    let mm = window.messageManager;
+    mm.addMessageListener("Browser:FirstPaint", function onFirstPaint() {
+      mm.removeMessageListener("Browser:FirstPaint", onFirstPaint);
+      firstBrowserPaintDeferred.resolve();
+    });
+
+    this._uriToLoadPromise.then(uriToLoad => {
+      if (!uriToLoad || uriToLoad == "about:blank") {
+        return;
+      }
+
+      if (uriToLoad instanceof Ci.nsIArray) {
+        let count = uriToLoad.length;
+        let specs = [];
+        for (let i = 0; i < count; i++) {
+          let urisstring = uriToLoad.queryElementAt(i, Ci.nsISupportsString);
+          specs.push(urisstring.data);
+        }
+
+        // This function throws for certain malformed URIs, so use exception handling
+        // so that we don't disrupt startup
+        try {
+          gBrowser.loadTabs(specs, {
+            inBackground: false,
+            replace: true,
+            triggeringPrincipal: Services.scriptSecurityManager.getSystemPrincipal(),
+          });
+        } catch (e) {}
+      } else if (uriToLoad instanceof XULElement) {
+        // swap the given tab with the default about:blank tab and then close
+        // the original tab in the other window.
+        let tabToOpen = uriToLoad;
+
+        // If this tab was passed as a window argument, clear the
+        // reference to it from the arguments array.
+        if (window.arguments[0] == tabToOpen) {
+          window.arguments[0] = null;
+        }
+
+        // Stop the about:blank load
+        gBrowser.stop();
+        // make sure it has a docshell
+        gBrowser.docShell;
+
+        // We must set usercontextid before updateBrowserRemoteness()
+        // so that the newly created remote tab child has correct usercontextid
+        if (tabToOpen.hasAttribute("usercontextid")) {
+          let usercontextid = tabToOpen.getAttribute("usercontextid");
+          gBrowser.selectedBrowser.setAttribute("usercontextid", usercontextid);
+        }
+
+        try {
+          // Make sure selectedBrowser has the same remote settings as the one
+          // we are swapping in.
+          gBrowser.updateBrowserRemoteness(gBrowser.selectedBrowser,
+                                           tabToOpen.linkedBrowser.isRemoteBrowser,
+                                           { remoteType: tabToOpen.linkedBrowser.remoteType });
+          gBrowser.swapBrowsersAndCloseOther(gBrowser.selectedTab, tabToOpen);
+        } catch (e) {
+          Cu.reportError(e);
+        }
+      } else if (window.arguments.length >= 3) {
+        // window.arguments[2]: referrer (nsIURI | string)
+        //                 [3]: postData (nsIInputStream)
+        //                 [4]: allowThirdPartyFixup (bool)
+        //                 [5]: referrerPolicy (int)
+        //                 [6]: userContextId (int)
+        //                 [7]: originPrincipal (nsIPrincipal)
+        //                 [8]: triggeringPrincipal (nsIPrincipal)
+        let referrerURI = window.arguments[2];
+        if (typeof(referrerURI) == "string") {
+          try {
+            referrerURI = makeURI(referrerURI);
+          } catch (e) {
+            referrerURI = null;
+          }
+        }
+        let referrerPolicy = (window.arguments[5] != undefined ?
+            window.arguments[5] : Ci.nsIHttpChannel.REFERRER_POLICY_UNSET);
+        let userContextId = (window.arguments[6] != undefined ?
+            window.arguments[6] : Ci.nsIScriptSecurityManager.DEFAULT_USER_CONTEXT_ID);
+        loadURI(uriToLoad, referrerURI, window.arguments[3] || null,
+                window.arguments[4] || false, referrerPolicy, userContextId,
+                // pass the origin principal (if any) and force its use to create
+                // an initial about:blank viewer if present:
+                window.arguments[7], !!window.arguments[7], window.arguments[8]);
+        window.focus();
+      } else {
+        // Note: loadOneOrMoreURIs *must not* be called if window.arguments.length >= 3.
+        // Such callers expect that window.arguments[0] is handled as a single URI.
+        loadOneOrMoreURIs(uriToLoad, Services.scriptSecurityManager.getSystemPrincipal());
+      }
+    });
+
+    this._uriToLoadPromise.then(uriToLoad => {
+      if ((isBlankPageURL(uriToLoad) || uriToLoad == "about:privatebrowsing") &&
+          focusAndSelectUrlBar()) {
+        return;
+      }
+
+      if (gBrowser.selectedBrowser.isRemoteBrowser) {
+        // If the initial browser is remote, in order to optimize for first paint,
+        // we'll defer switching focus to that browser until it has painted.
+        firstBrowserPaintDeferred.promise.then(() => {
+          // If focus didn't move while we were waiting for first paint, we're okay
+          // to move to the browser.
+          if (document.commandDispatcher.focusedElement == initiallyFocusedElement) {
+            gBrowser.selectedBrowser.focus();
+          }
+        });
+      } else {
+        // If the initial browser is not remote, we can focus the browser
+        // immediately with no paint performance impact.
+        gBrowser.selectedBrowser.focus();
+      }
+    });
+  },
+
   /**
    * Use this function as an entry point to schedule tasks that
    * need to run once per window after startup, and can be scheduled
@@ -1755,28 +1778,38 @@ var gBrowserInit = {
   },
 
   // Returns the URI(s) to load at startup.
-  _getUriToLoad() {
-    // window.arguments[0]: URI to load (string), or an nsIArray of
-    //                      nsISupportsStrings to load, or a xul:tab of
-    //                      a tabbrowser, which will be replaced by this
-    //                      window (for this case, all other arguments are
-    //                      ignored).
-    if (!window.arguments || !window.arguments[0])
-      return null;
+  get _uriToLoadPromise() {
+    delete this._uriToLoadPromise;
+    return this._uriToLoadPromise = new Promise(resolve => {
+      // window.arguments[0]: URI to load (string), or an nsIArray of
+      //                      nsISupportsStrings to load, or a xul:tab of
+      //                      a tabbrowser, which will be replaced by this
+      //                      window (for this case, all other arguments are
+      //                      ignored).
+      if (!window.arguments || !window.arguments[0]) {
+        resolve(null);
+        return;
+      }
 
-    let uri = window.arguments[0];
-    let sessionStartup = Cc["@mozilla.org/browser/sessionstartup;1"]
-                           .getService(Ci.nsISessionStartup);
-    let defaultArgs = Cc["@mozilla.org/browser/clh;1"]
-                        .getService(Ci.nsIBrowserHandler)
-                        .defaultArgs;
+      let uri = window.arguments[0];
+      let defaultArgs = Cc["@mozilla.org/browser/clh;1"]
+                          .getService(Ci.nsIBrowserHandler)
+                          .defaultArgs;
 
-    // If the given URI matches defaultArgs (the default homepage) we want
-    // to block its load if we're going to restore a session anyway.
-    if (uri == defaultArgs && sessionStartup.willOverrideHomepage)
-      return null;
+      // If the given URI is different from the homepage, we want to load it.
+      if (uri != defaultArgs) {
+        resolve(uri);
+        return;
+      }
 
-    return uri;
+      // The URI appears to be the the homepage. We want to load it only if
+      // session restore isn't about to override the homepage.
+      let sessionStartup = Cc["@mozilla.org/browser/sessionstartup;1"]
+                             .getService(Ci.nsISessionStartup);
+      sessionStartup.willOverrideHomepagePromise.then(willOverrideHomepage => {
+        resolve(willOverrideHomepage ? null : uri);
+      });
+    });
   },
 
   onUnload() {
@@ -7726,6 +7759,11 @@ var gIdentityHandler = {
    * (eg. about:home)
    */
   initIdentityBlock(initialURI) {
+    if (this._uri) {
+      // Apparently we already loaded something, so there's nothing to do here.
+      return;
+    }
+
     if ((typeof initialURI != "string") || !initialURI.startsWith("about:"))
       return;
 
