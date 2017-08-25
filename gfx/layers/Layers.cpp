@@ -689,6 +689,18 @@ Layer::GetEffectiveMixBlendMode()
   return mSimpleAttrs.MixBlendMode();
 }
 
+Matrix4x4
+Layer::ComputeTransformToPreserve3DRoot()
+{
+  Matrix4x4 transform = GetLocalTransform();
+  for (Layer* layer = GetParent();
+       layer && layer->Extend3DContext();
+       layer = layer->GetParent()) {
+    transform = transform * layer->GetLocalTransform();
+  }
+  return transform;
+}
+
 void
 Layer::ComputeEffectiveTransformForMaskLayers(const gfx::Matrix4x4& aTransformToSurface)
 {
