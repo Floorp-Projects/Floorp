@@ -74,7 +74,7 @@ private:
   bool CanPlayThroughImpl() override;
   bool IsLiveStream() override final { return !mEnded; }
 
-  RefPtr<MediaSourceResource> mResource;
+  UniquePtr<MediaSourceResource> mResource;
   RefPtr<nsIPrincipal> mPrincipal;
 
   // The owning MediaSource holds a strong reference to this decoder, and
