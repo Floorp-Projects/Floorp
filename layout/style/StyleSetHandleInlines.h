@@ -342,12 +342,6 @@ StyleSetHandle::Ptr::CounterStyleRuleForName(nsIAtom* aName)
   FORWARD(CounterStyleRuleForName, (aName));
 }
 
-already_AddRefed<gfxFontFeatureValueSet>
-StyleSetHandle::Ptr::BuildFontFeatureValueSet()
-{
-  FORWARD(BuildFontFeatureValueSet, ());
-}
-
 bool
 StyleSetHandle::Ptr::EnsureUniqueInnerOnCSSSheets()
 {

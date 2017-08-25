@@ -1378,18 +1378,6 @@ ServoStyleSet::CounterStyleRuleForName(nsIAtom* aName)
   return Servo_StyleSet_GetCounterStyleRule(mRawSet.get(), aName);
 }
 
-already_AddRefed<gfxFontFeatureValueSet>
-ServoStyleSet::BuildFontFeatureValueSet()
-{
-  UpdateStylistIfNeeded();
-  RefPtr<gfxFontFeatureValueSet> set = new gfxFontFeatureValueSet();
-  bool setHasAnyRules = Servo_StyleSet_BuildFontFeatureValueSet(mRawSet.get(), set.get());
-  if (!setHasAnyRules) {
-    return nullptr;
-  }
-  return set.forget();
-}
-
 already_AddRefed<ServoStyleContext>
 ServoStyleSet::ResolveForDeclarations(
   const ServoStyleContext* aParentOrNull,
