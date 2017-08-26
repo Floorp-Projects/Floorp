@@ -97,8 +97,8 @@ class PayloadDispatcher {
         }
     }
 
-    void lastPayloadFailed() {
-        uploader.finished(uploadTimestamp);
+    void lastPayloadFailed(Exception e) {
+        uploader.sessionStoreDelegate.onStoreFailed(e);
     }
 
     private void finished(long lastModifiedTimestamp) {
