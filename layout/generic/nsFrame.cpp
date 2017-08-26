@@ -504,7 +504,6 @@ nsFrame::~nsFrame()
   MOZ_ASSERT(GetVisibility() != Visibility::APPROXIMATELY_VISIBLE,
              "Visible nsFrame is being destroyed");
 
-  NS_IF_RELEASE(mContent);
 #ifdef DEBUG
   mStyleContext->FrameRelease();
 #endif
@@ -611,10 +610,6 @@ nsFrame::Init(nsIContent*       aContent,
 
   mContent = aContent;
   mParent = aParent;
-
-  if (aContent) {
-    NS_ADDREF(aContent);
-  }
 
   if (aPrevInFlow) {
     mWritingMode = aPrevInFlow->GetWritingMode();
