@@ -103,7 +103,7 @@ use. e.g.::
        sparse-profile: tasgraph
 
 This automagically results in ``run-task`` and ``hg robustcheckout``
-using the sparse profile defined in ``build/sparse/profiles/<value>``.
+using the sparse profile defined in ``build/sparse-profiles/<value>``.
 
 Pros and Cons of Sparse Checkouts
 =================================
