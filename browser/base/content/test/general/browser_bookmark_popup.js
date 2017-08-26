@@ -14,6 +14,8 @@ let bookmarkStar = BookmarkingUI.star;
 let bookmarkPanelTitle = document.getElementById("editBookmarkPanelTitle");
 let editBookmarkPanelRemoveButtonRect;
 
+const TEST_URL = "data:text/html,<html><body></body></html>";
+
 StarUI._closePanelQuickForTesting = true;
 
 add_task(async function setup() {
@@ -25,12 +27,12 @@ add_task(async function setup() {
 
 async function test_bookmarks_popup({isNewBookmark, popupShowFn, popupEditFn,
                                 shouldAutoClose, popupHideFn, isBookmarkRemoved}) {
-  await BrowserTestUtils.withNewTab({gBrowser, url: "about:home"}, async function(browser) {
+  await BrowserTestUtils.withNewTab({gBrowser, url: TEST_URL}, async function(browser) {
     try {
       if (!isNewBookmark) {
         await PlacesUtils.bookmarks.insert({
           parentGuid: PlacesUtils.bookmarks.unfiledGuid,
-          url: "about:home",
+          url: TEST_URL,
           title: "Home Page"
         });
       }
@@ -55,7 +57,7 @@ async function test_bookmarks_popup({isNewBookmark, popupShowFn, popupEditFn,
         await popupEditFn();
       }
       let bookmarks = [];
-      await PlacesUtils.bookmarks.fetch({url: "about:home"}, bm => bookmarks.push(bm));
+      await PlacesUtils.bookmarks.fetch({url: TEST_URL}, bm => bookmarks.push(bm));
       Assert.equal(bookmarks.length, 1, "Only one bookmark should exist");
       Assert.equal(bookmarkStar.getAttribute("starred"), "true", "Page is starred");
       Assert.equal(bookmarkPanelTitle.value,
@@ -72,7 +74,7 @@ async function test_bookmarks_popup({isNewBookmark, popupShowFn, popupEditFn,
       let onItemRemovedPromise = Promise.resolve();
       if (isBookmarkRemoved) {
         onItemRemovedPromise = PlacesTestUtils.waitForNotification("onItemRemoved",
-          (id, parentId, index, type, itemUrl) => "about:home" == itemUrl.spec);
+          (id, parentId, index, type, itemUrl) => TEST_URL == itemUrl.spec);
       }
 
       let hiddenPromise = promisePopupHidden(bookmarkPanel);
@@ -84,7 +86,7 @@ async function test_bookmarks_popup({isNewBookmark, popupShowFn, popupEditFn,
       Assert.equal(bookmarkStar.hasAttribute("starred"), !isBookmarkRemoved,
          "Page is starred after closing");
     } finally {
-      let bookmark = await PlacesUtils.bookmarks.fetch({url: "about:home"});
+      let bookmark = await PlacesUtils.bookmarks.fetch({url: TEST_URL});
       Assert.equal(!!bookmark, !isBookmarkRemoved,
          "bookmark should not be present if a panel action should've removed it");
       if (bookmark) {

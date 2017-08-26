@@ -109,7 +109,7 @@ var PocketPageAction = {
 
           let wrapper = doc.createElement("hbox");
           wrapper.id = "pocket-button-box";
-          wrapper.classList.add("urlbar-icon-wrapper");
+          wrapper.classList.add("urlbar-icon-wrapper", "urlbar-page-action");
           wrapper.setAttribute("context", "pageActionPanelContextMenu");
           wrapper.addEventListener("contextmenu", event => {
             window.BrowserPageActions.onContextMenu(event);

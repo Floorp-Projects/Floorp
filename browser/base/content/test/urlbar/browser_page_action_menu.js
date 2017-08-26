@@ -115,9 +115,19 @@ add_task(async function emailLink() {
 });
 
 add_task(async function sendToDevice_nonSendable() {
-  // Open a tab that's not sendable -- but that's also actionable so that the
-  // main page action button appears.
+  // Open a tab that's not sendable.  An about: page like about:home is
+  // convenient.
   await BrowserTestUtils.withNewTab("about:home", async () => {
+    // ... but the page actions should be hidden on about:home, including the
+    // main button.  (It's not easy to load a page that's both actionable and
+    // not sendable.)  So first check that that's the case, and then unhide the
+    // main button so that this test can continue.
+    Assert.equal(
+      window.getComputedStyle(BrowserPageActions.mainButtonNode).visibility,
+      "collapse",
+      "Main button should be hidden on about:home"
+    );
+    BrowserPageActions.mainButtonNode.style.visibility = "visible";
     await promiseSyncReady();
     // Open the panel.  Send to Device should be disabled.
     await promisePageActionPanelOpen();
@@ -127,6 +137,8 @@ add_task(async function sendToDevice_nonSendable() {
     let hiddenPromise = promisePageActionPanelHidden();
     BrowserPageActions.panelNode.hidePopup();
     await hiddenPromise;
+    // Remove the `visibility` style set above.
+    BrowserPageActions.mainButtonNode.style.removeProperty("visibility");
   });
 });
 
