@@ -8,11 +8,13 @@
 
 // Test deleting all cookies
 
-function* performDelete(store, rowName, deleteAll) {
+function* performDelete(store, rowName, action) {
   let contextMenu = gPanelWindow.document.getElementById(
     "storage-table-popup");
   let menuDeleteAllItem = contextMenu.querySelector(
     "#storage-table-popup-delete-all");
+  let menuDeleteAllSessionCookiesItem = contextMenu.querySelector(
+    "#storage-table-popup-delete-all-session-cookies");
   let menuDeleteAllFromItem = contextMenu.querySelector(
     "#storage-table-popup-delete-all-from");
 
@@ -25,13 +27,19 @@ function* performDelete(store, rowName, deleteAll) {
 
   yield waitForContextMenu(contextMenu, cells.name, () => {
     info(`Opened context menu in ${storeName}, row '${rowName}'`);
-    if (deleteAll) {
-      menuDeleteAllItem.click();
-    } else {
-      menuDeleteAllFromItem.click();
-      let hostName = cells.host.value;
-      ok(menuDeleteAllFromItem.getAttribute("label").includes(hostName),
+    switch (action) {
+      case "deleteAll":
+        menuDeleteAllItem.click();
+        break;
+      case "deleteAllSessionCookies":
+        menuDeleteAllSessionCookiesItem.click();
+        break;
+      case "deleteAllFrom":
+        menuDeleteAllFromItem.click();
+        let hostName = cells.host.value;
+        ok(menuDeleteAllFromItem.getAttribute("label").includes(hostName),
         `Context menu item label contains '${hostName}'`);
+        break;
     }
   });
 
@@ -48,15 +56,21 @@ add_task(function* () {
         getCookieId("c1", "test1.example.org", "/browser"),
         getCookieId("c3", "test1.example.org", "/"),
         getCookieId("cs2", ".example.org", "/"),
-        getCookieId("uc1", ".example.org", "/")
+        getCookieId("c4", ".example.org", "/"),
+        getCookieId("uc1", ".example.org", "/"),
+        getCookieId("uc2", ".example.org", "/")
       ]
     ],
     [
       ["cookies", "https://sectest1.example.org"], [
         getCookieId("cs2", ".example.org", "/"),
+        getCookieId("c4", ".example.org", "/"),
         getCookieId("sc1", "sectest1.example.org",
                     "/browser/devtools/client/storage/test/"),
-        getCookieId("uc1", ".example.org", "/")
+        getCookieId("sc2", "sectest1.example.org",
+                    "/browser/devtools/client/storage/test/"),
+        getCookieId("uc1", ".example.org", "/"),
+        getCookieId("uc2", ".example.org", "/")
       ]
     ],
   ]);
@@ -64,7 +78,7 @@ add_task(function* () {
   info("delete all from domain");
   // delete only cookies that match the host exactly
   let id = getCookieId("c1", "test1.example.org", "/browser");
-  yield performDelete(["cookies", "http://test1.example.org"], id, false);
+  yield performDelete(["cookies", "http://test1.example.org"], id, "deleteAllFrom");
 
   info("test state after delete all from domain");
   yield checkState([
@@ -73,24 +87,57 @@ add_task(function* () {
       ["cookies", "http://test1.example.org"],
       [
         getCookieId("cs2", ".example.org", "/"),
-        getCookieId("uc1", ".example.org", "/")
+        getCookieId("c4", ".example.org", "/"),
+        getCookieId("uc1", ".example.org", "/"),
+        getCookieId("uc2", ".example.org", "/")
       ]
     ],
     [
       ["cookies", "https://sectest1.example.org"],
       [
         getCookieId("cs2", ".example.org", "/"),
+        getCookieId("c4", ".example.org", "/"),
         getCookieId("uc1", ".example.org", "/"),
+        getCookieId("uc2", ".example.org", "/"),
         getCookieId("sc1", "sectest1.example.org",
                     "/browser/devtools/client/storage/test/"),
+        getCookieId("sc2", "sectest1.example.org",
+                    "/browser/devtools/client/storage/test/")
+      ]
+    ],
+  ]);
+
+  info("delete all session cookies");
+  // delete only session cookies
+  id = getCookieId("cs2", ".example.org", "/");
+  yield performDelete(["cookies", "http://sectest1.example.org"], id,
+    "deleteAllSessionCookies");
+
+  info("test state after delete all session cookies");
+  yield checkState([
+    // Cookies with expiry date must not be deleted.
+    [
+      ["cookies", "http://test1.example.org"],
+      [
+        getCookieId("c4", ".example.org", "/"),
+        getCookieId("uc2", ".example.org", "/")
+      ]
+    ],
+    [
+      ["cookies", "https://sectest1.example.org"],
+      [
+        getCookieId("c4", ".example.org", "/"),
+        getCookieId("uc2", ".example.org", "/"),
+        getCookieId("sc2", "sectest1.example.org",
+        "/browser/devtools/client/storage/test/")
       ]
     ],
   ]);
 
   info("delete all");
   // delete all cookies for host, including domain cookies
-  id = getCookieId("uc1", ".example.org", "/");
-  yield performDelete(["cookies", "http://sectest1.example.org"], id, true);
+  id = getCookieId("uc2", ".example.org", "/");
+  yield performDelete(["cookies", "http://sectest1.example.org"], id, "deleteAll");
 
   info("test state after delete all");
   yield checkState([
