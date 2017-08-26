@@ -54,7 +54,7 @@ HTTP(..) == font-features-order-5.html font-features-hlig.html
 HTTP(..) == alternates-order.html alternates-order-ref.html
 
 # check that font-specific values line up with @font-face feature settings
-fails-if((stylo||styloVsGecko)&&cocoaWidget) skip-if((stylo||styloVsGecko)&&winWidget) HTTP(..) == annotations.html annotations-ref.html
+skip-if((stylo||styloVsGecko)&&winWidget) HTTP(..) == annotations.html annotations-ref.html
 
 # font-variant subproperties
 # test for specific features being on and others off, based on prop values
