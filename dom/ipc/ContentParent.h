@@ -11,7 +11,6 @@
 #include "mozilla/dom/nsIContentParent.h"
 #include "mozilla/gfx/gfxVarReceiver.h"
 #include "mozilla/gfx/GPUProcessListener.h"
-#include "mozilla/ipc/CrashReporterHost.h"
 #include "mozilla/ipc/GeckoChildProcessHost.h"
 #include "mozilla/Attributes.h"
 #include "mozilla/FileUtils.h"
@@ -76,6 +75,7 @@ class PrintingParent;
 }
 
 namespace ipc {
+class CrashReporterHost;
 class OptionalURIParams;
 class PFileDescriptorSetParent;
 class URIParams;

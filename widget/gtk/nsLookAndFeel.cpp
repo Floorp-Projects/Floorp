@@ -43,6 +43,10 @@ using mozilla::LookAndFeel;
     ((nscolor) NS_RGBA((int)((c).red*255), (int)((c).green*255), \
                        (int)((c).blue*255), (int)((c).alpha*255)))
 
+#if !GTK_CHECK_VERSION(3,12,0)
+#define GTK_STATE_FLAG_LINK (static_cast<GtkStateFlags>(1 << 9))
+#endif
+
 nsLookAndFeel::nsLookAndFeel()
     : nsXPLookAndFeel(),
 #if (MOZ_WIDGET_GTK == 2)
@@ -1457,14 +1461,26 @@ nsLookAndFeel::EnsureInit()
     }
     sMenuSupportsDrag = supports_menubar_drag;
 
-    colorValuePtr = nullptr;
-    gtk_widget_style_get(linkButton, "link-color", &colorValuePtr, nullptr);
-    if (colorValuePtr) {
-        colorValue = *colorValuePtr; // we can't pass deref pointers to GDK_COLOR_TO_NS_RGB
-        sNativeHyperLinkText = GDK_COLOR_TO_NS_RGB(colorValue);
-        gdk_color_free(colorValuePtr);
-    } else {
-        sNativeHyperLinkText = NS_RGB(0x00,0x00,0xEE);
+#if (MOZ_WIDGET_GTK == 3)
+    if (gtk_check_version(3, 12, 0) == nullptr) {
+        // TODO: It returns wrong color for themes which
+        // sets link color for GtkLabel only as we query
+        // GtkLinkButton style here.
+        style = gtk_widget_get_style_context(linkButton);
+        gtk_style_context_get_color(style, GTK_STATE_FLAG_LINK, &color);
+        sNativeHyperLinkText = GDK_RGBA_TO_NS_RGBA(color);
+    } else
+#endif
+    {
+        colorValuePtr = nullptr;
+        gtk_widget_style_get(linkButton, "link-color", &colorValuePtr, nullptr);
+        if (colorValuePtr) {
+            colorValue = *colorValuePtr; // we can't pass deref pointers to GDK_COLOR_TO_NS_RGB
+            sNativeHyperLinkText = GDK_COLOR_TO_NS_RGB(colorValue);
+            gdk_color_free(colorValuePtr);
+        } else {
+            sNativeHyperLinkText = NS_RGB(0x00,0x00,0xEE);
+        }
     }
 
     // invisible character styles

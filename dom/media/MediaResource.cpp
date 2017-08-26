@@ -74,7 +74,6 @@ MediaResource::Destroy()
 
 NS_IMPL_ADDREF(MediaResource)
 NS_IMPL_RELEASE_WITH_DESTROY(MediaResource, Destroy())
-NS_IMPL_QUERY_INTERFACE0(MediaResource)
 
 ChannelMediaResource::ChannelMediaResource(MediaResourceCallback* aCallback,
                                            nsIChannel* aChannel,
@@ -1163,7 +1162,6 @@ public:
     return std::max(aOffset, mSize);
   }
   bool    IsDataCachedToEndOfResource(int64_t aOffset) override { return true; }
-  bool    IsSuspended() override { return true; }
   bool    IsTransportSeekable() override { return true; }
 
   nsresult GetCachedRanges(MediaByteRangeSet& aRanges) override;

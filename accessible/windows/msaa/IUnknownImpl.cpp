@@ -9,10 +9,6 @@
 
 #include "nsDebug.h"
 
-#ifdef MOZ_CRASHREPORTER
-#include "nsExceptionHandler.h"
-#endif
-
 namespace mozilla {
 namespace a11y {
 

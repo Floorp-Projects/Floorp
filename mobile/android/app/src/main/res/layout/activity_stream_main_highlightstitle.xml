@@ -10,7 +10,6 @@
     android:layout_marginBottom="@dimen/activity_stream_base_margin"
     android:layout_marginRight="@dimen/activity_stream_base_margin"
     android:layout_marginEnd="@dimen/activity_stream_base_margin"
-    android:text="@string/activity_stream_highlights"
     android:layout_width="match_parent"
     android:layout_height="wrap_content"
     android:textStyle="bold"

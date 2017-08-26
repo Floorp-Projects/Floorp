@@ -810,7 +810,7 @@ MediaDecoder::FirstFrameLoaded(nsAutoPtr<MediaInfo> aInfo,
   LOG("FirstFrameLoaded, channels=%u rate=%u hasAudio=%d hasVideo=%d "
       "mPlayState=%s transportSeekable=%d",
       aInfo->mAudio.mChannels, aInfo->mAudio.mRate, aInfo->HasAudio(),
-      aInfo->HasVideo(), PlayStateStr(), GetResource()->IsTransportSeekable());
+      aInfo->HasVideo(), PlayStateStr(), IsTransportSeekable());
 
   mInfo = aInfo.forget();
 
@@ -1165,13 +1165,6 @@ MediaDecoder::HasSuspendTaint() const
 {
   MOZ_ASSERT(NS_IsMainThread());
   return mHasSuspendTaint;
-}
-
-bool
-MediaDecoder::IsTransportSeekable()
-{
-  MOZ_ASSERT(NS_IsMainThread());
-  return GetResource()->IsTransportSeekable();
 }
 
 bool

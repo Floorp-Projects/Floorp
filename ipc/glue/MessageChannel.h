@@ -21,10 +21,6 @@
 #include "mozilla/ipc/Neutering.h"
 #endif // defined(OS_WIN)
 #include "mozilla/ipc/Transport.h"
-#if defined(MOZ_CRASHREPORTER) && defined(OS_WIN)
-#include "mozilla/mozalloc_oom.h"
-#include "nsExceptionHandler.h"
-#endif
 #include "MessageLink.h"
 #include "nsILabelableRunnable.h"
 #include "nsThreadUtils.h"

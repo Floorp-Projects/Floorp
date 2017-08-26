@@ -21,8 +21,8 @@ import android.view.accessibility.AccessibilityEvent;
 import android.widget.TextView;
 import org.mozilla.gecko.R;
 import org.mozilla.gecko.activitystream.ActivityStreamTelemetry;
-import org.mozilla.gecko.activitystream.homepanel.model.Item;
 import org.mozilla.gecko.activitystream.homepanel.stream.StreamOverridablePageIconLayout;
+import org.mozilla.gecko.activitystream.homepanel.model.WebpageModel;
 import org.mozilla.gecko.home.HomePager;
 import org.mozilla.gecko.util.StringUtils;
 import org.mozilla.gecko.util.URIUtils;
@@ -49,7 +49,7 @@ import java.net.URISyntaxException;
     public BottomSheetContextMenu(final Context context,
                                   final ActivityStreamTelemetry.Extras.Builder telemetryExtraBuilder,
                                   final MenuMode mode,
-                                  final Item item,
+                                  final WebpageModel item,
                                   final boolean shouldOverrideIconWithImageProvider,
                                   HomePager.OnUrlOpenListener onUrlOpenListener,
                                   HomePager.OnUrlOpenInBackgroundListener onUrlOpenInBackgroundListener,
