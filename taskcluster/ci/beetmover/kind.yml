@@ -15,6 +15,8 @@ only-for-attributes:
   - nightly
 
 not-for-build-platforms:
-   - macosx64-nightly/opt
-   - win32-nightly/opt
-   - win64-nightly/opt
+  - linux-nightly/opt
+  - linux64-nightly/opt
+  - macosx64-nightly/opt
+  - win32-nightly/opt
+  - win64-nightly/opt
