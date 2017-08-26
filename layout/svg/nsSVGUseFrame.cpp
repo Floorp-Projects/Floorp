@@ -100,7 +100,7 @@ nsSVGUseFrame::AttributeChanged(int32_t         aNameSpaceID,
                                 nsIAtom*        aAttribute,
                                 int32_t         aModType)
 {
-  SVGUseElement *useElement = static_cast<SVGUseElement*>(mContent);
+  SVGUseElement *useElement = static_cast<SVGUseElement*>(GetContent());
 
   if (aNameSpaceID == kNameSpaceID_None) {
     if (aAttribute == nsGkAtoms::x || aAttribute == nsGkAtoms::y) {
@@ -150,7 +150,7 @@ nsSVGUseFrame::AttributeChanged(int32_t         aNameSpaceID,
 void
 nsSVGUseFrame::DestroyFrom(nsIFrame* aDestructRoot)
 {
-  RefPtr<SVGUseElement> use = static_cast<SVGUseElement*>(mContent);
+  RefPtr<SVGUseElement> use = static_cast<SVGUseElement*>(GetContent());
   nsSVGGFrame::DestroyFrom(aDestructRoot);
   use->DestroyAnonymousContent();
 }
@@ -166,7 +166,7 @@ nsSVGUseFrame::ReflowSVG()
   // handled by the nsSVGOuterSVGFrame for the anonymous <svg> that will be
   // created for that purpose.
   float x, y;
-  static_cast<SVGUseElement*>(mContent)->
+  static_cast<SVGUseElement*>(GetContent())->
     GetAnimatedLengthValues(&x, &y, nullptr);
   mRect.MoveTo(nsLayoutUtils::RoundGfxRectToAppRect(
                  gfxRect(x, y, 0.0, 0.0),
@@ -188,7 +188,7 @@ nsSVGUseFrame::NotifySVGChanged(uint32_t aFlags)
       !(aFlags & TRANSFORM_CHANGED)) {
     // Coordinate context changes affect mCanvasTM if we have a
     // percentage 'x' or 'y'
-    SVGUseElement *use = static_cast<SVGUseElement*>(mContent);
+    SVGUseElement *use = static_cast<SVGUseElement*>(GetContent());
     if (use->mLengthAttributes[SVGUseElement::ATTR_X].IsPercentage() ||
         use->mLengthAttributes[SVGUseElement::ATTR_Y].IsPercentage()) {
       aFlags |= TRANSFORM_CHANGED;
@@ -215,7 +215,7 @@ nsSVGUseFrame::NotifySVGChanged(uint32_t aFlags)
 nsresult
 nsSVGUseFrame::CreateAnonymousContent(nsTArray<ContentInfo>& aElements)
 {
-  SVGUseElement *use = static_cast<SVGUseElement*>(mContent);
+  SVGUseElement *use = static_cast<SVGUseElement*>(GetContent());
 
   nsIContent* clone = use->CreateAnonymousContent();
   nsLayoutUtils::PostRestyleEvent(
@@ -231,7 +231,7 @@ void
 nsSVGUseFrame::AppendAnonymousContentTo(nsTArray<nsIContent*>& aElements,
                                         uint32_t aFilter)
 {
-  SVGUseElement *use = static_cast<SVGUseElement*>(mContent);
+  SVGUseElement *use = static_cast<SVGUseElement*>(GetContent());
   nsIContent* clone = use->GetAnonymousContent();
   if (clone) {
     aElements.AppendElement(clone);
