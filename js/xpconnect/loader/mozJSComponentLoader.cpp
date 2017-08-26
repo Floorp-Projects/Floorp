@@ -301,6 +301,8 @@ NS_IMPL_ISUPPORTS(mozJSComponentLoader,
 nsresult
 mozJSComponentLoader::ReallyInit()
 {
+    MOZ_ASSERT(!mInitialized);
+
     mShareLoaderGlobal = Preferences::GetBool("jsloader.shareGlobal");
 
     nsresult rv;
@@ -468,7 +470,7 @@ mozJSComponentLoader::SizeOfIncludingThis(MallocSizeOf aMallocSizeOf)
 
 void
 mozJSComponentLoader::CreateLoaderGlobal(JSContext* aCx,
-                                         nsACString& aLocation,
+                                         const nsACString& aLocation,
                                          JSAddonId* aAddonID,
                                          MutableHandleObject aGlobal)
 {
@@ -551,6 +553,31 @@ mozJSComponentLoader::ReuseGlobal(bool aIsAddon, nsIURI* aURI)
 }
 
 JSObject*
+mozJSComponentLoader::GetSharedGlobal(JSContext* aCx)
+{
+    if (!mLoaderGlobal) {
+        MOZ_ASSERT(mShareLoaderGlobal);
+
+        JS::RootedObject globalObj(aCx);
+        CreateLoaderGlobal(aCx, NS_LITERAL_CSTRING("shared JSM global"),
+                           nullptr, &globalObj);
+
+        // If we fail to create a module global this early, we're not going to
+        // get very far, so just bail out now.
+        MOZ_RELEASE_ASSERT(globalObj);
+        mLoaderGlobal = globalObj;
+
+        // AutoEntryScript required to invoke debugger hook, which is a
+        // Gecko-specific concept at present.
+        dom::AutoEntryScript aes(globalObj,
+                                 "component loader report global");
+        JS_FireOnNewGlobalObject(aes.cx(), globalObj);
+    }
+
+    return mLoaderGlobal;
+}
+
+JSObject*
 mozJSComponentLoader::PrepareObjectForLocation(JSContext* aCx,
                                                nsIFile* aComponentFile,
                                                nsIURI* aURI,
@@ -567,25 +594,10 @@ mozJSComponentLoader::PrepareObjectForLocation(JSContext* aCx,
 
     bool createdNewGlobal = false;
     RootedObject globalObj(aCx);
-    if (reuseGlobal)
-        globalObj = mLoaderGlobal;
-
-    if (!globalObj) {
-        nsAutoCString globalLocation;
-        if (reuseGlobal) {
-            globalLocation.AssignLiteral("shared JSM global");
-        } else {
-            globalLocation.Assign(nativePath);
-        }
-
-        CreateLoaderGlobal(aCx, globalLocation,
-                           addonId, &globalObj);
-        NS_ENSURE_TRUE(globalObj, nullptr);
-
-        if (reuseGlobal) {
-            mLoaderGlobal = globalObj;
-        }
-
+    if (reuseGlobal) {
+        globalObj = GetSharedGlobal(aCx);
+    } else if (!globalObj) {
+        CreateLoaderGlobal(aCx, nativePath, addonId, &globalObj);
         createdNewGlobal = true;
     }
 
