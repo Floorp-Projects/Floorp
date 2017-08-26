@@ -3323,7 +3323,7 @@ nsFrame::GetContentForEvent(WidgetEvent* aEvent,
 void
 nsFrame::FireDOMEvent(const nsAString& aDOMEventName, nsIContent *aContent)
 {
-  nsIContent* target = aContent ? aContent : mContent;
+  nsIContent* target = aContent ? aContent : GetContent();
 
   if (target) {
     RefPtr<AsyncEventDispatcher> asyncDispatcher =
