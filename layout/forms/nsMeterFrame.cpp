@@ -145,7 +145,7 @@ nsMeterFrame::ReflowBarFrame(nsIFrame*                aBarFrame,
   nscoord yoffset = aReflowInput.ComputedPhysicalBorderPadding().top;
 
   // NOTE: Introduce a new function getPosition in the content part ?
-  HTMLMeterElement* meterElement = static_cast<HTMLMeterElement*>(mContent);
+  HTMLMeterElement* meterElement = static_cast<HTMLMeterElement*>(GetContent());
 
   double max = meterElement->Max();
   double min = meterElement->Min();
