@@ -23,10 +23,6 @@
 // set to true and stay userDisabled. This add-on is not used in tests that
 // start with add-ons blocked as it would be identical to softblock3
 
-// softblock5 is a theme. Currently themes just get disabled when they become
-// softblocked and have to be manually re-enabled if they become completely
-// unblocked (bug 657520)
-
 var Cc = Components.classes;
 var Ci = Components.interfaces;
 var Cu = Components.utils;
@@ -55,18 +51,6 @@ mapFile("/data/blocklistchange/manual_update.xml", testserver);
 
 testserver.registerDirectory("/addons/", do_get_file("addons"));
 
-
-var default_theme = {
-  id: "default@tests.mozilla.org",
-  version: "1.0",
-  name: "Softblocked add-on",
-  internalName: "classic/1.0",
-  targetApplications: [{
-    id: "xpcshell@tests.mozilla.org",
-    minVersion: "1",
-    maxVersion: "3"
-  }]
-};
 
 var softblock1_1 = {
   id: "softblock1@tests.mozilla.org",
@@ -212,45 +196,6 @@ var softblock4_3 = {
   }]
 };
 
-var softblock5_1 = {
-  id: "softblock5@tests.mozilla.org",
-  version: "1.0",
-  name: "Softblocked add-on",
-  updateURL: "http://localhost:" + gPort + "/data/blocklistchange/addon_update1.rdf",
-  internalName: "test/1.0",
-  targetApplications: [{
-    id: "xpcshell@tests.mozilla.org",
-    minVersion: "1",
-    maxVersion: "3"
-  }]
-};
-
-var softblock5_2 = {
-  id: "softblock5@tests.mozilla.org",
-  version: "2.0",
-  name: "Softblocked add-on",
-  updateURL: "http://localhost:" + gPort + "/data/blocklistchange/addon_update2.rdf",
-  internalName: "test/1.0",
-  targetApplications: [{
-    id: "xpcshell@tests.mozilla.org",
-    minVersion: "1",
-    maxVersion: "3"
-  }]
-};
-
-var softblock5_3 = {
-  id: "softblock5@tests.mozilla.org",
-  version: "3.0",
-  name: "Softblocked add-on",
-  updateURL: "http://localhost:" + gPort + "/data/blocklistchange/addon_update3.rdf",
-  internalName: "test/1.0",
-  targetApplications: [{
-    id: "xpcshell@tests.mozilla.org",
-    minVersion: "1",
-    maxVersion: "3"
-  }]
-};
-
 var hardblock_1 = {
   id: "hardblock@tests.mozilla.org",
   version: "1.0",
@@ -327,7 +272,6 @@ const ADDON_IDS = ["softblock1@tests.mozilla.org",
                    "softblock2@tests.mozilla.org",
                    "softblock3@tests.mozilla.org",
                    "softblock4@tests.mozilla.org",
-                   "softblock5@tests.mozilla.org",
                    "hardblock@tests.mozilla.org",
                    "regexpblock@tests.mozilla.org"];
 
@@ -458,7 +402,7 @@ function Pbackground_update() {
 // Manually updates the test add-ons to the given version
 function Pmanual_update(aVersion) {
   let Pinstalls = [];
-  for (let name of ["soft1", "soft2", "soft3", "soft4", "soft5", "hard1", "regexp1"]) {
+  for (let name of ["soft1", "soft2", "soft3", "soft4", "hard1", "regexp1"]) {
     Pinstalls.push(
       AddonManager.getInstallForURL(
         `http://localhost:${gPort}/addons/blocklist_${name}_${aVersion}.xpi`,
@@ -536,19 +480,16 @@ function run_test() {
 }
 
 add_task(async function init() {
-  writeInstallRDFForExtension(default_theme, profileDir);
   writeInstallRDFForExtension(softblock1_1, profileDir);
   writeInstallRDFForExtension(softblock2_1, profileDir);
   writeInstallRDFForExtension(softblock3_1, profileDir);
   writeInstallRDFForExtension(softblock4_1, profileDir);
-  writeInstallRDFForExtension(softblock5_1, profileDir);
   writeInstallRDFForExtension(hardblock_1, profileDir);
   writeInstallRDFForExtension(regexpblock_1, profileDir);
   startupManager();
 
-  let [/* s1 */, /* s2 */, /* s3 */, s4, s5, /* h, r */] = await promiseAddonsByIDs(ADDON_IDS);
+  let [/* s1 */, /* s2 */, /* s3 */, s4, /* h, r */] = await promiseAddonsByIDs(ADDON_IDS);
   s4.userDisabled = true;
-  s5.userDisabled = false;
 });
 
 // Starts with add-ons unblocked and then switches application versions to
@@ -558,31 +499,27 @@ add_task(async function run_app_update_test() {
   await Pload_blocklist("app_update.xml");
   await promiseRestartManager();
 
-  let [s1, s2, s3, s4, s5, h, r] = await promiseAddonsByIDs(ADDON_IDS);
+  let [s1, s2, s3, s4, h, r] = await promiseAddonsByIDs(ADDON_IDS);
 
   check_addon(s1, "1.0", false, false, Ci.nsIBlocklistService.STATE_NOT_BLOCKED);
   check_addon(s2, "1.0", false, false, Ci.nsIBlocklistService.STATE_NOT_BLOCKED);
   check_addon(s3, "1.0", false, false, Ci.nsIBlocklistService.STATE_NOT_BLOCKED);
   check_addon(s4, "1.0", true, false, Ci.nsIBlocklistService.STATE_NOT_BLOCKED);
-  check_addon(s5, "1.0", false, false, Ci.nsIBlocklistService.STATE_NOT_BLOCKED);
   check_addon(h, "1.0", false, false, Ci.nsIBlocklistService.STATE_NOT_BLOCKED);
   check_addon(r, "1.0", false, false, Ci.nsIBlocklistService.STATE_NOT_BLOCKED);
-  do_check_eq(Services.prefs.getCharPref("general.skins.selectedSkin"), "test/1.0");
 });
 
 add_task(async function app_update_step_2() {
   await promiseRestartManager("2");
 
-  let [s1, s2, s3, s4, s5, h, r] = await promiseAddonsByIDs(ADDON_IDS);
+  let [s1, s2, s3, s4, h, r] = await promiseAddonsByIDs(ADDON_IDS);
 
   check_addon(s1, "1.0", true, true, Ci.nsIBlocklistService.STATE_SOFTBLOCKED);
   check_addon(s2, "1.0", true, true, Ci.nsIBlocklistService.STATE_SOFTBLOCKED);
   check_addon(s3, "1.0", true, true, Ci.nsIBlocklistService.STATE_SOFTBLOCKED);
   check_addon(s4, "1.0", true, false, Ci.nsIBlocklistService.STATE_SOFTBLOCKED);
-  check_addon(s5, "1.0", true, false, Ci.nsIBlocklistService.STATE_SOFTBLOCKED);
   check_addon(h, "1.0", false, false, Ci.nsIBlocklistService.STATE_BLOCKED);
   check_addon(r, "1.0", false, false, Ci.nsIBlocklistService.STATE_BLOCKED);
-  do_check_eq(Services.prefs.getCharPref("general.skins.selectedSkin"), "classic/1.0");
 
   s2.userDisabled = false;
   s2.userDisabled = true;
@@ -596,35 +533,30 @@ add_task(async function app_update_step_3() {
 
   await promiseRestartManager("2.5");
 
-  let [s1, s2, s3, s4, s5, h, r] = await promiseAddonsByIDs(ADDON_IDS);
+  let [s1, s2, s3, s4, h, r] = await promiseAddonsByIDs(ADDON_IDS);
 
   check_addon(s1, "1.0", true, true, Ci.nsIBlocklistService.STATE_SOFTBLOCKED);
   check_addon(s2, "1.0", true, false, Ci.nsIBlocklistService.STATE_SOFTBLOCKED);
   check_addon(s3, "1.0", false, false, Ci.nsIBlocklistService.STATE_SOFTBLOCKED);
   check_addon(s4, "1.0", true, false, Ci.nsIBlocklistService.STATE_SOFTBLOCKED);
-  check_addon(s5, "1.0", true, false, Ci.nsIBlocklistService.STATE_SOFTBLOCKED);
   check_addon(h, "1.0", false, false, Ci.nsIBlocklistService.STATE_BLOCKED);
   check_addon(r, "1.0", false, false, Ci.nsIBlocklistService.STATE_BLOCKED);
-  do_check_eq(Services.prefs.getCharPref("general.skins.selectedSkin"), "classic/1.0");
 });
 
 add_task(async function app_update_step_4() {
   await promiseRestartManager("1");
 
-  let [s1, s2, s3, s4, s5, h, r] = await promiseAddonsByIDs(ADDON_IDS);
+  let [s1, s2, s3, s4, h, r] = await promiseAddonsByIDs(ADDON_IDS);
 
   check_addon(s1, "1.0", false, false, Ci.nsIBlocklistService.STATE_NOT_BLOCKED);
   check_addon(s2, "1.0", true, false, Ci.nsIBlocklistService.STATE_NOT_BLOCKED);
   check_addon(s3, "1.0", false, false, Ci.nsIBlocklistService.STATE_NOT_BLOCKED);
   check_addon(s4, "1.0", true, false, Ci.nsIBlocklistService.STATE_NOT_BLOCKED);
-  check_addon(s5, "1.0", true, false, Ci.nsIBlocklistService.STATE_NOT_BLOCKED);
   check_addon(h, "1.0", false, false, Ci.nsIBlocklistService.STATE_NOT_BLOCKED);
   check_addon(r, "1.0", false, false, Ci.nsIBlocklistService.STATE_NOT_BLOCKED);
-  do_check_eq(Services.prefs.getCharPref("general.skins.selectedSkin"), "classic/1.0");
 
   s1.userDisabled = false;
   s2.userDisabled = false;
-  s5.userDisabled = false;
 });
 
 // Starts with add-ons unblocked and then switches application versions to
@@ -633,16 +565,14 @@ add_task(async function app_update_step_4() {
 add_task(async function run_app_update_schema_test() {
   await promiseRestartManager();
 
-  let [s1, s2, s3, s4, s5, h, r] = await promiseAddonsByIDs(ADDON_IDS);
+  let [s1, s2, s3, s4, h, r] = await promiseAddonsByIDs(ADDON_IDS);
 
   check_addon(s1, "1.0", false, false, Ci.nsIBlocklistService.STATE_NOT_BLOCKED);
   check_addon(s2, "1.0", false, false, Ci.nsIBlocklistService.STATE_NOT_BLOCKED);
   check_addon(s3, "1.0", false, false, Ci.nsIBlocklistService.STATE_NOT_BLOCKED);
   check_addon(s4, "1.0", true, false, Ci.nsIBlocklistService.STATE_NOT_BLOCKED);
-  check_addon(s5, "1.0", false, false, Ci.nsIBlocklistService.STATE_NOT_BLOCKED);
   check_addon(h, "1.0", false, false, Ci.nsIBlocklistService.STATE_NOT_BLOCKED);
   check_addon(r, "1.0", false, false, Ci.nsIBlocklistService.STATE_NOT_BLOCKED);
-  do_check_eq(Services.prefs.getCharPref("general.skins.selectedSkin"), "test/1.0");
 });
 
 add_task(async function update_schema_2() {
@@ -652,16 +582,14 @@ add_task(async function update_schema_2() {
   gAppInfo.version = "2";
   startupManager(true);
 
-  let [s1, s2, s3, s4, s5, h, r] = await promiseAddonsByIDs(ADDON_IDS);
+  let [s1, s2, s3, s4, h, r] = await promiseAddonsByIDs(ADDON_IDS);
 
   check_addon(s1, "1.0", true, true, Ci.nsIBlocklistService.STATE_SOFTBLOCKED);
   check_addon(s2, "1.0", true, true, Ci.nsIBlocklistService.STATE_SOFTBLOCKED);
   check_addon(s3, "1.0", true, true, Ci.nsIBlocklistService.STATE_SOFTBLOCKED);
   check_addon(s4, "1.0", true, false, Ci.nsIBlocklistService.STATE_SOFTBLOCKED);
-  check_addon(s5, "1.0", true, false, Ci.nsIBlocklistService.STATE_SOFTBLOCKED);
   check_addon(h, "1.0", false, false, Ci.nsIBlocklistService.STATE_BLOCKED);
   check_addon(r, "1.0", false, false, Ci.nsIBlocklistService.STATE_BLOCKED);
-  do_check_eq(Services.prefs.getCharPref("general.skins.selectedSkin"), "classic/1.0");
 
   s2.userDisabled = false;
   s2.userDisabled = true;
@@ -678,16 +606,14 @@ add_task(async function update_schema_3() {
   gAppInfo.version = "2.5";
   startupManager(true);
 
-  let [s1, s2, s3, s4, s5, h, r] = await promiseAddonsByIDs(ADDON_IDS);
+  let [s1, s2, s3, s4, h, r] = await promiseAddonsByIDs(ADDON_IDS);
 
   check_addon(s1, "1.0", true, true, Ci.nsIBlocklistService.STATE_SOFTBLOCKED);
   check_addon(s2, "1.0", true, false, Ci.nsIBlocklistService.STATE_SOFTBLOCKED);
   check_addon(s3, "1.0", false, false, Ci.nsIBlocklistService.STATE_SOFTBLOCKED);
   check_addon(s4, "1.0", true, false, Ci.nsIBlocklistService.STATE_SOFTBLOCKED);
-  check_addon(s5, "1.0", true, false, Ci.nsIBlocklistService.STATE_SOFTBLOCKED);
   check_addon(h, "1.0", false, false, Ci.nsIBlocklistService.STATE_BLOCKED);
   check_addon(r, "1.0", false, false, Ci.nsIBlocklistService.STATE_BLOCKED);
-  do_check_eq(Services.prefs.getCharPref("general.skins.selectedSkin"), "classic/1.0");
 });
 
 add_task(async function update_schema_4() {
@@ -696,16 +622,14 @@ add_task(async function update_schema_4() {
   changeXPIDBVersion(100);
   startupManager(false);
 
-  let [s1, s2, s3, s4, s5, h, r] = await promiseAddonsByIDs(ADDON_IDS);
+  let [s1, s2, s3, s4, h, r] = await promiseAddonsByIDs(ADDON_IDS);
 
   check_addon(s1, "1.0", true, true, Ci.nsIBlocklistService.STATE_SOFTBLOCKED);
   check_addon(s2, "1.0", true, false, Ci.nsIBlocklistService.STATE_SOFTBLOCKED);
   check_addon(s3, "1.0", false, false, Ci.nsIBlocklistService.STATE_SOFTBLOCKED);
   check_addon(s4, "1.0", true, false, Ci.nsIBlocklistService.STATE_SOFTBLOCKED);
-  check_addon(s5, "1.0", true, false, Ci.nsIBlocklistService.STATE_SOFTBLOCKED);
   check_addon(h, "1.0", false, false, Ci.nsIBlocklistService.STATE_BLOCKED);
   check_addon(r, "1.0", false, false, Ci.nsIBlocklistService.STATE_BLOCKED);
-  do_check_eq(Services.prefs.getCharPref("general.skins.selectedSkin"), "classic/1.0");
 });
 
 add_task(async function update_schema_5() {
@@ -715,20 +639,17 @@ add_task(async function update_schema_5() {
   gAppInfo.version = "1";
   startupManager(true);
 
-  let [s1, s2, s3, s4, s5, h, r] = await promiseAddonsByIDs(ADDON_IDS);
+  let [s1, s2, s3, s4, h, r] = await promiseAddonsByIDs(ADDON_IDS);
 
   check_addon(s1, "1.0", false, false, Ci.nsIBlocklistService.STATE_NOT_BLOCKED);
   check_addon(s2, "1.0", true, false, Ci.nsIBlocklistService.STATE_NOT_BLOCKED);
   check_addon(s3, "1.0", false, false, Ci.nsIBlocklistService.STATE_NOT_BLOCKED);
   check_addon(s4, "1.0", true, false, Ci.nsIBlocklistService.STATE_NOT_BLOCKED);
-  check_addon(s5, "1.0", true, false, Ci.nsIBlocklistService.STATE_NOT_BLOCKED);
   check_addon(h, "1.0", false, false, Ci.nsIBlocklistService.STATE_NOT_BLOCKED);
   check_addon(r, "1.0", false, false, Ci.nsIBlocklistService.STATE_NOT_BLOCKED);
-  do_check_eq(Services.prefs.getCharPref("general.skins.selectedSkin"), "classic/1.0");
 
   s1.userDisabled = false;
   s2.userDisabled = false;
-  s5.userDisabled = false;
 });
 
 // Starts with add-ons unblocked and then loads new blocklists to change add-ons
@@ -737,30 +658,26 @@ add_task(async function run_blocklist_update_test() {
   await Pload_blocklist("blocklist_update1.xml");
   await promiseRestartManager();
 
-  let [s1, s2, s3, s4, s5, h, r] = await promiseAddonsByIDs(ADDON_IDS);
+  let [s1, s2, s3, s4, h, r] = await promiseAddonsByIDs(ADDON_IDS);
 
   check_addon(s1, "1.0", false, false, Ci.nsIBlocklistService.STATE_NOT_BLOCKED);
   check_addon(s2, "1.0", false, false, Ci.nsIBlocklistService.STATE_NOT_BLOCKED);
   check_addon(s3, "1.0", false, false, Ci.nsIBlocklistService.STATE_NOT_BLOCKED);
   check_addon(s4, "1.0", true, false, Ci.nsIBlocklistService.STATE_NOT_BLOCKED);
-  check_addon(s5, "1.0", false, false, Ci.nsIBlocklistService.STATE_NOT_BLOCKED);
   check_addon(h, "1.0", false, false, Ci.nsIBlocklistService.STATE_NOT_BLOCKED);
   check_addon(r, "1.0", false, false, Ci.nsIBlocklistService.STATE_NOT_BLOCKED);
-  do_check_eq(Services.prefs.getCharPref("general.skins.selectedSkin"), "test/1.0");
 
   await Pload_blocklist("blocklist_update2.xml");
   await promiseRestartManager();
 
-  [s1, s2, s3, s4, s5, h, r] = await promiseAddonsByIDs(ADDON_IDS);
+  [s1, s2, s3, s4, h, r] = await promiseAddonsByIDs(ADDON_IDS);
 
   check_addon(s1, "1.0", true, true, Ci.nsIBlocklistService.STATE_SOFTBLOCKED);
   check_addon(s2, "1.0", true, true, Ci.nsIBlocklistService.STATE_SOFTBLOCKED);
   check_addon(s3, "1.0", true, true, Ci.nsIBlocklistService.STATE_SOFTBLOCKED);
   check_addon(s4, "1.0", true, false, Ci.nsIBlocklistService.STATE_SOFTBLOCKED);
-  check_addon(s5, "1.0", true, false, Ci.nsIBlocklistService.STATE_SOFTBLOCKED);
   check_addon(h, "1.0", false, false, Ci.nsIBlocklistService.STATE_BLOCKED);
   check_addon(r, "1.0", false, false, Ci.nsIBlocklistService.STATE_BLOCKED);
-  do_check_eq(Services.prefs.getCharPref("general.skins.selectedSkin"), "classic/1.0");
 
   s2.userDisabled = false;
   s2.userDisabled = true;
@@ -773,34 +690,29 @@ add_task(async function run_blocklist_update_test() {
   await Pload_blocklist("blocklist_update2.xml");
   await promiseRestartManager();
 
-  [s1, s2, s3, s4, s5, h, r] = await promiseAddonsByIDs(ADDON_IDS);
+  [s1, s2, s3, s4, h, r] = await promiseAddonsByIDs(ADDON_IDS);
 
   check_addon(s1, "1.0", true, true, Ci.nsIBlocklistService.STATE_SOFTBLOCKED);
   check_addon(s2, "1.0", true, false, Ci.nsIBlocklistService.STATE_SOFTBLOCKED);
   check_addon(s3, "1.0", false, false, Ci.nsIBlocklistService.STATE_SOFTBLOCKED);
   check_addon(s4, "1.0", true, false, Ci.nsIBlocklistService.STATE_SOFTBLOCKED);
-  check_addon(s5, "1.0", true, false, Ci.nsIBlocklistService.STATE_SOFTBLOCKED);
   check_addon(h, "1.0", false, false, Ci.nsIBlocklistService.STATE_BLOCKED);
   check_addon(r, "1.0", false, false, Ci.nsIBlocklistService.STATE_BLOCKED);
-  do_check_eq(Services.prefs.getCharPref("general.skins.selectedSkin"), "classic/1.0");
 
   await Pload_blocklist("blocklist_update1.xml");
   await promiseRestartManager();
 
-  [s1, s2, s3, s4, s5, h, r] = await promiseAddonsByIDs(ADDON_IDS);
+  [s1, s2, s3, s4, h, r] = await promiseAddonsByIDs(ADDON_IDS);
 
   check_addon(s1, "1.0", false, false, Ci.nsIBlocklistService.STATE_NOT_BLOCKED);
   check_addon(s2, "1.0", true, false, Ci.nsIBlocklistService.STATE_NOT_BLOCKED);
   check_addon(s3, "1.0", false, false, Ci.nsIBlocklistService.STATE_NOT_BLOCKED);
   check_addon(s4, "1.0", true, false, Ci.nsIBlocklistService.STATE_NOT_BLOCKED);
-  check_addon(s5, "1.0", true, false, Ci.nsIBlocklistService.STATE_NOT_BLOCKED);
   check_addon(h, "1.0", false, false, Ci.nsIBlocklistService.STATE_NOT_BLOCKED);
   check_addon(r, "1.0", false, false, Ci.nsIBlocklistService.STATE_NOT_BLOCKED);
-  do_check_eq(Services.prefs.getCharPref("general.skins.selectedSkin"), "classic/1.0");
 
   s1.userDisabled = false;
   s2.userDisabled = false;
-  s5.userDisabled = false;
 });
 
 // Starts with add-ons unblocked and then new versions are installed outside of
@@ -809,16 +721,14 @@ add_task(async function run_addon_change_test() {
   await Pload_blocklist("addon_change.xml");
   await promiseRestartManager();
 
-  let [s1, s2, s3, s4, s5, h, r] = await promiseAddonsByIDs(ADDON_IDS);
+  let [s1, s2, s3, s4, h, r] = await promiseAddonsByIDs(ADDON_IDS);
 
   check_addon(s1, "1.0", false, false, Ci.nsIBlocklistService.STATE_NOT_BLOCKED);
   check_addon(s2, "1.0", false, false, Ci.nsIBlocklistService.STATE_NOT_BLOCKED);
   check_addon(s3, "1.0", false, false, Ci.nsIBlocklistService.STATE_NOT_BLOCKED);
   check_addon(s4, "1.0", true, false, Ci.nsIBlocklistService.STATE_NOT_BLOCKED);
-  check_addon(s5, "1.0", false, false, Ci.nsIBlocklistService.STATE_NOT_BLOCKED);
   check_addon(h, "1.0", false, false, Ci.nsIBlocklistService.STATE_NOT_BLOCKED);
   check_addon(r, "1.0", false, false, Ci.nsIBlocklistService.STATE_NOT_BLOCKED);
-  do_check_eq(Services.prefs.getCharPref("general.skins.selectedSkin"), "test/1.0");
 });
 
 add_task(async function run_addon_change_2() {
@@ -832,8 +742,6 @@ add_task(async function run_addon_change_2() {
   setExtensionModifiedTime(getFileForAddon(profileDir, softblock3_2.id), Date.now() + 10000);
   writeInstallRDFForExtension(softblock4_2, profileDir);
   setExtensionModifiedTime(getFileForAddon(profileDir, softblock4_2.id), Date.now() + 10000);
-  writeInstallRDFForExtension(softblock5_2, profileDir);
-  setExtensionModifiedTime(getFileForAddon(profileDir, softblock5_2.id), Date.now() + 10000);
   writeInstallRDFForExtension(hardblock_2, profileDir);
   setExtensionModifiedTime(getFileForAddon(profileDir, hardblock_2.id), Date.now() + 10000);
   writeInstallRDFForExtension(regexpblock_2, profileDir);
@@ -841,16 +749,14 @@ add_task(async function run_addon_change_2() {
 
   startupManager(false);
 
-  let [s1, s2, s3, s4, s5, h, r] = await promiseAddonsByIDs(ADDON_IDS);
+  let [s1, s2, s3, s4, h, r] = await promiseAddonsByIDs(ADDON_IDS);
 
   check_addon(s1, "2.0", true, true, Ci.nsIBlocklistService.STATE_SOFTBLOCKED);
   check_addon(s2, "2.0", true, true, Ci.nsIBlocklistService.STATE_SOFTBLOCKED);
   check_addon(s3, "2.0", true, true, Ci.nsIBlocklistService.STATE_SOFTBLOCKED);
   check_addon(s4, "2.0", true, false, Ci.nsIBlocklistService.STATE_SOFTBLOCKED);
-  check_addon(s5, "2.0", true, false, Ci.nsIBlocklistService.STATE_SOFTBLOCKED);
   check_addon(h, "2.0", false, false, Ci.nsIBlocklistService.STATE_BLOCKED);
   check_addon(r, "2.0", false, false, Ci.nsIBlocklistService.STATE_BLOCKED);
-  do_check_eq(Services.prefs.getCharPref("general.skins.selectedSkin"), "classic/1.0");
 
   s2.userDisabled = false;
   s2.userDisabled = true;
@@ -872,8 +778,6 @@ add_task(async function run_addon_change_3() {
   setExtensionModifiedTime(getFileForAddon(profileDir, softblock3_3.id), Date.now() + 20000);
   writeInstallRDFForExtension(softblock4_3, profileDir);
   setExtensionModifiedTime(getFileForAddon(profileDir, softblock4_3.id), Date.now() + 20000);
-  writeInstallRDFForExtension(softblock5_3, profileDir);
-  setExtensionModifiedTime(getFileForAddon(profileDir, softblock5_3.id), Date.now() + 20000);
   writeInstallRDFForExtension(hardblock_3, profileDir);
   setExtensionModifiedTime(getFileForAddon(profileDir, hardblock_3.id), Date.now() + 20000);
   writeInstallRDFForExtension(regexpblock_3, profileDir);
@@ -881,16 +785,14 @@ add_task(async function run_addon_change_3() {
 
   startupManager(false);
 
-  let [s1, s2, s3, s4, s5, h, r] = await promiseAddonsByIDs(ADDON_IDS);
+  let [s1, s2, s3, s4, h, r] = await promiseAddonsByIDs(ADDON_IDS);
 
   check_addon(s1, "3.0", true, true, Ci.nsIBlocklistService.STATE_SOFTBLOCKED);
   check_addon(s2, "3.0", true, false, Ci.nsIBlocklistService.STATE_SOFTBLOCKED);
   check_addon(s3, "3.0", false, false, Ci.nsIBlocklistService.STATE_SOFTBLOCKED);
   check_addon(s4, "3.0", true, false, Ci.nsIBlocklistService.STATE_SOFTBLOCKED);
-  check_addon(s5, "3.0", true, false, Ci.nsIBlocklistService.STATE_SOFTBLOCKED);
   check_addon(h, "3.0", false, false, Ci.nsIBlocklistService.STATE_BLOCKED);
   check_addon(r, "3.0", false, false, Ci.nsIBlocklistService.STATE_BLOCKED);
-  do_check_eq(Services.prefs.getCharPref("general.skins.selectedSkin"), "classic/1.0");
 });
 
 add_task(async function run_addon_change_4() {
@@ -904,8 +806,6 @@ add_task(async function run_addon_change_4() {
   setExtensionModifiedTime(getFileForAddon(profileDir, softblock3_1.id), Date.now() + 30000);
   writeInstallRDFForExtension(softblock4_1, profileDir);
   setExtensionModifiedTime(getFileForAddon(profileDir, softblock4_1.id), Date.now() + 30000);
-  writeInstallRDFForExtension(softblock5_1, profileDir);
-  setExtensionModifiedTime(getFileForAddon(profileDir, softblock5_1.id), Date.now() + 30000);
   writeInstallRDFForExtension(hardblock_1, profileDir);
   setExtensionModifiedTime(getFileForAddon(profileDir, hardblock_1.id), Date.now() + 30000);
   writeInstallRDFForExtension(regexpblock_1, profileDir);
@@ -913,20 +813,17 @@ add_task(async function run_addon_change_4() {
 
   startupManager(false);
 
-  let [s1, s2, s3, s4, s5, h, r] = await promiseAddonsByIDs(ADDON_IDS);
+  let [s1, s2, s3, s4, h, r] = await promiseAddonsByIDs(ADDON_IDS);
 
   check_addon(s1, "1.0", false, false, Ci.nsIBlocklistService.STATE_NOT_BLOCKED);
   check_addon(s2, "1.0", true, false, Ci.nsIBlocklistService.STATE_NOT_BLOCKED);
   check_addon(s3, "1.0", false, false, Ci.nsIBlocklistService.STATE_NOT_BLOCKED);
   check_addon(s4, "1.0", true, false, Ci.nsIBlocklistService.STATE_NOT_BLOCKED);
-  check_addon(s5, "1.0", true, false, Ci.nsIBlocklistService.STATE_NOT_BLOCKED);
   check_addon(h, "1.0", false, false, Ci.nsIBlocklistService.STATE_NOT_BLOCKED);
   check_addon(r, "1.0", false, false, Ci.nsIBlocklistService.STATE_NOT_BLOCKED);
-  do_check_eq(Services.prefs.getCharPref("general.skins.selectedSkin"), "classic/1.0");
 
   s1.userDisabled = false;
   s2.userDisabled = false;
-  s5.userDisabled = false;
 });
 
 // Starts with add-ons blocked and then new versions are installed outside of
@@ -938,7 +835,6 @@ add_task(async function run_addon_change_2_test() {
   getFileForAddon(profileDir, softblock2_1.id).remove(true);
   getFileForAddon(profileDir, softblock3_1.id).remove(true);
   getFileForAddon(profileDir, softblock4_1.id).remove(true);
-  getFileForAddon(profileDir, softblock5_1.id).remove(true);
   getFileForAddon(profileDir, hardblock_1.id).remove(true);
   getFileForAddon(profileDir, regexpblock_1.id).remove(true);
 
@@ -949,13 +845,12 @@ add_task(async function run_addon_change_2_test() {
   writeInstallRDFForExtension(softblock2_2, profileDir);
   writeInstallRDFForExtension(softblock3_2, profileDir);
   writeInstallRDFForExtension(softblock4_2, profileDir);
-  writeInstallRDFForExtension(softblock5_2, profileDir);
   writeInstallRDFForExtension(hardblock_2, profileDir);
   writeInstallRDFForExtension(regexpblock_2, profileDir);
 
   startupManager(false);
 
-  let [s1, s2, s3, /* s4 */, /* s5 */, h, r] = await promiseAddonsByIDs(ADDON_IDS);
+  let [s1, s2, s3, /* s4 */, h, r] = await promiseAddonsByIDs(ADDON_IDS);
 
   check_addon(s1, "2.0", true, true, Ci.nsIBlocklistService.STATE_SOFTBLOCKED);
   check_addon(s2, "2.0", true, true, Ci.nsIBlocklistService.STATE_SOFTBLOCKED);
@@ -983,8 +878,6 @@ add_task(async function addon_change_2_test_2() {
   setExtensionModifiedTime(getFileForAddon(profileDir, softblock3_3.id), Date.now() + 10000);
   writeInstallRDFForExtension(softblock4_3, profileDir);
   setExtensionModifiedTime(getFileForAddon(profileDir, softblock4_3.id), Date.now() + 10000);
-  writeInstallRDFForExtension(softblock5_3, profileDir);
-  setExtensionModifiedTime(getFileForAddon(profileDir, softblock5_3.id), Date.now() + 10000);
   writeInstallRDFForExtension(hardblock_3, profileDir);
   setExtensionModifiedTime(getFileForAddon(profileDir, hardblock_3.id), Date.now() + 10000);
   writeInstallRDFForExtension(regexpblock_3, profileDir);
@@ -992,7 +885,7 @@ add_task(async function addon_change_2_test_2() {
 
   startupManager(false);
 
-  let [s1, s2, s3, /* s4 */, /* s5 */, h, r] = await promiseAddonsByIDs(ADDON_IDS);
+  let [s1, s2, s3, /* s4 */, h, r] = await promiseAddonsByIDs(ADDON_IDS);
 
   check_addon(s1, "3.0", true, true, Ci.nsIBlocklistService.STATE_SOFTBLOCKED);
   check_addon(s2, "3.0", true, false, Ci.nsIBlocklistService.STATE_SOFTBLOCKED);
@@ -1012,8 +905,6 @@ add_task(async function addon_change_2_test_3() {
   setExtensionModifiedTime(getFileForAddon(profileDir, softblock3_1.id), Date.now() + 20000);
   writeInstallRDFForExtension(softblock4_1, profileDir);
   setExtensionModifiedTime(getFileForAddon(profileDir, softblock4_1.id), Date.now() + 20000);
-  writeInstallRDFForExtension(softblock5_1, profileDir);
-  setExtensionModifiedTime(getFileForAddon(profileDir, softblock5_1.id), Date.now() + 20000);
   writeInstallRDFForExtension(hardblock_1, profileDir);
   setExtensionModifiedTime(getFileForAddon(profileDir, hardblock_1.id), Date.now() + 20000);
   writeInstallRDFForExtension(regexpblock_1, profileDir);
@@ -1021,7 +912,7 @@ add_task(async function addon_change_2_test_3() {
 
   startupManager(false);
 
-  let [s1, s2, s3, s4, s5, h, r] = await promiseAddonsByIDs(ADDON_IDS);
+  let [s1, s2, s3, s4, h, r] = await promiseAddonsByIDs(ADDON_IDS);
 
   check_addon(s1, "1.0", false, false, Ci.nsIBlocklistService.STATE_NOT_BLOCKED);
   check_addon(s2, "1.0", true, false, Ci.nsIBlocklistService.STATE_NOT_BLOCKED);
@@ -1032,7 +923,6 @@ add_task(async function addon_change_2_test_3() {
   s1.userDisabled = false;
   s2.userDisabled = false;
   s4.userDisabled = true;
-  s5.userDisabled = false;
 });
 
 // Add-ons are initially unblocked then attempts to upgrade to blocked versions
@@ -1040,26 +930,24 @@ add_task(async function addon_change_2_test_3() {
 add_task(async function run_background_update_test() {
   await promiseRestartManager();
 
-  let [s1, s2, s3, s4, s5, h, r] = await promiseAddonsByIDs(ADDON_IDS);
+  let [s1, s2, s3, s4, h, r] = await promiseAddonsByIDs(ADDON_IDS);
 
   check_addon(s1, "1.0", false, false, Ci.nsIBlocklistService.STATE_NOT_BLOCKED);
   check_addon(s2, "1.0", false, false, Ci.nsIBlocklistService.STATE_NOT_BLOCKED);
   check_addon(s3, "1.0", false, false, Ci.nsIBlocklistService.STATE_NOT_BLOCKED);
   check_addon(s4, "1.0", true, false, Ci.nsIBlocklistService.STATE_NOT_BLOCKED);
-  check_addon(s5, "1.0", false, false, Ci.nsIBlocklistService.STATE_NOT_BLOCKED);
   check_addon(h, "1.0", false, false, Ci.nsIBlocklistService.STATE_NOT_BLOCKED);
   check_addon(r, "1.0", false, false, Ci.nsIBlocklistService.STATE_NOT_BLOCKED);
 
   await Pbackground_update();
   await promiseRestartManager();
 
-  [s1, s2, s3, s4, s5, h, r] = await promiseAddonsByIDs(ADDON_IDS);
+  [s1, s2, s3, s4, h, r] = await promiseAddonsByIDs(ADDON_IDS);
 
   check_addon(s1, "1.0", false, false, Ci.nsIBlocklistService.STATE_NOT_BLOCKED);
   check_addon(s2, "1.0", false, false, Ci.nsIBlocklistService.STATE_NOT_BLOCKED);
   check_addon(s3, "1.0", false, false, Ci.nsIBlocklistService.STATE_NOT_BLOCKED);
   check_addon(s4, "1.0", true, false, Ci.nsIBlocklistService.STATE_NOT_BLOCKED);
-  check_addon(s5, "1.0", false, false, Ci.nsIBlocklistService.STATE_NOT_BLOCKED);
   check_addon(h, "1.0", false, false, Ci.nsIBlocklistService.STATE_NOT_BLOCKED);
   check_addon(r, "1.0", false, false, Ci.nsIBlocklistService.STATE_NOT_BLOCKED);
 });
@@ -1073,7 +961,6 @@ add_task(async function run_background_update_2_test() {
   getFileForAddon(profileDir, softblock2_1.id).remove(true);
   getFileForAddon(profileDir, softblock3_1.id).remove(true);
   getFileForAddon(profileDir, softblock4_1.id).remove(true);
-  getFileForAddon(profileDir, softblock5_1.id).remove(true);
   getFileForAddon(profileDir, hardblock_1.id).remove(true);
   getFileForAddon(profileDir, regexpblock_1.id).remove(true);
 
@@ -1084,13 +971,12 @@ add_task(async function run_background_update_2_test() {
   writeInstallRDFForExtension(softblock2_3, profileDir);
   writeInstallRDFForExtension(softblock3_3, profileDir);
   writeInstallRDFForExtension(softblock4_3, profileDir);
-  writeInstallRDFForExtension(softblock5_3, profileDir);
   writeInstallRDFForExtension(hardblock_3, profileDir);
   writeInstallRDFForExtension(regexpblock_3, profileDir);
 
   startupManager(false);
 
-  let [s1, s2, s3, s4, s5, h, r] = await promiseAddonsByIDs(ADDON_IDS);
+  let [s1, s2, s3, s4, h, r] = await promiseAddonsByIDs(ADDON_IDS);
 
   check_addon(s1, "3.0", true, true, Ci.nsIBlocklistService.STATE_SOFTBLOCKED);
   check_addon(s2, "3.0", true, true, Ci.nsIBlocklistService.STATE_SOFTBLOCKED);
@@ -1109,7 +995,7 @@ add_task(async function run_background_update_2_test() {
   await Pbackground_update();
   await promiseRestartManager();
 
-  [s1, s2, s3, s4, s5, h, r] = await promiseAddonsByIDs(ADDON_IDS);
+  [s1, s2, s3, s4, h, r] = await promiseAddonsByIDs(ADDON_IDS);
 
   check_addon(s1, "1.0", false, false, Ci.nsIBlocklistService.STATE_NOT_BLOCKED);
   check_addon(s2, "1.0", true, false, Ci.nsIBlocklistService.STATE_NOT_BLOCKED);
@@ -1120,7 +1006,6 @@ add_task(async function run_background_update_2_test() {
   s1.userDisabled = false;
   s2.userDisabled = false;
   s4.userDisabled = true;
-  s5.userDisabled = true;
 });
 
 // Starts with add-ons blocked and then simulates the user upgrading them to
@@ -1130,13 +1015,12 @@ add_task(async function run_manual_update_test() {
   await Pload_blocklist("manual_update.xml");
   await promiseRestartManager();
 
-  let [s1, s2, s3, s4, s5, h, r] = await promiseAddonsByIDs(ADDON_IDS);
+  let [s1, s2, s3, s4, h, r] = await promiseAddonsByIDs(ADDON_IDS);
 
   check_addon(s1, "1.0", true, true, Ci.nsIBlocklistService.STATE_SOFTBLOCKED);
   check_addon(s2, "1.0", true, true, Ci.nsIBlocklistService.STATE_SOFTBLOCKED);
   check_addon(s3, "1.0", true, true, Ci.nsIBlocklistService.STATE_SOFTBLOCKED);
   check_addon(s4, "1.0", true, false, Ci.nsIBlocklistService.STATE_SOFTBLOCKED);
-  check_addon(s5, "1.0", true, false, Ci.nsIBlocklistService.STATE_SOFTBLOCKED);
   check_addon(h, "1.0", false, false, Ci.nsIBlocklistService.STATE_BLOCKED);
   check_addon(r, "1.0", false, false, Ci.nsIBlocklistService.STATE_BLOCKED);
 
@@ -1151,13 +1035,12 @@ add_task(async function run_manual_update_test() {
   await Pmanual_update("2");
   await promiseRestartManager();
 
-  [s1, s2, s3, s4, s5, h, r] = await promiseAddonsByIDs(ADDON_IDS);
+  [s1, s2, s3, s4, h, r] = await promiseAddonsByIDs(ADDON_IDS);
 
   check_addon(s1, "2.0", true, true, Ci.nsIBlocklistService.STATE_SOFTBLOCKED);
   check_addon(s2, "2.0", true, false, Ci.nsIBlocklistService.STATE_SOFTBLOCKED);
   check_addon(s3, "2.0", false, false, Ci.nsIBlocklistService.STATE_SOFTBLOCKED);
   check_addon(s4, "2.0", true, false, Ci.nsIBlocklistService.STATE_SOFTBLOCKED);
-  check_addon(s5, "2.0", false, false, Ci.nsIBlocklistService.STATE_SOFTBLOCKED);
   // Can't manually update to a hardblocked add-on
   check_addon(h, "1.0", false, false, Ci.nsIBlocklistService.STATE_BLOCKED);
   check_addon(r, "1.0", false, false, Ci.nsIBlocklistService.STATE_BLOCKED);
@@ -1165,13 +1048,12 @@ add_task(async function run_manual_update_test() {
   await Pmanual_update("3");
   await promiseRestartManager();
 
-  [s1, s2, s3, s4, s5, h, r] = await promiseAddonsByIDs(ADDON_IDS);
+  [s1, s2, s3, s4, h, r] = await promiseAddonsByIDs(ADDON_IDS);
 
   check_addon(s1, "3.0", false, false, Ci.nsIBlocklistService.STATE_NOT_BLOCKED);
   check_addon(s2, "3.0", true, false, Ci.nsIBlocklistService.STATE_NOT_BLOCKED);
   check_addon(s3, "3.0", false, false, Ci.nsIBlocklistService.STATE_NOT_BLOCKED);
   check_addon(s4, "3.0", true, false, Ci.nsIBlocklistService.STATE_NOT_BLOCKED);
-  check_addon(s5, "3.0", false, false, Ci.nsIBlocklistService.STATE_NOT_BLOCKED);
   check_addon(h, "3.0", false, false, Ci.nsIBlocklistService.STATE_NOT_BLOCKED);
   check_addon(r, "3.0", false, false, Ci.nsIBlocklistService.STATE_NOT_BLOCKED);
 });
@@ -1185,7 +1067,6 @@ add_task(async function run_manual_update_2_test() {
   getFileForAddon(profileDir, softblock2_1.id).remove(true);
   getFileForAddon(profileDir, softblock3_1.id).remove(true);
   getFileForAddon(profileDir, softblock4_1.id).remove(true);
-  getFileForAddon(profileDir, softblock5_1.id).remove(true);
   getFileForAddon(profileDir, hardblock_1.id).remove(true);
   getFileForAddon(profileDir, regexpblock_1.id).remove(true);
 
@@ -1196,13 +1077,12 @@ add_task(async function run_manual_update_2_test() {
   writeInstallRDFForExtension(softblock2_1, profileDir);
   writeInstallRDFForExtension(softblock3_1, profileDir);
   writeInstallRDFForExtension(softblock4_1, profileDir);
-  writeInstallRDFForExtension(softblock5_1, profileDir);
   writeInstallRDFForExtension(hardblock_1, profileDir);
   writeInstallRDFForExtension(regexpblock_1, profileDir);
 
   startupManager(false);
 
-  let [s1, s2, s3, s4, /* s5 */, h, r] = await promiseAddonsByIDs(ADDON_IDS);
+  let [s1, s2, s3, s4, h, r] = await promiseAddonsByIDs(ADDON_IDS);
 
   check_addon(s1, "1.0", true, true, Ci.nsIBlocklistService.STATE_SOFTBLOCKED);
   check_addon(s2, "1.0", true, true, Ci.nsIBlocklistService.STATE_SOFTBLOCKED);
@@ -1220,7 +1100,7 @@ add_task(async function run_manual_update_2_test() {
   await Pmanual_update("2");
   await promiseRestartManager();
 
-  [s1, s2, s3, s4, /* s5 */, h, r] = await promiseAddonsByIDs(ADDON_IDS);
+  [s1, s2, s3, s4, h, r] = await promiseAddonsByIDs(ADDON_IDS);
 
   check_addon(s1, "2.0", true, true, Ci.nsIBlocklistService.STATE_SOFTBLOCKED);
   check_addon(s2, "2.0", true, false, Ci.nsIBlocklistService.STATE_SOFTBLOCKED);
@@ -1234,7 +1114,7 @@ add_task(async function run_manual_update_2_test() {
   await Pmanual_update("3");
   await promiseRestartManager();
 
-  [s1, s2, s3, s4, /* s5 */, h, r] = await promiseAddonsByIDs(ADDON_IDS);
+  [s1, s2, s3, s4, h, r] = await promiseAddonsByIDs(ADDON_IDS);
 
   check_addon(s1, "3.0", false, false, Ci.nsIBlocklistService.STATE_NOT_BLOCKED);
   check_addon(s2, "3.0", true, false, Ci.nsIBlocklistService.STATE_NOT_BLOCKED);
@@ -1255,7 +1135,6 @@ add_task(async function run_local_install_test() {
   getFileForAddon(profileDir, softblock2_1.id).remove(true);
   getFileForAddon(profileDir, softblock3_1.id).remove(true);
   getFileForAddon(profileDir, softblock4_1.id).remove(true);
-  getFileForAddon(profileDir, softblock5_1.id).remove(true);
   getFileForAddon(profileDir, hardblock_1.id).remove(true);
   getFileForAddon(profileDir, regexpblock_1.id).remove(true);
 
@@ -1266,7 +1145,6 @@ add_task(async function run_local_install_test() {
     do_get_file("addons/blocklist_soft2_1.xpi"),
     do_get_file("addons/blocklist_soft3_1.xpi"),
     do_get_file("addons/blocklist_soft4_1.xpi"),
-    do_get_file("addons/blocklist_soft5_1.xpi"),
     do_get_file("addons/blocklist_hard1_1.xpi"),
     do_get_file("addons/blocklist_regexp1_1.xpi")
   ]);
@@ -1275,7 +1153,7 @@ add_task(async function run_local_install_test() {
   // Should have finished all installs without needing to restart
   do_check_eq(aInstalls.length, 0);
 
-  let [s1, s2, s3, /* s4 */, /* s5 */, h, r] = await promiseAddonsByIDs(ADDON_IDS);
+  let [s1, s2, s3, /* s4 */, h, r] = await promiseAddonsByIDs(ADDON_IDS);
 
   check_addon(s1, "1.0", true, true, Ci.nsIBlocklistService.STATE_SOFTBLOCKED);
   check_addon(s2, "1.0", true, true, Ci.nsIBlocklistService.STATE_SOFTBLOCKED);
