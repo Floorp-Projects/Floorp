@@ -20,7 +20,10 @@ document.cookie = "c1=foobar; expires=" +
   new Date(cookieExpiresTime1).toGMTString() + "; path=/browser";
 document.cookie = "cs2=sessionCookie; path=/; domain=" + partialHostname;
 document.cookie = "c3=foobar-2; expires=" +
-  new Date(cookieExpiresTime2).toGMTString() + "; path=/";
+  new Date(cookieExpiresTime1).toGMTString() + "; path=/";
+document.cookie = "c4=foobar-3; expires=" +
+  new Date(cookieExpiresTime2).toGMTString() + "; path=/; domain=" +
+  partialHostname;
 // ... and some local storage items ..
 localStorage.setItem("ls1", "foobar");
 localStorage.setItem("ls2", "foobar-2");
