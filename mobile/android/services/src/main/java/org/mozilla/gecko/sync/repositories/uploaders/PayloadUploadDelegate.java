@@ -200,7 +200,7 @@ class PayloadUploadDelegate implements SyncStorageRequestDelegate {
         postedRecordGuids = null;
 
         if (isLastPayload) {
-            dispatcher.lastPayloadFailed();
+            dispatcher.lastPayloadFailed(e);
         }
     }
 }
