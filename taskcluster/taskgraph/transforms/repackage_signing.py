@@ -121,6 +121,8 @@ def make_repackage_signing_description(config, jobs):
         }
 
         funsize_platforms = [
+            'linux-nightly',
+            'linux64-nightly',
             'macosx64-nightly',
             'win32-nightly',
             'win64-nightly'
