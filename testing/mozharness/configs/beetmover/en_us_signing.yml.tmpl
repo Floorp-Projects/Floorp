@@ -23,18 +23,12 @@ mapping:
     package:
       artifact: {{ artifact_base_url }}/target.tar.bz2
       s3_key: {{ s3_prefix }}{{ platform }}/{{ locale }}/firefox-{{ version }}.tar.bz2
-    complete_mar:
-      artifact: {{ artifact_base_url }}/update/target.complete.mar
-      s3_key: {{ s3_prefix }}update/{{ platform }}/{{ locale }}/firefox-{{ version }}.complete.mar
   {% endif %}
 
   {% if platform == "linux-x86_64" %}
     package:
       artifact: {{ artifact_base_url }}/target.tar.bz2
       s3_key: {{ s3_prefix }}{{ platform }}/{{ locale }}/firefox-{{ version }}.tar.bz2
-    complete_mar:
-      artifact: {{ artifact_base_url }}/update/target.complete.mar
-      s3_key: {{ s3_prefix }}update/{{ platform }}/{{ locale }}/firefox-{{ version }}.complete.mar
   {% endif %}
 
   {% if platform == "mac" %}
