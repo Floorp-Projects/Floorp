@@ -1235,7 +1235,7 @@ class BuildReader(object):
 
         @memoize
         def exists(path):
-            return self._finder.get(path) is not None
+            return self._relevant_mozbuild_finder.get(path) is not None
 
         def itermozbuild(path):
             subpath = ''
@@ -1251,8 +1251,7 @@ class BuildReader(object):
                     raise Exception('Path outside topsrcdir: %s' % path)
                 path = mozpath.relpath(path, root)
 
-            result[path] = [p for p in itermozbuild(path)
-                              if exists(mozpath.join(root, p))]
+            result[path] = [p for p in itermozbuild(path) if exists(p)]
 
         return result
 
