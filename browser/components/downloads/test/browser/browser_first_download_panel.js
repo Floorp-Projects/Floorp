@@ -32,9 +32,7 @@ add_task(async function test_first_download_panel() {
   // time a download is started.
   DownloadsCommon.getData(window).panelHasShownBefore = false;
 
-  info("waiting for panel open");
   let promise = promisePanelOpened();
-  await task_addDownloads([{state: DownloadsCommon.DOWNLOAD_DOWNLOADING}]);
   DownloadsCommon.getData(window)._notifyDownloadEvent("start");
   await promise;
 

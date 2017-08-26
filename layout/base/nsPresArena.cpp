@@ -191,37 +191,38 @@ nsPresArena::AddSizeOfExcludingThis(nsWindowSizes& aSizes) const
     // |mEntries| at this point) and we're using that to determine the
     // total size of objects allocated with a given ID.
     size_t totalSize = entry->mEntrySize * entry->mEntriesEverAllocated;
-    size_t* p;
 
     switch (entry - mFreeLists) {
 #define FRAME_ID(classname, ...) \
       case nsQueryFrame::classname##_id: \
-        p = &aSizes.mArenaSizes.NS_ARENA_SIZES_FIELD(classname); \
+        aSizes.mArenaSizes.NS_ARENA_SIZES_FIELD(classname) += totalSize; \
         break;
 #define ABSTRACT_FRAME_ID(...)
 #include "nsFrameIdList.h"
 #undef FRAME_ID
 #undef ABSTRACT_FRAME_ID
       case eArenaObjectID_nsLineBox:
-        p = &aSizes.mArenaSizes.mLineBoxes;
+        aSizes.mArenaSizes.mLineBoxes += totalSize;
         break;
       case eArenaObjectID_nsRuleNode:
-        p = &aSizes.mArenaSizes.mRuleNodes;
+        aSizes.mArenaSizes.mRuleNodes += totalSize;
         break;
       case eArenaObjectID_GeckoStyleContext:
-        p = &aSizes.mArenaSizes.mStyleContexts;
+        aSizes.mArenaSizes.mStyleContexts += totalSize;
         break;
-#define STYLE_STRUCT(name_, checkdata_cb_)      \
-        case eArenaObjectID_nsStyle##name_:
+#define STYLE_STRUCT(name_, cb_) \
+      case eArenaObjectID_nsStyle##name_: \
+        aSizes.mArenaSizes.mGeckoStyleSizes.NS_STYLE_SIZES_FIELD(name_) += \
+          totalSize; \
+        break;
+#define STYLE_STRUCT_LIST_IGNORE_VARIABLES
 #include "nsStyleStructList.h"
 #undef STYLE_STRUCT
-        p = &aSizes.mArenaSizes.mStyleStructs;
-        break;
+#undef STYLE_STRUCT_LIST_IGNORE_VARIABLES
       default:
         continue;
     }
 
-    *p += totalSize;
     totalSizeInFreeLists += totalSize;
   }
 

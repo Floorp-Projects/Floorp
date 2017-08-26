@@ -266,8 +266,6 @@ TypedObjectMemory(HandleValue v, const JS::AutoRequireNoGC& nogc)
 static const ClassOps SimdTypeDescrClassOps = {
     nullptr, /* addProperty */
     nullptr, /* delProperty */
-    nullptr, /* getProperty */
-    nullptr, /* setProperty */
     nullptr, /* enumerate */
     nullptr, /* newEnumerate */
     nullptr, /* resolve */
@@ -531,8 +529,6 @@ SimdTypeDescr::call(JSContext* cx, unsigned argc, Value* vp)
 static const ClassOps SimdObjectClassOps = {
     nullptr, /* addProperty */
     nullptr, /* delProperty */
-    nullptr, /* getProperty */
-    nullptr, /* setProperty */
     nullptr, /* enumerate */
     nullptr, /* newEnumerate */
     SimdObject::resolve

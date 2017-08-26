@@ -7436,6 +7436,20 @@
     "keyed": true,
     "description": "a testing histogram; not meant to be touched"
   },
+  "TELEMETRY_TEST_KEYED_KEYS": {
+    "alert_emails": ["telemetry-client-dev@mozilla.com"],
+    "record_in_processes": ["main", "content"],
+    "bug_numbers": [1343855],
+    "expires_in_version": "never",
+    "kind": "boolean",
+    "keyed": true,
+    "keys": [
+      "testkey",
+      "CommonKey",
+      "thirdKey"
+    ],
+    "description": "a testing histogram; not meant to be touched"
+  },
   "TELEMETRY_TEST_KEYED_BOOLEAN": {
     "record_in_processes": ["main", "content"],
     "alert_emails": ["telemetry-client-dev@mozilla.com"],

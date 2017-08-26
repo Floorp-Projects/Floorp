@@ -220,12 +220,11 @@ HTMLAreaElement::IntrinsicState() const
 }
 
 void
-HTMLAreaElement::AddSizeOfExcludingThis(SizeOfState& aState,
-                                        nsStyleSizes& aSizes,
+HTMLAreaElement::AddSizeOfExcludingThis(nsWindowSizes& aSizes,
                                         size_t* aNodeSize) const
 {
-  nsGenericHTMLElement::AddSizeOfExcludingThis(aState, aSizes, aNodeSize);
-  *aNodeSize += Link::SizeOfExcludingThis(aState);
+  nsGenericHTMLElement::AddSizeOfExcludingThis(aSizes, aNodeSize);
+  *aNodeSize += Link::SizeOfExcludingThis(aSizes.mState);
 }
 
 JSObject*

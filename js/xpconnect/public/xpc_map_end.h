@@ -65,16 +65,6 @@ NS_IMETHODIMP XPC_MAP_CLASSNAME::PreCreate(nsISupports* nativeObj, JSContext * c
     {NS_ERROR("never called"); return NS_ERROR_NOT_IMPLEMENTED;}
 #endif
 
-#if !((XPC_MAP_FLAGS) & XPC_SCRIPTABLE_WANT_GETPROPERTY)
-NS_IMETHODIMP XPC_MAP_CLASSNAME::GetProperty(nsIXPConnectWrappedNative* wrapper, JSContext * cx, JSObject * obj, jsid id, JS::Value * vp, bool* _retval)
-    {NS_WARNING("never called"); return NS_ERROR_NOT_IMPLEMENTED;}
-#endif
-
-#if !((XPC_MAP_FLAGS) & XPC_SCRIPTABLE_WANT_SETPROPERTY)
-NS_IMETHODIMP XPC_MAP_CLASSNAME::SetProperty(nsIXPConnectWrappedNative* wrapper, JSContext * cx, JSObject * obj, jsid id, JS::Value * vp, bool* _retval)
-    {NS_WARNING("never called"); return NS_ERROR_NOT_IMPLEMENTED;}
-#endif
-
 #if !((XPC_MAP_FLAGS) & XPC_SCRIPTABLE_WANT_NEWENUMERATE)
 NS_IMETHODIMP XPC_MAP_CLASSNAME::NewEnumerate(nsIXPConnectWrappedNative* wrapper, JSContext * cx, JSObject * obj, JS::AutoIdVector& properties, bool* _retval)
     {NS_ERROR("never called"); return NS_ERROR_NOT_IMPLEMENTED;}

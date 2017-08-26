@@ -2191,13 +2191,11 @@ enum IsNameLookup { NotNameLookup = false, NameLookup = true };
  * Per the spec, this should just set the result to `undefined` and call it a
  * day. However:
  *
- * 1.  We add support for the nonstandard JSClass::getProperty hook.
- *
- * 2.  This function also runs when we're evaluating an expression that's an
+ * 1.  This function also runs when we're evaluating an expression that's an
  *     Identifier (that is, an unqualified name lookup), so we need to figure
  *     out if that's what's happening and throw a ReferenceError if so.
  *
- * 3.  We also emit an optional warning for this. (It's not super useful on the
+ * 2.  We also emit an optional warning for this. (It's not super useful on the
  *     web, as there are too many false positives, but anecdotally useful in
  *     Gecko code.)
  */
@@ -2206,17 +2204,6 @@ GetNonexistentProperty(JSContext* cx, HandleNativeObject obj, HandleId id,
                        HandleValue receiver, IsNameLookup nameLookup, MutableHandleValue vp)
 {
     vp.setUndefined();
-
-    // Non-standard extension: Call the getProperty hook. If it sets vp to a
-    // value other than undefined, we're done. If not, fall through to the
-    // warning/error checks below.
-    if (JSGetterOp getProperty = obj->getClass()->getGetProperty()) {
-        if (!CallJSGetterOp(cx, getProperty, obj, id, vp))
-            return false;
-
-        if (!vp.isUndefined())
-            return true;
-    }
 
     // If we are doing a name lookup, this is a ReferenceError.
     if (nameLookup)
@@ -2227,7 +2214,7 @@ GetNonexistentProperty(JSContext* cx, HandleNativeObject obj, HandleId id,
     //
     // Don't warn if extra warnings not enabled or for random getprop
     // operations.
-    if (!cx->compartment()->behaviors().extraWarnings(cx))
+    if (MOZ_LIKELY(!cx->compartment()->behaviors().extraWarnings(cx)))
         return true;
 
     jsbytecode* pc;
@@ -2484,30 +2471,6 @@ NativeSetExistingDataProperty(JSContext* cx, HandleNativeObject obj, HandleShape
     return true;  // result is populated by CallJSSetterOp above.
 }
 
-static bool
-CallSetPropertyHookAfterDefining(JSContext* cx, HandleObject receiver, HandleId id, HandleValue v,
-                                 ObjectOpResult& result)
-{
-    MOZ_ASSERT(receiver->is<NativeObject>());
-    MOZ_ASSERT(receiver->getClass()->getSetProperty());
-
-    if (!result)
-        return true;
-
-    Rooted<NativeObject*> nativeReceiver(cx, &receiver->as<NativeObject>());
-    MOZ_ASSERT(!cx->helperThread());
-    RootedValue receiverValue(cx, ObjectValue(*receiver));
-
-    // This lookup is a bit unfortunate, but not nearly the most
-    // unfortunate thing about Class getters and setters. Since the above
-    // DefineProperty call succeeded, receiver is native, and the property
-    // has a setter (and thus can't be a dense element), this lookup is
-    // guaranteed to succeed.
-    RootedShape shape(cx, nativeReceiver->lookup(cx, id));
-    MOZ_ASSERT(shape);
-    return NativeSetExistingDataProperty(cx, nativeReceiver, shape, v, receiverValue, result);
-}
-
 /*
  * When a [[Set]] operation finds no existing property with the given id
  * or finds a writable data property on the prototype chain, we end up here.
@@ -2546,9 +2509,6 @@ js::SetPropertyByDefining(JSContext* cx, HandleId id, HandleValue v, HandleValue
         }
     }
 
-    // Invalidate SpiderMonkey-specific caches or bail.
-    const Class* clasp = receiver->getClass();
-
     // Purge the property cache of now-shadowed id in receiver's environment chain.
     if (!PurgeEnvironmentChain(cx, receiver, id))
         return false;
@@ -2558,19 +2518,7 @@ js::SetPropertyByDefining(JSContext* cx, HandleId id, HandleValue v, HandleValue
         existing
         ? JSPROP_IGNORE_ENUMERATE | JSPROP_IGNORE_READONLY | JSPROP_IGNORE_PERMANENT
         : JSPROP_ENUMERATE;
-    JSGetterOp getter = clasp->getGetProperty();
-    JSSetterOp setter = clasp->getSetProperty();
-    MOZ_ASSERT(getter != JS_PropertyStub);
-    MOZ_ASSERT(setter != JS_StrictPropertyStub);
-    if (!DefineProperty(cx, receiver, id, v, getter, setter, attrs, result))
-        return false;
-
-    // If the receiver is native, there is one more legacy wrinkle: the class
-    // JSSetterOp is called after defining the new property.
-    if (setter && receiver->is<NativeObject>())
-        return CallSetPropertyHookAfterDefining(cx, receiver, id, v, result);
-
-    return true;
+    return DefineProperty(cx, receiver, id, v, nullptr, nullptr, attrs, result);
 }
 
 // When setting |id| for |receiver| and |obj| has no property for id, continue
@@ -2623,14 +2571,8 @@ SetNonexistentProperty(JSContext* cx, HandleNativeObject obj, HandleId id, Handl
 
         // Step 5.e. Define the new data property.
 
-        const Class* clasp = obj->getClass();
-        JSGetterOp getter = clasp->getGetProperty();
-        JSSetterOp setter = clasp->getSetProperty();
-        MOZ_ASSERT(getter != JS_PropertyStub);
-        MOZ_ASSERT(setter != JS_StrictPropertyStub);
-
         Rooted<PropertyDescriptor> desc(cx);
-        desc.initFields(nullptr, v, JSPROP_ENUMERATE, getter, setter);
+        desc.initFields(nullptr, v, JSPROP_ENUMERATE, nullptr, nullptr);
 
         if (DefinePropertyOp op = obj->getOpsDefineProperty()) {
             // Purge the property cache of now-shadowed id in receiver's environment chain.
@@ -2638,19 +2580,10 @@ SetNonexistentProperty(JSContext* cx, HandleNativeObject obj, HandleId id, Handl
                 return false;
 
             MOZ_ASSERT(!cx->helperThread());
-            if (!op(cx, obj, id, desc, result))
-                return false;
-        } else {
-            if (!DefineNonexistentProperty(cx, obj, id, desc, result))
-                return false;
+            return op(cx, obj, id, desc, result);
         }
 
-        // There is one more legacy wrinkle: the class JSSetterOp is called
-        // after defining the new property.
-        if (setter)
-            return CallSetPropertyHookAfterDefining(cx, obj, id, v, result);
-
-        return true;
+        return DefineNonexistentProperty(cx, obj, id, desc, result);
     }
 
     return SetPropertyByDefining(cx, id, v, receiver, result);

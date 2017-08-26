@@ -320,8 +320,12 @@ FREEBL_GetVector(void)
         return NULL;
     }
 #endif
-    /* make sure the Full self tests have been run before continuing */
+
+#ifndef NSS_FIPS_DISABLED
+    /* In FIPS mode make sure the Full self tests have been run before
+     * continuing. */
     BL_POSTRan(PR_FALSE);
+#endif
 
     return &vector;
 }

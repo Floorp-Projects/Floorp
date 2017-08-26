@@ -177,8 +177,6 @@ ErrorObject::classSpecs[JSEXN_ERROR_LIMIT] = {
 static const ClassOps ErrorObjectClassOps = {
     nullptr,                 /* addProperty */
     nullptr,                 /* delProperty */
-    nullptr,                 /* getProperty */
-    nullptr,                 /* setProperty */
     nullptr,                 /* enumerate */
     nullptr,                 /* newEnumerate */
     nullptr,                 /* resolve */

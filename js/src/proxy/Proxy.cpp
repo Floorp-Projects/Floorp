@@ -753,8 +753,6 @@ js::proxy_Construct(JSContext* cx, unsigned argc, Value* vp)
 const ClassOps js::ProxyClassOps = {
     nullptr,                 /* addProperty */
     nullptr,                 /* delProperty */
-    nullptr,                 /* getProperty */
-    nullptr,                 /* setProperty */
     nullptr,                 /* enumerate   */
     nullptr,                 /* newEnumerate */
     nullptr,                 /* resolve     */

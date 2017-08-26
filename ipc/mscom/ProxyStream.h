@@ -11,16 +11,28 @@
 
 #include "mozilla/mscom/Ptr.h"
 #include "mozilla/RefPtr.h"
+#include "mozilla/TypedEnumBits.h"
 #include "mozilla/UniquePtr.h"
 
 namespace mozilla {
 namespace mscom {
 
+enum class ProxyStreamFlags : uint32_t
+{
+  eDefault = 0,
+  // When ePreservable is set on a ProxyStream, its caller *must* call
+  // GetPreservableStream() before the ProxyStream is destroyed.
+  ePreservable = 1
+};
+
+MOZ_MAKE_ENUM_CLASS_BITWISE_OPERATORS(ProxyStreamFlags);
+
 class ProxyStream final
 {
 public:
   ProxyStream();
-  ProxyStream(REFIID aIID, IUnknown* aObject);
+  ProxyStream(REFIID aIID, IUnknown* aObject,
+              ProxyStreamFlags aFlags = ProxyStreamFlags::eDefault);
   ProxyStream(REFIID aIID, const BYTE* aInitBuf, const int aInitBufSize);
 
   ~ProxyStream();
@@ -39,7 +51,8 @@ public:
 
   bool GetInterface(void** aOutInterface);
   const BYTE* GetBuffer(int& aReturnedBufSize) const;
-  RefPtr<IStream> GetStream() const;
+
+  PreservedStreamPtr GetPreservedStream();
 
   bool operator==(const ProxyStream& aOther) const
   {
@@ -52,6 +65,7 @@ private:
   HGLOBAL         mHGlobal;
   int             mBufSize;
   ProxyUniquePtr<IUnknown> mUnmarshaledProxy;
+  bool            mPreserveStream;
 };
 
 } // namespace mscom

@@ -53,7 +53,7 @@ class nsNodeWeakReference final : public nsIWeakReference
 {
 public:
   explicit nsNodeWeakReference(nsINode* aNode)
-    : mNode(aNode)
+    : nsIWeakReference(aNode)
   {
   }
 
@@ -63,17 +63,14 @@ public:
   // nsIWeakReference
   NS_DECL_NSIWEAKREFERENCE
   virtual size_t SizeOfOnlyThis(mozilla::MallocSizeOf aMallocSizeOf) const override;
-  virtual bool IsAlive() const override { return mNode != nullptr; }
 
   void NoticeNodeDestruction()
   {
-    mNode = nullptr;
+    mObject = nullptr;
   }
 
 private:
   ~nsNodeWeakReference();
-
-  nsINode* MOZ_NON_OWNING_REF mNode;
 };
 
 /**

@@ -237,8 +237,9 @@ NSPR_API(PRStatus) PR_NT_CancelIo(PRFileDesc *fd);
 
 #endif /* WIN32 */
 
-/* FUNCTION: PR_FileDesc2PlatformOverlappedIOHandle
+/* FUNCTION: PR_EXPERIMENTAL_ONLY_IN_4_17_GetOverlappedIOHandle
 ** DESCRIPTION:
+** This function will be available only in nspr version 4.17
 ** This functionality is only available on windows. Some windows operation use
 ** asynchronous (call overlapped) io. One of them is ConnectEx. NSPR uses
 ** ConnectEx for enabling TCP Fast Open.
@@ -248,7 +249,7 @@ NSPR_API(PRStatus) PR_NT_CancelIo(PRFileDesc *fd);
 ** PRFileDesc continues to be owner of the structure and the structure must not
 ** be destroyed.
 */
-NSPR_API(PRStatus) PR_FileDesc2PlatformOverlappedIOHandle(PRFileDesc *fd, void **ol);
+NSPR_API(PRStatus) PR_EXPERIMENTAL_ONLY_IN_4_17_GetOverlappedIOHandle(PRFileDesc *fd, void **ol);
 
 PR_END_EXTERN_C
 

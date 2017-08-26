@@ -14,6 +14,11 @@ function emitTestFail(message) {
 }
 
 function checkSimplestRequest(payRequest) {
+  if (payRequest.topLevelPrincipal.origin != "https://example.com") {
+    emitTestFail("Top level principal's Origin should be 'https://example.com', but got '"
+                 + payRequest.topLevelPrincipal.origin + "'.");
+  }
+
   if (payRequest.paymentMethods.length != 1) {
     emitTestFail("paymentMethods' length should be 1.");
   }
@@ -72,6 +77,11 @@ function checkSimplestRequest(payRequest) {
 }
 
 function checkComplexRequest(payRequest) {
+  if (payRequest.topLevelPrincipal.origin != "https://example.com") {
+    emitTestFail("Top level principal's origin should be 'https://example.com', but got '"
+                 + payRequest.topLevelPrincipal.origin + "'.");
+  }
+
   if (payRequest.paymentMethods.length != 1) {
     emitTestFail("paymentMethods' length should be 1.");
   }
@@ -473,11 +483,32 @@ function checkMultipleRequestsHandler () {
   sendAsyncMessage("check-complete");
 }
 
+function checkCrossOriginTopLevelPrincipalHandler() {
+  const paymentEnum = paymentSrv.enumerate();
+  if (!paymentEnum.hasMoreElements()) {
+    emitTestFail("PaymentRequestService should have at least one payment request.");
+  }
+  while (paymentEnum.hasMoreElements()) {
+    let payRequest = paymentEnum.getNext().QueryInterface(Ci.nsIPaymentRequest);
+    if (!payRequest) {
+      emitTestFail("Fail to get existing payment request.");
+      break;
+    }
+    if (payRequest.topLevelPrincipal.origin != "https://example.com") {
+      emitTestFail("Top level principal's origin should be 'https://example.com', but got '"
+                   + payRequest.topLevelPrincipal.origin + "'.");
+    }
+  }
+  paymentSrv.cleanup();
+  sendAsyncMessage("check-complete");
+}
+
 addMessageListener("check-simplest-request", checkSimplestRequestHandler);
 addMessageListener("check-complex-request", checkComplexRequestHandler);
 addMessageListener("check-duplicate-shipping-options-request", checkDuplicateShippingOptionsRequestHandler);
 addMessageListener("check-multiple-requests", checkMultipleRequestsHandler);
 addMessageListener("check-nonbasiccard-request", checkNonBasicCardRequestHandler);
+addMessageListener("check-cross-origin-top-level-principal", checkCrossOriginTopLevelPrincipalHandler);
 
 addMessageListener("teardown", function() {
   paymentSrv.cleanup();

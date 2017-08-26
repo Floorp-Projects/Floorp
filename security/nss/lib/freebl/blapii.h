@@ -22,8 +22,10 @@ typedef void (*freeblDestroyFunc)(void *cx, PRBool freeit);
 
 SEC_BEGIN_PROTOS
 
+#ifndef NSS_FIPS_DISABLED
 SECStatus BL_FIPSEntryOK(PRBool freeblOnly);
 PRBool BL_POSTRan(PRBool freeblOnly);
+#endif
 
 #if defined(XP_UNIX) && !defined(NO_FORK_CHECK)
 

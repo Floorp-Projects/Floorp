@@ -96,6 +96,7 @@ while [ $# -gt 0 ]; do
         --with-nspr=?*) set_nspr_path "${1#*=}"; no_local_nspr=1 ;;
         --system-nspr) set_nspr_path "/usr/include/nspr/:"; no_local_nspr=1 ;;
         --enable-libpkix) gyp_params+=(-Ddisable_libpkix=0) ;;
+        --enable-fips) gyp_params+=(-Ddisable_fips=0) ;;
         *) show_help; exit 2 ;;
     esac
     shift

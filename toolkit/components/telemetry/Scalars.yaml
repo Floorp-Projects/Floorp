@@ -690,6 +690,23 @@ navigator.storage:
       - 'main'
       - 'content'
 
+telemetry:
+  accumulate_unknown_histogram_keys:
+    bug_numbers:
+      - 1343855
+    description: >
+      The count of attempted accumulations to unknown histogram keys for
+      histograms that restrict the set of allowed keys ('keys' property).
+      The names of the offending histograms are used as keys in this probe.
+    expires: never
+    kind: uint
+    keyed: true
+    notification_emails:
+      - telemetry-client-dev@mozilla.com
+    release_channel_collection: opt-out
+    record_in_processes:
+      - all
+
 telemetry.discarded:
   accumulations:
     bug_numbers:

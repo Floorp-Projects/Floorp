@@ -1172,8 +1172,8 @@ ssl_run_tests()
                 ssl_set_fips server on
                 ;;
             *)
-                echo "${SCRIPTNAME}: Error: Unknown server mode ${SERVER_MODE}"
-                continue
+                html_failed "${SCRIPTNAME}: Error: Unknown server mode ${SERVER_MODE}"
+                return 1
                 ;;
             esac
 
@@ -1186,8 +1186,8 @@ ssl_run_tests()
                 ssl_set_fips client on
                 ;;
             *)
-                echo "${SCRIPTNAME}: Error: Unknown client mode ${CLIENT_MODE}"
-                continue
+                html_failed "${SCRIPTNAME}: Error: Unknown client mode ${CLIENT_MODE}"
+                return 1
                 ;;
             esac
 

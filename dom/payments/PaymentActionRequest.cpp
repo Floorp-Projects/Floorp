@@ -74,11 +74,13 @@ NS_IMETHODIMP
 PaymentCreateActionRequest::InitRequest(const nsAString& aRequestId,
                                         nsIPaymentActionCallback* aCallback,
                                         const uint64_t aTabId,
+                                        nsIPrincipal* aTopLevelPrincipal,
                                         nsIArray* aMethodData,
                                         nsIPaymentDetails* aDetails,
                                         nsIPaymentOptions* aOptions)
 {
   NS_ENSURE_ARG_POINTER(aCallback);
+  NS_ENSURE_ARG_POINTER(aTopLevelPrincipal);
   NS_ENSURE_ARG_POINTER(aMethodData);
   NS_ENSURE_ARG_POINTER(aDetails);
   NS_ENSURE_ARG_POINTER(aOptions);
@@ -87,6 +89,7 @@ PaymentCreateActionRequest::InitRequest(const nsAString& aRequestId,
     return rv;
   }
   mTabId = aTabId;
+  mTopLevelPrincipal = aTopLevelPrincipal;
   mMethodData = aMethodData;
   mDetails = aDetails;
   mOptions = aOptions;
@@ -98,6 +101,16 @@ PaymentCreateActionRequest::GetTabId(uint64_t* aTabId)
 {
   NS_ENSURE_ARG_POINTER(aTabId);
   *aTabId = mTabId;
+  return NS_OK;
+}
+
+NS_IMETHODIMP
+PaymentCreateActionRequest::GetTopLevelPrincipal(nsIPrincipal** aTopLevelPrincipal)
+{
+  NS_ENSURE_ARG_POINTER(aTopLevelPrincipal);
+  MOZ_ASSERT(mTopLevelPrincipal);
+  nsCOMPtr<nsIPrincipal> principal = mTopLevelPrincipal;
+  principal.forget(aTopLevelPrincipal);
   return NS_OK;
 }
 

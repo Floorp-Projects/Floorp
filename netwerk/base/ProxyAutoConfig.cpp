@@ -561,12 +561,12 @@ bool PACProxyAlert(JSContext *cx, unsigned int argc, JS::Value *vp)
 }
 
 static const JSFunctionSpec PACGlobalFunctions[] = {
-  JS_FS("dnsResolve", PACDnsResolve, 1, 0),
+  JS_FN("dnsResolve", PACDnsResolve, 1, 0),
 
   // a global "var pacUseMultihomedDNS = true;" will change behavior
   // of myIpAddress to actively use DNS
-  JS_FS("myIpAddress", PACMyIpAddress, 0, 0),
-  JS_FS("alert", PACProxyAlert, 1, 0),
+  JS_FN("myIpAddress", PACMyIpAddress, 0, 0),
+  JS_FN("alert", PACProxyAlert, 1, 0),
   JS_FS_END
 };
 
@@ -681,7 +681,7 @@ private:
 static const JSClassOps sJSContextWrapperGlobalClassOps = {
   nullptr, nullptr, nullptr, nullptr,
   nullptr, nullptr, nullptr, nullptr,
-  nullptr, nullptr, nullptr, nullptr,
+  nullptr, nullptr,
   JS_GlobalObjectTraceHook
 };
 

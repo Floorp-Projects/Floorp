@@ -19,7 +19,7 @@ function test() {
      "All future placements should be dealt with by now.");
 
   let {CustomizableUIInternal, gFuturePlacements, gPalette} = CustomizableUIBSPass;
-  CustomizableUIInternal._updateForNewVersion();
+  CustomizableUIInternal._introduceNewBuiltinWidgets();
   is(gFuturePlacements.size, 0,
      "No change to future placements initially.");
 
@@ -67,7 +67,7 @@ function test() {
   }
 
   // Then call the re-init routine so we re-add the builtin widgets
-  CustomizableUIInternal._updateForNewVersion();
+  CustomizableUIInternal._introduceNewBuiltinWidgets();
   is(gFuturePlacements.size, 1,
      "Should have 1 more future placement");
   let haveNavbarPlacements = gFuturePlacements.has(CustomizableUI.AREA_NAVBAR);
@@ -106,7 +106,7 @@ function test() {
       "PanelUI-contents": ["panic-button", "edit-controls"],
     },
   };
-  CustomizableUIInternal._updateForNewVersion();
+  CustomizableUIInternal._introduceNewBuiltinWidgets();
   let navbarPlacements = CustomizableUIBSPass.gSavedState.placements["nav-bar"];
   let springs = navbarPlacements.filter(id => id.includes("spring"));
   is(springs.length, 2, "Should have 2 toolbarsprings in placements now");

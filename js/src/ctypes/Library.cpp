@@ -34,8 +34,7 @@ typedef Rooted<JSFlatString*>    RootedFlatString;
 
 static const JSClassOps sLibraryClassOps = {
   nullptr, nullptr, nullptr, nullptr,
-  nullptr, nullptr, nullptr, nullptr,
-  Library::Finalize
+  nullptr, nullptr, Library::Finalize
 };
 
 static const JSClass sLibraryClass = {

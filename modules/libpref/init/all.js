@@ -3323,6 +3323,13 @@ pref("dom.ipc.processCount.extension", 1);
 // Don't use a native event loop in the content process.
 pref("dom.ipc.useNativeEventProcessing.content", false);
 
+// Quantum DOM scheduling:
+pref("dom.ipc.scheduler", false);
+pref("dom.ipc.scheduler.useMultipleQueues", false);
+pref("dom.ipc.scheduler.preemption", false);
+pref("dom.ipc.scheduler.threadCount", 2);
+pref("dom.ipc.scheduler.chaoticScheduling", false);
+
 // Disable support for SVG
 pref("svg.disabled", false);
 

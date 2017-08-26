@@ -6,6 +6,8 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 /* $Id: fipstest.c,v 1.31 2012/06/28 17:55:06 rrelyea%redhat.com Exp $ */
 
+#ifndef NSS_FIPS_DISABLED
+
 #include "seccomon.h"
 #include "lgdb.h"
 #include "blapi.h"
@@ -113,3 +115,5 @@ lg_FIPSEntryOK()
 #endif
     return lg_self_tests_success;
 }
+
+#endif /* NSS_FIPS_DISABLED */

@@ -44,6 +44,15 @@ public:
   // initialized.
   nsThread* GetCurrentThread();
 
+  // CreateCurrentThread sets up an nsThread for the current thread. It uses the
+  // event queue and main thread flags passed in. It should only be called once
+  // for the current thread. After it returns, GetCurrentThread() will return
+  // the thread that was created. GetCurrentThread() will also create a thread
+  // (lazily), but it doesn't allow the queue or main-thread attributes to be
+  // specified.
+  nsThread* CreateCurrentThread(mozilla::SynchronizedEventQueue* aQueue,
+                                nsThread::MainThreadFlag aMainThread);
+
   // Returns the maximal number of threads that have been in existence
   // simultaneously during the execution of the thread manager.
   uint32_t GetHighestNumberOfThreads();

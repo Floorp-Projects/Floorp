@@ -109,6 +109,7 @@
     'nss_public_dist_dir%': '<(nss_dist_dir)/public',
     'nss_private_dist_dir%': '<(nss_dist_dir)/private',
     'only_dev_random%': 1,
+    'disable_fips%': 1,
   },
   'target_defaults': {
     # Settings specific to targets should go here.
@@ -125,6 +126,11 @@
       '<(nss_dist_dir)/private/<(module)',
     ],
     'conditions': [
+      [ 'disable_fips==1', {
+        'defines': [
+          'NSS_FIPS_DISABLED',
+        ],
+      }],
       [ 'OS!="android" and OS!="mac" and OS!="win"', {
         'libraries': [
           '-lpthread',
