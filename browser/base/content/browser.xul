@@ -155,13 +155,15 @@
            level="parent"
            overflowpadding="30" />
 
+   <!-- for date/time picker. consumeoutsideclicks is set to never, so that
+        clicks on the anchored input box are never consumed. -->
     <panel id="DateTimePickerPanel"
            type="arrow"
            hidden="true"
            orient="vertical"
            noautofocus="true"
-           noautohide="true"
-           consumeoutsideclicks="false"
+           norolluponanchor="true"
+           consumeoutsideclicks="never"
            level="parent"
            tabspecific="true">
     </panel>
@@ -904,18 +906,17 @@
         </toolbaritem>
 
         <!-- This is a placeholder for the Downloads Indicator.  It is visible
-             before the Downloads Indicator overlay is loaded. -->
+             during the customization of the toolbar, in the palette, and before
+             the Downloads Indicator overlay is loaded. -->
         <toolbarbutton id="downloads-button"
-                       hidden="true"
                        class="toolbarbutton-1 chromeclass-toolbar-additional badged-button"
-                       skipintoolbarset="true"
-                       overflows="false"
                        key="key_openDownloads"
                        oncommand="DownloadsIndicatorView.onCommand(event);"
                        ondrop="DownloadsIndicatorView.onDrop(event);"
                        ondragover="DownloadsIndicatorView.onDragOver(event);"
                        ondragenter="DownloadsIndicatorView.onDragOver(event);"
                        label="&downloads.label;"
+                       removable="true"
                        cui-areatype="toolbar"
                        tooltip="dynamic-shortcut-tooltip"/>
 

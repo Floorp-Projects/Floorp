@@ -273,8 +273,7 @@ js::MaybeHasInterestingSymbolProperty(JSContext* cx, JSObject* obj, Symbol* symb
     jsid id = SYMBOL_TO_JSID(symbol);
     do {
         if (obj->maybeHasInterestingSymbolProperty() ||
-            MOZ_UNLIKELY(ClassMayResolveId(cx->names(), obj->getClass(), id, obj) ||
-                         obj->getClass()->getGetProperty()))
+            MOZ_UNLIKELY(ClassMayResolveId(cx->names(), obj->getClass(), id, obj)))
         {
             if (holder)
                 *holder = obj;

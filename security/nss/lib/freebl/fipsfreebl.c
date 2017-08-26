@@ -6,6 +6,7 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 /* $Id: fipstest.c,v 1.31 2012/06/28 17:55:06 rrelyea%redhat.com Exp $ */
 
+#ifndef NSS_FIPS_DISABLED
 #ifdef FREEBL_NO_DEPEND
 #include "stubs.h"
 #endif
@@ -1589,9 +1590,6 @@ static PRBool self_tests_freebl_ran = PR_FALSE;
 static PRBool self_tests_ran = PR_FALSE;
 static PRBool self_tests_freebl_success = PR_FALSE;
 static PRBool self_tests_success = PR_FALSE;
-#if defined(DEBUG)
-static PRBool fips_mode_available = PR_FALSE;
-#endif
 
 /*
  * accessors for freebl
@@ -1644,7 +1642,6 @@ bl_startup_tests(void)
 
     PORT_Assert(self_tests_freebl_ran == PR_FALSE);
     PORT_Assert(self_tests_success == PR_FALSE);
-    PORT_Assert(fips_mode_available == PR_FALSE);
     self_tests_freebl_ran = PR_TRUE;      /* we are running the tests */
     self_tests_success = PR_FALSE;        /* force it just in case */
     self_tests_freebl_success = PR_FALSE; /* force it just in case */
@@ -1713,3 +1710,4 @@ BL_FIPSEntryOK(PRBool freebl_only)
     PORT_SetError(SEC_ERROR_LIBRARY_FAILURE);
     return SECFailure;
 }
+#endif

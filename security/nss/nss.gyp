@@ -131,7 +131,6 @@
             'cmd/digest/digest.gyp:digest',
             'cmd/ecperf/ecperf.gyp:ecperf',
             'cmd/fbectest/fbectest.gyp:fbectest',
-            'cmd/fipstest/fipstest.gyp:fipstest',
             'cmd/httpserv/httpserv.gyp:httpserv',
             'cmd/listsuites/listsuites.gyp:listsuites',
             'cmd/makepqg/makepqg.gyp:makepqg',
@@ -188,6 +187,11 @@
               'dependencies': [
                 'cmd/mpitests/mpitests.gyp:mpi_tests',
                 'gtests/freebl_gtest/freebl_gtest.gyp:freebl_gtest',
+              ],
+            }],
+            [ 'disable_fips==0', {
+              'dependencies': [
+                'cmd/fipstest/fipstest.gyp:fipstest',
               ],
             }],
           ],

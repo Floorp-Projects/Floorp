@@ -56,7 +56,7 @@ DocAccessibleWrap::get_accParent(
 
   // Emulated window proxy is only set for the top level content document when
   // emulation is enabled.
-  IAccessible* dispParent = ipcDoc->GetEmulatedWindowIAccessible();
+  RefPtr<IDispatch> dispParent = ipcDoc->GetEmulatedWindowIAccessible();
   if (!dispParent) {
     dispParent = ipcDoc->GetParentIAccessible();
   }
@@ -65,8 +65,7 @@ DocAccessibleWrap::get_accParent(
     return S_FALSE;
   }
 
-  dispParent->AddRef();
-  *ppdispParent = static_cast<IDispatch*>(dispParent);
+  dispParent.forget(ppdispParent);
   return S_OK;
 }
 

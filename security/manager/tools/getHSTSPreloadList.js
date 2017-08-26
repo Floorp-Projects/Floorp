@@ -12,13 +12,14 @@
 // Note: Running this file outputs a new nsSTSPreloadlist.inc in the current
 //       working directory.
 
-const { classes: Cc, interfaces: Ci, utils: Cu, results: Cr } = Components;
+var Cc = Components.classes;
+var Ci = Components.interfaces;
+var Cu = Components.utils;
+var Cr = Components.results;
 
-const { FileUtils } = Cu.import("resource://gre/modules/FileUtils.jsm", {});
-const { PSMToolUtils } =
-  Cu.import(`file:///${__LOCATION__.parent.path}/PSMToolUtils.jsm`, {});
-const { Services } = Cu.import("resource://gre/modules/Services.jsm", {});
-const { XPCOMUtils } = Cu.import("resource://gre/modules/XPCOMUtils.jsm", {});
+Cu.import("resource://gre/modules/Services.jsm");
+Cu.import("resource://gre/modules/FileUtils.jsm");
+Cu.import("resource://gre/modules/XPCOMUtils.jsm");
 
 const SOURCE = "https://chromium.googlesource.com/chromium/src/net/+/master/http/transport_security_state_static.json?format=TEXT";
 const OUTPUT = "nsSTSPreloadList.inc";
@@ -44,8 +45,30 @@ const HEADER = "/* This Source Code Form is subject to the terms of the Mozilla 
 const GPERF_DELIM = "%%\n";
 
 function download() {
-  let resultDecoded = PSMToolUtils.downloadFile(SOURCE, true);
-  let result = PSMToolUtils.stripComments(resultDecoded);
+  var req = Cc["@mozilla.org/xmlextras/xmlhttprequest;1"]
+            .createInstance(Ci.nsIXMLHttpRequest);
+  req.open("GET", SOURCE, false); // doing the request synchronously
+  try {
+    req.send();
+  } catch (e) {
+    throw new Error(`ERROR: problem downloading '${SOURCE}': ${e}`);
+  }
+
+  if (req.status != 200) {
+    throw new Error("ERROR: problem downloading '" + SOURCE + "': status " +
+                    req.status);
+  }
+
+  var resultDecoded;
+  try {
+    resultDecoded = atob(req.responseText);
+  } catch (e) {
+    throw new Error("ERROR: could not decode data as base64 from '" + SOURCE +
+                    "': " + e);
+  }
+
+  // we have to filter out '//' comments, while not mangling the json
+  var result = resultDecoded.replace(/^(\s*)?\/\/[^\n]*\n/mg, "");
   var data = null;
   try {
     data = JSON.parse(result);

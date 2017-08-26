@@ -586,11 +586,15 @@ legacy_Open(const char *configdir, const char *certPrefix,
 #define NSS_VERSION_VARIABLE __nss_dbm_version
 #include "verref.h"
 
+#ifndef NSS_FIPS_DISABLED
     if (flags & SDB_FIPS) {
+        /* We shouldn't get here when FIPS is not enabled on the database. But
+         * we also don't care when this NSS build doesn't support FIPS. */
         if (!lg_FIPSEntryOK()) {
             return CKR_DEVICE_ERROR;
         }
     }
+#endif
 
     rv = SECOID_Init();
     if (SECSuccess != rv) {

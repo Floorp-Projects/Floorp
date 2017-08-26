@@ -1293,6 +1293,7 @@ talos-chrome-stylo:
     run-on-projects:
         by-test-platform:
             windows.*: ['mozilla-central', 'try']
+            macosx.*: ['mozilla-central', 'try']
             default: []
     max-run-time: 3600
     mozharness:
@@ -1348,6 +1349,7 @@ talos-dromaeojs-stylo:
     run-on-projects:
         by-test-platform:
             windows.*: ['mozilla-central', 'try']
+            macosx.*: ['mozilla-central', 'try']
             default: []
     max-run-time: 3600
     mozharness:
@@ -1403,6 +1405,7 @@ talos-g1-stylo:
     run-on-projects:
         by-test-platform:
             windows.*: ['mozilla-central', 'try']
+            macosx.*: ['mozilla-central', 'try']
             default: []
     max-run-time: 7200
     mozharness:
@@ -1459,6 +1462,7 @@ talos-g2-stylo:
     run-on-projects:
         by-test-platform:
             windows.*: ['mozilla-central', 'try']
+            macosx.*: ['mozilla-central', 'try']
             default: []
     mozharness:
         script: talos_script.py
@@ -1541,6 +1545,7 @@ talos-g4-stylo:
     run-on-projects:
         by-test-platform:
             windows.*: ['mozilla-central', 'try']
+            macosx.*: ['mozilla-central', 'try']
             default: []
     max-run-time: 3600
     mozharness:
@@ -1597,6 +1602,7 @@ talos-g5-stylo:
     run-on-projects:
         by-test-platform:
             windows.*: ['mozilla-central', 'try']
+            macosx.*: ['mozilla-central', 'try']
             default: []
     max-run-time: 3600
     mozharness:
@@ -1653,6 +1659,7 @@ talos-other-stylo:
     run-on-projects:
         by-test-platform:
             windows.*: ['mozilla-central', 'try']
+            macosx.*: ['mozilla-central', 'try']
             default: []
     max-run-time: 3600
     mozharness:
@@ -1730,6 +1737,7 @@ talos-perf-reftest-singletons-stylo:
     run-on-projects:
         by-test-platform:
             windows.*: ['mozilla-central', 'try']
+            macosx.*: ['mozilla-central', 'try']
             default: []
     max-run-time: 3600
     mozharness:
@@ -1755,6 +1763,7 @@ talos-perf-reftest-stylo:
     run-on-projects:
         by-test-platform:
             windows.*: ['mozilla-central', 'try']
+            macosx.*: ['mozilla-central', 'try']
             default: []
     max-run-time: 3600
     mozharness:
@@ -1806,6 +1815,7 @@ talos-svgr-stylo:
     run-on-projects:
         by-test-platform:
             windows.*: ['mozilla-central', 'try']
+            macosx.*: ['mozilla-central', 'try']
             default: []
     max-run-time: 3600
     mozharness:
@@ -1861,6 +1871,7 @@ talos-tp5o-stylo:
     run-on-projects:
         by-test-platform:
             windows.*: ['mozilla-central', 'try']
+            macosx.*: ['mozilla-central', 'try']
             default: []
     max-run-time: 3600
     mozharness:

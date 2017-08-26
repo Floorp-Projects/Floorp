@@ -2583,12 +2583,11 @@ nsINode::GetAccessibleNode()
 }
 
 void
-nsINode::AddSizeOfExcludingThis(SizeOfState& aState, nsStyleSizes& aSizes,
-                                size_t* aNodeSize) const
+nsINode::AddSizeOfExcludingThis(nsWindowSizes& aSizes, size_t* aNodeSize) const
 {
   EventListenerManager* elm = GetExistingListenerManager();
   if (elm) {
-    *aNodeSize += elm->SizeOfIncludingThis(aState.mMallocSizeOf);
+    *aNodeSize += elm->SizeOfIncludingThis(aSizes.mState.mMallocSizeOf);
   }
 
   // Measurement of the following members may be added later if DMD finds it is

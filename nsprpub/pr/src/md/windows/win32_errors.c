@@ -166,21 +166,26 @@ void _MD_win32_map_default_error(PRInt32 err)
             prError = PR_ADDRESS_IN_USE_ERROR;
             break;
         case WSAEADDRNOTAVAIL:
+        case ERROR_INVALID_NETNAME:
             prError = PR_ADDRESS_NOT_AVAILABLE_ERROR;
             break;
         case WSAEAFNOSUPPORT:
+        case ERROR_INCORRECT_ADDRESS:
             prError = PR_ADDRESS_NOT_SUPPORTED_ERROR;
             break;
         case WSAEALREADY:
+        case ERROR_ALREADY_INITIALIZED:
             prError = PR_ALREADY_INITIATED_ERROR;
             break;
         case WSAEBADF:
             prError = PR_BAD_DESCRIPTOR_ERROR;
             break;
         case WSAECONNABORTED:
+        case ERROR_CONNECTION_ABORTED:
             prError = PR_CONNECT_ABORTED_ERROR;
             break;
         case WSAECONNREFUSED:
+        case ERROR_CONNECTION_REFUSED:
             prError = PR_CONNECT_REFUSED_ERROR;
             break;
         case WSAECONNRESET:
@@ -193,6 +198,7 @@ void _MD_win32_map_default_error(PRInt32 err)
             prError = PR_ACCESS_FAULT_ERROR;
             break;
         case WSAEHOSTUNREACH:
+        case ERROR_HOST_UNREACHABLE:
             prError = PR_HOST_UNREACHABLE_ERROR;
             break;
         case WSAEINVAL:
@@ -208,12 +214,14 @@ void _MD_win32_map_default_error(PRInt32 err)
             prError = PR_BUFFER_OVERFLOW_ERROR;
             break;
         case WSAENETDOWN:
+        case ERROR_NO_NETWORK:
             prError = PR_NETWORK_DOWN_ERROR;
             break;
         case WSAENETRESET:
             prError = PR_CONNECT_ABORTED_ERROR;
             break;
         case WSAENETUNREACH:
+        case ERROR_NETWORK_UNREACHABLE:
             prError = PR_NETWORK_UNREACHABLE_ERROR;
             break;
         case WSAENOBUFS:

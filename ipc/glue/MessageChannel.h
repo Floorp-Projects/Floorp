@@ -22,6 +22,7 @@
 #endif // defined(OS_WIN)
 #include "mozilla/ipc/Transport.h"
 #include "MessageLink.h"
+#include "nsILabelableRunnable.h"
 #include "nsThreadUtils.h"
 
 #include <deque>
@@ -544,7 +545,8 @@ class MessageChannel : HasResultCodes, MessageLoop::DestructionObserver
     class MessageTask :
         public CancelableRunnable,
         public LinkedListElement<RefPtr<MessageTask>>,
-        public nsIRunnablePriority
+        public nsIRunnablePriority,
+        public nsILabelableRunnable
     {
     public:
         explicit MessageTask(MessageChannel* aChannel, Message&& aMessage);
@@ -561,6 +563,8 @@ class MessageChannel : HasResultCodes, MessageLoop::DestructionObserver
 
         Message& Msg() { return mMessage; }
         const Message& Msg() const { return mMessage; }
+
+        bool GetAffectedSchedulerGroups(nsTArray<RefPtr<SchedulerGroup>>& aGroups) override;
 
     private:
         MessageTask() = delete;

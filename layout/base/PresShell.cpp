@@ -2936,6 +2936,14 @@ PresShell::DestroyFramesFor(Element* aElement)
     PostRecreateFramesFor(aElement);
   }
 
+  // NOTE(emilio): This is needed to force also a full subtree restyle for the
+  // content (in Stylo, where the existence of frames != the existence of
+  // styles).
+  //
+  // It's a bit out of place in a function called DestroyFramesFor,
+  // however the two only callers of this code really need this (given they
+  // shuffle the flattened tree around), and this avoids exposing additional
+  // APIs on the pres shell.
   mPresContext->RestyleManager()->PostRestyleEvent(
     aElement, eRestyle_Subtree, nsChangeHint(0));
 

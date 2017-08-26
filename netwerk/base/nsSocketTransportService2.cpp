@@ -1770,14 +1770,14 @@ nsSocketTransportService::CheckFileDesc2PlatformOverlappedIOHandleFunc()
     if (library) {
         mFileDesc2PlatformOverlappedIOHandleFunc =
             reinterpret_cast<FileDesc2PlatformOverlappedIOHandleFunc>(
-                GetProcAddress(library, "PR_FileDesc2PlatformOverlappedIOHandle"));
+                GetProcAddress(library, "PR_EXPERIMENTAL_ONLY_IN_4_17_GetOverlappedIOHandle"));
         if (mFileDesc2PlatformOverlappedIOHandleFunc) {
-            SOCKET_LOG(("FileDesc2PlatformOverlappedIOHandle function "
+            SOCKET_LOG(("PR_EXPERIMENTAL_ONLY_IN_4_17_GetOverlappedIOHandle function "
                         "present"));
             mNsprLibrary = library;
         } else {
             BOOL rv = FreeLibrary(library);
-            SOCKET_LOG(("No FileDesc2PlatformOverlappedIOHandle function: "
+            SOCKET_LOG(("No PR_EXPERIMENTAL_ONLY_IN_4_17_GetOverlappedIOHandle function: "
                         "%d\n", rv));
         }
     }

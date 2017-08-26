@@ -36,8 +36,8 @@ interface nsIXPConnectWrappedNative;
     // #defines so they can be used in #ifndef guards in xpc_map_end.h.
 
     #define XPC_SCRIPTABLE_WANT_PRECREATE                   (1 <<  0)
-    #define XPC_SCRIPTABLE_WANT_GETPROPERTY                 (1 <<  1)
-    #define XPC_SCRIPTABLE_WANT_SETPROPERTY                 (1 <<  2)
+    // (1 << 1) is unused
+    // (1 << 2) is unused
     #define XPC_SCRIPTABLE_WANT_ENUMERATE                   (1 <<  3)
     #define XPC_SCRIPTABLE_WANT_NEWENUMERATE                (1 <<  4)
     #define XPC_SCRIPTABLE_WANT_RESOLVE                     (1 <<  5)
@@ -74,14 +74,6 @@ interface nsIXPCScriptable : nsISupports
     void   preCreate(in nsISupports nativeObj, in JSContextPtr cx,
                      in JSObjectPtr globalObj, out JSObjectPtr parentObj);
 
-    boolean getProperty(in nsIXPConnectWrappedNative wrapper,
-                       in JSContextPtr cx, in JSObjectPtr obj, in jsid id,
-                       in JSValPtr vp);
-
-    boolean setProperty(in nsIXPConnectWrappedNative wrapper,
-                       in JSContextPtr cx, in JSObjectPtr obj, in jsid id,
-                       in JSValPtr vp);
-
     boolean enumerate(in nsIXPConnectWrappedNative wrapper,
                      in JSContextPtr cx, in JSObjectPtr obj);
 
@@ -117,8 +109,6 @@ interface nsIXPCScriptable : nsISupports
     }
 
     GET_IT(WantPreCreate,                WANT_PRECREATE)
-    GET_IT(WantGetProperty,              WANT_GETPROPERTY)
-    GET_IT(WantSetProperty,              WANT_SETPROPERTY)
     GET_IT(WantEnumerate,                WANT_ENUMERATE)
     GET_IT(WantNewEnumerate,             WANT_NEWENUMERATE)
     GET_IT(WantResolve,                  WANT_RESOLVE)

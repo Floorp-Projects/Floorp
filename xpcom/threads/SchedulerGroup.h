@@ -9,8 +9,10 @@
 
 #include "mozilla/AlreadyAddRefed.h"
 #include "mozilla/TaskCategory.h"
+#include "mozilla/ThreadLocal.h"
 #include "mozilla/TimeStamp.h"
 #include "nsCOMPtr.h"
+#include "nsILabelableRunnable.h"
 #include "nsISupportsImpl.h"
 #include "nsThreadUtils.h"
 
@@ -49,22 +51,13 @@ public:
   // "background" state.
   virtual bool IsBackground() const { return false; }
 
-  class MOZ_STACK_CLASS AutoProcessEvent final {
-  public:
-    AutoProcessEvent();
-    ~AutoProcessEvent();
-
-  private:
-    SchedulerGroup* mPrevRunningDispatcher;
-  };
-
   // This function returns true if it's currently safe to run code associated
   // with this SchedulerGroup. It will return true either if we're inside an
   // unlabeled runnable or if we're inside a runnable labeled with this
   // SchedulerGroup.
   bool IsSafeToRun() const
   {
-    return !sRunningDispatcher || mAccessValid;
+    return !sTlsValidatingAccess.get() || mIsRunning;
   }
 
   // This function returns true if it's currently safe to run unlabeled code
@@ -72,7 +65,7 @@ public:
   // unlabeled runnable.
   static bool IsSafeToRunUnlabeled()
   {
-    return !sRunningDispatcher;
+    return !sTlsValidatingAccess.get();
   }
 
   // Ensure that it's valid to access the TabGroup at this time.
@@ -81,11 +74,15 @@ public:
     MOZ_ASSERT(IsSafeToRun());
   }
 
-  class Runnable final : public mozilla::Runnable, public nsIRunnablePriority
+  class Runnable final : public mozilla::Runnable
+                       , public nsIRunnablePriority
+                       , public nsILabelableRunnable
   {
   public:
     Runnable(already_AddRefed<nsIRunnable>&& aRunnable,
              SchedulerGroup* aGroup);
+
+    bool GetAffectedSchedulerGroups(nsTArray<RefPtr<SchedulerGroup>>& aGroups) override;
 
     SchedulerGroup* Group() const { return mGroup; }
 
@@ -109,7 +106,7 @@ public:
   };
   friend class Runnable;
 
-  bool* GetValidAccessPtr() { return &mAccessValid; }
+  bool* GetValidAccessPtr() { return &mIsRunning; }
 
   virtual nsresult Dispatch(TaskCategory aCategory,
                             already_AddRefed<nsIRunnable>&& aRunnable);
@@ -130,6 +127,15 @@ public:
   static void MarkVsyncReceived();
 
   static void MarkVsyncRan();
+
+  void SetIsRunning(bool aIsRunning) { mIsRunning = aIsRunning; }
+  bool IsRunning() const { return mIsRunning; }
+
+  enum ValidationType {
+    StartValidation,
+    EndValidation,
+  };
+  static void SetValidatingAccess(ValidationType aType);
 
 protected:
   static nsresult InternalUnlabeledDispatch(TaskCategory aCategory,
@@ -156,14 +162,9 @@ protected:
   // dispatcher.
   void Shutdown(bool aXPCOMShutdown);
 
-  enum ValidationType {
-    StartValidation,
-    EndValidation,
-  };
-  void SetValidatingAccess(ValidationType aType);
+  static MOZ_THREAD_LOCAL(bool) sTlsValidatingAccess;
 
-  static SchedulerGroup* sRunningDispatcher;
-  bool mAccessValid;
+  bool mIsRunning;
 
   nsCOMPtr<nsISerialEventTarget> mEventTargets[size_t(TaskCategory::Count)];
   RefPtr<AbstractThread> mAbstractThreads[size_t(TaskCategory::Count)];
