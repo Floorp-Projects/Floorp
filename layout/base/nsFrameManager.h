@@ -199,6 +199,8 @@ public:
 
   void RestoreFrameStateFor(nsIFrame* aFrame, nsILayoutHistoryState* aState);
 
+  void DestroyAnonymousContent(already_AddRefed<nsIContent> aContent);
+
 protected:
   static nsIContent* ParentForUndisplayedMap(const nsIContent* aContent);
 
