@@ -177,9 +177,9 @@ nsVideoFrame::AppendAnonymousContentTo(nsTArray<nsIContent*>& aElements,
 void
 nsVideoFrame::DestroyFrom(nsIFrame* aDestructRoot)
 {
-  nsContentUtils::DestroyAnonymousContent(&mCaptionDiv);
-  nsContentUtils::DestroyAnonymousContent(&mVideoControls);
-  nsContentUtils::DestroyAnonymousContent(&mPosterImage);
+  DestroyAnonymousContent(mCaptionDiv.forget());
+  DestroyAnonymousContent(mVideoControls.forget());
+  DestroyAnonymousContent(mPosterImage.forget());
   nsContainerFrame::DestroyFrom(aDestructRoot);
 }
 

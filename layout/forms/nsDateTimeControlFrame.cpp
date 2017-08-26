@@ -50,7 +50,7 @@ nsDateTimeControlFrame::nsDateTimeControlFrame(nsStyleContext* aContext)
 void
 nsDateTimeControlFrame::DestroyFrom(nsIFrame* aDestructRoot)
 {
-  nsContentUtils::DestroyAnonymousContent(&mInputAreaContent);
+  DestroyAnonymousContent(mInputAreaContent.forget());
   nsContainerFrame::DestroyFrom(aDestructRoot);
 }
 

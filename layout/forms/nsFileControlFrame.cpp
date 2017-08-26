@@ -68,8 +68,8 @@ nsFileControlFrame::DestroyFrom(nsIFrame* aDestructRoot)
                                         mMouseListener, false);
   }
 
-  nsContentUtils::DestroyAnonymousContent(&mTextContent);
-  nsContentUtils::DestroyAnonymousContent(&mBrowseFilesOrDirs);
+  DestroyAnonymousContent(mTextContent.forget());
+  DestroyAnonymousContent(mBrowseFilesOrDirs.forget());
 
   mMouseListener->ForgetFrame();
   nsBlockFrame::DestroyFrom(aDestructRoot);

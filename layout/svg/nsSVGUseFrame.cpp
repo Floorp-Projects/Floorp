@@ -102,7 +102,7 @@ nsSVGUseFrame::AttributeChanged(int32_t         aNameSpaceID,
 void
 nsSVGUseFrame::DestroyFrom(nsIFrame* aDestructRoot)
 {
-  nsContentUtils::DestroyAnonymousContent(&mContentClone);
+  DestroyAnonymousContent(mContentClone.forget());
   nsSVGGFrame::DestroyFrom(aDestructRoot);
 }
 

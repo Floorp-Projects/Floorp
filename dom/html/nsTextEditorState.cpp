@@ -2264,9 +2264,9 @@ nsTextEditorState::UnbindFromFrame(nsTextControlFrame* aFrame)
   // Unbind the anonymous content from the tree.
   // We actually hold a reference to the content nodes so that
   // they're not actually destroyed.
-  nsContentUtils::DestroyAnonymousContent(&rootNode);
-  nsContentUtils::DestroyAnonymousContent(&mPlaceholderDiv);
-  nsContentUtils::DestroyAnonymousContent(&mPreviewDiv);
+  aFrame->DestroyAnonymousContent(rootNode.forget());
+  aFrame->DestroyAnonymousContent(mPlaceholderDiv.forget());
+  aFrame->DestroyAnonymousContent(mPreviewDiv.forget());
 }
 
 nsresult

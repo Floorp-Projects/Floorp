@@ -681,6 +681,21 @@ nsFrameManager::RestoreFrameState(nsIFrame* aFrame,
   }
 }
 
+void
+nsFrameManager::DestroyAnonymousContent(already_AddRefed<nsIContent> aContent)
+{
+  nsCOMPtr<nsIContent> content = aContent;
+  if (content) {
+    // Invoke ClearAllMapsFor before unbinding from the tree. When we unbind,
+    // we remove the mPrimaryFrame pointer, which is used by the frame
+    // teardown code to determine whether to invoke ClearAllMapsFor or not.
+    // These maps will go away when we drop support for the old style system.
+    ClearAllMapsFor(content);
+
+    content->UnbindFromTree();
+  }
+}
+
 //----------------------------------------------------------------------
 
 nsFrameManagerBase::UndisplayedMap::UndisplayedMap()

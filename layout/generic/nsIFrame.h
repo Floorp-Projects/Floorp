@@ -4026,6 +4026,8 @@ public:
 
   DisplayItemArray& DisplayItemData() { return mDisplayItemData; }
 
+  void DestroyAnonymousContent(already_AddRefed<nsIContent> aContent);
+
 protected:
 
   /**

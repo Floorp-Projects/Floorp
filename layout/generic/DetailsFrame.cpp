@@ -83,7 +83,7 @@ DetailsFrame::CheckValidMainSummary(const nsFrameList& aFrameList) const
 void
 DetailsFrame::DestroyFrom(nsIFrame* aDestructRoot)
 {
-  nsContentUtils::DestroyAnonymousContent(&mDefaultSummary);
+  DestroyAnonymousContent(mDefaultSummary.forget());
   nsBlockFrame::DestroyFrom(aDestructRoot);
 }
 
