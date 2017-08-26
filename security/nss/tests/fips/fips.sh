@@ -23,6 +23,7 @@
 ########################################################################
 fips_init()
 {
+  export NSS_TEST_ENABLE_FIPS=1
   SCRIPTNAME=fips.sh      # sourced - $0 would point to all.sh
 
   if [ -z "${CLEANUP}" ] ; then     # if nobody else is responsible for

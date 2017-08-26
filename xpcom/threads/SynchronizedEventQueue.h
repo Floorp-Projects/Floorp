@@ -10,6 +10,7 @@
 #include "mozilla/AlreadyAddRefed.h"
 #include "mozilla/AbstractEventQueue.h"
 #include "mozilla/Mutex.h"
+#include "nsTObserverArray.h"
 
 class nsIThreadObserver;
 
@@ -65,6 +66,10 @@ public:
   virtual already_AddRefed<nsIThreadObserver> GetObserverOnThread() = 0;
   virtual void SetObserver(nsIThreadObserver* aObserver) = 0;
 
+  void AddObserver(nsIThreadObserver* aObserver);
+  void RemoveObserver(nsIThreadObserver* aObserver);
+  const nsTObserverArray<nsCOMPtr<nsIThreadObserver>>& EventObservers();
+
   virtual void EnableInputEventPrioritization() = 0;
   virtual void FlushInputEventPrioritization() = 0;
   virtual void SuspendInputEventPrioritization() = 0;
@@ -72,6 +77,9 @@ public:
 
 protected:
   virtual ~SynchronizedEventQueue() {}
+
+private:
+  nsTObserverArray<nsCOMPtr<nsIThreadObserver>> mEventObservers;
 };
 
 } // namespace mozilla

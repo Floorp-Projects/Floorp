@@ -572,8 +572,6 @@ str_resolve(JSContext* cx, HandleObject obj, HandleId id, bool* resolvedp)
 static const ClassOps StringObjectClassOps = {
     nullptr, /* addProperty */
     nullptr, /* delProperty */
-    nullptr, /* getProperty */
-    nullptr, /* setProperty */
     str_enumerate,
     nullptr, /* newEnumerate */
     str_resolve,

@@ -12,7 +12,8 @@
 namespace mozilla {
 
 already_AddRefed<IdleTaskRunner>
-IdleTaskRunner::Create(const CallbackType& aCallback, uint32_t aDelay,
+IdleTaskRunner::Create(const CallbackType& aCallback,
+                       const char* aRunnableName, uint32_t aDelay,
                        int64_t aBudget, bool aRepeating,
                        const MayStopProcessingCallbackType& aMayStopProcessing,
                        TaskCategory aTaskCategory)
@@ -22,18 +23,21 @@ IdleTaskRunner::Create(const CallbackType& aCallback, uint32_t aDelay,
   }
 
   RefPtr<IdleTaskRunner> runner =
-    new IdleTaskRunner(aCallback, aDelay, aBudget, aRepeating,
-                       aMayStopProcessing, aTaskCategory);
+    new IdleTaskRunner(aCallback, aRunnableName, aDelay,
+                       aBudget, aRepeating, aMayStopProcessing,
+                       aTaskCategory);
   runner->Schedule(false); // Initial scheduling shouldn't use idle dispatch.
   return runner.forget();
 }
 
 IdleTaskRunner::IdleTaskRunner(const CallbackType& aCallback,
+                               const char* aRunnableName,
                                uint32_t aDelay, int64_t aBudget,
                                bool aRepeating,
                                const MayStopProcessingCallbackType& aMayStopProcessing,
                                TaskCategory aTaskCategory)
-  : mCallback(aCallback), mDelay(aDelay)
+  : IdleRunnable(aRunnableName)
+  , mCallback(aCallback), mDelay(aDelay)
   , mBudget(TimeDuration::FromMilliseconds(aBudget))
   , mRepeating(aRepeating), mTimerActive(false)
   , mMayStopProcessing(aMayStopProcessing)

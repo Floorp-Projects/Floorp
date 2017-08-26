@@ -71,7 +71,7 @@ AttachNewConstructorObject(JSContext* aCx, JS::HandleObject aGlobalObject)
   JSFunction* xpcnativewrapper =
     JS_DefineFunction(aCx, aGlobalObject, "XPCNativeWrapper",
                       XrayWrapperConstructor, 1,
-                      JSPROP_READONLY | JSPROP_PERMANENT | JSFUN_STUB_GSOPS | JSFUN_CONSTRUCTOR);
+                      JSPROP_READONLY | JSPROP_PERMANENT | JSFUN_CONSTRUCTOR);
   if (!xpcnativewrapper) {
     return false;
   }

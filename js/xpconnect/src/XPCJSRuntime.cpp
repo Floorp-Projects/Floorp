@@ -2160,10 +2160,10 @@ class OrphanReporter : public JS::ObjectPrivateVisitor
     size_t SizeOfTreeIncludingThis(nsINode* tree)
     {
         size_t nodeSize = 0;
-        nsStyleSizes sizes;
-        tree->AddSizeOfIncludingThis(mState, sizes, &nodeSize);
+        nsWindowSizes sizes(mState);
+        tree->AddSizeOfIncludingThis(sizes, &nodeSize);
         for (nsIContent* child = tree->GetFirstChild(); child; child = child->GetNextNode(tree))
-            child->AddSizeOfIncludingThis(mState, sizes, &nodeSize);
+            child->AddSizeOfIncludingThis(sizes, &nodeSize);
 
         // We combine the node size with nsStyleSizes here. It's not ideal, but
         // it's hard to get the style structs measurements out to

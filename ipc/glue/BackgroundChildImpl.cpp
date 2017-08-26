@@ -28,8 +28,10 @@
 #include "mozilla/dom/StorageIPC.h"
 #include "mozilla/dom/GamepadEventChannelChild.h"
 #include "mozilla/dom/GamepadTestChannelChild.h"
-#include "mozilla/dom/MessagePortChild.h"
 #include "mozilla/dom/LocalStorage.h"
+#include "mozilla/dom/MessagePortChild.h"
+#include "mozilla/dom/TabChild.h"
+#include "mozilla/dom/TabGroup.h"
 #include "mozilla/ipc/IPCStreamAlloc.h"
 #include "mozilla/ipc/PBackgroundTestChild.h"
 #include "mozilla/ipc/PChildToParentStreamChild.h"
@@ -623,6 +625,23 @@ BackgroundChildImpl::RecvDispatchLocalStorageChange(
                                      principal, aIsPrivate, nullptr, true);
 
   return IPC_OK();
+}
+
+bool
+BackgroundChildImpl::GetMessageSchedulerGroups(const Message& aMsg, nsTArray<RefPtr<SchedulerGroup>>& aGroups)
+{
+  if (aMsg.type() == layout::PVsync::MessageType::Msg_Notify__ID) {
+    MOZ_ASSERT(NS_IsMainThread());
+    aGroups.Clear();
+    if (dom::TabChild::HasActiveTabs()) {
+      for (dom::TabChild* tabChild : dom::TabChild::GetActiveTabs()) {
+        aGroups.AppendElement(tabChild->TabGroup());
+      }
+    }
+    return true;
+  }
+
+  return false;
 }
 
 } // namespace ipc

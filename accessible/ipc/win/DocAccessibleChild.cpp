@@ -49,10 +49,10 @@ DocAccessibleChild::Shutdown()
 }
 
 ipc::IPCResult
-DocAccessibleChild::RecvParentCOMProxy(const IAccessibleHolder& aParentCOMProxy)
+DocAccessibleChild::RecvParentCOMProxy(const IDispatchHolder& aParentCOMProxy)
 {
   MOZ_ASSERT(!mParentProxy && !aParentCOMProxy.IsNull());
-  mParentProxy.reset(const_cast<IAccessibleHolder&>(aParentCOMProxy).Release());
+  mParentProxy.reset(const_cast<IDispatchHolder&>(aParentCOMProxy).Release());
   SetConstructedInParentProcess();
 
   for (uint32_t i = 0, l = mDeferredEvents.Length(); i < l; ++i) {
@@ -66,13 +66,13 @@ DocAccessibleChild::RecvParentCOMProxy(const IAccessibleHolder& aParentCOMProxy)
 
 ipc::IPCResult
 DocAccessibleChild::RecvEmulatedWindow(const WindowsHandle& aEmulatedWindowHandle,
-                                       const IAccessibleHolder& aEmulatedWindowCOMProxy)
+                                       const IDispatchHolder& aEmulatedWindowCOMProxy)
 {
   mEmulatedWindowHandle = reinterpret_cast<HWND>(aEmulatedWindowHandle);
   if (!aEmulatedWindowCOMProxy.IsNull()) {
     MOZ_ASSERT(!mEmulatedWindowProxy);
     mEmulatedWindowProxy.reset(
-      const_cast<IAccessibleHolder&>(aEmulatedWindowCOMProxy).Release());
+      const_cast<IDispatchHolder&>(aEmulatedWindowCOMProxy).Release());
   }
 
   return IPC_OK();

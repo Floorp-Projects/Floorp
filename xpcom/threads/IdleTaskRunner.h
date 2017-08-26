@@ -32,7 +32,8 @@ public:
 
 public:
   static already_AddRefed<IdleTaskRunner>
-  Create(const CallbackType& aCallback, uint32_t aDelay,
+  Create(const CallbackType& aCallback,
+         const char* aRunnableName, uint32_t aDelay,
          int64_t aBudget, bool aRepeating,
          const MayStopProcessingCallbackType& aMayStopProcessing,
          TaskCategory aTaskCategory = TaskCategory::Count);
@@ -47,6 +48,7 @@ public:
 
 private:
   explicit IdleTaskRunner(const CallbackType& aCallback,
+                          const char* aRunnableName,
                           uint32_t aDelay, int64_t aBudget,
                           bool aRepeating,
                           const MayStopProcessingCallbackType& aMayStopProcessing,

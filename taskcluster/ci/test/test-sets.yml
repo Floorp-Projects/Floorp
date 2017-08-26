@@ -231,6 +231,19 @@ macosx64-tests-talos:
     - talos-perf-reftest
     - talos-perf-reftest-singletons
     - talos-tp6
+
+macosx64-tests-talos-stylo:
+    - talos-chrome-stylo
+    - talos-dromaeojs-stylo
+    - talos-g1-stylo
+    - talos-g2-stylo
+    - talos-g4-stylo
+    - talos-g5-stylo
+    - talos-other-stylo
+    - talos-svgr-stylo
+    - talos-tp5o-stylo
+    - talos-perf-reftest-stylo
+    - talos-perf-reftest-singletons-stylo
     - talos-tp6-stylo
     - talos-tp6-stylo-threads
 

@@ -23,6 +23,7 @@ void parse_input(const uint8_t *data, size_t size, BIGNUM *A, BIGNUM *B,
 void parse_input(const uint8_t *data, size_t size, BIGNUM *A, mp_int *a);
 std::tuple<BIGNUM *, mp_int> get_modulus(const uint8_t *data, size_t size,
                                          BN_CTX *ctx);
+void print_bn(std::string label, BIGNUM *x);
 
 // Initialise MPI and BN variables
 // XXX: Also silence unused variable warnings for R.

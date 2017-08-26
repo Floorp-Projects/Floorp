@@ -57,7 +57,7 @@ const kSubviewEvents = [
  * The current version. We can use this to auto-add new default widgets as necessary.
  * (would be const but isn't because of testing purposes)
  */
-var kVersion = 11;
+var kVersion = 10;
 
 /**
  * Buttons removed from built-ins by version they were removed. kVersion must be
@@ -177,7 +177,7 @@ var CustomizableUIInternal = {
     this.addListener(this);
     this._defineBuiltInWidgets();
     this.loadSavedState();
-    this._updateForNewVersion();
+    this._introduceNewBuiltinWidgets();
     this._markObsoleteBuiltinButtonsSeen();
 
     this.registerArea(CustomizableUI.AREA_FIXED_OVERFLOW_PANEL, {
@@ -195,6 +195,7 @@ var CustomizableUIInternal = {
       "urlbar-container",
       "search-container",
       "spring",
+      "downloads-button",
       "library-button",
       "sidebar-button",
     ];
@@ -262,7 +263,7 @@ var CustomizableUIInternal = {
     }
   },
 
-  _updateForNewVersion() {
+  _introduceNewBuiltinWidgets() {
     // We should still enter even if gSavedState.currentVersion >= kVersion
     // because the per-widget pref facility is independent of versioning.
     if (!gSavedState) {
@@ -411,15 +412,6 @@ var CustomizableUIInternal = {
       for (let placements of Object.values(gSavedState.placements)) {
         if (placements.includes("webcompat-reporter-button")) {
           placements.splice(placements.indexOf("webcompat-reporter-button"), 1);
-          break;
-        }
-      }
-    }
-
-    if (currentVersion < 11 && gSavedState && gSavedState.placements) {
-      for (let placements of Object.values(gSavedState.placements)) {
-        if (placements.includes("downloads-button")) {
-          placements.splice(placements.indexOf("downloads-button"), 1);
           break;
         }
       }

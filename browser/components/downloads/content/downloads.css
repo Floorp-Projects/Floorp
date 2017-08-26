@@ -176,6 +176,13 @@ richlistitem.download button {
   display: none;
 }
 
+/*** Downloads panel ***/
+
+#downloadsPanel[hasdownloads] #emptyDownloads,
+#downloadsPanel:not([hasdownloads]) #downloadsListBox {
+  display: none;
+}
+
 /*** Downloads panel multiview (main view and blocked-downloads subview) ***/
 
 /* Hide all the usual buttons. */

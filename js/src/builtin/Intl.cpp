@@ -932,8 +932,6 @@ Call(JSContext* cx, const ICUStringFunction& strFn)
 const ClassOps CollatorObject::classOps_ = {
     nullptr, /* addProperty */
     nullptr, /* delProperty */
-    nullptr, /* getProperty */
-    nullptr, /* setProperty */
     nullptr, /* enumerate */
     nullptr, /* newEnumerate */
     nullptr, /* resolve */
@@ -1500,8 +1498,6 @@ js::intl_isUpperCaseFirst(JSContext* cx, unsigned argc, Value* vp)
 const ClassOps NumberFormatObject::classOps_ = {
     nullptr, /* addProperty */
     nullptr, /* delProperty */
-    nullptr, /* getProperty */
-    nullptr, /* setProperty */
     nullptr, /* enumerate */
     nullptr, /* newEnumerate */
     nullptr, /* resolve */
@@ -2374,8 +2370,6 @@ js::intl_FormatNumber(JSContext* cx, unsigned argc, Value* vp)
 const ClassOps DateTimeFormatObject::classOps_ = {
     nullptr, /* addProperty */
     nullptr, /* delProperty */
-    nullptr, /* getProperty */
-    nullptr, /* setProperty */
     nullptr, /* enumerate */
     nullptr, /* newEnumerate */
     nullptr, /* resolve */
@@ -3485,8 +3479,6 @@ js::intl_FormatDateTime(JSContext* cx, unsigned argc, Value* vp)
 const ClassOps PluralRulesObject::classOps_ = {
     nullptr, /* addProperty */
     nullptr, /* delProperty */
-    nullptr, /* getProperty */
-    nullptr, /* setProperty */
     nullptr, /* enumerate */
     nullptr, /* newEnumerate */
     nullptr, /* resolve */

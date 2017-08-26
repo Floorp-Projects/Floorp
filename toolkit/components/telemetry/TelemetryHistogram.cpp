@@ -13,6 +13,7 @@
 #include "nsBaseHashtable.h"
 #include "nsClassHashtable.h"
 #include "nsITelemetry.h"
+#include "nsPrintfCString.h"
 
 #include "mozilla/dom/ToJSValue.h"
 #include "mozilla/gfx/GPUProcessManager.h"
@@ -23,6 +24,7 @@
 
 #include "TelemetryCommon.h"
 #include "TelemetryHistogram.h"
+#include "TelemetryScalar.h"
 #include "ipc/TelemetryIPCAccumulator.h"
 
 #include "base/histogram.h"
@@ -120,12 +122,15 @@ struct HistogramInfo {
   uint32_t dataset;
   uint32_t label_index;
   uint32_t label_count;
+  uint32_t key_index;
+  uint32_t key_count;
   RecordedProcessType record_in_processes;
   bool keyed;
 
   const char *name() const;
   const char *expiration() const;
   nsresult label_id(const char* label, uint32_t* labelId) const;
+  bool allows_key(const nsACString& key) const;
 };
 
 enum reflectStatus {
@@ -421,6 +426,32 @@ HistogramInfo::label_id(const char* label, uint32_t* labelId) const
   }
 
   return NS_ERROR_FAILURE;
+}
+
+bool
+HistogramInfo::allows_key(const nsACString& key) const
+{
+  MOZ_ASSERT(this->keyed);
+
+  // If we didn't specify a list of allowed keys, just return true.
+  if (this->key_count == 0) {
+    return true;
+  }
+
+  // Otherwise, check if |key| is in the list of allowed keys.
+  for (uint32_t i = 0; i < this->key_count; ++i) {
+    // gHistogramKeyTable contains the indices of the key strings in the
+    // gHistogramStringTable. They are stored in-order and consecutively,
+    // from the offset key_index to (key_index + key_count).
+    uint32_t string_offset = gHistogramKeyTable[this->key_index + i];
+    const char* const str = &gHistogramStringTable[string_offset];
+    if (key.EqualsASCII(str)) {
+      return true;
+    }
+  }
+
+  // |key| was not found.
+  return false;
 }
 
 } // namespace
@@ -1028,8 +1059,6 @@ void internal_JSHistogram_finalize(JSFreeOp*, JSObject*);
 static const JSClassOps sJSHistogramClassOps = {
   nullptr, /* addProperty */
   nullptr, /* delProperty */
-  nullptr, /* getProperty */
-  nullptr, /* setProperty */
   nullptr, /* enumerate */
   nullptr, /* newEnumerate */
   nullptr, /* resolve */
@@ -1267,8 +1296,6 @@ void internal_JSKeyedHistogram_finalize(JSFreeOp*, JSObject*);
 static const JSClassOps sJSKeyedHistogramClassOps = {
   nullptr, /* addProperty */
   nullptr, /* delProperty */
-  nullptr, /* getProperty */
-  nullptr, /* setProperty */
   nullptr, /* enumerate */
   nullptr, /* newEnumerate */
   nullptr, /* resolve */
@@ -1388,6 +1415,18 @@ internal_JSKeyedHistogram_Add(JSContext *cx, unsigned argc, JS::Value *vp)
   nsAutoJSString key;
   if (!args[0].isString() || !key.init(cx, args[0])) {
     LogToBrowserConsole(nsIScriptError::errorFlag, NS_LITERAL_STRING("Not a string"));
+    return true;
+  }
+
+  // Check if we're allowed to record in the provided key, for this histogram.
+  if (!gHistogramInfos[id].allows_key(NS_ConvertUTF16toUTF8(key))) {
+    nsPrintfCString msg("%s - key '%s' not allowed for this keyed histogram",
+                        gHistogramInfos[id].name(),
+                        NS_ConvertUTF16toUTF8(key).get());
+    LogToBrowserConsole(nsIScriptError::errorFlag, NS_ConvertUTF8toUTF16(msg));
+    TelemetryScalar::Add(
+      mozilla::Telemetry::ScalarID::TELEMETRY_ACCUMULATE_UNKNOWN_HISTOGRAM_KEYS,
+      NS_ConvertASCIItoUTF16(gHistogramInfos[id].name()), 1);
     return true;
   }
 
@@ -1794,6 +1833,18 @@ TelemetryHistogram::Accumulate(HistogramID aID,
     return;
   }
 
+  // Check if we're allowed to record in the provided key, for this histogram.
+  if (!gHistogramInfos[aID].allows_key(aKey)) {
+    nsPrintfCString msg("%s - key '%s' not allowed for this keyed histogram",
+                        gHistogramInfos[aID].name(),
+                        aKey.get());
+    LogToBrowserConsole(nsIScriptError::errorFlag, NS_ConvertUTF8toUTF16(msg));
+    TelemetryScalar::Add(
+      mozilla::Telemetry::ScalarID::TELEMETRY_ACCUMULATE_UNKNOWN_HISTOGRAM_KEYS,
+      NS_ConvertASCIItoUTF16(gHistogramInfos[aID].name()), 1);
+    return;
+  }
+
   StaticMutexAutoLock locker(gTelemetryHistogramMutex);
   internal_Accumulate(aID, aKey, aSample);
 }
@@ -1817,14 +1868,33 @@ void
 TelemetryHistogram::Accumulate(const char* name,
                                const nsCString& key, uint32_t sample)
 {
-  StaticMutexAutoLock locker(gTelemetryHistogramMutex);
-  if (!internal_CanRecordBase()) {
-    return;
-  }
-  HistogramID id;
-  nsresult rv = internal_GetHistogramIdByName(nsDependentCString(name), &id);
-  if (NS_SUCCEEDED(rv)) {
-    internal_Accumulate(id, key, sample);
+  bool keyNotAllowed = false;
+
+  {
+    StaticMutexAutoLock locker(gTelemetryHistogramMutex);
+    if (!internal_CanRecordBase()) {
+      return;
+    }
+    HistogramID id;
+    nsresult rv = internal_GetHistogramIdByName(nsDependentCString(name), &id);
+    if (NS_SUCCEEDED(rv)) {
+      // Check if we're allowed to record in the provided key, for this histogram.
+      if (gHistogramInfos[id].allows_key(key)) {
+        internal_Accumulate(id, key, sample);
+        return;
+      }
+      // We're holding |gTelemetryHistogramMutex|, so we can't print a message
+      // here.
+      keyNotAllowed = true;
+    }
+   }
+
+  if (keyNotAllowed) {
+    LogToBrowserConsole(nsIScriptError::errorFlag,
+                        NS_LITERAL_STRING("Key not allowed for this keyed histogram"));
+    TelemetryScalar::Add(
+      mozilla::Telemetry::ScalarID::TELEMETRY_ACCUMULATE_UNKNOWN_HISTOGRAM_KEYS,
+      NS_ConvertASCIItoUTF16(name), 1);
   }
 }
 

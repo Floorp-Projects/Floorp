@@ -208,8 +208,6 @@ JSObject* newDelegate()
     static const js::ClassOps delegateClassOps = {
         nullptr, /* addProperty */
         nullptr, /* delProperty */
-        nullptr, /* getProperty */
-        nullptr, /* setProperty */
         nullptr, /* enumerate */
         nullptr, /* newEnumerate */
         nullptr, /* resolve */

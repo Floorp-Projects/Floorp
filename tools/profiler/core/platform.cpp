@@ -42,6 +42,7 @@
 #include "GeckoProfilerReporter.h"
 #include "ProfilerIOInterposeObserver.h"
 #include "mozilla/AutoProfilerLabel.h"
+#include "mozilla/Scheduler.h"
 #include "mozilla/StackWalk.h"
 #include "mozilla/StaticPtr.h"
 #include "mozilla/ThreadLocal.h"
@@ -2977,7 +2978,7 @@ profiler_register_thread(const char* aName, void* aGuessStackTop)
 {
   DEBUG_LOG("profiler_register_thread(%s)", aName);
 
-  MOZ_RELEASE_ASSERT(!NS_IsMainThread());
+  MOZ_ASSERT_IF(NS_IsMainThread(), Scheduler::IsCooperativeThread());
   MOZ_RELEASE_ASSERT(CorePS::Exists());
 
   PSAutoLock lock(gPSMutex);
@@ -2989,7 +2990,7 @@ profiler_register_thread(const char* aName, void* aGuessStackTop)
 void
 profiler_unregister_thread()
 {
-  MOZ_RELEASE_ASSERT(!NS_IsMainThread());
+  MOZ_ASSERT_IF(NS_IsMainThread(), Scheduler::IsCooperativeThread());
   MOZ_RELEASE_ASSERT(CorePS::Exists());
 
   PSAutoLock lock(gPSMutex);

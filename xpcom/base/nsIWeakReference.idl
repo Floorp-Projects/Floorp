@@ -7,7 +7,28 @@
 #include "nsISupports.idl"
 
 %{C++
+#include "mozilla/Attributes.h"
 #include "mozilla/MemoryReporting.h"
+
+// For MOZ_THREAD_SAFETY_OWNERSHIP_CHECKS_SUPPORTED.
+#include "nsDebug.h"
+
+#ifdef MOZ_THREAD_SAFETY_OWNERSHIP_CHECKS_SUPPORTED
+
+#define MOZ_WEAKREF_DECL_OWNINGTHREAD nsAutoOwningThread _mWeakRefOwningThread;
+#define MOZ_WEAKREF_ASSERT_OWNINGTHREAD \
+  _mWeakRefOwningThread.AssertOwnership("nsWeakReference not thread-safe")
+#define MOZ_WEAKREF_ASSERT_OWNINGTHREAD_DELEGATED(that) \
+  (that)->_mWeakRefOwningThread.AssertOwnership("nsWeakReference not thread-safe")
+
+#else
+
+#define MOZ_WEAKREF_DECL_OWNINGTHREAD
+#define MOZ_WEAKREF_ASSERT_OWNINGTHREAD do { } while (false)
+#define MOZ_WEAKREF_ASSERT_OWNINGTHREAD_DELEGATED(that) do { } while (false)
+
+#endif
+
 %}
 
 /**
@@ -33,15 +54,36 @@ interface nsIWeakReference : nsISupports
      * like (a proxied) |QueryInterface|.  Don't hold on to the produced interface permanently;
      * that would defeat the purpose of using a non-owning |nsIWeakReference| in the first place.
      */
+    [binaryname(QueryReferentFromScript)]
     void QueryReferent( in nsIIDRef uuid, [iid_is(uuid), retval] out nsQIResult result );
 
 %{C++
-    virtual size_t SizeOfOnlyThis(mozilla::MallocSizeOf aMallocSizeOf) const = 0;
+  virtual size_t SizeOfOnlyThis(mozilla::MallocSizeOf aMallocSizeOf) const = 0;
 
-    /**
-     * Returns true if the referring object is alive.  Otherwise, false.
-     */
-    virtual bool IsAlive() const = 0;
+  /**
+   * Returns true if the referring object is alive.  Otherwise, false.
+   */
+  bool IsAlive() const
+  {
+    return !!mObject;
+  }
+
+  nsresult QueryReferent(const nsIID& aIID, void** aInstancePtr);
+
+protected:
+  friend class nsSupportsWeakReference;
+
+  nsIWeakReference(nsISupports* aObject)
+    : mObject(aObject)
+  {
+  }
+
+  nsIWeakReference() = delete;
+
+  MOZ_WEAKREF_DECL_OWNINGTHREAD
+
+  // The object we're holding a weak reference to.
+  nsISupports* MOZ_NON_OWNING_REF mObject;
 %}
   };
 
