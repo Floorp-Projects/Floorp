@@ -117,7 +117,7 @@ function continueTests3() {
   }
 
   newWindow = gBrowser.replaceTabWithWindow(tabs.pop());
-  whenDelayedStartupFinished(newWindow, checkNewWindow);
+  whenDelayedStartupFinished(newWindow, () => { executeSoon(checkNewWindow); });
 }
 
 // Test that findbar gets restored when a tab is moved to a new window.
