@@ -7684,8 +7684,9 @@ nsCSSFrameConstructor::ContentAppended(nsIContent* aContainer,
         !aContainer->IsActiveChildrenElement()) {
       // We're punting on frame construction because there's no container frame.
       // The Servo-backed style system handles this case like the lazy frame
-      // construction case.
-      if (isNewlyAddedContentForServo) {
+      // construction case, except when we're already constructing frames, in
+      // which case we shouldn't need to do anything else.
+      if (isNewlyAddedContentForServo && aAllowLazyConstruction) {
         LazilyStyleNewChildRange(aFirstNewContent, nullptr);
       }
       return;
@@ -8168,8 +8169,9 @@ nsCSSFrameConstructor::ContentRangeInserted(nsIContent* aContainer,
     if (!parentFrame && !aContainer->IsActiveChildrenElement()) {
       // We're punting on frame construction because there's no container frame.
       // The Servo-backed style system handles this case like the lazy frame
-      // construction case.
-      if (isNewlyAddedContentForServo) {
+      // construction case, except when we're already constructing frames, in
+      // which case we shouldn't need to do anything else.
+      if (isNewlyAddedContentForServo && aAllowLazyConstruction) {
         LazilyStyleNewChildRange(aStartChild, aEndChild);
       }
       return;
