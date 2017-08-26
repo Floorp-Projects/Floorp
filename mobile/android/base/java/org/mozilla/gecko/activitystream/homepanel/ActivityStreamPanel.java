@@ -18,6 +18,8 @@ import android.widget.FrameLayout;
 
 import org.mozilla.gecko.R;
 import org.mozilla.gecko.activitystream.ActivityStreamTelemetry;
+import org.mozilla.gecko.activitystream.homepanel.model.TopStory;
+import org.mozilla.gecko.activitystream.homepanel.topstories.PocketStoriesLoader;
 import org.mozilla.gecko.db.BrowserDB;
 import org.mozilla.gecko.fxa.FirefoxAccounts;
 import org.mozilla.gecko.home.HomePager;
@@ -33,6 +35,7 @@ public class ActivityStreamPanel extends FrameLayout {
 
     private static final int LOADER_ID_HIGHLIGHTS = 0;
     private static final int LOADER_ID_TOPSITES = 1;
+    private static final int LOADER_ID_POCKET = 2;
 
     /**
      * Number of database entries to consider and rank for finding highlights.
@@ -48,7 +51,6 @@ public class ActivityStreamPanel extends FrameLayout {
     public static final int TOP_SITES_ROWS = 2;
 
     private int desiredTileWidth;
-    private int desiredTilesHeight;
     private int tileMargin;
 
     public ActivityStreamPanel(Context context, AttributeSet attrs) {
@@ -75,7 +77,6 @@ public class ActivityStreamPanel extends FrameLayout {
 
         final Resources resources = getResources();
         desiredTileWidth = resources.getDimensionPixelSize(R.dimen.activity_stream_desired_tile_width);
-        desiredTilesHeight = resources.getDimensionPixelSize(R.dimen.activity_stream_desired_tile_height);
         tileMargin = resources.getDimensionPixelSize(R.dimen.activity_stream_base_margin);
 
         ActivityStreamTelemetry.Extras.setGlobal(
@@ -91,6 +92,7 @@ public class ActivityStreamPanel extends FrameLayout {
     public void load(LoaderManager lm) {
         lm.initLoader(LOADER_ID_TOPSITES, null, new TopSitesCallback());
         lm.initLoader(LOADER_ID_HIGHLIGHTS, null, new HighlightsCallbacks());
+        lm.initLoader(LOADER_ID_POCKET, null, new PocketStoriesCallbacks());
 
     }
 
@@ -173,5 +175,25 @@ public class ActivityStreamPanel extends FrameLayout {
         public void onLoaderReset(Loader<Cursor> loader) {
             adapter.swapTopSitesCursor(null);
         }
+    }
+
+    private class PocketStoriesCallbacks implements LoaderManager.LoaderCallbacks<List<TopStory>> {
+
+        @Override
+        public Loader<List<TopStory>> onCreateLoader(int id, Bundle args) {
+            return new PocketStoriesLoader(getContext());
+        }
+
+        @Override
+        public void onLoadFinished(Loader<List<TopStory>> loader, List<TopStory> data) {
+            adapter.swapTopStories(data);
+        }
+
+        @Override
+        public void onLoaderReset(Loader<List<TopStory>> loader) {
+            adapter.swapTopStories(Collections.<TopStory>emptyList());
+        }
+
+
     }
 }

@@ -13,14 +13,20 @@ nserror = { path = "../../../../xpcom/rust/nserror" }
 rust_url_capi = { path = "../../../../netwerk/base/rust-url-capi" }
 webrender_bindings = { path = "../../../../gfx/webrender_bindings", optional = true }
 cubeb-pulse = { path = "../../../../media/libcubeb/cubeb-pulse-rs", optional = true, features=["pulse-dlopen"] }
+cubeb-core = { path = "../../../../media/cubeb-rs/cubeb-core", optional = true }
+cubeb = { path = "../../../../media/cubeb-rs/cubeb-api", optional = true }
+cubeb-backend = { path = "../../../../media/cubeb-rs/cubeb-backend", optional = true }
 encoding_c = "0.7.1"
 encoding_glue = { path = "../../../../intl/encoding_glue" }
+audioipc-client = { path = "../../../../media/audioipc/client", optional = true }
+audioipc-server = { path = "../../../../media/audioipc/server", optional = true }
 
 [features]
 default = []
 bindgen = ["geckoservo/bindgen"]
 servo = ["geckoservo"]
 quantum_render = ["webrender_bindings"]
+cubeb-remoting = ["cubeb-core", "cubeb", "cubeb-backend", "audioipc-client", "audioipc-server"]
 cubeb_pulse_rust = ["cubeb-pulse"]
 gecko_debug = ["geckoservo/gecko_debug"]
 simd-accel = ["encoding_c/simd-accel", "encoding_glue/simd-accel"]

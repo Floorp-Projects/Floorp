@@ -722,7 +722,7 @@ xul|*.radio-label-box {
 
   .category {
     padding-inline-start: 13px; /* make category icons align center */
-    margin-inline-end: 40px;
+    margin-inline-end: 35px;
   }
 
   .help-button {
@@ -783,17 +783,13 @@ xul|*.fileFieldLabel {
   padding-inline-start: 36px;
 }
 
-xul|textbox:-moz-locale-dir(rtl),
 xul|*.fileFieldLabel:-moz-locale-dir(rtl),
-xul|textbox + xul|button:-moz-locale-dir(ltr),
 xul|filefield + xul|button:-moz-locale-dir(ltr) {
   border-top-left-radius: 0;
   border-bottom-left-radius: 0;
 }
 
-xul|textbox:-moz-locale-dir(ltr),
 xul|*.fileFieldLabel:-moz-locale-dir(ltr),
-xul|textbox + xul|button:-moz-locale-dir(rtl),
 xul|filefield + xul|button:-moz-locale-dir(rtl) {
   border-top-right-radius: 0;
   border-bottom-right-radius: 0;

@@ -1,0 +1,37 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!-- This Source Code Form is subject to the terms of the Mozilla Public
+   - License, v. 2.0. If a copy of the MPL was not distributed with this
+   - file, You can obtain one at http://mozilla.org/MPL/2.0/. -->
+<!DOCTYPE html>
+<html xmlns="http://www.w3.org/1999/xhtml">
+<head>
+  <title data-localization="manageCreditCardsTitle"/>
+  <link rel="stylesheet" href="chrome://global/skin/in-content/common.css" />
+  <link rel="stylesheet" href="chrome://formautofill/content/manageDialog.css" />
+  <script src="chrome://formautofill/content/manageDialog.js"></script>
+</head>
+<body>
+  <fieldset>
+    <legend data-localization="creditCardsListHeader"/>
+    <select id="credit-cards" size="9" multiple="multiple"/>
+  </fieldset>
+  <div id="controls-container">
+    <button id="remove" disabled="disabled" data-localization="remove"/>
+    <button id="show-credit-cards" data-localization="showCreditCards"/>
+    <button id="add" data-localization="add"/>
+    <button id="edit" disabled="disabled" data-localization="edit"/>
+  </div>
+  <script type="application/javascript">
+    "use strict";
+    /* global ManageCreditCards */
+    new ManageCreditCards({
+      records: document.getElementById("credit-cards"),
+      controlsContainer: document.getElementById("controls-container"),
+      remove: document.getElementById("remove"),
+      showCreditCards: document.getElementById("show-credit-cards"),
+      add: document.getElementById("add"),
+      edit: document.getElementById("edit"),
+    });
+  </script>
+</body>
+</html>

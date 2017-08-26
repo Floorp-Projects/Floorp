@@ -1,20 +1,22 @@
-/* exported MANAGE_ADDRESSES_DIALOG_URL, EDIT_ADDRESS_DIALOG_URL, EDIT_CREDIT_CARD_DIALOG_URL,
+/* exported MANAGE_ADDRESSES_DIALOG_URL, MANAGE_CREDIT_CARDS_DIALOG_URL, EDIT_ADDRESS_DIALOG_URL, EDIT_CREDIT_CARD_DIALOG_URL,
             BASE_URL, TEST_ADDRESS_1, TEST_ADDRESS_2, TEST_ADDRESS_3, TEST_ADDRESS_4, TEST_ADDRESS_5,
             TEST_CREDIT_CARD_1, TEST_CREDIT_CARD_2, TEST_CREDIT_CARD_3, FORM_URL,
-            FTU_PREF, ENABLED_PREF, SYNC_USERNAME_PREF, SYNC_ADDRESSES_PREF,
+            FTU_PREF, ENABLED_AUTOFILL_ADDRESSES_PREF, ENABLED_AUTOFILL_CREDITCARDS_PREF, SYNC_USERNAME_PREF, SYNC_ADDRESSES_PREF,
             sleep, expectPopupOpen, openPopupOn, expectPopupClose, closePopup, clickDoorhangerButton,
             getAddresses, saveAddress, removeAddresses, saveCreditCard,
-            getDisplayedPopupItems, getDoorhangerCheckbox */
+            getDisplayedPopupItems, getDoorhangerCheckbox, waitForMasterPasswordDialog */
 
 "use strict";
 
 const MANAGE_ADDRESSES_DIALOG_URL = "chrome://formautofill/content/manageAddresses.xhtml";
+const MANAGE_CREDIT_CARDS_DIALOG_URL = "chrome://formautofill/content/manageCreditCards.xhtml";
 const EDIT_ADDRESS_DIALOG_URL = "chrome://formautofill/content/editAddress.xhtml";
 const EDIT_CREDIT_CARD_DIALOG_URL = "chrome://formautofill/content/editCreditCard.xhtml";
 const BASE_URL = "http://mochi.test:8888/browser/browser/extensions/formautofill/test/browser/";
 const FORM_URL = "http://mochi.test:8888/browser/browser/extensions/formautofill/test/browser/autocomplete_basic.html";
 const FTU_PREF = "extensions.formautofill.firstTimeUse";
-const ENABLED_PREF = "extensions.formautofill.addresses.enabled";
+const ENABLED_AUTOFILL_ADDRESSES_PREF = "extensions.formautofill.addresses.enabled";
+const ENABLED_AUTOFILL_CREDITCARDS_PREF = "extensions.formautofill.creditCards.enabled";
 const SYNC_USERNAME_PREF = "services.sync.username";
 const SYNC_ADDRESSES_PREF = "services.sync.engine.addresses";
 
@@ -214,6 +216,16 @@ function getDoorhangerCheckbox() {
   ok(notifications.length > 0, "at least one notification displayed");
   ok(true, notifications.length + " notification(s)");
   return notifications[0].checkbox;
+}
+
+// Wait for master password dialog and cancel to close it.
+function waitForMasterPasswordDialog() {
+  let dialogShown = TestUtils.topicObserved("common-dialog-loaded");
+  return dialogShown.then(function([subject]) {
+    let dialog = subject.Dialog;
+    is(dialog.args.title, "Password Required", "Master password dialog shown");
+    dialog.ui.button1.click();
+  });
 }
 
 registerCleanupFunction(async function() {

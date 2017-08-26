@@ -1717,29 +1717,6 @@ add_task(async function test_abortedSession() {
   await TelemetryController.testShutdown();
   Assert.ok(!(await OS.File.exists(ABORTED_FILE)),
             "No aborted session ping must be available after a shutdown.");
-
-  // Write the ping to the aborted-session file. TelemetrySession will add it to the
-  // saved pings directory when it starts.
-  await TelemetryStorage.savePingToFile(abortedSessionPing, ABORTED_FILE, false);
-  Assert.ok((await OS.File.exists(ABORTED_FILE)),
-            "The aborted session ping must exist in the aborted session ping directory.");
-
-  await TelemetryStorage.testClearPendingPings();
-  PingServer.clearRequests();
-  await TelemetryController.testReset();
-
-  Assert.ok(!(await OS.File.exists(ABORTED_FILE)),
-            "The aborted session ping must be removed from the aborted session ping directory.");
-
-  // Restarting Telemetry again to trigger sending pings in TelemetrySend.
-  await TelemetryController.testReset();
-
-  // We should have received an aborted-session ping.
-  const receivedPing = await PingServer.promiseNextPing();
-  Assert.equal(receivedPing.type, PING_TYPE_MAIN, "Should have the correct type");
-  Assert.equal(receivedPing.payload.info.reason, REASON_ABORTED_SESSION, "Ping should have the correct reason");
-
-  await TelemetryController.testShutdown();
 });
 
 add_task(async function test_abortedSession_Shutdown() {
@@ -1836,8 +1813,9 @@ add_task(async function test_schedulerComputerSleep() {
 
   const ABORTED_FILE = OS.Path.join(DATAREPORTING_PATH, ABORTED_PING_FILE_NAME);
 
-  await TelemetryStorage.testClearPendingPings();
   await TelemetryController.testReset();
+  await TelemetryController.testShutdown();
+  await TelemetryStorage.testClearPendingPings();
   PingServer.clearRequests();
 
   // Remove any aborted-session ping from the previous tests.
@@ -1923,7 +1901,8 @@ add_task(async function test_schedulerEnvironmentReschedules() {
 
   // We don't expect to receive any daily ping in this test, so assert if we do.
   PingServer.registerPingHandler((req, res) => {
-    Assert.ok(false, "No ping should be sent/received in this test.");
+    const receivedPing = decodeRequestPayload(req);
+    Assert.ok(false, `No ping should be received in this test (got ${receivedPing.id}).`);
   });
 
   // Execute one scheduler tick. It should not trigger a daily ping.
@@ -1947,7 +1926,8 @@ add_task(async function test_schedulerNothingDue() {
 
   // We don't expect to receive any ping in this test, so assert if we do.
   PingServer.registerPingHandler((req, res) => {
-    Assert.ok(false, "No ping should be sent/received in this test.");
+    const receivedPing = decodeRequestPayload(req);
+    Assert.ok(false, `No ping should be received in this test (got ${receivedPing.id}).`);
   });
 
   // Set a current date/time away from midnight, so that the daily ping doesn't get

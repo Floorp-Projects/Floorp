@@ -5,3 +5,5 @@
 <!ENTITY  brandShortName  "Fennec">
 <!ENTITY  brandFullName   "Mozilla Fennec">
 <!ENTITY  vendorShortName "Mozilla">
+
+<!ENTITY  brandPocket     "Pocket">

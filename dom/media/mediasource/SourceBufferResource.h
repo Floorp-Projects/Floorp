@@ -69,19 +69,9 @@ public:
     return GetLength();
   }
   bool IsDataCachedToEndOfResource(int64_t aOffset) override { return false; }
-  bool IsSuspended() override
-  {
-    UNIMPLEMENTED();
-    return false;
-  }
   nsresult ReadFromCache(char* aBuffer,
                          int64_t aOffset,
                          uint32_t aCount) override;
-  bool IsTransportSeekable() override
-  {
-    UNIMPLEMENTED();
-    return true;
-  }
 
   nsresult GetCachedRanges(MediaByteRangeSet& aRanges) override
   {

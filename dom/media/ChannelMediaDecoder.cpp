@@ -487,6 +487,13 @@ ChannelMediaDecoder::ShouldThrottleDownload()
   return stats.mDownloadRate > factor * stats.mPlaybackRate;
 }
 
+bool
+ChannelMediaDecoder::IsTransportSeekable()
+{
+  MOZ_ASSERT(NS_IsMainThread());
+  return mResource->IsTransportSeekable();
+}
+
 void
 ChannelMediaDecoder::SetLoadInBackground(bool aLoadInBackground)
 {
