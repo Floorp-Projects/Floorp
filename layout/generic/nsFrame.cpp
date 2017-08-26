@@ -490,11 +490,10 @@ nsFrame::nsFrame(nsStyleContext* aContext, ClassID aID)
   MOZ_COUNT_CTOR(nsFrame);
 
   mStyleContext = aContext;
-  mWritingMode = WritingMode(mStyleContext);
-  mStyleContext->AddRef();
 #ifdef DEBUG
   mStyleContext->FrameAddRef();
 #endif
+  mWritingMode = WritingMode(mStyleContext);
 }
 
 nsFrame::~nsFrame()
@@ -507,7 +506,6 @@ nsFrame::~nsFrame()
 #ifdef DEBUG
   mStyleContext->FrameRelease();
 #endif
-  mStyleContext->Release();
 }
 
 NS_IMPL_FRAMEARENA_HELPERS(nsFrame)
