@@ -5,14 +5,14 @@
 <!DOCTYPE html>
 <html xmlns="http://www.w3.org/1999/xhtml">
 <head>
-  <title data-localization="manageDialogTitle"/>
+  <title data-localization="manageAddressesTitle"/>
   <link rel="stylesheet" href="chrome://global/skin/in-content/common.css" />
-  <link rel="stylesheet" href="chrome://formautofill/content/manageAddresses.css" />
-  <script src="chrome://formautofill/content/manageAddresses.js"></script>
+  <link rel="stylesheet" href="chrome://formautofill/content/manageDialog.css" />
+  <script src="chrome://formautofill/content/manageDialog.js"></script>
 </head>
 <body>
   <fieldset>
-    <legend data-localization="addressListHeader"/>
+    <legend data-localization="addressesListHeader"/>
     <select id="addresses" size="9" multiple="multiple"/>
   </fieldset>
   <div id="controls-container">
@@ -22,8 +22,14 @@
   </div>
   <script type="application/javascript">
     "use strict";
-    // Localize strings before DOMContentLoaded to prevent flash
-    window.dialog.localizeDocument();
+    /* global ManageAddresses */
+    new ManageAddresses({
+      records: document.getElementById("addresses"),
+      controlsContainer: document.getElementById("controls-container"),
+      remove: document.getElementById("remove"),
+      add: document.getElementById("add"),
+      edit: document.getElementById("edit"),
+    });
   </script>
 </body>
 </html>

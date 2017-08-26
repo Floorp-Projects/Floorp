@@ -10,16 +10,15 @@ import android.support.annotation.NonNull;
 import android.support.annotation.Nullable;
 import android.support.annotation.VisibleForTesting;
 import android.text.TextUtils;
-import android.text.format.DateUtils;
 import org.mozilla.gecko.activitystream.Utils;
+import org.mozilla.gecko.activitystream.homepanel.StreamRecyclerAdapter;
 import org.mozilla.gecko.activitystream.ranking.HighlightCandidateCursorIndices;
 import org.mozilla.gecko.activitystream.ranking.HighlightsRanking;
-import org.mozilla.gecko.db.BrowserContract;
 
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
-public class Highlight implements Item {
+public class Highlight implements WebpageRowModel {
 
     /**
      * A pattern matching a json object containing the key "image_url" and extracting the value. afaik, these urls
@@ -87,6 +86,11 @@ public class Highlight implements Item {
 
         final Matcher matcher = pattern.matcher(metadataJSON);
         return matcher.find() ? matcher.group(1) : null;
+    }
+
+    @Override
+    public StreamRecyclerAdapter.RowItemType getRowItemType() {
+        return StreamRecyclerAdapter.RowItemType.HIGHLIGHT_ITEM;
     }
 
     private void updateState() {
@@ -210,11 +214,13 @@ public class Highlight implements Item {
         this.isPinned = pinned;
     }
 
+    @Override
     public Utils.HighlightSource getSource() {
         return source;
     }
 
-    public long getHistoryId() {
+    @Override
+    public long getUniqueId() {
         return historyId;
     }
 }

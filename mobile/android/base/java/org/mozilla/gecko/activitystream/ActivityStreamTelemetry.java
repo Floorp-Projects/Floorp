@@ -34,6 +34,7 @@ public class ActivityStreamTelemetry {
         // Values
         public final static String TYPE_TOPSITES = "topsites";
         public final static String TYPE_HIGHLIGHTS = "highlights";
+        public final static String TYPE_POCKET = "pocket";
         public final static String SUBTYPE_PINNED = "pinned";
         public final static String SUBTYPE_SUGGESTED = "suggested";
         public final static String SUBTYPE_TOP = "top";
@@ -142,6 +143,9 @@ public class ActivityStreamTelemetry {
                         break;
                     case BOOKMARKED:
                         this.set(Contract.SOURCE_SUBTYPE, Contract.SUBTYPE_BOOKMARKED);
+                        break;
+                    case POCKET:
+                        this.set(Contract.SOURCE_TYPE, Contract.TYPE_POCKET);
                         break;
                     default:
                         throw new IllegalStateException("Unknown highlight source: " + source);

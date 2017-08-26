@@ -1237,6 +1237,12 @@ ServoStyleSet::EnsureUniqueInnerOnCSSSheets()
     sheet->AppendAllChildSheets(queue);
   }
 
+  if (mNeedsRestyleAfterEnsureUniqueInner) {
+    // TODO(emilio): We could make this faster if needed tracking the specific
+    // origins and all that, but the only caller of this doesn't seem to really
+    // care about perf.
+    MarkOriginsDirty(OriginFlags::All);
+  }
   bool res = mNeedsRestyleAfterEnsureUniqueInner;
   mNeedsRestyleAfterEnsureUniqueInner = false;
   return res;

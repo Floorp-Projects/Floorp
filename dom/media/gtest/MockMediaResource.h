@@ -34,7 +34,6 @@ public:
   {
     return false;
   }
-  bool IsSuspended() override { return false; }
   nsresult ReadFromCache(char* aBuffer, int64_t aOffset,
                          uint32_t aCount) override
   {
@@ -44,7 +43,6 @@ public:
     return bytesRead == aCount ? NS_OK : NS_ERROR_FAILURE;
   }
 
-  bool IsTransportSeekable() override { return true; }
   nsresult Open();
   nsresult GetCachedRanges(MediaByteRangeSet& aRanges) override;
 

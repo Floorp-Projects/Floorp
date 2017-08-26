@@ -126,7 +126,7 @@ private:
 
   void Clear();
 
-  bool IsTopLevelContentDocument() const;
+  bool IsTopLevelContentDocumentInContentProcess() const;
 
   mozilla::WeakPtr<nsDocShell> mDocShell;
 

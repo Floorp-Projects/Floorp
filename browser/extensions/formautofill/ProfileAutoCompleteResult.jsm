@@ -279,13 +279,6 @@ class CreditCardResult extends ProfileAutoCompleteResult {
     super(...args);
   }
 
-  _fmtMaskedCreditCardLabel(maskedCCNum = "") {
-    return {
-      affix: "****",
-      label: maskedCCNum.replace(/^\**/, ""),
-    };
-  }
-
   _getSecondaryLabel(focusedFieldName, allFieldNames, profile) {
     const GROUP_FIELDS = {
       "cc-name": [
@@ -325,7 +318,7 @@ class CreditCardResult extends ProfileAutoCompleteResult {
 
       if (matching) {
         if (currentFieldName == "cc-number") {
-          let {affix, label} = this._fmtMaskedCreditCardLabel(profile[currentFieldName]);
+          let {affix, label} = FormAutofillUtils.fmtMaskedCreditCardLabel(profile[currentFieldName]);
           return affix + label;
         }
         return profile[currentFieldName];
@@ -353,7 +346,7 @@ class CreditCardResult extends ProfileAutoCompleteResult {
       let primary = profile[focusedFieldName];
 
       if (focusedFieldName == "cc-number") {
-        let {affix, label} = this._fmtMaskedCreditCardLabel(primary);
+        let {affix, label} = FormAutofillUtils.fmtMaskedCreditCardLabel(primary);
         primaryAffix = affix;
         primary = label;
       }

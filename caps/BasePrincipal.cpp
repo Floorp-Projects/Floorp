@@ -7,9 +7,6 @@
 #include "mozilla/BasePrincipal.h"
 
 #include "nsDocShell.h"
-#ifdef MOZ_CRASHREPORTER
-#include "nsExceptionHandler.h"
-#endif
 #include "nsIAddonPolicyService.h"
 #include "nsIContentSecurityPolicy.h"
 #include "nsIObjectInputStream.h"

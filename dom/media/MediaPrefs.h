@@ -207,6 +207,11 @@ private:
 
   // resume background video decoding when the cursor is hovering over the tab.
   DECL_MEDIA_PREF("media.resume-bkgnd-video-on-tabhover",     ResumeVideoDecodingOnTabHover, bool, false);
+
+#ifdef MOZ_CUBEB_REMOTING
+  DECL_MEDIA_PREF("media.cubeb.sandbox",                      CubebSandbox, bool, false);
+#endif // MOZ_CUBEB_REMOTING
+
 public:
   // Manage the singleton:
   static MediaPrefs& GetSingleton();

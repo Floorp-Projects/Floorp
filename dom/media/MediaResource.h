@@ -149,7 +149,7 @@ typedef media::IntervalSet<int64_t> MediaByteRangeSet;
  * access, so the FileMediaResource implementation class bypasses the cache.
  * MediaResource::Create automatically chooses the best implementation class.
  */
-class MediaResource : public nsISupports
+class MediaResource
 {
 public:
   // Our refcounting is threadsafe, and when our refcount drops to zero
@@ -157,7 +157,8 @@ public:
   // Note that this means it's safe for references to this object to be
   // released on a non main thread, but the destructor will always run on
   // the main thread.
-  NS_DECL_THREADSAFE_ISUPPORTS
+  NS_METHOD_(MozExternalRefCountType) AddRef(void);
+  NS_METHOD_(MozExternalRefCountType) Release(void);
 
   // Get the current principal for the channel
   virtual already_AddRefed<nsIPrincipal> GetCurrentPrincipal() = 0;
@@ -202,8 +203,6 @@ public:
   // Returns true if all the data from aOffset to the end of the stream
   // is in cache. If the end of the stream is not known, we return false.
   virtual bool IsDataCachedToEndOfResource(int64_t aOffset) = 0;
-  // Returns true if this stream has been suspended.
-  virtual bool IsSuspended() = 0;
   // Reads only data which is cached in the media cache. If you try to read
   // any data which overlaps uncached data, or if aCount bytes otherwise can't
   // be read, this function will return failure. This function be called from
@@ -212,10 +211,6 @@ public:
   virtual nsresult ReadFromCache(char* aBuffer,
                                  int64_t aOffset,
                                  uint32_t aCount) = 0;
-  // Returns true if the resource can be seeked to unbuffered ranges, i.e.
-  // for an HTTP network stream this returns true if HTTP1.1 Byte Range
-  // requests are supported by the connection/server.
-  virtual bool IsTransportSeekable() = 0;
 
   /**
    * Fills aRanges with MediaByteRanges representing the data which is cached
@@ -237,6 +232,8 @@ protected:
 
 private:
   void Destroy();
+  mozilla::ThreadSafeAutoRefCnt mRefCnt;
+  NS_DECL_OWNINGTHREAD
 };
 
 class BaseMediaResource : public MediaResource {
@@ -287,6 +284,11 @@ public:
 
   // The mode is initially MODE_PLAYBACK.
   virtual void SetReadMode(MediaCacheStream::ReadMode aMode) = 0;
+
+  // Returns true if the resource can be seeked to unbuffered ranges, i.e.
+  // for an HTTP network stream this returns true if HTTP1.1 Byte Range
+  // requests are supported by the connection/server.
+  virtual bool IsTransportSeekable() = 0;
 
   /**
    * Open the stream. This creates a stream listener and returns it in
@@ -459,6 +461,8 @@ public:
   // Resume the current load since data is wanted again
   nsresult CacheClientResume();
 
+  bool IsSuspended();
+
   void ThrottleReadahead(bool bThrottle) override;
 
   // Main thread
@@ -491,7 +495,6 @@ public:
   int64_t GetNextCachedData(int64_t aOffset) override;
   int64_t GetCachedDataEnd(int64_t aOffset) override;
   bool    IsDataCachedToEndOfResource(int64_t aOffset) override;
-  bool    IsSuspended() override;
   bool    IsTransportSeekable() override;
 
   size_t SizeOfExcludingThis(MallocSizeOf aMallocSizeOf) const override {

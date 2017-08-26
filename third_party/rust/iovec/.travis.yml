@@ -1,0 +1,24 @@
+---
+language: rust
+sudo: false
+
+rust:
+  - stable
+
+os:
+  - linux
+  - osx
+
+matrix:
+  include:
+    - os: linux
+      # Oldest supported Rust (this should track Mio)
+      rust: 1.9.0
+
+script:
+  - cargo build
+  - cargo test
+
+notifications:
+  email:
+    on_success: never

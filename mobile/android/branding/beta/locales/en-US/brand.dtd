@@ -5,3 +5,5 @@
 <!ENTITY  brandShortName  "Firefox Beta">
 <!ENTITY  brandFullName   "Mozilla Firefox Beta">
 <!ENTITY  vendorShortName "Mozilla">
+
+<!ENTITY  brandPocket     "Pocket">

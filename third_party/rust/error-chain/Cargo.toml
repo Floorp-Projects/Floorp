@@ -1,0 +1,26 @@
+[package]
+
+name = "error-chain"
+version = "0.10.0"
+authors = [ "Brian Anderson <banderson@mozilla.com>",
+            "Paul Colomiets <paul@colomiets.name>",
+            "Colin Kiegel <kiegel@gmx.de>",
+            "Yamakaky <yamakaky@yamaworld.fr>"]
+description = "Yet another error boilerplate library."
+categories = ["rust-patterns"]
+
+documentation = "https://docs.rs/error-chain"
+homepage = "https://github.com/brson/error-chain"
+repository = "https://github.com/brson/error-chain"
+
+license = "MIT/Apache-2.0"
+
+[badges]
+travis-ci = { repository = "brson/error-chain" }
+
+[features]
+default = ["backtrace", "example_generated"]
+example_generated = []
+
+[dependencies]
+backtrace = { version = "0.3", optional = true }

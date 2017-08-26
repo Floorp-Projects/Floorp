@@ -55,7 +55,7 @@ function appUpdater() {
 
   let manualURL = Services.urlFormatter.formatURLPref("app.update.url.manual");
   let manualLink = document.getElementById("manualLink");
-  manualLink.value = manualURL;
+  manualLink.textContent = manualURL;
   manualLink.href = manualURL;
   document.getElementById("failedLink").href = manualURL;
 
@@ -327,7 +327,7 @@ appUpdater.prototype =
    */
   setupDownloadingUI() {
     this.downloadStatus = document.getElementById("downloadStatus");
-    this.downloadStatus.value =
+    this.downloadStatus.textContent =
       DownloadUtils.getTransferTotal(0, this.update.selectedPatch.size);
     this.selectPanel("downloading");
     this.aus.addDownloadListener(this);
@@ -414,7 +414,7 @@ appUpdater.prototype =
    * See nsIProgressEventSink.idl
    */
   onProgress(aRequest, aContext, aProgress, aProgressMax) {
-    this.downloadStatus.value =
+    this.downloadStatus.textContent =
       DownloadUtils.getTransferTotal(aProgress, aProgressMax);
   },
 
