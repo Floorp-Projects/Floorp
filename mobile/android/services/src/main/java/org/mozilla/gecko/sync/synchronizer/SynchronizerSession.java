@@ -224,12 +224,6 @@ implements RecordsChannelDelegate,
         // of better telemetry. See Bug 1362208.
         storeFailedCauseException = ex;
       }
-
-      @Override
-      public void onFlowFinishFailed(RecordsChannel recordsChannel, Exception ex) {
-        Logger.warn(LOG_TAG, "First RecordsChannel onFlowFinishedFailed. Logging session error.", ex);
-        session.delegate.onSynchronizeFailed(session, ex, "Failed to finish first flow.");
-      }
     };
 
     // This is the *first* channel to flow.
@@ -311,12 +305,6 @@ implements RecordsChannelDelegate,
   @Override
   public void onFlowStoreFailed(RecordsChannel recordsChannel, Exception ex, String recordGuid) {
     Logger.warn(LOG_TAG, "Second RecordsChannel onFlowStoreFailed. Logging remote store error.", ex);
-  }
-
-  @Override
-  public void onFlowFinishFailed(RecordsChannel recordsChannel, Exception ex) {
-    Logger.warn(LOG_TAG, "Second RecordsChannel onFlowFinishedFailed. Logging session error.", ex);
-    this.delegate.onSynchronizeFailed(this, ex, "Failed to finish second flow.");
   }
 
   /*
