@@ -10,9 +10,6 @@
 #include "mozilla/StyleSetHandleInlines.h"
 #include "mozilla/dom/HTMLInputElement.h"
 #include "nsContentUtils.h"
-// MouseEvent suppression in PP
-#include "nsContentList.h"
-
 #include "nsIDOMHTMLInputElement.h"
 #include "nsTextNode.h"
 
