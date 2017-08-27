@@ -250,7 +250,7 @@ var gPrivacyPane = {
     this.initSubmitHealthReport();
     setEventListener("submitHealthReportBox", "command",
                      gPrivacyPane.updateSubmitHealthReport);
-
+    this._initA11yState();
     let bundlePrefs = document.getElementById("bundlePreferences");
     let signonBundle = document.getElementById("signonBundle");
     let pkiBundle = document.getElementById("pkiBundle");
@@ -1598,4 +1598,31 @@ var gPrivacyPane = {
         break;
     }
   },
+
+  // Accessibility checkbox helpers
+  _initA11yState() {
+    this._initA11yString();
+    let checkbox = document.getElementById("a11yPrivacyCheckbox");
+    switch (Services.prefs.getIntPref("accessibility.force_disabled")) {
+      case 1: // access blocked
+        checkbox.checked = true;
+        break;
+      case -1: // a11y is forced on for testing
+      case 0: // access allowed
+        checkbox.checked = false;
+        break;
+    }
+  },
+
+  _initA11yString() {
+    let a11yLearnMoreLink =
+      Services.urlFormatter.formatURLPref("app.support.baseURL") +
+        "accessibility";
+    document.getElementById("a11yLearnMoreLink")
+            .setAttribute("href", a11yLearnMoreLink);
+  },
+
+  updateA11yPrefs(checked) {
+    Services.prefs.setIntPref("accessibility.force_disabled", checked ? 1 : 0);
+  }
 };
