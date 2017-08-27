@@ -7,7 +7,6 @@
 #include "nsContentUtils.h"
 
 #include "mozilla/dom/SVGUseElement.h"
-#include "nsContentList.h"
 #include "nsSVGEffects.h"
 
 using namespace mozilla::dom;

@@ -43,7 +43,6 @@
 #include "nsXHTMLContentSerializer.h"
 #include "nsRuleNode.h"
 #include "nsContentAreaDragDrop.h"
-#include "nsContentList.h"
 #include "nsBox.h"
 #include "nsIFrameTraversal.h"
 #include "nsLayoutCID.h"
