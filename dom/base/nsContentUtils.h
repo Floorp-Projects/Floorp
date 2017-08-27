@@ -630,7 +630,7 @@ public:
   static nsIPrincipal* ObjectPrincipal(JSObject* aObj);
 
   static nsresult GenerateStateKey(nsIContent* aContent,
-                                   const nsIDocument* aDocument,
+                                   nsIDocument* aDocument,
                                    nsACString& aKey);
 
   /**

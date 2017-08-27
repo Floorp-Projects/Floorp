@@ -270,6 +270,9 @@ public:
 
   virtual nsHTMLDocument* AsHTMLDocument() override { return this; }
 
+  static bool MatchFormControls(Element* aElement, int32_t aNamespaceID,
+                                nsIAtom* aAtom, void* aData);
+
 protected:
   ~nsHTMLDocument();
 
