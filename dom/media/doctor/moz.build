@@ -9,11 +9,27 @@ TEST_DIRS += [
 ]
 
 EXPORTS += [
+    'DDLogClass.h',
+    'DDLoggedTypeTraits.h',
+    'DDLogObject.h',
+    'DDLogValue.h',
     'DecoderDoctorDiagnostics.h',
+    'DecoderDoctorLogger.h',
 ]
 
 UNIFIED_SOURCES += [
+    'DDLifetime.cpp',
+    'DDLifetimes.cpp',
+    'DDLogClass.cpp',
+    'DDLogMessage.cpp',
+    'DDLogObject.cpp',
+    'DDLogUtils.cpp',
+    'DDLogValue.cpp',
+    'DDMediaLog.cpp',
+    'DDMediaLogs.cpp',
+    'DDTimeStamp.cpp',
     'DecoderDoctorDiagnostics.cpp',
+    'DecoderDoctorLogger.cpp',
 ]
 
 FINAL_LIBRARY = 'xul'
