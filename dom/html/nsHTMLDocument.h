@@ -77,8 +77,6 @@ public:
 
   virtual nsContentList* GetForms() override;
 
-  virtual nsContentList* GetFormControls() override;
-
   nsContentList* GetExistingForms() const
   {
     return mForms;
