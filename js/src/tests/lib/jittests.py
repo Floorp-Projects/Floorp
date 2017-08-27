@@ -481,8 +481,8 @@ def print_automation_format(ok, res):
     result = "TEST-PASS" if ok else "TEST-UNEXPECTED-FAIL"
     message = "Success" if ok else res.describe_failure()
     jitflags = " ".join(res.test.jitflags)
-    print("{} | {} | {} (code {}, args \"{}\")".format(
-        result, res.test.relpath_top, message, res.rc, jitflags))
+    print("{} | {} | {} (code {}, args \"{}\") [{:.1f} s]".format(
+        result, res.test.relpath_top, message, res.rc, jitflags, res.dt))
 
     # For failed tests, print as much information as we have, to aid debugging.
     if ok:
