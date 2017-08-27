@@ -865,26 +865,26 @@
                   <image id="userContext-indicator"/>
                 </hbox>
                 <image id="page-report-button"
-                       class="urlbar-icon"
+                       class="urlbar-icon urlbar-page-action"
                        hidden="true"
                        tooltiptext="&pageReportIcon.tooltip;"
                        onmousedown="gPopupBlockerObserver.onReportButtonMousedown(event);"/>
                 <image id="reader-mode-button"
-                       class="urlbar-icon"
+                       class="urlbar-icon urlbar-page-action"
                        hidden="true"
                        onclick="ReaderParent.buttonClick(event);"/>
                 <toolbarbutton id="urlbar-zoom-button"
                        onclick="FullZoom.reset();"
                        tooltip="dynamic-shortcut-tooltip"
                        hidden="true"/>
-                <box id="pageActionSeparator"/>
+                <box id="pageActionSeparator" class="urlbar-page-action"/>
                 <image id="pageActionButton"
-                       class="urlbar-icon"
+                       class="urlbar-icon urlbar-page-action"
                        tooltiptext="&pageActionButton.tooltip;"
                        onclick="BrowserPageActions.mainButtonClicked(event);"/>
                 <hbox id="star-button-box"
                       hidden="true"
-                      class="urlbar-icon-wrapper"
+                      class="urlbar-icon-wrapper urlbar-page-action"
                       context="pageActionPanelContextMenu"
                       oncontextmenu="BrowserPageActions.onContextMenu(event);"
                       onclick="BrowserPageActions.bookmark.onUrlbarNodeClicked(event);">

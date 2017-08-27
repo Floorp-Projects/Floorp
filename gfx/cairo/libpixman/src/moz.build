@@ -142,6 +142,7 @@ if CONFIG['GNU_CC'] or CONFIG['CLANG_CL']:
         '-Wno-address',
         '-Wno-missing-field-initializers',
         '-Wno-sign-compare',
+        '-Wno-incompatible-pointer-types',
         '-Wno-unused',                      # too many unused warnings; ignore
     ]
 if CONFIG['CLANG_CXX'] or CONFIG['CLANG_CL']:

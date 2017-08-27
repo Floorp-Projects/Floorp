@@ -54,6 +54,7 @@
 #include "mozilla/net/NeckoChild.h"
 #include "mozilla/dom/ContentParent.h"
 #include "mozilla/net/CaptivePortalService.h"
+#include "mozilla/Unused.h"
 #include "ReferrerPolicy.h"
 #include "nsContentSecurityManager.h"
 #include "nsContentUtils.h"
@@ -258,6 +259,7 @@ nsIOService::Init()
     gIOService = this;
 
     InitializeNetworkLinkService();
+    InitializeProtocolProxyService();
 
     SetOffline(false);
 
@@ -332,6 +334,19 @@ nsIOService::InitializeNetworkLinkService()
 
     // After initializing the networkLinkService, query the connectivity state
     OnNetworkLinkEvent(NS_NETWORK_LINK_DATA_UNKNOWN);
+
+    return rv;
+}
+
+nsresult
+nsIOService::InitializeProtocolProxyService()
+{
+    nsresult rv = NS_OK;
+
+    if (XRE_IsParentProcess()) {
+        // for early-initialization
+        Unused << do_GetService(NS_PROTOCOLPROXYSERVICE_CONTRACTID, &rv);
+    }
 
     return rv;
 }

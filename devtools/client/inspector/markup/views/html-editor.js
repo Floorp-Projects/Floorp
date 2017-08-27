@@ -127,6 +127,7 @@ HTMLEditor.prototype = {
 
     this.editor.refresh();
     this.editor.focus();
+    this.editor.clearHistory();
 
     this.emit("popupshown");
   },

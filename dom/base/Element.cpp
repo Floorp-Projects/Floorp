@@ -1900,7 +1900,12 @@ Element::UnbindFromTree(bool aDeep, bool aNullParent)
   // Computed style data isn't useful for detached nodes, and we'll need to
   // recompute it anyway if we ever insert the nodes back into a document.
   if (IsStyledByServo()) {
-    ClearServoData(document);
+    if (document) {
+      ClearServoData(document);
+    } else {
+      MOZ_ASSERT(!HasServoData());
+      MOZ_ASSERT(!HasAnyOfFlags(kAllServoDescendantBits | NODE_NEEDS_FRAME));
+    }
   } else {
     MOZ_ASSERT(!HasServoData());
   }
@@ -4147,16 +4152,17 @@ Element::UpdateIntersectionObservation(DOMIntersectionObserver* aObserver, int32
 void
 Element::ClearServoData(nsIDocument* aDoc) {
   MOZ_ASSERT(IsStyledByServo());
+  MOZ_ASSERT(aDoc);
 #ifdef MOZ_STYLO
   Servo_Element_ClearData(this);
-  UnsetFlags(ELEMENT_HAS_DIRTY_DESCENDANTS_FOR_SERVO |
-             ELEMENT_HAS_ANIMATION_ONLY_DIRTY_DESCENDANTS_FOR_SERVO);
-
   // Since this element is losing its servo data, nothing under it may have
   // servo data either, so we can forget restyles rooted at this element. This
   // is necessary for correctness, since we invoke ClearServoData in various
   // places where an element's flattened tree parent changes, and such a change
   // may also make an element invalid to be used as a restyle root.
+  //
+  // Note that we need to null-check aDoc, which may be null in some situations
+  // when invoked from UnbindFromTree.
   if (aDoc && aDoc->GetServoRestyleRoot() == this) {
     aDoc->ClearServoRestyleRoot();
   }
@@ -4250,19 +4256,6 @@ PropagateBits(Element* aElement, uint32_t aBits, nsINode* aStopAt)
   return curr;
 }
 
-// Invokes PropagateBits on the parent element if |aNode| is not the document.
-static inline Element*
-PropagateBitsFromParent(nsINode* aNode, uint32_t aBits, nsINode* aStopAt)
-{
-  MOZ_ASSERT(aNode->IsElement() || aNode == aNode->OwnerDoc());
-  if (!aNode->IsElement()) {
-    return nullptr;
-  }
-
-  Element* parent = aNode->AsElement()->GetFlattenedTreeParentElementForStyle();
-  return PropagateBits(parent, aBits, aStopAt);
-}
-
 // Notes that a given element is "dirty" with respect to the given descendants
 // bit (which may be one of dirty descendants, dirty animation descendants, or
 // need frame construction for descendants).
@@ -4341,7 +4334,7 @@ NoteDirtyElement(Element* aElement, uint32_t aBit)
   // propagating bits as wel go.
   const bool reachedDocRoot = !parent || !PropagateBits(parent, aBit, existingRoot);
 
-  if (!reachedDocRoot) {
+  if (!reachedDocRoot || existingRoot == doc) {
       // We're a descendant of the existing root. All that's left to do is to
       // make sure the bit we propagated is also registered on the root.
       doc->SetServoRestyleRoot(existingRoot, existingBits | aBit);
@@ -4349,7 +4342,8 @@ NoteDirtyElement(Element* aElement, uint32_t aBit)
     // We reached the root without crossing the pre-existing restyle root. We
     // now need to find the nearest common ancestor, so climb up from the
     // existing root, extending bits along the way.
-    if (Element* commonAncestor = PropagateBitsFromParent(existingRoot, existingBits, aElement)) {
+    Element* rootParent = existingRoot->GetFlattenedTreeParentElementForStyle();
+    if (Element* commonAncestor = PropagateBits(rootParent, existingBits, aElement)) {
       // We found a common ancestor. Make that the new style root, and clear the
       // bits between the new style root and the document root.
       doc->SetServoRestyleRoot(commonAncestor, existingBits | aBit);

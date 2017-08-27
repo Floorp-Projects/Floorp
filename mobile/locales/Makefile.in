@@ -126,7 +126,6 @@ libs-%: AB_CD=$*
 libs-%: $(libs-preqs)
 	$(display-deps)
 	@$(MAKE) -C $(DEPTH)/toolkit/locales libs-$*
-	@$(MAKE) -C $(DEPTH)/intl/locales AB_CD=$* XPI_NAME=locale-$*
 	@$(MAKE) -B searchplugins AB_CD=$* XPI_NAME=locale-$*
 	@$(MAKE) libs AB_CD=$* XPI_NAME=locale-$* PREF_DIR=defaults/pref
 	@$(MAKE) -C $(DEPTH)/$(MOZ_BRANDING_DIRECTORY)/locales AB_CD=$* XPI_NAME=locale-$*

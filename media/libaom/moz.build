@@ -17,12 +17,15 @@ if CONFIG['CPU_ARCH'] == 'x86_64':
     if CONFIG['OS_TARGET'] == 'WINNT':
         ASFLAGS += [ '-I%s/media/libaom/config/win/x64/' % TOPSRCDIR ]
         CFLAGS += [ '-I%s/media/libaom/config/win/x64/' % TOPSRCDIR ]
+        EXPORTS.aom += [ 'config/win/x64/aom_config.h' ]
     elif CONFIG['OS_TARGET'] == 'Darwin':
         ASFLAGS += [ '-I%s/media/libaom/config/mac/x64/' % TOPSRCDIR ]
         CFLAGS += [ '-I%s/media/libaom/config/mac/x64/' % TOPSRCDIR ]
+        EXPORTS.aom += [ 'config/mac/x64/aom_config.h' ]
     else: # Android, Linux, BSDs, etc.
         ASFLAGS += [ '-I%s/media/libaom/config/linux/x64/' % TOPSRCDIR ]
         CFLAGS += [ '-I%s/media/libaom/config/linux/x64/' % TOPSRCDIR ]
+        EXPORTS.aom += [ 'config/linux/x64/aom_config.h' ]
 elif CONFIG['CPU_ARCH'] == 'x86':
     EXPORTS.aom += files['IA32_EXPORTS']
     SOURCES += files['IA32_SOURCES']
@@ -30,9 +33,11 @@ elif CONFIG['CPU_ARCH'] == 'x86':
     if CONFIG['OS_TARGET'] == 'WINNT':
         ASFLAGS += [ '-I%s/media/libaom/config/win/ia32/' % TOPSRCDIR ]
         CFLAGS += [ '-I%s/media/libaom/config/win/ia32/' % TOPSRCDIR ]
+        EXPORTS.aom += [ 'config/win/ia32/aom_config.h' ]
     else: # Android, Linux, BSDs, etc.
         ASFLAGS += [ '-I%s/media/libaom/config/linux/ia32/' % TOPSRCDIR ]
         CFLAGS += [ '-I%s/media/libaom/config/linux/ia32/' % TOPSRCDIR ]
+        EXPORTS.aom += [ 'config/linux/ia32/aom_config.h' ]
 elif CONFIG['CPU_ARCH'] == 'arm':
     EXPORTS.aom += files['ARM_EXPORTS']
     ASFLAGS += [
@@ -40,6 +45,7 @@ elif CONFIG['CPU_ARCH'] == 'arm':
         '-I%s/libaom' % OBJDIR,
     ]
     CFLAGS += [ '-I%s/media/libaom/config/linux/arm/' % TOPSRCDIR ]
+    EXPORTS.aom += [ 'config/linux/arm/aom_config.h' ]
 
     arm_asm_files = files['ARM_SOURCES']
 
@@ -69,6 +75,7 @@ else:
     SOURCES += files['GENERIC_SOURCES']
     ASFLAGS += [ '-I%s/media/libaom/config/generic/' % TOPSRCDIR ]
     CFLAGS += [ '-I%s/media/libaom/config/generic/' % TOPSRCDIR ]
+    EXPORTS.aom += [ 'config/generic/aom_config.h' ]
 
 # We allow warnings for third-party code that can be updated from upstream.
 ALLOW_COMPILER_WARNINGS = True

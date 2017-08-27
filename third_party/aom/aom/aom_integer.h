@@ -61,4 +61,6 @@ typedef size_t uintptr_t;
 #include <inttypes.h>
 #endif
 
+#define NELEMENTS(x) (int)(sizeof(x) / sizeof(x[0]))
+
 #endif  // AOM_AOM_INTEGER_H_

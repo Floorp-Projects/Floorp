@@ -213,40 +213,44 @@ TEST_P(AV1HBDSubtractBlockTest, CheckSpeed) { RunForSpeed(); }
 #endif  // USE_SPEED_TEST
 
 #if HAVE_SSE2
-INSTANTIATE_TEST_CASE_P(
-    SSE2, AV1HBDSubtractBlockTest,
-    ::testing::Values(make_tuple(4, 4, 12, &aom_highbd_subtract_block_sse2),
-                      make_tuple(4, 4, 12, &aom_highbd_subtract_block_c),
-                      make_tuple(4, 8, 12, &aom_highbd_subtract_block_sse2),
-                      make_tuple(4, 8, 12, &aom_highbd_subtract_block_c),
-                      make_tuple(8, 4, 12, &aom_highbd_subtract_block_sse2),
-                      make_tuple(8, 4, 12, &aom_highbd_subtract_block_c),
-                      make_tuple(8, 8, 12, &aom_highbd_subtract_block_sse2),
-                      make_tuple(8, 8, 12, &aom_highbd_subtract_block_c),
-                      make_tuple(8, 16, 12, &aom_highbd_subtract_block_sse2),
-                      make_tuple(8, 16, 12, &aom_highbd_subtract_block_c),
-                      make_tuple(16, 8, 12, &aom_highbd_subtract_block_sse2),
-                      make_tuple(16, 8, 12, &aom_highbd_subtract_block_c),
-                      make_tuple(16, 16, 12, &aom_highbd_subtract_block_sse2),
-                      make_tuple(16, 16, 12, &aom_highbd_subtract_block_c),
-                      make_tuple(16, 32, 12, &aom_highbd_subtract_block_sse2),
-                      make_tuple(16, 32, 12, &aom_highbd_subtract_block_c),
-                      make_tuple(32, 16, 12, &aom_highbd_subtract_block_sse2),
-                      make_tuple(32, 16, 12, &aom_highbd_subtract_block_c),
-                      make_tuple(32, 32, 12, &aom_highbd_subtract_block_sse2),
-                      make_tuple(32, 32, 12, &aom_highbd_subtract_block_c),
-                      make_tuple(32, 64, 12, &aom_highbd_subtract_block_sse2),
-                      make_tuple(32, 64, 12, &aom_highbd_subtract_block_c),
-                      make_tuple(64, 32, 12, &aom_highbd_subtract_block_sse2),
-                      make_tuple(64, 32, 12, &aom_highbd_subtract_block_c),
-                      make_tuple(64, 64, 12, &aom_highbd_subtract_block_sse2),
-                      make_tuple(64, 64, 12, &aom_highbd_subtract_block_c),
-                      make_tuple(64, 128, 12, &aom_highbd_subtract_block_sse2),
-                      make_tuple(64, 128, 12, &aom_highbd_subtract_block_c),
-                      make_tuple(128, 64, 12, &aom_highbd_subtract_block_sse2),
-                      make_tuple(128, 64, 12, &aom_highbd_subtract_block_c),
-                      make_tuple(128, 128, 12, &aom_highbd_subtract_block_sse2),
-                      make_tuple(128, 128, 12, &aom_highbd_subtract_block_c)));
+
+const Params kAV1HBDSubtractBlock_sse2[] = {
+  make_tuple(4, 4, 12, &aom_highbd_subtract_block_sse2),
+  make_tuple(4, 4, 12, &aom_highbd_subtract_block_c),
+  make_tuple(4, 8, 12, &aom_highbd_subtract_block_sse2),
+  make_tuple(4, 8, 12, &aom_highbd_subtract_block_c),
+  make_tuple(8, 4, 12, &aom_highbd_subtract_block_sse2),
+  make_tuple(8, 4, 12, &aom_highbd_subtract_block_c),
+  make_tuple(8, 8, 12, &aom_highbd_subtract_block_sse2),
+  make_tuple(8, 8, 12, &aom_highbd_subtract_block_c),
+  make_tuple(8, 16, 12, &aom_highbd_subtract_block_sse2),
+  make_tuple(8, 16, 12, &aom_highbd_subtract_block_c),
+  make_tuple(16, 8, 12, &aom_highbd_subtract_block_sse2),
+  make_tuple(16, 8, 12, &aom_highbd_subtract_block_c),
+  make_tuple(16, 16, 12, &aom_highbd_subtract_block_sse2),
+  make_tuple(16, 16, 12, &aom_highbd_subtract_block_c),
+  make_tuple(16, 32, 12, &aom_highbd_subtract_block_sse2),
+  make_tuple(16, 32, 12, &aom_highbd_subtract_block_c),
+  make_tuple(32, 16, 12, &aom_highbd_subtract_block_sse2),
+  make_tuple(32, 16, 12, &aom_highbd_subtract_block_c),
+  make_tuple(32, 32, 12, &aom_highbd_subtract_block_sse2),
+  make_tuple(32, 32, 12, &aom_highbd_subtract_block_c),
+  make_tuple(32, 64, 12, &aom_highbd_subtract_block_sse2),
+  make_tuple(32, 64, 12, &aom_highbd_subtract_block_c),
+  make_tuple(64, 32, 12, &aom_highbd_subtract_block_sse2),
+  make_tuple(64, 32, 12, &aom_highbd_subtract_block_c),
+  make_tuple(64, 64, 12, &aom_highbd_subtract_block_sse2),
+  make_tuple(64, 64, 12, &aom_highbd_subtract_block_c),
+  make_tuple(64, 128, 12, &aom_highbd_subtract_block_sse2),
+  make_tuple(64, 128, 12, &aom_highbd_subtract_block_c),
+  make_tuple(128, 64, 12, &aom_highbd_subtract_block_sse2),
+  make_tuple(128, 64, 12, &aom_highbd_subtract_block_c),
+  make_tuple(128, 128, 12, &aom_highbd_subtract_block_sse2),
+  make_tuple(128, 128, 12, &aom_highbd_subtract_block_c)
+};
+
+INSTANTIATE_TEST_CASE_P(SSE2, AV1HBDSubtractBlockTest,
+                        ::testing::ValuesIn(kAV1HBDSubtractBlock_sse2));
 #endif  // HAVE_SSE2
 #endif  // CONFIG_HIGHBITDEPTH
 }  // namespace

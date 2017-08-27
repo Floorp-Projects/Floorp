@@ -858,6 +858,11 @@ ServoStyleSet::HasStateDependentStyle(dom::Element* aElement,
 bool
 ServoStyleSet::StyleDocument(ServoTraversalFlags aBaseFlags)
 {
+  nsIDocument* doc = mPresContext->Document();
+  if (!doc->GetServoRestyleRoot()) {
+    return false;
+  }
+
   PreTraverse(aBaseFlags);
   AutoPrepareTraversal guard(this);
   const SnapshotTable& snapshots = Snapshots();
@@ -866,7 +871,6 @@ ServoStyleSet::StyleDocument(ServoTraversalFlags aBaseFlags)
   // NAC subtree roots.
   bool postTraversalRequired = false;
 
-  nsIDocument* doc = mPresContext->Document();
   Element* rootElement = doc->GetRootElement();
   // NB: We distinguish between the main document and document-level NAC here.
   const bool isInitialForMainDoc = rootElement && !rootElement->HasServoData();
@@ -1382,6 +1386,18 @@ nsCSSCounterStyleRule*
 ServoStyleSet::CounterStyleRuleForName(nsIAtom* aName)
 {
   return Servo_StyleSet_GetCounterStyleRule(mRawSet.get(), aName);
+}
+
+already_AddRefed<gfxFontFeatureValueSet>
+ServoStyleSet::BuildFontFeatureValueSet()
+{
+  UpdateStylistIfNeeded();
+  RefPtr<gfxFontFeatureValueSet> set = new gfxFontFeatureValueSet();
+  bool setHasAnyRules = Servo_StyleSet_BuildFontFeatureValueSet(mRawSet.get(), set.get());
+  if (!setHasAnyRules) {
+    return nullptr;
+  }
+  return set.forget();
 }
 
 already_AddRefed<ServoStyleContext>

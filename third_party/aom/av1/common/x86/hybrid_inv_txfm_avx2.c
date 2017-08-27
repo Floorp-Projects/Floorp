@@ -364,8 +364,9 @@ static void iidtx16(__m256i *in) {
 #endif
 
 void av1_iht16x16_256_add_avx2(const tran_low_t *input, uint8_t *dest,
-                               int stride, int tx_type) {
+                               int stride, const TxfmParam *txfm_param) {
   __m256i in[16];
+  int tx_type = txfm_param->tx_type;
 
   load_buffer_16x16(input, in);
   switch (tx_type) {
