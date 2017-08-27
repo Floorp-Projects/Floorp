@@ -26,6 +26,7 @@ Cu.import("resource://gre/modules/Services.jsm");
 
 this.FormAutofillUtils = {
   get AUTOFILL_FIELDS_THRESHOLD() { return 3; },
+  get isAutofillEnabled() { return this.isAutofillAddressesEnabled || this.isAutofillCreditCardsEnabled; },
 
   ADDRESSES_COLLECTION_NAME,
   CREDITCARDS_COLLECTION_NAME,
@@ -141,12 +142,13 @@ this.FormAutofillUtils = {
       return false;
     }
 
-    if (element instanceof Ci.nsIDOMHTMLInputElement) {
+    let tagName = element.tagName;
+    if (tagName == "INPUT") {
       // `element.type` can be recognized as `text`, if it's missing or invalid.
       if (!this.ALLOWED_TYPES.includes(element.type)) {
         return false;
       }
-    } else if (!(element instanceof Ci.nsIDOMHTMLSelectElement)) {
+    } else if (tagName != "SELECT") {
       return false;
     }
 

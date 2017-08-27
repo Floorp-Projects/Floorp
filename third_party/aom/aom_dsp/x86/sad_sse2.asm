@@ -208,6 +208,10 @@ SAD32XN 16 ; sad32x16_sse2
 SAD32XN 64, 1 ; sad32x64_avg_sse2
 SAD32XN 32, 1 ; sad32x32_avg_sse2
 SAD32XN 16, 1 ; sad32x16_avg_sse2
+%if CONFIG_EXT_PARTITION_TYPES
+SAD32XN 8 ; sad_32x8_sse2
+SAD32XN 8, 1 ; sad_32x8_avg_sse2
+%endif
 
 ; unsigned int aom_sad16x{8,16}_sse2(uint8_t *src, int src_stride,
 ;                                    uint8_t *ref, int ref_stride);
@@ -254,6 +258,10 @@ SAD16XN  8 ; sad16x8_sse2
 SAD16XN 32, 1 ; sad16x32_avg_sse2
 SAD16XN 16, 1 ; sad16x16_avg_sse2
 SAD16XN  8, 1 ; sad16x8_avg_sse2
+%if CONFIG_EXT_PARTITION_TYPES
+SAD16XN 4 ; sad_16x4_sse2
+SAD16XN 4, 1 ; sad_16x4_avg_sse2
+%endif
 
 ; unsigned int aom_sad8x{8,16}_sse2(uint8_t *src, int src_stride,
 ;                                   uint8_t *ref, int ref_stride);
@@ -298,6 +306,10 @@ SAD8XN  4 ; sad8x4_sse2
 SAD8XN 16, 1 ; sad8x16_avg_sse2
 SAD8XN  8, 1 ; sad8x8_avg_sse2
 SAD8XN  4, 1 ; sad8x4_avg_sse2
+%if CONFIG_EXT_PARTITION_TYPES
+SAD8XN 32 ; sad_8x32_sse2
+SAD8XN 32, 1 ; sad_8x32_avg_sse2
+%endif
 
 ; unsigned int aom_sad4x{4, 8}_sse2(uint8_t *src, int src_stride,
 ;                                   uint8_t *ref, int ref_stride);
@@ -343,3 +355,7 @@ SAD4XN  8 ; sad4x8_sse
 SAD4XN  4 ; sad4x4_sse
 SAD4XN  8, 1 ; sad4x8_avg_sse
 SAD4XN  4, 1 ; sad4x4_avg_sse
+%if CONFIG_EXT_PARTITION_TYPES
+SAD4XN 16 ; sad_4x16_sse2
+SAD4XN 16, 1 ; sad_4x16_avg_sse2
+%endif

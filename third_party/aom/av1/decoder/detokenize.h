@@ -14,9 +14,9 @@
 
 #include "./aom_config.h"
 #if !CONFIG_PVQ || CONFIG_VAR_TX
-#include "av1/decoder/decoder.h"
 #include "av1/common/scan.h"
-#endif  // !CONFIG_PVQ
+#endif  // !CONFIG_PVQ || CONFIG_VAR_TX
+#include "av1/decoder/decoder.h"
 
 #ifdef __cplusplus
 extern "C" {

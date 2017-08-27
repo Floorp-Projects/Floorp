@@ -1,0 +1,59 @@
+<!DOCTYPE HTML>
+<html>
+<head>
+  <meta charset="utf-8">
+  <title>Test for Bug 1382545</title>
+<script>
+  function waitForCondition(aCond, aCallback, aErrorMsg) {
+    var tries = 0;
+    var interval = setInterval(() => {
+      if (tries >= 30) {
+        opener.ok(false, aErrorMsg);
+        moveOn();
+        return;
+      }
+      var conditionPassed;
+      try {
+        conditionPassed = aCond();
+      } catch (e) {
+        opener.ok(false, `${e}\n${e.stack}`);
+        conditionPassed = false;
+      }
+      if (conditionPassed) {
+        moveOn();
+      }
+      tries++;
+    }, 100);
+    var moveOn = () => { clearInterval(interval); aCallback(); };
+  }
+
+  function runTest() {
+    const isRounded = x => (Math.floor(x / 100) * 100) === x;
+    const testDiv = document.getElementById("testDiv");
+    const animation = testDiv.animate({ opacity: [0, 1] }, 100000);
+    animation.play();
+
+    waitForCondition(
+      () => animation.currentTime > 100,
+        () => {
+          opener.ok(isRounded(animation.startTime),
+             "animation.startTime is rounded");
+          opener.ok(isRounded(animation.currentTime),
+             "animation.currentTime is rounded");
+          opener.ok(isRounded(animation.timeline.currentTime),
+             "animation.timeline.currentTime is rounded");
+          if (document.timeline) {
+            opener.ok(isRounded(document.timeline.currentTime),
+               "document.timeline.currentTime is rounded");
+          }
+          opener.done();
+          window.close();
+        },
+        "animation failed to start");
+  }
+</script>
+</head>
+<body onload="runTest();">
+<div id="testDiv">test</div>
+</body>
+</html>

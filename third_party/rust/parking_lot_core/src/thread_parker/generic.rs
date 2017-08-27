@@ -33,6 +33,10 @@ impl ThreadParker {
     // Checks if the park timed out. This should be called while holding the
     // queue lock after park_until has returned false.
     pub unsafe fn timed_out(&self) -> bool {
+        // We need to grab the mutex here because another thread may be
+        // concurrently executing UnparkHandle::unpark, which is done without
+        // holding the queue lock.
+        let _lock = self.mutex.lock().unwrap();
         self.should_park.get()
     }
 

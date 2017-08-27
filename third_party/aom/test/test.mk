@@ -33,6 +33,7 @@ LIBAOM_TEST_SRCS-$(CONFIG_AV1_ENCODER)    += altref_test.cc
 LIBAOM_TEST_SRCS-$(CONFIG_AV1_ENCODER)    += aq_segment_test.cc
 LIBAOM_TEST_SRCS-$(CONFIG_AV1_ENCODER)    += datarate_test.cc
 LIBAOM_TEST_SRCS-$(CONFIG_AV1_ENCODER)    += encode_api_test.cc
+LIBAOM_TEST_SRCS-$(CONFIG_AV1_ENCODER)    += coding_path_sync.cc
 LIBAOM_TEST_SRCS-$(CONFIG_AV1_ENCODER)    += error_resilience_test.cc
 LIBAOM_TEST_SRCS-$(CONFIG_AV1_ENCODER)    += i420_video_source.h
 #LIBAOM_TEST_SRCS-$(CONFIG_AV1_ENCODER)    += realtime_test.cc
@@ -167,6 +168,7 @@ ifneq ($(CONFIG_NEW_QUANT), yes)
 LIBAOM_TEST_SRCS-$(CONFIG_AV1_ENCODER) += quantize_func_test.cc
 endif
 endif
+LIBAOM_TEST_SRCS-$(CONFIG_AV1_ENCODER) += block_error_test.cc
 
 LIBAOM_TEST_SRCS-$(CONFIG_AV1_ENCODER) += av1_inv_txfm_test.cc
 LIBAOM_TEST_SRCS-$(CONFIG_AV1_ENCODER) += av1_dct_test.cc
@@ -242,6 +244,12 @@ LIBAOM_TEST_SRCS-$(HAVE_SSE2) += hiprec_convolve_test_util.h
 LIBAOM_TEST_SRCS-$(HAVE_SSE2) += hiprec_convolve_test.cc
 LIBAOM_TEST_SRCS-$(HAVE_SSE2) += hiprec_convolve_test_util.cc
 LIBAOM_TEST_SRCS-$(HAVE_SSE4_1) += selfguided_filter_test.cc
+endif
+ifeq ($(CONFIG_CONVOLVE_ROUND),yes)
+LIBAOM_TEST_SRCS-$(HAVE_SSE2) += av1_convolve_2d_test_util.h
+LIBAOM_TEST_SRCS-$(HAVE_SSE2) += av1_convolve_2d_test.cc
+LIBAOM_TEST_SRCS-$(HAVE_SSE2) += av1_convolve_2d_test_util.cc
+LIBAOM_TEST_SRCS-yes          += convolve_round_test.cc
 endif
 
 ifeq ($(CONFIG_GLOBAL_MOTION)$(CONFIG_AV1_ENCODER),yesyes)

@@ -16,6 +16,7 @@ use style::context::{CascadeInputs, QuirksMode, SharedStyleContext, StyleContext
 use style::context::ThreadLocalStyleContext;
 use style::data::ElementStyles;
 use style::dom::{ShowSubtreeData, TElement, TNode};
+use style::driver;
 use style::element_state::ElementState;
 use style::error_reporting::{NullReporter, ParseErrorReporter};
 use style::font_metrics::{FontMetricsProvider, get_metrics_provider_for_product};
@@ -88,6 +89,7 @@ use style::gecko_bindings::structs::ServoElementSnapshotTable;
 use style::gecko_bindings::structs::ServoTraversalFlags;
 use style::gecko_bindings::structs::StyleRuleInclusion;
 use style::gecko_bindings::structs::URLExtraData;
+use style::gecko_bindings::structs::gfxFontFeatureValueSet;
 use style::gecko_bindings::structs::nsCSSValueSharedList;
 use style::gecko_bindings::structs::nsCompatibility;
 use style::gecko_bindings::structs::nsIDocument;
@@ -100,7 +102,6 @@ use style::gecko_bindings::sugar::refptr::RefPtr;
 use style::gecko_properties::style_structs;
 use style::invalidation::element::restyle_hints;
 use style::media_queries::{MediaList, parse_media_query_list};
-use style::parallel;
 use style::parser::{ParserContext, self};
 use style::properties::{CascadeFlags, ComputedValues, Importance};
 use style::properties::{IS_FIELDSET_CONTENT, IS_LINK, IS_VISITED_LINK, LonghandIdSet};
@@ -112,7 +113,6 @@ use style::properties::animated_properties::compare_property_priority;
 use style::properties::parse_one_declaration_into;
 use style::rule_tree::StyleSource;
 use style::selector_parser::PseudoElementCascadeType;
-use style::sequential;
 use style::shared_lock::{SharedRwLockReadGuard, StylesheetGuards, ToCssWithGuard, Locked};
 use style::string_cache::Atom;
 use style::style_adjuster::StyleAdjuster;
@@ -126,7 +126,7 @@ use style::stylesheets::supports_rule::parse_condition_or_declaration;
 use style::stylist::RuleInclusion;
 use style::thread_state;
 use style::timer::Timer;
-use style::traversal::{DomTraversal, TraversalDriver};
+use style::traversal::DomTraversal;
 use style::traversal::resolve_style;
 use style::traversal_flags::{TraversalFlags, self};
 use style::values::{CustomIdent, KeyframesName};
@@ -197,7 +197,6 @@ fn create_shared_context<'a>(global_style_data: &GlobalStyleData,
         options: global_style_data.options.clone(),
         guards: StylesheetGuards::same(guard),
         timer: Timer::new(),
-        quirks_mode: per_doc_data.stylist.quirks_mode(),
         traversal_flags: traversal_flags,
         snapshot_map: snapshot_map,
     }
@@ -238,21 +237,15 @@ fn traverse_subtree(element: GeckoElement,
     debug!("Traversing subtree:");
     debug!("{:?}", ShowSubtreeData(element.as_node()));
 
-    let style_thread_pool = &*STYLE_THREAD_POOL;
-    let traversal_driver = if !traversal_flags.contains(traversal_flags::ParallelTraversal) ||
-                              style_thread_pool.style_thread_pool.is_none() {
-        TraversalDriver::Sequential
+    let thread_pool_holder = &*STYLE_THREAD_POOL;
+    let thread_pool = if traversal_flags.contains(traversal_flags::ParallelTraversal) {
+        thread_pool_holder.style_thread_pool.as_ref()
     } else {
-        TraversalDriver::Parallel
+        None
     };
 
-    let traversal = RecalcStyleOnly::new(shared_style_context, traversal_driver);
-    if traversal_driver.is_parallel() {
-        parallel::traverse_dom(&traversal, element, token,
-                               style_thread_pool.style_thread_pool.as_ref().unwrap());
-    } else {
-        sequential::traverse_dom(&traversal, element, token);
-    }
+    let traversal = RecalcStyleOnly::new(shared_style_context);
+    driver::traverse_dom(&traversal, element, token, thread_pool);
 }
 
 /// Traverses the subtree rooted at `root` for restyling.
@@ -3536,6 +3529,30 @@ pub extern "C" fn Servo_StyleSet_GetCounterStyleRule(raw_data: RawServoStyleSetB
 }
 
 #[no_mangle]
+pub extern "C" fn Servo_StyleSet_BuildFontFeatureValueSet(
+  raw_data: RawServoStyleSetBorrowed,
+  set: *mut gfxFontFeatureValueSet
+) -> bool {
+    let data = PerDocumentStyleData::from_ffi(raw_data).borrow();
+
+    let global_style_data = &*GLOBAL_STYLE_DATA;
+    let guard = global_style_data.shared_lock.read();
+
+    let font_feature_values_iter = data.extra_style_data
+        .iter_origins_rev()
+        .flat_map(|(d, _)| d.font_feature_values.iter());
+
+    let mut any_rule = false;
+    for src in font_feature_values_iter {
+        any_rule = true;
+        let rule = src.read_with(&guard);
+        rule.set_at_rules(set);
+    }
+
+    any_rule
+}
+
+#[no_mangle]
 pub extern "C" fn Servo_StyleSet_ResolveForDeclarations(
     raw_data: RawServoStyleSetBorrowed,
     parent_style_context: ServoStyleContextBorrowedOrNull,
@@ -3658,4 +3675,32 @@ pub extern "C" fn Servo_GetCustomPropertyNameAt(computed_values: ServoStyleConte
     name.assign(&*property_name.as_slice());
 
     true
+}
+
+#[no_mangle]
+pub extern "C" fn Servo_ProcessInvalidations(set: RawServoStyleSetBorrowed,
+                                             element: RawGeckoElementBorrowed,
+                                             snapshots: *const ServoElementSnapshotTable) {
+    debug_assert!(!snapshots.is_null());
+
+    let element = GeckoElement(element);
+    debug_assert!(element.has_snapshot());
+    debug_assert!(!element.handled_snapshot());
+
+    let mut data = element.mutate_data();
+    debug_assert!(data.is_some());
+
+    let global_style_data = &*GLOBAL_STYLE_DATA;
+    let guard = global_style_data.shared_lock.read();
+    let per_doc_data = PerDocumentStyleData::from_ffi(set).borrow();
+    let shared_style_context = create_shared_context(&global_style_data,
+                                                     &guard,
+                                                     &per_doc_data,
+                                                     TraversalFlags::empty(),
+                                                     unsafe { &*snapshots });
+    let mut data = data.as_mut().map(|d| &mut **d);
+
+    if let Some(ref mut data) = data {
+        data.invalidate_style_if_needed(element, &shared_style_context, None);
+    }
 }

@@ -43,6 +43,6 @@ set(AOM_ADS2GAS "${CMAKE_CURRENT_SOURCE_DIR}/build/make/ads2gas.pl")
 set(AOM_GAS_EXT "S")
 
 # No runtime cpu detect for armv7-linux-gcc.
-set(CONFIG_RUNTIME_CPU_DETECT 0 CACHE BOOL "")
+set(CONFIG_RUNTIME_CPU_DETECT 0 CACHE NUMBER "")
 
 endif ()  # AOM_BUILD_CMAKE_TOOLCHAINS_ARMV7_LINUX_GCC_CMAKE_

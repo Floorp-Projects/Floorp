@@ -36,14 +36,6 @@ void av1_k_means(const float *data, float *centroids, uint8_t *indices, int n,
 // method.
 int av1_remove_duplicates(float *centroids, int num_centroids);
 
-// Returns the number of colors in 'src'.
-int av1_count_colors(const uint8_t *src, int stride, int rows, int cols);
-#if CONFIG_HIGHBITDEPTH
-// Same as av1_count_colors(), but for high-bitdepth mode.
-int av1_count_colors_highbd(const uint8_t *src8, int stride, int rows, int cols,
-                            int bit_depth);
-#endif  // CONFIG_HIGHBITDEPTH
-
 #if CONFIG_PALETTE_DELTA_ENCODING
 // Given a color cache and a set of base colors, find if each cache color is
 // present in the base colors, record the binary results in "cache_color_found".

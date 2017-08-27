@@ -6,6 +6,7 @@ import re
 import os
 import signal
 import subprocess
+from collections import defaultdict
 
 import which
 from mozprocess import ProcessHandlerMixin
@@ -114,13 +115,35 @@ def gen_yamllint_args(cmdargs, paths=None, conf_file=None):
     args = cmdargs[:]
     if isinstance(paths, basestring):
         paths = [paths]
-    if conf_file:
+    if conf_file and conf_file != 'default':
         return args + ['-c', conf_file] + paths
     return args + paths
 
 
-def lint(files, config, **lintargs):
+def ancestors(path):
+    while path:
+        yield path
+        (path, child) = os.path.split(path)
+        if child == "":
+            break
 
+
+def get_relevant_configs(name, path, root):
+    """Returns a list of configuration files that exist in `path`'s ancestors,
+    sorted from closest->furthest.
+    """
+    configs = []
+    for path in ancestors(path):
+        if path == root:
+            break
+
+        config = os.path.join(path, name)
+        if os.path.isfile(config):
+            configs.append(config)
+    return configs
+
+
+def lint(files, config, **lintargs):
     if not reinstall_yamllint():
         print(YAMLLINT_INSTALL_ERROR)
         return 1
@@ -138,17 +161,12 @@ def lint(files, config, **lintargs):
     # Run any paths with a .yamllint file in the directory separately so
     # it gets picked up. This means only .yamllint files that live in
     # directories that are explicitly included will be considered.
-    no_config = []
+    paths_by_config = defaultdict(list)
     for f in files:
-        yamllint_config = os.path.join(f, '.yamllint')
-        if not os.path.isfile(yamllint_config):
-            no_config.append(f)
-            continue
-        run_process(config,
-                    gen_yamllint_args(cmdargs, conf_file=yamllint_config, paths=f))
+        conf_files = get_relevant_configs('.yamllint', f, config['root'])
+        paths_by_config[conf_files[0] if conf_files else 'default'].append(f)
 
-    if no_config:
-        run_process(config,
-                    gen_yamllint_args(cmdargs, paths=no_config))
+    for conf_file, paths in paths_by_config.items():
+        run_process(config, gen_yamllint_args(cmdargs, conf_file=conf_file, paths=paths))
 
     return results

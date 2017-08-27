@@ -153,6 +153,10 @@ typedef struct BufferPool {
 typedef struct AV1Common {
   struct aom_internal_error_info error;
   aom_color_space_t color_space;
+#if CONFIG_COLORSPACE_HEADERS
+  aom_transfer_function_t transfer_function;
+  aom_chroma_sample_position_t chroma_sample_position;
+#endif
   int color_range;
   int width;
   int height;
@@ -302,6 +306,9 @@ typedef struct AV1Common {
 #if CONFIG_FRAME_SUPERRES
   // The numerator of the superres scale; the denominator is fixed.
   uint8_t superres_scale_numerator;
+  uint8_t superres_kf_scale_numerator;
+  int superres_upscaled_width;
+  int superres_upscaled_height;
 #endif  // CONFIG_FRAME_SUPERRES
 #if CONFIG_LOOP_RESTORATION
   RestorationInfo rst_info[MAX_MB_PLANE];
@@ -316,7 +323,7 @@ typedef struct AV1Common {
 
   struct loopfilter lf;
   struct segmentation seg;
-
+  int all_lossless;
   int frame_parallel_decode;  // frame-based threading.
 
 #if CONFIG_EXT_TX
@@ -348,21 +355,18 @@ typedef struct AV1Common {
 
   int error_resilient_mode;
 
-#if !CONFIG_EXT_TILE
-  int log2_tile_cols, log2_tile_rows;
-#endif  // !CONFIG_EXT_TILE
+  int log2_tile_cols, log2_tile_rows;  // Used in non-large_scale_tile_coding.
   int tile_cols, tile_rows;
   int tile_width, tile_height;  // In MI units
 #if CONFIG_EXT_TILE
-  unsigned int tile_encoding_mode;
+  unsigned int large_scale_tile;
+  unsigned int single_tile_decoding;
 #endif  // CONFIG_EXT_TILE
 
 #if CONFIG_DEPENDENT_HORZTILES
   int dependent_horz_tiles;
-#if CONFIG_TILE_GROUPS
   int tile_group_start_row[MAX_TILE_ROWS][MAX_TILE_COLS];
   int tile_group_start_col[MAX_TILE_ROWS][MAX_TILE_COLS];
-#endif
 #endif
 #if CONFIG_LOOPFILTERING_ACROSS_TILES
   int loop_filter_across_tiles_enabled;
@@ -421,9 +425,7 @@ typedef struct AV1Common {
   int delta_lf_res;
 #endif
 #endif
-#if CONFIG_TILE_GROUPS
   int num_tg;
-#endif
 #if CONFIG_REFERENCE_BUFFER
   int current_frame_id;
   int ref_frame_id[REF_FRAMES];
@@ -505,6 +507,33 @@ static INLINE void ref_cnt_fb(RefCntBuffer *bufs, int *idx, int new_idx) {
   bufs[new_idx].ref_count++;
 }
 
+#if CONFIG_VAR_REFS
+#define LAST_IS_VALID(cm) ((cm)->frame_refs[LAST_FRAME - 1].is_valid)
+#define LAST2_IS_VALID(cm) ((cm)->frame_refs[LAST2_FRAME - 1].is_valid)
+#define LAST3_IS_VALID(cm) ((cm)->frame_refs[LAST3_FRAME - 1].is_valid)
+#define GOLDEN_IS_VALID(cm) ((cm)->frame_refs[GOLDEN_FRAME - 1].is_valid)
+#define BWDREF_IS_VALID(cm) ((cm)->frame_refs[BWDREF_FRAME - 1].is_valid)
+#if CONFIG_ALTREF2
+#define ALTREF2_IS_VALID(cm) ((cm)->frame_refs[ALTREF2_FRAME - 1].is_valid)
+#endif  // CONFIG_ALTREF2
+#define ALTREF_IS_VALID(cm) ((cm)->frame_refs[ALTREF_FRAME - 1].is_valid)
+
+#define L_OR_L2(cm) (LAST_IS_VALID(cm) || LAST2_IS_VALID(cm))
+#define L_AND_L2(cm) (LAST_IS_VALID(cm) && LAST2_IS_VALID(cm))
+#define L_AND_L3(cm) (LAST_IS_VALID(cm) && LAST3_IS_VALID(cm))
+#define L_AND_G(cm) (LAST_IS_VALID(cm) && GOLDEN_IS_VALID(cm))
+
+#define L3_OR_G(cm) (LAST3_IS_VALID(cm) || GOLDEN_IS_VALID(cm))
+#define L3_AND_G(cm) (LAST3_IS_VALID(cm) && GOLDEN_IS_VALID(cm))
+
+#if CONFIG_ALTREF2
+#define BWD_OR_ALT2(cm) (BWDREF_IS_VALID(cm) || ALTREF2_IS_VALID(cm))
+#define BWD_AND_ALT2(cm) (BWDREF_IS_VALID(cm) && ALTREF2_IS_VALID(cm))
+#endif  // CONFIG_ALTREF2
+#define BWD_OR_ALT(cm) (BWDREF_IS_VALID(cm) || ALTREF_IS_VALID(cm))
+#define BWD_AND_ALT(cm) (BWDREF_IS_VALID(cm) && ALTREF_IS_VALID(cm))
+#endif  // CONFIG_VAR_REFS
+
 static INLINE int mi_cols_aligned_to_sb(const AV1_COMMON *cm) {
   return ALIGN_POWER_OF_TWO(cm->mi_cols, cm->mib_size_log2);
 }
@@ -525,16 +554,10 @@ static INLINE void av1_init_macroblockd(AV1_COMMON *cm, MACROBLOCKD *xd,
                                         CFL_CTX *cfl,
 #endif
                                         tran_low_t *dqcoeff) {
-  int i;
-  for (i = 0; i < MAX_MB_PLANE; ++i) {
+  for (int i = 0; i < MAX_MB_PLANE; ++i) {
     xd->plane[i].dqcoeff = dqcoeff;
 #if CONFIG_PVQ
     xd->plane[i].pvq_ref_coeff = pvq_ref_coeff;
-#endif
-#if CONFIG_CFL
-    xd->cfl = cfl;
-    cfl_init(cfl, cm, xd->plane[AOM_PLANE_U].subsampling_x,
-             xd->plane[AOM_PLANE_U].subsampling_y);
 #endif
     xd->above_context[i] = cm->above_context[i];
     if (xd->plane[i].plane_type == PLANE_TYPE_Y) {
@@ -558,11 +581,15 @@ static INLINE void av1_init_macroblockd(AV1_COMMON *cm, MACROBLOCKD *xd,
              sizeof(cm->uv_dequant_nuq));
 #endif
     }
-    xd->fc = cm->fc;
   }
+  xd->fc = cm->fc;
   xd->above_seg_context = cm->above_seg_context;
 #if CONFIG_VAR_TX
   xd->above_txfm_context = cm->above_txfm_context;
+#endif
+#if CONFIG_CFL
+  cfl_init(cfl, cm);
+  xd->cfl = cfl;
 #endif
   xd->mi_stride = cm->mi_stride;
   xd->error_info = &cm->error;
@@ -623,11 +650,7 @@ static INLINE void set_mi_row_col(MACROBLOCKD *xd, const TileInfo *const tile,
 
 #if CONFIG_DEPENDENT_HORZTILES
   if (dependent_horz_tile_flag) {
-#if CONFIG_TILE_GROUPS
     xd->up_available = (mi_row > tile->mi_row_start) || !tile->tg_horz_boundary;
-#else
-    xd->up_available = (mi_row > 0);
-#endif  // CONFIG_TILE_GROUPS
   } else {
 #endif  // CONFIG_DEPENDENT_HORZTILES
     // Are edges available for intra prediction?
@@ -742,6 +765,20 @@ static INLINE int is_chroma_reference(int mi_row, int mi_col, BLOCK_SIZE bsize,
 #endif
 }
 
+#if CONFIG_SUPERTX
+static INLINE int need_handle_chroma_sub8x8(BLOCK_SIZE bsize, int subsampling_x,
+                                            int subsampling_y) {
+  const int bw = mi_size_wide[bsize];
+  const int bh = mi_size_high[bsize];
+
+  if (bsize >= BLOCK_8X8 ||
+      ((!(bh & 0x01) || !subsampling_y) && (!(bw & 0x01) || !subsampling_x)))
+    return 0;
+  else
+    return 1;
+}
+#endif
+
 static INLINE BLOCK_SIZE scale_chroma_bsize(BLOCK_SIZE bsize, int subsampling_x,
                                             int subsampling_y) {
   BLOCK_SIZE bs = bsize;
@@ -773,6 +810,8 @@ static INLINE void update_ext_partition_context(MACROBLOCKD *xd, int mi_row,
       case PARTITION_NONE:
       case PARTITION_HORZ:
       case PARTITION_VERT:
+      case PARTITION_HORZ_4:
+      case PARTITION_VERT_4:
         update_partition_context(xd, mi_row, mi_col, subsize, bsize);
         break;
       case PARTITION_HORZ_A:
@@ -861,6 +900,24 @@ static INLINE int max_block_high(const MACROBLOCKD *xd, BLOCK_SIZE bsize,
   return max_blocks_high >> tx_size_wide_log2[0];
 }
 
+#if CONFIG_CFL
+static INLINE int max_intra_block_width(const MACROBLOCKD *xd,
+                                        BLOCK_SIZE plane_bsize, int plane,
+                                        TX_SIZE tx_size) {
+  const int max_blocks_wide = max_block_wide(xd, plane_bsize, plane)
+                              << tx_size_wide_log2[0];
+  return ALIGN_POWER_OF_TWO(max_blocks_wide, tx_size_wide_log2[tx_size]);
+}
+
+static INLINE int max_intra_block_height(const MACROBLOCKD *xd,
+                                         BLOCK_SIZE plane_bsize, int plane,
+                                         TX_SIZE tx_size) {
+  const int max_blocks_high = max_block_high(xd, plane_bsize, plane)
+                              << tx_size_high_log2[0];
+  return ALIGN_POWER_OF_TWO(max_blocks_high, tx_size_high_log2[tx_size]);
+}
+#endif  // CONFIG_CFL
+
 static INLINE void av1_zero_above_context(AV1_COMMON *const cm,
                                           int mi_col_start, int mi_col_end) {
   const int width = mi_col_end - mi_col_start;
@@ -891,12 +948,22 @@ static INLINE void av1_zero_left_context(MACROBLOCKD *const xd) {
 #endif
 }
 
-#if CONFIG_VAR_TX
+// Disable array-bounds checks as the TX_SIZE enum contains values larger than
+// TX_SIZES_ALL (TX_INVALID) which make extending the array as a workaround
+// infeasible. The assert is enough for static analysis and this or other tools
+// asan, valgrind would catch oob access at runtime.
+#if defined(__GNUC__) && __GNUC__ >= 4
+#pragma GCC diagnostic ignored "-Warray-bounds"
+#endif
 static INLINE TX_SIZE get_min_tx_size(TX_SIZE tx_size) {
   assert(tx_size < TX_SIZES_ALL);
   return txsize_sqr_map[tx_size];
 }
+#if defined(__GNUC__) && __GNUC__ >= 4
+#pragma GCC diagnostic warning "-Warray-bounds"
+#endif
 
+#if CONFIG_VAR_TX
 static INLINE void set_txfm_ctx(TXFM_CONTEXT *txfm_ctx, uint8_t txs, int len) {
   int i;
   for (i = 0; i < len; ++i) txfm_ctx[i] = txs;
@@ -986,6 +1053,9 @@ static INLINE PARTITION_TYPE get_partition(const AV1_COMMON *const cm,
 
     assert(cm->mi_grid_visible[offset] == &cm->mi[offset]);
 
+    if (partition == PARTITION_HORZ_4 || partition == PARTITION_VERT_4)
+      return partition;
+
     if (partition != PARTITION_NONE && bsize > BLOCK_8X8 &&
         mi_row + hbs < cm->mi_rows && mi_col + hbs < cm->mi_cols) {
       const BLOCK_SIZE h = get_subsize(bsize, PARTITION_HORZ_A);
@@ -1018,6 +1088,22 @@ static INLINE void set_sb_size(AV1_COMMON *const cm, BLOCK_SIZE sb_size) {
 #else
   cm->mib_size_log2 = mi_width_log2_lookup[cm->sb_size];
 #endif
+}
+
+static INLINE int all_lossless(const AV1_COMMON *cm, const MACROBLOCKD *xd) {
+  int i;
+  int all_lossless = 1;
+  if (cm->seg.enabled) {
+    for (i = 0; i < MAX_SEGMENTS; ++i) {
+      if (!xd->lossless[i]) {
+        all_lossless = 0;
+        break;
+      }
+    }
+  } else {
+    all_lossless = xd->lossless[0];
+  }
+  return all_lossless;
 }
 
 #ifdef __cplusplus

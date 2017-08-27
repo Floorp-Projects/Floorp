@@ -34,6 +34,14 @@ extern const uint16_t av1_prob_cost[256];
 // for each bit.
 #define av1_cost_literal(n) ((n) * (1 << AV1_PROB_COST_SHIFT))
 
+// Calculate the cost of a symbol with probability p15 / 2^15
+static INLINE int av1_cost_symbol(aom_cdf_prob p15) {
+  assert(0 < p15 && p15 < CDF_PROB_TOP);
+  const int shift = CDF_PROB_BITS - 1 - get_msb(p15);
+  return av1_cost_zero(get_prob(p15 << shift, CDF_PROB_TOP)) +
+         av1_cost_literal(shift);
+}
+
 static INLINE unsigned int cost_branch256(const unsigned int ct[2],
                                           aom_prob p) {
   return ct[0] * av1_cost_zero(p) + ct[1] * av1_cost_one(p);
@@ -55,6 +63,8 @@ static INLINE int treed_cost(aom_tree tree, const aom_prob *probs, int bits,
 
 void av1_cost_tokens(int *costs, const aom_prob *probs, aom_tree tree);
 void av1_cost_tokens_skip(int *costs, const aom_prob *probs, aom_tree tree);
+void av1_cost_tokens_from_cdf(int *costs, const aom_cdf_prob *cdf,
+                              const int *inv_map);
 
 #ifdef __cplusplus
 }  // extern "C"

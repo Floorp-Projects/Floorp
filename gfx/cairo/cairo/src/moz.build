@@ -217,11 +217,17 @@ if CONFIG['GNU_CC'] or CONFIG['CLANG_CL']:
     CFLAGS += [
         '-Wno-enum-compare',
         '-Wno-int-to-pointer-cast',
+        '-Wno-int-conversion',
+        '-Wno-incompatible-pointer-types',
         '-Wno-sign-compare',
         '-Wno-type-limits',
         '-Wno-missing-field-initializers',
         '-Wno-conversion',
+        '-Wno-narrowing',
+        '-Wno-switch',
         '-Wno-unused',
+        '-Wno-unused-variable',
+        '-Wno-unused-but-set-variable'
     ]
 
 if CONFIG['CLANG_CXX'] or CONFIG['CLANG_CL']:

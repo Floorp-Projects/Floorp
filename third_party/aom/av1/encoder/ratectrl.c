@@ -94,8 +94,8 @@ static int kf_high = 5000;
 static int kf_low = 400;
 
 double av1_resize_rate_factor(const AV1_COMP *cpi) {
-  return (double)(cpi->resize_scale_den * cpi->resize_scale_den) /
-         (cpi->resize_scale_num * cpi->resize_scale_num);
+  return (double)(cpi->oxcf.width * cpi->oxcf.height) /
+         (cpi->common.width * cpi->common.height);
 }
 
 // Functions to compute the active minq lookup table entries based on a
@@ -1081,7 +1081,7 @@ static int rc_pick_q_and_bounds_two_pass(const AV1_COMP *cpi, int *bottom_index,
   }
 
   // Modify active_best_quality for downscaled normal frames.
-  if (!av1_resize_unscaled(cpi) && !frame_is_kf_gf_arf(cpi)) {
+  if (!av1_frame_unscaled(cm) && !frame_is_kf_gf_arf(cpi)) {
     int qdelta = av1_compute_qdelta_by_rate(
         rc, cm->frame_type, active_best_quality, 2.0, cm->bit_depth);
     active_best_quality =
@@ -1164,7 +1164,7 @@ void av1_rc_set_frame_target(AV1_COMP *cpi, int target) {
   rc->this_frame_target = target;
 
   // Modify frame size target when down-scaled.
-  if (cpi->oxcf.resize_mode == RESIZE_DYNAMIC && !av1_resize_unscaled(cpi))
+  if (!av1_frame_unscaled(cm))
     rc->this_frame_target =
         (int)(rc->this_frame_target * av1_resize_rate_factor(cpi));
 
@@ -1663,3 +1663,64 @@ void av1_set_target_rate(AV1_COMP *cpi) {
     vbr_rate_correction(cpi, &target_rate);
   av1_rc_set_frame_target(cpi, target_rate);
 }
+
+static unsigned int lcg_rand16(unsigned int *state) {
+  *state = (unsigned int)(*state * 1103515245ULL + 12345);
+  return *state / 65536 % 32768;
+}
+
+uint8_t av1_calculate_next_resize_scale(const AV1_COMP *cpi) {
+  static unsigned int seed = 56789;
+  const AV1EncoderConfig *oxcf = &cpi->oxcf;
+  if (oxcf->pass == 1) return SCALE_DENOMINATOR;
+  uint8_t new_num = SCALE_DENOMINATOR;
+
+  switch (oxcf->resize_mode) {
+    case RESIZE_NONE: new_num = SCALE_DENOMINATOR; break;
+    case RESIZE_FIXED:
+      if (cpi->common.frame_type == KEY_FRAME)
+        new_num = oxcf->resize_kf_scale_numerator;
+      else
+        new_num = oxcf->resize_scale_numerator;
+      break;
+    case RESIZE_DYNAMIC:
+      // RESIZE_DYNAMIC: Just random for now.
+      new_num = lcg_rand16(&seed) % 4 + 13;
+      break;
+    default: assert(0);
+  }
+  return new_num;
+}
+
+#if CONFIG_FRAME_SUPERRES
+// TODO(afergs): Rename av1_rc_update_superres_scale(...)?
+uint8_t av1_calculate_next_superres_scale(const AV1_COMP *cpi, int width,
+                                          int height) {
+  static unsigned int seed = 34567;
+  const AV1EncoderConfig *oxcf = &cpi->oxcf;
+  if (oxcf->pass == 1) return SCALE_DENOMINATOR;
+  uint8_t new_num = SCALE_DENOMINATOR;
+
+  switch (oxcf->superres_mode) {
+    case SUPERRES_NONE: new_num = SCALE_DENOMINATOR; break;
+    case SUPERRES_FIXED:
+      if (cpi->common.frame_type == KEY_FRAME)
+        new_num = oxcf->superres_kf_scale_numerator;
+      else
+        new_num = oxcf->superres_scale_numerator;
+      break;
+    case SUPERRES_DYNAMIC:
+      // SUPERRES_DYNAMIC: Just random for now.
+      new_num = lcg_rand16(&seed) % 9 + 8;
+      break;
+    default: assert(0);
+  }
+
+  // Make sure overall reduction is no more than 1/2 of the source size.
+  av1_calculate_scaled_size(&width, &height, new_num);
+  if (width * 2 < oxcf->width || height * 2 < oxcf->height)
+    new_num = SCALE_DENOMINATOR;
+
+  return new_num;
+}
+#endif  // CONFIG_FRAME_SUPERRES

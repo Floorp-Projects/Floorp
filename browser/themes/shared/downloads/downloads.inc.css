@@ -270,16 +270,8 @@ richlistitem[type="download"]:last-child {
   background-color: var(--arrowpanel-dimmed-further);
 }
 
-@item@[showingsubview] {
-  background-color: Highlight;
-  color: HighlightText;
-  transition: background-color var(--panelui-subview-transition-duration),
-              color var(--panelui-subview-transition-duration);
-}
-
 @item@[verdict="Malware"]:hover,
-@item@[verdict="Malware"]:hover:active,
-@item@[verdict="Malware"][showingsubview] {
+@item@[verdict="Malware"]:hover:active {
   background-color: #aa1b08;
   color: white;
 }
@@ -312,27 +304,7 @@ richlistitem[type="download"]:last-child {
 
 /*** Blocked subview ***/
 
-#downloadsPanel-multiView > .panel-viewcontainer > .panel-viewstack[viewtype=main] > .panel-subviews {
-  /* When the main view is showing, the shadow on the left edge of the subview is
-     barely visible on the right edge of the main view, so set it to none. */
-  box-shadow: none;
-}
-
-/* When the subview is showing, turn the download button into an arrow pointing
-   back to the main view. */
-#downloadsPanel-multiView > .panel-viewcontainer > .panel-viewstack[viewtype="subview"] .download-state[showingsubview] .downloadButton {
-  color: HighlightText;
-}
-
-#downloadsPanel-multiView > .panel-viewcontainer > .panel-viewstack[viewtype="subview"] .download-state[showingsubview] .downloadButton > .button-box > .button-icon {
-  list-style-image: url("chrome://browser/skin/panel-icon-arrow-left.svg");
-}
-
-#downloadsPanel-multiView > .panel-viewcontainer > .panel-viewstack[viewtype="subview"] .download-state[showingsubview] .downloadButton > .button-box > .button-icon:-moz-locale-dir(rtl) {
-  list-style-image: url("chrome://browser/skin/panel-icon-arrow-right.svg");
-}
-
-#downloadsPanel-blockedSubview {
+#downloadsPanel-blockedSubview > .panel-view-body-unscrollable {
   background-image: url("chrome://browser/skin/warning.svg");
   background-size: 32px 32px;
   background-position: 16px 16px;
@@ -343,7 +315,7 @@ richlistitem[type="download"]:last-child {
   background-position: calc(100% - 16px) 16px;
 }
 
-#downloadsPanel-blockedSubview[verdict=Malware] {
+#downloadsPanel-blockedSubview[verdict=Malware] > .panel-view-body-unscrollable {
   background-image: url("chrome://browser/skin/downloads/download-blocked.svg");
 }
 

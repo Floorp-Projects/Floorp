@@ -5590,7 +5590,6 @@ void av1_adapt_coef_probs(AV1_COMMON *cm) {
 #endif
 }
 
-#if CONFIG_EC_ADAPT
 static void av1_average_cdf(aom_cdf_prob *cdf_ptr[], aom_cdf_prob *fc_cdf_ptr,
                             int cdf_size, const int num_tiles) {
   int i;
@@ -5639,9 +5638,14 @@ void av1_average_tile_mv_cdfs(FRAME_CONTEXT *fc, FRAME_CONTEXT *ec_ctxs[],
     AVERAGE_TILE_CDFS(nmvc[j].joint_cdf)
 
     for (k = 0; k < 2; ++k) {
-      AVERAGE_TILE_CDFS(nmvc[j].comps[k].class_cdf);
-      AVERAGE_TILE_CDFS(nmvc[j].comps[k].class0_fp_cdf);
-      AVERAGE_TILE_CDFS(nmvc[j].comps[k].fp_cdf);
+      AVERAGE_TILE_CDFS(nmvc[j].comps[k].class_cdf)
+      AVERAGE_TILE_CDFS(nmvc[j].comps[k].class0_fp_cdf)
+      AVERAGE_TILE_CDFS(nmvc[j].comps[k].fp_cdf)
+#if CONFIG_NEW_MULTISYMBOL
+      AVERAGE_TILE_CDFS(nmvc[j].comps[k].hp_cdf)
+      AVERAGE_TILE_CDFS(nmvc[j].comps[k].class0_hp_cdf)
+      AVERAGE_TILE_CDFS(nmvc[j].comps[k].class0_cdf)
+#endif
     }
   }
 }
@@ -5652,19 +5656,20 @@ void av1_average_tile_intra_cdfs(FRAME_CONTEXT *fc, FRAME_CONTEXT *ec_ctxs[],
 
   aom_cdf_prob *fc_cdf_ptr;
 
-  AVERAGE_TILE_CDFS(tx_size_cdf);
-
-#if CONFIG_VAR_TX
-// FIXME: txfm_partition probs
-#endif
-
-  // FIXME: skip probs
+  AVERAGE_TILE_CDFS(tx_size_cdf)
 
   AVERAGE_TILE_CDFS(intra_ext_tx_cdf)
-  AVERAGE_TILE_CDFS(inter_ext_tx_cdf);
+  AVERAGE_TILE_CDFS(inter_ext_tx_cdf)
 
   AVERAGE_TILE_CDFS(seg.tree_cdf)
+#if CONFIG_NEW_MULTISYMBOL
+  AVERAGE_TILE_CDFS(seg.pred_cdf)
+#endif
   AVERAGE_TILE_CDFS(uv_mode_cdf)
+
+#if CONFIG_CFL
+  AVERAGE_TILE_CDFS(cfl_alpha_cdf)
+#endif
 
   AVERAGE_TILE_CDFS(partition_cdf)
 
@@ -5677,6 +5682,19 @@ void av1_average_tile_intra_cdfs(FRAME_CONTEXT *fc, FRAME_CONTEXT *ec_ctxs[],
 #if CONFIG_EXT_INTRA && CONFIG_INTRA_INTERP
   AVERAGE_TILE_CDFS(intra_filter_cdf)
 #endif  // CONFIG_EXT_INTRA && CONFIG_INTRA_INTERP
+
+#if CONFIG_NEW_MULTISYMBOL
+  AVERAGE_TILE_CDFS(skip_cdfs)
+#if CONFIG_VAR_TX
+  AVERAGE_TILE_CDFS(txfm_partition_cdf)
+#endif
+#if CONFIG_PALETTE
+  AVERAGE_TILE_CDFS(palette_y_size_cdf)
+  AVERAGE_TILE_CDFS(palette_uv_size_cdf)
+  AVERAGE_TILE_CDFS(palette_y_color_index_cdf)
+  AVERAGE_TILE_CDFS(palette_uv_color_index_cdf)
+#endif
+#endif  // CONFIG_NEW_MULTISYMBOL
 }
 
 void av1_average_tile_inter_cdfs(AV1_COMMON *cm, FRAME_CONTEXT *fc,
@@ -5686,26 +5704,57 @@ void av1_average_tile_inter_cdfs(AV1_COMMON *cm, FRAME_CONTEXT *fc,
 
   aom_cdf_prob *fc_cdf_ptr;
 
-  // FIXME: comp_inter_cdf not defined
+#if CONFIG_NEW_MULTISYMBOL
+  AVERAGE_TILE_CDFS(comp_inter_cdf)
+#if CONFIG_EXT_REFS
+  AVERAGE_TILE_CDFS(comp_bwdref_cdf)
+#endif
+#endif
 
-  // FIXME: comp_ref_cdf and comp_bwd_ref not defined
+#if CONFIG_NEW_MULTISYMBOL
+  AVERAGE_TILE_CDFS(single_ref_cdf)
 
-  // FIXME: single_ref_cdf not defined
+  AVERAGE_TILE_CDFS(newmv_cdf)
+  AVERAGE_TILE_CDFS(zeromv_cdf)
+  AVERAGE_TILE_CDFS(refmv_cdf)
+  AVERAGE_TILE_CDFS(drl_cdf)
+#endif
 
-  // FIXME: cdfs not defined for newmv_mode, zeromv_mode, drl_mode, new2mv_mode
+// FIXME: cdfs not defined for super_tx
 
-  // FIXME: cdfs not defined for motion_mode_prob, obmc_prob
+#if CONFIG_EXT_INTER
+  AVERAGE_TILE_CDFS(inter_compound_mode_cdf)
 
-  // FIXME: cdfs not defined for super_tx
+  AVERAGE_TILE_CDFS(compound_type_cdf)
+#if CONFIG_COMPOUND_SINGLEREF
+  AVERAGE_TILE_CDFS(inter_singleref_comp_mode_cdf)
+#endif
 
-  // FIXME: CONFIG_EXT_INTER cdfs not defined for inter_compound_mode,
-  // interintra_mode etc
+#if CONFIG_INTERINTRA
+#if CONFIG_NEW_MULTISYMBOL
+  AVERAGE_TILE_CDFS(interintra_cdf)
+  AVERAGE_TILE_CDFS(wedge_interintra_cdf)
+#endif
+  AVERAGE_TILE_CDFS(interintra_mode_cdf)
+#endif
+#endif  // CONFIG_EXT_INTER
 
+  /* NB: kf_y_cdf is discarded after use, so no need
+     for backwards update */
   AVERAGE_TILE_CDFS(y_mode_cdf)
 
   if (cm->interp_filter == SWITCHABLE) {
     AVERAGE_TILE_CDFS(switchable_interp_cdf)
   }
+#if CONFIG_NEW_MULTISYMBOL
+  AVERAGE_TILE_CDFS(intra_inter_cdf)
+#if CONFIG_MOTION_VAR || CONFIG_WARPED_MOTION
+  AVERAGE_TILE_CDFS(motion_mode_cdf)
+#if CONFIG_MOTION_VAR && CONFIG_WARPED_MOTION
+  AVERAGE_TILE_CDFS(obmc_cdf)
+#endif
+#endif
+#endif
 }
 
 #if CONFIG_PVQ
@@ -5771,4 +5820,3 @@ void av1_average_tile_pvq_cdfs(FRAME_CONTEXT *fc, FRAME_CONTEXT *ec_ctxs[],
   AVERAGE_TILE_CDFS(pvq_context.pvq.pvq_skip_dir_cdf)
 }
 #endif  // CONFIG_PVQ
-#endif  // CONFIG_EC_ADAPT

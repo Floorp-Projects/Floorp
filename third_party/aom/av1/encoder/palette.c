@@ -145,27 +145,6 @@ int av1_remove_duplicates(float *centroids, int num_centroids) {
   return num_unique;
 }
 
-int av1_count_colors(const uint8_t *src, int stride, int rows, int cols) {
-  int n = 0, r, c, i, val_count[256];
-  uint8_t val;
-  memset(val_count, 0, sizeof(val_count));
-
-  for (r = 0; r < rows; ++r) {
-    for (c = 0; c < cols; ++c) {
-      val = src[r * stride + c];
-      ++val_count[val];
-    }
-  }
-
-  for (i = 0; i < 256; ++i) {
-    if (val_count[i]) {
-      ++n;
-    }
-  }
-
-  return n;
-}
-
 #if CONFIG_PALETTE_DELTA_ENCODING
 static int delta_encode_cost(const int *colors, int num, int bit_depth,
                              int min_val) {
@@ -291,30 +270,3 @@ int av1_palette_color_cost_uv(const PALETTE_MODE_INFO *const pmi,
   return 2 * bit_depth * n * av1_cost_bit(128, 0);
 #endif  // CONFIG_PALETTE_DELTA_ENCODING
 }
-
-#if CONFIG_HIGHBITDEPTH
-int av1_count_colors_highbd(const uint8_t *src8, int stride, int rows, int cols,
-                            int bit_depth) {
-  int n = 0, r, c, i;
-  uint16_t val;
-  uint16_t *src = CONVERT_TO_SHORTPTR(src8);
-  int val_count[1 << 12];
-
-  assert(bit_depth <= 12);
-  memset(val_count, 0, (1 << 12) * sizeof(val_count[0]));
-  for (r = 0; r < rows; ++r) {
-    for (c = 0; c < cols; ++c) {
-      val = src[r * stride + c];
-      ++val_count[val];
-    }
-  }
-
-  for (i = 0; i < (1 << bit_depth); ++i) {
-    if (val_count[i]) {
-      ++n;
-    }
-  }
-
-  return n;
-}
-#endif  // CONFIG_HIGHBITDEPTH

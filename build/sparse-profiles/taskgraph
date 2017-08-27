@@ -19,6 +19,9 @@ path:testing/config/tooltool-manifests/
 path:testing/mozharness/
 path:tools/lint/
 
+# for new-style try pushes
+path:try_task_config.json
+
 # Tooltool manifests also need to be opened. Assume they
 # are all somewhere in "tooltool-manifests" directories.
 glob:**/tooltool-manifests/**

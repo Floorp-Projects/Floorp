@@ -220,4 +220,25 @@ function (append_exe_linker_flag flag)
   endif ()
 endfunction ()
 
+# Adds $flag to the link flags for $target.
+function (append_link_flag_to_target target flags)
+  unset(target_link_flags)
+  get_target_property(target_link_flags ${target} LINK_FLAGS)
+
+  if (target_link_flags)
+    unset(link_flag_found)
+    string(FIND "${target_link_flags}" "${flags}" link_flag_found)
+
+    if (NOT ${link_flag_found} EQUAL -1)
+      return()
+    endif ()
+
+    set(target_link_flags "${target_link_flags} ${flags}")
+  else ()
+    set(target_link_flags "${flags}")
+  endif ()
+
+  set_target_properties(${target} PROPERTIES LINK_FLAGS ${target_link_flags})
+endfunction ()
+
 endif ()  # AOM_BUILD_CMAKE_COMPILER_FLAGS_CMAKE_

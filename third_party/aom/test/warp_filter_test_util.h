@@ -31,8 +31,8 @@ typedef void (*warp_affine_func)(const int32_t *mat, const uint8_t *ref,
                                  uint8_t *pred, int p_col, int p_row,
                                  int p_width, int p_height, int p_stride,
                                  int subsampling_x, int subsampling_y,
-                                 int ref_frm, int16_t alpha, int16_t beta,
-                                 int16_t gamma, int16_t delta);
+                                 ConvolveParams *conv_params, int16_t alpha,
+                                 int16_t beta, int16_t gamma, int16_t delta);
 
 typedef std::tr1::tuple<int, int, int, warp_affine_func> WarpTestParam;
 
@@ -60,11 +60,14 @@ class AV1WarpFilterTest : public ::testing::TestWithParam<WarpTestParam> {
 
 #if CONFIG_HIGHBITDEPTH
 namespace AV1HighbdWarpFilter {
-typedef void (*highbd_warp_affine_func)(
-    const int32_t *mat, const uint16_t *ref, int width, int height, int stride,
-    uint16_t *pred, int p_col, int p_row, int p_width, int p_height,
-    int p_stride, int subsampling_x, int subsampling_y, int bd, int ref_frm,
-    int16_t alpha, int16_t beta, int16_t gamma, int16_t delta);
+typedef void (*highbd_warp_affine_func)(const int32_t *mat, const uint16_t *ref,
+                                        int width, int height, int stride,
+                                        uint16_t *pred, int p_col, int p_row,
+                                        int p_width, int p_height, int p_stride,
+                                        int subsampling_x, int subsampling_y,
+                                        int bd, ConvolveParams *conv_params,
+                                        int16_t alpha, int16_t beta,
+                                        int16_t gamma, int16_t delta);
 
 typedef std::tr1::tuple<int, int, int, int> HighbdWarpTestParam;
 
