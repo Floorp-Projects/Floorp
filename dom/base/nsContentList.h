@@ -251,8 +251,8 @@ struct nsContentListKey
 #define LIST_LAZY 2
 
 /**
- * Class that implements a live NodeList that matches Elements in the
- * tree based on some criterion.
+ * Class that implements a possibly live NodeList that matches Elements
+ * in the tree based on some criterion.
  */
 class nsContentList : public nsBaseContentList,
                       public nsIHTMLCollection,
@@ -276,12 +276,15 @@ public:
    * @param aDeep If false, then look only at children of the root, nothing
    *              deeper.  If true, then look at the whole subtree rooted at
    *              our root.
+   * @param aLiveList Whether the created list should be a live list observing
+   *                  mutations to the DOM tree.
    */
   nsContentList(nsINode* aRootNode,
                 int32_t aMatchNameSpaceId,
                 nsIAtom* aHTMLMatchAtom,
                 nsIAtom* aXMLMatchAtom,
-                bool aDeep = true);
+                bool aDeep = true,
+                bool aLiveList = true);
 
   /**
    * @param aRootNode The node under which to limit our search.
@@ -298,6 +301,8 @@ public:
    * @param aMatchNameSpaceId a namespace id to be passed back to aFunc
    * @param aFuncMayDependOnAttr a boolean that indicates whether this list is
    *                             sensitive to attribute changes.
+   * @param aLiveList Whether the created list should be a live list observing
+   *                  mutations to the DOM tree.
    */
   nsContentList(nsINode* aRootNode,
                 nsContentListMatchFunc aFunc,
@@ -306,7 +311,8 @@ public:
                 bool aDeep = true,
                 nsIAtom* aMatchAtom = nullptr,
                 int32_t aMatchNameSpaceId = kNameSpaceID_None,
-                bool aFuncMayDependOnAttr = true);
+                bool aFuncMayDependOnAttr = true,
+                bool aLiveList = true);
 
   // nsWrapperCache
   using nsWrapperCache::GetWrapperPreserveColor;
@@ -517,6 +523,10 @@ protected:
    * when doing function matching, always false otherwise.
    */
   uint8_t mIsHTMLDocument : 1;
+  /**
+   * Whether the list observes mutations to the DOM tree.
+   */
+  const uint8_t mIsLiveList : 1;
 
 #ifdef DEBUG_CONTENT_LIST
   void AssertInSync();
