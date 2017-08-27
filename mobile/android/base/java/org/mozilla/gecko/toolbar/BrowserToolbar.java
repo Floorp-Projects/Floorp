@@ -56,6 +56,7 @@ import android.view.View;
 import android.view.ViewTreeObserver.OnGlobalLayoutListener;
 import android.view.inputmethod.InputMethodManager;
 import android.widget.Button;
+import android.widget.HorizontalScrollView;
 import android.widget.LinearLayout;
 import android.widget.PopupWindow;
 import android.support.annotation.NonNull;
@@ -116,6 +117,7 @@ public abstract class BrowserToolbar extends ThemedRelativeLayout
     }
 
     protected final ToolbarDisplayLayout urlDisplayLayout;
+    protected final HorizontalScrollView urlDisplayScroll;
     protected final ToolbarEditLayout urlEditLayout;
     protected final View urlBarEntry;
     protected boolean isSwitchingTabs;
@@ -186,6 +188,7 @@ public abstract class BrowserToolbar extends ThemedRelativeLayout
         isSwitchingTabs = true;
 
         urlDisplayLayout = (ToolbarDisplayLayout) findViewById(R.id.display_layout);
+        urlDisplayScroll = (HorizontalScrollView) findViewById(R.id.url_bar_title_scroll_view);
         urlBarEntry = findViewById(R.id.url_bar_entry);
         urlEditLayout = (ToolbarEditLayout) findViewById(R.id.edit_layout);
 
@@ -213,7 +216,10 @@ public abstract class BrowserToolbar extends ThemedRelativeLayout
         urlDisplayLayout.setToolbarPrefs(prefs);
         urlEditLayout.setToolbarPrefs(prefs);
 
-        setOnCreateContextMenuListener(new View.OnCreateContextMenuListener() {
+        // ScrollViews are allowed to have only one child.
+        final View scrollChild = urlDisplayScroll.getChildAt(0);
+
+        scrollChild.setOnCreateContextMenuListener(new View.OnCreateContextMenuListener() {
             @Override
             public void onCreateContextMenu(ContextMenu menu, View v, ContextMenu.ContextMenuInfo menuInfo) {
                 // Do not show the context menu while editing
@@ -256,7 +262,7 @@ public abstract class BrowserToolbar extends ThemedRelativeLayout
             }
         });
 
-        setOnClickListener(new OnClickListener() {
+        scrollChild.setOnClickListener(new OnClickListener() {
             @Override
             public void onClick(View v) {
                 if (activateListener != null) {
