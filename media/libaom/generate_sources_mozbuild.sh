@@ -133,21 +133,21 @@ function gen_rtcd_header {
 
   $BASE_DIR/$LIBAOM_SRC_DIR/build/make/rtcd.pl \
     --arch=$2 \
-    --sym=aom_rtcd $DISABLE_AVX $3 \
+    --sym=aom_rtcd $3 \
     --config=$TEMP_DIR/libaom.config \
     $BASE_DIR/$LIBAOM_SRC_DIR/av1/common/av1_rtcd_defs.pl \
     > $BASE_DIR/$LIBAOM_CONFIG_DIR/$1/av1_rtcd.h
 
   $BASE_DIR/$LIBAOM_SRC_DIR/build/make/rtcd.pl \
     --arch=$2 \
-    --sym=aom_scale_rtcd $DISABLE_AVX $3 \
+    --sym=aom_scale_rtcd $3 \
     --config=$TEMP_DIR/libaom.config \
     $BASE_DIR/$LIBAOM_SRC_DIR/aom_scale/aom_scale_rtcd.pl \
     > $BASE_DIR/$LIBAOM_CONFIG_DIR/$1/aom_scale_rtcd.h
 
   $BASE_DIR/$LIBAOM_SRC_DIR/build/make/rtcd.pl \
     --arch=$2 \
-    --sym=aom_dsp_rtcd $DISABLE_AVX $3 \
+    --sym=aom_dsp_rtcd $3 \
     --config=$TEMP_DIR/libaom.config \
     $BASE_DIR/$LIBAOM_SRC_DIR/aom_dsp/aom_dsp_rtcd_defs.pl \
     > $BASE_DIR/$LIBAOM_CONFIG_DIR/$1/aom_dsp_rtcd.h
@@ -168,8 +168,8 @@ function gen_config_files {
   local ASM_CONV=ads2gas.pl
 
   # Generate aom_config.asm.
-  if [[ "$1" == *x64* ]] || [[ "$1" == *ia32* ]]; then
-    egrep "#define [A-Z0-9_]+ [01]" aom_config.h | awk '{print "%define " $2 " " $3}' > aom_config.asm
+  if [[ "$1" == *x64* ]] || [[ "$1" == *ia32* ]] || [[ "$1" == *mingw* ]]; then
+    egrep "#define [A-Z0-9_]+ [01]" aom_config.h | awk '{print $2 " equ " $3}' > aom_config.asm
   else
     egrep "#define [A-Z0-9_]+ [01]" aom_config.h | awk '{print $2 " EQU " $3}' | perl $BASE_DIR/$LIBAOM_SRC_DIR/build/make/$ASM_CONV > aom_config.asm
   fi
@@ -198,6 +198,7 @@ gen_config_files linux/ia32 "--target=x86-linux-gcc ${all_platforms} ${x86_platf
 gen_config_files mac/x64 "--target=x86_64-darwin9-gcc ${all_platforms} ${x86_platforms}"
 gen_config_files win/x64 "--target=x86_64-win64-vs14 ${all_platforms} ${x86_platforms}"
 gen_config_files win/ia32 "--target=x86-win32-vs14 ${all_platforms} ${x86_platforms}"
+gen_config_files win/mingw32 "--target=x86-win32-gcc ${all_platforms} ${x86_platforms}"
 
 gen_config_files linux/arm "--target=armv7-linux-gcc ${all_platforms} ${arm_platforms}"
 
@@ -218,6 +219,7 @@ gen_rtcd_header linux/ia32 x86
 gen_rtcd_header mac/x64 x86_64
 gen_rtcd_header win/x64 x86_64
 gen_rtcd_header win/ia32 x86
+gen_rtcd_header win/mingw32 x86
 
 gen_rtcd_header linux/arm armv7
 

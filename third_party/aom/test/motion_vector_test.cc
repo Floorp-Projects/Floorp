@@ -32,9 +32,9 @@ const int kCpuUsedVectors[] = { 1, 5 };
 const int kMVTestModes[] = { MAX_EXTREME_MV, MIN_EXTREME_MV };
 
 class MotionVectorTestLarge
-    : public ::libaom_test::EncoderTest,
-      public ::libaom_test::CodecTestWith3Params<libaom_test::TestMode, int,
-                                                 int> {
+    : public ::libaom_test::CodecTestWith3Params<libaom_test::TestMode, int,
+                                                 int>,
+      public ::libaom_test::EncoderTest {
  protected:
   MotionVectorTestLarge()
       : EncoderTest(GET_PARAM(0)), encoding_mode_(GET_PARAM(1)),

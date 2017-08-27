@@ -134,6 +134,12 @@
 <!ENTITY downloadsHistory.label           "Show All Downloads">
 <!ENTITY downloadsHistory.accesskey       "S">
 
+<!-- LOCALIZATION NOTE (downloadDetails.label):
+     This string is shown at the top of the Download Details Panel, to indicate
+     that we are showing the details of a single download.
+     -->
+<!ENTITY downloadDetails.label            "Download Details">
+
 <!-- LOCALIZATION NOTE (openDownloadsFolder.label):
      This command is not currently available in the user interface, but the
      string was preserved by bug 1362207 to be used in a future version.

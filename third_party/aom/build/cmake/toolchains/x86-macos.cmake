@@ -15,4 +15,4 @@ set(CMAKE_C_COMPILER_ARG1 "-arch i386")
 set(CMAKE_CXX_COMPILER_ARG1 "-arch i386")
 
 # Apple tools always complain in 32 bit mode without PIC.
-set(CONFIG_PIC 1 CACHE STRING "")
+set(CONFIG_PIC 1 CACHE NUMBER "")

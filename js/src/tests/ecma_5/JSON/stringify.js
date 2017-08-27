@@ -34,6 +34,9 @@ assertStringify({'mmm\\mmm':"hmm"}, '{"mmm\\\\mmm":"hmm"}');
 assertStringify({'mmm\\mmm\\mmm':"hmm"}, '{"mmm\\\\mmm\\\\mmm":"hmm"}');
 assertStringify({"mm\u000bmm":"hmm"}, '{"mm\\u000bmm":"hmm"}');
 assertStringify({"mm\u0000mm":"hmm"}, '{"mm\\u0000mm":"hmm"}');
+assertStringify({"\u0000\u000b":""}, '{"\\u0000\\u000b":""}');
+assertStringify({"\u000b\ufdfd":"hmm"}, '{"\\u000b\ufdfd":"hmm"}');
+assertStringify({"\u000b\ufdfd":"h\xfc\ufdfdm"}, '{"\\u000b\ufdfd":"h\xfc\ufdfdm"}');
 
 var x = {"free":"variable"};
 assertStringify(x, '{"free":"variable"}');

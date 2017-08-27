@@ -16,8 +16,8 @@ static void calc_block(__m128i sum, __m128i sum_sq, __m128i n,
   if (bit_depth > 8) {
     __m128i rounding_a = _mm_set1_epi32((1 << (2 * (bit_depth - 8))) >> 1);
     __m128i rounding_b = _mm_set1_epi32((1 << (bit_depth - 8)) >> 1);
-    __m128i shift_a = _mm_set_epi64x(0, 2 * (bit_depth - 8));
-    __m128i shift_b = _mm_set_epi64x(0, bit_depth - 8);
+    __m128i shift_a = _mm_cvtsi32_si128(2 * (bit_depth - 8));
+    __m128i shift_b = _mm_cvtsi32_si128(bit_depth - 8);
     a = _mm_srl_epi32(_mm_add_epi32(sum_sq, rounding_a), shift_a);
     b = _mm_srl_epi32(_mm_add_epi32(sum, rounding_b), shift_b);
     a = _mm_mullo_epi32(a, n);

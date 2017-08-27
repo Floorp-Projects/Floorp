@@ -57,22 +57,33 @@ typedef enum OUTPUT_STATUS {
   OUTPUT_HAS_DECODED_PIXELS
 } OUTPUT_STATUS;
 
+#if CONFIG_PALETTE || CONFIG_INTRABC
+// Returns the number of colors in 'src'.
+int av1_count_colors(const uint8_t *src, int stride, int rows, int cols);
+#if CONFIG_HIGHBITDEPTH
+// Same as av1_count_colors(), but for high-bitdepth mode.
+int av1_count_colors_highbd(const uint8_t *src8, int stride, int rows, int cols,
+                            int bit_depth);
+#endif  // CONFIG_HIGHBITDEPTH
+#endif  // CONFIG_PALETTE || CONFIG_INTRABC
+
 void av1_dist_block(const AV1_COMP *cpi, MACROBLOCK *x, int plane,
                     BLOCK_SIZE plane_bsize, int block, int blk_row, int blk_col,
                     TX_SIZE tx_size, int64_t *out_dist, int64_t *out_sse,
                     OUTPUT_STATUS output_status);
 
-#if CONFIG_DAALA_DIST
-int64_t av1_daala_dist(const uint8_t *src, int src_stride, const uint8_t *dst,
-                       int dst_stride, int bsw, int bsh, int qm,
-                       int use_activity_masking, int qindex);
+#if CONFIG_DIST_8X8
+int64_t av1_dist_8x8(const AV1_COMP *const cpi, const MACROBLOCKD *xd,
+                     const uint8_t *src, int src_stride, const uint8_t *dst,
+                     int dst_stride, const BLOCK_SIZE tx_bsize, int bsw,
+                     int bsh, int visible_w, int visible_h, int qindex);
 #endif
 
 #if !CONFIG_PVQ || CONFIG_VAR_TX
 int av1_cost_coeffs(const AV1_COMP *const cpi, MACROBLOCK *x, int plane,
-                    int block, TX_SIZE tx_size, const SCAN_ORDER *scan_order,
-                    const ENTROPY_CONTEXT *a, const ENTROPY_CONTEXT *l,
-                    int use_fast_coef_costing);
+                    int blk_row, int blk_col, int block, TX_SIZE tx_size,
+                    const SCAN_ORDER *scan_order, const ENTROPY_CONTEXT *a,
+                    const ENTROPY_CONTEXT *l, int use_fast_coef_costing);
 #endif
 void av1_rd_pick_intra_mode_sb(const struct AV1_COMP *cpi, struct macroblock *x,
                                struct RD_STATS *rd_cost, BLOCK_SIZE bsize,

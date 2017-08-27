@@ -17,8 +17,8 @@
 
 namespace {
 class LevelTest
-    : public ::libaom_test::EncoderTest,
-      public ::libaom_test::CodecTestWith2Params<libaom_test::TestMode, int> {
+    : public ::libaom_test::CodecTestWith2Params<libaom_test::TestMode, int>,
+      public ::libaom_test::EncoderTest {
  protected:
   LevelTest()
       : EncoderTest(GET_PARAM(0)), encoding_mode_(GET_PARAM(1)),

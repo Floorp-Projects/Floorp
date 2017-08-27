@@ -338,12 +338,8 @@ def SettingsProvider(cls):
         raise MachError('@SettingsProvider must contain a config_settings attribute. It '
                         'may either be a list of tuples, or a callable that returns a list '
                         'of tuples. Each tuple must be of the form:\n'
-                        '(<section>.<option>, <type_cls>, <default>, <choices>)\n'
+                        '(<section>.<option>, <type_cls>, <description>, <default>, <choices>)\n'
                         'as specified by ConfigSettings._format_metadata.')
-
-    if not hasattr(cls, 'config_settings_locale_directory'):
-        cls_dir = os.path.dirname(inspect.getfile(cls))
-        cls.config_settings_locale_directory = os.path.join(cls_dir, 'locale')
 
     Registrar.register_settings_provider(cls)
     return cls

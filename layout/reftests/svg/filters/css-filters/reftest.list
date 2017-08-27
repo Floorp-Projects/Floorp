@@ -33,7 +33,7 @@ skip-if(d2d) == blur-cap-large-radius-on-software.html blur-cap-large-radius-on-
 == filter-on-outer-svg.html pass.svg
 fuzzy-if(webrender,1,10000) fuzzy-if(d2d,1,10000) == grayscale.html grayscale-ref.html
 fuzzy-if(webrender,1,10000) fuzzy-if(d2d,1,10000) == grayscale-one.html grayscale-one-ref.html
-fuzzy-if(webrender,1,10000) fuzzy-if(d2d,1,10000) == grayscale-over-one.html grayscale-over-one-ref.html
+fuzzy-if(webrender,1,10000) fuzzy-if(d2d,1,10000) fails-if(stylo&&webrender) == grayscale-over-one.html grayscale-over-one-ref.html
 fuzzy-if(webrender,1,10000) fuzzy-if(d2d,1,10000) == grayscale-percent.html grayscale-percent-ref.html
 fuzzy-if(webrender,1,10000) == grayscale-zero.html grayscale-zero-ref.html
 == hue-rotate.html hue-rotate-ref.html
@@ -65,7 +65,7 @@ fuzzy-if(d2d,1,10000) == saturate-desaturate.html saturate-desaturate-ref.html
 fuzzy-if(d2d,1,10000) == saturate-zero.html saturate-zero-ref.html
 fuzzy-if(webrender,1,10000) fuzzy-if(d2d,1,10000) == sepia.html sepia-ref.html
 fuzzy-if(webrender,1,10000) fuzzy-if(d2d,1,10000) == sepia-one.html sepia-one-ref.html
-fuzzy-if(webrender,1,10000) fuzzy-if(d2d,1,10000) == sepia-over-one.html sepia-over-one-ref.html
+fuzzy-if(webrender,1,10000) fuzzy-if(d2d,1,10000) fails-if(stylo&&webrender) == sepia-over-one.html sepia-over-one-ref.html
 fuzzy-if(webrender,1,10000) fuzzy-if(d2d,1,10000) == sepia-percent.html sepia-percent-ref.html
 == sepia-zero.html sepia-zero-ref.html
 

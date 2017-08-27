@@ -172,15 +172,6 @@ void aom_fdct8x8_c(const int16_t *input, tran_low_t *final_output, int stride) {
   }
 }
 
-void aom_fdct8x8_1_c(const int16_t *input, tran_low_t *output, int stride) {
-  int r, c;
-  tran_low_t sum = 0;
-  for (r = 0; r < 8; ++r)
-    for (c = 0; c < 8; ++c) sum += input[r * stride + c];
-
-  output[0] = sum;
-}
-
 void aom_fdct16x16_c(const int16_t *input, tran_low_t *output, int stride) {
   // The 2D transform is done with two passes which are actually pretty
   // similar. In the first one, we transform the columns and transpose
@@ -359,15 +350,6 @@ void aom_fdct16x16_c(const int16_t *input, tran_low_t *output, int stride) {
     in_low = intermediate;
     out = output;
   }
-}
-
-void aom_fdct16x16_1_c(const int16_t *input, tran_low_t *output, int stride) {
-  int r, c;
-  int sum = 0;
-  for (r = 0; r < 16; ++r)
-    for (c = 0; c < 16; ++c) sum += input[r * stride + c];
-
-  output[0] = (tran_low_t)(sum >> 1);
 }
 
 static INLINE tran_high_t dct_32_round(tran_high_t input) {
@@ -758,15 +740,6 @@ void aom_fdct32x32_rd_c(const int16_t *input, tran_low_t *out, int stride) {
   }
 }
 
-void aom_fdct32x32_1_c(const int16_t *input, tran_low_t *output, int stride) {
-  int r, c;
-  int sum = 0;
-  for (r = 0; r < 32; ++r)
-    for (c = 0; c < 32; ++c) sum += input[r * stride + c];
-
-  output[0] = (tran_low_t)(sum >> 3);
-}
-
 #if CONFIG_HIGHBITDEPTH
 void aom_highbd_fdct4x4_c(const int16_t *input, tran_low_t *output,
                           int stride) {
@@ -778,32 +751,17 @@ void aom_highbd_fdct8x8_c(const int16_t *input, tran_low_t *final_output,
   aom_fdct8x8_c(input, final_output, stride);
 }
 
-void aom_highbd_fdct8x8_1_c(const int16_t *input, tran_low_t *final_output,
-                            int stride) {
-  aom_fdct8x8_1_c(input, final_output, stride);
-}
-
 void aom_highbd_fdct16x16_c(const int16_t *input, tran_low_t *output,
                             int stride) {
   aom_fdct16x16_c(input, output, stride);
 }
 
-void aom_highbd_fdct16x16_1_c(const int16_t *input, tran_low_t *output,
-                              int stride) {
-  aom_fdct16x16_1_c(input, output, stride);
-}
-
 void aom_highbd_fdct32x32_c(const int16_t *input, tran_low_t *out, int stride) {
   aom_fdct32x32_c(input, out, stride);
 }
-
 void aom_highbd_fdct32x32_rd_c(const int16_t *input, tran_low_t *out,
                                int stride) {
   aom_fdct32x32_rd_c(input, out, stride);
 }
 
-void aom_highbd_fdct32x32_1_c(const int16_t *input, tran_low_t *out,
-                              int stride) {
-  aom_fdct32x32_1_c(input, out, stride);
-}
 #endif  // CONFIG_HIGHBITDEPTH

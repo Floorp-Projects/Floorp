@@ -107,6 +107,8 @@ UNITTEST_ALIASES = {
     'web-platform-tests-e10s': alias_prefix('web-platform-tests-e10s'),
     'web-platform-tests-reftests': alias_prefix('web-platform-tests-reftests'),
     'web-platform-tests-reftests-e10s': alias_prefix('web-platform-tests-reftests-e10s'),
+    'web-platform-tests-wdspec': alias_prefix('web-platform-tests-wdspec'),
+    'web-platform-tests-wdspec-e10s': alias_prefix('web-platform-tests-wdspec-e10s'),
     'xpcshell': alias_prefix('xpcshell'),
 }
 

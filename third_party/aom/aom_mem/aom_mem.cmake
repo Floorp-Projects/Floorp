@@ -21,7 +21,7 @@ set(AOM_MEM_SOURCES
 function (setup_aom_mem_targets)
   add_library(aom_mem OBJECT ${AOM_MEM_SOURCES})
   set(AOM_LIB_TARGETS ${AOM_LIB_TARGETS} aom_mem PARENT_SCOPE)
-  target_sources(aom PUBLIC $<TARGET_OBJECTS:aom_mem>)
+  target_sources(aom PRIVATE $<TARGET_OBJECTS:aom_mem>)
 endfunction ()
 
 endif ()  # AOM_AOM_MEM_AOM_MEM_CMAKE_

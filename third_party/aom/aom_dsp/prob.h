@@ -148,7 +148,6 @@ static INLINE void av1_tree_to_cdf(const aom_tree_index *tree,
 
 void av1_indices_from_tree(int *ind, int *inv, const aom_tree_index *tree);
 
-#if CONFIG_EC_ADAPT
 static INLINE void update_cdf(aom_cdf_prob *cdf, int val, int nsymbs) {
   const int rate = 4 + (cdf[nsymbs] > 31) + get_msb(nsymbs);
   const int rate2 = 5;
@@ -183,7 +182,6 @@ static INLINE void update_cdf(aom_cdf_prob *cdf, int val, int nsymbs) {
 #endif
   cdf[nsymbs] += (cdf[nsymbs] < 32);
 }
-#endif
 
 #ifdef __cplusplus
 }  // extern "C"

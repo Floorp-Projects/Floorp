@@ -209,8 +209,8 @@ parent:
      *  notification Whole data of the notification
      *  requests     Requests of notification for IME of the native widget
      */
-    nested(inside_cpow) sync NotifyIMEFocus(ContentCache contentCache,
-                                            IMENotification notification)
+    nested(inside_cpow) async NotifyIMEFocus(ContentCache contentCache,
+                                             IMENotification notification)
       returns (IMENotificationRequests requests);
 
     /**
@@ -253,7 +253,7 @@ parent:
     /**
      * Notifies IME of mouse button event on a character in focused editor.
      *
-     * Returns true if the mouse button event is consumd by IME.
+     * Returns true if the mouse button event is consumed by IME.
      */
     nested(inside_cpow) sync NotifyIMEMouseButtonEvent(IMENotification notification)
       returns (bool consumedByIME);
@@ -530,7 +530,6 @@ parent:
 
 child:
     async NativeSynthesisResponse(uint64_t aObserverId, nsCString aResponse);
-
 
 parent:
 

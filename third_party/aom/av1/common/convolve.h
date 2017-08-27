@@ -27,6 +27,7 @@ typedef int32_t CONV_BUF_TYPE;
 
 typedef struct ConvolveParams {
   int ref;
+  int do_average;
   CONVOLVE_OPT round;
   CONV_BUF_TYPE *dst;
   int dst_stride;
@@ -36,9 +37,11 @@ typedef struct ConvolveParams {
   int do_post_rounding;
 } ConvolveParams;
 
-static INLINE ConvolveParams get_conv_params(int ref, int plane) {
+static INLINE ConvolveParams get_conv_params(int ref, int do_average,
+                                             int plane) {
   ConvolveParams conv_params;
   conv_params.ref = ref;
+  conv_params.do_average = do_average;
   conv_params.round = CONVOLVE_OPT_ROUND;
   conv_params.plane = plane;
   conv_params.do_post_rounding = 0;
@@ -47,12 +50,6 @@ static INLINE ConvolveParams get_conv_params(int ref, int plane) {
 struct AV1Common;
 void av1_convolve_init(struct AV1Common *cm);
 #if CONFIG_CONVOLVE_ROUND
-void av1_convolve_2d(const uint8_t *src, int src_stride, CONV_BUF_TYPE *dst,
-                     int dst_stride, int w, int h,
-                     InterpFilterParams *filter_params_x,
-                     InterpFilterParams *filter_params_y, const int subpel_x_q4,
-                     const int subpel_y_q4, ConvolveParams *conv_params);
-
 void av1_convolve_2d_facade(const uint8_t *src, int src_stride, uint8_t *dst,
                             int dst_stride, int w, int h,
                             const InterpFilter *interp_filter,
@@ -60,11 +57,12 @@ void av1_convolve_2d_facade(const uint8_t *src, int src_stride, uint8_t *dst,
                             const int subpel_y_q4, int y_step_q4,
                             ConvolveParams *conv_params);
 
-static INLINE ConvolveParams get_conv_params_no_round(int ref, int plane,
-                                                      int32_t *dst,
+static INLINE ConvolveParams get_conv_params_no_round(int ref, int do_average,
+                                                      int plane, int32_t *dst,
                                                       int dst_stride) {
   ConvolveParams conv_params;
   conv_params.ref = ref;
+  conv_params.do_average = do_average;
   conv_params.round = CONVOLVE_OPT_NO_ROUND;
 #if CONFIG_COMPOUND_ROUND
   conv_params.round_0 = FILTER_BITS;
@@ -79,21 +77,7 @@ static INLINE ConvolveParams get_conv_params_no_round(int ref, int plane,
   return conv_params;
 }
 
-void av1_convolve_rounding(const int32_t *src, int src_stride, uint8_t *dst,
-                           int dst_stride, int w, int h, int bits);
-
 #if CONFIG_HIGHBITDEPTH
-void av1_highbd_convolve_rounding(const int32_t *src, int src_stride,
-                                  uint8_t *dst8, int dst_stride, int w, int h,
-                                  int bits, int bd);
-
-void av1_highbd_convolve_2d(const uint16_t *src, int src_stride,
-                            CONV_BUF_TYPE *dst, int dst_stride, int w, int h,
-                            InterpFilterParams *filter_params_x,
-                            InterpFilterParams *filter_params_y,
-                            const int subpel_x_q4, const int subpel_y_q4,
-                            ConvolveParams *conv_params, int bd);
-
 void av1_highbd_convolve_2d_facade(const uint8_t *src8, int src_stride,
                                    uint8_t *dst, int dst_stride, int w, int h,
                                    const InterpFilter *interp_filter,
@@ -123,6 +107,16 @@ void av1_convolve_c(const uint8_t *src, int src_stride, uint8_t *dst,
                     const int subpel_x, int xstep, const int subpel_y,
                     int ystep, ConvolveParams *conv_params);
 
+void av1_convolve_scale(const uint8_t *src, int src_stride, uint8_t *dst,
+                        int dst_stride, int w, int h,
+#if CONFIG_DUAL_FILTER
+                        const InterpFilter *interp_filter,
+#else
+                        const InterpFilter interp_filter,
+#endif
+                        const int subpel_x, int xstep, const int subpel_y,
+                        int ystep, ConvolveParams *conv_params);
+
 #if CONFIG_HIGHBITDEPTH
 void av1_highbd_convolve(const uint8_t *src, int src_stride, uint8_t *dst,
                          int dst_stride, int w, int h,
@@ -133,6 +127,16 @@ void av1_highbd_convolve(const uint8_t *src, int src_stride, uint8_t *dst,
 #endif
                          const int subpel_x, int xstep, const int subpel_y,
                          int ystep, int avg, int bd);
+
+void av1_highbd_convolve_scale(const uint8_t *src, int src_stride, uint8_t *dst,
+                               int dst_stride, int w, int h,
+#if CONFIG_DUAL_FILTER
+                               const InterpFilter *interp_filter,
+#else
+                               const InterpFilter interp_filter,
+#endif  // CONFIG_DUAL_FILTER
+                               const int subpel_x, int xstep,
+                               const int subpel_y, int ystep, int avg, int bd);
 #endif  // CONFIG_HIGHBITDEPTH
 
 #ifdef __cplusplus

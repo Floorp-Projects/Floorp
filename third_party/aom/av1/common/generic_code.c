@@ -22,9 +22,7 @@ void aom_cdf_init_q15_1D(uint16_t *cdf, int nsyms, int cdf_size) {
   for (i = 0; i < nsyms; i++)
     cdf[i] = AOM_ICDF((i + 1)*CDF_PROB_TOP/nsyms);
 
-#if CONFIG_EC_ADAPT
   cdf[cdf_size - 1] = 0;
-#endif
 }
 
 /** Adapts a Q15 cdf after encoding/decoding a symbol. */

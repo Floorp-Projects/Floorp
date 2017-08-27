@@ -50,14 +50,15 @@
 // certain modes are assumed to be based on 8x8 blocks.
 // This table is used to correct for block size.
 // The factors here are << 2 (2 = x0.5, 32 = x8 etc).
-static const uint8_t rd_thresh_block_size_factor[BLOCK_SIZES] = {
-#if CONFIG_CB4X4
+static const uint8_t rd_thresh_block_size_factor[BLOCK_SIZES_ALL] = {
+#if CONFIG_CHROMA_2X2 || CONFIG_CHROMA_SUB8X8
   2,  2,  2,
 #endif
-  2,  3,  3, 4, 6, 6, 8, 12, 12, 16, 24, 24, 32,
+  2,  3,  3,  4, 6, 6, 8, 12, 12, 16, 24, 24, 32,
 #if CONFIG_EXT_PARTITION
-  48, 48, 64
+  48, 48, 64,
 #endif  // CONFIG_EXT_PARTITION
+  4,  4,  8,  8
 };
 
 static void fill_mode_costs(AV1_COMP *cpi) {
@@ -66,16 +67,16 @@ static void fill_mode_costs(AV1_COMP *cpi) {
 
   for (i = 0; i < INTRA_MODES; ++i)
     for (j = 0; j < INTRA_MODES; ++j)
-      av1_cost_tokens(cpi->y_mode_costs[i][j], av1_kf_y_mode_prob[i][j],
-                      av1_intra_mode_tree);
+      av1_cost_tokens_from_cdf(cpi->y_mode_costs[i][j], av1_kf_y_mode_cdf[i][j],
+                               av1_intra_mode_inv);
 
   for (i = 0; i < BLOCK_SIZE_GROUPS; ++i)
-    av1_cost_tokens(cpi->mbmode_cost[i], fc->y_mode_prob[i],
-                    av1_intra_mode_tree);
+    av1_cost_tokens_from_cdf(cpi->mbmode_cost[i], fc->y_mode_cdf[i],
+                             av1_intra_mode_inv);
 
   for (i = 0; i < INTRA_MODES; ++i)
-    av1_cost_tokens(cpi->intra_uv_mode_cost[i], fc->uv_mode_prob[i],
-                    av1_intra_mode_tree);
+    av1_cost_tokens_from_cdf(cpi->intra_uv_mode_cost[i], fc->uv_mode_cdf[i],
+                             av1_intra_mode_inv);
 
   for (i = 0; i < SWITCHABLE_FILTER_CONTEXTS; ++i)
     av1_cost_tokens(cpi->switchable_interp_costs[i],
@@ -83,20 +84,18 @@ static void fill_mode_costs(AV1_COMP *cpi) {
 
 #if CONFIG_PALETTE
   for (i = 0; i < PALETTE_BLOCK_SIZES; ++i) {
-    av1_cost_tokens(cpi->palette_y_size_cost[i],
-                    av1_default_palette_y_size_prob[i], av1_palette_size_tree);
-    av1_cost_tokens(cpi->palette_uv_size_cost[i],
-                    av1_default_palette_uv_size_prob[i], av1_palette_size_tree);
+    av1_cost_tokens_from_cdf(cpi->palette_y_size_cost[i],
+                             fc->palette_y_size_cdf[i], NULL);
+    av1_cost_tokens_from_cdf(cpi->palette_uv_size_cost[i],
+                             fc->palette_uv_size_cdf[i], NULL);
   }
 
   for (i = 0; i < PALETTE_SIZES; ++i) {
     for (j = 0; j < PALETTE_COLOR_INDEX_CONTEXTS; ++j) {
-      av1_cost_tokens(cpi->palette_y_color_cost[i][j],
-                      av1_default_palette_y_color_index_prob[i][j],
-                      av1_palette_color_index_tree[i]);
-      av1_cost_tokens(cpi->palette_uv_color_cost[i][j],
-                      av1_default_palette_uv_color_index_prob[i][j],
-                      av1_palette_color_index_tree[i]);
+      av1_cost_tokens_from_cdf(cpi->palette_y_color_cost[i][j],
+                               fc->palette_y_color_index_cdf[i][j], NULL);
+      av1_cost_tokens_from_cdf(cpi->palette_uv_color_cost[i][j],
+                               fc->palette_uv_color_index_cdf[i][j], NULL);
     }
   }
 #endif  // CONFIG_PALETTE
@@ -147,8 +146,9 @@ static void fill_mode_costs(AV1_COMP *cpi) {
                   av1_switchable_restore_tree);
 #endif  // CONFIG_LOOP_RESTORATION
 #if CONFIG_GLOBAL_MOTION
-  av1_cost_tokens(cpi->gmtype_cost, fc->global_motion_types_prob,
-                  av1_global_motion_types_tree);
+  for (i = 0; i < TRANS_TYPES; ++i)
+    cpi->gmtype_cost[i] = (1 + (i > 0 ? GLOBAL_TYPE_BITS : 0))
+                          << AV1_PROB_COST_SHIFT;
 #endif  // CONFIG_GLOBAL_MOTION
 }
 
@@ -301,7 +301,7 @@ static void set_block_thresholds(const AV1_COMMON *cm, RD_OPT *rd) {
               0, MAXQ);
     const int q = compute_rd_thresh_factor(qindex, cm->bit_depth);
 
-    for (bsize = 0; bsize < BLOCK_SIZES; ++bsize) {
+    for (bsize = 0; bsize < BLOCK_SIZES_ALL; ++bsize) {
       // Threshold here seems unnecessarily harsh but fine given actual
       // range of values used for cpi->sf.thresh_mult[].
       const int t = q * rd_thresh_block_size_factor[bsize];
@@ -350,7 +350,6 @@ void av1_initialize_rd_consts(AV1_COMP *cpi) {
 
   aom_clear_system_state();
 
-  rd->RDDIV = RDDIV_BITS;  // In bits (to multiply D by 128).
   rd->RDMULT = av1_compute_rd_mult(cpi, cm->base_qindex + cm->y_dc_delta_q);
 
   set_error_per_bit(x, rd->RDMULT);
@@ -366,6 +365,16 @@ void av1_initialize_rd_consts(AV1_COMP *cpi) {
   }
   x->mvcost = x->mv_cost_stack[0];
   x->nmvjointcost = x->nmv_vec_cost[0];
+
+#if CONFIG_INTRABC
+  if (frame_is_intra_only(cm) && cm->allow_screen_content_tools &&
+      cpi->oxcf.pass != 1) {
+    av1_build_nmv_cost_table(
+        x->nmv_vec_cost[0],
+        cm->allow_high_precision_mv ? x->nmvcost_hp[0] : x->nmvcost[0],
+        &cm->fc->ndvc, MV_SUBPEL_NONE);
+  }
+#endif
 
   if (cpi->oxcf.pass != 1) {
     av1_fill_token_costs(x->token_costs, cm->fc->coef_probs);
@@ -434,6 +443,12 @@ void av1_initialize_rd_consts(AV1_COMP *cpi) {
         av1_cost_tokens((int *)cpi->inter_compound_mode_cost[i],
                         cm->fc->inter_compound_mode_probs[i],
                         av1_inter_compound_mode_tree);
+#if CONFIG_COMPOUND_SINGLEREF
+      for (i = 0; i < INTER_MODE_CONTEXTS; ++i)
+        av1_cost_tokens((int *)cpi->inter_singleref_comp_mode_cost[i],
+                        cm->fc->inter_singleref_comp_mode_probs[i],
+                        av1_inter_singleref_comp_mode_tree);
+#endif  // CONFIG_COMPOUND_SINGLEREF
 #if CONFIG_INTERINTRA
       for (i = 0; i < BLOCK_SIZE_GROUPS; ++i)
         av1_cost_tokens((int *)cpi->interintra_mode_cost[i],
@@ -442,16 +457,22 @@ void av1_initialize_rd_consts(AV1_COMP *cpi) {
 #endif  // CONFIG_INTERINTRA
 #endif  // CONFIG_EXT_INTER
 #if CONFIG_MOTION_VAR || CONFIG_WARPED_MOTION
-      for (i = BLOCK_8X8; i < BLOCK_SIZES; i++) {
+      for (i = BLOCK_8X8; i < BLOCK_SIZES_ALL; i++) {
         av1_cost_tokens((int *)cpi->motion_mode_cost[i],
                         cm->fc->motion_mode_prob[i], av1_motion_mode_tree);
       }
 #if CONFIG_MOTION_VAR && CONFIG_WARPED_MOTION
-      for (i = BLOCK_8X8; i < BLOCK_SIZES; i++) {
+      for (i = BLOCK_8X8; i < BLOCK_SIZES_ALL; i++) {
         cpi->motion_mode_cost1[i][0] = av1_cost_bit(cm->fc->obmc_prob[i], 0);
         cpi->motion_mode_cost1[i][1] = av1_cost_bit(cm->fc->obmc_prob[i], 1);
       }
 #endif  // CONFIG_MOTION_VAR && CONFIG_WARPED_MOTION
+#if CONFIG_MOTION_VAR && CONFIG_NCOBMC_ADAPT_WEIGHT
+      for (i = ADAPT_OVERLAP_BLOCK_8X8; i < ADAPT_OVERLAP_BLOCKS; ++i) {
+        av1_cost_tokens((int *)cpi->ncobmc_mode_cost[i],
+                        cm->fc->ncobmc_mode_prob[i], av1_ncobmc_mode_tree);
+      }
+#endif
 #endif  // CONFIG_MOTION_VAR || CONFIG_WARPED_MOTION
     }
   }
@@ -648,7 +669,7 @@ static void get_entropy_contexts_plane(
       for (i = 0; i < num_4x4_h; i += 8)
         t_left[i] = !!*(const uint64_t *)&left[i];
       break;
-#if CONFIG_EXT_TX && CONFIG_RECT_TX && CONFIG_RECT_TX_EXT
+#if CONFIG_RECT_TX_EXT && (CONFIG_EXT_TX || CONFIG_VAR_TX)
     case TX_4X16:
       for (i = 0; i < num_4x4_w; i += 2)
         t_above[i] = !!*(const uint16_t *)&above[i];
@@ -675,7 +696,7 @@ static void get_entropy_contexts_plane(
       for (i = 0; i < num_4x4_h; i += 4)
         t_left[i] = !!*(const uint32_t *)&left[i];
       break;
-#endif  // CONFIG_EXT_TX && CONFIG_RECT_TX && CONFIG_RECT_TX_EXT
+#endif
 
     default: assert(0 && "Invalid transform size."); break;
   }
@@ -749,7 +770,7 @@ static void get_entropy_contexts_plane(
       for (i = 0; i < num_4x4_h; i += 4)
         t_left[i] = !!*(const uint32_t *)&left[i];
       break;
-#if CONFIG_EXT_TX && CONFIG_RECT_TX && CONFIG_RECT_TX_EXT
+#if CONFIG_RECT_TX_EXT && (CONFIG_EXT_TX || CONFIG_VAR_TX)
     case TX_4X16:
       memcpy(t_above, above, sizeof(ENTROPY_CONTEXT) * num_4x4_w);
       for (i = 0; i < num_4x4_h; i += 4)
@@ -772,7 +793,7 @@ static void get_entropy_contexts_plane(
       for (i = 0; i < num_4x4_h; i += 2)
         t_left[i] = !!*(const uint16_t *)&left[i];
       break;
-#endif  // CONFIG_EXT_TX && CONFIG_RECT_TX && CONFIG_RECT_TX_EXT
+#endif
     default: assert(0 && "Invalid transform size."); break;
   }
 }
@@ -781,7 +802,7 @@ void av1_get_entropy_contexts(BLOCK_SIZE bsize, TX_SIZE tx_size,
                               const struct macroblockd_plane *pd,
                               ENTROPY_CONTEXT t_above[2 * MAX_MIB_SIZE],
                               ENTROPY_CONTEXT t_left[2 * MAX_MIB_SIZE]) {
-#if CONFIG_CB4X4 && !CONFIG_CHROMA_2X2
+#if CONFIG_CHROMA_SUB8X8
   const BLOCK_SIZE plane_bsize =
       AOMMAX(BLOCK_4X4, get_plane_block_size(bsize, pd));
 #else
@@ -983,6 +1004,54 @@ void av1_set_rd_speed_thresholds(AV1_COMP *cpi) {
 
 #if CONFIG_EXT_INTER
 
+#if CONFIG_COMPOUND_SINGLEREF
+  rd->thresh_mult[THR_SR_NEAREST_NEARMV] += 1200;
+#if CONFIG_EXT_REFS
+  rd->thresh_mult[THR_SR_NEAREST_NEARL2] += 1200;
+  rd->thresh_mult[THR_SR_NEAREST_NEARL3] += 1200;
+  rd->thresh_mult[THR_SR_NEAREST_NEARB] += 1200;
+#endif  // CONFIG_EXT_REFS
+  rd->thresh_mult[THR_SR_NEAREST_NEARA] += 1200;
+  rd->thresh_mult[THR_SR_NEAREST_NEARG] += 1200;
+
+  /*
+  rd->thresh_mult[THR_SR_NEAREST_NEWMV] += 1200;
+#if CONFIG_EXT_REFS
+  rd->thresh_mult[THR_SR_NEAREST_NEWL2] += 1200;
+  rd->thresh_mult[THR_SR_NEAREST_NEWL3] += 1200;
+  rd->thresh_mult[THR_SR_NEAREST_NEWB] += 1200;
+#endif  // CONFIG_EXT_REFS
+  rd->thresh_mult[THR_SR_NEAREST_NEWA] += 1200;
+  rd->thresh_mult[THR_SR_NEAREST_NEWG] += 1200;*/
+
+  rd->thresh_mult[THR_SR_NEAR_NEWMV] += 1500;
+#if CONFIG_EXT_REFS
+  rd->thresh_mult[THR_SR_NEAR_NEWL2] += 1500;
+  rd->thresh_mult[THR_SR_NEAR_NEWL3] += 1500;
+  rd->thresh_mult[THR_SR_NEAR_NEWB] += 1500;
+#endif  // CONFIG_EXT_REFS
+  rd->thresh_mult[THR_SR_NEAR_NEWA] += 1500;
+  rd->thresh_mult[THR_SR_NEAR_NEWG] += 1500;
+
+  rd->thresh_mult[THR_SR_ZERO_NEWMV] += 2000;
+#if CONFIG_EXT_REFS
+  rd->thresh_mult[THR_SR_ZERO_NEWL2] += 2000;
+  rd->thresh_mult[THR_SR_ZERO_NEWL3] += 2000;
+  rd->thresh_mult[THR_SR_ZERO_NEWB] += 2000;
+#endif  // CONFIG_EXT_REFS
+  rd->thresh_mult[THR_SR_ZERO_NEWA] += 2000;
+  rd->thresh_mult[THR_SR_ZERO_NEWG] += 2000;
+
+  rd->thresh_mult[THR_SR_NEW_NEWMV] += 1700;
+#if CONFIG_EXT_REFS
+  rd->thresh_mult[THR_SR_NEW_NEWL2] += 1700;
+  rd->thresh_mult[THR_SR_NEW_NEWL3] += 1700;
+  rd->thresh_mult[THR_SR_NEW_NEWB] += 1700;
+#endif  // CONFIG_EXT_REFS
+  rd->thresh_mult[THR_SR_NEW_NEWA] += 1700;
+  rd->thresh_mult[THR_SR_NEW_NEWG] += 1700;
+#endif  // CONFIG_COMPOUND_SINGLEREF
+
   rd->thresh_mult[THR_COMP_NEAREST_NEARESTLA] += 1000;
 #if CONFIG_EXT_REFS
   rd->thresh_mult[THR_COMP_NEAREST_NEARESTL2A] += 1000;
@@ -994,6 +1063,13 @@ void av1_set_rd_speed_thresholds(AV1_COMP *cpi) {
   rd->thresh_mult[THR_COMP_NEAREST_NEARESTL2B] += 1000;
   rd->thresh_mult[THR_COMP_NEAREST_NEARESTL3B] += 1000;
   rd->thresh_mult[THR_COMP_NEAREST_NEARESTGB] += 1000;
+
+#if CONFIG_EXT_COMP_REFS
+  rd->thresh_mult[THR_COMP_NEAREST_NEARESTLL2] += 1000;
+  rd->thresh_mult[THR_COMP_NEAREST_NEARESTLL3] += 1000;
+  rd->thresh_mult[THR_COMP_NEAREST_NEARESTLG] += 1000;
+  rd->thresh_mult[THR_COMP_NEAREST_NEARESTBA] += 1000;
+#endif  // CONFIG_EXT_COMP_REFS
 #endif  // CONFIG_EXT_REFS
 
 #else  // CONFIG_EXT_INTER
@@ -1009,6 +1085,12 @@ void av1_set_rd_speed_thresholds(AV1_COMP *cpi) {
   rd->thresh_mult[THR_COMP_NEARESTL2B] += 1000;
   rd->thresh_mult[THR_COMP_NEARESTL3B] += 1000;
   rd->thresh_mult[THR_COMP_NEARESTGB] += 1000;
+#if CONFIG_EXT_COMP_REFS
+  rd->thresh_mult[THR_COMP_NEARESTLL2] += 1000;
+  rd->thresh_mult[THR_COMP_NEARESTLL3] += 1000;
+  rd->thresh_mult[THR_COMP_NEARESTLG] += 1000;
+  rd->thresh_mult[THR_COMP_NEARESTBA] += 1000;
+#endif  // CONFIG_EXT_COMP_REFS
 #endif  // CONFIG_EXT_REFS
 
 #endif  // CONFIG_EXT_INTER
@@ -1081,6 +1163,40 @@ void av1_set_rd_speed_thresholds(AV1_COMP *cpi) {
   rd->thresh_mult[THR_COMP_NEW_NEARGB] += 1700;
   rd->thresh_mult[THR_COMP_NEW_NEWGB] += 2000;
   rd->thresh_mult[THR_COMP_ZERO_ZEROGB] += 2500;
+
+#if CONFIG_EXT_COMP_REFS
+  rd->thresh_mult[THR_COMP_NEAR_NEARLL2] += 1200;
+  rd->thresh_mult[THR_COMP_NEAREST_NEWLL2] += 1500;
+  rd->thresh_mult[THR_COMP_NEW_NEARESTLL2] += 1500;
+  rd->thresh_mult[THR_COMP_NEAR_NEWLL2] += 1700;
+  rd->thresh_mult[THR_COMP_NEW_NEARLL2] += 1700;
+  rd->thresh_mult[THR_COMP_NEW_NEWLL2] += 2000;
+  rd->thresh_mult[THR_COMP_ZERO_ZEROLL2] += 2500;
+
+  rd->thresh_mult[THR_COMP_NEAR_NEARLL3] += 1200;
+  rd->thresh_mult[THR_COMP_NEAREST_NEWLL3] += 1500;
+  rd->thresh_mult[THR_COMP_NEW_NEARESTLL3] += 1500;
+  rd->thresh_mult[THR_COMP_NEAR_NEWLL3] += 1700;
+  rd->thresh_mult[THR_COMP_NEW_NEARLL3] += 1700;
+  rd->thresh_mult[THR_COMP_NEW_NEWLL3] += 2000;
+  rd->thresh_mult[THR_COMP_ZERO_ZEROLL3] += 2500;
+
+  rd->thresh_mult[THR_COMP_NEAR_NEARLG] += 1200;
+  rd->thresh_mult[THR_COMP_NEAREST_NEWLG] += 1500;
+  rd->thresh_mult[THR_COMP_NEW_NEARESTLG] += 1500;
+  rd->thresh_mult[THR_COMP_NEAR_NEWLG] += 1700;
+  rd->thresh_mult[THR_COMP_NEW_NEARLG] += 1700;
+  rd->thresh_mult[THR_COMP_NEW_NEWLG] += 2000;
+  rd->thresh_mult[THR_COMP_ZERO_ZEROLG] += 2500;
+
+  rd->thresh_mult[THR_COMP_NEAR_NEARBA] += 1200;
+  rd->thresh_mult[THR_COMP_NEAREST_NEWBA] += 1500;
+  rd->thresh_mult[THR_COMP_NEW_NEARESTBA] += 1500;
+  rd->thresh_mult[THR_COMP_NEAR_NEWBA] += 1700;
+  rd->thresh_mult[THR_COMP_NEW_NEARBA] += 1700;
+  rd->thresh_mult[THR_COMP_NEW_NEWBA] += 2000;
+  rd->thresh_mult[THR_COMP_ZERO_ZEROBA] += 2500;
+#endif  // CONFIG_EXT_COMP_REFS
 #endif  // CONFIG_EXT_REFS
 
 #else  // CONFIG_EXT_INTER
@@ -1105,6 +1221,17 @@ void av1_set_rd_speed_thresholds(AV1_COMP *cpi) {
   rd->thresh_mult[THR_COMP_NEWL3B] += 2000;
   rd->thresh_mult[THR_COMP_NEARGB] += 1500;
   rd->thresh_mult[THR_COMP_NEWGB] += 2000;
+
+#if CONFIG_EXT_COMP_REFS
+  rd->thresh_mult[THR_COMP_NEARLL2] += 1500;
+  rd->thresh_mult[THR_COMP_NEWLL2] += 2000;
+  rd->thresh_mult[THR_COMP_NEARLL3] += 1500;
+  rd->thresh_mult[THR_COMP_NEWLL3] += 2000;
+  rd->thresh_mult[THR_COMP_NEARLG] += 1500;
+  rd->thresh_mult[THR_COMP_NEWLG] += 2000;
+  rd->thresh_mult[THR_COMP_NEARBA] += 1500;
+  rd->thresh_mult[THR_COMP_NEWBA] += 2000;
+#endif  // CONFIG_EXT_COMP_REFS
 #endif  // CONFIG_EXT_REFS
 
   rd->thresh_mult[THR_COMP_ZEROLA] += 2500;
@@ -1119,6 +1246,13 @@ void av1_set_rd_speed_thresholds(AV1_COMP *cpi) {
   rd->thresh_mult[THR_COMP_ZEROL2B] += 2500;
   rd->thresh_mult[THR_COMP_ZEROL3B] += 2500;
   rd->thresh_mult[THR_COMP_ZEROGB] += 2500;
+
+#if CONFIG_EXT_COMP_REFS
+  rd->thresh_mult[THR_COMP_ZEROLL2] += 2500;
+  rd->thresh_mult[THR_COMP_ZEROLL3] += 2500;
+  rd->thresh_mult[THR_COMP_ZEROLG] += 2500;
+  rd->thresh_mult[THR_COMP_ZEROBA] += 2500;
+#endif  // CONFIG_EXT_COMP_REFS
 #endif  // CONFIG_EXT_REFS
 
 #endif  // CONFIG_EXT_INTER

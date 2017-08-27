@@ -59,8 +59,8 @@ void GenerateMap(int mb_rows, int mb_cols, const aom_image_t &current,
 const int kAqModeCyclicRefresh = 3;
 
 class ActiveMapRefreshTest
-    : public ::libaom_test::EncoderTest,
-      public ::libaom_test::CodecTestWith2Params<libaom_test::TestMode, int> {
+    : public ::libaom_test::CodecTestWith2Params<libaom_test::TestMode, int>,
+      public ::libaom_test::EncoderTest {
  protected:
   ActiveMapRefreshTest() : EncoderTest(GET_PARAM(0)) {}
   virtual ~ActiveMapRefreshTest() {}
@@ -108,7 +108,7 @@ TEST_P(ActiveMapRefreshTest, Test) {
   cfg_.g_lag_in_frames = 0;
   cfg_.g_profile = 1;
   cfg_.rc_target_bitrate = 600;
-  cfg_.rc_resize_allowed = 0;
+  cfg_.rc_resize_mode = 0;
   cfg_.rc_min_quantizer = 8;
   cfg_.rc_max_quantizer = 30;
   cfg_.g_pass = AOM_RC_ONE_PASS;

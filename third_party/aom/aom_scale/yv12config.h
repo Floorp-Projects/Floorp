@@ -69,6 +69,10 @@ typedef struct yv12_buffer_config {
   int subsampling_y;
   unsigned int bit_depth;
   aom_color_space_t color_space;
+#if CONFIG_COLORSPACE_HEADERS
+  aom_transfer_function_t transfer_function;
+  aom_chroma_sample_position_t chroma_sample_position;
+#endif
   aom_color_range_t color_range;
   int render_width;
   int render_height;

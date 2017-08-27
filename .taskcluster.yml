@@ -73,9 +73,10 @@ tasks:
         GECKO_HEAD_REV: '${push.revision}'
         GECKO_COMMIT_MSG: '${push.comment}'
         HG_STORE_PATH: /home/worker/checkouts/hg-store
+        TASKCLUSTER_CACHES: /home/worker/checkouts
 
       cache:
-        level-${repository.level}-checkouts: /home/worker/checkouts
+        level-${repository.level}-checkouts-sparse-v1: /home/worker/checkouts
 
       features:
         taskclusterProxy: true
@@ -85,7 +86,7 @@ tasks:
       # exist in tree so we must hard code the hash
       # XXX Changing this will break Chain of Trust without an associated puppet and
       # scriptworker patch!
-      image: 'taskcluster/decision:0.1.9@sha256:9d6a38ff675ba2f2f132bc1461e3a48b0ce56c90617a8a5c5f8c48c6eb8d06e0'
+      image: 'taskcluster/decision:0.1.10@sha256:c5451ee6c655b3d97d4baa3b0e29a5115f23e0991d4f7f36d2a8f793076d6854'
 
       maxRunTime: 1800
 
@@ -94,6 +95,7 @@ tasks:
       command:
         - /home/worker/bin/run-task
         - '--vcs-checkout=/home/worker/checkouts/gecko'
+        - '--sparse-profile=build/sparse-profiles/taskgraph'
         - '--'
         - bash
         - -cx

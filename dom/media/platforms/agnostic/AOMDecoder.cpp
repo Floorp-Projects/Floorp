@@ -8,6 +8,7 @@
 #include "MediaResult.h"
 #include "TimeUnits.h"
 #include "aom/aomdx.h"
+#include "aom/aom_image.h"
 #include "gfx2DGlue.h"
 #include "mozilla/PodOperations.h"
 #include "mozilla/SyncRunnable.h"
@@ -107,6 +108,62 @@ AOMDecoder::Flush()
   });
 }
 
+// Ported from third_party/aom/tools_common.c.
+static aom_codec_err_t
+highbd_img_downshift(aom_image_t *dst, aom_image_t *src, int down_shift) {
+  int plane;
+  if (dst->d_w != src->d_w || dst->d_h != src->d_h)
+    return AOM_CODEC_INVALID_PARAM;
+  if (dst->x_chroma_shift != src->x_chroma_shift)
+    return AOM_CODEC_INVALID_PARAM;
+  if (dst->y_chroma_shift != src->y_chroma_shift)
+    return AOM_CODEC_INVALID_PARAM;
+  if (dst->fmt != (src->fmt & ~AOM_IMG_FMT_HIGHBITDEPTH))
+    return AOM_CODEC_INVALID_PARAM;
+  if (down_shift < 0)
+      return AOM_CODEC_INVALID_PARAM;
+  switch (dst->fmt) {
+    case AOM_IMG_FMT_I420:
+    case AOM_IMG_FMT_I422:
+    case AOM_IMG_FMT_I444:
+    case AOM_IMG_FMT_I440:
+      break;
+    default:
+      return AOM_CODEC_INVALID_PARAM;
+  }
+  switch (src->fmt) {
+    case AOM_IMG_FMT_I42016:
+    case AOM_IMG_FMT_I42216:
+    case AOM_IMG_FMT_I44416:
+    case AOM_IMG_FMT_I44016:
+      break;
+    default:
+      return AOM_CODEC_UNSUP_BITSTREAM;
+  }
+  for (plane = 0; plane < 3; plane++) {
+    int w = src->d_w;
+    int h = src->d_h;
+    int x, y;
+    if (plane) {
+      w = (w + src->x_chroma_shift) >> src->x_chroma_shift;
+      h = (h + src->y_chroma_shift) >> src->y_chroma_shift;
+    }
+    for (y = 0; y < h; y++) {
+      uint16_t *p_src =
+          (uint16_t *)(src->planes[plane] + y * src->stride[plane]);
+      uint8_t *p_dst =
+          dst->planes[plane] + y * dst->stride[plane];
+      for (x = 0; x < w; x++) *p_dst++ = (*p_src++ >> down_shift) & 0xFF;
+    }
+  }
+  return AOM_CODEC_OK;
+}
+
+// UniquePtr dtor wrapper for aom_image_t.
+struct AomImageFree {
+  void operator()(aom_image_t* img) { aom_img_free(img); }
+};
+
 RefPtr<MediaDataDecoder::DecodePromise>
 AOMDecoder::ProcessDecode(MediaRawData* aSample)
 {
@@ -128,12 +185,44 @@ AOMDecoder::ProcessDecode(MediaRawData* aSample)
 
   aom_codec_iter_t iter = nullptr;
   aom_image_t *img;
+  UniquePtr<aom_image_t, AomImageFree> img8;
   DecodedData results;
 
   while ((img = aom_codec_get_frame(&mCodec, &iter))) {
+    // Track whether the underlying buffer is 8 or 16 bits per channel.
+    bool highbd = bool(img->fmt & AOM_IMG_FMT_HIGHBITDEPTH);
+    if (img->bit_depth > 8) {
+      // Downsample images with more than 8 significant bits per channel.
+      aom_img_fmt_t fmt8 = static_cast<aom_img_fmt_t>(img->fmt ^ AOM_IMG_FMT_HIGHBITDEPTH);
+      img8.reset(aom_img_alloc(NULL, fmt8, img->d_w, img->d_h, 16));
+      if (img8 == nullptr) {
+        LOG("Couldn't allocate bitdepth reduction target!");
+        return DecodePromise::CreateAndReject(
+          MediaResult(NS_ERROR_OUT_OF_MEMORY,
+                      RESULT_DETAIL("Couldn't allocate conversion buffer for AV1 frame")),
+                      __func__);
+      }
+      if (aom_codec_err_t r = highbd_img_downshift(img8.get(), img, img->bit_depth - 8)) {
+        LOG_RESULT(r, "Image downconversion failed");
+        return DecodePromise::CreateAndReject(
+          MediaResult(NS_ERROR_DOM_MEDIA_DECODE_ERR,
+                      RESULT_DETAIL("Error converting AV1 frame to 8 bits: %s",
+                                    aom_codec_err_to_string(r))),
+          __func__);
+      }
+      // img normally points to storage owned by mCodec, so it is not freed.
+      // To copy out the contents of img8 we can overwrite img with an alias.
+      // Since img is assigned at the start of the while loop and img8 is held
+      // outside that loop, the alias won't outlive the storage it points to.
+      img = img8.get();
+      highbd = false;
+    }
+
     NS_ASSERTION(img->fmt == AOM_IMG_FMT_I420 ||
-                 img->fmt == AOM_IMG_FMT_I444,
-                 "WebM image format not I420 or I444");
+                 img->fmt == AOM_IMG_FMT_I42016 ||
+                 img->fmt == AOM_IMG_FMT_I444 ||
+                 img->fmt == AOM_IMG_FMT_I44416,
+                 "AV1 image format not I420 or I444");
 
     // Chroma shifts are rounded down as per the decoding examples in the SDK
     VideoData::YCbCrBuffer b;
@@ -141,17 +230,21 @@ AOMDecoder::ProcessDecode(MediaRawData* aSample)
     b.mPlanes[0].mStride = img->stride[0];
     b.mPlanes[0].mHeight = img->d_h;
     b.mPlanes[0].mWidth = img->d_w;
-    b.mPlanes[0].mOffset = b.mPlanes[0].mSkip = 0;
+    b.mPlanes[0].mOffset = 0;
+    b.mPlanes[0].mSkip = highbd ? 1 : 0;
 
     b.mPlanes[1].mData = img->planes[1];
     b.mPlanes[1].mStride = img->stride[1];
-    b.mPlanes[1].mOffset = b.mPlanes[1].mSkip = 0;
+    b.mPlanes[1].mOffset = 0;
+    b.mPlanes[1].mSkip = highbd ? 1 : 0;
 
     b.mPlanes[2].mData = img->planes[2];
     b.mPlanes[2].mStride = img->stride[2];
-    b.mPlanes[2].mOffset = b.mPlanes[2].mSkip = 0;
+    b.mPlanes[2].mOffset = 0;
+    b.mPlanes[2].mSkip = highbd ? 1 : 0;
 
-    if (img->fmt == AOM_IMG_FMT_I420) {
+    if (img->fmt == AOM_IMG_FMT_I420 ||
+        img->fmt == AOM_IMG_FMT_I42016) {
       b.mPlanes[1].mHeight = (img->d_h + 1) >> img->y_chroma_shift;
       b.mPlanes[1].mWidth = (img->d_w + 1) >> img->x_chroma_shift;
 
@@ -228,7 +321,7 @@ AOMDecoder::IsSupportedCodec(const nsAString& aCodecType)
   // for a specific aom commit hash so sites can check
   // compatibility.
   auto version = NS_ConvertASCIItoUTF16("av1.experimental.");
-  version.AppendLiteral("aadbb0251996c8ebb8310567bea330ab7ae9abe4");
+  version.AppendLiteral("f5bdeac22930ff4c6b219be49c843db35970b918");
   return aCodecType.EqualsLiteral("av1") ||
          aCodecType.Equals(version);
 }

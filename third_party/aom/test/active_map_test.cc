@@ -20,8 +20,8 @@
 namespace {
 
 class ActiveMapTest
-    : public ::libaom_test::EncoderTest,
-      public ::libaom_test::CodecTestWith2Params<libaom_test::TestMode, int> {
+    : public ::libaom_test::CodecTestWith2Params<libaom_test::TestMode, int>,
+      public ::libaom_test::EncoderTest {
  protected:
   static const int kWidth = 208;
   static const int kHeight = 144;
@@ -73,7 +73,7 @@ class ActiveMapTest
     // Validate that this non multiple of 64 wide clip encodes
     cfg_.g_lag_in_frames = 0;
     cfg_.rc_target_bitrate = 400;
-    cfg_.rc_resize_allowed = 0;
+    cfg_.rc_resize_mode = 0;
     cfg_.g_pass = AOM_RC_ONE_PASS;
     cfg_.rc_end_usage = AOM_CBR;
     cfg_.kf_max_dist = 90000;

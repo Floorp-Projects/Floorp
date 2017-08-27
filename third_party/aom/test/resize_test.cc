@@ -265,8 +265,8 @@ class ResizingVideoSource : public ::libaom_test::DummyVideoSource {
 };
 
 class ResizeTest
-    : public ::libaom_test::EncoderTest,
-      public ::libaom_test::CodecTestWithParam<libaom_test::TestMode> {
+    : public ::libaom_test::CodecTestWithParam<libaom_test::TestMode>,
+      public ::libaom_test::EncoderTest {
  protected:
   ResizeTest() : EncoderTest(GET_PARAM(0)) {}
 
@@ -427,8 +427,8 @@ TEST_P(ResizeInternalTest, TestInternalResizeChangeConfig) {
 }
 
 class ResizeRealtimeTest
-    : public ::libaom_test::EncoderTest,
-      public ::libaom_test::CodecTestWith2Params<libaom_test::TestMode, int> {
+    : public ::libaom_test::CodecTestWith2Params<libaom_test::TestMode, int>,
+      public ::libaom_test::EncoderTest {
  protected:
   ResizeRealtimeTest() : EncoderTest(GET_PARAM(0)) {}
   virtual ~ResizeRealtimeTest() {}
@@ -482,8 +482,6 @@ class ResizeRealtimeTest
     cfg_.rc_dropframe_thresh = 1;
     // Enable error_resilience mode.
     cfg_.g_error_resilient = 1;
-    // Enable dynamic resizing.
-    cfg_.rc_resize_allowed = 1;
     // Run at low bitrate.
     cfg_.rc_target_bitrate = 200;
   }
@@ -499,8 +497,6 @@ TEST_P(ResizeRealtimeTest, TestExternalResizeWorks) {
   ResizingVideoSource video;
   video.flag_codec_ = 1;
   DefaultConfig();
-  // Disable internal resize for this test.
-  cfg_.rc_resize_allowed = 0;
   change_bitrate_ = false;
   mismatch_psnr_ = 0.0;
   mismatch_nframes_ = 0;

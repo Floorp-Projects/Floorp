@@ -327,17 +327,40 @@ enum aome_enc_control_id {
   AV1E_SET_TUNE_CONTENT,
 
   /*!\brief Codec control function to set color space info.
-   * \note Valid ranges: 0..7, default is "UNKNOWN".
+   * \note Valid ranges: 0..9, default is "UNKNOWN".
    *                     0 = UNKNOWN,
    *                     1 = BT_601
    *                     2 = BT_709
    *                     3 = SMPTE_170
    *                     4 = SMPTE_240
-   *                     5 = BT_2020
-   *                     6 = RESERVED
+   *                     5 = BT_2020_NCL
+   *                     6 = BT_2020_CL
    *                     7 = SRGB
+   *                     8 = ICtCp
+   *                     9 = RESERVED
    */
   AV1E_SET_COLOR_SPACE,
+
+#if CONFIG_COLORSPACE_HEADERS
+  /*!\brief Codec control function to set transfer function info.
+   * \note Valid ranges: 0..4, default is "UNKNOWN".
+   *                     0 = UNKNOWN,
+   *                     1 = BT_709
+   *                     2 = PQ
+   *                     3 = HLG
+   *                     4 = RESERVED
+   */
+  AV1E_SET_TRANSFER_FUNCTION,
+
+  /*!\brief Codec control function to set chroma 4:2:0 sample position info.
+   * \note Valid ranges: 0..3, default is "UNKNOWN".
+   *                     0 = UNKNOWN,
+   *                     1 = VERTICAL
+   *                     2 = COLOCATED
+   *                     3 = RESERVED
+   */
+  AV1E_SET_CHROMA_SAMPLE_POSITION,
+#endif
 
   /*!\brief Codec control function to set minimum interval between GF/ARF frames
    *
@@ -515,14 +538,15 @@ enum aome_enc_control_id {
   */
   AV1E_SET_DELTAQ_MODE,
 
-  /*!\brief Codec control function to set the tile encoding mode to 0 or 1.
+  /*!\brief Codec control function to set the single tile decoding mode to 0 or
+   * 1.
    *
-   * 0 means that the tile encoding mode is TILE_NORMAL, and 1 means that the
-   * tile encoding mode is TILE_VR.
+   * 0 means that the single tile decoding is off, and 1 means that the single
+   * tile decoding is on.
    *
    * Experiment: EXT_TILE
    */
-  AV1E_SET_TILE_ENCODING_MODE,
+  AV1E_SET_SINGLE_TILE_DECODING,
 
   /*!\brief Codec control function to enable the extreme motion vector unit test
    * in AV1. Please note that this is only used in motion vector unit test.
@@ -704,6 +728,14 @@ AOM_CTRL_USE_TYPE(AV1E_SET_TUNE_CONTENT, int) /* aom_tune_content */
 AOM_CTRL_USE_TYPE(AV1E_SET_COLOR_SPACE, int)
 #define AOM_CTRL_AV1E_SET_COLOR_SPACE
 
+#if CONFIG_COLORSPACE_HEADERS
+AOM_CTRL_USE_TYPE(AV1E_SET_TRANSFER_FUNCTION, int)
+#define AOM_CTRL_AV1E_SET_TRANSFER_FUNCTION
+
+AOM_CTRL_USE_TYPE(AV1E_SET_CHROMA_SAMPLE_POSITION, int)
+#define AOM_CTRL_AV1E_SET_CHROMA_SAMPLE_POSITION
+#endif
+
 AOM_CTRL_USE_TYPE(AV1E_SET_MIN_GF_INTERVAL, unsigned int)
 #define AOM_CTRL_AV1E_SET_MIN_GF_INTERVAL
 
@@ -735,8 +767,8 @@ AOM_CTRL_USE_TYPE(AV1E_GET_LEVEL, int *)
 AOM_CTRL_USE_TYPE(AV1E_SET_ANS_WINDOW_SIZE_LOG2, unsigned int)
 #define AOM_CTRL_AV1E_SET_ANS_WINDOW_SIZE_LOG2
 
-AOM_CTRL_USE_TYPE(AV1E_SET_TILE_ENCODING_MODE, unsigned int)
-#define AOM_CTRL_AV1E_SET_TILE_ENCODING_MODE
+AOM_CTRL_USE_TYPE(AV1E_SET_SINGLE_TILE_DECODING, unsigned int)
+#define AOM_CTRL_AV1E_SET_SINGLE_TILE_DECODING
 
 AOM_CTRL_USE_TYPE(AV1E_ENABLE_MOTION_VECTOR_UNIT_TEST, unsigned int)
 #define AOM_CTRL_AV1E_ENABLE_MOTION_VECTOR_UNIT_TEST

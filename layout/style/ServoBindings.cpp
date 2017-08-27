@@ -10,6 +10,7 @@
 #include "ErrorReporter.h"
 #include "GeckoProfiler.h"
 #include "gfxFontFamilyList.h"
+#include "gfxFontFeatures.h"
 #include "nsAnimationManager.h"
 #include "nsAttrValueInlines.h"
 #include "nsCSSCounterStyleRule.h"
@@ -1340,6 +1341,33 @@ Gecko_nsFont_Destroy(nsFont* aDest)
   aDest->~nsFont();
 }
 
+nsTArray<unsigned int>*
+Gecko_AppendFeatureValueHashEntry(gfxFontFeatureValueSet* aFontFeatureValues,
+                                  nsIAtom* aFamily, uint32_t aAlternate, nsIAtom* aName)
+{
+  MOZ_ASSERT(NS_IsMainThread());
+  static_assert(sizeof(unsigned int) == sizeof(uint32_t),
+                "sizeof unsigned int and uint32_t must be the same");
+  return aFontFeatureValues->AppendFeatureValueHashEntry(
+    nsDependentAtomString(aFamily),
+    nsDependentAtomString(aName),
+    aAlternate
+  );
+}
+
+void
+Gecko_nsFont_SetFontFeatureValuesLookup(nsFont* aFont,
+                                        const RawGeckoPresContext* aPresContext)
+{
+  aFont->featureValueLookup = aPresContext->GetFontFeatureValuesLookup();
+}
+
+void
+Gecko_nsFont_ResetFontFeatureValuesLookup(nsFont* aFont)
+{
+  aFont->featureValueLookup = nullptr;
+}
+
 
 void
 Gecko_ClearAlternateValues(nsFont* aFont, size_t aLength)
@@ -1362,6 +1390,7 @@ Gecko_CopyAlternateValuesFrom(nsFont* aDest, const nsFont* aSrc)
 {
   aDest->alternateValues.Clear();
   aDest->alternateValues.AppendElements(aSrc->alternateValues);
+  aDest->featureValueLookup = aSrc->featureValueLookup;
 }
 
 void
@@ -2367,7 +2396,14 @@ Gecko_nsStyleFont_PrefillDefaultForGeneric(nsStyleFont* aFont,
 {
   const nsFont* defaultFont = ThreadSafeGetDefaultFontHelper(aPresContext, aFont->mLanguage,
                                                              aGenericId);
-   aFont->mFont.fontlist = defaultFont->fontlist;
+  // In case of just the language changing, the parent could have had no generic,
+  // which Gecko just does regular cascading with. Do the same.
+  // This can only happen in the case where the language changed but the family did not
+  if (aGenericId != kGenericFont_NONE) {
+    aFont->mFont.fontlist = defaultFont->fontlist;
+  } else {
+    aFont->mFont.fontlist.SetDefaultFontType(defaultFont->fontlist.GetDefaultFontType());
+  }
 }
 
 void

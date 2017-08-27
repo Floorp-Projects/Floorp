@@ -15,6 +15,7 @@
 #include "./aom_config.h"
 #include "aom_mem/aom_mem.h"
 #include "aom/aom_codec.h"
+#include "aom_dsp/txfm_common.h"
 
 namespace libaom_test {
 
@@ -28,10 +29,10 @@ namespace libaom_test {
 const int kDctMaxValue = 16384;
 
 typedef void (*FhtFunc)(const int16_t *in, tran_low_t *out, int stride,
-                        int tx_type);
+                        TxfmParam *txfm_param);
 
 typedef void (*IhtFunc)(const tran_low_t *in, uint8_t *out, int stride,
-                        int tx_type);
+                        const TxfmParam *txfm_param);
 
 class TransformTestBase {
  public:
@@ -157,7 +158,7 @@ class TransformTestBase {
         }
       }
 
-      fwd_txfm_ref(input_block, output_ref_block, stride, tx_type_);
+      fwd_txfm_ref(input_block, output_ref_block, stride, &txfm_param_);
       ASM_REGISTER_STATE_CHECK(RunFwdTxfm(input_block, output_block, stride));
 
       // The minimum quant value is 4.
@@ -205,9 +206,9 @@ class TransformTestBase {
         }
       }
 
-      fwd_txfm_ref(input_block, trans_block, pitch_, tx_type_);
+      fwd_txfm_ref(input_block, trans_block, pitch_, &txfm_param_);
 
-      inv_txfm_ref(trans_block, output_ref_block, stride, tx_type_);
+      inv_txfm_ref(trans_block, output_ref_block, stride, &txfm_param_);
       ASM_REGISTER_STATE_CHECK(RunInvTxfm(trans_block, output_block, stride));
 
       for (j = 0; j < height_; ++j) {
@@ -247,7 +248,7 @@ class TransformTestBase {
         for (int j = 0; j < num_coeffs_; ++j) input_extreme_block[j] = -mask_;
       }
 
-      fwd_txfm_ref(input_extreme_block, output_ref_block, pitch_, tx_type_);
+      fwd_txfm_ref(input_extreme_block, output_ref_block, pitch_, &txfm_param_);
       ASM_REGISTER_STATE_CHECK(
           RunFwdTxfm(input_extreme_block, output_block, pitch_));
 
@@ -303,7 +304,7 @@ class TransformTestBase {
         }
       }
 
-      fwd_txfm_ref(in, coeff, pitch_, tx_type_);
+      fwd_txfm_ref(in, coeff, pitch_, &txfm_param_);
 
       if (bit_depth_ == AOM_BITS_8) {
         ASM_REGISTER_STATE_CHECK(RunInvTxfm(coeff, dst, pitch_));
@@ -338,12 +339,12 @@ class TransformTestBase {
 
   int pitch_;
   int height_;
-  int tx_type_;
   FhtFunc fwd_txfm_ref;
   IhtFunc inv_txfm_ref;
   aom_bit_depth_t bit_depth_;
   int mask_;
   int num_coeffs_;
+  TxfmParam txfm_param_;
 
  private:
   //  Assume transform size is 4x4, 8x8, 16x16,...
