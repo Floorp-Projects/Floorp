@@ -40,6 +40,7 @@ import android.view.View;
 import android.widget.Button;
 
 import org.mozilla.gecko.switchboard.SwitchBoard;
+import org.mozilla.gecko.widget.themed.ThemedView;
 
 /**
 * {@code ToolbarDisplayLayout} is the UI for when the toolbar is in
@@ -96,6 +97,7 @@ public class ToolbarDisplayLayout extends ThemedLinearLayout {
     private boolean mIsAttached;
 
     private final ThemedTextView mTitle;
+    private final ThemedView mTitleBackground;
     private final int mTitlePadding;
     private ToolbarPrefs mPrefs;
     private OnTitleChangeListener mTitleChangeListener;
@@ -140,6 +142,7 @@ public class ToolbarDisplayLayout extends ThemedLinearLayout {
         LayoutInflater.from(context).inflate(R.layout.toolbar_display_layout, this);
 
         mTitle = (ThemedTextView) findViewById(R.id.url_bar_title);
+        mTitleBackground = (ThemedView) findViewById(R.id.url_bar_title_bg);
         mTitlePadding = mTitle.getPaddingRight();
 
         mUrlColorSpan = new ForegroundColorSpan(ContextCompat.getColor(context, R.color.url_bar_urltext));
@@ -167,6 +170,8 @@ public class ToolbarDisplayLayout extends ThemedLinearLayout {
         mSiteSecurity.setPrivateMode(isPrivate);
         mStop.setPrivateMode(isPrivate);
         mPageActionLayout.setPrivateMode(isPrivate);
+        mTitle.setPrivateMode(isPrivate);
+        mTitleBackground.setPrivateMode(isPrivate);
     }
 
     @Override
@@ -244,6 +249,7 @@ public class ToolbarDisplayLayout extends ThemedLinearLayout {
 
         if (flags.contains(UpdateFlags.PRIVATE_MODE)) {
             mTitle.setPrivateMode(tab.isPrivate());
+            mTitleBackground.setPrivateMode(tab.isPrivate());
         }
     }
 
