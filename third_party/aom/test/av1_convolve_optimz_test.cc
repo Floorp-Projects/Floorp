@@ -74,7 +74,7 @@ class AV1ConvolveOptimzTest : public ::testing::TestWithParam<ConvParams> {
     subpel_ = GET_PARAM(5);
     int ref = GET_PARAM(6);
     const int plane = 0;
-    conv_params_ = get_conv_params(ref, plane);
+    conv_params_ = get_conv_params(ref, ref, plane);
 
     alloc_ = new uint8_t[maxBlockSize * 4];
     src_ = alloc_ + (vertiOffset * maxWidth);

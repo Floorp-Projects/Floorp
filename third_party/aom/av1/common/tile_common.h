@@ -20,9 +20,7 @@ extern "C" {
 
 struct AV1Common;
 
-#if CONFIG_TILE_GROUPS
 #define DEFAULT_MAX_NUM_TG 1
-#endif
 
 typedef struct TileInfo {
   int mi_row_start, mi_row_end;
@@ -37,16 +35,16 @@ void av1_tile_init(TileInfo *tile, const struct AV1Common *cm, int row,
 
 void av1_tile_set_row(TileInfo *tile, const struct AV1Common *cm, int row);
 void av1_tile_set_col(TileInfo *tile, const struct AV1Common *cm, int col);
-#if CONFIG_DEPENDENT_HORZTILES && CONFIG_TILE_GROUPS
+#if CONFIG_DEPENDENT_HORZTILES
 void av1_tile_set_tg_boundary(TileInfo *tile, const struct AV1Common *const cm,
                               int row, int col);
 #endif
 void av1_get_tile_n_bits(int mi_cols, int *min_log2_tile_cols,
                          int *max_log2_tile_cols);
 
-void av1_update_boundary_info(const struct AV1Common *cm,
-                              const TileInfo *const tile_info, int mi_row,
-                              int mi_col);
+void av1_setup_frame_boundary_info(const struct AV1Common *const cm);
+void av1_setup_across_tile_boundary_info(const struct AV1Common *const cm,
+                                         const TileInfo *const tile_info);
 
 #if CONFIG_LOOPFILTERING_ACROSS_TILES
 int av1_disable_loopfilter_on_tile_boundary(const struct AV1Common *cm);

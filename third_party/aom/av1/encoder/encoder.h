@@ -21,6 +21,7 @@
 #include "av1/common/entropymode.h"
 #include "av1/common/thread_common.h"
 #include "av1/common/onyxc_int.h"
+#include "av1/common/resize.h"
 #include "av1/encoder/aq_cyclicrefresh.h"
 #if CONFIG_ANS
 #include "aom_dsp/ans.h"
@@ -51,6 +52,10 @@
 #ifdef __cplusplus
 extern "C" {
 #endif
+
+#if CONFIG_SPEED_REFS
+#define MIN_SPEED_REFS_BLKSIZE BLOCK_16X16
+#endif  // CONFIG_SPEED_REFS
 
 typedef struct {
   int nmv_vec_cost[NMV_CONTEXTS][MV_JOINTS];
@@ -128,7 +133,14 @@ typedef enum {
   RESIZE_NONE = 0,    // No frame resizing allowed.
   RESIZE_FIXED = 1,   // All frames are coded at the specified dimension.
   RESIZE_DYNAMIC = 2  // Coded size of each frame is determined by the codec.
-} RESIZE_TYPE;
+} RESIZE_MODE;
+#if CONFIG_FRAME_SUPERRES
+typedef enum {
+  SUPERRES_NONE = 0,
+  SUPERRES_FIXED = 1,
+  SUPERRES_DYNAMIC = 2
+} SUPERRES_MODE;
+#endif  // CONFIG_FRAME_SUPERRES
 
 typedef struct AV1EncoderConfig {
   BITSTREAM_PROFILE profile;
@@ -190,22 +202,22 @@ typedef struct AV1EncoderConfig {
   int qm_minlevel;
   int qm_maxlevel;
 #endif
-#if CONFIG_TILE_GROUPS
   unsigned int num_tile_groups;
   unsigned int mtu;
-#endif
 
 #if CONFIG_TEMPMV_SIGNALING
   unsigned int disable_tempmv;
 #endif
   // Internal frame size scaling.
-  RESIZE_TYPE resize_mode;
-  int scaled_frame_width;
-  int scaled_frame_height;
+  RESIZE_MODE resize_mode;
+  uint8_t resize_scale_numerator;
+  uint8_t resize_kf_scale_numerator;
 
 #if CONFIG_FRAME_SUPERRES
-  // Frame Super-Resolution size scaling
-  int superres_enabled;
+  // Frame Super-Resolution size scaling.
+  SUPERRES_MODE superres_mode;
+  uint8_t superres_scale_numerator;
+  uint8_t superres_kf_scale_numerator;
 #endif  // CONFIG_FRAME_SUPERRES
 
   // Enable feature to reduce the frame quantization every x frames.
@@ -265,6 +277,10 @@ typedef struct AV1EncoderConfig {
   int use_highbitdepth;
 #endif
   aom_color_space_t color_space;
+#if CONFIG_COLORSPACE_HEADERS
+  aom_transfer_function_t transfer_function;
+  aom_chroma_sample_position_t chroma_sample_position;
+#endif
   int color_range;
   int render_width;
   int render_height;
@@ -276,7 +292,8 @@ typedef struct AV1EncoderConfig {
   int ans_window_size_log2;
 #endif  // CONFIG_ANS && ANS_MAX_SYMBOLS
 #if CONFIG_EXT_TILE
-  unsigned int tile_encoding_mode;
+  unsigned int large_scale_tile;
+  unsigned int single_tile_decoding;
 #endif  // CONFIG_EXT_TILE
 
   unsigned int motion_vector_unit_test;
@@ -289,8 +306,8 @@ static INLINE int is_lossless_requested(const AV1EncoderConfig *cfg) {
 // TODO(jingning) All spatially adaptive variables should go to TileDataEnc.
 typedef struct TileDataEnc {
   TileInfo tile_info;
-  int thresh_freq_fact[BLOCK_SIZES][MAX_MODES];
-  int mode_map[BLOCK_SIZES][MAX_MODES];
+  int thresh_freq_fact[BLOCK_SIZES_ALL][MAX_MODES];
+  int mode_map[BLOCK_SIZES_ALL][MAX_MODES];
   int m_search_count;
   int ex_search_count;
 #if CONFIG_PVQ
@@ -299,9 +316,7 @@ typedef struct TileDataEnc {
 #if CONFIG_CFL
   CFL_CTX cfl;
 #endif
-#if CONFIG_EC_ADAPT
   DECLARE_ALIGNED(16, FRAME_CONTEXT, tctx);
-#endif
 } TileDataEnc;
 
 typedef struct RD_COUNTS {
@@ -311,6 +326,8 @@ typedef struct RD_COUNTS {
   // Stores number of 4x4 blocks using global motion per reference frame.
   int global_motion_used[TOTAL_REFS_PER_FRAME];
 #endif  // CONFIG_GLOBAL_MOTION
+  int single_ref_used_flag;
+  int compound_ref_used_flag;
 } RD_COUNTS;
 
 typedef struct ThreadData {
@@ -372,17 +389,10 @@ typedef struct AV1_COMP {
 
   YV12_BUFFER_CONFIG *source;
   YV12_BUFFER_CONFIG *last_source;  // NULL for first frame and alt_ref frames
-  YV12_BUFFER_CONFIG *un_scaled_source;
+  YV12_BUFFER_CONFIG *unscaled_source;
   YV12_BUFFER_CONFIG scaled_source;
   YV12_BUFFER_CONFIG *unscaled_last_source;
   YV12_BUFFER_CONFIG scaled_last_source;
-
-  // Up-sampled reference buffers
-  // NOTE(zoeliu): It is needed to allocate sufficient space to the up-sampled
-  // reference buffers, which should include the up-sampled version of all the
-  // possibly stored references plus the currently coded frame itself.
-  EncRefCntBuffer upsampled_ref_bufs[REF_FRAMES + 1];
-  int upsampled_ref_idx[REF_FRAMES + 1];
 
   // For a still frame, this flag is set to 1 to skip partition search.
   int partition_search_skippable_frame;
@@ -471,7 +481,7 @@ typedef struct AV1_COMP {
   fractional_mv_step_fp *find_fractional_mv_step;
   av1_full_search_fn_t full_search_sad;  // It is currently unused.
   av1_diamond_search_fn_t diamond_search_sad;
-  aom_variance_fn_ptr_t fn_ptr[BLOCK_SIZES];
+  aom_variance_fn_ptr_t fn_ptr[BLOCK_SIZES_ALL];
   uint64_t time_receive_data;
   uint64_t time_compress_data;
   uint64_t time_pick_lpf;
@@ -538,17 +548,24 @@ typedef struct AV1_COMP {
 #if CONFIG_EXT_INTER
   unsigned int inter_compound_mode_cost[INTER_MODE_CONTEXTS]
                                        [INTER_COMPOUND_MODES];
+#if CONFIG_COMPOUND_SINGLEREF
+  unsigned int inter_singleref_comp_mode_cost[INTER_MODE_CONTEXTS]
+                                             [INTER_SINGLEREF_COMP_MODES];
+#endif  // CONFIG_COMPOUND_SINGLEREF
 #if CONFIG_INTERINTRA
   unsigned int interintra_mode_cost[BLOCK_SIZE_GROUPS][INTERINTRA_MODES];
 #endif  // CONFIG_INTERINTRA
 #endif  // CONFIG_EXT_INTER
 #if CONFIG_MOTION_VAR || CONFIG_WARPED_MOTION
-  int motion_mode_cost[BLOCK_SIZES][MOTION_MODES];
+  int motion_mode_cost[BLOCK_SIZES_ALL][MOTION_MODES];
 #if CONFIG_MOTION_VAR && CONFIG_WARPED_MOTION
-  int motion_mode_cost1[BLOCK_SIZES][2];
+  int motion_mode_cost1[BLOCK_SIZES_ALL][2];
 #endif  // CONFIG_MOTION_VAR && CONFIG_WARPED_MOTION
+#if CONFIG_MOTION_VAR && CONFIG_NCOBMC_ADAPT_WEIGHT
+  int ncobmc_mode_cost[ADAPT_OVERLAP_BLOCKS][MAX_NCOBMC_MODES];
+#endif  // CONFIG_MOTION_VAR && CONFIG_NCOBMC_ADAPT_WEIGHT
 #endif  // CONFIG_MOTION_VAR || CONFIG_WARPED_MOTION
-  int intra_uv_mode_cost[INTRA_MODES][INTRA_MODES];
+  int intra_uv_mode_cost[INTRA_MODES][UV_INTRA_MODES];
   int y_mode_costs[INTRA_MODES][INTRA_MODES][INTRA_MODES];
   int switchable_interp_costs[SWITCHABLE_FILTER_CONTEXTS][SWITCHABLE_FILTERS];
 #if CONFIG_EXT_PARTITION_TYPES
@@ -601,17 +618,9 @@ typedef struct AV1_COMP {
   TileBufferEnc tile_buffers[MAX_TILE_ROWS][MAX_TILE_COLS];
 
   int resize_state;
-  int resize_scale_num;
-  int resize_scale_den;
-  int resize_next_scale_num;
-  int resize_next_scale_den;
   int resize_avg_qp;
   int resize_buffer_underflow;
   int resize_count;
-
-#if CONFIG_FRAME_SUPERRES
-  int superres_pending;
-#endif  // CONFIG_FRAME_SUPERRES
 
   // VARIANCE_AQ segment map refresh
   int vaq_refresh;
@@ -640,6 +649,15 @@ typedef struct AV1_COMP {
 #if CONFIG_LV_MAP
   tran_low_t *tcoeff_buf[MAX_MB_PLANE];
 #endif
+
+#if CONFIG_SPEED_REFS
+  int sb_scanning_pass_idx;
+#endif  // CONFIG_SPEED_REFS
+
+#if CONFIG_FLEX_REFS
+  int extra_arf_allowed;
+  int bwd_ref_allowed;
+#endif  // CONFIG_FLEX_REFS
 } AV1_COMP;
 
 void av1_initialize_enc(void);
@@ -727,14 +745,6 @@ static INLINE YV12_BUFFER_CONFIG *get_ref_frame_buffer(
   const int buf_idx = get_ref_frame_buf_idx(cpi, ref_frame);
   return buf_idx != INVALID_IDX ? &cm->buffer_pool->frame_bufs[buf_idx].buf
                                 : NULL;
-}
-
-static INLINE const YV12_BUFFER_CONFIG *get_upsampled_ref(
-    const AV1_COMP *cpi, const MV_REFERENCE_FRAME ref_frame) {
-  // Use up-sampled reference frames.
-  const int buf_idx =
-      cpi->upsampled_ref_idx[get_ref_frame_map_idx(cpi, ref_frame)];
-  return &cpi->upsampled_ref_bufs[buf_idx].buf;
 }
 
 #if CONFIG_EXT_REFS || CONFIG_TEMPMV_SIGNALING
@@ -831,23 +841,22 @@ static INLINE void uref_cnt_fb(EncRefCntBuffer *ubufs, int *uidx,
   ubufs[new_uidx].ref_count++;
 }
 
-// Returns 1 if a resize is pending and 0 otherwise.
-static INLINE int av1_resize_pending(const struct AV1_COMP *cpi) {
-  return cpi->resize_scale_num != cpi->resize_next_scale_num ||
-         cpi->resize_scale_den != cpi->resize_next_scale_den;
-}
-
 // Returns 1 if a frame is unscaled and 0 otherwise.
-static INLINE int av1_resize_unscaled(const struct AV1_COMP *cpi) {
-  return cpi->resize_scale_num == cpi->resize_scale_den;
+static INLINE int av1_resize_unscaled(const AV1_COMMON *cm) {
+#if CONFIG_FRAME_SUPERRES
+  return cm->superres_upscaled_width == cm->render_width &&
+         cm->superres_upscaled_height == cm->render_height;
+#else
+  return cm->width == cm->render_width && cm->height == cm->render_height;
+#endif  // CONFIG_FRAME_SUPERRES
 }
 
-// Moves resizing to the next state. This is just setting the numerator and
-// denominator to the next numerator and denominator, causing
-// av1_resize_pending to subsequently return false.
-static INLINE void av1_resize_step(struct AV1_COMP *cpi) {
-  cpi->resize_scale_num = cpi->resize_next_scale_num;
-  cpi->resize_scale_den = cpi->resize_next_scale_den;
+static INLINE int av1_frame_unscaled(const AV1_COMMON *cm) {
+#if CONFIG_FRAME_SUPERRES
+  return av1_superres_unscaled(cm) && av1_resize_unscaled(cm);
+#else
+  return av1_resize_unscaled(cm);
+#endif  // CONFIG_FRAME_SUPERRES
 }
 
 #ifdef __cplusplus

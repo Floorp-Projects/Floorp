@@ -517,7 +517,7 @@ static void DnsPrefChanged(const char* aPref, void* aClosure)
         return;
     }
 
-    auto self = static_cast<nsHostResolver*>(aClosure);
+    DebugOnly<nsHostResolver*> self = static_cast<nsHostResolver*>(aClosure);
     MOZ_ASSERT(self);
 
     sGetTtlEnabled = Preferences::GetBool(kPrefGetTtl);

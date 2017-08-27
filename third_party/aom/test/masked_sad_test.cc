@@ -160,64 +160,56 @@ TEST_P(HighbdMaskedSADTest, OperationCheck) {
 using std::tr1::make_tuple;
 
 #if HAVE_SSSE3
-INSTANTIATE_TEST_CASE_P(
-    SSSE3_C_COMPARE, MaskedSADTest,
-    ::testing::Values(
+const MaskedSADParam msad_test[] = {
 #if CONFIG_EXT_PARTITION
-        make_tuple(&aom_masked_sad128x128_ssse3, &aom_masked_sad128x128_c),
-        make_tuple(&aom_masked_sad128x64_ssse3, &aom_masked_sad128x64_c),
-        make_tuple(&aom_masked_sad64x128_ssse3, &aom_masked_sad64x128_c),
+  make_tuple(&aom_masked_sad128x128_ssse3, &aom_masked_sad128x128_c),
+  make_tuple(&aom_masked_sad128x64_ssse3, &aom_masked_sad128x64_c),
+  make_tuple(&aom_masked_sad64x128_ssse3, &aom_masked_sad64x128_c),
 #endif  // CONFIG_EXT_PARTITION
-        make_tuple(&aom_masked_sad64x64_ssse3, &aom_masked_sad64x64_c),
-        make_tuple(&aom_masked_sad64x32_ssse3, &aom_masked_sad64x32_c),
-        make_tuple(&aom_masked_sad32x64_ssse3, &aom_masked_sad32x64_c),
-        make_tuple(&aom_masked_sad32x32_ssse3, &aom_masked_sad32x32_c),
-        make_tuple(&aom_masked_sad32x16_ssse3, &aom_masked_sad32x16_c),
-        make_tuple(&aom_masked_sad16x32_ssse3, &aom_masked_sad16x32_c),
-        make_tuple(&aom_masked_sad16x16_ssse3, &aom_masked_sad16x16_c),
-        make_tuple(&aom_masked_sad16x8_ssse3, &aom_masked_sad16x8_c),
-        make_tuple(&aom_masked_sad8x16_ssse3, &aom_masked_sad8x16_c),
-        make_tuple(&aom_masked_sad8x8_ssse3, &aom_masked_sad8x8_c),
-        make_tuple(&aom_masked_sad8x4_ssse3, &aom_masked_sad8x4_c),
-        make_tuple(&aom_masked_sad4x8_ssse3, &aom_masked_sad4x8_c),
-        make_tuple(&aom_masked_sad4x4_ssse3, &aom_masked_sad4x4_c)));
+  make_tuple(&aom_masked_sad64x64_ssse3, &aom_masked_sad64x64_c),
+  make_tuple(&aom_masked_sad64x32_ssse3, &aom_masked_sad64x32_c),
+  make_tuple(&aom_masked_sad32x64_ssse3, &aom_masked_sad32x64_c),
+  make_tuple(&aom_masked_sad32x32_ssse3, &aom_masked_sad32x32_c),
+  make_tuple(&aom_masked_sad32x16_ssse3, &aom_masked_sad32x16_c),
+  make_tuple(&aom_masked_sad16x32_ssse3, &aom_masked_sad16x32_c),
+  make_tuple(&aom_masked_sad16x16_ssse3, &aom_masked_sad16x16_c),
+  make_tuple(&aom_masked_sad16x8_ssse3, &aom_masked_sad16x8_c),
+  make_tuple(&aom_masked_sad8x16_ssse3, &aom_masked_sad8x16_c),
+  make_tuple(&aom_masked_sad8x8_ssse3, &aom_masked_sad8x8_c),
+  make_tuple(&aom_masked_sad8x4_ssse3, &aom_masked_sad8x4_c),
+  make_tuple(&aom_masked_sad4x8_ssse3, &aom_masked_sad4x8_c),
+  make_tuple(&aom_masked_sad4x4_ssse3, &aom_masked_sad4x4_c)
+};
+
+INSTANTIATE_TEST_CASE_P(SSSE3_C_COMPARE, MaskedSADTest,
+                        ::testing::ValuesIn(msad_test));
 #if CONFIG_HIGHBITDEPTH
-INSTANTIATE_TEST_CASE_P(SSSE3_C_COMPARE, HighbdMaskedSADTest,
-                        ::testing::Values(
+const HighbdMaskedSADParam hbd_msad_test[] = {
 #if CONFIG_EXT_PARTITION
-                            make_tuple(&aom_highbd_masked_sad128x128_ssse3,
-                                       &aom_highbd_masked_sad128x128_c),
-                            make_tuple(&aom_highbd_masked_sad128x64_ssse3,
-                                       &aom_highbd_masked_sad128x64_c),
-                            make_tuple(&aom_highbd_masked_sad64x128_ssse3,
-                                       &aom_highbd_masked_sad64x128_c),
+  make_tuple(&aom_highbd_masked_sad128x128_ssse3,
+             &aom_highbd_masked_sad128x128_c),
+  make_tuple(&aom_highbd_masked_sad128x64_ssse3,
+             &aom_highbd_masked_sad128x64_c),
+  make_tuple(&aom_highbd_masked_sad64x128_ssse3,
+             &aom_highbd_masked_sad64x128_c),
 #endif  // CONFIG_EXT_PARTITION
-                            make_tuple(&aom_highbd_masked_sad64x64_ssse3,
-                                       &aom_highbd_masked_sad64x64_c),
-                            make_tuple(&aom_highbd_masked_sad64x32_ssse3,
-                                       &aom_highbd_masked_sad64x32_c),
-                            make_tuple(&aom_highbd_masked_sad32x64_ssse3,
-                                       &aom_highbd_masked_sad32x64_c),
-                            make_tuple(&aom_highbd_masked_sad32x32_ssse3,
-                                       &aom_highbd_masked_sad32x32_c),
-                            make_tuple(&aom_highbd_masked_sad32x16_ssse3,
-                                       &aom_highbd_masked_sad32x16_c),
-                            make_tuple(&aom_highbd_masked_sad16x32_ssse3,
-                                       &aom_highbd_masked_sad16x32_c),
-                            make_tuple(&aom_highbd_masked_sad16x16_ssse3,
-                                       &aom_highbd_masked_sad16x16_c),
-                            make_tuple(&aom_highbd_masked_sad16x8_ssse3,
-                                       &aom_highbd_masked_sad16x8_c),
-                            make_tuple(&aom_highbd_masked_sad8x16_ssse3,
-                                       &aom_highbd_masked_sad8x16_c),
-                            make_tuple(&aom_highbd_masked_sad8x8_ssse3,
-                                       &aom_highbd_masked_sad8x8_c),
-                            make_tuple(&aom_highbd_masked_sad8x4_ssse3,
-                                       &aom_highbd_masked_sad8x4_c),
-                            make_tuple(&aom_highbd_masked_sad4x8_ssse3,
-                                       &aom_highbd_masked_sad4x8_c),
-                            make_tuple(&aom_highbd_masked_sad4x4_ssse3,
-                                       &aom_highbd_masked_sad4x4_c)));
+  make_tuple(&aom_highbd_masked_sad64x64_ssse3, &aom_highbd_masked_sad64x64_c),
+  make_tuple(&aom_highbd_masked_sad64x32_ssse3, &aom_highbd_masked_sad64x32_c),
+  make_tuple(&aom_highbd_masked_sad32x64_ssse3, &aom_highbd_masked_sad32x64_c),
+  make_tuple(&aom_highbd_masked_sad32x32_ssse3, &aom_highbd_masked_sad32x32_c),
+  make_tuple(&aom_highbd_masked_sad32x16_ssse3, &aom_highbd_masked_sad32x16_c),
+  make_tuple(&aom_highbd_masked_sad16x32_ssse3, &aom_highbd_masked_sad16x32_c),
+  make_tuple(&aom_highbd_masked_sad16x16_ssse3, &aom_highbd_masked_sad16x16_c),
+  make_tuple(&aom_highbd_masked_sad16x8_ssse3, &aom_highbd_masked_sad16x8_c),
+  make_tuple(&aom_highbd_masked_sad8x16_ssse3, &aom_highbd_masked_sad8x16_c),
+  make_tuple(&aom_highbd_masked_sad8x8_ssse3, &aom_highbd_masked_sad8x8_c),
+  make_tuple(&aom_highbd_masked_sad8x4_ssse3, &aom_highbd_masked_sad8x4_c),
+  make_tuple(&aom_highbd_masked_sad4x8_ssse3, &aom_highbd_masked_sad4x8_c),
+  make_tuple(&aom_highbd_masked_sad4x4_ssse3, &aom_highbd_masked_sad4x4_c)
+};
+
+INSTANTIATE_TEST_CASE_P(SSSE3_C_COMPARE, HighbdMaskedSADTest,
+                        ::testing::ValuesIn(hbd_msad_test));
 #endif  // CONFIG_HIGHBITDEPTH
 #endif  // HAVE_SSSE3
 }  // namespace

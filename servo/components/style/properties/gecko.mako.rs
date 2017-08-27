@@ -2169,9 +2169,10 @@ fn static_assert() {
         }
     }
 
-    pub fn fixup_system(&mut self) {
+    pub fn fixup_system(&mut self, default_font_type: structs::FontFamilyType) {
         self.gecko.mFont.systemFont = true;
         self.gecko.mGenericID = structs::kGenericFont_NONE;
+        self.gecko.mFont.fontlist.mDefaultFontType = default_font_type;
     }
 
     pub fn set_font_family(&mut self, v: longhands::font_family::computed_value::T) {
@@ -2223,7 +2224,16 @@ fn static_assert() {
         use gecko_bindings::structs::FontFamilyType;
         use gecko_string_cache::Atom;
 
-        ::properties::longhands::font_family::computed_value::T(
+        if self.gecko.mFont.fontlist.mFontlist.is_empty() {
+            let default = match self.gecko.mFont.fontlist.mDefaultFontType {
+                FontFamilyType::eFamily_serif => FontFamily::Generic(atom!("serif")),
+                FontFamilyType::eFamily_sans_serif => FontFamily::Generic(atom!("sans-serif")),
+                _ => panic!("Default generic must be serif or sans-serif"),
+            };
+            return longhands::font_family::computed_value::T(vec![default]);
+        }
+
+        longhands::font_family::computed_value::T(
             self.gecko.mFont.fontlist.mFontlist.iter().map(|gecko_font_family_name| {
                 match gecko_font_family_name.mType {
                     FontFamilyType::eFamily_serif => FontFamily::Generic(atom!("serif")),
@@ -2513,8 +2523,12 @@ fn static_assert() {
 
     <% impl_simple_type_with_conversion("font_language_override", "mFont.languageOverride") %>
 
-    pub fn set_font_variant_alternates(&mut self, v: longhands::font_variant_alternates::computed_value::T) {
+    pub fn set_font_variant_alternates(&mut self,
+                                       v: longhands::font_variant_alternates::computed_value::T,
+                                       device: &Device) {
         use gecko_bindings::bindings::{Gecko_ClearAlternateValues, Gecko_AppendAlternateValues};
+        use gecko_bindings::bindings::Gecko_nsFont_ResetFontFeatureValuesLookup;
+        use gecko_bindings::bindings::Gecko_nsFont_SetFontFeatureValuesLookup;
         % for value in "normal swash stylistic ornaments annotation styleset character_variant historical".split():
             use gecko_bindings::structs::NS_FONT_VARIANT_ALTERNATES_${value.upper()};
         % endfor
@@ -2526,6 +2540,8 @@ fn static_assert() {
 
         if v.0.is_empty() {
             self.gecko.mFont.variantAlternates = NS_FONT_VARIANT_ALTERNATES_NORMAL as u16;
+            unsafe { Gecko_nsFont_ResetFontFeatureValuesLookup(&mut self.gecko.mFont); }
+            return;
         }
 
         for val in v.0.iter() {
@@ -2556,6 +2572,10 @@ fn static_assert() {
                     self.gecko.mFont.variantAlternates |= NS_FONT_VARIANT_ALTERNATES_HISTORICAL as u16;
                 }
             }
+        }
+
+        unsafe {
+            Gecko_nsFont_SetFontFeatureValuesLookup(&mut self.gecko.mFont, device.pres_context());
         }
     }
 

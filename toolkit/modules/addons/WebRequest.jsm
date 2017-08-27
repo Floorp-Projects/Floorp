@@ -468,13 +468,18 @@ class AuthRequestor {
   // nsIAuthPrompt2 asyncPromptAuth
   asyncPromptAuth(channel, callback, context, level, authInfo) {
     let uri = channel.URI;
+    let proxyInfo;
+    let isProxy = !!(authInfo.flags & authInfo.AUTH_PROXY);
+    if (isProxy && channel instanceof Ci.nsIProxiedChannel) {
+      proxyInfo = channel.proxyInfo;
+    }
     let data = {
       scheme: authInfo.authenticationScheme,
       realm: authInfo.realm,
-      isProxy: !!(authInfo.flags & authInfo.AUTH_PROXY),
+      isProxy,
       challenger: {
-        host: uri.host,
-        port: uri.port,
+        host: proxyInfo ? proxyInfo.host : uri.host,
+        port: proxyInfo ? proxyInfo.port : uri.port,
       },
     };
 
@@ -789,11 +794,11 @@ HttpObserverManager = {
 
     if (loadInfo) {
       let originPrincipal = loadInfo.triggeringPrincipal;
-      if (originPrincipal.URI) {
+      if (!originPrincipal.isNullPrincipal && originPrincipal.URI) {
         data.originUrl = originPrincipal.URI.spec;
       }
       let docPrincipal = loadInfo.loadingPrincipal;
-      if (docPrincipal && docPrincipal.URI) {
+      if (docPrincipal && !docPrincipal.isNullPrincipal && docPrincipal.URI) {
         data.documentUrl = docPrincipal.URI.spec;
       }
 
@@ -840,6 +845,18 @@ HttpObserverManager = {
         // The remoteAddress getter throws if the address is unavailable,
         // but ip is an optional property so just ignore the exception.
       }
+    }
+
+    if (channel instanceof Ci.nsIProxiedChannel && channel.proxyInfo) {
+      let pi = channel.proxyInfo;
+      data.proxyInfo = {
+        host: pi.host,
+        port: pi.port,
+        type: pi.type,
+        username: pi.username,
+        proxyDNS: pi.flags == Ci.nsIProxyInfo.TRANSPARENT_PROXY_RESOLVES_HOST,
+        failoverTimeout: pi.failoverTimeout,
+      };
     }
 
     return Object.assign(data, extraData);

@@ -12,17 +12,22 @@ from mozbuild.base import (
 )
 import mozfile
 import mozpack.path as mozpath
+import os
 import requests
 import re
 import sys
 import tarfile
+from urlparse import urlparse
 
 class VendorAOM(MozbuildObject):
-    base_url = 'https://aomedia.googlesource.com/aom/'
-
-    def upstream_url(self, revision):
+    def upstream_snapshot(self, revision):
         '''Construct a url for a tarball snapshot of the given revision.'''
-        return mozpath.join(self.base_url, '+archive', revision + '.tar.gz')
+        if 'googlesource' in self.repo_url:
+            return mozpath.join(self.repo_url, '+archive', revision + '.tar.gz')
+        elif 'github' in self.repo_url:
+            return mozpath.join(self.repo_url, 'archive', revision + '.tar.gz')
+        else:
+            raise ValueError('Unknown git host, no snapshot lookup method')
 
     def upstream_commit(self, revision):
         '''Convert a revision to a git commit and timestamp.
@@ -30,7 +35,27 @@ class VendorAOM(MozbuildObject):
         Ask the upstream repo to convert the requested revision to
         a git commit id and timestamp, so we can be precise in
         what we're vendoring.'''
-        url = mozpath.join(self.base_url, '+', revision + '?format=JSON')
+        if 'googlesource' in self.repo_url:
+            return self.upstream_googlesource_commit(revision)
+        elif 'github' in self.repo_url:
+            return self.upstream_github_commit(revision)
+        else:
+            raise ValueError('Unknown git host, no commit lookup method')
+
+    def upstream_validate(self, url):
+        '''Validate repository urls to make sure we can handle them.'''
+        host = urlparse(url).netloc
+        valid_domains = ('googlesource.com', 'github.com')
+        if not any(filter(lambda domain: domain in host, valid_domains)):
+            self.log(logging.ERROR, 'upstream_url', {},
+                     '''Unsupported git host %s; cannot fetch snapshots.
+
+Please set a repository url with --repo on either googlesource or github.''' % host)
+            sys.exit(1)
+
+    def upstream_googlesource_commit(self, revision):
+        '''Query gitiles for a git commit and timestamp.'''
+        url = mozpath.join(self.repo_url, '+', revision + '?format=JSON')
         self.log(logging.INFO, 'fetch', {'url': url},
                  'Fetching commit id from {url}')
         req = requests.get(url)
@@ -48,11 +73,24 @@ class VendorAOM(MozbuildObject):
                 raise
         return (info['commit'], info['committer']['time'])
 
+    def upstream_github_commit(self, revision):
+        '''Query the github api for a git commit id and timestamp.'''
+        github_api = 'https://api.github.com/'
+        repo = urlparse(self.repo_url).path[1:]
+        url = mozpath.join(github_api, 'repos', repo, 'commits', revision)
+        self.log(logging.INFO, 'fetch', {'url': url},
+                 'Fetching commit id from {url}')
+        req = requests.get(url)
+        req.raise_for_status()
+        info = req.json()
+        return (info['sha'], info['commit']['committer']['date'])
+
     def fetch_and_unpack(self, revision, target):
         '''Fetch and unpack upstream source'''
-        url = self.upstream_url(revision)
+        url = self.upstream_snapshot(revision)
         self.log(logging.INFO, 'fetch', {'url': url}, 'Fetching {url}')
-        filename = 'libaom-' + revision + '.tar.gz'
+        prefix = 'aom-' + revision
+        filename = prefix + '.tar.gz'
         with open(filename, 'wb') as f:
             req = requests.get(url, stream=True)
             for data in req.iter_content(4096):
@@ -67,6 +105,12 @@ class VendorAOM(MozbuildObject):
         mozfile.remove(target)
         self.log(logging.INFO, 'unpack', {}, 'Unpacking upstream files.')
         tar.extractall(target)
+        # Github puts everything properly down a directory; move it up.
+        if all(map(lambda name: name.startswith(prefix), tar.getnames())):
+            tardir = mozpath.join(target, prefix)
+            os.system('mv %s/* %s/.* %s' % (tardir, tardir, target))
+            os.rmdir(tardir)
+        # Remove the tarball.
         mozfile.remove(filename)
 
     def update_readme(self, revision, timestamp, target):
@@ -81,6 +125,11 @@ class VendorAOM(MozbuildObject):
                                 readme)
         else:
             new_readme = '%s\n\n%s %s.' % (readme, prefix, revision)
+
+        prefix = 'The last update was pulled from'
+        new_readme = re.sub(prefix + ' https*://.*',
+                            prefix + ' %s' % self.repo_url,
+                            new_readme)
 
         if readme != new_readme:
             with open(filename, 'w') as f:
@@ -162,7 +211,7 @@ Please commit or stash these changes before vendoring, or re-run with `--ignore-
 '''.format(files='\n'.join(sorted(modified))))
             sys.exit(1)
 
-    def vendor(self, revision, ignore_modified=False):
+    def vendor(self, revision, repo, ignore_modified=False):
         self.populate_logger()
         self.log_manager.enable_unstructured()
 
@@ -170,6 +219,12 @@ Please commit or stash these changes before vendoring, or re-run with `--ignore-
             self.check_modified_files()
         if not revision:
             revision = 'master'
+        if repo:
+            self.repo_url = repo
+        else:
+            self.repo_url = 'https://aomedia.googlesource.com/aom/'
+        self.upstream_validate(self.repo_url)
+
         commit, timestamp = self.upstream_commit(revision)
 
         vendor_dir = mozpath.join(self.topsrcdir, 'third_party/aom')

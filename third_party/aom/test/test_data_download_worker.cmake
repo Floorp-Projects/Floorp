@@ -19,7 +19,10 @@ endif ()
 
 set(AOM_TEST_DATA_URL
     "https://storage.googleapis.com/downloads.webmproject.org/test_data/libvpx")
-set(AOM_TEST_DATA_PATH "$ENV{LIBAOM_TEST_DATA_PATH}")
+
+if (NOT AOM_TEST_DATA_PATH)
+  set(AOM_TEST_DATA_PATH "$ENV{LIBAOM_TEST_DATA_PATH}")
+endif ()
 
 if ("${AOM_TEST_DATA_PATH}" STREQUAL "")
   message(WARNING "Writing test data to ${AOM_CONFIG_DIR}, set "

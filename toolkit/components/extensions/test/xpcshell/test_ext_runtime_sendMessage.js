@@ -109,3 +109,103 @@ add_task(async function tabsSendMessageBlob() {
   await extension.awaitFinish("sendBlob");
   await extension.unload();
 });
+
+add_task(async function sendMessageResponseGC() {
+  function background() {
+    let savedResolve, savedRespond;
+
+    browser.runtime.onMessage.addListener((msg, _, respond) => {
+      browser.test.log(`Got request: ${msg}`);
+      switch (msg) {
+        case "ping":
+          respond("pong");
+          return;
+
+        case "promise-save":
+          return new Promise(resolve => {
+            savedResolve = resolve;
+          });
+        case "promise-resolve":
+          savedResolve("saved-resolve");
+          return;
+        case "promise-never":
+          return new Promise(r => {});
+
+        case "callback-save":
+          savedRespond = respond;
+          return true;
+        case "callback-call":
+          savedRespond("saved-respond");
+          return;
+        case "callback-never":
+          return true;
+      }
+    });
+
+    const frame = document.createElement("iframe");
+    frame.src = "page.html";
+    document.body.appendChild(frame);
+  }
+
+  function page() {
+    browser.test.onMessage.addListener(msg => {
+      browser.runtime.sendMessage(msg)
+        .then(response => {
+          if (response) {
+            browser.test.log(`Got response: ${response}`);
+            browser.test.sendMessage(response);
+          }
+        }, error => {
+          browser.test.assertEq(error.message,
+            "Response handle went out of scope",
+            "The promise rejected with the correct error");
+          browser.test.sendMessage("rejected");
+        }
+      );
+    });
+    browser.test.sendMessage("ready");
+  }
+
+  let extension = ExtensionTestUtils.loadExtension({
+    background,
+    files: {
+      "page.html": "<!DOCTYPE html><meta charset=utf-8><script src=page.js></script>",
+      "page.js": page,
+    },
+  });
+
+  await extension.startup();
+  await extension.awaitMessage("ready");
+
+  // Setup long-running tasks before GC.
+  extension.sendMessage("promise-save");
+  extension.sendMessage("callback-save");
+
+  // Test returning a Promise that can never resolve.
+  extension.sendMessage("promise-never");
+
+  extension.sendMessage("ping");
+  await extension.awaitMessage("pong");
+
+  Services.ppmm.loadProcessScript("data:,Components.utils.forceGC()", false);
+  await extension.awaitMessage("rejected");
+
+  // Test returning `true` without holding the response handle.
+  extension.sendMessage("callback-never");
+
+  extension.sendMessage("ping");
+  await extension.awaitMessage("pong");
+
+  Services.ppmm.loadProcessScript("data:,Components.utils.forceGC()", false);
+  await extension.awaitMessage("rejected");
+
+  // Test that promises from long-running tasks didn't get GCd.
+  extension.sendMessage("promise-resolve");
+  await extension.awaitMessage("saved-resolve");
+
+  extension.sendMessage("callback-call");
+  await extension.awaitMessage("saved-respond");
+
+  ok("Long running tasks responded");
+  await extension.unload();
+});

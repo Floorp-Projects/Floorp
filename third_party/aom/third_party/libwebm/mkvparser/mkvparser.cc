@@ -22,9 +22,15 @@
 
 #include "common/webmids.h"
 
+// disable deprecation warnings for auto_ptr
+#if defined(__GNUC__) && __GNUC__ >= 5
+#pragma GCC diagnostic ignored "-Wdeprecated-declarations"
+#endif
+
 namespace mkvparser {
 const float MasteringMetadata::kValueNotPresent = FLT_MAX;
 const long long Colour::kValueNotPresent = LLONG_MAX;
+const float Projection::kValueNotPresent = FLT_MAX;
 
 #ifdef MSC_COMPAT
 inline bool isnan(double val) { return !!_isnan(val); }
@@ -1475,6 +1481,8 @@ long Segment::Load() {
   }
 }
 
+SeekHead::Entry::Entry() : id(0), pos(0), element_start(0), element_size(0) {}
+
 SeekHead::SeekHead(Segment* pSegment, long long start, long long size_,
                    long long element_start, long long element_size)
     : m_pSegment(pSegment),
@@ -1525,15 +1533,19 @@ long SeekHead::Parse() {
   if (pos != stop)
     return E_FILE_FORMAT_INVALID;
 
-  m_entries = new (std::nothrow) Entry[entry_count];
+  if (entry_count > 0) {
+    m_entries = new (std::nothrow) Entry[entry_count];
 
-  if (m_entries == NULL)
-    return -1;
+    if (m_entries == NULL)
+      return -1;
+  }
 
-  m_void_elements = new (std::nothrow) VoidElement[void_element_count];
+  if (void_element_count > 0) {
+    m_void_elements = new (std::nothrow) VoidElement[void_element_count];
 
-  if (m_void_elements == NULL)
-    return -1;
+    if (m_void_elements == NULL)
+      return -1;
+  }
 
   // now parse the entries and void elements
 
@@ -1552,14 +1564,14 @@ long SeekHead::Parse() {
     if (status < 0)  // error
       return status;
 
-    if (id == libwebm::kMkvSeek) {
+    if (id == libwebm::kMkvSeek && entry_count > 0) {
       if (ParseEntry(pReader, pos, size, pEntry)) {
         Entry& e = *pEntry++;
 
         e.element_start = idpos;
         e.element_size = (pos + size) - idpos;
       }
-    } else if (id == libwebm::kMkvVoid) {
+    } else if (id == libwebm::kMkvVoid && void_element_count > 0) {
       VoidElement& e = *pVoidElement++;
 
       e.element_start = idpos;
@@ -1766,18 +1778,7 @@ bool SeekHead::ParseEntry(IMkvReader* pReader, long long start, long long size_,
   if ((pos + seekIdSize) > stop)
     return false;
 
-  // Note that the SeekId payload really is serialized
-  // as a "Matroska integer", not as a plain binary value.
-  // In fact, Matroska requires that ID values in the
-  // stream exactly match the binary representation as listed
-  // in the Matroska specification.
-  //
-  // This parser is more liberal, and permits IDs to have
-  // any width.  (This could make the representation in the stream
-  // different from what's in the spec, but it doesn't matter here,
-  // since we always normalize "Matroska integer" values.)
-
-  pEntry->id = ReadUInt(pReader, pos, len);  // payload
+  pEntry->id = ReadID(pReader, pos, len);  // payload
 
   if (pEntry->id <= 0)
     return false;
@@ -2434,7 +2435,9 @@ bool CuePoint::TrackPosition::Parse(IMkvReader* pReader, long long start_,
 }
 
 const CuePoint::TrackPosition* CuePoint::Find(const Track* pTrack) const {
-  assert(pTrack);
+  if (pTrack == NULL) {
+    return NULL;
+  }
 
   const long long n = pTrack->GetNumber();
 
@@ -4034,7 +4037,7 @@ long SegmentInfo::Parse() {
   }
 
   const double rollover_check = m_duration * m_timecodeScale;
-  if (rollover_check > LLONG_MAX)
+  if (rollover_check > static_cast<double>(LLONG_MAX))
     return E_FILE_FORMAT_INVALID;
 
   if (pos != stop)
@@ -4125,7 +4128,7 @@ ContentEncoding::~ContentEncoding() {
 }
 
 const ContentEncoding::ContentCompression*
-    ContentEncoding::GetCompressionByIndex(unsigned long idx) const {
+ContentEncoding::GetCompressionByIndex(unsigned long idx) const {
   const ptrdiff_t count = compression_entries_end_ - compression_entries_;
   assert(count >= 0);
 
@@ -4983,29 +4986,27 @@ bool PrimaryChromaticity::Parse(IMkvReader* reader, long long read_pos,
   if (!reader)
     return false;
 
-  std::auto_ptr<PrimaryChromaticity> chromaticity_ptr;
+  if (!*chromaticity)
+    *chromaticity = new PrimaryChromaticity();
 
-  if (!*chromaticity) {
-    chromaticity_ptr.reset(new PrimaryChromaticity());
-  } else {
-    chromaticity_ptr.reset(*chromaticity);
-  }
-
-  if (!chromaticity_ptr.get())
+  if (!*chromaticity)
     return false;
 
-  float* value = is_x ? &chromaticity_ptr->x : &chromaticity_ptr->y;
+  PrimaryChromaticity* pc = *chromaticity;
+  float* value = is_x ? &pc->x : &pc->y;
 
   double parser_value = 0;
-  const long long value_parse_status =
+  const long long parse_status =
       UnserializeFloat(reader, read_pos, value_size, parser_value);
+
+  // Valid range is [0, 1]. Make sure the double is representable as a float
+  // before casting.
+  if (parse_status < 0 || parser_value < 0.0 || parser_value > 1.0 ||
+      (parser_value > 0.0 && parser_value < FLT_MIN))
+    return false;
 
   *value = static_cast<float>(parser_value);
 
-  if (value_parse_status < 0 || *value < 0.0 || *value > 1.0)
-    return false;
-
-  *chromaticity = chromaticity_ptr.release();
   return true;
 }
 
@@ -5188,11 +5189,94 @@ bool Colour::Parse(IMkvReader* reader, long long colour_start,
   return true;
 }
 
+bool Projection::Parse(IMkvReader* reader, long long start, long long size,
+                       Projection** projection) {
+  if (!reader || *projection)
+    return false;
+
+  std::auto_ptr<Projection> projection_ptr(new Projection());
+  if (!projection_ptr.get())
+    return false;
+
+  const long long end = start + size;
+  long long read_pos = start;
+
+  while (read_pos < end) {
+    long long child_id = 0;
+    long long child_size = 0;
+
+    const long long status =
+        ParseElementHeader(reader, read_pos, end, child_id, child_size);
+    if (status < 0)
+      return false;
+
+    if (child_id == libwebm::kMkvProjectionType) {
+      long long projection_type = kTypeNotPresent;
+      projection_type = UnserializeUInt(reader, read_pos, child_size);
+      if (projection_type < 0)
+        return false;
+
+      projection_ptr->type = static_cast<ProjectionType>(projection_type);
+    } else if (child_id == libwebm::kMkvProjectionPrivate) {
+      unsigned char* data = SafeArrayAlloc<unsigned char>(1, child_size);
+
+      if (data == NULL)
+        return false;
+
+      const int status =
+          reader->Read(read_pos, static_cast<long>(child_size), data);
+
+      if (status) {
+        delete[] data;
+        return false;
+      }
+
+      projection_ptr->private_data = data;
+      projection_ptr->private_data_length = static_cast<size_t>(child_size);
+    } else {
+      double value = 0;
+      const long long value_parse_status =
+          UnserializeFloat(reader, read_pos, child_size, value);
+      // Make sure value is representable as a float before casting.
+      if (value_parse_status < 0 || value < -FLT_MAX || value > FLT_MAX ||
+          (value > 0.0 && value < FLT_MIN)) {
+        return false;
+      }
+
+      switch (child_id) {
+        case libwebm::kMkvProjectionPoseYaw:
+          projection_ptr->pose_yaw = static_cast<float>(value);
+          break;
+        case libwebm::kMkvProjectionPosePitch:
+          projection_ptr->pose_pitch = static_cast<float>(value);
+          break;
+        case libwebm::kMkvProjectionPoseRoll:
+          projection_ptr->pose_roll = static_cast<float>(value);
+          break;
+        default:
+          return false;
+      }
+    }
+
+    read_pos += child_size;
+    if (read_pos > end)
+      return false;
+  }
+
+  *projection = projection_ptr.release();
+  return true;
+}
+
 VideoTrack::VideoTrack(Segment* pSegment, long long element_start,
                        long long element_size)
-    : Track(pSegment, element_start, element_size), m_colour(NULL) {}
+    : Track(pSegment, element_start, element_size),
+      m_colour(NULL),
+      m_projection(NULL) {}
 
-VideoTrack::~VideoTrack() { delete m_colour; }
+VideoTrack::~VideoTrack() {
+  delete m_colour;
+  delete m_projection;
+}
 
 long VideoTrack::Parse(Segment* pSegment, const Info& info,
                        long long element_start, long long element_size,
@@ -5224,6 +5308,7 @@ long VideoTrack::Parse(Segment* pSegment, const Info& info,
   const long long stop = pos + s.size;
 
   Colour* colour = NULL;
+  Projection* projection = NULL;
 
   while (pos < stop) {
     long long id, size;
@@ -5274,6 +5359,9 @@ long VideoTrack::Parse(Segment* pSegment, const Info& info,
     } else if (id == libwebm::kMkvColour) {
       if (!Colour::Parse(pReader, pos, size, &colour))
         return E_FILE_FORMAT_INVALID;
+    } else if (id == libwebm::kMkvProjection) {
+      if (!Projection::Parse(pReader, pos, size, &projection))
+        return E_FILE_FORMAT_INVALID;
     }
 
     pos += size;  // consume payload
@@ -5305,6 +5393,7 @@ long VideoTrack::Parse(Segment* pSegment, const Info& info,
   pTrack->m_stereo_mode = stereo_mode;
   pTrack->m_rate = rate;
   pTrack->m_colour = colour;
+  pTrack->m_projection = projection;
 
   pResult = pTrack;
   return 0;  // success
@@ -5404,6 +5493,8 @@ long VideoTrack::Seek(long long time_ns, const BlockEntry*& pResult) const {
 }
 
 Colour* VideoTrack::GetColour() const { return m_colour; }
+
+Projection* VideoTrack::GetProjection() const { return m_projection; }
 
 long long VideoTrack::GetWidth() const { return m_width; }
 
@@ -6698,8 +6789,10 @@ Cluster::Cluster(Segment* pSegment, long idx, long long element_start
 {}
 
 Cluster::~Cluster() {
-  if (m_entries_count <= 0)
+  if (m_entries_count <= 0) {
+    delete[] m_entries;
     return;
+  }
 
   BlockEntry** i = m_entries;
   BlockEntry** const j = m_entries + m_entries_count;
@@ -7850,7 +7943,6 @@ long Block::Parse(const Cluster* pCluster) {
     pf = m_frames;
     while (pf != pf_end) {
       Frame& f = *pf++;
-      assert((pos + f.len) <= stop);
       if ((pos + f.len) > stop)
         return E_FILE_FORMAT_INVALID;
 

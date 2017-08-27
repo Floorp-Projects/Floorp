@@ -9,12 +9,16 @@
  * PATENTS file, you can obtain it at www.aomedia.org/license/patent.
  */
 
+#include <assert.h>
 #include <emmintrin.h>  // SSE2
 
 #include "./aom_config.h"
 #include "./aom_dsp_rtcd.h"
 
 #include "aom_ports/mem.h"
+
+#include "./av1_rtcd.h"
+#include "av1/common/filter.h"
 
 typedef uint32_t (*high_variance_fn_t)(const uint16_t *src, int src_stride,
                                        const uint16_t *ref, int ref_stride,
@@ -181,6 +185,11 @@ VAR_FN(16, 16, 16, 8);
 VAR_FN(16, 8, 8, 7);
 VAR_FN(8, 16, 8, 7);
 VAR_FN(8, 8, 8, 6);
+#if CONFIG_EXT_PARTITION_TYPES
+VAR_FN(16, 4, 16, 6);
+VAR_FN(8, 32, 8, 8);
+VAR_FN(32, 8, 16, 8);
+#endif
 
 #undef VAR_FN
 
@@ -387,6 +396,7 @@ DECLS(sse2);
     return (var >= 0) ? (uint32_t)var : 0;                                     \
   }
 
+#if CONFIG_EXT_PARTITION_TYPES
 #define FNS(opt)                        \
   FN(64, 64, 16, 6, 6, opt, (int64_t)); \
   FN(64, 32, 16, 6, 5, opt, (int64_t)); \
@@ -398,7 +408,24 @@ DECLS(sse2);
   FN(16, 8, 16, 4, 3, opt, (int64_t));  \
   FN(8, 16, 8, 3, 4, opt, (int64_t));   \
   FN(8, 8, 8, 3, 3, opt, (int64_t));    \
-  FN(8, 4, 8, 3, 2, opt, (int64_t));
+  FN(8, 4, 8, 3, 2, opt, (int64_t));    \
+  FN(16, 4, 16, 4, 2, opt, (int64_t));  \
+  FN(8, 32, 8, 3, 5, opt, (int64_t));   \
+  FN(32, 8, 16, 5, 3, opt, (int64_t))
+#else
+#define FNS(opt)                        \
+  FN(64, 64, 16, 6, 6, opt, (int64_t)); \
+  FN(64, 32, 16, 6, 5, opt, (int64_t)); \
+  FN(32, 64, 16, 5, 6, opt, (int64_t)); \
+  FN(32, 32, 16, 5, 5, opt, (int64_t)); \
+  FN(32, 16, 16, 5, 4, opt, (int64_t)); \
+  FN(16, 32, 16, 4, 5, opt, (int64_t)); \
+  FN(16, 16, 16, 4, 4, opt, (int64_t)); \
+  FN(16, 8, 16, 4, 3, opt, (int64_t));  \
+  FN(8, 16, 8, 3, 4, opt, (int64_t));   \
+  FN(8, 8, 8, 3, 3, opt, (int64_t));    \
+  FN(8, 4, 8, 3, 2, opt, (int64_t))
+#endif
 
 FNS(sse2);
 
@@ -412,9 +439,9 @@ FNS(sse2);
       const uint16_t *dst, ptrdiff_t dst_stride, const uint16_t *sec,        \
       ptrdiff_t sec_stride, int height, unsigned int *sse, void *unused0,    \
       void *unused);
-#define DECLS(opt1) \
-  DECL(16, opt1)    \
-  DECL(8, opt1)
+#define DECLS(opt) \
+  DECL(16, opt)    \
+  DECL(8, opt)
 
 DECLS(sse2);
 #undef DECL
@@ -546,18 +573,36 @@ DECLS(sse2);
     return (var >= 0) ? (uint32_t)var : 0;                                     \
   }
 
-#define FNS(opt1)                        \
-  FN(64, 64, 16, 6, 6, opt1, (int64_t)); \
-  FN(64, 32, 16, 6, 5, opt1, (int64_t)); \
-  FN(32, 64, 16, 5, 6, opt1, (int64_t)); \
-  FN(32, 32, 16, 5, 5, opt1, (int64_t)); \
-  FN(32, 16, 16, 5, 4, opt1, (int64_t)); \
-  FN(16, 32, 16, 4, 5, opt1, (int64_t)); \
-  FN(16, 16, 16, 4, 4, opt1, (int64_t)); \
-  FN(16, 8, 16, 4, 3, opt1, (int64_t));  \
-  FN(8, 16, 8, 4, 3, opt1, (int64_t));   \
-  FN(8, 8, 8, 3, 3, opt1, (int64_t));    \
-  FN(8, 4, 8, 3, 2, opt1, (int64_t));
+#if CONFIG_EXT_PARTITION_TYPES
+#define FNS(opt)                        \
+  FN(64, 64, 16, 6, 6, opt, (int64_t)); \
+  FN(64, 32, 16, 6, 5, opt, (int64_t)); \
+  FN(32, 64, 16, 5, 6, opt, (int64_t)); \
+  FN(32, 32, 16, 5, 5, opt, (int64_t)); \
+  FN(32, 16, 16, 5, 4, opt, (int64_t)); \
+  FN(16, 32, 16, 4, 5, opt, (int64_t)); \
+  FN(16, 16, 16, 4, 4, opt, (int64_t)); \
+  FN(16, 8, 16, 4, 3, opt, (int64_t));  \
+  FN(8, 16, 8, 3, 4, opt, (int64_t));   \
+  FN(8, 8, 8, 3, 3, opt, (int64_t));    \
+  FN(8, 4, 8, 3, 2, opt, (int64_t));    \
+  FN(16, 4, 16, 4, 2, opt, (int64_t));  \
+  FN(8, 32, 8, 3, 5, opt, (int64_t));   \
+  FN(32, 8, 16, 5, 3, opt, (int64_t));
+#else
+#define FNS(opt)                        \
+  FN(64, 64, 16, 6, 6, opt, (int64_t)); \
+  FN(64, 32, 16, 6, 5, opt, (int64_t)); \
+  FN(32, 64, 16, 5, 6, opt, (int64_t)); \
+  FN(32, 32, 16, 5, 5, opt, (int64_t)); \
+  FN(32, 16, 16, 5, 4, opt, (int64_t)); \
+  FN(16, 32, 16, 4, 5, opt, (int64_t)); \
+  FN(16, 16, 16, 4, 4, opt, (int64_t)); \
+  FN(16, 8, 16, 4, 3, opt, (int64_t));  \
+  FN(8, 16, 8, 3, 4, opt, (int64_t));   \
+  FN(8, 8, 8, 3, 3, opt, (int64_t));    \
+  FN(8, 4, 8, 3, 2, opt, (int64_t));
+#endif
 
 FNS(sse2);
 
@@ -565,131 +610,94 @@ FNS(sse2);
 #undef FN
 
 void aom_highbd_upsampled_pred_sse2(uint16_t *comp_pred, int width, int height,
-                                    const uint8_t *ref8, int ref_stride) {
-  int i, j;
-  int stride = ref_stride << 3;
-  uint16_t *ref = CONVERT_TO_SHORTPTR(ref8);
-
-  if (width >= 8) {
-    // read 8 points at one time
-    for (i = 0; i < height; i++) {
-      for (j = 0; j < width; j += 8) {
-        __m128i s0 = _mm_cvtsi32_si128(*(const uint32_t *)ref);
-        __m128i s1 = _mm_cvtsi32_si128(*(const uint32_t *)(ref + 8));
-        __m128i s2 = _mm_cvtsi32_si128(*(const uint32_t *)(ref + 16));
-        __m128i s3 = _mm_cvtsi32_si128(*(const uint32_t *)(ref + 24));
-        __m128i s4 = _mm_cvtsi32_si128(*(const uint32_t *)(ref + 32));
-        __m128i s5 = _mm_cvtsi32_si128(*(const uint32_t *)(ref + 40));
-        __m128i s6 = _mm_cvtsi32_si128(*(const uint32_t *)(ref + 48));
-        __m128i s7 = _mm_cvtsi32_si128(*(const uint32_t *)(ref + 56));
-        __m128i t0, t1, t2, t3;
-
-        t0 = _mm_unpacklo_epi16(s0, s1);
-        t1 = _mm_unpacklo_epi16(s2, s3);
-        t2 = _mm_unpacklo_epi16(s4, s5);
-        t3 = _mm_unpacklo_epi16(s6, s7);
-        t0 = _mm_unpacklo_epi32(t0, t1);
-        t2 = _mm_unpacklo_epi32(t2, t3);
-        t0 = _mm_unpacklo_epi64(t0, t2);
-
-        _mm_storeu_si128((__m128i *)(comp_pred), t0);
-        comp_pred += 8;
-        ref += 64;  // 8 * 8;
+                                    int subpel_x_q3, int subpel_y_q3,
+                                    const uint8_t *ref8, int ref_stride,
+                                    int bd) {
+  if (!subpel_x_q3 && !subpel_y_q3) {
+    uint16_t *ref = CONVERT_TO_SHORTPTR(ref8);
+    if (width >= 8) {
+      int i;
+      assert(!(width & 7));
+      /*Read 8 pixels one row at a time.*/
+      for (i = 0; i < height; i++) {
+        int j;
+        for (j = 0; j < width; j += 8) {
+          __m128i s0 = _mm_loadu_si128((const __m128i *)ref);
+          _mm_storeu_si128((__m128i *)comp_pred, s0);
+          comp_pred += 8;
+          ref += 8;
+        }
+        ref += ref_stride - width;
       }
-      ref += stride - (width << 3);
+    } else {
+      int i;
+      assert(!(width & 3));
+      /*Read 4 pixels two rows at a time.*/
+      for (i = 0; i < height; i += 2) {
+        __m128i s0 = _mm_loadl_epi64((const __m128i *)ref);
+        __m128i s1 = _mm_loadl_epi64((const __m128i *)(ref + ref_stride));
+        __m128i t0 = _mm_unpacklo_epi64(s0, s1);
+        _mm_storeu_si128((__m128i *)comp_pred, t0);
+        comp_pred += 8;
+        ref += 2 * ref_stride;
+      }
     }
   } else {
-    // read 4 points at one time
-    for (i = 0; i < height; i++) {
-      for (j = 0; j < width; j += 4) {
-        __m128i s0 = _mm_cvtsi32_si128(*(const uint32_t *)ref);
-        __m128i s1 = _mm_cvtsi32_si128(*(const uint32_t *)(ref + 8));
-        __m128i s2 = _mm_cvtsi32_si128(*(const uint32_t *)(ref + 16));
-        __m128i s3 = _mm_cvtsi32_si128(*(const uint32_t *)(ref + 24));
-        __m128i t0, t1;
-
-        t0 = _mm_unpacklo_epi16(s0, s1);
-        t1 = _mm_unpacklo_epi16(s2, s3);
-        t0 = _mm_unpacklo_epi32(t0, t1);
-
-        _mm_storel_epi64((__m128i *)(comp_pred), t0);
-        comp_pred += 4;
-        ref += 4 * 8;
-      }
-      ref += stride - (width << 3);
+    InterpFilterParams filter;
+    filter = av1_get_interp_filter_params(EIGHTTAP_REGULAR);
+    if (!subpel_y_q3) {
+      const int16_t *kernel;
+      kernel = av1_get_interp_filter_subpel_kernel(filter, subpel_x_q3 << 1);
+      aom_highbd_convolve8_horiz(ref8, ref_stride,
+                                 CONVERT_TO_BYTEPTR(comp_pred), width, kernel,
+                                 16, NULL, -1, width, height, bd);
+    } else if (!subpel_x_q3) {
+      const int16_t *kernel;
+      kernel = av1_get_interp_filter_subpel_kernel(filter, subpel_y_q3 << 1);
+      aom_highbd_convolve8_vert(ref8, ref_stride, CONVERT_TO_BYTEPTR(comp_pred),
+                                width, NULL, -1, kernel, 16, width, height, bd);
+    } else {
+      DECLARE_ALIGNED(16, uint16_t,
+                      temp[((MAX_SB_SIZE + 16) + 16) * MAX_SB_SIZE]);
+      const int16_t *kernel_x;
+      const int16_t *kernel_y;
+      int intermediate_height;
+      kernel_x = av1_get_interp_filter_subpel_kernel(filter, subpel_x_q3 << 1);
+      kernel_y = av1_get_interp_filter_subpel_kernel(filter, subpel_y_q3 << 1);
+      intermediate_height =
+          (((height - 1) * 8 + subpel_y_q3) >> 3) + filter.taps;
+      assert(intermediate_height <= (MAX_SB_SIZE * 2 + 16) + 16);
+      aom_highbd_convolve8_horiz(ref8 - ref_stride * ((filter.taps >> 1) - 1),
+                                 ref_stride, CONVERT_TO_BYTEPTR(temp),
+                                 MAX_SB_SIZE, kernel_x, 16, NULL, -1, width,
+                                 intermediate_height, bd);
+      aom_highbd_convolve8_vert(
+          CONVERT_TO_BYTEPTR(temp + MAX_SB_SIZE * ((filter.taps >> 1) - 1)),
+          MAX_SB_SIZE, CONVERT_TO_BYTEPTR(comp_pred), width, NULL, -1, kernel_y,
+          16, width, height, bd);
     }
   }
 }
 
 void aom_highbd_comp_avg_upsampled_pred_sse2(uint16_t *comp_pred,
                                              const uint8_t *pred8, int width,
-                                             int height, const uint8_t *ref8,
-                                             int ref_stride) {
-  const __m128i one = _mm_set1_epi16(1);
-  int i, j;
-  int stride = ref_stride << 3;
+                                             int height, int subpel_x_q3,
+                                             int subpel_y_q3,
+                                             const uint8_t *ref8,
+                                             int ref_stride, int bd) {
   uint16_t *pred = CONVERT_TO_SHORTPTR(pred8);
-  uint16_t *ref = CONVERT_TO_SHORTPTR(ref8);
-
-  if (width >= 8) {
-    // read 8 points at one time
-    for (i = 0; i < height; i++) {
-      for (j = 0; j < width; j += 8) {
-        __m128i s0 = _mm_cvtsi32_si128(*(const uint32_t *)ref);
-        __m128i s1 = _mm_cvtsi32_si128(*(const uint32_t *)(ref + 8));
-        __m128i s2 = _mm_cvtsi32_si128(*(const uint32_t *)(ref + 16));
-        __m128i s3 = _mm_cvtsi32_si128(*(const uint32_t *)(ref + 24));
-        __m128i s4 = _mm_cvtsi32_si128(*(const uint32_t *)(ref + 32));
-        __m128i s5 = _mm_cvtsi32_si128(*(const uint32_t *)(ref + 40));
-        __m128i s6 = _mm_cvtsi32_si128(*(const uint32_t *)(ref + 48));
-        __m128i s7 = _mm_cvtsi32_si128(*(const uint32_t *)(ref + 56));
-        __m128i p0 = _mm_loadu_si128((const __m128i *)pred);
-        __m128i t0, t1, t2, t3;
-
-        t0 = _mm_unpacklo_epi16(s0, s1);
-        t1 = _mm_unpacklo_epi16(s2, s3);
-        t2 = _mm_unpacklo_epi16(s4, s5);
-        t3 = _mm_unpacklo_epi16(s6, s7);
-        t0 = _mm_unpacklo_epi32(t0, t1);
-        t2 = _mm_unpacklo_epi32(t2, t3);
-        t0 = _mm_unpacklo_epi64(t0, t2);
-
-        p0 = _mm_adds_epu16(t0, p0);
-        p0 = _mm_adds_epu16(p0, one);
-        p0 = _mm_srli_epi16(p0, 1);
-
-        _mm_storeu_si128((__m128i *)(comp_pred), p0);
-        comp_pred += 8;
-        pred += 8;
-        ref += 8 * 8;
-      }
-      ref += stride - (width << 3);
-    }
-  } else {
-    // read 4 points at one time
-    for (i = 0; i < height; i++) {
-      for (j = 0; j < width; j += 4) {
-        __m128i s0 = _mm_cvtsi32_si128(*(const uint32_t *)ref);
-        __m128i s1 = _mm_cvtsi32_si128(*(const uint32_t *)(ref + 8));
-        __m128i s2 = _mm_cvtsi32_si128(*(const uint32_t *)(ref + 16));
-        __m128i s3 = _mm_cvtsi32_si128(*(const uint32_t *)(ref + 24));
-        __m128i p0 = _mm_loadl_epi64((const __m128i *)pred);
-        __m128i t0, t1;
-
-        t0 = _mm_unpacklo_epi16(s0, s1);
-        t1 = _mm_unpacklo_epi16(s2, s3);
-        t0 = _mm_unpacklo_epi32(t0, t1);
-
-        p0 = _mm_adds_epu16(t0, p0);
-        p0 = _mm_adds_epu16(p0, one);
-        p0 = _mm_srli_epi16(p0, 1);
-
-        _mm_storel_epi64((__m128i *)(comp_pred), p0);
-        comp_pred += 4;
-        pred += 4;
-        ref += 4 * 8;
-      }
-      ref += stride - (width << 3);
-    }
+  int n;
+  int i;
+  aom_highbd_upsampled_pred(comp_pred, width, height, subpel_x_q3, subpel_y_q3,
+                            ref8, ref_stride, bd);
+  /*The total number of pixels must be a multiple of 8 (e.g., 4x4).*/
+  assert(!(width * height & 7));
+  n = width * height >> 3;
+  for (i = 0; i < n; i++) {
+    __m128i s0 = _mm_loadu_si128((const __m128i *)comp_pred);
+    __m128i p0 = _mm_loadu_si128((const __m128i *)pred);
+    _mm_storeu_si128((__m128i *)comp_pred, _mm_avg_epu16(s0, p0));
+    comp_pred += 8;
+    pred += 8;
   }
 }

@@ -14,7 +14,20 @@
 #include "./av1_rtcd.h"
 #include "aom/aom_integer.h"
 
-int64_t av1_block_error_avx2(const int16_t *coeff, const int16_t *dqcoeff,
+static INLINE void read_coeff(const tran_low_t *coeff, intptr_t offset,
+                              __m256i *c) {
+  const tran_low_t *addr = coeff + offset;
+#if CONFIG_HIGHBITDEPTH
+  const __m256i x0 = _mm256_loadu_si256((const __m256i *)addr);
+  const __m256i x1 = _mm256_loadu_si256((const __m256i *)addr + 1);
+  const __m256i y = _mm256_packs_epi32(x0, x1);
+  *c = _mm256_permute4x64_epi64(y, 0xD8);
+#else
+  *c = _mm256_loadu_si256((const __m256i *)addr);
+#endif
+}
+
+int64_t av1_block_error_avx2(const tran_low_t *coeff, const tran_low_t *dqcoeff,
                              intptr_t block_size, int64_t *ssz) {
   __m256i sse_reg, ssz_reg, coeff_reg, dqcoeff_reg;
   __m256i exp_dqcoeff_lo, exp_dqcoeff_hi, exp_coeff_lo, exp_coeff_hi;
@@ -22,16 +35,16 @@ int64_t av1_block_error_avx2(const int16_t *coeff, const int16_t *dqcoeff,
   __m128i sse_reg128, ssz_reg128;
   int64_t sse;
   int i;
-  const __m256i zero_reg = _mm256_set1_epi16(0);
+  const __m256i zero_reg = _mm256_setzero_si256();
 
   // init sse and ssz registerd to zero
-  sse_reg = _mm256_set1_epi16(0);
-  ssz_reg = _mm256_set1_epi16(0);
+  sse_reg = _mm256_setzero_si256();
+  ssz_reg = _mm256_setzero_si256();
 
   for (i = 0; i < block_size; i += 16) {
     // load 32 bytes from coeff and dqcoeff
-    coeff_reg = _mm256_loadu_si256((const __m256i *)(coeff + i));
-    dqcoeff_reg = _mm256_loadu_si256((const __m256i *)(dqcoeff + i));
+    read_coeff(coeff, i, &coeff_reg);
+    read_coeff(dqcoeff, i, &dqcoeff_reg);
     // dqcoeff - coeff
     dqcoeff_reg = _mm256_sub_epi16(dqcoeff_reg, coeff_reg);
     // madd (dqcoeff - coeff)

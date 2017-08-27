@@ -42,14 +42,6 @@ class AV1InvTxfm2d : public ::testing::TestWithParam<AV1InvTxfm2dParam> {
     max_avg_error_ = GET_PARAM(3);
     txfm1d_size_ = libaom_test::get_txfm1d_size(tx_size_);
     txfm2d_size_ = txfm1d_size_ * txfm1d_size_;
-    count_ = 500;
-
-    input_ = reinterpret_cast<int16_t *>(
-        aom_memalign(16, sizeof(int16_t) * txfm2d_size_));
-    ref_input_ = reinterpret_cast<uint16_t *>(
-        aom_memalign(16, sizeof(uint16_t) * txfm2d_size_));
-    output_ = reinterpret_cast<int32_t *>(
-        aom_memalign(16, sizeof(int32_t) * txfm2d_size_));
   }
 
   void RunRoundtripCheck() {
@@ -59,52 +51,51 @@ class AV1InvTxfm2d : public ::testing::TestWithParam<AV1InvTxfm2dParam> {
         libaom_test::inv_txfm_func_ls[tx_size_];
     double avg_abs_error = 0;
     ACMRandom rnd(ACMRandom::DeterministicSeed());
-    for (int ci = 0; ci < count_; ci++) {
+
+    const int count = 500;
+
+    for (int ci = 0; ci < count; ci++) {
+      int16_t expected[64 * 64] = { 0 };
+      ASSERT_LT(txfm2d_size_, NELEMENTS(expected));
+
       for (int ni = 0; ni < txfm2d_size_; ++ni) {
         if (ci == 0) {
           int extreme_input = input_base - 1;
-          input_[ni] = extreme_input;  // extreme case
-          ref_input_[ni] = 0;
+          expected[ni] = extreme_input;  // extreme case
         } else {
-          input_[ni] = rnd.Rand16() % input_base;
-          ref_input_[ni] = 0;
+          expected[ni] = rnd.Rand16() % input_base;
         }
       }
 
-      fwd_txfm_func(input_, output_, txfm1d_size_, tx_type_, bd);
-      inv_txfm_func(output_, ref_input_, txfm1d_size_, tx_type_, bd);
+      int32_t coeffs[64 * 64] = { 0 };
+      ASSERT_LT(txfm2d_size_, NELEMENTS(coeffs));
+      fwd_txfm_func(expected, coeffs, txfm1d_size_, tx_type_, bd);
+
+      uint16_t actual[64 * 64] = { 0 };
+      ASSERT_LT(txfm2d_size_, NELEMENTS(actual));
+      inv_txfm_func(coeffs, actual, txfm1d_size_, tx_type_, bd);
 
       for (int ni = 0; ni < txfm2d_size_; ++ni) {
-        EXPECT_GE(max_error_, abs(input_[ni] - ref_input_[ni]));
+        EXPECT_GE(max_error_, abs(expected[ni] - actual[ni]));
       }
       avg_abs_error += compute_avg_abs_error<int16_t, uint16_t>(
-          input_, ref_input_, txfm2d_size_);
+          expected, actual, txfm2d_size_);
     }
 
-    avg_abs_error /= count_;
+    avg_abs_error /= count;
     // max_abs_avg_error comes from upper bound of
     // printf("txfm1d_size: %d accuracy_avg_abs_error: %f\n",
     // txfm1d_size_, avg_abs_error);
     EXPECT_GE(max_avg_error_, avg_abs_error);
   }
 
-  virtual void TearDown() {
-    aom_free(input_);
-    aom_free(output_);
-    aom_free(ref_input_);
-  }
-
  private:
-  int count_;
   int max_error_;
   double max_avg_error_;
   TX_TYPE tx_type_;
   TX_SIZE tx_size_;
   int txfm1d_size_;
   int txfm2d_size_;
-  int16_t *input_;
-  uint16_t *ref_input_;
-  int32_t *output_;
 };
 
 TEST_P(AV1InvTxfm2d, RunRoundtripCheck) { RunRoundtripCheck(); }

@@ -1237,8 +1237,10 @@ static void loop_restoration_rows(YV12_BUFFER_CONFIG *frame, AV1_COMMON *cm,
                                   int components_pattern, RestorationInfo *rsi,
                                   YV12_BUFFER_CONFIG *dst) {
   const int ywidth = frame->y_crop_width;
-  const int ystride = frame->y_stride;
+  const int yheight = frame->y_crop_height;
   const int uvwidth = frame->uv_crop_width;
+  const int uvheight = frame->uv_crop_height;
+  const int ystride = frame->y_stride;
   const int uvstride = frame->uv_stride;
   const int ystart = start_mi_row << MI_SIZE_LOG2;
   const int uvstart = ystart >> cm->subsampling_y;
@@ -1259,8 +1261,8 @@ static void loop_restoration_rows(YV12_BUFFER_CONFIG *frame, AV1_COMMON *cm,
 #endif  // CONFIG_HIGHBITDEPTH
   YV12_BUFFER_CONFIG dst_;
 
-  yend = AOMMIN(yend, cm->height);
-  uvend = AOMMIN(uvend, cm->subsampling_y ? (cm->height + 1) >> 1 : cm->height);
+  yend = AOMMIN(yend, yheight);
+  uvend = AOMMIN(uvend, uvheight);
 
   if (components_pattern == (1 << AOM_PLANE_Y)) {
     // Only y
@@ -1295,7 +1297,7 @@ static void loop_restoration_rows(YV12_BUFFER_CONFIG *frame, AV1_COMMON *cm,
     dst = &dst_;
     memset(dst, 0, sizeof(YV12_BUFFER_CONFIG));
     if (aom_realloc_frame_buffer(
-            dst, cm->width, cm->height, cm->subsampling_x, cm->subsampling_y,
+            dst, ywidth, yheight, cm->subsampling_x, cm->subsampling_y,
 #if CONFIG_HIGHBITDEPTH
             cm->use_highbitdepth,
 #endif
@@ -1307,7 +1309,7 @@ static void loop_restoration_rows(YV12_BUFFER_CONFIG *frame, AV1_COMMON *cm,
   if ((components_pattern >> AOM_PLANE_Y) & 1) {
     if (rsi[0].frame_restoration_type != RESTORE_NONE) {
       cm->rst_internal.ntiles = av1_get_rest_ntiles(
-          cm->width, cm->height, cm->rst_info[AOM_PLANE_Y].restoration_tilesize,
+          ywidth, yheight, cm->rst_info[AOM_PLANE_Y].restoration_tilesize,
           &cm->rst_internal.tile_width, &cm->rst_internal.tile_height,
           &cm->rst_internal.nhtiles, &cm->rst_internal.nvtiles);
       cm->rst_internal.rsi = &rsi[0];
@@ -1334,9 +1336,7 @@ static void loop_restoration_rows(YV12_BUFFER_CONFIG *frame, AV1_COMMON *cm,
   if ((components_pattern >> AOM_PLANE_U) & 1) {
     if (rsi[AOM_PLANE_U].frame_restoration_type != RESTORE_NONE) {
       cm->rst_internal.ntiles = av1_get_rest_ntiles(
-          ROUND_POWER_OF_TWO(cm->width, cm->subsampling_x),
-          ROUND_POWER_OF_TWO(cm->height, cm->subsampling_y),
-          cm->rst_info[AOM_PLANE_U].restoration_tilesize,
+          uvwidth, uvheight, cm->rst_info[AOM_PLANE_U].restoration_tilesize,
           &cm->rst_internal.tile_width, &cm->rst_internal.tile_height,
           &cm->rst_internal.nhtiles, &cm->rst_internal.nvtiles);
       cm->rst_internal.rsi = &rsi[AOM_PLANE_U];
@@ -1363,9 +1363,7 @@ static void loop_restoration_rows(YV12_BUFFER_CONFIG *frame, AV1_COMMON *cm,
   if ((components_pattern >> AOM_PLANE_V) & 1) {
     if (rsi[AOM_PLANE_V].frame_restoration_type != RESTORE_NONE) {
       cm->rst_internal.ntiles = av1_get_rest_ntiles(
-          ROUND_POWER_OF_TWO(cm->width, cm->subsampling_x),
-          ROUND_POWER_OF_TWO(cm->height, cm->subsampling_y),
-          cm->rst_info[AOM_PLANE_V].restoration_tilesize,
+          uvwidth, uvheight, cm->rst_info[AOM_PLANE_V].restoration_tilesize,
           &cm->rst_internal.tile_width, &cm->rst_internal.tile_height,
           &cm->rst_internal.nhtiles, &cm->rst_internal.nvtiles);
       cm->rst_internal.rsi = &rsi[AOM_PLANE_V];
@@ -1402,11 +1400,16 @@ void av1_loop_restoration_frame(YV12_BUFFER_CONFIG *frame, AV1_COMMON *cm,
                                 int partial_frame, YV12_BUFFER_CONFIG *dst) {
   int start_mi_row, end_mi_row, mi_rows_to_filter;
   start_mi_row = 0;
+#if CONFIG_FRAME_SUPERRES
+  mi_rows_to_filter =
+      ALIGN_POWER_OF_TWO(cm->superres_upscaled_height, 3) >> MI_SIZE_LOG2;
+#else
   mi_rows_to_filter = cm->mi_rows;
-  if (partial_frame && cm->mi_rows > 8) {
-    start_mi_row = cm->mi_rows >> 1;
+#endif  // CONFIG_FRAME_SUPERRES
+  if (partial_frame && mi_rows_to_filter > 8) {
+    start_mi_row = mi_rows_to_filter >> 1;
     start_mi_row &= 0xfffffff8;
-    mi_rows_to_filter = AOMMAX(cm->mi_rows / 8, 8);
+    mi_rows_to_filter = AOMMAX(mi_rows_to_filter / 8, 8);
   }
   end_mi_row = start_mi_row + mi_rows_to_filter;
   loop_restoration_init(&cm->rst_internal, cm->frame_type == KEY_FRAME);

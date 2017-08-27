@@ -45,25 +45,24 @@ function (setup_aom_ports_targets)
   elseif ("${AOM_TARGET_CPU}" MATCHES "arm")
     add_library(aom_ports OBJECT ${AOM_PORTS_SOURCES_ARM})
     set(aom_ports_has_symbols 1)
-    list(APPEND AOM_LIB_TARGETS aom_ports)
     target_sources(aom PRIVATE $<TARGET_OBJECTS:aom_ports>)
   endif ()
 
   if (aom_ports_has_symbols)
-    target_sources(aom_ports PUBLIC ${AOM_PORTS_INCLUDES})
+    target_sources(aom_ports PRIVATE ${AOM_PORTS_INCLUDES})
 
     if ("${AOM_TARGET_CPU}" STREQUAL "x86" OR
         "${AOM_TARGET_CPU}" STREQUAL "x86_64")
-      target_sources(aom_ports PUBLIC ${AOM_PORTS_INCLUDES_X86})
+      target_sources(aom_ports PRIVATE ${AOM_PORTS_INCLUDES_X86})
     endif ()
 
     set(AOM_LIB_TARGETS ${AOM_LIB_TARGETS} PARENT_SCOPE)
   else ()
-    target_sources(aom PUBLIC ${AOM_PORTS_INCLUDES})
+    target_sources(aom PRIVATE ${AOM_PORTS_INCLUDES})
 
     if ("${AOM_TARGET_CPU}" STREQUAL "x86" OR
         "${AOM_TARGET_CPU}" STREQUAL "x86_64")
-      target_sources(aom PUBLIC ${AOM_PORTS_INCLUDES_X86})
+      target_sources(aom PRIVATE ${AOM_PORTS_INCLUDES_X86})
     endif ()
   endif ()
 endfunction ()

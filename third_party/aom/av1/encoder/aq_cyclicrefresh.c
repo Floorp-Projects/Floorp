@@ -352,10 +352,7 @@ void av1_cyclic_refresh_check_golden_update(AV1_COMP *const cpi) {
   // For video conference clips, if the background has high motion in current
   // frame because of the camera movement, set this frame as the golden frame.
   // Use 70% and 5% as the thresholds for golden frame refreshing.
-  // Also, force this frame as a golden update frame if this frame will change
-  // the resolution (av1_resize_pending != 0).
-  if (av1_resize_pending(cpi) ||
-      (cnt1 * 10 > (70 * rows * cols) && cnt2 * 20 < cnt1)) {
+  if (cnt1 * 10 > (70 * rows * cols) && cnt2 * 20 < cnt1) {
     av1_cyclic_refresh_set_golden_update(cpi);
     rc->frames_till_gf_update_due = rc->baseline_gf_interval;
 

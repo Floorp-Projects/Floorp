@@ -698,7 +698,6 @@ var EnvironmentData = {
 
   appendAddonSubsectionTitle(section, table) {
     let caption = document.createElement("caption");
-    caption.setAttribute("class", "addon-caption");
     caption.appendChild(document.createTextNode(section));
     table.appendChild(caption);
   },
@@ -848,7 +847,6 @@ var SlowSQL = {
       this.renderTable(table, mainThread);
 
       slowSqlDiv.appendChild(table);
-      slowSqlDiv.appendChild(document.createElement("hr"));
     }
 
     // Other threads
@@ -858,7 +856,6 @@ var SlowSQL = {
       this.renderTable(table, otherThreads);
 
       slowSqlDiv.appendChild(table);
-      slowSqlDiv.appendChild(document.createElement("hr"));
     }
   },
 
@@ -1176,7 +1173,7 @@ var Histogram = {
     outerDiv.id = aName;
 
     let divTitle = document.createElement("div");
-    divTitle.className = "histogram-title";
+    divTitle.classList.add("histogram-title");
     divTitle.appendChild(document.createTextNode(aName));
     outerDiv.appendChild(divTitle);
 
@@ -1185,6 +1182,7 @@ var Histogram = {
                 this.hgramSumCaption + " = " + hgram.sum;
 
     let divStats = document.createElement("div");
+    divStats.classList.add("histogram-stats");
     divStats.appendChild(document.createTextNode(stats));
     outerDiv.appendChild(divStats);
 
@@ -1631,7 +1629,7 @@ var KeyedHistogram = {
     outerDiv.id = id;
 
     let divTitle = document.createElement("div");
-    divTitle.className = "keyed-histogram-title";
+    divTitle.classList.add("keyed-title");
     divTitle.appendChild(document.createTextNode(id));
     outerDiv.appendChild(divTitle);
 
@@ -1750,7 +1748,8 @@ var KeyedScalars = {
       let container = document.createElement("div");
       container.classList.add("keyed-scalar");
       container.id = scalar;
-      let scalarNameSection = document.createElement("h2");
+      let scalarNameSection = document.createElement("p");
+      scalarNameSection.classList.add("keyed-title");
       scalarNameSection.appendChild(document.createTextNode(scalar));
       container.appendChild(scalarNameSection);
       // Populate the section with the key-value pairs from the scalar.
@@ -1866,6 +1865,9 @@ function adjustHeaderState(title = null) {
   let selected = document.querySelector(".category.selected .category-name");
   let selectedTitle = selected.textContent.trim();
   document.getElementById("sectionTitle").textContent = title ? title : selectedTitle;
+  if (selected.parentElement.id === "category-home") {
+    selectedTitle = bundle.GetStringFromName("allSections");
+  }
   let search = document.getElementById("search");
   let placeholder = bundle.formatStringFromName("filterPlaceholder", [ selectedTitle ], 1);
   search.setAttribute("placeholder", placeholder);
@@ -1907,8 +1909,6 @@ function show(selected) {
     }
   }
 
-  adjustHeaderState();
-
   let current_button = document.querySelector(".category.selected");
   if (current_button == selected)
     return;
@@ -1923,6 +1923,7 @@ function show(selected) {
   // Hack because subsection text appear selected. See Bug 1375114.
   document.getSelection().empty();
 
+  adjustHeaderState();
   displayProcessesSelector(selectedValue);
   adjustSearchState();
   changeUrlPath(selectedValue);
@@ -2059,7 +2060,12 @@ function urlStateRestore() {
 }
 
 function openJsonInFirefoxJsonViewer(json) {
-  window.open("data:application/json;base64," + btoa(json));
+  json = unescape(encodeURIComponent(json));
+  try {
+    window.open("data:application/json;base64," + btoa(json));
+  } catch (e) {
+    show(document.querySelector(".category[value=raw-payload-section]"));
+  }
 }
 
 function onLoad() {

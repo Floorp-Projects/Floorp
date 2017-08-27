@@ -16,6 +16,7 @@ use euclid::Size2D;
 use fnv::FnvHashMap;
 use font_metrics::FontMetricsProvider;
 #[cfg(feature = "gecko")] use gecko_bindings::structs;
+use parallel::{STACK_SAFETY_MARGIN_KB, STYLE_THREAD_STACK_SIZE_KB};
 #[cfg(feature = "servo")] use parking_lot::RwLock;
 use properties::ComputedValues;
 #[cfg(feature = "servo")] use properties::PropertyId;
@@ -137,9 +138,6 @@ pub struct SharedStyleContext<'a> {
     /// them.
     pub timer: Timer,
 
-    /// The QuirksMode state which the document needs to be rendered with
-    pub quirks_mode: QuirksMode,
-
     /// Flags controlling how we traverse the tree.
     pub traversal_flags: TraversalFlags,
 
@@ -173,6 +171,11 @@ impl<'a> SharedStyleContext<'a> {
     /// The device pixel ratio
     pub fn device_pixel_ratio(&self) -> ScaleFactor<f32, CSSPixel, DevicePixel> {
         self.stylist.device().device_pixel_ratio()
+    }
+
+    /// The quirks mode of the document.
+    pub fn quirks_mode(&self) -> QuirksMode {
+        self.stylist.quirks_mode()
     }
 }
 
@@ -383,14 +386,14 @@ impl fmt::Display for TraversalStatistics {
 
 impl TraversalStatistics {
     /// Computes the traversal time given the start time in seconds.
-    pub fn finish<E, D>(&mut self, traversal: &D, start: f64)
+    pub fn finish<E, D>(&mut self, traversal: &D, parallel: bool, start: f64)
         where E: TElement,
               D: DomTraversal<E>,
     {
         let threshold = traversal.shared_context().options.style_statistics_threshold;
         let stylist = traversal.shared_context().stylist;
 
-        self.is_parallel = Some(traversal.is_parallel());
+        self.is_parallel = Some(parallel);
         self.is_large = Some(self.elements_traversed as usize >= threshold);
         self.traversal_time_ms = (time::precise_time_s() - start) * 1000.0;
         self.selectors = stylist.num_selectors() as u32;
@@ -603,6 +606,72 @@ where
     }
 }
 
+
+/// A helper type for stack limit checking.  This assumes that stacks grow
+/// down, which is true for all non-ancient CPU architectures.
+pub struct StackLimitChecker {
+   lower_limit: usize
+}
+
+impl StackLimitChecker {
+    /// Create a new limit checker, for this thread, allowing further use
+    /// of up to |stack_size| bytes beyond (below) the current stack pointer.
+    #[inline(never)]
+    pub fn new(stack_size_limit: usize) -> Self {
+        StackLimitChecker {
+            lower_limit: StackLimitChecker::get_sp() - stack_size_limit
+        }
+    }
+
+    /// Checks whether the previously stored stack limit has now been exceeded.
+    #[inline(never)]
+    pub fn limit_exceeded(&self) -> bool {
+        let curr_sp = StackLimitChecker::get_sp();
+
+        // Do some sanity-checking to ensure that our invariants hold, even in
+        // the case where we've exceeded the soft limit.
+        //
+        // The correctness of depends on the assumption that no stack wraps
+        // around the end of the address space.
+        if cfg!(debug_assertions) {
+            // Compute the actual bottom of the stack by subtracting our safety
+            // margin from our soft limit. Note that this will be slightly below
+            // the actual bottom of the stack, because there are a few initial
+            // frames on the stack before we do the measurement that computes
+            // the limit.
+            let stack_bottom = self.lower_limit - STACK_SAFETY_MARGIN_KB * 1024;
+
+            // The bottom of the stack should be below the current sp. If it
+            // isn't, that means we've either waited too long to check the limit
+            // and burned through our safety margin (in which case we probably
+            // would have segfaulted by now), or we're using a limit computed for
+            // a different thread.
+            debug_assert!(stack_bottom < curr_sp);
+
+            // Compute the distance between the current sp and the bottom of
+            // the stack, and compare it against the current stack. It should be
+            // no further from us than the total stack size. We allow some slop
+            // to handle the fact that stack_bottom is a bit further than the
+            // bottom of the stack, as discussed above.
+            let distance_to_stack_bottom = curr_sp - stack_bottom;
+            let max_allowable_distance = (STYLE_THREAD_STACK_SIZE_KB + 10) * 1024;
+            debug_assert!(distance_to_stack_bottom <= max_allowable_distance);
+        }
+
+        // The actual bounds check.
+        curr_sp <= self.lower_limit
+    }
+
+    // Technically, rustc can optimize this away, but shouldn't for now.
+    // We should fix this once black_box is stable.
+    #[inline(always)]
+    fn get_sp() -> usize {
+        let mut foo: usize = 42;
+        (&mut foo as *mut usize) as usize
+    }
+}
+
+
 /// A thread-local style context.
 ///
 /// This context contains data that needs to be used during restyling, but is
@@ -637,6 +706,9 @@ pub struct ThreadLocalStyleContext<E: TElement> {
     /// The struct used to compute and cache font metrics from style
     /// for evaluation of the font-relative em/ch units and font-size
     pub font_metrics_provider: E::FontMetricsProvider,
+    /// A checker used to ensure that parallel.rs does not recurse indefinitely
+    /// even on arbitrarily deep trees.  See Gecko bug 1376883.
+    pub stack_limit_checker: StackLimitChecker,
 }
 
 impl<E: TElement> ThreadLocalStyleContext<E> {
@@ -652,6 +724,8 @@ impl<E: TElement> ThreadLocalStyleContext<E> {
             statistics: TraversalStatistics::default(),
             current_element_info: None,
             font_metrics_provider: E::FontMetricsProvider::create_from(shared),
+            stack_limit_checker: StackLimitChecker::new(
+                (STYLE_THREAD_STACK_SIZE_KB - STACK_SAFETY_MARGIN_KB) * 1024),
         }
     }
 
@@ -666,6 +740,8 @@ impl<E: TElement> ThreadLocalStyleContext<E> {
             statistics: TraversalStatistics::default(),
             current_element_info: None,
             font_metrics_provider: E::FontMetricsProvider::create_from(shared),
+            stack_limit_checker: StackLimitChecker::new(
+                (STYLE_THREAD_STACK_SIZE_KB - STACK_SAFETY_MARGIN_KB) * 1024),
         }
     }
 

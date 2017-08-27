@@ -301,6 +301,12 @@ void Gecko_nsFont_InitSystem(nsFont* dst, int32_t font_id,
                              const nsStyleFont* font, RawGeckoPresContextBorrowed pres_context);
 void Gecko_nsFont_Destroy(nsFont* dst);
 
+nsTArray<unsigned int>* Gecko_AppendFeatureValueHashEntry(
+  gfxFontFeatureValueSet* value_set, nsIAtom* family, uint32_t alternate, nsIAtom* name);
+void Gecko_nsFont_SetFontFeatureValuesLookup(nsFont* font,
+                                             const RawGeckoPresContext* pres_context);
+void Gecko_nsFont_ResetFontFeatureValuesLookup(nsFont* font);
+
 // Font variant alternates
 void Gecko_ClearAlternateValues(nsFont* font, size_t length);
 void Gecko_AppendAlternateValues(nsFont* font, uint32_t alternate_name, nsIAtom* atom);

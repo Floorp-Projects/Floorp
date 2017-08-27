@@ -227,9 +227,19 @@ function promisePageActionPanelOpen() {
   if (BrowserPageActions.panelNode.state == "open") {
     return Promise.resolve();
   }
-  let shownPromise = promisePageActionPanelShown();
-  EventUtils.synthesizeMouseAtCenter(BrowserPageActions.mainButtonNode, {});
-  return shownPromise;
+  // The main page action button is hidden for some URIs, so make sure it's
+  // visible before trying to click it.
+  let dwu = window.QueryInterface(Ci.nsIInterfaceRequestor)
+                  .getInterface(Ci.nsIDOMWindowUtils);
+  return BrowserTestUtils.waitForCondition(() => {
+    info("Waiting for main page action button to have non-0 size");
+    let bounds = dwu.getBoundsWithoutFlushing(BrowserPageActions.mainButtonNode);
+    return bounds.width > 0 && bounds.height > 0;
+  }).then(() => {
+    let shownPromise = promisePageActionPanelShown();
+    EventUtils.synthesizeMouseAtCenter(BrowserPageActions.mainButtonNode, {});
+    return shownPromise;
+  });
 }
 
 function promisePageActionPanelShown() {

@@ -363,44 +363,63 @@ typedef struct aom_codec_enc_cfg {
    */
   unsigned int rc_dropframe_thresh;
 
-  /*!\brief Enable/disable spatial resampling, if supported by the codec.
+  /*!\brief Mode for spatial resampling, if supported by the codec.
    *
    * Spatial resampling allows the codec to compress a lower resolution
-   * version of the frame, which is then upscaled by the encoder to the
+   * version of the frame, which is then upscaled by the decoder to the
    * correct presentation resolution. This increases visual quality at
    * low data rates, at the expense of CPU time on the encoder/decoder.
    */
-  unsigned int rc_resize_allowed;
+  unsigned int rc_resize_mode;
 
-  /*!\brief Internal coded frame width.
+  /*!\brief Frame resize numerator.
    *
-   * If spatial resampling is enabled this specifies the width of the
-   * encoded frame.
+   * The numerator for resize to use, assuming 16 as the denominator.
+   *
+   * Valid numerators are  8 - 16 for now.
    */
-  unsigned int rc_scaled_width;
+  unsigned int rc_resize_numerator;
 
-  /*!\brief Internal coded frame height.
+  /*!\brief Keyframe resize numerator.
    *
-   * If spatial resampling is enabled this specifies the height of the
-   * encoded frame.
+   * The numerator for resize to use, assuming 16 as the denominator.
+   *
+   * Valid numerators are  8 - 16 for now.
    */
-  unsigned int rc_scaled_height;
+  unsigned int rc_resize_kf_numerator;
 
-  /*!\brief Spatial resampling up watermark.
+  /*!\brief Frame super-resolution scaling mode.
    *
-   * This threshold is described as a percentage of the target data buffer.
-   * When the data buffer rises above this percentage of fullness, the
-   * encoder will step up to a higher resolution version of the frame.
+   * Similar to spatial resampling, frame super-resolution integrates
+   * upscaling after the encode/decode process. Taking control of upscaling and
+   * using restoration filters should allow it to outperform normal resizing.
+   *
+   * Mode 0 is SUPERRES_NONE, mode 1 is SUPERRES_FIXED, and mode 2 is
+   * SUPERRES_DYNAMIC.
    */
-  unsigned int rc_resize_up_thresh;
+  unsigned int rc_superres_mode;
 
-  /*!\brief Spatial resampling down watermark.
+  /*!\brief Frame super-resolution numerator.
    *
-   * This threshold is described as a percentage of the target data buffer.
-   * When the data buffer falls below this percentage of fullness, the
-   * encoder will step down to a lower resolution version of the frame.
+   * The numerator for superres to use. If fixed it will only change if the
+   * cumulative scale change over resizing and superres is greater than 1/2;
+   * this forces superres to reduce scaling.
+   *
+   * Valid numerators are 8 to 16.
+   *
+   * Ignored by SUPERRES_DYNAMIC.
    */
-  unsigned int rc_resize_down_thresh;
+  unsigned int rc_superres_numerator;
+
+  /*!\brief Keyframe super-resolution numerator.
+   *
+   * The numerator for superres to use. If fixed it will only change if the
+   * cumulative scale change over resizing and superres is greater than 1/2;
+   * this forces superres to reduce scaling.
+   *
+   * Valid numerators are 8 - 16 for now.
+   */
+  unsigned int rc_superres_kf_numerator;
 
   /*!\brief Rate control algorithm to use.
    *
@@ -574,6 +593,14 @@ typedef struct aom_codec_enc_cfg {
    * equal to kf_max_dist for a fixed interval.
    */
   unsigned int kf_max_dist;
+
+  /*!\brief Tile coding mode
+   *
+   * This value indicates the tile coding mode.
+   * A value of 0 implies a normal non-large-scale tile coding. A value of 1
+   * implies a large-scale tile coding.
+   */
+  unsigned int large_scale_tile;
 } aom_codec_enc_cfg_t; /**< alias for struct aom_codec_enc_cfg */
 
 /*!\brief Initialize an encoder instance
