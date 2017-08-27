@@ -23,29 +23,38 @@ class Documentation(MachCommandBase):
     """Helps manage in-tree documentation."""
 
     @Command('doc', category='devenv',
-        description='Generate and display documentation from the tree.')
+             description='Generate and display documentation from the tree.')
     @CommandArgument('what', nargs='*', metavar='DIRECTORY [, DIRECTORY]',
-        help='Path(s) to documentation to build and display.')
+                     help='Path(s) to documentation to build and display.')
     @CommandArgument('--format', default='html',
-        help='Documentation format to write.')
+                     help='Documentation format to write.')
     @CommandArgument('--outdir', default=None, metavar='DESTINATION',
-        help='Where to write output.')
-    @CommandArgument('--no-open', dest='auto_open', default=True, action='store_false',
-        help="Don't automatically open HTML docs in a browser.")
+                     help='Where to write output.')
+    @CommandArgument('--archive', action='store_true',
+                     help='Write a gzipped tarball of generated docs')
+    @CommandArgument('--no-open', dest='auto_open', default=True,
+                     action='store_false',
+                     help="Don't automatically open HTML docs in a browser.")
     @CommandArgument('--http', const=':6666', metavar='ADDRESS', nargs='?',
-        help='Serve documentation on an HTTP server, e.g. ":6666".')
-    def build_docs(self, what=None, format=None, outdir=None, auto_open=True, http=None):
+                     help='Serve documentation on an HTTP server, '
+                          'e.g. ":6666".')
+    @CommandArgument('--upload', action='store_true',
+                     help='Upload generated files to S3')
+    def build_docs(self, what=None, format=None, outdir=None, auto_open=True,
+                   http=None, archive=False, upload=False):
         self._activate_virtualenv()
         self.virtualenv_manager.install_pip_package('sphinx_rtd_theme==0.1.6')
 
         import sphinx
         import webbrowser
+        import moztreedocs
 
         if not outdir:
             outdir = os.path.join(self.topobjdir, 'docs')
         if not what:
             what = [os.path.join(self.topsrcdir, 'tools')]
-        outdir = os.path.join(outdir, format)
+
+        format_outdir = os.path.join(outdir, format)
 
         generated = []
         failed = []
@@ -57,9 +66,8 @@ class Documentation(MachCommandBase):
                 failed.append((path, 'could not find docs at this location'))
                 continue
 
-            # find project name to use as a namespace within `outdir`
-            project = self._find_project_name(docdir)
-            savedir = os.path.join(outdir, project)
+            props = self._project_properties(docdir)
+            savedir = os.path.join(format_outdir, props['project'])
 
             args = [
                 'sphinx',
@@ -72,6 +80,15 @@ class Documentation(MachCommandBase):
                 failed.append((path, 'sphinx return code %d' % result))
             else:
                 generated.append(savedir)
+
+            if archive:
+                archive_path = os.path.join(outdir,
+                                            '%s.tar.gz' % props['project'])
+                moztreedocs.create_tarball(archive_path, savedir)
+                print('Archived to %s' % archive_path)
+
+            if upload:
+                self._s3_upload(savedir, props['project'], props['version'])
 
             index_path = os.path.join(savedir, 'index.html')
             if not http and auto_open and os.path.isfile(index_path):
@@ -90,18 +107,28 @@ class Documentation(MachCommandBase):
             if len(addr) != 2:
                 return die('invalid address: %s' % http)
 
-            httpd = mozhttpd.MozHttpd(host=addr[0], port=addr[1], docroot=outdir)
+            httpd = mozhttpd.MozHttpd(host=addr[0], port=addr[1],
+                                      docroot=format_outdir)
             print('listening on %s:%d' % addr)
             httpd.start(block=True)
 
-    def _find_project_name(self, path):
+    def _project_properties(self, path):
         import imp
         path = os.path.join(path, 'conf.py')
         with open(path, 'r') as fh:
             conf = imp.load_module('doc_conf', fh, path,
                                    ('.py', 'r', imp.PY_SOURCE))
 
-        return conf.project.replace(' ', '_')
+        # Prefer the Mozilla project name, falling back to Sphinx's
+        # default variable if it isn't defined.
+        project = getattr(conf, 'moz_project_name', None)
+        if not project:
+            project = conf.project.replace(' ', '_')
+
+        return {
+            'project': project,
+            'version': getattr(conf, 'version', None)
+        }
 
     def _find_doc_dir(self, path):
         search_dirs = ('doc', 'docs')
@@ -110,74 +137,31 @@ class Documentation(MachCommandBase):
             if os.path.isfile(os.path.join(p, 'conf.py')):
                 return p
 
-    @Command('doc-upload', category='devenv',
-        description='Generate and upload documentation from the tree.')
-    @CommandArgument('what', nargs='*', metavar='DIRECTORY [, DIRECTORY]',
-        help='Path(s) to documentation to build and upload.')
-    def upload_docs(self, what=None):
-        self._activate_virtualenv()
+    def _s3_upload(self, root, project, version=None):
         self.virtualenv_manager.install_pip_package('boto3==1.4.4')
 
-        outdir = os.path.join(self.topobjdir, 'docs')
-        self.build_docs(what=what, outdir=outdir, format='html')
+        from moztreedocs import distribution_files
+        from moztreedocs.upload import s3_upload
 
-        self.s3_upload(os.path.join(outdir, 'html', 'Mozilla_Source_Tree_Docs'))
+        # Files are uploaded to multiple locations:
+        #
+        # <project>/latest
+        # <project>/<version>
+        #
+        # This allows multiple projects and versions to be stored in the
+        # S3 bucket.
 
-    def s3_upload(self, root):
-        """Upload the contents of outdir recursively to S3"""
-        import boto3
-        import mimetypes
-        import requests
+        files = list(distribution_files(root))
 
-        region = 'us-west-2'
-        level = os.environ.get('MOZ_SCM_LEVEL', '1')
-        bucket = {
-            '1': 'gecko-docs.mozilla.org-l1',
-            '2': 'gecko-docs.mozilla.org-l2',
-            '3': 'gecko-docs.mozilla.org',
-        }[level]
-        secrets_url = 'http://taskcluster/secrets/v1/secret/'
-        secrets_url += 'project/releng/gecko/build/level-{}/gecko-docs-upload'.format(level)
+        s3_upload(files, key_prefix='%s/latest' % project)
+        if version:
+            s3_upload(files, key_prefix='%s/%s' % (project, version))
 
-        # Get the credentials from the TC secrets service.  Note that these
-        # differ per SCM level
-        if 'TASK_ID' in os.environ:
-            print("Using AWS credentials from the secrets service")
-            session = requests.Session()
-            res = session.get(secrets_url)
-            res.raise_for_status()
-            secret = res.json()['secret']
-            session = boto3.session.Session(
-                aws_access_key_id=secret['AWS_ACCESS_KEY_ID'],
-                aws_secret_access_key=secret['AWS_SECRET_ACCESS_KEY'],
-                region_name=region)
-        else:
-            print("Trying to use your AWS credentials..")
-            session = boto3.session.Session(region_name=region)
-        s3 = session.client('s3')
+        # Until we redirect / to main/latest, upload the main docs
+        # to the root.
+        if project == 'main':
+            s3_upload(files)
 
-        try:
-            old_cwd = os.getcwd()
-            os.chdir(root)
-
-            for dir, dirs, filenames in os.walk('.'):
-                if dir == '.':
-                    # ignore a few things things in the root directory
-                    bad = [d for d in dirs if d.startswith('.') or d in ('_venv', '_staging')]
-                    for b in bad:
-                        dirs.remove(b)
-                for filename in filenames:
-                    pathname = os.path.join(dir, filename)[2:]  # strip '.''
-                    content_type, content_encoding = mimetypes.guess_type(pathname)
-                    extra_args = {}
-                    if content_type:
-                        extra_args['ContentType'] = content_type
-                    if content_encoding:
-                        extra_args['ContentEncoding'] = content_encoding
-                    print('uploading', pathname)
-                    s3.upload_file(pathname, bucket, pathname, ExtraArgs=extra_args)
-        finally:
-            os.chdir(old_cwd)
 
 def die(msg, exit_code=1):
     msg = '%s: %s' % (sys.argv[0], msg)

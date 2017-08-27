@@ -508,17 +508,19 @@ SIMD_INLINE v256 v256_shr_s32(v256 a, unsigned int c) {
    to enforce that. */
 #define v256_shl_n_byte(a, n)                                                 \
   ((n) < 16 ? v256_from_v128(v128_or(v128_shl_n_byte(a.hi, n),                \
-                                     v128_shr_n_byte(a.lo, 16 - (n))),        \
+                                     v128_shr_n_byte(a.lo, (16 - (n)) & 31)), \
                              v128_shl_n_byte(a.lo, (n)))                      \
-            : v256_from_v128((n) > 16 ? v128_shl_n_byte(a.lo, (n)-16) : a.lo, \
-                             v128_zero()))
+            : v256_from_v128(                                                 \
+                  (n) > 16 ? v128_shl_n_byte(a.lo, ((n)-16) & 31) : a.lo,     \
+                  v128_zero()))
 
-#define v256_shr_n_byte(a, n)                                          \
-  ((n) < 16 ? v256_from_v128(v128_shr_n_byte(a.hi, n),                 \
-                             v128_or(v128_shr_n_byte(a.lo, n),         \
-                                     v128_shl_n_byte(a.hi, 16 - (n)))) \
-            : v256_from_v128(v128_zero(),                              \
-                             (n) > 16 ? v128_shr_n_byte(a.hi, (n)-16) : a.hi))
+#define v256_shr_n_byte(a, n)                                                 \
+  ((n) < 16 ? v256_from_v128(v128_shr_n_byte(a.hi, n),                        \
+                             v128_or(v128_shr_n_byte(a.lo, n),                \
+                                     v128_shl_n_byte(a.hi, (16 - (n)) & 31))) \
+            : v256_from_v128(                                                 \
+                  v128_zero(),                                                \
+                  (n) > 16 ? v128_shr_n_byte(a.hi, ((n)-16) & 31) : a.hi))
 
 #define v256_align(a, b, c) \
   ((c) ? v256_or(v256_shr_n_byte(b, c), v256_shl_n_byte(a, 32 - (c))) : b)

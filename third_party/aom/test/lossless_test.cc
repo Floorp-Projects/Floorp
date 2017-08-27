@@ -23,8 +23,8 @@ namespace {
 const int kMaxPsnr = 100;
 
 class LosslessTestLarge
-    : public ::libaom_test::EncoderTest,
-      public ::libaom_test::CodecTestWithParam<libaom_test::TestMode> {
+    : public ::libaom_test::CodecTestWithParam<libaom_test::TestMode>,
+      public ::libaom_test::EncoderTest {
  protected:
   LosslessTestLarge()
       : EncoderTest(GET_PARAM(0)), psnr_(kMaxPsnr), nframes_(0),

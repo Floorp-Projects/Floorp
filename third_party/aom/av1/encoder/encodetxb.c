@@ -70,38 +70,43 @@ static void write_golomb(aom_writer *w, int level) {
 }
 
 void av1_write_coeffs_txb(const AV1_COMMON *const cm, MACROBLOCKD *xd,
-                          aom_writer *w, int block, int plane,
-                          const tran_low_t *tcoeff, uint16_t eob,
-                          TXB_CTX *txb_ctx) {
+                          aom_writer *w, int blk_row, int blk_col, int block,
+                          int plane, TX_SIZE tx_size, const tran_low_t *tcoeff,
+                          uint16_t eob, TXB_CTX *txb_ctx) {
   aom_prob *nz_map;
   aom_prob *eob_flag;
   MB_MODE_INFO *mbmi = &xd->mi[0]->mbmi;
   const PLANE_TYPE plane_type = get_plane_type(plane);
-  const TX_SIZE tx_size = get_tx_size(plane, xd);
-  const TX_TYPE tx_type = get_tx_type(plane_type, xd, block, tx_size);
-  const SCAN_ORDER *const scan_order =
-      get_scan(cm, tx_size, tx_type, is_inter_block(mbmi));
+  const TX_SIZE txs_ctx = get_txsize_context(tx_size);
+  const TX_TYPE tx_type =
+      av1_get_tx_type(plane_type, xd, blk_row, blk_col, block, tx_size);
+  const SCAN_ORDER *const scan_order = get_scan(cm, tx_size, tx_type, mbmi);
   const int16_t *scan = scan_order->scan;
+  const int16_t *iscan = scan_order->iscan;
   int c;
   int is_nz;
   const int bwl = b_width_log2_lookup[txsize_to_bsize[tx_size]] + 2;
+  const int height = tx_size_high[tx_size];
   const int seg_eob = tx_size_2d[tx_size];
-  uint8_t txb_mask[32 * 32] = { 0 };
   uint16_t update_eob = 0;
 
-  aom_write(w, eob == 0, cm->fc->txb_skip[tx_size][txb_ctx->txb_skip_ctx]);
+  (void)blk_row;
+  (void)blk_col;
+
+  aom_write(w, eob == 0, cm->fc->txb_skip[txs_ctx][txb_ctx->txb_skip_ctx]);
 
   if (eob == 0) return;
 #if CONFIG_TXK_SEL
-  av1_write_tx_type(cm, xd, block, plane, w);
+  av1_write_tx_type(cm, xd, blk_row, blk_col, block, plane,
+                    get_min_tx_size(tx_size), w);
 #endif
 
-  nz_map = cm->fc->nz_map[tx_size][plane_type];
-  eob_flag = cm->fc->eob_flag[tx_size][plane_type];
+  nz_map = cm->fc->nz_map[txs_ctx][plane_type];
+  eob_flag = cm->fc->eob_flag[txs_ctx][plane_type];
 
   for (c = 0; c < eob; ++c) {
-    int coeff_ctx = get_nz_map_ctx(tcoeff, txb_mask, scan[c], bwl);
-    int eob_ctx = get_eob_ctx(tcoeff, scan[c], bwl);
+    int coeff_ctx = get_nz_map_ctx(tcoeff, scan[c], bwl, height, iscan);
+    int eob_ctx = get_eob_ctx(tcoeff, scan[c], txs_ctx);
 
     tran_low_t v = tcoeff[scan[c]];
     is_nz = (v != 0);
@@ -113,12 +118,11 @@ void av1_write_coeffs_txb(const AV1_COMMON *const cm, MACROBLOCKD *xd,
     if (is_nz) {
       aom_write(w, c == (eob - 1), eob_flag[eob_ctx]);
     }
-    txb_mask[scan[c]] = 1;
   }
 
   int i;
   for (i = 0; i < NUM_BASE_LEVELS; ++i) {
-    aom_prob *coeff_base = cm->fc->coeff_base[tx_size][plane_type][i];
+    aom_prob *coeff_base = cm->fc->coeff_base[txs_ctx][plane_type][i];
 
     update_eob = 0;
     for (c = eob - 1; c >= 0; --c) {
@@ -129,7 +133,7 @@ void av1_write_coeffs_txb(const AV1_COMMON *const cm, MACROBLOCKD *xd,
 
       if (level <= i) continue;
 
-      ctx = get_base_ctx(tcoeff, scan[c], bwl, i + 1);
+      ctx = get_base_ctx(tcoeff, scan[c], bwl, height, i + 1);
 
       if (level == i + 1) {
         aom_write(w, 1, coeff_base[ctx]);
@@ -161,13 +165,13 @@ void av1_write_coeffs_txb(const AV1_COMMON *const cm, MACROBLOCKD *xd,
     }
 
     // level is above 1.
-    ctx = get_br_ctx(tcoeff, scan[c], bwl);
+    ctx = get_br_ctx(tcoeff, scan[c], bwl, height);
     for (idx = 0; idx < COEFF_BASE_RANGE; ++idx) {
       if (level == (idx + 1 + NUM_BASE_LEVELS)) {
-        aom_write(w, 1, cm->fc->coeff_lps[tx_size][plane_type][ctx]);
+        aom_write(w, 1, cm->fc->coeff_lps[txs_ctx][plane_type][ctx]);
         break;
       }
-      aom_write(w, 0, cm->fc->coeff_lps[tx_size][plane_type][ctx]);
+      aom_write(w, 0, cm->fc->coeff_lps[txs_ctx][plane_type][ctx]);
     }
     if (idx < COEFF_BASE_RANGE) continue;
 
@@ -183,7 +187,10 @@ void av1_write_coeffs_mb(const AV1_COMMON *const cm, MACROBLOCK *x,
   BLOCK_SIZE bsize = mbmi->sb_type;
   struct macroblockd_plane *pd = &xd->plane[plane];
 
-#if CONFIG_CB4X4
+#if CONFIG_CHROMA_SUB8X8
+  const BLOCK_SIZE plane_bsize =
+      AOMMAX(BLOCK_4X4, get_plane_block_size(bsize, pd));
+#elif CONFIG_CB4X4
   const BLOCK_SIZE plane_bsize = get_plane_block_size(bsize, pd);
 #else
   const BLOCK_SIZE plane_bsize =
@@ -191,7 +198,7 @@ void av1_write_coeffs_mb(const AV1_COMMON *const cm, MACROBLOCK *x,
 #endif
   const int max_blocks_wide = max_block_wide(xd, plane_bsize, plane);
   const int max_blocks_high = max_block_high(xd, plane_bsize, plane);
-  TX_SIZE tx_size = get_tx_size(plane, xd);
+  const TX_SIZE tx_size = av1_get_tx_size(plane, xd);
   const int bkw = tx_size_wide_unit[tx_size];
   const int bkh = tx_size_high_unit[tx_size];
   const int step = tx_size_wide_unit[tx_size] * tx_size_high_unit[tx_size];
@@ -203,7 +210,8 @@ void av1_write_coeffs_mb(const AV1_COMMON *const cm, MACROBLOCK *x,
       uint16_t eob = x->mbmi_ext->eobs[plane][block];
       TXB_CTX txb_ctx = { x->mbmi_ext->txb_skip_ctx[plane][block],
                           x->mbmi_ext->dc_sign_ctx[plane][block] };
-      av1_write_coeffs_txb(cm, xd, w, block, plane, tcoeff, eob, &txb_ctx);
+      av1_write_coeffs_txb(cm, xd, w, row, col, block, plane, tx_size, tcoeff,
+                           eob, &txb_ctx);
       block += step;
     }
   }
@@ -211,7 +219,7 @@ void av1_write_coeffs_mb(const AV1_COMMON *const cm, MACROBLOCK *x,
 
 static INLINE void get_base_ctx_set(const tran_low_t *tcoeffs,
                                     int c,  // raster order
-                                    const int bwl,
+                                    const int bwl, const int height,
                                     int ctx_set[NUM_BASE_LEVELS]) {
   const int row = c >> bwl;
   const int col = c - (row << bwl);
@@ -226,7 +234,7 @@ static INLINE void get_base_ctx_set(const tran_low_t *tcoeffs,
     int ref_col = col + base_ref_offset[idx][1];
     int pos = (ref_row << bwl) + ref_col;
 
-    if (ref_row < 0 || ref_col < 0 || ref_row >= stride || ref_col >= stride)
+    if (ref_row < 0 || ref_col < 0 || ref_row >= height || ref_col >= stride)
       continue;
 
     abs_coeff = abs(tcoeffs[pos]);
@@ -280,12 +288,14 @@ static INLINE int get_base_cost(tran_low_t abs_qc, int ctx,
 }
 
 int av1_cost_coeffs_txb(const AV1_COMP *const cpi, MACROBLOCK *x, int plane,
-                        int block, TXB_CTX *txb_ctx) {
+                        int blk_row, int blk_col, int block, TX_SIZE tx_size,
+                        TXB_CTX *txb_ctx) {
   const AV1_COMMON *const cm = &cpi->common;
   MACROBLOCKD *const xd = &x->e_mbd;
-  const TX_SIZE tx_size = get_tx_size(plane, xd);
+  TX_SIZE txs_ctx = get_txsize_context(tx_size);
   const PLANE_TYPE plane_type = get_plane_type(plane);
-  const TX_TYPE tx_type = get_tx_type(plane_type, xd, block, tx_size);
+  const TX_TYPE tx_type =
+      av1_get_tx_type(plane_type, xd, blk_row, blk_col, block, tx_size);
   MB_MODE_INFO *mbmi = &xd->mi[0]->mbmi;
   const struct macroblock_plane *p = &x->plane[plane];
   const int eob = p->eobs[block];
@@ -293,27 +303,26 @@ int av1_cost_coeffs_txb(const AV1_COMP *const cpi, MACROBLOCK *x, int plane,
   int c, cost;
   const int seg_eob = AOMMIN(eob, tx_size_2d[tx_size] - 1);
   int txb_skip_ctx = txb_ctx->txb_skip_ctx;
-  aom_prob *nz_map = xd->fc->nz_map[tx_size][plane_type];
+  aom_prob *nz_map = xd->fc->nz_map[txs_ctx][plane_type];
 
   const int bwl = b_width_log2_lookup[txsize_to_bsize[tx_size]] + 2;
-  // txb_mask is only initialized for once here. After that, it will be set when
-  // coding zero map and then reset when coding level 1 info.
-  uint8_t txb_mask[32 * 32] = { 0 };
-  aom_prob(*coeff_base)[COEFF_BASE_CONTEXTS] =
-      xd->fc->coeff_base[tx_size][plane_type];
+  const int height = tx_size_high[tx_size];
 
-  const SCAN_ORDER *const scan_order =
-      get_scan(cm, tx_size, tx_type, is_inter_block(mbmi));
+  aom_prob(*coeff_base)[COEFF_BASE_CONTEXTS] =
+      xd->fc->coeff_base[txs_ctx][plane_type];
+
+  const SCAN_ORDER *const scan_order = get_scan(cm, tx_size, tx_type, mbmi);
   const int16_t *scan = scan_order->scan;
+  const int16_t *iscan = scan_order->iscan;
 
   cost = 0;
 
   if (eob == 0) {
-    cost = av1_cost_bit(xd->fc->txb_skip[tx_size][txb_skip_ctx], 1);
+    cost = av1_cost_bit(xd->fc->txb_skip[txs_ctx][txb_skip_ctx], 1);
     return cost;
   }
 
-  cost = av1_cost_bit(xd->fc->txb_skip[tx_size][txb_skip_ctx], 0);
+  cost = av1_cost_bit(xd->fc->txb_skip[txs_ctx][txb_skip_ctx], 0);
 
 #if CONFIG_TXK_SEL
   cost += av1_tx_type_cost(cpi, xd, mbmi->sb_type, plane, tx_size, tx_type);
@@ -325,7 +334,7 @@ int av1_cost_coeffs_txb(const AV1_COMP *const cpi, MACROBLOCK *x, int plane,
     int level = abs(v);
 
     if (c < seg_eob) {
-      int coeff_ctx = get_nz_map_ctx(qcoeff, txb_mask, scan[c], bwl);
+      int coeff_ctx = get_nz_map_ctx(qcoeff, scan[c], bwl, height, iscan);
       cost += av1_cost_bit(nz_map[coeff_ctx], is_nz);
     }
 
@@ -342,7 +351,7 @@ int av1_cost_coeffs_txb(const AV1_COMP *const cpi, MACROBLOCK *x, int plane,
         cost += av1_cost_bit(128, sign);
       }
 
-      get_base_ctx_set(qcoeff, scan[c], bwl, ctx_ls);
+      get_base_ctx_set(qcoeff, scan[c], bwl, height, ctx_ls);
 
       int i;
       for (i = 0; i < NUM_BASE_LEVELS; ++i) {
@@ -359,15 +368,15 @@ int av1_cost_coeffs_txb(const AV1_COMP *const cpi, MACROBLOCK *x, int plane,
         int idx;
         int ctx;
 
-        ctx = get_br_ctx(qcoeff, scan[c], bwl);
+        ctx = get_br_ctx(qcoeff, scan[c], bwl, height);
 
         for (idx = 0; idx < COEFF_BASE_RANGE; ++idx) {
           if (level == (idx + 1 + NUM_BASE_LEVELS)) {
             cost +=
-                av1_cost_bit(xd->fc->coeff_lps[tx_size][plane_type][ctx], 1);
+                av1_cost_bit(xd->fc->coeff_lps[txs_ctx][plane_type][ctx], 1);
             break;
           }
-          cost += av1_cost_bit(xd->fc->coeff_lps[tx_size][plane_type][ctx], 0);
+          cost += av1_cost_bit(xd->fc->coeff_lps[txs_ctx][plane_type][ctx], 0);
         }
 
         if (idx >= COEFF_BASE_RANGE) {
@@ -389,13 +398,11 @@ int av1_cost_coeffs_txb(const AV1_COMP *const cpi, MACROBLOCK *x, int plane,
       }
 
       if (c < seg_eob) {
-        int eob_ctx = get_eob_ctx(qcoeff, scan[c], bwl);
-        cost += av1_cost_bit(xd->fc->eob_flag[tx_size][plane_type][eob_ctx],
+        int eob_ctx = get_eob_ctx(qcoeff, scan[c], txs_ctx);
+        cost += av1_cost_bit(xd->fc->eob_flag[txs_ctx][plane_type][eob_ctx],
                              c == (eob - 1));
       }
     }
-
-    txb_mask[scan[c]] = 1;
   }
 
   return cost;
@@ -409,26 +416,26 @@ static INLINE int has_base(tran_low_t qc, int base_idx) {
 static void gen_base_count_mag_arr(int (*base_count_arr)[MAX_TX_SQUARE],
                                    int (*base_mag_arr)[2],
                                    const tran_low_t *qcoeff, int stride,
-                                   int eob, const int16_t *scan) {
+                                   int height, int eob, const int16_t *scan) {
   for (int c = 0; c < eob; ++c) {
     const int coeff_idx = scan[c];  // raster order
     if (!has_base(qcoeff[coeff_idx], 0)) continue;
     const int row = coeff_idx / stride;
     const int col = coeff_idx % stride;
     int *mag = base_mag_arr[coeff_idx];
-    get_mag(mag, qcoeff, stride, row, col, base_ref_offset,
+    get_mag(mag, qcoeff, stride, height, row, col, base_ref_offset,
             BASE_CONTEXT_POSITION_NUM);
     for (int i = 0; i < NUM_BASE_LEVELS; ++i) {
       if (!has_base(qcoeff[coeff_idx], i)) continue;
       int *count = base_count_arr[i] + coeff_idx;
-      *count = get_level_count(qcoeff, stride, row, col, i, base_ref_offset,
-                               BASE_CONTEXT_POSITION_NUM);
+      *count = get_level_count(qcoeff, stride, height, row, col, i,
+                               base_ref_offset, BASE_CONTEXT_POSITION_NUM);
     }
   }
 }
 
 static void gen_nz_count_arr(int(*nz_count_arr), const tran_low_t *qcoeff,
-                             int stride, int eob,
+                             int stride, int height, int eob,
                              const SCAN_ORDER *scan_order) {
   const int16_t *scan = scan_order->scan;
   const int16_t *iscan = scan_order->iscan;
@@ -436,7 +443,8 @@ static void gen_nz_count_arr(int(*nz_count_arr), const tran_low_t *qcoeff,
     const int coeff_idx = scan[c];  // raster order
     const int row = coeff_idx / stride;
     const int col = coeff_idx % stride;
-    nz_count_arr[coeff_idx] = get_nz_count(qcoeff, stride, row, col, iscan);
+    nz_count_arr[coeff_idx] =
+        get_nz_count(qcoeff, stride, height, row, col, iscan);
   }
 }
 
@@ -478,8 +486,8 @@ static INLINE int has_br(tran_low_t qc) {
 }
 
 static void gen_br_count_mag_arr(int *br_count_arr, int (*br_mag_arr)[2],
-                                 const tran_low_t *qcoeff, int stride, int eob,
-                                 const int16_t *scan) {
+                                 const tran_low_t *qcoeff, int stride,
+                                 int height, int eob, const int16_t *scan) {
   for (int c = 0; c < eob; ++c) {
     const int coeff_idx = scan[c];  // raster order
     if (!has_br(qcoeff[coeff_idx])) continue;
@@ -487,9 +495,9 @@ static void gen_br_count_mag_arr(int *br_count_arr, int (*br_mag_arr)[2],
     const int col = coeff_idx % stride;
     int *count = br_count_arr + coeff_idx;
     int *mag = br_mag_arr[coeff_idx];
-    *count = get_level_count(qcoeff, stride, row, col, NUM_BASE_LEVELS,
+    *count = get_level_count(qcoeff, stride, height, row, col, NUM_BASE_LEVELS,
                              br_ref_offset, BR_CONTEXT_POSITION_NUM);
-    get_mag(mag, qcoeff, stride, row, col, br_ref_offset,
+    get_mag(mag, qcoeff, stride, height, row, col, br_ref_offset,
             BR_CONTEXT_POSITION_NUM);
   }
 }
@@ -543,18 +551,19 @@ static INLINE int get_golomb_cost(int abs_qc) {
 void gen_txb_cache(TxbCache *txb_cache, TxbInfo *txb_info) {
   const int16_t *scan = txb_info->scan_order->scan;
   gen_nz_count_arr(txb_cache->nz_count_arr, txb_info->qcoeff, txb_info->stride,
-                   txb_info->eob, txb_info->scan_order);
+                   txb_info->height, txb_info->eob, txb_info->scan_order);
   gen_nz_ctx_arr(txb_cache->nz_ctx_arr, txb_cache->nz_count_arr,
                  txb_info->qcoeff, txb_info->bwl, txb_info->eob,
                  txb_info->scan_order);
   gen_base_count_mag_arr(txb_cache->base_count_arr, txb_cache->base_mag_arr,
-                         txb_info->qcoeff, txb_info->stride, txb_info->eob,
-                         scan);
+                         txb_info->qcoeff, txb_info->stride, txb_info->height,
+                         txb_info->eob, scan);
   gen_base_ctx_arr(txb_cache->base_ctx_arr, txb_cache->base_count_arr,
                    txb_cache->base_mag_arr, txb_info->qcoeff, txb_info->stride,
                    txb_info->eob, scan);
   gen_br_count_mag_arr(txb_cache->br_count_arr, txb_cache->br_mag_arr,
-                       txb_info->qcoeff, txb_info->stride, txb_info->eob, scan);
+                       txb_info->qcoeff, txb_info->stride, txb_info->height,
+                       txb_info->eob, scan);
   gen_br_ctx_arr(txb_cache->br_ctx_arr, txb_cache->br_count_arr,
                  txb_cache->br_mag_arr, txb_info->qcoeff, txb_info->stride,
                  txb_info->eob, scan);
@@ -781,7 +790,7 @@ static int try_self_level_down(tran_low_t *low_coeff, int coeff_idx,
 
     if (scan_idx < txb_info->seg_eob) {
       const int eob_ctx =
-          get_eob_ctx(txb_info->qcoeff, coeff_idx, txb_info->bwl);
+          get_eob_ctx(txb_info->qcoeff, coeff_idx, txb_info->txs_ctx);
       cost_diff -= av1_cost_bit(txb_probs->eob_flag[eob_ctx],
                                 scan_idx == (txb_info->eob - 1));
     }
@@ -853,9 +862,13 @@ int try_level_down(int coeff_idx, const TxbCache *txb_cache,
       const int nb_row = row - sig_ref_offset[i][0];
       const int nb_col = col - sig_ref_offset[i][1];
       const int nb_coeff_idx = nb_row * txb_info->stride + nb_col;
+
+      if (!(nb_row >= 0 && nb_col >= 0 && nb_row < txb_info->height &&
+            nb_col < txb_info->stride))
+        continue;
+
       const int nb_scan_idx = iscan[nb_coeff_idx];
-      if (nb_scan_idx < eob && nb_row >= 0 && nb_col >= 0 &&
-          nb_row < txb_info->stride && nb_col < txb_info->stride) {
+      if (nb_scan_idx < eob) {
         const int cost_diff = try_neighbor_level_down_nz(
             nb_coeff_idx, coeff_idx, txb_cache, txb_probs, txb_info);
         if (cost_map)
@@ -871,9 +884,13 @@ int try_level_down(int coeff_idx, const TxbCache *txb_cache,
       const int nb_row = row - base_ref_offset[i][0];
       const int nb_col = col - base_ref_offset[i][1];
       const int nb_coeff_idx = nb_row * txb_info->stride + nb_col;
+
+      if (!(nb_row >= 0 && nb_col >= 0 && nb_row < txb_info->height &&
+            nb_col < txb_info->stride))
+        continue;
+
       const int nb_scan_idx = iscan[nb_coeff_idx];
-      if (nb_scan_idx < eob && nb_row >= 0 && nb_col >= 0 &&
-          nb_row < txb_info->stride && nb_col < txb_info->stride) {
+      if (nb_scan_idx < eob) {
         const int cost_diff = try_neighbor_level_down_base(
             nb_coeff_idx, coeff_idx, txb_cache, txb_probs, txb_info);
         if (cost_map)
@@ -889,9 +906,13 @@ int try_level_down(int coeff_idx, const TxbCache *txb_cache,
       const int nb_row = row - br_ref_offset[i][0];
       const int nb_col = col - br_ref_offset[i][1];
       const int nb_coeff_idx = nb_row * txb_info->stride + nb_col;
+
+      if (!(nb_row >= 0 && nb_col >= 0 && nb_row < txb_info->height &&
+            nb_col < txb_info->stride))
+        continue;
+
       const int nb_scan_idx = iscan[nb_coeff_idx];
-      if (nb_scan_idx < eob && nb_row >= 0 && nb_col >= 0 &&
-          nb_row < txb_info->stride && nb_col < txb_info->stride) {
+      if (nb_scan_idx < eob) {
         const int cost_diff = try_neighbor_level_down_br(
             nb_coeff_idx, coeff_idx, txb_cache, txb_probs, txb_info);
         if (cost_map)
@@ -925,7 +946,7 @@ static int get_low_coeff_cost(int coeff_idx, const TxbCache *txb_cache,
     cost += get_base_cost(abs_qc, ctx, txb_probs->coeff_base, base_idx);
     if (scan_idx < txb_info->seg_eob) {
       const int eob_ctx =
-          get_eob_ctx(txb_info->qcoeff, coeff_idx, txb_info->bwl);
+          get_eob_ctx(txb_info->qcoeff, coeff_idx, txb_info->txs_ctx);
       cost += av1_cost_bit(txb_probs->eob_flag[eob_ctx],
                            scan_idx == (txb_info->eob - 1));
     }
@@ -982,7 +1003,7 @@ int try_change_eob(int *new_eob, int coeff_idx, const TxbCache *txb_cache,
     // Note that get_eob_ctx does NOT actually account for qcoeff, so we don't
     // need to lower down the qcoeff here
     const int eob_ctx =
-        get_eob_ctx(txb_info->qcoeff, scan[*new_eob - 1], txb_info->bwl);
+        get_eob_ctx(txb_info->qcoeff, scan[*new_eob - 1], txb_info->txs_ctx);
     cost_diff -= av1_cost_bit(txb_probs->eob_flag[eob_ctx], 0);
     cost_diff += av1_cost_bit(txb_probs->eob_flag[eob_ctx], 1);
   } else {
@@ -1016,10 +1037,14 @@ void update_level_down(int coeff_idx, TxbCache *txb_cache, TxbInfo *txb_info) {
   for (int i = 0; i < SIG_REF_OFFSET_NUM; ++i) {
     const int nb_row = row - sig_ref_offset[i][0];
     const int nb_col = col - sig_ref_offset[i][1];
+
+    if (!(nb_row >= 0 && nb_col >= 0 && nb_row < txb_info->height &&
+          nb_col < txb_info->stride))
+      continue;
+
     const int nb_coeff_idx = nb_row * txb_info->stride + nb_col;
     const int nb_scan_idx = iscan[nb_coeff_idx];
-    if (nb_scan_idx < eob && nb_row >= 0 && nb_col >= 0 &&
-        nb_row < txb_info->stride && nb_col < txb_info->stride) {
+    if (nb_scan_idx < eob) {
       const int scan_idx = iscan[coeff_idx];
       if (scan_idx < nb_scan_idx) {
         const int level = 1;
@@ -1030,7 +1055,7 @@ void update_level_down(int coeff_idx, TxbCache *txb_cache, TxbInfo *txb_info) {
         const int count = txb_cache->nz_count_arr[nb_coeff_idx];
         txb_cache->nz_ctx_arr[nb_coeff_idx][0] = get_nz_map_ctx_from_count(
             count, txb_info->qcoeff, nb_coeff_idx, txb_info->bwl, iscan);
-        // int ref_ctx = get_nz_map_ctx2(txb_info->qcoeff, nb_coeff_idx,
+        // int ref_ctx = get_nz_map_ctx(txb_info->qcoeff, nb_coeff_idx,
         // txb_info->bwl, iscan);
         // if (ref_ctx != txb_cache->nz_ctx_arr[nb_coeff_idx][0])
         //   printf("nz ctx %d ref_ctx %d\n",
@@ -1043,11 +1068,15 @@ void update_level_down(int coeff_idx, TxbCache *txb_cache, TxbInfo *txb_info) {
     const int nb_row = row - base_ref_offset[i][0];
     const int nb_col = col - base_ref_offset[i][1];
     const int nb_coeff_idx = nb_row * txb_info->stride + nb_col;
+
+    if (!(nb_row >= 0 && nb_col >= 0 && nb_row < txb_info->height &&
+          nb_col < txb_info->stride))
+      continue;
+
     const tran_low_t nb_coeff = txb_info->qcoeff[nb_coeff_idx];
     if (!has_base(nb_coeff, 0)) continue;
     const int nb_scan_idx = iscan[nb_coeff_idx];
-    if (nb_scan_idx < eob && nb_row >= 0 && nb_col >= 0 &&
-        nb_row < txb_info->stride && nb_col < txb_info->stride) {
+    if (nb_scan_idx < eob) {
       if (row >= nb_row && col >= nb_col)
         update_mag_arr(txb_cache->base_mag_arr[nb_coeff_idx], abs_qc);
       const int mag =
@@ -1076,11 +1105,15 @@ void update_level_down(int coeff_idx, TxbCache *txb_cache, TxbInfo *txb_info) {
     const int nb_row = row - br_ref_offset[i][0];
     const int nb_col = col - br_ref_offset[i][1];
     const int nb_coeff_idx = nb_row * txb_info->stride + nb_col;
+
+    if (!(nb_row >= 0 && nb_col >= 0 && nb_row < txb_info->height &&
+          nb_col < txb_info->stride))
+      continue;
+
     const int nb_scan_idx = iscan[nb_coeff_idx];
     const tran_low_t nb_coeff = txb_info->qcoeff[nb_coeff_idx];
     if (!has_br(nb_coeff)) continue;
-    if (nb_scan_idx < eob && nb_row >= 0 && nb_col >= 0 &&
-        nb_row < txb_info->stride && nb_col < txb_info->stride) {
+    if (nb_scan_idx < eob) {
       const int level = 1 + NUM_BASE_LEVELS;
       if (abs_qc == level) {
         txb_cache->br_count_arr[nb_coeff_idx] -= 1;
@@ -1112,8 +1145,8 @@ static int get_coeff_cost(tran_low_t qc, int scan_idx, TxbInfo *txb_info,
   const int16_t *iscan = txb_info->scan_order->iscan;
 
   if (scan_idx < txb_info->seg_eob) {
-    int coeff_ctx =
-        get_nz_map_ctx2(txb_info->qcoeff, scan[scan_idx], txb_info->bwl, iscan);
+    int coeff_ctx = get_nz_map_ctx(txb_info->qcoeff, scan[scan_idx],
+                                   txb_info->bwl, txb_info->height, iscan);
     cost += av1_cost_bit(txb_probs->nz_map[coeff_ctx], is_nz);
   }
 
@@ -1122,7 +1155,8 @@ static int get_coeff_cost(tran_low_t qc, int scan_idx, TxbInfo *txb_info,
                               txb_ctx->dc_sign_ctx);
 
     int ctx_ls[NUM_BASE_LEVELS] = { 0 };
-    get_base_ctx_set(txb_info->qcoeff, scan[scan_idx], txb_info->bwl, ctx_ls);
+    get_base_ctx_set(txb_info->qcoeff, scan[scan_idx], txb_info->bwl,
+                     txb_info->height, ctx_ls);
 
     int i;
     for (i = 0; i < NUM_BASE_LEVELS; ++i) {
@@ -1130,14 +1164,15 @@ static int get_coeff_cost(tran_low_t qc, int scan_idx, TxbInfo *txb_info,
     }
 
     if (abs_qc > NUM_BASE_LEVELS) {
-      int ctx = get_br_ctx(txb_info->qcoeff, scan[scan_idx], txb_info->bwl);
+      int ctx = get_br_ctx(txb_info->qcoeff, scan[scan_idx], txb_info->bwl,
+                           txb_info->height);
       cost += get_br_cost(abs_qc, ctx, txb_probs->coeff_lps);
       cost += get_golomb_cost(abs_qc);
     }
 
     if (scan_idx < txb_info->seg_eob) {
       int eob_ctx =
-          get_eob_ctx(txb_info->qcoeff, scan[scan_idx], txb_info->bwl);
+          get_eob_ctx(txb_info->qcoeff, scan[scan_idx], txb_info->txs_ctx);
       cost += av1_cost_bit(txb_probs->eob_flag[eob_ctx],
                            scan_idx == (txb_info->eob - 1));
     }
@@ -1323,8 +1358,7 @@ void try_level_down_facade(LevelDownStats *stats, int scan_idx,
     test_level_down(coeff_idx, txb_cache, txb_probs, txb_info);
 #endif
   }
-  stats->rd_diff = RDCOST(txb_info->rdmult, txb_info->rddiv, stats->cost_diff,
-                          stats->dist_diff);
+  stats->rd_diff = RDCOST(txb_info->rdmult, stats->cost_diff, stats->dist_diff);
   if (stats->rd_diff < 0) stats->update = 1;
   return;
 }
@@ -1424,18 +1458,17 @@ static int optimize_txb(TxbInfo *txb_info, const TxbProbs *txb_probs,
 
 // These numbers are empirically obtained.
 static const int plane_rd_mult[REF_TYPES][PLANE_TYPES] = {
-#if CONFIG_EC_ADAPT
   { 17, 13 }, { 16, 10 },
-#else
-  { 20, 12 }, { 16, 12 },
-#endif
 };
 
-int av1_optimize_txb(const AV1_COMMON *cm, MACROBLOCK *x, int plane, int block,
-                     TX_SIZE tx_size, TXB_CTX *txb_ctx) {
+int av1_optimize_txb(const AV1_COMMON *cm, MACROBLOCK *x, int plane,
+                     int blk_row, int blk_col, int block, TX_SIZE tx_size,
+                     TXB_CTX *txb_ctx) {
   MACROBLOCKD *const xd = &x->e_mbd;
   const PLANE_TYPE plane_type = get_plane_type(plane);
-  const TX_TYPE tx_type = get_tx_type(plane_type, xd, block, tx_size);
+  const TX_SIZE txs_ctx = get_txsize_context(tx_size);
+  const TX_TYPE tx_type =
+      av1_get_tx_type(plane_type, xd, blk_row, blk_col, block, tx_size);
   const MB_MODE_INFO *mbmi = &xd->mi[0]->mbmi;
   const struct macroblock_plane *p = &x->plane[plane];
   struct macroblockd_plane *pd = &xd->plane[plane];
@@ -1445,34 +1478,34 @@ int av1_optimize_txb(const AV1_COMMON *cm, MACROBLOCK *x, int plane, int block,
   const tran_low_t *tcoeff = BLOCK_OFFSET(p->coeff, block);
   const int16_t *dequant = pd->dequant;
   const int seg_eob = AOMMIN(eob, tx_size_2d[tx_size] - 1);
-  const aom_prob *nz_map = xd->fc->nz_map[tx_size][plane_type];
+  const aom_prob *nz_map = xd->fc->nz_map[txs_ctx][plane_type];
 
   const int bwl = b_width_log2_lookup[txsize_to_bsize[tx_size]] + 2;
   const int stride = 1 << bwl;
+  const int height = tx_size_high[tx_size];
   aom_prob(*coeff_base)[COEFF_BASE_CONTEXTS] =
-      xd->fc->coeff_base[tx_size][plane_type];
+      xd->fc->coeff_base[txs_ctx][plane_type];
 
-  const aom_prob *coeff_lps = xd->fc->coeff_lps[tx_size][plane_type];
+  const aom_prob *coeff_lps = xd->fc->coeff_lps[txs_ctx][plane_type];
 
   const int is_inter = is_inter_block(mbmi);
-  const SCAN_ORDER *const scan_order =
-      get_scan(cm, tx_size, tx_type, is_inter_block(mbmi));
+  const SCAN_ORDER *const scan_order = get_scan(cm, tx_size, tx_type, mbmi);
 
   const TxbProbs txb_probs = { xd->fc->dc_sign[plane_type],
                                nz_map,
                                coeff_base,
                                coeff_lps,
-                               xd->fc->eob_flag[tx_size][plane_type],
-                               xd->fc->txb_skip[tx_size] };
+                               xd->fc->eob_flag[txs_ctx][plane_type],
+                               xd->fc->txb_skip[txs_ctx] };
 
   const int shift = av1_get_tx_scale(tx_size);
   const int64_t rdmult =
       (x->rdmult * plane_rd_mult[is_inter][plane_type] + 2) >> 2;
-  const int64_t rddiv = x->rddiv;
 
-  TxbInfo txb_info = { qcoeff,     dqcoeff, tcoeff, dequant, shift,
-                       tx_size,    bwl,     stride, eob,     seg_eob,
-                       scan_order, txb_ctx, rdmult, rddiv };
+  TxbInfo txb_info = { qcoeff,  dqcoeff, tcoeff,     dequant, shift,
+                       tx_size, txs_ctx, bwl,        stride,  height,
+                       eob,     seg_eob, scan_order, txb_ctx, rdmult };
+
   TxbCache txb_cache;
   gen_txb_cache(&txb_cache, &txb_info);
 
@@ -1510,9 +1543,9 @@ void av1_update_txb_context_b(int plane, int block, int blk_row, int blk_col,
   const uint16_t eob = p->eobs[block];
   const tran_low_t *qcoeff = BLOCK_OFFSET(p->qcoeff, block);
   const PLANE_TYPE plane_type = pd->plane_type;
-  const TX_TYPE tx_type = get_tx_type(plane_type, xd, block, tx_size);
-  const SCAN_ORDER *const scan_order =
-      get_scan(cm, tx_size, tx_type, is_inter_block(mbmi));
+  const TX_TYPE tx_type =
+      av1_get_tx_type(plane_type, xd, blk_row, blk_col, block, tx_size);
+  const SCAN_ORDER *const scan_order = get_scan(cm, tx_size, tx_type, mbmi);
   (void)plane_bsize;
 
   int cul_level = av1_get_txb_entropy_context(qcoeff, scan_order, eob);
@@ -1536,25 +1569,28 @@ void av1_update_and_record_txb_context(int plane, int block, int blk_row,
   const tran_low_t *qcoeff = BLOCK_OFFSET(p->qcoeff, block);
   tran_low_t *tcoeff = BLOCK_OFFSET(x->mbmi_ext->tcoeff[plane], block);
   const int segment_id = mbmi->segment_id;
-  const TX_TYPE tx_type = get_tx_type(plane_type, xd, block, tx_size);
-  const SCAN_ORDER *const scan_order =
-      get_scan(cm, tx_size, tx_type, is_inter_block(mbmi));
+  const TX_TYPE tx_type =
+      av1_get_tx_type(plane_type, xd, blk_row, blk_col, block, tx_size);
+  const SCAN_ORDER *const scan_order = get_scan(cm, tx_size, tx_type, mbmi);
   const int16_t *scan = scan_order->scan;
+  const int16_t *iscan = scan_order->iscan;
   const int seg_eob = get_tx_eob(&cpi->common.seg, segment_id, tx_size);
   int c, i;
   TXB_CTX txb_ctx;
   get_txb_ctx(plane_bsize, tx_size, plane, pd->above_context + blk_col,
               pd->left_context + blk_row, &txb_ctx);
   const int bwl = b_width_log2_lookup[txsize_to_bsize[tx_size]] + 2;
+  const int height = tx_size_high[tx_size];
   int cul_level = 0;
   unsigned int(*nz_map_count)[SIG_COEF_CONTEXTS][2];
-  uint8_t txb_mask[32 * 32] = { 0 };
 
-  nz_map_count = &td->counts->nz_map[tx_size][plane_type];
+  TX_SIZE txsize_ctx = get_txsize_context(tx_size);
+
+  nz_map_count = &td->counts->nz_map[txsize_ctx][plane_type];
 
   memcpy(tcoeff, qcoeff, sizeof(*tcoeff) * seg_eob);
 
-  ++td->counts->txb_skip[tx_size][txb_ctx.txb_skip_ctx][eob == 0];
+  ++td->counts->txb_skip[txsize_ctx][txb_ctx.txb_skip_ctx][eob == 0];
   x->mbmi_ext->txb_skip_ctx[plane][block] = txb_ctx.txb_skip_ctx;
 
   x->mbmi_ext->eobs[plane][block] = eob;
@@ -1565,24 +1601,23 @@ void av1_update_and_record_txb_context(int plane, int block, int blk_row,
   }
 
 #if CONFIG_TXK_SEL
-  av1_update_tx_type_count(cm, xd, block, plane, mbmi->sb_type, tx_size,
-                           td->counts);
+  av1_update_tx_type_count(cm, xd, blk_row, blk_col, block, plane,
+                           mbmi->sb_type, get_min_tx_size(tx_size), td->counts);
 #endif
 
   for (c = 0; c < eob; ++c) {
     tran_low_t v = qcoeff[scan[c]];
     int is_nz = (v != 0);
-    int coeff_ctx = get_nz_map_ctx(tcoeff, txb_mask, scan[c], bwl);
-    int eob_ctx = get_eob_ctx(tcoeff, scan[c], bwl);
+    int coeff_ctx = get_nz_map_ctx(tcoeff, scan[c], bwl, height, iscan);
+    int eob_ctx = get_eob_ctx(tcoeff, scan[c], txsize_ctx);
 
     if (c == seg_eob - 1) break;
 
     ++(*nz_map_count)[coeff_ctx][is_nz];
 
     if (is_nz) {
-      ++td->counts->eob_flag[tx_size][plane_type][eob_ctx][c == (eob - 1)];
+      ++td->counts->eob_flag[txsize_ctx][plane_type][eob_ctx][c == (eob - 1)];
     }
-    txb_mask[scan[c]] = 1;
   }
 
   // Reverse process order to handle coefficient level and sign.
@@ -1595,10 +1630,10 @@ void av1_update_and_record_txb_context(int plane, int block, int blk_row,
 
       if (level <= i) continue;
 
-      ctx = get_base_ctx(tcoeff, scan[c], bwl, i + 1);
+      ctx = get_base_ctx(tcoeff, scan[c], bwl, height, i + 1);
 
       if (level == i + 1) {
-        ++td->counts->coeff_base[tx_size][plane_type][i][ctx][1];
+        ++td->counts->coeff_base[txsize_ctx][plane_type][i][ctx][1];
         if (c == 0) {
           int dc_sign_ctx = txb_ctx.dc_sign_ctx;
 
@@ -1608,7 +1643,7 @@ void av1_update_and_record_txb_context(int plane, int block, int blk_row,
         cul_level += level;
         continue;
       }
-      ++td->counts->coeff_base[tx_size][plane_type][i][ctx][0];
+      ++td->counts->coeff_base[txsize_ctx][plane_type][i][ctx][0];
       update_eob = AOMMAX(update_eob, c);
     }
   }
@@ -1630,13 +1665,13 @@ void av1_update_and_record_txb_context(int plane, int block, int blk_row,
     }
 
     // level is above 1.
-    ctx = get_br_ctx(tcoeff, scan[c], bwl);
+    ctx = get_br_ctx(tcoeff, scan[c], bwl, height);
     for (idx = 0; idx < COEFF_BASE_RANGE; ++idx) {
       if (level == (idx + 1 + NUM_BASE_LEVELS)) {
-        ++td->counts->coeff_lps[tx_size][plane_type][ctx][1];
+        ++td->counts->coeff_lps[txsize_ctx][plane_type][ctx][1];
         break;
       }
-      ++td->counts->coeff_lps[tx_size][plane_type][ctx][0];
+      ++td->counts->coeff_lps[txsize_ctx][plane_type][ctx][0];
     }
     if (idx < COEFF_BASE_RANGE) continue;
 
@@ -1835,46 +1870,74 @@ int64_t av1_search_txk_type(const AV1_COMP *cpi, MACROBLOCK *x, int plane,
   TX_TYPE txk_end = TX_TYPES - 1;
   TX_TYPE best_tx_type = txk_start;
   int64_t best_rd = INT64_MAX;
+  uint8_t best_eob = 0;
   const int coeff_ctx = combine_entropy_contexts(*a, *l);
+  RD_STATS best_rd_stats;
   TX_TYPE tx_type;
+
+  av1_invalid_rd_stats(&best_rd_stats);
+
   for (tx_type = txk_start; tx_type <= txk_end; ++tx_type) {
-    if (plane == 0) mbmi->txk_type[block] = tx_type;
-    TX_TYPE ref_tx_type =
-        get_tx_type(get_plane_type(plane), xd, block, tx_size);
+    if (plane == 0) mbmi->txk_type[(blk_row << 4) + blk_col] = tx_type;
+    TX_TYPE ref_tx_type = av1_get_tx_type(get_plane_type(plane), xd, blk_row,
+                                          blk_col, block, tx_size);
     if (tx_type != ref_tx_type) {
-      // use get_tx_type() to check if the tx_type is valid for the current mode
-      // if it's not, we skip it here.
+      // use av1_get_tx_type() to check if the tx_type is valid for the current
+      // mode if it's not, we skip it here.
       continue;
     }
+
+#if CONFIG_EXT_TX
+    int is_inter = is_inter_block(mbmi);
+    int ext_tx_set = get_ext_tx_set(get_min_tx_size(tx_size), mbmi->sb_type,
+                                    is_inter, cm->reduced_tx_set_used);
+    if (!(is_inter && ext_tx_used_inter[ext_tx_set][tx_type]) &&
+        !(!is_inter && ext_tx_used_intra[ext_tx_set][tx_type]))
+      continue;
+#endif  // CONFIG_EXT_TX
+
     RD_STATS this_rd_stats;
     av1_invalid_rd_stats(&this_rd_stats);
     av1_xform_quant(cm, x, plane, block, blk_row, blk_col, plane_bsize, tx_size,
                     coeff_ctx, AV1_XFORM_QUANT_FP);
-    av1_optimize_b(cm, x, plane, block, plane_bsize, tx_size, a, l);
+    av1_optimize_b(cm, x, plane, blk_row, blk_col, block, plane_bsize, tx_size,
+                   a, l);
     av1_dist_block(cpi, x, plane, plane_bsize, block, blk_row, blk_col, tx_size,
                    &this_rd_stats.dist, &this_rd_stats.sse,
                    OUTPUT_HAS_PREDICTED_PIXELS);
-    const SCAN_ORDER *scan_order =
-        get_scan(cm, tx_size, tx_type, is_inter_block(mbmi));
-    this_rd_stats.rate = av1_cost_coeffs(
-        cpi, x, plane, block, tx_size, scan_order, a, l, use_fast_coef_costing);
-    int rd =
-        RDCOST(x->rdmult, x->rddiv, this_rd_stats.rate, this_rd_stats.dist);
+    const SCAN_ORDER *scan_order = get_scan(cm, tx_size, tx_type, mbmi);
+    this_rd_stats.rate =
+        av1_cost_coeffs(cpi, x, plane, blk_row, blk_col, block, tx_size,
+                        scan_order, a, l, use_fast_coef_costing);
+    int rd = RDCOST(x->rdmult, this_rd_stats.rate, this_rd_stats.dist);
+
     if (rd < best_rd) {
       best_rd = rd;
-      *rd_stats = this_rd_stats;
+      best_rd_stats = this_rd_stats;
       best_tx_type = tx_type;
+      best_eob = x->plane[plane].txb_entropy_ctx[block];
     }
   }
-  if (plane == 0) mbmi->txk_type[block] = best_tx_type;
-  // TODO(angiebird): Instead of re-call av1_xform_quant and av1_optimize_b,
-  // copy the best result in the above tx_type search for loop
-  av1_xform_quant(cm, x, plane, block, blk_row, blk_col, plane_bsize, tx_size,
-                  coeff_ctx, AV1_XFORM_QUANT_FP);
-  av1_optimize_b(cm, x, plane, block, plane_bsize, tx_size, a, l);
+
+  av1_merge_rd_stats(rd_stats, &best_rd_stats);
+
+  //  if (x->plane[plane].eobs[block] == 0)
+  //    if (best_tx_type != DCT_DCT)
+  //      exit(0);
+
+  if (best_eob == 0 && is_inter_block(mbmi)) best_tx_type = DCT_DCT;
+
+  if (plane == 0) mbmi->txk_type[(blk_row << 4) + blk_col] = best_tx_type;
+  x->plane[plane].txb_entropy_ctx[block] = best_eob;
+
   if (!is_inter_block(mbmi)) {
     // intra mode needs decoded result such that the next transform block
     // can use it for prediction.
+    av1_xform_quant(cm, x, plane, block, blk_row, blk_col, plane_bsize, tx_size,
+                    coeff_ctx, AV1_XFORM_QUANT_FP);
+    av1_optimize_b(cm, x, plane, blk_row, blk_col, block, plane_bsize, tx_size,
+                   a, l);
+
     av1_inverse_transform_block_facade(xd, plane, block, blk_row, blk_col,
                                        x->plane[plane].eobs[block]);
   }

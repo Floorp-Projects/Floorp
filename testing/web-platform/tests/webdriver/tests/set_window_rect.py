@@ -15,10 +15,45 @@ def set_window_rect(session, rect):
 # 10.7.2 Set Window Rect
 
 
-def test_prompt_accept(new_session):
+def test_current_top_level_browsing_context_no_longer_open(session, create_window):
+    """
+    1. If the current top-level browsing context is no longer open,
+    return error with error code no such window.
+    """
+
+    session.window_handle = create_window()
+    session.close()
+    response = set_window_rect(session, {})
+    assert_error(response, "no such window")
+
+
+def test_handle_prompt_dismiss():
+    """TODO"""
+
+
+def test_handle_prompt_accept(new_session):
+    """
+    2. Handle any user prompts and return its value if it is an error.
+
+    [...]
+
+    In order to handle any user prompts a remote end must take the
+    following steps:
+
+      [...]
+
+      2. Perform the following substeps based on the current session's
+      user prompt handler:
+
+        [...]
+
+        - accept state
+           Accept the current user prompt.
+
+    """
+
     _, session = new_session(
         {"alwaysMatch": {"unhandledPromptBehavior": "accept"}})
-    session.url = inline("<title>WD doc title</title>")
     original = session.window.rect
 
     # step 2
@@ -41,11 +76,43 @@ def test_prompt_accept(new_session):
     assert_dialog_handled(session, "dismiss #3")
 
 
+def test_handle_prompt_dismiss_and_notify():
+    """TODO"""
+
+
+def test_handle_prompt_accept_and_notify():
+    """TODO"""
+
+
+def test_handle_prompt_ignore():
+    """TODO"""
+
+
 def test_handle_prompt_missing_value(session, create_dialog):
+    """
+    2. Handle any user prompts and return its value if it is an error.
+
+    [...]
+
+    In order to handle any user prompts a remote end must take the
+    following steps:
+
+      [...]
+
+      2. Perform the following substeps based on the current session's
+      user prompt handler:
+
+        [...]
+
+        - missing value default state
+           1. Dismiss the current user prompt.
+           2. Return error with error code unexpected alert open.
+
+    """
+
     original = session.window.rect
 
     # step 2
-    session.url = inline("<title>WD doc title</title>")
     create_dialog("alert", text="dismiss #1", result_var="dismiss1")
 
     result = set_window_rect(session, {"x": int(original["x"]),
@@ -68,23 +135,146 @@ def test_handle_prompt_missing_value(session, create_dialog):
     assert_dialog_handled(session, "dismiss #3")
 
 
-@pytest.mark.parametrize("data", [
-    {"height": None, "width": None, "x": "a", "y": "b"},
-    {"height": "a", "width": "b", "x": None, "y": None},
-    {"height": None, "width": None, "x": 10.1, "y": 10.1},
-    {"height": 10.1, "width": 10.1, "x": None, "y": None},
-    {"height": True, "width": False, "x": None, "y": None},
-    {"height": None, "width": None, "x": True, "y": False},
-    {"height": [], "width": [], "x": None, "y": None},
-    {"height": None, "width": None, "x": [], "y": []},
-    {"height": [], "width": [], "x": [], "y": []},
-    {"height": {}, "width": {}, "x": None, "y": None},
-    {"height": None, "width": None, "x": {}, "y": {}},
+@pytest.mark.parametrize("rect", [
+    {"width": "a"},
+    {"height": "b"},
+    {"width": "a", "height": "b"},
+    {"x": "a"},
+    {"y": "b"},
+    {"x": "a", "y": "b"},
+    {"width": "a", "height": "b", "x": "a", "y": "b"},
+
+    {"width": True},
+    {"height": False},
+    {"width": True, "height": False},
+    {"x": True},
+    {"y": False},
+    {"x": True, "y": False},
+    {"width": True, "height": False, "x": True, "y": False},
+
+    {"width": []},
+    {"height": []},
+    {"width": [], "height": []},
+    {"x": []},
+    {"y": []},
+    {"x": [], "y": []},
+    {"width": [], "height": [], "x": [], "y": []},
+
+    {"height": {}},
+    {"width": {}},
+    {"height": {}, "width": {}},
+    {"x": {}},
+    {"y": {}},
+    {"x": {}, "y": {}},
+    {"width": {}, "height": {}, "x": {}, "y": {}},
 ])
-def test_invalid_params(session, data):
-    # step 8-9
-    response = set_window_rect(session, data)
+def test_invalid_types(session, rect):
+    """
+    8. If width or height is neither null nor a Number from 0 to 2^64 -
+    1, return error with error code invalid argument.
+
+    9. If x or y is neither null nor a Number from -(263) to 263 - 1,
+    return error with error code invalid argument.
+    """
+    response = set_window_rect(session, rect)
     assert_error(response, "invalid argument")
+
+
+@pytest.mark.parametrize("rect", [
+    {"width": -1},
+    {"height": -2},
+    {"width": -1, "height": -2},
+])
+def test_out_of_bounds(session, rect):
+    """
+    8. If width or height is neither null nor a Number from 0 to 2^64 -
+    1, return error with error code invalid argument.
+
+    9. If x or y is neither null nor a Number from -(263) to 263 - 1,
+    return error with error code invalid argument.
+    """
+    response = set_window_rect(session, rect)
+    assert_error(response, "invalid argument")
+
+
+def test_width_height_floats(session):
+    """
+    8. If width or height is neither null nor a Number from 0 to 2^64 -
+    1, return error with error code invalid argument.
+    """
+
+    response = set_window_rect(session, {"width": 200.5, "height": 400})
+    value = assert_success(response)
+    assert value["width"] == 200.2
+    assert value["height"] == 400
+
+    response = set_window_rect(session, {"width": 300, "height": 450.5})
+    value = assert_success(response)
+    assert value["width"] == 300
+    assert value["height"] == 450.5
+
+
+def test_x_y_floats(session):
+    """
+    9. If x or y is neither null nor a Number from -(263) to 263 - 1,
+    return error with error code invalid argument.
+    """
+
+    response = set_window_rect(session, {"x": 200.5, "y": 400})
+    value = assert_success(response)
+    assert value["x"] == 200.2
+    assert value["y"] == 400
+
+    response = set_window_rect(session, {"x": 300, "y": 450.5})
+    value = assert_success(response)
+    assert value["x"] == 300
+    assert value["y"] == 450.5
+
+
+@pytest.mark.parametrize("rect", [
+    {},
+
+    {"width": None},
+    {"height": None},
+    {"width": None, "height": None},
+
+    {"x": None},
+    {"y": None},
+    {"x": None, "y": None},
+
+    {"width": None, "x": None},
+    {"width": None, "y": None},
+    {"height": None, "x": None},
+    {"height": None, "Y": None},
+
+    {"width": None, "height": None, "x": None, "y": None},
+
+    {"width": 200},
+    {"height": 200},
+    {"x": 200},
+    {"y": 200},
+    {"width": 200, "x": 200},
+    {"height": 200, "x": 200},
+    {"width": 200, "y": 200},
+    {"height": 200, "y": 200},
+])
+def test_no_change(session, rect):
+    """
+    13. If width and height are not null:
+
+    [...]
+
+    14. If x and y are not null:
+
+    [...]
+
+    15. Return success with the JSON serialization of the current
+    top-level browsing context's window rect.
+    """
+
+    original = session.window.rect
+    response = set_window_rect(session, rect)
+    assert_success(response, original)
 
 
 def test_fully_exit_fullscreen(session):
@@ -101,9 +291,7 @@ def test_fully_exit_fullscreen(session):
       document's top layer, except for document's fullscreen element.
 
       3. Exit fullscreen document.
-
     """
-
     session.window.fullscreen()
     assert session.execute_script("return window.fullScreen") is True
 
@@ -113,15 +301,18 @@ def test_fully_exit_fullscreen(session):
     assert value["height"] == 400
     assert value["state"] == "normal"
 
+    assert session.execute_script("return window.fullScreen") is False
 
-def test_restore_window_from_minimized(session):
+
+def test_restore_from_minimized(session):
     """
-    11. Restore the window.
+    12. If the visibility state of the top-level browsing context's
+    active document is hidden, restore the window.
 
     [...]
 
-    To restore the window, given an operating system level window with an
-    associated top-level browsing context, run implementation-specific
+    To restore the window, given an operating system level window with
+    an associated top-level browsing context, run implementation-specific
     steps to restore or unhide the window to the visible screen. Do not
     return from this operation until the visibility state of the top-level
     browsing context's active document has reached the visible state,
@@ -137,28 +328,33 @@ def test_restore_window_from_minimized(session):
     assert value["height"] == 450
     assert value["state"] == "normal"
 
+    assert session.execute_script("return document.hidden") is False
 
-def test_restore_window_from_maximized(session):
+
+def test_restore_from_maximized(session):
     """
-    11. Restore the window.
+    12. If the visibility state of the top-level browsing context's
+    active document is hidden, restore the window.
 
     [...]
 
-    To restore the window, given an operating system level window with an
-    associated top-level browsing context, run implementation-specific
+    To restore the window, given an operating system level window with
+    an associated top-level browsing context, run implementation-specific
     steps to restore or unhide the window to the visible screen. Do not
     return from this operation until the visibility state of the top-level
-    browsing context’s active document has reached the visible state,
+    browsing context's active document has reached the visible state,
     or until the operation times out.
     """
 
+    original_size = session.window.size
     session.window.maximize()
+    assert session.window.size != original_size
     assert session.window.state == "maximized"
 
-    response = set_window_rect(session, {"width": 500, "height": 500})
+    response = set_window_rect(session, {"width": 400, "height": 400})
     value = assert_success(response)
-    assert value["width"] == 500
-    assert value["height"] == 500
+    assert value["width"] == 400
+    assert value["height"] == 400
     assert value["state"] == "normal"
 
 
@@ -267,19 +463,40 @@ def test_negative_x_y(session):
                                   "state": original["state"]})
 
 
-def test_x_y_as_current(session):
-    original = session.window.rect
+def test_move_to_same_position(session):
+    original_position = session.window.position
+    position = session.window.position = (int(original_position[0]), int(original_position[1]))
+    assert position == original_position
 
-    # step 13
-    response = set_window_rect(session, {"x": int(original["x"]),
-                                         "y": int(original["y"])})
 
-    # step 14
-    assert_success(response, {"x": original["x"],
-                              "y": original["y"],
-                              "width": original["width"],
-                              "height": original["height"],
-                              "state": original["state"]})
+def test_move_to_same_x(session):
+    original_x = session.window.position[0]
+    position = session.window.position = (int(original_x), 345)
+    assert position == (original_x, 345)
+
+
+def test_move_to_same_y(session):
+    original_y = session.window.position[1]
+    position = session.window.position = (456, int(original_y))
+    assert position == (456, original_y)
+
+
+def test_resize_to_same_size(session):
+    original_size = session.window.size
+    size = session.window.size = (int(original_size[0]), int(original_size[1]))
+    assert size == original_size
+
+
+def test_resize_to_same_width(session):
+    original_width = session.window.size[0]
+    size = session.window.size = (int(original_width), 345)
+    assert size == (original_width, 345)
+
+
+def test_resize_to_same_height(session):
+    original_height = session.window.size[1]
+    size = session.window.size = (456, int(original_height))
+    assert size == (456, original_height)
 
 
 def test_payload(session):

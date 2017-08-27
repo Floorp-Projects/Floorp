@@ -10,6 +10,7 @@ function waitForDialog() {
     let dialog = subject.Dialog;
     is(dialog.args.title, "Password Required");
     dialog.ui.button1.click();
+    return BrowserTestUtils.waitForEvent(window, "DOMModalDialogClosed");
   });
 }
 

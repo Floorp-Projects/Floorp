@@ -112,6 +112,7 @@ void AV1WarpFilterTest::RunCheckOutput(warp_affine_func test_impl) {
   uint8_t *output2 = new uint8_t[output_n];
   int32_t mat[8];
   int16_t alpha, beta, gamma, delta;
+  ConvolveParams conv_params = get_conv_params(0, 0, 0);
 
   // Generate an input block and extend its borders horizontally
   for (i = 0; i < h; ++i)
@@ -126,10 +127,10 @@ void AV1WarpFilterTest::RunCheckOutput(warp_affine_func test_impl) {
       for (sub_y = 0; sub_y < 2; ++sub_y) {
         generate_model(mat, &alpha, &beta, &gamma, &delta);
         av1_warp_affine_c(mat, input, w, h, stride, output, 32, 32, out_w,
-                          out_h, out_w, sub_x, sub_y, 0, alpha, beta, gamma,
-                          delta);
+                          out_h, out_w, sub_x, sub_y, &conv_params, alpha, beta,
+                          gamma, delta);
         test_impl(mat, input, w, h, stride, output2, 32, 32, out_w, out_h,
-                  out_w, sub_x, sub_y, 0, alpha, beta, gamma, delta);
+                  out_w, sub_x, sub_y, &conv_params, alpha, beta, gamma, delta);
 
         for (j = 0; j < out_w * out_h; ++j)
           ASSERT_EQ(output[j], output2[j])
@@ -248,6 +249,7 @@ void AV1HighbdWarpFilterTest::RunCheckOutput(
   uint16_t *output2 = new uint16_t[output_n];
   int32_t mat[8];
   int16_t alpha, beta, gamma, delta;
+  ConvolveParams conv_params = get_conv_params(0, 0, 0);
 
   // Generate an input block and extend its borders horizontally
   for (i = 0; i < h; ++i)
@@ -265,10 +267,11 @@ void AV1HighbdWarpFilterTest::RunCheckOutput(
         generate_model(mat, &alpha, &beta, &gamma, &delta);
 
         av1_highbd_warp_affine_c(mat, input, w, h, stride, output, 32, 32,
-                                 out_w, out_h, out_w, sub_x, sub_y, bd, 0,
-                                 alpha, beta, gamma, delta);
+                                 out_w, out_h, out_w, sub_x, sub_y, bd,
+                                 &conv_params, alpha, beta, gamma, delta);
         test_impl(mat, input, w, h, stride, output2, 32, 32, out_w, out_h,
-                  out_w, sub_x, sub_y, bd, 0, alpha, beta, gamma, delta);
+                  out_w, sub_x, sub_y, bd, &conv_params, alpha, beta, gamma,
+                  delta);
 
         for (j = 0; j < out_w * out_h; ++j)
           ASSERT_EQ(output[j], output2[j])

@@ -63,6 +63,7 @@ TEST_P(DecodePerfTest, PerfTest) {
 
   aom_codec_dec_cfg_t cfg = aom_codec_dec_cfg_t();
   cfg.threads = threads;
+  cfg.allow_lowbitdepth = 1;
   libaom_test::AV1Decoder decoder(cfg, 0);
 
   aom_usec_timer t;
@@ -93,8 +94,8 @@ TEST_P(DecodePerfTest, PerfTest) {
 //                        ::testing::ValuesIn(kAV1DecodePerfVectors));
 
 class AV1NewEncodeDecodePerfTest
-    : public ::libaom_test::EncoderTest,
-      public ::libaom_test::CodecTestWithParam<libaom_test::TestMode> {
+    : public ::libaom_test::CodecTestWithParam<libaom_test::TestMode>,
+      public ::libaom_test::EncoderTest {
  protected:
   AV1NewEncodeDecodePerfTest()
       : EncoderTest(GET_PARAM(0)), encoding_mode_(GET_PARAM(1)), speed_(0),
@@ -115,7 +116,6 @@ class AV1NewEncodeDecodePerfTest
     cfg_.rc_buf_sz = 1000;
     cfg_.rc_buf_initial_sz = 500;
     cfg_.rc_buf_optimal_sz = 600;
-    cfg_.rc_resize_allowed = 0;
     cfg_.rc_end_usage = AOM_VBR;
   }
 
@@ -211,6 +211,7 @@ TEST_P(AV1NewEncodeDecodePerfTest, PerfTest) {
 
   aom_codec_dec_cfg_t cfg = aom_codec_dec_cfg_t();
   cfg.threads = threads;
+  cfg.allow_lowbitdepth = 1;
   libaom_test::AV1Decoder decoder(cfg, 0);
 
   aom_usec_timer t;

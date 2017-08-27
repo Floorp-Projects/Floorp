@@ -145,11 +145,11 @@ class Av1ConvolveTest : public ::testing::TestWithParam<ConvolveParam> {
 };
 
 int bsize_ls[] = { 1, 2, 4, 8, 16, 32, 64, 3, 7, 15, 31, 63 };
-int bsize_num = sizeof(bsize_ls) / sizeof(bsize_ls[0]);
+int bsize_num = NELEMENTS(bsize_ls);
 
 TEST_P(Av1ConvolveTest, av1_convolve_vert) {
   const int y_step_q4 = 16;
-  ConvolveParams conv_params = get_conv_params(0, 0);
+  ConvolveParams conv_params = get_conv_params(0, 0, 0);
 
   int in_stride, out_stride, ref_out_stride, avg_out_stride, ref_avg_out_stride;
   uint8_t *in = add_input(MAX_SB_SIZE, MAX_SB_SIZE, &in_stride);
@@ -172,6 +172,7 @@ TEST_P(Av1ConvolveTest, av1_convolve_vert) {
                               ref_out, ref_out_stride, w, h);
 
         conv_params.ref = 0;
+        conv_params.do_average = 0;
         cfs_->vf_(in, in_stride, out, out_stride, w, h, param_vert, subpel_y_q4,
                   y_step_q4, &conv_params);
         EXPECT_EQ(match(out, out_stride, ref_out, ref_out_stride, w, h), 1)
@@ -186,6 +187,7 @@ TEST_P(Av1ConvolveTest, av1_convolve_vert) {
           }
         }
         conv_params.ref = 1;
+        conv_params.do_average = 1;
         cfs_->vf_(in, in_stride, avg_out, avg_out_stride, w, h, param_vert,
                   subpel_y_q4, y_step_q4, &conv_params);
         EXPECT_EQ(match(avg_out, avg_out_stride, ref_avg_out,
@@ -200,7 +202,7 @@ TEST_P(Av1ConvolveTest, av1_convolve_vert) {
 
 TEST_P(Av1ConvolveTest, av1_convolve_horiz) {
   const int x_step_q4 = 16;
-  ConvolveParams conv_params = get_conv_params(0, 0);
+  ConvolveParams conv_params = get_conv_params(0, 0, 0);
 
   int in_stride, out_stride, ref_out_stride, avg_out_stride, ref_avg_out_stride;
   uint8_t *in = add_input(MAX_SB_SIZE, MAX_SB_SIZE, &in_stride);
@@ -223,6 +225,7 @@ TEST_P(Av1ConvolveTest, av1_convolve_horiz) {
                                ref_out, ref_out_stride, w, h);
 
         conv_params.ref = 0;
+        conv_params.do_average = 0;
         cfs_->hf_(in, in_stride, out, out_stride, w, h, param_horiz,
                   subpel_x_q4, x_step_q4, &conv_params);
         EXPECT_EQ(match(out, out_stride, ref_out, ref_out_stride, w, h), 1)
@@ -237,6 +240,7 @@ TEST_P(Av1ConvolveTest, av1_convolve_horiz) {
           }
         }
         conv_params.ref = 1;
+        conv_params.do_average = 1;
         cfs_->hf_(in, in_stride, avg_out, avg_out_stride, w, h, param_horiz,
                   subpel_x_q4, x_step_q4, &conv_params);
         EXPECT_EQ(match(avg_out, avg_out_stride, ref_avg_out,

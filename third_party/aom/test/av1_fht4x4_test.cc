@@ -25,17 +25,19 @@ using libaom_test::ACMRandom;
 
 namespace {
 typedef void (*IhtFunc)(const tran_low_t *in, uint8_t *out, int stride,
-                        int tx_type);
+                        const TxfmParam *txfm_param);
 using std::tr1::tuple;
 using libaom_test::FhtFunc;
 typedef tuple<FhtFunc, IhtFunc, int, aom_bit_depth_t, int> Ht4x4Param;
 
-void fht4x4_ref(const int16_t *in, tran_low_t *out, int stride, int tx_type) {
-  av1_fht4x4_c(in, out, stride, tx_type);
+void fht4x4_ref(const int16_t *in, tran_low_t *out, int stride,
+                TxfmParam *txfm_param) {
+  av1_fht4x4_c(in, out, stride, txfm_param);
 }
 
-void iht4x4_ref(const tran_low_t *in, uint8_t *out, int stride, int tx_type) {
-  av1_iht4x4_16_add_c(in, out, stride, tx_type);
+void iht4x4_ref(const tran_low_t *in, uint8_t *out, int stride,
+                const TxfmParam *txfm_param) {
+  av1_iht4x4_16_add_c(in, out, stride, txfm_param);
 }
 
 #if CONFIG_HIGHBITDEPTH
@@ -62,7 +64,6 @@ class AV1Trans4x4HT : public libaom_test::TransformTestBase,
   virtual void SetUp() {
     fwd_txfm_ = GET_PARAM(0);
     inv_txfm_ = GET_PARAM(1);
-    tx_type_ = GET_PARAM(2);
     pitch_ = 4;
     height_ = 4;
     fwd_txfm_ref = fht4x4_ref;
@@ -70,16 +71,17 @@ class AV1Trans4x4HT : public libaom_test::TransformTestBase,
     bit_depth_ = GET_PARAM(3);
     mask_ = (1 << bit_depth_) - 1;
     num_coeffs_ = GET_PARAM(4);
+    txfm_param_.tx_type = GET_PARAM(2);
   }
   virtual void TearDown() { libaom_test::ClearSystemState(); }
 
  protected:
   void RunFwdTxfm(const int16_t *in, tran_low_t *out, int stride) {
-    fwd_txfm_(in, out, stride, tx_type_);
+    fwd_txfm_(in, out, stride, &txfm_param_);
   }
 
   void RunInvTxfm(const tran_low_t *out, uint8_t *dst, int stride) {
-    inv_txfm_(out, dst, stride, tx_type_);
+    inv_txfm_(out, dst, stride, &txfm_param_);
   }
 
   FhtFunc fwd_txfm_;

@@ -19,8 +19,9 @@ void av1_highbd_warp_affine_ssse3(const int32_t *mat, const uint16_t *ref,
                                   uint16_t *pred, int p_col, int p_row,
                                   int p_width, int p_height, int p_stride,
                                   int subsampling_x, int subsampling_y, int bd,
-                                  int comp_avg, int16_t alpha, int16_t beta,
-                                  int16_t gamma, int16_t delta) {
+                                  ConvolveParams *conv_params, int16_t alpha,
+                                  int16_t beta, int16_t gamma, int16_t delta) {
+  int comp_avg = conv_params->do_average;
 #if HORSHEAR_REDUCE_PREC_BITS >= 5
   __m128i tmp[15];
 #else

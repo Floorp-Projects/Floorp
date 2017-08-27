@@ -2285,7 +2285,7 @@ nsIWidget::CaptureRegisteredPlugins(uintptr_t aOwnerWidget)
   // a specific top level window. We use the parent widget during iteration
   // to skip the plugin widgets owned by other top level windows.
   for (auto iter = sPluginWidgetList->Iter(); !iter.Done(); iter.Next()) {
-    const void* windowId = iter.Key();
+    DebugOnly<const void*> windowId = iter.Key();
     nsIWidget* widget = iter.UserData();
 
     MOZ_ASSERT(windowId);

@@ -14,6 +14,10 @@ import which
 from distutils.version import LooseVersion
 
 
+class MissingVCSTool(Exception):
+    """Represents a failure to find a version control tool binary."""
+
+
 def get_tool_path(tool):
     """Obtain the path of `tool`."""
     if os.path.isabs(tool) and os.path.exists(tool):
@@ -30,11 +34,11 @@ def get_tool_path(tool):
         try:
             return which.which(tool)
         except which.WhichError as e:
-            print(e)
+            pass
 
-    raise Exception('Unable to obtain %s path. Try running '
-                    '|mach bootstrap| to ensure your environment is up to '
-                    'date.' % tool)
+    raise MissingVCSTool('Unable to obtain %s path. Try running '
+                         '|mach bootstrap| to ensure your environment is up to '
+                         'date.' % tool)
 
 
 class Repository(object):

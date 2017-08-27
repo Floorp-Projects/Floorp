@@ -69,7 +69,7 @@ function WebRequestEventManager(context, eventName) {
       }
 
       let optional = ["requestHeaders", "responseHeaders", "statusCode", "statusLine", "error", "redirectUrl",
-                      "requestBody", "scheme", "realm", "isProxy", "challenger"];
+                      "requestBody", "scheme", "realm", "isProxy", "challenger", "proxyInfo"];
       for (let opt of optional) {
         if (opt in data) {
           data2[opt] = data[opt];

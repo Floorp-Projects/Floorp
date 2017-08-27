@@ -320,8 +320,8 @@ class nsStyleSet final
   // Return the winning (in the cascade) @counter-style rule for the given name.
   nsCSSCounterStyleRule* CounterStyleRuleForName(nsIAtom* aName);
 
-  // Fetch object for looking up font feature values
-  already_AddRefed<gfxFontFeatureValueSet> GetFontFeatureValuesLookup();
+  // Return gfxFontFeatureValueSet from font feature values rules.
+  already_AddRefed<gfxFontFeatureValueSet> BuildFontFeatureValueSet();
 
   // Append all the currently-active font feature values rules to aArray.
   // Return true for success and false for failure.
@@ -643,7 +643,6 @@ private:
   unsigned mInGC : 1;
   unsigned mAuthorStyleDisabled: 1;
   unsigned mInReconstruct : 1;
-  unsigned mInitFontFeatureValuesLookup : 1;
   unsigned mNeedsRestyleAfterEnsureUniqueInner : 1;
   // Does the associated document use viewport units (vw/vh/vmin/vmax)?
   unsigned mUsesViewportUnits : 1;
@@ -677,9 +676,6 @@ private:
   // Style rule that sets the internal -x-text-zoom property on
   // <svg:text> elements to disable the effect of text zooming.
   RefPtr<nsDisableTextZoomStyleRule> mDisableTextZoomStyleRule;
-
-  // whether font feature values lookup object needs initialization
-  RefPtr<gfxFontFeatureValueSet> mFontFeatureValuesLookup;
 
   // Stores pointers to our cached style contexts for non-inheriting anonymous
   // boxes.

@@ -926,23 +926,3 @@ void aom_fdct32x32_rd_msa(const int16_t *input, int16_t *out,
                        out + (8 * i * 32));
   }
 }
-
-void aom_fdct32x32_1_msa(const int16_t *input, int16_t *out, int32_t stride) {
-  int sum = LD_HADD(input, stride);
-  sum += LD_HADD(input + 8, stride);
-  sum += LD_HADD(input + 16, stride);
-  sum += LD_HADD(input + 24, stride);
-  sum += LD_HADD(input + 32 * 8, stride);
-  sum += LD_HADD(input + 32 * 8 + 8, stride);
-  sum += LD_HADD(input + 32 * 8 + 16, stride);
-  sum += LD_HADD(input + 32 * 8 + 24, stride);
-  sum += LD_HADD(input + 32 * 16, stride);
-  sum += LD_HADD(input + 32 * 16 + 8, stride);
-  sum += LD_HADD(input + 32 * 16 + 16, stride);
-  sum += LD_HADD(input + 32 * 16 + 24, stride);
-  sum += LD_HADD(input + 32 * 24, stride);
-  sum += LD_HADD(input + 32 * 24 + 8, stride);
-  sum += LD_HADD(input + 32 * 24 + 16, stride);
-  sum += LD_HADD(input + 32 * 24 + 24, stride);
-  out[0] = (int16_t)(sum >> 3);
-}

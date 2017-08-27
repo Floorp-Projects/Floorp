@@ -104,6 +104,9 @@ SERVO_BINDING_FUNC(Servo_StyleSet_GetFontFaceRules, void,
                    RawGeckoFontFaceRuleListBorrowedMut list)
 SERVO_BINDING_FUNC(Servo_StyleSet_GetCounterStyleRule, nsCSSCounterStyleRule*,
                    RawServoStyleSetBorrowed set, nsIAtom* name)
+SERVO_BINDING_FUNC(Servo_StyleSet_BuildFontFeatureValueSet, bool,
+                   RawServoStyleSetBorrowed set,
+                   gfxFontFeatureValueSet* list)
 SERVO_BINDING_FUNC(Servo_StyleSet_ResolveForDeclarations,
                    ServoStyleContextStrong,
                    RawServoStyleSetBorrowed set,
