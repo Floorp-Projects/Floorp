@@ -43,8 +43,9 @@ const prefs = Services.prefs.getBranch("extensions.shield-recipe-client.");
 const TIMER_NAME = "recipe-client-addon-run";
 const RUN_INTERVAL_PREF = "run_interval_seconds";
 const FIRST_RUN_PREF = "first_run";
-const UI_AVAILABLE_NOTIFICATION = "sessionstore-windows-restored";
-const SHIELD_INIT_NOTIFICATION = "shield-init-complete";
+const UI_AVAILABLE_TOPIC = "sessionstore-windows-restored";
+const SHIELD_INIT_TOPIC = "shield-init-complete";
+const PREF_CHANGED_TOPIC = "nsPref:changed";
 
 this.RecipeRunner = {
   init() {
@@ -60,19 +61,8 @@ this.RecipeRunner = {
     if (prefs.getBoolPref(FIRST_RUN_PREF)) {
       // Run once immediately after the UI is available. Do this before adding the
       // timer so we can't end up racing it.
-      const observer = {
-        observe: async (subject, topic, data) => {
-          Services.obs.removeObserver(observer, UI_AVAILABLE_NOTIFICATION);
-
-          await this.run();
-          this.registerTimer();
-          prefs.setBoolPref(FIRST_RUN_PREF, false);
-
-          Services.obs.notifyObservers(null, SHIELD_INIT_NOTIFICATION);
-        },
-      };
-      Services.obs.addObserver(observer, UI_AVAILABLE_NOTIFICATION);
-      CleanupManager.addCleanupHandler(() => Services.obs.removeObserver(observer, UI_AVAILABLE_NOTIFICATION));
+      Services.obs.addObserver(this, UI_AVAILABLE_TOPIC);
+      CleanupManager.addCleanupHandler(() => Services.obs.removeObserver(this, UI_AVAILABLE_TOPIC));
     } else {
       this.registerTimer();
     }
@@ -108,15 +98,36 @@ this.RecipeRunner = {
     return true;
   },
 
+  observe(subject, topic, data) {
+    switch (topic) {
+      case PREF_CHANGED_TOPIC:
+        this.observePrefChange(data);
+        break;
+      case UI_AVAILABLE_TOPIC:
+        this.observeUIAvailable().catch(err => Cu.reportError(err));
+        break;
+    }
+  },
+
   /**
    * Watch for preference changes from Services.pref.addObserver.
    */
-  observe(changedPrefBranch, action, changedPref) {
-    if (action === "nsPref:changed" && changedPref === RUN_INTERVAL_PREF) {
+  observePrefChange(prefName) {
+    if (prefName === RUN_INTERVAL_PREF) {
       this.updateRunInterval();
     } else {
-      log.debug(`Observer fired with unexpected pref change: ${action} ${changedPref}`);
+      log.debug(`Observer fired with unexpected pref change: ${prefName}`);
     }
+  },
+
+  async observeUIAvailable() {
+    Services.obs.removeObserver(this, UI_AVAILABLE_TOPIC);
+
+    await this.run();
+    this.registerTimer();
+    prefs.setBoolPref(FIRST_RUN_PREF, false);
+
+    Services.obs.notifyObservers(null, SHIELD_INIT_TOPIC);
   },
 
   updateRunInterval() {
