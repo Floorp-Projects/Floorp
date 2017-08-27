@@ -2500,12 +2500,14 @@ EditorBase::InsertTextImpl(const nsAString& aStringToInsert,
 
   // If a neighboring text node already exists, use that
   if (!node->IsNodeOfType(nsINode::eTEXT)) {
-    if (offset && node->GetChildAt(offset - 1)->IsNodeOfType(nsINode::eTEXT)) {
-      node = node->GetChildAt(offset - 1);
+    nsIContent* child = node->GetChildAt(offset);
+    if (offset && child && child->GetPreviousSibling() &&
+        child->GetPreviousSibling()->IsNodeOfType(nsINode::eTEXT)) {
+      node = child->GetPreviousSibling();
       offset = node->Length();
     } else if (offset < static_cast<int32_t>(node->Length()) &&
-               node->GetChildAt(offset)->IsNodeOfType(nsINode::eTEXT)) {
-      node = node->GetChildAt(offset);
+               child && child->IsNodeOfType(nsINode::eTEXT)) {
+      node = child;
       offset = 0;
     }
   }
