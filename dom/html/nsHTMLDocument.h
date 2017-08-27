@@ -75,7 +75,7 @@ public:
 
   virtual nsIContent* GetUnfocusedKeyEventTarget() override;
 
-  virtual nsContentList* GetForms() override;
+  nsContentList* GetForms();
 
   nsContentList* GetExistingForms() const
   {

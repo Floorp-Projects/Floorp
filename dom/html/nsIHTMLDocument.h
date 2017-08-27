@@ -51,11 +51,6 @@ public:
   virtual bool IsWriting() = 0;
 
   /**
-   * Get the list of form elements in the document.
-   */
-  virtual nsContentList* GetForms() = 0;
-
-  /**
    * Should be called when an element's editable changes as a result of
    * changing its contentEditable attribute/property.
    *
