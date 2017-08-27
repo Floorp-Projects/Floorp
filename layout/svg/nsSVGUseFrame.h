@@ -55,8 +55,11 @@ public:
   void AppendAnonymousContentTo(nsTArray<nsIContent*>& aElements,
                                 uint32_t aFilter) override;
 
+  nsIContent* GetContentClone() { return mContentClone.get(); }
+
 private:
   bool mHasValidDimensions;
+  nsCOMPtr<nsIContent> mContentClone;
 };
 
 #endif // __NS_SVGUSEFRAME_H__

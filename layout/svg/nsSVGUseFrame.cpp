@@ -4,6 +4,7 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
 #include "nsSVGUseFrame.h"
+#include "nsContentUtils.h"
 
 #include "mozilla/dom/SVGUseElement.h"
 #include "nsContentList.h"
@@ -101,9 +102,8 @@ nsSVGUseFrame::AttributeChanged(int32_t         aNameSpaceID,
 void
 nsSVGUseFrame::DestroyFrom(nsIFrame* aDestructRoot)
 {
-  RefPtr<SVGUseElement> use = static_cast<SVGUseElement*>(GetContent());
+  nsContentUtils::DestroyAnonymousContent(&mContentClone);
   nsSVGGFrame::DestroyFrom(aDestructRoot);
-  use->DestroyAnonymousContent();
 }
 
 
@@ -168,13 +168,12 @@ nsSVGUseFrame::CreateAnonymousContent(nsTArray<ContentInfo>& aElements)
 {
   SVGUseElement *use = static_cast<SVGUseElement*>(GetContent());
 
-  nsIContent* clone = use->CreateAnonymousContent();
+  mContentClone = use->CreateAnonymousContent();
   nsLayoutUtils::PostRestyleEvent(
     use, nsRestyleHint(0), nsChangeHint_InvalidateRenderingObservers);
-  if (!clone)
+  if (!mContentClone)
     return NS_ERROR_FAILURE;
-  if (!aElements.AppendElement(clone))
-    return NS_ERROR_OUT_OF_MEMORY;
+  aElements.AppendElement(mContentClone);
   return NS_OK;
 }
 
@@ -182,9 +181,7 @@ void
 nsSVGUseFrame::AppendAnonymousContentTo(nsTArray<nsIContent*>& aElements,
                                         uint32_t aFilter)
 {
-  SVGUseElement *use = static_cast<SVGUseElement*>(GetContent());
-  nsIContent* clone = use->GetAnonymousContent();
-  if (clone) {
-    aElements.AppendElement(clone);
+  if (mContentClone) {
+    aElements.AppendElement(mContentClone);
   }
 }

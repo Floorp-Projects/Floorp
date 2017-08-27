@@ -57,9 +57,7 @@ public:
   NS_DECL_NSIMUTATIONOBSERVER_NODEWILLBEDESTROYED
 
   // for nsSVGUseFrame's nsIAnonymousContentCreator implementation.
-  nsIContent* CreateAnonymousContent();
-  nsIContent* GetAnonymousContent() const { return mClone; }
-  void DestroyAnonymousContent();
+  already_AddRefed<nsIContent> CreateAnonymousContent();
 
   // nsSVGElement specializations:
   virtual gfxMatrix PrependLocalTransformsTo(
@@ -97,6 +95,8 @@ protected:
   private:
     SVGUseElement* mContainer;
   };
+
+  nsSVGUseFrame* GetFrame() const;
 
   virtual LengthAttributesInfo GetLengthInfo() override;
   virtual StringAttributesInfo GetStringInfo() override;
