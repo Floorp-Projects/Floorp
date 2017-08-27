@@ -95,8 +95,6 @@ const Ci = Components.interfaces;
 const Cr = Components.results;
 const Cu = Components.utils;
 
-var modules = {};
-
 this.XPCOMUtils = {
   /**
    * Generate a QueryInterface implementation. The returned function must be
@@ -329,33 +327,20 @@ this.XPCOMUtils = {
       aPreLambda.apply(proxy);
     }
 
-    function XPCU_moduleLambda() {
+    this.defineLazyGetter(aObject, aName, function XPCU_moduleLambda() {
+      var temp = {};
       try {
-        let temp;
-        if (aResource in modules) {
-          temp = modules[aResource];
-        } else {
-          temp = {};
-          Cu.import(aResource, temp);
-          modules[aResource] = temp;
-        }
+        Cu.import(aResource, temp);
 
         if (typeof(aPostLambda) === "function") {
           aPostLambda.apply(proxy);
         }
-
-        return temp[aSymbol || aName];
       } catch (ex) {
         Cu.reportError("Failed to load module " + aResource + ".");
         throw ex;
       }
-    }
-
-    if (!aPostLambda && (aResource in modules || Cu.isModuleLoaded(aResource))) {
-      aObject[aSymbol || aName] = XPCU_moduleLambda();
-    } else {
-      this.defineLazyGetter(aObject, aName, XPCU_moduleLambda);
-    }
+      return temp[aSymbol || aName];
+    });
   },
 
   /**
