@@ -2357,14 +2357,16 @@ nsContentList*
 nsHTMLDocument::GetForms()
 {
   if (!mForms) {
+    // Please keep this in sync with nsContentUtils::GenerateStateKey().
     mForms = new nsContentList(this, kNameSpaceID_XHTML, nsGkAtoms::form, nsGkAtoms::form);
   }
 
   return mForms;
 }
 
-static bool MatchFormControls(Element* aElement, int32_t aNamespaceID,
-                              nsIAtom* aAtom, void* aData)
+bool
+nsHTMLDocument::MatchFormControls(Element* aElement, int32_t aNamespaceID,
+                                  nsIAtom* aAtom, void* aData)
 {
   return aElement->IsNodeOfType(nsIContent::eHTML_FORM_CONTROL);
 }

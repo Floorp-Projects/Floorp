@@ -107,6 +107,7 @@
 #include "nsHostObjectProtocolHandler.h"
 #include "nsHtml5Module.h"
 #include "nsHtml5StringParser.h"
+#include "nsHTMLDocument.h"
 #include "nsIAddonPolicyService.h"
 #include "nsIAnonymousContentCreator.h"
 #include "nsIAsyncVerifyRedirectCallback.h"
@@ -3004,7 +3005,7 @@ static inline bool IsAutocompleteOff(const nsIContent* aElement)
 
 /*static*/ nsresult
 nsContentUtils::GenerateStateKey(nsIContent* aContent,
-                                 const nsIDocument* aDocument,
+                                 nsIDocument* aDocument,
                                  nsACString& aKey)
 {
   aKey.Truncate();
@@ -3030,14 +3031,39 @@ nsContentUtils::GenerateStateKey(nsIContent* aContent,
   bool generatedUniqueKey = false;
 
   if (htmlDocument) {
+    nsHTMLDocument* htmlDoc = static_cast<nsHTMLDocument*> (htmlDocument.get());
     // Flush our content model so it'll be up to date
     // If this becomes unnecessary and the following line is removed,
     // please also remove the corresponding flush operation from
     // nsHtml5TreeBuilderCppSupplement.h. (Look for "See bug 497861." there.)
     aContent->GetUncomposedDoc()->FlushPendingNotifications(FlushType::Content);
 
-    nsContentList *htmlForms = htmlDocument->GetForms();
-    nsContentList *htmlFormControls = htmlDocument->GetFormControls();
+    RefPtr<nsContentList> htmlForms = htmlDoc->GetExistingForms();
+    if (!htmlForms) {
+      // If the document doesn't have an existing forms content list, create a
+      // new one, but avoid creating a live list since we only need to use the
+      // list here and it doesn't need to listen to mutation events.
+
+      // Please keep this in sync with nsHTMLDocument::GetForms().
+      htmlForms = new nsContentList(aDocument, kNameSpaceID_XHTML,
+                                    nsGkAtoms::form, nsGkAtoms::form,
+                                    /* aDeep = */ true,
+                                    /* aLiveList = */ false);
+    }
+    RefPtr<nsContentList> htmlFormControls = htmlDoc->GetExistingFormControls();
+    if (!htmlFormControls) {
+      // If the document doesn't have an existing form controls content list,
+      // create a new one, but avoid creating a live list since we only need to
+      // use the list here and it doesn't need to listen to mutation events.
+      htmlFormControls = new nsContentList(aDocument,
+                                           nsHTMLDocument::MatchFormControls,
+                                           nullptr, nullptr,
+                                           /* aDeep = */ true,
+                                           /* aMatchAtom = */ nullptr,
+                                           /* aMatchNameSpaceId = */ kNameSpaceID_None,
+                                           /* aFuncMayDependOnAttr = */ true,
+                                           /* aLiveList = */ false);
+    }
 
     NS_ENSURE_TRUE(htmlForms && htmlFormControls, NS_ERROR_OUT_OF_MEMORY);
 
