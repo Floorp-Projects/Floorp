@@ -7160,8 +7160,12 @@ nsDocument::GetTitleElement()
 
   // We check the HTML namespace even for non-HTML documents, except SVG.  This
   // matches the spec and the behavior of all tested browsers.
-  RefPtr<nsContentList> list =
-    NS_GetContentList(this, kNameSpaceID_XHTML, NS_LITERAL_STRING("title"));
+  // We avoid creating a live nsContentList since we don't need to watch for DOM
+  // tree mutations.
+  RefPtr<nsContentList> list = new nsContentList(this, kNameSpaceID_XHTML,
+                                                 nsGkAtoms::title, nsGkAtoms::title,
+                                                 /* aDeep = */ true,
+                                                 /* aLiveList = */ false);
 
   nsIContent* first = list->Item(0, false);
 
