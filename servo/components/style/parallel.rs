@@ -23,14 +23,32 @@
 #![deny(missing_docs)]
 
 use arrayvec::ArrayVec;
-use context::{StyleContext, ThreadLocalStyleContext, TraversalStatistics};
-use dom::{OpaqueNode, SendNode, TElement, TNode};
+use context::{StyleContext, ThreadLocalStyleContext};
+use dom::{OpaqueNode, SendNode, TElement};
+use itertools::Itertools;
 use rayon;
 use scoped_tls::ScopedTLS;
 use smallvec::SmallVec;
-use std::borrow::Borrow;
-use time;
-use traversal::{DomTraversal, PerLevelTraversalData, PreTraverseToken};
+use traversal::{DomTraversal, PerLevelTraversalData};
+
+/// The minimum stack size for a thread in the styling pool, in kilobytes.
+pub const STYLE_THREAD_STACK_SIZE_KB: usize = 128;
+
+/// The stack margin. If we get this deep in the stack, we will skip recursive
+/// optimizations to ensure that there is sufficient room for non-recursive work.
+///
+/// When measured with 128KB stacks and 40KB margin, we could support 53
+/// levels of recursion before the limiter kicks in, on x86_64-Linux [1].
+///
+/// We currently use 45KB margins, because that seems to be the minimum amount
+/// of head room required by an unoptimized debug build, as measured on [2]. We
+/// could probably get away with a smaller margin on optimized release builds,
+/// but that would be a pain, and the extra padding reduces stability risk.
+///
+/// [1] See Gecko bug 1376883 for more discussion on the measurements.
+/// [2] layout/style/crashtests/1383981-3.html
+///
+pub const STACK_SAFETY_MARGIN_KB: usize = 45;
 
 /// The maximum number of child nodes that we will process as a single unit.
 ///
@@ -49,59 +67,6 @@ pub const WORK_UNIT_MAX: usize = 16;
 /// A set of nodes, sized to the work unit. This gets copied when sent to other
 /// threads, so we keep it compact.
 type WorkUnit<N> = ArrayVec<[SendNode<N>; WORK_UNIT_MAX]>;
-
-/// Entry point for the parallel traversal.
-#[allow(unsafe_code)]
-pub fn traverse_dom<E, D>(traversal: &D,
-                          root: E,
-                          token: PreTraverseToken,
-                          pool: &rayon::ThreadPool)
-    where E: TElement,
-          D: DomTraversal<E>,
-{
-    debug_assert!(traversal.is_parallel());
-    debug_assert!(token.should_traverse());
-
-    let dump_stats = traversal.shared_context().options.dump_style_statistics;
-    let start_time = if dump_stats { Some(time::precise_time_s()) } else { None };
-
-    let traversal_data = PerLevelTraversalData {
-        current_dom_depth: root.depth(),
-    };
-    let tls = ScopedTLS::<ThreadLocalStyleContext<E>>::new(pool);
-    let send_root = unsafe { SendNode::new(root.as_node()) };
-
-    pool.install(|| {
-        rayon::scope(|scope| {
-            let root = send_root;
-            let root_opaque = root.opaque();
-            traverse_nodes(&[root],
-                           DispatchMode::TailCall,
-                           0,
-                           root_opaque,
-                           traversal_data,
-                           scope,
-                           pool,
-                           traversal,
-                           &tls);
-        });
-    });
-
-    // Dump statistics to stdout if requested.
-    if dump_stats {
-        let slots = unsafe { tls.unsafe_get() };
-        let mut aggregate = slots.iter().fold(TraversalStatistics::default(), |acc, t| {
-            match *t.borrow() {
-                None => acc,
-                Some(ref cx) => &cx.borrow().statistics + &acc,
-            }
-        });
-        aggregate.finish(traversal, start_time.unwrap());
-        if aggregate.is_large_traversal() {
-            println!("{}", aggregate);
-        }
-    }
-}
 
 /// A callback to create our thread local context.  This needs to be
 /// out of line so we don't allocate stack space for the entire struct
@@ -132,7 +97,6 @@ fn create_thread_local_context<'scope, E, D>(
 #[inline(always)]
 #[allow(unsafe_code)]
 fn top_down_dom<'a, 'scope, E, D>(nodes: &'a [SendNode<E::ConcreteNode>],
-                                  recursion_depth: usize,
                                   root: OpaqueNode,
                                   mut traversal_data: PerLevelTraversalData,
                                   scope: &'a rayon::Scope<'scope>,
@@ -144,6 +108,10 @@ fn top_down_dom<'a, 'scope, E, D>(nodes: &'a [SendNode<E::ConcreteNode>],
 {
     debug_assert!(nodes.len() <= WORK_UNIT_MAX);
 
+    // We set this below, when we have a borrow of the thread-local-context
+    // available.
+    let recursion_ok;
+
     // Collect all the children of the elements in our work unit. This will
     // contain the combined children of up to WORK_UNIT_MAX nodes, which may
     // be numerous. As such, we store it in a large SmallVec to minimize heap-
@@ -154,6 +122,10 @@ fn top_down_dom<'a, 'scope, E, D>(nodes: &'a [SendNode<E::ConcreteNode>],
         // a potential recursive call when we pass TailCall.
         let mut tlc = tls.ensure(
             |slot: &mut Option<ThreadLocalStyleContext<E>>| create_thread_local_context(traversal, slot));
+
+        // Check that we're not in danger of running out of stack.
+        recursion_ok = !tlc.stack_limit_checker.limit_exceeded();
+
         let mut context = StyleContext {
             shared: traversal.shared_context(),
             thread_local: &mut *tlc,
@@ -200,16 +172,15 @@ fn top_down_dom<'a, 'scope, E, D>(nodes: &'a [SendNode<E::ConcreteNode>],
             if discovered_child_nodes.len() >= WORK_UNIT_MAX {
                 let mut traversal_data_copy = traversal_data.clone();
                 traversal_data_copy.current_dom_depth += 1;
-                traverse_nodes(&*discovered_child_nodes,
+                traverse_nodes(discovered_child_nodes.drain(),
                                DispatchMode::NotTailCall,
-                               recursion_depth,
+                               recursion_ok,
                                root,
                                traversal_data_copy,
                                scope,
                                pool,
                                traversal,
                                tls);
-                discovered_child_nodes.clear();
             }
 
             let node = **n;
@@ -230,9 +201,9 @@ fn top_down_dom<'a, 'scope, E, D>(nodes: &'a [SendNode<E::ConcreteNode>],
     // worth of them) directly on this thread by passing TailCall.
     if !discovered_child_nodes.is_empty() {
         traversal_data.current_dom_depth += 1;
-        traverse_nodes(&discovered_child_nodes,
+        traverse_nodes(discovered_child_nodes.drain(),
                        DispatchMode::TailCall,
-                       recursion_depth,
+                       recursion_ok,
                        root,
                        traversal_data,
                        scope,
@@ -245,8 +216,10 @@ fn top_down_dom<'a, 'scope, E, D>(nodes: &'a [SendNode<E::ConcreteNode>],
 /// Controls whether traverse_nodes may make a recursive call to continue
 /// doing work, or whether it should always dispatch work asynchronously.
 #[derive(Clone, Copy, PartialEq)]
-enum DispatchMode {
+pub enum DispatchMode {
+    /// This is the last operation by the caller.
     TailCall,
+    /// This is not the last operation by the caller.
     NotTailCall,
 }
 
@@ -254,60 +227,59 @@ impl DispatchMode {
     fn is_tail_call(&self) -> bool { matches!(*self, DispatchMode::TailCall) }
 }
 
-// On x86_64-linux, a recursive cycle requires 3472 bytes of stack.  Limiting
-// the depth to 150 therefore should keep the stack use by the recursion to
-// 520800 bytes, which would give a generously conservative margin should we
-// decide to reduce the thread stack size from its default of 2MB down to 1MB.
-const RECURSION_DEPTH_LIMIT: usize = 150;
-
+/// Enqueues |nodes| for processing, possibly on this thread if the tail call
+/// conditions are met.
 #[inline]
-fn traverse_nodes<'a, 'scope, E, D>(nodes: &[SendNode<E::ConcreteNode>],
-                                    mode: DispatchMode,
-                                    recursion_depth: usize,
-                                    root: OpaqueNode,
-                                    traversal_data: PerLevelTraversalData,
-                                    scope: &'a rayon::Scope<'scope>,
-                                    pool: &'scope rayon::ThreadPool,
-                                    traversal: &'scope D,
-                                    tls: &'scope ScopedTLS<'scope, ThreadLocalStyleContext<E>>)
-    where E: TElement + 'scope,
-          D: DomTraversal<E>,
+pub fn traverse_nodes<'a, 'scope, E, D, I>(
+    nodes: I,
+    mode: DispatchMode,
+    recursion_ok: bool,
+    root: OpaqueNode,
+    traversal_data: PerLevelTraversalData,
+    scope: &'a rayon::Scope<'scope>,
+    pool: &'scope rayon::ThreadPool,
+    traversal: &'scope D,
+    tls: &'scope ScopedTLS<'scope, ThreadLocalStyleContext<E>>
+)
+where
+    E: TElement + 'scope,
+    D: DomTraversal<E>,
+    I: ExactSizeIterator<Item = SendNode<E::ConcreteNode>>
 {
-    debug_assert!(!nodes.is_empty());
+    debug_assert_ne!(nodes.len(), 0);
 
     // This is a tail call from the perspective of the caller. However, we only
     // want to actually dispatch the job as a tail call if there's nothing left
     // in our local queue. Otherwise we need to return to it to maintain proper
     // breadth-first ordering. We also need to take care to avoid stack
-    // overflow due to excessive tail recursion. The stack overflow isn't
-    // observable to content -- we're still completely correct, just not
-    // using tail recursion any more. See bug 1368302.
-    debug_assert!(recursion_depth <= RECURSION_DEPTH_LIMIT);
+    // overflow due to excessive tail recursion. The stack overflow avoidance
+    // isn't observable to content -- we're still completely correct, just not
+    // using tail recursion any more. See Gecko bugs 1368302 and 1376883.
     let may_dispatch_tail = mode.is_tail_call() &&
-        recursion_depth != RECURSION_DEPTH_LIMIT &&
+        recursion_ok &&
         !pool.current_thread_has_pending_tasks().unwrap();
 
     // In the common case, our children fit within a single work unit, in which
     // case we can pass the SmallVec directly and avoid extra allocation.
     if nodes.len() <= WORK_UNIT_MAX {
-        let work = nodes.iter().cloned().collect::<WorkUnit<E::ConcreteNode>>();
+        let work: WorkUnit<E::ConcreteNode> = nodes.collect();
         if may_dispatch_tail {
-            top_down_dom(&work, recursion_depth + 1, root,
+            top_down_dom(&work, root,
                          traversal_data, scope, pool, traversal, tls);
         } else {
             scope.spawn(move |scope| {
                 let work = work;
-                top_down_dom(&work, 0, root,
+                top_down_dom(&work, root,
                              traversal_data, scope, pool, traversal, tls);
             });
         }
     } else {
-        for chunk in nodes.chunks(WORK_UNIT_MAX) {
-            let nodes = chunk.iter().cloned().collect::<WorkUnit<E::ConcreteNode>>();
+        for chunk in nodes.chunks(WORK_UNIT_MAX).into_iter() {
+            let nodes: WorkUnit<E::ConcreteNode> = chunk.collect();
             let traversal_data_copy = traversal_data.clone();
             scope.spawn(move |scope| {
                 let n = nodes;
-                top_down_dom(&*n, 0, root,
+                top_down_dom(&*n, root,
                              traversal_data_copy, scope, pool, traversal, tls)
             });
         }

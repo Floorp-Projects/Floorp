@@ -14,8 +14,12 @@ To update to a specific upstream git tag or commit, use
 
   ./mach vendor aom -r <commit>
 
-The upstream aom git repository is:
+The upstream git repository is https://aomedia.googlesource.com/aom
 
-    https://aomedia.googlesource.com/aom
+To update to a fork, use
 
-The git commit ID used was aadbb0251996c8ebb8310567bea330ab7ae9abe4 (Fri Jun 02 22:24:14 2017 +0000).
+  ./mach vendor aom --repo <repository url> [-r <commit>]
+
+The last update was pulled from https://aomedia.googlesource.com/aom
+
+The git commit ID used was f5bdeac22930ff4c6b219be49c843db35970b918 (Thu Jul 27 18:23:37 2017 +0000).

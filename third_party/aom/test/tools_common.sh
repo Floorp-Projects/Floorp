@@ -48,6 +48,21 @@ test_end() {
 # Echoes the target configuration being tested.
 test_configuration_target() {
   aom_config_mk="${LIBAOM_CONFIG_PATH}/config.mk"
+  # TODO(tomfinegan): Remove the parts requiring config.mk when the configure
+  # script is removed from the repository.
+  if [ ! -f "${aom_config_mk}" ]; then
+    aom_config_c="${LIBAOM_CONFIG_PATH}/aom_config.c"
+    # Clean up the cfg pointer line from aom_config.c for easier re-use by
+    # someone examining a failure in the example tests.
+    # 1. Run grep on aom_config.c for cfg and limit the results to 1.
+    # 2. Split the line using ' = ' as separator.
+    # 3. Abuse sed to consume the leading " and trailing "; from the assignment
+    #    to the cfg pointer.
+    cmake_config=$(awk -F ' = ' '/cfg/ { print $NF; exit }' "${aom_config_c}" \
+      | sed -e s/\"// -e s/\"\;//)
+    echo cmake generated via command: cmake path/to/aom ${cmake_config}
+    return
+  fi
   # Find the TOOLCHAIN line, split it using ':=' as the field separator, and
   # print the last field to get the value. Then pipe the value to tr to consume
   # any leading/trailing spaces while allowing tr to echo the output to stdout.
@@ -71,6 +86,18 @@ cleanup() {
 # no git hash is contained in VERSION_STRING.
 config_hash() {
   aom_config_mk="${LIBAOM_CONFIG_PATH}/config.mk"
+  if [ ! -f "${aom_config_mk}" ]; then
+    aom_config_c="${LIBAOM_CONFIG_PATH}/aom_config.c"
+    # Clean up the aom_git_hash pointer line from aom_config.c.
+    # 1. Run grep on aom_config.c for aom_git_hash and limit results to 1.
+    # 2. Split the line using ' = "' as separator.
+    # 3. Abuse sed to consume the trailing "; from the assignment to the
+    #    aom_git_hash pointer.
+    awk -F ' = "' '/aom_git_hash/ { print $NF; exit }' "${aom_config_c}" \
+      | sed s/\"\;//
+    return
+  fi
+
   # Find VERSION_STRING line, split it with "-g" and print the last field to
   # output the git hash to stdout.
   aom_version=$(awk -F -g '/VERSION_STRING/ {print $NF}' "${aom_config_mk}")
@@ -87,7 +114,7 @@ config_hash() {
 current_hash() {
   if git --version > /dev/null 2>&1; then
     (cd "$(dirname "${0}")"
-    git rev-parse --short HEAD)
+    git rev-parse HEAD)
   else
     # Return the config hash if git is unavailable: Fail silently, git hashes
     # are used only for warnings.
@@ -103,6 +130,7 @@ check_git_hashes() {
 
   if [ "${hash_at_configure_time}" != "${hash_now}" ]; then
     echo "Warning: git hash has changed since last configure."
+    vlog "  config hash: ${hash_at_configure_time} hash now: ${hash_now}"
   fi
 }
 

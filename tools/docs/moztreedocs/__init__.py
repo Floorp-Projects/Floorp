@@ -7,6 +7,7 @@ from __future__ import unicode_literals
 import os
 
 from mozbuild.frontend.reader import BuildReader
+from mozpack.archive import create_tar_gz_from_files
 from mozpack.copier import FileCopier
 from mozpack.files import FileFinder
 from mozpack.manifests import InstallManifest
@@ -124,3 +125,23 @@ class SphinxManager(object):
 
         with open(os.path.join(self._docs_dir, 'index.rst'), 'wb') as fh:
             fh.write(data)
+
+
+def distribution_files(root):
+    """Find all files suitable for distributing.
+
+    Given the path to generated Sphinx documentation, returns an iterable
+    of (path, BaseFile) for files that should be archived, uploaded, etc.
+    Paths are relative to given root directory.
+    """
+    finder = FileFinder(root, ignore=('_staging', '_venv'))
+    return finder.find('**')
+
+
+def create_tarball(filename, root):
+    """Create a tar.gz archive of docs in a directory."""
+    files = dict(distribution_files(root))
+
+    with open(filename, 'wb') as fh:
+        create_tar_gz_from_files(fh, files, filename=os.path.basename(filename),
+                                 compresslevel=6)

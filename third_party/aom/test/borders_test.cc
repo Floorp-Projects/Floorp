@@ -20,8 +20,8 @@
 namespace {
 
 class BordersTest
-    : public ::libaom_test::EncoderTest,
-      public ::libaom_test::CodecTestWithParam<libaom_test::TestMode> {
+    : public ::libaom_test::CodecTestWithParam<libaom_test::TestMode>,
+      public ::libaom_test::EncoderTest {
  protected:
   BordersTest() : EncoderTest(GET_PARAM(0)) {}
   virtual ~BordersTest() {}

@@ -26,11 +26,11 @@ set(AOM_SCALE_INTRIN_DSPR2
 # target must exist before this function is called.
 function (setup_aom_scale_targets)
   add_library(aom_scale OBJECT ${AOM_SCALE_SOURCES})
-  target_sources(aom PUBLIC $<TARGET_OBJECTS:aom_scale>)
+  target_sources(aom PRIVATE $<TARGET_OBJECTS:aom_scale>)
 
   if (HAVE_DSPR2)
     add_intrinsics_object_library("" "dspr2" "aom_scale"
-                                  "AOM_SCALE_INTRIN_DSPR2")
+                                  "AOM_SCALE_INTRIN_DSPR2" "aom_scale")
   endif ()
 
   set(AOM_LIB_TARGETS ${AOM_LIB_TARGETS} aom_scale PARENT_SCOPE)

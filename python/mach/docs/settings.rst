@@ -43,8 +43,8 @@ decorator in an existing mach command module. E.g:
     @SettingsProvider
     class ArbitraryClassName(object):
         config_settings = [
-            ('foo.bar', 'string'),
-            ('foo.baz', 'int', 0, set([0,1,2])),
+            ('foo.bar', 'string', "A helpful description"),
+            ('foo.baz', 'int', "Another description", 0, {'choices': set([0,1,2])}),
         ]
 
 ``@SettingsProvider``'s must specify a variable called ``config_settings``
@@ -55,10 +55,14 @@ Each tuple is of the form:
 
 .. code-block:: python
 
-    ('<section>.<option>', '<type>', default, extra)
+    ('<section>.<option>', '<type>', '<description>', default, extra)
 
 ``type`` is a string and can be one of:
 string, boolean, int, pos_int, path
+
+``description`` is a string explaining how to define the settings and
+where they get used. Descriptions should ideally be multi-line paragraphs
+where the first line acts as a short description.
 
 ``default`` is optional, and provides a default value in case none was
 specified by any of the configuration files.
@@ -77,7 +81,7 @@ as the option name. For example:
 
 .. parsed-literal::
 
-    ('foo.*', 'string')
+    ('foo.*', 'string', 'desc')
 
 This allows configuration files like this:
 
@@ -88,20 +92,16 @@ This allows configuration files like this:
     arbitrary2 = some other string
 
 
-Documenting Settings
-====================
+Finding Settings
+================
 
-All settings must at least be documented in the en_US locale. Otherwise,
-running ``mach settings`` will raise. Mach uses gettext to perform localization.
-
-A handy command exists to generate the localization files:
+You can see which settings are available as well as their description and
+expected values by running:
 
 .. parsed-literal::
 
-    mach settings locale-gen <section>
-
-You'll be prompted to add documentation for all options in section with the
-en_US locale. To add documentation in another locale, pass in ``--locale``.
+    ./mach settings  # or
+    ./mach settings --list
 
 
 Accessing Settings
@@ -122,9 +122,9 @@ For example:
     @SettingsProvider
     class ExampleSettings(object):
         config_settings = [
-            ('a.b', 'string', 'default'),
-            ('foo.bar', 'string'),
-            ('foo.baz', 'int', 0, {'choices': set([0,1,2])}),
+            ('a.b', 'string', 'desc', 'default'),
+            ('foo.bar', 'string', 'desc',),
+            ('foo.baz', 'int', 'desc', 0, {'choices': set([0,1,2])}),
         ]
 
     @CommandProvider

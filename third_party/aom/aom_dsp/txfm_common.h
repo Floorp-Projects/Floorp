@@ -21,6 +21,27 @@
 #define UNIT_QUANT_SHIFT 2
 #define UNIT_QUANT_FACTOR (1 << UNIT_QUANT_SHIFT)
 
+typedef struct txfm_param {
+  // for both forward and inverse transforms
+  int tx_type;
+  int tx_size;
+  int lossless;
+  int bd;
+#if CONFIG_MRC_TX || CONFIG_LGT
+  int stride;
+  uint8_t *dst;
+#endif  // CONFIG_MRC_TX || CONFIG_LGT
+#if CONFIG_LGT
+  int is_inter;
+  int mode;
+#endif
+// for inverse transforms only
+#if CONFIG_ADAPT_SCAN
+  const int16_t *eob_threshold;
+#endif
+  int eob;
+} TxfmParam;
+
 // Constants:
 //  for (int i = 1; i< 32; ++i)
 //    printf("static const int cospi_%d_64 = %.0f;\n", i,
@@ -67,4 +88,62 @@ static const tran_high_t sinpi_4_9 = 15212;
 // 16384 * sqrt(2)
 static const tran_high_t Sqrt2 = 23170;
 
+static INLINE tran_high_t fdct_round_shift(tran_high_t input) {
+  tran_high_t rv = ROUND_POWER_OF_TWO(input, DCT_CONST_BITS);
+  return rv;
+}
+
+#if CONFIG_LGT
+// The Line Graph Transforms (LGTs) matrices are written as follows.
+// Each 2D array is 16384 times an LGT matrix, which is the matrix of
+// eigenvectors of the graph Laplacian matrices for the line graph.
+
+// LGT4 name: lgt4_140
+// Self loops: 1.400, 0.000, 0.000, 0.000
+// Edges: 1.000, 1.000, 1.000
+static const tran_high_t lgt4_140[4][4] = {
+  { 4206, 9518, 13524, 15674 },
+  { 11552, 14833, 1560, -13453 },
+  { 15391, -1906, -14393, 9445 },
+  { 12201, -14921, 12016, -4581 },
+};
+
+// LGT4 name: lgt4_170
+// Self loops: 1.700, 0.000, 0.000, 0.000
+// Edges: 1.000, 1.000, 1.000
+static const tran_high_t lgt4_170[4][4] = {
+  { 3636, 9287, 13584, 15902 },
+  { 10255, 15563, 2470, -13543 },
+  { 14786, 711, -15249, 9231 },
+  { 14138, -14420, 10663, -3920 },
+};
+
+// LGT8 name: lgt8_150
+// Self loops: 1.500, 0.000, 0.000, 0.000, 0.000, 0.000, 0.000, 0.000
+// Edges: 1.000, 1.000, 1.000, 1.000, 1.000, 1.000, 1.000
+static const tran_high_t lgt8_150[8][8] = {
+  { 2075, 5110, 7958, 10511, 12677, 14376, 15544, 16140 },
+  { 6114, 13307, 16196, 13845, 7015, -2084, -10509, -15534 },
+  { 9816, 16163, 8717, -6168, -15790, -11936, 2104, 14348 },
+  { 12928, 12326, -7340, -15653, 242, 15763, 6905, -12632 },
+  { 15124, 3038, -16033, 1758, 15507, -6397, -13593, 10463 },
+  { 15895, -7947, -7947, 15895, -7947, -7947, 15895, -7947 },
+  { 14325, -15057, 9030, 1050, -10659, 15483, -13358, 5236 },
+  { 9054, -12580, 14714, -15220, 14043, -11312, 7330, -2537 },
+};
+
+// LGT8 name: lgt8_170
+// Self loops: 1.700, 0.000, 0.000, 0.000, 0.000, 0.000, 0.000, 0.000
+// Edges: 1.000, 1.000, 1.000, 1.000, 1.000, 1.000, 1.000
+static const tran_high_t lgt8_170[8][8] = {
+  { 1858, 4947, 7850, 10458, 12672, 14411, 15607, 16217 },
+  { 5494, 13022, 16256, 14129, 7343, -1864, -10456, -15601 },
+  { 8887, 16266, 9500, -5529, -15749, -12273, 1876, 14394 },
+  { 11870, 13351, -6199, -15984, -590, 15733, 7273, -12644 },
+  { 14248, 5137, -15991, 291, 15893, -5685, -13963, 10425 },
+  { 15716, -5450, -10010, 15929, -6665, -8952, 16036, -7835 },
+  { 15533, -13869, 6559, 3421, -12009, 15707, -13011, 5018 },
+  { 11357, -13726, 14841, -14600, 13025, -10259, 6556, -2254 },
+};
+#endif  // CONFIG_LGT
 #endif  // AOM_DSP_TXFM_COMMON_H_

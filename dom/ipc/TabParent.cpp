@@ -1897,20 +1897,27 @@ TabParent::RecvHideTooltip()
 mozilla::ipc::IPCResult
 TabParent::RecvNotifyIMEFocus(const ContentCache& aContentCache,
                               const IMENotification& aIMENotification,
-                              IMENotificationRequests* aRequests)
+                              NotifyIMEFocusResolver&& aResolve)
 {
+  if (mIsDestroyed) {
+    return IPC_OK();
+  }
+
   nsCOMPtr<nsIWidget> widget = GetWidget();
   if (!widget) {
-    *aRequests = IMENotificationRequests();
+    aResolve(IMENotificationRequests());
     return IPC_OK();
   }
 
   mContentCache.AssignContent(aContentCache, widget, &aIMENotification);
   IMEStateManager::NotifyIME(aIMENotification, widget, this);
 
+  IMENotificationRequests requests;
   if (aIMENotification.mMessage == NOTIFY_IME_OF_FOCUS) {
-    *aRequests = widget->IMENotificationRequestsRef();
+    requests = widget->IMENotificationRequestsRef();
   }
+  aResolve(requests);
+
   return IPC_OK();
 }
 
@@ -1919,17 +1926,9 @@ TabParent::RecvNotifyIMETextChange(const ContentCache& aContentCache,
                                    const IMENotification& aIMENotification)
 {
   nsCOMPtr<nsIWidget> widget = GetWidget();
-  if (!widget) {
+  if (!widget || !IMEStateManager::DoesTabParentHaveIMEFocus(this)) {
     return IPC_OK();
   }
-
-#ifdef DEBUG
-  const IMENotificationRequests& requests =
-    widget->IMENotificationRequestsRef();
-  NS_ASSERTION(requests.WantTextChange(),
-    "Don't call Send/RecvNotifyIMETextChange without NOTIFY_TEXT_CHANGE");
-#endif
-
   mContentCache.AssignContent(aContentCache, widget, &aIMENotification);
   mContentCache.MaybeNotifyIME(widget, aIMENotification);
   return IPC_OK();
@@ -1941,7 +1940,7 @@ TabParent::RecvNotifyIMECompositionUpdate(
              const IMENotification& aIMENotification)
 {
   nsCOMPtr<nsIWidget> widget = GetWidget();
-  if (!widget) {
+  if (!widget || !IMEStateManager::DoesTabParentHaveIMEFocus(this)) {
     return IPC_OK();
   }
   mContentCache.AssignContent(aContentCache, widget, &aIMENotification);
@@ -1954,7 +1953,7 @@ TabParent::RecvNotifyIMESelection(const ContentCache& aContentCache,
                                   const IMENotification& aIMENotification)
 {
   nsCOMPtr<nsIWidget> widget = GetWidget();
-  if (!widget) {
+  if (!widget || !IMEStateManager::DoesTabParentHaveIMEFocus(this)) {
     return IPC_OK();
   }
   mContentCache.AssignContent(aContentCache, widget, &aIMENotification);
@@ -1966,7 +1965,7 @@ mozilla::ipc::IPCResult
 TabParent::RecvUpdateContentCache(const ContentCache& aContentCache)
 {
   nsCOMPtr<nsIWidget> widget = GetWidget();
-  if (!widget) {
+  if (!widget || !IMEStateManager::DoesTabParentHaveIMEFocus(this)) {
     return IPC_OK();
   }
 
@@ -1981,7 +1980,7 @@ TabParent::RecvNotifyIMEMouseButtonEvent(
 {
 
   nsCOMPtr<nsIWidget> widget = GetWidget();
-  if (!widget) {
+  if (!widget || !IMEStateManager::DoesTabParentHaveIMEFocus(this)) {
     *aConsumedByIME = false;
     return IPC_OK();
   }
@@ -1995,7 +1994,7 @@ TabParent::RecvNotifyIMEPositionChange(const ContentCache& aContentCache,
                                        const IMENotification& aIMENotification)
 {
   nsCOMPtr<nsIWidget> widget = GetWidget();
-  if (!widget) {
+  if (!widget || !IMEStateManager::DoesTabParentHaveIMEFocus(this)) {
     return IPC_OK();
   }
   mContentCache.AssignContent(aContentCache, widget, &aIMENotification);

@@ -22,8 +22,8 @@ const int kVideoSourceHeight = 240;
 const int kFramesToEncode = 2;
 
 class RealtimeTest
-    : public ::libaom_test::EncoderTest,
-      public ::libaom_test::CodecTestWithParam<libaom_test::TestMode> {
+    : public ::libaom_test::CodecTestWithParam<libaom_test::TestMode>,
+      public ::libaom_test::EncoderTest {
  protected:
   RealtimeTest() : EncoderTest(GET_PARAM(0)), frame_packets_(0) {}
   virtual ~RealtimeTest() {}

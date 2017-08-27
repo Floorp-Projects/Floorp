@@ -17,7 +17,6 @@ NON_CHROME = set([
     '**/crashreporter*.ini',
     'searchplugins',
     'dictionaries',
-    'hyphenation',
     'defaults/profile',
     'defaults/pref*/*-l10n.js',
     'update.locale',

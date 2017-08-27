@@ -28,8 +28,8 @@ namespace {
 const char kTestVideoName[] = "niklas_1280_720_30.y4m";
 const int kTestVideoFrames = 10;
 
-class AnsCodecTest : public ::libaom_test::EncoderTest,
-                     public ::libaom_test::CodecTestWithParam<int> {
+class AnsCodecTest : public ::libaom_test::CodecTestWithParam<int>,
+                     public ::libaom_test::EncoderTest {
  protected:
   AnsCodecTest()
       : EncoderTest(GET_PARAM(0)), ans_window_size_log2_(GET_PARAM(1)) {}

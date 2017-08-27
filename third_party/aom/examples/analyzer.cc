@@ -233,13 +233,17 @@ void AnalyzerPanel::setShowPlane(bool show_plane, int mask) {
 
 void AnalyzerPanel::render() {
   aom_image_t *img = decoder.image;
-  int y_stride = img->stride[0];
-  int cb_stride = img->stride[1];
-  int cr_stride = img->stride[2];
+  const int hbd = !!(img->fmt & AOM_IMG_FMT_HIGHBITDEPTH);
+  int y_stride = img->stride[0] >> hbd;
+  int cb_stride = img->stride[1] >> hbd;
+  int cr_stride = img->stride[2] >> hbd;
   int p_stride = 3 * getDisplayWidth();
   unsigned char *y_row = img->planes[0];
   unsigned char *cb_row = img->planes[1];
   unsigned char *cr_row = img->planes[2];
+  uint16_t *y_row16 = reinterpret_cast<uint16_t *>(y_row);
+  uint16_t *cb_row16 = reinterpret_cast<uint16_t *>(cb_row);
+  uint16_t *cr_row16 = reinterpret_cast<uint16_t *>(cr_row);
   unsigned char *p_row = pixels;
   int y_width_padding = decoder.getWidthPadding();
   int cb_width_padding = y_width_padding >> 1;
@@ -251,6 +255,9 @@ void AnalyzerPanel::render() {
     unsigned char *y = y_row - y_stride * y_height_padding;
     unsigned char *cb = cb_row - cb_stride * cb_height_padding;
     unsigned char *cr = cr_row - cr_stride * cr_height_padding;
+    uint16_t *y16 = y_row16 - y_stride * y_height_padding;
+    uint16_t *cb16 = cb_row16 - cb_stride * cb_height_padding;
+    uint16_t *cr16 = cr_row16 - cr_stride * cr_height_padding;
     unsigned char *p = p_row;
     for (int i = 0; i < decoder.getWidth(); i++) {
       int64_t yval;
@@ -260,9 +267,15 @@ void AnalyzerPanel::render() {
       unsigned rval;
       unsigned gval;
       unsigned bval;
-      yval = *(y - y_width_padding);
-      cbval = *(cb - cb_width_padding);
-      crval = *(cr - cr_width_padding);
+      if (hbd) {
+        yval = *(y16 - y_width_padding);
+        cbval = *(cb16 - cb_width_padding);
+        crval = *(cr16 - cr_width_padding);
+      } else {
+        yval = *(y - y_width_padding);
+        cbval = *(cb - cb_width_padding);
+        crval = *(cr - cr_width_padding);
+      }
       pmask = plane_mask;
       if (pmask & OD_LUMA_MASK) {
         yval -= 16;
@@ -296,16 +309,29 @@ void AnalyzerPanel::render() {
         }
         px_row += p_stride;
       }
-      int dc = ((y - y_row) & 1) | (1 - img->x_chroma_shift);
-      y++;
-      cb += dc;
-      cr += dc;
+      if (hbd) {
+        int dc = ((y16 - y_row16) & 1) | (1 - img->x_chroma_shift);
+        y16++;
+        cb16 += dc;
+        cr16 += dc;
+      } else {
+        int dc = ((y - y_row) & 1) | (1 - img->x_chroma_shift);
+        y++;
+        cb += dc;
+        cr += dc;
+      }
       p += zoom * 3;
     }
     int dc = -((j & 1) | (1 - img->y_chroma_shift));
-    y_row += y_stride;
-    cb_row += dc & cb_stride;
-    cr_row += dc & cr_stride;
+    if (hbd) {
+      y_row16 += y_stride;
+      cb_row16 += dc & cb_stride;
+      cr_row16 += dc & cr_stride;
+    } else {
+      y_row += y_stride;
+      cb_row += dc & cb_stride;
+      cr_row += dc & cr_stride;
+    }
     p_row += zoom * p_stride;
   }
 }

@@ -10,6 +10,7 @@
 #include "mozilla/TimeStamp.h"
 #include "mozilla/dom/BindingDeclarations.h"
 #include "mozilla/dom/Nullable.h"
+#include "nsRFPService.h"
 #include "nsStringFwd.h"
 
 class nsIContent;
@@ -31,7 +32,9 @@ public:
     dom::Nullable<double> result;
 
     if (!aTime.IsNull()) {
-      result.SetValue(aTime.Value().ToMilliseconds());
+      result.SetValue(
+        nsRFPService::ReduceTimePrecisionAsMSecs(aTime.Value().ToMilliseconds())
+      );
     }
 
     return result;

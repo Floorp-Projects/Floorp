@@ -64,7 +64,7 @@ static INLINE void transpose_32_4x4(int stride, const __m128i *input,
 // the entire input block can be represent by a grid of 4x4 blocks
 // each 4x4 blocks can be represent by 4 vertical __m128i
 // we first transpose each 4x4 block internally
-// than transpose the grid
+// then transpose the grid
 static INLINE void transpose_32(int txfm_size, const __m128i *input,
                                 __m128i *output) {
   const int num_per_128 = 4;

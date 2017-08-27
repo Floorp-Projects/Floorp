@@ -86,9 +86,9 @@ int is_extension_y4m(const char *filename) {
 }
 
 class EndToEndTest
-    : public ::libaom_test::EncoderTest,
-      public ::libaom_test::CodecTestWith3Params<libaom_test::TestMode,
-                                                 TestVideoParam, int> {
+    : public ::libaom_test::CodecTestWith3Params<libaom_test::TestMode,
+                                                 TestVideoParam, int>,
+      public ::libaom_test::EncoderTest {
  protected:
   EndToEndTest()
       : EncoderTest(GET_PARAM(0)), test_video_param_(GET_PARAM(2)),
@@ -110,7 +110,6 @@ class EndToEndTest
       cfg_.rc_buf_initial_sz = 500;
       cfg_.rc_buf_optimal_sz = 600;
     }
-    dec_cfg_.threads = 4;
   }
 
   virtual void BeginPassHook(unsigned int) {

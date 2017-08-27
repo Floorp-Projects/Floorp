@@ -9,14 +9,13 @@
  * PATENTS file, you can obtain it at www.aomedia.org/license/patent.
  */
 
-#include "./clpf.h"
 #include "./av1_rtcd.h"
 #include "./cdef.h"
 #include "aom/aom_image.h"
 #include "aom_dsp/aom_dsp_common.h"
 
-int av1_clpf_sample(int X, int A, int B, int C, int D, int E, int F, int G,
-                    int H, int s, unsigned int dmp) {
+static int clpf_sample(int X, int A, int B, int C, int D, int E, int F, int G,
+                       int H, int s, unsigned int dmp) {
   int delta = 1 * constrain(A - X, s, dmp) + 3 * constrain(B - X, s, dmp) +
               1 * constrain(C - X, s, dmp) + 3 * constrain(D - X, s, dmp) +
               3 * constrain(E - X, s, dmp) + 1 * constrain(F - X, s, dmp) +
@@ -24,8 +23,8 @@ int av1_clpf_sample(int X, int A, int B, int C, int D, int E, int F, int G,
   return (8 + delta - (delta < 0)) >> 4;
 }
 
-int av1_clpf_hsample(int X, int A, int B, int C, int D, int s,
-                     unsigned int dmp) {
+static int clpf_hsample(int X, int A, int B, int C, int D, int s,
+                        unsigned int dmp) {
   int delta = 1 * constrain(A - X, s, dmp) + 3 * constrain(B - X, s, dmp) +
               3 * constrain(C - X, s, dmp) + 1 * constrain(D - X, s, dmp);
   return (4 + delta - (delta < 0)) >> 3;
@@ -48,7 +47,7 @@ void aom_clpf_block_c(uint8_t *dst, const uint16_t *src, int dstride,
       const int G = src[(y + 1) * sstride + x];
       const int H = src[(y + 2) * sstride + x];
       const int delta =
-          av1_clpf_sample(X, A, B, C, D, E, F, G, H, strength, damping);
+          clpf_sample(X, A, B, C, D, E, F, G, H, strength, damping);
       dst[y * dstride + x] = X + delta;
     }
   }
@@ -72,7 +71,7 @@ void aom_clpf_block_hbd_c(uint16_t *dst, const uint16_t *src, int dstride,
       const int G = src[(y + 1) * sstride + x];
       const int H = src[(y + 2) * sstride + x];
       const int delta =
-          av1_clpf_sample(X, A, B, C, D, E, F, G, H, strength, damping);
+          clpf_sample(X, A, B, C, D, E, F, G, H, strength, damping);
       dst[y * dstride + x] = X + delta;
     }
   }
@@ -91,7 +90,7 @@ void aom_clpf_hblock_c(uint8_t *dst, const uint16_t *src, int dstride,
       const int B = src[y * sstride + x - 1];
       const int C = src[y * sstride + x + 1];
       const int D = src[y * sstride + x + 2];
-      const int delta = av1_clpf_hsample(X, A, B, C, D, strength, damping);
+      const int delta = clpf_hsample(X, A, B, C, D, strength, damping);
       dst[y * dstride + x] = X + delta;
     }
   }
@@ -109,7 +108,7 @@ void aom_clpf_hblock_hbd_c(uint16_t *dst, const uint16_t *src, int dstride,
       const int B = src[y * sstride + x - 1];
       const int C = src[y * sstride + x + 1];
       const int D = src[y * sstride + x + 2];
-      const int delta = av1_clpf_hsample(X, A, B, C, D, strength, damping);
+      const int delta = clpf_hsample(X, A, B, C, D, strength, damping);
       dst[y * dstride + x] = X + delta;
     }
   }

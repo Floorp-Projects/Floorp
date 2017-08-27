@@ -292,6 +292,7 @@ public:
 
   void HandledWindowedPluginKeyEvent(const NativeEventData& aKeyEventData,
                                      bool aIsConsumed);
+
   virtual nsresult OnWindowedPluginKeyEvent(
                      const NativeEventData& aKeyEventData,
                      nsIKeyEventInPluginCallback* aCallback) override;

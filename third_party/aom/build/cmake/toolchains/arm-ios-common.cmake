@@ -24,7 +24,7 @@ set(AOM_ADS2GAS "${CMAKE_CURRENT_SOURCE_DIR}/build/make/ads2gas_apple.pl")
 set(AOM_GAS_EXT "S")
 
 # No runtime cpu detect for arm*-ios targets.
-set(CONFIG_RUNTIME_CPU_DETECT 0 CACHE BOOL "")
+set(CONFIG_RUNTIME_CPU_DETECT 0 CACHE NUMBER "")
 
 # TODO(tomfinegan): Handle bit code embedding.
 

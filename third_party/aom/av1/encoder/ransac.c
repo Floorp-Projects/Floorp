@@ -139,6 +139,8 @@ static void normalize_homography(double *pts, int n, double *T) {
   double msqe = 0;
   double scale;
   int i;
+
+  assert(n > 0);
   for (i = 0; i < n; ++i, p += 2) {
     mean[0] += p[0];
     mean[1] += p[1];
@@ -821,13 +823,15 @@ static int ransac(const int *matched_points, int npoints,
 
   // Recompute the motions using only the inliers.
   for (i = 0; i < num_desired_motions; ++i) {
-    copy_points_at_indices(points1, corners1, motions[i].inlier_indices,
-                           motions[i].num_inliers);
-    copy_points_at_indices(points2, corners2, motions[i].inlier_indices,
-                           motions[i].num_inliers);
+    if (motions[i].num_inliers >= minpts) {
+      copy_points_at_indices(points1, corners1, motions[i].inlier_indices,
+                             motions[i].num_inliers);
+      copy_points_at_indices(points2, corners2, motions[i].inlier_indices,
+                             motions[i].num_inliers);
 
-    find_transformation(motions[i].num_inliers, points1, points2,
-                        params_by_motion + (MAX_PARAMDIM - 1) * i);
+      find_transformation(motions[i].num_inliers, points1, points2,
+                          params_by_motion + (MAX_PARAMDIM - 1) * i);
+    }
     num_inliers_by_motion[i] = motions[i].num_inliers;
   }
 

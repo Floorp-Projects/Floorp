@@ -15,7 +15,6 @@
 #include "aom_mem/aom_mem.h"
 #include "aom_ports/mem.h"
 
-#if CONFIG_HIGHBITDEPTH
 void aom_highbd_quantize_b_sse2(const tran_low_t *coeff_ptr, intptr_t count,
                                 int skip_block, const int16_t *zbin_ptr,
                                 const int16_t *round_ptr,
@@ -152,4 +151,3 @@ void aom_highbd_quantize_b_32x32_sse2(
   }
   *eob_ptr = eob + 1;
 }
-#endif

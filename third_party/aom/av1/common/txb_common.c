@@ -113,10 +113,11 @@ void av1_adapt_txb_probs(AV1_COMMON *cm, unsigned int count_sat,
     for (ctx = 0; ctx < DC_SIGN_CONTEXTS; ++ctx)
       fc->dc_sign[plane][ctx] = mode_mv_merge_probs(
           pre_fc->dc_sign[plane][ctx], counts->dc_sign[plane][ctx]);
+
   // Update probability models for non-zero coefficient map and eob flag.
-  for (level = 0; level < NUM_BASE_LEVELS; ++level)
-    for (tx_size = 0; tx_size < TX_SIZES; ++tx_size)
-      for (plane = 0; plane < PLANE_TYPES; ++plane)
+  for (tx_size = 0; tx_size < TX_SIZES; ++tx_size)
+    for (plane = 0; plane < PLANE_TYPES; ++plane)
+      for (level = 0; level < NUM_BASE_LEVELS; ++level)
         for (ctx = 0; ctx < COEFF_BASE_CONTEXTS; ++ctx)
           fc->coeff_base[tx_size][plane][level][ctx] =
               merge_probs(pre_fc->coeff_base[tx_size][plane][level][ctx],

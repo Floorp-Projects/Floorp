@@ -81,12 +81,14 @@ typedef struct PC_TREE {
   PICK_MODE_CONTEXT horizontalb[3];
   PICK_MODE_CONTEXT verticala[3];
   PICK_MODE_CONTEXT verticalb[3];
+  PICK_MODE_CONTEXT horizontal4[4];
+  PICK_MODE_CONTEXT vertical4[4];
 #endif
   union {
     struct PC_TREE *split[4];
     PICK_MODE_CONTEXT *leaf_split[4];
   };
-#ifdef CONFIG_SUPERTX
+#if CONFIG_SUPERTX
   PICK_MODE_CONTEXT horizontal_supertx;
   PICK_MODE_CONTEXT vertical_supertx;
   PICK_MODE_CONTEXT split_supertx;

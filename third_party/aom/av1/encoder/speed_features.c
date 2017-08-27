@@ -35,7 +35,7 @@ static unsigned char good_quality_max_mesh_pct[MAX_MESH_SPEED + 1] = {
 // TODO(aconverse@google.com): These settings are pretty relaxed, tune them for
 // each speed setting
 static MESH_PATTERN intrabc_mesh_patterns[MAX_MESH_SPEED + 1][MAX_MESH_STEP] = {
-  { { 64, 1 }, { 64, 1 }, { 0, 0 }, { 0, 0 } },
+  { { 256, 1 }, { 256, 1 }, { 0, 0 }, { 0, 0 } },
   { { 64, 1 }, { 64, 1 }, { 0, 0 }, { 0, 0 } },
   { { 64, 1 }, { 64, 1 }, { 0, 0 }, { 0, 0 } },
   { { 64, 4 }, { 16, 1 }, { 0, 0 }, { 0, 0 } },
@@ -171,12 +171,24 @@ static void set_good_speed_features_framesize_independent(AV1_COMP *cpi,
     sf->recode_loop = ALLOW_RECODE_KFARFGF;
 #if CONFIG_TX64X64
     sf->intra_y_mode_mask[TX_64X64] = INTRA_DC_H_V;
+#if CONFIG_CFL
+    sf->intra_uv_mode_mask[TX_64X64] = UV_INTRA_DC_H_V;
+#else
     sf->intra_uv_mode_mask[TX_64X64] = INTRA_DC_H_V;
+#endif  // CONFIG_CFL
 #endif  // CONFIG_TX64X64
     sf->intra_y_mode_mask[TX_32X32] = INTRA_DC_H_V;
+#if CONFIG_CFL
+    sf->intra_uv_mode_mask[TX_32X32] = UV_INTRA_DC_H_V;
+#else
     sf->intra_uv_mode_mask[TX_32X32] = INTRA_DC_H_V;
+#endif
     sf->intra_y_mode_mask[TX_16X16] = INTRA_DC_H_V;
+#if CONFIG_CFL
+    sf->intra_uv_mode_mask[TX_16X16] = UV_INTRA_DC_H_V;
+#else
     sf->intra_uv_mode_mask[TX_16X16] = INTRA_DC_H_V;
+#endif
 
     sf->tx_size_search_breakout = 1;
     sf->partition_search_breakout_rate_thr = 80;
@@ -199,7 +211,7 @@ static void set_good_speed_features_framesize_independent(AV1_COMP *cpi,
             : FLAG_SKIP_INTRA_DIRMISMATCH | FLAG_SKIP_INTRA_BESTINTER |
                   FLAG_SKIP_COMP_BESTINTRA | FLAG_SKIP_INTRA_LOWVAR;
     sf->disable_filter_search_var_thresh = 100;
-    sf->comp_inter_joint_search_thresh = BLOCK_SIZES;
+    sf->comp_inter_joint_search_thresh = BLOCK_SIZES_ALL;
     sf->auto_min_max_partition_size = RELAXED_NEIGHBORING_MIN_MAX;
     sf->allow_partition_search_skip = 1;
     sf->use_upsampled_references = 0;
@@ -227,10 +239,18 @@ static void set_good_speed_features_framesize_independent(AV1_COMP *cpi,
     sf->mode_skip_start = 6;
 #if CONFIG_TX64X64
     sf->intra_y_mode_mask[TX_64X64] = INTRA_DC;
+#if CONFIG_CFL
+    sf->intra_uv_mode_mask[TX_64X64] = UV_INTRA_DC;
+#else
     sf->intra_uv_mode_mask[TX_64X64] = INTRA_DC;
+#endif  // CONFIG_CFL
 #endif  // CONFIG_TX64X64
     sf->intra_y_mode_mask[TX_32X32] = INTRA_DC;
+#if CONFIG_CFL
+    sf->intra_uv_mode_mask[TX_32X32] = UV_INTRA_DC;
+#else
     sf->intra_uv_mode_mask[TX_32X32] = INTRA_DC;
+#endif  // CONFIG_CFL
     sf->adaptive_interp_filter_search = 1;
   }
 
@@ -255,7 +275,11 @@ static void set_good_speed_features_framesize_independent(AV1_COMP *cpi,
     sf->disable_filter_search_var_thresh = 500;
     for (i = 0; i < TX_SIZES; ++i) {
       sf->intra_y_mode_mask[i] = INTRA_DC;
+#if CONFIG_CFL
+      sf->intra_uv_mode_mask[i] = UV_INTRA_DC;
+#else
       sf->intra_uv_mode_mask[i] = INTRA_DC;
+#endif  // CONFIG_CFL
     }
     sf->partition_search_breakout_rate_thr = 500;
     sf->mv.reduce_first_step_size = 1;
@@ -405,7 +429,11 @@ void av1_set_speed_features_framesize_independent(AV1_COMP *cpi) {
 
   for (i = 0; i < TX_SIZES; i++) {
     sf->intra_y_mode_mask[i] = INTRA_ALL;
+#if CONFIG_CFL
+    sf->intra_uv_mode_mask[i] = UV_INTRA_ALL;
+#else
     sf->intra_uv_mode_mask[i] = INTRA_ALL;
+#endif  // CONFIG_CFL
   }
   sf->use_rd_breakout = 0;
   sf->lpf_pick = LPF_PICK_FROM_FULL_IMAGE;
@@ -413,7 +441,7 @@ void av1_set_speed_features_framesize_independent(AV1_COMP *cpi) {
   sf->use_fast_coef_costing = 0;
   sf->mode_skip_start = MAX_MODES;  // Mode index at which mode skip mask set
   sf->schedule_mode_search = 0;
-  for (i = 0; i < BLOCK_SIZES; ++i) sf->inter_mode_mask[i] = INTER_ALL;
+  for (i = 0; i < BLOCK_SIZES_ALL; ++i) sf->inter_mode_mask[i] = INTER_ALL;
   sf->max_intra_bsize = BLOCK_LARGEST;
   sf->reuse_inter_pred_sby = 0;
   // This setting only takes effect when partition_search_type is set

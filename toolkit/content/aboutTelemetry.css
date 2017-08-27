@@ -16,6 +16,7 @@ body {
 #categories {
   padding-top: 0px;
   overflow-y: auto;
+  margin-bottom: 42px;
 }
 
 .main-content.search > section > *:not(.data) {
@@ -24,8 +25,11 @@ body {
 
 .main-content {
   flex: 1;
-  font-size: 18px;
   line-height: 1.6;
+}
+
+#home-section {
+  font-size: 18px;
 }
 
 #category-raw {
@@ -202,7 +206,7 @@ section:not(.active) {
   border-radius: 2px;
   margin-bottom: 24px;
   margin-right: 24px;
-  min-height: 284px;
+  min-height: 17.5em;
 }
 
 
@@ -215,6 +219,11 @@ body[dir="rtl"] .histogram {
   width: 100%;
   white-space: nowrap;
   overflow: hidden;
+  font-size: 17px
+}
+
+.histogram-stats {
+  font-size: 13px;
 }
 
 .keyed-histogram {
@@ -223,16 +232,15 @@ body[dir="rtl"] .histogram {
   overflow: hidden;
 }
 
-.keyed-histogram-title {
+.keyed-title {
   text-overflow: ellipsis;
-  width: 100%;
   margin: 12px 0;
-  font-weight: bold;
-  font-size: 120%;
+  font-size: 17px;
   white-space: nowrap;
 }
 
 .bar {
+  font-size: 17px;
   width: 2em;
   margin: 2px;
   text-align: center;
@@ -256,12 +264,15 @@ body[dir="rtl"] .bar {
 
 th, td, table {
   text-align: start;
+  word-break: break-all;
   border-collapse: collapse;
 }
 
 table {
+  table-layout: fixed;
   width: 100%;
   font-size: 15px;
+  margin-bottom: 2em;
 }
 
 td {
@@ -274,10 +285,9 @@ tr:not(:first-child):hover {
 }
 
 th {
-  font-size: larger;
-  font-weight: bold;
+  font-size: 13px;
   white-space: nowrap;
-  padding-bottom: 0.5em;
+  padding: 0.5em 0;
 }
 
 body[dir="rtl"] th {
@@ -286,8 +296,8 @@ body[dir="rtl"] th {
 
 caption {
   text-align: left;
-  font-size: xx-large;
-  margin: 1em 0 0.5em 0;
+  font-size: 22px;
+  margin: 0.5em 0 0.5em 0;
 }
 
 body[dir="rtl"] caption {

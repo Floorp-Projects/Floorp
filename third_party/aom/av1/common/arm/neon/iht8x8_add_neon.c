@@ -458,7 +458,7 @@ static INLINE void IADST8X8_1D(int16x8_t *q8s16, int16x8_t *q9s16,
 }
 
 void av1_iht8x8_64_add_neon(const tran_low_t *input, uint8_t *dest,
-                            int dest_stride, int tx_type) {
+                            int dest_stride, const TxfmParam *txfm_param) {
   int i;
   uint8_t *d1, *d2;
   uint8x8_t d0u8, d1u8, d2u8, d3u8;
@@ -478,9 +478,10 @@ void av1_iht8x8_64_add_neon(const tran_low_t *input, uint8_t *dest,
   TRANSPOSE8X8(&q8s16, &q9s16, &q10s16, &q11s16, &q12s16, &q13s16, &q14s16,
                &q15s16);
 
+  int tx_type = txfm_param->tx_type;
   switch (tx_type) {
     case 0:  // idct_idct is not supported. Fall back to C
-      av1_iht8x8_64_add_c(input, dest, dest_stride, tx_type);
+      av1_iht8x8_64_add_c(input, dest, dest_stride, txfm_param);
       return;
       break;
     case 1:  // iadst_idct

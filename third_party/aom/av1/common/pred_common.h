@@ -54,6 +54,13 @@ static INLINE aom_prob av1_get_pred_prob_seg_id(
   return segp->pred_probs[av1_get_pred_context_seg_id(xd)];
 }
 
+#if CONFIG_NEW_MULTISYMBOL
+static INLINE aom_cdf_prob *av1_get_pred_cdf_seg_id(
+    struct segmentation_probs *segp, const MACROBLOCKD *xd) {
+  return segp->pred_cdf[av1_get_pred_context_seg_id(xd)];
+}
+#endif
+
 static INLINE int av1_get_skip_context(const MACROBLOCKD *xd) {
   const MODE_INFO *const above_mi = xd->above_mi;
   const MODE_INFO *const left_mi = xd->left_mi;
@@ -101,9 +108,82 @@ static INLINE aom_prob av1_get_reference_mode_prob(const AV1_COMMON *cm,
                                                    const MACROBLOCKD *xd) {
   return cm->fc->comp_inter_prob[av1_get_reference_mode_context(cm, xd)];
 }
+#if CONFIG_NEW_MULTISYMBOL
+static INLINE aom_cdf_prob *av1_get_reference_mode_cdf(const AV1_COMMON *cm,
+                                                       const MACROBLOCKD *xd) {
+  return xd->tile_ctx->comp_inter_cdf[av1_get_reference_mode_context(cm, xd)];
+}
+#endif
+
+#if CONFIG_EXT_COMP_REFS
+int av1_get_comp_reference_type_context(const MACROBLOCKD *xd);
+
+static INLINE aom_prob av1_get_comp_reference_type_prob(const AV1_COMMON *cm,
+                                                        const MACROBLOCKD *xd) {
+  return cm->fc->comp_ref_type_prob[av1_get_comp_reference_type_context(xd)];
+}
+
+int av1_get_pred_context_uni_comp_ref_p(const MACROBLOCKD *xd);
+
+static INLINE aom_prob av1_get_pred_prob_uni_comp_ref_p(const AV1_COMMON *cm,
+                                                        const MACROBLOCKD *xd) {
+  const int pred_context = av1_get_pred_context_uni_comp_ref_p(xd);
+  return cm->fc->uni_comp_ref_prob[pred_context][0];
+}
+
+int av1_get_pred_context_uni_comp_ref_p1(const MACROBLOCKD *xd);
+
+static INLINE aom_prob
+av1_get_pred_prob_uni_comp_ref_p1(const AV1_COMMON *cm, const MACROBLOCKD *xd) {
+  const int pred_context = av1_get_pred_context_uni_comp_ref_p1(xd);
+  return cm->fc->uni_comp_ref_prob[pred_context][1];
+}
+
+int av1_get_pred_context_uni_comp_ref_p2(const MACROBLOCKD *xd);
+
+static INLINE aom_prob
+av1_get_pred_prob_uni_comp_ref_p2(const AV1_COMMON *cm, const MACROBLOCKD *xd) {
+  const int pred_context = av1_get_pred_context_uni_comp_ref_p2(xd);
+  return cm->fc->uni_comp_ref_prob[pred_context][2];
+}
+
+#if CONFIG_NEW_MULTISYMBOL
+static INLINE aom_cdf_prob *av1_get_comp_reference_type_cdf(
+    const MACROBLOCKD *xd) {
+  const int pred_context = av1_get_comp_reference_type_context(xd);
+  return xd->tile_ctx->comp_ref_type_cdf[pred_context];
+}
+
+static INLINE aom_cdf_prob *av1_get_pred_cdf_uni_comp_ref_p(
+    const MACROBLOCKD *xd) {
+  const int pred_context = av1_get_pred_context_uni_comp_ref_p(xd);
+  return xd->tile_ctx->uni_comp_ref_cdf[pred_context][0];
+}
+
+static INLINE aom_cdf_prob *av1_get_pred_cdf_uni_comp_ref_p1(
+    const MACROBLOCKD *xd) {
+  const int pred_context = av1_get_pred_context_uni_comp_ref_p1(xd);
+  return xd->tile_ctx->uni_comp_ref_cdf[pred_context][1];
+}
+
+static INLINE aom_cdf_prob *av1_get_pred_cdf_uni_comp_ref_p2(
+    const MACROBLOCKD *xd) {
+  const int pred_context = av1_get_pred_context_uni_comp_ref_p2(xd);
+  return xd->tile_ctx->uni_comp_ref_cdf[pred_context][2];
+}
+#endif  // CONFIG_NEW_MULTISYMBOL
+#endif  // CONFIG_EXT_COMP_REFS
 
 int av1_get_pred_context_comp_ref_p(const AV1_COMMON *cm,
                                     const MACROBLOCKD *xd);
+
+#if CONFIG_NEW_MULTISYMBOL
+static INLINE aom_cdf_prob *av1_get_pred_cdf_comp_ref_p(const AV1_COMMON *cm,
+                                                        const MACROBLOCKD *xd) {
+  const int pred_context = av1_get_pred_context_comp_ref_p(cm, xd);
+  return xd->tile_ctx->comp_ref_cdf[pred_context][0];
+}
+#endif
 
 static INLINE aom_prob av1_get_pred_prob_comp_ref_p(const AV1_COMMON *cm,
                                                     const MACROBLOCKD *xd) {
@@ -115,6 +195,14 @@ static INLINE aom_prob av1_get_pred_prob_comp_ref_p(const AV1_COMMON *cm,
 int av1_get_pred_context_comp_ref_p1(const AV1_COMMON *cm,
                                      const MACROBLOCKD *xd);
 
+#if CONFIG_NEW_MULTISYMBOL
+static INLINE aom_cdf_prob *av1_get_pred_cdf_comp_ref_p1(
+    const AV1_COMMON *cm, const MACROBLOCKD *xd) {
+  const int pred_context = av1_get_pred_context_comp_ref_p1(cm, xd);
+  return xd->tile_ctx->comp_ref_cdf[pred_context][1];
+}
+#endif  // CONFIG_NEW_MULTISYMBOL
+
 static INLINE aom_prob av1_get_pred_prob_comp_ref_p1(const AV1_COMMON *cm,
                                                      const MACROBLOCKD *xd) {
   const int pred_context = av1_get_pred_context_comp_ref_p1(cm, xd);
@@ -123,6 +211,14 @@ static INLINE aom_prob av1_get_pred_prob_comp_ref_p1(const AV1_COMMON *cm,
 
 int av1_get_pred_context_comp_ref_p2(const AV1_COMMON *cm,
                                      const MACROBLOCKD *xd);
+
+#if CONFIG_NEW_MULTISYMBOL
+static INLINE aom_cdf_prob *av1_get_pred_cdf_comp_ref_p2(
+    const AV1_COMMON *cm, const MACROBLOCKD *xd) {
+  const int pred_context = av1_get_pred_context_comp_ref_p2(cm, xd);
+  return xd->tile_ctx->comp_ref_cdf[pred_context][2];
+}
+#endif  // CONFIG_NEW_MULTISYMBOL
 
 static INLINE aom_prob av1_get_pred_prob_comp_ref_p2(const AV1_COMMON *cm,
                                                      const MACROBLOCKD *xd) {
@@ -133,11 +229,31 @@ static INLINE aom_prob av1_get_pred_prob_comp_ref_p2(const AV1_COMMON *cm,
 int av1_get_pred_context_comp_bwdref_p(const AV1_COMMON *cm,
                                        const MACROBLOCKD *xd);
 
+#if CONFIG_NEW_MULTISYMBOL
+static INLINE aom_cdf_prob *av1_get_pred_cdf_comp_bwdref_p(
+    const AV1_COMMON *cm, const MACROBLOCKD *xd) {
+  const int pred_context = av1_get_pred_context_comp_bwdref_p(cm, xd);
+  return xd->tile_ctx->comp_bwdref_cdf[pred_context][0];
+}
+#endif  // CONFIG_NEW_MULTISYMBOL
+
 static INLINE aom_prob av1_get_pred_prob_comp_bwdref_p(const AV1_COMMON *cm,
                                                        const MACROBLOCKD *xd) {
   const int pred_context = av1_get_pred_context_comp_bwdref_p(cm, xd);
   return cm->fc->comp_bwdref_prob[pred_context][0];
 }
+
+#if CONFIG_ALTREF2
+// TODO(zoeliu): ALTREF2 to work with NEW_MULTISYMBOL
+int av1_get_pred_context_comp_bwdref_p1(const AV1_COMMON *cm,
+                                        const MACROBLOCKD *xd);
+
+static INLINE aom_prob av1_get_pred_prob_comp_bwdref_p1(const AV1_COMMON *cm,
+                                                        const MACROBLOCKD *xd) {
+  const int pred_context = av1_get_pred_context_comp_bwdref_p1(cm, xd);
+  return cm->fc->comp_bwdref_prob[pred_context][1];
+}
+#endif  // CONFIG_ALTREF2
 #endif  // CONFIG_EXT_REFS
 
 int av1_get_pred_context_single_ref_p1(const MACROBLOCKD *xd);
@@ -175,7 +291,51 @@ static INLINE aom_prob av1_get_pred_prob_single_ref_p5(const AV1_COMMON *cm,
                                                        const MACROBLOCKD *xd) {
   return cm->fc->single_ref_prob[av1_get_pred_context_single_ref_p5(xd)][4];
 }
+
+#if CONFIG_ALTREF2
+int av1_get_pred_context_single_ref_p6(const MACROBLOCKD *xd);
+
+static INLINE aom_prob av1_get_pred_prob_single_ref_p6(const AV1_COMMON *cm,
+                                                       const MACROBLOCKD *xd) {
+  return cm->fc->single_ref_prob[av1_get_pred_context_single_ref_p6(xd)][5];
+}
+#endif  // CONFIG_ALTREF2
 #endif  // CONFIG_EXT_REFS
+
+#if CONFIG_NEW_MULTISYMBOL
+static INLINE aom_cdf_prob *av1_get_pred_cdf_single_ref_p1(
+    const AV1_COMMON *cm, const MACROBLOCKD *xd) {
+  (void)cm;
+  return xd->tile_ctx
+      ->single_ref_cdf[av1_get_pred_context_single_ref_p1(xd)][0];
+}
+static INLINE aom_cdf_prob *av1_get_pred_cdf_single_ref_p2(
+    const AV1_COMMON *cm, const MACROBLOCKD *xd) {
+  (void)cm;
+  return xd->tile_ctx
+      ->single_ref_cdf[av1_get_pred_context_single_ref_p2(xd)][1];
+}
+#if CONFIG_EXT_REFS
+static INLINE aom_cdf_prob *av1_get_pred_cdf_single_ref_p3(
+    const AV1_COMMON *cm, const MACROBLOCKD *xd) {
+  (void)cm;
+  return xd->tile_ctx
+      ->single_ref_cdf[av1_get_pred_context_single_ref_p3(xd)][2];
+}
+static INLINE aom_cdf_prob *av1_get_pred_cdf_single_ref_p4(
+    const AV1_COMMON *cm, const MACROBLOCKD *xd) {
+  (void)cm;
+  return xd->tile_ctx
+      ->single_ref_cdf[av1_get_pred_context_single_ref_p4(xd)][3];
+}
+static INLINE aom_cdf_prob *av1_get_pred_cdf_single_ref_p5(
+    const AV1_COMMON *cm, const MACROBLOCKD *xd) {
+  (void)cm;
+  return xd->tile_ctx
+      ->single_ref_cdf[av1_get_pred_context_single_ref_p5(xd)][4];
+}
+#endif  // CONFIG_EXT_REFS
+#endif  // CONFIG_NEW_MULTISYMBOL
 
 #if CONFIG_EXT_INTER && CONFIG_COMPOUND_SINGLEREF
 int av1_get_inter_mode_context(const MACROBLOCKD *xd);
@@ -208,61 +368,6 @@ static INLINE int get_tx_size_context(const MACROBLOCKD *xd) {
   if (!has_above) above_ctx = left_ctx;
   return (above_ctx + left_ctx) > max_tx_size + TX_SIZE_LUMA_MIN;
 }
-
-#if CONFIG_VAR_TX
-static void update_tx_counts(AV1_COMMON *cm, MACROBLOCKD *xd,
-                             MB_MODE_INFO *mbmi, BLOCK_SIZE plane_bsize,
-                             TX_SIZE tx_size, int blk_row, int blk_col,
-                             TX_SIZE max_tx_size, int ctx) {
-  const struct macroblockd_plane *const pd = &xd->plane[0];
-  const BLOCK_SIZE bsize = txsize_to_bsize[tx_size];
-  const int tx_row = blk_row >> (1 - pd->subsampling_y);
-  const int tx_col = blk_col >> (1 - pd->subsampling_x);
-  const TX_SIZE plane_tx_size = mbmi->inter_tx_size[tx_row][tx_col];
-  const int max_blocks_high = max_block_high(xd, plane_bsize, 0);
-  const int max_blocks_wide = max_block_wide(xd, plane_bsize, 0);
-
-  if (blk_row >= max_blocks_high || blk_col >= max_blocks_wide) return;
-
-  if (tx_size == plane_tx_size) {
-    int depth;
-    depth = tx_size_to_depth(tx_size);
-    ++xd->counts->tx_size[max_tx_size - TX_SIZE_CTX_MIN][ctx][depth];
-    mbmi->tx_size = tx_size;
-  } else {
-    int bsl = b_width_log2_lookup[bsize];
-    int i;
-
-    assert(bsl > 0);
-    --bsl;
-
-    for (i = 0; i < 4; ++i) {
-      const int offsetr = blk_row + ((i >> 1) << bsl);
-      const int offsetc = blk_col + ((i & 0x01) << bsl);
-
-      if (offsetr >= max_blocks_high || offsetc >= max_blocks_wide) continue;
-      update_tx_counts(cm, xd, mbmi, plane_bsize, (TX_SIZE)(tx_size - 1),
-                       offsetr, offsetc, max_tx_size, ctx);
-    }
-  }
-}
-
-static INLINE void inter_block_tx_count_update(AV1_COMMON *cm, MACROBLOCKD *xd,
-                                               MB_MODE_INFO *mbmi,
-                                               BLOCK_SIZE plane_bsize,
-                                               int ctx) {
-  const int mi_width = block_size_wide[plane_bsize] >> tx_size_wide_log2[0];
-  const int mi_height = block_size_high[plane_bsize] >> tx_size_wide_log2[0];
-  TX_SIZE max_tx_size = max_txsize_lookup[plane_bsize];
-  int bh = tx_size_wide_unit[max_tx_size];
-  int idx, idy;
-
-  for (idy = 0; idy < mi_height; idy += bh)
-    for (idx = 0; idx < mi_width; idx += bh)
-      update_tx_counts(cm, xd, mbmi, plane_bsize, max_tx_size, idy, idx,
-                       max_tx_size, ctx);
-}
-#endif
 
 #ifdef __cplusplus
 }  // extern "C"

@@ -25,7 +25,7 @@ files.
 Options:
     --help                      Print this message
     --out=outfile               Redirect output to a file
-    --ver=version               Version (12,14) of visual studio to generate for
+    --ver=version               Version (12,14,15) of visual studio to generate for
     --target=isa-os-cc          Target specifier
 EOF
     exit 1
@@ -215,7 +215,7 @@ for opt in "$@"; do
     ;;
     --ver=*) vs_ver="$optval"
              case $optval in
-             12|14)
+             12|14|15)
              ;;
              *) die Unrecognized Visual Studio Version in $opt
              ;;
@@ -234,8 +234,11 @@ case "${vs_ver:-12}" in
     12) sln_vers="12.00"
        sln_vers_str="Visual Studio 2013"
     ;;
-    14) sln_vers="14.00"
+    14) sln_vers="12.00"
        sln_vers_str="Visual Studio 2015"
+    ;;
+    15) sln_vers="12.00"
+       sln_vers_str="Visual Studio 2017"
     ;;
 esac
 sfx=vcxproj

@@ -1,5 +1,10 @@
 == CSS21-t1502-no-inherited-font-family.xhtml CSS21-t1502-no-inherited-font-family-ref.xhtml
 
+# tests for bug 1367860 (correct default generic font based on language)
+== 1367860-1.htm 1367860-ref.htm
+== 1367860-2.htm 1367860-ref.htm
+== 1367860-3.htm 1367860-ref.htm
+
 # basic tests for bug 538730
 != synthetic-bold-1.html synthetic-bold-1-ref.html
 != synthetic-bold-2.html synthetic-bold-2-ref.html

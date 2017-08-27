@@ -236,11 +236,3 @@ void aom_fdct16x16_msa(const int16_t *input, int16_t *output,
     fdct16x8_1d_row((&tmp_buf[0] + (128 * i)), (output + (128 * i)));
   }
 }
-
-void aom_fdct16x16_1_msa(const int16_t *input, int16_t *out, int32_t stride) {
-  int sum = LD_HADD(input, stride);
-  sum += LD_HADD(input + 8, stride);
-  sum += LD_HADD(input + 16 * 8, stride);
-  sum += LD_HADD(input + 16 * 8 + 8, stride);
-  out[0] = (int16_t)(sum >> 1);
-}
