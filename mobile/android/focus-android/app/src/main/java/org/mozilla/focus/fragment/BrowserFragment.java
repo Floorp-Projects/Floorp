@@ -63,6 +63,7 @@ import org.mozilla.focus.session.ui.SessionsSheetFragment;
 import org.mozilla.focus.telemetry.TelemetryWrapper;
 import org.mozilla.focus.utils.Browsers;
 import org.mozilla.focus.utils.ColorUtils;
+import org.mozilla.focus.utils.DownloadUtils;
 import org.mozilla.focus.utils.DrawableUtils;
 import org.mozilla.focus.utils.UrlUtils;
 import org.mozilla.focus.web.Download;
@@ -675,8 +676,7 @@ public class BrowserFragment extends WebFragment implements View.OnClickListener
         }
 
         final String cookie = CookieManager.getInstance().getCookie(download.getUrl());
-        final String fileName = URLUtil.guessFileName(
-                download.getUrl(), download.getContentDisposition(), download.getMimeType());
+        final String fileName = DownloadUtils.guessFileName(download);
 
         final DownloadManager.Request request = new DownloadManager.Request(Uri.parse(download.getUrl()))
                 .addRequestHeader("User-Agent", download.getUserAgent())
