@@ -1226,6 +1226,7 @@ MessageHandler.prototype = {
         if (this.isCancelled) {
           return;
         }
+        this.isCancelled = true;
         sendStreamRequest({ stream: 'close' });
         delete self.streamSinks[streamId];
       },
@@ -4482,18 +4483,17 @@ var Parser = function ParserClosure() {
       }
       return buf1;
     },
-    findDefaultInlineStreamEnd: function Parser_findDefaultInlineStreamEnd(stream) {
-      var E = 0x45,
-          I = 0x49,
-          SPACE = 0x20,
-          LF = 0xA,
-          CR = 0xD;
-      var startPos = stream.pos,
+    findDefaultInlineStreamEnd(stream) {
+      const E = 0x45,
+            I = 0x49,
+            SPACE = 0x20,
+            LF = 0xA,
+            CR = 0xD,
+            n = 5;
+      let startPos = stream.pos,
           state = 0,
           ch,
-          i,
-          n,
-          followingBytes;
+          maybeEIPos;
       while ((ch = stream.getByte()) !== -1) {
         if (state === 0) {
           state = ch === E ? 1 : 0;
@@ -4502,9 +4502,9 @@ var Parser = function ParserClosure() {
         } else {
           (0, _util.assert)(state === 2);
           if (ch === SPACE || ch === LF || ch === CR) {
-            n = 5;
-            followingBytes = stream.peekBytes(n);
-            for (i = 0; i < n; i++) {
+            maybeEIPos = stream.pos;
+            let followingBytes = stream.peekBytes(n);
+            for (let i = 0; i < n; i++) {
               ch = followingBytes[i];
               if (ch !== LF && ch !== CR && (ch < SPACE || ch > 0x7F)) {
                 state = 0;
@@ -4517,6 +4517,13 @@ var Parser = function ParserClosure() {
           } else {
             state = 0;
           }
+        }
+      }
+      if (ch === -1) {
+        (0, _util.warn)('findDefaultInlineStreamEnd: ' + 'Reached the end of the stream without finding a valid EI marker');
+        if (maybeEIPos) {
+          (0, _util.warn)('... trying to recover by using the last "EI" occurrence.');
+          stream.skip(-(stream.pos - maybeEIPos));
         }
       }
       return stream.pos - 4 - startPos;
@@ -22519,9 +22526,16 @@ var XRef = function XRefClosure() {
     },
     readXRef: function XRef_readXRef(recoveryMode) {
       var stream = this.stream;
+      let startXRefParsedCache = Object.create(null);
       try {
         while (this.startXRefQueue.length) {
           var startXRef = this.startXRefQueue[0];
+          if (startXRefParsedCache[startXRef]) {
+            (0, _util.warn)('readXRef - skipping XRef table since it was already parsed.');
+            this.startXRefQueue.shift();
+            continue;
+          }
+          startXRefParsedCache[startXRef] = true;
           stream.pos = startXRef + stream.start;
           var parser = new _parser.Parser(new _parser.Lexer(stream), true, this);
           var obj = parser.getObj();
@@ -40037,8 +40051,8 @@ exports.Type1Parser = Type1Parser;
 "use strict";
 
 
-var pdfjsVersion = '1.9.456';
-var pdfjsBuild = 'cb10c03d';
+var pdfjsVersion = '1.9.476';
+var pdfjsBuild = '26c45369';
 var pdfjsCoreWorker = __w_pdfjs_require__(17);
 exports.WorkerMessageHandler = pdfjsCoreWorker.WorkerMessageHandler;
 
