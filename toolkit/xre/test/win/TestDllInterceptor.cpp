@@ -316,6 +316,13 @@ bool TestCreateFileA(void* aFunc)
   return true;
 }
 
+bool TestQueryDosDeviceW(void* aFunc)
+{
+  auto patchedQueryDosDeviceW =
+    reinterpret_cast<decltype(&QueryDosDeviceW)>(aFunc);
+  return patchedQueryDosDeviceW(nullptr, nullptr, 0) == 0;
+}
+
 bool TestInSendMessageEx(void* aFunc)
 {
   auto patchedInSendMessageEx =
@@ -509,6 +516,7 @@ int main()
       TestHook(TestCreateFileW, "kernel32.dll", "CreateFileW") &&    // see Bug 1316415
 #endif
       TestHook(TestCreateFileA, "kernel32.dll", "CreateFileA") &&
+      TestHook(TestQueryDosDeviceW, "kernelbase.dll", "QueryDosDeviceW") &&
       TestDetour("user32.dll", "CreateWindowExW") &&
       TestHook(TestInSendMessageEx, "user32.dll", "InSendMessageEx") &&
       TestHook(TestImmGetContext, "imm32.dll", "ImmGetContext") &&
