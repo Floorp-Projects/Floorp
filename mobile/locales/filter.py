@@ -25,7 +25,6 @@ def test(mod, path, entity = None):
         "chrome/global/commonDialogs.properties",
         "chrome/global/intl.properties",
         "chrome/global/intl.css",
-        "chrome/passwordmgr/passwordmgr.properties",
         "chrome/search/search.properties",
         "chrome/pluginproblem/pluginproblem.dtd",
         "chrome/global/aboutSupport.dtd",
