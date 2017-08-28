@@ -48,6 +48,9 @@
   <string name="content_description_clear_input">امسح الإدخال</string>
   <string name="content_description_dismiss_input">غادِر</string>
   <string name="content_description_erase">امسح تأريخ التصفح</string>
+  <string name="content_description_fab_expand">وسِّع</string>
+  <string name="content_description_open_tab">افتح لسانا</string>
+  <string name="content_description_close_tab">أغلق اللسان</string>
   <string name="content_description_lock">اتصال آمن</string>
   <string name="accessibility_announcement_loading">يُحمّل</string>
   <string name="accessibility_announcement_loading_finished">تم تحميل الموقع</string>
@@ -93,8 +96,16 @@
   <string name="contextmenu_image_share">شارك الصورة</string>
   <string name="contextmenu_image_copy">انسخ عنوان الصورة</string>
   <string name="contextmenu_image_save">احفظ الصورة</string>
+  <string name="contextmenu_open_in_new_tab">افتح الرابط في لسان جديد</string>
   <string name="contextmenu_image_warning"><![CDATA["الصور المحفوظة و المُشاركة "<b xmlns:xliff="urn:oasis:names:tc:xliff:document:1.2">&#1604;&#1606; &#1578;&#1615;&#1581;&#1584;&#1601;</b>" عندما تمسح تأريخ %1$s."]]></string>
   <string name="firstrun_defaultbrowser_title">حسّن خصوصيتك</string>
+  <string name="firstrun_defaultbrowser_text2">انتقل بالتصفّح الخاص إلى المستوى التالي. احجب الإعلانات وغيرها من المحتويات التي تتعقبك أثناء التصفح وتأخذ من وقت تحميل الصفحات.</string>
+  <string name="firstrun_search_title">تبحثُ بأسلوبك أنت</string>
+  <string name="firstrun_search_text">أتبحث عن شيء مختلف؟ اختر محرّك بحث آخر ليكون المبدئي من الإعدادات.</string>
+  <string name="firstrun_shortcut_title">أضف اختصارات إلى الشاشة الرئيسية</string>
+  <string name="firstrun_shortcut_text">عُد إلى مواقعك المفضلة في %1$s بسرعة. اختر ”أضف إلى الشاشة الرئيسية“ من قائمة %1$s.</string>
+  <string name="firstrun_privacy_title">اجعل من الخصوصية عادة</string>
+  <string name="firstrun_privacy_text">اضبط %1$s ليكون المتصفّح المبدئي وتمتع بفوائد التصفح الخاص عندما تفتح موقعا من تطبيق آخر.</string>
   <string name="firstrun_close_button">حسنًا، فهمت</string>
   <string name="firstrun_skip_button">تخطّ</string>
   <string name="firstrun_next_button">التالي</string>
@@ -102,4 +113,6 @@
   <string name="dialog_addtohomescreen_title">أضِف إلى شاشة البداية</string>
   <string name="dialog_addtohomescreen_action_add">أضِف</string>
   <string name="dialog_addtohomescreen_action_cancel">ألغِ</string>
+  <string name="dialog_opentab_title">افتح الرابط في اللسان المحدّد</string>
+  <string name="dialog_opentab_action_open">افتح</string>
 </resources>

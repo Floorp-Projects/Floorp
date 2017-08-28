@@ -9,6 +9,7 @@
   <string name="menu_share">Համօգտագործել</string>
   <string name="menu_open_with_default_browser">Բացել %1$s-ով</string>
   <string name="menu_open_with_a_browser">Բացել այլ հավելվածով՝</string>
+  <string name="menu_add_to_home_screen">Ավելացնել Տուն էկրանին</string>
   <string name="menu_settings">Կարգավորումներ</string>
   <string name="menu_about">Մասին</string>
   <string name="menu_help">Օգնություն</string>
@@ -16,6 +17,8 @@
   <string name="menu_trackers_blocked_title">Արգել. հետագծումներ</string>
   <string name="share_dialog_title">Համօգտագործել՝</string>
   <string name="notification_erase_text">Ջնջել դիտարկումների պատմությունը</string>
+  <string name="notification_action_open">Բացել</string>
+  <string name="notification_action_erase_and_open">Ջնջել ու Բացել</string>
   <string name="shortcut_erase_short_label">Ջնջել</string>
   <string name="shortcut_erase_long_label">Ջնջել դիտարկման պատմությունը</string>
   <string name="text_selection_search_action">Գաղտնի որոնում</string>
@@ -32,6 +35,7 @@
   <string name="preference_privacy_block_content">Արգելափակել այլ բովանդակության հետագծումները</string>
   <string name="preference_privacy_block_content_summary">Կարող է ընդհատել որոշ տեսանյութեր և վեբ էջեր</string>
   <string name="preference_privacy_secure_mode">Թաքնված</string>
+  <string name="preference_privacy_stealth_summary">Թաքցնել վեբ էջերը հավելվածները փոխանջատելիս</string>
   <string name="preference_category_performance">Արդյունավետություն</string>
   <string name="preference_performance_block_webfonts">Արգելափակել վեբ տառատեսակները</string>
   <string name="preference_performance_block_webfonts_summary">Կարող է հանգեցնել պատկերակների և պատկերների բացակայության</string>
@@ -44,6 +48,9 @@
   <string name="content_description_clear_input">Մաքրել ներածումը</string>
   <string name="content_description_dismiss_input">Բաց թողնել</string>
   <string name="content_description_erase">Ջնջել դիտարկման պատմությունը</string>
+  <string name="content_description_fab_expand">Ընդարձակել</string>
+  <string name="content_description_open_tab">Բացել ներդիր</string>
+  <string name="content_description_close_tab">Փակել ներդիրը</string>
   <string name="content_description_lock">Անվտանգ կապակցում</string>
   <string name="accessibility_announcement_loading">Բեռնում</string>
   <string name="accessibility_announcement_loading_finished">Կայքը բեռնվել է</string>
@@ -61,6 +68,12 @@
   <string name="external_app_prompt_no_app_title">Գտեք հավելված, որը կարող է բացել հղումը</string>
   <string name="external_app_prompt_no_app">Ձեր սարքի ոչ մի հավելված չի կարողանում բացել այս հղումը: Դուք կարող եք թողնել %1$s-ը՝ որոնելու համար %2$s-ում այն հավելվածը, որը կարող է այն բացել:</string>
   <string name="external_multiple_apps_matched_exit">Փակե՞լ Գաղտնի դիտարկումը</string>
+  <string name="download_snackbar_finished">%1$s ավարտվել է</string>
+  <string name="download_snackbar_open">Բացել</string>
+  <string name="download_dialog_warning"><![CDATA["Ներբեռնված ֆայլերը "<b xmlns:xliff="urn:oasis:names:tc:xliff:document:1.2">&#1401;&#1381;&#1398; &#1403;&#1398;&#1403;&#1406;&#1387;</b>, երբ դուք ջնջեք %1$s-ի պատմությունը:]]></string>
+  <string name="download_dialog_title">Ներբեռնել ֆայլ</string>
+  <string name="download_dialog_action_cancel">Չեղարկել</string>
+  <string name="download_dialog_action_download">Ներբեռնել</string>
   <string name="errorpage_title">Էջը բեռնելու խնդիր</string>
   <string name="errorpage_refresh">Կրկին փորձել</string>
   <string name="error_connectionfailure_title">Հնարավոր չէ կապակցվել</string>
@@ -83,9 +96,15 @@
   <string name="contextmenu_image_share">Համօգտագործել պատկերը</string>
   <string name="contextmenu_image_copy">Պատճենել պատկերի հասցեն</string>
   <string name="contextmenu_image_save">Պահպանել պատկերը</string>
+  <string name="contextmenu_open_in_new_tab">Բացել հղումը նոր ներդիրում</string>
   <string name="contextmenu_image_warning"><![CDATA["Պահպանված և համօգտագործված պատկերները "<b xmlns:xliff="urn:oasis:names:tc:xliff:document:1.2">&#1401;&#1381;&#1398; &#1403;&#1398;&#1403;&#1406;&#1387;</b>, երբ դուք ջնջեք %1$s-ը]]></string>
   <string name="firstrun_defaultbrowser_title">Հզորացրեք ձեր գաղտնիությունը</string>
   <string name="firstrun_close_button">Լավ, հասկացա:</string>
   <string name="firstrun_skip_button">Բաց թողնել</string>
   <string name="firstrun_next_button">Հաջորդը</string>
+  <string name="dialog_addtohomescreen_title">Ավելացնել Տուն էկրանին</string>
+  <string name="dialog_addtohomescreen_action_add">Ավելացնել</string>
+  <string name="dialog_addtohomescreen_action_cancel">Չեղարկել</string>
+  <string name="dialog_opentab_title">Բացել հղումը ընտրված ներդիրում</string>
+  <string name="dialog_opentab_action_open">Բացել</string>
 </resources>

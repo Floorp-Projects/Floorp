@@ -99,8 +99,13 @@
   <string name="contextmenu_open_in_new_tab">Bağlantıyı yeni sekmede aç</string>
   <string name="contextmenu_image_warning"><![CDATA["%1$s geçmişini sildiğinizde, kaydettiğiniz ve paylaştığınız resimler "<b xmlns:xliff="urn:oasis:names:tc:xliff:document:1.2">silinmeyecektir</b>.]]></string>
   <string name="firstrun_defaultbrowser_title">Gizliliğini güçlendir</string>
+  <string name="firstrun_defaultbrowser_text2">Gizli gezintiyi daha da geliştirdik. Gezdiğiniz siteleri takip eden ve sayfaların yüklenmesini yavaşlatan reklamları ve diğer içerikleri engelleyebilirsiniz.</string>
   <string name="firstrun_search_title">Senin araman, senin kararın</string>
   <string name="firstrun_search_text">Başka bir şey mi arıyorsunuz? Ayarlar menüsünden varsayılan arama motorunuzu değiştirebilirsiniz.</string>
+  <string name="firstrun_shortcut_title">Kısayolları ana ekranınıza ekleyin</string>
+  <string name="firstrun_shortcut_text">%1$s’ta sevdiğiniz sitelere çabucak ulaşabilirsiniz. %1$s menüsünden \"Ana ekrana ekle\"yi seçmeniz yeterli.</string>
+  <string name="firstrun_privacy_title">Hep gizli kalın</string>
+  <string name="firstrun_privacy_text">%1$s’u varsayılan tarayıcınız yapın, diğer uygulamalarda web sayfalarını açtığınız zaman da gizli gezintiden yararlanın.</string>
   <string name="firstrun_close_button">Anladım!</string>
   <string name="firstrun_skip_button">Geç</string>
   <string name="firstrun_next_button">İleri</string>

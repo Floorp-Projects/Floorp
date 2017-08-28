@@ -63,7 +63,7 @@
   <string name="content_description_blocking_switch">Blokowanie elementów śledzących</string>
   <string name="context_menu_paste_go">Wklej i przejdź</string>
   <string name="your_rights">O prawach użytkownika</string>
-  <string name="external_app_prompt_title">Otwieranie odnośnika w innej aplikacji</string>
+  <string name="external_app_prompt_title">Otwórz odnośnik w innej aplikacji</string>
   <string name="external_app_prompt">Można wyjść z aplikacji %1$s, aby otworzyć ten odnośnik w aplikacji %2$s.</string>
   <string name="external_app_prompt_no_app_title">Wyszukiwanie aplikacji mogącej otworzyć odnośnik</string>
   <string name="external_app_prompt_no_app">Żadna aplikacja na urządzeniu nie może otworzyć tego odnośnika. Można wyjść z aplikacji %1$s, aby wyszukać odpowiednią aplikację w „%2$s”.</string>

@@ -48,6 +48,9 @@
   <string name="content_description_clear_input">Viŝi kampon</string>
   <string name="content_description_dismiss_input">Ignori</string>
   <string name="content_description_erase">Viŝi retuman historion</string>
+  <string name="content_description_fab_expand">Malfaldi</string>
+  <string name="content_description_open_tab">Malfermi langeton</string>
+  <string name="content_description_close_tab">Fermi langeton</string>
   <string name="content_description_lock">Sekura konekto</string>
   <string name="accessibility_announcement_loading">Ŝargado</string>
   <string name="accessibility_announcement_loading_finished">Retejo ŝargita</string>
@@ -93,13 +96,21 @@
   <string name="contextmenu_image_share">Dividi bildon</string>
   <string name="contextmenu_image_copy">Kopii adreson de bildo</string>
   <string name="contextmenu_image_save">Konservi bildon</string>
+  <string name="contextmenu_open_in_new_tab">Malfermi ligilon en nova langeto</string>
   <string name="contextmenu_image_warning"><![CDATA["Konservitaj kaj dividitaj bildoj "<b xmlns:xliff="urn:oasis:names:tc:xliff:document:1.2">ne estos forigitaj</b>" kiam vi viŝas la historion de %1$s."]]></string>
   <string name="firstrun_defaultbrowser_title">Plibonigi vian privatecon</string>
-  <string name="firstrun_close_button">Bone, mi komprenas!</string>
+  <string name="firstrun_defaultbrowser_text2">Privata retumo pli altnivela, kun blokado de reklamoj kaj aliaj enhavoj, kiuj povas spuri vin trans retejoj kaj malrapidigi la ŝargon de paĝoj.</string>
+  <string name="firstrun_search_title">Via serĉo laŭ via maniero</string>
+  <string name="firstrun_search_text">Ĉu vi serĉas ion alian, malsaman? Elektu alian norman serĉilon en la agordoj.</string>
+  <string name="firstrun_shortcut_title">Aldoni rektajn alirojn al via hejmekrano</string>
+  <string name="firstrun_privacy_title">Alkutimiĝu al la privateco</string>
+  <string name="firstrun_close_button">En ordo, mi komprenis!</string>
   <string name="firstrun_skip_button">Ignori</string>
   <string name="firstrun_next_button">Sekva</string>
   <string name="content_blocking_disabled">-</string>
   <string name="dialog_addtohomescreen_title">Aldoni al hejmekrano</string>
   <string name="dialog_addtohomescreen_action_add">Aldoni</string>
   <string name="dialog_addtohomescreen_action_cancel">Nuligi</string>
+  <string name="dialog_opentab_title">Malfermi ligilon en elektita langeto</string>
+  <string name="dialog_opentab_action_open">Malfermi</string>
 </resources>

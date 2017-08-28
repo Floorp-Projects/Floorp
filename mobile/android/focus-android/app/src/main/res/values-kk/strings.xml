@@ -48,6 +48,9 @@
   <string name="content_description_clear_input">Енгізуді тазарту</string>
   <string name="content_description_dismiss_input">Тайдыру</string>
   <string name="content_description_erase">Шолу тарихын өшіру</string>
+  <string name="content_description_fab_expand">Жазық қылу</string>
+  <string name="content_description_open_tab">Бетті ашу</string>
+  <string name="content_description_close_tab">Бетті жабу</string>
   <string name="content_description_lock">Қауіпсіз байланыс</string>
   <string name="accessibility_announcement_loading">Жүктелуде</string>
   <string name="accessibility_announcement_loading_finished">Вебсайт жүктелген</string>
@@ -93,8 +96,16 @@
   <string name="contextmenu_image_share">Суретпен бөлісу</string>
   <string name="contextmenu_image_copy">Сурет адресін көшіріп алу</string>
   <string name="contextmenu_image_save">Суретті сақтау</string>
+  <string name="contextmenu_open_in_new_tab">Сілтемені жаңа бетте ашу</string>
   <string name="contextmenu_image_warning"><![CDATA["%1$s тарихы өшірілген кезде сақталған және бөліскен суреттер "<b xmlns:xliff="urn:oasis:names:tc:xliff:document:1.2">&#1257;&#1096;&#1110;&#1088;&#1110;&#1083;&#1084;&#1077;&#1081;&#1076;&#1110;</b>.]]></string>
   <string name="firstrun_defaultbrowser_title">Жекелігіңізді күшейтіңіз</string>
+  <string name="firstrun_defaultbrowser_text2">Жекелік шолудың келесі деңгейіне өтіңіз. Сайттар арасында сізді бақылайтын және парақтардың жүктелу уақытын арттыратын жарнама және басқа құраманы блоктаңыз.</string>
+  <string name="firstrun_search_title">Сіздің іздеулеріңіз, сіздің жолыңызбен</string>
+  <string name="firstrun_search_text">Басқа бірнәрсе іздедіңіз бе? Баптаулардан басқа негізгі іздеу жүйесін таңдаңыз.</string>
+  <string name="firstrun_shortcut_title">Үй экранына жарлықтарды қосыңыз</string>
+  <string name="firstrun_shortcut_text">%1$s ішінде таңдамалы сайттарға жылдам оралыңыз. Тек %1$s мәзірінен \"Үй экранына қосу\" таңдаңыз.</string>
+  <string name="firstrun_privacy_title">Жекелікті әдет қылыңыз</string>
+  <string name="firstrun_privacy_text">%1$s негізгі браузер ретінде орнатып, басқа қолданбалардан вебпарақтарын ашу кезінде жекелік шолудың артықшылықтарын алыңыз.</string>
   <string name="firstrun_close_button">Жақсы, түсіндім!</string>
   <string name="firstrun_skip_button">Аттап кету</string>
   <string name="firstrun_next_button">Келесі</string>
@@ -102,4 +113,6 @@
   <string name="dialog_addtohomescreen_title">Үй экранына қосу</string>
   <string name="dialog_addtohomescreen_action_add">Қосу</string>
   <string name="dialog_addtohomescreen_action_cancel">Бас тарту</string>
+  <string name="dialog_opentab_title">Сілтемені таңдалған бетте ашу</string>
+  <string name="dialog_opentab_action_open">Ашу</string>
 </resources>

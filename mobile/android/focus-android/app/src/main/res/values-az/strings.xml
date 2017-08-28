@@ -48,6 +48,9 @@
   <string name="content_description_clear_input">Girişi təmizlə</string>
   <string name="content_description_dismiss_input">Ləğv et</string>
   <string name="content_description_erase">Səyahət tarixçəsini təmizlə</string>
+  <string name="content_description_fab_expand">Genişlət</string>
+  <string name="content_description_open_tab">Vərəq aç</string>
+  <string name="content_description_close_tab">Vərəqi qapat</string>
   <string name="content_description_lock">Təhlükəsiz əlaqə</string>
   <string name="accessibility_announcement_loading">Yüklənir</string>
   <string name="accessibility_announcement_loading_finished">Sayt yükləndi</string>
@@ -93,8 +96,16 @@
   <string name="contextmenu_image_share">Şəkli paylaş</string>
   <string name="contextmenu_image_copy">Şəkil ünvanını köçür</string>
   <string name="contextmenu_image_save">Şəkli saxla</string>
+  <string name="contextmenu_open_in_new_tab">Keçidi yeni vərəqdə aç</string>
   <string name="contextmenu_image_warning"><![CDATA["Saxlanılan və paylaşılan şəkillər %1$s tarixini pozduqda "<b xmlns:xliff="urn:oasis:names:tc:xliff:document:1.2">silinm&#601;y&#601;c&#601;kl&#601;r</b>.]]></string>
   <string name="firstrun_defaultbrowser_title">Məxfiliyinizi gücləndirin</string>
+  <string name="firstrun_defaultbrowser_text2">Məxfi səyahəti fərqli səviyyəyə götürün. Saytlar üzərindən sizə izləyə biləcək reklam və digər məzmunları bloklayın və yüklənmə sürətini artırın.</string>
+  <string name="firstrun_search_title">Sizin axtarış, sizin qaydalar</string>
+  <string name="firstrun_search_text">Fərqli şeylər axtarırsız? Tənzimləmələrdən fərqli axtarış mühərriyi seçin.</string>
+  <string name="firstrun_shortcut_title">Ana ekranınıza keçidlər əlavə edin</string>
+  <string name="firstrun_shortcut_text">%1$s üzərindəki sevimli saytlarınıza cəld girin. %1$s menyusundan \"Ana ekrana əlavə et\" seçməyiniz kifayətdir.</string>
+  <string name="firstrun_privacy_title">Məxfiliyi vərdiş halına gətirin</string>
+  <string name="firstrun_privacy_text">Əsas səyyahınız olaraq %1$s seçin və digər tətbiqlərdən keçid açarkən məxfi səyahətin üstünlüklərindən faydalanın.</string>
   <string name="firstrun_close_button">Tamam, başa düşdüm!</string>
   <string name="firstrun_skip_button">Keç</string>
   <string name="firstrun_next_button">Sonrakı</string>
@@ -102,4 +113,6 @@
   <string name="dialog_addtohomescreen_title">Ana ekrana əlavə et</string>
   <string name="dialog_addtohomescreen_action_add">Əlavə et</string>
   <string name="dialog_addtohomescreen_action_cancel">Ləğv et</string>
+  <string name="dialog_opentab_title">Keçidi seçilmiş vərəqdə aç</string>
+  <string name="dialog_opentab_action_open">Aç</string>
 </resources>

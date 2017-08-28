@@ -104,6 +104,7 @@
   <string name="firstrun_search_text">¿Buscas algo diferente? Elige otro motor de búsqueda predeterminado en los ajustes.</string>
   <string name="firstrun_shortcut_title">Añade atajos a tu pantalla de inicio</string>
   <string name="firstrun_privacy_title">Haz de la privacidad un hábito</string>
+  <string name="firstrun_privacy_text">Establece %1$s como navegador predeterminado y experimenta los beneficios de la navegación privada al abrir páginas web desde otras aplicaciones.</string>
   <string name="firstrun_close_button">Ok, ¡ya caché!</string>
   <string name="firstrun_skip_button">Saltar</string>
   <string name="firstrun_next_button">Siguiente</string>

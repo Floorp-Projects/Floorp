@@ -66,7 +66,7 @@
   <string name="external_app_prompt_title">เปิดลิงก์ในแอปอื่น</string>
   <string name="external_app_prompt">คุณสามารถออกจาก %1$s เพื่อเปิดลิงก์นี้ใน %2$s</string>
   <string name="external_app_prompt_no_app_title">ค้นหาแอปที่สามารถเปิดลิงก์</string>
-  <string name="external_app_prompt_no_app">ไม่มีแอปบนอุปกรณ์ของคุณที่สามารถเปิดลิงก์นี้ คุณสามารถออกจาก %1$s เพื่อค้นหา %2$s สำหรับแอปที่สามารถ</string>
+  <string name="external_app_prompt_no_app">ไม่มีแอปในอุปกรณ์ของคุณที่สามารถเปิดลิงก์นี้ คุณสามารถออกจาก %1$s เพื่อค้นหา %2$s สำหรับแอปที่สามารถทำได้</string>
   <string name="external_multiple_apps_matched_exit">ออกจากการท่องเว็บแบบส่วนตัว?</string>
   <string name="download_snackbar_finished">%1$s เสร็จแล้ว</string>
   <string name="download_snackbar_open">เปิด</string>
@@ -104,6 +104,7 @@
   <string name="firstrun_search_text">กำลังค้นหาอย่างอื่น? เลือกเครื่องมือค้นหาเริ่มต้นอื่นในการตั้งค่า</string>
   <string name="firstrun_shortcut_title">เพิ่มทางลัดไปยังหน้าจอหลักของคุณ</string>
   <string name="firstrun_shortcut_text">กลับไปที่ไซต์โปรดของคุณใน %1$s ได้อย่างรวดเร็ว เพียงเลือก \"เพิ่มไปยังหน้าจอหลัก\" จากเมนู %1$s</string>
+  <string name="firstrun_privacy_title">สร้างนิสัยความเป็นส่วนตัว</string>
   <string name="firstrun_privacy_text">ตั้ง %1$s เป็นเบราว์เซอร์เริ่มต้นของคุณและรับประโยชน์จากการท่องเว็บแบบส่วนตัวเมื่อคุณเปิดหน้าเว็บจากแอปอื่น ๆ</string>
   <string name="firstrun_close_button">ตกลง เข้าใจแล้ว!</string>
   <string name="firstrun_skip_button">ข้าม</string>

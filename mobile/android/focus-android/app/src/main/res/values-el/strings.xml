@@ -48,6 +48,9 @@
   <string name="content_description_clear_input">Εκκαθάριση εισόδου</string>
   <string name="content_description_dismiss_input">Απόρριψη</string>
   <string name="content_description_erase">Διαγραφή ιστορικού περιήγησης</string>
+  <string name="content_description_fab_expand">Επέκταση</string>
+  <string name="content_description_open_tab">Άνοιγμα καρτέλας</string>
+  <string name="content_description_close_tab">Κλείσιμο καρτέλας</string>
   <string name="content_description_lock">Ασφαλής σύνδεση</string>
   <string name="accessibility_announcement_loading">Φόρτωση</string>
   <string name="accessibility_announcement_loading_finished">Η ιστοσελίδα φορτώθηκε</string>
@@ -102,4 +105,6 @@
   <string name="dialog_addtohomescreen_title">Προσθήκη στην Αρχική οθόνη</string>
   <string name="dialog_addtohomescreen_action_add">Προσθήκη</string>
   <string name="dialog_addtohomescreen_action_cancel">Ακύρωση</string>
+  <string name="dialog_opentab_title">Άνοιγμα συνδέσμου σε επιλεγμένη καρτέλα</string>
+  <string name="dialog_opentab_action_open">Άνοιγμα</string>
 </resources>

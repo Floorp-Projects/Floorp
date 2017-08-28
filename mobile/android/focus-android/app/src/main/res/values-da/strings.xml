@@ -53,4 +53,19 @@
   <string name="error_unsupportedprotocol_title">Adressen kunne ikke forstås</string>
   <string name="error_unsupportedprotocol_message"><![CDATA[<ul xmlns:xliff="urn:oasis:names:tc:xliff:document:1.2">"\n  "<li>Du er m&#229;ske n&#248;dt til at installere andet software for at &#229;bne denne adresse.</li>\n</ul>]]></string>
   <string name="error_sslhandshake_title">Sikker forbindelse mislykkedes</string>
+  <string name="contextmenu_link_share">Del link</string>
+  <string name="contextmenu_link_copy">Kopier linkadresse</string>
+  <string name="contextmenu_image_share">Del billede</string>
+  <string name="contextmenu_image_copy">Kopier billedets adresse</string>
+  <string name="contextmenu_image_save">Gem billede</string>
+  <string name="contextmenu_open_in_new_tab">Åbn link i nyt faneblad</string>
+  <string name="firstrun_shortcut_title">Tilføj genveje til din startskærm</string>
+  <string name="firstrun_close_button">OK, forstået!</string>
+  <string name="firstrun_skip_button">Spring over</string>
+  <string name="firstrun_next_button">Næste</string>
+  <string name="content_blocking_disabled">-</string>
+  <string name="dialog_addtohomescreen_title">Føj til startskærm</string>
+  <string name="dialog_addtohomescreen_action_add">Tilføj</string>
+  <string name="dialog_addtohomescreen_action_cancel">Annuller</string>
+  <string name="dialog_opentab_action_open">Åbn</string>
 </resources>
