@@ -46,7 +46,7 @@ parser.add_argument('--timeout', '-t', type=int, metavar='TIMEOUT',
                     default=10800,
                     help='kill job after TIMEOUT seconds')
 parser.add_argument('--objdir', type=str, metavar='DIR',
-                    default=env.get('OBJDIR', 'obj-spider'),
+                    default=env.get('OBJDIR', os.path.join(DIR.source, 'obj-spider')),
                     help='object directory')
 group = parser.add_mutually_exclusive_group()
 group.add_argument('--optimize', action='store_true',
@@ -125,8 +125,11 @@ def set_vars_from_script(script, vars):
                 env[var] = "%s;%s" % (env[var], originals[var])
 
 
-def ensure_dir_exists(name, clobber=True):
+def ensure_dir_exists(name, clobber=True, creation_marker_filename="CREATED-BY-AUTOSPIDER"):
     if clobber:
+        marker = os.path.join(name, creation_marker_filename)
+        if os.path.exists(name) and not os.path.exists(marker):
+            raise Exception("Refusing to delete objdir %s because it was not created by autospider" % name)
         shutil.rmtree(name, ignore_errors=True)
     try:
         os.mkdir(name)
@@ -148,7 +151,7 @@ if args.variant == 'nonunified':
             subprocess.check_call(['sed'] + in_place + ['s/UNIFIED_SOURCES/SOURCES/',
                                                         os.path.join(dirpath, 'moz.build')])
 
-OBJDIR = os.path.join(DIR.source, args.objdir)
+OBJDIR = args.objdir
 OUTDIR = os.path.join(OBJDIR, "out")
 POBJDIR = posixpath.join(PDIR.source, args.objdir)
 AUTOMATION = env.get('AUTOMATION', False)
