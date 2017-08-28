@@ -6,6 +6,7 @@
 
 #include <sys/types.h>
 #include <sys/stat.h>
+#include "mozilla/net/NeckoCommon.h"
 #include "nsOSHelperAppService.h"
 #include "nsObjCExceptions.h"
 #include "nsISupports.h"
@@ -561,10 +562,14 @@ nsOSHelperAppService::GetProtocolHandlerInfoFromOS(const nsACString &aScheme,
     return NS_OK;
   }
 
-  nsAutoString desc;
-  rv = GetApplicationDescription(aScheme, desc);
-  NS_WARNING_ASSERTION(NS_SUCCEEDED(rv), "GetApplicationDescription failed");
-  handlerInfo->SetDefaultDescription(desc);
+  // As a workaround for the OS X problem described in bug 1391186, don't
+  // attempt to get/set the application description from the child process.
+  if (!mozilla::net::IsNeckoChild()) {
+    nsAutoString desc;
+    rv = GetApplicationDescription(aScheme, desc);
+    NS_WARNING_ASSERTION(NS_SUCCEEDED(rv), "GetApplicationDescription failed");
+    handlerInfo->SetDefaultDescription(desc);
+  }
 
   return NS_OK;
 }
