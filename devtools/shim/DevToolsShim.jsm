@@ -44,24 +44,6 @@ this.DevToolsShim = {
   listeners: [],
 
   /**
-   * Lazy getter for the `gDevTools` instance. Should only be called when users interacts
-   * with DevTools as it will force loading them.
-   *
-   * @return {DevTools} a devtools instance (from client/framework/devtools)
-   */
-  get gDevTools() {
-    if (!this.isInstalled()) {
-      throw new Error(`Trying to interact with DevTools, but they are not installed`);
-    }
-
-    if (!this.isInitialized()) {
-      this._initDevTools();
-    }
-
-    return this._gDevTools;
-  },
-
-  /**
    * Check if DevTools are currently installed (but not necessarily initialized).
    *
    * @return {Boolean} true if DevTools are installed.
@@ -147,6 +129,7 @@ this.DevToolsShim = {
     if (!this.isInitialized()) {
       return;
     }
+
     this._gDevTools.saveDevToolsSession(state);
   },
 
@@ -155,11 +138,12 @@ this.DevToolsShim = {
    * opened scratchpad windows and browser console.
    */
   restoreDevToolsSession: function (session) {
-    if (!this.isInstalled()) {
+    let devtoolsReady = this._maybeInitializeDevTools();
+    if (!devtoolsReady) {
       return;
     }
 
-    this.gDevTools.restoreDevToolsSession(session);
+    this._gDevTools.restoreDevToolsSession(session);
   },
 
   /**
@@ -176,28 +160,12 @@ this.DevToolsShim = {
    *         markup view or that resolves immediately if DevTools are not installed.
    */
   inspectNode: function (tab, selectors) {
-    if (!this.isInstalled()) {
+    let devtoolsReady = this._maybeInitializeDevTools("ContextMenu");
+    if (!devtoolsReady) {
       return Promise.resolve();
     }
 
-    // Initialize DevTools explicitly to pass the "ContextMenu" reason to telemetry.
-    if (!this.isInitialized()) {
-      this._initDevTools("ContextMenu");
-    }
-
-    return this.gDevTools.inspectNode(tab, selectors);
-  },
-
-  /**
-   * Initialize DevTools via the devtools-startup command line handler component.
-   * Overridden in tests.
-   *
-   * @param {String} reason
-   *        optional, if provided should be a valid entry point for DEVTOOLS_ENTRY_POINT
-   *        in toolkit/components/telemetry/Histograms.json
-   */
-  _initDevTools: function (reason) {
-    DevtoolsStartup.initDevTools(reason);
+    return this._gDevTools.inspectNode(tab, selectors);
   },
 
   _onDevToolsRegistered: function () {
@@ -208,6 +176,30 @@ this.DevToolsShim = {
 
     this.listeners = [];
   },
+
+  /**
+   * Should be called if a shim method attempts to initialize devtools.
+   * - if DevTools are already initialized, returns true.
+   * - if DevTools are not initialized, call initDevTools from devtools-startup:
+   *   - if devtools.enabled is true, DevTools will synchronously initialize and the
+   *     method will return true.
+   *   - if devtools.enabled is false, DevTools installation flow will start and the
+   *     method will return false
+   *
+   * @param {String} reason
+   *        optional, if provided should be a valid entry point for DEVTOOLS_ENTRY_POINT
+   *        in toolkit/components/telemetry/Histograms.json
+   */
+  _maybeInitializeDevTools: function (reason) {
+    // Attempt to initialize DevTools, which should be synchronous.
+    if (!this.isInitialized()) {
+      DevtoolsStartup.initDevTools(reason);
+    }
+
+    // The initialization process can lead to show the user installation screen, in this
+    // case this.isInitialized() will still be false after calling initDevTools().
+    return this.isInitialized();
+  }
 };
 
 /**
@@ -226,6 +218,11 @@ let webExtensionsMethods = [
 
 for (let method of webExtensionsMethods) {
   this.DevToolsShim[method] = function () {
-    return this.gDevTools[method].apply(this.gDevTools, arguments);
+    let devtoolsReady = this._maybeInitializeDevTools();
+    if (!devtoolsReady) {
+      throw new Error("Could not call a DevToolsShim webextension method ('" + method +
+        "'): DevTools are not initialized.");
+    }
+    return this._gDevTools[method].apply(this._gDevTools, arguments);
   };
 }
