@@ -10,7 +10,7 @@
 
 var { utils: Cu } = Components;
 var { Services } = Cu.import("resource://gre/modules/Services.jsm", {});
-var { Loader, Require, descriptor, resolveURI, unload } =
+var { Loader, Require, resolveURI, unload } =
   Cu.import("resource://devtools/shared/base-loader.js", {});
 var { requireRawId } = Cu.import("resource://devtools/shared/loader-plugin-raw.jsm", {});
 
@@ -193,7 +193,7 @@ DevToolsLoader.prototype = {
 
     // Register custom globals to the current loader instance
     globals.loader.id = this.id;
-    Object.defineProperties(loader.globals, descriptor(globals));
+    Object.defineProperties(loader.globals, Object.getOwnPropertyDescriptors(globals));
 
     // Expose lazy helpers on loader
     this.lazyGetter = globals.loader.lazyGetter;
