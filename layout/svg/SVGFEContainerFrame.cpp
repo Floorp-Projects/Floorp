@@ -85,7 +85,7 @@ SVGFEContainerFrame::AttributeChanged(int32_t  aNameSpaceID,
                                       nsIAtom* aAttribute,
                                       int32_t  aModType)
 {
-  nsSVGFE *element = static_cast<nsSVGFE*>(mContent);
+  nsSVGFE *element = static_cast<nsSVGFE*>(GetContent());
   if (element->AttributeAffectsRendering(aNameSpaceID, aAttribute)) {
     MOZ_ASSERT(GetParent()->IsSVGFilterFrame(),
                "Observers observe the filter, so that's what we must invalidate");

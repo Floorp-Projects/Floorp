@@ -33,7 +33,7 @@ uint16_t
 nsSVGFilterFrame::GetEnumValue(uint32_t aIndex, nsIContent *aDefault)
 {
   nsSVGEnum& thisEnum =
-    static_cast<SVGFilterElement *>(mContent)->mEnumAttributes[aIndex];
+    static_cast<SVGFilterElement *>(GetContent())->mEnumAttributes[aIndex];
 
   if (thisEnum.IsExplicitlySet())
     return thisEnum.GetAnimValue();
@@ -60,7 +60,7 @@ const nsSVGLength2 *
 nsSVGFilterFrame::GetLengthValue(uint32_t aIndex, nsIContent *aDefault)
 {
   const nsSVGLength2 *thisLength =
-    &static_cast<SVGFilterElement *>(mContent)->mLengthAttributes[aIndex];
+    &static_cast<SVGFilterElement *>(GetContent())->mLengthAttributes[aIndex];
 
   if (thisLength->IsExplicitlySet())
     return thisLength;
@@ -90,7 +90,7 @@ nsSVGFilterFrame::GetFilterContent(nsIContent *aDefault)
     RefPtr<nsSVGFE> primitive;
     CallQueryInterface(child, (nsSVGFE**)getter_AddRefs(primitive));
     if (primitive) {
-      return static_cast<SVGFilterElement *>(mContent);
+      return static_cast<SVGFilterElement *>(GetContent());
     }
   }
 
@@ -121,7 +121,7 @@ nsSVGFilterFrame::GetReferencedFilter()
 
   if (!property) {
     // Fetch our Filter element's href or xlink:href attribute
-    SVGFilterElement *filter = static_cast<SVGFilterElement *>(mContent);
+    SVGFilterElement *filter = static_cast<SVGFilterElement *>(GetContent());
     nsAutoString href;
     if (filter->mStringAttributes[SVGFilterElement::HREF].IsExplicitlySet()) {
       filter->mStringAttributes[SVGFilterElement::HREF]

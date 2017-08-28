@@ -759,9 +759,8 @@ public:
   void SetStyleContext(nsStyleContext* aContext)
   {
     if (aContext != mStyleContext) {
-      nsStyleContext* oldStyleContext = mStyleContext;
+      RefPtr<nsStyleContext> oldStyleContext = mStyleContext.forget();
       mStyleContext = aContext;
-      aContext->AddRef();
 #ifdef DEBUG
       aContext->FrameAddRef();
 #endif
@@ -769,7 +768,6 @@ public:
 #ifdef DEBUG
       oldStyleContext->FrameRelease();
 #endif
-      oldStyleContext->Release();
     }
   }
 
@@ -785,11 +783,9 @@ public:
 #ifdef DEBUG
       mStyleContext->FrameRelease();
 #endif
-      mStyleContext->Release();
       mStyleContext = aContext;
-      aContext->AddRef();
 #ifdef DEBUG
-      aContext->FrameAddRef();
+      mStyleContext->FrameAddRef();
 #endif
     }
   }
@@ -4047,9 +4043,9 @@ protected:
   virtual bool IsLeafDynamic() const { return false; }
 
   // Members
-  nsRect           mRect;
-  nsIContent*      mContent;
-  nsStyleContext*  mStyleContext;
+  nsRect                 mRect;
+  nsCOMPtr<nsIContent>   mContent;
+  RefPtr<nsStyleContext> mStyleContext;
 private:
   nsContainerFrame* mParent;
   nsIFrame*        mNextSibling;  // doubly-linked list of frames

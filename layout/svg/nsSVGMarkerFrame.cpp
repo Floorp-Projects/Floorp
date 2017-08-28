@@ -74,7 +74,7 @@ nsSVGMarkerFrame::GetCanvasTM()
     return gfxMatrix();
   }
 
-  SVGMarkerElement *content = static_cast<SVGMarkerElement*>(mContent);
+  SVGMarkerElement *content = static_cast<SVGMarkerElement*>(GetContent());
 
   mInUse2 = true;
   gfxMatrix markedTM = mMarkedFrame->GetCanvasTM();
@@ -110,7 +110,7 @@ nsSVGMarkerFrame::PaintMark(gfxContext& aContext,
 
   AutoMarkerReferencer markerRef(this, aMarkedFrame);
 
-  SVGMarkerElement *marker = static_cast<SVGMarkerElement*>(mContent);
+  SVGMarkerElement *marker = static_cast<SVGMarkerElement*>(GetContent());
   if (!marker->HasValidDimensions()) {
     return;
   }
@@ -165,7 +165,7 @@ nsSVGMarkerFrame::GetMarkBBoxContribution(const Matrix& aToBBoxUserspace,
 
   AutoMarkerReferencer markerRef(this, aMarkedFrame);
 
-  SVGMarkerElement *content = static_cast<SVGMarkerElement*>(mContent);
+  SVGMarkerElement *content = static_cast<SVGMarkerElement*>(GetContent());
   if (!content->HasValidDimensions()) {
     return bbox;
   }
@@ -196,7 +196,7 @@ nsSVGMarkerFrame::GetMarkBBoxContribution(const Matrix& aToBBoxUserspace,
 void
 nsSVGMarkerFrame::SetParentCoordCtxProvider(SVGSVGElement *aContext)
 {
-  SVGMarkerElement *marker = static_cast<SVGMarkerElement*>(mContent);
+  SVGMarkerElement *marker = static_cast<SVGMarkerElement*>(GetContent());
   marker->SetParentCoordCtxProvider(aContext);
 }
 
