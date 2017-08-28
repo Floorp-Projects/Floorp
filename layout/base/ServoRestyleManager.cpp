@@ -645,12 +645,21 @@ UpdateFramePseudoElementStyles(nsIFrame* aFrame,
     aFrame, aRestyleState.StyleSet(), aRestyleState.ChangeList());
 }
 
+enum class ServoPostTraversalFlags : uint32_t
+{
+  Empty = 0,
+  // Whether parent was restyled.
+  ParentWasRestyled = 1 << 0,
+};
+
+MOZ_MAKE_ENUM_CLASS_BITWISE_OPERATORS(ServoPostTraversalFlags)
+
 bool
 ServoRestyleManager::ProcessPostTraversal(
   Element* aElement,
   ServoStyleContext* aParentContext,
   ServoRestyleState& aRestyleState,
-  bool aParentWasRestyled)
+  ServoPostTraversalFlags aFlags)
 {
   nsIFrame* styleFrame = nsLayoutUtils::GetStyleFrame(aElement);
   nsIFrame* primaryFrame = aElement->GetPrimaryFrame();
@@ -694,7 +703,8 @@ ServoRestyleManager::ProcessPostTraversal(
 
     // If the parent wasn't restyled, the styles of our anon box parents won't
     // change either.
-    if (aParentWasRestyled && maybeAnonBoxChild->ParentIsWrapperAnonBox()) {
+    if ((aFlags & ServoPostTraversalFlags::ParentWasRestyled) &&
+        maybeAnonBoxChild->ParentIsWrapperAnonBox()) {
       aRestyleState.AddPendingWrapperRestyle(
         ServoRestyleState::TableAwareParentFor(maybeAnonBoxChild));
     }
@@ -817,6 +827,9 @@ ServoRestyleManager::ProcessPostTraversal(
   const bool traverseTextChildren =
     wasRestyled || aElement->HasFlag(NODE_DESCENDANTS_NEED_FRAMES);
   bool recreatedAnyContext = wasRestyled;
+  ServoPostTraversalFlags childrenFlags =
+    wasRestyled ? ServoPostTraversalFlags::ParentWasRestyled
+                : ServoPostTraversalFlags::Empty;
   if (traverseElementChildren || traverseTextChildren) {
     StyleChildrenIterator it(aElement);
     TextPostTraversalState textState(*aElement,
@@ -828,11 +841,11 @@ ServoRestyleManager::ProcessPostTraversal(
         recreatedAnyContext |= ProcessPostTraversal(n->AsElement(),
                                                     upToDateContext,
                                                     childrenRestyleState,
-                                                    wasRestyled);
+                                                    childrenFlags);
       } else if (traverseTextChildren && n->IsNodeOfType(nsINode::eTEXT)) {
         recreatedAnyContext |= ProcessPostTraversalForText(n, textState,
                                                            childrenRestyleState,
-                                                           wasRestyled);
+                                                           childrenFlags);
       }
     }
   }
@@ -879,7 +892,7 @@ ServoRestyleManager::ProcessPostTraversalForText(
     nsIContent* aTextNode,
     TextPostTraversalState& aPostTraversalState,
     ServoRestyleState& aRestyleState,
-    bool aParentWasRestyled)
+    ServoPostTraversalFlags aFlags)
 {
   // Handle lazy frame construction.
   if (aTextNode->HasFlag(NODE_NEEDS_FRAME)) {
@@ -896,7 +909,8 @@ ServoRestyleManager::ProcessPostTraversalForText(
 
   // If the parent wasn't restyled, the styles of our anon box parents won't
   // change either.
-  if (aParentWasRestyled && primaryFrame->ParentIsWrapperAnonBox()) {
+  if ((aFlags & ServoPostTraversalFlags::ParentWasRestyled) &&
+      primaryFrame->ParentIsWrapperAnonBox()) {
     aRestyleState.AddPendingWrapperRestyle(
       ServoRestyleState::TableAwareParentFor(primaryFrame));
   }
@@ -1024,9 +1038,8 @@ ServoRestyleManager::DoProcessPendingRestyles(ServoTraversalFlags aFlags)
       while (Element* root = iter.GetNextStyleRoot()) {
         nsTArray<nsIFrame*> wrappersToRestyle;
         ServoRestyleState state(*styleSet, currentChanges, wrappersToRestyle);
-        anyStyleChanged |=
-          ProcessPostTraversal(root, nullptr, state,
-                               /* aParentWasRestyled = */ false);
+        ServoPostTraversalFlags flags = ServoPostTraversalFlags::Empty;
+        anyStyleChanged |= ProcessPostTraversal(root, nullptr, state, flags);
       }
     }
 
