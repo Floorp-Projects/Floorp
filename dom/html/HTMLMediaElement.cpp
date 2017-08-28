@@ -5314,15 +5314,16 @@ void HTMLMediaElement::ProcessMediaFragmentURI()
   }
 }
 
-void HTMLMediaElement::MetadataLoaded(const MediaInfo* aInfo,
-                                      nsAutoPtr<const MetadataTags> aTags)
+void
+HTMLMediaElement::MetadataLoaded(const MediaInfo* aInfo,
+                                 UniquePtr<const MetadataTags> aTags)
 {
   MOZ_ASSERT(NS_IsMainThread());
 
   SetMediaInfo(*aInfo);
 
   mIsEncrypted = aInfo->IsEncrypted() || mPendingEncryptedInitData.IsEncrypted();
-  mTags = aTags.forget();
+  mTags = Move(aTags);
   mLoadedDataFired = false;
   ChangeReadyState(nsIDOMHTMLMediaElement::HAVE_METADATA);
 
@@ -5735,7 +5736,7 @@ HTMLMediaElement::UpdateReadyStateInternal()
     if (hasVideoTracks) {
       mediaInfo.EnableVideo();
     }
-    MetadataLoaded(&mediaInfo, nsAutoPtr<const MetadataTags>(nullptr));
+    MetadataLoaded(&mediaInfo, nullptr);
   }
 
   if (mMediaSource) {

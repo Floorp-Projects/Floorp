@@ -7,7 +7,6 @@
 
 #include "MediaDecoderOwner.h"
 #include "mozilla/AbstractThread.h"
-#include "nsAutoPtr.h"
 
 namespace mozilla
 {
@@ -22,7 +21,7 @@ public:
   void FireTimeUpdate(bool aPeriodic) override {}
   bool GetPaused() override { return false; }
   void MetadataLoaded(const MediaInfo* aInfo,
-                      nsAutoPtr<const MetadataTags> aTags) override
+                      UniquePtr<const MetadataTags> aTags) override
   {
   }
   void NetworkError() override {}
