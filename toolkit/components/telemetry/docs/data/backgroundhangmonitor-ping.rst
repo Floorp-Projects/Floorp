@@ -34,6 +34,7 @@ Structure:
             "runnableName": <string>, // name of the runnable executing during the hang.
                                       // Runnable names are only collected for the XPCOM main thread.
             "process": <string>, // Type of process that hung, see below for a list of types.
+            "remoteType": <string>, // Remote type of process which hung, see below.
             "annotations": { ... }, // A set of annotations on the hang, see below.
             "pseudoStack": [ ... ], // List of pseudostack frame names.
             "stack": [ ... ], // interleaved hang stack, see below.
@@ -62,6 +63,15 @@ are currently sent only for the processes below:
 +---------------+---------------------------------------------------+
 | gpu           | GPU process                                       |
 +---------------+---------------------------------------------------+
+
+Remote Type
+-----------
+
+The ``remoteType`` field is a string denoting the type of content process that
+hung. As such it is only non-null if ``processType`` contains the ``tab`` value.
+
+The supported ``remoteType`` values are documented in the crash ping
+documentation: :ref:`remote-process-types`.
 
 Stack Traces
 ------------
