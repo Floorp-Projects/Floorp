@@ -25,11 +25,17 @@ public class FloatingActionButtonBehavior extends CoordinatorLayout.Behavior<Flo
     private AppBarLayout layout;
     private FloatingActionButton button;
     private boolean visible;
+    private boolean enabled;
 
     public FloatingActionButtonBehavior(Context context, AttributeSet attrs) {
         super();
 
+        enabled = true;
         visible = true;
+    }
+
+    public void setEnabled(boolean enabled) {
+        this.enabled = enabled;
     }
 
     @Override
@@ -58,6 +64,10 @@ public class FloatingActionButtonBehavior extends CoordinatorLayout.Behavior<Flo
 
     @Override
     public void onOffsetChanged(AppBarLayout appBarLayout, int verticalOffset) {
+        if (!enabled) {
+            return;
+        }
+
         if (verticalOffset == 0 && !visible) {
             showButton();
         } else if (Math.abs(verticalOffset) >= appBarLayout.getTotalScrollRange() && visible) {

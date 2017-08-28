@@ -25,6 +25,7 @@
     <color name="colorAutocompleteHighlight">#FFCF68FF</color>
 
     <color name="colorFloatingActionButtonTint">#96368D</color>
+    <color name="colorTabsButtonTint">#ffffff</color>
 
     <color name="colorUrlInputBackground">#B2000000</color>
 

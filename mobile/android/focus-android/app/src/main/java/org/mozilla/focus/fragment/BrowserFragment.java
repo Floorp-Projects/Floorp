@@ -24,6 +24,7 @@ import android.os.Environment;
 import android.support.annotation.NonNull;
 import android.support.annotation.Nullable;
 import android.support.design.widget.AppBarLayout;
+import android.support.design.widget.FloatingActionButton;
 import android.support.v4.app.DialogFragment;
 import android.support.v4.app.Fragment;
 import android.support.v4.app.FragmentManager;
@@ -67,8 +68,10 @@ import org.mozilla.focus.utils.UrlUtils;
 import org.mozilla.focus.web.Download;
 import org.mozilla.focus.web.IWebView;
 import org.mozilla.focus.widget.AnimatedProgressBar;
+import org.mozilla.focus.widget.FloatingTabsButton;
 
 import java.lang.ref.WeakReference;
+import java.util.List;
 
 /**
  * Fragment for displaying the browser UI.
@@ -208,6 +211,8 @@ public class BrowserFragment extends WebFragment implements View.OnClickListener
             }
         });
 
+        initialiseTabsButton((FloatingTabsButton) view.findViewById(R.id.tabs));
+
         final View toolbarContent = view.findViewById(R.id.toolbar_content);
 
         final AppBarLayout appBarLayout = (AppBarLayout) view.findViewById(R.id.appbar);
@@ -255,8 +260,6 @@ public class BrowserFragment extends WebFragment implements View.OnClickListener
 
                     progressView.setProgress(5);
                     progressView.setVisibility(View.VISIBLE);
-
-
                 } else {
                     backgroundTransitionGroup.startTransition(ANIMATION_DURATION);
 
@@ -321,6 +324,27 @@ public class BrowserFragment extends WebFragment implements View.OnClickListener
         }
 
         return view;
+    }
+
+    private void initialiseTabsButton(final FloatingTabsButton tabsButton) {
+        if (session.isCustomTab()) {
+            // The custom tab button should not appear in custom tabs.
+            tabsButton.updateTabsCount(0);
+            return;
+        }
+
+        tabsButton.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View view) {
+            }
+        });
+
+        sessionManager.getSessions().observe(this, new NonNullObserver<List<Session>>() {
+            @Override
+            protected void onValueChanged(@NonNull List<Session> sessions) {
+                tabsButton.updateTabsCount(sessions.size());
+            }
+        });
     }
 
     private void initialiseNormalBrowserUi(final @NonNull View view) {
