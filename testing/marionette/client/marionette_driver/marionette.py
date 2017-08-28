@@ -663,7 +663,7 @@ class Marionette(object):
         if self.instance is not None:
             runner = self.instance.runner
 
-        poll_interval = 0.1
+        poll_interval = 1
         starttime = datetime.datetime.now()
 
         while datetime.datetime.now() - starttime < datetime.timedelta(seconds=timeout):
@@ -679,8 +679,8 @@ class Marionette(object):
                 data = sock.recv(16)
                 if ":" in data:
                     return True
-            except socket.error:
-                pass
+            except socket.error as e:
+                print >>sys.stderr, "Connection attempt to Marionette failed ({})".format(e)
             finally:
                 if sock is not None:
                     sock.close()
