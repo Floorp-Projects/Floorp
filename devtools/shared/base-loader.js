@@ -53,20 +53,6 @@ const descriptor = function descriptor(object) {
   return value;
 };
 
-// Defines own properties of given `properties` object on the given
-// target object overriding any existing property with a conflicting name.
-// Returns `target` object. Note we only export this function because it's
-// useful during loader bootstrap when other util modules can't be used &
-// thats only case where this export should be used.
-const override = function override(target, source) {
-  let properties = descriptor(target);
-
-  for (let name of getOwnIdentifiers(source || {}))
-    properties[name] = getOwnPropertyDescriptor(source, name);
-
-  return Object.defineProperties({}, properties);
-};
-
 function sourceURI(uri) { return String(uri).split(" -> ").pop(); }
 
 function isntLoaderFrame(frame) { return frame.fileName !== __URI__ }
@@ -165,8 +151,6 @@ const Sandbox = function Sandbox(options) {
     sandboxName: options.name,
     principal: 'principal' in options ? options.principal : systemPrincipal,
     wantXrays: 'wantXrays' in options ? options.wantXrays : true,
-    wantGlobalProperties: 'wantGlobalProperties' in options ?
-                          options.wantGlobalProperties : [],
     sandboxPrototype: 'prototype' in options ? options.prototype : {},
     invisibleToDebugger: 'invisibleToDebugger' in options ?
                          options.invisibleToDebugger : false,
@@ -212,8 +196,7 @@ const load = function load(loader, module) {
   });
 
   let sandbox;
-  if ((loader.useSharedGlobalSandbox || isSystemURI(module.uri)) &&
-      loader.sharedGlobalBlocklist.indexOf(module.id) == -1) {
+  if (loader.useSharedGlobalSandbox || isSystemURI(module.uri)) {
     // Create a new object in this sandbox, that will be used as
     // the scope object for this particular module
     sandbox = new loader.sharedGlobalSandbox.Object();
@@ -246,7 +229,6 @@ const load = function load(loader, module) {
       name: module.uri,
       prototype: Object.create(globals, descriptors),
       wantXrays: false,
-      wantGlobalProperties: module.id == "sdk/indexed-db" ? ["indexedDB"] : [],
       invisibleToDebugger: loader.invisibleToDebugger,
       metadata: {
         addonID: loader.id,
@@ -627,46 +609,10 @@ function Loader(options) {
     return addTrailingSlash(join(uri));
   }
 
-  if (options.sharedGlobalBlacklist && !options.sharedGlobalBlocklist) {
-    options.sharedGlobalBlocklist = options.sharedGlobalBlacklist;
-  }
-  let {
-    modules, globals, resolve, paths, rootURI, manifest, isNative,
-    metadata, sharedGlobal, sharedGlobalBlocklist, checkCompatibility, waiveIntereposition
-  } = override({
-    paths: {},
-    modules: {},
-    globals: {
-      get console() {
-        // Import Console.jsm from here to prevent loading it until someone uses it
-        let { ConsoleAPI } = Cu.import("resource://gre/modules/Console.jsm");
-        let console = new ConsoleAPI({
-          consoleID: options.id ? "addon/" + options.id : ""
-        });
-        Object.defineProperty(this, "console", { value: console });
-        return this.console;
-      }
-    },
-    checkCompatibility: false,
-    resolve: options.isNative ?
-      // Make the returned resolve function have the same signature
-      (id, requirer) => nodeResolve(id, requirer, { rootURI: normalizeRootURI(rootURI) }) :
-      resolve,
-    sharedGlobalBlocklist: ["sdk/indexed-db"],
-    waiveIntereposition: false
-  }, options);
-
-  // Create overrides defaults, none at the moment
-  if (typeof manifest != "object" || !manifest) {
-    manifest = {};
-  }
-  if (typeof manifest.jetpack != "object" || !manifest.jetpack) {
-    manifest.jetpack = {
-      overrides: {}
-    };
-  }
-  if (typeof manifest.jetpack.overrides != "object" || !manifest.jetpack.overrides) {
-    manifest.jetpack.overrides = {};
+  let { paths, sharedGlobal, globals } = options;
+  let resolve = Loader.resolve;
+  if (!globals) {
+    globals = {};
   }
 
   // We create an identity object that will be dispatched on an unload
@@ -679,7 +625,7 @@ function Loader(options) {
   let mapping = compileMapping(paths);
 
   // Define pseudo modules.
-  modules = override({
+  let modules = {
     '@loader/unload': destructor,
     '@loader/options': options,
     'chrome': { Cc: Cc, Ci: Ci, Cu: Cu, Cr: Cr, Cm: Cm,
@@ -688,7 +634,7 @@ function Loader(options) {
                 // It is done by bootstrap.js:loadSandbox for the SDK.
                 ChromeWorker: ChromeWorker
     }
-  }, modules);
+  };
 
   const builtinModuleExports = modules;
   modules = {};
@@ -716,7 +662,6 @@ function Loader(options) {
   let sharedGlobalSandbox = Sandbox({
     name: options.sandboxName || "Addon-SDK",
     wantXrays: false,
-    wantGlobalProperties: [],
     invisibleToDebugger: options.invisibleToDebugger || false,
     metadata: {
       addonID: options.noSandboxAddonId ? undefined : options.id,
@@ -746,8 +691,6 @@ function Loader(options) {
     modules: { enumerable: false, value: modules },
     useSharedGlobalSandbox: { enumerable: false, value: !!sharedGlobal },
     sharedGlobalSandbox: { enumerable: false, value: sharedGlobalSandbox },
-    sharedGlobalBlocklist: { enumerable: false, value: sharedGlobalBlocklist },
-    sharedGlobalBlacklist: { enumerable: false, value: sharedGlobalBlocklist },
     // Map of module sandboxes indexed by module URIs.
     sandboxes: { enumerable: false, value: {} },
     resolve: { enumerable: false, value: resolve },
