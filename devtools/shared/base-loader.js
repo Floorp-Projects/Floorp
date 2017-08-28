@@ -764,10 +764,12 @@ function Loader(options) {
   return Object.create(null, returnObj);
 };
 
-var isSystemURI = uri => /^resource:\/\/(gre|devtools|testing-common)\//.test(uri);
+var SystemRegExp = /^resource:\/\/(gre|devtools|testing-common)\//;
+var isSystemURI = uri => SystemRegExp.test(uri);
 
 var isJSONURI = uri => uri.endsWith('.json');
 var isJSMURI = uri => uri.endsWith('.jsm');
 var isJSURI = uri => uri.endsWith('.js');
-var isAbsoluteURI = uri => /^(resource|chrome|file|jar):/.test(uri);
+var AbsoluteRegExp = /^(resource|chrome|file|jar):/;
+var isAbsoluteURI = uri => AbsoluteRegExp.test(uri);
 var isRelative = id => id.startsWith(".");
