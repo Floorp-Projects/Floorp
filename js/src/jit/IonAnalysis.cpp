@@ -97,101 +97,30 @@ FlagPhiInputsAsHavingRemovedUses(MIRGenerator* mir, MBasicBlock* block, MBasicBl
     // bailout will use this value and give it back to baseline, which will then
     // use the OptimizedOut magic value in a computation.
 
-    // Conservative upper limit for the number of Phi instructions which are
-    // visited while looking for uses.
-    const size_t conservativeUsesLimit = 128;
-
-    MOZ_ASSERT(worklist.empty());
     size_t predIndex = succ->getPredecessorIndex(block);
     MPhiIterator end = succ->phisEnd();
     MPhiIterator it = succ->phisBegin();
     for (; it != end; it++) {
-        MPhi* phi = *it;
-
         if (mir->shouldCancel("FlagPhiInputsAsHavingRemovedUses outer loop"))
             return false;
+
+        // If the Phi has no uses, then there is no need to flag any of its
+        // operands as having removed uses.
+        MPhi* phi = *it;
+        if (phi->isUnused())
+            continue;
 
         // We are looking to mark the Phi inputs which are used across the edge
         // between the |block| and its successor |succ|.
         MDefinition* def = phi->getOperand(predIndex);
-        if (def->isUseRemoved())
-            continue;
-
-        phi->setInWorklist();
-        if (!worklist.append(phi))
-            return false;
-
-        // Fill the work list with all the Phi nodes uses until we reach either:
-        //  - A resume point which uses the Phi as an observable operand.
-        //  - An explicit use of the Phi instruction.
-        //  - An implicit use of the Phi instruction.
-        bool isUsed = false;
-        for (size_t idx = 0; !isUsed && idx < worklist.length(); idx++) {
-            phi = worklist[idx];
-
-            if (mir->shouldCancel("FlagPhiInputsAsHavingRemovedUses inner loop 1"))
-                return false;
-
-            if (phi->isUseRemoved() || phi->isImplicitlyUsed()) {
-                // The phi is implicitly used.
-                isUsed = true;
-                break;
-            }
-
-            MUseIterator usesEnd(phi->usesEnd());
-            for (MUseIterator use(phi->usesBegin()); use != usesEnd; use++) {
-                MNode* consumer = (*use)->consumer();
-
-                if (mir->shouldCancel("FlagPhiInputsAsHavingRemovedUses inner loop 2"))
-                    return false;
-
-                if (consumer->isResumePoint()) {
-                    MResumePoint* rp = consumer->toResumePoint();
-                    if (rp->isObservableOperand(*use)) {
-                        // The phi is observable via a resume point operand.
-                        isUsed = true;
-                        break;
-                    }
-                    continue;
-                }
-
-                MDefinition* cdef = consumer->toDefinition();
-                if (!cdef->isPhi()) {
-                    // The phi is explicitly used.
-                    isUsed = true;
-                    break;
-                }
-
-                phi = cdef->toPhi();
-                if (phi->isInWorklist())
-                    continue;
-
-                phi->setInWorklist();
-                if (!worklist.append(phi))
-                    return false;
-            }
-
-            // Use a conservative upper bound to avoid iterating too many times
-            // on very large graphs.
-            if (idx >= conservativeUsesLimit) {
-                isUsed = true;
-                break;
-            }
-        }
-
-        if (isUsed)
-            def->setUseRemoved();
-
-        // Remove all the InWorklist flags.
-        while (!worklist.empty()) {
-            phi = worklist.popCopy();
-            phi->setNotInWorklist();
-        }
+        def->setUseRemovedUnchecked();
     }
 
     return true;
 }
 
+// Note: To be able to remove Phi nodes correctly, unused Phi should be marked
+// by FlagUnusedPhis function.
 static bool
 FlagAllOperandsAsHavingRemovedUses(MIRGenerator* mir, MBasicBlock* block)
 {
@@ -534,6 +463,15 @@ jit::PruneUnusedBranches(MIRGenerator* mir, MIRGraph& graph)
 
     JitSpew(JitSpew_Prune, "Convert basic block to bailing blocks, and remove unreachable blocks:");
     JitSpewIndent indent(JitSpew_Prune);
+
+    // Try blocks are removing uses that are not observed by the graph. Thus if
+    // the graph might have had any try block we should not remove any of the
+    // operands of the corresponding resume points.
+    Observability observability = graph.hasTryBlock()
+                                  ? ConservativeObservability
+                                  : AggressiveObservability;
+    if (!FlagUnusedPhis(mir, graph, observability))
+        return true;
 
     // As we are going to remove edges and basic block, we have to mark
     // instructions which would be needed by baseline if we were to bailout.
@@ -1257,8 +1195,8 @@ IsPhiRedundant(MPhi* phi)
 }
 
 bool
-jit::EliminatePhis(MIRGenerator* mir, MIRGraph& graph,
-                   Observability observe)
+jit::FlagUnusedPhis(MIRGenerator* mir, MIRGraph& graph,
+                    Observability observe)
 {
     // Eliminates redundant or unobservable phis from the graph.  A
     // redundant phi is something like b = phi(a, a) or b = phi(a, b),
@@ -1282,6 +1220,10 @@ jit::EliminatePhis(MIRGenerator* mir, MIRGraph& graph,
     // |conservativeObservability| is set, we will consider any use
     // from a resume point to be observable.  Otherwise, we demand a
     // use from an actual instruction.
+    //
+    // At the end of this phase, every Phi which is not flagged as being
+    // unused is observed. Thus, the removal of used Phi should introduce
+    // the addition of UseRemoved flag to all of its operands.
 
     Vector<MPhi*, 16, SystemAllocPolicy> worklist;
 
@@ -1292,7 +1234,7 @@ jit::EliminatePhis(MIRGenerator* mir, MIRGraph& graph,
         while (iter != block->phisEnd()) {
             MPhi* phi = *iter++;
 
-            if (mir->shouldCancel("Eliminate Phis (populate loop)"))
+            if (mir->shouldCancel("Flag Unused Phis (populate loop)"))
                 return false;
 
             // Flag all as unused, only observable phis would be marked as used
@@ -1354,6 +1296,16 @@ jit::EliminatePhis(MIRGenerator* mir, MIRGraph& graph,
                 return false;
         }
     }
+
+    return true;
+}
+
+bool
+jit::EliminatePhis(MIRGenerator* mir, MIRGraph& graph,
+                   Observability observe)
+{
+    if (!FlagUnusedPhis(mir, graph, observe))
+        return false;
 
     // Sweep dead phis.
     for (PostorderIterator block = graph.poBegin(); block != graph.poEnd(); block++) {
@@ -2382,6 +2334,15 @@ jit::RemoveUnmarkedBlocks(MIRGenerator* mir, MIRGraph& graph, uint32_t numMarked
         // since we may have removed edges even if we didn't remove any blocks.
         graph.unmarkBlocks();
     } else {
+        // Try blocks are removing uses that are not observed by the graph. Thus
+        // if the graph might have had any try block we should not remove any of
+        // the operands of the corresponding resume points.
+        Observability observability = graph.hasTryBlock()
+                                      ? ConservativeObservability
+                                      : AggressiveObservability;
+        if (!FlagUnusedPhis(mir, graph, observability))
+            return true;
+
         // As we are going to remove edges and basic blocks, we have to mark
         // instructions which would be needed by baseline if we were to
         // bailout.
