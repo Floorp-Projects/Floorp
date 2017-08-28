@@ -1,0 +1,20 @@
+<!doctype html>
+<meta charset="utf-8">
+<title>CSS Test: ::before and ::after generated with content: inherit</title>
+<link rel="author" title="Emilio Cobos Álvarez" href="mailto:emilio@crisal.io">
+<link rel="match" href="generated-content-inherit-001-ref.html">
+<link rel="help" href="https://drafts.csswg.org/css-pseudo/#generated-content">
+<meta name="flags" content="">
+<meta name="assert" content="Tests that pseudo-elements are properly generated with content: inherit">
+<!--
+  TODO(emilio): upstream this to WPT once
+  https://github.com/w3c/csswg-drafts/issues/1757 is resolved
+-->
+<style>
+.first::before, .second::after {
+  content: inherit;
+}
+</style>
+<p>Test passes if you see two PASS lines below:</p>
+<div class="first" style="content: 'PA'">SS</div>
+<div class="second" style="content: 'SS'">PA</div>
