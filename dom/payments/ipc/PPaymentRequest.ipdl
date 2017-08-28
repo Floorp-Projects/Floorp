@@ -123,7 +123,7 @@ struct IPCPaymentCanMakeActionResponse
 struct IPCPaymentShowActionResponse
 {
   nsString requestId;
-  bool isAccepted;
+  uint32_t status;
   nsString methodName;
   nsString data;
   nsString payerName;

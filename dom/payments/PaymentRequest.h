@@ -71,13 +71,12 @@ public:
   void RespondCanMakePayment(bool aResult);
 
   already_AddRefed<Promise> Show(ErrorResult& aRv);
-  void RespondShowPayment(bool aAccept,
-                          const nsAString& aMethodName,
+  void RespondShowPayment(const nsAString& aMethodName,
                           const nsAString& aDetails,
                           const nsAString& aPayerName,
                           const nsAString& aPayerEmail,
                           const nsAString& aPayerPhone,
-                          nsresult aRv = NS_ERROR_DOM_ABORT_ERR);
+                          nsresult aRv);
   void RejectShowPayment(nsresult aRejectReason);
   void RespondComplete();
 
