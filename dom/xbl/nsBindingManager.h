@@ -193,6 +193,12 @@ protected:
   // Call PostProcessAttachedQueueEvent() on a timer.
   static void PostPAQEventCallback(nsITimer* aTimer, void* aClosure);
 
+  // Enumerate each bound content's bindings (including its base bindings)
+  // in mBoundContentSet.
+  using BoundContentBindingCallback = std::function<void (nsXBLBinding*)>;
+  void EnumerateBoundContentBindings(
+    const BoundContentBindingCallback& aCallback) const;
+
 // MEMBER VARIABLES
 protected:
   // A set of nsIContent that currently have a binding installed.
