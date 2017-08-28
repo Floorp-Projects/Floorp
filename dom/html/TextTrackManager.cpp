@@ -505,6 +505,14 @@ public:
     return NS_OK;
   }
 
+  void Dispatch() {
+    if (nsCOMPtr<nsIGlobalObject> global = mCue->GetOwnerGlobal()) {
+      global->Dispatch(TaskCategory::Other, do_AddRef(this));
+    } else {
+      NS_DispatchToMainThread(do_AddRef(this));
+    }
+  }
+
 private:
   nsString mName;
   double mTime;
@@ -850,7 +858,7 @@ TextTrackManager::TimeMarchesOn()
 
   // Fire the eventList
   for (uint32_t i = 0; i < eventList.Length(); ++i) {
-    NS_DispatchToMainThread(eventList[i].forget());
+    eventList[i]->Dispatch();
   }
 
   // Step 16.
