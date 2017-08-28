@@ -12,18 +12,19 @@ android-dependencies/opt:
     worker:
         docker-image: {in-tree: android-gradle-build}
         env:
-            GRADLE_USER_HOME: "/home/worker/workspace/build/src/dotgradle-online"
+            GRADLE_USER_HOME: "/builds/worker/workspace/build/src/dotgradle-online"
             PERFHERDER_EXTRA_OPTIONS: android-dependencies
             TOOLTOOL_MANIFEST: "mobile/android/config/tooltool-manifests/android-gradle-dependencies/releng.manifest"
+            WORKSPACE: "/builds/worker/workspace"
         artifacts:
           - name: public/build
-            path: /home/worker/artifacts/
+            path: /builds/worker/artifacts/
             type: directory
           - name: private/android-sdk
-            path: /home/worker/private/android-sdk
+            path: /builds/worker/private/android-sdk
             type: directory
           - name: private/java_home
-            path: /home/worker/private/java_home
+            path: /builds/worker/private/java_home
             type: directory
         max-run-time: 36000
     run:
@@ -59,15 +60,15 @@ android-test/opt:
     worker:
         docker-image: {in-tree: desktop-build}
         env:
-            GRADLE_USER_HOME: "/home/worker/workspace/build/src/dotgradle"
+            GRADLE_USER_HOME: "/builds/worker/workspace/build/src/dotgradle"
             PERFHERDER_EXTRA_OPTIONS: android-test
             TOOLTOOL_MANIFEST: "mobile/android/config/tooltool-manifests/android-frontend/releng.manifest"
         artifacts:
           - name: public/android/unittest
-            path: /home/worker/workspace/build/src/obj-firefox/gradle/build/mobile/android/app/reports/tests
+            path: /builds/worker/workspace/build/src/obj-firefox/gradle/build/mobile/android/app/reports/tests
             type: directory
           - name: public/build
-            path: /home/worker/artifacts/
+            path: /builds/worker/artifacts/
             type: directory
         max-run-time: 36000
     run:
@@ -101,30 +102,30 @@ android-lint/opt:
     worker:
         docker-image: {in-tree: desktop-build}
         env:
-            GRADLE_USER_HOME: "/home/worker/workspace/build/src/dotgradle"
+            GRADLE_USER_HOME: "/builds/worker/workspace/build/src/dotgradle"
             PERFHERDER_EXTRA_OPTIONS: android-lint
             TOOLTOOL_MANIFEST: "mobile/android/config/tooltool-manifests/android-frontend/releng.manifest"
         artifacts:
           - name: public/android/lint/lint-results-officialAustralisDebug.html
-            path: /home/worker/workspace/build/src/obj-firefox/gradle/build/mobile/android/app/outputs/lint-results-officialAustralisDebug.html
+            path: /builds/worker/workspace/build/src/obj-firefox/gradle/build/mobile/android/app/outputs/lint-results-officialAustralisDebug.html
             type: file
           - name: public/android/lint/lint-results-officialAustralisDebug.xml
-            path: /home/worker/workspace/build/src/obj-firefox/gradle/build/mobile/android/app/outputs/lint-results-officialAustralisDebug.xml
+            path: /builds/worker/workspace/build/src/obj-firefox/gradle/build/mobile/android/app/outputs/lint-results-officialAustralisDebug.xml
             type: file
           - name: public/android/lint/lint-results-officialAustralisDebug_files
-            path: /home/worker/workspace/build/src/obj-firefox/gradle/build/mobile/android/app/outputs/lint-results-officialAustralisDebug_files
+            path: /builds/worker/workspace/build/src/obj-firefox/gradle/build/mobile/android/app/outputs/lint-results-officialAustralisDebug_files
             type: directory
           - name: public/android/lint/lint-results-officialPhotonDebug.html
-            path: /home/worker/workspace/build/src/obj-firefox/gradle/build/mobile/android/app/outputs/lint-results-officialPhotonDebug.html
+            path: /builds/worker/workspace/build/src/obj-firefox/gradle/build/mobile/android/app/outputs/lint-results-officialPhotonDebug.html
             type: file
           - name: public/android/lint/lint-results-officialPhotonDebug.xml
-            path: /home/worker/workspace/build/src/obj-firefox/gradle/build/mobile/android/app/outputs/lint-results-officialPhotonDebug.xml
+            path: /builds/worker/workspace/build/src/obj-firefox/gradle/build/mobile/android/app/outputs/lint-results-officialPhotonDebug.xml
             type: file
           - name: public/android/lint/lint-results-officialPhotonDebug_files
-            path: /home/worker/workspace/build/src/obj-firefox/gradle/build/mobile/android/app/outputs/lint-results-officialPhotonDebug_files
+            path: /builds/worker/workspace/build/src/obj-firefox/gradle/build/mobile/android/app/outputs/lint-results-officialPhotonDebug_files
             type: directory
           - name: public/build
-            path: /home/worker/artifacts/
+            path: /builds/worker/artifacts/
             type: directory
         max-run-time: 36000
     run:
@@ -164,18 +165,18 @@ android-checkstyle/opt:
     worker:
         docker-image: {in-tree: desktop-build}
         env:
-            GRADLE_USER_HOME: "/home/worker/workspace/build/src/dotgradle"
+            GRADLE_USER_HOME: "/builds/worker/workspace/build/src/dotgradle"
             PERFHERDER_EXTRA_OPTIONS: android-checkstyle
             TOOLTOOL_MANIFEST: "mobile/android/config/tooltool-manifests/android-frontend/releng.manifest"
         artifacts:
           - name: public/android/checkstyle/checkstyle.html
-            path: /home/worker/workspace/build/src/obj-firefox/gradle/build/mobile/android/app/reports/checkstyle/checkstyle.html
+            path: /builds/worker/workspace/build/src/obj-firefox/gradle/build/mobile/android/app/reports/checkstyle/checkstyle.html
             type: file
           - name: public/android/checkstyle/checkstyle.xml
-            path: /home/worker/workspace/build/src/obj-firefox/gradle/build/mobile/android/app/reports/checkstyle/checkstyle.xml
+            path: /builds/worker/workspace/build/src/obj-firefox/gradle/build/mobile/android/app/reports/checkstyle/checkstyle.xml
             type: file
           - name: public/build
-            path: /home/worker/artifacts/
+            path: /builds/worker/artifacts/
             type: directory
         max-run-time: 36000
     run:
@@ -211,24 +212,24 @@ android-findbugs/opt:
     worker:
         docker-image: {in-tree: desktop-build}
         env:
-            GRADLE_USER_HOME: "/home/worker/workspace/build/src/dotgradle"
+            GRADLE_USER_HOME: "/builds/worker/workspace/build/src/dotgradle"
             PERFHERDER_EXTRA_OPTIONS: android-findbugs
             TOOLTOOL_MANIFEST: "mobile/android/config/tooltool-manifests/android-frontend/releng.manifest"
         artifacts:
           - name: public/android/findbugs/findbugs-officialAustralisDebug-output.html
-            path: /home/worker/workspace/build/src/obj-firefox/gradle/build/mobile/android/app/outputs/findbugs/findbugs-officialAustralisDebug-output.html
+            path: /builds/worker/workspace/build/src/obj-firefox/gradle/build/mobile/android/app/outputs/findbugs/findbugs-officialAustralisDebug-output.html
             type: file
           - name: public/android/findbugs/findbugs-officialAustralisDebug-output.xml
-            path: /home/worker/workspace/build/src/obj-firefox/gradle/build/mobile/android/app/outputs/findbugs/findbugs-officialAustralisDebug-output.xml
+            path: /builds/worker/workspace/build/src/obj-firefox/gradle/build/mobile/android/app/outputs/findbugs/findbugs-officialAustralisDebug-output.xml
             type: file
           - name: public/android/findbugs/findbugs-officialPhotonDebug-output.html
-            path: /home/worker/workspace/build/src/obj-firefox/gradle/build/mobile/android/app/outputs/findbugs/findbugs-officialPhotonDebug-output.html
+            path: /builds/worker/workspace/build/src/obj-firefox/gradle/build/mobile/android/app/outputs/findbugs/findbugs-officialPhotonDebug-output.html
             type: file
           - name: public/android/findbugs/findbugs-officialPhotonDebug-output.xml
-            path: /home/worker/workspace/build/src/obj-firefox/gradle/build/mobile/android/app/outputs/findbugs/findbugs-officialPhotonDebug-output.xml
+            path: /builds/worker/workspace/build/src/obj-firefox/gradle/build/mobile/android/app/outputs/findbugs/findbugs-officialPhotonDebug-output.xml
             type: file
           - name: public/build
-            path: /home/worker/artifacts/
+            path: /builds/worker/artifacts/
             type: directory
         max-run-time: 36000
     run:

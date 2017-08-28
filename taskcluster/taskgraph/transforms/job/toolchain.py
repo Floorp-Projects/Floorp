@@ -121,12 +121,12 @@ def docker_worker_toolchain(config, job, taskdesc):
         docker_worker_add_tooltool(config, job, taskdesc, internal=internal)
 
     worker['command'] = [
-        '/home/worker/bin/run-task',
-        '--vcs-checkout=/home/worker/workspace/build/src',
+        '/builds/worker/bin/run-task',
+        '--vcs-checkout=/builds/worker/workspace/build/src',
         '--',
         'bash',
         '-c',
-        'cd /home/worker && '
+        'cd /builds/worker && '
         './workspace/build/src/taskcluster/scripts/misc/{}'.format(
             run['script'])
     ]

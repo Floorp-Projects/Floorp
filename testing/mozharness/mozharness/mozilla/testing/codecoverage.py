@@ -82,7 +82,7 @@ class CodeCoverageMixin(object):
 
         tooltool_path = self._fetch_tooltool_py()
         cmd = [tooltool_path, '--url', 'https://tooltool.mozilla-releng.net/', 'fetch', \
-            '-m', manifest, '-o', '-c', '/home/worker/tooltool-cache']
+            '-m', manifest, '-o', '-c', '/builds/worker/tooltool-cache']
         self.run_command(cmd, cwd=self.grcov_dir)
         self.run_command(['tar', '-jxvf', os.path.join(self.grcov_dir, 'grcov-linux-standalone-x86_64.tar.bz2'), \
             '-C', self.grcov_dir], cwd=self.grcov_dir)
@@ -133,7 +133,7 @@ class CodeCoverageMixin(object):
             grcov_command = [
                 os.path.join(self.grcov_dir, 'grcov'),
                 '-t', 'lcov',
-                '-p', '/home/worker/workspace/build/src/',
+                '-p', '/builds/worker/workspace/build/src/',
                 '--ignore-dir', 'gcc',
                 os.path.join(self.grcov_dir, 'target.code-coverage-gcno.zip'), file_path_gcda
             ]
