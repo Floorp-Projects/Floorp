@@ -145,7 +145,8 @@ public class PocketStoriesLoader extends AsyncTaskLoader<List<TopStory>> {
         }
     }
 
-    private static List<TopStory> jsonStringToTopStories(String jsonResponse) {
+    /* package-private */
+    static List<TopStory> jsonStringToTopStories(String jsonResponse) {
         final List<TopStory> topStories = new LinkedList<>();
 
         if (TextUtils.isEmpty(jsonResponse)) {
