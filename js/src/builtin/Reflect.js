@@ -104,6 +104,25 @@ function Reflect_construct(target, argumentsList/*, newTarget*/) {
     }
 }
 
+// ES2017 draft rev 6859bb9ccaea9c6ede81d71e5320e3833b92cb3e
+// 26.1.3 Reflect.defineProperty ( target, propertyKey, attributes )
+function Reflect_defineProperty(obj, propertyKey, attributes) {
+    // Steps 1-4.
+    return ObjectOrReflectDefineProperty(obj, propertyKey, attributes, false);
+}
+
+// ES2017 draft rev 6859bb9ccaea9c6ede81d71e5320e3833b92cb3e
+// 26.1.6 Reflect.getOwnPropertyDescriptor ( target, propertyKey )
+function Reflect_getOwnPropertyDescriptor(target, propertyKey) {
+    // Step 1.
+    if (!IsObject(target))
+        ThrowTypeError(JSMSG_NOT_NONNULL_OBJECT, DecompileArg(0, target));
+
+    // Steps 2-3.
+    // The other steps are identical to Object.getOwnPropertyDescriptor().
+    return ObjectGetOwnPropertyDescriptor(target, propertyKey);
+}
+
 // ES2017 draft rev a785b0832b071f505a694e1946182adeab84c972
 // 26.1.8 Reflect.has ( target, propertyKey )
 function Reflect_has(target, propertyKey) {
