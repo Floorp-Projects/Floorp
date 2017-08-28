@@ -203,4 +203,22 @@ l10n-check::
 	$(MAKE) installers-x-test L10NBASEDIR='$(PWD)' \
 	    ZIP_IN='$(ZIP_IN)' MOZ_SIMPLE_PACKAGE_NAME=
 	$(PYTHON) $(topsrcdir)/toolkit/mozapps/installer/unpack.py $(DIST)/l10n-stage/$(MOZ_PKG_DIR)$(_RESPATH)
-	cd $(DIST)/l10n-stage && test $$(cat $(MOZ_PKG_DIR)$(_RESPATH)/update.locale) = x-test
+	(cd $(DIST)/l10n-stage && test $$(cat $(MOZ_PKG_DIR)$(_RESPATH)/update.locale) = x-test)
+	@# package langpack as web extension, too, run some tests on it
+	$(MAKE) package-langpack-x-test L10NBASEDIR='$(PWD)' WEBEXT_LANGPACKS=1
+	$(MAKE) analyze-langpack-x-test
+	$(MAKE) check-clobber-l10n-x-test
+
+# Helper rules to have AB_CD set to the locale we test for testing
+# We need to split this out from l10n-check, as that needs AB_CD to be en-US
+# at the top level to unpack the right file
+analyze-langpack-%: AB_CD=$*
+analyze-langpack-%:
+	$(if $(shell unzip -qql $(ABS_DIST)/$(LANGPACK) manifest.json),$(info Found manifest.json),$(error manifest.json is missing))
+	$(if $(shell unzip -qql $(ABS_DIST)/$(LANGPACK) chrome.manifest),$(error Found chrome.manifest),$(info Not packaging chrome.manifest))
+
+check-clobber-l10n-%: AB_CD=$*
+check-clobber-l10n-%:
+	$(MAKE) clobber-x-test
+	find $(ABS_DIST) -name \*$(AB_CD)\* -type f -delete
+	$(RM) -r $(DIST)/l10n-stage $(UNPACKED_INSTALLER)
