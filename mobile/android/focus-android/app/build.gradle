@@ -159,6 +159,10 @@ dependencies {
         transitive = false
     }
 
+    // This is only added temporarily to work around a buddybuild SDK issue:
+    // https://github.com/mozilla-mobile/focus-android/issues/1218
+    compile 'com.squareup.leakcanary:leakcanary-android-no-op:1.5.2'
+
     compile 'org.mozilla.telemetry:telemetry:1.1.0'
 
     focusCompile 'com.adjust.sdk:adjust-android:4.11.4'
