@@ -191,25 +191,6 @@ const Sandbox = function Sandbox(options) {
   return sandbox;
 }
 
-// Evaluates code from the given `uri` into given `sandbox`. If
-// `options.source` is passed, then that code is evaluated instead.
-// Optionally following options may be given:
-// - `options.encoding`: Source encoding, defaults to 'UTF-8'.
-// - `options.line`: Line number to start count from for stack traces.
-//    Defaults to 1.
-// - `options.version`: Version of JS used, defaults to '1.8'.
-const evaluate = function evaluate(sandbox, uri, options) {
-  let { source, line, version, encoding } = override({
-    encoding: 'UTF-8',
-    line: 1,
-    version: '1.8',
-    source: null
-  }, options);
-
-  return source ? Cu.evalInSandbox(source, sandbox, version, uri, line)
-                : loadSubScript(uri, sandbox, encoding);
-};
-
 // Populates `exports` of the given CommonJS `module` object, in the context
 // of the given `loader` by evaluating code associated with it.
 const load = function load(loader, module) {
@@ -277,7 +258,7 @@ const load = function load(loader, module) {
 
   let originalExports = module.exports;
   try {
-    evaluate(sandbox, module.uri);
+    loadSubScript(module.uri, sandbox, 'UTF-8');
   }
   catch (error) {
     let { message, fileName, lineNumber } = error;
