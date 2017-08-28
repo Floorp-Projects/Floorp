@@ -177,6 +177,9 @@ function GetIterator(obj, method) {
     return iterator;
 }
 
+#define TO_PROPERTY_KEY(name) \
+(typeof name !== "string" && typeof name !== "number" && typeof name !== "symbol" ? ToPropertyKey(name) : name)
+
 var _builtinCtorsCache = {__proto__: null};
 
 function GetBuiltinConstructor(builtinName) {

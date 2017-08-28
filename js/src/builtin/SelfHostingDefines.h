@@ -50,6 +50,16 @@
 #define ATTR_NONCONFIGURABLE    0x10
 #define ATTR_NONWRITABLE        0x20
 
+// Property descriptor kind, must be different from the descriptor attributes.
+#define DATA_DESCRIPTOR_KIND     0x100
+#define ACCESSOR_DESCRIPTOR_KIND 0x200
+
+// Property descriptor array indices.
+#define PROP_DESC_ATTRS_AND_KIND_INDEX 0
+#define PROP_DESC_VALUE_INDEX 1
+#define PROP_DESC_GETTER_INDEX 1
+#define PROP_DESC_SETTER_INDEX 2
+
 // The extended slot in which the self-hosted name for self-hosted builtins is
 // stored.
 #define LAZY_FUNCTION_NAME_SLOT 0
