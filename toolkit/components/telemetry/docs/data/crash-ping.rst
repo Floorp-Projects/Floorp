@@ -95,6 +95,8 @@ are sent only for the ones below:
 | gpu           | GPU process                                       |
 +---------------+---------------------------------------------------+
 
+.. _remote-process-types:
+
 Remote Process Types
 --------------------
 

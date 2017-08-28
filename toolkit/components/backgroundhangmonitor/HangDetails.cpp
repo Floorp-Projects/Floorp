@@ -37,6 +37,13 @@ nsHangDetails::GetProcess(nsACString& aName)
 }
 
 NS_IMETHODIMP
+nsHangDetails::GetRemoteType(nsAString& aName)
+{
+  aName.Assign(mDetails.mRemoteType);
+  return NS_OK;
+}
+
+NS_IMETHODIMP
 nsHangDetails::GetAnnotations(JSContext* aCx, JS::MutableHandleValue aVal)
 {
   // We create an object with { "key" : "value" } string pairs for each item in
@@ -197,6 +204,7 @@ nsHangDetails::Submit()
     case GeckoProcessType_Content: {
       auto cc = dom::ContentChild::GetSingleton();
       if (cc) {
+        hangDetails->mDetails.mRemoteType.Assign(cc->GetRemoteType());
         Unused << cc->SendBHRThreadHang(hangDetails->mDetails);
       }
       break;
@@ -256,6 +264,7 @@ ParamTraits<mozilla::HangDetails>::Write(Message* aMsg, const mozilla::HangDetai
 {
   WriteParam(aMsg, aParam.mDuration);
   WriteParam(aMsg, aParam.mProcess);
+  WriteParam(aMsg, aParam.mRemoteType);
   WriteParam(aMsg, aParam.mThreadName);
   WriteParam(aMsg, aParam.mRunnableName);
   WriteParam(aMsg, aParam.mStack);
@@ -271,6 +280,9 @@ ParamTraits<mozilla::HangDetails>::Read(const Message* aMsg,
     return false;
   }
   if (!ReadParam(aMsg, aIter, &aResult->mProcess)) {
+    return false;
+  }
+  if (!ReadParam(aMsg, aIter, &aResult->mRemoteType)) {
     return false;
   }
   if (!ReadParam(aMsg, aIter, &aResult->mThreadName)) {

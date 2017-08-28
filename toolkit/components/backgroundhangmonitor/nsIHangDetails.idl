@@ -42,6 +42,11 @@ interface nsIHangDetails : nsISupports
   readonly attribute ACString process;
 
   /**
+   * The remote type of the content process which produced the hang.
+   */
+  readonly attribute AString remoteType;
+
+  /**
    * Returns the stack which was captured by BHR. The offset is encoded as a hex
    * string, as it can contain numbers larger than JS can hold losslessly.
    *
