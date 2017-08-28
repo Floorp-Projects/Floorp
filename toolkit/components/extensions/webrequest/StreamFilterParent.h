@@ -52,11 +52,13 @@ public:
 
   StreamFilterParent();
 
+  using ParentEndpoint = mozilla::ipc::Endpoint<PStreamFilterParent>;
+
   static bool Create(ContentParent* aContentParent,
                      uint64_t aChannelId, const nsAString& aAddonId,
                      mozilla::ipc::Endpoint<PStreamFilterChild>* aEndpoint);
 
-  static void Attach(nsIChannel* aChannel, mozilla::ipc::Endpoint<PStreamFilterParent>&& aEndpoint);
+  static void Attach(nsIChannel* aChannel, ParentEndpoint&& aEndpoint);
 
   enum class State
   {
@@ -103,6 +105,10 @@ private:
 
   void Init(nsIChannel* aChannel);
 
+  void Bind(ParentEndpoint&& aEndpoint);
+
+  void Destroy();
+
   nsresult FlushBufferedData();
 
   nsresult Write(Data& aData);
@@ -125,17 +131,15 @@ private:
     }
   }
 
-  void
-  AssertIsActorThread()
-  {
-    MOZ_ASSERT(NS_GetCurrentThread() == mActorThread);
-  }
+  inline nsIEventTarget* ActorThread();
 
-  void
-  AssertIsIOThread()
-  {
-    MOZ_ASSERT(NS_GetCurrentThread() == mIOThread);
-  }
+  inline nsIEventTarget* IOThread();
+
+  inline bool IsIOThread();
+
+  inline void AssertIsActorThread();
+
+  inline void AssertIsIOThread();
 
   static void
   AssertIsMainThread()
@@ -152,25 +156,14 @@ private:
   }
 
   template<typename Function>
-  void
-  RunOnActorThread(const char* aName, Function&& aFunc)
-  {
-    mActorThread->Dispatch(Move(NS_NewRunnableFunction(aName, aFunc)),
-                           NS_DISPATCH_NORMAL);
-  }
+  void RunOnActorThread(const char* aName, Function&& aFunc);
 
   template<typename Function>
-  void
-  RunOnIOThread(const char* aName, Function&& aFunc)
-  {
-    mIOThread->Dispatch(Move(NS_NewRunnableFunction(aName, aFunc)),
-                        NS_DISPATCH_NORMAL);
-  }
+  void RunOnIOThread(const char* aName, Function&& aFunc);
 
   nsCOMPtr<nsIChannel> mChannel;
   nsCOMPtr<nsIStreamListener> mOrigListener;
 
-  nsCOMPtr<nsIEventTarget> mActorThread;
   nsCOMPtr<nsIEventTarget> mMainThread;
   nsCOMPtr<nsIEventTarget> mIOThread;
 

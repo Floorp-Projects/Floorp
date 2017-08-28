@@ -16,6 +16,7 @@
 #include "nsITraceableChannel.h"
 #include "nsProxyRelease.h"
 #include "nsQueryObject.h"
+#include "nsSocketTransportService2.h"
 #include "nsStringStream.h"
 
 namespace mozilla {
@@ -26,8 +27,7 @@ namespace extensions {
  *****************************************************************************/
 
 StreamFilterParent::StreamFilterParent()
-  : mActorThread(GetCurrentThreadEventTarget())
-  , mMainThread(GetCurrentThreadEventTarget())
+  : mMainThread(GetCurrentThreadEventTarget())
   , mIOThread(mMainThread)
   , mBufferMutex("StreamFilter buffer mutex")
   , mReceivedStop(false)
@@ -77,16 +77,27 @@ StreamFilterParent::Create(dom::ContentParent* aContentParent, uint64_t aChannel
 }
 
 /* static */ void
-StreamFilterParent::Attach(nsIChannel* aChannel, mozilla::ipc::Endpoint<PStreamFilterParent>&& aEndpoint)
+StreamFilterParent::Attach(nsIChannel* aChannel, ParentEndpoint&& aEndpoint)
 {
   auto self = MakeRefPtr<StreamFilterParent>();
-  if (!aEndpoint.Bind(self)) {
-    MOZ_CRASH("Failed to attach StreamFilter endpoint");
-  }
+
+  self->ActorThread()->Dispatch(
+    NewRunnableMethod<ParentEndpoint&&>("StreamFilterParent::Bind",
+                                        self,
+                                        &StreamFilterParent::Bind,
+                                        Move(aEndpoint)),
+    NS_DISPATCH_NORMAL);
 
   self->Init(aChannel);
 
+  // IPC owns this reference now.
   Unused << self.forget();
+}
+
+void
+StreamFilterParent::Bind(ParentEndpoint&& aEndpoint)
+{
+  aEndpoint.Bind(this);
 }
 
 void
@@ -161,8 +172,20 @@ StreamFilterParent::RecvClose()
   }
 
   Unused << SendClosed();
-  Close();
+  Destroy();
   return IPC_OK();
+}
+
+void
+StreamFilterParent::Destroy()
+{
+  // Close the channel asynchronously so the actor is never destroyed before
+  // this message is fully processed.
+  ActorThread()->Dispatch(
+    NewRunnableMethod("StreamFilterParent::Close",
+                      this,
+                      &StreamFilterParent::Close),
+    NS_DISPATCH_NORMAL);
 }
 
 IPCResult
@@ -236,7 +259,7 @@ StreamFilterParent::RecvFlushedData()
 
   MOZ_ASSERT(mState == State::Disconnecting);
 
-  Close();
+  Destroy();
 
   RefPtr<StreamFilterParent> self(this);
   RunOnIOThread(FUNC, [=] {
@@ -258,12 +281,16 @@ StreamFilterParent::RecvWrite(Data&& aData)
 {
   AssertIsActorThread();
 
-  mIOThread->Dispatch(
-    NewRunnableMethod<Data&&>("StreamFilterParent::WriteMove",
-                              this,
-                              &StreamFilterParent::WriteMove,
-                              Move(aData)),
-    NS_DISPATCH_NORMAL);
+  if (IsIOThread()) {
+    Write(aData);
+  } else {
+    IOThread()->Dispatch(
+      NewRunnableMethod<Data&&>("StreamFilterParent::WriteMove",
+                                this,
+                                &StreamFilterParent::WriteMove,
+                                Move(aData)),
+      NS_DISPATCH_NORMAL);
+  }
   return IPC_OK();
 }
 
@@ -371,7 +398,11 @@ StreamFilterParent::OnDataAvailable(nsIRequest* aRequest,
 {
   // Note: No AssertIsIOThread here. Whatever thread we're on now is, by
   // definition, the IO thread.
-  mIOThread = NS_GetCurrentThread();
+  if (OnSocketThread()) {
+    mIOThread = nullptr;
+  } else {
+    mIOThread = NS_GetCurrentThread();
+  }
 
   if (mState == State::Disconnected) {
     // If we're offloading data in a thread pool, it's possible that we'll
@@ -405,7 +436,7 @@ StreamFilterParent::OnDataAvailable(nsIRequest* aRequest,
   } else if (mState == State::Closed) {
     return NS_ERROR_FAILURE;
   } else {
-    mActorThread->Dispatch(
+    ActorThread()->Dispatch(
       NewRunnableMethod<Data&&>("StreamFilterParent::DoSendData",
                                 this,
                                 &StreamFilterParent::DoSendData,
@@ -443,6 +474,69 @@ StreamFilterParent::FlushBufferedData()
   }
 
   return NS_OK;
+}
+
+/*****************************************************************************
+ * Thread helpers
+ *****************************************************************************/
+
+void
+StreamFilterParent::AssertIsActorThread()
+{
+  MOZ_ASSERT(OnSocketThread());
+}
+
+nsIEventTarget*
+StreamFilterParent::ActorThread()
+{
+  return gSocketTransportService;
+}
+
+nsIEventTarget*
+StreamFilterParent::IOThread()
+{
+  if (mIOThread) {
+    return mIOThread;
+  }
+  return gSocketTransportService;
+}
+
+bool
+StreamFilterParent::IsIOThread()
+{
+  return (mIOThread ? NS_GetCurrentThread() == mIOThread
+                    : OnSocketThread());
+}
+
+void
+StreamFilterParent::AssertIsIOThread()
+{
+  MOZ_ASSERT(IsIOThread());
+}
+
+template<typename Function>
+void
+StreamFilterParent::RunOnActorThread(const char* aName, Function&& aFunc)
+{
+  if (OnSocketThread()) {
+    aFunc();
+  } else {
+    gSocketTransportService->Dispatch(
+      Move(NS_NewRunnableFunction(aName, aFunc)),
+      NS_DISPATCH_NORMAL);
+  }
+}
+
+template<typename Function>
+void
+StreamFilterParent::RunOnIOThread(const char* aName, Function&& aFunc)
+{
+  if (mIOThread) {
+    mIOThread->Dispatch(Move(NS_NewRunnableFunction(aName, aFunc)),
+                        NS_DISPATCH_NORMAL);
+  } else {
+    RunOnActorThread(aName, Move(aFunc));
+  }
 }
 
 /*****************************************************************************
