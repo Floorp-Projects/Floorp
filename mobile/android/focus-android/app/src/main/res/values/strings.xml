@@ -76,7 +76,7 @@
 
     <!-- This is the label of an action we offer when the user selects text in other third-party apps.
          Clicking this action will launch Focus and perform a search in the default search engine. -->
-    <string name="text_selection_search_action">Search Secretly</string>
+    <string name="text_selection_search_action">Search Privately</string>
 
     <!-- Content of about focus. Argument 1 is the app name (Firefox Focus/Firefox Klar/etc).
          Argument 2 is the url for the learn-more link. -->
@@ -135,7 +135,15 @@
 
     <string name="preference_category_mozilla">Mozilla</string>
     <string name="preference_mozilla_telemetry">Send anonymous usage data</string>
+
+    <!-- A link to SUMO at the end of the summary (preference_mozilla_telemetry_summary2) of the "Send anonymous usage data" setting. -->
     <string name="preference_mozilla_telemetry_summary">Learn more</string>
+
+    <!-- %1$s will be replaced with the name of the app (e.g. Firefox Focus) -->
+    <string name="preference_mozilla_telemetry_summary2">Mozilla strives to collect only what we need to provide and improve %1$s for everyone.</string>
+
+    <!-- In-app link (in settings) to Focus privacy notice. -->
+    <string name="preference_privacy_notice">Privacy Notice</string>
 
     <!-- Item in Preferences that shows the about page. Parameter 1 is the app name, i.e. Firefox Focus/Firefox Klar. -->
     <string name="preference_about">About %1$s</string>
@@ -156,6 +164,11 @@
       is shown on top of the web content. Clicking the button shows (expands) the menu for switching
       tabs, adding a new tab or erasing the browsing history. -->
     <string name="content_description_fab_expand">Expand</string>
+
+    <!-- If the user has multiple tabs open we will show an addition "floating action button" showing how many tabs are open.
+     This string is not displayed and read only by screenreaders. %1$s will be replaced with the number of open tabs. This
+      button will only be visible when there is more than one tab open (>= 2). -->
+    <string name="content_description_tab_counter">Tabs open: %1$s</string>
 
     <!-- Description of the "+" button used to open a new temporary tab ("open" is a verb), not displayed and read only by screenreaders. -->
     <string name="content_description_open_tab">Open tab</string>
@@ -350,6 +363,10 @@ be temporary, and you can try again later.</li>
     <!-- Label of the action that will close the dialog and not add anything to the home screen (shown in the confirmation dialog). -->
     <string name="dialog_addtohomescreen_action_cancel">Cancel</string>
 
+    <!-- When tracking protection is disabled for the current session then we will show this warning in the "Add to home screen" dialog to
+         let the user know that the shortcut will always be opened with tracking protection disabled. -->
+    <string name="dialog_addtohomescreen_tracking_protection">Shortcut will open with Tracking Protection disabled</string>
+
     <!-- When the limit of concurrent tabs is reached and the user wants to open another tab then we show a dialog to select a tab
          that will be overridden with the new link. This is the title of the dialog where the user selects a tab to replace with the
          new URL. -->
@@ -375,4 +392,7 @@ be temporary, and you can try again later.</li>
     * To see how this string will look like in Android's UI, see: https://github.com/mozilla-mobile/focus-android/issues/863#issuecomment-324105723
     -->
     <string name="notification_browsing_session_channel_description">Notifications let you erase your %1$s session with a tap. You don’t need to open the app or see what’s running in your browser.</string>
+
+    <!-- Label for a button in the "tabs tray" to erase the browsing history (closes all tabs and removes associated data). -->
+    <string name="tabs_tray_action_erase">Erase browsing history</string>
 </resources>
