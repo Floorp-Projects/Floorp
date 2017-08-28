@@ -1,6 +1,6 @@
 /* exported MANAGE_ADDRESSES_DIALOG_URL, MANAGE_CREDIT_CARDS_DIALOG_URL, EDIT_ADDRESS_DIALOG_URL, EDIT_CREDIT_CARD_DIALOG_URL,
             BASE_URL, TEST_ADDRESS_1, TEST_ADDRESS_2, TEST_ADDRESS_3, TEST_ADDRESS_4, TEST_ADDRESS_5,
-            TEST_CREDIT_CARD_1, TEST_CREDIT_CARD_2, TEST_CREDIT_CARD_3, FORM_URL,
+            TEST_CREDIT_CARD_1, TEST_CREDIT_CARD_2, TEST_CREDIT_CARD_3, FORM_URL, CREDITCARD_FORM_URL,
             FTU_PREF, ENABLED_AUTOFILL_ADDRESSES_PREF, ENABLED_AUTOFILL_CREDITCARDS_PREF, SYNC_USERNAME_PREF, SYNC_ADDRESSES_PREF,
             sleep, expectPopupOpen, openPopupOn, expectPopupClose, closePopup, clickDoorhangerButton,
             getAddresses, saveAddress, removeAddresses, saveCreditCard,
@@ -14,6 +14,8 @@ const EDIT_ADDRESS_DIALOG_URL = "chrome://formautofill/content/editAddress.xhtml
 const EDIT_CREDIT_CARD_DIALOG_URL = "chrome://formautofill/content/editCreditCard.xhtml";
 const BASE_URL = "http://mochi.test:8888/browser/browser/extensions/formautofill/test/browser/";
 const FORM_URL = "http://mochi.test:8888/browser/browser/extensions/formautofill/test/browser/autocomplete_basic.html";
+const CREDITCARD_FORM_URL =
+  "http://mochi.test:8888/browser/browser/extensions/formautofill/test/browser/autocomplete_creditcard_basic.html";
 const FTU_PREF = "extensions.formautofill.firstTimeUse";
 const ENABLED_AUTOFILL_ADDRESSES_PREF = "extensions.formautofill.addresses.enabled";
 const ENABLED_AUTOFILL_CREDITCARDS_PREF = "extensions.formautofill.creditCards.enabled";
@@ -60,7 +62,6 @@ const TEST_ADDRESS_5 = {
 const TEST_CREDIT_CARD_1 = {
   "cc-name": "John Doe",
   "cc-number": "1234567812345678",
-  // "cc-number-encrypted": "",
   "cc-exp-month": 4,
   "cc-exp-year": 2017,
 };
@@ -78,8 +79,9 @@ const TEST_CREDIT_CARD_3 = {
   "cc-exp-year": 2000,
 };
 
-const MAIN_BUTTON_INDEX = 0;
-const SECONDARY_BUTTON_INDEX = 1;
+const MAIN_BUTTON = "button";
+const SECONDARY_BUTTON = "secondaryButton";
+const MENU_BUTTON = "menubutton";
 
 function getDisplayedPopupItems(browser, selector = ".autocomplete-richlistitem") {
   const {autoCompletePopup: {richlistbox: itemsBox}} = browser;
@@ -188,25 +190,28 @@ function removeCreditCards(guids) {
 /**
  * Clicks the popup notification button and wait for popup hidden.
  *
- * @param {number} buttonIndex Number indicating which button to click.
- *                             See the constants in this file.
+ * @param {string} button The button type in popup notification.
+ * @param {number} index The action's index in menu list.
  */
-async function clickDoorhangerButton(buttonIndex) {
+async function clickDoorhangerButton(button, index) {
   let popuphidden = BrowserTestUtils.waitForEvent(PopupNotifications.panel, "popuphidden");
   let notifications = PopupNotifications.panel.childNodes;
   ok(notifications.length > 0, "at least one notification displayed");
   ok(true, notifications.length + " notification(s)");
   let notification = notifications[0];
 
-  if (buttonIndex == MAIN_BUTTON_INDEX) {
-    ok(true, "Triggering main action");
-    EventUtils.synthesizeMouseAtCenter(notification.button, {});
-  } else if (buttonIndex == SECONDARY_BUTTON_INDEX) {
-    ok(true, "Triggering secondary action");
-    EventUtils.synthesizeMouseAtCenter(notification.secondaryButton, {});
-  } else if (notification.childNodes[buttonIndex - 1]) {
-    ok(true, "Triggering secondary action with index " + buttonIndex);
-    EventUtils.synthesizeMouseAtCenter(notification.childNodes[buttonIndex - 1], {});
+  if (button == MAIN_BUTTON || button == SECONDARY_BUTTON) {
+    EventUtils.synthesizeMouseAtCenter(notification[button], {});
+  } else if (button == MENU_BUTTON) {
+    // Click the dropmarker arrow and wait for the menu to show up.
+    let dropdownPromise =
+      BrowserTestUtils.waitForEvent(notification.menupopup, "popupshown");
+    await EventUtils.synthesizeMouseAtCenter(notification.menubutton, {});
+    ok(true, "notification menupopup displayed");
+    await dropdownPromise;
+
+    let actionMenuItem = notification.querySelectorAll("menuitem")[index];
+    await EventUtils.synthesizeMouseAtCenter(actionMenuItem, {});
   }
   await popuphidden;
 }
