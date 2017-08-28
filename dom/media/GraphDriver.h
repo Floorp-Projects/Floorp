@@ -470,18 +470,18 @@ private:
   bool StartStream();
   friend class AsyncCubebTask;
   bool Init();
-  /* MediaStreamGraphs are always down/up mixed to stereo for now. */
-  static const uint32_t ChannelCount = 2;
+  /* MediaStreamGraphs are always down/up mixed to output channels. */
+  uint32_t mOuputChannels;
   /* The size of this buffer comes from the fact that some audio backends can
    * call back with a number of frames lower than one block (128 frames), so we
    * need to keep at most two block in the SpillBuffer, because we always round
    * up to block boundaries during an iteration.
    * This is only ever accessed on the audio callback thread. */
-  SpillBuffer<AudioDataValue, WEBAUDIO_BLOCK_SIZE * 2, ChannelCount> mScratchBuffer;
+  SpillBuffer<AudioDataValue, WEBAUDIO_BLOCK_SIZE * 2> mScratchBuffer;
   /* Wrapper to ensure we write exactly the number of frames we need in the
    * audio buffer cubeb passes us. This is only ever accessed on the audio
    * callback thread. */
-  AudioCallbackBufferWrapper<AudioDataValue, ChannelCount> mBuffer;
+  AudioCallbackBufferWrapper<AudioDataValue> mBuffer;
   /* cubeb stream for this graph. This is guaranteed to be non-null after Init()
    * has been called, and is synchronized internaly. */
   nsAutoRef<cubeb_stream> mAudioStream;
