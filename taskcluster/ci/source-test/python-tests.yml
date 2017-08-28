@@ -164,7 +164,7 @@ python3:
         using: run-task
         # this will evolve as we get closer and closer to python 3 compatibility. It may
         # eventually be a mach command or shell script.
-        command: python3 -mcompileall python/
+        command: python3 -mcompileall python/ taskcluster/
     when:
         files-changed:
-            - 'python/**/*.py'
+            - '**/*.py'
