@@ -65,7 +65,9 @@
 # so that they can be shared by macBrowserOverlay.xul.
 #include global-scripts.inc
 
-<script type="application/javascript" src="chrome://global/content/contentAreaUtils.js"/>
+<script type="application/javascript">
+  Services.scriptloader.loadSubScript("chrome://global/content/contentAreaUtils.js", this);
+</script>
 
 # All sets except for popupsets (commands, keys, stringbundles and broadcasters) *must* go into the
 # browser-sets.inc file for sharing with hiddenWindow.xul.
