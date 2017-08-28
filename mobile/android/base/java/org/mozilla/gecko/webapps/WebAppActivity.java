@@ -17,6 +17,7 @@ import android.graphics.Bitmap;
 import android.net.Uri;
 import android.os.Build;
 import android.os.Bundle;
+import android.support.customtabs.CustomTabsIntent;
 import android.support.v7.app.ActionBar;
 import android.support.v7.app.AppCompatActivity;
 import android.support.v7.widget.Toolbar;
@@ -238,19 +239,30 @@ public class WebAppActivity extends AppCompatActivity
     }
 
     @Override
-    public boolean onLoadUri(final GeckoView view, final String url,
+    public boolean onLoadUri(final GeckoView view, final String urlStr,
                              final TargetWindow where) {
+        final Uri url = Uri.parse(urlStr);
+        if (url == null) {
+            // We can't really handle this, so deny it?
+            Log.w(LOGTAG, "Failed to parse URL for navigation: " + urlStr);
+            return true;
+        }
+
         if (mManifest.isInScope(url) && where != TargetWindow.NEW) {
             // This is in scope and wants to load in the same frame, so
             // let Gecko handle it.
             return false;
         }
 
-        final Intent intent = new Intent(getIntent());
-        intent.setClassName(getApplicationContext(),
-                            CustomTabsActivity.class.getName());
-        intent.setData(Uri.parse(url));
-        startActivity(intent);
+        CustomTabsIntent tab = new CustomTabsIntent.Builder()
+            .addDefaultShareMenuItem()
+            .setToolbarColor(mManifest.getThemeColor())
+            .setStartAnimations(this, R.anim.slide_in_right, R.anim.slide_out_left)
+            .setExitAnimations(this, R.anim.slide_in_left, R.anim.slide_out_right)
+            .build();
+
+        tab.intent.setClass(this, CustomTabsActivity.class);
+        tab.launchUrl(this, url);
         return true;
     }
 
