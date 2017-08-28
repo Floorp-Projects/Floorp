@@ -629,7 +629,6 @@ ProcessDDE(nsINativeAppSupport* aNative, bool aWait)
   if (ar == ARG_FOUND) {
     aNative->Enable(); // enable win32 DDE responses
     if (aWait) {
-      nsIThread *thread = NS_GetCurrentThread();
       // This is just a guesstimate based on testing different values.
       // If count is 8 or less windows will display an error dialog.
       int32_t count = 20;

@@ -486,7 +486,7 @@ double
 nsRangeFrame::GetValueAsFractionOfRange()
 {
   MOZ_ASSERT(mContent->IsHTMLElement(nsGkAtoms::input), "bad cast");
-  dom::HTMLInputElement* input = static_cast<dom::HTMLInputElement*>(mContent);
+  dom::HTMLInputElement* input = static_cast<dom::HTMLInputElement*>(GetContent());
 
   MOZ_ASSERT(input->ControlType() == NS_FORM_INPUT_RANGE);
 
@@ -515,7 +515,7 @@ nsRangeFrame::GetValueAtEventPoint(WidgetGUIEvent* aEvent)
              "Unexpected event type - aEvent->mRefPoint may be meaningless");
 
   MOZ_ASSERT(mContent->IsHTMLElement(nsGkAtoms::input), "bad cast");
-  dom::HTMLInputElement* input = static_cast<dom::HTMLInputElement*>(mContent);
+  dom::HTMLInputElement* input = static_cast<dom::HTMLInputElement*>(GetContent());
 
   MOZ_ASSERT(input->ControlType() == NS_FORM_INPUT_RANGE);
 
@@ -541,7 +541,7 @@ nsRangeFrame::GetValueAtEventPoint(WidgetGUIEvent* aEvent)
 
   if (point == nsPoint(NS_UNCONSTRAINEDSIZE, NS_UNCONSTRAINEDSIZE)) {
     // We don't want to change the current value for this error state.
-    return static_cast<dom::HTMLInputElement*>(mContent)->GetValueAsDecimal();
+    return static_cast<dom::HTMLInputElement*>(GetContent())->GetValueAsDecimal();
   }
 
   nsRect rangeContentRect = GetContentRectRelativeToSelf();
@@ -750,7 +750,7 @@ nsRangeFrame::AttributeChanged(int32_t  aNameSpaceID,
       // UpdateForValueChange() anyway.
       MOZ_ASSERT(mContent->IsHTMLElement(nsGkAtoms::input), "bad cast");
       bool typeIsRange =
-        static_cast<dom::HTMLInputElement*>(mContent)->ControlType() ==
+        static_cast<dom::HTMLInputElement*>(GetContent())->ControlType() ==
                            NS_FORM_INPUT_RANGE;
       // If script changed the <input>'s type before setting these attributes
       // then we don't need to do anything since we are going to be reframed.
@@ -837,7 +837,7 @@ bool
 nsRangeFrame::IsHorizontal() const
 {
   dom::HTMLInputElement* element =
-    static_cast<dom::HTMLInputElement*>(mContent);
+    static_cast<dom::HTMLInputElement*>(GetContent());
   return element->AttrValueIs(kNameSpaceID_None, nsGkAtoms::orient,
                               nsGkAtoms::horizontal, eCaseMatters) ||
          (!element->AttrValueIs(kNameSpaceID_None, nsGkAtoms::orient,
@@ -850,19 +850,19 @@ nsRangeFrame::IsHorizontal() const
 double
 nsRangeFrame::GetMin() const
 {
-  return static_cast<dom::HTMLInputElement*>(mContent)->GetMinimum().toDouble();
+  return static_cast<dom::HTMLInputElement*>(GetContent())->GetMinimum().toDouble();
 }
 
 double
 nsRangeFrame::GetMax() const
 {
-  return static_cast<dom::HTMLInputElement*>(mContent)->GetMaximum().toDouble();
+  return static_cast<dom::HTMLInputElement*>(GetContent())->GetMaximum().toDouble();
 }
 
 double
 nsRangeFrame::GetValue() const
 {
-  return static_cast<dom::HTMLInputElement*>(mContent)->GetValueAsDecimal().toDouble();
+  return static_cast<dom::HTMLInputElement*>(GetContent())->GetValueAsDecimal().toDouble();
 }
 
 #define STYLES_DISABLING_NATIVE_THEMING \

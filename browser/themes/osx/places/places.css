@@ -7,12 +7,9 @@
 /* Sidebars */
 
 #bookmarksPanel,
-#history-panel,
-#sidebar-search-container,
-#tabs-panel {
-  -moz-appearance: none !important;
-  background-color: transparent !important;
-  border-top: none !important;
+#history-panel {
+  -moz-appearance: none;
+  background-color: transparent;
 }
 
 .sidebar-placesTree,

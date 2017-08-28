@@ -13,7 +13,7 @@
 #include "webrtc/modules/video_capture/windows/help_functions_ds.h"
 #include "webrtc/system_wrappers/include/trace.h"
 
-#include <Dvdmedia.h> // VIDEOINFOHEADER2
+#include <dvdmedia.h> // VIDEOINFOHEADER2
 #include <initguid.h>
 
 #define DELETE_RESET(p) { delete (p) ; (p) = NULL ;}

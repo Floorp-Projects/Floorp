@@ -32,6 +32,10 @@
 #include <mmsystem.h>
 #include <process.h>
 
+#ifdef __MINGW32__
+#include <immintrin.h> // for _mm_pause
+#endif
+
 #include "nsWindowsDllInterceptor.h"
 #include "mozilla/StackWalk_windows.h"
 #include "mozilla/WindowsVersion.h"
