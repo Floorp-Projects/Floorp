@@ -22,6 +22,7 @@ EXPORTS += [
     'nsSVGForeignObjectFrame.h',
     'nsSVGImageFrame.h',
     'nsSVGIntegrationUtils.h',
+    'nsSVGUseFrame.h',
     'nsSVGUtils.h',
     'SVGImageContext.h',
 ]

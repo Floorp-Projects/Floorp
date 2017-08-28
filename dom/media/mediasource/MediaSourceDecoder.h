@@ -49,6 +49,8 @@ public:
     return mDemuxer;
   }
 
+  already_AddRefed<nsIPrincipal> GetCurrentPrincipal() override;
+
   bool IsTransportSeekable() override { return true; }
 
   // Returns a string describing the state of the MediaSource internal
@@ -72,6 +74,7 @@ private:
   bool IsLiveStream() override final { return !mEnded; }
 
   RefPtr<MediaSourceResource> mResource;
+  RefPtr<nsIPrincipal> mPrincipal;
 
   // The owning MediaSource holds a strong reference to this decoder, and
   // calls Attach/DetachMediaSource on this decoder to set and clear

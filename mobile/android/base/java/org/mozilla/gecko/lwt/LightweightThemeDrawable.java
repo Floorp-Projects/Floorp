@@ -34,6 +34,7 @@ public class LightweightThemeDrawable extends Drawable {
 
     private int mStartColor;
     private int mEndColor;
+    private boolean mHorizontalGradient;
 
     public LightweightThemeDrawable(Resources resources, Bitmap bitmap) {
         mBitmap = bitmap;
@@ -104,15 +105,22 @@ public class LightweightThemeDrawable extends Drawable {
         mColorPaint.setColorFilter(new PorterDuffColorFilter(filter, PorterDuff.Mode.SRC_OVER));
     }
 
+    public void setAlpha(final int startAlpha, final int endAlpha) {
+        // By default we draw a vertical linear gradient.
+        setAlpha(startAlpha, endAlpha, false);
+    }
+
     /**
      * Set the alpha for the linear gradient used with the bitmap's shader.
      *
      * @param startAlpha The starting alpha (0..255) value to be applied to the LinearGradient.
-     * @param startAlpha The ending alpha (0..255) value to be applied to the LinearGradient.
+     * @param endAlpha The ending alpha (0..255) value to be applied to the LinearGradient.
+     * @param horizontalGradient Draw gradient in horizontal direction; otherwise in vertical direction.
      */
-    public void setAlpha(int startAlpha, int endAlpha) {
+    public void setAlpha(final int startAlpha, final int endAlpha, final boolean horizontalGradient) {
         mStartColor = startAlpha << 24;
         mEndColor = endAlpha << 24;
+        mHorizontalGradient = horizontalGradient;
         initializeBitmapShader();
     }
 
@@ -120,10 +128,15 @@ public class LightweightThemeDrawable extends Drawable {
         // A bitmap-shader to draw the bitmap.
         // Clamp mode will repeat the last row of pixels.
         // Hence its better to have an endAlpha of 0 for the linear-gradient.
-        BitmapShader bitmapShader = new BitmapShader(mBitmap, Shader.TileMode.CLAMP, Shader.TileMode.CLAMP);
+        final BitmapShader bitmapShader = new BitmapShader(mBitmap, Shader.TileMode.CLAMP, Shader.TileMode.CLAMP);
 
         // A linear-gradient to specify the opacity of the bitmap.
-        LinearGradient gradient = new LinearGradient(0, 0, 0, mBitmap.getHeight(), mStartColor, mEndColor, Shader.TileMode.CLAMP);
+        final LinearGradient gradient;
+        if (mHorizontalGradient) {
+            gradient = new LinearGradient(0, 0, mBitmap.getWidth(), 0, mStartColor, mEndColor, Shader.TileMode.CLAMP);
+        } else {
+            gradient = new LinearGradient(0, 0, 0, mBitmap.getHeight(), mStartColor, mEndColor, Shader.TileMode.CLAMP);
+        }
 
         // Make a combined shader -- a performance win.
         // The linear-gradient is the 'SRC' and the bitmap-shader is the 'DST'.

@@ -17,6 +17,7 @@
 #include "nsIURI.h"
 #include "mozilla/URLExtraData.h"
 #include "nsSVGEffects.h"
+#include "nsSVGUseFrame.h"
 
 NS_IMPL_NS_NEW_NAMESPACED_SVG_ELEMENT(Use)
 
@@ -55,13 +56,11 @@ NS_IMPL_CYCLE_COLLECTION_UNLINK_BEGIN_INHERITED(SVGUseElement,
                                                 SVGUseElementBase)
   nsAutoScriptBlocker scriptBlocker;
   NS_IMPL_CYCLE_COLLECTION_UNLINK(mOriginal)
-  tmp->DestroyAnonymousContent();
   tmp->UnlinkSource();
 NS_IMPL_CYCLE_COLLECTION_UNLINK_END
 NS_IMPL_CYCLE_COLLECTION_TRAVERSE_BEGIN_INHERITED(SVGUseElement,
                                                   SVGUseElementBase)
   NS_IMPL_CYCLE_COLLECTION_TRAVERSE(mOriginal)
-  NS_IMPL_CYCLE_COLLECTION_TRAVERSE(mClone)
   tmp->mSource.Traverse(&cb);
 NS_IMPL_CYCLE_COLLECTION_TRAVERSE_END
 
@@ -213,11 +212,9 @@ SVGUseElement::NodeWillBeDestroyed(const nsINode *aNode)
 
 //----------------------------------------------------------------------
 
-nsIContent*
+already_AddRefed<nsIContent>
 SVGUseElement::CreateAnonymousContent()
 {
-  mClone = nullptr;
-
   if (mSource.get()) {
     mSource.get()->RemoveMutationObserver(this);
   }
@@ -293,18 +290,17 @@ SVGUseElement::CreateAnonymousContent()
                                      do_AddRef(NodePrincipal()));
 
   targetContent->AddMutationObserver(this);
-  mClone = newcontent;
 
 #ifdef DEBUG
   // Our anonymous clone can get restyled by various things
   // (e.g. SMIL).  Reconstructing its frame is OK, though, because
   // it's going to be our _only_ child in the frame tree, so can't get
   // mis-ordered with anything.
-  mClone->SetProperty(nsGkAtoms::restylableAnonymousNode,
-                      reinterpret_cast<void*>(true));
+  newcontent->SetProperty(nsGkAtoms::restylableAnonymousNode,
+                          reinterpret_cast<void*>(true));
 #endif // DEBUG
 
-  return mClone;
+  return newcontent.forget();
 }
 
 nsIURI*
@@ -317,16 +313,14 @@ SVGUseElement::GetSourceDocURI()
   return targetContent->OwnerDoc()->GetDocumentURI();
 }
 
-void
-SVGUseElement::DestroyAnonymousContent()
-{
-  nsContentUtils::DestroyAnonymousContent(&mClone);
-}
-
 bool
 SVGUseElement::OurWidthAndHeightAreUsed() const
 {
-  return mClone && mClone->IsAnyOfSVGElements(nsGkAtoms::svg, nsGkAtoms::symbol);
+  auto* frame = GetFrame();
+  if (!frame || !frame->GetContentClone()) {
+    return false;
+  }
+  return frame->GetContentClone()->IsAnyOfSVGElements(nsGkAtoms::svg, nsGkAtoms::symbol);
 }
 
 //----------------------------------------------------------------------
@@ -339,15 +333,18 @@ SVGUseElement::SyncWidthOrHeight(nsIAtom* aName)
                "The clue is in the function name");
   NS_ASSERTION(OurWidthAndHeightAreUsed(), "Don't call this");
 
+  auto* frame = GetFrame();
+  nsIContent* clone = frame ? frame->GetContentClone() : nullptr;
+
   if (OurWidthAndHeightAreUsed()) {
-    nsSVGElement *target = static_cast<nsSVGElement*>(mClone.get());
+    auto* target = static_cast<nsSVGElement*>(clone);
     uint32_t index = *sLengthInfo[ATTR_WIDTH].mName == aName ? ATTR_WIDTH : ATTR_HEIGHT;
 
     if (mLengthAttributes[index].IsExplicitlySet()) {
       target->SetLength(aName, mLengthAttributes[index]);
       return;
     }
-    if (mClone->IsSVGElement(nsGkAtoms::svg)) {
+    if (clone->IsSVGElement(nsGkAtoms::svg)) {
       // Our width/height attribute is now no longer explicitly set, so we
       // need to revert the clone's width/height to the width/height of the
       // content that's being cloned.
@@ -472,6 +469,14 @@ SVGUseElement::GetStringInfo()
 {
   return StringAttributesInfo(mStringAttributes, sStringInfo,
                               ArrayLength(sStringInfo));
+}
+
+nsSVGUseFrame*
+SVGUseElement::GetFrame() const
+{
+  nsIFrame* frame = GetPrimaryFrame();
+  MOZ_ASSERT_IF(frame, frame->IsSVGUseFrame());
+  return static_cast<nsSVGUseFrame*>(frame);
 }
 
 //----------------------------------------------------------------------

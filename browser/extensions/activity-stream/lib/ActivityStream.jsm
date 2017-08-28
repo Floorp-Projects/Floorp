@@ -51,15 +51,15 @@ const PREFS_CONFIG = new Map([
       api_key_pref: "extensions.pocket.oAuthConsumerKey",
       // Use the opposite value as what default value the feed would have used
       hidden: !PREFS_CONFIG.get("feeds.section.topstories").getValue(args),
-      learn_more_endpoint: "https://getpocket.com/firefox_learnmore?src=ff_newtab",
+      learn_more_endpoint: "https://getpocket.cdn.mozilla.net/firefox_learnmore?src=ff_newtab",
       provider_description: "pocket_feedback_body",
       provider_icon: "pocket",
       provider_name: "Pocket",
-      read_more_endpoint: "https://getpocket.com/explore/trending?src=ff_new_tab",
-      stories_endpoint: `https://getpocket.com/v3/firefox/global-recs?consumer_key=$apiKey&locale_lang=${args.locale}`,
+      read_more_endpoint: "https://getpocket.cdn.mozilla.net/explore/trending?src=ff_new_tab",
+      stories_endpoint: `https://getpocket.cdn.mozilla.net/v3/firefox/global-recs?version=2&consumer_key=$apiKey&locale_lang=${args.locale}`,
       stories_referrer: "https://getpocket.com/recommendations",
       survey_link: "https://www.surveymonkey.com/r/newtabffx",
-      topics_endpoint: `https://getpocket.com/v3/firefox/trending-topics?consumer_key=$apiKey&locale_lang=${args.locale}`
+      topics_endpoint: `https://getpocket.cdn.mozilla.net/v3/firefox/trending-topics?version=2&consumer_key=$apiKey&locale_lang=${args.locale}`
     })
   }],
   ["migrationExpired", {

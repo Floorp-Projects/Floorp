@@ -59,7 +59,7 @@ public:
   bool IsDataCachedToEndOfResource(int64_t aOffset) override { UNIMPLEMENTED(); return false; }
   nsresult ReadFromCache(char* aBuffer, int64_t aOffset, uint32_t aCount) override { UNIMPLEMENTED(); return NS_ERROR_FAILURE; }
 
-  already_AddRefed<nsIPrincipal> GetCurrentPrincipal() override
+  already_AddRefed<nsIPrincipal> GetCurrentPrincipal()
   {
     NS_ASSERTION(NS_IsMainThread(), "Only call on main thread");
 
@@ -83,22 +83,22 @@ public:
 
   void Detach() { mDecoder = nullptr; }
 
+  size_t SizeOfExcludingThis(MallocSizeOf aMallocSizeOf) const
+  {
+    // TODO: track JAVA wrappers.
+    return 0;
+  }
+
+  size_t SizeOfIncludingThis(MallocSizeOf aMallocSizeOf) const
+  {
+    return aMallocSizeOf(this) + SizeOfExcludingThis(aMallocSizeOf);
+  }
+
 private:
   friend class HLSResourceCallbacksSupport;
 
   void onDataAvailable();
   void onError(int aErrorCode);
-
-  size_t SizeOfExcludingThis(MallocSizeOf aMallocSizeOf) const override
-  {
-    size_t size = MediaResource::SizeOfExcludingThis(aMallocSizeOf);
-    return size;
-  }
-
-  size_t SizeOfIncludingThis(MallocSizeOf aMallocSizeOf) const override
-  {
-    return aMallocSizeOf(this) + SizeOfExcludingThis(aMallocSizeOf);
-  }
 
   HLSDecoder* mDecoder;
   nsCOMPtr<nsIChannel> mChannel;

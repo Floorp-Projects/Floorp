@@ -11,7 +11,6 @@
 #include "mozilla/CheckedInt.h"
 #include "mozilla/FloatingPoint.h"
 #include "mozilla/Maybe.h"
-#include "mozilla/dom/TimeRanges.h"
 #include "mozilla/TimeStamp.h"
 
 namespace mozilla {
@@ -19,7 +18,7 @@ namespace media {
 class TimeIntervals;
 } // namespace media
 } // namespace mozilla
-// CopyChooser specalization for nsTArray
+// CopyChooser specialization for nsTArray
 template<>
 struct nsTArray_CopyChooser<mozilla::media::TimeIntervals>
 {
@@ -241,34 +240,6 @@ public:
   }
 
   TimeIntervals() = default;
-
-  // Make TimeIntervals interchangeable with dom::TimeRanges.
-  explicit TimeIntervals(dom::TimeRanges* aRanges)
-  {
-    for (uint32_t i = 0; i < aRanges->Length(); i++) {
-      ErrorResult rv;
-      *this +=
-        TimeInterval(TimeUnit::FromSeconds(aRanges->Start(i, rv)),
-                     TimeUnit::FromSeconds(aRanges->End(i, rv)));
-    }
-  }
-  TimeIntervals& operator = (dom::TimeRanges* aRanges)
-  {
-    *this = TimeIntervals(aRanges);
-    return *this;
-  }
-
-  static TimeIntervals FromTimeRanges(dom::TimeRanges* aRanges)
-  {
-    return TimeIntervals(aRanges);
-  }
-
-  void ToTimeRanges(dom::TimeRanges* aRanges) const
-  {
-    for (IndexType i = 0; i < Length(); i++) {
-      aRanges->Add(Start(i).ToSeconds(), End(i).ToSeconds());
-    }
-  }
 };
 
 } // namespace media

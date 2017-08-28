@@ -1,5 +1,5 @@
 /*
- * Test for make sure getRecords can retrieve right collection from storag.
+ * Test for make sure getRecords can retrieve right collection from storage.
  */
 
 "use strict";
@@ -166,11 +166,14 @@ add_task(async function test_getRecords_creditCards() {
   await formAutofillParent.init();
   await formAutofillParent.profileStorage.initialize();
   let collection = profileStorage.creditCards;
+  let decryptedCCNumber = [TEST_CREDIT_CARD_1["cc-number"], TEST_CREDIT_CARD_2["cc-number"]];
   await collection.normalizeCCNumberFields(TEST_CREDIT_CARD_1);
   await collection.normalizeCCNumberFields(TEST_CREDIT_CARD_2);
-  let mockCreditCards = [TEST_CREDIT_CARD_1, TEST_CREDIT_CARD_2];
-  sinon.stub(collection, "getAll");
-  collection.getAll.returns(mockCreditCards);
+  sinon.stub(collection, "getAll", () => [Object.assign({}, TEST_CREDIT_CARD_1), Object.assign({}, TEST_CREDIT_CARD_2)]);
+  let CreditCardsWithDecryptedNumber = [
+    Object.assign({}, TEST_CREDIT_CARD_1, {"cc-number-decrypted": decryptedCCNumber[0]}),
+    Object.assign({}, TEST_CREDIT_CARD_2, {"cc-number-decrypted": decryptedCCNumber[1]}),
+  ];
 
   let testCases = [
     {
@@ -180,7 +183,7 @@ add_task(async function test_getRecords_creditCards() {
         info: {fieldName: "cc-name"},
         searchString: "John Doe",
       },
-      expectedResult: [TEST_CREDIT_CARD_1],
+      expectedResult: CreditCardsWithDecryptedNumber.slice(0, 1),
     },
     {
       description: "If the search string could match multiple creditCards (without masterpassword)",
@@ -189,7 +192,7 @@ add_task(async function test_getRecords_creditCards() {
         info: {fieldName: "cc-name"},
         searchString: "John",
       },
-      expectedResult: [TEST_CREDIT_CARD_1, TEST_CREDIT_CARD_2],
+      expectedResult: CreditCardsWithDecryptedNumber,
     },
     {
       description: "If the search string could not match any creditCard (without masterpassword)",
@@ -207,7 +210,7 @@ add_task(async function test_getRecords_creditCards() {
         info: {fieldName: "cc-number"},
         searchString: "123",
       },
-      expectedResult: [TEST_CREDIT_CARD_1],
+      expectedResult: CreditCardsWithDecryptedNumber.slice(0, 1),
     },
     {
       description: "If the search string could match multiple creditCards (without masterpassword)",
@@ -216,7 +219,7 @@ add_task(async function test_getRecords_creditCards() {
         info: {fieldName: "cc-number"},
         searchString: "1",
       },
-      expectedResult: [TEST_CREDIT_CARD_1, TEST_CREDIT_CARD_2],
+      expectedResult: CreditCardsWithDecryptedNumber,
     },
     {
       description: "If the search string could match 1 creditCard (with masterpassword)",

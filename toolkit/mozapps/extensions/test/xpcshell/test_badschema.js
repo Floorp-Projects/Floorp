@@ -119,15 +119,17 @@ var theme1 = {
 
 // The selected theme
 var theme2 = {
-  id: "theme2@tests.mozilla.org",
-  version: "1.0",
-  name: "Theme 2",
-  internalName: "test/1.0",
-  targetApplications: [{
-    id: "xpcshell@tests.mozilla.org",
-    minVersion: "2",
-    maxVersion: "2"
-  }]
+  manifest: {
+    manifest_version: 2,
+    name: "Theme 2",
+    version: "1.0",
+    theme: { images: { headerURL: "example.png" } },
+    applications: {
+      gecko: {
+        id: "theme2@tests.mozilla.org",
+      }
+    }
+  },
 };
 
 const profileDir = gProfD.clone();
@@ -145,34 +147,35 @@ function run_test() {
   writeInstallRDFForExtension(addon6, profileDir);
   writeInstallRDFForExtension(addon7, profileDir);
   writeInstallRDFForExtension(theme1, profileDir);
-  writeInstallRDFForExtension(theme2, profileDir);
+  let theme2XPI = createTempWebExtensionFile(theme2);
+  AddonTestUtils.manuallyInstall(theme2XPI).then(() => {
+    // Create and configure the HTTP server.
+    testserver.registerDirectory("/addons/", do_get_file("addons"));
 
-  // Create and configure the HTTP server.
-  testserver.registerDirectory("/addons/", do_get_file("addons"));
+    // Startup the profile and setup the initial state
+    startupManager();
 
-  // Startup the profile and setup the initial state
-  startupManager();
-
-  AddonManager.getAddonsByIDs(["addon2@tests.mozilla.org",
-                               "addon3@tests.mozilla.org",
-                               "addon4@tests.mozilla.org",
-                               "addon7@tests.mozilla.org",
-                               "theme2@tests.mozilla.org"], function([a2, a3, a4,
-                                                                      a7, t2]) {
-    // Set up the initial state
-    a2.userDisabled = true;
-    a4.userDisabled = true;
-    a7.userDisabled = true;
-    t2.userDisabled = false;
-    a3.findUpdates({
-      onUpdateFinished() {
-        a4.findUpdates({
-          onUpdateFinished() {
-            do_execute_soon(run_test_1);
-          }
-        }, AddonManager.UPDATE_WHEN_PERIODIC_UPDATE);
-      }
-    }, AddonManager.UPDATE_WHEN_PERIODIC_UPDATE);
+    AddonManager.getAddonsByIDs(["addon2@tests.mozilla.org",
+                                 "addon3@tests.mozilla.org",
+                                 "addon4@tests.mozilla.org",
+                                 "addon7@tests.mozilla.org",
+                                 "theme2@tests.mozilla.org"], function([a2, a3, a4,
+                                                                        a7, t2]) {
+      // Set up the initial state
+      a2.userDisabled = true;
+      a4.userDisabled = true;
+      a7.userDisabled = true;
+      t2.userDisabled = false;
+      a3.findUpdates({
+        onUpdateFinished() {
+          a4.findUpdates({
+            onUpdateFinished() {
+              do_execute_soon(run_test_1);
+            }
+          }, AddonManager.UPDATE_WHEN_PERIODIC_UPDATE);
+        }
+      }, AddonManager.UPDATE_WHEN_PERIODIC_UPDATE);
+    });
   });
 }
 
