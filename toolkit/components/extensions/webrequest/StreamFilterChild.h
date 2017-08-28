@@ -9,20 +9,26 @@
 
 #include "StreamFilterBase.h"
 #include "mozilla/extensions/PStreamFilterChild.h"
+#include "mozilla/extensions/StreamFilter.h"
 
 #include "mozilla/ErrorResult.h"
 #include "mozilla/LinkedList.h"
+#include "mozilla/dom/StreamFilterBinding.h"
 #include "nsISupportsImpl.h"
 
 namespace mozilla {
 namespace extensions {
 
+using mozilla::dom::StreamFilterStatus;
 using mozilla::ipc::IPCResult;
 
 class StreamFilter;
+
 class StreamFilterChild final : public PStreamFilterChild
                               , public StreamFilterBase
 {
+  friend class StreamFilter;
+
 public:
   NS_INLINE_DECL_REFCOUNTING(StreamFilterChild)
 
@@ -84,6 +90,8 @@ public:
     return mState;
   }
 
+  StreamFilterStatus Status() const;
+
 protected:
   virtual IPCResult RecvInitialized(const bool& aSuccess) override;
 
@@ -97,6 +105,12 @@ protected:
   virtual IPCResult RecvFlushData() override;
 
   virtual IPCResult Recv__delete__() override { return IPC_OK(); }
+
+  void
+  SetStreamFilter(StreamFilter* aStreamFilter)
+  {
+    mStreamFilter = aStreamFilter;
+  }
 
 private:
   ~StreamFilterChild() {}
@@ -122,6 +136,8 @@ private:
   State mState;
   State mNextState;
   bool mReceivedOnStop;
+
+  RefPtr<StreamFilter> mStreamFilter;
 };
 
 } // namespace extensions
