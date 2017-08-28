@@ -32,6 +32,7 @@
   border: none;
   /* Set to none so no grey contrast background in the high-contrast mode */
   background: none;
+  z-index: 10; /* We want this always under #onboarding-overlay */
 }
 
 /* Keyboard focus styling */
