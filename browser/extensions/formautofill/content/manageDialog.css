@@ -37,12 +37,16 @@ option:nth-child(even) {
   font-size: 0.85em;
   width: 100%;
   height: 16.6em;
+  margin: 0;
   border-top: none;
   border-radius: 0 0 2px 2px;
 }
 
 #addresses > option,
 #credit-cards > option {
+  display: flex;
+  align-items: center;
+  height: 1.3em;
   padding-inline-start: 0.7em;
 }
 
