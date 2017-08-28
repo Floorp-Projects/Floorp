@@ -6,8 +6,8 @@
 #ifndef MediaDecoderOwner_h_
 #define MediaDecoderOwner_h_
 
+#include "mozilla/UniquePtr.h"
 #include "MediaInfo.h"
-#include "nsAutoPtr.h"
 
 namespace mozilla {
 
@@ -59,7 +59,7 @@ public:
   // etc.
   // Must take ownership of MetadataTags aTags argument.
   virtual void MetadataLoaded(const MediaInfo* aInfo,
-                              nsAutoPtr<const MetadataTags> aTags) = 0;
+                              UniquePtr<const MetadataTags> aTags) = 0;
 
   // Called by the decoder object, on the main thread,
   // when it has read the first frame of the video or audio.
