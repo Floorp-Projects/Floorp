@@ -9108,7 +9108,7 @@ nsLayoutUtils::GetRootMetadata(nsDisplayListBuilder* aBuilder,
 
   if (ensureMetricsForRootId && content) {
     ViewID scrollId = nsLayoutUtils::FindOrCreateIDFor(content);
-    if (nsLayoutUtils::ContainsMetricsWithId(aRootLayer, scrollId)) {
+    if (aRootLayer && nsLayoutUtils::ContainsMetricsWithId(aRootLayer, scrollId)) {
       ensureMetricsForRootId = false;
     }
   }
