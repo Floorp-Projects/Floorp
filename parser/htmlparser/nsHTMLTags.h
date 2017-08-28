@@ -66,18 +66,6 @@ public:
     return tag ? (nsHTMLTag)NS_PTR_TO_INT32(tag) : eHTMLTag_userdefined;
   }
 
-  // Functions for converting an id to a string or atom
-  static const char16_t *GetStringValue(nsHTMLTag aEnum)
-  {
-    return aEnum <= eHTMLTag_unknown || aEnum > NS_HTML_TAG_MAX ?
-      nullptr : sTagUnicodeTable[aEnum - 1];
-  }
-  static nsIAtom *GetAtom(nsHTMLTag aEnum)
-  {
-    return aEnum <= eHTMLTag_unknown || aEnum > NS_HTML_TAG_MAX ?
-      nullptr : sTagAtomTable[aEnum - 1];
-  }
-
 #ifdef DEBUG
   static void TestTagTable();
 #endif
