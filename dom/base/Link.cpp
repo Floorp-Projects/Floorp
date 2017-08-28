@@ -9,6 +9,11 @@
 #include "mozilla/EventStates.h"
 #include "mozilla/MemoryReporting.h"
 #include "mozilla/dom/Element.h"
+#ifdef ANDROID
+#include "mozilla/IHistory.h"
+#else
+#include "mozilla/places/History.h"
+#endif
 #include "nsIURL.h"
 #include "nsISizeOf.h"
 #include "nsIDocShell.h"
@@ -28,26 +33,30 @@
 namespace mozilla {
 namespace dom {
 
+#ifndef ANDROID
+using places::History;
+#endif
+
 Link::Link(Element *aElement)
   : mElement(aElement)
-  , mHistory(services::GetHistoryService())
   , mLinkState(eLinkState_NotLink)
   , mNeedsRegistration(false)
   , mRegistered(false)
   , mHasPendingLinkUpdate(false)
   , mInDNSPrefetch(false)
+  , mHistory(true)
 {
   MOZ_ASSERT(mElement, "Must have an element");
 }
 
 Link::Link()
   : mElement(nullptr)
-  , mHistory(nullptr)
   , mLinkState(eLinkState_NotLink)
   , mNeedsRegistration(false)
   , mRegistered(false)
   , mHasPendingLinkUpdate(false)
   , mInDNSPrefetch(false)
+  , mHistory(false)
 {
 }
 
@@ -380,12 +389,19 @@ Link::LinkState() const
     // Make sure the href attribute has a valid link (bug 23209).
     // If we have a good href, register with History if available.
     if (mHistory && hrefURI) {
-      nsresult rv = mHistory->RegisterVisitedCallback(hrefURI, self);
-      if (NS_SUCCEEDED(rv)) {
-        self->mRegistered = true;
+#ifdef ANDROID
+      nsCOMPtr<IHistory> history = services::GetHistoryService();
+#else
+      History* history = History::GetService();
+#endif
+      if (history) {
+        nsresult rv = history->RegisterVisitedCallback(hrefURI, self);
+        if (NS_SUCCEEDED(rv)) {
+          self->mRegistered = true;
 
-        // And make sure we are in the document's link map.
-        element->GetComposedDoc()->AddStyleRelevantLink(self);
+          // And make sure we are in the document's link map.
+          element->GetComposedDoc()->AddStyleRelevantLink(self);
+        }
       }
     }
   }
@@ -752,14 +768,13 @@ Link::ResetLinkState(bool aNotify, bool aHasHref)
       // with it before.
       doc->ForgetLink(this);
     }
-
-    UnregisterFromHistory();
   }
 
   // If we have an href, we should register with the history.
   mNeedsRegistration = aHasHref;
 
   // If we've cached the URI, reset always invalidates it.
+  UnregisterFromHistory();
   mCachedURI = nullptr;
 
   // Update our state back to the default.
@@ -792,14 +807,19 @@ Link::UnregisterFromHistory()
     return;
   }
 
-  NS_ASSERTION(mCachedURI, "mRegistered is true, but we have no cached URI?!");
-
   // And tell History to stop tracking us.
-  if (mHistory) {
-    nsresult rv = mHistory->UnregisterVisitedCallback(mCachedURI, this);
-    NS_ASSERTION(NS_SUCCEEDED(rv), "This should only fail if we misuse the API!");
-    if (NS_SUCCEEDED(rv)) {
-      mRegistered = false;
+  if (mHistory && mCachedURI) {
+#ifdef ANDROID
+    nsCOMPtr<IHistory> history = services::GetHistoryService();
+#else
+    History* history = History::GetService();
+#endif
+    if (history) {
+      nsresult rv = history->UnregisterVisitedCallback(mCachedURI, this);
+      NS_ASSERTION(NS_SUCCEEDED(rv), "This should only fail if we misuse the API!");
+      if (NS_SUCCEEDED(rv)) {
+        mRegistered = false;
+      }
     }
   }
 }
@@ -844,7 +864,6 @@ Link::SizeOfExcludingThis(mozilla::SizeOfState& aState) const
 
   // The following members don't need to be measured:
   // - mElement, because it is a pointer-to-self used to avoid QIs
-  // - mHistory, because it is non-owning
 
   return n;
 }
