@@ -13,6 +13,7 @@
 #include "jsmath.h"
 #include "json.h"
 #include "jsprototypes.h"
+#include "jsweakmap.h"
 
 #include "builtin/AtomicsObject.h"
 #include "builtin/DataViewObject.h"
