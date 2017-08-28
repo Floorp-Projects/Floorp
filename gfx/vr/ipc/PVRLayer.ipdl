@@ -8,6 +8,8 @@
 include protocol PVRManager;
 include protocol PTexture;
 
+using mozilla::gfx::Rect from "mozilla/gfx/Rect.h";
+
 namespace mozilla {
 namespace gfx {
 
@@ -16,7 +18,9 @@ async protocol PVRLayer
   manager PVRManager;
 
 parent:
-  async SubmitFrame(PTexture aTexture, uint64_t aFrameId);
+  async SubmitFrame(PTexture aTexture, uint64_t aFrameId,
+                    Rect aLeftEyeRect, Rect aRightEyeRect);
+
   async Destroy();
 
 child:

@@ -74,8 +74,6 @@ public:
   virtual void CancelWaitForRecycle(uint64_t aTextureId) override;
 
   PVRLayerChild* CreateVRLayer(uint32_t aDisplayID,
-                               const Rect& aLeftEyeRect,
-                               const Rect& aRightEyeRect,
                                nsIEventTarget* aTarget,
                                uint32_t aGroup);
 
@@ -113,14 +111,6 @@ protected:
   virtual bool DeallocPTextureChild(PTextureChild* actor) override;
 
   virtual PVRLayerChild* AllocPVRLayerChild(const uint32_t& aDisplayID,
-                                            const float& aLeftEyeX,
-                                            const float& aLeftEyeY,
-                                            const float& aLeftEyeWidth,
-                                            const float& aLeftEyeHeight,
-                                            const float& aRightEyeX,
-                                            const float& aRightEyeY,
-                                            const float& aRightEyeWidth,
-                                            const float& aRightEyeHeight,
                                             const uint32_t& aGroup) override;
   virtual bool DeallocPVRLayerChild(PVRLayerChild* actor) override;
 

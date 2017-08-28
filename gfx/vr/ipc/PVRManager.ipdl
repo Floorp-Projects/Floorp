@@ -40,10 +40,7 @@ parent:
   async PTexture(SurfaceDescriptor aSharedData, LayersBackend aBackend,
                  TextureFlags aTextureFlags, uint64_t aSerial);
 
-  async PVRLayer(uint32_t aDisplayID, float aLeftEyeX, float aLeftEyeY,
-                 float aLeftEyeWidth, float aLeftEyeHeight, float aRightEyeX,
-                 float aRightEyeY, float aRightEyeWidth, float aRightEyeHeight,
-                 uint32_t aGroup);
+  async PVRLayer(uint32_t aDisplayID, uint32_t aGroup);
 
   // (Re)Enumerate VR Displays.  An updated list of VR displays will be returned
   // asynchronously to children via UpdateDisplayInfo.
