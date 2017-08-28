@@ -4904,9 +4904,7 @@ EditorBase::InitializeSelection(nsIDOMEventTarget* aFocusEventTarget)
 
   // XXX What case needs this?
   if (isTargetDoc) {
-    int32_t rangeCount;
-    selection->GetRangeCount(&rangeCount);
-    if (!rangeCount) {
+    if (!selection->RangeCount()) {
       BeginningOfDocument();
     }
   }

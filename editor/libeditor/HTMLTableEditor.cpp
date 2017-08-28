@@ -764,11 +764,7 @@ HTMLEditor::DeleteTableCell(int32_t aNumber)
   rv = GetFirstSelectedCell(getter_AddRefs(range), getter_AddRefs(firstCell));
   NS_ENSURE_SUCCESS(rv, rv);
 
-  int32_t rangeCount;
-  rv = selection->GetRangeCount(&rangeCount);
-  NS_ENSURE_SUCCESS(rv, rv);
-
-  if (firstCell && rangeCount > 1) {
+  if (firstCell && selection->RangeCount() > 1) {
     // When > 1 selected cell,
     //  ignore aNumber and use selected cells
     cell = firstCell;
@@ -1038,9 +1034,7 @@ HTMLEditor::DeleteTableColumn(int32_t aNumber)
   rv = GetFirstSelectedCell(getter_AddRefs(range), getter_AddRefs(firstCell));
   NS_ENSURE_SUCCESS(rv, rv);
 
-  int32_t rangeCount;
-  rv = selection->GetRangeCount(&rangeCount);
-  NS_ENSURE_SUCCESS(rv, rv);
+  uint32_t rangeCount = selection->RangeCount();
 
   if (firstCell && rangeCount > 1) {
     // Fetch indexes again - may be different for selected cells
@@ -1203,9 +1197,7 @@ HTMLEditor::DeleteTableRow(int32_t aNumber)
   rv = GetFirstSelectedCell(getter_AddRefs(range), getter_AddRefs(firstCell));
   NS_ENSURE_SUCCESS(rv, rv);
 
-  int32_t rangeCount;
-  rv = selection->GetRangeCount(&rangeCount);
-  NS_ENSURE_SUCCESS(rv, rv);
+  uint32_t rangeCount = selection->RangeCount();
 
   if (firstCell && rangeCount > 1) {
     // Fetch indexes again - may be different for selected cells
@@ -2216,12 +2208,10 @@ HTMLEditor::JoinTableCells(bool aMergeNonContiguousContents)
     RefPtr<Selection> selection = GetSelection();
     NS_ENSURE_TRUE(selection, NS_ERROR_FAILURE);
 
-    int32_t rangeCount;
-    rv = selection->GetRangeCount(&rangeCount);
-    NS_ENSURE_SUCCESS(rv, rv);
+    uint32_t rangeCount = selection->RangeCount();
 
     RefPtr<nsRange> range;
-    for (int32_t i = 0; i < rangeCount; i++) {
+    for (uint32_t i = 0; i < rangeCount; i++) {
       range = selection->GetRangeAt(i);
       NS_ENSURE_TRUE(range, NS_ERROR_FAILURE);
 
@@ -3208,8 +3198,7 @@ HTMLEditor::GetSelectedOrParentTableElement(nsAString& aTagName,
   if (tableOrCellElement) {
       // Each cell is in its own selection range,
       //  so count signals multiple-cell selection
-      rv = selection->GetRangeCount(aSelectedCount);
-      NS_ENSURE_SUCCESS(rv, rv);
+      *aSelectedCount = selection->RangeCount();
       aTagName = tdName;
   } else {
     nsCOMPtr<nsIDOMNode> anchorNode;
@@ -3242,8 +3231,7 @@ HTMLEditor::GetSelectedOrParentTableElement(nsAString& aTagName,
           aTagName = tdName;
           // Each cell is in its own selection range,
           //  so count signals multiple-cell selection
-          rv = selection->GetRangeCount(aSelectedCount);
-          NS_ENSURE_SUCCESS(rv, rv);
+          *aSelectedCount = selection->RangeCount();
         } else if (atom == nsGkAtoms::table) {
           tableOrCellElement = do_QueryInterface(selectedNode);
           aTagName.AssignLiteral("table");
