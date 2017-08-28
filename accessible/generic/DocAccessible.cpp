@@ -2164,10 +2164,10 @@ DocAccessible::DoARIAOwnsRelocation(Accessible* aOwner)
     }
 
     if (MoveChild(child, aOwner, insertIdx)) {
-      nsTArray<RefPtr<Accessible> >* relocated = mARIAOwnsHash.LookupOrAdd(aOwner);
-      MOZ_ASSERT(relocated == owned);
       child->SetRelocated(true);
-      relocated->InsertElementAt(idx, child);
+      MOZ_ASSERT(owned == mARIAOwnsHash.Get(aOwner));
+      owned = mARIAOwnsHash.LookupOrAdd(aOwner);
+      owned->InsertElementAt(idx, child);
       idx++;
     }
   }
