@@ -735,8 +735,7 @@ MediaDecoder::MetadataLoaded(UniquePtr<MediaInfo> aInfo,
   // our new size.
   if (aEventVisibility != MediaDecoderEventVisibility::Suppressed) {
     mFiredMetadataLoaded = true;
-    GetOwner()->MetadataLoaded(
-      mInfo, nsAutoPtr<const MetadataTags>(aTags.release()));
+    GetOwner()->MetadataLoaded(mInfo, Move(aTags));
   }
   // Invalidate() will end up calling GetOwner()->UpdateMediaSize with the last
   // dimensions retrieved from the video frame container. The video frame

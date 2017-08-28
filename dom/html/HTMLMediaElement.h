@@ -169,8 +169,9 @@ public:
   // Called by the video decoder object, on the main thread,
   // when it has read the metadata containing video dimensions,
   // etc.
-  virtual void MetadataLoaded(const MediaInfo* aInfo,
-                              nsAutoPtr<const MetadataTags> aTags) final override;
+  virtual void MetadataLoaded(
+    const MediaInfo* aInfo,
+    UniquePtr<const MetadataTags> aTags) final override;
 
   // Called by the decoder object, on the main thread,
   // when it has read the first frame of the video or audio.
@@ -1452,7 +1453,7 @@ protected:
   // Current audio volume
   double mVolume;
 
-  nsAutoPtr<const MetadataTags> mTags;
+  UniquePtr<const MetadataTags> mTags;
 
   // URI of the resource we're attempting to load. This stores the value we
   // return in the currentSrc attribute. Use GetCurrentSrc() to access the
