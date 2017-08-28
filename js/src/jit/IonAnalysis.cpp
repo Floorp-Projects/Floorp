@@ -1239,7 +1239,7 @@ jit::FlagUnusedPhis(MIRGenerator* mir, MIRGraph& graph,
 
             // Flag all as unused, only observable phis would be marked as used
             // when processed by the work list.
-            phi->setUnusedUnchecked();
+            phi->setUnused();
 
             // If the phi is redundant, remove it here.
             if (MDefinition* redundant = IsPhiRedundant(phi)) {
