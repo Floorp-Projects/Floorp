@@ -490,11 +490,10 @@ nsFrame::nsFrame(nsStyleContext* aContext, ClassID aID)
   MOZ_COUNT_CTOR(nsFrame);
 
   mStyleContext = aContext;
-  mWritingMode = WritingMode(mStyleContext);
-  mStyleContext->AddRef();
 #ifdef DEBUG
   mStyleContext->FrameAddRef();
 #endif
+  mWritingMode = WritingMode(mStyleContext);
 }
 
 nsFrame::~nsFrame()
@@ -504,11 +503,9 @@ nsFrame::~nsFrame()
   MOZ_ASSERT(GetVisibility() != Visibility::APPROXIMATELY_VISIBLE,
              "Visible nsFrame is being destroyed");
 
-  NS_IF_RELEASE(mContent);
 #ifdef DEBUG
   mStyleContext->FrameRelease();
 #endif
-  mStyleContext->Release();
 }
 
 NS_IMPL_FRAMEARENA_HELPERS(nsFrame)
@@ -611,10 +608,6 @@ nsFrame::Init(nsIContent*       aContent,
 
   mContent = aContent;
   mParent = aParent;
-
-  if (aContent) {
-    NS_ADDREF(aContent);
-  }
 
   if (aPrevInFlow) {
     mWritingMode = aPrevInFlow->GetWritingMode();
@@ -3323,7 +3316,7 @@ nsFrame::GetContentForEvent(WidgetEvent* aEvent,
 void
 nsFrame::FireDOMEvent(const nsAString& aDOMEventName, nsIContent *aContent)
 {
-  nsIContent* target = aContent ? aContent : mContent;
+  nsIContent* target = aContent ? aContent : GetContent();
 
   if (target) {
     RefPtr<AsyncEventDispatcher> asyncDispatcher =

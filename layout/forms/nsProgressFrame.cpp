@@ -151,7 +151,7 @@ nsProgressFrame::ReflowChildFrame(nsIFrame*          aChild,
   nscoord xoffset = aReflowInput.ComputedPhysicalBorderPadding().left;
   nscoord yoffset = aReflowInput.ComputedPhysicalBorderPadding().top;
 
-  double position = static_cast<HTMLProgressElement*>(mContent)->Position();
+  double position = static_cast<HTMLProgressElement*>(GetContent())->Position();
 
   // Force the bar's size to match the current progress.
   // When indeterminate, the progress' size will be 100%.
