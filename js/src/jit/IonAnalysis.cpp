@@ -279,55 +279,6 @@ ConvertToBailingBlock(TempAllocator& alloc, MBasicBlock* block)
     block->end(MUnreachable::New(alloc));
 }
 
-struct BranchPruningBlockInfo
-{
-    // Number of instructions per block.
-    size_t numInst;
-    // Number of effectful instructions per block.
-    size_t numEffectful;
-    // Number of predecessors (excluding OSR blocks).
-    size_t numPred;
-    // Number of successors.
-    size_t numSucc;
-};
-
-using BPBlockInfos = Vector<BranchPruningBlockInfo, 0, SystemAllocPolicy>;
-
-static bool
-CollectBlocksInfos(MIRGenerator* mir, MIRGraph& graph, BPBlockInfos& infos)
-{
-    // Already initialized.
-    if (!infos.empty())
-        return true;
-
-    if (!infos.growBy(graph.numBlocks()))
-        return false;
-
-    // Predictible tight loops which is caching the information about blocks.
-    size_t bid = 0;
-    for (ReversePostorderIterator block(graph.rpoBegin()); block != graph.rpoEnd();
-         block++, bid++)
-    {
-        if (mir->shouldCancel("Prune unused branches (CollectBlocksInfos)"))
-            return false;
-        size_t numInst = 0;
-        size_t numEffectful = 0;
-        for (auto ins = block->begin(), insEnd = block->end(); ins != insEnd; ins++) {
-            numInst++;
-            if (ins->isEffectful())
-                numEffectful++;
-        }
-
-        auto& info = infos[bid];
-        info.numInst = numInst;
-        info.numEffectful = numEffectful;
-        info.numPred = block->numPredecessors();
-        info.numSucc = block->numSuccessors();
-    }
-
-    return true;
-}
-
 bool
 jit::PruneUnusedBranches(MIRGenerator* mir, MIRGraph& graph)
 {
@@ -336,12 +287,8 @@ jit::PruneUnusedBranches(MIRGenerator* mir, MIRGraph& graph)
     // We do a reverse-post-order traversal, marking basic blocks when the block
     // have to be converted into bailing blocks, and flagging block as
     // unreachable if all predecessors are flagged as bailing or unreachable.
-    BPBlockInfos infos;
-    size_t bid = 0;
     bool someUnreachable = false;
-    for (ReversePostorderIterator block(graph.rpoBegin()); block != graph.rpoEnd();
-         block++, bid++)
-    {
+    for (ReversePostorderIterator block(graph.rpoBegin()); block != graph.rpoEnd(); block++) {
         if (mir->shouldCancel("Prune unused branches (main loop)"))
             return false;
 
@@ -405,9 +352,6 @@ jit::PruneUnusedBranches(MIRGenerator* mir, MIRGraph& graph)
                 numSuccessorsOfPreds += pred->numSuccessors() - 1;
             }
 
-            if (!CollectBlocksInfos(mir, graph, infos))
-                return false;
-
             // Iterate over the approximated set of dominated blocks and count
             // the number of instructions which are dominated.  Note that this
             // approximation has issues with OSR blocks, but this should not be
@@ -416,19 +360,27 @@ jit::PruneUnusedBranches(MIRGenerator* mir, MIRGraph& graph)
             size_t numEffectfulInst = 0;
             int numInOutEdges = block->numPredecessors();
             size_t branchSpan = 0;
-            size_t i = bid;
-            while (numInOutEdges > 0 && i < infos.length()) {
-                auto& info = infos[i];
+            ReversePostorderIterator it(block);
+            do {
+                if (mir->shouldCancel("Prune unused branches (inner loop 3)"))
+                    return false;
+
                 // Iterate over dominated blocks, and visit exit blocks as well.
-                numInOutEdges -= info.numPred;
+                numInOutEdges -= it->numPredecessors();
                 if (numInOutEdges < 0)
                     break;
-                numInOutEdges += info.numSucc;
-                numDominatedInst += info.numInst;
-                numEffectfulInst += info.numEffectful;
+                numInOutEdges += it->numSuccessors();
+
+                // Collect information about the instructions within the block.
+                for (auto ins = it->begin(), insEnd = it->end(); ins != insEnd; ins++) {
+                    numDominatedInst++;
+                    if (ins->isEffectful())
+                        numEffectfulInst++;
+                }
+
+                it++;
                 branchSpan++;
-                i++;
-            }
+            } while(numInOutEdges > 0 && it != graph.rpoEnd());
 
             // The goal of branch pruning is to remove branches which are
             // preventing other optimization, while keeping branches which would
