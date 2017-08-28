@@ -1435,7 +1435,6 @@ protected:
     bool mInvalidated;
     bool mCapturedFrameInvalidated;
     bool mResetLayer;
-    bool mLayerIsMirror;
     bool mOptionsFrozen;
     bool mDisableExtensions;
     bool mIsMesa;
