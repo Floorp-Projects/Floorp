@@ -45,16 +45,14 @@ BEGIN_TEST(testAddPropertyHook)
     JS::RootedValue arr(cx, JS::ObjectValue(*obj));
 
     CHECK(JS_DefineProperty(cx, global, "arr", arr,
-                            JSPROP_ENUMERATE,
-                            JS_STUBGETTER, JS_STUBSETTER));
+                            JSPROP_ENUMERATE));
 
     JS::RootedObject arrObj(cx, &arr.toObject());
     for (int i = 0; i < ExpectedCount; ++i) {
         obj = JS_NewObject(cx, &AddPropertyClass);
         CHECK(obj);
         CHECK(JS_DefineElement(cx, arrObj, i, obj,
-                               JSPROP_ENUMERATE,
-                               JS_STUBGETTER, JS_STUBSETTER));
+                               JSPROP_ENUMERATE));
     }
 
     // Now add a prop to each of the objects, but make sure to do
