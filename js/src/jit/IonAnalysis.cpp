@@ -372,9 +372,9 @@ jit::PruneUnusedBranches(MIRGenerator* mir, MIRGraph& graph)
                 numInOutEdges += it->numSuccessors();
 
                 // Collect information about the instructions within the block.
-                for (MDefinitionIterator def(*it); def; def++) {
+                for (auto ins = it->begin(), insEnd = it->end(); ins != insEnd; ins++) {
                     numDominatedInst++;
-                    if (def->isEffectful())
+                    if (ins->isEffectful())
                         numEffectfulInst++;
                 }
 
