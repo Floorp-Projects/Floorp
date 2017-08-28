@@ -15,7 +15,7 @@
 #include "webrtc/modules/video_capture/video_capture_impl.h"
 #include "base/singleton.h"
 
-#include <Dshow.h>
+#include <dshow.h>
 #include <windows.h>
 
 namespace webrtc

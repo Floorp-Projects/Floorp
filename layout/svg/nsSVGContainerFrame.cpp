@@ -147,7 +147,7 @@ nsSVGDisplayContainerFrame::BuildDisplayList(nsDisplayListBuilder*   aBuilder,
 {
   // mContent could be a XUL element so check for an SVG element before casting
   if (mContent->IsSVGElement() &&
-      !static_cast<const nsSVGElement*>(mContent)->HasValidDimensions()) {
+      !static_cast<const nsSVGElement*>(GetContent())->HasValidDimensions()) {
     return;
   }
   DisplayOutline(aBuilder, aLists);
@@ -232,7 +232,7 @@ nsSVGDisplayContainerFrame::IsSVGTransformed(gfx::Matrix *aOwnTransform,
 
   // mContent could be a XUL element so check for an SVG element before casting
   if (mContent->IsSVGElement()) {
-    nsSVGElement *content = static_cast<nsSVGElement*>(mContent);
+    nsSVGElement *content = static_cast<nsSVGElement*>(GetContent());
     nsSVGAnimatedTransformList* transformList =
       content->GetAnimatedTransformList();
     if ((transformList && transformList->HasTransform()) ||

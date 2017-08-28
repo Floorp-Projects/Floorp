@@ -62,7 +62,7 @@ SVGFEUnstyledLeafFrame::AttributeChanged(int32_t  aNameSpaceID,
                                          nsIAtom* aAttribute,
                                          int32_t  aModType)
 {
-  SVGFEUnstyledElement *element = static_cast<SVGFEUnstyledElement*>(mContent);
+  SVGFEUnstyledElement *element = static_cast<SVGFEUnstyledElement*>(GetContent());
   if (element->AttributeAffectsRendering(aNameSpaceID, aAttribute)) {
     MOZ_ASSERT(GetParent()->GetParent()->IsSVGFilterFrame(),
                "Observers observe the filter, so that's what we must invalidate");

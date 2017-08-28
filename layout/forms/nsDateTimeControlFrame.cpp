@@ -404,7 +404,7 @@ nsDateTimeControlFrame::AttributeChanged(int32_t aNameSpaceID,
         aAttribute == nsGkAtoms::readonly ||
         aAttribute == nsGkAtoms::tabindex) {
       MOZ_ASSERT(mContent->IsHTMLElement(nsGkAtoms::input), "bad cast");
-      auto contentAsInputElem = static_cast<dom::HTMLInputElement*>(mContent);
+      auto contentAsInputElem = static_cast<dom::HTMLInputElement*>(GetContent());
       // If script changed the <input>'s type before setting these attributes
       // then we don't need to do anything since we are going to be reframed.
       if (contentAsInputElem->ControlType() == NS_FORM_INPUT_TIME ||
