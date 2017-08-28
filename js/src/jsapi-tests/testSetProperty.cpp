@@ -12,12 +12,11 @@ BEGIN_TEST(testSetProperty_NativeGetterStubSetter)
     JS::RootedObject obj(cx, JS_NewPlainObject(cx));
     CHECK(obj);
 
-    CHECK(JS_DefineProperty(cx, global, "globalProp", obj, JSPROP_ENUMERATE,
-                            JS_STUBGETTER, JS_STUBSETTER));
+    CHECK(JS_DefineProperty(cx, global, "globalProp", obj, JSPROP_ENUMERATE));
 
     CHECK(JS_DefineProperty(cx, obj, "prop", JS::UndefinedHandleValue,
                             JSPROP_SHARED | JSPROP_PROPOP_ACCESSORS,
-                            JS_PROPERTYOP_GETTER(NativeGet), JS_STUBSETTER));
+                            JS_PROPERTYOP_GETTER(NativeGet), nullptr));
 
     EXEC("'use strict';                                     \n"
          "var error, passed = false;                        \n"

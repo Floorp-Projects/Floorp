@@ -180,10 +180,6 @@ DOMProxyHandler::defineProperty(JSContext* cx, JS::Handle<JSObject*> proxy, JS::
                                 Handle<PropertyDescriptor> desc,
                                 JS::ObjectOpResult &result, bool *defined) const
 {
-  if (desc.hasGetterObject() && desc.setter() == JS_StrictPropertyStub) {
-    return result.failGetterOnly();
-  }
-
   if (xpc::WrapperFactory::IsXrayWrapper(proxy)) {
     return result.succeed();
   }
