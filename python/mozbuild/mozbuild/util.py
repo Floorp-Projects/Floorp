@@ -152,7 +152,7 @@ def ensureParentDir(path):
     if d and not os.path.exists(path):
         try:
             os.makedirs(d)
-        except OSError, error:
+        except OSError as error:
             if error.errno != errno.EEXIST:
                 raise
 

@@ -19,14 +19,10 @@ from __future__ import absolute_import, unicode_literals
 import collections
 import os
 import sys
+import six
 from functools import wraps
-
-if sys.version_info[0] == 3:
-    from configparser import RawConfigParser, NoSectionError
-    str_type = str
-else:
-    from ConfigParser import RawConfigParser, NoSectionError
-    str_type = basestring
+from six.moves.configparser import RawConfigParser, NoSectionError
+from six import string_types as str_type
 
 
 class ConfigException(Exception):
@@ -144,7 +140,7 @@ def reraise_attribute_error(func):
             return func(*args, **kwargs)
         except KeyError:
             exc_class, exc, tb = sys.exc_info()
-            raise AttributeError().__class__, exc, tb
+            six.reraise(AttributeError().__class__, exc, tb)
     return _
 
 

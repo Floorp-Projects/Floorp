@@ -75,7 +75,7 @@ class ArchlinuxBootstrapper(StyloInstall, BaseBootstrapper):
     ]
 
     def __init__(self, version, dist_id, **kwargs):
-        print 'Using an experimental bootstrapper for Archlinux.'
+        print('Using an experimental bootstrapper for Archlinux.')
         BaseBootstrapper.__init__(self, **kwargs)
 
     def install_system_packages(self):

@@ -28,4 +28,4 @@ for region, overrides in searchinfo["regionOverrides"].iteritems():
       engines.add(replacement)
 
 # join() will take an iterable, not just a list.
-print '\n'.join(engines)
+print('\n'.join(engines))
