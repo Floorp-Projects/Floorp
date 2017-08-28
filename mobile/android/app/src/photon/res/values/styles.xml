@@ -465,6 +465,7 @@
     </style>
 
     <style name="UrlBar.Title" parent="UrlBar.Button">
+        <item name="android:layout_height">@dimen/browser_toolbar_url_height</item>
         <item name="android:textAppearance">@style/TextAppearance.UrlBar.Title</item>
         <item name="android:textColor">@color/url_bar_title</item>
         <item name="android:textColorHint">@color/url_bar_title_hint</item>
@@ -818,11 +819,12 @@
     <style name="UrlBar.SiteIdentity" parent="UrlBar.V15.SiteIdentity"/>
     <style name="UrlBar.Base.SiteIdentity" parent="UrlBar.Button">
         <item name="android:layout_width">@dimen/browser_toolbar_site_security_width</item>
-        <item name="android:layout_height">@dimen/browser_toolbar_height</item>
+        <item name="android:layout_height">@dimen/browser_toolbar_url_height</item>
         <item name="android:scaleType">center</item>
     </style>
     <style name="UrlBar.V15.SiteIdentity" parent="UrlBar.Base.SiteIdentity">
         <item name="android:layout_marginLeft">5dp</item>
+        <item name="android:paddingRight">@dimen/browser_toolbar_site_security_margin_end</item>
     </style>
 
     <style name="UrlBar.Entry" parent="UrlBar.V15.Entry"/>
@@ -849,7 +851,7 @@
     <style name="UrlBar.Base.Tabs" parent="UrlBar.ImageButton"/>
     <style name="UrlBar.V15.Tabs" parent="UrlBar.Base.Tabs">
         <item name="android:layout_toLeftOf">@id/menu</item>
-        <item name="android:layout_marginRight">-4dp</item>
+        <item name="android:layout_marginRight">-3dp</item>
     </style>
 
     <style name="UrlBar.TabCounter" parent="UrlBar.V15.TabCounter"/>
@@ -858,6 +860,11 @@
         <item name="android:layout_alignLeft">@id/tabs</item>
         <item name="android:layout_alignRight">@id/tabs</item>
         <item name="android:layout_toLeftOf">@id/menu</item>
+    </style>
+
+    <style name="UrlBar.TabCounter.Text">
+        <item name="android:fontFamily">sans-serif-medium</item>
+        <item name="android:textStyle">bold</item>
     </style>
 
     <style name="UrlBar.EditCancel" parent="UrlBar.V15.EditCancel"/>
@@ -873,7 +880,7 @@
         <item name="android:layout_toLeftOf">@id/edit_cancel</item>
         <item name="android:paddingLeft">8dp</item>
         <item name="android:paddingRight">0dp</item>
-        <item name="android:layout_marginRight">-2dp</item>
+        <item name="android:layout_marginRight">-3dp</item>
     </style>
 
     <style name="UrlBar.DisplayLayout" parent="UrlBar.V15.DisplayLayout"/>
@@ -882,12 +889,26 @@
     <style name="UrlBar.V15.DisplayLayout" parent="UrlBar.Base.DisplayLayout">
         <item name="android:layout_alignLeft">@id/url_bar_entry</item>
         <item name="android:layout_alignRight">@id/url_bar_entry</item>
-        <item name="android:layout_marginRight">-2dp</item>
     </style>
 
     <style name="UrlBar.QRCode" parent="UrlBar.V15.QRCode"/>
     <style name="UrlBar.V15.QRCode" parent="UrlBar.ImageButton">
-        <item name="android:layout_marginRight">-2dp</item>
+        <item name="android:layout_marginRight">-3dp</item>
+    </style>
+
+    <!-- TabStrip -->
+    <style name="TabStrip"/>
+
+    <style name="TabStrip.Base">
+        <item name="android:layout_width">@dimen/tablet_tab_strip_item_width</item>
+        <item name="android:layout_height">@dimen/tablet_tab_strip_item_height</item>
+    </style>
+
+    <style name="TabStrip.Favicon" parent="TabStrip.V15.Favicon"/>
+    <style name="TabStrip.Base.Favicon" parent="TabStrip.Base"/>
+    <style name="TabStrip.V15.Favicon" parent="TabStrip.Base.Favicon">
+        <item name="android:layout_marginLeft">12dp</item>
+        <item name="android:layout_marginRight">8dp</item>
     </style>
 
 </resources>

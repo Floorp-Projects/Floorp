@@ -31,11 +31,6 @@ class SourceBufferResource final : public MediaResource
 public:
   SourceBufferResource();
   nsresult Close();
-  already_AddRefed<nsIPrincipal> GetCurrentPrincipal() override
-  {
-    UNIMPLEMENTED();
-    return nullptr;
-  }
   nsresult ReadAt(int64_t aOffset,
                   char* aBuffer,
                   uint32_t aCount,
@@ -83,17 +78,13 @@ public:
     return NS_OK;
   }
 
-  size_t SizeOfExcludingThis(MallocSizeOf aMallocSizeOf) const override
+  size_t SizeOfExcludingThis(MallocSizeOf aMallocSizeOf) const
   {
     MOZ_ASSERT(OnTaskQueue());
-
-    size_t size = MediaResource::SizeOfExcludingThis(aMallocSizeOf);
-    size += mInputBuffer.SizeOfExcludingThis(aMallocSizeOf);
-
-    return size;
+    return mInputBuffer.SizeOfExcludingThis(aMallocSizeOf);
   }
 
-  size_t SizeOfIncludingThis(MallocSizeOf aMallocSizeOf) const override
+  size_t SizeOfIncludingThis(MallocSizeOf aMallocSizeOf) const
   {
     return aMallocSizeOf(this) + SizeOfExcludingThis(aMallocSizeOf);
   }

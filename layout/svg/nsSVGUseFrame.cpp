@@ -3,62 +3,14 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-// Keep in (case-insensitive) order:
-#include "nsIAnonymousContentCreator.h"
-#include "nsSVGEffects.h"
-#include "nsSVGGFrame.h"
+#include "nsSVGUseFrame.h"
+#include "nsContentUtils.h"
+
 #include "mozilla/dom/SVGUseElement.h"
 #include "nsContentList.h"
+#include "nsSVGEffects.h"
 
 using namespace mozilla::dom;
-
-class nsSVGUseFrame final
-  : public nsSVGGFrame
-  , public nsIAnonymousContentCreator
-{
-  friend nsIFrame*
-  NS_NewSVGUseFrame(nsIPresShell* aPresShell, nsStyleContext* aContext);
-
-protected:
-  explicit nsSVGUseFrame(nsStyleContext* aContext)
-    : nsSVGGFrame(aContext, kClassID)
-    , mHasValidDimensions(true)
-  {}
-
-public:
-  NS_DECL_QUERYFRAME
-  NS_DECL_FRAMEARENA_HELPERS(nsSVGUseFrame)
-
-  // nsIFrame interface:
-  virtual void Init(nsIContent*       aContent,
-                    nsContainerFrame* aParent,
-                    nsIFrame*         aPrevInFlow) override;
-
-  virtual nsresult  AttributeChanged(int32_t         aNameSpaceID,
-                                     nsIAtom*        aAttribute,
-                                     int32_t         aModType) override;
-
-  virtual void DestroyFrom(nsIFrame* aDestructRoot) override;
-
-#ifdef DEBUG_FRAME_DUMP
-  virtual nsresult GetFrameName(nsAString& aResult) const override
-  {
-    return MakeFrameName(NS_LITERAL_STRING("SVGUse"), aResult);
-  }
-#endif
-
-  // nsSVGDisplayableFrame interface:
-  virtual void ReflowSVG() override;
-  virtual void NotifySVGChanged(uint32_t aFlags) override;
-
-  // nsIAnonymousContentCreator
-  virtual nsresult CreateAnonymousContent(nsTArray<ContentInfo>& aElements) override;
-  virtual void AppendAnonymousContentTo(nsTArray<nsIContent*>& aElements,
-                                        uint32_t aFilter) override;
-
-private:
-  bool mHasValidDimensions;
-};
 
 //----------------------------------------------------------------------
 // Implementation
@@ -150,9 +102,8 @@ nsSVGUseFrame::AttributeChanged(int32_t         aNameSpaceID,
 void
 nsSVGUseFrame::DestroyFrom(nsIFrame* aDestructRoot)
 {
-  RefPtr<SVGUseElement> use = static_cast<SVGUseElement*>(GetContent());
+  DestroyAnonymousContent(mContentClone.forget());
   nsSVGGFrame::DestroyFrom(aDestructRoot);
-  use->DestroyAnonymousContent();
 }
 
 
@@ -217,13 +168,12 @@ nsSVGUseFrame::CreateAnonymousContent(nsTArray<ContentInfo>& aElements)
 {
   SVGUseElement *use = static_cast<SVGUseElement*>(GetContent());
 
-  nsIContent* clone = use->CreateAnonymousContent();
+  mContentClone = use->CreateAnonymousContent();
   nsLayoutUtils::PostRestyleEvent(
     use, nsRestyleHint(0), nsChangeHint_InvalidateRenderingObservers);
-  if (!clone)
+  if (!mContentClone)
     return NS_ERROR_FAILURE;
-  if (!aElements.AppendElement(clone))
-    return NS_ERROR_OUT_OF_MEMORY;
+  aElements.AppendElement(mContentClone);
   return NS_OK;
 }
 
@@ -231,9 +181,7 @@ void
 nsSVGUseFrame::AppendAnonymousContentTo(nsTArray<nsIContent*>& aElements,
                                         uint32_t aFilter)
 {
-  SVGUseElement *use = static_cast<SVGUseElement*>(GetContent());
-  nsIContent* clone = use->GetAnonymousContent();
-  if (clone) {
-    aElements.AppendElement(clone);
+  if (mContentClone) {
+    aElements.AppendElement(mContentClone);
   }
 }

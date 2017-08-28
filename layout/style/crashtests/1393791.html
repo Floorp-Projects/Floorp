@@ -1,0 +1,12 @@
+<script>
+window.onload = () => {
+  a = document.createElement("p")
+  document.documentElement.appendChild(a)
+  b = document.createElement("caption")
+  document.documentElement.appendChild(b)
+  a.insertAdjacentHTML("afterEnd", "<audio controls></audio><iframe>");
+  document.documentElement.getBoundingClientRect()
+  document.documentElement.appendChild(document.createElement("tr"))
+  b.style.borderCollapse = "collapse"
+}
+</script>

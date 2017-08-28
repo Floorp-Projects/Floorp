@@ -19,3 +19,5 @@ fuzzy-if(OSX==1010,1,10) == table-parts-01.html table-parts-01-ref.html
 == before-style-sharing.html before-style-sharing-ref.html
 == transitive-style-invalidation.html transitive-style-invalidation-ref.html
 == dynamic-content.html dynamic-content-ref.html
+== generated-content-inherit-001.html generated-content-inherit-001-ref.html
+== dynamic-generated-content-inherit-001.html generated-content-inherit-001-ref.html

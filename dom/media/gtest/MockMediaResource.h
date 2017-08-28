@@ -16,10 +16,6 @@ class MockMediaResource : public MediaResource
 {
 public:
   explicit MockMediaResource(const char* aFileName);
-  already_AddRefed<nsIPrincipal> GetCurrentPrincipal() override
-  {
-    return nullptr;
-  }
   nsresult ReadAt(int64_t aOffset, char* aBuffer, uint32_t aCount,
                   uint32_t* aBytes) override;
   // Data stored in file, caching recommended.

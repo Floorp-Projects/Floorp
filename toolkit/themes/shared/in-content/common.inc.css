@@ -31,10 +31,10 @@
   --in-content-category-background-selected-hover: rgba(12,12,13,0.15);
   --in-content-category-background-selected-active: rgba(12,12,13,0.2);
   --in-content-tab-color: #424f5a;
-  --in-content-link-color: #0a84ff;
+  --in-content-link-color: #0a8dff;
   --in-content-link-color-hover: #0060df;
-  --in-content-link-color-active: #ff9500;
-  --in-content-link-color-visited: #551a8b;
+  --in-content-link-color-active: #003eaa;
+  --in-content-link-color-visited: #0a8dff;
   --in-content-primary-button-background: #0a84ff;
   --in-content-primary-button-background-hover: #0060df;
   --in-content-primary-button-background-active: #003EAA;

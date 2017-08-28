@@ -9,12 +9,6 @@
     <!-- private browsing mode -->
     <item android:color="@color/photon_text_selected_highlight_private" gecko:state_private="true" />
 
-    <!-- dark theme -->
-    <item android:color="@color/photon_text_selected_highlight_private" gecko:state_dark="true" />
-
-    <!-- light theme -->
-    <item android:color="@color/photon_text_selected_highlight" gecko:state_light="true" />
-
     <!-- normal mode -->
     <item android:color="@color/photon_text_selected_highlight" />
 

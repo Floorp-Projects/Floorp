@@ -37,6 +37,7 @@
         android:minWidth="64dp"
         android:nextFocusRight="@+id/suggestions_prompt_yes"
         android:text="@string/button_no"
+        android:textAllCaps="true"
         android:textColor="@android:color/white"
         android:textSize="14sp"
         android:textStyle="bold"/>
@@ -50,6 +51,7 @@
         android:gravity="center"
         android:minWidth="64dp"
         android:text="@string/button_yes"
+        android:textAllCaps="true"
         android:textColor="@android:color/white"
         android:textSize="14sp"
         android:textStyle="bold"/>

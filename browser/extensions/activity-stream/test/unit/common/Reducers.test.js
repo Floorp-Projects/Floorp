@@ -210,7 +210,8 @@ describe("Reducers", () => {
         id: `foo_bar_${i}`,
         title: `Foo Bar ${i}`,
         initialized: false,
-        rows: [{url: "www.foo.bar"}, {url: "www.other.url"}]
+        rows: [{url: "www.foo.bar"}, {url: "www.other.url"}],
+        order: i
       }));
     });
 
@@ -230,6 +231,29 @@ describe("Reducers", () => {
       const insertedSection = newState.find(section => section.id === "foo_bar_5");
       assert.propertyVal(insertedSection, "title", action.data.title);
     });
+    it("should ensure sections are sorted by property `order` (increasing) on SECTION_REGISTER", () => {
+      let newState = [];
+      const state = Object.assign([], oldState);
+      state.forEach(section => {
+        Object.assign(section, {order: 5 - section.order});
+        const action = {type: at.SECTION_REGISTER, data: section};
+        newState = Sections(newState, action);
+      });
+      // Should have been inserted into newState in reverse order
+      assert.deepEqual(newState.map(section => section.id), state.map(section => section.id).reverse());
+      const newSection = {id: "new_section", order: 2.5};
+      const action = {type: at.SECTION_REGISTER, data: newSection};
+      newState = Sections(newState, action);
+      // Should have been inserted at index 2, between second and third section
+      assert.equal(newState[2].id, newSection.id);
+    });
+    it("should insert sections without an `order` at the top on SECTION_REGISTER", () => {
+      const newSection = {id: "new_section"};
+      const action = {type: at.SECTION_REGISTER, data: newSection};
+      const newState = Sections(oldState, action);
+      assert.equal(newState[0].id, newSection.id);
+      assert.ok(newState[0].order < newState[1].order);
+    });
     it("should set newSection.rows === [] if no rows are provided on SECTION_REGISTER", () => {
       const action = {type: at.SECTION_REGISTER, data: {id: "foo_bar_5", title: "Foo Bar 5"}};
       const newState = Sections(oldState, action);
@@ -244,17 +268,17 @@ describe("Reducers", () => {
       const updatedSection = newState.find(section => section.id === "foo_bar_2");
       assert.ok(updatedSection && updatedSection.title === NEW_TITLE);
     });
-    it("should have no effect on SECTION_ROWS_UPDATE if the id doesn't exist", () => {
-      const action = {type: at.SECTION_ROWS_UPDATE, data: {id: "fake_id", data: "fake_data"}};
+    it("should have no effect on SECTION_UPDATE if the id doesn't exist", () => {
+      const action = {type: at.SECTION_UPDATE, data: {id: "fake_id", data: "fake_data"}};
       const newState = Sections(oldState, action);
       assert.deepEqual(oldState, newState);
     });
-    it("should update the section rows with the correct data on SECTION_ROWS_UPDATE", () => {
-      const FAKE_DATA = ["some", "fake", "data"];
-      const action = {type: at.SECTION_ROWS_UPDATE, data: {id: "foo_bar_2", rows: FAKE_DATA}};
+    it("should update the section with the correct data on SECTION_UPDATE", () => {
+      const FAKE_DATA = {rows: ["some", "fake", "data"], foo: "bar"};
+      const action = {type: at.SECTION_UPDATE, data: Object.assign(FAKE_DATA, {id: "foo_bar_2"})};
       const newState = Sections(oldState, action);
       const updatedSection = newState.find(section => section.id === "foo_bar_2");
-      assert.equal(updatedSection.rows, FAKE_DATA);
+      assert.include(updatedSection, FAKE_DATA);
     });
     it("should remove blocked and deleted urls from all rows in all sections", () => {
       const blockAction = {type: at.PLACES_LINK_BLOCKED, data: {url: "www.foo.bar"}};

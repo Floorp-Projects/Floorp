@@ -31,7 +31,7 @@ public class TabCounter extends ThemedRelativeLayout {
     public static final int MAX_VISIBLE_TABS = 99;
     public static final String SO_MANY_TABS_OPEN = "∞";
 
-    private static final float ONE_DIGIT_SIZE_RATIO = 0.7f;
+    private static final float ONE_DIGIT_SIZE_RATIO = 0.6f;
     private static final float TWO_DIGITS_SIZE_RATIO = 0.5f;
 
     public TabCounter(Context context) {
@@ -160,7 +160,7 @@ public class TabCounter extends ThemedRelativeLayout {
     }
 
     void setCountWithAnimation(final int count) {
-        // Don't animate from initial state
+        // Don't animate from initial state.
         if (this.count == 0) {
             setCount(count);
             return;
@@ -170,7 +170,7 @@ public class TabCounter extends ThemedRelativeLayout {
             return;
         }
 
-        // don't animate if there are still over MAX_VISIBLE_TABS tabs open
+        // Don't animate if there are still over MAX_VISIBLE_TABS tabs open.
         if (this.count > MAX_VISIBLE_TABS && count > MAX_VISIBLE_TABS) {
             this.count = count;
             return;
@@ -181,7 +181,11 @@ public class TabCounter extends ThemedRelativeLayout {
         text.setText(formatForDisplay(count));
         this.count = count;
 
-        // Trigger animation
+        // Cancel previous animations if necessary.
+        if (animationSet.isRunning()) {
+            animationSet.cancel();
+        }
+        // Trigger animations.
         animationSet.start();
     }
 

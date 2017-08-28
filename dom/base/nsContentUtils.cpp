@@ -5412,52 +5412,6 @@ nsContentUtils::IsInSameAnonymousTree(const nsINode* aNode,
   return nodeAsContent->GetBindingParent() == aContent->GetBindingParent();
 }
 
-class AnonymousContentDestroyer : public Runnable {
-public:
-  explicit AnonymousContentDestroyer(nsCOMPtr<nsIContent>* aContent)
-    : mozilla::Runnable("AnonymousContentDestroyer")
-  {
-    mContent.swap(*aContent);
-    mParent = mContent->GetParent();
-    mDoc = mContent->OwnerDoc();
-  }
-  explicit AnonymousContentDestroyer(nsCOMPtr<Element>* aElement)
-    : mozilla::Runnable("AnonymousContentDestroyer")
-  {
-    mContent = aElement->forget();
-    mParent = mContent->GetParent();
-    mDoc = mContent->OwnerDoc();
-  }
-  NS_IMETHOD Run() override {
-    mContent->UnbindFromTree();
-    return NS_OK;
-  }
-private:
-  nsCOMPtr<nsIContent> mContent;
-  // Hold strong refs to the parent content and document so that they
-  // don't die unexpectedly
-  nsCOMPtr<nsIDocument> mDoc;
-  nsCOMPtr<nsIContent> mParent;
-};
-
-/* static */
-void
-nsContentUtils::DestroyAnonymousContent(nsCOMPtr<nsIContent>* aContent)
-{
-  if (*aContent) {
-    AddScriptRunner(new AnonymousContentDestroyer(aContent));
-  }
-}
-
-/* static */
-void
-nsContentUtils::DestroyAnonymousContent(nsCOMPtr<Element>* aElement)
-{
-  if (*aElement) {
-    AddScriptRunner(new AnonymousContentDestroyer(aElement));
-  }
-}
-
 /* static */
 void
 nsContentUtils::NotifyInstalledMenuKeyboardListener(bool aInstalling)
