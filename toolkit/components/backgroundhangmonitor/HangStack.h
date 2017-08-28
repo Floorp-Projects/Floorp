@@ -44,6 +44,10 @@ public:
   // * Kind::STRING(const char*) : A string representing a pseudostack or chrome JS stack frame.
   // * Kind::MODOFFSET(ModOffset) : A module index and offset into that module.
   // * Kind::PC(uintptr_t) : A raw program counter which has not been mapped to a module.
+  // * Kind::CONTENT: A hidden "(content script)" frame.
+  // * Kind::JIT : An unprocessed  "(jit frame)".
+  // * Kind::WASM : An unprocessed "(wasm)" frame.
+  // * Kind::SUPPRESSED : A JS frame while profiling was suppressed.
   //
   // NOTE: A manually rolled tagged enum is used instead of mozilla::Variant
   // here because we cannot use mozilla::Variant's IPC serialization directly.
@@ -57,6 +61,10 @@ public:
       STRING,
       MODOFFSET,
       PC,
+      CONTENT,
+      JIT,
+      WASM,
+      SUPPRESSED,
       END // Marker
     };
 
@@ -104,7 +112,32 @@ public:
       return mPC;
     }
 
+    // Public constant frames copies of each of the data-less frames.
+    static Frame Content() {
+      return Frame(Kind::CONTENT);
+    }
+    static Frame Jit() {
+      return Frame(Kind::JIT);
+    }
+    static Frame Wasm() {
+      return Frame(Kind::WASM);
+    }
+    static Frame Suppressed() {
+      return Frame(Kind::SUPPRESSED);
+    }
+
   private:
+    explicit Frame(Kind aKind)
+      : mKind(aKind)
+    {
+      MOZ_ASSERT(aKind == Kind::CONTENT ||
+                 aKind == Kind::JIT ||
+                 aKind == Kind::WASM ||
+                 aKind == Kind::SUPPRESSED,
+                 "Kind must only be one of CONTENT, JIT, WASM or SUPPRESSED "
+                 "for the data-free constructor.");
+    }
+
     Kind mKind;
     union {
       const char* mString;
