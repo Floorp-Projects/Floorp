@@ -262,7 +262,6 @@ private:
   bool ProcessPostTraversal(Element* aElement,
                             ServoStyleContext* aParentContext,
                             ServoRestyleState& aRestyleState,
-                            ServoTraversalFlags aFlags,
                             bool aParentWasRestyled);
 
   struct TextPostTraversalState;
