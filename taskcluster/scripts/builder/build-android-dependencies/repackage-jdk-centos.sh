@@ -2,7 +2,7 @@
 
 set -e -x
 
-: WORKSPACE ${WORKSPACE:=/home/worker/workspace}
+: WORKSPACE ${WORKSPACE:=/builds/worker/workspace}
 
 set -v
 

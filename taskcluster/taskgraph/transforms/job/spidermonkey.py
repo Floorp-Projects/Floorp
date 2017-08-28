@@ -40,7 +40,7 @@ def docker_worker_spidermonkey(config, job, taskdesc):
         'type': 'persistent',
         'name': 'level-{}-{}-build-spidermonkey-workspace'.format(
             config.params['level'], config.params['project']),
-        'mount-point': "/home/worker/workspace",
+        'mount-point': "/builds/worker/workspace",
         'skip-untrusted': True,
     })
 
@@ -64,12 +64,12 @@ def docker_worker_spidermonkey(config, job, taskdesc):
         script = "build-sm-mozjs-crate.sh"
 
     worker['command'] = [
-        '/home/worker/bin/run-task',
-        '--vcs-checkout', '/home/worker/workspace/build/src',
+        '/builds/worker/bin/run-task',
+        '--vcs-checkout', '/builds/worker/workspace/build/src',
         '--',
         '/bin/bash',
         '-c',
-        'cd /home/worker && workspace/build/src/taskcluster/scripts/builder/%s' % script
+        'cd /builds/worker && workspace/build/src/taskcluster/scripts/builder/%s' % script
     ]
 
 
