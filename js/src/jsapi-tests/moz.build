@@ -12,6 +12,7 @@ UNIFIED_SOURCES += [
     'testArgumentsObject.cpp',
     'testArrayBuffer.cpp',
     'testArrayBufferView.cpp',
+    'testAtomicOperations.cpp',
     'testBoundFunction.cpp',
     'testBug604087.cpp',
     'testCallArgs.cpp',
@@ -109,6 +110,11 @@ UNIFIED_SOURCES += [
 SOURCES += [
     # There are clashing definitions of js::jit::AssemblerBuffer.
     'testAssemblerBuffer.cpp',
+]
+
+SOURCES += [
+    # We don't want this in the C++ files with the test cases.
+    'hidePointer.cpp',
 ]
 
 if CONFIG['ENABLE_ION']:
