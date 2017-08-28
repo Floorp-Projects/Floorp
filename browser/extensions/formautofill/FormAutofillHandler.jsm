@@ -563,9 +563,8 @@ FormAutofillHandler.prototype = {
       delete data.address;
     }
 
-    if (data.creditCard && (!data.creditCard.record["cc-number"] ||
-        !FormAutofillUtils.isCCNumber(data.creditCard.record["cc-number"]))) {
-      log.debug("No credit card record saving since card number is invalid");
+    if (data.creditCard && !data.creditCard.record["cc-number"]) {
+      log.debug("No credit card record saving since card number is empty");
       delete data.creditCard;
     }
 
