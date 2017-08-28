@@ -31,6 +31,8 @@ const kDebuggerPrefs = [
 // startup.
 const TOOLBAR_VISIBLE_PREF = "devtools.toolbar.visible";
 
+const DEVTOOLS_ENABLED_PREF = "devtools.enabled";
+
 const { XPCOMUtils } = Cu.import("resource://gre/modules/XPCOMUtils.jsm", {});
 XPCOMUtils.defineLazyModuleGetter(this, "Services",
                                   "resource://gre/modules/Services.jsm");
@@ -188,6 +190,9 @@ DevToolsStartup.prototype = {
     let debuggerFlag = cmdLine.handleFlag("jsdebugger", false);
     let devtoolsFlag = cmdLine.handleFlag("devtools", false);
 
+    let hasDevToolsFlag = consoleFlag || devtoolsFlag || debuggerFlag;
+    this.setupEnabledPref(hasDevToolsFlag);
+
     if (consoleFlag) {
       this.handleConsoleFlag(cmdLine);
     }
@@ -341,6 +346,25 @@ DevToolsStartup.prototype = {
     }, { once: true });
   },
 
+  /**
+   * Depending on some runtime parameters (command line arguments as well as existing
+   * preferences), the DEVTOOLS_ENABLED_PREF might be forced to true.
+   *
+   * @param {Boolean} hasDevToolsFlag
+   *        true if any DevTools command line argument was passed when starting Firefox.
+   */
+  setupEnabledPref(hasDevToolsFlag) {
+    if (Services.prefs.getBoolPref(DEVTOOLS_ENABLED_PREF)) {
+      // Nothing to do if DevTools are already enabled.
+      return;
+    }
+
+    let hasToolbarPref = Services.prefs.getBoolPref(TOOLBAR_VISIBLE_PREF, false);
+    if (hasDevToolsFlag || hasToolbarPref) {
+      Services.prefs.setBoolPref(DEVTOOLS_ENABLED_PREF, true);
+    }
+  },
+
   hookKeyShortcuts(window) {
     let doc = window.document;
     let keyset = doc.createElement("keyset");
@@ -360,8 +384,11 @@ DevToolsStartup.prototype = {
 
   onKey(window, key) {
     let require = this.initDevTools("KeyShortcut");
-    let { gDevToolsBrowser } = require("devtools/client/framework/devtools-browser");
-    gDevToolsBrowser.onKeyShortcut(window, key);
+    if (require) {
+      // require might be null if initDevTools was called while DevTools are disabled.
+      let { gDevToolsBrowser } = require("devtools/client/framework/devtools-browser");
+      gDevToolsBrowser.onKeyShortcut(window, key);
+    }
   },
 
   // Create a <xul:key> DOM Element
@@ -387,6 +414,12 @@ DevToolsStartup.prototype = {
   },
 
   initDevTools: function (reason) {
+    // If an entry point is fired and tools are not enabled open the installation page
+    if (!Services.prefs.getBoolPref(DEVTOOLS_ENABLED_PREF)) {
+      this.openInstallPage(reason);
+      return null;
+    }
+
     if (reason && !this.recorded) {
       // Only save the first call for each firefox run as next call
       // won't necessarely start the tool. For example key shortcuts may
@@ -399,9 +432,7 @@ DevToolsStartup.prototype = {
       }
       this.recorded = true;
     }
-    if (!this.initialized) {
-      Services.prefs.setBoolPref("devtools.enabled", true);
-    }
+
     this.initialized = true;
     let { require } = Cu.import("resource://devtools/shared/Loader.jsm", {});
     // Ensure loading main devtools module that hooks up into browser UI
@@ -410,12 +441,19 @@ DevToolsStartup.prototype = {
     return require;
   },
 
+  openInstallPage: function (reason) {
+    let { gBrowser } = Services.wm.getMostRecentWindow("navigator:browser");
+    let url = "about:devtools";
+    if (reason) {
+      url += "?reason=" + encodeURIComponent(reason);
+    }
+    gBrowser.selectedTab = gBrowser.addTab(url);
+  },
+
   handleConsoleFlag: function (cmdLine) {
     let window = Services.wm.getMostRecentWindow("devtools:webconsole");
     if (!window) {
-      this.initDevTools("CommandLine");
-
-      let { require } = Cu.import("resource://devtools/shared/Loader.jsm", {});
+      let require = this.initDevTools("CommandLine");
       let { HUDService } = require("devtools/client/webconsole/hudservice");
       let { console } = Cu.import("resource://gre/modules/Console.jsm", {});
       HUDService.toggleBrowserConsole().catch(console.error);
