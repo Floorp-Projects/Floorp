@@ -650,7 +650,6 @@ ServoRestyleManager::ProcessPostTraversal(
   Element* aElement,
   ServoStyleContext* aParentContext,
   ServoRestyleState& aRestyleState,
-  ServoTraversalFlags aFlags,
   bool aParentWasRestyled)
 {
   nsIFrame* styleFrame = nsLayoutUtils::GetStyleFrame(aElement);
@@ -829,7 +828,6 @@ ServoRestyleManager::ProcessPostTraversal(
         recreatedAnyContext |= ProcessPostTraversal(n->AsElement(),
                                                     upToDateContext,
                                                     childrenRestyleState,
-                                                    aFlags,
                                                     wasRestyled);
       } else if (traverseTextChildren && n->IsNodeOfType(nsINode::eTEXT)) {
         recreatedAnyContext |= ProcessPostTraversalForText(n, textState,
@@ -1027,7 +1025,7 @@ ServoRestyleManager::DoProcessPendingRestyles(ServoTraversalFlags aFlags)
         nsTArray<nsIFrame*> wrappersToRestyle;
         ServoRestyleState state(*styleSet, currentChanges, wrappersToRestyle);
         anyStyleChanged |=
-          ProcessPostTraversal(root, nullptr, state, aFlags,
+          ProcessPostTraversal(root, nullptr, state,
                                /* aParentWasRestyled = */ false);
       }
     }
