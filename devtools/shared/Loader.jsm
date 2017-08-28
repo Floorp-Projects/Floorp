@@ -69,12 +69,10 @@ BuiltinProvider.prototype = {
       paths.promise = "resource://gre/modules/Promise-backend.js";
     }
     this.loader = new Loader({
-      id: "fx-devtools",
       paths,
       invisibleToDebugger: this.invisibleToDebugger,
       sharedGlobal: true,
       sandboxName: "DevTools (Module loader)",
-      noSandboxAddonId: true,
       requireHook: (id, require) => {
         if (id.startsWith("raw!")) {
           return requireRawId(id, require);
