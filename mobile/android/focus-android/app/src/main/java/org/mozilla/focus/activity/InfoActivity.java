@@ -27,6 +27,8 @@ import org.mozilla.focus.web.WebViewProvider;
  * for showing any web based content, including About/Help/Rights, and also SUMO pages.
  */
 public class InfoActivity extends AppCompatActivity {
+    private static final String PRIVACY_NOTICE_URL = "https://www.mozilla.org/privacy/firefox-focus/";
+
     private static final String EXTRA_URL = "extra_url";
     private static final String EXTRA_TITLE = "extra_title";
 
@@ -55,6 +57,11 @@ public class InfoActivity extends AppCompatActivity {
     public static final Intent getHelpIntent(final Context context) {
         final Resources resources = Locales.getLocalizedResources(context);
         return getIntentFor(context, SupportUtils.HELP_URL, resources.getString(R.string.menu_help));
+    }
+
+    public static final Intent getPrivacyNoticeIntent(final Context context) {
+        final Resources resources = Locales.getLocalizedResources(context);
+        return getIntentFor(context, PRIVACY_NOTICE_URL, resources.getString(R.string.preference_privacy_notice));
     }
 
     public static final Intent getTrackerHelpIntent(final Context context) {
