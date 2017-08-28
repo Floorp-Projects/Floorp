@@ -4,8 +4,8 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-#ifndef mozilla_mscom_InterfaceRegistrationAnnotator_h
-#define mozilla_mscom_InterfaceRegistrationAnnotator_h
+#ifndef mozilla_mscom_RegistrationAnnotator_h
+#define mozilla_mscom_RegistrationAnnotator_h
 
 #if !defined(MOZ_CRASHREPORTER)
 #error "This header requires crash reporting to be enabled"
@@ -15,8 +15,9 @@ namespace mozilla {
 namespace mscom {
 
 void AnnotateInterfaceRegistration(REFIID aIid);
+void AnnotateClassRegistration(REFCLSID aClsid);
 
 } // namespace mscom
 } // namespace mozilla
 
-#endif // mozilla_mscom_InterfaceRegistrationAnnotator_h
+#endif // mozilla_mscom_RegistrationAnnotator_h
