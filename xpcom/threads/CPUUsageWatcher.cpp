@@ -9,17 +9,14 @@
 #include "prsystem.h"
 
 #ifdef XP_MACOSX
+#include <sys/resource.h>
+#include <mach/clock.h>
 #include <mach/mach_host.h>
 #endif
 
-// We only support OSX and Windows, because on Linux we're forced to read
-// from /proc/stat in order to get global CPU values. We would prefer to not
-// eat that cost for this.
-#if defined(NIGHTLY_BUILD) && (defined(XP_WIN) || defined(XP_MACOSX))
-#define CPU_USAGE_WATCHER_ACTIVE
-#endif
-
 namespace mozilla {
+
+#ifdef CPU_USAGE_WATCHER_ACTIVE
 
 // Even if the machine only has one processor, tolerate up to 50%
 // external CPU usage.
@@ -37,26 +34,44 @@ struct CPUStats {
 
 #ifdef XP_MACOSX
 
-static const uint64_t kNanosecondsPerSecond = 1000000000LL;
-static const uint64_t kCPUCheckInterval = kNanosecondsPerSecond / 2LL;
+static const uint64_t kMicrosecondsPerSecond = 1000000LL;
+static const uint64_t kNanosecondsPerMicrosecond = 1000LL;
+static const uint64_t kCPUCheckInterval = kMicrosecondsPerSecond / 2LL;
 
-Result<uint64_t, CPUUsageWatcherError>
-GetClockTime(clockid_t clockId) {
-  timespec clockResult;
-  bool success = !clock_gettime(clockId, &clockResult);
-  if (!success) {
-    return Err(ClockGetTimeError);
-  }
-  return ((uint64_t)clockResult.tv_sec) * kNanosecondsPerSecond +
-         (uint64_t)clockResult.tv_nsec;
+uint64_t GetMicroseconds(timeval time) {
+    return ((uint64_t)time.tv_sec) * kMicrosecondsPerSecond +
+           (uint64_t)time.tv_usec;
+}
+
+uint64_t GetMicroseconds(mach_timespec_t time) {
+    return ((uint64_t)time.tv_sec) * kMicrosecondsPerSecond +
+           ((uint64_t)time.tv_nsec) / kNanosecondsPerMicrosecond;
 }
 
 Result<CPUStats, CPUUsageWatcherError>
 GetProcessCPUStats(int32_t numCPUs) {
   CPUStats result = {};
-  MOZ_TRY_VAR(result.usageTime, GetClockTime(CLOCK_PROCESS_CPUTIME_ID));
-  MOZ_TRY_VAR(result.updateTime, GetClockTime(CLOCK_MONOTONIC));
-  // CLOCK_PROCESS_CPUTIME_ID will give us the sum of the values across all
+  rusage usage;
+  int32_t rusageResult = getrusage(RUSAGE_SELF, &usage);
+  if (rusageResult == -1) {
+    return Err(GetProcessTimesError);
+  }
+  result.usageTime = GetMicroseconds(usage.ru_utime) + GetMicroseconds(usage.ru_stime);
+
+  clock_serv_t realtimeClock;
+  kern_return_t errorResult =
+      host_get_clock_service(mach_host_self(), REALTIME_CLOCK, &realtimeClock);
+  if (errorResult != KERN_SUCCESS) {
+    return Err(GetProcessTimesError);
+  }
+  mach_timespec_t time;
+  errorResult = clock_get_time(realtimeClock, &time);
+  if (errorResult != KERN_SUCCESS) {
+    return Err(GetProcessTimesError);
+  }
+  result.updateTime = GetMicroseconds(time);
+
+  // getrusage will give us the sum of the values across all
   // of our cores. Divide by the number of CPUs to get an average.
   result.usageTime /= numCPUs;
   return result;
@@ -157,8 +172,6 @@ CPUUsageWatcher::Init()
   mExternalUsageThreshold = std::max(1.0f - 1.0f / (float)mNumCPUs,
                                      kTolerableExternalCPUUsageFloor);
 
-#ifdef CPU_USAGE_WATCHER_ACTIVE
-
   CPUStats processTimes;
   MOZ_TRY_VAR(processTimes, GetProcessCPUStats(mNumCPUs));
   mProcessUpdateTime = processTimes.updateTime;
@@ -176,18 +189,16 @@ CPUUsageWatcher::Init()
     NS_NewRunnableFunction("CPUUsageWatcher::Init",
                            [=]() { HangMonitor::RegisterAnnotator(*self); }));
 
-#endif // CPU_USAGE_WATCHER_ACTIVE
   return Ok();
 }
 
 void
 CPUUsageWatcher::Uninit()
 {
+  if (mInitialized) {
+    HangMonitor::UnregisterAnnotator(*this);
+  }
   mInitialized = false;
-
-#ifdef CPU_USAGE_WATCHER_ACTIVE
-  HangMonitor::UnregisterAnnotator(*this);
-#endif // CPU_USAGE_WATCHER_ACTIVE
 }
 
 Result<Ok, CPUUsageWatcherError>
@@ -197,7 +208,6 @@ CPUUsageWatcher::CollectCPUUsage()
     return Ok();
   }
 
-#ifdef CPU_USAGE_WATCHER_ACTIVE
   mExternalUsageRatio = 0.0f;
 
   CPUStats processTimes;
@@ -224,7 +234,6 @@ CPUUsageWatcher::CollectCPUUsage()
 
   mExternalUsageRatio = std::max(0.0f,
                                  globalUsageNormalized - processUsageNormalized);
-#endif // CPU_USAGE_WATCHER_ACTIVE
 
   return Ok();
 }
@@ -239,5 +248,25 @@ CPUUsageWatcher::AnnotateHang(HangMonitor::HangAnnotations& aAnnotations) {
     aAnnotations.AddAnnotation(NS_LITERAL_STRING("ExternalCPUHigh"), true);
   }
 }
+
+#else // !CPU_USAGE_WATCHER_ACTIVE
+
+Result<Ok, CPUUsageWatcherError>
+CPUUsageWatcher::Init()
+{
+  return Ok();
+}
+
+void CPUUsageWatcher::Uninit() {}
+
+Result<Ok, CPUUsageWatcherError>
+CPUUsageWatcher::CollectCPUUsage()
+{
+  return Ok();
+}
+
+void CPUUsageWatcher::AnnotateHang(HangMonitor::HangAnnotations& aAnnotations) {}
+
+#endif // CPU_USAGE_WATCHER_ACTIVE
 
 } // namespace mozilla

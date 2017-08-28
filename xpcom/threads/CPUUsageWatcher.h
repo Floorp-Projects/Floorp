@@ -11,6 +11,13 @@
 
 #include "mozilla/HangAnnotations.h"
 
+// We only support OSX and Windows, because on Linux we're forced to read
+// from /proc/stat in order to get global CPU values. We would prefer to not
+// eat that cost for this.
+#if defined(NIGHTLY_BUILD) && (defined(XP_WIN) || defined(XP_MACOSX))
+#define CPU_USAGE_WATCHER_ACTIVE
+#endif
+
 namespace mozilla {
 
 enum CPUUsageWatcherError : uint8_t
@@ -33,6 +40,7 @@ class CPUUsageWatcher
   : public HangMonitor::Annotator
 {
 public:
+#ifdef CPU_USAGE_WATCHER_ACTIVE
   CPUUsageWatcher()
     : mInitialized(false)
     , mExternalUsageThreshold(0)
@@ -42,6 +50,7 @@ public:
     , mGlobalUsageTime(0)
     , mGlobalUpdateTime(0)
   {}
+#endif
 
   Result<Ok, CPUUsageWatcherError> Init();
 
@@ -54,6 +63,7 @@ public:
 
   void AnnotateHang(HangMonitor::HangAnnotations& aAnnotations) final;
 private:
+#ifdef CPU_USAGE_WATCHER_ACTIVE
   bool mInitialized;
   // The threshold above which we will mark a hang as occurring under high
   // external CPU usage conditions
@@ -75,6 +85,7 @@ private:
   uint64_t mGlobalUpdateTime;
   // The number of virtual cores on our machine
   uint64_t mNumCPUs;
+#endif
 };
 
 } // namespace mozilla
