@@ -7279,7 +7279,9 @@ nsLayoutUtils::SurfaceFromOffscreenCanvas(OffscreenCanvas* aOffscreenCanvas,
     // If the element doesn't have a context then we won't get a snapshot. The canvas spec wants us to not error and just
     // draw nothing, so return an empty surface.
     result.mAlphaType = gfxAlphaType::Opaque;
-    DrawTarget *ref = aTarget ? aTarget.get() : gfxPlatform::GetPlatform()->ScreenReferenceDrawTarget();
+    RefPtr<DrawTarget> ref =
+      aTarget ? aTarget
+              : gfxPlatform::GetPlatform()->ScreenReferenceDrawTarget();
     RefPtr<DrawTarget> dt = ref->CreateSimilarDrawTarget(IntSize(size.width, size.height),
                                                          SurfaceFormat::B8G8R8A8);
     if (dt) {
@@ -7447,7 +7449,9 @@ nsLayoutUtils::SurfaceFromElement(HTMLCanvasElement* aElement,
     // If the element doesn't have a context then we won't get a snapshot. The canvas spec wants us to not error and just
     // draw nothing, so return an empty surface.
     result.mAlphaType = gfxAlphaType::Opaque;
-    DrawTarget *ref = aTarget ? aTarget.get() : gfxPlatform::GetPlatform()->ScreenReferenceDrawTarget();
+    RefPtr<DrawTarget> ref =
+      aTarget ? aTarget
+              : gfxPlatform::GetPlatform()->ScreenReferenceDrawTarget();
     RefPtr<DrawTarget> dt = ref->CreateSimilarDrawTarget(IntSize(size.width, size.height),
                                                         SurfaceFormat::B8G8R8A8);
     if (dt) {
