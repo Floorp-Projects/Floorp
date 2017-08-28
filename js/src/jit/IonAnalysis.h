@@ -39,9 +39,6 @@ enum Observability {
 };
 
 MOZ_MUST_USE bool
-FlagUnusedPhis(MIRGenerator* mir, MIRGraph& graph, Observability observe);
-
-MOZ_MUST_USE bool
 EliminatePhis(MIRGenerator* mir, MIRGraph& graph, Observability observe);
 
 size_t
