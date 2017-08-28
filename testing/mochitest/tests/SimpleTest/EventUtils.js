@@ -17,6 +17,9 @@
  *  synthesizeMouseExpectEvent
  *  synthesizeKeyExpectEvent
  *  synthesizeNativeOSXClick
+ *  synthesizeDragOver
+ *  synthesizeDropAfterDragOver
+ *  synthesizeDrop
  *
  *  When adding methods to this file, please add a performance test for it.
  */
@@ -142,6 +145,11 @@ function sendMouseEvent(aEvent, aTarget, aWindow) {
   return SpecialPowers.dispatchEvent(aWindow, aTarget, event);
 }
 
+function isHidden(aElement) {
+  var box = aElement.getBoundingClientRect();
+  return box.width == 0 && box.height == 0;
+}
+
 /**
  * Send a drag event to the node aTarget (aTarget can be an id, or an
  * actual node) . The "event" passed in to aEvent is just a JavaScript
@@ -155,6 +163,18 @@ function sendDragEvent(aEvent, aTarget, aWindow = window) {
 
   if (typeof aTarget == "string") {
     aTarget = aWindow.document.getElementById(aTarget);
+  }
+
+  /*
+   * Drag event cannot be performed if the element is hidden, except 'dragend'
+   * event where the element can becomes hidden after start dragging.
+   */
+  if (aEvent.type != 'dragend' && isHidden(aTarget)) {
+    var targetName = aTarget.nodeName;
+    if ("id" in aTarget && aTarget.id) {
+      targetName += "#" + aTarget.id;
+    }
+    throw new Error(`${aEvent.type} event target ${targetName} is hidden`);
   }
 
   var event = aWindow.document.createEvent('DragEvent');

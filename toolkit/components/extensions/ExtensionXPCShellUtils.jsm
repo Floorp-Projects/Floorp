@@ -23,6 +23,8 @@ XPCOMUtils.defineLazyModuleGetter(this, "Schemas",
                                   "resource://gre/modules/Schemas.jsm");
 XPCOMUtils.defineLazyModuleGetter(this, "Services",
                                   "resource://gre/modules/Services.jsm");
+XPCOMUtils.defineLazyModuleGetter(this, "TestUtils",
+                                  "resource://testing-common/TestUtils.jsm");
 
 XPCOMUtils.defineLazyGetter(this, "Management", () => {
   const {Management} = Cu.import("resource://gre/modules/Extension.jsm", {});
@@ -141,10 +143,15 @@ class ContentPage {
   async close() {
     await this.browserReady;
 
+    let {messageManager} = this.browser;
+
     this.browser = null;
 
     this.windowlessBrowser.close();
     this.windowlessBrowser = null;
+
+    await TestUtils.topicObserved("message-manager-disconnect",
+                                  subject => subject === messageManager);
   }
 }
 
