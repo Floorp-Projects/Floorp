@@ -699,7 +699,6 @@ class TypedArrayObjectTemplate : public TypedArrayObject
     create(JSContext* cx, const CallArgs& args)
     {
         MOZ_ASSERT(args.isConstructing());
-        RootedObject newTarget(cx, &args.newTarget().toObject());
 
         // 22.2.4.1 TypedArray ( )
         // 22.2.4.2 TypedArray ( length )
@@ -1299,7 +1298,7 @@ TypedArrayObjectTemplate<T>::fromObject(JSContext* cx, HandleObject other, Handl
     // Fast path when iterable is a packed array using the default iterator.
     if (optimized) {
         // Step 6.a (We don't need to call IterableToList for the fast path).
-        RootedArrayObject array(cx, &other->as<ArrayObject>());
+        HandleArrayObject array = other.as<ArrayObject>();
 
         // Step 6.b.
         uint32_t len = array->getDenseInitializedLength();
