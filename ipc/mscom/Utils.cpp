@@ -242,31 +242,6 @@ GUIDToString(REFGUID aGuid, nsAString& aOutString)
   }
 }
 
-bool
-IsCallerExternalProcess()
-{
-  MOZ_ASSERT(XRE_IsContentProcess());
-
-  /**
-   * CoGetCallerTID() gives us the caller's thread ID when that thread resides
-   * in a single-threaded apartment. Since our chrome main thread does live
-   * inside an STA, we will therefore be able to check whether the caller TID
-   * equals our chrome main thread TID. This enables us to distinguish
-   * between our chrome thread vs other out-of-process callers. We check for
-   * S_FALSE to ensure that the caller is a different process from ours, which
-   * is the only scenario that we care about.
-   */
-  DWORD callerTid;
-  if (::CoGetCallerTID(&callerTid) != S_FALSE) {
-    return false;
-  }
-
-  // Now check whether the caller is our parent process main thread.
-  const DWORD parentMainTid =
-    dom::ContentChild::GetSingleton()->GetChromeMainThreadId();
-  return callerTid != parentMainTid;
-}
-
 #endif // defined(MOZILLA_INTERNAL_API)
 
 #if defined(ACCESSIBILITY)
@@ -316,6 +291,31 @@ IsVtableIndexFromParentInterface(REFIID aInterface, unsigned long aVtableIndex)
 }
 
 #if defined(MOZILLA_INTERNAL_API)
+
+bool
+IsCallerExternalProcess()
+{
+  MOZ_ASSERT(XRE_IsContentProcess());
+
+  /**
+   * CoGetCallerTID() gives us the caller's thread ID when that thread resides
+   * in a single-threaded apartment. Since our chrome main thread does live
+   * inside an STA, we will therefore be able to check whether the caller TID
+   * equals our chrome main thread TID. This enables us to distinguish
+   * between our chrome thread vs other out-of-process callers. We check for
+   * S_FALSE to ensure that the caller is a different process from ours, which
+   * is the only scenario that we care about.
+   */
+  DWORD callerTid;
+  if (::CoGetCallerTID(&callerTid) != S_FALSE) {
+    return false;
+  }
+
+  // Now check whether the caller is our parent process main thread.
+  const DWORD parentMainTid =
+    dom::ContentChild::GetSingleton()->GetChromeMainThreadId();
+  return callerTid != parentMainTid;
+}
 
 bool
 IsInterfaceEqualToOrInheritedFrom(REFIID aInterface, REFIID aFrom,

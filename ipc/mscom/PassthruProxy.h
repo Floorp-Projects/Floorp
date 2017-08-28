@@ -8,6 +8,7 @@
 #define mozilla_mscom_PassthruProxy_h
 
 #include "mozilla/Atomics.h"
+#include "mozilla/mscom/Ptr.h"
 #include "mozilla/NotNull.h"
 
 #include <objbase.h>
