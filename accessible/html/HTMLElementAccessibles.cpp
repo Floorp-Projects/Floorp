@@ -202,3 +202,59 @@ HTMLSummaryAccessible::IsWidget() const
 {
   return true;
 }
+
+
+////////////////////////////////////////////////////////////////////////////////
+// HTMLHeaderOrFooterAccessible
+////////////////////////////////////////////////////////////////////////////////
+
+NS_IMPL_ISUPPORTS_INHERITED0(HTMLHeaderOrFooterAccessible, HyperTextAccessible)
+
+role
+HTMLHeaderOrFooterAccessible::NativeRole()
+{
+  // Only map header and footer if they are direct descendants of the body tag.
+  // If other sectioning or sectioning root elements, they become sections.
+  nsIContent* parent = mContent->GetParent();
+  while (parent) {
+    if (parent->IsAnyOfHTMLElements(nsGkAtoms::article, nsGkAtoms::aside,
+                             nsGkAtoms::nav, nsGkAtoms::section,
+                             nsGkAtoms::blockquote, nsGkAtoms::details,
+                             nsGkAtoms::dialog, nsGkAtoms::fieldset,
+                             nsGkAtoms::figure, nsGkAtoms::td)) {
+      break;
+    }
+    parent = parent->GetParent();
+  }
+
+  // No sectioning or sectioning root elements found.
+  if (!parent) {
+    if (mContent->IsHTMLElement(nsGkAtoms::header)) {
+      return roles::HEADER;
+    }
+
+    if (mContent->IsHTMLElement(nsGkAtoms::footer)) {
+      return roles::FOOTER;
+    }
+  }
+
+  return roles::SECTION;
+}
+
+nsIAtom*
+HTMLHeaderOrFooterAccessible::LandmarkRole() const
+{
+  if (!HasOwnContent())
+    return nullptr;
+
+  a11y::role r = const_cast<HTMLHeaderOrFooterAccessible*>(this)->Role();
+  if (r == roles::HEADER) {
+    return nsGkAtoms::banner;
+  }
+
+  if (r == roles::FOOTER) {
+    return nsGkAtoms::contentinfo;
+  }
+
+  return nullptr;
+}
