@@ -1989,7 +1989,7 @@ MAtomicIsLockFree::foldsTo(TempAllocator& alloc)
         return this;
 
     int32_t i = input->toConstant()->toInt32();
-    return MConstant::New(alloc, BooleanValue(AtomicOperations::isLockfree(i)));
+    return MConstant::New(alloc, BooleanValue(AtomicOperations::isLockfreeJS(i)));
 }
 
 // Define |THIS_SLOT| as part of this translation unit, as it is used to
