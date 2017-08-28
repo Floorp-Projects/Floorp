@@ -32,6 +32,8 @@
     <dimen name="browser_toolbar_menu_icon_height">16dp</dimen>
     <dimen name="browser_toolbar_menu_radius">2dp</dimen>
 
+    <dimen name="browser_toolbar_url_height">32dp</dimen>
+
     <!-- favicon_size includes 4dp of right padding. We can't use margin (which would allow us to
          specify the actual size) because that would decrease the size of our hit target. -->
     <dimen name="browser_toolbar_favicon_size">21.33dip</dimen>
@@ -56,7 +58,7 @@
     <dimen name="tablet_tab_strip_item_margin">0dp</dimen>
     <dimen name="tablet_tab_strip_divider_width">1dp</dimen>
     <dimen name="tablet_tab_strip_divider_height">30dp</dimen>
-    <dimen name="tablet_tab_strip_divider_padding_bottom">6dp</dimen>
+    <dimen name="tablet_tab_strip_divider_padding_bottom">4dp</dimen>
     <dimen name="tablet_browser_toolbar_menu_item_width">56dp</dimen>
     <!-- Padding combines with an 18dp image to form the menu item width and height. -->
     <dimen name="tablet_browser_toolbar_menu_item_padding_horizontal">19dp</dimen>
@@ -88,7 +90,6 @@
     <dimen name="browser_toolbar_site_security_margin_end">0dp</dimen>
 
     <!-- If one of these values changes, they all should. -->
-    <dimen name="browser_toolbar_site_security_margin_bottom">.5dp</dimen>
     <dimen name="site_security_unknown_inset_top">1dp</dimen>
     <dimen name="site_security_unknown_inset_bottom">-1dp</dimen>
 

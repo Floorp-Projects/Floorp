@@ -82,6 +82,7 @@
     <color name="photon_url_bar_certificate_owner_private">#16DA00</color>
     <color name="photon_url_bar_domain">@color/photon_text_main</color>
     <color name="photon_url_bar_domain_private">@color/photon_text_main_private</color>
+    <color name="photon_url_bar_bg">#80FFFFFF</color>
 
     <!-- Tab strip color on tablet -->
     <color name="photon_tab_strip_bg">#272727</color>
@@ -91,16 +92,23 @@
     <color name="photon_tab_strip_item_checked">#F9F9FA</color>
     <color name="photon_tab_strip_item_checked_pressed">#E4E4E5</color> <!-- #F9F9FA + #272727@10% Alpha -->
     <color name="photon_tab_strip_item_pressed">#3D3C3D</color> <!-- #272727 + #FFFFFF@10% Alpha -->
+    <color name="photon_tab_strip_item_private">#272727</color>
     <color name="photon_tab_strip_item_private_checked">#38383D</color>
     <color name="photon_tab_strip_item_private_checked_pressed">#4C4B51</color> <!-- #38383D + #FFFFFF@10% Alpha -->
     <color name="photon_tab_strip_item_private_pressed">#3D3C3D</color> <!-- #272727 + #FFFFFF@10% Alpha -->
 
-    <color name="photon_tab_strip_item_lwt_dark_checked">#1A38383D</color>
-    <color name="photon_tab_strip_item_lwt_dark_checked_pressed">#1AFFFFFF</color>
-    <color name="photon_tab_strip_item_lwt_dark_pressed">#1AFFFFFF</color>
-    <color name="photon_tab_strip_item_lwt_checked">#1AF9F9FA</color>
-    <color name="photon_tab_strip_item_lwt_checked_pressed">#1A272727</color>
-    <color name="photon_tab_strip_item_lwt_pressed">#1A272727</color>
+    <color name="photon_tab_strip_item_lwt_checked">#CCF9F9FA</color> <!-- 80% -->
+    <color name="photon_tab_strip_item_lwt_checked_pressed">#99FFFFFF</color> <!-- 60% -->
+    <color name="photon_tab_strip_item_lwt">#66E4E4E4</color> <!-- 40% -->
+    <color name="photon_tab_strip_item_lwt_pressed">#33FFFFFF</color> <!-- 20% -->
+
+    <color name="photon_tab_strip_item_lwt_light_checked">@color/photon_tab_strip_item_lwt_checked</color>
+    <color name="photon_tab_strip_item_lwt_light_checked_pressed">@color/photon_tab_strip_item_lwt_checked_pressed</color>
+    <color name="photon_tab_strip_item_lwt_light">@color/photon_tab_strip_item_lwt</color>
+    <color name="photon_tab_strip_item_lwt_light_pressed">@color/photon_tab_strip_item_lwt_pressed</color>
+
+    <color name="tab_strip_title_lwt_checked">#272727</color>
+    <color name="tab_strip_title_lwt">#272727</color>
 
     <!-- Status bar background color -->
     <color name="status_bar_bg_color">@color/photon_toolbar_bg</color>
@@ -283,7 +291,7 @@
     <color name="activity_stream_subtitle">#FF919191</color>
     <color name="activity_stream_icon">#FF919191</color>
 
-    <color name="tablet_tab_strip_divider_color">#414146</color>
+    <color name="tablet_tab_strip_divider_color">#737373</color>
 
     <color name="bookmark_folder_bg_color">#FCFCFC</color>
 </resources>

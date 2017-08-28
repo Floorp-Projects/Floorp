@@ -199,6 +199,7 @@
 
     <style name="UrlBar.V15.SiteIdentity" parent="UrlBar.Base.SiteIdentity">
         <item name="android:layout_marginLeft">8dp</item>
+        <item name="android:paddingRight">@dimen/browser_toolbar_site_security_margin_end</item>
     </style>
 
 </resources>
