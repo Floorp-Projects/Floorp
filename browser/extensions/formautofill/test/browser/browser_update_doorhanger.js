@@ -26,7 +26,7 @@ add_task(async function test_update_address() {
       });
 
       await promiseShown;
-      await clickDoorhangerButton(MAIN_BUTTON);
+      await clickDoorhangerButton(MAIN_BUTTON_INDEX);
     }
   );
 
@@ -59,7 +59,7 @@ add_task(async function test_create_new_address() {
       });
 
       await promiseShown;
-      await clickDoorhangerButton(SECONDARY_BUTTON);
+      await clickDoorhangerButton(SECONDARY_BUTTON_INDEX);
     }
   );
 
@@ -92,7 +92,7 @@ add_task(async function test_create_new_address_merge() {
       });
 
       await promiseShown;
-      await clickDoorhangerButton(SECONDARY_BUTTON);
+      await clickDoorhangerButton(SECONDARY_BUTTON_INDEX);
     }
   );
 
@@ -128,7 +128,7 @@ add_task(async function test_submit_untouched_fields() {
       });
 
       await promiseShown;
-      await clickDoorhangerButton(MAIN_BUTTON);
+      await clickDoorhangerButton(MAIN_BUTTON_INDEX);
     }
   );
 
