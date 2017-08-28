@@ -524,12 +524,20 @@
       testElm("footer", obj);
 
       obj = {
-        role: ROLE_FOOTER,
+        role: ROLE_SECTION,
         absentAttributes: { "xml-roles": "contentinfo" },
         interfaces: [ nsIAccessibleText, nsIAccessibleHyperText ]
       };
       testElm("footer_in_article", obj);
+      testElm("footer_in_aside", obj);
+      testElm("footer_in_nav", obj);
       testElm("footer_in_section", obj);
+      testElm("footer_in_blockquote", obj);
+      testElm("footer_in_details", obj);
+      testElm("footer_in_dialog", obj);
+      testElm("footer_in_fieldset", obj);
+      testElm("footer_in_figure", obj);
+      testElm("footer_in_td", obj);
 
       // ////////////////////////////////////////////////////////////////////////
       // HTML:form
@@ -609,12 +617,20 @@
       testElm("header", obj);
 
       obj = {
-        role: ROLE_HEADER,
+        role: ROLE_SECTION,
         absentAttributes: { "xml-roles": "banner" },
         interfaces: [ nsIAccessibleText, nsIAccessibleHyperText ]
       };
       testElm("header_in_article", obj);
+      testElm("header_in_aside", obj);
+      testElm("header_in_nav", obj);
       testElm("header_in_section", obj);
+      testElm("header_in_blockquote", obj);
+      testElm("header_in_details", obj);
+      testElm("header_in_dialog", obj);
+      testElm("header_in_fieldset", obj);
+      testElm("header_in_figure", obj);
+      testElm("header_in_td", obj);
 
       // ////////////////////////////////////////////////////////////////////////
       // HTML:hr
@@ -1471,9 +1487,33 @@
   <article>
     <footer id="footer_in_article">Some copyright info</footer>
   </article>
+  <aside>
+    <footer id="footer_in_aside">Some copyright info</footer>
+  </aside>
+  <nav>
+    <footer id="footer_in_nav">Some copyright info</footer>
+  </nav>
   <section>
     <footer id="footer_in_section">Some copyright info</footer>
   </section>
+  <blockquote>
+    <footer id="footer_in_blockquote">Some copyright info</footer>
+  </blockquote>
+  <details open="true">
+    <footer id="footer_in_details">Some copyright info</footer>
+  </details>
+  <dialog open="true">
+    <footer id="footer_in_dialog">Some copyright info</footer>
+  </dialog>
+  <fieldset>
+    <footer id="footer_in_fieldset">Some copyright info</footer>
+  </fieldset>
+  <figure>
+    <footer id="footer_in_figure">Some copyright info</footer>
+  </figure>
+  <table><tr><td>
+    <footer id="footer_in_td">Some copyright info</footer>
+  </td></tr></table>
 
   <form id="form"></form>
 
@@ -1492,9 +1532,33 @@
   <article>
     <header id="header_in_article">Not logo</header>
   </article>
+  <aside>
+    <header id="header_in_aside">Not logo</header>
+  </aside>
+  <nav>
+    <header id="header_in_nav">Not logo</header>
+  </nav>
   <section>
     <header id="header_in_section">Not logo</header>
   </section>
+  <blockquote>
+    <header id="header_in_blockquote">Not logo</header>
+  </blockquote>
+  <details open="true">
+    <header id="header_in_details">Not logo</header>
+  </details>
+  <dialog open="true">
+    <header id="header_in_dialog">Not logo</header>
+  </dialog>
+  <fieldset>
+    <header id="header_in_fieldset">Not logo</header>
+  </fieldset>
+  <figure>
+    <header id="header_in_figure">Not logo</header>
+  </figure>
+  <table><tr><td>
+    <header id="header_in_td">Not logo</header>
+  </td></tr></table>
 
   <hr id="hr">
   <p id="i_container">normal<i>italic</i></p>
