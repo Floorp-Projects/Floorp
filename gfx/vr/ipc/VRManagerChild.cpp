@@ -184,14 +184,6 @@ VRManagerChild::DeallocPTextureChild(PTextureChild* actor)
 
 PVRLayerChild*
 VRManagerChild::AllocPVRLayerChild(const uint32_t& aDisplayID,
-                                   const float& aLeftEyeX,
-                                   const float& aLeftEyeY,
-                                   const float& aLeftEyeWidth,
-                                   const float& aLeftEyeHeight,
-                                   const float& aRightEyeX,
-                                   const float& aRightEyeY,
-                                   const float& aRightEyeWidth,
-                                   const float& aRightEyeHeight,
                                    const uint32_t& aGroup)
 {
   return VRLayerChild::CreateIPDLActor();
@@ -397,28 +389,16 @@ VRManagerChild::DeallocShmem(ipc::Shmem& aShmem)
 
 PVRLayerChild*
 VRManagerChild::CreateVRLayer(uint32_t aDisplayID,
-                              const Rect& aLeftEyeRect,
-                              const Rect& aRightEyeRect,
                               nsIEventTarget* aTarget,
                               uint32_t aGroup)
 {
-  PVRLayerChild* vrLayerChild = AllocPVRLayerChild(aDisplayID, aLeftEyeRect.x,
-                                                   aLeftEyeRect.y, aLeftEyeRect.Width(),
-                                                   aLeftEyeRect.Height(), aRightEyeRect.x,
-                                                   aRightEyeRect.y, aRightEyeRect.Width(),
-                                                   aRightEyeRect.Height(),
-                                                   aGroup);
+  PVRLayerChild* vrLayerChild = AllocPVRLayerChild(aDisplayID, aGroup);
   // Do the DOM labeling.
   if (aTarget) {
     SetEventTargetForActor(vrLayerChild, aTarget);
     MOZ_ASSERT(vrLayerChild->GetActorEventTarget());
   }
-  return SendPVRLayerConstructor(vrLayerChild, aDisplayID, aLeftEyeRect.x,
-                                 aLeftEyeRect.y, aLeftEyeRect.Width(),
-                                 aLeftEyeRect.Height(), aRightEyeRect.x,
-                                 aRightEyeRect.y, aRightEyeRect.Width(),
-                                 aRightEyeRect.Height(),
-                                 aGroup);
+  return SendPVRLayerConstructor(vrLayerChild, aDisplayID, aGroup);
 }
 
 

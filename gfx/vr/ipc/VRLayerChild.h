@@ -35,7 +35,8 @@ public:
   static PVRLayerChild* CreateIPDLActor();
   static bool DestroyIPDLActor(PVRLayerChild* actor);
 
-  void Initialize(dom::HTMLCanvasElement* aCanvasElement);
+  void Initialize(dom::HTMLCanvasElement* aCanvasElement,
+                  const gfx::Rect& aLeftEyeRect, const gfx::Rect& aRightEyeRect);
   void SubmitFrame(uint64_t aFrameId);
   bool IsIPCOpen();
 
@@ -56,6 +57,9 @@ private:
   // actor goes down: mIPCOpen is then set to false.
   void AddIPDLReference();
   void ReleaseIPDLReference();
+
+  gfx::Rect mLeftEyeRect;
+  gfx::Rect mRightEyeRect;
 };
 
 } // namespace gfx
