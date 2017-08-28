@@ -990,7 +990,7 @@ class Onboarding {
     let img = this._window.document.createElement("img");
     img.id = "onboarding-overlay-button-icon";
     img.setAttribute("role", "presentation");
-    img.src = "chrome://branding/content/icon64.png";
+    img.src = "resource://onboarding/img/overlay-icon.svg";
     button.appendChild(img);
     return button;
   }
