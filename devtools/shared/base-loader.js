@@ -45,63 +45,27 @@ const COMPONENT_ERROR = '`Components` is not available in this context.\n' +
   'Example: \n' +
   '    let { Cc, Ci } = require(\'chrome\');\n';
 
-// Workaround for bug 674195. Freezing objects from other compartments fail,
-// so we use `Object.freeze` from the same component instead.
-function freeze(object) {
-  if (prototypeOf(object) === null) {
-      Object.freeze(object);
-  }
-  else {
-    prototypeOf(prototypeOf(object.isPrototypeOf)).
-      constructor. // `Object` from the owner compartment.
-      freeze(object);
-  }
-  return object;
-}
-
 // Returns map of given `object`-s own property descriptors.
-const descriptor = iced(function descriptor(object) {
+const descriptor = function descriptor(object) {
   let value = {};
   for (let name of getOwnIdentifiers(object))
     value[name] = getOwnPropertyDescriptor(object, name)
   return value;
-});
-
-// Freeze important built-ins so they can't be used by untrusted code as a
-// message passing channel.
-freeze(Object);
-freeze(Object.prototype);
-freeze(Function);
-freeze(Function.prototype);
-freeze(Array);
-freeze(Array.prototype);
-freeze(String);
-freeze(String.prototype);
-
-// This function takes `f` function sets it's `prototype` to undefined and
-// freezes it. We need to do this kind of deep freeze with all the exposed
-// functions so that untrusted code won't be able to use them a message
-// passing channel.
-function iced(f) {
-  if (!Object.isFrozen(f)) {
-    f.prototype = undefined;
-  }
-  return freeze(f);
-}
+};
 
 // Defines own properties of given `properties` object on the given
 // target object overriding any existing property with a conflicting name.
 // Returns `target` object. Note we only export this function because it's
 // useful during loader bootstrap when other util modules can't be used &
 // thats only case where this export should be used.
-const override = iced(function override(target, source) {
+const override = function override(target, source) {
   let properties = descriptor(target);
 
   for (let name of getOwnIdentifiers(source || {}))
     properties[name] = getOwnPropertyDescriptor(source, name);
 
   return Object.defineProperties({}, properties);
-});
+};
 
 function sourceURI(uri) { return String(uri).split(" -> ").pop(); }
 
@@ -192,7 +156,7 @@ function join(base, ...paths) {
 //    be JSON-serializable.
 // For more details see:
 // https://developer.mozilla.org/en/Components.utils.Sandbox
-const Sandbox = iced(function Sandbox(options) {
+const Sandbox = function Sandbox(options) {
   // Normalize options and rename to match `Cu.Sandbox` expectations.
   options = {
     // Do not expose `Components` if you really need them (bad idea!) you
@@ -225,7 +189,7 @@ const Sandbox = iced(function Sandbox(options) {
   delete sandbox.debug;
 
   return sandbox;
-});
+}
 
 // Evaluates code from the given `uri` into given `sandbox`. If
 // `options.source` is passed, then that code is evaluated instead.
@@ -234,7 +198,7 @@ const Sandbox = iced(function Sandbox(options) {
 // - `options.line`: Line number to start count from for stack traces.
 //    Defaults to 1.
 // - `options.version`: Version of JS used, defaults to '1.8'.
-const evaluate = iced(function evaluate(sandbox, uri, options) {
+const evaluate = function evaluate(sandbox, uri, options) {
   let { source, line, version, encoding } = override({
     encoding: 'UTF-8',
     line: 1,
@@ -244,11 +208,11 @@ const evaluate = iced(function evaluate(sandbox, uri, options) {
 
   return source ? Cu.evalInSandbox(source, sandbox, version, uri, line)
                 : loadSubScript(uri, sandbox, encoding);
-});
+};
 
 // Populates `exports` of the given CommonJS `module` object, in the context
 // of the given `loader` by evaluating code associated with it.
-const load = iced(function load(loader, module) {
+const load = function load(loader, module) {
   let { sandboxes, globals, loadModuleHook } = loader;
   let require = Require(loader, module);
 
@@ -364,7 +328,7 @@ const load = iced(function load(loader, module) {
     Object.freeze(module.exports);
 
   return module;
-});
+}
 
 // Utility function to normalize module `uri`s so they have `.js` extension.
 function normalizeExt(uri) {
@@ -377,7 +341,7 @@ function normalizeExt(uri) {
 // Utility function to join paths. In common case `base` is a
 // `requirer.uri` but in some cases it may be `baseURI`. In order to
 // avoid complexity we require `baseURI` with a trailing `/`.
-const resolve = iced(function resolve(id, base) {
+const resolve = function resolve(id, base) {
   if (!isRelative(id))
     return id;
 
@@ -395,7 +359,7 @@ const resolve = iced(function resolve(id, base) {
     resolved = './' + resolved;
 
   return resolved;
-});
+}
 
 function addTrailingSlash(path) {
   return path.replace(/\/*$/, "/");
@@ -446,13 +410,13 @@ function compileMapping(paths) {
   };
 }
 
-const resolveURI = iced(function resolveURI(id, mapping) {
+const resolveURI = function resolveURI(id, mapping) {
   // Do not resolve if already a resource URI
   if (isAbsoluteURI(id))
     return normalizeExt(id);
 
   return normalizeExt(mapping(id))
-});
+}
 
 /**
  * Defines lazy getters on the given object, which lazily require the
@@ -508,7 +472,7 @@ function lazyRequireModule(obj, moduleId, prop = moduleId) {
 // in the context of the given `loader`. Each module gets own limited copy
 // of `require` that is allowed to load only a modules that are associated
 // with it during link time.
-const Require = iced(function Require(loader, requirer) {
+const Require = function Require(loader, requirer) {
   let {
     modules, mapping, mappingCache, resolve: loaderResolve, load,
     manifest, rootURI, isNative, requireHook
@@ -537,7 +501,6 @@ const Require = iced(function Require(loader, requirer) {
     else if (isJSMURI(uri)) {
       module = modules[uri] = Module(requirement, uri);
       module.exports = Cu.import(uri, {});
-      freeze(module);
     }
     else if (isJSONURI(uri)) {
       let data;
@@ -550,7 +513,6 @@ const Require = iced(function Require(loader, requirer) {
         data = JSON.parse(readURI(uri));
         module = modules[uri] = Module(requirement, uri);
         module.exports = data;
-        freeze(module);
       }
       catch (err) {
         // If error thrown from JSON parsing, throw that, do not
@@ -638,23 +600,23 @@ const Require = iced(function Require(loader, requirer) {
     };
   };
 
-  return iced(require);
-});
+  return require;
+}
 
 // Makes module object that is made available to CommonJS modules when they
 // are evaluated, along with `exports` and `require`.
-const Module = iced(function Module(id, uri) {
+const Module = function Module(id, uri) {
   return Object.create(null, {
     id: { enumerable: true, value: id },
     exports: { enumerable: true, writable: true, value: Object.create(null),
                configurable: true },
     uri: { value: uri }
   });
-});
+}
 
 // Takes `loader`, and unload `reason` string and notifies all observers that
 // they should cleanup after them-self.
-const unload = iced(function unload(loader, reason) {
+const unload = function unload(loader, reason) {
   // subject is a unique object created per loader instance.
   // This allows any code to cleanup on loader unload regardless of how
   // it was loaded. To handle unload for specific loader subject may be
@@ -664,7 +626,7 @@ const unload = iced(function unload(loader, reason) {
   // cache may cause module identity problems in such cases.
   let subject = { wrappedJSObject: loader.destructor };
   notifyObservers(subject, 'sdk:loader:destroy', reason);
-});
+};
 
 // Function makes new loader that can be used to load CommonJS modules
 // described by a given `options.manifest`. Loader takes following options:
@@ -731,7 +693,7 @@ function Loader(options) {
   // which loader is unloaded. Please note that we intentionally don't
   // use `loader` as subject to prevent a loader access leakage through
   // observer notifications.
-  let destructor = freeze(Object.create(null));
+  let destructor = Object.create(null);
 
   let mapping = compileMapping(paths);
 
@@ -763,7 +725,7 @@ function Loader(options) {
       }
     });
 
-    modules[uri] = freeze(module);
+    modules[uri] = module;
   }
 
   // Create the unique sandbox we will be using for all modules,
@@ -818,7 +780,7 @@ function Loader(options) {
     loadModuleHook: { enumerable: false, value: options.loadModuleHook },
   };
 
-  return freeze(Object.create(null, returnObj));
+  return Object.create(null, returnObj);
 };
 
 var isSystemURI = uri => /^resource:\/\/(gre|devtools|testing-common)\//.test(uri);
