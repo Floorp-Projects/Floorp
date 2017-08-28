@@ -90,7 +90,11 @@ ProxyStream::ProxyStream(REFIID aIID, const BYTE* aInitBuf,
   // correctness with IPDL. We'll request an IUnknown and then QI the
   // actual interface later.
 
+#if defined(ACCESSIBILITY) && defined(MOZ_CRASHREPORTER)
   auto marshalFn = [this, &strActCtx, &unmarshalResult, &aIID]() -> void
+#else
+  auto marshalFn = [this, &unmarshalResult, &aIID]() -> void
+#endif // defined(ACCESSIBILITY) && defined(MOZ_CRASHREPORTER)
   {
 #if defined(ACCESSIBILITY) && defined(MOZ_CRASHREPORTER)
     auto curActCtx = ActivationContext::GetCurrent();
