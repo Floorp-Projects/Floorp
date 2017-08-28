@@ -206,18 +206,14 @@ package-langpack-%: XPI_NAME=locale-$*
 package-langpack-%: AB_CD=$*
 package-langpack-%:
 	$(NSINSTALL) -D $(DIST)/$(PKG_LANGPACK_PATH)
+ifdef WEBEXT_LANGPACKS
+	$(call py_action,langpack_manifest,--locales $(AB_CD) --appver $(MOZ_APP_VERSION) --defines $(NEW_APP_DEFINES) --input $(DIST)/xpi-stage/locale-$(AB_CD))
+	$(call py_action,zip,-C $(DIST)/xpi-stage/locale-$(AB_CD) -x **/*.manifest -x **/*.js -x **/*.ini $(LANGPACK_FILE) $(PKG_ZIP_DIRS) manifest.json)
+else
 	$(call py_action,preprocessor,$(DEFINES) $(ACDEFINES) \
 	  -DTK_DEFINES=$(TK_DEFINES) -DAPP_DEFINES=$(APP_DEFINES) $(MOZILLA_DIR)/toolkit/locales/generic/install.rdf -o $(DIST)/xpi-stage/$(XPI_NAME)/install.rdf)
 	$(call py_action,zip,-C $(DIST)/xpi-stage/locale-$(AB_CD) $(LANGPACK_FILE) install.rdf $(PKG_ZIP_DIRS) chrome.manifest)
-
-langpack-webext-%: LANGPACK_FILE=$(ABS_DIST)/$(PKG_LANGPACK_PATH)$(PKG_LANGPACK_BASENAME).xpi
-langpack-webext-%: AB_CD=$*
-langpack-webext-%: XPI_NAME=locale-$*
-langpack-webext-%: libs-%
-	@echo 'Making new-langpack $(LANGPACK_FILE)'
-	$(NSINSTALL) -D $(DIST)/$(PKG_LANGPACK_PATH)
-	$(call py_action,langpack_manifest,--locales $(AB_CD) --appver $(MOZ_APP_VERSION) --defines $(NEW_APP_DEFINES) --input $(DIST)/xpi-stage/locale-$(AB_CD))
-	$(call py_action,zip,-C $(DIST)/xpi-stage/locale-$(AB_CD) -x **/*.manifest -x **/*.js -x **/*.ini $(LANGPACK_FILE) $(PKG_ZIP_DIRS) manifest.json)
+endif
 
 # This variable is to allow the wget-en-US target to know which ftp server to download from
 ifndef EN_US_BINARY_URL 
