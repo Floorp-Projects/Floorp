@@ -8,16 +8,8 @@
 // except according to those terms.
 
 use simd::u8x16;
-use simd::i8x16;
 use simd::u16x8;
-use simd::i16x8;
 use simd::Simd;
-
-extern "platform-intrinsic" {
-    fn simd_shuffle16<T: Simd, U: Simd<Elem = T::Elem>>(x: T, y: T, idx: [u32; 16]) -> U;
-    fn x86_mm_packus_epi16(x: i16x8, y: i16x8) -> u8x16;
-    fn x86_mm_movemask_epi8(x: i8x16) -> i32;
-}
 
 // TODO: Migrate unaligned access to stdlib code if/when the RFC
 // https://github.com/rust-lang/rfcs/pull/1725 is implemented.
@@ -66,35 +58,115 @@ pub unsafe fn store8_aligned(ptr: *mut u16, s: u16x8) {
     *(ptr as *mut u16x8) = s;
 }
 
-/// _mm_movemask_epi8 in SSE2. vec_all_lt in AltiVec.
-#[inline(always)]
-pub fn is_ascii(s: u8x16) -> bool {
-    unsafe {
-        let signed: i8x16 = ::std::mem::transmute_copy(&s);
-        x86_mm_movemask_epi8(signed) == 0
+extern "platform-intrinsic" {
+    fn simd_shuffle16<T: Simd, U: Simd<Elem = T::Elem>>(x: T, y: T, idx: [u32; 16]) -> U;
+}
+
+cfg_if! {
+    if #[cfg(target_feature = "sse2")] {
+
+        use simd::i16x8;
+        use simd::i8x16;
+        extern "platform-intrinsic" {
+            fn x86_mm_packus_epi16(x: i16x8, y: i16x8) -> u8x16;
+            fn x86_mm_movemask_epi8(x: i8x16) -> i32;
+        }
+
+        #[inline(always)]
+        pub fn is_ascii(s: u8x16) -> bool {
+            unsafe {
+                let signed: i8x16 = ::std::mem::transmute_copy(&s);
+                x86_mm_movemask_epi8(signed) == 0
+            }
+        }
+
+        // Expose low-level mask instead of higher-level conclusion,
+        // because the non-ASCII case would perform less well otherwise.
+        #[inline(always)]
+        pub fn mask_ascii(s: u8x16) -> i32 {
+            unsafe {
+                let signed: i8x16 = ::std::mem::transmute_copy(&s);
+                x86_mm_movemask_epi8(signed)
+            }
+        }
+
+        #[inline(always)]
+        pub unsafe fn pack_basic_latin(a: u16x8, b: u16x8) -> Option<u8x16> {
+            // If the 16-bit lane is out of range positive, the 8-bit lane becomes 0xFF
+            // when packing, which would allow us to pack first and then check for
+            // ASCII, but if the 16-bit lane is negative, the 8-bit lane becomes 0x00.
+            // Sigh. Hence, check first.
+            let highest_ascii = u16x8::splat(0x7F);
+            let combined = a | b;
+            if combined.gt(highest_ascii).any() {
+                None
+            } else {
+                let first: i16x8 = ::std::mem::transmute_copy(&a);
+                let second: i16x8 = ::std::mem::transmute_copy(&b);
+                Some(x86_mm_packus_epi16(first, second))
+            }
+        }
+    } else if #[cfg(target_arch = "aarch64")]{
+
+        extern "platform-intrinsic" {
+            fn aarch64_vmaxvq_u8(x: u8x16) -> u8;
+            fn aarch64_vmaxvq_u16(x: u16x8) -> u16;
+        }
+
+        #[inline(always)]
+        pub fn is_ascii(s: u8x16) -> bool {
+            unsafe {
+                aarch64_vmaxvq_u8(s) < 0x80
+            }
+        }
+
+        #[inline(always)]
+        pub unsafe fn pack_basic_latin(a: u16x8, b: u16x8) -> Option<u8x16> {
+            let combined = a | b;
+            if aarch64_vmaxvq_u16(combined) < 0x80 {
+                let first: u8x16 = ::std::mem::transmute_copy(&a);
+                let second: u8x16 = ::std::mem::transmute_copy(&b);
+                let lower: u8x16 = simd_shuffle16(
+                    first,
+                    second,
+                    [0, 2, 4, 6, 8, 10, 12, 14, 16, 18, 20, 22, 24, 26, 28, 30],
+                );
+                Some(lower)
+            } else {
+                None
+            }
+        }
+
+
+    } else {
+
+        #[inline(always)]
+        pub fn is_ascii(s: u8x16) -> bool {
+            let highest_ascii = u8x16::splat(0x7F);
+            !s.gt(highest_ascii).any()
+        }
+
+        #[inline(always)]
+        pub unsafe fn pack_basic_latin(a: u16x8, b: u16x8) -> Option<u8x16> {
+            let highest_ascii = u16x8::splat(0x7F);
+            let combined = a | b;
+            if combined.gt(highest_ascii).any() {
+                None
+            } else {
+                let first: u8x16 = ::std::mem::transmute_copy(&a);
+                let second: u8x16 = ::std::mem::transmute_copy(&b);
+                let lower: u8x16 = simd_shuffle16(
+                    first,
+                    second,
+                    [0, 2, 4, 6, 8, 10, 12, 14, 16, 18, 20, 22, 24, 26, 28, 30],
+                );
+                Some(lower)
+            }
+        }
+
     }
 }
 
-
-/// _mm_movemask_epi8 in SSE2.
-#[inline(always)]
-pub fn check_ascii(s: u8x16) -> Option<usize> {
-    let mask = unsafe {
-        let signed: i8x16 = ::std::mem::transmute_copy(&s);
-        x86_mm_movemask_epi8(signed)
-    };
-    if mask == 0 {
-        return None;
-    }
-    // We don't extract the non-ascii byte from the SIMD register, because
-    // at least on Haswell, it seems faster to let the caller re-read it from
-    // memory.
-    Some(mask.trailing_zeros() as usize)
-}
-
-/// vzipq_u8 in NEON. _mm_unpacklo_epi8 and
-/// _mm_unpackhi_epi8 in SSE2. vec_mergeh and vec_mergel or vec_unpackh and
-/// vec_unpackl in AltiVec.
 #[inline(always)]
 pub fn unpack(s: u8x16) -> (u16x8, u16x8) {
     unsafe {
@@ -109,24 +181,6 @@ pub fn unpack(s: u8x16) -> (u16x8, u16x8) {
             [8, 24, 9, 25, 10, 26, 11, 27, 12, 28, 13, 29, 14, 30, 15, 31],
         );
         (::std::mem::transmute_copy(&first), ::std::mem::transmute_copy(&second))
-    }
-}
-
-/// vuzpq_u8 in NEON. _mm_packus_epi16 in SSE2. vec_packsu *followed* by ASCII
-/// check in AltiVec.
-#[inline(always)]
-pub unsafe fn pack_basic_latin(a: u16x8, b: u16x8) -> Option<u8x16> {
-    // If the 16-bit lane is out of range positive, the 8-bit lane becomes 0xFF
-    // when packing, which would allow us to pack later and then check for
-    // ASCII, but if the 16-bit lane is negative, the 8-bit lane becomes 0x00.
-    // Sigh. Hence, check first.
-    let above_ascii = u16x8::splat(0x80);
-    if a.lt(above_ascii).all() && b.lt(above_ascii).all() {
-        let first: i16x8 = ::std::mem::transmute_copy(&a);
-        let second: i16x8 = ::std::mem::transmute_copy(&b);
-        Some(x86_mm_packus_epi16(first, second))
-    } else {
-        None
     }
 }
 
@@ -219,17 +273,15 @@ mod tests {
         assert!(!is_ascii(simd));
     }
 
+    #[cfg(target_feature = "sse2")]
     #[test]
     fn test_check_ascii() {
         let input: [u8; 16] = [0x61, 0x62, 0x63, 0x64, 0x81, 0x66, 0x67, 0x68, 0x69, 0x70, 0x71,
                                0x72, 0x73, 0x74, 0x75, 0x76];
         let simd = unsafe { load16_unaligned(input.as_ptr()) };
-        match check_ascii(simd) {
-            None => unreachable!(),
-            Some(consumed) => {
-                assert_eq!(consumed, 4);
-            }
-        }
+        let mask = mask_ascii(simd);
+        assert_ne!(mask, 0);
+        assert_eq!(mask.trailing_zeros(), 4);
     }
 
     #[test]
