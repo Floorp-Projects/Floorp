@@ -57,6 +57,7 @@ public:
 
   RefPtr<ID3D11Device> GetCompositorDevice();
   RefPtr<ID3D11Device> GetContentDevice();
+  RefPtr<ID3D11Device> GetVRDevice();
   RefPtr<ID3D11Device> CreateDecoderDevice();
   RefPtr<layers::MLGDevice> GetMLGDevice();
   IDirectDraw7* GetDirectDraw();
@@ -123,6 +124,7 @@ private:
 
   void CreateWARPCompositorDevice();
   void CreateMLGDevice();
+  bool CreateVRDevice();
 
   mozilla::gfx::FeatureStatus CreateContentDevice();
 
@@ -154,6 +156,7 @@ private:
   RefPtr<IDXGIAdapter1> mAdapter;
   RefPtr<ID3D11Device> mCompositorDevice;
   RefPtr<ID3D11Device> mContentDevice;
+  RefPtr<ID3D11Device> mVRDevice;
   RefPtr<ID3D11Device> mDecoderDevice;
   RefPtr<layers::DeviceAttachmentsD3D11> mCompositorAttachments;
   RefPtr<layers::MLGDevice> mMLGDevice;
