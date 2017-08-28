@@ -182,7 +182,6 @@ function Tester(aTests, structuredLogger, aCallback) {
       }
     },
     loadSubScriptWithOptions: this._scriptLoader.loadSubScriptWithOptions.bind(this._scriptLoader),
-    precompileScript: this._scriptLoader.precompileScript.bind(this._scriptLoader)
   };
 }
 Tester.prototype = {
