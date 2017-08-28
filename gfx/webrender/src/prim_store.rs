@@ -593,6 +593,8 @@ impl TextRunPrimitiveCpu {
                       self.subpx_dir as u32 as f32,
                       0.0]);
         request.extend_from_slice(&self.glyph_gpu_blocks);
+
+        assert!(request.current_used_block_num() <= MAX_VERTEX_TEXTURE_WIDTH);
     }
 }
 

@@ -12,7 +12,6 @@ mod boilerplate;
 use boilerplate::{Example, HandyDandyRectBuilder};
 use std::mem;
 use webrender::api::*;
-use webrender::renderer::{ExternalImage, ExternalImageSource, ExternalImageHandler};
 
 struct ImageGenerator {
     patterns: [[u8; 3]; 6],
@@ -57,15 +56,15 @@ impl ImageGenerator {
     }
 }
 
-impl ExternalImageHandler for ImageGenerator {
-    fn lock(&mut self, _key: ExternalImageId, channel_index: u8) -> ExternalImage {
+impl webrender::ExternalImageHandler for ImageGenerator {
+    fn lock(&mut self, _key: ExternalImageId, channel_index: u8) -> webrender::ExternalImage {
         self.generate_image(channel_index as u32);
-        ExternalImage {
+        webrender::ExternalImage {
             u0: 0.0,
             v0: 0.0,
             u1: 1.0,
             v1: 1.0,
-            source: ExternalImageSource::RawData(&self.current_image)
+            source: webrender::ExternalImageSource::RawData(&self.current_image)
         }
     }
     fn unlock(&mut self, _key: ExternalImageId, _channel_index: u8) {
@@ -270,7 +269,7 @@ impl Example for App {
         false
     }
 
-    fn get_external_image_handler(&self) -> Option<Box<ExternalImageHandler>> {
+    fn get_external_image_handler(&self) -> Option<Box<webrender::ExternalImageHandler>> {
         Some(Box::new(ImageGenerator::new()))
     }
 }
