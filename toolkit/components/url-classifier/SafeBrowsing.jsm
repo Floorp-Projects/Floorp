@@ -130,6 +130,7 @@ this.SafeBrowsing = {
   initialized:          false,
   phishingEnabled:      false,
   malwareEnabled:       false,
+  downloadsEnabled:       false,
   trackingEnabled:      false,
   blockedEnabled:       false,
   trackingAnnotations:  false,
@@ -207,6 +208,7 @@ this.SafeBrowsing = {
 
     this.phishingEnabled = Services.prefs.getBoolPref("browser.safebrowsing.phishing.enabled");
     this.malwareEnabled = Services.prefs.getBoolPref("browser.safebrowsing.malware.enabled");
+    this.downloadsEnabled = Services.prefs.getBoolPref("browser.safebrowsing.downloads.enabled");
     this.trackingEnabled = Services.prefs.getBoolPref("privacy.trackingprotection.enabled") || Services.prefs.getBoolPref("privacy.trackingprotection.pbmode.enabled");
     this.blockedEnabled = Services.prefs.getBoolPref("browser.safebrowsing.blockedURIs.enabled");
     this.trackingAnnotations = Services.prefs.getBoolPref("privacy.trackingprotection.annotate_channels");
@@ -321,6 +323,7 @@ this.SafeBrowsing = {
   controlUpdateChecking: function() {
     log("phishingEnabled:", this.phishingEnabled, "malwareEnabled:",
         this.malwareEnabled, "trackingEnabled:", this.trackingEnabled,
+        "downloadsEnabled:", this.downloadsEnabled,
         "blockedEnabled:", this.blockedEnabled, "trackingAnnotations",
         this.trackingAnnotations, "flashBlockEnabled", this.flashBlockEnabled,
         "flashInfobarListEnabled:", this.flashInfobarListEnabled);
@@ -343,14 +346,14 @@ this.SafeBrowsing = {
       }
     }
     for (let i = 0; i < this.downloadBlockLists.length; ++i) {
-      if (this.malwareEnabled) {
+      if (this.downloadsEnabled) {
         listManager.enableUpdate(this.downloadBlockLists[i]);
       } else {
         listManager.disableUpdate(this.downloadBlockLists[i]);
       }
     }
     for (let i = 0; i < this.downloadAllowLists.length; ++i) {
-      if (this.malwareEnabled) {
+      if (this.downloadsEnabled) {
         listManager.enableUpdate(this.downloadAllowLists[i]);
       } else {
         listManager.disableUpdate(this.downloadAllowLists[i]);
