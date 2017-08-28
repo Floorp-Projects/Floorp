@@ -37,15 +37,6 @@ function createMockDevTools() {
   return mock;
 }
 
-let isInstalledMethodBackup = DevToolsShim.isInstalled;
-function mockDevToolsInstalled(isInstalled) {
-  DevToolsShim.isInstalled = () => isInstalled;
-}
-
-function restoreDevToolsInstalled() {
-  DevToolsShim.isInstalled = isInstalledMethodBackup;
-}
-
 /**
  * Check if a given method was called an expected number of times, and finally check the
  * arguments provided to the last call, if appropriate.
@@ -67,8 +58,6 @@ function checkCalls(mock, method, length, lastArgs) {
 }
 
 function test_register_unregister() {
-  mockDevToolsInstalled(true);
-
   ok(!DevToolsShim.isInitialized(), "DevTools are not initialized");
 
   DevToolsShim.register(createMockDevTools());
@@ -76,8 +65,6 @@ function test_register_unregister() {
 
   DevToolsShim.unregister();
   ok(!DevToolsShim.isInitialized(), "DevTools are not initialized");
-
-  restoreDevToolsInstalled();
 }
 
 function test_on_is_forwarded_to_devtools() {
@@ -93,13 +80,9 @@ function test_on_is_forwarded_to_devtools() {
 
   DevToolsShim.on("other_event", cb2);
   checkCalls(mock, "on", 2, ["other_event", cb2]);
-
-  restoreDevToolsInstalled();
 }
 
 function test_off_called_before_registering_devtools() {
-  mockDevToolsInstalled(true);
-
   ok(!DevToolsShim.isInitialized(), "DevTools are not initialized");
 
   function cb1() {}
@@ -110,13 +93,9 @@ function test_off_called_before_registering_devtools() {
 
   DevToolsShim.register(mock);
   checkCalls(mock, "on", 0);
-
-  restoreDevToolsInstalled();
 }
 
 function test_off_called_before_with_bad_callback() {
-  mockDevToolsInstalled(true);
-
   ok(!DevToolsShim.isInitialized(), "DevTools are not initialized");
 
   function cb1() {}
@@ -131,13 +110,9 @@ function test_off_called_before_with_bad_callback() {
   checkCalls(mock, "on", 1, ["test_event", cb1]);
   // Calls to off should not be held and forwarded.
   checkCalls(mock, "off", 0);
-
-  restoreDevToolsInstalled();
 }
 
 function test_events() {
-  mockDevToolsInstalled(true);
-
   ok(!DevToolsShim.isInitialized(), "DevTools are not initialized");
 
   let mock = createMockDevTools();
@@ -151,41 +126,31 @@ function test_events() {
   // Check emit is called once with the devtools-unregistered event.
   DevToolsShim.unregister();
   checkCalls(mock, "emit", 2, ["devtools-unregistered"]);
-
-  restoreDevToolsInstalled();
 }
 
 function test_scratchpad_apis() {
-  mockDevToolsInstalled(false);
+  let backupMaybeInitializeDevTools = DevToolsShim._maybeInitializeDevTools;
+  DevToolsShim._maybeInitializeDevTools = () => {
+    return false;
+  };
 
-  ok(!DevToolsShim.isInstalled(), "DevTools are not installed");
   ok(!DevToolsShim.isInitialized(), "DevTools are not initialized");
 
-  // Ensure that saveDevToolsSession doesn't initialize the tools
+  // Ensure that save & restore DevToolsSession don't initialize the tools and don't crash
   DevToolsShim.saveDevToolsSession({});
-
-  ok(!DevToolsShim.isInstalled(), "DevTools are not installed");
-  ok(!DevToolsShim.isInitialized(), "DevTools are not initialized");
-
-  // Check that restoreDevToolsSession doesn't crash.
   DevToolsShim.restoreDevToolsSession({
     scratchpads: [{}],
     browserConsole: true,
   });
 
-  // Check that saveDevToolsSession doesn't crash.
-  DevToolsShim.saveDevToolsSession({});
-
-  mockDevToolsInstalled(true);
-
-  ok(DevToolsShim.isInstalled(), "DevTools are installed");
   ok(!DevToolsShim.isInitialized(), "DevTools are not initialized");
 
   let mock = createMockDevTools();
-  DevToolsShim._initDevTools = () => {
+  DevToolsShim._maybeInitializeDevTools = () => {
     // Next call to restoreDevToolsSession is expected to initialize DevTools, which we
     // simulate here by registering our mock.
     DevToolsShim.register(mock);
+    return true;
   };
 
   let scratchpadSessions = [{}];
@@ -197,7 +162,7 @@ function test_scratchpad_apis() {
   DevToolsShim.saveDevToolsSession({});
   checkCalls(mock, "saveDevToolsSession", 1, []);
 
-  restoreDevToolsInstalled();
+  DevToolsShim._maybeInitializeDevTools = backupMaybeInitializeDevTools;
 }
 
 function run_test() {
