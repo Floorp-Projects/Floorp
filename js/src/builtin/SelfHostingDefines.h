@@ -73,9 +73,6 @@
 // to be resolved eagerly.
 #define BOUND_FUN_LENGTH_SLOT 1
 
-// Stores the private WeakMap slot used for WeakSets
-#define WEAKSET_MAP_SLOT 0
-
 #define ITERATOR_SLOT_TARGET 0
 // Used for collection iterators.
 #define ITERATOR_SLOT_RANGE 1
