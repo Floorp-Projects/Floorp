@@ -270,8 +270,8 @@ add_task(async function test_backoffTimeout() {
                "Should have recorded sending failure in histograms.");
   Assert.equal(histSendTimeSuccess.snapshot().sum, 0,
                "Should not have recorded any sending success in histograms yet.");
-  Assert.greater(histSendTimeFail.snapshot().sum, 0,
-               "Should have recorded send failure times in histograms.");
+  Assert.greaterOrEqual(histSendTimeFail.snapshot().sum, 0,
+                        "Should have recorded send failure times in histograms.");
   Assert.equal(histogramValueCount(histSendTimeFail.snapshot()), sendAttempts,
                "Should have recorded send failure times in histograms.");
 
@@ -305,8 +305,8 @@ add_task(async function test_backoffTimeout() {
 
   Assert.deepEqual(histSuccess.snapshot().counts, [sendAttempts, 3, 0],
                "Should have recorded sending failure in histograms.");
-  Assert.greater(histSendTimeSuccess.snapshot().sum, 0,
-               "Should have recorded sending success in histograms.");
+  Assert.greaterOrEqual(histSendTimeSuccess.snapshot().sum, 0,
+                        "Should have recorded sending success in histograms.");
   Assert.equal(histogramValueCount(histSendTimeSuccess.snapshot()), 3,
                "Should have recorded sending success in histograms.");
   Assert.equal(histogramValueCount(histSendTimeFail.snapshot()), sendAttempts,
@@ -337,7 +337,7 @@ add_task(async function test_discardBigPings() {
   Assert.equal(histDiscardedSize.snapshot().sum, 0, "Telemetry must report no oversized pings.");
   Assert.deepEqual(histSuccess.snapshot().counts, [0, 1, 0], "Should have recorded sending success.");
   Assert.equal(histogramValueCount(histSendTimeSuccess.snapshot()), 1, "Should have recorded send success time.");
-  Assert.greater(histSendTimeSuccess.snapshot().sum, 0, "Should have recorded send success time.");
+  Assert.greaterOrEqual(histSendTimeSuccess.snapshot().sum, 0, "Should have recorded send success time.");
   Assert.equal(histogramValueCount(histSendTimeFail.snapshot()), 0, "Should not have recorded send failure time.");
 
   // Submit an oversized ping and check that it gets discarded.
@@ -349,7 +349,7 @@ add_task(async function test_discardBigPings() {
   Assert.equal(histDiscardedSize.snapshot().counts[2], 1, "Telemetry must report a 2MB, oversized, ping submitted.");
   Assert.deepEqual(histSuccess.snapshot().counts, [0, 2, 0], "Should have recorded sending success.");
   Assert.equal(histogramValueCount(histSendTimeSuccess.snapshot()), 2, "Should have recorded send success time.");
-  Assert.greater(histSendTimeSuccess.snapshot().sum, 0, "Should have recorded send success time.");
+  Assert.greaterOrEqual(histSendTimeSuccess.snapshot().sum, 0, "Should have recorded send success time.");
   Assert.equal(histogramValueCount(histSendTimeFail.snapshot()), 0, "Should not have recorded send failure time.");
 
   Assert.equal(ping.type, TelemetryHealthPing.HEALTH_PING_TYPE, "Should have received a health ping.");
@@ -387,7 +387,7 @@ add_task(async function test_evictedOnServerErrors() {
                "Telemetry must report a ping evicted due to server errors");
   Assert.deepEqual(histSuccess.snapshot().counts, [0, 1, 0]);
   Assert.equal(histogramValueCount(histSendTimeSuccess.snapshot()), 1);
-  Assert.greater(histSendTimeSuccess.snapshot().sum, 0);
+  Assert.greaterOrEqual(histSendTimeSuccess.snapshot().sum, 0);
   Assert.equal(histogramValueCount(histSendTimeFail.snapshot()), 0);
 
   // The ping should not be persisted.
