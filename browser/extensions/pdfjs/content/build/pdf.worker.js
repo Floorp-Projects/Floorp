@@ -4488,8 +4488,9 @@ var Parser = function ParserClosure() {
             I = 0x49,
             SPACE = 0x20,
             LF = 0xA,
-            CR = 0xD,
-            n = 5;
+            CR = 0xD;
+      const n = 10,
+            NUL = 0x0;
       let startPos = stream.pos,
           state = 0,
           ch,
@@ -4504,8 +4505,11 @@ var Parser = function ParserClosure() {
           if (ch === SPACE || ch === LF || ch === CR) {
             maybeEIPos = stream.pos;
             let followingBytes = stream.peekBytes(n);
-            for (let i = 0; i < n; i++) {
+            for (let i = 0, ii = followingBytes.length; i < ii; i++) {
               ch = followingBytes[i];
+              if (ch === NUL && followingBytes[i + 1] !== NUL) {
+                continue;
+              }
               if (ch !== LF && ch !== CR && (ch < SPACE || ch > 0x7F)) {
                 state = 0;
                 break;
@@ -22104,21 +22108,29 @@ var Catalog = function CatalogClosure() {
     }
     var destDict = params.destDict;
     if (!(0, _primitives.isDict)(destDict)) {
-      (0, _util.warn)('Catalog_parseDestDictionary: "destDict" must be a dictionary.');
+      (0, _util.warn)('parseDestDictionary: "destDict" must be a dictionary.');
       return;
     }
     var resultObj = params.resultObj;
     if (typeof resultObj !== 'object') {
-      (0, _util.warn)('Catalog_parseDestDictionary: "resultObj" must be an object.');
+      (0, _util.warn)('parseDestDictionary: "resultObj" must be an object.');
       return;
     }
     var docBaseUrl = params.docBaseUrl || null;
     var action = destDict.get('A'),
         url,
         dest;
+    if (!(0, _primitives.isDict)(action) && destDict.has('Dest')) {
+      action = destDict.get('Dest');
+    }
     if ((0, _primitives.isDict)(action)) {
-      var linkType = action.get('S').name;
-      switch (linkType) {
+      let actionType = action.get('S');
+      if (!(0, _primitives.isName)(actionType)) {
+        (0, _util.warn)('parseDestDictionary: Invalid type in Action dictionary.');
+        return;
+      }
+      let actionName = actionType.name;
+      switch (actionName) {
         case 'URI':
           url = action.get('URI');
           if ((0, _primitives.isName)(url)) {
@@ -22184,7 +22196,7 @@ var Catalog = function CatalogClosure() {
             }
           }
         default:
-          (0, _util.warn)('Catalog_parseDestDictionary: Unrecognized link type "' + linkType + '".');
+          (0, _util.warn)(`parseDestDictionary: Unsupported Action type "${actionName}".`);
           break;
       }
     } else if (destDict.has('Dest')) {
@@ -40051,8 +40063,8 @@ exports.Type1Parser = Type1Parser;
 "use strict";
 
 
-var pdfjsVersion = '1.9.476';
-var pdfjsBuild = '26c45369';
+var pdfjsVersion = '1.9.489';
+var pdfjsBuild = 'b7fcaff0';
 var pdfjsCoreWorker = __w_pdfjs_require__(17);
 exports.WorkerMessageHandler = pdfjsCoreWorker.WorkerMessageHandler;
 
