@@ -179,8 +179,10 @@ public:
     kUrgentStartGroupID = 0xD
     // Hey, you! YES YOU! If you add/remove any groups here, you almost
     // certainly need to change the lookup of the stream/ID hash in
-    // Http2Session::OnTransportStatus. Yeah, that's right. YOU!
+    // Http2Session::OnTransportStatus and |kPriorityGroupCount| below.
+    // Yeah, that's right. YOU!
   };
+  const static uint8_t kPriorityGroupCount = 6;
 
   static nsresult RecvHeaders(Http2Session *);
   static nsresult RecvPriority(Http2Session *);
