@@ -691,14 +691,7 @@ nsTextServicesDocument::LastSelectedBlock(TSDBlockSelectionStatus *aSelStatus,
   // beginning of its text block, and make it the current
   // block.
 
-  int32_t rangeCount;
-  rv = selection->GetRangeCount(&rangeCount);
-
-  if (NS_FAILED(rv)) {
-    UNLOCK_DOC(this);
-    return rv;
-  }
-
+  int32_t rangeCount = static_cast<int32_t>(selection->RangeCount());
   NS_ASSERTION(rangeCount > 0, "Unexpected range count!");
 
   if (rangeCount <= 0) {
@@ -2570,7 +2563,7 @@ nsTextServicesDocument::GetUncollapsedSelection(nsITextServicesDocument::TSDBloc
 
   nsCOMPtr<nsIDOMNode> startContainer, endContainer;
   int32_t startOffset, endOffset;
-  int32_t rangeCount, tableCount;
+  int32_t tableCount;
   int32_t e1s1 = 0, e1s2 = 0, e2s1 = 0, e2s2 = 0;
 
   OffsetEntry *eStart, *eEnd;
@@ -2592,14 +2585,12 @@ nsTextServicesDocument::GetUncollapsedSelection(nsITextServicesDocument::TSDBloc
   eStartOffset = eStart->mNodeOffset;
   eEndOffset   = eEnd->mNodeOffset + eEnd->mLength;
 
-  rv = selection->GetRangeCount(&rangeCount);
-
-  NS_ENSURE_SUCCESS(rv, rv);
+  uint32_t rangeCount = selection->RangeCount();
 
   // Find the first range in the selection that intersects
   // the current text block.
 
-  for (int32_t i = 0; i < rangeCount; i++) {
+  for (uint32_t i = 0; i < rangeCount; i++) {
     range = selection->GetRangeAt(i);
     NS_ENSURE_STATE(range);
 

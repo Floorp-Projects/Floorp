@@ -5312,12 +5312,8 @@ HTMLEditRules::NormalizeSelection(Selection* inSelection)
     return NS_OK;
   }
 
-  int32_t rangeCount;
-  nsresult rv = inSelection->GetRangeCount(&rangeCount);
-  NS_ENSURE_SUCCESS(rv, rv);
-
   // we don't need to mess with cell selections, and we assume multirange selections are those.
-  if (rangeCount != 1) {
+  if (inSelection->RangeCount() != 1) {
     return NS_OK;
   }
 
@@ -5327,7 +5323,7 @@ HTMLEditRules::NormalizeSelection(Selection* inSelection)
   uint32_t startOffset, endOffset;
   nsCOMPtr<nsIDOMNode> newStartNode, newEndNode;
 
-  rv = range->GetStartContainer(getter_AddRefs(startNode));
+  nsresult rv = range->GetStartContainer(getter_AddRefs(startNode));
   NS_ENSURE_SUCCESS(rv, rv);
   rv = range->GetStartOffset(&startOffset);
   NS_ENSURE_SUCCESS(rv, rv);
