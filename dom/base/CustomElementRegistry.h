@@ -36,6 +36,7 @@ struct LifecycleCallbackArgs
   nsString name;
   nsString oldValue;
   nsString newValue;
+  nsString namespaceURI;
 };
 
 class CustomElementCallback
