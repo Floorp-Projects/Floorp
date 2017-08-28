@@ -1047,6 +1047,7 @@ SyncEngine.prototype = {
     // Clear the tracker now. If the sync fails we'll add the ones we failed
     // to upload back.
     this._tracker.clearChangedIDs();
+    this._tracker.resetScore();
 
     this._log.info(this._modified.count() +
                    " outgoing items pre-reconciliation");
@@ -1729,7 +1730,6 @@ SyncEngine.prototype = {
   // Save the current snapshot so as to calculate changes at next sync
   async _syncFinish() {
     this._log.trace("Finishing up sync");
-    this._tracker.resetScore();
 
     let doDelete = async (key, val) => {
       let coll = new Collection(this.engineURL, this._recordObj, this.service);
