@@ -167,8 +167,6 @@ struct DocumentHandle;
 // RenderBackend.
 struct Renderer;
 
-struct Tiles;
-
 struct Vec_u8;
 
 struct WrRenderedEpochs;
@@ -417,16 +415,6 @@ struct ColorF {
   }
 };
 
-struct TypedPoint2D_u16__Tiles {
-  uint16_t x;
-  uint16_t y;
-
-  bool operator==(const TypedPoint2D_u16__Tiles& aOther) const {
-    return x == aOther.x &&
-           y == aOther.y;
-  }
-};
-
 struct TypedPoint2D_f32__LayerPixel {
   float x;
   float y;
@@ -617,6 +605,16 @@ struct TextShadow {
 };
 
 typedef YuvColorSpace WrYuvColorSpace;
+
+struct TypedPoint2D_u16__Tiles {
+  uint16_t x;
+  uint16_t y;
+
+  bool operator==(const TypedPoint2D_u16__Tiles& aOther) const {
+    return x == aOther.x &&
+           y == aOther.y;
+  }
+};
 
 typedef TypedPoint2D_u16__Tiles TileOffset;
 
@@ -1103,7 +1101,7 @@ extern bool wr_moz2d_render_cb(ByteSlice aBlob,
                                uint32_t aHeight,
                                ImageFormat aFormat,
                                const uint16_t *aTileSize,
-                               const TileOffset *aTileoffest,
+                               const TileOffset *aTileOffset,
                                MutByteSlice aOutput);
 
 extern void wr_notifier_external_event(WrWindowId aWindowId,
