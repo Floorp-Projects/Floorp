@@ -39,7 +39,6 @@ CopyableCanvasRenderer::CopyableCanvasRenderer()
   , mAsyncRenderer(nullptr)
   , mIsAlphaPremultiplied(true)
   , mOriginPos(gl::OriginPos::TopLeft)
-  , mIsMirror(false)
   , mOpaque(true)
   , mCachedTempSurface(nullptr)
 {
@@ -61,7 +60,6 @@ CopyableCanvasRenderer::Initialize(const CanvasInitializeData& aData)
     mGLContext = aData.mGLContext;
     mIsAlphaPremultiplied = aData.mIsGLAlphaPremult;
     mOriginPos = gl::OriginPos::BottomLeft;
-    mIsMirror = aData.mIsMirror;
 
     MOZ_ASSERT(mGLContext->IsOffscreen(), "canvas gl context isn't offscreen");
 
