@@ -1590,6 +1590,8 @@ extern "C" {
                                width: u32,
                                height: u32,
                                format: ImageFormat,
+                               tile_size: *const u16,
+                               tile_offset: *const TileOffset,
                                output: MutByteSlice)
                                -> bool;
 }

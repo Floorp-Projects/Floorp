@@ -447,7 +447,6 @@ class BytecodeParser
     bool parse();
 
 #ifdef DEBUG
-    bool isReachable(uint32_t offset) { return maybeCode(offset); }
     bool isReachable(const jsbytecode* pc) { return maybeCode(pc); }
 #endif /* DEBUG */
 
@@ -498,14 +497,6 @@ class BytecodeParser
         MOZ_ASSERT(uint32_t(operand) < code.stackDepthAfter);
         return code.offsetStackAfter[operand];
     }
-    jsbytecode* pcForStackOperandAfterPC(jsbytecode* pc, int operand, uint8_t* defIndex) {
-        size_t offset = script_->pcToOffset(pc);
-        const OffsetAndDefIndex& offsetAndDefIndex = offsetForStackOperandAfterPC(offset, operand);
-        if (offsetAndDefIndex.isSpecial())
-            return nullptr;
-        *defIndex = offsetAndDefIndex.defIndex();
-        return script_->offsetToPC(offsetAndDefIndex.offset());
-    }
 
     template <typename Callback>
     bool forEachJumpOrigins(jsbytecode* pc, Callback callback) {
@@ -534,11 +525,6 @@ class BytecodeParser
         ReportOutOfMemory(cx_);
     }
 
-    uint32_t numSlots() {
-        return 1 + script_->nfixed() +
-               (script_->functionNonDelazifying() ? script_->functionNonDelazifying()->nargs() : 0);
-    }
-
     uint32_t maximumStackDepth() {
         return script_->nslots() - script_->nfixed();
     }
@@ -548,13 +534,15 @@ class BytecodeParser
         MOZ_ASSERT(codeArray_[offset]);
         return *codeArray_[offset];
     }
-    Bytecode& getCode(const jsbytecode* pc) { return getCode(script_->pcToOffset(pc)); }
 
     Bytecode* maybeCode(uint32_t offset) {
         MOZ_ASSERT(offset < script_->length());
         return codeArray_[offset];
     }
+
+#ifdef DEBUG
     Bytecode* maybeCode(const jsbytecode* pc) { return maybeCode(script_->pcToOffset(pc)); }
+#endif
 
     uint32_t simulateOp(JSOp op, uint32_t offset, OffsetAndDefIndex* offsetStack,
                         uint32_t stackDepth);
