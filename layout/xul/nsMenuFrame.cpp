@@ -704,7 +704,7 @@ nsMenuFrame::GetAnchor()
   }
 
   // Always return the menu's content if the anchor wasn't set or wasn't found.
-  return anchor && anchor->GetPrimaryFrame() ? anchor : mContent;
+  return anchor && anchor->GetPrimaryFrame() ? anchor : GetContent();
 }
 
 void

@@ -624,6 +624,12 @@ SERVO_BINDING_FUNC(Servo_GetCustomPropertyNameAt, bool,
                    nsAString* name)
 
 
+SERVO_BINDING_FUNC(Servo_ProcessInvalidations, void,
+                   RawServoStyleSetBorrowed set,
+                   RawGeckoElementBorrowed element,
+                   const mozilla::ServoElementSnapshotTable* snapshots)
+
+
 // AddRef / Release functions
 #define SERVO_ARC_TYPE(name_, type_)                                \
   SERVO_BINDING_FUNC(Servo_##name_##_AddRef, void, type_##Borrowed) \

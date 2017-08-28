@@ -66,6 +66,12 @@ MOZ_END_EXTERN_C
 #  include <android/log.h>
 #endif
 
+#if defined(__GNUC__)
+#  define MOZ_UNUSED_ATTRIBUTE __attribute__((unused))
+#else
+#  define MOZ_UNUSED_ATTRIBUTE /* nothing */
+#endif
+
 /*
  * MOZ_STATIC_ASSERT may be used to assert a condition *at compile time* in C.
  * In C++11, static_assert is provided by the compiler to the same effect.
@@ -90,11 +96,6 @@ MOZ_END_EXTERN_C
     * triggers compiler warnings with some versions of gcc, so mark the typedefs
     * as permissibly-unused to disable the warnings.
     */
-#  if defined(__GNUC__)
-#    define MOZ_STATIC_ASSERT_UNUSED_ATTRIBUTE __attribute__((unused))
-#  else
-#    define MOZ_STATIC_ASSERT_UNUSED_ATTRIBUTE /* nothing */
-#  endif
 #  define MOZ_STATIC_ASSERT_GLUE1(x, y)          x##y
 #  define MOZ_STATIC_ASSERT_GLUE(x, y)           MOZ_STATIC_ASSERT_GLUE1(x, y)
 #  if defined(__SUNPRO_CC)
@@ -127,10 +128,10 @@ MOZ_END_EXTERN_C
       * code.
       */
 #    define MOZ_STATIC_ASSERT(cond, reason) \
-       typedef int MOZ_STATIC_ASSERT_GLUE(moz_static_assert, __COUNTER__)[(cond) ? 1 : -1] MOZ_STATIC_ASSERT_UNUSED_ATTRIBUTE
+       typedef int MOZ_STATIC_ASSERT_GLUE(moz_static_assert, __COUNTER__)[(cond) ? 1 : -1] MOZ_UNUSED_ATTRIBUTE
 #  else
 #    define MOZ_STATIC_ASSERT(cond, reason) \
-       extern void MOZ_STATIC_ASSERT_GLUE(moz_static_assert, __LINE__)(int arg[(cond) ? 1 : -1]) MOZ_STATIC_ASSERT_UNUSED_ATTRIBUTE
+       extern void MOZ_STATIC_ASSERT_GLUE(moz_static_assert, __LINE__)(int arg[(cond) ? 1 : -1]) MOZ_UNUSED_ATTRIBUTE
 #  endif
 
 #define MOZ_STATIC_ASSERT_IF(cond, expr, reason)  MOZ_STATIC_ASSERT(!(cond) || (expr), reason)
