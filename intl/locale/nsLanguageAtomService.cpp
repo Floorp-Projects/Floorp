@@ -101,6 +101,7 @@ nsLanguageAtomService::GetUncachedLanguageGroup(nsIAtom* aLanguage) const
 {
   nsAutoCString langStr;
   aLanguage->ToUTF8String(langStr);
+  ToLowerCase(langStr);
 
   nsAutoCString langGroupStr;
   nsresult res =
