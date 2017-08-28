@@ -141,7 +141,9 @@ public class SessionNotificationService extends Service {
         }
 
         final String notificationChannelName = getString(R.string.notification_browsing_session_channel_name);
-        final String notificationChannelDescription = getString(R.string.notification_browsing_session_channel_description);
+        final String notificationChannelDescription = getString(
+                R.string.notification_browsing_session_channel_description,
+                getString(R.string.app_name));
 
         final NotificationChannel channel = new NotificationChannel(
                 NOTIFICATION_CHANNEL_ID, notificationChannelName, NotificationManager.IMPORTANCE_MIN);

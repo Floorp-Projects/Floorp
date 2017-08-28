@@ -360,19 +360,19 @@ be temporary, and you can try again later.</li>
           existing tab. -->
     <string name="dialog_opentab_action_open">Open</string>
 
-    <!-- The user visible name of the notification channel.
+    <!-- The user visible name of the "notification channel" (Android 8+ feature) for the ongoing notification shown while a browsing session is active.
     The recommended maximum length is 40 characters; the value may be truncated if it is too long.
 
     * To understand what notification channels are, see: https://www.androidcentral.com/notification-channels
     * To see how this string will look like in Android's UI, see: https://github.com/mozilla-mobile/focus-android/issues/863#issuecomment-324105723
     -->
-    <string name="notification_browsing_session_channel_name">TBD</string>
+    <string name="notification_browsing_session_channel_name">Private browsing session</string>
 
-    <!-- The user visible description of the notification channel.
-    The recommended maximum length is 300 characters; the value may be truncated if it is too long.
+    <!-- The user visible description of the "notification channel" (Android 8+ feature) for the ongoing notification shown while a browsing session is active.
+    The recommended maximum length is 300 characters; the value may be truncated if it is too long. %1$s will be replaced with the name of the app (e.g. Firefox Focus).
 
     * To understand what notification channels are, see: https://www.androidcentral.com/notification-channels
     * To see how this string will look like in Android's UI, see: https://github.com/mozilla-mobile/focus-android/issues/863#issuecomment-324105723
     -->
-    <string name="notification_browsing_session_channel_description">TBD</string>
+    <string name="notification_browsing_session_channel_description">Notifications let you erase your %1$s session with a tap. You don’t need to open the app or see what’s running in your browser.</string>
 </resources>
