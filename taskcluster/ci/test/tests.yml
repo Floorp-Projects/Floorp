@@ -195,7 +195,6 @@ firefox-ui-functional-remote:
     suite: "firefox-ui/functional remote"
     treeherder-symbol: tc-Fxfn-r(en-US)
     max-run-time: 5400
-    tier: 2
     mozharness:
         script: firefox_ui_tests/functional.py
         config:
@@ -214,7 +213,7 @@ firefox-ui-functional-remote:
     tier:
         by-test-platform:
             windows10-64-asan.*: 3
-            default: default
+            default: 2
 
 geckoview:
     description: "Geckoview run"
