@@ -700,15 +700,6 @@ MediaDecoder::GetCurrentTime()
   return mLogicalPosition;
 }
 
-already_AddRefed<nsIPrincipal>
-MediaDecoder::GetCurrentPrincipal()
-{
-  MOZ_ASSERT(NS_IsMainThread());
-  MediaResource* r = GetResource();
-  AbstractThread::AutoEnter context(AbstractMainThread());
-  return r ? r->GetCurrentPrincipal() : nullptr;
-}
-
 void
 MediaDecoder::OnMetadataUpdate(TimedMetadata&& aMetadata)
 {
@@ -1343,15 +1334,6 @@ MediaDecoder::SizeOfAudioQueue()
     return mDecoderStateMachine->SizeOfAudioQueue();
   }
   return 0;
-}
-
-void MediaDecoder::AddSizeOfResources(ResourceSizes* aSizes)
-{
-  MOZ_ASSERT(NS_IsMainThread());
-  if (GetResource()) {
-    aSizes->mByteSize +=
-      GetResource()->SizeOfIncludingThis(aSizes->mMallocSizeOf);
-  }
 }
 
 void

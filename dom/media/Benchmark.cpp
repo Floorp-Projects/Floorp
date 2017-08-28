@@ -53,7 +53,7 @@ VP9Benchmark::IsVP9DecodeFast()
     sHasRunTest = true;
 
     RefPtr<WebMDemuxer> demuxer = new WebMDemuxer(
-      new BufferMediaResource(sWebMSample, sizeof(sWebMSample), nullptr));
+      new BufferMediaResource(sWebMSample, sizeof(sWebMSample)));
     RefPtr<Benchmark> estimiser =
       new Benchmark(demuxer,
                     {

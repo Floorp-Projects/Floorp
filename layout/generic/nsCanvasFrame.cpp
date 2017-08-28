@@ -153,7 +153,7 @@ nsCanvasFrame::DestroyFrom(nsIFrame* aDestructRoot)
       content->SetContentNode(clonedElement->AsElement());
     }
   }
-  nsContentUtils::DestroyAnonymousContent(&mCustomContentContainer);
+  DestroyAnonymousContent(mCustomContentContainer.forget());
 
   nsContainerFrame::DestroyFrom(aDestructRoot);
 }

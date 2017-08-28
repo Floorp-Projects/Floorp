@@ -80,6 +80,7 @@
 
     <style name="UrlBar.V17.SiteIdentity" parent="UrlBar.Base.SiteIdentity">
         <item name="android:layout_marginStart">8dp</item>
+        <item name="android:paddingEnd">@dimen/browser_toolbar_site_security_margin_end</item>
     </style>
 
 </resources>

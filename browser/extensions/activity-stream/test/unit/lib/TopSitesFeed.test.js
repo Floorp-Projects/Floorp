@@ -5,7 +5,12 @@ const {FakePrefs, GlobalOverrider} = require("test/unit/utils");
 const action = {meta: {fromTarget: {}}};
 const {actionCreators: ac, actionTypes: at} = require("common/Actions.jsm");
 const {insertPinned, TOP_SITES_SHOWMORE_LENGTH} = require("common/Reducers.jsm");
-const FAKE_LINKS = new Array(TOP_SITES_SHOWMORE_LENGTH).fill(null).map((v, i) => ({url: `http://www.site${i}.com`}));
+
+const FAKE_FRECENCY = 200;
+const FAKE_LINKS = new Array(TOP_SITES_SHOWMORE_LENGTH).fill(null).map((v, i) => ({
+  frecency: FAKE_FRECENCY,
+  url: `http://www.site${i}.com`
+}));
 const FAKE_SCREENSHOT = "data123";
 
 function FakeTippyTopProvider() {}
@@ -53,7 +58,7 @@ describe("Top Sites Feed", () => {
       "common/Reducers.jsm": {insertPinned, TOP_SITES_SHOWMORE_LENGTH},
       "lib/Screenshots.jsm": {Screenshots: fakeScreenshot},
       "lib/TippyTopProvider.jsm": {TippyTopProvider: FakeTippyTopProvider},
-      "common/ShortURL.jsm": {shortURL: shortURLStub}
+      "lib/ShortURL.jsm": {shortURL: shortURLStub}
     }));
     feed = new TopSitesFeed();
     feed.store = {dispatch: sinon.spy(), getState() { return {TopSites: {rows: Array(12).fill("site")}}; }};
@@ -106,10 +111,27 @@ describe("Top Sites Feed", () => {
       assert.deepEqual(result, reference);
       assert.calledOnce(global.NewTabUtils.activityStreamLinks.getTopSites);
     });
+    it("should filter out low frecency links", async () => {
+      links = [
+        {frecency: FAKE_FRECENCY, url: "https://enough/visited"},
+        {frecency: 100, url: "https://visited/once"},
+        {frecency: 0, url: "https://unvisited/page"}
+      ];
+
+      const result = await feed.getLinksWithDefaults();
+
+      assert.equal(result[0].url, links[0].url);
+      assert.notEqual(result[1].url, links[1].url);
+      assert.notEqual(result[1].url, links[2].url);
+    });
     it("should filter out the defaults that have been blocked", async () => {
       // make sure we only have one top site, and we block the only default site we have to show
       const url = "www.myonlytopsite.com";
-      const topsite = {url, hostname: shortURLStub({url})};
+      const topsite = {
+        frecency: FAKE_FRECENCY,
+        hostname: shortURLStub({url}),
+        url
+      };
       const blockedDefaultSite = {url: "https://foo.com"};
       fakeNewTabUtils.activityStreamLinks.getTopSites = () => [topsite];
       fakeNewTabUtils.blockedLinks.isBlocked = site => (site.url === blockedDefaultSite.url);
@@ -134,7 +156,7 @@ describe("Top Sites Feed", () => {
       assert.equal(result, site.hostname);
     });
     it("should add defaults if there are are not enough links", async () => {
-      links = [{url: "foo.com"}];
+      links = [{frecency: FAKE_FRECENCY, url: "foo.com"}];
 
       const result = await feed.getLinksWithDefaults();
       const reference = [...links, ...DEFAULT_TOP_SITES].map(s => Object.assign({}, s, {hostname: shortURLStub(s)}));
@@ -144,7 +166,7 @@ describe("Top Sites Feed", () => {
     it("should only add defaults up to TOP_SITES_SHOWMORE_LENGTH", async () => {
       links = [];
       for (let i = 0; i < TOP_SITES_SHOWMORE_LENGTH - 1; i++) {
-        links.push({url: `foo${i}.com`});
+        links.push({frecency: FAKE_FRECENCY, url: `foo${i}.com`});
       }
       const result = await feed.getLinksWithDefaults();
       const reference = [...links, DEFAULT_TOP_SITES[0]].map(s => Object.assign({}, s, {hostname: shortURLStub(s)}));
@@ -356,6 +378,11 @@ describe("Top Sites Feed", () => {
     it("should call refresh on INIT action", async () => {
       sinon.stub(feed, "refresh");
       await feed.onAction({type: at.INIT});
+      assert.calledOnce(feed.refresh);
+    });
+    it("should call refresh on BLOCK_URL action", async () => {
+      sinon.stub(feed, "refresh");
+      await feed.onAction({type: at.BLOCK_URL});
       assert.calledOnce(feed.refresh);
     });
   });

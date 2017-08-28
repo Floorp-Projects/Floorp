@@ -55,7 +55,7 @@ nsMeterFrame::DestroyFrom(nsIFrame* aDestructRoot)
                "nsMeterFrame should not have continuations; if it does we "
                "need to call RegUnregAccessKey only for the first.");
   nsFormControlFrame::RegUnRegAccessKey(static_cast<nsIFrame*>(this), false);
-  nsContentUtils::DestroyAnonymousContent(&mBarDiv);
+  DestroyAnonymousContent(mBarDiv.forget());
   nsContainerFrame::DestroyFrom(aDestructRoot);
 }
 

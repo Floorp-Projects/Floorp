@@ -121,7 +121,7 @@ public:
   void NetworkError();
 
   // Return the principal of the current URI being played or downloaded.
-  virtual already_AddRefed<nsIPrincipal> GetCurrentPrincipal();
+  virtual already_AddRefed<nsIPrincipal> GetCurrentPrincipal() = 0;
 
   // Return the time position in the video stream being
   // played measured in seconds.
@@ -275,7 +275,7 @@ private:
     MozPromiseHolder<SizeOfPromise> mCallback;
   };
 
-  virtual void AddSizeOfResources(ResourceSizes* aSizes);
+  virtual void AddSizeOfResources(ResourceSizes* aSizes) = 0;
 
   VideoFrameContainer* GetVideoFrameContainer()
   {

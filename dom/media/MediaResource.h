@@ -160,9 +160,6 @@ public:
   NS_METHOD_(MozExternalRefCountType) AddRef(void);
   NS_METHOD_(MozExternalRefCountType) Release(void);
 
-  // Get the current principal for the channel
-  virtual already_AddRefed<nsIPrincipal> GetCurrentPrincipal() = 0;
-
   // These methods are called off the main thread.
   // Read up to aCount bytes from the stream. The read starts at
   // aOffset in the stream, seeking to that location initially if
@@ -218,14 +215,6 @@ public:
    * aRanges is being used.
    */
   virtual nsresult GetCachedRanges(MediaByteRangeSet& aRanges) = 0;
-
-  virtual size_t SizeOfExcludingThis(MallocSizeOf aMallocSizeOf) const {
-    return 0;
-  }
-
-  virtual size_t SizeOfIncludingThis(MallocSizeOf aMallocSizeOf) const {
-    return aMallocSizeOf(this) + SizeOfExcludingThis(aMallocSizeOf);
-  }
 
 protected:
   virtual ~MediaResource() {};
@@ -290,6 +279,9 @@ public:
   // requests are supported by the connection/server.
   virtual bool IsTransportSeekable() = 0;
 
+  // Get the current principal for the channel
+  virtual already_AddRefed<nsIPrincipal> GetCurrentPrincipal() = 0;
+
   /**
    * Open the stream. This creates a stream listener and returns it in
    * aStreamListener; this listener needs to be notified of incoming data.
@@ -315,18 +307,17 @@ public:
   // Returns true if the resource is a live stream.
   bool IsLiveStream() { return GetLength() == -1; }
 
-  size_t SizeOfExcludingThis(MallocSizeOf aMallocSizeOf) const override
+  virtual size_t SizeOfExcludingThis(MallocSizeOf aMallocSizeOf) const
   {
     // Might be useful to track in the future:
     // - mChannel
     // - mURI (possibly owned, looks like just a ref from mChannel)
     // Not owned:
     // - mCallback
-    size_t size = MediaResource::SizeOfExcludingThis(aMallocSizeOf);
-    return size;
+    return 0;
   }
 
-  size_t SizeOfIncludingThis(MallocSizeOf aMallocSizeOf) const override
+  virtual size_t SizeOfIncludingThis(MallocSizeOf aMallocSizeOf) const
   {
     return aMallocSizeOf(this) + SizeOfExcludingThis(aMallocSizeOf);
   }

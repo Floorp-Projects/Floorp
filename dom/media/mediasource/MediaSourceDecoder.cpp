@@ -60,7 +60,8 @@ MediaSourceDecoder::Load(nsIPrincipal* aPrincipal)
   MOZ_ASSERT(!GetStateMachine());
   AbstractThread::AutoEnter context(AbstractMainThread());
 
-  mResource = new MediaSourceResource(aPrincipal);
+  mPrincipal = aPrincipal;
+  mResource = new MediaSourceResource();
 
   nsresult rv = MediaShutdownManager::Instance().Register(this);
   if (NS_WARN_IF(NS_FAILED(rv))) {
@@ -360,6 +361,13 @@ MediaSourceDecoder::NotifyInitDataArrived()
   if (mDemuxer) {
     mDemuxer->NotifyInitDataArrived();
   }
+}
+
+already_AddRefed<nsIPrincipal>
+MediaSourceDecoder::GetCurrentPrincipal()
+{
+  MOZ_ASSERT(NS_IsMainThread());
+  return do_AddRef(mPrincipal);
 }
 
 #undef MSE_DEBUG

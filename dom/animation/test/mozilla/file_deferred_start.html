@@ -104,8 +104,15 @@ promise_test(function(t) {
     div.animate({ transform: [ 'translate(0px)', 'translate(100px)' ] },
                 { duration: 400 * MS_PER_SEC,
                   delay: -200 * MS_PER_SEC });
-    return waitForPaints();
-  }).then(() => {
+
+    // TODO: Current waitForPaint() will not wait for MozAfterPaint in this
+    // case(Bug 1341294), so this waiting code is workaround for it.
+    // This waitForFrame() uses Promise, but bug 1193394 will be using same
+    // handling of  microtask, so if landed bug 1193394 this test might be
+    // failure since this promise will resolve in same tick of Element.animate.
+    return waitForFrame();
+  }).then(() => waitForPaints())
+  .then(() => {
     const transformStr =
       SpecialPowers.DOMWindowUtils.getOMTAStyle(div, 'transform');
     const translateX = getTranslateXFromTransform(transformStr);
@@ -146,8 +153,12 @@ promise_test(function(t) {
                   200 * MS_PER_SEC);
     animation.currentTime = 100 * MS_PER_SEC;
     animation.playbackRate = 0.1;
-    return waitForPaints();
-  }).then(() => {
+
+    // As the above test case, we should fix bug 1341294 before bug 1193394
+    // lands.
+    return waitForFrame();
+  }).then(() => waitForPaints())
+  .then(() => {
     const transformStr =
       SpecialPowers.DOMWindowUtils.getOMTAStyle(div, 'transform');
     const translateX = getTranslateXFromTransform(transformStr);
