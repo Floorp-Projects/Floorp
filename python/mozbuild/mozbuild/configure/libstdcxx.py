@@ -76,6 +76,6 @@ def find_version(e):
 
 if __name__ == '__main__':
     cxx_env = os.environ['CXX']
-    print 'MOZ_LIBSTDCXX_TARGET_VERSION=%s' % find_version(cxx_env)
+    print('MOZ_LIBSTDCXX_TARGET_VERSION=%s' % find_version(cxx_env))
     host_cxx_env = os.environ.get('HOST_CXX', cxx_env)
-    print 'MOZ_LIBSTDCXX_HOST_VERSION=%s' % find_version(host_cxx_env)
+    print('MOZ_LIBSTDCXX_HOST_VERSION=%s' % find_version(host_cxx_env))

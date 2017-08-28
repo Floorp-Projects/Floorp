@@ -110,7 +110,7 @@ class TestFileAvoidWrite(unittest.TestCase):
             '''
             def __call__(self, name, mode):
                 if 'w' in mode:
-                    raise Exception, 'Unexpected open with write mode'
+                    raise Exception('Unexpected open with write mode')
                 return MockedOpen.__call__(self, name, mode)
 
         with MyMockedOpen({'file': 'content'}):

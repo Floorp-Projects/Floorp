@@ -212,7 +212,7 @@ class Doctor(object):
                         fsutil_output = subprocess.check_output(command)
                         status = 'GOOD, FIXED'
                         desc = 'lastaccess disabled systemwide'
-                    except subprocess.CalledProcessError, e:
+                    except subprocess.CalledProcessError as e:
                         desc = 'lastaccess enabled systemwide'
                         if e.output.find('denied') != -1:
                             status = 'BAD, FIX DENIED'
