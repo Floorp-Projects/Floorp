@@ -32,27 +32,6 @@ function* getOwnIdentifiers(x) {
   yield* Object.getOwnPropertySymbols(x);
 }
 
-const COMPONENT_ERROR = '`Components` is not available in this context.\n' +
-  'Functionality provided by Components may be available in an SDK\n' +
-  'module: https://developer.mozilla.org/en-US/Add-ons/SDK \n\n' +
-  'However, if you still need to import Components, you may use the\n' +
-  '`chrome` module\'s properties for shortcuts to Component properties:\n\n' +
-  'Shortcuts: \n' +
-  '    Cc = Components' + '.classes \n' +
-  '    Ci = Components' + '.interfaces \n' +
-  '    Cu = Components' + '.utils \n' +
-  '    CC = Components' + '.Constructor \n' +
-  'Example: \n' +
-  '    let { Cc, Ci } = require(\'chrome\');\n';
-
-// Returns map of given `object`-s own property descriptors.
-const descriptor = function descriptor(object) {
-  let value = {};
-  for (let name of getOwnIdentifiers(object))
-    value[name] = getOwnPropertyDescriptor(object, name)
-  return value;
-};
-
 function sourceURI(uri) { return String(uri).split(" -> ").pop(); }
 
 function isntLoaderFrame(frame) { return frame.fileName !== __URI__ }
@@ -184,16 +163,26 @@ const load = function load(loader, module) {
   // We expose set of properties defined by `CommonJS` specification via
   // prototype of the sandbox. Also globals are deeper in the prototype
   // chain so that each module has access to them as well.
-  let descriptors = descriptor({
-    require: require,
-    module: module,
-    exports: module.exports,
-    get Components() {
-      // Expose `Components` property to throw error on usage with
-      // additional information
-      throw new ReferenceError(COMPONENT_ERROR);
-    }
-  });
+  let descriptors = {
+    require: {
+      configurable: true,
+      enumerable: true,
+      writable: true,
+      value: require
+    },
+    module: {
+      configurable: true,
+      enumerable: true,
+      writable: true,
+      value: module
+    },
+    exports: {
+      configurable: true,
+      enumerable: true,
+      writable: true,
+      value: module.exports
+    },
+  };
 
   let sandbox;
   if (loader.useSharedGlobalSandbox || isSystemURI(module.uri)) {
@@ -437,7 +426,7 @@ function lazyRequireModule(obj, moduleId, prop = moduleId) {
 // with it during link time.
 const Require = function Require(loader, requirer) {
   let {
-    modules, mapping, mappingCache, resolve: loaderResolve, load,
+    modules, mapping, mappingCache,
     manifest, rootURI, isNative, requireHook
   } = loader;
 
@@ -524,7 +513,7 @@ const Require = function Require(loader, requirer) {
     }
     else if (requirer) {
       // Resolve `id` to its requirer if it's relative.
-      requirement = loaderResolve(id, requirer.id);
+      requirement = resolve(id, requirer.id);
     }
     else {
       requirement = id;
@@ -610,7 +599,6 @@ function Loader(options) {
   }
 
   let { paths, sharedGlobal, globals } = options;
-  let resolve = Loader.resolve;
   if (!globals) {
     globals = {};
   }
@@ -693,13 +681,11 @@ function Loader(options) {
     sharedGlobalSandbox: { enumerable: false, value: sharedGlobalSandbox },
     // Map of module sandboxes indexed by module URIs.
     sandboxes: { enumerable: false, value: {} },
-    resolve: { enumerable: false, value: resolve },
     // ID of the addon, if provided.
     id: { enumerable: false, value: options.id },
     // Whether the modules loaded should be ignored by the debugger
     invisibleToDebugger: { enumerable: false,
                            value: options.invisibleToDebugger || false },
-    load: { enumerable: false, value: options.load || load },
     requireHook: { enumerable: false, value: options.requireHook },
     loadModuleHook: { enumerable: false, value: options.loadModuleHook },
   };
