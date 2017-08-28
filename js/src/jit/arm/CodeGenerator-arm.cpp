@@ -3104,6 +3104,7 @@ CodeGeneratorARM::visitSignExtendInt64(LSignExtendInt64* lir)
         masm.move16SignExtend(input.low, output.low);
         break;
       case MSignExtendInt64::Word:
+        masm.move32(input.low, output.low);
         break;
     }
     masm.ma_asr(Imm32(31), output.low, output.high);

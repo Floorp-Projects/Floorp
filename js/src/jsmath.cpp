@@ -1440,11 +1440,8 @@ js::InitMathClass(JSContext* cx, HandleObject obj)
     if (!Math)
         return nullptr;
 
-    if (!JS_DefineProperty(cx, obj, js_Math_str, Math, JSPROP_RESOLVING,
-                           JS_STUBGETTER, JS_STUBSETTER))
-    {
+    if (!JS_DefineProperty(cx, obj, js_Math_str, Math, JSPROP_RESOLVING))
         return nullptr;
-    }
     if (!JS_DefineFunctions(cx, Math, math_static_methods))
         return nullptr;
     if (!JS_DefineConstDoubles(cx, Math, math_constants))
