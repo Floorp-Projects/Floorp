@@ -10142,6 +10142,28 @@ nsContentUtils::SetupCustomElement(Element* aElement,
   return registry->SetupCustomElement(aElement, aTypeExtension);
 }
 
+/* static */ CustomElementDefinition*
+nsContentUtils::GetElementDefinitionIfObservingAttr(Element* aCustomElement,
+                                                    nsIAtom* aExtensionType,
+                                                    nsIAtom* aAttrName)
+{
+  nsString extType = nsDependentAtomString(aExtensionType);
+  NodeInfo *ni = aCustomElement->NodeInfo();
+
+  CustomElementDefinition* definition =
+    LookupCustomElementDefinition(aCustomElement->OwnerDoc(), ni->LocalName(),
+                                  ni->NamespaceID(),
+                                  extType.IsEmpty() ? nullptr : &extType);
+
+  // Custom element not defined yet or attribute is not in the observed
+  // attribute list.
+  if (!definition || !definition->IsInObservedAttributeList(aAttrName)) {
+    return nullptr;
+  }
+
+  return definition;
+}
+
 /* static */ void
 nsContentUtils::EnqueueLifecycleCallback(nsIDocument* aDoc,
                                          nsIDocument::ElementCallbackType aType,
