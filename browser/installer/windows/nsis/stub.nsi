@@ -1573,6 +1573,7 @@ Function LaunchApp
   ${If} $0 <> 0 ; integer comparison
     StrCpy $FirefoxLaunchCode "1"
     MessageBox MB_OK|MB_ICONQUESTION "$(WARN_MANUALLY_CLOSE_APP_LAUNCH)"
+    Call SendPing
     Return
   ${EndIf}
 !endif
