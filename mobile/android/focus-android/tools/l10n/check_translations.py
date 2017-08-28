@@ -21,8 +21,23 @@ def etree_to_dict(tree):
     return d
 
 
-def raise_exception(lang, code):
+def missing_target_exception(lang, code):
+    # there is placeholder in source, but not in target.
     print(" * [{lang}/strings.xml] missing placeholder in translation, key: {code}".format(
+        lang=lang,
+        code=code
+    ))
+
+def missing_source_exception(lang, code):
+    # there is placeholder in target, but not in source.
+    print(" * [{lang}/strings.xml] placeholder missing in source, key: {code}".format(
+        lang=lang,
+        code=code
+    ))
+
+def count_mismatch_warning(lang, code):
+    # number of same placeholders used in source and target do not match
+    print(" * [{lang}/strings.xml] number of placeholders not matching, key: {code}".format(
         lang=lang,
         code=code
     ))
@@ -43,9 +58,10 @@ source = etree_to_dict(source_xml.getroot())
 
 got_error = False
 
+print("Checking for placeholders in translation files...")
+
 for source_xml in files:
     target = etree_to_dict(ET.parse(source_xml).getroot())
-    print("Checking for placeholders in {lang}".format(lang=source_xml.split('/')[-2].replace('values-', '')))
     for key in source:
         # pass missing translations and empty strings
         if key not in target:
@@ -55,11 +71,16 @@ for source_xml in files:
         if not source[key]:
             continue
         # Check for placeholders
+        language = source_xml.split('/')[-2]
         for placeholder in ['%1$s', '%2$s', '%3$s', '%4$s', '%5$s']:
-            if placeholder in source[key] and \
-                    source[key].count(placeholder) != target[key].count(placeholder):
-                raise_exception(source_xml.split('/')[-2], key)
+            if placeholder in source[key] and placeholder not in target[key]:
+                missing_target_exception(language, key)
                 got_error = True
+            elif placeholder in target[key] and placeholder not in source[key]:
+                missing_source_exception(language, key)
+                got_error = True
+            elif source[key].count(placeholder) != target[key].count(placeholder):
+                count_mismatch_warning(language, key)
 
 if got_error:
     exit(1)
