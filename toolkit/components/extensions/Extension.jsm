@@ -4,7 +4,7 @@
 
 "use strict";
 
-this.EXPORTED_SYMBOLS = ["Extension", "ExtensionData"];
+this.EXPORTED_SYMBOLS = ["Extension", "ExtensionData", "Langpack"];
 
 /* exported Extension, ExtensionData */
 /* globals Extension ExtensionData */
@@ -40,15 +40,19 @@ Cu.importGlobalProperties(["TextEncoder"]);
 
 Cu.import("resource://gre/modules/XPCOMUtils.jsm");
 Cu.import("resource://gre/modules/Services.jsm");
+Cu.importGlobalProperties(["fetch"]);
 
 XPCOMUtils.defineLazyModuleGetters(this, {
   AddonManager: "resource://gre/modules/AddonManager.jsm",
   AddonManagerPrivate: "resource://gre/modules/AddonManager.jsm",
+  AppConstants: "resource://gre/modules/AppConstants.jsm",
   AsyncShutdown: "resource://gre/modules/AsyncShutdown.jsm",
   ExtensionCommon: "resource://gre/modules/ExtensionCommon.jsm",
   ExtensionPermissions: "resource://gre/modules/ExtensionPermissions.jsm",
   ExtensionStorage: "resource://gre/modules/ExtensionStorage.jsm",
   ExtensionTestCommon: "resource://testing-common/ExtensionTestCommon.jsm",
+  FileSource: "resource://gre/modules/L10nRegistry.jsm",
+  L10nRegistry: "resource://gre/modules/L10nRegistry.jsm",
   Log: "resource://gre/modules/Log.jsm",
   MessageChannel: "resource://gre/modules/MessageChannel.jsm",
   NetUtil: "resource://gre/modules/NetUtil.jsm",
@@ -62,6 +66,11 @@ XPCOMUtils.defineLazyGetter(
   this, "processScript",
   () => Cc["@mozilla.org/webextensions/extension-process-script;1"]
           .getService().wrappedJSObject);
+
+XPCOMUtils.defineLazyGetter(
+  this, "resourceProtocol",
+  () => Services.io.getProtocolHandler("resource")
+          .QueryInterface(Ci.nsIResProtocolHandler));
 
 Cu.import("resource://gre/modules/ExtensionParent.jsm");
 Cu.import("resource://gre/modules/ExtensionUtils.jsm");
@@ -295,6 +304,7 @@ this.ExtensionData = class {
     this.resourceURL = rootURI.spec;
 
     this.manifest = null;
+    this.type = null;
     this.id = null;
     this.uuid = null;
     this.localeData = null;
@@ -453,6 +463,10 @@ this.ExtensionData = class {
   // of the permissions attribute, if we add things like url_overrides,
   // they should also be added here.
   get userPermissions() {
+    if (this.type !== "extension") {
+      return null;
+    }
+
     let result = {
       origins: this.whiteListedHosts.patterns.map(matcher => matcher.pattern),
       apis: [...this.apiNames],
@@ -508,7 +522,10 @@ this.ExtensionData = class {
       preprocessors: {},
     };
 
+    let manifestType = "manifest.WebExtensionManifest";
     if (this.manifest.theme) {
+      this.type = "theme";
+      // XXX create a separate manifest type for themes
       let invalidProps = validateThemeManifest(Object.getOwnPropertyNames(this.manifest));
 
       if (invalidProps.length) {
@@ -517,13 +534,18 @@ this.ExtensionData = class {
           `(the invalid properties found are: ${invalidProps})`;
         this.manifestError(message);
       }
+    } else if (this.manifest.langpack_id) {
+      this.type = "langpack";
+      manifestType = "manifest.WebExtensionLangpackManifest";
+    } else {
+      this.type = "extension";
     }
 
     if (this.localeData) {
       context.preprocessors.localize = (value, context) => this.localize(value);
     }
 
-    let normalized = Schemas.normalize(this.manifest, "manifest.WebExtensionManifest", context);
+    let normalized = Schemas.normalize(this.manifest, manifestType, context);
     if (normalized.error) {
       this.manifestError(normalized.error);
       return null;
@@ -548,54 +570,59 @@ this.ExtensionData = class {
     let dependencies = new Set();
     let originPermissions = new Set();
     let permissions = new Set();
+    let webAccessibleResources = [];
 
-    for (let perm of manifest.permissions) {
-      if (perm === "geckoProfiler") {
-        const acceptedExtensions = Services.prefs.getStringPref("extensions.geckoProfiler.acceptedExtensionIds", "");
-        if (!acceptedExtensions.split(",").includes(id)) {
-          this.manifestError("Only whitelisted extensions are allowed to access the geckoProfiler.");
-          continue;
+    if (this.type === "extension") {
+      for (let perm of manifest.permissions) {
+        if (perm === "geckoProfiler") {
+          const acceptedExtensions = Services.prefs.getStringPref("extensions.geckoProfiler.acceptedExtensionIds", "");
+          if (!acceptedExtensions.split(",").includes(id)) {
+            this.manifestError("Only whitelisted extensions are allowed to access the geckoProfiler.");
+            continue;
+          }
+        }
+
+        let type = classifyPermission(perm);
+        if (type.origin) {
+          let matcher = new MatchPattern(perm, {ignorePath: true});
+
+          perm = matcher.pattern;
+          originPermissions.add(perm);
+        } else if (type.api) {
+          apiNames.add(type.api);
+        }
+
+        permissions.add(perm);
+      }
+
+      if (this.id) {
+        // An extension always gets permission to its own url.
+        let matcher = new MatchPattern(this.getURL(), {ignorePath: true});
+        originPermissions.add(matcher.pattern);
+
+        // Apply optional permissions
+        let perms = await ExtensionPermissions.get(this);
+        for (let perm of perms.permissions) {
+          permissions.add(perm);
+        }
+        for (let origin of perms.origins) {
+          originPermissions.add(origin);
         }
       }
 
-      let type = classifyPermission(perm);
-      if (type.origin) {
-        let matcher = new MatchPattern(perm, {ignorePath: true});
-
-        perm = matcher.pattern;
-        originPermissions.add(perm);
-      } else if (type.api) {
-        apiNames.add(type.api);
+      for (let api of apiNames) {
+        dependencies.add(`${api}@experiments.addons.mozilla.org`);
       }
 
-      permissions.add(perm);
-    }
-
-    if (this.id) {
-      // An extension always gets permission to its own url.
-      let matcher = new MatchPattern(this.getURL(), {ignorePath: true});
-      originPermissions.add(matcher.pattern);
-
-      // Apply optional permissions
-      let perms = await ExtensionPermissions.get(this);
-      for (let perm of perms.permissions) {
-        permissions.add(perm);
-      }
-      for (let origin of perms.origins) {
-        originPermissions.add(origin);
+      // Normalize all patterns to contain a single leading /
+      if (manifest.web_accessible_resources) {
+        webAccessibleResources = manifest.web_accessible_resources
+          .map(path => path.replace(/^\/*/, "/"));
       }
     }
-
-    for (let api of apiNames) {
-      dependencies.add(`${api}@experiments.addons.mozilla.org`);
-    }
-
-    // Normalize all patterns to contain a single leading /
-    let webAccessibleResources = (manifest.web_accessible_resources || [])
-        .map(path => path.replace(/^\/*/, "/"));
 
     return {apiNames, dependencies, originPermissions, id, manifest, permissions,
-            webAccessibleResources};
+            webAccessibleResources, type: this.type};
   }
 
   // Reads the extension's |manifest.json| file, and stores its
@@ -619,6 +646,7 @@ this.ExtensionData = class {
     this.apiNames = manifestData.apiNames;
     this.dependencies = manifestData.dependencies;
     this.permissions = manifestData.permissions;
+    this.type = manifestData.type;
 
     this.webAccessibleResources = manifestData.webAccessibleResources.map(res => new MatchGlob(res));
     this.whiteListedHosts = new MatchPatternSet(manifestData.originPermissions);
@@ -797,6 +825,21 @@ XPCOMUtils.defineLazyGetter(BootstrapScope.prototype, "BOOTSTRAP_REASON_TO_STRIN
     [BOOTSTRAP_REASONS.ADDON_DOWNGRADE]: "ADDON_DOWNGRADE",
   });
 });
+
+class LangpackBootstrapScope {
+  install(data, reason) {}
+  uninstall(data, reason) {}
+
+  startup(data, reason) {
+    this.langpack = new Langpack(data);
+    return this.langpack.startup();
+  }
+
+  shutdown(data, reason) {
+    this.langpack.shutdown();
+    this.langpack = null;
+  }
+}
 
 // We create one instance of this class per extension. |addonData|
 // comes directly from bootstrap.js when initializing.
@@ -1407,3 +1450,127 @@ this.Extension = class extends ExtensionData {
     return this._optionalOrigins;
   }
 };
+
+this.Langpack = class extends ExtensionData {
+  constructor(addonData, startupReason) {
+    super(addonData.resourceURI);
+  }
+
+  static getBootstrapScope(id, file) {
+    return new LangpackBootstrapScope();
+  }
+
+  async promiseLocales(locale) {
+    let locales = await StartupCache.locales
+      .get([this.id, "@@all_locales"], () => this._promiseLocaleMap());
+
+    return this._setupLocaleData(locales);
+  }
+
+  readLocaleFile(locale) {
+    return StartupCache.locales.get([this.id, this.version, locale],
+                                    () => super.readLocaleFile(locale))
+      .then(result => {
+        this.localeData.messages.set(locale, result);
+      });
+  }
+
+  get manifestCacheKey() {
+    return [this.id, this.version, Services.locale.getAppLocaleAsLangTag()];
+  }
+
+  async _parseManifest() {
+    let data = await super.parseManifest();
+
+    const productCodeName = AppConstants.MOZ_BUILD_APP.replace("/", "-");
+
+    // The result path looks like this:
+    //   Firefox - `langpack-pl-browser`
+    //   Fennec - `langpack-pl-mobile-android`
+    data.langpackId =
+      `langpack-${data.manifest.langpack_id}-${productCodeName}`;
+
+    const l10nRegistrySources = {};
+
+    // Check if there's a root directory `/localization` in the langpack.
+    // If there is one, add it with the name `toolkit` as a FileSource.
+    const entries = await this.readDirectory("./localization");
+    if (entries.length > 0) {
+      l10nRegistrySources["toolkit"] = "";
+    }
+
+    // Add any additional sources listed in the manifest
+    if (data.manifest.sources) {
+      for (const [sourceName, {base_path}] of Object.entries(data.manifest.sources)) {
+        l10nRegistrySources[sourceName] = base_path;
+      }
+    }
+
+    data.l10nRegistrySources = l10nRegistrySources;
+    data.chromeResources = this.getChromeResources(data.manifest);
+
+    return data;
+  }
+
+  parseManifest() {
+    return StartupCache.manifests.get(this.manifestCacheKey,
+                                      () => this._parseManifest());
+  }
+
+  async startup(reason) {
+    const data = await this.parseManifest();
+    this.langpackId = data.langpackId;
+    this.l10nRegistrySources = data.l10nRegistrySources;
+
+    const languages = Object.keys(data.manifest.languages);
+    const manifestURI = Services.io.newURI("manifest.json", null, this.rootURI);
+
+    this.chromeRegistryHandle = null;
+    if (data.chromeResources.length > 0) {
+      this.chromeRegistryHandle =
+        aomStartup.registerChrome(manifestURI, data.chromeResources);
+    }
+
+    resourceProtocol.setSubstitution(this.langpackId, this.rootURI);
+
+    for (const [sourceName, basePath] of Object.entries(this.l10nRegistrySources)) {
+      L10nRegistry.registerSource(new FileSource(
+        `${sourceName}-${this.langpackId}`,
+        languages,
+        `resource://${this.langpackId}/${basePath}localization/{locale}/`
+      ));
+    }
+  }
+
+  async shutdown(reason) {
+    for (const sourceName of Object.keys(this.l10nRegistrySources)) {
+      L10nRegistry.removeSource(`${sourceName}-${this.langpackId}`);
+    }
+    if (this.chromeRegistryHandle) {
+      this.chromeRegistryHandle.destruct();
+      this.chromeRegistryHandle = null;
+    }
+
+    resourceProtocol.setSubstitution(this.langpackId, null);
+  }
+
+  getChromeResources(manifest) {
+    const chromeEntries = [];
+    for (const [language, entry] of Object.entries(manifest.languages)) {
+      for (const [alias, path] of Object.entries(entry.chrome_resources || {})) {
+        if (typeof path === "string") {
+          chromeEntries.push(["locale", alias, language, path]);
+        } else {
+          // If the path is not a string, it's an object with path per platform
+          // where the keys are taken from AppConstants.platform
+          const platform = AppConstants.platform;
+          if (platform in path) {
+            chromeEntries.push(["locale", alias, language, path[platform]]);
+          }
+        }
+
+      }
+    }
+    return chromeEntries;
+  }
+}
