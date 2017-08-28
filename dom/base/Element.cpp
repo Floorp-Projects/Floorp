@@ -2624,11 +2624,15 @@ Element::SetAttrAndNotify(int32_t aNamespaceID,
       oldValueAtom = aParsedValue.GetAsAtom();
     }
     nsCOMPtr<nsIAtom> newValueAtom = valueForAfterSetAttr.GetAsAtom();
+    nsAutoString ns;
+    nsContentUtils::NameSpaceManager()->GetNameSpaceURI(aNamespaceID, ns);
+
     LifecycleCallbackArgs args = {
       nsDependentAtomString(aName),
       aModType == nsIDOMMutationEvent::ADDITION ?
         NullString() : nsDependentAtomString(oldValueAtom),
-      nsDependentAtomString(newValueAtom)
+      nsDependentAtomString(newValueAtom),
+      (ns.IsEmpty() ? NullString() : ns)
     };
 
     nsContentUtils::EnqueueLifecycleCallback(
@@ -2909,11 +2913,15 @@ Element::UnsetAttr(int32_t aNameSpaceID, nsIAtom* aName,
 
   nsIDocument* ownerDoc = OwnerDoc();
   if (ownerDoc && GetCustomElementData()) {
+    nsAutoString ns;
+    nsContentUtils::NameSpaceManager()->GetNameSpaceURI(aNameSpaceID, ns);
+
     nsCOMPtr<nsIAtom> oldValueAtom = oldValue.GetAsAtom();
     LifecycleCallbackArgs args = {
       nsDependentAtomString(aName),
       nsDependentAtomString(oldValueAtom),
-      NullString()
+      NullString(),
+      (ns.IsEmpty() ? NullString() : ns)
     };
 
     nsContentUtils::EnqueueLifecycleCallback(
