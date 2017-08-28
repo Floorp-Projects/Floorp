@@ -49,7 +49,7 @@ const MAPPINGS = {
 };
 
 const globalScriptsRegExp =
-  /<script type=\"application\/javascript\" src=\"(.*)\"\/>/;
+  /<script type=\"application\/javascript\" src=\"(.*)\"\/>|^\s*"(.*?\.js)",$/;
 
 function getGlobalScriptsIncludes() {
   let fileData;
@@ -67,8 +67,8 @@ function getGlobalScriptsIncludes() {
   for (let line of fileData) {
     let match = line.match(globalScriptsRegExp);
     if (match) {
-      let sourceFile =
-        match[1].replace("chrome://browser/content/", "browser/base/content/")
+      let sourceFile = (match[1] || match[2])
+                .replace("chrome://browser/content/", "browser/base/content/")
                 .replace("chrome://global/content/", "toolkit/content/");
 
       for (let mapping of Object.getOwnPropertyNames(MAPPINGS)) {
