@@ -13,13 +13,10 @@
 
     <ImageView
         android:id="@+id/favicon"
+        style="@style/TabStrip.Favicon"
         android:layout_width="@dimen/browser_toolbar_favicon_size"
         android:layout_height="@dimen/browser_toolbar_favicon_size"
         android:layout_gravity="center"
-        android:layout_marginEnd="8dp"
-        android:layout_marginLeft="12dp"
-        android:layout_marginRight="8dp"
-        android:layout_marginStart="12dp"
         android:duplicateParentState="true"
         android:scaleType="centerInside"
         tools:src="@drawable/toolbar_favicon_default"/>
