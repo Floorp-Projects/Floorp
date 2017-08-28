@@ -2151,13 +2151,13 @@ nsTextServicesDocument::SetSelectionInternal(int32_t aOffset, int32_t aLength, b
 {
   NS_ENSURE_TRUE(mSelCon && aOffset >= 0 && aLength >= 0, NS_ERROR_FAILURE);
 
-  nsIDOMNode *sNode = 0, *eNode = 0;
-  int32_t sOffset = 0, eOffset = 0;
+  nsCOMPtr<nsINode> startNode;
+  int32_t startNodeOffset = 0;
   OffsetEntry *entry;
 
   // Find start of selection in node offset terms:
 
-  for (size_t i = 0; !sNode && i < mOffsetTable.Length(); i++) {
+  for (size_t i = 0; !startNode && i < mOffsetTable.Length(); i++) {
     entry = mOffsetTable[i];
     if (entry->mIsValid) {
       if (entry->mIsInsertedText) {
@@ -2166,8 +2166,8 @@ nsTextServicesDocument::SetSelectionInternal(int32_t aOffset, int32_t aLength, b
         // match exactly!
 
         if (entry->mStrOffset == aOffset) {
-          sNode   = entry->mNode;
-          sOffset = entry->mNodeOffset + entry->mLength;
+          startNode = do_QueryInterface(entry->mNode);
+          startNodeOffset = entry->mNodeOffset + entry->mLength;
         }
       } else if (aOffset >= entry->mStrOffset) {
         bool foundEntry = false;
@@ -2193,19 +2193,19 @@ nsTextServicesDocument::SetSelectionInternal(int32_t aOffset, int32_t aLength, b
         }
 
         if (foundEntry) {
-          sNode   = entry->mNode;
-          sOffset = entry->mNodeOffset + aOffset - entry->mStrOffset;
+          startNode = do_QueryInterface(entry->mNode);
+          startNodeOffset = entry->mNodeOffset + aOffset - entry->mStrOffset;
         }
       }
 
-      if (sNode) {
+      if (startNode) {
         mSelStartIndex = static_cast<int32_t>(i);
         mSelStartOffset = aOffset;
       }
     }
   }
 
-  NS_ENSURE_TRUE(sNode, NS_ERROR_FAILURE);
+  NS_ENSURE_TRUE(startNode, NS_ERROR_FAILURE);
 
   // XXX: If we ever get a SetSelection() method in nsIEditor, we should
   //      use it.
@@ -2219,7 +2219,7 @@ nsTextServicesDocument::SetSelectionInternal(int32_t aOffset, int32_t aLength, b
 
     NS_ENSURE_SUCCESS(rv, rv);
 
-    rv = selection->Collapse(sNode, sOffset);
+    rv = selection->AsSelection()->Collapse(startNode, startNodeOffset);
 
     NS_ENSURE_SUCCESS(rv, rv);
    }
@@ -2238,34 +2238,36 @@ nsTextServicesDocument::SetSelectionInternal(int32_t aOffset, int32_t aLength, b
   }
 
   // Find the end of the selection in node offset terms:
+  nsCOMPtr<nsINode> endNode;
+  int32_t endNodeOffset = 0;
   int32_t endOffset = aOffset + aLength;
-  for (int32_t i = mOffsetTable.Length() - 1; !eNode && i >= 0; i--) {
+  for (int32_t i = mOffsetTable.Length() - 1; !endNode && i >= 0; i--) {
     entry = mOffsetTable[i];
 
     if (entry->mIsValid) {
       if (entry->mIsInsertedText) {
-        if (entry->mStrOffset == eOffset) {
+        if (entry->mStrOffset == endNodeOffset) {
           // If the selection ends on an inserted text offset entry,
           // the selection includes the entire entry!
 
-          eNode   = entry->mNode;
-          eOffset = entry->mNodeOffset + entry->mLength;
+          endNode = do_QueryInterface(entry->mNode);
+          endNodeOffset = entry->mNodeOffset + entry->mLength;
         }
       } else if (endOffset >= entry->mStrOffset &&
                  endOffset <= entry->mStrOffset + entry->mLength) {
-        eNode   = entry->mNode;
-        eOffset = entry->mNodeOffset + endOffset - entry->mStrOffset;
+        endNode = do_QueryInterface(entry->mNode);
+        endNodeOffset = entry->mNodeOffset + endOffset - entry->mStrOffset;
       }
 
-      if (eNode) {
+      if (endNode) {
         mSelEndIndex = i;
         mSelEndOffset = endOffset;
       }
     }
   }
 
-  if (aDoUpdate && eNode) {
-    nsresult rv = selection->Extend(eNode, eOffset);
+  if (aDoUpdate && endNode) {
+    nsresult rv = selection->AsSelection()->Extend(endNode, endNodeOffset);
 
     NS_ENSURE_SUCCESS(rv, rv);
   }
