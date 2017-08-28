@@ -121,7 +121,7 @@ function join(base, ...paths) {
 //    be JSON-serializable.
 // For more details see:
 // https://developer.mozilla.org/en/Components.utils.Sandbox
-const Sandbox = function Sandbox(options) {
+function Sandbox(options) {
   // Normalize options and rename to match `Cu.Sandbox` expectations.
   options = {
     // Do not expose `Components` if you really need them (bad idea!) you
@@ -156,7 +156,7 @@ const Sandbox = function Sandbox(options) {
 
 // Populates `exports` of the given CommonJS `module` object, in the context
 // of the given `loader` by evaluating code associated with it.
-const load = function load(loader, module) {
+function load(loader, module) {
   let { sandboxes, globals, loadModuleHook } = loader;
   let require = Require(loader, module);
 
@@ -293,7 +293,7 @@ function normalizeExt(uri) {
 // Utility function to join paths. In common case `base` is a
 // `requirer.uri` but in some cases it may be `baseURI`. In order to
 // avoid complexity we require `baseURI` with a trailing `/`.
-const resolve = function resolve(id, base) {
+function resolve(id, base) {
   if (!isRelative(id))
     return id;
 
@@ -362,7 +362,7 @@ function compileMapping(paths) {
   };
 }
 
-const resolveURI = function resolveURI(id, mapping) {
+function resolveURI(id, mapping) {
   // Do not resolve if already a resource URI
   if (isAbsoluteURI(id))
     return normalizeExt(id);
@@ -424,7 +424,7 @@ function lazyRequireModule(obj, moduleId, prop = moduleId) {
 // in the context of the given `loader`. Each module gets own limited copy
 // of `require` that is allowed to load only a modules that are associated
 // with it during link time.
-const Require = function Require(loader, requirer) {
+function Require(loader, requirer) {
   let {
     modules, mapping, mappingCache,
     manifest, rootURI, isNative, requireHook
@@ -557,7 +557,7 @@ const Require = function Require(loader, requirer) {
 
 // Makes module object that is made available to CommonJS modules when they
 // are evaluated, along with `exports` and `require`.
-const Module = function Module(id, uri) {
+function Module(id, uri) {
   return Object.create(null, {
     id: { enumerable: true, value: id },
     exports: { enumerable: true, writable: true, value: Object.create(null),
@@ -568,7 +568,7 @@ const Module = function Module(id, uri) {
 
 // Takes `loader`, and unload `reason` string and notifies all observers that
 // they should cleanup after them-self.
-const unload = function unload(loader, reason) {
+function unload(loader, reason) {
   // subject is a unique object created per loader instance.
   // This allows any code to cleanup on loader unload regardless of how
   // it was loaded. To handle unload for specific loader subject may be
