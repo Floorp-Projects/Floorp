@@ -1233,7 +1233,8 @@ bool
 GlobalHelperThreadState::canStartWasmTier2Generator(const AutoLockHelperThreadState& lock)
 {
     return !wasmTier2GeneratorWorklist(lock).empty() &&
-           checkTaskThreadLimit<wasm::Tier2GeneratorTask*>(maxWasmTier2GeneratorThreads());
+           checkTaskThreadLimit<wasm::Tier2GeneratorTask*>(maxWasmTier2GeneratorThreads(),
+                                                           /*isMaster=*/true);
 }
 
 bool
