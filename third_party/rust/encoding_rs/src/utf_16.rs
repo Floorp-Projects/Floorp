@@ -30,7 +30,7 @@ impl Utf16Decoder {
         )
     }
 
-    pub fn additional_from_state(&self) -> usize() {
+    pub fn additional_from_state(&self) -> usize {
         1 + if self.lead_byte.is_some() { 1 } else { 0 } +
         if self.lead_surrogate == 0 { 0 } else { 2 }
     }
