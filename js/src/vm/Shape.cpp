@@ -457,8 +457,6 @@ NativeObject::addPropertyInternal(JSContext* cx,
                                   bool allowDictionary, const AutoKeepShapeTables& keep)
 {
     MOZ_ASSERT_IF(!allowDictionary, !obj->inDictionaryMode());
-    MOZ_ASSERT(getter != JS_PropertyStub);
-    MOZ_ASSERT(setter != JS_StrictPropertyStub);
 
     AutoRooterGetterSetter gsRoot(cx, attrs, &getter, &setter);
 
@@ -606,8 +604,6 @@ NativeObject::putProperty(JSContext* cx, HandleNativeObject obj, HandleId id,
                           unsigned flags)
 {
     MOZ_ASSERT(!JSID_IS_VOID(id));
-    MOZ_ASSERT(getter != JS_PropertyStub);
-    MOZ_ASSERT(setter != JS_StrictPropertyStub);
 
 #ifdef DEBUG
     if (obj->is<ArrayObject>()) {
@@ -792,8 +788,6 @@ NativeObject::changeProperty(JSContext* cx, HandleNativeObject obj, HandleShape 
                              unsigned attrs, GetterOp getter, SetterOp setter)
 {
     MOZ_ASSERT(obj->containsPure(shape));
-    MOZ_ASSERT(getter != JS_PropertyStub);
-    MOZ_ASSERT(setter != JS_StrictPropertyStub);
     MOZ_ASSERT_IF(attrs & (JSPROP_GETTER | JSPROP_SETTER), attrs & JSPROP_SHARED);
 
     /* Allow only shared (slotless) => unshared (slotful) transition. */
