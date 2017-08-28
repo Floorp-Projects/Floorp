@@ -9069,6 +9069,64 @@ nsLayoutUtils::ComputeScrollMetadata(nsIFrame* aForFrame,
   return metadata;
 }
 
+/*static*/ Maybe<ScrollMetadata>
+nsLayoutUtils::GetRootMetadata(nsDisplayListBuilder* aBuilder,
+                               Layer* aRootLayer,
+                               const ContainerLayerParameters& aContainerParameters)
+{
+  nsIFrame* frame = aBuilder->RootReferenceFrame();
+  nsPresContext* presContext = frame->PresContext();
+  nsIPresShell* presShell = presContext->PresShell();
+  nsIDocument* document = presShell->GetDocument();
+
+  // If we're using containerless scrolling, there is still one case where we
+  // want the root container layer to have metrics. If the parent process is
+  // using XUL windows, there is no root scrollframe, and without explicitly
+  // creating metrics there will be no guaranteed top-level APZC.
+  bool addMetrics = gfxPrefs::LayoutUseContainersForRootFrames() ||
+      (XRE_IsParentProcess() && !presShell->GetRootScrollFrame());
+
+  // Add metrics if there are none in the layer tree with the id (create an id
+  // if there isn't one already) of the root scroll frame/root content.
+  bool ensureMetricsForRootId =
+    nsLayoutUtils::AsyncPanZoomEnabled(frame) &&
+    !gfxPrefs::LayoutUseContainersForRootFrames() &&
+    aBuilder->IsPaintingToWindow() &&
+    !presContext->GetParentPresContext();
+
+  nsIContent* content = nullptr;
+  nsIFrame* rootScrollFrame = presShell->GetRootScrollFrame();
+  if (rootScrollFrame) {
+    content = rootScrollFrame->GetContent();
+  } else {
+    // If there is no root scroll frame, pick the document element instead.
+    // The only case we don't want to do this is in non-APZ fennec, where
+    // we want the root xul document to get a null scroll id so that the root
+    // content document gets the first non-null scroll id.
+    content = document->GetDocumentElement();
+  }
+
+  if (ensureMetricsForRootId && content) {
+    ViewID scrollId = nsLayoutUtils::FindOrCreateIDFor(content);
+    if (nsLayoutUtils::ContainsMetricsWithId(aRootLayer, scrollId)) {
+      ensureMetricsForRootId = false;
+    }
+  }
+
+  if (addMetrics || ensureMetricsForRootId) {
+    bool isRootContent = presContext->IsRootContentDocument();
+
+    nsRect viewport(aBuilder->ToReferenceFrame(frame), frame->GetSize());
+    return Some(nsLayoutUtils::ComputeScrollMetadata(frame,
+                           rootScrollFrame, content,
+                           aBuilder->FindReferenceFrameFor(frame),
+                           aRootLayer, FrameMetrics::NULL_SCROLL_ID, viewport, Nothing(),
+                           isRootContent, aContainerParameters));
+  }
+
+  return Nothing();
+}
+
 /* static */ bool
 nsLayoutUtils::ContainsMetricsWithId(const Layer* aLayer, const ViewID& aScrollId)
 {
