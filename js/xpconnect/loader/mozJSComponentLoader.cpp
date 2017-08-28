@@ -651,6 +651,7 @@ mozJSComponentLoader::ObjectForLocation(ComponentLoaderInfo& aInfo,
         CompileOptions options(cx);
         options.setNoScriptRval(true)
                .setVersion(JSVERSION_DEFAULT)
+               .maybeMakeStrictMode(true)
                .setFileAndLine(nativePath.get(), 1)
                .setSourceIsLazy(cache || ScriptPreloader::GetSingleton().Active());
 
