@@ -396,8 +396,6 @@ NativeObject::addProperty(JSContext* cx, HandleNativeObject obj, HandleId id,
                           unsigned flags, bool allowDictionary)
 {
     MOZ_ASSERT(!JSID_IS_VOID(id));
-    MOZ_ASSERT(getter != JS_PropertyStub);
-    MOZ_ASSERT(setter != JS_StrictPropertyStub);
     MOZ_ASSERT(obj->uninlinedNonProxyIsExtensible());
     MOZ_ASSERT(!obj->containsPure(id));
 
