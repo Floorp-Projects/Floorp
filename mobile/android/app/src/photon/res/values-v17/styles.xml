@@ -31,7 +31,7 @@
 
     <style name="UrlBar.V17.Tabs" parent="UrlBar.Base.Tabs">
         <item name="android:layout_toStartOf">@id/menu</item>
-        <item name="android:layout_marginEnd">-4dp</item>
+        <item name="android:layout_marginEnd">-3dp</item>
     </style>
 
     <style name="UrlBar.TabCounter" parent="UrlBar.V17.TabCounter" />
@@ -55,7 +55,7 @@
         <item name="android:layout_toStartOf">@id/edit_cancel</item>
         <item name="android:paddingStart">8dp</item>
         <item name="android:paddingEnd">0dp</item>
-        <item name="android:layout_marginEnd">-2dp</item>
+        <item name="android:layout_marginEnd">-3dp</item>
     </style>
 
     <style name="UrlBar.DisplayLayout" parent="UrlBar.V17.DisplayLayout" />
@@ -63,12 +63,12 @@
     <style name="UrlBar.V17.DisplayLayout" parent="UrlBar.Base.DisplayLayout">
         <item name="android:layout_alignStart">@id/url_bar_entry</item>
         <item name="android:layout_alignEnd">@id/url_bar_entry</item>
-        <item name="android:layout_marginEnd">-2dp</item>
+        <item name="android:layout_marginEnd">-3dp</item>
     </style>
 
-    <style name="UrlBar.QRCode" parent="UrlBar.V15.QRCode"/>
-    <style name="UrlBar.V15.QRCode" parent="UrlBar.ImageButton">
-        <item name="android:layout_marginRight">-2dp</item>
+    <style name="UrlBar.QRCode" parent="UrlBar.V17.QRCode"/>
+    <style name="UrlBar.V17.QRCode" parent="UrlBar.ImageButton">
+        <item name="android:layout_marginRight">-3dp</item>
     </style>
 
 </resources>
