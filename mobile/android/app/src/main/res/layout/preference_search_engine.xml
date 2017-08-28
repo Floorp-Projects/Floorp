@@ -14,11 +14,11 @@
 
     <org.mozilla.gecko.widget.FaviconView
         android:id="@+id/search_engine_icon"
-        android:layout_width="@dimen/favicon_bg"
-        android:layout_height="@dimen/favicon_bg"
+        android:layout_width="@dimen/favicon_small_size"
+        android:layout_height="@dimen/favicon_small_size"
         android:layout_gravity="center"
-        android:minWidth="@dimen/favicon_bg"
-        android:minHeight="@dimen/favicon_bg" />
+        android:minWidth="@dimen/favicon_small_size"
+        android:minHeight="@dimen/favicon_small_size" />
 
     <LinearLayout
         android:layout_width="wrap_content"
