@@ -355,7 +355,9 @@ FormAutofillParent.prototype = {
     this._updateStatus();
   },
 
-  _onAddressSubmit(address, target) {
+  _onFormSubmit(data, target) {
+    let {address} = data;
+
     if (address.guid) {
       // Avoid updating the fields that users don't modify.
       let originalAddress = this.profileStorage.addresses.get(address.guid);
@@ -414,40 +416,6 @@ FormAutofillParent.prototype = {
         // We want to exclude the first time form filling.
         Services.telemetry.scalarAdd("formautofill.addresses.fill_type_manual", 1);
       }
-    }
-  },
-
-  async _onCreditCardSubmit(creditCard, target) {
-    // We'll show the credit card doorhanger if:
-    //   - User applys autofill and changed
-    //   - User fills form manually
-    if (creditCard.guid &&
-        Object.keys(creditCard.record).every(key => creditCard.untouchedFields.includes(key))) {
-      return;
-    }
-
-    let state = await FormAutofillDoorhanger.show(target, "creditCard");
-    if (state == "cancel") {
-      return;
-    }
-
-    if (state == "disable") {
-      Services.prefs.setBoolPref("extensions.formautofill.creditCards.enabled", false);
-      return;
-    }
-
-    await this.profileStorage.creditCards.normalizeCCNumberFields(creditCard.record);
-    this.profileStorage.creditCards.add(creditCard.record);
-  },
-
-  _onFormSubmit(data, target) {
-    let {address, creditCard} = data;
-
-    if (address) {
-      this._onAddressSubmit(address, target);
-    }
-    if (creditCard) {
-      this._onCreditCardSubmit(creditCard, target);
     }
   },
 };
