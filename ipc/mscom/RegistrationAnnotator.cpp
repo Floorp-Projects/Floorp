@@ -4,7 +4,7 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-#include "InterfaceRegistrationAnnotator.h"
+#include "RegistrationAnnotator.h"
 
 #include "mozilla/JSONWriter.h"
 #include "mozilla/mscom/Utils.h"
@@ -363,6 +363,45 @@ AnnotateInterfaceRegistration(REFIID aIid)
   } else {
     annotationKey.AppendLiteral("Child");
   }
+
+  CrashReporter::AnnotateCrashReport(annotationKey,
+                                     static_cast<CStringWriter*>(json.WriteFunc())->Get());
+}
+
+void
+AnnotateClassRegistration(REFCLSID aClsid)
+{
+#if defined(DEBUG)
+  const JSONWriter::CollectionStyle style = JSONWriter::MultiLineStyle;
+#else
+  const JSONWriter::CollectionStyle style = JSONWriter::SingleLineStyle;
+#endif
+
+  nsAutoString strClsid;
+  GUIDToString(aClsid, strClsid);
+
+  JSONWriter json(MakeUnique<CStringWriter>());
+
+  json.Start(style);
+
+  json.StartObjectProperty("HKLM", style);
+  AnnotateClsidRegistrationForHive(json, HKEY_LOCAL_MACHINE, strClsid, style);
+  json.EndObject();
+
+  json.StartObjectProperty("HKCU", style);
+  AnnotateClsidRegistrationForHive(json, HKEY_CURRENT_USER, strClsid, style);
+  json.EndObject();
+
+  json.End();
+
+  nsAutoCString annotationKey;
+  annotationKey.AppendLiteral("ClassRegistrationInfo");
+  if (XRE_IsParentProcess()) {
+    annotationKey.AppendLiteral("Parent");
+  } else {
+    annotationKey.AppendLiteral("Child");
+  }
+
   CrashReporter::AnnotateCrashReport(annotationKey,
                                      static_cast<CStringWriter*>(json.WriteFunc())->Get());
 }
