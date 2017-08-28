@@ -62,7 +62,7 @@ LoginManagerPrompter.prototype = {
       let bunService = Cc["@mozilla.org/intl/stringbundle;1"].
                        getService(Ci.nsIStringBundleService);
       this.__strBundle = {
-        pwmgr: bunService.createBundle("chrome://passwordmgr/locale/passwordmgr.properties"),
+        pwmgr: bunService.createBundle("chrome://browser/locale/passwordmgr.properties"),
         brand: bunService.createBundle("chrome://branding/locale/brand.properties")
       };
 

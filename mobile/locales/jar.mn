@@ -13,5 +13,3 @@
 % override chrome://global/locale/netError.dtd    chrome://browser/locale/netError.dtd
   locale/@AB_CD@/browser/appstrings.properties    (%overrides/appstrings.properties)
 % override chrome://global/locale/appstrings.properties chrome://browser/locale/appstrings.properties
-  locale/@AB_CD@/browser/passwordmgr.properties    (%overrides/passwordmgr.properties)
-% override chrome://passwordmgr/locale/passwordmgr.properties chrome://browser/locale/passwordmgr.properties
