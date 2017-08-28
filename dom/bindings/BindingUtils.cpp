@@ -837,8 +837,7 @@ CreateInterfaceObject(JSContext* cx, JS::Handle<JSObject*> global,
       if (!namedConstructor ||
           !JS_DefineProperty(cx, namedConstructor, "prototype",
                              proto,
-                             JSPROP_PERMANENT | JSPROP_READONLY,
-                             JS_STUBGETTER, JS_STUBSETTER) ||
+                             JSPROP_PERMANENT | JSPROP_READONLY) ||
           (defineOnGlobal &&
            !DefineConstructor(cx, global, namedConstructors->mName,
                               namedConstructor))) {
