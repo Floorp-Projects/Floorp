@@ -3389,15 +3389,10 @@ SetChildForceCharacterSet(nsIContentViewer* aChild, void* aClosure)
 NS_IMETHODIMP
 nsDocumentViewer::SetForceCharacterSet(const nsACString& aForceCharacterSet)
 {
-  // This method is scriptable, so add-ons could pass in something other
-  // than a canonical name. However, in case where the input is a canonical
-  // name, "replacement" doesn't survive label resolution. Additionally, the
-  // empty string means no hint.
+  // The empty string means no hint.
   const Encoding* encoding = nullptr;
   if (!aForceCharacterSet.IsEmpty()) {
-    if (aForceCharacterSet.EqualsLiteral("replacement")) {
-      encoding = REPLACEMENT_ENCODING;
-    } else if (!(encoding = Encoding::ForLabel(aForceCharacterSet))) {
+    if (!(encoding = Encoding::ForLabel(aForceCharacterSet))) {
       // Reject unknown labels
       return NS_ERROR_INVALID_ARG;
     }
@@ -3472,15 +3467,10 @@ SetChildHintCharacterSet(nsIContentViewer* aChild, void* aClosure)
 NS_IMETHODIMP
 nsDocumentViewer::SetHintCharacterSet(const nsACString& aHintCharacterSet)
 {
-  // This method is scriptable, so add-ons could pass in something other
-  // than a canonical name. However, in case where the input is a canonical
-  // name, "replacement" doesn't survive label resolution. Additionally, the
-  // empty string means no hint.
+  // The empty string means no hint.
   const Encoding* encoding = nullptr;
   if (!aHintCharacterSet.IsEmpty()) {
-    if (aHintCharacterSet.EqualsLiteral("replacement")) {
-      encoding = REPLACEMENT_ENCODING;
-    } else if (!(encoding = Encoding::ForLabel(aHintCharacterSet))) {
+    if (!(encoding = Encoding::ForLabel(aHintCharacterSet))) {
       // Reject unknown labels
       return NS_ERROR_INVALID_ARG;
     }
