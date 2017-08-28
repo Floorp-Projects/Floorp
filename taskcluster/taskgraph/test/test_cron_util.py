@@ -17,38 +17,38 @@ from taskgraph.cron.util import (
 class TestMatchUtc(unittest.TestCase):
 
     def test_hour_minute(self):
-        params = {'time': datetime.datetime(2017, 01, 26, 16, 30, 0)}
+        params = {'time': datetime.datetime(2017, 1, 26, 16, 30, 0)}
         self.assertFalse(match_utc(params, hour=4, minute=30))
         self.assertTrue(match_utc(params, hour=16, minute=30))
         self.assertFalse(match_utc(params, hour=16, minute=0))
 
     def test_hour_only(self):
-        params = {'time': datetime.datetime(2017, 01, 26, 16, 0, 0)}
+        params = {'time': datetime.datetime(2017, 1, 26, 16, 0, 0)}
         self.assertFalse(match_utc(params, hour=0))
         self.assertFalse(match_utc(params, hour=4))
         self.assertTrue(match_utc(params, hour=16))
-        params = {'time': datetime.datetime(2017, 01, 26, 16, 15, 0)}
+        params = {'time': datetime.datetime(2017, 1, 26, 16, 15, 0)}
         self.assertFalse(match_utc(params, hour=0))
         self.assertFalse(match_utc(params, hour=4))
         self.assertTrue(match_utc(params, hour=16))
-        params = {'time': datetime.datetime(2017, 01, 26, 16, 30, 0)}
+        params = {'time': datetime.datetime(2017, 1, 26, 16, 30, 0)}
         self.assertFalse(match_utc(params, hour=0))
         self.assertFalse(match_utc(params, hour=4))
         self.assertTrue(match_utc(params, hour=16))
-        params = {'time': datetime.datetime(2017, 01, 26, 16, 45, 0)}
+        params = {'time': datetime.datetime(2017, 1, 26, 16, 45, 0)}
         self.assertFalse(match_utc(params, hour=0))
         self.assertFalse(match_utc(params, hour=4))
         self.assertTrue(match_utc(params, hour=16))
 
     def test_minute_only(self):
-        params = {'time': datetime.datetime(2017, 01, 26, 13, 0, 0)}
+        params = {'time': datetime.datetime(2017, 1, 26, 13, 0, 0)}
         self.assertTrue(match_utc(params, minute=0))
         self.assertFalse(match_utc(params, minute=15))
         self.assertFalse(match_utc(params, minute=30))
         self.assertFalse(match_utc(params, minute=45))
 
     def test_zeroes(self):
-        params = {'time': datetime.datetime(2017, 01, 26, 0, 0, 0)}
+        params = {'time': datetime.datetime(2017, 1, 26, 0, 0, 0)}
         self.assertTrue(match_utc(params, minute=0))
         self.assertTrue(match_utc(params, hour=0))
         self.assertFalse(match_utc(params, hour=1))
@@ -57,7 +57,7 @@ class TestMatchUtc(unittest.TestCase):
         self.assertFalse(match_utc(params, minute=45))
 
     def test_invalid_minute(self):
-        params = {'time': datetime.datetime(2017, 01, 26, 13, 0, 0)}
+        params = {'time': datetime.datetime(2017, 1, 26, 13, 0, 0)}
         self.assertRaises(Exception, lambda:
                           match_utc(params, minute=1))
 
