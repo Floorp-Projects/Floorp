@@ -13,6 +13,9 @@
 #include "mozilla/Assertions.h"
 #include "mozilla/RefPtr.h"
 #include "mozilla/UniquePtr.h"
+#if defined(ACCESSIBILITY) && defined(MOZ_CRASHREPORTER)
+#include "nsExceptionHandler.h"
+#endif // defined(ACCESSIBILITY) && defined(MOZ_CRASHREPORTER)
 #include "nsWindowsHelpers.h"
 #include "nsXULAppAPI.h"
 
@@ -47,6 +50,19 @@ MainThreadRuntime::MainThreadRuntime()
   , mActCtxRgn(a11y::Compatibility::GetActCtxResourceId())
 #endif // defined(ACCESSIBILITY)
 {
+#if defined(ACCESSIBILITY) && defined(MOZ_CRASHREPORTER)
+  auto actctx = ActivationContext::GetCurrent();
+  nsAutoCString strActCtx;
+  if (actctx.isOk()) {
+    strActCtx.AppendPrintf("0x%p", actctx.unwrap());
+  } else {
+    strActCtx.AppendPrintf("HRESULT 0x%08X", actctx.unwrapErr());
+  }
+
+  CrashReporter::AnnotateCrashReport(NS_LITERAL_CSTRING("AssemblyManifestCtx"),
+                                     strActCtx);
+#endif // defined(ACCESSIBILITY) && defined(MOZ_CRASHREPORTER)
+
   // We must be the outermost COM initialization on this thread. The COM runtime
   // cannot be configured once we start manipulating objects
   MOZ_ASSERT(mStaRegion.IsValidOutermost());
