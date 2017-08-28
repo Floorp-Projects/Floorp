@@ -52,7 +52,7 @@ CustomElementCallback::Call()
       break;
     case nsIDocument::eAttributeChanged:
       static_cast<LifecycleAttributeChangedCallback *>(mCallback.get())->Call(mThisObject,
-        mArgs.name, mArgs.oldValue, mArgs.newValue, rv);
+        mArgs.name, mArgs.oldValue, mArgs.newValue, mArgs.namespaceURI, rv);
       break;
   }
 }
