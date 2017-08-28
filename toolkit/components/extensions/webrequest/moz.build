@@ -13,7 +13,9 @@ XPIDL_MODULE = 'webextensions'
 
 UNIFIED_SOURCES += [
     'nsWebRequestListener.cpp',
+    'StreamFilter.cpp',
     'StreamFilterChild.cpp',
+    'StreamFilterEvents.cpp',
     'StreamFilterParent.cpp',
     'WebRequestService.cpp',
 ]
@@ -31,8 +33,10 @@ EXPORTS.mozilla += [
 ]
 
 EXPORTS.mozilla.extensions += [
+    'StreamFilter.h',
     'StreamFilterBase.h',
     'StreamFilterChild.h',
+    'StreamFilterEvents.h',
     'StreamFilterParent.h',
 ]
 
