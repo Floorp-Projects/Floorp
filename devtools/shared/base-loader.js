@@ -2,52 +2,76 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-'use strict';
+/* global __URI__ */
+/* exported Loader, resolveURI, Module, Require, unload */
 
-this.EXPORTED_SYMBOLS = ["Loader", "resolveURI", "Module", "Require"]
+"use strict";
+
+this.EXPORTED_SYMBOLS = ["Loader", "resolveURI", "Module", "Require", "unload"];
 
 const { classes: Cc, Constructor: CC, interfaces: Ci, utils: Cu,
         results: Cr, manager: Cm } = Components;
-const systemPrincipal = CC('@mozilla.org/systemprincipal;1', 'nsIPrincipal')();
-const { loadSubScript } = Cc['@mozilla.org/moz/jssubscript-loader;1'].
-                     getService(Ci.mozIJSSubScriptLoader);
-const { addObserver, notifyObservers } = Cc['@mozilla.org/observer-service;1'].
-                        getService(Ci.nsIObserverService);
+const systemPrincipal = CC("@mozilla.org/systemprincipal;1", "nsIPrincipal")();
+const { loadSubScript } = Cc["@mozilla.org/moz/jssubscript-loader;1"]
+  .getService(Ci.mozIJSSubScriptLoader);
+const { notifyObservers } = Cc["@mozilla.org/observer-service;1"]
+  .getService(Ci.nsIObserverService);
 const { XPCOMUtils } = Cu.import("resource://gre/modules/XPCOMUtils.jsm", {});
-const { NetUtil } = Cu.import("resource://gre/modules/NetUtil.jsm", {});
-const { normalize, dirname } = Cu.import("resource://gre/modules/osfile/ospath_unix.jsm");
+const { normalize, dirname } = Cu.import("resource://gre/modules/osfile/ospath_unix.jsm", {});
 
 XPCOMUtils.defineLazyServiceGetter(this, "resProto",
                                    "@mozilla.org/network/protocol;1?name=resource",
                                    "nsIResProtocolHandler");
+XPCOMUtils.defineLazyModuleGetter(this, "NetUtil", "resource://gre/modules/NetUtil.jsm");
 
 const { defineLazyGetter } = XPCOMUtils;
 
 // Define some shortcuts.
 const bind = Function.call.bind(Function.bind);
-const getOwnPropertyDescriptor = Object.getOwnPropertyDescriptor;
-const prototypeOf = Object.getPrototypeOf;
 function* getOwnIdentifiers(x) {
   yield* Object.getOwnPropertyNames(x);
   yield* Object.getOwnPropertySymbols(x);
 }
 
-function sourceURI(uri) { return String(uri).split(" -> ").pop(); }
+function isJSONURI(uri) {
+  return uri.endsWith(".json");
+}
+function isJSMURI(uri) {
+  return uri.endsWith(".jsm");
+}
+function isJSURI(uri) {
+  return uri.endsWith(".js");
+}
+const AbsoluteRegExp = /^(resource|chrome|file|jar):/;
+function isAbsoluteURI(uri) {
+  return AbsoluteRegExp.test(uri);
+}
+function isRelative(id) {
+  return id.startsWith(".");
+}
 
-function isntLoaderFrame(frame) { return frame.fileName !== __URI__ }
+function sourceURI(uri) {
+  return String(uri).split(" -> ").pop();
+}
 
-function parseURI(uri) { return String(uri).split(" -> ").pop(); }
+function isntLoaderFrame(frame) {
+  return frame.fileName !== __URI__;
+}
+
+function parseURI(uri) {
+  return String(uri).split(" -> ").pop();
+}
 
 function parseStack(stack) {
   let lines = String(stack).split("\n");
-  return lines.reduce(function(frames, line) {
+  return lines.reduce(function (frames, line) {
     if (line) {
       let atIndex = line.indexOf("@");
       let columnIndex = line.lastIndexOf(":");
       let lineIndex = line.lastIndexOf(":", columnIndex - 1);
       let fileName = parseURI(line.slice(atIndex + 1, lineIndex));
-      let lineNumber = parseInt(line.slice(lineIndex + 1, columnIndex));
-      let columnNumber = parseInt(line.slice(columnIndex + 1));
+      let lineNumber = parseInt(line.slice(lineIndex + 1, columnIndex), 10);
+      let columnNumber = parseInt(line.slice(columnIndex + 1), 10);
       let name = line.slice(0, atIndex).split("(").shift();
       frames.unshift({
         fileName: fileName,
@@ -61,7 +85,7 @@ function parseStack(stack) {
 }
 
 function serializeStack(frames) {
-  return frames.reduce(function(stack, frame) {
+  return frames.reduce(function (stack, frame) {
     return frame.name + "@" +
            frame.fileName + ":" +
            frame.lineNumber + ":" +
@@ -79,12 +103,12 @@ function readURI(uri) {
   }
 
   let stream = NetUtil.newChannel({
-    uri: NetUtil.newURI(uri, 'UTF-8'),
+    uri: NetUtil.newURI(uri, "UTF-8"),
     loadUsingSystemPrincipal: true}
   ).open2();
   let count = stream.available();
   let data = NetUtil.readInputStreamToString(stream, count, {
-    charset: 'UTF-8'
+    charset: "UTF-8"
   });
 
   stream.close();
@@ -108,17 +132,10 @@ function join(base, ...paths) {
 // passed set of options:
 //  - `name`: A string value which identifies the sandbox in about:memory. Will
 //    throw exception if omitted.
-// - `principal`: String URI or `nsIPrincipal` for the sandbox. Defaults to
-//    system principal.
 // - `prototype`: Ancestor for the sandbox that will be created. Defaults to
 //    `{}`.
-// - `wantXrays`: A Boolean value indicating whether code outside the sandbox
-//    wants X-ray vision with respect to objects inside the sandbox. Defaults
-//    to `true`.
-// - `sandbox`: A sandbox to share JS compartment with. If omitted new
-//    compartment will be created.
-// - `metadata`: A metadata object associated with the sandbox. It should
-//    be JSON-serializable.
+// - `invisibleToDebugger`: True, if the sandbox is part of the debugger
+//    implementation and should not be tracked by debugger API.
 // For more details see:
 // https://developer.mozilla.org/en/Components.utils.Sandbox
 function Sandbox(options) {
@@ -128,28 +145,15 @@ function Sandbox(options) {
     // still can expose via prototype.
     wantComponents: false,
     sandboxName: options.name,
-    principal: 'principal' in options ? options.principal : systemPrincipal,
-    wantXrays: 'wantXrays' in options ? options.wantXrays : true,
-    sandboxPrototype: 'prototype' in options ? options.prototype : {},
-    invisibleToDebugger: 'invisibleToDebugger' in options ?
+    sandboxPrototype: "prototype" in options ? options.prototype : {},
+    invisibleToDebugger: "invisibleToDebugger" in options ?
                          options.invisibleToDebugger : false,
-    metadata: 'metadata' in options ? options.metadata : {},
-    waiveIntereposition: !!options.waiveIntereposition
+    waiveInterposition: false
   };
 
-  if (options.metadata && options.metadata.addonID) {
-    options.addonId = options.metadata.addonID;
-  }
+  let sandbox = Cu.Sandbox(systemPrincipal, options);
 
-  let sandbox = Cu.Sandbox(options.principal, options);
-
-  // Each sandbox at creation gets set of own properties that will be shadowing
-  // ones from it's prototype. We override delete such `sandbox` properties
-  // to avoid shadowing.
-  delete sandbox.Iterator;
   delete sandbox.Components;
-  delete sandbox.importFunction;
-  delete sandbox.debug;
 
   return sandbox;
 }
@@ -157,7 +161,7 @@ function Sandbox(options) {
 // Populates `exports` of the given CommonJS `module` object, in the context
 // of the given `loader` by evaluating code associated with it.
 function load(loader, module) {
-  let { sandboxes, globals, loadModuleHook } = loader;
+  let { sandboxes, globals } = loader;
   let require = Require(loader, module);
 
   // We expose set of properties defined by `CommonJS` specification via
@@ -185,7 +189,7 @@ function load(loader, module) {
   };
 
   let sandbox;
-  if (loader.useSharedGlobalSandbox || isSystemURI(module.uri)) {
+  if (loader.useSharedGlobalSandbox) {
     // Create a new object in this sandbox, that will be used as
     // the scope object for this particular module
     sandbox = new loader.sharedGlobalSandbox.Object();
@@ -207,31 +211,26 @@ function load(loader, module) {
       };
     }
     let define = Object.getOwnPropertyDescriptor(globals, "define");
-    if (define && define.value)
+    if (define && define.value) {
       descriptors.define = define;
-    if ("DOMParser" in globals)
+    }
+    if ("DOMParser" in globals) {
       descriptors.DOMParser = Object.getOwnPropertyDescriptor(globals, "DOMParser");
+    }
     Object.defineProperties(sandbox, descriptors);
-  }
-  else {
+  } else {
     sandbox = Sandbox({
       name: module.uri,
       prototype: Object.create(globals, descriptors),
-      wantXrays: false,
-      invisibleToDebugger: loader.invisibleToDebugger,
-      metadata: {
-        addonID: loader.id,
-        URI: module.uri
-      }
+      invisibleToDebugger: loader.invisibleToDebugger
     });
   }
   sandboxes[module.uri] = sandbox;
 
   let originalExports = module.exports;
   try {
-    loadSubScript(module.uri, sandbox, 'UTF-8');
-  }
-  catch (error) {
+    loadSubScript(module.uri, sandbox, "UTF-8");
+  } catch (error) {
     let { message, fileName, lineNumber } = error;
     let stack = error.stack || Error().stack;
     let frames = parseStack(stack).filter(isntLoaderFrame);
@@ -248,16 +247,15 @@ function load(loader, module) {
       lineNumber = caller.lineNumber;
       message = "Module `" + module.id + "` is not found at " + module.uri;
       toString = message;
-    }
-    // Workaround for a Bug 910653. Errors thrown by subscript loader
-    // do not include `stack` field and above created error won't have
-    // fileName or lineNumber of the module being loaded, so we ensure
-    // it does.
-    else if (frames[frames.length - 1].fileName !== file) {
+    } else if (frames[frames.length - 1].fileName !== file) {
+      // Workaround for a Bug 910653. Errors thrown by subscript loader
+      // do not include `stack` field and above created error won't have
+      // fileName or lineNumber of the module being loaded, so we ensure
+      // it does.
       frames.push({ fileName: file, lineNumber: lineNumber, name: "" });
     }
 
-    let prototype = typeof(error) === "object" ? error.constructor.prototype :
+    let prototype = typeof (error) === "object" ? error.constructor.prototype :
                     Error.prototype;
 
     throw Object.create(prototype, {
@@ -269,52 +267,48 @@ function load(loader, module) {
     });
   }
 
-  if (loadModuleHook) {
-    module = loadModuleHook(module, require);
-  }
-
   // Only freeze the exports object if we created it ourselves. Modules
   // which completely replace the exports object and still want it
   // frozen need to freeze it themselves.
-  if (module.exports === originalExports)
+  if (module.exports === originalExports) {
     Object.freeze(module.exports);
+  }
 
   return module;
 }
 
 // Utility function to normalize module `uri`s so they have `.js` extension.
 function normalizeExt(uri) {
-  return isJSURI(uri) ? uri :
-         isJSONURI(uri) ? uri :
-         isJSMURI(uri) ? uri :
-         uri + '.js';
+  if (isJSURI(uri) || isJSONURI(uri) || isJSMURI(uri)) {
+    return uri;
+  }
+  return uri + ".js";
 }
 
 // Utility function to join paths. In common case `base` is a
 // `requirer.uri` but in some cases it may be `baseURI`. In order to
 // avoid complexity we require `baseURI` with a trailing `/`.
 function resolve(id, base) {
-  if (!isRelative(id))
+  if (!isRelative(id)) {
     return id;
+  }
 
   let baseDir = dirname(base);
 
   let resolved;
-  if (baseDir.includes(":"))
+  if (baseDir.includes(":")) {
     resolved = join(baseDir, id);
-  else
+  } else {
     resolved = normalize(`${baseDir}/${id}`);
+  }
 
-  // Joining and normalizing removes the './' from relative files.
+  // Joining and normalizing removes the "./" from relative files.
   // We need to ensure the resolution still has the root
-  if (base.startsWith('./'))
-    resolved = './' + resolved;
+  if (base.startsWith("./")) {
+    resolved = "./" + resolved;
+  }
 
   return resolved;
-}
-
-function addTrailingSlash(path) {
-  return path.replace(/\/*$/, "/");
 }
 
 function compileMapping(paths) {
@@ -324,7 +318,7 @@ function compileMapping(paths) {
                       .map(path => [path, paths[path]]);
 
   const PATTERN = /([.\\?+*(){}[\]^$])/g;
-  const escapeMeta = str => str.replace(PATTERN, '\\$1')
+  const escapeMeta = str => str.replace(PATTERN, "\\$1");
 
   let patterns = [];
   paths = {};
@@ -347,13 +341,14 @@ function compileMapping(paths) {
     //
     // Check for an empty path, an exact match, or a substring match
     // with the next character being a forward slash.
-    if (path == "")
+    if (path == "") {
       patterns.push("");
-    else
+    } else {
       patterns.push(`${escapeMeta(path)}(?=$|/)`);
+    }
   }
 
-  let pattern = new RegExp(`^(${patterns.join('|')})`);
+  let pattern = new RegExp(`^(${patterns.join("|")})`);
 
   // This will replace the longest matching path mapping at the start of
   // the ID string with its mapped value.
@@ -364,10 +359,11 @@ function compileMapping(paths) {
 
 function resolveURI(id, mapping) {
   // Do not resolve if already a resource URI
-  if (isAbsoluteURI(id))
+  if (isAbsoluteURI(id)) {
     return normalizeExt(id);
+  }
 
-  return normalizeExt(mapping(id))
+  return normalizeExt(mapping(id));
 }
 
 /**
@@ -390,17 +386,20 @@ function resolveURI(id, mapping) {
 function lazyRequire(obj, moduleId, ...args) {
   let module;
   let getModule = () => {
-    if (!module)
+    if (!module) {
       module = this.require(moduleId);
+    }
     return module;
   };
 
   for (let props of args) {
-    if (typeof props !== "object")
+    if (typeof props !== "object") {
       props = {[props]: props};
+    }
 
-    for (let [fromName, toName] of Object.entries(props))
+    for (let [fromName, toName] of Object.entries(props)) {
       defineLazyGetter(obj, toName, () => getModule()[fromName]);
+    }
   }
 }
 
@@ -419,21 +418,21 @@ function lazyRequireModule(obj, moduleId, prop = moduleId) {
   defineLazyGetter(obj, prop, () => this.require(moduleId));
 }
 
-
 // Creates version of `require` that will be exposed to the given `module`
 // in the context of the given `loader`. Each module gets own limited copy
 // of `require` that is allowed to load only a modules that are associated
 // with it during link time.
 function Require(loader, requirer) {
   let {
-    modules, mapping, mappingCache,
-    manifest, rootURI, isNative, requireHook
+    modules, mapping, mappingCache, requireHook
   } = loader;
 
   function require(id) {
-    if (!id) // Throw if `id` is not passed.
-      throw Error('You must provide a module name when calling require() from '
+    if (!id) {
+      // Throw if `id` is not passed.
+      throw Error("You must provide a module name when calling require() from "
                   + requirer.id, requirer.uri);
+    }
 
     if (requireHook) {
       return requireHook(id, _require);
@@ -449,29 +448,27 @@ function Require(loader, requirer) {
     // If module is already cached by loader then just use it.
     if (uri in modules) {
       module = modules[uri];
-    }
-    else if (isJSMURI(uri)) {
+    } else if (isJSMURI(uri)) {
       module = modules[uri] = Module(requirement, uri);
       module.exports = Cu.import(uri, {});
-    }
-    else if (isJSONURI(uri)) {
+    } else if (isJSONURI(uri)) {
       let data;
 
       // First attempt to load and parse json uri
       // ex: `test.json`
-      // If that doesn't exist, check for `test.json.js`
+      // If that doesn"t exist, check for `test.json.js`
       // for node parity
       try {
         data = JSON.parse(readURI(uri));
         module = modules[uri] = Module(requirement, uri);
         module.exports = data;
-      }
-      catch (err) {
+      } catch (err) {
         // If error thrown from JSON parsing, throw that, do not
         // attempt to find .json.js file
-        if (err && /JSON\.parse/.test(err.message))
+        if (err && /JSON\.parse/.test(err.message)) {
           throw err;
-        uri = uri + '.js';
+        }
+        uri = uri + ".js";
       }
     }
 
@@ -485,8 +482,7 @@ function Require(loader, requirer) {
       module = modules[uri] = Module(requirement, uri);
       try {
         Object.freeze(load(loader, module));
-      }
-      catch (e) {
+      } catch (e) {
         // Clear out modules cache so we can throw on a second invalid require
         delete modules[uri];
         // Also clear out the Sandbox that was created
@@ -502,20 +498,20 @@ function Require(loader, requirer) {
   // returning a resourceURI and a `requirement` used by the loader.
   // Used by both `require` and `require.resolve`.
   function getRequirements(id) {
-    if (!id) // Throw if `id` is not passed.
-      throw Error('you must provide a module name when calling require() from '
+    if (!id) {
+      // Throw if `id` is not passed.
+      throw Error("you must provide a module name when calling require() from "
                   + requirer.id, requirer.uri);
+    }
 
     let requirement, uri;
 
     if (modules[id]) {
       uri = requirement = id;
-    }
-    else if (requirer) {
+    } else if (requirer) {
       // Resolve `id` to its requirer if it's relative.
       requirement = resolve(id, requirer.id);
-    }
-    else {
+    } else {
       requirement = id;
     }
 
@@ -531,18 +527,18 @@ function Require(loader, requirer) {
 
     // Throw if `uri` can not be resolved.
     if (!uri) {
-      throw Error('Module: Can not resolve "' + id + '" module required by ' +
-                  requirer.id + ' located at ' + requirer.uri, requirer.uri);
+      throw Error("Module: Can not resolve '" + id + "' module required by " +
+                  requirer.id + " located at " + requirer.uri, requirer.uri);
     }
 
     return { uri: uri, requirement: requirement };
   }
 
   // Expose the `resolve` function for this `Require` instance
-  require.resolve = _require.resolve = function resolve(id) {
+  require.resolve = _require.resolve = function (id) {
     let { uri } = getRequirements(id);
     return uri;
-  }
+  };
 
   // This is like webpack's require.context.  It returns a new require
   // function that prepends the prefix to any requests.
@@ -572,32 +568,33 @@ function unload(loader, reason) {
   // subject is a unique object created per loader instance.
   // This allows any code to cleanup on loader unload regardless of how
   // it was loaded. To handle unload for specific loader subject may be
-  // asserted against loader.destructor or require('@loader/unload')
+  // asserted against loader.destructor or require("@loader/unload")
   // Note: We don not destroy loader's module cache or sandboxes map as
   // some modules may do cleanup in subsequent turns of event loop. Destroying
   // cache may cause module identity problems in such cases.
   let subject = { wrappedJSObject: loader.destructor };
-  notifyObservers(subject, 'sdk:loader:destroy', reason);
-};
+  notifyObservers(subject, "sdk:loader:destroy", reason);
+}
 
-// Function makes new loader that can be used to load CommonJS modules
-// described by a given `options.manifest`. Loader takes following options:
+// Function makes new loader that can be used to load CommonJS modules.
+// Loader takes following options:
+// - `paths`: Mandatory dictionary of require path mapped to absolute URIs.
+//   Object keys are path prefix used in require(), values are URIs where each
+//   prefix should be mapped to.
+// - `sharedGlobal`: Boolean, if True, loads all module in a single, shared
+//   global in order to create only one global and compartment.
 // - `globals`: Optional map of globals, that all module scopes will inherit
 //   from. Map is also exposed under `globals` property of the returned loader
 //   so it can be extended further later. Defaults to `{}`.
-// - `modules` Optional map of built-in module exports mapped by module id.
-//   These modules will incorporated into module cache. Each module will be
-//   frozen.
-// - `resolve` Optional module `id` resolution function. If given it will be
-//   used to resolve module URIs, by calling it with require term, requirer
-//   module object (that has `uri` property) and `baseURI` of the loader.
-//   If `resolve` does not returns `uri` string exception will be thrown by
-//   an associated `require` call.
+// - `sandboxName`: String, name of the sandbox displayed in about:memory.
+// - `invisibleToDebugger`: Boolean. Should be true when loading debugger
+//   modules, in order to ignore them from the Debugger API.
+// - `sandboxPrototype`: Object used to define globals on all module's
+//   sandboxes.
+// - `requireHook`: Optional function used to replace native require function
+//   from loader. This function receive the module path as first argument,
+//   and native require method as second argument.
 function Loader(options) {
-  function normalizeRootURI(uri) {
-    return addTrailingSlash(join(uri));
-  }
-
   let { paths, sharedGlobal, globals } = options;
   if (!globals) {
     globals = {};
@@ -605,7 +602,7 @@ function Loader(options) {
 
   // We create an identity object that will be dispatched on an unload
   // event as subject. This way unload listeners will be able to assert
-  // which loader is unloaded. Please note that we intentionally don't
+  // which loader is unloaded. Please note that we intentionally don"t
   // use `loader` as subject to prevent a loader access leakage through
   // observer notifications.
   let destructor = Object.create(null);
@@ -614,13 +611,11 @@ function Loader(options) {
 
   // Define pseudo modules.
   let modules = {
-    '@loader/unload': destructor,
-    '@loader/options': options,
-    'chrome': { Cc: Cc, Ci: Ci, Cu: Cu, Cr: Cr, Cm: Cm,
+    "@loader/unload": destructor,
+    "@loader/options": options,
+    "chrome": { Cc, Ci, Cu, Cr, Cm,
                 CC: bind(CC, Components), components: Components,
-                // `ChromeWorker` has to be inject in loader global scope.
-                // It is done by bootstrap.js:loadSandbox for the SDK.
-                ChromeWorker: ChromeWorker
+                ChromeWorker
     }
   };
 
@@ -635,7 +630,7 @@ function Loader(options) {
     // allow them to be loaded lazily.
     Object.defineProperty(module, "exports", {
       enumerable: true,
-      get: function() {
+      get: function () {
         return builtinModuleExports[id];
       }
     });
@@ -644,17 +639,12 @@ function Loader(options) {
   }
 
   // Create the unique sandbox we will be using for all modules,
-  // so that we prevent creating a new comportment per module.
+  // so that we prevent creating a new compartment per module.
   // The side effect is that all modules will share the same
   // global objects.
   let sharedGlobalSandbox = Sandbox({
-    name: options.sandboxName || "Addon-SDK",
-    wantXrays: false,
+    name: options.sandboxName || "DevTools",
     invisibleToDebugger: options.invisibleToDebugger || false,
-    metadata: {
-      addonID: options.noSandboxAddonId ? undefined : options.id,
-      URI: options.sandboxName || "Addon-SDK"
-    },
     prototype: options.sandboxPrototype || globals,
   });
 
@@ -662,13 +652,14 @@ function Loader(options) {
     // If we were given a sandboxPrototype, we have to define the globals on
     // the sandbox directly. Note that this will not work for callers who
     // depend on being able to add globals after the loader was created.
-    for (let name of getOwnIdentifiers(globals))
+    for (let name of getOwnIdentifiers(globals)) {
       Object.defineProperty(sharedGlobalSandbox, name,
-                            getOwnPropertyDescriptor(globals, name));
+                            Object.getOwnPropertyDescriptor(globals, name));
+    }
   }
 
   // Loader object is just a representation of a environment
-  // state. We freeze it and mark make it's properties non-enumerable
+  // state. We mark its properties non-enumerable
   // as they are pure implementation detail that no one should rely upon.
   let returnObj = {
     destructor: { enumerable: false, value: destructor },
@@ -681,24 +672,11 @@ function Loader(options) {
     sharedGlobalSandbox: { enumerable: false, value: sharedGlobalSandbox },
     // Map of module sandboxes indexed by module URIs.
     sandboxes: { enumerable: false, value: {} },
-    // ID of the addon, if provided.
-    id: { enumerable: false, value: options.id },
     // Whether the modules loaded should be ignored by the debugger
     invisibleToDebugger: { enumerable: false,
                            value: options.invisibleToDebugger || false },
     requireHook: { enumerable: false, value: options.requireHook },
-    loadModuleHook: { enumerable: false, value: options.loadModuleHook },
   };
 
   return Object.create(null, returnObj);
-};
-
-var SystemRegExp = /^resource:\/\/(gre|devtools|testing-common)\//;
-var isSystemURI = uri => SystemRegExp.test(uri);
-
-var isJSONURI = uri => uri.endsWith('.json');
-var isJSMURI = uri => uri.endsWith('.jsm');
-var isJSURI = uri => uri.endsWith('.js');
-var AbsoluteRegExp = /^(resource|chrome|file|jar):/;
-var isAbsoluteURI = uri => AbsoluteRegExp.test(uri);
-var isRelative = id => id.startsWith(".");
+}
