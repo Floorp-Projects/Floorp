@@ -11,6 +11,13 @@ encoding_c is an FFI wrapper for [encoding_rs](https://github.com/hsivonen/encod
 Please see the file named
 [COPYRIGHT](https://github.com/hsivonen/encoding_c/blob/master/COPYRIGHT).
 
+## No Unwinding Support!
+
+This crate is meant for use in binaries compiled with `panic = 'abort'`, which
+is _required_ for correctness! Unwinding across FFI is Undefined Behavior, and
+this crate does nothing to try to prevent unwinding across the FFI if
+compliled with unwinding enabled.
+
 ## C/C++ Headers
 
 `include/encoding_rs.h` and `include/encoding_rs_statics.h` are needed for C
@@ -22,6 +29,12 @@ string classes, etc., it's probably necessary for C++ projects to manually
 adapt the header to their replacements of standard-library types.
 
 ## Release Notes
+
+### 0.8.0
+
+* Update to encoding_rs 0.7.0.
+* Drop `encoding_for_name()`.
+* Deal correctly with the `data()` method of `gsl::span` returning `nullptr`.
 
 ### 0.7.6
 
