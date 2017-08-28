@@ -73,7 +73,6 @@ BuiltinProvider.prototype = {
       paths,
       invisibleToDebugger: this.invisibleToDebugger,
       sharedGlobal: true,
-      sharedGlobalBlocklist: [],
       sandboxName: "DevTools (Module loader)",
       noSandboxAddonId: true,
       requireHook: (id, require) => {
