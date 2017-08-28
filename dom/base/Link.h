@@ -11,7 +11,6 @@
 #ifndef mozilla_dom_Link_h__
 #define mozilla_dom_Link_h__
 
-#include "mozilla/IHistory.h"
 #include "mozilla/MemoryReporting.h"
 #include "nsIContent.h" // for nsLinkState
 #include "nsIContentPolicy.h"
@@ -182,10 +181,6 @@ private:
 
   Element * const mElement;
 
-  // Strong reference to History.  The link has to unregister before History
-  // can disappear.
-  nsCOMPtr<IHistory> mHistory;
-
   uint16_t mLinkState;
 
   bool mNeedsRegistration : 1;
@@ -195,6 +190,8 @@ private:
   bool mHasPendingLinkUpdate : 1;
 
   bool mInDNSPrefetch : 1;
+
+  bool mHistory: 1;
 };
 
 NS_DEFINE_STATIC_IID_ACCESSOR(Link, MOZILLA_DOM_LINK_IMPLEMENTATION_IID)

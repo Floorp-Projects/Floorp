@@ -1942,9 +1942,6 @@ History::~History()
   UnregisterWeakMemoryReporter(this);
 
   gService = nullptr;
-
-  NS_ASSERTION(mObservers.Count() == 0,
-               "Not all Links were removed before we disappear!");
 }
 
 void
@@ -2416,8 +2413,9 @@ History::GetService()
   }
 
   nsCOMPtr<IHistory> service(do_GetService(NS_IHISTORY_CONTRACTID));
-  MOZ_ASSERT(service, "Cannot obtain IHistory service!");
-  NS_ASSERTION(gService, "Our constructor was not run?!");
+  if (service) {
+    NS_ASSERTION(gService, "Our constructor was not run?!");
+  }
 
   return gService;
 }
