@@ -650,9 +650,77 @@ enum class ServoPostTraversalFlags : uint32_t
   Empty = 0,
   // Whether parent was restyled.
   ParentWasRestyled = 1 << 0,
+  // Skip sending accessibility notifications for all descendants.
+  SkipA11yNotifications = 1 << 1,
+  // Always send accessibility notifications if the element is shown.
+  // The SkipA11yNotifications flag above overrides this flag.
+  SendA11yNotificationsIfShown = 1 << 2,
 };
 
 MOZ_MAKE_ENUM_CLASS_BITWISE_OPERATORS(ServoPostTraversalFlags)
+
+// Send proper accessibility notifications and return post traversal
+// flags for kids.
+static ServoPostTraversalFlags
+SendA11yNotifications(nsPresContext* aPresContext,
+                      Element* aElement,
+                      nsStyleContext* aOldStyleContext,
+                      nsStyleContext* aNewStyleContext,
+                      ServoPostTraversalFlags aFlags)
+{
+  using Flags = ServoPostTraversalFlags;
+  MOZ_ASSERT(!(aFlags & Flags::SkipA11yNotifications) ||
+             !(aFlags & Flags::SendA11yNotificationsIfShown),
+             "The two a11y flags should never be set together");
+
+#ifdef ACCESSIBILITY
+  nsAccessibilityService* accService = GetAccService();
+  if (!accService) {
+    // If we don't have accessibility service, accessibility is not
+    // enabled. Just skip everything.
+    return Flags::Empty;
+  }
+  if (aFlags & Flags::SkipA11yNotifications) {
+    // Propogate the skipping flag to descendants.
+    return Flags::SkipA11yNotifications;
+  }
+
+  bool needsNotify = false;
+  bool isVisible = aNewStyleContext->StyleVisibility()->IsVisible();
+  if (aFlags & Flags::SendA11yNotificationsIfShown) {
+    if (!isVisible) {
+      // Propagate the sending-if-shown flag to descendants.
+      return Flags::SendA11yNotificationsIfShown;
+    }
+    // We have asked accessibility service to remove the whole subtree
+    // of element which becomes invisible from the accessible tree, but
+    // this element is visible, so we need to add it back.
+    needsNotify = true;
+  } else {
+    // If we shouldn't skip in any case, we need to check whether our
+    // own visibility has changed.
+    bool wasVisible = aOldStyleContext->StyleVisibility()->IsVisible();
+    needsNotify = wasVisible != isVisible;
+  }
+
+  if (needsNotify) {
+    nsIPresShell* presShell = aPresContext->PresShell();
+    if (isVisible) {
+      accService->ContentRangeInserted(presShell, aElement->GetParent(),
+                                       aElement, aElement->GetNextSibling());
+      // We are adding the subtree. Accessibility service would handle
+      // descendants, so we should just skip them from notifying.
+      return Flags::SkipA11yNotifications;
+    }
+    // Remove the subtree of this invisible element, and ask any shown
+    // descendant to add themselves back.
+    accService->ContentRemoved(presShell, aElement);
+    return Flags::SendA11yNotificationsIfShown;
+  }
+#endif
+
+  return Flags::Empty;
+}
 
 bool
 ServoRestyleManager::ProcessPostTraversal(
@@ -767,6 +835,10 @@ ServoRestyleManager::ProcessPostTraversal(
       ? aRestyleState.StyleSet().ResolveServoStyle(aElement)
       : oldStyleContext;
 
+  ServoPostTraversalFlags childrenFlags =
+    wasRestyled ? ServoPostTraversalFlags::ParentWasRestyled
+                : ServoPostTraversalFlags::Empty;
+
   if (wasRestyled && oldStyleContext) {
     MOZ_ASSERT(styleFrame || displayContentsStyle);
     MOZ_ASSERT(oldStyleContext->ComputedData() != upToDateContext->ComputedData());
@@ -820,6 +892,10 @@ ServoRestyleManager::ProcessPostTraversal(
     // |styleFrame| to ensure the animated transform has been removed first.
     AddLayerChangesForAnimation(
       styleFrame, aElement, aRestyleState.ChangeList());
+
+    childrenFlags |= SendA11yNotifications(mPresContext, aElement,
+                                           oldStyleContext,
+                                           upToDateContext, aFlags);
   }
 
   const bool traverseElementChildren =
@@ -827,9 +903,6 @@ ServoRestyleManager::ProcessPostTraversal(
   const bool traverseTextChildren =
     wasRestyled || aElement->HasFlag(NODE_DESCENDANTS_NEED_FRAMES);
   bool recreatedAnyContext = wasRestyled;
-  ServoPostTraversalFlags childrenFlags =
-    wasRestyled ? ServoPostTraversalFlags::ParentWasRestyled
-                : ServoPostTraversalFlags::Empty;
   if (traverseElementChildren || traverseTextChildren) {
     StyleChildrenIterator it(aElement);
     TextPostTraversalState textState(*aElement,
