@@ -73,14 +73,6 @@ protected:
   virtual bool DeallocPTextureParent(PTextureParent* actor) override;
 
   virtual PVRLayerParent* AllocPVRLayerParent(const uint32_t& aDisplayID,
-                                              const float& aLeftEyeX,
-                                              const float& aLeftEyeY,
-                                              const float& aLeftEyeWidth,
-                                              const float& aLeftEyeHeight,
-                                              const float& aRightEyeX,
-                                              const float& aRightEyeY,
-                                              const float& aRightEyeWidth,
-                                              const float& aRightEyeHeight,
                                               const uint32_t& aGroup) override;
   virtual bool DeallocPVRLayerParent(PVRLayerParent* actor) override;
 

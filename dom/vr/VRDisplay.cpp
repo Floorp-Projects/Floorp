@@ -541,7 +541,8 @@ VRDisplay::RequestPresent(const nsTArray<VRLayer>& aLayers,
   if (!EventStateManager::IsHandlingUserInput() &&
       !isChromePresentation &&
       !IsHandlingVRNavigationEvent() &&
-      gfxPrefs::VRRequireGesture()) {
+      gfxPrefs::VRRequireGesture() &&
+      !IsPresenting()) {
     // The WebVR API states that if called outside of a user gesture, the
     // promise must be rejected.  We allow VR presentations to start within
     // trusted events such as vrdisplayactivate, which triggers in response to
@@ -560,7 +561,11 @@ VRDisplay::RequestPresent(const nsTArray<VRLayer>& aLayers,
     // use cases.
     promise->MaybeRejectWithUndefined();
   } else {
-    mPresentation = mClient->BeginPresentation(aLayers, presentationGroup);
+    if (mPresentation) {
+      mPresentation->UpdateLayers(aLayers);
+    } else {
+      mPresentation = mClient->BeginPresentation(aLayers, presentationGroup);
+    }
     mFrameInfo.Clear();
     promise->MaybeResolve(JS::UndefinedHandleValue);
   }

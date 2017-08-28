@@ -36,14 +36,20 @@ VRLayerChild::~VRLayerChild()
 }
 
 void
-VRLayerChild::Initialize(dom::HTMLCanvasElement* aCanvasElement)
+VRLayerChild::Initialize(dom::HTMLCanvasElement* aCanvasElement,
+                         const gfx::Rect& aLeftEyeRect, const gfx::Rect& aRightEyeRect)
 {
   MOZ_ASSERT(aCanvasElement);
-  mCanvasElement = aCanvasElement;
-  mCanvasElement->StartVRPresentation();
-
-  VRManagerChild *vrmc = VRManagerChild::Get();
-  vrmc->RunFrameRequestCallbacks();
+  aCanvasElement->StartVRPresentation();
+  mLeftEyeRect = aLeftEyeRect;
+  mRightEyeRect = aRightEyeRect;
+  if (mCanvasElement == nullptr) {
+    mCanvasElement = aCanvasElement;
+    VRManagerChild *vrmc = VRManagerChild::Get();
+    vrmc->RunFrameRequestCallbacks();
+  } else {
+    mCanvasElement = aCanvasElement;
+  }
 }
 
 void
@@ -72,7 +78,8 @@ VRLayerChild::SubmitFrame(uint64_t aFrameId)
   mFront->SyncWithObject(vrmc->GetSyncObject());
   MOZ_ALWAYS_TRUE(mFront->InitIPDLActor(vrmc));
 
-  SendSubmitFrame(mFront->GetIPDLActor(), aFrameId);
+  SendSubmitFrame(mFront->GetIPDLActor(), aFrameId,
+                  mLeftEyeRect, mRightEyeRect);
 }
 
 bool

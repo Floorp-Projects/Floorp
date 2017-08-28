@@ -58,20 +58,10 @@ VRManagerParent::DeallocPTextureParent(PTextureParent* actor)
 
 PVRLayerParent*
 VRManagerParent::AllocPVRLayerParent(const uint32_t& aDisplayID,
-                                     const float& aLeftEyeX,
-                                     const float& aLeftEyeY,
-                                     const float& aLeftEyeWidth,
-                                     const float& aLeftEyeHeight,
-                                     const float& aRightEyeX,
-                                     const float& aRightEyeY,
-                                     const float& aRightEyeWidth,
-                                     const float& aRightEyeHeight,
                                      const uint32_t& aGroup)
 {
   RefPtr<VRLayerParent> layer;
   layer = new VRLayerParent(aDisplayID,
-                            Rect(aLeftEyeX, aLeftEyeY, aLeftEyeWidth, aLeftEyeHeight),
-                            Rect(aRightEyeX, aRightEyeY, aRightEyeWidth, aRightEyeHeight),
                             aGroup);
   VRManager* vm = VRManager::Get();
   RefPtr<gfx::VRDisplayHost> display = vm->GetDisplay(aDisplayID);
