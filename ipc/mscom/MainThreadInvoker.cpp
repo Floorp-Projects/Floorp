@@ -14,6 +14,7 @@
 #include "mozilla/HangMonitor.h"
 #include "mozilla/mscom/SpinEvent.h"
 #include "mozilla/RefPtr.h"
+#include "mozilla/SystemGroup.h"
 #include "private/prpriv.h" // For PR_GetThreadID
 #include "WinUtils.h"
 
@@ -109,7 +110,8 @@ MainThreadInvoker::Invoke(already_AddRefed<nsIRunnable>&& aRunnable)
 
   RefPtr<SyncRunnable> syncRunnable = new SyncRunnable(runnable.forget());
 
-  if (NS_FAILED(NS_DispatchToMainThread(syncRunnable, nsIEventTarget::DISPATCH_NORMAL))) {
+  if (NS_FAILED(SystemGroup::Dispatch(
+                  TaskCategory::Other, do_AddRef(syncRunnable)))) {
     return false;
   }
 
