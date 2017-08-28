@@ -212,6 +212,138 @@
         "additionalProperties": { "$ref": "UnrecognizedProperty" }
       },
       {
+        "id": "WebExtensionLangpackManifest",
+        "type": "object",
+        "description": "Represents a WebExtension language pack manifest.json file",
+        "properties": {
+          "manifest_version": {
+            "type": "integer",
+            "minimum": 2,
+            "maximum": 2
+          },
+
+          "applications": {
+            "type": "object",
+            "optional": true,
+            "properties": {
+              "gecko": {
+                "$ref": "FirefoxSpecificProperties",
+                "optional": true
+              }
+            }
+          },
+
+          "browser_specific_settings": {
+            "type": "object",
+            "optional": true,
+            "properties": {
+              "gecko": {
+                "$ref": "FirefoxSpecificProperties",
+                "optional": true
+              }
+            }
+          },
+
+          "name": {
+            "type": "string",
+            "optional": false,
+            "preprocess": "localize"
+          },
+
+          "short_name": {
+            "type": "string",
+            "optional": true,
+            "preprocess": "localize"
+          },
+
+          "description": {
+            "type": "string",
+            "optional": true,
+            "preprocess": "localize"
+          },
+
+          "author": {
+            "type": "string",
+            "optional": true,
+            "preprocess": "localize",
+            "onError": "warn"
+          },
+
+          "version": {
+            "type": "string",
+            "optional": false
+          },
+
+          "homepage_url": {
+            "type": "string",
+            "format": "url",
+            "optional": true,
+            "preprocess": "localize"
+          },
+
+          "langpack_id": {
+            "type": "string",
+            "pattern": "^[a-zA-Z][a-zA-Z-]+$"
+          },
+
+          "languages": {
+            "type": "object",
+            "patternProperties": {
+              "^[a-z]{2}[a-zA-Z-]*$": {
+                "type": "object",
+                "properties": {
+                  "chrome_resources": {
+                    "type": "object",
+                    "patternProperties": {
+                      "^[a-zA-Z-.]+$": {
+                        "choices": [
+                          {
+                            "$ref": "ExtensionURL"
+                          },
+                          {
+                            "type": "object",
+                            "patternProperties": {
+                              "^[a-z]+$": {
+                                "$ref": "ExtensionURL"
+                              }
+                            }
+                          }
+                        ]
+                      }
+                    }
+                  },
+                  "version": {
+                    "type": "string"
+                  }
+                }
+              }
+            }
+          },
+          "sources": {
+            "type": "object",
+            "optional": true,
+            "patternProperties": {
+              "^[a-z]+$": {
+                "type": "object",
+                "properties": {
+                  "base_path": {
+                    "$ref": "ExtensionURL"
+                  },
+                  "paths": {
+                    "type": "array",
+                    "items": {
+                      "type": "string",
+                      "format": "strictRelativeUrl"
+                    },
+                    "optional": true
+                  }
+                }
+              }
+            }
+          }
+        }
+      },
+      {
         "id": "ThemeIcons",
         "type": "object",
         "properties": {
