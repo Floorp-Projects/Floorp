@@ -13574,6 +13574,28 @@
     "releaseChannelCollection": "opt-out",
     "description": "The amount of time spent(ms) of a session for viewing content in OpenVR."
   },
+  "WEBVR_DROPPED_FRAMES_IN_OCULUS": {
+    "record_in_processes": ["main", "gpu"],
+    "alert_emails": ["dmu@mozilla.com"],
+    "bug_numbers": [1392476],
+    "expires_in_version": "never",
+    "kind": "linear",
+    "high": 200,
+    "n_buckets": 100,
+    "releaseChannelCollection": "opt-out",
+    "description": "The average number of dropped frames per sec in Oculus, sent when user exits WebVR content."
+  },
+  "WEBVR_DROPPED_FRAMES_IN_OPENVR": {
+    "record_in_processes": ["main", "gpu"],
+    "alert_emails": ["dmu@mozilla.com"],
+    "bug_numbers": [1392476],
+    "expires_in_version": "never",
+    "kind": "linear",
+    "high": 200,
+    "n_buckets": 100,
+    "releaseChannelCollection": "opt-out",
+    "description": "The average number of dropped frames per sec in OpenVR, sent when user exits WebVR content."
+  },
   "URLCLASSIFIER_UI_EVENTS": {
     "record_in_processes": ["main", "content"],
     "alert_emails": ["seceng-telemetry@mozilla.com", "francois@mozilla.com"],
