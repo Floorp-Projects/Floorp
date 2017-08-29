@@ -74,9 +74,11 @@ void
 LIRGeneratorMIPSShared::lowerForMulInt64(LMulI64* ins, MMul* mir, MDefinition* lhs, MDefinition* rhs)
 {
     bool needsTemp = false;
+    bool cannotAliasRhs = false;
 
 #ifdef JS_CODEGEN_MIPS32
     needsTemp = true;
+    cannotAliasRhs = true;
     if (rhs->isConstant()) {
         int64_t constant = rhs->toConstant()->toInt64();
         int32_t shift = mozilla::FloorLog2(constant);
@@ -87,10 +89,10 @@ LIRGeneratorMIPSShared::lowerForMulInt64(LMulI64* ins, MMul* mir, MDefinition* l
             needsTemp = false;
     }
 #endif
-
     ins->setInt64Operand(0, useInt64RegisterAtStart(lhs));
     ins->setInt64Operand(INT64_PIECES,
-                         lhs != rhs ? useInt64OrConstant(rhs) : useInt64OrConstantAtStart(rhs));
+                         (lhs != rhs || cannotAliasRhs) ? useInt64OrConstant(rhs) : useInt64OrConstantAtStart(rhs));
+
     if (needsTemp)
         ins->setTemp(0, temp());
 

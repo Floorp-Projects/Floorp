@@ -396,7 +396,7 @@ CodeGeneratorMIPS::visitDivOrModI64(LDivOrModI64* lir)
         masm.bind(&notmin);
     }
 
-    masm.setupUnalignedABICall(temp);
+    masm.setupWasmABICall();
     masm.passABIArg(lhs.high);
     masm.passABIArg(lhs.low);
     masm.passABIArg(rhs.high);
@@ -435,7 +435,7 @@ CodeGeneratorMIPS::visitUDivOrModI64(LUDivOrModI64* lir)
     if (lir->canBeDivideByZero())
         masm.branchTest64(Assembler::Zero, rhs, rhs, temp, trap(lir, wasm::Trap::IntegerDivideByZero));
 
-    masm.setupUnalignedABICall(temp);
+    masm.setupWasmABICall();
     masm.passABIArg(lhs.high);
     masm.passABIArg(lhs.low);
     masm.passABIArg(rhs.high);
