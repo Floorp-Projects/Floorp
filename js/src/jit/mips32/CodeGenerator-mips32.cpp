@@ -738,12 +738,17 @@ CodeGeneratorMIPS::visitWasmTruncateToInt64(LWasmTruncateToInt64* lir)
         MOZ_CRASH("unexpected type in visitOutOfLineWasmTruncateCheck");
     }
 
-    masm.setupUnalignedABICall(output.high);
+    masm.Push(input);
+
+    masm.setupWasmABICall();
     masm.passABIArg(scratch, MoveOp::DOUBLE);
     if (lir->mir()->isUnsigned())
         masm.callWithABI(mir->bytecodeOffset(), wasm::SymbolicAddress::TruncateDoubleToUint64);
     else
         masm.callWithABI(mir->bytecodeOffset(), wasm::SymbolicAddress::TruncateDoubleToInt64);
+
+    masm.Pop(input);
+
     masm.ma_b(output.high, Imm32(0x80000000), ool->rejoin(), Assembler::NotEqual);
     masm.ma_b(output.low, Imm32(0x00000000), ool->rejoin(), Assembler::NotEqual);
     masm.ma_b(ool->entry());
@@ -767,20 +772,23 @@ CodeGeneratorMIPS::visitInt64ToFloatingPoint(LInt64ToFloatingPoint* lir)
     regs.take(input.high);
     Register temp = regs.takeAny();
 
-    masm.setupUnalignedABICall(temp);
+    masm.setupWasmABICall();
     masm.passABIArg(input.high);
     masm.passABIArg(input.low);
 
     if (lir->mir()->isUnsigned())
-        masm.callWithABI(mir->bytecodeOffset(), wasm::SymbolicAddress::Uint64ToDouble, MoveOp::DOUBLE);
+        if (toType == MIRType::Double)
+            masm.callWithABI(mir->bytecodeOffset(), wasm::SymbolicAddress::Uint64ToDouble, MoveOp::DOUBLE);
+        else
+            masm.callWithABI(mir->bytecodeOffset(), wasm::SymbolicAddress::Uint64ToFloat32, MoveOp::FLOAT32);
     else
-        masm.callWithABI(mir->bytecodeOffset(), wasm::SymbolicAddress::Int64ToDouble, MoveOp::DOUBLE);
+        if (toType == MIRType::Double)
+            masm.callWithABI(mir->bytecodeOffset(), wasm::SymbolicAddress::Int64ToDouble, MoveOp::DOUBLE);
+        else
+            masm.callWithABI(mir->bytecodeOffset(), wasm::SymbolicAddress::Int64ToFloat32, MoveOp::FLOAT32);
 
     MOZ_ASSERT_IF(toType == MIRType::Double, output == ReturnDoubleReg);
-    if (toType == MIRType::Float32) {
-         MOZ_ASSERT(output == ReturnFloat32Reg);
-         masm.convertDoubleToFloat32(ReturnDoubleReg, output);
-    }
+    MOZ_ASSERT_IF(toType == MIRType::Float32, output == ReturnFloat32Reg);
 }
 
 void
