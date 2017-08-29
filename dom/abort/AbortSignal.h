@@ -15,31 +15,30 @@ namespace dom {
 class AbortController;
 class AbortSignal;
 
-// This class must be implemented by objects who want to follow a AbortSignal.
-class AbortFollower
-{
-public:
-  virtual void Abort() = 0;
-
-  void
-  Follow(AbortSignal* aSignal);
-
-  void
-  Unfollow();
-
-  bool
-  IsFollowing() const;
-
-protected:
-  virtual ~AbortFollower();
-
-  RefPtr<AbortSignal> mFollowingSignal;
-};
-
 class AbortSignal final : public DOMEventTargetHelper
-                        , public AbortFollower
 {
 public:
+  // This class must be implemented by objects who want to follow a AbortSignal.
+  class Follower
+  {
+  public:
+    virtual void Aborted() = 0;
+
+  protected:
+    virtual ~Follower();
+
+    void
+    Follow(AbortSignal* aSignal);
+
+    void
+    Unfollow();
+
+    bool
+    IsFollowing() const;
+
+    RefPtr<AbortSignal> mFollowingSignal;
+  };
+
   NS_DECL_ISUPPORTS_INHERITED
   NS_DECL_CYCLE_COLLECTION_CLASS_INHERITED(AbortSignal, DOMEventTargetHelper)
 
@@ -53,23 +52,23 @@ public:
   Aborted() const;
 
   void
-  Abort() override;
+  Abort();
 
   IMPL_EVENT_HANDLER(abort);
 
   void
-  AddFollower(AbortFollower* aFollower);
+  AddFollower(Follower* aFollower);
 
   void
-  RemoveFollower(AbortFollower* aFollower);
+  RemoveFollower(Follower* aFollower);
 
 private:
   ~AbortSignal() = default;
 
   RefPtr<AbortController> mController;
 
-  // Raw pointers. AbortFollower unregisters itself in the DTOR.
-  nsTArray<AbortFollower*> mFollowers;
+  // Raw pointers. Follower unregisters itself in the DTOR.
+  nsTArray<Follower*> mFollowers;
 
   bool mAborted;
 };
