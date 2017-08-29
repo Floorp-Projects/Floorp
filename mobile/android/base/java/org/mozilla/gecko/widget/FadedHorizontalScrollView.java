@@ -16,6 +16,8 @@ import android.graphics.PorterDuff;
 import android.graphics.PorterDuffXfermode;
 import android.graphics.Shader;
 import android.util.AttributeSet;
+import android.view.MotionEvent;
+import android.view.TouchDelegate;
 import android.view.View;
 import android.widget.HorizontalScrollView;
 
@@ -28,6 +30,9 @@ import org.mozilla.gecko.R;
  * <code>gecko:fadeWidth</code>. To control in how far the fading effect should affect any views
  * further up in the View hierarchy, place this view or one of its parents onto a separate layer
  * using <code>android:layerType</code>. Currently, only horizontal fading is supported.
+ * <p>
+ * Additionally, {@link TouchDelegate} support (which isn't provided for in Android's ScrollView
+ * implementation) has been enabled.
  */
 public class FadedHorizontalScrollView extends HorizontalScrollView {
     // Width of the fade effect from end of the view.
@@ -38,6 +43,8 @@ public class FadedHorizontalScrollView extends HorizontalScrollView {
     private float mFadeTop;
     private float mFadeBottom;
     private boolean mVerticalFadeBordersDirty;
+
+    private boolean mInterceptingTouchEvents;
 
     public FadedHorizontalScrollView(Context context, AttributeSet attrs) {
         super(context, attrs);
@@ -155,5 +162,31 @@ public class FadedHorizontalScrollView extends HorizontalScrollView {
             setShader(fade);
             setXfermode(new PorterDuffXfermode(PorterDuff.Mode.DST_OUT));
         }
+    }
+
+    @Override
+    public boolean onInterceptTouchEvent(MotionEvent ev) {
+        // Once we intercept an event, this method stops being called until the intercept state
+        // is reset at the start of the following gesture. Therefore we can reset the tracking
+        // variable to false each time this method is being called.
+        mInterceptingTouchEvents = false;
+
+        final boolean intercept = super.onInterceptTouchEvent(ev);
+        if (intercept) {
+            mInterceptingTouchEvents = true;
+        }
+        return intercept;
+    }
+
+    @Override
+    public boolean onTouchEvent(MotionEvent ev) {
+        if (!mInterceptingTouchEvents) {
+            final TouchDelegate touchDelegate = getTouchDelegate();
+            if (touchDelegate != null && touchDelegate.onTouchEvent(ev)) {
+                return true;
+            }
+        }
+
+        return super.onTouchEvent(ev);
     }
 }
