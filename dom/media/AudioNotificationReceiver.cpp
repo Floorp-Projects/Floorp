@@ -5,7 +5,6 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
 #include "AudioNotificationReceiver.h"
-#include "AudioStream.h"          // for AudioStream
 #include "mozilla/Logging.h"      // for LazyLogModule
 #include "mozilla/StaticMutex.h"  // for StaticMutex
 #include "mozilla/StaticPtr.h"    // for StaticAutoPtr
@@ -25,41 +24,43 @@ namespace audio {
 /*
  * A list containing all clients subscribering the device-changed notifications.
  */
-static StaticAutoPtr<nsTArray<AudioStream*>> sSubscribers;
+static StaticAutoPtr<nsTArray<DeviceChangeListener*>> sSubscribers;
 static StaticMutex sMutex;
 
 /*
  * AudioNotificationReceiver Implementation
  */
 /* static */ void
-AudioNotificationReceiver::Register(AudioStream* aAudioStream)
+AudioNotificationReceiver::Register(DeviceChangeListener* aDeviceChangeListener)
 {
   MOZ_ASSERT(XRE_IsContentProcess());
 
   StaticMutexAutoLock lock(sMutex);
   if (!sSubscribers) {
-    sSubscribers = new nsTArray<AudioStream*>();
+    sSubscribers = new nsTArray<DeviceChangeListener*>();
   }
-  sSubscribers->AppendElement(aAudioStream);
+  sSubscribers->AppendElement(aDeviceChangeListener);
 
-  ANR_LOG("The AudioStream: %p is registered successfully.", aAudioStream);
+  ANR_LOG("The DeviceChangeListener: %p is registered successfully.",
+          aDeviceChangeListener);
 }
 
 /* static */ void
-AudioNotificationReceiver::Unregister(AudioStream* aAudioStream)
+AudioNotificationReceiver::Unregister(DeviceChangeListener* aDeviceChangeListener)
 {
   MOZ_ASSERT(XRE_IsContentProcess());
 
   StaticMutexAutoLock lock(sMutex);
   MOZ_ASSERT(!sSubscribers->IsEmpty(), "No subscriber.");
 
-  sSubscribers->RemoveElement(aAudioStream);
+  sSubscribers->RemoveElement(aDeviceChangeListener);
   if (sSubscribers->IsEmpty()) {
     // Clear the static pointer here to prevent memory leak.
     sSubscribers = nullptr;
   }
 
-  ANR_LOG("The AudioStream: %p is unregistered successfully.", aAudioStream);
+  ANR_LOG("The DeviceChangeListener: %p is unregistered successfully.",
+          aDeviceChangeListener);
 }
 
 /* static */ void
@@ -69,13 +70,14 @@ AudioNotificationReceiver::NotifyDefaultDeviceChanged()
 
   StaticMutexAutoLock lock(sMutex);
 
-  // Do nothing when there is no AudioStream.
+  // Do nothing when there is no DeviceChangeListener.
   if (!sSubscribers) {
     return;
   }
 
-  for (AudioStream* stream : *sSubscribers) {
-    ANR_LOG("Notify the AudioStream: %p that the default device has been changed.", stream);
+  for (DeviceChangeListener* stream : *sSubscribers) {
+    ANR_LOG("Notify the DeviceChangeListener: %p "
+            "that the default device has been changed.", stream);
     stream->ResetDefaultDevice();
   }
 }
