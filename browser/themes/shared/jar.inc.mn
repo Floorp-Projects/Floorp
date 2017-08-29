@@ -114,6 +114,8 @@
   skin/classic/browser/fxa/sync-illustration.svg               (../shared/fxa/sync-illustration.svg)
 
 
+  skin/classic/browser/accessibility.svg              (../shared/icons/accessibility.svg)
+  skin/classic/browser/accessibility-active.svg       (../shared/icons/accessibility-active.svg)
   skin/classic/browser/arrow-left.svg                 (../shared/icons/arrow-left.svg)
   skin/classic/browser/back.svg                       (../shared/icons/back.svg)
   skin/classic/browser/back-12.svg                    (../shared/icons/back-12.svg)
