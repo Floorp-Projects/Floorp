@@ -8,7 +8,6 @@
 #define mozilla_dom_FetchConsumer_h
 
 #include "Fetch.h"
-#include "mozilla/dom/AbortSignal.h"
 #include "nsIObserver.h"
 #include "nsWeakReference.h"
 
@@ -32,7 +31,6 @@ template <class Derived> class FetchBody;
 template <class Derived>
 class FetchBodyConsumer final : public nsIObserver
                               , public nsSupportsWeakReference
-                              , public AbortSignal::Follower
 {
 public:
   NS_DECL_THREADSAFE_ISUPPORTS
@@ -42,7 +40,6 @@ public:
   Create(nsIGlobalObject* aGlobal,
          nsIEventTarget* aMainThreadEventTarget,
          FetchBody<Derived>* aBody,
-         AbortSignal* aSignal,
          FetchConsumeType aType,
          ErrorResult& aRv);
 
@@ -78,9 +75,6 @@ public:
   {
     mConsumeBodyPump = nullptr;
   }
-
-  // AbortSignal::Follower
-  void Aborted() override;
 
 private:
   FetchBodyConsumer(nsIEventTarget* aMainThreadEventTarget,
