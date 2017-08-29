@@ -13,7 +13,7 @@
 #include "mozilla/Atomics.h"
 #include "mozilla/RefPtr.h"
 #include "nsAutoPtr.h"
-#include "nsRect.h"
+#include "mozilla/gfx/Rect.h"
 
 namespace mozilla {
 
@@ -93,7 +93,7 @@ private:
 
   // Video frame geometry.
   const VideoInfo mVideoInfo;
-  const nsIntSize mImageSize;
+  const gfx::IntSize mImageSize;
   uint32_t mVideoStride;
 
   RefPtr<layers::ImageContainer> mImageContainer;

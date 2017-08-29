@@ -345,8 +345,9 @@ AOMDecoder::IsKeyframe(Span<const uint8_t> aBuffer) {
 }
 
 /* static */
-nsIntSize
-AOMDecoder::GetFrameSize(Span<const uint8_t> aBuffer) {
+gfx::IntSize
+AOMDecoder::GetFrameSize(Span<const uint8_t> aBuffer)
+{
   aom_codec_stream_info_t info;
   PodZero(&info);
 
@@ -358,7 +359,7 @@ AOMDecoder::GetFrameSize(Span<const uint8_t> aBuffer) {
     LOG_RESULT(res, "couldn't get frame size with aom_codec_peek_stream_info");
   }
 
-  return nsIntSize(info.w, info.h);
+  return gfx::IntSize(info.w, info.h);
 }
 
 } // namespace mozilla
