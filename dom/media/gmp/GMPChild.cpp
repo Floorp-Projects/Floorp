@@ -23,7 +23,6 @@
 #include "prio.h"
 #include "base/task.h"
 #include "base/command_line.h"
-#include "widevine-adapter/WidevineAdapter.h"
 #include "ChromiumCDMAdapter.h"
 #include "GMPLog.h"
 
@@ -561,12 +560,10 @@ GMPChild::AnswerStartPlugin(const nsString& aAdapter)
     return IPC_FAIL_NO_REASON(this);
   }
 #endif
-
-  bool isWidevine = aAdapter.EqualsLiteral("widevine");
   bool isChromium = aAdapter.EqualsLiteral("chromium");
 #if defined(MOZ_GMP_SANDBOX) && defined(XP_MACOSX)
   MacSandboxPluginType pluginType = MacSandboxPluginType_GMPlugin_Default;
-  if (isWidevine || isChromium) {
+  if (isChromium) {
     pluginType = MacSandboxPluginType_GMPlugin_EME_Widevine;
   }
   if (!SetMacSandboxInfo(pluginType)) {
@@ -577,9 +574,7 @@ GMPChild::AnswerStartPlugin(const nsString& aAdapter)
 #endif
 
   GMPAdapter* adapter = nullptr;
-  if (isWidevine) {
-    adapter = new WidevineAdapter();
-  } else if (isChromium) {
+  if (isChromium) {
     auto&& paths = MakeCDMHostVerificationPaths();
     GMP_LOG("%s CDM host paths=%s", __func__, ToCString(paths).get());
     adapter = new ChromiumCDMAdapter(Move(paths));
