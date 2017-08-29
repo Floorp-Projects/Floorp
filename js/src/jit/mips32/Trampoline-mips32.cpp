@@ -36,11 +36,9 @@ struct EnterJITRegs
     double f22;
     double f20;
 
-    // empty slot for alignment
-    uintptr_t align;
-
     // non-volatile registers.
     uintptr_t ra;
+    uintptr_t fp;
     uintptr_t s7;
     uintptr_t s6;
     uintptr_t s5;
@@ -80,6 +78,7 @@ GenerateReturn(MacroAssembler& masm, int returnCode)
     masm.loadPtr(Address(StackPointer, offsetof(EnterJITRegs, s5)), s5);
     masm.loadPtr(Address(StackPointer, offsetof(EnterJITRegs, s6)), s6);
     masm.loadPtr(Address(StackPointer, offsetof(EnterJITRegs, s7)), s7);
+    masm.loadPtr(Address(StackPointer, offsetof(EnterJITRegs, fp)), fp);
     masm.loadPtr(Address(StackPointer, offsetof(EnterJITRegs, ra)), ra);
 
     // Restore non-volatile floating point registers
@@ -110,6 +109,7 @@ GeneratePrologue(MacroAssembler& masm)
     masm.storePtr(s5, Address(StackPointer, offsetof(EnterJITRegs, s5)));
     masm.storePtr(s6, Address(StackPointer, offsetof(EnterJITRegs, s6)));
     masm.storePtr(s7, Address(StackPointer, offsetof(EnterJITRegs, s7)));
+    masm.storePtr(fp, Address(StackPointer, offsetof(EnterJITRegs, fp)));
     masm.storePtr(ra, Address(StackPointer, offsetof(EnterJITRegs, ra)));
 
     masm.as_sd(f20, StackPointer, offsetof(EnterJITRegs, f20));

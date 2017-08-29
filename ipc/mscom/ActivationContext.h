@@ -9,6 +9,7 @@
 
 #include "mozilla/Attributes.h"
 #include "mozilla/Move.h"
+#include "mozilla/Result.h"
 
 #include <windows.h>
 
@@ -33,6 +34,8 @@ public:
   {
     return mActCtx != INVALID_HANDLE_VALUE;
   }
+
+  static Result<uintptr_t,HRESULT> GetCurrent();
 
 private:
   void Init(ACTCTX& aActCtx);
