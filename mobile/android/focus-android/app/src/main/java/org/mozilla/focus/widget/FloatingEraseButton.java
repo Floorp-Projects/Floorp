@@ -11,6 +11,8 @@ import android.util.AttributeSet;
 import android.view.View;
 
 public class FloatingEraseButton extends FloatingActionButton {
+    private boolean keepHidden;
+
     public FloatingEraseButton(Context context) {
         super(context);
     }
@@ -27,16 +29,27 @@ public class FloatingEraseButton extends FloatingActionButton {
         final CoordinatorLayout.LayoutParams params = (CoordinatorLayout.LayoutParams) getLayoutParams();
         final FloatingActionButtonBehavior behavior = (FloatingActionButtonBehavior) params.getBehavior();
 
-        final boolean shouldBeVisible = tabCount == 1;
+        keepHidden = tabCount != 1;
 
         if (behavior != null) {
-            behavior.setEnabled(shouldBeVisible);
+            behavior.setEnabled(!keepHidden);
         }
 
-        if (shouldBeVisible) {
-            setVisibility(View.VISIBLE);
-        } else {
+        if (keepHidden) {
             setVisibility(View.GONE);
+        } else {
+            setVisibility(View.VISIBLE);
         }
+    }
+
+    @Override
+    public void setVisibility(int visibility) {
+        if (keepHidden && visibility == View.VISIBLE) {
+            // There are multiple callbacks updating the visibility of the button. Let's make sure
+            // we do not show the button if we do not want to.
+            return;
+        }
+
+        super.setVisibility(visibility);
     }
 }
