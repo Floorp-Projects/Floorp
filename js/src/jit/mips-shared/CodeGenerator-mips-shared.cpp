@@ -1009,12 +1009,18 @@ CodeGeneratorMIPSShared::visitRotateI64(LRotateI64* lir)
     Register64 output = ToOutRegister64(lir);
     Register temp = ToTempRegisterOrInvalid(lir->temp());
 
+#ifdef JS_CODEGEN_MIPS64
     MOZ_ASSERT(input == output);
+#endif
 
     if (count->isConstant()) {
         int32_t c = int32_t(count->toConstant()->toInt64() & 0x3F);
-        if (!c)
+        if (!c) {
+#ifdef JS_CODEGEN_MIPS32
+            masm.move64(input, output);
+#endif
             return;
+        }
         if (mir->isLeftRotate())
             masm.rotateLeft64(Imm32(c), input, output, temp);
         else
