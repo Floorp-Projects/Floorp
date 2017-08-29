@@ -4173,13 +4173,6 @@ HTMLMediaElement::WakeLockBoolWrapper::~WakeLockBoolWrapper()
 }
 
 void
-HTMLMediaElement::WakeLockBoolWrapper::SetCanPlay(bool aCanPlay)
-{
-  mCanPlay = aCanPlay;
-  UpdateWakeLock();
-}
-
-void
 HTMLMediaElement::WakeLockBoolWrapper::UpdateWakeLock()
 {
   MOZ_ASSERT(NS_IsMainThread());
@@ -4188,7 +4181,7 @@ HTMLMediaElement::WakeLockBoolWrapper::UpdateWakeLock()
     return;
   }
 
-  bool playing = (!mValue && mCanPlay);
+  bool playing = !mValue;
 
   if (playing) {
     if (mTimer) {
