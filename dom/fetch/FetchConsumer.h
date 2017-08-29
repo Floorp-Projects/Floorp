@@ -32,7 +32,7 @@ template <class Derived> class FetchBody;
 template <class Derived>
 class FetchBodyConsumer final : public nsIObserver
                               , public nsSupportsWeakReference
-                              , public AbortFollower
+                              , public AbortSignal::Follower
 {
 public:
   NS_DECL_THREADSAFE_ISUPPORTS
@@ -79,8 +79,8 @@ public:
     mConsumeBodyPump = nullptr;
   }
 
-  // AbortFollower
-  void Abort() override;
+  // AbortSignal::Follower
+  void Aborted() override;
 
 private:
   FetchBodyConsumer(nsIEventTarget* aMainThreadEventTarget,
