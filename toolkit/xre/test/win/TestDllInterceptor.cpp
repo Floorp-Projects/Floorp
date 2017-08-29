@@ -432,6 +432,14 @@ bool TestTlsFree(void* aFunc)
   return sTlsIndex != 0 && patchedTlsFree(sTlsIndex);
 }
 
+bool TestPrintDlgW(void* aFunc)
+{
+  auto patchedPrintDlgW =
+    reinterpret_cast<decltype(&PrintDlgW)>(aFunc);
+  patchedPrintDlgW(0);
+  return true;
+}
+
 int main()
 {
   payload initial = { 0x12345678, 0xfc4e9d31, 0x87654321 };
@@ -531,6 +539,7 @@ int main()
       TestHook(TestLdrUnloadDll, "ntdll.dll", "LdrUnloadDll") &&
       MaybeTestHook(IsWin8OrLater(), TestLdrResolveDelayLoadedAPI, "ntdll.dll", "LdrResolveDelayLoadedAPI") &&
       MaybeTestHook(!IsWin8OrLater(), TestRtlInstallFunctionTableCallback, "kernel32.dll", "RtlInstallFunctionTableCallback") &&
+      TestHook(TestPrintDlgW, "comdlg32.dll", "PrintDlgW") &&
 #endif
       MaybeTestHook(ShouldTestTipTsf(), TestProcessCaretEvents, "tiptsf.dll", "ProcessCaretEvents") &&
 #ifdef _M_IX86
