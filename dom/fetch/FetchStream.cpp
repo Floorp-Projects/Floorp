@@ -5,7 +5,6 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
 #include "FetchStream.h"
-#include "mozilla/dom/DOMError.h"
 #include "nsITransport.h"
 #include "nsIStreamTransportService.h"
 #include "nsProxyRelease.h"
@@ -340,18 +339,6 @@ FetchStream::ErroredCallback(JSContext* aCx, JS::HandleObject aStream,
 {
   MOZ_DIAGNOSTIC_ASSERT(aUnderlyingSource);
   MOZ_DIAGNOSTIC_ASSERT(aFlags == FETCH_STREAM_FLAG);
-
-  // This is safe because we created an extra reference in FetchStream::Create()
-  // that won't be released until FetchStream::FinalizeCallback() is called.
-  // We are guaranteed that won't happen until the js ReadableStream object
-  // is finalized.
-  FetchStream* stream = static_cast<FetchStream*>(aUnderlyingSource);
-
-  if (stream->mInputStream) {
-    stream->mInputStream->CloseWithStatus(NS_BASE_STREAM_CLOSED);
-  }
-
-  stream->ReleaseObjects();
 }
 
 void
