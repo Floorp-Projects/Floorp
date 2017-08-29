@@ -247,7 +247,7 @@ class Module::Tier2GeneratorTaskImpl : public Tier2GeneratorTask
 
     ~Tier2GeneratorTaskImpl() override {
         if (!finished_)
-            module_->unblockOnTier2GeneratorFinished(CompileMode::Once);
+            module_->notifyCompilationListeners();
     }
 
     void cancel() override {
@@ -263,7 +263,7 @@ class Module::Tier2GeneratorTaskImpl : public Tier2GeneratorTask
 void
 Module::startTier2(const CompileArgs& args)
 {
-    MOZ_ASSERT(mode_ == CompileMode::Once);
+    MOZ_ASSERT(!tiering_.lock()->active);
 
     // If a Module initiates tier-2 compilation, we must ensure that eventually
     // unblockOnTier2GeneratorFinished() is called. Since we must ensure
@@ -275,12 +275,29 @@ Module::startTier2(const CompileArgs& args)
     if (!task)
         return;
 
-    {
-        LockGuard<Mutex> l(tier2Lock_);
-        mode_ = CompileMode::Tier1;
-    }
+    tiering_.lock()->active = true;
 
     StartOffThreadWasmTier2Generator(Move(task));
+}
+
+void
+Module::notifyCompilationListeners()
+{
+    // Notify listeners without holding the lock to avoid deadlocks if the
+    // listener takes their own lock or reenters this Module.
+
+    Tiering::ListenerVector listeners;
+    {
+        auto tiering = tiering_.lock();
+
+        MOZ_ASSERT(tiering->active);
+        tiering->active = false;
+
+        Swap(listeners, tiering->listeners);
+    }
+
+    for (RefPtr<JS::WasmModuleListener>& listener : listeners)
+        listener->onCompilationComplete();
 }
 
 void
@@ -299,7 +316,7 @@ Module::finishTier2(UniqueLinkDataTier linkData2, UniqueMetadataTier metadata2,
     // unblock anyone waiting on it.
 
     metadata().commitTier2();
-    unblockOnTier2GeneratorFinished(CompileMode::Tier2);
+    notifyCompilationListeners();
 
     // And we update the jump vector.
 
@@ -341,25 +358,42 @@ Module::bytecodeSerialize(uint8_t* bytecodeBegin, size_t bytecodeSize) const
 /* virtual */ bool
 Module::compilationComplete() const
 {
-    return true;
+    // For the purposes of serialization, if there is not an active tier-2
+    // compilation in progress, compilation is "complete" in that
+    // compiledSerialize() can be called. Now, tier-2 compilation may have
+    // failed or never started in the first place, but in such cases, a
+    // zero-byte compilation is serialized, triggering recompilation on upon
+    // deserialization. Basically, we only want serialization to wait if waiting
+    // would eventually produce tier-2 code.
+    return !tiering_.lock()->active;
 }
 
 /* virtual */ bool
 Module::notifyWhenCompilationComplete(JS::WasmModuleListener* listener)
 {
-    MOZ_CRASH("unreachable");
+    {
+        auto tiering = tiering_.lock();
+        if (tiering->active)
+            return tiering->listeners.append(listener);
+    }
+
+    // Notify the listener without holding the lock to avoid deadlocks if the
+    // listener takes their own lock or reenters this Module.
+    listener->onCompilationComplete();
+    return true;
 }
 
 /* virtual */ size_t
 Module::compiledSerializedSize() const
 {
+    MOZ_ASSERT(!tiering_.lock()->active);
+
     // The compiled debug code must not be saved, set compiled size to 0,
     // so Module::assumptionsMatch will return false during assumptions
     // deserialization.
     if (metadata().debugEnabled)
         return 0;
 
-    blockOnIonCompileFinished();
     if (!code_->hasTier(Tier::Serialized))
         return 0;
 
@@ -375,12 +409,13 @@ Module::compiledSerializedSize() const
 /* virtual */ void
 Module::compiledSerialize(uint8_t* compiledBegin, size_t compiledSize) const
 {
+    MOZ_ASSERT(!tiering_.lock()->active);
+
     if (metadata().debugEnabled) {
         MOZ_RELEASE_ASSERT(compiledSize == 0);
         return;
     }
 
-    blockOnIonCompileFinished();
     if (!code_->hasTier(Tier::Serialized)) {
         MOZ_RELEASE_ASSERT(compiledSize == 0);
         return;
@@ -395,22 +430,6 @@ Module::compiledSerialize(uint8_t* compiledBegin, size_t compiledSize) const
     cursor = SerializeVector(cursor, elemSegments_);
     cursor = code_->serialize(cursor, linkData_);
     MOZ_RELEASE_ASSERT(cursor == compiledBegin + compiledSize);
-}
-
-void
-Module::blockOnIonCompileFinished() const
-{
-    LockGuard<Mutex> l(tier2Lock_);
-    while (mode_ == CompileMode::Tier1 && !metadata().hasTier2())
-        tier2Cond_.wait(l);
-}
-
-void
-Module::unblockOnTier2GeneratorFinished(CompileMode newMode) const
-{
-    LockGuard<Mutex> l(tier2Lock_);
-    mode_ = newMode;
-    tier2Cond_.notify_all();
 }
 
 /* static */ bool
@@ -622,9 +641,6 @@ Module::extractCode(JSContext* cx, Tier tier, MutableHandleValue vp) const
     RootedPlainObject result(cx, NewBuiltinClassInstance<PlainObject>(cx));
     if (!result)
         return false;
-
-    if (tier == Tier::Ion)
-        blockOnIonCompileFinished();
 
     if (!code_->hasTier(tier)) {
         vp.setNull();
