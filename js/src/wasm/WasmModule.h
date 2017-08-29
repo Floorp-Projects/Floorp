@@ -109,6 +109,21 @@ class LinkData
     WASM_DECLARE_SERIALIZABLE(LinkData)
 };
 
+// Contains the locked tiering state of a Module: whether there is an active
+// background tier-2 compilation in progress and, if so, the list of listeners
+// waiting for the tier-2 compilation to complete.
+
+struct Tiering
+{
+    typedef Vector<RefPtr<JS::WasmModuleListener>, 0, SystemAllocPolicy> ListenerVector;
+
+    Tiering() : active(false) {}
+    ~Tiering() { MOZ_ASSERT(listeners.empty()); MOZ_ASSERT(!active); }
+
+    ListenerVector listeners;
+    bool active;
+};
+
 // Module represents a compiled wasm module and primarily provides two
 // operations: instantiation and serialization. A Module can be instantiated any
 // number of times to produce new Instance objects. A Module can be serialized
@@ -133,6 +148,7 @@ class Module : public JS::WasmModule
     const DataSegmentVector dataSegments_;
     const ElemSegmentVector elemSegments_;
     const SharedBytes       bytecode_;
+    ExclusiveData<Tiering>  tiering_;
 
     // `codeIsBusy_` is set to false initially and then to true when `code_` is
     // already being used for an instance and can't be shared because it may be
@@ -140,20 +156,6 @@ class Module : public JS::WasmModule
     // by linking the `unlinkedCodeForDebugging_`.
 
     mutable Atomic<bool>    codeIsBusy_;
-
-    // The lock guards the mode_ member, and the lock/cond pair are used to
-    // allow threads to wait for the availability of Ion code and signal the
-    // completion of tier-2 compilation; see blockOnIonCompileFinished and
-    // unblockOnTier2GeneratorFinished, below.
-
-    mutable Mutex                 tier2Lock_;
-    mutable ConditionVariable     tier2Cond_;
-
-    // Access mode_ only under the lock.  It will be changed from Tier1 to Tier2
-    // once Tier2 compilation is finished, and from Tier1 to Once if Tier2
-    // compilation is disabled (in testing modes) or cancelled.
-
-    mutable CompileMode           mode_;
 
     bool instantiateFunctions(JSContext* cx, Handle<FunctionVector> funcImports) const;
     bool instantiateMemory(JSContext* cx, MutableHandleWasmMemoryObject memory) const;
@@ -167,6 +169,7 @@ class Module : public JS::WasmModule
                       const ValVector& globalImports) const;
 
     class Tier2GeneratorTaskImpl;
+    void notifyCompilationListeners();
 
   public:
     Module(Assumptions&& assumptions,
@@ -187,9 +190,8 @@ class Module : public JS::WasmModule
         dataSegments_(Move(dataSegments)),
         elemSegments_(Move(elemSegments)),
         bytecode_(&bytecode),
-        codeIsBusy_(false),
-        tier2Lock_(js::mutexid::WasmTier2GeneratorComplete),
-        mode_(CompileMode::Once)
+        tiering_(mutexid::WasmModuleTieringLock),
+        codeIsBusy_(false)
     {
         MOZ_ASSERT_IF(metadata().debugEnabled, unlinkedCodeForDebugging_);
     }
