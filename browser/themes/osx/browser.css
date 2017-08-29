@@ -547,10 +547,6 @@ html|span.ac-emphasize-text-url {
   height: 48px;
 }
 
-#editBookmarkPanelStarIcon[unstarred] {
-  list-style-image: url("chrome://browser/skin/places/unstarred48.png");
-}
-
 @media (min-resolution: 2dppx) {
   #editBookmarkPanelStarIcon {
     list-style-image: url("chrome://browser/skin/places/starred48@2x.png");
