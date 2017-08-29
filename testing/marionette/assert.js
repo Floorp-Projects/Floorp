@@ -11,10 +11,10 @@ Cu.import("resource://gre/modules/Preferences.jsm");
 Cu.import("resource://gre/modules/Services.jsm");
 
 const {
-  error,
   InvalidArgumentError,
   InvalidSessionIDError,
   NoSuchWindowError,
+  pprint,
   UnexpectedAlertOpenError,
   UnsupportedOperationError,
 } = Cu.import("chrome://marionette/content/error.js", {});
@@ -174,7 +174,7 @@ assert.noUserPrompt = function(dialog, msg = "") {
  *     If |obj| is not defined.
  */
 assert.defined = function(obj, msg = "") {
-  msg = msg || error.pprint`Expected ${obj} to be defined`;
+  msg = msg || pprint`Expected ${obj} to be defined`;
   return assert.that(o => typeof o != "undefined", msg)(obj);
 };
 
@@ -193,7 +193,7 @@ assert.defined = function(obj, msg = "") {
  *     If |obj| is not a number.
  */
 assert.number = function(obj, msg = "") {
-  msg = msg || error.pprint`Expected ${obj} to be finite number`;
+  msg = msg || pprint`Expected ${obj} to be finite number`;
   return assert.that(Number.isFinite, msg)(obj);
 };
 
@@ -212,7 +212,7 @@ assert.number = function(obj, msg = "") {
  *     If |obj| is not callable.
  */
 assert.callable = function(obj, msg = "") {
-  msg = msg || error.pprint`${obj} is not callable`;
+  msg = msg || pprint`${obj} is not callable`;
   return assert.that(o => typeof o == "function", msg)(obj);
 };
 
@@ -231,7 +231,7 @@ assert.callable = function(obj, msg = "") {
  *     If |obj| is not an integer.
  */
 assert.integer = function(obj, msg = "") {
-  msg = msg || error.pprint`Expected ${obj} to be an integer`;
+  msg = msg || pprint`Expected ${obj} to be an integer`;
   return assert.that(Number.isInteger, msg)(obj);
 };
 
@@ -251,7 +251,7 @@ assert.integer = function(obj, msg = "") {
  */
 assert.positiveInteger = function(obj, msg = "") {
   assert.integer(obj, msg);
-  msg = msg || error.pprint`Expected ${obj} to be >= 0`;
+  msg = msg || pprint`Expected ${obj} to be >= 0`;
   return assert.that(n => n >= 0, msg)(obj);
 };
 
@@ -270,7 +270,7 @@ assert.positiveInteger = function(obj, msg = "") {
  *     If |obj| is not a boolean.
  */
 assert.boolean = function(obj, msg = "") {
-  msg = msg || error.pprint`Expected ${obj} to be boolean`;
+  msg = msg || pprint`Expected ${obj} to be boolean`;
   return assert.that(b => typeof b == "boolean", msg)(obj);
 };
 
@@ -289,7 +289,7 @@ assert.boolean = function(obj, msg = "") {
  *     If |obj| is not a string.
  */
 assert.string = function(obj, msg = "") {
-  msg = msg || error.pprint`Expected ${obj} to be a string`;
+  msg = msg || pprint`Expected ${obj} to be a string`;
   return assert.that(s => typeof s == "string", msg)(obj);
 };
 
@@ -308,7 +308,7 @@ assert.string = function(obj, msg = "") {
  *     If |obj| is not an object.
  */
 assert.object = function(obj, msg = "") {
-  msg = msg || error.pprint`Expected ${obj} to be an object`;
+  msg = msg || pprint`Expected ${obj} to be an object`;
   return assert.that(o => {
     // unable to use instanceof because LHS and RHS may come from
     // different globals
@@ -335,7 +335,7 @@ assert.object = function(obj, msg = "") {
  */
 assert.in = function(prop, obj, msg = "") {
   assert.object(obj, msg);
-  msg = msg || error.pprint`Expected ${prop} in ${obj}`;
+  msg = msg || pprint`Expected ${prop} in ${obj}`;
   assert.that(p => obj.hasOwnProperty(p), msg)(prop);
   return obj[prop];
 };
@@ -355,7 +355,7 @@ assert.in = function(prop, obj, msg = "") {
  *     If |obj| is not an Array.
  */
 assert.array = function(obj, msg = "") {
-  msg = msg || error.pprint`Expected ${obj} to be an Array`;
+  msg = msg || pprint`Expected ${obj} to be an Array`;
   return assert.that(Array.isArray, msg)(obj);
 };
 
