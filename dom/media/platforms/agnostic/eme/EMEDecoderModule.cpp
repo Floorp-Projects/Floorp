@@ -357,11 +357,7 @@ EMEDecoderModule::CreateVideoDecoder(const CreateDecoderParams& aParams)
     RefPtr<MediaDataDecoderProxy> wrapper =
       CreateDecoderWrapper(mProxy, aParams);
     auto params = GMPVideoDecoderParams(aParams);
-    if (MediaPrefs::EMEChromiumAPIEnabled()) {
-      wrapper->SetProxyTarget(new ChromiumCDMVideoDecoder(params, mProxy));
-    } else {
-      wrapper->SetProxyTarget(new EMEVideoDecoder(mProxy, params));
-    }
+    wrapper->SetProxyTarget(new ChromiumCDMVideoDecoder(params, mProxy));
     return wrapper.forget();
   }
 

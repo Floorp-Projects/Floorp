@@ -342,23 +342,13 @@ MediaKeys::CreateCDMProxy(nsIEventTarget* aMainThread)
   } else
 #endif
   {
-    if (MediaPrefs::EMEChromiumAPIEnabled()) {
-      proxy = new ChromiumCDMProxy(
-        this,
-        mKeySystem,
-        new MediaKeysGMPCrashHelper(this),
-        mConfig.mDistinctiveIdentifier == MediaKeysRequirement::Required,
-        mConfig.mPersistentState == MediaKeysRequirement::Required,
-        aMainThread);
-    } else {
-      proxy = new GMPCDMProxy(
-        this,
-        mKeySystem,
-        new MediaKeysGMPCrashHelper(this),
-        mConfig.mDistinctiveIdentifier == MediaKeysRequirement::Required,
-        mConfig.mPersistentState == MediaKeysRequirement::Required,
-        aMainThread);
-    }
+    proxy = new ChromiumCDMProxy(
+      this,
+      mKeySystem,
+      new MediaKeysGMPCrashHelper(this),
+      mConfig.mDistinctiveIdentifier == MediaKeysRequirement::Required,
+      mConfig.mPersistentState == MediaKeysRequirement::Required,
+      aMainThread);
   }
   return proxy.forget();
 }

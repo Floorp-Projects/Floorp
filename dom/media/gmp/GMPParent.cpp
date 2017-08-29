@@ -740,11 +740,7 @@ IsCDMAPISupported(const mozilla::dom::WidevineCDMManifest& aManifest)
   int32_t interfaceVersion =
     aManifest.mX_cdm_interface_versions.ToInteger(&ignored);
   int32_t hostVersion = aManifest.mX_cdm_host_versions.ToInteger(&ignored);
-  if (MediaPrefs::EMEChromiumAPIEnabled()) {
-    return ChromiumCDMAdapter::Supports(
-      moduleVersion, interfaceVersion, hostVersion);
-  }
-  return WidevineAdapter::Supports(
+  return ChromiumCDMAdapter::Supports(
     moduleVersion, interfaceVersion, hostVersion);
 }
 
@@ -822,17 +818,9 @@ GMPParent::ParseChromiumManifest(const nsAString& aJSON)
 
   video.mAPITags.AppendElement(kEMEKeySystem);
 
-  if (MediaPrefs::EMEChromiumAPIEnabled()) {
-    video.mAPIName = NS_LITERAL_CSTRING(CHROMIUM_CDM_API);
-    mAdapter = NS_LITERAL_STRING("chromium");
-  } else {
-    video.mAPIName = NS_LITERAL_CSTRING(GMP_API_VIDEO_DECODER);
-    mAdapter = NS_LITERAL_STRING("widevine");
+  video.mAPIName = NS_LITERAL_CSTRING(CHROMIUM_CDM_API);
+  mAdapter = NS_LITERAL_STRING("chromium");
 
-    GMPCapability decrypt(NS_LITERAL_CSTRING(GMP_API_DECRYPTOR));
-    decrypt.mAPITags.AppendElement(kEMEKeySystem);
-    mCapabilities.AppendElement(Move(decrypt));
-  }
   mCapabilities.AppendElement(Move(video));
 
   return GenericPromise::CreateAndResolve(true, __func__);
