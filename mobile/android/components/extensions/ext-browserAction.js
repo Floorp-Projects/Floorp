@@ -23,6 +23,7 @@ class BrowserAction extends EventEmitter {
 
     this.defaults = {
       name: options.default_title || extension.name,
+      popup: options.default_popup,
     };
 
     this.tabContext = new TabContext(tab => Object.create(this.defaults),
@@ -47,7 +48,12 @@ class BrowserAction extends EventEmitter {
 
     this.tabManager.addActiveTabPermission(tab);
 
-    this.emit("click", tab);
+    let popup = this.tabContext.get(tab.id).popup || this.defaults.popup;
+    if (popup) {
+      tabTracker.openExtensionPopupTab(popup);
+    } else {
+      this.emit("click", tab);
+    }
   }
 
   /**
@@ -171,6 +177,18 @@ this.browserAction = class extends ExtensionAPI {
           let tab = getTab(tabId);
           let title = browserActionMap.get(extension).getProperty(tab, "name");
           return Promise.resolve(title);
+        },
+
+        setPopup(details) {
+          let tab = getTab(details.tabId);
+          let url = details.popup && context.uri.resolve(details.popup);
+          browserActionMap.get(extension).setProperty(tab, "popup", url);
+        },
+
+        getPopup(details) {
+          let tab = getTab(details.tabId);
+          let popup = browserActionMap.get(extension).getProperty(tab, "popup");
+          return Promise.resolve(popup);
         },
       },
     };
