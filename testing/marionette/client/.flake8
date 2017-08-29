@@ -1,3 +1,5 @@
 [flake8]
-max-line-length = 99
-exclude = __init__.py,disti/*,build/*,
+exclude =
+    __init__.py,
+    disti/*,
+    build/*,
