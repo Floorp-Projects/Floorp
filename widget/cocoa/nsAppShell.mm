@@ -60,7 +60,9 @@ private:
   IOPMAssertionID mAssertionID = kIOPMNullAssertionID;
 
   NS_IMETHOD Callback(const nsAString& aTopic, const nsAString& aState) override {
-    if (!aTopic.EqualsASCII("screen")) {
+    if (!aTopic.EqualsASCII("screen") &&
+        !aTopic.EqualsASCII("audio-playing") &&
+        !aTopic.EqualsASCII("video-playing")) {
       return NS_OK;
     }
     // Note the wake lock code ensures that we're not sent duplicate

@@ -334,7 +334,7 @@ HTMLVideoElement::UpdateScreenWakeLock()
     NS_ENSURE_TRUE_VOID(pmService);
 
     ErrorResult rv;
-    mScreenWakeLock = pmService->NewWakeLock(NS_LITERAL_STRING("screen"),
+    mScreenWakeLock = pmService->NewWakeLock(NS_LITERAL_STRING("video-playing"),
                                              OwnerDoc()->GetInnerWindow(),
                                              rv);
   }
