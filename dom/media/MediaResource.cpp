@@ -632,8 +632,8 @@ nsresult ChannelMediaResource::Close()
 {
   NS_ASSERTION(NS_IsMainThread(), "Only call on main thread");
 
-  mCacheStream.Close();
   CloseChannel();
+  mCacheStream.Close();
   return NS_OK;
 }
 
