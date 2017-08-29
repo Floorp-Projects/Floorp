@@ -1,0 +1,41 @@
+<!--
+  Any copyright is dedicated to the Public Domain.
+  http://creativecommons.org/publicdomain/zero/1.0/
+-->
+<!DOCTYPE HTML>
+<html>
+<head>
+  <title>Test AbortController in Fetch API</title>
+  <script type="text/javascript" src="/tests/SimpleTest/SimpleTest.js"></script>
+  <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css" />
+</head>
+<body>
+<script class="testbody" type="text/javascript">
+
+SpecialPowers.pushPrefEnv({"set": [["dom.abortController.enabled", true ],
+                                   ["dom.abortController.fetch.enabled", true]]}, () => {
+  let ifr = document.createElement("iframe");
+  ifr.src = "file_abort_controller_fetch.html";
+  document.body.appendChild(ifr);
+
+  window.onmessage = function(e) {
+    if (e.data.type == "finish") {
+      SimpleTest.finish();
+      return;
+    }
+
+    if (e.data.type == "check") {
+      ok(e.data.status, e.data.message);
+      return;
+    }
+
+    ok(false, "Something when wrong.");
+  }
+});
+
+SimpleTest.waitForExplicitFinish();
+
+</script>
+</body>
+</html>
+

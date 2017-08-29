@@ -4554,38 +4554,6 @@ HTMLEditRules::CreateStyleForInsertText(Selection& aSelection,
   nsCOMPtr<nsINode> node = aSelection.GetRangeAt(0)->GetStartContainer();
   int32_t offset = aSelection.GetRangeAt(0)->StartOffset();
 
-  // next examine our present style and make sure default styles are either
-  // present or explicitly overridden.  If neither, add the default style to
-  // the TypeInState
-  int32_t length = mHTMLEditor->mDefaultStyles.Length();
-  for (int32_t j = 0; j < length; j++) {
-    PropItem* propItem = mHTMLEditor->mDefaultStyles[j];
-    MOZ_ASSERT(propItem);
-    bool bFirst, bAny, bAll;
-
-    // GetInlineProperty also examine TypeInState.  The only gotcha here is
-    // that a cleared property looks like an unset property.  For now I'm
-    // assuming that's not a problem: that default styles will always be
-    // multivalue styles (like font face or size) where clearing the style
-    // means we want to go back to the default.  If we ever wanted a "toggle"
-    // style like bold for a default, though, I'll have to add code to detect
-    // the difference between unset and explicitly cleared, else user would
-    // never be able to unbold, for instance.
-    nsAutoString curValue;
-    NS_ENSURE_STATE(mHTMLEditor);
-    nsresult rv =
-      mHTMLEditor->GetInlinePropertyBase(*propItem->tag, &propItem->attr,
-                                         nullptr, &bFirst, &bAny, &bAll,
-                                         &curValue, false);
-    NS_ENSURE_SUCCESS(rv, rv);
-
-    if (!bAny) {
-      // no style set for this prop/attr
-      mHTMLEditor->mTypeInState->SetProp(propItem->tag, propItem->attr,
-                                         propItem->value);
-    }
-  }
-
   nsCOMPtr<Element> rootElement = aDoc.GetRootElement();
   NS_ENSURE_STATE(rootElement);
 
@@ -5312,34 +5280,34 @@ HTMLEditRules::NormalizeSelection(Selection* inSelection)
     return NS_OK;
   }
 
-  int32_t rangeCount;
-  nsresult rv = inSelection->GetRangeCount(&rangeCount);
-  NS_ENSURE_SUCCESS(rv, rv);
-
   // we don't need to mess with cell selections, and we assume multirange selections are those.
-  if (rangeCount != 1) {
+  if (inSelection->RangeCount() != 1) {
     return NS_OK;
   }
 
+  if (NS_WARN_IF(!mHTMLEditor)) {
+    return NS_ERROR_UNEXPECTED;
+  }
+  RefPtr<HTMLEditor> htmlEditor = mHTMLEditor;
+
   RefPtr<nsRange> range = inSelection->GetRangeAt(0);
   NS_ENSURE_TRUE(range, NS_ERROR_NULL_POINTER);
-  nsCOMPtr<nsIDOMNode> startNode, endNode;
-  uint32_t startOffset, endOffset;
-  nsCOMPtr<nsIDOMNode> newStartNode, newEndNode;
 
-  rv = range->GetStartContainer(getter_AddRefs(startNode));
-  NS_ENSURE_SUCCESS(rv, rv);
-  rv = range->GetStartOffset(&startOffset);
-  NS_ENSURE_SUCCESS(rv, rv);
-  rv = range->GetEndContainer(getter_AddRefs(endNode));
-  NS_ENSURE_SUCCESS(rv, rv);
-  rv = range->GetEndOffset(&endOffset);
-  NS_ENSURE_SUCCESS(rv, rv);
+  nsCOMPtr<nsINode> startNode = range->GetStartContainer();
+  if (NS_WARN_IF(!startNode)) {
+    return NS_ERROR_FAILURE;
+  }
+  nsCOMPtr<nsINode> endNode = range->GetEndContainer();
+  if (NS_WARN_IF(!endNode)) {
+    return NS_ERROR_FAILURE;
+  }
+  uint32_t startOffset = range->StartOffset();
+  uint32_t endOffset = range->EndOffset();
 
   // adjusted values default to original values
-  newStartNode = startNode;
+  nsCOMPtr<nsINode> newStartNode = startNode;
   uint32_t newStartOffset = startOffset;
-  newEndNode = endNode;
+  nsCOMPtr<nsINode> newEndNode = endNode;
   uint32_t newEndOffset = endOffset;
 
   // some locals we need for whitespace code
@@ -5348,20 +5316,18 @@ HTMLEditRules::NormalizeSelection(Selection* inSelection)
   WSType wsType;
 
   // let the whitespace code do the heavy lifting
-  WSRunObject wsEndObj(mHTMLEditor, endNode, static_cast<int32_t>(endOffset));
+  WSRunObject wsEndObj(htmlEditor, endNode, static_cast<int32_t>(endOffset));
   // is there any intervening visible whitespace?  if so we can't push selection past that,
   // it would visibly change maening of users selection
-  nsCOMPtr<nsINode> endNode_(do_QueryInterface(endNode));
-  wsEndObj.PriorVisibleNode(endNode_, static_cast<int32_t>(endOffset),
+  wsEndObj.PriorVisibleNode(endNode, static_cast<int32_t>(endOffset),
                             address_of(unused), &offset, &wsType);
   if (wsType != WSType::text && wsType != WSType::normalWS) {
     // eThisBlock and eOtherBlock conveniently distinquish cases
     // of going "down" into a block and "up" out of a block.
     if (wsEndObj.mStartReason == WSType::otherBlock) {
       // endpoint is just after the close of a block.
-      nsCOMPtr<nsIDOMNode> child =
-        GetAsDOMNode(mHTMLEditor->GetRightmostChild(wsEndObj.mStartReasonNode,
-                                                    true));
+      nsINode* child =
+        htmlEditor->GetRightmostChild(wsEndObj.mStartReasonNode, true);
       if (child) {
         int32_t offset = -1;
         newEndNode = EditorBase::GetNodeLocation(child, &offset);
@@ -5371,10 +5337,8 @@ HTMLEditRules::NormalizeSelection(Selection* inSelection)
       // else block is empty - we can leave selection alone here, i think.
     } else if (wsEndObj.mStartReason == WSType::thisBlock) {
       // endpoint is just after start of this block
-      nsCOMPtr<nsIDOMNode> child;
-      NS_ENSURE_STATE(mHTMLEditor);
-      mHTMLEditor->GetPriorHTMLNode(endNode, static_cast<int32_t>(endOffset),
-                                    address_of(child));
+      nsINode* child =
+        htmlEditor->GetPriorHTMLNode(endNode, static_cast<int32_t>(endOffset));
       if (child) {
         int32_t offset = -1;
         newEndNode = EditorBase::GetNodeLocation(child, &offset);
@@ -5386,29 +5350,26 @@ HTMLEditRules::NormalizeSelection(Selection* inSelection)
       // endpoint is just after break.  lets adjust it to before it.
       int32_t offset = -1;
       newEndNode =
-        EditorBase::GetNodeLocation(GetAsDOMNode(wsEndObj.mStartReasonNode),
-                                    &offset);
+        EditorBase::GetNodeLocation(wsEndObj.mStartReasonNode, &offset);
       newEndOffset = static_cast<uint32_t>(offset);;
     }
   }
 
 
   // similar dealio for start of range
-  WSRunObject wsStartObj(mHTMLEditor, startNode,
+  WSRunObject wsStartObj(htmlEditor, startNode,
                          static_cast<int32_t>(startOffset));
   // is there any intervening visible whitespace?  if so we can't push selection past that,
   // it would visibly change maening of users selection
-  nsCOMPtr<nsINode> startNode_(do_QueryInterface(startNode));
-  wsStartObj.NextVisibleNode(startNode_, static_cast<int32_t>(startOffset),
+  wsStartObj.NextVisibleNode(startNode, static_cast<int32_t>(startOffset),
                              address_of(unused), &offset, &wsType);
   if (wsType != WSType::text && wsType != WSType::normalWS) {
     // eThisBlock and eOtherBlock conveniently distinquish cases
     // of going "down" into a block and "up" out of a block.
     if (wsStartObj.mEndReason == WSType::otherBlock) {
       // startpoint is just before the start of a block.
-      nsCOMPtr<nsIDOMNode> child =
-        GetAsDOMNode(mHTMLEditor->GetLeftmostChild(wsStartObj.mEndReasonNode,
-                                                   true));
+      nsINode* child =
+        htmlEditor->GetLeftmostChild(wsStartObj.mEndReasonNode, true);
       if (child) {
         int32_t offset = -1;
         newStartNode = EditorBase::GetNodeLocation(child, &offset);
@@ -5417,10 +5378,9 @@ HTMLEditRules::NormalizeSelection(Selection* inSelection)
       // else block is empty - we can leave selection alone here, i think.
     } else if (wsStartObj.mEndReason == WSType::thisBlock) {
       // startpoint is just before end of this block
-      nsCOMPtr<nsIDOMNode> child;
-      NS_ENSURE_STATE(mHTMLEditor);
-      mHTMLEditor->GetNextHTMLNode(startNode, static_cast<int32_t>(startOffset),
-                                   address_of(child));
+      nsINode* child =
+        htmlEditor->GetNextHTMLNode(startNode,
+                                    static_cast<int32_t>(startOffset));
       if (child) {
         int32_t offset = -1;
         newStartNode = EditorBase::GetNodeLocation(child, &offset);
@@ -5431,8 +5391,7 @@ HTMLEditRules::NormalizeSelection(Selection* inSelection)
       // startpoint is just before a break.  lets adjust it to after it.
       int32_t offset = -1;
       newStartNode =
-        EditorBase::GetNodeLocation(GetAsDOMNode(wsStartObj.mEndReasonNode),
-                                    &offset);
+        EditorBase::GetNodeLocation(wsStartObj.mEndReasonNode, &offset);
       // offset *after* break
       newStartOffset = static_cast<uint32_t>(offset + 1);
     }
@@ -7350,7 +7309,7 @@ HTMLEditRules::ReapplyCachedStyles()
                                              &(mCachedStyles[i].attr),
                                              &(mCachedStyles[i].value),
                                              &bFirst, &bAny, &bAll,
-                                             &curValue, false);
+                                             &curValue);
         NS_ENSURE_SUCCESS(rv, rv);
       }
       // This style has disappeared through deletion.  Let's add the styles to

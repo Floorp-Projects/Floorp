@@ -495,23 +495,18 @@ nsTextServicesDocument::LastSelectedBlock(TSDBlockSelectionStatus *aSelStatus,
     return NS_ERROR_FAILURE;
   }
 
-  nsCOMPtr<nsISelection> domSelection;
-  nsresult rv = mSelCon->GetSelection(nsISelectionController::SELECTION_NORMAL,
-                                      getter_AddRefs(domSelection));
-  if (NS_FAILED(rv)) {
+  RefPtr<Selection> selection =
+    mSelCon->GetDOMSelection(nsISelectionController::SELECTION_NORMAL);
+  if (NS_WARN_IF(!selection)) {
     UNLOCK_DOC(this);
-    return rv;
+    return NS_ERROR_FAILURE;
   }
-
-  RefPtr<Selection> selection = domSelection->AsSelection();
-
-  bool isCollapsed = selection->IsCollapsed();
 
   nsCOMPtr<nsIContentIterator> iter;
   RefPtr<nsRange> range;
   nsCOMPtr<nsIDOMNode>         parent;
 
-  if (isCollapsed) {
+  if (selection->IsCollapsed()) {
     // We have a caret. Check if the caret is in a text node.
     // If it is, make the text node's block the current block.
     // If the caret isn't in a text node, search forwards in
@@ -524,7 +519,7 @@ nsTextServicesDocument::LastSelectedBlock(TSDBlockSelectionStatus *aSelStatus,
       return NS_ERROR_FAILURE;
     }
 
-    rv = range->GetStartContainer(getter_AddRefs(parent));
+    nsresult rv = range->GetStartContainer(getter_AddRefs(parent));
 
     if (NS_FAILED(rv)) {
       UNLOCK_DOC(this);
@@ -605,6 +600,7 @@ nsTextServicesDocument::LastSelectedBlock(TSDBlockSelectionStatus *aSelStatus,
         return rv;
       }
 
+      bool isCollapsed;
       rv = range->GetCollapsed(&isCollapsed);
 
       if (NS_FAILED(rv)) {
@@ -691,14 +687,7 @@ nsTextServicesDocument::LastSelectedBlock(TSDBlockSelectionStatus *aSelStatus,
   // beginning of its text block, and make it the current
   // block.
 
-  int32_t rangeCount;
-  rv = selection->GetRangeCount(&rangeCount);
-
-  if (NS_FAILED(rv)) {
-    UNLOCK_DOC(this);
-    return rv;
-  }
-
+  int32_t rangeCount = static_cast<int32_t>(selection->RangeCount());
   NS_ASSERTION(rangeCount > 0, "Unexpected range count!");
 
   if (rangeCount <= 0) {
@@ -721,7 +710,7 @@ nsTextServicesDocument::LastSelectedBlock(TSDBlockSelectionStatus *aSelStatus,
 
     // Create an iterator for the range.
 
-    rv = CreateContentIterator(range, getter_AddRefs(iter));
+    nsresult rv = CreateContentIterator(range, getter_AddRefs(iter));
 
     if (NS_FAILED(rv)) {
       UNLOCK_DOC(this);
@@ -787,7 +776,7 @@ nsTextServicesDocument::LastSelectedBlock(TSDBlockSelectionStatus *aSelStatus,
     return NS_ERROR_FAILURE;
   }
 
-  rv = range->GetEndContainer(getter_AddRefs(parent));
+  nsresult rv = range->GetEndContainer(getter_AddRefs(parent));
 
   if (NS_FAILED(rv)) {
     UNLOCK_DOC(this);
@@ -815,6 +804,7 @@ nsTextServicesDocument::LastSelectedBlock(TSDBlockSelectionStatus *aSelStatus,
     return rv;
   }
 
+  bool isCollapsed;
   rv = range->GetCollapsed(&isCollapsed);
 
   if (NS_FAILED(rv)) {
@@ -2161,13 +2151,13 @@ nsTextServicesDocument::SetSelectionInternal(int32_t aOffset, int32_t aLength, b
 {
   NS_ENSURE_TRUE(mSelCon && aOffset >= 0 && aLength >= 0, NS_ERROR_FAILURE);
 
-  nsIDOMNode *sNode = 0, *eNode = 0;
-  int32_t sOffset = 0, eOffset = 0;
+  nsCOMPtr<nsINode> startNode;
+  int32_t startNodeOffset = 0;
   OffsetEntry *entry;
 
   // Find start of selection in node offset terms:
 
-  for (size_t i = 0; !sNode && i < mOffsetTable.Length(); i++) {
+  for (size_t i = 0; !startNode && i < mOffsetTable.Length(); i++) {
     entry = mOffsetTable[i];
     if (entry->mIsValid) {
       if (entry->mIsInsertedText) {
@@ -2176,8 +2166,8 @@ nsTextServicesDocument::SetSelectionInternal(int32_t aOffset, int32_t aLength, b
         // match exactly!
 
         if (entry->mStrOffset == aOffset) {
-          sNode   = entry->mNode;
-          sOffset = entry->mNodeOffset + entry->mLength;
+          startNode = do_QueryInterface(entry->mNode);
+          startNodeOffset = entry->mNodeOffset + entry->mLength;
         }
       } else if (aOffset >= entry->mStrOffset) {
         bool foundEntry = false;
@@ -2203,19 +2193,19 @@ nsTextServicesDocument::SetSelectionInternal(int32_t aOffset, int32_t aLength, b
         }
 
         if (foundEntry) {
-          sNode   = entry->mNode;
-          sOffset = entry->mNodeOffset + aOffset - entry->mStrOffset;
+          startNode = do_QueryInterface(entry->mNode);
+          startNodeOffset = entry->mNodeOffset + aOffset - entry->mStrOffset;
         }
       }
 
-      if (sNode) {
+      if (startNode) {
         mSelStartIndex = static_cast<int32_t>(i);
         mSelStartOffset = aOffset;
       }
     }
   }
 
-  NS_ENSURE_TRUE(sNode, NS_ERROR_FAILURE);
+  NS_ENSURE_TRUE(startNode, NS_ERROR_FAILURE);
 
   // XXX: If we ever get a SetSelection() method in nsIEditor, we should
   //      use it.
@@ -2229,7 +2219,7 @@ nsTextServicesDocument::SetSelectionInternal(int32_t aOffset, int32_t aLength, b
 
     NS_ENSURE_SUCCESS(rv, rv);
 
-    rv = selection->Collapse(sNode, sOffset);
+    rv = selection->AsSelection()->Collapse(startNode, startNodeOffset);
 
     NS_ENSURE_SUCCESS(rv, rv);
    }
@@ -2248,34 +2238,36 @@ nsTextServicesDocument::SetSelectionInternal(int32_t aOffset, int32_t aLength, b
   }
 
   // Find the end of the selection in node offset terms:
+  nsCOMPtr<nsINode> endNode;
+  int32_t endNodeOffset = 0;
   int32_t endOffset = aOffset + aLength;
-  for (int32_t i = mOffsetTable.Length() - 1; !eNode && i >= 0; i--) {
+  for (int32_t i = mOffsetTable.Length() - 1; !endNode && i >= 0; i--) {
     entry = mOffsetTable[i];
 
     if (entry->mIsValid) {
       if (entry->mIsInsertedText) {
-        if (entry->mStrOffset == eOffset) {
+        if (entry->mStrOffset == endNodeOffset) {
           // If the selection ends on an inserted text offset entry,
           // the selection includes the entire entry!
 
-          eNode   = entry->mNode;
-          eOffset = entry->mNodeOffset + entry->mLength;
+          endNode = do_QueryInterface(entry->mNode);
+          endNodeOffset = entry->mNodeOffset + entry->mLength;
         }
       } else if (endOffset >= entry->mStrOffset &&
                  endOffset <= entry->mStrOffset + entry->mLength) {
-        eNode   = entry->mNode;
-        eOffset = entry->mNodeOffset + endOffset - entry->mStrOffset;
+        endNode = do_QueryInterface(entry->mNode);
+        endNodeOffset = entry->mNodeOffset + endOffset - entry->mStrOffset;
       }
 
-      if (eNode) {
+      if (endNode) {
         mSelEndIndex = i;
         mSelEndOffset = endOffset;
       }
     }
   }
 
-  if (aDoUpdate && eNode) {
-    nsresult rv = selection->Extend(eNode, eOffset);
+  if (aDoUpdate && endNode) {
+    nsresult rv = selection->AsSelection()->Extend(endNode, endNodeOffset);
 
     NS_ENSURE_SUCCESS(rv, rv);
   }
@@ -2302,26 +2294,17 @@ nsTextServicesDocument::GetSelection(nsITextServicesDocument::TSDBlockSelectionS
     return NS_OK;
   }
 
-  nsCOMPtr<nsISelection> selection;
-  bool isCollapsed;
-
-  nsresult rv = mSelCon->GetSelection(nsISelectionController::SELECTION_NORMAL,
-                                      getter_AddRefs(selection));
-
-  NS_ENSURE_SUCCESS(rv, rv);
-
+  RefPtr<Selection> selection =
+    mSelCon->GetDOMSelection(nsISelectionController::SELECTION_NORMAL);
   NS_ENSURE_TRUE(selection, NS_ERROR_FAILURE);
-
-  rv = selection->GetIsCollapsed(&isCollapsed);
-
-  NS_ENSURE_SUCCESS(rv, rv);
 
   // XXX: If we expose this method publicly, we need to
   //      add LOCK_DOC/UNLOCK_DOC calls!
 
   // LOCK_DOC(this);
 
-  if (isCollapsed) {
+  nsresult rv;
+  if (selection->IsCollapsed()) {
     rv = GetCollapsedSelection(aSelStatus, aSelOffset, aSelLength);
   } else {
     rv = GetUncollapsedSelection(aSelStatus, aSelOffset, aSelLength);
@@ -2570,7 +2553,7 @@ nsTextServicesDocument::GetUncollapsedSelection(nsITextServicesDocument::TSDBloc
 
   nsCOMPtr<nsIDOMNode> startContainer, endContainer;
   int32_t startOffset, endOffset;
-  int32_t rangeCount, tableCount;
+  int32_t tableCount;
   int32_t e1s1 = 0, e1s2 = 0, e2s1 = 0, e2s2 = 0;
 
   OffsetEntry *eStart, *eEnd;
@@ -2592,14 +2575,12 @@ nsTextServicesDocument::GetUncollapsedSelection(nsITextServicesDocument::TSDBloc
   eStartOffset = eStart->mNodeOffset;
   eEndOffset   = eEnd->mNodeOffset + eEnd->mLength;
 
-  rv = selection->GetRangeCount(&rangeCount);
-
-  NS_ENSURE_SUCCESS(rv, rv);
+  uint32_t rangeCount = selection->RangeCount();
 
   // Find the first range in the selection that intersects
   // the current text block.
 
-  for (int32_t i = 0; i < rangeCount; i++) {
+  for (uint32_t i = 0; i < rangeCount; i++) {
     range = selection->GetRangeAt(i);
     NS_ENSURE_STATE(range);
 

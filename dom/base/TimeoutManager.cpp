@@ -350,7 +350,17 @@ TimeoutManager::UpdateBudget(const TimeStamp& aNow, const TimeDuration& aDuratio
       GetMinBudget(isBackground),
       TimeDuration::Min(GetMaxBudget(isBackground),
                         mExecutionBudget - aDuration + regenerated));
+  } else {
+    // If budget throttling isn't enabled, reset the execution budget
+    // to the max budget specified in preferences. Always doing this
+    // will catch the case of BudgetThrottlingEnabled going from
+    // returning true to returning false. This prevent us from looping
+    // in RunTimeout, due to totalTimeLimit being set to zero and no
+    // timeouts being executed, even though budget throttling isn't
+    // active at the moment.
+    mExecutionBudget = GetMaxBudget(isBackground);
   }
+
   mLastBudgetUpdate = aNow;
 }
 

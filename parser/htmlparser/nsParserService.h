@@ -43,10 +43,6 @@ public:
 
   int32_t HTMLStringTagToId(const nsAString& aTag) const override;
 
-  const char16_t *HTMLIdToStringTag(int32_t aId) const override;
-  
-  nsIAtom *HTMLIdToAtomTag(int32_t aId) const override;
-
   NS_IMETHOD IsContainer(int32_t aId, bool& aIsContainer) const override;
   NS_IMETHOD IsBlock(int32_t aId, bool& aIsBlock) const override;
 };

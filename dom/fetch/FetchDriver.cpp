@@ -73,7 +73,7 @@ FetchDriver::~FetchDriver()
 }
 
 nsresult
-FetchDriver::Fetch(FetchSignal* aSignal, FetchDriverObserver* aObserver)
+FetchDriver::Fetch(AbortSignal* aSignal, FetchDriverObserver* aObserver)
 {
   workers::AssertIsOnMainThread();
 #ifdef DEBUG
@@ -104,7 +104,7 @@ FetchDriver::Fetch(FetchSignal* aSignal, FetchDriverObserver* aObserver)
   // the operation.
   if (aSignal) {
     if (aSignal->Aborted()) {
-      Aborted();
+      Abort();
       return NS_OK;
     }
 
@@ -967,7 +967,7 @@ FetchDriver::SetRequestHeaders(nsIHttpChannel* aChannel) const
 }
 
 void
-FetchDriver::Aborted()
+FetchDriver::Abort()
 {
   if (mObserver) {
   #ifdef DEBUG

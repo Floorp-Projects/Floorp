@@ -36,6 +36,7 @@ struct LifecycleCallbackArgs
   nsString name;
   nsString oldValue;
   nsString newValue;
+  nsString namespaceURI;
 };
 
 class CustomElementCallback
@@ -129,6 +130,7 @@ struct CustomElementDefinition
   CustomElementDefinition(nsIAtom* aType,
                           nsIAtom* aLocalName,
                           Function* aConstructor,
+                          nsCOMArray<nsIAtom>&& aObservedAttributes,
                           JSObject* aPrototype,
                           mozilla::dom::LifecycleCallbacks* aCallbacks,
                           uint32_t aDocOrder);
@@ -142,6 +144,9 @@ struct CustomElementDefinition
   // The custom element constructor.
   RefPtr<CustomElementConstructor> mConstructor;
 
+  // The list of attributes that this custom element observes.
+  nsCOMArray<nsIAtom> mObservedAttributes;
+
   // The prototype to use for new custom elements of this type.
   JS::Heap<JSObject *> mPrototype;
 
@@ -154,8 +159,18 @@ struct CustomElementDefinition
   // The document custom element order.
   uint32_t mDocOrder;
 
-  bool IsCustomBuiltIn() {
+  bool IsCustomBuiltIn()
+  {
     return mType != mLocalName;
+  }
+
+  bool IsInObservedAttributeList(nsIAtom* aName)
+  {
+    if (mObservedAttributes.IsEmpty()) {
+      return false;
+    }
+
+    return mObservedAttributes.Contains(aName);
   }
 };
 
