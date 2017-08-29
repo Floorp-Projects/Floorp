@@ -64,6 +64,39 @@ using google_breakpad::StackFrame;
 
 #ifdef XP_WIN
 
+#if !defined(_MSC_VER)
+static string WideToMBCP(const wstring& wide,
+                         unsigned int cp,
+                         bool* success = nullptr)
+{
+  char* buffer = nullptr;
+  int buffer_size = WideCharToMultiByte(cp, 0, wide.c_str(),
+                                        -1, nullptr, 0, nullptr, nullptr);
+  if(buffer_size == 0) {
+    if (success)
+      *success = false;
+    return "";
+  }
+
+  buffer = new char[buffer_size];
+  if(buffer == nullptr) {
+    if (success)
+      *success = false;
+    return "";
+  }
+
+  WideCharToMultiByte(cp, 0, wide.c_str(),
+                      -1, buffer, buffer_size, nullptr, nullptr);
+  string mb = buffer;
+  delete [] buffer;
+
+  if (success)
+    *success = true;
+
+  return mb;
+}
+#endif /* !defined(_MSC_VER) */
+
 static wstring UTF8ToWide(const string& aUtf8Str, bool *aSuccess = nullptr)
 {
   wchar_t* buffer = nullptr;
