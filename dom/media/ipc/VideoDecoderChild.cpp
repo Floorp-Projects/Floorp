@@ -173,7 +173,9 @@ VideoDecoderChild::InitIPDL(const VideoInfo& aVideoInfo,
   mIPDLSelfRef = this;
   bool success = false;
   if (manager->SendPVideoDecoderConstructor(this, aVideoInfo, aIdentifier,
-                                            &success)) {
+                                            &success,
+                                            &mBlacklistedD3D11Driver,
+                                            &mBlacklistedD3D9Driver)) {
     mCanSend = true;
   }
   return success;
