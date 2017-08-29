@@ -11,13 +11,12 @@ XPCOMUtils.defineLazyModuleGetter(this, "Services",
 XPCOMUtils.defineLazyModuleGetter(this, "SharedPreferences",
                                   "resource://gre/modules/SharedPreferences.jsm");
 
-let clearCookies = async function(options) {
-  if (options.originTypes &&
-      (options.originTypes.protectedWeb || options.originTypes.extension)) {
-    return Promise.reject(
-      {message: "Firefox does not support protectedWeb or extension as originTypes."});
-  }
+const clearCache = () => {
+  // Clearing the cache does not support timestamps.
+  return Sanitizer.clearItem("cache");
+};
 
+const clearCookies = async function(options) {
   let cookieMgr = Services.cookies;
   let yieldCounter = 0;
   const YIELD_PERIOD = 10;
@@ -46,8 +45,53 @@ let clearCookies = async function(options) {
   }
 };
 
+const clearDownloads = options => {
+  return Sanitizer.clearItem("downloadHistory", options.since);
+};
+
+const clearFormData = options => {
+  return Sanitizer.clearItem("formdata", options.since);
+};
+
+const doRemoval = (options, dataToRemove, extension) => {
+  if (options.originTypes &&
+      (options.originTypes.protectedWeb || options.originTypes.extension)) {
+    return Promise.reject(
+      {message: "Firefox does not support protectedWeb or extension as originTypes."});
+  }
+
+  let removalPromises = [];
+  let invalidDataTypes = [];
+  for (let dataType in dataToRemove) {
+    if (dataToRemove[dataType]) {
+      switch (dataType) {
+        case "cache":
+          removalPromises.push(clearCache());
+          break;
+        case "cookies":
+          removalPromises.push(clearCookies(options));
+          break;
+        case "downloads":
+          removalPromises.push(clearDownloads(options));
+          break;
+        case "formData":
+          removalPromises.push(clearFormData(options));
+          break;
+        default:
+          invalidDataTypes.push(dataType);
+      }
+    }
+  }
+  if (extension && invalidDataTypes.length) {
+    extension.logger.warn(
+      `Firefox does not support dataTypes: ${invalidDataTypes.toString()}.`);
+  }
+  return Promise.all(removalPromises);
+};
+
 this.browsingData = class extends ExtensionAPI {
   getAPI(context) {
+    let {extension} = context;
     return {
       browsingData: {
         settings() {
@@ -88,17 +132,20 @@ this.browsingData = class extends ExtensionAPI {
           // so, since value is given 0, which means Everything
           return Promise.resolve({options: {since: 0}, dataToRemove, dataRemovalPermitted});
         },
-        removeCookies(options) {
-          return clearCookies(options);
+        remove(options, dataToRemove) {
+          return doRemoval(options, dataToRemove, extension);
         },
         removeCache(options) {
-          return Sanitizer.clearItem("cache");
+          return doRemoval(options, {cache: true});
+        },
+        removeCookies(options) {
+          return doRemoval(options, {cookies: true});
         },
         removeDownloads(options) {
-          return Sanitizer.clearItem("downloadHistory", options.since);
+          return doRemoval(options, {downloads: true});
         },
         removeFormData(options) {
-          return Sanitizer.clearItem("formdata", options.since);
+          return doRemoval(options, {formData: true});
         },
       },
     };
