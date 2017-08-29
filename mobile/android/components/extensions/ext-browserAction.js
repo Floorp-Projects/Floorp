@@ -15,8 +15,10 @@ XPCOMUtils.defineLazyModuleGetter(this, "BrowserActions",
 // WeakMap[Extension -> BrowserAction]
 let browserActionMap = new WeakMap();
 
-class BrowserAction {
+class BrowserAction extends EventEmitter {
   constructor(options, extension) {
+    super();
+
     this.uuid = `{${extension.uuid}}`;
 
     this.defaults = {
@@ -34,7 +36,6 @@ class BrowserAction {
                        (evt, tabId) => { this.onTabClosed(tabId); });
 
     BrowserActions.register(this);
-    EventEmitter.decorate(this);
   }
 
   /**
