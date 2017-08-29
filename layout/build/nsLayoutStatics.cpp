@@ -67,7 +67,6 @@
 #include "CacheObserver.h"
 #include "DisplayItemClip.h"
 #include "ActiveLayerTracker.h"
-#include "CounterStyleManager.h"
 #include "FrameLayerBuilder.h"
 #include "AnimationCommon.h"
 #include "LayerAnimationInfo.h"
@@ -285,8 +284,6 @@ nsLayoutStatics::Initialize()
 #endif
 
   CacheObserver::Init();
-
-  CounterStyleManager::InitializeBuiltinCounterStyles();
 
   IMEStateManager::Init();
 
