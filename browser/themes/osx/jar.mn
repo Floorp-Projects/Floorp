@@ -27,10 +27,6 @@ browser.jar:
   skin/classic/browser/page-livemarks.png
   skin/classic/browser/page-livemarks@2x.png
   skin/classic/browser/pageInfo.css
-  skin/classic/browser/privatebrowsing-mask.png
-  skin/classic/browser/privatebrowsing-mask@2x.png
-  skin/classic/browser/privatebrowsing-mask-short.png
-  skin/classic/browser/privatebrowsing-mask-short@2x.png
   skin/classic/browser/searchbar.css
   skin/classic/browser/slowStartup-16.png
   skin/classic/browser/toolbarbutton-dropmarker.png
