@@ -261,8 +261,7 @@ public:
   // the cache requested the offset in
   // ChannelMediaResource::CacheClientSeek, or because it defaulted to 0.
   // We pass in the principal that was used to load this data.
-  void NotifyDataReceived(int64_t aSize, const char* aData,
-                          nsIPrincipal* aPrincipal);
+  void NotifyDataReceived(int64_t aSize, const char* aData);
   // Notifies the cache that the current bytes should be written to disk.
   // Called on the main thread.
   void FlushPartialBlock();
@@ -348,6 +347,9 @@ public:
 
   size_t SizeOfExcludingThis(MallocSizeOf aMallocSizeOf) const;
 
+  // Update mPrincipal given that data has been received from aPrincipal
+  bool UpdatePrincipal(nsIPrincipal* aPrincipal);
+
 private:
   friend class MediaCache;
 
@@ -425,8 +427,6 @@ private:
   // If |aNotifyAll| is true, this function will wake up readers who may be
   // waiting on the media cache monitor. Called on the main thread only.
   void FlushPartialBlockInternal(bool aNotify, ReentrantMonitorAutoEnter& aReentrantMonitor);
-  // Update mPrincipal given that data has been received from aPrincipal
-  bool UpdatePrincipal(nsIPrincipal* aPrincipal);
 
   // Instance of MediaCache to use with this MediaCacheStream.
   RefPtr<MediaCache> mMediaCache;
