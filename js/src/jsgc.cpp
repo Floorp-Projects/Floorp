@@ -1698,7 +1698,7 @@ void
 GCRuntime::callFinalizeCallbacks(FreeOp* fop, JSFinalizeStatus status) const
 {
     for (auto& p : finalizeCallbacks.ref())
-        p.op(fop, status, !isFull, p.data);
+        p.op(fop, status, p.data);
 }
 
 bool
