@@ -13,10 +13,12 @@
 
 using namespace mozilla;
 using namespace mozilla::css;
+using namespace mozilla::dom;
 using namespace mozilla::net;
 
 #define PARSING_REPETITIONS 20
 #define SETPROPERTY_REPETITIONS (1000 * 1000)
+#define GETPROPERTY_REPETITIONS (1000 * 1000)
 
 #ifdef MOZ_STYLO
 
@@ -90,5 +92,37 @@ MOZ_GTEST_BENCH(Stylo, Servo_DeclarationBlock_SetPropertyById_Bench, [] {
 MOZ_GTEST_BENCH(Stylo, Servo_DeclarationBlock_SetPropertyById_WithInitialSpace_Bench, [] {
   ServoSetPropertyByIdBench(NS_LITERAL_CSTRING(" 10px"));
 });
+
+static void ServoGetPropertyValueById() {
+  RefPtr<RawServoDeclarationBlock> block = Servo_DeclarationBlock_CreateEmpty().Consume();
+  RefPtr<URLExtraData> data = new URLExtraData(
+    NullPrincipalURI::Create(), nullptr, NullPrincipal::Create());
+  NS_NAMED_LITERAL_CSTRING(css_, "10px");
+  const nsACString& css = css_;
+  Servo_DeclarationBlock_SetPropertyById(
+    block,
+    eCSSProperty_width,
+    &css,
+    /* is_important = */ false,
+    data,
+    ParsingMode::Default,
+    eCompatibility_FullStandards,
+    nullptr
+  );
+
+  for (int i = 0; i < GETPROPERTY_REPETITIONS; i++) {
+    DOMString value_;
+    nsAString& value = value_;
+    Servo_DeclarationBlock_GetPropertyValueById(
+      block,
+      eCSSProperty_width,
+      &value
+    );
+    ASSERT_TRUE(value.EqualsLiteral("10px"));
+  }
+}
+
+MOZ_GTEST_BENCH(Stylo, Servo_DeclarationBlock_GetPropertyById_Bench, ServoGetPropertyValueById);
+
 
 #endif
