@@ -112,8 +112,8 @@
   "tourDone": {
     "message": "Immed"
   },
-  "termsAndPrivacyNoticeCloudServices": {
-    "message": "S useqdec n Firefox Screenshots, ad tqebleḍ tiwuriwin n usigna Firefox $TERMSANDPRIVACYNOTICETERMSLINK$ akked $TERMSANDPRIVACYNOTICEPRIVACYLINK$.",
+  "termsAndPrivacyNotice2": {
+    "message": "S useqdec Firefox Screenshots, ad tqebleḍ $TERMSANDPRIVACYNOTICETERMSLINK$ akked $TERMSANDPRIVACYNOTICEPRIVACYLINK$.",
     "placeholders": {
       "termsandprivacynoticetermslink": {
         "content": "$1"
@@ -128,5 +128,8 @@
   },
   "termsAndPrivacyNoticyPrivacyLink": {
     "message": "Tasertit n tbaḍnit"
+  },
+  "libraryLabel": {
+    "message": "Tuṭṭfiwin n ugdil"
   }
 }

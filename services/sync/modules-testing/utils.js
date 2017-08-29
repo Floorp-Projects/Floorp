@@ -75,7 +75,7 @@ MockFxaStorageManager.prototype = {
 /**
  * First wait >100ms (nsITimers can take up to that much time to fire, so
  * we can account for the timer in delayedAutoconnect) and then two event
- * loop ticks (to account for the Utils.nextTick() in autoConnect).
+ * loop ticks (to account for the CommonUtils.nextTick() in autoConnect).
  */
 this.waitForZeroTimer = function waitForZeroTimer(callback) {
   let ticks = 2;
@@ -98,7 +98,7 @@ this.promiseZeroTimer = function() {
 
 this.promiseNamedTimer = function(wait, thisObj, name) {
   return new Promise(resolve => {
-    Utils.namedTimer(resolve, wait, thisObj, name);
+    CommonUtils.namedTimer(resolve, wait, thisObj, name);
   });
 }
 

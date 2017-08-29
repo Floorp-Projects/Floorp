@@ -36,6 +36,10 @@ FINAL_TARGET_FILES.features['screenshots@mozilla.org']["webextension"]["_locales
   'webextension/_locales/ar/messages.json'
 ]
 
+FINAL_TARGET_FILES.features['screenshots@mozilla.org']["webextension"]["_locales"]["ast"] += [
+  'webextension/_locales/ast/messages.json'
+]
+
 FINAL_TARGET_FILES.features['screenshots@mozilla.org']["webextension"]["_locales"]["az"] += [
   'webextension/_locales/az/messages.json'
 ]
@@ -363,6 +367,7 @@ FINAL_TARGET_FILES.features['screenshots@mozilla.org']["webextension"]["icons"] 
   'webextension/icons/icon-starred-32-v2.svg',
   'webextension/icons/icon-welcome-face-without-eyes.svg',
   'webextension/icons/menu-fullpage.svg',
+  'webextension/icons/menu-myshot-white.svg',
   'webextension/icons/menu-myshot.svg',
   'webextension/icons/menu-visible.svg',
   'webextension/icons/onboarding-1.png',

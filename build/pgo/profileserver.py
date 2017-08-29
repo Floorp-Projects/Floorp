@@ -17,13 +17,23 @@ from mozrunner import FirefoxRunner, CLI
 
 PORT = 8888
 
+PATH_MAPPINGS = {
+    '/js-input/speedometer': 'third_party/speedometer',
+}
+
+
 if __name__ == '__main__':
     cli = CLI()
     debug_args, interactive = cli.debugger_arguments()
 
     build = MozbuildObject.from_environment()
+    path_mappings = {
+        k: os.path.join(build.topsrcdir, v)
+        for k, v in PATH_MAPPINGS.items()
+    }
     httpd = MozHttpd(port=PORT,
-                     docroot=os.path.join(build.topsrcdir, "build", "pgo"))
+                     docroot=os.path.join(build.topsrcdir, "build", "pgo"),
+                     path_mappings=path_mappings)
     httpd.start(block=False)
 
     locations = ServerLocations()

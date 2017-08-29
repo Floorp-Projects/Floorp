@@ -358,14 +358,6 @@ private:
     return mAbstractMainThread;
   }
 
-  typedef MozPromise<RefPtr<CDMProxy>, bool /* aIgnored */,
-                     /* IsExclusive = */ true>
-    CDMProxyPromise;
-
-  // Resolved when a CDMProxy is available and the capabilities are known or
-  // rejected when this decoder is about to shut down.
-  RefPtr<CDMProxyPromise> RequestCDMProxy() const;
-
   void SetCDMProxy(CDMProxy* aProxy);
 
   void EnsureTelemetryReported();
@@ -481,14 +473,11 @@ protected:
     media::TimeUnit::FromMicroseconds(250000);
 
 private:
-  // Get the current MediaResource being used.
-  // Note: The MediaResource is refcounted, but it outlives the MediaDecoder,
-  // so it's OK to use the reference returned by this function without
-  // refcounting, *unless* you need to store and use the reference after the
-  // MediaDecoder has been destroyed. You might need to do this if you're
-  // wrapping the MediaResource in some kind of byte stream interface to be
-  // passed to a platform decoder.
-  virtual MediaResource* GetResource() const = 0;
+  // Ensures our media resource has been pinned.
+  virtual void PinForSeek() = 0;
+
+  // Ensures our media resource has been unpinned.
+  virtual void UnpinForSeek() = 0;
 
   nsCString GetDebugInfo();
 
@@ -521,9 +510,6 @@ private:
   // Explicitly prievate to force access via accessors.
   RefPtr<MediaDecoderStateMachine> mDecoderStateMachine;
 
-  MozPromiseHolder<CDMProxyPromise> mCDMProxyPromiseHolder;
-  RefPtr<CDMProxyPromise> mCDMProxyPromise;
-
 protected:
   void NotifyDataArrivedInternal();
   void DiscardOngoingSeekIfExists();
@@ -538,12 +524,6 @@ protected:
   void NotifyPrincipalChanged();
 
   MozPromiseRequestHolder<SeekPromise> mSeekRequest;
-
-  // Ensures our media stream has been pinned.
-  void PinForSeek();
-
-  // Ensures our media stream has been unpinned.
-  void UnpinForSeek();
 
   const char* PlayStateStr();
 
@@ -561,10 +541,6 @@ protected:
   const RefPtr<FrameStatistics> mFrameStats;
 
   RefPtr<VideoFrameContainer> mVideoFrameContainer;
-
-  // True when our media stream has been pinned. We pin the stream
-  // while seeking.
-  bool mPinnedForSeek;
 
   // True if the decoder has been directed to minimize its preroll before
   // playback starts. After the first time playback starts, we don't attempt

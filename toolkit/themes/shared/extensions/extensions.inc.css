@@ -1034,7 +1034,7 @@ button.button-link:hover {
 /* Needed to override normal button style from inContent.css */
 button.button-link:not([disabled="true"]):active:hover {
   background-color: transparent;
-  color: #ff9500;
+  color: #0A84FF;
   text-decoration: none;
 }
 

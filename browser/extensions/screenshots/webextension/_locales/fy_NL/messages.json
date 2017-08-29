@@ -112,8 +112,8 @@
   "tourDone": {
     "message": "Dien"
   },
-  "termsAndPrivacyNoticeCloudServices": {
-    "message": "Troch Firefox Screenshots te brûken, geane jo akkoard mei de $TERMSANDPRIVACYNOTICETERMSLINK$ en $TERMSANDPRIVACYNOTICEPRIVACYLINK$ fan Firefox-cloudtsjinsten.",
+  "termsAndPrivacyNotice2": {
+    "message": "Troch Firefox Screenshots te brûken, gean jo akkoard mei ús $TERMSANDPRIVACYNOTICETERMSLINK$ en $TERMSANDPRIVACYNOTICEPRIVACYLINK$.",
     "placeholders": {
       "termsandprivacynoticetermslink": {
         "content": "$1"
@@ -128,5 +128,8 @@
   },
   "termsAndPrivacyNoticyPrivacyLink": {
     "message": "Privacyferklearring"
+  },
+  "libraryLabel": {
+    "message": "Skermôfbyldingen"
   }
 }

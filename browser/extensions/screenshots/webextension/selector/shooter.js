@@ -21,7 +21,7 @@ this.shooter = (function() { // eslint-disable-line no-unused-vars
 
   function sanitizeError(data) {
     const href = new RegExp(regexpEscape(window.location.href), 'g');
-    const origin = new RegExp(`${regexpEscape(window.location.origin)}[^\s",>]*`, 'g');
+    const origin = new RegExp(`${regexpEscape(window.location.origin)}[^ \t\n\r",>]*`, 'g');
     const json = JSON.stringify(data)
       .replace(href, 'REDACTED_HREF')
       .replace(origin, 'REDACTED_URL');
@@ -39,17 +39,22 @@ this.shooter = (function() { // eslint-disable-line no-unused-vars
     supportsDrawWindow = !!ctx.drawWindow;
   })();
 
-  function screenshotPage(selectedPos) {
+  let screenshotPage = exports.screenshotPage = function(selectedPos, captureType) {
     if (!supportsDrawWindow) {
       return null;
     }
     let height = selectedPos.bottom - selectedPos.top;
     let width = selectedPos.right - selectedPos.left;
     let canvas = document.createElementNS('http://www.w3.org/1999/xhtml', 'canvas');
-    canvas.width = width * window.devicePixelRatio;
-    canvas.height = height * window.devicePixelRatio;
     let ctx = canvas.getContext('2d');
-    if (window.devicePixelRatio !== 1) {
+    if (captureType == 'fullPage') {
+      canvas.width = width;
+      canvas.height = height;
+    } else {
+      canvas.width = width * window.devicePixelRatio;
+      canvas.height = height * window.devicePixelRatio;
+    }
+    if (window.devicePixelRatio !== 1 && captureType != 'fullPage') {
       ctx.scale(window.devicePixelRatio, window.devicePixelRatio);
     }
     ui.iframe.hide();
@@ -59,11 +64,11 @@ this.shooter = (function() { // eslint-disable-line no-unused-vars
       ui.iframe.unhide();
     }
     return canvas.toDataURL();
-  }
+  };
 
   let isSaving = null;
 
-  exports.takeShot = function(captureType, selectedPos) {
+  exports.takeShot = function(captureType, selectedPos, url) {
     // isSaving indicates we're aleady in the middle of saving
     // we use a timeout so in the case of a failure the button will
     // still start working again
@@ -92,7 +97,7 @@ this.shooter = (function() { // eslint-disable-line no-unused-vars
     if (buildSettings.captureText) {
       captureText = util.captureEnclosedText(selectedPos);
     }
-    let dataUrl = screenshotPage(selectedPos);
+    let dataUrl = url || screenshotPage(selectedPos, captureType);
     if (dataUrl) {
       shotObject.delAllClips();
       shotObject.addClip({

@@ -32,7 +32,7 @@ this.slides = (function() {
       iframe.scrolling = "no";
       updateIframeSize();
       let html = onboardingHtml.replace('<style></style>', `<style>${onboardingCss}</style>`);
-      html = html.replace(/MOZ_EXTENSION([^\"]+)/g, (match, filename) => {
+      html = html.replace(/MOZ_EXTENSION([^"]+)/g, (match, filename) => {
         return browser.extension.getURL(filename);
       });
       iframe.addEventListener("load", catcher.watchFunction(() => {
@@ -99,7 +99,7 @@ this.slides = (function() {
       [privacySentinel]: "https://www.mozilla.org/privacy/firefox/"
     };
     let text = browser.i18n.getMessage(
-      "termsAndPrivacyNoticeCloudServices",
+      "termsAndPrivacyNotice2",
       [sentinelSplitter + termsSentinel + sentinelSplitter,
        sentinelSplitter + privacySentinel + sentinelSplitter]);
     let parts = text.split(sentinelSplitter);

@@ -24,7 +24,6 @@
 #include "mozilla/Unused.h"
 #include "nsContentUtils.h"
 #include "nsPrintfCString.h"
-#include "nsSize.h"
 
 #include <algorithm>
 #include <queue>
@@ -1238,6 +1237,12 @@ MediaFormatReader::SetCDMProxy(CDMProxy* aProxy)
     NS_NewRunnableFunction("MediaFormatReader::SetCDMProxy", [=]() {
       MOZ_ASSERT(self->OnTaskQueue());
       self->mCDMProxy = proxy;
+      if (HasAudio()) {
+        self->ScheduleUpdate(TrackInfo::kAudioTrack);
+      }
+      if (HasVideo()) {
+        self->ScheduleUpdate(TrackInfo::kVideoTrack);
+      }
     });
   OwnerThread()->Dispatch(r.forget());
 }
@@ -2341,6 +2346,12 @@ MediaFormatReader::Update(TrackType aTrack)
        decoder.mDemuxEOS,
        int32_t(decoder.mDrainState),
        decoder.mLastStreamSourceID);
+
+  if (IsWaitingOnCDMResource()) {
+    // If the content is encrypted, MFR won't start to create decoder until
+    // CDMProxy is set.
+    return;
+  }
 
   if ((decoder.mWaitingForData
        && (!decoder.mTimeThreshold || decoder.mTimeThreshold.ref().mWaiting))

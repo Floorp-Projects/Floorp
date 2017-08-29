@@ -36,7 +36,7 @@ config = {
         "graph_server_branch_name": "Firefox",
         'stage_server': 'upload.ffxbld.productdelivery.prod.mozaws.net',
         'platform_overrides': {
-            'android-api-15-old-id': {
+            'android-api-16-old-id': {
                 "update_channel": "nightly-old-id",
             },
             'android-x86-old-id': {
@@ -250,7 +250,7 @@ config = {
         'update_channel': 'nightly-date',
         'stage_server': 'upload.ffxbld.productdelivery.prod.mozaws.net',
         'platform_overrides': {
-            'android-api-15-old-id': {
+            'android-api-16-old-id': {
                 "update_channel": "nightly-old-id",
             },
             'android-x86-old-id': {

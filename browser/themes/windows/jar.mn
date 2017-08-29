@@ -57,7 +57,6 @@ browser.jar:
   skin/classic/browser/places/editBookmarkOverlay.css          (places/editBookmarkOverlay.css)
   skin/classic/browser/places/libraryToolbar.png               (places/libraryToolbar.png)
   skin/classic/browser/places/starred48.png                    (places/starred48.png)
-  skin/classic/browser/places/unstarred48.png                  (places/unstarred48.png)
   skin/classic/browser/places/tag.png                          (places/tag.png)
   skin/classic/browser/places/allBookmarks.png                 (places/allBookmarks.png)
   skin/classic/browser/places/unsortedBookmarks.png            (places/unsortedBookmarks.png)

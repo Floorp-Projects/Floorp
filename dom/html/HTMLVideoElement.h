@@ -129,12 +129,6 @@ public:
 
   bool MozHasAudio() const;
 
-  bool MozUseScreenWakeLock() const;
-
-  void SetMozUseScreenWakeLock(bool aValue);
-
-  void NotifyOwnerDocumentActivityChanged() override;
-
   // Gives access to the decoder's frame statistics, if present.
   FrameStatistics* GetFrameStatistics();
 
@@ -165,7 +159,6 @@ protected:
   virtual void WakeLockRelease() override;
   void UpdateScreenWakeLock();
 
-  bool mUseScreenWakeLock;
   RefPtr<WakeLock> mScreenWakeLock;
 
   bool mIsOrientationLocked;

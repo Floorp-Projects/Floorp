@@ -364,33 +364,6 @@ internal_IsRecordingEnabled(HistogramID id)
   return !gHistogramRecordingDisabled[id];
 }
 
-nsresult
-internal_GetRegisteredHistogramIds(bool keyed, uint32_t dataset,
-                                   uint32_t *aCount, char*** aHistograms)
-{
-  nsTArray<char*> collection;
-
-  for (const auto & h : gHistogramInfos) {
-    if (IsExpiredVersion(h.expiration()) ||
-        h.keyed != keyed ||
-        !IsInDataset(h.dataset, dataset)) {
-      continue;
-    }
-
-    const char* id = h.name();
-    const size_t len = strlen(id);
-    collection.AppendElement(static_cast<char*>(nsMemory::Clone(id, len+1)));
-  }
-
-  const size_t bytes = collection.Length() * sizeof(char*);
-  char** histograms = static_cast<char**>(moz_xmalloc(bytes));
-  memcpy(histograms, collection.Elements(), bytes);
-  *aHistograms = histograms;
-  *aCount = collection.Length();
-
-  return NS_OK;
-}
-
 const char *
 HistogramInfo::name() const
 {
@@ -2013,17 +1986,24 @@ TelemetryHistogram::GetHistogramName(HistogramID id)
 }
 
 nsresult
-TelemetryHistogram::CreateHistogramSnapshots(JSContext *cx,
-                                             JS::MutableHandle<JS::Value> ret,
-                                             bool subsession,
-                                             bool clearSubsession)
+TelemetryHistogram::CreateHistogramSnapshots(JSContext* aCx,
+                                             JS::MutableHandleValue aResult,
+                                             unsigned int aDataset,
+                                             bool aSubsession,
+                                             bool aClearSubsession)
 {
+#if defined(MOZ_WIDGET_ANDROID)
+  if (aSubsession) {
+    return NS_OK;
+  }
+#endif
+
   // Runs without protection from |gTelemetryHistogramMutex|
-  JS::Rooted<JSObject*> root_obj(cx, JS_NewPlainObject(cx));
+  JS::Rooted<JSObject*> root_obj(aCx, JS_NewPlainObject(aCx));
   if (!root_obj) {
     return NS_ERROR_FAILURE;
   }
-  ret.setObject(*root_obj);
+  aResult.setObject(*root_obj);
 
   // Include the GPU process in histogram snapshots only if we actually tried
   // to launch a process for it.
@@ -2032,18 +2012,15 @@ TelemetryHistogram::CreateHistogramSnapshots(JSContext *cx,
     includeGPUProcess = gpm->AttemptedGPUProcess();
   }
 
-#if !defined(MOZ_WIDGET_ANDROID)
-  SessionType sessionType = SessionType(subsession);
-#else
-  SessionType sessionType = SessionType::Session;
-#endif
+  SessionType sessionType = SessionType(aSubsession);
 
   for (uint32_t process = 0; process < static_cast<uint32_t>(ProcessID::Count); ++process) {
-    JS::Rooted<JSObject*> processObject(cx, JS_NewPlainObject(cx));
+    JS::Rooted<JSObject*> processObject(aCx, JS_NewPlainObject(aCx));
     if (!processObject) {
       return NS_ERROR_FAILURE;
     }
-    if (!JS_DefineProperty(cx, root_obj, GetNameForProcessID(ProcessID(process)),
+    if (!JS_DefineProperty(aCx, root_obj,
+                           GetNameForProcessID(ProcessID(process)),
                            processObject, JSPROP_ENUMERATE)) {
       return NS_ERROR_FAILURE;
     }
@@ -2060,6 +2037,10 @@ TelemetryHistogram::CreateHistogramSnapshots(JSContext *cx,
         continue;
       }
 
+      if (!IsInDataset(info.dataset, aDataset)) {
+        continue;
+      }
+
       bool shouldInstantiate =
         info.histogramType == nsITelemetry::HISTOGRAM_FLAG;
       Histogram* h = internal_GetHistogramById(id, ProcessID(process),
@@ -2069,22 +2050,22 @@ TelemetryHistogram::CreateHistogramSnapshots(JSContext *cx,
         continue;
       }
 
-      JS::Rooted<JSObject*> hobj(cx, JS_NewPlainObject(cx));
+      JS::Rooted<JSObject*> hobj(aCx, JS_NewPlainObject(aCx));
       if (!hobj) {
         return NS_ERROR_FAILURE;
       }
-      switch (internal_ReflectHistogramSnapshot(cx, hobj, h)) {
+      switch (internal_ReflectHistogramSnapshot(aCx, hobj, h)) {
       case REFLECT_FAILURE:
         return NS_ERROR_FAILURE;
       case REFLECT_OK:
-        if (!JS_DefineProperty(cx, processObject, gHistogramInfos[id].name(),
+        if (!JS_DefineProperty(aCx, processObject, gHistogramInfos[id].name(),
                                hobj, JSPROP_ENUMERATE)) {
           return NS_ERROR_FAILURE;
         }
       }
 
 #if !defined(MOZ_WIDGET_ANDROID)
-      if ((sessionType == SessionType::Subsession) && clearSubsession) {
+      if ((sessionType == SessionType::Subsession) && aClearSubsession) {
         h->Clear();
       }
 #endif
@@ -2094,36 +2075,23 @@ TelemetryHistogram::CreateHistogramSnapshots(JSContext *cx,
 }
 
 nsresult
-TelemetryHistogram::RegisteredHistograms(uint32_t aDataset, uint32_t *aCount,
-                                         char*** aHistograms)
+TelemetryHistogram::GetKeyedHistogramSnapshots(JSContext* aCx,
+                                               JS::MutableHandleValue aResult,
+                                               unsigned int aDataset,
+                                               bool aSubsession,
+                                               bool aClearSubsession)
 {
-  StaticMutexAutoLock locker(gTelemetryHistogramMutex);
-  return internal_GetRegisteredHistogramIds(false,
-                                            aDataset, aCount, aHistograms);
-}
-
-nsresult
-TelemetryHistogram::RegisteredKeyedHistograms(uint32_t aDataset,
-                                              uint32_t *aCount,
-                                              char*** aHistograms)
-{
-  StaticMutexAutoLock locker(gTelemetryHistogramMutex);
-  return internal_GetRegisteredHistogramIds(true,
-                                            aDataset, aCount, aHistograms);
-}
-
-nsresult
-TelemetryHistogram::GetKeyedHistogramSnapshots(JSContext *cx,
-                                               JS::MutableHandle<JS::Value> ret,
-                                               bool subsession,
-                                               bool clearSubsession)
-{
+#if defined(MOZ_WIDGET_ANDROID)
+  if (aSubsession) {
+    return NS_OK;
+  }
+#endif
   // Runs without protection from |gTelemetryHistogramMutex|
-  JS::Rooted<JSObject*> obj(cx, JS_NewPlainObject(cx));
+  JS::Rooted<JSObject*> obj(aCx, JS_NewPlainObject(aCx));
   if (!obj) {
     return NS_ERROR_FAILURE;
   }
-  ret.setObject(*obj);
+  aResult.setObject(*obj);
 
   // Include the GPU process in histogram snapshots only if we actually tried
   // to launch a process for it.
@@ -2133,11 +2101,11 @@ TelemetryHistogram::GetKeyedHistogramSnapshots(JSContext *cx,
   }
 
   for (uint32_t process = 0; process < static_cast<uint32_t>(ProcessID::Count); ++process) {
-    JS::Rooted<JSObject*> processObject(cx, JS_NewPlainObject(cx));
+    JS::Rooted<JSObject*> processObject(aCx, JS_NewPlainObject(aCx));
     if (!processObject) {
       return NS_ERROR_FAILURE;
     }
-    if (!JS_DefineProperty(cx, obj, GetNameForProcessID(ProcessID(process)),
+    if (!JS_DefineProperty(aCx, obj, GetNameForProcessID(ProcessID(process)),
                            processObject, JSPROP_ENUMERATE)) {
       return NS_ERROR_FAILURE;
     }
@@ -2152,6 +2120,10 @@ TelemetryHistogram::GetKeyedHistogramSnapshots(JSContext *cx,
         continue;
       }
 
+      if (!IsInDataset(info.dataset, aDataset)) {
+        continue;
+      }
+
       KeyedHistogram* keyed = internal_GetKeyedHistogramById(HistogramID(id),
                                                              ProcessID(process),
                                                              /* instantiate = */ false);
@@ -2159,17 +2131,17 @@ TelemetryHistogram::GetKeyedHistogramSnapshots(JSContext *cx,
         continue;
       }
 
-      JS::RootedObject snapshot(cx, JS_NewPlainObject(cx));
+      JS::RootedObject snapshot(aCx, JS_NewPlainObject(aCx));
       if (!snapshot) {
         return NS_ERROR_FAILURE;
       }
 
-      if (!NS_SUCCEEDED(keyed->GetJSSnapshot(cx, snapshot, subsession,
-                                             clearSubsession))) {
+      if (!NS_SUCCEEDED(keyed->GetJSSnapshot(aCx, snapshot, aSubsession,
+                                             aClearSubsession))) {
         return NS_ERROR_FAILURE;
       }
 
-      if (!JS_DefineProperty(cx, processObject, gHistogramInfos[id].name(),
+      if (!JS_DefineProperty(aCx, processObject, gHistogramInfos[id].name(),
                              snapshot, JSPROP_ENUMERATE)) {
         return NS_ERROR_FAILURE;
       }

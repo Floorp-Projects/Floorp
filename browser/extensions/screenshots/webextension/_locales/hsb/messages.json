@@ -112,8 +112,8 @@
   "tourDone": {
     "message": "Hotowo"
   },
-  "termsAndPrivacyNoticeCloudServices": {
-    "message": "Přez wužiwanje Firefox ScreenShots, zwoliće do $TERMSANDPRIVACYNOTICETERMSLINK$ a $TERMSANDPRIVACYNOTICEPRIVACYLINK$ Firefox Cloud Services.",
+  "termsAndPrivacyNotice2": {
+    "message": "Přez wužiwanje Firefox ScreenShots, zwoliće do našich $TERMSANDPRIVACYNOTICETERMSLINK$ a $TERMSANDPRIVACYNOTICEPRIVACYLINK$ Firefox Screenshots.",
     "placeholders": {
       "termsandprivacynoticetermslink": {
         "content": "$1"
@@ -128,5 +128,8 @@
   },
   "termsAndPrivacyNoticyPrivacyLink": {
     "message": "Pokaz priwatnosće"
+  },
+  "libraryLabel": {
+    "message": "Fota wobrazowki"
   }
 }
