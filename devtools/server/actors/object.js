@@ -121,8 +121,7 @@ ObjectActor.prototype = {
           // Bug 1348761: getOwnPropertyNames is unecessary slow on TypedArrays
           let length = DevToolsUtils.getProperty(this.obj, "length");
           g.ownPropertyLength = length;
-        } else if (!["Function", "Proxy"].includes(g.class)) {
-          // Bug 1163520: Assert on internal functions
+        } else if (g.class != "Proxy") {
           g.ownPropertyLength = this.obj.getOwnPropertyNames().length;
         }
       } catch (e) {
