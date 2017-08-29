@@ -4,6 +4,7 @@
 Cu.import("resource://testing-common/PlacesTestUtils.jsm");
 Cu.import("resource://gre/modules/XPCOMUtils.jsm");
 Cu.import("resource://services-common/async.js");
+Cu.import("resource://services-common/utils.js");
 Cu.import("resource://services-sync/engines/history.js");
 Cu.import("resource://services-sync/service.js");
 Cu.import("resource://services-sync/util.js");
@@ -77,7 +78,7 @@ add_task(async function test_store() {
   do_check_empty((await store.getAllIDs()));
 
   _("Let's create an entry in the database.");
-  fxuri = Utils.makeURI("http://getfirefox.com/");
+  fxuri = CommonUtils.makeURI("http://getfirefox.com/");
 
   await PlacesTestUtils.addVisits({ uri: fxuri, title: "Get Firefox!",
                                   visitDate: TIMESTAMP1 });
@@ -126,7 +127,7 @@ add_task(async function test_store() {
 add_task(async function test_store_create() {
   _("Create a brand new record through the store.");
   tbguid = Utils.makeGUID();
-  tburi = Utils.makeURI("http://getthunderbird.com");
+  tburi = CommonUtils.makeURI("http://getthunderbird.com");
   let onVisitObserved = promiseOnVisitObserved();
   await applyEnsureNoFailures([
     {id: tbguid,
@@ -152,7 +153,7 @@ add_task(async function test_store_create() {
 add_task(async function test_null_title() {
   _("Make sure we handle a null title gracefully (it can happen in some cases, e.g. for resource:// URLs)");
   let resguid = Utils.makeGUID();
-  let resuri = Utils.makeURI("unknown://title");
+  let resuri = CommonUtils.makeURI("unknown://title");
   await applyEnsureNoFailures([
     {id: resguid,
      histUri: resuri.spec,

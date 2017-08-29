@@ -842,25 +842,42 @@ LaunchProgram(const XP_CHAR* aProgramPath, const XP_CHAR* aMinidumpPath)
     CloseHandle(pi.hProcess);
     CloseHandle(pi.hThread);
   }
-#elif defined(XP_UNIX)
+#elif defined(XP_MACOSX)
+  // Needed to locate NSS and its dependencies
+  setenv("DYLD_LIBRARY_PATH", libraryPath, /* overwrite */ 1);
+
+  pid_t pid = 0;
+  char* const my_argv[] = {
+    const_cast<char*>(aProgramPath),
+    const_cast<char*>(aMinidumpPath),
+    nullptr
+  };
+
+  char **env = nullptr;
+  char ***nsEnv = _NSGetEnviron();
+  if (nsEnv) {
+    env = *nsEnv;
+  }
+
+  int rv = posix_spawnp(&pid, my_argv[0], nullptr, nullptr, my_argv, env);
+
+  if (rv != 0) {
+    return false;
+  }
+#else // !XP_MACOSX
   pid_t pid = sys_fork();
 
   if (pid == -1) {
     return false;
   } else if (pid == 0) {
-#ifdef XP_LINUX
     // need to clobber this, as libcurl might load NSS,
     // and we want it to load the system NSS.
     unsetenv("LD_LIBRARY_PATH");
-#else // XP_MACOSX
-    // Needed to locate NSS and its dependencies
-    setenv("DYLD_LIBRARY_PATH", libraryPath, /* overwrite */ 1);
-#endif
     Unused << execl(aProgramPath,
                     aProgramPath, aMinidumpPath, (char*)0);
     _exit(1);
   }
-#endif // XP_UNIX
+#endif // XP_MACOSX
 
   return true;
 }

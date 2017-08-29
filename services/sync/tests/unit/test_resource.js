@@ -3,6 +3,7 @@
 
 Cu.import("resource://gre/modules/Log.jsm");
 Cu.import("resource://services-common/observers.js");
+Cu.import("resource://services-common/utils.js");
 Cu.import("resource://services-sync/resource.js");
 Cu.import("resource://services-sync/status.js");
 Cu.import("resource://services-sync/util.js");
@@ -487,9 +488,9 @@ add_task(async function test() {
 
   let query = "?" + args.join("&");
 
-  let uri1 = Utils.makeURI("http://foo/" + query)
+  let uri1 = CommonUtils.makeURI("http://foo/" + query)
                   .QueryInterface(Ci.nsIURL);
-  let uri2 = Utils.makeURI("http://foo/")
+  let uri2 = CommonUtils.makeURI("http://foo/")
                   .QueryInterface(Ci.nsIURL);
   uri2.query = query;
   do_check_eq(uri1.query, uri2.query);

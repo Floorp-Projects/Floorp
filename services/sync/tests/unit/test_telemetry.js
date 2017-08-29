@@ -2,6 +2,7 @@
    http://creativecommons.org/publicdomain/zero/1.0/ */
 
 Cu.import("resource://services-common/observers.js");
+Cu.import("resource://services-common/utils.js");
 Cu.import("resource://services-sync/telemetry.js");
 Cu.import("resource://services-sync/service.js");
 Cu.import("resource://services-sync/record.js");
@@ -164,7 +165,7 @@ add_task(async function test_uploading() {
   await SyncTestingInfrastructure(server);
 
   let parent = PlacesUtils.toolbarFolderId;
-  let uri = Utils.makeURI("http://getfirefox.com/");
+  let uri = CommonUtils.makeURI("http://getfirefox.com/");
 
   let bmk_id = PlacesUtils.bookmarks.insertBookmark(parent, uri,
     PlacesUtils.bookmarks.DEFAULT_INDEX, "Get Firefox!");

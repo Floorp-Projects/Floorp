@@ -8,7 +8,8 @@
 
 #include "mozilla/CheckedInt.h"
 #include "mozilla/mozalloc.h"
-#include "nsCOMPtr.h"
+#include "mozilla/MemoryReporting.h"
+#include "nsISupportsImpl.h"
 
 namespace mozilla {
 

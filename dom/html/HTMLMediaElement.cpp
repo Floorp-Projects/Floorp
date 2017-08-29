@@ -4165,61 +4165,22 @@ HTMLMediaElement::WakeLockBoolWrapper::operator=(bool val)
   return *this;
 }
 
-HTMLMediaElement::WakeLockBoolWrapper::~WakeLockBoolWrapper()
-{
-  if (mTimer) {
-    mTimer->Cancel();
-  }
-}
-
-void
-HTMLMediaElement::WakeLockBoolWrapper::SetCanPlay(bool aCanPlay)
-{
-  mCanPlay = aCanPlay;
-  UpdateWakeLock();
-}
-
 void
 HTMLMediaElement::WakeLockBoolWrapper::UpdateWakeLock()
 {
   MOZ_ASSERT(NS_IsMainThread());
+  MOZ_ASSERT(mOuter);
 
-  if (!mOuter) {
-    return;
-  }
-
-  bool playing = (!mValue && mCanPlay);
-
-  if (playing) {
-    if (mTimer) {
-      mTimer->Cancel();
-      mTimer = nullptr;
-    }
+  bool playing = !mValue;
+  bool isAudible = mOuter->Volume() > 0.0 &&
+                   !mOuter->mMuted &&
+                   mOuter->mIsAudioTrackAudible;
+  // when playing audible media.
+  if (playing && isAudible) {
     mOuter->WakeLockCreate();
-  } else if (!mTimer) {
-    // Don't release the wake lock immediately; instead, release it after a
-    // grace period.
-    int timeout = Preferences::GetInt("media.wakelock_timeout", 2000);
-    mTimer = do_CreateInstance("@mozilla.org/timer;1");
-    if (mTimer) {
-      mTimer->SetTarget(mOuter->MainThreadEventTarget());
-      mTimer->InitWithNamedFuncCallback(
-        TimerCallback,
-        this,
-        timeout,
-        nsITimer::TYPE_ONE_SHOT,
-        "dom::HTMLMediaElement::WakeLockBoolWrapper::UpdateWakeLock");
-    }
+  } else {
+    mOuter->WakeLockRelease();
   }
-}
-
-void
-HTMLMediaElement::WakeLockBoolWrapper::TimerCallback(nsITimer* aTimer,
-                                                     void* aClosure)
-{
-  WakeLockBoolWrapper* wakeLock = static_cast<WakeLockBoolWrapper*>(aClosure);
-  wakeLock->mOuter->WakeLockRelease();
-  wakeLock->mTimer = nullptr;
 }
 
 void
@@ -4231,7 +4192,7 @@ HTMLMediaElement::WakeLockCreate()
     NS_ENSURE_TRUE_VOID(pmService);
 
     ErrorResult rv;
-    mWakeLock = pmService->NewWakeLock(NS_LITERAL_STRING("cpu"),
+    mWakeLock = pmService->NewWakeLock(NS_LITERAL_STRING("audio-playing"),
                                        OwnerDoc()->GetInnerWindow(),
                                        rv);
   }
@@ -5314,15 +5275,16 @@ void HTMLMediaElement::ProcessMediaFragmentURI()
   }
 }
 
-void HTMLMediaElement::MetadataLoaded(const MediaInfo* aInfo,
-                                      nsAutoPtr<const MetadataTags> aTags)
+void
+HTMLMediaElement::MetadataLoaded(const MediaInfo* aInfo,
+                                 UniquePtr<const MetadataTags> aTags)
 {
   MOZ_ASSERT(NS_IsMainThread());
 
   SetMediaInfo(*aInfo);
 
   mIsEncrypted = aInfo->IsEncrypted() || mPendingEncryptedInitData.IsEncrypted();
-  mTags = aTags.forget();
+  mTags = Move(aTags);
   mLoadedDataFired = false;
   ChangeReadyState(nsIDOMHTMLMediaElement::HAVE_METADATA);
 
@@ -5735,7 +5697,7 @@ HTMLMediaElement::UpdateReadyStateInternal()
     if (hasVideoTracks) {
       mediaInfo.EnableVideo();
     }
-    MetadataLoaded(&mediaInfo, nsAutoPtr<const MetadataTags>(nullptr));
+    MetadataLoaded(&mediaInfo, nullptr);
   }
 
   if (mMediaSource) {
@@ -7209,6 +7171,8 @@ HTMLMediaElement::NotifyAudioPlaybackChanged(AudibleChangedReasons aReason)
   if (mAudioChannelWrapper) {
     mAudioChannelWrapper->NotifyAudioPlaybackChanged(aReason);
   }
+  // only request wake lock for audible media.
+  mPaused.UpdateWakeLock();
 }
 
 bool
@@ -7642,7 +7606,7 @@ HTMLMediaElement::ReportCanPlayTelemetry()
       [thread, abstractThread]() {
 #if XP_WIN
         // Windows Media Foundation requires MSCOM to be inited.
-        HRESULT hr = CoInitializeEx(0, COINIT_MULTITHREADED);
+        DebugOnly<HRESULT> hr = CoInitializeEx(0, COINIT_MULTITHREADED);
         MOZ_ASSERT(hr == S_OK);
 #endif
         bool aac = MP4Decoder::IsSupportedType(

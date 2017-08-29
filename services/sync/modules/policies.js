@@ -16,6 +16,7 @@ Cu.import("resource://services-sync/constants.js");
 Cu.import("resource://services-sync/util.js");
 Cu.import("resource://services-common/logmanager.js");
 Cu.import("resource://services-common/async.js");
+Cu.import("resource://services-common/utils.js");
 
 XPCOMUtils.defineLazyModuleGetter(this, "Status",
                                   "resource://services-sync/status.js");
@@ -143,7 +144,7 @@ SyncScheduler.prototype = {
     switch (topic) {
       case "weave:engine:score:updated":
         if (Status.login == LOGIN_SUCCEEDED) {
-          Utils.namedTimer(this.calculateScore, SCORE_UPDATE_DELAY, this,
+          CommonUtils.namedTimer(this.calculateScore, SCORE_UPDATE_DELAY, this,
                            "_scoreTimer");
         }
         break;
@@ -298,7 +299,7 @@ SyncScheduler.prototype = {
       case "active":
         this._log.trace("Received notification that we're back from idle.");
         this.idle = false;
-        Utils.namedTimer(function onBack() {
+        CommonUtils.namedTimer(function onBack() {
           if (this.idle) {
             this._log.trace("... and we're idle again. " +
                             "Ignoring spurious back notification.");
@@ -314,7 +315,7 @@ SyncScheduler.prototype = {
         break;
       case "wake_notification":
         this._log.debug("Woke from sleep.");
-        Utils.nextTick(() => {
+        CommonUtils.nextTick(() => {
           // Trigger a sync if we have multiple clients. We give it 5 seconds
           // incase the network is still in the process of coming back up.
           if (this.numClients > 1) {
@@ -439,7 +440,7 @@ SyncScheduler.prototype = {
       this._log.debug("Not initiating sync: app is shutting down");
       return;
     }
-    Utils.nextTick(this.service.sync, this.service);
+    CommonUtils.nextTick(this.service.sync, this.service);
   },
 
   /**
@@ -481,7 +482,7 @@ SyncScheduler.prototype = {
     }
 
     this._log.debug("Next sync in " + interval + " ms.");
-    Utils.namedTimer(this.syncIfMPUnlocked, interval, this, "syncTimer");
+    CommonUtils.namedTimer(this.syncIfMPUnlocked, interval, this, "syncTimer");
 
     // Save the next sync time in-case sync is disabled (logout/offline/etc.)
     this.nextSync = Date.now() + interval;
@@ -515,7 +516,7 @@ SyncScheduler.prototype = {
   */
   delayedAutoConnect: function delayedAutoConnect(delay) {
     if (this.service._checkSetup() == STATUS_OK) {
-      Utils.namedTimer(this.autoConnect, delay * 1000, this, "_autoTimer");
+      CommonUtils.namedTimer(this.autoConnect, delay * 1000, this, "_autoTimer");
     }
   },
 
@@ -725,7 +726,7 @@ ErrorHandler.prototype = {
   },
 
   notifyOnNextTick: function notifyOnNextTick(topic) {
-    Utils.nextTick(function() {
+    CommonUtils.nextTick(function() {
       this._log.trace("Notifying " + topic +
                       ". Status.login is " + Status.login +
                       ". Status.sync is " + Status.sync);
@@ -740,7 +741,7 @@ ErrorHandler.prototype = {
     this._log.debug("Beginning user-triggered sync.");
 
     this.dontIgnoreErrors = true;
-    Utils.nextTick(this.service.sync, this.service);
+    CommonUtils.nextTick(this.service.sync, this.service);
   },
 
   async _dumpAddons() {
@@ -917,7 +918,7 @@ ErrorHandler.prototype = {
         // in with your Firefox Account" storage alerts.
         if ((this.currentAlertMode != xwa.code) ||
             (this.earliestNextAlert < Date.now())) {
-          Utils.nextTick(function() {
+          CommonUtils.nextTick(function() {
             Svc.Obs.notify("weave:eol", xwa);
           }, this);
           this._log.error("X-Weave-Alert: " + xwa.code + ": " + xwa.message);

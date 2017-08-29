@@ -6,8 +6,8 @@
 #ifndef MediaDecoderOwner_h_
 #define MediaDecoderOwner_h_
 
+#include "mozilla/UniquePtr.h"
 #include "MediaInfo.h"
-#include "nsAutoPtr.h"
 
 namespace mozilla {
 
@@ -41,16 +41,6 @@ public:
    */
   virtual void FireTimeUpdate(bool aPeriodic) = 0;
 
-  // Get the HTMLMediaElement object if the decoder is being used from an
-  // HTML media element, and null otherwise.
-  virtual dom::HTMLMediaElement* GetMediaElement()
-  {
-    return nullptr;
-  }
-
-  // Return an abstract thread on which to run main thread runnables.
-  virtual AbstractThread* AbstractMainThread() const = 0;
-
   // Return true if decoding should be paused
   virtual bool GetPaused() = 0;
 
@@ -59,7 +49,7 @@ public:
   // etc.
   // Must take ownership of MetadataTags aTags argument.
   virtual void MetadataLoaded(const MediaInfo* aInfo,
-                              nsAutoPtr<const MetadataTags> aTags) = 0;
+                              UniquePtr<const MetadataTags> aTags) = 0;
 
   // Called by the decoder object, on the main thread,
   // when it has read the first frame of the video or audio.
@@ -143,10 +133,6 @@ public:
   // Check if the decoder owner is hidden.
   virtual bool IsHidden() const = 0;
 
-  // Called by the media decoder and the video frame to get the
-  // ImageContainer containing the video data.
-  virtual VideoFrameContainer* GetVideoFrameContainer() = 0;
-
   // Called by media decoder when the audible state changed
   virtual void SetAudibleState(bool aAudible) = 0;
 
@@ -161,9 +147,6 @@ public:
   virtual void DispatchEncrypted(const nsTArray<uint8_t>& aInitData,
                                  const nsAString& aInitDataType) = 0;
 
-  // Return the decoder owner's owner document.
-  virtual nsIDocument* GetDocument() const = 0;
-
   // Called by the media decoder to create audio/video tracks and add to its
   // owner's track list.
   virtual void ConstructMediaTracks(const MediaInfo* aInfo) = 0;
@@ -171,9 +154,6 @@ public:
   // Called by the media decoder to removes all audio/video tracks from its
   // owner's track list.
   virtual void RemoveMediaTracks() = 0;
-
-  // Called by the media decoder to create a GMPCrashHelper.
-  virtual already_AddRefed<GMPCrashHelper> CreateGMPCrashHelper() = 0;
 
   // Called by the media decoder to notify the owner to resolve a seek promise.
   virtual void AsyncResolveSeekDOMPromiseIfExists() = 0;
@@ -184,6 +164,35 @@ public:
   // Notified by the decoder that a decryption key is required before emitting
   // further output.
   virtual void NotifyWaitingForKey() {}
+
+  /*
+   * Methods that are used only in Gecko go here. We provide defaul
+   * implementations so they can compile in Servo without modification.
+   */
+  // Return an abstract thread on which to run main thread runnables.
+  virtual AbstractThread* AbstractMainThread() const { return nullptr; }
+
+  // Get the HTMLMediaElement object if the decoder is being used from an
+  // HTML media element, and null otherwise.
+  virtual dom::HTMLMediaElement* GetMediaElement() { return nullptr; }
+
+  // Called by the media decoder and the video frame to get the
+  // ImageContainer containing the video data.
+  virtual VideoFrameContainer* GetVideoFrameContainer() { return nullptr; }
+
+  // Return the decoder owner's owner document.
+  virtual nsIDocument* GetDocument() const { return nullptr; }
+
+  // Called by the media decoder to create a GMPCrashHelper.
+  virtual already_AddRefed<GMPCrashHelper> CreateGMPCrashHelper()
+  {
+    return nullptr;
+  }
+
+  /*
+   * Servo only methods go here. Please provide default implementations so they
+   * can build in Gecko without any modification.
+   */
 };
 
 } // namespace mozilla

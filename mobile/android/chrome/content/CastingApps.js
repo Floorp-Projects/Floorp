@@ -558,14 +558,16 @@ var CastingApps = {
         title: Strings.browser.GetStringFromName("contextmenu.sendToDevice"),
         icon: "drawable://casting_active",
         clickCallback: this.pageAction.click,
-        important: true
+        important: true,
+        useTint: false
       });
     } else if (aVideo.mozAllowCasting) {
       this.pageAction.id = PageActions.add({
         title: Strings.browser.GetStringFromName("contextmenu.sendToDevice"),
         icon: "drawable://casting",
         clickCallback: this.pageAction.click,
-        important: true
+        important: true,
+        useTint: true
       });
     }
   },

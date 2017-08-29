@@ -674,6 +674,57 @@ var BrowserPageActions = {
   },
 };
 
+var BrowserPageActionFeedback = {
+  /**
+   * The feedback page action panel DOM node (DOM node)
+   */
+  get panelNode() {
+    delete this.panelNode;
+    return this.panelNode = document.getElementById("pageActionFeedback");
+  },
+
+  get feedbackAnimationBox() {
+    delete this.feedbackAnimationBox;
+    return this.feedbackAnimationBox = document.getElementById("pageActionFeedbackAnimatableBox");
+  },
+
+  get feedbackLabel() {
+    delete this.feedbackLabel;
+    return this.feedbackLabel = document.getElementById("pageActionFeedbackMessage");
+  },
+
+  show(action, event) {
+    this.feedbackLabel.textContent = this.panelNode.getAttribute(action + "Feedback");
+    this.panelNode.hidden = false;
+
+    let anchor = BrowserPageActions.mainButtonNode;
+    if (event.target.classList.contains("urlbar-icon")) {
+      let id = BrowserPageActions._urlbarButtonNodeIDForActionID(action);
+      let node = document.getElementById(id);
+      if (node) {
+        anchor = node;
+      }
+    }
+
+    this.panelNode.openPopup(anchor, {
+      position: "bottomcenter topright",
+      triggerEvent: event,
+    });
+
+    this.panelNode.addEventListener("popupshown", () => {
+      this.feedbackAnimationBox.setAttribute("animate", "true");
+    }, {once: true});
+    this.panelNode.addEventListener("popuphidden", () => {
+      this.feedbackAnimationBox.removeAttribute("animate");
+    }, {once: true});
+
+    // The timeout value used here allows the panel to stay open for
+    // 1 second after the text transition (duration=120ms) has finished.
+    setTimeout(() => {
+      this.panelNode.hidePopup();
+    }, Services.prefs.getIntPref("browser.pageActions.feedbackTimeoutMS", 1120));
+  },
+};
 
 // built-in actions below //////////////////////////////////////////////////////
 
@@ -708,6 +759,7 @@ BrowserPageActions.copyURL = {
     Cc["@mozilla.org/widget/clipboardhelper;1"]
       .getService(Ci.nsIClipboardHelper)
       .copyString(gURLBar.makeURIReadable(gBrowser.selectedBrowser.currentURI).displaySpec);
+    BrowserPageActionFeedback.show("copyURL", event);
   },
 };
 
@@ -766,6 +818,9 @@ BrowserPageActions.sendToDevice = {
         item.classList.add("subviewbutton-iconic");
       }
       item.setAttribute("tooltiptext", name);
+      item.addEventListener("command", event => {
+        BrowserPageActionFeedback.show("sendToDevice", event);
+      });
       return item;
     });
 

@@ -48,7 +48,7 @@ uintptr_t UContextReader::GetInstructionPointer(const ucontext_t* uc) {
   return uc->uc_mcontext.gregs[REG_EIP];
 }
 
-void UContextReader::FillCPUContext(RawContextCPU *out, const ucontext *uc,
+void UContextReader::FillCPUContext(RawContextCPU *out, const ucontext_t *uc,
                                     const struct _libc_fpstate* fp) {
   const greg_t* regs = uc->uc_mcontext.gregs;
 
@@ -153,7 +153,7 @@ uintptr_t UContextReader::GetInstructionPointer(const ucontext_t* uc) {
   return uc->uc_mcontext.arm_pc;
 }
 
-void UContextReader::FillCPUContext(RawContextCPU *out, const ucontext *uc) {
+void UContextReader::FillCPUContext(RawContextCPU *out, const ucontext_t *uc) {
   out->context_flags = MD_CONTEXT_ARM_FULL;
 
   out->iregs[0] = uc->uc_mcontext.arm_r0;
@@ -192,7 +192,7 @@ uintptr_t UContextReader::GetInstructionPointer(const ucontext_t* uc) {
   return uc->uc_mcontext.pc;
 }
 
-void UContextReader::FillCPUContext(RawContextCPU *out, const ucontext *uc,
+void UContextReader::FillCPUContext(RawContextCPU *out, const ucontext_t *uc,
                                     const struct fpsimd_context* fpregs) {
   out->context_flags = MD_CONTEXT_ARM64_FULL;
 
@@ -218,7 +218,7 @@ uintptr_t UContextReader::GetInstructionPointer(const ucontext_t* uc) {
   return uc->uc_mcontext.pc;
 }
 
-void UContextReader::FillCPUContext(RawContextCPU *out, const ucontext *uc) {
+void UContextReader::FillCPUContext(RawContextCPU *out, const ucontext_t *uc) {
 #if _MIPS_SIM == _ABI64
   out->context_flags = MD_CONTEXT_MIPS64_FULL;
 #elif _MIPS_SIM == _ABIO32

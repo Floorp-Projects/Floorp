@@ -44,7 +44,8 @@ public:
   void Resume() override;
 
 private:
-  MediaResource* GetResource() const override final;
+  void PinForSeek() override {}
+  void UnpinForSeek() override {}
 
   MediaDecoderStateMachine* CreateStateMachine();
 
@@ -57,7 +58,7 @@ private:
 
   bool IsLiveStream() override final { return false; }
 
-  RefPtr<HLSResource> mResource;
+  UniquePtr<HLSResource> mResource;
 };
 
 } // namespace mozilla

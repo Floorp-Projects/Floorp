@@ -112,8 +112,8 @@
   "tourDone": {
     "message": "Selesai"
   },
-  "termsAndPrivacyNoticeCloudServices": {
-    "message": "Dengan menggunakan Firefox Screenshots, anda bersetuju dengan $TERMSANDPRIVACYNOTICETERMSLINK$ dan $TERMSANDPRIVACYNOTICEPRIVACYLINK$ Firefox Cloud Services.",
+  "termsAndPrivacyNotice2": {
+    "message": "Apabila menggunakan Firefox Screenshots, anda bersetuju dengan $TERMSANDPRIVACYNOTICETERMSLINK$ dan $TERMSANDPRIVACYNOTICEPRIVACYLINK$.",
     "placeholders": {
       "termsandprivacynoticetermslink": {
         "content": "$1"
@@ -128,5 +128,8 @@
   },
   "termsAndPrivacyNoticyPrivacyLink": {
     "message": "Notis Privasi"
+  },
+  "libraryLabel": {
+    "message": "Screenshots"
   }
 }

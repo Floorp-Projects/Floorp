@@ -11,6 +11,7 @@
 #include "MediaInfo.h"
 #include "TimeUnits.h"
 #include "VideoLimits.h"
+#include "mozilla/gfx/Point.h" // for gfx::IntSize
 #include "mozilla/AbstractThread.h"
 #include "mozilla/Attributes.h"
 #include "mozilla/CheckedInt.h"
@@ -23,8 +24,7 @@
 #include "nsINamed.h"
 #include "nsIThread.h"
 #include "nsITimer.h"
-#include "nsRect.h"
-#include "nsSize.h"
+
 #include "nsThreadUtils.h"
 #include "prtime.h"
 
@@ -149,7 +149,8 @@ nsresult SecondsToUsecs(double aSeconds, int64_t& aOutUsecs);
 // Scales the display rect aDisplay by aspect ratio aAspectRatio.
 // Note that aDisplay must be validated by IsValidVideoRegion()
 // before being used!
-void ScaleDisplayByAspectRatio(nsIntSize& aDisplay, float aAspectRatio);
+void
+ScaleDisplayByAspectRatio(gfx::IntSize& aDisplay, float aAspectRatio);
 
 // Downmix Stereo audio samples to Mono.
 // Input are the buffer contains stereo data and the number of frames.
@@ -162,8 +163,10 @@ bool IsVideoContentType(const nsCString& aContentType);
 // extracted inside a frame of size aFrame, and scaled up to and displayed
 // at a size of aDisplay. You should validate the frame, picture, and
 // display regions before using them to display video frames.
-bool IsValidVideoRegion(const nsIntSize& aFrame, const nsIntRect& aPicture,
-                        const nsIntSize& aDisplay);
+bool
+IsValidVideoRegion(const gfx::IntSize& aFrame,
+                   const gfx::IntRect& aPicture,
+                   const gfx::IntSize& aDisplay);
 
 // Template to automatically set a variable to a value on scope exit.
 // Useful for unsetting flags, etc.

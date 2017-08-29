@@ -709,9 +709,8 @@ fn read_moov<T: Read>(f: &mut BMFFBox<T>, context: &mut MediaContext) -> Result<
 }
 
 fn read_pssh<T: Read>(src: &mut BMFFBox<T>) -> Result<ProtectionSystemSpecificHeaderBox> {
-    let mut box_content = Vec::with_capacity(src.head.size as usize);
-    src.read_to_end(&mut box_content)?;
-
+    let len = src.bytes_left();
+    let mut box_content = read_buf(src, len)?;
     let (system_id, kid, data) = {
         let pssh = &mut Cursor::new(box_content.as_slice());
 
@@ -721,14 +720,14 @@ fn read_pssh<T: Read>(src: &mut BMFFBox<T>) -> Result<ProtectionSystemSpecificHe
 
         let mut kid: Vec<ByteData> = Vec::new();
         if version > 0 {
-            let count = be_i32(pssh)?;
+            let count = be_u32_with_limit(pssh)?;
             for _ in 0..count {
                 let item = read_buf(pssh, 16)?;
                 kid.push(item);
             }
         }
 
-        let data_size = be_i32(pssh)? as usize;
+        let data_size = be_u32_with_limit(pssh)? as usize;
         let data = read_buf(pssh, data_size)?;
 
         (system_id, kid, data)

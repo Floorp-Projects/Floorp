@@ -142,7 +142,7 @@ AtomIsPinnedInRuntime(JSRuntime* rt, JSAtom* atom);
 #endif // DEBUG
 
 /* Well-known predefined C strings. */
-#define DECLARE_PROTO_STR(name,code,init,clasp) extern const char js_##name##_str[];
+#define DECLARE_PROTO_STR(name,init,clasp) extern const char js_##name##_str[];
 JS_FOR_EACH_PROTOTYPE(DECLARE_PROTO_STR)
 #undef DECLARE_PROTO_STR
 

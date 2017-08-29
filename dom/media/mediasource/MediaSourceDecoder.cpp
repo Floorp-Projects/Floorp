@@ -33,12 +33,6 @@ MediaSourceDecoder::MediaSourceDecoder(MediaDecoderInit& aInit)
   mExplicitDuration.emplace(UnspecifiedNaN<double>());
 }
 
-MediaResource*
-MediaSourceDecoder::GetResource() const
-{
-  return mResource;
-}
-
 MediaDecoderStateMachine*
 MediaSourceDecoder::CreateStateMachine()
 {
@@ -61,7 +55,7 @@ MediaSourceDecoder::Load(nsIPrincipal* aPrincipal)
   AbstractThread::AutoEnter context(AbstractMainThread());
 
   mPrincipal = aPrincipal;
-  mResource = new MediaSourceResource();
+  mResource = MakeUnique<MediaSourceResource>();
 
   nsresult rv = MediaShutdownManager::Instance().Register(this);
   if (NS_WARN_IF(NS_FAILED(rv))) {

@@ -20,7 +20,7 @@
               android:paddingStart="@dimen/find_in_page_text_padding_start"
               android:paddingRight="@dimen/find_in_page_text_padding_end"
               android:paddingEnd="@dimen/find_in_page_text_padding_end"
-              android:textColorHighlight="@color/fennec_ui_orange"
+              android:textColorHighlight="@color/fennec_ui_accent"
               android:imeOptions="actionSearch"
               android:selectAllOnFocus="true"
               android:gravity="center_vertical|left|start"/>

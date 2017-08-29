@@ -24,6 +24,7 @@ Cu.import("resource://gre/modules/Timer.jsm");
 Cu.import("resource://gre/modules/PromiseUtils.jsm");
 Cu.import("resource://gre/modules/osfile.jsm");
 Cu.import("resource://services-common/async.js");
+Cu.import("resource://services-common/utils.js");
 Cu.import("resource://services-sync/constants.js");
 Cu.import("resource://services-sync/main.js");
 Cu.import("resource://services-sync/util.js");
@@ -207,7 +208,7 @@ var TPS = {
           if (this._syncErrors === 0) {
             Logger.logInfo("Sync error; retrying...");
             this._syncErrors++;
-            Utils.nextTick(() => {
+            CommonUtils.nextTick(() => {
               this.RunNextTestAction().catch(err => {
                 this.DumpError("RunNextTestActionFailed", err);
               });
@@ -229,7 +230,7 @@ var TPS = {
 
           // Wait a second before continuing, otherwise we can get
           // 'sync not complete' errors.
-          Utils.namedTimer(function() {
+          CommonUtils.namedTimer(function() {
             this.FinishAsyncOperation();
           }, 1000, this, "postsync");
 
@@ -287,7 +288,7 @@ var TPS = {
     }
     if (!this.operations_pending) {
       this._currentAction++;
-      Utils.nextTick(function() {
+      CommonUtils.nextTick(function() {
         this.RunNextTestAction().catch(err => {
           this.DumpError("RunNextTestActionFailed", err);
         });
@@ -335,7 +336,7 @@ var TPS = {
 
               // Wait some time before continuing to be sure tabs can be synced,
               // otherwise we can get 'error locating tab' (bug 1383832).
-              Utils.namedTimer(function() {
+              CommonUtils.namedTimer(function() {
                 that.FinishAsyncOperation();
               }, 2500, this, "postTabsOpening");
             }
@@ -589,7 +590,7 @@ var TPS = {
     } else if ("skipped" in obj && obj.skipped) {
       this.DumpError("mozmill test failed, name: " + obj.name + ", reason: " + obj.skipped_reason);
     } else {
-      Utils.namedTimer(function() {
+      CommonUtils.namedTimer(function() {
         this.FinishAsyncOperation();
       }, 2000, this, "postmozmilltest");
     }

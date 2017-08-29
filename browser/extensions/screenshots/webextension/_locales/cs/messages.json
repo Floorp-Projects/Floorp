@@ -112,8 +112,8 @@
   "tourDone": {
     "message": "Hotovo"
   },
-  "termsAndPrivacyNoticeCloudServices": {
-    "message": "Používáním služby Firefox Screenshots souhlasíte s $TERMSANDPRIVACYNOTICETERMSLINK$ a $TERMSANDPRIVACYNOTICEPRIVACYLINK$ Firefox Cloud Services.",
+  "termsAndPrivacyNotice2": {
+    "message": "Používáním služby Firefox Screenshots souhlasíte s našimi $TERMSANDPRIVACYNOTICETERMSLINK$ a $TERMSANDPRIVACYNOTICEPRIVACYLINK$.",
     "placeholders": {
       "termsandprivacynoticetermslink": {
         "content": "$1"
@@ -128,5 +128,8 @@
   },
   "termsAndPrivacyNoticyPrivacyLink": {
     "message": "zásadami ochrany osobních údajů"
+  },
+  "libraryLabel": {
+    "message": "Screenshots"
   }
 }

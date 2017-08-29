@@ -92,9 +92,17 @@ class TTest(object):
             mainthread_io = os.path.join(here, "mainthread_io.log")
             setup.env['MOZ_MAIN_THREAD_IO_LOG'] = mainthread_io
 
+        if browser_config['disable_stylo']:
+            if browser_config['stylothreads']:
+                raise TalosError("--disable-stylo conflicts with --stylo-threads")
+            if browser_config['enable_stylo']:
+                raise TalosError("--disable-stylo conflicts with --enable-stylo")
+
         # As we transition to Stylo, we need to set env vars and output data properly
-        if browser_config['stylo']:
+        if browser_config['enable_stylo']:
             setup.env['STYLO_FORCE_ENABLED'] = '1'
+        if browser_config['disable_stylo']:
+            setup.env['STYLO_FORCE_DISABLED'] = '1'
 
         # During the Stylo transition, measure different number of threads
         if browser_config.get('stylothreads', 0) > 0:

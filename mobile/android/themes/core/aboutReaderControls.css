@@ -77,7 +77,7 @@
   background-position: center;
   background-size: 26px 16px;
   background-repeat: no-repeat;
-  background-color: #E66000;
+  background-color: #0979D9;
   border-radius: 10000px;
   margin: 20px;
   border: 0;
@@ -85,7 +85,7 @@
 }
 
 .button:active {
-  background-color: #DC5600;
+  background-color: #086ACC;
 }
 
 /* Remove dotted border when button is focused */
@@ -218,7 +218,7 @@
 
 #color-scheme-buttons > button:active,
 #color-scheme-buttons > button.selected {
-  border: 2px solid #FF9500;
+  border: 2px solid #0A84FF;
 }
 
 .dark-button {

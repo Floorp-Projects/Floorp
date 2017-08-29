@@ -112,8 +112,8 @@
   "tourDone": {
     "message": "সম্পন্ন"
   },
-  "termsAndPrivacyNoticeCloudServices": {
-    "message": "Firefox Screenshots ব্যবহারে, আপনি Firefox Cloud Services এর $TERMSANDPRIVACYNOTICETERMSLINK$ এবং $TERMSANDPRIVACYNOTICEPRIVACYLINK$ নীতিতে সম্মত হয়েছেন।",
+  "termsAndPrivacyNotice2": {
+    "message": "Firefox Screenshots ব্যবহারের জন্য, আপনি আমাদের $TERMSANDPRIVACYNOTICETERMSLINK$ এবং $TERMSANDPRIVACYNOTICEPRIVACYLINK$ নীতিতে সম্মত হয়েছেন।",
     "placeholders": {
       "termsandprivacynoticetermslink": {
         "content": "$1"
@@ -128,5 +128,8 @@
   },
   "termsAndPrivacyNoticyPrivacyLink": {
     "message": "গোপনীয়তা নীতি"
+  },
+  "libraryLabel": {
+    "message": "স্ক্রীনশট"
   }
 }

@@ -112,7 +112,7 @@
   "tourDone": {
     "message": "Done"
   },
-  "termsAndPrivacyNoticeCloudServices": {
+  "termsAndPrivacyNotice2": {
     "message": "By using Firefox Screenshots, you agree to our $TERMSANDPRIVACYNOTICETERMSLINK$ and $TERMSANDPRIVACYNOTICEPRIVACYLINK$.",
     "placeholders": {
       "termsandprivacynoticetermslink": {
@@ -128,5 +128,8 @@
   },
   "termsAndPrivacyNoticyPrivacyLink": {
     "message": "Privacy Notice"
+  },
+  "libraryLabel": {
+    "message": "Screenshots"
   }
 }

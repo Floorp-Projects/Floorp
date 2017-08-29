@@ -15,7 +15,6 @@ import org.mozilla.gecko.util.GeckoBundle;
 import android.content.Context;
 import android.database.Cursor;
 import android.support.v4.widget.SwipeRefreshLayout;
-import android.util.Log;
 import android.view.View;
 
 /**
@@ -56,7 +55,7 @@ class PanelRefreshLayout extends SwipeRefreshLayout implements DatasetBacked {
         addView(childView);
 
         // Must be called after the child view has been added.
-        setColorSchemeResources(R.color.fennec_ui_orange, R.color.action_orange);
+        setColorSchemeResources(R.color.fennec_ui_accent, R.color.action_accent);
     }
 
     @Override

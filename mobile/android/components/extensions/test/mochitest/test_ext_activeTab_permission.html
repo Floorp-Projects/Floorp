@@ -1,0 +1,208 @@
+<!DOCTYPE HTML>
+<html>
+<head>
+  <title>PageAction Test</title>
+  <script src="chrome://mochikit/content/tests/SimpleTest/SimpleTest.js"></script>
+  <script src="chrome://mochikit/content/tests/SimpleTest/SpawnTask.js"></script>
+  <script src="chrome://mochikit/content/tests/SimpleTest/ExtensionTestUtils.js"></script>
+  <script type="text/javascript" src="head.js"></script>
+  <link rel="stylesheet" href="chrome://mochikit/contents/tests/SimpleTest/test.css"/>
+</head>
+<body>
+
+<script type="text/javascript">
+"use strict";
+
+var {BrowserActions} = SpecialPowers.Cu.import("resource://gre/modules/BrowserActions.jsm", {});
+var {PageActions} = SpecialPowers.Cu.import("resource://gre/modules/PageActions.jsm", {});
+
+function pageLoadedContentScript() {
+  browser.test.sendMessage("page-loaded", window.location.href);
+}
+
+add_task(async function test_activeTab_pageAction() {
+  async function background() {
+    function contentScriptCode() {
+      browser.test.log("content script executed");
+
+      return "tabs.executeScript result";
+    }
+
+    const createdTab = await browser.tabs.create({
+      url: "http://example.com/#test_activeTab_pageAction",
+    });
+
+    browser.test.log(`Created new tab with id: ${createdTab.id}`);
+
+    await browser.pageAction.show(createdTab.id);
+
+    browser.pageAction.onClicked.addListener(async (tab) => {
+      browser.test.assertEq(createdTab.id, tab.id,
+                            "pageAction clicked on the expected tab id");
+
+      const [result] = await browser.tabs.executeScript(tab.id, {
+        code: `(${contentScriptCode})()`,
+      }).catch(error => {
+        // Make the test to fail fast if something goes wrong.
+        browser.test.fail(`Unexpected exception on tabs.executeScript: ${error}`);
+        browser.tabs.remove(tab.id);
+        browser.test.notifyFail("page_action.activeTab.done");
+        throw error;
+      });
+
+      browser.test.assertEq("tabs.executeScript result", result,
+                            "Got the expected result from tabs.executeScript");
+
+      browser.tabs.onRemoved.addListener((tabId) => {
+        if (tabId !== tab.id) {
+          return;
+        }
+
+        browser.test.notifyPass("page_action.activeTab.done");
+      });
+      browser.tabs.remove(tab.id);
+    });
+
+    browser.test.sendMessage("background_page.ready");
+  }
+
+  let extension = ExtensionTestUtils.loadExtension({
+    background,
+    manifest: {
+      "name": "PageAction Extension",
+      "page_action": {
+        "default_title": "Page Action",
+        "default_icon": {
+          "18": "extension.png",
+        },
+      },
+      "content_scripts": [
+        {
+          "js": ["page_loaded.js"],
+          "matches": ["http://example.com/*"],
+          "run_at": "document_end",
+        },
+      ],
+      "permissions": ["activeTab"],
+    },
+    files: {
+      "extension.png": TEST_ICON_ARRAYBUFFER,
+      "page_loaded.js": pageLoadedContentScript,
+    },
+  });
+
+  await extension.startup();
+
+  await extension.awaitMessage("background_page.ready");
+
+  const uuid = `{${extension.uuid}}`;
+
+  ok(PageActions.isShown(uuid), "page action is shown");
+
+  info("Wait the new tab to be loaded");
+  const loadedURL = await extension.awaitMessage("page-loaded");
+
+  is(loadedURL, "http://example.com/#test_activeTab_pageAction",
+     "The expected URL has been loaded in a new tab");
+
+  info("Click the pageAction");
+  PageActions.synthesizeClick(uuid);
+
+  await extension.awaitFinish("page_action.activeTab.done");
+
+  await extension.unload();
+});
+
+add_task(async function test_activeTab_browserAction() {
+  async function background() {
+    let createdTab;
+
+    function contentScriptCode() {
+      browser.test.log("content script executed");
+
+      return "tabs.executeScript result";
+    }
+
+    browser.browserAction.onClicked.addListener(async (tab) => {
+      browser.test.assertEq(createdTab.id, tab.id,
+                            "browserAction clicked on the expected tab id");
+
+      const [result] = await browser.tabs.executeScript(tab.id, {
+        code: `(${contentScriptCode})()`,
+      }).catch(error => {
+        // Make the test to fail fast if something goes wrong.
+        browser.test.fail(`Unexpected exception on tabs.executeScript: ${error}`);
+        browser.tabs.remove(tab.id);
+        browser.test.notifyFail("browser_action.activeTab.done");
+        throw error;
+      });
+
+      browser.test.assertEq("tabs.executeScript result", result,
+                            "Got the expected result from tabs.executeScript");
+
+      browser.tabs.onRemoved.addListener((tabId) => {
+        if (tabId !== tab.id) {
+          return;
+        }
+
+        browser.test.notifyPass("browser_action.activeTab.done");
+      });
+      browser.tabs.remove(tab.id);
+    });
+
+    createdTab = await browser.tabs.create({
+      url: "http://example.com/#test_activeTab_browserAction",
+    });
+
+    browser.test.log(`Created a new tab with id: ${createdTab.id}`);
+
+    browser.test.sendMessage("background_page.ready");
+  }
+
+  let extension = ExtensionTestUtils.loadExtension({
+    background,
+    manifest: {
+      "name": "BrowserAction Extension",
+      "browser_action": {
+        "default_title": "Browser Action",
+      },
+      "content_scripts": [
+        {
+          "js": ["page_loaded.js"],
+          "matches": ["http://example.com/*"],
+          "run_at": "document_end",
+        },
+      ],
+      "permissions": ["activeTab"],
+    },
+    files: {
+      "page_loaded.js": pageLoadedContentScript,
+    },
+  });
+
+  await extension.startup();
+
+  await extension.awaitMessage("background_page.ready");
+
+  const uuid = `{${extension.uuid}}`;
+
+  ok(BrowserActions.isShown(uuid), "browser action is shown");
+
+  info("Wait the new tab to be loaded");
+  const loadedURL = await extension.awaitMessage("page-loaded");
+
+  is(loadedURL, "http://example.com/#test_activeTab_browserAction",
+     "The expected URL has been loaded in a new tab");
+
+  info("Click the browserAction");
+  BrowserActions.synthesizeClick(uuid);
+
+  await extension.awaitFinish("browser_action.activeTab.done");
+
+  await extension.unload();
+});
+
+</script>
+
+</body>
+</html>

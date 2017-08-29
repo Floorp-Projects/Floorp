@@ -448,6 +448,21 @@
         </panelview>
       </photonpanelmultiview>
     </panel>
+    <panel id="pageActionFeedback"
+           role="alert"
+           type="arrow"
+           hidden="true"
+           flip="slide"
+           position="bottomcenter topright"
+           tabspecific="true"
+           noautofocus="true"
+           copyURLFeedback="&copyURLFeedback.label;"
+           sendToDeviceFeedback="&sendToDeviceFeedback.label;">
+      <hbox id="pageActionFeedbackAnimatableBox">
+        <image id="pageActionFeedbackAnimatableImage"/>
+      </hbox>
+      <label id="pageActionFeedbackMessage"/>
+    </panel>
 
     <menupopup id="pageActionPanelContextMenu"
                onpopupshowing="BrowserPageActions.onContextMenuShowing(event, this);">

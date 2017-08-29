@@ -40,7 +40,7 @@ public:
   static bool IsKeyframe(Span<const uint8_t> aBuffer);
 
   // Return the frame dimensions for a sample.
-  static nsIntSize GetFrameSize(Span<const uint8_t> aBuffer);
+  static gfx::IntSize GetFrameSize(Span<const uint8_t> aBuffer);
 
 private:
   ~AOMDecoder();

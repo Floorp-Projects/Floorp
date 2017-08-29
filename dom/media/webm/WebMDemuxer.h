@@ -261,7 +261,7 @@ private:
   int64_t mLastWebMBlockOffset;
   const bool mIsMediaSource;
 
-  Maybe<nsIntSize> mLastSeenFrameSize;
+  Maybe<gfx::IntSize> mLastSeenFrameSize;
   // This will be populated only if a resolution change occurs, otherwise it
   // will be left as null so the original metadata is used
   RefPtr<TrackInfoSharedPtr> mSharedVideoTrackInfo;

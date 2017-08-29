@@ -43,6 +43,9 @@ Sanitizer.prototype = {
         case "downloadHistory":
           this._clear("downloadFiles", { startTime, deleteFiles: false });
           break;
+        case "formdata":
+          this._clear(aItemName, { startTime });
+          break;
         default:
           return Promise.reject({message: `Invalid argument: ${aItemName} does not support startTime argument.`});
       }
@@ -227,12 +230,17 @@ Sanitizer.prototype = {
     },
 
     formdata: {
-      clear: function() {
+      clear: function({ startTime = 0 } = {}) {
         return new Promise(function(resolve, reject) {
           let refObj = {};
           TelemetryStopwatch.start("FX_SANITIZE_FORMDATA", refObj);
 
-          FormHistory.update({ op: "remove" });
+          // Conver time to microseconds
+          let time = startTime * 1000;
+          FormHistory.update({
+            op: "remove",
+            firstUsedStart: time
+          });
 
           TelemetryStopwatch.finish("FX_SANITIZE_FORMDATA", refObj);
           resolve();

@@ -17,6 +17,14 @@ public interface WakeLockDelegate {
      * Wake-lock for the screen.
      */
     final String LOCK_SCREEN = "screen";
+    /**
+     * Wake-lock for the audio-playing, eqaul to LOCK_CPU.
+     */
+    final String LOCK_AUDIO_PLAYING = "audio-playing";
+    /**
+     * Wake-lock for the video-playing, eqaul to LOCK_SCREEN..
+     */
+    final String LOCK_VIDEO_PLAYING = "video-playing";
 
     final int LOCKS_COUNT = 2;
 
