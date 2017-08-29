@@ -26,7 +26,6 @@
               "default_popup": {
                 "type": "string",
                 "format": "relativeUrl",
-                "deprecated": "Unsupported on Android.",
                 "optional": true,
                 "preprocess": "localize"
               },
@@ -183,7 +182,6 @@
       },
       {
         "name": "setPopup",
-        "unsupported": true,
         "type": "function",
         "description": "Sets the html document to be opened as a popup when the user clicks on the browser action's icon.",
         "async": "callback",
@@ -214,7 +212,6 @@
       },
       {
         "name": "getPopup",
-        "unsupported": true,
         "type": "function",
         "description": "Gets the html document set as the popup for this browser action.",
         "async": "callback",
@@ -226,6 +223,7 @@
               "tabId": {
                 "type": "integer",
                 "optional": true,
+                "minimum": 0,
                 "description": "Specify the tab to get the popup from. If no tab is specified, the non-tab-specific popup is returned."
               }
             }
