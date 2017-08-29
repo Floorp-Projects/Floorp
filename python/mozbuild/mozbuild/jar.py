@@ -372,7 +372,7 @@ class JarMaker(object):
             jarfilepath = jarfile + '.jar'
             try:
                 os.makedirs(os.path.dirname(jarfilepath))
-            except OSError, error:
+            except OSError as error:
                 if error.errno != errno.EEXIST:
                     raise
             jf = ZipFile(jarfilepath, 'a', lock=True)
@@ -514,7 +514,7 @@ class JarMaker(object):
             # remove previous link or file
             try:
                 os.remove(out)
-            except OSError, e:
+            except OSError as e:
                 if e.errno != errno.ENOENT:
                     raise
             return open(out, 'wb')
@@ -525,7 +525,7 @@ class JarMaker(object):
             if not os.path.isdir(outdir):
                 try:
                     os.makedirs(outdir)
-                except OSError, error:
+                except OSError as error:
                     if error.errno != errno.EEXIST:
                         raise
             return out
@@ -541,7 +541,7 @@ class JarMaker(object):
             # remove previous link or file
             try:
                 os.remove(out)
-            except OSError, e:
+            except OSError as e:
                 if e.errno != errno.ENOENT:
                     raise
             if sys.platform != 'win32':
