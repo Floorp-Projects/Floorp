@@ -40,6 +40,24 @@ Buffer GetTestDigitallySignedData();
 // Returns the binary representation of a test serialized SCT.
 Buffer GetTestSignedCertificateTimestamp();
 
+// Returns the binary representation of a test serialized InclusionProof.
+Buffer GetTestInclusionProof();
+Buffer GetTestInclusionProofUnexpectedData();
+Buffer GetTestInclusionProofInvalidHashSize();
+Buffer GetTestInclusionProofInvalidHash();
+Buffer GetTestInclusionProofMissingLogId();
+Buffer GetTestInclusionProofNullPathLength();
+Buffer GetTestInclusionProofPathLengthTooSmall();
+Buffer GetTestInclusionProofPathLengthTooLarge();
+Buffer GetTestInclusionProofNullTreeSize();
+Buffer GetTestInclusionProofLeafIndexOutOfBounds();
+Buffer GetTestInclusionProofExtraData();
+
+// Returns the binary representation of test serialized node hashs from an
+// inclusion proof.
+Buffer GetTestNodeHash0();
+Buffer GetTestNodeHash1();
+
 // Test log key.
 Buffer GetTestPublicKey();
 

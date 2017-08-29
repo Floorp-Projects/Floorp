@@ -8,8 +8,6 @@ use std::env;
 use std::path::PathBuf;
 use webrender;
 use webrender::api::*;
-use webrender::renderer::{PROFILER_DBG, RENDER_TARGET_DBG, TEXTURE_CACHE_DBG};
-use webrender::renderer::ExternalImageHandler;
 
 struct Notifier {
     window_proxy: glutin::WindowProxy,
@@ -65,7 +63,7 @@ pub trait Example {
                 event: glutin::Event,
                 api: &RenderApi,
                 document_id: DocumentId) -> bool;
-    fn get_external_image_handler(&self) -> Option<Box<ExternalImageHandler>> {
+    fn get_external_image_handler(&self) -> Option<Box<webrender::ExternalImageHandler>> {
         None
     }
 }
@@ -113,7 +111,7 @@ pub fn main_wrapper(example: &mut Example,
     };
 
     let size = DeviceUintSize::new(width, height);
-    let (mut renderer, sender) = webrender::renderer::Renderer::new(gl, opts).unwrap();
+    let (mut renderer, sender) = webrender::Renderer::new(gl, opts).unwrap();
     let api = sender.create_api();
     let document_id = api.add_document(size);
 
@@ -162,19 +160,19 @@ pub fn main_wrapper(example: &mut Example,
                 glutin::Event::KeyboardInput(glutin::ElementState::Pressed,
                                              _, Some(glutin::VirtualKeyCode::P)) => {
                     let mut flags = renderer.get_debug_flags();
-                    flags.toggle(PROFILER_DBG);
+                    flags.toggle(webrender::PROFILER_DBG);
                     renderer.set_debug_flags(flags);
                 }
                 glutin::Event::KeyboardInput(glutin::ElementState::Pressed,
                                              _, Some(glutin::VirtualKeyCode::O)) => {
                     let mut flags = renderer.get_debug_flags();
-                    flags.toggle(RENDER_TARGET_DBG);
+                    flags.toggle(webrender::RENDER_TARGET_DBG);
                     renderer.set_debug_flags(flags);
                 }
                 glutin::Event::KeyboardInput(glutin::ElementState::Pressed,
                                              _, Some(glutin::VirtualKeyCode::I)) => {
                     let mut flags = renderer.get_debug_flags();
-                    flags.toggle(TEXTURE_CACHE_DBG);
+                    flags.toggle(webrender::TEXTURE_CACHE_DBG);
                     renderer.set_debug_flags(flags);
                 }
                 glutin::Event::KeyboardInput(glutin::ElementState::Pressed,

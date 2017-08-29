@@ -1,0 +1,22 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8">
+    <title>Test for bug 1375833</title>
+  </head>
+  <body onload="test();">
+    <iframe id="testFrame" src="file_bug1375833-frame1.html"></iframe>
+    <script type="application/javascript">
+    function test() {
+      let iframe = document.querySelector("#testFrame");
+      setTimeout(function() { iframe.src = "file_bug1375833-frame1.html"; }, 0);
+      iframe.onload = function(e) {
+        setTimeout(function() { iframe.src = "file_bug1375833-frame2.html"; }, 0);
+        iframe.onload = function() {
+          opener.postMessage(iframe.contentWindow.location.href, "*");
+        };
+      }
+    }
+    </script>
+  </body>
+</html>

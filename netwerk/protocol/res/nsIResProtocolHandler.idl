@@ -11,4 +11,5 @@
 [scriptable, uuid(241d34ac-9ed5-46d7-910c-7a9d914aa0c5)]
 interface nsIResProtocolHandler : nsISubstitutingProtocolHandler
 {
+  boolean allowContentToAccess(in nsIURI url);
 };

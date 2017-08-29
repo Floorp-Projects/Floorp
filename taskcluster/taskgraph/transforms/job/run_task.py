@@ -19,7 +19,7 @@ run_task_schema = Schema({
     # tend to hide their caches.  This cache is never added for level-1 jobs.
     Required('cache-dotcache', default=False): bool,
 
-    # if true (the default), perform a checkout in /home/worker/checkouts/gecko
+    # if true (the default), perform a checkout in /builds/worker/checkouts/gecko
     Required('checkout', default=True): bool,
 
     # The sparse checkout profile to use. Value is the filename relative to the
@@ -46,7 +46,7 @@ def add_checkout_to_command(run, command):
     if not run['checkout']:
         return
 
-    command.append('--vcs-checkout=/home/worker/checkouts/gecko')
+    command.append('--vcs-checkout=/builds/worker/checkouts/gecko')
 
     if run['sparse-profile']:
         command.append('--sparse-profile=build/sparse-profiles/%s' %
@@ -62,14 +62,14 @@ def docker_worker_run_task(config, job, taskdesc):
     worker['caches'].append({
         'type': 'persistent',
         'name': 'level-{level}-{project}-dotcache'.format(**config.params),
-        'mount-point': '/home/worker/.cache',
+        'mount-point': '/builds/worker/.cache',
         'skip-untrusted': True,
     })
 
     run_command = run['command']
     if isinstance(run_command, basestring):
         run_command = ['bash', '-cx', run_command]
-    command = ['/home/worker/bin/run-task']
+    command = ['/builds/worker/bin/run-task']
     add_checkout_to_command(run, command)
     command.append('--fetch-hgfingerprint')
     command.append('--')

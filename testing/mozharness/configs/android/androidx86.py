@@ -4,10 +4,10 @@ config = {
     "buildbot_json_path": "buildprops.json",
     "hostutils_manifest_path": "testing/config/tooltool-manifests/linux64/hostutils.manifest",
     "tooltool_manifest_path": "testing/config/tooltool-manifests/androidx86/releng.manifest",
-    "tooltool_cache": "/home/worker/tooltool_cache",
+    "tooltool_cache": "/builds/worker/tooltool_cache",
     "download_tooltool": True,
     "tooltool_servers": ['http://relengapi/tooltool/'],
-    "avds_dir": "/home/worker/workspace/build/.android",
+    "avds_dir": "/builds/worker/workspace/build/.android",
     "emulator_manifest": """
         [
         {

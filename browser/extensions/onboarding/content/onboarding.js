@@ -603,13 +603,14 @@ class Onboarding {
     }
     this.uiInitialized = false;
 
+    this._overlayIcon.dispatchEvent(new this._window.CustomEvent("Agent:Destroy"));
+
     this._clearPrefObserver();
     this._overlayIcon.remove();
     this._overlay.remove();
     if (this._notificationBar) {
       this._notificationBar.remove();
     }
-
     this._tourItems = this._tourPages =
     this._overlayIcon = this._overlay = this._notificationBar = null;
   }

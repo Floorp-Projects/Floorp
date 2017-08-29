@@ -205,8 +205,10 @@ AudioContext::Constructor(const GlobalObject& aGlobal,
     return nullptr;
   }
 
+  uint32_t maxChannelCount = std::min<uint32_t>(WebAudioUtils::MaxChannelCount,
+      CubebUtils::MaxNumberOfChannels());
   RefPtr<AudioContext> object =
-    new AudioContext(window, false);
+    new AudioContext(window, false,maxChannelCount);
   aRv = object->Init();
   if (NS_WARN_IF(aRv.Failed())) {
      return nullptr;
@@ -622,7 +624,8 @@ AudioContext::UpdatePannerSource()
 uint32_t
 AudioContext::MaxChannelCount() const
 {
-  return mIsOffline ? mNumberOfChannels : CubebUtils::MaxNumberOfChannels();
+  return std::min<uint32_t>(WebAudioUtils::MaxChannelCount,
+      mIsOffline ? mNumberOfChannels : CubebUtils::MaxNumberOfChannels());
 }
 
 uint32_t

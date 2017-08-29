@@ -29,15 +29,19 @@ static inline uint32_t SamplesToFrames(uint32_t aChannels, uint32_t aSamples) {
  * interface to manipulate this buffer, and to ensure we are not missing frames
  * by the end of the callback.
  */
-template<typename T, uint32_t CHANNELS>
+template<typename T>
 class AudioCallbackBufferWrapper
 {
 public:
-  AudioCallbackBufferWrapper()
+  explicit AudioCallbackBufferWrapper(uint32_t aChannels)
     : mBuffer(nullptr),
       mSamples(0),
-      mSampleWriteOffset(1)
-  {}
+      mSampleWriteOffset(1),
+      mChannels(aChannels)
+
+  {
+    MOZ_ASSERT(aChannels);
+  }
   /**
    * Set the buffer in this wrapper. This is to be called at the beginning of
    * the callback.
@@ -46,7 +50,7 @@ public:
     MOZ_ASSERT(!mBuffer && !mSamples,
         "SetBuffer called twice.");
     mBuffer = aBuffer;
-    mSamples = FramesToSamples(CHANNELS, aFrames);
+    mSamples = FramesToSamples(mChannels, aFrames);
     mSampleWriteOffset = 0;
   }
 
@@ -58,16 +62,16 @@ public:
     MOZ_ASSERT(aFrames <= Available(),
         "Writing more that we can in the audio buffer.");
 
-    PodCopy(mBuffer + mSampleWriteOffset, aBuffer, FramesToSamples(CHANNELS,
+    PodCopy(mBuffer + mSampleWriteOffset, aBuffer, FramesToSamples(mChannels,
                                                                    aFrames));
-    mSampleWriteOffset += FramesToSamples(CHANNELS, aFrames);
+    mSampleWriteOffset += FramesToSamples(mChannels, aFrames);
   }
 
   /**
    * Number of frames that can be written to the buffer.
    */
   uint32_t Available() {
-    return SamplesToFrames(CHANNELS, mSamples - mSampleWriteOffset);
+    return SamplesToFrames(mChannels, mSamples - mSampleWriteOffset);
   }
 
   /**
@@ -88,7 +92,7 @@ public:
       "Audio Buffer is not full by the end of the callback.");
     // Make sure the data returned is always set and not random!
     if (Available()) {
-      PodZero(mBuffer + mSampleWriteOffset, FramesToSamples(CHANNELS, Available()));
+      PodZero(mBuffer + mSampleWriteOffset, FramesToSamples(mChannels, Available()));
     }
     MOZ_ASSERT(mSamples, "Buffer not set.");
     mSamples = 0;
@@ -105,6 +109,7 @@ private:
   /* The position at which new samples should be written. We want to return to
    * the audio callback iff this is equal to mSamples. */
   uint32_t mSampleWriteOffset;
+  uint32_t const mChannels;
 };
 
 /**
@@ -113,27 +118,32 @@ private:
  * because of different rounding constraints, to be used the next time the audio
  * backend calls back.
  */
-template<typename T, uint32_t BLOCK_SIZE, uint32_t CHANNELS>
+template<typename T, uint32_t BLOCK_SIZE>
 class SpillBuffer
 {
 public:
-  SpillBuffer()
+  explicit SpillBuffer(uint32_t aChannels)
   : mPosition(0)
+  , mChannels(aChannels)
   {
-    PodArrayZero(mBuffer);
+    MOZ_ASSERT(aChannels);
+    mBuffer = MakeUnique<T[]>(BLOCK_SIZE * mChannels);
+    PodZero(mBuffer.get(), BLOCK_SIZE * mChannels);
   }
+
   /* Empty the spill buffer into the buffer of the audio callback. This returns
    * the number of frames written. */
-  uint32_t Empty(AudioCallbackBufferWrapper<T, CHANNELS>& aBuffer) {
+  uint32_t Empty(AudioCallbackBufferWrapper<T>& aBuffer) {
     uint32_t framesToWrite = std::min(aBuffer.Available(),
-                                      SamplesToFrames(CHANNELS, mPosition));
+                                      SamplesToFrames(mChannels, mPosition));
 
-    aBuffer.WriteFrames(mBuffer, framesToWrite);
+    aBuffer.WriteFrames(mBuffer.get(), framesToWrite);
 
-    mPosition -= FramesToSamples(CHANNELS, framesToWrite);
+    mPosition -= FramesToSamples(mChannels, framesToWrite);
     // If we didn't empty the spill buffer for some reason, shift the remaining data down
     if (mPosition > 0) {
-      PodMove(mBuffer, mBuffer + FramesToSamples(CHANNELS, framesToWrite),
+      MOZ_ASSERT(FramesToSamples(mChannels, framesToWrite) + mPosition <= BLOCK_SIZE * mChannels);
+      PodMove(mBuffer.get(), mBuffer.get() + FramesToSamples(mChannels, framesToWrite),
               mPosition);
     }
 
@@ -143,22 +153,24 @@ public:
    * number of frames written to the spill buffer */
   uint32_t Fill(T* aInput, uint32_t aFrames) {
     uint32_t framesToWrite = std::min(aFrames,
-                                      BLOCK_SIZE - SamplesToFrames(CHANNELS,
+                                      BLOCK_SIZE - SamplesToFrames(mChannels,
                                                                    mPosition));
 
-    PodCopy(mBuffer + mPosition, aInput, FramesToSamples(CHANNELS,
+    MOZ_ASSERT(FramesToSamples(mChannels, framesToWrite) + mPosition <= BLOCK_SIZE * mChannels);
+    PodCopy(mBuffer.get() + mPosition, aInput, FramesToSamples(mChannels,
                                                          framesToWrite));
 
-    mPosition += FramesToSamples(CHANNELS, framesToWrite);
+    mPosition += FramesToSamples(mChannels, framesToWrite);
 
     return framesToWrite;
   }
 private:
   /* The spilled data. */
-  T mBuffer[BLOCK_SIZE * CHANNELS];
+  UniquePtr<T[]> mBuffer;
   /* The current write position, in samples, in the buffer when filling, or the
    * amount of buffer filled when emptying. */
   uint32_t mPosition;
+  uint32_t const mChannels;
 };
 
 } // namespace mozilla

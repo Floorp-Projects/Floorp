@@ -122,8 +122,15 @@ let Tabbar = createClass({
     let tabs = this.state.tabs.slice();
     tabs.splice(index, 1);
 
+    let activeTab = this.state.activeTab;
+
+    if (activeTab >= tabs.length) {
+      activeTab = tabs.length - 1;
+    }
+
     this.setState(Object.assign({}, this.state, {
-      tabs: tabs,
+      tabs,
+      activeTab,
     }));
   },
 

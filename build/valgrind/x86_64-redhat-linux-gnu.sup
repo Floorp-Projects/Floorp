@@ -336,16 +336,16 @@
 
 
 # Conditional jump or move depends on uninitialised value(s)
-#    at 0xF9D56AE: sse2_combine_over_u (in /home/worker/workspace/build/applic
-#    by 0xF9D05D4: general_composite_rect (in /home/worker/workspace/build/app
-#    by 0xF9F5B5F: _moz_pixman_image_composite32 (in /home/worker/workspace/bu
-#    by 0xF96CF63: _clip_and_composite (in /home/worker/workspace/build/applic
-#    by 0xF96D656: _clip_and_composite_boxes.part.32 (in /home/worker/workspac
-#    by 0xF96E328: _clip_and_composite_boxes (in /home/worker/workspace/build/
-#    by 0xF96F79D: _cairo_image_surface_fill (in /home/worker/workspace/build/
-#    by 0xF98790C: _cairo_surface_fill (in /home/worker/workspace/build/applic
+#    at 0xF9D56AE: sse2_combine_over_u (in /builds/worker/workspace/build/applic
+#    by 0xF9D05D4: general_composite_rect (in /builds/worker/workspace/build/app
+#    by 0xF9F5B5F: _moz_pixman_image_composite32 (in /builds/worker/workspace/bu
+#    by 0xF96CF63: _clip_and_composite (in /builds/worker/workspace/build/applic
+#    by 0xF96D656: _clip_and_composite_boxes.part.32 (in /builds/worker/workspac
+#    by 0xF96E328: _clip_and_composite_boxes (in /builds/worker/workspace/build/
+#    by 0xF96F79D: _cairo_image_surface_fill (in /builds/worker/workspace/build/
+#    by 0xF98790C: _cairo_surface_fill (in /builds/worker/workspace/build/applic
 #  Uninitialised value was created by a stack allocation
-#    at 0xF9D024D: general_composite_rect (in /home/worker/workspace/build/app
+#    at 0xF9D024D: general_composite_rect (in /builds/worker/workspace/build/app
 #
 {
    Bug 1248365: mochitest-libpixman-3
@@ -358,12 +358,12 @@
 
 
 # Conditional jump or move depends on uninitialised value(s)
-#    at 0xE626A5C: mozilla::image::imgFrame::Optimize() (in /home/worker/work
+#    at 0xE626A5C: mozilla::image::imgFrame::Optimize() (in /builds/worker/work
 #    by 0xE626C68: mozilla::image::imgFrame::UnlockImageData() (in /home/work
 #    by 0xE608E8F: mozilla::image::RawAccessFrameRef::~RawAccessFrameRef() (i
-#    by 0xE61F5E4: mozilla::image::Decoder::~Decoder() (in /home/worker/works
+#    by 0xE61F5E4: mozilla::image::Decoder::~Decoder() (in /builds/worker/works
 #    by 0xE630E32: mozilla::image::nsIconDecoder::~nsIconDecoder() (in /home/
-#    by 0xE61A5B2: mozilla::image::Decoder::Release() (in /home/worker/worksp
+#    by 0xE61A5B2: mozilla::image::Decoder::Release() (in /builds/worker/worksp
 #    by 0xE61DD73: mozilla::image::NotifyDecodeCompleteWorker::~NotifyDecodeC
 #    by 0xE61DD8F: mozilla::image::NotifyDecodeCompleteWorker::~NotifyDecodeC
 #  Uninitialised value was created by a stack allocation
@@ -383,11 +383,11 @@
 #    at 0x4E4533D: ??? (syscall-template.S:82)
 #    by 0xE12C0A7: IPC::Channel::ChannelImpl::ProcessOutgoingMessages() (in /h
 #    by 0xE142FD0: RunnableMethod<IPC::Channel, bool (IPC::Channel::*)(IPC::Me
-#    by 0xE1240EA: MessageLoop::RunTask(Task*) (in /home/worker/workspace/buil
+#    by 0xE1240EA: MessageLoop::RunTask(Task*) (in /builds/worker/workspace/buil
 #    by 0xE128A46: MessageLoop::DeferOrRunPendingTask(MessageLoop::PendingTask
-#    by 0xE128B6D: MessageLoop::DoWork() (in /home/worker/workspace/build/appl
+#    by 0xE128B6D: MessageLoop::DoWork() (in /builds/worker/workspace/build/appl
 #    by 0xE12272C: base::MessagePumpLibevent::Run(base::MessagePump::Delegate*
-#    by 0xE124155: MessageLoop::Run() (in /home/worker/workspace/build/applica
+#    by 0xE124155: MessageLoop::Run() (in /builds/worker/workspace/build/applica
 {
    Bug 1248365: mochitest-sendmsg-1
    Memcheck:Param
@@ -406,14 +406,14 @@
 #    by 0x41711BC4: ??? (in /usr/lib/x86_64-linux-gnu/libavcodec.so.53.35.0)
 #    by 0x41B08B6A: avcodec_open2 (in /usr/lib/x86_64-linux-gnu/libavcodec.so.
 #    by 0xEEAD89C: mozilla::FFmpegDataDecoder<53>::InitDecoder() (in /home/wor
-#    by 0xEEAE42B: mozilla::FFmpegVideoDecoder<53>::Init() (in /home/worker/wo
-#    by 0xEEA4C07: mozilla::H264Converter::Init() (in /home/worker/workspace/b
+#    by 0xEEAE42B: mozilla::FFmpegVideoDecoder<53>::Init() (in /builds/worker/wo
+#    by 0xEEA4C07: mozilla::H264Converter::Init() (in /builds/worker/workspace/b
 #  Uninitialised value was created by a heap allocation
 #    at 0x4C2D11F: realloc (vg_replace_malloc.c:785)
-#    by 0x406196: moz_xrealloc (in /home/worker/workspace/build/application/fi
+#    by 0x406196: moz_xrealloc (in /builds/worker/workspace/build/application/fi
 #    by 0xDEB43AC: nsTArrayInfallibleAllocator::ResultTypeProxy nsTArray_base<
 #    by 0xEEAD850: mozilla::FFmpegDataDecoder<53>::InitDecoder() (in /home/wor
-#    by 0xEEAE42B: mozilla::FFmpegVideoDecoder<53>::Init() (in /home/worker/wo
+#    by 0xEEAE42B: mozilla::FFmpegVideoDecoder<53>::Init() (in /builds/worker/wo
 {
    Bug 1248365: mochitest-libavcodec-1-c
    Memcheck:Cond
@@ -435,7 +435,7 @@
 # Not sure what this is, but I am inclined to think it is also probably a
 # SSE2-induced false positive similar to mochitest-libpixman-2 above.
 # Use of uninitialised value of size 8
-#    at 0xE4F3E89: FastConvertYUVToRGB32Row (in /home/worker/workspace/build/a
+#    at 0xE4F3E89: FastConvertYUVToRGB32Row (in /builds/worker/workspace/build/a
 #    by 0xE4F4A6D: mozilla::gfx::ConvertYCbCrToRGB32(unsigned char const*, uns
 #    by 0xE4F4B17: mozilla::gfx::ConvertYCbCrToRGB(mozilla::layers::PlanarYCbC
 #    by 0xE5227CB: mozilla::layers::PlanarYCbCrImage::GetAsSourceSurface() (in
@@ -473,11 +473,11 @@
 # description of the ioctl(SIOCETHTOOL) behavior.
 # Syscall param ioctl(SIOCETHTOOL) points to uninitialised byte(s)
 #    at 0x5D5CBF7: ioctl (syscall-template.S:82)
-#    by 0xF58EB67: nr_stun_get_addrs (in /home/worker/workspace/build/applica
-#    by 0xF594791: nr_stun_find_local_addresses (in /home/worker/workspace/bu
-#    by 0xF58A237: nr_ice_get_local_addresses (in /home/worker/workspace/buil
-#    by 0xF58ADDE: nr_ice_gather (in /home/worker/workspace/build/application
-#    by 0xE43F35F: mozilla::NrIceCtx::StartGathering() (in /home/worker/works
+#    by 0xF58EB67: nr_stun_get_addrs (in /builds/worker/workspace/build/applica
+#    by 0xF594791: nr_stun_find_local_addresses (in /builds/worker/workspace/bu
+#    by 0xF58A237: nr_ice_get_local_addresses (in /builds/worker/workspace/buil
+#    by 0xF58ADDE: nr_ice_gather (in /builds/worker/workspace/build/application
+#    by 0xE43F35F: mozilla::NrIceCtx::StartGathering() (in /builds/worker/works
 #    by 0xE419560: mozilla::PeerConnectionMedia::EnsureIceGathering_s() (in /
 #    by 0xE41A11C: mozilla::runnable_args_memfn<RefPtr<mozilla::PeerConnectio
 #  Address 0x1cc3fb48 is on thread 6's stack
@@ -502,7 +502,7 @@
 #    by 0x9F22C5F: FcConfigAppFontAddDir (in /usr/lib/x86_64-linux-gnu/libfon
 #    by 0xE850173: gfxFcPlatformFontList::ActivateBundledFonts() (in /home/wo
 #    by 0xE852258: gfxFcPlatformFontList::InitFontListForPlatform() (in /home
-#    by 0xE895E21: gfxPlatformFontList::InitFontList() (in /home/worker/works
+#    by 0xE895E21: gfxPlatformFontList::InitFontList() (in /builds/worker/works
 #  Address 0x2316663c is 156 bytes inside a block of size 1,448 alloc'd
 #    at 0x4C2CF71: malloc (vg_replace_malloc.c:299)
 #    by 0x9F1FD1D: ??? (in /usr/lib/x86_64-linux-gnu/libfontconfig.so.1.4.4)
@@ -511,7 +511,7 @@
 #    by 0x9F22C5F: FcConfigAppFontAddDir (in /usr/lib/x86_64-linux-gnu/libfon
 #    by 0xE850173: gfxFcPlatformFontList::ActivateBundledFonts() (in /home/wo
 #    by 0xE852258: gfxFcPlatformFontList::InitFontListForPlatform() (in /home
-#    by 0xE895E21: gfxPlatformFontList::InitFontList() (in /home/worker/works
+#    by 0xE895E21: gfxPlatformFontList::InitFontList() (in /builds/worker/works
 {
    Bug 1248365: libfontconfig-1
    Memcheck:Param
@@ -530,8 +530,8 @@
 #
 # Mismatched free() / delete / delete []
 #    at 0x4C2BE97: free (vg_replace_malloc.c:530)
-#    by 0xFCD09EC: ots::ots_post_free(ots::Font*) (in /home/worker/workspace/
-#    by 0xFCC600E: ots::Font::~Font() (in /home/worker/workspace/build/applic
+#    by 0xFCD09EC: ots::ots_post_free(ots::Font*) (in /builds/worker/workspace/
+#    by 0xFCC600E: ots::Font::~Font() (in /builds/worker/workspace/build/applic
 #    by 0xFCCBFA5: ots::OTSContext::Process(ots::OTSStream*, unsigned char co
 #    by 0xE7D7C8D: gfxUserFontEntry::SanitizeOpenTypeData(unsigned char const
 #    by 0xE7E371D: gfxUserFontEntry::LoadPlatformFont(unsigned char const*, u
@@ -605,18 +605,6 @@
    fun:_ZN3ots10OTSContext7ProcessEPNS_9OTSStream*
 }
 
-# apparent leaks in libLLVM-3.6-mesa.so, August 2017.  See bug 1382280.
-{
-   static-object-leaks-in-libLLVM-3.6-mesa.so.  See bug 1382280.
-   Memcheck:Leak
-   match-leak-kinds: definite
-   fun:_Znwm
-   ...
-   fun:__static_initialization_and_destruction_0
-   fun:_GLOBAL__sub_I_*.cpp
-   obj:/*/lib*/libLLVM-3.6-mesa.so
-}
-
 {
    map_or<selectors::parser::Combinator,bool,closure> #1 (see bug 1365915)
    Memcheck:Cond
@@ -633,4 +621,14 @@
    fun:_ZN9selectors8matching33matches_complex_selector_internal*
    fun:_ZN9selectors8matching24matches_complex_selector*
    fun:{{closure}}<closure>
+}
+
+# more leaks in libLLVM-3.6-mesa.so, August 2017.  See bug 1338651.
+{
+   static-object-leaks-in-libLLVM-3.6-mesa.so.  See bug 1338651.
+   Memcheck:Leak
+   match-leak-kinds: definite
+   fun:_Znwm
+   obj:/*/lib*/libLLVM-3.6-mesa.so
+   obj:/*/lib*/libLLVM-3.6-mesa.so
 }

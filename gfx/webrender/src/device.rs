@@ -443,7 +443,8 @@ struct IBOId(gl::GLuint);
 #[derive(PartialEq, Eq, Hash, Debug, Copy, Clone)]
 pub struct PBOId(gl::GLuint);
 
-const MAX_EVENTS_PER_FRAME: usize = 256;
+const MAX_TIMERS_PER_FRAME: usize = 256;
+const MAX_SAMPLERS_PER_FRAME: usize = 16;
 const MAX_PROFILE_FRAMES: usize = 4;
 
 pub trait NamedTag {
@@ -451,142 +452,148 @@ pub trait NamedTag {
 }
 
 #[derive(Debug, Clone)]
-pub struct GpuSample<T> {
+pub struct GpuTimer<T> {
     pub tag: T,
     pub time_ns: u64,
 }
 
+#[derive(Debug, Clone)]
+pub struct GpuSampler<T> {
+    pub tag: T,
+    pub count: u64,
+}
+
+pub struct QuerySet<T> {
+    set: Vec<gl::GLuint>,
+    data: Vec<T>,
+    pending: gl::GLuint,
+}
+
+impl<T> QuerySet<T> {
+    fn new(set: Vec<gl::GLuint>) -> Self {
+        QuerySet {
+            set,
+            data: Vec::new(),
+            pending: 0,
+        }
+    }
+
+    fn reset(&mut self) {
+        self.data.clear();
+        self.pending = 0;
+    }
+
+    fn add(&mut self, value: T) -> Option<gl::GLuint> {
+        assert_eq!(self.pending, 0);
+        self.set.get(self.data.len())
+            .cloned()
+            .map(|query_id| {
+                self.data.push(value);
+                self.pending = query_id;
+                query_id
+            })
+    }
+
+    fn take<F: Fn(&mut T, gl::GLuint)>(&mut self, fun: F) -> Vec<T> {
+        let mut data = mem::replace(&mut self.data, Vec::new());
+        for (value, &query) in data.iter_mut().zip(self.set.iter()) {
+            fun(value, query)
+        }
+        data
+    }
+}
+
 pub struct GpuFrameProfile<T> {
     gl: Rc<gl::Gl>,
-    queries: Vec<gl::GLuint>,
-    samples: Vec<GpuSample<T>>,
-    next_query: usize,
-    pending_query: gl::GLuint,
+    timers: QuerySet<GpuTimer<T>>,
+    samplers: QuerySet<GpuSampler<T>>,
     frame_id: FrameId,
     inside_frame: bool,
 }
 
 impl<T> GpuFrameProfile<T> {
     fn new(gl: Rc<gl::Gl>) -> Self {
-        match gl.get_type() {
-            gl::GlType::Gl => {
-                let queries = gl.gen_queries(MAX_EVENTS_PER_FRAME as gl::GLint);
-                GpuFrameProfile {
-                    gl,
-                    queries,
-                    samples: Vec::new(),
-                    next_query: 0,
-                    pending_query: 0,
-                    frame_id: FrameId(0),
-                    inside_frame: false,
-                }
-            }
-            gl::GlType::Gles => {
-                GpuFrameProfile {
-                    gl,
-                    queries: Vec::new(),
-                    samples: Vec::new(),
-                    next_query: 0,
-                    pending_query: 0,
-                    frame_id: FrameId(0),
-                    inside_frame: false,
-                }
-            }
+        let (time_queries, sample_queries) = match gl.get_type() {
+            gl::GlType::Gl => (
+                gl.gen_queries(MAX_TIMERS_PER_FRAME as gl::GLint),
+                gl.gen_queries(MAX_SAMPLERS_PER_FRAME as gl::GLint),
+            ),
+            gl::GlType::Gles => (Vec::new(), Vec::new()),
+        };
+
+        GpuFrameProfile {
+            gl,
+            timers: QuerySet::new(time_queries),
+            samplers: QuerySet::new(sample_queries),
+            frame_id: FrameId(0),
+            inside_frame: false,
         }
     }
 
     fn begin_frame(&mut self, frame_id: FrameId) {
         self.frame_id = frame_id;
-        self.next_query = 0;
-        self.pending_query = 0;
-        self.samples.clear();
+        self.timers.reset();
+        self.samplers.reset();
         self.inside_frame = true;
     }
 
     fn end_frame(&mut self) {
+        self.done_marker();
+        self.done_sampler();
         self.inside_frame = false;
-        match self.gl.get_type() {
-            gl::GlType::Gl => {
-                if self.pending_query != 0 {
-                    self.gl.end_query(gl::TIME_ELAPSED);
-                }
-            }
-            gl::GlType::Gles => {},
-        }
     }
 
-    fn add_marker(&mut self, tag: T) -> GpuMarker
-    where T: NamedTag {
+    fn done_marker(&mut self) {
         debug_assert!(self.inside_frame);
-        match self.gl.get_type() {
-            gl::GlType::Gl => {
-                self.add_marker_gl(tag)
-            }
-            gl::GlType::Gles => {
-                self.add_marker_gles(tag)
-            }
-        }
-    }
-
-    fn add_marker_gl(&mut self, tag: T) -> GpuMarker
-    where T: NamedTag {
-        if self.pending_query != 0 {
+        if self.timers.pending != 0 {
             self.gl.end_query(gl::TIME_ELAPSED);
+            self.timers.pending = 0;
         }
+    }
+
+    fn add_marker(&mut self, tag: T) -> GpuMarker where T: NamedTag {
+        self.done_marker();
 
         let marker = GpuMarker::new(&self.gl, tag.get_label());
 
-        if self.next_query < MAX_EVENTS_PER_FRAME {
-            self.pending_query = self.queries[self.next_query];
-            self.gl.begin_query(gl::TIME_ELAPSED, self.pending_query);
-            self.samples.push(GpuSample {
-                tag,
-                time_ns: 0,
-            });
-        } else {
-            self.pending_query = 0;
+        if let Some(query) = self.timers.add(GpuTimer { tag, time_ns: 0 }) {
+            self.gl.begin_query(gl::TIME_ELAPSED, query);
         }
 
-        self.next_query += 1;
         marker
     }
 
-    fn add_marker_gles(&mut self, tag: T) -> GpuMarker
-    where T: NamedTag {
-        let marker = GpuMarker::new(&self.gl, tag.get_label());
-        self.samples.push(GpuSample {
-            tag,
-            time_ns: 0,
-        });
-        marker
+    fn done_sampler(&mut self) {
+        debug_assert!(self.inside_frame);
+        if self.samplers.pending != 0 {
+            self.gl.end_query(gl::SAMPLES_PASSED);
+            self.samplers.pending = 0;
+        }
+    }
+
+    fn add_sampler(&mut self, tag: T) where T: NamedTag {
+        self.done_sampler();
+
+        if let Some(query) = self.samplers.add(GpuSampler { tag, count: 0 }) {
+            self.gl.begin_query(gl::SAMPLES_PASSED, query);
+        }
     }
 
     fn is_valid(&self) -> bool {
-        self.next_query > 0 && self.next_query <= MAX_EVENTS_PER_FRAME
+        !self.timers.set.is_empty() || !self.samplers.set.is_empty()
     }
 
-    fn build_samples(&mut self) -> Vec<GpuSample<T>> {
+    fn build_samples(&mut self) -> (Vec<GpuTimer<T>>, Vec<GpuSampler<T>>) {
         debug_assert!(!self.inside_frame);
-        match self.gl.get_type() {
-            gl::GlType::Gl => {
-                self.build_samples_gl()
-            }
-            gl::GlType::Gles => {
-                self.build_samples_gles()
-            }
-        }
-    }
+        let gl = &self.gl;
 
-    fn build_samples_gl(&mut self) -> Vec<GpuSample<T>> {
-        for (index, sample) in self.samples.iter_mut().enumerate() {
-            sample.time_ns = self.gl.get_query_object_ui64v(self.queries[index], gl::QUERY_RESULT)
-        }
-
-        mem::replace(&mut self.samples, Vec::new())
-    }
-
-    fn build_samples_gles(&mut self) -> Vec<GpuSample<T>> {
-        mem::replace(&mut self.samples, Vec::new())
+        (self.timers.take(|timer, query| {
+            timer.time_ns = gl.get_query_object_ui64v(query, gl::QUERY_RESULT)
+         }),
+         self.samplers.take(|sampler, query| {
+            sampler.count = gl.get_query_object_ui64v(query, gl::QUERY_RESULT)
+         }),
+        )
     }
 }
 
@@ -594,7 +601,8 @@ impl<T> Drop for GpuFrameProfile<T> {
     fn drop(&mut self) {
         match self.gl.get_type() {
             gl::GlType::Gl =>  {
-                self.gl.delete_queries(&self.queries);
+                self.gl.delete_queries(&self.timers.set);
+                self.gl.delete_queries(&self.samplers.set);
             }
             gl::GlType::Gles => {},
         }
@@ -611,18 +619,19 @@ impl<T> GpuProfiler<T> {
         GpuProfiler {
             next_frame: 0,
             frames: [
-                      GpuFrameProfile::new(Rc::clone(gl)),
-                      GpuFrameProfile::new(Rc::clone(gl)),
-                      GpuFrameProfile::new(Rc::clone(gl)),
-                      GpuFrameProfile::new(Rc::clone(gl)),
-                    ],
+                GpuFrameProfile::new(Rc::clone(gl)),
+                GpuFrameProfile::new(Rc::clone(gl)),
+                GpuFrameProfile::new(Rc::clone(gl)),
+                GpuFrameProfile::new(Rc::clone(gl)),
+            ],
         }
     }
 
-    pub fn build_samples(&mut self) -> Option<(FrameId, Vec<GpuSample<T>>)> {
+    pub fn build_samples(&mut self) -> Option<(FrameId, Vec<GpuTimer<T>>, Vec<GpuSampler<T>>)> {
         let frame = &mut self.frames[self.next_frame];
         if frame.is_valid() {
-            Some((frame.frame_id, frame.build_samples()))
+            let (timers, samplers) = frame.build_samples();
+            Some((frame.frame_id, timers, samplers))
         } else {
             None
         }
@@ -642,6 +651,15 @@ impl<T> GpuProfiler<T> {
     pub fn add_marker(&mut self, tag: T) -> GpuMarker
     where T: NamedTag {
         self.frames[self.next_frame].add_marker(tag)
+    }
+
+    pub fn add_sampler(&mut self, tag: T)
+    where T: NamedTag {
+        self.frames[self.next_frame].add_sampler(tag)
+    }
+
+    pub fn done_sampler(&mut self) {
+        self.frames[self.next_frame].done_sampler()
     }
 }
 
@@ -688,6 +706,7 @@ impl Drop for GpuMarker {
         }
     }
 }
+
 
 #[derive(Debug, Copy, Clone)]
 pub enum VertexUsageHint {
@@ -803,6 +822,14 @@ impl Device {
 
     pub fn get_capabilities(&self) -> &Capabilities {
         &self.capabilities
+    }
+
+    pub fn reset_state(&mut self) {
+        self.bound_textures = [ TextureId::invalid(); 16 ];
+        self.bound_vao = 0;
+        self.bound_pbo = PBOId(0);
+        self.bound_read_fbo = FBOId(0);
+        self.bound_draw_fbo = FBOId(0);
     }
 
     pub fn compile_shader(gl: &gl::Gl,
