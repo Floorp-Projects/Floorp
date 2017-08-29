@@ -1551,7 +1551,8 @@ MacroAssembler::Pop(const ValueOperand& val)
 void
 MacroAssembler::PopStackPtr()
 {
-    MOZ_CRASH("NYI");
+    asMasm().ma_load(StackPointer, Address(StackPointer, 0), SizeWord);
+    framePushed_ -= sizeof(intptr_t);
 }
 
 
