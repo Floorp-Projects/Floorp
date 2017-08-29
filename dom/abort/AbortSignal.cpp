@@ -119,5 +119,11 @@ AbortSignal::Follower::Unfollow()
   }
 }
 
+bool
+AbortSignal::Follower::IsFollowing() const
+{
+  return !!mFollowingSignal;
+}
+
 } // dom namespace
 } // mozilla namespace
