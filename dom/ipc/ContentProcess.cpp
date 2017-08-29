@@ -127,7 +127,7 @@ ContentProcess::Init(int aArgc, char* aArgv[])
   nsCOMPtr<nsIFile> profileDir;
 #endif
 
-  char* schedulerPrefs;
+  char* schedulerPrefs = nullptr;
   InfallibleTArray<PrefSetting> prefsArray;
   for (int idx = aArgc; idx > 0; idx--) {
     if (!aArgv[idx]) {
