@@ -116,9 +116,15 @@ class MachRegistrar(object):
             # subsequent invocations of Registrar.dispatch()
             old_defaults = parser._defaults.copy()
             parser.set_defaults(**kwargs)
-            kwargs, _ = parser.parse_known_args(argv or [])
+            kwargs, unknown = parser.parse_known_args(argv or [])
             kwargs = vars(kwargs)
             parser._defaults = old_defaults
+
+            if unknown:
+                if subcommand:
+                    name = '{} {}'.format(name, subcommand)
+                parser.error("unrecognized arguments for {}: {}".format(
+                    name, ', '.join(["'{}'".format(arg) for arg in unknown])))
 
         return self._run_command_handler(handler, context=context, **kwargs)
 
