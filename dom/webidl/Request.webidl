@@ -27,10 +27,6 @@ interface Request {
   readonly attribute RequestRedirect redirect;
   readonly attribute DOMString integrity;
 
-  [Func="AbortController::IsEnabledInFetch",
-   BinaryName="getOrCreateSignal"]
-  readonly attribute AbortSignal signal;
-
   [Throws,
    NewObject] Request clone();
 

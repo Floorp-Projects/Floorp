@@ -120,12 +120,6 @@ public:
     return mSignalMainThread;
   }
 
-  AbortSignal*
-  GetSignalForTargetThread()
-  {
-    return mFollowingSignal;
-  }
-
   void
   Shutdown()
   {
@@ -179,7 +173,7 @@ public:
   }
 
   AbortSignal*
-  GetAbortSignalForMainThread()
+  GetAbortSignal()
   {
     MOZ_ASSERT(NS_IsMainThread());
 
@@ -188,18 +182,6 @@ public:
     }
 
     return mSignalProxy->GetOrCreateSignalForMainThread();
-  }
-
-  AbortSignal*
-  GetAbortSignalForTargetThread()
-  {
-    mPromiseProxy->GetWorkerPrivate()->AssertIsOnWorkerThread();
-
-    if (!mSignalProxy) {
-      return nullptr;
-    }
-
-    return mSignalProxy->GetSignalForTargetThread();
   }
 
   void
@@ -235,17 +217,14 @@ class MainThreadFetchResolver final : public FetchDriverObserver
   RefPtr<Promise> mPromise;
   RefPtr<Response> mResponse;
   RefPtr<FetchObserver> mFetchObserver;
-  RefPtr<AbortSignal> mSignal;
 
   nsCOMPtr<nsILoadGroup> mLoadGroup;
 
   NS_DECL_OWNINGTHREAD
 public:
-  MainThreadFetchResolver(Promise* aPromise, FetchObserver* aObserver,
-                          AbortSignal* aSignal)
+  MainThreadFetchResolver(Promise* aPromise, FetchObserver* aObserver)
     : mPromise(aPromise)
     , mFetchObserver(aObserver)
-    , mSignal(aSignal)
   {}
 
   void
@@ -327,7 +306,7 @@ public:
       fetch->SetWorkerScript(spec);
     }
 
-    RefPtr<AbortSignal> signal = mResolver->GetAbortSignalForMainThread();
+    RefPtr<AbortSignal> signal = mResolver->GetAbortSignal();
 
     // ...but release it before calling Fetch, because mResolver's callback can
     // be called synchronously and they want the mutex, too.
@@ -368,7 +347,12 @@ FetchRequest(nsIGlobalObject* aGlobal, const RequestOrUSVString& aInput,
   }
 
   RefPtr<InternalRequest> r = request->GetInternalRequest();
-  RefPtr<AbortSignal> signal = request->GetSignal();
+
+  RefPtr<AbortSignal> signal;
+  if (aInit.mSignal.WasPassed()) {
+    signal = &aInit.mSignal.Value();
+    // Let's FetchDriver to deal with an already aborted signal.
+  }
 
   RefPtr<FetchObserver> observer;
   if (aInit.mObserve.WasPassed()) {
@@ -411,7 +395,7 @@ FetchRequest(nsIGlobalObject* aGlobal, const RequestOrUSVString& aInput,
     Telemetry::Accumulate(Telemetry::FETCH_IS_MAINTHREAD, 1);
 
     RefPtr<MainThreadFetchResolver> resolver =
-      new MainThreadFetchResolver(p, observer, signal);
+      new MainThreadFetchResolver(p, observer);
     RefPtr<FetchDriver> fetch =
       new FetchDriver(r, principal, loadGroup,
                       aGlobal->EventTargetFor(TaskCategory::Other), isTrackingFetch);
@@ -459,7 +443,7 @@ MainThreadFetchResolver::OnResponseAvailableInternal(InternalResponse* aResponse
     }
 
     nsCOMPtr<nsIGlobalObject> go = mPromise->GetParentObject();
-    mResponse = new Response(go, aResponse, mSignal);
+    mResponse = new Response(go, aResponse);
     mPromise->MaybeResolve(mResponse);
   } else {
     if (mFetchObserver) {
@@ -522,9 +506,7 @@ public:
       }
 
       RefPtr<nsIGlobalObject> global = aWorkerPrivate->GlobalScope();
-      RefPtr<Response> response =
-        new Response(global, mInternalResponse,
-                     mResolver->GetAbortSignalForTargetThread());
+      RefPtr<Response> response = new Response(global, mInternalResponse);
       promise->MaybeResolve(response);
     } else {
       if (mResolver->mFetchObserver) {
@@ -1038,12 +1020,6 @@ already_AddRefed<Promise>
 FetchBody<Derived>::ConsumeBody(JSContext* aCx, FetchConsumeType aType,
                                 ErrorResult& aRv)
 {
-  RefPtr<AbortSignal> signal = DerivedClass()->GetSignal();
-  if (signal && signal->Aborted()) {
-    aRv.Throw(NS_ERROR_DOM_ABORT_ERR);
-    return nullptr;
-  }
-
   if (BodyUsed()) {
     aRv.ThrowTypeError<MSG_FETCH_BODY_CONSUMED_ERROR>();
     return nullptr;
@@ -1058,7 +1034,7 @@ FetchBody<Derived>::ConsumeBody(JSContext* aCx, FetchConsumeType aType,
 
   RefPtr<Promise> promise =
     FetchBodyConsumer<Derived>::Create(global, mMainThreadEventTarget, this,
-                                       signal, aType, aRv);
+                                       aType, aRv);
   if (NS_WARN_IF(aRv.Failed())) {
     return nullptr;
   }
