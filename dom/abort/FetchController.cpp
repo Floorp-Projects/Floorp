@@ -7,6 +7,7 @@
 #include "FetchController.h"
 #include "FetchSignal.h"
 #include "mozilla/dom/FetchControllerBinding.h"
+#include "WorkerPrivate.h"
 
 namespace mozilla {
 namespace dom {
