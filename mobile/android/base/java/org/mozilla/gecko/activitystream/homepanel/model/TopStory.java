@@ -5,17 +5,18 @@
 
 package org.mozilla.gecko.activitystream.homepanel.model;
 
+import android.support.annotation.Nullable;
+
 import org.mozilla.gecko.activitystream.Utils;
 import org.mozilla.gecko.activitystream.homepanel.StreamRecyclerAdapter;
 
 public class TopStory implements WebpageRowModel {
+    private @Nullable Boolean isBookmarked;
+    private @Nullable Boolean isPinned;
+
     private final String title;
     private final String url;
     private final String imageUrl;
-
-    public TopStory(String title, String url) {
-        this(title, url, null);
-    }
 
     public TopStory(String title, String url, String imageUrl) {
         this.title = title;
@@ -45,16 +46,23 @@ public class TopStory implements WebpageRowModel {
 
     @Override
     public Boolean isBookmarked() {
-        return false;
+        return isBookmarked;
     }
 
     @Override
     public Boolean isPinned() {
-        return false;
+        return isPinned;
     }
 
-    public void updateBookmarked(boolean bookmarked) {}
-    public void updatePinned(boolean pinned) {}
+    @Override
+    public void updateBookmarked(boolean bookmarked) {
+        this.isBookmarked = bookmarked;
+    }
+
+    @Override
+    public void updatePinned(boolean pinned) {
+        this.isPinned = pinned;
+    }
 
     @Override
     public Utils.HighlightSource getSource() {
@@ -64,5 +72,19 @@ public class TopStory implements WebpageRowModel {
     @Override
     public long getUniqueId() {
         return getUrl().hashCode();
+    }
+
+    /**
+     * Pinned and Bookmarked state are loaded in {@link org.mozilla.gecko.activitystream.homepanel.menu.ActivityStreamContextMenu#postInit()},
+     * and will be fetched if the state cached in {@link TopStory} is null (See {@link WebpageModel#isPinned}
+     * and {@link WebpageModel#isBookmarked}
+     **/
+    @Override
+    public void onStateCommitted() {
+        // Since Top Stories are not loaded from a cursor that automatically notifies of
+        // changes to bookmark or pin state, trash this cached state once we've committed it
+        // so it will be fetched every time.
+        isPinned = null;
+        isBookmarked = null;
     }
 }

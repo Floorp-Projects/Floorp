@@ -89,10 +89,10 @@ public abstract class ActivityStreamContextMenu
             pinItem.setTitle(R.string.contextmenu_top_sites_unpin);
         }
 
-        // Disable "dismiss" for topsites until we have decided on its behaviour for topsites
+        // Disable "dismiss" for topsites and topstories until we have decided on its behaviour
         // (currently "dismiss" adds the URL to a highlights-specific blocklist, which the topsites
         // query has no knowledge of).
-        if (mode == MenuMode.TOPSITE) {
+        if (mode == MenuMode.TOPSITE || mode == MenuMode.TOPSTORY) {
             final MenuItem dismissItem = getItemByID(R.id.dismiss);
             dismissItem.setVisible(false);
         }
@@ -225,12 +225,12 @@ public abstract class ActivityStreamContextMenu
 
                         if (item.isBookmarked()) {
                             db.removeBookmarksWithURL(context.getContentResolver(), item.getUrl());
-
                         } else {
                             // We only store raw URLs in history (and bookmarks), hence we won't ever show about:reader
                             // URLs in AS topsites or highlights. Therefore we don't need to do any special about:reader handling here.
                             db.addBookmark(context.getContentResolver(), item.getTitle(), item.getUrl());
                         }
+                        item.onStateCommitted();
                     }
                 });
                 break;
@@ -254,6 +254,7 @@ public abstract class ActivityStreamContextMenu
                         } else {
                             db.pinSiteForAS(context.getContentResolver(), item.getUrl(), item.getTitle());
                         }
+                        item.onStateCommitted();
                     }
                 });
                 break;
