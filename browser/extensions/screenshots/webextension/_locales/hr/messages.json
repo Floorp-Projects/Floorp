@@ -67,6 +67,12 @@
   "emptySelectionErrorTitle": {
     "message": "Vaš odabir je premalen"
   },
+  "privateWindowErrorTitle": {
+    "message": "Snimke ekrana su onemogućene u načinu privatnog pretraživanja"
+  },
+  "privateWindowErrorDetails": {
+    "message": "Žao nam je na neugodnosti. Radimo na ovoj mogućnosti za buduća izdanja."
+  },
   "genericErrorTitle": {
     "message": "Uf! Firefox Screenshots se zbrkao."
   },
@@ -106,10 +112,24 @@
   "tourDone": {
     "message": "Gotovo"
   },
+  "termsAndPrivacyNotice2": {
+    "message": "Koristeći Firefox Screenshots slažete se s našim $TERMSANDPRIVACYNOTICETERMSLINK$ i $TERMSANDPRIVACYNOTICEPRIVACYLINK$.",
+    "placeholders": {
+      "termsandprivacynoticetermslink": {
+        "content": "$1"
+      },
+      "termsandprivacynoticeprivacylink": {
+        "content": "$2"
+      }
+    }
+  },
   "termsAndPrivacyNoticeTermsLink": {
     "message": "Uvjeti"
   },
   "termsAndPrivacyNoticyPrivacyLink": {
     "message": "Pravila o privatnosti"
+  },
+  "libraryLabel": {
+    "message": "Snimke ekrana"
   }
 }

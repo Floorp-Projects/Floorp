@@ -1,10 +1,10 @@
 android-dependencies/opt:
-    description: "Android armv7 API 15+ gradle dependencies"
+    description: "Android armv7 api-16+ gradle dependencies"
     index:
         product: mobile
         job-name: android-dependencies
     treeherder:
-        platform: android-4-0-armv7-api15/opt
+        platform: android-4-0-armv7-api16/opt
         kind: build
         tier: 2
         symbol: tc(Deps)
@@ -36,7 +36,7 @@ android-dependencies/opt:
             - platform_supports_post_upload_to_latest.py
         script: "mozharness/scripts/fx_desktop_build.py"
         secrets: true
-        custom-build-variant-cfg: api-15-gradle-dependencies
+        custom-build-variant-cfg: api-16-gradle-dependencies
         tooltool-downloads: internal
         job-script: taskcluster/scripts/builder/build-android-dependencies.sh
     optimizations:
@@ -52,7 +52,7 @@ android-test/opt:
         product: mobile
         job-name: android-test
     treeherder:
-        platform: android-4-0-armv7-api15/opt
+        platform: android-4-0-armv7-api16/opt
         kind: build
         tier: 2
         symbol: tc(test)
@@ -94,7 +94,7 @@ android-lint/opt:
         product: mobile
         job-name: android-lint
     treeherder:
-        platform: android-4-0-armv7-api15/opt
+        platform: android-4-0-armv7-api16/opt
         kind: build
         tier: 2
         symbol: tc(lint)
@@ -157,7 +157,7 @@ android-checkstyle/opt:
         product: mobile
         job-name: android-checkstyle
     treeherder:
-        platform: android-4-0-armv7-api15/opt
+        platform: android-4-0-armv7-api16/opt
         kind: build
         tier: 2
         symbol: tc(checkstyle)
@@ -204,7 +204,7 @@ android-findbugs/opt:
         product: mobile
         job-name: android-findbugs
     treeherder:
-        platform: android-4-0-armv7-api15/opt
+        platform: android-4-0-armv7-api16/opt
         kind: build
         tier: 2
         symbol: tc(findbugs)

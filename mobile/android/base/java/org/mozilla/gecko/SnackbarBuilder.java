@@ -200,7 +200,7 @@ public class SnackbarBuilder {
         if (callback != null && !TextUtils.isEmpty(action)) {
             snackbar.setAction(action, callback);
             if (actionColor == null) {
-                snackbar.setActionTextColor(ContextCompat.getColor(activity, R.color.fennec_ui_orange));
+                snackbar.setActionTextColor(ContextCompat.getColor(activity, R.color.fennec_ui_accent));
             } else {
                 snackbar.setActionTextColor(actionColor);
             }

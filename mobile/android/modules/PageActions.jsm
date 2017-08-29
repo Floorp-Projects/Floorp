@@ -88,7 +88,8 @@ var PageActions = {
       id: id,
       title: aOptions.title,
       icon: resolveGeckoURI(aOptions.icon),
-      important: "important" in aOptions ? aOptions.important : false
+      important: "important" in aOptions ? aOptions.important : false,
+      useTint: "useTint" in aOptions ? aOptions.useTint : false
     });
 
     this._items[id] = {};

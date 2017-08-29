@@ -18,6 +18,7 @@ Cu.import("resource://gre/modules/JSONFile.jsm");
 Cu.import("resource://gre/modules/Log.jsm");
 Cu.import("resource://services-common/async.js");
 Cu.import("resource://services-common/observers.js");
+Cu.import("resource://services-common/utils.js");
 Cu.import("resource://services-sync/constants.js");
 Cu.import("resource://services-sync/record.js");
 Cu.import("resource://services-sync/resource.js");
@@ -887,7 +888,7 @@ SyncEngine.prototype = {
       return;
     }
     this._toFetch = val;
-    Utils.namedTimer(function() {
+    CommonUtils.namedTimer(function() {
       try {
         Async.promiseSpinningly(Utils.jsonSave("toFetch/" + this.name, this, val));
       } catch (error) {
@@ -914,7 +915,7 @@ SyncEngine.prototype = {
       return;
     }
     this._previousFailed = val;
-    Utils.namedTimer(function() {
+    CommonUtils.namedTimer(function() {
       Utils.jsonSave("failed/" + this.name, this, val).then(() => {
         this._log.debug("Successfully wrote previousFailed.");
       })

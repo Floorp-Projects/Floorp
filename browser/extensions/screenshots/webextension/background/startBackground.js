@@ -1,6 +1,7 @@
 /* globals browser, main, communication */
 /* This file handles:
      browser.browserAction.onClicked
+     clicks on the Photon page action
      browser.contextMenus.onClicked
      browser.runtime.onMessage
    and loads the rest of the background page in response to those events, forwarding
@@ -8,6 +9,8 @@
 */
 
 this.startBackground = (function() {
+  let exports = {};
+
   const backgroundScripts = [
     "log.js",
     "makeUuid.js",
@@ -52,11 +55,22 @@ this.startBackground = (function() {
 
   // Note this duplicates functionality in main.js, but we need to change
   // the onboarding icon before main.js loads up
+  let iconPath = null;
   browser.storage.local.get(["hasSeenOnboarding"]).then((result) => {
     let hasSeenOnboarding = !!result.hasSeenOnboarding;
     if (!hasSeenOnboarding) {
       let path = "icons/icon-starred-32-v2.svg";
-      browser.browserAction.setIcon({path});
+      if (!usePhotonPageAction) {
+        browser.browserAction.setIcon({path});
+      } else {
+        iconPath = path;
+        if (photonPageActionPort) {
+          photonPageActionPort.postMessage({
+            type: "setProperties",
+            iconPath
+          });
+        }
+      }
     }
   }).catch((error) => {
     console.error("Error loading Screenshots onboarding flag:", error);
@@ -70,6 +84,10 @@ this.startBackground = (function() {
     });
     return true;
   });
+
+  let usePhotonPageAction = false;
+  let photonPageActionPort = null;
+  initPhotonPageAction();
 
   // We delay this check (by CHECK_MIGRATION_DELAY) just to avoid piling too
   // many things onto browser/add-on startup
@@ -122,4 +140,50 @@ this.startBackground = (function() {
     return loadedPromise;
   }
 
+  function initPhotonPageAction() {
+    // Set up this side of the Photon page action port.  The other side is in
+    // bootstrap.js.  Ideally, in the future, WebExtension page actions and
+    // Photon page actions would be one in the same, but they aren't right now.
+    photonPageActionPort = browser.runtime.connect({ name: "photonPageActionPort" });
+    photonPageActionPort.onMessage.addListener((message) => {
+      switch (message.type) {
+      case "setUsePhotonPageAction":
+        usePhotonPageAction = message.value;
+        break;
+      case "click":
+        loadIfNecessary().then(() => {
+          main.onClicked(message.tab);
+        }).catch((error) => {
+          console.error("Error loading Screenshots:", error);
+        });
+        break;
+      default:
+        console.error("Unrecognized message:", message);
+        break;
+      }
+    });
+    photonPageActionPort.postMessage({
+      type: "setProperties",
+      title: browser.i18n.getMessage("contextMenuLabel"),
+      iconPath
+    });
+
+    // Export these so that main.js can use them.
+    Object.defineProperties(exports, {
+      "photonPageActionPort": {
+        enumerable: true,
+        get() {
+          return photonPageActionPort;
+        }
+      },
+      "usePhotonPageAction": {
+        enumerable: true,
+        get() {
+          return usePhotonPageAction;
+        }
+      }
+    });
+  }
+
+  return exports;
 })();

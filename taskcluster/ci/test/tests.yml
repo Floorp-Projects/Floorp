@@ -109,6 +109,10 @@ cppunit:
                             - remove_executables.py
                 extra-options:
                     - --cppunittest-suite=cppunittest
+    tier:
+        by-test-platform:
+            windows10-64-asan.*: 3
+            default: default
 
 crashtest:
     description: "Crashtest run"
@@ -124,7 +128,7 @@ crashtest:
             default: built-projects
     chunks:
         by-test-platform:
-            android-4.3-arm7-api-15/debug: 10
+            android-4.3-arm7-api-16/debug: 10
             android.*: 4
             default: 1
     e10s:
@@ -158,6 +162,7 @@ crashtest:
     tier:
         by-test-platform:
             linux64-qr/.*: 1
+            windows10-64-asan.*: 3
             default: default
 
 firefox-ui-functional-local:
@@ -180,13 +185,16 @@ firefox-ui-functional-local:
         extra-options:
             - "--tag"
             - "local"
+    tier:
+        by-test-platform:
+            windows10-64-asan.*: 3
+            default: default
 
 firefox-ui-functional-remote:
     description: "Firefox-ui-tests functional run"
     suite: "firefox-ui/functional remote"
     treeherder-symbol: tc-Fxfn-r(en-US)
     max-run-time: 5400
-    tier: 2
     mozharness:
         script: firefox_ui_tests/functional.py
         config:
@@ -202,6 +210,10 @@ firefox-ui-functional-remote:
         extra-options:
             - "--tag"
             - "remote"
+    tier:
+        by-test-platform:
+            windows10-64-asan.*: 3
+            default: 2
 
 geckoview:
     description: "Geckoview run"
@@ -249,6 +261,7 @@ gtest:
         by-test-platform:
             windows7-32-pgo.*: 3
             windows10-64-pgo.*: 3
+            windows10-64-asan.*: 3
             default: default
 
 jittest:
@@ -288,6 +301,10 @@ jittest:
         files-changed:
             - js/src/**
             - js/public/**
+    tier:
+        by-test-platform:
+            windows10-64-asan.*: 3
+            default: default
 
 jsreftest:
     description: "JS Reftest run"
@@ -299,7 +316,7 @@ jsreftest:
             default: default
     chunks:
         by-test-platform:
-            android-4.3-arm7-api-15/debug: 100
+            android-4.3-arm7-api-16/debug: 100
             android.*: 40
             windows.*: 2
             linux64-ccov/.*: 5
@@ -346,6 +363,7 @@ jsreftest:
     tier:
         by-test-platform:
             linux64-qr/.*: 1
+            windows10-64-asan.*: 3
             default: default
 
 marionette:
@@ -363,6 +381,7 @@ marionette:
     tier:
         by-test-platform:
             android.*: 2
+            windows10-64-asan.*: 3
             default: default
     chunks:
         by-test-platform:
@@ -397,7 +416,6 @@ marionette-headless:
     treeherder-symbol: tc(MnH)
     max-run-time: 5400
     instance-size: default
-    tier: default
     chunks: 1
     mozharness:
         script: marionette.py
@@ -414,6 +432,10 @@ marionette-headless:
                     - remove_executables.py
         extra-options:
             - --headless
+    tier:
+        by-test-platform:
+            windows10-64-asan.*: 3
+            default: default
 
 mochitest:
     description: "Mochitest plain run"
@@ -430,7 +452,7 @@ mochitest:
             default: legacy # Bug 1281241: migrating to m3.large instances
     chunks:
         by-test-platform:
-            android-4.3-arm7-api-15/debug: 48
+            android-4.3-arm7-api-16/debug: 48
             android.*: 20
             macosx.*: 5
             windows.*: 5
@@ -444,7 +466,7 @@ mochitest:
             default: true
     max-run-time:
         by-test-platform:
-            android-4.3-arm7-api-15/debug: 10800
+            android-4.3-arm7-api-16/debug: 10800
             linux64-jsdcov/opt: 10800
             default: 5400
     allow-software-gl-layers: false
@@ -457,6 +479,7 @@ mochitest:
     tier:
         by-test-platform:
             macosx64-stylo/.*: 2
+            windows10-64-asan.*: 3
             default: default
     mozharness:
         by-test-platform:
@@ -525,6 +548,7 @@ mochitest-a11y:
             .*-stylo.*: 2
             linux32-stylo/debug: 3
             linux64-stylo/debug: 3
+            windows10-64-asan.*: 3
             default: default
 
 mochitest-browser-chrome:
@@ -601,6 +625,7 @@ mochitest-browser-chrome:
     tier:
         by-test-platform:
             .*-stylo.*: 2
+            windows10-64-asan.*: 3
             default: default
 
 mochitest-browser-screenshots:
@@ -647,7 +672,7 @@ mochitest-chrome:
             default: default
     chunks:
         by-test-platform:
-            android-4.3-arm7-api-15/debug: 4
+            android-4.3-arm7-api-16/debug: 4
             android.*: 2
             default: 3
     max-run-time: 3600
@@ -814,6 +839,10 @@ mochitest-devtools-chrome:
             default: default
     # Bug 1296086: high number of intermittents observed with software GL and large instances
     allow-software-gl-layers: false
+    tier:
+        by-test-platform:
+            windows10-64-asan.*: 3
+            default: default
 
 mochitest-gpu:
     description: "Mochitest GPU run"
@@ -870,6 +899,7 @@ mochitest-gpu:
         by-test-platform:
             linux64-qr/.*: 1
             macosx64-stylo/.*: 2
+            windows10-64-asan.*: 3
             default: default
 
 mochitest-jetpack:
@@ -895,6 +925,10 @@ mochitest-jetpack:
                     - remove_executables.py
         extra-options:
             - --mochitest-suite=jetpack-package
+    tier:
+        by-test-platform:
+            windows10-64-asan.*: 3
+            default: default
 
 mochitest-media:
     description: "Mochitest media run"
@@ -960,6 +994,7 @@ mochitest-media:
         by-test-platform:
             linux64-qr/.*: 1
             macosx64-stylo/.*: 2
+            windows10-64-asan.*: 3
             default: default
 
 mochitest-valgrind:
@@ -1061,6 +1096,7 @@ mochitest-webgl:
         by-test-platform:
             linux64-qr/.*: 1
             macosx64-stylo/.*: 2
+            windows10-64-asan.*: 3
             default: default
 
 reftest:
@@ -1088,7 +1124,7 @@ reftest:
     virtualization: virtual-with-gpu
     chunks:
         by-test-platform:
-            android-4.3-arm7-api-15/debug: 48
+            android-4.3-arm7-api-16/debug: 48
             android.*: 16
             macosx64/opt: 1
             macosx64/debug: 2
@@ -1135,6 +1171,7 @@ reftest:
     tier:
         by-test-platform:
             linux64-qr/.*: 1
+            windows10-64-asan.*: 3
             default: default
 
 reftest-gpu:
@@ -1216,6 +1253,10 @@ reftest-no-accel:
                     - remove_executables.py
         extra-options:
             - --reftest-suite=reftest-no-accel
+    tier:
+        by-test-platform:
+            windows10-64-asan.*: 3
+            default: default
 
 reftest-stylo:
     description: "Reftest run for Stylo"
@@ -1249,9 +1290,9 @@ robocop:
     instance-size: xlarge
     chunks:
         by-test-platform:
-            # android-4.3-arm7-api-15/debug -- not run
-            android-4.3-arm7-api-15/opt: 4
-            android-4.3-arm7-api-15-gradle/opt: 4
+            # android-4.3-arm7-api-16/debug -- not run
+            android-4.3-arm7-api-16/opt: 4
+            android-4.3-arm7-api-16-gradle/opt: 4
     loopback-video: true
     e10s: false
     mozharness:
@@ -2334,3 +2375,7 @@ xpcshell:
                         windows10-64-asan/opt: false    # No XPCShell on ASAN yet
                         windows.*: true
                         default: false
+    tier:
+        by-test-platform:
+            windows10-64-asan.*: 3
+            default: default

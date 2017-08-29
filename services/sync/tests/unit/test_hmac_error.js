@@ -206,7 +206,7 @@ add_task(async function hmac_error_during_node_reassignment() {
 
         // Kick off another sync. Can't just call it, because we're inside the
         // lock...
-        Utils.nextTick(function() {
+        CommonUtils.nextTick(function() {
           _("Now a fresh sync will get no HMAC errors.");
           _("Partially resetting client, as if after a restart, and forcing redownload.");
           Service.collectionKeys.clear();

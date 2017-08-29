@@ -112,8 +112,8 @@
   "tourDone": {
     "message": "Feito"
   },
-  "termsAndPrivacyNoticeCloudServices": {
-    "message": "Ao utilizar o Firefox Screenshots, você concorda com os $TERMSANDPRIVACYNOTICETERMSLINK$ e com o $TERMSANDPRIVACYNOTICEPRIVACYLINK$ do Firefox Cloud Services.",
+  "termsAndPrivacyNotice2": {
+    "message": "Ao utilizar o Firefox Screenshots, concorda com os nossos $TERMSANDPRIVACYNOTICETERMSLINK$ e com o $TERMSANDPRIVACYNOTICEPRIVACYLINK$.",
     "placeholders": {
       "termsandprivacynoticetermslink": {
         "content": "$1"
@@ -128,5 +128,8 @@
   },
   "termsAndPrivacyNoticyPrivacyLink": {
     "message": "Aviso de privacidade"
+  },
+  "libraryLabel": {
+    "message": "Capturas de ecrã"
   }
 }

@@ -195,8 +195,10 @@ def run_tests(config, browser_config):
         talos_results.add_extra_option('e10s')
 
     # stylo is another option for testing
-    if config['stylo']:
+    if config['enable_stylo']:
         talos_results.add_extra_option('stylo')
+    if config['disable_stylo']:
+        talos_results.add_extra_option('stylo_disabled')
 
     # measuring the difference of a a certain thread level
     if config.get('stylothreads', 0) > 0:

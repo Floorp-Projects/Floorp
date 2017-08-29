@@ -67,7 +67,7 @@ public class TabQueuePanel extends FirstrunPanel {
                 messageTextView.setTypeface(b ? Typeface.DEFAULT_BOLD : Typeface.DEFAULT);
                 subtextTextView.setText(b ? R.string.firstrun_tabqueue_subtext_on : R.string.firstrun_tabqueue_subtext_off);
                 subtextTextView.setTypeface(b ? Typeface.defaultFromStyle(Typeface.ITALIC) : Typeface.DEFAULT);
-                subtextTextView.setTextColor(b ? ContextCompat.getColor(context, R.color.fennec_ui_orange) : ContextCompat.getColor(context, R.color.placeholder_grey));
+                subtextTextView.setTextColor(b ? ContextCompat.getColor(context, R.color.fennec_ui_accent) : ContextCompat.getColor(context, R.color.placeholder_grey));
             }
         });
 

@@ -6,7 +6,7 @@
 #ifndef MOZILLA_AUDIOSAMPLEFORMAT_H_
 #define MOZILLA_AUDIOSAMPLEFORMAT_H_
 
-#include "nsAlgorithm.h"
+#include "mozilla/Assertions.h"
 #include <algorithm>
 
 namespace mozilla {
@@ -248,8 +248,7 @@ AddAudioSampleOffset(const void* aBase, AudioSampleFormat aFormat,
 {
   static_assert(AUDIO_FORMAT_S16 == 0, "Bad constant");
   static_assert(AUDIO_FORMAT_FLOAT32 == 1, "Bad constant");
-  NS_ASSERTION(aFormat == AUDIO_FORMAT_S16 || aFormat == AUDIO_FORMAT_FLOAT32,
-               "Unknown format");
+  MOZ_ASSERT(aFormat == AUDIO_FORMAT_S16 || aFormat == AUDIO_FORMAT_FLOAT32);
 
   return static_cast<const uint8_t*>(aBase) + (aFormat + 1)*2*aOffset;
 }

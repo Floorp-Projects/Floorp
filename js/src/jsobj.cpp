@@ -3310,8 +3310,8 @@ GetObjectSlotNameFunctor::operator()(JS::CallbackTracer* trc, char* buf, size_t 
                 pattern = "CLASS_OBJECT(%s)";
                 if (false)
                     ;
-#define TEST_SLOT_MATCHES_PROTOTYPE(name,code,init,clasp) \
-                else if ((code) == slot) { slotname = js_##name##_str; }
+#define TEST_SLOT_MATCHES_PROTOTYPE(name,init,clasp) \
+                else if ((JSProto_##name) == slot) { slotname = js_##name##_str; }
                 JS_FOR_EACH_PROTOTYPE(TEST_SLOT_MATCHES_PROTOTYPE)
 #undef TEST_SLOT_MATCHES_PROTOTYPE
             } else {

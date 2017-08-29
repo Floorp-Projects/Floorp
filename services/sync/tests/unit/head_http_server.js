@@ -6,6 +6,7 @@ var Cm = Components.manager;
 
 // Shared logging for all HTTP server functions.
 Cu.import("resource://gre/modules/Log.jsm");
+Cu.import("resource://services-common/utils.js");
 const SYNC_HTTP_LOGGER = "Sync.Test.Server";
 
 // While the sync code itself uses 1.5, the tests hard-code 1.1,
@@ -36,7 +37,7 @@ function has_hawk_header(req) {
 }
 
 function basic_auth_header(user, password) {
-  return "Basic " + btoa(user + ":" + Utils.encodeUTF8(password));
+  return "Basic " + btoa(user + ":" + CommonUtils.encodeUTF8(password));
 }
 
 function basic_auth_matches(req, user, password) {
@@ -44,7 +45,7 @@ function basic_auth_matches(req, user, password) {
     return false;
   }
 
-  let expected = basic_auth_header(user, Utils.encodeUTF8(password));
+  let expected = basic_auth_header(user, CommonUtils.encodeUTF8(password));
   return req.getHeader("Authorization") == expected;
 }
 

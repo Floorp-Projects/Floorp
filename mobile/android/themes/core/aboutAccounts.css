@@ -83,7 +83,7 @@ a:active {
 .button {
   flex: 1;
   height: 60px;
-  background-color: #E66000; /*matched to action_orange in java codebase*/
+  background-color: #0979D9; /*matched to action_accent in java codebase*/
   color: #FFFFFF;
   font-size: 20px;
   border-radius: 4px;

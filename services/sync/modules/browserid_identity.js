@@ -217,7 +217,7 @@ this.BrowserIDManager.prototype = {
           this._log.info("Doing initial sync actions");
           Svc.Prefs.set("firstSync", "resetClient");
           Services.obs.notifyObservers(null, "weave:service:setup-complete");
-          Weave.Utils.nextTick(Weave.Service.sync, Weave.Service);
+          CommonUtils.nextTick(Weave.Service.sync, Weave.Service);
         }
       }).catch(authErr => {
         // report what failed...
@@ -609,7 +609,7 @@ this.BrowserIDManager.prototype = {
         token.expiration = this._now() + (token.duration * 1000) * 0.80;
         if (!this._syncKeyBundle) {
           // We are given kA/kB as hex.
-          this._syncKeyBundle = deriveKeyBundle(Utils.hexToBytes(userData.kB));
+          this._syncKeyBundle = deriveKeyBundle(CommonUtils.hexToBytes(userData.kB));
         }
         return token;
       })

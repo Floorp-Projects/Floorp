@@ -295,6 +295,82 @@ panel[photon] > .panel-arrowcontainer > .panel-arrowcontent {
   max-width: @standaloneSubviewWidth@;
 }
 
+#pageActionFeedback > .panel-arrowcontainer > .panel-arrowbox {
+  /* Don't display the arrow but keep the popup at the same vertical
+     offset as other arrow panels. */
+  visibility: hidden;
+}
+
+#pageActionFeedback > .panel-arrowcontainer > .panel-arrowcontent {
+  background-color: #058b00;
+  background-image: none;
+  border-radius: 2px;
+  color: #fff;
+  font-weight: 400;
+  font-size: 1.1rem;
+  -moz-box-align: center;
+  padding: 6px 10px;
+}
+
+#pageActionFeedbackAnimatableBox {
+  position: relative;
+  overflow: hidden;
+  width: 14px;
+  height: 14px;
+}
+
+#pageActionFeedbackAnimatableBox[animate] > #pageActionFeedbackAnimatableImage {
+  position: absolute;
+  background-image: url(chrome://browser/skin/check-animation.svg);
+  background-repeat: no-repeat;
+  min-width: 266px;
+  max-width: 266px;
+  min-height: 14px;
+  max-height: 14px;
+  animation-name: page-action-feedback-animation;
+  animation-duration: 300ms;
+  animation-delay: 60ms;
+  animation-fill-mode: forwards;
+  animation-timing-function: steps(18);
+}
+
+#pageActionFeedbackAnimatableBox[animate] > #pageActionFeedbackAnimatableImage:-moz-locale-dir(rtl) {
+  animation-name: page-action-feedback-animation-rtl;
+  transform: translateX(252px);
+}
+
+@keyframes page-action-feedback-animation {
+  from {
+    transform: translateX(0);
+  }
+  to {
+    transform: translateX(-252px);
+  }
+}
+
+@keyframes page-action-feedback-animation-rtl {
+  from {
+    transform: translateX(252px);
+  }
+  to {
+    transform: translateX(0);
+  }
+}
+
+#pageActionFeedbackMessage {
+  margin-inline-start: 7px;
+  margin-inline-end: 0;
+  transform: scale(.8);
+  opacity: 0;
+  transition: transform 120ms cubic-bezier(.25,1.27,.35,1.18),
+              opacity 60ms linear;
+}
+
+#pageActionFeedbackAnimatableBox[animate] + #pageActionFeedbackMessage {
+  transform: scale(1);
+  opacity: 1;
+}
+
 /* Give WebExtension stand-alone panels extra width for Chrome compatibility */
 .cui-widget-panel[viewId^=PanelUI-webext-] .panel-mainview {
   max-width: 800px;

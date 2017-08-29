@@ -103,7 +103,7 @@ VideoDecoderManagerParent::StartupThreads()
 #if XP_WIN
   sVideoDecoderManagerThread->Dispatch(NS_NewRunnableFunction("VideoDecoderManagerParent::StartupThreads",
   []() {
-    HRESULT hr = CoInitializeEx(0, COINIT_MULTITHREADED);
+    DebugOnly<HRESULT> hr = CoInitializeEx(0, COINIT_MULTITHREADED);
     MOZ_ASSERT(hr == S_OK);
   }), NS_DISPATCH_NORMAL);
 #endif

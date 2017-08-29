@@ -112,8 +112,8 @@
   "tourDone": {
     "message": "Дайын"
   },
-  "termsAndPrivacyNoticeCloudServices": {
-    "message": "Firefox скриншоттарын қолдану арқылы, сіз Firefox бұлттық қызметтерінің $TERMSANDPRIVACYNOTICETERMSLINK$ және $TERMSANDPRIVACYNOTICEPRIVACYLINK$ келісесіз.",
+  "termsAndPrivacyNotice2": {
+    "message": "Firefox скриншоттарын қолдану арқылы, сіз біздің $TERMSANDPRIVACYNOTICETERMSLINK$ және $TERMSANDPRIVACYNOTICEPRIVACYLINK$ келісесіз.",
     "placeholders": {
       "termsandprivacynoticetermslink": {
         "content": "$1"

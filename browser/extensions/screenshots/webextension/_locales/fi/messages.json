@@ -112,8 +112,8 @@
   "tourDone": {
     "message": "Valmis"
   },
-  "termsAndPrivacyNoticeCloudServices": {
-    "message": "Käyttämällä Firefox Screenshots –ominaisuutta hyväksyt Firefoxin pilvipalveluiden $TERMSANDPRIVACYNOTICETERMSLINK$ ja $TERMSANDPRIVACYNOTICEPRIVACYLINK$.",
+  "termsAndPrivacyNotice2": {
+    "message": "Käyttämällä Firefox Screenshots -ominaisuutta hyväksyt meidän $TERMSANDPRIVACYNOTICETERMSLINK$ ja $TERMSANDPRIVACYNOTICEPRIVACYLINK$.",
     "placeholders": {
       "termsandprivacynoticetermslink": {
         "content": "$1"
@@ -128,5 +128,8 @@
   },
   "termsAndPrivacyNoticyPrivacyLink": {
     "message": "tietosuojakäytännön"
+  },
+  "libraryLabel": {
+    "message": "Kuvakaappaukset"
   }
 }

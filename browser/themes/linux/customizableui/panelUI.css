@@ -89,6 +89,16 @@ menu.subviewbutton > .menu-right:-moz-locale-dir(rtl) {
   -moz-appearance: none;
 }
 
+/*
+ * #pageActionFeedbackAnimatableImage is wider than the panel, and due to a
+ * bug in panels on Linux, a box-shadow appears where the image would be if
+ * overflow:hidden wasn't applied. Disabling the box-shadow for this panel on
+ * Linux works around this issue. This bug is on file as 1394575.
+ */
+#pageActionFeedback > .panel-arrowcontainer > .panel-arrowcontent {
+  box-shadow: none;
+}
+
 /* START photon adjustments */
 
 photonpanelmultiview .subviewbutton > .toolbarbutton-text,

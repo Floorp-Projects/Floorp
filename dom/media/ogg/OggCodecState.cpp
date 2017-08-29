@@ -350,10 +350,12 @@ TheoraState::Init()
 
   // Ensure the frame and picture regions aren't larger than our prescribed
   // maximum, or zero sized.
-  nsIntSize frame(mTheoraInfo.frame_width, mTheoraInfo.frame_height);
-  nsIntRect picture(mTheoraInfo.pic_x, mTheoraInfo.pic_y,
-                    mTheoraInfo.pic_width, mTheoraInfo.pic_height);
-  nsIntSize display(mTheoraInfo.pic_width, mTheoraInfo.pic_height);
+  gfx::IntSize frame(mTheoraInfo.frame_width, mTheoraInfo.frame_height);
+  gfx::IntRect picture(mTheoraInfo.pic_x,
+                       mTheoraInfo.pic_y,
+                       mTheoraInfo.pic_width,
+                       mTheoraInfo.pic_height);
+  gfx::IntSize display(mTheoraInfo.pic_width, mTheoraInfo.pic_height);
   ScaleDisplayByAspectRatio(display, aspectRatio);
   if (!IsValidVideoRegion(frame, picture, display)) {
     return mActive = false;

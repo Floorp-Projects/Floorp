@@ -7,6 +7,8 @@ XPCOMUtils.defineLazyGetter(this, "ExtensionManager", () => {
 });
 Cu.import("resource://gre/modules/ExtensionPermissions.jsm");
 
+const BROWSER_PROPERTIES = "chrome://browser/locale/browser.properties";
+
 AddonTestUtils.init(this);
 AddonTestUtils.overrideCertDB();
 AddonTestUtils.createAppInfo("xpcshell@tests.mozilla.org", "XPCShell", "1", "42");
@@ -363,4 +365,47 @@ add_task(async function test_alreadyGranted() {
 
   handle.destruct();
   await extension.unload();
+});
+
+// IMPORTANT: Do not change this list without review from a Web Extensions peer!
+
+const GRANTED_WITHOUT_USER_PROMPT = [
+  "activeTab",
+  "alarms",
+  "browsingData",
+  "contextMenus",
+  "contextualIdentities",
+  "cookies",
+  "downloads.open",
+  "downloads.shelf",
+  "geckoProfiler",
+  "identity",
+  "idle",
+  "menus",
+  "proxy",
+  "storage",
+  "theme",
+  "webRequest",
+  "webRequestBlocking",
+];
+
+add_task(function test_permissions_have_localization_strings() {
+  const ns = Schemas.getNamespace("manifest");
+
+  const permissions = ns.get("Permission").choices;
+  const optional = ns.get("OptionalPermission").choices;
+
+  const bundle = Services.strings.createBundle(BROWSER_PROPERTIES);
+
+  for (const choice of permissions.concat(optional)) {
+    for (const perm of choice.enumeration || []) {
+      try {
+        const str = bundle.GetStringFromName(`webextPerms.description.${perm}`);
+        ok(str.length, `Found localization string for '${perm}' permission`);
+      } catch (e) {
+        ok(GRANTED_WITHOUT_USER_PROMPT.includes(perm),
+          `Permission '${perm}' intentionally granted without prompting the user`);
+      }
+    }
+  }
 });

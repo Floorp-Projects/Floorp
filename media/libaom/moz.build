@@ -31,9 +31,14 @@ elif CONFIG['CPU_ARCH'] == 'x86':
     SOURCES += files['IA32_SOURCES']
     USE_YASM = True
     if CONFIG['OS_TARGET'] == 'WINNT':
-        ASFLAGS += [ '-I%s/media/libaom/config/win/ia32/' % TOPSRCDIR ]
-        CFLAGS += [ '-I%s/media/libaom/config/win/ia32/' % TOPSRCDIR ]
-        EXPORTS.aom += [ 'config/win/ia32/aom_config.h' ]
+        if CONFIG['CC_TYPE'] == 'gcc':
+            ASFLAGS += [ '-I%s/media/libaom/config/win/mingw32/' % TOPSRCDIR ]
+            CFLAGS += [ '-I%s/media/libaom/config/win/mingw32/' % TOPSRCDIR ]
+            EXPORTS.aom += [ 'config/win/mingw32/aom_config.h' ]
+        else:
+            ASFLAGS += [ '-I%s/media/libaom/config/win/ia32/' % TOPSRCDIR ]
+            CFLAGS += [ '-I%s/media/libaom/config/win/ia32/' % TOPSRCDIR ]
+            EXPORTS.aom += [ 'config/win/ia32/aom_config.h' ]
     else: # Android, Linux, BSDs, etc.
         ASFLAGS += [ '-I%s/media/libaom/config/linux/ia32/' % TOPSRCDIR ]
         CFLAGS += [ '-I%s/media/libaom/config/linux/ia32/' % TOPSRCDIR ]

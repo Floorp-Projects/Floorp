@@ -756,8 +756,6 @@ add_task(async function test_checkSubsessionHistograms() {
   const KEYED_ID = "TELEMETRY_TEST_KEYED_COUNT";
   const count = Telemetry.getHistogramById(COUNT_ID);
   const keyed = Telemetry.getKeyedHistogramById(KEYED_ID);
-  const registeredIds =
-    new Set(Telemetry.registeredHistograms(Ci.nsITelemetry.DATASET_RELEASE_CHANNEL_OPTIN, []));
 
   const stableHistograms = new Set([
     "TELEMETRY_TEST_FLAG",
@@ -781,10 +779,6 @@ add_task(async function test_checkSubsessionHistograms() {
   // check for deep equality on known stable histograms.
   let checkHistograms = (classic, subsession, message) => {
     for (let id of Object.keys(subsession)) {
-      if (!registeredIds.has(id)) {
-        continue;
-      }
-
       Assert.ok(id in classic, message + ` (${id})`);
       if (stableHistograms.has(id)) {
         Assert.deepEqual(classic[id],
@@ -799,10 +793,6 @@ add_task(async function test_checkSubsessionHistograms() {
   // Same as above, except for keyed histograms.
   let checkKeyedHistograms = (classic, subsession, message) => {
     for (let id of Object.keys(subsession)) {
-      if (!registeredIds.has(id)) {
-        continue;
-      }
-
       Assert.ok(id in classic, message);
       if (stableKeyedHistograms.has(id)) {
         Assert.deepEqual(classic[id],

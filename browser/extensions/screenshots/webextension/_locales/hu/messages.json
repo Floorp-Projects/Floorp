@@ -112,8 +112,8 @@
   "tourDone": {
     "message": "Kész"
   },
-  "termsAndPrivacyNoticeCloudServices": {
-    "message": "A Firefox képernyőképek használatával beleegyezik a Firefox felhőszolgáltatások $TERMSANDPRIVACYNOTICETERMSLINK$ és $TERMSANDPRIVACYNOTICEPRIVACYLINK$.",
+  "termsAndPrivacyNotice2": {
+    "message": "A Firefox képernyőképek használatával, Ön beleegyezik a $TERMSANDPRIVACYNOTICETERMSLINK$ és $TERMSANDPRIVACYNOTICEPRIVACYLINK$.",
     "placeholders": {
       "termsandprivacynoticetermslink": {
         "content": "$1"
@@ -128,5 +128,8 @@
   },
   "termsAndPrivacyNoticyPrivacyLink": {
     "message": "Adatvédelmi nyilatkozatba"
+  },
+  "libraryLabel": {
+    "message": "Képernyőképek"
   }
 }

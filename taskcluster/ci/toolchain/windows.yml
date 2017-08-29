@@ -8,7 +8,7 @@ win32-clang-cl:
         kind: build
         platform: toolchains/opt
         symbol: TW32(clang-cl)
-        tier: 2
+        tier: 1
     worker-type: aws-provisioner-v1/gecko-{level}-b-win2012
     worker:
         max-run-time: 36000
@@ -29,7 +29,7 @@ win64-clang-cl:
         kind: build
         platform: toolchains/opt
         symbol: TW64(clang-cl)
-        tier: 2
+        tier: 1
     worker-type: aws-provisioner-v1/gecko-{level}-b-win2012
     worker:
         max-run-time: 36000

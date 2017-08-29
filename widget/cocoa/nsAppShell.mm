@@ -46,6 +46,9 @@
 
 using namespace mozilla::widget;
 
+#define WAKE_LOCK_LOG(...) MOZ_LOG(gMacWakeLockLog, mozilla::LogLevel::Debug, (__VA_ARGS__))
+static mozilla::LazyLogModule gMacWakeLockLog("MacWakeLock");
+
 // A wake lock listener that disables screen saver when requested by
 // Gecko. For example when we're playing video in a foreground tab we
 // don't want the screen saver to turn on.
@@ -57,15 +60,37 @@ public:
 private:
   ~MacWakeLockListener() {}
 
-  IOPMAssertionID mAssertionID = kIOPMNullAssertionID;
+  IOPMAssertionID mAssertionNoDisplaySleepID = kIOPMNullAssertionID;
+  IOPMAssertionID mAssertionNoIdleSleepID = kIOPMNullAssertionID;
 
   NS_IMETHOD Callback(const nsAString& aTopic, const nsAString& aState) override {
-    if (!aTopic.EqualsASCII("screen")) {
+    if (!aTopic.EqualsASCII("screen") &&
+        !aTopic.EqualsASCII("audio-playing") &&
+        !aTopic.EqualsASCII("video-playing")) {
       return NS_OK;
     }
+
+    // we should still hold the lock for background audio.
+    if (aTopic.EqualsASCII("audio-playing") &&
+        aState.EqualsASCII("locked-background")) {
+      WAKE_LOCK_LOG("keep audio playing even in background");
+      return NS_OK;
+    }
+
+    bool shouldKeepDisplayOn = aTopic.EqualsASCII("screen") ||
+                               aTopic.EqualsASCII("video-playing");
+    CFStringRef assertionType = shouldKeepDisplayOn ?
+      kIOPMAssertionTypeNoDisplaySleep : kIOPMAssertionTypeNoIdleSleep;
+    IOPMAssertionID& assertionId = shouldKeepDisplayOn ?
+      mAssertionNoDisplaySleepID : mAssertionNoIdleSleepID;
+
     // Note the wake lock code ensures that we're not sent duplicate
     // "locked-foreground" notifications when multiple wake locks are held.
     if (aState.EqualsASCII("locked-foreground")) {
+      if (assertionId != kIOPMNullAssertionID) {
+        WAKE_LOCK_LOG("already has a lock");
+        return NS_OK;
+      }
       // Prevent screen saver.
       CFStringRef cf_topic =
         ::CFStringCreateWithCharacters(kCFAllocatorDefault,
@@ -73,22 +98,24 @@ private:
                                          (aTopic.Data()),
                                        aTopic.Length());
       IOReturn success =
-        ::IOPMAssertionCreateWithName(kIOPMAssertionTypeNoDisplaySleep,
+        ::IOPMAssertionCreateWithName(assertionType,
                                       kIOPMAssertionLevelOn,
                                       cf_topic,
-                                      &mAssertionID);
+                                      &assertionId);
       CFRelease(cf_topic);
       if (success != kIOReturnSuccess) {
-        NS_WARNING("failed to disable screensaver");
+        WAKE_LOCK_LOG("failed to disable screensaver");
       }
+      WAKE_LOCK_LOG("create screensaver");
     } else {
       // Re-enable screen saver.
-      NS_WARNING("Releasing screensaver");
-      if (mAssertionID != kIOPMNullAssertionID) {
-        IOReturn result = ::IOPMAssertionRelease(mAssertionID);
+      if (assertionId != kIOPMNullAssertionID) {
+        IOReturn result = ::IOPMAssertionRelease(assertionId);
         if (result != kIOReturnSuccess) {
-          NS_WARNING("failed to release screensaver");
+          WAKE_LOCK_LOG("failed to release screensaver");
         }
+        WAKE_LOCK_LOG("Release screensaver");
+        assertionId = kIOPMNullAssertionID;
       }
     }
     return NS_OK;
