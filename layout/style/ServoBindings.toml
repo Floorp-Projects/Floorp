@@ -123,6 +123,7 @@ whitelist-vars = [
 whitelist-types = [
     "RawGecko.*",
     "mozilla::AnimationPropertySegment",
+    "mozilla::AnonymousCounterStyle",
     "mozilla::ComputedTiming",
     "mozilla::ComputedTimingFunction",
     "mozilla::ComputedTimingFunction::BeforeFlag",
@@ -370,6 +371,7 @@ structs-types = [
     "mozilla::css::ImageValue",
     "mozilla::css::URLValue",
     "mozilla::css::URLValueData",
+    "mozilla::AnonymousCounterStyle",
     "mozilla::MallocSizeOf",
     "mozilla::OriginFlags",
     "mozilla::Side",

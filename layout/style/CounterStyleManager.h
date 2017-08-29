@@ -238,6 +238,18 @@ public:
   bool IsResolved() const { return !IsUnresolved(); }
   inline void Resolve(CounterStyleManager* aManager);
 
+  nsIAtom* AsAtom() const
+  {
+    MOZ_ASSERT(IsUnresolved());
+    return reinterpret_cast<nsIAtom*>(mRaw & ~eMask);
+  }
+  AnonymousCounterStyle* AsAnonymous() const
+  {
+    MOZ_ASSERT(IsAnonymous());
+    return static_cast<AnonymousCounterStyle*>(
+      reinterpret_cast<CounterStyle*>(mRaw & ~eMask));
+  }
+
 private:
   CounterStyle* Get() const
   {
@@ -266,17 +278,6 @@ private:
   Type GetType() const { return static_cast<Type>(mRaw & eMask); }
   bool IsUnresolved() const { return GetType() == eUnresolvedAtom; }
   bool IsAnonymous() const { return GetType() == eAnonymousCounterStyle; }
-  nsIAtom* AsAtom()
-  {
-    MOZ_ASSERT(IsUnresolved());
-    return reinterpret_cast<nsIAtom*>(mRaw & ~eMask);
-  }
-  AnonymousCounterStyle* AsAnonymous()
-  {
-    MOZ_ASSERT(IsAnonymous());
-    return static_cast<AnonymousCounterStyle*>(
-      reinterpret_cast<CounterStyle*>(mRaw & ~eMask));
-  }
 
   void Reset()
   {
