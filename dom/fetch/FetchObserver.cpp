@@ -67,7 +67,7 @@ FetchObserver::State() const
 }
 
 void
-FetchObserver::Aborted()
+FetchObserver::Abort()
 {
   SetState(FetchState::Aborted);
 }

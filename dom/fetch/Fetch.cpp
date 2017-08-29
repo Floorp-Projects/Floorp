@@ -78,7 +78,7 @@ AbortStream(JSContext* aCx, JS::Handle<JSObject*> aStream)
 } // anonymous
 
 // This class helps the proxying of AbortSignal changes cross threads.
-class AbortSignalProxy final : public AbortSignal::Follower
+class AbortSignalProxy final : public AbortFollower
 {
   // This is created and released on the main-thread.
   RefPtr<AbortSignal> mSignalMainThread;
@@ -124,7 +124,7 @@ public:
   }
 
   void
-  Aborted() override
+  Abort() override
   {
     RefPtr<AbortSignalProxyRunnable> runnable =
       new AbortSignalProxyRunnable(this);
@@ -1315,7 +1315,7 @@ FetchBody<Response>::MaybeTeeReadableStreamBody(JSContext* aCx,
 
 template <class Derived>
 void
-FetchBody<Derived>::Aborted()
+FetchBody<Derived>::Abort()
 {
   MOZ_ASSERT(mReadableStreamBody);
 
@@ -1332,11 +1332,11 @@ FetchBody<Derived>::Aborted()
 
 template
 void
-FetchBody<Request>::Aborted();
+FetchBody<Request>::Abort();
 
 template
 void
-FetchBody<Response>::Aborted();
+FetchBody<Response>::Abort();
 
 } // namespace dom
 } // namespace mozilla
