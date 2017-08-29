@@ -26,7 +26,7 @@
 #include "mozilla/dom/BindingDeclarations.h"
 #include "mozilla/dom/BodyUtil.h"
 #include "mozilla/dom/Exceptions.h"
-#include "mozilla/dom/DOMError.h"
+#include "mozilla/dom/DOMException.h"
 #include "mozilla/dom/FetchDriver.h"
 #include "mozilla/dom/File.h"
 #include "mozilla/dom/FormData.h"
@@ -55,6 +55,27 @@ namespace mozilla {
 namespace dom {
 
 using namespace workers;
+
+namespace {
+
+void
+AbortStream(JSContext* aCx, JS::Handle<JSObject*> aStream)
+{
+  if (!JS::ReadableStreamIsReadable(aStream)) {
+    return;
+  }
+
+  RefPtr<DOMException> e = DOMException::Create(NS_ERROR_DOM_ABORT_ERR);
+
+  JS::Rooted<JS::Value> value(aCx);
+  if (!GetOrCreateDOMReflector(aCx, e, &value)) {
+    return;
+  }
+
+  JS::ReadableStreamError(aCx, aStream, value);
+}
+
+} // anonymous
 
 // This class helps the proxying of AbortSignal changes cross threads.
 class AbortSignalProxy final : public AbortSignal::Follower
@@ -943,6 +964,7 @@ FetchBody<Response>::FetchBody(nsIGlobalObject* aOwner);
 template <class Derived>
 FetchBody<Derived>::~FetchBody()
 {
+  Unfollow();
 }
 
 template
@@ -1106,20 +1128,33 @@ FetchBody<Response>::SetMimeType();
 
 template <class Derived>
 void
-FetchBody<Derived>::SetReadableStreamBody(JSObject* aBody)
+FetchBody<Derived>::SetReadableStreamBody(JSContext* aCx, JSObject* aBody)
 {
   MOZ_ASSERT(!mReadableStreamBody);
   MOZ_ASSERT(aBody);
   mReadableStreamBody = aBody;
+
+  RefPtr<AbortSignal> signal = DerivedClass()->GetSignal();
+  if (!signal) {
+    return;
+  }
+
+  bool aborted = signal->Aborted();
+  if (aborted) {
+    JS::Rooted<JSObject*> body(aCx, mReadableStreamBody);
+    AbortStream(aCx, body);
+  } else if (!IsFollowing()) {
+    Follow(signal);
+  }
 }
 
 template
 void
-FetchBody<Request>::SetReadableStreamBody(JSObject* aBody);
+FetchBody<Request>::SetReadableStreamBody(JSContext* aCx, JSObject* aBody);
 
 template
 void
-FetchBody<Response>::SetReadableStreamBody(JSObject* aBody);
+FetchBody<Response>::SetReadableStreamBody(JSContext* aCx, JSObject* aBody);
 
 template <class Derived>
 void
@@ -1154,6 +1189,15 @@ FetchBody<Derived>::GetBody(JSContext* aCx,
     LockStream(aCx, body, aRv);
     if (NS_WARN_IF(aRv.Failed())) {
       return;
+    }
+  }
+
+  RefPtr<AbortSignal> signal = DerivedClass()->GetSignal();
+  if (signal) {
+    if (signal->Aborted()) {
+      AbortStream(aCx, body);
+    } else if (!IsFollowing()) {
+      Follow(signal);
     }
   }
 
@@ -1268,6 +1312,31 @@ FetchBody<Response>::MaybeTeeReadableStreamBody(JSContext* aCx,
                                                 FetchStreamReader** aStreamReader,
                                                 nsIInputStream** aInputStream,
                                                 ErrorResult& aRv);
+
+template <class Derived>
+void
+FetchBody<Derived>::Aborted()
+{
+  MOZ_ASSERT(mReadableStreamBody);
+
+  AutoJSAPI jsapi;
+  if (!jsapi.Init(mOwner)) {
+    return;
+  }
+
+  JSContext* cx = jsapi.cx();
+
+  JS::Rooted<JSObject*> body(cx, mReadableStreamBody);
+  AbortStream(cx, body);
+}
+
+template
+void
+FetchBody<Request>::Aborted();
+
+template
+void
+FetchBody<Response>::Aborted();
 
 } // namespace dom
 } // namespace mozilla
