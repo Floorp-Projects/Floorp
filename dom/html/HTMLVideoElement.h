@@ -129,8 +129,6 @@ public:
 
   bool MozHasAudio() const;
 
-  void NotifyOwnerDocumentActivityChanged() override;
-
   // Gives access to the decoder's frame statistics, if present.
   FrameStatistics* GetFrameStatistics();
 
