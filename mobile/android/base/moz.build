@@ -962,6 +962,7 @@ gbjar.sources += ['java/org/mozilla/gecko/' + x for x in [
     'util/WindowUtil.java',
     'webapps/WebAppActivity.java',
     'webapps/WebAppIndexer.java',
+    'webapps/WebAppManifest.java',
     'webapps/WebApps.java',
     'widget/ActionModePresenter.java',
     'widget/ActivityChooserModel.java',

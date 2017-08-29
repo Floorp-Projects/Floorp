@@ -94,6 +94,9 @@ nsNSSSocketInfo::nsNSSSocketInfo(SharedSSLState& aState, uint32_t providerFlags,
     mSentClientCert(false),
     mNotedTimeUntilReady(false),
     mFailedVerification(false),
+    mIsShortWritePending(false),
+    mShortWritePendingByte(0),
+    mShortWriteOriginalAmount(-1),
     mKEAUsed(nsISSLSocketControl::KEY_EXCHANGE_UNKNOWN),
     mKEAKeyBits(0),
     mSSLVersionUsed(nsISSLSocketControl::SSL_VERSION_UNKNOWN),
@@ -1479,8 +1482,68 @@ PSMSend(PRFileDesc* fd, const void* buf, int32_t amount, int flags,
   DEBUG_DUMP_BUFFER((unsigned char*) buf, amount);
 #endif
 
+  if (socketInfo->IsShortWritePending() && amount > 0) {
+    // We got "SSL short write" last time, try to flush the pending byte.
+#ifdef DEBUG
+    socketInfo->CheckShortWrittenBuffer(static_cast<const unsigned char*>(buf), amount);
+#endif
+
+    buf = socketInfo->GetShortWritePendingByteRef();
+    amount = 1;
+
+    MOZ_LOG(gPIPNSSLog, LogLevel::Verbose,
+            ("[%p] pushing 1 byte after SSL short write", fd));
+  }
+
   int32_t bytesWritten = fd->lower->methods->send(fd->lower, buf, amount,
                                                   flags, timeout);
+
+  // NSS indicates that it can't write all requested data (due to network
+  // congestion, for example) by returning either one less than the amount
+  // of data requested or 16383, if the requested amount is greater than
+  // 16384. We refer to this as a "short write". If we simply returned
+  // the amount that NSS did write, the layer above us would then call
+  // PSMSend with a very small amount of data (often 1). This is inefficient
+  // and can lead to alternating between sending large packets and very small
+  // packets. To prevent this, we alert the layer calling us that the operation
+  // would block and that it should be retried later, with the same data.
+  // When it does, we tell NSS to write the remaining byte it didn't write
+  // in the previous call. We then return the total number of bytes written,
+  // which is the number that caused the short write plus the additional byte
+  // we just wrote out.
+
+  // The 16384 value is based on libssl's maximum buffer size:
+  //    MAX_FRAGMENT_LENGTH - 1
+  //
+  // It's in a private header, though, filed bug 1394822 to expose it.
+  static const int32_t kShortWrite16k = 16383;
+
+  if ((amount > 1 && bytesWritten == (amount - 1)) ||
+      (amount > kShortWrite16k && bytesWritten == kShortWrite16k)) {
+    // This is indication of an "SSL short write", block to force retry.
+    socketInfo->SetShortWritePending(
+      bytesWritten + 1, // The amount to return after the flush
+      *(static_cast<const unsigned char*>(buf) + bytesWritten));
+
+    MOZ_LOG(gPIPNSSLog, LogLevel::Verbose,
+            ("[%p] indicated SSL short write for %d bytes (written just %d bytes)",
+            fd, amount, bytesWritten));
+
+    bytesWritten = -1;
+    PR_SetError(PR_WOULD_BLOCK_ERROR, 0);
+
+#ifdef DEBUG
+    socketInfo->RememberShortWrittenBuffer(static_cast<const unsigned char*>(buf));
+#endif
+
+  } else if (socketInfo->IsShortWritePending() && bytesWritten == 1) {
+    // We have now flushed all pending data in the SSL socket
+    // after the indicated short write.  Tell the upper layer
+    // it has sent all its data now.
+    MOZ_LOG(gPIPNSSLog, LogLevel::Verbose, ("[%p] finished SSL short write", fd));
+
+    bytesWritten = socketInfo->ResetShortWritePending();
+  }
 
   MOZ_LOG(gPIPNSSLog, LogLevel::Verbose,
           ("[%p] wrote %d bytes\n", fd, bytesWritten));

@@ -17,41 +17,35 @@ import android.graphics.Bitmap;
 import android.net.Uri;
 import android.os.Build;
 import android.os.Bundle;
+import android.support.customtabs.CustomTabsIntent;
 import android.support.v7.app.ActionBar;
 import android.support.v7.app.AppCompatActivity;
 import android.support.v7.widget.Toolbar;
-import android.text.TextUtils;
 import android.util.Log;
 import android.view.View;
 import android.view.Window;
 import android.view.WindowManager;
 import android.widget.TextView;
 
-import org.json.JSONObject;
-import org.json.JSONException;
-
 import org.mozilla.gecko.ActivityHandlerHelper;
 import org.mozilla.gecko.AppConstants;
 import org.mozilla.gecko.customtabs.CustomTabsActivity;
 import org.mozilla.gecko.DoorHangerPopup;
-import org.mozilla.gecko.GeckoAppShell;
 import org.mozilla.gecko.GeckoScreenOrientation;
 import org.mozilla.gecko.GeckoView;
 import org.mozilla.gecko.GeckoViewSettings;
-import org.mozilla.gecko.icons.decoders.FaviconDecoder;
-import org.mozilla.gecko.icons.decoders.LoadFaviconResult;
 import org.mozilla.gecko.permissions.Permissions;
 import org.mozilla.gecko.prompts.PromptService;
 import org.mozilla.gecko.R;
 import org.mozilla.gecko.util.ActivityUtils;
 import org.mozilla.gecko.util.ColorUtil;
-import org.mozilla.gecko.util.FileUtils;
 
 public class WebAppActivity extends AppCompatActivity
                             implements GeckoView.NavigationListener {
     private static final String LOGTAG = "WebAppActivity";
 
     public static final String MANIFEST_PATH = "MANIFEST_PATH";
+    public static final String MANIFEST_URL = "MANIFEST_URL";
     private static final String SAVED_INTENT = "savedIntent";
 
     private GeckoView mGeckoView;
@@ -61,7 +55,12 @@ public class WebAppActivity extends AppCompatActivity
     private boolean mIsFullScreenMode;
     private boolean mIsFullScreenContent;
     private boolean mCanGoBack;
+
+    private Uri mManifestUrl;
+    private Uri mStartUrl;
     private Uri mScope;
+
+    private WebAppManifest mManifest;
 
     @Override
     public void onCreate(Bundle savedInstanceState) {
@@ -97,14 +96,14 @@ public class WebAppActivity extends AppCompatActivity
         final GeckoViewSettings settings = mGeckoView.getSettings();
         settings.setBoolean(GeckoViewSettings.USE_MULTIPROCESS, false);
 
-        final Uri u = getIntent().getData();
-        if (u != null) {
-            mGeckoView.loadUri(u.toString());
-        }
+        mManifest = WebAppManifest.fromFile(getIntent().getStringExtra(MANIFEST_URL),
+                                            getIntent().getStringExtra(MANIFEST_PATH));
+
+        updateFromManifest();
+
+        mGeckoView.loadUri(mManifest.getStartUri().toString());
 
         setContentView(mGeckoView);
-
-        loadManifest(getIntent().getStringExtra(MANIFEST_PATH));
     }
 
     @Override
@@ -153,40 +152,27 @@ public class WebAppActivity extends AppCompatActivity
         }
     }
 
-    private void loadManifest(String manifestPath) {
-        if (TextUtils.isEmpty(manifestPath)) {
-            Log.e(LOGTAG, "Missing manifest");
-            return;
+    private void updateFromManifest() {
+        if (AppConstants.Versions.feature21Plus) {
+            updateTaskAndStatusBar();
         }
 
-        try {
-            final File manifestFile = new File(manifestPath);
-            final JSONObject manifest = FileUtils.readJSONObjectFromFile(manifestFile);
-            final JSONObject manifestField = manifest.getJSONObject("manifest");
-
-            if (AppConstants.Versions.feature21Plus) {
-                loadManifestV21(manifest, manifestField);
-            }
-
-            updateScreenOrientation(manifestField);
-            updateDisplayMode(manifestField);
-        } catch (IOException | JSONException e) {
-            Log.e(LOGTAG, "Failed to read manifest", e);
-        }
+        updateScreenOrientation();
+        updateDisplayMode();
     }
 
     // The customisations defined in the manifest only work on Android API 21+
     @TargetApi(Build.VERSION_CODES.LOLLIPOP)
-    private void loadManifestV21(JSONObject manifest, JSONObject manifestField) {
-        final Integer color = readColorFromManifest(manifestField);
-        final String name = readNameFromManifest(manifestField);
-        final Bitmap icon = readIconFromManifest(manifest);
-        mScope = readScopeFromManifest(manifest);
-        final ActivityManager.TaskDescription taskDescription = (color == null)
-            ? new ActivityManager.TaskDescription(name, icon)
-            : new ActivityManager.TaskDescription(name, icon, color);
+    private void updateTaskAndStatusBar() {
+        final Integer themeColor = mManifest.getThemeColor();
+        final String name = mManifest.getName();
+        final Bitmap icon = mManifest.getIcon();
 
-        updateStatusBarColorV21(color);
+        final ActivityManager.TaskDescription taskDescription = (themeColor == null)
+            ? new ActivityManager.TaskDescription(name, icon)
+            : new ActivityManager.TaskDescription(name, icon, themeColor);
+
+        updateStatusBarColorV21(themeColor);
         setTaskDescription(taskDescription);
     }
 
@@ -199,21 +185,22 @@ public class WebAppActivity extends AppCompatActivity
         }
     }
 
-    private void updateScreenOrientation(JSONObject manifest) {
-        String orientString = manifest.optString("orientation", null);
+    private void updateScreenOrientation() {
+        final String orientString = mManifest.getOrientation();
         if (orientString == null) {
             return;
         }
 
-        GeckoScreenOrientation.ScreenOrientation orientation =
+        final GeckoScreenOrientation.ScreenOrientation orientation =
             GeckoScreenOrientation.screenOrientationFromString(orientString);
-        int activityOrientation = GeckoScreenOrientation.screenOrientationToAndroidOrientation(orientation);
+        final int activityOrientation =
+            GeckoScreenOrientation.screenOrientationToAndroidOrientation(orientation);
 
         setRequestedOrientation(activityOrientation);
     }
 
-    private void updateDisplayMode(JSONObject manifest) {
-        String displayMode = manifest.optString("display");
+    private void updateDisplayMode() {
+        final String displayMode = mManifest.getDisplayMode();
 
         updateFullScreenMode(displayMode.equals("fullscreen"));
 
@@ -237,84 +224,6 @@ public class WebAppActivity extends AppCompatActivity
         mGeckoView.getSettings().setInt(GeckoViewSettings.DISPLAY_MODE, mode.value());
     }
 
-    private Integer readColorFromManifest(JSONObject manifest) {
-        final String colorStr = manifest.optString("theme_color", null);
-        if (colorStr != null) {
-            return ColorUtil.parseStringColor(colorStr);
-        }
-        return null;
-    }
-
-    private String readNameFromManifest(JSONObject manifest) {
-        String name = manifest.optString("name", null);
-        if (name == null) {
-            name = manifest.optString("short_name", null);
-        }
-        if (name == null) {
-            name = manifest.optString("start_url", null);
-        }
-        return name;
-    }
-
-    private Bitmap readIconFromManifest(JSONObject manifest) {
-        final String iconStr = manifest.optString("cached_icon", null);
-        if (iconStr == null) {
-            return null;
-        }
-        final LoadFaviconResult loadIconResult = FaviconDecoder
-            .decodeDataURI(this, iconStr);
-        if (loadIconResult == null) {
-            return null;
-        }
-        return loadIconResult.getBestBitmap(GeckoAppShell.getPreferredIconSize());
-    }
-
-    private Uri readScopeFromManifest(JSONObject manifest) {
-        final String scopeStr = manifest.optString("scope", null);
-        if (scopeStr == null) {
-            return null;
-        }
-
-        Uri res = Uri.parse(scopeStr);
-        if (res.isRelative()) {
-            // TODO: Handle this more correctly.
-            return null;
-        }
-
-        return res;
-    }
-
-    private boolean isInScope(String url) {
-        if (mScope == null) {
-            return true;
-        }
-
-        final Uri uri = Uri.parse(url);
-
-        if (!uri.getScheme().equals(mScope.getScheme())) {
-            return false;
-        }
-
-        if (!uri.getHost().equals(mScope.getHost())) {
-            return false;
-        }
-
-        final List<String> scopeSegments = mScope.getPathSegments();
-        final List<String> urlSegments = uri.getPathSegments();
-
-        if (scopeSegments.size() > urlSegments.size()) {
-            return false;
-        }
-
-        for (int i = 0; i < scopeSegments.size(); i++) {
-            if (!scopeSegments.get(i).equals(urlSegments.get(i))) {
-                return false;
-            }
-        }
-
-        return true;
-    }
-
     /* GeckoView.NavigationListener */
     @Override
     public void onLocationChange(GeckoView view, String url) {
@@ -330,17 +239,30 @@ public class WebAppActivity extends AppCompatActivity
     }
 
     @Override
-    public boolean onLoadUri(final GeckoView view, final String uri,
+    public boolean onLoadUri(final GeckoView view, final String urlStr,
                              final TargetWindow where) {
-        if (isInScope(uri)) {
-            view.loadUri(uri);
-        } else {
-            final Intent intent = new Intent(getIntent());
-            intent.setClassName(getApplicationContext(),
-                                CustomTabsActivity.class.getName());
-            intent.setData(Uri.parse(uri));
-            startActivity(intent);
+        final Uri url = Uri.parse(urlStr);
+        if (url == null) {
+            // We can't really handle this, so deny it?
+            Log.w(LOGTAG, "Failed to parse URL for navigation: " + urlStr);
+            return true;
         }
+
+        if (mManifest.isInScope(url) && where != TargetWindow.NEW) {
+            // This is in scope and wants to load in the same frame, so
+            // let Gecko handle it.
+            return false;
+        }
+
+        CustomTabsIntent tab = new CustomTabsIntent.Builder()
+            .addDefaultShareMenuItem()
+            .setToolbarColor(mManifest.getThemeColor())
+            .setStartAnimations(this, R.anim.slide_in_right, R.anim.slide_out_left)
+            .setExitAnimations(this, R.anim.slide_in_left, R.anim.slide_out_right)
+            .build();
+
+        tab.intent.setClass(this, CustomTabsActivity.class);
+        tab.launchUrl(this, url);
         return true;
     }
 

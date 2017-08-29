@@ -182,3 +182,23 @@ LIRGeneratorMIPS64::visitRandom(MRandom* ins)
     LRandom *lir = new(alloc()) LRandom(temp(), temp(), temp());
     defineFixed(lir, ins, LFloatReg(ReturnDoubleReg));
 }
+
+
+void
+LIRGeneratorMIPS64::visitWasmTruncateToInt64(MWasmTruncateToInt64* ins)
+{
+    MDefinition* opd = ins->input();
+    MOZ_ASSERT(opd->type() == MIRType::Double || opd->type() == MIRType::Float32);
+
+    defineInt64(new(alloc()) LWasmTruncateToInt64(useRegister(opd)), ins);
+}
+
+void
+LIRGeneratorMIPS64::visitInt64ToFloatingPoint(MInt64ToFloatingPoint* ins)
+{
+    MDefinition* opd = ins->input();
+    MOZ_ASSERT(opd->type() == MIRType::Int64);
+    MOZ_ASSERT(IsFloatingPointType(ins->type()));
+
+    define(new(alloc()) LInt64ToFloatingPoint(useInt64Register(opd)), ins);
+}

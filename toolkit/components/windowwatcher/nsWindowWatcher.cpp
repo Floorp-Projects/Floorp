@@ -1222,8 +1222,9 @@ nsWindowWatcher::OpenWindowInternal(mozIDOMWindowProxy* aParent,
       true);
   }
 
-  // Copy the current session storage for the current domain.
-  if (subjectPrincipal && parentDocShell) {
+  // Copy the current session storage for the current domain. Don't perform the
+  // copy if we're forcing noopener, however.
+  if (!aForceNoOpener && subjectPrincipal && parentDocShell) {
     nsCOMPtr<nsIDOMStorageManager> parentStorageManager =
       do_QueryInterface(parentDocShell);
     nsCOMPtr<nsIDOMStorageManager> newStorageManager =

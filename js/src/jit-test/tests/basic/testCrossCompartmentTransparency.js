@@ -152,7 +152,7 @@ test("new Date()", d => justDontThrow(Date.prototype.toLocaleFormat.call(d)));
 test("new Date()", d => justDontThrow(Date.prototype.toTimeString.call(d)));
 test("new Date()", d => justDontThrow(Date.prototype.toDateString.call(d)));
 test("new Date()", d => justDontThrow(Date.prototype.toSource.call(d)));
-test("new Date()", d => justDontThrow(Date.prototype.toString.call(d)), true);
+test("new Date()", d => justDontThrow(Date.prototype.toString.call(d)));
 test("new Date()", d => justDontThrow(Date.prototype.valueOf.call(d)));
 
 throw "done";

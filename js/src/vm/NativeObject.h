@@ -805,6 +805,7 @@ class NativeObject : public ShapedObject
                                                 JSGetterOp getter, JSSetterOp setter,
                                                 uint32_t slot, unsigned attrs, unsigned flags,
                                                 bool allowDictionary = true);
+    static Shape* addEnumerableDataProperty(JSContext* cx, HandleNativeObject obj, HandleId id);
 
     /* Add a data property whose id is not yet in this scope. */
     static Shape* addDataProperty(JSContext* cx, HandleNativeObject obj,
@@ -1456,9 +1457,10 @@ enum QualifiedBool {
     Qualified = 1
 };
 
+template <QualifiedBool Qualified>
 extern bool
 NativeSetProperty(JSContext* cx, HandleNativeObject obj, HandleId id, HandleValue v,
-                  HandleValue receiver, QualifiedBool qualified, ObjectOpResult& result);
+                  HandleValue receiver, ObjectOpResult& result);
 
 extern bool
 NativeSetElement(JSContext* cx, HandleNativeObject obj, uint32_t index, HandleValue v,
@@ -1550,7 +1552,7 @@ js::SetProperty(JSContext* cx, HandleObject obj, HandleId id, HandleValue v,
 {
     if (obj->getOpsSetProperty())
         return JSObject::nonNativeSetProperty(cx, obj, id, v, receiver, result);
-    return NativeSetProperty(cx, obj.as<NativeObject>(), id, v, receiver, Qualified, result);
+    return NativeSetProperty<Qualified>(cx, obj.as<NativeObject>(), id, v, receiver, result);
 }
 
 inline bool
