@@ -33,12 +33,22 @@
     // Test that the div is initially red (from base.css)
     is(getComputedStyle(theOnlyDiv).color, "rgb(0, 128, 0)", "div begins as green.");
 
+    // Create a Promise to watch for some number of events.
+    let generateCountingListenerCallback = function(numberOfEventsToWaitFor) {
+      let eventsReceived = 0;
+      return function(event) {
+        return (++eventsReceived >= numberOfEventsToWaitFor);
+      }
+    };
+    let gotAllOurStyleRuleAddedEvents = ContentTaskUtils.waitForEvent(document,
+      "StyleRuleAdded", true, generateCountingListenerCallback(2));
+
     stylesheet.insertRule('@import url("import_useless2.css")', 0);
     stylesheet.insertRule('@import url("import_useless2.css")', 1);
 
-    // Wait for two StyleRuleAdded events to be fired.
-    await ContentTaskUtils.waitForEvent(document, "StyleRuleAdded", true);
-    await ContentTaskUtils.waitForEvent(document, "StyleRuleAdded", true);
+    // Wait for the StyleRuleAdded events to be fired. This function returns the last event,
+    // but we don't care what it contains -- only that the correct number of events fired.
+    await gotAllOurStyleRuleAddedEvents;
 
     // Get the imported sheets and confirm they are non-null and have rules.
     let importSheet1 = stylesheet.cssRules[0].styleSheet;
