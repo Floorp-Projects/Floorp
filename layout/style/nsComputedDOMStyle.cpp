@@ -1325,8 +1325,7 @@ AppendCounterStyle(CounterStyle* aStyle, nsAString& aString)
   AnonymousCounterStyle* anonymous = aStyle->AsAnonymous();
   if (!anonymous) {
     // want SetIdent
-    nsString type;
-    aStyle->GetStyleName(type);
+    nsDependentAtomString type(aStyle->GetStyleName());
     nsStyleUtil::AppendEscapedCSSIdent(type, aString);
   } else if (anonymous->IsSingleString()) {
     const nsTArray<nsString>& symbols = anonymous->GetSymbols();
