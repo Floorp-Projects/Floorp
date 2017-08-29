@@ -24,6 +24,7 @@ const {
   pprint,
   ScriptTimeoutError,
   SessionNotCreatedError,
+  stack,
   StaleElementReferenceError,
   TimeoutError,
   UnableToSetCookieError,
@@ -140,6 +141,14 @@ add_test(function test_pprint() {
     className: "bar baz",
   };
   equal('<input id="foo" class="bar baz">', pprint`${el}`);
+
+  run_next_test();
+});
+
+add_test(function test_stack() {
+  equal("string", typeof stack());
+  ok(stack().includes("test_stack"));
+  ok(!stack().includes("add_test"));
 
   run_next_test();
 });
