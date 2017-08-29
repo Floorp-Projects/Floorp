@@ -822,7 +822,7 @@ protected:
       , mOuter(nullptr)
     {}
 
-    ~WakeLockBoolWrapper();
+    ~WakeLockBoolWrapper() {};
 
     void SetOuter(HTMLMediaElement* outer) { mOuter = outer; }
 
@@ -832,14 +832,11 @@ protected:
 
     bool operator !() const { return !mValue; }
 
-    static void TimerCallback(nsITimer* aTimer, void* aClosure);
-
   private:
     void UpdateWakeLock();
 
     bool mValue;
     HTMLMediaElement* mOuter;
-    nsCOMPtr<nsITimer> mTimer;
   };
 
   // Holds references to the DOM wrappers for the MediaStreams that we're
