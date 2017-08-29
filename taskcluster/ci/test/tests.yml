@@ -1123,8 +1123,8 @@ reftest:
         by-test-platform:
             android-4.3-arm7-api-15/debug: 48
             android.*: 16
-            macosx64/opt: 1
-            macosx64/debug: 2
+            macosx64.*/opt: 1
+            macosx64.*/debug: 2
             windows8-64.*/opt: 1
             windows8-64.*/debug: 2
             default: 8
@@ -1264,7 +1264,7 @@ reftest-stylo:
     suite: reftest/reftest-stylo
     treeherder-symbol: tc-R(Rs)
     docker-image: {"in-tree": "desktop1604-test"}
-    chunks: 16
+    chunks: 8
     run-on-projects:
         by-test-platform:
             .*-stylo/opt: [ 'autoland', 'mozilla-central', 'try' ] # not on mozilla-inbound
