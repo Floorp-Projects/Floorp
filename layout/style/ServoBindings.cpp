@@ -1468,7 +1468,8 @@ void
 Gecko_CounterStyle_GetName(const CounterStylePtr* aPtr,
                            nsAString* aResult) {
   MOZ_ASSERT(Gecko_CounterStyle_IsName(aPtr));
-  (*aPtr)->GetStyleName(*aResult);
+  nsIAtom* name = (*aPtr)->GetStyleName();
+  *aResult = nsDependentAtomString(name);
 }
 
 const nsTArray<nsString>&
