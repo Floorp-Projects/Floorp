@@ -45,7 +45,7 @@ static mozilla::LazyLogModule gWinWakeLockLog("WinWakeLock");
 class WinWakeLockListener final : public nsIDOMMozWakeLockListener
 {
 public:
-  NS_DECL_ISUPPORTS;
+  NS_DECL_ISUPPORTS
 
 private:
   ~WinWakeLockListener() {}
@@ -56,13 +56,23 @@ private:
         !aTopic.EqualsASCII("video-playing")) {
       return NS_OK;
     }
-    bool shouldKeepDisplayOn = aTopic.EqualsASCII("screen") ||
-                               aTopic.EqualsASCII("video-playing");
+
+    // we should still hold the lock for background audio.
+    if (aTopic.EqualsASCII("audio-playing") &&
+        aState.EqualsASCII("locked-background")) {
+      return NS_OK;
+    }
+
+    if (aTopic.EqualsASCII("screen") ||
+        aTopic.EqualsASCII("video-playing")) {
+      mRequireForDisplay = aState.EqualsASCII("locked-foreground");
+    }
+
     // Note the wake lock code ensures that we're not sent duplicate
     // "locked-foreground" notifications when multiple wake locks are held.
     if (aState.EqualsASCII("locked-foreground")) {
       WAKE_LOCK_LOG("WinWakeLock: Blocking screen saver");
-      if (shouldKeepDisplayOn) {
+      if (mRequireForDisplay) {
         // Prevent the display turning off and block the screen saver.
         SetThreadExecutionState(ES_DISPLAY_REQUIRED|ES_CONTINUOUS);
       } else {
@@ -75,6 +85,8 @@ private:
     }
     return NS_OK;
   }
+
+  bool mRequireForDisplay = false;
 };
 
 NS_IMPL_ISUPPORTS(WinWakeLockListener, nsIDOMMozWakeLockListener)
