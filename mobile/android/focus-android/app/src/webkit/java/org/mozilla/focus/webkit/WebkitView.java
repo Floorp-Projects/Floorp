@@ -13,6 +13,7 @@ import android.os.Environment;
 import android.preference.PreferenceManager;
 import android.support.annotation.NonNull;
 import android.support.annotation.Nullable;
+import android.support.annotation.VisibleForTesting;
 import android.util.AttributeSet;
 import android.util.Log;
 import android.view.View;
@@ -39,8 +40,6 @@ import org.mozilla.focus.web.WebViewProvider;
 
 public class WebkitView extends NestedWebView implements IWebView, SharedPreferences.OnSharedPreferenceChangeListener {
     private static final String TAG = "WebkitView";
-    private static final String KEY_CURRENTURL = "currenturl";
-    private static final String KEY_STATE_UUID = "state_uuid";
 
     private Callback callback;
     private FocusWebViewClient client;
@@ -63,6 +62,11 @@ public class WebkitView extends NestedWebView implements IWebView, SharedPrefere
 
         linkHandler = new LinkHandler(this);
         setOnLongClickListener(linkHandler);
+    }
+
+    @VisibleForTesting
+    public Callback getCallback() {
+        return callback;
     }
 
     @Override

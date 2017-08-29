@@ -6,6 +6,7 @@
 package org.mozilla.focus.activity;
 
 import android.os.RemoteException;
+import android.support.annotation.NonNull;
 import android.support.test.InstrumentationRegistry;
 import android.support.test.espresso.ViewInteraction;
 import android.support.test.uiautomator.UiDevice;
@@ -25,6 +26,7 @@ import java.io.InputStream;
 import java.io.InputStreamReader;
 import java.nio.charset.StandardCharsets;
 
+import okhttp3.mockwebserver.MockResponse;
 import okio.Buffer;
 import okio.Okio;
 
@@ -243,6 +245,11 @@ public final class TestHelper {
                 dHeight,
                 20
         );
+    }
+
+    public static MockResponse createMockResponseFromAsset(@NonNull String fileName) throws IOException {
+        return new MockResponse()
+                .setBody(TestHelper.readTestAsset(fileName));
     }
 
     static Buffer readTestAsset(String filename) throws IOException {
