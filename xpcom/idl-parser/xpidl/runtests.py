@@ -110,4 +110,4 @@ void getBar();
             self.assertEqual(e.args[0], "Unexpected overloaded virtual method GetBar in interface foo")
 
 if __name__ == '__main__':
-    mozunit.main()
+    mozunit.main(runwith='unittest')
