@@ -54,6 +54,11 @@
 
 /** Begin titlebar **/
 
+#titlebar-content {
+  /* Ensure the the content part of the titlebar does not shrink. */
+  min-height: inherit;
+}
+
 #titlebar-buttonbox > .titlebar-button {
   display: none;
 }
@@ -63,6 +68,8 @@
 #titlebar-secondary-buttonbox {
   position: relative;
   z-index: 1;
+  align-items: center;
+  display: flex;
 }
 
 /* These would be margin-inline-start/end if it wasn't for the fact that OS X
@@ -72,10 +79,8 @@
   margin-left: 7px;
 }
 
-.titlebar-placeholder[type="fullscreen-button"],
-#titlebar-secondary-buttonbox {
-  margin-right: 7px;
-  margin-left: 7px;
+.titlebar-placeholder[type="fullscreen-button"] {
+  margin-right: 4px;
 }
 
 #main-window:not(:-moz-lwtheme) > #titlebar {
@@ -1236,66 +1241,18 @@ html|*.addon-webext-perm-list {
 
 /* End customization mode */
 
-.private-browsing-indicator {
-  background-image: url("chrome://browser/skin/privatebrowsing-mask.png");
-  background-repeat: no-repeat;
-  background-size: 100% auto;
-  width: 38px;
-  height: 28px;
-  /**
-   * The private browsing mask graphic has a 3px flare at the top. The distance
-   * we want between the mask and items on either side is 7px, so we use 4px,
-   * since the other 3px is accounted for by the empty space on either side.
-   */
-  margin-left: 4px;
-  margin-right: 4px;
-}
+/* Private browsing indicator */
 
-#titlebar-secondary-buttonbox > .private-browsing-indicator {
-  position: relative;
-}
-
-#main-window[privatebrowsingmode=temporary]:not([tabsintitlebar]) > #titlebar > #titlebar-content > #titlebar-secondary-buttonbox > .private-browsing-indicator {
-  background-image: url("chrome://browser/skin/privatebrowsing-mask-short.png");
-  height: 20px;
-}
-
-#main-window:not([privatebrowsingmode=temporary]) .private-browsing-indicator,
-#main-window[privatebrowsingmode=temporary][inFullscreen] > #titlebar > #titlebar-content > #titlebar-secondary-buttonbox > .private-browsing-indicator,
-#main-window[privatebrowsingmode=temporary]:not([inFullscreen]) > #tab-view-deck > #browser-panel > #navigator-toolbox > #TabsToolbar > .private-browsing-indicator {
+:root[privatebrowsingmode=temporary][tabsintitlebar]:not([inFullscreen]) > #tab-view-deck > #browser-panel > #navigator-toolbox > #TabsToolbar > .private-browsing-indicator,
+:root[privatebrowsingmode=temporary]:not([tabsintitlebar]) > #titlebar > #titlebar-content > #titlebar-secondary-buttonbox > .private-browsing-indicator {
   display: none;
 }
 
-@media (min-resolution: 2dppx) {
-  .private-browsing-indicator {
-    background-image: url("chrome://browser/skin/privatebrowsing-mask@2x.png");
-  }
-  #main-window[privatebrowsingmode=temporary]:not([tabsintitlebar]) > #titlebar > #titlebar-content > #titlebar-secondary-buttonbox > .private-browsing-indicator {
-    background-image: url("chrome://browser/skin/privatebrowsing-mask-short@2x.png");
-  }
-}
-
-#TabsToolbar > .private-browsing-indicator {
-  /* We offset by 38px for mask graphic, plus 4px to account for the
-   * margin-left, which sums to 42px.
-   */
-  margin-right: -42px;
-}
-
-#main-window[privatebrowsingmode=temporary] .titlebar-placeholder[type="fullscreen-button"],
-#main-window[privatebrowsingmode=temporary] > #titlebar > #titlebar-content > #titlebar-secondary-buttonbox > #titlebar-fullscreen-button {
-  margin-left: 0px;
-}
-
-#main-window[privatebrowsingmode=temporary][inFullscreen] .titlebar-placeholder[type="fullscreen-button"] {
-  /* Override display:none for .titlebar-placeholder in fullscreen so we can have consistent
-     position and padding for the private browsing indicator. */
-  display: -moz-box;
-}
-
-#TabsToolbar > .private-browsing-indicator:-moz-locale-dir(rtl) {
+#TabsToolbar > .private-browsing-indicator:-moz-locale-dir(rtl),
   -moz-box-ordinal-group: 0;
 }
+
+/* End private browsing indicator */
 
 %include ../shared/UITour.inc.css
 

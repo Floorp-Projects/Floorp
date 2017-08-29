@@ -573,9 +573,7 @@
     <spacer id="titlebar-spacer" flex="1"/>
     <hbox id="titlebar-buttonbox-container">
 #ifdef XP_WIN
-      <hbox id="private-browsing-indicator-titlebar">
-        <hbox class="private-browsing-indicator"/>
-      </hbox>
+      <hbox class="private-browsing-indicator"/>
 #endif
       <hbox id="titlebar-buttonbox">
         <toolbarbutton class="titlebar-button" id="titlebar-min" oncommand="window.minimize();"/>
@@ -633,7 +631,7 @@
              collapsed="true">
 
 #if defined(MOZ_WIDGET_GTK)
-      <hbox id="private-browsing-indicator"
+      <hbox class="private-browsing-indicator"
             skipintoolbarset="true"/>
 #endif
 
