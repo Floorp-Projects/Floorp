@@ -1290,7 +1290,7 @@ protected:
 NS_IMPL_ADDREF_INHERITED(nsContentSubtreeIterator, nsContentIterator)
 NS_IMPL_RELEASE_INHERITED(nsContentSubtreeIterator, nsContentIterator)
 
-NS_INTERFACE_MAP_BEGIN_CYCLE_COLLECTION_INHERITED(nsContentSubtreeIterator)
+NS_INTERFACE_MAP_BEGIN_CYCLE_COLLECTION(nsContentSubtreeIterator)
 NS_INTERFACE_MAP_END_INHERITING(nsContentIterator)
 
 NS_IMPL_CYCLE_COLLECTION_INHERITED(nsContentSubtreeIterator, nsContentIterator,

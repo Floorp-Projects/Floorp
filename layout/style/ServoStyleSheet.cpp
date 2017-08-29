@@ -168,7 +168,7 @@ ServoStyleSheet::LastRelease()
 }
 
 // QueryInterface implementation for ServoStyleSheet
-NS_INTERFACE_MAP_BEGIN_CYCLE_COLLECTION_INHERITED(ServoStyleSheet)
+NS_INTERFACE_MAP_BEGIN_CYCLE_COLLECTION(ServoStyleSheet)
   NS_INTERFACE_MAP_ENTRY_AMBIGUOUS(nsISupports, nsIDOMCSSStyleSheet)
   if (aIID.Equals(NS_GET_IID(ServoStyleSheet)))
     foundInterface = reinterpret_cast<nsISupports*>(this);

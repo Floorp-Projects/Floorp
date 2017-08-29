@@ -24,7 +24,7 @@ NS_IMPL_CYCLE_COLLECTION_INHERITED(ScreenOrientation,
                                    DOMEventTargetHelper,
                                    mScreen);
 
-NS_INTERFACE_MAP_BEGIN_CYCLE_COLLECTION_INHERITED(ScreenOrientation)
+NS_INTERFACE_MAP_BEGIN_CYCLE_COLLECTION(ScreenOrientation)
 NS_INTERFACE_MAP_END_INHERITING(DOMEventTargetHelper)
 
 NS_IMPL_ADDREF_INHERITED(ScreenOrientation, DOMEventTargetHelper)

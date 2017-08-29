@@ -25,7 +25,7 @@ NS_IMPL_CYCLE_COLLECTION_INHERITED(DynamicsCompressorNode, AudioNode,
                                    mAttack,
                                    mRelease)
 
-NS_INTERFACE_MAP_BEGIN_CYCLE_COLLECTION_INHERITED(DynamicsCompressorNode)
+NS_INTERFACE_MAP_BEGIN_CYCLE_COLLECTION(DynamicsCompressorNode)
 NS_INTERFACE_MAP_END_INHERITING(AudioNode)
 
 NS_IMPL_ADDREF_INHERITED(DynamicsCompressorNode, AudioNode)
