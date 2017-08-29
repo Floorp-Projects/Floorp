@@ -1287,11 +1287,11 @@ OpIter<Policy>::readCurrentMemory()
     if (!env_.usesMemory())
         return fail("can't touch memory without memory");
 
-    uint32_t flags;
-    if (!readVarU32(&flags))
+    uint8_t flags;
+    if (!readFixedU8(&flags))
         return false;
 
-    if (flags != uint32_t(MemoryTableFlags::Default))
+    if (flags != uint8_t(MemoryTableFlags::Default))
         return fail("unexpected flags");
 
     return push(ValType::I32);
@@ -1306,11 +1306,11 @@ OpIter<Policy>::readGrowMemory(Value* input)
     if (!env_.usesMemory())
         return fail("can't touch memory without memory");
 
-    uint32_t flags;
-    if (!readVarU32(&flags))
+    uint8_t flags;
+    if (!readFixedU8(&flags))
         return false;
 
-    if (flags != uint32_t(MemoryTableFlags::Default))
+    if (flags != uint8_t(MemoryTableFlags::Default))
         return fail("unexpected flags");
 
     if (!popWithType(ValType::I32, input))
@@ -1604,11 +1604,11 @@ OpIter<Policy>::readCallIndirect(uint32_t* sigIndex, Value* callee, ValueVector*
     if (*sigIndex >= env_.numSigs())
         return fail("signature index out of range");
 
-    uint32_t flags;
-    if (!readVarU32(&flags))
+    uint8_t flags;
+    if (!readFixedU8(&flags))
         return false;
 
-    if (flags != uint32_t(MemoryTableFlags::Default))
+    if (flags != uint8_t(MemoryTableFlags::Default))
         return fail("unexpected flags");
 
     if (!popWithType(ValType::I32, callee))
