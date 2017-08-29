@@ -441,6 +441,8 @@ MacroAssembler::rshift64(Register unmaskedShift, Register64 dest)
     ScratchRegisterScope shift(*this);
 
     ma_and(shift, unmaskedShift, Imm32(0x3f));
+    ma_b(shift, Imm32(0), &done, Equal);
+
     ma_srl(dest.low, dest.low, shift);
     ma_subu(shift, shift, Imm32(32));
     ma_b(shift, Imm32(0), &less, LessThan);
@@ -487,6 +489,7 @@ MacroAssembler::rshift64Arithmetic(Register unmaskedShift, Register64 dest)
 
     ScratchRegisterScope shift(*this);
     ma_and(shift, unmaskedShift, Imm32(0x3f));
+    ma_b(shift, Imm32(0), &done, Equal);
 
     ma_srl(dest.low, dest.low, shift);
     ma_subu(shift, shift, Imm32(32));
@@ -548,12 +551,13 @@ MacroAssembler::rotateLeft64(Register shift, Register64 src, Register64 dest, Re
     MOZ_ASSERT(temp != src.low && temp != src.high);
     MOZ_ASSERT(shift != src.low && shift != src.high);
     MOZ_ASSERT(temp != InvalidReg);
+    MOZ_ASSERT(src != dest);
 
     ScratchRegisterScope shift_value(*this);
-    Label high, done, zero;
-
+    Label high, swap, done, zero;
     ma_and(temp, shift, Imm32(0x3f));
-    ma_b(temp, Imm32(32), &high, GreaterThanOrEqual);
+    ma_b(temp, Imm32(32), &swap, Equal);
+    ma_b(temp, Imm32(32), &high, GreaterThan);
 
     // high = high << shift | low >> 32 - shift
     // low = low << shift | high >> 32 - shift
@@ -574,7 +578,11 @@ MacroAssembler::rotateLeft64(Register shift, Register64 src, Register64 dest, Re
     ma_move(dest.low, src.low);
     ma_move(dest.high, src.high);
     ma_b(&done);
-
+    bind(&swap);
+    ma_move(SecondScratchReg, src.low);
+    ma_move(dest.low, src.high);
+    ma_move(dest.high, SecondScratchReg);
+    ma_b(&done);
     // A 32 - 64 shift is a 0 - 32 shift in the other direction.
     bind(&high);
     ma_and(shift, shift, Imm32(0x3f));
@@ -631,12 +639,14 @@ MacroAssembler::rotateRight64(Register shift, Register64 src, Register64 dest, R
     MOZ_ASSERT(temp != src.low && temp != src.high);
     MOZ_ASSERT(shift != src.low && shift != src.high);
     MOZ_ASSERT(temp != InvalidReg);
+    MOZ_ASSERT(src != dest);
 
     ScratchRegisterScope shift_value(*this);
-    Label high, done, zero;
+    Label high, swap, done, zero;
 
     ma_and(temp, shift, Imm32(0x3f));
-    ma_b(temp, Imm32(32), &high, GreaterThanOrEqual);
+    ma_b(temp, Imm32(32), &swap, Equal);
+    ma_b(temp, Imm32(32), &high, GreaterThan);
 
     // high = high >> shift | low << 32 - shift
     // low = low >> shift | high << 32 - shift
@@ -661,7 +671,11 @@ MacroAssembler::rotateRight64(Register shift, Register64 src, Register64 dest, R
     ma_move(dest.low, src.low);
     ma_move(dest.high, src.high);
     ma_b(&done);
-
+    bind(&swap);
+    ma_move(SecondScratchReg, src.low);
+    ma_move(dest.low, src.high);
+    ma_move(dest.high, SecondScratchReg);
+    ma_b(&done);
     // A 32 - 64 shift is a 0 - 32 shift in the other direction.
     bind(&high);
     ma_and(shift, shift, Imm32(0x3f));
