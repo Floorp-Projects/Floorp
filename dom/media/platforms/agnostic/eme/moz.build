@@ -8,14 +8,12 @@ EXPORTS += [
     'ChromiumCDMVideoDecoder.h',
     'DecryptThroughputLimit.h',
     'EMEDecoderModule.h',
-    'EMEVideoDecoder.h',
     'SamplesWaitingForKey.h',
 ]
 
 UNIFIED_SOURCES += [
     'ChromiumCDMVideoDecoder.cpp',
     'EMEDecoderModule.cpp',
-    'EMEVideoDecoder.cpp',
     'SamplesWaitingForKey.cpp',
 ]
 
