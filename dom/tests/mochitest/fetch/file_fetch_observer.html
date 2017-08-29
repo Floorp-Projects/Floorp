@@ -19,10 +19,10 @@ function testObserver() {
 }
 
 function testObserveAbort() {
-  var fc = new FetchController();
+  var ac = new AbortController();
 
   fetch('http://mochi.test:8888/tests/dom/tests/mochitest/fetch/slow.sjs', {
-    signal: fc.signal,
+    signal: ac.signal,
     observe: o => {
       o.onstatechange = () => {
         ok(true, "StateChange event dispatched");
@@ -31,16 +31,16 @@ function testObserveAbort() {
           next();
         }
       }
-      fc.abort();
+      ac.abort();
     }
   });
 }
 
 function testObserveComplete() {
-  var fc = new FetchController();
+  var ac = new AbortController();
 
   fetch('http://mochi.test:8888/tests/dom/tests/mochitest/fetch/slow.sjs', {
-    signal: fc.signal,
+    signal: ac.signal,
     observe: o => {
       o.onstatechange = () => {
         ok(true, "StateChange event dispatched");
@@ -54,10 +54,10 @@ function testObserveComplete() {
 }
 
 function testObserveErrored() {
-  var fc = new FetchController();
+  var ac = new AbortController();
 
   fetch('foo: bar', {
-    signal: fc.signal,
+    signal: ac.signal,
     observe: o => {
       o.onstatechange = () => {
         ok(true, "StateChange event dispatched");
@@ -71,10 +71,10 @@ function testObserveErrored() {
 }
 
 function testObserveResponding() {
-  var fc = new FetchController();
+  var ac = new AbortController();
 
   fetch('http://mochi.test:8888/tests/dom/tests/mochitest/fetch/slow.sjs', {
-    signal: fc.signal,
+    signal: ac.signal,
     observe: o => {
       o.onstatechange = () => {
         if (o.state == "responding") {

@@ -73,7 +73,7 @@ FetchDriver::~FetchDriver()
 }
 
 nsresult
-FetchDriver::Fetch(FetchSignal* aSignal, FetchDriverObserver* aObserver)
+FetchDriver::Fetch(AbortSignal* aSignal, FetchDriverObserver* aObserver)
 {
   workers::AssertIsOnMainThread();
 #ifdef DEBUG

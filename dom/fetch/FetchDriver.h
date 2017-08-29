@@ -12,7 +12,7 @@
 #include "nsIStreamListener.h"
 #include "nsIThreadRetargetableStreamListener.h"
 #include "mozilla/ConsoleReportCollector.h"
-#include "mozilla/dom/FetchSignal.h"
+#include "mozilla/dom/AbortSignal.h"
 #include "mozilla/dom/SRIMetadata.h"
 #include "mozilla/RefPtr.h"
 
@@ -85,7 +85,7 @@ class FetchDriver final : public nsIStreamListener,
                           public nsIChannelEventSink,
                           public nsIInterfaceRequestor,
                           public nsIThreadRetargetableStreamListener,
-                          public FetchSignal::Follower
+                          public AbortSignal::Follower
 {
 public:
   NS_DECL_ISUPPORTS
@@ -101,7 +101,7 @@ public:
               nsIEventTarget* aMainThreadEventTarget,
               bool aIsTrackingFetch);
 
-  nsresult Fetch(FetchSignal* aSignal,
+  nsresult Fetch(AbortSignal* aSignal,
                  FetchDriverObserver* aObserver);
 
   void
@@ -114,7 +114,7 @@ public:
     mWorkerScript = aWorkerScirpt;
   }
 
-  // FetchSignal::Follower
+  // AbortSignal::Follower
 
   void
   Aborted() override;
