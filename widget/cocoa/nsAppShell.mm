@@ -57,7 +57,8 @@ public:
 private:
   ~MacWakeLockListener() {}
 
-  IOPMAssertionID mAssertionID = kIOPMNullAssertionID;
+  IOPMAssertionID mAssertionNoDisplaySleepID = kIOPMNullAssertionID;
+  IOPMAssertionID mAssertionNoIdleSleepID = kIOPMNullAssertionID;
 
   NS_IMETHOD Callback(const nsAString& aTopic, const nsAString& aState) override {
     if (!aTopic.EqualsASCII("screen") &&
@@ -65,6 +66,14 @@ private:
         !aTopic.EqualsASCII("video-playing")) {
       return NS_OK;
     }
+
+    bool shouldKeepDisplayOn = aTopic.EqualsASCII("screen") ||
+                               aTopic.EqualsASCII("video-playing");
+    CFStringRef assertionType = shouldKeepDisplayOn ?
+      kIOPMAssertionTypeNoDisplaySleep : kIOPMAssertionTypeNoIdleSleep;
+    IOPMAssertionID& assertionId = shouldKeepDisplayOn ?
+      mAssertionNoDisplaySleepID : mAssertionNoIdleSleepID;
+
     // Note the wake lock code ensures that we're not sent duplicate
     // "locked-foreground" notifications when multiple wake locks are held.
     if (aState.EqualsASCII("locked-foreground")) {
@@ -75,10 +84,10 @@ private:
                                          (aTopic.Data()),
                                        aTopic.Length());
       IOReturn success =
-        ::IOPMAssertionCreateWithName(kIOPMAssertionTypeNoDisplaySleep,
+        ::IOPMAssertionCreateWithName(assertionType,
                                       kIOPMAssertionLevelOn,
                                       cf_topic,
-                                      &mAssertionID);
+                                      &assertionId);
       CFRelease(cf_topic);
       if (success != kIOReturnSuccess) {
         NS_WARNING("failed to disable screensaver");
@@ -86,8 +95,8 @@ private:
     } else {
       // Re-enable screen saver.
       NS_WARNING("Releasing screensaver");
-      if (mAssertionID != kIOPMNullAssertionID) {
-        IOReturn result = ::IOPMAssertionRelease(mAssertionID);
+      if (assertionId != kIOPMNullAssertionID) {
+        IOReturn result = ::IOPMAssertionRelease(assertionId);
         if (result != kIOReturnSuccess) {
           NS_WARNING("failed to release screensaver");
         }
