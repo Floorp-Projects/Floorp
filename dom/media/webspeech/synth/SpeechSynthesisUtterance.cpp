@@ -21,7 +21,7 @@ namespace dom {
 NS_IMPL_CYCLE_COLLECTION_INHERITED(SpeechSynthesisUtterance,
                                    DOMEventTargetHelper, mVoice);
 
-NS_INTERFACE_MAP_BEGIN_CYCLE_COLLECTION_INHERITED(SpeechSynthesisUtterance)
+NS_INTERFACE_MAP_BEGIN_CYCLE_COLLECTION(SpeechSynthesisUtterance)
 NS_INTERFACE_MAP_END_INHERITING(DOMEventTargetHelper)
 
 NS_IMPL_ADDREF_INHERITED(SpeechSynthesisUtterance, DOMEventTargetHelper)

@@ -21,7 +21,7 @@ namespace dom {
 NS_IMPL_CYCLE_COLLECTION_INHERITED(BiquadFilterNode, AudioNode,
                                    mFrequency, mDetune, mQ, mGain)
 
-NS_INTERFACE_MAP_BEGIN_CYCLE_COLLECTION_INHERITED(BiquadFilterNode)
+NS_INTERFACE_MAP_BEGIN_CYCLE_COLLECTION(BiquadFilterNode)
 NS_INTERFACE_MAP_END_INHERITING(AudioNode)
 
 NS_IMPL_ADDREF_INHERITED(BiquadFilterNode, AudioNode)

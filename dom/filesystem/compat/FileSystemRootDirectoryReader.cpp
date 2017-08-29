@@ -55,7 +55,7 @@ NS_IMPL_ADDREF_INHERITED(FileSystemRootDirectoryReader,
 NS_IMPL_RELEASE_INHERITED(FileSystemRootDirectoryReader,
                           FileSystemDirectoryReader)
 
-NS_INTERFACE_MAP_BEGIN_CYCLE_COLLECTION_INHERITED(FileSystemRootDirectoryReader)
+NS_INTERFACE_MAP_BEGIN_CYCLE_COLLECTION(FileSystemRootDirectoryReader)
 NS_INTERFACE_MAP_END_INHERITING(FileSystemDirectoryReader)
 
 FileSystemRootDirectoryReader::FileSystemRootDirectoryReader(FileSystemDirectoryEntry* aParentEntry,

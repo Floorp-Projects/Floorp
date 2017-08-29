@@ -59,7 +59,7 @@ NS_IMPL_ADDREF_INHERITED(AudioDestinationTrackSource,
                          MediaStreamTrackSource)
 NS_IMPL_RELEASE_INHERITED(AudioDestinationTrackSource,
                           MediaStreamTrackSource)
-NS_INTERFACE_MAP_BEGIN_CYCLE_COLLECTION_INHERITED(AudioDestinationTrackSource)
+NS_INTERFACE_MAP_BEGIN_CYCLE_COLLECTION(AudioDestinationTrackSource)
 NS_INTERFACE_MAP_END_INHERITING(MediaStreamTrackSource)
 NS_IMPL_CYCLE_COLLECTION_INHERITED(AudioDestinationTrackSource,
                                    MediaStreamTrackSource,
@@ -67,7 +67,7 @@ NS_IMPL_CYCLE_COLLECTION_INHERITED(AudioDestinationTrackSource,
 
 NS_IMPL_CYCLE_COLLECTION_INHERITED(MediaStreamAudioDestinationNode, AudioNode, mDOMStream)
 
-NS_INTERFACE_MAP_BEGIN_CYCLE_COLLECTION_INHERITED(MediaStreamAudioDestinationNode)
+NS_INTERFACE_MAP_BEGIN_CYCLE_COLLECTION(MediaStreamAudioDestinationNode)
 NS_INTERFACE_MAP_END_INHERITING(AudioNode)
 
 NS_IMPL_ADDREF_INHERITED(MediaStreamAudioDestinationNode, AudioNode)

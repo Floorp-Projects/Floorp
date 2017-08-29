@@ -121,7 +121,7 @@ private:
 };
 
 // QueryInterface implementation for ServoKeyframeList
-NS_INTERFACE_MAP_BEGIN_CYCLE_COLLECTION_INHERITED(ServoKeyframeList)
+NS_INTERFACE_MAP_BEGIN_CYCLE_COLLECTION(ServoKeyframeList)
 NS_INTERFACE_MAP_END_INHERITING(dom::CSSRuleList)
 
 NS_IMPL_ADDREF_INHERITED(ServoKeyframeList, dom::CSSRuleList)
@@ -164,7 +164,7 @@ ServoKeyframesRule::~ServoKeyframesRule()
 NS_IMPL_ADDREF_INHERITED(ServoKeyframesRule, dom::CSSKeyframesRule)
 NS_IMPL_RELEASE_INHERITED(ServoKeyframesRule, dom::CSSKeyframesRule)
 
-NS_INTERFACE_MAP_BEGIN_CYCLE_COLLECTION_INHERITED(ServoKeyframesRule)
+NS_INTERFACE_MAP_BEGIN_CYCLE_COLLECTION(ServoKeyframesRule)
 NS_INTERFACE_MAP_END_INHERITING(dom::CSSKeyframesRule)
 
 NS_IMPL_CYCLE_COLLECTION_CLASS(ServoKeyframesRule)

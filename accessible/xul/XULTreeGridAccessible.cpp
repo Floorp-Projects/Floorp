@@ -263,7 +263,7 @@ NS_IMPL_CYCLE_COLLECTION_INHERITED(XULTreeGridRowAccessible,
                                    XULTreeItemAccessibleBase,
                                    mAccessibleCache)
 
-NS_INTERFACE_MAP_BEGIN_CYCLE_COLLECTION_INHERITED(XULTreeGridRowAccessible)
+NS_INTERFACE_MAP_BEGIN_CYCLE_COLLECTION(XULTreeGridRowAccessible)
 NS_INTERFACE_MAP_END_INHERITING(XULTreeItemAccessibleBase)
 
 NS_IMPL_ADDREF_INHERITED(XULTreeGridRowAccessible,
@@ -447,7 +447,7 @@ XULTreeGridCellAccessible::~XULTreeGridCellAccessible()
 NS_IMPL_CYCLE_COLLECTION_INHERITED(XULTreeGridCellAccessible, LeafAccessible,
                                    mTree, mColumn)
 
-NS_INTERFACE_MAP_BEGIN_CYCLE_COLLECTION_INHERITED(XULTreeGridCellAccessible)
+NS_INTERFACE_MAP_BEGIN_CYCLE_COLLECTION(XULTreeGridCellAccessible)
 NS_INTERFACE_MAP_END_INHERITING(LeafAccessible)
 NS_IMPL_ADDREF_INHERITED(XULTreeGridCellAccessible, LeafAccessible)
 NS_IMPL_RELEASE_INHERITED(XULTreeGridCellAccessible, LeafAccessible)

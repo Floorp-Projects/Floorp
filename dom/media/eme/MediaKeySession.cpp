@@ -33,7 +33,7 @@ NS_IMPL_CYCLE_COLLECTION_INHERITED(MediaKeySession,
                                    mKeyStatusMap,
                                    mClosed)
 
-NS_INTERFACE_MAP_BEGIN_CYCLE_COLLECTION_INHERITED(MediaKeySession)
+NS_INTERFACE_MAP_BEGIN_CYCLE_COLLECTION(MediaKeySession)
 NS_INTERFACE_MAP_END_INHERITING(DOMEventTargetHelper)
 
 NS_IMPL_ADDREF_INHERITED(MediaKeySession, DOMEventTargetHelper)
