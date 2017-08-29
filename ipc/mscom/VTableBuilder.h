@@ -8,7 +8,7 @@
 #define mozilla_mscom_VTableBuilder_h
 
 #include <stdint.h>
-#include <Unknwn.h>
+#include <unknwn.h>
 
 #if defined(__cplusplus)
 extern "C" {
