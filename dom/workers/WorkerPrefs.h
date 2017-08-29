@@ -43,6 +43,7 @@ WORKER_SIMPLE_PREF("gfx.offscreencanvas.enabled", OffscreenCanvasEnabled, OFFSCR
 WORKER_SIMPLE_PREF("dom.webkitBlink.dirPicker.enabled", WebkitBlinkDirectoryPickerEnabled, DOM_WEBKITBLINK_DIRPICKER_WEBKITBLINK)
 WORKER_SIMPLE_PREF("dom.netinfo.enabled", NetworkInformationEnabled, NETWORKINFORMATION_ENABLED)
 WORKER_SIMPLE_PREF("dom.abortController.enabled", AbortControllerEnabled, ABORTCONTROLLER_ENABLED)
+WORKER_SIMPLE_PREF("dom.abortController.fetch.enabled", AbortControllerEnabledInFetch, ABORTCONTROLLER_FETCH_ENABLED)
 WORKER_SIMPLE_PREF("dom.fetchObserver.enabled", FetchObserverEnabled, FETCHOBSERVER_ENABLED)
 WORKER_SIMPLE_PREF("privacy.resistFingerprinting", ResistFingerprintingEnabled, RESISTFINGERPRINTING_ENABLED)
 WORKER_PREF("intl.accept_languages", PrefLanguagesChanged)
