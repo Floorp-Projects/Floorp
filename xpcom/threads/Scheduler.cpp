@@ -477,7 +477,9 @@ SchedulerImpl::CreateQueue(nsIIdlePeriod* aIdlePeriod, nsThread** aThread)
   // Setup "main" thread
   mainThread = new nsThread(WrapNotNull(synchronizedQueue), nsThread::MAIN_THREAD, 0);
 
+#ifndef RELEASE_OR_BETA
   prioritized->SetNextIdleDeadlineRef(mainThread->NextIdleDeadlineRef());
+#endif
 
   mainThread.forget(aThread);
   return synchronizedQueue.forget();

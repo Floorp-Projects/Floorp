@@ -1,0 +1,53 @@
+<!doctype html>
+<html>
+<head>
+  <meta charset="utf-8">
+  <title>Test for CSS parser reporting parsing errors with expected precision</title>
+  <script src="/tests/SimpleTest/SimpleTest.js"></script>
+  <link rel="stylesheet" href="/tests/SimpleTest/test.css">
+</head>
+<body>
+<style id="testbench"></style>
+<script>
+  var tests = [
+    { css: "@unknown {}", error: "Unrecognized at-rule or error parsing at-rule ‘@unknown’." },
+
+    { css: "x { color: invalid; }", error: "Expected color but found ‘invalid’.  Error in parsing value for ‘color’.  Declaration dropped." },
+
+    { css: "::unknown {}", error: "Unknown pseudo-class or pseudo-element ‘unknown’.  Ruleset ignored due to bad selector." },
+    { css: ":unknown {}", error: "Unknown pseudo-class or pseudo-element ‘unknown’.  Ruleset ignored due to bad selector." },
+    { css: "::5 {}", error: "Expected identifier for pseudo-class or pseudo-element but found ‘5’.  Ruleset ignored due to bad selector." },
+    { css: ": {}", error: "Expected identifier for pseudo-class or pseudo-element but found ‘ ’.  Ruleset ignored due to bad selector." },
+
+    { css: "x[a.]{}", error: "Unexpected token in attribute selector: ‘.’.  Ruleset ignored due to bad selector." },
+    { css: "x[*a]{}", error: "Expected ‘|’ but found ‘a’.  Ruleset ignored due to bad selector." },
+    { css: "x[a=5]{}", error: "Expected identifier or string for value in attribute selector but found ‘5’.  Ruleset ignored due to bad selector." },
+    { css: "x[$] {}", error: "Expected attribute name or namespace but found ‘$’.  Ruleset ignored due to bad selector." },
+    { css: "a[|5] {}", error: "Expected identifier for attribute name but found ‘5’.  Ruleset ignored due to bad selector." },
+    { css: "a[x|] {}", error: "Unknown namespace prefix ‘x’.  Ruleset ignored due to bad selector." },
+
+    { css: "x| {}", error: "Unknown namespace prefix ‘x’.  Ruleset ignored due to bad selector." },
+    { css: "a> {}", error: "Dangling combinator.  Ruleset ignored due to bad selector." },
+    { css: "~ {}", error: "Selector expected.  Ruleset ignored due to bad selector." },
+    { css: "| {}", error: "Expected element name or ‘*’ but found ‘ ’.  Ruleset ignored due to bad selector." },
+    { css: ". {}", error: "Expected identifier for class selector but found ‘ ’.  Ruleset ignored due to bad selector." },
+
+    { css: ":not() {}", error: "Missing argument in negation pseudo-class ‘)’.  Ruleset ignored due to bad selector." },
+  ];
+
+  var test = -1;
+  function nextTest() {
+    test++;
+    if (test == tests.length) {
+      SimpleTest.finish();
+      return;
+    }
+    let {css, error} = tests[test];
+    SimpleTest.expectConsoleMessages(function () { testbench.innerHTML = css },
+                                     [{ errorMessage: error }],
+                                     nextTest);
+  }
+
+  SimpleTest.waitForExplicitFinish();
+  nextTest();
+</script>

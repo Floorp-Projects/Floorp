@@ -492,7 +492,7 @@ var gSync = {
 
     let broadcaster = document.getElementById("sync-status");
     broadcaster.setAttribute("syncstatus", "active");
-    broadcaster.setAttribute("label", this.syncStrings.GetStringFromName("syncing2.label"));
+    broadcaster.setAttribute("label", this.syncStrings.GetStringFromName("syncingtabs.label"));
     broadcaster.setAttribute("disabled", "true");
   },
 

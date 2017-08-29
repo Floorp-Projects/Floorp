@@ -45,7 +45,7 @@ class WindowsBootstrapper(BaseBootstrapper):
         if not self.which('pacman'):
             raise NotImplementedError('The Windows bootstrapper only works with msys2 with pacman. Get msys2 at '
                                       'http://msys2.github.io/')
-        print 'Using an experimental bootstrapper for Windows.'
+        print('Using an experimental bootstrapper for Windows.')
 
     def which(self, name):
         return BaseBootstrapper.which(self, name + '.exe')

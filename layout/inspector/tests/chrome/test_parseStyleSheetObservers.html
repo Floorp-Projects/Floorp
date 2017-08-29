@@ -65,24 +65,31 @@ function test1Result() {
 let foundImport = false;
 let foundStyle = false;
 let styleFirstAddProcessor = function(event) {
-  info("styleFirstAddProcessor: called");
+  info("styleFirstAddProcessor: called with event "+ event.rule.cssText);
   if (event.rule.type == CSSRule.IMPORT_RULE) {
     foundImport = true;
   } else if (event.rule.type == CSSRule.STYLE_RULE) {
     foundStyle = true;
     is(foundImport, false, "Test 2: The style rule arrived before the import rule.");
   }
-}
+  return foundImport;
+};
 
 async function test2Setup() {
   info("test2Setup: called");
 
-  DOMUtils.parseStyleSheet(sheet, "@import url('imported_no_op.css'); p { color: purple; }");
+  // Create a Promise to watch for two StyleRuleAdded events. The first invocation should
+  // be the style rule, and the second should be the import rule. We use the same processor
+  // for both events, but the processor will only return true (completing the Promise) when
+  // the import rule has been processed.
+  let gotAllStyleRuleAddedEvents = ContentTaskUtils.waitForEvent(document,
+    "StyleRuleAdded", true, styleFirstAddProcessor);
+
+  DOMUtils.parseStyleSheet(sheet, "@import url('imported_no_op.css'); p {color: purple;}");
   is(sheet.cssRules.length, 2, "Test 2: Stylesheet now has 2 rules.");
 
-  // Await and then process the 2 events we expect to arrive.
-  styleFirstAddProcessor(await ContentTaskUtils.waitForEvent(document, "StyleRuleAdded", true));
-  styleFirstAddProcessor(await ContentTaskUtils.waitForEvent(document, "StyleRuleAdded", true));
+  // Await and then process the events we expect to arrive.
+  await gotAllStyleRuleAddedEvents;
 
   is(foundStyle, true, "Test 2: Got the style rule.");
   is(foundImport, true, "Test 2: Got the import rule.");
