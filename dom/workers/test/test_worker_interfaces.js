@@ -81,10 +81,6 @@ var ecmaGlobals =
 var interfaceNamesInGlobalScope =
   [
 // IMPORTANT: Do not change this list without review from a DOM peer!
-    "AbortController",
-// IMPORTANT: Do not change this list without review from a DOM peer!
-    "AbortSignal",
-// IMPORTANT: Do not change this list without review from a DOM peer!
     "Blob",
 // IMPORTANT: Do not change this list without review from a DOM peer!
     "BroadcastChannel",
