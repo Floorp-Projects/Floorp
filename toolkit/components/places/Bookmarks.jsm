@@ -1086,6 +1086,8 @@ var Bookmarks = Object.freeze({
    * This is intended as an interim API for the web-extensions implementation.
    * It will be removed as soon as we have a new querying API.
    *
+   * Note also that this used to exclude separators but no longer does so.
+   *
    * If you just want to search bookmarks by URL, use .fetch() instead.
    *
    * @param query
@@ -1548,11 +1550,9 @@ async function handleBookmarkItemSpecialData(itemId, item) {
 async function queryBookmarks(info) {
   let queryParams = {
     tags_folder: await promiseTagsFolderId(),
-    type: Bookmarks.TYPE_SEPARATOR,
   };
-  // We're searching for bookmarks, so exclude tags and separators.
-  let queryString = "WHERE b.type <> :type";
-  queryString += " AND b.parent <> :tags_folder";
+  // We're searching for bookmarks, so exclude tags.
+  let queryString = "WHERE b.parent <> :tags_folder";
   queryString += " AND p.parent <> :tags_folder";
 
   if (info.title) {
