@@ -37,7 +37,6 @@ NS_IMPL_CYCLE_COLLECTION_CLASS(Response)
 NS_IMPL_CYCLE_COLLECTION_UNLINK_BEGIN(Response)
   NS_IMPL_CYCLE_COLLECTION_UNLINK(mOwner)
   NS_IMPL_CYCLE_COLLECTION_UNLINK(mHeaders)
-  NS_IMPL_CYCLE_COLLECTION_UNLINK(mSignal)
   NS_IMPL_CYCLE_COLLECTION_UNLINK(mFetchStreamReader)
 
   tmp->mReadableStreamBody = nullptr;
@@ -49,7 +48,6 @@ NS_IMPL_CYCLE_COLLECTION_UNLINK_END
 NS_IMPL_CYCLE_COLLECTION_TRAVERSE_BEGIN(Response)
   NS_IMPL_CYCLE_COLLECTION_TRAVERSE(mOwner)
   NS_IMPL_CYCLE_COLLECTION_TRAVERSE(mHeaders)
-  NS_IMPL_CYCLE_COLLECTION_TRAVERSE(mSignal)
   NS_IMPL_CYCLE_COLLECTION_TRAVERSE(mFetchStreamReader)
 NS_IMPL_CYCLE_COLLECTION_TRAVERSE_END
 
@@ -64,12 +62,9 @@ NS_INTERFACE_MAP_BEGIN_CYCLE_COLLECTION(Response)
   NS_INTERFACE_MAP_ENTRY(nsISupports)
 NS_INTERFACE_MAP_END
 
-Response::Response(nsIGlobalObject* aGlobal,
-                   InternalResponse* aInternalResponse,
-                   AbortSignal* aSignal)
+Response::Response(nsIGlobalObject* aGlobal, InternalResponse* aInternalResponse)
   : FetchBody<Response>(aGlobal)
   , mInternalResponse(aInternalResponse)
-  , mSignal(aSignal)
 {
   MOZ_ASSERT(aInternalResponse->Headers()->Guard() == HeadersGuardEnum::Immutable ||
              aInternalResponse->Headers()->Guard() == HeadersGuardEnum::Response);
@@ -88,7 +83,7 @@ Response::Error(const GlobalObject& aGlobal)
 {
   nsCOMPtr<nsIGlobalObject> global = do_QueryInterface(aGlobal.GetAsSupports());
   RefPtr<InternalResponse> error = InternalResponse::NetworkError();
-  RefPtr<Response> r = new Response(global, error, nullptr);
+  RefPtr<Response> r = new Response(global, error);
   return r.forget();
 }
 
@@ -208,7 +203,7 @@ Response::Constructor(const GlobalObject& aGlobal,
     internalResponse->InitChannelInfo(worker->GetChannelInfo());
   }
 
-  RefPtr<Response> r = new Response(global, internalResponse, nullptr);
+  RefPtr<Response> r = new Response(global, internalResponse);
 
   if (aInit.mHeaders.WasPassed()) {
     internalResponse->Headers()->Clear();
@@ -347,7 +342,7 @@ Response::Clone(JSContext* aCx, ErrorResult& aRv)
       ? InternalResponse::eDontCloneInputStream
       : InternalResponse::eCloneInputStream);
 
-  RefPtr<Response> response = new Response(mOwner, ir, mSignal);
+  RefPtr<Response> response = new Response(mOwner, ir);
 
   if (body) {
     // Maybe we have a body, but we receive null from MaybeTeeReadableStreamBody
@@ -390,7 +385,7 @@ Response::CloneUnfiltered(JSContext* aCx, ErrorResult& aRv)
       : InternalResponse::eCloneInputStream);
 
   RefPtr<InternalResponse> ir = clone->Unfiltered();
-  RefPtr<Response> ref = new Response(mOwner, ir, mSignal);
+  RefPtr<Response> ref = new Response(mOwner, ir);
 
   if (body) {
     // Maybe we have a body, but we receive null from MaybeTeeReadableStreamBody

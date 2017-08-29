@@ -1611,10 +1611,7 @@ private:
     if (NS_WARN_IF(!global)) {
       return false;
     }
-
-    // TODO This request object should be created with a AbortSignal object
-    // which should be aborted if the loading is aborted. See bug 1394102.
-    RefPtr<Request> request = new Request(global, internalReq, nullptr);
+    RefPtr<Request> request = new Request(global, internalReq);
 
     MOZ_ASSERT_IF(internalReq->IsNavigationRequest(),
                   request->Redirect() == RequestRedirect::Manual);
