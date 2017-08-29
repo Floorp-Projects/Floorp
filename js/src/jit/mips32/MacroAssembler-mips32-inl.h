@@ -141,6 +141,8 @@ MacroAssembler::addPtr(ImmWord imm, Register dest)
 void
 MacroAssembler::add64(Register64 src, Register64 dest)
 {
+    MOZ_ASSERT(dest.low != src.low);
+
     as_addu(dest.low, dest.low, src.low);
     as_sltu(ScratchRegister, dest.low, src.low);
     as_addu(dest.high, dest.high, src.high);
@@ -190,6 +192,10 @@ MacroAssembler::subPtr(Imm32 imm, Register dest)
 void
 MacroAssembler::sub64(Register64 src, Register64 dest)
 {
+    MOZ_ASSERT(dest.low != src.high);
+    MOZ_ASSERT(dest.high != src.low);
+    MOZ_ASSERT(dest.high != src.high);
+
     as_sltu(ScratchRegister, dest.low, src.low);
     as_subu(dest.high, dest.high, ScratchRegister);
     as_subu(dest.low, dest.low, src.low);

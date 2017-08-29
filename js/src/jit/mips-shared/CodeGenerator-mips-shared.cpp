@@ -536,9 +536,6 @@ CodeGeneratorMIPSShared::visitMulI64(LMulI64* lir)
           case 1:
             // nop
             return;
-          case 2:
-            masm.add64(ToRegister64(lhs), ToRegister64(lhs));
-            return;
           default:
             if (constant > 0) {
                 // Use shift if constant is power of 2.
