@@ -303,6 +303,33 @@ public abstract class RepositorySession {
   }
 
   /**
+   * Indicate if the specified records should be reconciled.
+   *
+   * @param remoteRecord
+   *        The record retrieved from upstream, already adjusted for clock skew.
+   * @param localRecord
+   *        The record retrieved from local storage.
+   *
+   * @return
+   *        true if the records should be passed to shouldReconcileRecords for
+   *        the actual resolution, false otherwise.
+   */
+  public boolean shouldReconcileRecords(final Record remoteRecord,
+                                        final Record localRecord) {
+    Logger.debug(LOG_TAG, "Checking if we should reconcile remote " + remoteRecord.guid + " against local " + localRecord.guid);
+    if (localRecord.equalPayloads(remoteRecord)) {
+      if (remoteRecord.lastModified > localRecord.lastModified) {
+        Logger.debug(LOG_TAG, "Records are equal (remote is newer). No record application needed.");
+        return false;
+      }
+      // Local wins.
+      Logger.debug(LOG_TAG, "Records are equal (local is newer). No record application needed.");
+      return false;
+    }
+    return true;
+  }
+
+  /**
    * Produce a record that is some combination of the remote and local records
    * provided.
    *
@@ -313,11 +340,12 @@ public abstract class RepositorySession {
    * The returned record *should* have the local androidID and the remote GUID,
    * and some optional merge of data from the two records.
    *
-   * This method can be called with records that are identical, or differ in
-   * any regard.
+   * This method should only be called when shouldReconcileRecords returns true
+   * for the specified records.
    *
    * This method will not be called if:
    *
+   * * shouldReconcileRecords() returns false
    * * either record is marked as deleted, or
    * * there is no local mapping for a new remote record.
    *
@@ -335,23 +363,13 @@ public abstract class RepositorySession {
    * @param lastLocalRetrieval
    *        The timestamp of the last retrieved set of local records.
    * @return
-   *        A Record instance to apply, or null to apply nothing.
+   *        A Record instance to apply.
    */
   public Record reconcileRecords(final Record remoteRecord,
-                                    final Record localRecord,
-                                    final long lastRemoteRetrieval,
-                                    final long lastLocalRetrieval) {
+                                 final Record localRecord,
+                                 final long lastRemoteRetrieval,
+                                 final long lastLocalRetrieval) {
     Logger.debug(LOG_TAG, "Reconciling remote " + remoteRecord.guid + " against local " + localRecord.guid);
-
-    if (localRecord.equalPayloads(remoteRecord)) {
-      if (remoteRecord.lastModified > localRecord.lastModified) {
-        Logger.debug(LOG_TAG, "Records are equal. No record application needed.");
-        return null;
-      }
-
-      // Local wins.
-      return null;
-    }
 
     // TODO: Decide what to do based on:
     // * Which of the two records is modified;
