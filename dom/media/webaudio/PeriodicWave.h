@@ -46,7 +46,7 @@ public:
 
   uint32_t DataLength() const
   {
-    return mCoefficients.mDuration;
+    return mLength;
   }
 
   bool DisableNormalization() const
@@ -54,7 +54,7 @@ public:
     return mDisableNormalization;
   }
 
-  const AudioChunk& GetThreadSharedBuffer() const
+  ThreadSharedFloatArrayBufferList* GetThreadSharedBuffer() const
   {
     return mCoefficients;
   }
@@ -65,8 +65,9 @@ public:
 private:
   ~PeriodicWave() = default;
 
-  AudioChunk mCoefficients;
   RefPtr<AudioContext> mContext;
+  RefPtr<ThreadSharedFloatArrayBufferList> mCoefficients;
+  uint32_t mLength;
   bool mDisableNormalization;
 };
 
