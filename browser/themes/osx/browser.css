@@ -1241,18 +1241,21 @@ html|*.addon-webext-perm-list {
 
 /* End customization mode */
 
-/* Private browsing indicator */
+/* Private browsing and accessibility indicators */
 
+:root[accessibilitymode][tabsintitlebar]:not([inFullscreen]) > #tab-view-deck > #browser-panel > #navigator-toolbox > #TabsToolbar > .accessibility-indicator,
 :root[privatebrowsingmode=temporary][tabsintitlebar]:not([inFullscreen]) > #tab-view-deck > #browser-panel > #navigator-toolbox > #TabsToolbar > .private-browsing-indicator,
+:root[accessibilitymode]:not([tabsintitlebar]) > #titlebar > #titlebar-content > #titlebar-secondary-buttonbox > .accessibility-indicator,
 :root[privatebrowsingmode=temporary]:not([tabsintitlebar]) > #titlebar > #titlebar-content > #titlebar-secondary-buttonbox > .private-browsing-indicator {
   display: none;
 }
 
 #TabsToolbar > .private-browsing-indicator:-moz-locale-dir(rtl),
+#TabsToolbar > .accessibility-indicator:-moz-locale-dir(rtl) {
   -moz-box-ordinal-group: 0;
 }
 
-/* End private browsing indicator */
+/* End private browsing and accessibility indicators */
 
 %include ../shared/UITour.inc.css
 
