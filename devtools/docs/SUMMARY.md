@@ -44,6 +44,7 @@
     * [Writing Actors With protocol.js](backend/protocol.js.md)
     * [Registering A New Actor](backend/actor-registration.md)
     * [Actor Best Practices](backend/actor-best-practices.md)
+* [Preferences](preferences.md)
 * [Automated tests](tests/README.md)
   * Running tests
     * [`xpcshell`](tests/xpcshell.md)
