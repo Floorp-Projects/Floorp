@@ -156,3 +156,37 @@ span#hostname {
   justify-content: end;
   padding: 10px;
 }
+
+.illustrated #errorPageContainer {
+  min-height: 300px;
+  display: flex;
+  background-position: left center;
+}
+
+.illustrated[dir="rtl"] #errorPageContainer {
+  background-position: right center;
+}
+
+.illustrated .title {
+  background: none;
+  padding-inline-start: 0;
+  margin-inline-start: 0;
+}
+
+.illustrated #text-container {
+  margin: auto;
+  padding-inline-start: 38%;
+}
+
+.illustrated #errorPageContainer {
+  background-repeat: no-repeat;
+  background-size: 38%;
+}
+
+.malformedURI #errorPageContainer {
+  background-image: url("chrome://browser/content/illustrations/error-malformed-url.svg");
+}
+
+.malformedURI #errorTryAgain {
+  display: none;
+}
