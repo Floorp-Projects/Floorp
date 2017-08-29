@@ -143,8 +143,9 @@ WebRenderBridgeParent::WebRenderBridgeParent(CompositorBridgeParentBase* aCompos
   }
 }
 
-WebRenderBridgeParent::WebRenderBridgeParent()
+WebRenderBridgeParent::WebRenderBridgeParent(const wr::PipelineId& aPipelineId)
   : mCompositorBridge(nullptr)
+  , mPipelineId(aPipelineId)
   , mChildLayerObserverEpoch(0)
   , mParentLayerObserverEpoch(0)
   , mWrEpoch(0)
@@ -156,9 +157,9 @@ WebRenderBridgeParent::WebRenderBridgeParent()
 }
 
 /* static */ WebRenderBridgeParent*
-WebRenderBridgeParent::CreateDestroyed()
+WebRenderBridgeParent::CreateDestroyed(const wr::PipelineId& aPipelineId)
 {
-  return new WebRenderBridgeParent();
+  return new WebRenderBridgeParent(aPipelineId);
 }
 
 WebRenderBridgeParent::~WebRenderBridgeParent()
