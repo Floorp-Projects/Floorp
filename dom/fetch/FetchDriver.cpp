@@ -104,7 +104,7 @@ FetchDriver::Fetch(AbortSignal* aSignal, FetchDriverObserver* aObserver)
   // the operation.
   if (aSignal) {
     if (aSignal->Aborted()) {
-      Abort();
+      Aborted();
       return NS_OK;
     }
 
@@ -967,7 +967,7 @@ FetchDriver::SetRequestHeaders(nsIHttpChannel* aChannel) const
 }
 
 void
-FetchDriver::Abort()
+FetchDriver::Aborted()
 {
   if (mObserver) {
   #ifdef DEBUG

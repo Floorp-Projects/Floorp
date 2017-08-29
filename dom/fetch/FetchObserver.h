@@ -15,7 +15,7 @@ namespace mozilla {
 namespace dom {
 
 class FetchObserver final : public DOMEventTargetHelper
-                          , public AbortFollower
+                          , public AbortSignal::Follower
 {
 public:
   NS_DECL_ISUPPORTS_INHERITED
@@ -37,7 +37,7 @@ public:
   IMPL_EVENT_HANDLER(responseprogress);
 
   void
-  Abort() override;
+  Aborted() override;
 
   void
   SetState(FetchState aState);
