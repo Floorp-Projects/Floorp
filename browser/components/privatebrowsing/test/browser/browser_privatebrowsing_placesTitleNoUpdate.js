@@ -22,16 +22,18 @@ add_task(async function test() {
   });
   info("Wait for a title change notification.");
   await promiseTitleChanged;
-  is((await PlacesUtils.history.fetch(TEST_URL)).title, TITLE_1,
-     "The title matches the orignal title after first visit");
+  await BrowserTestUtils.waitForCondition(async function() {
+    return (await PlacesUtils.history.fetch(TEST_URL)).title == TITLE_1;
+  }, "The title matches the orignal title after first visit");
 
   promiseTitleChanged = PlacesTestUtils.waitForNotification(
     "onTitleChanged", (uri, title) => uri.spec == TEST_URL, "history");
   await PlacesTestUtils.addVisits({ uri: TEST_URL, title: TITLE_2 });
   info("Wait for a title change notification.");
   await promiseTitleChanged;
-  is((await PlacesUtils.history.fetch(TEST_URL)).title, TITLE_2,
-     "The title matches the orignal title after updating visit");
+  await BrowserTestUtils.waitForCondition(async function() {
+    return (await PlacesUtils.history.fetch(TEST_URL)).title == TITLE_2;
+  }, "The title matches the orignal title after updating visit");
 
   let privateWin = await BrowserTestUtils.openNewBrowserWindow({private: true});
   registerCleanupFunction(async () => {
@@ -43,4 +45,3 @@ add_task(async function test() {
   is((await PlacesUtils.history.fetch(TEST_URL)).title, TITLE_2,
      "The title remains the same after visiting in private window");
 });
-
