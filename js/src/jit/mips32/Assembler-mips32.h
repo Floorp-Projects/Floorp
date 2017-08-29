@@ -65,7 +65,7 @@ static constexpr Register WasmTableCallIndexReg = ABINonArgReg2;
 
 static constexpr Register JSReturnReg_Type = a3;
 static constexpr Register JSReturnReg_Data = a2;
-static constexpr Register64 ReturnReg64(InvalidReg, InvalidReg);
+static constexpr Register64 ReturnReg64(v1, v0);
 static constexpr FloatRegister ReturnFloat32Reg = { FloatRegisters::f0, FloatRegister::Single };
 static constexpr FloatRegister ReturnDoubleReg = { FloatRegisters::f0, FloatRegister::Double };
 static constexpr FloatRegister ScratchFloat32Reg = { FloatRegisters::f18, FloatRegister::Single };
