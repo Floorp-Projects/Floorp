@@ -207,11 +207,11 @@ private:
   JSContext* mContexts[CooperativeThreadPool::kMaxThreads];
 };
 
-bool SchedulerImpl::sPrefScheduler;
-bool SchedulerImpl::sPrefChaoticScheduling;
-bool SchedulerImpl::sPrefPreemption;
-bool SchedulerImpl::sPrefUseMultipleQueues;
-size_t SchedulerImpl::sPrefThreadCount;
+bool SchedulerImpl::sPrefScheduler = false;
+bool SchedulerImpl::sPrefChaoticScheduling = false;
+bool SchedulerImpl::sPrefPreemption = false;
+bool SchedulerImpl::sPrefUseMultipleQueues = false;
+size_t SchedulerImpl::sPrefThreadCount = 2;
 
 size_t SchedulerImpl::sNumThreadsRunning;
 bool SchedulerImpl::sUnlabeledEventRunning;
@@ -763,11 +763,17 @@ Scheduler::GetPrefs()
 {
   MOZ_ASSERT(XRE_IsParentProcess());
   nsPrintfCString result("%d%d%d%d,%d",
-                         Preferences::GetBool("dom.ipc.scheduler", false),
-                         Preferences::GetBool("dom.ipc.scheduler.chaoticScheduling", false),
-                         Preferences::GetBool("dom.ipc.scheduler.preemption", false) ,
-                         Preferences::GetBool("dom.ipc.scheduler.useMultipleQueues", false),
-                         Preferences::GetInt("dom.ipc.scheduler.threadCount", 2));
+                         Preferences::GetBool("dom.ipc.scheduler",
+                                              SchedulerImpl::sPrefScheduler),
+                         Preferences::GetBool("dom.ipc.scheduler.chaoticScheduling",
+                                              SchedulerImpl::sPrefChaoticScheduling),
+                         Preferences::GetBool("dom.ipc.scheduler.preemption",
+                                              SchedulerImpl::sPrefPreemption),
+                         Preferences::GetBool("dom.ipc.scheduler.useMultipleQueues",
+                                              SchedulerImpl::sPrefUseMultipleQueues),
+                         Preferences::GetInt("dom.ipc.scheduler.threadCount",
+                                             SchedulerImpl::sPrefThreadCount));
+
   return result;
 }
 
@@ -775,6 +781,16 @@ Scheduler::GetPrefs()
 Scheduler::SetPrefs(const char* aPrefs)
 {
   MOZ_ASSERT(XRE_IsContentProcess());
+
+  // If the prefs weren't sent to this process, use the default values.
+  if (!aPrefs) {
+    return;
+  }
+
+  // If the pref string appears truncated, use the default values.
+  if (strlen(aPrefs) < 6) {
+    return;
+  }
 
   SchedulerImpl::sPrefScheduler = aPrefs[0] == '1';
   SchedulerImpl::sPrefChaoticScheduling = aPrefs[1] == '1';
