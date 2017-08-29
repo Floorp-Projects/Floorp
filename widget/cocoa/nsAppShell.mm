@@ -46,6 +46,9 @@
 
 using namespace mozilla::widget;
 
+#define WAKE_LOCK_LOG(...) MOZ_LOG(gMacWakeLockLog, mozilla::LogLevel::Debug, (__VA_ARGS__))
+static mozilla::LazyLogModule gMacWakeLockLog("MacWakeLock");
+
 // A wake lock listener that disables screen saver when requested by
 // Gecko. For example when we're playing video in a foreground tab we
 // don't want the screen saver to turn on.
@@ -70,6 +73,7 @@ private:
     // we should still hold the lock for background audio.
     if (aTopic.EqualsASCII("audio-playing") &&
         aState.EqualsASCII("locked-background")) {
+      WAKE_LOCK_LOG("keep audio playing even in background");
       return NS_OK;
     }
 
@@ -84,6 +88,7 @@ private:
     // "locked-foreground" notifications when multiple wake locks are held.
     if (aState.EqualsASCII("locked-foreground")) {
       if (assertionId != kIOPMNullAssertionID) {
+        WAKE_LOCK_LOG("already has a lock");
         return NS_OK;
       }
       // Prevent screen saver.
@@ -99,16 +104,17 @@ private:
                                       &assertionId);
       CFRelease(cf_topic);
       if (success != kIOReturnSuccess) {
-        NS_WARNING("failed to disable screensaver");
+        WAKE_LOCK_LOG("failed to disable screensaver");
       }
+      WAKE_LOCK_LOG("create screensaver");
     } else {
       // Re-enable screen saver.
-      NS_WARNING("Releasing screensaver");
       if (assertionId != kIOPMNullAssertionID) {
         IOReturn result = ::IOPMAssertionRelease(assertionId);
         if (result != kIOReturnSuccess) {
-          NS_WARNING("failed to release screensaver");
+          WAKE_LOCK_LOG("failed to release screensaver");
         }
+        WAKE_LOCK_LOG("Release screensaver");
         assertionId = kIOPMNullAssertionID;
       }
     }
