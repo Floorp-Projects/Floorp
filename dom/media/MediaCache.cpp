@@ -1866,35 +1866,27 @@ MediaCacheStream::NotifyDataStarted(int64_t aOffset)
   }
 }
 
-bool
+void
 MediaCacheStream::UpdatePrincipal(nsIPrincipal* aPrincipal)
 {
-  return nsContentUtils::CombineResourcePrincipals(&mPrincipal, aPrincipal);
+  MOZ_ASSERT(NS_IsMainThread());
+  MediaCache::ResourceStreamIterator iter(mMediaCache, mResourceID);
+  while (MediaCacheStream* stream = iter.Next()) {
+    if (nsContentUtils::CombineResourcePrincipals(&stream->mPrincipal,
+                                                  aPrincipal)) {
+      stream->mClient->CacheClientNotifyPrincipalChanged();
+    }
+  }
 }
 
 void
-MediaCacheStream::NotifyDataReceived(int64_t aSize, const char* aData,
-    nsIPrincipal* aPrincipal)
+MediaCacheStream::NotifyDataReceived(int64_t aSize, const char* aData)
 {
   // This might happen off the main thread.
 
   // It is safe to read mClosed without holding the monitor because this
   // function is guaranteed to happen before Close().
   MOZ_DIAGNOSTIC_ASSERT(!mClosed);
-
-  // Update principals before putting the data in the cache. This is important,
-  // we want to make sure all principals are updated before any consumer
-  // can see the new data.
-  // We do this without holding the cache monitor, in case the client wants
-  // to do something that takes a lock.
-  {
-    MediaCache::ResourceStreamIterator iter(mMediaCache, mResourceID);
-    while (MediaCacheStream* stream = iter.Next()) {
-      if (stream->UpdatePrincipal(aPrincipal)) {
-        stream->mClient->CacheClientNotifyPrincipalChanged();
-      }
-    }
-  }
 
   ReentrantMonitorAutoEnter mon(mMediaCache->GetReentrantMonitor());
   int64_t size = aSize;

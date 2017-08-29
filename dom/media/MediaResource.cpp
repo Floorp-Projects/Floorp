@@ -435,33 +435,25 @@ ChannelMediaResource::OnChannelRedirect(nsIChannel* aOld,
 }
 
 nsresult
-ChannelMediaResource::CopySegmentToCache(nsIPrincipal* aPrincipal,
-                                         const char* aFromSegment,
+ChannelMediaResource::CopySegmentToCache(const char* aFromSegment,
                                          uint32_t aCount,
                                          uint32_t* aWriteCount)
 {
-  mCacheStream.NotifyDataReceived(aCount, aFromSegment, aPrincipal);
+  mCacheStream.NotifyDataReceived(aCount, aFromSegment);
   *aWriteCount = aCount;
   return NS_OK;
 }
 
-
-struct CopySegmentClosure {
-  nsCOMPtr<nsIPrincipal> mPrincipal;
-  ChannelMediaResource*  mResource;
-};
-
 nsresult
 ChannelMediaResource::CopySegmentToCache(nsIInputStream* aInStream,
-                                         void* aClosure,
+                                         void* aResource,
                                          const char* aFromSegment,
                                          uint32_t aToOffset,
                                          uint32_t aCount,
                                          uint32_t* aWriteCount)
 {
-  CopySegmentClosure* closure = static_cast<CopySegmentClosure*>(aClosure);
-  return closure->mResource->CopySegmentToCache(
-    closure->mPrincipal, aFromSegment, aCount, aWriteCount);
+  ChannelMediaResource* res = static_cast<ChannelMediaResource*>(aResource);
+  return res->CopySegmentToCache(aFromSegment, aCount, aWriteCount);
 }
 
 nsresult
@@ -472,24 +464,22 @@ ChannelMediaResource::OnDataAvailable(nsIRequest* aRequest,
   // This might happen off the main thread.
   NS_ASSERTION(mChannel.get() == aRequest, "Wrong channel!");
 
+  // Update principals before putting the data in the cache. This is important,
+  // we want to make sure all principals are updated before any consumer can see
+  // the new data.
+  // TODO: Handle the case where OnDataAvailable() runs off the main thread.
+  UpdatePrincipal();
+
   RefPtr<ChannelMediaResource> self = this;
   nsCOMPtr<nsIRunnable> r = NS_NewRunnableFunction(
     "ChannelMediaResource::OnDataAvailable",
     [self, aCount]() { self->mChannelStatistics.AddBytes(aCount); });
   mCallback->AbstractMainThread()->Dispatch(r.forget());
 
-  CopySegmentClosure closure;
-  nsIScriptSecurityManager* secMan = nsContentUtils::GetSecurityManager();
-  if (secMan && mChannel) {
-    secMan->GetChannelResultPrincipal(mChannel, getter_AddRefs(closure.mPrincipal));
-  }
-  closure.mResource = this;
-
   uint32_t count = aCount;
   while (count > 0) {
     uint32_t read;
-    nsresult rv = aStream->ReadSegments(CopySegmentToCache, &closure, count,
-                                        &read);
+    nsresult rv = aStream->ReadSegments(CopySegmentToCache, this, count, &read);
     if (NS_FAILED(rv))
       return rv;
     NS_ASSERTION(read > 0, "Read 0 bytes while data was available?");
@@ -591,7 +581,8 @@ nsresult ChannelMediaResource::Close()
   return NS_OK;
 }
 
-already_AddRefed<nsIPrincipal> ChannelMediaResource::GetCurrentPrincipal()
+already_AddRefed<nsIPrincipal>
+ChannelMediaResource::GetCurrentPrincipal()
 {
   NS_ASSERTION(NS_IsMainThread(), "Only call on main thread");
 
@@ -836,6 +827,18 @@ ChannelMediaResource::CacheClientNotifyPrincipalChanged()
   NS_ASSERTION(NS_IsMainThread(), "Don't call on non-main thread");
 
   mCallback->NotifyPrincipalChanged();
+}
+
+void
+ChannelMediaResource::UpdatePrincipal()
+{
+  MOZ_ASSERT(NS_IsMainThread());
+  nsCOMPtr<nsIPrincipal> principal;
+  nsIScriptSecurityManager* secMan = nsContentUtils::GetSecurityManager();
+  if (secMan && mChannel) {
+    secMan->GetChannelResultPrincipal(mChannel, getter_AddRefs(principal));
+    mCacheStream.UpdatePrincipal(principal);
+  }
 }
 
 void
