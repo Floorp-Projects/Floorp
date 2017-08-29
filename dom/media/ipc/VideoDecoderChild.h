@@ -79,6 +79,9 @@ private:
   // caller.
   bool mNeedNewDecoder;
   MediaDataDecoder::DecodedData mDecodedData;
+
+  nsCString mBlacklistedD3D11Driver;
+  nsCString mBlacklistedD3D9Driver;
 };
 
 } // namespace dom

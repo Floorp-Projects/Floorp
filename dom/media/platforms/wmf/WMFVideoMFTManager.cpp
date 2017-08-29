@@ -410,6 +410,26 @@ FindD3D9BlacklistedDLL()
                                 "media.wmf.disable-d3d9-for-dlls");
 }
 
+const nsCString
+GetFoundD3D11BlacklistedDLL()
+{
+  if (sD3D11BlacklistingCache) {
+    return sD3D11BlacklistingCache->mBlacklistedDLL;
+  }
+
+  return nsCString();
+}
+
+const nsCString
+GetFoundD3D9BlacklistedDLL()
+{
+  if (sD3D9BlacklistingCache) {
+    return sD3D9BlacklistingCache->mBlacklistedDLL;
+  }
+
+  return nsCString();
+}
+
 class CreateDXVAManagerEvent : public Runnable
 {
 public:
