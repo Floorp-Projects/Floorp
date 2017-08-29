@@ -18221,16 +18221,18 @@ function _asyncToGenerator(fn) { return function () { var gen = fn.apply(this, a
  *
  * @memberof actions/breakpoints
  * @static
- * @param {String} $1.sourceId String  value
+ * @param {String} $1.source Source  value
  * @param {PendingBreakpoint} $1.location PendingBreakpoint  value
  */
-function syncBreakpoint(sourceId, pendingBreakpoint) {
+function syncBreakpoint(source, pendingBreakpoint) {
   return (_ref) => {
     var dispatch = _ref.dispatch,
         getState = _ref.getState,
         client = _ref.client,
         sourceMaps = _ref.sourceMaps;
-    var _pendingBreakpoint$lo = pendingBreakpoint.location,
+
+		var sourceId = source.id;
+		var _pendingBreakpoint$lo = pendingBreakpoint.location,
         line = _pendingBreakpoint$lo.line,
         sourceUrl = _pendingBreakpoint$lo.sourceUrl,
         column = _pendingBreakpoint$lo.column;
@@ -18238,7 +18240,7 @@ function syncBreakpoint(sourceId, pendingBreakpoint) {
     var location = { sourceId, sourceUrl, line, column };
     var breakpoint = (0, _breakpoint.createBreakpoint)(location, pendingBreakpoint);
 
-    var syncPromise = (0, _syncBreakpoint.syncClientBreakpoint)(sourceId, client, sourceMaps, pendingBreakpoint);
+    var syncPromise = (0, _syncBreakpoint.syncClientBreakpoint)(getState, client, sourceMaps, source, pendingBreakpoint);
 
     return dispatch({
       type: "SYNC_BREAKPOINT",
@@ -18308,7 +18310,7 @@ function removeBreakpoint(location) {
     return dispatch({
       type: "REMOVE_BREAKPOINT",
       breakpoint: bp,
-      [_promise.PROMISE]: client.removeBreakpoint(bp)
+      [_promise.PROMISE]: client.removeBreakpoint(bp.generatedLocation)
     });
   };
 }
@@ -18374,7 +18376,7 @@ function disableBreakpoint(location) {
         throw new Error("attempt to disable unsaved breakpoint");
       }
 
-      yield client.removeBreakpoint(bp);
+      yield client.removeBreakpoint(bp.generatedLocation);
       var newBreakpoint = _extends({}, bp, { disabled: true });
 
       return dispatch({
@@ -19364,7 +19366,7 @@ var checkPendingBreakpoint = (() => {
     var sameSource = sourceUrl && sourceUrl === source.url;
 
     if (sameSource) {
-      yield dispatch((0, _breakpoints.syncBreakpoint)(source.id, pendingBreakpoint));
+      yield dispatch((0, _breakpoints.syncBreakpoint)(source, pendingBreakpoint));
     }
   });
 
@@ -31407,9 +31409,9 @@ function setBreakpoint(location, condition, noSliding) {
   });
 }
 
-function removeBreakpoint(breakpoint) {
+function removeBreakpoint(generatedLocation) {
   try {
-    var id = (0, _breakpoint.makeLocationId)(breakpoint.generatedLocation);
+    var id = (0, _breakpoint.makeLocationId)(generatedLocation);
     var bpClient = bpClients[id];
     if (!bpClient) {
       console.warn("No breakpoint to delete on server");
@@ -42164,14 +42166,35 @@ Object.defineProperty(exports, "__esModule", {
   value: true
 });
 exports.syncClientBreakpoint = undefined;
+var _selectors = __webpack_require__(242);
 
 var _extends = Object.assign || function (target) { for (var i = 1; i < arguments.length; i++) { var source = arguments[i]; for (var key in source) { if (Object.prototype.hasOwnProperty.call(source, key)) { target[key] = source[key]; } } } return target; };
+
+async function getGeneratedLocation(
+  state,
+  source,
+  location,
+  sourceMaps
+) {
+  if (!sourceMaps.isOriginalId(location.sourceId)) {
+    return location;
+  }
+
+  const generatedLocation = await sourceMaps.getGeneratedLocation(
+    location,
+    source
+  );
+  const generatedSource = _selectors.getSource(state, generatedLocation.sourceId);
+  const sourceUrl = generatedSource.get("url");
+  return { ...generatedLocation, sourceUrl };
+}
 
 // we have three forms of syncing: disabled syncing, existing server syncing
 // and adding a new breakpoint
 var syncClientBreakpoint = exports.syncClientBreakpoint = (() => {
-  var _ref = _asyncToGenerator(function* (sourceId, client, sourceMaps, pendingBreakpoint) {
-    var generatedSourceId = sourceMaps.isOriginalId(sourceId) ? (0, _devtoolsSourceMap.originalToGeneratedId)(sourceId) : sourceId;
+  var _ref = _asyncToGenerator(function* (getState, client, sourceMaps, source, pendingBreakpoint) {
+		var sourceId = source.id;
+		var generatedSourceId = sourceMaps.isOriginalId(sourceId) ? (0, _devtoolsSourceMap.originalToGeneratedId)(sourceId) : sourceId;
 
     // this is the generatedLocation of the pending breakpoint, with
     // the source id updated to reflect the new connection
@@ -42180,7 +42203,7 @@ var syncClientBreakpoint = exports.syncClientBreakpoint = (() => {
     });
 
     var location = _extends({}, pendingBreakpoint.location, {
-      sourceId: generatedSourceId
+      sourceId: sourceId
     });
 
     (0, _breakpoint3.assertPendingBreakpoint)(pendingBreakpoint);
@@ -42209,17 +42232,32 @@ var syncClientBreakpoint = exports.syncClientBreakpoint = (() => {
     var existingClient = client.getBreakpointByLocation(generatedLocation);
 
     if (existingClient) {
-      var _newGeneratedLocation = existingClient.actualLocation;
-      var _newLocation2 = yield sourceMaps.getOriginalLocation(_newGeneratedLocation);
+			const newGeneratedLocation = yield getGeneratedLocation(
+	      getState(),
+	      source,
+	      location,
+	      sourceMaps
+	    );
 
-      var _breakpoint2 = _extends({}, pendingBreakpoint, {
-        id: (0, _breakpoint3.makeLocationId)(_newLocation2),
-        generatedLocation: _newGeneratedLocation,
-        location: _newLocation2
-      });
+	    if ((0, _breakpoint3.locationMoved)(generatedLocation, newGeneratedLocation)) {
+	      yield client.removeBreakpoint(generatedLocation);
+	      yield client.setBreakpoint(
+	        newGeneratedLocation,
+	        pendingBreakpoint.condition,
+	        sourceMaps.isOriginalId(sourceId)
+	      );
+	    }
 
-      (0, _breakpoint3.assertBreakpoint)(_breakpoint2);
-      return { breakpoint: _breakpoint2, previousLocation: location };
+	    const breakpoint = {
+	      ...pendingBreakpoint,
+	      id: (0, _breakpoint3.makeLocationId)(location),
+	      generatedLocation: newGeneratedLocation,
+	      location: location
+	    };
+
+	    (0, _breakpoint3.assertPendingBreakpoint)(breakpoint);
+	    return { breakpoint, previousLocation: location };
+
     }
 
     /** ******* CASE 3: Add New Breakpoint ***********/

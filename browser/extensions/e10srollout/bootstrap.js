@@ -30,7 +30,7 @@ const MULTI_EXPERIMENT = {
             // at all.
             addonsDisableExperiment(prefix) { return getAddonsDisqualifyForMulti(); } },
 
-  "release": { buckets: { 1: .5, 4: 1 }, // 1 process: 50%, 4 processes: 50%
+  "release": { buckets: { 4: 1 }, // 4 processes: 100%
 
                // See above for an explanation of this: we only allow users
                // with no extensions or users with WebExtensions.

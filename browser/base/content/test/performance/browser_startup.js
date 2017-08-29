@@ -92,7 +92,8 @@ const startupPhases = {
       "nsPlacesExpiration.js",
     ]),
     modules: new Set([
-      "resource:///modules/RecentWindow.jsm",
+      // Bug 1391495 - RecentWindow.jsm is intermittently used.
+      // "resource:///modules/RecentWindow.jsm",
       "resource://gre/modules/BookmarkHTMLUtils.jsm",
       "resource://gre/modules/Bookmarks.jsm",
       "resource://gre/modules/ContextualIdentityService.jsm",

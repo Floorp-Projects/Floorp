@@ -309,7 +309,7 @@ promise_test(async t => {
     mode: 'no-cors'
   });
 
-  const stashTakeURL = new URL(`../resources/stash-take.py?key=${stateKey}`);
+  const stashTakeURL = new URL(`../resources/stash-take.py?key=${stateKey}`, location);
   stashTakeURL.hostname = 'www1.' + stashTakeURL.hostname;
 
   const beforeAbortResult = await fetch(stashTakeURL).then(r => r.json());

@@ -31,12 +31,14 @@ NS_IMPL_CYCLE_COLLECTION_CLASS(Request)
 NS_IMPL_CYCLE_COLLECTION_UNLINK_BEGIN(Request)
   NS_IMPL_CYCLE_COLLECTION_UNLINK(mOwner)
   NS_IMPL_CYCLE_COLLECTION_UNLINK(mHeaders)
+  NS_IMPL_CYCLE_COLLECTION_UNLINK(mSignal)
   NS_IMPL_CYCLE_COLLECTION_UNLINK_PRESERVED_WRAPPER
 NS_IMPL_CYCLE_COLLECTION_UNLINK_END
 
 NS_IMPL_CYCLE_COLLECTION_TRAVERSE_BEGIN(Request)
   NS_IMPL_CYCLE_COLLECTION_TRAVERSE(mOwner)
   NS_IMPL_CYCLE_COLLECTION_TRAVERSE(mHeaders)
+  NS_IMPL_CYCLE_COLLECTION_TRAVERSE(mSignal)
 NS_IMPL_CYCLE_COLLECTION_TRAVERSE_END
 
 NS_IMPL_CYCLE_COLLECTION_TRACE_BEGIN(Request)
@@ -51,7 +53,8 @@ NS_INTERFACE_MAP_BEGIN_CYCLE_COLLECTION(Request)
   NS_INTERFACE_MAP_ENTRY(nsISupports)
 NS_INTERFACE_MAP_END
 
-Request::Request(nsIGlobalObject* aOwner, InternalRequest* aRequest)
+Request::Request(nsIGlobalObject* aOwner, InternalRequest* aRequest,
+                 AbortSignal* aSignal)
   : FetchBody<Request>(aOwner)
   , mRequest(aRequest)
 {
@@ -59,6 +62,15 @@ Request::Request(nsIGlobalObject* aOwner, InternalRequest* aRequest)
              aRequest->Headers()->Guard() == HeadersGuardEnum::Request ||
              aRequest->Headers()->Guard() == HeadersGuardEnum::Request_no_cors);
   SetMimeType();
+
+  if (aSignal) {
+    // If we don't have a signal as argument, we will create it when required by
+    // content, otherwise the Request's signal must follow what has been passed.
+    mSignal = new AbortSignal(aSignal->Aborted());
+    if (!mSignal->Aborted()) {
+      mSignal->Follow(aSignal);
+    }
+  }
 }
 
 Request::~Request()
@@ -300,6 +312,8 @@ Request::Constructor(const GlobalObject& aGlobal,
 
   nsCOMPtr<nsIGlobalObject> global = do_QueryInterface(aGlobal.GetAsSupports());
 
+  RefPtr<AbortSignal> signal;
+
   if (aInput.IsRequest()) {
     RefPtr<Request> inputReq = &aInput.GetAsRequest();
     nsCOMPtr<nsIInputStream> body;
@@ -315,6 +329,7 @@ Request::Constructor(const GlobalObject& aGlobal,
     }
 
     request = inputReq->GetInternalRequest();
+    signal = inputReq->GetOrCreateSignal();
   } else {
     // aInput is USVString.
     // We need to get url before we create a InternalRequest.
@@ -431,6 +446,10 @@ Request::Constructor(const GlobalObject& aGlobal,
 
   if (aInit.mReferrerPolicy.WasPassed()) {
     request->SetReferrerPolicy(aInit.mReferrerPolicy.Value());
+  }
+
+  if (aInit.mSignal.WasPassed()) {
+    signal = &aInit.mSignal.Value();
   }
 
   if (NS_IsMainThread()) {
@@ -597,7 +616,7 @@ Request::Constructor(const GlobalObject& aGlobal,
     }
   }
 
-  RefPtr<Request> domRequest = new Request(global, request);
+  RefPtr<Request> domRequest = new Request(global, request, signal);
   domRequest->SetMimeType();
 
   if (aInput.IsRequest()) {
@@ -616,7 +635,7 @@ Request::Constructor(const GlobalObject& aGlobal,
 }
 
 already_AddRefed<Request>
-Request::Clone(ErrorResult& aRv) const
+Request::Clone(ErrorResult& aRv)
 {
   if (BodyUsed()) {
     aRv.ThrowTypeError<MSG_FETCH_BODY_CONSUMED_ERROR>();
@@ -629,7 +648,8 @@ Request::Clone(ErrorResult& aRv) const
     return nullptr;
   }
 
-  RefPtr<Request> request = new Request(mOwner, ir);
+  RefPtr<Request> request = new Request(mOwner, ir, GetOrCreateSignal());
+
   return request.forget();
 }
 
@@ -641,6 +661,22 @@ Request::Headers_()
   }
 
   return mHeaders;
+}
+
+AbortSignal*
+Request::GetOrCreateSignal()
+{
+  if (!mSignal) {
+    mSignal = new AbortSignal(false);
+  }
+
+  return mSignal;
+}
+
+AbortSignal*
+Request::GetSignal() const
+{
+  return mSignal;
 }
 
 } // namespace dom

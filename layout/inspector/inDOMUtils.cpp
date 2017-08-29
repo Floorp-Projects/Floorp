@@ -34,7 +34,6 @@
 #include "mozilla/EventStateManager.h"
 #include "nsIAtom.h"
 #include "nsRange.h"
-#include "nsContentList.h"
 #include "mozilla/StyleSheetInlines.h"
 #include "mozilla/dom/Element.h"
 #include "nsRuleWalker.h"

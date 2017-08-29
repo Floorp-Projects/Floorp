@@ -27,6 +27,10 @@ interface Request {
   readonly attribute RequestRedirect redirect;
   readonly attribute DOMString integrity;
 
+  [Func="AbortController::IsEnabledInFetch",
+   BinaryName="getOrCreateSignal"]
+  readonly attribute AbortSignal signal;
+
   [Throws,
    NewObject] Request clone();
 
@@ -48,8 +52,8 @@ dictionary RequestInit {
   RequestRedirect redirect;
   DOMString integrity;
 
-  [Func="FetchController::IsEnabled"]
-  FetchSignal signal;
+  [Func="AbortController::IsEnabledInFetch"]
+  AbortSignal signal;
 
   [Func="FetchObserver::IsEnabled"]
   ObserverCallback observe;
