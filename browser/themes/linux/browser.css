@@ -717,12 +717,6 @@ html|span.ac-emphasize-text-url {
 
 /* End customization mode */
 
-
-#main-window[privatebrowsingmode=temporary] #private-browsing-indicator {
-  background: url("chrome://browser/skin/privatebrowsing-mask.png") center no-repeat;
-  width: 40px;
-}
-
 %include ../shared/UITour.inc.css
 
 #UITourHighlight {
