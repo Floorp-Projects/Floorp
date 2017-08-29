@@ -4,30 +4,30 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-#include "FetchController.h"
-#include "FetchSignal.h"
-#include "mozilla/dom/FetchControllerBinding.h"
+#include "AbortController.h"
+#include "AbortSignal.h"
+#include "mozilla/dom/AbortControllerBinding.h"
 #include "WorkerPrivate.h"
 
 namespace mozilla {
 namespace dom {
 
-NS_IMPL_CYCLE_COLLECTION_WRAPPERCACHE(FetchController, mGlobal, mSignal,
+NS_IMPL_CYCLE_COLLECTION_WRAPPERCACHE(AbortController, mGlobal, mSignal,
                                       mFollowingSignal)
 
-NS_IMPL_CYCLE_COLLECTING_ADDREF(FetchController)
-NS_IMPL_CYCLE_COLLECTING_RELEASE(FetchController)
+NS_IMPL_CYCLE_COLLECTING_ADDREF(AbortController)
+NS_IMPL_CYCLE_COLLECTING_RELEASE(AbortController)
 
-NS_INTERFACE_MAP_BEGIN_CYCLE_COLLECTION(FetchController)
+NS_INTERFACE_MAP_BEGIN_CYCLE_COLLECTION(AbortController)
   NS_WRAPPERCACHE_INTERFACE_MAP_ENTRY
   NS_INTERFACE_MAP_ENTRY(nsISupports)
 NS_INTERFACE_MAP_END
 
 /* static */ bool
-FetchController::IsEnabled(JSContext* aCx, JSObject* aGlobal)
+AbortController::IsEnabled(JSContext* aCx, JSObject* aGlobal)
 {
   if (NS_IsMainThread()) {
-    return Preferences::GetBool("dom.fetchController.enabled", false);
+    return Preferences::GetBool("dom.abortController.enabled", false);
   }
 
   using namespace workers;
@@ -38,11 +38,11 @@ FetchController::IsEnabled(JSContext* aCx, JSObject* aGlobal)
     return false;
   }
 
-  return workerPrivate->FetchControllerEnabled();
+  return workerPrivate->AbortControllerEnabled();
 }
 
-/* static */ already_AddRefed<FetchController>
-FetchController::Constructor(const GlobalObject& aGlobal, ErrorResult& aRv)
+/* static */ already_AddRefed<AbortController>
+AbortController::Constructor(const GlobalObject& aGlobal, ErrorResult& aRv)
 {
   nsCOMPtr<nsIGlobalObject> global = do_QueryInterface(aGlobal.GetAsSupports());
   if (!global) {
@@ -50,39 +50,39 @@ FetchController::Constructor(const GlobalObject& aGlobal, ErrorResult& aRv)
     return nullptr;
   }
 
-  RefPtr<FetchController> fetchController = new FetchController(global);
-  return fetchController.forget();
+  RefPtr<AbortController> abortController = new AbortController(global);
+  return abortController.forget();
 }
 
-FetchController::FetchController(nsIGlobalObject* aGlobal)
+AbortController::AbortController(nsIGlobalObject* aGlobal)
   : mGlobal(aGlobal)
   , mAborted(false)
 {}
 
 JSObject*
-FetchController::WrapObject(JSContext* aCx, JS::Handle<JSObject*> aGivenProto)
+AbortController::WrapObject(JSContext* aCx, JS::Handle<JSObject*> aGivenProto)
 {
-  return FetchControllerBinding::Wrap(aCx, this, aGivenProto);
+  return AbortControllerBinding::Wrap(aCx, this, aGivenProto);
 }
 
 nsIGlobalObject*
-FetchController::GetParentObject() const
+AbortController::GetParentObject() const
 {
   return mGlobal;
 }
 
-FetchSignal*
-FetchController::Signal()
+AbortSignal*
+AbortController::Signal()
 {
   if (!mSignal) {
-    mSignal = new FetchSignal(this, mAborted);
+    mSignal = new AbortSignal(this, mAborted);
   }
 
   return mSignal;
 }
 
 void
-FetchController::Abort()
+AbortController::Abort()
 {
   if (mAborted) {
     return;
@@ -96,29 +96,29 @@ FetchController::Abort()
 }
 
 void
-FetchController::Follow(FetchSignal& aSignal)
+AbortController::Follow(AbortSignal& aSignal)
 {
-  FetchSignal::Follower::Follow(&aSignal);
+  AbortSignal::Follower::Follow(&aSignal);
 }
 
 void
-FetchController::Unfollow(FetchSignal& aSignal)
+AbortController::Unfollow(AbortSignal& aSignal)
 {
   if (mFollowingSignal != &aSignal) {
     return;
   }
 
-  FetchSignal::Follower::Unfollow();
+  AbortSignal::Follower::Unfollow();
 }
 
-FetchSignal*
-FetchController::Following() const
+AbortSignal*
+AbortController::Following() const
 {
   return mFollowingSignal;
 }
 
 void
-FetchController::Aborted()
+AbortController::Aborted()
 {
   Abort();
 }
