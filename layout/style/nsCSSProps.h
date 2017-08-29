@@ -809,7 +809,6 @@ public:
   static const KTableEntry kIMEModeKTable[];
   static const KTableEntry kLineHeightKTable[];
   static const KTableEntry kListStylePositionKTable[];
-  static const KTableEntry kListStyleKTable[];
   static const KTableEntry kMaskTypeKTable[];
   static const KTableEntry kMathVariantKTable[];
   static const KTableEntry kMathDisplayKTable[];
