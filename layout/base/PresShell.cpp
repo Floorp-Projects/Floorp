@@ -4534,7 +4534,10 @@ PresShell::ReconstructFrames()
 
   // Have to make sure that the content notifications are flushed before we
   // start messing with the frame model; otherwise we can get content doubling.
-  mDocument->FlushPendingNotifications(FlushType::ContentAndNotify);
+  //
+  // Also make sure that styles are flushed before calling into the frame
+  // constructor, since that's what it expects.
+  mDocument->FlushPendingNotifications(FlushType::Style);
 
   if (mIsDestroying) {
     return;
