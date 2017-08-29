@@ -13,4 +13,6 @@ interface AbortController {
   readonly attribute AbortSignal signal;
 
   void abort();
+  void follow(AbortSignal signal);
+  void unfollow(AbortSignal signal);
 };
