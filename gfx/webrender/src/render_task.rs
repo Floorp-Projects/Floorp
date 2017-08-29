@@ -248,6 +248,15 @@ impl RenderTask {
         let clips: Vec<_> = raw_clips.iter()
                                      .chain(extra_clip.iter())
                                      .filter(|&&(_, ref clip_info)| {
+            // If this clip does not contribute to a mask, then ensure
+            // it gets filtered out here. Otherwise, if a mask is
+            // created (by a different clip in the list), the allocated
+            // rectangle for the mask could end up being much bigger
+            // than is actually required.
+            if !clip_info.is_masking() {
+                return false;
+            }
+
             match clip_info.bounds.inner {
                 Some(ref inner) if !inner.device_rect.is_empty() => {
                     inner_rect = inner_rect.and_then(|r| r.intersection(&inner.device_rect));

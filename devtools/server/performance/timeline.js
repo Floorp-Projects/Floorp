@@ -21,7 +21,7 @@
  */
 
 const { Ci, Cu } = require("chrome");
-const { Class } = require("sdk/core/heritage");
+
 // Be aggressive about lazy loading, as this will run on every
 // toolbox startup
 loader.lazyRequireGetter(this, "Task", "devtools/shared/task", true);
@@ -38,25 +38,23 @@ const DEFAULT_TIMELINE_DATA_PULL_TIMEOUT = 200;
 /**
  * The timeline actor pops and forwards timeline markers registered in docshells.
  */
-exports.Timeline = Class({
-  extends: EventEmitter,
-  /**
-   * Initializes this actor with the provided connection and tab actor.
-   */
-  initialize: function (tabActor) {
-    this.tabActor = tabActor;
+function Timeline(tabActor) {
+  EventEmitter.decorate(this);
 
-    this._isRecording = false;
-    this._stackFrames = null;
-    this._memory = null;
-    this._framerate = null;
+  this.tabActor = tabActor;
 
-    // Make sure to get markers from new windows as they become available
-    this._onWindowReady = this._onWindowReady.bind(this);
-    this._onGarbageCollection = this._onGarbageCollection.bind(this);
-    EventEmitter.on(this.tabActor, "window-ready", this._onWindowReady);
-  },
+  this._isRecording = false;
+  this._stackFrames = null;
+  this._memory = null;
+  this._framerate = null;
 
+  // Make sure to get markers from new windows as they become available
+  this._onWindowReady = this._onWindowReady.bind(this);
+  this._onGarbageCollection = this._onGarbageCollection.bind(this);
+  EventEmitter.on(this.tabActor, "window-ready", this._onWindowReady);
+}
+
+Timeline.prototype = {
   /**
    * Destroys this actor, stopping recording first.
    */
@@ -357,4 +355,6 @@ exports.Timeline = Class({
       };
     }), endTime);
   },
-});
+};
+
+exports.Timeline = Timeline;

@@ -47,20 +47,20 @@ const DRAIN_ALLOCATIONS_TIMEOUT = 2000;
  * @param Target target
  *        The target owning this connection.
  */
-exports.PerformanceRecorder = Class({
-  extends: EventEmitter,
+function PerformanceRecorder(conn, tabActor) {
+  EventEmitter.decorate(this);
 
-  initialize: function (conn, tabActor) {
-    this.conn = conn;
-    this.tabActor = tabActor;
+  this.conn = conn;
+  this.tabActor = tabActor;
 
-    this._pendingConsoleRecordings = [];
-    this._recordings = [];
+  this._pendingConsoleRecordings = [];
+  this._recordings = [];
 
-    this._onTimelineData = this._onTimelineData.bind(this);
-    this._onProfilerEvent = this._onProfilerEvent.bind(this);
-  },
+  this._onTimelineData = this._onTimelineData.bind(this);
+  this._onProfilerEvent = this._onProfilerEvent.bind(this);
+}
 
+PerformanceRecorder.prototype = {
   /**
    * Initializes a connection to the profiler and other miscellaneous actors.
    * If in the process of opening, or already open, nothing happens.
@@ -479,7 +479,7 @@ exports.PerformanceRecorder = Class({
   },
 
   toString: () => "[object PerformanceRecorder]"
-});
+};
 
 /**
  * Creates an object of configurations based off of
@@ -498,3 +498,5 @@ function getPerformanceRecordingPrefs() {
       Services.prefs.getIntPref("devtools.performance.memory.max-log-length")
   };
 }
+
+exports.PerformanceRecorder = PerformanceRecorder;

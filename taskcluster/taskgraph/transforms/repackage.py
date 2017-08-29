@@ -244,7 +244,7 @@ def _generate_task_output_files(build_platform, locale=None):
     if build_platform.startswith('linux') or build_platform.startswith('macosx'):
         output_files = [{
             'type': 'file',
-            'path': '/home/worker/workspace/build/artifacts/{}target.complete.mar'
+            'path': '/builds/worker/workspace/build/artifacts/{}target.complete.mar'
                     .format(locale_output_path),
             'name': 'public/build/{}target.complete.mar'.format(locale_output_path),
         }]
@@ -252,7 +252,7 @@ def _generate_task_output_files(build_platform, locale=None):
         if build_platform.startswith('macosx'):
             output_files.append({
                 'type': 'file',
-                'path': '/home/worker/workspace/build/artifacts/{}target.dmg'
+                'path': '/builds/worker/workspace/build/artifacts/{}target.dmg'
                         .format(locale_output_path),
                 'name': 'public/build/{}target.dmg'.format(locale_output_path),
             })

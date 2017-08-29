@@ -325,7 +325,7 @@ AudioDestinationNode::AudioDestinationNode(AudioContext* aContext,
                                            bool aIsOffline,
                                            uint32_t aNumberOfChannels,
                                            uint32_t aLength, float aSampleRate)
-  : AudioNode(aContext, aIsOffline ? aNumberOfChannels : 2,
+  : AudioNode(aContext, aNumberOfChannels,
               ChannelCountMode::Explicit, ChannelInterpretation::Speakers)
   , mFramesToProduce(aLength)
   , mIsOffline(aIsOffline)

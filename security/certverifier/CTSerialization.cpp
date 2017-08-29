@@ -5,6 +5,7 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
 #include "CTSerialization.h"
+#include "CTUtils.h"
 
 #include <stdint.h>
 
@@ -72,7 +73,7 @@ UncheckedReadUint(size_t length, Reader& in, uint64_t& out)
 
 // Performs overflow sanity checks and calls UncheckedReadUint.
 template <size_t length, typename T>
-static inline Result
+Result
 ReadUint(Reader& in, T& out)
 {
   uint64_t value;
@@ -98,7 +99,7 @@ ReadFixedBytes(size_t length, Reader& in, Input& out)
 // on success. |prefixLength| indicates the number of bytes needed to represent
 // the length.
 template <size_t prefixLength>
-static inline Result
+Result
 ReadVariableBytes(Reader& in, Input& out)
 {
   size_t length;

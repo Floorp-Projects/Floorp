@@ -7,7 +7,7 @@
   lib/ (./lib/*)
   data/ (./data/*)
   skin/  (skin/*)
-% resource shield-recipe-client-content %content/
+% resource shield-recipe-client-content %content/ contentaccessible=yes
   content/ (./content/*)
-% resource shield-recipe-client-vendor %vendor/
+% resource shield-recipe-client-vendor %vendor/ contentaccessible=yes
   vendor/ (./vendor/*)

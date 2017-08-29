@@ -139,6 +139,18 @@ impl fmt::Debug for DocumentMsg {
     }
 }
 
+#[derive(Debug, Clone, Deserialize, Serialize)]
+pub enum DebugCommand {
+    // Display the frame profiler on screen.
+    EnableProfiler(bool),
+    // Display all texture cache pages on screen.
+    EnableTextureCacheDebug(bool),
+    // Display intermediate render targets on screen.
+    EnableRenderTargetDebug(bool),
+    // Flush any pending debug commands.
+    Flush,
+}
+
 #[derive(Clone, Deserialize, Serialize)]
 pub enum ApiMsg {
     /// Add/remove/update images and fonts.
@@ -163,6 +175,8 @@ pub enum ApiMsg {
     ClearNamespace(IdNamespace),
     /// Flush from the caches anything that isn't necessary, to free some memory.
     MemoryPressure,
+    /// Change debugging options.
+    DebugCommand(DebugCommand),
     ShutDown,
 }
 
@@ -179,6 +193,7 @@ impl fmt::Debug for ApiMsg {
             ApiMsg::ExternalEvent(..) => "ApiMsg::ExternalEvent",
             ApiMsg::ClearNamespace(..) => "ApiMsg::ClearNamespace",
             ApiMsg::MemoryPressure => "ApiMsg::MemoryPressure",
+            ApiMsg::DebugCommand(..) => "ApiMsg::DebugCommand",
             ApiMsg::ShutDown => "ApiMsg::ShutDown",
         })
     }
@@ -419,7 +434,7 @@ impl RenderApi {
     /// Supplies a new frame to WebRender.
     ///
     /// Non-blocking, it notifies a worker process which processes the display list.
-    /// When it's done and a RenderNotifier has been set in `webrender::renderer::Renderer`,
+    /// When it's done and a RenderNotifier has been set in `webrender::Renderer`,
     /// [new_frame_ready()][notifier] gets called.
     ///
     /// Note: Scrolling doesn't require an own Frame.

@@ -31,7 +31,7 @@ def setup_task(config, tasks):
             'type': 'persistent',
             'name': 'level-{}-{}-tc-vcs'.format(
                 config.params['level'], config.params['project']),
-            'mount-point': "/home/worker/.tc-vcs",
+            'mount-point': "/builds/worker/.tc-vcs",
         }]
 
         yield task
