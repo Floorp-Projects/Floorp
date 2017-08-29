@@ -1403,8 +1403,6 @@ public abstract class GeckoApp extends GeckoActivity
                 BrowserLocaleManager.storeAndNotifyOSLocale(getSharedPreferencesForProfile(), osLocale);
             }
         });
-
-        IntentHelper.init(this);
     }
 
     @Override

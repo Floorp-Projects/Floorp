@@ -280,6 +280,8 @@ public class GeckoApplication extends Application {
 
         GeckoService.register();
 
+        IntentHelper.init();
+
         final EventListener listener = new EventListener();
         EventDispatcher.getInstance().registerUiThreadListener(listener,
                 "Gecko:Exited",
