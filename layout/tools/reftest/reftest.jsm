@@ -725,9 +725,17 @@ function BuildConditionSandbox(aURL) {
 #endif
 
 #ifdef MOZ_STYLO
-    sandbox.stylo =
-       (!!env.get("STYLO_FORCE_ENABLED") || prefs.getBoolPref("layout.css.servo.enabled", false)) &&
-        !gCompareStyloToGecko;
+    let styloEnabled = false;
+    // Perhaps a bit redundant in places, but this is easier to compare with the
+    // the real check in `nsLayoutUtils.cpp` to ensure they test the same way.
+    if (env.get("STYLO_FORCE_ENABLED")) {
+        styloEnabled = true;
+    } else if (env.get("STYLO_FORCE_DISABLED")) {
+        styloEnabled = false;
+    } else {
+        styloEnabled = prefs.getBoolPref("layout.css.servo.enabled", false);
+    }
+    sandbox.stylo = styloEnabled && !gCompareStyloToGecko;
     sandbox.styloVsGecko = gCompareStyloToGecko;
 #else
     sandbox.stylo = false;

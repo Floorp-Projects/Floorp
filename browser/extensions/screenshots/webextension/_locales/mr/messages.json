@@ -112,7 +112,7 @@
   "tourDone": {
     "message": "झाले"
   },
-  "termsAndPrivacyNoticeCloudServices": {
+  "termsAndPrivacyNotice2": {
     "message": "Firefox Screenshots वापरून, आपण आमच्या $TERMSANDPRIVACYNOTICETERMSLINK$आणि $TERMSANDPRIVACYNOTICEPRIVACYLINK$ शी सहमत आहात.",
     "placeholders": {
       "termsandprivacynoticetermslink": {
@@ -128,5 +128,8 @@
   },
   "termsAndPrivacyNoticyPrivacyLink": {
     "message": "गोपनीयता सूचना"
+  },
+  "libraryLabel": {
+    "message": "स्क्रीनशॉट"
   }
 }

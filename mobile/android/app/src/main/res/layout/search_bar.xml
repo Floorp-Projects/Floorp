@@ -19,7 +19,7 @@
         android:textSize="@dimen/query_text_size"
         android:focusable="false"
         android:focusableInTouchMode="false"
-        android:textColorHighlight="@color/fennec_ui_orange"
+        android:textColorHighlight="@color/fennec_ui_accent"
         android:textSelectHandle="@drawable/handle_middle"
         android:textSelectHandleLeft="@drawable/handle_start"
         android:textSelectHandleRight="@drawable/handle_end"

@@ -7,6 +7,7 @@ package org.mozilla.gecko.toolbar;
 
 import org.mozilla.gecko.EventDispatcher;
 import org.mozilla.gecko.R;
+import org.mozilla.gecko.util.DrawableUtil;
 import org.mozilla.gecko.util.ResourceDrawableUtils;
 import org.mozilla.gecko.util.BundleEventListener;
 import org.mozilla.gecko.util.EventCallback;
@@ -17,8 +18,10 @@ import org.mozilla.gecko.widget.themed.ThemedImageButton;
 import org.mozilla.gecko.widget.themed.ThemedLinearLayout;
 
 import android.content.Context;
+import android.content.res.ColorStateList;
 import android.content.res.Resources;
 import android.graphics.drawable.Drawable;
+import android.support.v4.content.ContextCompat;
 import android.util.AttributeSet;
 import android.view.Menu;
 import android.view.MenuItem;
@@ -108,8 +111,9 @@ public class PageActionLayout extends ThemedLinearLayout implements BundleEventL
             final String title = message.getString("title");
             final String imageURL = message.getString("icon");
             final boolean important = message.getBoolean("important");
+            final boolean useTint = message.getBoolean("useTint");
 
-            addPageAction(id, title, imageURL, new OnPageActionClickListeners() {
+            addPageAction(id, title, imageURL, useTint, new OnPageActionClickListeners() {
                 @Override
                 public void onClick(final String id) {
                     final GeckoBundle data = new GeckoBundle(1);
@@ -131,7 +135,7 @@ public class PageActionLayout extends ThemedLinearLayout implements BundleEventL
         }
     }
 
-    private void addPageAction(final String id, final String title, final String imageData,
+    private void addPageAction(final String id, final String title, final String imageData, final boolean useTint,
             final OnPageActionClickListeners onPageActionClickListeners, boolean important) {
         ThreadUtils.assertOnUiThread();
 
@@ -147,7 +151,15 @@ public class PageActionLayout extends ThemedLinearLayout implements BundleEventL
             @Override
             public void onBitmapFound(final Drawable d) {
                 if (mPageActionList.contains(pageAction)) {
-                    pageAction.setDrawable(d);
+                    final Drawable icon;
+                    if (useTint) {
+                        final ColorStateList colorStateList = ContextCompat.getColorStateList(
+                                getContext(), R.color.page_action_fg);
+                        icon = DrawableUtil.tintDrawableWithStateList(d, colorStateList);
+                    } else {
+                        icon = d;
+                    }
+                    pageAction.setDrawable(icon);
                     refreshPageActionIcons();
                 }
             }

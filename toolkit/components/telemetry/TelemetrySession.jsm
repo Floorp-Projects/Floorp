@@ -863,22 +863,13 @@ var Impl = {
   },
 
   getHistograms: function getHistograms(subsession, clearSubsession) {
-    let registered =
-      Telemetry.registeredHistograms(this.getDatasetType(), []);
-    if (this._testing == false) {
-      // Omit telemetry test histograms outside of tests.
-      registered = registered.filter(n => !n.startsWith("TELEMETRY_TEST_"));
-    }
-    registered = registered.concat(registered.map(n => "STARTUP_" + n));
-
-    let hls = subsession ? Telemetry.snapshotSubsessionHistograms(clearSubsession)
-                         : Telemetry.histogramSnapshots;
+    let hls = Telemetry.snapshotHistograms(this.getDatasetType(), subsession, clearSubsession);
     let ret = {};
 
     for (let [process, histograms] of Object.entries(hls)) {
       ret[process] = {};
       for (let [name, value] of Object.entries(histograms)) {
-        if (registered.includes(name)) {
+        if (this._testing || !name.startsWith("TELEMETRY_TEST_")) {
           ret[process][name] = this.packHistogram(value);
         }
       }
@@ -888,21 +879,13 @@ var Impl = {
   },
 
   getKeyedHistograms(subsession, clearSubsession) {
-    let registered =
-      Telemetry.registeredKeyedHistograms(this.getDatasetType(), []);
-    if (this._testing == false) {
-      // Omit telemetry test histograms outside of tests.
-      registered = registered.filter(id => !id.startsWith("TELEMETRY_TEST_"));
-    }
-
-    let khs = subsession ? Telemetry.snapshotSubsessionKeyedHistograms(clearSubsession)
-                         : Telemetry.keyedHistogramSnapshots;
+    let khs = Telemetry.snapshotKeyedHistograms(this.getDatasetType(), subsession, clearSubsession);
     let ret = {};
 
     for (let [process, histograms] of Object.entries(khs)) {
       ret[process] = {};
       for (let [name, value] of Object.entries(histograms)) {
-        if (registered.includes(name)) {
+        if (this._testing || !name.startsWith("TELEMETRY_TEST_")) {
           let keys = Object.keys(value);
           if (keys.length == 0) {
             // Skip empty keyed histogram

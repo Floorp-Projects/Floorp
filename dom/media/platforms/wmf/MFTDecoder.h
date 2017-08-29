@@ -29,6 +29,7 @@ public:
   //  - aMFTClsID the clsid used by CoCreateInstance to instantiate the
   //    decoder MFT.
   HRESULT Create(const GUID& aMFTClsID);
+  HRESULT Create(HMODULE aDecoderDLL, const GUID& aMFTClsID);
 
   // Sets the input and output media types. Call after Init().
   //

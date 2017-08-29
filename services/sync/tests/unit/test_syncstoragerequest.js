@@ -2,6 +2,7 @@
    http://creativecommons.org/publicdomain/zero/1.0/ */
 
 Cu.import("resource://gre/modules/Log.jsm");
+Cu.import("resource://services-common/utils.js");
 Cu.import("resource://services-sync/constants.js");
 Cu.import("resource://services-sync/rest.js");
 Cu.import("resource://services-sync/service.js");
@@ -206,7 +207,7 @@ add_test(function test_abort() {
     request.abort();
   });
 
-  Utils.nextTick(function() {
+  CommonUtils.nextTick(function() {
     // Verify that we didn't try to process any of the values.
     do_check_eq(SyncStorageRequest.serverTime, undefined);
 

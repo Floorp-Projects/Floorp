@@ -112,7 +112,7 @@
   "tourDone": {
     "message": "Готово"
   },
-  "termsAndPrivacyNoticeCloudServices": {
+  "termsAndPrivacyNotice2": {
     "message": "Со користење на Firefox Screenshots, се согласувате со нашите $TERMSANDPRIVACYNOTICETERMSLINK$ и $TERMSANDPRIVACYNOTICEPRIVACYLINK$.",
     "placeholders": {
       "termsandprivacynoticetermslink": {
@@ -128,5 +128,8 @@
   },
   "termsAndPrivacyNoticyPrivacyLink": {
     "message": "Известување за приватност"
+  },
+  "libraryLabel": {
+    "message": "Слики од екран"
   }
 }

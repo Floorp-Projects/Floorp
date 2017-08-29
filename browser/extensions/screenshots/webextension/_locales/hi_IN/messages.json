@@ -112,8 +112,8 @@
   "tourDone": {
     "message": "पूर्ण"
   },
-  "termsAndPrivacyNoticeCloudServices": {
-    "message": "Firefox स्क्रीनशॉट का उपयोग करके, आप Firefox क्लाउड सेवाओं $TERMSANDPRIVACYNOTICETERMSLINK$ और $TERMSANDPRIVACYNOTICEPRIVACYLINK$ के लिए सहमत हैं.",
+  "termsAndPrivacyNotice2": {
+    "message": "Firefox स्क्रीनशॉट्स का उपयोग करके, आप हमारी $TERMSANDPRIVACYNOTICETERMSLINK$ और $TERMSANDPRIVACYNOTICEPRIVACYLINK$ से सहमत हैं.",
     "placeholders": {
       "termsandprivacynoticetermslink": {
         "content": "$1"
@@ -128,5 +128,8 @@
   },
   "termsAndPrivacyNoticyPrivacyLink": {
     "message": "गोपनीयता सूचना"
+  },
+  "libraryLabel": {
+    "message": "स्क्रीनशॉट"
   }
 }

@@ -2,6 +2,7 @@
    http://creativecommons.org/publicdomain/zero/1.0/ */
 
 Cu.import("resource://gre/modules/Log.jsm");
+Cu.import("resource://services-common/utils.js");
 Cu.import("resource://services-sync/constants.js");
 Cu.import("resource://services-sync/engines.js");
 Cu.import("resource://services-sync/main.js");
@@ -201,7 +202,7 @@ function run_test() {
  */
 function promiseIsURIVisited(url) {
   return new Promise(resolve => {
-    PlacesUtils.asyncHistory.isURIVisited(Utils.makeURI(url), function(aURI, aIsVisited) {
+    PlacesUtils.asyncHistory.isURIVisited(CommonUtils.makeURI(url), function(aURI, aIsVisited) {
       resolve(aIsVisited);
     });
   });

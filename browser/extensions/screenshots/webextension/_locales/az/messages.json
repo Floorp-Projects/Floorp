@@ -112,7 +112,7 @@
   "tourDone": {
     "message": "Tamamlandı"
   },
-  "termsAndPrivacyNoticeCloudServices": {
+  "termsAndPrivacyNotice2": {
     "message": "Firefox Screenshots işlədərək $TERMSANDPRIVACYNOTICETERMSLINK$ və $TERMSANDPRIVACYNOTICEPRIVACYLINK$ ilə razılaşmış olursunuz.",
     "placeholders": {
       "termsandprivacynoticetermslink": {
@@ -128,5 +128,8 @@
   },
   "termsAndPrivacyNoticyPrivacyLink": {
     "message": "Məxfilik Bildirişi"
+  },
+  "libraryLabel": {
+    "message": "Ekran Görüntüləri"
   }
 }

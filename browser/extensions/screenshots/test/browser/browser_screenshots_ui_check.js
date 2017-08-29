@@ -13,9 +13,13 @@ add_task(async function() {
     await promiseScreenshotsReset();
   });
 
+  let onPhoton = (typeof AppConstants.MOZ_PHOTON_THEME == "undefined") ||
+                 AppConstants.MOZ_PHOTON_THEME;
+  let id = onPhoton ? "pageAction-panel-screenshots" : "screenshots_mozilla_org-browser-action";
+
   await BrowserTestUtils.waitForCondition(
-    () => document.getElementById("screenshots_mozilla_org-browser-action"),
+    () => document.getElementById(id),
     "Screenshots button should be present", 100, 100);
 
-  checkElements(true, ["screenshots_mozilla_org-browser-action"]);
+  checkElements(true, [id]);
 });

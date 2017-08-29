@@ -1011,10 +1011,6 @@ impl PropertyId {
     /// will be used. It is `Origin::Author` for stylesheet_origin and
     /// `CssRuleType::Style` for rule_type.
     pub fn parse(property_name: &str, context: Option< &PropertyParserContext>) -> Result<Self, ()> {
-        if let Ok(name) = ::custom_properties::parse_name(property_name) {
-            return Ok(PropertyId::Custom(::custom_properties::Name::from(name)))
-        }
-
         // FIXME(https://github.com/rust-lang/rust/issues/33156): remove this enum and use PropertyId
         // when stable Rust allows destructors in statics.
         // ShorthandAlias is not used in servo build. That's why we need to allow dead_code.
@@ -1071,9 +1067,10 @@ impl PropertyId {
             Some(&StaticId::ShorthandAlias(id, alias)) => {
                 (PropertyId::Shorthand(id), Some(alias))
             },
-            None => return Err(()),
+            None => return ::custom_properties::parse_name(property_name)
+                .map(|name| PropertyId::Custom(::custom_properties::Name::from(name))),
         };
-        id.check_allowed_in(alias, context).map_err(|_| ())?;
+        id.check_allowed_in(alias, context)?;
         Ok(id)
     }
 
@@ -1156,8 +1153,11 @@ impl PropertyId {
         }
     }
 
-    fn check_allowed_in(&self, alias: Option<AliasId>, context: &PropertyParserContext)
-                        -> Result<(), PropertyDeclarationParseError<'static>> {
+    fn check_allowed_in(
+        &self,
+        alias: Option<AliasId>,
+        context: &PropertyParserContext,
+    ) -> Result<(), ()> {
         let id: NonCustomPropertyId;
         if let Some(alias_id) = alias {
             id = alias_id.into();
@@ -1177,10 +1177,10 @@ impl PropertyId {
         ${id_set("DISALLOWED_IN_PAGE_RULE", lambda p: not p.allowed_in_page_rule)}
         match context.rule_type {
             CssRuleType::Keyframe if DISALLOWED_IN_KEYFRAME_BLOCK.contains(id) => {
-                return Err(PropertyDeclarationParseError::AnimationPropertyInKeyframeBlock)
+                return Err(());
             }
             CssRuleType::Page if DISALLOWED_IN_PAGE_RULE.contains(id) => {
-                return Err(PropertyDeclarationParseError::NotAllowedInPageRule)
+                return Err(())
             }
             _ => {}
         }
@@ -1245,15 +1245,15 @@ impl PropertyId {
             if context.stylesheet_origin != Origin::UserAgent {
                 if EXPERIMENTAL.contains(id) {
                     if !passes_pref_check() {
-                        return Err(PropertyDeclarationParseError::ExperimentalProperty);
+                        return Err(())
                     }
                 } else {
-                    return Err(PropertyDeclarationParseError::UnknownProperty(self.name().into()));
+                    return Err(())
                 }
             }
         } else {
             if EXPERIMENTAL.contains(id) && !passes_pref_check() {
-                return Err(PropertyDeclarationParseError::ExperimentalProperty);
+                return Err(());
             }
         }
 
