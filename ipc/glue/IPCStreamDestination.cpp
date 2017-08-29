@@ -349,14 +349,16 @@ IPCStreamDestination::ActorDestroyed()
 }
 
 void
-IPCStreamDestination::BufferReceived(const nsCString& aBuffer)
+IPCStreamDestination::BufferReceived(const wr::ByteBuffer& aBuffer)
 {
   MOZ_ASSERT(mWriter);
 
   uint32_t numWritten = 0;
 
   // This should only fail if we hit an OOM condition.
-  nsresult rv = mWriter->Write(aBuffer.get(), aBuffer.Length(), &numWritten);
+  nsresult rv = mWriter->Write(reinterpret_cast<char*>(aBuffer.mData),
+                               aBuffer.mLength,
+                               &numWritten);
   if (NS_WARN_IF(NS_FAILED(rv))) {
     RequestClose(rv);
   }
