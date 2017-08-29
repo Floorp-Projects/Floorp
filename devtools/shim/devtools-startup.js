@@ -43,9 +43,14 @@ XPCOMUtils.defineLazyModuleGetter(this, "CustomizableUI",
 XPCOMUtils.defineLazyModuleGetter(this, "CustomizableWidgets",
                                   "resource:///modules/CustomizableWidgets.jsm");
 
-XPCOMUtils.defineLazyGetter(this, "Bundle", function () {
-  const kUrl = "chrome://devtools-shim/locale/key-shortcuts.properties";
-  return Services.strings.createBundle(kUrl);
+XPCOMUtils.defineLazyGetter(this, "StartupBundle", function () {
+  const url = "chrome://devtools-shim/locale/startup.properties";
+  return Services.strings.createBundle(url);
+});
+
+XPCOMUtils.defineLazyGetter(this, "KeyShortcutsBundle", function () {
+  const url = "chrome://devtools-shim/locale/key-shortcuts.properties";
+  return Services.strings.createBundle(url);
 });
 
 XPCOMUtils.defineLazyGetter(this, "KeyShortcuts", function () {
@@ -64,49 +69,49 @@ XPCOMUtils.defineLazyGetter(this, "KeyShortcuts", function () {
     // or the default one.
     {
       id: "toggleToolbox",
-      shortcut: Bundle.GetStringFromName("toggleToolbox.commandkey"),
+      shortcut: KeyShortcutsBundle.GetStringFromName("toggleToolbox.commandkey"),
       modifiers
     },
     // All locales are using F12
     {
       id: "toggleToolboxF12",
-      shortcut: Bundle.GetStringFromName("toggleToolboxF12.commandkey"),
+      shortcut: KeyShortcutsBundle.GetStringFromName("toggleToolboxF12.commandkey"),
       modifiers: "" // F12 is the only one without modifiers
     },
     // Toggle the visibility of the Developer Toolbar (=gcli)
     {
       id: "toggleToolbar",
-      shortcut: Bundle.GetStringFromName("toggleToolbar.commandkey"),
+      shortcut: KeyShortcutsBundle.GetStringFromName("toggleToolbar.commandkey"),
       modifiers: "shift"
     },
     // Open WebIDE window
     {
       id: "webide",
-      shortcut: Bundle.GetStringFromName("webide.commandkey"),
+      shortcut: KeyShortcutsBundle.GetStringFromName("webide.commandkey"),
       modifiers: "shift"
     },
     // Open the Browser Toolbox
     {
       id: "browserToolbox",
-      shortcut: Bundle.GetStringFromName("browserToolbox.commandkey"),
+      shortcut: KeyShortcutsBundle.GetStringFromName("browserToolbox.commandkey"),
       modifiers: "accel,alt,shift"
     },
     // Open the Browser Console
     {
       id: "browserConsole",
-      shortcut: Bundle.GetStringFromName("browserConsole.commandkey"),
+      shortcut: KeyShortcutsBundle.GetStringFromName("browserConsole.commandkey"),
       modifiers: "accel,shift"
     },
     // Toggle the Responsive Design Mode
     {
       id: "responsiveDesignMode",
-      shortcut: Bundle.GetStringFromName("responsiveDesignMode.commandkey"),
+      shortcut: KeyShortcutsBundle.GetStringFromName("responsiveDesignMode.commandkey"),
       modifiers
     },
     // Open ScratchPad window
     {
       id: "scratchpad",
-      shortcut: Bundle.GetStringFromName("scratchpad.commandkey"),
+      shortcut: KeyShortcutsBundle.GetStringFromName("scratchpad.commandkey"),
       modifiers: "shift"
     },
 
@@ -116,55 +121,57 @@ XPCOMUtils.defineLazyGetter(this, "KeyShortcuts", function () {
     // Key for opening the Inspector
     {
       toolId: "inspector",
-      shortcut: Bundle.GetStringFromName("inspector.commandkey"),
+      shortcut: KeyShortcutsBundle.GetStringFromName("inspector.commandkey"),
       modifiers
     },
     // Key for opening the Web Console
     {
       toolId: "webconsole",
-      shortcut: Bundle.GetStringFromName("webconsole.commandkey"),
+      shortcut: KeyShortcutsBundle.GetStringFromName("webconsole.commandkey"),
       modifiers
     },
     // Key for opening the Debugger
     {
       toolId: "jsdebugger",
-      shortcut: Bundle.GetStringFromName("debugger.commandkey"),
+      shortcut: KeyShortcutsBundle.GetStringFromName("debugger.commandkey"),
       modifiers
     },
     // Key for opening the Network Monitor
     {
       toolId: "netmonitor",
-      shortcut: Bundle.GetStringFromName("netmonitor.commandkey"),
+      shortcut: KeyShortcutsBundle.GetStringFromName("netmonitor.commandkey"),
       modifiers
     },
     // Key for opening the Style Editor
     {
       toolId: "styleeditor",
-      shortcut: Bundle.GetStringFromName("styleeditor.commandkey"),
+      shortcut: KeyShortcutsBundle.GetStringFromName("styleeditor.commandkey"),
       modifiers: "shift"
     },
     // Key for opening the Performance Panel
     {
       toolId: "performance",
-      shortcut: Bundle.GetStringFromName("performance.commandkey"),
+      shortcut: KeyShortcutsBundle.GetStringFromName("performance.commandkey"),
       modifiers: "shift"
     },
     // Key for opening the Storage Panel
     {
       toolId: "storage",
-      shortcut: Bundle.GetStringFromName("storage.commandkey"),
+      shortcut: KeyShortcutsBundle.GetStringFromName("storage.commandkey"),
       modifiers: "shift"
     },
     // Key for opening the DOM Panel
     {
       toolId: "dom",
-      shortcut: Bundle.GetStringFromName("dom.commandkey"),
+      shortcut: KeyShortcutsBundle.GetStringFromName("dom.commandkey"),
       modifiers
     },
   ];
 });
 
-function DevToolsStartup() {}
+function DevToolsStartup() {
+  this.onEnabledPrefChanged = this.onEnabledPrefChanged.bind(this);
+}
 
 DevToolsStartup.prototype = {
   /**
@@ -231,6 +238,8 @@ DevToolsStartup.prototype = {
       JsonView.initialize();
     };
     Services.obs.addObserver(onWindowReady, "browser-delayed-startup-finished");
+
+    Services.prefs.addObserver(DEVTOOLS_ENABLED_PREF, this.onEnabledPrefChanged);
   },
 
   /**
@@ -256,6 +265,9 @@ DevToolsStartup.prototype = {
     if (!this.initialized) {
       this.hookWebDeveloperMenu(window);
     }
+
+    this.createDevToolsEnableMenuItem(window);
+    this.updateDevToolsMenuItems(window);
   },
 
   /**
@@ -290,8 +302,11 @@ DevToolsStartup.prototype = {
                      CustomizableUI.AREA_NAVBAR :
                      CustomizableUI.AREA_PANEL,
       onViewShowing: (event) => {
-        // Ensure creating the menuitems in the system menu before trying to copy them.
-        this.initDevTools("HamburgerMenu");
+        if (Services.prefs.getBoolPref(DEVTOOLS_ENABLED_PREF)) {
+          // If DevTools are enabled, initialize DevTools to create all menuitems in the
+          // system menu before trying to copy them.
+          this.initDevTools("HamburgerMenu");
+        }
 
         // Populate the subview with whatever menuitems are in the developer
         // menu. We skip menu elements, because the menu panel has no way
@@ -341,9 +356,60 @@ DevToolsStartup.prototype = {
    */
   hookWebDeveloperMenu(window) {
     let menu = window.document.getElementById("webDeveloperMenu");
-    menu.addEventListener("popupshowing", () => {
+    let onPopupShowing = () => {
+      if (!Services.prefs.getBoolPref(DEVTOOLS_ENABLED_PREF)) {
+        return;
+      }
+      menu.removeEventListener("popupshowing", onPopupShowing);
       this.initDevTools("SystemMenu");
-    }, { once: true });
+    };
+    menu.addEventListener("popupshowing", onPopupShowing);
+  },
+
+  /**
+   * Create a new menu item to enable DevTools and insert it DevTools's submenu in the
+   * System Menu.
+   */
+  createDevToolsEnableMenuItem(window) {
+    let {document} = window;
+
+    // Create the menu item.
+    let item = document.createElement("menuitem");
+    item.id = "enableDeveloperTools";
+    item.setAttribute("label", StartupBundle.GetStringFromName("enableDevTools.label"));
+    item.setAttribute("accesskey",
+      StartupBundle.GetStringFromName("enableDevTools.accesskey"));
+
+    // The menu item should open the install page for DevTools.
+    item.addEventListener("command", () => {
+      this.openInstallPage("SystemMenu");
+    });
+
+    // Insert the menu item in the DevTools submenu.
+    let systemMenuItem = document.getElementById("menuWebDeveloperPopup");
+    systemMenuItem.appendChild(item);
+  },
+
+  /**
+   * Update the visibility the menu item to enable DevTools.
+   */
+  updateDevToolsMenuItems(window) {
+    let item = window.document.getElementById("enableDeveloperTools");
+    item.hidden = Services.prefs.getBoolPref(DEVTOOLS_ENABLED_PREF);
+  },
+
+  /**
+   * Loop on all windows and update the hidden attribute of the "enable DevTools" menu
+   * item.
+   */
+  onEnabledPrefChanged() {
+    let enumerator = Services.wm.getEnumerator("navigator:browser");
+    while (enumerator.hasMoreElements()) {
+      let window = enumerator.getNext();
+      if (window.gBrowserInit && window.gBrowserInit.delayedStartupFinished) {
+        this.updateDevToolsMenuItems(window);
+      }
+    }
   },
 
   /**
