@@ -14,11 +14,11 @@
 
 SpecialPowers.pushPrefEnv({"set": [["dom.abortController.enabled", true ],
                                    ["dom.abortController.fetch.enabled", true]]}, () => {
-  let ifr = document.createElement('iframe');
+  let ifr = document.createElement("iframe");
   ifr.src = "file_abort_controller_fetch.html";
   document.body.appendChild(ifr);
 
-  onmessage = function(e) {
+  window.onmessage = function(e) {
     if (e.data.type == "finish") {
       SimpleTest.finish();
       return;
