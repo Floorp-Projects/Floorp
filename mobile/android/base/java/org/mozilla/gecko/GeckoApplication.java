@@ -522,11 +522,13 @@ public class GeckoApplication extends Application {
     }
 
     public static void createAppShortcut(final String aTitle, final String aURI,
-                                         final String manifestPath, final Bitmap aIcon) {
+                                         final String manifestPath, final String manifestUrl,
+                                         final Bitmap aIcon) {
         final Intent shortcutIntent = new Intent();
         shortcutIntent.setAction(GeckoApp.ACTION_WEBAPP);
         shortcutIntent.setData(Uri.parse(aURI));
         shortcutIntent.putExtra("MANIFEST_PATH", manifestPath);
+        shortcutIntent.putExtra("MANIFEST_URL", manifestUrl);
         shortcutIntent.setClassName(AppConstants.ANDROID_PACKAGE_NAME,
                                     LauncherActivity.class.getName());
         Telemetry.sendUIEvent(TelemetryContract.Event.ACTION,

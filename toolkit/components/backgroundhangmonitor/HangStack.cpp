@@ -250,7 +250,10 @@ ParamTraits<mozilla::HangStack>::Read(const Message* aMsg,
     return false;
   }
 
-  aResult->reserve(length);
+  if (!aResult->reserve(length)) {
+    return false;
+  }
+
   for (size_t i = 0; i < length; ++i) {
     Frame::Kind kind;
     if (!ReadParam(aMsg, aIter, &kind)) {

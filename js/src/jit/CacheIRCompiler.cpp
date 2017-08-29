@@ -2106,7 +2106,7 @@ CacheIRCompiler::emitArrayJoinResult()
 
     // And only if elem0 is a string.
     Address elementAddr(scratch, 0);
-    masm.branchTestString(Assembler::NonZero, elementAddr, failure->label());
+    masm.branchTestString(Assembler::NotEqual, elementAddr, failure->label());
 
     // Store the value.
     masm.loadValue(elementAddr, output.valueReg());

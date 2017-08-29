@@ -39,7 +39,7 @@ UNIFIED_SOURCES += [
 
 if CONFIG['MOZ_CRASHREPORTER']:
     UNIFIED_SOURCES += [
-        'InterfaceRegistrationAnnotator.cpp',
+        'RegistrationAnnotator.cpp',
     ]
 
 if CONFIG['ACCESSIBILITY']:

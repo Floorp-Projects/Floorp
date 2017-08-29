@@ -20,6 +20,10 @@ class nsIContentChild;
 class nsIContentParent;
 } // dom namespace
 
+namespace wr {
+struct ByteBuffer;
+} // wr namespace
+
 namespace ipc {
 
 class PBackgroundChild;
@@ -109,7 +113,7 @@ protected:
   Close(nsresult aRv) = 0;
 
   virtual void
-  SendData(const nsCString& aBuffer) = 0;
+  SendData(const wr::ByteBuffer& aBuffer) = 0;
 
   void
   ActorConstructed();
@@ -121,11 +125,7 @@ private:
   virtual bool
   Notify(dom::workers::Status aStatus) override;
 
-  enum class ReadReason {
-    Starting, // We're trying to read because we just started off.
-    Notified  // We're trying to read because the streams said it's ready.
-  };
-  void DoRead(ReadReason aReadReason);
+  void DoRead();
 
   void Wait();
 

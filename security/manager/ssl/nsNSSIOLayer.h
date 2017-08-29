@@ -10,6 +10,7 @@
 #include "TransportSecurityInfo.h"
 #include "mozilla/Assertions.h"
 #include "mozilla/TimeStamp.h"
+#include "mozilla/UniquePtr.h"
 #include "nsCOMPtr.h"
 #include "nsDataHashtable.h"
 #include "nsIClientAuthDialogs.h"
@@ -120,6 +121,49 @@ public:
 
   void SetMACAlgorithmUsed(int16_t mac) { mMACAlgorithmUsed = mac; }
 
+  void SetShortWritePending(int32_t amount, unsigned char data)
+  {
+    mIsShortWritePending = true;
+    mShortWriteOriginalAmount = amount;
+    mShortWritePendingByte = data;
+  }
+
+  bool IsShortWritePending()
+  {
+    return mIsShortWritePending;
+  }
+
+  unsigned char const* GetShortWritePendingByteRef()
+  {
+    return &mShortWritePendingByte;
+  }
+
+  int32_t ResetShortWritePending()
+  {
+    mIsShortWritePending = false;
+    return mShortWriteOriginalAmount;
+  }
+
+#ifdef DEBUG
+  // These helpers assert that the caller does try to send the same data
+  // as it was previously when we hit the short-write.  This is a measure
+  // to make sure we communicate correctly to the consumer.
+  void RememberShortWrittenBuffer(const unsigned char *data)
+  {
+    mShortWriteBufferCheck = mozilla::MakeUnique<char[]>(mShortWriteOriginalAmount);
+    memcpy(mShortWriteBufferCheck.get(), data, mShortWriteOriginalAmount);
+  }
+  void CheckShortWrittenBuffer(const unsigned char *data, int32_t amount)
+  {
+    if (!mShortWriteBufferCheck) return;
+    MOZ_ASSERT(amount >= mShortWriteOriginalAmount,
+               "unexpected amount length after short write");
+    MOZ_ASSERT(!memcmp(mShortWriteBufferCheck.get(), data, mShortWriteOriginalAmount),
+               "unexpected buffer content after short write");
+    mShortWriteBufferCheck = nullptr;
+  }
+#endif
+
 protected:
   virtual ~nsNSSSocketInfo();
 
@@ -148,6 +192,24 @@ private:
   bool      mSentClientCert;
   bool      mNotedTimeUntilReady;
   bool      mFailedVerification;
+
+  // True when SSL layer has indicated an "SSL short write", i.e. need
+  // to call on send one or more times to push all pending data to write.
+  bool      mIsShortWritePending;
+
+  // These are only valid if mIsShortWritePending is true.
+  //
+  // Value of the last byte pending from the SSL short write that needs
+  // to be passed to subsequent calls to send to perform the flush.
+  unsigned char mShortWritePendingByte;
+
+  // Original amount of data the upper layer has requested to write to
+  // return after the successful flush.
+  int32_t   mShortWriteOriginalAmount;
+
+#ifdef DEBUG
+  mozilla::UniquePtr<char[]> mShortWriteBufferCheck;
+#endif
 
   // mKEA* are used in false start and http/2 detetermination
   // Values are from nsISSLSocketControl

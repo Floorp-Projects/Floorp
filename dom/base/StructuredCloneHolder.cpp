@@ -887,8 +887,7 @@ ReadWasmModule(JSContext* aCx,
   MOZ_ASSERT(aHolder->CloneScope() == StructuredCloneHolder::StructuredCloneScope::SameProcessSameThread ||
              aHolder->CloneScope() == StructuredCloneHolder::StructuredCloneScope::SameProcessDifferentThread);
 
-  RefPtr<JS::WasmModule> wasmModule = aHolder->WasmModules()[aIndex];
-  return wasmModule->createObject(aCx);
+  return aHolder->WasmModules()[aIndex]->createObject(aCx);
 }
 
 bool
