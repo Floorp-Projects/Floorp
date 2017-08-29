@@ -59,9 +59,6 @@ public:
   void
   RemoveFollower(Follower* aFollower);
 
-  bool
-  CanAcceptFollower(Follower* aFollower) const;
-
 private:
   ~AbortSignal() = default;
 
