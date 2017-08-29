@@ -35,6 +35,10 @@
 #include "AudioBlock.h"
 #include "mozilla/MemoryReporting.h"
 
+namespace mozilla {
+class ThreadSharedFloatArrayBufferList;
+} // namespace mozilla
+
 namespace WebCore {
 
 // Multi-channel convolution reverb with channel matrixing - one or more ReverbConvolver objects are used internally.
@@ -44,7 +48,8 @@ public:
     enum { MaxFrameSize = 256 };
 
     // renderSliceSize is a rendering hint, so the FFTs can be optimized to not all occur at the same time (very bad when rendering on a real-time thread).
-    Reverb(const mozilla::AudioChunk& impulseResponseBuffer, size_t maxFFTSize,
+    Reverb(mozilla::ThreadSharedFloatArrayBufferList* impulseResponseBuffer,
+           size_t impulseResponseBufferLength, size_t maxFFTSize,
            bool useBackgroundThreads, bool normalize, float sampleRate);
 
     void process(const mozilla::AudioBlock* sourceBus,

@@ -144,7 +144,7 @@ public:
       NS_ERROR("Bad AudioBufferSourceNodeEngine Int32Parameter");
     }
   }
-  void SetBuffer(AudioChunk&& aBuffer) override
+  void SetBuffer(already_AddRefed<ThreadSharedFloatArrayBufferList> aBuffer) override
   {
     mBuffer = aBuffer;
   }
@@ -215,30 +215,26 @@ public:
   void BorrowFromInputBuffer(AudioBlock* aOutput,
                              uint32_t aChannels)
   {
-    aOutput->SetBuffer(mBuffer.mBuffer);
+    aOutput->SetBuffer(mBuffer);
     aOutput->mChannelData.SetLength(aChannels);
     for (uint32_t i = 0; i < aChannels; ++i) {
-      aOutput->mChannelData[i] =
-        mBuffer.ChannelData<float>()[i] + mBufferPosition;
+      aOutput->mChannelData[i] = mBuffer->GetData(i) + mBufferPosition;
     }
-    aOutput->mVolume = mBuffer.mVolume;
+    aOutput->mVolume = 1.0f;
     aOutput->mBufferFormat = AUDIO_FORMAT_FLOAT32;
   }
 
   // Copy aNumberOfFrames frames from the source buffer at offset aSourceOffset
   // and put it at offset aBufferOffset in the destination buffer.
-  template <typename T> void
-  CopyFromInputBuffer(AudioBlock* aOutput,
-                      uint32_t aChannels,
-                      uintptr_t aOffsetWithinBlock,
-                      uint32_t aNumberOfFrames)
-  {
-    MOZ_ASSERT(mBuffer.mVolume == 1.0f);
+  void CopyFromInputBuffer(AudioBlock* aOutput,
+                           uint32_t aChannels,
+                           uintptr_t aOffsetWithinBlock,
+                           uint32_t aNumberOfFrames) {
     for (uint32_t i = 0; i < aChannels; ++i) {
       float* baseChannelData = aOutput->ChannelFloatsForWrite(i);
-      ConvertAudioSamples(mBuffer.ChannelData<T>()[i] + mBufferPosition,
-                          baseChannelData + aOffsetWithinBlock,
-                          aNumberOfFrames);
+      memcpy(baseChannelData + aOffsetWithinBlock,
+             mBuffer->GetData(i) + mBufferPosition,
+             aNumberOfFrames * sizeof(float));
     }
   }
 
@@ -294,28 +290,17 @@ public:
       }
       inputLimit = std::min(inputLimit, availableInInputBuffer);
 
-      MOZ_ASSERT(mBuffer.mVolume == 1.0f);
       for (uint32_t i = 0; true; ) {
         uint32_t inSamples = inputLimit;
+        const float* inputData = mBuffer->GetData(i) + mBufferPosition;
 
         uint32_t outSamples = aAvailableInOutput;
         float* outputData =
           aOutput->ChannelFloatsForWrite(i) + *aOffsetWithinBlock;
 
-        if (mBuffer.mBufferFormat == AUDIO_FORMAT_FLOAT32) {
-          const float* inputData =
-            mBuffer.ChannelData<float>()[i] + mBufferPosition;
-          WebAudioUtils::SpeexResamplerProcess(resampler, i,
-                                               inputData, &inSamples,
-                                               outputData, &outSamples);
-        } else {
-          MOZ_ASSERT(mBuffer.mBufferFormat == AUDIO_FORMAT_S16);
-          const int16_t* inputData =
-            mBuffer.ChannelData<int16_t>()[i] + mBufferPosition;
-          WebAudioUtils::SpeexResamplerProcess(resampler, i,
-                                               inputData, &inSamples,
-                                               outputData, &outSamples);
-        }
+        WebAudioUtils::SpeexResamplerProcess(resampler, i,
+                                             inputData, &inSamples,
+                                             outputData, &outSamples);
         if (++i == aChannels) {
           mBufferPosition += inSamples;
           MOZ_ASSERT(mBufferPosition <= mBufferEnd || mLoop);
@@ -433,32 +418,22 @@ public:
     uint32_t numFrames = std::min(aBufferMax - mBufferPosition,
                                   availableInOutput);
 
-    bool shouldBorrow = false;
-    if (numFrames == WEBAUDIO_BLOCK_SIZE &&
-        mBuffer.mBufferFormat == AUDIO_FORMAT_FLOAT32) {
-      shouldBorrow = true;
-      for (uint32_t i = 0; i < aChannels; ++i) {
-        if (!IS_ALIGNED16(mBuffer.ChannelData<float>()[i] + mBufferPosition)) {
-          shouldBorrow = false;
-          break;
-        }
+    bool inputBufferAligned = true;
+    for (uint32_t i = 0; i < aChannels; ++i) {
+      if (!IS_ALIGNED16(mBuffer->GetData(i) + mBufferPosition)) {
+        inputBufferAligned = false;
       }
     }
-    MOZ_ASSERT(mBufferPosition < aBufferMax);
-    if (shouldBorrow) {
+
+    if (numFrames == WEBAUDIO_BLOCK_SIZE && inputBufferAligned) {
+      MOZ_ASSERT(mBufferPosition < aBufferMax);
       BorrowFromInputBuffer(aOutput, aChannels);
     } else {
       if (*aOffsetWithinBlock == 0) {
         aOutput->AllocateChannels(aChannels);
       }
-      if (mBuffer.mBufferFormat == AUDIO_FORMAT_FLOAT32) {
-        CopyFromInputBuffer<float>(aOutput, aChannels,
-                                   *aOffsetWithinBlock, numFrames);
-      } else {
-        MOZ_ASSERT(mBuffer.mBufferFormat == AUDIO_FORMAT_S16);
-        CopyFromInputBuffer<int16_t>(aOutput, aChannels,
-                                     *aOffsetWithinBlock, numFrames);
-      }
+      MOZ_ASSERT(mBufferPosition < aBufferMax);
+      CopyFromInputBuffer(aOutput, aChannels, *aOffsetWithinBlock, numFrames);
     }
     *aOffsetWithinBlock += numFrames;
     *aCurrentPosition += numFrames;
@@ -514,7 +489,7 @@ public:
     }
 
     StreamTime streamPosition = mDestination->GraphTimeToStreamTime(aFrom);
-    uint32_t channels = mBuffer.ChannelCount();
+    uint32_t channels = mBuffer ? mBuffer->GetChannels() : 0;
 
     UpdateSampleRateIfNeeded(channels, streamPosition);
 
@@ -594,7 +569,7 @@ public:
   // indicates that the resampler has begun processing.
   StreamTime mBeginProcessing;
   StreamTime mStop;
-  AudioChunk mBuffer;
+  RefPtr<ThreadSharedFloatArrayBufferList> mBuffer;
   SpeexResamplerState* mResampler;
   // mRemainingResamplerTail, like mBufferPosition, and
   // mBufferEnd, is measured in input buffer samples.
@@ -755,15 +730,16 @@ AudioBufferSourceNode::SendBufferParameterToStream(JSContext* aCx)
   }
 
   if (mBuffer) {
-    AudioChunk data = mBuffer->GetThreadSharedChannelsForRate(aCx);
-    ns->SetBuffer(Move(data));
+    RefPtr<ThreadSharedFloatArrayBufferList> data =
+      mBuffer->GetThreadSharedChannelsForRate(aCx);
+    ns->SetBuffer(data.forget());
 
     if (mStartCalled) {
       SendOffsetAndDurationParametersToStream(ns);
     }
   } else {
     ns->SetInt32Parameter(BUFFEREND, 0);
-    ns->SetBuffer(AudioChunk());
+    ns->SetBuffer(nullptr);
 
     MarkInactive();
   }

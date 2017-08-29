@@ -48,12 +48,6 @@ public:
   static already_AddRefed<ThreadSharedFloatArrayBufferList>
   Create(uint32_t aChannelCount, size_t aLength, const mozilla::fallible_t&);
 
-  ThreadSharedFloatArrayBufferList*
-  AsThreadSharedFloatArrayBufferList() override
-  {
-    return this;
-  };
-
   struct Storage final
   {
     Storage() :
@@ -294,7 +288,7 @@ public:
   {
     NS_ERROR("Invalid SetThreeDPointParameter index");
   }
-  virtual void SetBuffer(AudioChunk&& aBuffer)
+  virtual void SetBuffer(already_AddRefed<ThreadSharedFloatArrayBufferList> aBuffer)
   {
     NS_ERROR("SetBuffer called on engine that doesn't support it");
   }

@@ -121,7 +121,8 @@ public:
   }
 
   // main thread
-  void FinishProducingOutputBuffer(const AudioChunk& aBuffer)
+  void FinishProducingOutputBuffer(ThreadSharedFloatArrayBufferList* aBuffer,
+                                   uint32_t aBufferSize)
   {
     MOZ_ASSERT(NS_IsMainThread());
 
@@ -141,7 +142,7 @@ public:
       // MAX_LATENCY_S, frame dropping starts again to maintain an as short
       // output queue as possible.
       float latency = (now - mLastEventTime).ToSeconds();
-      float bufferDuration = aBuffer.mDuration / mSampleRate;
+      float bufferDuration = aBufferSize / mSampleRate;
       mLatency += latency - bufferDuration;
       mLastEventTime = now;
       if (fabs(mLatency) > MAX_LATENCY_S) {
@@ -158,11 +159,20 @@ public:
       mLatency = 0;
     }
 
-    for (uint32_t offset = 0; offset < aBuffer.mDuration;
-         offset += WEBAUDIO_BLOCK_SIZE) {
+    for (uint32_t offset = 0; offset < aBufferSize; offset += WEBAUDIO_BLOCK_SIZE) {
       AudioChunk& chunk = mOutputQueue.Produce();
-      chunk = aBuffer;
-      chunk.SliceTo(offset, offset + WEBAUDIO_BLOCK_SIZE);
+      if (aBuffer) {
+        chunk.mDuration = WEBAUDIO_BLOCK_SIZE;
+        chunk.mBuffer = aBuffer;
+        chunk.mChannelData.SetLength(aBuffer->GetChannels());
+        for (uint32_t i = 0; i < aBuffer->GetChannels(); ++i) {
+          chunk.mChannelData[i] = aBuffer->GetData(i) + offset;
+        }
+        chunk.mVolume = 1.0f;
+        chunk.mBufferFormat = AUDIO_FORMAT_FLOAT32;
+      } else {
+        chunk.SetNull(WEBAUDIO_BLOCK_SIZE);
+      }
     }
   }
 
@@ -374,11 +384,10 @@ private:
 
       NS_IMETHOD Run() override
       {
+        RefPtr<ThreadSharedFloatArrayBufferList> output;
 
         auto engine =
           static_cast<ScriptProcessorNodeEngine*>(mStream->Engine());
-        AudioChunk output;
-        output.SetNull(engine->mBufferSize);
         {
           auto node = static_cast<ScriptProcessorNode*>
             (engine->NodeMainThread());
@@ -387,29 +396,30 @@ private:
           }
 
           if (node->HasListenersFor(nsGkAtoms::onaudioprocess)) {
-            DispatchAudioProcessEvent(node, &output);
+            output = DispatchAudioProcessEvent(node);
           }
           // The node may have been destroyed during event dispatch.
         }
 
         // Append it to our output buffer queue
-        engine->GetSharedBuffers()->FinishProducingOutputBuffer(output);
+        engine->GetSharedBuffers()->
+          FinishProducingOutputBuffer(output, engine->mBufferSize);
 
         return NS_OK;
       }
 
-      // Sets up |output| iff buffers are set in event handlers.
-      void DispatchAudioProcessEvent(ScriptProcessorNode* aNode,
-                                     AudioChunk* aOutput)
+      // Returns the output buffers if set in event handlers.
+      ThreadSharedFloatArrayBufferList*
+        DispatchAudioProcessEvent(ScriptProcessorNode* aNode)
       {
         AudioContext* context = aNode->Context();
         if (!context) {
-          return;
+          return nullptr;
         }
 
         AutoJSAPI jsapi;
         if (NS_WARN_IF(!jsapi.Init(aNode->GetOwner()))) {
-          return;
+          return nullptr;
         }
         JSContext* cx = jsapi.cx();
         uint32_t inputChannelCount = aNode->ChannelCount();
@@ -424,7 +434,7 @@ private:
                                 mInputBuffer.forget(), rv);
           if (rv.Failed()) {
             rv.SuppressException();
-            return;
+            return nullptr;
           }
         }
 
@@ -448,11 +458,10 @@ private:
           // HasOutputBuffer() returning true means that GetOutputBuffer()
           // will not fail.
           MOZ_ASSERT(!rv.Failed());
-          *aOutput = buffer->GetThreadSharedChannelsForRate(cx);
-          MOZ_ASSERT(aOutput->IsNull() ||
-                     aOutput->mBufferFormat == AUDIO_FORMAT_FLOAT32,
-                     "AudioBuffers initialized from JS have float data");
+          return buffer->GetThreadSharedChannelsForRate(cx);
         }
+
+        return nullptr;
       }
     private:
       RefPtr<AudioNodeStream> mStream;
