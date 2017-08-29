@@ -12,7 +12,8 @@
 namespace mozilla {
 namespace dom {
 
-NS_IMPL_CYCLE_COLLECTION_WRAPPERCACHE(AbortController, mGlobal, mSignal)
+NS_IMPL_CYCLE_COLLECTION_WRAPPERCACHE(AbortController, mGlobal, mSignal,
+                                      mFollowingSignal)
 
 NS_IMPL_CYCLE_COLLECTING_ADDREF(AbortController)
 NS_IMPL_CYCLE_COLLECTING_RELEASE(AbortController)
@@ -92,6 +93,34 @@ AbortController::Abort()
   if (mSignal) {
     mSignal->Abort();
   }
+}
+
+void
+AbortController::Follow(AbortSignal& aSignal)
+{
+  AbortSignal::Follower::Follow(&aSignal);
+}
+
+void
+AbortController::Unfollow(AbortSignal& aSignal)
+{
+  if (mFollowingSignal != &aSignal) {
+    return;
+  }
+
+  AbortSignal::Follower::Unfollow();
+}
+
+AbortSignal*
+AbortController::Following() const
+{
+  return mFollowingSignal;
+}
+
+void
+AbortController::Aborted()
+{
+  Abort();
 }
 
 } // dom namespace

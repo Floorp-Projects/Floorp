@@ -67,6 +67,8 @@ AbortSignal::Abort()
   init.mBubbles = false;
   init.mCancelable = false;
 
+  // TODO which kind of event should we dispatch here?
+
   RefPtr<Event> event =
     Event::Constructor(this, NS_LITERAL_STRING("abort"), init);
   event->SetTrusted(true);
@@ -91,6 +93,27 @@ AbortSignal::RemoveFollower(AbortSignal::Follower* aFollower)
   mFollowers.RemoveElement(aFollower);
 }
 
+bool
+AbortSignal::CanAcceptFollower(AbortSignal::Follower* aFollower) const
+{
+  MOZ_DIAGNOSTIC_ASSERT(aFollower);
+
+  if (!mController) {
+    return true;
+  }
+
+  if (aFollower == mController) {
+    return false;
+  }
+
+  AbortSignal* following = mController->Following();
+  if (!following) {
+    return true;
+  }
+
+  return following->CanAcceptFollower(aFollower);
+}
+
 // AbortSignal::Follower
 // ----------------------------------------------------------------------------
 
@@ -103,6 +126,10 @@ void
 AbortSignal::Follower::Follow(AbortSignal* aSignal)
 {
   MOZ_DIAGNOSTIC_ASSERT(aSignal);
+
+  if (!aSignal->CanAcceptFollower(this)) {
+    return;
+  }
 
   Unfollow();
 
