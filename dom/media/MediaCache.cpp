@@ -675,7 +675,7 @@ MediaCache::CloseStreamsForPrivateBrowsing()
   MOZ_ASSERT(NS_IsMainThread());
   for (MediaCacheStream* s : mStreams) {
     if (s->mIsPrivateBrowsing) {
-      s->Close();
+      s->mClient->Close();
     }
   }
 }
@@ -1459,8 +1459,7 @@ MediaCache::Update()
       // Close the streams that failed due to error. This will cause all
       // client Read and Seek operations on those streams to fail. Blocked
       // Reads will also be woken up.
-      ReentrantMonitorAutoEnter mon(mReentrantMonitor);
-      stream->CloseInternal(mon);
+      stream->mClient->Close();
     }
   }
 
@@ -1880,11 +1879,8 @@ void
 MediaCacheStream::NotifyDataReceived(int64_t aSize, const char* aData,
     nsIPrincipal* aPrincipal)
 {
-  NS_ASSERTION(NS_IsMainThread(), "Only call on main thread");
-
-  if (mClosed) {
-    return;
-  }
+  // This might happen off the main thread.
+  MOZ_DIAGNOSTIC_ASSERT(!mClosed);
 
   // Update principals before putting the data in the cache. This is important,
   // we want to make sure all principals are updated before any consumer
