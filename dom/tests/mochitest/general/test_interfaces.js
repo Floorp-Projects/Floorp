@@ -103,10 +103,6 @@ var legacyMozPrefixedInterfaces =
 var interfaceNamesInGlobalScope =
   [
 // IMPORTANT: Do not change this list without review from a DOM peer!
-    "AbortController",
-// IMPORTANT: Do not change this list without review from a DOM peer!
-    "AbortSignal",
-// IMPORTANT: Do not change this list without review from a DOM peer!
     "AnalyserNode",
 // IMPORTANT: Do not change this list without review from a DOM peer!
     {name: "Animation"},
