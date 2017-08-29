@@ -179,6 +179,22 @@ tabbrowser {
   transition: transform 200ms var(--animation-easing-function);
 }
 
+#TabsToolbar[movingtab] > .tabbrowser-tabs {
+  padding-bottom: 15px;
+}
+
+#TabsToolbar[movingtab] + #nav-bar {
+  margin-top: -15px;
+  pointer-events: none;
+}
+
+/* Allow dropping a tab on buttons with associated drop actions. */
+#TabsToolbar[movingtab] + #nav-bar > #nav-bar-customization-target > #home-button,
+#TabsToolbar[movingtab] + #nav-bar > #nav-bar-customization-target > #downloads-button,
+#TabsToolbar[movingtab] + #nav-bar > #nav-bar-customization-target > #bookmarks-menu-button {
+  pointer-events: auto;
+}
+
 .new-tab-popup,
 #alltabs-popup {
   -moz-binding: url("chrome://browser/content/tabbrowser.xml#tabbrowser-alltabs-popup");
