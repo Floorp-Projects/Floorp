@@ -2296,8 +2296,11 @@ CodeGeneratorMIPSShared::visitWasmStackArg(LWasmStackArg* ins)
     } else {
         if (ins->arg()->isGeneralReg()) {
             masm.storePtr(ToRegister(ins->arg()), Address(StackPointer, mir->spOffset()));
-        } else {
+        } else if (mir->input()->type() == MIRType::Double) {
             masm.storeDouble(ToFloatRegister(ins->arg()).doubleOverlay(),
+                             Address(StackPointer, mir->spOffset()));
+        } else {
+            masm.storeFloat32(ToFloatRegister(ins->arg()),
                              Address(StackPointer, mir->spOffset()));
         }
     }
