@@ -1607,9 +1607,14 @@ Element::BindToTree(nsIDocument* aDocument, nsIContent* aParent,
     // Unset this flag since we now really are in a document.
     UnsetFlags(NODE_FORCE_XBL_BINDINGS |
                // And clear the lazy frame construction bits.
-               NODE_NEEDS_FRAME | NODE_DESCENDANTS_NEED_FRAMES);
-    // And the restyle bits
-    UnsetRestyleFlagsIfGecko();
+               NODE_NEEDS_FRAME | NODE_DESCENDANTS_NEED_FRAMES |
+               // And the restyle bits. These shouldn't even get set if we came
+               // from a Servo-styled document, but they may be set if the
+               // element comes from a Gecko-backed document, see bug 1394586.
+               //
+               // TODO(emilio): We can remove this and assert we don't have any
+               // of them when we remove the old style system.
+               ELEMENT_ALL_RESTYLE_FLAGS);
   } else if (IsInShadowTree()) {
     // We're not in a document, but we did get inserted into a shadow tree.
     // Since we won't have any restyle data in the document's restyle trackers,
@@ -1617,9 +1622,10 @@ Element::BindToTree(nsIDocument* aDocument, nsIContent* aParent,
     //
     // Also clear all the other flags that are cleared above when we do get
     // inserted into a document.
-    UnsetFlags(NODE_FORCE_XBL_BINDINGS |
-               NODE_NEEDS_FRAME | NODE_DESCENDANTS_NEED_FRAMES);
-    UnsetRestyleFlagsIfGecko();
+    //
+    // See the comment about the restyle bits above, it also applies.
+    UnsetFlags(NODE_FORCE_XBL_BINDINGS | NODE_NEEDS_FRAME |
+               NODE_DESCENDANTS_NEED_FRAMES | ELEMENT_ALL_RESTYLE_FLAGS);
   } else {
     // If we're not in the doc and not in a shadow tree,
     // update our subtree pointer.
