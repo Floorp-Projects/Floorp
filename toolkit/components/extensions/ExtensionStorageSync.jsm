@@ -124,7 +124,7 @@ this.extensionStorageSync = null;
  */
 function ciphertextHMAC(keyBundle, id, IV, ciphertext) {
   const hasher = keyBundle.sha256HMACHasher;
-  return Utils.bytesAsHex(Utils.digestUTF8(id + IV + ciphertext, hasher));
+  return CommonUtils.bytesAsHex(Utils.digestUTF8(id + IV + ciphertext, hasher));
 }
 
 /**
@@ -274,7 +274,7 @@ class KeyRingEncryptionRemoteTransformer extends EncryptionRemoteTransformer {
         throw new Error("user doesn't have kB");
       }
 
-      let kB = Utils.hexToBytes(user.kB);
+      let kB = CommonUtils.hexToBytes(user.kB);
 
       let keyMaterial = CryptoUtils.hkdf(kB, undefined,
                                        "identity.mozilla.com/picl/v1/chrome.storage.sync", 2 * 32);

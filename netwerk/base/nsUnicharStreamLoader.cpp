@@ -178,21 +178,11 @@ nsUnicharStreamLoader::DetermineCharset()
     mCharset.AssignLiteral("UTF-8");
   }
 
-  // Sadly, nsIUnicharStreamLoader is exposed to extensions, so we can't
-  // assume mozilla::css::Loader to be the only caller. Special-casing
-  // replacement, since it's not invariant under a second label resolution
-  // operation.
-  if (mCharset.EqualsLiteral("replacement")) {
-    mDecoder = REPLACEMENT_ENCODING->NewDecoderWithBOMRemoval();
-  } else {
-    const Encoding* encoding = Encoding::ForLabelNoReplacement(mCharset);
-    if (!encoding) {
-      // If we got replacement here, the caller was not mozilla::css::Loader
-      // but an extension.
-      return NS_ERROR_UCONV_NOCONV;
-    }
-    mDecoder = encoding->NewDecoderWithBOMRemoval();
+  const Encoding* encoding = Encoding::ForLabel(mCharset);
+  if (!encoding) {
+    return NS_ERROR_UCONV_NOCONV;
   }
+  mDecoder = encoding->NewDecoderWithBOMRemoval();
 
   // Process the data into mBuffer
   uint32_t dummy;

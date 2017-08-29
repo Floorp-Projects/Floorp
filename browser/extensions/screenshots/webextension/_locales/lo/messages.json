@@ -106,8 +106,8 @@
   "tourDone": {
     "message": "ສຳເລັດ"
   },
-  "termsAndPrivacyNoticeCloudServices": {
-    "message": "ການນຳໃຊ້ Firefox Screenshots ແມ່ນທ່ານໄດ້ຍອມຮັບເງືອນໄຂການໃຫ້ບໍລິການຂອງ Firefox Cloud Services $TERMSANDPRIVACYNOTICETERMSLINK$ ແລະ $TERMSANDPRIVACYNOTICEPRIVACYLINK$.",
+  "termsAndPrivacyNotice2": {
+    "message": "ເພື່ອນຳໃຊ້ Firefox Screenshots ທ່ານໄດ້ຍອມຮັບ $TERMSANDPRIVACYNOTICETERMSLINK$ ແລະ $TERMSANDPRIVACYNOTICEPRIVACYLINK$ ຂອງພວກເຮົາ.",
     "placeholders": {
       "termsandprivacynoticetermslink": {
         "content": "$1"

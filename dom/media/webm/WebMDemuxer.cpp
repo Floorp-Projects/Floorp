@@ -339,10 +339,10 @@ WebMDemuxer::ReadMetadata()
       // to the display size.
       unsigned int cropH = params.crop_right + params.crop_left;
       unsigned int cropV = params.crop_bottom + params.crop_top;
-      nsIntRect pictureRect(params.crop_left,
-                            params.crop_top,
-                            params.width - cropH,
-                            params.height - cropV);
+      gfx::IntRect pictureRect(params.crop_left,
+                               params.crop_top,
+                               params.width - cropH,
+                               params.height - cropV);
 
       // If the cropping data appears invalid then use the frame data
       if (pictureRect.width <= 0
@@ -357,8 +357,8 @@ WebMDemuxer::ReadMetadata()
 
       // Validate the container-reported frame and pictureRect sizes. This
       // ensures that our video frame creation code doesn't overflow.
-      nsIntSize displaySize(params.display_width, params.display_height);
-      nsIntSize frameSize(params.width, params.height);
+      gfx::IntSize displaySize(params.display_width, params.display_height);
+      gfx::IntSize frameSize(params.width, params.height);
       if (!IsValidVideoRegion(frameSize, pictureRect, displaySize)) {
         // Video track's frame sizes will overflow. Ignore the video track.
         continue;
@@ -698,7 +698,7 @@ WebMDemuxer::GetNextPacket(TrackInfo::TrackType aType,
         if (isKeyframe) {
           // For both VP8 and VP9, we only look for resolution changes
           // on keyframes. Other resolution changes are invalid.
-          auto dimensions = nsIntSize(0, 0);
+          auto dimensions = gfx::IntSize(0, 0);
           switch (mVideoCodec) {
           case NESTEGG_CODEC_VP8:
             dimensions = VPXDecoder::GetFrameSize(sample, VPXDecoder::Codec::VP8);

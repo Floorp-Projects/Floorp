@@ -52,7 +52,7 @@
         <item name="android:textColorHintInverse">@color/text_color_hint_inverse</item>
 
         <!-- Highlight colors -->
-        <item name="android:textColorHighlight">@color/fennec_ui_orange</item>
+        <item name="android:textColorHighlight">@color/fennec_ui_accent</item>
         <item name="android:textColorHighlightInverse">@color/text_color_highlight_inverse</item>
 
         <!-- Link colors -->
@@ -68,7 +68,7 @@
         <item name="android:textAppearanceMediumInverse">@style/TextAppearance.Medium.Inverse</item>
         <item name="android:textAppearanceSmallInverse">@style/TextAppearance.Small.Inverse</item>
 
-        <item name="colorAccent">@color/action_orange</item>
+        <item name="colorAccent">@color/action_accent</item>
 
         <item name="actionBarTheme">@style/GeckoActionBar</item>
     </style>
@@ -129,7 +129,7 @@
     <style name="Bookmark" parent="Theme.AppCompat.Light.DialogWhenLarge"/>
     <style name="Bookmark.Gecko" parent="Gecko">
         <item name="toolbarStyle">@style/BookmarkToolbarStyle</item>
-        <item name="colorAccent">@color/fennec_ui_orange</item>
+        <item name="colorAccent">@color/fennec_ui_accent</item>
         <item name="colorControlNormal">@color/disabled_grey</item>
 
         <item name="android:textColorHint">@color/tabs_tray_icon_grey</item>

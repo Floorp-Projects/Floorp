@@ -106,17 +106,6 @@
   "tourDone": {
     "message": "ہوگیا"
   },
-  "termsAndPrivacyNoticeCloudServices": {
-    "message": "۔Firefox Screenshots کے استعمال کے ساتھ  آپ Firefox Cloud Services کے $TERMSANDPRIVACYNOTICETERMSLINK$ اور $TERMSANDPRIVACYNOTICEPRIVACYLINK$ کے ساتھ متفق ہیں۔",
-    "placeholders": {
-      "termsandprivacynoticetermslink": {
-        "content": "$1"
-      },
-      "termsandprivacynoticeprivacylink": {
-        "content": "$2"
-      }
-    }
-  },
   "termsAndPrivacyNoticeTermsLink": {
     "message": "شرائط"
   },

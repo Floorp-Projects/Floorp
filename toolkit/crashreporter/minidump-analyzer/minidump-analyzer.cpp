@@ -4,6 +4,7 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
 #include <cstdio>
+#include <cstring>
 #include <fstream>
 #include <string>
 #include <sstream>
@@ -30,6 +31,13 @@
 #include <unistd.h>
 
 #endif
+
+// Path of the minidump to be analyzed.
+static string gMinidumpPath;
+
+// When set to true print out the full minidump analysis, otherwise only
+// include the crashing thread in the output.
+static bool gFullMinidump = false;
 
 namespace CrashReporter {
 
@@ -273,7 +281,10 @@ ConvertProcessStateToJSON(const ProcessState& aProcessState, Json::Value& aRoot)
     crashInfo["address"] = ToHex(aProcessState.crash_address());
 
     if (requestingThread != -1) {
-      crashInfo["crashing_thread"] = requestingThread;
+      // Record the crashing thread index only if this is a full minidump
+      // and all threads' stacks are present, otherwise only the crashing
+      // thread stack is written out and this field is set to 0.
+      crashInfo["crashing_thread"] = gFullMinidump ? requestingThread : 0;
     }
   } else {
     crashInfo["type"] = Json::Value(Json::nullValue);
@@ -301,14 +312,25 @@ ConvertProcessStateToJSON(const ProcessState& aProcessState, Json::Value& aRoot)
   Json::Value threads(Json::arrayValue);
   int threadCount = aProcessState.threads()->size();
 
-  for (int threadIndex = 0; threadIndex < threadCount; ++threadIndex) {
+  if (!gFullMinidump && (requestingThread != -1)) {
+    // Only add the crashing thread
     Json::Value thread;
     Json::Value stack(Json::arrayValue);
-    const CallStack* rawStack = aProcessState.threads()->at(threadIndex);
+    const CallStack* rawStack = aProcessState.threads()->at(requestingThread);
 
     ConvertStackToJSON(aProcessState, orderedModules, rawStack, stack);
     thread["frames"] = stack;
     threads.append(thread);
+   } else {
+    for (int threadIndex = 0; threadIndex < threadCount; ++threadIndex) {
+      Json::Value thread;
+      Json::Value stack(Json::arrayValue);
+      const CallStack* rawStack = aProcessState.threads()->at(threadIndex);
+
+      ConvertStackToJSON(aProcessState, orderedModules, rawStack, stack);
+      thread["frames"] = stack;
+      threads.append(thread);
+    }
   }
 
   aRoot["threads"] = threads;
@@ -410,27 +432,36 @@ UpdateExtraDataFile(const string &aDumpPath, const Json::Value& aRoot)
 
 using namespace CrashReporter;
 
-int main(int argc, char** argv)
-{
-  string dumpPath;
-
-  if (argc > 1) {
-    dumpPath = argv[1];
-  }
-
-  if (dumpPath.empty()) {
+static void
+ParseArguments(int argc, char** argv) {
+  if (argc <= 1) {
     exit(EXIT_FAILURE);
   }
 
-  if (!FileExists(dumpPath)) {
+  for (int i = 1; i < argc - 1; i++) {
+    if (strcmp(argv[i], "--full") == 0) {
+      gFullMinidump = true;
+    } else {
+      exit(EXIT_FAILURE);
+    }
+  }
+
+  gMinidumpPath = argv[argc - 1];
+}
+
+int main(int argc, char** argv)
+{
+  ParseArguments(argc, argv);
+
+  if (!FileExists(gMinidumpPath)) {
     // The dump file does not exist
-    return 1;
+    exit(EXIT_FAILURE);
   }
 
   // Try processing the minidump
   Json::Value root;
-  if (ProcessMinidump(root, dumpPath)) {
-    UpdateExtraDataFile(dumpPath, root);
+  if (ProcessMinidump(root, gMinidumpPath)) {
+    UpdateExtraDataFile(gMinidumpPath, root);
   }
 
   exit(EXIT_SUCCESS);

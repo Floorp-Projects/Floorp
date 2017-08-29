@@ -1607,7 +1607,6 @@ public class BrowserApp extends GeckoApp
         if (mTextSelection != null)
             mTextSelection.destroy();
         NotificationHelper.destroy();
-        IntentHelper.destroy();
         GeckoNetworkManager.destroy();
 
         super.onDestroy();

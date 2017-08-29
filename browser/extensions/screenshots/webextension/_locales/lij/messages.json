@@ -104,15 +104,7 @@
     "message": "Fæto"
   },
   "termsAndPrivacyNoticeCloudServices": {
-    "message": "Se ti deuvi Firefox Screenshots, ti e d'acordio con $TERMSANDPRIVACYNOTICETERMSLINK$ e $TERMSANDPRIVACYNOTICEPRIVACYLINK$ de Firefox Cloud Services.",
-    "placeholders": {
-      "termsandprivacynoticetermslink": {
-        "content": "$1"
-      },
-      "termsandprivacynoticeprivacylink": {
-        "content": "$2"
-      }
-    }
+    "message": "Se ti deuvi Firefox Screenshots, ti e d'acordio con {termsAndPrivacyNoticeTermsLink} e {termsAndPrivacyNoticePrivacyLink} de Firefox Cloud Services."
   },
   "termsAndPrivacyNoticeTermsLink": {
     "message": "Termini"

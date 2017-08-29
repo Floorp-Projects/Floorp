@@ -104,15 +104,7 @@
     "message": "Tapos"
   },
   "termsAndPrivacyNoticeCloudServices": {
-    "message": "Sa paggamit ng Firefox Screenshots, tinatanggap mo ang Firefox Cloud Services $TERMSANDPRIVACYNOTICETERMSLINK$ at $TERMSANDPRIVACYNOTICEPRIVACYLINK$.",
-    "placeholders": {
-      "termsandprivacynoticetermslink": {
-        "content": "$1"
-      },
-      "termsandprivacynoticeprivacylink": {
-        "content": "$2"
-      }
-    }
+    "message": "Sa paggamit ng Firefox Screenshots, tinatanggap mo ang Firefox Cloud Services {termsAndPrivacyNoticeTermsLink} at {termsAndPrivacyNoticePrivacyLink}."
   },
   "termsAndPrivacyNoticeTermsLink": {
     "message": "Mga tuntunin"

@@ -262,7 +262,7 @@ def dia_sdk_dir(vc_path, c_compiler):
         else:
             # This would be easier if we had the installationPath that
             # get_vc_paths works with, since 'DIA SDK' is relative to that.
-             path = os.path.normpath(os.path.join(vc_path, r'..\..\..\..\..\..\..\DIA SDK'))
+            path = os.path.normpath(os.path.join(vc_path, r'..\..\..\..\DIA SDK'))
         if isdir(path):
             return path
 

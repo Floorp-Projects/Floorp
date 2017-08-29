@@ -1,6 +1,7 @@
 /* Any copyright is dedicated to the Public Domain.
    http://creativecommons.org/publicdomain/zero/1.0/ */
 
+Cu.import("resource://services-common/utils.js");
 Cu.import("resource://services-sync/constants.js");
 Cu.import("resource://services-sync/engines.js");
 Cu.import("resource://services-sync/engines/clients.js");
@@ -385,7 +386,7 @@ add_task(async function test_bug671378_scenario() {
   Svc.Obs.add("weave:service:sync:start", function onSyncStart() {
     // Wait for other sync:start observers to be called so that
     // nextSync is set to 0.
-    Utils.nextTick(function() {
+    CommonUtils.nextTick(function() {
       Svc.Obs.remove("weave:service:sync:start", onSyncStart);
 
       scheduler.scheduleNextSync();

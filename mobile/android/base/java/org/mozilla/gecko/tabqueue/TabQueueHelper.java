@@ -247,7 +247,7 @@ public class TabQueueHelper {
                                                      .setContentTitle(text)
                                                      .setContentText(resources.getString(R.string.tab_queue_notification_title))
                                                      .setStyle(inboxStyle)
-                                                     .setColor(ContextCompat.getColor(context, R.color.fennec_ui_orange))
+                                                     .setColor(ContextCompat.getColor(context, R.color.fennec_ui_accent))
                                                      .setNumber(tabsQueued)
                                                      .setContentIntent(pendingIntent);
 

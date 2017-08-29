@@ -9,6 +9,7 @@ _("Test that node reassignment happens correctly using the FxA identity mgr.");
 
 Cu.import("resource://gre/modules/Log.jsm");
 Cu.import("resource://services-common/rest.js");
+Cu.import("resource://services-common/utils.js");
 Cu.import("resource://services-sync/constants.js");
 Cu.import("resource://services-sync/service.js");
 Cu.import("resource://services-sync/status.js");
@@ -162,11 +163,11 @@ async function syncAndExpectNodeReassignment(server, firstNotification, between,
     let request = new RESTRequest(url);
     request.get(function() {
       do_check_eq(request.response.status, 401);
-      Utils.nextTick(onwards);
+      CommonUtils.nextTick(onwards);
     });
   } else {
     _("Skipping preliminary validation check for a 401 as we aren't logged in");
-    Utils.nextTick(onwards);
+    CommonUtils.nextTick(onwards);
   }
   await deferred.promise;
 }

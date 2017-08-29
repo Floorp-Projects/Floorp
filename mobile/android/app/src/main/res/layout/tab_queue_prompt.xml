@@ -56,7 +56,7 @@
             android:paddingBottom="30dp"
             android:paddingTop="20dp"
             android:text="@string/tab_queue_prompt_tip_text"
-            android:textColor="@color/action_orange"
+            android:textColor="@color/action_accent"
             android:textSize="14sp"
             android:textStyle="italic"
             tools:text="you can change this later in Settings" />
@@ -70,7 +70,7 @@
             android:paddingBottom="30dp"
             android:paddingTop="20dp"
             android:text="@string/tab_queue_prompt_permit_drawing_over_apps"
-            android:textColor="@color/action_orange"
+            android:textColor="@color/action_accent"
             android:textSize="14sp"
             android:textStyle="italic"
             tools:text="Turn on Permit drawing over other apps" />

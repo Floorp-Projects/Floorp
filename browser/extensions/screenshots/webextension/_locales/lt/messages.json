@@ -112,8 +112,8 @@
   "tourDone": {
     "message": "Baigta"
   },
-  "termsAndPrivacyNoticeCloudServices": {
-    "message": "Naudodami „Firefox Screenshots“ sutinkate su „Firefox“ tinklo paslaugų $TERMSANDPRIVACYNOTICETERMSLINK$ bei $TERMSANDPRIVACYNOTICEPRIVACYLINK$.",
+  "termsAndPrivacyNotice2": {
+    "message": "Naudodamiesi „Firefox“ ekrano nuotraukomis, sutinkate su mūsų $TERMSANDPRIVACYNOTICETERMSLINK$ bei $TERMSANDPRIVACYNOTICEPRIVACYLINK$.",
     "placeholders": {
       "termsandprivacynoticetermslink": {
         "content": "$1"
@@ -128,5 +128,8 @@
   },
   "termsAndPrivacyNoticyPrivacyLink": {
     "message": "privatumo nuostatais"
+  },
+  "libraryLabel": {
+    "message": "Ekrano nuotraukos"
   }
 }

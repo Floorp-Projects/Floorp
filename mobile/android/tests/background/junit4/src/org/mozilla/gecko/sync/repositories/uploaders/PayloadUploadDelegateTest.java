@@ -80,7 +80,7 @@ public class PayloadUploadDelegateTest {
         }
 
         @Override
-        public void lastPayloadFailed() {
+        public void lastPayloadFailed(Exception e) {
             didLastPayloadFail = true;
         }
     }

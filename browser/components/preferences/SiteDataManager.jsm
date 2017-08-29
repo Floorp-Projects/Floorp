@@ -48,6 +48,10 @@ this.SiteDataManager = {
       let onUsageResult = request => {
         let items = request.result;
         for (let item of items) {
+          if (!item.persisted && item.usage <= 0) {
+            // An non-persistent-storage site with 0 byte quota usage is redundant for us so skip it.
+            continue;
+          }
           let principal =
             Services.scriptSecurityManager.createCodebasePrincipalFromOrigin(item.origin);
           let uri = principal.URI;
@@ -95,6 +99,11 @@ this.SiteDataManager = {
   _updateAppCache() {
     let groups = this._appCache.getGroups();
     for (let group of groups) {
+      let cache = this._appCache.getActiveCache(group);
+      if (cache.usage <= 0) {
+        // A site with 0 byte appcache usage is redundant for us so skip it.
+        continue;
+      }
       let principal = Services.scriptSecurityManager.createCodebasePrincipalFromOrigin(group);
       let uri = principal.URI;
       let site = this._sites.get(uri.host);
@@ -109,7 +118,6 @@ this.SiteDataManager = {
       } else if (!site.principals.some(p => p.origin == principal.origin)) {
         site.principals.push(principal);
       }
-      let cache = this._appCache.getActiveCache(group);
       site.appCacheList.push(cache);
     }
   },

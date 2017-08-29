@@ -3,6 +3,7 @@
 
 Cu.import("resource://gre/modules/PlacesDBUtils.jsm");
 Cu.import("resource://gre/modules/XPCOMUtils.jsm");
+Cu.import("resource://services-common/utils.js");
 Cu.import("resource://services-sync/engines.js");
 Cu.import("resource://services-sync/constants.js");
 Cu.import("resource://services-sync/engines/history.js");
@@ -143,7 +144,7 @@ add_task(async function test_track_delete() {
 
   // This isn't present because we weren't tracking when it was visited.
   await addVisit("track_delete");
-  let uri = Utils.makeURI("http://getfirefox.com/track_delete");
+  let uri = CommonUtils.makeURI("http://getfirefox.com/track_delete");
   let guid = await engine._store.GUIDForUri(uri.spec);
   await verifyTrackerEmpty();
 

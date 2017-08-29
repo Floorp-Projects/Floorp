@@ -112,7 +112,7 @@
   "tourDone": {
     "message": "Fet"
   },
-  "termsAndPrivacyNoticeCloudServices": {
+  "termsAndPrivacyNotice2": {
     "message": "Si utilitzeu el Firefox Screenshots, esteu acceptant les nostres $TERMSANDPRIVACYNOTICETERMSLINK$ i l'$TERMSANDPRIVACYNOTICEPRIVACYLINK$.",
     "placeholders": {
       "termsandprivacynoticetermslink": {
@@ -128,5 +128,8 @@
   },
   "termsAndPrivacyNoticyPrivacyLink": {
     "message": "avís de privadesa"
+  },
+  "libraryLabel": {
+    "message": "Captures de pantalla"
   }
 }

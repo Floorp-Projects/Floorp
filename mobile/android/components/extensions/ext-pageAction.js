@@ -43,6 +43,9 @@ class PageAction {
       id: `{${extension.uuid}}`,
       clickCallback: () => {
         let tab = tabTracker.activeTab;
+
+        this.tabManager.addActiveTabPermission(tab);
+
         let popup = this.tabContext.get(tab.id).popup || this.defaults.popup;
         if (popup) {
           let win = Services.wm.getMostRecentWindow("navigator:browser");

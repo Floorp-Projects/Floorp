@@ -218,8 +218,8 @@ def target_tasks_nightly_fennec(full_task_graph, parameters):
     def filter(task):
         platform = task.attributes.get('build_platform')
         if platform in ('android-aarch64-nightly',
-                        'android-api-15-nightly',
-                        'android-api-15-old-id-nightly',
+                        'android-api-16-nightly',
+                        'android-api-16-old-id-nightly',
                         'android-nightly',
                         'android-x86-nightly',
                         'android-x86-old-id-nightly'):
@@ -255,7 +255,7 @@ def target_tasks_mozilla_beta(full_task_graph, parameters):
                 # On beta, Nightly builds are already PGOs
                 'linux-pgo', 'linux64-pgo',
                 'win32-pgo', 'win64-pgo',
-                'android-api-15-nightly', 'android-x86-nightly'
+                'android-api-16-nightly', 'android-x86-nightly'
                 ):
             return False
 

@@ -148,6 +148,12 @@ class Talos(TestingMixin, MercurialScript, BlobUploadMixin, TooltoolMixin,
             "default": False,
             "help": "Run tests with Stylo enabled"
         }],
+        [["--disable-stylo"], {
+            "action": "store_true",
+            "dest": "disable_stylo",
+            "default": False,
+            "help": "Run tests with Stylo disabled"
+        }],
         [["--enable-webrender"], {
             "action": "store_true",
             "dest": "enable_webrender",
@@ -590,8 +596,13 @@ class Talos(TestingMixin, MercurialScript, BlobUploadMixin, TooltoolMixin,
             env['MOZ_WEBRENDER'] = '1'
             env['MOZ_ACCELERATED'] = '1'
 
+        if self.config['disable_stylo'] and self.config['enable_stylo']:
+            self.fatal("--disable-stylo conflicts with --enable-stylo")
+
         if self.config['enable_stylo']:
             env['STYLO_FORCE_ENABLED'] = '1'
+        if self.config['disable_stylo']:
+            env['STYLO_FORCE_DISABLED'] = '1'
 
         # Remove once Talos is migrated away from buildbot
         if self.buildbot_config:
@@ -599,8 +610,12 @@ class Talos(TestingMixin, MercurialScript, BlobUploadMixin, TooltoolMixin,
             if 'qr' in platform:
                 env['MOZ_WEBRENDER'] = '1'
                 env['MOZ_ACCELERATED'] = '1'
-            if 'stylo' in platform:
+            if 'stylo' in platform and 'stylo_disabled' not in platform:
                 env['STYLO_FORCE_ENABLED'] = '1'
+            if 'stylo_disabled' in platform:
+                env['STYLO_FORCE_DISABLED'] = '1'
+            if 'styloseq' in platform:
+                env['STYLO_THREADS'] = '1'
 
         # sets a timeout for how long talos should run without output
         output_timeout = self.config.get('talos_output_timeout', 3600)

@@ -46,6 +46,12 @@ var notifications = new Map();
 var DownloadNotifications = {
   _notificationKey: "downloads",
 
+  observe: function(subject, topic, data) {
+    if (topic === "chrome-document-interactive") {
+      this.init();
+    }
+  },
+
   init: function() {
     Downloads.getList(Downloads.ALL)
              .then(list => list.addView(this))
