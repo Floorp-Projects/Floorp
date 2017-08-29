@@ -56,12 +56,18 @@ private:
         !aTopic.EqualsASCII("video-playing")) {
       return NS_OK;
     }
+    bool shouldKeepDisplayOn = aTopic.EqualsASCII("screen") ||
+                               aTopic.EqualsASCII("video-playing");
     // Note the wake lock code ensures that we're not sent duplicate
     // "locked-foreground" notifications when multiple wake locks are held.
     if (aState.EqualsASCII("locked-foreground")) {
       WAKE_LOCK_LOG("WinWakeLock: Blocking screen saver");
-      // Prevent the display turning off and block the screen saver.
-      SetThreadExecutionState(ES_DISPLAY_REQUIRED|ES_CONTINUOUS);
+      if (shouldKeepDisplayOn) {
+        // Prevent the display turning off and block the screen saver.
+        SetThreadExecutionState(ES_DISPLAY_REQUIRED|ES_CONTINUOUS);
+      } else {
+        SetThreadExecutionState(ES_SYSTEM_REQUIRED|ES_CONTINUOUS);
+      }
     } else {
       WAKE_LOCK_LOG("WinWakeLock: Unblocking screen saver");
       // Unblock display/screen saver turning off.
