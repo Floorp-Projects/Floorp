@@ -107,6 +107,10 @@ public class SessionManager {
         return getSessionByUUID(currentSessionUUID);
     }
 
+    public boolean isCurrentSession(@NonNull Session session) {
+        return session.getUUID().equals(currentSessionUUID);
+    }
+
     public boolean hasSessionWithUUID(@NonNull String uuid) {
         for (Session session : sessions.getValue()) {
             if (uuid.equals(session.getUUID())) {
@@ -163,6 +167,12 @@ public class SessionManager {
         sessions.add(session);
 
         this.sessions.setValue(Collections.unmodifiableList(sessions));
+    }
+
+    public void selectSession(Session session) {
+        currentSessionUUID = session.getUUID();
+
+        this.sessions.setValue(this.sessions.getValue());
     }
 
     /**

@@ -24,7 +24,6 @@ import android.os.Environment;
 import android.support.annotation.NonNull;
 import android.support.annotation.Nullable;
 import android.support.design.widget.AppBarLayout;
-import android.support.design.widget.FloatingActionButton;
 import android.support.v4.app.DialogFragment;
 import android.support.v4.app.Fragment;
 import android.support.v4.app.FragmentManager;
@@ -59,11 +58,11 @@ import org.mozilla.focus.session.Session;
 import org.mozilla.focus.session.SessionCallbackProxy;
 import org.mozilla.focus.session.SessionManager;
 import org.mozilla.focus.session.Source;
+import org.mozilla.focus.session.ui.SessionsSheetFragment;
 import org.mozilla.focus.telemetry.TelemetryWrapper;
 import org.mozilla.focus.utils.Browsers;
 import org.mozilla.focus.utils.ColorUtils;
 import org.mozilla.focus.utils.DrawableUtils;
-import org.mozilla.focus.utils.IntentUtils;
 import org.mozilla.focus.utils.UrlUtils;
 import org.mozilla.focus.web.Download;
 import org.mozilla.focus.web.IWebView;
@@ -333,11 +332,7 @@ public class BrowserFragment extends WebFragment implements View.OnClickListener
             return;
         }
 
-        tabsButton.setOnClickListener(new View.OnClickListener() {
-            @Override
-            public void onClick(View view) {
-            }
-        });
+        tabsButton.setOnClickListener(this);
 
         sessionManager.getSessions().observe(this, new NonNullObserver<List<Session>>() {
             @Override
@@ -768,6 +763,13 @@ public class BrowserFragment extends WebFragment implements View.OnClickListener
                 TelemetryWrapper.eraseEvent();
                 break;
             }
+
+            case R.id.tabs:
+                getActivity().getSupportFragmentManager()
+                        .beginTransaction()
+                        .add(R.id.container, new SessionsSheetFragment(), SessionsSheetFragment.FRAGMENT_TAG)
+                        .commit();
+                break;
 
             case R.id.back: {
                 goBack();

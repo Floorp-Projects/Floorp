@@ -24,6 +24,7 @@
 
     <color name="colorAutocompleteHighlight">#FFCF68FF</color>
 
+    <color name="colorErase">#96368D</color>
     <color name="colorFloatingActionButtonTint">#96368D</color>
     <color name="colorTabsButtonTint">#ffffff</color>
 
@@ -38,6 +39,8 @@
     <color name="onboarding_indicator_selected">#FFFFFFFF</color>
 
     <color name="download_dialog_text">#FF00A4DC</color>
+
+    <color name="colorAction">#FF00A4DC</color>
 
     <color name="add_to_homescreen_button_text">#FF00A4DC</color>
     <color name="add_to_homescreen_text">#FFFFFF</color>

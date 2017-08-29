@@ -143,4 +143,20 @@ public class UrlUtils {
 
         return host.substring(start);
     }
+
+    public static String stripScheme(@Nullable String url) {
+        if (url == null) {
+            return null;
+        }
+
+        int start = 0;
+
+        if (url.startsWith("http://")) {
+            start = 7;
+        } else if (url.startsWith("https://")) {
+            start = 8;
+        }
+
+        return url.substring(start);
+    }
 }
