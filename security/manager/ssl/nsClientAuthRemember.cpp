@@ -85,10 +85,16 @@ void nsClientAuthRememberService::ClearAllRememberedDecisions()
 {
   RefPtr<nsClientAuthRememberService> svc =
     PublicSSLState()->GetClientAuthRememberService();
-  svc->ClearRememberedDecisions();
+  MOZ_ASSERT(svc);
+  if (svc) {
+    svc->ClearRememberedDecisions();
+  }
 
   svc = PrivateSSLState()->GetClientAuthRememberService();
-  svc->ClearRememberedDecisions();
+  MOZ_ASSERT(svc);
+  if (svc) {
+    svc->ClearRememberedDecisions();
+  }
 }
 
 void
