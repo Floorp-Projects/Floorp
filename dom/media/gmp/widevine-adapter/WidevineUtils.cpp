@@ -4,7 +4,6 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
 #include "WidevineUtils.h"
-#include "WidevineDecryptor.h"
 
 #include "gmp-api/gmp-errors.h"
 #include <stdarg.h>
@@ -60,21 +59,6 @@ void InitInputBuffer(const GMPEncryptedBufferMetadata* aCrypto,
   aInputBuffer.data_size = aDataSize;
   aInputBuffer.subsamples = aSubsamples.Elements();
   aInputBuffer.timestamp = aTimestamp;
-}
-
-CDMWrapper::CDMWrapper(cdm::ContentDecryptionModule_8* aCDM,
-                       WidevineDecryptor* aDecryptor)
-  : mCDM(aCDM)
-  , mDecryptor(aDecryptor)
-{
-  MOZ_ASSERT(mCDM);
-}
-
-CDMWrapper::~CDMWrapper()
-{
-  CDM_LOG("CDMWrapper destroying CDM=%p", mCDM);
-  mCDM->Destroy();
-  mCDM = nullptr;
 }
 
 WidevineBuffer::WidevineBuffer(size_t aSize)

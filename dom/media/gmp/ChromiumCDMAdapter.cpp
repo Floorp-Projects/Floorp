@@ -29,8 +29,7 @@
 #include <fcntl.h>
 #endif
 
-// Declared in WidevineAdapter.cpp.
-extern const GMPPlatformAPI* sPlatform;
+const GMPPlatformAPI* sPlatform = nullptr;
 
 namespace mozilla {
 

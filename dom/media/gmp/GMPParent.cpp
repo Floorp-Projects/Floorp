@@ -42,7 +42,6 @@ using CrashReporter::GetIDFromMinidump;
 #endif
 
 #include "mozilla/dom/WidevineCDMManifestBinding.h"
-#include "widevine-adapter/WidevineAdapter.h"
 #include "ChromiumCDMAdapter.h"
 
 namespace mozilla {
