@@ -219,8 +219,6 @@
              preprocessed_resources res/raw folder. Lint reports it as unused. We should get
              rid of the file eventually. See bug 1268948. -->
         <ignore path="**/raw/.mkdir.done" />
-        <!-- bug 1375351 - To clean unused color codes -->
-        <ignore path="src/photon/res/values/colors.xml"/>
     </issue>
     <issue id="Usability" severity="error" />
     <issue id="UseCheckPermission" severity="error" />
