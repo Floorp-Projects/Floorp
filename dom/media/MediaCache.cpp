@@ -1876,8 +1876,7 @@ MediaCacheStream::UpdatePrincipal(nsIPrincipal* aPrincipal)
 }
 
 void
-MediaCacheStream::NotifyDataReceived(int64_t aSize, const char* aData,
-    nsIPrincipal* aPrincipal)
+MediaCacheStream::NotifyDataReceived(int64_t aSize, const char* aData)
 {
   // This might happen off the main thread.
   MOZ_DIAGNOSTIC_ASSERT(!mClosed);
@@ -1890,9 +1889,7 @@ MediaCacheStream::NotifyDataReceived(int64_t aSize, const char* aData,
   {
     MediaCache::ResourceStreamIterator iter(mMediaCache, mResourceID);
     while (MediaCacheStream* stream = iter.Next()) {
-      if (stream->UpdatePrincipal(aPrincipal)) {
-        stream->mClient->CacheClientNotifyPrincipalChanged();
-      }
+      stream->mClient->CacheClientUpdatePrincipal();
     }
   }
 
