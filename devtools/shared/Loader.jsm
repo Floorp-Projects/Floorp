@@ -10,7 +10,8 @@
 
 var { utils: Cu } = Components;
 var { Services } = Cu.import("resource://gre/modules/Services.jsm", {});
-var { Loader, descriptor, resolveURI } = Cu.import("resource://devtools/shared/base-loader.js", {});
+var { Loader, Require, descriptor, resolveURI, unload } =
+  Cu.import("resource://devtools/shared/base-loader.js", {});
 var { requireRawId } = Cu.import("resource://devtools/shared/loader-plugin-raw.jsm", {});
 
 this.EXPORTED_SYMBOLS = ["DevToolsLoader", "devtools", "BuiltinProvider",
@@ -67,7 +68,7 @@ BuiltinProvider.prototype = {
     if (this.invisibleToDebugger) {
       paths.promise = "resource://gre/modules/Promise-backend.js";
     }
-    this.loader = new Loader.Loader({
+    this.loader = new Loader({
       id: "fx-devtools",
       paths,
       invisibleToDebugger: this.invisibleToDebugger,
@@ -85,7 +86,7 @@ BuiltinProvider.prototype = {
   },
 
   unload: function (reason) {
-    Loader.unload(this.loader, reason);
+    unload(this.loader, reason);
     delete this.loader;
   },
 };
@@ -168,7 +169,7 @@ DevToolsLoader.prototype = {
     this._provider.invisibleToDebugger = this.invisibleToDebugger;
 
     this._provider.load();
-    this.require = Loader.Require(this._provider.loader, { id: "devtools" });
+    this.require = Require(this._provider.loader, { id: "devtools" });
 
     // Fetch custom pseudo modules and globals
     let { modules, globals } = this.require("devtools/shared/builtin-modules");
