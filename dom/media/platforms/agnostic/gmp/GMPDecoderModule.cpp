@@ -79,9 +79,7 @@ GMPDecoderModule::SupportsMimeType(const nsACString& aMimeType,
     return false;
   }
 
-  nsCString api = MediaPrefs::EMEChromiumAPIEnabled()
-    ? NS_LITERAL_CSTRING(CHROMIUM_CDM_API)
-    : NS_LITERAL_CSTRING(GMP_API_VIDEO_DECODER);
+  nsCString api = NS_LITERAL_CSTRING(CHROMIUM_CDM_API);
 
   if (MP4Decoder::IsH264(aMimeType)) {
     return HaveGMPFor(api, { NS_LITERAL_CSTRING("h264"), aGMP.value()});
