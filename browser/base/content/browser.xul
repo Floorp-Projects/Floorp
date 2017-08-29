@@ -573,6 +573,7 @@
     <spacer id="titlebar-spacer" flex="1"/>
     <hbox id="titlebar-buttonbox-container">
 #ifdef XP_WIN
+      <button class="accessibility-indicator" tooltiptext="&accessibilityIndicator.tooltip;" aria-live="polite"/>
       <hbox class="private-browsing-indicator"/>
 #endif
       <hbox id="titlebar-buttonbox">
@@ -585,6 +586,7 @@
     <!-- OS X does not natively support RTL for its titlebar items, so we prevent this secondary
          buttonbox from reversing order in RTL by forcing an LTR direction. -->
     <hbox id="titlebar-secondary-buttonbox" dir="ltr">
+      <button class="accessibility-indicator" tooltiptext="&accessibilityIndicator.tooltip;" aria-live="polite"/>
       <hbox class="private-browsing-indicator"/>
       <hbox id="titlebar-fullscreen-button"/>
     </hbox>
@@ -633,6 +635,10 @@
 #if defined(MOZ_WIDGET_GTK)
       <hbox class="private-browsing-indicator"
             skipintoolbarset="true"/>
+      <button class="accessibility-indicator"
+              tooltiptext="&accessibilityIndicator.tooltip;"
+              aria-live="polite"
+              skipintoolbarset="true"/>
 #endif
 
       <tabs id="tabbrowser-tabs"
@@ -680,6 +686,8 @@
       </toolbarbutton>
 
 #if !defined(MOZ_WIDGET_GTK)
+      <button class="accessibility-indicator" tooltiptext="&accessibilityIndicator.tooltip;"
+              aria-live="polite" skipintoolbarset="true"/>
       <hbox class="private-browsing-indicator" skipintoolbarset="true"/>
 #endif
 #ifdef CAN_DRAW_IN_TITLEBAR
