@@ -134,6 +134,42 @@ GetGeckoProcessType(ProcessID process)
   return ProcessIDToGeckoProcessType[static_cast<uint32_t>(process)];
 }
 
+bool
+IsStringCharValid(const char aChar, const bool aAllowInfixPeriod,
+                  const bool aAllowInfixUnderscore)
+{
+  return (aChar >= 'A' && aChar <= 'Z')
+      || (aChar >= 'a' && aChar <= 'z')
+      || (aChar >= '0' && aChar <= '9')
+      || (aAllowInfixPeriod && (aChar == '.'))
+      || (aAllowInfixUnderscore && (aChar == '_'));
+}
+
+bool
+IsValidIdentifierString(const nsACString& aStr, const size_t aMaxLength,
+                        const bool aAllowInfixPeriod, const bool aAllowInfixUnderscore)
+{
+  // Check string length.
+  if (aStr.Length() > aMaxLength) {
+    return false;
+  }
+
+  // Check string characters.
+  const char* first = aStr.BeginReading();
+  const char* end = aStr.EndReading();
+
+  for (const char* cur = first; cur < end; ++cur) {
+      const bool infix = (cur != first) && (cur != (end - 1));
+      if (!IsStringCharValid(*cur,
+                             aAllowInfixPeriod && infix,
+                             aAllowInfixUnderscore && infix)) {
+        return false;
+      }
+  }
+
+  return true;
+}
+
 } // namespace Common
 } // namespace Telemetry
 } // namespace mozilla
