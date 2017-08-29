@@ -2694,17 +2694,15 @@ file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
   <binding id="click-to-play-plugins-notification" extends="chrome://global/content/bindings/notification.xml#popup-notification">
     <content align="start" style="width: &pluginNotification.width;;">
-      <xul:vbox flex="1" align="stretch" class="popup-notification-main-box"
+      <xul:vbox flex="1" align="stretch" class="click-to-play-plugins-notification-main-box"
                 xbl:inherits="popupid">
         <xul:hbox class="click-to-play-plugins-notification-description-box" flex="1" align="start">
           <xul:description class="click-to-play-plugins-outer-description" flex="1">
             <html:span anonid="click-to-play-plugins-notification-description" />
-            <xul:label class="text-link click-to-play-plugins-notification-link" anonid="click-to-play-plugins-notification-link" />
+            <html:br/>
+            <xul:label class="text-link click-to-play-plugins-notification-link popup-notification-learnmore-link"
+                       anonid="click-to-play-plugins-notification-link" />
           </xul:description>
-          <xul:toolbarbutton anonid="closebutton"
-                             class="messageCloseButton popup-notification-closebutton tabbable close-icon"
-                             xbl:inherits="oncommand=closebuttoncommand"
-                             tooltiptext="&closeNotification.tooltip;"/>
         </xul:hbox>
         <xul:grid anonid="click-to-play-plugins-notification-center-box"
                   class="click-to-play-plugins-notification-center-box">
@@ -2726,11 +2724,12 @@ file, You can obtain one at http://mozilla.org/MPL/2.0/.
                   class="click-to-play-plugins-notification-button-container"
                   pack="center" align="center">
           <xul:button anonid="primarybutton"
-                      class="click-to-play-popup-button"
+                      class="click-to-play-popup-button popup-notification-button"
                       oncommand="document.getBindingParent(this)._onButton(this)"
                       flex="1"/>
           <xul:button anonid="secondarybutton"
-                      class="click-to-play-popup-button"
+                      default="true"
+                      class="click-to-play-popup-button popup-notification-button"
                       oncommand="document.getBindingParent(this)._onButton(this);"
                       flex="1"/>
         </xul:hbox>
