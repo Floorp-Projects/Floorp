@@ -25,15 +25,15 @@
             "properties": {
               "additional_backgrounds": {
                 "type": "array",
-                "items": { "$ref": "ExtensionURL" },
+                "items": { "$ref": "ImageDataOrExtensionURL" },
                 "optional": true
               },
               "headerURL": {
-                "$ref": "ExtensionURL",
+                "$ref": "ImageDataOrExtensionURL",
                 "optional": true
               },
               "theme_frame": {
-                "$ref": "ExtensionURL",
+                "$ref": "ImageDataOrExtensionURL",
                 "optional": true
               }
             },

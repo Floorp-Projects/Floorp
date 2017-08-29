@@ -7,9 +7,9 @@ use std::os::raw::{c_void, c_char, c_float};
 use gleam::gl;
 
 use webrender_api::*;
-use webrender::renderer::{ReadPixelsFormat, Renderer, RendererOptions};
-use webrender::renderer::{ExternalImage, ExternalImageHandler, ExternalImageSource};
-use webrender::renderer::DebugFlags;
+use webrender::{ReadPixelsFormat, Renderer, RendererOptions};
+use webrender::{ExternalImage, ExternalImageHandler, ExternalImageSource};
+use webrender::DebugFlags;
 use webrender::{ApiRecordingReceiver, BinaryRecorder};
 use thread_profiler::register_thread_with_profiler;
 use moz2d_renderer::Moz2dImageRenderer;

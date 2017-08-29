@@ -6,6 +6,7 @@ DIRS += [
     'boxmodel',
     'components',
     'computed',
+    'extensions',
     'fonts',
     'grids',
     'layout',

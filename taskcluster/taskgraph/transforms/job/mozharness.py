@@ -168,11 +168,11 @@ def mozharness_on_docker_worker_setup(config, job, taskdesc):
     docker_worker_setup_secrets(config, job, taskdesc)
 
     command = [
-        '/home/worker/bin/run-task',
-        '--vcs-checkout', '/home/worker/workspace/build/src',
-        '--tools-checkout', '/home/worker/workspace/build/tools',
+        '/builds/worker/bin/run-task',
+        '--vcs-checkout', '/builds/worker/workspace/build/src',
+        '--tools-checkout', '/builds/worker/workspace/build/tools',
         '--',
-        '/home/worker/workspace/build/src/{}'.format(
+        '/builds/worker/workspace/build/src/{}'.format(
             run.get('job-script', 'taskcluster/scripts/builder/build-linux.sh')
         ),
     ]

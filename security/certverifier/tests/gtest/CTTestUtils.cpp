@@ -9,6 +9,7 @@
 #include <stdint.h>
 #include <iomanip>
 
+#include "BTInclusionProof.h"
 #include "CTSerialization.h"
 #include "gtest/gtest.h"
 #include "mozilla/Assertions.h"
@@ -326,6 +327,104 @@ const char kTestEmbeddedWithIntermediatePreCaCertData[] =
   "041d31bda8e2dd6d39b3664de5ce0870f5fc7e6a00d6ed00528458d953d2"
   "37586d73";
 
+// Given the ordered set of data [ 0x00, 0x01, 0x02, deadbeef ],
+// the 'inclusion proof' of the leaf of index '2' (for '0x02') is created from
+// the Merkle Tree generated for that set of data.
+// A Merkle inclusion proof for a leaf in a Merkle Tree is the shortest list
+// of additional nodes in the Merkle Tree required to compute the Merkle Tree
+// Hash (also called 'Merkle Tree head') for that tree.
+// This follows the structure defined in RFC 6962-bis.
+//
+// https://tools.ietf.org/html/draft-ietf-trans-rfc6962-bis-24#section-2.1
+
+const char kTestInclusionProof[] =
+  "020100" // logId
+  "0000000000000004" // tree size
+  "0000000000000002" // leaf index
+  "0042" // inclusion path length
+  "2048c90c8ae24688d6bef5d48a30c2cc8b6754335a8db21793cc0a8e3bed321729" // node hash 0
+  "20a20bf9a7cc2dc8a08f5f415a71b19f6ac427bab54d24eec868b5d3103449953a"; // node hash 1
+
+const char kTestNodeHash0[] =
+  "48c90c8ae24688d6bef5d48a30c2cc8b6754335a8db21793cc0a8e3bed321729";
+
+const char kTestNodeHash1[] =
+  "a20bf9a7cc2dc8a08f5f415a71b19f6ac427bab54d24eec868b5d3103449953a";
+
+const char kTestInclusionProofUnexpectedData[] = "12345678";
+
+const char kTestInclusionProofInvalidHashSize[] =
+  "020100" // logId
+  "0000000000000004" // treesize
+  "0000000000000002" // leafindex
+  "0042" // inclusion path length
+  "3048c90c8ae24688d6bef5d48a30c2cc8b6754335a8db21793cc0a8e3bed321729" // invalid hash size
+  "20a20bf9a7cc2dc8a08f5f415a71b19f6ac427bab54d24eec868b5d3103449953a"; // node hash 1
+
+const char kTestInclusionProofInvalidHash[] =
+  "020100" // logId
+  "0000000000000004" // treesize
+  "0000000000000002" // leafindex
+  "0042" // inclusion path length
+  "2048c90c8ae24688d6bef5d48a30c2cc8b6754335a8db21793cc0a8e3bed321729" // node hash 0
+  "20a20bf9a7cc2dc8a08f5f415a71b19f6ac427"; // truncated node hash 1
+
+const char kTestInclusionProofMissingLogId[] =
+  "0000000000000004" // treesize
+  "0000000000000002" // leafindex
+  "0042"
+  "2048c90c8ae24688d6bef5d48a30c2cc8b6754335a8db21793cc0a8e3bed321729" // node hash 0
+  "20a20bf9a7cc2dc8a08f5f415a71b19f6ac427bab54d24eec868b5d3103449953a"; // node hash 1
+
+const char kTestInclusionProofNullPathLength[] =
+  "020100"
+  "0000000000000004" // treesize
+  "0000000000000002" // leafindex
+  "0000"
+  "2048c90c8ae24688d6bef5d48a30c2cc8b6754335a8db21793cc0a8e3bed321729" // node hash 0
+  "20a20bf9a7cc2dc8a08f5f415a71b19f6ac427bab54d24eec868b5d3103449953a"; // node hash 1
+
+const char kTestInclusionProofPathLengthTooSmall[] =
+  "020100"
+  "0000000000000004" // treesize
+  "0000000000000002" // leafindex
+  "0036"
+  "2048c90c8ae24688d6bef5d48a30c2cc8b6754335a8db21793cc0a8e3bed321729" // node hash 0
+  "20a20bf9a7cc2dc8a08f5f415a71b19f6ac427bab54d24eec868b5d3103449953a"; // node hash 1
+
+const char kTestInclusionProofPathLengthTooLarge[] =
+  "020100"
+  "0000000000000004" // treesize
+  "0000000000000002" // leafindex
+  "0080"
+  "2048c90c8ae24688d6bef5d48a30c2cc8b6754335a8db21793cc0a8e3bed321729" // node hash 0
+  "20a20bf9a7cc2dc8a08f5f415a71b19f6ac427bab54d24eec868b5d3103449953a"; // node hash 1
+
+const char kTestInclusionProofNullTreeSize[] =
+  "020100"
+  "0000000000000000" // treesize
+  "0000000000000002" // leafindex
+  "0042"
+  "2048c90c8ae24688d6bef5d48a30c2cc8b6754335a8db21793cc0a8e3bed321729" // node hash 0
+  "20a20bf9a7cc2dc8a08f5f415a71b19f6ac427bab54d24eec868b5d3103449953a"; // node hash 1
+
+const char kTestInclusionProofLeafIndexOutOfBounds[] =
+  "020100"
+  "0000000000000004" // treesize
+  "0000000000000004" // leafindex
+  "0042"
+  "2048c90c8ae24688d6bef5d48a30c2cc8b6754335a8db21793cc0a8e3bed321729" // node hash 0
+  "20a20bf9a7cc2dc8a08f5f415a71b19f6ac427bab54d24eec868b5d3103449953a"; // node hash 1
+
+const char kTestInclusionProofExtraData[] =
+  "020100" // logId
+  "0000000000000004" // tree size
+  "0000000000000002" // leaf index
+  "0042" // inclusion path length
+  "2048c90c8ae24688d6bef5d48a30c2cc8b6754335a8db21793cc0a8e3bed321729" // node hash 0
+  "20a20bf9a7cc2dc8a08f5f415a71b19f6ac427bab54d24eec868b5d3103449953a" // node hash 1
+  "123456"; // extra data after the proof
+
 static uint8_t
 CharToByte(char c)
 {
@@ -404,6 +503,84 @@ Buffer
 GetTestSignedCertificateTimestamp()
 {
   return HexToBytes(kTestSignedCertificateTimestamp);
+}
+
+Buffer
+GetTestInclusionProof()
+{
+  return HexToBytes(kTestInclusionProof);
+}
+
+Buffer
+GetTestInclusionProofUnexpectedData()
+{
+  return HexToBytes(kTestInclusionProofUnexpectedData);
+}
+
+Buffer
+GetTestInclusionProofInvalidHashSize()
+{
+  return HexToBytes(kTestInclusionProofInvalidHashSize);
+}
+
+Buffer
+GetTestInclusionProofInvalidHash()
+{
+  return HexToBytes(kTestInclusionProofInvalidHash);
+}
+
+Buffer
+GetTestInclusionProofMissingLogId()
+{
+  return HexToBytes(kTestInclusionProofMissingLogId);
+}
+
+Buffer
+GetTestInclusionProofNullPathLength()
+{
+  return HexToBytes(kTestInclusionProofNullPathLength);
+}
+
+Buffer
+GetTestInclusionProofPathLengthTooSmall()
+{
+  return HexToBytes(kTestInclusionProofPathLengthTooSmall);
+}
+
+Buffer
+GetTestInclusionProofPathLengthTooLarge()
+{
+  return HexToBytes(kTestInclusionProofPathLengthTooLarge);
+}
+
+Buffer
+GetTestInclusionProofNullTreeSize()
+{
+  return HexToBytes(kTestInclusionProofNullTreeSize);
+}
+
+Buffer
+GetTestInclusionProofLeafIndexOutOfBounds()
+{
+  return HexToBytes(kTestInclusionProofLeafIndexOutOfBounds);
+}
+
+Buffer
+GetTestInclusionProofExtraData()
+{
+  return HexToBytes(kTestInclusionProofExtraData);
+}
+
+Buffer
+GetTestNodeHash0()
+{
+  return HexToBytes(kTestNodeHash0);
+}
+
+Buffer
+GetTestNodeHash1()
+{
+  return HexToBytes(kTestNodeHash1);
 }
 
 Buffer

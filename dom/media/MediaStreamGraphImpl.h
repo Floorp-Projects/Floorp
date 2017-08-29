@@ -453,8 +453,10 @@ public:
     mStreamOrderDirty = true;
   }
 
-  // Always stereo for now.
-  uint32_t AudioChannelCount() const { return 2; }
+  uint32_t AudioChannelCount() const
+  {
+    return std::min<uint32_t>(8, CubebUtils::MaxNumberOfChannels());
+  }
 
   double MediaTimeToSeconds(GraphTime aTime) const
   {

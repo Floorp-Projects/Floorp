@@ -42,11 +42,11 @@ function test() {
           waitForBrowserState(blankState, finish);
         });
 
-        // reload the browser to deprecate the subframes
-        browser.reload();
+        // Force reload the browser to deprecate the subframes.
+        browser.reloadWithFlags(Ci.nsIWebNavigation.LOAD_FLAGS_BYPASS_CACHE);
       });
 
-      // create a dynamic subframe
+      // Create a dynamic subframe.
       let doc = browser.contentDocument;
       let iframe = doc.createElement("iframe");
       doc.body.appendChild(iframe);

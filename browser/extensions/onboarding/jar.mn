@@ -3,7 +3,9 @@
 # file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
 [features/onboarding@mozilla.org] chrome.jar:
-% resource onboarding %content/
+  # resource://onboarding/ is referenced in about:home and about:newtab,
+  # so make it content-accessible.
+% resource onboarding %content/ contentaccessible=yes
   content/ (content/*)
   # Package UITour-lib.js in here rather than under
   # /browser/components/uitour to avoid "unreferenced files" error when

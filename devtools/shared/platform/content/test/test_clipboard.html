@@ -15,12 +15,8 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=1290230
 "use strict";
 var exports = {}
 </script>
-
-  <script type="application/javascript"
-	  src="resource://devtools/shared/platform/content/clipboard.js"></script>
-
 </head>
-<body onload="do_tests()">
+<body onload="pre_do_tests()">
 <script type="application/javascript">
 "use strict";
 
@@ -29,6 +25,25 @@ const RESULT = "lark bunting";
 function doCopy(e) {
   console.log(e.isTrusted);
   copyString(RESULT);
+}
+
+async function pre_do_tests() {
+  // Temporarily allow content to access all resource:// URIs.
+  await SpecialPowers.pushPrefEnv({
+    set: [
+      ["security.all_resource_uri_content_accessible", true]
+    ]
+  });
+
+  // Load script.
+  await (() => new Promise((resolve) => {
+    var script = document.createElement("script");
+    script.onload = resolve;
+    script.src = "resource://devtools/shared/platform/content/clipboard.js";
+    document.head.appendChild(script);
+  }))();
+
+  do_tests();
 }
 
 function do_tests() {

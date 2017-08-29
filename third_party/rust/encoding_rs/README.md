@@ -5,16 +5,43 @@
 [![docs.rs](https://docs.rs/encoding_rs/badge.svg)](https://docs.rs/encoding_rs/)
 [![Apache 2 / MIT dual-licensed](https://img.shields.io/badge/license-Apache%202%20%2F%20MIT-blue.svg)](https://github.com/hsivonen/encoding_rs/blob/master/COPYRIGHT)
 
-encoding_rs aspires to become an implementation of the
-[Encoding Standard](https://encoding.spec.whatwg.org/) that
+encoding_rs an implementation of the (non-JavaScript parts of) the
+[Encoding Standard](https://encoding.spec.whatwg.org/) written in Rust and
+used in Gecko (starting with Firefox 56).
 
-1. Is written in Rust.
-2. Is suitable for use in Gecko as a replacement of uconv. (I.e. supports
-   decoding to UTF-16 and encoding from UTF-16.)
-3. Is suitable for use in Rust code (both in Gecko and independently of Gecko).
-   (I.e. supports decoding to UTF-8 and encoding from UTF-8 and provides an API
-   compatible with at least the most common ways of using
-   [rust-encoding](https://github.com/lifthrasiir/rust-encoding/).)
+## Functionality
+
+Due to the Gecko use case, encoding_rs supports decoding to and encoding from
+UTF-16 in addition to supporting the usual Rust use case of decoding to and
+encoding from UTF-8. Additionally, the API has been designed to be FFI-friendly
+to accommodate the C++ side of Gecko.
+
+Specifically, encoding_rs does the following:
+
+* Decodes a stream of bytes in an Encoding Standard-defined character encoding
+  into valid aligned native-endian in-RAM UTF-16 (units of `u16` / `char16_t`).
+* Encodes a stream of potentially-invalid aligned native-endian in-RAM UTF-16
+  (units of `u16` / `char16_t`) into a sequence of bytes in an Encoding
+  Standard-defined character encoding as if the lone surrogates had been
+  replaced with the REPLACEMENT CHARACTER before performing the encode.
+  (Gecko's UTF-16 is potentially invalid.)
+* Decodes a stream of bytes in an Encoding Standard-defined character
+  encoding into valid UTF-8.
+* Encodes a stream of valid UTF-8 into a sequence of bytes in an Encoding
+  Standard-defined character encoding. (Rust's UTF-8 is guaranteed-valid.)
+* Does the above in streaming (input and output split across multiple
+  buffers) and non-streaming (whole input in a single buffer and whole
+  output in a single buffer) variants.
+* Avoids copying (borrows) when possible in the non-streaming cases when
+  decoding to or encoding from UTF-8.
+* Resolves textual labels that identify character encodings in
+  protocol text into type-safe objects representing the those encodings
+  conceptually.
+* Maps the type-safe encoding objects onto strings suitable for
+  returning from `document.characterSet`.
+* Validates UTF-8 (in common instruction set scenarios a bit faster for Web
+  workloads than the standard library; hopefully will get upstreamed some
+  day) and ASCII.
 
 ## Licensing
 
@@ -26,10 +53,50 @@ Please see the file named
 Generated [API documentation](https://docs.rs/encoding_rs/) is available
 online.
 
-## Design
+## C and C++ bindings
 
-For design considerations, please see the associated [technical proposal to
-rewrite uconv in Rust](https://docs.google.com/document/d/13GCbdvKi83a77ZcKOxaEteXp1SOGZ_9Fmztb9iX22v0/edit#).
+An FFI layer for encoding_rs is available as a
+[separate crate](https://github.com/hsivonen/encoding_c). The crate comes
+with a [demo C++ wrapper](https://github.com/hsivonen/encoding_c/blob/master/include/encoding_rs_cpp.h)
+using the C++ standard library and [GSL](https://github.com/Microsoft/GSL/) types.
+
+For the Gecko context, there's a
+[C++ wrapper using the MFBT/XPCOM types](https://searchfox.org/mozilla-central/source/intl/Encoding.h#100).
+
+## Optional features
+
+There are currently three optional cargo features:
+
+### `simd-accel`
+
+Enables SSE2 acceleration on x86, x86_64 and Aarch64. Requires nightly Rust.
+_Enabling this cargo feature is recommended when building for x86, x86_64 or
+Aarch64 on nightly Rust._ The intention is for the functionality enabled by
+this feature to become the normal on-by-default behavior once explicit SIMD
+becames available on all Rust release channels.
+
+Enabling this feature breaks the build unless the target is x86 with SSE2
+(Rust's default 32-bit x86 target, `i686`, has SSE2, but Linux distros may
+use an x86 target without SSE2, i.e. `i586` in `rustup` terms), x86_64 or
+Aarch64.
+
+### `serde`
+
+Enables support for serializing and deserializing `&'static Encoding`-typed
+struct fields using [Serde][1].
+
+[1]: https://serde.rs/
+
+### `no-static-ideograph-encoder-tables`
+
+Makes the binary size smaller at the expense of ideograph _encode_ speed for
+Chinese and Japanese legacy encodings. (Does _not_ affect decode speed.)
+
+The speed resulting from enabling this feature is believed to be acceptable
+for Web browser-exposed encoder use cases. However, the result is likely
+unacceptable for other applications that need to produce output in Chinese or
+Japanese legacy encodings. (But applications really should always be using
+UTF-8 for output.)
 
 ## Performance goals
 
@@ -45,27 +112,51 @@ encodings should not be optimized for speed at the expense of code size as long
 as form submission and URL parsing in Gecko don't become noticeably too slow
 in real-world use.
 
+Currently, by default, encoding_rs builds with limited encoder-specific
+accelation tables for GB2312 Level 1 Hanzi, Big5 Level 1 Hanzi and JIS X
+0208 Level 1 Kanji. These tables use binary search and strike a balance
+between not having encoder-specific tables at all (doing linear search
+over the decode-optimized tables) and having larger directly-indexable
+encoder-side tables. It is not clear that anyone wants this in-between
+approach, and it may be changed in the future.
+
+In the interest of binary size, Firefox builds with the
+`no-static-ideograph-encoder-tables` cargo feature, which omits
+the encoder-specific tables and performs linear search over the
+decode-optimized tables. With realistic work loads, this seemed fast enough
+not to be user-visibly slow on Raspberry Pi 3 (which stood in for a phone
+for testing) in the Web-exposed encoder use cases.
+
 A framework for measuring performance is [available separately][1].
 
 [1]: https://github.com/hsivonen/encoding_bench/
 
-## C binding
+## Rust Version Compatibility
 
-An FFI layer for encoding_rs is available as a
-[separate crate](https://github.com/hsivonen/encoding_c).
+It is a goal to support the latest stable Rust, the latest nightly Rust and
+the version of Rust that's used for Firefox Nightly (currently 1.19.0).
+These are tested on Travis.
+
+Additionally, beta and the oldest known to work Rust version (currently
+1.15.0) are tested on Travis. The oldest Rust known to work is tested as
+a canary so that when the oldest known to work no longer works, the change
+can be documented here. At this time, there is no firm commitment to support
+a version older than what's required by Firefox, but there isn't an active
+plan to make changes that would make 1.15.0 no longer work, either.
 
 ## Compatibility with rust-encoding
 
 A compatibility layer that implements the rust-encoding API on top of
 encoding_rs is
 [provided as a separate crate](https://github.com/hsivonen/encoding_rs_compat)
-(cannot be uploaded to crates.io).
+(cannot be uploaded to crates.io). The compatibility layer was originally
+written with the assuption that Firefox would need it, but it is not currently
+used in Firefox.
 
 ## Roadmap
 
 - [x] Design the low-level API.
-- [x] Provide Rust-only convenience features (some BOM sniffing variants still
-      TODO).
+- [x] Provide Rust-only convenience features.
 - [x] Provide an stl/gsl-flavored C++ API.
 - [x] Implement all decoders and encoders.
 - [x] Add unit tests for all decoders and encoders.
@@ -83,18 +174,30 @@ encoding_rs is
 - [x] Make lookups by label or name use binary search that searches from the
       end of the label/name to the start.
 - [x] Make labels with non-ASCII bytes fail fast.
-- [x] Parallelize UTF-8 validation using [Rayon](https://github.com/nikomatsakis/rayon).
+- [ ] Parallelize UTF-8 validation using [Rayon](https://github.com/nikomatsakis/rayon).
 - [x] Provide an XPCOM/MFBT-flavored C++ API.
 - [ ] Investigate accelerating single-byte encode with a single fast-tracked
       range per encoding.
-- [ ] Replace uconv with encoding_rs in Gecko.
+- [x] Replace uconv with encoding_rs in Gecko.
 - [x] Implement the rust-encoding API in terms of encoding_rs.
-- [ ] Investigate the use of NEON on newer ARM CPUs that have a lesser penalty
-      on data flow from NEON to ALU registers.
+- [ ] Add SIMD acceleration for Aarch64.
+- [ ] Investigate the use of NEON on 32-bit ARM.
 - [ ] Investigate Björn Höhrmann's lookup table acceleration for UTF-8 as
       adapted to Rust in rust-encoding.
 
 ## Release Notes
+
+### 0.7.0
+
+* [Make `replacement` a label of the replacement
+  encoding.](https://github.com/whatwg/encoding/issues/70) (Spec change.)
+* Remove `Encoding::for_name()`. (`Encoding::for_label(foo).unwrap()` is
+  now close enough after the above label change.)
+* Remove the `parallel-utf8` cargo feature.
+* Add optional Serde support for `&'static Encoding`.
+* Performance tweaks for ASCII handling.
+* Performance tweaks for UTF-8 validation.
+* SIMD support on aarch64.
 
 ### 0.6.11
 

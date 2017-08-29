@@ -51,4 +51,4 @@ export MOZ_ANDROID_POCKET=1
 
 # Populated after checking out the sources and before building the
 # tree as part of the dependencies task bin/ scripts.
-ac_add_options --with-android-sdk="/home/worker/.mozbuild/android-sdk-linux"
+ac_add_options --with-android-sdk="/builds/worker/.mozbuild/android-sdk-linux"

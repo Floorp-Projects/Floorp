@@ -34,6 +34,7 @@ public:
     MOZ_MUST_USE nsresult Init();
 
     NS_IMETHOD SetSubstitution(const nsACString& aRoot, nsIURI* aBaseURI) override;
+    NS_IMETHOD SetSubstitutionWithFlags(const nsACString& aRoot, nsIURI* aBaseURI, uint32_t aFlags) override;
 
     NS_IMETHOD GetSubstitution(const nsACString& aRoot, nsIURI** aResult) override
     {
@@ -61,7 +62,7 @@ public:
     }
 
 protected:
-    MOZ_MUST_USE nsresult GetSubstitutionInternal(const nsACString& aRoot, nsIURI** aResult) override;
+    MOZ_MUST_USE nsresult GetSubstitutionInternal(const nsACString& aRoot, nsIURI** aResult, uint32_t* aFlags) override;
     virtual ~nsResProtocolHandler() {}
 
     MOZ_MUST_USE bool ResolveSpecialCases(const nsACString& aHost,
