@@ -1453,53 +1453,19 @@ Gecko_CopyCounterStyle(CounterStylePtr* aDst, const CounterStylePtr* aSrc)
   *aDst = *aSrc;
 }
 
-bool
-Gecko_CounterStyle_IsNone(const CounterStylePtr* aPtr) {
-  MOZ_ASSERT(aPtr);
-  return (*aPtr)->IsNone();
+nsIAtom*
+Gecko_CounterStyle_GetName(const CounterStylePtr* aPtr)
+{
+  if (!aPtr->IsResolved()) {
+    return aPtr->AsAtom();
+  }
+  return (*aPtr)->GetStyleName();
 }
 
-bool
-Gecko_CounterStyle_IsName(const CounterStylePtr* aPtr) {
-  return !Gecko_CounterStyle_IsNone(aPtr) && !(*aPtr)->AsAnonymous();
-}
-
-void
-Gecko_CounterStyle_GetName(const CounterStylePtr* aPtr,
-                           nsAString* aResult) {
-  MOZ_ASSERT(Gecko_CounterStyle_IsName(aPtr));
-  nsIAtom* name = (*aPtr)->GetStyleName();
-  *aResult = nsDependentAtomString(name);
-}
-
-const nsTArray<nsString>&
-Gecko_CounterStyle_GetSymbols(const CounterStylePtr* aPtr) {
-  MOZ_ASSERT((*aPtr)->AsAnonymous());
-  AnonymousCounterStyle* anonymous = (*aPtr)->AsAnonymous();
-  return anonymous->GetSymbols();
-}
-
-uint8_t
-Gecko_CounterStyle_GetSystem(const CounterStylePtr* aPtr) {
-  MOZ_ASSERT((*aPtr)->AsAnonymous());
-  AnonymousCounterStyle* anonymous = (*aPtr)->AsAnonymous();
-  return anonymous->GetSystem();
-}
-
-bool
-Gecko_CounterStyle_IsSingleString(const CounterStylePtr* aPtr) {
-  MOZ_ASSERT(aPtr);
-  AnonymousCounterStyle* anonymous = (*aPtr)->AsAnonymous();
-  return anonymous ? anonymous->IsSingleString() : false;
-}
-
-void
-Gecko_CounterStyle_GetSingleString(const CounterStylePtr* aPtr,
-                                   nsAString* aResult) {
-  MOZ_ASSERT(Gecko_CounterStyle_IsSingleString(aPtr));
-  const nsTArray<nsString>& symbols = Gecko_CounterStyle_GetSymbols(aPtr);
-  MOZ_ASSERT(symbols.Length() == 1);
-  aResult->Assign(symbols[0]);
+const AnonymousCounterStyle*
+Gecko_CounterStyle_GetAnonymous(const CounterStylePtr* aPtr)
+{
+  return aPtr->AsAnonymous();
 }
 
 already_AddRefed<css::URLValue>
