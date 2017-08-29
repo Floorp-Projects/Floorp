@@ -122,8 +122,16 @@ final class GeckoEditable extends IGeckoEditableParent.Stub
         final int keyPressMetaState = (unicodeChar >= ' ' &&
                 unicodeChar != unmodifiedUnicodeChar) ? unmodifiedMetaState : metaState;
 
+        // For synthesized keys, ignore modifier metastates from the synthesized event,
+        // because the synthesized modifier metastates don't reflect the actual state of
+        // the meta keys (bug 1387889). For example, the Latin sharp S (U+00DF) is
+        // synthesized as Alt+S, but we don't want the Alt metastate because the Alt key
+        // is not actually pressed in this case.
+        final int keyUpDownMetaState =
+                isSynthesizedImeKey ? (unmodifiedMetaState | savedMetaState) : metaState;
+
         child.onKeyEvent(action, event.getKeyCode(), event.getScanCode(),
-                   metaState, keyPressMetaState, event.getEventTime(),
+                   keyUpDownMetaState, keyPressMetaState, event.getEventTime(),
                    domPrintableKeyValue, event.getRepeatCount(), event.getFlags(),
                    isSynthesizedImeKey, event);
     }

@@ -236,11 +236,9 @@ TextEditor::InsertFromDrop(nsIDOMEvent* aDropEvent)
     // We never have to delete if selection is already collapsed
     bool cursorIsInSelection = false;
 
-    int32_t rangeCount;
-    rv = selection->GetRangeCount(&rangeCount);
-    NS_ENSURE_SUCCESS(rv, rv);
+    uint32_t rangeCount = selection->RangeCount();
 
-    for (int32_t j = 0; j < rangeCount; j++) {
+    for (uint32_t j = 0; j < rangeCount; j++) {
       RefPtr<nsRange> range = selection->GetRangeAt(j);
       if (!range) {
         // don't bail yet, iterate through them all

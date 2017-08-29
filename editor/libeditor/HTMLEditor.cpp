@@ -162,9 +162,6 @@ HTMLEditor::~HTMLEditor()
   mTypeInState = nullptr;
   mSelectionListenerP = nullptr;
 
-  // free any default style propItems
-  RemoveAllDefaultProperties();
-
   if (mLinkHandler && IsInitialized()) {
     nsCOMPtr<nsIPresShell> ps = GetPresShell();
 
@@ -275,6 +272,10 @@ HTMLEditor::Init(nsIDOMDocument* aDoc,
     nsCOMPtr<nsINode> document = do_QueryInterface(aDoc);
     document->AddMutationObserverUnlessExists(this);
 
+    if (!mRootElement) {
+      UpdateRootElement();
+    }
+
     // disable Composer-only features
     if (IsMailEditor()) {
       SetAbsolutePositioningEnabled(false);
@@ -346,48 +347,27 @@ HTMLEditor::PreDestroy(bool aDestroyingFrames)
   return TextEditor::PreDestroy(aDestroyingFrames);
 }
 
-NS_IMETHODIMP
-HTMLEditor::GetRootElement(nsIDOMElement** aRootElement)
+void
+HTMLEditor::UpdateRootElement()
 {
-  NS_ENSURE_ARG_POINTER(aRootElement);
-
-  if (mRootElement) {
-    return EditorBase::GetRootElement(aRootElement);
-  }
-
-  *aRootElement = nullptr;
-
   // Use the HTML documents body element as the editor root if we didn't
   // get a root element during initialization.
 
   nsCOMPtr<nsIDOMElement> rootElement;
   nsCOMPtr<nsIDOMHTMLElement> bodyElement;
-  nsresult rv = GetBodyElement(getter_AddRefs(bodyElement));
-  NS_ENSURE_SUCCESS(rv, rv);
-
+  GetBodyElement(getter_AddRefs(bodyElement));
   if (bodyElement) {
     rootElement = bodyElement;
   } else {
     // If there is no HTML body element,
     // we should use the document root element instead.
     nsCOMPtr<nsIDOMDocument> domDocument = GetDOMDocument();
-    if (NS_WARN_IF(!domDocument)) {
-      return NS_ERROR_NOT_INITIALIZED;
-    }
-    rv = domDocument->GetDocumentElement(getter_AddRefs(rootElement));
-    if (NS_WARN_IF(NS_FAILED(rv))) {
-      return rv;
-    }
-    // Document can have no elements
-    if (!rootElement) {
-      return NS_ERROR_NOT_AVAILABLE;
+    if (domDocument) {
+      domDocument->GetDocumentElement(getter_AddRefs(rootElement));
     }
   }
 
   mRootElement = do_QueryInterface(rootElement);
-  rootElement.forget(aRootElement);
-
-  return NS_OK;
 }
 
 already_AddRefed<nsIContent>
@@ -1583,18 +1563,16 @@ HTMLEditor::InsertElementAtSelection(nsIDOMElement* aElement,
       }
     }
 
-    nsCOMPtr<nsIDOMNode> parentSelectedNode;
-    int32_t offsetForInsert;
-    rv = selection->GetAnchorNode(getter_AddRefs(parentSelectedNode));
-    // XXX: ERROR_HANDLING bad XPCOM usage
-    if (NS_SUCCEEDED(rv) &&
-        NS_SUCCEEDED(selection->GetAnchorOffset(&offsetForInsert)) &&
-        parentSelectedNode) {
+    nsINode* parentSelectedNode = selection->GetAnchorNode();
+    if (parentSelectedNode) {
+      int32_t offsetForInsert = selection->AnchorOffset();
       // Adjust position based on the node we are going to insert.
-      NormalizeEOLInsertPosition(element, address_of(parentSelectedNode),
+      nsCOMPtr<nsIDOMNode> parentSelectedDOMNode =
+        GetAsDOMNode(parentSelectedNode);
+      NormalizeEOLInsertPosition(element, address_of(parentSelectedDOMNode),
                                  &offsetForInsert);
 
-      rv = InsertNodeAtPoint(node, address_of(parentSelectedNode),
+      rv = InsertNodeAtPoint(node, address_of(parentSelectedDOMNode),
                              &offsetForInsert, false);
       NS_ENSURE_SUCCESS(rv, rv);
       // Set caret after element, but check for special case
@@ -1608,10 +1586,10 @@ HTMLEditor::InsertElementAtSelection(nsIDOMElement* aElement,
       if (HTMLEditUtils::IsTable(node)) {
         if (IsLastEditableChild(element)) {
           nsCOMPtr<nsIDOMNode> brNode;
-          rv = CreateBR(parentSelectedNode, offsetForInsert + 1,
+          rv = CreateBR(parentSelectedDOMNode, offsetForInsert + 1,
                         address_of(brNode));
           NS_ENSURE_SUCCESS(rv, rv);
-          selection->Collapse(parentSelectedNode, offsetForInsert+1);
+          selection->Collapse(parentSelectedDOMNode, offsetForInsert+1);
         }
       }
     }
@@ -1700,17 +1678,18 @@ HTMLEditor::SelectElement(nsIDOMElement* aElement)
 
   RefPtr<Selection> selection = GetSelection();
   NS_ENSURE_TRUE(selection, NS_ERROR_NULL_POINTER);
-  nsCOMPtr<nsIDOMNode>parent;
-  nsresult rv = aElement->GetParentNode(getter_AddRefs(parent));
-  if (NS_SUCCEEDED(rv) && parent) {
-    int32_t offsetInParent = GetChildOffset(aElement, parent);
+  nsINode* parent = element->GetParentNode();
+  if (NS_WARN_IF(!parent)) {
+    return NS_ERROR_FAILURE;
+  }
 
-    // Collapse selection to just before desired element,
-    rv = selection->Collapse(parent, offsetInParent);
-    if (NS_SUCCEEDED(rv)) {
-      // then extend it to just after
-      rv = selection->Extend(parent, offsetInParent + 1);
-    }
+  int32_t offsetInParent = parent->IndexOf(element);
+
+  // Collapse selection to just before desired element,
+  nsresult rv = selection->Collapse(parent, offsetInParent);
+  if (NS_SUCCEEDED(rv)) {
+    // then extend it to just after
+    rv = selection->Extend(parent, offsetInParent + 1);
   }
   return rv;
 }
@@ -2463,27 +2442,23 @@ HTMLEditor::GetSelectedElement(const nsAString& aTagName,
       // Link tag is a special case - we return the anchor node
       //  found for any selection that is totally within a link,
       //  included a collapsed selection (just a caret in a link)
-      nsCOMPtr<nsIDOMNode> anchorNode;
-      rv = selection->GetAnchorNode(getter_AddRefs(anchorNode));
-      NS_ENSURE_SUCCESS(rv, rv);
+      nsCOMPtr<nsINode> anchorNode = selection->GetAnchorNode();
       int32_t anchorOffset = -1;
       if (anchorNode) {
-        selection->GetAnchorOffset(&anchorOffset);
+        anchorOffset = selection->AnchorOffset();
       }
 
-      nsCOMPtr<nsIDOMNode> focusNode;
-      rv = selection->GetFocusNode(getter_AddRefs(focusNode));
-      NS_ENSURE_SUCCESS(rv, rv);
+      nsCOMPtr<nsINode> focusNode = selection->GetFocusNode();
       int32_t focusOffset = -1;
       if (focusNode) {
-        selection->GetFocusOffset(&focusOffset);
+        focusOffset = selection->FocusOffset();
       }
 
       // Link node must be the same for both ends of selection
-      if (NS_SUCCEEDED(rv) && anchorNode) {
+      if (anchorNode) {
         nsCOMPtr<nsIDOMElement> parentLinkOfAnchor;
         rv = GetElementOrParentByTagName(NS_LITERAL_STRING("href"),
-                                         anchorNode,
+                                         GetAsDOMNode(anchorNode),
                                          getter_AddRefs(parentLinkOfAnchor));
         // XXX: ERROR_HANDLING  can parentLinkOfAnchor be null?
         if (NS_SUCCEEDED(rv) && parentLinkOfAnchor) {
@@ -2494,7 +2469,7 @@ HTMLEditor::GetSelectedElement(const nsAString& aTagName,
             // Link node must be the same for both ends of selection.
             nsCOMPtr<nsIDOMElement> parentLinkOfFocus;
             rv = GetElementOrParentByTagName(NS_LITERAL_STRING("href"),
-                                             focusNode,
+                                             GetAsDOMNode(focusNode),
                                              getter_AddRefs(parentLinkOfFocus));
             if (NS_SUCCEEDED(rv) && parentLinkOfFocus == parentLinkOfAnchor) {
               bNodeFound = true;
@@ -2504,16 +2479,15 @@ HTMLEditor::GetSelectedElement(const nsAString& aTagName,
           // We found a link node parent
           if (bNodeFound) {
             // GetElementOrParentByTagName addref'd this, so we don't need to do it here
-            *aReturn = parentLinkOfAnchor;
-            NS_IF_ADDREF(*aReturn);
+            parentLinkOfAnchor.forget(aReturn);
             return NS_OK;
           }
         } else if (anchorOffset >= 0) {
           // Check if link node is the only thing selected
-          nsCOMPtr<nsIDOMNode> anchorChild;
-          anchorChild = GetChildAt(anchorNode,anchorOffset);
+          nsINode* anchorChild = anchorNode->GetChildAt(anchorOffset);
           if (anchorChild && HTMLEditUtils::IsLink(anchorChild) &&
-              anchorNode == focusNode && focusOffset == anchorOffset + 1) {
+              anchorNode == focusNode &&
+              focusOffset == anchorOffset + 1) {
             selectedElement = do_QueryInterface(anchorChild);
             bNodeFound = true;
           }
@@ -3282,10 +3256,11 @@ HTMLEditor::DoContentInserted(nsIDocument* aDocument,
   RefPtr<HTMLEditor> kungFuDeathGrip(this);
 
   if (ShouldReplaceRootElement()) {
+    UpdateRootElement();
     nsContentUtils::AddScriptRunner(
-      NewRunnableMethod("HTMLEditor::ResetRootElementAndEventTarget",
+      NewRunnableMethod("HTMLEditor::NotifyRootChanged",
                         this,
-                        &HTMLEditor::ResetRootElementAndEventTarget));
+                        &HTMLEditor::NotifyRootChanged));
   }
   // We don't need to handle our own modifications
   else if (!mAction && (aContainer ? aContainer->IsEditable() : aDocument->IsEditable())) {
@@ -3335,10 +3310,11 @@ HTMLEditor::ContentRemoved(nsIDocument* aDocument,
   RefPtr<HTMLEditor> kungFuDeathGrip(this);
 
   if (SameCOMIdentity(aChild, mRootElement)) {
+    mRootElement = nullptr;
     nsContentUtils::AddScriptRunner(
-      NewRunnableMethod("HTMLEditor::ResetRootElementAndEventTarget",
+      NewRunnableMethod("HTMLEditor::NotifyRootChanged",
                         this,
-                        &HTMLEditor::ResetRootElementAndEventTarget));
+                        &HTMLEditor::NotifyRootChanged));
   }
   // We don't need to handle our own modifications
   else if (!mAction && (aContainer ? aContainer->IsEditable() : aDocument->IsEditable())) {
@@ -3595,16 +3571,15 @@ HTMLEditor::SelectAll()
   RefPtr<Selection> selection = GetSelection();
   NS_ENSURE_STATE(selection);
 
-  nsCOMPtr<nsIDOMNode> anchorNode;
-  nsresult rv = selection->GetAnchorNode(getter_AddRefs(anchorNode));
-  NS_ENSURE_SUCCESS(rv, rv);
+  nsINode* anchorNode = selection->GetAnchorNode();
+  if (NS_WARN_IF(!anchorNode) || NS_WARN_IF(!anchorNode->IsContent())) {
+    return NS_ERROR_FAILURE;
+  }
 
-  nsCOMPtr<nsIContent> anchorContent = do_QueryInterface(anchorNode, &rv);
-  NS_ENSURE_SUCCESS(rv, rv);
-
-  nsIContent *rootContent;
+  nsIContent* anchorContent = anchorNode->AsContent();
+  nsIContent* rootContent;
   if (anchorContent->HasIndependentSelection()) {
-    rv = selection->SetAncestorLimiter(nullptr);
+    nsresult rv = selection->SetAncestorLimiter(nullptr);
     NS_ENSURE_SUCCESS(rv, rv);
     rootContent = mRootElement;
   } else {
@@ -3614,14 +3589,13 @@ HTMLEditor::SelectAll()
 
   NS_ENSURE_TRUE(rootContent, NS_ERROR_UNEXPECTED);
 
-  nsCOMPtr<nsIDOMNode> rootElement = do_QueryInterface(rootContent, &rv);
-  NS_ENSURE_SUCCESS(rv, rv);
-
   Maybe<mozilla::dom::Selection::AutoUserInitiated> userSelection;
   if (!rootContent->IsEditable()) {
     userSelection.emplace(selection);
   }
-  return selection->SelectAllChildren(rootElement);
+  ErrorResult errorResult;
+  selection->SelectAllChildren(*rootContent, errorResult);
+  return errorResult.StealNSResult();
 }
 
 // this will NOT find aAttribute unless aAttribute has a non-null value
@@ -5029,13 +5003,11 @@ HTMLEditor::GetActiveEditingHost()
   // We're HTML editor for contenteditable
   RefPtr<Selection> selection = GetSelection();
   NS_ENSURE_TRUE(selection, nullptr);
-  nsCOMPtr<nsIDOMNode> focusNode;
-  nsresult rv = selection->GetFocusNode(getter_AddRefs(focusNode));
-  NS_ENSURE_SUCCESS(rv, nullptr);
-  nsCOMPtr<nsIContent> content = do_QueryInterface(focusNode);
-  if (!content) {
+  nsINode* focusNode = selection->GetFocusNode();
+  if (NS_WARN_IF(!focusNode) || NS_WARN_IF(!focusNode->IsContent())) {
     return nullptr;
   }
+  nsIContent* content = focusNode->AsContent();
 
   // If the active content isn't editable, or it has independent selection,
   // we're not active.
@@ -5073,24 +5045,18 @@ HTMLEditor::ShouldReplaceRootElement()
 }
 
 void
-HTMLEditor::ResetRootElementAndEventTarget()
+HTMLEditor::NotifyRootChanged()
 {
   nsCOMPtr<nsIMutationObserver> kungFuDeathGrip(this);
 
-  // Need to remove the event listeners first because BeginningOfDocument
-  // could set a new root (and event target is set by InstallEventListeners())
-  // and we won't be able to remove them from the old event target then.
   RemoveEventListeners();
-  mRootElement = nullptr;
   nsresult rv = InstallEventListeners();
   if (NS_FAILED(rv)) {
     return;
   }
 
-  // We must have mRootElement now.
-  nsCOMPtr<nsIDOMElement> root;
-  rv = GetRootElement(getter_AddRefs(root));
-  if (NS_FAILED(rv) || !mRootElement) {
+  UpdateRootElement();
+  if (!mRootElement) {
     return;
   }
 

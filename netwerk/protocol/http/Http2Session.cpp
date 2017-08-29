@@ -863,8 +863,8 @@ Http2Session::GenerateGoAway(uint32_t aStatusCode)
 // flush out silent but broken intermediaries
 // 2] a settings frame which sets a small flow control window for pushes
 // 3] a window update frame which creates a large session flow control window
-// 4] 5 priority frames for streams which will never be opened with headers
-//    these streams (3, 5, 7, 9, b) build a dependency tree that all other
+// 4] 6 priority frames for streams which will never be opened with headers
+//    these streams (3, 5, 7, 9, b, d) build a dependency tree that all other
 //    streams will be direct leaves of.
 void
 Http2Session::SendHello()
@@ -872,11 +872,11 @@ Http2Session::SendHello()
   MOZ_ASSERT(OnSocketThread(), "not on socket thread");
   LOG3(("Http2Session::SendHello %p\n", this));
 
-  // sized for magic + 5 settings and a session window update and 5 priority frames
+  // sized for magic + 5 settings and a session window update and 6 priority frames
   // 24 magic, 33 for settings (9 header + 4 settings @6), 13 for window update,
-  // 5 priority frames at 14 (9 + 5) each
+  // 6 priority frames at 14 (9 + 5) each
   static const uint32_t maxSettings = 5;
-  static const uint32_t prioritySize = 5 * (kFrameHeaderBytes + 5);
+  static const uint32_t prioritySize = kPriorityGroupCount * (kFrameHeaderBytes + 5);
   static const uint32_t maxDataLen = 24 + kFrameHeaderBytes + maxSettings * 6 + 13 + prioritySize;
   char *packet = EnsureOutputBuffer(maxDataLen);
   memcpy(packet, kMagicHello, 24);

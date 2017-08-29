@@ -57,14 +57,6 @@ public:
 
   bool Disabled();
   void SetDisabled(bool aDisabled);
-  void GetNonce(nsAString& aNonce) const
-  {
-    GetHTMLAttr(nsGkAtoms::nonce, aNonce);
-  }
-  void SetNonce(const nsAString& aNonce, ErrorResult& aRv)
-  {
-    SetHTMLAttr(nsGkAtoms::nonce, aNonce, aRv);
-  }
   void GetMedia(nsAString& aValue)
   {
     GetHTMLAttr(nsGkAtoms::media, aValue);

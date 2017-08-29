@@ -166,24 +166,31 @@ function Tester(aTests, structuredLogger, aCallback) {
 
   this._coverageCollector = null;
 
+  const XPCOMUtilsMod = Components.utils.import("resource://gre/modules/XPCOMUtils.jsm", {});
+
   // Avoid failing tests when XPCOMUtils.defineLazyScriptGetter is used.
-  Services.scriptloader = {
-    loadSubScript: (url, obj, charset) => {
-      let before = Object.keys(window);
-      try {
-        return this._scriptLoader.loadSubScript(url, obj, charset);
-      } finally {
-        for (let property of Object.keys(window)) {
-          if (!before.includes(property) && !this._globalProperties.includes(property)) {
-            this._globalProperties.push(property);
-            this.SimpleTest.info("Global property added while loading " + url + ": " + property);
+  XPCOMUtilsMod.Services = Object.create(Services, {
+    scriptloader: {
+      configurable: true,
+      writable: true,
+      value: {
+        loadSubScript: (url, obj, charset) => {
+          let before = Object.keys(window);
+          try {
+            return this._scriptLoader.loadSubScript(url, obj, charset);
+          } finally {
+            for (let property of Object.keys(window)) {
+              if (!before.includes(property) && !this._globalProperties.includes(property)) {
+                this._globalProperties.push(property);
+                this.SimpleTest.info("Global property added while loading " + url + ": " + property);
+              }
+            }
           }
-        }
-      }
+        },
+        loadSubScriptWithOptions: this._scriptLoader.loadSubScriptWithOptions.bind(this._scriptLoader),
+      },
     },
-    loadSubScriptWithOptions: this._scriptLoader.loadSubScriptWithOptions.bind(this._scriptLoader),
-    precompileScript: this._scriptLoader.precompileScript.bind(this._scriptLoader)
-  };
+  });
 }
 Tester.prototype = {
   EventUtils: {},

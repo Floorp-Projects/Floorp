@@ -1,7 +1,6 @@
 #!/usr/bin/env python
 
 import re
-
 from codecs import open
 
 try:
@@ -35,5 +34,6 @@ setup(
         'Intended Audience :: Developers',
         'Natural Language :: English',
         'Programming Language :: Python :: 2.7',
+        'Programming Language :: Python :: 3.5',
     ),
 )

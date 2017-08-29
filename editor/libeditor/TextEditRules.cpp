@@ -132,10 +132,7 @@ TextEditRules::Init(TextEditor* aTextEditor)
 
   // If the selection hasn't been set up yet, set it up collapsed to the end of
   // our editable content.
-  int32_t rangeCount;
-  rv = selection->GetRangeCount(&rangeCount);
-  NS_ENSURE_SUCCESS(rv, rv);
-  if (!rangeCount) {
+  if (!selection->RangeCount()) {
     rv = mTextEditor->CollapseSelectionToEnd(selection);
     NS_ENSURE_SUCCESS(rv, rv);
   }
@@ -204,7 +201,7 @@ TextEditRules::BeforeEdit(EditAction action,
     mCachedSelectionOffset = 0;
   } else {
     mCachedSelectionNode = selection->GetAnchorNode();
-    selection->GetAnchorOffset(&mCachedSelectionOffset);
+    mCachedSelectionOffset = selection->AnchorOffset();
   }
 
   return NS_OK;
@@ -425,10 +422,7 @@ TextEditRules::WillInsertBreak(Selection* aSelection,
     *aCancel = false;
 
     // if the selection isn't collapsed, delete it.
-    bool bCollapsed;
-    rv = aSelection->GetIsCollapsed(&bCollapsed);
-    NS_ENSURE_SUCCESS(rv, rv);
-    if (!bCollapsed) {
+    if (!aSelection->IsCollapsed()) {
       NS_ENSURE_STATE(mTextEditor);
       rv = mTextEditor->DeleteSelection(nsIEditor::eNone, nsIEditor::eStrip);
       NS_ENSURE_SUCCESS(rv, rv);
@@ -670,10 +664,7 @@ TextEditRules::WillInsertText(EditAction aAction,
   }
 
   // if the selection isn't collapsed, delete it.
-  bool bCollapsed;
-  rv = aSelection->GetIsCollapsed(&bCollapsed);
-  NS_ENSURE_SUCCESS(rv, rv);
-  if (!bCollapsed) {
+  if (!aSelection->IsCollapsed()) {
     NS_ENSURE_STATE(mTextEditor);
     rv = mTextEditor->DeleteSelection(nsIEditor::eNone, nsIEditor::eStrip);
     NS_ENSURE_SUCCESS(rv, rv);
@@ -1030,11 +1021,7 @@ TextEditRules::WillDeleteSelection(Selection* aSelection,
     NS_ENSURE_SUCCESS(rv, rv);
     NS_ENSURE_TRUE(startNode, NS_ERROR_FAILURE);
 
-    bool bCollapsed;
-    rv = aSelection->GetIsCollapsed(&bCollapsed);
-    NS_ENSURE_SUCCESS(rv, rv);
-
-    if (!bCollapsed) {
+    if (!aSelection->IsCollapsed()) {
       return NS_OK;
     }
 
