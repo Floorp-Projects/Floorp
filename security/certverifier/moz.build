@@ -9,6 +9,9 @@ with Files("**"):
 
 EXPORTS += [
     'BRNameMatchingPolicy.h',
+    'BTInclusionProof.h',
+    'BTVerifier.h',
+    'Buffer.h',
     'CertVerifier.h',
     'CTLog.h',
     'CTPolicyEnforcer.h',
@@ -20,6 +23,8 @@ EXPORTS += [
 
 UNIFIED_SOURCES += [
     'BRNameMatchingPolicy.cpp',
+    'BTVerifier.cpp',
+    'Buffer.cpp',
     'CertVerifier.cpp',
     'CTDiversityPolicy.cpp',
     'CTLogVerifier.cpp',

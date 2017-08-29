@@ -105,30 +105,6 @@ ENCODING_RS_ENCODING const* encoding_for_label_no_replacement(uint8_t const* lab
 /// block of if `buffer` is `NULL`.
 ENCODING_RS_ENCODING const* encoding_for_bom(uint8_t const* buffer, size_t* buffer_len);
 
-/// If the argument matches exactly (case-sensitively; no whitespace
-/// removal performed) the name of an encoding, returns
-/// `const ENCODING_RS_ENCODING*` representing that encoding. Otherwise panics.
-///
-/// The motivating use case for this function is interoperability with
-/// legacy Gecko code that represents encodings as name string instead of
-/// type-safe `ENCODING_RS_ENCODING` objects. Using this function for other purposes is
-/// most likely the wrong thing to do.
-///
-/// `name` must be non-`NULL` even if `name_len` is zero. When `name_len`
-/// is zero, it is OK for `name` to be something non-dereferencable,
-/// such as `0x1`. This is required due to Rust's optimization for slices
-/// within `Option`.
-///
-/// # Panics
-///
-/// Panics if the argument is not the name of an encoding.
-///
-/// # Undefined behavior
-///
-/// UB ensues if `name` and `name_len` don't designate a valid memory block
-/// of if `name` is `NULL`.
-ENCODING_RS_ENCODING const* encoding_for_name(uint8_t const* name, size_t name_len);
-
 /// Writes the name of the given `ENCODING_RS_ENCODING` to a caller-supplied buffer as
 /// ASCII and returns the number of bytes / ASCII characters written.
 ///

@@ -7457,7 +7457,6 @@ BCBlockDirSeg::CreateWebRenderCommands(BCPaintBorderIterator& aIter,
                                                      transformedRect.size.width,
                                                      transformedRect.size.width,
                                                      transformedRect.size.width);
-  transformedRect.size.width *= 2.0f;
   Range<const wr::BorderSide> wrsides(wrSide, 4);
   aBuilder.PushBorder(transformedRect,
                       transformedRect,
@@ -7715,7 +7714,6 @@ BCInlineDirSeg::CreateWebRenderCommands(BCPaintBorderIterator& aIter,
                                                      transformedRect.size.height,
                                                      transformedRect.size.height,
                                                      transformedRect.size.height);
-  transformedRect.size.height *= 2.0f;
   Range<const wr::BorderSide> wrsides(wrSide, 4);
   aBuilder.PushBorder(transformedRect,
                       transformedRect,

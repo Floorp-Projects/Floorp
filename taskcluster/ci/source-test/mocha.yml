@@ -13,7 +13,7 @@ eslint-plugin-mozilla:
         using: run-task
         cache-dotcache: true
         command: >
-            cd /home/worker/checkouts/gecko/tools/lint/eslint/eslint-plugin-mozilla &&
+            cd /builds/worker/checkouts/gecko/tools/lint/eslint/eslint-plugin-mozilla &&
             cp -r /build/node_modules_eslint-plugin-mozilla node_modules &&
             npm run test
     when:

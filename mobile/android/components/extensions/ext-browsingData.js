@@ -94,6 +94,9 @@ this.browsingData = class extends ExtensionAPI {
         removeCache(options) {
           return Sanitizer.clearItem("cache");
         },
+        removeDownloads(options) {
+          return Sanitizer.clearItem("downloadHistory", options.since);
+        },
       },
     };
   }

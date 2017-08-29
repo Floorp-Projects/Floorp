@@ -267,5 +267,4 @@ TEST_F(CTSerializationTest, EncodesValidSignedTreeHead)
   MOZ_RELEASE_ASSERT(expectedBuffer.append(hash.begin(), hash.length()));
   EXPECT_EQ(expectedBuffer, encoded);
 }
-
-} }  // namespace mozilla::ct
+} } // namespace mozilla::ct

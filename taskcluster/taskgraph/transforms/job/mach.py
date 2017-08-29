@@ -29,7 +29,7 @@ def docker_worker_mach(config, job, taskdesc):
     run = job['run']
 
     # defer to the run_task implementation
-    run['command'] = 'cd /home/worker/checkouts/gecko && ./mach ' + run['mach']
+    run['command'] = 'cd /builds/worker/checkouts/gecko && ./mach ' + run['mach']
     run['checkout'] = True
     run['sparse-profile'] = None
     del run['mach']

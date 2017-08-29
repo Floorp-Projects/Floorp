@@ -461,6 +461,15 @@ impl RenderBackend {
                     // will cancel rendering the frame.
                     self.notifier.lock().unwrap().as_mut().unwrap().new_frame_ready();
                 }
+                ApiMsg::DebugCommand(option) => {
+                    let msg = ResultMsg::DebugCommand(option);
+                    self.result_tx.send(msg).unwrap();
+                    let notifier = self.notifier.lock();
+                    notifier.unwrap()
+                            .as_mut()
+                            .unwrap()
+                            .new_frame_ready();
+                }
                 ApiMsg::ShutDown => {
                     let notifier = self.notifier.lock();
                     notifier.unwrap()

@@ -4,7 +4,7 @@ set -x -e
 
 echo "running as" $(id)
 
-: WORKSPACE ${WORKSPACE:=/home/worker/workspace}
+: WORKSPACE ${WORKSPACE:=/builds/worker/workspace}
 
 set -v
 

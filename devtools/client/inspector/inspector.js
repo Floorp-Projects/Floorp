@@ -22,6 +22,7 @@ const Menu = require("devtools/client/framework/menu");
 const MenuItem = require("devtools/client/framework/menu-item");
 
 const {HTMLBreadcrumbs} = require("devtools/client/inspector/breadcrumbs");
+const ExtensionSidebar = require("devtools/client/inspector/extensions/extension-sidebar");
 const GridInspector = require("devtools/client/inspector/grids/grid-inspector");
 const {InspectorSearch} = require("devtools/client/inspector/inspector-search");
 const HighlightersOverlay = require("devtools/client/inspector/shared/highlighters-overlay");
@@ -293,6 +294,7 @@ Inspector.prototype = {
 
       this.setupSearchBox();
       this.setupSidebar();
+      this.setupExtensionSidebars();
     });
   },
 
@@ -556,6 +558,8 @@ Inspector.prototype = {
     // Then forces the panel creation by calling getPanel
     // (This allows lazy loading the panels only once we select them)
     this.getPanel(toolId);
+
+    this.toolbox.emit("inspector-sidebar-select", toolId);
   },
 
   /**
@@ -651,6 +655,69 @@ Inspector.prototype = {
     this.setupSplitter();
 
     this.sidebar.show(defaultTab);
+  },
+
+  /**
+   * Setup any extension sidebar already registered to the toolbox when the inspector.
+   * has been created for the first time.
+   */
+  setupExtensionSidebars() {
+    for (const [sidebarId, {title}] of this.toolbox.inspectorExtensionSidebars) {
+      this.addExtensionSidebar(sidebarId, {title});
+    }
+  },
+
+  /**
+   * Create a side-panel tab controlled by an extension
+   * using the devtools.panels.elements.createSidebarPane and sidebar object API
+   *
+   * @param {String} id
+   *        An unique id for the sidebar tab.
+   * @param {Object} options
+   * @param {String} options.title
+   *        The tab title
+   */
+  addExtensionSidebar: function (id, {title}) {
+    if (this._panels.has(id)) {
+      throw new Error(`Cannot create an extension sidebar for the existent id: ${id}`);
+    }
+
+    const extensionSidebar = new ExtensionSidebar(this, {id, title});
+
+    // TODO(rpl): pass some extension metadata (e.g. extension name and icon) to customize
+    // the render of the extension title (e.g. use the icon in the sidebar and show the
+    // extension name in a tooltip).
+    this.addSidebarTab(id, title, extensionSidebar.provider, false);
+
+    this._panels.set(id, extensionSidebar);
+
+    // Emit the created ExtensionSidebar instance to the listeners registered
+    // on the toolbox by the "devtools.panels.elements" WebExtensions API.
+    this.toolbox.emit(`extension-sidebar-created-${id}`, extensionSidebar);
+  },
+
+  /**
+   * Remove and destroy a side-panel tab controlled by an extension (e.g. when the
+   * extension has been disable/uninstalled while the toolbox and inspector were
+   * still open).
+   *
+   * @param {String} id
+   *        The id of the sidebar tab to destroy.
+   */
+  removeExtensionSidebar: function (id) {
+    if (!this._panels.has(id)) {
+      throw new Error(`Unable to find a sidebar panel with id "${id}"`);
+    }
+
+    const panel = this._panels.get(id);
+
+    if (!(panel instanceof ExtensionSidebar)) {
+      throw new Error(`The sidebar panel with id "${id}" is not an ExtensionSidebar`);
+    }
+
+    this._panels.delete(id);
+    this.sidebar.removeTab(id);
+    panel.destroy();
   },
 
   /**
@@ -2109,6 +2176,10 @@ const buildFakeToolbox = Task.async(function* (
     viewSource: notImplemented,
     viewSourceInDebugger: notImplemented,
     viewSourceInStyleEditor: notImplemented,
+
+    get inspectorExtensionSidebars() {
+      notImplemented();
+    },
 
     // For attachThread:
     highlightTool() {},

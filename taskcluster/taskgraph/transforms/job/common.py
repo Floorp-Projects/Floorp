@@ -24,7 +24,7 @@ def docker_worker_add_workspace_cache(config, job, taskdesc, extra=None):
             taskdesc['attributes']['build_platform'],
             taskdesc['attributes']['build_type'],
         ),
-        'mount-point': "/home/worker/workspace",
+        'mount-point': "/builds/worker/workspace",
         # Don't enable the workspace cache when we can't guarantee its
         # behavior, like on Try.
         'skip-untrusted': True,
@@ -40,7 +40,7 @@ def docker_worker_add_tc_vcs_cache(config, job, taskdesc):
         'type': 'persistent',
         'name': 'level-{}-{}-tc-vcs'.format(
             config.params['level'], config.params['project']),
-        'mount-point': "/home/worker/.tc-vcs",
+        'mount-point': "/builds/worker/.tc-vcs",
     })
 
 
@@ -54,7 +54,7 @@ def add_public_artifacts(config, job, taskdesc, path):
 
 def docker_worker_add_public_artifacts(config, job, taskdesc):
     """ Adds a public artifact directory to the task """
-    add_public_artifacts(config, job, taskdesc, path='/home/worker/artifacts/')
+    add_public_artifacts(config, job, taskdesc, path='/builds/worker/artifacts/')
 
 
 def generic_worker_add_public_artifacts(config, job, taskdesc):
@@ -94,14 +94,14 @@ def support_vcs_checkout(config, job, taskdesc, sparse=False):
         taskdesc['worker'].setdefault('caches', []).append({
             'type': 'persistent',
             'name': name,
-            'mount-point': '/home/worker/checkouts',
+            'mount-point': '/builds/worker/checkouts',
         })
 
     taskdesc['worker'].setdefault('env', {}).update({
         'GECKO_BASE_REPOSITORY': config.params['base_repository'],
         'GECKO_HEAD_REPOSITORY': config.params['head_repository'],
         'GECKO_HEAD_REV': config.params['head_rev'],
-        'HG_STORE_PATH': '/home/worker/checkouts/hg-store',
+        'HG_STORE_PATH': '/builds/worker/checkouts/hg-store',
     })
 
     # Give task access to hgfingerprint secret so it can pin the certificate
@@ -148,11 +148,11 @@ def docker_worker_add_tooltool(config, job, taskdesc, internal=False):
     taskdesc['worker'].setdefault('caches', []).append({
         'type': 'persistent',
         'name': 'level-%s-tooltool-cache' % level,
-        'mount-point': '/home/worker/tooltool-cache',
+        'mount-point': '/builds/worker/tooltool-cache',
     })
 
     taskdesc['worker'].setdefault('env', {}).update({
-        'TOOLTOOL_CACHE': '/home/worker/tooltool-cache',
+        'TOOLTOOL_CACHE': '/builds/worker/tooltool-cache',
     })
 
     taskdesc['worker']['relengapi-proxy'] = True

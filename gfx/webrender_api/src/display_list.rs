@@ -20,6 +20,10 @@ use {StickyFrameInfo, TextDisplayItem, TextShadow, TransformStyle};
 use {YuvColorSpace, YuvData, YuvImageDisplayItem};
 use std::marker::PhantomData;
 
+// We don't want to push a long text-run. If a text-run is too long, split it into several parts.
+// Please check the renderer::MAX_VERTEX_TEXTURE_WIDTH for the detail.
+pub const MAX_TEXT_RUN_LENGTH: usize = 2040;
+
 #[repr(C)]
 #[derive(Clone, Copy, Debug, Deserialize, Eq, Hash, PartialEq, Serialize)]
 pub struct ItemRange<T> {
@@ -619,11 +623,13 @@ impl DisplayListBuilder {
                 glyph_options,
             });
 
-            self.push_item(item, rect, local_clip);
-            self.push_iter(glyphs);
+            for split_glyphs in glyphs.chunks(MAX_TEXT_RUN_LENGTH) {
+                self.push_item(item, rect, local_clip);
+                self.push_iter(split_glyphs);
 
-            // Remember that we've seen these glyphs
-            self.cache_glyphs(font_key, color, glyphs.iter().map(|glyph| glyph.index));
+                // Remember that we've seen these glyphs
+                self.cache_glyphs(font_key, color, split_glyphs.iter().map(|glyph| glyph.index));
+            }
         }
     }
 
