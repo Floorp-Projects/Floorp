@@ -35,6 +35,7 @@ EXPORTS.mozilla.dom += [
     'MultipartBlobImpl.h',
     'MutableBlobStorage.h',
     'MutableBlobStreamListener.h',
+    'StreamBlobImpl.h',
 ]
 
 UNIFIED_SOURCES += [
