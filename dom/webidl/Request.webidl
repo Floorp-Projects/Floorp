@@ -48,8 +48,8 @@ dictionary RequestInit {
   RequestRedirect redirect;
   DOMString integrity;
 
-  [Func="AbortController::IsEnabled"]
-  AbortSignal signal;
+  [Func="FetchController::IsEnabled"]
+  FetchSignal signal;
 
   [Func="FetchObserver::IsEnabled"]
   ObserverCallback observe;
