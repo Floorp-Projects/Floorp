@@ -13,7 +13,7 @@ const { getAdjustedQuads, getCurrentZoom,
 // Note that the order of items in this array is important because it is used
 // for drawing the BoxModelHighlighter's path elements correctly.
 const BOX_MODEL_REGIONS = ["margin", "border", "padding", "content"];
-const QUADS_PROPS = ["p1", "p2", "p3", "p4", "bounds"];
+const QUADS_PROPS = ["p1", "p2", "p3", "p4"];
 
 function areValuesDifferent(oldValue, newValue, zoom) {
   let delta = Math.abs(oldValue.toFixed(4) - newValue.toFixed(4));
@@ -28,14 +28,12 @@ function areQuadsDifferent(oldQuads, newQuads, zoom) {
 
     for (let i = 0; i < oldQuads[region].length; i++) {
       for (let prop of QUADS_PROPS) {
-        let oldProp = oldQuads[region][i][prop];
-        let newProp = newQuads[region][i][prop];
+        let oldPoint = oldQuads[region][i][prop];
+        let newPoint = newQuads[region][i][prop];
 
-        for (let key of Object.keys(oldProp)) {
-          if (areValuesDifferent(oldProp[key], newProp[key], zoom)) {
-            return true;
-          }
-        }
+        return areValuesDifferent(oldPoint.x, newPoint.x, zoom) ||
+               areValuesDifferent(oldPoint.y, newPoint.y, zoom) ||
+               areValuesDifferent(oldPoint.w, newPoint.w, zoom);
       }
     }
   }
