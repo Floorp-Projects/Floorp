@@ -20,9 +20,3 @@ sticky_pref("devtools.theme", "light");
 
 // Should the devtools toolbar be opened on startup
 pref("devtools.toolbar.visible", false);
-
-// Tells if DevTools have been explicitely enabled by the user.
-// This pref allows to disable all features related to DevTools
-// for users that never use them.
-// Until bug 1361080 lands, we always consider them enabled.
-pref("devtools.enabled", true);
