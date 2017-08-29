@@ -29,6 +29,9 @@ public:
   static bool
   IsEnabled(JSContext* aCx, JSObject* aGlobal);
 
+  static bool
+  IsEnabledInFetch(JSContext* aCx, JSObject* aGlobal);
+
   static already_AddRefed<AbortController>
   Constructor(const GlobalObject& aGlobal, ErrorResult& aRv);
 
