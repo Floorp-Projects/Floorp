@@ -43,7 +43,7 @@
 
         input.addEventListener("focus", function() {
           div.requestPointerLock();
-        });
+        }, { once: true });
 
         document.addEventListener("pointerlockchange", function (e) {
           if (document.pointerLockElement === div) {
