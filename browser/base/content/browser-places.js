@@ -340,9 +340,6 @@ var StarUI = {
                           .replace("#1", bookmarksCount);
     this._element("editBookmarkPanelRemoveButton").label = label;
 
-    // unset the unstarred state, if set
-    this._element("editBookmarkPanelStarIcon").removeAttribute("unstarred");
-
     this.beginBatch();
 
     if (aAnchorElement) {
