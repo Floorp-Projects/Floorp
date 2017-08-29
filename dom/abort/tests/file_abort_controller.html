@@ -32,49 +32,6 @@ function testUpdateData() {
   next();
 }
  
-function testFollowingOurself() {
-  // Let's follow ourself
-  var ac = new AbortController();
-  ac.follow(ac.signal);
- 
-  ac.abort();
-  is(ac.signal.aborted, true, "Signal is aborted");
- 
-  next();
-}
- 
-function testFollowingOther() {
-  // Let's follow another one
-  var ac1 = new AbortController();
-  var ac2 = new AbortController();
-  ac1.follow(ac2.signal);
- 
-  ac2.abort();
- 
-  is(ac1.signal.aborted, true, "Signal is aborted");
-  is(ac2.signal.aborted, true, "Signal is aborted");
- 
-  next();
-}
-
-function testFollowingLoop() {
-  // ac1 -> ac2 -> ac3 -> ac1
-  var ac1 = new AbortController();
-  var ac2 = new AbortController();
-  var ac3 = new AbortController();
-  ac1.follow(ac2.signal);
-  ac2.follow(ac3.signal);
-  ac3.follow(ac1.signal);
- 
-  ac3.abort();
- 
-  is(ac1.signal.aborted, true, "Signal is aborted");
-  is(ac2.signal.aborted, true, "Signal is aborted");
-  is(ac3.signal.aborted, true, "Signal is aborted");
- 
-  next();
-}
- 
 function testAbortEvent() {
   var ac = new AbortController();
   ac.signal.onabort = function(e) {
@@ -130,11 +87,6 @@ var steps = [
   // Simple stuff
   testWebIDL,
   testUpdateData,
-
-  // Following algorithm
-  testFollowingOurself,
-  testFollowingOther,
-  testFollowingLoop,
 
   // Event propagation
   testAbortEvent,
