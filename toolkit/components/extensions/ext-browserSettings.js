@@ -2,28 +2,38 @@
 /* vim: set sts=2 sw=2 et tw=80: */
 "use strict";
 
+XPCOMUtils.defineLazyModuleGetter(this, "ExtensionSettingsStore",
+                                  "resource://gre/modules/ExtensionSettingsStore.jsm");
 XPCOMUtils.defineLazyModuleGetter(this, "Preferences",
                                   "resource://gre/modules/Preferences.jsm");
 
 Cu.import("resource://gre/modules/ExtensionPreferencesManager.jsm");
 
-const getSettingsAPI = (extension, name, callback) => {
+const HOMEPAGE_OVERRIDE_SETTING = "homepage_override";
+const URL_STORE_TYPE = "url_overrides";
+const NEW_TAB_OVERRIDE_SETTING = "newTabURL";
+
+const getSettingsAPI = (extension, name, callback, storeType, readOnly = false) => {
   return {
     async get(details) {
       return {
         levelOfControl: details.incognito ?
           "not_controllable" :
           await ExtensionPreferencesManager.getLevelOfControl(
-            extension, name),
+            extension, name, storeType),
         value: await callback(),
       };
     },
     set(details) {
-      return ExtensionPreferencesManager.setSetting(
-        extension, name, details.value);
+      if (!readOnly) {
+        return ExtensionPreferencesManager.setSetting(
+          extension, name, details.value);
+      }
     },
     clear(details) {
-      return ExtensionPreferencesManager.removeSetting(extension, name);
+      if (!readOnly) {
+        return ExtensionPreferencesManager.removeSetting(extension, name);
+      }
     },
   };
 };
@@ -73,6 +83,25 @@ this.browserSettings = class extends ExtensionAPI {
             return Preferences.get("browser.cache.disk.enable") &&
               Preferences.get("browser.cache.memory.enable");
           }),
+        homepageOverride: getSettingsAPI(extension,
+          HOMEPAGE_OVERRIDE_SETTING,
+          async () => {
+            let homepageSetting = await ExtensionPreferencesManager.getSetting(HOMEPAGE_OVERRIDE_SETTING);
+            if (homepageSetting) {
+              return homepageSetting.value;
+            }
+            return null;
+          }, undefined, true),
+        newTabPageOverride: getSettingsAPI(extension,
+          NEW_TAB_OVERRIDE_SETTING,
+          async () => {
+            await ExtensionSettingsStore.initialize();
+            let newTabPageSetting = ExtensionSettingsStore.getSetting(URL_STORE_TYPE, NEW_TAB_OVERRIDE_SETTING);
+            if (newTabPageSetting) {
+              return newTabPageSetting.value;
+            }
+            return null;
+          }, URL_STORE_TYPE, true),
       },
     };
   }
