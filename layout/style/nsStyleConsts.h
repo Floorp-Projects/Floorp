@@ -795,7 +795,6 @@ enum class StyleGridTrackBreadth : uint8_t {
 #define NS_STYLE_LIST_STYLE_TRAD_CHINESE_INFORMAL 15
 #define NS_STYLE_LIST_STYLE_TRAD_CHINESE_FORMAL   16
 #define NS_STYLE_LIST_STYLE_ETHIOPIC_NUMERIC      17
-#define NS_STYLE_LIST_STYLE__MAX                  18
 // These styles are handled as custom styles defined in counterstyles.css.
 // They are preserved here only for html attribute map.
 #define NS_STYLE_LIST_STYLE_LOWER_ROMAN           100
