@@ -9,6 +9,8 @@ import unittest
 from StringIO import StringIO
 from unittest import TextTestRunner as _TestRunner, TestResult as _TestResult
 
+import pytest
+
 '''Helper to make python unit tests report the way that the Mozilla
 unit test infrastructure expects tests to report.
 
@@ -209,4 +211,19 @@ class MockedOpen(object):
 
 
 def main(*args, **kwargs):
-    unittest.main(testRunner=MozTestRunner(), *args, **kwargs)
+    runwith = kwargs.pop('runwith', 'pytest')
+
+    if runwith == 'unittest':
+        unittest.main(testRunner=MozTestRunner(), *args, **kwargs)
+    else:
+        args = list(args)
+        if os.environ.get('MACH_STDOUT_ISATTY') and not any(a.startswith('--color') for a in args):
+            args.append('--color=yes')
+
+        module = __import__('__main__')
+        args.extend([
+            '--verbose',
+            '-p', 'mozlog.pytest_mozlog.plugin',
+            module.__file__,
+        ])
+        sys.exit(pytest.main(args))

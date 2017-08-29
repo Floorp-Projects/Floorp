@@ -6,6 +6,7 @@ import json
 import os
 import sys
 
+import mozunit
 import pytest
 
 from conftest import build, filter_action
@@ -162,4 +163,4 @@ def test_output_leak(monkeypatch, runtests):
 
 
 if __name__ == '__main__':
-    sys.exit(pytest.main(['--verbose', __file__]))
+    mozunit.main()
