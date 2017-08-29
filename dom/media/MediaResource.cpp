@@ -109,10 +109,8 @@ ChannelMediaResource::ChannelMediaResource(
 
 ChannelMediaResource::~ChannelMediaResource()
 {
-  if (mListener) {
-    // Kill its reference to us since we're going away
-    mListener->Revoke();
-  }
+  MOZ_ASSERT(!mChannel);
+  MOZ_ASSERT(!mListener);
 }
 
 // ChannelMediaResource::Listener just observes the channel and
