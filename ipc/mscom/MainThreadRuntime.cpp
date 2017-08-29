@@ -51,16 +51,20 @@ MainThreadRuntime::MainThreadRuntime()
 #endif // defined(ACCESSIBILITY)
 {
 #if defined(ACCESSIBILITY) && defined(MOZ_CRASHREPORTER)
-  auto actctx = ActivationContext::GetCurrent();
-  nsAutoCString strActCtx;
-  if (actctx.isOk()) {
-    strActCtx.AppendPrintf("0x%p", actctx.unwrap());
-  } else {
-    strActCtx.AppendPrintf("HRESULT 0x%08X", actctx.unwrapErr());
-  }
+  GeckoProcessType procType = XRE_GetProcessType();
+  if (procType == GeckoProcessType_Default ||
+      procType == GeckoProcessType_Content) {
+    auto actctx = ActivationContext::GetCurrent();
+    nsAutoCString strActCtx;
+    if (actctx.isOk()) {
+      strActCtx.AppendPrintf("0x%p", actctx.unwrap());
+    } else {
+      strActCtx.AppendPrintf("HRESULT 0x%08X", actctx.unwrapErr());
+    }
 
-  CrashReporter::AnnotateCrashReport(NS_LITERAL_CSTRING("AssemblyManifestCtx"),
-                                     strActCtx);
+    CrashReporter::AnnotateCrashReport(NS_LITERAL_CSTRING("AssemblyManifestCtx"),
+                                       strActCtx);
+  }
 #endif // defined(ACCESSIBILITY) && defined(MOZ_CRASHREPORTER)
 
   // We must be the outermost COM initialization on this thread. The COM runtime
