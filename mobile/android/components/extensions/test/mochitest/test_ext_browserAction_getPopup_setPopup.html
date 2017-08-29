@@ -1,0 +1,192 @@
+<!DOCTYPE HTML>
+<html>
+<head>
+  <title>BrowserAction Test</title>
+  <script src="chrome://mochikit/content/tests/SimpleTest/SimpleTest.js"></script>
+  <script src="chrome://mochikit/content/tests/SimpleTest/SpawnTask.js"></script>
+  <script src="chrome://mochikit/content/tests/SimpleTest/ExtensionTestUtils.js"></script>
+  <script type="text/javascript" src="head.js"></script>
+  <link rel="stylesheet" href="chrome://mochikit/contents/tests/SimpleTest/test.css"/>
+</head>
+<body>
+
+<script type="text/javascript">
+"use strict";
+
+var {BrowserActions} = SpecialPowers.Cu.import("resource://gre/modules/BrowserActions.jsm", {});
+var {ContentTaskUtils} = SpecialPowers.Cu.import("resource://testing-common/ContentTaskUtils.jsm", {});
+var {Services} = SpecialPowers.Cu.import("resource://gre/modules/Services.jsm", {});
+
+function createPopupHTML({text, js}) {
+  return `<!DOCTYPE html>
+    <html>
+      <head>
+        <meta charset="utf-8">
+        <title>${text}</title>
+      </head>
+      <body>
+        <h1>${text}</h1>
+        <script src="${js}"><\/script>
+      </body>
+    </html>
+  `;
+}
+
+async function ensureTabSelected(nativeTab) {
+  const {BrowserApp} = Services.wm.getMostRecentWindow("navigator:browser");
+
+  BrowserApp.selectTab(nativeTab);
+
+  await ContentTaskUtils.waitForCondition(() => {
+    return nativeTab.getActive();
+  });
+}
+
+add_task(async function test_browserAction_setPopup_and_getPopup() {
+  const DEFAULT_POPUP = "/default_popup.html";
+  const CUSTOM_POPUP_1 = "/custom_popup_1.html";
+  const CUSTOM_POPUP_2 = "/custom_popup_2.html";
+
+  const {BrowserApp} = Services.wm.getMostRecentWindow("navigator:browser");
+  const initialTab = BrowserApp.selectedTab;
+
+  const tab1 = BrowserApp.addTab("about:blank#tab1", {parentId: initialTab.id});
+  const tab2 = BrowserApp.addTab("about:blank#tab2", {parentId: initialTab.id});
+  const tab3 = BrowserApp.addTab("about:blank#tab3", {parentId: initialTab.id});
+
+  function background() {
+    async function handleBrowserActionSetPopup({tabId, popup}) {
+      await browser.browserAction.setPopup({tabId, popup});
+
+      browser.test.sendMessage("browserAction-setPopup:done", {tabId, popup});
+    }
+
+    async function handleBrowserActionGetPopup({tabId}) {
+      const popup = await browser.browserAction.getPopup({tabId});
+
+      const popupURL = new URL(popup);
+
+      browser.test.sendMessage("browserAction-getPopup:done", {
+        tabId,
+        popup: popupURL.pathname,
+      });
+    }
+
+    browser.test.onMessage.addListener((msg, args) => {
+      switch (msg) {
+        case "browserAction-setPopup":
+          handleBrowserActionSetPopup(args);
+          break;
+        case "browserAction-getPopup":
+          handleBrowserActionGetPopup(args);
+          break;
+        default:
+          browser.test.fail(`Unexpected test message received: ${msg}`);
+      }
+    });
+
+    browser.test.sendMessage("background-ready");
+  }
+
+  function popupScript() {
+    browser.test.sendMessage("popup-loaded", {popup: window.location.pathname});
+
+    window.close();
+  }
+
+  const extension = ExtensionTestUtils.loadExtension({
+    background,
+    manifest: {
+      "browser_action": {
+        "default_popup": "default_popup.html",
+        "default_title": "BrowserAction title",
+      },
+    },
+    files: {
+      "default_popup.html": createPopupHTML({text: "Default Popup", js: "popup.js"}),
+      "custom_popup_1.html": createPopupHTML({text: "Custom Popup 1", js: "popup.js"}),
+      "custom_popup_2.html": createPopupHTML({text: "Custom Popup 2", js: "popup.js"}),
+      "popup.js": popupScript,
+    },
+  });
+
+  await extension.startup();
+
+  const uuid = `{${extension.uuid}}`;
+
+  await extension.awaitMessage("background-ready");
+
+  // Test that the browserAction popup is currently the default popup for all the opened tabs.
+
+  for (const tab of [tab1, tab2, tab3]) {
+    extension.sendMessage("browserAction-getPopup", {tabId: tab.id});
+
+    const res = await extension.awaitMessage("browserAction-getPopup:done");
+
+    isDeeply(res, {tabId: tab.id, popup: DEFAULT_POPUP},
+             "All the tabs should have been associated the same default browserAction popup");
+  }
+
+  // Customize the popup for the first two tabs and checks that getPopup return the expected popup.
+
+  extension.sendMessage("browserAction-setPopup", {
+    tabId: tab1.id,
+    popup: CUSTOM_POPUP_1,
+  });
+
+  await extension.awaitMessage("browserAction-setPopup:done");
+
+  extension.sendMessage("browserAction-setPopup", {
+    tabId: tab2.id,
+    popup: CUSTOM_POPUP_2,
+  });
+
+  await extension.awaitMessage("browserAction-setPopup:done");
+
+  extension.sendMessage("browserAction-getPopup", {tabId: tab1.id});
+  const resTab1 = await extension.awaitMessage("browserAction-getPopup:done");
+  isDeeply(resTab1, {tabId: tab1.id, popup: CUSTOM_POPUP_1},
+           "The first tab should have been associated to the custom  popup 1");
+
+  extension.sendMessage("browserAction-getPopup", {tabId: tab2.id});
+  const resTab2 = await extension.awaitMessage("browserAction-getPopup:done");
+  isDeeply(resTab2, {tabId: tab2.id, popup: CUSTOM_POPUP_2},
+           "The second tab should have been associated to the custom popup 2");
+
+  extension.sendMessage("browserAction-getPopup", {tabId: tab3.id});
+  const resTab3 = await extension.awaitMessage("browserAction-getPopup:done");
+  isDeeply(resTab3, {tabId: tab3.id, popup: DEFAULT_POPUP},
+           "The third tab should still be associated to the default popup");
+
+  // Test browserAction popup opened by clicking on the browserAction.
+
+  await ensureTabSelected(tab1);
+  BrowserActions.synthesizeClick(uuid);
+  const popupLoadedTab1 = await extension.awaitMessage("popup-loaded");
+  isDeeply(popupLoadedTab1, {popup: CUSTOM_POPUP_1},
+           "The expected custom popup has been opened for the first tab");
+
+  await ensureTabSelected(tab2);
+  BrowserActions.synthesizeClick(uuid);
+  const popupLoadedTab2 = await extension.awaitMessage("popup-loaded");
+  isDeeply(popupLoadedTab2, {popup: CUSTOM_POPUP_2},
+           "The expected custom popup has been opened for the second tab");
+
+  await ensureTabSelected(tab3);
+  BrowserActions.synthesizeClick(uuid);
+  const popupLoadedTab3 = await extension.awaitMessage("popup-loaded");
+  isDeeply(popupLoadedTab3, {popup: DEFAULT_POPUP},
+           "The expected default popup has been opened for the third tab");
+
+  // Cleanup the browser before exiting.
+
+  BrowserApp.closeTab(tab1);
+  BrowserApp.closeTab(tab2);
+  BrowserApp.closeTab(tab3);
+
+  await extension.unload();
+});
+</script>
+
+</body>
+</html>
