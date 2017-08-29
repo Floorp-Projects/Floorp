@@ -2464,7 +2464,8 @@ public:
    * parser if and when the parser is merged with libgklayout.  aCrossOriginAttr
    * should be a void string if the attr is not present.
    */
-  virtual void PreloadStyle(nsIURI* aURI, const nsAString& aCharset,
+  virtual void PreloadStyle(nsIURI* aURI,
+                            const mozilla::Encoding* aEncoding,
                             const nsAString& aCrossOriginAttr,
                             ReferrerPolicyEnum aReferrerPolicy,
                             const nsAString& aIntegrity) = 0;
