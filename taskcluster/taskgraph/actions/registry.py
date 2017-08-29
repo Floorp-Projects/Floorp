@@ -10,7 +10,6 @@ import json
 import os
 import inspect
 import re
-import yaml
 from slugid import nice as slugid
 from mozbuild.util import memoize
 from types import FunctionType
@@ -325,14 +324,9 @@ def trigger_action_callback(task_group_id, task_id, task, input, callback, param
 def _load():
     # Load all modules from this folder, relying on the side-effects of register_
     # functions to populate the action registry.
-    actions_dir = os.path.dirname(__file__)
-    for f in os.listdir(actions_dir):
+    for f in os.listdir(os.path.dirname(__file__)):
         if f.endswith('.py') and f not in ('__init__.py', 'registry.py', 'util.py'):
             __import__('taskgraph.actions.' + f[:-3])
-        if f.endswith('.yml'):
-            with open(os.path.join(actions_dir, f), 'r') as d:
-                frontmatter, template = yaml.safe_load_all(d)
-                register_task_action(**frontmatter)(lambda _: template)
     return callbacks, actions
 
 
