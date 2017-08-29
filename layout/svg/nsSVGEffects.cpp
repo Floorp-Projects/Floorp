@@ -229,7 +229,8 @@ nsSVGRenderingObserverProperty::DoUpdate()
   nsSVGIDRenderingObserver::DoUpdate();
 
   nsIFrame* frame = mFrameReference.Get();
-  if (frame && frame->IsFrameOfType(nsIFrame::eSVG)) {
+
+  if (frame && frame->HasAllStateBits(NS_FRAME_SVG_LAYOUT)) {
     // Changes should propagate out to things that might be observing
     // the referencing frame or its ancestors.
     nsLayoutUtils::PostRestyleEvent(
