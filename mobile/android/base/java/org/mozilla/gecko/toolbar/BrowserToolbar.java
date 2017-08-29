@@ -9,6 +9,7 @@ import java.util.ArrayList;
 import java.util.EnumSet;
 import java.util.List;
 
+import android.graphics.Rect;
 import android.support.annotation.Nullable;
 import android.support.v4.content.ContextCompat;
 import org.mozilla.gecko.BrowserApp;
@@ -36,6 +37,7 @@ import org.mozilla.gecko.util.HardwareUtils;
 import org.mozilla.gecko.util.MenuUtils;
 import org.mozilla.gecko.util.WindowUtil;
 import org.mozilla.gecko.widget.AnimatedProgressBar;
+import org.mozilla.gecko.widget.TouchDelegateWithReset;
 import org.mozilla.gecko.widget.themed.ThemedImageButton;
 import org.mozilla.gecko.widget.themed.ThemedRelativeLayout;
 
@@ -218,6 +220,23 @@ public abstract class BrowserToolbar extends ThemedRelativeLayout
 
         // ScrollViews are allowed to have only one child.
         final View scrollChild = urlDisplayScroll.getChildAt(0);
+
+        urlDisplayScroll.addOnLayoutChangeListener(new OnLayoutChangeListener() {
+            @Override
+            public void onLayoutChange(View v, int left, int top, int right, int bottom, int oldLeft, int oldTop, int oldRight, int oldBottom) {
+                final int width = urlDisplayScroll.getWidth();
+                final int height = urlDisplayScroll.getHeight();
+                final int oldWidth = oldRight - oldLeft;
+                final int oldHeight = oldBottom - oldTop;
+
+                if (width != oldWidth || height != oldHeight) {
+                    final Rect r = new Rect();
+                    r.right = width;
+                    r.bottom = height;
+                    urlDisplayScroll.setTouchDelegate(new TouchDelegateWithReset(r, scrollChild));
+                }
+            }
+        });
 
         scrollChild.setOnCreateContextMenuListener(new View.OnCreateContextMenuListener() {
             @Override
