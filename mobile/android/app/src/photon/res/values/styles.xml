@@ -268,7 +268,7 @@
         <item name="android:layout_width">@dimen/firstrun_content_width</item>
         <item name="android:layout_height">43dp</item>
         <item name="android:textColor">@color/android:white</item>
-        <item name="android:background">@color/action_orange</item>
+        <item name="android:background">@color/action_accent</item>
         <item name="android:textSize">18sp</item>
     </style>
 
@@ -298,7 +298,7 @@
     -->
     <style name="TextAppearance">
         <item name="android:textColor">?android:attr/textColorPrimary</item>
-        <item name="android:textColorHighlight">@color/fennec_ui_orange</item>
+        <item name="android:textColorHighlight">@color/fennec_ui_accent</item>
         <item name="android:textColorHint">?android:attr/textColorHint</item>
         <item name="android:textColorLink">?android:attr/textColorLink</item>
         <item name="android:textSize">@dimen/menu_item_textsize</item>
@@ -640,7 +640,7 @@
          some attrs that share a purpose have different names so instead we inherit. -->
     <style name="GeckoActionBar" parent="ThemeOverlay.AppCompat.ActionBar">
         <item name="android:colorBackground">@color/action_bar_bg_color</item>
-        <item name="colorAccent">@color/fennec_ui_orange</item>
+        <item name="colorAccent">@color/fennec_ui_accent</item>
         <item name="colorControlNormal">@color/toolbar_icon_grey</item>
     </style>
     <style name="GeckoActionBar.ActionMode">

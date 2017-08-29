@@ -107,15 +107,7 @@
     "message": "סיום"
   },
   "termsAndPrivacyNoticeCloudServices": {
-    "message": "מעצם השימוש ב־Firefox Screenshots הכללים של שירותי הענן של Firefox‏ $TERMSANDPRIVACYNOTICETERMSLINK$ ו$TERMSANDPRIVACYNOTICEPRIVACYLINK$ מוסכמים עליך.",
-    "placeholders": {
-      "termsandprivacynoticetermslink": {
-        "content": "$1"
-      },
-      "termsandprivacynoticeprivacylink": {
-        "content": "$2"
-      }
-    }
+    "message": "מעצם השימוש ב־Firefox Screenshots הכללים של שירותי הענן של Firefox‏ {termsAndPrivacyNoticeTermsLink} ו{termsAndPrivacyNoticePrivacyLink} מוסכמים עליך."
   },
   "termsAndPrivacyNoticeTermsLink": {
     "message": "תנאים"

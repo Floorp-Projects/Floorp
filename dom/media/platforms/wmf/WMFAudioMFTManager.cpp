@@ -66,7 +66,6 @@ AACAudioSpecificConfigToUserData(uint8_t aAACProfileLevelIndication,
     // The AudioSpecificConfig is TTTTTFFF|FCCCCGGG
     // (T=ObjectType, F=Frequency, C=Channel, G=GASpecificConfig)
     // If frequency = 0xf, then the frequency is explicitly defined on 24 bits.
-    int8_t profile = (aAudioSpecConfig[0] & 0xF8) >> 3;
     int8_t frequency =
       (aAudioSpecConfig[0] & 0x7) << 1 | (aAudioSpecConfig[1] & 0x80) >> 7;
     int8_t channels = (aAudioSpecConfig[1] & 0x78) >> 3;

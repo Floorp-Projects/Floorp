@@ -46,6 +46,28 @@ using mozilla::layers::LayerManager;
 using mozilla::layers::LayersBackend;
 using mozilla::media::TimeUnit;
 
+// AMD
+// Path is appended on to the %ProgramW6432% base path.
+const wchar_t kAMDVPXDecoderDLLPath[] =
+  L"\\Common Files\\ATI Technologies\\Multimedia\\";
+
+const wchar_t kAMDVP9DecoderDLLName[] =
+#if defined(ARCH_CPU_X86)
+  L"amf-mft-decvp9-decoder32.dll";
+#elif defined(ARCH_CPU_X86_64)
+  L"amf-mft-decvp9-decoder64.dll";
+#else
+#error Unsupported Windows CPU Architecture
+#endif
+
+const CLSID CLSID_AMDWebmMfVp9Dec =
+{
+  0x2d2d728a,
+  0x67d6,
+  0x48ab,
+  { 0x89, 0xfb, 0xa6, 0xec, 0x65, 0x55, 0x49, 0x70 }
+};
+
 #if WINVER_MAXVER < 0x0A00
 // Windows 10+ SDK has VP80 and VP90 defines
 const GUID MFVideoFormat_VP80 =
@@ -120,6 +142,7 @@ WMFVideoMFTManager::WMFVideoMFTManager(
   , mImageContainer(aImageContainer)
   , mDXVAEnabled(aDXVAEnabled)
   , mKnowsCompositor(aKnowsCompositor)
+  , mAMDVP9InUse(false)
   // mVideoStride, mVideoWidth, mVideoHeight, mUseHwAccel are initialized in
   // Init().
 {
@@ -498,6 +521,26 @@ WMFVideoMFTManager::ValidateVideoInfo()
   return mIsValid;
 }
 
+already_AddRefed<MFTDecoder>
+WMFVideoMFTManager::LoadAMDVP9Decoder()
+{
+  MOZ_ASSERT(mStreamType == VP9);
+
+  RefPtr<MFTDecoder> decoder = new MFTDecoder();
+  // Check if we can load the AMD VP9 decoder.
+  nsString path = GetProgramW6432Path();
+  path.Append(kAMDVPXDecoderDLLPath);
+  path.Append(kAMDVP9DecoderDLLName);
+  HMODULE decoderDLL = ::LoadLibraryEx(path.get(), NULL,
+                                       LOAD_WITH_ALTERED_SEARCH_PATH);
+  if (!decoderDLL) {
+    return nullptr;
+  }
+  HRESULT hr = decoder->Create(decoderDLL, CLSID_AMDWebmMfVp9Dec);
+  NS_ENSURE_TRUE(SUCCEEDED(hr), nullptr);
+  return decoder.forget();
+}
+
 bool
 WMFVideoMFTManager::Init()
 {
@@ -506,6 +549,15 @@ WMFVideoMFTManager::Init()
   }
 
   bool success = InitInternal();
+  if (!success && mAMDVP9InUse) {
+    // Something failed with the AMD VP9 decoder; attempt again defaulting back
+    // to Microsoft MFT.
+    mCheckForAMDDecoder = false;
+    if (mDXVA2Manager) {
+      DeleteOnMainThread(mDXVA2Manager);
+    }
+    success = InitInternal();
+  }
 
   if (success && mDXVA2Manager) {
     // If we had some failures but eventually made it work,
@@ -526,10 +578,21 @@ WMFVideoMFTManager::InitInternal()
   mUseHwAccel = false; // default value; changed if D3D setup succeeds.
   bool useDxva = InitializeDXVA();
 
-  RefPtr<MFTDecoder> decoder(new MFTDecoder());
+  RefPtr<MFTDecoder> decoder;
 
-  HRESULT hr = decoder->Create(GetMFTGUID());
-  NS_ENSURE_TRUE(SUCCEEDED(hr), false);
+  HRESULT hr;
+  if (mStreamType == VP9 && useDxva && mCheckForAMDDecoder) {
+    if ((decoder = LoadAMDVP9Decoder())) {
+      mAMDVP9InUse = true;
+    }
+  }
+  if (!decoder) {
+    mCheckForAMDDecoder = false;
+    mAMDVP9InUse = false;
+    decoder = new MFTDecoder();
+    hr = decoder->Create(GetMFTGUID());
+    NS_ENSURE_TRUE(SUCCEEDED(hr), false);
+  }
 
   RefPtr<IMFAttributes> attr(decoder->GetAttributes());
   UINT32 aware = 0;
@@ -588,7 +651,8 @@ WMFVideoMFTManager::InitInternal()
 
   if (mUseHwAccel && !CanUseDXVA(outputType)) {
     mDXVAEnabled = false;
-    // DXVA initialization actually failed, re-do initialisation.
+    // DXVA initialization with current decoder actually failed,
+    // re-do initialization.
     return InitInternal();
   }
 
@@ -856,7 +920,8 @@ WMFVideoMFTManager::CreateBasicVideoFrame(IMFSample* aSample,
   NS_ENSURE_TRUE(pts.IsValid(), E_FAIL);
   TimeUnit duration = GetSampleDuration(aSample);
   NS_ENSURE_TRUE(duration.IsValid(), E_FAIL);
-  nsIntRect pictureRegion = mVideoInfo.ScaledImageRect(videoWidth, videoHeight);
+  gfx::IntRect pictureRegion =
+    mVideoInfo.ScaledImageRect(videoWidth, videoHeight);
 
   LayersBackend backend = GetCompositorBackendType(mKnowsCompositor);
   if (backend != LayersBackend::LAYERS_D3D11 || !mIMFUsable) {
@@ -914,7 +979,7 @@ WMFVideoMFTManager::CreateD3DVideoFrame(IMFSample* aSample,
   *aOutVideoData = nullptr;
   HRESULT hr;
 
-  nsIntRect pictureRegion =
+  gfx::IntRect pictureRegion =
     mVideoInfo.ScaledImageRect(mImageSize.width, mImageSize.height);
   RefPtr<Image> image;
   hr = mDXVA2Manager->CopyToImage(aSample,

@@ -284,7 +284,6 @@
         "description": "Clears the browser's stored form data (autofill).",
         "type": "function",
         "async": "callback",
-        "unsupported": true,
         "parameters": [
           {
             "$ref": "RemovalOptions",

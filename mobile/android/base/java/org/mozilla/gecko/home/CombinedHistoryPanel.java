@@ -36,7 +36,6 @@ import android.widget.Button;
 import android.widget.ImageView;
 import android.widget.TextView;
 import org.mozilla.gecko.EventDispatcher;
-import org.mozilla.gecko.GeckoApp;
 import org.mozilla.gecko.GeckoProfile;
 import org.mozilla.gecko.R;
 import org.mozilla.gecko.RemoteClientsDialogFragment;
@@ -203,7 +202,7 @@ public class CombinedHistoryPanel extends HomeFragment implements RemoteClientsD
     }
 
     private void setUpRefreshLayout() {
-        mRefreshLayout.setColorSchemeResources(R.color.fennec_ui_orange, R.color.action_orange);
+        mRefreshLayout.setColorSchemeResources(R.color.fennec_ui_accent, R.color.action_accent);
         mRefreshLayout.setOnRefreshListener(new RemoteTabsRefreshListener());
         mRefreshLayout.setEnabled(false);
     }

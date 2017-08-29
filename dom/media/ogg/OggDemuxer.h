@@ -309,7 +309,7 @@ private:
 
   // The picture region inside Theora frame to be displayed, if we have
   // a Theora video track.
-  nsIntRect mPicture;
+  gfx::IntRect mPicture;
 
   // True if we are decoding a chained ogg.
   bool mIsChained;

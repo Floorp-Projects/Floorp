@@ -104,7 +104,7 @@ public:
   // Copies a region (aRegion) of the video frame stored in aVideoSample
   // into an image which is returned by aOutImage.
   HRESULT CopyToImage(IMFSample* aVideoSample,
-                      const nsIntRect& aRegion,
+                      const gfx::IntRect& aRegion,
                       Image** aOutImage) override;
 
   bool SupportsConfig(IMFMediaType* aType, float aFramerate) override;
@@ -439,7 +439,7 @@ D3D9DXVA2Manager::Init(layers::KnowsCompositor* aKnowsCompositor,
 
 HRESULT
 D3D9DXVA2Manager::CopyToImage(IMFSample* aSample,
-                              const nsIntRect& aRegion,
+                              const gfx::IntRect& aRegion,
                               Image** aOutImage)
 {
   RefPtr<IMFMediaBuffer> buffer;
@@ -611,7 +611,7 @@ public:
   // Copies a region (aRegion) of the video frame stored in aVideoSample
   // into an image which is returned by aOutImage.
   HRESULT CopyToImage(IMFSample* aVideoSample,
-                      const nsIntRect& aRegion,
+                      const gfx::IntRect& aRegion,
                       Image** aOutImage) override;
 
   virtual HRESULT CopyToBGRATexture(ID3D11Texture2D *aInTexture,
@@ -908,7 +908,7 @@ D3D11DXVA2Manager::CreateOutputSample(RefPtr<IMFSample>& aSample,
 
 HRESULT
 D3D11DXVA2Manager::CopyToImage(IMFSample* aVideoSample,
-                               const nsIntRect& aRegion,
+                               const gfx::IntRect& aRegion,
                                Image** aOutImage)
 {
   NS_ENSURE_TRUE(aVideoSample, E_POINTER);

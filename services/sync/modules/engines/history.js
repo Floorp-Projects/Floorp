@@ -14,6 +14,7 @@ const THIRTY_DAYS_IN_MS = 2592000000; // 30 days in milliseconds
 
 Cu.import("resource://gre/modules/XPCOMUtils.jsm");
 Cu.import("resource://services-common/async.js");
+Cu.import("resource://services-common/utils.js");
 Cu.import("resource://services-sync/constants.js");
 Cu.import("resource://services-sync/engines.js");
 Cu.import("resource://services-sync/record.js");
@@ -226,7 +227,7 @@ HistoryStore.prototype = {
   async _recordToPlaceInfo(record) {
     // Sort out invalid URIs and ones Places just simply doesn't want.
     record.url = PlacesUtils.normalizeToURLOrGUID(record.histUri);
-    record.uri = Utils.makeURI(record.histUri);
+    record.uri = CommonUtils.makeURI(record.histUri);
 
     if (!Utils.checkGUID(record.id)) {
       this._log.warn("Encountered record with invalid GUID: " + record.id);

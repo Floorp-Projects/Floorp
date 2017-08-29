@@ -74,7 +74,7 @@
     "message": "சிரமத்திற்கு வருந்துகிறோம். எதிர்கால வெளியீடுகளில் நாங்கள் இந்த வசதியைச் செய்து தருகிறோம்."
   },
   "genericErrorTitle": {
-    "message": "அய் அய்யோ! பயர்பாஃசு திரைப்பிடிப்பு வீணாய் போனது."
+    "message": "அய் அய்யோ! பயர்பாஃசு திரைப்பிடிப்பு வீணாய் போனது. "
   },
   "genericErrorDetails": {
     "message": "என்ன நடந்தது என எங்களுக்குத் தெரியவில்லை. முடிந்தால் மீண்டும் முயற்சியுங்கள் (அ) வேறொரு பக்கத்தில் முயற்சியுங்கள்?"
@@ -112,8 +112,8 @@
   "tourDone": {
     "message": "முடிந்தது"
   },
-  "termsAndPrivacyNoticeCloudServices": {
-    "message": "பயர்பாஃசு திரைப்பிடிப்பைப் பயன்படுத்துவதன் மூலம் எங்களின் முகில் கணிமச் சேவைகளுக்கான பின்வரும் $TERMSANDPRIVACYNOTICETERMSLINK$ $TERMSANDPRIVACYNOTICEPRIVACYLINK$ நிபந்தனைகளை ஏற்றுக் கொள்கிறீர்கள்.",
+  "termsAndPrivacyNotice2": {
+    "message": "பயர்பாஃசு திரைப்பிடிப்புகளைப் பயன்படுத்துவதன் மூலம் $TERMSANDPRIVACYNOTICETERMSLINK$ மற்றும் $TERMSANDPRIVACYNOTICEPRIVACYLINK$ சேவை நிபற்தனைகளை ஏற்கிறீர்கள்.",
     "placeholders": {
       "termsandprivacynoticetermslink": {
         "content": "$1"
@@ -128,5 +128,8 @@
   },
   "termsAndPrivacyNoticyPrivacyLink": {
     "message": "தனியுரிம கொள்கை"
+  },
+  "libraryLabel": {
+    "message": "திரைபிடிப்புகள்"
   }
 }

@@ -10,9 +10,8 @@
 /* A higher-order macro for enumerating all JSProtoKey values. */
 /*
  * Consumers define macros as follows:
- * macro(name, code, init, clasp)
+ * macro(name, init, clasp)
  *   name:    The canonical name of the class.
- *   code:    The enumerator code. There are part of the XDR API, and must not change.
  *   init:    Initialization function. These are |extern "C";|, and clients should use
  *            |extern "C" {}| as appropriate when using this macro.
  *   clasp:   The JSClass for this object, or "dummy" if it doesn't exist.
@@ -62,73 +61,73 @@
 #endif
 
 #define JS_FOR_PROTOTYPES(real,imaginary) \
-    imaginary(Null,              0,     InitNullClass,          dummy) \
-    real(Object,                 1,     InitViaClassSpec,       OCLASP(Plain)) \
-    real(Function,               2,     InitViaClassSpec,       &JSFunction::class_) \
-    real(Array,                  3,     InitViaClassSpec,       OCLASP(Array)) \
-    real(Boolean,                4,     InitBooleanClass,       OCLASP(Boolean)) \
-    real(JSON,                   5,     InitJSONClass,          CLASP(JSON)) \
-    real(Date,                   6,     InitViaClassSpec,       OCLASP(Date)) \
-    real(Math,                   7,     InitMathClass,          CLASP(Math)) \
-    real(Number,                 8,     InitNumberClass,        OCLASP(Number)) \
-    real(String,                 9,     InitStringClass,        OCLASP(String)) \
-    real(RegExp,                10,     InitViaClassSpec,       OCLASP(RegExp)) \
-    real(Error,                 11,     InitViaClassSpec,       ERROR_CLASP(JSEXN_ERR)) \
-    real(InternalError,         12,     InitViaClassSpec,       ERROR_CLASP(JSEXN_INTERNALERR)) \
-    real(EvalError,             13,     InitViaClassSpec,       ERROR_CLASP(JSEXN_EVALERR)) \
-    real(RangeError,            14,     InitViaClassSpec,       ERROR_CLASP(JSEXN_RANGEERR)) \
-    real(ReferenceError,        15,     InitViaClassSpec,       ERROR_CLASP(JSEXN_REFERENCEERR)) \
-    real(SyntaxError,           16,     InitViaClassSpec,       ERROR_CLASP(JSEXN_SYNTAXERR)) \
-    real(TypeError,             17,     InitViaClassSpec,       ERROR_CLASP(JSEXN_TYPEERR)) \
-    real(URIError,              18,     InitViaClassSpec,       ERROR_CLASP(JSEXN_URIERR)) \
-    real(DebuggeeWouldRun,      19,     InitViaClassSpec,       ERROR_CLASP(JSEXN_DEBUGGEEWOULDRUN)) \
-    real(CompileError,          20,     InitViaClassSpec,       ERROR_CLASP(JSEXN_WASMCOMPILEERROR)) \
-    real(LinkError,             21,     InitViaClassSpec,       ERROR_CLASP(JSEXN_WASMLINKERROR)) \
-    real(RuntimeError,          22,     InitViaClassSpec,       ERROR_CLASP(JSEXN_WASMRUNTIMEERROR)) \
-    real(Iterator,              23,     InitLegacyIteratorClass,OCLASP(PropertyIterator)) \
-    real(StopIteration,         24,     InitStopIterationClass, OCLASP(StopIteration)) \
-    real(ArrayBuffer,           25,     InitViaClassSpec,       OCLASP(ArrayBuffer)) \
-    real(Int8Array,             26,     InitViaClassSpec,       TYPED_ARRAY_CLASP(Int8)) \
-    real(Uint8Array,            27,     InitViaClassSpec,       TYPED_ARRAY_CLASP(Uint8)) \
-    real(Int16Array,            28,     InitViaClassSpec,       TYPED_ARRAY_CLASP(Int16)) \
-    real(Uint16Array,           29,     InitViaClassSpec,       TYPED_ARRAY_CLASP(Uint16)) \
-    real(Int32Array,            30,     InitViaClassSpec,       TYPED_ARRAY_CLASP(Int32)) \
-    real(Uint32Array,           31,     InitViaClassSpec,       TYPED_ARRAY_CLASP(Uint32)) \
-    real(Float32Array,          32,     InitViaClassSpec,       TYPED_ARRAY_CLASP(Float32)) \
-    real(Float64Array,          33,     InitViaClassSpec,       TYPED_ARRAY_CLASP(Float64)) \
-    real(Uint8ClampedArray,     34,     InitViaClassSpec,       TYPED_ARRAY_CLASP(Uint8Clamped)) \
-    real(Proxy,                 35,     InitProxyClass,         js::ProxyClassPtr) \
-    real(WeakMap,               36,     InitWeakMapClass,       OCLASP(WeakMap)) \
-    real(Map,                   37,     InitViaClassSpec,       OCLASP(Map)) \
-    real(Set,                   38,     InitViaClassSpec,       OCLASP(Set)) \
-    real(DataView,              39,     InitViaClassSpec,       OCLASP(DataView)) \
-    real(Symbol,                40,     InitSymbolClass,        OCLASP(Symbol)) \
-IF_SAB(real,imaginary)(SharedArrayBuffer,       41,     InitViaClassSpec, OCLASP(SharedArrayBuffer)) \
-IF_INTL(real,imaginary) (Intl,                  42,     InitIntlClass,          CLASP(Intl)) \
-IF_BDATA(real,imaginary)(TypedObject,           43,     InitTypedObjectModuleObject,   OCLASP(TypedObjectModule)) \
-    real(Reflect,               44,     InitReflect,            nullptr) \
-IF_SIMD(real,imaginary)(SIMD,                   45,     InitSimdClass, OCLASP(Simd)) \
-    real(WeakSet,               46,     InitWeakSetClass,       OCLASP(WeakSet)) \
-    real(TypedArray,            47,     InitViaClassSpec,       &js::TypedArrayObject::sharedTypedArrayPrototypeClass) \
-IF_SAB(real,imaginary)(Atomics, 48,     InitAtomicsClass, OCLASP(Atomics)) \
-    real(SavedFrame,            49,     InitViaClassSpec,       &js::SavedFrame::class_) \
-    real(Promise,               50,     InitViaClassSpec,       OCLASP(Promise)) \
-    real(ReadableStream,        51,     InitViaClassSpec,       &js::ReadableStream::class_) \
-    real(ReadableStreamDefaultReader,           52,     InitViaClassSpec, &js::ReadableStreamDefaultReader::class_) \
-    real(ReadableStreamBYOBReader,              53,     InitViaClassSpec, &js::ReadableStreamBYOBReader::class_) \
-    real(ReadableStreamDefaultController,       54,     InitViaClassSpec, &js::ReadableStreamDefaultController::class_) \
-    real(ReadableByteStreamController,          55,     InitViaClassSpec, &js::ReadableByteStreamController::class_) \
-    real(ReadableStreamBYOBRequest,             56,     InitViaClassSpec, &js::ReadableStreamBYOBRequest::class_) \
-    imaginary(WritableStream,   57,     dummy,                  dummy) \
-    imaginary(WritableStreamDefaultWriter,      58,     dummy,  dummy) \
-    imaginary(WritableStreamDefaultController,  59,     dummy,  dummy) \
-    real(ByteLengthQueuingStrategy,             60,     InitViaClassSpec, &js::ByteLengthQueuingStrategy::class_) \
-    real(CountQueuingStrategy,  61,      InitViaClassSpec,      &js::CountQueuingStrategy::class_) \
-    real(WebAssembly,           62,     InitWebAssemblyClass,   CLASP(WebAssembly)) \
-    imaginary(WasmModule,       63,     dummy,                  dummy) \
-    imaginary(WasmInstance,     64,     dummy,                  dummy) \
-    imaginary(WasmMemory,       65,     dummy,                  dummy) \
-    imaginary(WasmTable,        66,     dummy,                  dummy) \
+    imaginary(Null,             InitNullClass,          dummy) \
+    real(Object,                InitViaClassSpec,       OCLASP(Plain)) \
+    real(Function,              InitViaClassSpec,       &JSFunction::class_) \
+    real(Array,                 InitViaClassSpec,       OCLASP(Array)) \
+    real(Boolean,               InitBooleanClass,       OCLASP(Boolean)) \
+    real(JSON,                  InitJSONClass,          CLASP(JSON)) \
+    real(Date,                  InitViaClassSpec,       OCLASP(Date)) \
+    real(Math,                  InitMathClass,          CLASP(Math)) \
+    real(Number,                InitNumberClass,        OCLASP(Number)) \
+    real(String,                InitStringClass,        OCLASP(String)) \
+    real(RegExp,                InitViaClassSpec,       OCLASP(RegExp)) \
+    real(Error,                 InitViaClassSpec,       ERROR_CLASP(JSEXN_ERR)) \
+    real(InternalError,         InitViaClassSpec,       ERROR_CLASP(JSEXN_INTERNALERR)) \
+    real(EvalError,             InitViaClassSpec,       ERROR_CLASP(JSEXN_EVALERR)) \
+    real(RangeError,            InitViaClassSpec,       ERROR_CLASP(JSEXN_RANGEERR)) \
+    real(ReferenceError,        InitViaClassSpec,       ERROR_CLASP(JSEXN_REFERENCEERR)) \
+    real(SyntaxError,           InitViaClassSpec,       ERROR_CLASP(JSEXN_SYNTAXERR)) \
+    real(TypeError,             InitViaClassSpec,       ERROR_CLASP(JSEXN_TYPEERR)) \
+    real(URIError,              InitViaClassSpec,       ERROR_CLASP(JSEXN_URIERR)) \
+    real(DebuggeeWouldRun,      InitViaClassSpec,       ERROR_CLASP(JSEXN_DEBUGGEEWOULDRUN)) \
+    real(CompileError,          InitViaClassSpec,       ERROR_CLASP(JSEXN_WASMCOMPILEERROR)) \
+    real(LinkError,             InitViaClassSpec,       ERROR_CLASP(JSEXN_WASMLINKERROR)) \
+    real(RuntimeError,          InitViaClassSpec,       ERROR_CLASP(JSEXN_WASMRUNTIMEERROR)) \
+    real(Iterator,              InitLegacyIteratorClass,OCLASP(PropertyIterator)) \
+    real(StopIteration,         InitStopIterationClass, OCLASP(StopIteration)) \
+    real(ArrayBuffer,           InitViaClassSpec,       OCLASP(ArrayBuffer)) \
+    real(Int8Array,             InitViaClassSpec,       TYPED_ARRAY_CLASP(Int8)) \
+    real(Uint8Array,            InitViaClassSpec,       TYPED_ARRAY_CLASP(Uint8)) \
+    real(Int16Array,            InitViaClassSpec,       TYPED_ARRAY_CLASP(Int16)) \
+    real(Uint16Array,           InitViaClassSpec,       TYPED_ARRAY_CLASP(Uint16)) \
+    real(Int32Array,            InitViaClassSpec,       TYPED_ARRAY_CLASP(Int32)) \
+    real(Uint32Array,           InitViaClassSpec,       TYPED_ARRAY_CLASP(Uint32)) \
+    real(Float32Array,          InitViaClassSpec,       TYPED_ARRAY_CLASP(Float32)) \
+    real(Float64Array,          InitViaClassSpec,       TYPED_ARRAY_CLASP(Float64)) \
+    real(Uint8ClampedArray,     InitViaClassSpec,       TYPED_ARRAY_CLASP(Uint8Clamped)) \
+    real(Proxy,                 InitProxyClass,         js::ProxyClassPtr) \
+    real(WeakMap,               InitWeakMapClass,       OCLASP(WeakMap)) \
+    real(Map,                   InitViaClassSpec,       OCLASP(Map)) \
+    real(Set,                   InitViaClassSpec,       OCLASP(Set)) \
+    real(DataView,              InitViaClassSpec,       OCLASP(DataView)) \
+    real(Symbol,                InitSymbolClass,        OCLASP(Symbol)) \
+IF_SAB(real,imaginary)(SharedArrayBuffer,       InitViaClassSpec, OCLASP(SharedArrayBuffer)) \
+IF_INTL(real,imaginary) (Intl,                  InitIntlClass,          CLASP(Intl)) \
+IF_BDATA(real,imaginary)(TypedObject,           InitTypedObjectModuleObject,   OCLASP(TypedObjectModule)) \
+    real(Reflect,               InitReflect,            nullptr) \
+IF_SIMD(real,imaginary)(SIMD,                   InitSimdClass, OCLASP(Simd)) \
+    real(WeakSet,               InitWeakSetClass,       OCLASP(WeakSet)) \
+    real(TypedArray,            InitViaClassSpec,       &js::TypedArrayObject::sharedTypedArrayPrototypeClass) \
+IF_SAB(real,imaginary)(Atomics, InitAtomicsClass, OCLASP(Atomics)) \
+    real(SavedFrame,            InitViaClassSpec,       &js::SavedFrame::class_) \
+    real(Promise,               InitViaClassSpec,       OCLASP(Promise)) \
+    real(ReadableStream,        InitViaClassSpec,       &js::ReadableStream::class_) \
+    real(ReadableStreamDefaultReader,           InitViaClassSpec, &js::ReadableStreamDefaultReader::class_) \
+    real(ReadableStreamBYOBReader,              InitViaClassSpec, &js::ReadableStreamBYOBReader::class_) \
+    real(ReadableStreamDefaultController,       InitViaClassSpec, &js::ReadableStreamDefaultController::class_) \
+    real(ReadableByteStreamController,          InitViaClassSpec, &js::ReadableByteStreamController::class_) \
+    real(ReadableStreamBYOBRequest,             InitViaClassSpec, &js::ReadableStreamBYOBRequest::class_) \
+    imaginary(WritableStream,   dummy,                  dummy) \
+    imaginary(WritableStreamDefaultWriter,      dummy,  dummy) \
+    imaginary(WritableStreamDefaultController,  dummy,  dummy) \
+    real(ByteLengthQueuingStrategy,             InitViaClassSpec, &js::ByteLengthQueuingStrategy::class_) \
+    real(CountQueuingStrategy,  InitViaClassSpec,       &js::CountQueuingStrategy::class_) \
+    real(WebAssembly,           InitWebAssemblyClass,   CLASP(WebAssembly)) \
+    imaginary(WasmModule,       dummy,                  dummy) \
+    imaginary(WasmInstance,     dummy,                  dummy) \
+    imaginary(WasmMemory,       dummy,                  dummy) \
+    imaginary(WasmTable,        dummy,                  dummy) \
 
 #define JS_FOR_EACH_PROTOTYPE(macro) JS_FOR_PROTOTYPES(macro,macro)
 

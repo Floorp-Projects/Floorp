@@ -529,8 +529,6 @@ public class GeckoPreferences
 
     @Override
     public void onPause() {
-        EventDispatcher.getInstance().unregisterUiThreadListener(this, "Snackbar:Show");
-
         // Symmetric with onResume.
         if (isMultiPane()) {
             SharedPreferences prefs = GeckoSharedPrefs.forApp(this);
@@ -543,8 +541,6 @@ public class GeckoPreferences
     @Override
     public void onResume() {
         super.onResume();
-
-        EventDispatcher.getInstance().registerUiThreadListener(this, "Snackbar:Show");
 
         // Watch prefs, otherwise we don't reliably get told when they change.
         // See documentation for onSharedPreferenceChange for more.
@@ -617,13 +613,7 @@ public class GeckoPreferences
     @Override
     public void handleMessage(final String event, final GeckoBundle message,
                               final EventCallback callback) {
-        if ("Snackbar:Show".equals(event)) {
-            SnackbarBuilder.builder(this)
-                    .fromEvent(message)
-                    .callback(callback)
-                    .buildAndShow();
-
-        } else if ("Sanitize:Finished".equals(event)) {
+        if ("Sanitize:Finished".equals(event)) {
             final boolean success = message.getBoolean("success");
             final int stringRes = success ? R.string.private_data_success : R.string.private_data_fail;
 

@@ -10,6 +10,7 @@
 #include "nsNameSpaceManager.h"
 #include "mozilla/StyleSetHandle.h"
 #include "mozilla/StyleSetHandleInlines.h"
+#include "mozilla/Unused.h"
 #include "nsDisplayList.h"
 #include "nsITheme.h"
 #include "nsFrame.h"
@@ -87,6 +88,25 @@ public:
   }
 #endif
 
+  virtual bool CreateWebRenderCommands(
+    mozilla::wr::DisplayListBuilder& aBuilder,
+    const StackingContextHelper& aSc,
+    nsTArray<WebRenderParentCommand>& aParentCommands,
+    mozilla::layers::WebRenderLayerManager* aManager,
+    nsDisplayListBuilder* aDisplayListBuilder) override;
+
+  virtual LayerState GetLayerState(
+    nsDisplayListBuilder* aBuilder,
+    LayerManager* aManager,
+    const ContainerLayerParameters& aParameters) override;
+
+  virtual already_AddRefed<Layer> BuildLayer(
+    nsDisplayListBuilder* aBuilder,
+    LayerManager* aManager,
+    const ContainerLayerParameters& aContainerParameters) override;
+
+  bool CanBuildWebRenderDisplayItems();
+
   virtual void Paint(nsDisplayListBuilder* aBuilder,
                      gfxContext* aCtx) override;
   virtual nsRect GetBounds(nsDisplayListBuilder* aBuilder,
@@ -107,6 +127,137 @@ nsDisplayButtonBoxShadowOuter::Paint(nsDisplayListBuilder* aBuilder,
 
   nsCSSRendering::PaintBoxShadowOuter(mFrame->PresContext(), *aCtx, mFrame,
                                       frameRect, mVisibleRect);
+}
+
+bool
+nsDisplayButtonBoxShadowOuter::CanBuildWebRenderDisplayItems()
+{
+  nsCSSShadowArray* shadows = mFrame->StyleEffects()->mBoxShadow;
+  if (!shadows) {
+    return false;
+  }
+
+  bool hasBorderRadius;
+  bool nativeTheme =
+    nsCSSRendering::HasBoxShadowNativeTheme(mFrame, hasBorderRadius);
+
+  // We don't support native themed things yet like box shadows around
+  // input buttons.
+  if (nativeTheme) {
+    return false;
+  }
+
+  nsPoint offset = ToReferenceFrame();
+  nsRect borderRect = mFrame->VisualBorderRectRelativeToSelf() + offset;
+  nsRect frameRect =
+    nsCSSRendering::GetShadowRect(borderRect, nativeTheme, mFrame);
+
+  if (hasBorderRadius) {
+    nscoord twipsRadii[8];
+    nsSize sz = frameRect.Size();
+    hasBorderRadius = mFrame->GetBorderRadii(sz, sz, Sides(), twipsRadii);
+  }
+
+  if (hasBorderRadius) {
+    nsCSSRendering::RectCornerRadii borderRadii;
+    nsCSSRendering::GetBorderRadii(frameRect, borderRect, mFrame, borderRadii);
+    if (!borderRadii.AreRadiiSame()) {
+      return false;
+    }
+  }
+
+  return true;
+}
+
+LayerState
+nsDisplayButtonBoxShadowOuter::GetLayerState(
+  nsDisplayListBuilder* aBuilder,
+  LayerManager* aManager,
+  const ContainerLayerParameters& aParameters)
+{
+  if (ShouldUseAdvancedLayer(aManager, gfxPrefs::LayersAllowOuterBoxShadow) &&
+      CanBuildWebRenderDisplayItems()) {
+    return LAYER_ACTIVE;
+  }
+  return LAYER_NONE;
+}
+
+already_AddRefed<Layer>
+nsDisplayButtonBoxShadowOuter::BuildLayer(
+  nsDisplayListBuilder* aBuilder,
+  LayerManager* aManager,
+  const ContainerLayerParameters& aContainerParameters)
+{
+  return BuildDisplayItemLayer(aBuilder, aManager, aContainerParameters);
+}
+
+bool
+nsDisplayButtonBoxShadowOuter::CreateWebRenderCommands(
+  mozilla::wr::DisplayListBuilder& aBuilder,
+  const StackingContextHelper& aSc,
+  nsTArray<WebRenderParentCommand>& aParentCommands,
+  mozilla::layers::WebRenderLayerManager* aManager,
+  nsDisplayListBuilder* aDisplayListBuilder)
+{
+  if (aManager->IsLayersFreeTransaction()) {
+    ContainerLayerParameters parameter;
+    if (GetLayerState(aDisplayListBuilder, aManager, parameter) !=
+        LAYER_ACTIVE) {
+      return false;
+    }
+  }
+  int32_t appUnitsPerDevPixel = mFrame->PresContext()->AppUnitsPerDevPixel();
+  nsRect shadowRect = nsRect(ToReferenceFrame(), mFrame->GetSize());
+  LayoutDeviceRect deviceBox =
+    LayoutDeviceRect::FromAppUnits(shadowRect, appUnitsPerDevPixel);
+  wr::LayoutRect deviceBoxRect = aSc.ToRelativeLayoutRectRounded(deviceBox);
+
+  LayoutDeviceRect clipRect =
+    LayoutDeviceRect::FromAppUnits(mVisibleRect, appUnitsPerDevPixel);
+  wr::LayoutRect deviceClipRect = aSc.ToRelativeLayoutRect(clipRect);
+
+  bool hasBorderRadius;
+  Unused << nsCSSRendering::HasBoxShadowNativeTheme(mFrame, hasBorderRadius);
+
+  float borderRadius = 0.0;
+  if (hasBorderRadius) {
+    mozilla::gfx::RectCornerRadii borderRadii;
+    hasBorderRadius = nsCSSRendering::GetBorderRadii(
+      shadowRect, shadowRect, mFrame, borderRadii);
+    // TODO: support non-uniform border radius.
+    MOZ_ASSERT(borderRadii.AreRadiiSame());
+    borderRadius = hasBorderRadius ? borderRadii.TopLeft().width : 0.0;
+  }
+
+  nsCSSShadowArray* shadows = mFrame->StyleEffects()->mBoxShadow;
+  MOZ_ASSERT(shadows);
+
+  for (uint32_t i = shadows->Length(); i > 0; i--) {
+    nsCSSShadowItem* shadow = shadows->ShadowAt(i - 1);
+    if (shadow->mInset) {
+      continue;
+    }
+    float blurRadius = float(shadow->mRadius) / float(appUnitsPerDevPixel);
+    gfx::Color shadowColor =
+      nsCSSRendering::GetShadowColor(shadow, mFrame, 1.0);
+
+    mozilla::gfx::Point shadowOffset;
+    shadowOffset.x = (shadow->mXOffset / appUnitsPerDevPixel);
+    shadowOffset.y = (shadow->mYOffset / appUnitsPerDevPixel);
+
+    float spreadRadius = float(shadow->mSpread) / float(appUnitsPerDevPixel);
+
+    aBuilder.PushBoxShadow(deviceBoxRect,
+                           deviceClipRect,
+                           deviceBoxRect,
+                           wr::ToLayoutVector2D(shadowOffset),
+                           wr::ToColorF(shadowColor),
+                           blurRadius,
+                           spreadRadius,
+                           borderRadius,
+                           wr::BoxShadowClipMode::Outset);
+  }
+  return true;
 }
 
 class nsDisplayButtonBorder : public nsDisplayItem {

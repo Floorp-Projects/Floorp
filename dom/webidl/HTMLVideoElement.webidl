@@ -46,10 +46,6 @@ partial interface HTMLVideoElement {
   // True if the video has an audio track available.
   readonly attribute boolean mozHasAudio;
 
-  // True if the video should use a screen wake lock.
-  [Pref="dom.wakelock.enabled", Func="Navigator::HasWakeLockSupport"]
-  attribute boolean mozUseScreenWakeLock;
-
   // Attributes for builtin video controls to lock screen orientation.
   // True if video controls should lock orientation when fullscreen.
   [Pref="media.videocontrols.lock-video-orientation", Func="IsChromeOrXBL"]

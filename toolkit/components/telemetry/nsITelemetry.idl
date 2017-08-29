@@ -52,27 +52,25 @@ interface nsITelemetry : nsISupports
 
 
   /**
-   * An object containing a snapshot from all of the currently registered histograms from all processes.
-   * { process1: {name1: {data1}, name2:{data2}...} }
-   * where data is consists of the following properties:
-   *   min - Minimal bucket size
-   *   max - Maximum bucket size
-   *   histogram_type - HISTOGRAM_EXPONENTIAL, HISTOGRAM_LINEAR, HISTOGRAM_BOOLEAN
-   *                    or HISTOGRAM_COUNT
+   * Serializes the histograms from the given dataset to a JSON-style object.
+   * The returned structure looks like:
+   *   { process1: {name1: {histogramData1}, name2:{histogramData2}...}}
+   *
+   * Where histogramDataN has the following properties:
+   *   min - minimum bucket size
+   *   max - maximum bucket size
+   *   histogram_type - HISTOGRAM_EXPONENTIAL, HISTOGRAM_LINEAR, HISTOGRAM_BOOLEAN,
+   *                    HISTOGRAM_FLAG, HISTOGRAM_COUNT, or HISTOGRAM_CATEGORICAL
    *   counts - array representing contents of the buckets in the histogram
-   *   ranges -  an array with calculated bucket sizes
+   *   ranges - array with calculated bucket sizes
    *   sum - sum of the bucket contents
+   *
+   * @param aDataset DATASET_RELEASE_CHANNEL_OPTOUT or DATASET_RELEASE_CHANNEL_OPTIN.
+   * @param aSubsession Whether to return the internally-duplicated subsession histograms
+   * @param aClear Whether to clear out the subsession histograms after snapshotting (only works if aSubsession is true)
    */
   [implicit_jscontext]
-  readonly attribute jsval histogramSnapshots;
-
-  /**
-   * Get a snapshot of the internally duplicated subsession histograms.
-   * @param clear Whether to clear out the subsession histograms after snapshotting.
-   * @return An object as histogramSnapshots, except this contains the internally duplicated histograms for subsession telemetry.
-   */
-  [implicit_jscontext]
-  jsval snapshotSubsessionHistograms([optional] in boolean clear);
+  jsval snapshotHistograms(in uint32_t aDataset, in boolean aSubsession, in boolean aClear);
 
   /**
    * The amount of time, in milliseconds, that the last session took
@@ -215,16 +213,6 @@ interface nsITelemetry : nsISupports
   readonly attribute jsval lateWrites;
 
   /**
-   * Returns an array whose values are the names of histograms defined
-   * in Histograms.json.
-   *
-   * @param dataset - DATASET_RELEASE_CHANNEL_OPTOUT or DATASET_RELEASE_CHANNEL_OPTIN
-   */
-  void registeredHistograms(in uint32_t dataset,
-                            out uint32_t count,
-                            [retval, array, size_is(count)] out string histograms);
-
-  /**
    * Create and return a histogram registered in TelemetryHistograms.h.
    *
    * @param id - unique identifier from TelemetryHistograms.h
@@ -238,30 +226,17 @@ interface nsITelemetry : nsISupports
   [implicit_jscontext]
   jsval getHistogramById(in ACString id);
 
-  /*
-   * An object containing a snapshot from all of the currently registered keyed histograms.
-   * { process1: {name1: {histogramData1}, name2:{histogramData2}...}}
-   * where the histogramData is as described in histogramSnapshots.
-   */
-  [implicit_jscontext]
-  readonly attribute jsval keyedHistogramSnapshots;
-
   /**
-   * Get a snapshot of the internally duplicated subsession keyed histograms.
-   * @param clear Whether to clear out the subsession histograms after snapshotting.
-   * @return An object as histogramSnapshots, except this contains the internally duplicated keyed histograms for subsession telemetry.
-   */
-  [implicit_jscontext]
-  jsval snapshotSubsessionKeyedHistograms([optional] in boolean clear);
-
-  /**
-   * Returns an array whose values are the names of histograms defined
-   * in Histograms.json.
+   * Serializes the keyed histograms from the given dataset to a JSON-style object.
+   * The returned structure looks like:
+   *   { process1: {name1: {histogramData1}, name2:{histogramData2}...}}
    *
-   * @param dataset - DATASET_RELEASE_CHANNEL_OPTOUT or ...OPTIN
+   * @param aDataset DATASET_RELEASE_CHANNEL_OPTOUT or DATASET_RELEASE_CHANNEL_OPTIN.
+   * @param aSubsession Whether to return the internally-duplicated subsession keyed histograms
+   * @param aClear Whether to clear out the subsession keyed histograms after snapshotting (only works if aSubsession is true)
    */
-  void registeredKeyedHistograms(in uint32_t dataset, out uint32_t count,
-                                 [retval, array, size_is(count)] out string histograms);
+  [implicit_jscontext]
+  jsval snapshotKeyedHistograms(in uint32_t aDataset, in boolean aSubsession, in boolean aClear);
 
   /**
    * Create and return a histogram registered in TelemetryHistograms.h.

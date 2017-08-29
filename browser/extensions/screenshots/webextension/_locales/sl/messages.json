@@ -112,8 +112,8 @@
   "tourDone": {
     "message": "Končano"
   },
-  "termsAndPrivacyNoticeCloudServices": {
-    "message": "Z uporabo Firefox Screenshots se strinjate s $TERMSANDPRIVACYNOTICETERMSLINK$ Firefoxovih storitev v oblaku in $TERMSANDPRIVACYNOTICEPRIVACYLINK$.",
+  "termsAndPrivacyNotice2": {
+    "message": "Z uporabo razširitve Firefox Screenshots se strinjate z našimi $TERMSANDPRIVACYNOTICETERMSLINK$ in $TERMSANDPRIVACYNOTICEPRIVACYLINK$.",
     "placeholders": {
       "termsandprivacynoticetermslink": {
         "content": "$1"
@@ -128,5 +128,8 @@
   },
   "termsAndPrivacyNoticyPrivacyLink": {
     "message": "obvestilom o zasebnosti"
+  },
+  "libraryLabel": {
+    "message": "Posnetki zaslona"
   }
 }

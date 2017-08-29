@@ -280,10 +280,13 @@ public class GeckoApplication extends Application {
 
         GeckoService.register();
 
+        IntentHelper.init();
+
         final EventListener listener = new EventListener();
         EventDispatcher.getInstance().registerUiThreadListener(listener,
                 "Gecko:Exited",
                 "RuntimePermissions:Check",
+                "Snackbar:Show",
                 null);
         EventDispatcher.getInstance().registerBackgroundThreadListener(listener,
                 "Profile:Create",
@@ -442,6 +445,20 @@ public class GeckoApplication extends Application {
                                    callback.sendSuccess(true);
                                }
                            });
+
+            } else if ("Snackbar:Show".equals(event)) {
+                final Activity currentActivity =
+                        GeckoActivityMonitor.getInstance().getCurrentActivity();
+                if (currentActivity == null) {
+                    if (callback != null) {
+                        callback.sendError("No activity");
+                    }
+                    return;
+                }
+                SnackbarBuilder.builder(currentActivity)
+                        .fromEvent(message)
+                        .callback(callback)
+                        .buildAndShow();
             }
         }
     }

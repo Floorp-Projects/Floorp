@@ -6,6 +6,7 @@ from __future__ import absolute_import
 
 from io import BytesIO
 import struct
+import subprocess
 import zlib
 import os
 from zipfile import (
@@ -15,9 +16,12 @@ from zipfile import (
 from collections import OrderedDict
 from urlparse import urlparse, ParseResult
 import mozpack.path as mozpath
+from mozbuild.util import memoize
+
 
 JAR_STORED = ZIP_STORED
 JAR_DEFLATED = ZIP_DEFLATED
+JAR_BROTLI = 0x81
 MAX_WBITS = 15
 
 
@@ -262,13 +266,14 @@ class JarFileReader(object):
         corresponding to the file in the jar archive, data a buffer containing
         the file data.
         '''
-        assert header['compression'] in [JAR_DEFLATED, JAR_STORED]
+        assert header['compression'] in [JAR_DEFLATED, JAR_STORED, JAR_BROTLI]
         self._data = data
         # Copy some local file header fields.
         for name in ['filename', 'compressed_size',
                      'uncompressed_size', 'crc32']:
             setattr(self, name, header[name])
-        self.compressed = header['compression'] == JAR_DEFLATED
+        self.compressed = header['compression'] != JAR_STORED
+        self.compress = header['compression']
 
     def read(self, length=-1):
         '''
@@ -317,10 +322,14 @@ class JarFileReader(object):
         if hasattr(self, '_uncompressed_data'):
             return self._uncompressed_data
         data = self.compressed_data
-        if self.compressed:
+        if self.compress == JAR_STORED:
+            data = data.tobytes()
+        elif self.compress == JAR_BROTLI:
+            data = Brotli.decompress(data.tobytes())
+        elif self.compress == JAR_DEFLATED:
             data = zlib.decompress(data.tobytes(), -MAX_WBITS)
         else:
-            data = data.tobytes()
+            assert False  # Can't be another value per __init__
         if len(data) != self.uncompressed_size:
             raise JarReaderError('Corrupted file? %s' % self.filename)
         self._uncompressed_data = BytesIO(data)
@@ -359,6 +368,13 @@ class JarReader(object):
         Free some resources associated with the Jar.
         '''
         del self._data
+
+    @property
+    def compression(self):
+        entries = self.entries
+        if not entries:
+            return JAR_STORED
+        return max(f['compression'] for f in entries.itervalues())
 
     @property
     def entries(self):
@@ -473,6 +489,8 @@ class JarWriter(object):
             self._data = fileobj
         else:
             self._data = open(file, 'wb')
+        if compress is True:
+            compress = JAR_DEFLATED
         self._compress = compress
         self._compress_level = compress_level
         self._contents = OrderedDict()
@@ -574,12 +592,13 @@ class JarWriter(object):
         '''
         Add a new member to the jar archive, with the given name and the given
         data.
-        The compress option indicates if the given data should be compressed
-        (True), not compressed (False), or compressed according to the default
-        defined when creating the JarWriter (None).
-        When the data should be compressed (True or None with self.compress ==
-        True), it is only really compressed if the compressed size is smaller
-        than the uncompressed size.
+        The compress option indicates how the given data should be compressed
+        (one of JAR_STORED, JAR_DEFLATE or JAR_BROTLI), or compressed according
+        to the default defined when creating the JarWriter (None). True and
+        False are allowed values for backwards compatibility, mapping,
+        respectively, to JAR_DEFLATE and JAR_STORED.
+        When the data should be compressed, it is only really compressed if
+        the compressed size is smaller than the uncompressed size.
         The mode option gives the unix permissions that should be stored
         for the jar entry.
         If a duplicated member is found skip_duplicates will prevent raising
@@ -594,8 +613,12 @@ class JarWriter(object):
             raise JarWriterError("File %s already in JarWriter" % name)
         if compress is None:
             compress = self._compress
-        if (isinstance(data, JarFileReader) and data.compressed == compress) \
-                or (isinstance(data, Deflater) and data.compress == compress):
+        if compress is True:
+            compress = JAR_DEFLATED
+        if compress is False:
+            compress = JAR_STORED
+        if (isinstance(data, (JarFileReader, Deflater)) and \
+                data.compress == compress):
             deflater = data
         else:
             deflater = Deflater(compress, compress_level=self._compress_level)
@@ -619,7 +642,7 @@ class JarWriter(object):
         if deflater.compressed:
             entry['min_version'] = 20  # Version 2.0 supports deflated streams
             entry['general_flag'] = 2  # Max compression
-            entry['compression'] = JAR_DEFLATED
+            entry['compression'] = deflater.compress
         else:
             entry['min_version'] = 10  # Version 1.0 for stored streams
             entry['general_flag'] = 0
@@ -659,16 +682,24 @@ class Deflater(object):
     '''
     def __init__(self, compress=True, compress_level=9):
         '''
-        Initialize a Deflater. The compress argument determines whether to
-        try to compress at all.
+        Initialize a Deflater. The compress argument determines how to
+        compress.
         '''
         self._data = BytesIO()
+        if compress is True:
+            compress = JAR_DEFLATED
+        elif compress is False:
+            compress = JAR_STORED
         self.compress = compress
-        if compress:
-            self._deflater = zlib.compressobj(compress_level, zlib.DEFLATED,
-                                              -MAX_WBITS)
+        if compress in (JAR_DEFLATED, JAR_BROTLI):
+            if compress == JAR_DEFLATED:
+                self._deflater = zlib.compressobj(
+                    compress_level, zlib.DEFLATED, -MAX_WBITS)
+            else:
+                self._deflater = BrotliCompress()
             self._deflated = BytesIO()
         else:
+            assert compress == JAR_STORED
             self._deflater = None
 
     def write(self, data):
@@ -757,6 +788,47 @@ class Deflater(object):
         if self.compressed:
             return self._deflated.getvalue()
         return self._data.getvalue()
+
+
+class Brotli(object):
+    @staticmethod
+    @memoize
+    def brotli_tool():
+            from buildconfig import topobjdir, substs
+            return os.path.join(topobjdir, 'dist', 'host', 'bin',
+                               'bro' + substs.get('BIN_SUFFIX', ''))
+
+    @staticmethod
+    def run_brotli_tool(args, input):
+        proc = subprocess.Popen([Brotli.brotli_tool()] + args,
+                                stdin=subprocess.PIPE,
+                                stdout=subprocess.PIPE)
+        (stdout, _) = proc.communicate(input)
+        ret = proc.wait()
+        if ret != 0:
+            raise Exception("Brotli compression failed")
+        return stdout
+
+    @staticmethod
+    def compress(data):
+        return Brotli.run_brotli_tool(['--window', '17'], data)
+
+    @staticmethod
+    def decompress(data):
+        return Brotli.run_brotli_tool(['--decompress'], data)
+
+
+
+class BrotliCompress(object):
+    def __init__(self):
+        self._buf = BytesIO()
+
+    def compress(self, data):
+        self._buf.write(data)
+        return b''
+
+    def flush(self):
+        return Brotli.compress(self._buf.getvalue())
 
 
 class JarLog(dict):

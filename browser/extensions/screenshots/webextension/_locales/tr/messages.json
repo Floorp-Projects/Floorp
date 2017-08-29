@@ -112,8 +112,8 @@
   "tourDone": {
     "message": "Tamam"
   },
-  "termsAndPrivacyNoticeCloudServices": {
-    "message": "Firefox Screenshots'ı kullandığınızda Firefox Bulut Hizmetleri'nin $TERMSANDPRIVACYNOTICETERMSLINK$ ve $TERMSANDPRIVACYNOTICEPRIVACYLINK$ kabul etmiş sayılırsınız.",
+  "termsAndPrivacyNotice2": {
+    "message": "Firefox Screenshots'ı kullandığınızda $TERMSANDPRIVACYNOTICETERMSLINK$ ve $TERMSANDPRIVACYNOTICEPRIVACYLINK$ kabul etmiş sayılırsınız.",
     "placeholders": {
       "termsandprivacynoticetermslink": {
         "content": "$1"
@@ -128,5 +128,8 @@
   },
   "termsAndPrivacyNoticyPrivacyLink": {
     "message": "Gizlilik Bildirimimizi"
+  },
+  "libraryLabel": {
+    "message": "Ekran görüntüleri"
   }
 }

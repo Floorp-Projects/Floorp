@@ -1,0 +1,51 @@
+# Many things aren't appropriate for a frontend-only build.
+MOZ_AUTOMATION_BUILD_SYMBOLS=0
+MOZ_AUTOMATION_INSTALLER=0
+MOZ_AUTOMATION_L10N_CHECK=0
+MOZ_AUTOMATION_PACKAGE=0
+MOZ_AUTOMATION_PACKAGE_TESTS=0
+MOZ_AUTOMATION_UPDATE_PACKAGING=0
+MOZ_AUTOMATION_UPLOAD=0
+MOZ_AUTOMATION_UPLOAD_SYMBOLS=0
+MOZ_AUTOMATION_PACKAGE_GENERATED_SOURCES=0
+
+NO_CACHE=1
+NO_NDK=1
+
+. "$topsrcdir/mobile/android/config/mozconfigs/common"
+
+ac_add_options --with-gradle="$topsrcdir/gradle-dist/bin/gradle"
+export GRADLE_MAVEN_REPOSITORIES="file://$topsrcdir/jcenter","file://$topsrcdir/google"
+
+unset HOST_CC
+unset HOST_CXX
+unset RUSTC
+unset CARGO
+
+ac_add_options --disable-compile-environment
+ac_add_options --disable-tests
+
+# From here on, like ../android-api-16/nightly.
+
+ac_add_options --enable-profiling
+
+# Android
+# Warning: Before increasing the with-android-min-sdk value, please note several places in and out
+# of tree have to be changed. Otherwise, places like Treeherder or archive.mozilla.org will
+# advertise a bad API level. This may confuse people. As an example, please look at bug 1384482.
+# If you think you can't handle the whole set of changes, please reach out to the Release
+# Engineering team.
+ac_add_options --with-android-min-sdk=16
+ac_add_options --target=arm-linux-androideabi
+
+ac_add_options --with-branding=mobile/android/branding/nightly
+
+# This will overwrite the default of stripping everything and keep the symbol table.
+# This is useful for profiling with eideticker. See bug 788680
+STRIP_FLAGS="--strip-debug"
+
+export MOZILLA_OFFICIAL=1
+export MOZ_TELEMETRY_REPORTING=1
+export MOZ_ANDROID_POCKET=1
+
+. "$topsrcdir/mobile/android/config/mozconfigs/common.override"

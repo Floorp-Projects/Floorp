@@ -107,7 +107,15 @@
     "message": "Críochnaithe"
   },
   "termsAndPrivacyNotice2": {
-    "message": "Má úsáideann tú Gabhálacha Scáileáin Firefox, glacann tú leis na {termsAndPrivacyNoticeTermsLink} agus leis an {termsAndPrivacyNoticePrivacyLink}."
+    "message": "Má úsáideann tú Gabhálacha Scáileáin Firefox, glacann tú leis na $TERMSANDPRIVACYNOTICETERMSLINK$ agus leis an $TERMSANDPRIVACYNOTICEPRIVACYLINK$.",
+    "placeholders": {
+      "termsandprivacynoticetermslink": {
+        "content": "$1"
+      },
+      "termsandprivacynoticeprivacylink": {
+        "content": "$2"
+      }
+    }
   },
   "termsAndPrivacyNoticeTermsLink": {
     "message": "Téarmaí"

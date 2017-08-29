@@ -10,6 +10,7 @@ this.EXPORTED_SYMBOLS = [
 
 var {classes: Cc, interfaces: Ci, utils: Cu, results: Cr} = Components;
 
+Cu.import("resource://services-common/utils.js");
 Cu.import("resource://services-sync/constants.js");
 Cu.import("resource://gre/modules/Log.jsm");
 Cu.import("resource://services-sync/main.js");
@@ -162,7 +163,7 @@ BulkKeyBundle.prototype = {
                       "keys.");
     }
 
-    this.encryptionKey  = Utils.safeAtoB(value[0]);
-    this.hmacKey        = Utils.safeAtoB(value[1]);
+    this.encryptionKey  = CommonUtils.safeAtoB(value[0]);
+    this.hmacKey        = CommonUtils.safeAtoB(value[1]);
   },
 };

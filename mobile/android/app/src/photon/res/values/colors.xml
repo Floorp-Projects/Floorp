@@ -135,10 +135,10 @@
     <color name="action_bar_item_bg_color_private_pressed">#33FFFFFF</color>
 
     <!-- Fennec color palette (bug 1127517) -->
-    <color name="fennec_ui_orange">#FF9500</color>
+    <color name="fennec_ui_accent">@color/photon_highlight</color>
     <color name="affirmative_green">#6FBE4A</color>
     <color name="rejection_red">#D23228</color>
-    <color name="action_orange">#E66000</color>
+    <color name="action_accent">#0979D9</color>
     <color name="link_blue">#0096DD</color>
     <color name="link_blue_pressed">#0082C6</color>
     <color name="private_browsing_purple">#CF68FF</color>

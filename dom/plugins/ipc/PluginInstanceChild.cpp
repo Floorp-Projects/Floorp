@@ -212,7 +212,7 @@ PluginInstanceChild::~PluginInstanceChild()
     // In the event that we registered for audio device changes, stop.
     PluginModuleChild* chromeInstance = PluginModuleChild::GetChrome();
     if (chromeInstance) {
-      NPError rv = chromeInstance->PluginRequiresAudioDeviceChanges(this, false);
+      chromeInstance->PluginRequiresAudioDeviceChanges(this, false);
     }
 #endif
 #if defined(MOZ_WIDGET_COCOA)

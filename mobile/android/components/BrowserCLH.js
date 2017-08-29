@@ -42,19 +42,25 @@ BrowserCLH.prototype = {
 
   addObserverScripts: function(aScripts) {
     aScripts.forEach(item => {
-      let [name, notifications, script] = item;
+      let {name, topics, script} = item;
       XPCOMUtils.defineLazyGetter(this, name, _ => {
         let sandbox = {};
-        Services.scriptloader.loadSubScript(script, sandbox);
+        if (script.endsWith(".jsm")) {
+          Cu.import(script, sandbox);
+        } else {
+          Services.scriptloader.loadSubScript(script, sandbox);
+        }
         return sandbox[name];
       });
       let observer = (subject, topic, data) => {
         Services.obs.removeObserver(observer, topic);
-        Services.obs.addObserver(this[name], topic);
+        if (!item.once) {
+          Services.obs.addObserver(this[name], topic);
+        }
         this[name].observe(subject, topic, data); // Explicitly notify new observer
       };
-      notifications.forEach(notification => {
-        Services.obs.addObserver(observer, notification);
+      topics.forEach(topic => {
+        Services.obs.addObserver(observer, topic);
       });
     });
   },
@@ -64,16 +70,25 @@ BrowserCLH.prototype = {
       case "app-startup":
         this.setResourceSubstitutions();
 
-        let observerScripts = [];
+        let observerScripts = [{
+          name: "DownloadNotifications",
+          script: "resource://gre/modules/DownloadNotifications.jsm",
+          topics: ["chrome-document-interactive"],
+          once: true,
+        }];
         if (AppConstants.MOZ_WEBRTC) {
-          observerScripts.push(["WebrtcUI", [
-            "getUserMedia:ask-device-permission",
-            "getUserMedia:request",
-            "PeerConnection:request",
-            "recording-device-events",
-            "VideoCapture:Paused",
-            "VideoCapture:Resumed",
-          ], "chrome://browser/content/WebrtcUI.js"]);
+          observerScripts.push({
+            name: "WebrtcUI",
+            script: "chrome://browser/content/WebrtcUI.js",
+            topics: [
+              "getUserMedia:ask-device-permission",
+              "getUserMedia:request",
+              "PeerConnection:request",
+              "recording-device-events",
+              "VideoCapture:Paused",
+              "VideoCapture:Resumed",
+            ],
+          });
         }
         this.addObserverScripts(observerScripts);
         break;

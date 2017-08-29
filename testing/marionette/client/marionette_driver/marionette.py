@@ -554,7 +554,7 @@ class Marionette(object):
     CONTEXT_CHROME = "chrome"  # non-browser content: windows, dialogs, etc.
     CONTEXT_CONTENT = "content"  # browser content: iframes, divs, etc.
     DEFAULT_STARTUP_TIMEOUT = 120
-    DEFAULT_SHUTDOWN_TIMEOUT = 65  # Firefox will kill hanging threads after 60s
+    DEFAULT_SHUTDOWN_TIMEOUT = 120  # Firefox will kill hanging threads after 60s
 
     # Bug 1336953 - Until we can remove the socket timeout parameter it has to be
     # set a default value which is larger than the longest timeout as defined by the

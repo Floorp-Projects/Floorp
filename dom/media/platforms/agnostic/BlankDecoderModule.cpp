@@ -9,8 +9,8 @@
 #include "mozilla/CheckedInt.h"
 #include "mozilla/UniquePtrExtensions.h"
 #include "mozilla/RefPtr.h"
-#include "nsRect.h"
-#include "nsSize.h"
+#include "mozilla/gfx/Rect.h"
+#include "mozilla/gfx/Point.h"
 #include "ImageContainer.h"
 #include "MediaData.h"
 #include "MediaInfo.h"
@@ -25,7 +25,7 @@ BlankVideoDataCreator::BlankVideoDataCreator(uint32_t aFrameWidth,
   , mFrameHeight(aFrameHeight)
   , mImageContainer(aImageContainer)
 {
-  mInfo.mDisplay = nsIntSize(mFrameWidth, mFrameHeight);
+  mInfo.mDisplay = gfx::IntSize(mFrameWidth, mFrameHeight);
   mPicture = gfx::IntRect(0, 0, mFrameWidth, mFrameHeight);
 }
 

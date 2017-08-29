@@ -349,9 +349,6 @@ pref("media.throttle-regardless-of-download-rate", false);
 // Master HTML5 media volume scale.
 pref("media.volume_scale", "1.0");
 
-// Timeout for wakelock release
-pref("media.wakelock_timeout", 2000);
-
 // Whether we should play videos opened in a "video document", i.e. videos
 // opened as top-level documents, as opposed to inside a media element.
 pref("media.play-stand-alone", true);

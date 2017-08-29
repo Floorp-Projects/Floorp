@@ -329,7 +329,7 @@ VPXDecoder::IsKeyframe(Span<const uint8_t> aBuffer, Codec aCodec)
 }
 
 /* static */
-nsIntSize
+gfx::IntSize
 VPXDecoder::GetFrameSize(Span<const uint8_t> aBuffer, Codec aCodec)
 {
   vpx_codec_stream_info_t si;
@@ -342,7 +342,7 @@ VPXDecoder::GetFrameSize(Span<const uint8_t> aBuffer, Codec aCodec)
     vpx_codec_peek_stream_info(vpx_codec_vp9_dx(), aBuffer.Elements(), aBuffer.Length(), &si);
   }
 
-  return nsIntSize(si.w, si.h);
+  return gfx::IntSize(si.w, si.h);
 }
 } // namespace mozilla
 #undef LOG

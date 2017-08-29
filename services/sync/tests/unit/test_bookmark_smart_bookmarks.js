@@ -2,6 +2,7 @@
    http://creativecommons.org/publicdomain/zero/1.0/ */
 
 Cu.import("resource://gre/modules/Log.jsm");
+Cu.import("resource://services-common/utils.js");
 Cu.import("resource://services-sync/engines.js");
 Cu.import("resource://services-sync/engines/bookmarks.js");
 Cu.import("resource://services-sync/service.js");
@@ -64,7 +65,7 @@ add_task(async function test_annotation_uploaded() {
   _("Create a smart bookmark in the toolbar.");
   let parent = PlacesUtils.toolbarFolderId;
   let uri =
-    Utils.makeURI("place:sort=" +
+    CommonUtils.makeURI("place:sort=" +
                   Ci.nsINavHistoryQueryOptions.SORT_BY_VISITCOUNT_DESCENDING +
                   "&maxResults=10");
   let title = "Most Visited";
@@ -123,7 +124,7 @@ add_task(async function test_annotation_uploaded() {
     // around as a deleted record...
     PlacesUtils.bookmarks.setItemTitle(mostVisitedID, "Not Most Visited");
     PlacesUtils.bookmarks.changeBookmarkURI(
-      mostVisitedID, Utils.makeURI("http://something/else"));
+      mostVisitedID, CommonUtils.makeURI("http://something/else"));
     PlacesUtils.annotations.removeItemAnnotation(mostVisitedID,
                                                  SMART_BOOKMARKS_ANNO);
     await store.wipe();
@@ -168,7 +169,7 @@ add_task(async function test_smart_bookmarks_duped() {
 
   let parent = PlacesUtils.toolbarFolderId;
   let uri =
-    Utils.makeURI("place:sort=" +
+    CommonUtils.makeURI("place:sort=" +
                   Ci.nsINavHistoryQueryOptions.SORT_BY_VISITCOUNT_DESCENDING +
                   "&maxResults=10");
   let title = "Most Visited";
