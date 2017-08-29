@@ -820,6 +820,9 @@ DecodeName(Decoder& d)
     if (!d.readBytes(numBytes, &bytes))
         return nullptr;
 
+    if (!JS::StringIsUTF8(bytes, numBytes))
+        return nullptr;
+
     UniqueChars name(js_pod_malloc<char>(numBytes + 1));
     if (!name)
         return nullptr;
