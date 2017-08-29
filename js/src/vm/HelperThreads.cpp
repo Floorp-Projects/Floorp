@@ -687,6 +687,9 @@ EnsureParserCreatedClasses(JSContext* cx, ParseTaskKind kind)
     if (!EnsureConstructor(cx, global, JSProto_RegExp))
         return false; // needed by regular expression literals
 
+    if (!EnsureConstructor(cx, global, JSProto_Iterator))
+        return false; // needed by ???
+
     if (!GlobalObject::initStarGenerators(cx, global))
         return false; // needed by function*() {} and generator comprehensions
 
@@ -1794,7 +1797,8 @@ GlobalHelperThreadState::mergeParseTaskCompartment(JSContext* cx, ParseTask* par
             JSProtoKey key = JS::IdentifyStandardPrototype(protoObj);
             if (key != JSProto_Null) {
                 MOZ_ASSERT(key == JSProto_Object || key == JSProto_Array ||
-                           key == JSProto_Function || key == JSProto_RegExp);
+                           key == JSProto_Function || key == JSProto_RegExp ||
+                           key == JSProto_Iterator);
                 newProto = GetBuiltinPrototypePure(global, key);
             } else if (protoObj == parseTaskStarGenFunctionProto) {
                 newProto = global->getStarGeneratorFunctionPrototype();
