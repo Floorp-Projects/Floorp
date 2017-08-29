@@ -8,16 +8,19 @@
 #define mozilla_dom_AbortController_h
 
 #include "mozilla/dom/BindingDeclarations.h"
-#include "mozilla/dom/AbortSignal.h"
+#include "mozilla/ErrorResult.h"
 #include "nsCycleCollectionParticipant.h"
 #include "nsWrapperCache.h"
+
+class nsIGlobalObject;
 
 namespace mozilla {
 namespace dom {
 
+class AbortSignal;
+
 class AbortController final : public nsISupports
                             , public nsWrapperCache
-                            , public AbortSignal::Follower
 {
 public:
   NS_DECL_CYCLE_COLLECTING_ISUPPORTS
@@ -42,19 +45,6 @@ public:
 
   void
   Abort();
-
-  void
-  Follow(AbortSignal& aSignal);
-
-  void
-  Unfollow(AbortSignal& aSignal);
-
-  AbortSignal*
-  Following() const;
-
-  // AbortSignal::Follower
-
-  void Aborted() override;
 
 private:
   ~AbortController() = default;
