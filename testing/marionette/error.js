@@ -48,6 +48,7 @@ const BUILTIN_ERRORS = new Set([
 this.EXPORTED_SYMBOLS = [
   "error",
   "pprint",
+  "stack",
 ].concat(Array.from(ERRORS));
 
 /** @namespace */
@@ -213,6 +214,14 @@ this.pprint = function(ss, ...values) {
     }
   }
   return res.join("");
+};
+
+/** Create a stacktrace to the current line in the program. */
+this.stack = function() {
+  let trace = new Error().stack;
+  let sa = trace.split("\n");
+  sa = sa.slice(1);
+  return "stacktrace:\n" + sa.join("\n");
 };
 
 /**
