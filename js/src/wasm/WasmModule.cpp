@@ -18,6 +18,9 @@
 
 #include "wasm/WasmModule.h"
 
+#include <chrono>
+#include <thread>
+
 #include "jsnspr.h"
 
 #include "jit/JitOptions.h"
@@ -641,6 +644,11 @@ Module::extractCode(JSContext* cx, Tier tier, MutableHandleValue vp) const
     RootedPlainObject result(cx, NewBuiltinClassInstance<PlainObject>(cx));
     if (!result)
         return false;
+
+    // This function is only used for testing purposes so we can simply
+    // busy-wait on tiered compilation to complete.
+    while (!compilationComplete())
+        std::this_thread::sleep_for(std::chrono::milliseconds(1));
 
     if (!code_->hasTier(tier)) {
         vp.setNull();
