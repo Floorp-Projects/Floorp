@@ -12,6 +12,7 @@ import which
 from mozprocess import ProcessHandlerMixin
 
 from mozlint import result
+from mozlint.pathutils import get_ancestors_by_name
 
 
 here = os.path.abspath(os.path.dirname(__file__))
@@ -120,29 +121,6 @@ def gen_yamllint_args(cmdargs, paths=None, conf_file=None):
     return args + paths
 
 
-def ancestors(path):
-    while path:
-        yield path
-        (path, child) = os.path.split(path)
-        if child == "":
-            break
-
-
-def get_relevant_configs(name, path, root):
-    """Returns a list of configuration files that exist in `path`'s ancestors,
-    sorted from closest->furthest.
-    """
-    configs = []
-    for path in ancestors(path):
-        if path == root:
-            break
-
-        config = os.path.join(path, name)
-        if os.path.isfile(config):
-            configs.append(config)
-    return configs
-
-
 def lint(files, config, **lintargs):
     if not reinstall_yamllint():
         print(YAMLLINT_INSTALL_ERROR)
@@ -163,7 +141,7 @@ def lint(files, config, **lintargs):
     # directories that are explicitly included will be considered.
     paths_by_config = defaultdict(list)
     for f in files:
-        conf_files = get_relevant_configs('.yamllint', f, config['root'])
+        conf_files = get_ancestors_by_name('.yamllint', f, config['root'])
         paths_by_config[conf_files[0] if conf_files else 'default'].append(f)
 
     for conf_file, paths in paths_by_config.items():
