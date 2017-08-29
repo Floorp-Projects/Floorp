@@ -157,6 +157,130 @@
             ]
           }
         ]
+      },
+      {
+        "name": "setTabValue",
+        "type": "function",
+        "description": "Set a key/value pair on a given tab.",
+        "async": true,
+        "parameters": [
+          {
+            "type": "integer",
+            "minimum": 0,
+            "name": "tabId",
+            "description": "The id of the tab that the key/value pair is being set on."
+          },
+          {
+            "type": "string",
+            "name": "key",
+            "description": "The key which corresponds to the value being set."
+          },
+          {
+            "type": "any",
+            "name": "value",
+            "description": "The value being set."
+          }
+        ]
+      },
+      {
+        "name": "getTabValue",
+        "type": "function",
+        "description": "Retrieve a value that was set for a given key on a given tab.",
+        "async": true,
+        "parameters": [
+          {
+            "type": "integer",
+            "minimum": 0,
+            "name": "tabId",
+            "description": "The id of the tab whose value is being retrieved from."
+          },
+          {
+            "type": "string",
+            "name": "key",
+            "description": "The key which corresponds to the value."
+          }
+        ]
+      },
+      {
+        "name": "removeTabValue",
+        "type": "function",
+        "description": "Remove a key/value pair that was set on a given tab.",
+        "async": true,
+        "parameters": [
+          {
+            "type": "integer",
+            "minimum": 0,
+            "name": "tabId",
+            "description": "The id of the tab whose key/value pair is being removed."
+          },
+          {
+            "type": "string",
+            "name": "key",
+            "description": "The key which corresponds to the value."
+          }
+        ]
+      },
+      {
+        "name": "setWindowValue",
+        "type": "function",
+        "description": "Set a key/value pair on a given window.",
+        "async": true,
+        "parameters": [
+          {
+            "type": "integer",
+            "minimum": -2,
+            "name": "windowId",
+            "description": "The id of the window that the key/value pair is being set on."
+          },
+          {
+            "type": "string",
+            "name": "key",
+            "description": "The key which corresponds to the value being set."
+          },
+          {
+            "type": "any",
+            "name": "value",
+            "description": "The value being set."
+          }
+        ]
+      },
+      {
+        "name": "getWindowValue",
+        "type": "function",
+        "description": "Retrieve a value that was set for a given key on a given window.",
+        "async": true,
+        "parameters": [
+          {
+            "type": "integer",
+            "minimum": -2,
+            "name": "windowId",
+            "description": "The id of the window whose value is being retrieved from."
+          },
+          {
+            "type": "string",
+            "name": "key",
+            "description": "The key which corresponds to the value."
+          }
+        ]
+      },
+      {
+        "name": "removeWindowValue",
+        "type": "function",
+        "description": "Remove a key/value pair that was set on a given window.",
+        "async": true,
+        "parameters": [
+          {
+            "type": "integer",
+            "minimum": -2,
+            "name": "windowId",
+            "description": "The id of the window whose key/value pair is being removed."
+          },
+          {
+            "type": "string",
+            "name": "key",
+            "description": "The key which corresponds to the value."
+          }
+        ]
       }
     ],
     "events": [

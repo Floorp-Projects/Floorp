@@ -13,7 +13,10 @@
 callback LifecycleCreatedCallback = void();
 callback LifecycleAttachedCallback = void();
 callback LifecycleDetachedCallback = void();
-callback LifecycleAttributeChangedCallback = void(DOMString attrName, DOMString? oldValue, DOMString? newValue);
+callback LifecycleAttributeChangedCallback = void(DOMString attrName,
+                                                  DOMString? oldValue,
+                                                  DOMString? newValue,
+                                                  DOMString? namespaceURI);
 
 dictionary LifecycleCallbacks {
   LifecycleCreatedCallback? createdCallback;

@@ -202,8 +202,8 @@ PaymentRequestParent::RespondPayment(nsIPaymentActionResponse* aResponse)
       nsCOMPtr<nsIPaymentShowActionResponse> response =
         do_QueryInterface(aResponse);
       MOZ_ASSERT(response);
-      bool isAccepted;
-      NS_ENSURE_SUCCESS(response->IsAccepted(&isAccepted), NS_ERROR_FAILURE);
+      uint32_t acceptStatus;
+      NS_ENSURE_SUCCESS(response->GetAcceptStatus(&acceptStatus), NS_ERROR_FAILURE);
       nsAutoString methodName;
       NS_ENSURE_SUCCESS(response->GetMethodName(methodName), NS_ERROR_FAILURE);
       nsAutoString data;
@@ -215,7 +215,7 @@ PaymentRequestParent::RespondPayment(nsIPaymentActionResponse* aResponse)
       nsAutoString payerPhone;
       NS_ENSURE_SUCCESS(response->GetPayerPhone(payerPhone), NS_ERROR_FAILURE);
       IPCPaymentShowActionResponse actionResponse(requestId,
-                                                  isAccepted,
+                                                  acceptStatus,
                                                   methodName,
                                                   data,
                                                   payerName,

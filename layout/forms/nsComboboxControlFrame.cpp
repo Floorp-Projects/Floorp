@@ -21,7 +21,6 @@
 #include "nsPIDOMWindow.h"
 #include "nsIPresShell.h"
 #include "nsPresState.h"
-#include "nsContentList.h"
 #include "nsView.h"
 #include "nsViewManager.h"
 #include "nsIDOMEventListener.h"

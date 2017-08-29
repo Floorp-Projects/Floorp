@@ -318,8 +318,7 @@ MARKUPMAP(q,
 
 MARKUPMAP(section,
           New_HyperText,
-          roles::SECTION,
-          Attr(xmlroles, region))
+          roles::SECTION)
 
 MARKUPMAP(summary,
           New_HTMLSummary,

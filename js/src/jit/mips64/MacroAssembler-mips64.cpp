@@ -759,6 +759,7 @@ MacroAssemblerMIPS64::ma_b(Address addr, ImmGCPtr imm, Label* label, Condition c
 void
 MacroAssemblerMIPS64::ma_bal(Label* label, DelaySlotFill delaySlotFill)
 {
+    spew("branch .Llabel %p\n", label);
     if (label->bound()) {
         // Generate the long jump for calls because return address has to be
         // the address after the reserved block.
@@ -777,6 +778,7 @@ MacroAssemblerMIPS64::ma_bal(Label* label, DelaySlotFill delaySlotFill)
     // instructions are writing at below (contain delay slot).
     m_buffer.ensureSpace(6 * sizeof(uint32_t));
 
+    spew("bal .Llabel %p\n", label);
     BufferOffset bo = writeInst(getBranchCode(BranchIsCall).encode());
     writeInst(nextInChain);
     if (!oom())
@@ -792,6 +794,9 @@ MacroAssemblerMIPS64::ma_bal(Label* label, DelaySlotFill delaySlotFill)
 void
 MacroAssemblerMIPS64::branchWithCode(InstImm code, Label* label, JumpKind jumpKind)
 {
+    // simply output the pointer of one label as its id,
+    // notice that after one label destructor, the pointer will be reused.
+    spew("branch .Llabel %p", label);
     MOZ_ASSERT(code.encode() != InstImm(op_regimm, zero, rt_bgezal, BOffImm16(0)).encode());
     InstImm inst_beq = InstImm(op_beq, zero, zero, BOffImm16(0));
 
@@ -804,6 +809,9 @@ MacroAssemblerMIPS64::branchWithCode(InstImm code, Label* label, JumpKind jumpKi
         if (jumpKind == ShortJump) {
             MOZ_ASSERT(BOffImm16::IsInRange(offset));
             code.setBOffImm16(BOffImm16(offset));
+#ifdef JS_JITSPEW
+            decodeBranchInstAndSpew(code);
+#endif
             writeInst(code.encode());
             as_nop();
             return;
@@ -820,7 +828,12 @@ MacroAssemblerMIPS64::branchWithCode(InstImm code, Label* label, JumpKind jumpKi
 
         // Handle long conditional branch, the target offset is based on self,
         // point to next instruction of nop at below.
-        writeInst(invertBranch(code, BOffImm16(7 * sizeof(uint32_t))).encode());
+        spew("invert branch .Llabel %p", label);
+        InstImm code_r = invertBranch(code, BOffImm16(7 * sizeof(uint32_t)));
+#ifdef JS_JITSPEW
+        decodeBranchInstAndSpew(code_r);
+#endif
+        writeInst(code_r.encode());
         // No need for a "nop" here because we can clobber scratch.
         addLongJump(nextOffset());
         ma_liPatchable(ScratchRegister, ImmWord(label->offset()));
@@ -840,6 +853,9 @@ MacroAssemblerMIPS64::branchWithCode(InstImm code, Label* label, JumpKind jumpKi
 
         // Indicate that this is short jump with offset 4.
         code.setBOffImm16(BOffImm16(4));
+#ifdef JS_JITSPEW
+        decodeBranchInstAndSpew(code);
+#endif
         BufferOffset bo = writeInst(code.encode());
         writeInst(nextInChain);
         if (!oom())
@@ -853,6 +869,9 @@ MacroAssemblerMIPS64::branchWithCode(InstImm code, Label* label, JumpKind jumpKi
     // instructions are writing at below (contain conditional nop).
     m_buffer.ensureSpace(7 * sizeof(uint32_t));
 
+#ifdef JS_JITSPEW
+    decodeBranchInstAndSpew(code);
+#endif
     BufferOffset bo = writeInst(code.encode());
     writeInst(nextInChain);
     if (!oom())
