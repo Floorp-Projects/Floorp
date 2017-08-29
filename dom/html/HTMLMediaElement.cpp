@@ -4172,8 +4172,11 @@ HTMLMediaElement::WakeLockBoolWrapper::UpdateWakeLock()
   MOZ_ASSERT(mOuter);
 
   bool playing = !mValue;
-
-  if (playing) {
+  bool isAudible = mOuter->Volume() > 0.0 &&
+                   !mOuter->mMuted &&
+                   mOuter->mIsAudioTrackAudible;
+  // when playing audible media.
+  if (playing && isAudible) {
     mOuter->WakeLockCreate();
   } else {
     mOuter->WakeLockRelease();
@@ -7168,6 +7171,8 @@ HTMLMediaElement::NotifyAudioPlaybackChanged(AudibleChangedReasons aReason)
   if (mAudioChannelWrapper) {
     mAudioChannelWrapper->NotifyAudioPlaybackChanged(aReason);
   }
+  // only request wake lock for audible media.
+  mPaused.UpdateWakeLock();
 }
 
 bool

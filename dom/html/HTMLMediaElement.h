@@ -832,9 +832,8 @@ protected:
 
     bool operator !() const { return !mValue; }
 
-  private:
     void UpdateWakeLock();
-
+  private:
     bool mValue;
     HTMLMediaElement* mOuter;
   };
