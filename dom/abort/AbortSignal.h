@@ -33,6 +33,9 @@ public:
     void
     Unfollow();
 
+    bool
+    IsFollowing() const;
+
     RefPtr<AbortSignal> mFollowingSignal;
   };
 
