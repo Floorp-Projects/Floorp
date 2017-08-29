@@ -715,24 +715,6 @@ LIRGeneratorMIPSShared::visitAtomicTypedArrayElementBinop(MAtomicTypedArrayEleme
     define(lir, ins);
 }
 
-void
-LIRGeneratorMIPSShared::visitWasmTruncateToInt64(MWasmTruncateToInt64* ins)
-{
-    MDefinition* opd = ins->input();
-    MOZ_ASSERT(opd->type() == MIRType::Double || opd->type() == MIRType::Float32);
-
-    defineInt64(new(alloc()) LWasmTruncateToInt64(useRegister(opd)), ins);
-}
-
-void
-LIRGeneratorMIPSShared::visitInt64ToFloatingPoint(MInt64ToFloatingPoint* ins)
-{
-    MDefinition* opd = ins->input();
-    MOZ_ASSERT(opd->type() == MIRType::Int64);
-    MOZ_ASSERT(IsFloatingPointType(ins->type()));
-
-    define(new(alloc()) LInt64ToFloatingPoint(useInt64Register(opd)), ins);
-}
 
 void
 LIRGeneratorMIPSShared::visitCopySign(MCopySign* ins)
