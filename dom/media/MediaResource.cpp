@@ -122,8 +122,11 @@ ChannelMediaResource::~ChannelMediaResource()
 // a new listener, so notifications from the old channel are discarded
 // and don't confuse us.
 NS_IMPL_ISUPPORTS(ChannelMediaResource::Listener,
-                  nsIRequestObserver, nsIStreamListener, nsIChannelEventSink,
-                  nsIInterfaceRequestor)
+                  nsIRequestObserver,
+                  nsIStreamListener,
+                  nsIChannelEventSink,
+                  nsIInterfaceRequestor,
+                  nsIThreadRetargetableStreamListener)
 
 nsresult
 ChannelMediaResource::Listener::OnStartRequest(nsIRequest* aRequest,
@@ -174,7 +177,13 @@ ChannelMediaResource::Listener::AsyncOnChannelRedirect(nsIChannel* aOldChannel,
 }
 
 nsresult
-ChannelMediaResource::Listener::GetInterface(const nsIID & aIID, void **aResult)
+ChannelMediaResource::Listener::CheckListenerChain()
+{
+  return NS_OK;
+}
+
+nsresult
+ChannelMediaResource::Listener::GetInterface(const nsIID& aIID, void** aResult)
 {
   return QueryInterface(aIID, aResult);
 }
