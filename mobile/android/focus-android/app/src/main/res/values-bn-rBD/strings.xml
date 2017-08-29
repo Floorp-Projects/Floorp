@@ -8,7 +8,6 @@
   <string name="search_hint">%1$s এর জন্যে অনুসন্ধান করুন</string>
   <string name="menu_share">শেয়ার…</string>
   <string name="menu_open_with_default_browser">%1$s ব্যবহার করে খোলা হবে</string>
-  <string name="menu_open_with_a_browser">%1$s ব্যবহার করে খোলা হবে…</string>
   <string name="menu_add_to_home_screen">হোমস্ক্রিনে যোগ</string>
   <string name="menu_settings">সেটিং</string>
   <string name="menu_about">পরিচিতি</string>
