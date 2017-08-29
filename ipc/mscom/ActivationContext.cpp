@@ -93,6 +93,17 @@ ActivationContext::~ActivationContext()
   Release();
 }
 
+/* static */ Result<uintptr_t,HRESULT>
+ActivationContext::GetCurrent()
+{
+  HANDLE actCtx;
+  if (!::GetCurrentActCtx(&actCtx)) {
+    return Result<uintptr_t,HRESULT>(HRESULT_FROM_WIN32(::GetLastError()));
+  }
+
+  return reinterpret_cast<uintptr_t>(actCtx);
+}
+
 ActivationContextRegion::ActivationContextRegion(const ActivationContext& aActCtx)
   : mActCtx(aActCtx)
   , mActCookie(0)

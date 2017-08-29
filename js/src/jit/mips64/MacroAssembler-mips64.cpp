@@ -2571,4 +2571,32 @@ template void
 MacroAssembler::storeUnboxedValue(const ConstantOrRegister& value, MIRType valueType,
                                   const BaseIndex& dest, MIRType slotType);
 
+
+void
+MacroAssembler::wasmTruncateDoubleToUInt32(FloatRegister input, Register output, Label* oolEntry)
+{
+    as_truncld(ScratchDoubleReg, input);
+    moveFromDoubleHi(ScratchDoubleReg, output);
+    as_cfc1(ScratchRegister, Assembler::FCSR);
+    as_ext(ScratchRegister, ScratchRegister, 6, 1);
+    ma_or(ScratchRegister, output);
+    moveFromFloat32(ScratchDoubleReg, output);
+    ma_b(ScratchRegister, Imm32(0), oolEntry, Assembler::NotEqual);
+
+
+}
+
+void
+MacroAssembler::wasmTruncateFloat32ToUInt32(FloatRegister input, Register output, Label* oolEntry)
+{
+    as_truncls(ScratchDoubleReg, input);
+    moveFromDoubleHi(ScratchDoubleReg, output);
+    as_cfc1(ScratchRegister, Assembler::FCSR);
+    as_ext(ScratchRegister, ScratchRegister, 6, 1);
+    ma_or(ScratchRegister, output);
+    moveFromFloat32(ScratchDoubleReg, output);
+    ma_b(ScratchRegister, Imm32(0), oolEntry, Assembler::NotEqual);
+
+}
+
 //}}} check_macroassembler_style

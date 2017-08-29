@@ -528,6 +528,97 @@ NativeObject::addPropertyInternal(JSContext* cx,
     return nullptr;
 }
 
+/* static */ Shape*
+NativeObject::addEnumerableDataProperty(JSContext* cx, HandleNativeObject obj, HandleId id)
+{
+    // Like addProperty(Internal), but optimized for the common case of adding a
+    // new enumerable data property.
+
+    AutoKeepShapeTables keep(cx);
+
+    ShapeTable* table = nullptr;
+    ShapeTable::Entry* entry = nullptr;
+
+    if (!obj->inDictionaryMode()) {
+        if (MOZ_UNLIKELY(ShouldConvertToDictionary(obj))) {
+            if (!toDictionaryMode(cx, obj))
+                return nullptr;
+            table = obj->lastProperty()->maybeTable(keep);
+            entry = &table->search<MaybeAdding::Adding>(id, keep);
+        }
+    } else {
+        table = obj->lastProperty()->ensureTableForDictionary(cx, keep);
+        if (!table)
+            return nullptr;
+        if (table->needsToGrow()) {
+            if (!table->grow(cx))
+                return nullptr;
+        }
+        entry = &table->search<MaybeAdding::Adding>(id, keep);
+        MOZ_ASSERT(!entry->shape());
+    }
+
+    MOZ_ASSERT(!!table == !!entry);
+
+    /* Find or create a property tree node labeled by our arguments. */
+    RootedShape last(cx, obj->lastProperty());
+    UnownedBaseShape* nbase = GetBaseShapeForNewShape(cx, last, id);
+    if (!nbase)
+        return nullptr;
+
+    Shape* shape;
+    if (obj->inDictionaryMode()) {
+        uint32_t slot;
+        if (!allocDictionarySlot(cx, obj, &slot))
+            return nullptr;
+
+        Rooted<StackShape> child(cx, StackShape(nbase, id, slot, JSPROP_ENUMERATE, 0));
+
+        MOZ_ASSERT(last == obj->lastProperty());
+        shape = Allocate<Shape>(cx);
+        if (!shape)
+            return nullptr;
+        if (slot >= obj->lastProperty()->base()->slotSpan()) {
+            if (MOZ_UNLIKELY(!obj->setSlotSpan(cx, slot + 1))) {
+                new (shape) Shape(obj->lastProperty()->base()->unowned(), 0);
+                return nullptr;
+            }
+        }
+        shape->initDictionaryShape(child, obj->numFixedSlots(), &obj->shape_);
+    } else {
+        uint32_t slot = obj->slotSpan();
+        MOZ_ASSERT(slot >= JSSLOT_FREE(obj->getClass()));
+        // Objects with many properties are converted to dictionary
+        // mode, so we can't overflow SHAPE_MAXIMUM_SLOT here.
+        MOZ_ASSERT(slot < JSSLOT_FREE(obj->getClass()) + PropertyTree::MAX_HEIGHT);
+        MOZ_ASSERT(slot < SHAPE_MAXIMUM_SLOT);
+
+        Rooted<StackShape> child(cx, StackShape(nbase, id, slot, JSPROP_ENUMERATE, 0));
+        shape = cx->zone()->propertyTree().inlinedGetChild(cx, last, child);
+        if (!shape)
+            return nullptr;
+        if (!obj->setLastProperty(cx, shape)) {
+            obj->checkShapeConsistency();
+            return nullptr;
+        }
+    }
+
+    MOZ_ASSERT(shape == obj->lastProperty());
+
+    if (table) {
+        /* Store the tree node pointer in the table entry for id. */
+        entry->setPreservingCollision(shape);
+        table->incEntryCount();
+
+        /* Pass the table along to the new last property, namely shape. */
+        MOZ_ASSERT(shape->parent->maybeTable(keep) == table);
+        shape->parent->handoffTableTo(shape);
+    }
+
+    obj->checkShapeConsistency();
+    return shape;
+}
+
 Shape*
 js::ReshapeForAllocKind(JSContext* cx, Shape* shape, TaggedProto proto,
                                  gc::AllocKind allocKind)
