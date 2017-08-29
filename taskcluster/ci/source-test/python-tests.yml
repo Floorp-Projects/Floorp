@@ -148,3 +148,23 @@ mozlint:
         files-changed:
             - 'python/mozlint/**'
             - 'python/mach_commands.py'
+
+python3:
+    description: regression tests for python3 compatibility
+    platform: linux64/opt
+    treeherder:
+        symbol: py(3)
+        kind: test
+        tier: 2
+    worker-type: aws-provisioner-v1/gecko-t-linux-large
+    worker:
+        docker-image: {in-tree: "lint"}
+        max-run-time: 3600
+    run:
+        using: run-task
+        # this will evolve as we get closer and closer to python 3 compatibility. It may
+        # eventually be a mach command or shell script.
+        command: python3 -mcompileall python/ taskcluster/
+    when:
+        files-changed:
+            - '**/*.py'

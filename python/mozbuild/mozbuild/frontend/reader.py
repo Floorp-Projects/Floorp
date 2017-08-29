@@ -852,6 +852,18 @@ class BuildReader(object):
         self._execution_stack = []
         self._finder = finder
 
+        # Finder patterns to ignore when searching for moz.build files.
+        ignores = {
+            # Ignore fake moz.build files used for testing moz.build.
+            'python/mozbuild/mozbuild/test',
+
+            # Ignore object directories.
+            'obj*',
+        }
+
+        self._relevant_mozbuild_finder = FileFinder(self.config.topsrcdir,
+                                                    ignore=ignores)
+
         max_workers = cpu_count()
         self._gyp_worker_pool = ProcessPoolExecutor(max_workers=max_workers)
         self._gyp_processors = []
@@ -904,20 +916,10 @@ class BuildReader(object):
         # In the future, we may traverse moz.build files by looking
         # for DIRS references in the AST, even if a directory is added behind
         # a conditional. For now, just walk the filesystem.
-        ignore = {
-            # Ignore fake moz.build files used for testing moz.build.
-            'python/mozbuild/mozbuild/test',
-
-            # Ignore object directories.
-            'obj*',
-        }
-
-        finder = FileFinder(self.config.topsrcdir, ignore=ignore)
-
         # The root doesn't get picked up by FileFinder.
         yield 'moz.build'
 
-        for path, f in finder.find('**/moz.build'):
+        for path, f in self._relevant_mozbuild_finder.find('**/moz.build'):
             yield path
 
     def find_sphinx_variables(self):
@@ -1233,7 +1235,7 @@ class BuildReader(object):
 
         @memoize
         def exists(path):
-            return self._finder.get(path) is not None
+            return self._relevant_mozbuild_finder.get(path) is not None
 
         def itermozbuild(path):
             subpath = ''
@@ -1249,8 +1251,7 @@ class BuildReader(object):
                     raise Exception('Path outside topsrcdir: %s' % path)
                 path = mozpath.relpath(path, root)
 
-            result[path] = [p for p in itermozbuild(path)
-                              if exists(mozpath.join(root, p))]
+            result[path] = [p for p in itermozbuild(path) if exists(p)]
 
         return result
 

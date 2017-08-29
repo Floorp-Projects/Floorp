@@ -1,6 +1,6 @@
-/* -*- indent-tabs-mode: nil; js-indent-level: 2 -*-
- * vim: sw=2 ts=2 sts=2 et */
- /* This Source Code Form is subject to the terms of the Mozilla Public
+/* -*- indent-tabs-mode: nil; js-indent-level: 2 -*- */
+/* vim: set sw=2 ts=2 sts=2 et */
+/* This Source Code Form is subject to the terms of the Mozilla Public
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
@@ -131,7 +131,7 @@ FirefoxProfileMigrator.prototype._getResourcesInternal = function(sourceProfileD
   let favicons = getFileResource(types.HISTORY, ["favicons.sqlite"]);
   let cookies = getFileResource(types.COOKIES, ["cookies.sqlite"]);
   let passwords = getFileResource(types.PASSWORDS,
-    ["signons.sqlite", "logins.json", "key3.db",
+    ["signons.sqlite", "logins.json", "key3.db", "key4.db",
      "signedInUser.json"]);
   let formData = getFileResource(types.FORMDATA, [
     "formhistory.sqlite",

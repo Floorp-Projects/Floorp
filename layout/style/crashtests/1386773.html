@@ -1,0 +1,17 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset=UTF-8>
+<style>
+::-moz-selection{}
+</style>
+<script>
+window.onload = () => {
+  r = document.createRange()
+  document.getSelection().addRange(r)
+  r.setEndAfter(document.body)
+}
+</script>
+</head>
+<body>A</body>
+</html>

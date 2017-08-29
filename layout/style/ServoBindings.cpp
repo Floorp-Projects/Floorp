@@ -2832,9 +2832,14 @@ Gecko_ReportUnexpectedCSSError(ErrorReporter* reporter,
     }
   }
 
-  nsDependentCSubstring paramValue(param, paramLen);
-  nsAutoString wideParam = NS_ConvertUTF8toUTF16(paramValue);
-  reporter->ReportUnexpectedUnescaped(message, wideParam);
+  if (param) {
+    nsDependentCSubstring paramValue(param, paramLen);
+    nsAutoString wideParam = NS_ConvertUTF8toUTF16(paramValue);
+    reporter->ReportUnexpectedUnescaped(message, wideParam);
+  } else {
+    reporter->ReportUnexpected(message);
+  }
+
   if (suffix) {
     reporter->ReportUnexpected(suffix);
   }
