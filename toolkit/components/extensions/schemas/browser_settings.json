@@ -29,6 +29,14 @@
       "cacheEnabled": {
         "$ref": "types.Setting",
         "description": "Enables or disables the browser cache."
+      },
+      "homepageOverride": {
+        "$ref": "types.Setting",
+        "description": "Returns the value of the overridden home page. Read-only."
+      },
+      "newTabPageOverride": {
+        "$ref": "types.Setting",
+        "description": "Returns the value of the overridden new tab page. Read-only."
       }
     }
   }

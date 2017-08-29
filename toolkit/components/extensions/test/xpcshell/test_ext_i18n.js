@@ -370,7 +370,7 @@ add_task(async function test_get_ui_language() {
   await extension.startup();
   await extension.awaitMessage("content-loaded");
 
-  extension.sendMessage(["expect-results", "en_US"]);
+  extension.sendMessage(["expect-results", "en-US"]);
 
   await extension.awaitMessage("background-done");
   await extension.awaitMessage("content-done");
