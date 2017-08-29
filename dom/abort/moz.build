@@ -10,13 +10,13 @@ with Files("**"):
 TEST_DIRS += ['tests']
 
 EXPORTS.mozilla.dom += [
-    'FetchController.h',
-    'FetchSignal.h',
+    'AbortController.h',
+    'AbortSignal.h',
 ]
 
 UNIFIED_SOURCES += [
-    'FetchController.cpp',
-    'FetchSignal.cpp',
+    'AbortController.cpp',
+    'AbortSignal.cpp',
 ]
 
 LOCAL_INCLUDES += [
