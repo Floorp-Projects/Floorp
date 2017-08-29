@@ -3553,8 +3553,11 @@ nsDisplayBackgroundImage::CreateWebRenderCommands(mozilla::wr::DisplayListBuilde
                                                   WebRenderLayerManager* aManager,
                                                   nsDisplayListBuilder* aDisplayListBuilder)
 {
-  if (!CanBuildWebRenderDisplayItems(aManager)) {
-    return false;
+  if (aManager->IsLayersFreeTransaction()) {
+    ContainerLayerParameters parameter;
+    if (GetLayerState(aDisplayListBuilder, aManager, parameter) != LAYER_ACTIVE) {
+      return false;
+    }
   }
 
   if (aDisplayListBuilder) {
