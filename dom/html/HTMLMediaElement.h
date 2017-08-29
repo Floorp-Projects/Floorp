@@ -160,12 +160,6 @@ public:
                                int32_t *aTabIndex) override;
   virtual int32_t TabIndexDefault() override;
 
-  /**
-   * Call this to reevaluate whether we should start/stop due to our owner
-   * document being active, inactive, visible or hidden.
-   */
-  virtual void NotifyOwnerDocumentActivityChanged();
-
   // Called by the video decoder object, on the main thread,
   // when it has read the metadata containing video dimensions,
   // etc.
@@ -238,6 +232,12 @@ public:
   // ImageContainer containing the video data.
   virtual VideoFrameContainer* GetVideoFrameContainer() final override;
   layers::ImageContainer* GetImageContainer();
+
+  /**
+   * Call this to reevaluate whether we should start/stop due to our owner
+   * document being active, inactive, visible or hidden.
+   */
+  void NotifyOwnerDocumentActivityChanged();
 
   // From PrincipalChangeObserver<DOMMediaStream>.
   void PrincipalChanged(DOMMediaStream* aStream) override;

@@ -235,13 +235,6 @@ HTMLVideoElement::WrapNode(JSContext* aCx, JS::Handle<JSObject*> aGivenProto)
   return HTMLVideoElementBinding::Wrap(aCx, this, aGivenProto);
 }
 
-void
-HTMLVideoElement::NotifyOwnerDocumentActivityChanged()
-{
-  HTMLMediaElement::NotifyOwnerDocumentActivityChanged();
-  UpdateScreenWakeLock();
-}
-
 FrameStatistics*
 HTMLVideoElement::GetFrameStatistics()
 {
@@ -318,9 +311,7 @@ HTMLVideoElement::WakeLockRelease()
 void
 HTMLVideoElement::UpdateScreenWakeLock()
 {
-  bool hidden = OwnerDoc()->Hidden();
-
-  if (mScreenWakeLock && (mPaused || hidden)) {
+  if (mScreenWakeLock && mPaused) {
     ErrorResult rv;
     mScreenWakeLock->Unlock(rv);
     rv.SuppressException();
@@ -328,7 +319,7 @@ HTMLVideoElement::UpdateScreenWakeLock()
     return;
   }
 
-  if (!mScreenWakeLock && !mPaused && !hidden && HasVideo()) {
+  if (!mScreenWakeLock && !mPaused && HasVideo()) {
     RefPtr<power::PowerManagerService> pmService =
       power::PowerManagerService::GetInstance();
     NS_ENSURE_TRUE_VOID(pmService);
