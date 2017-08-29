@@ -1,8 +1,10 @@
 #include "WidevineFileIO.h"
 #include "WidevineUtils.h"
-#include "WidevineAdapter.h"
 
 using namespace cdm;
+
+// Declared in ChromiumCDMAdapter.cpp.
+extern const GMPPlatformAPI* sPlatform;
 
 namespace mozilla {
 
@@ -11,7 +13,7 @@ WidevineFileIO::Open(const char* aFilename, uint32_t aFilenameLength)
 {
   mName = std::string(aFilename, aFilename + aFilenameLength);
   GMPRecord* record = nullptr;
-  GMPErr err = GMPCreateRecord(aFilename, aFilenameLength, &record, static_cast<GMPRecordClient*>(this));
+  GMPErr err = sPlatform->createrecord(aFilename, aFilenameLength, &record, static_cast<GMPRecordClient*>(this));
   if (GMP_FAILED(err)) {
     CDM_LOG("WidevineFileIO::Open() '%s' GMPCreateRecord failed", mName.c_str());
     mClient->OnOpenComplete(FileIOClient::kError);
