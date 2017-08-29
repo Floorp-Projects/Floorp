@@ -8285,15 +8285,22 @@ function switchToTabHavingURI(aURI, aOpenNew, aOpenParams = {}) {
 
 var RestoreLastSessionObserver = {
   init() {
+    let browser_tabs_restorebutton_pref = Services.prefs.getIntPref("browser.tabs.restorebutton");
+    Services.telemetry.scalarSet("browser.session.restore.browser_tabs_restorebutton", browser_tabs_restorebutton_pref);
+    Services.telemetry.scalarSet("browser.session.restore.browser_startup_page", Services.prefs.getIntPref("browser.startup.page"));
     if (SessionStore.canRestoreLastSession &&
         !PrivateBrowsingUtils.isWindowPrivate(window)) {
-      if (Services.prefs.getBoolPref("browser.tabs.restorebutton")) {
+      if (browser_tabs_restorebutton_pref == 1) {
         let {restoreTabsButton, restoreTabsButtonWrapperWidth} = gBrowser.tabContainer;
         let restoreTabsButtonWrapper = restoreTabsButton.parentNode;
         restoreTabsButtonWrapper.setAttribute("session-exists", "true");
         gBrowser.tabContainer.updateSessionRestoreVisibility();
         restoreTabsButton.style.maxWidth = `${restoreTabsButtonWrapperWidth}px`;
         gBrowser.tabContainer.addEventListener("TabOpen", this);
+        Services.telemetry.scalarSet("browser.session.restore.tabbar_restore_available", true);
+        restoreTabsButton.addEventListener("click", () => {
+          Services.telemetry.scalarSet("browser.session.restore.tabbar_restore_clicked", true);
+        });
       }
       Services.obs.addObserver(this, "sessionstore-last-session-cleared", true);
       goSetCommandEnabled("Browser:RestoreLastSession", true);

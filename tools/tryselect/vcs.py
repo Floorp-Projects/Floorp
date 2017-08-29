@@ -148,7 +148,7 @@ class HgHelper(VCSHelper):
     @property
     def files_changed(self):
         return self.run(['hg', 'log', '-r', '::. and not public()',
-                         '--template', '{join(files, "\n")}\n'])
+                         '--template', '{join(files, "\n")}\n']).splitlines()
 
     @property
     def has_uncommitted_changes(self):

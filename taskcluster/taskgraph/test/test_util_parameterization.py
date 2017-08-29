@@ -17,7 +17,7 @@ from taskgraph.util.parameterization import (
 class TestTimestamps(unittest.TestCase):
 
     def test_no_change(self):
-        now = datetime.datetime(2018, 01, 01)
+        now = datetime.datetime(2018, 1, 1)
         input = {
             "key": "value",
             "numeric": 10,
@@ -26,13 +26,13 @@ class TestTimestamps(unittest.TestCase):
         self.assertEqual(resolve_timestamps(now, input), input)
 
     def test_buried_replacement(self):
-        now = datetime.datetime(2018, 01, 01)
+        now = datetime.datetime(2018, 1, 1)
         input = {"key": [{"key2": [{'relative-datestamp': '1 day'}]}]}
         self.assertEqual(resolve_timestamps(now, input),
                          {"key": [{"key2": ['2018-01-02T00:00:00Z']}]})
 
     def test_appears_with_other_keys(self):
-        now = datetime.datetime(2018, 01, 01)
+        now = datetime.datetime(2018, 1, 1)
         input = [{'relative-datestamp': '1 day', 'another-key': True}]
         self.assertEqual(resolve_timestamps(now, input),
                          [{'relative-datestamp': '1 day', 'another-key': True}])
