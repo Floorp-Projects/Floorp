@@ -11,7 +11,7 @@ const {classes: Cc, interfaces: Ci, utils: Cu} = Components;
 Cu.import("chrome://marionette/content/assert.js");
 Cu.import("chrome://marionette/content/element.js");
 const {
-  error,
+  pprint,
   InvalidArgumentError,
   MoveTargetOutOfBoundsError,
   UnsupportedOperationError,
@@ -20,8 +20,6 @@ Cu.import("chrome://marionette/content/event.js");
 Cu.import("chrome://marionette/content/interaction.js");
 
 this.EXPORTED_SYMBOLS = ["action"];
-
-const {pprint} = error;
 
 // TODO? With ES 2016 and Symbol you can make a safer approximation
 // to an enum e.g. https://gist.github.com/xmlking/e86e4f15ec32b12c4689

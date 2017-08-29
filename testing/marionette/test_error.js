@@ -4,7 +4,35 @@
 
 const {utils: Cu} = Components;
 
-Cu.import("chrome://marionette/content/error.js");
+const {
+  ElementClickInterceptedError,
+  ElementNotAccessibleError,
+  ElementNotInteractableError,
+  error,
+  InsecureCertificateError,
+  InvalidArgumentError,
+  InvalidCookieDomainError,
+  InvalidElementStateError,
+  InvalidSelectorError,
+  InvalidSessionIDError,
+  JavaScriptError,
+  MoveTargetOutOfBoundsError,
+  NoAlertOpenError,
+  NoSuchElementError,
+  NoSuchFrameError,
+  NoSuchWindowError,
+  pprint,
+  ScriptTimeoutError,
+  SessionNotCreatedError,
+  StaleElementReferenceError,
+  TimeoutError,
+  UnableToSetCookieError,
+  UnexpectedAlertOpenError,
+  UnknownCommandError,
+  UnknownError,
+  UnsupportedOperationError,
+  WebDriverError,
+} = Cu.import("chrome://marionette/content/error.js", {});
 
 function notok(condition) {
   ok(!(condition));
@@ -90,19 +118,19 @@ add_test(function test_stringify() {
 });
 
 add_test(function test_pprint() {
-  equal('[object Object] {"foo":"bar"}', error.pprint`${{foo: "bar"}}`);
+  equal('[object Object] {"foo":"bar"}', pprint`${{foo: "bar"}}`);
 
-  equal("[object Number] 42", error.pprint`${42}`);
-  equal("[object Boolean] true", error.pprint`${true}`);
-  equal("[object Undefined] undefined", error.pprint`${undefined}`);
-  equal("[object Null] null", error.pprint`${null}`);
+  equal("[object Number] 42", pprint`${42}`);
+  equal("[object Boolean] true", pprint`${true}`);
+  equal("[object Undefined] undefined", pprint`${undefined}`);
+  equal("[object Null] null", pprint`${null}`);
 
   let complexObj = {toJSON: () => "foo"};
-  equal('[object Object] "foo"', error.pprint`${complexObj}`);
+  equal('[object Object] "foo"', pprint`${complexObj}`);
 
   let cyclic = {};
   cyclic.me = cyclic;
-  equal("[object Object] <cyclic object value>", error.pprint`${cyclic}`);
+  equal("[object Object] <cyclic object value>", pprint`${cyclic}`);
 
   let el = {
     nodeType: 1,
@@ -111,7 +139,7 @@ add_test(function test_pprint() {
     classList: {length: 1},
     className: "bar baz",
   };
-  equal('<input id="foo" class="bar baz">', error.pprint`${el}`);
+  equal('<input id="foo" class="bar baz">', pprint`${el}`);
 
   run_next_test();
 });
