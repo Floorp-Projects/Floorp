@@ -10,7 +10,7 @@
 #include "TimeUnits.h"
 #include "VideoUtils.h"
 #include "WMF.h"
-#include "nsRect.h"
+#include "mozilla/gfx/Rect.h"
 #include "nsString.h"
 
 // Various utilities shared by WMF backend files.
@@ -45,7 +45,7 @@ int32_t MFOffsetToInt32(const MFOffset& aOffset);
 // Gets the sub-region of the video frame that should be displayed.
 // See: http://msdn.microsoft.com/en-us/library/windows/desktop/bb530115(v=vs.85).aspx
 HRESULT
-GetPictureRegion(IMFMediaType* aMediaType, nsIntRect& aOutPictureRegion);
+GetPictureRegion(IMFMediaType* aMediaType, gfx::IntRect& aOutPictureRegion);
 
 // Returns the duration of a IMFSample in TimeUnit.
 // Returns media::TimeUnit::Invalid() on failure.

@@ -24,7 +24,6 @@
 #include "mozilla/Unused.h"
 #include "nsContentUtils.h"
 #include "nsPrintfCString.h"
-#include "nsSize.h"
 
 #include <algorithm>
 #include <queue>
