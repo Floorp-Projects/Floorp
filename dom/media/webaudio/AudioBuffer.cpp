@@ -160,22 +160,15 @@ AudioBuffer::AudioBuffer(nsPIDOMWindowInner* aWindow,
                          uint32_t aNumberOfChannels,
                          uint32_t aLength,
                          float aSampleRate,
-                         ErrorResult& aRv)
+                         already_AddRefed<ThreadSharedFloatArrayBufferList>
+                           aInitialContents)
   : mOwnerWindow(do_GetWeakReference(aWindow)),
+    mSharedChannels(aInitialContents),
+    mLength(aLength),
     mSampleRate(aSampleRate)
 {
-  // Note that a buffer with zero channels is permitted here for the sake of
-  // AudioProcessingEvent, where channel counts must match parameters passed
-  // to createScriptProcessor(), one of which may be zero.
-  if (aSampleRate < WebAudioUtils::MinSampleRate ||
-      aSampleRate > WebAudioUtils::MaxSampleRate ||
-      aNumberOfChannels > WebAudioUtils::MaxChannelCount ||
-      !aLength || aLength > INT32_MAX) {
-    aRv.Throw(NS_ERROR_DOM_INDEX_SIZE_ERR);
-    return;
-  }
-
-  mSharedChannels.mDuration = aLength;
+  MOZ_ASSERT(!mSharedChannels ||
+             mSharedChannels->GetChannels() == aNumberOfChannels);
   mJSChannels.SetLength(aNumberOfChannels);
   mozilla::HoldJSObjects(this);
   AudioBufferMemoryTracker::RegisterAudioBuffer(this);
@@ -211,21 +204,6 @@ AudioBuffer::ClearJSChannels()
   mJSChannels.Clear();
 }
 
-void
-AudioBuffer::SetSharedChannels(
-  already_AddRefed<ThreadSharedFloatArrayBufferList> aBuffer)
-{
-  RefPtr<ThreadSharedFloatArrayBufferList> buffer = aBuffer;
-  uint32_t channelCount = buffer->GetChannels();
-  mSharedChannels.mChannelData.SetLength(channelCount);
-  for (uint32_t i = 0; i < channelCount; ++i) {
-    mSharedChannels.mChannelData[i] = buffer->GetData(i);
-  }
-  mSharedChannels.mBuffer = buffer.forget();
-  mSharedChannels.mVolume = 1.0f;
-  mSharedChannels.mBufferFormat = AUDIO_FORMAT_FLOAT32;
-}
-
 /* static */ already_AddRefed<AudioBuffer>
 AudioBuffer::Create(nsPIDOMWindowInner* aWindow, uint32_t aNumberOfChannels,
                     uint32_t aLength, float aSampleRate,
@@ -233,34 +211,20 @@ AudioBuffer::Create(nsPIDOMWindowInner* aWindow, uint32_t aNumberOfChannels,
                       aInitialContents,
                     ErrorResult& aRv)
 {
-  RefPtr<ThreadSharedFloatArrayBufferList> initialContents = aInitialContents;
-  RefPtr<AudioBuffer> buffer =
-    new AudioBuffer(aWindow, aNumberOfChannels, aLength, aSampleRate, aRv);
-  if (aRv.Failed()) {
+  // Note that a buffer with zero channels is permitted here for the sake of
+  // AudioProcessingEvent, where channel counts must match parameters passed
+  // to createScriptProcessor(), one of which may be zero.
+  if (aSampleRate < WebAudioUtils::MinSampleRate ||
+      aSampleRate > WebAudioUtils::MaxSampleRate ||
+      aNumberOfChannels > WebAudioUtils::MaxChannelCount ||
+      !aLength || aLength > INT32_MAX) {
+    aRv.Throw(NS_ERROR_DOM_INDEX_SIZE_ERR);
     return nullptr;
   }
 
-  if (initialContents) {
-    MOZ_ASSERT(initialContents->GetChannels() == aNumberOfChannels);
-    buffer->SetSharedChannels(initialContents.forget());
-  }
-
-  return buffer.forget();
-}
-
-/* static */ already_AddRefed<AudioBuffer>
-AudioBuffer::Create(nsPIDOMWindowInner* aWindow, float aSampleRate,
-                    AudioChunk&& aInitialContents)
-{
-  AudioChunk initialContents = aInitialContents;
-  ErrorResult rv;
   RefPtr<AudioBuffer> buffer =
-    new AudioBuffer(aWindow, initialContents.ChannelCount(),
-                    initialContents.mDuration, aSampleRate, rv);
-  if (rv.Failed()) {
-    return nullptr;
-  }
-  buffer->mSharedChannels = Move(aInitialContents);
+    new AudioBuffer(aWindow, aNumberOfChannels, aLength, aSampleRate,
+                    Move(aInitialContents));
 
   return buffer.forget();
 }
@@ -269,22 +233,6 @@ JSObject*
 AudioBuffer::WrapObject(JSContext* aCx, JS::Handle<JSObject*> aGivenProto)
 {
   return AudioBufferBinding::Wrap(aCx, this, aGivenProto);
-}
-
-static void
-CopyChannelDataToFloat(const AudioChunk& aChunk, uint32_t aChannel,
-                       uint32_t aSrcOffset, float* aOutput, uint32_t aLength)
-{
-  MOZ_ASSERT(aChunk.mVolume == 1.0f);
-  if (aChunk.mBufferFormat == AUDIO_FORMAT_FLOAT32) {
-    mozilla::PodCopy(aOutput,
-                     aChunk.ChannelData<float>()[aChannel] + aSrcOffset,
-                     aLength);
-  } else {
-    MOZ_ASSERT(aChunk.mBufferFormat == AUDIO_FORMAT_S16);
-    ConvertAudioSamples(aChunk.ChannelData<int16_t>()[aChannel] + aSrcOffset,
-                        aOutput, aLength);
-  }
 }
 
 bool
@@ -300,24 +248,23 @@ AudioBuffer::RestoreJSChannelData(JSContext* aJSContext)
     // into it. We could avoid this with additional JS APIs to construct
     // an array (or ArrayBuffer) containing initial data.
     JS::Rooted<JSObject*> array(aJSContext,
-                                JS_NewFloat32Array(aJSContext, Length()));
+                                JS_NewFloat32Array(aJSContext, mLength));
     if (!array) {
       return false;
     }
-    if (!mSharedChannels.IsNull()) {
+    if (mSharedChannels) {
       // "4. Attach ArrayBuffers containing copies of the data to the
       // AudioBuffer, to be returned by the next call to getChannelData."
+      const float* data = mSharedChannels->GetData(i);
       JS::AutoCheckCannotGC nogc;
       bool isShared;
-      float* jsData = JS_GetFloat32ArrayData(array, &isShared, nogc);
+      mozilla::PodCopy(JS_GetFloat32ArrayData(array, &isShared, nogc), data, mLength);
       MOZ_ASSERT(!isShared); // Was created as unshared above
-      CopyChannelDataToFloat(mSharedChannels, i, 0, jsData, Length());
     }
     mJSChannels[i] = array;
   }
 
-  mSharedChannels.mBuffer = nullptr;
-  mSharedChannels.mChannelData.Clear();
+  mSharedChannels = nullptr;
 
   return true;
 }
@@ -332,37 +279,35 @@ AudioBuffer::CopyFromChannel(const Float32Array& aDestination, uint32_t aChannel
   CheckedInt<uint32_t> end = aStartInChannel;
   end += length;
   if (aChannelNumber >= NumberOfChannels() ||
-      !end.isValid() || end.value() > Length()) {
+      !end.isValid() || end.value() > mLength) {
     aRv.Throw(NS_ERROR_DOM_INDEX_SIZE_ERR);
     return;
   }
 
   JS::AutoCheckCannotGC nogc;
   JSObject* channelArray = mJSChannels[aChannelNumber];
+  const float* sourceData = nullptr;
   if (channelArray) {
-    if (JS_GetTypedArrayLength(channelArray) != Length()) {
+    if (JS_GetTypedArrayLength(channelArray) != mLength) {
       // The array's buffer was detached.
       aRv.Throw(NS_ERROR_DOM_INDEX_SIZE_ERR);
       return;
     }
 
     bool isShared = false;
-    const float* sourceData =
-      JS_GetFloat32ArrayData(channelArray, &isShared, nogc);
+    sourceData = JS_GetFloat32ArrayData(channelArray, &isShared, nogc);
     // The sourceData arrays should all have originated in
     // RestoreJSChannelData, where they are created unshared.
     MOZ_ASSERT(!isShared);
+  } else if (mSharedChannels) {
+    sourceData = mSharedChannels->GetData(aChannelNumber);
+  }
+
+  if (sourceData) {
     PodMove(aDestination.Data(), sourceData + aStartInChannel, length);
-    return;
+  } else {
+    PodZero(aDestination.Data(), length);
   }
-
-  if (!mSharedChannels.IsNull()) {
-    CopyChannelDataToFloat(mSharedChannels, aChannelNumber, aStartInChannel,
-                           aDestination.Data(), length);
-    return;
-  }
-
-  PodZero(aDestination.Data(), length);
 }
 
 void
@@ -376,7 +321,7 @@ AudioBuffer::CopyToChannel(JSContext* aJSContext, const Float32Array& aSource,
   CheckedInt<uint32_t> end = aStartInChannel;
   end += length;
   if (aChannelNumber >= NumberOfChannels() ||
-      !end.isValid() || end.value() > Length()) {
+      !end.isValid() || end.value() > mLength) {
     aRv.Throw(NS_ERROR_DOM_INDEX_SIZE_ERR);
     return;
   }
@@ -388,7 +333,7 @@ AudioBuffer::CopyToChannel(JSContext* aJSContext, const Float32Array& aSource,
 
   JS::AutoCheckCannotGC nogc;
   JSObject* channelArray = mJSChannels[aChannelNumber];
-  if (JS_GetTypedArrayLength(channelArray) != Length()) {
+  if (JS_GetTypedArrayLength(channelArray) != mLength) {
     // The array's buffer was detached.
     aRv.Throw(NS_ERROR_DOM_INDEX_SIZE_ERR);
     return;
@@ -428,7 +373,7 @@ AudioBuffer::StealJSArrayDataIntoSharedChannels(JSContext* aJSContext)
   // invoker."
   for (uint32_t i = 0; i < mJSChannels.Length(); ++i) {
     JSObject* channelArray = mJSChannels[i];
-    if (!channelArray || Length() != JS_GetTypedArrayLength(channelArray)) {
+    if (!channelArray || mLength != JS_GetTypedArrayLength(channelArray)) {
       // Either empty buffer or one of the arrays' buffers was detached.
       return nullptr;
     }
@@ -469,17 +414,11 @@ AudioBuffer::StealJSArrayDataIntoSharedChannels(JSContext* aJSContext)
   return result.forget();
 }
 
-const AudioChunk&
+ThreadSharedFloatArrayBufferList*
 AudioBuffer::GetThreadSharedChannelsForRate(JSContext* aJSContext)
 {
-  if (mSharedChannels.IsNull()) {
-    // mDuration is set in constructor
-    RefPtr<ThreadSharedFloatArrayBufferList> buffer =
-      StealJSArrayDataIntoSharedChannels(aJSContext);
-
-    if (buffer) {
-      SetSharedChannels(buffer.forget());
-    }
+  if (!mSharedChannels) {
+    mSharedChannels = StealJSArrayDataIntoSharedChannels(aJSContext);
   }
 
   return mSharedChannels;
@@ -490,7 +429,9 @@ AudioBuffer::SizeOfIncludingThis(MallocSizeOf aMallocSizeOf) const
 {
   size_t amount = aMallocSizeOf(this);
   amount += mJSChannels.ShallowSizeOfExcludingThis(aMallocSizeOf);
-  amount += mSharedChannels.SizeOfExcludingThis(aMallocSizeOf, false);
+  if (mSharedChannels) {
+    amount += mSharedChannels->SizeOfIncludingThis(aMallocSizeOf);
+  }
   return amount;
 }
 

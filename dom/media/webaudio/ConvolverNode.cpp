@@ -30,6 +30,7 @@ class ConvolverNodeEngine final : public AudioNodeEngine
 public:
   ConvolverNodeEngine(AudioNode* aNode, bool aNormalize)
     : AudioNodeEngine(aNode)
+    , mBufferLength(0)
     , mLeftOverData(INT32_MIN)
     , mSampleRate(0.0f)
     , mUseBackgroundThreads(!aNode->Context()->IsOffline())
@@ -38,12 +39,20 @@ public:
   }
 
   enum Parameters {
+    BUFFER_LENGTH,
     SAMPLE_RATE,
     NORMALIZE
   };
   void SetInt32Parameter(uint32_t aIndex, int32_t aParam) override
   {
     switch (aIndex) {
+    case BUFFER_LENGTH:
+      // BUFFER_LENGTH is the first parameter that we set when setting a new buffer,
+      // so we should be careful to invalidate the rest of our state here.
+      mSampleRate = 0.0f;
+      mBufferLength = aParam;
+      mLeftOverData = INT32_MIN;
+      break;
     case NORMALIZE:
       mNormalize = !!aParam;
       break;
@@ -63,8 +72,10 @@ public:
       NS_ERROR("Bad ConvolverNodeEngine DoubleParameter");
     }
   }
-  void SetBuffer(AudioChunk&& aBuffer) override
+  void SetBuffer(already_AddRefed<ThreadSharedFloatArrayBufferList> aBuffer) override
   {
+    RefPtr<ThreadSharedFloatArrayBufferList> buffer = aBuffer;
+
     // Note about empirical tuning (this is copied from Blink)
     // The maximum FFT size affects reverb performance and accuracy.
     // If the reverb is single-threaded and processes entirely in the real-time audio thread,
@@ -73,14 +84,14 @@ public:
     // Very large FFTs will have worse phase errors. Given these constraints 32768 is a good compromise.
     const size_t MaxFFTSize = 32768;
 
-    mLeftOverData = INT32_MIN; // reset
-
-    if (aBuffer.IsNull() || !mSampleRate) {
+    if (!buffer || !mBufferLength || !mSampleRate) {
       mReverb = nullptr;
+      mLeftOverData = INT32_MIN;
       return;
     }
 
-    mReverb = new WebCore::Reverb(aBuffer, MaxFFTSize, mUseBackgroundThreads,
+    mReverb = new WebCore::Reverb(buffer, mBufferLength,
+                                  MaxFFTSize, mUseBackgroundThreads,
                                   mNormalize, mSampleRate);
   }
 
@@ -131,7 +142,7 @@ public:
         aStream->Graph()->DispatchToMainThreadAfterStreamStateUpdate(
           refchanged.forget());
       }
-      mLeftOverData = mReverb->impulseResponseLength();
+      mLeftOverData = mBufferLength;
       MOZ_ASSERT(mLeftOverData > 0);
     }
     aOutput->AllocateChannels(2);
@@ -162,6 +173,7 @@ public:
 
 private:
   nsAutoPtr<WebCore::Reverb> mReverb;
+  int32_t mBufferLength;
   int32_t mLeftOverData;
   float mSampleRate;
   bool mUseBackgroundThreads;
@@ -251,45 +263,22 @@ ConvolverNode::SetBuffer(JSContext* aCx, AudioBuffer* aBuffer, ErrorResult& aRv)
     }
   }
 
+  mBuffer = aBuffer;
+
   // Send the buffer to the stream
   AudioNodeStream* ns = mStream;
   MOZ_ASSERT(ns, "Why don't we have a stream here?");
-  if (aBuffer) {
-    AudioChunk data = aBuffer->GetThreadSharedChannelsForRate(aCx);
-    if (data.mBufferFormat == AUDIO_FORMAT_S16) {
-      // Reverb expects data in float format.
-      // Convert on the main thread so as to minimize allocations on the audio
-      // thread.
-      // Reverb will dispose of the buffer once initialized, so convert here
-      // and leave the smaller arrays in the AudioBuffer.
-      // There is currently no value in providing 16/32-byte aligned data
-      // because PadAndMakeScaledDFT() will copy the data (without SIMD
-      // instructions) to aligned arrays for the FFT.
-      RefPtr<SharedBuffer> floatBuffer =
-        SharedBuffer::Create(sizeof(float) *
-                             data.mDuration * data.ChannelCount());
-      if (!floatBuffer) {
-        aRv.Throw(NS_ERROR_OUT_OF_MEMORY);
-        return;
-      }
-      auto floatData = static_cast<float*>(floatBuffer->Data());
-      for (size_t i = 0; i < data.ChannelCount(); ++i) {
-        ConvertAudioSamples(data.ChannelData<int16_t>()[i],
-                            floatData, data.mDuration);
-        data.mChannelData[i] = floatData;
-        floatData += data.mDuration;
-      }
-      data.mBuffer = Move(floatBuffer);
-      data.mBufferFormat = AUDIO_FORMAT_FLOAT32;
-    }
+  if (mBuffer) {
+    uint32_t length = mBuffer->Length();
+    RefPtr<ThreadSharedFloatArrayBufferList> data =
+      mBuffer->GetThreadSharedChannelsForRate(aCx);
+    SendInt32ParameterToStream(ConvolverNodeEngine::BUFFER_LENGTH, length);
     SendDoubleParameterToStream(ConvolverNodeEngine::SAMPLE_RATE,
-                                aBuffer->SampleRate());
-    ns->SetBuffer(Move(data));
+                                mBuffer->SampleRate());
+    ns->SetBuffer(data.forget());
   } else {
-    ns->SetBuffer(AudioChunk());
+    ns->SetBuffer(nullptr);
   }
-
-  mBuffer = aBuffer;
 }
 
 void

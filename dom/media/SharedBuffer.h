@@ -13,7 +13,6 @@
 namespace mozilla {
 
 class AudioBlockBuffer;
-class ThreadSharedFloatArrayBufferList;
 
 /**
  * Base class for objects with a thread-safe refcount and a virtual
@@ -26,10 +25,6 @@ public:
   bool IsShared() { return mRefCnt.get() > 1; }
 
   virtual AudioBlockBuffer* AsAudioBlockBuffer() { return nullptr; };
-  virtual ThreadSharedFloatArrayBufferList* AsThreadSharedFloatArrayBufferList()
-  {
-    return nullptr;
-  };
 
   virtual size_t SizeOfExcludingThis(MallocSizeOf aMallocSizeOf) const
   {
@@ -57,16 +52,18 @@ class SharedBuffer : public ThreadSharedObject {
 public:
   void* Data() { return this + 1; }
 
-  static already_AddRefed<SharedBuffer> Create(size_t aSize, const fallible_t&)
-  {
-    return InternalCreate(&malloc, aSize);
-  }
-
   static already_AddRefed<SharedBuffer> Create(size_t aSize)
   {
-    // Use moz_xmalloc() to include its diagnostic message indicating the
-    // size of any failed allocations.
-    return InternalCreate(&moz_xmalloc, aSize);
+    CheckedInt<size_t> size = sizeof(SharedBuffer);
+    size += aSize;
+    if (!size.isValid()) {
+      MOZ_CRASH();
+    }
+    void* m = moz_xmalloc(size.value());
+    RefPtr<SharedBuffer> p = new (m) SharedBuffer();
+    NS_ASSERTION((reinterpret_cast<char*>(p.get() + 1) - reinterpret_cast<char*>(p.get())) % 4 == 0,
+                 "SharedBuffers should be at least 4-byte aligned");
+    return p.forget();
   }
 
   size_t SizeOfIncludingThis(MallocSizeOf aMallocSizeOf) const override
@@ -75,24 +72,6 @@ public:
   }
 
 private:
-  static already_AddRefed<SharedBuffer>
-  InternalCreate(void* aMalloc(size_t), size_t aSize)
-  {
-    CheckedInt<size_t> size = sizeof(SharedBuffer);
-    size += aSize;
-    if (!size.isValid()) {
-      MOZ_CRASH();
-    }
-    void* m = (*aMalloc)(size.value());
-    if (!m) {
-      return nullptr;
-    }
-    RefPtr<SharedBuffer> p = new (m) SharedBuffer();
-    NS_ASSERTION((reinterpret_cast<char*>(p.get() + 1) - reinterpret_cast<char*>(p.get())) % 4 == 0,
-                 "SharedBuffers should be at least 4-byte aligned");
-    return p.forget();
-  }
-
   SharedBuffer() {}
 };
 
