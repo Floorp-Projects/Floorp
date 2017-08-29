@@ -251,7 +251,7 @@ Response::Constructor(const GlobalObject& aGlobal,
         return nullptr;
       }
 
-      r->SetReadableStreamBody(readableStreamObj);
+      r->SetReadableStreamBody(aGlobal.Context(), readableStreamObj);
 
       if (JS::ReadableStreamGetMode(readableStreamObj) ==
             JS::ReadableStreamMode::ExternalSource) {
@@ -354,7 +354,7 @@ Response::Clone(JSContext* aCx, ErrorResult& aRv)
     // if this body is a native stream.   In this case the InternalResponse will
     // have a clone of the native body and the ReadableStream will be created
     // lazily if needed.
-    response->SetReadableStreamBody(body);
+    response->SetReadableStreamBody(aCx, body);
     response->mFetchStreamReader = streamReader;
     ir->SetBody(inputStream, InternalResponse::UNKNOWN_BODY_SIZE);
   }
@@ -397,7 +397,7 @@ Response::CloneUnfiltered(JSContext* aCx, ErrorResult& aRv)
     // if this body is a native stream.   In this case the InternalResponse will
     // have a clone of the native body and the ReadableStream will be created
     // lazily if needed.
-    ref->SetReadableStreamBody(body);
+    ref->SetReadableStreamBody(aCx, body);
     ref->mFetchStreamReader = streamReader;
     ir->SetBody(inputStream, InternalResponse::UNKNOWN_BODY_SIZE);
   }
