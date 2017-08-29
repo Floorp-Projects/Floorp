@@ -198,7 +198,7 @@ function checkSyncNowButton(buttonId, syncing, tooltip = null) {
 
   is(remoteTabsButton.hasAttribute("disabled"), syncing, "disabled has the right value");
   if (syncing) {
-    is(remoteTabsButton.getAttribute("label"), gSync.syncStrings.GetStringFromName("syncing2.label"), "label is set to the right value");
+    is(remoteTabsButton.getAttribute("label"), gSync.syncStrings.GetStringFromName("syncingtabs.label"), "label is set to the right value");
   } else {
     is(remoteTabsButton.getAttribute("label"), gSync.syncStrings.GetStringFromName("syncnow.label"), "label is set to the right value");
   }
