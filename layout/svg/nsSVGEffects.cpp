@@ -375,20 +375,16 @@ nsSVGMarkerProperty::DoUpdate()
 
   NS_ASSERTION(frame->IsFrameOfType(nsIFrame::eSVG), "SVG frame expected");
 
-  // Repaint asynchronously in case the marker frame is being torn down
-  nsChangeHint changeHint =
-    nsChangeHint(nsChangeHint_RepaintFrame);
-
   // Don't need to request ReflowFrame if we're being reflowed.
   if (!(frame->GetStateBits() & NS_FRAME_IN_REFLOW)) {
-    changeHint |= nsChangeHint_InvalidateRenderingObservers;
     // XXXjwatt: We need to unify SVG into standard reflow so we can just use
     // nsChangeHint_NeedReflow | nsChangeHint_NeedDirtyReflow here.
     // XXXSDL KILL THIS!!!
     nsSVGUtils::ScheduleReflowSVG(frame);
   }
   frame->PresContext()->RestyleManager()->PostRestyleEvent(
-    frame->GetContent()->AsElement(), nsRestyleHint(0), changeHint);
+    frame->GetContent()->AsElement(), nsRestyleHint(0),
+    nsChangeHint_RepaintFrame);
 }
 
 NS_IMPL_ISUPPORTS(nsSVGMaskProperty, nsISupports)
@@ -502,9 +498,6 @@ nsSVGPaintingProperty::DoUpdate()
     return;
 
   if (frame->GetStateBits() & NS_FRAME_SVG_LAYOUT) {
-    nsLayoutUtils::PostRestyleEvent(
-      frame->GetContent()->AsElement(), nsRestyleHint(0),
-      nsChangeHint_InvalidateRenderingObservers);
     frame->InvalidateFrameSubtree();
   } else {
     InvalidateAllContinuations(frame);
