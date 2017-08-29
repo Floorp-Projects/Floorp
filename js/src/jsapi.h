@@ -588,7 +588,7 @@ typedef enum JSFinalizeStatus {
 } JSFinalizeStatus;
 
 typedef void
-(* JSFinalizeCallback)(JSFreeOp* fop, JSFinalizeStatus status, bool isZoneGC, void* data);
+(* JSFinalizeCallback)(JSFreeOp* fop, JSFinalizeStatus status, void* data);
 
 typedef void
 (* JSWeakPointerZonesCallback)(JSContext* cx, void* data);
