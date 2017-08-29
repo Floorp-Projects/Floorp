@@ -45,7 +45,11 @@ async function setUpCookies() {
 add_task(async function testCookies() {
   function background() {
     browser.test.onMessage.addListener(async (msg, options) => {
-      await browser.browsingData.removeCookies(options);
+      if (msg == "removeCookies") {
+        await browser.browsingData.removeCookies(options);
+      } else {
+        await browser.browsingData.remove(options, {cookies: true});
+      }
       browser.test.sendMessage("cookiesRemoved");
     });
   }
@@ -89,6 +93,7 @@ add_task(async function testCookies() {
   await extension.startup();
 
   await testRemovalMethod("removeCookies");
+  await testRemovalMethod("remove");
 
   await extension.unload();
 });
@@ -98,6 +103,8 @@ add_task(async function testCache() {
     browser.test.onMessage.addListener(async msg => {
       if (msg == "removeCache") {
         await browser.browsingData.removeCache({});
+      } else {
+        await browser.browsingData.remove({}, {cache: true});
       }
       browser.test.sendMessage("cacheRemoved");
     });
@@ -133,6 +140,7 @@ add_task(async function testCache() {
   await extension.startup();
 
   await testRemovalMethod("removeCache");
+  await testRemovalMethod("remove");
 
   await extension.unload();
 });
