@@ -26,7 +26,7 @@
 
     <color name="colorErase">#96368D</color>
     <color name="colorFloatingActionButtonTint">#96368D</color>
-    <color name="colorTabsButtonTint">#ffffff</color>
+    <color name="colorTabsButtonTint">#ff0087fa</color>
 
     <color name="colorUrlInputBackground">#B2000000</color>
 

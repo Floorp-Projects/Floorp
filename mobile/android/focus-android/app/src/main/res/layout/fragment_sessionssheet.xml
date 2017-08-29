@@ -18,6 +18,8 @@
         android:layout_width="280dp"
         android:layout_height="wrap_content"
         android:layout_gravity="bottom|end"
+        android:layout_marginBottom="@dimen/floating_action_button_margin"
+        android:layout_marginEnd="@dimen/floating_action_button_margin"
         android:clickable="true"
         android:focusable="true"
         android:elevation="16dp"

@@ -13,7 +13,7 @@
     android:lines="1"
     android:ellipsize="end"
     tools:drawableLeft="@drawable/ic_link"
-    android:drawablePadding="8dp"
+    android:drawablePadding="16dp"
     android:textColor="#000000"
     android:background="@drawable/background_list_item_session"
     android:textSize="14sp" />

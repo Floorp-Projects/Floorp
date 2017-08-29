@@ -26,6 +26,7 @@ import org.mozilla.focus.fragment.UrlInputFragment;
 import org.mozilla.focus.locale.LocaleAwareAppCompatActivity;
 import org.mozilla.focus.session.Session;
 import org.mozilla.focus.session.SessionManager;
+import org.mozilla.focus.session.ui.SessionsSheetFragment;
 import org.mozilla.focus.telemetry.TelemetryWrapper;
 import org.mozilla.focus.utils.SafeIntent;
 import org.mozilla.focus.utils.Settings;
@@ -223,6 +224,14 @@ public class MainActivity extends LocaleAwareAppCompatActivity {
     @Override
     public void onBackPressed() {
         final FragmentManager fragmentManager = getSupportFragmentManager();
+
+        final SessionsSheetFragment sessionsSheetFragment = (SessionsSheetFragment) fragmentManager.findFragmentByTag(SessionsSheetFragment.FRAGMENT_TAG);
+        if (sessionsSheetFragment != null &&
+                sessionsSheetFragment.isVisible() &&
+                sessionsSheetFragment.onBackPressed()) {
+            // SessionsSheetFragment handles back presses itself (custom animations).
+            return;
+        }
 
         final UrlInputFragment urlInputFragment = (UrlInputFragment) fragmentManager.findFragmentByTag(UrlInputFragment.FRAGMENT_TAG);
         if (urlInputFragment != null &&

@@ -219,7 +219,7 @@ public class SessionManager {
         if (sessions.isEmpty()) {
             currentSessionUUID = null;
         } else {
-            final Session currentSession = this.sessions.getValue().get(
+            final Session currentSession = sessions.get(
                     Math.min(removedFromPosition, sessions.size() - 1));
             currentSessionUUID = currentSession.getUUID();
         }

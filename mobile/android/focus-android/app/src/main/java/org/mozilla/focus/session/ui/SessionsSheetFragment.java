@@ -6,6 +6,7 @@ package org.mozilla.focus.session.ui;
 
 import android.animation.Animator;
 import android.animation.AnimatorListenerAdapter;
+import android.content.res.Resources;
 import android.os.Bundle;
 import android.support.annotation.Nullable;
 import android.support.v7.widget.LinearLayoutManager;
@@ -59,8 +60,9 @@ public class SessionsSheetFragment extends LocaleAwareFragment implements View.O
     private Animator playAnimation(final boolean reverse) {
         isAnimating = true;
 
-        final int cx = cardView.getMeasuredWidth();
-        final int cy = cardView.getMeasuredHeight();
+        final int offset = getResources().getDimensionPixelSize(R.dimen.floating_action_button_size) / 2;
+        final int cx = cardView.getMeasuredWidth() - offset;
+        final int cy = cardView.getMeasuredHeight() - offset;
 
         // The final radius is the diagonal of the card view -> sqrt(w^2 + h^2)
         final float fullRadius = (float) Math.sqrt(
@@ -108,6 +110,11 @@ public class SessionsSheetFragment extends LocaleAwareFragment implements View.O
         });
 
         return animator;
+    }
+
+    public boolean onBackPressed() {
+        animateAndDismiss();
+        return true;
     }
 
     @Override

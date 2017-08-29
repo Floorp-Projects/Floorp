@@ -75,14 +75,14 @@
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
                 android:layout_gravity="end|bottom"
-                android:layout_marginBottom="84dp"
-                android:layout_marginEnd="24dp"
+                android:layout_marginBottom="@dimen/floating_action_button_margin"
+                android:layout_marginEnd="@dimen/floating_action_button_margin"
                 android:elevation="4dp"
                 android:visibility="gone"
                 app:backgroundTint="@color/colorTabsButtonTint"
-                app:rippleColor="#50FFFFFF"
+                app:rippleColor="#7FFFFFFF"
                 app:layout_behavior="org.mozilla.focus.widget.FloatingActionButtonBehavior"
-                app:fabSize="mini" />
+                app:fabSize="normal" />
 
             <org.mozilla.focus.widget.FloatingEraseButton
                 android:id="@+id/erase"
@@ -94,7 +94,7 @@
                 android:elevation="4dp"
                 android:src="@drawable/ic_delete"
                 app:backgroundTint="@color/colorFloatingActionButtonTint"
-                app:rippleColor="#50FFFFFF"
+                app:rippleColor="#7FFFFFFF"
                 app:fabSize="normal"
                 app:layout_behavior="org.mozilla.focus.widget.FloatingActionButtonBehavior"
                 android:contentDescription="@string/content_description_erase" />

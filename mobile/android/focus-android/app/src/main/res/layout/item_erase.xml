@@ -7,7 +7,7 @@
     android:layout_height="48dp"
     xmlns:tools="http://schemas.android.com/tools"
     android:background="@drawable/background_list_item_erase"
-    android:drawablePadding="8dp"
+    android:drawablePadding="16dp"
     android:gravity="start|center_vertical"
     android:paddingEnd="16dp"
     android:paddingStart="16dp"
@@ -16,4 +16,4 @@
     tools:drawableLeft="@drawable/ic_delete"
     android:text="@string/tabs_tray_action_erase"
     android:textColor="#ffffff"
-    android:textSize="16sp" />
+    android:textSize="14sp" />

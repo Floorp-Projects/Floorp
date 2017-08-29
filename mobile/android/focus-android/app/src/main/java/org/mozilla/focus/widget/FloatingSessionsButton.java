@@ -39,7 +39,7 @@ public class FloatingSessionsButton extends FloatingActionButton {
 
     private void init() {
         final Paint paint = new Paint();
-        paint.setColor(Color.BLACK);
+        paint.setColor(Color.WHITE);
 
         final int textSize = getResources().getDimensionPixelSize(R.dimen.tabs_button_text_size);
 
@@ -48,7 +48,7 @@ public class FloatingSessionsButton extends FloatingActionButton {
         textPaint.setTextSize(textSize);
     }
 
-    public void updateTabsCount(int tabCount) {
+    public void updateSessionsCount(int tabCount) {
         this.tabCount = tabCount;
 
         final CoordinatorLayout.LayoutParams params = (CoordinatorLayout.LayoutParams) getLayoutParams();
