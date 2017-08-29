@@ -13,6 +13,7 @@
 #include "nsIStreamListener.h"
 #include "nsIChannelEventSink.h"
 #include "nsIInterfaceRequestor.h"
+#include "nsIThreadRetargetableStreamListener.h"
 #include "Intervals.h"
 #include "MediaCache.h"
 #include "MediaContainerType.h"
@@ -503,9 +504,11 @@ public:
     return aMallocSizeOf(this) + SizeOfExcludingThis(aMallocSizeOf);
   }
 
-  class Listener final : public nsIStreamListener,
-                         public nsIInterfaceRequestor,
-                         public nsIChannelEventSink
+  class Listener final
+    : public nsIStreamListener
+    , public nsIInterfaceRequestor
+    , public nsIChannelEventSink
+    , public nsIThreadRetargetableStreamListener
   {
     ~Listener() {}
   public:
@@ -516,6 +519,7 @@ public:
     NS_DECL_NSISTREAMLISTENER
     NS_DECL_NSICHANNELEVENTSINK
     NS_DECL_NSIINTERFACEREQUESTOR
+    NS_DECL_NSITHREADRETARGETABLESTREAMLISTENER
 
     void Revoke() { mResource = nullptr; }
 
