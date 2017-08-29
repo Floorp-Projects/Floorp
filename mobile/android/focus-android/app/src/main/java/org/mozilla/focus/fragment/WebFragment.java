@@ -97,7 +97,10 @@ public abstract class WebFragment extends LocaleAwareFragment {
 
     @Override
     public void onPause() {
-        webView.saveWebViewState(getSession());
+        final Session session = getSession();
+        if (session != null) {
+            webView.saveWebViewState(session);
+        }
 
         webView.onPause();
 
