@@ -10,7 +10,7 @@
 #include "WMF.h"
 #include "mozilla/Mutex.h"
 #include "nsAutoPtr.h"
-#include "nsRect.h"
+#include "mozilla/gfx/Rect.h"
 #include "d3d11.h"
 
 namespace mozilla {
@@ -43,7 +43,7 @@ public:
 
   // Creates an Image for the video frame stored in aVideoSample.
   virtual HRESULT CopyToImage(IMFSample* aVideoSample,
-                              const nsIntRect& aRegion,
+                              const gfx::IntRect& aRegion,
                               layers::Image** aOutImage) = 0;
 
   virtual HRESULT CopyToBGRATexture(ID3D11Texture2D *aInTexture,
