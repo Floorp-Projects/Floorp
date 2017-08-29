@@ -596,7 +596,8 @@ private:
     RefPtr<InternalHeaders> internalHeaders = aCN->GetInternalHeaders();
     ir->Headers()->Fill(*(internalHeaders.get()), ignored);
 
-    RefPtr<Response> response = new Response(aCache->GetGlobalObject(), ir);
+    RefPtr<Response> response =
+      new Response(aCache->GetGlobalObject(), ir, nullptr);
 
     RequestOrUSVString request;
     request.SetAsUSVString().Rebind(aCN->URL().Data(), aCN->URL().Length());

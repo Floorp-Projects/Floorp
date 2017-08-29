@@ -81,7 +81,9 @@ FlyWebPublishedServer::FireFetchEvent(InternalRequest* aRequest)
 {
   nsCOMPtr<nsIGlobalObject> global = do_QueryInterface(GetOwner());
   RefPtr<FlyWebFetchEvent> e = new FlyWebFetchEvent(this,
-                                                    new Request(global, aRequest),
+                                                    new Request(global,
+                                                                aRequest,
+                                                                nullptr),
                                                     aRequest);
   e->Init(this);
   e->InitEvent(NS_LITERAL_STRING("fetch"), false, false);
@@ -94,7 +96,9 @@ FlyWebPublishedServer::FireWebsocketEvent(InternalRequest* aConnectRequest)
 {
   nsCOMPtr<nsIGlobalObject> global = do_QueryInterface(GetOwner());
   RefPtr<FlyWebFetchEvent> e = new FlyWebWebSocketEvent(this,
-                                                        new Request(global, aConnectRequest),
+                                                        new Request(global,
+                                                                    aConnectRequest,
+                                                                    nullptr),
                                                         aConnectRequest);
   e->Init(this);
   e->InitEvent(NS_LITERAL_STRING("websocket"), false, false);
