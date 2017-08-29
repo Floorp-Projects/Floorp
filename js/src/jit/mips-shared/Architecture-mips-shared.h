@@ -182,6 +182,7 @@ class Registers
         (1 << Registers::s5) |
         (1 << Registers::s6) |
         (1 << Registers::s7) |
+        (1 << Registers::fp) |
         (1 << Registers::ra);
 
     static const SetType WrapperMask =
@@ -198,7 +199,6 @@ class Registers
         (1 << Registers::k1) |
         (1 << Registers::gp) |
         (1 << Registers::sp) |
-        (1 << Registers::fp) |
         (1 << Registers::ra);
 
     // Registers that can be allocated without being saved, generally.
