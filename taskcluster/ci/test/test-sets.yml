@@ -105,7 +105,7 @@ stylo-sequential-tests:
 qr-talos:
     - talos-chrome
     - talos-dromaeojs
-    # - talos-g1 # doesn't work with QR yet
+    - talos-g1
     # - talos-g2 # doesn't work with QR yet
     - talos-g3
     - talos-g4
