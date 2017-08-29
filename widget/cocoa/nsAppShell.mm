@@ -67,6 +67,12 @@ private:
       return NS_OK;
     }
 
+    // we should still hold the lock for background audio.
+    if (aTopic.EqualsASCII("audio-playing") &&
+        aState.EqualsASCII("locked-background")) {
+      return NS_OK;
+    }
+
     bool shouldKeepDisplayOn = aTopic.EqualsASCII("screen") ||
                                aTopic.EqualsASCII("video-playing");
     CFStringRef assertionType = shouldKeepDisplayOn ?
@@ -77,6 +83,9 @@ private:
     // Note the wake lock code ensures that we're not sent duplicate
     // "locked-foreground" notifications when multiple wake locks are held.
     if (aState.EqualsASCII("locked-foreground")) {
+      if (assertionId != kIOPMNullAssertionID) {
+        return NS_OK;
+      }
       // Prevent screen saver.
       CFStringRef cf_topic =
         ::CFStringCreateWithCharacters(kCFAllocatorDefault,
@@ -100,6 +109,7 @@ private:
         if (result != kIOReturnSuccess) {
           NS_WARNING("failed to release screensaver");
         }
+        assertionId = kIOPMNullAssertionID;
       }
     }
     return NS_OK;
