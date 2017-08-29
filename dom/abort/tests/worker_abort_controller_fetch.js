@@ -2,7 +2,7 @@ function testWorkerAbortedFetch() {
   var ac = new AbortController();
   ac.abort();
 
-  fetch('slow.sjs', { signal: ac.signal }).then(() => {
+  fetch("slow.sjs", { signal: ac.signal }).then(() => {
     postMessage(false);
   }, e => {
     postMessage(e.name == "AbortError");
@@ -12,7 +12,7 @@ function testWorkerAbortedFetch() {
 function testWorkerFetchAndAbort() {
   var ac = new AbortController();
 
-  var p = fetch('slow.sjs', { signal: ac.signal });
+  var p = fetch("slow.sjs", { signal: ac.signal });
   ac.abort();
 
   p.then(() => {
@@ -22,6 +22,6 @@ function testWorkerFetchAndAbort() {
   });
 }
 
-onmessage = function(e) {
+self.onmessage = function(e) {
   self[e.data]();
 }

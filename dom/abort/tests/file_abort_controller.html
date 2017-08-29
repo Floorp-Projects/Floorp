@@ -23,15 +23,15 @@ function testWebIDL() {
 
 function testUpdateData() {
   var ac = new AbortController();
- 
+
   is(ac.signal.aborted, false, "By default AbortSignal.aborted is false");
- 
+
   ac.abort();
   is(ac.signal.aborted, true, "Signal is aborted");
- 
+
   next();
 }
- 
+
 function testAbortEvent() {
   var ac = new AbortController();
   ac.signal.onabort = function(e) {
@@ -40,7 +40,7 @@ function testAbortEvent() {
   }
   ac.abort();
 }
- 
+
 var steps = [
   // Simple stuff
   testWebIDL,
