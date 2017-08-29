@@ -16,23 +16,23 @@ import android.view.View;
 
 import org.mozilla.focus.R;
 
-public class FloatingTabsButton extends FloatingActionButton {
+public class FloatingSessionsButton extends FloatingActionButton {
     private static final String TOO_MANY_TABS_SYMBOL = "∞";
 
     private TextPaint textPaint;
     private int tabCount;
 
-    public FloatingTabsButton(Context context) {
+    public FloatingSessionsButton(Context context) {
         super(context);
         init();
     }
 
-    public FloatingTabsButton(Context context, AttributeSet attrs) {
+    public FloatingSessionsButton(Context context, AttributeSet attrs) {
         super(context, attrs);
         init();
     }
 
-    public FloatingTabsButton(Context context, AttributeSet attrs, int defStyleAttr) {
+    public FloatingSessionsButton(Context context, AttributeSet attrs, int defStyleAttr) {
         super(context, attrs, defStyleAttr);
         init();
     }

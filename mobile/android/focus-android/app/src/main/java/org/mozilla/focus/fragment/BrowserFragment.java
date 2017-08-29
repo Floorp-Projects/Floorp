@@ -67,7 +67,7 @@ import org.mozilla.focus.utils.UrlUtils;
 import org.mozilla.focus.web.Download;
 import org.mozilla.focus.web.IWebView;
 import org.mozilla.focus.widget.AnimatedProgressBar;
-import org.mozilla.focus.widget.FloatingTabsButton;
+import org.mozilla.focus.widget.FloatingSessionsButton;
 
 import java.lang.ref.WeakReference;
 import java.util.List;
@@ -210,7 +210,7 @@ public class BrowserFragment extends WebFragment implements View.OnClickListener
             }
         });
 
-        initialiseTabsButton((FloatingTabsButton) view.findViewById(R.id.tabs));
+        initialiseTabsButton((FloatingSessionsButton) view.findViewById(R.id.tabs));
 
         final View toolbarContent = view.findViewById(R.id.toolbar_content);
 
@@ -325,7 +325,7 @@ public class BrowserFragment extends WebFragment implements View.OnClickListener
         return view;
     }
 
-    private void initialiseTabsButton(final FloatingTabsButton tabsButton) {
+    private void initialiseTabsButton(final FloatingSessionsButton tabsButton) {
         if (session.isCustomTab()) {
             // The custom tab button should not appear in custom tabs.
             tabsButton.updateTabsCount(0);

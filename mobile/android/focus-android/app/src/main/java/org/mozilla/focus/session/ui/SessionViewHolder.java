@@ -47,8 +47,15 @@ public class SessionViewHolder extends RecyclerView.ViewHolder implements View.O
         final boolean isCurrentSession = SessionManager.getInstance().isCurrentSession(session);
         final int actionColor = ContextCompat.getColor(textView.getContext(), R.color.colorAction);
 
-        textView.setTextColor(isCurrentSession ? actionColor : Color.BLACK);
+        updateTextColor(isCurrentSession, actionColor);
+        updateDrawable(isCurrentSession, actionColor);
+    }
 
+    private void updateTextColor(boolean isCurrentSession, int actionColor) {
+        textView.setTextColor(isCurrentSession ? actionColor : Color.BLACK);
+    }
+
+    private void updateDrawable(boolean isCurrentSession, int actionColor) {
         final Drawable drawable = AppCompatResources.getDrawable(itemView.getContext(), R.drawable.ic_link);
         if (drawable == null) {
             return;
@@ -69,18 +76,19 @@ public class SessionViewHolder extends RecyclerView.ViewHolder implements View.O
 
     @Override
     public void onClick(View view) {
-        final Session sesison = sessionReference != null ? sessionReference.get() : null;
-        if (sesison == null) {
+        final Session session = sessionReference != null ? sessionReference.get() : null;
+        if (session == null) {
             return;
         }
 
+        selectSession(session);
+    }
+
+    private void selectSession(final Session session) {
         fragment.animateAndDismiss().addListener(new AnimatorListenerAdapter() {
             @Override
             public void onAnimationEnd(Animator animation) {
-                final SessionManager sessionManager = SessionManager.getInstance();
-                if (!sessionManager.isCurrentSession(sesison)) {
-                    sessionManager.selectSession(sesison);
-                }
+                SessionManager.getInstance().selectSession(session);
             }
         });
     }

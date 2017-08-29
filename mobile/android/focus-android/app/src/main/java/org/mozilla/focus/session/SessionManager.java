@@ -170,6 +170,11 @@ public class SessionManager {
     }
 
     public void selectSession(Session session) {
+        if (session.getUUID().equals(currentSessionUUID)) {
+            // This is already the selected session.
+            return;
+        }
+
         currentSessionUUID = session.getUUID();
 
         this.sessions.setValue(this.sessions.getValue());
