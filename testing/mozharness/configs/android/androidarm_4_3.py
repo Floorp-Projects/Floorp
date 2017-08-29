@@ -9,8 +9,8 @@ config = {
     "download_tooltool": True,
     "tooltool_servers": ['http://relengapi/tooltool/'],
     "tooltool_manifest_path": "testing/config/tooltool-manifests/androidarm_4_3/releng.manifest",
-    "tooltool_cache": "/home/worker/tooltool_cache",
-    "avds_dir": "/home/worker/workspace/build/.android",
+    "tooltool_cache": "/builds/worker/tooltool_cache",
+    "avds_dir": "/builds/worker/workspace/build/.android",
     "emulator_manifest": """
         [
         {

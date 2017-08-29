@@ -16,7 +16,7 @@ cubeb-pulse = { path = "../../../../media/libcubeb/cubeb-pulse-rs", optional = t
 cubeb-core = { path = "../../../../media/cubeb-rs/cubeb-core", optional = true }
 cubeb = { path = "../../../../media/cubeb-rs/cubeb-api", optional = true }
 cubeb-backend = { path = "../../../../media/cubeb-rs/cubeb-backend", optional = true }
-encoding_c = "0.7.1"
+encoding_c = "0.8.0"
 encoding_glue = { path = "../../../../intl/encoding_glue" }
 audioipc-client = { path = "../../../../media/audioipc/client", optional = true }
 audioipc-server = { path = "../../../../media/audioipc/server", optional = true }
@@ -31,7 +31,6 @@ cubeb_pulse_rust = ["cubeb-pulse"]
 gecko_debug = ["geckoservo/gecko_debug"]
 simd-accel = ["encoding_c/simd-accel", "encoding_glue/simd-accel"]
 no-static-ideograph-encoder-tables = ["encoding_c/no-static-ideograph-encoder-tables", "encoding_glue/no-static-ideograph-encoder-tables"]
-parallel-utf8 = ["encoding_c/parallel-utf8", "encoding_glue/parallel-utf8"]
 
 [lib]
 path = "lib.rs"

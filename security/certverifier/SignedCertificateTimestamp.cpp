@@ -26,21 +26,3 @@ DigitallySigned::SignatureParametersMatch(HashAlgorithm aHashAlgorithm,
 }
 
 } } // namespace mozilla::ct
-
-
-namespace mozilla {
-
-bool
-operator==(const ct::Buffer& a, const ct::Buffer& b)
-{
-  return (a.empty() && b.empty()) ||
-    (a.length() == b.length() && memcmp(a.begin(), b.begin(), a.length()) == 0);
-}
-
-bool
-operator!=(const ct::Buffer& a, const ct::Buffer& b)
-{
-  return !(a == b);
-}
-
-} // namespace mozilla

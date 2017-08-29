@@ -121,7 +121,7 @@
         opener.ok(!staticFrame.contentDocument.getElementById('dynamicFrame'), 'innerDynamicFrame should not exist');
 
         // Test 6: Insert and navigate inner dynamic frame and then reload outer
-        // frame. Verify that inner frame entries are all removed.
+        // frame. Verify that inner dynamic frame entries are all removed.
         staticFrame.width = '320px';
         staticFrame.height = '360px';
         let innerDynamicFrame = await createDynamicFrame(staticFrame.contentDocument, 'frame2.html');
@@ -137,11 +137,11 @@
         staticFrame.contentWindow.location.reload();
         await staticFrameLoadPromise;
         // staticFrame:       frame0 -> frame1 -> frame2 -> iframe_static
-        // innerStaticFrame:                                frame0
-        opener.is(shistory.index, 3, 'shistory.index');
-        opener.is(history.length, 4, 'history.length');
+        // innerStaticFrame:                                frame0        -> frame1
+        opener.is(shistory.index, 4, 'shistory.index');
+        opener.is(history.length, 5, 'history.length');
         innerStaticFrame = staticFrame.contentDocument.getElementById('staticFrame');
-        opener.is(innerStaticFrame.contentDocument.location.href, BASE_URL + 'frame0.html', 'innerStaticFrame location');
+        opener.is(innerStaticFrame.contentDocument.location.href, BASE_URL + 'frame1.html', 'innerStaticFrame location');
         opener.ok(!staticFrame.contentDocument.getElementById('dynamicFrame'), 'innerDynamicFrame should not exist');
         opener.nextTest();
         window.close();

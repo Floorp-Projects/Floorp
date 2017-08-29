@@ -102,9 +102,9 @@ def mozharness_test_on_docker(config, job, taskdesc):
 
     artifacts = [
         # (artifact name prefix, in-image path)
-        ("public/logs/", "/home/worker/workspace/build/upload/logs/"),
-        ("public/test", "/home/worker/artifacts/"),
-        ("public/test_info/", "/home/worker/workspace/build/blobber_upload_dir/"),
+        ("public/logs/", "/builds/worker/workspace/build/upload/logs/"),
+        ("public/test", "/builds/worker/artifacts/"),
+        ("public/test_info/", "/builds/worker/workspace/build/blobber_upload_dir/"),
     ]
 
     installer_url = get_artifact_url('<build>', mozharness['build-artifact-name'])
@@ -113,7 +113,7 @@ def mozharness_test_on_docker(config, job, taskdesc):
 
     worker['artifacts'] = [{
         'name': prefix,
-        'path': os.path.join('/home/worker/workspace', path),
+        'path': os.path.join('/builds/worker/workspace', path),
         'type': 'directory',
     } for (prefix, path) in artifacts]
 
@@ -121,7 +121,7 @@ def mozharness_test_on_docker(config, job, taskdesc):
         'type': 'persistent',
         'name': 'level-{}-{}-test-workspace'.format(
             config.params['level'], config.params['project']),
-        'mount-point': "/home/worker/workspace",
+        'mount-point': "/builds/worker/workspace",
     }]
 
     env = worker['env'] = {
@@ -156,7 +156,7 @@ def mozharness_test_on_docker(config, job, taskdesc):
 
     # assemble the command line
     command = [
-        '/home/worker/bin/run-task',
+        '/builds/worker/bin/run-task',
     ]
 
     # Support vcs checkouts regardless of whether the task runs from
@@ -166,14 +166,14 @@ def mozharness_test_on_docker(config, job, taskdesc):
     # If we have a source checkout, run mozharness from it instead of
     # downloading a zip file with the same content.
     if test['checkout']:
-        command.extend(['--vcs-checkout', '/home/worker/checkouts/gecko'])
-        env['MOZHARNESS_PATH'] = '/home/worker/checkouts/gecko/testing/mozharness'
+        command.extend(['--vcs-checkout', '/builds/worker/checkouts/gecko'])
+        env['MOZHARNESS_PATH'] = '/builds/worker/checkouts/gecko/testing/mozharness'
     else:
         env['MOZHARNESS_URL'] = {'task-reference': mozharness_url}
 
     command.extend([
         '--',
-        '/home/worker/bin/test-linux.sh',
+        '/builds/worker/bin/test-linux.sh',
     ])
 
     if mozharness.get('no-read-buildbot-config'):

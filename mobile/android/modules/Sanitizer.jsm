@@ -33,16 +33,34 @@ this.EXPORTED_SYMBOLS = ["Sanitizer"];
 
 function Sanitizer() {}
 Sanitizer.prototype = {
-  clearItem: function(aItemName) {
+  clearItem: function(aItemName, startTime) {
+    // Only a subset of items support deletion with startTime.
+    // Those who do not will be rejected with error message.
+    if (typeof startTime != "undefined") {
+      switch (aItemName) {
+        // Normal call to DownloadFiles remove actual data from storage, but our web-extension consumer
+        // deletes only download history. So, for this reason we are passing a flag 'deleteFiles'.
+        case "downloadHistory":
+          this._clear("downloadFiles", { startTime, deleteFiles: false });
+          break;
+        default:
+          return Promise.reject({message: `Invalid argument: ${aItemName} does not support startTime argument.`});
+      }
+    } else {
+      this._clear(aItemName);
+    }
+  },
+
+ _clear: function(aItemName, options) {
     let item = this.items[aItemName];
     let canClear = item.canClear;
     if (typeof canClear == "function") {
       canClear(function clearCallback(aCanClear) {
         if (aCanClear)
-          return item.clear();
+          return item.clear(options);
       });
     } else if (canClear) {
-      return item.clear();
+      return item.clear(options);
     }
   },
 
@@ -233,7 +251,7 @@ Sanitizer.prototype = {
     },
 
     downloadFiles: {
-      clear: Task.async(function* () {
+      clear: Task.async(function* ({ startTime = 0, deleteFiles = true} = {}) {
         let refObj = {};
         TelemetryStopwatch.start("FX_SANITIZE_DOWNLOADS", refObj);
 
@@ -247,8 +265,10 @@ Sanitizer.prototype = {
         for (let download of downloads) {
           // Remove downloads that have been canceled, even if the cancellation
           // operation hasn't completed yet so we don't check "stopped" here.
-          // Failed downloads with partial data are also removed.
-          if (download.stopped && (!download.hasPartialData || download.error)) {
+          // Failed downloads with partial data are also removed. The startTime
+          // check is provided for addons that may want to delete only recent downloads.
+          if (download.stopped && (!download.hasPartialData || download.error) &&
+              download.startTime.getTime() >= startTime) {
             // Remove the download first, so that the views don't get the change
             // notifications that may occur during finalization.
             yield list.remove(download);
@@ -258,12 +278,14 @@ Sanitizer.prototype = {
             // processing the other downloads in the list.
             finalizePromises.push(download.finalize(true).then(() => null, Cu.reportError));
 
-            // Delete the downloaded files themselves.
-            OS.File.remove(download.target.path).then(() => null, ex => {
-              if (!(ex instanceof OS.File.Error && ex.becauseNoSuchFile)) {
-                Cu.reportError(ex);
-              }
-            });
+            if (deleteFiles) {
+              // Delete the downloaded files themselves.
+              OS.File.remove(download.target.path).then(() => null, ex => {
+                if (!(ex instanceof OS.File.Error && ex.becauseNoSuchFile)) {
+                  Cu.reportError(ex);
+                }
+              });
+            }
           }
         }
 

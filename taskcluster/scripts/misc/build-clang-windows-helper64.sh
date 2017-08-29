@@ -4,7 +4,7 @@ set -x -e -v
 
 # This script is for building clang-cl on Windows.
 
-: TOOLTOOL_CACHE                ${TOOLTOOL_CACHE:=/home/worker/tooltool-cache}
+: TOOLTOOL_CACHE                ${TOOLTOOL_CACHE:=/builds/worker/tooltool-cache}
 export TOOLTOOL_CACHE
 
 TOOLTOOL_AUTH_FILE=/c/builds/relengapi.tok

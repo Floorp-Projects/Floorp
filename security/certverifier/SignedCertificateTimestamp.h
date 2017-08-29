@@ -7,14 +7,13 @@
 #ifndef SignedCertificateTimestamp_h
 #define SignedCertificateTimestamp_h
 
+#include "Buffer.h"
 #include "mozilla/Vector.h"
 #include "pkix/Input.h"
 #include "pkix/Result.h"
 
 // Structures related to Certificate Transparency (RFC 6962).
 namespace mozilla { namespace ct {
-
-typedef Vector<uint8_t> Buffer;
 
 // LogEntry struct in RFC 6962, Section 3.1.
 struct LogEntry
@@ -105,14 +104,5 @@ inline pkix::Result InputToBuffer(pkix::Input input, Buffer& buffer)
 }
 
 } } // namespace mozilla::ct
-
-namespace mozilla {
-
-// Comparison operators are placed under mozilla namespace since
-// mozilla::ct::Buffer is actually mozilla::Vector.
-bool operator==(const ct::Buffer& a, const ct::Buffer& b);
-bool operator!=(const ct::Buffer& a, const ct::Buffer& b);
-
-} // namespace mozilla
 
 #endif // SignedCertificateTimestamp_h

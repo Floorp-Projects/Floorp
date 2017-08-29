@@ -1,0 +1,101 @@
+<!DOCTYPE HTML>
+<html>
+<!--
+https://bugzilla.mozilla.org/show_bug.cgi?id=1375833
+-->
+<head>
+  <meta charset="utf-8">
+  <title>Test for Bug 1375833</title>
+  <script type="application/javascript" src="/tests/SimpleTest/SimpleTest.js"></script>
+  <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css"/>
+  <script type="application/javascript">
+
+  SimpleTest.waitForExplicitFinish();
+
+  /**
+   * Test for Bug 1375833. It tests for 2 things in a normal reload -
+   * 1. Static frame history should not be dropped.
+   * 2. In a reload, docshell would parse the reloaded root document and
+   *    genearate new child docshells, and then use the child offset
+   */
+
+  let testWin = window.open("file_bug1375833.html");
+  let count = 0;
+  let webNav, shistory;
+  let frameDocShellId;
+  window.addEventListener("message", e => {
+    switch (count++) {
+    case 0:
+      ok(e.data.endsWith("file_bug1375833-frame2.html"), "check location");
+
+      webNav = SpecialPowers.wrap(testWin)
+               .QueryInterface(SpecialPowers.Ci.nsIInterfaceRequestor)
+               .getInterface(SpecialPowers.Ci.nsIWebNavigation);
+      shistory = webNav.sessionHistory;
+      is(shistory.count, 2, "check history length");
+      is(shistory.index, 1, "check history index");
+
+      frameDocShellId = String(getFrameDocShell().historyID);
+      ok(frameDocShellId, "sanity check for docshell ID");
+
+      testWin.location.reload();
+      break;
+    case 1:
+      ok(e.data.endsWith("file_bug1375833-frame2.html"), "check location");
+      is(shistory.count, 4, "check history length");
+      is(shistory.index, 3, "check history index");
+
+      let newFrameDocShellId = String(getFrameDocShell().historyID);
+      ok(newFrameDocShellId, "sanity check for docshell ID");
+      is(newFrameDocShellId, frameDocShellId, "check docshell ID remains after reload");
+
+      let entry = shistory.getEntryAtIndex(shistory.index, false);
+      let frameEntry = SpecialPowers.wrap(entry)
+                       .QueryInterface(SpecialPowers.Ci.nsISHContainer)
+                       .GetChildAt(0);
+      is(String(frameEntry.docshellID), frameDocShellId, "check newly added shentry uses the same docshell ID");
+
+      webNav.goBack();
+      break;
+    case 2:
+      ok(e.data.endsWith("file_bug1375833-frame1.html"), "check location");
+      is(shistory.count, 4, "check history length");
+      is(shistory.index, 2, "check history index");
+
+      webNav.goBack();
+      break;
+    case 3:
+      ok(e.data.endsWith("file_bug1375833-frame2.html"), "check location");
+      is(shistory.count, 4, "check history length");
+      is(shistory.index, 1, "check history index");
+
+      webNav.goBack();
+      break;
+    case 4:
+      ok(e.data.endsWith("file_bug1375833-frame1.html"), "check location");
+      is(shistory.count, 4, "check history length");
+      is(shistory.index, 0, "check history index");
+
+      testWin.close();
+      SimpleTest.finish();
+    }
+  });
+
+  function getFrameDocShell() {
+    return SpecialPowers.wrap(testWin.window[0])
+           .QueryInterface(SpecialPowers.Ci.nsIInterfaceRequestor)
+           .getInterface(SpecialPowers.Ci.nsIDocShell)
+  }
+
+  </script>
+</head>
+<body>
+<a target="_blank" href="https://bugzilla.mozilla.org/show_bug.cgi?id=1375833">Mozilla Bug 1375833</a>
+<p id="display"></p>
+<div id="content" style="display: none">
+
+</div>
+<pre id="test">
+</pre>
+</body>
+</html>

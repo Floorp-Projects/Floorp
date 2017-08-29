@@ -2090,6 +2090,14 @@ SPECIAL_VARIABLES = {
            RESOURCE_FILES.fonts += ['bar.res']
         """),
 
+    'CONTENT_ACCESSIBLE_FILES': (lambda context: context['FINAL_TARGET_FILES'].contentaccessible, list,
+        """List of files which can be accessed by web content through resource:// URIs.
+
+        ``CONTENT_ACCESSIBLE_FILES`` is used to list the files to be exported
+        to ``dist/bin/contentaccessible``. Files can also be appended to a
+        field to indicate which subdirectory they should be exported to.
+        """),
+
     'EXTRA_JS_MODULES': (lambda context: context['FINAL_TARGET_FILES'].modules, list,
         """Additional JavaScript files to distribute.
 

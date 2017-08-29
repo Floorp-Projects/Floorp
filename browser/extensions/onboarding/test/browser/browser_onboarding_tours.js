@@ -25,6 +25,13 @@ function assertTourCompleted(tourId, expectComplete, browser) {
   });
 }
 
+function promisePopupChange(popup, expectedState) {
+  return new Promise(resolve => {
+    let event = expectedState == "open" ? "popupshown" : "popuphidden";
+    popup.addEventListener(event, resolve, { once: true });
+  });
+}
+
 add_task(async function test_set_right_tour_completed_style_on_overlay() {
   resetOnboardingDefaultState();
 
@@ -87,4 +94,80 @@ add_task(async function test_click_action_button_to_set_tour_completed() {
     }
     await BrowserTestUtils.removeTab(tab);
   }
+});
+
+add_task(async function test_clean_up_uitour_on_page_unload() {
+  resetOnboardingDefaultState();
+  await SpecialPowers.pushPrefEnv({set: [
+    ["browser.onboarding.newtour", "singlesearch,customize"],
+  ]});
+
+  let tab = await openTab(ABOUT_NEWTAB_URL);
+  await promiseOnboardingOverlayLoaded(tab.linkedBrowser);
+  await BrowserTestUtils.synthesizeMouseAtCenter("#onboarding-overlay-button", {}, tab.linkedBrowser);
+  await promiseOnboardingOverlayOpened(tab.linkedBrowser);
+
+  // Trigger UITour showHighlight and showMenu
+  let highlight = document.getElementById("UITourHighlightContainer");
+  let urlbarOpenPromise = promisePopupChange(gURLBar.popup, "open");
+  let highlightOpenPromise = promisePopupChange(highlight, "open");
+  BrowserTestUtils.synthesizeMouseAtCenter("#onboarding-tour-singlesearch", {}, tab.linkedBrowser);
+  BrowserTestUtils.synthesizeMouseAtCenter("#onboarding-tour-singlesearch-button", {}, tab.linkedBrowser);
+  BrowserTestUtils.synthesizeMouseAtCenter("#onboarding-tour-customize", {}, tab.linkedBrowser);
+  BrowserTestUtils.synthesizeMouseAtCenter("#onboarding-tour-customize-button", {}, tab.linkedBrowser);
+  await urlbarOpenPromise;
+  await highlightOpenPromise;
+  is(gURLBar.popup.state, "open", "Should show urlbar popup");
+  is(highlight.state, "open", "Should show UITour highlight");
+  is(highlight.getAttribute("targetName"), "customize", "UITour should highlight customize");
+
+  // Load another page to unload the current page
+  let urlbarClosePromise = promisePopupChange(gURLBar.popup, "closed");
+  let highlightClosePromise = promisePopupChange(highlight, "closed");
+  await BrowserTestUtils.loadURI(tab.linkedBrowser, "http://example.com");
+  await urlbarClosePromise;
+  await highlightClosePromise;
+  is(gURLBar.popup.state, "closed", "Should close urlbar popup after page unloaded");
+  is(highlight.state, "closed", "Should close UITour highlight after page unloaded");
+
+  await BrowserTestUtils.removeTab(tab);
+});
+
+add_task(async function test_clean_up_uitour_on_window_resize() {
+  resetOnboardingDefaultState();
+  await SpecialPowers.pushPrefEnv({set: [
+    ["browser.onboarding.newtour", "singlesearch,customize"],
+  ]});
+
+  let tab = await openTab(ABOUT_NEWTAB_URL);
+  await promiseOnboardingOverlayLoaded(tab.linkedBrowser);
+  await BrowserTestUtils.synthesizeMouseAtCenter("#onboarding-overlay-button", {}, tab.linkedBrowser);
+  await promiseOnboardingOverlayOpened(tab.linkedBrowser);
+
+  // Trigger UITour showHighlight and showMenu
+  let highlight = document.getElementById("UITourHighlightContainer");
+  let urlbarOpenPromise = promisePopupChange(gURLBar.popup, "open");
+  let highlightOpenPromise = promisePopupChange(highlight, "open");
+  BrowserTestUtils.synthesizeMouseAtCenter("#onboarding-tour-singlesearch", {}, tab.linkedBrowser);
+  BrowserTestUtils.synthesizeMouseAtCenter("#onboarding-tour-singlesearch-button", {}, tab.linkedBrowser);
+  BrowserTestUtils.synthesizeMouseAtCenter("#onboarding-tour-customize", {}, tab.linkedBrowser);
+  BrowserTestUtils.synthesizeMouseAtCenter("#onboarding-tour-customize-button", {}, tab.linkedBrowser);
+  await urlbarOpenPromise;
+  await highlightOpenPromise;
+  is(gURLBar.popup.state, "open", "Should show urlbar popup");
+  is(highlight.state, "open", "Should show UITour highlight");
+  is(highlight.getAttribute("targetName"), "customize", "UITour should highlight customize");
+
+  // Resize window to destroy the onboarding tour
+  const originalWidth = window.innerWidth;
+  let urlbarClosePromise = promisePopupChange(gURLBar.popup, "closed");
+  let highlightClosePromise = promisePopupChange(highlight, "closed");
+  window.innerWidth = 300;
+  await urlbarClosePromise;
+  await highlightClosePromise;
+  is(gURLBar.popup.state, "closed", "Should close urlbar popup after window resized");
+  is(highlight.state, "closed", "Should close UITour highlight after window resized");
+
+  window.innerWidth = originalWidth;
+  await BrowserTestUtils.removeTab(tab);
 });

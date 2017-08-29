@@ -11,7 +11,8 @@
 // The initial revision of this file was extracted from the "UTF-8 validation"
 // section of the file src/libcore/str/mod.rs from Rust project at revision
 // 7ad7232422f7e5bbfa0e52dabe36c12677df19e2. The Utf8Error struct also comes
-// from that file.
+// from that file. Subsequently, changes from the mentioned file at revision
+// 85eadf84f3945dc431643ea43d34f15193fdafb4 were merged into this file.
 
 use ascii::validate_ascii;
 
@@ -56,43 +57,43 @@ impl Utf8Error {
 #[cfg_attr(feature = "cargo-clippy", allow(eval_order_dependence))]
 #[inline(always)]
 pub fn run_utf8_validation(v: &[u8]) -> Result<(), Utf8Error> {
-    let mut offset = 0;
+    let mut index = 0;
     let len = v.len();
+
     'outer: loop {
         let mut first = {
-            let remaining = &v[offset..];
+            let remaining = &v[index..];
             match validate_ascii(remaining) {
                 None => {
                     // offset += remaining.len();
                     break 'outer;
                 }
                 Some((non_ascii, consumed)) => {
-                    offset += consumed;
+                    index += consumed;
                     non_ascii
                 }
             }
         };
-        let old_offset = offset;
-        macro_rules! err { () => {{
-            return Err(Utf8Error {
-                valid_up_to: old_offset
-            })
-        }}}
+        let old_offset = index;
+        macro_rules! err {
+            ($error_len: expr) => {
+                return Err(Utf8Error {
+                    valid_up_to: old_offset,
+                })
+            }
+        }
 
         macro_rules! next { () => {{
-            offset += 1;
+            index += 1;
             // we needed data, but there was none: error!
-            if offset >= len {
-                err!()
+            if index >= len {
+                err!(None)
             }
-            v[offset]
+            v[index]
         }}}
+
         'inner: loop {
-            // Intuitively, it would make sense to check availability for
-            // a four-byte sequence here, not check per byte and handle the
-            // end of the buffer as a special case. For some reason, that
-            // disturbs something in a way that would make things slower.
-            let second = next!();
+            let w = UTF8_CHAR_WIDTH[first as usize];
             // 2-byte encoding is for codepoints  \u{0080} to  \u{07ff}
             //        first  C2 80        last DF BF
             // 3-byte encoding is for codepoints  \u{0800} to  \u{ffff}
@@ -111,60 +112,49 @@ pub fn run_utf8_validation(v: &[u8]) -> Result<(), Utf8Error> {
             //               %xED %x80-9F UTF8-tail / %xEE-EF 2( UTF8-tail )
             // UTF8-4      = %xF0 %x90-BF 2( UTF8-tail ) / %xF1-F3 3( UTF8-tail ) /
             //               %xF4 %x80-8F 2( UTF8-tail )
-            match first {
-                0xC2...0xDF => {
-                    if second & !CONT_MASK != TAG_CONT_U8 {
-                        err!()
+            match w {
+                2 => {
+                    if next!() & !CONT_MASK != TAG_CONT_U8 {
+                        err!(Some(1))
                     }
                 }
-                0xE0 => {
-                    match (second, next!() & !CONT_MASK) {
-                        (0xA0...0xBF, TAG_CONT_U8) => {}
-                        _ => err!(),
+                3 => {
+                    match (first, next!()) {
+                        (0xE0, 0xA0...0xBF) |
+                        (0xE1...0xEC, 0x80...0xBF) |
+                        (0xED, 0x80...0x9F) |
+                        (0xEE...0xEF, 0x80...0xBF) => {}
+                        _ => err!(Some(1)),
+                    }
+                    if next!() & !CONT_MASK != TAG_CONT_U8 {
+                        err!(Some(2))
                     }
                 }
-                0xE1...0xEC | 0xEE...0xEF => {
-                    match (second & !CONT_MASK, next!() & !CONT_MASK) {
-                        (TAG_CONT_U8, TAG_CONT_U8) => {}
-                        _ => err!(),
+                4 => {
+                    match (first, next!()) {
+                        (0xF0, 0x90...0xBF) |
+                        (0xF1...0xF3, 0x80...0xBF) |
+                        (0xF4, 0x80...0x8F) => {}
+                        _ => err!(Some(1)),
+                    }
+                    if next!() & !CONT_MASK != TAG_CONT_U8 {
+                        err!(Some(2))
+                    }
+                    if next!() & !CONT_MASK != TAG_CONT_U8 {
+                        err!(Some(3))
                     }
                 }
-                0xED => {
-                    match (second, next!() & !CONT_MASK) {
-                        (0x80...0x9F, TAG_CONT_U8) => {}
-                        _ => err!(),
-                    }
-                }
-                0xF0 => {
-                    match (second, next!() & !CONT_MASK, next!() & !CONT_MASK) {
-                        (0x90...0xBF, TAG_CONT_U8, TAG_CONT_U8) => {}
-                        _ => err!(),
-                    }
-                }
-                0xF1...0xF3 => {
-                    match (second & !CONT_MASK, next!() & !CONT_MASK, next!() & !CONT_MASK) {
-                        (TAG_CONT_U8, TAG_CONT_U8, TAG_CONT_U8) => {}
-                        _ => err!(),
-                    }
-                }
-                0xF4 => {
-                    match (second, next!() & !CONT_MASK, next!() & !CONT_MASK) {
-                        (0x80...0x8F, TAG_CONT_U8, TAG_CONT_U8) => {}
-                        _ => err!(),
-                    }
-                }
-                _ => err!(),
+                _ => err!(Some(1)),
             }
-            offset += 1;
-            if offset == len {
+            index += 1;
+            if index == len {
                 break 'outer;
             }
-            first = v[offset];
+            first = v[index];
             // This check is separate from the above `match`, because merging
-            // this check into it causes a spectacular performance drop
-            // (over twice as slow).
+            // this check into it causes a notable performance drop.
             if first < 0x80 {
-                offset += 1;
+                index += 1;
                 continue 'outer;
             }
             continue 'inner;
@@ -173,6 +163,26 @@ pub fn run_utf8_validation(v: &[u8]) -> Result<(), Utf8Error> {
 
     Ok(())
 }
+
+// https://tools.ietf.org/html/rfc3629
+static UTF8_CHAR_WIDTH: [u8; 256] = [
+1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,
+1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1, // 0x1F
+1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,
+1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1, // 0x3F
+1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,
+1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1, // 0x5F
+1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,
+1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1, // 0x7F
+0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,
+0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0, // 0x9F
+0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,
+0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0, // 0xBF
+0,0,2,2,2,2,2,2,2,2,2,2,2,2,2,2,
+2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2, // 0xDF
+3,3,3,3,3,3,3,3,3,3,3,3,3,3,3,3, // 0xEF
+4,4,4,4,4,0,0,0,0,0,0,0,0,0,0,0, // 0xFF
+];
 
 /// Mask of the value bits of a continuation byte
 const CONT_MASK: u8 = 0b0011_1111;

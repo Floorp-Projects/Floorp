@@ -65,6 +65,9 @@ AudioConverter::CanWorkInPlace() const
 size_t
 AudioConverter::ProcessInternal(void* aOut, const void* aIn, size_t aFrames)
 {
+  if (!aFrames) {
+    return 0;
+  }
   if (mIn.Channels() > mOut.Channels()) {
     return DownmixAudio(aOut, aIn, aFrames);
   } else if (mIn.Channels() < mOut.Channels()) {
