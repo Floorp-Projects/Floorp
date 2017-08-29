@@ -77,6 +77,7 @@ function* testHarnessSteps() {
       "set": [
         ["dom.indexedDB.testing", true],
         ["dom.indexedDB.experimental", true],
+        ["javascript.options.wasm_baselinejit", true]  // This can be removed when on by default
       ]
     },
     nextTestHarnessStep

@@ -865,7 +865,8 @@ template <class Iter>
 static void
 TraceOneDataRelocation(JSTracer* trc, Iter* iter)
 {
-    Instruction* ins = iter->cur();
+    Iter iterCopy(*iter);
+
     Register dest;
     Assembler::RelocStyle rs;
     const void* prior = Assembler::GetPtr32Target(iter, &dest, &rs);
@@ -876,12 +877,12 @@ TraceOneDataRelocation(JSTracer* trc, Iter* iter)
                                              "ion-masm-ptr");
 
     if (ptr != prior) {
-        MacroAssemblerARM::ma_mov_patch(Imm32(int32_t(ptr)), dest, Assembler::Always, rs, ins);
+        MacroAssemblerARM::ma_mov_patch(Imm32(int32_t(ptr)), dest, Assembler::Always, rs, iterCopy);
 
         // L_LDR won't cause any instructions to be updated.
         if (rs != Assembler::L_LDR) {
-            AutoFlushICache::flush(uintptr_t(ins), 4);
-            AutoFlushICache::flush(uintptr_t(ins->next()), 4);
+            AutoFlushICache::flush(uintptr_t(iter->cur()), 4);
+            AutoFlushICache::flush(uintptr_t(iter->next()), 4);
         }
     }
 }
@@ -901,7 +902,7 @@ TraceDataRelocations(JSTracer* trc, ARMBuffer* buffer, CompactBufferReader& read
 {
     while (reader.more()) {
         BufferOffset offset(reader.readUnsigned());
-        ARMBuffer::AssemblerBufferInstIterator iter(offset, buffer);
+        BufferInstructionIterator iter(offset, buffer);
         TraceOneDataRelocation(trc, &iter);
     }
 }
@@ -3119,14 +3120,15 @@ Assembler::PatchDataWithValueCheck(CodeLocationLabel label, PatchedImmPtr newVal
                                    PatchedImmPtr expectedValue)
 {
     Instruction* ptr = reinterpret_cast<Instruction*>(label.raw());
-    InstructionIterator iter(ptr);
+
     Register dest;
     Assembler::RelocStyle rs;
-
+    InstructionIterator iter(ptr);
     DebugOnly<const uint32_t*> val = GetPtr32Target(&iter, &dest, &rs);
     MOZ_ASSERT(uint32_t((const uint32_t*)val) == uint32_t(expectedValue.value));
 
-    MacroAssembler::ma_mov_patch(Imm32(int32_t(newValue.value)), dest, Always, rs, ptr);
+    iter = InstructionIterator(ptr);
+    MacroAssembler::ma_mov_patch(Imm32(int32_t(newValue.value)), dest, Always, rs, iter);
 
     // L_LDR won't cause any instructions to be updated.
     if (rs != L_LDR) {
@@ -3180,6 +3182,20 @@ InstIsGuard(Instruction* inst, const PoolHeader** ph)
 }
 
 static bool
+InstIsGuard(BufferInstructionIterator& iter, const PoolHeader** ph)
+{
+    Instruction* inst = iter.cur();
+    Assembler::Condition c = inst->extractCond();
+    if (c != Assembler::Always)
+        return false;
+    if (!(inst->is<InstBXReg>() || inst->is<InstBImm>()))
+        return false;
+    // See if the next instruction is a pool header.
+    *ph = iter.peek()->as<const PoolHeader>();
+    return *ph != nullptr;
+}
+
+static bool
 InstIsBNop(Instruction* inst)
 {
     // In some special situations, it is necessary to insert a NOP into the
@@ -3222,6 +3238,28 @@ Instruction::skipPool()
     if (InstIsBNop(this))
         return (this + 1)->skipPool();
     return this;
+}
+
+void
+BufferInstructionIterator::skipPool()
+{
+    // If this is a guard, and the next instruction is a header, always work
+    // around the pool. If it isn't a guard, then start looking ahead.
+
+    const PoolHeader* ph;
+    if (InstIsGuard(*this, &ph)) {
+        // Don't skip a natural guard.
+        if (ph->isNatural())
+            return;
+        advance(sizeof(Instruction) * (1 + ph->size()));
+        skipPool();
+        return;
+    }
+
+    if (InstIsBNop(cur())) {
+        next();
+        skipPool();
+    }
 }
 
 // Cases to be handled:
@@ -3365,13 +3403,6 @@ Assembler::BailoutTableStart(uint8_t* code)
     inst = inst->skipPool();
     MOZ_ASSERT(inst->is<InstBLImm>());
     return (uint8_t*) inst;
-}
-
-InstructionIterator::InstructionIterator(Instruction* i_)
-  : i(i_)
-{
-    // Work around pools with an artificial pool guard and around nop-fill.
-    i = i->skipPool();
 }
 
 uint32_t Assembler::NopFill = 0;

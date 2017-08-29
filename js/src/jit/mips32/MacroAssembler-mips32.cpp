@@ -2427,4 +2427,52 @@ template void
 MacroAssembler::storeUnboxedValue(const ConstantOrRegister& value, MIRType valueType,
                                   const BaseIndex& dest, MIRType slotType);
 
+
+void
+MacroAssembler::wasmTruncateDoubleToUInt32(FloatRegister input, Register output, Label* oolEntry)
+{
+
+    loadConstantDouble(double(-1.0), ScratchDoubleReg);
+    branchDouble(Assembler::DoubleLessThanOrEqual, input, ScratchDoubleReg, oolEntry);
+
+    loadConstantDouble(double(UINT32_MAX) + 1.0, ScratchDoubleReg);
+    branchDouble(Assembler::DoubleGreaterThanOrEqualOrUnordered, input, ScratchDoubleReg, oolEntry);
+    Label done, simple;
+    loadConstantDouble(double(0x80000000UL), ScratchDoubleReg);
+    branchDouble(Assembler::DoubleLessThan, input, ScratchDoubleReg, &simple);
+    as_subd(ScratchDoubleReg, input, ScratchDoubleReg);
+    as_truncwd(ScratchDoubleReg, ScratchDoubleReg);
+    moveFromFloat32(ScratchDoubleReg, output);
+    ma_li(ScratchRegister, Imm32(0x80000000UL));
+    ma_or(output, ScratchRegister);
+    ma_b(&done);
+    bind(&simple);
+    as_truncwd(ScratchDoubleReg, input);
+    moveFromFloat32(ScratchDoubleReg, output);
+    bind(&done);
+}
+
+void
+MacroAssembler::wasmTruncateFloat32ToUInt32(FloatRegister input, Register output, Label* oolEntry)
+{
+    loadConstantFloat32(double(-1.0), ScratchDoubleReg);
+    branchFloat(Assembler::DoubleLessThanOrEqualOrUnordered, input, ScratchDoubleReg, oolEntry);
+
+    loadConstantFloat32(double(UINT32_MAX) + 1.0, ScratchDoubleReg);
+    branchFloat(Assembler::DoubleGreaterThanOrEqualOrUnordered, input, ScratchDoubleReg, oolEntry);
+    Label done, simple;
+    loadConstantFloat32(double(0x80000000UL), ScratchDoubleReg);
+    branchFloat(Assembler::DoubleLessThan, input, ScratchDoubleReg, &simple);
+    as_subs(ScratchDoubleReg, input, ScratchDoubleReg);
+    as_truncws(ScratchDoubleReg, ScratchDoubleReg);
+    moveFromFloat32(ScratchDoubleReg, output);
+    ma_li(ScratchRegister, Imm32(0x80000000UL));
+    ma_or(output, ScratchRegister);
+    ma_b(&done);
+    bind(&simple);
+    as_truncws(ScratchDoubleReg, input);
+    moveFromFloat32(ScratchDoubleReg, output);
+    bind(&done);
+}
+
 //}}} check_macroassembler_style

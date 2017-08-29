@@ -496,3 +496,30 @@ JS::StringIsASCII(const char* s)
     }
     return true;
 }
+
+bool
+JS::StringIsUTF8(const uint8_t* s, uint32_t length)
+{
+    const uint8_t* limit = s + length;
+    while (s < limit) {
+        uint32_t len;
+        if ((*s & 0x80) == 0)
+            len = 1;
+        else if ((*s & 0xE0) == 0xC0)
+            len = 2;
+        else if ((*s & 0xF0) == 0xE0)
+            len = 3;
+        else if ((*s & 0xF8) == 0xF0)
+            len = 4;
+        else
+            return false;
+        if (s + len > limit)
+            return false;
+        for (uint32_t i = 1; i < len; i++) {
+            if ((s[i] & 0xC0) != 0x80)
+                return false;
+        }
+        s += len;
+    }
+    return true;
+}
