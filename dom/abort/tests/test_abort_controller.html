@@ -13,11 +13,11 @@
 <script class="testbody" type="text/javascript">
 
 SpecialPowers.pushPrefEnv({"set": [["dom.abortController.enabled", true ]]}, () => {
-  let ifr = document.createElement('iframe');
+  let ifr = document.createElement("iframe");
   ifr.src = "file_abort_controller.html";
   document.body.appendChild(ifr);
 
-  onmessage = function(e) {
+  window.onmessage = function(e) {
     if (e.data.type == "finish") {
       SimpleTest.finish();
       return;
