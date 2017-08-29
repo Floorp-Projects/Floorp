@@ -34,6 +34,47 @@ These functions can throw if, for example, an operation is performed on a scalar
 (e.g. calling scalarSetMaximum on a scalar of the string kind). Please look at the `code documentation <https://dxr.mozilla.org/mozilla-central/search?q=regexp%3ATelemetryScalar%3A%3A(Set%7CAdd)+file%3ATelemetryScalar.cpp&redirect=false>`_ for
 additional information.
 
+``registerScalars()``
+~~~~~~~~~~~~~~~~~~~~~
+
+.. code-block:: js
+
+  Services.telemetry.registerScalars(group, scalarData);
+
+Register new scalars from add-ons.
+
+* ``group`` - *(required, string)* The unique group the scalars are registered in (see :ref:`limitations <scalar-limitations>`).
+* ``scalarData`` - *(required, object)* An object of the form ``{scalarName1: scalar1Data, ...}`` that contains registration data for multiple scalars; ``scalarName1`` is subject to :ref:`limitations <scalar-limitations>`; each scalar is an object with the following properties:
+
+  * ``kind`` - *(required, uint)*  One of the scalar types (nsITelemetry::SCALAR_TYPE_*).
+  * ``keyed`` - *(optional, bool)* Whether this is a keyed scalar or not. Defaults to false.
+  * ``record_on_release`` - *(optional, bool)* Whether to record this data on release. Defaults to false.
+  * ``expired`` - *(optional, bool)* Whether this scalar entry is expired. This allows recording it without error, but it will be discarded. Defaults to false.
+
+For scalars recorded from add-ons, registration happens at runtime. Any new scalar must first be registered through this function before they can be recorded.
+
+After registration, the scalars can be recorded through the usual scalar JS API. If the accumulation happens in a content process right after the registration and the definition still has to reach this process, it will be discarded: one way to work around the problem is to send an IPC message to the content process and start accumulating data once this message has been received. The accumulated data will be submitted in the main pings payload under ``processes.dynamic.scalars``.
+
+.. note::
+
+    Accumulating in dynamic scalars only works in content child processes and in the parent process. All the accumulations (parent and content chldren) are aggregated together .
+
+New scalars registered here are subject to the same :ref:`limitations <scalar-limitations>` as the ones registered through ``Scalars.yaml``, e.g. the length of the group name or the allowed characters.
+
+Example:
+
+.. code-block:: js
+
+  Services.telemetry.registerScalars("myAddon.group", {
+    "counter_scalar": {
+      kind: Ci.nsITelemetry.SCALAR_TYPE_COUNT,
+      keyed: false,
+      record_on_release: false
+    },
+  });
+  // Now scalars can be recorded.
+  Services.telemetry.scalarSet("myAddon.group.counter_scalar", 37);
+
 C++ API
 -------
 Probes in native code can use the more convenient helper functions declared in `Telemetry.h <https://dxr.mozilla.org/mozilla-central/source/toolkit/components/telemetry/Telemetry.h>`_:
@@ -78,6 +119,8 @@ The probes in the definition file are represented in a fixed-depth, two-level st
       probe:
         kind: int
         ...
+
+.. _scalar-limitations:
 
 Group and probe names need to follow a few rules:
 
@@ -241,3 +284,4 @@ Version History
 - Firefox 50: Initial scalar support (`bug 1276195 <https://bugzilla.mozilla.org/show_bug.cgi?id=1276195>`_).
 - Firefox 51: Added keyed scalars (`bug 1277806 <https://bugzilla.mozilla.org/show_bug.cgi?id=1277806>`_).
 - Firefox 53: Added child process scalars (`bug 1278556 <https://bugzilla.mozilla.org/show_bug.cgi?id=1278556>`_).
+- Firefox 58: Added support for recording new scalars from add-ons (`bug 1393801 <bug https://bugzilla.mozilla.org/show_bug.cgi?id=1393801>`_).

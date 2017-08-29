@@ -40,6 +40,18 @@ TelemetryIPC::UpdateChildKeyedScalars(Telemetry::ProcessID aProcessType,
 }
 
 void
+TelemetryIPC::GetDynamicScalarDefinitions(nsTArray<mozilla::Telemetry::DynamicScalarDefinition>& aDefs)
+{
+  TelemetryScalar::GetDynamicScalarDefinitions(aDefs);
+}
+
+void
+TelemetryIPC::AddDynamicScalarDefinitions(const nsTArray<mozilla::Telemetry::DynamicScalarDefinition>& aDefs)
+{
+  TelemetryScalar::AddDynamicScalarDefinitions(aDefs);
+}
+
+void
 TelemetryIPC::RecordChildEvents(Telemetry::ProcessID aProcessType, const nsTArray<Telemetry::ChildEventData>& aEvents)
 {
   TelemetryEvent::RecordChildEvents(aProcessType, aEvents);
