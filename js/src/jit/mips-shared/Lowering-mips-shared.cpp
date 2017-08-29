@@ -104,10 +104,16 @@ void
 LIRGeneratorMIPSShared::lowerForShiftInt64(LInstructionHelper<INT64_PIECES, INT64_PIECES + 1, Temps>* ins,
                                            MDefinition* mir, MDefinition* lhs, MDefinition* rhs)
 {
+#ifdef JS_CODEGEN_MIPS32
+    if (mir->isRotate()) {
+        if (!rhs->isConstant())
+            ins->setTemp(0, temp());
+        ins->setInt64Operand(0, useInt64Register(lhs));
+    } else {
+        ins->setInt64Operand(0, useInt64RegisterAtStart(lhs));
+    }
+#else
     ins->setInt64Operand(0, useInt64RegisterAtStart(lhs));
-#if defined(JS_NUNBOX32)
-    if (mir->isRotate())
-        ins->setTemp(0, temp());
 #endif
 
     static_assert(LShiftI64::Rhs == INT64_PIECES, "Assume Rhs is located at INT64_PIECES.");
@@ -115,7 +121,14 @@ LIRGeneratorMIPSShared::lowerForShiftInt64(LInstructionHelper<INT64_PIECES, INT6
 
     ins->setOperand(INT64_PIECES, useRegisterOrConstant(rhs));
 
+#ifdef JS_CODEGEN_MIPS32
+    if (mir->isRotate())
+        defineInt64(ins, mir);
+    else
+        defineInt64ReuseInput(ins, mir, 0);
+#else
     defineInt64ReuseInput(ins, mir, 0);
+#endif
 }
 
 template void LIRGeneratorMIPSShared::lowerForShiftInt64(
