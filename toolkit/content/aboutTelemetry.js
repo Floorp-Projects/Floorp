@@ -1435,6 +1435,14 @@ var Search = {
         keyedElements.push({key, datas});
       }
       noSearchResults = this.filterKeyedElements(keyedElements, text);
+    } else if (section.querySelector(".sub-section")) {
+      let keyedSubSections = [];
+      let subsections = section.querySelectorAll(".sub-section");
+      for (let section of subsections) {
+        let datas = section.querySelector("table").rows
+        keyedSubSections.push({section, datas});
+      }
+      noSearchResults = this.filterKeyedElements(keyedSubSections, text);
     } else {
       let tables = section.querySelectorAll("table");
       for (let table of tables) {
