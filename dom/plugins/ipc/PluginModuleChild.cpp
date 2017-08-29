@@ -112,6 +112,9 @@ static GetSaveFileNameWPtr sGetSaveFileNameWPtrStub = nullptr;
 typedef BOOL (WINAPI *SetCursorPosPtr)(int x, int y);
 static SetCursorPosPtr sSetCursorPosPtrStub = nullptr;
 
+typedef BOOL (WINAPI *PrintDlgWPtr)(LPPRINTDLGW aDlg);
+static PrintDlgWPtr sPrintDlgWPtrStub = nullptr;
+
 #endif
 
 /* static */
@@ -2187,6 +2190,19 @@ PMCGetOpenFileNameW(LPOPENFILENAMEW aLpofn)
     return PMCGetFileNameW(OPEN_FUNC, aLpofn);
 }
 
+//static
+BOOL WINAPI
+PMCPrintDlgW(LPPRINTDLGW aDlg)
+{
+  // Zero out the HWND supplied by the plugin.  We are sacrificing window
+  // parentage for the ability to run in the NPAPI sandbox.
+  HWND hwnd = aDlg->hwndOwner;
+  aDlg->hwndOwner = 0;
+  BOOL ret = sPrintDlgWPtrStub(aDlg);
+  aDlg->hwndOwner = hwnd;
+  return ret;
+}
+
 BOOL WINAPI PMCSetCursorPos(int x, int y);
 
 class SetCursorPosTaskData : public PluginThreadTaskData
@@ -2264,6 +2280,12 @@ PluginModuleChild::AllocPPluginInstanceChild(const nsCString& aMimeType,
     if (!sGetOpenFileNameWPtrStub) {
         sComDlg32Intercept.AddHook("GetOpenFileNameW", reinterpret_cast<intptr_t>(PMCGetOpenFileNameW),
                                  (void**) &sGetOpenFileNameWPtrStub);
+    }
+
+    if ((mQuirks & QUIRK_FLASH_HOOK_PRINTDLGW) &&
+        !sPrintDlgWPtrStub) {
+        sComDlg32Intercept.AddHook("PrintDlgW", reinterpret_cast<intptr_t>(PMCPrintDlgW),
+                                 (void**) &sPrintDlgWPtrStub);
     }
 #endif
 
