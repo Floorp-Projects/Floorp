@@ -818,12 +818,13 @@ protected:
   class WakeLockBoolWrapper {
   public:
     explicit WakeLockBoolWrapper(bool val = false)
-      : mValue(val), mCanPlay(true), mOuter(nullptr) {}
+      : mValue(val)
+      , mOuter(nullptr)
+    {}
 
     ~WakeLockBoolWrapper();
 
     void SetOuter(HTMLMediaElement* outer) { mOuter = outer; }
-    void SetCanPlay(bool aCanPlay);
 
     MOZ_IMPLICIT operator bool() const { return mValue; }
 
@@ -837,7 +838,6 @@ protected:
     void UpdateWakeLock();
 
     bool mValue;
-    bool mCanPlay;
     HTMLMediaElement* mOuter;
     nsCOMPtr<nsITimer> mTimer;
   };
