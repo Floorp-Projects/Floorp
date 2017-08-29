@@ -186,9 +186,13 @@ static const char contentSandboxRules[] = R"(
       (global-name "com.apple.audio.coreaudiod")
       (global-name "com.apple.audio.audiohald"))
 
-; bug 1376163
   (if (>= macosMinorVersion 13)
-    (allow mach-lookup (global-name "com.apple.audio.AudioComponentRegistrar")))
+    (allow mach-lookup
+      ; bug 1376163
+      (global-name "com.apple.audio.AudioComponentRegistrar")
+      ; bug 1392988
+      (xpc-service-name "com.apple.coremedia.videodecoder")
+      (xpc-service-name "com.apple.coremedia.videoencoder")))
 
 ; bug 1312273
   (if (= macosMinorVersion 9)
