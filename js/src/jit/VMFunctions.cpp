@@ -505,15 +505,20 @@ SetProperty(JSContext* cx, HandleObject obj, HandlePropertyName name, HandleValu
     RootedValue receiver(cx, ObjectValue(*obj));
     ObjectOpResult result;
     if (MOZ_LIKELY(!obj->getOpsSetProperty())) {
-        if (!NativeSetProperty(
-                cx, obj.as<NativeObject>(), id, value, receiver,
-                (op == JSOP_SETNAME || op == JSOP_STRICTSETNAME ||
-                 op == JSOP_SETGNAME || op == JSOP_STRICTSETGNAME)
-                ? Unqualified
-                : Qualified,
-                result))
+        if (op == JSOP_SETNAME || op == JSOP_STRICTSETNAME ||
+            op == JSOP_SETGNAME || op == JSOP_STRICTSETGNAME)
         {
-            return false;
+            if (!NativeSetProperty<Unqualified>(cx, obj.as<NativeObject>(), id, value, receiver,
+                                                result))
+            {
+                return false;
+            }
+        } else {
+            if (!NativeSetProperty<Qualified>(cx, obj.as<NativeObject>(), id, value, receiver,
+                                              result))
+            {
+                return false;
+            }
         }
     } else {
         if (!SetProperty(cx, obj, id, value, receiver, result))

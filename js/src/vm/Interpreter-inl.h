@@ -351,7 +351,7 @@ SetNameOperation(JSContext* cx, JSScript* script, jsbytecode* pc, HandleObject e
         else
             varobj = &env->as<NativeObject>();
         MOZ_ASSERT(!varobj->getOpsSetProperty());
-        ok = NativeSetProperty(cx, varobj, id, val, receiver, Unqualified, result);
+        ok = NativeSetProperty<Unqualified>(cx, varobj, id, val, receiver, result);
     } else {
         ok = SetProperty(cx, env, id, val, receiver, result);
     }
