@@ -391,6 +391,12 @@ FetchRequest(nsIGlobalObject* aGlobal, const RequestOrUSVString& aInput,
   RefPtr<InternalRequest> r = request->GetInternalRequest();
   RefPtr<AbortSignal> signal = request->GetSignal();
 
+  if (signal && signal->Aborted()) {
+    // Already aborted signal rejects immediately.
+    aRv.Throw(NS_ERROR_DOM_ABORT_ERR);
+    return nullptr;
+  }
+
   RefPtr<FetchObserver> observer;
   if (aInit.mObserve.WasPassed()) {
     observer = new FetchObserver(aGlobal, signal);
