@@ -50,6 +50,16 @@
 #define ATTR_NONCONFIGURABLE    0x10
 #define ATTR_NONWRITABLE        0x20
 
+// Property descriptor kind, must be different from the descriptor attributes.
+#define DATA_DESCRIPTOR_KIND     0x100
+#define ACCESSOR_DESCRIPTOR_KIND 0x200
+
+// Property descriptor array indices.
+#define PROP_DESC_ATTRS_AND_KIND_INDEX 0
+#define PROP_DESC_VALUE_INDEX 1
+#define PROP_DESC_GETTER_INDEX 1
+#define PROP_DESC_SETTER_INDEX 2
+
 // The extended slot in which the self-hosted name for self-hosted builtins is
 // stored.
 #define LAZY_FUNCTION_NAME_SLOT 0
@@ -62,9 +72,6 @@
 // Stores the length for bound functions, so the .length property doesn't need
 // to be resolved eagerly.
 #define BOUND_FUN_LENGTH_SLOT 1
-
-// Stores the private WeakMap slot used for WeakSets
-#define WEAKSET_MAP_SLOT 0
 
 #define ITERATOR_SLOT_TARGET 0
 // Used for collection iterators.

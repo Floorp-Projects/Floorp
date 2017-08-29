@@ -6,7 +6,6 @@
 #include "nsColorControlFrame.h"
 
 #include "nsContentCreatorFunctions.h"
-#include "nsContentList.h"
 #include "nsContentUtils.h"
 #include "nsCSSPseudoElements.h"
 #include "nsFormControlFrame.h"

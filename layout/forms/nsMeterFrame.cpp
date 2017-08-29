@@ -18,7 +18,6 @@
 #include "nsFontMetrics.h"
 #include "mozilla/dom/Element.h"
 #include "mozilla/dom/HTMLMeterElement.h"
-#include "nsContentList.h"
 #include "nsCSSPseudoElements.h"
 #include "nsStyleSet.h"
 #include "mozilla/StyleSetHandle.h"

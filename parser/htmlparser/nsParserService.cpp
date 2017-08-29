@@ -39,18 +39,6 @@ nsParserService::HTMLStringTagToId(const nsAString& aTag) const
   return nsHTMLTags::LookupTag(aTag);
 }
 
-const char16_t*
-nsParserService::HTMLIdToStringTag(int32_t aId) const
-{
-  return nsHTMLTags::GetStringValue((nsHTMLTag)aId);
-}
-  
-nsIAtom*
-nsParserService::HTMLIdToAtomTag(int32_t aId) const
-{
-  return nsHTMLTags::GetAtom((nsHTMLTag)aId);
-}
-
 NS_IMETHODIMP
 nsParserService::IsContainer(int32_t aId, bool& aIsContainer) const
 {

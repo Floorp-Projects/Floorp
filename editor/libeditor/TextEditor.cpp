@@ -1640,15 +1640,15 @@ TextEditor::SelectEntireDocument(Selection* aSelection)
 
   // Don't select the trailing BR node if we have one
   int32_t selOffset;
-  nsCOMPtr<nsIDOMNode> selNode;
+  nsCOMPtr<nsINode> selNode;
   rv = GetEndNodeAndOffset(aSelection, getter_AddRefs(selNode), &selOffset);
   NS_ENSURE_SUCCESS(rv, rv);
 
-  nsCOMPtr<nsIDOMNode> childNode = GetChildAt(selNode, selOffset - 1);
+  nsINode* childNode = selNode->GetChildAt(selOffset - 1);
 
   if (childNode && TextEditUtils::IsMozBR(childNode)) {
     int32_t parentOffset;
-    nsCOMPtr<nsIDOMNode> parentNode = GetNodeLocation(childNode, &parentOffset);
+    nsINode* parentNode = GetNodeLocation(childNode, &parentOffset);
 
     return aSelection->Extend(parentNode, parentOffset);
   }

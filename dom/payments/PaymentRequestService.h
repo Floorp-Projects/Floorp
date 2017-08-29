@@ -47,6 +47,9 @@ private:
   LaunchUIAction(const nsAString& aRequestId, uint32_t aActionType);
 
   bool
+  CanMakePayment(const nsAString& aRequestId);
+
+  bool
   IsBasicCardPayment(const nsAString& aRequestId);
 
   FallibleTArray<nsCOMPtr<nsIPaymentRequest>> mRequestQueue;

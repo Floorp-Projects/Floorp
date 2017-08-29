@@ -53,7 +53,7 @@
     test(t => {
       script.nonce = 'bar';
       assert_equals(script.nonce, 'bar');
-      assert_equals(script.getAttribute('nonce'), 'bar');
+      assert_equals(script.getAttribute('nonce'), 'foo');
     }, "Writing 'nonce' IDL attribute.");
 
     // Fragment parser.

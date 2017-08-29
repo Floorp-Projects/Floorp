@@ -217,7 +217,7 @@ CrossProcessCompositorBridgeParent::AllocPWebRenderBridgeParent(const wr::Pipeli
     // This could happen when this function is called after CompositorBridgeParent destruction.
     // This was observed during Tab move between different windows.
     NS_WARNING("Created child without a matching parent?");
-    parent = WebRenderBridgeParent::CreateDestroyed();
+    parent = WebRenderBridgeParent::CreateDestroyed(aPipelineId);
     parent->AddRef(); // IPDL reference
     *aIdNamespace = parent->GetIdNamespace();
     *aTextureFactoryIdentifier = TextureFactoryIdentifier(LayersBackend::LAYERS_NONE);

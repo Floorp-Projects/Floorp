@@ -27,8 +27,6 @@ interface HTMLLinkElement : HTMLElement {
   [CEReactions, SetterThrows, Pure]
            attribute DOMString media;
   [CEReactions, SetterThrows, Pure]
-           attribute DOMString nonce;
-  [CEReactions, SetterThrows, Pure]
            attribute DOMString hreflang;
   [CEReactions, SetterThrows, Pure]
            attribute DOMString type;

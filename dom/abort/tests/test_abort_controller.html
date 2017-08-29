@@ -5,19 +5,19 @@
 <!DOCTYPE HTML>
 <html>
 <head>
-  <title>Test FetchController</title>
+  <title>Test AbortController</title>
   <script type="text/javascript" src="/tests/SimpleTest/SimpleTest.js"></script>
   <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css" />
 </head>
 <body>
 <script class="testbody" type="text/javascript">
 
-SpecialPowers.pushPrefEnv({"set": [["dom.fetchController.enabled", true ]]}, () => {
-  let ifr = document.createElement('iframe');
-  ifr.src = "file_fetch_controller.html";
+SpecialPowers.pushPrefEnv({"set": [["dom.abortController.enabled", true ]]}, () => {
+  let ifr = document.createElement("iframe");
+  ifr.src = "file_abort_controller.html";
   document.body.appendChild(ifr);
 
-  onmessage = function(e) {
+  window.onmessage = function(e) {
     if (e.data.type == "finish") {
       SimpleTest.finish();
       return;

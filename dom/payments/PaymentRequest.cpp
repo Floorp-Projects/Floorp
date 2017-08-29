@@ -430,8 +430,7 @@ PaymentRequest::RejectShowPayment(nsresult aRejectReason)
 }
 
 void
-PaymentRequest::RespondShowPayment(bool aAccept,
-                                   const nsAString& aMethodName,
+PaymentRequest::RespondShowPayment(const nsAString& aMethodName,
                                    const nsAString& aDetails,
                                    const nsAString& aPayerName,
                                    const nsAString& aPayerEmail,
@@ -442,7 +441,7 @@ PaymentRequest::RespondShowPayment(bool aAccept,
   MOZ_ASSERT(ReadyForUpdate());
   MOZ_ASSERT(mState == eInteractive);
 
-  if (!aAccept) {
+  if (NS_FAILED(aRv)) {
     RejectShowPayment(aRv);
     return;
   }
@@ -514,7 +513,7 @@ PaymentRequest::RespondAbortPayment(bool aSuccess)
   // - Otherwise, we are handling |Abort| method call from merchant.
   //   => Resolve/Reject |mAbortPromise| based on |aSuccess|.
   if (NS_FAILED(mUpdateError)) {
-    RespondShowPayment(false, EmptyString(), EmptyString(), EmptyString(),
+    RespondShowPayment(EmptyString(), EmptyString(), EmptyString(),
                        EmptyString(), EmptyString(), mUpdateError);
     mUpdateError = NS_OK;
     return;

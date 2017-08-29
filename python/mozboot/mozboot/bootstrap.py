@@ -138,7 +138,7 @@ optimally configured?
 Please enter your reply: '''
 
 CLONE_MERCURIAL = '''
-If you would like to clone the canonical Mercurial repository, please
+If you would like to clone the mozilla-unified Mercurial repository, please
 enter the destination path below.
 
 (If you prefer to use Git, leave this blank.)

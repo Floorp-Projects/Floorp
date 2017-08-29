@@ -1023,11 +1023,8 @@ EditorEventListener::CanDrop(nsIDOMDragEvent* aEvent)
   rv = aEvent->GetRangeOffset(&offset);
   NS_ENSURE_SUCCESS(rv, false);
 
-  int32_t rangeCount;
-  rv = selection->GetRangeCount(&rangeCount);
-  NS_ENSURE_SUCCESS(rv, false);
-
-  for (int32_t i = 0; i < rangeCount; i++) {
+  uint32_t rangeCount = selection->RangeCount();
+  for (uint32_t i = 0; i < rangeCount; i++) {
     RefPtr<nsRange> range = selection->GetRangeAt(i);
     if (!range) {
       // Don't bail yet, iterate through them all

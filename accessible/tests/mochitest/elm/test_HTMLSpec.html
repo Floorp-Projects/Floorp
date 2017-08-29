@@ -1156,14 +1156,23 @@
       testElm("samp_container", obj);
 
       // ////////////////////////////////////////////////////////////////////////
-      // HTML:section
+      // HTML:section without an accessible name
+
+      obj = {
+        role: ROLE_SECTION,
+        absentAttributes: { "xml-roles": "region" },
+        interfaces: [ nsIAccessibleText, nsIAccessibleHyperText ]
+      };
+      testElm("section", obj);
+
+      // HTML:section with an accessible name
 
       obj = {
         role: ROLE_SECTION,
         attributes: { "xml-roles": "region" },
         interfaces: [ nsIAccessibleText, nsIAccessibleHyperText ]
       };
-      testElm("section", obj);
+      testElm("named_section", obj);
 
       // ////////////////////////////////////////////////////////////////////////
       // HTML:small contained by paragraph
@@ -1648,6 +1657,7 @@
   <p id="s_container">normal<s>striked</s></p>
   <p id="samp_container">normal<samp>sample</samp></p>
   <section id="section">section</section>
+  <section id="named_section" aria-label="foo">named section</section>
   <p id="small_container">normal<small>small</small></p>
   <span id="span"></span>
   <p id="strong_container">normal<strong>strong</strong></p>

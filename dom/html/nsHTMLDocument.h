@@ -75,9 +75,17 @@ public:
 
   virtual nsIContent* GetUnfocusedKeyEventTarget() override;
 
-  virtual nsContentList* GetForms() override;
+  nsContentList* GetForms();
 
-  virtual nsContentList* GetFormControls() override;
+  nsContentList* GetExistingForms() const
+  {
+    return mForms;
+  }
+
+  nsContentList* GetExistingFormControls() const
+  {
+    return mFormControls;
+  }
 
   // nsIDOMDocument interface
   using nsDocument::CreateElement;
@@ -259,6 +267,9 @@ public:
   }
 
   virtual nsHTMLDocument* AsHTMLDocument() override { return this; }
+
+  static bool MatchFormControls(Element* aElement, int32_t aNamespaceID,
+                                nsIAtom* aAtom, void* aData);
 
 protected:
   ~nsHTMLDocument();

@@ -52,7 +52,7 @@ CustomElementCallback::Call()
       break;
     case nsIDocument::eAttributeChanged:
       static_cast<LifecycleAttributeChangedCallback *>(mCallback.get())->Call(mThisObject,
-        mArgs.name, mArgs.oldValue, mArgs.newValue, rv);
+        mArgs.name, mArgs.oldValue, mArgs.newValue, mArgs.namespaceURI, rv);
       break;
   }
 }
@@ -445,8 +445,27 @@ CustomElementRegistry::EnqueueLifecycleCallback(nsIDocument::ElementCallbackType
                                                 LifecycleCallbackArgs* aArgs,
                                                 CustomElementDefinition* aDefinition)
 {
+  RefPtr<CustomElementData> elementData = aCustomElement->GetCustomElementData();
+  MOZ_ASSERT(elementData, "CustomElementData should exist");
+
+  // Let DEFINITION be ELEMENT's definition
+  CustomElementDefinition* definition = aDefinition;
+  if (!definition) {
+    mozilla::dom::NodeInfo* info = aCustomElement->NodeInfo();
+
+    // Make sure we get the correct definition in case the element
+    // is a extended custom element e.g. <button is="x-button">.
+    nsCOMPtr<nsIAtom> typeAtom = elementData ?
+      elementData->mType.get() : info->NameAtom();
+
+    definition = mCustomDefinitions.Get(typeAtom);
+    if (!definition || definition->mLocalName != info->NameAtom()) {
+      return;
+    }
+  }
+
   auto callback =
-    CreateCustomElementCallback(aType, aCustomElement, aArgs, aDefinition);
+    CreateCustomElementCallback(aType, aCustomElement, aArgs, definition);
   if (!callback) {
     return;
   }
@@ -456,9 +475,17 @@ CustomElementRegistry::EnqueueLifecycleCallback(nsIDocument::ElementCallbackType
     return;
   }
 
+  if (aType == nsIDocument::eAttributeChanged) {
+    nsCOMPtr<nsIAtom> attrName = NS_Atomize(aArgs->name);
+    if (definition->mObservedAttributes.IsEmpty() ||
+        !definition->mObservedAttributes.Contains(attrName)) {
+      return;
+    }
+  }
+
   CustomElementReactionsStack* reactionsStack =
     docGroup->CustomElementReactionsStack();
-  reactionsStack->EnqueueCallbackReaction(this, aCustomElement, aDefinition,
+  reactionsStack->EnqueueCallbackReaction(this, aCustomElement, definition,
                                           Move(callback));
 }
 
@@ -668,6 +695,7 @@ CustomElementRegistry::Define(const nsAString& aName,
 
   JS::Rooted<JSObject*> constructorPrototype(cx);
   nsAutoPtr<LifecycleCallbacks> callbacksHolder(new LifecycleCallbacks());
+  nsCOMArray<nsIAtom> observedAttributes;
   { // Set mIsCustomDefinitionRunning.
     /**
      * 9. Set this CustomElementRegistry's element definition is running flag.
@@ -729,6 +757,14 @@ CustomElementRegistry::Define(const nsAString& aName,
         return;
       }
 
+      // Note: We call the init from the constructorProtoUnwrapped's compartment
+      //       here.
+      JS::RootedValue rootedv(cx, JS::ObjectValue(*constructorProtoUnwrapped));
+      if (!JS_WrapValue(cx, &rootedv) || !callbacksHolder->Init(cx, rootedv)) {
+        aRv.StealExceptionFromJSContext(cx);
+        return;
+      }
+
       /**
        * 10.5. Let observedAttributes be an empty sequence<DOMString>.
        * 10.6. If the value of the entry in lifecycleCallbacks with key
@@ -741,14 +777,45 @@ CustomElementRegistry::Define(const nsAString& aName,
        *          any exceptions from the conversion.
        */
       // TODO: Bug 1293921 - Implement connected/disconnected/adopted/attributeChanged lifecycle callbacks for custom elements
+      if (callbacksHolder->mAttributeChangedCallback.WasPassed()) {
+        // Enter constructor's compartment.
+        JSAutoCompartment ac(cx, constructor);
+        JS::Rooted<JS::Value> observedAttributesIterable(cx);
 
-      // Note: We call the init from the constructorProtoUnwrapped's compartment
-      //       here.
-      JS::RootedValue rootedv(cx, JS::ObjectValue(*constructorProtoUnwrapped));
-      if (!JS_WrapValue(cx, &rootedv) || !callbacksHolder->Init(cx, rootedv)) {
-        aRv.StealExceptionFromJSContext(cx);
-        return;
-      }
+        if (!JS_GetProperty(cx, constructor, "observedAttributes",
+                            &observedAttributesIterable)) {
+          aRv.StealExceptionFromJSContext(cx);
+          return;
+        }
+
+        if (!observedAttributesIterable.isUndefined()) {
+          JS::ForOfIterator iter(cx);
+          if (!iter.init(observedAttributesIterable)) {
+            aRv.StealExceptionFromJSContext(cx);
+            return;
+          }
+
+          JS::Rooted<JS::Value> attribute(cx);
+          while (true) {
+            bool done;
+            if (!iter.next(&attribute, &done)) {
+              aRv.StealExceptionFromJSContext(cx);
+              return;
+            }
+            if (done) {
+              break;
+            }
+
+            JSString *attrJSStr = attribute.toString();
+            nsAutoJSString attrStr;
+            if (!attrStr.init(cx, attrJSStr)) {
+              aRv.StealExceptionFromJSContext(cx);
+              return;
+            }
+            observedAttributes.AppendElement(NS_Atomize(attrStr));
+          }
+        }
+      } // Leave constructor's compartment.
     } // Leave constructorProtoUnwrapped's compartment.
   } // Unset mIsCustomDefinitionRunning
 
@@ -774,6 +841,7 @@ CustomElementRegistry::Define(const nsAString& aName,
     new CustomElementDefinition(nameAtom,
                                 localNameAtom,
                                 &aFunctionConstructor,
+                                Move(observedAttributes),
                                 constructorPrototype,
                                 callbacks,
                                 0 /* TODO dependent on HTML imports. Bug 877072 */);
@@ -890,8 +958,35 @@ CustomElementRegistry::Upgrade(Element* aElement,
     return;
   }
 
-  // Step 3 and Step 4.
-  // TODO: Bug 1334051 - Implement list of observed attributes for custom elements' attributeChanged callbacks
+  // Step 3.
+  if (!aDefinition->mObservedAttributes.IsEmpty()) {
+    uint32_t count = aElement->GetAttrCount();
+    for (uint32_t i = 0; i < count; i++) {
+      mozilla::dom::BorrowedAttrInfo info = aElement->GetAttrInfoAt(i);
+
+      const nsAttrName* name = info.mName;
+      nsIAtom* attrName = name->LocalName();
+
+      if (aDefinition->IsInObservedAttributeList(attrName)) {
+        int32_t namespaceID = name->NamespaceID();
+        nsAutoString attrValue, namespaceURI;
+        info.mValue->ToString(attrValue);
+        nsContentUtils::NameSpaceManager()->GetNameSpaceURI(namespaceID,
+                                                            namespaceURI);
+
+        LifecycleCallbackArgs args = {
+          nsDependentAtomString(attrName),
+          NullString(),
+          (attrValue.IsEmpty() ? NullString() : attrValue),
+          (namespaceURI.IsEmpty() ? NullString() : namespaceURI)
+        };
+        EnqueueLifecycleCallback(nsIDocument::eAttributeChanged, aElement,
+                                 &args, aDefinition);
+      }
+    }
+  }
+
+  // Step 4.
   // TODO: Bug 1334043 - Implement connected lifecycle callbacks for custom elements
 
   // Step 5.
@@ -1063,12 +1158,14 @@ CustomElementReactionsStack::InvokeReactions(ElementQueue* aElementQueue,
 CustomElementDefinition::CustomElementDefinition(nsIAtom* aType,
                                                  nsIAtom* aLocalName,
                                                  Function* aConstructor,
+                                                 nsCOMArray<nsIAtom>&& aObservedAttributes,
                                                  JSObject* aPrototype,
                                                  LifecycleCallbacks* aCallbacks,
                                                  uint32_t aDocOrder)
   : mType(aType),
     mLocalName(aLocalName),
     mConstructor(new CustomElementConstructor(aConstructor)),
+    mObservedAttributes(Move(aObservedAttributes)),
     mPrototype(aPrototype),
     mCallbacks(aCallbacks),
     mDocOrder(aDocOrder)

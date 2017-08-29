@@ -687,7 +687,7 @@ nsDefaultURIFixup::FixupURIProtocol(const nsACString& aURIString,
   //   no-scheme.com/query?foo=http://www.foo.com
   //   user:pass@no-scheme.com
   //
-  int32_t schemeDelim = uriString.Find("://", 0);
+  int32_t schemeDelim = uriString.Find("://");
   int32_t firstDelim = uriString.FindCharInSet("/:");
   if (schemeDelim <= 0 ||
       (firstDelim != -1 && schemeDelim > firstDelim)) {
