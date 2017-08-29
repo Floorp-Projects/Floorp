@@ -733,7 +733,7 @@ FetchBodyConsumer<Derived>::Observe(nsISupports* aSubject,
 
 template <class Derived>
 void
-FetchBodyConsumer<Derived>::Aborted()
+FetchBodyConsumer<Derived>::Abort()
 {
   AssertIsOnTargetThread();
   ContinueConsumeBody(NS_ERROR_DOM_ABORT_ERR, 0, nullptr);
