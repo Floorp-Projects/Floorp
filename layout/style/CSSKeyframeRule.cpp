@@ -16,7 +16,7 @@ NS_IMPL_ADDREF_INHERITED(CSSKeyframeRule, mozilla::css::Rule)
 NS_IMPL_RELEASE_INHERITED(CSSKeyframeRule, mozilla::css::Rule)
 
 // QueryInterface implementation for CSSKeyframeRule
-NS_INTERFACE_MAP_BEGIN_CYCLE_COLLECTION_INHERITED(CSSKeyframeRule)
+NS_INTERFACE_MAP_BEGIN_CYCLE_COLLECTION(CSSKeyframeRule)
   NS_INTERFACE_MAP_ENTRY(nsIDOMCSSKeyframeRule)
 NS_INTERFACE_MAP_END_INHERITING(mozilla::css::Rule)
 

@@ -50,7 +50,7 @@ nsScreen::~nsScreen()
 
 
 // QueryInterface implementation for nsScreen
-NS_INTERFACE_MAP_BEGIN_CYCLE_COLLECTION_INHERITED(nsScreen)
+NS_INTERFACE_MAP_BEGIN_CYCLE_COLLECTION(nsScreen)
   NS_INTERFACE_MAP_ENTRY(nsIDOMScreen)
 NS_INTERFACE_MAP_END_INHERITING(DOMEventTargetHelper)
 

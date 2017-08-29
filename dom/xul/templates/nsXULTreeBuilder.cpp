@@ -47,7 +47,7 @@ NS_IMPL_CYCLE_COLLECTION_INHERITED(nsXULTreeBuilder, nsXULTemplateBuilder,
                                    mLocalStore,
                                    mObservers)
 
-NS_INTERFACE_MAP_BEGIN_CYCLE_COLLECTION_INHERITED(nsXULTreeBuilder)
+NS_INTERFACE_MAP_BEGIN_CYCLE_COLLECTION(nsXULTreeBuilder)
     NS_INTERFACE_MAP_ENTRY(nsIXULTreeBuilder)
     NS_INTERFACE_MAP_ENTRY(nsITreeView)
 NS_INTERFACE_MAP_END_INHERITING(nsXULTemplateBuilder)

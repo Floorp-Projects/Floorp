@@ -52,7 +52,7 @@ NS_IMPL_CYCLE_COLLECTION_INHERITED(FileSystemFileEntry, FileSystemEntry, mFile)
 NS_IMPL_ADDREF_INHERITED(FileSystemFileEntry, FileSystemEntry)
 NS_IMPL_RELEASE_INHERITED(FileSystemFileEntry, FileSystemEntry)
 
-NS_INTERFACE_MAP_BEGIN_CYCLE_COLLECTION_INHERITED(FileSystemFileEntry)
+NS_INTERFACE_MAP_BEGIN_CYCLE_COLLECTION(FileSystemFileEntry)
 NS_INTERFACE_MAP_END_INHERITING(FileSystemEntry)
 
 FileSystemFileEntry::FileSystemFileEntry(nsIGlobalObject* aGlobal,

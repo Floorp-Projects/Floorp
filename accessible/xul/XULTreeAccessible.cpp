@@ -74,7 +74,7 @@ XULTreeAccessible::~XULTreeAccessible()
 NS_IMPL_CYCLE_COLLECTION_INHERITED(XULTreeAccessible, Accessible,
                                    mTree, mAccessibleCache)
 
-NS_INTERFACE_MAP_BEGIN_CYCLE_COLLECTION_INHERITED(XULTreeAccessible)
+NS_INTERFACE_MAP_BEGIN_CYCLE_COLLECTION(XULTreeAccessible)
 NS_INTERFACE_MAP_END_INHERITING(Accessible)
 
 NS_IMPL_ADDREF_INHERITED(XULTreeAccessible, Accessible)
@@ -1086,7 +1086,7 @@ NS_IMPL_CYCLE_COLLECTION_INHERITED(XULTreeItemAccessible,
                                    XULTreeItemAccessibleBase,
                                    mColumn)
 
-NS_INTERFACE_MAP_BEGIN_CYCLE_COLLECTION_INHERITED(XULTreeItemAccessible)
+NS_INTERFACE_MAP_BEGIN_CYCLE_COLLECTION(XULTreeItemAccessible)
 NS_INTERFACE_MAP_END_INHERITING(XULTreeItemAccessibleBase)
 NS_IMPL_ADDREF_INHERITED(XULTreeItemAccessible, XULTreeItemAccessibleBase)
 NS_IMPL_RELEASE_INHERITED(XULTreeItemAccessible, XULTreeItemAccessibleBase)

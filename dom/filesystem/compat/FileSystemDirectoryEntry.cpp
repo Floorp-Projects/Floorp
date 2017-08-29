@@ -20,7 +20,7 @@ NS_IMPL_CYCLE_COLLECTION_INHERITED(FileSystemDirectoryEntry, FileSystemEntry,
 NS_IMPL_ADDREF_INHERITED(FileSystemDirectoryEntry, FileSystemEntry)
 NS_IMPL_RELEASE_INHERITED(FileSystemDirectoryEntry, FileSystemEntry)
 
-NS_INTERFACE_MAP_BEGIN_CYCLE_COLLECTION_INHERITED(FileSystemDirectoryEntry)
+NS_INTERFACE_MAP_BEGIN_CYCLE_COLLECTION(FileSystemDirectoryEntry)
 NS_INTERFACE_MAP_END_INHERITING(FileSystemEntry)
 
 FileSystemDirectoryEntry::FileSystemDirectoryEntry(nsIGlobalObject* aGlobal,
