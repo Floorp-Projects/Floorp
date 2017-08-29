@@ -55,20 +55,22 @@ public abstract class WebFragment extends LocaleAwareFragment {
     public abstract void onCreateViewCalled();
 
     @Override
-    public final View onCreateView(LayoutInflater inflater, @Nullable ViewGroup container, @Nullable Bundle savedInstanceState) {
+    public View onCreateView(LayoutInflater inflater, @Nullable ViewGroup container, @Nullable Bundle savedInstanceState) {
         final View view = inflateLayout(inflater, container, savedInstanceState);
 
-        webView = (IWebView) view.findViewById(R.id.webview);
+        webView = view.findViewById(R.id.webview);
         isWebViewAvailable = true;
         webView.setCallback(createCallback());
 
-        if (savedInstanceState == null) {
+        final Session session = getSession();
+
+        if (session == null || !session.hasWebViewState()) {
             final String url = getInitialUrl();
             if (!TextUtils.isEmpty(url)) {
                 webView.loadUrl(url);
             }
         } else {
-            webView.restoreWebViewState(getSession(), savedInstanceState);
+            webView.restoreWebViewState(session);
         }
 
         onCreateViewCalled();
@@ -95,6 +97,8 @@ public abstract class WebFragment extends LocaleAwareFragment {
 
     @Override
     public void onPause() {
+        webView.saveWebViewState(getSession());
+
         webView.onPause();
 
         super.onPause();
@@ -105,13 +109,6 @@ public abstract class WebFragment extends LocaleAwareFragment {
         webView.onResume();
 
         super.onResume();
-    }
-
-    @Override
-    public void onSaveInstanceState(Bundle outState) {
-        webView.saveWebViewState(getSession(), outState);
-
-        super.onSaveInstanceState(outState);
     }
 
     @Override

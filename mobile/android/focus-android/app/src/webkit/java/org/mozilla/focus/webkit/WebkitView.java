@@ -11,6 +11,8 @@ import android.net.Uri;
 import android.os.Bundle;
 import android.os.Environment;
 import android.preference.PreferenceManager;
+import android.support.annotation.NonNull;
+import android.support.annotation.Nullable;
 import android.util.AttributeSet;
 import android.util.Log;
 import android.view.View;
@@ -90,19 +92,15 @@ public class WebkitView extends NestedWebView implements IWebView, SharedPrefere
     }
 
     @Override
-    public void restoreWebViewState(Session session, Bundle inBundle) {
-        // Let's see if there's a UUID in the bundle and whether we have a state assigned to this UUID.
-        final String uuid = inBundle.getString(KEY_STATE_UUID);
-        if (!session.getUUID().equals(uuid)) {
-            // This session and the stored state do not match.
-            return;
-        }
-
+    public void restoreWebViewState(Session session) {
         final Bundle stateData = session.getWebViewState();
 
         final WebBackForwardList backForwardList = stateData != null
                 ? super.restoreState(stateData)
                 : null;
+
+        final String desiredURL = session.getUrl().getValue();
+        client.notifyCurrentURL(desiredURL);
 
         // Pages are only added to the back/forward list when loading finishes. If a new page is
         // loading when the Activity is paused/killed, then that page won't be in the list,
@@ -112,9 +110,6 @@ public class WebkitView extends NestedWebView implements IWebView, SharedPrefere
         // WebView.getUrl() always returns the currently loading or loaded page).
         // If the app is paused/killed before the initial page finished loading, then the entire
         // list will be null - so we need to additionally check whether the list even exists.
-
-        final String desiredURL = inBundle.getString(KEY_CURRENTURL);
-        client.notifyCurrentURL(desiredURL);
 
         if (backForwardList != null &&
                 backForwardList.getCurrentItem().getUrl().equals(desiredURL)) {
@@ -127,7 +122,7 @@ public class WebkitView extends NestedWebView implements IWebView, SharedPrefere
     }
 
     @Override
-    public void saveWebViewState(Session session, Bundle outState) {
+    public void saveWebViewState(@NonNull Session session) {
         // We store the actual state into another bundle that we will keep in memory as long as this
         // browsing session is active. The data that WebView stores in this bundle is too large for
         // Android to save and restore as part of the state bundle.
@@ -135,15 +130,6 @@ public class WebkitView extends NestedWebView implements IWebView, SharedPrefere
         super.saveState(stateData);
 
         session.saveWebViewState(stateData);
-
-        // We will only store the session UUID in the bundle that Android saves and restores. The
-        // actual data will be kept in memory and we are going to use the UUID to lookup the data
-        // when restoring.
-        outState.putString(KEY_STATE_UUID, session.getUUID());
-
-        // See restoreWebViewState() for an explanation of why we need to save this in _addition_
-        // to WebView's state
-        outState.putString(KEY_CURRENTURL, getUrl());
     }
 
     @Override

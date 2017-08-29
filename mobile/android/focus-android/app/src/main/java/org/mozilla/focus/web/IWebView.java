@@ -108,9 +108,9 @@ public interface IWebView {
 
     boolean canGoBack();
 
-    void restoreWebViewState(Session session, Bundle inState);
+    void restoreWebViewState(Session session);
 
-    void saveWebViewState(@NonNull Session session, @NonNull Bundle outState);
+    void saveWebViewState(@NonNull Session session);
 
     /**
      * Get the title of the currently displayed website.

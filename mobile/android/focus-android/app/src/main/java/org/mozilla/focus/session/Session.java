@@ -106,6 +106,10 @@ public class Session {
         return webviewState;
     }
 
+    public boolean hasWebViewState() {
+        return webviewState != null;
+    }
+
     public boolean isCustomTab() {
         return customTabConfig != null;
     }

@@ -184,12 +184,12 @@ public class WebViewProvider {
         }
 
         @Override
-        public void restoreWebViewState(Session session, Bundle inState) {
+        public void restoreWebViewState(Session session) {
             // TODO: restore navigation history, and reopen previously opened page
         }
 
         @Override
-        public void saveWebViewState(@NonNull Session session, @NonNull Bundle outState) {
+        public void saveWebViewState(@NonNull Session session) {
             // TODO: save anything needed for navigation history restoration.
         }
 
