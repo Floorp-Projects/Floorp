@@ -55,70 +55,6 @@ IsEmptyTextNode(HTMLEditor* aThis, nsINode* aNode)
 }
 
 NS_IMETHODIMP
-HTMLEditor::AddDefaultProperty(const nsAString& aProperty,
-                               const nsAString& aAttribute,
-                               const nsAString& aValue)
-{
-  return AddDefaultProperty(NS_Atomize(aProperty).take(), aAttribute, aValue);
-}
-
-nsresult
-HTMLEditor::AddDefaultProperty(nsIAtom* aProperty,
-                               const nsAString& aAttribute,
-                               const nsAString& aValue)
-{
-  nsString outValue;
-  int32_t index;
-  nsString attr(aAttribute);
-  if (TypeInState::FindPropInList(aProperty, attr, &outValue,
-                                  mDefaultStyles, index)) {
-    PropItem *item = mDefaultStyles[index];
-    item->value = aValue;
-  } else {
-    nsString value(aValue);
-    PropItem *propItem = new PropItem(aProperty, attr, value);
-    mDefaultStyles.AppendElement(propItem);
-  }
-  return NS_OK;
-}
-
-NS_IMETHODIMP
-HTMLEditor::RemoveDefaultProperty(const nsAString& aProperty,
-                                  const nsAString& aAttribute,
-                                  const nsAString& aValue)
-{
-  return RemoveDefaultProperty(NS_Atomize(aProperty).take(), aAttribute,
-                               aValue);
-}
-
-nsresult
-HTMLEditor::RemoveDefaultProperty(nsIAtom* aProperty,
-                                  const nsAString& aAttribute,
-                                  const nsAString& aValue)
-{
-  nsString outValue;
-  int32_t index;
-  nsString attr(aAttribute);
-  if (TypeInState::FindPropInList(aProperty, attr, &outValue,
-                                  mDefaultStyles, index)) {
-    delete mDefaultStyles[index];
-    mDefaultStyles.RemoveElementAt(index);
-  }
-  return NS_OK;
-}
-
-NS_IMETHODIMP
-HTMLEditor::RemoveAllDefaultProperties()
-{
-  size_t defcon = mDefaultStyles.Length();
-  for (size_t j = 0; j < defcon; j++) {
-    delete mDefaultStyles[j];
-  }
-  mDefaultStyles.Clear();
-  return NS_OK;
-}
-
-NS_IMETHODIMP
 HTMLEditor::SetInlineProperty(const nsAString& aProperty,
                               const nsAString& aAttribute,
                               const nsAString& aValue)
@@ -716,20 +652,6 @@ HTMLEditor::NodeIsProperty(nsINode& aNode)
 }
 
 nsresult
-HTMLEditor::ApplyDefaultProperties()
-{
-  size_t defcon = mDefaultStyles.Length();
-  for (size_t j = 0; j < defcon; j++) {
-    PropItem *propItem = mDefaultStyles[j];
-    NS_ENSURE_TRUE(propItem, NS_ERROR_NULL_POINTER);
-    nsresult rv =
-      SetInlineProperty(propItem->tag, propItem->attr, propItem->value);
-    NS_ENSURE_SUCCESS(rv, rv);
-  }
-  return NS_OK;
-}
-
-nsresult
 HTMLEditor::RemoveStyleInside(nsIContent& aNode,
                               nsIAtom* aProperty,
                               const nsAString* aAttribute,
@@ -997,8 +919,7 @@ HTMLEditor::GetInlinePropertyBase(nsIAtom& aProperty,
                                   bool* aFirst,
                                   bool* aAny,
                                   bool* aAll,
-                                  nsAString* outValue,
-                                  bool aCheckDefaults)
+                                  nsAString* outValue)
 {
   *aAny = false;
   *aAll = true;
@@ -1053,21 +974,6 @@ HTMLEditor::GetInlinePropertyBase(nsIAtom& aProperty,
       isSet = IsTextPropertySetByContent(collapsedNode, &aProperty,
                                          aAttribute, aValue, outValue);
       *aFirst = *aAny = *aAll = isSet;
-
-      if (!isSet && aCheckDefaults) {
-        // Style not set, but if it is a default then it will appear if content
-        // is inserted, so we should report it as set (analogous to
-        // TypeInState).
-        int32_t index;
-        if (aAttribute && TypeInState::FindPropInList(&aProperty, *aAttribute,
-                                                      outValue, mDefaultStyles,
-                                                      index)) {
-          *aFirst = *aAny = *aAll = true;
-          if (outValue) {
-            outValue->Assign(mDefaultStyles[index]->value);
-          }
-        }
-      }
       return NS_OK;
     }
 
@@ -1236,7 +1142,7 @@ HTMLEditor::RemoveAllInlineProperties()
 
   nsresult rv = RemoveInlinePropertyImpl(nullptr, nullptr);
   NS_ENSURE_SUCCESS(rv, rv);
-  return ApplyDefaultProperties();
+  return NS_OK;
 }
 
 NS_IMETHODIMP

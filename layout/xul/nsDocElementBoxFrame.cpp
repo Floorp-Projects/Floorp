@@ -19,7 +19,6 @@
 #include "nsNodeInfoManager.h"
 #include "nsContentCreatorFunctions.h"
 #include "nsContentUtils.h"
-#include "nsContentList.h"
 #include "mozilla/dom/Element.h"
 
 //#define DEBUG_REFLOW

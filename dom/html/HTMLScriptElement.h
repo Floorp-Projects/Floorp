@@ -81,14 +81,6 @@ public:
   {
     SetOrRemoveNullableStringAttr(nsGkAtoms::crossorigin, aCrossOrigin, aError);
   }
-  void GetNonce(nsAString& aNonce) const
-  {
-    GetHTMLAttr(nsGkAtoms::nonce, aNonce);
-  }
-  void SetNonce(const nsAString& aNonce, ErrorResult& aRv)
-  {
-    SetHTMLAttr(nsGkAtoms::nonce, aNonce, aRv);
-  }
   void GetIntegrity(nsAString& aIntegrity)
   {
     GetHTMLAttr(nsGkAtoms::integrity, aIntegrity);

@@ -57,32 +57,6 @@ class nsIParserService : public nsISupports {
    */
   virtual int32_t HTMLStringTagToId(const nsAString& aTag) const = 0;
 
-  /**
-   * Gets the tag corresponding to the nsHTMLTag enum value in aId. The
-   * returned tag will be in lowercase.
-   *
-   * @param aId The nsHTMLTag enum value to get the tag for.
-   *
-   * @return const char16_t* The tag corresponding to the nsHTMLTag enum
-   *                          value, or nullptr if the enum value doesn't
-   *                          correspond to a tag (eHTMLTag_unknown,
-   *                          eHTMLTag_userdefined, eHTMLTag_text, ...).
-   */
-  virtual const char16_t *HTMLIdToStringTag(int32_t aId) const = 0;
-
-  /**
-   * Gets the tag corresponding to the nsHTMLTag enum value in aId. The
-   * returned tag will be in lowercase.
-   *
-   * @param aId The nsHTMLTag enum value to get the tag for.
-   *
-   * @return nsIAtom* The tag corresponding to the nsHTMLTag enum value, or
-   *                  nullptr if the enum value doesn't correspond to a tag
-   *                  (eHTMLTag_unknown, eHTMLTag_userdefined, eHTMLTag_text,
-   *                  ...).
-   */
-  virtual nsIAtom *HTMLIdToAtomTag(int32_t aId) const = 0;
-
   NS_IMETHOD IsContainer(int32_t aId, bool& aIsContainer) const = 0;
   NS_IMETHOD IsBlock(int32_t aId, bool& aIsBlock) const = 0;
 };

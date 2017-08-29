@@ -594,13 +594,32 @@ PaymentRequestManager::RespondPayment(const IPCPaymentActionResponse& aResponse)
       if (NS_WARN_IF(!request)) {
         return NS_ERROR_FAILURE;
       }
-      request->RespondShowPayment(response.isAccepted(),
-                                  response.methodName(),
+      nsresult rejectedReason = NS_ERROR_DOM_ABORT_ERR;
+      switch (response.status()) {
+        case nsIPaymentActionResponse::PAYMENT_ACCEPTED: {
+          rejectedReason = NS_OK;
+          break;
+        }
+        case nsIPaymentActionResponse::PAYMENT_REJECTED: {
+          rejectedReason = NS_ERROR_DOM_ABORT_ERR;
+          break;
+        }
+        case nsIPaymentActionResponse::PAYMENT_NOTSUPPORTED: {
+          rejectedReason = NS_ERROR_DOM_NOT_SUPPORTED_ERR;
+          break;
+        }
+        default: {
+          rejectedReason = NS_ERROR_UNEXPECTED;
+          break;
+        }
+      }
+      request->RespondShowPayment(response.methodName(),
                                   response.data(),
                                   response.payerName(),
                                   response.payerEmail(),
-                                  response.payerPhone());
-      if (!response.isAccepted()) {
+                                  response.payerPhone(),
+                                  rejectedReason);
+      if (NS_FAILED(rejectedReason)) {
         MOZ_ASSERT(mShowingRequest == request);
         mShowingRequest = nullptr;
         mRequestQueue.RemoveElement(request);

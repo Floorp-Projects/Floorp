@@ -9992,10 +9992,10 @@
   },
   "DEVTOOLS_TOOLBOX_HOST": {
     "record_in_processes": ["main", "content"],
-    "alert_emails": ["dev-developer-tools@lists.mozilla.org"],
-    "expires_in_version": "58",
+    "alert_emails": ["dev-developer-tools@lists.mozilla.org", "hkirschner@mozilla.com"],
+    "expires_in_version": "never",
     "kind": "enumerated",
-    "bug_numbers": [1205845],
+    "bug_numbers": [1205845, 1389995],
     "n_values": 9,
     "releaseChannelCollection": "opt-out",
     "description": "Records DevTools toolbox host each time the toolbox is opened and when the host is changed (0:Bottom, 1:Side, 2:Window, 3:Custom, 9:Unknown)."

@@ -66,8 +66,9 @@ interface nsIPaymentActionResponse : nsISupports
   const uint32_t ABORT_SUCCEEDED = 1;
   const uint32_t ABORT_FAILED = 0;
 
-  const uint32_t PAYMENT_ACCEPTED = 1;
   const uint32_t PAYMENT_REJECTED = 0;
+  const uint32_t PAYMENT_ACCEPTED = 1;
+  const uint32_t PAYMENT_NOTSUPPORTED = 2;
 
   const uint32_t COMPLETE_SUCCEEDED = 1;
   const uint32_t COMPLETE_FAILED = 0;
@@ -140,11 +141,6 @@ interface nsIPaymentShowActionResponse : nsIPaymentActionResponse
             in AString aPayerName,
             in AString aPayerEmail,
             in AString aPayerPhone);
-
-  /*
-   *  Check if the payment is accpeted
-   */
-  bool isAccepted();
 };
 
 [builtinclass, scriptable, uuid(8c72bcdb-0c37-4786-a9e5-510afa2f8ede)]

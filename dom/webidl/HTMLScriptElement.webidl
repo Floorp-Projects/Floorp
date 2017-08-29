@@ -26,10 +26,6 @@ interface HTMLScriptElement : HTMLElement {
   attribute DOMString? crossOrigin;
   [CEReactions, SetterThrows]
   attribute DOMString text;
-  [CEReactions, SetterThrows, Pure]
-  attribute DOMString nonce;
-  [CEReactions, SetterThrows, Pure]
-  attribute DOMString integrity;
 };
 
 // http://www.whatwg.org/specs/web-apps/current-work/#other-elements,-attributes-and-apis
@@ -38,4 +34,10 @@ partial interface HTMLScriptElement {
   attribute DOMString event;
   [CEReactions, SetterThrows]
   attribute DOMString htmlFor;
+};
+
+// https://w3c.github.io/webappsec/specs/subresourceintegrity/#htmlscriptelement-1
+partial interface HTMLScriptElement {
+  [CEReactions, SetterThrows]
+  attribute DOMString integrity;
 };

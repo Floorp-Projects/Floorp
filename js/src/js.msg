@@ -420,6 +420,7 @@ MSG_DEF(JSMSG_CANT_SET_NW_NC,          1, JSEXN_TYPEERR, "proxy can't successful
 MSG_DEF(JSMSG_CANT_SET_WO_SETTER,      1, JSEXN_TYPEERR, "proxy can't succesfully set an accessor property '{0}' without a setter")
 MSG_DEF(JSMSG_CANT_SKIP_NC,            1, JSEXN_TYPEERR, "proxy can't skip a non-configurable property '{0}'")
 MSG_DEF(JSMSG_OWNKEYS_STR_SYM,         0, JSEXN_TYPEERR, "proxy [[OwnPropertyKeys]] must return an array with only string and symbol elements")
+MSG_DEF(JSMSG_OWNKEYS_DUPLICATE,       1, JSEXN_TYPEERR, "proxy [[OwnPropertyKeys]] can't report property '{0}' more than once")
 MSG_DEF(JSMSG_MUST_REPORT_SAME_VALUE,  1, JSEXN_TYPEERR, "proxy must report the same value for the non-writable, non-configurable property '{0}'")
 MSG_DEF(JSMSG_MUST_REPORT_UNDEFINED,   1, JSEXN_TYPEERR, "proxy must report undefined for a non-configurable accessor property '{0}' without a getter")
 MSG_DEF(JSMSG_PROXY_CONSTRUCT_OBJECT,  0, JSEXN_TYPEERR, "proxy [[Construct]] must return an object")

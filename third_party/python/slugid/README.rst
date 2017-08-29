@@ -5,8 +5,9 @@ slugid.py - Compressed UUIDs for python
 
 |Build Status| |Coverage Status| |License| |pypi Version| |Downloads|
 
-A python module for generating v4 UUIDs and encoding them into 22 character
-URL-safe base64 slug representation (see `RFC 4648 sec. 5`_).
+A python 2.7 and python 3.5 compatible module for generating v4 UUIDs and
+encoding them into 22 character URL-safe base64 slug representation (see `RFC
+4648 sec. 5`_).
 
 Slugs are url-safe base64 encoded v4 uuids, stripped of base64 ``=`` padding.
 

@@ -49,18 +49,33 @@ async function reportTimes() {
   }
 }
 
+window.addEventListener("message", childIsOpen);
 async function childIsOpen() {
   kidEndTime = window.performance.now();
   openTime = kidEndTime - kidStartTime;
   await TalosContentProfiler.pause("tpaint", true);
 
+  window.removeEventListener("message", childIsOpen);
   window.setTimeout(reportTimes, 0);
 }
+
+/* eslint-disable no-useless-concat */
+var kidHTML = "<html><meta charset='utf-8'><script>" +
+              "var e = 'MozAfterPaint';" +
+              "function done() {" +
+              "  window.removeEventListener(e, done, true);" +
+              "  window.opener.postMessage({msg: 'childIsOpen'}, '*');" +
+              "  window.close();" +
+              "}" +
+              "window.addEventListener(e, done, true);" +
+              "</" + "script>TPAINT</html>";
+/* eslint-enable no-useless-concat */
+var kidURI = "data:text/html," + encodeURI(kidHTML);
 
 async function openWindow() {
   await TalosContentProfiler.resume("tpaint");
   kidStartTime = window.performance.now();
-  kid = window.open("file_tpaint_win.html");
+  kid = window.open(kidURI);
 }
 
 if (auto)

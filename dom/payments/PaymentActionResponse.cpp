@@ -236,7 +236,10 @@ PaymentShowActionResponse::Init(const nsAString& aRequestId,
                                 const nsAString& aPayerEmail,
                                 const nsAString& aPayerPhone)
 {
-  NS_ENSURE_ARG_POINTER(aData);
+  if (aAcceptStatus == nsIPaymentActionResponse::PAYMENT_ACCEPTED) {
+    NS_ENSURE_ARG_POINTER(aData);
+  }
+
   mRequestId = aRequestId;
   mAcceptStatus = aAcceptStatus;
   mMethodName = aMethodName;
@@ -245,46 +248,39 @@ PaymentShowActionResponse::Init(const nsAString& aRequestId,
   MOZ_ASSERT(service);
   bool isBasicCardPayment = service->IsBasicCardPayment(mMethodName);
 
-  uint32_t responseType;
-  NS_ENSURE_SUCCESS(aData->GetType(&responseType), NS_ERROR_FAILURE);
-  switch (responseType) {
-    case nsIPaymentResponseData::GENERAL_RESPONSE: {
-      if (isBasicCardPayment) {
+  if (aAcceptStatus == nsIPaymentActionResponse::PAYMENT_ACCEPTED) {
+    uint32_t responseType;
+    NS_ENSURE_SUCCESS(aData->GetType(&responseType), NS_ERROR_FAILURE);
+    switch (responseType) {
+      case nsIPaymentResponseData::GENERAL_RESPONSE: {
+        if (isBasicCardPayment) {
+          return NS_ERROR_FAILURE;
+        }
+        nsCOMPtr<nsIGeneralResponseData> data = do_QueryInterface(aData);
+        MOZ_ASSERT(data);
+        NS_ENSURE_SUCCESS(data->GetData(mData), NS_ERROR_FAILURE);
+        break;
+      }
+      case nsIPaymentResponseData::BASICCARD_RESPONSE: {
+        if (!isBasicCardPayment) {
+          return NS_ERROR_FAILURE;
+        }
+        nsCOMPtr<nsIBasicCardResponseData> data = do_QueryInterface(aData);
+        MOZ_ASSERT(data);
+        NS_ENSURE_SUCCESS(data->GetData(mData), NS_ERROR_FAILURE);
+        break;
+      }
+      default: {
         return NS_ERROR_FAILURE;
       }
-      nsCOMPtr<nsIGeneralResponseData> data = do_QueryInterface(aData);
-      MOZ_ASSERT(data);
-      NS_ENSURE_SUCCESS(data->GetData(mData), NS_ERROR_FAILURE);
-      break;
     }
-    case nsIPaymentResponseData::BASICCARD_RESPONSE: {
-      if (!isBasicCardPayment) {
-        return NS_ERROR_FAILURE;
-      }
-      nsCOMPtr<nsIBasicCardResponseData> data = do_QueryInterface(aData);
-      MOZ_ASSERT(data);
-      NS_ENSURE_SUCCESS(data->GetData(mData), NS_ERROR_FAILURE);
-      break;
-    }
-    default: {
+    if (mData.IsEmpty()) {
       return NS_ERROR_FAILURE;
     }
   }
-  if (mData.IsEmpty()) {
-    return NS_ERROR_FAILURE;
-  }
-
   mPayerName = aPayerName;
   mPayerEmail = aPayerEmail;
   mPayerPhone = aPayerPhone;
-  return NS_OK;
-}
-
-NS_IMETHODIMP
-PaymentShowActionResponse::IsAccepted(bool* aIsAccepted)
-{
-  NS_ENSURE_ARG_POINTER(aIsAccepted);
-  *aIsAccepted = (mAcceptStatus == nsIPaymentActionResponse::PAYMENT_ACCEPTED);
   return NS_OK;
 }
 
