@@ -45,6 +45,8 @@ enum PluginQuirks {
   QUIRK_WINLESS_HOOK_IME                          = 1 << 12,
   // Win: Hook GetKeyState to get keyboard state on sandbox process
   QUIRK_FLASH_HOOK_GETKEYSTATE                    = 1 << 13,
+  // Win: Hook PrintDlgW to show print settings dialog on sandbox process
+  QUIRK_FLASH_HOOK_PRINTDLGW                      = 1 << 14,
 };
 
 int GetQuirksFromMimeTypeAndFilename(const nsCString& aMimeType,
