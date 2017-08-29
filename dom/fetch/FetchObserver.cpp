@@ -45,7 +45,7 @@ FetchObserver::IsEnabled(JSContext* aCx, JSObject* aGlobal)
 }
 
 FetchObserver::FetchObserver(nsIGlobalObject* aGlobal,
-                             AbortSignal* aSignal)
+                             FetchSignal* aSignal)
   : DOMEventTargetHelper(aGlobal)
   , mState(FetchState::Requesting)
 {

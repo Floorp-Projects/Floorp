@@ -378,8 +378,6 @@ PREPROCESSED_WEBIDL_FILES = [
 ]
 
 WEBIDL_FILES = [
-    'AbortController.webidl',
-    'AbortSignal.webidl',
     'AbstractWorker.webidl',
     'AddonManager.webidl',
     'AnalyserNode.webidl',
@@ -517,8 +515,10 @@ WEBIDL_FILES = [
     'ExtendableMessageEvent.webidl',
     'FakePluginTagInit.webidl',
     'Fetch.webidl',
+    'FetchController.webidl',
     'FetchEvent.webidl',
     'FetchObserver.webidl',
+    'FetchSignal.webidl',
     'File.webidl',
     'FileList.webidl',
     'FileMode.webidl',

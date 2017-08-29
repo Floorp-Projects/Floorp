@@ -4,21 +4,21 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-#ifndef mozilla_dom_AbortSignal_h
-#define mozilla_dom_AbortSignal_h
+#ifndef mozilla_dom_FetchSignal_h
+#define mozilla_dom_FetchSignal_h
 
 #include "mozilla/DOMEventTargetHelper.h"
 
 namespace mozilla {
 namespace dom {
 
-class AbortController;
-class AbortSignal;
+class FetchController;
+class FetchSignal;
 
-class AbortSignal final : public DOMEventTargetHelper
+class FetchSignal final : public DOMEventTargetHelper
 {
 public:
-  // This class must be implemented by objects who want to follow a AbortSignal.
+  // This class must be implemented by objects who want to follow a FetchSignal.
   class Follower
   {
   public:
@@ -28,19 +28,19 @@ public:
     virtual ~Follower();
 
     void
-    Follow(AbortSignal* aSignal);
+    Follow(FetchSignal* aSignal);
 
     void
     Unfollow();
 
-    RefPtr<AbortSignal> mFollowingSignal;
+    RefPtr<FetchSignal> mFollowingSignal;
   };
 
   NS_DECL_ISUPPORTS_INHERITED
-  NS_DECL_CYCLE_COLLECTION_CLASS_INHERITED(AbortSignal, DOMEventTargetHelper)
+  NS_DECL_CYCLE_COLLECTION_CLASS_INHERITED(FetchSignal, DOMEventTargetHelper)
 
-  AbortSignal(AbortController* aController, bool aAborted);
-  explicit AbortSignal(bool aAborted);
+  FetchSignal(FetchController* aController, bool aAborted);
+  explicit FetchSignal(bool aAborted);
 
   JSObject*
   WrapObject(JSContext* aCx, JS::Handle<JSObject*> aGivenProto) override;
@@ -63,9 +63,9 @@ public:
   CanAcceptFollower(Follower* aFollower) const;
 
 private:
-  ~AbortSignal() = default;
+  ~FetchSignal() = default;
 
-  RefPtr<AbortController> mController;
+  RefPtr<FetchController> mController;
 
   // Raw pointers. Follower unregisters itself in the DTOR.
   nsTArray<Follower*> mFollowers;
@@ -76,4 +76,4 @@ private:
 } // dom namespace
 } // mozilla namespace
 
-#endif // mozilla_dom_AbortSignal_h
+#endif // mozilla_dom_FetchSignal_h
