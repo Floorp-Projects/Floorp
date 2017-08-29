@@ -40,26 +40,6 @@ AbortController::IsEnabled(JSContext* aCx, JSObject* aGlobal)
   return workerPrivate->AbortControllerEnabled();
 }
 
-/* static */ bool
-AbortController::IsEnabledInFetch(JSContext* aCx, JSObject* aGlobal)
-{
-  if (NS_IsMainThread()) {
-    return IsEnabled(aCx, aGlobal) &&
-           Preferences::GetBool("dom.abortController.fetch.enabled", false);
-  }
-
-  using namespace workers;
-
-  // Otherwise, check the pref via the WorkerPrivate
-  WorkerPrivate* workerPrivate = GetWorkerPrivateFromContext(aCx);
-  if (!workerPrivate) {
-    return false;
-  }
-
-  return workerPrivate->AbortControllerEnabled() &&
-         workerPrivate->AbortControllerEnabledInFetch();
-}
-
 /* static */ already_AddRefed<AbortController>
 AbortController::Constructor(const GlobalObject& aGlobal, ErrorResult& aRv)
 {
