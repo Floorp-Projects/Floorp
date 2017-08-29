@@ -5,7 +5,6 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
 #include "EMEDecoderModule.h"
-#include "EMEVideoDecoder.h"
 #include "GMPDecoderModule.h"
 #include "GMPService.h"
 #include "MediaInfo.h"
