@@ -15,12 +15,14 @@
 // will call this for messages from their respective processes.
 
 namespace mozilla {
+
 namespace Telemetry {
 
 struct HistogramAccumulation;
 struct KeyedHistogramAccumulation;
 struct ScalarAction;
 struct KeyedScalarAction;
+struct DynamicScalarDefinition;
 struct ChildEventData;
 struct DiscardedData;
 
@@ -81,6 +83,19 @@ void RecordChildEvents(Telemetry::ProcessID aProcessType,
  */
 void RecordDiscardedData(Telemetry::ProcessID aProcessType,
                          const Telemetry::DiscardedData& aDiscardedData);
+
+/**
+ * Get the dynamic scalar definitions from the parent process.
+ * @param aDefs - The array that will contain the scalar definitions.
+ */
+void GetDynamicScalarDefinitions(nsTArray<mozilla::Telemetry::DynamicScalarDefinition>& aDefs);
+
+/**
+ * Add the dynamic scalar definitions coming from the parent process
+ * to the current child process.
+ * @param aDefs - The array that contains the scalar definitions.
+ */
+void AddDynamicScalarDefinitions(const nsTArray<mozilla::Telemetry::DynamicScalarDefinition>& aDefs);
 
 }
 }
