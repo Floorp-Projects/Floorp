@@ -2,7 +2,9 @@
 flake8:
     description: Python linter
     include:
+        - config/mozunit.py
         - layout/tools/reftest
+        - python/mach_commands.py
         - python/mozlint
         - security/manager
         - taskcluster
