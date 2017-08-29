@@ -152,8 +152,8 @@ ChannelMediaResource::Listener::OnDataAvailable(nsIRequest* aRequest,
                                                 uint64_t aOffset,
                                                 uint32_t aCount)
 {
-  if (!mResource)
-    return NS_OK;
+  // This might happen off the main thread.
+  MOZ_DIAGNOSTIC_ASSERT(mResource);
   return mResource->OnDataAvailable(aRequest, aStream, aCount);
 }
 
@@ -681,11 +681,6 @@ void ChannelMediaResource::CloseChannel()
     mChannelStatistics.Stop();
   }
 
-  if (mListener) {
-    mListener->Revoke();
-    mListener = nullptr;
-  }
-
   if (mChannel) {
     mSuspendAgent.NotifyChannelClosing();
     // The status we use here won't be passed to the decoder, since
@@ -697,6 +692,11 @@ void ChannelMediaResource::CloseChannel()
     // at the moment.
     mChannel->Cancel(NS_ERROR_PARSED_DATA_CACHED);
     mChannel = nullptr;
+  }
+
+  if (mListener) {
+    mListener->Revoke();
+    mListener = nullptr;
   }
 }
 
