@@ -251,7 +251,13 @@ body[dir="rtl"] .histogram {
   white-space: nowrap;
   position: relative; /* required for position:absolute of the contained .copy-node */
   overflow: hidden;
+  margin-bottom: 1em;
 }
+
+.keyed-scalar, .sub-section {
+  margin-bottom: 1em;
+}
+
 
 .keyed-title {
   text-overflow: ellipsis;
@@ -293,7 +299,6 @@ table {
   table-layout: fixed;
   width: 100%;
   font-size: 15px;
-  margin-bottom: 2em;
 }
 
 td {
