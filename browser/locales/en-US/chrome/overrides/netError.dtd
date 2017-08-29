@@ -58,15 +58,7 @@
 
 <!ENTITY openPortalLoginPage.label2 "Open Network Login Page">
 
-<!ENTITY malformedURI.title "The address isn’t valid">
-<!ENTITY malformedURI.longDesc "
-<ul>
-  <li>Web addresses are usually written like
-    <strong>http://www.example.com/</strong></li>
-  <li>Make sure that you’re using forward slashes (i.e.
-    <strong>/</strong>).</li>
-</ul>
-">
+<!ENTITY malformedURI.title1 "Hmm. That address doesn’t look right.">
 
 <!ENTITY netInterrupt.title "The connection was interrupted">
 <!ENTITY netInterrupt.longDesc "&sharedLongDesc;">
