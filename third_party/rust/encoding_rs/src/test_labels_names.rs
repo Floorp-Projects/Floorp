@@ -188,6 +188,7 @@ fn test_all_labels() {
     assert_eq!(Encoding::for_label(b"csiso2022jp"), Some(ISO_2022_JP));
     assert_eq!(Encoding::for_label(b"iso-2022-kr"), Some(REPLACEMENT));
     assert_eq!(Encoding::for_label(b"csiso2022kr"), Some(REPLACEMENT));
+    assert_eq!(Encoding::for_label(b"replacement"), Some(REPLACEMENT));
     assert_eq!(Encoding::for_label(b"windows-1250"), Some(WINDOWS_1250));
     assert_eq!(Encoding::for_label(b"windows-1251"), Some(WINDOWS_1251));
     assert_eq!(Encoding::for_label(b"windows-1252"), Some(WINDOWS_1252));
@@ -229,48 +230,4 @@ fn test_all_labels() {
     assert_eq!(Encoding::for_label(b"unicode-1-1-utf-8"), Some(UTF_8));
     assert_eq!(Encoding::for_label(b"csisolatincyrillic"), Some(ISO_8859_5));
     assert_eq!(Encoding::for_label(b"cseucpkdfmtjapanese"), Some(EUC_JP));
-}
-
-#[test]
-fn test_all_names() {
-    assert_eq!(Encoding::for_name(b"GBK"), GBK);
-    assert_eq!(Encoding::for_name(b"Big5"), BIG5);
-    assert_eq!(Encoding::for_name(b"UTF-8"), UTF_8);
-    assert_eq!(Encoding::for_name(b"IBM866"), IBM866);
-    assert_eq!(Encoding::for_name(b"EUC-JP"), EUC_JP);
-    assert_eq!(Encoding::for_name(b"KOI8-R"), KOI8_R);
-    assert_eq!(Encoding::for_name(b"EUC-KR"), EUC_KR);
-    assert_eq!(Encoding::for_name(b"KOI8-U"), KOI8_U);
-    assert_eq!(Encoding::for_name(b"gb18030"), GB18030);
-    assert_eq!(Encoding::for_name(b"UTF-16BE"), UTF_16BE);
-    assert_eq!(Encoding::for_name(b"UTF-16LE"), UTF_16LE);
-    assert_eq!(Encoding::for_name(b"Shift_JIS"), SHIFT_JIS);
-    assert_eq!(Encoding::for_name(b"macintosh"), MACINTOSH);
-    assert_eq!(Encoding::for_name(b"ISO-8859-2"), ISO_8859_2);
-    assert_eq!(Encoding::for_name(b"ISO-8859-3"), ISO_8859_3);
-    assert_eq!(Encoding::for_name(b"ISO-8859-4"), ISO_8859_4);
-    assert_eq!(Encoding::for_name(b"ISO-8859-5"), ISO_8859_5);
-    assert_eq!(Encoding::for_name(b"ISO-8859-6"), ISO_8859_6);
-    assert_eq!(Encoding::for_name(b"ISO-8859-7"), ISO_8859_7);
-    assert_eq!(Encoding::for_name(b"ISO-8859-8"), ISO_8859_8);
-    assert_eq!(Encoding::for_name(b"ISO-8859-10"), ISO_8859_10);
-    assert_eq!(Encoding::for_name(b"ISO-8859-13"), ISO_8859_13);
-    assert_eq!(Encoding::for_name(b"ISO-8859-14"), ISO_8859_14);
-    assert_eq!(Encoding::for_name(b"windows-874"), WINDOWS_874);
-    assert_eq!(Encoding::for_name(b"ISO-8859-15"), ISO_8859_15);
-    assert_eq!(Encoding::for_name(b"ISO-8859-16"), ISO_8859_16);
-    assert_eq!(Encoding::for_name(b"ISO-2022-JP"), ISO_2022_JP);
-    assert_eq!(Encoding::for_name(b"replacement"), REPLACEMENT);
-    assert_eq!(Encoding::for_name(b"windows-1250"), WINDOWS_1250);
-    assert_eq!(Encoding::for_name(b"windows-1251"), WINDOWS_1251);
-    assert_eq!(Encoding::for_name(b"windows-1252"), WINDOWS_1252);
-    assert_eq!(Encoding::for_name(b"windows-1253"), WINDOWS_1253);
-    assert_eq!(Encoding::for_name(b"windows-1254"), WINDOWS_1254);
-    assert_eq!(Encoding::for_name(b"windows-1255"), WINDOWS_1255);
-    assert_eq!(Encoding::for_name(b"windows-1256"), WINDOWS_1256);
-    assert_eq!(Encoding::for_name(b"windows-1257"), WINDOWS_1257);
-    assert_eq!(Encoding::for_name(b"windows-1258"), WINDOWS_1258);
-    assert_eq!(Encoding::for_name(b"ISO-8859-8-I"), ISO_8859_8_I);
-    assert_eq!(Encoding::for_name(b"x-mac-cyrillic"), X_MAC_CYRILLIC);
-    assert_eq!(Encoding::for_name(b"x-user-defined"), X_USER_DEFINED);
 }

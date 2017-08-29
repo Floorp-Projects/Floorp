@@ -9,6 +9,7 @@
 #include "MediaTrackConstraints.h"
 #include "mtransport/runnable_utils.h"
 #include "nsAutoPtr.h"
+#include "AudioConverter.h"
 
 // scoped_ptr.h uses FF
 #ifdef FF
@@ -63,6 +64,7 @@ AudioOutputObserver::AudioOutputObserver()
   , mChunkSize(0)
   , mSaved(nullptr)
   , mSamplesSaved(0)
+  , mDownmixBuffer(MAX_SAMPLING_FREQ * MAX_CHANNELS / 100)
 {
   // Buffers of 10ms chunks
   mPlayoutFifo = new webrtc::SingleRwFifo(MAX_AEC_FIFO_DEPTH/10);
@@ -101,13 +103,19 @@ void
 AudioOutputObserver::InsertFarEnd(const AudioDataValue *aBuffer, uint32_t aFrames, bool aOverran,
                                   int aFreq, int aChannels)
 {
+  // Prepare for downmix if needed
+  int channels = aChannels;
+  if (aChannels > MAX_CHANNELS) {
+    channels = MAX_CHANNELS;
+  }
+
   if (mPlayoutChannels != 0) {
-    if (mPlayoutChannels != static_cast<uint32_t>(aChannels)) {
+    if (mPlayoutChannels != static_cast<uint32_t>(channels)) {
       MOZ_CRASH();
     }
   } else {
-    MOZ_ASSERT(aChannels <= MAX_CHANNELS);
-    mPlayoutChannels = static_cast<uint32_t>(aChannels);
+    MOZ_ASSERT(channels <= MAX_CHANNELS);
+    mPlayoutChannels = static_cast<uint32_t>(channels);
   }
   if (mPlayoutFreq != 0) {
     if (mPlayoutFreq != static_cast<uint32_t>(aFreq)) {
@@ -135,7 +143,7 @@ AudioOutputObserver::InsertFarEnd(const AudioDataValue *aBuffer, uint32_t aFrame
   while (aFrames) {
     if (!mSaved) {
       mSaved = (FarEndAudioChunk *) moz_xmalloc(sizeof(FarEndAudioChunk) +
-                                                (mChunkSize * aChannels - 1)*sizeof(int16_t));
+                                                (mChunkSize * channels - 1)*sizeof(int16_t));
       mSaved->mSamples = mChunkSize;
       mSaved->mOverrun = aOverran;
       aOverran = false;
@@ -145,8 +153,14 @@ AudioOutputObserver::InsertFarEnd(const AudioDataValue *aBuffer, uint32_t aFrame
       to_copy = aFrames;
     }
 
-    int16_t *dest = &(mSaved->mData[mSamplesSaved * aChannels]);
-    ConvertAudioSamples(aBuffer, dest, to_copy * aChannels);
+    int16_t* dest = &(mSaved->mData[mSamplesSaved * channels]);
+    if (aChannels > MAX_CHANNELS) {
+      AudioConverter converter(AudioConfig(aChannels, 0), AudioConfig(channels, 0));
+      converter.Process(mDownmixBuffer, aBuffer, to_copy);
+      ConvertAudioSamples(mDownmixBuffer.Data(), dest, to_copy * channels);
+    } else {
+      ConvertAudioSamples(aBuffer, dest, to_copy * channels);
+    }
 
 #ifdef LOG_FAREND_INSERTION
     if (fp) {

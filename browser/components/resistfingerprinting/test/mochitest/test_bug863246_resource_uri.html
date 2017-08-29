@@ -1,0 +1,51 @@
+<!DOCTYPE html>
+<meta charset="utf8">
+<script src="/tests/SimpleTest/SimpleTest.js"></script>
+<script src="/tests/SimpleTest/SpawnTask.js"></script>
+<script>
+/* global SimpleTest SpecialPowers add_task */
+
+function waitForDOMContentLoaded() {
+  return new Promise((aResolve) => {
+    document.addEventListener("DOMContentLoaded", aResolve);
+  });
+}
+
+function testResourceUri(aTest, aUri, aContentAccessible) {
+  return new Promise((aResolve) => {
+    let link = document.createElement("link");
+    link.rel = "stylesheet";
+    link.onload = () => {
+      SimpleTest.ok(aContentAccessible, aTest);
+      aResolve();
+    };
+    link.onerror = () => {
+      SimpleTest.ok(!aContentAccessible, aTest);
+      aResolve();
+    };
+    link.href = aUri;
+    document.head.appendChild(link);
+  });
+}
+
+add_task(async function() {
+  await waitForDOMContentLoaded();
+  await testResourceUri(
+      "resource://content-accessible is content-accessible",
+      "resource://content-accessible/viewsource.css",
+      true);
+  await testResourceUri(
+      "resource://gre-resources is not content-accessible",
+      "resource://gre-resources/html.css",
+      false);
+  await SpecialPowers.pushPrefEnv({
+    set: [
+      ["security.all_resource_uri_content_accessible", true]
+    ]
+  });
+  await testResourceUri(
+      "security.all_resource_uri_content_accessible = true, resource://gre-resources is now content-accessible",
+      "resource://gre-resources/html.css",
+      true);
+});
+</script>

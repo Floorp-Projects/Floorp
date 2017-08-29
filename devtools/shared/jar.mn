@@ -4,6 +4,8 @@
 
 devtools.jar:
 %   resource devtools %modules/devtools/
+%   resource devtools-client-jsonview resource://devtools/client/jsonview/ contentaccessible=yes
+%   resource devtools-client-shared resource://devtools/client/shared/ contentaccessible=yes
 # The typical approach would be to list all the resource files in this manifest
 # for installation.  Instead of doing this, use the DevToolsModules syntax via
 # moz.build files to do the installation so that we can enforce correct paths

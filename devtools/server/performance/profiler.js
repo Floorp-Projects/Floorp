@@ -5,7 +5,7 @@
 
 const { Cc, Ci, Cu } = require("chrome");
 const Services = require("Services");
-const { Class } = require("sdk/core/heritage");
+
 loader.lazyRequireGetter(this, "EventEmitter", "devtools/shared/event-emitter");
 loader.lazyRequireGetter(this, "DevToolsUtils", "devtools/shared/DevToolsUtils");
 loader.lazyRequireGetter(this, "DeferredTask", "resource://gre/modules/DeferredTask.jsm", true);
@@ -406,82 +406,83 @@ const ProfilerManager = (function () {
 /**
  * The profiler actor provides remote access to the built-in nsIProfiler module.
  */
-var Profiler = exports.Profiler = Class({
-  extends: EventEmitter,
+class Profiler {
+  constructor() {
+    EventEmitter.decorate(this);
 
-  initialize: function () {
     this.subscribedEvents = new Set();
     ProfilerManager.addInstance(this);
-  },
+  }
 
-  destroy: function () {
+  destroy() {
     this.unregisterEventNotifications({ events: Array.from(this.subscribedEvents) });
     this.subscribedEvents = null;
+
     ProfilerManager.removeInstance(this);
-  },
+  }
 
   /**
    * @see ProfilerManager.start
    */
-  start: function (options) {
+  start(options) {
     return ProfilerManager.start(options);
-  },
+  }
 
   /**
    * @see ProfilerManager.stop
    */
-  stop: function () {
+  stop() {
     return ProfilerManager.stop();
-  },
+  }
 
   /**
    * @see ProfilerManager.getProfile
    */
-  getProfile: function (request = {}) {
+  getProfile(request = {}) {
     return ProfilerManager.getProfile(request);
-  },
+  }
 
   /**
    * @see ProfilerManager.getFeatures
    */
-  getFeatures: function () {
+  getFeatures() {
     return ProfilerManager.getFeatures();
-  },
+  }
 
   /**
    * @see ProfilerManager.getBufferInfo
    */
-  getBufferInfo: function () {
+  getBufferInfo() {
     return ProfilerManager.getBufferInfo();
-  },
+  }
 
   /**
    * @see ProfilerManager.getStartOptions
    */
-  getStartOptions: function () {
+  getStartOptions() {
     return ProfilerManager.getStartOptions();
-  },
+  }
 
   /**
    * @see ProfilerManager.isActive
    */
-  isActive: function () {
+  isActive() {
     return ProfilerManager.isActive();
-  },
+  }
 
   /**
    * @see ProfilerManager.sharedLibraries
    */
-  sharedLibraries: function () {
+  sharedLibraries() {
     return ProfilerManager.sharedLibraries;
-  },
+  }
 
   /**
    * @see ProfilerManager.setProfilerStatusInterval
    */
-  setProfilerStatusInterval: function (interval) {
+  setProfilerStatusInterval(interval) {
     return ProfilerManager.setProfilerStatusInterval(interval);
-  },
+  }
 
   /**
    * Subscribes this instance to one of several events defined in
@@ -494,7 +495,7 @@ var Profiler = exports.Profiler = Class({
    * @param {Array<string>} data.event
    * @return {object}
    */
-  registerEventNotifications: function (data = {}) {
+  registerEventNotifications(data = {}) {
     let response = [];
     (data.events || []).forEach(e => {
       if (!this.subscribedEvents.has(e)) {
@@ -506,7 +507,7 @@ var Profiler = exports.Profiler = Class({
       }
     });
     return { registered: response };
-  },
+  }
 
   /**
    * Unsubscribes this instance to one of several events defined in
@@ -515,7 +516,7 @@ var Profiler = exports.Profiler = Class({
    * @param {Array<string>} data.event
    * @return {object}
    */
-  unregisterEventNotifications: function (data = {}) {
+  unregisterEventNotifications(data = {}) {
     let response = [];
     (data.events || []).forEach(e => {
       if (this.subscribedEvents.has(e)) {
@@ -527,16 +528,16 @@ var Profiler = exports.Profiler = Class({
       }
     });
     return { registered: response };
-  },
-});
+  }
 
-/**
- * Checks whether or not the profiler module can currently run.
- * @return boolean
- */
-Profiler.canProfile = function () {
-  return nsIProfilerModule.CanProfile();
-};
+  /**
+   * Checks whether or not the profiler module can currently run.
+   * @return boolean
+   */
+  static canProfile() {
+    return nsIProfilerModule.CanProfile();
+  }
+}
 
 /**
  * JSON.stringify callback used in Profiler.prototype.observe.
@@ -572,3 +573,5 @@ function sanitizeHandler(handler, identifier) {
     return handler.call(this, subject, topic, data);
   }, identifier);
 }
+
+exports.Profiler = Profiler;

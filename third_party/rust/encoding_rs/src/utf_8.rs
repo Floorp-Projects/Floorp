@@ -15,7 +15,24 @@ use variant::*;
 use super::*;
 use ascii::ascii_to_basic_latin;
 use ascii::basic_latin_to_ascii;
-use utf_8_core::run_utf8_validation;
+
+// Keep this cfg_if in sync with whether the utf_8_core module is defined in lib.rs.
+cfg_if! {
+    // When running 32-bit ARM code on Raspberry Pi 3, which has a 64-bit CPU,
+    // this is a pessimization for non-Latin, non-CJK scripts. However, this
+    // optimization seems to work across scripts when running 32-bit ARM code
+    // on a 32-bit ARM CPU (particularly good on Exynos 5) and when running
+    // 64-bit ARM code on a 64-bit ARM CPU.
+    if #[cfg(any(all(feature = "simd-accel", target_feature = "sse2"), all(target_endian = "little", target_arch = "aarch64"), all(target_endian = "little", target_arch = "arm")))] {
+        use utf_8_core::run_utf8_validation;
+    } else {
+        use ::std::str::Utf8Error;
+        #[inline(always)]
+        fn run_utf8_validation(v: &[u8]) -> Result<&str, Utf8Error> {
+            ::std::str::from_utf8(v)
+        }
+    }
+}
 
 const UTF8_NORMAL_TRAIL: u8 = 1 << 3;
 
@@ -63,7 +80,7 @@ pub fn utf8_valid_up_to(bytes: &[u8]) -> usize {
         // which we are trying to optimize here.
         if len < 290000 {
             return match run_utf8_validation(&bytes[..len]) {
-                       Ok(()) => bytes.len(),
+                       Ok(_) => bytes.len(),
                        Err(e) => e.valid_up_to(),
                    };
         }
@@ -97,7 +114,7 @@ pub fn utf8_valid_up_to(bytes: &[u8]) -> usize {
 #[cfg(not(feature = "parallel-utf8"))]
 pub fn utf8_valid_up_to(bytes: &[u8]) -> usize {
     match run_utf8_validation(bytes) {
-        Ok(()) => bytes.len(),
+        Ok(_) => bytes.len(),
         Err(e) => e.valid_up_to(),
     }
 }

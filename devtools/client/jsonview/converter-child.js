@@ -208,7 +208,7 @@ function initialHTML(doc) {
 
   // The base URI is prepended to all URIs instead of using a <base> element
   // because the latter can be blocked by a CSP base-uri directive (bug 1316393)
-  let baseURI = "resource://devtools/client/jsonview/";
+  let baseURI = "resource://devtools-client-jsonview/";
 
   let style = doc.createElement("link");
   style.rel = "stylesheet";

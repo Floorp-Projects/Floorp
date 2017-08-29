@@ -1,12 +1,12 @@
 # TODO remove VOLUME below when the base image is updated next.
-FROM          taskcluster/centos6-build-upd:0.1.6.20160329195300
+FROM          taskcluster/centos6-build-upd:0.1.8.20170808150401
 MAINTAINER    Nick Alexander <nalexander@mozilla.com>
 
 # BEGIN ../desktop-build/Dockerfile
 
-VOLUME /home/worker/checkouts
-VOLUME /home/worker/workspace
-VOLUME /home/worker/tooltool-cache
+VOLUME /builds/worker/checkouts
+VOLUME /builds/worker/workspace
+VOLUME /builds/worker/tooltool-cache
 
 # %include python/mozbuild/mozbuild/action/tooltool.py
 COPY topsrcdir/python/mozbuild/mozbuild/action/tooltool.py /build/tooltool.py
@@ -42,13 +42,13 @@ RUN bash /setup/system-setup.sh
 
 # Add wrapper scripts for xvfb allowing tasks to easily retry starting up xvfb
 # %include taskcluster/docker/recipes/xvfb.sh
-COPY topsrcdir/taskcluster/docker/recipes/xvfb.sh /home/worker/scripts/xvfb.sh
+COPY topsrcdir/taskcluster/docker/recipes/xvfb.sh /builds/worker/scripts/xvfb.sh
 
 # %include taskcluster/docker/recipes/run-task
-COPY topsrcdir/taskcluster/docker/recipes/run-task /home/worker/bin/run-task
+COPY topsrcdir/taskcluster/docker/recipes/run-task /builds/worker/bin/run-task
 
 # Add configuration
-COPY            dot-config                    /home/worker/.config
+COPY            dot-config                    /builds/worker/.config
 
 # Generate machine uuid file
 RUN dbus-uuidgen --ensure=/var/lib/dbus/machine-id
@@ -57,12 +57,12 @@ RUN dbus-uuidgen --ensure=/var/lib/dbus/machine-id
 # if it's not found, which causes the build to fail.  Note that this needs to
 # be in the parent of the workspace directory and in the directory where
 # mozharness is run (not its --work-dir).  See Bug 1169652.
-ADD           oauth.txt /home/worker/
+ADD           oauth.txt /builds/worker/
 
 # stubbed out buildprops, which keeps mozharness from choking
 # Note that this needs to be in the parent of the workspace directory and in
 # the directory where mozharness is run (not its --work-dir)
-ADD           buildprops.json /home/worker/
+ADD           buildprops.json /builds/worker/
 
 # END ../desktop-build/Dockerfile
 
@@ -114,7 +114,7 @@ RUN tar zxf nexus-${NEXUS_VERSION}-bundle.tar.gz \
 RUN chown -R worker:worker /opt/sonatype/nexus/
 
 # Back to the centos6-build workdir, matching desktop-build.
-WORKDIR /home/worker
+WORKDIR /builds/worker
 
 # Set a default command useful for debugging
 CMD ["/bin/bash", "--login"]

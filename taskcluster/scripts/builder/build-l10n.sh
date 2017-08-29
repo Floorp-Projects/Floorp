@@ -4,7 +4,7 @@ set -x -e
 
 echo "running as" $(id)
 
-. /home/worker/scripts/xvfb.sh
+. /builds/worker/scripts/xvfb.sh
 
 ####
 # Taskcluster friendly wrapper for performing fx desktop l10n repacks via mozharness.
@@ -18,11 +18,11 @@ echo "running as" $(id)
 : MOZHARNESS_ACTIONS            ${MOZHARNESS_ACTIONS}
 : MOZHARNESS_OPTIONS            ${MOZHARNESS_OPTIONS}
 
-: TOOLTOOL_CACHE                ${TOOLTOOL_CACHE:=/home/worker/tooltool-cache}
+: TOOLTOOL_CACHE                ${TOOLTOOL_CACHE:=/builds/worker/tooltool-cache}
 
 : NEED_XVFB                     ${NEED_XVFB:=false}
 
-: WORKSPACE                     ${WORKSPACE:=/home/worker/workspace}
+: WORKSPACE                     ${WORKSPACE:=/builds/worker/workspace}
 
 set -v
 
@@ -86,7 +86,7 @@ if [ -n "$MOZHARNESS_OPTIONS" ]; then
     done
 fi
 
-cd /home/worker
+cd /builds/worker
 
 python2.7 $WORKSPACE/build/src/testing/${MOZHARNESS_SCRIPT} \
   --disable-mock \

@@ -12,7 +12,7 @@ but it can also be used as such in a standalone application.
 WebRender currently depends on [FreeType](https://www.freetype.org/)
 
 # Api Structure
-The main entry point to WebRender is the `webrender::renderer::Renderer`.
+The main entry point to WebRender is the `webrender::Renderer`.
 
 By calling `Renderer::new(...)` you get a `Renderer`, as well as a `RenderApiSender`.
 Your `Renderer` is responsible to render the previously processed frames onto the screen.
@@ -55,6 +55,8 @@ mod clip_scroll_tree;
 mod debug_colors;
 mod debug_font_data;
 mod debug_render;
+#[cfg(feature = "debugger")]
+mod debug_server;
 mod device;
 mod ellipse;
 mod frame;
@@ -72,6 +74,7 @@ mod profiler;
 mod record;
 mod render_backend;
 mod render_task;
+mod renderer;
 mod resource_cache;
 mod scene;
 mod spring;
@@ -108,8 +111,6 @@ mod platform {
     }
 }
 
-pub mod renderer;
-
 #[cfg(target_os="macos")]
 extern crate core_graphics;
 #[cfg(target_os="macos")]
@@ -133,12 +134,21 @@ pub extern crate webrender_api;
 extern crate byteorder;
 extern crate rayon;
 extern crate plane_split;
+#[cfg(feature = "debugger")]
+extern crate ws;
+#[cfg(feature = "debugger")]
+extern crate serde_json;
+#[cfg(feature = "debugger")]
+#[macro_use]
+extern crate serde_derive;
 
 #[cfg(any(target_os="macos", target_os="windows"))]
 extern crate gamma_lut;
 
 pub use renderer::{ExternalImage, ExternalImageSource, ExternalImageHandler};
 pub use renderer::{GraphicsApi, GraphicsApiInfo, ReadPixelsFormat, Renderer, RendererOptions};
+pub use renderer::{CpuProfile, GpuProfile, DebugFlags, RendererKind};
+pub use renderer::{MAX_VERTEX_TEXTURE_WIDTH, PROFILER_DBG, RENDER_TARGET_DBG, TEXTURE_CACHE_DBG};
 
 pub use webrender_api as api;
 

@@ -4,7 +4,7 @@ set -x -e
 
 echo "running as" $(id)
 
-: WORKSPACE ${WORKSPACE:=/home/worker/workspace}
+: WORKSPACE ${WORKSPACE:=/builds/worker/workspace}
 : GRADLE_VERSION ${GRADLE_VERSION:=2.14.1}
 
 set -v
@@ -12,19 +12,19 @@ set -v
 # Package everything up.
 pushd $WORKSPACE
 
-cp -R /home/worker/.mozbuild/android-sdk-linux android-sdk-linux
+cp -R /builds/worker/.mozbuild/android-sdk-linux android-sdk-linux
 tar cJf android-sdk-linux.tar.xz android-sdk-linux
 
 # We can't redistribute the Android SDK publicly.
-mkdir -p /home/worker/private/android-sdk
-mv android-sdk-linux.tar.xz /home/worker/private/android-sdk
+mkdir -p /builds/worker/private/android-sdk
+mv android-sdk-linux.tar.xz /builds/worker/private/android-sdk
 
 cp -R $WORKSPACE/build/src/java_home java_home
 tar cJf java_home.tar.xz java_home
 
 # We can't redistribute Java publicly.
-mkdir -p /home/worker/private/java_home
-mv java_home.tar.xz /home/worker/private/java_home
+mkdir -p /builds/worker/private/java_home
+mv java_home.tar.xz /builds/worker/private/java_home
 
 cp -R $WORKSPACE/nexus/storage/jcenter jcenter
 tar cJf jcenter.tar.xz jcenter
@@ -42,8 +42,8 @@ unzip -q gradle-${GRADLE_VERSION}-all.zip
 mv gradle-${GRADLE_VERSION} gradle-dist
 tar cJf gradle-dist.tar.xz gradle-dist
 
-mkdir -p /home/worker/artifacts
-mv jcenter.tar.xz /home/worker/artifacts
-mv google.tar.xz /home/worker/artifacts
-mv gradle-dist.tar.xz /home/worker/artifacts
+mkdir -p /builds/worker/artifacts
+mv jcenter.tar.xz /builds/worker/artifacts
+mv google.tar.xz /builds/worker/artifacts
+mv gradle-dist.tar.xz /builds/worker/artifacts
 popd
