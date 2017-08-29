@@ -153,6 +153,27 @@ section:not(.active) {
   border-bottom-style: solid;
 }
 
+#no-search-results {
+  position: fixed;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%,-50%);
+  display: flex;
+  align-items: center;
+  flex-direction: column;
+}
+
+#no-search-results-text {
+  font-size: 17px;
+  margin-bottom: 2em;
+}
+
+.no-search-results-image {
+  background-image: url("chrome://browser/skin/preferences/in-content-new/no-search-results.svg");
+  width: 380px;
+  height: 293px;
+}
+
 .hidden {
   display: none !important;
 }
