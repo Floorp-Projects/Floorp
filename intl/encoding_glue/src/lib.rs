@@ -421,6 +421,11 @@ pub fn decode_to_nscstring_without_bom_handling(encoding: &'static Encoding,
     decode_from_slice_to_nscstring_without_bom_handling(encoding, src, dst, valid_up_to)
 }
 
+#[no_mangle]
+pub unsafe extern "C" fn mozilla_encoding_decode_from_slice_to_nscstring_without_bom_handling(encoding: *const Encoding, src: *const u8, src_len: usize, dst: *mut nsACString, already_validated: usize) -> nsresult {
+    decode_from_slice_to_nscstring_without_bom_handling(&*encoding, slice::from_raw_parts(src, src_len), &mut *dst, already_validated)
+}
+
 fn decode_from_slice_to_nscstring_without_bom_handling(encoding: &'static Encoding,
                                                        src: &[u8],
                                                        dst: &mut nsACString,

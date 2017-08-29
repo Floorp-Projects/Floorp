@@ -195,7 +195,7 @@ ServoStyleSheet::HasRules() const
 
 nsresult
 ServoStyleSheet::ParseSheet(css::Loader* aLoader,
-                            const nsAString& aInput,
+                            Span<const uint8_t> aInput,
                             nsIURI* aSheetURI,
                             nsIURI* aBaseURI,
                             nsIPrincipal* aSheetPrincipal,
@@ -207,12 +207,16 @@ ServoStyleSheet::ParseSheet(css::Loader* aLoader,
   RefPtr<URLExtraData> extraData =
     new URLExtraData(aBaseURI, aSheetURI, aSheetPrincipal);
 
-  NS_ConvertUTF16toUTF8 input(aInput);
-  Inner()->mContents =
-    Servo_StyleSheet_FromUTF8Bytes(
-        aLoader, this, &input, mParsingMode, extraData,
-        aLineNumber, aCompatMode, aReusableSheets
-    ).Consume();
+  Inner()->mContents = Servo_StyleSheet_FromUTF8Bytes(aLoader,
+                                                      this,
+                                                      aInput.Elements(),
+                                                      aInput.Length(),
+                                                      mParsingMode,
+                                                      extraData,
+                                                      aLineNumber,
+                                                      aCompatMode,
+                                                      aReusableSheets)
+                         .Consume();
 
   Inner()->mURLData = extraData.forget();
   return NS_OK;
@@ -291,9 +295,14 @@ ServoStyleSheet::ReparseSheet(const nsAString& aInput)
 
   DropRuleList();
 
-  nsresult rv = ParseSheet(loader, aInput, mInner->mSheetURI, mInner->mBaseURI,
-                           mInner->mPrincipal, lineNumber,
-                           eCompatibility_FullStandards, &reusableSheets);
+  nsresult rv = ParseSheet(loader,
+                           NS_ConvertUTF16toUTF8(aInput),
+                           mInner->mSheetURI,
+                           mInner->mBaseURI,
+                           mInner->mPrincipal,
+                           lineNumber,
+                           eCompatibility_FullStandards,
+                           &reusableSheets);
   DidDirty();
   NS_ENSURE_SUCCESS(rv, rv);
 

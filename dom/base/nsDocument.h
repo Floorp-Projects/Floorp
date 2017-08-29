@@ -836,7 +836,8 @@ public:
   virtual void MaybePreconnect(nsIURI* uri,
                                mozilla::CORSMode aCORSMode) override;
 
-  virtual void PreloadStyle(nsIURI* uri, const nsAString& charset,
+  virtual void PreloadStyle(nsIURI* uri,
+                            const mozilla::Encoding* aEncoding,
                             const nsAString& aCrossOriginAttr,
                             ReferrerPolicy aReferrerPolicy,
                             const nsAString& aIntegrity) override;
