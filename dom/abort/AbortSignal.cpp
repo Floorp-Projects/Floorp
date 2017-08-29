@@ -4,56 +4,56 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-#include "FetchSignal.h"
+#include "AbortSignal.h"
 #include "mozilla/dom/Event.h"
-#include "mozilla/dom/FetchSignalBinding.h"
+#include "mozilla/dom/AbortSignalBinding.h"
 
 namespace mozilla {
 namespace dom {
 
-NS_IMPL_CYCLE_COLLECTION_CLASS(FetchSignal)
+NS_IMPL_CYCLE_COLLECTION_CLASS(AbortSignal)
 
-NS_IMPL_CYCLE_COLLECTION_TRAVERSE_BEGIN_INHERITED(FetchSignal,
+NS_IMPL_CYCLE_COLLECTION_TRAVERSE_BEGIN_INHERITED(AbortSignal,
                                                   DOMEventTargetHelper)
   NS_IMPL_CYCLE_COLLECTION_TRAVERSE(mController)
 NS_IMPL_CYCLE_COLLECTION_TRAVERSE_END
 
-NS_IMPL_CYCLE_COLLECTION_UNLINK_BEGIN_INHERITED(FetchSignal,
+NS_IMPL_CYCLE_COLLECTION_UNLINK_BEGIN_INHERITED(AbortSignal,
                                                 DOMEventTargetHelper)
   NS_IMPL_CYCLE_COLLECTION_UNLINK(mController)
 NS_IMPL_CYCLE_COLLECTION_UNLINK_END
 
-NS_INTERFACE_MAP_BEGIN_CYCLE_COLLECTION_INHERITED(FetchSignal)
+NS_INTERFACE_MAP_BEGIN_CYCLE_COLLECTION_INHERITED(AbortSignal)
 NS_INTERFACE_MAP_END_INHERITING(DOMEventTargetHelper)
 
-NS_IMPL_ADDREF_INHERITED(FetchSignal, DOMEventTargetHelper)
-NS_IMPL_RELEASE_INHERITED(FetchSignal, DOMEventTargetHelper)
+NS_IMPL_ADDREF_INHERITED(AbortSignal, DOMEventTargetHelper)
+NS_IMPL_RELEASE_INHERITED(AbortSignal, DOMEventTargetHelper)
 
-FetchSignal::FetchSignal(FetchController* aController,
+AbortSignal::AbortSignal(AbortController* aController,
                          bool aAborted)
   : DOMEventTargetHelper(aController->GetParentObject())
   , mController(aController)
   , mAborted(aAborted)
 {}
 
-FetchSignal::FetchSignal(bool aAborted)
+AbortSignal::AbortSignal(bool aAborted)
   : mAborted(aAborted)
 {}
 
 JSObject*
-FetchSignal::WrapObject(JSContext* aCx, JS::Handle<JSObject*> aGivenProto)
+AbortSignal::WrapObject(JSContext* aCx, JS::Handle<JSObject*> aGivenProto)
 {
-  return FetchSignalBinding::Wrap(aCx, this, aGivenProto);
+  return AbortSignalBinding::Wrap(aCx, this, aGivenProto);
 }
 
 bool
-FetchSignal::Aborted() const
+AbortSignal::Aborted() const
 {
   return mAborted;
 }
 
 void
-FetchSignal::Abort()
+AbortSignal::Abort()
 {
   MOZ_ASSERT(!mAborted);
   mAborted = true;
@@ -78,7 +78,7 @@ FetchSignal::Abort()
 }
 
 void
-FetchSignal::AddFollower(FetchSignal::Follower* aFollower)
+AbortSignal::AddFollower(AbortSignal::Follower* aFollower)
 {
   MOZ_DIAGNOSTIC_ASSERT(aFollower);
   if (!mFollowers.Contains(aFollower)) {
@@ -87,14 +87,14 @@ FetchSignal::AddFollower(FetchSignal::Follower* aFollower)
 }
 
 void
-FetchSignal::RemoveFollower(FetchSignal::Follower* aFollower)
+AbortSignal::RemoveFollower(AbortSignal::Follower* aFollower)
 {
   MOZ_DIAGNOSTIC_ASSERT(aFollower);
   mFollowers.RemoveElement(aFollower);
 }
 
 bool
-FetchSignal::CanAcceptFollower(FetchSignal::Follower* aFollower) const
+AbortSignal::CanAcceptFollower(AbortSignal::Follower* aFollower) const
 {
   MOZ_DIAGNOSTIC_ASSERT(aFollower);
 
@@ -106,7 +106,7 @@ FetchSignal::CanAcceptFollower(FetchSignal::Follower* aFollower) const
     return false;
   }
 
-  FetchSignal* following = mController->Following();
+  AbortSignal* following = mController->Following();
   if (!following) {
     return true;
   }
@@ -114,16 +114,16 @@ FetchSignal::CanAcceptFollower(FetchSignal::Follower* aFollower) const
   return following->CanAcceptFollower(aFollower);
 }
 
-// FetchSignal::Follower
+// AbortSignal::Follower
 // ----------------------------------------------------------------------------
 
-FetchSignal::Follower::~Follower()
+AbortSignal::Follower::~Follower()
 {
   Unfollow();
 }
 
 void
-FetchSignal::Follower::Follow(FetchSignal* aSignal)
+AbortSignal::Follower::Follow(AbortSignal* aSignal)
 {
   MOZ_DIAGNOSTIC_ASSERT(aSignal);
 
@@ -138,7 +138,7 @@ FetchSignal::Follower::Follow(FetchSignal* aSignal)
 }
 
 void
-FetchSignal::Follower::Unfollow()
+AbortSignal::Follower::Unfollow()
 {
   if (mFollowingSignal) {
     mFollowingSignal->RemoveFollower(this);

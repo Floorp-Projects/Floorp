@@ -2,14 +2,17 @@
 /* This Source Code Form is subject to the terms of the Mozilla Public
  * License, v. 2.0. If a copy of the MPL was not distributed with this file,
  * You can obtain one at http://mozilla.org/MPL/2.0/.
+ *
+ * The origin of this IDL file is
+ * https://dom.spec.whatwg.org/#abortcontroller
  */
 
 [Constructor(), Exposed=(Window,Worker),
- Func="FetchController::IsEnabled"]
-interface FetchController {
-  readonly attribute FetchSignal signal;
+ Func="AbortController::IsEnabled"]
+interface AbortController {
+  readonly attribute AbortSignal signal;
 
   void abort();
-  void follow(FetchSignal signal);
-  void unfollow(FetchSignal signal);
+  void follow(AbortSignal signal);
+  void unfollow(AbortSignal signal);
 };

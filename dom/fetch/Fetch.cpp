@@ -56,28 +56,28 @@ namespace dom {
 
 using namespace workers;
 
-// This class helps the proxying of FetchSignal changes cross threads.
-class FetchSignalProxy final : public FetchSignal::Follower
+// This class helps the proxying of AbortSignal changes cross threads.
+class AbortSignalProxy final : public AbortSignal::Follower
 {
   // This is created and released on the main-thread.
-  RefPtr<FetchSignal> mSignalMainThread;
+  RefPtr<AbortSignal> mSignalMainThread;
 
   // The main-thread event target for runnable dispatching.
   nsCOMPtr<nsIEventTarget> mMainThreadEventTarget;
 
-  // This value is used only for the creation of FetchSignal on the
+  // This value is used only for the creation of AbortSignal on the
   // main-thread. They are not updated.
   const bool mAborted;
 
-  // This runnable propagates changes from the FetchSignal on workers to the
-  // FetchSignal on main-thread.
-  class FetchSignalProxyRunnable final : public Runnable
+  // This runnable propagates changes from the AbortSignal on workers to the
+  // AbortSignal on main-thread.
+  class AbortSignalProxyRunnable final : public Runnable
   {
-    RefPtr<FetchSignalProxy> mProxy;
+    RefPtr<AbortSignalProxy> mProxy;
 
   public:
-    explicit FetchSignalProxyRunnable(FetchSignalProxy* aProxy)
-      : Runnable("dom::FetchSignalProxy::FetchSignalProxyRunnable")
+    explicit AbortSignalProxyRunnable(AbortSignalProxy* aProxy)
+      : Runnable("dom::AbortSignalProxy::AbortSignalProxyRunnable")
       , mProxy(aProxy)
     {}
 
@@ -85,16 +85,16 @@ class FetchSignalProxy final : public FetchSignal::Follower
     Run() override
     {
       MOZ_ASSERT(NS_IsMainThread());
-      FetchSignal* signal = mProxy->GetOrCreateSignalForMainThread();
+      AbortSignal* signal = mProxy->GetOrCreateSignalForMainThread();
       signal->Abort();
       return NS_OK;
     }
   };
 
 public:
-  NS_INLINE_DECL_THREADSAFE_REFCOUNTING(FetchSignalProxy)
+  NS_INLINE_DECL_THREADSAFE_REFCOUNTING(AbortSignalProxy)
 
-  FetchSignalProxy(FetchSignal* aSignal, nsIEventTarget* aMainThreadEventTarget)
+  AbortSignalProxy(AbortSignal* aSignal, nsIEventTarget* aMainThreadEventTarget)
     : mMainThreadEventTarget(aMainThreadEventTarget)
     , mAborted(aSignal->Aborted())
   {
@@ -105,17 +105,17 @@ public:
   void
   Aborted() override
   {
-    RefPtr<FetchSignalProxyRunnable> runnable =
-      new FetchSignalProxyRunnable(this);
+    RefPtr<AbortSignalProxyRunnable> runnable =
+      new AbortSignalProxyRunnable(this);
     mMainThreadEventTarget->Dispatch(runnable.forget(), NS_DISPATCH_NORMAL);
   }
 
-  FetchSignal*
+  AbortSignal*
   GetOrCreateSignalForMainThread()
   {
     MOZ_ASSERT(NS_IsMainThread());
     if (!mSignalMainThread) {
-      mSignalMainThread = new FetchSignal(mAborted);
+      mSignalMainThread = new AbortSignal(mAborted);
     }
     return mSignalMainThread;
   }
@@ -127,10 +127,10 @@ public:
   }
 
 private:
-  ~FetchSignalProxy()
+  ~AbortSignalProxy()
   {
     NS_ProxyRelease(
-      "FetchSignalProxy::mSignalMainThread",
+      "AbortSignalProxy::mSignalMainThread",
       mMainThreadEventTarget, mSignalMainThread.forget());
   }
 };
@@ -144,14 +144,14 @@ class WorkerFetchResolver final : public FetchDriverObserver
   friend class WorkerFetchResponseRunnable;
 
   RefPtr<PromiseWorkerProxy> mPromiseProxy;
-  RefPtr<FetchSignalProxy> mSignalProxy;
+  RefPtr<AbortSignalProxy> mSignalProxy;
   RefPtr<FetchObserver> mFetchObserver;
 
 public:
   // Returns null if worker is shutting down.
   static already_AddRefed<WorkerFetchResolver>
   Create(workers::WorkerPrivate* aWorkerPrivate, Promise* aPromise,
-         FetchSignal* aSignal, FetchObserver* aObserver)
+         AbortSignal* aSignal, FetchObserver* aObserver)
   {
     MOZ_ASSERT(aWorkerPrivate);
     aWorkerPrivate->AssertIsOnWorkerThread();
@@ -161,10 +161,10 @@ public:
       return nullptr;
     }
 
-    RefPtr<FetchSignalProxy> signalProxy;
+    RefPtr<AbortSignalProxy> signalProxy;
     if (aSignal) {
       signalProxy =
-        new FetchSignalProxy(aSignal, aWorkerPrivate->MainThreadEventTarget());
+        new AbortSignalProxy(aSignal, aWorkerPrivate->MainThreadEventTarget());
     }
 
     RefPtr<WorkerFetchResolver> r =
@@ -172,8 +172,8 @@ public:
     return r.forget();
   }
 
-  FetchSignal*
-  GetFetchSignal()
+  AbortSignal*
+  GetAbortSignal()
   {
     MOZ_ASSERT(NS_IsMainThread());
 
@@ -195,7 +195,7 @@ public:
 
 private:
    WorkerFetchResolver(PromiseWorkerProxy* aProxy,
-                       FetchSignalProxy* aSignalProxy,
+                       AbortSignalProxy* aSignalProxy,
                        FetchObserver* aObserver)
     : mPromiseProxy(aProxy)
     , mSignalProxy(aSignalProxy)
@@ -306,7 +306,7 @@ public:
       fetch->SetWorkerScript(spec);
     }
 
-    RefPtr<FetchSignal> signal = mResolver->GetFetchSignal();
+    RefPtr<AbortSignal> signal = mResolver->GetAbortSignal();
 
     // ...but release it before calling Fetch, because mResolver's callback can
     // be called synchronously and they want the mutex, too.
@@ -348,7 +348,7 @@ FetchRequest(nsIGlobalObject* aGlobal, const RequestOrUSVString& aInput,
 
   RefPtr<InternalRequest> r = request->GetInternalRequest();
 
-  RefPtr<FetchSignal> signal;
+  RefPtr<AbortSignal> signal;
   if (aInit.mSignal.WasPassed()) {
     signal = &aInit.mSignal.Value();
     // Let's FetchDriver to deal with an already aborted signal.
