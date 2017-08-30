@@ -18,6 +18,7 @@ import org.mozilla.gecko.Telemetry;
 import org.mozilla.gecko.TelemetryContract;
 import org.mozilla.gecko.activitystream.ActivityStreamTelemetry;
 import org.mozilla.gecko.activitystream.homepanel.model.WebpageModel;
+import org.mozilla.gecko.activitystream.homepanel.topstories.PocketStoriesLoader;
 import org.mozilla.gecko.annotation.RobocopTarget;
 import org.mozilla.gecko.db.BrowserDB;
 import org.mozilla.gecko.home.HomePager;
@@ -181,6 +182,8 @@ public abstract class ActivityStreamContextMenu
         // information to handle correctly.
         telemetryExtraBuilder.fromMenuItemId(menuItemId);
 
+        final String referrerUri = mode == MenuMode.TOPSTORY ? PocketStoriesLoader.POCKET_REFERRER_URI : null;
+
         switch (menuItem.getItemId()) {
             case R.id.share:
                 // NB: Generic menu item action event will be sent at the end of this function.
@@ -268,11 +271,13 @@ public abstract class ActivityStreamContextMenu
                 break;
 
             case R.id.open_new_tab:
-                onUrlOpenInBackgroundListener.onUrlOpenInBackground(item.getUrl(), EnumSet.noneOf(HomePager.OnUrlOpenInBackgroundListener.Flags.class));
+                onUrlOpenInBackgroundListener.onUrlOpenInBackgroundWithReferrer(item.getUrl(), referrerUri,
+                        EnumSet.noneOf(HomePager.OnUrlOpenInBackgroundListener.Flags.class));
                 break;
 
             case R.id.open_new_private_tab:
-                onUrlOpenInBackgroundListener.onUrlOpenInBackground(item.getUrl(), EnumSet.of(HomePager.OnUrlOpenInBackgroundListener.Flags.PRIVATE));
+                onUrlOpenInBackgroundListener.onUrlOpenInBackgroundWithReferrer(item.getUrl(), referrerUri,
+                        EnumSet.of(HomePager.OnUrlOpenInBackgroundListener.Flags.PRIVATE));
                 break;
 
             case R.id.dismiss:
