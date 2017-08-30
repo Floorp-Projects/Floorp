@@ -113,7 +113,7 @@ DirectoryProvider.prototype = {
       return;
 
     let curLocale = "";
-    let reqLocales = Services.locales.getRequestedLocales();
+    let reqLocales = Services.locale.getRequestedLocales();
     if (reqLocales.length > 0) {
       curLocale = reqLocales[0];
     }
