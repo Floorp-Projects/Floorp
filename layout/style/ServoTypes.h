@@ -201,6 +201,18 @@ struct ServoComputedValueFlags {
 #undef STYLE_STRUCT
 #undef STYLE_STRUCT_LIST_IGNORE_VARIABLES
 
+class ServoStyleSetSizes
+{
+public:
+  size_t mStylistRuleTree;
+  size_t mOther;
+
+  ServoStyleSetSizes()
+    : mStylistRuleTree(0)
+    , mOther(0)
+  {}
+};
+
 } // namespace mozilla
 
 class ServoComputedData;
