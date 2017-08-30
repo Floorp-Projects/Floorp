@@ -8,6 +8,7 @@ import android.content.Context;
 import android.graphics.Canvas;
 import android.graphics.Color;
 import android.graphics.Paint;
+import android.graphics.Typeface;
 import android.support.design.widget.CoordinatorLayout;
 import android.support.design.widget.FloatingActionButton;
 import android.text.TextPaint;
@@ -17,7 +18,12 @@ import android.view.View;
 import org.mozilla.focus.R;
 
 public class FloatingSessionsButton extends FloatingActionButton {
-    private static final String TOO_MANY_TABS_SYMBOL = "∞";
+    /**
+     * The Answer to the Ultimate Question of Life, the Universe, and Everything. And the number of
+     * tabs that is just too many.
+     */
+    private static final int TOO_MANY_TABS = 42;
+    private static final String TOO_MANY_TABS_SYMBOL = ":(";
 
     private TextPaint textPaint;
     private int tabCount;
@@ -40,6 +46,7 @@ public class FloatingSessionsButton extends FloatingActionButton {
     private void init() {
         final Paint paint = new Paint();
         paint.setColor(Color.WHITE);
+        paint.setTypeface(Typeface.create(Typeface.DEFAULT, Typeface.BOLD));
 
         final int textSize = getResources().getDimensionPixelSize(R.dimen.tabs_button_text_size);
 
@@ -78,7 +85,7 @@ public class FloatingSessionsButton extends FloatingActionButton {
         final int x = canvas.getWidth() / 2;
         final int y = (int) ((canvas.getHeight() / 2) - ((textPaint.descent() + textPaint.ascent()) / 2));
 
-        final String text = tabCount <= 9 ? String.valueOf(tabCount) : TOO_MANY_TABS_SYMBOL;
+        final String text = tabCount < TOO_MANY_TABS ? String.valueOf(tabCount) : TOO_MANY_TABS_SYMBOL;
 
         canvas.drawText(text, x, y, textPaint);
     }

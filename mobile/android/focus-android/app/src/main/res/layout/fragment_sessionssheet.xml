@@ -20,6 +20,7 @@
         android:layout_gravity="bottom|end"
         android:layout_marginBottom="@dimen/floating_action_button_margin"
         android:layout_marginEnd="@dimen/floating_action_button_margin"
+        android:layout_marginTop="96dp"
         android:clickable="true"
         android:focusable="true"
         android:elevation="16dp"

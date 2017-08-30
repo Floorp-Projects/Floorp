@@ -26,7 +26,7 @@
 
     <color name="colorErase">#96368D</color>
     <color name="colorFloatingActionButtonTint">#96368D</color>
-    <color name="colorTabsButtonTint">#ff0087fa</color>
+    <color name="colorTabsButtonTint">@color/colorAction</color>
 
     <color name="colorUrlInputBackground">#B2000000</color>
 
@@ -40,7 +40,8 @@
 
     <color name="download_dialog_text">#FF00A4DC</color>
 
-    <color name="colorAction">#FF00A4DC</color>
+    <color name="colorSession">#272727</color>
+    <color name="colorAction">#FF0A84FF</color>
 
     <color name="add_to_homescreen_button_text">#FF00A4DC</color>
     <color name="add_to_homescreen_text">#FFFFFF</color>

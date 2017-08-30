@@ -6,6 +6,7 @@ package org.mozilla.focus.session.ui;
 
 import android.animation.Animator;
 import android.animation.AnimatorListenerAdapter;
+import android.content.Context;
 import android.graphics.Color;
 import android.graphics.drawable.Drawable;
 import android.net.Uri;
@@ -47,23 +48,24 @@ public class SessionViewHolder extends RecyclerView.ViewHolder implements View.O
 
         final boolean isCurrentSession = SessionManager.getInstance().isCurrentSession(session);
         final int actionColor = ContextCompat.getColor(textView.getContext(), R.color.colorAction);
+        final int darkColor = ContextCompat.getColor(textView.getContext(), R.color.colorSession);
 
-        updateTextColor(isCurrentSession, actionColor);
-        updateDrawable(isCurrentSession, actionColor);
+        updateTextColor(isCurrentSession, actionColor, darkColor);
+        updateDrawable(isCurrentSession, actionColor, darkColor);
     }
 
-    private void updateTextColor(boolean isCurrentSession, int actionColor) {
-        textView.setTextColor(isCurrentSession ? actionColor : Color.BLACK);
+    private void updateTextColor(boolean isCurrentSession, int actionColor, int darkColor) {
+        textView.setTextColor(isCurrentSession ? actionColor : darkColor);
     }
 
-    private void updateDrawable(boolean isCurrentSession, int actionColor) {
+    private void updateDrawable(boolean isCurrentSession, int actionColor, int darkColor) {
         final Drawable drawable = AppCompatResources.getDrawable(itemView.getContext(), R.drawable.ic_link);
         if (drawable == null) {
             return;
         }
 
-        final Drawable wrapDrawable = DrawableCompat.wrap(drawable);
-        DrawableCompat.setTint(wrapDrawable, isCurrentSession ? actionColor : Color.BLACK);
+        final Drawable wrapDrawable = DrawableCompat.wrap(drawable.mutate());
+        DrawableCompat.setTint(wrapDrawable, isCurrentSession ? actionColor : darkColor);
 
         textView.setCompoundDrawablesWithIntrinsicBounds(wrapDrawable, null, null, null);
     }

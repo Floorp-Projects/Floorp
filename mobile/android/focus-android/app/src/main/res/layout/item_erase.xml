@@ -4,7 +4,7 @@
    - file, You can obtain one at http://mozilla.org/MPL/2.0/. -->
 <TextView xmlns:android="http://schemas.android.com/apk/res/android"
     android:layout_width="match_parent"
-    android:layout_height="48dp"
+    android:layout_height="56dp"
     xmlns:tools="http://schemas.android.com/tools"
     android:background="@drawable/background_list_item_erase"
     android:drawablePadding="16dp"
