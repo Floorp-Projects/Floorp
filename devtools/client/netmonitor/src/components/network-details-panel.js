@@ -41,9 +41,9 @@ function NetworkDetailsPanel({
           request,
           selectTab,
           sourceMapService,
+          cloneSelectedRequest,
         }) :
         CustomRequestPanel({
-          cloneSelectedRequest,
           request,
         })
     )
