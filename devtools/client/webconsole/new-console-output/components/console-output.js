@@ -67,7 +67,7 @@ const ConsoleOutput = createClass({
     const visibleMessagesDelta =
       nextProps.visibleMessages.length - this.props.visibleMessages.length;
     const messagesDelta =
-      nextProps.messages.length - this.props.messages.length;
+      nextProps.messages.size - this.props.messages.size;
 
     // We need to scroll to the bottom if:
     // - the number of messages displayed changed
