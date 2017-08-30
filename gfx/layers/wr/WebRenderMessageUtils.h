@@ -122,6 +122,15 @@ struct ParamTraits<mozilla::wr::BuiltDisplayListDescriptor>
 {
 };
 
+template<>
+struct ParamTraits<mozilla::wr::WebRenderError>
+  : public ContiguousEnumSerializer<
+        mozilla::wr::WebRenderError,
+        mozilla::wr::WebRenderError::INITIALIZE,
+        mozilla::wr::WebRenderError::Sentinel>
+{
+};
+
 } // namespace IPC
 
 #endif // GFX_WEBRENDERMESSAGEUTILS_H

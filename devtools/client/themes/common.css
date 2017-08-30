@@ -375,10 +375,6 @@ checkbox:-moz-focusring {
   margin-inline-start: 3px;
 }
 
-.devtools-separator + .devtools-toolbarbutton {
-  margin-inline-start: 1px;
-}
-
 /* Text input */
 
 .devtools-textinput,

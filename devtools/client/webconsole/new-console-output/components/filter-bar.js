@@ -140,7 +140,7 @@ const FilterBar = createClass({
         filterKey: FILTERS.DEBUG,
         dispatch
       }),
-      dom.span({
+      dom.div({
         className: "devtools-separator",
       }),
       FilterButton({

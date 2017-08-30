@@ -28,9 +28,6 @@ namespace jit {
 
 void* GetReturnAddressToIonCode(JSContext* cx);
 
-void EmitIonStoreDenseElement(MacroAssembler& masm, const ConstantOrRegister& value,
-                              Register elements, BaseObjectElementIndex target);
-
 } // namespace jit
 } // namespace js
 
