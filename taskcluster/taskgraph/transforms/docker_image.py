@@ -100,20 +100,20 @@ def fill_template(config, tasks):
                 'caches': [{
                     'type': 'persistent',
                     'name': 'level-{}-imagebuilder-v1'.format(config.params['level']),
-                    'mount-point': '/home/worker/checkouts',
+                    'mount-point': '/builds/worker/checkouts',
                 }],
                 'volumes': [
-                    # Keep in sync with Dockerfile.
-                    '/home/worker/checkouts',
-                    '/home/worker/workspace',
+                    # Keep in sync with Dockerfile and TASKCLUSTER_VOLUMES
+                    '/builds/worker/checkouts',
+                    '/builds/worker/workspace',
                 ],
                 'artifacts': [{
                     'type': 'file',
-                    'path': '/home/worker/workspace/artifacts/image.tar.zst',
+                    'path': '/builds/worker/workspace/artifacts/image.tar.zst',
                     'name': 'public/image.tar.zst',
                 }],
                 'env': {
-                    'HG_STORE_PATH': '/home/worker/checkouts/hg-store',
+                    'HG_STORE_PATH': '/builds/worker/checkouts/hg-store',
                     'HASH': context_hash,
                     'PROJECT': config.params['project'],
                     'IMAGE_NAME': image_name,
@@ -121,6 +121,7 @@ def fill_template(config, tasks):
                     'GECKO_BASE_REPOSITORY': config.params['base_repository'],
                     'GECKO_HEAD_REPOSITORY': config.params['head_repository'],
                     'GECKO_HEAD_REV': config.params['head_rev'],
+                    'TASKCLUSTER_VOLUMES': '/builds/worker/checkouts;/builds/worker/workspace',
                 },
                 'chain-of-trust': True,
                 'docker-in-docker': True,
