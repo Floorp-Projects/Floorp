@@ -255,7 +255,27 @@ public:
    */
   int32_t GetMaxLength();
 
-  void ClearValueCache() { mCachedValue.Truncate(); }
+  void ClearValueCache()
+  {
+    mCachedValue.SetIsVoid(true);
+    MOZ_ASSERT(mCachedValue.IsEmpty());
+  }
+  void SetValueCache(const nsAString& aValue)
+  {
+    mCachedValue.Assign(aValue);
+    MOZ_ASSERT(!mCachedValue.IsVoid());
+  }
+  MOZ_MUST_USE bool
+  SetValueCache(const nsAString& aValue,
+                const mozilla::fallible_t& aFallible)
+  {
+    if (!mCachedValue.Assign(aValue, aFallible)) {
+      ClearValueCache();
+      return false;
+    }
+    MOZ_ASSERT(!mCachedValue.IsVoid());
+    return true;
+  }
 
   void HideSelectionIfBlurred();
 
@@ -460,11 +480,11 @@ private:
   mozilla::Maybe<nsString> mValue;
   RefPtr<nsAnonDivObserver> mMutationObserver;
   // Cache of the |.value| of <input> or <textarea> element without hard-wrap.
-  // If this is empty string, it doesn't cache |.value|.
+  // If its IsVoid() returns true, it doesn't cache |.value|.
   // Otherwise, it's cached when setting specific value or getting value from
   // TextEditor.  Additionally, when contents in the anonymous <div> element
   // is modified, this is cleared.
-  mutable nsString mCachedValue;
+  nsString mCachedValue;
   // mValueBeingSet is available only while SetValue() is requesting to commit
   // composition.  I.e., this is valid only while mIsCommittingComposition is
   // true.  While active composition is being committed, GetValue() needs
