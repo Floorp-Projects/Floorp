@@ -44,7 +44,7 @@ private:
   void operator=(const CounterStyle& other) = delete;
 
 public:
-  constexpr int32_t GetStyle() const { return mStyle; }
+  int32_t GetStyle() const { return mStyle; }
   bool IsNone() const { return mStyle == NS_STYLE_LIST_STYLE_NONE; }
   bool IsCustomStyle() const { return mStyle == NS_STYLE_LIST_STYLE_CUSTOM; }
   // A style is dependent if it depends on the counter style manager.
@@ -98,7 +98,7 @@ public:
   virtual AnonymousCounterStyle* AsAnonymous() { return nullptr; }
 
 protected:
-  const int32_t mStyle;
+  int32_t mStyle;
 };
 
 class AnonymousCounterStyle final : public CounterStyle
@@ -313,6 +313,8 @@ private:
   ~CounterStyleManager();
 public:
   explicit CounterStyleManager(nsPresContext* aPresContext);
+
+  static void InitializeBuiltinCounterStyles();
 
   void Disconnect();
 
