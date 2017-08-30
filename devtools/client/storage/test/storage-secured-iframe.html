@@ -9,7 +9,10 @@ Iframe for testing multiple host detetion in storage actor
 <body>
 <script type="application/javascript">
 "use strict";
+let cookieExpiresTime = 2000000000000;
 document.cookie = "sc1=foobar;";
+document.cookie = "sc2=foobar-2; expires=" +
+  new Date(cookieExpiresTime).toGMTString() + ";";
 localStorage.setItem("iframe-s-ls1", "foobar");
 sessionStorage.setItem("iframe-s-ss1", "foobar-2");
 dump("added cookies and storage from secured iframe\n");

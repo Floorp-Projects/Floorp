@@ -848,7 +848,7 @@ var PromptUtils = {
 };
 
 XPCOMUtils.defineLazyGetter(PromptUtils, "passwdBundle", function() {
-  return Services.strings.createBundle("chrome://passwordmgr/locale/passwordmgr.properties");
+  return Services.strings.createBundle("chrome://browser/locale/passwordmgr.properties");
 });
 
 XPCOMUtils.defineLazyGetter(PromptUtils, "bundle", function() {

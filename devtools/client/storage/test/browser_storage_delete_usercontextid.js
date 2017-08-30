@@ -32,15 +32,22 @@ const storageItemsForDefault = [
       getCookieId("c1", "test1.example.org", "/browser"),
       getCookieId("cs2", ".example.org", "/"),
       getCookieId("c3", "test1.example.org", "/"),
-      getCookieId("uc1", ".example.org", "/")
+      getCookieId("c4", ".example.org", "/"),
+      getCookieId("uc1", ".example.org", "/"),
+      getCookieId("uc2", ".example.org", "/")
     ]
   ],
   [
     ["cookies", "https://sectest1.example.org"],
     [
       getCookieId("uc1", ".example.org", "/"),
+      getCookieId("uc2", ".example.org", "/"),
       getCookieId("cs2", ".example.org", "/"),
-      getCookieId("sc1", "sectest1.example.org", "/browser/devtools/client/storage/test/")
+      getCookieId("c4", ".example.org", "/"),
+      getCookieId("sc1", "sectest1.example.org",
+        "/browser/devtools/client/storage/test/"),
+      getCookieId("sc2", "sectest1.example.org",
+        "/browser/devtools/client/storage/test/")
     ]
   ],
   [["localStorage", "http://test1.example.org"],

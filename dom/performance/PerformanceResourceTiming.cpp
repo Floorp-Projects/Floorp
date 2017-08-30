@@ -17,7 +17,7 @@ NS_IMPL_CYCLE_COLLECTION_TRACE_BEGIN_INHERITED(PerformanceResourceTiming,
                                                PerformanceEntry)
 NS_IMPL_CYCLE_COLLECTION_TRACE_END
 
-NS_INTERFACE_MAP_BEGIN_CYCLE_COLLECTION_INHERITED(PerformanceResourceTiming)
+NS_INTERFACE_MAP_BEGIN_CYCLE_COLLECTION(PerformanceResourceTiming)
 NS_INTERFACE_MAP_END_INHERITING(PerformanceEntry)
 
 NS_IMPL_ADDREF_INHERITED(PerformanceResourceTiming, PerformanceEntry)

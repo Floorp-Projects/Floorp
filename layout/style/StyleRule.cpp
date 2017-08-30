@@ -1242,7 +1242,7 @@ StyleRule::DropReferences()
 }
 
 // QueryInterface implementation for StyleRule
-NS_INTERFACE_MAP_BEGIN_CYCLE_COLLECTION_INHERITED(StyleRule)
+NS_INTERFACE_MAP_BEGIN_CYCLE_COLLECTION(StyleRule)
   if (aIID.Equals(NS_GET_IID(mozilla::css::StyleRule))) {
     *aInstancePtr = this;
     NS_ADDREF_THIS();

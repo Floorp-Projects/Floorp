@@ -194,6 +194,92 @@ function synthesizeNativeTouch(aElement, aX, aY, aType, aObserver = null, aTouch
   return true;
 }
 
+// Function to generate native touch events for a multi-touch sequence.
+// aElement is the element whose bounding rect the coordinates are relative to.
+// aPositions is a 2D array of position data. It is indexed as [row][column],
+//   where advancing the row counter moves forward in time, and each column
+//   represents a single "finger" (or touch input). Each row must have exactly
+//   the same number of columns, and the number of columns must match the length
+//   of the aTouchIds parameter. However, rows are allowed to be null, this
+//   represents a yield point, where the function yields back to the caller for
+//   additional processing at that point in the touch sequence.
+//   For each non-null row, each entry is either an object with x and y fields,
+//   or a null. A null value indicates that the "finger" should be "lifted"
+//   (i.e. send a touchend for that touch input). A non-null value therefore
+//   indicates the position of the touch input.
+//   This function takes care of the state tracking necessary to send
+//   touchstart/touchend inputs as necessary as the fingers go up and down.
+// aObserver is the observer that will get registered on the very last
+//   synthesizeNativeTouch call this function makes.
+// aTouchIds is an array holding the touch ID values of each "finger".
+function* synthesizeNativeTouchSequences(aElement, aPositions, aObserver = null, aTouchIds = [0]) {
+  // We use lastNonNullValue to figure out which synthesizeNativeTouch call
+  // will be the last one we make, so that we can register aObserver on it.
+  var lastNonNullValue = -1;
+  var yields = 0;
+  for (var i = 0; i < aPositions.length; i++) {
+    if (aPositions[i] == null) {
+      yields++;
+      continue;
+    }
+    if (aPositions[i].length != aTouchIds.length) {
+      throw "aPositions[" + i + "] did not have the expected number of positions; expected " + aTouchIds.length + " touch points but found " + aPositions[i].length;
+    }
+    for (var j = 0; j < aTouchIds.length; j++) {
+      if (aPositions[i][j] != null) {
+        lastNonNullValue = ((i - yields) * aTouchIds.length) + j;
+      }
+    }
+  }
+  if (lastNonNullValue < 0) {
+    throw "All values in positions array were null!";
+  }
+
+  // Insert a row of nulls at the end of aPositions, to ensure that all
+  // touches get removed. If the touches have already been removed this will
+  // just add an extra no-op iteration in the aPositions loop below.
+  var allNullRow = new Array(aTouchIds.length);
+  allNullRow.fill(null);
+  aPositions.push(allNullRow);
+
+  // The last synthesizeNativeTouch call will be the TOUCH_REMOVE which happens
+  // one iteration of aPosition after the last non-null value.
+  var lastSynthesizeCall = lastNonNullValue + aTouchIds.length;
+
+  // track which touches are down and which are up. start with all up
+  var currentPositions = new Array(aTouchIds.length);
+  currentPositions.fill(null);
+
+  // Iterate over the position data now, and generate the touches requested
+  yields = 0;
+  for (var i = 0; i < aPositions.length; i++) {
+    if (aPositions[i] == null) {
+      yields++;
+      yield i;
+      continue;
+    }
+    for (var j = 0; j < aTouchIds.length; j++) {
+      if (aPositions[i][j] == null) {
+        // null means lift the finger
+        if (currentPositions[j] == null) {
+          // it's already lifted, do nothing
+        } else {
+          // synthesize the touch-up. If this is the last call we're going to
+          // make, pass the observer as well
+          var thisIndex = ((i - yields) * aTouchIds.length) + j;
+          var observer = (lastSynthesizeCall == thisIndex) ? aObserver : null;
+          synthesizeNativeTouch(aElement, currentPositions[j].x, currentPositions[j].y, SpecialPowers.DOMWindowUtils.TOUCH_REMOVE, observer, aTouchIds[j]);
+          currentPositions[j] = null;
+        }
+      } else {
+        synthesizeNativeTouch(aElement, aPositions[i][j].x, aPositions[i][j].y, SpecialPowers.DOMWindowUtils.TOUCH_CONTACT, null, aTouchIds[j]);
+        currentPositions[j] = aPositions[i][j];
+      }
+    }
+  }
+  return true;
+}
+
 // A handy constant when synthesizing native touch drag events with the pref
 // "apz.touch_start_tolerance" set to 0. In this case, the first touchmove with
 // a nonzero pixel movement is consumed by the APZ to transition from the
@@ -204,15 +290,22 @@ function synthesizeNativeTouch(aElement, aX, aY, aType, aObserver = null, aTouch
 // correspondingly increased so as to be higher than the tolerance.
 const TOUCH_SLOP = 1;
 function synthesizeNativeTouchDrag(aElement, aX, aY, aDeltaX, aDeltaY, aObserver = null, aTouchId = 0) {
-  synthesizeNativeTouch(aElement, aX, aY, SpecialPowers.DOMWindowUtils.TOUCH_CONTACT, null, aTouchId);
   var steps = Math.max(Math.abs(aDeltaX), Math.abs(aDeltaY));
+  var positions = new Array();
+  positions.push([{ x: aX, y: aY }]);
   for (var i = 1; i < steps; i++) {
     var dx = i * (aDeltaX / steps);
     var dy = i * (aDeltaY / steps);
-    synthesizeNativeTouch(aElement, aX + dx, aY + dy, SpecialPowers.DOMWindowUtils.TOUCH_CONTACT, null, aTouchId);
+    var pos = { x: aX + dx, y: aY + dy };
+    positions.push([pos]);
   }
-  synthesizeNativeTouch(aElement, aX + aDeltaX, aY + aDeltaY, SpecialPowers.DOMWindowUtils.TOUCH_CONTACT, null, aTouchId);
-  return synthesizeNativeTouch(aElement, aX + aDeltaX, aY + aDeltaY, SpecialPowers.DOMWindowUtils.TOUCH_REMOVE, aObserver, aTouchId);
+  positions.push([{ x: aX + aDeltaX, y: aY + aDeltaY }]);
+  var continuation = synthesizeNativeTouchSequences(aElement, positions, aObserver, [aTouchId]);
+  var yielded = continuation.next();
+  while (!yielded.done) {
+    yielded = continuation.next();
+  }
+  return yielded.value;
 }
 
 function synthesizeNativeTap(aElement, aX, aY, aObserver = null) {

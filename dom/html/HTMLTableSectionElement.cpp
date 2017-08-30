@@ -40,7 +40,7 @@ NS_IMPL_ADDREF_INHERITED(HTMLTableSectionElement, Element)
 NS_IMPL_RELEASE_INHERITED(HTMLTableSectionElement, Element)
 
 // QueryInterface implementation for HTMLTableSectionElement
-NS_INTERFACE_MAP_BEGIN_CYCLE_COLLECTION_INHERITED(HTMLTableSectionElement)
+NS_INTERFACE_MAP_BEGIN_CYCLE_COLLECTION(HTMLTableSectionElement)
 NS_INTERFACE_MAP_END_INHERITING(nsGenericHTMLElement)
 
 

@@ -13,7 +13,7 @@ namespace dom {
 NS_IMPL_ADDREF_INHERITED(AuthenticatorAttestationResponse, AuthenticatorResponse)
 NS_IMPL_RELEASE_INHERITED(AuthenticatorAttestationResponse, AuthenticatorResponse)
 
-NS_INTERFACE_MAP_BEGIN_CYCLE_COLLECTION_INHERITED(AuthenticatorAttestationResponse)
+NS_INTERFACE_MAP_BEGIN_CYCLE_COLLECTION(AuthenticatorAttestationResponse)
 NS_INTERFACE_MAP_END_INHERITING(AuthenticatorResponse)
 
 AuthenticatorAttestationResponse::AuthenticatorAttestationResponse(nsPIDOMWindowInner* aParent)

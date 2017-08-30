@@ -2288,10 +2288,6 @@ GetNonexistentProperty(JSContext* cx, HandleNativeObject obj, HandleId id,
     if (script->selfHosted())
         return true;
 
-    // We may just be checking if that object has an iterator.
-    if (JSID_IS_ATOM(id, cx->names().iteratorIntrinsic))
-        return true;
-
     // Do not warn about tests like (obj[prop] == undefined).
     pc += CodeSpec[*pc].length;
     if (Detecting(cx, script, pc))

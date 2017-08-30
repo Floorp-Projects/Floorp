@@ -34,7 +34,7 @@ ServoCSSRuleList::ServoCSSRuleList(already_AddRefed<ServoCssRules> aRawRules,
 }
 
 // QueryInterface implementation for ServoCSSRuleList
-NS_INTERFACE_MAP_BEGIN_CYCLE_COLLECTION_INHERITED(ServoCSSRuleList)
+NS_INTERFACE_MAP_BEGIN_CYCLE_COLLECTION(ServoCSSRuleList)
 NS_INTERFACE_MAP_END_INHERITING(dom::CSSRuleList)
 
 NS_IMPL_ADDREF_INHERITED(ServoCSSRuleList, dom::CSSRuleList)

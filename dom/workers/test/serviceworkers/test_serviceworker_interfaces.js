@@ -42,7 +42,6 @@ var ecmaGlobals =
     "Int8Array",
     "InternalError",
     "Intl",
-    "Iterator",
     "JSON",
     "Map",
     "Math",

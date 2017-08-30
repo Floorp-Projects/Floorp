@@ -33,7 +33,7 @@ NS_IMPL_CYCLE_COLLECTION_INHERITED(SVGSwitchElement, SVGSwitchElementBase,
 NS_IMPL_ADDREF_INHERITED(SVGSwitchElement,SVGSwitchElementBase)
 NS_IMPL_RELEASE_INHERITED(SVGSwitchElement,SVGSwitchElementBase)
 
-NS_INTERFACE_MAP_BEGIN_CYCLE_COLLECTION_INHERITED(SVGSwitchElement)
+NS_INTERFACE_MAP_BEGIN_CYCLE_COLLECTION(SVGSwitchElement)
 NS_INTERFACE_MAP_END_INHERITING(SVGSwitchElementBase)
 
 //----------------------------------------------------------------------

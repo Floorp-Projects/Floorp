@@ -61,7 +61,7 @@ NS_IMPL_CYCLE_COLLECTION_INHERITED(nsDOMOfflineResourceList,
                                    mCacheUpdate,
                                    mPendingEvents)
 
-NS_INTERFACE_MAP_BEGIN_CYCLE_COLLECTION_INHERITED(nsDOMOfflineResourceList)
+NS_INTERFACE_MAP_BEGIN_CYCLE_COLLECTION(nsDOMOfflineResourceList)
   NS_INTERFACE_MAP_ENTRY(nsIDOMOfflineResourceList)
   NS_INTERFACE_MAP_ENTRY(nsIOfflineCacheUpdateObserver)
   NS_INTERFACE_MAP_ENTRY(nsIObserver)

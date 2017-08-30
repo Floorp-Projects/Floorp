@@ -675,35 +675,7 @@ public class testBrowserProvider extends ContentProviderTest {
             return id;
         }
 
-        @Override
-        public void test() throws Exception {
-            // Test that unsynced bookmarks are dropped from the database.
-            long id = insertOneBookmark();
-
-            int changed = mProvider.delete(BrowserContract.Bookmarks.CONTENT_URI,
-                                           BrowserContract.Bookmarks._ID + " = ?",
-                                           new String[] { String.valueOf(id) });
-
-            // Deletions also affect parents of folders, and so that must be accounted for.
-            mAsserter.is((changed == 2), true, "Inserted bookmark was deleted");
-
-            Cursor c = getBookmarkById(appendUriParam(BrowserContract.Bookmarks.CONTENT_URI, BrowserContract.PARAM_SHOW_DELETED, "1"), id);
-            mAsserter.is(c.moveToFirst(), false, "Unsynced deleted bookmark was dropped from the database");
-
-            // Test that synced bookmarks are only marked as deleted.
-            id = insertOneBookmark("test-guid", true);
-
-            // Bookmark has been inserted from sync. Let's delete it again, and test that it has not
-            // been dropped from the database.
-            changed = mProvider.delete(BrowserContract.Bookmarks.CONTENT_URI,
-                    BrowserContract.Bookmarks._ID + " = ?",
-                    new String[] { String.valueOf(id) });
-
-            // Deletions also affect parents of folders, and so that must be accounted for.
-            mAsserter.is((changed == 2), true, "Inserted bookmark was deleted");
-
-            c = getBookmarkById(appendUriParam(BrowserContract.Bookmarks.CONTENT_URI, BrowserContract.PARAM_SHOW_DELETED, "1"), id);
-            mAsserter.is(c.moveToFirst(), true, "Deleted bookmark was only marked as deleted");
+        private void verifyMarkedAsDeleted(Cursor c) {
             mAsserter.is(c.getString(c.getColumnIndex(BrowserContract.Bookmarks.TITLE)), null,
                     "Deleted bookmark title is null");
             mAsserter.is(c.getString(c.getColumnIndex(BrowserContract.Bookmarks.URL)), null,
@@ -724,6 +696,40 @@ public class testBrowserProvider extends ContentProviderTest {
                     "Deleted bookmark Favicon ID is null");
             mAsserter.isnot(c.getString(c.getColumnIndex(BrowserContract.Bookmarks.GUID)), null,
                     "Deleted bookmark GUID is not null");
+        }
+
+        @Override
+        public void test() throws Exception {
+            // Test that unsynced bookmarks are not dropped from the database.
+            long id = insertOneBookmark();
+
+            int changed = mProvider.delete(BrowserContract.Bookmarks.CONTENT_URI,
+                                           BrowserContract.Bookmarks._ID + " = ?",
+                                           new String[] { String.valueOf(id) });
+
+            // Deletions also affect parents of folders, and so that must be accounted for.
+            mAsserter.is((changed == 2), true, "Inserted bookmark was deleted");
+
+            Cursor c = getBookmarkById(appendUriParam(BrowserContract.Bookmarks.CONTENT_URI, BrowserContract.PARAM_SHOW_DELETED, "1"), id);
+            mAsserter.is(c.moveToFirst(), true, "Unsynced deleted was only marked as deleted");
+            verifyMarkedAsDeleted(c);
+            c.close();
+
+            // Test that synced bookmarks are only marked as deleted.
+            id = insertOneBookmark("test-guid", true);
+
+            // Bookmark has been inserted from sync. Let's delete it again, and test that it has not
+            // been dropped from the database.
+            changed = mProvider.delete(BrowserContract.Bookmarks.CONTENT_URI,
+                    BrowserContract.Bookmarks._ID + " = ?",
+                    new String[] { String.valueOf(id) });
+
+            // Deletions also affect parents of folders, and so that must be accounted for.
+            mAsserter.is((changed == 2), true, "Inserted bookmark was deleted");
+
+            c = getBookmarkById(appendUriParam(BrowserContract.Bookmarks.CONTENT_URI, BrowserContract.PARAM_SHOW_DELETED, "1"), id);
+            mAsserter.is(c.moveToFirst(), true, "Deleted bookmark was only marked as deleted");
+            verifyMarkedAsDeleted(c);
             c.close();
 
             changed = mProvider.delete(appendUriParam(BrowserContract.Bookmarks.CONTENT_URI, BrowserContract.PARAM_IS_SYNC, "1"),

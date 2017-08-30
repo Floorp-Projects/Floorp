@@ -177,10 +177,6 @@ exclude-multi-locale = [
     l10n = "{l}toolkit/chrome/global/intl.css"
 
 [[paths]]
-    reference = "toolkit/locales/en-US/chrome/passwordmgr/passwordmgr.properties"
-    l10n = "{l}toolkit/chrome/passwordmgr/passwordmgr.properties"
-
-[[paths]]
     reference = "toolkit/locales/en-US/chrome/search/search.properties"
     l10n = "{l}toolkit/chrome/search/search.properties"
 

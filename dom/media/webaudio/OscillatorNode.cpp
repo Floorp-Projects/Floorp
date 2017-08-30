@@ -18,7 +18,7 @@ namespace dom {
 NS_IMPL_CYCLE_COLLECTION_INHERITED(OscillatorNode, AudioScheduledSourceNode,
                                    mPeriodicWave, mFrequency, mDetune)
 
-NS_INTERFACE_MAP_BEGIN_CYCLE_COLLECTION_INHERITED(OscillatorNode)
+NS_INTERFACE_MAP_BEGIN_CYCLE_COLLECTION(OscillatorNode)
 NS_INTERFACE_MAP_END_INHERITING(AudioScheduledSourceNode)
 
 NS_IMPL_ADDREF_INHERITED(OscillatorNode, AudioScheduledSourceNode)

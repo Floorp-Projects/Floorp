@@ -194,9 +194,6 @@ IteratorCloseForException(JSContext* cx, HandleObject obj);
 void
 UnwindIteratorForUncatchableException(JSContext* cx, JSObject* obj);
 
-bool
-IteratorConstructor(JSContext* cx, unsigned argc, Value* vp);
-
 extern bool
 SuppressDeletedProperty(JSContext* cx, HandleObject obj, jsid id);
 
@@ -220,8 +217,8 @@ ThrowStopIteration(JSContext* cx);
 extern JSObject*
 CreateIterResultObject(JSContext* cx, HandleValue value, bool done);
 
-extern JSObject*
-InitLegacyIteratorClass(JSContext* cx, HandleObject obj);
+bool
+IsLegacyIterator(HandleValue v);
 
 extern JSObject*
 InitStopIterationClass(JSContext* cx, HandleObject obj);

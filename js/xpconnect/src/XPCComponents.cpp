@@ -3236,11 +3236,6 @@ nsXPCComponents_Utils::GetJSEngineTelemetryValue(JSContext* cx, MutableHandleVal
     if (!JS_DefineProperty(cx, obj, "setProto", v, attrs))
         return NS_ERROR_OUT_OF_MEMORY;
 
-    i = JS_GetCustomIteratorCount(cx);
-    v.setDouble(i);
-    if (!JS_DefineProperty(cx, obj, "customIter", v, attrs))
-        return NS_ERROR_OUT_OF_MEMORY;
-
     rval.setObject(*obj);
     return NS_OK;
 }

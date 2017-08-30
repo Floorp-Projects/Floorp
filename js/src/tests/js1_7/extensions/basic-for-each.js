@@ -42,38 +42,6 @@ try
       throw "iterable[\"persistedProp\"] == 17";
   }
 
-  var keys = ["foo", "bar", "baz"];
-  var vals = [6, 5, 14];
-
-  iterable.__iterator__ =
-    function(keysOnly)
-    {
-      var gen =
-      function()
-      {
-	for (var i = 0; i < keys.length; i++)
-	{
-	  if (keysOnly)
-	    yield keys[i];
-	  else
-	    yield [keys[i], vals[i]];
-	}
-      };
-      return gen();
-    };
-
-  // for each sets keysOnly==false
-  var index = 0;
-  for each (var v in iterable)
-  {
-    if (!Array_equals(v, [keys[index], vals[index]]))
-      throw "for-each iteration failed on index=" + index + "!";
-    index++;
-  }
-  if (index != keys.length)
-    throw "not everything iterated!  index=" + index +
-      ", keys.length=" + keys.length;
-
   if (iterable.persistedProp != 17)
     throw "iterable.persistedProp not persisted!";
 }

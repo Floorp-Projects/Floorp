@@ -676,7 +676,7 @@ nsPresContext::GetUserPreferences()
   // We don't need to force reflow: either we are initializing a new
   // prescontext or we are being called from UpdateAfterPreferencesChanged()
   // which triggers a reflow anyway.
-  SetBidi(bidiOptions, false);
+  SetBidi(bidiOptions);
 }
 
 void
@@ -1654,15 +1654,12 @@ nsPresContext::SetBidiEnabled() const
 }
 
 void
-nsPresContext::SetBidi(uint32_t aSource, bool aForceRestyle)
+nsPresContext::SetBidi(uint32_t aSource)
 {
   // Don't do all this stuff unless the options have changed.
   if (aSource == GetBidi()) {
     return;
   }
-
-  NS_ASSERTION(!(aForceRestyle && (GetBidi() == 0)),
-               "ForceReflow on new prescontext");
 
   Document()->SetBidiOptions(aSource);
   if (IBMBIDI_TEXTDIRECTION_RTL == GET_BIDI_OPTION_DIRECTION(aSource)
@@ -1680,12 +1677,6 @@ nsPresContext::SetBidi(uint32_t aSource, bool aForceRestyle)
     if (doc) {
       SetVisualMode(IsVisualCharset(doc->GetDocumentCharacterSet()));
     }
-  }
-  if (aForceRestyle && mShell) {
-    // Reconstruct the root document element's frame and its children,
-    // because we need to trigger frame reconstruction for direction change.
-    mDocument->RebuildUserFontSet();
-    mShell->ReconstructFrames();
   }
 }
 

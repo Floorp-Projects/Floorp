@@ -103,7 +103,7 @@ GetSpeechRecognitionService(const nsAString& aLang)
 
 NS_IMPL_CYCLE_COLLECTION_INHERITED(SpeechRecognition, DOMEventTargetHelper, mDOMStream, mSpeechGrammarList)
 
-NS_INTERFACE_MAP_BEGIN_CYCLE_COLLECTION_INHERITED(SpeechRecognition)
+NS_INTERFACE_MAP_BEGIN_CYCLE_COLLECTION(SpeechRecognition)
   NS_INTERFACE_MAP_ENTRY(nsIObserver)
 NS_INTERFACE_MAP_END_INHERITING(DOMEventTargetHelper)
 
