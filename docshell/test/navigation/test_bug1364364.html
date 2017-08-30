@@ -1,0 +1,56 @@
+<!DOCTYPE HTML>
+<html>
+<!--
+https://bugzilla.mozilla.org/show_bug.cgi?id=1364364
+-->
+<head>
+  <meta charset="utf-8">
+  <title>Test for Bug 1364364</title>
+  <script type="application/javascript" src="/tests/SimpleTest/SimpleTest.js"></script>
+  <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css"/>
+  <script type="application/javascript">
+
+  /** Test for Bug 1364364 **/
+  let testWin, testDoc;
+  async function test() {
+    SimpleTest.waitForExplicitFinish();
+    testWin = window.open("file_bug1364364-1.html");
+    await waitForLoad(testWin);
+    testDoc = testWin.document;
+
+    // file_bug1364364-1.html will load a few dynamic iframes and then navigate
+    // top browsing context to file_bug1364364-2.html, which will postMessage
+    // back.
+  }
+
+  function waitForLoad(win) {
+    return new Promise(r => win.addEventListener("load", r, { once: true}));
+  }
+
+  window.addEventListener("message", async function(msg) {
+    if (msg.data == "navigation-done") {
+      is(testWin.history.length, 6, "check history.length");
+
+      // Modify a document in bfcache should cause the cache being dropped tho
+      // RemoveFromBFCacheAsync.
+      testDoc.querySelector("#content").textContent = "modified";
+      await new Promise(r => setTimeout(r, 0));
+
+      is(testWin.history.length, 2, "check history.length after bfcache dropped");
+      testWin.close();
+      SimpleTest.finish();
+    }
+  });
+
+  </script>
+</head>
+<body onload="test();">
+<a target="_blank" href="https://bugzilla.mozilla.org/show_bug.cgi?id=1364364">Mozilla Bug 1364364</a>
+<p id="display"></p>
+<div id="content" style="display: none">
+
+</div>
+<pre id="test">
+</pre>
+</body>
+</html>
