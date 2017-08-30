@@ -40,6 +40,7 @@
 #include "mozilla/dom/PluginCrashedEvent.h"
 #include "mozilla/EventDispatcher.h"
 #include "mozilla/Attributes.h"
+#include "mozilla/SystemGroup.h"
 
 namespace mozilla {
 
