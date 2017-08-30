@@ -2034,21 +2034,22 @@ CounterStyleManager::BuildCounterStyle(nsIAtom* aName)
     return data;
   }
 
-  // Names are compared case-sensitively here. Predefined names should
-  // have been lowercased by the parser.
+  // It is intentional that the predefined names are case-insensitive
+  // but the user-defined names case-sensitive.
   StyleSetHandle styleSet = mPresContext->StyleSet();
   nsCSSCounterStyleRule* rule = styleSet->CounterStyleRuleForName(aName);
   if (rule) {
     MOZ_ASSERT(rule->Name() == aName);
     data = new (mPresContext) CustomCounterStyle(aName, this, rule);
   } else {
-    for (const BuiltinCounterStyle& item : gBuiltinStyleTable) {
-      if (item.GetStyleName() == aName) {
-        int32_t style = item.GetStyle();
-        data = item.IsDependentStyle()
-          ? new (mPresContext) DependentBuiltinCounterStyle(style, this)
-          : GetBuiltinStyle(style);
-        break;
+    int32_t type;
+    nsDependentAtomString name(aName);
+    nsCSSKeyword keyword = nsCSSKeywords::LookupKeyword(name);
+    if (nsCSSProps::FindKeyword(keyword, nsCSSProps::kListStyleKTable, type)) {
+      if (gBuiltinStyleTable[type].IsDependentStyle()) {
+        data = new (mPresContext) DependentBuiltinCounterStyle(type, this);
+      } else {
+        data = GetBuiltinStyle(type);
       }
     }
   }
@@ -2069,14 +2070,6 @@ CounterStyleManager::GetBuiltinStyle(int32_t aStyle)
   // No method of BuiltinCounterStyle mutates the struct itself, so it
   // should be fine to cast const away.
   return const_cast<BuiltinCounterStyle*>(&gBuiltinStyleTable[aStyle]);
-}
-
-/* static */ nsIAtom*
-CounterStyleManager::GetStyleNameFromType(int32_t aStyle)
-{
-  MOZ_ASSERT(0 <= aStyle && size_t(aStyle) < sizeof(gBuiltinStyleTable),
-             "Require a valid builtin style constant");
-  return gBuiltinStyleTable[aStyle].GetStyleName();
 }
 
 bool
