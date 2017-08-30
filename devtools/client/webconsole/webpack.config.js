@@ -82,6 +82,7 @@ webpackConfig.resolve = {
     "devtools/shared/old-event-emitter": "devtools-modules/src/utils/event-emitter",
     "devtools/shared/client/main": path.join(__dirname, "new-console-output/test/fixtures/ObjectClient"),
     "devtools/shared/platform/clipboard": path.join(__dirname, "../../shared/platform/content/clipboard"),
+    "devtools/shared/platform/stack": path.join(__dirname, "../../shared/platform/content/stack"),
   }
 };
 

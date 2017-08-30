@@ -3,8 +3,8 @@
 
 "use strict";
 
-const TEST_URI = "data:text/html;charset=utf8,Test that clicking on a network message " +
-                 "in the console opens the netmonitor panel.";
+const TEST_URI = "data:text/html;charset=utf8,Test that 'Open in Network Panel' " +
+                 "context menu item opens the selected request in netmonitor panel.";
 
 const TEST_FILE = "test-network-request.html";
 const JSON_TEST_URL = "test-network-request.html";
@@ -12,6 +12,7 @@ const TEST_PATH = "http://example.com/browser/devtools/client/webconsole/new-con
 
 const NET_PREF = "devtools.webconsole.filter.net";
 const XHR_PREF = "devtools.webconsole.filter.netxhr";
+
 Services.prefs.setBoolPref(NET_PREF, true);
 Services.prefs.setBoolPref(XHR_PREF, true);
 registerCleanupFunction(() => {
@@ -47,17 +48,16 @@ add_task(async function task() {
 
 async function testNetmonitorLink(toolbox, hud, url) {
   let messageNode = await waitFor(() => findMessage(hud, url));
-  let urlNode = messageNode.querySelector(".url");
   info("Network message found.");
 
-  let onNetmonitorSelected = new Promise((resolve) => {
-    toolbox.once("netmonitor-selected", (event, panel) => {
-      resolve(panel);
-    });
+  let onNetmonitorSelected = toolbox.once("netmonitor-selected", (event, panel) => {
+    return panel;
   });
 
-  info("Simulate click on the network message url.");
-  EventUtils.sendMouseEvent({ type: "click" }, urlNode);
+  let menuPopup = await openContextMenu(hud, messageNode);
+  let openInNetMenuItem = menuPopup.querySelector("#console-menu-open-in-network-panel");
+  ok(openInNetMenuItem, "open in network panel item is enabled");
+  openInNetMenuItem.click();
 
   const {panelWin} = await onNetmonitorSelected;
   ok(true, "The netmonitor panel is selected when clicking on the network message");
