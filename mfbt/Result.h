@@ -260,6 +260,14 @@ struct IsResult<Result<V, E>> : TrueType { };
 
 } // namespace detail
 
+template <typename V, typename E>
+auto
+ToResult(Result<V, E>&& aValue)
+  -> decltype(Forward<Result<V, E>>(aValue))
+{
+  return Forward<Result<V, E>>(aValue);
+}
+
 /**
  * Result<V, E> represents the outcome of an operation that can either succeed
  * or fail. It contains either a success value of type V or an error value of
@@ -442,7 +450,7 @@ Err(E&& aErrorValue)
  */
 #define MOZ_TRY(expr) \
   do { \
-    auto mozTryTempResult_ = (expr); \
+    auto mozTryTempResult_ = ::mozilla::ToResult(expr); \
     if (mozTryTempResult_.isErr()) { \
       return ::mozilla::Err(mozTryTempResult_.unwrapErr()); \
     } \
