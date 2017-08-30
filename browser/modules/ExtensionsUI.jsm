@@ -320,6 +320,11 @@ this.ExtensionsUI = {
       result.msgs.push(bundle.formatStringFromName(permissionKey(NATIVE_MSG_PERM), [appName], 1));
     }
 
+    // Hardcoded "proxy" permission string for beta uplift.
+    if (perms.permissions.includes("proxy")) {
+      result.msgs.push("Control browser proxy settings");
+    }
+
     // Finally, show remaining permissions, in any order.
     for (let permission of perms.permissions) {
       // Handled above
