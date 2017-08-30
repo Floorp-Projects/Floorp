@@ -1186,6 +1186,7 @@ nsTextEditorState::Construct(nsITextControlElement* aOwningElement,
     state->mPlaceholderVisibility = false;
     state->mPreviewVisibility = false;
     state->mIsCommittingComposition = false;
+    state->ClearValueCache();
     // When adding more member variable initializations here, add the same
     // also to the constructor.
     return state;
@@ -1411,6 +1412,8 @@ nsTextEditorState::PrepareEditor(const nsAString *aValue)
   if (guard.IsInitializingRecursively()) {
     return NS_ERROR_NOT_INITIALIZED;
   }
+
+  ClearValueCache();
 
   // Note that we don't check mTextEditor here, because we might already have
   // one around, in which case we don't create a new one, and we'll just tie
@@ -2432,7 +2435,7 @@ nsTextEditorState::GetValue(nsAString& aValue, bool aIgnoreWrap) const
 
   if (mTextEditor && mBoundFrame &&
       (mEditorInitialized || !IsSingleLineTextControl())) {
-    if (aIgnoreWrap && !mCachedValue.IsEmpty()) {
+    if (aIgnoreWrap && !mCachedValue.IsVoid()) {
       aValue = mCachedValue;
       return;
     }
@@ -2474,9 +2477,9 @@ nsTextEditorState::GetValue(nsAString& aValue, bool aIgnoreWrap) const
     // Only when the result doesn't include line breaks caused by hard-wrap,
     // mCacheValue should cache the value.
     if (!(flags & nsIDocumentEncoder::OutputWrap)) {
-      mCachedValue = aValue;
+      const_cast<nsTextEditorState*>(this)->SetValueCache(aValue);
     } else {
-      mCachedValue.Truncate();
+      const_cast<nsTextEditorState*>(this)->ClearValueCache();
     }
   } else {
     if (!mTextCtrlElement->ValueChanged() || !mValue) {
@@ -2719,7 +2722,7 @@ nsTextEditorState::SetValue(const nsAString& aValue, const nsAString* aOldValue,
 
         // The new value never includes line breaks caused by hard-wrap.
         // So, mCachedValue can always cache the new value.
-        if (!mCachedValue.Assign(newValue, fallible)) {
+        if (!SetValueCache(newValue, fallible)) {
           return false;
         }
       }
