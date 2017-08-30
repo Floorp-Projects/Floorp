@@ -126,7 +126,7 @@ nsSVGFilterInstance::GetFilterFrame(nsIFrame* aTargetFrame)
   // aTargetFrame can be null if this filter belongs to a
   // CanvasRenderingContext2D.
   nsCOMPtr<nsIURI> url = aTargetFrame
-    ? nsSVGEffects::GetFilterURI(aTargetFrame, mFilter)
+    ? SVGObserverUtils::GetFilterURI(aTargetFrame, mFilter)
     : mFilter.GetURL()->ResolveLocalRef(mTargetContent);
 
   if (!url) {

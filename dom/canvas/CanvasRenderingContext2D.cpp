@@ -1300,7 +1300,7 @@ CanvasRenderingContext2D::Redraw()
     return NS_OK;
   }
 
-  nsSVGEffects::InvalidateDirectRenderingObservers(mCanvasElement);
+  SVGObserverUtils::InvalidateDirectRenderingObservers(mCanvasElement);
 
   mCanvasElement->InvalidateCanvasContent(nullptr);
 
@@ -1329,7 +1329,7 @@ CanvasRenderingContext2D::Redraw(const gfx::Rect& aR)
     return;
   }
 
-  nsSVGEffects::InvalidateDirectRenderingObservers(mCanvasElement);
+  SVGObserverUtils::InvalidateDirectRenderingObservers(mCanvasElement);
 
   mCanvasElement->InvalidateCanvasContent(&aR);
 }

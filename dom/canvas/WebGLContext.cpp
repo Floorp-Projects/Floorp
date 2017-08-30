@@ -316,7 +316,7 @@ WebGLContext::Invalidate()
     if (mInvalidated)
         return;
 
-    nsSVGEffects::InvalidateDirectRenderingObservers(mCanvasElement);
+    SVGObserverUtils::InvalidateDirectRenderingObservers(mCanvasElement);
 
     mInvalidated = true;
     mCanvasElement->InvalidateCanvasContent(nullptr);

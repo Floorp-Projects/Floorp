@@ -9308,7 +9308,7 @@ PresShell::DoReflow(nsIFrame* target, bool aInterruptible)
   target->SchedulePaint();
   nsIFrame *parent = nsLayoutUtils::GetCrossDocParentFrame(target);
   while (parent) {
-    nsSVGEffects::InvalidateDirectRenderingObservers(parent);
+    SVGObserverUtils::InvalidateDirectRenderingObservers(parent);
     parent = nsLayoutUtils::GetCrossDocParentFrame(parent);
   }
 

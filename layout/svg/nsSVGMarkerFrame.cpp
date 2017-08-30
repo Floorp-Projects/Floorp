@@ -42,7 +42,7 @@ nsSVGMarkerFrame::AttributeChanged(int32_t  aNameSpaceID,
        aAttribute == nsGkAtoms::orient ||
        aAttribute == nsGkAtoms::preserveAspectRatio ||
        aAttribute == nsGkAtoms::viewBox)) {
-    nsSVGEffects::InvalidateDirectRenderingObservers(this);
+    SVGObserverUtils::InvalidateDirectRenderingObservers(this);
   }
 
   return nsSVGContainerFrame::AttributeChanged(aNameSpaceID,

@@ -715,7 +715,7 @@ nsFrame::DestroyFrom(nsIFrame* aDestructRoot)
   MOZ_ASSERT(!HasAnyStateBits(NS_FRAME_PART_OF_IBSPLIT),
              "NS_FRAME_PART_OF_IBSPLIT set on non-nsContainerFrame?");
 
-  nsSVGEffects::InvalidateDirectRenderingObservers(this);
+  SVGObserverUtils::InvalidateDirectRenderingObservers(this);
 
   if (StyleDisplay()->mPosition == NS_STYLE_POSITION_STICKY) {
     StickyScrollContainer* ssc =
@@ -5892,7 +5892,8 @@ nsFrame::DidReflow(nsPresContext*           aPresContext,
   NS_FRAME_TRACE_MSG(NS_FRAME_TRACE_CALLS,
                      ("nsFrame::DidReflow: aStatus=%d", static_cast<uint32_t>(aStatus)));
 
-  nsSVGEffects::InvalidateDirectRenderingObservers(this, nsSVGEffects::INVALIDATE_REFLOW);
+  SVGObserverUtils::InvalidateDirectRenderingObservers(this,
+                      SVGObserverUtils::INVALIDATE_REFLOW);
 
   if (nsDidReflowStatus::FINISHED == aStatus) {
     RemoveStateBits(NS_FRAME_IN_REFLOW | NS_FRAME_FIRST_REFLOW |
@@ -6407,12 +6408,12 @@ nsIFrame::GetTransformMatrix(const nsIFrame* aStopAtAncestor,
 static void InvalidateRenderingObservers(nsIFrame* aDisplayRoot, nsIFrame* aFrame)
 {
   MOZ_ASSERT(aDisplayRoot == nsLayoutUtils::GetDisplayRootFrame(aFrame));
-  nsSVGEffects::InvalidateDirectRenderingObservers(aFrame);
+  SVGObserverUtils::InvalidateDirectRenderingObservers(aFrame);
   nsIFrame* parent = aFrame;
   while (parent != aDisplayRoot &&
          (parent = nsLayoutUtils::GetCrossDocParentFrame(parent)) &&
          !parent->HasAnyStateBits(NS_FRAME_DESCENDANT_NEEDS_PAINT)) {
-    nsSVGEffects::InvalidateDirectRenderingObservers(parent);
+    SVGObserverUtils::InvalidateDirectRenderingObservers(parent);
   }
 }
 
@@ -6451,7 +6452,7 @@ static void InvalidateFrameInternal(nsIFrame *aFrame, bool aHasDisplayItem = tru
   if (aHasDisplayItem) {
     aFrame->AddStateBits(NS_FRAME_NEEDS_PAINT);
   }
-  nsSVGEffects::InvalidateDirectRenderingObservers(aFrame);
+  SVGObserverUtils::InvalidateDirectRenderingObservers(aFrame);
   bool needsSchedulePaint = false;
   if (nsLayoutUtils::IsPopup(aFrame)) {
     needsSchedulePaint = true;
@@ -6461,7 +6462,7 @@ static void InvalidateFrameInternal(nsIFrame *aFrame, bool aHasDisplayItem = tru
       if (aHasDisplayItem && !parent->HasAnyStateBits(NS_FRAME_IS_NONDISPLAY)) {
         parent->AddStateBits(NS_FRAME_DESCENDANT_NEEDS_PAINT);
       }
-      nsSVGEffects::InvalidateDirectRenderingObservers(parent);
+      SVGObserverUtils::InvalidateDirectRenderingObservers(parent);
 
       // If we're inside a popup, then we need to make sure that we
       // call schedule paint so that the NS_FRAME_UPDATE_LAYER_TREE
@@ -9138,7 +9139,7 @@ nsIFrame::FinishAndStoreOverflow(nsOverflowAreas& aOverflowAreas,
   }
 
   if (anyOverflowChanged) {
-    nsSVGEffects::InvalidateDirectRenderingObservers(this);
+    SVGObserverUtils::InvalidateDirectRenderingObservers(this);
   }
   return anyOverflowChanged;
 }

@@ -448,7 +448,7 @@ nsSVGImageFrame::ReflowSVG()
     // Make sure we have our filter property (if any) before calling
     // FinishAndStoreOverflow (subsequent filter changes are handled off
     // nsChangeHint_UpdateEffects):
-    nsSVGEffects::UpdateEffects(this);
+    SVGObserverUtils::UpdateEffects(this);
 
     if (!mReflowCallbackPosted) {
       nsIPresShell* shell = PresContext()->PresShell();
