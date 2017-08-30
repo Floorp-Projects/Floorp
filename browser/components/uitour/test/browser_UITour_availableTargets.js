@@ -29,6 +29,9 @@ function getExpectedTargets() {
     "privateWindow",
       ...(hasQuit ? ["quit"] : []),
     "readerMode-urlBar",
+    "screenshots",
+    "search",
+    "searchIcon",
     "trackingProtection",
     "urlbar",
   ];
@@ -37,6 +40,7 @@ function getExpectedTargets() {
 add_task(setup_UITourTest);
 
 add_UITour_task(async function test_availableTargets() {
+  await ensureScreenshotsEnabled();
   let data = await getConfigurationPromise("availableTargets");
   let expecteds = getExpectedTargets();
   ok_targets(data, expecteds);
@@ -80,6 +84,7 @@ add_UITour_task(async function test_availableTargets_removeUrlbarPageActionsAll(
   ok_targets(data, expecteds);
   let expectedActions = [
     [ "pocket", "pageAction-panel-pocket" ],
+    [ "screenshots", "pageAction-panel-screenshots" ],
     [ "pageAction-bookmark", "pageAction-panel-bookmark" ],
     [ "pageAction-copyURL", "pageAction-panel-copyURL" ],
     [ "pageAction-emailLink", "pageAction-panel-emailLink" ],
@@ -99,6 +104,7 @@ add_UITour_task(async function test_availableTargets_addUrlbarPageActionsAll() {
   ok_targets(data, expecteds);
   let expectedActions = [
     [ "pocket", "pocket-button-box" ],
+    [ "screenshots", "pageAction-urlbar-screenshots" ],
     [ "pageAction-bookmark", "star-button-box" ],
     [ "pageAction-copyURL", "pageAction-urlbar-copyURL" ],
     [ "pageAction-emailLink", "pageAction-urlbar-emailLink" ],
@@ -150,3 +156,14 @@ var pageActionsHelper = {
     this._originalStates = null;
   }
 };
+
+function ensureScreenshotsEnabled() {
+  SpecialPowers.pushPrefEnv({ set: [
+    [ "extensions.screenshots.system", false ],
+    [ "extensions.screenshots.system-disabled", false ]
+  ]});
+  return BrowserTestUtils.waitForCondition(() => {
+    return PageActions.actionForID("screenshots") &&
+           !CustomizableUI.getWidget("screenshots_mozilla_org-browser-action");
+  }, "Should enable Screenshots");
+}
