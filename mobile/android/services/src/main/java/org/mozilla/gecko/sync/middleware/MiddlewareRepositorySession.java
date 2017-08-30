@@ -175,4 +175,14 @@ public abstract class MiddlewareRepositorySession extends RepositorySession {
   public long getLastSyncTimestamp() {
     return inner.getLastSyncTimestamp();
   }
+
+  @Override
+  public long getLastFetchTimestamp() {
+    return inner.getLastFetchTimestamp();
+  }
+
+  @Override
+  public long getLastStoreTimestamp() {
+    return inner.getLastStoreTimestamp();
+  }
 }

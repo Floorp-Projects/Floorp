@@ -144,7 +144,7 @@ public class BatchingUploaderTest {
         }
 
         @Override
-        public void onStoreCompleted(long storeEnd) {
+        public void onStoreCompleted() {
             ++storeCompleted;
         }
 

@@ -85,7 +85,8 @@ public class WBORepository extends Repository {
       }
       long fetchCompleted  = now();
       stats.fetchCompleted = fetchCompleted;
-      delegate.deferredFetchDelegate(delegateExecutor).onFetchCompleted(fetchCompleted);
+      setLastFetchTimestamp(fetchCompleted);
+      delegate.deferredFetchDelegate(delegateExecutor).onFetchCompleted();
     }
 
     @Override
@@ -100,7 +101,8 @@ public class WBORepository extends Repository {
       }
       long fetchCompleted  = now();
       stats.fetchCompleted = fetchCompleted;
-      delegate.deferredFetchDelegate(delegateExecutor).onFetchCompleted(fetchCompleted);
+      setLastFetchTimestamp(fetchCompleted);
+      delegate.deferredFetchDelegate(delegateExecutor).onFetchCompleted();
     }
 
     @Override
@@ -113,7 +115,8 @@ public class WBORepository extends Repository {
       }
       long fetchCompleted  = now();
       stats.fetchCompleted = fetchCompleted;
-      delegate.deferredFetchDelegate(delegateExecutor).onFetchCompleted(fetchCompleted);
+      setLastFetchTimestamp(fetchCompleted);
+      delegate.deferredFetchDelegate(delegateExecutor).onFetchCompleted();
     }
 
     @Override
@@ -187,7 +190,8 @@ public class WBORepository extends Repository {
         stats.storeBegan = end;
       }
       stats.storeCompleted = end;
-      storeDelegate.deferredStoreDelegate(delegateExecutor).onStoreCompleted(end);
+      setLastStoreTimestamp(end);
+      storeDelegate.deferredStoreDelegate(delegateExecutor).onStoreCompleted();
     }
   }
 

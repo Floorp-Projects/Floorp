@@ -557,7 +557,7 @@ public abstract class ThreadedRepositoryTestCase extends AndroidSyncTestCase {
    private DefaultFetchDelegate getTimestampDelegate(final String guid) {
      return new DefaultFetchDelegate() {
        @Override
-       public void onFetchCompleted(final long fetchEnd) {
+       public void onFetchCompleted() {
          assertEquals(guid, this.records.get(0).guid);
          performNotify();
        }
