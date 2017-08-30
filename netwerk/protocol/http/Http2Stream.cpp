@@ -38,7 +38,8 @@ namespace net {
 
 Http2Stream::Http2Stream(nsAHttpTransaction *httpTransaction,
                          Http2Session *session,
-                         int32_t priority)
+                         int32_t priority,
+                         uint64_t windowId)
   : mStreamID(0)
   , mSession(session)
   , mSegmentReader(nullptr)
@@ -72,6 +73,8 @@ Http2Stream::Http2Stream(nsAHttpTransaction *httpTransaction,
   , mTotalRead(0)
   , mPushSource(nullptr)
   , mAttempting0RTT(false)
+  , mCurrentForegroundTabOuterContentWindowId(windowId)
+  , mTransactionTabId(0)
   , mIsTunnel(false)
   , mPlainTextTunnel(false)
 {
@@ -100,6 +103,11 @@ Http2Stream::Http2Stream(nsAHttpTransaction *httpTransaction,
   }
   MOZ_ASSERT(httpPriority >= 0);
   SetPriority(static_cast<uint32_t>(httpPriority));
+
+  nsHttpTransaction *trans = mTransaction->QueryHttpTransaction();
+  if (trans) {
+    mTransactionTabId = trans->TopLevelOuterContentWindowId();
+  }
 }
 
 Http2Stream::~Http2Stream()
@@ -1202,6 +1210,40 @@ Http2Stream::SetPriorityDependency(uint32_t newDependency, uint8_t newWeight,
         exclusive));
 }
 
+static uint32_t
+GetPriorityDependencyFromTransaction(nsHttpTransaction *trans)
+{
+  MOZ_ASSERT(trans);
+
+  uint32_t classFlags = trans->ClassOfService();
+
+  if (classFlags & nsIClassOfService::UrgentStart) {
+    return Http2Session::kUrgentStartGroupID;
+  }
+
+  if (classFlags & nsIClassOfService::Leader) {
+    return Http2Session::kLeaderGroupID;
+  }
+
+  if (classFlags & nsIClassOfService::Follower) {
+    return Http2Session::kFollowerGroupID;
+  }
+
+  if (classFlags & nsIClassOfService::Speculative) {
+    return Http2Session::kSpeculativeGroupID;
+  }
+
+  if (classFlags & nsIClassOfService::Background) {
+    return Http2Session::kBackgroundGroupID;
+  }
+
+  if (classFlags & nsIClassOfService::Unblocked) {
+    return Http2Session::kOtherGroupID;
+  }
+
+  return Http2Session::kFollowerGroupID; // unmarked followers
+}
+
 void
 Http2Stream::UpdatePriorityDependency()
 {
@@ -1230,27 +1272,56 @@ Http2Stream::UpdatePriorityDependency()
   // spculative bg streams depend on 9
   // urgent-start streams depend on d
 
-  uint32_t classFlags = trans->ClassOfService();
+  mPriorityDependency = GetPriorityDependencyFromTransaction(trans);
 
-  if (classFlags & nsIClassOfService::Leader) {
-    mPriorityDependency = Http2Session::kLeaderGroupID;
-  } else if (classFlags & nsIClassOfService::Follower) {
-    mPriorityDependency = Http2Session::kFollowerGroupID;
-  } else if (classFlags & nsIClassOfService::Speculative) {
-    mPriorityDependency = Http2Session::kSpeculativeGroupID;
-  } else if (classFlags & nsIClassOfService::Background) {
+  if (mTransactionTabId != mCurrentForegroundTabOuterContentWindowId &&
+      mPriorityDependency != Http2Session::kUrgentStartGroupID) {
+    LOG3(("Http2Stream::UpdatePriorityDependency %p "
+          " depends on background group for trans %p\n",
+          this, trans));
     mPriorityDependency = Http2Session::kBackgroundGroupID;
-  } else if (classFlags & nsIClassOfService::Unblocked) {
-    mPriorityDependency = Http2Session::kOtherGroupID;
-  } else if (classFlags & nsIClassOfService::UrgentStart) {
-    mPriorityDependency = Http2Session::kUrgentStartGroupID;
-  } else {
-    mPriorityDependency = Http2Session::kFollowerGroupID; // unmarked followers
   }
 
   LOG3(("Http2Stream::UpdatePriorityDependency %p "
-        "classFlags %X depends on stream 0x%X\n",
-        this, classFlags, mPriorityDependency));
+        "depends on stream 0x%X\n",
+        this, mPriorityDependency));
+}
+
+void
+Http2Stream::TopLevelOuterContentWindowIdChanged(uint64_t windowId)
+{
+  LOG3(("Http2Stream::TopLevelOuterContentWindowIdChanged "
+        "%p windowId=%" PRIx64 "\n",
+        this, windowId));
+
+  mCurrentForegroundTabOuterContentWindowId = windowId;
+
+  if (!mSession->UseH2Deps()) {
+    return;
+  }
+
+  // Urgent start takes an absolute precedence, so don't
+  // change mPriorityDependency here.
+  if (mPriorityDependency == Http2Session::kUrgentStartGroupID) {
+    return;
+  }
+
+  if (mTransactionTabId != mCurrentForegroundTabOuterContentWindowId) {
+    mPriorityDependency = Http2Session::kBackgroundGroupID;
+    LOG3(("Http2Stream::TopLevelOuterContentWindowIdChanged %p "
+          "move into background group.\n", this));
+  } else {
+    nsHttpTransaction *trans = mTransaction->QueryHttpTransaction();
+    if (!trans) {
+      return;
+    }
+
+    mPriorityDependency = GetPriorityDependencyFromTransaction(trans);
+    LOG3(("Http2Stream::TopLevelOuterContentWindowIdChanged %p "
+          "depends on stream 0x%X\n", this, mPriorityDependency));
+  }
+
+  mSession->SendPriorityFrame(mStreamID, mPriorityDependency, mPriorityWeight);
 }
 
 void

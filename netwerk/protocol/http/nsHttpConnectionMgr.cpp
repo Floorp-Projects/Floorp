@@ -3414,6 +3414,47 @@ nsHttpConnectionMgr::ResumeReadOf(nsTArray<RefPtr<nsHttpTransaction>>* transacti
 }
 
 void
+nsHttpConnectionMgr::NotifyConnectionOfWindowIdChange(uint64_t previousWindowId)
+{
+    MOZ_ASSERT(OnSocketThread(), "not on socket thread");
+
+    nsTArray<RefPtr<nsHttpTransaction>> *transactions = nullptr;
+    nsTArray<RefPtr<nsAHttpConnection>> connections;
+
+    auto addConnectionHelper =
+        [&connections](nsTArray<RefPtr<nsHttpTransaction>> *trans) {
+            if (!trans) {
+                return;
+            }
+
+            for (auto t : *trans) {
+                RefPtr<nsAHttpConnection> conn = t->Connection();
+                if (conn && !connections.Contains(conn)) {
+                    connections.AppendElement(conn);
+                }
+            }
+        };
+
+    // Get unthrottled transactions with the previous and current window id.
+    transactions = mActiveTransactions[false].Get(previousWindowId);
+    addConnectionHelper(transactions);
+    transactions =
+        mActiveTransactions[false].Get(mCurrentTopLevelOuterContentWindowId);
+    addConnectionHelper(transactions);
+
+    // Get throttled transactions with the previous and current window id.
+    transactions = mActiveTransactions[true].Get(previousWindowId);
+    addConnectionHelper(transactions);
+    transactions =
+        mActiveTransactions[true].Get(mCurrentTopLevelOuterContentWindowId);
+    addConnectionHelper(transactions);
+
+    for (auto conn : connections) {
+        conn->TopLevelOuterContentWindowIdChanged(mCurrentTopLevelOuterContentWindowId);
+    }
+}
+
+void
 nsHttpConnectionMgr::OnMsgUpdateCurrentTopLevelOuterContentWindowId(
     int32_t aLoading, ARefBase *param)
 {
@@ -3429,7 +3470,10 @@ nsHttpConnectionMgr::OnMsgUpdateCurrentTopLevelOuterContentWindowId(
     bool activeTabWasLoading = mActiveTabTransactionsExist;
     bool activeTabIdChanged = mCurrentTopLevelOuterContentWindowId != winId;
 
+    uint64_t previousWindowId = mCurrentTopLevelOuterContentWindowId;
     mCurrentTopLevelOuterContentWindowId = winId;
+
+    NotifyConnectionOfWindowIdChange(previousWindowId);
 
     LOG(("nsHttpConnectionMgr::OnMsgUpdateCurrentTopLevelOuterContentWindowId"
          " id=%" PRIx64 "\n",
@@ -4896,6 +4940,12 @@ ConnectionHandle::HttpConnection()
 {
     RefPtr<nsHttpConnection> rv(mConn);
     return rv.forget();
+}
+
+void
+ConnectionHandle::TopLevelOuterContentWindowIdChanged(uint64_t windowId)
+{
+  // Do nothing.
 }
 
 // nsConnectionEntry
