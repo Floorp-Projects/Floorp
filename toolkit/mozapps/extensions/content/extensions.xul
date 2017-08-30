@@ -189,14 +189,14 @@
             <spacer class="alert-spacer-before"/>
             <hbox>
               <spacer class="discover-spacer-before"/>
-              <hbox class="alert" align="center">
+              <vbox class="alert" align="center">
                 <image class="discover-logo"/>
                 <vbox flex="1" align="stretch">
                   <label class="discover-title">&discover.title;</label>
                   <description class="discover-description">&discover.description2;</description>
                   <description class="discover-footer">&discover.footer;</description>
                 </vbox>
-              </hbox>
+              </vbox>
               <spacer class="discover-spacer-after"/>
             </hbox>
             <spacer class="alert-spacer-after"/>
@@ -367,25 +367,25 @@
                 </description>
               </vbox>
               <vbox id="legacy-extensions-notice" class="alert-container" hidden="true">
-                <hbox class="alert">
+                <vbox class="alert">
                   <description>&legacyWarning.description;
                     <label class="text-link plain" id="legacy-extensions-learnmore-link">&legacyWarning.showLegacy;</label>
                   </description>
-                </hbox>
+                </vbox>
               </vbox>
               <vbox id="plugindeprecation-notice" class="alert-container">
-                <hbox class="alert">
+                <vbox class="alert">
                   <description>&pluginDeprecation.description; &#160;
                     <label class="text-link plain" id="plugindeprecation-learnmore-link">&pluginDeprecation.learnMore;</label>
                   </description>
-                </hbox>
+                </vbox>
               </vbox>
               <vbox id="getthemes-container" class="alert-container">
-                <hbox class="alert">
+                <vbox class="alert">
                   <description>&getThemes.description; &#160;
                     <label class="text-link plain" id="getthemes-learnmore-link">&getThemes.learnMore;</label>
                   </description>
-                </hbox>
+                </vbox>
               </vbox>
               <hbox class="view-header global-warning-container">
                 <!-- global warnings -->
@@ -419,22 +419,25 @@
                   <spacer flex="5000"/> <!-- Necessary to allow the message to wrap -->
                 </hbox>
               </hbox>
-              <hbox class="view-header global-info-container experiment-info-container">
-                <hbox class="global-info" flex="1" align="center">
-                  <label value="&experiment.info.label;"/>
-                  <button id="experiments-learn-more"
-                          label="&experiment.info.learnmore;"
-                          tooltiptext="&experiment.info.learnmore;"
-                          accesskey="&experiment.info.learnmore.accesskey;"
-                          command="cmd_experimentsLearnMore"/>
-                  <button id="experiments-change-telemetry"
-                          label="&experiment.info.changetelemetry;"
-                          tooltiptext="&experiment.info.changetelemetry;"
-                          accesskey="&experiment.info.changetelemetry.accesskey;"
-                          command="cmd_experimentsOpenTelemetryPreferences"/>
-                  <spacer flex="5000"/> <!-- Necessary to allow the message to wrap. -->
-                </hbox>
-              </hbox>
+              <vbox class="alert-container experiment-info-container">
+                <vbox class="alert">
+                  <description>
+                    &experiment.info.label;
+                    <hbox>
+                      <button id="experiments-learn-more"
+                              label="&experiment.info.learnmore;"
+                              tooltiptext="&experiment.info.learnmore;"
+                              accesskey="&experiment.info.learnmore.accesskey;"
+                              command="cmd_experimentsLearnMore"/>
+                      <button id="experiments-change-telemetry"
+                              label="&experiment.info.changetelemetry;"
+                              tooltiptext="&experiment.info.changetelemetry;"
+                              accesskey="&experiment.info.changetelemetry.accesskey;"
+                              command="cmd_experimentsOpenTelemetryPreferences"/>
+                    </hbox>
+                  </description>
+                </vbox>
+              </vbox>
               <vbox id="addon-list-empty" class="alert-container"
                     flex="1" hidden="true">
                 <spacer class="alert-spacer-before"/>
