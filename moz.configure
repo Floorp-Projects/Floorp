@@ -371,7 +371,6 @@ tup = check_prog('TUP', tup_progs)
 option(env='WATCHMAN', nargs=1, help='Path to the watchman program')
 
 @depends('WATCHMAN')
-@imports('json')
 def watchman_info(prog):
     if not prog:
         prog = find_program('watchman')
@@ -379,18 +378,15 @@ def watchman_info(prog):
     if not prog:
         return
 
-    out = check_cmd_output(prog, 'version', onerror=lambda: None)
+    # `watchman version` will talk to the Watchman daemon service.
+    # This can hang due to permissions problems. e.g.
+    # https://github.com/facebook/watchman/issues/376. So use
+    # `watchman --version` to prevent a class of failures.
+    out = check_cmd_output(prog, '--version', onerror=lambda: None)
     if out is None:
         return
 
-    # Assume a process not emitting JSON is not watchman or is a
-    # broken watchman.
-    try:
-        res = json.loads(out)
-    except ValueError:
-        return
-
-    return namespace(path=prog, version=Version(res['version']))
+    return namespace(path=prog, version=Version(out.strip()))
 
 @depends_if(watchman_info)
 @checking('for watchman')
