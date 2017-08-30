@@ -1181,24 +1181,50 @@ class TestMercurialRevisionFinder(MatchTestTemplate, TestWithTmpDir):
     def setUp(self):
         super(TestMercurialRevisionFinder, self).setUp()
         hglib.init(self.tmpdir)
+        self._clients = []
+
+    def tearDown(self):
+        # Ensure the hg client process is closed. Otherwise, Windows
+        # may have trouble removing the repo directory because the process
+        # has an open handle on it.
+        for client in getattr(self, '_clients', []):
+            if client.server:
+                client.close()
+
+        self._clients[:] = []
+
+        super(TestMercurialRevisionFinder, self).tearDown()
+
+    def _client(self):
+        configs = (
+            'ui.username="Dummy User <dummy@example.com>"',
+        )
+
+        client = hglib.open(self.tmpdir, encoding='UTF-8',
+                            configs=configs)
+        self._clients.append(client)
+        return client
 
     def add(self, path):
-        c = hglib.open(self.tmpdir)
-        ensureParentDir(self.tmppath(path))
-        with open(self.tmppath(path), 'wb') as fh:
-            fh.write(path)
-        c.add(self.tmppath(path))
+        with self._client() as c:
+            ensureParentDir(self.tmppath(path))
+            with open(self.tmppath(path), 'wb') as fh:
+                fh.write(path)
+            c.add(self.tmppath(path))
 
     def do_check(self, pattern, result):
         do_check(self, self.finder, pattern, result)
 
     def _get_finder(self, *args, **kwargs):
-        return MercurialRevisionFinder(*args, **kwargs)
+        f = MercurialRevisionFinder(*args, **kwargs)
+        self._clients.append(f._client)
+        return f
 
     def test_default_revision(self):
         self.prepare_match_test()
-        c = hglib.open(self.tmpdir)
-        c.commit('initial commit')
+        with self._client() as c:
+            c.commit('initial commit')
+
         self.finder = self._get_finder(self.tmpdir)
         self.do_match_test()
 
@@ -1206,21 +1232,21 @@ class TestMercurialRevisionFinder(MatchTestTemplate, TestWithTmpDir):
         self.assertIsInstance(self.finder.get('bar'), MercurialFile)
 
     def test_old_revision(self):
-        c = hglib.open(self.tmpdir)
-        with open(self.tmppath('foo'), 'wb') as fh:
-            fh.write('foo initial')
-        c.add(self.tmppath('foo'))
-        c.commit('initial')
+        with self._client() as c:
+            with open(self.tmppath('foo'), 'wb') as fh:
+                fh.write('foo initial')
+            c.add(self.tmppath('foo'))
+            c.commit('initial')
 
-        with open(self.tmppath('foo'), 'wb') as fh:
-            fh.write('foo second')
-        with open(self.tmppath('bar'), 'wb') as fh:
-            fh.write('bar second')
-        c.add(self.tmppath('bar'))
-        c.commit('second')
-        # This wipes out the working directory, ensuring the finder isn't
-        # finding anything from the filesystem.
-        c.rawcommand(['update', 'null'])
+            with open(self.tmppath('foo'), 'wb') as fh:
+                fh.write('foo second')
+            with open(self.tmppath('bar'), 'wb') as fh:
+                fh.write('bar second')
+            c.add(self.tmppath('bar'))
+            c.commit('second')
+            # This wipes out the working directory, ensuring the finder isn't
+            # finding anything from the filesystem.
+            c.rawcommand(['update', 'null'])
 
         finder = self._get_finder(self.tmpdir, 0)
         f = finder.get('foo')
@@ -1228,19 +1254,20 @@ class TestMercurialRevisionFinder(MatchTestTemplate, TestWithTmpDir):
         self.assertEqual(f.read(), 'foo initial', 'read again for good measure')
         self.assertIsNone(finder.get('bar'))
 
-        finder = MercurialRevisionFinder(self.tmpdir, rev=1)
+        finder = self._get_finder(self.tmpdir, rev=1)
         f = finder.get('foo')
         self.assertEqual(f.read(), 'foo second')
         f = finder.get('bar')
         self.assertEqual(f.read(), 'bar second')
+        f = None
 
     def test_recognize_repo_paths(self):
-        c = hglib.open(self.tmpdir)
-        with open(self.tmppath('foo'), 'wb') as fh:
-            fh.write('initial')
-        c.add(self.tmppath('foo'))
-        c.commit('initial')
-        c.rawcommand(['update', 'null'])
+        with self._client() as c:
+            with open(self.tmppath('foo'), 'wb') as fh:
+                fh.write('initial')
+            c.add(self.tmppath('foo'))
+            c.commit('initial')
+            c.rawcommand(['update', 'null'])
 
         finder = self._get_finder(self.tmpdir, 0,
                                   recognize_repo_paths=True)
@@ -1255,6 +1282,7 @@ class TestMercurialRevisionFinder(MatchTestTemplate, TestWithTmpDir):
         f = finder.get(self.tmppath('foo'))
         self.assertIsInstance(f, MercurialFile)
         self.assertEqual(f.read(), 'initial')
+        f = None
 
 
 @unittest.skipUnless(MercurialNativeRevisionFinder, 'hgnative not available')
