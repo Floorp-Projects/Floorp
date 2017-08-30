@@ -6117,10 +6117,10 @@ StructType::DefineInternal(JSContext* cx, JSObject* typeObj_, JSObject* fieldsOb
       RootedObject setterObj(cx, JS_GetFunctionObject(setter));
 
       if (!JS_DefineUCProperty(cx, prototype,
-             nameChars.twoByteChars(), name->length(), UndefinedHandleValue,
-             JSPROP_SHARED | JSPROP_ENUMERATE | JSPROP_PERMANENT | JSPROP_GETTER | JSPROP_SETTER,
+             nameChars.twoByteChars(), name->length(),
              JS_DATA_TO_FUNC_PTR(JSNative, getterObj.get()),
-             JS_DATA_TO_FUNC_PTR(JSNative, setterObj.get())))
+             JS_DATA_TO_FUNC_PTR(JSNative, setterObj.get()),
+             JSPROP_SHARED | JSPROP_ENUMERATE | JSPROP_PERMANENT | JSPROP_GETTER | JSPROP_SETTER))
       {
         return false;
       }
