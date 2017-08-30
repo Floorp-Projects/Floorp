@@ -19,6 +19,7 @@ const {
   SELECT_REQUEST,
   TOGGLE_COLUMN,
   WATERFALL_RESIZE,
+  PANELS,
 } = require("../constants");
 
 const cols = {
@@ -51,7 +52,7 @@ const Columns = I.Record(
 
 const UI = I.Record({
   columns: new Columns(),
-  detailsPanelSelectedTab: "headers",
+  detailsPanelSelectedTab: PANELS.HEADERS,
   networkDetailsOpen: false,
   browserCacheDisabled: Services.prefs.getBoolPref("devtools.cache.disabled"),
   statisticsOpen: false,

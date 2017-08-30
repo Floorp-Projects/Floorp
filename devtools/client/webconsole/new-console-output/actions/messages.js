@@ -15,6 +15,7 @@ const { batchActions } = require("devtools/client/shared/redux/middleware/deboun
 const {
   MESSAGE_ADD,
   NETWORK_MESSAGE_UPDATE,
+  NETWORK_UPDATE_REQUEST,
   MESSAGES_CLEAR,
   MESSAGE_OPEN,
   MESSAGE_CLOSE,
@@ -94,7 +95,7 @@ function messageTableDataReceive(id, data) {
   };
 }
 
-function networkMessageUpdate(packet, idGenerator = null) {
+function networkMessageUpdate(packet, idGenerator = null, response) {
   if (idGenerator == null) {
     idGenerator = defaultIdGenerator;
   }
@@ -104,6 +105,15 @@ function networkMessageUpdate(packet, idGenerator = null) {
   return {
     type: NETWORK_MESSAGE_UPDATE,
     message,
+    response,
+  };
+}
+
+function networkUpdateRequest(id, data) {
+  return {
+    type: NETWORK_UPDATE_REQUEST,
+    id,
+    data,
   };
 }
 
@@ -179,6 +189,7 @@ module.exports = {
   messageClose,
   messageTableDataGet,
   networkMessageUpdate,
+  networkUpdateRequest,
   messageObjectPropertiesLoad,
   messageObjectEntriesLoad,
   // for test purpose only.
