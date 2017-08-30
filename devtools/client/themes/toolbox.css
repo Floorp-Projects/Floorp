@@ -84,11 +84,6 @@
   align-items: stretch;
 }
 
-#toolbox-buttons-start {
-  border: solid 0 var(--theme-splitter-color);
-  border-inline-end-width: 1px;
-}
-
 /* Toolbox tabs */
 .devtools-tab {
   position: relative;
@@ -305,15 +300,6 @@
 .devtools-tabbar > div {
   background-color: var(--theme-tab-toolbar-background);
   z-index: 0;
-}
-
-#toolbox-buttons-end:empty + .devtools-separator,
-.devtools-separator[invisible] {
-  visibility: hidden;
-}
-
-#toolbox-controls-separator {
-  margin: 0;
 }
 
 /* Command buttons */
