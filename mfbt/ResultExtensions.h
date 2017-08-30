@@ -11,6 +11,7 @@
 
 #include "mozilla/Assertions.h"
 #include "nscore.h"
+#include "prtypes.h"
 
 namespace mozilla {
 
@@ -31,6 +32,33 @@ public:
 
   operator nsresult() { return mErrorValue; }
 };
+
+// Allow MOZ_TRY to handle `PRStatus` values.
+inline Result<Ok, nsresult> ToResult(PRStatus aValue);
+
+} // namespace mozilla
+
+#include "mozilla/Result.h"
+
+namespace mozilla {
+
+inline Result<Ok, nsresult>
+ToResult(nsresult aValue)
+{
+  if (NS_FAILED(aValue)) {
+    return Err(aValue);
+  }
+  return Ok();
+}
+
+inline Result<Ok, nsresult>
+ToResult(PRStatus aValue)
+{
+  if (aValue == PR_SUCCESS) {
+    return Ok();
+  }
+  return Err(NS_ERROR_FAILURE);
+}
 
 } // namespace mozilla
 

@@ -30,26 +30,6 @@ struct MOZ_RAII AutoSafeJSAPI : public AutoJSAPI
     AutoSafeJSAPI() { Init(); }
 };
 
-static inline Result<Ok, nsresult>
-WrapNSResult(PRStatus aRv)
-{
-    if (aRv != PR_SUCCESS) {
-        return Err(NS_ERROR_FAILURE);
-    }
-    return Ok();
-}
-
-static inline Result<Ok, nsresult>
-WrapNSResult(nsresult aRv)
-{
-    if (NS_FAILED(aRv)) {
-        return Err(aRv);
-    }
-    return Ok();
-}
-
-#define NS_TRY(expr) MOZ_TRY(WrapNSResult(expr))
-
 
 class OutputBuffer
 {
