@@ -1,0 +1,62 @@
+<!DOCTYPE HTML>
+<html>
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width">
+  <title>Sanity check for zooming</title>
+  <script type="application/javascript" src="apz_test_native_event_utils.js"></script>
+  <script type="application/javascript" src="apz_test_utils.js"></script>
+  <script type="application/javascript" src="/tests/SimpleTest/paint_listener.js"></script>
+  <script type="application/javascript">
+function getResolution() {
+  let resolution = { value: -1 }; // bogus value in case DWU fails us
+  SpecialPowers.getDOMWindowUtils(window).getResolution(resolution);
+  return resolution.value;
+}
+
+function* test(testDriver) {
+  var initial_resolution = getResolution();
+  SimpleTest.ok(initial_resolution > 0,
+      'The initial_resolution is ' + initial_resolution + ', which is some sane value');
+
+  // This listener will trigger the test to continue once APZ is done with
+  // processing the scroll.
+  SpecialPowers.Services.obs.addObserver(testDriver, "APZ:TransformEnd");
+
+  var zoom_in = [
+      [ { x: 125, y: 250 }, { x: 175, y: 350 } ],
+      [ { x: 120, y: 220 }, { x: 180, y: 380 } ],
+      [ { x: 115, y: 190 }, { x: 185, y: 410 } ],
+      [ { x: 110, y: 160 }, { x: 190, y: 440 } ],
+      [ { x: 105, y: 130 }, { x: 195, y: 470 } ],
+      [ { x: 100, y: 100 }, { x: 200, y: 500 } ],
+  ];
+
+  var touchIds = [0, 1];
+  yield* synthesizeNativeTouchSequences(document.body, zoom_in, null, touchIds);
+
+  // Wait for the APZ:TransformEnd to be fired after touch events are processed.
+  yield true;
+
+  // We get here once the APZ:TransformEnd has fired, so we don't need that
+  // observer any more.
+  SpecialPowers.Services.obs.removeObserver(testDriver, "APZ:TransformEnd", false);
+
+  // Flush state and get the resolution we're at now
+  yield flushApzRepaints(testDriver);
+  let final_resolution = getResolution();
+  SimpleTest.ok(final_resolution > initial_resolution, 'The final resolution (' + final_resolution + ') is greater after zooming in');
+}
+
+waitUntilApzStable()
+.then(runContinuation(test))
+.then(subtestDone);
+
+  </script>
+</head>
+<body>
+  Here is some text to stare at as the test runs. It serves no functional
+  purpose, but gives you an idea of the zoom level. It's harder to tell what
+  the zoom level is when the page is just solid white.
+</body>
+</html>
