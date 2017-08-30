@@ -95,5 +95,7 @@ ifeq ($(OS_ARCH),Darwin)
 endif
 endif
 ifneq (,$(IMPORT_LIBRARY))
+ifneq ($(IMPORT_LIBRARY),$(SHARED_LIBRARY))
 	$(SYSINSTALL) $(IMPORT_LIBRARY) $(DESTDIR)$(libdir)
+endif
 endif
