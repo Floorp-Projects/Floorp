@@ -308,7 +308,12 @@ exports.WebConsoleCommands = WebConsoleCommands;
  *         The result of calling document.querySelector(selector).
  */
 WebConsoleCommands._registerOriginal("$", function (owner, selector) {
-  return owner.window.document.querySelector(selector);
+  try {
+    return owner.window.document.querySelector(selector);
+  } catch (err) {
+    // Throw an error like `err` but that belongs to `owner.window`.
+    throw new owner.window.DOMException(err.message, err.name);
+  }
 });
 
 /**
@@ -320,7 +325,13 @@ WebConsoleCommands._registerOriginal("$", function (owner, selector) {
  *         Returns the result of document.querySelectorAll(selector).
  */
 WebConsoleCommands._registerOriginal("$$", function (owner, selector) {
-  let nodes = owner.window.document.querySelectorAll(selector);
+  let nodes;
+  try {
+    nodes = owner.window.document.querySelectorAll(selector);
+  } catch (err) {
+    // Throw an error like `err` but that belongs to `owner.window`.
+    throw new owner.window.DOMException(err.message, err.name);
+  }
 
   // Calling owner.window.Array.from() doesn't work without accessing the
   // wrappedJSObject, so just loop through the results instead.
