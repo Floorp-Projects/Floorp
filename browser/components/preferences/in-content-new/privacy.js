@@ -1077,24 +1077,32 @@ var gPrivacyPane = {
       safeBrowsingMalwarePref.value = enableSafeBrowsing.checked;
 
       if (enableSafeBrowsing.checked) {
-        blockDownloads.removeAttribute("disabled");
-        if (blockDownloads.checked) {
+        if (blockDownloads) {
+          blockDownloads.removeAttribute("disabled");
+          if (blockDownloads.checked) {
+            blockUncommonUnwanted.removeAttribute("disabled");
+          }
+        } else {
           blockUncommonUnwanted.removeAttribute("disabled");
         }
       } else {
-        blockDownloads.setAttribute("disabled", "true");
+        if (blockDownloads) {
+          blockDownloads.setAttribute("disabled", "true");
+        }
         blockUncommonUnwanted.setAttribute("disabled", "true");
       }
     });
 
-    blockDownloads.addEventListener("command", function() {
-      blockDownloadsPref.value = blockDownloads.checked;
-      if (blockDownloads.checked) {
-        blockUncommonUnwanted.removeAttribute("disabled");
-      } else {
-        blockUncommonUnwanted.setAttribute("disabled", "true");
-      }
-    });
+    if (blockDownloads) {
+      blockDownloads.addEventListener("command", function() {
+        blockDownloadsPref.value = blockDownloads.checked;
+        if (blockDownloads.checked) {
+          blockUncommonUnwanted.removeAttribute("disabled");
+        } else {
+          blockUncommonUnwanted.setAttribute("disabled", "true");
+        }
+      });
+    }
 
     blockUncommonUnwanted.addEventListener("command", function() {
       blockUnwantedPref.value = blockUncommonUnwanted.checked;
@@ -1119,13 +1127,18 @@ var gPrivacyPane = {
 
     enableSafeBrowsing.checked = safeBrowsingPhishingPref.value && safeBrowsingMalwarePref.value;
     if (!enableSafeBrowsing.checked) {
-      blockDownloads.setAttribute("disabled", "true");
+      if (blockDownloads) {
+        blockDownloads.setAttribute("disabled", "true");
+      }
+
       blockUncommonUnwanted.setAttribute("disabled", "true");
     }
 
-    blockDownloads.checked = blockDownloadsPref.value;
-    if (!blockDownloadsPref.value) {
-      blockUncommonUnwanted.setAttribute("disabled", "true");
+    if (blockDownloads) {
+      blockDownloads.checked = blockDownloadsPref.value;
+      if (!blockDownloadsPref.value) {
+        blockUncommonUnwanted.setAttribute("disabled", "true");
+      }
     }
 
     blockUncommonUnwanted.checked = blockUnwantedPref.value && blockUncommonPref.value;
