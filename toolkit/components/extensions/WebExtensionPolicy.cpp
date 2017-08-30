@@ -19,26 +19,6 @@ namespace extensions {
 
 using namespace dom;
 
-static inline Result<Ok, nsresult>
-WrapNSResult(PRStatus aRv)
-{
-  if (aRv != PR_SUCCESS) {
-    return Err(NS_ERROR_FAILURE);
-  }
-  return Ok();
-}
-
-static inline Result<Ok, nsresult>
-WrapNSResult(nsresult aRv)
-{
-  if (NS_FAILED(aRv)) {
-    return Err(aRv);
-  }
-  return Ok();
-}
-
-#define NS_TRY(expr) MOZ_TRY(WrapNSResult(expr))
-
 static const char kProto[] = "moz-extension";
 
 static const char kBackgroundPageHTMLStart[] = "<!DOCTYPE html>\n\
@@ -225,9 +205,9 @@ WebExtensionPolicy::GetURL(const nsAString& aPath) const
   nsPrintfCString spec("%s://%s/", kProto, mHostname.get());
 
   nsCOMPtr<nsIURI> uri;
-  NS_TRY(NS_NewURI(getter_AddRefs(uri), spec));
+  MOZ_TRY(NS_NewURI(getter_AddRefs(uri), spec));
 
-  NS_TRY(uri->Resolve(NS_ConvertUTF16toUTF8(aPath), spec));
+  MOZ_TRY(uri->Resolve(NS_ConvertUTF16toUTF8(aPath), spec));
 
   return NS_ConvertUTF8toUTF16(spec);
 }
