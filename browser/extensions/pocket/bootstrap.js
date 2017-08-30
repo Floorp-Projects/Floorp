@@ -118,9 +118,15 @@ var PocketPageAction = {
           animatableBox.id = "pocket-animatable-box";
           let animatableImage = doc.createElement("image");
           animatableImage.id = "pocket-animatable-image";
+          animatableImage.setAttribute("role", "button");
+          let tooltip =
+            gPocketBundle.GetStringFromName("pocket-button.tooltiptext");
+          animatableImage.setAttribute("tooltiptext", tooltip);
           let pocketButton = doc.createElement("image");
           pocketButton.id = "pocket-button";
           pocketButton.classList.add("urlbar-icon");
+          pocketButton.setAttribute("role", "button");
+          pocketButton.setAttribute("tooltiptext", tooltip);
 
           wrapper.appendChild(pocketButton);
           wrapper.appendChild(animatableBox);

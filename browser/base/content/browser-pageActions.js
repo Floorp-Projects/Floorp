@@ -339,6 +339,7 @@ var BrowserPageActions = {
   _makeUrlbarButtonNode(action) {
     let buttonNode = document.createElement("image");
     buttonNode.classList.add("urlbar-icon", "urlbar-page-action");
+    buttonNode.setAttribute("role", "button");
     if (action.tooltip) {
       buttonNode.setAttribute("tooltiptext", action.tooltip);
     }
