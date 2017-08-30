@@ -18,7 +18,7 @@
         android:layout_height="wrap_content">
 
         <org.mozilla.gecko.activitystream.homepanel.stream.StreamOverridablePageIconLayout
-                android:id="@+id/icon"
+                android:id="@+id/page_icon"
                 android:layout_width="@dimen/favicon_bg"
                 android:layout_height="@dimen/favicon_bg"
                 android:layout_marginStart="@dimen/activity_stream_base_margin"
@@ -43,7 +43,7 @@
         android:paddingTop="16dp" />
 
     <TextView
-        android:id="@+id/page"
+        android:id="@+id/page_domain"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
         android:layout_toEndOf="@id/icon_wrapper"
@@ -58,10 +58,10 @@
         tools:text="twitter" />
 
     <TextView
-        android:id="@+id/card_history_label"
+        android:id="@+id/page_title"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:layout_below="@id/page"
+        android:layout_below="@id/page_domain"
         android:layout_toEndOf="@id/icon_wrapper"
         android:layout_toLeftOf="@id/menu"
         android:layout_toRightOf="@id/icon_wrapper"
@@ -79,7 +79,7 @@
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
         android:layout_alignParentBottom="true"
-        android:layout_below="@id/card_history_label"
+        android:layout_below="@id/page_title"
         android:layout_toEndOf="@id/icon_wrapper"
         android:layout_toRightOf="@id/icon_wrapper"
         android:gravity="center_vertical"
@@ -93,13 +93,13 @@
         tools:ignore="UseCompoundDrawables">
 
         <ImageView
-            android:id="@+id/source_icon"
+            android:id="@+id/page_source_icon"
             android:layout_width="12dp"
             android:layout_height="12dp"
             tools:src="@drawable/ic_as_bookmarked" />
 
         <TextView
-            android:id="@+id/card_history_source"
+            android:id="@+id/page_source"
             android:layout_width="0dp"
             android:layout_height="wrap_content"
             android:layout_marginLeft="2dp"
