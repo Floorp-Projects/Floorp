@@ -18,6 +18,7 @@ import android.view.View;
 import org.mozilla.focus.R;
 import org.mozilla.focus.fragment.InfoFragment;
 import org.mozilla.focus.locale.Locales;
+import org.mozilla.focus.utils.AppConstants;
 import org.mozilla.focus.utils.SupportUtils;
 import org.mozilla.focus.web.IWebView;
 import org.mozilla.focus.web.WebViewProvider;
@@ -28,6 +29,7 @@ import org.mozilla.focus.web.WebViewProvider;
  */
 public class InfoActivity extends AppCompatActivity {
     private static final String PRIVACY_NOTICE_URL = "https://www.mozilla.org/privacy/firefox-focus/";
+    private static final String PRIVACY_NOTICE_KLAR_URL = "https://www.mozilla.org/de/privacy/firefox-klar/";
 
     private static final String EXTRA_URL = "extra_url";
     private static final String EXTRA_TITLE = "extra_title";
@@ -61,7 +63,7 @@ public class InfoActivity extends AppCompatActivity {
 
     public static final Intent getPrivacyNoticeIntent(final Context context) {
         final Resources resources = Locales.getLocalizedResources(context);
-        return getIntentFor(context, PRIVACY_NOTICE_URL, resources.getString(R.string.preference_privacy_notice));
+        return getIntentFor(context, AppConstants.isKlarBuild() ? PRIVACY_NOTICE_KLAR_URL : PRIVACY_NOTICE_URL, resources.getString(R.string.preference_privacy_notice));
     }
 
     public static final Intent getTrackerHelpIntent(final Context context) {
