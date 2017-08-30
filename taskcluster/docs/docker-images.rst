@@ -39,4 +39,4 @@ preserved. However, the file owner/group is changed to ``root`` and the
 Here is an example Dockerfile snippet::
 
    # %include mach
-   ADD topsrcdir/mach /home/worker/mach
+   ADD topsrcdir/mach /builds/worker/mach
