@@ -396,6 +396,10 @@
   color: inherit;
 }
 
+.tabbrowser-tab[visuallyselected=true]:-moz-lwtheme {
+  color: var(--toolbar-color, inherit);
+}
+
 .tab-line {
   height: 2px;
 }

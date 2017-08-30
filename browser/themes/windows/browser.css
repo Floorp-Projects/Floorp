@@ -87,6 +87,7 @@
   background-color: var(--toolbar-bgcolor);
   background-image: var(--toolbar-bgimage);
   background-clip: padding-box;
+  color: var(--toolbar-color, inherit);
 }
 
 #toolbar-menubar,
