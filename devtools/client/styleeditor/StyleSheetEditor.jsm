@@ -127,7 +127,7 @@ function StyleSheetEditor(styleSheet, win, file, isNew, walker, highlighter) {
   this.mediaRules = [];
   if (this.cssSheet.getMediaRules) {
     this.cssSheet.getMediaRules().then(this._onMediaRulesChanged,
-                                       e => console.error(e));
+                                       console.error);
   }
   this.cssSheet.on("media-rules-changed", this._onMediaRulesChanged);
   this.cssSheet.on("style-applied", this._onStyleApplied);
@@ -518,7 +518,7 @@ StyleSheetEditor.prototype = {
    * Toggled the disabled state of the underlying stylesheet.
    */
   toggleDisabled: function () {
-    this.styleSheet.toggleDisabled().catch(e => console.error(e));
+    this.styleSheet.toggleDisabled().catch(console.error);
   },
 
   /**
@@ -560,7 +560,7 @@ StyleSheetEditor.prototype = {
 
     this._isUpdating = true;
     this.styleSheet.update(this._state.text, this.transitionsEnabled)
-      .catch(e => console.error(e));
+      .catch(console.error);
   },
 
   /**
