@@ -120,7 +120,11 @@ impl BlobImageRenderer for Moz2dImageRenderer {
         // If we break out of the loop above it means the channel closed unexpectedly.
         Err(BlobImageError::Other("Channel closed".into()))
     }
+
     fn delete_font(&mut self, _font: FontKey) {
+    }
+
+    fn delete_font_instance(&mut self, _key: FontInstanceKey) {
     }
 }
 
