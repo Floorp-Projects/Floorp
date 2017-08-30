@@ -152,9 +152,7 @@ RenderDXGITextureHostOGL::EnsureLockable()
         LOCAL_EGL_NONE,
     };
     mGL->fGenTextures(2, mTextureHandle);
-    // We change the ActiveTexture texture unit here. Use ScopedBindTextureUnit
-    // to go back to the original status after this function.
-    gl::ScopedBindTextureUnit scopedBindTexture(mGL, LOCAL_GL_TEXTURE0);
+    mGL->fActiveTexture(LOCAL_GL_TEXTURE0);
     mGL->fBindTexture(LOCAL_GL_TEXTURE_EXTERNAL_OES, mTextureHandle[0]);
     mGL->fTexParameteri(LOCAL_GL_TEXTURE_EXTERNAL_OES, LOCAL_GL_TEXTURE_MIN_FILTER, LOCAL_GL_LINEAR);
     mGL->fActiveTexture(LOCAL_GL_TEXTURE1);
