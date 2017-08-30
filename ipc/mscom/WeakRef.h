@@ -12,6 +12,7 @@
 
 #include "mozilla/Assertions.h"
 #include "mozilla/Atomics.h"
+#include "mozilla/Mutex.h"
 #include "mozilla/RefPtr.h"
 #include "nsISupportsImpl.h"
 
@@ -100,6 +101,12 @@ protected:
 
   virtual HRESULT ThreadSafeQueryInterface(REFIID aIid,
                                            IUnknown** aOutInterface) = 0;
+
+  void Lock();
+  void Unlock();
+
+  typedef BaseAutoLock<WeakReferenceSupport> AutoLock;
+  friend class AutoLock;
 
 private:
   RefPtr<detail::SharedRef> mSharedRef;
