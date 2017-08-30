@@ -23,6 +23,8 @@ const PROMPT_COUNT_PREF = "browser.onboarding.notification.prompt-count";
 const ONBOARDING_DIALOG_ID = "onboarding-overlay-dialog";
 const ONBOARDING_MIN_WIDTH_PX = 960;
 const SPEECH_BUBBLE_MIN_WIDTH_PX = 1130;
+const ICON_STATE_WATERMARK = "watermark";
+const ICON_STATE_DEFAULT = "default";
 
 /**
  * Add any number of tours, key is the tourId, value should follow the format below
@@ -419,6 +421,8 @@ class Onboarding {
     this._loadJS(TOUR_AGENT_JS_URI);
 
     this._initPrefObserver();
+    this._onIconStateChange(Services.prefs.getStringPref("browser.onboarding.state", ICON_STATE_DEFAULT));
+
     // Doing tour notification takes some effort. Let's do it on idle.
     this._window.requestIdleCallback(() => this._initNotification());
   }
@@ -452,14 +456,28 @@ class Onboarding {
     }
 
     this._prefsObserved = new Map();
+    this._prefsObserved.set("browser.onboarding.state", () => {
+      this._onIconStateChange(Services.prefs.getStringPref("browser.onboarding.state", ICON_STATE_DEFAULT));
+    });
     this._tours.forEach(tour => {
       let tourId = tour.id;
       this._prefsObserved.set(`browser.onboarding.tour.${tourId}.completed`, () => {
         this.markTourCompletionState(tourId);
+        this._checkWatermarkByTours();
       });
     });
     for (let [name, callback] of this._prefsObserved) {
       Services.prefs.addObserver(name, callback);
+    }
+  }
+
+  _checkWatermarkByTours() {
+    let tourDone = this._tours.every(tour => this.isTourCompleted(tour.id));
+    if (tourDone) {
+      sendMessageToChrome("set-prefs", [{
+        name: "browser.onboarding.state",
+        value: ICON_STATE_WATERMARK
+      }]);
     }
   }
 
@@ -653,6 +671,18 @@ class Onboarding {
     }
     this._tourItems = this._tourPages =
     this._overlayIcon = this._overlay = this._notificationBar = null;
+  }
+
+  _onIconStateChange(state) {
+    switch (state) {
+      case ICON_STATE_DEFAULT:
+        this._overlayIcon.classList.remove("onboarding-watermark");
+        break;
+      case ICON_STATE_WATERMARK:
+        this._overlayIcon.classList.add("onboarding-watermark");
+        break;
+    }
+    return true;
   }
 
   showOverlay() {
@@ -923,6 +953,10 @@ class Onboarding {
         {
           name: "browser.onboarding.notification.tour-ids-queue",
           value: ""
+        },
+        {
+          name: "browser.onboarding.state",
+          value: ICON_STATE_WATERMARK
         }
       ]);
       return;
@@ -1006,6 +1040,10 @@ class Onboarding {
       {
         name: "browser.onboarding.notification.finished",
         value: true
+      },
+      {
+        name: "browser.onboarding.state",
+        value: ICON_STATE_WATERMARK
       }
     ]);
   }
@@ -1050,11 +1088,16 @@ class Onboarding {
     button.id = "onboarding-overlay-button";
     button.setAttribute("aria-haspopup", true);
     button.setAttribute("aria-controls", `${ONBOARDING_DIALOG_ID}`);
-    let img = this._window.document.createElement("img");
-    img.id = "onboarding-overlay-button-icon";
-    img.setAttribute("role", "presentation");
-    img.src = "chrome://branding/content/icon64.png";
-    button.appendChild(img);
+    let defaultImg = this._window.document.createElement("img");
+    defaultImg.id = "onboarding-overlay-button-icon";
+    defaultImg.setAttribute("role", "presentation");
+    defaultImg.src = "chrome://branding/content/icon64.png";
+    button.appendChild(defaultImg);
+    let watermarkImg = this._window.document.createElement("img");
+    watermarkImg.id = "onboarding-overlay-button-watermark-icon";
+    watermarkImg.setAttribute("role", "presentation");
+    watermarkImg.src = "resource://onboarding/img/watermark64.png";
+    button.appendChild(watermarkImg);
     return button;
   }
 

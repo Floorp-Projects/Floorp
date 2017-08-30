@@ -22,6 +22,8 @@ const UPDATE_TOUR_IDs = [
   "onboarding-tour-customize",
   "onboarding-tour-sync",
 ];
+const ICON_STATE_WATERMARK = "watermark";
+const ICON_STATE_DEFAULT = "default";
 
 registerCleanupFunction(resetOnboardingDefaultState);
 
@@ -29,6 +31,7 @@ function resetOnboardingDefaultState() {
   // All the prefs should be reset to the default states
   // and no need to revert back so we don't use `SpecialPowers.pushPrefEnv` here.
   Preferences.set("browser.onboarding.enabled", true);
+  Preferences.set("browser.onboarding.state", ICON_STATE_DEFAULT);
   Preferences.set("browser.onboarding.notification.finished", false);
   Preferences.set("browser.onboarding.notification.mute-duration-on-first-session-ms", 300000);
   Preferences.set("browser.onboarding.notification.max-life-time-per-tour-ms", 432000000);
@@ -273,5 +276,12 @@ function assertModalDialog(browser, args) {
       ok(!overlayButton.dataset.keyboardFocus,
         "Overlay button focus state should be cleared");
     }
+  });
+}
+
+function assertWatermarkIconDisplayed(browser) {
+  return ContentTask.spawn(browser, {}, function() {
+    let overlayButton = content.document.getElementById("onboarding-overlay-button");
+    ok(overlayButton.classList.contains("onboarding-watermark"), "Should display the watermark onboarding icon");
   });
 }

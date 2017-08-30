@@ -45,7 +45,7 @@
   transition: outline-offset 150ms;
 }
 
-#onboarding-overlay-button-icon {
+#onboarding-overlay-button > img {
   width: 32px;
   vertical-align: top;
 }
@@ -92,6 +92,16 @@
 
 #onboarding-overlay-button:dir(rtl)::after {
   box-shadow: 2px 0 5px 0 rgba(74, 74, 79, 0.25);
+}
+
+#onboarding-overlay-button-watermark-icon,
+#onboarding-overlay-button.onboarding-watermark:not(:hover)::after,
+#onboarding-overlay-button.onboarding-watermark:not(:hover) > #onboarding-overlay-button-icon {
+  display: none;
+}
+
+#onboarding-overlay-button.onboarding-watermark:not(:hover) > #onboarding-overlay-button-watermark-icon {
+  display: block;
 }
 
 #onboarding-overlay-dialog,
