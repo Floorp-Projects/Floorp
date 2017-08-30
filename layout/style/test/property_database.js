@@ -439,6 +439,7 @@ if (IsCSSPropertyPrefEnabled("layout.css.prefixes.webkit")) {
 
     // Initial side/corner/point (valid only for -moz/-webkit prefixed):
     "-webkit-linear-gradient(left, red, blue)",
+    "-webkit-linear-gradient(bottom, red, blue)",
     "-webkit-linear-gradient(right top, red, blue)",
     "-webkit-linear-gradient(top right, red, blue)",
     "-webkit-radial-gradient(right, red, blue)",
@@ -661,7 +662,7 @@ if (IsCSSPropertyPrefEnabled("layout.css.prefixes.gradients")) {
     "-moz-linear-gradient(10% 10em, red, blue)",
     "-moz-linear-gradient(44px top, red, blue)",
     "-moz-linear-gradient(left, red, blue)",
-    "-moz-linear-gradient(top, red, blue)",
+    "-moz-linear-gradient(bottom, red, blue)",
 
     "-moz-linear-gradient(0px, red, blue)",
     "-moz-linear-gradient(0, red, blue)",
