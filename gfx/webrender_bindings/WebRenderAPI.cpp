@@ -678,6 +678,12 @@ DisplayListBuilder::PushBuiltDisplayList(BuiltDisplayList &dl)
                                 &dl.dl.inner);
 }
 
+bool
+DisplayListBuilder::IsScrollLayerDefined(layers::FrameMetrics::ViewID aScrollId) const
+{
+  return mScrollParents.find(aScrollId) != mScrollParents.end();
+}
+
 void
 DisplayListBuilder::DefineScrollLayer(const layers::FrameMetrics::ViewID& aScrollId,
                                       const wr::LayoutRect& aContentRect,
