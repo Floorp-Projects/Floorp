@@ -121,19 +121,7 @@ interface nsIAppStartup : nsISupports
      * Restart the application after quitting.  The application will be
      * restarted with the same profile and an empty command line.
      */
-    const uint32_t eRestart = 0x10; 
-
-    /**
-     * When restarting attempt to start in the i386 architecture. Only supported
-     * on OSX.
-     */
-    const uint32_t eRestarti386 = 0x20;
-
-    /**
-     * When restarting attempt to start in the x86_64 architecture. Only
-     * supported on OSX.
-     */
-    const uint32_t eRestartx86_64 = 0x40;
+    const uint32_t eRestart = 0x10;
 
     /**
      * Restart the application after quitting.  The application will be
