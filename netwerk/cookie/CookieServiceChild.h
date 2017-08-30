@@ -54,9 +54,12 @@ protected:
 
   bool RequireThirdPartyCheck();
 
+  virtual void ActorDestroy(ActorDestroyReason aWhy) override;
+
   nsCOMPtr<mozIThirdPartyUtil> mThirdPartyUtil;
   uint8_t mCookieBehavior;
   bool mThirdPartySession;
+  bool mIPCOpen;
 };
 
 } // namespace net
