@@ -1,4 +1,9 @@
 add_task(async function() {
+  // When about:home is set to Activity Stream, there are no 'narrow' attributes
+  // therefore for this test, we want to ensure we're using the original about:home
+  await SpecialPowers.pushPrefEnv({set: [
+    ["browser.newtabpage.activity-stream.aboutHome.enabled", false]
+  ]});
   let newWindow = await BrowserTestUtils.openNewBrowserWindow();
 
   let resizedPromise = BrowserTestUtils.waitForEvent(newWindow, "resize");
