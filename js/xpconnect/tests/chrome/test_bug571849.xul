@@ -24,10 +24,10 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=500931
     var ifr = document.getElementById('ifr');
     var docnodes = ifr.contentDocument.body.childNodes;
     var index, value;
-    for (let i in Iterator(docnodes)) {
+    for (let i of Object.entries(docnodes)) {
       index = i[0], value = i[1];
     }
-    is(index, 0, "enumerated the 0th element");
+    is(index, "0", "enumerated the 0th element");
     ok(value instanceof Text, "the 0th element was a text node");
     SimpleTest.finish();
   }

@@ -2848,6 +2848,14 @@ public:
                                               const ContainerLayerParameters& aContainerParameters);
 
   /**
+   * Returns the metadata to put onto the root layer of a layer tree, if one is
+   * needed.
+   */
+  static mozilla::Maybe<ScrollMetadata> GetRootMetadata(nsDisplayListBuilder* aBuilder,
+                                                        Layer* aRootLayer,
+                                                        const ContainerLayerParameters& aContainerParameters);
+
+  /**
    * If the given scroll frame needs an area excluded from its composition
    * bounds due to scrollbars, return that area, otherwise return an empty
    * margin.

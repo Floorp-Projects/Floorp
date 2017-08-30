@@ -27,6 +27,8 @@
     <menupopup id="storage-tree-popup">
       <menuitem id="storage-tree-popup-delete-all"
                 label="&storage.popupMenu.deleteAllLabel;"/>
+      <menuitem id="storage-tree-popup-delete-all-session-cookies"
+                label="&storage.popupMenu.deleteAllSessionCookiesLabel;"/>
       <menuitem id="storage-tree-popup-delete"/>
     </menupopup>
     <menupopup id="storage-table-popup">
@@ -35,6 +37,8 @@
       <menuitem id="storage-table-popup-delete-all-from"/>
       <menuitem id="storage-table-popup-delete-all"
                 label="&storage.popupMenu.deleteAllLabel;"/>
+      <menuitem id="storage-table-popup-delete-all-session-cookies"
+                label="&storage.popupMenu.deleteAllSessionCookiesLabel;"/>
     </menupopup>
   </popupset>
 

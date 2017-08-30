@@ -691,6 +691,12 @@ StorageActors.createActor({
                                            .originAttributes);
   }),
 
+  removeAllSessionCookies: Task.async(function* (host, domain) {
+    let doc = this.storageActor.document;
+    this.removeAllSessionCookies(host, domain, doc.nodePrincipal
+        .originAttributes);
+  }),
+
   maybeSetupChildProcess() {
     cookieHelpers.onCookieChanged = this.onCookieChanged.bind(this);
 
@@ -707,6 +713,8 @@ StorageActors.createActor({
         cookieHelpers.removeCookie.bind(cookieHelpers);
       this.removeAllCookies =
         cookieHelpers.removeAllCookies.bind(cookieHelpers);
+      this.removeAllSessionCookies =
+        cookieHelpers.removeAllSessionCookies.bind(cookieHelpers);
       return;
     }
 
@@ -730,6 +738,8 @@ StorageActors.createActor({
       callParentProcess.bind(null, "removeCookie");
     this.removeAllCookies =
       callParentProcess.bind(null, "removeAllCookies");
+    this.removeAllSessionCookies =
+      callParentProcess.bind(null, "removeAllSessionCookies");
 
     addMessageListener("debug:storage-cookie-request-child",
                        cookieHelpers.handleParentRequest);
@@ -920,7 +930,8 @@ var cookieHelpers = {
       if (hostMatches(cookie.host, host) &&
           (!opts.name || cookie.name === opts.name) &&
           (!opts.domain || cookie.host === opts.domain) &&
-          (!opts.path || cookie.path === opts.path)) {
+          (!opts.path || cookie.path === opts.path) &&
+          (!opts.session || (!cookie.expires && !cookie.maxAge))) {
         Services.cookies.remove(
           cookie.host,
           cookie.name,
@@ -940,6 +951,10 @@ var cookieHelpers = {
 
   removeAllCookies(host, domain, originAttributes) {
     this._removeCookies(host, { domain, originAttributes });
+  },
+
+  removeAllSessionCookies(host, domain, originAttributes) {
+    this._removeCookies(host, { domain, originAttributes, session: true });
   },
 
   addCookieObservers() {
@@ -1023,6 +1038,12 @@ var cookieHelpers = {
         let domain = msg.data.args[1];
         let originAttributes = msg.data.args[2];
         return cookieHelpers.removeAllCookies(host, domain, originAttributes);
+      }
+      case "removeAllSessionCookies": {
+        let host = msg.data.args[0];
+        let domain = msg.data.args[1];
+        let originAttributes = msg.data.args[2];
+        return cookieHelpers.removeAllSessionCookies(host, domain, originAttributes);
       }
       default:
         console.error("ERR_DIRECTOR_PARENT_UNKNOWN_METHOD", msg.json.method);

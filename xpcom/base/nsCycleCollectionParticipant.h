@@ -318,9 +318,6 @@ NS_DEFINE_STATIC_IID_ACCESSOR(nsXPCOMCycleCollectionParticipant,
   NS_INTERFACE_MAP_BEGIN(_class)                                               \
     NS_INTERFACE_MAP_ENTRIES_CYCLE_COLLECTION(_class)
 
-#define NS_INTERFACE_MAP_BEGIN_CYCLE_COLLECTION_INHERITED(_class)              \
-  NS_INTERFACE_MAP_BEGIN_CYCLE_COLLECTION(_class)
-
 #define NS_INTERFACE_TABLE_TO_MAP_SEGUE_CYCLE_COLLECTION(_class)  \
   if (rv == NS_OK) return rv; \
   nsISupports* foundInterface; \

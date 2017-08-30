@@ -15,7 +15,7 @@ namespace dom {
 NS_IMPL_CYCLE_COLLECTION_INHERITED(AudioProcessingEvent, Event,
                                    mInputBuffer, mOutputBuffer, mNode)
 
-NS_INTERFACE_MAP_BEGIN_CYCLE_COLLECTION_INHERITED(AudioProcessingEvent)
+NS_INTERFACE_MAP_BEGIN_CYCLE_COLLECTION(AudioProcessingEvent)
 NS_INTERFACE_MAP_END_INHERITING(Event)
 
 NS_IMPL_ADDREF_INHERITED(AudioProcessingEvent, Event)

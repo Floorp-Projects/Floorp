@@ -642,6 +642,7 @@ public:
     bool SupportsApzTouchInput() const;
     bool SupportsApzDragInput() const;
     bool SupportsApzKeyboardInput() const;
+    bool SupportsApzAutoscrolling() const;
 
     virtual void FlushContentDrawing() {}
 

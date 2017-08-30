@@ -18,7 +18,7 @@ NotificationEvent::NotificationEvent(EventTarget* aOwner)
 NS_IMPL_ADDREF_INHERITED(NotificationEvent, ExtendableEvent)
 NS_IMPL_RELEASE_INHERITED(NotificationEvent, ExtendableEvent)
 
-NS_INTERFACE_MAP_BEGIN_CYCLE_COLLECTION_INHERITED(NotificationEvent)
+NS_INTERFACE_MAP_BEGIN_CYCLE_COLLECTION(NotificationEvent)
 NS_INTERFACE_MAP_END_INHERITING(ExtendableEvent)
 
 NS_IMPL_CYCLE_COLLECTION_INHERITED(NotificationEvent, ExtendableEvent, mNotification)

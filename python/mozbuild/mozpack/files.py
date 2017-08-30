@@ -995,7 +995,7 @@ class FileFinder(BaseFinder):
 
     def get(self, path):
         srcpath = os.path.join(self.base, path)
-        if not os.path.exists(srcpath):
+        if not os.path.lexists(srcpath):
             return None
 
         for p in self.ignore:
