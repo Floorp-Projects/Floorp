@@ -88,7 +88,7 @@ WebConsolePanel.prototype = {
         let msg = "WebConsolePanel open failed. " +
                   reason.error + ": " + reason.message;
         dump(msg + "\n");
-        console.error(msg);
+        console.error(msg, reason);
       });
   },
 

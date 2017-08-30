@@ -854,13 +854,42 @@ a.learn-more-link.webconsole-learn-more-link {
   background-position: -36px -36px;
 }
 
+/* Network Messages */
+
 .message.network .method {
   margin-inline-end: 5px;
+}
+
+.network.message .network-info {
+  display: none;
+  margin-top: 8px;
+  border: solid 1px var(--theme-splitter-color);
+}
+
+.network.message.open .network-info {
+  display: block;
+}
+
+.network.message .network-info .panels {
+  max-height: 250px;
+  min-height: 100px;
+}
+
+/* Hide 'Edit And Resend' button since the feature isn't
+   supported in the Console panel. */
+.network.message #headers-panel .edit-and-resend-button {
+  display: none;
+}
+
+.network.message #response-panel .treeTable {
+  overflow-y: hidden;
 }
 
 .network .message-flex-body > .message-body {
   display: flex;
 }
+
+/* Output Wrapper */
 
 .webconsole-output-wrapper .message .indent {
   display: inline-block;
