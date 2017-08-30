@@ -27,48 +27,7 @@ stubPreparedMessages.set("GET request", new NetworkEventMessage({
   "type": "log",
   "groupId": null,
   "timeStamp": 1487022056850,
-  "indent": 0,
-  "updates": [],
-  "openedOnce": false,
-  "securityState": null,
-  "securityInfo": null,
-  "requestHeadersFromUploadStream": null,
-  "url": "http://example.com/browser/devtools/client/webconsole/new-console-output/test/fixtures/stub-generators/inexistent.html",
-  "urlDetails": {
-    "baseNameWithQuery": "inexistent.html",
-    "host": "example.com",
-    "scheme": "http",
-    "unicodeUrl": "http://example.com/browser/devtools/client/webconsole/new-console-output/test/fixtures/stub-generators/inexistent.html",
-    "isLocal": null
-  },
-  "method": "GET",
-  "cause": {
-    "type": "img",
-    "loadingDocumentUri": "http://example.com/browser/devtools/client/webconsole/new-console-output/test/fixtures/stub-generators/test-network-event.html",
-    "stacktrace": [
-      {
-        "filename": "http://example.com/browser/devtools/client/webconsole/new-console-output/test/fixtures/stub-generators/test-network-event.html",
-        "lineNumber": 3,
-        "columnNumber": 1,
-        "functionName": "triggerPacket",
-        "asyncCause": null
-      },
-      {
-        "filename": "resource://testing-common/content-task.js line 52 > eval",
-        "lineNumber": 8,
-        "columnNumber": 9,
-        "functionName": null,
-        "asyncCause": null
-      },
-      {
-        "filename": "resource://testing-common/content-task.js",
-        "lineNumber": 53,
-        "columnNumber": 20,
-        "functionName": null,
-        "asyncCause": null
-      }
-    ]
-  }
+  "indent": 0
 }));
 
 stubPreparedMessages.set("GET request update", new NetworkEventMessage({
@@ -97,20 +56,7 @@ stubPreparedMessages.set("GET request update", new NetworkEventMessage({
   "type": "log",
   "groupId": null,
   "totalTime": 16,
-  "indent": 0,
-  "openedOnce": false,
-  "securityState": null,
-  "securityInfo": null,
-  "requestHeadersFromUploadStream": null,
-  "url": "http://example.com/browser/devtools/client/webconsole/new-console-output/test/fixtures/stub-generators/inexistent.html",
-  "urlDetails": {
-    "baseNameWithQuery": "inexistent.html",
-    "host": "example.com",
-    "scheme": "http",
-    "unicodeUrl": "http://example.com/browser/devtools/client/webconsole/new-console-output/test/fixtures/stub-generators/inexistent.html",
-    "isLocal": null
-  },
-  "method": "GET"
+  "indent": 0
 }));
 
 stubPreparedMessages.set("XHR GET request", new NetworkEventMessage({
@@ -127,48 +73,7 @@ stubPreparedMessages.set("XHR GET request", new NetworkEventMessage({
   "type": "log",
   "groupId": null,
   "timeStamp": 1487022057746,
-  "indent": 0,
-  "updates": [],
-  "openedOnce": false,
-  "securityState": null,
-  "securityInfo": null,
-  "requestHeadersFromUploadStream": null,
-  "url": "http://example.com/browser/devtools/client/webconsole/new-console-output/test/fixtures/stub-generators/inexistent.html",
-  "urlDetails": {
-    "baseNameWithQuery": "inexistent.html",
-    "host": "example.com",
-    "scheme": "http",
-    "unicodeUrl": "http://example.com/browser/devtools/client/webconsole/new-console-output/test/fixtures/stub-generators/inexistent.html",
-    "isLocal": null
-  },
-  "method": "GET",
-  "cause": {
-    "type": "xhr",
-    "loadingDocumentUri": "http://example.com/browser/devtools/client/webconsole/new-console-output/test/fixtures/stub-generators/test-network-event.html",
-    "stacktrace": [
-      {
-        "filename": "http://example.com/browser/devtools/client/webconsole/new-console-output/test/fixtures/stub-generators/test-network-event.html",
-        "lineNumber": 4,
-        "columnNumber": 1,
-        "functionName": "triggerPacket",
-        "asyncCause": null
-      },
-      {
-        "filename": "resource://testing-common/content-task.js line 52 > eval",
-        "lineNumber": 8,
-        "columnNumber": 9,
-        "functionName": null,
-        "asyncCause": null
-      },
-      {
-        "filename": "resource://testing-common/content-task.js",
-        "lineNumber": 53,
-        "columnNumber": 20,
-        "functionName": null,
-        "asyncCause": null
-      }
-    ]
-  }
+  "indent": 0
 }));
 
 stubPreparedMessages.set("XHR GET request update", new NetworkEventMessage({
@@ -197,20 +102,7 @@ stubPreparedMessages.set("XHR GET request update", new NetworkEventMessage({
   "type": "log",
   "groupId": null,
   "totalTime": 16,
-  "indent": 0,
-  "openedOnce": false,
-  "securityState": null,
-  "securityInfo": null,
-  "requestHeadersFromUploadStream": null,
-  "url": "http://example.com/browser/devtools/client/webconsole/new-console-output/test/fixtures/stub-generators/inexistent.html",
-  "urlDetails": {
-    "baseNameWithQuery": "inexistent.html",
-    "host": "example.com",
-    "scheme": "http",
-    "unicodeUrl": "http://example.com/browser/devtools/client/webconsole/new-console-output/test/fixtures/stub-generators/inexistent.html",
-    "isLocal": null
-  },
-  "method": "GET"
+  "indent": 0
 }));
 
 stubPreparedMessages.set("XHR POST request", new NetworkEventMessage({
@@ -227,48 +119,7 @@ stubPreparedMessages.set("XHR POST request", new NetworkEventMessage({
   "type": "log",
   "groupId": null,
   "timeStamp": 1487022058414,
-  "indent": 0,
-  "updates": [],
-  "openedOnce": false,
-  "securityState": null,
-  "securityInfo": null,
-  "requestHeadersFromUploadStream": null,
-  "url": "http://example.com/browser/devtools/client/webconsole/new-console-output/test/fixtures/stub-generators/inexistent.html",
-  "urlDetails": {
-    "baseNameWithQuery": "inexistent.html",
-    "host": "example.com",
-    "scheme": "http",
-    "unicodeUrl": "http://example.com/browser/devtools/client/webconsole/new-console-output/test/fixtures/stub-generators/inexistent.html",
-    "isLocal": null
-  },
-  "method": "POST",
-  "cause": {
-    "type": "xhr",
-    "loadingDocumentUri": "http://example.com/browser/devtools/client/webconsole/new-console-output/test/fixtures/stub-generators/test-network-event.html",
-    "stacktrace": [
-      {
-        "filename": "http://example.com/browser/devtools/client/webconsole/new-console-output/test/fixtures/stub-generators/test-network-event.html",
-        "lineNumber": 4,
-        "columnNumber": 1,
-        "functionName": "triggerPacket",
-        "asyncCause": null
-      },
-      {
-        "filename": "resource://testing-common/content-task.js line 52 > eval",
-        "lineNumber": 8,
-        "columnNumber": 9,
-        "functionName": null,
-        "asyncCause": null
-      },
-      {
-        "filename": "resource://testing-common/content-task.js",
-        "lineNumber": 53,
-        "columnNumber": 20,
-        "functionName": null,
-        "asyncCause": null
-      }
-    ]
-  }
+  "indent": 0
 }));
 
 stubPreparedMessages.set("XHR POST request update", new NetworkEventMessage({
@@ -297,20 +148,7 @@ stubPreparedMessages.set("XHR POST request update", new NetworkEventMessage({
   "type": "log",
   "groupId": null,
   "totalTime": 10,
-  "indent": 0,
-  "openedOnce": false,
-  "securityState": null,
-  "securityInfo": null,
-  "requestHeadersFromUploadStream": null,
-  "url": "http://example.com/browser/devtools/client/webconsole/new-console-output/test/fixtures/stub-generators/inexistent.html",
-  "urlDetails": {
-    "baseNameWithQuery": "inexistent.html",
-    "host": "example.com",
-    "scheme": "http",
-    "unicodeUrl": "http://example.com/browser/devtools/client/webconsole/new-console-output/test/fixtures/stub-generators/inexistent.html",
-    "isLocal": null
-  },
-  "method": "POST"
+  "indent": 0
 }));
 
 stubPackets.set("GET request", {
