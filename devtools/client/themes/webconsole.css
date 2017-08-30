@@ -774,13 +774,17 @@ a.learn-more-link.webconsole-learn-more-link {
 }
 
 .devtools-toolbar.webconsole-filterbar-secondary {
-  height: initial;
-  /* This toolbar should always take the whole horizontal space */
+  display: flex;
   width: 100%;
+  align-items: center;
 }
 
 .webconsole-filterbar-primary .devtools-plaininput {
   flex: 1 1 100%;
+}
+
+.webconsole-filterbar-secondary .devtools-separator {
+  margin: 0 5px;
 }
 
 .webconsole-filterbar-filtered-messages {
@@ -792,6 +796,7 @@ a.learn-more-link.webconsole-learn-more-link {
 
 .webconsole-filterbar-filtered-messages .filter-message-text {
   font-style: italic;
+  -moz-user-select: none;
 }
 
 .webconsole-filterbar-filtered-messages .reset-filters-button {
