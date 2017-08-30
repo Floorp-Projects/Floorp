@@ -1884,6 +1884,12 @@ ScriptLoader::ProcessRequest(ScriptLoadRequest* aRequest)
   // Free any source data, but keep the bytecode content as we might have to
   // save it later.
   aRequest->mScriptText.clearAndFree();
+  if (aRequest->IsBytecode()) {
+    // We received bytecode as input, thus we were decoding, and we will not be
+    // encoding the bytecode once more. We can safely clear the content of this
+    // buffer.
+    aRequest->mScriptBytecode.clearAndFree();
+  }
 
   return rv;
 }
