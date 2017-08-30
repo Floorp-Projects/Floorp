@@ -7,13 +7,14 @@
 
 "use strict";
 
-var {classes: Cc, interfaces: Ci, utils: Cu, results: Cr} = Components;
+const {classes: Cc, interfaces: Ci, utils: Cu, results: Cr} = Components;
 
-var uuidGen = Cc["@mozilla.org/uuid-generator;1"]
+const uuidGen = Cc["@mozilla.org/uuid-generator;1"]
     .getService(Ci.nsIUUIDGenerator);
-
-var loader = Cc["@mozilla.org/moz/jssubscript-loader;1"]
+const loader = Cc["@mozilla.org/moz/jssubscript-loader;1"]
     .getService(Ci.mozIJSSubScriptLoader);
+const winUtil = content.QueryInterface(Ci.nsIInterfaceRequestor)
+    .getInterface(Ci.nsIDOMWindowUtils);
 
 Cu.import("resource://gre/modules/FileUtils.jsm");
 Cu.import("resource://gre/modules/Log.jsm");
@@ -47,15 +48,14 @@ Cu.import("chrome://marionette/content/session.js");
 
 Cu.importGlobalProperties(["URL"]);
 
-var marionetteTestName;
-var winUtil = content.QueryInterface(Ci.nsIInterfaceRequestor)
-    .getInterface(Ci.nsIDOMWindowUtils);
-var listenerId = null; // unique ID of this listener
-var curContainer = {frame: content, shadowRoot: null};
-var previousContainer = null;
+let marionetteTestName;
 
-var seenEls = new element.Store();
-var SUPPORTED_STRATEGIES = new Set([
+let listenerId = null;  // unique ID of this listener
+let curContainer = {frame: content, shadowRoot: null};
+let previousContainer = null;
+
+const seenEls = new element.Store();
+const SUPPORTED_STRATEGIES = new Set([
   element.Strategy.ClassName,
   element.Strategy.Selector,
   element.Strategy.ID,
@@ -66,39 +66,40 @@ var SUPPORTED_STRATEGIES = new Set([
   element.Strategy.XPath,
 ]);
 
-var capabilities;
+let capabilities;
 
-var legacyactions = new legacyaction.Chain(checkForInterrupted);
+let legacyactions = new legacyaction.Chain(checkForInterrupted);
 
 // the unload handler
-var onunload;
+let onunload;
 
 // Flag to indicate whether an async script is currently running or not.
-var asyncTestRunning = false;
-var asyncTestCommandId;
-var asyncTestTimeoutId;
+let asyncTestRunning = false;
+let asyncTestCommandId;
+let asyncTestTimeoutId;
 
-var inactivityTimeoutId = null;
+let inactivityTimeoutId = null;
 
-var originalOnError;
+let originalOnError;
 // Send move events about this often
-var EVENT_INTERVAL = 30; // milliseconds
+let EVENT_INTERVAL = 30; // milliseconds
 // last touch for each fingerId
-var multiLast = {};
-var asyncChrome = proxy.toChromeAsync({
+let multiLast = {};
+
+const asyncChrome = proxy.toChromeAsync({
   addMessageListener: addMessageListenerId.bind(this),
   removeMessageListener: removeMessageListenerId.bind(this),
   sendAsyncMessage: sendAsyncMessage.bind(this),
 });
-var syncChrome = proxy.toChrome(sendSyncMessage.bind(this));
+const syncChrome = proxy.toChrome(sendSyncMessage.bind(this));
 
-var logger = Log.repository.getLogger("Marionette");
+const logger = Log.repository.getLogger("Marionette");
 // Append only once to avoid duplicated output after listener.js gets reloaded
 if (logger.ownAppenders.length == 0) {
   logger.addAppender(new Log.DumpAppender());
 }
 
-var modalHandler = function() {
+const modalHandler = function() {
   // This gets called on the system app only since it receives the
   // mozbrowserprompt event
   sendSyncMessage("Marionette:switchedToFrame",
@@ -111,8 +112,8 @@ var modalHandler = function() {
 };
 
 // sandbox storage and name of the current sandbox
-var sandboxes = new Sandboxes(() => curContainer.frame);
-var sandboxName = "default";
+const sandboxes = new Sandboxes(() => curContainer.frame);
+let sandboxName = "default";
 
 /**
  * The load listener singleton helps to keep track of active page load
@@ -120,7 +121,7 @@ var sandboxName = "default";
  * to happen. In the specific case of a reload of the frame script it allows
  * to continue observing the current page load.
  */
-var loadListener = {
+const loadListener = {
   commandID: null,
   seenBeforeUnload: false,
   seenUnload: false,
@@ -543,31 +544,31 @@ function removeMessageListenerId(messageName, handler) {
   removeMessageListener(messageName + listenerId, handler);
 }
 
-var getPageSourceFn = dispatch(getPageSource);
-var getActiveElementFn = dispatch(getActiveElement);
-var getElementAttributeFn = dispatch(getElementAttribute);
-var getElementPropertyFn = dispatch(getElementProperty);
-var getElementTextFn = dispatch(getElementText);
-var getElementTagNameFn = dispatch(getElementTagName);
-var getElementRectFn = dispatch(getElementRect);
-var isElementEnabledFn = dispatch(isElementEnabled);
-var findElementContentFn = dispatch(findElementContent);
-var findElementsContentFn = dispatch(findElementsContent);
-var isElementSelectedFn = dispatch(isElementSelected);
-var clearElementFn = dispatch(clearElement);
-var isElementDisplayedFn = dispatch(isElementDisplayed);
-var getElementValueOfCssPropertyFn = dispatch(getElementValueOfCssProperty);
-var switchToShadowRootFn = dispatch(switchToShadowRoot);
-var singleTapFn = dispatch(singleTap);
-var takeScreenshotFn = dispatch(takeScreenshot);
-var performActionsFn = dispatch(performActions);
-var releaseActionsFn = dispatch(releaseActions);
-var actionChainFn = dispatch(actionChain);
-var multiActionFn = dispatch(multiAction);
-var executeFn = dispatch(execute);
-var executeInSandboxFn = dispatch(executeInSandbox);
-var sendKeysToElementFn = dispatch(sendKeysToElement);
-var reftestWaitFn = dispatch(reftestWait);
+let getPageSourceFn = dispatch(getPageSource);
+let getActiveElementFn = dispatch(getActiveElement);
+let getElementAttributeFn = dispatch(getElementAttribute);
+let getElementPropertyFn = dispatch(getElementProperty);
+let getElementTextFn = dispatch(getElementText);
+let getElementTagNameFn = dispatch(getElementTagName);
+let getElementRectFn = dispatch(getElementRect);
+let isElementEnabledFn = dispatch(isElementEnabled);
+let findElementContentFn = dispatch(findElementContent);
+let findElementsContentFn = dispatch(findElementsContent);
+let isElementSelectedFn = dispatch(isElementSelected);
+let clearElementFn = dispatch(clearElement);
+let isElementDisplayedFn = dispatch(isElementDisplayed);
+let getElementValueOfCssPropertyFn = dispatch(getElementValueOfCssProperty);
+let switchToShadowRootFn = dispatch(switchToShadowRoot);
+let singleTapFn = dispatch(singleTap);
+let takeScreenshotFn = dispatch(takeScreenshot);
+let performActionsFn = dispatch(performActions);
+let releaseActionsFn = dispatch(releaseActions);
+let actionChainFn = dispatch(actionChain);
+let multiActionFn = dispatch(multiAction);
+let executeFn = dispatch(execute);
+let executeInSandboxFn = dispatch(executeInSandbox);
+let sendKeysToElementFn = dispatch(sendKeysToElement);
+let reftestWaitFn = dispatch(reftestWait);
 
 /**
  * Start all message listeners
@@ -1650,7 +1651,7 @@ function switchToFrame(msg) {
       // throwing in the towel
       const doc = curContainer.frame.document;
       let iframes = doc.getElementsByTagName("iframe");
-      for (var i = 0; i < iframes.length; i++) {
+      for (let i = 0; i < iframes.length; i++) {
         let frameEl = iframes[i];
         let wrappedEl = new XPCNativeWrapper(frameEl);
         let wrappedWanted = new XPCNativeWrapper(wantedFrame);
