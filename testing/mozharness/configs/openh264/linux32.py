@@ -26,6 +26,7 @@ config = {
     'mock_files': [
         ('/home/cltbld/.ssh', '/home/mock_mozilla/.ssh'),
         ('/builds/relengapi.tok', '/builds/relengapi.tok'),
+        ('/tools/tooltool.py', '/builds/tooltool.py'),
     ],
     'operating_system': 'linux',
 }

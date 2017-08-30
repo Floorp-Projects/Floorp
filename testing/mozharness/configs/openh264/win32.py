@@ -8,7 +8,7 @@ external_tools_path = os.path.join(
     'external_tools',
 )
 
-VSPATH = 'C:/tools/vs2013'
+VSPATH = '%(abs_work_dir)s/vs2015u3'
 config = {
    'tooltool_manifest_file': "win.manifest",
    'exes': {
@@ -16,22 +16,20 @@ config = {
        'python2.7': 'c:\\mozilla-build\\python27\\python2.7.exe',
        'tooltool.py': [sys.executable, "c:\\mozilla-build\\tooltool.py"],
    },
-   'dump_syms_binary': 'dump_syms_vc1800.exe',
+   'dump_syms_binary': 'dump_syms.exe',
    'arch': 'x86',
    'use_yasm': True,
    'operating_system': 'msvc',
    'partial_env': {
-       'PATH': '%s;%s;%s;%s;%s' % (
-           'c:/Program Files (x86)/Windows Kits/8.1/bin/x86;{_VSPATH}/Common7/IDE;{_VSPATH}/VC/BIN/amd64_x86;{_VSPATH}/VC/BIN/amd64;{_VSPATH}/Common7/Tools;{_VSPATH}/VC/VCPackages;c:/mozilla-build/moztools'.format(_VSPATH=VSPATH),
-           'c:/windows/Microsoft.NET/Framework/v3.5;c:/windows/Microsoft.NET/Framework/v4.0.30319',
+       'PATH': '%s;%s;%s' % (
+           '{_VSPATH}/VC/redist/x86/Microsoft.VC140.CRT;{_VSPATH}/VC/redist/x64/Microsoft.VC140.CRT;{_VSPATH}/SDK/Redist/ucrt/DLLs/x86;{_VSPATH}/SDK/Redist/ucrt/DLLs/x64;{_VSPATH}/VC/bin/amd64_x86;{_VSPATH}/VC/bin/amd64;{_VSPATH}/VC/bin;{_VSPATH}/SDK/bin/x86;{_VSPATH}/SDK/bin/x64;{_VSPATH}/DIA SDK/bin'.format(_VSPATH=VSPATH),
            os.environ['PATH'],
            'C:\\mozilla-build\\Git\\bin',
-           'C:\\mozilla-build\\svn-win32-1.6.3\\bin',
        ),
-       'WIN32_REDIST_DIR': '{_VSPATH}/VC/redist/x86/Microsoft.VC120.CRT'.format(_VSPATH=VSPATH),
-       'INCLUDE': 'c:\\Program Files (x86)\\Windows Kits\\8.1\\include\\shared;c:\\Program Files (x86)\\Windows Kits\\8.1\\include\\um;c:\\Program Files (x86)\\Windows Kits\\8.1\\include\\winrt;c:\\Program Files (x86)\\Windows Kits\\8.1\\include\\winrt\\wrl;c:\\Program Files (x86)\\Windows Kits\\8.1\\include\\winrt\\wrl\\wrappers;{_VSPATH}\\vc\\include;{_VSPATH}\\vc\\atlmfc\\include;c:\\tools\\sdks\\dx10\\include'.format(_VSPATH=VSPATH),
-       'LIB': 'c:\\Program Files (x86)\\Windows Kits\\8.1\\Lib\\winv6.3\\um\\x86;{_VSPATH}\\vc\\lib;{_VSPATH}\\vc\\atlmfc\\lib;c:\\tools\\sdks\\dx10\\lib'.format(_VSPATH=VSPATH),
-       'LIBPATH': 'c:\\Program Files (x86)\\Windows Kits\\8.1\\Lib\\winv6.3\\um\\x86;{_VSPATH}\\vc\\lib;{_VSPATH}\\vc\\atlmfc\\lib;c:\\tools\\sdks\\dx10\\lib'.format(_VSPATH=VSPATH),
-       'WINDOWSSDKDIR': 'c:\\Program Files (x86)\\Windows Kits\\8.1\\',
+       'WIN32_REDIST_DIR': '{_VSPATH}/VC/redist/x86/Microsoft.VC140.CRT'.format(_VSPATH=VSPATH),
+       'WIN_UCRT_REDIST_DIR': '{_VSPATH}/SDK/Redist/ucrt/DLLs/x86'.format(_VSPATH=VSPATH),
+       'INCLUDE': '{_VSPATH}/VC/include;{_VSPATH}/VC/atlmfc/include;{_VSPATH}/SDK/Include/10.0.14393.0/ucrt;{_VSPATH}/SDK/Include/10.0.14393.0/shared;{_VSPATH}/SDK/Include/10.0.14393.0/um;{_VSPATH}/SDK/Include/10.0.14393.0/winrt;{_VSPATH}/DIA SDK/include'.format(_VSPATH=VSPATH),
+       'LIB': '{_VSPATH}/VC/lib;{_VSPATH}/VC/atlmfc/lib;{_VSPATH}/SDK/lib/10.0.14393.0/ucrt/x86;{_VSPATH}/SDK/lib/10.0.14393.0/um/x86;{_VSPATH}/DIA SDK/lib'.format(_VSPATH=VSPATH),
+       'WINDOWSSDKDIR': '{_VSPATH}/SDK'.format(_VSPATH=VSPATH),
    },
 }

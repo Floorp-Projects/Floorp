@@ -1,10 +1,17 @@
 [
-{
-"size": 51200, 
-"visibility": "public", 
-"digest": "3071d2c22325c6f952d99491005dce85887ebd6a7ec52a91af157cf6f1ef4453234489d1269f7f92c739e08fd8a747d1ea2d6a6cf13cc9818a2f99302b4eb970", 
-"algorithm": "sha512", 
-"filename": "dump_syms_vc1800.exe"
-}
+  {
+    "version": "Visual Studio 2015 Update 3 14.0.25425.01 / SDK 10.0.14393.0",
+    "size": 326656969,
+    "digest": "babc414ffc0457d27f5a1ed24a8e4873afbe2f1c1a4075469a27c005e1babc3b2a788f643f825efedff95b79686664c67ec4340ed535487168a3482e68559bc7",
+    "algorithm": "sha512",
+    "filename": "vs2015u3.zip",
+    "unpack": true
+  },
+  {
+    "size": 56832,
+    "visibility": "public",
+    "digest": "01e6bd936ef008061b95a94008682869ebf2a29d1c035e49cd6579b1a020d0d195431221577f127eb52b97137337efe30e6de6c5a2f4b6a87ff2a990e9874e8e",
+    "algorithm": "sha512",
+    "filename": "dump_syms.exe"
+  }
 ]
-

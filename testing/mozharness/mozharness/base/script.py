@@ -1448,7 +1448,7 @@ class ScriptMixin(PlatformMixin):
         return returncode
 
     def get_output_from_command(self, command, cwd=None,
-                                halt_on_failure=False, env=None, partial_env=None,
+                                halt_on_failure=False, env=None,
                                 silent=False, log_level=INFO,
                                 tmpfile_base_path='tmpfile',
                                 return_type='output', save_tmpfiles=False,
@@ -1480,8 +1480,6 @@ class ScriptMixin(PlatformMixin):
               log level as `FATAL` on error. Defaults to False.
             env (dict, optional): key-value of environment values to use to
               run the command. Defaults to None.
-            partial_env (dict, optional): key-value of environment values to
-              replace from the current environment values. Defaults to None.
             silent (bool, optional): whether or not to output the stdout of
               executing the command. Defaults to False.
             log_level (str, optional): log level name to use on normal execution.
@@ -1550,15 +1548,8 @@ class ScriptMixin(PlatformMixin):
                      self.exception(), level=level)
             return None
         shell = True
-        if isinstance(command, list) or isinstance(command, tuple):
+        if isinstance(command, list):
             shell = False
-
-        if env is None:
-            if partial_env:
-                self.info("Using partial env: %s" % pprint.pformat(partial_env))
-                env = self.query_env(partial_env=partial_env)
-        else:
-            self.info("Using env: %s" % pprint.pformat(env))
 
         p = subprocess.Popen(command, shell=shell, stdout=tmp_stdout,
                              cwd=cwd, stderr=tmp_stderr, env=env)

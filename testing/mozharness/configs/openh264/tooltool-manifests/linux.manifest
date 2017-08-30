@@ -1,9 +1,9 @@
 [
-{
-"size": 4086983, 
-"visibility": "public", 
-"digest": "f9b8922384b489cf4969b1d26d4fef93db5882dacadd9e679e728164220b237ce170e94f45e6a6ede1055f4d06097f994e5d0185f42cf90b9e3dc57dfc2d0005", 
-"algorithm": "sha512", 
-"filename": "dump_syms"
-}
+  {
+    "size": 9507240,
+    "visibility": "public",
+    "digest": "3cf69a10dca3969bcd2873b96b0207de01ce13f299b2af37f424f21959be849c0e729d5f74cca41f33e0c59bc87b2329a07ac9f901b4a0a9672e6441ceca704d",
+    "algorithm": "sha512",
+    "filename": "dump_syms"
+  }
 ]

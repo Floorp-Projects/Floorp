@@ -121,3 +121,52 @@ class TransferMixin(object):
             self.exception(message="Unable to download %s!" % url)
             raise
         return j
+
+    def scp_upload_directory(self, local_path, ssh_key, ssh_user,
+                             remote_host, remote_path,
+                             scp_options=None,
+                             error_level=ERROR,
+                             create_remote_directory=True,
+                            ):
+        """
+        Create a remote directory and upload the contents of
+        a local directory to it via scp only
+
+        Returns:
+            None: on success
+              -1: if local_path is not a directory
+              -2: if the remote_directory cannot be created
+                  (it only makes sense if create_remote_directory is True)
+              -3: scp fails to copy to the remote directory
+        """
+        dirs = self.query_abs_dirs()
+        self.info("Uploading the contents of %s to %s:%s" % (local_path, remote_host, remote_path))
+        ssh = self.query_exe("ssh")
+        scp = self.query_exe("scp")
+        if scp_options is None:
+            scp_options = '-rp'
+        if not os.path.isdir(local_path):
+            self.log("%s isn't a directory!" % local_path,
+                     level=ERROR)
+            return -1
+        if create_remote_directory:
+            mkdir_error_list = [{
+                'substr': r'''exists but is not a directory''',
+                'level': ERROR
+            }] + SSHErrorList
+            if self.run_command([ssh, '-oIdentityFile=%s' % ssh_key,
+                                 '%s@%s' % (ssh_user, remote_host),
+                                 'mkdir', '-p', remote_path],
+                                cwd=dirs['abs_work_dir'],
+                                return_type='num_errors',
+                                error_list=mkdir_error_list):
+                self.log("Unable to create remote directory %s:%s!" % (remote_host, remote_path), level=error_level)
+                return -2
+        if self.run_command([scp, '-oIdentityFile=%s' % ssh_key,
+                             scp_options, '.',
+                             '%s@%s:%s/' % (ssh_user, remote_host, remote_path)],
+                            cwd=local_path,
+                            return_type='num_errors',
+                            error_list=SSHErrorList):
+            self.log("Unable to scp %s to %s:%s!" % (local_path, remote_host, remote_path), level=error_level)
+            return -3

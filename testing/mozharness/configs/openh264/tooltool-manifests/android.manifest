@@ -1,17 +1,26 @@
 [
-{
-"size": 357533004,
-"visibility": "internal",
-"digest": "9b24b6db45ca4f6418d18119e3d2dd48e2a352e977ebf4fd0b2a8c4103fd0735eacb0f7360ff3a2eda6777fdd1029325ca23b8a4c34542b3b1fa487ff633647c",
-"algorithm": "sha512",
-"filename": "android-ndk.tar.bz2",
-"unpack": true
-},
-{
-"size": 4086983, 
-"visibility": "public", 
-"digest": "f9b8922384b489cf4969b1d26d4fef93db5882dacadd9e679e728164220b237ce170e94f45e6a6ede1055f4d06097f994e5d0185f42cf90b9e3dc57dfc2d0005", 
-"algorithm": "sha512", 
-"filename": "dump_syms"
-}
+  {
+    "version": "Android NDK r11c full",
+    "size": 434664300,
+    "visibility": "internal",
+    "digest": "c59a8fe59f52324ccce5ca6563e8e0189c3fb5538b2a435249581eb994bfb89a70b28e366bab102c36a1e11ee50cd657f1e084e40306f660d3cd2d60d09097bf",
+    "algorithm": "sha512",
+    "filename": "android-ndk-r11c-linux-x86_64.tar.xz",
+    "unpack": true
+  },
+  {
+    "size": 735225120,
+    "visibility": "internal",
+    "digest": "ec936b87d151fcf0a5920e0954fbfff18fc04595d753f6b11a0582faee3ce60e3429c828a94c1533ae31ff27272a6d0c637d901153b946e51241ea89ce8179b3",
+    "algorithm": "sha512",
+    "filename": "android-sdk-linux.tar.xz",
+    "unpack": true
+  },
+  {
+    "size": 9507240,
+    "visibility": "public",
+    "digest": "3cf69a10dca3969bcd2873b96b0207de01ce13f299b2af37f424f21959be849c0e729d5f74cca41f33e0c59bc87b2329a07ac9f901b4a0a9672e6441ceca704d",
+    "algorithm": "sha512",
+    "filename": "dump_syms"
+  }
 ]
