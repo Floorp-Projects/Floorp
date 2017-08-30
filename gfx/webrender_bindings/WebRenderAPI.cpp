@@ -524,6 +524,22 @@ WebRenderAPI::DeleteFont(wr::FontKey aKey)
   wr_api_delete_font(mDocHandle, aKey);
 }
 
+void
+WebRenderAPI::AddFontInstance(wr::FontInstanceKey aKey,
+                              wr::FontKey aFontKey,
+                              float aGlyphSize,
+                              const wr::FontInstanceOptions* aOptions,
+                              const wr::FontInstancePlatformOptions* aPlatformOptions)
+{
+  wr_api_add_font_instance(mDocHandle, aKey, aFontKey, aGlyphSize, aOptions, aPlatformOptions);
+}
+
+void
+WebRenderAPI::DeleteFontInstance(wr::FontInstanceKey aKey)
+{
+  wr_api_delete_font_instance(mDocHandle, aKey);
+}
+
 class FrameStartTime : public RendererEvent
 {
 public:
@@ -922,15 +938,15 @@ void
 DisplayListBuilder::PushText(const wr::LayoutRect& aBounds,
                              const wr::LayoutRect& aClip,
                              const gfx::Color& aColor,
-                             wr::FontKey aFontKey,
+                             wr::FontInstanceKey aFontKey,
                              Range<const wr::GlyphInstance> aGlyphBuffer,
-                             float aGlyphSize)
+                             const wr::GlyphOptions* aGlyphOptions)
 {
   wr_dp_push_text(mWrState, aBounds, aClip,
                   ToColorF(aColor),
                   aFontKey,
                   &aGlyphBuffer[0], aGlyphBuffer.length(),
-                  aGlyphSize);
+                  aGlyphOptions);
 }
 
 void
