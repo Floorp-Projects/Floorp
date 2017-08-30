@@ -243,10 +243,6 @@ WebConsoleConnectionProxy.prototype = {
     this.webConsoleFrame.newConsoleOutput.dispatchMessageUpdate(networkInfo, response);
   },
 
-  dispatchRequestUpdate: function (id, data) {
-    this.webConsoleFrame.newConsoleOutput.dispatchRequestUpdate(id, data);
-  },
-
   /**
    * The "cachedMessages" response handler.
    *

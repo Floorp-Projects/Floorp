@@ -15,7 +15,6 @@ const {
   SELECT_REQUEST,
   SEND_CUSTOM_REQUEST,
   UPDATE_REQUEST,
-  UPDATE_PROPS,
 } = require("../constants");
 
 const Request = I.Record({
@@ -68,6 +67,34 @@ const Requests = I.Record({
   firstStartedMillis: +Infinity,
   lastEndedMillis: -Infinity,
 });
+
+const UPDATE_PROPS = [
+  "method",
+  "url",
+  "remotePort",
+  "remoteAddress",
+  "status",
+  "statusText",
+  "httpVersion",
+  "securityState",
+  "securityInfo",
+  "mimeType",
+  "contentSize",
+  "transferredSize",
+  "totalTime",
+  "eventTimings",
+  "headersSize",
+  "customQueryValue",
+  "requestHeaders",
+  "requestHeadersFromUploadStream",
+  "requestCookies",
+  "requestPostData",
+  "responseHeaders",
+  "responseCookies",
+  "responseContent",
+  "responseContentDataUri",
+  "formDataSections",
+];
 
 /**
  * Remove the currently selected custom request.

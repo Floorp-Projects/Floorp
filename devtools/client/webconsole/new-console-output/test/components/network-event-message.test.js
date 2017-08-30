@@ -109,16 +109,4 @@ describe("NetworkEventMessage component:", () => {
       expect(wrapper.find(".message-body .status").text()).toMatch(EXPECTED_STATUS);
     });
   });
-
-  describe("is expandable", () => {
-    it("renders as expected", () => {
-      const message = stubPreparedMessages.get("XHR POST request");
-      const wrapper = render(NetworkEventMessage({
-        message,
-        serviceContainer,
-      }));
-
-      expect(wrapper.find(".message .theme-twisty")).toExist();
-    });
-  });
 });
