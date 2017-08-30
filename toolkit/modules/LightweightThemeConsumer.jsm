@@ -17,6 +17,7 @@ const kCSSVarsMap = new Map([
   ["--lwt-background-alignment", "backgroundsAlignment"],
   ["--lwt-background-tiling", "backgroundsTiling"],
   ["--toolbar-bgcolor", "toolbarColor"],
+  ["--toolbar-color", "toolbar_text"],
   ["--url-and-searchbar-background-color", "toolbar_field"],
   ["--url-and-searchbar-color", "toolbar_field_text"]
 ]);
