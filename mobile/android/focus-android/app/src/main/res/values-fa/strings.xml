@@ -44,11 +44,14 @@
   <string name="preference_category_mozilla">موزیلا</string>
   <string name="preference_mozilla_telemetry">ارسال داده‌های ناشناس مربوط به شیوه استفاده</string>
   <string name="preference_mozilla_telemetry_summary">اطلاعات بیشتر</string>
+  <string name="preference_mozilla_telemetry_summary2">موزیلا تلاش می‌کند تنها اطلاعاتی که برای بهینه‌سازی %1$s برای همه به آنها نیاز دارد را جمع‌آوری کند.</string>
+  <string name="preference_privacy_notice">نکات حریم‌خصوصی</string>
   <string name="preference_about">درباره %1$s</string>
   <string name="content_description_clear_input">پاک کردن وروردی</string>
   <string name="content_description_dismiss_input">رد کردن</string>
   <string name="content_description_erase">حذف تاریخچه مرور</string>
   <string name="content_description_fab_expand">بازکردن</string>
+  <string name="content_description_tab_counter">زبانه‌های باز: %1$s</string>
   <string name="content_description_open_tab">باز کردن زبانه‌</string>
   <string name="content_description_close_tab">بستن زبانه</string>
   <string name="content_description_lock">اتصال امن</string>
@@ -113,6 +116,10 @@
   <string name="dialog_addtohomescreen_title">افزودن به صفحه‌ی خانه</string>
   <string name="dialog_addtohomescreen_action_add">افزودن</string>
   <string name="dialog_addtohomescreen_action_cancel">انصراف</string>
+  <string name="dialog_addtohomescreen_tracking_protection">میان‌بر بدون محافظت در برابر ردگیری باز خواهد شد</string>
   <string name="dialog_opentab_title">بازکردن پیوند در زبانه انتخاب شده</string>
   <string name="dialog_opentab_action_open">باز کردن</string>
+  <string name="notification_browsing_session_channel_name">نشستِ مرور ناشناس</string>
+  <string name="notification_browsing_session_channel_description">اعلان‌ها امکان پاک کردن اطلاعات نشستِ %1$s را با یک ضربه به شما می‌دهند. لازم نیست که برنامه را باز کنید یا ببینید که چه چیزی در مرورگر در حال اجراست.</string>
+  <string name="tabs_tray_action_erase">پاک کردن تاریخچهٔ مرور</string>
 </resources>

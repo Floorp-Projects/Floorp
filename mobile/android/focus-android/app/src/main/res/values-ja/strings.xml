@@ -44,11 +44,14 @@
   <string name="preference_category_mozilla">Mozilla</string>
   <string name="preference_mozilla_telemetry">匿名の使用状況データを送信</string>
   <string name="preference_mozilla_telemetry_summary">詳細情報</string>
+  <string name="preference_mozilla_telemetry_summary2">Mozilla は %1$s を皆さんに提供し改善するために必要な情報だけを収集するよう努めています。</string>
+  <string name="preference_privacy_notice">プライバシー通知</string>
   <string name="preference_about">%1$s について</string>
   <string name="content_description_clear_input">入力内容を消去</string>
   <string name="content_description_dismiss_input">閉じる</string>
   <string name="content_description_erase">閲覧履歴を消去</string>
   <string name="content_description_fab_expand">開く</string>
+  <string name="content_description_tab_counter">開かれているタブの数: %1$s</string>
   <string name="content_description_open_tab">タブを開く</string>
   <string name="content_description_close_tab">タブを閉じる</string>
   <string name="content_description_lock">安全な接続</string>
@@ -113,6 +116,10 @@
   <string name="dialog_addtohomescreen_title">ホーム画面に追加</string>
   <string name="dialog_addtohomescreen_action_add">追加</string>
   <string name="dialog_addtohomescreen_action_cancel">キャンセル</string>
+  <string name="dialog_addtohomescreen_tracking_protection">ショートカットはトラッキング保護が無効の状態で開かれます</string>
   <string name="dialog_opentab_title">リンクを選択したタブで開く</string>
   <string name="dialog_opentab_action_open">開く</string>
+  <string name="notification_browsing_session_channel_name">プライベートブラウジングセッション</string>
+  <string name="notification_browsing_session_channel_description">%1$s のセッションは通知をワンタップするだけで消去できます。アプリを開いたり、ブラウザー内でどのページが表示されているか確認したりする必要はありません。</string>
+  <string name="tabs_tray_action_erase">閲覧履歴を消去</string>
 </resources>

@@ -44,11 +44,14 @@
   <string name="preference_category_mozilla">Mozilla</string>
   <string name="preference_mozilla_telemetry">Anonymne wužywańske daty pósłaś</string>
   <string name="preference_mozilla_telemetry_summary">Dalšne informacije</string>
+  <string name="preference_mozilla_telemetry_summary2">Mozilla se procujo, jano informacije gromaźiś, z kótarymiž móžomy %1$s za kuždego póbitowaś a pólěpšyś.</string>
+  <string name="preference_privacy_notice">Powěźeńka priwatnosći</string>
   <string name="preference_about">Wó %1$s</string>
   <string name="content_description_clear_input">Zapódaśe wuprozniś</string>
   <string name="content_description_dismiss_input">Zachyśiś</string>
   <string name="content_description_erase">Pśeglědowańsku historiju lašowaś</string>
   <string name="content_description_fab_expand">Pokazaś</string>
+  <string name="content_description_tab_counter">Wócynjone rejtarki: %1$s</string>
   <string name="content_description_open_tab">Rejtark wócyniś</string>
   <string name="content_description_close_tab">Rejtark zacyniś</string>
   <string name="content_description_lock">Wěsty zwisk</string>
@@ -113,6 +116,10 @@
   <string name="dialog_addtohomescreen_title">Startowej wobrazowce pśidaś</string>
   <string name="dialog_addtohomescreen_action_add">Pśidaś</string>
   <string name="dialog_addtohomescreen_action_cancel">Pśetergnuś</string>
+  <string name="dialog_addtohomescreen_tracking_protection">Zwězanje se ze znjemóžnjonym šlědowańskim šćitom wócynijo</string>
   <string name="dialog_opentab_title">Wótkaz we wubranem rejtarku wócyniś</string>
   <string name="dialog_opentab_action_open">Wócyniś</string>
+  <string name="notification_browsing_session_channel_name">Priwatne pósejźenje</string>
+  <string name="notification_browsing_session_channel_description">Powěźeńki wam zmóžnjaju, waše pósejźenje %1$s z dotyknjenim wulašowaś. Njetrjebaśo nałoženje wócyniś abo glědaś, což we wašom wobglědowaku běžy.</string>
+  <string name="tabs_tray_action_erase">Pśeglědowańsku historiju wulašowaś</string>
 </resources>

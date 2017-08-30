@@ -44,11 +44,14 @@
   <string name="preference_category_mozilla">Mozilla</string>
   <string name="preference_mozilla_telemetry">Odosielať anonymné údaje o používaní</string>
   <string name="preference_mozilla_telemetry_summary">Ďalšie informácie</string>
+  <string name="preference_mozilla_telemetry_summary2">Mozilla sa usiluje zbierať len údaje, ktoré potrebujeme na vylepšenie aplikácie %1$s pre všetkých.</string>
+  <string name="preference_privacy_notice">Zásady ochrany súkromia</string>
   <string name="preference_about">O aplikácii %1$s</string>
   <string name="content_description_clear_input">Vymazať pole</string>
   <string name="content_description_dismiss_input">Zavrieť</string>
   <string name="content_description_erase">Vymazať históriu prehliadania</string>
   <string name="content_description_fab_expand">Rozbaliť</string>
+  <string name="content_description_tab_counter">Otvorené karty: %1$s</string>
   <string name="content_description_open_tab">Otvoriť kartu</string>
   <string name="content_description_close_tab">Zavrieť kartu</string>
   <string name="content_description_lock">Zabezpečené pripojenie</string>
@@ -115,4 +118,6 @@
   <string name="dialog_addtohomescreen_action_cancel">Zrušiť</string>
   <string name="dialog_opentab_title">Otvoriť odkaz na zvolenej karte</string>
   <string name="dialog_opentab_action_open">Otvoriť</string>
+  <string name="notification_browsing_session_channel_name">Súkromné prehliadanie</string>
+  <string name="tabs_tray_action_erase">Vymazať históriu prehliadania</string>
 </resources>

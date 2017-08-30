@@ -46,7 +46,7 @@
   <string name="preference_mozilla_telemetry_summary">Научете повече</string>
   <string name="preference_about">Относно %1$s</string>
   <string name="content_description_clear_input">Изчистване на полето</string>
-  <string name="content_description_dismiss_input">Прекратяване</string>
+  <string name="content_description_dismiss_input">Затваряне</string>
   <string name="content_description_erase">Изчистване историята на разглеждането</string>
   <string name="content_description_lock">Защитена връзка</string>
   <string name="accessibility_announcement_loading">Зареждане</string>

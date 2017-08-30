@@ -44,11 +44,14 @@
   <string name="preference_category_mozilla">Mozilla</string>
   <string name="preference_mozilla_telemetry">Skicka anonym användardata</string>
   <string name="preference_mozilla_telemetry_summary">Läs mer</string>
+  <string name="preference_mozilla_telemetry_summary2">Mozilla strävar efter att endast samla in det vi behöver för att tillhandahålla och förbättra %1$s för alla.</string>
+  <string name="preference_privacy_notice">Sekretesspolicy</string>
   <string name="preference_about">Om %1$s</string>
   <string name="content_description_clear_input">Rensa inmatning</string>
   <string name="content_description_dismiss_input">Ignorera</string>
   <string name="content_description_erase">Radera webbhistorik</string>
   <string name="content_description_fab_expand">Expandera</string>
+  <string name="content_description_tab_counter">Flikar öppna: %1$s</string>
   <string name="content_description_open_tab">Öppna flik</string>
   <string name="content_description_close_tab">Stäng flik</string>
   <string name="content_description_lock">Säker anslutning</string>
@@ -113,6 +116,10 @@
   <string name="dialog_addtohomescreen_title">Lägg till på startskärmen</string>
   <string name="dialog_addtohomescreen_action_add">Lägg till</string>
   <string name="dialog_addtohomescreen_action_cancel">Avbryt</string>
+  <string name="dialog_addtohomescreen_tracking_protection">Genväg öppnas med spårningsskydd inaktiverat</string>
   <string name="dialog_opentab_title">Öppna länk i vald flik</string>
   <string name="dialog_opentab_action_open">Öppna</string>
+  <string name="notification_browsing_session_channel_name">Privat surfsession</string>
+  <string name="notification_browsing_session_channel_description">Med aviseringar kan du radera din session i %1$s med ett klick. Du behöver inte öppna appen eller se vad som körs i din webbläsare.</string>
+  <string name="tabs_tray_action_erase">Radera webbhistorik</string>
 </resources>

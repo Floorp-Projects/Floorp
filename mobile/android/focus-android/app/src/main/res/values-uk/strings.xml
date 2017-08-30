@@ -44,11 +44,14 @@
   <string name="preference_category_mozilla">Mozilla</string>
   <string name="preference_mozilla_telemetry">Надсилати анонімні дані використання</string>
   <string name="preference_mozilla_telemetry_summary">Докладніше</string>
+  <string name="preference_mozilla_telemetry_summary2">Mozilla намагається збирати лише дані, що необхідні для роботи і вдосконалення %1$s для кожного.</string>
+  <string name="preference_privacy_notice">Повідомлення про приватність</string>
   <string name="preference_about">Про %1$s</string>
   <string name="content_description_clear_input">Очистити поле</string>
   <string name="content_description_dismiss_input">Відхилити</string>
   <string name="content_description_erase">Стерти історію перегляду</string>
   <string name="content_description_fab_expand">Розгорнути</string>
+  <string name="content_description_tab_counter">Відкритих вкладок: %1$s</string>
   <string name="content_description_open_tab">Відкрити вкладку</string>
   <string name="content_description_close_tab">Закрити вкладку</string>
   <string name="content_description_lock">Безпечне з\'єднання</string>
@@ -113,6 +116,10 @@
   <string name="dialog_addtohomescreen_title">Додати на головний екран</string>
   <string name="dialog_addtohomescreen_action_add">Додати</string>
   <string name="dialog_addtohomescreen_action_cancel">Скасувати</string>
+  <string name="dialog_addtohomescreen_tracking_protection">Ярлик буде відкриватися з вимкненим захистом від стеження</string>
   <string name="dialog_opentab_title">Відкривайте посилання у вибраній вкладці</string>
   <string name="dialog_opentab_action_open">Відкрити</string>
+  <string name="notification_browsing_session_channel_name">Сеанс приватного перегляду</string>
+  <string name="notification_browsing_session_channel_description">Сповіщення дозволяють вам стирати дані сеансу %1$s одним дотиком. Вам не потрібно відкривати програму чи дивитися, що відбувається у вашому браузері.</string>
+  <string name="tabs_tray_action_erase">Стерти історію перегляду</string>
 </resources>

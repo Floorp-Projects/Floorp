@@ -44,11 +44,14 @@
   <string name="preference_category_mozilla">Mozilla</string>
   <string name="preference_mozilla_telemetry">傳送匿名的使用統計資料</string>
   <string name="preference_mozilla_telemetry_summary">了解更多</string>
+  <string name="preference_mozilla_telemetry_summary2">Mozilla 致力於只收集用來為眾人改善 %1$s 所需的必要資料。</string>
+  <string name="preference_privacy_notice">隱私權公告</string>
   <string name="preference_about">關於 %1$s</string>
   <string name="content_description_clear_input">清除輸入內容</string>
   <string name="content_description_dismiss_input">結束輸入</string>
   <string name="content_description_erase">清除瀏覽紀錄</string>
   <string name="content_description_fab_expand">展開</string>
+  <string name="content_description_tab_counter">開啟分頁數: %1$s</string>
   <string name="content_description_open_tab">開啟分頁</string>
   <string name="content_description_close_tab">關閉分頁</string>
   <string name="content_description_lock">安全連線</string>
@@ -113,6 +116,10 @@
   <string name="dialog_addtohomescreen_title">新增至裝置主畫面</string>
   <string name="dialog_addtohomescreen_action_add">新增</string>
   <string name="dialog_addtohomescreen_action_cancel">取消</string>
+  <string name="dialog_addtohomescreen_tracking_protection">使用此捷徑開啟時，將關閉追蹤保護功能</string>
   <string name="dialog_opentab_title">指定用來開啟鏈結的分頁</string>
   <string name="dialog_opentab_action_open">開啟</string>
+  <string name="notification_browsing_session_channel_name">隱私瀏覽階段</string>
+  <string name="notification_browsing_session_channel_description">不需要開啟程式或確認瀏覽器中有哪些資料，只要輕鬆一點，就能清除 %1$s 瀏覽階段的通知項目。</string>
+  <string name="tabs_tray_action_erase">抹除瀏覽紀錄</string>
 </resources>

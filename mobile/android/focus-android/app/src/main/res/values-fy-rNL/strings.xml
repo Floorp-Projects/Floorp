@@ -44,10 +44,16 @@
   <string name="preference_category_mozilla">Mozilla</string>
   <string name="preference_mozilla_telemetry">Anonime brûksgegevens ferstjoere</string>
   <string name="preference_mozilla_telemetry_summary">Mear ynfo</string>
+  <string name="preference_mozilla_telemetry_summary2">Mozilla stribbet dernei allinnich te sammeljen wat nedich is om %1$s foar elkenien oan te bieden en te ferbetterjen.</string>
+  <string name="preference_privacy_notice">Privacyferklearring</string>
   <string name="preference_about">Oer %1$s</string>
   <string name="content_description_clear_input">Ynfier wiskje</string>
   <string name="content_description_dismiss_input">Fuortsmite</string>
   <string name="content_description_erase">Navigaasjeskiednis wiskje</string>
+  <string name="content_description_fab_expand">Utklappe</string>
+  <string name="content_description_tab_counter">Iepen ljepblêden: %1$s</string>
+  <string name="content_description_open_tab">Ljepblêd iepenje</string>
+  <string name="content_description_close_tab">Ljepblêd slute</string>
   <string name="content_description_lock">Befeilige ferbining</string>
   <string name="accessibility_announcement_loading">Lade</string>
   <string name="accessibility_announcement_loading_finished">Website laden</string>
@@ -93,8 +99,16 @@
   <string name="contextmenu_image_share">Ofbylding diele</string>
   <string name="contextmenu_image_copy">Ofbyldingsadres kopiearje</string>
   <string name="contextmenu_image_save">Ofbylding bewarje</string>
+  <string name="contextmenu_open_in_new_tab">Keppeling iepenje yn nij ljepblêd</string>
   <string name="contextmenu_image_warning"><![CDATA["Bewarre en dielde ôfbyldingen "<b xmlns:xliff="urn:oasis:names:tc:xliff:document:1.2">wurde net fuortsmiten</b>" as jo skiednis fan %1$s wiskje."]]></string>
   <string name="firstrun_defaultbrowser_title">Fergrutsje jo privacy</string>
+  <string name="firstrun_defaultbrowser_text2">Bring priveenavigaasje nei in heger nivo. Blokkearje advertinsjes en oare ynhâld dy\'t jo op websites folgje kinne en laadtiden fan siden ferlingje.</string>
+  <string name="firstrun_search_title">Sykje op jo manier</string>
+  <string name="firstrun_search_text">Op syk nei wat oars? Kies in oare standertsykmasine yn Ynstellingen.</string>
+  <string name="firstrun_shortcut_title">Foegje keppelingen ta oan jo startskerm</string>
+  <string name="firstrun_shortcut_text">Kear fluch werom nei jo favorite websites yn %1$s. Selektearje gewoanwei ‘Tafoegje oan startskerm’ fan it %1$s-menu út.</string>
+  <string name="firstrun_privacy_title">Meitsje privacy gewoan</string>
+  <string name="firstrun_privacy_text">Stel %1$s yn as jo standertbrowser en ûnderfyn de foardielen fan priveenavigaasje as jo websiden iepenje fan oare apps út.</string>
   <string name="firstrun_close_button">OK, begrepen!</string>
   <string name="firstrun_skip_button">Oerslaan</string>
   <string name="firstrun_next_button">Folgjende</string>
@@ -102,4 +116,10 @@
   <string name="dialog_addtohomescreen_title">Tafoegje oan startskerm</string>
   <string name="dialog_addtohomescreen_action_add">Tafoegje</string>
   <string name="dialog_addtohomescreen_action_cancel">Annulearje</string>
+  <string name="dialog_addtohomescreen_tracking_protection">Keppeling sil iepenje mei folchbeskerming útskeakele</string>
+  <string name="dialog_opentab_title">Keppeling iepenje yn selektearre ljepblêd</string>
+  <string name="dialog_opentab_action_open">Iepenje</string>
+  <string name="notification_browsing_session_channel_name">Priveenavigaasjesesje</string>
+  <string name="notification_browsing_session_channel_description">Mei notifikaasjes kinne jo fia ien tik jo %1$s-sesje wiskje. Jo hoege de app net te iepenjen of te sjen wat der yn jo browser aktyf is.</string>
+  <string name="tabs_tray_action_erase">Navigaasjeskiednis wiskje</string>
 </resources>

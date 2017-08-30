@@ -44,11 +44,14 @@
   <string name="preference_category_mozilla">Mozilla</string>
   <string name="preference_mozilla_telemetry">Névtelen használati adatok küldése</string>
   <string name="preference_mozilla_telemetry_summary">Tudjon meg többet</string>
+  <string name="preference_mozilla_telemetry_summary2">A Mozilla arra törekszik, hogy csak azt gyűjtse, ami a %1$s fejlesztéséhez és támogatásához szükséges.</string>
+  <string name="preference_privacy_notice">Adatvédelmi nyilatkozat</string>
   <string name="preference_about">A %1$s névjegye</string>
   <string name="content_description_clear_input">Bemenet törlése</string>
   <string name="content_description_dismiss_input">Elutasítás</string>
   <string name="content_description_erase">Böngészési előzmények törlése</string>
   <string name="content_description_fab_expand">Kibontás</string>
+  <string name="content_description_tab_counter">Nyitott lapok: %1$s</string>
   <string name="content_description_open_tab">Lap megnyitása</string>
   <string name="content_description_close_tab">Lap bezárása</string>
   <string name="content_description_lock">Biztonságos kapcsolat</string>
@@ -113,6 +116,10 @@
   <string name="dialog_addtohomescreen_title">Kezdőképernyőhöz adás</string>
   <string name="dialog_addtohomescreen_action_add">Hozzáadás</string>
   <string name="dialog_addtohomescreen_action_cancel">Mégse</string>
+  <string name="dialog_addtohomescreen_tracking_protection">Az ikon követésvédelem nélkül fogja megnyitni az alkalmazást</string>
   <string name="dialog_opentab_title">Hivatkozás megnyitása a kiválasztott lapon</string>
   <string name="dialog_opentab_action_open">Megnyitás</string>
+  <string name="notification_browsing_session_channel_name">Privát böngészés</string>
+  <string name="notification_browsing_session_channel_description">Az értesítésekkel egy érintéssel törölheti a %1$s munkamenetét. Nem kell megnyitnia az alkalmazást, sem megnéznie, hogy mi fut benne.</string>
+  <string name="tabs_tray_action_erase">Böngészési előzmények törlése</string>
 </resources>

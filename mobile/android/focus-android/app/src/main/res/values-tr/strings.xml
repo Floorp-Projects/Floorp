@@ -44,11 +44,14 @@
   <string name="preference_category_mozilla">Mozilla</string>
   <string name="preference_mozilla_telemetry">Anonim kullanım verilerini gönder</string>
   <string name="preference_mozilla_telemetry_summary">Daha fazla bilgi al</string>
+  <string name="preference_mozilla_telemetry_summary2">Mozilla, yalnızca %1$s’u daha da geliştirmek için ihtiyaç duyduğumuz verileri toplar.</string>
+  <string name="preference_privacy_notice">Gizlilik bildirimi</string>
   <string name="preference_about">%1$s hakkında</string>
   <string name="content_description_clear_input">Girdiyi temizle</string>
   <string name="content_description_dismiss_input">Kapat</string>
   <string name="content_description_erase">Gezinti geçmişini sil</string>
   <string name="content_description_fab_expand">Genişlet</string>
+  <string name="content_description_tab_counter">Açık sekmeler: %1$s</string>
   <string name="content_description_open_tab">Sekmeyi aç</string>
   <string name="content_description_close_tab">Sekmeyi kapat</string>
   <string name="content_description_lock">Güvenli bağlantı</string>
@@ -113,6 +116,10 @@
   <string name="dialog_addtohomescreen_title">Ana ekrana ekle</string>
   <string name="dialog_addtohomescreen_action_add">Ekle</string>
   <string name="dialog_addtohomescreen_action_cancel">İptal</string>
+  <string name="dialog_addtohomescreen_tracking_protection">Kısayolu kullandığınızda İzlenme Koruması kapalı kalacaktır</string>
   <string name="dialog_opentab_title">Bağlantıyı seçili sekmede aç</string>
   <string name="dialog_opentab_action_open">Aç</string>
+  <string name="notification_browsing_session_channel_name">Gizli gezinti oturumu</string>
+  <string name="notification_browsing_session_channel_description">Bildirimler sayesinde %1$s oturumunuzu tek dokunuşla silebilirsiniz. Uygulamayı açmanıza ve tarayıcınızdaki açık sayfaları görmenize gerek kalmaz.</string>
+  <string name="tabs_tray_action_erase">Gezinti geçmişini sil</string>
 </resources>

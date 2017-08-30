@@ -44,10 +44,16 @@
   <string name="preference_category_mozilla">Mozilla</string>
   <string name="preference_mozilla_telemetry">Kirim data penggunaan anonim</string>
   <string name="preference_mozilla_telemetry_summary">Pelajari lebih lanjut</string>
+  <string name="preference_mozilla_telemetry_summary2">Mozilla berusaha untuk mengumpulkan hanya apa yang kami perlu untuk sediakan dan meningkatkan %1$s untuk setiap orang.</string>
+  <string name="preference_privacy_notice">Kebijakan Privasi</string>
   <string name="preference_about">Tentang %1$s</string>
   <string name="content_description_clear_input">Bersihkan masukan</string>
   <string name="content_description_dismiss_input">Tutup</string>
   <string name="content_description_erase">Hapus riwayat penjelajahan</string>
+  <string name="content_description_fab_expand">Bentangkan</string>
+  <string name="content_description_tab_counter">Tab terbuka: %1$s</string>
+  <string name="content_description_open_tab">Buka tab</string>
+  <string name="content_description_close_tab">Tutup tab</string>
   <string name="content_description_lock">Sambungan aman</string>
   <string name="accessibility_announcement_loading">Memuat</string>
   <string name="accessibility_announcement_loading_finished">Situs web dimuat</string>
@@ -93,8 +99,16 @@
   <string name="contextmenu_image_share">Bagikan gambar</string>
   <string name="contextmenu_image_copy">Salin alamat gambar</string>
   <string name="contextmenu_image_save">Simpan gambar</string>
+  <string name="contextmenu_open_in_new_tab">Buka tautan di tab baru</string>
   <string name="contextmenu_image_warning"><![CDATA["Gambar yang disimpan dan dibagikan "<b xmlns:xliff="urn:oasis:names:tc:xliff:document:1.2">tidak akan dihapus</b>" ketika Anda menghapus riwayat %1$s."]]></string>
   <string name="firstrun_defaultbrowser_title">Perkuat privasi Anda</string>
+  <string name="firstrun_defaultbrowser_text2">Bawa penjelajahan pribadi ke tingkat berikutnya. Blokir iklan dan konten lainnya yang dapat melacak Anda di seluruh situs dan memperlambat waktu buka halaman.</string>
+  <string name="firstrun_search_title">Pencarian Anda, cara Anda</string>
+  <string name="firstrun_search_text">Mencari sesuatu yang berbeda? Pilih mesin pencari baku lainnya di Setelan.</string>
+  <string name="firstrun_shortcut_title">Tambahkan pintasan ke layar Beranda</string>
+  <string name="firstrun_shortcut_text">Kembali ke situs favorit Anda di %1$s dengan cepat. Cukup pilih \"Tambahkan ke layar Beranda\" dari menu %1$s.</string>
+  <string name="firstrun_privacy_title">Jadikan privasi menjadi kebiasaan</string>
+  <string name="firstrun_privacy_text">Atur %1$s sebagai peramban utama Anda dan dapatkan keuntungan penjelajahan pribadi ketika Anda membuka laman web dari aplikasi lainnya.</string>
   <string name="firstrun_close_button">Oke, beres!</string>
   <string name="firstrun_skip_button">Lewati</string>
   <string name="firstrun_next_button">Lanjutkan</string>
@@ -102,4 +116,10 @@
   <string name="dialog_addtohomescreen_title">Tambahkan ke Beranda</string>
   <string name="dialog_addtohomescreen_action_add">Tambah</string>
   <string name="dialog_addtohomescreen_action_cancel">Batal</string>
+  <string name="dialog_addtohomescreen_tracking_protection">Pintasan akan terbuka dengan Perlindungan Pelacakan dinonaktifkan</string>
+  <string name="dialog_opentab_title">Buka tautan di tab yang dipilih</string>
+  <string name="dialog_opentab_action_open">Buka</string>
+  <string name="notification_browsing_session_channel_name">Sesi penjelajahan privat</string>
+  <string name="notification_browsing_session_channel_description">Notifikasi memungkinkan Anda menghapus sesi %1$s Anda dengan sekali sentuh. Anda tak perlu membuka aplikasi atau melihat apa yang berjalan di peramban Anda.</string>
+  <string name="tabs_tray_action_erase">Hapus riwayat penjelajahan</string>
 </resources>

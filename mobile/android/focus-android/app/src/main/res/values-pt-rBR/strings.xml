@@ -44,11 +44,14 @@
   <string name="preference_category_mozilla">Mozilla</string>
   <string name="preference_mozilla_telemetry">Enviar dados de uso anonimamente</string>
   <string name="preference_mozilla_telemetry_summary">Saiba mais</string>
+  <string name="preference_mozilla_telemetry_summary2">A Mozilla se empenha para coletar somente o que é necessário para melhorar o %1$s para todos.</string>
+  <string name="preference_privacy_notice">Política de Privacidade</string>
   <string name="preference_about">Sobre o %1$s</string>
   <string name="content_description_clear_input">Limpar campo</string>
   <string name="content_description_dismiss_input">Dispensar</string>
   <string name="content_description_erase">Apagar o histórico de navegação</string>
   <string name="content_description_fab_expand">Expandir</string>
+  <string name="content_description_tab_counter">Abas abertas: %1$s</string>
   <string name="content_description_open_tab">Abrir aba</string>
   <string name="content_description_close_tab">Fechar aba</string>
   <string name="content_description_lock">Conexão segura</string>
@@ -113,6 +116,10 @@
   <string name="dialog_addtohomescreen_title">Adicionar à tela inicial</string>
   <string name="dialog_addtohomescreen_action_add">Adicionar</string>
   <string name="dialog_addtohomescreen_action_cancel">Cancelar</string>
+  <string name="dialog_addtohomescreen_tracking_protection">O atalho abrirá com a Proteção Contra Rastreamento desativada</string>
   <string name="dialog_opentab_title">Abrir link na aba selecionada</string>
   <string name="dialog_opentab_action_open">Abrir</string>
+  <string name="notification_browsing_session_channel_name">Sessão de navegação privativa</string>
+  <string name="notification_browsing_session_channel_description">As notificações permitem você limpar sua sessão do %1$s com um toque. Você não precisa abrir o app ou ver o que está rodando no seu navegador.</string>
+  <string name="tabs_tray_action_erase">Limpar o histórico de navegação</string>
 </resources>

@@ -44,11 +44,14 @@
   <string name="preference_category_mozilla">Mozilla</string>
   <string name="preference_mozilla_telemetry">发送匿名的使用统计数据</string>
   <string name="preference_mozilla_telemetry_summary">详细了解</string>
+  <string name="preference_mozilla_telemetry_summary2">Mozilla 仅收集必要的信息用以改进 %1$s 以适合大众。</string>
+  <string name="preference_privacy_notice">隐私声明</string>
   <string name="preference_about">关于 %1$s</string>
   <string name="content_description_clear_input">清空输入内容</string>
   <string name="content_description_dismiss_input">关闭</string>
   <string name="content_description_erase">清除浏览记录</string>
   <string name="content_description_fab_expand">展开</string>
+  <string name="content_description_tab_counter">已打开 %1$s 个标签页</string>
   <string name="content_description_open_tab">打开标签页</string>
   <string name="content_description_close_tab">关闭标签页</string>
   <string name="content_description_lock">安全连接</string>
@@ -113,6 +116,10 @@
   <string name="dialog_addtohomescreen_title">添加到主屏幕</string>
   <string name="dialog_addtohomescreen_action_add">添加</string>
   <string name="dialog_addtohomescreen_action_cancel">取消</string>
+  <string name="dialog_addtohomescreen_tracking_protection">快捷方式打开时跟踪保护将被禁用</string>
   <string name="dialog_opentab_title">指定用来打开链接的标签页</string>
   <string name="dialog_opentab_action_open">打开</string>
+  <string name="notification_browsing_session_channel_name">隐私浏览会话</string>
+  <string name="notification_browsing_session_channel_description">通知您可以一键清除您的 %1$s 浏览记录。清除无需打开应用或查看浏览器中的内容。</string>
+  <string name="tabs_tray_action_erase">清除浏览记录</string>
 </resources>

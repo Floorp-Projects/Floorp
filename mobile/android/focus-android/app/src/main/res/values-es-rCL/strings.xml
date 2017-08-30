@@ -44,11 +44,13 @@
   <string name="preference_category_mozilla">Mozilla</string>
   <string name="preference_mozilla_telemetry">Enviar datos de uso anónimos</string>
   <string name="preference_mozilla_telemetry_summary">Aprender más</string>
+  <string name="preference_privacy_notice">Aviso de privacidad</string>
   <string name="preference_about">Acerca de %1$s</string>
   <string name="content_description_clear_input">Limpiar texto ingresado</string>
   <string name="content_description_dismiss_input">Ocultar</string>
   <string name="content_description_erase">Eliminar historial de navegación</string>
   <string name="content_description_fab_expand">Expandir</string>
+  <string name="content_description_tab_counter">Pestañas abiertas: %1$s</string>
   <string name="content_description_open_tab">Abrir pestaña</string>
   <string name="content_description_close_tab">Cerrar pestaña</string>
   <string name="content_description_lock">Conexión segura</string>

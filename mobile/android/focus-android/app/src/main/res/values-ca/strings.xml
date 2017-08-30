@@ -44,11 +44,14 @@
   <string name="preference_category_mozilla">Mozilla</string>
   <string name="preference_mozilla_telemetry">Envia dades d\'ús anònimes</string>
   <string name="preference_mozilla_telemetry_summary">Més informació</string>
+  <string name="preference_mozilla_telemetry_summary2">Mozilla s\'esforça per recollir només les dades necessàries per oferir i millorar el %1$s per a tothom.</string>
+  <string name="preference_privacy_notice">Avís de privadesa</string>
   <string name="preference_about">Quant al %1$s</string>
   <string name="content_description_clear_input">Esborra l\'entrada</string>
   <string name="content_description_dismiss_input">Descarta</string>
   <string name="content_description_erase">Esborra l\'historial de navegació</string>
   <string name="content_description_fab_expand">Amplia</string>
+  <string name="content_description_tab_counter">Pestanyes obertes: %1$s</string>
   <string name="content_description_open_tab">Obre la pestanya</string>
   <string name="content_description_close_tab">Tanca la pestanya</string>
   <string name="content_description_lock">Connexió segura</string>
@@ -113,6 +116,10 @@
   <string name="dialog_addtohomescreen_title">Afegeix a la pantalla d\'inici</string>
   <string name="dialog_addtohomescreen_action_add">Afegeix</string>
   <string name="dialog_addtohomescreen_action_cancel">Cancel·la</string>
+  <string name="dialog_addtohomescreen_tracking_protection">La drecera s\'obrirà amb la protecció contra el seguiment desactivada</string>
   <string name="dialog_opentab_title">Obre l\'enllaç en la pestanya seleccionada</string>
   <string name="dialog_opentab_action_open">Obre</string>
+  <string name="notification_browsing_session_channel_name">Sessió de navegació privada</string>
+  <string name="notification_browsing_session_channel_description">Les notificacions permeten esborrar la sessió del %1$s amb un sol toc. No cal ni obrir l\'aplicació ni mostrar el contingut del navegador.</string>
+  <string name="tabs_tray_action_erase">Esborra l\'historial de navegació</string>
 </resources>

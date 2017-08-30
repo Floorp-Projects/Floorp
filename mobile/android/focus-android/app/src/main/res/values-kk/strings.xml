@@ -44,11 +44,14 @@
   <string name="preference_category_mozilla">Mozilla</string>
   <string name="preference_mozilla_telemetry">Анонимды қолдану деректерін жіберіп отыру</string>
   <string name="preference_mozilla_telemetry_summary">Көбірек білу</string>
+  <string name="preference_mozilla_telemetry_summary2">Mozilla тек %1$s әркім үшін ұсыну және жақсарту мақсатында керек деректерді жинауға тырысады.</string>
+  <string name="preference_privacy_notice">Жекелік ескертуі</string>
   <string name="preference_about">%1$s туралы</string>
   <string name="content_description_clear_input">Енгізуді тазарту</string>
   <string name="content_description_dismiss_input">Тайдыру</string>
   <string name="content_description_erase">Шолу тарихын өшіру</string>
   <string name="content_description_fab_expand">Жазық қылу</string>
+  <string name="content_description_tab_counter">Ашық беттер: %1$s</string>
   <string name="content_description_open_tab">Бетті ашу</string>
   <string name="content_description_close_tab">Бетті жабу</string>
   <string name="content_description_lock">Қауіпсіз байланыс</string>
@@ -113,6 +116,10 @@
   <string name="dialog_addtohomescreen_title">Үй экранына қосу</string>
   <string name="dialog_addtohomescreen_action_add">Қосу</string>
   <string name="dialog_addtohomescreen_action_cancel">Бас тарту</string>
+  <string name="dialog_addtohomescreen_tracking_protection">Жарлық Баықылаудан қорғанысы сөндірілген түрде ашылады</string>
   <string name="dialog_opentab_title">Сілтемені таңдалған бетте ашу</string>
   <string name="dialog_opentab_action_open">Ашу</string>
+  <string name="notification_browsing_session_channel_name">Жекелік шолу сессиясы</string>
+  <string name="notification_browsing_session_channel_description">Хабарламалар сізге %1$s сессиясын бір шертумен өшіруді мүмкін етеді. Сізге браузерді ашуды немесе браузерде не орындалғанын көру керек емес.</string>
+  <string name="tabs_tray_action_erase">Шолу тарихын өшіру</string>
 </resources>

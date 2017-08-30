@@ -44,11 +44,14 @@
   <string name="preference_category_mozilla">Mozilla</string>
   <string name="preference_mozilla_telemetry">Invia dati anonimi sull’uso</string>
   <string name="preference_mozilla_telemetry_summary">Ulteriori informazioni</string>
+  <string name="preference_mozilla_telemetry_summary2">Mozilla cerca di raccogliere solo i dati necessari per fornire e migliorare %1$s per tutti gli utenti.</string>
+  <string name="preference_privacy_notice">Informativa sulla privacy</string>
   <string name="preference_about">Informazioni su %1$s</string>
   <string name="content_description_clear_input">Cancella testo</string>
   <string name="content_description_dismiss_input">Chiudi</string>
   <string name="content_description_erase">Elimina cronologia di navigazione</string>
   <string name="content_description_fab_expand">Espandi</string>
+  <string name="content_description_tab_counter">Schede aperte: %1$s</string>
   <string name="content_description_open_tab">Apri scheda</string>
   <string name="content_description_close_tab">Chiudi scheda</string>
   <string name="content_description_lock">Connessione sicura</string>
@@ -113,6 +116,10 @@
   <string name="dialog_addtohomescreen_title">Agg. a schermata principale</string>
   <string name="dialog_addtohomescreen_action_add">Aggiungi</string>
   <string name="dialog_addtohomescreen_action_cancel">Annulla</string>
+  <string name="dialog_addtohomescreen_tracking_protection">Questa scorciatoia verrà aperta con la protezione antitracciamento disattivata</string>
   <string name="dialog_opentab_title">Apri link nella scheda selezionata</string>
   <string name="dialog_opentab_action_open">Apri</string>
+  <string name="notification_browsing_session_channel_name">Sessione di navigazione anonima</string>
+  <string name="notification_browsing_session_channel_description">Le notifiche permettono di eliminare i dati della sessione di %1$s con un tocco. Non serve aprire l’app o controllare il contenuto del browser.</string>
+  <string name="tabs_tray_action_erase">Elimina cronologia di navigazione</string>
 </resources>

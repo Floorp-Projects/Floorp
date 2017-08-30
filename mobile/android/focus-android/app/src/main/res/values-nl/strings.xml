@@ -44,11 +44,14 @@
   <string name="preference_category_mozilla">Mozilla</string>
   <string name="preference_mozilla_telemetry">Anonieme gebruiksgegevens verzenden</string>
   <string name="preference_mozilla_telemetry_summary">Meer info</string>
+  <string name="preference_mozilla_telemetry_summary2">Mozilla streeft ernaar alleen te verzamelen wat nodig is om %1$s voor iedereen aan te bieden en te verbeteren.</string>
+  <string name="preference_privacy_notice">Privacyverklaring</string>
   <string name="preference_about">Over %1$s</string>
   <string name="content_description_clear_input">Invoer wissen</string>
   <string name="content_description_dismiss_input">Verwijderen</string>
   <string name="content_description_erase">Navigatiegeschiedenis wissen</string>
   <string name="content_description_fab_expand">Uitvouwen</string>
+  <string name="content_description_tab_counter">Open tabbladen: %1$s</string>
   <string name="content_description_open_tab">Tabblad openen</string>
   <string name="content_description_close_tab">Tabblad sluiten</string>
   <string name="content_description_lock">Beveiligde verbinding</string>
@@ -113,6 +116,10 @@
   <string name="dialog_addtohomescreen_title">Toevoegen aan startscherm</string>
   <string name="dialog_addtohomescreen_action_add">Toevoegen</string>
   <string name="dialog_addtohomescreen_action_cancel">Annuleren</string>
+  <string name="dialog_addtohomescreen_tracking_protection">Snelkoppeling opent met Bescherming tegen volgen uitgeschakeld</string>
   <string name="dialog_opentab_title">Koppeling openen in geselecteerde tabblad</string>
   <string name="dialog_opentab_action_open">Openen</string>
+  <string name="notification_browsing_session_channel_name">Privénavigatiesessie</string>
+  <string name="notification_browsing_session_channel_description">Met notificaties kunt u via een tik uw %1$s-sessie wissen. U hoeft de app niet te openen of te zien wat er in uw browser actief is.</string>
+  <string name="tabs_tray_action_erase">Navigatiegeschiedenis wissen</string>
 </resources>

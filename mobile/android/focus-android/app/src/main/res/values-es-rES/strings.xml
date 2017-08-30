@@ -44,11 +44,14 @@
   <string name="preference_category_mozilla">Mozilla</string>
   <string name="preference_mozilla_telemetry">Enviar datos de uso anónimos</string>
   <string name="preference_mozilla_telemetry_summary">Descubrir más</string>
+  <string name="preference_mozilla_telemetry_summary2">Mozilla se esfuerza por recopilar solo lo necesario para proporcionar y mejorar %1$s para todos.</string>
+  <string name="preference_privacy_notice">Aviso de privacidad</string>
   <string name="preference_about">Acerca de %1$s</string>
   <string name="content_description_clear_input">Limpiar registro</string>
   <string name="content_description_dismiss_input">Ignorar</string>
   <string name="content_description_erase">Eliminar historial de navegación</string>
   <string name="content_description_fab_expand">Expandir</string>
+  <string name="content_description_tab_counter">Pestañas abiertas: %1$s</string>
   <string name="content_description_open_tab">Abrir pestaña</string>
   <string name="content_description_close_tab">Cerrar pestaña</string>
   <string name="content_description_lock">Conexión segura</string>
@@ -113,6 +116,10 @@
   <string name="dialog_addtohomescreen_title">Añadir a pantalla inicio</string>
   <string name="dialog_addtohomescreen_action_add">Añadir</string>
   <string name="dialog_addtohomescreen_action_cancel">Cancelar</string>
+  <string name="dialog_addtohomescreen_tracking_protection">El acceso directo se abrirá con protección contra rastreo desactivada</string>
   <string name="dialog_opentab_title">Abrir enlace en la pestaña seleccionada</string>
   <string name="dialog_opentab_action_open">Abrir</string>
+  <string name="notification_browsing_session_channel_name">Sesión de navegación privada</string>
+  <string name="notification_browsing_session_channel_description">Las notificaciones te permiten borrar la sesión de %1$s con un toque. No necesitas abrir la aplicación ni ver qué se está ejecutando en el navegador.</string>
+  <string name="tabs_tray_action_erase">Eliminar historial de navegación</string>
 </resources>

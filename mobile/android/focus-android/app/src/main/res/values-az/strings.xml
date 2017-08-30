@@ -44,11 +44,14 @@
   <string name="preference_category_mozilla">Mozilla</string>
   <string name="preference_mozilla_telemetry">Anonim istifadə məlumatlarını göndər</string>
   <string name="preference_mozilla_telemetry_summary">Ətraflı öyrən</string>
+  <string name="preference_mozilla_telemetry_summary2">Mozilla ancaq %1$s səyyahını hamı üçün yaxşılaşdırmağa lazım olan məlumatları yığır.</string>
+  <string name="preference_privacy_notice">Məxfilik Bildirişi</string>
   <string name="preference_about">%1$s Haqqında</string>
   <string name="content_description_clear_input">Girişi təmizlə</string>
   <string name="content_description_dismiss_input">Ləğv et</string>
   <string name="content_description_erase">Səyahət tarixçəsini təmizlə</string>
   <string name="content_description_fab_expand">Genişlət</string>
+  <string name="content_description_tab_counter">Açıq vərəqlər: %1$s</string>
   <string name="content_description_open_tab">Vərəq aç</string>
   <string name="content_description_close_tab">Vərəqi qapat</string>
   <string name="content_description_lock">Təhlükəsiz əlaqə</string>
@@ -113,6 +116,10 @@
   <string name="dialog_addtohomescreen_title">Ana ekrana əlavə et</string>
   <string name="dialog_addtohomescreen_action_add">Əlavə et</string>
   <string name="dialog_addtohomescreen_action_cancel">Ləğv et</string>
+  <string name="dialog_addtohomescreen_tracking_protection">Qısayol İzlənmə Qoruması sönülü olaraq açılacaq</string>
   <string name="dialog_opentab_title">Keçidi seçilmiş vərəqdə aç</string>
   <string name="dialog_opentab_action_open">Aç</string>
+  <string name="notification_browsing_session_channel_name">Məxfi səyahət sessiyası</string>
+  <string name="notification_browsing_session_channel_description">Bildirişlər tək toxunuşla %1$s sessiyanınızı pozmağa imkan verəcək. Tətbiqi açmağa və ya səyyahınızda nəyin işlədiyinə baxmağa ehtiyyacınız yoxdur.</string>
+  <string name="tabs_tray_action_erase">Səyahət keçmişini poz</string>
 </resources>

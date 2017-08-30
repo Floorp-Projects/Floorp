@@ -44,11 +44,14 @@
   <string name="preference_category_mozilla">Mozilla</string>
   <string name="preference_mozilla_telemetry">Sendi anonimajn datumojn pri uzo</string>
   <string name="preference_mozilla_telemetry_summary">Pli da informo</string>
+  <string name="preference_mozilla_telemetry_summary2">Mozilla penas kolekti nur la datumojn nepre bezonatajn por provizi kaj plibonigi %1$s por ĉiuj.</string>
+  <string name="preference_privacy_notice">Rimarko pri privateco</string>
   <string name="preference_about">Pri %1$s</string>
   <string name="content_description_clear_input">Viŝi kampon</string>
   <string name="content_description_dismiss_input">Ignori</string>
   <string name="content_description_erase">Viŝi retuman historion</string>
   <string name="content_description_fab_expand">Malfaldi</string>
+  <string name="content_description_tab_counter">Malfermitaj langetoj: %1$s</string>
   <string name="content_description_open_tab">Malfermi langeton</string>
   <string name="content_description_close_tab">Fermi langeton</string>
   <string name="content_description_lock">Sekura konekto</string>
@@ -104,6 +107,7 @@
   <string name="firstrun_search_text">Ĉu vi serĉas ion alian, malsaman? Elektu alian norman serĉilon en la agordoj.</string>
   <string name="firstrun_shortcut_title">Aldoni rektajn alirojn al via hejmekrano</string>
   <string name="firstrun_privacy_title">Alkutimiĝu al la privateco</string>
+  <string name="firstrun_privacy_text">Elektu %1$s kiel via normal retumilo kaj ricevu ĉiujn avantaĝojn de la privata retumo, kiam vi malfermas paĝojn el aliaj programoj.</string>
   <string name="firstrun_close_button">En ordo, mi komprenis!</string>
   <string name="firstrun_skip_button">Ignori</string>
   <string name="firstrun_next_button">Sekva</string>
@@ -111,6 +115,10 @@
   <string name="dialog_addtohomescreen_title">Aldoni al hejmekrano</string>
   <string name="dialog_addtohomescreen_action_add">Aldoni</string>
   <string name="dialog_addtohomescreen_action_cancel">Nuligi</string>
+  <string name="dialog_addtohomescreen_tracking_protection">La ŝparvojo estos malfermita sen protekto kontraŭ spurado</string>
   <string name="dialog_opentab_title">Malfermi ligilon en elektita langeto</string>
   <string name="dialog_opentab_action_open">Malfermi</string>
+  <string name="notification_browsing_session_channel_name">Privata retuma seanco</string>
+  <string name="notification_browsing_session_channel_description">Sciigoj permesas al vi viŝi vian seancon de %1$s per tuŝeto. Vi ne bezonas malfermi la programon aŭ vidi kio estas en via retumilo.</string>
+  <string name="tabs_tray_action_erase">Viŝi retuman historion</string>
 </resources>

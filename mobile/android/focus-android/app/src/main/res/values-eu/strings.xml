@@ -44,11 +44,14 @@
   <string name="preference_category_mozilla">Mozilla</string>
   <string name="preference_mozilla_telemetry">Bidali erabilpen-datu anonimoak</string>
   <string name="preference_mozilla_telemetry_summary">Argibide gehiago</string>
+  <string name="preference_mozilla_telemetry_summary2">%1$s denontzat eskaini eta hobetzeko beharrezkoa dena soilik biltzen ahalegintzen da Mozilla.</string>
+  <string name="preference_privacy_notice">Pribatutasun-oharra</string>
   <string name="preference_about">%1$s(r)i buruz</string>
   <string name="content_description_clear_input">Garbitu idatzitakoa</string>
   <string name="content_description_dismiss_input">Baztertu</string>
   <string name="content_description_erase">Ezabatu nabigatze-historia</string>
   <string name="content_description_fab_expand">Zabaldu</string>
+  <string name="content_description_tab_counter">Irekitako fitxak: %1$s</string>
   <string name="content_description_open_tab">Ireki fitxa</string>
   <string name="content_description_close_tab">Itxi fitxa</string>
   <string name="content_description_lock">Konexio segurua</string>
@@ -113,6 +116,10 @@
   <string name="dialog_addtohomescreen_title">Gehitu hasierako pantailan</string>
   <string name="dialog_addtohomescreen_action_add">Gehitu</string>
   <string name="dialog_addtohomescreen_action_cancel">Utzi</string>
+  <string name="dialog_addtohomescreen_tracking_protection">Lasterbidea jarraipenaren babesa desgaituta irekiko da</string>
   <string name="dialog_opentab_title">Ireki lotura hautatutako fitxan</string>
   <string name="dialog_opentab_action_open">Ireki</string>
+  <string name="notification_browsing_session_channel_name">Nabigatze pribatuko saioa</string>
+  <string name="notification_browsing_session_channel_description">Jakinarazpenetatik zure %1$s saioa ezaba dezakezu sakatzearekin soilik. Horretarako ez daukazu aplikazioa ireki edo nabigatzailean dagoena ikusi beharrik.</string>
+  <string name="tabs_tray_action_erase">Ezabatu nabigatze-historia</string>
 </resources>

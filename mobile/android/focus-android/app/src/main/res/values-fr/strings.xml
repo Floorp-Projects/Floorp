@@ -44,11 +44,14 @@
   <string name="preference_category_mozilla">Mozilla</string>
   <string name="preference_mozilla_telemetry">Envoyer des statistiques d’utilisation anonymes</string>
   <string name="preference_mozilla_telemetry_summary">En savoir plus</string>
+  <string name="preference_mozilla_telemetry_summary2">Mozilla veille à collecter uniquement les données nécessaires afin d’offrir et d’améliorer %1$s pour tout le monde.</string>
+  <string name="preference_privacy_notice">Politique de confidentialité</string>
   <string name="preference_about">À propos de %1$s</string>
   <string name="content_description_clear_input">Effacer le texte saisi</string>
   <string name="content_description_dismiss_input">Fermer</string>
   <string name="content_description_erase">Effacer l’historique de navigation</string>
   <string name="content_description_fab_expand">Développer</string>
+  <string name="content_description_tab_counter">Onglets ouverts : %1$s</string>
   <string name="content_description_open_tab">Ouvrir un onglet</string>
   <string name="content_description_close_tab">Fermer l’onglet</string>
   <string name="content_description_lock">Connexion sécurisée</string>
@@ -113,6 +116,10 @@
   <string name="dialog_addtohomescreen_title">Ajouter à l’écran d’accueil</string>
   <string name="dialog_addtohomescreen_action_add">Ajouter</string>
   <string name="dialog_addtohomescreen_action_cancel">Annuler</string>
+  <string name="dialog_addtohomescreen_tracking_protection">Ce raccourci s’ouvrira avec la protection contre le pistage désactivée</string>
   <string name="dialog_opentab_title">Ouvrir le lien dans l’onglet sélectionné</string>
   <string name="dialog_opentab_action_open">Ouvrir</string>
+  <string name="notification_browsing_session_channel_name">Session de navigation privée</string>
+  <string name="notification_browsing_session_channel_description">Vous pouvez effacer votre session %1$s d’un simple appui depuis les notifications. Vous n’avez pas besoin d’ouvrir l’application ni d’afficher ce qui s’exécute dans votre navigateur.</string>
+  <string name="tabs_tray_action_erase">Effacer l’historique de navigation</string>
 </resources>

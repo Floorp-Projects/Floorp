@@ -44,11 +44,14 @@
   <string name="preference_category_mozilla">Mozilla</string>
   <string name="preference_mozilla_telemetry">Przesyłanie anonimowych danych o użyciu</string>
   <string name="preference_mozilla_telemetry_summary">Więcej informacji</string>
+  <string name="preference_mozilla_telemetry_summary2">Mozilla zbiera wyłącznie informacje niezbędne do udostępniania i ulepszania programu %1$s.</string>
+  <string name="preference_privacy_notice">Zasady ochrony prywatności</string>
   <string name="preference_about">O programie %1$s</string>
   <string name="content_description_clear_input">Usuń tekst</string>
   <string name="content_description_dismiss_input">Odrzuć</string>
   <string name="content_description_erase">Usuń historię przeglądania</string>
   <string name="content_description_fab_expand">Rozwiń</string>
+  <string name="content_description_tab_counter">Otwarte karty: %1$s</string>
   <string name="content_description_open_tab">Otwórz kartę</string>
   <string name="content_description_close_tab">Zamknij kartę</string>
   <string name="content_description_lock">Zabezpieczone połączenie</string>
@@ -113,6 +116,10 @@
   <string name="dialog_addtohomescreen_title">Dodaj do ekranu głównego</string>
   <string name="dialog_addtohomescreen_action_add">Dodaj</string>
   <string name="dialog_addtohomescreen_action_cancel">Anuluj</string>
+  <string name="dialog_addtohomescreen_tracking_protection">Skrót będzie otwierany bez ochrony przed śledzeniem</string>
   <string name="dialog_opentab_title">Otwórz odnośnik w wybranej karcie</string>
   <string name="dialog_opentab_action_open">Otwórz</string>
+  <string name="notification_browsing_session_channel_name">Sesja przeglądania prywatnego</string>
+  <string name="notification_browsing_session_channel_description">Powiadomienia umożliwiają usunięcie sesji programu %1$s jednym dotknięciem. Nie trzeba otwierać aplikacji ani widzieć, co jest otwarte w przeglądarce.</string>
+  <string name="tabs_tray_action_erase">Usuń historię przeglądania</string>
 </resources>

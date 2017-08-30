@@ -44,11 +44,14 @@
   <string name="preference_category_mozilla">Mozilla</string>
   <string name="preference_mozilla_telemetry">Anfon defnydd data dienw</string>
   <string name="preference_mozilla_telemetry_summary">Dysgu rhagor</string>
+  <string name="preference_mozilla_telemetry_summary2">Mae Mozilla\'n ceisio casglu dim ond yr hyn sydd ei angen arnom i ddarparu a gwella %1$s ar gyfer pawb.</string>
+  <string name="preference_privacy_notice">Hysbysiad Preifatrwydd</string>
   <string name="preference_about">Ynghylch %1$s</string>
   <string name="content_description_clear_input">Clirio\'r mewnbwn</string>
   <string name="content_description_dismiss_input">Cau</string>
   <string name="content_description_erase">Dileu\'r hanes pori</string>
   <string name="content_description_fab_expand">Ehangu</string>
+  <string name="content_description_tab_counter">Tabiau agored: %1$s</string>
   <string name="content_description_open_tab">Agor tab</string>
   <string name="content_description_close_tab">Cau tab</string>
   <string name="content_description_lock">Cysylltiadau diogel</string>
@@ -113,6 +116,10 @@
   <string name="dialog_addtohomescreen_title">Ychwanegu i\'r sgrin Cartref</string>
   <string name="dialog_addtohomescreen_action_add">Ychwanegu</string>
   <string name="dialog_addtohomescreen_action_cancel">Diddymu</string>
+  <string name="dialog_addtohomescreen_tracking_protection">Bydd y Llwybr Byr yn agor gyda Diogelwch rhag Tracio wedi ei analluogi</string>
   <string name="dialog_opentab_title">Agor dolen mewn tab penodol</string>
   <string name="dialog_opentab_action_open">Agor</string>
+  <string name="notification_browsing_session_channel_name">Sesiwn pori preifat</string>
+  <string name="notification_browsing_session_channel_description">Mae hysbysiadau\'n caniatáu i chi ddileu eich sesiwn %1$s gyda thap. Does dim angen agor yr ap na gweld beth sy\'n rhedeg yn eich porwr.</string>
+  <string name="tabs_tray_action_erase">Dileu hanes pori</string>
 </resources>

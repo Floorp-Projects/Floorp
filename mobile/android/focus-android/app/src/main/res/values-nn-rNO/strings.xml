@@ -44,11 +44,14 @@
   <string name="preference_category_mozilla">Mozilla</string>
   <string name="preference_mozilla_telemetry">Send anonyme brukardata</string>
   <string name="preference_mozilla_telemetry_summary">Les meir</string>
+  <string name="preference_mozilla_telemetry_summary2">Mozilla strevar etter å berre samle inn det vi treng for å tilby og forbetre %1$s for alle.</string>
+  <string name="preference_privacy_notice">Personvernerklæring</string>
   <string name="preference_about">Om %1$s</string>
   <string name="content_description_clear_input">Tøm skrivefeltet</string>
   <string name="content_description_dismiss_input">Lukk</string>
   <string name="content_description_erase">Slett nettlesarhistorikk</string>
   <string name="content_description_fab_expand">Fald ut</string>
+  <string name="content_description_tab_counter">Opne faner: %1$s</string>
   <string name="content_description_open_tab">Opne fane</string>
   <string name="content_description_close_tab">Lukk fane</string>
   <string name="content_description_lock">Sikker tilkopling</string>
@@ -113,6 +116,10 @@
   <string name="dialog_addtohomescreen_title">Legg til på startskjerm</string>
   <string name="dialog_addtohomescreen_action_add">Legg til</string>
   <string name="dialog_addtohomescreen_action_cancel">Avbryt</string>
+  <string name="dialog_addtohomescreen_tracking_protection">Snarvegen vil bli opna med sporingsvernet avslått</string>
   <string name="dialog_opentab_title">Opne lenke i vald fane</string>
   <string name="dialog_opentab_action_open">Opne</string>
+  <string name="notification_browsing_session_channel_name">Privat nettlesingsøkt</string>
+  <string name="notification_browsing_session_channel_description">Med varsel kan du slette økta di i %1$s med eitt klikk. Du treng ikkje å opne appen, eller å sjå kva som køyrer i nettlesaren din.</string>
+  <string name="tabs_tray_action_erase">Slett nettlesarhistorikk</string>
 </resources>

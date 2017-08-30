@@ -44,11 +44,14 @@
   <string name="preference_category_mozilla">Mozilla</string>
   <string name="preference_mozilla_telemetry">Anonymne wužiwanske daty pósłać</string>
   <string name="preference_mozilla_telemetry_summary">Dalše informacije</string>
+  <string name="preference_mozilla_telemetry_summary2">Mozilla so prócuje, jenož informacije hromadźić, z kotrymiž móžemy %1$s za kóždeho poskićić a polěpšić.</string>
+  <string name="preference_privacy_notice">Zdźělenka priwatnosće</string>
   <string name="preference_about">Wo %1$s</string>
   <string name="content_description_clear_input">Zapodaće wuprózdnić</string>
   <string name="content_description_dismiss_input">Zaćisnyć</string>
   <string name="content_description_erase">Přehladowansku historiju zhašeć</string>
   <string name="content_description_fab_expand">Pokazać</string>
+  <string name="content_description_tab_counter">Wočinjene rajtarki: %1$s</string>
   <string name="content_description_open_tab">Rajtark wočinić</string>
   <string name="content_description_close_tab">Rajtark začinić</string>
   <string name="content_description_lock">Wěsty zwisk</string>
@@ -113,6 +116,10 @@
   <string name="dialog_addtohomescreen_title">Startowej wobrazowce přidać</string>
   <string name="dialog_addtohomescreen_action_add">Přidać</string>
   <string name="dialog_addtohomescreen_action_cancel">Přetorhnyć</string>
+  <string name="dialog_addtohomescreen_tracking_protection">Zwjazanje so ze znjemóžnjenym šlědowanskim škitom wočini</string>
   <string name="dialog_opentab_title">Wotkaz we wubranym rajtarku wočinić</string>
   <string name="dialog_opentab_action_open">Wočinić</string>
+  <string name="notification_browsing_session_channel_name">Priwatne posedźenje</string>
+  <string name="notification_browsing_session_channel_description">Zdźělenki wam zmóžnjeja, waše posedźenje %1$s z podótkom zhašeć. Njetrjebaće nałoženje wočinić abo hladać, štož we wašim wobhladowaku běži.</string>
+  <string name="tabs_tray_action_erase">Přehladowansku historiju zhašeć</string>
 </resources>

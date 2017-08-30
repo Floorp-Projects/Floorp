@@ -44,11 +44,14 @@
   <string name="preference_category_mozilla">Mozilla</string>
   <string name="preference_mozilla_telemetry">Hantar data penggunaan anonimus</string>
   <string name="preference_mozilla_telemetry_summary">Ketahui selanjutnya</string>
+  <string name="preference_mozilla_telemetry_summary2">Mozilla mengumpulkan hanya yang diperlukan untuk menyedia dan meningkatkan %1$s.</string>
+  <string name="preference_privacy_notice">Notis Privasi</string>
   <string name="preference_about">Perihal %1$s</string>
   <string name="content_description_clear_input">Hapuskan input</string>
   <string name="content_description_dismiss_input">Abai</string>
   <string name="content_description_erase">Buang sejarah pelayaran</string>
   <string name="content_description_fab_expand">Kembangkan</string>
+  <string name="content_description_tab_counter">Tab terbuka: %1$s</string>
   <string name="content_description_open_tab">Buka tab</string>
   <string name="content_description_close_tab">Tutup tab</string>
   <string name="content_description_lock">Sambungan selamat</string>
@@ -113,6 +116,10 @@
   <string name="dialog_addtohomescreen_title">Tambah ke Skrin Halaman utama</string>
   <string name="dialog_addtohomescreen_action_add">Tambah</string>
   <string name="dialog_addtohomescreen_action_cancel">Batal</string>
+  <string name="dialog_addtohomescreen_tracking_protection">Perlindungan Penjejakan dinyahdayakan apabila dibuka menggunakan pintasan</string>
   <string name="dialog_opentab_title">Buka pautan dalam tab yang dipilih</string>
   <string name="dialog_opentab_action_open">Buka</string>
+  <string name="notification_browsing_session_channel_name">Sesi pelayaran peribadi</string>
+  <string name="notification_browsing_session_channel_description">Anda boleh buang sesi %1$s dengan menekan notifikasi. Tidak perlu buka aplikasi atau lihat kandungan dalam pelayar.</string>
+  <string name="tabs_tray_action_erase">Buang sejarah pelayaran</string>
 </resources>
