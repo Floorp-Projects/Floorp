@@ -45,4 +45,13 @@ interface nsIClassOfService : nsISupports
   const unsigned long Throttleable = 1 << 5;
   const unsigned long UrgentStart = 1 << 6;
   const unsigned long DontThrottle = 1 << 7;
+  // Enforce tailing on this load; any of Leader, Unblocked, UrgentStart, TailForbidden
+  // overrule this flag (disable tailing.)
+  const unsigned long Tail = 1 << 8;
+  // Tailing may be engaged regardless if the load is marked Unblocked when
+  // some other conditions are met later, like when the load is found to be
+  // a tracker.
+  const unsigned long TailAllowed = 1 << 9;
+  // Tailing not allowed under any circumstances or combination of flags.
+  const unsigned long TailForbidden = 1 << 10;
 };

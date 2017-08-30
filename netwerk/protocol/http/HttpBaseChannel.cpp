@@ -183,6 +183,7 @@ HttpBaseChannel::HttpBaseChannel()
   , mResponseCouldBeSynthesized(false)
   , mBlockAuthPrompt(false)
   , mAllowStaleCacheContent(false)
+  , mAddedAsNonTailRequest(false)
   , mTlsFlags(0)
   , mSuspendCount(0)
   , mInitialRwin(0)
@@ -235,12 +236,38 @@ HttpBaseChannel::~HttpBaseChannel()
   ReleaseMainThreadOnlyReferences();
 }
 
+namespace { // anon
+
+class NonTailRemover : public nsISupports
+{
+  NS_DECL_THREADSAFE_ISUPPORTS
+
+  explicit NonTailRemover(nsIRequestContext* rc)
+    : mRequestContext(rc)
+  {
+  }
+
+private:
+  virtual ~NonTailRemover()
+  {
+    MOZ_ASSERT(NS_IsMainThread());
+    mRequestContext->RemoveNonTailRequest();
+  }
+
+  nsCOMPtr<nsIRequestContext> mRequestContext;
+};
+
+NS_IMPL_ISUPPORTS0(NonTailRemover)
+
+} // anon
+
 void
 HttpBaseChannel::ReleaseMainThreadOnlyReferences()
 {
   if (NS_IsMainThread()) {
     // Already on main thread, let dtor to
     // take care of releasing references
+    RemoveAsNonTailRequest();
     return;
   }
 
@@ -261,6 +288,14 @@ HttpBaseChannel::ReleaseMainThreadOnlyReferences()
   arrayToRelease.AppendElement(mListener.forget());
   arrayToRelease.AppendElement(mListenerContext.forget());
   arrayToRelease.AppendElement(mCompressListener.forget());
+
+  if (mAddedAsNonTailRequest) {
+    // RemoveNonTailRequest() on our request context must be called on the main thread
+    MOZ_RELEASE_ASSERT(mRequestContext, "Someone released rc or set flags w/o having it?");
+
+    nsCOMPtr<nsISupports> nonTailRemover(new NonTailRemover(mRequestContext));
+    arrayToRelease.AppendElement(nonTailRemover.forget());
+  }
 
   NS_DispatchToMainThread(new ProxyReleaseRunnable(Move(arrayToRelease)));
 }
@@ -3014,6 +3049,38 @@ HttpBaseChannel::ShouldIntercept(nsIURI* aURI)
   return shouldIntercept;
 }
 
+void
+HttpBaseChannel::AddAsNonTailRequest()
+{
+  MOZ_ASSERT(NS_IsMainThread());
+
+  if (EnsureRequestContext()) {
+    LOG(("HttpBaseChannel::AddAsNonTailRequest this=%p, rc=%p, already added=%d",
+         this, mRequestContext.get(), (bool)mAddedAsNonTailRequest));
+
+    if (!mAddedAsNonTailRequest) {
+      mRequestContext->AddNonTailRequest();
+      mAddedAsNonTailRequest = true;
+    }
+  }
+}
+
+void
+HttpBaseChannel::RemoveAsNonTailRequest()
+{
+  MOZ_ASSERT(NS_IsMainThread());
+
+  if (mRequestContext) {
+    LOG(("HttpBaseChannel::RemoveAsNonTailRequest this=%p, rc=%p, already added=%d",
+         this, mRequestContext.get(), (bool)mAddedAsNonTailRequest));
+
+    if (mAddedAsNonTailRequest) {
+      mRequestContext->RemoveNonTailRequest();
+      mAddedAsNonTailRequest = false;
+    }
+  }
+}
+
 #ifdef DEBUG
 void HttpBaseChannel::AssertPrivateBrowsingId()
 {
@@ -3175,8 +3242,12 @@ HttpBaseChannel::DoNotifyListener()
     mOnStopRequestCalled = true;
   }
 
+  // This channel has finished its job, potentially release any tail-blocked
+  // requests with this.
+  RemoveAsNonTailRequest();
+
   // We have to make sure to drop the references to listeners and callbacks
-  // no longer  needed
+  // no longer needed.
   ReleaseListeners();
 
   DoNotifyListenerCleanup();
@@ -4094,11 +4165,36 @@ HttpBaseChannel::EnsureRequestContextID()
         return false;
     }
 
-    // Set the load group connection scope on the transaction
+    // Set the load group connection scope on this channel and its transaction
     rootLoadGroup->GetRequestContextID(&mRequestContextID);
 
     LOG(("HttpBaseChannel::EnsureRequestContextID this=%p id=%" PRIx64,
          this, mRequestContextID));
+
+    return true;
+}
+
+bool
+HttpBaseChannel::EnsureRequestContext()
+{
+    if (mRequestContext) {
+        // Already have a request context, no need to do the rest of this work
+        return true;
+    }
+
+    if (!EnsureRequestContextID()) {
+        return false;
+    }
+
+    nsIRequestContextService* rcsvc = gHttpHandler->GetRequestContextService();
+    if (!rcsvc) {
+        return false;
+    }
+
+    rcsvc->GetRequestContext(mRequestContextID, getter_AddRefs(mRequestContext));
+    if (!mRequestContext) {
+        return false;
+    }
 
     return true;
 }

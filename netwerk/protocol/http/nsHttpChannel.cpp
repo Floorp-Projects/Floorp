@@ -276,6 +276,10 @@ AutoRedirectVetoNotifier::ReportRedirectResult(bool succeeded)
 
     mChannel->mRedirectChannel = nullptr;
 
+    if (succeeded) {
+        mChannel->RemoveAsNonTailRequest();
+    }
+
     nsCOMPtr<nsIRedirectResultListener> vetoHook;
     NS_QueryNotificationCallbacks(mChannel,
                                   NS_GET_IID(nsIRedirectResultListener),
@@ -336,6 +340,7 @@ nsHttpChannel::nsHttpChannel()
     , mReqContentLength(0U)
     , mPushedStream(nullptr)
     , mLocalBlocklist(false)
+    , mOnTailUnblock(nullptr)
     , mWarningReporter(nullptr)
     , mIsReadingFromCache(false)
     , mFirstResponseSource(RESPONSE_PENDING)
@@ -536,17 +541,40 @@ nsHttpChannel::Connect()
 {
     LOG(("nsHttpChannel::Connect [this=%p]\n", this));
 
-    // Consider opening a TCP connection right away.
-    SpeculativeConnect();
-
     // Don't allow resuming when cache must be used
     if (mResuming && (mLoadFlags & LOAD_ONLY_FROM_CACHE)) {
         LOG(("Resuming from cache is not supported yet"));
         return NS_ERROR_DOCUMENT_NOT_CACHED;
     }
 
-    // open a cache entry for this channel...
+    bool isTrackingResource = mIsTrackingResource; // is atomic
+    LOG(("nsHttpChannel %p tracking resource=%d, local blocklist=%d, cos=%u",
+          this, isTrackingResource, mLocalBlocklist, mClassOfService));
+
+    if (isTrackingResource || mLocalBlocklist) {
+        AddClassFlags(nsIClassOfService::Tail);
+    }
+
+    if (WaitingForTailUnblock()) {
+        MOZ_DIAGNOSTIC_ASSERT(!mOnTailUnblock);
+        mOnTailUnblock = &nsHttpChannel::ConnectOnTailUnblock;
+        return NS_OK;
+    }
+
+    return ConnectOnTailUnblock();
+}
+
+nsresult
+nsHttpChannel::ConnectOnTailUnblock()
+{
     nsresult rv;
+
+    LOG(("nsHttpChannel::ConnectOnTailUnblock [this=%p]\n", this));
+
+    // Consider opening a TCP connection right away.
+    SpeculativeConnect();
+
+    // open a cache entry for this channel...
     bool isHttps = false;
     rv = mURI->SchemeIs("https", &isHttps);
     NS_ENSURE_SUCCESS(rv,rv);
@@ -1064,30 +1092,6 @@ nsHttpChannel::ContinueHandleAsyncFallback(nsresult rv)
     return rv;
 }
 
-void
-nsHttpChannel::SetupTransactionRequestContext()
-{
-    if (!EnsureRequestContextID()) {
-        return;
-    }
-
-    nsIRequestContextService *rcsvc =
-        gHttpHandler->GetRequestContextService();
-    if (!rcsvc) {
-        return;
-    }
-
-    nsCOMPtr<nsIRequestContext> rc;
-    nsresult rv = rcsvc->GetRequestContext(mRequestContextID,
-                                           getter_AddRefs(rc));
-
-    if (NS_FAILED(rv)) {
-        return;
-    }
-
-    mTransaction->SetRequestContext(rc);
-}
-
 nsresult
 nsHttpChannel::SetupTransaction()
 {
@@ -1317,7 +1321,9 @@ nsHttpChannel::SetupTransaction()
     }
 
     mTransaction->SetClassOfService(mClassOfService);
-    SetupTransactionRequestContext();
+    if (EnsureRequestContext()) {
+        mTransaction->SetRequestContext(mRequestContext);
+    }
 
     rv = nsInputStreamPump::Create(getter_AddRefs(mTransactionPump),
                                    responseStream);
@@ -5967,6 +5973,7 @@ NS_INTERFACE_MAP_BEGIN(nsHttpChannel)
     NS_INTERFACE_MAP_ENTRY(nsITimerCallback)
     NS_INTERFACE_MAP_ENTRY(nsIHstsPrimingCallback)
     NS_INTERFACE_MAP_ENTRY(nsIChannelWithDivertableParentListener)
+    NS_INTERFACE_MAP_ENTRY(nsIRequestTailUnblockCallback)
     // we have no macro that covers this case.
     if (aIID.Equals(NS_GET_IID(nsHttpChannel)) ) {
         AddRef();
@@ -6008,6 +6015,10 @@ nsHttpChannel::Cancel(nsresult status)
         mAuthProvider->Cancel(status);
     if (mPreflightChannel)
         mPreflightChannel->Cancel(status);
+    if (mRequestContext && mOnTailUnblock) {
+        mOnTailUnblock = nullptr;
+        mRequestContext->CancelTailedRequest(this);
+    }
     return NS_OK;
 }
 
@@ -6129,6 +6140,21 @@ nsHttpChannel::AsyncOpen(nsIStreamListener *listener, nsISupports *context)
         return rv;
     }
 
+    if (WaitingForTailUnblock()) {
+        // This channel is marked as Tail and is part of a request context
+        // that has positive number of non-tailed requestst, hence this channel
+        // has been put to a queue.
+        // When tail is unblocked, OnTailUnblock on this channel will be called
+        // to continue AsyncOpen.
+        mListener = listener;
+        mListenerContext = context;
+        MOZ_DIAGNOSTIC_ASSERT(!mOnTailUnblock);
+        mOnTailUnblock = &nsHttpChannel::AsyncOpenOnTailUnblock;
+
+        LOG(("  put on hold until tail is unblocked"));
+        return NS_OK;
+    }
+
     if (mInterceptCache != INTERCEPTED && ShouldIntercept()) {
         mInterceptCache = MAYBE_INTERCEPT;
         SetCouldBeSynthesized();
@@ -6191,6 +6217,12 @@ nsHttpChannel::AsyncOpen(nsIStreamListener *listener, nsISupports *context)
     }
 
     return NS_OK;
+}
+
+nsresult
+nsHttpChannel::AsyncOpenOnTailUnblock()
+{
+    return AsyncOpen(mListener, mListenerContext);
 }
 
 namespace {
@@ -6533,7 +6565,12 @@ nsHttpChannel::BeginConnectContinue()
     // will return false and then we can BeginConnectActual() right away.
     RefPtr<nsHttpChannel> self = this;
     bool willCallback = InitLocalBlockList([self](bool aLocalBlockList) -> void  {
+        MOZ_ASSERT(self->mLocalBlocklist <= aLocalBlockList, "Unmarking local block-list flag?");
+
         self->mLocalBlocklist = aLocalBlockList;
+
+        LOG(("nsHttpChannel %p on-local-blacklist=%d", self.get(), aLocalBlockList));
+
         nsresult rv = self->BeginConnectActual();
         if (NS_FAILED(rv)) {
             // Since this error is thrown asynchronously so that the caller
@@ -6737,6 +6774,8 @@ nsHttpChannel::ContinueBeginConnectWithResult()
 void
 nsHttpChannel::ContinueBeginConnect()
 {
+    LOG(("nsHttpChannel::ContinueBeginConnect this=%p", this));
+
     nsresult rv = ContinueBeginConnectWithResult();
     if (NS_FAILED(rv)) {
         CloseCacheEntry(false);
@@ -6751,8 +6790,16 @@ nsHttpChannel::ContinueBeginConnect()
 void
 nsHttpChannel::OnClassOfServiceUpdated()
 {
+    LOG(("nsHttpChannel::OnClassOfServiceUpdated this=%p, cos=%u",
+         this, mClassOfService));
+
     if (mTransaction) {
         gHttpHandler->UpdateClassOfServiceOnTransaction(mTransaction, mClassOfService);
+    }
+    if (EligibleForTailing()) {
+        RemoveAsNonTailRequest();
+    } else {
+        AddAsNonTailRequest();
     }
 }
 
@@ -7525,7 +7572,10 @@ nsHttpChannel::OnStopRequest(nsIRequest *request, nsISupports *ctxt, nsresult st
                    "We should not call OnStopRequest twice");
         mListener->OnStopRequest(this, mListenerContext, status);
         mOnStopRequestCalled = true;
+
     }
+
+    RemoveAsNonTailRequest();
 
     // If a preferred alt-data type was set, this signals the consumer is
     // interested in reading and/or writing the alt-data representation.
@@ -9327,6 +9377,98 @@ nsHttpChannel::Notify(nsITimer *aTimer)
         return TriggerNetwork(0);
     } else {
         MOZ_CRASH("Unknown timer");
+    }
+
+    return NS_OK;
+}
+
+bool
+nsHttpChannel::EligibleForTailing()
+{
+  if (!(mClassOfService & nsIClassOfService::Tail)) {
+      return false;
+  }
+
+  if (mClassOfService & (nsIClassOfService::UrgentStart |
+                         nsIClassOfService::Leader |
+                         nsIClassOfService::TailForbidden)) {
+      return false;
+  }
+
+  if (mClassOfService & nsIClassOfService::Unblocked &&
+      !(mClassOfService & nsIClassOfService::TailAllowed)) {
+      return false;
+  }
+
+  if (IsNavigation()) {
+      return false;
+  }
+
+  return true;
+}
+
+bool
+nsHttpChannel::WaitingForTailUnblock()
+{
+  nsresult rv;
+
+  if (!gHttpHandler->IsTailBlockingEnabled()) {
+    LOG(("nsHttpChannel %p tail-blocking disabled", this));
+    return false;
+  }
+
+  if (!EligibleForTailing()) {
+    LOG(("nsHttpChannel %p not eligible for tail-blocking", this));
+    AddAsNonTailRequest();
+    return false;
+  }
+
+  if (!EnsureRequestContext()) {
+    LOG(("nsHttpChannel %p no request context", this));
+    return false;
+  }
+
+  LOG(("nsHttpChannel::WaitingForTailUnblock this=%p, rc=%p",
+       this, mRequestContext.get()));
+
+  bool blocked;
+  rv = mRequestContext->IsContextTailBlocked(this, &blocked);
+  if (NS_FAILED(rv)) {
+    return false;
+  }
+
+  LOG(("  blocked=%d", blocked));
+
+  return blocked;
+}
+
+//-----------------------------------------------------------------------------
+// nsHttpChannel::nsIRequestTailUnblockCallback
+//-----------------------------------------------------------------------------
+
+// Must be implemented in the leaf class because we don't have
+// AsyncAbort in HttpBaseChannel.
+NS_IMETHODIMP
+nsHttpChannel::OnTailUnblock(nsresult rv)
+{
+    LOG(("nsHttpChannel::OnTailUnblock this=%p rv=%" PRIx32 " rc=%p",
+         this, static_cast<uint32_t>(rv), mRequestContext.get()));
+
+    MOZ_RELEASE_ASSERT(mOnTailUnblock);
+
+    if (NS_FAILED(mStatus)) {
+        rv = mStatus;
+    }
+
+    if (NS_SUCCEEDED(rv)) {
+        auto callback = mOnTailUnblock;
+        mOnTailUnblock = nullptr;
+        rv = (this->*callback)();
+    }
+
+    if (NS_FAILED(rv)) {
+        CloseCacheEntry(false);
+        return AsyncAbort(rv);
     }
 
     return NS_OK;

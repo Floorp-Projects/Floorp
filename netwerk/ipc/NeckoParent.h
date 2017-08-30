@@ -228,6 +228,8 @@ protected:
                                                 const OriginAttributes& aOriginAttributes) override;
   virtual mozilla::ipc::IPCResult RecvPredReset() override;
 
+  virtual mozilla::ipc::IPCResult RecvRequestContextLoadBegin(const uint64_t& rcid) override;
+  virtual mozilla::ipc::IPCResult RecvRequestContextAfterDOMContentLoaded(const uint64_t& rcid) override;
   virtual mozilla::ipc::IPCResult RecvRemoveRequestContext(const uint64_t& rcid) override;
 
   /* WebExtensions */

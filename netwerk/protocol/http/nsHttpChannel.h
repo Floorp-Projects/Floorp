@@ -85,6 +85,7 @@ class nsHttpChannel final : public HttpBaseChannel
                           , public nsIChannelWithDivertableParentListener
                           , public nsIHstsPrimingCallback
                           , public nsIRaceCacheWithNetwork
+                          , public nsIRequestTailUnblockCallback
                           , public nsITimerCallback
 {
 public:
@@ -109,6 +110,7 @@ public:
     NS_DECLARE_STATIC_IID_ACCESSOR(NS_HTTPCHANNEL_IID)
     NS_DECL_NSIRACECACHEWITHNETWORK
     NS_DECL_NSITIMERCALLBACK
+    NS_DECL_NSIREQUESTTAILUNBLOCKCALLBACK
 
     // nsIHttpAuthenticableChannel. We can't use
     // NS_DECL_NSIHTTPAUTHENTICABLECHANNEL because it duplicates cancel() and
@@ -325,7 +327,6 @@ private:
     MOZ_MUST_USE nsresult Connect();
     void     SpeculativeConnect();
     MOZ_MUST_USE nsresult SetupTransaction();
-    void     SetupTransactionRequestContext();
     MOZ_MUST_USE nsresult CallOnStartRequest();
     MOZ_MUST_USE nsresult ProcessResponse();
     void                  AsyncContinueProcessResponse();
@@ -672,6 +673,25 @@ private:
     MOZ_MUST_USE nsresult WaitForRedirectCallback();
     void PushRedirectAsyncFunc(nsContinueRedirectionFunc func);
     void PopRedirectAsyncFunc(nsContinueRedirectionFunc func);
+
+    // If this resource is eligible for tailing based on class-of-service flags
+    // and load flags.  We don't tail Leaders/Unblocked/UrgentStart and top-level
+    // loads.
+    bool EligibleForTailing();
+
+    // Called exclusively only from AsyncOpen or after all classification callbacks.
+    // If this channel is 1) Tail, 2) assigned a request context, 3) the context is
+    // still in the tail-blocked phase, then the method will queue this channel.
+    // OnTailUnblock will be called after the context is tail-unblocked or canceled.
+    bool WaitingForTailUnblock();
+
+    // A function we trigger when untail callback is triggered by our request
+    // context in case this channel was tail-blocked.
+    nsresult (nsHttpChannel::*mOnTailUnblock)();
+    // Called on untail when tailed during AsyncOpen execution.
+    nsresult AsyncOpenOnTailUnblock();
+    // Called on untail when tailed because of being a tracking resource.
+    nsresult ConnectOnTailUnblock();
 
     nsCString mUsername;
 

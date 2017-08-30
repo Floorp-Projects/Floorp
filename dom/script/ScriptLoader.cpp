@@ -137,10 +137,13 @@ ScriptLoader::ScriptLoader(nsIDocument *aDocument)
     mGiveUpEncoding(false),
     mReporter(new ConsoleReportCollector())
 {
+  LOG(("ScriptLoader::ScriptLoader %p", this));
 }
 
 ScriptLoader::~ScriptLoader()
 {
+  LOG(("ScriptLoader::~ScriptLoader %p", this));
+
   mObservers.Clear();
 
   if (mParserBlockingRequest) {
@@ -1055,15 +1058,32 @@ ScriptLoader::StartLoad(ScriptLoadRequest* aRequest)
   bool async = script ? script->GetScriptAsync() : aRequest->mPreloadAsAsync;
   bool defer = script ? script->GetScriptDeferred() : aRequest->mPreloadAsDefer;
 
+  LOG(("ScriptLoadRequest (%p): async=%d defer=%d tracking=%d",
+       aRequest, async, defer, aRequest->IsTracking()));
+
   nsCOMPtr<nsIClassOfService> cos(do_QueryInterface(channel));
   if (cos) {
     if (aRequest->mScriptFromHead && !async && !defer) {
       // synchronous head scripts block loading of most other non js/css
-      // content such as images
+      // content such as images, Leader implicitely disallows tailing
       cos->AddClassFlags(nsIClassOfService::Leader);
-    } else if (!defer) {
-      // other scripts are neither blocked nor prioritized unless marked deferred
+    } else if (defer && !async) {
+      // head/body deferred scripts are blocked by leaders but are not
+      // allowed tailing because they block DOMContentLoaded
+      cos->AddClassFlags(nsIClassOfService::TailForbidden);
+    } else {
+      // other scripts (=body sync or head/body async) are neither blocked
+      // nor prioritized
       cos->AddClassFlags(nsIClassOfService::Unblocked);
+
+      if (async) {
+        // async scripts are allowed tailing, since those and only those
+        // don't block DOMContentLoaded; this flag doesn't enforce tailing,
+        // just overweights the Unblocked flag when the channel is found
+        // to be a thrird-party tracker and thus set the Tail flag to engage
+        // tailing.
+        cos->AddClassFlags(nsIClassOfService::TailAllowed);
+      }
     }
   }
 
@@ -1206,8 +1226,11 @@ ScriptLoader::CreateLoadRequest(ScriptKind aKind,
                                 const SRIMetadata& aIntegrity)
 {
   if (aKind == ScriptKind::Classic) {
-    return new ScriptLoadRequest(aKind, aElement, aVersion, aCORSMode,
+    ScriptLoadRequest* slr = new ScriptLoadRequest(aKind, aElement, aVersion, aCORSMode,
                                  aIntegrity);
+
+    LOG(("ScriptLoader %p creates ScriptLoadRequest %p", this, slr));
+    return slr;
   }
 
   MOZ_ASSERT(aKind == ScriptKind::Module);

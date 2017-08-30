@@ -379,6 +379,9 @@ FetchDriver::HttpFetch()
   }
 
   if (mIsTrackingFetch && nsContentUtils::IsLowerNetworkPriority()) {
+    cos->AddClassFlags(nsIClassOfService::Throttleable |
+                       nsIClassOfService::Tail);
+
     nsCOMPtr<nsISupportsPriority> p = do_QueryInterface(chan);
     if (p) {
       p->SetPriority(nsISupportsPriority::PRIORITY_LOWEST);
