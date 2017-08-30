@@ -103,7 +103,7 @@
 #include "mozmemory_wrap.h"
 #include "mozilla/Sprintf.h"
 
-#ifdef MOZ_MEMORY_ANDROID
+#ifdef ANDROID
 #define NO_TLS
 #endif
 
@@ -208,7 +208,7 @@ typedef long ssize_t;
 #include <sys/param.h>
 #include <sys/time.h>
 #include <sys/types.h>
-#if !defined(MOZ_MEMORY_SOLARIS) && !defined(MOZ_MEMORY_ANDROID)
+#if !defined(MOZ_MEMORY_SOLARIS) && !defined(ANDROID)
 #include <sys/sysctl.h>
 #endif
 #include <sys/uio.h>
@@ -277,7 +277,7 @@ void *_mmap(void *addr, size_t length, int prot, int flags,
 	} args = { addr, length, prot, flags, fd, offset };
 	return (void *) syscall(SYS_mmap, &args);
 #else
-#if defined(MOZ_MEMORY_ANDROID) && defined(__aarch64__) && defined(SYS_mmap2)
+#if defined(ANDROID) && defined(__aarch64__) && defined(SYS_mmap2)
 /* Android NDK defines SYS_mmap2 for AArch64 despite it not supporting mmap2 */
 #undef SYS_mmap2
 #endif
@@ -428,7 +428,7 @@ static bool malloc_initialized = false;
 /* No init lock for Windows. */
 #elif defined(XP_DARWIN)
 static malloc_mutex_t init_lock = {OS_SPINLOCK_INIT};
-#elif defined(XP_LINUX) && !defined(MOZ_MEMORY_ANDROID)
+#elif defined(XP_LINUX) && !defined(ANDROID)
 static malloc_mutex_t init_lock = PTHREAD_ADAPTIVE_MUTEX_INITIALIZER_NP;
 #else
 static malloc_mutex_t init_lock = PTHREAD_MUTEX_INITIALIZER;
@@ -1063,7 +1063,7 @@ _malloc_message(const char *p, Args... args)
 // Note: MozTaggedAnonymousMmap() could call an LD_PRELOADed mmap
 // instead of the one defined here; use only MozTagAnonymousMemory().
 
-#ifdef MOZ_MEMORY_ANDROID
+#ifdef ANDROID
 // Android's pthread.h does not declare pthread_atfork() until SDK 21.
 extern "C" MOZ_EXPORT
 int pthread_atfork(void (*)(void), void (*)(void), void(*)(void));
@@ -1084,7 +1084,7 @@ malloc_mutex_init(malloc_mutex_t *mutex)
 		return (true);
 #elif defined(XP_DARWIN)
 	mutex->lock = OS_SPINLOCK_INIT;
-#elif defined(XP_LINUX) && !defined(MOZ_MEMORY_ANDROID)
+#elif defined(XP_LINUX) && !defined(ANDROID)
 	pthread_mutexattr_t attr;
 	if (pthread_mutexattr_init(&attr) != 0)
 		return (true);
@@ -1138,7 +1138,7 @@ malloc_spin_init(malloc_spinlock_t *lock)
 			return (true);
 #elif defined(XP_DARWIN)
 	lock->lock = OS_SPINLOCK_INIT;
-#elif defined(XP_LINUX) && !defined(MOZ_MEMORY_ANDROID)
+#elif defined(XP_LINUX) && !defined(ANDROID)
 	pthread_mutexattr_t attr;
 	if (pthread_mutexattr_init(&attr) != 0)
 		return (true);
