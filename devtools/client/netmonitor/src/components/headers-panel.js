@@ -203,11 +203,11 @@ const HeadersPanel = createClass({
             className: "headers-summary learn-more-link",
           }),
           button({
-            className: "devtools-button",
+            className: "devtools-button edit-and-resend-button",
             onClick: cloneSelectedRequest,
           }, EDIT_AND_RESEND),
           button({
-            className: "devtools-button",
+            className: "devtools-button raw-headers-button",
             onClick: this.toggleRawHeaders,
           }, RAW_HEADERS),
         )

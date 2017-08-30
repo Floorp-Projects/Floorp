@@ -94,6 +94,44 @@ const EVENTS = {
   CONNECTED: "connected",
 };
 
+const UPDATE_PROPS = [
+  "method",
+  "url",
+  "remotePort",
+  "remoteAddress",
+  "status",
+  "statusText",
+  "httpVersion",
+  "securityState",
+  "securityInfo",
+  "mimeType",
+  "contentSize",
+  "transferredSize",
+  "totalTime",
+  "eventTimings",
+  "headersSize",
+  "customQueryValue",
+  "requestHeaders",
+  "requestHeadersFromUploadStream",
+  "requestCookies",
+  "requestPostData",
+  "responseHeaders",
+  "responseCookies",
+  "responseContent",
+  "responseContentDataUri",
+  "formDataSections",
+];
+
+const PANELS = {
+  COOKIES: "cookies",
+  HEADERS: "headers",
+  PARAMS: "params",
+  RESPONSE: "response",
+  SECURITY: "security",
+  STACK_TRACE: "stack-trace",
+  TIMINGS: "timings",
+};
+
 const RESPONSE_HEADERS = [
   "Cache-Control",
   "Connection",
@@ -246,11 +284,13 @@ const general = {
   ACTIVITY_TYPE,
   EVENTS,
   FILTER_SEARCH_DELAY: 200,
+  UPDATE_PROPS,
   HEADERS,
   RESPONSE_HEADERS,
   FILTER_FLAGS,
   SOURCE_EDITOR_SYNTAX_HIGHLIGHT_MAX_SIZE: 51200, // 50 KB in bytes
   REQUESTS_WATERFALL,
+  PANELS,
 };
 
 // flatten constants

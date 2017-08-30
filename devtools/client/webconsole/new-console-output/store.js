@@ -17,13 +17,24 @@ const {
 } = require("devtools/client/shared/redux/middleware/debounce");
 const {
   MESSAGE_ADD,
+  MESSAGE_OPEN,
   MESSAGES_CLEAR,
   REMOVED_ACTORS_CLEAR,
+  NETWORK_MESSAGE_UPDATE,
   PREFS,
 } = require("devtools/client/webconsole/new-console-output/constants");
 const { reducers } = require("./reducers/index");
 const Services = require("Services");
+const {
+  getMessage,
+  getAllMessagesUiById,
+} = require("devtools/client/webconsole/new-console-output/selectors/messages");
+const DataProvider = require("devtools/client/netmonitor/src/connector/firefox-data-provider");
 
+/**
+ * Create and configure store for the Console panel. This is the place
+ * where various enhancers and middleware can be registered.
+ */
 function configureStore(hud, options = {}) {
   const logLimit = options.logLimit
     || Math.max(Services.prefs.getIntPref("devtools.hud.loglimit"), 1);
@@ -48,7 +59,12 @@ function configureStore(hud, options = {}) {
   return createStore(
     createRootReducer(),
     initialState,
-    compose(applyMiddleware(thunk), enableActorReleaser(hud), enableBatching())
+    compose(
+      applyMiddleware(thunk),
+      enableActorReleaser(hud),
+      enableBatching(),
+      enableNetProvider(hud)
+    )
   );
 }
 
@@ -125,6 +141,69 @@ function enableActorReleaser(hud) {
   };
 }
 
+/**
+ * This enhancer is responsible for fetching HTTP details data
+ * collected by the backend. The fetch happens on-demand
+ * when the user expands network log in order to inspect it.
+ *
+ * This way we don't slow down the Console logging by fetching.
+ * unnecessary data over RDP.
+ */
+function enableNetProvider(hud) {
+  let dataProvider;
+  return next => (reducer, initialState, enhancer) => {
+    function netProviderEnhancer(state, action) {
+      let proxy = hud ? hud.proxy : null;
+      if (!proxy) {
+        return reducer(state, action);
+      }
+
+      let actions = {
+        updateRequest: (id, data, batch) => {
+          proxy.dispatchRequestUpdate(id, data);
+        }
+      };
+
+      // Data provider implements async logic for fetching
+      // data from the backend. It's created the first
+      // time it's needed.
+      if (!dataProvider) {
+        dataProvider = new DataProvider({
+          actions,
+          webConsoleClient: proxy.webConsoleClient
+        });
+      }
+
+      let type = action.type;
+
+      // If network message has been opened, fetch all
+      // HTTP details from the backend.
+      if (type == MESSAGE_OPEN) {
+        let message = getMessage(state, action.id);
+        if (!message.openedOnce && message.source == "network") {
+          message.updates.forEach(updateType => {
+            dataProvider.onNetworkEventUpdate(null, {
+              packet: { updateType: updateType },
+              networkInfo: message,
+            });
+          });
+        }
+      }
+
+      // Process all incoming HTTP details packets.
+      if (type == NETWORK_MESSAGE_UPDATE) {
+        let open = getAllMessagesUiById(state).includes(action.id);
+        if (open) {
+          dataProvider.onNetworkEventUpdate(null, action.response);
+        }
+      }
+
+      return reducer(state, action);
+    }
+
+    return next(netProviderEnhancer, initialState, enhancer);
+  };
+}
 /**
  * Helper function for releasing backend actors.
  */
