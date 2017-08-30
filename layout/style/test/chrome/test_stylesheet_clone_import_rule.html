@@ -22,7 +22,11 @@
   let theOnlyDiv = document.getElementById("theOnlyDiv");
   let stylesheet = document.getElementById("theOnlyLink").sheet;
 
-  runTest();
+  runTest().catch(function(reason) {
+    ok(false, "Failed with reason: " + reason);
+  }).then(function() {
+    SimpleTest.finish();
+  });
 
   function cssRulesToString(cssRules) {
     return Array.from(cssRules).map(rule => rule.cssText).join('');
@@ -34,48 +38,76 @@
     is(getComputedStyle(theOnlyDiv).color, "rgb(0, 128, 0)", "div begins as green.");
 
     // Create a Promise to watch for some number of events.
-    let generateCountingListenerCallback = function(numberOfEventsToWaitFor) {
+    let generateCountingListenerCallback = function(numberOfEventsToWaitFor, arrayToFill) {
       let eventsReceived = 0;
       return function(event) {
+        info("Event processor: called with event " + event.rule.cssText);
+        arrayToFill.push(event);
         return (++eventsReceived >= numberOfEventsToWaitFor);
       }
     };
+    let events = [];
     let gotAllOurStyleRuleAddedEvents = ContentTaskUtils.waitForEvent(document,
-      "StyleRuleAdded", true, generateCountingListenerCallback(2));
+      "StyleRuleAdded", true, generateCountingListenerCallback(2, events));
 
+    // Insert some import rules.
     stylesheet.insertRule('@import url("import_useless2.css")', 0);
     stylesheet.insertRule('@import url("import_useless2.css")', 1);
 
     // Wait for the StyleRuleAdded events to be fired. This function returns the last event,
     // but we don't care what it contains -- only that the correct number of events fired.
     await gotAllOurStyleRuleAddedEvents;
+    is(events.length, 2, "Got the expected number of StyleRuleAdded events.");
 
-    // Get the imported sheets and confirm they are non-null and have rules.
-    let importSheet1 = stylesheet.cssRules[0].styleSheet;
-    let importSheet2 = stylesheet.cssRules[1].styleSheet;
+    // Do some sanity checking of our import rules.
+    let primaryRules = stylesheet.cssRules;
+    for (let i = 0; i < 2; ++i) {
+      // Check that the main stylesheet rule is the same rule we saw in the event listener.
+      is(primaryRules[i], events[i].rule, "Rule " + i + " matches the event listener.");
 
-    ok(importSheet1 && importSheet2, "Imported sheets exist.");
-    if (!(importSheet1 && importSheet2)) {
-      SimpleTest.finish();
-      return;
+      // Get the imported sheet and confirm it is non-null.
+      let importSheet = primaryRules[i].styleSheet;
+      ok(importSheet, "Imported sheet " + i + " exists.");
+      if (!importSheet) {
+        info("Sheet " + i + " doesn't exist -- aborting.");
+        return;
+      }
+
+      // Confirm the import sheet has rules.
+      info("Retrieving rules for sheet " + i);
+      let rules;
+
+      try {
+        rules = importSheet.cssRules;
+      } catch (e) {
+        throw "Exception thrown when retrieving rules for sheet " + i + ": " + e.message;
+      }
+      ok(rules, "Imported sheet " + i + " has rules.");
+      if (!rules) {
+        info("Rules for sheet " + i + " don't exist -- aborting.");
+        return;
+      }
     }
 
-    ok(importSheet1.cssRules && importSheet2.cssRules, "Imported sheets have rules.");
-    if (!(importSheet1.cssRules && importSheet2.cssRules)) {
-      SimpleTest.finish();
-      return;
-    }
+    // Make some helper variables for the comparison tests.
+    let importSheet1 = primaryRules[0].styleSheet;
+    let rules1 = importSheet1.cssRules;
+
+    let importSheet2 = primaryRules[1].styleSheet;
+    let rules2 = importSheet2.cssRules;
 
     // Confirm that these two sheets are meaningfully the same.
-    is(cssRulesToString(importSheet1.cssRules), cssRulesToString(importSheet2.cssRules), "Cloned sheet rules are equivalent.");
+    is(cssRulesToString(rules1), cssRulesToString(rules2), "Cloned sheet rules are equivalent.");
 
     // Add a color-changing rule to the first stylesheet.
     importSheet1.insertRule('div { color: blue; }');
+    rules1 = importSheet1.cssRules;
+
     // And make sure that it has an effect.
     is(getComputedStyle(theOnlyDiv).color, "rgb(0, 0, 255)", "div becomes blue.");
 
     // Make sure that the two sheets have different rules now.
-    isnot(cssRulesToString(importSheet1.cssRules), cssRulesToString(importSheet2.cssRules), "Cloned sheet rules are no longer equivalent.");
+    isnot(cssRulesToString(rules1), cssRulesToString(rules2), "Cloned sheet rules are no longer equivalent.");
 
     // Add a color-changing rule to the second stylesheet (that will mask the first).
     importSheet2.insertRule('div { color: red; }');
@@ -89,10 +121,6 @@
     // Delete the first sheet by removing the import rule, and make sure the color changes back.
     stylesheet.deleteRule(0);
     is(getComputedStyle(theOnlyDiv).color, "rgb(0, 128, 0)", "div goes back to green.");
-
-    SimpleTest.finish();
   }
-
-
 </script>
 </html>
