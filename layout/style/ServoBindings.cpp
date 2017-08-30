@@ -2772,9 +2772,7 @@ void
 Gecko_SetJemallocThreadLocalArena(bool enabled)
 {
 #if defined(MOZ_MEMORY)
-  // At this point we convert |enabled| from a plain C++ bool to a
-  // |jemalloc_bool|, so be on the safe side.
-  jemalloc_thread_local_arena(!!enabled);
+  jemalloc_thread_local_arena(enabled);
 #endif
 }
 
