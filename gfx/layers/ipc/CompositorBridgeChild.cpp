@@ -888,6 +888,14 @@ CompositorBridgeChild::RecvObserveLayerUpdate(const uint64_t& aLayersId,
   return IPC_OK();
 }
 
+mozilla::ipc::IPCResult
+CompositorBridgeChild::RecvNotifyWebRenderError(const WebRenderError& aError)
+{
+  MOZ_ASSERT(XRE_IsParentProcess());
+  GPUProcessManager::Get()->NotifyWebRenderError(aError);
+  return IPC_OK();
+}
+
 void
 CompositorBridgeChild::HoldUntilCompositableRefReleasedIfNecessary(TextureClient* aClient)
 {
