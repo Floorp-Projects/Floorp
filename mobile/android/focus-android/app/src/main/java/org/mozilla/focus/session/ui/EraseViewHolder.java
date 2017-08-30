@@ -14,6 +14,7 @@ import android.widget.TextView;
 
 import org.mozilla.focus.R;
 import org.mozilla.focus.session.SessionManager;
+import org.mozilla.focus.telemetry.TelemetryWrapper;
 
 public class EraseViewHolder extends RecyclerView.ViewHolder implements View.OnClickListener {
     public static final int LAYOUT_ID = R.layout.item_erase;
@@ -33,6 +34,8 @@ public class EraseViewHolder extends RecyclerView.ViewHolder implements View.OnC
 
     @Override
     public void onClick(View view) {
+        TelemetryWrapper.eraseInTabsTrayEvent();
+
         fragment.animateAndDismiss().addListener(new AnimatorListenerAdapter() {
             @Override
             public void onAnimationEnd(Animator animation) {

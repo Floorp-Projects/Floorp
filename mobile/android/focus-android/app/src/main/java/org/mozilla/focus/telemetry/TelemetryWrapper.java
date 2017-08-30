@@ -10,20 +10,21 @@ import android.content.SharedPreferences;
 import android.content.res.Resources;
 import android.os.StrictMode;
 import android.preference.PreferenceManager;
+import android.support.annotation.CheckResult;
 
 import org.mozilla.focus.BuildConfig;
 import org.mozilla.focus.R;
 import org.mozilla.focus.search.SearchEngine;
 import org.mozilla.focus.search.SearchEngineManager;
+import org.mozilla.focus.session.SessionManager;
 import org.mozilla.focus.utils.AppConstants;
-import org.mozilla.focus.utils.Browsers;
 import org.mozilla.telemetry.Telemetry;
 import org.mozilla.telemetry.TelemetryHolder;
 import org.mozilla.telemetry.config.TelemetryConfiguration;
 import org.mozilla.telemetry.event.TelemetryEvent;
 import org.mozilla.telemetry.measurement.DefaultSearchMeasurement;
 import org.mozilla.telemetry.measurement.SearchesMeasurement;
-import org.mozilla.telemetry.measurement.SettingsMeasurement;
+import org.mozilla.telemetry.net.DebugLogClient;
 import org.mozilla.telemetry.net.HttpURLConnectionTelemetryClient;
 import org.mozilla.telemetry.net.TelemetryClient;
 import org.mozilla.telemetry.ping.TelemetryCorePingBuilder;
@@ -65,6 +66,7 @@ public final class TelemetryWrapper {
         private static final String INTENT_CUSTOM_TAB = "intent_custom_tab";
         private static final String TEXT_SELECTION_INTENT = "text_selection_intent";
         private static final String SHOW = "show";
+        private static final String HIDE = "hide";
         private static final String SHARE_INTENT = "share_intent";
     }
 
@@ -87,6 +89,7 @@ public final class TelemetryWrapper {
         private static final String DOWNLOAD_DIALOG = "download_dialog";
         private static final String ADD_TO_HOMESCREEN_DIALOG = "add_to_homescreen_dialog";
         private static final String HOMESCREEN_SHORTCUT = "homescreen_shortcut";
+        private static final String TABS_TRAY = "tabs_tray";
     }
 
     private static class Value {
@@ -113,6 +116,8 @@ public final class TelemetryWrapper {
 
     private static class Extra {
         private static final String TO = "to";
+        private static final String TOTAL = "total";
+        private static final String SELECTED = "selected";
     }
 
     public static boolean isTelemetryEnabled(Context context) {
@@ -199,6 +204,20 @@ public final class TelemetryWrapper {
         };
     }
 
+    /**
+     * Add the position of the current session and total number of sessions as extras to the event
+     * and return it.
+     */
+    @CheckResult
+    private static TelemetryEvent withSessionCounts(TelemetryEvent event) {
+        final SessionManager sessionManager = SessionManager.getInstance();
+
+        event.extra(Extra.SELECTED, String.valueOf(sessionManager.getPositionOfCurrentSession()));
+        event.extra(Extra.TOTAL, String.valueOf(sessionManager.getNumberOfSessions()));
+
+        return event;
+    }
+
     public static void startSession() {
         TelemetryHolder.get().recordSessionStart();
 
@@ -230,11 +249,11 @@ public final class TelemetryWrapper {
         TelemetryEvent.create(Category.ACTION, Method.TYPE_URL, Object.SEARCH_BAR).queue();
     }
 
-    public static void browseIntentEvent() {
+    /* package */ static void browseIntentEvent() {
         TelemetryEvent.create(Category.ACTION, Method.INTENT_URL, Object.APP).queue();
     }
 
-    public static void shareIntentEvent(boolean isSearch) {
+    /* package */ static void shareIntentEvent(boolean isSearch) {
         if (isSearch) {
             TelemetryEvent.create(Category.ACTION, Method.SHARE_INTENT, Object.APP, Value.SEARCH).queue();
         } else {
@@ -245,7 +264,7 @@ public final class TelemetryWrapper {
     /**
      * Sends a list of the custom tab options that a custom-tab intent made use of.
      */
-    public static void customTabsIntentEvent(final List<String> options) {
+    /* package */ static void customTabsIntentEvent(final List<String> options) {
         final TelemetryEvent event = TelemetryEvent.create(Category.ACTION, Method.INTENT_CUSTOM_TAB, Object.APP);
 
         // We can send at most 10 extras per event - we just ignore the rest if there are too many
@@ -272,7 +291,8 @@ public final class TelemetryWrapper {
     }
 
     public static void closeCustomTabEvent() {
-        TelemetryEvent.create(Category.ACTION, Method.CLICK, Object.CUSTOM_TAB_CLOSE_BUTTON).queue();
+        withSessionCounts(TelemetryEvent.create(Category.ACTION, Method.CLICK, Object.CUSTOM_TAB_CLOSE_BUTTON))
+                .queue();
     }
 
     public static void customTabActionButtonEvent() {
@@ -283,7 +303,7 @@ public final class TelemetryWrapper {
         TelemetryEvent.create(Category.ACTION, Method.OPEN, Object.MENU, Value.CUSTOM_TAB).queue();
     }
 
-    public static void textSelectionIntentEvent() {
+    /* package */ static void textSelectionIntentEvent() {
         TelemetryEvent.create(Category.ACTION, Method.TEXT_SELECTION_INTENT, Object.APP).queue();
     }
 
@@ -310,30 +330,35 @@ public final class TelemetryWrapper {
     }
 
     public static void eraseEvent() {
-        TelemetryEvent.create(Category.ACTION, Method.CLICK, Object.ERASE_BUTTON).queue();
+        withSessionCounts(TelemetryEvent.create(Category.ACTION, Method.CLICK, Object.ERASE_BUTTON))
+                .queue();
     }
 
     public static void eraseBackToHomeEvent() {
-        TelemetryEvent.create(Category.ACTION, Method.CLICK, Object.BACK_BUTTON, Value.ERASE_TO_HOME).queue();
+        withSessionCounts(TelemetryEvent.create(Category.ACTION, Method.CLICK, Object.BACK_BUTTON, Value.ERASE_TO_HOME))
+                .queue();
     }
 
     public static void eraseBackToAppEvent() {
-        TelemetryEvent.create(Category.ACTION, Method.CLICK, Object.BACK_BUTTON, Value.ERASE_TO_APP).queue();
+        withSessionCounts(TelemetryEvent.create(Category.ACTION, Method.CLICK, Object.BACK_BUTTON, Value.ERASE_TO_APP))
+                .queue();
     }
 
     public static void eraseNotificationEvent() {
-        TelemetryEvent.create(Category.ACTION, Method.CLICK, Object.NOTIFICATION, Value.ERASE).queue();
+        withSessionCounts(TelemetryEvent.create(Category.ACTION, Method.CLICK, Object.NOTIFICATION, Value.ERASE))
+                .queue();
     }
 
     public static void eraseAndOpenNotificationActionEvent() {
-        TelemetryEvent.create(Category.ACTION, Method.CLICK, Object.NOTIFICATION_ACTION, Value.ERASE_AND_OPEN).queue();
+        withSessionCounts(TelemetryEvent.create(Category.ACTION, Method.CLICK, Object.NOTIFICATION_ACTION, Value.ERASE_AND_OPEN))
+                .queue();
     }
 
     public static void openNotificationActionEvent() {
         TelemetryEvent.create(Category.ACTION, Method.CLICK, Object.NOTIFICATION_ACTION, Value.OPEN).queue();
     }
 
-    public static void openHomescreenShortcutEvent() {
+    /* package */ static void openHomescreenShortcutEvent() {
         TelemetryEvent.create(Category.ACTION, Method.CLICK, Object.HOMESCREEN_SHORTCUT, Value.OPEN).queue();
     }
 
@@ -346,7 +371,8 @@ public final class TelemetryWrapper {
     }
 
     public static void eraseShortcutEvent() {
-        TelemetryEvent.create(Category.ACTION, Method.CLICK, Object.SHORTCUT, Value.ERASE).queue();
+        withSessionCounts(TelemetryEvent.create(Category.ACTION, Method.CLICK, Object.SHORTCUT, Value.ERASE))
+                .queue();
     }
 
     public static void settingsEvent(String key, String value) {
@@ -380,7 +406,8 @@ public final class TelemetryWrapper {
     }
 
     public static void openLinkInNewTabEvent() {
-        TelemetryEvent.create(Category.ACTION, Method.OPEN, Object.BROWSER_CONTEXTMENU, Value.TAB).queue();
+        withSessionCounts(TelemetryEvent.create(Category.ACTION, Method.OPEN, Object.BROWSER_CONTEXTMENU, Value.TAB))
+                .queue();
     }
 
     public static void openWebContextMenuEvent() {
@@ -417,5 +444,23 @@ public final class TelemetryWrapper {
 
     public static void finishFirstRunEvent() {
         TelemetryEvent.create(Category.ACTION, Method.CLICK, Object.FIRSTRUN, Value.FINISH).queue();
+    }
+
+    public static void openTabsTrayEvent() {
+        TelemetryEvent.create(Category.ACTION, Method.SHOW, Object.TABS_TRAY).queue();
+    }
+
+    public static void closeTabsTrayEvent() {
+        TelemetryEvent.create(Category.ACTION, Method.HIDE, Object.TABS_TRAY).queue();
+    }
+
+    public static void switchTabInTabsTrayEvent() {
+        withSessionCounts(TelemetryEvent.create(Category.ACTION, Method.CLICK, Object.TABS_TRAY, Value.TAB))
+                .queue();
+    }
+
+    public static void eraseInTabsTrayEvent() {
+        withSessionCounts(TelemetryEvent.create(Category.ACTION, Method.CLICK, Object.TABS_TRAY, Value.ERASE))
+                .queue();
     }
 }

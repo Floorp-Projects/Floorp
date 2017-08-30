@@ -19,6 +19,7 @@ import android.widget.TextView;
 import org.mozilla.focus.R;
 import org.mozilla.focus.session.Session;
 import org.mozilla.focus.session.SessionManager;
+import org.mozilla.focus.telemetry.TelemetryWrapper;
 import org.mozilla.focus.utils.UrlUtils;
 
 import java.lang.ref.WeakReference;
@@ -91,5 +92,7 @@ public class SessionViewHolder extends RecyclerView.ViewHolder implements View.O
                 SessionManager.getInstance().selectSession(session);
             }
         });
+
+        TelemetryWrapper.switchTabInTabsTrayEvent();
     }
 }

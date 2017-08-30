@@ -63,9 +63,9 @@ public class SessionNotificationService extends Service {
                 break;
 
             case ACTION_ERASE:
-                SessionManager.getInstance().removeAllSessions();
-
                 TelemetryWrapper.eraseNotificationEvent();
+
+                SessionManager.getInstance().removeAllSessions();
                 break;
 
             default:

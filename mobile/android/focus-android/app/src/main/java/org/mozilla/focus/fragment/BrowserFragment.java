@@ -698,6 +698,8 @@ public class BrowserFragment extends WebFragment implements View.OnClickListener
             goBack();
         } else {
             if (session.getSource() == Source.VIEW || session.getSource() == Source.CUSTOM_TAB) {
+                TelemetryWrapper.eraseBackToAppEvent();
+
                 // This session has been started from a VIEW intent. Go back to the previous app
                 // immediately and erase the current browsing session.
                 erase();
@@ -712,13 +714,11 @@ public class BrowserFragment extends WebFragment implements View.OnClickListener
 
                 // We can't show a snackbar outside of the app. So let's show a toast instead.
                 Toast.makeText(getContext(), R.string.feedback_erase, Toast.LENGTH_SHORT).show();
-
-                TelemetryWrapper.eraseBackToAppEvent();
             } else {
                 // Just go back to the home screen.
-                erase();
-
                 TelemetryWrapper.eraseBackToHomeEvent();
+
+                erase();
             }
         }
 
@@ -755,9 +755,9 @@ public class BrowserFragment extends WebFragment implements View.OnClickListener
                 break;
 
             case R.id.erase: {
-                erase();
-
                 TelemetryWrapper.eraseEvent();
+
+                erase();
                 break;
             }
 
@@ -766,6 +766,8 @@ public class BrowserFragment extends WebFragment implements View.OnClickListener
                         .beginTransaction()
                         .add(R.id.container, new SessionsSheetFragment(), SessionsSheetFragment.FRAGMENT_TAG)
                         .commit();
+
+                TelemetryWrapper.openTabsTrayEvent();
                 break;
 
             case R.id.back: {

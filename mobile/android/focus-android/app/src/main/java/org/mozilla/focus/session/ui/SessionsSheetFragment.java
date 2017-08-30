@@ -20,6 +20,7 @@ import android.view.animation.AccelerateInterpolator;
 import org.mozilla.focus.R;
 import org.mozilla.focus.locale.LocaleAwareFragment;
 import org.mozilla.focus.session.SessionManager;
+import org.mozilla.focus.telemetry.TelemetryWrapper;
 import org.mozilla.focus.utils.OneShotOnPreDrawListener;
 
 public class SessionsSheetFragment extends LocaleAwareFragment implements View.OnClickListener {
@@ -114,6 +115,8 @@ public class SessionsSheetFragment extends LocaleAwareFragment implements View.O
 
     public boolean onBackPressed() {
         animateAndDismiss();
+
+        TelemetryWrapper.closeTabsTrayEvent();
         return true;
     }
 
@@ -130,6 +133,8 @@ public class SessionsSheetFragment extends LocaleAwareFragment implements View.O
         switch (view.getId()) {
             case R.id.background:
                 animateAndDismiss();
+
+                TelemetryWrapper.closeTabsTrayEvent();
                 break;
 
             default:

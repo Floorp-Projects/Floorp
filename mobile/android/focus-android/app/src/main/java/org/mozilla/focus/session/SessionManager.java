@@ -131,6 +131,26 @@ public class SessionManager {
         throw new IllegalAccessError("There's no active session with UUID " + uuid);
     }
 
+    public int getNumberOfSessions() {
+        return sessions.getValue().size();
+    }
+
+    public int getPositionOfCurrentSession() {
+        if (currentSessionUUID == null) {
+            return -1;
+        }
+
+        for (int i = 0; i < this.sessions.getValue().size(); i++) {
+            final Session session = this.sessions.getValue().get(i);
+
+            if (session.getUUID().equals(currentSessionUUID)) {
+                return i;
+            }
+        }
+
+        return -1;
+    }
+
     public NonNullLiveData<List<Session>> getSessions() {
         return sessions;
     }
