@@ -90,9 +90,9 @@ public class SessionViewHolder extends RecyclerView.ViewHolder implements View.O
             @Override
             public void onAnimationEnd(Animator animation) {
                 SessionManager.getInstance().selectSession(session);
+
+                TelemetryWrapper.switchTabInTabsTrayEvent();
             }
         });
-
-        TelemetryWrapper.switchTabInTabsTrayEvent();
     }
 }
