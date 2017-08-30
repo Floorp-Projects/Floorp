@@ -31,7 +31,8 @@ typedef enum {
   TFO_FAILED_NET_TIMEOUT__NO_TFO_FAILED_TOO,
   TFO_FAILED_UNKNOW_ERROR_NO_TFO_FAILED_TOO,
   TFO_FAILED_BACKUP_CONNECTION_NO_TFO_FAILED_TOO,
-  TFO_FAILED
+  TFO_FAILED,
+  TFO_HTTP // TFO is disabled for non-secure connections.
 } TFOResult;
 
 nsresult AttachTCPFastOpenIOLayer(PRFileDesc *fd);
