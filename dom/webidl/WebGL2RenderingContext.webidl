@@ -511,19 +511,19 @@ interface WebGL2RenderingContextBase
                            GLint x, GLint y, GLsizei width, GLsizei height);
 
     void compressedTexImage2D(GLenum target, GLint level, GLenum internalformat, GLsizei width,
-                              GLsizei height, GLint border, GLsizei imageSize,  GLintptr offset);
+                              GLsizei height, GLint border, GLintptr offset);
     void compressedTexImage2D(GLenum target, GLint level, GLenum internalformat, GLsizei width,
                               GLsizei height, GLint border, ArrayBufferView srcData,
                               optional GLuint srcOffset = 0, optional GLuint srcLengthOverride = 0);
 
     void compressedTexImage3D(GLenum target, GLint level, GLenum internalformat, GLsizei width,
-                              GLsizei height, GLsizei depth, GLint border, GLsizei imageSize, GLintptr offset);
+                              GLsizei height, GLsizei depth, GLint border, GLintptr offset);
     void compressedTexImage3D(GLenum target, GLint level, GLenum internalformat, GLsizei width,
                               GLsizei height, GLsizei depth, GLint border, ArrayBufferView srcData,
                               optional GLuint srcOffset = 0, optional GLuint srcLengthOverride = 0);
 
     void compressedTexSubImage2D(GLenum target, GLint level, GLint xoffset, GLint yoffset,
-                                 GLsizei width, GLsizei height, GLenum format, GLsizei imageSize, GLintptr offset);
+                                 GLsizei width, GLsizei height, GLenum format, GLintptr offset);
     void compressedTexSubImage2D(GLenum target, GLint level, GLint xoffset, GLint yoffset,
                                  GLsizei width, GLsizei height, GLenum format,
                                  ArrayBufferView srcData,
@@ -532,7 +532,7 @@ interface WebGL2RenderingContextBase
 
     void compressedTexSubImage3D(GLenum target, GLint level, GLint xoffset, GLint yoffset,
                                  GLint zoffset, GLsizei width, GLsizei height, GLsizei depth,
-                                 GLenum format, GLsizei imageSize, GLintptr offset);
+                                 GLenum format, GLintptr offset);
     void compressedTexSubImage3D(GLenum target, GLint level, GLint xoffset, GLint yoffset,
                                  GLint zoffset, GLsizei width, GLsizei height, GLsizei depth,
                                  GLenum format, ArrayBufferView srcData,

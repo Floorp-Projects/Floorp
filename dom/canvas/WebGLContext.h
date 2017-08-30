@@ -1052,18 +1052,6 @@ protected:
     ////////////////////////////////////
 
 public:
-    void CompressedTexImage2D(GLenum target, GLint level, GLenum internalFormat,
-                              GLsizei width, GLsizei height, GLint border,
-                              GLsizei imageSize, WebGLsizeiptr offset)
-    {
-        const char funcName[] = "compressedTexImage2D";
-        const uint8_t funcDims = 2;
-        const GLsizei depth = 1;
-        const TexImageSourceAdapter src(&offset, 0, 0);
-        CompressedTexImage(funcName, funcDims, target, level, internalFormat, width,
-                           height, depth, border, src, Some(imageSize));
-    }
-
     template<typename T>
     void CompressedTexImage2D(GLenum target, GLint level, GLenum internalFormat,
                               GLsizei width, GLsizei height, GLint border,
@@ -1075,20 +1063,7 @@ public:
         const GLsizei depth = 1;
         const TexImageSourceAdapter src(&anySrc, viewElemOffset, viewElemLengthOverride);
         CompressedTexImage(funcName, funcDims, target, level, internalFormat, width,
-                           height, depth, border, src, Nothing());
-    }
-
-    void CompressedTexSubImage2D(GLenum target, GLint level, GLint xOffset, GLint yOffset,
-                                 GLsizei width, GLsizei height, GLenum unpackFormat,
-                                 GLsizei imageSize, WebGLsizeiptr offset)
-    {
-        const char funcName[] = "compressedTexSubImage2D";
-        const uint8_t funcDims = 2;
-        const GLint zOffset = 0;
-        const GLsizei depth = 1;
-        const TexImageSourceAdapter src(&offset, 0, 0);
-        CompressedTexSubImage(funcName, funcDims, target, level, xOffset, yOffset,
-                              zOffset, width, height, depth, unpackFormat, src, Some(imageSize));
+                           height, depth, border, src);
     }
 
     template<typename T>
@@ -1103,19 +1078,20 @@ public:
         const GLsizei depth = 1;
         const TexImageSourceAdapter src(&anySrc, viewElemOffset, viewElemLengthOverride);
         CompressedTexSubImage(funcName, funcDims, target, level, xOffset, yOffset,
-                              zOffset, width, height, depth, unpackFormat, src, Nothing());
+                              zOffset, width, height, depth, unpackFormat, src);
     }
 
 protected:
     void CompressedTexImage(const char* funcName, uint8_t funcDims, GLenum target,
                             GLint level, GLenum internalFormat, GLsizei width,
                             GLsizei height, GLsizei depth, GLint border,
-                            const TexImageSource& src, const Maybe<GLsizei>& expectedImageSize);
+                            const TexImageSource& src);
+
     void CompressedTexSubImage(const char* funcName, uint8_t funcDims, GLenum target,
                                GLint level, GLint xOffset, GLint yOffset, GLint zOffset,
                                GLsizei width, GLsizei height, GLsizei depth,
-                               GLenum unpackFormat, const TexImageSource& src,
-                               const Maybe<GLsizei>& expectedImageSize);
+                               GLenum unpackFormat, const TexImageSource& src);
+
     ////////////////////////////////////
 
 public:
@@ -1281,7 +1257,7 @@ protected:
     UniquePtr<webgl::TexUnpackBytes>
     FromCompressed(const char* funcName, TexImageTarget target, GLsizei rawWidth,
                    GLsizei rawHeight, GLsizei rawDepth, GLint border,
-                   const TexImageSource& src, const Maybe<GLsizei>& expectedImageSize);
+                   const TexImageSource& src);
 
 // -----------------------------------------------------------------------------
 // Vertices Feature (WebGLContextVertices.cpp)
