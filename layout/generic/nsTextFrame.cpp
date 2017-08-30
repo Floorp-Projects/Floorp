@@ -5268,8 +5268,14 @@ nsDisplayText::CreateWebRenderCommands(mozilla::wr::DisplayListBuilder& aBuilder
   }
 
   for (const mozilla::layout::TextRunFragment& text: mTextDrawer->GetText()) {
+    // mOpacity is set after we do our analysis, so we need to apply it here.
+    // mOpacity is only non-trivial when we have "pure" text, so we don't
+    // ever need to apply it to shadows or decorations.
+    auto color = text.color;
+    color.a *= mOpacity;
+
     aManager->WrBridge()->PushGlyphs(aBuilder, text.glyphs, text.font,
-                                     text.color, aSc, boundsRect, clipRect);
+                                     color, aSc, boundsRect, clipRect);
   }
 
   for (const wr::Line& decoration: mTextDrawer->GetAfterDecorations()) {
@@ -5315,7 +5321,11 @@ nsDisplayText::BuildLayer(nsDisplayListBuilder* aBuilder,
 
     GlyphArray* glyphs = allGlyphs.AppendElement();
     glyphs->glyphs() = text.glyphs;
-    glyphs->color() = text.color;
+
+    // Apply folded alpha (only applies to glyphs)
+    auto color = text.color;
+    color.a *= mOpacity;
+    glyphs->color() = color;
   }
 
   MOZ_ASSERT(font);
