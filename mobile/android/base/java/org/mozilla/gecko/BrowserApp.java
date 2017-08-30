@@ -2455,10 +2455,6 @@ public class BrowserApp extends GeckoApp
         openUrlAndStopEditing(url, null, false);
     }
 
-    private void openUrlAndStopEditing(String url, boolean newTab) {
-        openUrlAndStopEditing(url, null, newTab);
-    }
-
     private void openUrlAndStopEditing(String url, String searchEngine) {
         openUrlAndStopEditing(url, searchEngine, false);
     }
