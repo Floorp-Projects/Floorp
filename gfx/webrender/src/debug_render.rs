@@ -3,13 +3,26 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
 use debug_font_data;
-use device::{Device, GpuMarker, Program, VAO, TextureId, VertexDescriptor};
+use device::{Device, GpuMarker, Program, VAO, Texture, TextureSlot, VertexDescriptor};
 use device::{TextureFilter, VertexAttribute, VertexUsageHint, VertexAttributeKind, TextureTarget};
 use euclid::{Transform3D, Point2D, Size2D, Rect};
-use internal_types::{ORTHO_NEAR_PLANE, ORTHO_FAR_PLANE, TextureSampler};
+use internal_types::{ORTHO_NEAR_PLANE, ORTHO_FAR_PLANE};
 use internal_types::RenderTargetMode;
 use std::f32;
 use api::{ColorU, ImageFormat, DeviceUintSize};
+
+#[derive(Debug, Copy, Clone)]
+enum DebugSampler {
+    Font,
+}
+
+impl Into<TextureSlot> for DebugSampler {
+    fn into(self) -> TextureSlot {
+        match self {
+            DebugSampler::Font => TextureSlot(0),
+        }
+    }
+}
 
 const DESC_FONT: VertexDescriptor = VertexDescriptor {
     vertex_attributes: &[
@@ -71,7 +84,7 @@ pub struct DebugRenderer {
     font_indices: Vec<u32>,
     font_program: Program,
     font_vao: VAO,
-    font_texture_id: TextureId,
+    font_texture: Texture,
 
     tri_vertices: Vec<DebugColorVertex>,
     tri_indices: Vec<u32>,
@@ -86,16 +99,20 @@ impl DebugRenderer {
         let font_program = device.create_program("debug_font",
                                                  "",
                                                  &DESC_FONT).unwrap();
+        device.bind_shader_samplers(&font_program, &[
+            ("sColor0", DebugSampler::Font)
+        ]);
+
         let color_program = device.create_program("debug_color",
                                                   "",
                                                   &DESC_COLOR).unwrap();
 
-        let font_vao = device.create_vao(&DESC_FONT, 32);
-        let line_vao = device.create_vao(&DESC_COLOR, 32);
-        let tri_vao = device.create_vao(&DESC_COLOR, 32);
+        let font_vao = device.create_vao(&DESC_FONT);
+        let line_vao = device.create_vao(&DESC_COLOR);
+        let tri_vao = device.create_vao(&DESC_COLOR);
 
-        let font_texture_id = device.create_texture_ids(1, TextureTarget::Array)[0];
-        device.init_texture(font_texture_id,
+        let mut font_texture = device.create_texture(TextureTarget::Array);
+        device.init_texture(&mut font_texture,
                             debug_font_data::BMP_WIDTH,
                             debug_font_data::BMP_HEIGHT,
                             ImageFormat::A8,
@@ -115,11 +132,12 @@ impl DebugRenderer {
             color_program,
             font_vao,
             line_vao,
-            font_texture_id,
+            font_texture,
         }
     }
 
     pub fn deinit(self, device: &mut Device) {
+        device.delete_texture(self.font_texture);
         device.delete_program(self.font_program);
         device.delete_program(self.color_program);
         device.delete_vao(self.tri_vao);
@@ -265,7 +283,7 @@ impl DebugRenderer {
         if !self.font_indices.is_empty() {
             device.bind_program(&self.font_program);
             device.set_uniforms(&self.font_program, &projection);
-            device.bind_texture(TextureSampler::Color0, self.font_texture_id);
+            device.bind_texture(DebugSampler::Font, &self.font_texture);
             device.bind_vao(&self.font_vao);
             device.update_vao_indices(&self.font_vao,
                                       &self.font_indices,
