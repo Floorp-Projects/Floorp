@@ -23,6 +23,10 @@
 <!ENTITY  reloadTab.accesskey                "R">
 <!ENTITY  reloadAllTabs.label                "Reload All Tabs">
 <!ENTITY  reloadAllTabs.accesskey            "A">
+<!-- LOCALIZATION NOTE (duplicateTab.label): This is a command to duplicate
+a tab (i.e. it is a verb, not adjective). -->
+<!ENTITY  duplicateTab.label                 "Duplicate Tab">
+<!ENTITY  duplicateTab.accesskey             "D">
 <!-- LOCALIZATION NOTE (closeTabsToTheEnd.label): This should indicate the
 direction in which tabs are closed, i.e. locales that use RTL mode should say
 left instead of right. -->
@@ -41,11 +45,11 @@ can reach it easily. -->
 <!ENTITY  unpinTab.label                     "Unpin Tab">
 <!ENTITY  unpinTab.accesskey                 "b">
 <!ENTITY  sendTabToDevice.label              "Send Tab to Device">
-<!ENTITY  sendTabToDevice.accesskey          "D">
+<!ENTITY  sendTabToDevice.accesskey          "n">
 <!ENTITY  sendPageToDevice.label             "Send Page to Device">
-<!ENTITY  sendPageToDevice.accesskey         "D">
+<!ENTITY  sendPageToDevice.accesskey         "n">
 <!ENTITY  sendLinkToDevice.label             "Send Link to Device">
-<!ENTITY  sendLinkToDevice.accesskey         "D">
+<!ENTITY  sendLinkToDevice.accesskey         "n">
 <!ENTITY  sendToDeviceFeedback.label         "Sent!">
 <!ENTITY  moveToNewWindow.label              "Move to New Window">
 <!ENTITY  moveToNewWindow.accesskey          "W">
