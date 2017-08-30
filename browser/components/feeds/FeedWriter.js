@@ -2,6 +2,7 @@
 /* This Source Code Form is subject to the terms of the Mozilla Public
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
+"use strict";
 
 const Cc = Components.classes;
 const Ci = Components.interfaces;
@@ -78,6 +79,13 @@ function FeedWriter() {
   this._selectedAppMenuItem = null;
   this._subscribeCallback = null;
   this._defaultHandlerMenuItem = null;
+
+
+  XPCOMUtils.defineLazyGetter(this, "_mm", () =>
+    this._window.QueryInterface(Ci.nsIInterfaceRequestor).
+                 getInterface(Ci.nsIDocShell).
+                 QueryInterface(Ci.nsIInterfaceRequestor).
+                 getInterface(Ci.nsIContentFrameMessageManager));
 }
 
 FeedWriter.prototype = {
@@ -975,15 +983,6 @@ FeedWriter.prototype = {
     } else {
       subscribeCallback();
     }
-  },
-
-  get _mm() {
-    let mm = this._window.QueryInterface(Ci.nsIInterfaceRequestor).
-                          getInterface(Ci.nsIDocShell).
-                          QueryInterface(Ci.nsIInterfaceRequestor).
-                          getInterface(Ci.nsIContentFrameMessageManager);
-    delete this._mm;
-    return this._mm = mm;
   },
 
   classID: FEEDWRITER_CID,

@@ -3,4 +3,4 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
 this['EXPORTED_SYMBOLS'] = ['test'];
-test = 'this is a jsm';
+var test = 'this is a jsm';

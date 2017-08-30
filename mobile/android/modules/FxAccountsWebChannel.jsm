@@ -2,6 +2,7 @@
 /* This Source Code Form is subject to the terms of the Mozilla Public
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
+"use strict";
 
 /**
  * Firefox Accounts Web Channel.
@@ -379,7 +380,7 @@ var singleton;
 // ever created - we require this because the WebChannel is global in scope and
 // allowing multiple channels would cause such notifications to be sent multiple
 // times.
-this.EnsureFxAccountsWebChannel = function() {
+this.EnsureFxAccountsWebChannel = () => {
   if (!singleton) {
     let contentUri = Services.urlFormatter.formatURLPref("identity.fxaccounts.remote.webchannel.uri");
     // The FxAccountsWebChannel listens for events and updates the Java layer.

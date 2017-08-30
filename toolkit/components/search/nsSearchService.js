@@ -2341,8 +2341,12 @@ Engine.prototype = {
       type = "application/x-moz-phonesearch";
     }
 
-    delete this._defaultMobileResponseType;
-    return this._defaultMobileResponseType = type;
+    Object.defineProperty(this, "_defaultMobileResponseType", {
+      value: type,
+      configurable: true,
+    });
+
+    return type;
   },
 
   get _isWhiteListed() {
