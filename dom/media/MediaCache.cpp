@@ -1884,19 +1884,16 @@ MediaCacheStream::NotifyDataReceived(int64_t aSize, const char* aData)
   // This might happen off the main thread.
   MOZ_DIAGNOSTIC_ASSERT(!mClosed);
 
-  // Update principals before putting the data in the cache. This is important,
-  // we want to make sure all principals are updated before any consumer
-  // can see the new data.
-  // We do this without holding the cache monitor, in case the client wants
-  // to do something that takes a lock.
+  ReentrantMonitorAutoEnter mon(mMediaCache->GetReentrantMonitor());
   {
+    // Need to acquire the monitor because this code might run
+    // off the main thread.
     MediaCache::ResourceStreamIterator iter(mMediaCache, mResourceID);
     while (MediaCacheStream* stream = iter.Next()) {
       stream->mClient->CacheClientUpdatePrincipal();
     }
   }
 
-  ReentrantMonitorAutoEnter mon(mMediaCache->GetReentrantMonitor());
   int64_t size = aSize;
   const char* data = aData;
 
