@@ -899,6 +899,40 @@ NeckoParent::RecvPredReset()
 }
 
 mozilla::ipc::IPCResult
+NeckoParent::RecvRequestContextLoadBegin(const uint64_t& rcid)
+{
+  nsCOMPtr<nsIRequestContextService> rcsvc =
+    do_GetService("@mozilla.org/network/request-context-service;1");
+  if (!rcsvc) {
+    return IPC_OK();
+  }
+  nsCOMPtr<nsIRequestContext> rc;
+  rcsvc->GetRequestContext(rcid, getter_AddRefs(rc));
+  if (rc) {
+    rc->BeginLoad();
+  }
+
+  return IPC_OK();
+}
+
+mozilla::ipc::IPCResult
+NeckoParent::RecvRequestContextAfterDOMContentLoaded(const uint64_t& rcid)
+{
+  nsCOMPtr<nsIRequestContextService> rcsvc =
+    do_GetService("@mozilla.org/network/request-context-service;1");
+  if (!rcsvc) {
+    return IPC_OK();
+  }
+  nsCOMPtr<nsIRequestContext> rc;
+  rcsvc->GetRequestContext(rcid, getter_AddRefs(rc));
+  if (rc) {
+    rc->DOMContentLoaded();
+  }
+
+  return IPC_OK();
+}
+
+mozilla::ipc::IPCResult
 NeckoParent::RecvRemoveRequestContext(const uint64_t& rcid)
 {
   nsCOMPtr<nsIRequestContextService> rcsvc =
