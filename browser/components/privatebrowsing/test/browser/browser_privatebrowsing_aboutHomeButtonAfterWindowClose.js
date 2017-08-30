@@ -5,6 +5,11 @@
 // This test checks that the Session Restore "Restore Previous Session"
 // button on about:home is disabled in private mode
 add_task(async function test_no_sessionrestore_button() {
+  // Activity Stream page does not have a restore session button.
+  // We want to run this test only when Activity Stream is disabled from about:home.
+  await SpecialPowers.pushPrefEnv({set: [
+    ["browser.newtabpage.activity-stream.aboutHome.enabled", false]
+  ]});
   // Opening, then closing, a private window shouldn't create session data.
   (await BrowserTestUtils.openNewBrowserWindow({private: true})).close();
 
