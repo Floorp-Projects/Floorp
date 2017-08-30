@@ -673,6 +673,13 @@ struct WrClipId {
 
 typedef Variant<layers::FrameMetrics::ViewID, WrClipId> ScrollOrClipId;
 
+enum class WebRenderError : int8_t {
+  INITIALIZE = 0,
+  MAKE_CURRENT,
+
+  Sentinel /* this must be last for serialization purposes. */
+};
+
 } // namespace wr
 } // namespace mozilla
 

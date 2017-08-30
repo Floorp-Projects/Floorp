@@ -43,13 +43,14 @@
 
 .devtools-tabbar {
   -moz-appearance: none;
-  min-height: 24px;
+  min-height: 29px;
   border: 0px solid;
   border-bottom-width: 1px;
   padding: 0;
   background: var(--theme-tab-toolbar-background);
   border-bottom-color: var(--theme-splitter-color);
   display: flex;
+  box-sizing: border-box;
 }
 
 .toolbox-tabs-wrapper {
@@ -79,14 +80,12 @@
 /* Set flex attribute to Toolbox buttons and Picker container so,
    they don't overlap with the tab bar */
 #toolbox-buttons-start,
-#toolbox-buttons-end {
+#toolbox-buttons-end,
+#toolbox-option-container,
+#toolbox-controls,
+#toolbox-dock-buttons {
   display: flex;
   align-items: stretch;
-}
-
-#toolbox-buttons-start {
-  border: solid 0 var(--theme-splitter-color);
-  border-inline-end-width: 1px;
 }
 
 /* Toolbox tabs */
@@ -263,10 +262,6 @@
 
 /* Toolbox controls */
 
-#toolbox-controls, #toolbox-dock-buttons {
-  display: flex;
-}
-
 /* Save space in Firebug theme */
 .theme-firebug #toolbox-controls button {
   margin-inline-start: 0 !important;
@@ -305,15 +300,6 @@
 .devtools-tabbar > div {
   background-color: var(--theme-tab-toolbar-background);
   z-index: 0;
-}
-
-#toolbox-buttons-end:empty + .devtools-separator,
-.devtools-separator[invisible] {
-  visibility: hidden;
-}
-
-#toolbox-controls-separator {
-  margin: 0;
 }
 
 /* Command buttons */

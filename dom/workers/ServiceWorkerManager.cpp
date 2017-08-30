@@ -34,6 +34,7 @@
 #include "mozilla/ClearOnShutdown.h"
 #include "mozilla/ErrorNames.h"
 #include "mozilla/LoadContext.h"
+#include "mozilla/SystemGroup.h"
 #include "mozilla/Telemetry.h"
 #include "mozilla/dom/BindingUtils.h"
 #include "mozilla/dom/ContentParent.h"
@@ -4311,6 +4312,10 @@ ServiceWorkerManager::ScheduleUpdateTimer(nsIPrincipal* aPrincipal,
     data->mUpdateTimers.Remove(aScope); // another lookup, but very rare
     return;
   }
+
+  // Label with SystemGroup because UpdateTimerCallback only sends an IPC message
+  // (PServiceWorkerUpdaterConstructor) without touching any web contents.
+  timer->SetTarget(SystemGroup::EventTargetFor(TaskCategory::Other));
 
   nsCOMPtr<nsITimerCallback> callback = new UpdateTimerCallback(aPrincipal,
                                                                 aScope);
