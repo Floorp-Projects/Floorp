@@ -721,7 +721,7 @@ var BrowserPageActionFeedback = {
     // The timeout value used here allows the panel to stay open for
     // 1 second after the text transition (duration=120ms) has finished.
     setTimeout(() => {
-      this.panelNode.hidePopup();
+      this.panelNode.hidePopup(true);
     }, Services.prefs.getIntPref("browser.pageActions.feedbackTimeoutMS", 1120));
   },
 };
