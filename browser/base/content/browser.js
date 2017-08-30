@@ -1379,10 +1379,6 @@ var gBrowserInit = {
 
     gRemoteControl.updateVisualCue(Marionette.running);
 
-    this._uriToLoadPromise.then(uriToLoad => {
-      gIdentityHandler.initIdentityBlock(uriToLoad);
-    });
-
     // Wait until chrome is painted before executing code not critical to making the window visible
     this._boundDelayedStartup = this._delayedStartup.bind(this);
     window.addEventListener("MozAfterPaint", this._boundDelayedStartup);
@@ -7082,7 +7078,7 @@ var gIdentityHandler = {
    * RegExp used to decide if an about url should be shown as being part of
    * the browser UI.
    */
-  _secureInternalUIWhitelist: /^(?:accounts|addons|cache|config|crashes|customizing|downloads|healthreport|home|license|newaddon|permissions|preferences|privatebrowsing|rights|searchreset|sessionrestore|support|welcomeback)(?:[?#]|$)/i,
+  _secureInternalUIWhitelist: /^(?:accounts|addons|cache|config|crashes|customizing|downloads|healthreport|license|newaddon|permissions|preferences|rights|searchreset|sessionrestore|support|welcomeback)(?:[?#]|$)/i,
 
   get _isBroken() {
     return this._state & Ci.nsIWebProgressListener.STATE_IS_BROKEN;
@@ -7712,14 +7708,6 @@ var gIdentityHandler = {
   },
 
   setURI(uri) {
-    // Ignore about:blank loads until the window's initial URL has loaded,
-    // to avoid hiding the UI that initIdentityBlock could have prepared.
-    if (this._ignoreAboutBlankUntilFirstLoad) {
-      if (uri.spec == "about:blank")
-        return;
-      this._ignoreAboutBlankUntilFirstLoad = false;
-    }
-
     this._uri = uri;
 
     try {
@@ -7750,30 +7738,6 @@ var gIdentityHandler = {
       this._isURILoadedFromFile = resolvedURI.schemeIs("file");
     } catch (ex) {
       // NetUtil's methods will throw for malformed URIs and the like
-    }
-  },
-
-  /**
-   * Used to initialize the identity block before first paint to avoid
-   * flickering when opening a new window showing a secure internal page
-   * (eg. about:home)
-   */
-  initIdentityBlock(initialURI) {
-    if (this._uri) {
-      // Apparently we already loaded something, so there's nothing to do here.
-      return;
-    }
-
-    if ((typeof initialURI != "string") || !initialURI.startsWith("about:"))
-      return;
-
-    let uri = Services.io.newURI(initialURI);
-    if (this._secureInternalUIWhitelist.test(uri.pathQueryRef)) {
-      this._isSecureInternalUI = true;
-      this._ignoreAboutBlankUntilFirstLoad = true;
-      this.refreshIdentityBlock();
-      // The identity label won't be visible without setting this.
-      gURLBar.setAttribute("pageproxystate", "valid");
     }
   },
 
