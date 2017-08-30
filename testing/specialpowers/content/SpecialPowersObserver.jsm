@@ -1,6 +1,7 @@
 /* This Source Code Form is subject to the terms of the Mozilla Public
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
+"use strict";
 
 // Based on:
 // https://bugzilla.mozilla.org/show_bug.cgi?id=549539
@@ -132,7 +133,7 @@ SpecialPowersObserver.prototype.uninit = function() {
   var obs = Services.obs;
   obs.removeObserver(this, "chrome-document-global-created");
   obs.removeObserver(this, "http-on-modify-request");
-  this._registerObservers._topics.forEach(function(element) {
+  this._registerObservers._topics.forEach((element) => {
     obs.removeObserver(this._registerObservers, element);
   });
   this._removeProcessCrashObservers();
@@ -254,7 +255,7 @@ SpecialPowersObserver.prototype.receiveMessage = function(aMessage) {
       try {
         let promises = [];
         aMessage.data.forEach(function(request) {
-          const filePerms = 0666; // eslint-disable-line no-octal
+          const filePerms = 0o666;
           let testFile = Services.dirsvc.get("ProfD", Ci.nsIFile);
           if (request.name) {
             testFile.appendRelativePath(request.name);

@@ -10,7 +10,7 @@
 
 this.EXPORTED_SYMBOLS = ["NS_ASSERT"];
 
-var gTraceOnAssert = true;
+var gTraceOnAssert = false;
 
 /**
  * This function provides a simple assertion function for JavaScript.
@@ -47,8 +47,6 @@ this.NS_ASSERT = function NS_ASSERT(condition, message) {
     }
   } catch (ex) {}
 
-  // eslint-disable-next-line no-caller
-  var caller = arguments.callee.caller;
   var assertionText = "ASSERT: " + message + "\n";
 
   // Report the error to the console
@@ -63,6 +61,8 @@ this.NS_ASSERT = function NS_ASSERT(condition, message) {
   if (gTraceOnAssert) {
     stackText = "Stack Trace: \n";
     var count = 0;
+    // eslint-disable-next-line no-caller
+    var caller = arguments.callee.caller;
     while (caller) {
       stackText += count++ + ":" + caller.name + "(";
       for (var i = 0; i < caller.arguments.length; ++i) {
