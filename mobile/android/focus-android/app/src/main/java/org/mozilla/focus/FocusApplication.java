@@ -19,6 +19,7 @@ import org.mozilla.focus.session.NotificationSessionObserver;
 import org.mozilla.focus.session.Session;
 import org.mozilla.focus.session.SessionManager;
 import org.mozilla.focus.session.SessionNotificationService;
+import org.mozilla.focus.session.VisibilityLifeCycleCallback;
 import org.mozilla.focus.telemetry.TelemetrySessionObserver;
 import org.mozilla.focus.telemetry.TelemetryWrapper;
 import org.mozilla.focus.utils.AdjustHelper;
@@ -28,6 +29,7 @@ import org.mozilla.focus.web.CleanupSessionObserver;
 import java.util.List;
 
 public class FocusApplication extends LocaleAwareApplication {
+    private VisibilityLifeCycleCallback visibilityLifeCycleCallback;
 
     @Override
     public void onCreate() {
@@ -42,10 +44,16 @@ public class FocusApplication extends LocaleAwareApplication {
         TelemetryWrapper.init(this);
         AdjustHelper.setupAdjustIfNeeded(this);
 
+        registerActivityLifecycleCallbacks(visibilityLifeCycleCallback = new VisibilityLifeCycleCallback(this));
+
         final LiveData<List<Session>> sessions = SessionManager.getInstance().getSessions();
         sessions.observeForever(new NotificationSessionObserver(this));
         sessions.observeForever(new TelemetrySessionObserver());
         sessions.observeForever(new CleanupSessionObserver(this));
+    }
+
+    public VisibilityLifeCycleCallback getVisibilityLifeCycleCallback() {
+        return visibilityLifeCycleCallback;
     }
 
     private void enableStrictMode() {

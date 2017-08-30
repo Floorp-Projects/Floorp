@@ -66,6 +66,8 @@ public class SessionNotificationService extends Service {
                 TelemetryWrapper.eraseNotificationEvent();
 
                 SessionManager.getInstance().removeAllSessions();
+
+                VisibilityLifeCycleCallback.finishAndRemoveTaskIfInBackground(this);
                 break;
 
             default:
