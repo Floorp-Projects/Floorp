@@ -32,16 +32,14 @@ function getPrincipalForFrame(docShell, frame) {
 this.SessionStorage = Object.freeze({
   /**
    * Updates all sessionStorage "super cookies"
-   * @param docShell
-   *        That tab's docshell (containing the sessionStorage)
-   * @param frameTree
-   *        The docShell's FrameTree instance.
+   * @param content
+   *        A tab's global, i.e. the root frame we want to collect for.
    * @return Returns a nested object that will have hosts as keys and per-origin
    *         session storage data as strings. For example:
    *         {"https://example.com^userContextId=1": {"key": "value", "my_number": "123"}}
    */
-  collect(docShell, frameTree) {
-    return SessionStorageInternal.collect(docShell, frameTree);
+  collect(content) {
+    return SessionStorageInternal.collect(content);
   },
 
   /**

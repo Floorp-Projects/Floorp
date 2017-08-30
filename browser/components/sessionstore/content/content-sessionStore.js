@@ -55,24 +55,6 @@ const kNoIndex = Number.MAX_SAFE_INTEGER;
 const kLastIndex = Number.MAX_SAFE_INTEGER - 1;
 
 /**
- * Returns a lazy function that will evaluate the given
- * function |fn| only once and cache its return value.
- */
-function createLazy(fn) {
-  let cached = false;
-  let cachedValue = null;
-
-  return function lazy() {
-    if (!cached) {
-      cachedValue = fn();
-      cached = true;
-    }
-
-    return cachedValue;
-  };
-}
-
-/**
  * A function that will recursively call |cb| to collected data for all
  * non-dynamic frames in the current frame/docShell tree.
  */
@@ -595,10 +577,9 @@ var DocShellCapabilitiesListener = {
  */
 var SessionStorageListener = {
   init() {
-    let filter = ssu.createDynamicFrameEventFilter(this);
-    addEventListener("MozSessionStorageChanged", filter, true);
     Services.obs.addObserver(this, "browser:purge-domain-data");
     StateChangeNotifier.addObserver(this);
+    this.resetEventListener();
   },
 
   uninit() {
@@ -622,6 +603,21 @@ var SessionStorageListener = {
     this._changes = undefined;
   },
 
+  // The event listener waiting for MozSessionStorageChanged events.
+  _listener: null,
+
+  resetEventListener() {
+    if (!this._listener) {
+      this._listener = ssu.createDynamicFrameEventFilter(this);
+      addEventListener("MozSessionStorageChanged", this._listener, true);
+    }
+  },
+
+  removeEventListener() {
+    removeEventListener("MozSessionStorageChanged", this._listener, true);
+    this._listener = null;
+  },
+
   handleEvent(event) {
     if (!docShell) {
       return;
@@ -637,6 +633,8 @@ var SessionStorageListener = {
     // collected so that we don't confuse websites with partial state.
     if (usage > Services.prefs.getIntPref(DOM_STORAGE_LIMIT_PREF)) {
       MessageQueue.push("storage", () => null);
+      this.removeEventListener();
+      this.resetChanges();
       return;
     }
 
@@ -678,6 +676,7 @@ var SessionStorageListener = {
   },
 
   onPageLoadStarted() {
+    this.resetEventListener();
     this.collect();
   }
 };
@@ -799,7 +798,7 @@ var MessageQueue = {
    *        process.
    */
   push(key, fn) {
-    this._data.set(key, createLazy(fn));
+    this._data.set(key, fn);
 
     if (!this._timeout && !this._timeoutDisabled) {
       // Wait a little before sending the message to batch multiple changes.
