@@ -172,6 +172,7 @@ impl SpecNewSessionParameters {
                 },
                 "ftpProxy" => try!(SpecNewSessionParameters::validate_host(value)),
                 "httpProxy" => try!(SpecNewSessionParameters::validate_host(value)),
+                "noProxy" => try!(SpecNewSessionParameters::validate_no_proxy(value)),
                 "sslProxy" => try!(SpecNewSessionParameters::validate_host(value)),
                 "socksProxy" => try!(SpecNewSessionParameters::validate_host(value)),
                 "socksVersion" => if !value.is_number() {
@@ -191,6 +192,28 @@ impl SpecNewSessionParameters {
                     format!("{} was not a valid proxy configuration capability", x)))
             }
         }
+        Ok(())
+    }
+
+    fn validate_no_proxy(value: &Json) -> WebDriverResult<()> {
+        match value.as_array() {
+            Some(hosts) => {
+                for host in hosts {
+                    match host.as_string() {
+                        Some(_) => {},
+                        None => return Err(WebDriverError::new(
+                            ErrorStatus::InvalidArgument,
+                            format!("{} was not a string", host)
+                        ))
+                    }
+                }
+            },
+            None => return Err(WebDriverError::new(
+                ErrorStatus::InvalidArgument,
+                format!("{} was not an array", value)
+            ))
+        }
+
         Ok(())
     }
 
@@ -497,24 +520,32 @@ mod tests {
     use rustc_serialize::json::Json;
     use super::{WebDriverResult, SpecNewSessionParameters};
 
-    fn validate_host(value: &str) -> WebDriverResult<()> {
-        SpecNewSessionParameters::validate_host(&Json::String(value.into()))
+    fn validate_proxy(value: &str) -> WebDriverResult<()> {
+        let data = Json::from_str(value).unwrap();
+        SpecNewSessionParameters::validate_proxy(&data)
     }
 
     #[test]
-    fn test_validate_host() {
-        validate_host("127.0.0.1").unwrap();
-        validate_host("127.0.0.1:").unwrap();
-        validate_host("127.0.0.1:3128").unwrap();
-        validate_host("[2001:db8::1]").unwrap();
-        validate_host("[2001:db8::1]:3128").unwrap();
-        validate_host("localhost").unwrap();
-        validate_host("localhost:3128").unwrap();
-        validate_host("example.org").unwrap();
-        validate_host("example.org:3128").unwrap();
+    fn test_validate_proxy() {
+        // proxy hosts
+        validate_proxy("{\"httpProxy\": \"127.0.0.1\"}").unwrap();
+        validate_proxy("{\"httpProxy\": \"127.0.0.1:\"}").unwrap();
+        validate_proxy("{\"httpProxy\": \"127.0.0.1:3128\"}").unwrap();
+        validate_proxy("{\"httpProxy\": \"localhost\"}").unwrap();
+        validate_proxy("{\"httpProxy\": \"localhost:3128\"}").unwrap();
+        validate_proxy("{\"httpProxy\": \"[2001:db8::1]\"}").unwrap();
+        validate_proxy("{\"httpProxy\": \"[2001:db8::1]:3128\"}").unwrap();
+        validate_proxy("{\"httpProxy\": \"example.org\"}").unwrap();
+        validate_proxy("{\"httpProxy\": \"example.org:3128\"}").unwrap();
 
-        assert!(validate_host("http://example.org").is_err());  // existing scheme
-        assert!(validate_host("example.org:-1").is_err());  // invalid port
-        assert!(validate_host("2001:db8::1").is_err());  // missing brackets
+        assert!(validate_proxy("{\"httpProxy\": \"http://example.org\"}").is_err());
+        assert!(validate_proxy("{\"httpProxy\": \"example.org:-1\"}").is_err());
+        assert!(validate_proxy("{\"httpProxy\": \"2001:db8::1\"}").is_err());
+
+        // no proxy for manual proxy type
+        validate_proxy("{\"noProxy\": [\"foo\"]}").unwrap();
+
+        assert!(validate_proxy("{\"noProxy\": \"foo\"}").is_err());
+        assert!(validate_proxy("{\"noProxy\": [42]}").is_err());
     }
 }
