@@ -250,6 +250,7 @@ public:
   virtual nsresult        SetNonClientMargins(LayoutDeviceIntMargin& aMargins) override;
   virtual LayoutDeviceIntPoint GetClientOffset() override;
   virtual void            EnableDragDrop(bool aEnable) override {};
+  virtual nsresult        AsyncEnableDragDrop(bool aEnable) override;
   virtual MOZ_MUST_USE nsresult
                           GetAttention(int32_t aCycleCount) override
                           { return NS_OK; }

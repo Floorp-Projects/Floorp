@@ -125,6 +125,11 @@ int32_t nsIWidget::sPointerIdCounter = 0;
 /*static*/ uint64_t AutoObserverNotifier::sObserverId = 0;
 /*static*/ nsDataHashtable<nsUint64HashKey, nsCOMPtr<nsIObserver>> AutoObserverNotifier::sSavedObservers;
 
+// The maximum amount of time to let the EnableDragDrop runnable wait in the
+// idle queue before timing out and moving it to the regular queue. Value is in
+// milliseconds.
+const uint32_t kAsyncDragDropTimeout = 1000;
+
 namespace mozilla {
 namespace widget {
 
@@ -2227,6 +2232,18 @@ nsBaseWidget::UnregisterPluginWindowForRemoteUpdates()
   MOZ_ASSERT(sPluginWidgetList);
   sPluginWidgetList->Remove(id);
 #endif
+}
+
+nsresult
+nsBaseWidget::AsyncEnableDragDrop(bool aEnable)
+{
+  RefPtr<nsBaseWidget> kungFuDeathGrip = this;
+  return NS_IdleDispatchToCurrentThread(
+    NS_NewRunnableFunction("AsyncEnableDragDropFn",
+                           [this, aEnable, kungFuDeathGrip]() {
+                             EnableDragDrop(aEnable);
+                           }),
+    kAsyncDragDropTimeout);
 }
 
 // static
