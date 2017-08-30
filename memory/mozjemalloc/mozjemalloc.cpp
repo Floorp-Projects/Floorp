@@ -244,8 +244,6 @@ typedef long ssize_t;
 #include "mozjemalloc_types.h"
 #include "linkedlist.h"
 
-extern "C" void moz_abort();
-
 /* Some tools, such as /dev/dsp wrappers, LD_PRELOAD libraries that
  * happen to override mmap() and call dlsym() from their overridden
  * mmap(). The problem is that dlsym() calls malloc(), and this ends
@@ -1272,7 +1270,7 @@ pages_decommit(void *addr, size_t size)
 		CHUNK_ADDR2OFFSET((uintptr_t)addr));
 	while (size > 0) {
 		if (!VirtualFree(addr, pages_size, MEM_DECOMMIT))
-			moz_abort();
+			MOZ_CRASH();
 		addr = (void *)((uintptr_t)addr + pages_size);
 		size -= pages_size;
 		pages_size = std::min(size, chunksize);
@@ -1280,7 +1278,7 @@ pages_decommit(void *addr, size_t size)
 #else
 	if (mmap(addr, size, PROT_NONE, MAP_FIXED | MAP_PRIVATE | MAP_ANON, -1,
 	    0) == MAP_FAILED)
-		moz_abort();
+		MOZ_CRASH();
 	MozTagAnonymousMemory(addr, size, "jemalloc-decommitted");
 #endif
 }
@@ -1300,7 +1298,7 @@ pages_commit(void *addr, size_t size)
 		CHUNK_ADDR2OFFSET((uintptr_t)addr));
 	while (size > 0) {
 		if (!VirtualAlloc(addr, pages_size, MEM_COMMIT, PAGE_READWRITE))
-			moz_abort();
+			MOZ_CRASH();
 		addr = (void *)((uintptr_t)addr + pages_size);
 		size -= pages_size;
 		pages_size = std::min(size, chunksize);
@@ -1308,7 +1306,7 @@ pages_commit(void *addr, size_t size)
 #  else
 	if (mmap(addr, size, PROT_READ | PROT_WRITE, MAP_FIXED | MAP_PRIVATE |
 	    MAP_ANON, -1, 0) == MAP_FAILED)
-		moz_abort();
+		MOZ_CRASH();
 	MozTagAnonymousMemory(addr, size, "jemalloc");
 #  endif
 }
@@ -4279,7 +4277,7 @@ malloc_init_hard(void)
 	if (pagesize % (size_t) result) {
 		_malloc_message(_getprogname(),
 				"Compile-time page size does not divide the runtime one.\n");
-		moz_abort();
+		MOZ_CRASH();
 	}
 #else
 	pagesize = (size_t) result;
@@ -5102,7 +5100,7 @@ void
 jemalloc_darwin_init(void)
 {
 	if (malloc_init_hard())
-		moz_abort();
+		MOZ_CRASH();
 }
 
 #endif
