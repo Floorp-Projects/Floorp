@@ -31,6 +31,10 @@ def jemalloc(value, target, build_project, c_compiler):
     if target.kernel == 'Linux':
         return True
 
+    if value and target.kernel not in ('WINNT', 'Linux', 'Darwin', 'kFreeBSD',
+                                       'FreeBSD', 'NetBSD'):
+        die('--enable-jemalloc is not supported on %s', target.kernel)
+
 
 set_config('MOZ_MEMORY', jemalloc)
 set_define('MOZ_MEMORY', jemalloc)
@@ -45,29 +49,6 @@ def jemalloc_for_old_configure(jemalloc):
     return '--%s-jemalloc' % ('enable' if jemalloc else 'disable')
 
 add_old_configure_arg(jemalloc_for_old_configure)
-
-
-@depends(jemalloc, target)
-def jemalloc_os_define(jemalloc, target):
-    if jemalloc:
-        if target.kernel == 'WINNT':
-            return 'MOZ_MEMORY_WINDOWS'
-        if target.kernel == 'Linux':
-            return 'MOZ_MEMORY_LINUX'
-        if target.kernel == 'Darwin':
-            return 'MOZ_MEMORY_DARWIN'
-        if target.kernel in ('kFreeBSD', 'FreeBSD', 'NetBSD'):
-            return 'MOZ_MEMORY_BSD'
-        die('--enable-jemalloc is not supported on %s', target.kernel)
-
-set_define(jemalloc_os_define, '1')
-
-@depends(jemalloc, target)
-def jemalloc_os_define_android(jemalloc, target):
-    if jemalloc and target.os == 'Android':
-        return 'MOZ_MEMORY_ANDROID'
-
-set_define(jemalloc_os_define_android, '1')
 
 
 option('--enable-replace-malloc',
