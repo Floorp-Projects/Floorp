@@ -449,7 +449,7 @@ Request::Constructor(const GlobalObject& aGlobal,
   }
 
   if (aInit.mSignal.WasPassed()) {
-    signal = &aInit.mSignal.Value();
+    signal = aInit.mSignal.Value();
   }
 
   if (NS_IsMainThread()) {
