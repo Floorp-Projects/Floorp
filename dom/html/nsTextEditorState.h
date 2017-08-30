@@ -459,7 +459,12 @@ private:
   RefPtr<nsTextInputListener> mTextListener;
   mozilla::Maybe<nsString> mValue;
   RefPtr<nsAnonDivObserver> mMutationObserver;
-  mutable nsString mCachedValue; // Caches non-hard-wrapped value on a multiline control.
+  // Cache of the |.value| of <input> or <textarea> element without hard-wrap.
+  // If this is empty string, it doesn't cache |.value|.
+  // Otherwise, it's cached when setting specific value or getting value from
+  // TextEditor.  Additionally, when contents in the anonymous <div> element
+  // is modified, this is cleared.
+  mutable nsString mCachedValue;
   // mValueBeingSet is available only while SetValue() is requesting to commit
   // composition.  I.e., this is valid only while mIsCommittingComposition is
   // true.  While active composition is being committed, GetValue() needs

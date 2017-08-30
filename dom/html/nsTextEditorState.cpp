@@ -2284,11 +2284,8 @@ nsTextEditorState::CreateRootNode()
                                   NOT_FROM_PARSER);
   NS_ENSURE_SUCCESS(rv, rv);
 
-  if (!IsSingleLineTextControl()) {
-    mMutationObserver = new nsAnonDivObserver(this);
-    mRootNode->AddMutationObserver(mMutationObserver);
-  }
-
+  mMutationObserver = new nsAnonDivObserver(this);
+  mRootNode->AddMutationObserver(mMutationObserver);
   return rv;
 }
 
@@ -2435,8 +2432,7 @@ nsTextEditorState::GetValue(nsAString& aValue, bool aIgnoreWrap) const
 
   if (mTextEditor && mBoundFrame &&
       (mEditorInitialized || !IsSingleLineTextControl())) {
-    bool canCache = aIgnoreWrap && !IsSingleLineTextControl();
-    if (canCache && !mCachedValue.IsEmpty()) {
+    if (aIgnoreWrap && !mCachedValue.IsEmpty()) {
       aValue = mCachedValue;
       return;
     }
@@ -2475,7 +2471,9 @@ nsTextEditorState::GetValue(nsAString& aValue, bool aIgnoreWrap) const
       mTextEditor->OutputToString(NS_LITERAL_STRING("text/plain"), flags,
                                   aValue);
     }
-    if (canCache) {
+    // Only when the result doesn't include line breaks caused by hard-wrap,
+    // mCacheValue should cache the value.
+    if (!(flags & nsIDocumentEncoder::OutputWrap)) {
       mCachedValue = aValue;
     } else {
       mCachedValue.Truncate();
@@ -2719,10 +2717,10 @@ nsTextEditorState::SetValue(const nsAString& aValue, const nsAString* aOldValue,
           return true;
         }
 
-        if (!IsSingleLineTextControl()) {
-          if (!mCachedValue.Assign(newValue, fallible)) {
-            return false;
-          }
+        // The new value never includes line breaks caused by hard-wrap.
+        // So, mCachedValue can always cache the new value.
+        if (!mCachedValue.Assign(newValue, fallible)) {
+          return false;
         }
       }
     }
