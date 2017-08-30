@@ -435,7 +435,7 @@ MakeNewNPAPIStreamInternal(NPP npp, const char *relativeURL, const char *target,
   return NPERR_NO_ERROR;
 }
 
-#if defined(MOZ_MEMORY_WINDOWS)
+#if defined(MOZ_MEMORY) && defined(XP_WIN)
 extern "C" size_t malloc_usable_size(const void *ptr);
 #endif
 
@@ -506,7 +506,7 @@ doGetIdentifier(JSContext *cx, const NPUTF8* name)
   return StringToNPIdentifier(cx, str);
 }
 
-#if defined(MOZ_MEMORY_WINDOWS)
+#if defined(MOZ_MEMORY) && defined(XP_WIN)
 BOOL
 InHeap(HANDLE hHeap, LPVOID lpMem)
 {
@@ -1415,7 +1415,7 @@ _releasevariantvalue(NPVariant* variant)
       const NPString *s = &NPVARIANT_TO_STRING(*variant);
 
       if (s->UTF8Characters) {
-#if defined(MOZ_MEMORY_WINDOWS)
+#if defined(MOZ_MEMORY) && defined(XP_WIN)
         if (malloc_usable_size((void *)s->UTF8Characters) != 0) {
           free((void*)s->UTF8Characters);
         } else {
