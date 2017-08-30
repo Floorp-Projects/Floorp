@@ -60,7 +60,7 @@ const wchar_t kAMDVP9DecoderDLLName[] =
 #error Unsupported Windows CPU Architecture
 #endif
 
-const CLSID CLSID_AMDWebmMfVp9Dec =
+extern const GUID CLSID_AMDWebmMfVp9Dec =
 {
   0x2d2d728a,
   0x67d6,
