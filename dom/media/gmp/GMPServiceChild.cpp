@@ -19,6 +19,7 @@
 #include "base/task.h"
 #include "nsIObserverService.h"
 #include "nsComponentManagerUtils.h"
+#include "mozilla/SystemGroup.h"
 
 namespace mozilla {
 
