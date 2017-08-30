@@ -14,6 +14,8 @@ const {
 } = require("devtools/client/shared/vendor/react");
 const Message = createFactory(require("devtools/client/webconsole/new-console-output/components/message"));
 const { l10n } = require("devtools/client/webconsole/new-console-output/utils/messages");
+const TabboxPanel = createFactory(require("devtools/client/netmonitor/src/components/tabbox-panel"));
+const { PANELS } = require("devtools/client/netmonitor/src/constants");
 
 NetworkEventMessage.displayName = "NetworkEventMessage";
 
@@ -26,13 +28,29 @@ NetworkEventMessage.propTypes = {
   networkMessageUpdate: PropTypes.object.isRequired,
 };
 
+/**
+ * This component is responsible for rendering network messages
+ * in the Console panel.
+ *
+ * Network logs are expandable and the user can inspect it inline
+ * within the Console panel (no need to switch to the Network panel).
+ *
+ * HTTP details are rendered using `TabboxPanel` component used to
+ * render contents of the side bar in the Network panel.
+ *
+ * All HTTP details data are fetched from the backend on-demand
+ * when the user is expanding network log for the first time.
+ */
 function NetworkEventMessage({
   message = {},
   serviceContainer,
   timestampsVisible,
   networkMessageUpdate = {},
+  dispatch,
+  open,
 }) {
   const {
+    id,
     actor,
     indent,
     source,
@@ -77,11 +95,28 @@ function NetworkEventMessage({
 
   const messageBody = [method, xhr, url, statusBody];
 
+  // Only render the attachment if the network-event is
+  // actually opened (performance optimization).
+  const attachment = open && dom.div({className: "network-info devtools-monospace"},
+    TabboxPanel({
+      activeTabId: PANELS.HEADERS,
+      request: networkMessageUpdate,
+      sourceMapService: serviceContainer.sourceMapService,
+      cloneSelectedRequest: () => {},
+      selectTab: (tabId) => {},
+    })
+  );
+
   return Message({
+    dispatch,
+    messageId: id,
     source,
     type,
     level,
     indent,
+    collapsible: true,
+    open,
+    attachment,
     topLevelClasses,
     timeStamp,
     messageBody,

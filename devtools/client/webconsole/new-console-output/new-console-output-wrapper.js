@@ -52,6 +52,11 @@ NewConsoleOutputWrapper.prototype = {
         return;
       }
 
+      // Do not focus if an input field was clicked
+      if (target.closest("input")) {
+        return;
+      }
+
       // Do not focus if something other than the output region was clicked
       if (!target.closest(".webconsole-output")) {
         return;
@@ -217,6 +222,10 @@ NewConsoleOutputWrapper.prototype = {
       batchedMessageAdd(actions.networkMessageUpdate(message));
       this.jsterm.hud.emit("network-message-updated", res);
     }
+  },
+
+  dispatchRequestUpdate: function (id, data) {
+    batchedMessageAdd(actions.networkUpdateRequest(id, data));
   },
 
   // Should be used for test purpose only.
