@@ -2,893 +2,186 @@
    - License, v. 2.0. If a copy of the MPL was not distributed with this
    - file, You can obtain one at http://mozilla.org/MPL/2.0/. -->
 <svg xmlns="http://www.w3.org/2000/svg" width="468" height="20" fill="context-fill">
-  <svg x="0">
-    <defs>
-      <mask id="d" mask-type="alpha">
-        <path d="M0 -2.906A2.907 2.907 0 0 1 2.906 0 2.907 2.907 0 0 1 0 2.906 2.907 2.907 0 0 1 -2.906 0 2.907 2.907 0 0 1 0 -2.906z" transform="translate(1.27 18.622) scale(7.36624)"/>
-      </mask>
-      <mask id="c" mask-type="alpha">
-        <path d="M0 -2.906A2.907 2.907 0 0 1 2.906 0 2.907 2.907 0 0 1 0 2.906 2.907 2.907 0 0 1 -2.906 0 2.907 2.907 0 0 1 0 -2.906z" transform="translate(1.151 1.705) scale(7.47609)"/>
-      </mask>
-      <filter id="a" filterUnits="objectBoundingBox">
-        <feColorMatrix color-interpolation-filters="sRGB" type="matrix" values="1 0 0 0 0 0 1 0 0 0 0 0 1 0 0 0 0 0 -1 1"/>
-      </filter>
-      <mask id="b" mask-type="alpha">
-        <g filter="url(#a)">
-          <path fill="#fff" d="M0 0h18v20H0z" opacity="0"/>
-          <path display="none"/>
-        </g>
-      </mask>
-    </defs>
-    <g opacity="0">
-      <path fill-opacity="1" d="M9.975 15.617" opacity="1"/>
-    </g>
-    <g mask="url(#b)" opacity="0">
-      <path fill-opacity="1" d="M9.342 16.98c3.86 -0.19 6.833 -3.473 6.642 -7.331C15.794 5.79 12.513 2.816 8.654 3.006A6.997 6.997 0 0 0 2.821 6.711a6.954 6.954 0 0 0 -0.517 5.332A1 1 0 1 0 4.217 11.46a5.02 5.02 0 1 1 4.41 3.496" opacity="1"/>
-    </g>
-    <g mask="url(#c)">
-      <path d="M9 11.413l5.293 5.293a0.999 0.999 0 0 0 1.414 -0.024 1.001 1.001 0 0 0 0 -1.39L10.414 9.999"/>
-      <path d="M10.973 10.558L3.707 3.293A1 1 0 0 0 2.293 3.317a1.001 1.001 0 0 0 0 1.39l7.266 7.265"/>
-    </g>
-    <g mask="url(#d)">
-      <path d="M9.285 8.301l-6.992 6.992a1 1 0 0 0 -0.025 1.414 1 1 0 0 0 1.439 0l6.992 -6.992"/>
-      <path d="M10.413 10l5.293 -5.293A0.999 0.999 0 0 0 15.682 3.293a1.001 1.001 0 0 0 -1.39 0L8.999 8.586"/>
-    </g>
-  </svg>
+  <path d="M10.414 10l5.293-5.293a1 1 0 0 0-1.414-1.414L9 8.586 3.707 3.293a1 1 0 0 0-1.414 1.414L7.586 10l-5.293 5.293a1 1 0 1 0 1.414 1.414L9 11.414l5.293 5.293a1 1 0 0 0 1.414-1.414z"/>
   <svg x="18">
-    <defs>
-      <mask id="h" mask-type="alpha">
-        <path d="M0 -2.906A2.907 2.907 0 0 1 2.906 0 2.907 2.907 0 0 1 0 2.906 2.907 2.907 0 0 1 -2.906 0 2.907 2.907 0 0 1 0 -2.906z" transform="translate(1.255 18.622) scale(7.27821)"/>
-      </mask>
-      <mask id="g" mask-type="alpha">
-        <path d="M0 -2.906A2.907 2.907 0 0 1 2.906 0 2.907 2.907 0 0 1 0 2.906 2.907 2.907 0 0 1 -2.906 0 2.907 2.907 0 0 1 0 -2.906z" transform="translate(1.151 1.705) scale(7.47609)"/>
-      </mask>
-      <filter id="e" filterUnits="objectBoundingBox">
-        <feColorMatrix color-interpolation-filters="sRGB" type="matrix" values="1 0 0 0 0 0 1 0 0 0 0 0 1 0 0 0 0 0 -1 1"/>
-      </filter>
-      <mask id="f" mask-type="alpha">
-        <g filter="url(#e)">
-          <path fill="#fff" d="M0 0h18v20H0z" opacity="0"/>
-          <path display="none"/>
-        </g>
-      </mask>
-    </defs>
-    <g opacity="0">
-      <path fill-opacity="1" d="M9.975 15.617" opacity="1"/>
-    </g>
-    <g mask="url(#f)" opacity="0">
-      <path fill-opacity="1" d="M9.342 16.98c3.86 -0.19 6.833 -3.473 6.642 -7.331C15.794 5.79 12.513 2.816 8.654 3.006A6.997 6.997 0 0 0 2.821 6.711a6.954 6.954 0 0 0 -0.517 5.332A1 1 0 1 0 4.217 11.46a5.02 5.02 0 1 1 4.41 3.496" opacity="1"/>
-    </g>
-    <g mask="url(#g)">
-      <path d="M9 11.413l5.293 5.293a0.999 0.999 0 0 0 1.414 -0.024 1.001 1.001 0 0 0 0 -1.39L10.414 9.999"/>
-      <path d="M10.973 10.558L3.707 3.293A1 1 0 0 0 2.293 3.317a1.001 1.001 0 0 0 0 1.39l7.266 7.265"/>
-    </g>
-    <g mask="url(#h)">
-      <path d="M9.285 8.301l-6.992 6.992a1 1 0 0 0 -0.025 1.414 1 1 0 0 0 1.439 0l6.992 -6.992"/>
-      <path d="M10.413 10l5.293 -5.293A0.999 0.999 0 0 0 15.682 3.293a1.001 1.001 0 0 0 -1.39 0L8.999 8.586"/>
-    </g>
+    <path d="M10.414 10l5.293-5.293a1 1 0 0 0-1.414-1.414L9 8.586 3.707 3.293a1 1 0 0 0-1.414 1.414L7.586 10l-5.293 5.293a1 1 0 1 0 1.414 1.414L9 11.414l5.293 5.293a1 1 0 0 0 1.414-1.414z"/>
   </svg>
   <svg x="36">
-    <defs>
-      <mask id="l" mask-type="alpha">
-        <path d="M0 -2.906A2.907 2.907 0 0 1 2.906 0 2.907 2.907 0 0 1 0 2.906 2.907 2.907 0 0 1 -2.906 0 2.907 2.907 0 0 1 0 -2.906z" transform="translate(1.236 18.622) scale(7.1563)"/>
-      </mask>
-      <mask id="k" mask-type="alpha">
-        <path d="M0 -2.906A2.907 2.907 0 0 1 2.906 0 2.907 2.907 0 0 1 0 2.906 2.907 2.907 0 0 1 -2.906 0 2.907 2.907 0 0 1 0 -2.906z" transform="translate(1.151 1.705) scale(7.47609)"/>
-      </mask>
-      <filter id="i" filterUnits="objectBoundingBox">
-        <feColorMatrix color-interpolation-filters="sRGB" type="matrix" values="1 0 0 0 0 0 1 0 0 0 0 0 1 0 0 0 0 0 -1 1"/>
-      </filter>
-      <mask id="j" mask-type="alpha">
-        <g filter="url(#i)">
-          <path fill="#fff" d="M0 0h18v20H0z" opacity="0"/>
-          <path display="none"/>
-        </g>
-      </mask>
-    </defs>
-    <g opacity="0">
-      <path fill-opacity="1" d="M9.975 15.617" opacity="1"/>
-    </g>
-    <g mask="url(#j)" opacity="0">
-      <path fill-opacity="1" d="M9.342 16.98c3.86 -0.19 6.833 -3.473 6.642 -7.331C15.794 5.79 12.513 2.816 8.654 3.006A6.997 6.997 0 0 0 2.821 6.71a6.954 6.954 0 0 0 -0.517 5.333A1 1 0 1 0 4.217 11.46a5.02 5.02 0 1 1 4.41 3.496" opacity="1"/>
-    </g>
-    <g mask="url(#k)">
-      <path d="M9 11.413l5.293 5.293a0.999 0.999 0 0 0 1.414 -0.024 1.001 1.001 0 0 0 0 -1.39L10.414 9.999"/>
-      <path d="M10.973 10.558L3.707 3.293A1 1 0 0 0 2.293 3.317a1.001 1.001 0 0 0 0 1.39l7.266 7.265"/>
-    </g>
-    <g mask="url(#l)">
-      <path d="M9.285 8.301l-6.992 6.992a1 1 0 0 0 -0.025 1.414 1 1 0 0 0 1.439 0l6.992 -6.992"/>
-      <path d="M10.413 10l5.293 -5.293A0.999 0.999 0 0 0 15.682 3.293a1.001 1.001 0 0 0 -1.39 0L8.999 8.586"/>
-    </g>
+    <path d="M10.414 10l5.293-5.293a1 1 0 0 0-1.414-1.414L9 8.586 3.707 3.293a1 1 0 0 0-1.414 1.414L7.586 10l-5.293 5.293a1 1 0 1 0 1.414 1.414L9 11.414l5.293 5.293a1 1 0 0 0 1.414-1.414z"/>
   </svg>
   <svg x="54">
-    <defs>
-      <mask id="p" mask-type="alpha">
-        <path d="M0 -2.906A2.907 2.907 0 0 1 2.906 0 2.907 2.907 0 0 1 0 2.906 2.907 2.907 0 0 1 -2.906 0 2.907 2.907 0 0 1 0 -2.906z" transform="translate(1.21 18.622) scale(6.99309)"/>
-      </mask>
-      <mask id="o" mask-type="alpha">
-        <path d="M0 -2.906A2.907 2.907 0 0 1 2.906 0 2.907 2.907 0 0 1 0 2.906 2.907 2.907 0 0 1 -2.906 0 2.907 2.907 0 0 1 0 -2.906z" transform="translate(1.151 1.705) scale(7.47405)"/>
-      </mask>
-      <filter id="m" filterUnits="objectBoundingBox">
-        <feColorMatrix color-interpolation-filters="sRGB" type="matrix" values="1 0 0 0 0 0 1 0 0 0 0 0 1 0 0 0 0 0 -1 1"/>
-      </filter>
-      <mask id="n" mask-type="alpha">
-        <g filter="url(#m)">
-          <path fill="#fff" d="M0 0h18v20H0z" opacity="0"/>
-          <path display="none"/>
-        </g>
-      </mask>
-    </defs>
-    <g opacity="0">
-      <path fill-opacity="1" d="M9.975 15.617" opacity="1"/>
-    </g>
-    <g mask="url(#n)" opacity="0">
-      <path fill-opacity="1" d="M9.342 16.98c3.859 -0.19 6.833 -3.473 6.642 -7.331C15.794 5.79 12.513 2.816 8.654 3.006A6.997 6.997 0 0 0 2.821 6.71a6.954 6.954 0 0 0 -0.517 5.333A1 1 0 1 0 4.217 11.46a5.02 5.02 0 1 1 4.41 3.496" opacity="1"/>
-    </g>
-    <g mask="url(#o)">
-      <path d="M9 11.413l5.293 5.293a0.999 0.999 0 0 0 1.414 -0.024 1.001 1.001 0 0 0 0 -1.39L10.414 9.999"/>
-      <path d="M10.973 10.558L3.707 3.293A1 1 0 0 0 2.293 3.317a1.001 1.001 0 0 0 0 1.39l7.266 7.265"/>
-    </g>
-    <g mask="url(#p)">
-      <path d="M9.285 8.301l-6.992 6.992a1 1 0 0 0 -0.025 1.414 1 1 0 0 0 1.439 0l6.992 -6.992"/>
-      <path d="M10.413 10l5.293 -5.293A0.999 0.999 0 0 0 15.682 3.293a1.001 1.001 0 0 0 -1.39 0L8.999 8.586"/>
-    </g>
+    <path d="M10.414 10l5.293-5.293a1 1 0 0 0-1.414-1.414L9 8.586 3.707 3.293a1 1 0 0 0-1.414 1.414L7.586 10l-5.293 5.293a1 1 0 1 0 1.414 1.414L9 11.414l5.293 5.293a1 1 0 0 0 1.414-1.414z"/>
   </svg>
   <svg x="72">
     <defs>
-      <mask id="t" mask-type="alpha">
-        <path d="M0 -2.906A2.907 2.907 0 0 1 2.906 0 2.907 2.907 0 0 1 0 2.906 2.907 2.907 0 0 1 -2.906 0 2.907 2.907 0 0 1 0 -2.906z" transform="translate(1.177 18.622) scale(6.7782)"/>
-      </mask>
-      <mask id="s" mask-type="alpha">
-        <path d="M0 -2.906A2.907 2.907 0 0 1 2.906 0 2.907 2.907 0 0 1 0 2.906 2.907 2.907 0 0 1 -2.906 0 2.907 2.907 0 0 1 0 -2.906z" transform="translate(1.148 1.705) scale(7.45544)"/>
-      </mask>
-      <filter id="q" filterUnits="objectBoundingBox">
-        <feColorMatrix color-interpolation-filters="sRGB" type="matrix" values="1 0 0 0 0 0 1 0 0 0 0 0 1 0 0 0 0 0 -1 1"/>
-      </filter>
-      <mask id="r" mask-type="alpha">
-        <g filter="url(#q)">
-          <path fill="#fff" d="M0 0h18v20H0z" opacity="0"/>
-          <path display="none"/>
-        </g>
+      <mask id="a" mask-type="alpha" fill="#fff">
+        <path d="M0 -2.906a2.907 2.907 0 0 1 2.906 2.906 2.907 2.907 0 0 1 -2.906 2.906 2.907 2.907 0 0 1 -2.906 -2.906 2.907 2.907 0 0 1 2.906 -2.906z" transform="translate(1.177 18.622) scale(6.7782)"/>
       </mask>
     </defs>
-    <g opacity="0">
-      <path fill-opacity="1" d="M9.975 15.617" opacity="1"/>
-    </g>
-    <g mask="url(#r)" opacity="0">
-      <path fill-opacity="1" d="M9.342 16.98c3.859 -0.19 6.832 -3.473 6.642 -7.331C15.794 5.79 12.514 2.816 8.654 3.006A6.997 6.997 0 0 0 2.821 6.71a6.954 6.954 0 0 0 -0.517 5.333A1 1 0 1 0 4.217 11.46a5.02 5.02 0 1 1 4.41 3.496" opacity="1"/>
-    </g>
-    <g mask="url(#s)">
-      <path d="M9 11.413l5.293 5.293a0.999 0.999 0 0 0 1.414 -0.024 1.001 1.001 0 0 0 0 -1.39L10.414 9.999"/>
-      <path d="M10.973 10.558L3.707 3.293A1 1 0 0 0 2.293 3.317a1.001 1.001 0 0 0 0 1.39l7.266 7.265"/>
-    </g>
-    <g mask="url(#t)">
-      <path d="M9.285 8.301l-6.992 6.992a1 1 0 0 0 -0.025 1.414 1 1 0 0 0 1.439 0l6.992 -6.992"/>
-      <path d="M10.413 10l5.293 -5.293A0.999 0.999 0 0 0 15.682 3.293a1.001 1.001 0 0 0 -1.39 0L8.999 8.586"/>
-    </g>
+    <path d="M10.414 10l5.293-5.293a1 1 0 0 0-1.414-1.414L9 8.586 3.707 3.293a1 1 0 0 0-1.414 1.414L7.586 10l-5.293 5.293a1 1 0 1 0 1.414 1.414L9 11.414l5.293 5.293a1 1 0 0 0 1.414-1.414z" mask="url(#a)"/>
   </svg>
   <svg x="90">
     <defs>
-      <mask id="x" mask-type="alpha">
-        <path d="M0 -2.906A2.907 2.907 0 0 1 2.906 0 2.907 2.907 0 0 1 0 2.906 2.907 2.907 0 0 1 -2.906 0 2.907 2.907 0 0 1 0 -2.906z" transform="translate(1.133 18.622) scale(6.49626)"/>
-      </mask>
-      <mask id="w" mask-type="alpha">
-        <path d="M0 -2.906A2.907 2.907 0 0 1 2.906 0 2.907 2.907 0 0 1 0 2.906 2.907 2.907 0 0 1 -2.906 0 2.907 2.907 0 0 1 0 -2.906z" transform="translate(1.142 1.705) scale(7.4152)"/>
-      </mask>
-      <filter id="u" filterUnits="objectBoundingBox">
-        <feColorMatrix color-interpolation-filters="sRGB" type="matrix" values="1 0 0 0 0 0 1 0 0 0 0 0 1 0 0 0 0 0 -1 1"/>
-      </filter>
-      <mask id="v" mask-type="alpha">
-        <g filter="url(#u)">
-          <path fill="#fff" d="M0 0h18v20H0z" opacity="0"/>
-          <path display="none"/>
-        </g>
+      <mask id="b" mask-type="alpha" fill="#fff">
+        <path d="M0 -2.906a2.907 2.907 0 0 1 2.906 2.906 2.907 2.907 0 0 1 -2.906 2.906 2.907 2.907 0 0 1 -2.906 -2.906 2.907 2.907 0 0 1 2.906 -2.906z" transform="translate(1.133 18.622) scale(6.49626)"/>
       </mask>
     </defs>
-    <g opacity="0">
-      <path fill-opacity="1" d="M9.974 15.617" opacity="1"/>
-    </g>
-    <g mask="url(#v)" opacity="0">
-      <path fill-opacity="1" d="M9.342 16.98c3.859 -0.19 6.832 -3.473 6.642 -7.33C15.794 5.79 12.514 2.815 8.654 3.005A6.997 6.997 0 0 0 2.821 6.71a6.954 6.954 0 0 0 -0.517 5.333 1 1 0 1 0 1.913 -0.584 5.02 5.02 0 1 1 4.41 3.496" opacity="1"/>
-    </g>
-    <g mask="url(#w)">
-      <path d="M9 11.413l5.293 5.293a0.999 0.999 0 0 0 1.414 -0.024 1.001 1.001 0 0 0 0 -1.39L10.414 9.999"/>
-      <path d="M10.973 10.558L3.707 3.293A1 1 0 0 0 2.293 3.317a1.001 1.001 0 0 0 0 1.39l7.266 7.265"/>
-    </g>
-    <g mask="url(#x)">
-      <path d="M9.285 8.301l-6.992 6.992a1 1 0 0 0 -0.025 1.414 1 1 0 0 0 1.439 0l6.992 -6.992"/>
-      <path d="M10.413 10l5.293 -5.293A0.999 0.999 0 0 0 15.682 3.293a1.001 1.001 0 0 0 -1.39 0L8.999 8.586"/>
-    </g>
+    <path d="M10.414 10l5.293-5.293a1 1 0 0 0-1.414-1.414L9 8.586 3.707 3.293a1 1 0 0 0-1.414 1.414L7.586 10l-5.293 5.293a1 1 0 1 0 1.414 1.414L9 11.414l5.293 5.293a1 1 0 0 0 1.414-1.414z" mask="url(#b)"/>
   </svg>
   <svg x="108">
     <defs>
-      <mask id="B" mask-type="alpha">
-        <path d="M0 -2.906A2.907 2.907 0 0 1 2.906 0 2.907 2.907 0 0 1 0 2.906 2.907 2.907 0 0 1 -2.906 0 2.907 2.907 0 0 1 0 -2.906z" transform="translate(1.075 18.622) scale(6.1231)"/>
-      </mask>
-      <mask id="A" mask-type="alpha">
-        <path d="M0 -2.906A2.907 2.907 0 0 1 2.906 0 2.907 2.907 0 0 1 0 2.906 2.907 2.907 0 0 1 -2.906 0 2.907 2.907 0 0 1 0 -2.906z" transform="translate(1.132 1.705) scale(7.34989)"/>
-      </mask>
-      <filter id="y" filterUnits="objectBoundingBox">
-        <feColorMatrix color-interpolation-filters="sRGB" type="matrix" values="1 0 0 0 0 0 1 0 0 0 0 0 1 0 0 0 0 0 -1 1"/>
-      </filter>
-      <mask id="z" mask-type="alpha">
-        <g filter="url(#y)">
-          <path fill="#fff" d="M0 0h18v20H0z" opacity="0"/>
-          <path display="none"/>
-        </g>
+      <mask id="c" mask-type="alpha" fill="#fff">
+        <path d="M0 -2.906a2.907 2.907 0 0 1 2.906 2.906 2.907 2.907 0 0 1 -2.906 2.906 2.907 2.907 0 0 1 -2.906 -2.906 2.907 2.907 0 0 1 2.906 -2.906z" transform="translate(1.075 18.622) scale(6.1231)"/>
       </mask>
     </defs>
-    <g opacity="0">
-      <path fill-opacity="1" d="M9.974 15.617" opacity="1"/>
-    </g>
-    <g mask="url(#z)" opacity="0">
-      <path fill-opacity="1" d="M9.342 16.98c3.859 -0.19 6.832 -3.473 6.642 -7.33C15.794 5.79 12.514 2.815 8.654 3.005A6.997 6.997 0 0 0 2.821 6.71a6.954 6.954 0 0 0 -0.517 5.333 1 1 0 1 0 1.913 -0.584 5.02 5.02 0 1 1 4.41 3.496" opacity="1"/>
-    </g>
-    <g mask="url(#A)">
-      <path d="M9 11.413l5.293 5.293a0.999 0.999 0 0 0 1.414 -0.024 1.001 1.001 0 0 0 0 -1.39L10.414 9.999"/>
-      <path d="M10.973 10.558L3.707 3.293A1 1 0 0 0 2.293 3.317a1.001 1.001 0 0 0 0 1.39l7.266 7.265"/>
-    </g>
-    <g mask="url(#B)">
-      <path d="M9.285 8.301l-6.992 6.992a1 1 0 0 0 -0.025 1.414 1 1 0 0 0 1.439 0l6.992 -6.992"/>
-      <path d="M10.413 10l5.293 -5.293A0.999 0.999 0 0 0 15.682 3.293a1.001 1.001 0 0 0 -1.39 0L8.999 8.586"/>
-    </g>
+    <path d="M10.414 10l5.293-5.293a1 1 0 0 0-1.414-1.414L9 8.586 3.707 3.293a1 1 0 0 0-1.414 1.414L7.586 10l-5.293 5.293a1 1 0 1 0 1.414 1.414L9 11.414l5.293 5.293a1 1 0 0 0 1.414-1.414z" mask="url(#c)"/>
   </svg>
   <svg x="126">
     <defs>
-      <mask id="F" mask-type="alpha">
-        <path d="M0 -2.906A2.907 2.907 0 0 1 2.906 0 2.907 2.907 0 0 1 0 2.906 2.907 2.907 0 0 1 -2.906 0 2.907 2.907 0 0 1 0 -2.906z" transform="translate(.996 18.622) scale(5.61712)"/>
-      </mask>
-      <mask id="E" mask-type="alpha">
-        <path d="M0 -2.906A2.907 2.907 0 0 1 2.906 0 2.907 2.907 0 0 1 0 2.906 2.907 2.907 0 0 1 -2.906 0 2.907 2.907 0 0 1 0 -2.906z" transform="translate(1.117 1.705) scale(7.2551)"/>
-      </mask>
-      <filter id="C" filterUnits="objectBoundingBox">
-        <feColorMatrix color-interpolation-filters="sRGB" type="matrix" values="1 0 0 0 0 0 1 0 0 0 0 0 1 0 0 0 0 0 -1 1"/>
-      </filter>
-      <mask id="D" mask-type="alpha">
-        <g filter="url(#C)">
-          <path fill="#fff" d="M0 0h18v20H0z" opacity="0"/>
-          <path display="none"/>
-        </g>
+      <mask id="d" mask-type="alpha" fill="#fff">
+        <path d="M0 -2.906a2.907 2.907 0 0 1 2.906 2.906 2.907 2.907 0 0 1 -2.906 2.906 2.907 2.907 0 0 1 -2.906 -2.906 2.907 2.907 0 0 1 2.906 -2.906z" transform="translate(.996 18.622) scale(5.61712)"/>
       </mask>
     </defs>
-    <g opacity="0">
-      <path fill-opacity="1" d="M9.974 15.617" opacity="1"/>
-    </g>
-    <g mask="url(#D)" opacity="0">
-      <path fill-opacity="1" d="M9.342 16.98c3.859 -0.19 6.832 -3.473 6.642 -7.33C15.794 5.79 12.514 2.815 8.654 3.005A6.997 6.997 0 0 0 2.821 6.71a6.954 6.954 0 0 0 -0.517 5.333 1 1 0 1 0 1.913 -0.584 5.02 5.02 0 1 1 4.41 3.496" opacity="1"/>
-    </g>
-    <g mask="url(#E)">
-      <path d="M9 11.413l5.293 5.293a0.999 0.999 0 0 0 1.414 -0.024 1.001 1.001 0 0 0 0 -1.39L10.414 9.999"/>
-      <path d="M10.973 10.558L3.707 3.293A1 1 0 0 0 2.293 3.317a1.001 1.001 0 0 0 0 1.39l7.266 7.265"/>
-    </g>
-    <g mask="url(#F)">
-      <path d="M9.285 8.301l-6.992 6.992a1 1 0 0 0 -0.025 1.414 1 1 0 0 0 1.439 0l6.992 -6.992"/>
-      <path d="M10.413 10l5.293 -5.293A0.999 0.999 0 0 0 15.682 3.293a1.001 1.001 0 0 0 -1.39 0L8.999 8.586"/>
-    </g>
+    <path d="M10.414 10l5.293-5.293a1 1 0 0 0-1.414-1.414L9 8.586 3.707 3.293a1 1 0 0 0-1.414 1.414L7.586 10l-5.293 5.293a1 1 0 1 0 1.414 1.414L9 11.414l5.293 5.293a1 1 0 0 0 1.414-1.414z" mask="url(#d)"/>
   </svg>
   <svg x="144">
     <defs>
-      <mask id="J" mask-type="alpha">
-        <path d="M0 -2.906A2.907 2.907 0 0 1 2.906 0 2.907 2.907 0 0 1 0 2.906 2.907 2.907 0 0 1 -2.906 0 2.907 2.907 0 0 1 0 -2.906z" transform="translate(.884 18.622) scale(4.89783)"/>
+      <mask id="J" mask-type="alpha" fill="#fff">
+        <path d="M0 -2.906a2.907 2.907 0 0 1 2.906 2.906 2.907 2.907 0 0 1 -2.906 2.906 2.907 2.907 0 0 1 -2.906 -2.906 2.907 2.907 0 0 1 2.906 -2.906z" transform="translate(.884 18.622) scale(4.89783)"/>
       </mask>
-      <mask id="I" mask-type="alpha">
-        <path d="M0 -2.906A2.907 2.907 0 0 1 2.906 0 2.907 2.907 0 0 1 0 2.906 2.907 2.907 0 0 1 -2.906 0 2.907 2.907 0 0 1 0 -2.906z" transform="translate(1.097 1.705) scale(7.12503)"/>
-      </mask>
-      <filter id="G" filterUnits="objectBoundingBox">
-        <feColorMatrix color-interpolation-filters="sRGB" type="matrix" values="1 0 0 0 0 0 1 0 0 0 0 0 1 0 0 0 0 0 -1 1"/>
-      </filter>
-      <mask id="H" mask-type="alpha">
-        <g filter="url(#G)">
-          <path fill="#fff" d="M0 0h18v20H0z" opacity="0"/>
-          <path display="none"/>
-        </g>
+      <mask id="I" mask-type="alpha" fill="#fff">
+        <path d="M0 -2.906a2.907 2.907 0 0 1 2.906 2.906 2.907 2.907 0 0 1 -2.906 2.906 2.907 2.907 0 0 1 -2.906 -2.906 2.907 2.907 0 0 1 2.906 -2.906z" transform="translate(1.097 1.705) scale(7.12503)"/>
       </mask>
     </defs>
-    <g opacity="0">
-      <path fill-opacity="1" d="M9.974 15.617" opacity="1"/>
-    </g>
-    <g mask="url(#H)" opacity="0">
-      <path fill-opacity="1" d="M9.342 16.98c3.859 -0.19 6.832 -3.473 6.642 -7.33C15.794 5.79 12.514 2.815 8.654 3.005A6.997 6.997 0 0 0 2.821 6.71a6.954 6.954 0 0 0 -0.517 5.333 1 1 0 1 0 1.913 -0.584 5.02 5.02 0 1 1 4.41 3.496" opacity="1"/>
-    </g>
     <g mask="url(#I)">
-      <path d="M9 11.413l5.293 5.293a0.999 0.999 0 0 0 1.414 -0.024 1.001 1.001 0 0 0 0 -1.39L10.414 9.999"/>
-      <path d="M10.973 10.558L3.707 3.293A1 1 0 0 0 2.293 3.317a1.001 1.001 0 0 0 0 1.39l7.266 7.265"/>
+      <path d="M9 11.413l5.293 5.293a0.999 0.999 0 0 0 1.414 -0.024 1.001 1.001 0 0 0 0 -1.39l-5.293 -5.293"/>
+      <path d="M10.973 10.558l-7.266 -7.265a1 1 0 0 0 -1.414 0.024 1.001 1.001 0 0 0 0 1.39l7.266 7.265"/>
     </g>
-    <g mask="url(#J)">
-      <path d="M9.285 8.301l-6.992 6.992a1 1 0 0 0 -0.025 1.414 1 1 0 0 0 1.439 0l6.992 -6.992"/>
-      <path d="M10.413 10l5.293 -5.293A0.999 0.999 0 0 0 15.682 3.293a1.001 1.001 0 0 0 -1.39 0L8.999 8.586"/>
-    </g>
+    <path d="M7.687 9.906l-5.394 5.387a1 1 0 0 0 -0.025 1.414 1 1 0 0 0 1.439 0l5.394 -5.387m1.212 -1.232l5.393 -5.381a0.999 0.999 0 0 0 -0.024 -1.414 1.001 1.001 0 0 0 -1.39 0l-5.393 5.381" mask="url(#J)"/>
   </svg>
   <svg x="162">
     <defs>
-      <mask id="N" mask-type="alpha">
-        <path d="M0 -2.906A2.907 2.907 0 0 1 2.906 0 2.907 2.907 0 0 1 0 2.906 2.907 2.907 0 0 1 -2.906 0 2.907 2.907 0 0 1 0 -2.906z" transform="translate(.711 18.622) scale(3.7902)"/>
+      <mask id="g" mask-type="alpha" fill="#fff">
+        <path d="M0 -2.906a2.907 2.907 0 0 1 2.906 2.906 2.907 2.907 0 0 1 -2.906 2.906 2.907 2.907 0 0 1 -2.906 -2.906 2.907 2.907 0 0 1 2.906 -2.906z" transform="translate(.71 18.622) scale(3.7902)"/>
       </mask>
-      <mask id="M" mask-type="alpha">
-        <path d="M0 -2.906A2.907 2.907 0 0 1 2.906 0 2.907 2.907 0 0 1 0 2.906 2.907 2.907 0 0 1 -2.906 0 2.907 2.907 0 0 1 0 -2.906z" transform="translate(1.07 1.705) scale(6.95173)"/>
-      </mask>
-      <filter id="K" filterUnits="objectBoundingBox">
-        <feColorMatrix color-interpolation-filters="sRGB" type="matrix" values="1 0 0 0 0 0 1 0 0 0 0 0 1 0 0 0 0 0 -1 1"/>
-      </filter>
-      <mask id="L" mask-type="alpha">
-        <g filter="url(#K)">
-          <path fill="#fff" d="M0 0h18v20H0z" opacity="0"/>
-          <path display="none"/>
-        </g>
+      <mask id="f" mask-type="alpha" fill="#fff">
+        <path d="M0 -2.906a2.907 2.907 0 0 1 2.906 2.906 2.907 2.907 0 0 1 -2.906 2.906 2.907 2.907 0 0 1 -2.906 -2.906 2.907 2.907 0 0 1 2.906 -2.906z" transform="translate(1.07 1.705) scale(6.95173)"/>
       </mask>
     </defs>
-    <g opacity="0">
-      <path fill-opacity="1" d="M9.974 15.617" opacity="1"/>
+    <g mask="url(#f)">
+      <path d="M9 11.413l5.293 5.293a0.999 0.999 0 0 0 1.414 -0.024 1.001 1.001 0 0 0 0 -1.39l-5.293 -5.293"/>
+      <path d="M10.973 10.558l-7.266 -7.265a1 1 0 0 0 -1.414 0.024 1.001 1.001 0 0 0 0 1.39l7.266 7.265"/>
     </g>
-    <g mask="url(#L)" opacity="0">
-      <path fill-opacity="1" d="M9.342 16.98c3.859 -0.19 6.832 -3.473 6.642 -7.33C15.794 5.79 12.514 2.815 8.654 3.005A6.997 6.997 0 0 0 2.821 6.71a6.954 6.954 0 0 0 -0.517 5.333 1 1 0 1 0 1.913 -0.584 5.02 5.02 0 1 1 4.41 3.496" opacity="1"/>
-    </g>
-    <g mask="url(#M)">
-      <path d="M9 11.413l5.293 5.293a0.999 0.999 0 0 0 1.414 -0.024 1.001 1.001 0 0 0 0 -1.39L10.414 9.999"/>
-      <path d="M10.973 10.558L3.707 3.293A1 1 0 0 0 2.293 3.317a1.001 1.001 0 0 0 0 1.39l7.266 7.265"/>
-    </g>
-    <g mask="url(#N)">
-      <path d="M9.285 8.301l-6.992 6.992a1 1 0 0 0 -0.025 1.414 1 1 0 0 0 1.439 0l6.992 -6.992"/>
-      <path d="M10.413 10l5.293 -5.293A0.999 0.999 0 0 0 15.682 3.293a1.001 1.001 0 0 0 -1.39 0L8.999 8.586"/>
-    </g>
+    <path d="M7.687 9.906l-5.394 5.387a1 1 0 0 0 -0.025 1.414 1 1 0 0 0 1.439 0l5.394 -5.387m1.212 -1.232l5.393 -5.381a0.999 0.999 0 0 0 -0.024 -1.414 1.001 1.001 0 0 0 -1.39 0l-5.393 5.381" mask="url(#g)"/>
   </svg>
   <svg x="180">
     <defs>
-      <mask id="R" mask-type="alpha">
-        <path d="M0 -2.906A2.907 2.907 0 0 1 2.906 0 2.907 2.907 0 0 1 0 2.906 2.907 2.907 0 0 1 -2.906 0 2.907 2.907 0 0 1 0 -2.906z" transform="translate(.454 18.622) scale(2.13915)"/>
+      <mask id="i" mask-type="alpha" fill="#fff">
+        <path d="M0 -2.906a2.907 2.907 0 0 1 2.906 2.906 2.907 2.907 0 0 1 -2.906 2.906 2.907 2.907 0 0 1 -2.906 -2.906 2.907 2.907 0 0 1 2.906 -2.906z" transform="translate(.454 18.622) scale(2.13915)"/>
       </mask>
-      <mask id="Q" mask-type="alpha">
-        <path d="M0 -2.906A2.907 2.907 0 0 1 2.906 0 2.907 2.907 0 0 1 0 2.906 2.907 2.907 0 0 1 -2.906 0 2.907 2.907 0 0 1 0 -2.906z" transform="translate(1.034 1.705) scale(6.72397)"/>
-      </mask>
-      <filter id="O" filterUnits="objectBoundingBox">
-        <feColorMatrix color-interpolation-filters="sRGB" type="matrix" values="1 0 0 0 0 0 1 0 0 0 0 0 1 0 0 0 0 0 -1 1"/>
-      </filter>
-      <mask id="P" mask-type="alpha">
-        <g filter="url(#O)">
-          <path fill="#fff" d="M0 0h18v20H0z" opacity="0"/>
-          <path display="none"/>
-        </g>
+      <mask id="h" mask-type="alpha" fill="#fff">
+        <path d="M0 -2.906a2.907 2.907 0 0 1 2.906 2.906 2.907 2.907 0 0 1 -2.906 2.906 2.907 2.907 0 0 1 -2.906 -2.906 2.907 2.907 0 0 1 2.906 -2.906z" transform="translate(1.034 1.705) scale(6.72397)"/>
       </mask>
     </defs>
-    <g opacity="0">
-      <path fill-opacity="1" d="M9.974 15.617" opacity="1"/>
+    <g mask="url(#h)">
+      <path d="M9 11.413l5.293 5.293a0.999 0.999 0 0 0 1.414 -0.024 1.001 1.001 0 0 0 0 -1.39l-5.293 -5.293"/>
+      <path d="M10.973 10.558l-7.266 -7.265a1 1 0 0 0 -1.414 0.024 1.001 1.001 0 0 0 0 1.39l7.266 7.265"/>
     </g>
-    <g mask="url(#P)" opacity="0">
-      <path fill-opacity="1" d="M9.342 16.98c3.859 -0.19 6.832 -3.473 6.642 -7.33C15.794 5.79 12.514 2.815 8.654 3.005A6.997 6.997 0 0 0 2.822 6.71a6.954 6.954 0 0 0 -0.517 5.333 1 1 0 1 0 1.913 -0.584 5.02 5.02 0 1 1 4.41 3.496" opacity="1"/>
-    </g>
-    <g mask="url(#Q)">
-      <path d="M9 11.413l5.293 5.293a0.999 0.999 0 0 0 1.414 -0.024 1.001 1.001 0 0 0 0 -1.39L10.414 9.999"/>
-      <path d="M10.973 10.558L3.707 3.293A1 1 0 0 0 2.293 3.317a1.001 1.001 0 0 0 0 1.39l7.266 7.265"/>
-    </g>
-    <g mask="url(#R)">
-      <path d="M9.285 8.301l-6.992 6.992a1 1 0 0 0 -0.025 1.414 1 1 0 0 0 1.439 0l6.992 -6.992"/>
-      <path d="M10.413 10l5.293 -5.293A0.999 0.999 0 0 0 15.682 3.293a1.001 1.001 0 0 0 -1.39 0L8.999 8.586"/>
-    </g>
+    <path d="M7.687 9.906l-5.394 5.387a1 1 0 0 0 -0.025 1.414 1 1 0 0 0 1.439 0l5.394 -5.387m1.212 -1.232l5.393 -5.381a0.999 0.999 0 0 0 -0.024 -1.414 1.001 1.001 0 0 0 -1.39 0l-5.393 5.381" mask="url(#i)"/>
   </svg>
   <svg x="198">
     <defs>
-      <mask id="V" mask-type="alpha">
-        <path d="M0 -2.906A2.907 2.907 0 0 1 2.906 0 2.907 2.907 0 0 1 0 2.906 2.907 2.907 0 0 1 -2.906 0 2.907 2.907 0 0 1 0 -2.906z" transform="translate(.276 18.622) scale(1.00203)"/>
-      </mask>
-      <mask id="U" mask-type="alpha">
-        <path d="M0 -2.906A2.907 2.907 0 0 1 2.906 0 2.907 2.907 0 0 1 0 2.906 2.907 2.907 0 0 1 -2.906 0 2.907 2.907 0 0 1 0 -2.906z" transform="translate(.987 1.705) scale(6.42492)"/>
-      </mask>
-      <filter id="S" filterUnits="objectBoundingBox">
-        <feColorMatrix color-interpolation-filters="sRGB" type="matrix" values="1 0 0 0 0 0 1 0 0 0 0 0 1 0 0 0 0 0 -1 1"/>
-      </filter>
-      <mask id="T" mask-type="alpha">
-        <g filter="url(#S)">
-          <path fill="#fff" d="M0 0h18v20H0z" opacity="0"/>
-          <path display="none"/>
-        </g>
+      <mask id="j" mask-type="alpha" fill="#fff">
+        <path d="M0 -2.906a2.907 2.907 0 0 1 2.906 2.906 2.907 2.907 0 0 1 -2.906 2.906 2.907 2.907 0 0 1 -2.906 -2.906 2.907 2.907 0 0 1 2.906 -2.906z" transform="translate(.987 1.705) scale(6.42492)"/>
       </mask>
     </defs>
-    <g opacity="0">
-      <path fill-opacity="1" d="M9.974 15.617" opacity="1"/>
-    </g>
-    <g mask="url(#T)" opacity="0">
-      <path fill-opacity="1" d="M9.342 16.98c3.859 -0.19 6.832 -3.473 6.642 -7.33C15.794 5.79 12.514 2.815 8.654 3.005A6.997 6.997 0 0 0 2.822 6.71a6.954 6.954 0 0 0 -0.517 5.333 1 1 0 1 0 1.913 -0.584 5.02 5.02 0 1 1 4.41 3.496" opacity="1"/>
-    </g>
-    <g mask="url(#U)">
-      <path d="M9 11.413l5.293 5.293a0.999 0.999 0 0 0 1.414 -0.024 1.001 1.001 0 0 0 0 -1.39L10.414 9.999"/>
-      <path d="M10.973 10.558L3.707 3.293A1 1 0 0 0 2.293 3.317a1.001 1.001 0 0 0 0 1.39l7.266 7.265"/>
-    </g>
-    <g mask="url(#V)">
-      <path d="M9.285 8.301l-6.992 6.992a1 1 0 0 0 -0.025 1.414 1 1 0 0 0 1.439 0l6.992 -6.992"/>
-      <path d="M10.413 10l5.293 -5.293A0.999 0.999 0 0 0 15.682 3.293a1.001 1.001 0 0 0 -1.39 0L8.999 8.586"/>
+    <g mask="url(#j)">
+      <path d="M9 11.413l5.293 5.293a0.999 0.999 0 0 0 1.414 -0.024 1.001 1.001 0 0 0 0 -1.39l-5.293 -5.293"/>
+      <path d="M10.973 10.558l-7.266 -7.265a1 1 0 0 0 -1.414 0.024 1.001 1.001 0 0 0 0 1.39l7.266 7.265"/>
     </g>
   </svg>
   <svg x="216">
     <defs>
-      <mask id="Z" mask-type="alpha">
-        <path d="M0 -2.906A2.907 2.907 0 0 1 2.906 0 2.907 2.907 0 0 1 0 2.906 2.907 2.907 0 0 1 -2.906 0 2.907 2.907 0 0 1 0 -2.906z" transform="translate(.216 18.622) scale(.61358)"/>
-      </mask>
-      <mask id="Y" mask-type="alpha">
-        <path d="M0 -2.906A2.907 2.907 0 0 1 2.906 0 2.907 2.907 0 0 1 0 2.906 2.907 2.907 0 0 1 -2.906 0 2.907 2.907 0 0 1 0 -2.906z" transform="translate(.925 1.705) scale(6.02764)"/>
-      </mask>
-      <filter id="W" filterUnits="objectBoundingBox">
-        <feColorMatrix color-interpolation-filters="sRGB" type="matrix" values="1 0 0 0 0 0 1 0 0 0 0 0 1 0 0 0 0 0 -1 1"/>
-      </filter>
-      <mask id="X" mask-type="alpha">
-        <g filter="url(#W)">
-          <path fill="#fff" d="M0 0h18v20H0z" opacity="0"/>
-          <path display="none"/>
-        </g>
+      <mask id="k" mask-type="alpha" fill="#fff">
+        <path d="M0 -2.906a2.907 2.907 0 0 1 2.906 2.906 2.907 2.907 0 0 1 -2.906 2.906 2.907 2.907 0 0 1 -2.906 -2.906 2.907 2.907 0 0 1 2.906 -2.906z" transform="translate(.925 1.705) scale(6.02764)"/>
       </mask>
     </defs>
-    <g opacity="0">
-      <path fill-opacity="1" d="M9.974 15.617" opacity="1"/>
-    </g>
-    <g mask="url(#X)" opacity="0">
-      <path fill-opacity="1" d="M9.342 16.98c3.859 -0.19 6.832 -3.473 6.642 -7.33C15.794 5.79 12.514 2.815 8.654 3.005A6.997 6.997 0 0 0 2.822 6.71a6.954 6.954 0 0 0 -0.517 5.333 1 1 0 1 0 1.913 -0.584 5.02 5.02 0 1 1 4.41 3.496" opacity="1"/>
-    </g>
-    <g mask="url(#Y)">
-      <path d="M9 11.413l5.293 5.293a0.999 0.999 0 0 0 1.414 -0.024 1.001 1.001 0 0 0 0 -1.39L10.414 9.999"/>
-      <path d="M10.973 10.558L3.707 3.293A1 1 0 0 0 2.293 3.317a1.001 1.001 0 0 0 0 1.39l7.266 7.265"/>
-    </g>
-    <g mask="url(#Z)">
-      <path d="M9.285 8.301l-6.992 6.992a1 1 0 0 0 -0.025 1.414 1 1 0 0 0 1.439 0l6.992 -6.992"/>
-      <path d="M10.413 10l5.293 -5.293A0.999 0.999 0 0 0 15.682 3.293a1.001 1.001 0 0 0 -1.39 0L8.999 8.586"/>
+    <g mask="url(#k)">
+      <path d="M9 11.413l5.293 5.293a0.999 0.999 0 0 0 1.414 -0.024 1.001 1.001 0 0 0 0 -1.39l-5.293 -5.293"/>
+      <path d="M10.973 10.558l-7.266 -7.265a1 1 0 0 0 -1.414 0.024 1.001 1.001 0 0 0 0 1.39l7.266 7.265"/>
     </g>
   </svg>
   <svg x="234">
     <defs>
-      <mask id="ad" mask-type="alpha">
-        <path d="M0 -2.906A2.907 2.907 0 0 1 2.906 0 2.907 2.907 0 0 1 0 2.906 2.907 2.907 0 0 1 -2.906 0 2.907 2.907 0 0 1 0 -2.906z" transform="translate(.204 18.622) scale(.54135)"/>
-      </mask>
-      <mask id="ac" mask-type="alpha">
-        <path d="M0 -2.906A2.907 2.907 0 0 1 2.906 0 2.907 2.907 0 0 1 0 2.906 2.907 2.907 0 0 1 -2.906 0 2.907 2.907 0 0 1 0 -2.906z" transform="translate(.84 1.705) scale(5.48475)"/>
-      </mask>
-      <filter id="aa" filterUnits="objectBoundingBox">
-        <feColorMatrix color-interpolation-filters="sRGB" type="matrix" values="1 0 0 0 0 0 1 0 0 0 0 0 1 0 0 0 0 0 -1 1"/>
-      </filter>
-      <mask id="ab" mask-type="alpha">
-        <g filter="url(#aa)">
-          <path fill="#fff" d="M0 0h18v20H0z" opacity="0"/>
-          <path display="none"/>
-        </g>
+      <mask id="l" mask-type="alpha" fill="#fff">
+        <path d="M0 -2.906a2.907 2.907 0 0 1 2.906 2.906 2.907 2.907 0 0 1 -2.906 2.906 2.907 2.907 0 0 1 -2.906 -2.906 2.907 2.907 0 0 1 2.906 -2.906z" transform="translate(.84 1.705) scale(5.48475)"/>
       </mask>
     </defs>
-    <g opacity="0">
-      <path fill-opacity="1" d="M9.974 15.617" opacity="1"/>
-    </g>
-    <g mask="url(#ab)" opacity="0">
-      <path fill-opacity="1" d="M9.342 16.98c3.859 -0.19 6.832 -3.472 6.642 -7.33C15.794 5.79 12.514 2.817 8.654 3.006A6.997 6.997 0 0 0 2.822 6.71a6.954 6.954 0 0 0 -0.517 5.333A1 1 0 1 0 4.217 11.46a5.02 5.02 0 1 1 4.41 3.496" opacity="1"/>
-    </g>
-    <g mask="url(#ac)">
-      <path d="M9 11.413l5.293 5.293a0.999 0.999 0 0 0 1.414 -0.024 1.001 1.001 0 0 0 0 -1.39L10.414 9.999"/>
-      <path d="M10.973 10.558L3.707 3.293A1 1 0 0 0 2.293 3.317a1.001 1.001 0 0 0 0 1.39l7.266 7.265"/>
-    </g>
-    <g mask="url(#ad)">
-      <path d="M9.285 8.301l-6.992 6.992a1 1 0 0 0 -0.025 1.414 1 1 0 0 0 1.439 0l6.992 -6.992"/>
-      <path d="M10.413 10l5.293 -5.293A0.999 0.999 0 0 0 15.682 3.293a1.001 1.001 0 0 0 -1.39 0L8.999 8.586"/>
+    <g mask="url(#l)">
+      <path d="M9 11.413l5.293 5.293a0.999 0.999 0 0 0 1.414 -0.024 1.001 1.001 0 0 0 0 -1.39l-5.293 -5.293"/>
+      <path d="M10.973 10.558l-7.266 -7.265a1 1 0 0 0 -1.414 0.024 1.001 1.001 0 0 0 0 1.39l7.266 7.265"/>
     </g>
   </svg>
   <svg x="252">
     <defs>
-      <mask id="ah" mask-type="alpha">
-        <path d="M0 -2.906A2.907 2.907 0 0 1 2.906 0 2.907 2.907 0 0 1 0 2.906 2.907 2.907 0 0 1 -2.906 0 2.907 2.907 0 0 1 0 -2.906z" transform="translate(.204 18.622) scale(.54135)"/>
-      </mask>
-      <mask id="ag" mask-type="alpha">
-        <path d="M0 -2.906A2.907 2.907 0 0 1 2.906 0 2.907 2.907 0 0 1 0 2.906 2.907 2.907 0 0 1 -2.906 0 2.907 2.907 0 0 1 0 -2.906z" transform="translate(.718 1.705) scale(4.70182)"/>
-      </mask>
-      <filter id="ae" filterUnits="objectBoundingBox">
-        <feColorMatrix color-interpolation-filters="sRGB" type="matrix" values="1 0 0 0 0 0 1 0 0 0 0 0 1 0 0 0 0 0 -1 1"/>
-      </filter>
-      <mask id="af" mask-type="alpha">
-        <g filter="url(#ae)">
-          <path fill="#fff" d="M0 0h18v20H0z" opacity="0"/>
-          <path display="none"/>
-        </g>
+      <mask id="m" mask-type="alpha" fill="#fff">
+        <path d="M0 -2.906a2.907 2.907 0 0 1 2.906 2.906 2.907 2.907 0 0 1 -2.906 2.906 2.907 2.907 0 0 1 -2.906 -2.906 2.907 2.907 0 0 1 2.906 -2.906z" transform="translate(.718 1.705) scale(4.70182)"/>
       </mask>
     </defs>
-    <g opacity="0">
-      <path fill-opacity="1" d="M9.974 15.617" opacity="1"/>
-    </g>
-    <g mask="url(#af)" opacity="0">
-      <path fill-opacity="1" d="M9.342 16.98c3.858 -0.19 6.832 -3.472 6.642 -7.33C15.794 5.79 12.514 2.817 8.654 3.006A6.997 6.997 0 0 0 2.822 6.71a6.954 6.954 0 0 0 -0.517 5.333A1 1 0 1 0 4.217 11.46a5.02 5.02 0 1 1 4.41 3.496" opacity="1"/>
-    </g>
-    <g mask="url(#ag)">
-      <path d="M9 11.413l5.293 5.293a0.999 0.999 0 0 0 1.414 -0.024 1.001 1.001 0 0 0 0 -1.39L10.414 9.999"/>
-      <path d="M10.973 10.558L3.707 3.293A1 1 0 0 0 2.293 3.317a1.001 1.001 0 0 0 0 1.39l7.266 7.265"/>
-    </g>
-    <g mask="url(#ah)">
-      <path d="M9.285 8.301l-6.992 6.992a1 1 0 0 0 -0.025 1.414 1 1 0 0 0 1.439 0l6.992 -6.992"/>
-      <path d="M10.413 10l5.293 -5.293A0.999 0.999 0 0 0 15.682 3.293a1.001 1.001 0 0 0 -1.39 0L8.999 8.586"/>
+    <g mask="url(#m)">
+      <path d="M9 11.413l5.293 5.293a0.999 0.999 0 0 0 1.414 -0.024 1.001 1.001 0 0 0 0 -1.39l-5.293 -5.293"/>
+      <path d="M10.973 10.558l-7.266 -7.265a1 1 0 0 0 -1.414 0.024 1.001 1.001 0 0 0 0 1.39l7.266 7.265"/>
     </g>
   </svg>
   <svg x="270">
     <defs>
-      <mask id="al" mask-type="alpha">
-        <path d="M0 -2.906A2.907 2.907 0 0 1 2.906 0 2.907 2.907 0 0 1 0 2.906 2.907 2.907 0 0 1 -2.906 0 2.907 2.907 0 0 1 0 -2.906z" transform="translate(.204 18.622) scale(.54135)"/>
-      </mask>
-      <mask id="ak" mask-type="alpha">
-        <path d="M0 -2.906A2.907 2.907 0 0 1 2.906 0 2.907 2.907 0 0 1 0 2.906 2.907 2.907 0 0 1 -2.906 0 2.907 2.907 0 0 1 0 -2.906z" transform="translate(.527 1.705) scale(3.47447)"/>
-      </mask>
-      <filter id="ai" filterUnits="objectBoundingBox">
-        <feColorMatrix color-interpolation-filters="sRGB" type="matrix" values="1 0 0 0 0 0 1 0 0 0 0 0 1 0 0 0 0 0 -1 1"/>
-      </filter>
-      <mask id="aj" mask-type="alpha">
-        <g filter="url(#ai)">
-          <path fill="#fff" d="M0 0h18v20H0z" opacity="0"/>
-          <path display="none"/>
-        </g>
+      <mask id="n" mask-type="alpha" fill="#fff">
+        <path d="M0 -2.906a2.907 2.907 0 0 1 2.906 2.906 2.907 2.907 0 0 1 -2.906 2.906 2.907 2.907 0 0 1 -2.906 -2.906 2.907 2.907 0 0 1 2.906 -2.906z" transform="translate(.527 1.705) scale(3.47447)"/>
       </mask>
     </defs>
-    <g opacity="0">
-      <path fill-opacity="1" d="M9.974 15.617" opacity="1"/>
-    </g>
-    <g mask="url(#aj)" opacity="0">
-      <path fill-opacity="1" d="M9.342 16.98c3.858 -0.19 6.832 -3.472 6.642 -7.33C15.794 5.79 12.514 2.817 8.654 3.006A6.997 6.997 0 0 0 2.822 6.71a6.954 6.954 0 0 0 -0.517 5.333A1 1 0 1 0 4.217 11.46a5.02 5.02 0 1 1 4.41 3.496" opacity="1"/>
-    </g>
-    <g mask="url(#ak)">
-      <path d="M9 11.413l5.293 5.293a0.999 0.999 0 0 0 1.414 -0.024 1.001 1.001 0 0 0 0 -1.39L10.414 9.999"/>
-      <path d="M10.973 10.558L3.707 3.293A1 1 0 0 0 2.293 3.317a1.001 1.001 0 0 0 0 1.39l7.266 7.265"/>
-    </g>
-    <g mask="url(#al)">
-      <path d="M9.285 8.301l-6.992 6.992a1 1 0 0 0 -0.025 1.414 1 1 0 0 0 1.439 0l6.992 -6.992"/>
-      <path d="M10.413 10l5.293 -5.293A0.999 0.999 0 0 0 15.682 3.293a1.001 1.001 0 0 0 -1.39 0L8.999 8.586"/>
-    </g>
+    <path d="M10.973 10.558l-7.266 -7.265a1 1 0 0 0 -1.414 0.024 1.001 1.001 0 0 0 0 1.39l7.266 7.265" mask="url(#n)"/>
   </svg>
   <svg x="288">
     <defs>
-      <mask id="ap" mask-type="alpha">
-        <path d="M0 -2.906A2.907 2.907 0 0 1 2.906 0 2.907 2.907 0 0 1 0 2.906 2.907 2.907 0 0 1 -2.906 0 2.907 2.907 0 0 1 0 -2.906z" transform="translate(.204 18.622) scale(.54135)"/>
-      </mask>
-      <mask id="ao" mask-type="alpha">
-        <path d="M0 -2.906A2.907 2.907 0 0 1 2.906 0 2.907 2.907 0 0 1 0 2.906 2.907 2.907 0 0 1 -2.906 0 2.907 2.907 0 0 1 0 -2.906z" transform="translate(.267 1.705) scale(1.80625)"/>
-      </mask>
-      <filter id="am" filterUnits="objectBoundingBox">
-        <feColorMatrix color-interpolation-filters="sRGB" type="matrix" values="1 0 0 0 0 0 1 0 0 0 0 0 1 0 0 0 0 0 -1 1"/>
-      </filter>
-      <mask id="an" mask-type="alpha">
-        <g filter="url(#am)">
-          <path fill="#fff" d="M0 0h18v20H0z" opacity="0"/>
-          <path display="none"/>
-        </g>
+      <mask id="o" mask-type="alpha" fill="#fff">
+        <path d="M0 -2.906a2.907 2.907 0 0 1 2.906 2.906 2.907 2.907 0 0 1 -2.906 2.906 2.907 2.907 0 0 1 -2.906 -2.906 2.907 2.907 0 0 1 2.906 -2.906z" transform="translate(.267 1.705) scale(1.80625)"/>
       </mask>
     </defs>
-    <g opacity="0">
-      <path fill-opacity="1" d="M9.974 15.617" opacity="1"/>
-    </g>
-    <g mask="url(#an)" opacity="0">
-      <path fill-opacity="1" d="M9.342 16.98c3.858 -0.19 6.832 -3.472 6.642 -7.33C15.794 5.79 12.514 2.817 8.654 3.006A6.997 6.997 0 0 0 2.822 6.71a6.954 6.954 0 0 0 -0.517 5.333A1 1 0 1 0 4.217 11.46a5.02 5.02 0 1 1 4.41 3.496" opacity="1"/>
-    </g>
-    <g mask="url(#ao)">
-      <path d="M9 11.413l5.293 5.293a0.999 0.999 0 0 0 1.414 -0.024 1.001 1.001 0 0 0 0 -1.39L10.414 9.999"/>
-      <path d="M10.973 10.558L3.707 3.293A1 1 0 0 0 2.293 3.317a1.001 1.001 0 0 0 0 1.39l7.266 7.265"/>
-    </g>
-    <g mask="url(#ap)">
-      <path d="M9.285 8.301l-6.992 6.992a1 1 0 0 0 -0.025 1.414 1 1 0 0 0 1.439 0l6.992 -6.992"/>
-      <path d="M10.413 10l5.293 -5.293A0.999 0.999 0 0 0 15.682 3.293a1.001 1.001 0 0 0 -1.39 0L8.999 8.586"/>
-    </g>
+    <path d="M10.973 10.558l-7.266 -7.265a1 1 0 0 0 -1.414 0.024 1.001 1.001 0 0 0 0 1.39l7.266 7.265" mask="url(#o)"/>
   </svg>
   <svg x="306">
-    <defs>
-      <mask id="at" mask-type="alpha">
-        <path d="M0 -2.906A2.907 2.907 0 0 1 2.906 0 2.907 2.907 0 0 1 0 2.906 2.907 2.907 0 0 1 -2.906 0 2.907 2.907 0 0 1 0 -2.906z" transform="translate(.204 18.622) scale(.54135)"/>
-      </mask>
-      <mask id="as" mask-type="alpha">
-        <path d="M0 -2.906A2.907 2.907 0 0 1 2.906 0 2.907 2.907 0 0 1 0 2.906 2.907 2.907 0 0 1 -2.906 0 2.907 2.907 0 0 1 0 -2.906z" transform="translate(.122 1.705) scale(.87602)"/>
-      </mask>
-      <filter id="aq" filterUnits="objectBoundingBox">
-        <feColorMatrix color-interpolation-filters="sRGB" type="matrix" values="1 0 0 0 0 0 1 0 0 0 0 0 1 0 0 0 0 0 -1 1"/>
-      </filter>
-      <mask id="ar" mask-type="alpha">
-        <g filter="url(#aq)">
-          <path fill="#fff" d="M0 0h18v20H0z" opacity="0"/>
-          <path display="none"/>
-        </g>
-      </mask>
-    </defs>
-    <g opacity=".111">
-      <path fill-opacity="1" d="M7.268 15.294l0.269 -0.092a0.111 0.111 0 0 0 -0.073 -0.21l-0.526 0.181a0.111 0.111 0 0 0 -0.069 0.142l0.182 0.525a0.111 0.111 0 0 0 0.21 -0.072L7.173 15.513" opacity="1"/>
-    </g>
-    <g mask="url(#ar)" opacity=".066">
-      <path fill-opacity="1" d="M6.148 16.38c3.527 1.576 7.664 -0.007 9.24 -3.533C16.963 9.319 15.382 5.183 11.855 3.607A6.997 6.997 0 0 0 4.978 4.27 6.954 6.954 0 0 0 2.104 8.793a1 1 0 1 0 1.97 0.345 5.02 5.02 0 1 1 2.352 5.113" opacity="1"/>
-    </g>
-    <g mask="url(#as)">
-      <path d="M9 11.413l5.293 5.293a0.999 0.999 0 0 0 1.414 -0.024 1.001 1.001 0 0 0 0 -1.39L10.414 9.999"/>
-      <path d="M10.973 10.558L3.707 3.293A1 1 0 0 0 2.293 3.317a1.001 1.001 0 0 0 0 1.39l7.266 7.265"/>
-    </g>
-    <g mask="url(#at)">
-      <path d="M9.285 8.301l-6.992 6.992a1 1 0 0 0 -0.025 1.414 1 1 0 0 0 1.439 0l6.992 -6.992"/>
-      <path d="M10.413 10l5.293 -5.293A0.999 0.999 0 0 0 15.682 3.293a1.001 1.001 0 0 0 -1.39 0L8.999 8.586"/>
-    </g>
+    <path d="M6.148 16.38c3.527 1.576 7.664 -0.007 9.24 -3.533 1.576 -3.528 -0.005 -7.664 -3.532 -9.24a6.997 6.997 0 0 0 -6.878 0.664 6.954 6.954 0 0 0 -2.874 4.522 1 1 0 1 0 1.97 0.345 5.02 5.02 0 1 1 2.352 5.113" opacity=".066"/>
   </svg>
   <svg x="324">
-    <defs>
-      <mask id="ax" mask-type="alpha">
-        <path d="M0 -2.906A2.907 2.907 0 0 1 2.906 0 2.907 2.907 0 0 1 0 2.906 2.907 2.907 0 0 1 -2.906 0 2.907 2.907 0 0 1 0 -2.906z" transform="translate(.204 18.622) scale(.54135)"/>
-      </mask>
-      <mask id="aw" mask-type="alpha">
-        <path d="M0 -2.906A2.907 2.907 0 0 1 2.906 0 2.907 2.907 0 0 1 0 2.906 2.907 2.907 0 0 1 -2.906 0 2.907 2.907 0 0 1 0 -2.906z" transform="translate(.075 1.705) scale(.57983)"/>
-      </mask>
-      <filter id="au" filterUnits="objectBoundingBox">
-        <feColorMatrix color-interpolation-filters="sRGB" type="matrix" values="1 0 0 0 0 0 1 0 0 0 0 0 1 0 0 0 0 0 -1 1"/>
-      </filter>
-      <mask id="av" mask-type="alpha">
-        <g filter="url(#au)">
-          <path fill="#fff" d="M0 0h18v20H0z" opacity="0"/>
-          <path display="none"/>
-        </g>
-      </mask>
-    </defs>
-    <g opacity=".231">
-      <path fill-opacity="1" d="M4.934 13.615l0.584 0.08A0.231 0.231 0 0 0 5.58 13.236L4.436 13.082a0.231 0.231 0 0 0 -0.26 0.198L4.02 14.424a0.231 0.231 0 0 0 0.457 0.062l0.075 -0.554" opacity="1"/>
-    </g>
-    <g mask="url(#av)" opacity=".186">
-      <path fill-opacity="1" d="M3.416 14.202c2.324 3.086 6.71 3.704 9.796 1.38 3.086 -2.323 3.705 -6.708 1.381 -9.795A6.997 6.997 0 0 0 8.253 3.04 6.954 6.954 0 0 0 3.55 5.606a1 1 0 1 0 1.557 1.255A5.02 5.02 0 1 1 4.69 12.473" opacity="1"/>
-    </g>
-    <g mask="url(#aw)">
-      <path d="M9 11.413l5.293 5.293a0.999 0.999 0 0 0 1.414 -0.024 1.001 1.001 0 0 0 0 -1.39L10.414 9.999"/>
-      <path d="M10.973 10.558L3.707 3.293A1 1 0 0 0 2.293 3.317a1.001 1.001 0 0 0 0 1.39l7.266 7.265"/>
-    </g>
-    <g mask="url(#ax)">
-      <path d="M9.285 8.301l-6.992 6.992a1 1 0 0 0 -0.025 1.414 1 1 0 0 0 1.439 0l6.992 -6.992"/>
-      <path d="M10.413 10l5.293 -5.293A0.999 0.999 0 0 0 15.682 3.293a1.001 1.001 0 0 0 -1.39 0L8.999 8.586"/>
-    </g>
+    <path d="M4.934 13.615l0.584 0.08a0.231 0.231 0 0 0 0.062 -0.458l-1.144 -0.155a0.231 0.231 0 0 0 -0.26 0.198l-0.155 1.144a0.231 0.231 0 0 0 0.457 0.062l0.075 -0.554" opacity=".231"/>
+    <path d="M3.416 14.202c2.324 3.086 6.71 3.704 9.796 1.38 3.086 -2.323 3.705 -6.708 1.381 -9.795a6.997 6.997 0 0 0 -6.34 -2.747 6.954 6.954 0 0 0 -4.703 2.566 1 1 0 1 0 1.557 1.255 5.02 5.02 0 1 1 -0.417 5.612" opacity=".186"/>
   </svg>
   <svg x="342">
-    <defs>
-      <mask id="aB" mask-type="alpha">
-        <path d="M0 -2.906A2.907 2.907 0 0 1 2.906 0 2.907 2.907 0 0 1 0 2.906 2.907 2.907 0 0 1 -2.906 0 2.907 2.907 0 0 1 0 -2.906z" transform="translate(.204 18.622) scale(.54135)"/>
-      </mask>
-      <mask id="aA" mask-type="alpha">
-        <path d="M0 -2.906A2.907 2.907 0 0 1 2.906 0 2.907 2.907 0 0 1 0 2.906 2.907 2.907 0 0 1 -2.906 0 2.907 2.907 0 0 1 0 -2.906z" transform="translate(.07 1.705) scale(.54135)"/>
-      </mask>
-      <filter id="ay" filterUnits="objectBoundingBox">
-        <feColorMatrix color-interpolation-filters="sRGB" type="matrix" values="1 0 0 0 0 0 1 0 0 0 0 0 1 0 0 0 0 0 -1 1"/>
-      </filter>
-      <mask id="az" mask-type="alpha">
-        <g filter="url(#ay)">
-          <path fill="#fff" d="M0 0h18v20H0z" opacity="0"/>
-          <path display="none"/>
-        </g>
-      </mask>
-    </defs>
-    <g opacity=".351">
-      <path fill-opacity="1" d="M3.778 11.038l0.737 0.506a0.35 0.35 0 0 0 0.397 -0.578L3.468 9.973a0.35 0.35 0 0 0 -0.488 0.09l-0.993 1.445a0.35 0.35 0 0 0 0.578 0.397l0.48 -0.699" opacity="1"/>
-    </g>
-    <g mask="url(#az)" opacity=".322">
-      <path fill-opacity="1" d="M2.08 10.974c0.54 3.826 4.079 6.49 7.904 5.95s6.489 -4.078 5.95 -7.903A6.997 6.997 0 0 0 11.715 3.548 6.954 6.954 0 0 0 6.357 3.518 1 1 0 1 0 7.112 5.37a5.02 5.02 0 1 1 -3.081 4.71" opacity="1"/>
-    </g>
-    <g mask="url(#aA)">
-      <path d="M9 11.413l5.293 5.293a0.999 0.999 0 0 0 1.414 -0.024 1.001 1.001 0 0 0 0 -1.39L10.414 9.999"/>
-      <path d="M10.973 10.558L3.707 3.293A1 1 0 0 0 2.293 3.317a1.001 1.001 0 0 0 0 1.39l7.266 7.265"/>
-    </g>
-    <g mask="url(#aB)">
-      <path d="M9.285 8.301l-6.992 6.992a1 1 0 0 0 -0.025 1.414 1 1 0 0 0 1.439 0l6.992 -6.992"/>
-      <path d="M10.413 10l5.293 -5.293A0.999 0.999 0 0 0 15.682 3.293a1.001 1.001 0 0 0 -1.39 0L8.999 8.586"/>
-    </g>
+    <path d="M3.778 11.038l0.737 0.506a0.35 0.35 0 0 0 0.397 -0.578l-1.444 -0.993a0.35 0.35 0 0 0 -0.488 0.09l-0.993 1.445a0.35 0.35 0 0 0 0.578 0.397l0.48 -0.699" opacity=".351"/>
+    <path d="M2.08 10.974c0.54 3.826 4.079 6.49 7.904 5.95s6.489 -4.078 5.95 -7.903a6.997 6.997 0 0 0 -4.219 -5.473 6.954 6.954 0 0 0 -5.358 -0.03 1 1 0 1 0 0.755 1.852 5.02 5.02 0 1 1 -3.081 4.71" opacity=".322"/>
   </svg>
   <svg x="360">
-    <defs>
-      <mask id="aF" mask-type="alpha">
-        <path d="M0 -2.906A2.907 2.907 0 0 1 2.906 0 2.907 2.907 0 0 1 0 2.906 2.907 2.907 0 0 1 -2.906 0 2.907 2.907 0 0 1 0 -2.906z" transform="translate(.204 18.622) scale(.54135)"/>
-      </mask>
-      <mask id="aE" mask-type="alpha">
-        <path d="M0 -2.906A2.907 2.907 0 0 1 2.906 0 2.907 2.907 0 0 1 0 2.906 2.907 2.907 0 0 1 -2.906 0 2.907 2.907 0 0 1 0 -2.906z" transform="translate(.07 1.705) scale(.54135)"/>
-      </mask>
-      <filter id="aC" filterUnits="objectBoundingBox">
-        <feColorMatrix color-interpolation-filters="sRGB" type="matrix" values="1 0 0 0 0 0 1 0 0 0 0 0 1 0 0 0 0 0 -1 1"/>
-      </filter>
-      <mask id="aD" mask-type="alpha">
-        <g filter="url(#aC)">
-          <path fill="#fff" d="M0 0h18v20H0z" opacity="0"/>
-          <path display="none"/>
-        </g>
-      </mask>
-    </defs>
-    <g opacity=".47">
-      <path fill-opacity="1" d="M4.073 8.272L4.65 9.323A0.47 0.47 0 0 0 5.474 8.872L4.345 6.81A0.47 0.47 0 0 0 3.707 6.623L1.645 7.752a0.47 0.47 0 0 0 0.451 0.825L3.094 8.03" opacity="1"/>
-    </g>
-    <g mask="url(#aD)" opacity=".464">
-      <path fill-opacity="1" d="M2.473 7.503c-1.38 3.61 0.429 7.653 4.037 9.032 3.608 1.38 7.652 -0.427 9.031 -4.036A6.997 6.997 0 0 0 14.5 5.669 6.954 6.954 0 0 0 9.825 3.048 1 1 0 1 0 9.59 5.034a5.02 5.02 0 1 1 -4.976 2.63" opacity="1"/>
-    </g>
-    <g mask="url(#aE)">
-      <path d="M9 11.413l5.293 5.293a0.999 0.999 0 0 0 1.414 -0.024 1.001 1.001 0 0 0 0 -1.39L10.414 9.999"/>
-      <path d="M10.973 10.558L3.707 3.293A1 1 0 0 0 2.293 3.317a1.001 1.001 0 0 0 0 1.39l7.266 7.265"/>
-    </g>
-    <g mask="url(#aF)">
-      <path d="M9.285 8.301l-6.992 6.992a1 1 0 0 0 -0.025 1.414 1 1 0 0 0 1.439 0l6.992 -6.992"/>
-      <path d="M10.413 10l5.293 -5.293A0.999 0.999 0 0 0 15.682 3.293a1.001 1.001 0 0 0 -1.39 0L8.999 8.586"/>
-    </g>
+    <path d="M4.073 8.272l0.576 1.051a0.47 0.47 0 0 0 0.825 -0.451l-1.129 -2.062a0.47 0.47 0 0 0 -0.638 -0.187l-2.062 1.129a0.47 0.47 0 0 0 0.451 0.825l0.998 -0.546" opacity=".47"/>
+    <path d="M2.473 7.503c-1.38 3.61 0.429 7.653 4.037 9.032 3.608 1.38 7.652 -0.427 9.031 -4.036a6.997 6.997 0 0 0 -1.042 -6.83 6.954 6.954 0 0 0 -4.674 -2.62 1 1 0 1 0 -0.236 1.986 5.02 5.02 0 1 1 -4.976 2.63" opacity=".464"/>
   </svg>
   <svg x="378">
-    <defs>
-      <mask id="aJ" mask-type="alpha">
-        <path d="M0 -2.906A2.907 2.907 0 0 1 2.906 0 2.907 2.907 0 0 1 0 2.906 2.907 2.907 0 0 1 -2.906 0 2.907 2.907 0 0 1 0 -2.906z" transform="translate(.204 18.622) scale(.54135)"/>
-      </mask>
-      <mask id="aI" mask-type="alpha">
-        <path d="M0 -2.906A2.907 2.907 0 0 1 2.906 0 2.907 2.907 0 0 1 0 2.906 2.907 2.907 0 0 1 -2.906 0 2.907 2.907 0 0 1 0 -2.906z" transform="translate(.07 1.705) scale(.54135)"/>
-      </mask>
-      <filter id="aG" filterUnits="objectBoundingBox">
-        <feColorMatrix color-interpolation-filters="sRGB" type="matrix" values="1 0 0 0 0 0 1 0 0 0 0 0 1 0 0 0 0 0 -1 1"/>
-      </filter>
-      <mask id="aH" mask-type="alpha">
-        <g filter="url(#aG)">
-          <path fill="#fff" d="M0 0h18v20H0z" opacity="0"/>
-          <path display="none"/>
-        </g>
-      </mask>
-    </defs>
-    <g opacity=".59">
-      <path fill-opacity="1" d="M5.703 6.065l0.05 1.503a0.59 0.59 0 0 0 1.179 -0.04L6.834 4.583A0.59 0.59 0 0 0 6.225 4.012L3.278 4.109a0.59 0.59 0 0 0 0.04 1.18L4.741 5.24" opacity="1"/>
-    </g>
-    <g mask="url(#aH)" opacity=".607">
-      <path fill-opacity="1" d="M4.497 4.656C1.543 7.146 1.168 11.56 3.658 14.513c2.49 2.954 6.903 3.33 9.857 0.84A6.997 6.997 0 0 0 15.908 8.87 6.954 6.954 0 0 0 13.087 4.316 1 1 0 1 0 11.92 5.94 5.02 5.02 0 1 1 6.292 5.833" opacity="1"/>
-    </g>
-    <g mask="url(#aI)">
-      <path d="M9 11.413l5.293 5.293a0.999 0.999 0 0 0 1.414 -0.024 1.001 1.001 0 0 0 0 -1.39L10.414 9.999"/>
-      <path d="M10.973 10.558L3.707 3.293A1 1 0 0 0 2.293 3.317a1.001 1.001 0 0 0 0 1.39l7.266 7.265"/>
-    </g>
-    <g mask="url(#aJ)">
-      <path d="M9.285 8.301l-6.992 6.992a1 1 0 0 0 -0.025 1.414 1 1 0 0 0 1.439 0l6.992 -6.992"/>
-      <path d="M10.413 10l5.293 -5.293A0.999 0.999 0 0 0 15.682 3.293a1.001 1.001 0 0 0 -1.39 0L8.999 8.586"/>
-    </g>
+    <path d="M5.703 6.065l0.05 1.503a0.59 0.59 0 0 0 1.179 -0.04l-0.098 -2.946a0.59 0.59 0 0 0 -0.609 -0.57l-2.947 0.097a0.59 0.59 0 0 0 0.04 1.18l1.424 -0.048" opacity=".59"/>
+    <path d="M4.497 4.656c-2.954 2.49 -3.329 6.904 -0.839 9.857 2.49 2.954 6.903 3.33 9.857 0.84a6.997 6.997 0 0 0 2.393 -6.482 6.954 6.954 0 0 0 -2.821 -4.555 1 1 0 1 0 -1.167 1.624 5.02 5.02 0 1 1 -5.627 -0.107" opacity=".607"/>
   </svg>
   <svg x="396">
-    <defs>
-      <mask id="aN" mask-type="alpha">
-        <path d="M0 -2.906A2.907 2.907 0 0 1 2.906 0 2.907 2.907 0 0 1 0 2.906 2.907 2.907 0 0 1 -2.906 0 2.907 2.907 0 0 1 0 -2.906z" transform="translate(.204 18.622) scale(.54135)"/>
-      </mask>
-      <mask id="aM" mask-type="alpha">
-        <path d="M0 -2.906A2.907 2.907 0 0 1 2.906 0 2.907 2.907 0 0 1 0 2.906 2.907 2.907 0 0 1 -2.906 0 2.907 2.907 0 0 1 0 -2.906z" transform="translate(.07 1.705) scale(.54135)"/>
-      </mask>
-      <filter id="aK" filterUnits="objectBoundingBox">
-        <feColorMatrix color-interpolation-filters="sRGB" type="matrix" values="1 0 0 0 0 0 1 0 0 0 0 0 1 0 0 0 0 0 -1 1"/>
-      </filter>
-      <mask id="aL" mask-type="alpha">
-        <g filter="url(#aK)">
-          <path fill="#fff" d="M0 0h18v20H0z" opacity="0"/>
-          <path display="none"/>
-        </g>
-      </mask>
-    </defs>
-    <g opacity=".709">
-      <path fill-opacity="1" d="M8.198 5.001l-0.761 1.64a0.71 0.71 0 0 0 1.287 0.597l1.493 -3.217A0.71 0.71 0 0 0 9.872 3.08L6.655 1.586A0.71 0.71 0 0 0 6.058 2.873l1.556 0.722" opacity="1"/>
-    </g>
-    <g mask="url(#aL)" opacity=".747">
-      <path fill-opacity="1" d="M7.646 3.145C3.856 3.894 1.392 7.575 2.14 11.364c0.75 3.79 4.429 6.254 8.219 5.505a6.997 6.997 0 0 0 5.232 -4.514 6.954 6.954 0 0 0 -0.265 -5.35A1 1 0 1 0 13.52 7.86 5.02 5.02 0 1 1 8.648 5.043" opacity="1"/>
-    </g>
-    <g mask="url(#aM)">
-      <path d="M9 11.413l5.293 5.293a0.999 0.999 0 0 0 1.414 -0.024 1.001 1.001 0 0 0 0 -1.39L10.414 9.999"/>
-      <path d="M10.973 10.558L3.707 3.293A1 1 0 0 0 2.293 3.317a1.001 1.001 0 0 0 0 1.39l7.266 7.265"/>
-    </g>
-    <g mask="url(#aN)">
-      <path d="M9.285 8.301l-6.992 6.992a1 1 0 0 0 -0.025 1.414 1 1 0 0 0 1.439 0l6.992 -6.992"/>
-      <path d="M10.413 10l5.293 -5.293A0.999 0.999 0 0 0 15.682 3.293a1.001 1.001 0 0 0 -1.39 0L8.999 8.586"/>
-    </g>
+    <path d="M8.198 5.001l-0.761 1.64a0.71 0.71 0 0 0 1.287 0.597l1.493 -3.217a0.71 0.71 0 0 0 -0.345 -0.942l-3.217 -1.493a0.71 0.71 0 0 0 -0.597 1.287l1.556 0.722" opacity=".709"/>
+    <path d="M7.646 3.145c-3.79 0.749 -6.254 4.43 -5.505 8.219 0.75 3.79 4.429 6.254 8.219 5.505a6.997 6.997 0 0 0 5.232 -4.514 6.954 6.954 0 0 0 -0.265 -5.35 1 1 0 1 0 -1.807 0.856 5.02 5.02 0 1 1 -4.872 -2.817" opacity=".747"/>
   </svg>
   <svg x="414">
-    <defs>
-      <mask id="aR" mask-type="alpha">
-        <path d="M0 -2.906A2.907 2.907 0 0 1 2.906 0 2.907 2.907 0 0 1 0 2.906 2.907 2.907 0 0 1 -2.906 0 2.907 2.907 0 0 1 0 -2.906z" transform="translate(.204 18.622) scale(.54135)"/>
-      </mask>
-      <mask id="aQ" mask-type="alpha">
-        <path d="M0 -2.906A2.907 2.907 0 0 1 2.906 0 2.907 2.907 0 0 1 0 2.906 2.907 2.907 0 0 1 -2.906 0 2.907 2.907 0 0 1 0 -2.906z" transform="translate(.07 1.705) scale(.54135)"/>
-      </mask>
-      <filter id="aO" filterUnits="objectBoundingBox">
-        <feColorMatrix color-interpolation-filters="sRGB" type="matrix" values="1 0 0 0 0 0 1 0 0 0 0 0 1 0 0 0 0 0 -1 1"/>
-      </filter>
-      <mask id="aP" mask-type="alpha">
-        <g filter="url(#aO)">
-          <path fill="#fff" d="M0 0h18v20H0z" opacity="0"/>
-          <path display="none"/>
-        </g>
-      </mask>
-    </defs>
-    <g opacity=".829">
-      <path fill-opacity="1" d="M10.865 5.35L9.207 6.66a0.83 0.83 0 0 0 1.027 1.3l3.253 -2.57a0.83 0.83 0 0 0 0.136 -1.164l-2.57 -3.252a0.83 0.83 0 0 0 -1.3 1.028l1.243 1.573" opacity="1"/>
-    </g>
-    <g mask="url(#aP)" opacity=".877">
-      <path fill-opacity="1" d="M11.133 3.346C7.453 2.166 3.516 4.195 2.338 7.873c-1.179 3.68 0.848 7.617 4.527 8.796a6.997 6.997 0 0 0 6.763 -1.417 6.954 6.954 0 0 0 2.358 -4.811A1 1 0 1 0 13.99 10.315a5.02 5.02 0 1 1 -2.9 -4.823" opacity="1"/>
-    </g>
-    <g mask="url(#aQ)">
-      <path d="M9 11.413l5.293 5.293a0.999 0.999 0 0 0 1.414 -0.024 1.001 1.001 0 0 0 0 -1.39L10.414 9.999"/>
-      <path d="M10.973 10.558L3.707 3.293A1 1 0 0 0 2.293 3.317a1.001 1.001 0 0 0 0 1.39l7.266 7.265"/>
-    </g>
-    <g mask="url(#aR)">
-      <path d="M9.285 8.301l-6.992 6.992a1 1 0 0 0 -0.025 1.414 1 1 0 0 0 1.439 0l6.992 -6.992"/>
-      <path d="M10.413 10l5.293 -5.293A0.999 0.999 0 0 0 15.682 3.293a1.001 1.001 0 0 0 -1.39 0L8.999 8.586"/>
-    </g>
+    <path d="M10.865 5.35l-1.658 1.31a0.83 0.83 0 0 0 1.027 1.3l3.253 -2.57a0.83 0.83 0 0 0 0.136 -1.164l-2.57 -3.252a0.83 0.83 0 0 0 -1.3 1.028l1.243 1.573" opacity=".829"/>
+    <path d="M11.133 3.346c-3.68 -1.18 -7.617 0.849 -8.795 4.527 -1.179 3.68 0.848 7.617 4.527 8.796a6.997 6.997 0 0 0 6.763 -1.417 6.954 6.954 0 0 0 2.358 -4.811 1 1 0 1 0 -1.996 -0.126 5.02 5.02 0 1 1 -2.9 -4.823" opacity=".877"/>
   </svg>
   <svg x="432">
-    <defs>
-      <mask id="aV" mask-type="alpha">
-        <path d="M0 -2.906A2.907 2.907 0 0 1 2.906 0 2.907 2.907 0 0 1 0 2.906 2.907 2.907 0 0 1 -2.906 0 2.907 2.907 0 0 1 0 -2.906z" transform="translate(.204 18.622) scale(.54135)"/>
-      </mask>
-      <mask id="aU" mask-type="alpha">
-        <path d="M0 -2.906A2.907 2.907 0 0 1 2.906 0 2.907 2.907 0 0 1 0 2.906 2.907 2.907 0 0 1 -2.906 0 2.907 2.907 0 0 1 0 -2.906z" transform="translate(.07 1.705) scale(.54135)"/>
-      </mask>
-      <filter id="aS" filterUnits="objectBoundingBox">
-        <feColorMatrix color-interpolation-filters="sRGB" type="matrix" values="1 0 0 0 0 0 1 0 0 0 0 0 1 0 0 0 0 0 -1 1"/>
-      </filter>
-      <mask id="aT" mask-type="alpha">
-        <g filter="url(#aS)">
-          <path fill="#fff" d="M0 0h18v20H0z" opacity="0"/>
-          <path display="none"/>
-        </g>
-      </mask>
-    </defs>
-    <g opacity=".949">
-      <path fill-opacity="1" d="M12.97 6.998L10.6 7.48a0.949 0.949 0 0 0 0.38 1.86l4.647 -0.948a0.949 0.949 0 0 0 0.74 -1.118L15.42 2.626a0.949 0.949 0 0 0 -1.859 0.379l0.458 2.247" opacity="1"/>
-    </g>
-    <g mask="url(#aT)" opacity=".981">
-      <path fill-opacity="1" d="M14.087 5.21C11.438 2.396 7.011 2.265 4.2 4.914 1.387 7.564 1.255 11.99 3.904 14.803a6.997 6.997 0 0 0 6.604 2.033A6.954 6.954 0 0 0 14.9 13.767a1 1 0 1 0 -1.685 -1.076A5.02 5.02 0 1 1 13.01 7.067" opacity="1"/>
-    </g>
-    <g mask="url(#aU)">
-      <path d="M9 11.413l5.293 5.293a0.999 0.999 0 0 0 1.414 -0.024 1.001 1.001 0 0 0 0 -1.39L10.414 9.999"/>
-      <path d="M10.973 10.558L3.707 3.293A1 1 0 0 0 2.293 3.317a1.001 1.001 0 0 0 0 1.39l7.266 7.265"/>
-    </g>
-    <g mask="url(#aV)">
-      <path d="M9.285 8.301l-6.992 6.992a1 1 0 0 0 -0.025 1.414 1 1 0 0 0 1.439 0l6.992 -6.992"/>
-      <path d="M10.413 10l5.293 -5.293A0.999 0.999 0 0 0 15.682 3.293a1.001 1.001 0 0 0 -1.39 0L8.999 8.586"/>
-    </g>
+    <path d="M12.97 6.998l-2.37 0.482a0.949 0.949 0 0 0 0.38 1.86l4.647 -0.948a0.949 0.949 0 0 0 0.74 -1.118l-0.947 -4.648a0.949 0.949 0 0 0 -1.859 0.379l0.458 2.247" opacity=".949"/>
+    <path d="M14.087 5.21c-2.649 -2.813 -7.076 -2.944 -9.887 -0.295 -2.813 2.649 -2.945 7.075 -0.296 9.888a6.997 6.997 0 0 0 6.604 2.033 6.954 6.954 0 0 0 4.392 -3.069 1 1 0 1 0 -1.685 -1.076 5.02 5.02 0 1 1 -0.204 -5.624" opacity=".981"/>
   </svg>
   <svg x="450">
-    <defs>
-      <mask id="aZ" mask-type="alpha">
-        <path d="M0 -2.906A2.907 2.907 0 0 1 2.906 0 2.907 2.907 0 0 1 0 2.906 2.907 2.907 0 0 1 -2.906 0 2.907 2.907 0 0 1 0 -2.906z" transform="translate(.204 18.622) scale(.54135)"/>
-      </mask>
-      <mask id="aY" mask-type="alpha">
-        <path d="M0 -2.906A2.907 2.907 0 0 1 2.906 0 2.907 2.907 0 0 1 0 2.906 2.907 2.907 0 0 1 -2.906 0 2.907 2.907 0 0 1 0 -2.906z" transform="translate(.07 1.705) scale(.54135)"/>
-      </mask>
-      <filter id="aW" filterUnits="objectBoundingBox">
-        <feColorMatrix color-interpolation-filters="sRGB" type="matrix" values="1 0 0 0 0 0 1 0 0 0 0 0 1 0 0 0 0 0 -1 1"/>
-      </filter>
-      <mask id="aX" mask-type="alpha">
-        <g filter="url(#aW)">
-          <path fill="#fff" d="M0 0h18v20H0z" opacity="0"/>
-          <path display="none"/>
-        </g>
-      </mask>
-    </defs>
-    <path fill-opacity="1" d="M13.548 7.997l-2.549 0.001a1 1 0 0 0 0.001 2l5 -0.003a1 1 0 0 0 0.999 -1l-0.003 -5a1 1 0 0 0 -2 0.002l0.002 2.417" opacity="1"/>
-    <g mask="url(#aX)">
-      <path fill-opacity="1" d="M14.998 6.414C13.015 3.098 8.719 2.02 5.404 4.002 2.088 5.985 1.008 10.28 2.991 13.596A6.997 6.997 0 0 0 9.004 17a6.954 6.954 0 0 0 4.95 -2.053 1 1 0 1 0 -1.415 -1.413 5.02 5.02 0 1 1 1.01 -5.537" opacity="1"/>
-    </g>
-    <g mask="url(#aY)">
-      <path d="M9 11.413l5.293 5.293a0.999 0.999 0 0 0 1.414 -0.024 1.001 1.001 0 0 0 0 -1.39L10.414 9.999"/>
-      <path d="M10.973 10.558L3.707 3.293A1 1 0 0 0 2.293 3.317a1.001 1.001 0 0 0 0 1.39l7.266 7.265"/>
-    </g>
-    <g mask="url(#aZ)">
-      <path d="M9.285 8.301l-6.992 6.992a1 1 0 0 0 -0.025 1.414 1 1 0 0 0 1.439 0l6.992 -6.992"/>
-      <path d="M10.413 10l5.293 -5.293A0.999 0.999 0 0 0 15.682 3.293a1.001 1.001 0 0 0 -1.39 0L8.999 8.586"/>
-    </g>
-  </svg>
-  <svg x="468">
-    <defs>
-      <mask id="bd" mask-type="alpha">
-        <path d="M0 -2.906A2.907 2.907 0 0 1 2.906 0 2.907 2.907 0 0 1 0 2.906 2.907 2.907 0 0 1 -2.906 0 2.907 2.907 0 0 1 0 -2.906z" transform="translate(1.27 18.622) scale(7.36624)"/>
-      </mask>
-      <mask id="bc" mask-type="alpha">
-        <path d="M0 -2.906A2.907 2.907 0 0 1 2.906 0 2.907 2.907 0 0 1 0 2.906 2.907 2.907 0 0 1 -2.906 0 2.907 2.907 0 0 1 0 -2.906z" transform="translate(1.151 1.705) scale(7.47609)"/>
-      </mask>
-      <filter id="ba" filterUnits="objectBoundingBox">
-        <feColorMatrix color-interpolation-filters="sRGB" type="matrix" values="1 0 0 0 0 0 1 0 0 0 0 0 1 0 0 0 0 0 -1 1"/>
-      </filter>
-      <mask id="bb" mask-type="alpha">
-        <g filter="url(#ba)">
-          <path fill="#fff" d="M0 0h18v20H0z" opacity="0"/>
-          <path display="none"/>
-        </g>
-      </mask>
-    </defs>
-    <g opacity="0">
-      <path fill-opacity="1" d="M9.975 15.617" opacity="1"/>
-    </g>
-    <g mask="url(#bb)" opacity="0">
-      <path fill-opacity="1" d="M9.342 16.98c3.86 -0.19 6.833 -3.473 6.642 -7.331C15.794 5.79 12.513 2.816 8.654 3.006A6.997 6.997 0 0 0 2.821 6.711a6.954 6.954 0 0 0 -0.517 5.332A1 1 0 1 0 4.217 11.46a5.02 5.02 0 1 1 4.41 3.496" opacity="1"/>
-    </g>
-    <g mask="url(#bc)">
-      <path d="M9 11.413l5.293 5.293a0.999 0.999 0 0 0 1.414 -0.024 1.001 1.001 0 0 0 0 -1.39L10.414 9.999"/>
-      <path d="M10.973 10.558L3.707 3.293A1 1 0 0 0 2.293 3.317a1.001 1.001 0 0 0 0 1.39l7.266 7.265"/>
-    </g>
-    <g mask="url(#bd)">
-      <path d="M9.285 8.301l-6.992 6.992a1 1 0 0 0 -0.025 1.414 1 1 0 0 0 1.439 0l6.992 -6.992"/>
-      <path d="M10.413 10l5.293 -5.293A0.999 0.999 0 0 0 15.682 3.293a1.001 1.001 0 0 0 -1.39 0L8.999 8.586"/>
-    </g>
+    <path d="M13.548 7.997l-2.549 0.001a1 1 0 0 0 0.001 2l5 -0.003a1 1 0 0 0 0.999 -1l-0.003 -5a1 1 0 0 0 -2 0.002l0.002 2.417"/>
+    <path d="M14.998 6.414c-1.983 -3.316 -6.279 -4.395 -9.594 -2.412 -3.316 1.983 -4.396 6.278 -2.413 9.594a6.997 6.997 0 0 0 6.013 3.404 6.954 6.954 0 0 0 4.95 -2.053 1 1 0 1 0 -1.415 -1.413 5.02 5.02 0 1 1 1.01 -5.537"/>
   </svg>
 </svg>
