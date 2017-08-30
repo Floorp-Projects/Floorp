@@ -155,8 +155,6 @@ element.Store = class {
    *
    * @param {string} uuid
    *     Web element reference, or UUID.
-   * @param {Object.<string, (WindowProxy|Element)} container
-   *     Window and an optional shadow root that contains the element.
    *
    * @returns {Element}
    *     Element associated with reference.
@@ -167,11 +165,10 @@ element.Store = class {
    *     If element has gone stale, indicating it is no longer attached to
    *     the DOM provided in the container.
    */
-  get(uuid, container) {
+  get(uuid) {
     let el = this.els[uuid];
     if (!el) {
-      throw new NoSuchElementError(`Element reference not seen before: ` +
-                                   `${uuid}`);
+      throw new NoSuchElementError("Element reference not seen before: " + uuid);
     }
 
     try {
@@ -181,7 +178,7 @@ element.Store = class {
       delete this.els[uuid];
     }
 
-    if (element.isStale(el, container.frame, container.shadowRoot)) {
+    if (element.isStale(el)) {
       throw new StaleElementReferenceError(
           error.pprint`The element reference of ${el} stale; ` +
               "either the element is no longer attached to the DOM " +
@@ -626,78 +623,21 @@ element.generateUUID = function() {
 /**
  * Determines if <var>el</var> is stale.
  *
- * A stale element is an element no longer attached to the DOM, which
- * is provided through <var>window</var>.
+ * A stale element is an element no longer attached to the DOM or which
+ * <code>ownerDocument</coded> is not the same as {@link WindowProxy}'s
+ * document.
  *
  * @param {Element} el
  *     DOM element to check for staleness.
- * @param {WindowProxy} window
- *     Window global to check if <var>el</var> is still part of.
- * @param {Element=} shadowRoot
- *     Current shadow root element.
  *
  * @return {boolean}
  *     True if <var>el</var> is stale, false otherwise.
  */
-element.isStale = function(el, window, shadowRoot = undefined) {
-  if (typeof window == "undefined") {
-    throw new TypeError("Window global must be provided for staleness check");
-  }
-
-  // use XPCNativeWrapper to compare elements (see bug 834266)
-  let wrappedElement, wrappedWindow, wrappedShadowRoot;
-
-  wrappedElement = new XPCNativeWrapper(el);
-  wrappedWindow = new XPCNativeWrapper(window);
-  if (shadowRoot) {
-    wrappedShadowRoot = new XPCNativeWrapper(shadowRoot);
-  }
-
-  let sameDoc = wrappedElement.ownerDocument === wrappedWindow.document;
-  let disconn = element.isDisconnected(
-      wrappedElement,
-      wrappedWindow,
-      wrappedShadowRoot);
-
-  return !el || !sameDoc || disconn;
-};
-
-/**
- * Check if the element is detached from the current frame as well as
- * the optional shadow root (when inside a Shadow DOM context).
- *
- * @param {Element} el
- *     Element to be checked.
- * @param {WindowProxy} window
- *     Window to find out if <var>el</var> is still connected to.
- * @param {Element=} shadowRoot
- *     Current shadow root element, if any.
- *
- * @return {boolean}
- *     Flag indicating that the element is disconnected.
- */
-element.isDisconnected = function(el, window, shadowRoot = undefined) {
-  assert.defined(window);
-
-  // shadow DOM
-  if (window.ShadowRoot && shadowRoot) {
-    if (el.compareDocumentPosition(shadowRoot) &
-        DOCUMENT_POSITION_DISCONNECTED) {
-      return true;
-    }
-
-    // looking for next possible ShadowRoot ancestor
-    let parent = shadowRoot.host;
-    while (parent && !(parent instanceof window.ShadowRoot)) {
-      parent = parent.parentNode;
-    }
-    return element.isDisconnected(shadowRoot.host, window, parent);
-  }
-
-  // outside shadow DOM
-  let docEl = window.document.documentElement;
-  return el.compareDocumentPosition(docEl) &
-      DOCUMENT_POSITION_DISCONNECTED;
+element.isStale = function(el) {
+  let doc = el.ownerDocument;
+  let win = doc.defaultView;
+  let sameDoc = el.ownerDocument === win.document;
+  return !sameDoc || !el.isConnected;
 };
 
 /**
@@ -961,7 +901,7 @@ element.getPointerInteractablePaintTree = function(el) {
   }
 
   // pointer-interactable elements tree, step 1
-  if (element.isDisconnected(el, container.frame, container.shadowRoot)) {
+  if (!el.isConnected) {
     return [];
   }
 
