@@ -2146,8 +2146,9 @@ AppendCSSGradientToBoxPosition(const nsStyleGradient* aGradient,
   float xValue = aGradient->mBgPosX.GetPercentValue();
   float yValue = aGradient->mBgPosY.GetPercentValue();
 
-  if (yValue == 1.0f && xValue == 0.5f) {
-    // omit "to bottom"
+  if (xValue == 0.5f &&
+      yValue == (aGradient->mLegacySyntax ? 0.0f : 1.0f)) {
+    // omit "to bottom" in modern syntax, "top" in legacy syntax
     return;
   }
   NS_ASSERTION(yValue != 0.5f || xValue != 0.5f, "invalid box position");
@@ -2245,7 +2246,9 @@ nsComputedDOMStyle::GetCSSGradientString(const nsStyleGradient* aGradient,
     } else if (aGradient->mBgPosX.GetUnit() != eStyleUnit_Percent ||
                aGradient->mBgPosX.GetPercentValue() != 0.5f ||
                aGradient->mBgPosY.GetUnit() != eStyleUnit_Percent ||
-               aGradient->mBgPosY.GetPercentValue() != (isRadial ? 0.5f : 1.0f)) {
+               aGradient->mBgPosY.GetPercentValue() != (isRadial ? 0.5f : 0.0f)) {
+      // [-vendor-]radial-gradient or -moz-linear-gradient, with
+      // non-default box position, which we output here.
       if (isRadial && !aGradient->mLegacySyntax) {
         if (needSep) {
           aString.Append(' ');
