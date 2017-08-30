@@ -91,6 +91,8 @@ public:
   wr::Renderer* GetRenderer() { return mRenderer; }
 
 protected:
+  void NotifyWebRenderError(WebRenderError aError);
+
   RefPtr<RenderThread> mThread;
   RefPtr<gl::GLContext> mGL;
   RefPtr<widget::CompositorWidget> mWidget;

@@ -70,6 +70,7 @@
 #include "mozilla/Move.h"
 #include "mozilla/Services.h"
 #include "mozilla/Sprintf.h"
+#include "mozilla/webrender/WebRenderTypes.h"
 #include "nsRefPtrHashtable.h"
 #include "TouchEvents.h"
 #include "WritingModes.h"
@@ -1293,7 +1294,7 @@ nsBaseWidget::CreateCompositorSession(int aWidth,
       if (textureFactoryIdentifier.mParentBackend != LayersBackend::LAYERS_WR) {
         retry = true;
         DestroyCompositor();
-        gfx::GPUProcessManager::Get()->DisableWebRender();
+        gfx::GPUProcessManager::Get()->DisableWebRender(wr::WebRenderError::INITIALIZE);
       }
     }
 

@@ -743,20 +743,15 @@ nsTableFrame::AppendAnonymousColFrames(nsTableColGroupFrame* aColGroupFrame,
   int32_t startIndex = mColFrames.Length();
   int32_t lastIndex  = startIndex + aNumColsToAdd - 1;
 
-  // aColGroupFrame will need to handle restyling these cols we're about to add.
-  aColGroupFrame->AddStateBits(NS_FRAME_OWNS_ANON_BOXES);
   for (int32_t childX = startIndex; childX <= lastIndex; childX++) {
     nsIContent* iContent;
     RefPtr<nsStyleContext> styleContext;
-    nsStyleContext* parentStyleContext;
 
     // all anonymous cols that we create here use a pseudo style context of the
     // col group
     iContent = aColGroupFrame->GetContent();
-    parentStyleContext = aColGroupFrame->StyleContext();
     styleContext = shell->StyleSet()->
-      ResolveInheritingAnonymousBoxStyle(nsCSSAnonBoxes::tableCol,
-                                         parentStyleContext);
+      ResolveNonInheritingAnonymousBoxStyle(nsCSSAnonBoxes::tableCol);
     // ASSERTION to check for bug 54454 sneaking back in...
     NS_ASSERTION(iContent, "null content in CreateAnonymousColFrames");
 
@@ -1515,7 +1510,25 @@ nsTableFrame::DisplayGenericTablePart(nsDisplayListBuilder* aBuilder,
                                       const nsDisplayListSet& aLists,
                                       DisplayGenericTablePartTraversal aTraversal)
 {
-  if (aFrame->IsVisibleForPainting(aBuilder)) {
+  bool isVisible = aFrame->IsVisibleForPainting(aBuilder);
+  bool isColumn = aFrame->IsTableColFrame();
+  // If we have an anonymous column in the AppendAnonymousColFrames sense, it
+  // might think it's visible for painting (due to not inheriting its colgroup's
+  // styles) while the colgroup as a whole is actually not visible for painting
+  // because it has hidden visibility.  In that situation we should also treat
+  // the column as not visible, because otherwise hit-testing can get a bit
+  // confused.
+  //
+  // XXXbz It's not clear whether anonymous columns and column groups should
+  // ever affect hit-testing at all.  See
+  // https://github.com/w3c/csswg-drafts/issues/1763 which might result in them
+  // not existing conceptually and hence not affecting hit-testing.
+  if (isVisible && isColumn &&
+      aFrame->StyleContext()->GetPseudo() == nsCSSAnonBoxes::tableCol &&
+      !aFrame->GetParent()->StyleVisibility()->IsVisible()) {
+    isVisible = false;
+  }
+  if (isVisible) {
     nsDisplayTableItem* currentItem = aBuilder->GetCurrentTableItem();
     // currentItem may be null, when none of the table parts have a
     // background or border
@@ -1555,7 +1568,7 @@ nsTableFrame::DisplayGenericTablePart(nsDisplayListBuilder* aBuilder,
         }
         PaintRowGroupBackgroundByColIdx(rowGroup, aFrame, aBuilder, aLists, colIdx, offset);
       }
-    } else if (aFrame->IsTableColFrame()) {
+    } else if (isColumn) {
       // Compute background rect by iterating all cell frame.
       nsTableColFrame* col = static_cast<nsTableColFrame*>(aFrame);
       AutoTArray<int32_t, 1> colIdx;
@@ -1588,7 +1601,7 @@ nsTableFrame::DisplayGenericTablePart(nsDisplayListBuilder* aBuilder,
 
   aTraversal(aBuilder, aFrame, aLists);
 
-  if (aFrame->IsVisibleForPainting(aBuilder)) {
+  if (isVisible) {
     if (aFrame->IsTableFrame()) {
       nsTableFrame* table = static_cast<nsTableFrame*>(aFrame);
       // In the collapsed border model, overlay all collapsed borders.

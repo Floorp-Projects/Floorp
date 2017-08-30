@@ -410,35 +410,6 @@ class RefTest(object):
         browserEnv["XPCOM_MEM_BLOAT_LOG"] = self.leakLogFile
         return browserEnv
 
-    def killNamedOrphans(self, pname):
-        """ Kill orphan processes matching the given command name """
-        self.log.info("Checking for orphan %s processes..." % pname)
-
-        def _psInfo(line):
-            if pname in line:
-                self.log.info(line)
-        process = mozprocess.ProcessHandler(['ps', '-f'],
-                                            processOutputLine=_psInfo)
-        process.run()
-        process.wait()
-
-        def _psKill(line):
-            parts = line.split()
-            if len(parts) == 3 and parts[0].isdigit():
-                pid = int(parts[0])
-                if parts[2] == pname and parts[1] == '1':
-                    self.log.info("killing %s orphan with pid %d" % (pname, pid))
-                    try:
-                        os.kill(
-                            pid, getattr(signal, "SIGKILL", signal.SIGTERM))
-                    except Exception as e:
-                        self.log.info("Failed to kill process %d: %s" %
-                                      (pid, str(e)))
-        process = mozprocess.ProcessHandler(['ps', '-o', 'pid,ppid,comm'],
-                                            processOutputLine=_psKill)
-        process.run()
-        process.wait()
-
     def cleanup(self, profileDir):
         if profileDir:
             shutil.rmtree(profileDir, True)
@@ -446,14 +417,6 @@ class RefTest(object):
     def runTests(self, tests, options, cmdargs=None):
         cmdargs = cmdargs or []
         self._populate_logger(options)
-
-        # Despite our efforts to clean up servers started by this script, in practice
-        # we still see infrequent cases where a process is orphaned and interferes
-        # with future tests, typically because the old server is keeping the port in use.
-        # Try to avoid those failures by checking for and killing orphan servers before
-        # trying to start new ones.
-        self.killNamedOrphans('ssltunnel')
-        self.killNamedOrphans('xpcshell')
 
         if options.cleanupCrashes:
             mozcrash.cleanup_pending_crash_reports()

@@ -148,7 +148,10 @@ nsStructuredCloneContainer::GetDataAsBase64(nsAString &aOut)
     return rv;
   }
 
-  CopyASCIItoUTF16(base64Data, aOut);
+  if (!CopyASCIItoUTF16(base64Data, aOut, fallible)) {
+    return NS_ERROR_OUT_OF_MEMORY;
+  }
+
   return NS_OK;
 }
 

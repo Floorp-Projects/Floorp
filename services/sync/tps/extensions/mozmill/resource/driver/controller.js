@@ -433,8 +433,7 @@ MozMillController.prototype.startUserShutdown = function (timeout, restart, next
  * @param {string} aNext
  *        Name of the next test function to run after restart
  * @param {boolean} [aFlags=undefined]
- *        Additional flags how to handle the shutdown or restart. The attributes
- *        eRestarti386 (0x20) and eRestartx86_64 (0x30) have not been documented yet.
+ *        Additional flags how to handle the shutdown or restart.
  * @see https://developer.mozilla.org/nsIAppStartup#Attributes
  */
 MozMillController.prototype.restartApplication = function (aNext, aFlags) {
@@ -461,8 +460,7 @@ MozMillController.prototype.restartApplication = function (aNext, aFlags) {
  * @param {boolean} [aResetProfile=false]
  *        Whether to reset the profile during restart
  * @param {boolean} [aFlags=undefined]
- *        Additional flags how to handle the shutdown or restart. The attributes
- *        eRestarti386 and eRestartx86_64 have not been documented yet.
+ *        Additional flags how to handle the shutdown or restart.
  * @see https://developer.mozilla.org/nsIAppStartup#Attributes
  */
 MozMillController.prototype.stopApplication = function (aResetProfile, aFlags) {
