@@ -1797,8 +1797,7 @@ GeckoDriver.prototype.switchToFrame = async function(cmd, resp) {
     // by element
     if (this.curBrowser.seenEls.has(element)) {
       // HTMLIFrameElement
-      let wantedFrame = this.curBrowser.seenEls.get(
-          element, {frame: curWindow});
+      let wantedFrame = this.curBrowser.seenEls.get(element);
       // Deal with an embedded xul:browser case
       if (wantedFrame.tagName == "xul:browser" ||
           wantedFrame.tagName == "browser") {
@@ -2106,8 +2105,7 @@ GeckoDriver.prototype.findElement = async function(cmd, resp) {
 
       let container = {frame: win};
       if (opts.startNode) {
-        opts.startNode = this.curBrowser.seenEls.get(
-            opts.startNode, container);
+        opts.startNode = this.curBrowser.seenEls.get(opts.startNode);
       }
       let el = await element.find(container, strategy, expr, opts);
       let elRef = this.curBrowser.seenEls.add(el);
@@ -2152,8 +2150,7 @@ GeckoDriver.prototype.findElements = async function(cmd, resp) {
 
       let container = {frame: win};
       if (opts.startNode) {
-        opts.startNode = this.curBrowser.seenEls.get(
-            opts.startNode, container);
+        opts.startNode = this.curBrowser.seenEls.get(opts.startNode);
       }
       let els = await element.find(container, strategy, expr, opts);
 
@@ -2204,14 +2201,14 @@ GeckoDriver.prototype.getActiveElement = async function(cmd, resp) {
  *     A modal dialog is open, blocking this operation.
  */
 GeckoDriver.prototype.clickElement = async function(cmd, resp) {
-  const win = assert.window(this.getCurrentWindow());
+  assert.window(this.getCurrentWindow());
   assert.noUserPrompt(this.dialog);
 
   let id = cmd.parameters.id;
 
   switch (this.context) {
     case Context.CHROME:
-      let el = this.curBrowser.seenEls.get(id, {frame: win});
+      let el = this.curBrowser.seenEls.get(id);
       await interaction.clickElement(el, this.a11yChecks);
       break;
 
@@ -2263,14 +2260,14 @@ GeckoDriver.prototype.clickElement = async function(cmd, resp) {
  *     A modal dialog is open, blocking this operation.
  */
 GeckoDriver.prototype.getElementAttribute = async function(cmd, resp) {
-  const win = assert.window(this.getCurrentWindow());
+  assert.window(this.getCurrentWindow());
   assert.noUserPrompt(this.dialog);
 
   let {id, name} = cmd.parameters;
 
   switch (this.context) {
     case Context.CHROME:
-      let el = this.curBrowser.seenEls.get(id, {frame: win});
+      let el = this.curBrowser.seenEls.get(id);
       resp.body.value = el.getAttribute(name);
       break;
 
@@ -2297,14 +2294,14 @@ GeckoDriver.prototype.getElementAttribute = async function(cmd, resp) {
  *     A modal dialog is open, blocking this operation.
  */
 GeckoDriver.prototype.getElementProperty = async function(cmd, resp) {
-  const win = assert.window(this.getCurrentWindow());
+  assert.window(this.getCurrentWindow());
   assert.noUserPrompt(this.dialog);
 
   let {id, name} = cmd.parameters;
 
   switch (this.context) {
     case Context.CHROME:
-      let el = this.curBrowser.seenEls.get(id, {frame: win});
+      let el = this.curBrowser.seenEls.get(id);
       resp.body.value = el[name];
       break;
 
@@ -2330,7 +2327,7 @@ GeckoDriver.prototype.getElementProperty = async function(cmd, resp) {
  *     A modal dialog is open, blocking this operation.
  */
 GeckoDriver.prototype.getElementText = async function(cmd, resp) {
-  const win = assert.window(this.getCurrentWindow());
+  assert.window(this.getCurrentWindow());
   assert.noUserPrompt(this.dialog);
 
   let id = cmd.parameters.id;
@@ -2338,7 +2335,7 @@ GeckoDriver.prototype.getElementText = async function(cmd, resp) {
   switch (this.context) {
     case Context.CHROME:
       // for chrome, we look at text nodes, and any node with a "label" field
-      let el = this.curBrowser.seenEls.get(id, {frame: win});
+      let el = this.curBrowser.seenEls.get(id);
       let lines = [];
       this.getVisibleText(el, lines);
       resp.body.value = lines.join("\n");
@@ -2365,14 +2362,14 @@ GeckoDriver.prototype.getElementText = async function(cmd, resp) {
  *     A modal dialog is open, blocking this operation.
  */
 GeckoDriver.prototype.getElementTagName = async function(cmd, resp) {
-  const win = assert.window(this.getCurrentWindow());
+  assert.window(this.getCurrentWindow());
   assert.noUserPrompt(this.dialog);
 
   let id = cmd.parameters.id;
 
   switch (this.context) {
     case Context.CHROME:
-      let el = this.curBrowser.seenEls.get(id, {frame: win});
+      let el = this.curBrowser.seenEls.get(id);
       resp.body.value = el.tagName.toLowerCase();
       break;
 
@@ -2397,14 +2394,14 @@ GeckoDriver.prototype.getElementTagName = async function(cmd, resp) {
  *     A modal dialog is open, blocking this operation.
  */
 GeckoDriver.prototype.isElementDisplayed = async function(cmd, resp) {
-  const win = assert.window(this.getCurrentWindow());
+  assert.window(this.getCurrentWindow());
   assert.noUserPrompt(this.dialog);
 
   let id = cmd.parameters.id;
 
   switch (this.context) {
     case Context.CHROME:
-      let el = this.curBrowser.seenEls.get(id, {frame: win});
+      let el = this.curBrowser.seenEls.get(id);
       resp.body.value = await interaction.isElementDisplayed(
           el, this.a11yChecks);
       break;
@@ -2440,7 +2437,7 @@ GeckoDriver.prototype.getElementValueOfCssProperty = async function(
 
   switch (this.context) {
     case Context.CHROME:
-      let el = this.curBrowser.seenEls.get(id, {frame: win});
+      let el = this.curBrowser.seenEls.get(id);
       let sty = win.document.defaultView.getComputedStyle(el);
       resp.body.value = sty.getPropertyValue(prop);
       break;
@@ -2467,7 +2464,7 @@ GeckoDriver.prototype.getElementValueOfCssProperty = async function(
  *     A modal dialog is open, blocking this operation.
  */
 GeckoDriver.prototype.isElementEnabled = async function(cmd, resp) {
-  const win = assert.window(this.getCurrentWindow());
+  assert.window(this.getCurrentWindow());
   assert.noUserPrompt(this.dialog);
 
   let id = cmd.parameters.id;
@@ -2475,7 +2472,7 @@ GeckoDriver.prototype.isElementEnabled = async function(cmd, resp) {
   switch (this.context) {
     case Context.CHROME:
       // Selenium atom doesn't quite work here
-      let el = this.curBrowser.seenEls.get(id, {frame: win});
+      let el = this.curBrowser.seenEls.get(id);
       resp.body.value = await interaction.isElementEnabled(
           el, this.a11yChecks);
       break;
@@ -2501,7 +2498,7 @@ GeckoDriver.prototype.isElementEnabled = async function(cmd, resp) {
  *     A modal dialog is open, blocking this operation.
  */
 GeckoDriver.prototype.isElementSelected = async function(cmd, resp) {
-  const win = assert.window(this.getCurrentWindow());
+  assert.window(this.getCurrentWindow());
   assert.noUserPrompt(this.dialog);
 
   let id = cmd.parameters.id;
@@ -2509,7 +2506,7 @@ GeckoDriver.prototype.isElementSelected = async function(cmd, resp) {
   switch (this.context) {
     case Context.CHROME:
       // Selenium atom doesn't quite work here
-      let el = this.curBrowser.seenEls.get(id, {frame: win});
+      let el = this.curBrowser.seenEls.get(id);
       resp.body.value = await interaction.isElementSelected(
           el, this.a11yChecks);
       break;
@@ -2534,7 +2531,7 @@ GeckoDriver.prototype.getElementRect = async function(cmd, resp) {
 
   switch (this.context) {
     case Context.CHROME:
-      let el = this.curBrowser.seenEls.get(id, {frame: win});
+      let el = this.curBrowser.seenEls.get(id);
       let rect = el.getBoundingClientRect();
       resp.body = {
         x: rect.x + win.pageXOffset,
@@ -2564,7 +2561,7 @@ GeckoDriver.prototype.getElementRect = async function(cmd, resp) {
  *     A modal dialog is open, blocking this operation.
  */
 GeckoDriver.prototype.sendKeysToElement = async function(cmd, resp) {
-  const win = assert.window(this.getCurrentWindow());
+  assert.window(this.getCurrentWindow());
   assert.noUserPrompt(this.dialog);
 
   let {id, text} = cmd.parameters;
@@ -2572,7 +2569,7 @@ GeckoDriver.prototype.sendKeysToElement = async function(cmd, resp) {
 
   switch (this.context) {
     case Context.CHROME:
-      let el = this.curBrowser.seenEls.get(id, {frame: win});
+      let el = this.curBrowser.seenEls.get(id);
       await interaction.sendKeysToElement(
           el, text, true, this.a11yChecks);
       break;
@@ -2595,7 +2592,7 @@ GeckoDriver.prototype.sendKeysToElement = async function(cmd, resp) {
  *     A modal dialog is open, blocking this operation.
  */
 GeckoDriver.prototype.clearElement = async function(cmd, resp) {
-  const win = assert.window(this.getCurrentWindow());
+  assert.window(this.getCurrentWindow());
   assert.noUserPrompt(this.dialog);
 
   let id = cmd.parameters.id;
@@ -2603,7 +2600,7 @@ GeckoDriver.prototype.clearElement = async function(cmd, resp) {
   switch (this.context) {
     case Context.CHROME:
       // the selenium atom doesn't work here
-      let el = this.curBrowser.seenEls.get(id, {frame: win});
+      let el = this.curBrowser.seenEls.get(id);
       if (el.nodeName == "textbox") {
         el.value = "";
       } else if (el.nodeName == "checkbox") {
@@ -2921,23 +2918,21 @@ GeckoDriver.prototype.takeScreenshot = function(cmd, resp) {
 
   switch (this.context) {
     case Context.CHROME:
-      let container = {frame: win.document.defaultView};
-
       let highlightEls = highlights.map(
-          ref => this.curBrowser.seenEls.get(ref, container));
+          ref => this.curBrowser.seenEls.get(ref));
 
       // viewport
       let canvas;
       if (!id && !full) {
-        canvas = capture.viewport(container.frame, highlightEls);
+        canvas = capture.viewport(win, highlightEls);
 
       // element or full document element
       } else {
         let node;
         if (id) {
-          node = this.curBrowser.seenEls.get(id, container);
+          node = this.curBrowser.seenEls.get(id);
         } else {
-          node = container.frame.document.documentElement;
+          node = win.document.documentElement;
         }
 
         canvas = capture.element(node, highlightEls);

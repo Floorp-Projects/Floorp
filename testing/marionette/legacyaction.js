@@ -202,7 +202,7 @@ action.Chain.prototype.actions = function (chain, touchId, i, keyModifiers, cb) 
       break;
 
     case "click":
-      el = this.seenEls.get(pack[1], this.container);
+      el = this.seenEls.get(pack[1]);
       let button = pack[2];
       let clickCount = pack[3];
       c = element.coordinates(el);
@@ -233,7 +233,7 @@ action.Chain.prototype.actions = function (chain, touchId, i, keyModifiers, cb) 
       if ((i != chain.length) && (chain[i][0].indexOf('move') !== -1)) {
         this.scrolling = true;
       }
-      el = this.seenEls.get(pack[1], this.container);
+      el = this.seenEls.get(pack[1]);
       c = element.coordinates(el, pack[2], pack[3]);
       touchId = this.generateEvents("press", c.x, c.y, null, el, keyModifiers);
       this.actions(chain, touchId, i, keyModifiers, cb);
@@ -252,7 +252,7 @@ action.Chain.prototype.actions = function (chain, touchId, i, keyModifiers, cb) 
       break;
 
     case "move":
-      el = this.seenEls.get(pack[1], this.container);
+      el = this.seenEls.get(pack[1]);
       c = element.coordinates(el);
       this.generateEvents("move", c.x, c.y, touchId, null, keyModifiers);
       this.actions(chain, touchId, i, keyModifiers, cb);

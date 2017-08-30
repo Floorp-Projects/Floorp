@@ -882,7 +882,7 @@ function emitTouchEvent(type, touch) {
  * Function that perform a single tap
  */
 async function singleTap(id, corx, cory) {
-  let el = seenEls.get(id, curContainer);
+  let el = seenEls.get(id);
   // after this block, the element will be scrolled into view
   let visible = element.isVisible(el, corx, cory);
   if (!visible) {
@@ -1032,7 +1032,7 @@ function setDispatch(batches, touches, batchIndex = 0) {
 
     switch (command) {
       case "press":
-        el = seenEls.get(pack[2], curContainer);
+        el = seenEls.get(pack[2]);
         c = element.coordinates(el, pack[3], pack[4]);
         touch = createATouch(el, c.x, c.y, touchId);
         multiLast[touchId] = touch;
@@ -1050,7 +1050,7 @@ function setDispatch(batches, touches, batchIndex = 0) {
         break;
 
       case "move":
-        el = seenEls.get(pack[2], curContainer);
+        el = seenEls.get(pack[2]);
         c = element.coordinates(el);
         touch = createATouch(multiLast[touchId].target, c.x, c.y, touchId);
         touchIndex = touches.indexOf(lastTouch);
@@ -1305,7 +1305,7 @@ async function findElementContent(strategy, selector, opts = {}) {
 
   opts.all = false;
   if (opts.startNode) {
-    opts.startNode = seenEls.get(opts.startNode, curContainer);
+    opts.startNode = seenEls.get(opts.startNode);
   }
 
   let el = await element.find(curContainer, strategy, selector, opts);
@@ -1325,7 +1325,7 @@ async function findElementsContent(strategy, selector, opts = {}) {
 
   opts.all = true;
   if (opts.startNode) {
-    opts.startNode = seenEls.get(opts.startNode, curContainer);
+    opts.startNode = seenEls.get(opts.startNode);
   }
 
   let els = await element.find(curContainer, strategy, selector, opts);
@@ -1366,7 +1366,7 @@ function clickElement(msg) {
 
     loadListener.navigate(() => {
       return interaction.clickElement(
-          seenEls.get(id, curContainer),
+          seenEls.get(id),
           capabilities.get("moz:accessibilityChecks"),
           capabilities.get("specificationLevel") >= 1
       );
@@ -1378,7 +1378,7 @@ function clickElement(msg) {
 }
 
 function getElementAttribute(id, name) {
-  let el = seenEls.get(id, curContainer);
+  let el = seenEls.get(id);
   if (element.isBooleanAttribute(el, name)) {
     if (el.hasAttribute(name)) {
       return "true";
@@ -1389,7 +1389,7 @@ function getElementAttribute(id, name) {
 }
 
 function getElementProperty(id, name) {
-  let el = seenEls.get(id, curContainer);
+  let el = seenEls.get(id);
   return typeof el[name] != "undefined" ? el[name] : null;
 }
 
@@ -1403,7 +1403,7 @@ function getElementProperty(id, name) {
  *     Text of element.
  */
 function getElementText(id) {
-  let el = seenEls.get(id, curContainer);
+  let el = seenEls.get(id);
   return atom.getElementText(el, curContainer.frame);
 }
 
@@ -1417,7 +1417,7 @@ function getElementText(id) {
  *     Tag name of element.
  */
 function getElementTagName(id) {
-  let el = seenEls.get(id, curContainer);
+  let el = seenEls.get(id);
   return el.tagName.toLowerCase();
 }
 
@@ -1428,7 +1428,7 @@ function getElementTagName(id) {
  * capability.
  */
 function isElementDisplayed(id) {
-  let el = seenEls.get(id, curContainer);
+  let el = seenEls.get(id);
   return interaction.isElementDisplayed(
       el, capabilities.get("moz:accessibilityChecks"));
 }
@@ -1446,7 +1446,7 @@ function isElementDisplayed(id) {
  *     Effective value of the requested CSS property.
  */
 function getElementValueOfCssProperty(id, prop) {
-  let el = seenEls.get(id, curContainer);
+  let el = seenEls.get(id);
   let st = curContainer.frame.document.defaultView.getComputedStyle(el);
   return st.getPropertyValue(prop);
 }
@@ -1461,7 +1461,7 @@ function getElementValueOfCssProperty(id, prop) {
  *     The x, y, width, and height properties of the element.
  */
 function getElementRect(id) {
-  let el = seenEls.get(id, curContainer);
+  let el = seenEls.get(id);
   let clientRect = el.getBoundingClientRect();
   return {
     x: clientRect.x + curContainer.frame.pageXOffset,
@@ -1481,7 +1481,7 @@ function getElementRect(id) {
  *     True if enabled, false otherwise.
  */
 function isElementEnabled(id) {
-  let el = seenEls.get(id, curContainer);
+  let el = seenEls.get(id);
   return interaction.isElementEnabled(
       el, capabilities.get("moz:accessibilityChecks"));
 }
@@ -1493,13 +1493,13 @@ function isElementEnabled(id) {
  * and Radio Button states, or option elements.
  */
 function isElementSelected(id) {
-  let el = seenEls.get(id, curContainer);
+  let el = seenEls.get(id);
   return interaction.isElementSelected(
       el, capabilities.get("moz:accessibilityChecks"));
 }
 
 async function sendKeysToElement(id, val) {
-  let el = seenEls.get(id, curContainer);
+  let el = seenEls.get(id);
   if (el.type == "file") {
     await interaction.uploadFile(el, val);
   } else if ((el.type == "date" || el.type == "time") &&
@@ -1514,7 +1514,7 @@ async function sendKeysToElement(id, val) {
 /** Clear the text of an element. */
 function clearElement(id) {
   try {
-    let el = seenEls.get(id, curContainer);
+    let el = seenEls.get(id);
     if (el.type == "file") {
       el.value = null;
     } else {
@@ -1560,7 +1560,7 @@ function switchToShadowRoot(id) {
   }
 
   let foundShadowRoot;
-  let hostEl = seenEls.get(id, curContainer);
+  let hostEl = seenEls.get(id);
   foundShadowRoot = hostEl.shadowRoot;
   if (!foundShadowRoot) {
     throw new NoSuchElementError("Unable to locate shadow root: " + id);
@@ -1627,7 +1627,7 @@ function switchToFrame(msg) {
   if (seenEls.has(id)) {
     let wantedFrame;
     try {
-      wantedFrame = seenEls.get(id, curContainer);
+      wantedFrame = seenEls.get(id);
     } catch (e) {
       sendError(e, commandID);
     }
@@ -1760,7 +1760,7 @@ function takeScreenshot(format, opts = {}) {
   let highlights = opts.highlights || [];
   let scroll = !!opts.scroll;
 
-  let highlightEls = highlights.map(ref => seenEls.get(ref, curContainer));
+  let highlightEls = highlights.map(ref => seenEls.get(ref));
 
   let canvas;
 
@@ -1772,7 +1772,7 @@ function takeScreenshot(format, opts = {}) {
   } else {
     let el;
     if (id) {
-      el = seenEls.get(id, curContainer);
+      el = seenEls.get(id);
       if (scroll) {
         element.scrollIntoView(el);
       }
