@@ -12,10 +12,13 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
+"use strict";
 
 /*
  * This file is generated from kinto.js - do not modify directly.
  */
+
+const global = this;
 
 this.EXPORTED_SYMBOLS = ["Kinto"];
 

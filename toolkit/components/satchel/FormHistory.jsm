@@ -1,6 +1,7 @@
 /* This Source Code Form is subject to the terms of the Mozilla Public
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
+"use strict";
 
 /**
  * FormHistory
@@ -441,6 +442,8 @@ function dbCreateAsyncStatement(aQuery, aParams, aBindingArrays) {
   return stmt;
 }
 
+var dbMigrate;
+
 /**
  * Attempts to initialize the database. This creates the file if it doesn't
  * exist, performs any migrations, etc.
@@ -498,7 +501,7 @@ function dbCreate() {
   _dbConnection.schemaVersion = DB_SCHEMA_VERSION;
 }
 
-function dbMigrate(oldVersion) {
+dbMigrate = (oldVersion) => {
   log("Attempting to migrate from version " + oldVersion);
 
   if (oldVersion > DB_SCHEMA_VERSION) {
@@ -539,7 +542,7 @@ function dbMigrate(oldVersion) {
   _dbConnection.commitTransaction();
 
   log("DB migration completed.");
-}
+};
 
 /**
  * Sanity check to ensure that the columns this version of the code expects

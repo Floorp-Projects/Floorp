@@ -1,6 +1,7 @@
 /* This Source Code Form is subject to the terms of the Mozilla Public
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
+"use strict";
 
 /**
  * Firefox Accounts Web Channel.
@@ -540,7 +541,7 @@ var singleton;
 // (eg, it uses the observer service to tell interested parties of interesting
 // things) and allowing multiple channels would cause such notifications to be
 // sent multiple times.
-this.EnsureFxAccountsWebChannel = function() {
+this.EnsureFxAccountsWebChannel = () => {
   let contentUri = Services.urlFormatter.formatURLPref("identity.fxaccounts.remote.webchannel.uri");
   if (singleton && singleton._contentUri !== contentUri) {
     singleton.tearDown();
