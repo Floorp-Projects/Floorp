@@ -220,9 +220,6 @@ public:
   bool IsTextArea() const {
     return mTextCtrlElement->IsTextArea();
   }
-  bool IsPlainTextControl() const {
-    return mTextCtrlElement->IsPlainTextControl();
-  }
   bool IsPasswordTextControl() const {
     return mTextCtrlElement->IsPasswordTextControl();
   }

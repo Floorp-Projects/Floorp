@@ -1420,9 +1420,7 @@ nsTextEditorState::PrepareEditor(const nsAString *aValue)
   nsIPresShell *shell = presContext->GetPresShell();
 
   // Setup the editor flags
-  uint32_t editorFlags = 0;
-  if (IsPlainTextControl())
-    editorFlags |= nsIPlaintextEditor::eEditorPlaintextMask;
+  uint32_t editorFlags = nsIPlaintextEditor::eEditorPlaintextMask;
   if (IsSingleLineTextControl())
     editorFlags |= nsIPlaintextEditor::eEditorSingleLineMask;
   if (IsPasswordTextControl())
@@ -2447,13 +2445,8 @@ nsTextEditorState::GetValue(nsAString& aValue, bool aIgnoreWrap) const
 
     uint32_t flags = (nsIDocumentEncoder::OutputLFLineBreak |
                       nsIDocumentEncoder::OutputPreformatted |
-                      nsIDocumentEncoder::OutputPersistNBSP);
-
-    if (IsPlainTextControl())
-    {
-      flags |= nsIDocumentEncoder::OutputBodyOnly;
-    }
-
+                      nsIDocumentEncoder::OutputPersistNBSP |
+                      nsIDocumentEncoder::OutputBodyOnly);
     if (!aIgnoreWrap) {
       nsITextControlElement::nsHTMLTextWrap wrapProp;
       nsCOMPtr<nsIContent> content = do_QueryInterface(mTextCtrlElement);
