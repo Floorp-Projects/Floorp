@@ -46,11 +46,11 @@ public class DeferredRepositorySessionStoreDelegate implements
   }
 
   @Override
-  public void onStoreCompleted(final long storeEnd) {
+  public void onStoreCompleted() {
     executor.execute(new Runnable() {
       @Override
       public void run() {
-        inner.onStoreCompleted(storeEnd);
+        inner.onStoreCompleted();
       }
     });
   }

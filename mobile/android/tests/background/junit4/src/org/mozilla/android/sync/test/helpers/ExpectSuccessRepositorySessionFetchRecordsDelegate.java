@@ -32,7 +32,7 @@ public class ExpectSuccessRepositorySessionFetchRecordsDelegate extends
   }
 
   @Override
-  public void onFetchCompleted(long end) {
+  public void onFetchCompleted() {
     log("Fetch completed.");
     performNotify();
   }
