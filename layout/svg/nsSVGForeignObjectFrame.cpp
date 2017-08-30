@@ -360,7 +360,7 @@ nsSVGForeignObjectFrame::ReflowSVG()
     // Make sure we have our filter property (if any) before calling
     // FinishAndStoreOverflow (subsequent filter changes are handled off
     // nsChangeHint_UpdateEffects):
-    nsSVGEffects::UpdateEffects(this);
+    SVGObserverUtils::UpdateEffects(this);
   }
 
   // If we have a filter, we need to invalidate ourselves because filter

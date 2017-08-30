@@ -276,7 +276,7 @@ SVGDocumentWrapper::Observe(nsISupports* aSubject,
     // Sever ties from rendering observers to helper-doc's root SVG node
     SVGSVGElement* svgElem = GetRootSVGElem();
     if (svgElem) {
-      nsSVGEffects::RemoveAllRenderingObservers(svgElem);
+      SVGObserverUtils::RemoveAllRenderingObservers(svgElem);
     }
 
     // Clean up at XPCOM shutdown time.

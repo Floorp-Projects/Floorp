@@ -191,7 +191,7 @@ nsSVGMaskFrame::AttributeChanged(int32_t  aNameSpaceID,
        aAttribute == nsGkAtoms::height||
        aAttribute == nsGkAtoms::maskUnits ||
        aAttribute == nsGkAtoms::maskContentUnits)) {
-    nsSVGEffects::InvalidateDirectRenderingObservers(this);
+    SVGObserverUtils::InvalidateDirectRenderingObservers(this);
   }
 
   return nsSVGContainerFrame::AttributeChanged(aNameSpaceID,

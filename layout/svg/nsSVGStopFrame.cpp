@@ -85,7 +85,7 @@ nsSVGStopFrame::AttributeChanged(int32_t         aNameSpaceID,
     MOZ_ASSERT(GetParent()->IsSVGLinearGradientFrame() ||
                GetParent()->IsSVGRadialGradientFrame(),
                "Observers observe the gradient, so that's what we must invalidate");
-    nsSVGEffects::InvalidateDirectRenderingObservers(GetParent());
+    SVGObserverUtils::InvalidateDirectRenderingObservers(GetParent());
   }
 
   return nsFrame::AttributeChanged(aNameSpaceID, aAttribute, aModType);

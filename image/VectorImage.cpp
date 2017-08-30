@@ -66,7 +66,7 @@ public:
     Element* elem = GetTarget();
     MOZ_ASSERT(elem, "no root SVG node for us to observe");
 
-    nsSVGEffects::AddRenderingObserver(elem, this);
+    SVGObserverUtils::AddRenderingObserver(elem, this);
     mInObserverList = true;
   }
 
@@ -108,7 +108,7 @@ protected:
     // Our caller might've removed us from rendering-observer list.
     // Add ourselves back!
     if (!mInObserverList) {
-      nsSVGEffects::AddRenderingObserver(elem, this);
+      SVGObserverUtils::AddRenderingObserver(elem, this);
       mInObserverList = true;
     }
   }
