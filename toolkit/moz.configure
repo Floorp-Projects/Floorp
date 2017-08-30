@@ -120,7 +120,6 @@ option('--enable-default-toolkit', nargs=1,
 def toolkit(value, target, _):
     # Define possible choices for each platform. The default is the first one
     # listed when there are several.
-    os = target.os
     if target.os == 'WINNT':
         platform_choices = ('cairo-windows',)
     elif target.os == 'OSX':
@@ -135,7 +134,8 @@ def toolkit(value, target, _):
     if value:
         if value[0] not in platform_choices:
             die('`%s` is not a valid value for --enable-default-toolkit on %s\n'
-                'Valid values: %s', value[0], os, ', '.join(platform_choices))
+                'Valid values: %s', value[0], target.os,
+                ', '.join(platform_choices))
         return value[0]
 
     return platform_choices[0]
