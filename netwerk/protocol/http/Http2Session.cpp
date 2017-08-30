@@ -140,6 +140,8 @@ Http2Session::Http2Session(nsISocketTransport *aSocketTransport, uint32_t versio
 
   mPingThreshold = gHttpHandler->SpdyPingThreshold();
   mPreviousPingThreshold = mPingThreshold;
+  mCurrentForegroundTabOuterContentWindowId =
+    gHttpHandler->ConnMgr()->CurrentTopLevelOuterContentWindowId();
 }
 
 void
@@ -418,7 +420,11 @@ Http2Session::AddStream(nsAHttpTransaction *aHttpTransaction,
     return true;
   }
 
-  Http2Stream *stream = new Http2Stream(aHttpTransaction, this, aPriority);
+  Http2Stream *stream =
+    new Http2Stream(aHttpTransaction,
+                    this,
+                    aPriority,
+                    mCurrentForegroundTabOuterContentWindowId);
 
   LOG3(("Http2Session::AddStream session=%p stream=%p serial=%" PRIu64 " "
         "NextID=0x%X (tentative)", this, stream, mSerial, mNextStreamID));
@@ -797,14 +803,9 @@ Http2Session::GeneratePriority(uint32_t aID, uint8_t aPriorityWeight)
   LOG3(("Http2Session::GeneratePriority %p %X %X\n",
         this, aID, aPriorityWeight));
 
-  uint32_t frameSize = kFrameHeaderBytes + 5;
-  char *packet = EnsureOutputBuffer(frameSize);
-  mOutputQueueUsed += frameSize;
+  char *packet = CreatePriorityFrame(aID, 0, aPriorityWeight);
 
-  CreateFrameHeader(packet, 5, FRAME_TYPE_PRIORITY, 0, aID);
-  NetworkEndian::writeUint32(packet + kFrameHeaderBytes, 0);
-  memcpy(packet + frameSize - 1, &aPriorityWeight, 1);
-  LogIO(this, nullptr, "Generate Priority", packet, frameSize);
+  LogIO(this, nullptr, "Generate Priority", packet, kFrameHeaderBytes + 5);
   FlushOutputQueue();
 }
 
@@ -981,14 +982,38 @@ Http2Session::SendHello()
 }
 
 void
-Http2Session::CreatePriorityNode(uint32_t streamID, uint32_t dependsOn, uint8_t weight,
-                                 const char *label)
+Http2Session::SendPriorityFrame(uint32_t streamID,
+                                uint32_t dependsOn,
+                                uint8_t weight)
 {
-  char *packet = mOutputQueueBuffer.get() + mOutputQueueUsed;
+  MOZ_ASSERT(OnSocketThread(), "not on socket thread");
+  LOG3(("Http2Session::SendPriorityFrame %p Frame 0x%X depends on 0x%X "
+        "weight %d\n", this, streamID, dependsOn, weight));
+
+  char *packet = CreatePriorityFrame(streamID, dependsOn, weight);
+
+  LogIO(this, nullptr, "SendPriorityFrame", packet, kFrameHeaderBytes + 5);
+  FlushOutputQueue();
+}
+
+char *
+Http2Session::CreatePriorityFrame(uint32_t streamID,
+                                  uint32_t dependsOn,
+                                  uint8_t weight)
+{
+  char *packet = EnsureOutputBuffer(kFrameHeaderBytes + 5);
   CreateFrameHeader(packet, 5, FRAME_TYPE_PRIORITY, 0, streamID);
   mOutputQueueUsed += kFrameHeaderBytes + 5;
   NetworkEndian::writeUint32(packet + kFrameHeaderBytes, dependsOn); // depends on
   packet[kFrameHeaderBytes + 4] = weight; // weight
+  return packet;
+}
+
+void
+Http2Session::CreatePriorityNode(uint32_t streamID, uint32_t dependsOn, uint8_t weight,
+                                 const char *label)
+{
+  char *packet = CreatePriorityFrame(streamID, dependsOn, weight);
 
   LOG3(("Http2Session %p generate Priority Frame 0x%X depends on 0x%X "
         "weight %d for %s class\n", this, streamID, dependsOn, weight, label));
@@ -1755,7 +1780,11 @@ Http2Session::RecvPushPromise(Http2Session *self)
     new Http2PushTransactionBuffer();
   transactionBuffer->SetConnection(self);
   Http2PushedStream *pushedStream =
-    new Http2PushedStream(transactionBuffer, self, associatedStream, promisedID);
+    new Http2PushedStream(transactionBuffer,
+                          self,
+                          associatedStream,
+                          promisedID,
+                          self->mCurrentForegroundTabOuterContentWindowId);
 
   rv = pushedStream->ConvertPushHeaders(&self->mDecompressor,
                                         self->mDecompressBuffer,
@@ -4462,6 +4491,18 @@ Http2Session::RealJoinConnection(const nsACString &hostname, int32_t port,
     }
   }
   return joinedReturn;
+}
+
+void
+Http2Session::TopLevelOuterContentWindowIdChanged(uint64_t windowId)
+{
+  MOZ_ASSERT(OnSocketThread(), "not on socket thread");
+
+  mCurrentForegroundTabOuterContentWindowId = windowId;
+
+  for (auto iter = mStreamTransactionHash.Iter(); !iter.Done(); iter.Next()) {
+    iter.Data()->TopLevelOuterContentWindowIdChanged(windowId);
+  }
 }
 
 } // namespace net

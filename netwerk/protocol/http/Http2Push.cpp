@@ -63,8 +63,9 @@ private:
 Http2PushedStream::Http2PushedStream(Http2PushTransactionBuffer *aTransaction,
                                      Http2Session *aSession,
                                      Http2Stream *aAssociatedStream,
-                                     uint32_t aID)
-  :Http2Stream(aTransaction, aSession, 0)
+                                     uint32_t aID,
+                                     uint64_t aCurrentForegroundTabOuterContentWindowId)
+  :Http2Stream(aTransaction, aSession, 0, aCurrentForegroundTabOuterContentWindowId)
   , mConsumerStream(nullptr)
   , mAssociatedTransaction(aAssociatedStream->Transaction())
   , mBufferedPush(aTransaction)
