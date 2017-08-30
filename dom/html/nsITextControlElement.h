@@ -57,12 +57,6 @@ public:
   NS_IMETHOD_(bool) IsTextArea() const = 0;
 
   /**
-   * Find out whether this control edits plain text.  (Currently always true.)
-   * @return whether this is a plain text control
-   */
-  NS_IMETHOD_(bool) IsPlainTextControl() const = 0;
-
-  /**
    * Find out whether this is a password control (input type=password)
    * @return whether this is a password ontrol
    */
