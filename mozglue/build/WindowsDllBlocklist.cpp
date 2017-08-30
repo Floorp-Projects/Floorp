@@ -520,7 +520,7 @@ DllBlockSet::Write(HANDLE file)
     for (DllBlockSet* b = gFirst; b; b = b->mNext) {
       // write name[,v.v.v.v];
       WriteFile(file, b->mName, strlen(b->mName), &nBytes, nullptr);
-      if (b->mVersion != -1) {
+      if (b->mVersion != ALL_VERSIONS) {
         WriteFile(file, ",", 1, &nBytes, nullptr);
         uint16_t parts[4];
         parts[0] = b->mVersion >> 48;
