@@ -51,7 +51,7 @@ ScrollingLayersHelper::ScrollingLayersHelper(WebRenderLayer* aLayer,
       PushLayerLocalClip(aStackingContext);
     }
 
-    PushScrollLayer(fm, aStackingContext);
+    DefineAndPushScrollLayer(fm, aStackingContext);
   }
 
   // The scrolled clip on the layer is "inside" all of the scrollable metadatas
@@ -177,10 +177,10 @@ ScrollingLayersHelper::DefineAndPushScrollLayers(nsDisplayItem* aItem,
   DefineAndPushChain(asrClippedBy, aBuilder, aStackingContext,
       aAppUnitsPerDevPixel, aCache);
   // Finally, push the ASR itself as a scroll layer. Note that the
-  // implementation of PushScrollLayer in DisplayListBuilder makes sure the
+  // implementation of DefineScrollLayer in DisplayListBuilder makes sure the
   // scroll layer doesn't get defined multiple times so we don't need to worry
   // about that here.
-  if (PushScrollLayer(metadata->GetMetrics(), aStackingContext)) {
+  if (DefineAndPushScrollLayer(metadata->GetMetrics(), aStackingContext)) {
     mPushedClips.push_back(wr::ScrollOrClipId(scrollId));
   }
 }
@@ -228,8 +228,8 @@ ScrollingLayersHelper::DefineAndPushChain(const DisplayItemClipChain* aChain,
 }
 
 bool
-ScrollingLayersHelper::PushScrollLayer(const FrameMetrics& aMetrics,
-                                       const StackingContextHelper& aStackingContext)
+ScrollingLayersHelper::DefineAndPushScrollLayer(const FrameMetrics& aMetrics,
+                                                const StackingContextHelper& aStackingContext)
 {
   if (!aMetrics.IsScrollable()) {
     return false;
@@ -251,9 +251,10 @@ ScrollingLayersHelper::PushScrollLayer(const FrameMetrics& aMetrics,
   // WebRender at all. Instead, we take the position from the composition
   // bounds.
   contentRect.MoveTo(clipBounds.TopLeft());
-  mBuilder->PushScrollLayer(aMetrics.GetScrollId(),
+  mBuilder->DefineScrollLayer(aMetrics.GetScrollId(),
       aStackingContext.ToRelativeLayoutRect(contentRect),
       aStackingContext.ToRelativeLayoutRect(clipBounds));
+  mBuilder->PushScrollLayer(aMetrics.GetScrollId());
   return true;
 }
 
