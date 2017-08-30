@@ -6,6 +6,7 @@ from contextlib import closing
 import sys
 import logging
 import os
+import signal
 import time
 import tempfile
 import traceback
@@ -13,6 +14,7 @@ import urllib2
 
 import mozdevice
 import mozinfo
+import mozprocess
 from automation import Automation
 from remoteautomation import RemoteAutomation, fennecLogcatFilters
 
@@ -238,6 +240,35 @@ class RemoteReftest(RefTest):
     def stopWebServer(self, options):
         self.server.stop()
 
+    def killNamedProc(self, pname):
+        """ Kill processes matching the given command name """
+        self.log.info("Checking for %s processes..." % pname)
+
+        def _psInfo(line):
+            if pname in line:
+                self.log.info(line)
+        process = mozprocess.ProcessHandler(['ps', '-f'],
+                                            processOutputLine=_psInfo)
+        process.run()
+        process.wait()
+
+        def _psKill(line):
+            parts = line.split()
+            if len(parts) == 3 and parts[0].isdigit():
+                pid = int(parts[0])
+                if parts[2] == pname:
+                    self.log.info("killing %s with pid %d" % (pname, pid))
+                    try:
+                        os.kill(
+                            pid, getattr(signal, "SIGKILL", signal.SIGTERM))
+                    except Exception as e:
+                        self.log.info("Failed to kill process %d: %s" %
+                                      (pid, str(e)))
+        process = mozprocess.ProcessHandler(['ps', '-o', 'pid,ppid,comm'],
+                                            processOutputLine=_psKill)
+        process.run()
+        process.wait()
+
     def createReftestProfile(self, options, manifest, startAfter=None):
         profile = RefTest.createReftestProfile(self,
                                                options,
@@ -397,6 +428,14 @@ def run_test_harness(parser, options):
 
     # Hack in a symbolic link for jsreftest
     os.system("ln -s ../jsreftest " + str(os.path.join(SCRIPT_DIRECTORY, "jsreftest")))
+
+    # Despite our efforts to clean up servers started by this script, in practice
+    # we still see infrequent cases where a process is orphaned and interferes
+    # with future tests, typically because the old server is keeping the port in use.
+    # Try to avoid those failures by checking for and killing servers before
+    # trying to start new ones.
+    reftest.killNamedProc('ssltunnel')
+    reftest.killNamedProc('xpcshell')
 
     # Start the webserver
     retVal = reftest.startWebServer(options)

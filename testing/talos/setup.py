@@ -1,3 +1,4 @@
+
 import os
 from setuptools import setup, find_packages
 
@@ -18,7 +19,9 @@ setup(name='talos',
       version=version,
       description="Performance testing framework for Windows, Mac and Linux.",
       long_description=description,
-      classifiers=[],  # Get strings from http://www.python.org/pypi?%3Aaction=list_classifiers
+      classifiers=['Programming Language :: Python :: 2.7',
+                   'Programming Language :: Python :: 2 :: Only'],
+      # Get strings from http://www.python.org/pypi?%3Aaction=list_classifiers
       author='Mozilla Foundation',
       author_email='tools@lists.mozilla.org',
       url='https://wiki.mozilla.org/Buildbot/Talos',
