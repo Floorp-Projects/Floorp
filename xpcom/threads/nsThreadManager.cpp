@@ -34,6 +34,12 @@ static MOZ_THREAD_LOCAL(bool) sTLSIsMainThread;
 static MOZ_THREAD_LOCAL(PRThread*) gTlsCurrentVirtualThread;
 
 bool
+NS_IsMainThreadTLSInitialized()
+{
+  return sTLSIsMainThread.initialized();
+}
+
+bool
 NS_IsMainThread()
 {
   return sTLSIsMainThread.get();
