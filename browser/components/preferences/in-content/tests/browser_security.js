@@ -97,11 +97,19 @@ add_task(async function() {
   await checkPrefSwitch(false);
 });
 
+requestLongerTimeout(2);
 // test the unwanted/uncommon software warning preference
 add_task(async function() {
-  async function checkPrefSwitch(val1, val2) {
+  async function checkPrefSwitch(val1, val2, isV2) {
     Services.prefs.setBoolPref("browser.safebrowsing.downloads.remote.block_potentially_unwanted", val1);
     Services.prefs.setBoolPref("browser.safebrowsing.downloads.remote.block_uncommon", val2);
+    let testMalwareTable = "goog-malware-" + (isV2 ? "shavar" : "proto");
+    testMalwareTable += ",test-malware-simple";
+    if (val1 && val2) {
+      testMalwareTable += ",goog-unwanted-" + (isV2 ? "shavar" : "proto");
+      testMalwareTable += ",test-unwanted-simple";
+    }
+    Services.prefs.setCharPref("urlclassifier.malwareTable", testMalwareTable);
 
     gBrowser.reload();
     await BrowserTestUtils.browserLoaded(gBrowser.selectedBrowser);
@@ -122,8 +130,13 @@ add_task(async function() {
 
     // when the preference is on, the malware table should include these ids
     let malwareTable = Services.prefs.getCharPref("urlclassifier.malwareTable").split(",");
-    is(malwareTable.includes("goog-unwanted-shavar"), !checked,
-       "malware table doesn't include goog-unwanted-shavar");
+    if (isV2) {
+      is(malwareTable.includes("goog-unwanted-shavar"), !checked,
+         "malware table doesn't include goog-unwanted-shavar");
+    } else {
+      is(malwareTable.includes("goog-unwanted-proto"), !checked,
+         "malware table doesn't include goog-unwanted-proto");
+    }
     is(malwareTable.includes("test-unwanted-simple"), !checked,
        "malware table doesn't include test-unwanted-simple");
     let sortedMalware = malwareTable.slice(0);
@@ -131,8 +144,13 @@ add_task(async function() {
     Assert.deepEqual(malwareTable, sortedMalware, "malware table has been sorted");
   }
 
-  await checkPrefSwitch(true, true);
-  await checkPrefSwitch(false, true);
-  await checkPrefSwitch(true, false);
-  await checkPrefSwitch(false, false);
+  await checkPrefSwitch(true, true, false);
+  await checkPrefSwitch(false, true, false);
+  await checkPrefSwitch(true, false, false);
+  await checkPrefSwitch(false, false, false);
+  await checkPrefSwitch(true, true, true);
+  await checkPrefSwitch(false, true, true);
+  await checkPrefSwitch(true, false, true);
+  await checkPrefSwitch(false, false, true);
+
 });
