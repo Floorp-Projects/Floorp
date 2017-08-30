@@ -72,16 +72,16 @@ class PayloadDispatcher {
      * Depending on the type of payload and batch mode status, inform our delegate of progress.
      *
      * @param response success response to our commit post
-     * @param guids list of successfully posted record guids
      * @param isCommit was this a commit upload?
      * @param isLastPayload was this a very last payload we'll upload?
      */
-    void payloadSucceeded(final SyncStorageResponse response, final String[] guids, final boolean isCommit, final boolean isLastPayload) {
+    void payloadSucceeded(final SyncStorageResponse response, final boolean isCommit, final boolean isLastPayload) {
         // Sanity check.
         if (batchWhiteboard.getInBatchingMode() == null) {
             throw new IllegalStateException("Can't process payload success until we know if we're in a batching mode");
         }
 
+        final String[] guids = batchWhiteboard.getSuccessRecordGuids();
         // We consider records to have been committed if we're not in a batching mode or this was a commit.
         // If records have been committed, notify our store delegate.
         if (!batchWhiteboard.getInBatchingMode() || isCommit) {
@@ -94,6 +94,7 @@ class PayloadDispatcher {
             // Therefore, we bump our local "last store" timestamp.
             bumpTimestampTo(uploadTimestamp, response.normalizedTimestampForHeader(SyncResponse.X_LAST_MODIFIED));
             uploader.setLastStoreTimestamp(uploadTimestamp);
+            batchWhiteboard.clearSuccessRecordGuids();
         }
 
         // If this was our very last commit, we're done storing records.
