@@ -45,6 +45,7 @@ NS_IMPL_ISUPPORTS(CookieServiceChild,
 CookieServiceChild::CookieServiceChild()
   : mCookieBehavior(nsICookieService::BEHAVIOR_ACCEPT)
   , mThirdPartySession(false)
+  , mIPCOpen(false)
 {
   NS_ASSERTION(IsNeckoChild(), "not a child process");
 
@@ -61,6 +62,8 @@ CookieServiceChild::CookieServiceChild()
   NeckoChild::InitNeckoChild();
   gNeckoChild->SendPCookieServiceConstructor(this);
 
+  mIPCOpen = true;
+
   // Init our prefs and observer.
   nsCOMPtr<nsIPrefBranch> prefBranch =
     do_GetService(NS_PREFSERVICE_CONTRACTID);
@@ -75,6 +78,12 @@ CookieServiceChild::CookieServiceChild()
 CookieServiceChild::~CookieServiceChild()
 {
   gCookieService = nullptr;
+}
+
+void
+CookieServiceChild::ActorDestroy(ActorDestroyReason why)
+{
+  mIPCOpen = false;
 }
 
 void
@@ -139,6 +148,9 @@ CookieServiceChild::GetCookieStringInternal(nsIURI *aHostURI,
   }
 
   // Synchronously call the parent.
+  if (!mIPCOpen) {
+    return NS_ERROR_NOT_AVAILABLE;
+  }
   nsAutoCString result;
   SendGetCookieString(uriParams, !!isForeign, attrs, &result);
   if (!result.IsEmpty())
@@ -186,8 +198,10 @@ CookieServiceChild::SetCookieStringInternal(nsIURI *aHostURI,
   }
 
   // Synchronously call the parent.
-  SendSetCookieString(uriParams, !!isForeign, cookieString, serverTime,
-                      attrs, aFromHttp);
+  if (mIPCOpen) {
+    SendSetCookieString(uriParams, !!isForeign, cookieString, serverTime,
+                        attrs, aFromHttp);
+  }
   return NS_OK;
 }
 
