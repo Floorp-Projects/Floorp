@@ -242,6 +242,11 @@ public:
     // NOTE: relatively expensive to call, there are two hashtable lookups.
     bool IsConnEntryUnderPressure(nsHttpConnectionInfo*);
 
+    uint64_t CurrentTopLevelOuterContentWindowId()
+    {
+        return mCurrentTopLevelOuterContentWindowId;
+    }
+
 private:
     virtual ~nsHttpConnectionMgr();
 
@@ -760,6 +765,11 @@ private:
     nsTArray<RefPtr<PendingTransactionInfo>>*
     GetTransactionPendingQHelper(nsConnectionEntry *ent, nsAHttpTransaction *trans);
 
+    // When current active tab is changed, this function uses
+    // |previousWindowId| to select background transactions and
+    // mCurrentTopLevelOuterContentWindowId| to select foreground transactions.
+    // Then, it notifies selected transactions' connection of the new active tab id.
+    void NotifyConnectionOfWindowIdChange(uint64_t previousWindowId);
 };
 
 NS_DEFINE_STATIC_IID_ACCESSOR(nsHttpConnectionMgr::nsHalfOpenSocket, NS_HALFOPENSOCKET_IID)
