@@ -679,11 +679,11 @@ DisplayListBuilder::PushBuiltDisplayList(BuiltDisplayList &dl)
 }
 
 void
-DisplayListBuilder::PushScrollLayer(const layers::FrameMetrics::ViewID& aScrollId,
-                                    const wr::LayoutRect& aContentRect,
-                                    const wr::LayoutRect& aClipRect)
+DisplayListBuilder::DefineScrollLayer(const layers::FrameMetrics::ViewID& aScrollId,
+                                      const wr::LayoutRect& aContentRect,
+                                      const wr::LayoutRect& aClipRect)
 {
-  WRDL_LOG("PushScrollLayer id=%" PRIu64 " co=%s cl=%s\n", mWrState,
+  WRDL_LOG("DefineScrollLayer id=%" PRIu64 " co=%s cl=%s\n", mWrState,
       aScrollId, Stringify(aContentRect).c_str(), Stringify(aClipRect).c_str());
 
   Maybe<layers::FrameMetrics::ViewID> parent =
@@ -698,7 +698,12 @@ DisplayListBuilder::PushScrollLayer(const layers::FrameMetrics::ViewID& aScrollI
     // value is the same.
     MOZ_ASSERT(it.first->second == parent);
   }
+}
 
+void
+DisplayListBuilder::PushScrollLayer(const layers::FrameMetrics::ViewID& aScrollId)
+{
+  WRDL_LOG("PushScrollLayer id=%" PRIu64 "\n", mWrState, aScrollId);
   wr_dp_push_scroll_layer(mWrState, aScrollId);
   mScrollIdStack.push_back(aScrollId);
 }
