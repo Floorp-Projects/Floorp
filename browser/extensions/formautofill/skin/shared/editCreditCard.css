@@ -4,8 +4,6 @@
 
 form {
   justify-content: center;
-  /* Add extra space to ensure invalid input box is displayed properly */
-  padding: 2px;
 }
 
 form > label,
