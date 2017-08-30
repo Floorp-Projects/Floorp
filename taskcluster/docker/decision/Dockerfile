@@ -2,8 +2,9 @@ FROM          ubuntu:16.04
 MAINTAINER    Greg Arndt <garndt@mozilla.com>
 
 # Add worker user
-RUN useradd -d /home/worker -s /bin/bash -m worker
-RUN mkdir /home/worker/artifacts && chown worker:worker /home/worker/artifacts
+RUN mkdir /builds
+RUN useradd -d /builds/worker -s /bin/bash -m worker
+RUN mkdir /builds/worker/artifacts && chown worker:worker /builds/worker/artifacts
 
 # %include python/mozbuild/mozbuild/action/tooltool.py
 ADD topsrcdir/python/mozbuild/mozbuild/action/tooltool.py /tmp/tooltool.py
@@ -18,11 +19,11 @@ ADD system-setup.sh /tmp/system-setup.sh
 RUN bash /tmp/system-setup.sh
 
 # %include taskcluster/docker/recipes/run-task
-ADD topsrcdir/taskcluster/docker/recipes/run-task /home/worker/bin/run-task
+ADD topsrcdir/taskcluster/docker/recipes/run-task /builds/worker/bin/run-task
 
-ENV PATH /home/worker/bin:$PATH
+ENV PATH /builds/worker/bin:$PATH
 ENV SHELL /bin/bash
-ENV HOME /home/worker
+ENV HOME /builds/worker
 
 # Set a default command useful for debugging
 CMD ["/bin/bash", "--login"]
