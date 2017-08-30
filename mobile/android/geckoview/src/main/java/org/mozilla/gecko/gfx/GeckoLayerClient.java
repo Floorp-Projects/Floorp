@@ -384,8 +384,14 @@ class GeckoLayerClient implements LayerView.Listener
         info.orientation = orientation;
 
         // Dispatch the event
-        int action = (pointerIndex << MotionEvent.ACTION_POINTER_INDEX_SHIFT);
-        action &= MotionEvent.ACTION_POINTER_INDEX_MASK;
+        int action = 0;
+        if (eventType == MotionEvent.ACTION_POINTER_DOWN ||
+            eventType == MotionEvent.ACTION_POINTER_UP) {
+            // for pointer-down and pointer-up events we need to add the
+            // index of the relevant pointer.
+            action = (pointerIndex << MotionEvent.ACTION_POINTER_INDEX_SHIFT);
+            action &= MotionEvent.ACTION_POINTER_INDEX_MASK;
+        }
         action |= (eventType & MotionEvent.ACTION_MASK);
         boolean isButtonDown = (source == InputDevice.SOURCE_MOUSE) &&
                                (eventType == MotionEvent.ACTION_DOWN || eventType == MotionEvent.ACTION_MOVE);
