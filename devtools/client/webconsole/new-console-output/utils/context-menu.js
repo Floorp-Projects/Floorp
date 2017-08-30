@@ -31,12 +31,7 @@ const { l10n } = require("devtools/client/webconsole/new-console-output/utils/me
  *          - {String} source
  *          - {String} request
  */
-function createContextMenu(jsterm, parentNode, {
-  actor,
-  clipboardText,
-  message,
-  serviceContainer
-}) {
+function createContextMenu(jsterm, parentNode, { actor, clipboardText, message }) {
   let win = parentNode.ownerDocument.defaultView;
   let selection = win.getSelection();
 
@@ -57,19 +52,6 @@ function createContextMenu(jsterm, parentNode, {
         return;
       }
       clipboardHelper.copyString(request.url);
-    },
-  }));
-
-  // Open Network message in the Network panel.
-  menu.append(new MenuItem({
-    id: "console-menu-open-in-network-panel",
-    label: l10n.getStr("webconsole.menu.openInNetworkPanel.label"),
-    accesskey: l10n.getStr("webconsole.menu.openInNetworkPanel.accesskey"),
-    visible: source === MESSAGE_SOURCE.NETWORK,
-    click: () => {
-      if (request && serviceContainer.openNetworkPanel) {
-        serviceContainer.openNetworkPanel(message.messageId);
-      }
     },
   }));
 

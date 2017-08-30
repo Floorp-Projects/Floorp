@@ -7,20 +7,14 @@
 
 const {
   FILTER_BAR_TOGGLE,
-  TIMESTAMPS_TOGGLE,
-  SELECT_NETWORK_MESSAGE_TAB,
+  TIMESTAMPS_TOGGLE
 } = require("devtools/client/webconsole/new-console-output/constants");
 const Immutable = require("devtools/client/shared/vendor/immutable");
-
-const {
-  PANELS,
-} = require("devtools/client/netmonitor/src/constants");
 
 const UiState = Immutable.Record({
   filterBarVisible: false,
   filteredMessageVisible: false,
   timestampsVisible: true,
-  networkMessageActiveTabId: PANELS.HEADERS,
 });
 
 function ui(state = new UiState(), action) {
@@ -29,8 +23,6 @@ function ui(state = new UiState(), action) {
       return state.set("filterBarVisible", !state.filterBarVisible);
     case TIMESTAMPS_TOGGLE:
       return state.set("timestampsVisible", action.visible);
-    case SELECT_NETWORK_MESSAGE_TAB:
-      return state.set("networkMessageActiveTabId", action.id);
   }
 
   return state;

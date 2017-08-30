@@ -7,7 +7,6 @@
 "use strict";
 
 const l10n = require("devtools/client/webconsole/webconsole-l10n");
-const { getUrlDetails } = require("devtools/client/netmonitor/src/utils/request-utils");
 
 const {
   MESSAGE_SOURCE,
@@ -233,11 +232,6 @@ function transformNetworkEventPacket(packet) {
     response: networkEvent.response,
     timeStamp: networkEvent.timeStamp,
     totalTime: networkEvent.totalTime,
-    url: networkEvent.request.url,
-    urlDetails: getUrlDetails(networkEvent.request.url),
-    method: networkEvent.request.method,
-    updates: networkEvent.updates,
-    cause: networkEvent.cause,
   });
 }
 

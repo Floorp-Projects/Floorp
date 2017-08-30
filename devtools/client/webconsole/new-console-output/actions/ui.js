@@ -13,7 +13,6 @@ const {
   FILTER_BAR_TOGGLE,
   PREFS,
   TIMESTAMPS_TOGGLE,
-  SELECT_NETWORK_MESSAGE_TAB,
 } = require("devtools/client/webconsole/new-console-output/constants");
 
 function filterBarToggle(show) {
@@ -33,15 +32,7 @@ function timestampsToggle(visible) {
   };
 }
 
-function selectNetworkMessageTab(id) {
-  return {
-    type: SELECT_NETWORK_MESSAGE_TAB,
-    id,
-  };
-}
-
 module.exports = {
   filterBarToggle,
   timestampsToggle,
-  selectNetworkMessageTab,
 };
