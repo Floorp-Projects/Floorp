@@ -126,6 +126,7 @@
 #navigator-toolbox > toolbar:not(#TabsToolbar) {
   -moz-appearance: none;
   background: var(--toolbar-bgcolor);
+  color: var(--toolbar-color, inherit);
 }
 
 /* Draw the bottom border of the tabs toolbar when it's not using

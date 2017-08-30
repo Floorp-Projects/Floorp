@@ -58,6 +58,7 @@
 #navigator-toolbox > toolbar:not(#toolbar-menubar):not(#TabsToolbar) {
   background-color: var(--toolbar-bgcolor);
   background-image: var(--toolbar-bgimage);
+  color: var(--toolbar-color, inherit);
   -moz-appearance: none;
   border-style: none;
 }
