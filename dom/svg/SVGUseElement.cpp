@@ -17,7 +17,7 @@
 #include "nsContentUtils.h"
 #include "nsIURI.h"
 #include "mozilla/URLExtraData.h"
-#include "nsSVGEffects.h"
+#include "SVGObserverUtils.h"
 #include "nsSVGUseFrame.h"
 
 NS_IMPL_NS_NEW_NAMESPACED_SVG_ELEMENT(Use)

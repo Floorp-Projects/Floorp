@@ -8,7 +8,7 @@
 
 // Keep others in (case-insensitive) order:
 #include "gfxContext.h"
-#include "nsSVGEffects.h"
+#include "SVGObserverUtils.h"
 #include "mozilla/dom/SVGMarkerElement.h"
 #include "SVGGeometryElement.h"
 #include "SVGGeometryFrame.h"

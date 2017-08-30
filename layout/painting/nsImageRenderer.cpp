@@ -20,7 +20,7 @@
 #include "nsIFrame.h"
 #include "nsStyleStructInlines.h"
 #include "nsSVGDisplayableFrame.h"
-#include "nsSVGEffects.h"
+#include "SVGObserverUtils.h"
 #include "nsSVGIntegrationUtils.h"
 
 using namespace mozilla;
