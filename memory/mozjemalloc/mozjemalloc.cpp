@@ -142,7 +142,7 @@
 #include <string.h>
 #include <algorithm>
 
-#ifdef MOZ_MEMORY_WINDOWS
+#ifdef XP_WIN
 
 /* Some defines from the CRT internal headers that we need here. */
 #define _CRT_SPINCOUNT 5000
@@ -194,7 +194,7 @@ typedef long ssize_t;
 #define	MALLOC_DECOMMIT
 #endif
 
-#ifndef MOZ_MEMORY_WINDOWS
+#ifndef XP_WIN
 #ifndef MOZ_MEMORY_SOLARIS
 #include <sys/cdefs.h>
 #endif
@@ -299,7 +299,7 @@ void *_mmap(void *addr, size_t length, int prot, int flags,
 static pthread_key_t tlsIndex;
 #endif
 
-#ifdef MOZ_MEMORY_WINDOWS
+#ifdef XP_WIN
    /* MSVC++ does not support C99 variable-length arrays. */
 #  define RB_NO_C99_VARARRAYS
 #endif
@@ -359,7 +359,7 @@ static pthread_key_t tlsIndex;
  * must be 8 bytes on 32-bit, 16 bytes on 64-bit.  On Linux and Mac, even
  * malloc(1) must reserve a word's worth of memory (see Mozilla bug 691003).
  */
-#ifdef MOZ_MEMORY_WINDOWS
+#ifdef XP_WIN
 #define TINY_MIN_2POW           (sizeof(void*) == 8 ? 4 : 3)
 #else
 #define TINY_MIN_2POW           (sizeof(void*) == 8 ? 3 : 2)
@@ -406,7 +406,7 @@ static pthread_key_t tlsIndex;
  * places, because they require malloc()ed memory, which causes bootstrapping
  * issues in some cases.
  */
-#if defined(MOZ_MEMORY_WINDOWS)
+#if defined(XP_WIN)
 #define malloc_mutex_t CRITICAL_SECTION
 #define malloc_spinlock_t CRITICAL_SECTION
 #elif defined(MOZ_MEMORY_DARWIN)
@@ -424,7 +424,7 @@ typedef pthread_mutex_t malloc_spinlock_t;
 /* Set to true once the allocator has been initialized. */
 static bool malloc_initialized = false;
 
-#if defined(MOZ_MEMORY_WINDOWS)
+#if defined(XP_WIN)
 /* No init lock for Windows. */
 #elif defined(MOZ_MEMORY_DARWIN)
 static malloc_mutex_t init_lock = {OS_SPINLOCK_INIT};
@@ -954,7 +954,7 @@ static malloc_spinlock_t arenas_lock; /* Protects arenas initialization. */
  * Map of pthread_self() --> arenas[???], used for selecting an arena to use
  * for allocations.
  */
-#if !defined(MOZ_MEMORY_WINDOWS) && !defined(MOZ_MEMORY_DARWIN)
+#if !defined(XP_WIN) && !defined(MOZ_MEMORY_DARWIN)
 static __thread arena_t	*arenas_map;
 #endif
 #endif
@@ -998,7 +998,7 @@ static void	*huge_malloc(size_t size, bool zero);
 static void	*huge_palloc(size_t size, size_t alignment, bool zero);
 static void	*huge_ralloc(void *ptr, size_t size, size_t oldsize);
 static void	huge_dalloc(void *ptr);
-#ifdef MOZ_MEMORY_WINDOWS
+#ifdef XP_WIN
 extern "C"
 #else
 static
@@ -1023,7 +1023,7 @@ static inline size_t
 load_acquire_z(size_t *p)
 {
 	volatile size_t result = *p;
-#  ifdef MOZ_MEMORY_WINDOWS
+#  ifdef XP_WIN
 	/*
 	 * We use InterlockedExchange with a dummy value to insert a memory
 	 * barrier. This has been confirmed to generate the right instruction
@@ -1040,7 +1040,7 @@ load_acquire_z(size_t *p)
 static void
 _malloc_message(const char *p)
 {
-#if !defined(MOZ_MEMORY_WINDOWS)
+#if !defined(XP_WIN)
 #define	_write	write
 #endif
   // Pretend to check _write() errors to suppress gcc warnings about
@@ -1079,7 +1079,7 @@ int pthread_atfork(void (*)(void), void (*)(void), void(*)(void));
 static bool
 malloc_mutex_init(malloc_mutex_t *mutex)
 {
-#if defined(MOZ_MEMORY_WINDOWS)
+#if defined(XP_WIN)
 	if (!InitializeCriticalSectionAndSpinCount(mutex, _CRT_SPINCOUNT))
 		return (true);
 #elif defined(MOZ_MEMORY_DARWIN)
@@ -1105,7 +1105,7 @@ static inline void
 malloc_mutex_lock(malloc_mutex_t *mutex)
 {
 
-#if defined(MOZ_MEMORY_WINDOWS)
+#if defined(XP_WIN)
 	EnterCriticalSection(mutex);
 #elif defined(MOZ_MEMORY_DARWIN)
 	OSSpinLockLock(&mutex->lock);
@@ -1118,7 +1118,7 @@ static inline void
 malloc_mutex_unlock(malloc_mutex_t *mutex)
 {
 
-#if defined(MOZ_MEMORY_WINDOWS)
+#if defined(XP_WIN)
 	LeaveCriticalSection(mutex);
 #elif defined(MOZ_MEMORY_DARWIN)
 	OSSpinLockUnlock(&mutex->lock);
@@ -1133,7 +1133,7 @@ __attribute__((unused))
 static bool
 malloc_spin_init(malloc_spinlock_t *lock)
 {
-#if defined(MOZ_MEMORY_WINDOWS)
+#if defined(XP_WIN)
 	if (!InitializeCriticalSectionAndSpinCount(lock, _CRT_SPINCOUNT))
 			return (true);
 #elif defined(MOZ_MEMORY_DARWIN)
@@ -1159,7 +1159,7 @@ static inline void
 malloc_spin_lock(malloc_spinlock_t *lock)
 {
 
-#if defined(MOZ_MEMORY_WINDOWS)
+#if defined(XP_WIN)
 	EnterCriticalSection(lock);
 #elif defined(MOZ_MEMORY_DARWIN)
 	OSSpinLockLock(&lock->lock);
@@ -1171,7 +1171,7 @@ malloc_spin_lock(malloc_spinlock_t *lock)
 static inline void
 malloc_spin_unlock(malloc_spinlock_t *lock)
 {
-#if defined(MOZ_MEMORY_WINDOWS)
+#if defined(XP_WIN)
 	LeaveCriticalSection(lock);
 #elif defined(MOZ_MEMORY_DARWIN)
 	OSSpinLockUnlock(&lock->lock);
@@ -1259,7 +1259,7 @@ static inline void
 pages_decommit(void *addr, size_t size)
 {
 
-#ifdef MOZ_MEMORY_WINDOWS
+#ifdef XP_WIN
 	/*
 	* The region starting at addr may have been allocated in multiple calls
 	* to VirtualAlloc and recycled, so decommitting the entire region in one
@@ -1287,7 +1287,7 @@ static inline void
 pages_commit(void *addr, size_t size)
 {
 
-#  ifdef MOZ_MEMORY_WINDOWS
+#  ifdef XP_WIN
 	/*
 	* The region starting at addr may have been allocated in multiple calls
 	* to VirtualAlloc and recycled, so committing the entire region in one
@@ -1468,7 +1468,7 @@ rb_wrap(static, extent_tree_ad_, extent_tree_t, extent_node_t, link_ad,
  * Begin chunk management functions.
  */
 
-#ifdef MOZ_MEMORY_WINDOWS
+#ifdef XP_WIN
 
 static void *
 pages_map(void *addr, size_t size)
@@ -1776,7 +1776,7 @@ pages_trim(void *addr, size_t alloc_size, size_t leadsize, size_t size)
         void *ret = (void *)((uintptr_t)addr + leadsize);
 
         MOZ_ASSERT(alloc_size >= leadsize + size);
-#ifdef MOZ_MEMORY_WINDOWS
+#ifdef XP_WIN
         {
                 void *new_addr;
 
@@ -1874,7 +1874,7 @@ pages_purge(void *addr, size_t length, bool force_zero)
 	if (force_zero)
 		memset(addr, 0, length);
 #  endif
-#  ifdef MOZ_MEMORY_WINDOWS
+#  ifdef XP_WIN
 	/*
 	* The region starting at addr may have been allocated in multiple calls
 	* to VirtualAlloc and recycled, so resetting the entire region in one
@@ -1999,7 +1999,7 @@ chunk_recycle(extent_tree_t *chunks_szad, extent_tree_t *chunks_ad, size_t size,
 	return (ret);
 }
 
-#ifdef MOZ_MEMORY_WINDOWS
+#ifdef XP_WIN
 /*
  * On Windows, calls to VirtualAlloc and VirtualFree must be matched, making it
  * awkward to recycle allocations of varying sizes. Therefore we only allow
@@ -2227,7 +2227,7 @@ thread_local_arena(bool enabled)
 		arena = arenas[0];
 		malloc_spin_unlock(&arenas_lock);
 	}
-#ifdef MOZ_MEMORY_WINDOWS
+#ifdef XP_WIN
 	TlsSetValue(tlsIndex, arena);
 #elif defined(MOZ_MEMORY_DARWIN)
 	pthread_setspecific(tlsIndex, arena);
@@ -2262,7 +2262,7 @@ choose_arena(void)
 	 */
 #ifndef NO_TLS
 
-#  ifdef MOZ_MEMORY_WINDOWS
+#  ifdef XP_WIN
 	ret = (arena_t*)TlsGetValue(tlsIndex);
 #  elif defined(MOZ_MEMORY_DARWIN)
 	ret = (arena_t*)pthread_getspecific(tlsIndex);
@@ -4207,7 +4207,7 @@ huge_dalloc(void *ptr)
  * implementation has to take pains to avoid infinite recursion during
  * initialization.
  */
-#if (defined(MOZ_MEMORY_WINDOWS) || defined(MOZ_MEMORY_DARWIN))
+#if (defined(XP_WIN) || defined(MOZ_MEMORY_DARWIN))
 #define	malloc_init() false
 #else
 static inline bool
@@ -4225,7 +4225,7 @@ malloc_init(void)
 extern "C" void register_zone(void);
 #endif
 
-#if !defined(MOZ_MEMORY_WINDOWS)
+#if !defined(XP_WIN)
 static
 #endif
 bool
@@ -4235,7 +4235,7 @@ malloc_init_hard(void)
 	const char *opts;
 	long result;
 
-#ifndef MOZ_MEMORY_WINDOWS
+#ifndef XP_WIN
 	malloc_mutex_lock(&init_lock);
 #endif
 
@@ -4244,13 +4244,13 @@ malloc_init_hard(void)
 		 * Another thread initialized the allocator before this one
 		 * acquired init_lock.
 		 */
-#ifndef MOZ_MEMORY_WINDOWS
+#ifndef XP_WIN
 		malloc_mutex_unlock(&init_lock);
 #endif
 		return (false);
 	}
 
-#ifdef MOZ_MEMORY_WINDOWS
+#ifdef XP_WIN
 	/* get a thread local storage index */
 	tlsIndex = TlsAlloc();
 #elif defined(MOZ_MEMORY_DARWIN)
@@ -4258,7 +4258,7 @@ malloc_init_hard(void)
 #endif
 
 	/* Get page size and number of CPUs */
-#ifdef MOZ_MEMORY_WINDOWS
+#ifdef XP_WIN
 	{
 		SYSTEM_INFO info;
 
@@ -4455,7 +4455,7 @@ MALLOC_OUT:
 	 */
 	arenas_extend();
 	if (!arenas || !arenas[0]) {
-#ifndef MOZ_MEMORY_WINDOWS
+#ifndef XP_WIN
 		malloc_mutex_unlock(&init_lock);
 #endif
 		return (true);
@@ -4466,7 +4466,7 @@ MALLOC_OUT:
 	 * spurious creation of an extra arena if the application switches to
 	 * threaded mode.
 	 */
-#ifdef MOZ_MEMORY_WINDOWS
+#ifdef XP_WIN
 	TlsSetValue(tlsIndex, arenas[0]);
 #elif defined(MOZ_MEMORY_DARWIN)
 	pthread_setspecific(tlsIndex, arenas[0]);
@@ -4481,7 +4481,7 @@ MALLOC_OUT:
 
 	malloc_initialized = true;
 
-#if !defined(MOZ_MEMORY_WINDOWS) && !defined(MOZ_MEMORY_DARWIN)
+#if !defined(XP_WIN) && !defined(MOZ_MEMORY_DARWIN)
 	/* Prevent potential deadlock on malloc locks after fork. */
 	pthread_atfork(_malloc_prefork, _malloc_postfork_parent, _malloc_postfork_child);
 #endif
@@ -4490,7 +4490,7 @@ MALLOC_OUT:
 	register_zone();
 #endif
 
-#ifndef MOZ_MEMORY_WINDOWS
+#ifndef XP_WIN
 	malloc_mutex_unlock(&init_lock);
 #endif
 	return (false);
@@ -4948,7 +4948,7 @@ jemalloc_purge_freed_pages_impl()
 
 
 
-#ifdef MOZ_MEMORY_WINDOWS
+#ifdef XP_WIN
 void*
 _recalloc(void *ptr, size_t count, size_t size)
 {
@@ -5141,7 +5141,7 @@ MOZ_EXPORT void *(*__memalign_hook)(size_t alignment, size_t size) = MEMALIGN;
 #  endif
 #endif
 
-#ifdef MOZ_MEMORY_WINDOWS
+#ifdef XP_WIN
 /*
  * In the new style jemalloc integration jemalloc is built as a separate
  * shared library.  Since we're no longer hooking into the CRT binary,
