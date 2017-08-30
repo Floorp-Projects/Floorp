@@ -6,7 +6,7 @@
 #ifndef SimpleChannel_h
 #define SimpleChannel_h
 
-#include "mozilla/Result.h"
+#include "mozilla/ResultExtensions.h"
 #include "mozilla/UniquePtr.h"
 #include "nsCOMPtr.h"
 
