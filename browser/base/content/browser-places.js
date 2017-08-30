@@ -78,21 +78,6 @@ var StarUI = {
   // nsIDOMEventListener
   handleEvent(aEvent) {
     switch (aEvent.type) {
-      case "animationend": {
-        let animatableBox = document.getElementById("library-animatable-box");
-        if (aEvent.animationName.startsWith("library-bookmark-animation")) {
-          animatableBox.setAttribute("fade", "true");
-        } else if (aEvent.animationName == "library-bookmark-fade") {
-          animatableBox.removeEventListener("animationend", this);
-          animatableBox.removeAttribute("animate");
-          animatableBox.removeAttribute("fade");
-          let libraryButton = document.getElementById("library-button");
-          // Put the 'fill' back in the normal icon.
-          libraryButton.removeAttribute("animate");
-          gNavToolbox.removeAttribute("animate");
-        }
-        break;
-      }
       case "mousemove":
         clearTimeout(this._autoCloseTimer);
         // The autoclose timer is not disabled on generic mouseout
@@ -120,7 +105,6 @@ var StarUI = {
             this.endBatch();
           }
 
-          let libraryButton;
           if (removeBookmarksOnPopupHidden && guidsForRemoval) {
             if (this._isNewBookmark) {
               if (!PlacesUIUtils.useAsyncTransactions) {
@@ -144,32 +128,8 @@ var StarUI = {
 
             PlacesTransactions.Remove(guidsForRemoval)
                               .transact().catch(Cu.reportError);
-          } else if (this._isNewBookmark &&
-                     Services.prefs.getBoolPref("toolkit.cosmeticAnimations.enabled") &&
-                     (libraryButton = document.getElementById("library-button")) &&
-                     libraryButton.getAttribute("cui-areatype") != "menu-panel" &&
-                     libraryButton.getAttribute("overflowedItem") != "true" &&
-                     libraryButton.closest("#nav-bar")) {
-            let animatableBox = document.getElementById("library-animatable-box");
-            let navBar = document.getElementById("nav-bar");
-            let libraryIcon = document.getAnonymousElementByAttribute(libraryButton, "class", "toolbarbutton-icon");
-            let dwu = window.getInterface(Ci.nsIDOMWindowUtils);
-            let iconBounds = dwu.getBoundsWithoutFlushing(libraryIcon);
-            let libraryBounds = dwu.getBoundsWithoutFlushing(libraryButton);
-
-            animatableBox.style.setProperty("--library-button-y", libraryBounds.y + "px");
-            animatableBox.style.setProperty("--library-button-height", libraryBounds.height + "px");
-            animatableBox.style.setProperty("--library-icon-x", iconBounds.x + "px");
-            if (navBar.hasAttribute("brighttext")) {
-              animatableBox.setAttribute("brighttext", "true");
-            } else {
-              animatableBox.removeAttribute("brighttext");
-            }
-            animatableBox.removeAttribute("fade");
-            gNavToolbox.setAttribute("animate", "bookmark");
-            libraryButton.setAttribute("animate", "bookmark");
-            animatableBox.setAttribute("animate", "bookmark");
-            animatableBox.addEventListener("animationend", this);
+          } else if (this._isNewBookmark) {
+            LibraryUI.triggerLibraryAnimation("bookmark");
           }
         }
         break;
@@ -1540,6 +1500,68 @@ var RecentBookmarksMenuUI = {
   onItemVisited() {},
   onItemMoved() {},
 }
+
+/**
+ * Handles the Library button in the toolbar.
+ */
+var LibraryUI = {
+  triggerLibraryAnimation(animation) {
+    if (!this.hasOwnProperty("COSMETIC_ANIMATIONS_ENABLED")) {
+      XPCOMUtils.defineLazyPreferenceGetter(this, "COSMETIC_ANIMATIONS_ENABLED",
+        "toolkit.cosmeticAnimations.enabled", true);
+    }
+
+    let libraryButton = document.getElementById("library-button");
+    if (!libraryButton ||
+        libraryButton.getAttribute("cui-areatype") == "menu-panel" ||
+        libraryButton.getAttribute("overflowedItem") == "true" ||
+        !libraryButton.closest("#nav-bar") ||
+        !this.COSMETIC_ANIMATIONS_ENABLED) {
+      return;
+    }
+    let animatableBox = document.getElementById("library-animatable-box");
+    let navBar = document.getElementById("nav-bar");
+    let libraryIcon = document.getAnonymousElementByAttribute(libraryButton, "class", "toolbarbutton-icon");
+    let dwu = window.getInterface(Ci.nsIDOMWindowUtils);
+    let iconBounds = dwu.getBoundsWithoutFlushing(libraryIcon);
+    let libraryBounds = dwu.getBoundsWithoutFlushing(libraryButton);
+
+    animatableBox.style.setProperty("--library-button-y", libraryBounds.y + "px");
+    animatableBox.style.setProperty("--library-button-height", libraryBounds.height + "px");
+    animatableBox.style.setProperty("--library-icon-x", iconBounds.x + "px");
+    if (navBar.hasAttribute("brighttext")) {
+      animatableBox.setAttribute("brighttext", "true");
+    } else {
+      animatableBox.removeAttribute("brighttext");
+    }
+    animatableBox.removeAttribute("fade");
+    gNavToolbox.setAttribute("animate", animation);
+    libraryButton.setAttribute("animate", animation);
+    animatableBox.setAttribute("animate", animation);
+    if (!this._libraryButtonAnimationEndListeners[animation]) {
+      this._libraryButtonAnimationEndListeners[animation] = event => {
+        this._libraryButtonAnimationEndListener(event, animation);
+      }
+    }
+    animatableBox.addEventListener("animationend", this._libraryButtonAnimationEndListeners[animation]);
+  },
+
+  _libraryButtonAnimationEndListeners: {},
+  _libraryButtonAnimationEndListener(aEvent, animation) {
+    let animatableBox = document.getElementById("library-animatable-box");
+    if (aEvent.animationName.startsWith(`library-${animation}-animation`)) {
+      animatableBox.setAttribute("fade", "true");
+    } else if (aEvent.animationName == `library-${animation}-fade`) {
+      animatableBox.removeEventListener("animationend", LibraryUI._libraryButtonAnimationEndListeners[animation]);
+      animatableBox.removeAttribute("animate");
+      animatableBox.removeAttribute("fade");
+      let libraryButton = document.getElementById("library-button");
+      // Put the 'fill' back in the normal icon.
+      libraryButton.removeAttribute("animate");
+      gNavToolbox.removeAttribute("animate");
+    }
+  },
+};
 
 /**
  * Handles the bookmarks menu-button in the toolbar.
