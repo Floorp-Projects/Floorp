@@ -10,6 +10,7 @@
 #include "mozilla/Atomics.h"
 #include "mozilla/Printf.h"
 
+#include "MainThreadUtils.h"
 #include "nsDebugImpl.h"
 #include "nsDebug.h"
 #ifdef MOZ_CRASHREPORTER
@@ -352,8 +353,16 @@ NS_DebugBreak(uint32_t aSeverity, const char* aStr, const char* aExpr,
   if (sMultiprocessDescription) {
     buf.print("%s ", sMultiprocessDescription);
   }
-  buf.print("%d] %s", base::GetCurrentProcId(), nonPIDBuf.buffer);
 
+  PRThread *currentThread = PR_GetCurrentThread();
+  const char *currentThreadName = NS_IsMainThread()
+    ? "Main Thread"
+    : PR_GetThreadName(currentThread);
+  if(currentThreadName) {
+    buf.print("%d, %s] %s", base::GetCurrentProcId(), currentThreadName , nonPIDBuf.buffer);
+  } else {
+    buf.print("%d, Unnamed thread %p] %s", base::GetCurrentProcId(), currentThread, nonPIDBuf.buffer);
+  }
 
   // errors on platforms without a debugdlg ring a bell on stderr
 #if !defined(XP_WIN)
