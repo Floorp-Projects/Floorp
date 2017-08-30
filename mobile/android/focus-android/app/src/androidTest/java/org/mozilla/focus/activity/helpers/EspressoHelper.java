@@ -13,7 +13,7 @@ import okhttp3.mockwebserver.MockWebServer;
 
 import static android.support.test.espresso.Espresso.onView;
 import static android.support.test.espresso.action.ViewActions.pressImeActionButton;
-import static android.support.test.espresso.action.ViewActions.typeText;
+import static android.support.test.espresso.action.ViewActions.replaceText;
 import static android.support.test.espresso.assertion.ViewAssertions.matches;
 import static android.support.test.espresso.matcher.ViewMatchers.hasFocus;
 import static android.support.test.espresso.matcher.ViewMatchers.isDisplayed;
@@ -27,7 +27,7 @@ public class EspressoHelper {
         onView(withId(R.id.url_edit))
                 .check(matches(isDisplayed()))
                 .check(matches(hasFocus()))
-                .perform(typeText(input), pressImeActionButton());
+                .perform(replaceText(input), pressImeActionButton());
     }
 
     public static void navigateToMockWebServer(@NonNull MockWebServer webServer, String path) {
