@@ -552,10 +552,11 @@ function StartTests()
             // gURLs array which prevents skipped tests from showing up in the log
             start = gThisChunk == 1 ? 0 : gURLs.indexOf(tURLs[start]);
             end = gThisChunk == gTotalChunks ? gURLs.length : gURLs.indexOf(tURLs[end + 1]) - 1;
-            gURLs = gURLs.slice(start, end);
 
             logger.info("Running chunk " + gThisChunk + " out of " + gTotalChunks + " chunks.  " +
                 "tests " + (start+1) + "-" + end + "/" + gURLs.length);
+
+            gURLs = gURLs.slice(start, end);
         }
 
         if (gShuffle) {
