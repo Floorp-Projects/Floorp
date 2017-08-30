@@ -3632,12 +3632,6 @@ nsHttpConnectionMgr::GetOrCreateConnectionEntry(nsHttpConnectionInfo *specificCI
     if (!specificEnt) {
         RefPtr<nsHttpConnectionInfo> clone(specificCI->Clone());
         specificEnt = new nsConnectionEntry(clone);
-#if defined(_WIN64) && defined(WIN95)
-        specificEnt->mUseFastOpen = gHttpHandler->UseFastOpen() &&
-                                    gSocketTransportService->HasFileDesc2PlatformOverlappedIOHandleFunc();
-#else
-        specificEnt->mUseFastOpen = gHttpHandler->UseFastOpen();
-#endif
         mCT.Put(clone->HashKey(), specificEnt);
     }
     return specificEnt;
@@ -3771,7 +3765,6 @@ nsHalfOpenSocket::nsHalfOpenSocket(nsConnectionEntry *ent,
     , mFreeToUse(true)
     , mPrimaryStreamStatus(NS_OK)
     , mFastOpenInProgress(false)
-    , mFastOpenStatus(TFO_NOT_TRIED)
     , mEnt(ent)
 {
     MOZ_ASSERT(ent && trans, "constructor with null arguments");
@@ -3788,6 +3781,11 @@ nsHalfOpenSocket::nsHalfOpenSocket(nsConnectionEntry *ent,
         }
     }
 
+    if (mEnt->mConnInfo->FirstHopSSL()) {
+      mFastOpenStatus = TFO_NOT_TRIED;
+    } else {
+      mFastOpenStatus = TFO_HTTP;
+    }
     MOZ_ASSERT(mEnt);
 }
 
@@ -4960,7 +4958,18 @@ nsConnectionEntry::nsConnectionEntry(nsHttpConnectionInfo *ci)
     , mDoNotDestroy(false)
 {
     MOZ_COUNT_CTOR(nsConnectionEntry);
-    mUseFastOpen = gHttpHandler->UseFastOpen();
+
+    if (mConnInfo->FirstHopSSL()) {
+#if defined(_WIN64) && defined(WIN95)
+        mUseFastOpen = gHttpHandler->UseFastOpen() &&
+                       gSocketTransportService->HasFileDesc2PlatformOverlappedIOHandleFunc();
+#else
+        mUseFastOpen = gHttpHandler->UseFastOpen();
+#endif
+    } else {
+        // Only allow the TCP fast open on a secure connection.
+        mUseFastOpen = false;
+    }
 
     LOG(("nsConnectionEntry::nsConnectionEntry this=%p key=%s",
          this, ci->HashKey().get()));
