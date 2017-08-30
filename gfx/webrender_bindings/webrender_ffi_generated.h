@@ -861,6 +861,13 @@ uint64_t wr_dp_define_clip(WrState *aState,
 WR_FUNC;
 
 WR_INLINE
+void wr_dp_define_scroll_layer(WrState *aState,
+                               uint64_t aScrollId,
+                               LayoutRect aContentRect,
+                               LayoutRect aClipRect)
+WR_FUNC;
+
+WR_INLINE
 void wr_dp_end(WrState *aState)
 WR_FUNC;
 
@@ -1027,9 +1034,7 @@ WR_FUNC;
 
 WR_INLINE
 void wr_dp_push_scroll_layer(WrState *aState,
-                             uint64_t aScrollId,
-                             LayoutRect aContentRect,
-                             LayoutRect aClipRect)
+                             uint64_t aScrollId)
 WR_FUNC;
 
 WR_INLINE
