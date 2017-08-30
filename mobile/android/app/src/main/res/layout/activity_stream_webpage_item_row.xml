@@ -42,6 +42,9 @@
         android:paddingBottom="16dp"
         android:paddingTop="16dp" />
 
+    <!-- In RTL locales, we don't want a large horizontal gap between the domain, page title and source
+         text so we set textAlignment=viewStart for all of them so that it's to the left in LTR and
+         right in RTL. -->
     <TextView
         android:id="@+id/page_domain"
         android:layout_width="match_parent"
@@ -53,10 +56,12 @@
         android:paddingLeft="@dimen/activity_stream_base_margin"
         android:paddingStart="@dimen/activity_stream_base_margin"
         android:paddingTop="@dimen/activity_stream_base_margin"
+        android:textAlignment="viewStart"
         android:textColor="@color/activity_stream_subtitle"
         android:textSize="12sp"
         tools:text="twitter" />
 
+    <!-- See id/page_domain for textAlignment comment. -->
     <TextView
         android:id="@+id/page_title"
         android:layout_width="match_parent"
@@ -70,6 +75,7 @@
         android:maxLines="3"
         android:paddingLeft="@dimen/activity_stream_base_margin"
         android:paddingStart="@dimen/activity_stream_base_margin"
+        android:textAlignment="viewStart"
         android:textColor="#ff000000"
         android:textSize="14sp"
         android:textStyle="bold"
@@ -98,12 +104,14 @@
             android:layout_height="12dp"
             tools:src="@drawable/ic_as_bookmarked" />
 
+        <!-- See id/page_domain for textAlignment comment. -->
         <TextView
             android:id="@+id/page_source"
             android:layout_width="0dp"
             android:layout_height="wrap_content"
             android:layout_marginLeft="2dp"
             android:layout_weight="1"
+            android:textAlignment="viewStart"
             android:textColor="@color/activity_stream_subtitle"
             android:textSize="12sp"
             tools:text="Bookmarked" />
