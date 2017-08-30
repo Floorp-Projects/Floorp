@@ -32,6 +32,7 @@
 #include "mozilla/mscom/EnsureMTA.h"
 
 extern const GUID CLSID_WebmMfVpxDec;
+extern const GUID CLSID_AMDWebmMfVp9Dec;
 
 namespace mozilla {
 
@@ -261,9 +262,10 @@ WMFDecoderModule::Supports(const TrackInfo& aTrackInfo,
     return true;
   }
   if (MediaPrefs::PDMWMFVP9DecoderEnabled()) {
-    if ((VPXDecoder::IsVP8(aTrackInfo.mMimeType)
-         || VPXDecoder::IsVP9(aTrackInfo.mMimeType))
-        && CanCreateWMFDecoder<CLSID_WebmMfVpxDec>()) {
+    if ((VPXDecoder::IsVP8(aTrackInfo.mMimeType) ||
+         VPXDecoder::IsVP9(aTrackInfo.mMimeType)) &&
+        (CanCreateWMFDecoder<CLSID_AMDWebmMfVp9Dec>() ||
+         CanCreateWMFDecoder<CLSID_WebmMfVpxDec>())) {
       return true;
     }
   }
