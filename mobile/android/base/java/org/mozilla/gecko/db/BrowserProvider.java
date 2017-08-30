@@ -2388,12 +2388,6 @@ public class BrowserProvider extends SharedBrowserDatabaseProvider {
         final List<String> guids = getBookmarkDescendantGUIDs(db, selection, selectionArgs);
         changed += bulkDeleteByBookmarkGUIDs(db, uri, guids);
 
-        try {
-            cleanUpSomeDeletedRecords(uri, TABLE_BOOKMARKS);
-        } catch (Exception e) {
-            // We don't care.
-            Log.e(LOGTAG, "Unable to clean up deleted bookmark records: ", e);
-        }
         return changed;
     }
 

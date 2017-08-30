@@ -28,9 +28,9 @@
   locale/@AB_CD@/browser/pippki.properties        (%chrome/pippki.properties)
   locale/@AB_CD@/browser/sync.properties          (%chrome/sync.properties)
   locale/@AB_CD@/browser/phishing.dtd             (%chrome/phishing.dtd)
-  locale/@AB_CD@/browser/handling.properties      (%chrome/handling.properties)
   locale/@AB_CD@/browser/aboutLogins.dtd          (%chrome/aboutLogins.dtd)
   locale/@AB_CD@/browser/aboutLogins.properties  (%chrome/aboutLogins.properties)
+  locale/@AB_CD@/browser/passwordmgr.properties   (%chrome/passwordmgr.properties)
 #ifndef RELEASE_OR_BETA
   locale/@AB_CD@/browser/webcompatReporter.properties (%chrome/webcompatReporter.properties)
 #endif
@@ -47,7 +47,6 @@ relativesrcdir toolkit/locales:
   locale/@AB_CD@/browser/overrides/commonDialogs.properties        (%chrome/global/commonDialogs.properties)
   locale/@AB_CD@/browser/overrides/intl.properties                 (%chrome/global/intl.properties)
   locale/@AB_CD@/browser/overrides/intl.css                        (%chrome/global/intl.css)
-  locale/@AB_CD@/browser/overrides/passwordmgr.properties          (%chrome/passwordmgr/passwordmgr.properties)
   locale/@AB_CD@/browser/overrides/search/search.properties        (%chrome/search/search.properties)
 # plugins
   locale/@AB_CD@/browser/overrides/plugins/pluginproblem.dtd       (%chrome/pluginproblem/pluginproblem.dtd)
@@ -71,10 +70,8 @@ relativesrcdir toolkit/locales:
 % override chrome://global/locale/aboutRights.dtd chrome://browser/locale/overrides/aboutRights.dtd
 % override chrome://global/locale/charsetMenu.properties chrome://browser/locale/overrides/charsetMenu.properties
 % override chrome://global/locale/commonDialogs.properties chrome://browser/locale/overrides/commonDialogs.properties
-% override chrome://mozapps/locale/handling/handling.properties chrome://browser/locale/handling.properties
 % override chrome://global/locale/intl.properties chrome://browser/locale/overrides/intl.properties
 % override chrome://global/locale/intl.css chrome://browser/locale/overrides/intl.css
-% override chrome://passwordmgr/locale/passwordmgr.properties chrome://browser/locale/overrides/passwordmgr/passwordmgr.properties
 % override chrome://global/locale/search/search.properties chrome://browser/locale/overrides/search/search.properties
 % override chrome://pluginproblem/locale/pluginproblem.dtd chrome://browser/locale/overrides/plugins/pluginproblem.dtd
 % override chrome://global/locale/aboutSupport.dtd chrome://browser/locale/overrides/global/aboutSupport.dtd

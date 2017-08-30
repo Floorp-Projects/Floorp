@@ -653,13 +653,11 @@ element.isStale = function(el, window, shadowRoot = undefined) {
     wrappedShadowRoot = new XPCNativeWrapper(shadowRoot);
   }
 
-  const container = {
-    frame: wrappedWindow,
-    shadowRoot: wrappedShadowRoot,
-  };
-
   let sameDoc = wrappedElement.ownerDocument === wrappedWindow.document;
-  let disconn = element.isDisconnected(wrappedElement, container);
+  let disconn = element.isDisconnected(
+      wrappedElement,
+      wrappedWindow,
+      wrappedShadowRoot);
 
   return !el || !sameDoc || disconn;
 };
@@ -670,19 +668,19 @@ element.isStale = function(el, window, shadowRoot = undefined) {
  *
  * @param {Element} el
  *     Element to be checked.
- * @param {Container} container
- *     Container with |frame|, which is the window object that contains
- *     the element, and an optional |shadowRoot|.
+ * @param {WindowProxy} window
+ *     Window to find out if <var>el</var> is still connected to.
+ * @param {Element=} shadowRoot
+ *     Current shadow root element, if any.
  *
  * @return {boolean}
  *     Flag indicating that the element is disconnected.
  */
-element.isDisconnected = function(el, container = {}) {
-  const {frame, shadowRoot} = container;
-  assert.defined(frame);
+element.isDisconnected = function(el, window, shadowRoot = undefined) {
+  assert.defined(window);
 
   // shadow DOM
-  if (frame.ShadowRoot && shadowRoot) {
+  if (window.ShadowRoot && shadowRoot) {
     if (el.compareDocumentPosition(shadowRoot) &
         DOCUMENT_POSITION_DISCONNECTED) {
       return true;
@@ -690,16 +688,14 @@ element.isDisconnected = function(el, container = {}) {
 
     // looking for next possible ShadowRoot ancestor
     let parent = shadowRoot.host;
-    while (parent && !(parent instanceof frame.ShadowRoot)) {
+    while (parent && !(parent instanceof window.ShadowRoot)) {
       parent = parent.parentNode;
     }
-    return element.isDisconnected(
-        shadowRoot.host,
-        {frame, shadowRoot: parent});
+    return element.isDisconnected(shadowRoot.host, window, parent);
   }
 
   // outside shadow DOM
-  let docEl = frame.document.documentElement;
+  let docEl = window.document.documentElement;
   return el.compareDocumentPosition(docEl) &
       DOCUMENT_POSITION_DISCONNECTED;
 };
@@ -965,7 +961,7 @@ element.getPointerInteractablePaintTree = function(el) {
   }
 
   // pointer-interactable elements tree, step 1
-  if (element.isDisconnected(el, container)) {
+  if (element.isDisconnected(el, container.frame, container.shadowRoot)) {
     return [];
   }
 

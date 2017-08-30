@@ -32,7 +32,7 @@ ServoImportRule::~ServoImportRule()
 }
 
 // QueryInterface implementation for ServoImportRule
-NS_INTERFACE_MAP_BEGIN_CYCLE_COLLECTION_INHERITED(ServoImportRule)
+NS_INTERFACE_MAP_BEGIN_CYCLE_COLLECTION(ServoImportRule)
 NS_INTERFACE_MAP_END_INHERITING(dom::CSSImportRule)
 
 NS_IMPL_CYCLE_COLLECTION_CLASS(ServoImportRule)

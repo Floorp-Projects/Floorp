@@ -15,7 +15,7 @@
 NS_IMPL_CYCLE_COLLECTION_INHERITED(nsHtml5DocumentBuilder, nsContentSink,
                                    mOwnedElements)
 
-NS_INTERFACE_MAP_BEGIN_CYCLE_COLLECTION_INHERITED(nsHtml5DocumentBuilder)
+NS_INTERFACE_MAP_BEGIN_CYCLE_COLLECTION(nsHtml5DocumentBuilder)
 NS_INTERFACE_MAP_END_INHERITING(nsContentSink)
 
 NS_IMPL_ADDREF_INHERITED(nsHtml5DocumentBuilder, nsContentSink)

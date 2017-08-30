@@ -305,6 +305,7 @@ this.SafeBrowsing = {
       let googleKey = Services.urlFormatter.formatURL("%GOOGLE_API_KEY%").trim();
       if ((provider == "google" || provider == "google4") &&
           (!googleKey || googleKey == "no-google-api-key")) {
+        log("Missing Google API key, clearing updateURL and gethashURL.");
         updateURL = "";
         gethashURL = "";
       }

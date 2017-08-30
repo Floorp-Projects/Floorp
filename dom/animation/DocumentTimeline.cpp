@@ -35,7 +35,7 @@ NS_IMPL_CYCLE_COLLECTION_TRACE_BEGIN_INHERITED(DocumentTimeline,
                                                AnimationTimeline)
 NS_IMPL_CYCLE_COLLECTION_TRACE_END
 
-NS_INTERFACE_MAP_BEGIN_CYCLE_COLLECTION_INHERITED(DocumentTimeline)
+NS_INTERFACE_MAP_BEGIN_CYCLE_COLLECTION(DocumentTimeline)
 NS_INTERFACE_MAP_END_INHERITING(AnimationTimeline)
 
 NS_IMPL_ADDREF_INHERITED(DocumentTimeline, AnimationTimeline)

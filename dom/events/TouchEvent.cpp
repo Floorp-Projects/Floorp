@@ -74,7 +74,7 @@ NS_IMPL_CYCLE_COLLECTION_INHERITED(TouchEvent, UIEvent,
                                    mTargetTouches,
                                    mChangedTouches)
 
-NS_INTERFACE_MAP_BEGIN_CYCLE_COLLECTION_INHERITED(TouchEvent)
+NS_INTERFACE_MAP_BEGIN_CYCLE_COLLECTION(TouchEvent)
 NS_INTERFACE_MAP_END_INHERITING(UIEvent)
 
 NS_IMPL_ADDREF_INHERITED(TouchEvent, UIEvent)

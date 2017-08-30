@@ -841,8 +841,7 @@ public:
   /**
    * Set the Bidi options for the presentation context
    */
-  void SetBidi(uint32_t aBidiOptions,
-                           bool aForceRestyle = false);
+  void SetBidi(uint32_t aBidiOptions);
 
   /**
    * Get the Bidi options for the presentation context

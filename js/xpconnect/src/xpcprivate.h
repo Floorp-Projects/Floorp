@@ -458,7 +458,6 @@ public:
         IDX_CREATE_INSTANCE         ,
         IDX_ITEM                    ,
         IDX_PROTO                   ,
-        IDX_ITERATOR                ,
         IDX_EXPOSEDPROPS            ,
         IDX_EVAL                    ,
         IDX_CONTROLLERS             ,

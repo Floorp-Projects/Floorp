@@ -56,7 +56,7 @@ public class PocketStoriesLoader extends AsyncTaskLoader<List<TopStory>> {
     private static final String STORIES_CACHE_PREFIX = "storiesCache-";
 
     // Pocket API params and defaults
-    private static final String GLOBAL_ENDPOINT = "https://getpocket.com/v3/firefox/global-recs";
+    private static final String GLOBAL_ENDPOINT = "https://getpocket.cdn.mozilla.net/v3/firefox/global-recs";
     private static final String PARAM_APIKEY = "consumer_key";
     private static final String APIKEY = AppConstants.MOZ_POCKET_API_KEY;
     private static final String PARAM_COUNT = "count";
@@ -145,7 +145,8 @@ public class PocketStoriesLoader extends AsyncTaskLoader<List<TopStory>> {
         }
     }
 
-    private static List<TopStory> jsonStringToTopStories(String jsonResponse) {
+    /* package-private */
+    static List<TopStory> jsonStringToTopStories(String jsonResponse) {
         final List<TopStory> topStories = new LinkedList<>();
 
         if (TextUtils.isEmpty(jsonResponse)) {

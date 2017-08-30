@@ -952,7 +952,7 @@ protected:
 
 NS_IMPL_ADDREF_INHERITED(FakeTrackSourceGetter, MediaStreamTrackSourceGetter)
 NS_IMPL_RELEASE_INHERITED(FakeTrackSourceGetter, MediaStreamTrackSourceGetter)
-NS_INTERFACE_MAP_BEGIN_CYCLE_COLLECTION_INHERITED(FakeTrackSourceGetter)
+NS_INTERFACE_MAP_BEGIN_CYCLE_COLLECTION(FakeTrackSourceGetter)
 NS_INTERFACE_MAP_END_INHERITING(MediaStreamTrackSourceGetter)
 NS_IMPL_CYCLE_COLLECTION_INHERITED(FakeTrackSourceGetter,
                                    MediaStreamTrackSourceGetter,

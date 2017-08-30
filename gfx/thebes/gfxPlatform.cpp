@@ -2737,6 +2737,10 @@ gfxPlatform::GetApzSupportInfo(mozilla::widget::InfoObject& aObj)
   if (SupportsApzKeyboardInput() && !gfxPrefs::AccessibilityBrowseWithCaret()) {
     aObj.DefineProperty("ApzKeyboardInput", 1);
   }
+
+  if (SupportsApzAutoscrolling()) {
+    aObj.DefineProperty("ApzAutoscrollInput", 1);
+  }
 }
 
 void
@@ -2910,6 +2914,12 @@ bool
 gfxPlatform::SupportsApzKeyboardInput() const
 {
   return gfxPrefs::APZKeyboardEnabled();
+}
+
+bool
+gfxPlatform::SupportsApzAutoscrolling() const
+{
+  return gfxPrefs::APZAutoscrollEnabled();
 }
 
 void

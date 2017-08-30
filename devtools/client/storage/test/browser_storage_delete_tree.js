@@ -23,7 +23,9 @@ add_task(function* () {
         getCookieId("c1", "test1.example.org", "/browser"),
         getCookieId("cs2", ".example.org", "/"),
         getCookieId("c3", "test1.example.org", "/"),
-        getCookieId("uc1", ".example.org", "/")
+        getCookieId("c4", ".example.org", "/"),
+        getCookieId("uc1", ".example.org", "/"),
+        getCookieId("uc2", ".example.org", "/")
       ]
     ],
     [["localStorage", "http://test1.example.org"], ["ls1", "ls2"]],

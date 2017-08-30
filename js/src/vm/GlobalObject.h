@@ -439,10 +439,6 @@ class GlobalObject : public NativeObject
 
     TypedObjectModuleObject& getTypedObjectModule() const;
 
-    JSObject* getLegacyIteratorPrototype() {
-        return &getPrototype(JSProto_Iterator).toObject();
-    }
-
     static JSObject*
     getOrCreateCollatorPrototype(JSContext* cx, Handle<GlobalObject*> global) {
         return getOrCreateObject(cx, global, COLLATOR_PROTO, initIntlObject);
