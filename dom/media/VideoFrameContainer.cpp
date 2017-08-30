@@ -11,7 +11,7 @@
 
 #include "nsIFrame.h"
 #include "nsDisplayList.h"
-#include "nsSVGEffects.h"
+#include "SVGObserverUtils.h"
 
 using namespace mozilla::layers;
 

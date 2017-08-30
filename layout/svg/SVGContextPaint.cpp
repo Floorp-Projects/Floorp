@@ -10,7 +10,7 @@
 #include "mozilla/Preferences.h"
 #include "nsIDocument.h"
 #include "nsSVGPaintServerFrame.h"
-#include "nsSVGEffects.h"
+#include "SVGObserverUtils.h"
 #include "nsSVGPaintServerFrame.h"
 
 using namespace mozilla::gfx;

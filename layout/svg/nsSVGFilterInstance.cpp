@@ -13,7 +13,7 @@
 #include "mozilla/dom/HTMLCanvasElement.h"
 #include "mozilla/dom/SVGFilterElement.h"
 #include "nsReferencedElement.h"
-#include "nsSVGEffects.h"
+#include "SVGObserverUtils.h"
 #include "nsSVGFilterFrame.h"
 #include "nsSVGUtils.h"
 #include "SVGContentUtils.h"

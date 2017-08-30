@@ -4,7 +4,7 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
 // Main header first:
-#include "nsSVGEffects.h"
+#include "SVGObserverUtils.h"
 
 // Keep others in (case-insensitive) order:
 #include "mozilla/RestyleManager.h"

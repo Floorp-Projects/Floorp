@@ -15,7 +15,7 @@
 #include "nsIImageLoadingContent.h"
 #include "nsLayoutUtils.h"
 #include "imgINotificationObserver.h"
-#include "nsSVGEffects.h"
+#include "SVGObserverUtils.h"
 #include "mozilla/dom/SVGSVGElement.h"
 #include "nsSVGUtils.h"
 #include "SVGContentUtils.h"

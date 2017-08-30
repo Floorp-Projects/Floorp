@@ -76,7 +76,7 @@
 #include "nsBlockFrame.h"
 #include "nsDisplayList.h"
 #include "nsSVGIntegrationUtils.h"
-#include "nsSVGEffects.h"
+#include "SVGObserverUtils.h"
 #include "nsChangeHint.h"
 #include "nsDeckFrame.h"
 #include "nsSubDocumentFrame.h"

@@ -39,7 +39,7 @@
 #include "nsContentUtils.h"
 #include "nsLayoutUtils.h"
 #include "nsIContentPolicy.h"
-#include "nsSVGEffects.h"
+#include "SVGObserverUtils.h"
 
 #include "gfxPrefs.h"
 

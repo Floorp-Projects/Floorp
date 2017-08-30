@@ -13,7 +13,7 @@
 #include "mozilla/dom/SVGGradientElement.h"
 #include "mozilla/dom/SVGStopElement.h"
 #include "nsContentUtils.h"
-#include "nsSVGEffects.h"
+#include "SVGObserverUtils.h"
 #include "nsSVGAnimatedTransformList.h"
 
 // XXX Tight coupling with content classes ahead!

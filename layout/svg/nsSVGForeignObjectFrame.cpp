@@ -15,7 +15,7 @@
 #include "nsLayoutUtils.h"
 #include "nsRegion.h"
 #include "nsSVGContainerFrame.h"
-#include "nsSVGEffects.h"
+#include "SVGObserverUtils.h"
 #include "mozilla/dom/SVGForeignObjectElement.h"
 #include "nsSVGIntegrationUtils.h"
 #include "nsSVGOuterSVGFrame.h"

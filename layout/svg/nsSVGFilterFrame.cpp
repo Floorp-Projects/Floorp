@@ -10,7 +10,7 @@
 #include "AutoReferenceChainGuard.h"
 #include "gfxUtils.h"
 #include "nsGkAtoms.h"
-#include "nsSVGEffects.h"
+#include "SVGObserverUtils.h"
 #include "nsSVGElement.h"
 #include "mozilla/dom/SVGFilterElement.h"
 #include "nsSVGFilterInstance.h"
