@@ -121,7 +121,8 @@ function renderToolboxButtons({toolboxButtons, focusedButton, focusButton}, isSt
         onFocus: () => focusButton(id),
         tabIndex: id === focusedButton ? "0" : "-1"
       });
-    })
+    }),
+    isStart ? div({className: "devtools-separator"}) : null
   );
 }
 
@@ -150,10 +151,7 @@ function renderOptions({optionsPanel, currentToolId, selectTool, focusedButton,
  * Render a separator.
  */
 function renderSeparator() {
-  return div({
-    id: "toolbox-controls-separator",
-    className: "devtools-separator"
-  });
+  return div({className: "devtools-separator"});
 }
 
 /**

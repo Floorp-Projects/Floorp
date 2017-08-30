@@ -201,9 +201,6 @@ public:
   virtual void InvalidateFrameWithRect(const nsRect& aRect, uint32_t aDisplayItemKey = 0) override;
   virtual void InvalidateFrameForRemoval() override { InvalidateFrameSubtree(); }
 
-  // Return any anonymous columns we contain.
-  void AppendDirectlyOwnedAnonBoxes(nsTArray<OwnedAnonBox>& aResult) override;
-
 protected:
   explicit nsTableColGroupFrame(nsStyleContext* aContext);
 

@@ -2325,7 +2325,10 @@ Notification::InitFromJSVal(JSContext* aCx, JS::Handle<JS::Value> aData,
     return;
   }
 
-  dataObjectContainer->GetDataAsBase64(mDataAsBase64);
+  aRv = dataObjectContainer->GetDataAsBase64(mDataAsBase64);
+  if (NS_WARN_IF(aRv.Failed())) {
+    return;
+  }
 }
 
 void Notification::InitFromBase64(const nsAString& aData, ErrorResult& aRv)
@@ -2342,7 +2345,10 @@ void Notification::InitFromBase64(const nsAString& aData, ErrorResult& aRv)
     return;
   }
 
-  container->GetDataAsBase64(mDataAsBase64);
+  aRv = container->GetDataAsBase64(mDataAsBase64);
+  if (NS_WARN_IF(aRv.Failed())) {
+    return;
+  }
 }
 
 bool

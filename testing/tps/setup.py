@@ -2,6 +2,7 @@
 # License, v. 2.0. If a copy of the MPL was not distributed with this
 # file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
+
 from setuptools import setup, find_packages
 import sys
 
@@ -27,7 +28,9 @@ setup(name='tps',
       description='run automated multi-profile sync tests',
       long_description="""\
 """,
-      classifiers=[], # Get strings from http://pypi.python.org/pypi?%3Aaction=list_classifiers
+      classifiers=['Programming Language :: Python :: 2.7',
+		   'Programming Language :: Python :: 2 :: Only',
+		  ], # Get strings from http://pypi.python.org/pypi?%3Aaction=list_classifiers
       keywords='',
       author='Mozilla Automation and Tools team',
       author_email='tools@lists.mozilla.org',

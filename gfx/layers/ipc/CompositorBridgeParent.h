@@ -163,6 +163,8 @@ public:
     return false;
   }
 
+  virtual void NotifyWebRenderError(wr::WebRenderError aError) {}
+
 protected:
   ~CompositorBridgeParentBase() override;
 
@@ -259,6 +261,7 @@ public:
 
   virtual bool IsSameProcess() const override;
 
+  virtual void NotifyWebRenderError(wr::WebRenderError aError) override;
 
   PCompositorWidgetParent* AllocPCompositorWidgetParent(const CompositorWidgetInitData& aInitData) override;
   bool DeallocPCompositorWidgetParent(PCompositorWidgetParent* aActor) override;
