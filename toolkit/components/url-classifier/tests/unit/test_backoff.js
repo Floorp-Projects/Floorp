@@ -11,7 +11,7 @@ function setNow(time) {
 function run_test() {
   // 3 errors, 1ms retry period, max 3 requests per ten milliseconds,
   // 5ms backoff interval, 19ms max delay
-  var rb = new jslib.RequestBackoff(3, 1, 3, 10, 5, 19);
+  var rb = new jslib.RequestBackoff(3, 1, 3, 10, 5, 19, 0);
   setNow(1);
   rb.noteServerResponse(200);
   do_check_true(rb.canMakeRequest());
