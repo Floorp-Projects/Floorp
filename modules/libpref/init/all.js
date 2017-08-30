@@ -1029,12 +1029,6 @@ pref("toolkit.asyncshutdown.crash_timeout", 60000);
 // Extra logging for AsyncShutdown barriers and phases
 pref("toolkit.asyncshutdown.log", false);
 
-// Tells if DevTools have been explicitely enabled by the user.
-// This pref allows to disable all features related to DevTools
-// for users that never use them.
-// Until bug 1361080 lands, we always consider them enabled.
-pref("devtools.enabled", true);
-
 // Enable deprecation warnings.
 pref("devtools.errorconsole.deprecation_warnings", true);
 
