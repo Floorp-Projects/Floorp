@@ -215,6 +215,7 @@ button {
   margin-bottom: 1em;
   background-image: url(chrome://devtools/skin/images/help.svg);
   background-repeat: no-repeat;
+  background-size: 24px;
   padding-inline-start: 32px;
   height: 24px;
 }
