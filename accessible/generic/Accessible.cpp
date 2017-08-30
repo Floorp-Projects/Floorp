@@ -848,8 +848,10 @@ Accessible::HandleAccEvent(AccEvent* aEvent)
   if (profiler_is_active()) {
     nsAutoCString strEventType;
     GetAccService()->GetStringEventType(aEvent->GetEventType(), strEventType);
-
-    profiler_tracing("A11y Event", strEventType.get());
+    nsAutoCString strMarker;
+    strMarker.AppendLiteral("A11y Event - ");
+    strMarker.Append(strEventType);
+    profiler_add_marker(strMarker.get());
   }
 
   if (IPCAccessibilityActive() && Document()) {
