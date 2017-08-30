@@ -200,7 +200,7 @@ void
 nsSVGDisplayContainerFrame::RemoveFrame(ChildListID aListID,
                                         nsIFrame* aOldFrame)
 {
-  nsSVGEffects::InvalidateRenderingObservers(aOldFrame);
+  SVGObserverUtils::InvalidateRenderingObservers(aOldFrame);
 
   // nsSVGContainerFrame::RemoveFrame doesn't call down into
   // nsContainerFrame::RemoveFrame, so it doesn't call FrameNeedsReflow. We
@@ -384,7 +384,7 @@ nsSVGDisplayContainerFrame::ReflowSVG()
     // Make sure we have our filter property (if any) before calling
     // FinishAndStoreOverflow (subsequent filter changes are handled off
     // nsChangeHint_UpdateEffects):
-    nsSVGEffects::UpdateEffects(this);
+    SVGObserverUtils::UpdateEffects(this);
   }
 
   FinishAndStoreOverflow(overflowRects, mRect.Size());

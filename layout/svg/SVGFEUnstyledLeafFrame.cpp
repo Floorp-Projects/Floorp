@@ -66,7 +66,7 @@ SVGFEUnstyledLeafFrame::AttributeChanged(int32_t  aNameSpaceID,
   if (element->AttributeAffectsRendering(aNameSpaceID, aAttribute)) {
     MOZ_ASSERT(GetParent()->GetParent()->IsSVGFilterFrame(),
                "Observers observe the filter, so that's what we must invalidate");
-    nsSVGEffects::InvalidateDirectRenderingObservers(GetParent()->GetParent());
+    SVGObserverUtils::InvalidateDirectRenderingObservers(GetParent()->GetParent());
   }
 
   return nsFrame::AttributeChanged(aNameSpaceID, aAttribute, aModType);
