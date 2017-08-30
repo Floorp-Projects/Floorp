@@ -9,7 +9,6 @@ const {
   PropTypes,
 } = require("devtools/client/shared/vendor/react");
 const { connect } = require("devtools/client/shared/vendor/react-redux");
-const Actions = require("../actions/index");
 const { L10N } = require("../utils/l10n");
 const { PANELS } = require("../constants");
 
@@ -114,11 +113,4 @@ TabboxPanel.propTypes = {
   sourceMapService: PropTypes.object,
 };
 
-module.exports = connect(
-  (state) => ({
-  }),
-  (dispatch) => ({
-    cloneSelectedRequest: () => dispatch(Actions.cloneSelectedRequest()),
-    selectTab: (tabId) => dispatch(Actions.selectDetailsPanelTab(tabId)),
-  }),
-)(TabboxPanel);
+module.exports = connect()(TabboxPanel);

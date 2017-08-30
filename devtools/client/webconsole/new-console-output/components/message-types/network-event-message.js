@@ -13,9 +13,9 @@ const {
   PropTypes
 } = require("devtools/client/shared/vendor/react");
 const Message = createFactory(require("devtools/client/webconsole/new-console-output/components/message"));
+const actions = require("devtools/client/webconsole/new-console-output/actions/index");
 const { l10n } = require("devtools/client/webconsole/new-console-output/utils/messages");
 const TabboxPanel = createFactory(require("devtools/client/netmonitor/src/components/tabbox-panel"));
-const { PANELS } = require("devtools/client/netmonitor/src/constants");
 
 NetworkEventMessage.displayName = "NetworkEventMessage";
 
@@ -46,6 +46,7 @@ function NetworkEventMessage({
   serviceContainer,
   timestampsVisible,
   networkMessageUpdate = {},
+  networkMessageActiveTabId,
   dispatch,
   open,
 }) {
@@ -99,11 +100,15 @@ function NetworkEventMessage({
   // actually opened (performance optimization).
   const attachment = open && dom.div({className: "network-info devtools-monospace"},
     TabboxPanel({
-      activeTabId: PANELS.HEADERS,
+      activeTabId: networkMessageActiveTabId,
       request: networkMessageUpdate,
       sourceMapService: serviceContainer.sourceMapService,
-      cloneSelectedRequest: () => {},
-      selectTab: (tabId) => {},
+      cloneSelectedRequest: () => {
+        // Edit and resend feature isn't supported from the Console panel.
+      },
+      selectTab: (tabId) => {
+        dispatch(actions.selectNetworkMessageTab(tabId));
+      },
     })
   );
 
