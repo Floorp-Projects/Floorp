@@ -685,14 +685,21 @@ DisplayListBuilder::PushScrollLayer(const layers::FrameMetrics::ViewID& aScrollI
 {
   WRDL_LOG("PushScrollLayer id=%" PRIu64 " co=%s cl=%s\n", mWrState,
       aScrollId, Stringify(aContentRect).c_str(), Stringify(aClipRect).c_str());
-  wr_dp_push_scroll_layer(mWrState, aScrollId, aContentRect, aClipRect);
-  if (!mScrollIdStack.empty()) {
-    auto it = mScrollParents.insert({aScrollId, mScrollIdStack.back()});
-    if (!it.second) { // aScrollId was already a key in mScrollParents
-                      // so check that the parent value is the same.
-      MOZ_ASSERT(it.first->second == mScrollIdStack.back());
-    }
+
+  Maybe<layers::FrameMetrics::ViewID> parent =
+      mScrollIdStack.empty() ? Nothing() : Some(mScrollIdStack.back());
+  auto it = mScrollParents.insert({aScrollId, parent});
+  if (it.second) {
+    // An insertion took place, which means we haven't defined aScrollId before.
+    // So let's define it now.
+    wr_dp_define_scroll_layer(mWrState, aScrollId, aContentRect, aClipRect);
+  } else {
+    // aScrollId was already a key in mScrollParents so check that the parent
+    // value is the same.
+    MOZ_ASSERT(it.first->second == parent);
   }
+
+  wr_dp_push_scroll_layer(mWrState, aScrollId);
   mScrollIdStack.push_back(aScrollId);
 }
 
@@ -1011,7 +1018,7 @@ Maybe<layers::FrameMetrics::ViewID>
 DisplayListBuilder::ParentScrollIdFor(layers::FrameMetrics::ViewID aScrollId)
 {
   auto it = mScrollParents.find(aScrollId);
-  return (it == mScrollParents.end() ? Nothing() : Some(it->second));
+  return (it == mScrollParents.end() ? Nothing() : it->second);
 }
 
 } // namespace wr

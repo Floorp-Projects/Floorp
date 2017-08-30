@@ -177,7 +177,7 @@ ScrollingLayersHelper::DefineAndPushScrollLayers(nsDisplayItem* aItem,
   DefineAndPushChain(asrClippedBy, aBuilder, aStackingContext,
       aAppUnitsPerDevPixel, aCache);
   // Finally, push the ASR itself as a scroll layer. Note that the
-  // implementation of wr_push_scroll_layer in bindings.rs makes sure the
+  // implementation of PushScrollLayer in DisplayListBuilder makes sure the
   // scroll layer doesn't get defined multiple times so we don't need to worry
   // about that here.
   if (PushScrollLayer(metadata->GetMetrics(), aStackingContext)) {
