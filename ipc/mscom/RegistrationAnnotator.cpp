@@ -10,6 +10,7 @@
 #include "mozilla/mscom/Utils.h"
 #include "mozilla/NotNull.h"
 #include "nsExceptionHandler.h"
+#include "nsPrintfCString.h"
 #include "nsWindowsHelpers.h"
 #include "nsXULAppAPI.h"
 
@@ -53,16 +54,6 @@ static const char16_t kVersion[] = u"Version";
 static const char16_t kWin32[] = u"Win32";
 static const char16_t kWin64[] = u"Win64";
 
-template <size_t N>
-inline static bool
-GetStringValue(HKEY aBaseKey, const nsAString& aStrSubKey,
-               const char16_t (&aValueName)[N], nsAString& aOutput)
-{
-  return GetStringValue(aBaseKey, aStrSubKey,
-                        nsLiteralString(aValueName),
-                        aOutput);
-}
-
 static bool
 GetStringValue(HKEY aBaseKey, const nsAString& aStrSubKey,
                const nsAString& aValueName, nsAString& aOutput)
@@ -92,6 +83,16 @@ GetStringValue(HKEY aBaseKey, const nsAString& aStrSubKey,
   }
 
   return result == ERROR_SUCCESS;
+}
+
+template <size_t N>
+inline static bool
+GetStringValue(HKEY aBaseKey, const nsAString& aStrSubKey,
+               const char16_t (&aValueName)[N], nsAString& aOutput)
+{
+  return GetStringValue(aBaseKey, aStrSubKey,
+                        nsLiteralString(aValueName),
+                        aOutput);
 }
 
 /**
