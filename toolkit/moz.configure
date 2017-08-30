@@ -128,12 +128,7 @@ def toolkit(value, target, _):
     elif target.os == 'iOS':
         platform_choices = ('cairo-uikit',)
     elif target.os == 'Android':
-        if value.origin == 'implied':
-            # Trust values coming from imply_option() (used in
-            # b2g/moz.configure).
-            platform_choices = tuple(value)
-        else:
-            platform_choices = ('cairo-android',)
+        platform_choices = ('cairo-android',)
     else:
         platform_choices = ('cairo-gtk3', 'cairo-gtk3-wayland')
 
