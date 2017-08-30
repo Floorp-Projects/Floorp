@@ -4015,10 +4015,23 @@ MediaStreamGraphImpl::ApplyAudioContextOperationImpl(
       // Queue the operation on the next driver so that the ordering is
       // preserved.
     } else if (!audioTrackPresent && switching) {
-      MOZ_ASSERT(nextDriver->AsAudioCallbackDriver());
-      nextDriver->AsAudioCallbackDriver()->
-        EnqueueStreamAndPromiseForOperation(aDestinationStream, aPromise,
-                                            aOperation);
+      MOZ_ASSERT(nextDriver->AsAudioCallbackDriver() ||
+                 nextDriver->AsSystemClockDriver()->IsFallback());
+      if (nextDriver->AsAudioCallbackDriver()) {
+        nextDriver->AsAudioCallbackDriver()->
+          EnqueueStreamAndPromiseForOperation(aDestinationStream, aPromise,
+                                              aOperation);
+      } else {
+        // If this is not an AudioCallbackDriver, this means we failed opening an
+        // AudioCallbackDriver in the past, and we're constantly trying to re-open
+        // an new audio stream, but are running this graph that has an audio track
+        // off a SystemClockDriver for now to keep things moving.  This is the
+        // case where we're trying to switch an an system driver (because suspend
+        // or close have been called on an AudioContext, or we've closed the
+        // page), but we're already running one. We can just resolve the promise
+        // now: we're already running off a system thread.
+        AudioContextOperationCompleted(aDestinationStream, aPromise, aOperation);
+      }
     } else {
       // We are closing or suspending an AudioContext, but something else is
       // using the audio stream, we can resolve the promise now.
