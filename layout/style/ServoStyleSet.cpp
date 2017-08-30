@@ -182,25 +182,39 @@ ServoStyleSet::MediumFeaturesChanged(bool aViewportChanged)
   return nsRestyleHint(0);
 }
 
-size_t
-ServoStyleSet::SizeOfIncludingThis(MallocSizeOf aMallocSizeOf) const
+MOZ_DEFINE_MALLOC_SIZE_OF(ServoStyleSetMallocSizeOf)
+
+void
+ServoStyleSet::AddSizeOfIncludingThis(nsWindowSizes& aSizes) const
 {
-  size_t n = aMallocSizeOf(this);
+  MallocSizeOf mallocSizeOf = aSizes.mState.mMallocSizeOf;
+
+  aSizes.mLayoutServoStyleSetsOther += mallocSizeOf(this);
+
+  if (mRawSet) {
+    aSizes.mLayoutServoStyleSetsOther += mallocSizeOf(mRawSet.get());
+    ServoStyleSetSizes sizes;
+    // Measure mRawSet. We use ServoStyleSetMallocSizeOf rather than
+    // aMallocSizeOf to distinguish in DMD's output the memory measured within
+    // Servo code.
+    Servo_StyleSet_AddSizeOfExcludingThis(ServoStyleSetMallocSizeOf, &sizes,
+                                          mRawSet.get());
+    aSizes.mLayoutServoStyleSetsStylistRuleTree += sizes.mStylistRuleTree;
+    aSizes.mLayoutServoStyleSetsOther += sizes.mOther;
+  }
 
   if (mStyleRuleMap) {
-    n += mStyleRuleMap->SizeOfIncludingThis(aMallocSizeOf);
+    aSizes.mLayoutServoStyleSetsOther +=
+      mStyleRuleMap->SizeOfIncludingThis(aSizes.mState.mMallocSizeOf);
   }
 
   // Measurement of the following members may be added later if DMD finds it is
   // worthwhile:
-  // - mRawSet
   // - mSheets
   // - mNonInheritingStyleContexts
   //
   // The following members are not measured:
   // - mPresContext, because it a non-owning pointer
-
-  return n;
 }
 
 bool

@@ -175,7 +175,9 @@ class nsWindowSizes
   macro(DOM,   mDOMOtherSize) \
   macro(Style, mStyleSheetsSize) \
   macro(Other, mLayoutPresShellSize) \
-  macro(Style, mLayoutStyleSetsSize) \
+  macro(Style, mLayoutGeckoStyleSets) \
+  macro(Style, mLayoutServoStyleSetsStylistRuleTree) \
+  macro(Style, mLayoutServoStyleSetsOther) \
   macro(Other, mLayoutTextRunsSize) \
   macro(Other, mLayoutPresContextSize) \
   macro(Other, mLayoutFramePropertiesSize) \

@@ -250,10 +250,12 @@ nsStyleSet::~nsStyleSet()
   }
 }
 
-size_t
-nsStyleSet::SizeOfIncludingThis(MallocSizeOf aMallocSizeOf) const
+void
+nsStyleSet::AddSizeOfIncludingThis(nsWindowSizes& aSizes) const
 {
-  size_t n = aMallocSizeOf(this);
+  MallocSizeOf mallocSizeOf = aSizes.mState.mMallocSizeOf;
+
+  size_t n = mallocSizeOf(this);
 
   for (SheetType type : MakeEnumeratedRange(SheetType::Count)) {
     if (mRuleProcessors[type]) {
@@ -265,20 +267,20 @@ nsStyleSet::SizeOfIncludingThis(MallocSizeOf aMallocSizeOf) const
         shared = rp->IsShared();
       }
       if (!shared) {
-        n += mRuleProcessors[type]->SizeOfIncludingThis(aMallocSizeOf);
+        n += mRuleProcessors[type]->SizeOfIncludingThis(mallocSizeOf);
       }
     }
     // We don't own the sheets (either the nsLayoutStyleSheetCache singleton
     // or our document owns them).
-    n += mSheets[type].ShallowSizeOfExcludingThis(aMallocSizeOf);
+    n += mSheets[type].ShallowSizeOfExcludingThis(mallocSizeOf);
   }
 
   for (uint32_t i = 0; i < mScopedDocSheetRuleProcessors.Length(); i++) {
-    n += mScopedDocSheetRuleProcessors[i]->SizeOfIncludingThis(aMallocSizeOf);
+    n += mScopedDocSheetRuleProcessors[i]->SizeOfIncludingThis(mallocSizeOf);
   }
-  n += mScopedDocSheetRuleProcessors.ShallowSizeOfExcludingThis(aMallocSizeOf);
+  n += mScopedDocSheetRuleProcessors.ShallowSizeOfExcludingThis(mallocSizeOf);
 
-  return n;
+  aSizes.mLayoutGeckoStyleSets += n;
 }
 
 void
