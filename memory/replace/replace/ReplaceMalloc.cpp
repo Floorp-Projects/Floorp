@@ -253,7 +253,7 @@ replace_jemalloc_free_dirty_pages(void)
 }
 
 void
-replace_jemalloc_thread_local_arena(jemalloc_bool aEnabled)
+replace_jemalloc_thread_local_arena(bool aEnabled)
 {
   gFuncs->jemalloc_thread_local_arena(aEnabled);
   const malloc_hook_table_t* hook_table = gHookTable;

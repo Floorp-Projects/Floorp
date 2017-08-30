@@ -38,12 +38,11 @@
 #else
 #include <stddef.h>
 #endif
+#include <stdbool.h>
 
 #ifdef __cplusplus
 extern "C" {
 #endif
-
-typedef unsigned char jemalloc_bool;
 
 /*
  * jemalloc_stats() is not a stable interface.  When using jemalloc_stats_t, be
@@ -54,8 +53,8 @@ typedef struct {
 	/*
 	 * Run-time configuration settings.
 	 */
-	jemalloc_bool	opt_junk;	/* Fill allocated memory with kAllocJunk? */
-	jemalloc_bool	opt_zero;	/* Fill allocated memory with 0x0? */
+	bool	opt_junk;	/* Fill allocated memory with kAllocJunk? */
+	bool	opt_zero;	/* Fill allocated memory with 0x0? */
 	size_t	narenas;	/* Number of arenas. */
 	size_t	quantum;	/* Allocation quantum. */
 	size_t	small_max;	/* Max quantum-spaced allocation size. */
