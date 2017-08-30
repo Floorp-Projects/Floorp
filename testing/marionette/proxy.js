@@ -442,9 +442,9 @@ proxy.SyncChromeSender = class {
   }
 };
 
-var marshal = function(args) {
+function marshal(args) {
   if (args.length == 1 && typeof args[0] == "object") {
     return args[0];
   }
   return args;
-};
+}
