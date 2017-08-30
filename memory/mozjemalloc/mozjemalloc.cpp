@@ -195,7 +195,7 @@ typedef long ssize_t;
 #endif
 
 #ifndef XP_WIN
-#ifndef MOZ_MEMORY_SOLARIS
+#ifndef XP_SOLARIS
 #include <sys/cdefs.h>
 #endif
 #include <sys/mman.h>
@@ -208,7 +208,7 @@ typedef long ssize_t;
 #include <sys/param.h>
 #include <sys/time.h>
 #include <sys/types.h>
-#if !defined(MOZ_MEMORY_SOLARIS) && !defined(ANDROID)
+#if !defined(XP_SOLARIS) && !defined(ANDROID)
 #include <sys/sysctl.h>
 #endif
 #include <sys/uio.h>
