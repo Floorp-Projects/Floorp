@@ -213,7 +213,10 @@ define(function (require, exports, module) {
 
     onClickRow: function (nodePath, event) {
       event.stopPropagation();
-      this.toggle(nodePath);
+      let cell = event.target.closest("td");
+      if (cell && cell.classList.contains("treeLabelCell")) {
+        this.toggle(nodePath);
+      }
       this.selectRow(nodePath);
     },
 
