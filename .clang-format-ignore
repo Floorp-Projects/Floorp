@@ -1,4 +1,6 @@
+# Uses the LLVM coding style
 ^build/clang-plugin/.*
+# The two templates cannot be formatted
 ^config/gcc-stl-wrapper.template.h
 ^config/msvc-stl-wrapper.template.h
 ^dom/base/test/.*
@@ -9,7 +11,9 @@
 ^ipc/ipdl/test/.*
 ^ipc/testshell/.*
 ^js/src/jsapi-tests/.*
+# Ignored because of bug 1342657
 ^layout/style/nsCSSPropAliasList.h
+# Ignored because of bug 1342657
 ^layout/style/nsCSSPropList.h
 ^media/mtransport/test/.*
 ^mfbt/tests/.*
@@ -17,6 +21,7 @@
 ^testing/gtest/.*
 ^tools/profiler/tests/.*
 ^uriloader/exthandler/tests/.*
+# JNI code is generated
 ^widget/android/GeneratedJNINatives.h
 ^widget/android/GeneratedJNIWrappers.cpp
 ^widget/android/GeneratedJNIWrappers.h
