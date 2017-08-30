@@ -16,6 +16,7 @@
 #include "mozilla/Compression.h"
 #include "mozilla/LinkedList.h"
 #include "mozilla/Preferences.h"
+#include "mozilla/ResultExtensions.h"
 #include "mozilla/ScopeExit.h"
 #include "mozilla/Services.h"
 #include "mozilla/Unused.h"
@@ -41,19 +42,6 @@
 #include <stdlib.h>
 
 namespace mozilla {
-
-template <>
-class MOZ_MUST_USE_TYPE GenericErrorResult<nsresult>
-{
-  nsresult mErrorValue;
-
-  template<typename V, typename E2> friend class Result;
-
-public:
-  explicit GenericErrorResult(nsresult aErrorValue) : mErrorValue(aErrorValue) {}
-
-  operator nsresult() { return mErrorValue; }
-};
 
 static inline Result<Ok, nsresult>
 WrapNSResult(PRStatus aRv)

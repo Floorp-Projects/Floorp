@@ -11,7 +11,7 @@
 #include "mozilla/CheckedInt.h"
 #include "mozilla/EnumSet.h"
 #include "mozilla/Range.h"
-#include "mozilla/Result.h"
+#include "mozilla/ResultExtensions.h"
 #include "mozilla/Unused.h"
 #include "mozilla/dom/ScriptSettings.h"
 #include "nsString.h"
@@ -20,21 +20,6 @@
 #include <prio.h>
 
 namespace mozilla {
-
-// A specialization of GenericErrorResult which auto-converts to a nsresult.
-// This should be removed when bug 1366511 is fixed.
-template <>
-class MOZ_MUST_USE_TYPE GenericErrorResult<nsresult>
-{
-  nsresult mErrorValue;
-
-  template<typename V, typename E2> friend class Result;
-
-public:
-  explicit GenericErrorResult(nsresult aErrorValue) : mErrorValue(aErrorValue) {}
-
-  operator nsresult() { return mErrorValue; }
-};
 
 namespace loader {
 

@@ -52,19 +52,6 @@ using OptionalIPCStream = mozilla::ipc::OptionalIPCStream;
 
 namespace mozilla {
 
-template <>
-class MOZ_MUST_USE_TYPE GenericErrorResult<nsresult>
-{
-  nsresult mErrorValue;
-
-  template<typename V, typename E2> friend class Result;
-
-public:
-  explicit GenericErrorResult(nsresult aErrorValue) : mErrorValue(aErrorValue) {}
-
-  operator nsresult() { return mErrorValue; }
-};
-
 namespace net {
 
 using extensions::URLInfo;
