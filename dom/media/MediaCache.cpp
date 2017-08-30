@@ -234,6 +234,9 @@ public:
       , mResourceID(aResourceID)
       , mNext(0)
     {
+      MOZ_ASSERT(
+        NS_IsMainThread() ||
+        (aMediaCache->GetReentrantMonitor().AssertCurrentThreadIn(), true));
     }
     MediaCacheStream* Next()
     {
