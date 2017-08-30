@@ -199,10 +199,17 @@ var gSecurityPane = {
 
       let malware = malwareTable.value
         .split(",")
-        .filter(x => x !== "goog-unwanted-shavar" && x !== "test-unwanted-simple");
+        .filter(x => x !== "goog-unwanted-proto" &&
+                     x !== "goog-unwanted-shavar" &&
+                     x !== "test-unwanted-simple");
 
       if (blockUncommonUnwanted.checked) {
-        malware.push("goog-unwanted-shavar");
+        if (malware.indexOf("goog-malware-shavar") != -1) {
+          malware.push("goog-unwanted-shavar");
+        } else {
+          malware.push("goog-unwanted-proto");
+        }
+
         malware.push("test-unwanted-simple");
       }
 
