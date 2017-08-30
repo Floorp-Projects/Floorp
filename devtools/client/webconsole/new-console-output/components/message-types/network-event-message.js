@@ -52,7 +52,6 @@ function NetworkEventMessage({
 }) {
   const {
     id,
-    actor,
     indent,
     source,
     type,
@@ -80,18 +79,23 @@ function NetworkEventMessage({
     statusInfo = `[${httpVersion} ${status} ${statusText} ${totalTime}ms]`;
   }
 
-  const openNetworkMonitor = serviceContainer.openNetworkPanel
-    ? () => serviceContainer.openNetworkPanel(actor)
-    : null;
+  const toggle = () => {
+    if (open) {
+      dispatch(actions.messageClose(id));
+    } else {
+      dispatch(actions.messageOpen(id));
+    }
+  };
 
+  // Message body components.
   const method = dom.span({className: "method" }, request.method);
   const xhr = isXHR
     ? dom.span({ className: "xhr" }, l10n.getStr("webConsoleXhrIndicator"))
     : null;
-  const url = dom.a({ className: "url", title: request.url, onClick: openNetworkMonitor },
+  const url = dom.a({ className: "url", title: request.url, onClick: toggle },
     request.url.replace(/\?.+/, ""));
   const statusBody = statusInfo
-    ? dom.a({ className: "status", onClick: openNetworkMonitor }, statusInfo)
+    ? dom.a({ className: "status", onClick: toggle }, statusInfo)
     : null;
 
   const messageBody = [method, xhr, url, statusBody];
@@ -103,9 +107,6 @@ function NetworkEventMessage({
       activeTabId: networkMessageActiveTabId,
       request: networkMessageUpdate,
       sourceMapService: serviceContainer.sourceMapService,
-      cloneSelectedRequest: () => {
-        // Edit and resend feature isn't supported from the Console panel.
-      },
       selectTab: (tabId) => {
         dispatch(actions.selectNetworkMessageTab(tabId));
       },

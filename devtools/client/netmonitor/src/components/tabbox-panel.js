@@ -37,7 +37,7 @@ const TIMINGS_TITLE = L10N.getStr("netmonitor.tab.timings");
  */
 function TabboxPanel({
   activeTabId,
-  cloneSelectedRequest,
+  cloneSelectedRequest = ()=>{},
   request,
   selectTab,
   sourceMapService,
