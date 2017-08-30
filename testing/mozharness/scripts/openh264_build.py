@@ -46,6 +46,7 @@ class OpenH264Build(MockMixin, TransferMixin, VCSScript, TooltoolMixin):
         'test',
         'package',
         'dump-symbols',
+        'upload',
     ]
 
     config_options = [
@@ -66,7 +67,7 @@ class OpenH264Build(MockMixin, TransferMixin, VCSScript, TooltoolMixin):
         }],
         [["--arch"], {
             "dest": "arch",
-            "help": "Arch type to use (x64, x86, or arm)",
+            "help": "Arch type to use (x64, x86, arm, or aarch64)",
         }],
         [["--os"], {
             "dest": "operating_system",
@@ -99,10 +100,10 @@ class OpenH264Build(MockMixin, TransferMixin, VCSScript, TooltoolMixin):
         # Default configuration
         default_config = {
             'debug_build': False,
-            'upload_ssh_key': os.path.expanduser("~/.ssh/ffxbld_rsa"),
+            'upload_ssh_key': "~/.ssh/ffxbld_rsa",
             'upload_ssh_user': 'ffxbld',
-            'upload_ssh_host': 'stage.mozilla.org',
-            'upload_path_base': '/home/ffxbld/openh264',
+            'upload_ssh_host': 'upload.ffxbld.productdelivery.prod.mozaws.net',
+            'upload_path_base': '/tmp/openh264',
             'use_yasm': False,
         }
         default_config.update(config)
@@ -146,19 +147,12 @@ class OpenH264Build(MockMixin, TransferMixin, VCSScript, TooltoolMixin):
             bits = '64'
         else:
             bits = '32'
-
         version = self.config['revision']
 
         if sys.platform == 'linux2':
             if self.config.get('operating_system') == 'android':
-                if self.config.get('arch') == 'x86':
-                    return 'openh264-android-{arch}-{version}.zip'.format(
-                        version=version, bits=bits, arch=self.config['arch']
-                    )
-                else:
-                    return 'openh264-android-{arch}-{version}.zip'.format(
-                        version=version, bits=bits, arch='arm'
-                    )
+                return 'openh264-android-{arch}-{version}.zip'.format(
+                    version=version, arch=self.config['arch'])
             else:
                 return 'openh264-linux{bits}-{version}.zip'.format(version=version, bits=bits)
         elif sys.platform == 'darwin':
@@ -176,7 +170,7 @@ class OpenH264Build(MockMixin, TransferMixin, VCSScript, TooltoolMixin):
         if self.config['avoid_avx2']:
             retval.append('HAVE_AVX2=false')
 
-        if self.config['arch'] == 'x64':
+        if self.config['arch'] in ('x64', 'aarch64'):
             retval.append('ENABLE64BIT=Yes')
         else:
             retval.append('ENABLE64BIT=No')
@@ -186,9 +180,13 @@ class OpenH264Build(MockMixin, TransferMixin, VCSScript, TooltoolMixin):
             if self.config["operating_system"] == "android":
                 if self.config['arch'] == 'x86':
                     retval.append("ARCH=x86")
+                elif self.config['arch'] == 'aarch64':
+                    retval.append("ARCH=arm64")
+                else:
+                    retval.append("ARCH=arm")
                 retval.append('TARGET=invalid')
-                retval.append('NDKLEVEL=9')
-                retval.append('NDKROOT=%s/android-ndk' % dirs['abs_work_dir'])
+                retval.append('NDKLEVEL=%s' % self.config['min_sdk'])
+                retval.append('NDKROOT=%s/android-ndk-r11c' % dirs['abs_work_dir'])
 
         if self.config['use_yasm']:
             retval.append('ASM=yasm')
@@ -211,9 +209,10 @@ class OpenH264Build(MockMixin, TransferMixin, VCSScript, TooltoolMixin):
         cmd = ['make', target] + self.query_make_params()
         dirs = self.query_abs_dirs()
         repo_dir = os.path.join(dirs['abs_work_dir'], 'src')
-        env = self.config.get('env')
-        partial_env = self.config.get('partial_env')
-        kwargs = dict(cwd=repo_dir, env=env, partial_env=partial_env)
+        env = None
+        if self.config.get('partial_env'):
+            env = self.query_env(self.config['partial_env'])
+        kwargs = dict(cwd=repo_dir, env=env)
         if capture_output:
             return self.get_output_from_command(cmd, **kwargs)
         else:
@@ -300,9 +299,10 @@ class OpenH264Build(MockMixin, TransferMixin, VCSScript, TooltoolMixin):
         symbol_package_name = "{base}.symbols.zip".format(base=zip_package_name[:-4])
         symbol_zip_path = os.path.join(dirs['abs_upload_dir'], symbol_package_name)
         repo_dir = os.path.join(dirs['abs_work_dir'], 'src')
-        env = self.config.get('env')
-        partial_env = self.config.get('partial_env')
-        kwargs = dict(cwd=repo_dir, env=env, partial_env=partial_env)
+        env = None
+        if self.config.get('partial_env'):
+            env = self.query_env(self.config['partial_env'])
+        kwargs = dict(cwd=repo_dir, env=env)
         dump_syms = os.path.join(dirs['abs_work_dir'], c['dump_syms_binary'])
         self.chmod(dump_syms, 0755)
         python = self.query_exe('python2.7')
@@ -319,7 +319,7 @@ class OpenH264Build(MockMixin, TransferMixin, VCSScript, TooltoolMixin):
         if self.config['use_mock']:
             self.disable_mock()
         dirs = self.query_abs_dirs()
-        self.rsync_upload_directory(
+        self.scp_upload_directory(
             dirs['abs_upload_dir'],
             self.query_upload_ssh_key(),
             self.query_upload_ssh_user(),

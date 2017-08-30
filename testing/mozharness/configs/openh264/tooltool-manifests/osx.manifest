@@ -1,10 +1,9 @@
 [
-{
-"size": 393368, 
-"visibility": "public", 
-"digest": "dcbd679a57ac3a1bc20df45cd8770b462d2c430d1c5fb85366c02904422824ed4193a66d936fa9d21fb49190f5915f9b24aad16e3eb8b7c9a90d09c93067982f", 
-"algorithm": "sha512", 
-"filename": "dump_syms"
-}
+  {
+    "size": 475508,
+    "visibility": "public",
+    "digest": "d705fb149fd7ec6a0833000224f802bd8cbb0f3ecf96efa558010e63db691ff03a95180d9525229e7055e8810c528bf3d7f1a1ab97aecadab3c7c7de8668ab30",
+    "algorithm": "sha512",
+    "filename": "dump_syms"
+  }
 ]
-
