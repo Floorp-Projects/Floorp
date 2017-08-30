@@ -43,7 +43,9 @@ var gBidiUI = false;
  * Determines whether the given url is considered a special URL for new tabs.
  */
 function isBlankPageURL(aURL) {
-  return aURL == "about:blank" || aURL == BROWSER_NEW_TAB_URL;
+  return aURL == "about:blank" ||
+         aURL == "about:home" ||
+         aURL == BROWSER_NEW_TAB_URL;
 }
 
 function getBrowserURL() {
