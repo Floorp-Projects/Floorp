@@ -27,7 +27,7 @@
 #include "nsIDOMSVGLength.h"
 #include "nsISelection.h"
 #include "nsQuickSort.h"
-#include "nsSVGEffects.h"
+#include "SVGObserverUtils.h"
 #include "nsSVGOuterSVGFrame.h"
 #include "nsSVGPaintServerFrame.h"
 #include "mozilla/dom/SVGRect.h"

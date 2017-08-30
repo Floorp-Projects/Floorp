@@ -16,7 +16,7 @@
 #include "nsLayoutUtils.h"
 #include "gfxContext.h"
 #include "nsSVGClipPathFrame.h"
-#include "nsSVGEffects.h"
+#include "SVGObserverUtils.h"
 #include "nsSVGElement.h"
 #include "nsSVGFilterPaintCallback.h"
 #include "nsSVGMaskFrame.h"

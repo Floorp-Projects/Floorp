@@ -18,7 +18,7 @@
 #include "nsDisplayList.h"
 #include "nsGkAtoms.h"
 #include "nsLayoutUtils.h"
-#include "nsSVGEffects.h"
+#include "SVGObserverUtils.h"
 #include "nsSVGIntegrationUtils.h"
 #include "nsSVGMarkerFrame.h"
 #include "SVGGeometryElement.h"

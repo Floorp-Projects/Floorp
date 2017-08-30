@@ -110,7 +110,7 @@
 #include "gfxUtils.h"
 #include "nsSMILAnimationController.h"
 #include "SVGContentUtils.h"
-#include "nsSVGEffects.h"
+#include "SVGObserverUtils.h"
 #include "SVGFragmentIdentifier.h"
 #include "nsFrameSelection.h"
 

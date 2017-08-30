@@ -18,7 +18,7 @@
 #include "nsGkAtoms.h"
 #include "nsSVGDisplayableFrame.h"
 #include "nsStyleContext.h"
-#include "nsSVGEffects.h"
+#include "SVGObserverUtils.h"
 #include "SVGGeometryFrame.h"
 #include "mozilla/dom/SVGPatternElement.h"
 #include "nsSVGUtils.h"

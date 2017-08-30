@@ -17,7 +17,7 @@
 
 #include "nsIDocument.h"
 #include "mozilla/dom/HTMLCanvasElement.h"
-#include "nsSVGEffects.h"
+#include "SVGObserverUtils.h"
 #include "nsPresContext.h"
 #include "nsIPresShell.h"
 

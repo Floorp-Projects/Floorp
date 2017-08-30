@@ -13,7 +13,7 @@
 #include "nsError.h"
 #include "nsDisplayList.h"
 #include "FrameLayerBuilder.h"
-#include "nsSVGEffects.h"
+#include "SVGObserverUtils.h"
 #include "imgIContainer.h"
 #include "Image.h"
 

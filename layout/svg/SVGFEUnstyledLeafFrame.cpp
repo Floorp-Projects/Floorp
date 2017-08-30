@@ -7,7 +7,7 @@
 #include "nsContainerFrame.h"
 #include "nsFrame.h"
 #include "nsGkAtoms.h"
-#include "nsSVGEffects.h"
+#include "SVGObserverUtils.h"
 #include "nsSVGFilters.h"
 
 class SVGFEUnstyledLeafFrame : public nsFrame
