@@ -224,13 +224,13 @@ Inspector.prototype = {
       return promise.all([
         this._target.actorHasMethod("domwalker", "duplicateNode").then(value => {
           this._supportsDuplicateNode = value;
-        }).catch(e => console.error(e)),
+        }).catch(console.error),
         this._target.actorHasMethod("domnode", "scrollIntoView").then(value => {
           this._supportsScrollIntoView = value;
-        }).catch(e => console.error(e)),
+        }).catch(console.error),
         this._target.actorHasMethod("inspector", "resolveRelativeURL").then(value => {
           this._supportsResolveRelativeURL = value;
-        }).catch(e => console.error(e)),
+        }).catch(console.error),
       ]);
     });
   },
@@ -1627,7 +1627,7 @@ Inspector.prototype = {
     this.eyeDropperButton.classList.add("checked");
     this.startEyeDropperListeners();
     return this.inspector.pickColorFromPage(this.toolbox, {copyOnSelect: true})
-                         .catch(e => console.error(e));
+                         .catch(console.error);
   },
 
   /**
@@ -1644,7 +1644,7 @@ Inspector.prototype = {
     this.eyeDropperButton.classList.remove("checked");
     this.stopEyeDropperListeners();
     return this.inspector.cancelPickColorFromPage()
-                         .catch(e => console.error(e));
+                         .catch(console.error);
   },
 
   /**
@@ -1839,7 +1839,7 @@ Inspector.prototype = {
   _copyLongString: function (longStringActorPromise) {
     return this._getLongString(longStringActorPromise).then(string => {
       clipboardHelper.copyString(string);
-    }).catch(e => console.error(e));
+    }).catch(console.error);
   },
 
   /**
@@ -1851,10 +1851,10 @@ Inspector.prototype = {
   _getLongString: function (longStringActorPromise) {
     return longStringActorPromise.then(longStringActor => {
       return longStringActor.string().then(string => {
-        longStringActor.release().catch(e => console.error(e));
+        longStringActor.release().catch(console.error);
         return string;
       });
-    }).catch(e => console.error(e));
+    }).catch(console.error);
   },
 
   /**
@@ -1868,7 +1868,7 @@ Inspector.prototype = {
     this.telemetry.toolOpened("copyuniquecssselector");
     this.selection.nodeFront.getUniqueSelector().then(selector => {
       clipboardHelper.copyString(selector);
-    }).catch(e => console.error);
+    }).catch(console.error);
   },
 
   /**
@@ -1882,7 +1882,7 @@ Inspector.prototype = {
     this.telemetry.toolOpened("copyfullcssselector");
     this.selection.nodeFront.getCssPath().then(path => {
       clipboardHelper.copyString(path);
-    }).catch(e => console.error);
+    }).catch(console.error);
   },
 
   /**
@@ -1896,7 +1896,7 @@ Inspector.prototype = {
     this.telemetry.toolOpened("copyxpath");
     this.selection.nodeFront.getXPath().then(path => {
       clipboardHelper.copyString(path);
-    }).catch(e => console.error);
+    }).catch(console.error);
   },
 
   /**
@@ -1942,7 +1942,7 @@ Inspector.prototype = {
         selection.isPseudoElementNode()) {
       return;
     }
-    this.walker.duplicateNode(selection.nodeFront).catch(e => console.error(e));
+    this.walker.duplicateNode(selection.nodeFront).catch(console.error);
   },
 
   /**
@@ -2043,7 +2043,7 @@ Inspector.prototype = {
             return this.toolbox.viewSourceInDebugger(url);
           }
           return null;
-        }).catch(e => console.error(e));
+        }).catch(console.error);
     } else if (type == "idref") {
       // Select the node in the same document.
       this.walker.document(this.selection.nodeFront).then(doc => {
@@ -2054,7 +2054,7 @@ Inspector.prototype = {
           }
           this.selection.setNodeFront(node);
         });
-      }).catch(e => console.error(e));
+      }).catch(console.error);
     }
   },
 

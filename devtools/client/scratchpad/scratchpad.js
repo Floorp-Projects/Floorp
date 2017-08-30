@@ -1736,7 +1736,7 @@ var Scratchpad = {
       this.populateRecentFilesMenu();
       PreferenceObserver.init();
       CloseObserver.init();
-    }).catch((err) => console.error(err));
+    }).catch(console.error);
     this._setupCommandListeners();
     this._updateViewMenuItems();
     this._setupPopupShowingListeners();

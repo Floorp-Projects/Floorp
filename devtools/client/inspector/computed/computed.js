@@ -509,7 +509,7 @@ CssComputedView.prototype = {
         );
         this._refreshProcess.schedule();
       });
-    }).catch((err) => console.error(err));
+    }).catch(console.error);
   },
 
   /**
