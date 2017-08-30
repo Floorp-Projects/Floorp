@@ -64,11 +64,19 @@ nsLanguageAtomService::GetLocaleLanguage()
 {
   do {
     if (!mLocaleLanguage) {
-      nsAutoCString locale;
-      OSPreferences::GetInstance()->GetSystemLocale(locale);
+      AutoTArray<nsCString, 10> regionalPrefsLocales;
+      if (OSPreferences::GetInstance()->GetRegionalPrefsLocales(
+                                          regionalPrefsLocales)) {
+        // use lowercase for all language atoms
+        ToLowerCase(regionalPrefsLocales[0]);
+        mLocaleLanguage = NS_Atomize(regionalPrefsLocales[0]);
+      } else {
+        nsAutoCString locale;
+        OSPreferences::GetInstance()->GetSystemLocale(locale);
 
-      ToLowerCase(locale); // use lowercase for all language atoms
-      mLocaleLanguage = NS_Atomize(locale);
+        ToLowerCase(locale); // use lowercase for all language atoms
+        mLocaleLanguage = NS_Atomize(locale);
+      }
     }
   } while (0);
 
