@@ -2239,58 +2239,67 @@ NativeOpWrapper(Native native)
 
 JS_PUBLIC_API(bool)
 JS_DefinePropertyById(JSContext* cx, HandleObject obj, HandleId id, HandleValue value,
-                      unsigned attrs, Native getter, Native setter)
+                      unsigned attrs)
 {
     return DefinePropertyById(cx, obj, id, value,
+                              NativeOpWrapper(nullptr), NativeOpWrapper(nullptr),
+                              attrs, 0);
+}
+
+JS_PUBLIC_API(bool)
+JS_DefinePropertyById(JSContext* cx, HandleObject obj, HandleId id, Native getter, Native setter,
+                      unsigned attrs)
+{
+    return DefinePropertyById(cx, obj, id, UndefinedHandleValue,
                               NativeOpWrapper(getter), NativeOpWrapper(setter),
                               attrs, 0);
 }
 
 JS_PUBLIC_API(bool)
 JS_DefinePropertyById(JSContext* cx, HandleObject obj, HandleId id, HandleObject valueArg,
-                      unsigned attrs, Native getter, Native setter)
+                      unsigned attrs)
 {
     RootedValue value(cx, ObjectValue(*valueArg));
     return DefinePropertyById(cx, obj, id, value,
-                              NativeOpWrapper(getter), NativeOpWrapper(setter),
+                              NativeOpWrapper(nullptr), NativeOpWrapper(nullptr),
                               attrs, 0);
 }
 
 JS_PUBLIC_API(bool)
 JS_DefinePropertyById(JSContext* cx, HandleObject obj, HandleId id, HandleString valueArg,
-                      unsigned attrs, Native getter, Native setter)
+                      unsigned attrs)
 {
     RootedValue value(cx, StringValue(valueArg));
     return DefinePropertyById(cx, obj, id, value,
-                              NativeOpWrapper(getter), NativeOpWrapper(setter),
+                              NativeOpWrapper(nullptr), NativeOpWrapper(nullptr),
                               attrs, 0);
 }
 
 JS_PUBLIC_API(bool)
 JS_DefinePropertyById(JSContext* cx, HandleObject obj, HandleId id, int32_t valueArg,
-                      unsigned attrs, Native getter, Native setter)
+                      unsigned attrs)
 {
     Value value = Int32Value(valueArg);
     return DefinePropertyById(cx, obj, id, HandleValue::fromMarkedLocation(&value),
-                              NativeOpWrapper(getter), NativeOpWrapper(setter), attrs, 0);
+                              NativeOpWrapper(nullptr), NativeOpWrapper(nullptr), attrs, 0);
 }
 
 JS_PUBLIC_API(bool)
 JS_DefinePropertyById(JSContext* cx, HandleObject obj, HandleId id, uint32_t valueArg,
-                      unsigned attrs, Native getter, Native setter)
+                      unsigned attrs)
 {
     Value value = NumberValue(valueArg);
     return DefinePropertyById(cx, obj, id, HandleValue::fromMarkedLocation(&value),
-                              NativeOpWrapper(getter), NativeOpWrapper(setter), attrs, 0);
+                              NativeOpWrapper(nullptr), NativeOpWrapper(nullptr), attrs, 0);
 }
 
 JS_PUBLIC_API(bool)
 JS_DefinePropertyById(JSContext* cx, HandleObject obj, HandleId id, double valueArg,
-                      unsigned attrs, Native getter, Native setter)
+                      unsigned attrs)
 {
     Value value = NumberValue(valueArg);
     return DefinePropertyById(cx, obj, id, HandleValue::fromMarkedLocation(&value),
-                              NativeOpWrapper(getter), NativeOpWrapper(setter), attrs, 0);
+                              NativeOpWrapper(nullptr), NativeOpWrapper(nullptr), attrs, 0);
 }
 
 static bool
@@ -2311,61 +2320,63 @@ DefineProperty(JSContext* cx, HandleObject obj, const char* name, HandleValue va
 
 JS_PUBLIC_API(bool)
 JS_DefineProperty(JSContext* cx, HandleObject obj, const char* name, HandleValue value,
-                  unsigned attrs,
-                  Native getter /* = nullptr */, Native setter /* = nullptr */)
+                  unsigned attrs)
 {
-    return DefineProperty(cx, obj, name, value, NativeOpWrapper(getter), NativeOpWrapper(setter),
+    return DefineProperty(cx, obj, name, value, NativeOpWrapper(nullptr), NativeOpWrapper(nullptr),
                           attrs, 0);
 }
 
 JS_PUBLIC_API(bool)
+JS_DefineProperty(JSContext* cx, HandleObject obj, const char* name, Native getter, Native setter,
+                  unsigned attrs)
+{
+    return DefineProperty(cx, obj, name, UndefinedHandleValue, NativeOpWrapper(getter),
+                          NativeOpWrapper(setter), attrs, 0);
+}
+
+JS_PUBLIC_API(bool)
 JS_DefineProperty(JSContext* cx, HandleObject obj, const char* name, HandleObject valueArg,
-                  unsigned attrs,
-                  Native getter /* = nullptr */, Native setter /* = nullptr */)
+                  unsigned attrs)
 {
     RootedValue value(cx, ObjectValue(*valueArg));
-    return DefineProperty(cx, obj, name, value, NativeOpWrapper(getter), NativeOpWrapper(setter),
+    return DefineProperty(cx, obj, name, value, NativeOpWrapper(nullptr), NativeOpWrapper(nullptr),
                           attrs, 0);
 }
 
 JS_PUBLIC_API(bool)
 JS_DefineProperty(JSContext* cx, HandleObject obj, const char* name, HandleString valueArg,
-                  unsigned attrs,
-                  Native getter /* = nullptr */, Native setter /* = nullptr */)
+                  unsigned attrs)
 {
     RootedValue value(cx, StringValue(valueArg));
-    return DefineProperty(cx, obj, name, value, NativeOpWrapper(getter), NativeOpWrapper(setter),
+    return DefineProperty(cx, obj, name, value, NativeOpWrapper(nullptr), NativeOpWrapper(nullptr),
                           attrs, 0);
 }
 
 JS_PUBLIC_API(bool)
 JS_DefineProperty(JSContext* cx, HandleObject obj, const char* name, int32_t valueArg,
-                  unsigned attrs,
-                  Native getter /* = nullptr */, Native setter /* = nullptr */)
+                  unsigned attrs)
 {
     Value value = Int32Value(valueArg);
     return DefineProperty(cx, obj, name, HandleValue::fromMarkedLocation(&value),
-                          NativeOpWrapper(getter), NativeOpWrapper(setter), attrs, 0);
+                          NativeOpWrapper(nullptr), NativeOpWrapper(nullptr), attrs, 0);
 }
 
 JS_PUBLIC_API(bool)
 JS_DefineProperty(JSContext* cx, HandleObject obj, const char* name, uint32_t valueArg,
-                  unsigned attrs,
-                  Native getter /* = nullptr */, Native setter /* = nullptr */)
+                  unsigned attrs)
 {
     Value value = NumberValue(valueArg);
     return DefineProperty(cx, obj, name, HandleValue::fromMarkedLocation(&value),
-                          NativeOpWrapper(getter), NativeOpWrapper(setter), attrs, 0);
+                          NativeOpWrapper(nullptr), NativeOpWrapper(nullptr), attrs, 0);
 }
 
 JS_PUBLIC_API(bool)
 JS_DefineProperty(JSContext* cx, HandleObject obj, const char* name, double valueArg,
-                  unsigned attrs,
-                  Native getter /* = nullptr */, Native setter /* = nullptr */)
+                  unsigned attrs)
 {
     Value value = NumberValue(valueArg);
     return DefineProperty(cx, obj, name, HandleValue::fromMarkedLocation(&value),
-                          NativeOpWrapper(getter), NativeOpWrapper(setter), attrs, 0);
+                          NativeOpWrapper(nullptr), NativeOpWrapper(nullptr), attrs, 0);
 }
 
 #define AUTO_NAMELEN(s,n)   (((n) == (size_t)-1) ? js_strlen(s) : (n))
@@ -2412,52 +2423,60 @@ DefineUCProperty(JSContext* cx, HandleObject obj, const char16_t* name, size_t n
 
 JS_PUBLIC_API(bool)
 JS_DefineUCProperty(JSContext* cx, HandleObject obj, const char16_t* name, size_t namelen,
-                    HandleValue value, unsigned attrs, Native getter, Native setter)
+                    HandleValue value, unsigned attrs)
 {
-    return DefineUCProperty(cx, obj, name, namelen, value, getter, setter, attrs, 0);
+    return DefineUCProperty(cx, obj, name, namelen, value, nullptr, nullptr, attrs, 0);
 }
 
 JS_PUBLIC_API(bool)
 JS_DefineUCProperty(JSContext* cx, HandleObject obj, const char16_t* name, size_t namelen,
-                    HandleObject valueArg, unsigned attrs, Native getter, Native setter)
+                    Native getter, Native setter, unsigned attrs)
+{
+    return DefineUCProperty(cx, obj, name, namelen, UndefinedHandleValue, getter, setter,
+                            attrs, 0);
+}
+
+JS_PUBLIC_API(bool)
+JS_DefineUCProperty(JSContext* cx, HandleObject obj, const char16_t* name, size_t namelen,
+                    HandleObject valueArg, unsigned attrs)
 {
     RootedValue value(cx, ObjectValue(*valueArg));
-    return DefineUCProperty(cx, obj, name, namelen, value, getter, setter, attrs, 0);
+    return DefineUCProperty(cx, obj, name, namelen, value, nullptr, nullptr, attrs, 0);
 }
 
 JS_PUBLIC_API(bool)
 JS_DefineUCProperty(JSContext* cx, HandleObject obj, const char16_t* name, size_t namelen,
-                    HandleString valueArg, unsigned attrs, Native getter, Native setter)
+                    HandleString valueArg, unsigned attrs)
 {
     RootedValue value(cx, StringValue(valueArg));
-    return DefineUCProperty(cx, obj, name, namelen, value, getter, setter, attrs, 0);
+    return DefineUCProperty(cx, obj, name, namelen, value, nullptr, nullptr, attrs, 0);
 }
 
 JS_PUBLIC_API(bool)
 JS_DefineUCProperty(JSContext* cx, HandleObject obj, const char16_t* name, size_t namelen,
-                    int32_t valueArg, unsigned attrs, Native getter, Native setter)
+                    int32_t valueArg, unsigned attrs)
 {
     Value value = Int32Value(valueArg);
     return DefineUCProperty(cx, obj, name, namelen, HandleValue::fromMarkedLocation(&value),
-                            getter, setter, attrs, 0);
+                            nullptr, nullptr, attrs, 0);
 }
 
 JS_PUBLIC_API(bool)
 JS_DefineUCProperty(JSContext* cx, HandleObject obj, const char16_t* name, size_t namelen,
-                    uint32_t valueArg, unsigned attrs, Native getter, Native setter)
+                    uint32_t valueArg, unsigned attrs)
 {
     Value value = NumberValue(valueArg);
     return DefineUCProperty(cx, obj, name, namelen, HandleValue::fromMarkedLocation(&value),
-                            getter, setter, attrs, 0);
+                            nullptr, nullptr, attrs, 0);
 }
 
 JS_PUBLIC_API(bool)
 JS_DefineUCProperty(JSContext* cx, HandleObject obj, const char16_t* name, size_t namelen,
-                    double valueArg, unsigned attrs, Native getter, Native setter)
+                    double valueArg, unsigned attrs)
 {
     Value value = NumberValue(valueArg);
     return DefineUCProperty(cx, obj, name, namelen, HandleValue::fromMarkedLocation(&value),
-                            getter, setter, attrs, 0);
+                            nullptr, nullptr, attrs, 0);
 }
 
 static bool
@@ -2478,52 +2497,59 @@ DefineElement(JSContext* cx, HandleObject obj, uint32_t index, HandleValue value
 
 JS_PUBLIC_API(bool)
 JS_DefineElement(JSContext* cx, HandleObject obj, uint32_t index, HandleValue value,
-                 unsigned attrs, Native getter, Native setter)
+                 unsigned attrs)
 {
-    return DefineElement(cx, obj, index, value, attrs, getter, setter);
+    return DefineElement(cx, obj, index, value, attrs, nullptr, nullptr);
+}
+
+JS_PUBLIC_API(bool)
+JS_DefineElement(JSContext* cx, HandleObject obj, uint32_t index, Native getter, Native setter,
+                 unsigned attrs)
+{
+    return DefineElement(cx, obj, index, UndefinedHandleValue, attrs, getter, setter);
 }
 
 JS_PUBLIC_API(bool)
 JS_DefineElement(JSContext* cx, HandleObject obj, uint32_t index, HandleObject valueArg,
-                 unsigned attrs, Native getter, Native setter)
+                 unsigned attrs)
 {
     RootedValue value(cx, ObjectValue(*valueArg));
-    return DefineElement(cx, obj, index, value, attrs, getter, setter);
+    return DefineElement(cx, obj, index, value, attrs, nullptr, nullptr);
 }
 
 JS_PUBLIC_API(bool)
 JS_DefineElement(JSContext* cx, HandleObject obj, uint32_t index, HandleString valueArg,
-                 unsigned attrs, Native getter, Native setter)
+                 unsigned attrs)
 {
     RootedValue value(cx, StringValue(valueArg));
-    return DefineElement(cx, obj, index, value, attrs, getter, setter);
+    return DefineElement(cx, obj, index, value, attrs, nullptr, nullptr);
 }
 
 JS_PUBLIC_API(bool)
 JS_DefineElement(JSContext* cx, HandleObject obj, uint32_t index, int32_t valueArg,
-                 unsigned attrs, Native getter, Native setter)
+                 unsigned attrs)
 {
     Value value = Int32Value(valueArg);
     return DefineElement(cx, obj, index, HandleValue::fromMarkedLocation(&value),
-                         attrs, getter, setter);
+                         attrs, nullptr, nullptr);
 }
 
 JS_PUBLIC_API(bool)
 JS_DefineElement(JSContext* cx, HandleObject obj, uint32_t index, uint32_t valueArg,
-                 unsigned attrs, Native getter, Native setter)
+                 unsigned attrs)
 {
     Value value = NumberValue(valueArg);
     return DefineElement(cx, obj, index, HandleValue::fromMarkedLocation(&value),
-                         attrs, getter, setter);
+                         attrs, nullptr, nullptr);
 }
 
 JS_PUBLIC_API(bool)
 JS_DefineElement(JSContext* cx, HandleObject obj, uint32_t index, double valueArg,
-                 unsigned attrs, Native getter, Native setter)
+                 unsigned attrs)
 {
     Value value = NumberValue(valueArg);
     return DefineElement(cx, obj, index, HandleValue::fromMarkedLocation(&value),
-                         attrs, getter, setter);
+                         attrs, nullptr, nullptr);
 }
 
 JS_PUBLIC_API(bool)

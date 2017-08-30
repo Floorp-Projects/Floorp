@@ -3197,51 +3197,59 @@ JS_DefinePropertyById(JSContext* cx, JS::HandleObject obj, JS::HandleId id,
 
 extern JS_PUBLIC_API(bool)
 JS_DefinePropertyById(JSContext* cx, JS::HandleObject obj, JS::HandleId id, JS::HandleValue value,
-                      unsigned attrs, JSNative getter = nullptr, JSNative setter = nullptr);
+                      unsigned attrs);
+
+extern JS_PUBLIC_API(bool)
+JS_DefinePropertyById(JSContext* cx, JS::HandleObject obj, JS::HandleId id, JSNative getter,
+                      JSNative setter, unsigned attrs);
 
 extern JS_PUBLIC_API(bool)
 JS_DefinePropertyById(JSContext* cx, JS::HandleObject obj, JS::HandleId id, JS::HandleObject value,
-                      unsigned attrs, JSNative getter = nullptr, JSNative setter = nullptr);
+                      unsigned attrs);
 
 extern JS_PUBLIC_API(bool)
 JS_DefinePropertyById(JSContext* cx, JS::HandleObject obj, JS::HandleId id, JS::HandleString value,
-                      unsigned attrs, JSNative getter = nullptr, JSNative setter = nullptr);
+                      unsigned attrs);
 
 extern JS_PUBLIC_API(bool)
 JS_DefinePropertyById(JSContext* cx, JS::HandleObject obj, JS::HandleId id, int32_t value,
-                      unsigned attrs, JSNative getter = nullptr, JSNative setter = nullptr);
+                      unsigned attrs);
 
 extern JS_PUBLIC_API(bool)
 JS_DefinePropertyById(JSContext* cx, JS::HandleObject obj, JS::HandleId id, uint32_t value,
-                      unsigned attrs, JSNative getter = nullptr, JSNative setter = nullptr);
+                      unsigned attrs);
 
 extern JS_PUBLIC_API(bool)
 JS_DefinePropertyById(JSContext* cx, JS::HandleObject obj, JS::HandleId id, double value,
-                      unsigned attrs, JSNative getter = nullptr, JSNative setter = nullptr);
+                      unsigned attrs);
 
 extern JS_PUBLIC_API(bool)
 JS_DefineProperty(JSContext* cx, JS::HandleObject obj, const char* name, JS::HandleValue value,
-                  unsigned attrs, JSNative getter = nullptr, JSNative setter = nullptr);
+                  unsigned attrs);
+
+extern JS_PUBLIC_API(bool)
+JS_DefineProperty(JSContext* cx, JS::HandleObject obj, const char* name, JSNative getter,
+                  JSNative setter, unsigned attrs);
 
 extern JS_PUBLIC_API(bool)
 JS_DefineProperty(JSContext* cx, JS::HandleObject obj, const char* name, JS::HandleObject value,
-                  unsigned attrs, JSNative getter = nullptr, JSNative setter = nullptr);
+                  unsigned attrs);
 
 extern JS_PUBLIC_API(bool)
 JS_DefineProperty(JSContext* cx, JS::HandleObject obj, const char* name, JS::HandleString value,
-                  unsigned attrs, JSNative getter = nullptr, JSNative setter = nullptr);
+                  unsigned attrs);
 
 extern JS_PUBLIC_API(bool)
 JS_DefineProperty(JSContext* cx, JS::HandleObject obj, const char* name, int32_t value,
-                  unsigned attrs, JSNative getter = nullptr, JSNative setter = nullptr);
+                  unsigned attrs);
 
 extern JS_PUBLIC_API(bool)
 JS_DefineProperty(JSContext* cx, JS::HandleObject obj, const char* name, uint32_t value,
-                  unsigned attrs, JSNative getter = nullptr, JSNative setter = nullptr);
+                  unsigned attrs);
 
 extern JS_PUBLIC_API(bool)
 JS_DefineProperty(JSContext* cx, JS::HandleObject obj, const char* name, double value,
-                  unsigned attrs, JSNative getter = nullptr, JSNative setter = nullptr);
+                  unsigned attrs);
 
 extern JS_PUBLIC_API(bool)
 JS_DefineUCProperty(JSContext* cx, JS::HandleObject obj, const char16_t* name, size_t namelen,
@@ -3254,57 +3262,59 @@ JS_DefineUCProperty(JSContext* cx, JS::HandleObject obj, const char16_t* name, s
 
 extern JS_PUBLIC_API(bool)
 JS_DefineUCProperty(JSContext* cx, JS::HandleObject obj, const char16_t* name, size_t namelen,
-                    JS::HandleValue value, unsigned attrs,
-                    JSNative getter = nullptr, JSNative setter = nullptr);
+                    JS::HandleValue value, unsigned attrs);
 
 extern JS_PUBLIC_API(bool)
 JS_DefineUCProperty(JSContext* cx, JS::HandleObject obj, const char16_t* name, size_t namelen,
-                    JS::HandleObject value, unsigned attrs,
-                    JSNative getter = nullptr, JSNative setter = nullptr);
+                    JSNative getter, JSNative setter, unsigned attrs);
 
 extern JS_PUBLIC_API(bool)
 JS_DefineUCProperty(JSContext* cx, JS::HandleObject obj, const char16_t* name, size_t namelen,
-                    JS::HandleString value, unsigned attrs,
-                    JSNative getter = nullptr, JSNative setter = nullptr);
+                    JS::HandleObject value, unsigned attrs);
 
 extern JS_PUBLIC_API(bool)
 JS_DefineUCProperty(JSContext* cx, JS::HandleObject obj, const char16_t* name, size_t namelen,
-                    int32_t value, unsigned attrs,
-                    JSNative getter = nullptr, JSNative setter = nullptr);
+                    JS::HandleString value, unsigned attrs);
 
 extern JS_PUBLIC_API(bool)
 JS_DefineUCProperty(JSContext* cx, JS::HandleObject obj, const char16_t* name, size_t namelen,
-                    uint32_t value, unsigned attrs,
-                    JSNative getter = nullptr, JSNative setter = nullptr);
+                    int32_t value, unsigned attrs);
 
 extern JS_PUBLIC_API(bool)
 JS_DefineUCProperty(JSContext* cx, JS::HandleObject obj, const char16_t* name, size_t namelen,
-                    double value, unsigned attrs,
-                    JSNative getter = nullptr, JSNative setter = nullptr);
+                    uint32_t value, unsigned attrs);
+
+extern JS_PUBLIC_API(bool)
+JS_DefineUCProperty(JSContext* cx, JS::HandleObject obj, const char16_t* name, size_t namelen,
+                    double value, unsigned attrs);
 
 extern JS_PUBLIC_API(bool)
 JS_DefineElement(JSContext* cx, JS::HandleObject obj, uint32_t index, JS::HandleValue value,
-                 unsigned attrs, JSNative getter = nullptr, JSNative setter = nullptr);
+                 unsigned attrs);
+
+extern JS_PUBLIC_API(bool)
+JS_DefineElement(JSContext* cx, JS::HandleObject obj, uint32_t index, JSNative getter,
+                 JSNative setter, unsigned attrs);
 
 extern JS_PUBLIC_API(bool)
 JS_DefineElement(JSContext* cx, JS::HandleObject obj, uint32_t index, JS::HandleObject value,
-                 unsigned attrs, JSNative getter = nullptr, JSNative setter = nullptr);
+                 unsigned attrs);
 
 extern JS_PUBLIC_API(bool)
 JS_DefineElement(JSContext* cx, JS::HandleObject obj, uint32_t index, JS::HandleString value,
-                 unsigned attrs, JSNative getter = nullptr, JSNative setter = nullptr);
+                 unsigned attrs);
 
 extern JS_PUBLIC_API(bool)
 JS_DefineElement(JSContext* cx, JS::HandleObject obj, uint32_t index, int32_t value,
-                 unsigned attrs, JSNative getter = nullptr, JSNative setter = nullptr);
+                 unsigned attrs);
 
 extern JS_PUBLIC_API(bool)
 JS_DefineElement(JSContext* cx, JS::HandleObject obj, uint32_t index, uint32_t value,
-                 unsigned attrs, JSNative getter = nullptr, JSNative setter = nullptr);
+                 unsigned attrs);
 
 extern JS_PUBLIC_API(bool)
 JS_DefineElement(JSContext* cx, JS::HandleObject obj, uint32_t index, double value,
-                 unsigned attrs, JSNative getter = nullptr, JSNative setter = nullptr);
+                 unsigned attrs);
 
 /**
  * Compute the expression `id in obj`.

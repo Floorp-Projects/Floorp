@@ -356,9 +356,10 @@ DefinePropertyIfFound(XPCCallContext& ccx,
             AutoResolveName arn(ccx, id);
             if (resolved)
                 *resolved = true;
-            return JS_DefinePropertyById(ccx, obj, id, UndefinedHandleValue, propFlags,
+            return JS_DefinePropertyById(ccx, obj, id,
                                          JS_DATA_TO_FUNC_PTR(JSNative, funobj.get()),
-                                         nullptr);
+                                         nullptr,
+                                         propFlags);
         }
 
         if (resolved)
@@ -449,7 +450,7 @@ DefinePropertyIfFound(XPCCallContext& ccx,
     if (resolved)
         *resolved = true;
 
-    return JS_DefinePropertyById(ccx, obj, id, UndefinedHandleValue, propFlags, getter, setter);
+    return JS_DefinePropertyById(ccx, obj, id, getter, setter, propFlags);
 }
 
 /***************************************************************************/
