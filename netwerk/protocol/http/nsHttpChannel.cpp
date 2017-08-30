@@ -9223,9 +9223,16 @@ nsresult
 nsHttpChannel::TriggerNetwork(int32_t aTimeout)
 {
     MOZ_ASSERT(NS_IsMainThread(), "Must be called on the main thread");
+
+    LOG(("nsHttpChannel::TriggerNetwork [this=%p]\n", this));
+
+    if (mCanceled) {
+        LOG(("  channel was canceled.\n"));
+        return mStatus;
+    }
+
     // If a network request has already gone out, there is no point in
     // doing this again.
-    LOG(("nsHttpChannel::TriggerNetwork [this=%p]\n", this));
     if (mNetworkTriggered) {
         LOG(("  network already triggered. Returning.\n"));
         return NS_OK;
