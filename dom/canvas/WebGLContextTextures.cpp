@@ -318,7 +318,7 @@ void
 WebGLContext::CompressedTexImage(const char* funcName, uint8_t funcDims, GLenum rawTarget,
                                  GLint level, GLenum internalFormat, GLsizei width,
                                  GLsizei height, GLsizei depth, GLint border,
-                                 const TexImageSource& src, const Maybe<GLsizei>& expectedImageSize)
+                                 const TexImageSource& src)
 {
     TexImageTarget target;
     WebGLTexture* tex;
@@ -326,7 +326,7 @@ WebGLContext::CompressedTexImage(const char* funcName, uint8_t funcDims, GLenum 
         return;
 
     tex->CompressedTexImage(funcName, target, level, internalFormat, width, height, depth,
-                            border, src, expectedImageSize);
+                            border, src);
 }
 
 void
@@ -334,7 +334,7 @@ WebGLContext::CompressedTexSubImage(const char* funcName, uint8_t funcDims,
                                     GLenum rawTarget, GLint level, GLint xOffset,
                                     GLint yOffset, GLint zOffset, GLsizei width,
                                     GLsizei height, GLsizei depth, GLenum unpackFormat,
-                                    const TexImageSource& src, const Maybe<GLsizei>& expectedImageSize)
+                                    const TexImageSource& src)
 {
     TexImageTarget target;
     WebGLTexture* tex;
@@ -342,7 +342,7 @@ WebGLContext::CompressedTexSubImage(const char* funcName, uint8_t funcDims,
         return;
 
     tex->CompressedTexSubImage(funcName, target, level, xOffset, yOffset, zOffset, width,
-                               height, depth, unpackFormat, src, expectedImageSize);
+                               height, depth, unpackFormat, src);
 }
 
 ////
