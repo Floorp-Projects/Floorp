@@ -43,7 +43,7 @@ The `hasActor` method returns a boolean synchronously.
 ```js
 toolbox.target.actorHasMethod("domwalker", "duplicateNode").then(hasMethod => {
 
-}).catch(e => console.error(e));
+}).catch(console.error);
 ```
 
 The `actorHasMethod` returns a promise that resolves to a boolean.

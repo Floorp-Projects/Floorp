@@ -189,7 +189,7 @@ const ResponsiveUIManager = exports.ResponsiveUIManager = {
         break;
       default:
     }
-    completed.catch(e => console.error(e));
+    completed.catch(console.error);
   },
 
   handleMenuCheck({target}) {

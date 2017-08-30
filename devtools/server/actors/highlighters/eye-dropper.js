@@ -383,7 +383,7 @@ EyeDropper.prototype = {
     }
 
     this.emit("selected", toColorString(this.centerColor, this.format));
-    onColorSelected.then(() => this.hide(), e => console.error(e));
+    onColorSelected.then(() => this.hide(), console.error);
   },
 
   /**

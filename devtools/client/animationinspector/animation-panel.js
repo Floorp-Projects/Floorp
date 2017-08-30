@@ -179,9 +179,9 @@ var AnimationsPanel = {
     // the page if the selected node does not have any animation on it.
     if (event.keyCode === KeyCodes.DOM_VK_SPACE) {
       if (AnimationsController.animationPlayers.length > 0) {
-        this.playPauseTimeline().catch(ex => console.error(ex));
+        this.playPauseTimeline().catch(console.error);
       } else {
-        this.toggleAll().catch(ex => console.error(ex));
+        this.toggleAll().catch(console.error);
       }
       event.preventDefault();
     }
@@ -208,7 +208,7 @@ var AnimationsPanel = {
   },
 
   onToggleAllClicked: function () {
-    this.toggleAll().catch(ex => console.error(ex));
+    this.toggleAll().catch(console.error);
   },
 
   /**
@@ -221,7 +221,7 @@ var AnimationsPanel = {
   }),
 
   onTimelinePlayClicked: function () {
-    this.playPauseTimeline().catch(ex => console.error(ex));
+    this.playPauseTimeline().catch(console.error);
   },
 
   /**
@@ -241,7 +241,7 @@ var AnimationsPanel = {
   },
 
   onTimelineRewindClicked: function () {
-    this.rewindTimeline().catch(ex => console.error(ex));
+    this.rewindTimeline().catch(console.error);
   },
 
   /**
@@ -263,7 +263,7 @@ var AnimationsPanel = {
   onRateChanged: function (e, rate) {
     AnimationsController.setPlaybackRateAll(rate)
                         .then(() => this.refreshAnimationsStateAndUI())
-                        .catch(ex => console.error(ex));
+                        .catch(console.error);
   },
 
   onTabNavigated: function () {
@@ -289,7 +289,7 @@ var AnimationsPanel = {
     if (isUserDrag && !this.setCurrentTimeAllPromise) {
       this.setCurrentTimeAllPromise =
         AnimationsController.setCurrentTimeAll(time, true)
-                            .catch(error => console.error(error))
+                            .catch(console.error)
                             .then(() => {
                               this.setCurrentTimeAllPromise = null;
                             });
