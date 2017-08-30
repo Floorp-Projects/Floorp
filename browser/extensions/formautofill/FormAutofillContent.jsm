@@ -121,9 +121,16 @@ AutofillProfileAutoCompleteSearch.prototype = {
       return;
     }
 
-    let collectionName = isAddressField ? "addresses" : "creditCards";
+    let infoWithoutElement = Object.assign({}, info);
+    delete infoWithoutElement.elementWeakRef;
 
-    this._getRecords({collectionName, info, searchString}).then((records) => {
+    let data = {
+      collectionName: isAddressField ? "addresses" : "creditCards",
+      info: infoWithoutElement,
+      searchString,
+    };
+
+    this._getRecords(data).then((records) => {
       if (this.forceStop) {
         return;
       }
