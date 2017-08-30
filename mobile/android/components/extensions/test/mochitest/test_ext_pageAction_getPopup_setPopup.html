@@ -31,9 +31,9 @@ add_task(async function test_setPopup_and_getPopup() {
 
     async function createAndTestNewTab(expectedPopup, url) {
       // Create a tab.
-      let [tab] = await Promise.all([
-        browser.tabs.create({url}),
+      let [, tab] = await Promise.all([
         tabCreatedPromise,
+        browser.tabs.create({url}),
       ]);
 
       // Test that the default popup is returned before the popup is set for the tab.
@@ -58,12 +58,12 @@ add_task(async function test_setPopup_and_getPopup() {
     popup = await browser.pageAction.getPopup({tabId: tab2.id});
     browser.test.assertTrue(popup.includes("b.html"), "Expected the second tab popup");
 
-    // Unset the title for the first tab and confirm that it is unset.
+    // Unset the popup for the first tab and confirm that it is unset.
     browser.pageAction.setPopup({tabId: tab1.id, popup: ""});
     popup = await browser.pageAction.getPopup({tabId: tab1.id});
     browser.test.assertTrue(popup.includes("default.html"), "Expected the default popup to be returned");
 
-    // Reset the title for the first tab.
+    // Set the popup for the first tab.
     browser.pageAction.setPopup({tabId: tab1.id, popup: "a.html"});
     popup = await browser.pageAction.getPopup({tabId: tab1.id});
     browser.test.assertTrue(popup.includes("a.html"), "Expected the first tab popup");
@@ -78,25 +78,37 @@ add_task(async function test_setPopup_and_getPopup() {
 
     browser.test.onMessage.addListener(async (msg, data) => {
       if (msg === "select-tab") {
+        // Check if the requested tabId is already selected.
+        const [activeTab] = await browser.tabs.query({active: true});
+        if (activeTab.id === data.tabId) {
+          browser.test.sendMessage("tab-selected");
+          return;
+        }
+
+        // Select the requested tabId and wait the tab to be activated.
+        const onActivatedListener = ({tabId}) => {
+          if (tabId === data.tabId) {
+            browser.tabs.onActivated.removeListener(onActivatedListener);
+            browser.test.sendMessage("tab-selected");
+          }
+        };
+        browser.tabs.onActivated.addListener(onActivatedListener);
+
         await browser.tabs.update(data.tabId, {active: true});
-        browser.test.sendMessage("tab-selected");
       } else if (msg === "page-action-show") {
-        browser.pageAction.show(data.tabId).then(() => {
-          browser.test.sendMessage("page-action-shown");
-        });
+        await browser.pageAction.show(data.tabId);
+        browser.test.sendMessage("page-action-shown");
       } else if (msg == "page-action-set-popup") {
         if (data.popup == "") {
           expectingOnClicked[data.tabId] = true;
         } else {
           delete expectingOnClicked[tabId];
         }
-        browser.pageAction.setPopup({tabId: data.tabId, popup: data.popup}).then(() => {
-          browser.test.sendMessage("page-action-popup-set");
-        });
+        await browser.pageAction.setPopup({tabId: data.tabId, popup: data.popup});
+        browser.test.sendMessage("page-action-popup-set");
       } else if (msg == "page-action-get-popup") {
-        browser.pageAction.getPopup({tabId: data.tabId}).then(url => {
-          browser.test.sendMessage("page-action-got-popup", url);
-        });
+        const url = await browser.pageAction.getPopup({tabId: data.tabId});
+        browser.test.sendMessage("page-action-got-popup", url);
       } else if (msg === "finish") {
         await browser.tabs.remove([tab1.id, tab2.id]);
         browser.test.notifyPass("page-action-popup");
@@ -110,6 +122,7 @@ add_task(async function test_setPopup_and_getPopup() {
     window.onload = () => {
       browser.test.sendMessage("page-action-from-popup", location.href);
     };
+
     browser.test.onMessage.addListener((msg, details) => {
       if (msg == "page-action-close-popup") {
         if (details.location == location.href) {
@@ -168,13 +181,17 @@ add_task(async function test_setPopup_and_getPopup() {
     await extension.awaitMessage("page-action-shown");
 
     ok(PageActions.isShown(uuid), "page action is shown");
+
+    info(`Click on the pageAction on tab ${tabId} and wait the popup to be loaded`);
     PageActions.synthesizeClick(uuid);
     let location = await extension.awaitMessage("page-action-from-popup");
+
     ok(location.includes(expectedPopup), "The popup with the correct URL should be shown.");
 
+    const onceTabClosed = tabClosedPromise();
     extension.sendMessage("page-action-close-popup", {location});
-    location = await tabClosedPromise();
-    ok(location.includes(expectedPopup), "The popup with the correct URL should be closed.");
+    location = await onceTabClosed;
+    ok(location.includes(expectedPopup), "The popup with the correct URL should be closed");
   }
 
   await extension.startup();
