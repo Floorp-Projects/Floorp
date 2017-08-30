@@ -257,7 +257,7 @@ typedef long ssize_t;
  * calls with 6 arguments
  */
 #if (defined(XP_LINUX) && !defined(__alpha__)) || \
-    (defined(MOZ_MEMORY_BSD) && defined(__GLIBC__))
+    (defined(__FreeBSD_kernel__) && defined(__GLIBC__))
 #include <sys/syscall.h>
 #if defined(SYS_mmap) || defined(SYS_mmap2)
 static inline
