@@ -802,6 +802,8 @@ TEST(CSPParser, GoodGeneratedPolicies)
       "frame-ancestors http://a.b.c.d.e.f.g.h.i.j.k.l.x.com" },
     { "frame-ancestors https://self.com:34",
       "frame-ancestors https://self.com:34" },
+    { "frame-ancestors http://sampleuser:samplepass@example.com",
+      "frame-ancestors 'none'" },
     { "default-src 'none'; frame-ancestors 'self'",
       "default-src 'none'; frame-ancestors http://www.selfuri.com" },
     { "frame-ancestors http://self:80",
@@ -1132,4 +1134,3 @@ TEST(CSPParser, FuzzyPoliciesIncDirLimASCII)
   }
 }
 #endif
-
