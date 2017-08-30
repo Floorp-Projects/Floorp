@@ -52,7 +52,7 @@ public:
   // styles are dependent for fallback.
   bool IsDependentStyle() const;
 
-  virtual nsIAtom* GetStyleName() const = 0;
+  virtual void GetStyleName(nsAString& aResult) = 0;
   virtual void GetPrefix(nsAString& aResult) = 0;
   virtual void GetSuffix(nsAString& aResult) = 0;
   void GetCounterText(CounterValue aOrdinal,
@@ -108,7 +108,7 @@ public:
   AnonymousCounterStyle(uint8_t aSystem, nsTArray<nsString> aSymbols);
   explicit AnonymousCounterStyle(const nsCSSValue::Array* aValue);
 
-  virtual nsIAtom* GetStyleName() const override;
+  virtual void GetStyleName(nsAString& aResult) override;
   virtual void GetPrefix(nsAString& aResult) override;
   virtual void GetSuffix(nsAString& aResult) override;
   virtual bool IsBullet() override;
