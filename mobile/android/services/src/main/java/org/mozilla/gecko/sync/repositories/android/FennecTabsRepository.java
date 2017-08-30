@@ -159,7 +159,8 @@ public class FennecTabsRepository extends Repository {
             delegate.onFetchFailed(e);
             return;
           }
-          delegate.onFetchCompleted(now());
+          setLastFetchTimestamp(now());
+          delegate.onFetchCompleted();
         }
       };
 
@@ -203,7 +204,7 @@ public class FennecTabsRepository extends Repository {
       delegateQueue.execute(new Runnable() {
         @Override
         public void run() {
-          delegate.onFetchCompleted(now());
+          delegate.onFetchCompleted();
         }
       });
     }

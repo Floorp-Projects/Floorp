@@ -139,7 +139,7 @@ public class BatchingDownloaderTest {
         }
 
         @Override
-        public void onFetchCompleted(long fetchEnd) {
+        public void onFetchCompleted() {
             this.isSuccess = true;
         }
 

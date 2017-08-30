@@ -88,22 +88,23 @@ class PayloadDispatcher {
             for (String guid : guids) {
                 uploader.sessionStoreDelegate.onRecordStoreSucceeded(guid);
             }
+
+            // If we're not in a batching mode, or just committed a batch, uploaded records have
+            // been applied to the server storage and are now visible to other clients.
+            // Therefore, we bump our local "last store" timestamp.
+            bumpTimestampTo(uploadTimestamp, response.normalizedTimestampForHeader(SyncResponse.X_LAST_MODIFIED));
+            uploader.setLastStoreTimestamp(uploadTimestamp);
         }
 
         // If this was our very last commit, we're done storing records.
         // Get Last-Modified timestamp from the response, and pass it upstream.
         if (isLastPayload) {
-            finished(response.normalizedTimestampForHeader(SyncResponse.X_LAST_MODIFIED));
+            uploader.finished();
         }
     }
 
     void lastPayloadFailed(Exception e) {
         uploader.sessionStoreDelegate.onStoreFailed(e);
-    }
-
-    private void finished(long lastModifiedTimestamp) {
-        bumpTimestampTo(uploadTimestamp, lastModifiedTimestamp);
-        uploader.finished(uploadTimestamp);
     }
 
     void finalizeQueue(final boolean needToCommit, final Runnable finalRunnable) {
@@ -116,7 +117,7 @@ class PayloadDispatcher {
 
                     // Otherwise, we're done.
                 } else {
-                    uploader.finished(uploadTimestamp);
+                    uploader.finished();
                 }
             }
         });

@@ -20,7 +20,7 @@ public class DefaultStoreDelegate extends DefaultDelegate implements RepositoryS
   }
 
   @Override
-  public void onStoreCompleted(long storeEnd) {
+  public void onStoreCompleted() {
     performNotify("DefaultStoreDelegate used", null);
   }
 
@@ -68,11 +68,11 @@ public class DefaultStoreDelegate extends DefaultDelegate implements RepositoryS
       }
 
       @Override
-      public void onStoreCompleted(final long storeEnd) {
+      public void onStoreCompleted() {
         executor.execute(new Runnable() {
           @Override
           public void run() {
-            self.onStoreCompleted(storeEnd);
+            self.onStoreCompleted();
           }
         });
       }

@@ -64,10 +64,12 @@ implements RecordsChannelDelegate,
   private RepositorySessionBundle bundleA;
   private RepositorySessionBundle bundleB;
 
-  // Bug 726054: just like desktop, we track our last interaction with the server,
-  // not the last record timestamp that we fetched. This ensures that we don't re-
-  // download the records we just uploaded, at the cost of skipping any records
-  // that a concurrently syncing client has uploaded.
+  // Bug 1392505: for each "side" of the channel, we keep track of lastFetch and lastStore timestamps.
+  // For local repositories these timestamps represent our last interactions with local data.
+  // For the remote repository these timestamps represent server collection's last-modified
+  // timestamp after a corresponding operation (GET or POST) finished. We obtain these from server's
+  // response headers.
+  // It's important that we never compare timestamps which originated from different clocks.
   private long pendingATimestamp = -1;
   private long pendingBTimestamp = -1;
   private long storeEndATimestamp = -1;
@@ -200,8 +202,8 @@ implements RecordsChannelDelegate,
     // This is the delegate for the *first* flow.
     RecordsChannelDelegate channelAToBDelegate = new RecordsChannelDelegate() {
       @Override
-      public void onFlowCompleted(RecordsChannel recordsChannel, long fetchEnd, long storeEnd) {
-        session.onFirstFlowCompleted(recordsChannel, fetchEnd, storeEnd);
+      public void onFlowCompleted(RecordsChannel recordsChannel) {
+        session.onFirstFlowCompleted(recordsChannel);
       }
 
       @Override
@@ -242,14 +244,12 @@ implements RecordsChannelDelegate,
    * <p>
    * By default, any fetch and store failures are ignored.
    * @param recordsChannel the <code>RecordsChannel</code> (for error testing).
-   * @param fetchEnd timestamp when fetches completed.
-   * @param storeEnd timestamp when stores completed.
    */
-  public void onFirstFlowCompleted(RecordsChannel recordsChannel, long fetchEnd, long storeEnd) {
+  public void onFirstFlowCompleted(RecordsChannel recordsChannel) {
     Logger.trace(LOG_TAG, "First RecordsChannel onFlowCompleted.");
-    Logger.debug(LOG_TAG, "Fetch end is " + fetchEnd + ". Store end is " + storeEnd + ". Starting next.");
-    pendingATimestamp = fetchEnd;
-    storeEndBTimestamp = storeEnd;
+    pendingATimestamp = sessionA.getLastFetchTimestamp();
+    storeEndBTimestamp = sessionB.getLastStoreTimestamp();
+    Logger.debug(LOG_TAG, "Fetch end is " + pendingATimestamp + ". Store end is " + storeEndBTimestamp + ". Starting next.");
     numInboundRecords.set(recordsChannel.getFetchCount());
     numInboundRecordsStored.set(recordsChannel.getStoreAcceptedCount());
     numInboundRecordsFailed.set(recordsChannel.getStoreFailureCount());
@@ -263,15 +263,12 @@ implements RecordsChannelDelegate,
    * <p>
    * By default, any fetch and store failures are ignored.
    * @param recordsChannel the <code>RecordsChannel</code> (for error testing).
-   * @param fetchEnd timestamp when fetches completed.
-   * @param storeEnd timestamp when stores completed.
    */
-  public void onSecondFlowCompleted(RecordsChannel recordsChannel, long fetchEnd, long storeEnd) {
+  public void onSecondFlowCompleted(RecordsChannel recordsChannel) {
     Logger.trace(LOG_TAG, "Second RecordsChannel onFlowCompleted.");
-    Logger.debug(LOG_TAG, "Fetch end is " + fetchEnd + ". Store end is " + storeEnd + ". Finishing.");
-
-    pendingBTimestamp = fetchEnd;
-    storeEndATimestamp = storeEnd;
+    pendingBTimestamp = sessionB.getLastFetchTimestamp();
+    storeEndATimestamp = sessionA.getLastStoreTimestamp();
+    Logger.debug(LOG_TAG, "Fetch end is " + pendingBTimestamp + ". Store end is " + storeEndATimestamp + ". Finishing.");
     numOutboundRecords.set(recordsChannel.getFetchCount());
     numOutboundRecordsStored.set(recordsChannel.getStoreAcceptedCount());
     numOutboundRecordsFailed.set(recordsChannel.getStoreFailureCount());
@@ -287,8 +284,8 @@ implements RecordsChannelDelegate,
   }
 
   @Override
-  public void onFlowCompleted(RecordsChannel recordsChannel, long fetchEnd, long storeEnd) {
-    onSecondFlowCompleted(recordsChannel, fetchEnd, storeEnd);
+  public void onFlowCompleted(RecordsChannel recordsChannel) {
+    onSecondFlowCompleted(recordsChannel);
   }
 
   @Override

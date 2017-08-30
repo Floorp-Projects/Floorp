@@ -22,8 +22,8 @@ public class ExpectFetchDelegate extends DefaultFetchDelegate {
   }
 
   @Override
-  public void onFetchCompleted(final long fetchEnd) {
-    super.onDone(this.records, this.expect, fetchEnd);
+  public void onFetchCompleted() {
+    super.onDone(this.records, this.expect);
   }
 
   public Record recordAt(int i) {
