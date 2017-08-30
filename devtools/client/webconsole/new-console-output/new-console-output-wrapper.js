@@ -230,6 +230,15 @@ NewConsoleOutputWrapper.prototype = {
 
   dispatchRequestUpdate: function (id, data) {
     batchedMessageAdd(actions.networkUpdateRequest(id, data));
+
+    // Fire an event indicating that all data fetched from
+    // the backend has been received. This is based on
+    // 'FirefoxDataProvider.isQueuePayloadReady', see more
+    // comments in that method.
+    // (netmonitor/src/connector/firefox-data-provider).
+    // This event might be utilized in tests to find the right
+    // time when to finish.
+    this.jsterm.hud.emit("network-request-payload-ready", {id, data});
   },
 
   // Should be used for test purpose only.
