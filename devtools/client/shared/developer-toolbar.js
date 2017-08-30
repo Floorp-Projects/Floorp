@@ -226,6 +226,7 @@ DeveloperToolbar.prototype.createToolbar = function () {
   let toolbar = this._doc.createElement("toolbar");
   toolbar.setAttribute("id", "developer-toolbar");
   toolbar.setAttribute("hidden", "true");
+  toolbar.setAttribute("fullscreentoolbar", "true");
 
   let close = this._doc.createElement("toolbarbutton");
   close.setAttribute("id", "developer-toolbar-closebutton");
