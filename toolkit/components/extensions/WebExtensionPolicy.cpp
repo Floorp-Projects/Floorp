@@ -8,6 +8,7 @@
 #include "mozilla/extensions/WebExtensionPolicy.h"
 
 #include "mozilla/AddonManagerWebAPI.h"
+#include "mozilla/ResultExtensions.h"
 #include "nsEscape.h"
 #include "nsISubstitutingProtocolHandler.h"
 #include "nsNetUtil.h"

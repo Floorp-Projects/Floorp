@@ -21,18 +21,6 @@
 namespace mozilla {
 namespace net {
 
-// Like MOZ_TRY, but returns the unwrapped error value rather than a
-// GenericErrorResult on failure.
-#define TRY_VAR(target, expr) \
-  do { \
-    auto result = (expr); \
-    if (result.isErr()) { \
-      return result.unwrapErr(); \
-    } \
-    (target) = result.unwrap(); \
-  } while (0)
-
-
 class SimpleChannel : public nsBaseChannel
 {
 public:
@@ -63,7 +51,7 @@ SimpleChannel::OpenContentStream(bool async, nsIInputStream **streamOut, nsIChan
   NS_ENSURE_TRUE(mCallbacks, NS_ERROR_UNEXPECTED);
 
   nsCOMPtr<nsIInputStream> stream;
-  TRY_VAR(stream, mCallbacks->OpenContentStream(async, this));
+  MOZ_TRY_VAR(stream, mCallbacks->OpenContentStream(async, this));
   MOZ_ASSERT(stream);
 
   mCallbacks = nullptr;
@@ -79,15 +67,13 @@ SimpleChannel::BeginAsyncRead(nsIStreamListener* listener, nsIRequest** request)
   NS_ENSURE_TRUE(mCallbacks, NS_ERROR_UNEXPECTED);
 
   nsCOMPtr<nsIRequest> req;
-  TRY_VAR(req, mCallbacks->StartAsyncRead(listener, this));
+  MOZ_TRY_VAR(req, mCallbacks->StartAsyncRead(listener, this));
 
   mCallbacks = nullptr;
 
   req.forget(request);
   return NS_OK;
 }
-
-#undef TRY_VAR
 
 class SimpleChannelChild final : public SimpleChannel
                                , public nsIChildChannel
