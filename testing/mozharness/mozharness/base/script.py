@@ -502,16 +502,6 @@ class ScriptMixin(PlatformMixin):
             if isinstance(e.args[0], OSError) and e.args[0].errno == errno.ENOENT:
                 raise e.args[0]
 
-            remote_host = urlparse.urlsplit(url)[1]
-            if remote_host:
-                nslookup = self.query_exe('nslookup')
-                error_list = [{
-                    'substr': "server can't find %s" % remote_host,
-                    'level': ERROR,
-                    'explanation': "Either %s is an invalid hostname, or DNS is busted." % remote_host,
-                }]
-                self.run_command([nslookup, remote_host],
-                                 error_list=error_list)
             raise
         except socket.timeout, e:
             self.warning("Timed out accessing %s: %s" % (url, str(e)))
