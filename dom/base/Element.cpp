@@ -4387,6 +4387,9 @@ NoteDirtyElement(Element* aElement, uint32_t aBit)
   }
 
   MOZ_ASSERT(aElement == doc->GetServoRestyleRoot() ||
+             nsContentUtils::ContentIsFlattenedTreeDescendantOfForStyle(
+               aElement, doc->GetServoRestyleRoot()));
+  MOZ_ASSERT(aElement == doc->GetServoRestyleRoot() ||
              BitIsPropagated(parent, aBit, doc->GetServoRestyleRoot()));
   MOZ_ASSERT(doc->GetServoRestyleRootDirtyBits() & aBit);
 }
