@@ -20,7 +20,6 @@ if CONFIG['MOZ_MEMORY']:
     # on libxul.
     DIRS += [
         'build',
-        'mozjemalloc',
     ]
 
     if CONFIG['MOZ_REPLACE_MALLOC']:
