@@ -214,6 +214,12 @@ WebRenderScrollData::GetScrollMetadata(size_t aIndex) const
   return mScrollMetadatas[aIndex];
 }
 
+bool
+WebRenderScrollData::HasMetadataFor(const FrameMetrics::ViewID& aScrollId) const
+{
+  return mScrollIdMap.find(aScrollId) != mScrollIdMap.end();
+}
+
 void
 WebRenderScrollData::SetFocusTarget(const FocusTarget& aFocusTarget)
 {
