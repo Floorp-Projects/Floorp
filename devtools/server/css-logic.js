@@ -915,6 +915,7 @@ function CssRule(cssSheet, domRule, element) {
     // parse domRule.selectorText on call to this.selectors
     this._selectors = null;
     this.line = domUtils.getRuleLine(this.domRule);
+    this.column = domUtils.getRuleColumn(this.domRule);
     this.source = this._cssSheet.shortSource + ":" + this.line;
     if (this.mediaText) {
       this.source += " @media " + this.mediaText;
@@ -1105,6 +1106,16 @@ CssSelector.prototype = {
    */
   get ruleLine() {
     return this.cssRule.line;
+  },
+
+  /**
+   * Retrieve the column of the parent CSSStyleRule in the parent CSSStyleSheet.
+   *
+   * @return {number} the column of the parent CSSStyleRule in the parent
+   * stylesheet.
+   */
+  get ruleColumn() {
+    return this.cssRule.column;
   },
 
   /**
@@ -1392,6 +1403,16 @@ CssSelectorInfo.prototype = {
   },
 
   /**
+   * Retrieve the column of the parent CSSStyleRule in the parent CSSStyleSheet.
+   *
+   * @return {number} the column of the parent CSSStyleRule in the parent
+   * stylesheet.
+   */
+  get ruleColumn() {
+    return this.selector.ruleColumn;
+  },
+
+  /**
    * Check if the selector comes from a browser-provided stylesheet.
    *
    * @return {boolean} true if the selector comes from a browser-provided
@@ -1455,6 +1476,13 @@ CssSelectorInfo.prototype = {
       return -1;
     }
     if (that.ruleLine > this.ruleLine) {
+      return 1;
+    }
+
+    if (this.ruleColumn > that.ruleColumn) {
+      return -1;
+    }
+    if (that.ruleColumn > this.ruleColumn) {
       return 1;
     }
 
