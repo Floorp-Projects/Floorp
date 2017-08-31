@@ -1114,6 +1114,7 @@ MediaFormatReader::MediaFormatReader(MediaFormatReaderInit& aInit,
               TimeIntervals(),
               "MediaFormatReader::mBuffered (Canonical)")
   , mFrameStats(aInit.mFrameStats)
+  , mMediaDecoderOwnerID(aInit.mMediaDecoderOwnerID)
 {
   MOZ_ASSERT(aDemuxer);
   MOZ_COUNT_CTOR(MediaFormatReader);
