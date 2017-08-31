@@ -50,6 +50,10 @@ function todo(val, text) {
   debug(status + text);
 }
 
+function addLoadEvent(func) {
+  window.addEventListener('load', func, false);
+}
+
 SimpleTest = {
   waitForExplicitFinish: function() {},
   finish: function() {},
