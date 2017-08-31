@@ -210,7 +210,7 @@ nsDisplayButtonBoxShadowOuter::CreateWebRenderCommands(
   nsRect shadowRect = nsRect(ToReferenceFrame(), mFrame->GetSize());
   LayoutDeviceRect deviceBox =
     LayoutDeviceRect::FromAppUnits(shadowRect, appUnitsPerDevPixel);
-  wr::LayoutRect deviceBoxRect = aSc.ToRelativeLayoutRectRounded(deviceBox);
+  wr::LayoutRect deviceBoxRect = aSc.ToRelativeLayoutRect(deviceBox);
 
   LayoutDeviceRect clipRect =
     LayoutDeviceRect::FromAppUnits(mVisibleRect, appUnitsPerDevPixel);
