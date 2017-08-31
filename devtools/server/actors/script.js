@@ -775,9 +775,9 @@ const ThreadActor = ActorClassWithSpec(threadSpec, {
     };
   },
 
-  _makeOnPop: function (
-    { thread, pauseAndRespond, createValueGrip: createValueGripHook }) {
-    return function (completion) {
+  _makeOnPop: function ({ thread, pauseAndRespond, createValueGrip: createValueGripHook,
+                          startLocation }) {
+    const result = function (completion) {
       // onPop is called with 'this' set to the current frame.
 
       const generatedLocation = thread.sources.getFrameLocation(this);
@@ -807,6 +807,17 @@ const ThreadActor = ActorClassWithSpec(threadSpec, {
         return packet;
       });
     };
+
+    // When stepping out, we don't want to stop at a breakpoint that
+    // happened to be set exactly at the spot where we stepped out.
+    // See bug 970469.  We record the original location here and check
+    // it when a breakpoint is hit.  Furthermore we store this on the
+    // function because, while we could store it directly on the
+    // frame, if we did we'd also have to find the appropriate spot to
+    // clear it.
+    result.originalLocation = startLocation;
+
+    return result;
   },
 
   _makeOnStep: function ({ thread, pauseAndRespond, startFrame,
