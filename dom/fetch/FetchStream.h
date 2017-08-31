@@ -126,8 +126,6 @@ private:
   nsCOMPtr<nsIAsyncInputStream> mInputStream;
 
   UniquePtr<workers::WorkerHolder> mWorkerHolder;
-
-  JS::Heap<JSObject*> mReadableStream;
 };
 
 } // dom namespace

@@ -27,11 +27,10 @@ class cfAction(argparse.Action):
             self.setDockerCommand()
 
         if values:
-            files = [os.path.abspath(x) for x in values]
+            files = [os.path.relpath(os.path.abspath(x), start=cwd) for x in values]
         else:
             files = self.modifiedFiles()
-        files = [os.path.join('/home/worker/nss', os.path.relpath(x, start=cwd))
-                 for x in files]
+        files = [os.path.join('/home/worker/nss', x) for x in files]
 
         # First check if we can run docker.
         try:

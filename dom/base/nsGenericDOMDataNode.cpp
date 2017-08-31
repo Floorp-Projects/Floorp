@@ -33,7 +33,7 @@
 #include "nsCCUncollectableMarker.h"
 #include "mozAutoDocUpdate.h"
 #include "nsTextNode.h"
-
+#include "nsBidiUtils.h"
 #include "PLDHashTable.h"
 #include "mozilla/Sprintf.h"
 #include "nsWrapperCacheInlines.h"
@@ -163,7 +163,8 @@ nsresult
 nsGenericDOMDataNode::GetData(nsAString& aData) const
 {
   if (mText.Is2b()) {
-    aData.Assign(mText.Get2b(), mText.GetLength());
+    aData.Truncate();
+    mText.AppendTo(aData);
   } else {
     // Must use Substring() since nsDependentCString() requires null
     // terminated strings.
@@ -336,28 +337,35 @@ nsGenericDOMDataNode::SetTextInternal(uint32_t aOffset, uint32_t aCount,
   else {
     // Merging old and new
 
+    bool bidi = mText.IsBidi();
+
     // Allocate new buffer
     int32_t newLength = textLength - aCount + aLength;
-    char16_t* to = new char16_t[newLength];
+    // Use nsString and not nsAutoString so that we get a nsStringBuffer which
+    // can be just AddRefed in nsTextFragment.
+    nsString to;
+    to.SetCapacity(newLength);
 
     // Copy over appropriate data
     if (aOffset) {
-      mText.CopyTo(to, 0, aOffset);
+      mText.AppendTo(to, 0, aOffset);
     }
     if (aLength) {
-      memcpy(to + aOffset, aBuffer, aLength * sizeof(char16_t));
+      to.Append(aBuffer, aLength);
+      if (!bidi && (!document || !document->GetBidiEnabled())) {
+        bidi = HasRTLChars(aBuffer, aLength);
+      }
     }
     if (endOffset != textLength) {
-      mText.CopyTo(to + aOffset + aLength, endOffset, textLength - endOffset);
+      mText.AppendTo(to, endOffset, textLength - endOffset);
     }
 
     // If this is marked as "maybe modified frequently", the text should be
     // stored as char16_t since converting char* to char16_t* is expensive.
-    bool ok =
-      mText.SetTo(to, newLength, !document || !document->GetBidiEnabled(),
-                  HasFlag(NS_MAYBE_MODIFIED_FREQUENTLY));
-
-    delete [] to;
+    // Use char16_t also when we have bidi characters.
+    bool use2b = HasFlag(NS_MAYBE_MODIFIED_FREQUENTLY) || bidi;
+    bool ok = mText.SetTo(to, false, use2b);
+    mText.SetBidi(bidi);
 
     NS_ENSURE_TRUE(ok, NS_ERROR_OUT_OF_MEMORY);
   }

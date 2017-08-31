@@ -12,7 +12,6 @@
 #include "mozilla/dom/Exceptions.h"
 #include "nsContentUtils.h"
 #include "nsCOMPtr.h"
-#include "nsIClassInfoImpl.h"
 #include "nsIDocument.h"
 #include "nsIDOMDOMException.h"
 #include "nsIException.h"
@@ -140,17 +139,12 @@ NS_GetNameAndMessageForDOMNSResult(nsresult aNSResult, nsACString& aName,
 namespace mozilla {
 namespace dom {
 
-bool Exception::sEverMadeOneFromFactory = false;
-
-NS_IMPL_CLASSINFO(Exception, nullptr, nsIClassInfo::DOM_OBJECT,
-                  NS_XPCEXCEPTION_CID)
 NS_INTERFACE_MAP_BEGIN_CYCLE_COLLECTION(Exception)
   NS_WRAPPERCACHE_INTERFACE_MAP_ENTRY
   NS_INTERFACE_MAP_ENTRY(Exception)
   NS_INTERFACE_MAP_ENTRY(nsIException)
   NS_INTERFACE_MAP_ENTRY(nsIXPCException)
   NS_INTERFACE_MAP_ENTRY_AMBIGUOUS(nsISupports, nsIException)
-  NS_IMPL_QUERY_CLASSINFO(Exception)
 NS_INTERFACE_MAP_END
 
 NS_IMPL_CYCLE_COLLECTING_ADDREF(Exception)
@@ -186,19 +180,6 @@ Exception::Exception(const nsACString& aMessage,
   mInitialized(false),
   mHoldingJSVal(false)
 {
-  // A little hack... The nsIGenericModule nsIClassInfo scheme relies on there
-  // having been at least one instance made via the factory. Otherwise, the
-  // shared factory/classinsance object never gets created and our QI getter
-  // for our instance's pointer to our nsIClassInfo will always return null.
-  // This is bad because it means that wrapped exceptions will never have a
-  // shared prototype. So... We force one to be created via the factory
-  // *once* and then go about our business.
-  if (!sEverMadeOneFromFactory) {
-    nsCOMPtr<nsIXPCException> e =
-        do_CreateInstance(XPC_EXCEPTION_CONTRACTID);
-    sEverMadeOneFromFactory = true;
-  }
-
   Initialize(aMessage, aResult, aName, aLocation, aData);
 }
 

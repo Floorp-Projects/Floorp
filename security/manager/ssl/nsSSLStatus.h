@@ -50,6 +50,8 @@ public:
   uint16_t mCipherSuite;
   uint16_t mProtocolVersion;
   uint16_t mCertificateTransparencyStatus;
+  nsCString mKeaGroup;
+  nsCString mSignatureSchemeName;
 
   bool mIsDomainMismatch;
   bool mIsNotValidAtThisTime;

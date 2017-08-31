@@ -17,6 +17,7 @@
 #include "mozilla/MemoryReporting.h"
 
 #include "nsString.h"
+#include "nsStringBuffer.h"
 #include "nsReadableUtils.h"
 #include "nsISupportsImpl.h"
 
@@ -79,8 +80,8 @@ public:
    */
   const char16_t *Get2b() const
   {
-    NS_ASSERTION(Is2b(), "not 2b text");
-    return m2b;
+    MOZ_ASSERT(Is2b(), "not 2b text");
+    return static_cast<char16_t*>(m2b->Data());
   }
 
   /**
@@ -117,6 +118,23 @@ public:
   bool SetTo(const char16_t* aBuffer, int32_t aLength, bool aUpdateBidi,
              bool aForce2b);
 
+  bool SetTo(const nsString& aString, bool aUpdateBidi, bool aForce2b)
+  {
+    ReleaseText();
+    if (aForce2b && !aUpdateBidi) {
+      nsStringBuffer* buffer = nsStringBuffer::FromString(aString);
+      if (buffer) {
+        NS_ADDREF(m2b = buffer);
+        mState.mInHeap = true;
+        mState.mIs2b = true;
+        mState.mLength = aString.Length();
+        return true;
+      }
+    }
+
+    return SetTo(aString.get(), aString.Length(), aUpdateBidi, aForce2b);
+  }
+
   /**
    * Append aData to the end of this fragment. If aUpdateBidi is true, contents
    * of the fragment will be scanned, and mState.mIsBidi will be turned on if
@@ -145,7 +163,11 @@ public:
   bool AppendTo(nsAString& aString,
                 const mozilla::fallible_t& aFallible) const {
     if (mState.mIs2b) {
-      bool ok = aString.Append(m2b, mState.mLength, aFallible);
+      if (aString.IsEmpty()) {
+        m2b->ToString(mState.mLength, aString);
+        return true;
+      }
+      bool ok = aString.Append(Get2b(), mState.mLength, aFallible);
       if (!ok) {
         return false;
       }
@@ -180,7 +202,7 @@ public:
                 const mozilla::fallible_t& aFallible) const
   {
     if (mState.mIs2b) {
-      bool ok = aString.Append(m2b + aOffset, aLength, aFallible);
+      bool ok = aString.Append(Get2b() + aOffset, aLength, aFallible);
       if (!ok) {
         return false;
       }
@@ -207,7 +229,12 @@ public:
   char16_t CharAt(int32_t aIndex) const
   {
     MOZ_ASSERT(uint32_t(aIndex) < mState.mLength, "bad index");
-    return mState.mIs2b ? m2b[aIndex] : static_cast<unsigned char>(m1b[aIndex]);
+    return mState.mIs2b ? Get2b()[aIndex] : static_cast<unsigned char>(m1b[aIndex]);
+  }
+
+  void SetBidi(bool aBidi)
+  {
+    mState.mIsBidi = aBidi;
   }
 
   struct FragmentBits {
@@ -238,8 +265,8 @@ private:
   void UpdateBidiFlag(const char16_t* aBuffer, uint32_t aLength);
 
   union {
-    char16_t *m2b;
-    const char *m1b; // This is const since it can point to shared data
+    nsStringBuffer* m2b;
+    const char* m1b; // This is const since it can point to shared data
   };
 
   union {

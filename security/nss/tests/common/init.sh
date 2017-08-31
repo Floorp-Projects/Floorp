@@ -76,10 +76,12 @@ if [ -z "${INIT_SOURCED}" -o "${INIT_SOURCED}" != "TRUE" ]; then
 
         CERT_EXTENSIONS_DIR=${HOSTDIR}/cert_extensions
         STAPLINGDIR=${HOSTDIR}/stapling
+        NOLOGINDIR=${HOSTDIR}/nologin
         SSLGTESTDIR=${HOSTDIR}/ssl_gtests
         GTESTDIR=${HOSTDIR}/gtests
 
         PWFILE=${HOSTDIR}/tests.pw
+        EMPTY_FILE=${HOSTDIR}/tests_empty
         NOISE_FILE=${HOSTDIR}/tests_noise
         CORELIST_FILE=${HOSTDIR}/clist
 
@@ -528,6 +530,7 @@ if [ -z "${INIT_SOURCED}" -o "${INIT_SOURCED}" != "TRUE" ]; then
     D_CLIENT_CA="ClientCA.$version"
     D_SERVER="Server.$version"
     D_CLIENT="Client.$version"
+    D_NOLOGIN="NoLogin.$version"
     D_FIPS="FIPS.$version"
     D_DBPASS="DBPASS.$version"
     D_ECCURVES="ECCURVES.$version"
@@ -554,6 +557,7 @@ if [ -z "${INIT_SOURCED}" -o "${INIT_SOURCED}" != "TRUE" ]; then
     R_EXT_CLIENTDIR=../ext_client
     R_CERT_EXT=../cert_extensions
     R_STAPLINGDIR=../stapling
+    R_NOLOGINDIR=../nologin
     R_SSLGTESTDIR=../ssl_gtests
     R_GTESTDIR=../gtests
 
@@ -568,6 +572,7 @@ if [ -z "${INIT_SOURCED}" -o "${INIT_SOURCED}" != "TRUE" ]; then
     P_R_EVEDIR=${R_EVEDIR}
     P_R_SERVERDIR=${R_SERVERDIR}
     P_R_CLIENTDIR=${R_CLIENTDIR}
+    P_R_NOLOGINDIR=${R_NOLOGINDIR}
     P_R_EXT_SERVERDIR=${R_EXT_SERVERDIR}
     P_R_EXT_CLIENTDIR=${R_EXT_CLIENTDIR}
     if [ -n "${MULTIACCESS_DBM}" ]; then
@@ -578,11 +583,13 @@ if [ -z "${INIT_SOURCED}" -o "${INIT_SOURCED}" != "TRUE" ]; then
         P_R_EVEDIR="multiaccess:${D_EVE}"
         P_R_SERVERDIR="multiaccess:${D_SERVER}"
         P_R_CLIENTDIR="multiaccess:${D_CLIENT}"
+        P_R_NOLOGINDIR="multiaccess:${D_NOLOGIN}"
         P_R_EXT_SERVERDIR="multiaccess:${D_EXT_SERVER}"
         P_R_EXT_CLIENTDIR="multiaccess:${D_EXT_CLIENT}"
     fi
 
     R_PWFILE=../tests.pw
+    R_EMPTY_FILE=../tests_empty
     R_NOISE_FILE=../tests_noise
 
     R_FIPSPWFILE=../tests.fipspw

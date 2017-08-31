@@ -10214,15 +10214,17 @@ void
 nsIFrame::UpdateStyleOfChildAnonBox(nsIFrame* aChildFrame,
                                     ServoRestyleState& aRestyleState)
 {
-  MOZ_ASSERT(aChildFrame->GetParent() == this ||
-             (aChildFrame->IsTableFrame() &&
-              aChildFrame->GetParent()->GetParent() == this) ||
-             (aChildFrame->GetParent()->IsLineFrame() &&
-              aChildFrame->GetParent()->GetParent() == this) ||
-             (aChildFrame->IsTableFrame() &&
-              aChildFrame->GetParent()->GetParent()->IsLineFrame() &&
-              aChildFrame->GetParent()->GetParent()->GetParent() == this),
+#ifdef DEBUG
+  nsIFrame* parent = aChildFrame->GetParent();;
+  if (aChildFrame->IsTableFrame()) {
+    parent = parent->GetParent();
+  }
+  if (parent->IsLineFrame()) {
+    parent = parent->GetParent();
+  }
+  MOZ_ASSERT(nsLayoutUtils::FirstContinuationOrIBSplitSibling(parent) == this,
              "This should only be used for children!");
+#endif // DEBUG
   MOZ_ASSERT(!GetContent() || !aChildFrame->GetContent() ||
              aChildFrame->GetContent() == GetContent(),
              "What content node is it a frame for?");

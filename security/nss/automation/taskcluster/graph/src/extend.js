@@ -20,6 +20,11 @@ const FUZZ_IMAGE = {
   path: "automation/taskcluster/docker-fuzz"
 };
 
+const HACL_GEN_IMAGE = {
+  name: "hacl",
+  path: "automation/taskcluster/docker-hacl"
+};
+
 const WINDOWS_CHECKOUT_CMD =
   "bash -c \"hg clone -r $NSS_HEAD_REVISION $NSS_HEAD_REPOSITORY nss || " +
     "(sleep 2; hg clone -r $NSS_HEAD_REVISION $NSS_HEAD_REPOSITORY nss) || " +
@@ -931,6 +936,17 @@ async function scheduleTools() {
       "/bin/bash",
       "-c",
       "bin/checkout.sh && nss/automation/taskcluster/scripts/run_scan_build.sh"
+    ]
+  }));
+
+  queue.scheduleTask(merge(base, {
+    symbol: "hacl",
+    name: "hacl",
+    image: HACL_GEN_IMAGE,
+    command: [
+      "/bin/bash",
+      "-c",
+      "bin/checkout.sh && nss/automation/taskcluster/scripts/run_hacl.sh"
     ]
   }));
 

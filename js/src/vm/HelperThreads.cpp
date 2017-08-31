@@ -1753,10 +1753,6 @@ GlobalHelperThreadState::mergeParseTaskCompartment(JSContext* cx, ParseTask* par
                                                    Handle<GlobalObject*> global,
                                                    JSCompartment* dest)
 {
-    // Finish any ongoing incremental GC that may affect the destination zone.
-    if (JS::IsIncrementalGCInProgress(cx) && dest->zone()->wasGCStarted())
-        JS::FinishIncrementalGC(cx, JS::gcreason::API);
-
     // After we call LeaveParseTaskZone() it's not safe to GC until we have
     // finished merging the contents of the parse task's compartment into the
     // destination compartment.
