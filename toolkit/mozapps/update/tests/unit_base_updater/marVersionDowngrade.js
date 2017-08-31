@@ -34,16 +34,8 @@ function setupUpdaterTestFinished() {
  */
 function runUpdateFinished() {
   standardInit();
-  Assert.equal(readStatusState(), STATE_NONE,
-               "the status file state" + MSG_SHOULD_EQUAL);
-  Assert.ok(!gUpdateManager.activeUpdate,
-            "the active update should not be defined");
-  Assert.equal(gUpdateManager.updateCount, 1,
-               "the update manager updateCount attribute" + MSG_SHOULD_EQUAL);
-  Assert.equal(gUpdateManager.getUpdateAt(0).state, STATE_FAILED,
-               "the update state" + MSG_SHOULD_EQUAL);
-  Assert.equal(gUpdateManager.getUpdateAt(0).errorCode, VERSION_DOWNGRADE_ERROR,
-               "the update errorCode" + MSG_SHOULD_EQUAL);
+  checkUpdateManager(STATE_NONE, false, STATE_FAILED,
+                     VERSION_DOWNGRADE_ERROR, 1);
   checkPostUpdateRunningFile(false);
   checkFilesAfterUpdateFailure(getApplyDirFile);
   checkUpdateLogContains(STATE_FAILED_VERSION_DOWNGRADE_ERROR);
