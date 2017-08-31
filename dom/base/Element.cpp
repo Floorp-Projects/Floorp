@@ -4390,6 +4390,9 @@ NoteDirtyElement(Element* aElement, uint32_t aBit)
     // existing root, extending bits along the way.
     Element* rootParent = existingRoot->GetFlattenedTreeParentElementForStyle();
     if (Element* commonAncestor = PropagateBits(rootParent, existingBits, aElement)) {
+      MOZ_ASSERT(commonAncestor == aElement ||
+                 commonAncestor == nsContentUtils::GetCommonFlattenedTreeAncestorForStyle(aElement, rootParent));
+
       // We found a common ancestor. Make that the new style root, and clear the
       // bits between the new style root and the document root.
       doc->SetServoRestyleRoot(commonAncestor, existingBits | aBit);
