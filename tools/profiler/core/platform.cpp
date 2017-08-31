@@ -2517,8 +2517,15 @@ AutoSetProfilerEnvVarsForChildProcess::AutoSetProfilerEnvVarsForChildProcess(
                  ActivePS::Entries(lock));
   PR_SetEnv(mSetEntries);
 
-  SprintfLiteral(mSetInterval, "MOZ_PROFILER_STARTUP_INTERVAL=%f",
-                 ActivePS::Interval(lock));
+  // Use AppendFloat instead of SprintfLiteral with %f because the decimal
+  // separator used by %f is locale-dependent. But the string we produce needs
+  // to be parseable by strtod, which only accepts the period character as a
+  // decimal separator. AppendFloat always uses the period character.
+  nsCString setInterval;
+  setInterval.AppendLiteral("MOZ_PROFILER_STARTUP_INTERVAL=");
+  setInterval.AppendFloat(ActivePS::Interval(lock));
+  strncpy(mSetInterval, setInterval.get(), MOZ_ARRAY_LENGTH(mSetInterval));
+  mSetInterval[MOZ_ARRAY_LENGTH(mSetInterval) - 1] = '\0';
   PR_SetEnv(mSetInterval);
 
   SprintfLiteral(mSetFeaturesBitfield,
