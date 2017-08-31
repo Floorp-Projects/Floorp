@@ -144,6 +144,9 @@ const SERVICE_ERRORS = [SERVICE_UPDATER_COULD_NOT_BE_STARTED,
 
 // Error codes 80 through 99 are reserved for nsUpdateService.js and are not
 // defined in common/errors.h
+const ERR_OLDER_VERSION_OR_SAME_BUILD      = 90;
+const ERR_UPDATE_STATE_NONE                = 91;
+const ERR_CHANNEL_CHANGE                   = 92;
 const INVALID_UPDATER_STATE_CODE           = 98;
 const INVALID_UPDATER_STATUS_CODE          = 99;
 
@@ -849,6 +852,8 @@ function cleanupActiveUpdate() {
   // Move the update from the Active Update list into the Past Updates list.
   var um = Cc["@mozilla.org/updates/update-manager;1"].
            getService(Ci.nsIUpdateManager);
+  // Setting |activeUpdate| to null will move the active update to the update
+  // history.
   um.activeUpdate = null;
   um.saveUpdates();
 
@@ -1151,17 +1156,22 @@ UpdatePatch.prototype = {
    */
   serialize: function UpdatePatch_serialize(updates) {
     var patch = updates.createElementNS(URI_UPDATE_NS, "patch");
-    patch.setAttribute("type", this.type);
-    patch.setAttribute("URL", this.URL);
+    // Don't write an errorCode if it evaluates to false since 0 is the same as
+    // no error code.
+    if (this.errorCode) {
+      patch.setAttribute("errorCode", this.errorCode);
+    }
     // finalURL is not available until after the download has started
     if (this.finalURL) {
       patch.setAttribute("finalURL", this.finalURL);
     }
-    patch.setAttribute("size", this.size);
     if (this.selected) {
       patch.setAttribute("selected", this.selected);
     }
+    patch.setAttribute("size", this.size);
     patch.setAttribute("state", this.state);
+    patch.setAttribute("type", this.type);
+    patch.setAttribute("URL", this.URL);
 
     for (let p in this._properties) {
       if (this._properties[p].present) {
@@ -1218,22 +1228,20 @@ UpdatePatch.prototype = {
   },
 
   /**
-   * Returns whether or not the update.status file for this patch exists at the
-   * appropriate location.
+   * See nsIUpdateService.idl
    */
-  get statusFileExists() {
-    var statusFile = getUpdatesDir();
-    statusFile.append(FILE_UPDATE_STATUS);
-    return statusFile.exists();
+  get errorCode() {
+    return this._properties.errorCode || 0;
+  },
+  set errorCode(val) {
+    this._properties.errorCode = val;
   },
 
   /**
    * See nsIUpdateService.idl
    */
   get state() {
-    if (this._properties.state)
-      return this._properties.state;
-    return STATE_NONE;
+    return this._properties.state || STATE_NONE;
   },
   set state(val) {
     this._properties.state = val;
@@ -1306,6 +1314,11 @@ function Update(update) {
       let val = parseInt(attr.value);
       if (val) {
         this.installDate = val;
+      }
+    } else if (attr.name == "errorCode" && attr.value) {
+      let val = parseInt(attr.value);
+      if (val) {
+        this.errorCode = val;
       }
     } else if (attr.name == "isCompleteUpdate") {
       this.isCompleteUpdate = attr.value == "true";
@@ -1383,26 +1396,40 @@ Update.prototype = {
    *
    * We use a copy of the state cached on this object in |_state| only when
    * there is no selected patch, i.e. in the case when we could not load
-   * |.activeUpdate| from the update manager for some reason but still have
+   * |activeUpdate| from the update manager for some reason but still have
    * the update.status file to work with.
    */
   _state: "",
-  set state(state) {
-    if (this.selectedPatch)
-      this.selectedPatch.state = state;
-    this._state = state;
-    return state;
-  },
   get state() {
     if (this.selectedPatch)
       return this.selectedPatch.state;
     return this._state;
   },
+  set state(state) {
+    if (this.selectedPatch)
+      this.selectedPatch.state = state;
+    this._state = state;
+  },
 
   /**
    * See nsIUpdateService.idl
+   *
+   * We use a copy of the errorCode cached on this object in |_errorCode| only
+   * when there is no selected patch, i.e. in the case when we could not load
+   * |activeUpdate| from the update manager for some reason but still have
+   * the update.status file to work with.
    */
-  errorCode: 0,
+  _errorCode: 0,
+  get errorCode() {
+    if (this.selectedPatch)
+      return this.selectedPatch.errorCode;
+    return this._errorCode;
+  },
+  set errorCode(errorCode) {
+    if (this.selectedPatch)
+      this.selectedPatch.errorCode = errorCode;
+    this._errorCode = errorCode;
+  },
 
   /**
    * See nsIUpdateService.idl
@@ -1441,15 +1468,15 @@ Update.prototype = {
     }
     var update = updates.createElementNS(URI_UPDATE_NS, "update");
     update.setAttribute("appVersion", this.appVersion);
+    update.setAttribute("backgroundInterval", this.backgroundInterval);
     update.setAttribute("buildID", this.buildID);
     update.setAttribute("channel", this.channel);
     update.setAttribute("displayVersion", this.displayVersion);
     update.setAttribute("installDate", this.installDate);
     update.setAttribute("isCompleteUpdate", this.isCompleteUpdate);
     update.setAttribute("name", this.name);
-    update.setAttribute("serviceURL", this.serviceURL);
     update.setAttribute("promptWaitTime", this.promptWaitTime);
-    update.setAttribute("backgroundInterval", this.backgroundInterval);
+    update.setAttribute("serviceURL", this.serviceURL);
     update.setAttribute("type", this.type);
 
     if (this.detailsURL) {
@@ -1681,40 +1708,85 @@ UpdateService.prototype = {
              getService(Ci.nsIUpdateManager);
     var update = um.activeUpdate;
     var status = readStatusFile(getUpdatesDir());
-    pingStateAndStatusCodes(update, true, status);
-    // STATE_NONE status typically means that the update.status file is present
-    // but a background download error occurred.
     if (status == STATE_NONE) {
-      LOG("UpdateService:_postUpdateProcessing - no status, no update");
+      // A status of STATE_NONE in _postUpdateProcessing means that the
+      // update.status file is present but there isn't an update in progress so
+      // cleanup the update.
+      LOG("UpdateService:_postUpdateProcessing - status is none");
+      if (!update) {
+        update = new Update(null);
+      }
+      update.state = STATE_FAILED;
+      update.errorCode = ERR_UPDATE_STATE_NONE;
+      update.statusText = gUpdateBundle.GetStringFromName("statusFailed");
+      let newStatus = STATE_FAILED + ": " + ERR_UPDATE_STATE_NONE;
+      pingStateAndStatusCodes(update, true, newStatus);
       cleanupActiveUpdate();
       return;
     }
 
-    // Handle the case when the update is the same or older than the current
-    // version and nsUpdateDriver.cpp skipped updating due to the version being
-    // older than the current version.
-    if (update && update.appVersion &&
-        (status == STATE_PENDING || status == STATE_PENDING_SERVICE ||
-         status == STATE_APPLIED || status == STATE_APPLIED_SERVICE ||
-         status == STATE_PENDING_ELEVATE)) {
-      if (Services.vc.compare(update.appVersion, Services.appinfo.version) < 0 ||
-          Services.vc.compare(update.appVersion, Services.appinfo.version) == 0 &&
-          update.buildID == Services.appinfo.appBuildID) {
-        LOG("UpdateService:_postUpdateProcessing - removing update for older " +
-            "or same application version");
+    if (update && update.channel != UpdateUtils.UpdateChannel) {
+      LOG("UpdateService:_postUpdateProcessing - channel has changed, " +
+          "reloading default preferences to workaround bug 802022");
+      // Workaround to get the distribution preferences loaded (Bug 774618).
+      // This can be removed after bug 802022 is fixed. Now that this code runs
+      // later during startup this code may no longer be necessary but it
+      // shouldn't be removed until after bug 802022 is fixed.
+      let prefSvc = Services.prefs.QueryInterface(Ci.nsIObserver);
+      prefSvc.observe(null, "reload-default-prefs", null);
+      if (update.channel != UpdateUtils.UpdateChannel) {
+        LOG("UpdateService:_postUpdateProcessing - update channel is " +
+            "different than application's channel, removing update. update " +
+            "channel: " + update.channel + ", expected channel: " +
+            UpdateUtils.UpdateChannel);
+        // User switched channels, clear out the old active update and remove
+        // partial downloads
+        update.state = STATE_FAILED;
+        update.errorCode = ERR_CHANNEL_CHANGE;
+        update.statusText = gUpdateBundle.GetStringFromName("statusFailed");
+        let newStatus = STATE_FAILED + ": " + ERR_CHANNEL_CHANGE;
+        pingStateAndStatusCodes(update, true, newStatus);
         cleanupActiveUpdate();
         return;
       }
     }
 
+    // Handle the case when the update is the same or older than the current
+    // version and nsUpdateDriver.cpp skipped updating due to the version being
+    // older than the current version. This also handles the general case when
+    // an update is for an older version or the same version and same build ID.
+    if (update && update.appVersion &&
+        (status == STATE_PENDING || status == STATE_PENDING_SERVICE ||
+         status == STATE_APPLIED || status == STATE_APPLIED_SERVICE ||
+         status == STATE_PENDING_ELEVATE || status == STATE_DOWNLOADING)) {
+      if (Services.vc.compare(update.appVersion, Services.appinfo.version) < 0 ||
+          Services.vc.compare(update.appVersion, Services.appinfo.version) == 0 &&
+          update.buildID == Services.appinfo.appBuildID) {
+        LOG("UpdateService:_postUpdateProcessing - removing update for older " +
+            "application version or same application version with same build " +
+            "ID. update application version: " + update.appVersion + ", " +
+            "application version: " + Services.appinfo.version + ", update " +
+            "build ID: " + update.buildID + ", application build ID: " +
+            Services.appinfo.appBuildID);
+        update.state = STATE_FAILED;
+        update.statusText = gUpdateBundle.GetStringFromName("statusFailed");
+        update.errorCode = ERR_OLDER_VERSION_OR_SAME_BUILD;
+        // This could be split out to report telemetry for each case.
+        let newStatus = STATE_FAILED + ": " + ERR_OLDER_VERSION_OR_SAME_BUILD;
+        pingStateAndStatusCodes(update, true, newStatus);
+        cleanupActiveUpdate();
+        return;
+      }
+    }
+
+    pingStateAndStatusCodes(update, true, status);
     if (status == STATE_DOWNLOADING) {
       LOG("UpdateService:_postUpdateProcessing - patch found in downloading " +
           "state");
-      if (update && update.state != STATE_SUCCEEDED) {
-        // Resume download
-        status = this.downloadUpdate(update, true);
-        if (status == STATE_NONE)
-          cleanupActiveUpdate();
+      // Resume download
+      status = this.downloadUpdate(update, true);
+      if (status == STATE_NONE) {
+        cleanupActiveUpdate();
       }
       return;
     }
@@ -1766,9 +1838,6 @@ UpdateService.prototype = {
 
 
     if (status != STATE_SUCCEEDED) {
-      // Since the update didn't succeed save a copy of the active update's
-      // current state to the updates.xml so it is possible to track failures.
-      um.saveUpdates();
       // Rotate the update logs so the update log isn't removed. By passing
       // false the patch directory won't be removed.
       cleanUpUpdatesDir(false);
@@ -1780,8 +1849,11 @@ UpdateService.prototype = {
       }
       update.statusText = gUpdateBundle.GetStringFromName("installSuccess");
 
-      // Update the patch's metadata.
-      um.activeUpdate = update;
+      // The only time that update is not a reference to activeUpdate is when
+      // activeUpdate is null.
+      if (!um.activeUpdate) {
+        um.activeUpdate = update;
+      }
 
       // Done with this update. Clean it up.
       cleanupActiveUpdate();
@@ -2439,68 +2511,80 @@ UpdateService.prototype = {
  * @constructor
  */
 function UpdateManager() {
-  // Ensure the Active Update file is loaded
-  var updates = this._loadXMLFileIntoArray(getUpdateFile(
-                  [FILE_ACTIVE_UPDATE_XML]));
-  if (updates.length > 0) {
-    // Under some edgecases such as Windows system restore the active-update.xml
-    // will contain a pending update without the status file which will return
-    // STATE_NONE. To recover from this situation clean the updates dir and
-    // rewrite the active-update.xml file without the broken update.
+  // Ensure the active update file is loaded and that the active update is set
+  // in the update manager if there is an existing active update.
+  let activeUpdates = this._loadXMLFileIntoArray(FILE_ACTIVE_UPDATE_XML);
+  if (activeUpdates.length > 0) {
+    this._activeUpdate = activeUpdates[0];
+    // This check is performed here since UpdateService:_postUpdateProcessing
+    // won't be called when there isn't an update.status file.
     if (readStatusFile(getUpdatesDir()) == STATE_NONE) {
+      // Under some edgecases such as Windows system restore the
+      // active-update.xml will contain a pending update without the status
+      // file. To recover from this situation clean the updates dir and move
+      // the active update to the update history.
+      this._activeUpdate.state = STATE_FAILED;
+      this._activeUpdate.errorCode = ERR_UPDATE_STATE_NONE;
+      this._activeUpdate.statusText = gUpdateBundle.GetStringFromName("statusFailed");
+      let newStatus = STATE_FAILED + ": " + ERR_UPDATE_STATE_NONE;
+      pingStateAndStatusCodes(this._activeUpdate, true, newStatus);
+      // Setting |activeUpdate| to null will move the active update to the
+      // update history.
+      this.activeUpdate = null;
+      this.saveUpdates();
       cleanUpUpdatesDir();
-      this._writeUpdatesToXMLFile([], getUpdateFile([FILE_ACTIVE_UPDATE_XML]));
-    } else
-      this._activeUpdate = updates[0];
+    }
   }
 }
 UpdateManager.prototype = {
-  /**
-   * All previously downloaded and installed updates, as an array of nsIUpdate
-   * objects.
-   */
-  _updates: null,
-
   /**
    * The current actively downloading/installing update, as a nsIUpdate object.
    */
   _activeUpdate: null,
 
   /**
-   * Handle Observer Service notifications
-   * @param   subject
-   *          The subject of the notification
-   * @param   topic
-   *          The notification name
-   * @param   data
-   *          Additional data
+   * Whether the update history stored in _updates has changed since it was
+   * loaded.
+   */
+  _updatesDirty: false,
+
+  /**
+   * See nsIObserver.idl
    */
   observe: function UM_observe(subject, topic, data) {
     // Hack to be able to run and cleanup tests by reloading the update data.
     if (topic == "um-reload-update-data") {
-      this._updates = this._loadXMLFileIntoArray(getUpdateFile(
-                        [FILE_UPDATES_XML]));
       this._activeUpdate = null;
-      var updates = this._loadXMLFileIntoArray(getUpdateFile(
-                      [FILE_ACTIVE_UPDATE_XML]));
-      if (updates.length > 0)
-        this._activeUpdate = updates[0];
+      let activeUpdates = this._loadXMLFileIntoArray(FILE_ACTIVE_UPDATE_XML);
+      if (activeUpdates.length > 0) {
+        this._activeUpdate = activeUpdates[0];
+      }
+      delete this._updates;
+      let updates = this._loadXMLFileIntoArray(FILE_UPDATES_XML);
+      Object.defineProperty(this, "_updates", {
+        value: updates,
+        writable: true,
+        configurable: true,
+        enumerable: true
+      });
     }
   },
 
   /**
    * Loads an updates.xml formatted file into an array of nsIUpdate items.
-   * @param   file
-   *          A nsIFile for the updates.xml file
+   * @param   fileName
+   *          The file name in the updates directory to load.
    * @return  The array of nsIUpdate items held in the file.
    */
-  _loadXMLFileIntoArray: function UM__loadXMLFileIntoArray(file) {
+  _loadXMLFileIntoArray: function UM__loadXMLFileIntoArray(fileName) {
+    let updates = [];
+    let file = getUpdateFile([fileName]);
     if (!file.exists()) {
-      LOG("UpdateManager:_loadXMLFileIntoArray: XML file does not exist");
-      return [];
+      LOG("UpdateManager:_loadXMLFileIntoArray - XML file does not exist. " +
+          "path: " + file.path);
+      return updates;
     }
 
-    var result = [];
     var fileStream = Cc["@mozilla.org/network/file-input-stream;1"].
                      createInstance(Ci.nsIFileInputStream);
     fileStream.init(file, FileUtils.MODE_RDONLY, FileUtils.PERMS_FILE, 0);
@@ -2526,43 +2610,44 @@ UpdateManager.prototype = {
           LOG("UpdateManager:_loadXMLFileIntoArray - invalid update");
           continue;
         }
-        result.push(update);
+        updates.push(update);
       }
-    } catch (e) {
+    } catch (ex) {
       LOG("UpdateManager:_loadXMLFileIntoArray - error constructing update " +
-          "list. Exception: " + e);
+          "list. Exception: " + ex);
     }
     fileStream.close();
-    return result;
+    return updates;
   },
 
   /**
-   * Load the update manager, initializing state from state files.
+   * Loads the update history from the updates.xml file and then replaces
+   * _updates with an array of all previously downloaded and installed updates
+   * so the file is only read once.
    */
-  _ensureUpdates: function UM__ensureUpdates() {
-    if (!this._updates) {
-      this._updates = this._loadXMLFileIntoArray(getUpdateFile(
-                        [FILE_UPDATES_XML]));
-      var activeUpdates = this._loadXMLFileIntoArray(getUpdateFile(
-                            [FILE_ACTIVE_UPDATE_XML]));
-      if (activeUpdates.length > 0)
-        this._activeUpdate = activeUpdates[0];
-    }
+  get _updates() {
+    delete this._updates;
+    let updates = this._loadXMLFileIntoArray(FILE_UPDATES_XML);
+    Object.defineProperty(this, "_updates", {
+      value: updates,
+      writable: true,
+      configurable: true,
+      enumerable: true
+    });
+    return this._updates;
   },
 
   /**
    * See nsIUpdateService.idl
    */
-  getUpdateAt: function UM_getUpdateAt(index) {
-    this._ensureUpdates();
-    return this._updates[index];
+  getUpdateAt: function UM_getUpdateAt(aIndex) {
+    return this._updates[aIndex];
   },
 
   /**
    * See nsIUpdateService.idl
    */
   get updateCount() {
-    this._ensureUpdates();
     return this._updates.length;
   },
 
@@ -2570,76 +2655,40 @@ UpdateManager.prototype = {
    * See nsIUpdateService.idl
    */
   get activeUpdate() {
-    if (this._activeUpdate &&
-        this._activeUpdate.channel != UpdateUtils.UpdateChannel) {
-      LOG("UpdateManager:get activeUpdate - channel has changed, " +
-          "reloading default preferences to workaround bug 802022");
-      // Workaround to get distribution preferences loaded (Bug 774618). This
-      // can be removed after bug 802022 is fixed.
-      let prefSvc = Services.prefs.QueryInterface(Ci.nsIObserver);
-      prefSvc.observe(null, "reload-default-prefs", null);
-      if (this._activeUpdate.channel != UpdateUtils.UpdateChannel) {
-        // User switched channels, clear out any old active updates and remove
-        // partial downloads
-        this._activeUpdate = null;
-        this.saveUpdates();
-
-        // Destroy the updates directory, since we're done with it.
-        cleanUpUpdatesDir();
-      }
-    }
     return this._activeUpdate;
   },
-  set activeUpdate(activeUpdate) {
-    this._addUpdate(activeUpdate);
-    this._activeUpdate = activeUpdate;
-    if (!activeUpdate) {
-      // If |activeUpdate| is null, we have updated both lists - the active list
-      // and the history list, so we want to write both files.
-      this.saveUpdates();
-    } else
-      this._writeUpdatesToXMLFile([this._activeUpdate],
-                                  getUpdateFile([FILE_ACTIVE_UPDATE_XML]));
-    return activeUpdate;
-  },
-
-  /**
-   * Add an update to the Updates list. If the item already exists in the list,
-   * replace the existing value with the new value.
-   * @param   update
-   *          The nsIUpdate object to add.
-   */
-  _addUpdate: function UM__addUpdate(update) {
-    if (!update)
-      return;
-    this._ensureUpdates();
-    // Only the latest update entry is checked so the the latest successful
-    // step for an update is recorded and all failures are kept. This way
-    // mutliple attempts to update for the same update are kept in the update
-    // history.
-    if (this._updates &&
-        update.state != STATE_FAILED &&
-        this._updates[0] &&
-        this._updates[0].state != STATE_FAILED &&
-        this._updates[0].appVersion == update.appVersion &&
-        this._updates[0].buildID == update.buildID) {
-      // Replace the existing entry with the new value, updating
-      // all metadata.
-      this._updates[0] = update;
-      return;
+  set activeUpdate(aActiveUpdate) {
+    if (!aActiveUpdate && this._activeUpdate) {
+      this._updatesDirty = true;
+      // Add the current active update to the front of the update history.
+      this._updates.unshift(this._activeUpdate);
+      // Limit the update history to 10 updates.
+      this._updates.splice(10);
     }
-    // Otherwise add it to the front of the list.
-    this._updates.unshift(update);
+
+    this._activeUpdate = aActiveUpdate;
   },
 
   /**
-   * Serializes an array of updates to an XML file
+   * Serializes an array of updates to an XML file or removes the file if the
+   * array length is 0.
    * @param   updates
    *          An array of nsIUpdate objects
-   * @param   file
-   *          The nsIFile object to serialize to
+   * @param   fileName
+   *          The file name in the updates directory to write to.
    */
-  _writeUpdatesToXMLFile: function UM__writeUpdatesToXMLFile(updates, file) {
+  _writeUpdatesToXMLFile: function UM__writeUpdatesToXMLFile(updates, fileName) {
+    let file = getUpdateFile([fileName]);
+    if (updates.length == 0) {
+      LOG("UpdateManager:_writeUpdatesToXMLFile - no updates to write. " +
+          "removing file: " + file.path);
+      try {
+        file.remove(false);
+      } catch (e) {
+      }
+      return;
+    }
+
     var fos = Cc["@mozilla.org/network/safe-file-output-stream;1"].
               createInstance(Ci.nsIFileOutputStream);
     var modeFlags = FileUtils.MODE_WRONLY | FileUtils.MODE_CREATE |
@@ -2656,11 +2705,7 @@ UpdateManager.prototype = {
       var doc = parser.parseFromString(EMPTY_UPDATES_DOCUMENT, "text/xml");
 
       for (var i = 0; i < updates.length; ++i) {
-        // If appVersion isn't defined don't add the update. This happens when
-        // cleaning up invalid updates (e.g. incorrect channel).
-        if (updates[i] && updates[i].appVersion) {
-          doc.documentElement.appendChild(updates[i].serialize(doc));
-        }
+        doc.documentElement.appendChild(updates[i].serialize(doc));
       }
 
       var serializer = Cc["@mozilla.org/xmlextras/xmlserializer;1"].
@@ -2676,24 +2721,17 @@ UpdateManager.prototype = {
    * See nsIUpdateService.idl
    */
   saveUpdates: function UM_saveUpdates() {
-    this._writeUpdatesToXMLFile([this._activeUpdate],
-                                getUpdateFile([FILE_ACTIVE_UPDATE_XML]));
-    if (this._activeUpdate)
-      this._addUpdate(this._activeUpdate);
-
-    this._ensureUpdates();
-    // Don't write updates that don't have a state to the updates.xml file.
-    if (this._updates) {
-      let updates = this._updates.slice();
-      for (let i = updates.length - 1; i >= 0; --i) {
-        let state = updates[i].state;
-        if (state == STATE_NONE) {
-          updates.splice(i, 1);
-        }
-      }
-
-      this._writeUpdatesToXMLFile(updates.slice(0, 20),
-                                  getUpdateFile([FILE_UPDATES_XML]));
+    // The active update stored in the active-update.xml file will change during
+    // the lifetime of an active update and should always be updated when
+    // saveUpdates is called.
+    this._writeUpdatesToXMLFile(this._activeUpdate ? [this._activeUpdate] : [],
+                                FILE_ACTIVE_UPDATE_XML);
+    // The update history stored in the updates.xml file should only need to be
+    // updated when an active update has been added to it in which case
+    // |_updatesDirty| will be true.
+    if (this._updatesDirty) {
+      this._updatesDirty = false;
+      this._writeUpdatesToXMLFile(this._updates.slice(0, 10), FILE_UPDATES_XML);
     }
   },
 
@@ -2712,11 +2750,6 @@ UpdateManager.prototype = {
     if (update.state == STATE_FAILED && parts[1]) {
       update.errorCode = parseInt(parts[1]);
     }
-    let um = Cc["@mozilla.org/updates/update-manager;1"].
-             getService(Ci.nsIUpdateManager);
-    // Save a copy of the active update's current state to the updates.xml so
-    // it is possible to track failures.
-    um.saveUpdates();
 
     // Rotate the update logs so the update log isn't removed if a complete
     // update is downloaded. By passing false the patch directory won't be
@@ -2728,12 +2761,19 @@ UpdateManager.prototype = {
         handleFallbackToCompleteUpdate(update, true);
       }
 
+      // This can be removed after the update ui under update/content is
+      // removed.
       update.QueryInterface(Ci.nsIWritablePropertyBag);
       update.setProperty("stagingFailed", "true");
     }
     if (update.state == STATE_APPLIED && shouldUseService()) {
       writeStatusFile(getUpdatesDir(), update.state = STATE_APPLIED_SERVICE);
     }
+
+    // Now that the active update's properties have been updated write the
+    // active-update.xml to disk. Since there have been no changes to the update
+    // history the updates.xml will not be written to disk.
+    this.saveUpdates();
 
     // Send an observer notification which the app update doorhanger uses to
     // display a restart notification
@@ -3605,6 +3645,8 @@ Downloader.prototype = {
              getService(Ci.nsIUpdateManager);
     if (deleteActiveUpdate) {
       this._update.installDate = (new Date()).getTime();
+      // Setting |activeUpdate| to null will move the active update to the
+      // update history.
       um.activeUpdate = null;
     } else if (um.activeUpdate) {
       um.activeUpdate.state = state;
@@ -3664,13 +3706,11 @@ Downloader.prototype = {
         // downloading) and if at any point this was a foreground download
         // notify the user about the error. If the update was a background
         // update there is no notification since the user won't be expecting it.
-        if (!Services.wm.getMostRecentWindow(UPDATE_WINDOW_NAME)) {
-          this._update.QueryInterface(Ci.nsIWritablePropertyBag);
-          if (this._update.getProperty("foregroundDownload") == "true") {
-            let prompter = Cc["@mozilla.org/updates/update-prompt;1"].
-                           createInstance(Ci.nsIUpdatePrompt);
-            prompter.showUpdateError(this._update);
-          }
+        if (!Services.wm.getMostRecentWindow(UPDATE_WINDOW_NAME) &&
+            this._update.getProperty("foregroundDownload") == "true") {
+          let prompter = Cc["@mozilla.org/updates/update-prompt;1"].
+                         createInstance(Ci.nsIUpdatePrompt);
+          prompter.showUpdateError(this._update);
         }
 
         // Prevent leaking the update object (bug 454964).
