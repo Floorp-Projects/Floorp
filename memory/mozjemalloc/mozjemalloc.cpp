@@ -4705,8 +4705,7 @@ MozJemalloc::memalign(size_t aAlignment, size_t aSize)
   MOZ_ASSERT(((aAlignment - 1) & aAlignment) == 0);
 
   if (malloc_init()) {
-    ret = nullptr;
-    goto RETURN;
+    return nullptr;
   }
 
   if (aSize == 0) {
@@ -4716,7 +4715,6 @@ MozJemalloc::memalign(size_t aAlignment, size_t aSize)
   aAlignment = aAlignment < sizeof(void*) ? sizeof(void*) : aAlignment;
   ret = ipalloc(aAlignment, aSize);
 
-RETURN:
   return ret;
 }
 
