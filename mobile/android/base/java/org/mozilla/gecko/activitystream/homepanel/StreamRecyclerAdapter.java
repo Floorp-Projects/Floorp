@@ -51,6 +51,9 @@ public class StreamRecyclerAdapter extends RecyclerView.Adapter<StreamViewHolder
     private List<RowModel> recyclerViewModel; // List of item types backing this RecyclerView.
     private List<TopStory> topStoriesQueue;
 
+    // TODO: Replace temporary pref placeholder with pref
+    public static final boolean POCKET_ENABLED = false;
+
     private final RowItemType[] FIXED_ROWS = {RowItemType.TOP_PANEL, RowItemType.WELCOME, RowItemType.TOP_STORIES_TITLE, RowItemType.HIGHLIGHTS_TITLE};
     private final int MAX_TOP_STORIES = 3;
 
@@ -124,7 +127,7 @@ public class StreamRecyclerAdapter extends RecyclerView.Adapter<StreamViewHolder
         if (type == RowItemType.TOP_PANEL.getViewType()) {
             return new TopPanelRow(inflater.inflate(TopPanelRow.LAYOUT_ID, parent, false), onUrlOpenListener, onUrlOpenInBackgroundListener);
         } else if (type == RowItemType.TOP_STORIES_TITLE.getViewType()) {
-            return new StreamTitleRow(inflater.inflate(StreamTitleRow.LAYOUT_ID, parent, false), R.string.activity_stream_topstories);
+            return new StreamTitleRow(inflater.inflate(StreamTitleRow.LAYOUT_ID, parent, false), R.string.activity_stream_topstories, POCKET_ENABLED);
         } else if (type == RowItemType.TOP_STORIES_ITEM.getViewType()) {
             return new WebpageItemRow(inflater.inflate(WebpageItemRow.LAYOUT_ID, parent, false), this);
         } else if (type == RowItemType.WELCOME.getViewType()) {
@@ -132,7 +135,7 @@ public class StreamRecyclerAdapter extends RecyclerView.Adapter<StreamViewHolder
         } else if (type == RowItemType.HIGHLIGHT_ITEM.getViewType()) {
             return new WebpageItemRow(inflater.inflate(WebpageItemRow.LAYOUT_ID, parent, false), this);
         } else if (type == RowItemType.HIGHLIGHTS_TITLE.getViewType()) {
-            return new StreamTitleRow(inflater.inflate(StreamTitleRow.LAYOUT_ID, parent, false), R.string.activity_stream_highlights);
+            return new StreamTitleRow(inflater.inflate(StreamTitleRow.LAYOUT_ID, parent, false), R.string.activity_stream_highlights, true);
         } else {
             throw new IllegalStateException("Missing inflation for ViewType " + type);
         }

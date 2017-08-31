@@ -92,7 +92,9 @@ public class ActivityStreamPanel extends FrameLayout {
     public void load(LoaderManager lm) {
         lm.initLoader(LOADER_ID_TOPSITES, null, new TopSitesCallback());
         lm.initLoader(LOADER_ID_HIGHLIGHTS, null, new HighlightsCallbacks());
-        lm.initLoader(LOADER_ID_POCKET, null, new PocketStoriesCallbacks());
+        if (StreamRecyclerAdapter.POCKET_ENABLED) {
+            lm.initLoader(LOADER_ID_POCKET, null, new PocketStoriesCallbacks());
+        }
 
     }
 
