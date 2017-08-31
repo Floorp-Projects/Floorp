@@ -1,0 +1,15 @@
+/* Rights Illustration */
+
+.rights-header {
+  background-image: url("chrome://global/skin/illustrations/about-rights.svg");
+  background-repeat: no-repeat;
+  background-position: right center;
+  min-height: 300px;
+  display: flex;
+  align-items: center;
+  padding-inline-end: 320px;
+}
+
+body[dir="rtl"] .rights-header{
+   background-position: left center;
+}
