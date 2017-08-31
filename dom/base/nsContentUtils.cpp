@@ -2645,6 +2645,26 @@ nsContentUtils::ContentIsFlattenedTreeDescendantOf(
 }
 
 // static
+bool
+nsContentUtils::ContentIsFlattenedTreeDescendantOfForStyle(
+  const nsINode* aPossibleDescendant,
+  const nsINode* aPossibleAncestor)
+{
+  NS_PRECONDITION(aPossibleDescendant, "The possible descendant is null!");
+  NS_PRECONDITION(aPossibleAncestor, "The possible ancestor is null!");
+
+  do {
+    if (aPossibleDescendant == aPossibleAncestor) {
+      return true;
+    }
+    aPossibleDescendant =
+      aPossibleDescendant->GetFlattenedTreeParentNodeForStyle();
+  } while (aPossibleDescendant);
+
+  return false;
+}
+
+// static
 nsresult
 nsContentUtils::GetAncestors(nsINode* aNode,
                              nsTArray<nsINode*>& aArray)
