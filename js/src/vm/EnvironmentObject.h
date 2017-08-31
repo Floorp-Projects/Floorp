@@ -510,7 +510,8 @@ class LexicalEnvironmentObject : public EnvironmentObject
     static LexicalEnvironmentObject* create(JSContext* cx, Handle<LexicalScope*> scope,
                                             AbstractFramePtr frame);
     static LexicalEnvironmentObject* createGlobal(JSContext* cx, Handle<GlobalObject*> global);
-    static LexicalEnvironmentObject* createNonSyntactic(JSContext* cx, HandleObject enclosing);
+    static LexicalEnvironmentObject* createNonSyntactic(JSContext* cx, HandleObject enclosing,
+                                                        HandleObject thisv);
     static LexicalEnvironmentObject* createHollowForDebug(JSContext* cx,
                                                           Handle<LexicalScope*> scope);
 
