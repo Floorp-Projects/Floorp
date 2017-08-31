@@ -1084,6 +1084,14 @@ IsGlobalLexicalEnvironment(JSObject* env)
            env->as<LexicalEnvironmentObject>().isGlobal();
 }
 
+inline bool
+IsNSVOLexicalEnvironment(JSObject* env)
+{
+    return env->is<LexicalEnvironmentObject>() &&
+           env->as<LexicalEnvironmentObject>().enclosingEnvironment()
+                                              .is<NonSyntacticVariablesObject>();
+}
+
 inline JSObject*
 MaybeUnwrapWithEnvironment(JSObject* env)
 {
