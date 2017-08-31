@@ -1168,7 +1168,9 @@ class MercurialRevisionFinder(BaseFinder):
         # operation requires this list.
         out = self._client.rawcommand([b'files', b'--rev', str(self._rev)])
         for relpath in out.splitlines():
-            self._files[relpath] = None
+            # Mercurial may use \ as path separator on Windows. So use
+            # normpath().
+            self._files[mozpath.normpath(relpath)] = None
 
     def _find(self, pattern):
         if self._recognize_repo_paths:
@@ -1177,6 +1179,7 @@ class MercurialRevisionFinder(BaseFinder):
         return self._find_helper(pattern, self._files, self._get)
 
     def get(self, path):
+        path = mozpath.normpath(path)
         if self._recognize_repo_paths:
             if not path.startswith(self._root):
                 raise ValueError('lookups in recognize_repo_paths mode must be '
