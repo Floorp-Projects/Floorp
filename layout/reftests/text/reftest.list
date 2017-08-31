@@ -354,3 +354,5 @@ HTTP(..) == space-font-1.html space-font-1-ref.html
 
 == letter-spacing-nolig-1.html letter-spacing-nolig-1-ref.html
 HTTP(..) == letter-spacing-nolig-2.html letter-spacing-nolig-2.html
+
+== ethiopic-wordspace.html ethiopic-wordspace-ref.html
