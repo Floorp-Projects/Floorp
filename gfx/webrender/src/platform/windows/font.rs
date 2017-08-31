@@ -2,8 +2,8 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-use api::{FontKey, FontRenderMode, GlyphDimensions};
-use api::{FontInstance, GlyphKey, GlyphOptions, SubpixelDirection};
+use api::{FontInstance, FontInstancePlatformOptions, FontKey, FontRenderMode};
+use api::{GlyphDimensions, GlyphKey, GlyphOptions, SubpixelDirection};
 use gamma_lut::{GammaLut, Color as ColorLut};
 use internal_types::FastHashMap;
 
@@ -46,9 +46,9 @@ fn dwrite_texture_type(render_mode: FontRenderMode) ->
     }
 }
 
-fn dwrite_measure_mode(render_mode: FontRenderMode, options: Option<GlyphOptions>) ->
+fn dwrite_measure_mode(render_mode: FontRenderMode, options: Option<FontInstancePlatformOptions>) ->
                        dwrote::DWRITE_MEASURING_MODE {
-    if let Some(GlyphOptions{ force_gdi_rendering: true, .. }) = options {
+    if let Some(FontInstancePlatformOptions{ force_gdi_rendering: true, .. }) = options {
         return dwrote::DWRITE_MEASURING_MODE_GDI_CLASSIC;
     }
 
@@ -63,9 +63,9 @@ fn dwrite_render_mode(font_face: &dwrote::FontFace,
                       render_mode: FontRenderMode,
                       em_size: f32,
                       measure_mode: dwrote::DWRITE_MEASURING_MODE,
-                      options: Option<GlyphOptions>) ->
+                      options: Option<FontInstancePlatformOptions>) ->
                       dwrote::DWRITE_RENDERING_MODE {
-    if let Some(GlyphOptions{ force_gdi_rendering: true, .. }) = options {
+    if let Some(FontInstancePlatformOptions{ force_gdi_rendering: true, .. }) = options {
         return dwrote::DWRITE_RENDERING_MODE_GDI_CLASSIC;
     }
 
@@ -175,12 +175,12 @@ impl FontContext {
         };
 
         let dwrite_measure_mode = dwrite_measure_mode(font.render_mode,
-                                                      font.glyph_options);
+                                                      font.platform_options);
         let dwrite_render_mode = dwrite_render_mode(face,
                                                     font.render_mode,
                                                     font.size.to_f32_px(),
                                                     dwrite_measure_mode,
-                                                    font.glyph_options);
+                                                    font.platform_options);
 
         let (x_offset, y_offset) = font.get_subpx_offset(key);
         let transform = Some(
@@ -302,7 +302,7 @@ impl FontContext {
         let mut pixels = analysis.create_alpha_texture(texture_type, bounds);
 
         if font.render_mode != FontRenderMode::Mono {
-            let lut_correction = match font.glyph_options {
+            let lut_correction = match font.platform_options {
                 Some(option) => {
                     if option.force_gdi_rendering {
                         &self.gdi_gamma_lut

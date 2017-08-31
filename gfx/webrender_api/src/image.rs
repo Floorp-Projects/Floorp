@@ -6,7 +6,7 @@ use std::sync::Arc;
 use {DeviceUintRect, DevicePoint};
 use {IdNamespace};
 use {TileOffset, TileSize};
-use font::{FontKey, FontTemplate};
+use font::{FontKey, FontInstanceKey, FontTemplate};
 
 #[repr(C)]
 #[derive(Clone, Copy, Debug, Deserialize, Eq, Hash, PartialEq, Serialize)]
@@ -59,14 +59,14 @@ pub enum ImageFormat {
 }
 
 impl ImageFormat {
-    pub fn bytes_per_pixel(self) -> Option<u32> {
+    pub fn bytes_per_pixel(self) -> u32 {
         match self {
-            ImageFormat::A8 => Some(1),
-            ImageFormat::RGB8 => Some(3),
-            ImageFormat::BGRA8 => Some(4),
-            ImageFormat::RGBAF32 => Some(16),
-            ImageFormat::RG8 => Some(2),
-            ImageFormat::Invalid => None,
+            ImageFormat::A8 => 1,
+            ImageFormat::RGB8 => 3,
+            ImageFormat::BGRA8 => 4,
+            ImageFormat::RGBAF32 => 16,
+            ImageFormat::RG8 => 2,
+            ImageFormat::Invalid => 0,
         }
     }
 }
@@ -94,7 +94,7 @@ impl ImageDescriptor {
     }
 
     pub fn compute_stride(&self) -> u32 {
-        self.stride.unwrap_or(self.width * self.format.bytes_per_pixel().unwrap())
+        self.stride.unwrap_or(self.width * self.format.bytes_per_pixel())
     }
 }
 
@@ -165,6 +165,8 @@ pub trait BlobImageRenderer: Send {
     fn resolve(&mut self, key: BlobImageRequest) -> BlobImageResult;
 
     fn delete_font(&mut self, key: FontKey);
+
+    fn delete_font_instance(&mut self, key: FontInstanceKey);
 }
 
 pub type BlobImageData = Vec<u8>;

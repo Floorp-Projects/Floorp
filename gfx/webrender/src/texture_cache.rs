@@ -8,6 +8,7 @@ use freelist::{FreeList, FreeListHandle, UpsertResult, WeakFreeListHandle};
 use gpu_cache::{GpuCache, GpuCacheHandle};
 use internal_types::{SourceTexture, TextureUpdate, TextureUpdateOp};
 use internal_types::{CacheTextureId, RenderTargetMode, TextureUpdateList, TextureUpdateSource};
+use profiler::{ResourceProfileCounter, TextureCacheProfileCounters};
 use resource_cache::CacheItem;
 use std::cmp;
 use std::mem;
@@ -223,8 +224,13 @@ impl TextureCache {
         self.frame_id = frame_id;
     }
 
-    pub fn end_frame(&mut self) {
+    pub fn end_frame(&mut self, texture_cache_profile: &mut TextureCacheProfileCounters) {
         self.expire_old_standalone_entries();
+
+        self.array_a8.update_profile(&mut texture_cache_profile.pages_a8);
+        self.array_rg8.update_profile(&mut texture_cache_profile.pages_rg8);
+        self.array_rgb8.update_profile(&mut texture_cache_profile.pages_rgb8);
+        self.array_rgba8.update_profile(&mut texture_cache_profile.pages_rgba8);
     }
 
     // Request an item in the texture cache. All images that will
@@ -835,6 +841,18 @@ impl TextureArray {
         }
     }
 
+    fn update_profile(&self, counter: &mut ResourceProfileCounter) {
+        if self.is_allocated {
+            let size = TEXTURE_ARRAY_LAYERS as u32 *
+                       TEXTURE_LAYER_DIMENSIONS *
+                       TEXTURE_LAYER_DIMENSIONS *
+                       self.format.bytes_per_pixel();
+            counter.set(TEXTURE_ARRAY_LAYERS as usize, size as usize);
+        } else {
+            counter.set(0, 0);
+        }
+    }
+
     // Allocate space in this texture array.
     fn alloc(&mut self,
              width: u32,
@@ -957,7 +975,7 @@ impl TextureUpdate {
             }
             ImageData::Raw(bytes) => {
                 let finish = descriptor.offset +
-                             descriptor.width * descriptor.format.bytes_per_pixel().unwrap_or(0) +
+                             descriptor.width * descriptor.format.bytes_per_pixel() +
                              (descriptor.height-1) * descriptor.compute_stride();
                 assert!(bytes.len() >= finish as usize);
 

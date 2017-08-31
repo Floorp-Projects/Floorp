@@ -127,4 +127,13 @@ impl Scene {
 
         self.pipeline_map.insert(pipeline_id, new_pipeline);
     }
+
+    pub fn remove_pipeline(&mut self,
+                           pipeline_id: PipelineId) {
+        if self.root_pipeline_id == Some(pipeline_id) {
+            self.root_pipeline_id = None;
+        }
+        self.display_lists.remove(&pipeline_id);
+        self.pipeline_map.remove(&pipeline_id);
+    }
 }

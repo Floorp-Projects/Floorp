@@ -210,6 +210,7 @@ impl api::BlobImageRenderer for CheckerboardRenderer {
         Err(api::BlobImageError::Other("Channel closed".into()))
     }
     fn delete_font(&mut self, _font: api::FontKey) { }
+    fn delete_font_instance(&mut self, _instance: api::FontInstanceKey) { }
 }
 
 struct App {
