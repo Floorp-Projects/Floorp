@@ -258,4 +258,7 @@
     <!-- Full bookmark management -->
     <dimen name="bookmark_folder_first_child_padding">40dp</dimen>
     <dimen name="bookmark_folder_child_padding">16dp</dimen>
+
+    <!-- Dialogs -->
+    <dimen name="dialog_switchpreferenceview_padding">24dp</dimen>
 </resources>
