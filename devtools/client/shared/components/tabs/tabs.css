@@ -81,10 +81,6 @@
 .theme-light .tabs .tabs-menu-item {
   margin: 0;
   padding: 0;
-  border-style: solid;
-  border-width: 0;
-  border-inline-start-width: 1px;
-  border-color: var(--theme-splitter-color);
   color: var(--theme-content-color1);
 }
 
@@ -98,20 +94,14 @@
   padding: 3px 15px;
 }
 
-.theme-dark .tabs .tabs-menu-item:hover:not(.is-active),
-.theme-light .tabs .tabs-menu-item:hover:not(.is-active) {
+.theme-dark .tabs .tabs-menu-item:hover,
+.theme-light .tabs .tabs-menu-item:hover {
   background-color: var(--theme-toolbar-hover);
 }
 
 .theme-dark .tabs .tabs-menu-item:hover:active:not(.is-active),
 .theme-light .tabs .tabs-menu-item:hover:active:not(.is-active) {
   background-color: var(--theme-toolbar-hover-active);
-}
-
-.theme-dark .tabs .tabs-menu-item.is-active,
-.theme-light .tabs .tabs-menu-item.is-active {
-  background-color: var(--theme-selection-background);
-  color: var(--theme-selection-color);
 }
 
 /* Dark Theme */
