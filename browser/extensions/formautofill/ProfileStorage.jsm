@@ -1332,26 +1332,14 @@ class Addresses extends AutofillRecords {
       return;
     }
 
-    let region = address["tel-country-code"] || address.country || FormAutofillUtils.DEFAULT_COUNTRY_CODE;
-    let number;
+    FormAutofillUtils.compressTel(address);
 
-    if (address.tel) {
-      number = address.tel;
-    } else if (address["tel-national"]) {
-      number = address["tel-national"];
-    } else if (address["tel-local"]) {
-      number = (address["tel-area-code"] || "") + address["tel-local"];
-    } else if (address["tel-local-prefix"] && address["tel-local-suffix"]) {
-      number = (address["tel-area-code"] || "") + address["tel-local-prefix"] + address["tel-local-suffix"];
-    }
+    let possibleRegion = address.country || FormAutofillUtils.DEFAULT_COUNTRY_CODE;
+    let tel = PhoneNumber.Parse(address.tel, possibleRegion);
 
-    let tel = PhoneNumber.Parse(number, region);
     if (tel && tel.internationalNumber) {
       // Force to save numbers in E.164 format if parse success.
       address.tel = tel.internationalNumber;
-    } else if (!address.tel) {
-      // Save the original number anyway if "tel" is omitted.
-      address.tel = number;
     }
 
     TEL_COMPONENTS.forEach(c => delete address[c]);
