@@ -467,6 +467,7 @@ cert_add_cert()
 cert_all_CA()
 {
     echo nss > ${PWFILE}
+    echo > ${EMPTY_FILE}
 
     ALL_CU_SUBJECT="CN=NSS Test CA, O=BOGUS NSS, L=Mountain View, ST=California, C=US"
     cert_CA $CADIR TestCA -x "CTu,CTu,CTu" ${D_CA} "1"
@@ -1199,6 +1200,12 @@ cert_ssl()
   cp -r ${R_SERVERDIR} ${R_STAPLINGDIR}
   pk12u -o ${R_STAPLINGDIR}/ca.p12 -n TestCA -k ${R_PWFILE} -w ${R_PWFILE} -d ${R_CADIR}
   pk12u -i ${R_STAPLINGDIR}/ca.p12 -k ${R_PWFILE} -w ${R_PWFILE} -d ${R_STAPLINGDIR}
+
+  echo "$SCRIPTNAME: Creating database for strsclnt no login tests  ==============="
+  echo "cp -r ${CLIENTDIR} ${NOLOGINDIR}"
+  cp -r ${R_CLIENTDIR} ${R_NOLOGINDIR}
+  # change the password to empty
+  certu -W -d "${R_NOLOGINDIR}" -f "${R_PWFILE}" -@ "${R_EMPTY_FILE}" 2>&1
 }
 
 ############################## cert_stresscerts ################################
@@ -1268,6 +1275,11 @@ MODSCRIPT
   else
     html_passed "${CU_ACTION}"
   fi
+
+  CU_ACTION="Setting invalid database password in FIPS mode"
+  RETEXPECTED=255
+  certu -W -d "${PROFILEDIR}" -f "${R_FIPSPWFILE}" -@ "${R_FIPSBADPWFILE}" 2>&1
+  RETEXPECTED=0
 
   CU_ACTION="Generate Certificate for ${CERTNAME}"
   CU_SUBJECT="CN=${CERTNAME}, E=fips@bogus.com, O=BOGUS NSS, OU=FIPS PUB 140, L=Mountain View, ST=California, C=US"
