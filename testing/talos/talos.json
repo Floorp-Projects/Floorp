@@ -42,6 +42,10 @@
         "g3-e10s": {
             "tests": ["dromaeo_dom"]
         },
+        "g3-stylo-e10s": {
+            "tests": ["dromaeo_dom"],
+            "talos_options": ["--enable-stylo"]
+        },
         "g4-e10s": {
             "tests": ["basic_compositor_video", "glvideo"]
         },

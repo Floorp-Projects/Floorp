@@ -22,18 +22,18 @@ linux32/debug:
 linux32/opt:
     build-platform: linux/opt
     test-sets:
-        -  linux32-tests
-        -  linux32-opt-tests
+        - linux32-tests
+        - linux32-opt-tests
 linux32-nightly/opt:
     build-platform: linux-nightly/opt
     test-sets:
-        -  linux32-tests
-        -  linux32-opt-tests
+        - linux32-tests
+        - linux32-opt-tests
 linux32-devedition/opt:
     build-platform: linux-devedition-nightly/opt
     test-sets:
-        -  linux32-tests
-        -  linux32-opt-tests
+        - linux32-tests
+        - linux32-opt-tests
 
 linux64/debug:
     build-platform: linux64/debug
@@ -50,6 +50,7 @@ linux64/opt:
         - reftest-stylo
         - desktop-screenshot-capture
         - talos
+        - linux-talos-stylo
         - awsy
 linux64-nightly/opt:
     build-platform: linux64-nightly/opt
@@ -74,6 +75,7 @@ linux64-pgo/opt:
         - common-tests
         - web-platform-tests
         - talos
+        - linux-talos-stylo
 
 linux64-asan/opt:
     build-platform: linux64-asan/opt
@@ -102,7 +104,6 @@ linux64-stylo/opt:
         - awsy-stylo
         - stylo-tests
         - devtools-tests
-        - talos
 macosx64-stylo/debug:
     build-platform: macosx64/debug
     test-sets:
