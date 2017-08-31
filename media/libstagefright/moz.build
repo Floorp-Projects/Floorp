@@ -21,7 +21,10 @@ if CONFIG['OS_TARGET'] == 'WINNT':
         DEFINES['strncasecmp'] = 'strnicmp'
     DEFINES['HAVE_MS_C_RUNTIME'] = True
     DEFINES['__PRETTY_FUNCTION__'] = '__FUNCTION__'
-    LOCAL_INCLUDES += [ 'ports/win32/include' ]
+    if CONFIG['CC_TYPE'] == 'gcc':
+        LOCAL_INCLUDES += [ 'ports/mingw32/include' ]
+    else:
+        LOCAL_INCLUDES += [ 'ports/win32/include' ]
 elif CONFIG['OS_TARGET'] == 'Darwin':
     DEFINES['HAVE_SYS_UIO_H'] = True
     DEFINES['off64_t'] = 'off_t'
