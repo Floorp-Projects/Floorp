@@ -325,7 +325,7 @@ public:
         WRAP(   fStreamPostD3DTextureNV12ANGLE(dpy, stream, texture, attrib_list) )
 
     // ANGLE_device_creation
-    EGLDeviceEXT fCreateDeviceANGLE(EGLint device_type, void *native_device, const EGLAttrib *attrib_list) const
+    EGLDeviceEXT fCreateDeviceANGLE(EGLint device_type, void* native_device, const EGLAttrib* attrib_list) const
         WRAP(   fCreateDeviceANGLE(device_type, native_device, attrib_list) )
 
     EGLBoolean fReleaseDeviceANGLE(EGLDeviceEXT device)
