@@ -4,6 +4,7 @@
 "use strict";
 
 const {utils: Cu} = Components;
+Cu.import("resource://gre/modules/Services.jsm");
 const {actionCreators: ac, actionTypes: at} = Cu.import("resource://activity-stream/common/Actions.jsm", {});
 Cu.import("resource://gre/modules/EventEmitter.jsm");
 
@@ -24,7 +25,7 @@ const BUILT_IN_SECTIONS = {
     icon: options.provider_icon,
     title: {id: "header_recommended_by", values: {provider: options.provider_name}},
     maxRows: 1,
-    contextMenuOptions: ["CheckBookmark", "SaveToPocket", "Separator", "OpenInNewWindow", "OpenInPrivateWindow", "Separator", "BlockUrl"],
+    availableContextMenuOptions: ["CheckBookmark", "SaveToPocket", "Separator", "OpenInNewWindow", "OpenInPrivateWindow", "Separator", "BlockUrl"],
     infoOption: {
       header: {id: "pocket_feedback_header"},
       body: {id: options.provider_description},
@@ -39,6 +40,7 @@ const BUILT_IN_SECTIONS = {
 
 const SectionsManager = {
   ACTIONS_TO_PROXY: ["SYSTEM_TICK", "NEW_TAB_LOAD"],
+  CONTEXT_MENU_PREFS: {"SaveToPocket": "extensions.pocket.enabled"},
   initialized: false,
   sections: new Map(),
   init(prefs = {}) {
@@ -46,8 +48,23 @@ const SectionsManager = {
       const optionsPrefName = `${feedPrefName}.options`;
       this.addBuiltInSection(feedPrefName, prefs[optionsPrefName]);
     }
+
+    Object.keys(this.CONTEXT_MENU_PREFS).forEach(k =>
+      Services.prefs.addObserver(this.CONTEXT_MENU_PREFS[k], this));
+
     this.initialized = true;
     this.emit(this.INIT);
+  },
+  observe(subject, topic, data) {
+    switch (topic) {
+      case "nsPref:changed":
+        for (const pref of Object.keys(this.CONTEXT_MENU_PREFS)) {
+          if (data === this.CONTEXT_MENU_PREFS[pref]) {
+            this.updateSections();
+          }
+        }
+        break;
+    }
   },
   addBuiltInSection(feedPrefName, optionsPrefValue = "{}") {
     let options;
@@ -62,6 +79,7 @@ const SectionsManager = {
     this.addSection(section.id, Object.assign(section, {options}));
   },
   addSection(id, options) {
+    this.updateSectionContextMenuOptions(options);
     this.sections.set(id, options);
     this.emit(this.ADD_SECTION, id, options);
   },
@@ -71,14 +89,35 @@ const SectionsManager = {
   },
   enableSection(id) {
     this.updateSection(id, {enabled: true}, true);
+    this.emit(this.ENABLE_SECTION, id);
   },
   disableSection(id) {
     this.updateSection(id, {enabled: false, rows: []}, true);
+    this.emit(this.DISABLE_SECTION, id);
+  },
+  updateSections() {
+    this.sections.forEach((section, id) => this.updateSection(id, section, true));
   },
   updateSection(id, options, shouldBroadcast) {
+    this.updateSectionContextMenuOptions(options);
+
     if (this.sections.has(id)) {
       this.sections.set(id, Object.assign(this.sections.get(id), options));
       this.emit(this.UPDATE_SECTION, id, options, shouldBroadcast);
+    }
+  },
+
+  /**
+   * Sets the section's context menu options. These are all available context menu
+   * options minus the ones that are tied to a pref (see CONTEXT_MENU_PREFS) set
+   * to false.
+   *
+   * @param options section options
+   */
+  updateSectionContextMenuOptions(options) {
+    if (options.availableContextMenuOptions) {
+      options.contextMenuOptions = options.availableContextMenuOptions.filter(
+        o => !this.CONTEXT_MENU_PREFS[o] || Services.prefs.getBoolPref(this.CONTEXT_MENU_PREFS[o]));
     }
   },
   onceInitialized(callback) {
@@ -87,6 +126,11 @@ const SectionsManager = {
     } else {
       this.once(this.INIT, callback);
     }
+  },
+  uninit() {
+    Object.keys(this.CONTEXT_MENU_PREFS).forEach(k =>
+      Services.prefs.removeObserver(this.CONTEXT_MENU_PREFS[k], this));
+    SectionsManager.initialized = false;
   }
 };
 
@@ -94,6 +138,8 @@ for (const action of [
   "ACTION_DISPATCHED",
   "ADD_SECTION",
   "REMOVE_SECTION",
+  "ENABLE_SECTION",
+  "DISABLE_SECTION",
   "UPDATE_SECTION",
   "INIT",
   "UNINIT"
@@ -121,7 +167,7 @@ class SectionsFeed {
   }
 
   uninit() {
-    SectionsManager.initialized = false;
+    SectionsManager.uninit();
     SectionsManager.emit(SectionsManager.UNINIT);
     SectionsManager.off(SectionsManager.ADD_SECTION, this.onAddSection);
     SectionsManager.off(SectionsManager.REMOVE_SECTION, this.onRemoveSection);

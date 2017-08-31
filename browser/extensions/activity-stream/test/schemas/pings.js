@@ -2,7 +2,8 @@ const Joi = require("joi-browser");
 const {MAIN_MESSAGE_TYPE, CONTENT_MESSAGE_TYPE} = require("common/Actions.jsm");
 
 const baseKeys = {
-  client_id: Joi.string().required(),
+  // client_id will be set by PingCentre if it doesn't exist.
+  client_id: Joi.string().optional(),
   addon_version: Joi.string().required(),
   locale: Joi.string().required(),
   session_id: Joi.string(),
