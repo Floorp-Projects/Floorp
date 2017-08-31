@@ -96,6 +96,32 @@ public:
 };
 
 /**
+ * Specialization for when the success type is Ok (or another empty class) and
+ * the error type is a value type which can never have the value 0 (as
+ * determined by UnusedZero<>).
+ */
+template <typename V, typename E>
+class ResultImplementation<V, E, PackingStrategy::NullIsOk>
+{
+  static constexpr E NullValue = E(0);
+
+  E mErrorValue;
+
+public:
+  explicit ResultImplementation(V) : mErrorValue(NullValue) {}
+  explicit ResultImplementation(E aErrorValue) : mErrorValue(aErrorValue)
+  {
+    MOZ_ASSERT(aErrorValue != NullValue);
+  }
+
+  bool isOk() const { return mErrorValue == NullValue; }
+
+  V unwrap() const { return V(); }
+  E unwrapErr() const { return mErrorValue; }
+};
+
+
+/**
  * Specialization for when alignment permits using the least significant bit as
  * a tag bit.
  */
