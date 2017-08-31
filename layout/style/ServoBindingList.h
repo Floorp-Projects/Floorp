@@ -113,9 +113,10 @@ SERVO_BINDING_FUNC(Servo_StyleSet_GetFontFaceRules, void,
                    RawGeckoFontFaceRuleListBorrowedMut list)
 SERVO_BINDING_FUNC(Servo_StyleSet_GetCounterStyleRule, nsCSSCounterStyleRule*,
                    RawServoStyleSetBorrowed set, nsIAtom* name)
-SERVO_BINDING_FUNC(Servo_StyleSet_BuildFontFeatureValueSet, bool,
-                   RawServoStyleSetBorrowed set,
-                   gfxFontFeatureValueSet* list)
+// This function may return nullptr or gfxFontFeatureValueSet with zero reference.
+SERVO_BINDING_FUNC(Servo_StyleSet_BuildFontFeatureValueSet,
+                   gfxFontFeatureValueSet*,
+                   RawServoStyleSetBorrowed set)
 SERVO_BINDING_FUNC(Servo_StyleSet_ResolveForDeclarations,
                    ServoStyleContextStrong,
                    RawServoStyleSetBorrowed set,
