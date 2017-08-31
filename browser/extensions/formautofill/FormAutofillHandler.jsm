@@ -54,6 +54,12 @@ function FormAutofillHandler(form) {
      */
     filledRecordGUID: null,
   };
+
+  this._cacheValue = {
+    allFieldNames: null,
+    oneLineStreetAddress: null,
+    matchingSelectOption: null,
+  };
 }
 
 FormAutofillHandler.prototype = {
@@ -167,12 +173,6 @@ FormAutofillHandler.prototype = {
       return this.creditCard.fieldDetails;
     }
     return [];
-  },
-
-  _cacheValue: {
-    allFieldNames: null,
-    oneLineStreetAddress: null,
-    matchingSelectOption: null,
   },
 
   get allFieldNames() {
