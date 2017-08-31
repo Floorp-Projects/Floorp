@@ -61,6 +61,14 @@ group.add_argument('--no-debug', action='store_false',
                    dest='debug',
                    help='generate a non-debug build. Overrides variant setting.')
 group.set_defaults(debug=None)
+group = parser.add_mutually_exclusive_group()
+group.add_argument('--jemalloc', action='store_true',
+                   dest='jemalloc',
+                   help='use mozilla\'s jemalloc instead of the default allocator')
+group.add_argument('--no-jemalloc', action='store_false',
+                   dest='jemalloc',
+                   help='use the default allocator instead of mozilla\'s jemalloc')
+group.set_defaults(jemalloc=None)
 parser.add_argument('--run-tests', '--tests', type=str, metavar='TESTSUITE',
                     default='',
                     help="comma-separated set of test suites to add to the variant's default set")
@@ -175,6 +183,10 @@ if opt is None:
     opt = variant.get('debug')
 if opt is not None:
     CONFIGURE_ARGS += (" --enable-debug" if opt else " --disable-debug")
+
+opt = args.jemalloc
+if opt is not None:
+    CONFIGURE_ARGS += (" --enable-jemalloc" if opt else " --disable-jemalloc")
 
 # Any jobs that wish to produce additional output can save them into the upload
 # directory if there is such a thing, falling back to OBJDIR.
