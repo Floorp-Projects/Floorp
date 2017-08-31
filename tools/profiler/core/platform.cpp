@@ -2328,6 +2328,8 @@ profiler_init(void* aStackTop)
       if (errno == 0 && entries > 0) {
         LOG("- MOZ_PROFILER_STARTUP_ENTRIES = %d", entries);
       } else {
+        LOG("- MOZ_PROFILER_STARTUP_ENTRIES not a valid integer: %s",
+            startupEntries);
         PrintUsageThenExit(1);
       }
     }
@@ -2339,6 +2341,8 @@ profiler_init(void* aStackTop)
       if (errno == 0 && interval > 0.0 && interval <= 1000.0) {
         LOG("- MOZ_PROFILER_STARTUP_INTERVAL = %f", interval);
       } else {
+        LOG("- MOZ_PROFILER_STARTUP_INTERVAL not a valid float: %s",
+            startupInterval);
         PrintUsageThenExit(1);
       }
     }
@@ -2351,6 +2355,8 @@ profiler_init(void* aStackTop)
       if (errno == 0 && features != 0) {
         LOG("- MOZ_PROFILER_STARTUP_FEATURES_BITFIELD = %d", features);
       } else {
+        LOG("- MOZ_PROFILER_STARTUP_FEATURES_BITFIELD not a valid integer: %s",
+            startupFeaturesBitfield);
         PrintUsageThenExit(1);
       }
     } else {
