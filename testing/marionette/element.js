@@ -624,8 +624,7 @@ element.generateUUID = function() {
  * Determines if <var>el</var> is stale.
  *
  * A stale element is an element no longer attached to the DOM or which
- * <code>ownerDocument</coded> is not the same as {@link WindowProxy}'s
- * document.
+ * node document is not the active document.
  *
  * @param {Element} el
  *     DOM element to check for staleness.
@@ -636,8 +635,11 @@ element.generateUUID = function() {
 element.isStale = function(el) {
   let doc = el.ownerDocument;
   let win = doc.defaultView;
-  let sameDoc = el.ownerDocument === win.document;
-  return !sameDoc || !el.isConnected;
+
+  if (!win || el.ownerDocument !== win.document) {
+    return true;
+  }
+  return !el.isConnected;
 };
 
 /**
