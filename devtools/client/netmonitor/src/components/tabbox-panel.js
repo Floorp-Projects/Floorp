@@ -9,9 +9,8 @@ const {
   PropTypes,
 } = require("devtools/client/shared/vendor/react");
 const { connect } = require("devtools/client/shared/vendor/react-redux");
-const Actions = require("../actions/index");
 const { L10N } = require("../utils/l10n");
-const { getSelectedRequest } = require("../selectors/index");
+const { PANELS } = require("../constants");
 
 // Components
 const Tabbar = createFactory(require("devtools/client/shared/components/tabs/tabbar"));
@@ -38,7 +37,7 @@ const TIMINGS_TITLE = L10N.getStr("netmonitor.tab.timings");
  */
 function TabboxPanel({
   activeTabId,
-  cloneSelectedRequest,
+  cloneSelectedRequest = ()=>{},
   request,
   selectTab,
   sourceMapService,
@@ -56,45 +55,45 @@ function TabboxPanel({
       showAllTabsMenu: true,
     },
       TabPanel({
-        id: "headers",
+        id: PANELS.HEADERS,
         title: HEADERS_TITLE,
       },
         HeadersPanel({ request, cloneSelectedRequest }),
       ),
       TabPanel({
-        id: "cookies",
+        id: PANELS.COOKIES,
         title: COOKIES_TITLE,
       },
         CookiesPanel({ request }),
       ),
       TabPanel({
-        id: "params",
+        id: PANELS.PARAMS,
         title: PARAMS_TITLE,
       },
         ParamsPanel({ request }),
       ),
       TabPanel({
-        id: "response",
+        id: PANELS.RESPONSE,
         title: RESPONSE_TITLE,
       },
         ResponsePanel({ request }),
       ),
       TabPanel({
-        id: "timings",
+        id: PANELS.TIMINGS,
         title: TIMINGS_TITLE,
       },
         TimingsPanel({ request }),
       ),
       request.cause && request.cause.stacktrace && request.cause.stacktrace.length > 0 &&
       TabPanel({
-        id: "stack-trace",
+        id: PANELS.STACK_TRACE,
         title: STACK_TRACE_TITLE,
       },
         StackTracePanel({ request, sourceMapService }),
       ),
       request.securityState && request.securityState !== "insecure" &&
       TabPanel({
-        id: "security",
+        id: PANELS.SECURITY,
         title: SECURITY_TITLE,
       },
         SecurityPanel({ request }),
@@ -107,20 +106,11 @@ TabboxPanel.displayName = "TabboxPanel";
 
 TabboxPanel.propTypes = {
   activeTabId: PropTypes.string,
-  cloneSelectedRequest: PropTypes.func.isRequired,
+  cloneSelectedRequest: PropTypes.func,
   request: PropTypes.object,
   selectTab: PropTypes.func.isRequired,
   // Service to enable the source map feature.
   sourceMapService: PropTypes.object,
 };
 
-module.exports = connect(
-  (state) => ({
-    activeTabId: state.ui.detailsPanelSelectedTab,
-    request: getSelectedRequest(state),
-  }),
-  (dispatch) => ({
-    cloneSelectedRequest: () => dispatch(Actions.cloneSelectedRequest()),
-    selectTab: (tabId) => dispatch(Actions.selectDetailsPanelTab(tabId)),
-  }),
-)(TabboxPanel);
+module.exports = connect()(TabboxPanel);

@@ -67,8 +67,8 @@ public class TestStoreTracking extends AndroidSyncTestCase {
       }
 
       @Override
-      public void onStoreCompleted(long storeEnd) {
-        Logger.debug(getName(), "Store completed at " + storeEnd + ".");
+      public void onStoreCompleted() {
+        Logger.debug(getName(), "Store completed.");
         try {
           session.fetch(new String[] { expectedGUID }, new SimpleSuccessFetchDelegate() {
             @Override
@@ -78,8 +78,8 @@ public class TestStoreTracking extends AndroidSyncTestCase {
             }
 
             @Override
-            public void onFetchCompleted(final long fetchEnd) {
-              Logger.debug(getName(), "Fetch completed at " + fetchEnd + ".");
+            public void onFetchCompleted() {
+              Logger.debug(getName(), "Fetch completed.");
 
               // But fetching by time returns nothing.
               session.fetchModified(new SimpleSuccessFetchDelegate() {
@@ -93,7 +93,7 @@ public class TestStoreTracking extends AndroidSyncTestCase {
                 }
 
                 @Override
-                public void onFetchCompleted(final long fetchEnd) {
+                public void onFetchCompleted() {
                   if (fetched.get()) {
                     Logger.debug(getName(), "Not finishing session: record retrieved.");
                     return;
@@ -163,7 +163,7 @@ public class TestStoreTracking extends AndroidSyncTestCase {
                 }
 
                 @Override
-                public void onFetchCompleted(long end) {
+                public void onFetchCompleted() {
                   try {
                     session.finish(new SimpleSuccessFinishDelegate() {
                       @Override

@@ -10,7 +10,7 @@
 var protocol = require("devtools/shared/protocol");
 var {preEvent, types, Arg, RetVal} = protocol;
 
-var events = require("devtools/shared/event-emitter");
+var EventEmitter = require("devtools/shared/event-emitter");
 
 function simpleHello() {
   return {
@@ -151,11 +151,11 @@ var ChildActor = protocol.ActorClassWithSpec(childSpec, {
   },
 
   emitEvents: function () {
-    events.emit(this, "event1", 1, 2, 3);
-    events.emit(this, "event2", 4, 5, 6);
-    events.emit(this, "named-event", 1, 2, 3);
-    events.emit(this, "object-event", this);
-    events.emit(this, "array-object-event", [this]);
+    EventEmitter.emit(this, "event1", 1, 2, 3);
+    EventEmitter.emit(this, "event2", 4, 5, 6);
+    EventEmitter.emit(this, "named-event", 1, 2, 3);
+    EventEmitter.emit(this, "object-event", this);
+    EventEmitter.emit(this, "array-object-event", [this]);
   },
 
   release: function () { },

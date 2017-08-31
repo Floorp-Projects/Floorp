@@ -17,7 +17,6 @@ const {
 } = require("devtools/shared/specs/worker");
 
 loader.lazyRequireGetter(this, "ChromeUtils");
-loader.lazyRequireGetter(this, "events", "devtools/shared/event-emitter");
 
 XPCOMUtils.defineLazyServiceGetter(
   this, "swm",
@@ -280,7 +279,7 @@ protocol.ActorClassWithSpec(serviceWorkerRegistrationSpec, {
     this._waitingWorker = new ServiceWorkerActor(this._conn, waitingWorker);
     this._activeWorker = new ServiceWorkerActor(this._conn, activeWorker);
 
-    events.emit(this, "registration-changed");
+    this.emit("registration-changed");
   },
 
   form(detail) {
@@ -344,7 +343,7 @@ protocol.ActorClassWithSpec(serviceWorkerRegistrationSpec, {
           this._pushSubscriptionActor.destroy();
           this._pushSubscriptionActor = null;
         }
-        events.emit(this, "push-subscription-modified");
+        this.emit("push-subscription-modified");
         break;
     }
   },

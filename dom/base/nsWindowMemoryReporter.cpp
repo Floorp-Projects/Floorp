@@ -364,9 +364,23 @@ CollectWindowReports(nsGlobalWindow *aWindow,
               "within a window.");
   aWindowTotalSizes->mLayoutPresShellSize += windowSizes.mLayoutPresShellSize;
 
-  REPORT_SIZE("/layout/style-sets", windowSizes.mLayoutStyleSetsSize,
-              "Memory used by style sets within a window.");
-  aWindowTotalSizes->mLayoutStyleSetsSize += windowSizes.mLayoutStyleSetsSize;
+  REPORT_SIZE("/layout/gecko-style-sets", windowSizes.mLayoutGeckoStyleSets,
+              "Memory used by Gecko style sets within a window.");
+  aWindowTotalSizes->mLayoutGeckoStyleSets += windowSizes.mLayoutGeckoStyleSets;
+
+  REPORT_SIZE("/layout/servo-style-sets/stylist/rule-tree",
+              windowSizes.mLayoutServoStyleSetsStylistRuleTree,
+              "Memory used by rule trees within Servo style sets within a "
+              "window.");
+  aWindowTotalSizes->mLayoutServoStyleSetsStylistRuleTree +=
+    windowSizes.mLayoutServoStyleSetsStylistRuleTree;
+
+  REPORT_SIZE("/layout/servo-style-sets/other",
+              windowSizes.mLayoutServoStyleSetsOther,
+              "Memory used by other parts of Servo style sets within a "
+              "window.");
+  aWindowTotalSizes->mLayoutServoStyleSetsOther +=
+    windowSizes.mLayoutServoStyleSetsOther;
 
   REPORT_SIZE("/layout/text-runs", windowSizes.mLayoutTextRunsSize,
               "Memory used for text-runs (glyph layout) in the PresShell's "
@@ -638,9 +652,15 @@ nsWindowMemoryReporter::CollectReports(nsIHandleReportCallback* aHandleReport,
          windowTotalSizes.mLayoutPresShellSize,
          "This is the sum of all windows' 'layout/arenas' numbers.");
 
-  REPORT("window-objects/layout/style-sets",
-         windowTotalSizes.mLayoutStyleSetsSize,
-         "This is the sum of all windows' 'layout/style-sets' numbers.");
+  REPORT("window-objects/layout/gecko-style-sets",
+         windowTotalSizes.mLayoutGeckoStyleSets,
+         "This is the sum of all windows' 'layout/gecko-style-sets' numbers.");
+
+  REPORT("window-objects/layout/servo-style-sets",
+         windowTotalSizes.mLayoutServoStyleSetsStylistRuleTree +
+         windowTotalSizes.mLayoutServoStyleSetsOther,
+         "This is the sum of all windows' 'layout/servo-style-sets/' numbers.");
+
 
   REPORT("window-objects/layout/text-runs", windowTotalSizes.mLayoutTextRunsSize,
          "This is the sum of all windows' 'layout/text-runs' numbers.");

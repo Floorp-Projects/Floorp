@@ -9,7 +9,6 @@ const { Cc, Ci } = require("chrome");
 const Services = require("Services");
 const { XPCOMUtils } = require("resource://gre/modules/XPCOMUtils.jsm");
 
-const events = require("devtools/shared/event-emitter");
 const protocol = require("devtools/shared/protocol");
 const { cssUsageSpec } = require("devtools/shared/specs/csscoverage");
 
@@ -135,7 +134,7 @@ var CSSUsageActor = protocol.ActorClassWithSpec(cssUsageSpec, {
       this._tabActor.window.location.reload();
     }
 
-    events.emit(this, "state-change", { isRunning: true });
+    this.emit("state-change", { isRunning: true });
   },
 
   /**
@@ -150,7 +149,7 @@ var CSSUsageActor = protocol.ActorClassWithSpec(cssUsageSpec, {
     this._progress = undefined;
 
     this._running = false;
-    events.emit(this, "state-change", { isRunning: false });
+    this.emit("state-change", { isRunning: false });
   },
 
   /**

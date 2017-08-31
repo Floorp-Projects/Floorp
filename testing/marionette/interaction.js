@@ -518,5 +518,5 @@ interaction.isElementSelected = function(el, strict = false) {
 };
 
 function getWindow(el) {
-  return el.ownerGlobal;
+  return el.ownerDocument.defaultView;  // eslint-disable-line
 }

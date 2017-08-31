@@ -70,6 +70,14 @@ impl ResourceUpdates {
     pub fn delete_font(&mut self, key: FontKey) {
         self.updates.push(ResourceUpdate::DeleteFont(key));
     }
+
+    pub fn merge(&mut self, mut other: ResourceUpdates) {
+        self.updates.append(&mut other.updates);
+    }
+
+    pub fn clear(&mut self) {
+        self.updates.clear()
+    }
 }
 
 #[derive(Clone, Deserialize, Serialize)]

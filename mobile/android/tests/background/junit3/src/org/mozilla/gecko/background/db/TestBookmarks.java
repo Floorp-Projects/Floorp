@@ -626,7 +626,7 @@ public class TestBookmarks extends AndroidSyncTestCase {
         }
 
         @Override
-        public void onFetchCompleted(long end) {
+        public void onFetchCompleted() {
           finishAndNotify(session);
         }
 
@@ -661,7 +661,7 @@ public class TestBookmarks extends AndroidSyncTestCase {
         }
 
         @Override
-        public void onFetchCompleted(long end) {
+        public void onFetchCompleted() {
           finishAndNotify(session);
         }
 
@@ -696,7 +696,7 @@ public class TestBookmarks extends AndroidSyncTestCase {
         RepositorySessionStoreDelegate storeDelegate = new SimpleSuccessStoreDelegate() {
 
           @Override
-          public void onStoreCompleted(final long storeEnd) {
+          public void onStoreCompleted() {
             // Pass back whatever we tracked.
             if (tracked != null) {
               Iterator<String> iter = session.getTrackedRecordIDs();

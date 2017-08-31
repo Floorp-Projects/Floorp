@@ -6,8 +6,12 @@
 
 FINAL_TARGET = 'dist/bin/gtest'
 
+if CONFIG['ENABLE_TESTS']:
+	USE_LIBS += [
+	    'gkrust-gtest',
+	]
+
 USE_LIBS += [
-    'gkrust-gtest',
     'static:xul',
     # xul-gtest is an intermediate static library. It is used as FINAL_TARGET
     # for gtest code.

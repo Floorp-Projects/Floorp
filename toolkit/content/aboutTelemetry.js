@@ -1313,6 +1313,10 @@ var Histogram = {
 
 var Search = {
 
+  blacklist: [
+    "raw-payload-section"
+  ],
+
   // Pass if: all non-empty array items match (case-sensitive)
   isPassText(subject, filter) {
     for (let item of filter) {
@@ -1366,28 +1370,34 @@ var Search = {
 
   filterKeyedElements(keyedElements, filterText) {
     let [isPassFunc, filter] = this.chooseFilter(filterText);
+    let allElementsHidden = true;
 
     let needLowerCase = (isPassFunc === this.isPassText);
     keyedElements.forEach((keyedElement) => {
       let subject = needLowerCase ? keyedElement.key.id.toLowerCase() : keyedElement.key.id;
       if (!isPassFunc(subject, filter)) { // If the keyedHistogram's name is not matched
-        let allElementHidden = true;
+        let allKeyedElementsHidden = true;
         for (let element of keyedElement.datas) {
           let subject = needLowerCase ? element.id.toLowerCase() : element.id;
           let match = isPassFunc(subject, filter);
           element.hidden = !match;
           if (match) {
-            allElementHidden = false;
+            allKeyedElementsHidden = false;
           }
         }
-        keyedElement.key.hidden = allElementHidden;
+        if (allElementsHidden && !allKeyedElementsHidden) {
+          allElementsHidden = false;
+        }
+        keyedElement.key.hidden = allKeyedElementsHidden;
       } else { // If the keyedHistogram's name is matched
+        allElementsHidden = false;
         keyedElement.key.hidden = false;
         for (let element of keyedElement.datas) {
           element.hidden = false;
         }
       }
     });
+    return allElementsHidden;
   },
 
   searchHandler(e) {
@@ -1397,16 +1407,18 @@ var Search = {
     this.idleTimeout = setTimeout(() => Search.search(e.target.value), FILTER_IDLE_TIMEOUT);
   },
 
-  search(text, section = null) {
+  search(text, sectionParam = null) {
+    let section = sectionParam;
     if (!section) {
       let sectionId = document.querySelector(".category.selected").getAttribute("value");
       section = document.getElementById(sectionId);
     }
+    let noSearchResults = true;
     if (section.id === "home-section") {
-      this.homeSearch(text);
+      return this.homeSearch(text);
     } else if (section.id === "histograms-section") {
       let histograms = section.getElementsByClassName("histogram");
-      this.filterElements(histograms, text);
+      noSearchResults = this.filterElements(histograms, text);
     } else if (section.id === "keyed-histograms-section") {
       let keyedElements = [];
       let keyedHistograms = section.getElementsByClassName("keyed-histogram");
@@ -1414,7 +1426,7 @@ var Search = {
         let datas = key.getElementsByClassName("histogram");
         keyedElements.push({key, datas});
       }
-      this.filterKeyedElements(keyedElements, text);
+      noSearchResults = this.filterKeyedElements(keyedElements, text);
     } else if (section.id === "keyed-scalars-section") {
       let keyedElements = [];
       let keyedScalars = section.getElementsByClassName("keyed-scalar");
@@ -1422,20 +1434,48 @@ var Search = {
         let datas = key.querySelector("table").rows;
         keyedElements.push({key, datas});
       }
-      this.filterKeyedElements(keyedElements, text);
+      noSearchResults = this.filterKeyedElements(keyedElements, text);
+    } else if (section.querySelector(".sub-section")) {
+      let keyedSubSections = [];
+      let subsections = section.querySelectorAll(".sub-section");
+      for (let section of subsections) {
+        let datas = section.querySelector("table").rows
+        keyedSubSections.push({section, datas});
+      }
+      noSearchResults = this.filterKeyedElements(keyedSubSections, text);
     } else {
       let tables = section.querySelectorAll("table");
       for (let table of tables) {
-        let allElementsHidden = this.filterElements(table.rows, text);
+        noSearchResults = this.filterElements(table.rows, text);
         if (table.caption) {
-          table.caption.hidden = allElementsHidden;
+          table.caption.hidden = noSearchResults;
         }
       }
+    }
+
+    if (!sectionParam) { // If we are not searching in all section.
+      this.updateNoResults(text, noSearchResults);
+    }
+    return noSearchResults;
+  },
+
+  updateNoResults(text, noSearchResults) {
+    document.getElementById("no-search-results").classList.toggle("hidden", !noSearchResults);
+    if (noSearchResults) {
+      let section = document.querySelector(".category.selected > span");
+      let selectedTitle = section.textContent.trim();
+      if (section.parentElement.id === "category-home") {
+        selectedTitle = bundle.GetStringFromName("allSections");
+      }
+      let format = [selectedTitle, text];
+      let searchStatus = bundle.formatStringFromName("noSearchResults", format, 2);
+      document.getElementById("no-search-results-text").textContent = searchStatus;
     }
   },
 
   resetHome() {
     document.getElementById("main").classList.remove("search");
+    document.getElementById("no-search-results").classList.add("hidden");
     adjustHeaderState();
     Array.from(document.querySelectorAll("section")).forEach((section) => {
       section.classList.toggle("active", section.id == "home-section");
@@ -1450,14 +1490,19 @@ var Search = {
     document.getElementById("main").classList.add("search");
     let title = bundle.formatStringFromName("resultsForSearch", [text], 1);
     adjustHeaderState(title);
+    let noSearchResults = true;
     Array.from(document.querySelectorAll("section")).forEach((section) => {
       if (section.id == "home-section" || section.id == "raw-payload-section") {
         section.classList.remove("active");
         return;
       }
       section.classList.add("active");
-      this.search(text, section);
+      let sectionHidden = this.search(text, section);
+      if (noSearchResults && !sectionHidden) {
+        noSearchResults = false;
+      }
     });
+    this.updateNoResults(text, noSearchResults);
   }
 }
 
@@ -1841,17 +1886,20 @@ function displayProcessesSelector(selectedSection) {
   processes.hidden = !whitelist.includes(selectedSection);
 }
 
-function adjustSearchState() {
+function refreshSearch() {
   let selectedSection = document.querySelector(".category.selected").getAttribute("value");
-  let blacklist = [
-    "raw-payload-section"
-  ];
   let search = document.getElementById("search");
-  search.hidden = blacklist.includes(selectedSection);
-  // Filter element on section change.
-  if (!blacklist.includes(selectedSection)) {
+  if (!Search.blacklist.includes(selectedSection)) {
     Search.search(search.value);
   }
+}
+
+function adjustSearchState() {
+  let selectedSection = document.querySelector(".category.selected").getAttribute("value");
+  let search = document.getElementById("search");
+  search.hidden = Search.blacklist.includes(selectedSection);
+  document.getElementById("no-search-results").classList.add("hidden");
+  Search.search(""); // reinitialize search state.
 }
 
 function adjustSection() {
@@ -2084,8 +2132,8 @@ function onLoad() {
 
   // Update ping data when async Telemetry init is finished.
   Telemetry.asyncFetchTelemetryData(async () => {
-    await PingPicker.update();
     urlStateRestore();
+    await PingPicker.update();
   });
 }
 
@@ -2339,8 +2387,8 @@ function displayPingData(ping, updatePayloadList = false) {
   try {
     PingPicker.render();
     displayRichPingData(ping, updatePayloadList);
-    adjustSearchState();
     adjustSection();
+    refreshSearch();
   } catch (err) {
     console.log(err);
     PingPicker._showRawPingData();

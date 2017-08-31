@@ -11,6 +11,7 @@ import sys
 from mach.decorators import (
     CommandProvider,
     Command,
+    SettingsProvider,
     SubCommand,
 )
 
@@ -44,6 +45,19 @@ def generic_parser():
     return parser
 
 
+@SettingsProvider
+class TryConfig(object):
+
+    @classmethod
+    def config_settings(cls):
+        from mach.registrar import Registrar
+
+        desc = "The default selector to use when running `mach try` without a subcommand."
+        choices = Registrar.command_handlers['try'].subcommand_handlers.keys()
+
+        return [('try.default', 'string', desc, 'syntax', {'choices': choices})]
+
+
 @CommandProvider
 class TrySelect(MachCommandBase):
 
@@ -70,7 +84,7 @@ class TrySelect(MachCommandBase):
 
         # We do special handling of presets here so that `./mach try --preset foo`
         # works no matter what subcommand 'foo' was saved with.
-        sub = 'syntax'
+        sub = self._mach_context.settings['try']['default']
         if kwargs['preset']:
             _, section = preset.load(kwargs['preset'])
             sub = 'syntax' if section == 'try' else section

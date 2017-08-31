@@ -175,9 +175,10 @@ public class PocketStoriesLoader extends AsyncTaskLoader<List<TopStory>> {
 
     private static List<TopStory> makePlaceholderStories() {
         final List<TopStory> stories = new LinkedList<>();
-        final String[] TITLES = {"Placeholder 1", "Placeholder 2", "Placeholder 3"};
-        for (String title : TITLES) {
-            stories.add(new TopStory(title, "https://www.mozilla.org/", null));
+        final String TITLE_PREFIX = "Placeholder ";
+        for (int i = 0; i < 3; i++) {
+            // Urls must be different for bookmark/pinning UI to work properly. Assume this is true for Pocket stories.
+            stories.add(new TopStory(TITLE_PREFIX + i, "https://www.mozilla.org/#" + i, null));
         }
         return stories;
     }

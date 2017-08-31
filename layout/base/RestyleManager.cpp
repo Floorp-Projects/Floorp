@@ -331,15 +331,10 @@ RestyleManager::ContentRemoved(nsINode* aContainer,
 void
 RestyleManager::ContentStateChangedInternal(Element* aElement,
                                             EventStates aStateMask,
-                                            nsChangeHint* aOutChangeHint,
-                                            nsRestyleHint* aOutRestyleHint)
+                                            nsChangeHint* aOutChangeHint)
 {
   MOZ_ASSERT(!mInStyleRefresh);
   MOZ_ASSERT(aOutChangeHint);
-  MOZ_ASSERT(aOutRestyleHint);
-
-  StyleSetHandle styleSet = PresContext()->StyleSet();
-  NS_ASSERTION(styleSet, "couldn't get style set");
 
   *aOutChangeHint = nsChangeHint(0);
   // Any change to a content state that affects which frames we construct
@@ -349,7 +344,6 @@ RestyleManager::ContentStateChangedInternal(Element* aElement,
   // need to force a reframe -- if it's needed, the HasStateDependentStyle
   // call will handle things.
   nsIFrame* primaryFrame = aElement->GetPrimaryFrame();
-  CSSPseudoElementType pseudoType = CSSPseudoElementType::NotPseudo;
   if (primaryFrame) {
     // If it's generated content, ignore LOADING/etc state changes on it.
     if (!primaryFrame->IsGeneratedContentFrame() &&
@@ -374,27 +368,7 @@ RestyleManager::ContentStateChangedInternal(Element* aElement,
       }
     }
 
-    pseudoType = primaryFrame->StyleContext()->GetPseudoType();
-
     primaryFrame->ContentStatesChanged(aStateMask);
-  }
-
-  if (pseudoType >= CSSPseudoElementType::Count) {
-    *aOutRestyleHint = styleSet->HasStateDependentStyle(aElement, aStateMask);
-  } else if (nsCSSPseudoElements::PseudoElementSupportsUserActionState(
-               pseudoType)) {
-    // If aElement is a pseudo-element, we want to check to see whether there
-    // are any state-dependent rules applying to that pseudo.
-    Element* ancestor =
-      ElementForStyleContext(nullptr, primaryFrame, pseudoType);
-    *aOutRestyleHint = styleSet->HasStateDependentStyle(ancestor, pseudoType,
-                                                        aElement, aStateMask);
-  } else {
-    *aOutRestyleHint = nsRestyleHint(0);
-  }
-
-  if (aStateMask.HasState(NS_EVENT_STATE_HOVER) && *aOutRestyleHint != 0) {
-    IncrementHoverGeneration();
   }
 
   if (aStateMask.HasState(NS_EVENT_STATE_VISITED)) {

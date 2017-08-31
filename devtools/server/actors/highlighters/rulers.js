@@ -4,7 +4,7 @@
 
 "use strict";
 
-const events = require("devtools/shared/event-emitter");
+const EventEmitter = require("devtools/shared/event-emitter");
 const { getCurrentZoom,
   setIgnoreLayoutChanges } = require("devtools/shared/layout/utils");
 const {
@@ -277,7 +277,7 @@ RulersHighlighter.prototype = {
 
     this.markup.destroy();
 
-    events.emit(this, "destroy");
+    EventEmitter.emit(this, "destroy");
   },
 
   show: function () {

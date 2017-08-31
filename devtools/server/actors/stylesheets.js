@@ -10,7 +10,6 @@ const {XPCOMUtils} = require("resource://gre/modules/XPCOMUtils.jsm");
 const promise = require("promise");
 const defer = require("devtools/shared/defer");
 const {Task} = require("devtools/shared/task");
-const events = require("devtools/shared/event-emitter");
 const protocol = require("devtools/shared/protocol");
 const {LongStringActor} = require("devtools/server/actors/string");
 const {fetch} = require("devtools/shared/DevToolsUtils");
@@ -175,7 +174,7 @@ var MediaRuleActor = protocol.ActorClassWithSpec(mediaRuleSpec, {
   },
 
   _matchesChange: function () {
-    events.emit(this, "matches-change", this.matches);
+    this.emit("matches-change", this.matches);
   }
 });
 
@@ -399,7 +398,7 @@ var StyleSheetActor = protocol.ActorClassWithSpec(styleSheetSpec, {
    *         Name of the changed property
    */
   _notifyPropertyChanged: function (property) {
-    events.emit(this, "property-change", property, this.form()[property]);
+    this.emit("property-change", property, this.form()[property]);
   },
 
   /**
@@ -746,11 +745,11 @@ var StyleSheetActor = protocol.ActorClassWithSpec(styleSheetSpec, {
     if (transition) {
       this._insertTransistionRule(kind);
     } else {
-      events.emit(this, "style-applied", kind, this);
+      this.emit("style-applied", kind, this);
     }
 
     this._getMediaRules().then((rules) => {
-      events.emit(this, "media-rules-changed", rules);
+      this.emit("media-rules-changed", rules);
     });
   },
 
@@ -786,7 +785,7 @@ var StyleSheetActor = protocol.ActorClassWithSpec(styleSheetSpec, {
       this.rawSheet.deleteRule(index);
     }
 
-    events.emit(this, "style-applied", kind, this);
+    this.emit("style-applied", kind, this);
   }
 });
 

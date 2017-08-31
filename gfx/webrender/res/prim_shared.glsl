@@ -141,6 +141,15 @@ vec4[3] fetch_from_resource_cache_3(int address) {
     );
 }
 
+vec4[4] fetch_from_resource_cache_4_direct(ivec2 address) {
+    return vec4[4](
+        texelFetchOffset(sResourceCache, address, 0, ivec2(0, 0)),
+        texelFetchOffset(sResourceCache, address, 0, ivec2(1, 0)),
+        texelFetchOffset(sResourceCache, address, 0, ivec2(2, 0)),
+        texelFetchOffset(sResourceCache, address, 0, ivec2(3, 0))
+    );
+}
+
 vec4[4] fetch_from_resource_cache_4(int address) {
     ivec2 uv = get_resource_cache_uv(address);
     return vec4[4](
@@ -749,6 +758,11 @@ struct BoxShadow {
 
 BoxShadow fetch_boxshadow(int address) {
     vec4 data[4] = fetch_from_resource_cache_4(address);
+    return BoxShadow(data[0], data[1], data[2], data[3]);
+}
+
+BoxShadow fetch_boxshadow_direct(ivec2 address) {
+    vec4 data[4] = fetch_from_resource_cache_4_direct(address);
     return BoxShadow(data[0], data[1], data[2], data[3]);
 }
 

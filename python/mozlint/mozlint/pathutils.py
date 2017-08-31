@@ -176,3 +176,26 @@ def findobject(path):
     for a in objectpath.split('.'):
         obj = getattr(obj, a)
     return obj
+
+
+def ancestors(path):
+    while path:
+        yield path
+        (path, child) = os.path.split(path)
+        if child == "":
+            break
+
+
+def get_ancestors_by_name(name, path, root):
+    """Returns a list of files called `name` in `path`'s ancestors,
+    sorted from closest->furthest. This can be useful for finding
+    relevant configuration files.
+    """
+    configs = []
+    for path in ancestors(path):
+        config = os.path.join(path, name)
+        if os.path.isfile(config):
+            configs.append(config)
+        if path == root:
+            break
+    return configs

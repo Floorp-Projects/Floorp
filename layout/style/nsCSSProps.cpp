@@ -1708,31 +1708,6 @@ const KTableEntry nsCSSProps::kListStylePositionKTable[] = {
   { eCSSKeyword_UNKNOWN, -1 }
 };
 
-const KTableEntry nsCSSProps::kListStyleKTable[] = {
-  // none and decimal are not redefinable, so they should not be moved.
-  { eCSSKeyword_none, NS_STYLE_LIST_STYLE_NONE },
-  { eCSSKeyword_decimal, NS_STYLE_LIST_STYLE_DECIMAL },
-  // the following graphic styles are processed in a different way.
-  { eCSSKeyword_disc, NS_STYLE_LIST_STYLE_DISC },
-  { eCSSKeyword_circle, NS_STYLE_LIST_STYLE_CIRCLE },
-  { eCSSKeyword_square, NS_STYLE_LIST_STYLE_SQUARE },
-  { eCSSKeyword_disclosure_closed, NS_STYLE_LIST_STYLE_DISCLOSURE_CLOSED },
-  { eCSSKeyword_disclosure_open, NS_STYLE_LIST_STYLE_DISCLOSURE_OPEN },
-  // the following counter styles require specific algorithms to generate.
-  { eCSSKeyword_hebrew, NS_STYLE_LIST_STYLE_HEBREW },
-  { eCSSKeyword_japanese_informal, NS_STYLE_LIST_STYLE_JAPANESE_INFORMAL },
-  { eCSSKeyword_japanese_formal, NS_STYLE_LIST_STYLE_JAPANESE_FORMAL },
-  { eCSSKeyword_korean_hangul_formal, NS_STYLE_LIST_STYLE_KOREAN_HANGUL_FORMAL },
-  { eCSSKeyword_korean_hanja_informal, NS_STYLE_LIST_STYLE_KOREAN_HANJA_INFORMAL },
-  { eCSSKeyword_korean_hanja_formal, NS_STYLE_LIST_STYLE_KOREAN_HANJA_FORMAL },
-  { eCSSKeyword_simp_chinese_informal, NS_STYLE_LIST_STYLE_SIMP_CHINESE_INFORMAL },
-  { eCSSKeyword_simp_chinese_formal, NS_STYLE_LIST_STYLE_SIMP_CHINESE_FORMAL },
-  { eCSSKeyword_trad_chinese_informal, NS_STYLE_LIST_STYLE_TRAD_CHINESE_INFORMAL },
-  { eCSSKeyword_trad_chinese_formal, NS_STYLE_LIST_STYLE_TRAD_CHINESE_FORMAL },
-  { eCSSKeyword_ethiopic_numeric, NS_STYLE_LIST_STYLE_ETHIOPIC_NUMERIC },
-  { eCSSKeyword_UNKNOWN, -1 }
-};
-
 const KTableEntry nsCSSProps::kMathVariantKTable[] = {
   { eCSSKeyword_none, NS_MATHML_MATHVARIANT_NONE },
   { eCSSKeyword_normal, NS_MATHML_MATHVARIANT_NORMAL },

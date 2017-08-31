@@ -551,9 +551,9 @@ struct nsCSSRendering {
                                      const nsRect& aBorderRect,
                                      int32_t       aAppUnitsPerDevPixel,
                                      int32_t       aAppUnitsPerCSSPixel,
-                                     uint8_t       aStartBevelSide = 0,
+                                     mozilla::Side aStartBevelSide = mozilla::eSideTop,
                                      nscoord       aStartBevelOffset = 0,
-                                     uint8_t       aEndBevelSide = 0,
+                                     mozilla::Side aEndBevelSide = mozilla::eSideTop,
                                      nscoord       aEndBevelOffset = 0);
 
   // NOTE: pt, dirtyRect, lineSize, ascent, offset in the following

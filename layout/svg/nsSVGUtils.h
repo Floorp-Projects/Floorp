@@ -404,6 +404,11 @@ public:
     // given frame, instead of all continuations of it, while computing bbox if
     // this flag is set.
     eIncludeOnlyCurrentFrameForNonSVGElement = 1 << 8,
+    // This flag is only has an effect when the target is a <use> element.
+    // getBBox returns the bounds of the elements children in user space if
+    // this flag is set; Otherwise, getBBox returns the union bounds in
+    // the coordinate system formed by the <use> element.
+    eUseUserSpaceOfUseElement = 1 << 9,
   };
   /**
    * This function in primarily for implementing the SVG DOM function getBBox()

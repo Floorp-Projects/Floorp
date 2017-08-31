@@ -376,7 +376,7 @@ decorate_task(
     ok(!runStub.called, "RecipeRunner.run is not called immediately");
     ok(!registerTimerStub.called, "RecipeRunner.registerTimer is not called immediately");
 
-    Services.obs.notifyObservers(null, "sessionstore-windows-restored");
+    RecipeRunner.observe(null, "sessionstore-windows-restored");
     await TestUtils.topicObserved("shield-init-complete");
     ok(runStub.called, "RecipeRunner.run is called after the UI is available");
     ok(registerTimerStub.called, "RecipeRunner.registerTimer is called after the UI is available");

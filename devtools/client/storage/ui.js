@@ -169,12 +169,16 @@ function StorageUI(front, target, panelWin, toolbox) {
   this._tablePopup = this._panelDoc.getElementById("storage-table-popup");
   this._tablePopup.addEventListener("popupshowing", this.onTablePopupShowing);
 
+  this.onRefreshTable = this.onRefreshTable.bind(this);
   this.onAddItem = this.onAddItem.bind(this);
   this.onRemoveItem = this.onRemoveItem.bind(this);
   this.onRemoveAllFrom = this.onRemoveAllFrom.bind(this);
   this.onRemoveAll = this.onRemoveAll.bind(this);
   this.onRemoveAllSessionCookies = this.onRemoveAllSessionCookies.bind(this);
   this.onRemoveTreeItem = this.onRemoveTreeItem.bind(this);
+
+  this._refreshButton = this._panelDoc.getElementById("refresh-button");
+  this._refreshButton.addEventListener("command", this.onRefreshTable);
 
   this._addButton = this._panelDoc.getElementById("add-button");
   this._addButton.addEventListener("command", this.onAddItem);
@@ -242,6 +246,7 @@ StorageUI.prototype = {
     this.sidebarToggleBtn = null;
 
     this._treePopup.removeEventListener("popupshowing", this.onTreePopupShowing);
+    this._refreshButton.removeEventListener("command", this.onRefreshTable);
     this._addButton.removeEventListener("command", this.onAddItem);
     this._tablePopupAddItem.removeEventListener("command", this.onAddItem);
     this._treePopupDeleteAll.removeEventListener("command", this.onRemoveAll);
@@ -1160,6 +1165,13 @@ StorageUI.prototype = {
     if (!showMenu) {
       event.preventDefault();
     }
+  },
+
+  /**
+   * Handles refreshing the selected storage
+   */
+  onRefreshTable: function (event) {
+    this.onHostSelect(event, this.tree.selectedItem);
   },
 
   /**

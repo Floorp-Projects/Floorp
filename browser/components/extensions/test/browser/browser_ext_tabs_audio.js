@@ -115,8 +115,7 @@ add_task(async function() {
       for (let obj of [nonMuted.changeInfo, nonMuted.tab, muted.changeInfo, muted.tab]) {
         browser.test.assertEq("extension", obj.mutedInfo.reason, "Mute state changed by extension");
 
-        // FIXME: browser.runtime.id is currently broken.
-        browser.test.assertEq(browser.i18n.getMessage("@@extension_id"),
+        browser.test.assertEq(browser.runtime.id,
                               obj.mutedInfo.extensionId,
                               "Mute state changed by extension");
       }
@@ -128,8 +127,7 @@ add_task(async function() {
 
       browser.test.assertEq("extension", tab.mutedInfo.reason, "Mute state changed by extension");
 
-      // FIXME: browser.runtime.id is currently broken.
-      browser.test.assertEq(browser.i18n.getMessage("@@extension_id"),
+      browser.test.assertEq(browser.runtime.id,
                             tab.mutedInfo.extensionId,
                             "Mute state changed by extension");
 

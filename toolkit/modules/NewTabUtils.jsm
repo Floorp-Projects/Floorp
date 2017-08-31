@@ -1165,7 +1165,7 @@ var ActivityStreamLinks = {
   },
 
   /**
-   * Removes a history link
+   * Removes a history link and unpins the URL if previously pinned
    *
    * @param {String} aUrl
    *           The url to be removed from history
@@ -1173,7 +1173,9 @@ var ActivityStreamLinks = {
    * @returns {Promise} Returns a promise set to true if link was removed
    */
   deleteHistoryEntry(aUrl) {
-    return PlacesUtils.history.remove(aUrl);
+    const url = aUrl;
+    PinnedLinks.unpin({url});
+    return PlacesUtils.history.remove(url);
   },
 
   /**

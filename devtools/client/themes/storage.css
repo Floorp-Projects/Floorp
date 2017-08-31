@@ -37,6 +37,11 @@
   -moz-user-focus: normal;
 }
 
+#storage-toolbar .refresh-button::before {
+  background-image: url("chrome://devtools/skin/images/reload.svg");
+  -moz-user-focus: normal;
+}
+
 #storage-toolbar .devtools-button {
   min-width: 0;
 }

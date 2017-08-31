@@ -3,8 +3,6 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 "use strict";
 
-const { on, off } = require("devtools/shared/event-emitter");
-
 /**
  * A very simple utility for monitoring framerate. Takes a `tabActor`
  * and monitors framerate over time. The actor wrapper around this
@@ -16,12 +14,11 @@ class Framerate {
     this._contentWin = tabActor.window;
     this._onRefreshDriverTick = this._onRefreshDriverTick.bind(this);
     this._onGlobalCreated = this._onGlobalCreated.bind(this);
-
-    on(this.tabActor, "window-ready", this._onGlobalCreated);
+    this.tabActor.on("window-ready", this._onGlobalCreated);
   }
 
   destroy(conn) {
-    off(this.tabActor, "window-ready", this._onGlobalCreated);
+    this.tabActor.off("window-ready", this._onGlobalCreated);
     this.stopRecording();
   }
 

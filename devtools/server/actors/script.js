@@ -28,13 +28,13 @@ loader.lazyGetter(this, "Debugger", () => {
 });
 loader.lazyRequireGetter(this, "CssLogic", "devtools/server/css-logic", true);
 loader.lazyRequireGetter(this, "findCssSelector", "devtools/shared/inspector/css-logic", true);
-loader.lazyRequireGetter(this, "events", "devtools/shared/event-emitter");
 loader.lazyRequireGetter(this, "mapURIToAddonID", "devtools/server/actors/utils/map-uri-to-addon-id");
 loader.lazyRequireGetter(this, "BreakpointActor", "devtools/server/actors/breakpoint", true);
 loader.lazyRequireGetter(this, "setBreakpointAtEntryPoints", "devtools/server/actors/breakpoint", true);
 loader.lazyRequireGetter(this, "getSourceURL", "devtools/server/actors/source", true);
 loader.lazyRequireGetter(this, "EnvironmentActor", "devtools/server/actors/environment", true);
 loader.lazyRequireGetter(this, "FrameActor", "devtools/server/actors/frame", true);
+loader.lazyRequireGetter(this, "EventEmitter", "devtools/shared/event-emitter");
 
 /**
  * A BreakpointActorMap is a map from locations to instances of BreakpointActor.
@@ -452,7 +452,7 @@ const ThreadActor = ActorClassWithSpec(threadSpec, {
     this.objectGrip = this.objectGrip.bind(this);
     this.pauseObjectGrip = this.pauseObjectGrip.bind(this);
     this._onWindowReady = this._onWindowReady.bind(this);
-    events.on(this._parent, "window-ready", this._onWindowReady);
+    EventEmitter.on(this._parent, "window-ready", this._onWindowReady);
     // Set a wrappedJSObject property so |this| can be sent via the observer svc
     // for the xpcshell harness.
     this.wrappedJSObject = this;
@@ -579,7 +579,7 @@ const ThreadActor = ActorClassWithSpec(threadSpec, {
     // things like breakpoints across connections.
     this._sourceActorStore = null;
 
-    events.off(this._parent, "window-ready", this._onWindowReady);
+    EventEmitter.off(this._parent, "window-ready", this._onWindowReady);
     this.sources.off("newSource", this.onSourceEvent);
     this.sources.off("updatedSource", this.onSourceEvent);
     this.clearDebuggees();

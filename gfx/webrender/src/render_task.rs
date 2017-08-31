@@ -6,7 +6,7 @@ use gpu_cache::GpuCacheHandle;
 use internal_types::HardwareCompositeOp;
 use mask_cache::MaskCacheInfo;
 use prim_store::{BoxShadowPrimitiveCacheKey, PrimitiveIndex};
-use std::{cmp, f32, i32, mem, usize};
+use std::{cmp, f32, i32, usize};
 use tiling::{ClipScrollGroupIndex, PackedLayerIndex, RenderPass, RenderTargetIndex};
 use tiling::{RenderTargetKind, StackingContextIndex};
 use api::{ClipId, DeviceIntLength, DeviceIntPoint, DeviceIntRect, DeviceIntSize};
@@ -160,14 +160,6 @@ pub struct CacheMaskTask {
 #[derive(Debug, Clone)]
 pub struct RenderTaskData {
     pub data: [f32; FLOATS_PER_RENDER_TASK_INFO],
-}
-
-impl Default for RenderTaskData {
-    fn default() -> RenderTaskData {
-        RenderTaskData {
-            data: unsafe { mem::uninitialized() },
-        }
-    }
 }
 
 #[derive(Debug, Clone)]

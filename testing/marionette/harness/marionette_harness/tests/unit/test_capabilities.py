@@ -119,37 +119,6 @@ class TestCapabilityMatching(MarionetteTestCase):
             with self.assertRaisesRegexp(SessionNotCreatedException, "InvalidArgumentError"):
                 self.marionette.start_session({"pageLoadStrategy": value})
 
-    def test_proxy_none_by_default(self):
-        self.marionette.start_session()
-        self.assertNotIn("proxy", self.marionette.session_capabilities)
-
-    def test_invalid_proxy_type(self):
-        with self.assertRaises(SessionNotCreatedException):
-            self.marionette.start_session({"proxy": {"proxyAutoconfigUrl": None}})
-
-        with self.assertRaises(SessionNotCreatedException):
-            self.marionette.start_session({"proxy": {"proxyType": None}})
-
-    def test_proxy_type_pac_invalid_url(self):
-        with self.assertRaises(SessionNotCreatedException):
-            self.marionette.start_session({"proxy": {"proxyType": "pac"}})
-
-        with self.assertRaises(SessionNotCreatedException):
-            self.marionette.start_session({"proxy": {"proxyType": "pac",
-                                                     "proxyAutoconfigUrl": None}})
-
-    def test_proxy_type_direct(self):
-        self.marionette.start_session({"proxy": {"proxyType": "direct"}})
-        self.assertIn("proxy", self.marionette.session_capabilities)
-        self.assertEqual(self.marionette.session_capabilities["proxy"]["proxyType"], "direct")
-        self.assertEqual(self.marionette.get_pref("network.proxy.type"), 0)
-
-    def test_proxy_type_manual(self):
-        self.marionette.start_session({"proxy": {"proxyType": "manual"}})
-        self.assertIn("proxy", self.marionette.session_capabilities)
-        self.assertEqual(self.marionette.session_capabilities["proxy"]["proxyType"], "manual")
-        self.assertEqual(self.marionette.get_pref("network.proxy.type"), 1)
-
     def test_timeouts(self):
         timeouts = {u"implicit": 123, u"pageLoad": 456, u"script": 789}
         caps = {"timeouts": timeouts}

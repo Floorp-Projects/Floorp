@@ -223,7 +223,7 @@ evaluate.fromJSON = function(obj, seenEls, win, shadowRoot = undefined) {
           Object.keys(obj).includes(element.LegacyKey)) {
         /* eslint-disable */
         let uuid = obj[element.Key] || obj[element.LegacyKey];
-        let el = seenEls.get(uuid, {frame: win, shadowRoot: shadowRoot});
+        let el = seenEls.get(uuid);
         /* eslint-enable */
         if (!el) {
           throw new WebDriverError(`Unknown element: ${uuid}`);

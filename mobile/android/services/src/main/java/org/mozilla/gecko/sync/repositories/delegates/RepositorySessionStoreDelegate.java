@@ -23,7 +23,7 @@ public interface RepositorySessionStoreDelegate {
 
   // Called with a GUID when store has succeeded.
   void onRecordStoreSucceeded(String guid);
-  void onStoreCompleted(long storeEnd);
+  void onStoreCompleted();
   void onStoreFailed(Exception e);
   RepositorySessionStoreDelegate deferredStoreDelegate(ExecutorService executor);
 }

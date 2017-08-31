@@ -163,7 +163,7 @@ public class BrowserContract {
 
         // This is a flag used to indicate that records inserted from sync should start as modified.
         // That is, their versions will start as (2,1), instead of (1,1).
-        String PARAM_INSERT_FROM_SYNC_AS_MODIFIED = "insertFromSyncAsModified";
+        String PARAM_INSERT_FROM_SYNC_AS_MODIFIED = "modifiedBySync";
     }
 
     @RobocopTarget

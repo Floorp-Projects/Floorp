@@ -10,7 +10,7 @@
 
 const { PromisesFront } = require("devtools/shared/fronts/promises");
 
-var events = require("devtools/shared/event-emitter");
+var EventEmitter = require("devtools/shared/event-emitter");
 
 add_task(function* () {
   let client = yield startTestDebuggerServer("test-promises-timetosettle");
@@ -55,7 +55,7 @@ function* testGetTimeToSettle(client, form, makePromises) {
   yield front.listPromises();
 
   let onNewPromise = new Promise(resolve => {
-    events.on(front, "new-promises", promises => {
+    EventEmitter.on(front, "new-promises", promises => {
       for (let p of promises) {
         if (p.promiseState.state === "pending") {
           ok(!p.promiseState.timeToSettle,

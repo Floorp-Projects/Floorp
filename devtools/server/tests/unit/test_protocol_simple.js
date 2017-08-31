@@ -9,7 +9,7 @@
 
 var protocol = require("devtools/shared/protocol");
 var {Arg, Option, RetVal} = protocol;
-var events = require("devtools/shared/event-emitter");
+var EventEmitter = require("devtools/shared/event-emitter");
 
 function simpleHello() {
   return {
@@ -158,11 +158,11 @@ var RootActor = protocol.ActorClassWithSpec(rootSpec, {
 
   testOneWay: function (a) {
     // Emit to show that we got this message, because there won't be a response.
-    events.emit(this, "oneway", a);
+    EventEmitter.emit(this, "oneway", a);
   },
 
   emitFalsyOptions: function () {
-    events.emit(this, "falsyOptions", { zero: 0, farce: false });
+    EventEmitter.emit(this, "falsyOptions", { zero: 0, farce: false });
   }
 });
 
