@@ -50,6 +50,14 @@ interface nsIUpdatePatch : nsISupports
   attribute AString state;
 
   /**
+   * A numeric error code that conveys additional information about the state of
+   * a failed update. If the update is not in the "failed" state the value is
+   * zero. The possible values are located in common/errors.h and values between
+   * 80 and 99 are in nsUpdateService.js.
+   */
+  attribute long errorCode;
+
+  /**
    * true if this patch is currently selected as the patch to be downloaded and
    * installed for this update transaction, false if another patch from this
    * update has been selected.
@@ -183,13 +191,10 @@ interface nsIUpdate : nsISupports
   attribute AString state;
 
   /**
-   * A numeric error code that conveys additional information about the state
-   * of a failed update or failed certificate attribute check during an update
-   * check. If the update is not in the "failed" state or the certificate
-   * attribute check has not failed the value is zero.
-   *
-   * TODO: Define typical error codes (for now, see updater/errors.h and the
-   *       CERT_ATTR_CHECK_FAILED_* values in nsUpdateService.js)
+   * A numeric error code that conveys additional information about the state of
+   * a failed update. If the update is not in the "failed" state the value is
+   * zero. The possible values are located in common/errors.h and values between
+   * 80 and 99 are in nsUpdateService.js.
    */
   attribute long errorCode;
 
