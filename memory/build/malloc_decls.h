@@ -15,12 +15,6 @@
 
 #  include "mozjemalloc_types.h"
 
-#ifndef MALLOC_USABLE_SIZE_CONST_PTR
-#define MALLOC_USABLE_SIZE_CONST_PTR const
-#endif
-
-typedef MALLOC_USABLE_SIZE_CONST_PTR void * usable_ptr_t;
-
 #  define MALLOC_FUNCS_MALLOC 1
 #  define MALLOC_FUNCS_JEMALLOC 2
 #  define MALLOC_FUNCS_INIT 4
