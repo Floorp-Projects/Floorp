@@ -945,6 +945,49 @@ formautofill.addresses:
     record_in_processes:
       - 'main'
 
+formautofill.creditCards:
+  fill_type_manual:
+    bug_numbers:
+      - 1371232
+    description: Count at submission time whether the submitted credit card form was filled manually.
+    expires: never
+    kind: uint
+    notification_emails:
+      - autofill@lists.mozilla.org
+      - jcheng@mozilla.com
+      - chsiang@mozilla.com
+    release_channel_collection: opt-out
+    record_in_processes:
+      - 'main'
+  fill_type_autofill:
+    bug_numbers:
+      - 1371232
+    description: Count at submission time whether the submitted credit card form was autofilled.
+    expires: never
+    kind: uint
+    notification_emails:
+      - autofill@lists.mozilla.org
+      - jcheng@mozilla.com
+      - chsiang@mozilla.com
+    release_channel_collection: opt-out
+    record_in_processes:
+      - 'main'
+  fill_type_autofill_modified:
+    bug_numbers:
+      - 1371232
+    description: >
+      Count at submission time whether the submitted credit card form was autofilled but
+      the data in form is changed.
+    expires: never
+    kind: uint
+    notification_emails:
+      - autofill@lists.mozilla.org
+      - jcheng@mozilla.com
+      - chsiang@mozilla.com
+    release_channel_collection: opt-out
+    record_in_processes:
+      - 'main'
+
 # The following section is for probes for tcp protocol.
 network.tcp:
   overlapped_io_canceled_before_finished:
