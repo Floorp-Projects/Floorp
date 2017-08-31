@@ -7,12 +7,12 @@
 
 const {utils: Cu, interfaces: Ci} = Components;
 Cu.import("resource://gre/modules/XPCOMUtils.jsm");
-XPCOMUtils.defineLazyModuleGetter(this, "OnboardingTourType",
-  "resource://onboarding/modules/OnboardingTourType.jsm");
-XPCOMUtils.defineLazyModuleGetter(this, "Services",
-  "resource://gre/modules/Services.jsm");
-XPCOMUtils.defineLazyModuleGetter(this, "fxAccounts",
-  "resource://gre/modules/FxAccounts.jsm");
+XPCOMUtils.defineLazyModuleGetters(this, {
+  OnboardingTourType: "resource://onboarding/modules/OnboardingTourType.jsm",
+  OnboardingTelemetry: "resource://onboarding/modules/OnboardingTelemetry.jsm",
+  Services: "resource://gre/modules/Services.jsm",
+  fxAccounts: "resource://gre/modules/FxAccounts.jsm",
+});
 
 const {PREF_STRING, PREF_BOOL, PREF_INT} = Ci.nsIPrefBranch;
 
@@ -40,6 +40,7 @@ const PREF_WHITELIST = [
 ].forEach(tourId => PREF_WHITELIST.push([`browser.onboarding.tour.${tourId}.completed`, PREF_BOOL]));
 
 let waitingForBrowserReady = true;
+let startupData;
 
 /**
  * Set pref. Why no `getPrefs` function is due to the priviledge level.
@@ -64,15 +65,12 @@ function setPrefs(prefs) {
       case PREF_BOOL:
         Services.prefs.setBoolPref(name, pref.value);
         break;
-
       case PREF_INT:
         Services.prefs.setIntPref(name, pref.value);
         break;
-
       case PREF_STRING:
         Services.prefs.setStringPref(name, pref.value);
         break;
-
       default:
         throw new TypeError(`Unexpected type (${type}) for preference ${name}.`);
     }
@@ -155,6 +153,13 @@ function initContentMessageListener() {
           isLoggedIn: syncTourChecker.isLoggedIn()
         });
         break;
+      case "ping-centre":
+        try {
+          OnboardingTelemetry.process(msg.data.params.data);
+        } catch (e) {
+          Cu.reportError(e);
+        }
+        break;
     }
   });
 }
@@ -166,6 +171,7 @@ function onBrowserReady() {
   waitingForBrowserReady = false;
 
   OnboardingTourType.check();
+  OnboardingTelemetry.init(startupData);
   Services.mm.loadFrameScript("resource://onboarding/onboarding.js", true);
   initContentMessageListener();
 }
@@ -195,6 +201,9 @@ function install(aData, aReason) {}
 function uninstall(aData, aReason) {}
 
 function startup(aData, aReason) {
+  // Cache startup data which contains stuff like the version number, etc.
+  // so we can use it when we init the telemetry
+  startupData = aData;
   // Only start Onboarding when the browser UI is ready
   if (Services.startup.startingUp) {
     Services.obs.addObserver(observe, BROWSER_READY_NOTIFICATION);
@@ -206,6 +215,7 @@ function startup(aData, aReason) {
 }
 
 function shutdown(aData, aReason) {
+  startupData = null;
   // Stop waiting for browser to be ready
   if (waitingForBrowserReady) {
     Services.obs.removeObserver(observe, BROWSER_READY_NOTIFICATION);
