@@ -8,6 +8,7 @@
 
 #include "nsICacheEntry.h"
 #include "nsICachingChannel.h"
+#include "nsIClassOfService.h"
 #include "nsIAsyncVerifyRedirectCallback.h"
 #include "nsIPrincipal.h"
 
@@ -591,6 +592,12 @@ AsyncFetchAndSetIconForPage::FetchFromNetwork() {
   nsCOMPtr<nsISupportsPriority> priorityChannel = do_QueryInterface(channel);
   if (priorityChannel) {
     priorityChannel->AdjustPriority(nsISupportsPriority::PRIORITY_LOWEST);
+  }
+
+  nsCOMPtr<nsIClassOfService> cos = do_QueryInterface(channel);
+  if (cos) {
+    cos->AddClassFlags(nsIClassOfService::Tail |
+                       nsIClassOfService::Throttleable);
   }
 
   rv = channel->AsyncOpen2(this);
