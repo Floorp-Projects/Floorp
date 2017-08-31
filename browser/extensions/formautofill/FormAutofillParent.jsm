@@ -355,7 +355,7 @@ FormAutofillParent.prototype = {
     this._updateStatus();
   },
 
-  _onAddressSubmit(address, target, timeStartedFillingMS) {
+  _onAddressSubmit(address, target) {
     if (address.guid) {
       // Avoid updating the fields that users don't modify.
       let originalAddress = this.profileStorage.addresses.get(address.guid);
@@ -366,8 +366,6 @@ FormAutofillParent.prototype = {
       }
 
       if (!this.profileStorage.addresses.mergeIfPossible(address.guid, address.record)) {
-        this._recordFormFillingTime("address", "autofill-update", timeStartedFillingMS);
-
         FormAutofillDoorhanger.show(target, "update").then((state) => {
           let changedGUIDs = this.profileStorage.addresses.mergeToStorage(address.record);
           switch (state) {
@@ -391,7 +389,6 @@ FormAutofillParent.prototype = {
         Services.telemetry.scalarAdd("formautofill.addresses.fill_type_autofill_update", 1);
         return;
       }
-      this._recordFormFillingTime("address", "autofill", timeStartedFillingMS);
       this.profileStorage.addresses.notifyUsed(address.guid);
       // Address is merged successfully
       Services.telemetry.scalarAdd("formautofill.addresses.fill_type_autofill", 1);
@@ -401,7 +398,6 @@ FormAutofillParent.prototype = {
         changedGUIDs.push(this.profileStorage.addresses.add(address.record));
       }
       changedGUIDs.forEach(guid => this.profileStorage.addresses.notifyUsed(guid));
-      this._recordFormFillingTime("address", "manual", timeStartedFillingMS);
 
       // Show first time use doorhanger
       if (Services.prefs.getBoolPref("extensions.formautofill.firstTimeUse")) {
@@ -445,28 +441,13 @@ FormAutofillParent.prototype = {
   },
 
   _onFormSubmit(data, target) {
-    let {profile: {address, creditCard}, timeStartedFillingMS} = data;
+    let {address, creditCard} = data;
 
     if (address) {
-      this._onAddressSubmit(address, target, timeStartedFillingMS);
+      this._onAddressSubmit(address, target);
     }
     if (creditCard) {
       this._onCreditCardSubmit(creditCard, target);
     }
-  },
-  /**
-   * Set the probes for the filling time with specific filling type and form type.
-   *
-   * @private
-   * @param  {string} formType
-   *         3 type of form (address/creditcard/address-creditcard).
-   * @param  {string} fillingType
-   *         3 filling type (manual/autofill/autofill-update).
-   * @param  {int} startedFillingMS
-   *         Time that form started to filling in ms.
-   */
-  _recordFormFillingTime(formType, fillingType, startedFillingMS) {
-    let histogram = Services.telemetry.getKeyedHistogramById("FORM_FILLING_REQUIRED_TIME_MS");
-    histogram.add(`${formType}-${fillingType}`, Date.now() - startedFillingMS);
   },
 };
