@@ -7980,6 +7980,10 @@ PresShell::DispatchEventToDOM(WidgetEvent* aEvent,
     }
   }
   if (eventTarget) {
+    if (aEvent->IsBlockedForFingerprintingResistance()) {
+      aEvent->mFlags.mOnlySystemGroupDispatchInContent = true;
+    }
+
     if (aEvent->mClass == eCompositionEventClass) {
       IMEStateManager::DispatchCompositionEvent(eventTarget, mPresContext,
                                                 aEvent->AsCompositionEvent(),
