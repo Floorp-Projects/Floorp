@@ -5,6 +5,7 @@
 
 package org.mozilla.gecko.activitystream.homepanel;
 
+import android.content.SharedPreferences;
 import android.database.Cursor;
 import android.support.annotation.NonNull;
 import android.support.v7.widget.RecyclerView;
@@ -13,9 +14,11 @@ import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
 
+import org.mozilla.gecko.GeckoSharedPrefs;
 import org.mozilla.gecko.R;
 import org.mozilla.gecko.Telemetry;
 import org.mozilla.gecko.TelemetryContract;
+import org.mozilla.gecko.activitystream.ActivityStream;
 import org.mozilla.gecko.activitystream.ActivityStreamTelemetry;
 import org.mozilla.gecko.activitystream.homepanel.menu.ActivityStreamContextMenu;
 import org.mozilla.gecko.activitystream.homepanel.model.RowModel;
@@ -50,9 +53,6 @@ public class StreamRecyclerAdapter extends RecyclerView.Adapter<StreamViewHolder
     private Cursor topSitesCursor;
     private List<RowModel> recyclerViewModel; // List of item types backing this RecyclerView.
     private List<TopStory> topStoriesQueue;
-
-    // TODO: Replace temporary pref placeholder with pref
-    public static final boolean POCKET_ENABLED = false;
 
     private final RowItemType[] FIXED_ROWS = {RowItemType.TOP_PANEL, RowItemType.WELCOME, RowItemType.TOP_STORIES_TITLE, RowItemType.HIGHLIGHTS_TITLE};
     private final int MAX_TOP_STORIES = 3;
@@ -127,7 +127,8 @@ public class StreamRecyclerAdapter extends RecyclerView.Adapter<StreamViewHolder
         if (type == RowItemType.TOP_PANEL.getViewType()) {
             return new TopPanelRow(inflater.inflate(TopPanelRow.LAYOUT_ID, parent, false), onUrlOpenListener, onUrlOpenInBackgroundListener);
         } else if (type == RowItemType.TOP_STORIES_TITLE.getViewType()) {
-            return new StreamTitleRow(inflater.inflate(StreamTitleRow.LAYOUT_ID, parent, false), R.string.activity_stream_topstories, POCKET_ENABLED);
+            final boolean pocketEnabled = GeckoSharedPrefs.forProfile(parent.getContext()).getBoolean(ActivityStreamPanel.PREF_POCKET_ENABLED, true);
+            return new StreamTitleRow(inflater.inflate(StreamTitleRow.LAYOUT_ID, parent, false), R.string.activity_stream_topstories, pocketEnabled);
         } else if (type == RowItemType.TOP_STORIES_ITEM.getViewType()) {
             return new WebpageItemRow(inflater.inflate(WebpageItemRow.LAYOUT_ID, parent, false), this);
         } else if (type == RowItemType.WELCOME.getViewType()) {
@@ -135,7 +136,10 @@ public class StreamRecyclerAdapter extends RecyclerView.Adapter<StreamViewHolder
         } else if (type == RowItemType.HIGHLIGHT_ITEM.getViewType()) {
             return new WebpageItemRow(inflater.inflate(WebpageItemRow.LAYOUT_ID, parent, false), this);
         } else if (type == RowItemType.HIGHLIGHTS_TITLE.getViewType()) {
-            return new StreamTitleRow(inflater.inflate(StreamTitleRow.LAYOUT_ID, parent, false), R.string.activity_stream_highlights, true);
+            final SharedPreferences sharedPreferences = GeckoSharedPrefs.forProfile(parent.getContext());
+            final boolean bookmarksEnabled = sharedPreferences.getBoolean(ActivityStreamPanel.PREF_BOOKMARKS_ENABLED, true);
+            final boolean visitedEnabled = sharedPreferences.getBoolean(ActivityStreamPanel.PREF_VISITED_ENABLED, true);
+            return new StreamTitleRow(inflater.inflate(StreamTitleRow.LAYOUT_ID, parent, false), R.string.activity_stream_highlights, bookmarksEnabled || visitedEnabled);
         } else {
             throw new IllegalStateException("Missing inflation for ViewType " + type);
         }

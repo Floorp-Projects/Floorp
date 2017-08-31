@@ -79,6 +79,11 @@
         <attr name="entryKeys" format="string"/>
     </declare-styleable>
 
+    <declare-styleable name="SwitchPreferenceView">
+        <attr name="androidPreferenceKey" format="string"/>
+        <attr name="defaultValue" format="boolean"/>
+    </declare-styleable>
+
     <declare-styleable name="TabsLayout">
         <attr name="tabs">
             <flag name="tabs_normal" value="0x00" />
