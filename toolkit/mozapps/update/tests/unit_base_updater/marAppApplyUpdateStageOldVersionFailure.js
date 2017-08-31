@@ -35,17 +35,9 @@ function stageUpdateFinished() {
   checkPostUpdateRunningFile(false);
   checkFilesAfterUpdateSuccess(getStageDirFile, true);
   checkUpdateLogContents(LOG_COMPLETE_SUCCESS, true);
-  // Change the active update to an older version to simulate installing a new
-  // version of the application while there is an update that has been staged.
-  let patchProps = {state: STATE_AFTER_STAGE};
-  let patches = getLocalPatchString(patchProps);
-  let updateProps = {appVersion: "1.0"};
-  let updates = getLocalUpdateString(updateProps, patches);
-  writeUpdatesToXMLFile(getLocalUpdatesXMLString(updates), true);
   // Change the version file to an older version to simulate installing a new
   // version of the application while there is an update that has been staged.
-  writeVersionFile("1.0");
-  reloadUpdateManagerData();
+  writeVersionFile("0.9");
   // Try to switch the application to the staged application that was updated.
   runUpdateUsingApp(STATE_AFTER_STAGE);
 }
@@ -54,15 +46,19 @@ function stageUpdateFinished() {
  * Called after the call to runUpdateUsingApp finishes.
  */
 function runUpdateFinished() {
+  // Change the active update to an older version to simulate installing a new
+  // version of the application while there is an update that has been staged.
+  let patchProps = {state: STATE_AFTER_STAGE};
+  let patches = getLocalPatchString(patchProps);
+  let updateProps = {appVersion: "0.9"};
+  let updates = getLocalUpdateString(updateProps, patches);
+  getUpdatesXMLFile(true).remove(false);
+  writeUpdatesToXMLFile(getLocalUpdatesXMLString(updates), true);
+  reloadUpdateManagerData();
+
   standardInit();
-  Assert.equal(readStatusState(), STATE_NONE,
-               "the status file state" + MSG_SHOULD_EQUAL);
-  Assert.ok(!gUpdateManager.activeUpdate,
-            "the active update should not be defined");
-  Assert.equal(gUpdateManager.updateCount, 1,
-               "the update manager updateCount attribute" + MSG_SHOULD_EQUAL);
-  Assert.equal(gUpdateManager.getUpdateAt(0).state, STATE_AFTER_STAGE,
-               "the update state" + MSG_SHOULD_EQUAL);
+  checkUpdateManager(STATE_NONE, false, STATE_FAILED,
+                     ERR_OLDER_VERSION_OR_SAME_BUILD, 1);
   checkPostUpdateRunningFile(false);
   setTestFilesAndDirsForFailure();
   checkFilesAfterUpdateFailure(getApplyDirFile, !IS_MACOSX, false);
