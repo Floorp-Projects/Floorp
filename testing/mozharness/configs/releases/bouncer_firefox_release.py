@@ -34,6 +34,7 @@ config = {
         "installer-ssl": {
             "product-name": "Firefox-%(version)s-SSL",
             "check_uptake": True,
+            "alias": "firefox-latest-ssl",
             "ssl-only": True,
             "add-locales": True,
             "paths": {
