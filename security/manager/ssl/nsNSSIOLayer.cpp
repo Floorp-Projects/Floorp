@@ -2535,6 +2535,8 @@ loser:
   return nullptr;
 }
 
+// Please change getSignatureName in nsNSSCallbacks.cpp when changing the list
+// here.
 static const SSLSignatureScheme sEnabledSignatureSchemes[] = {
   ssl_sig_ecdsa_secp256r1_sha256,
   ssl_sig_ecdsa_secp384r1_sha384,
@@ -2645,6 +2647,8 @@ nsSSLIOLayerSetOptions(PRFileDesc* fd, bool forSTARTTLS,
   }
 
   // Include a modest set of named groups.
+  // Please change getKeaGroupName in nsNSSCallbacks.cpp when changing the list
+  // here.
   const SSLNamedGroup namedGroups[] = {
     ssl_grp_ec_curve25519, ssl_grp_ec_secp256r1, ssl_grp_ec_secp384r1,
     ssl_grp_ec_secp521r1, ssl_grp_ffdhe_2048, ssl_grp_ffdhe_3072
