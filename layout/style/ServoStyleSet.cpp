@@ -1052,47 +1052,6 @@ ServoStyleSet::StyleNewlyBoundElement(Element* aElement)
 }
 
 void
-ServoStyleSet::StyleSubtreeForReconstruct(Element* aRoot)
-{
-  MOZ_ASSERT(MayTraverseFrom(aRoot));
-  MOZ_ASSERT(aRoot->HasServoData());
-
-  // If the restyle root is beneath |aRoot|, there won't be any descendants bit
-  // leading us to aRoot. In this case, we need to traverse from the restyle
-  // root instead.
-  nsIDocument* doc = mPresContext->Document();
-  nsINode* restyleRoot = doc->GetServoRestyleRoot();
-  if (!restyleRoot) {
-    return;
-  }
-  Element* el = restyleRoot->IsElement() ? restyleRoot->AsElement() : nullptr;
-  if (el && nsContentUtils::ContentIsFlattenedTreeDescendantOf(el, aRoot)) {
-    MOZ_ASSERT(MayTraverseFrom(el));
-    aRoot = el;
-    doc->ClearServoRestyleRoot();
-  }
-
-  auto flags = ServoTraversalFlags::Forgetful |
-               ServoTraversalFlags::AggressivelyForgetful |
-               ServoTraversalFlags::ClearDirtyBits;
-  PreTraverse(flags);
-
-  AutoPrepareTraversal guard(this);
-
-  const SnapshotTable& snapshots = Snapshots();
-
-  DebugOnly<bool> postTraversalRequired =
-    Servo_TraverseSubtree(aRoot, mRawSet.get(), &snapshots, flags);
-  MOZ_ASSERT(!postTraversalRequired);
-
-  if (mPresContext->EffectCompositor()->PreTraverseInSubtree(flags, aRoot)) {
-    postTraversalRequired =
-      Servo_TraverseSubtree(aRoot, mRawSet.get(), &snapshots, flags);
-    MOZ_ASSERT(!postTraversalRequired);
-  }
-}
-
-void
 ServoStyleSet::MarkOriginsDirty(OriginFlags aChangedOrigins)
 {
   SetStylistStyleSheetsDirty();
