@@ -97,7 +97,21 @@ public:
     return sInServoTraversal;
   }
 
-  ServoStyleSet();
+  // The kind of styleset we have.
+  //
+  // We use ServoStyleSet also from XBL bindings, and some stuff needs to be
+  // different between them.
+  enum class Kind : uint8_t {
+    // A "master" StyleSet.
+    //
+    // This one is owned by a pres shell for a given document.
+    Master,
+
+    // A StyleSet for XBL, which is owned by a given XBL binding.
+    ForXBL,
+  };
+
+  explicit ServoStyleSet(Kind aKind);
   ~ServoStyleSet();
 
   void Init(nsPresContext* aPresContext, nsBindingManager* aBindingManager);
@@ -475,6 +489,9 @@ private:
    */
   const SnapshotTable& Snapshots();
 
+  bool IsMaster() const { return mKind == Kind::Master; }
+  bool IsForXBL() const { return mKind == Kind::ForXBL; }
+
   /**
    * Resolve all ServoDeclarationBlocks attached to mapped
    * presentation attributes cached on the document.
@@ -555,6 +572,7 @@ private:
   void RemoveSheetOfType(SheetType aType,
                          ServoStyleSheet* aSheet);
 
+  const Kind mKind;
   nsPresContext* mPresContext;
   UniquePtr<RawServoStyleSet> mRawSet;
   EnumeratedArray<SheetType, SheetType::Count,

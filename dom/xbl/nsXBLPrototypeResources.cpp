@@ -167,7 +167,7 @@ nsXBLPrototypeResources::GatherRuleProcessor()
 void
 nsXBLPrototypeResources::ComputeServoStyleSet(nsPresContext* aPresContext)
 {
-  mServoStyleSet.reset(new ServoStyleSet());
+  mServoStyleSet.reset(new ServoStyleSet(ServoStyleSet::Kind::ForXBL));
   mServoStyleSet->Init(aPresContext, nullptr);
   for (StyleSheet* sheet : mStyleSheetList) {
     MOZ_ASSERT(sheet->IsServo(),
