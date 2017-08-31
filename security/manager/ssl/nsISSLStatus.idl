@@ -18,6 +18,10 @@ interface nsISSLStatus : nsISupports {
   readonly attribute unsigned long keyLength;
   [must_use]
   readonly attribute unsigned long secretKeyLength;
+  [must_use]
+  readonly attribute ACString keaGroupName;
+  [must_use]
+  readonly attribute ACString signatureSchemeName;
 
   const short SSL_VERSION_3   = 0;
   const short TLS_VERSION_1   = 1;

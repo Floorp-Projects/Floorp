@@ -2094,7 +2094,7 @@ or run without that action (ie: --no-{action})"
             perfherder_data['suites'].append({
                 'name': 'compiler warnings',
                 'value': len(warnings.strip().splitlines()),
-                'alertThreshold': 1.0,
+                'alertThreshold': 100.0,
                 'subtests': [],
             })
 

@@ -62,6 +62,10 @@ WebRenderImageData::UpdateImageKey(ImageContainer* aContainer, bool aForceUpdate
   CreateImageClientIfNeeded();
   CreateExternalImageIfNeeded();
 
+  if (mContainer != aContainer) {
+    mContainer = aContainer;
+  }
+
   if (!mImageClient || !mExternalImageId) {
     return Nothing();
   }

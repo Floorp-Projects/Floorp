@@ -54,6 +54,10 @@ static char consoleName[] = {
 
 static PRBool utf8DisplayEnabled = PR_FALSE;
 
+/* The minimum password/pin length (in Unicode characters) in FIPS mode,
+ * defined in lib/softoken/pkcs11i.h. */
+#define FIPS_MIN_PIN 7
+
 void
 SECU_EnableUtf8Display(PRBool enable)
 {
@@ -276,10 +280,25 @@ secu_InitSlotPassword(PK11SlotInfo *slot, PRBool retry, void *arg)
     }
 
     /* we have no password, so initialize database with one */
-    PR_fprintf(PR_STDERR,
-               "Enter a password which will be used to encrypt your keys.\n"
-               "The password should be at least 8 characters long,\n"
-               "and should contain at least one non-alphabetic character.\n\n");
+    if (PK11_IsFIPS()) {
+        PR_fprintf(PR_STDERR,
+                   "Enter a password which will be used to encrypt your keys.\n"
+                   "The password should be at least %d characters long,\n"
+                   "and should consist of at least three character classes.\n"
+                   "The available character classes are: digits (0-9), ASCII\n"
+                   "lowercase letters, ASCII uppercase letters, ASCII\n"
+                   "non-alphanumeric characters, and non-ASCII characters.\n\n"
+                   "If an ASCII uppercase letter appears at the beginning of\n"
+                   "the password, it is not counted toward its character class.\n"
+                   "Similarly, if a digit appears at the end of the password,\n"
+                   "it is not counted toward its character class.\n\n",
+                   FIPS_MIN_PIN);
+    } else {
+        PR_fprintf(PR_STDERR,
+                   "Enter a password which will be used to encrypt your keys.\n"
+                   "The password should be at least 8 characters long,\n"
+                   "and should contain at least one non-alphabetic character.\n\n");
+    }
 
     output = fopen(consoleName, "w");
     if (output == NULL) {

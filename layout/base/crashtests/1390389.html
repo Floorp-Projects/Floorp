@@ -1,0 +1,19 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="UTF-8">
+<script>
+a = document.createElement("span");
+document.documentElement.appendChild(a);
+b = document.createElement("span");
+b.appendChild(document.createElement("div"));
+a.appendChild(b);
+a.appendChild(document.createElement("col"));
+</script>
+</head>
+<body>
+<style>
+q { color: red; }
+</style>
+</body>
+</html>
