@@ -21,7 +21,8 @@ class VRLayerParent : public PVRLayerParent {
 public:
   VRLayerParent(uint32_t aVRDisplayID, const Rect& aLeftEyeRect,
                 const Rect& aRightEyeRect, const uint32_t aGroup);
-  virtual mozilla::ipc::IPCResult RecvSubmitFrame(PTextureParent* texture) override;
+  virtual mozilla::ipc::IPCResult RecvSubmitFrame(PTextureParent* texture,
+                                                  const uint64_t& aFrameId) override;
   virtual mozilla::ipc::IPCResult RecvDestroy() override;
   uint32_t GetDisplayID() const { return mVRDisplayID; }
   uint32_t GetGroup() const { return mGroup; }
