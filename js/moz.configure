@@ -22,12 +22,11 @@ option(env='JS_STANDALONE', default=building_js,
 def js_standalone(value):
     if value:
         return True
-
 set_config('JS_STANDALONE', js_standalone)
+set_define('JS_STANDALONE', js_standalone)
 add_old_configure_assignment('JS_STANDALONE', js_standalone)
-
 js_option('--disable-js-shell', default=building_js,
-       help='Do not build the JS shell')
+          help='Do not build the JS shell')
 
 @depends('--disable-js-shell')
 def js_disable_shell(value):
