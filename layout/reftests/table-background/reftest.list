@@ -60,3 +60,7 @@ fuzzy-if(d2d||skiaContent,1,95000) == border-separate-opacity-table.html border-
 == empty-cells-default-2.html empty-cells-default-2-ref.html
 fuzzy-if(OSX,1,113) fuzzy-if(winWidget,1,12) fuzzy-if(winWidget&&!layersGPUAccelerated,82,116) fuzzy-if(skiaContent,84,5500) fuzzy-if(Android,2,5957) == table-row-opacity-dynamic-1.html table-row-opacity-dynamic-1-ref.html
 == table-row-opacity-dynamic-2.html table-row-opacity-dynamic-2-ref.html
+
+== hidden-cells-1.html about:blank
+== hidden-cells-2.html about:blank
+== hidden-cells-3.html hidden-cells-3-ref.html
