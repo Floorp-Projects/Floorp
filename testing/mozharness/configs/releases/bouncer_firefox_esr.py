@@ -34,6 +34,7 @@ config = {
         "installer-ssl": {
             "product-name": "Firefox-%(version)s-SSL",
             "check_uptake": True,
+            "alias": "firefox-esr-latest-ssl",
             "ssl-only": True,
             "add-locales": True,
             "paths": {
@@ -63,7 +64,7 @@ config = {
             "product-name": "Firefox-%(version)s-sha1",
             "check_uptake": True,
             # XP/Vista Release users are redicted to ESR52
-            "alias": "firefox-sha1",
+            "alias": "firefox-sha1-ssl",
             "ssl-only": True,
             "add-locales": True,
             "paths": {
