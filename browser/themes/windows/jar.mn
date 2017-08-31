@@ -97,10 +97,3 @@ browser.jar:
 % override chrome://browser/skin/privatebrowsing-mask-tabstrip.png    chrome://browser/skin/privatebrowsing-mask-tabstrip-win7.png  os=WINNT osversion<=6.1
 % override chrome://browser/skin/privatebrowsing-mask-titlebar.png    chrome://browser/skin/privatebrowsing-mask-titlebar-win7.png  os=WINNT osversion<=6.1
 % override chrome://browser/skin/toolbarbutton-dropdown-arrow.png     chrome://browser/skin/toolbarbutton-dropdown-arrow-win7.png   os=WINNT osversion<=6.1
-
-% override chrome://browser/skin/tabbrowser/tab-background-start.png     chrome://browser/skin/tabbrowser/tab-background-start-preWin10.png     os=WINNT osversion<=6.3
-% override chrome://browser/skin/tabbrowser/tab-background-start@2x.png  chrome://browser/skin/tabbrowser/tab-background-start-preWin10@2x.png  os=WINNT osversion<=6.3
-% override chrome://browser/skin/tabbrowser/tab-background-middle.png    chrome://browser/skin/tabbrowser/tab-background-middle-preWin10.png    os=WINNT osversion<=6.3
-% override chrome://browser/skin/tabbrowser/tab-background-middle@2x.png chrome://browser/skin/tabbrowser/tab-background-middle-preWin10@2x.png os=WINNT osversion<=6.3
-% override chrome://browser/skin/tabbrowser/tab-background-end.png       chrome://browser/skin/tabbrowser/tab-background-end-preWin10.png       os=WINNT osversion<=6.3
-% override chrome://browser/skin/tabbrowser/tab-background-end@2x.png    chrome://browser/skin/tabbrowser/tab-background-end-preWin10@2x.png    os=WINNT osversion<=6.3
