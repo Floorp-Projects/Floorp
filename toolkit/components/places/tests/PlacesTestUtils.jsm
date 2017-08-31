@@ -207,14 +207,15 @@ this.PlacesTestUtils = Object.freeze({
    * @resolves Returns the field value.
    * @rejects JavaScript exception.
    */
-  async fieldInDB(aURI, field) {
+  fieldInDB(aURI, field) {
     let url = aURI instanceof Ci.nsIURI ? new URL(aURI.spec) : new URL(aURI);
-    let db = await PlacesUtils.promiseDBConnection();
-    let rows = await db.executeCached(
-      `SELECT ${field} FROM moz_places
-       WHERE url_hash = hash(:url) AND url = :url`,
-      { url: url.href });
-    return rows[0].getResultByIndex(0);
+    return PlacesUtils.withConnectionWrapper("PlacesTestUtils.jsm: fieldInDb", async db => {
+      let rows = await db.executeCached(
+        `SELECT ${field} FROM moz_places
+        WHERE url_hash = hash(:url) AND url = :url`,
+        { url: url.href });
+      return rows[0].getResultByIndex(0);
+    });
   },
 
   /**

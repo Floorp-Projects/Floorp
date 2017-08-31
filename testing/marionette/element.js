@@ -12,10 +12,10 @@ Cu.import("resource://gre/modules/Log.jsm");
 Cu.import("chrome://marionette/content/assert.js");
 Cu.import("chrome://marionette/content/atom.js");
 const {
-  error,
   InvalidSelectorError,
   JavaScriptError,
   NoSuchElementError,
+  pprint,
   StaleElementReferenceError,
 } = Cu.import("chrome://marionette/content/error.js", {});
 Cu.import("chrome://marionette/content/wait.js");
@@ -180,7 +180,7 @@ element.Store = class {
 
     if (element.isStale(el)) {
       throw new StaleElementReferenceError(
-          error.pprint`The element reference of ${el} stale; ` +
+          pprint`The element reference of ${el} stale; ` +
               "either the element is no longer attached to the DOM " +
               "or the document has been refreshed");
     }

@@ -196,7 +196,7 @@ DomNodePreview.prototype = {
   },
 
   destroy: function () {
-    HighlighterLock.unhighlight().catch(e => console.error(e));
+    HighlighterLock.unhighlight().catch(console.error);
 
     this.stopListeners();
 
@@ -218,7 +218,7 @@ DomNodePreview.prototype = {
       return;
     }
     this.highlighterUtils.highlightNodeFront(this.nodeFront)
-                         .catch(e => console.error(e));
+                         .catch(console.error);
   },
 
   onPreviewMouseOut: function () {
@@ -226,7 +226,7 @@ DomNodePreview.prototype = {
       return;
     }
     this.highlighterUtils.unhighlight()
-                         .catch(e => console.error(e));
+                         .catch(console.error);
   },
 
   onSelectElClick: function () {
@@ -246,12 +246,12 @@ DomNodePreview.prototype = {
       classList.remove("selected");
       HighlighterLock.unhighlight().then(() => {
         this.emit("target-highlighter-unlocked");
-      }, error => console.error(error));
+      }, console.error);
     } else {
       classList.add("selected");
       HighlighterLock.highlight(this).then(() => {
         this.emit("target-highlighter-locked");
-      }, error => console.error(error));
+      }, console.error);
     }
   },
 

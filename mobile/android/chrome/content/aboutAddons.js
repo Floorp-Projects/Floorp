@@ -397,11 +397,7 @@ var Addons = {
         // Allow the options to use all the available width space.
         optionsBox.classList.remove("inner");
 
-        // WebExtensions are loaded asynchronously and the optionsURL
-        // may not be available via listitem when the add-on has just been
-        // installed, but it is available on the addon if one is set.
-        detailItem.setAttribute("optionsURL", addon.optionsURL);
-        this.createWebExtensionOptions(optionsBox, addon.optionsURL, addon.optionsBrowserStyle);
+        this.createWebExtensionOptions(optionsBox, addon);
         break;
       case AddonManager.OPTIONS_TYPE_TAB:
         // Keep the usual layout for any options related the legacy (or system) add-ons
@@ -441,44 +437,58 @@ var Addons = {
     }
 
     button.onclick = async () => {
+      if (addon.isWebExtension) {
+        // WebExtensions are loaded asynchronously and the optionsURL
+        // may not be available until the addon has been started.
+        await addon.startupPromise;
+      }
+
       const {optionsURL} = addon;
       openOptionsInTab(optionsURL);
     };
   },
 
-  createWebExtensionOptions: async function(destination, optionsURL, browserStyle) {
-    let originalHeight;
-    let frame = document.createElement("iframe");
-    frame.setAttribute("id", "addon-options");
-    frame.setAttribute("mozbrowser", "true");
-    frame.setAttribute("style", "width: 100%; overflow: hidden;");
+  createWebExtensionOptions: async function(destination, addon) {
+    // WebExtensions are loaded asynchronously and the optionsURL
+    // may not be available until the addon has been started.
+    await addon.startupPromise;
 
-    // Adjust iframe height to the iframe content (also between navigation of multiple options
-    // files).
-    frame.onload = (evt) => {
-      if (evt.target !== frame) {
-        return;
-      }
+    const {optionsURL, optionsBrowserStyle} = addon;
+    let frame = destination.querySelector("iframe#addon-options");
 
-      const {document} = frame.contentWindow;
-      const bodyScrollHeight = document.body && document.body.scrollHeight;
-      const documentScrollHeight = document.documentElement.scrollHeight;
+    if (!frame) {
+      let originalHeight;
+      frame = document.createElement("iframe");
+      frame.setAttribute("id", "addon-options");
+      frame.setAttribute("mozbrowser", "true");
+      frame.setAttribute("style", "width: 100%; overflow: hidden;");
 
-      // Set the iframe height to the maximum between the body and the document
-      // scrollHeight values.
-      frame.style.height = Math.max(bodyScrollHeight, documentScrollHeight) + "px";
+      // Adjust iframe height to the iframe content (also between navigation of multiple options
+      // files).
+      frame.onload = (evt) => {
+        if (evt.target !== frame) {
+          return;
+        }
 
-      // Restore the original iframe height between option page loads,
-      // so that we don't force the new document to have the same size
-      // of the previosuly loaded option page.
-      frame.contentWindow.addEventListener("unload", () => {
-        frame.style.height = originalHeight + "px";
-      }, {once: true});
-    };
+        const {document} = frame.contentWindow;
+        const bodyScrollHeight = document.body && document.body.scrollHeight;
+        const documentScrollHeight = document.documentElement.scrollHeight;
 
-    destination.appendChild(frame);
+        // Set the iframe height to the maximum between the body and the document
+        // scrollHeight values.
+        frame.style.height = Math.max(bodyScrollHeight, documentScrollHeight) + "px";
 
-    originalHeight = frame.getBoundingClientRect().height;
+        // Restore the original iframe height between option page loads,
+        // so that we don't force the new document to have the same size
+        // of the previosuly loaded option page.
+        frame.contentWindow.addEventListener("unload", () => {
+          frame.style.height = originalHeight + "px";
+        }, {once: true});
+      };
+
+      destination.appendChild(frame);
+      originalHeight = frame.getBoundingClientRect().height;
+    }
 
     // Loading the URL this way prevents the native back
     // button from applying to the iframe.
@@ -585,6 +595,14 @@ var Addons = {
         detailItem.setAttribute("opType", opType);
       else
         detailItem.removeAttribute("opType");
+
+      // Remove any addon options iframe if the currently selected addon has been disabled.
+      if (!aValue) {
+        const addonOptionsIframe = document.querySelector("#addon-options");
+        if (addonOptionsIframe) {
+          addonOptionsIframe.remove();
+        }
+      }
     }
 
     // Sync to the list item
