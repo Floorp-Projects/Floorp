@@ -22,7 +22,7 @@ nsHtml5PlainTextUtils::NewLinkAttributes()
   nsHtml5String type = nsHtml5Portability::newStringFromLiteral("text/css");
   linkAttrs->addAttribute(nsHtml5AttributeName::ATTR_TYPE, type, -1);
   nsHtml5String href = nsHtml5Portability::newStringFromLiteral(
-    "resource://gre-resources/plaintext.css");
+    "resource://content-accessible/plaintext.css");
   linkAttrs->addAttribute(nsHtml5AttributeName::ATTR_HREF, href, -1);
 
   nsresult rv;
