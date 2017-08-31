@@ -6,6 +6,7 @@
 #ifndef nsIDocumentInlines_h
 #define nsIDocumentInlines_h
 
+#include "nsContentUtils.h"
 #include "nsIDocument.h"
 #include "mozilla/dom/HTMLBodyElement.h"
 #include "nsStyleSheetService.h"
@@ -64,6 +65,9 @@ nsIDocument::SetServoRestyleRoot(nsINode* aRoot, uint32_t aDirtyBits)
   MOZ_ASSERT(aDirtyBits);
   MOZ_ASSERT((aDirtyBits & ~Element::kAllServoDescendantBits) == 0);
 
+  MOZ_ASSERT(!mServoRestyleRoot ||
+             mServoRestyleRoot == aRoot ||
+             nsContentUtils::ContentIsFlattenedTreeDescendantOfForStyle(mServoRestyleRoot, aRoot));
   MOZ_ASSERT(aRoot == aRoot->OwnerDocAsNode() ||
              (aRoot->IsElement() && aRoot->IsInComposedDoc()));
   mServoRestyleRoot = aRoot;
