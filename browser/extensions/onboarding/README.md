@@ -24,9 +24,13 @@ Snippets (the remote notification that handled by activity stream) will only be 
 
 ## Architecture
 
-Everytime `about:home` or `about:newtab` page is opened, onboarding overlay is injected into that page.
+![](https://i.imgur.com/7RK89Zw.png)
 
-`OnboardingTourType.jsm` will check the onboarding tour type (currently support `new` and `update`). Then in `onboarding.js`, All tours are defined inside of `onboardingTourset` dictionary. `getTourIDList` function will load tours from proper preferences. (Check `How to change the order of tours` section for more detail).
+During booting from `bootstrap.js`, `OnboardingTourType.jsm` will check the onboarding tour type (`new` and `update` are supported types) and set required initial states into preferences.
+
+Everytime `about:home` or `about:newtab` page is opened, `onboarding.js` is injected into that page via [frame scripts](https://developer.mozilla.org/en-US/Firefox/Multiprocess_Firefox/Message_Manager/Communicating_with_frame_scripts).
+
+Then in `onboarding.js`, all tours are defined inside of `onboardingTourset` dictionary. `getTourIDList` function will load tours from proper preferences. (Check `How to change the order of tours` section for more detail).
 
 When user clicks the action button in each tour, We use [UITour](http://bedrock.readthedocs.io/en/latest/uitour.html) to highlight the correspondent browser UI element. The UITour client is bundled in onboarding addon via `jar.mn`.
 
