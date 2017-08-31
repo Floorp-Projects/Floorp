@@ -118,6 +118,23 @@ public:
   bool SetTo(const char16_t* aBuffer, int32_t aLength, bool aUpdateBidi,
              bool aForce2b);
 
+  bool SetTo(const nsString& aString, bool aUpdateBidi, bool aForce2b)
+  {
+    ReleaseText();
+    if (aForce2b && !aUpdateBidi) {
+      nsStringBuffer* buffer = nsStringBuffer::FromString(aString);
+      if (buffer) {
+        NS_ADDREF(m2b = buffer);
+        mState.mInHeap = true;
+        mState.mIs2b = true;
+        mState.mLength = aString.Length();
+        return true;
+      }
+    }
+
+    return SetTo(aString.get(), aString.Length(), aUpdateBidi, aForce2b);
+  }
+
   /**
    * Append aData to the end of this fragment. If aUpdateBidi is true, contents
    * of the fragment will be scanned, and mState.mIsBidi will be turned on if
@@ -213,6 +230,11 @@ public:
   {
     MOZ_ASSERT(uint32_t(aIndex) < mState.mLength, "bad index");
     return mState.mIs2b ? Get2b()[aIndex] : static_cast<unsigned char>(m1b[aIndex]);
+  }
+
+  void SetBidi(bool aBidi)
+  {
+    mState.mIsBidi = aBidi;
   }
 
   struct FragmentBits {
