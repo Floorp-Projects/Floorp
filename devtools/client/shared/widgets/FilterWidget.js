@@ -575,7 +575,7 @@ CSSFilterEditorWidget.prototype = {
         // If the click happened on the remove button.
         presets.splice(id, 1);
         this.setPresets(presets).then(this.renderPresets,
-                                      ex => console.error(ex));
+                                      console.error);
       } else {
         // Or if the click happened on a preset.
         let p = presets[id];
@@ -583,7 +583,7 @@ CSSFilterEditorWidget.prototype = {
         this.setCssValue(p.value);
         this.addPresetInput.value = p.name;
       }
-    }, ex => console.error(ex));
+    }, console.error);
   },
 
   _togglePresets: function () {
@@ -612,8 +612,8 @@ CSSFilterEditorWidget.prototype = {
       }
 
       this.setPresets(presets).then(this.renderPresets,
-                                    ex => console.error(ex));
-    }, ex => console.error(ex));
+                                    console.error);
+    }, console.error);
   },
 
   /**
@@ -952,12 +952,12 @@ CSSFilterEditorWidget.prototype = {
       }
 
       return presets;
-    }, e => console.error(e));
+    }, console.error);
   },
 
   setPresets: function (presets) {
     return asyncStorage.setItem("cssFilterPresets", presets)
-      .catch(e => console.error(e));
+      .catch(console.error);
   }
 };
 

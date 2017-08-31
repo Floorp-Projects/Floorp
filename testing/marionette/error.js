@@ -45,7 +45,11 @@ const BUILTIN_ERRORS = new Set([
   "URIError",
 ]);
 
-this.EXPORTED_SYMBOLS = ["error", "error.pprint"].concat(Array.from(ERRORS));
+this.EXPORTED_SYMBOLS = [
+  "error",
+  "pprint",
+  "stack",
+].concat(Array.from(ERRORS));
 
 /** @namespace */
 this.error = {};
@@ -158,7 +162,7 @@ error.stringify = function(err) {
  *     pprint`Expected element ${htmlElement}`;
  *     => 'Expected element <input id="foo" class="bar baz">'
  */
-error.pprint = function(ss, ...values) {
+this.pprint = function(ss, ...values) {
   function prettyObject(obj) {
     let proto = Object.prototype.toString.call(obj);
     let s = "";
@@ -210,6 +214,14 @@ error.pprint = function(ss, ...values) {
     }
   }
   return res.join("");
+};
+
+/** Create a stacktrace to the current line in the program. */
+this.stack = function() {
+  let trace = new Error().stack;
+  let sa = trace.split("\n");
+  sa = sa.slice(1);
+  return "stacktrace:\n" + sa.join("\n");
 };
 
 /**
@@ -305,17 +317,17 @@ class ElementClickInterceptedError extends WebDriverError {
 
       switch (obscuredEl.style.pointerEvents) {
         case "none":
-          msg = error.pprint`Element ${obscuredEl} is not clickable ` +
+          msg = pprint`Element ${obscuredEl} is not clickable ` +
               `at point (${coords.x},${coords.y}) ` +
               `because it does not have pointer events enabled, ` +
-              error.pprint`and element ${overlayingEl} ` +
+              pprint`and element ${overlayingEl} ` +
               `would receive the click instead`;
           break;
 
         default:
-          msg = error.pprint`Element ${obscuredEl} is not clickable ` +
+          msg = pprint`Element ${obscuredEl} is not clickable ` +
               `at point (${coords.x},${coords.y}) ` +
-              error.pprint`because another element ${overlayingEl} ` +
+              pprint`because another element ${overlayingEl} ` +
               `obscures it`;
           break;
       }

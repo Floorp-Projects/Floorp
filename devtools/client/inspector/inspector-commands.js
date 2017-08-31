@@ -58,7 +58,7 @@ exports.items = [{
   }],
   exec: function* (args, context) {
     if (args.hide) {
-      context.updateExec("eyedropper_server_hide").catch(e => console.error(e));
+      context.updateExec("eyedropper_server_hide").catch(console.error);
       return;
     }
 
@@ -74,7 +74,7 @@ exports.items = [{
 
     let telemetry = new Telemetry();
     telemetry.toolOpened(args.frommenu ? "menueyedropper" : "eyedropper");
-    context.updateExec("eyedropper_server").catch(e => console.error(e));
+    context.updateExec("eyedropper_server").catch(console.error);
   }
 }, {
   item: "command",

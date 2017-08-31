@@ -184,7 +184,7 @@ MarkupView.prototype = {
   _onToolboxPickerHover: function (event, nodeFront) {
     this.showNode(nodeFront).then(() => {
       this._showContainerAsHovered(nodeFront);
-    }, e => console.error(e));
+    }, console.error);
   },
 
   /**
