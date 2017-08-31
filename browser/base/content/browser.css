@@ -327,6 +327,7 @@ toolbarpaletteitem > toolbaritem[sdkstylewidget="true"][cui-areatype="toolbar"] 
 }
 
 .webextension-browser-action > .toolbarbutton-badge-stack > .toolbarbutton-icon {
+  height: 16px;
   width: 16px;
 }
 
