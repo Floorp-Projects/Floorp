@@ -1724,8 +1724,12 @@ nsHttpChannel::CallOnStartRequest()
         // We must keep the cache entry in case of partial request.
         // Concurrent access is the same, we need the entry in
         // OnStopRequest.
-        if (!mCachedContentIsPartial && !mConcurrentCacheAccess)
+        // We also need the cache entry when racing cache with network to find
+        // out what is the source of the data.
+        if (!mCachedContentIsPartial && !mConcurrentCacheAccess &&
+            !(mRaceCacheWithNetwork && mFirstResponseSource == RESPONSE_FROM_CACHE)) {
             CloseCacheEntry(false);
+        }
     }
 
     if (!mCanceled) {
