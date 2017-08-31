@@ -26,4 +26,4 @@ flake8:
     exclude: []
     extensions: ['py']
     type: external
-    payload: flake8_:lint
+    payload: python.flake8:lint
