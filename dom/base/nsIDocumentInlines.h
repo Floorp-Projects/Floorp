@@ -64,10 +64,7 @@ nsIDocument::SetServoRestyleRoot(nsINode* aRoot, uint32_t aDirtyBits)
   MOZ_ASSERT(aRoot);
   MOZ_ASSERT(aDirtyBits);
   MOZ_ASSERT((aDirtyBits & ~Element::kAllServoDescendantBits) == 0);
-  // FIXME(emilio): This should hold, but we're clobbering it from
-  // nsCSSFrameConstructor::ConstructDocElementFrame, which is wrong!
-  //
-  // MOZ_ASSERT((aDirtyBits & mServoRestyleRootDirtyBits) == mServoRestyleRootDirtyBits);
+  MOZ_ASSERT((aDirtyBits & mServoRestyleRootDirtyBits) == mServoRestyleRootDirtyBits);
 
   MOZ_ASSERT(!mServoRestyleRoot ||
              mServoRestyleRoot == aRoot ||
