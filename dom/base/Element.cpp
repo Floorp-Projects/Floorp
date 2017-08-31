@@ -4265,6 +4265,21 @@ BitIsPropagated(const Element* aElement, uint32_t aBit, nsINode* aRestyleRoot)
 }
 #endif
 
+static inline void
+AssertNoBitsPropagatedFrom(nsINode* aRoot) {
+#ifdef DEBUG
+  if (!aRoot || !aRoot->IsElement()) {
+    return;
+  }
+
+  auto* element = aRoot->GetFlattenedTreeParentElementForStyle();
+  while (element) {
+    MOZ_ASSERT(!element->HasAnyOfFlags(Element::kAllServoDescendantBits));
+    element = element->GetFlattenedTreeParentElementForStyle();
+  }
+#endif
+}
+
 // Sets |aBits| on aElement and all of its flattened-tree ancestors up to and
 // including aStopAt or the root element (whichever is encountered first).
 static inline Element*
@@ -4347,10 +4362,15 @@ NoteDirtyElement(Element* aElement, uint32_t aBit)
     shell->EnsureStyleFlush();
   }
 
-  // If there's no existing restyle root, or if the root is already aElement,
-  // just note the root+bits and return.
   nsINode* existingRoot = doc->GetServoRestyleRoot();
   uint32_t existingBits = existingRoot ? doc->GetServoRestyleRootDirtyBits() : 0;
+
+  // The bit checks below rely on this to arrive to useful conclusions about the
+  // shape of the tree.
+  AssertNoBitsPropagatedFrom(existingRoot);
+
+  // If there's no existing restyle root, or if the root is already aElement,
+  // just note the root+bits and return.
   if (!existingRoot || existingRoot == aElement) {
     doc->SetServoRestyleRoot(aElement, existingBits | aBit);
     return;
