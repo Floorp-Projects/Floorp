@@ -541,10 +541,7 @@ WebRenderLayerManager::GenerateFallbackData(nsDisplayItem* aItem,
     return nullptr;
   }
 
-  aOffset = ViewAs<LayerPixel>(
-      LayoutDevicePoint::FromAppUnits(clippedBounds.TopLeft(), appUnitsPerDevPixel),
-      PixelCastJustification::WebRenderHasUnitResolution);
-
+  aOffset = RoundedToInt(bounds.TopLeft());
   nsRegion invalidRegion;
   nsAutoPtr<nsDisplayItemGeometry> geometry = fallbackData->GetGeometry();
 
