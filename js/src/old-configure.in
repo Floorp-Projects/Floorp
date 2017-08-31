@@ -1495,16 +1495,20 @@ dnl ========================================================
 dnl = Enable jemalloc
 dnl ========================================================
 
-case "${OS_TARGET}" in
-Android|WINNT|Darwin)
+if test "$JS_STANDALONE" -a -z "$MOZ_MEMORY"; then
   MOZ_GLUE_IN_PROGRAM=
-  ;;
-*)
-  dnl On !Android !Windows !OSX, we only want to link executables against mozglue
-  MOZ_GLUE_IN_PROGRAM=1
-  AC_DEFINE(MOZ_GLUE_IN_PROGRAM)
-  ;;
-esac
+else
+  case "${OS_TARGET}" in
+  Android|WINNT|Darwin)
+    MOZ_GLUE_IN_PROGRAM=
+    ;;
+  *)
+    dnl On !Android !Windows !OSX, we only want to link executables against mozglue
+    MOZ_GLUE_IN_PROGRAM=1
+    AC_DEFINE(MOZ_GLUE_IN_PROGRAM)
+    ;;
+  esac
+fi
 
 if test "$MOZ_MEMORY"; then
   dnl The generic feature tests that determine how to compute ncpus are long and
