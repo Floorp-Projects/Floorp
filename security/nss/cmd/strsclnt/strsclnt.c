@@ -886,8 +886,10 @@ PRBool
 LoggedIn(CERTCertificate *cert, SECKEYPrivateKey *key)
 {
     if ((cert->slot) && (key->pkcs11Slot) &&
-        (PR_TRUE == PK11_IsLoggedIn(cert->slot, NULL)) &&
-        (PR_TRUE == PK11_IsLoggedIn(key->pkcs11Slot, NULL))) {
+        (!PK11_NeedLogin(cert->slot) ||
+         PR_TRUE == PK11_IsLoggedIn(cert->slot, NULL)) &&
+        (!PK11_NeedLogin(key->pkcs11Slot) ||
+         PR_TRUE == PK11_IsLoggedIn(key->pkcs11Slot, NULL))) {
         return PR_TRUE;
     }
 
