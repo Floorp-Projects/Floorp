@@ -551,6 +551,10 @@ add_task(async function sendToDevice_inUrlbar() {
     // after a moment.
     info("Waiting for the Sent! notification panel to open");
     await promisePanelShown(BrowserPageActionFeedback.panelNode.id);
+    Assert.equal(
+      BrowserPageActionFeedback.panelNode.anchorNode.id,
+      urlbarButton.id
+    );
     info("Waiting for the Sent! notification panel to close");
     await promisePanelHidden(BrowserPageActionFeedback.panelNode.id);
 
