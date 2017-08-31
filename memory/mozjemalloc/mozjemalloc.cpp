@@ -4378,6 +4378,23 @@ malloc_init(void)
 extern "C" void register_zone(void);
 #endif
 
+static size_t
+GetKernelPageSize()
+{
+  static size_t kernel_page_size = ([]() {
+#ifdef XP_WIN
+    SYSTEM_INFO info;
+    GetSystemInfo(&info);
+    return info.dwPageSize;
+#else
+    long result = sysconf(_SC_PAGESIZE);
+    MOZ_ASSERT(result != -1);
+    return result;
+#endif
+  })();
+  return kernel_page_size;
+}
+
 #if !defined(XP_WIN)
 static
 #endif
@@ -4411,19 +4428,7 @@ malloc_init_hard(void)
 #endif
 
 	/* Get page size and number of CPUs */
-#ifdef XP_WIN
-	{
-		SYSTEM_INFO info;
-
-		GetSystemInfo(&info);
-		result = info.dwPageSize;
-
-	}
-#else
-	result = sysconf(_SC_PAGESIZE);
-	MOZ_ASSERT(result != -1);
-#endif
-
+	result = GetKernelPageSize();
 	/* We assume that the page size is a power of 2. */
 	MOZ_ASSERT(((result - 1) & result) == 0);
 #ifdef MALLOC_STATIC_SIZES
@@ -4766,7 +4771,7 @@ aligned_alloc_impl(size_t alignment, size_t size)
 MOZ_MEMORY_API void *
 valloc_impl(size_t size)
 {
-	return (MEMALIGN(pagesize, size));
+	return (MEMALIGN(GetKernelPageSize(), size));
 }
 
 MOZ_MEMORY_API void *
