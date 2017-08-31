@@ -1051,10 +1051,13 @@ sticky_pref("devtools.debugger.prompt-connection", true);
 sticky_pref("devtools.chrome.enabled", false);
 // Disable remote debugging connections
 sticky_pref("devtools.debugger.remote-enabled", false);
+// enable JS dump() function.
+sticky_pref("browser.dom.window.dump.enabled", false);
 #else
 // In local builds, enable the browser toolbox by default
 sticky_pref("devtools.chrome.enabled", true);
 sticky_pref("devtools.debugger.remote-enabled", true);
+sticky_pref("browser.dom.window.dump.enabled", true);
 #endif
 
 
@@ -5176,9 +5179,6 @@ pref("layout.css.touch_action.enabled", true);
 // for general use, but might be useful to enable for specific tests.
 // This only has an effect in DEBUG-builds.
 pref("layout.css.expensive-style-struct-assertions.enabled", false);
-
-// enable JS dump() function.
-pref("browser.dom.window.dump.enabled", false);
 
 #if defined(MOZ_WIDGET_ANDROID)
 // Network Information API
