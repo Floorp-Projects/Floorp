@@ -30,7 +30,6 @@ import org.mozilla.gecko.activitystream.homepanel.model.Highlight;
 import org.mozilla.gecko.activitystream.homepanel.stream.WebpageItemRow;
 import org.mozilla.gecko.activitystream.homepanel.stream.StreamTitleRow;
 import org.mozilla.gecko.activitystream.homepanel.stream.StreamViewHolder;
-import org.mozilla.gecko.activitystream.homepanel.stream.WelcomePanelRow;
 import org.mozilla.gecko.util.StringUtils;
 import org.mozilla.gecko.widget.RecyclerViewClickSupport;
 
@@ -38,6 +37,8 @@ import java.util.Collections;
 import java.util.EnumSet;
 import java.util.LinkedList;
 import java.util.List;
+
+import static android.R.attr.type;
 
 /**
  * The adapter for the Activity Stream panel.
@@ -54,7 +55,7 @@ public class StreamRecyclerAdapter extends RecyclerView.Adapter<StreamViewHolder
     private List<TopStory> topStoriesQueue;
 
     // Content sections available on the Activity Stream page. These may be hidden if the sections are disabled.
-    private final RowItemType[] ACTIVITY_STREAM_SECTIONS = { RowItemType.TOP_PANEL, RowItemType.WELCOME, RowItemType.TOP_STORIES_TITLE, RowItemType.HIGHLIGHTS_TITLE };
+    private final RowItemType[] ACTIVITY_STREAM_SECTIONS = { RowItemType.TOP_PANEL, RowItemType.TOP_STORIES_TITLE, RowItemType.HIGHLIGHTS_TITLE };
     private final int MAX_TOP_STORIES = 3;
 
     private HomePager.OnUrlOpenListener onUrlOpenListener;
@@ -65,10 +66,9 @@ public class StreamRecyclerAdapter extends RecyclerView.Adapter<StreamViewHolder
 
     public enum RowItemType {
         TOP_PANEL (-2), // RecyclerView.NO_ID is -1, so start hard-coded stableIds at -2.
-        WELCOME (-3),
-        TOP_STORIES_TITLE(-4),
+        TOP_STORIES_TITLE(-3),
         TOP_STORIES_ITEM(-1), // There can be multiple Top Stories items so caller should handle as a special case.
-        HIGHLIGHTS_TITLE (-5),
+        HIGHLIGHTS_TITLE (-4),
         HIGHLIGHT_ITEM (-1); // There can be multiple Highlight Items so caller should handle as a special case.
 
         public final int stableId;
@@ -131,8 +131,6 @@ public class StreamRecyclerAdapter extends RecyclerView.Adapter<StreamViewHolder
             return new StreamTitleRow(inflater.inflate(StreamTitleRow.LAYOUT_ID, parent, false), R.string.activity_stream_topstories, pocketEnabled);
         } else if (type == RowItemType.TOP_STORIES_ITEM.getViewType()) {
             return new WebpageItemRow(inflater.inflate(WebpageItemRow.LAYOUT_ID, parent, false), this);
-        } else if (type == RowItemType.WELCOME.getViewType()) {
-            return new WelcomePanelRow(inflater.inflate(WelcomePanelRow.LAYOUT_ID, parent, false), this);
         } else if (type == RowItemType.HIGHLIGHT_ITEM.getViewType()) {
             return new WebpageItemRow(inflater.inflate(WebpageItemRow.LAYOUT_ID, parent, false), this);
         } else if (type == RowItemType.HIGHLIGHTS_TITLE.getViewType()) {
