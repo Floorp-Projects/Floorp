@@ -378,10 +378,12 @@ FetchDriver::HttpFetch()
     }
   }
 
-  if (mIsTrackingFetch && nsContentUtils::IsLowerNetworkPriority()) {
+  if (mIsTrackingFetch && nsContentUtils::IsTailingEnabled()) {
     cos->AddClassFlags(nsIClassOfService::Throttleable |
                        nsIClassOfService::Tail);
+  }
 
+  if (mIsTrackingFetch && nsContentUtils::IsLowerNetworkPriority()) {
     nsCOMPtr<nsISupportsPriority> p = do_QueryInterface(chan);
     if (p) {
       p->SetPriority(nsISupportsPriority::PRIORITY_LOWEST);
