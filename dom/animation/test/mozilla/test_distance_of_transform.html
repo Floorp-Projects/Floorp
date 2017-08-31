@@ -70,6 +70,12 @@ function rotate3dToMatrix(x, y, z, radian) {
 
 test(function(t) {
   var target = addDiv(t);
+  var dist = getDistance(target, 'transform', 'none', 'none');
+  assert_equals(dist, 0, 'distance of translate');
+}, 'Test distance of none and none');
+
+test(function(t) {
+  var target = addDiv(t);
   var dist = getDistance(target, 'transform', 'translate(100px)', 'none');
   assert_equals(dist, 100, 'distance of translate');
 }, 'Test distance of translate function and none');
@@ -303,6 +309,40 @@ test(function(t) {
   assert_equals(dist, Math.sqrt(1000 * 1000 + Math.PI * Math.PI),
                 'distance of transform lists');
 }, 'Test distance of transform lists');
+
+test(function(t) {
+  var target = addDiv(t);
+  var dist = getDistance(target, 'transform',
+                         'translate(100px) rotate(180deg)',
+                         'translate(50px) rotate(90deg) scale(5) skew(1rad)');
+  assert_approx_equals(dist,
+                       Math.sqrt(50 * 50 +
+                                 Math.PI / 2 * Math.PI / 2 +
+                                 4 * 4 * 2 +
+                                 1 * 1),
+                       epsilon,
+                       'distance of transform lists');
+}, 'Test distance of transform lists where one has extra items');
+
+test(function(t) {
+  var target = addDiv(t);
+  var dist = getDistance(target, 'transform',
+                         'translate(1000px) rotate3d(1, 0, 0, 180deg)',
+                         'translate(1000px) scale3d(2.5, 0.5, 1)');
+  assert_equals(dist, Math.sqrt(Math.PI * Math.PI + 1.5 * 1.5 + 0.5 * 0.5),
+                'distance of transform lists');
+}, 'Test distance of mismatched transform lists');
+
+test(function(t) {
+  var target = addDiv(t);
+  var dist = getDistance(target, 'transform',
+                         'translate(100px) skew(1rad)',
+                         'translate(1000px) rotate3d(0, 1, 0, -2rad)');
+  assert_approx_equals(dist,
+                       Math.sqrt(900 * 900 + 1 * 1 + 2 * 2),
+                       epsilon,
+                       'distance of transform lists');
+}, 'Test distance of mismatched transform lists with skew function');
 
 </script>
 </html>

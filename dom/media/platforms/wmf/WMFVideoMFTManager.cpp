@@ -410,6 +410,26 @@ FindD3D9BlacklistedDLL()
                                 "media.wmf.disable-d3d9-for-dlls");
 }
 
+const nsCString
+GetFoundD3D11BlacklistedDLL()
+{
+  if (sD3D11BlacklistingCache) {
+    return sD3D11BlacklistingCache->mBlacklistedDLL;
+  }
+
+  return nsCString();
+}
+
+const nsCString
+GetFoundD3D9BlacklistedDLL()
+{
+  if (sD3D9BlacklistingCache) {
+    return sD3D9BlacklistingCache->mBlacklistedDLL;
+  }
+
+  return nsCString();
+}
+
 class CreateDXVAManagerEvent : public Runnable
 {
 public:
@@ -424,12 +444,14 @@ public:
 
   NS_IMETHOD Run() override {
     NS_ASSERTION(NS_IsMainThread(), "Must be on main thread.");
+    const bool deblacklistingForTelemetry =
+      XRE_IsGPUProcess() && gfxPrefs::PDMWMFDeblacklistingForTelemetryInGPUProcess();
     nsACString* failureReason = &mFailureReason;
     nsCString secondFailureReason;
     if (mBackend == LayersBackend::LAYERS_D3D11 &&
       gfxPrefs::PDMWMFAllowD3D11() && IsWin8OrLater()) {
       const nsCString& blacklistedDLL = FindD3D11BlacklistedDLL();
-      if (!blacklistedDLL.IsEmpty()) {
+      if (!deblacklistingForTelemetry && !blacklistedDLL.IsEmpty()) {
         failureReason->AppendPrintf("D3D11 blacklisted with DLL %s",
                                     blacklistedDLL.get());
       } else {
@@ -446,7 +468,7 @@ public:
     }
 
     const nsCString& blacklistedDLL = FindD3D9BlacklistedDLL();
-    if (!blacklistedDLL.IsEmpty()) {
+    if (!deblacklistingForTelemetry && !blacklistedDLL.IsEmpty()) {
       mFailureReason.AppendPrintf("D3D9 blacklisted with DLL %s",
                                   blacklistedDLL.get());
     } else {

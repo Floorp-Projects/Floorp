@@ -678,18 +678,6 @@ html|span.ac-emphasize-text-url {
   }
 }
 
-.autocomplete-richlistitem:hover,
-treechildren.searchbar-treebody::-moz-tree-row(hover) {
-  background-color: var(--arrowpanel-dimmed);
-  border-color: var(--panel-separator-color);
-}
-
-.autocomplete-richlistitem[selected],
-treechildren.searchbar-treebody::-moz-tree-row(selected) {
-  background-color: Highlight;
-  color: HighlightText;
-}
-
 .ac-type-icon[type=bookmark] {
   list-style-image: url("chrome://browser/skin/bookmark.svg");
   -moz-context-properties: fill;

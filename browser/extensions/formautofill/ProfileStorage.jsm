@@ -69,6 +69,7 @@
  *       cc-given-name,
  *       cc-additional-name,
  *       cc-family-name,
+ *       cc-exp,
  *
  *       // metadata
  *       timeCreated,          // in ms
@@ -190,6 +191,7 @@ const VALID_CREDIT_CARD_COMPUTED_FIELDS = [
   "cc-given-name",
   "cc-additional-name",
   "cc-family-name",
+  "cc-exp",
 ];
 
 const INTERNAL_FIELDS = [

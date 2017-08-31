@@ -40,6 +40,7 @@
 #include "GMPDecoderModule.h"
 #include <limits>
 #include "MediaPrefs.h"
+#include "mozilla/SystemGroup.h"
 
 using mozilla::ipc::Transport;
 

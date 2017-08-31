@@ -528,7 +528,7 @@ add_task(async function() {
 
   await BrowserTestUtils.withNewTab({ gBrowser, url: "about:home" }, async function(browser) {
     info("Waiting for about:addons tab to open...");
-    let promiseTabOpened = BrowserTestUtils.waitForNewTab(gBrowser, "about:addons");
+    let promiseTabLoaded = BrowserTestUtils.browserLoaded(browser, false, "about:addons");
 
     await ContentTask.spawn(browser, null, async function() {
       let addOnsButton = content.document.getElementById("addons");
@@ -536,10 +536,9 @@ add_task(async function() {
     });
     await BrowserTestUtils.synthesizeKey(" ", {}, browser);
 
-    let tab = await promiseTabOpened;
-    is(tab.linkedBrowser.currentURI.spec, "about:addons",
+    await promiseTabLoaded;
+    is(browser.currentURI.spec, "about:addons",
       "Should have seen the about:addons tab");
-    await BrowserTestUtils.removeTab(tab);
   });
 });
 

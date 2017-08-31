@@ -425,18 +425,6 @@
   border-top: 1px solid #C7C7C7;
 }
 
-.autocomplete-richlistitem:hover,
-treechildren.searchbar-treebody::-moz-tree-row(hover) {
-  background-color: var(--arrowpanel-dimmed);
-  border-color: var(--panel-separator-color);
-}
-
-.autocomplete-richlistitem[selected],
-treechildren.searchbar-treebody::-moz-tree-row(selected) {
-  background-color: Highlight;
-  color: HighlightText;
-}
-
 .ac-title {
   font-size: 14px;
 }

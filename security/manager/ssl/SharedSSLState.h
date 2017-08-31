@@ -19,7 +19,7 @@ namespace psm {
 class SharedSSLState {
 public:
   NS_INLINE_DECL_THREADSAFE_REFCOUNTING(SharedSSLState)
-  SharedSSLState();
+  explicit SharedSSLState(uint32_t aTlsFlags = 0);
 
   static void GlobalInit();
   static void GlobalCleanup();
