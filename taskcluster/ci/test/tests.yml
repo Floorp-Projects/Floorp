@@ -2316,6 +2316,7 @@ xpcshell:
             default: built-projects
     chunks:
         by-test-platform:
+            linux32/debug: 12
             linux64/debug: 10
             android-4.2-x86/opt: 6
             macosx.*: 1
