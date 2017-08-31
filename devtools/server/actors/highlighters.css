@@ -611,11 +611,7 @@
 }
 
 :-moz-native-anonymous .shapes-markers {
-  fill: #fff;
-}
-
-:-moz-native-anonymous .shapes-markers-outline {
-  fill: var(--highlighter-guide-color);
+  fill: var(--highlighter-marker-color);
 }
 
 :-moz-native-anonymous .shapes-marker-hover {
