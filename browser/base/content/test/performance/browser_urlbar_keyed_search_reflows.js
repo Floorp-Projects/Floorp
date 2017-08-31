@@ -67,7 +67,7 @@ const EXPECTED_REFLOWS_FIRST_OPEN = [
       "_invalidate@chrome://global/content/bindings/autocomplete.xml",
       "invalidate@chrome://global/content/bindings/autocomplete.xml"
     ],
-    times: 1584, // This number should only ever go down - never up.
+    times: 1344, // This number should only ever go down - never up.
   },
 
   {
