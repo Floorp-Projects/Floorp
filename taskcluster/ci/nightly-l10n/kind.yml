@@ -76,7 +76,7 @@ job-template:
             macosx64-nightly: osx-cross/opt
             win32-nightly: windows2012-32/opt
             win64-nightly: windows2012-64/opt
-            android-api-16-nightly: android-4-0-armv7-api-16/opt
+            android-api-16-nightly: android-4-0-armv7-api16/opt
    env:
       by-build-platform:
          linux.*:   # linux64 and 32 get same treatment here
