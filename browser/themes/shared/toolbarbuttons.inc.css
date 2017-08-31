@@ -290,3 +290,9 @@ toolbarbutton.bookmark-item {
 #PlacesToolbarItems > .bookmark-item > .toolbarbutton-icon[label]:not([label=""]) {
   margin-inline-end: 4px;
 }
+
+/* Remove a pixel of margin on the end so that the badge doesn't
+ * overflow the toolbar and push the button into the overflow menu. */
+:root[uidensity=compact] .toolbarbutton-badge {
+  margin-inline-end: -7px !important;
+}
