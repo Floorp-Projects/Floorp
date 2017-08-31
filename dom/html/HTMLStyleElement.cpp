@@ -41,16 +41,10 @@ NS_IMPL_CYCLE_COLLECTION_UNLINK_BEGIN_INHERITED(HTMLStyleElement,
   tmp->nsStyleLinkElement::Unlink();
 NS_IMPL_CYCLE_COLLECTION_UNLINK_END
 
-NS_IMPL_ADDREF_INHERITED(HTMLStyleElement, Element)
-NS_IMPL_RELEASE_INHERITED(HTMLStyleElement, Element)
-
-
-// QueryInterface implementation for HTMLStyleElement
-NS_INTERFACE_TABLE_HEAD_CYCLE_COLLECTION_INHERITED(HTMLStyleElement)
-  NS_INTERFACE_TABLE_INHERITED(HTMLStyleElement,
-                               nsIStyleSheetLinkingElement,
-                               nsIMutationObserver)
-NS_INTERFACE_TABLE_TAIL_INHERITING(nsGenericHTMLElement)
+NS_IMPL_ISUPPORTS_CYCLE_COLLECTION_INHERITED(HTMLStyleElement,
+                                             nsGenericHTMLElement,
+                                             nsIStyleSheetLinkingElement,
+                                             nsIMutationObserver)
 
 NS_IMPL_ELEMENT_CLONE(HTMLStyleElement)
 
