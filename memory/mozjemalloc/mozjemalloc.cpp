@@ -4727,41 +4727,63 @@ MozJemalloc::memalign(size_t aAlignment, size_t aSize)
   return ret;
 }
 
+template<void* (*memalign)(size_t, size_t)>
+struct AlignedAllocator
+{
+  static inline int
+  posix_memalign(void** aMemPtr, size_t aAlignment, size_t aSize)
+  {
+    void* result;
+
+    /* alignment must be a power of two and a multiple of sizeof(void*) */
+    if (((aAlignment - 1) & aAlignment) != 0 || aAlignment < sizeof(void*)) {
+      return EINVAL;
+    }
+
+    /* The 0-->1 size promotion is done in the memalign() call below */
+
+    result = memalign(aAlignment, aSize);
+
+    if (!result) {
+      return ENOMEM;
+    }
+
+    *aMemPtr = result;
+    return 0;
+  }
+
+  static inline void*
+  aligned_alloc(size_t aAlignment, size_t aSize)
+  {
+    if (aSize % aAlignment) {
+      return nullptr;
+    }
+    return memalign(aAlignment, aSize);
+  }
+
+  static inline void*
+  valloc(size_t aSize)
+  {
+    return memalign(GetKernelPageSize(), aSize);
+  }
+};
+
 template<> inline int
 MozJemalloc::posix_memalign(void** aMemPtr, size_t aAlignment, size_t aSize)
 {
-  void* result;
-
-  /* alignment must be a power of two and a multiple of sizeof(void*) */
-  if (((aAlignment - 1) & aAlignment) != 0 || aAlignment < sizeof(void*)) {
-    return EINVAL;
-  }
-
-  /* The 0-->1 size promotion is done in the memalign() call below */
-
-  result = memalign(aAlignment, aSize);
-
-  if (!result) {
-    return ENOMEM;
-  }
-
-  *aMemPtr = result;
-  return 0;
+  return AlignedAllocator<memalign>::posix_memalign(aMemPtr, aAlignment, aSize);
 }
 
 template<> inline void*
 MozJemalloc::aligned_alloc(size_t aAlignment, size_t aSize)
 {
-  if (aSize % aAlignment) {
-    return nullptr;
-  }
-  return memalign(aAlignment, aSize);
+  return AlignedAllocator<memalign>::aligned_alloc(aAlignment, aSize);
 }
 
 template<> inline void*
 MozJemalloc::valloc(size_t aSize)
 {
-  return memalign(GetKernelPageSize(), aSize);
+  return AlignedAllocator<memalign>::valloc(aSize);
 }
 
 template<> inline void*
@@ -5408,37 +5430,6 @@ get_bridge(void)
  * replace_valloc, and default implementations will be automatically derived
  * from replace_memalign.
  */
-static int
-default_posix_memalign(void** aPtr, size_t aAlignment, size_t aSize)
-{
-  void* result;
-  /* alignment must be a power of two and a multiple of sizeof(void *) */
-  if (((aAlignment - 1) & aAlignment) != 0 || (aAlignment < sizeof(void *)))
-    return EINVAL;
-  result = replace_malloc_table.memalign(aAlignment, aSize);
-  if (!result) {
-    return ENOMEM;
-  }
-  *aPtr = result;
-  return 0;
-}
-
-static void*
-default_aligned_alloc(size_t aAlignment, size_t aSize)
-{
-  /* size should be a multiple of alignment */
-  if (aSize % aAlignment)
-    return nullptr;
-  return replace_malloc_table.memalign(aAlignment, aSize);
-}
-
-// Nb: sysconf() is expensive, but valloc is obsolete and rarely used.
-static void*
-default_valloc(size_t aSize)
-{
-  return replace_malloc_table.memalign(GetKernelPageSize(), aSize);
-}
-
 static void
 replace_malloc_init_funcs()
 {
@@ -5458,15 +5449,13 @@ replace_malloc_init_funcs()
   }
 
   if (!replace_malloc_table.posix_memalign && replace_malloc_table.memalign) {
-    replace_malloc_table.posix_memalign = default_posix_memalign;
+    replace_malloc_table.posix_memalign = AlignedAllocator<ReplaceMalloc::memalign>::posix_memalign;
   }
-
   if (!replace_malloc_table.aligned_alloc && replace_malloc_table.memalign) {
-    replace_malloc_table.aligned_alloc = default_aligned_alloc;
+    replace_malloc_table.aligned_alloc = AlignedAllocator<ReplaceMalloc::memalign>::aligned_alloc;
   }
-
   if (!replace_malloc_table.valloc && replace_malloc_table.memalign) {
-    replace_malloc_table.valloc = default_valloc;
+    replace_malloc_table.valloc = AlignedAllocator<ReplaceMalloc::memalign>::valloc;
   }
 #define MALLOC_DECL(name, ...) \
   if (!replace_malloc_table.name) { \
