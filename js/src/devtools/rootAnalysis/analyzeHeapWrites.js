@@ -1153,6 +1153,14 @@ function isSafeVariable(entry, variable)
                 }
             }
 
+            // RefPtr::operator->() and operator* transmit the safety of the
+            // RefPtr to the return value.
+            if (isDirectCall(edge, /RefPtr<.*?>::operator(->|\*)\(\)/) &&
+                isEdgeSafeArgument(entry, edge.PEdgeCallInstance.Exp))
+            {
+                return true;
+            }
+
             // Placement-new returns a pointer that is as safe as the pointer
             // passed to it. Exp[0] is the size, Exp[1] is the pointer/address.
             // Note that the invocation of the constructor is a separate call,
