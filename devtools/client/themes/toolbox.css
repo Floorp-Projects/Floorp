@@ -89,6 +89,7 @@
 }
 
 /* Toolbox tabs */
+
 .devtools-tab {
   position: relative;
   display: flex;
@@ -97,15 +98,12 @@
   min-height: 24px;
   margin: 0;
   padding: 0;
-  border-style: solid;
-  border-width: 0;
-  border-inline-start-width: 1px;
+  border: none;
   white-space: nowrap;
   overflow: hidden;
   text-overflow: ellipsis;
   background-color: transparent;
 }
-
 
 .devtools-tab-label {
   mask-image: linear-gradient(to left, transparent 0, black 6px);
@@ -196,12 +194,6 @@
   flex-shrink: 0;
 }
 
-/* Support invertable icon flags and make icon white when it's on a blue background */
-.theme-light .devtools-tab.icon-invertable-light-theme:not(.selected) > img,
-.devtools-tab.icon-invertable-dark-theme.selected > img {
-  filter: invert(1);
-}
-
 /* Don't apply any filter to non-invertable command button icons */
 .command-button:not(.command-button-invertable),
 /* icon-invertable-light-theme icons are white, so do not invert them for the dark theme */
@@ -220,12 +212,6 @@
 .devtools-tab:active > img,
 .devtools-tab.selected > img {
   opacity: 1;
-}
-
-.devtools-tabbar .devtools-tab.selected,
-.devtools-tabbar .devtools-tab.selected:hover:active {
-  color: var(--theme-selection-color);
-  background-color: var(--theme-selection-background);
 }
 
 .toolbox-tabs .devtools-tab.selected,

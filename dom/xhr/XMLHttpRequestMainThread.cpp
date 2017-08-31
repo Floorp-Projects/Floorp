@@ -45,6 +45,7 @@
 #include "nsStringStream.h"
 #include "nsIAuthPrompt.h"
 #include "nsIAuthPrompt2.h"
+#include "nsIClassOfService.h"
 #include "nsIOutputStream.h"
 #include "nsISupportsPrimitives.h"
 #include "nsISupportsPriority.h"
@@ -2620,12 +2621,19 @@ XMLHttpRequestMainThread::MaybeLowerChannelPriority()
     return;
   }
 
-  nsCOMPtr<nsISupportsPriority> p = do_QueryInterface(mChannel);
-  if (!p) {
-    return;
+  nsCOMPtr<nsIClassOfService> cos = do_QueryInterface(mChannel);
+  if (cos) {
+    // Adding TailAllowed to overrule the Unblocked flag, but to preserve
+    // the effect of Unblocked when tailing is off.
+    cos->AddClassFlags(nsIClassOfService::Throttleable |
+                       nsIClassOfService::Tail |
+                       nsIClassOfService::TailAllowed);
   }
 
-  p->SetPriority(nsISupportsPriority::PRIORITY_LOWEST);
+  nsCOMPtr<nsISupportsPriority> p = do_QueryInterface(mChannel);
+  if (p) {
+    p->SetPriority(nsISupportsPriority::PRIORITY_LOWEST);
+  }
 }
 
 nsresult

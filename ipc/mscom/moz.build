@@ -11,7 +11,6 @@ EXPORTS.mozilla.mscom += [
     'COMApartmentRegion.h',
     'COMPtrHolder.h',
     'EnsureMTA.h',
-    'FastMarshaler.h',
     'MainThreadClientInfo.h',
     'MainThreadRuntime.h',
     'Objref.h',
@@ -28,7 +27,6 @@ SOURCES += [
 UNIFIED_SOURCES += [
     'AgileReference.cpp',
     'EnsureMTA.cpp',
-    'FastMarshaler.cpp',
     'MainThreadClientInfo.cpp',
     'MainThreadRuntime.cpp',
     'Objref.cpp',
@@ -50,6 +48,7 @@ if CONFIG['ACCESSIBILITY']:
     EXPORTS.mozilla.mscom += [
         'ActivationContext.h',
         'DispatchForwarder.h',
+        'FastMarshaler.h',
         'IHandlerProvider.h',
         'Interceptor.h',
         'InterceptorLog.h',
@@ -71,6 +70,7 @@ if CONFIG['ACCESSIBILITY']:
     UNIFIED_SOURCES += [
         'ActivationContext.cpp',
         'DispatchForwarder.cpp',
+        'FastMarshaler.cpp',
         'InterceptorLog.cpp',
         'MainThreadHandoff.cpp',
         'MainThreadInvoker.cpp',
