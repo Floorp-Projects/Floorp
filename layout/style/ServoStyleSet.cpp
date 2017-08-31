@@ -1420,11 +1420,8 @@ already_AddRefed<gfxFontFeatureValueSet>
 ServoStyleSet::BuildFontFeatureValueSet()
 {
   UpdateStylistIfNeeded();
-  RefPtr<gfxFontFeatureValueSet> set = new gfxFontFeatureValueSet();
-  bool setHasAnyRules = Servo_StyleSet_BuildFontFeatureValueSet(mRawSet.get(), set.get());
-  if (!setHasAnyRules) {
-    return nullptr;
-  }
+  RefPtr<gfxFontFeatureValueSet> set =
+    Servo_StyleSet_BuildFontFeatureValueSet(mRawSet.get());
   return set.forget();
 }
 
