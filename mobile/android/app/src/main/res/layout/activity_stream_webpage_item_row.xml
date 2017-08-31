@@ -44,7 +44,7 @@
 
     <!-- In RTL locales, we don't want a large horizontal gap between the domain, page title and source
          text so we set textAlignment=viewStart for all of them so that it's to the left in LTR and
-         right in RTL. -->
+         right in RTL. Note: to appease the RtlCompat lint warning, gravity="start" is also required. -->
     <TextView
         android:id="@+id/page_domain"
         android:layout_width="match_parent"
@@ -59,6 +59,7 @@
         android:paddingEnd="0dp"
         android:paddingTop="@dimen/activity_stream_base_margin"
         android:textAlignment="viewStart"
+        android:gravity="start"
         android:textColor="@color/activity_stream_subtitle"
         android:textSize="12sp"
         tools:text="twitter" />
@@ -80,6 +81,7 @@
         android:paddingRight="0dp"
         android:paddingEnd="0dp"
         android:textAlignment="viewStart"
+        android:gravity="start"
         android:textColor="#ff000000"
         android:textSize="14sp"
         android:textStyle="bold"
@@ -119,6 +121,7 @@
             android:layout_marginEnd="0dp"
             android:layout_weight="1"
             android:textAlignment="viewStart"
+            android:gravity="start"
             android:textColor="@color/activity_stream_subtitle"
             android:textSize="12sp"
             tools:text="Bookmarked" />
