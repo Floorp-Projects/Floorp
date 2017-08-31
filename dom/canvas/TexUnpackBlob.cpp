@@ -639,6 +639,10 @@ TexUnpackImage::TexOrSubImage(bool isSubImage, bool needsRespec, const char* fun
             fallbackReason = "depth is not 1";
             break;
         }
+        if (xOffset != 0 || yOffset != 0 || zOffset != 0) {
+            fallbackReason = "x/y/zOffset is not 0";
+            break;
+        }
 
         if (webgl->mPixelStore_UnpackSkipPixels ||
             webgl->mPixelStore_UnpackSkipRows ||
