@@ -932,7 +932,8 @@ public class AndroidFxAccount {
   }
 
   @Override
-  protected synchronized void finalize() {
+  protected synchronized void finalize() throws Throwable {
+    super.finalize();
     if (locked) {
       // Should never happen, but...
       sLock.release();
