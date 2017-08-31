@@ -58,7 +58,7 @@ SubtleCrypto::RecordTelemetryOnce() {
   RefPtr<WebCryptoTask> task =                                          \
     WebCryptoTask::Create ## Operation ## Task(__VA_ARGS__);            \
   if (!task) {                                                          \
-    aRv.Throw(NS_ERROR_OUT_OF_MEMORY);                                  \
+    aRv.Throw(NS_ERROR_NULL_POINTER);                                   \
     return nullptr;                                                     \
   }                                                                     \
   task->DispatchWithPromise(p);                                         \
