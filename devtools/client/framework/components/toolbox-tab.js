@@ -55,10 +55,20 @@ module.exports = createClass({
         onFocus: () => focusButton(id),
         onClick: () => selectTool(id),
       },
+      span(
+        {
+          className: "devtools-tab-line"
+        }
+      ),
       ...this.renderIcon(panelDefinition, isHighlighted),
-      iconOnly ? null : span({
-        className: "devtools-tab-label"
-      }, label)
+      iconOnly ?
+        null :
+        span(
+          {
+            className: "devtools-tab-label"
+          },
+          label
+        )
     );
   }
 });

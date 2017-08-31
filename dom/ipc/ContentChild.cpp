@@ -3633,6 +3633,9 @@ ContentChild::GetSpecificMessageEventTarget(const Message& aMsg)
     case PContent::Msg_DataStoragePut__ID:
     case PContent::Msg_DataStorageRemove__ID:
     case PContent::Msg_DataStorageClear__ID:
+    case PContent::Msg_PIPCBlobInputStreamConstructor__ID:
+    case PContent::Msg_BlobURLRegistration__ID:
+    case PContent::Msg_BlobURLUnregistration__ID:
       return do_AddRef(SystemGroup::EventTargetFor(TaskCategory::Other));
     default:
       return nullptr;
