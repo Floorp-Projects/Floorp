@@ -45,8 +45,6 @@ NS_INTERFACE_MAP_BEGIN(SVGAElement)
   NS_INTERFACE_MAP_ENTRY(Link)
 NS_INTERFACE_MAP_END_INHERITING(SVGAElementBase)
 
-NS_IMPL_ADDREF_INHERITED(SVGAElement, SVGAElementBase)
-NS_IMPL_RELEASE_INHERITED(SVGAElement, SVGAElementBase)
 
 //----------------------------------------------------------------------
 // Implementation
