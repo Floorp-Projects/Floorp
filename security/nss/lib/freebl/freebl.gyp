@@ -142,7 +142,8 @@
   'target_defaults': {
     'include_dirs': [
       'mpi',
-      'ecl'
+      'ecl',
+      'verified',
     ],
     'defines': [
       'SHLIB_SUFFIX=\"<(dll_suffix)\"',
@@ -228,10 +229,6 @@
             'defines': [
               # The Makefile does version-tests on GCC, but we're not doing that here.
               'HAVE_INT128_SUPPORT',
-            ],
-          }, {
-            'sources': [
-              'ecl/uint128.c',
             ],
           }],
         ],

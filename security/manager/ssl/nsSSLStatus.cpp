@@ -77,6 +77,28 @@ nsSSLStatus::GetCipherName(nsACString& aCipherName)
 }
 
 NS_IMETHODIMP
+nsSSLStatus::GetKeaGroupName(nsACString& aKeaGroup)
+{
+  if (!mHaveCipherSuiteAndProtocol) {
+    return NS_ERROR_NOT_AVAILABLE;
+  }
+
+  aKeaGroup.Assign(mKeaGroup);
+  return NS_OK;
+}
+
+NS_IMETHODIMP
+nsSSLStatus::GetSignatureSchemeName(nsACString& aSignatureScheme)
+{
+  if (!mHaveCipherSuiteAndProtocol) {
+    return NS_ERROR_NOT_AVAILABLE;
+  }
+
+  aSignatureScheme.Assign(mSignatureSchemeName);
+  return NS_OK;
+}
+
+NS_IMETHODIMP
 nsSSLStatus::GetProtocolVersion(uint16_t* aProtocolVersion)
 {
   NS_ENSURE_ARG_POINTER(aProtocolVersion);
@@ -194,6 +216,15 @@ nsSSLStatus::Read(nsIObjectInputStream* aStream)
     NS_ENSURE_SUCCESS(rv, rv);
   }
 
+  // Added in version 2 (see bug 1304923).
+  if (streamFormatVersion >= 2) {
+    rv = aStream->ReadCString(mKeaGroup);
+    NS_ENSURE_SUCCESS(rv, rv);
+
+    rv = aStream->ReadCString(mSignatureSchemeName);
+    NS_ENSURE_SUCCESS(rv, rv);
+  }
+
   return NS_OK;
 }
 
@@ -201,7 +232,7 @@ NS_IMETHODIMP
 nsSSLStatus::Write(nsIObjectOutputStream* aStream)
 {
   // The current version of the binary stream format.
-  const uint8_t STREAM_FORMAT_VERSION = 1;
+  const uint8_t STREAM_FORMAT_VERSION = 2;
 
   nsresult rv = aStream->WriteCompoundObject(mServerCert,
                                              NS_GET_IID(nsIX509Cert),
@@ -235,6 +266,13 @@ nsSSLStatus::Write(nsIObjectOutputStream* aStream)
 
   // Added in version 1.
   rv = aStream->Write16(mCertificateTransparencyStatus);
+  NS_ENSURE_SUCCESS(rv, rv);
+
+  // Added in version 2.
+  rv = aStream->WriteStringZ(mKeaGroup.get());
+  NS_ENSURE_SUCCESS(rv, rv);
+
+  rv = aStream->WriteStringZ(mSignatureSchemeName.get());
   NS_ENSURE_SUCCESS(rv, rv);
 
   return NS_OK;
@@ -300,6 +338,8 @@ nsSSLStatus::nsSSLStatus()
 , mProtocolVersion(0)
 , mCertificateTransparencyStatus(nsISSLStatus::
     CERTIFICATE_TRANSPARENCY_NOT_APPLICABLE)
+, mKeaGroup()
+, mSignatureSchemeName()
 , mIsDomainMismatch(false)
 , mIsNotValidAtThisTime(false)
 , mIsUntrusted(false)

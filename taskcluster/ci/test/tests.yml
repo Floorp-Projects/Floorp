@@ -5,6 +5,9 @@
 
 # Note that these are in lexical order, as enforced by the task loader.
 
+# Adding a new test type or running tests on a new platform? Be sure to review
+# https://wiki.mozilla.org/Sheriffing/Job_Visibility_Policy
+
 awsy:
     description: "Are we slim yet"
     suite: awsy
@@ -2316,6 +2319,7 @@ xpcshell:
             default: built-projects
     chunks:
         by-test-platform:
+            linux32/debug: 12
             linux64/debug: 10
             android-4.2-x86/opt: 6
             macosx.*: 1
