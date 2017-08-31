@@ -332,16 +332,13 @@ NS_IMPL_CYCLE_COLLECTION_UNLINK_BEGIN_INHERITED(XULDocument, XMLDocument)
     //XXX We should probably unlink all the objects we traverse.
 NS_IMPL_CYCLE_COLLECTION_UNLINK_END
 
-NS_IMPL_ADDREF_INHERITED(XULDocument, XMLDocument)
-NS_IMPL_RELEASE_INHERITED(XULDocument, XMLDocument)
-
-
-// QueryInterface implementation for XULDocument
-NS_INTERFACE_TABLE_HEAD_CYCLE_COLLECTION_INHERITED(XULDocument)
-    NS_INTERFACE_TABLE_INHERITED(XULDocument, nsIXULDocument,
-                                 nsIDOMXULDocument, nsIStreamLoaderObserver,
-                                 nsICSSLoaderObserver, nsIOffThreadScriptReceiver)
-NS_INTERFACE_TABLE_TAIL_INHERITING(XMLDocument)
+NS_IMPL_ISUPPORTS_CYCLE_COLLECTION_INHERITED(XULDocument,
+                                             XMLDocument,
+                                             nsIXULDocument,
+                                             nsIDOMXULDocument,
+                                             nsIStreamLoaderObserver,
+                                             nsICSSLoaderObserver,
+                                             nsIOffThreadScriptReceiver)
 
 
 //----------------------------------------------------------------------

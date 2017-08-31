@@ -149,18 +149,12 @@ NS_IMPL_CYCLE_COLLECTION_UNLINK_BEGIN_INHERITED(HTMLFormElement,
   tmp->mExpandoAndGeneration.OwnerUnlinked();
 NS_IMPL_CYCLE_COLLECTION_UNLINK_END
 
-NS_IMPL_ADDREF_INHERITED(HTMLFormElement, Element)
-NS_IMPL_RELEASE_INHERITED(HTMLFormElement, Element)
-
-
-// QueryInterface implementation for HTMLFormElement
-NS_INTERFACE_TABLE_HEAD_CYCLE_COLLECTION_INHERITED(HTMLFormElement)
-  NS_INTERFACE_TABLE_INHERITED(HTMLFormElement,
-                               nsIDOMHTMLFormElement,
-                               nsIForm,
-                               nsIWebProgressListener,
-                               nsIRadioGroupContainer)
-NS_INTERFACE_TABLE_TAIL_INHERITING(nsGenericHTMLElement)
+NS_IMPL_ISUPPORTS_CYCLE_COLLECTION_INHERITED(HTMLFormElement,
+                                             nsGenericHTMLElement,
+                                             nsIDOMHTMLFormElement,
+                                             nsIForm,
+                                             nsIWebProgressListener,
+                                             nsIRadioGroupContainer)
 
 // EventTarget
 void
