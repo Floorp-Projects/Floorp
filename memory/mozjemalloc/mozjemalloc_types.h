@@ -115,7 +115,7 @@ typedef struct {
   size_t size;    // meaning depends on tag; see above
 } jemalloc_ptr_info_t;
 
-static inline bool
+static inline jemalloc_bool
 jemalloc_ptr_is_live(jemalloc_ptr_info_t* info)
 {
   return info->tag == TagLiveSmall ||
@@ -123,7 +123,7 @@ jemalloc_ptr_is_live(jemalloc_ptr_info_t* info)
          info->tag == TagLiveHuge;
 }
 
-static inline bool
+static inline jemalloc_bool
 jemalloc_ptr_is_freed(jemalloc_ptr_info_t* info)
 {
   return info->tag == TagFreedSmall ||
@@ -133,7 +133,7 @@ jemalloc_ptr_is_freed(jemalloc_ptr_info_t* info)
          info->tag == TagFreedPageZeroed;
 }
 
-static inline bool
+static inline jemalloc_bool
 jemalloc_ptr_is_freed_page(jemalloc_ptr_info_t* info)
 {
   return info->tag == TagFreedPageDirty ||
