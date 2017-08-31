@@ -7723,6 +7723,13 @@ js::NewCompartment(JSContext* cx, JSPrincipals* principals,
 void
 gc::MergeCompartments(JSCompartment* source, JSCompartment* target)
 {
+    JSRuntime* rt = source->runtimeFromActiveCooperatingThread();
+    rt->gc.mergeCompartments(source, target);
+}
+
+void
+GCRuntime::mergeCompartments(JSCompartment* source, JSCompartment* target)
+{
     // The source compartment must be specifically flagged as mergable.  This
     // also implies that the compartment is not visible to the debugger.
     MOZ_ASSERT(source->creationOptions_.mergeable());
@@ -7735,13 +7742,12 @@ gc::MergeCompartments(JSCompartment* source, JSCompartment* target)
     MOZ_ASSERT(source->zone()->compartments().length() == 1);
     MOZ_ASSERT(source->zone()->group()->zones().length() == 1);
 
-    JSContext* cx = source->runtimeFromActiveCooperatingThread()->activeContextFromOwnThread();
+    JSContext* cx = rt->activeContextFromOwnThread();
 
     MOZ_ASSERT(!source->zone()->wasGCStarted());
-    MOZ_ASSERT(!target->zone()->wasGCStarted());
     JS::AutoAssertNoGC nogc(cx);
 
-    AutoTraceSession session(cx->runtime());
+    AutoTraceSession session(rt);
 
     // Cleanup tables and other state in the source compartment that will be
     // meaningless after merging into the target compartment.
@@ -7758,7 +7764,7 @@ gc::MergeCompartments(JSCompartment* source, JSCompartment* target)
 
     // Release any relocated arenas which we may be holding on to as they might
     // be in the source zone
-    cx->runtime()->gc.releaseHeldRelocatedArenas();
+    releaseHeldRelocatedArenas();
 
     // Fixup compartment pointers in source to refer to target, and make sure
     // type information generations are in sync.
@@ -7782,10 +7788,19 @@ gc::MergeCompartments(JSCompartment* source, JSCompartment* target)
 
     // Fixup zone pointers in source's zone to refer to target's zone.
 
+    bool targetZoneIsCollecting = isIncrementalGCInProgress() && target->zone()->wasGCStarted();
     for (auto thingKind : AllAllocKinds()) {
         for (ArenaIter aiter(source->zone(), thingKind); !aiter.done(); aiter.next()) {
             Arena* arena = aiter.get();
             arena->zone = target->zone();
+            if (MOZ_UNLIKELY(targetZoneIsCollecting)) {
+                // If we are currently collecting the target zone then we must
+                // treat all merged things as if they were allocated during the
+                // collection.
+                arena->unmarkAll();
+                if (!arena->isEmpty())
+                    arenaAllocatedDuringGC(target->zone(), arena);
+            }
         }
     }
 
@@ -7794,7 +7809,7 @@ gc::MergeCompartments(JSCompartment* source, JSCompartment* target)
         MOZ_ASSERT(c.get() == source);
 
     // Merge the allocator, stats and UIDs in source's zone into target's zone.
-    target->zone()->arenas.adoptArenas(cx->runtime(), &source->zone()->arenas);
+    target->zone()->arenas.adoptArenas(rt, &source->zone()->arenas, targetZoneIsCollecting);
     target->zone()->usage.adopt(source->zone()->usage);
     target->zone()->adoptUniqueIds(source->zone());
 
@@ -7802,10 +7817,10 @@ gc::MergeCompartments(JSCompartment* source, JSCompartment* target)
     target->zone()->types.typeLifoAlloc().transferFrom(&source->zone()->types.typeLifoAlloc());
 
     // Atoms which are marked in source's zone are now marked in target's zone.
-    cx->atomMarking().adoptMarkedAtoms(target->zone(), source->zone());
+    atomMarking.adoptMarkedAtoms(target->zone(), source->zone());
 
     // Merge script name maps in the target compartment's map.
-    if (cx->runtime()->lcovOutput().isEnabled() && source->scriptNameMap) {
+    if (rt->lcovOutput().isEnabled() && source->scriptNameMap) {
         AutoEnterOOMUnsafeRegion oomUnsafe;
 
         if (!target->scriptNameMap) {
@@ -7837,7 +7852,7 @@ gc::MergeCompartments(JSCompartment* source, JSCompartment* target)
     ZoneGroup* sourceGroup = sourceZone->group();
     sourceZone->deleteEmptyCompartment(source);
     sourceGroup->deleteEmptyZone(sourceZone);
-    cx->runtime()->gc.deleteEmptyZoneGroup(sourceGroup);
+    deleteEmptyZoneGroup(sourceGroup);
 }
 
 void
@@ -7978,33 +7993,15 @@ js::ReleaseAllJITCode(FreeOp* fop)
 }
 
 void
-ArenaLists::normalizeBackgroundFinalizeState(AllocKind thingKind)
+ArenaLists::adoptArenas(JSRuntime* rt, ArenaLists* fromArenaLists, bool targetZoneIsCollecting)
 {
-    ArenaLists::BackgroundFinalizeState* bfs = &backgroundFinalizeState(thingKind);
-    switch (*bfs) {
-      case BFS_DONE:
-        break;
-      default:
-        MOZ_ASSERT_UNREACHABLE("Background finalization in progress, but it should not be.");
-        break;
-    }
-}
-
-void
-ArenaLists::adoptArenas(JSRuntime* rt, ArenaLists* fromArenaLists)
-{
-    // GC should be inactive, but still take the lock as a kind of read fence.
+    // GC may be active so take the lock here so we can mutate the arena lists.
     AutoLockGC lock(rt);
 
     fromArenaLists->purge();
 
     for (auto thingKind : AllAllocKinds()) {
-        // When we enter a parallel section, we join the background
-        // thread, and we do not run GC while in the parallel section,
-        // so no finalizer should be active!
-        normalizeBackgroundFinalizeState(thingKind);
-        fromArenaLists->normalizeBackgroundFinalizeState(thingKind);
-
+        MOZ_ASSERT(fromArenaLists->backgroundFinalizeState(thingKind) == BFS_DONE);
         ArenaList* fromList = &fromArenaLists->arenaLists(thingKind);
         ArenaList* toList = &arenaLists(thingKind);
         fromList->check();
@@ -8015,7 +8012,16 @@ ArenaLists::adoptArenas(JSRuntime* rt, ArenaLists* fromArenaLists)
             next = fromArena->next;
 
             MOZ_ASSERT(!fromArena->isEmpty());
-            toList->insertAtCursor(fromArena);
+
+            // If the target zone is being collected then we need to add the
+            // arenas before the cursor because the collector assumes that the
+            // cursor is always at the end of the list. This has the side-effect
+            // of preventing allocation into any non-full arenas until the end
+            // of the next GC.
+            if (targetZoneIsCollecting)
+                toList->insertBeforeCursor(fromArena);
+            else
+                toList->insertAtCursor(fromArena);
         }
         fromList->clear();
         toList->check();

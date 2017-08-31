@@ -1608,9 +1608,10 @@ TabChild::MaybeDispatchCoalescedMouseMoveEvents()
   RecvRealMouseButtonEvent(*event,
                            mCoalescedWheelData.GetScrollableLayerGuid(),
                            mCoalescedWheelData.GetInputBlockId());
-  MOZ_ASSERT(mCoalescedMouseEventFlusher);
-  mCoalescedMouseData.Reset();
-  mCoalescedMouseEventFlusher->RemoveObserver();
+  if (mCoalescedMouseEventFlusher) {
+    mCoalescedMouseData.Reset();
+    mCoalescedMouseEventFlusher->RemoveObserver();
+  }
 }
 
 mozilla::ipc::IPCResult
@@ -1618,8 +1619,7 @@ TabChild::RecvRealMouseMoveEvent(const WidgetMouseEvent& aEvent,
                                  const ScrollableLayerGuid& aGuid,
                                  const uint64_t& aInputBlockId)
 {
-  if (mCoalesceMouseMoveEvents) {
-    MOZ_ASSERT(mCoalescedMouseEventFlusher);
+  if (mCoalesceMouseMoveEvents && mCoalescedMouseEventFlusher) {
     if (mCoalescedMouseData.CanCoalesce(aEvent, aGuid, aInputBlockId)) {
       mCoalescedMouseData.Coalesce(aEvent, aGuid, aInputBlockId);
       mCoalescedMouseEventFlusher->StartObserver();

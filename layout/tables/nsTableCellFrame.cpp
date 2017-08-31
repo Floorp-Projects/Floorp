@@ -470,18 +470,39 @@ PaintTableCellSelection(nsIFrame* aFrame, DrawTarget* aDrawTarget,
                                                                aPt);
 }
 
+bool
+nsTableCellFrame::ShouldPaintBordersAndBackgrounds() const
+{
+  // If we're not visible, we don't paint.
+  if (!StyleVisibility()->IsVisible()) {
+    return false;
+  }
+
+  // Consider 'empty-cells', but only in separated borders mode.
+  if (!GetContentEmpty()) {
+    return true;
+  }
+
+  nsTableFrame* tableFrame = GetTableFrame();
+  if (tableFrame->IsBorderCollapse()) {
+    return true;
+  }
+
+  return StyleTableBorder()->mEmptyCells == NS_STYLE_TABLE_EMPTY_CELLS_SHOW;
+}
+
+bool
+nsTableCellFrame::ShouldPaintBackground(nsDisplayListBuilder* aBuilder)
+{
+  return ShouldPaintBordersAndBackgrounds() && IsVisibleInSelection(aBuilder);
+}
+
 void
 nsTableCellFrame::BuildDisplayList(nsDisplayListBuilder*   aBuilder,
                                    const nsDisplayListSet& aLists)
 {
   DO_GLOBAL_REFLOW_COUNT_DSP("nsTableCellFrame");
-  nsTableFrame* tableFrame = GetTableFrame();
-  int32_t emptyCellStyle = GetContentEmpty() && !tableFrame->IsBorderCollapse() ?
-                              StyleTableBorder()->mEmptyCells
-                              : NS_STYLE_TABLE_EMPTY_CELLS_SHOW;
-  // take account of 'empty-cells'
-  if (StyleVisibility()->IsVisible() &&
-      (NS_STYLE_TABLE_EMPTY_CELLS_HIDE != emptyCellStyle)) {
+  if (ShouldPaintBordersAndBackgrounds()) {
     // display outset box-shadows if we need to.
     bool hasBoxShadow = !!StyleEffects()->mBoxShadow;
     if (hasBoxShadow) {
@@ -506,7 +527,7 @@ nsTableCellFrame::BuildDisplayList(nsDisplayListBuilder*   aBuilder,
     }
 
     // display borders if we need to
-    ProcessBorders(tableFrame, aBuilder, aLists);
+    ProcessBorders(GetTableFrame(), aBuilder, aLists);
 
     // and display the selection border if we need to
     if (IsSelected()) {

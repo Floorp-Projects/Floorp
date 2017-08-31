@@ -54,7 +54,7 @@ job-template:
             linux64-l10n: linux64/opt
             linux-l10n: linux32/opt
             macosx64: osx-cross/opt
-            android-api-16-l10n: android-4-0-armv7-api-16/opt
+            android-api-16-l10n: android-4-0-armv7-api16/opt
    mozharness:
       config:
          by-build-platform:

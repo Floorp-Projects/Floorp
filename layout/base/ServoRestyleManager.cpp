@@ -60,7 +60,8 @@ ExpectedOwnerForChild(const nsIFrame& aFrame)
     if (parent->IsLineFrame()) {
       parent = parent->GetParent();
     }
-    return parent->IsViewportFrame() ? nullptr : parent;
+    return parent->IsViewportFrame() ?
+      nullptr : FirstContinuationOrPartOfIBSplit(parent);
   }
 
   if (aFrame.IsBulletFrame()) {
@@ -203,16 +204,19 @@ ServoRestyleState::ProcessMaybeNestedWrapperRestyle(nsIFrame* aParent,
   if (parent->IsLineFrame()) {
     parent = parent->GetParent();
   }
-  MOZ_ASSERT(parent->FirstContinuation() == aParent ||
+  MOZ_ASSERT(FirstContinuationOrPartOfIBSplit(parent) == aParent ||
              (parent->StyleContext()->IsInheritingAnonBox() &&
               parent->GetContent() == aParent->GetContent()));
 
-  // Now "this" is a ServoRestyleState for aParent, so if parent != aParent we
-  // need a new ServoRestyleState for the kid.
+  // Now "this" is a ServoRestyleState for aParent, so if parent is not a prev
+  // continuation (possibly across ib splits) of aParent we need a new
+  // ServoRestyleState for the kid.
   Maybe<ServoRestyleState> parentRestyleState;
-  if (parent != aParent) {
+  nsIFrame* parentForRestyle = aParent;
+  if (nsLayoutUtils::FirstContinuationOrIBSplitSibling(parent) != aParent) {
     parentRestyleState.emplace(*parent, *this, nsChangeHint_Empty,
                                Type::InFlow);
+    parentForRestyle = parent;
   }
   ServoRestyleState& curRestyleState =
     parentRestyleState ? *parentRestyleState : *this;
@@ -220,7 +224,7 @@ ServoRestyleState::ProcessMaybeNestedWrapperRestyle(nsIFrame* aParent,
   // This frame may already have been restyled.  Even if it has, we can't just
   // return, because the next frame may be a kid of it that does need restyling.
   if (cur->IsWrapperAnonBoxNeedingRestyle()) {
-    parent->UpdateStyleOfChildAnonBox(cur, curRestyleState);
+    parentForRestyle->UpdateStyleOfChildAnonBox(cur, curRestyleState);
     cur->SetIsWrapperAnonBoxNeedingRestyle(false);
   }
 
