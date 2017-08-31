@@ -18,7 +18,7 @@
         android:layout_height="wrap_content">
 
         <org.mozilla.gecko.activitystream.homepanel.stream.StreamOverridablePageIconLayout
-                android:id="@+id/page_icon"
+                android:id="@+id/icon"
                 android:layout_width="@dimen/favicon_bg"
                 android:layout_height="@dimen/favicon_bg"
                 android:layout_marginStart="@dimen/activity_stream_base_margin"
@@ -42,11 +42,8 @@
         android:paddingBottom="16dp"
         android:paddingTop="16dp" />
 
-    <!-- In RTL locales, we don't want a large horizontal gap between the domain, page title and source
-         text so we set textAlignment=viewStart for all of them so that it's to the left in LTR and
-         right in RTL. -->
     <TextView
-        android:id="@+id/page_domain"
+        android:id="@+id/page"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
         android:layout_toEndOf="@id/icon_wrapper"
@@ -55,20 +52,16 @@
         android:layout_toStartOf="@id/menu"
         android:paddingLeft="@dimen/activity_stream_base_margin"
         android:paddingStart="@dimen/activity_stream_base_margin"
-        android:paddingRight="0dp"
-        android:paddingEnd="0dp"
         android:paddingTop="@dimen/activity_stream_base_margin"
-        android:textAlignment="viewStart"
         android:textColor="@color/activity_stream_subtitle"
         android:textSize="12sp"
         tools:text="twitter" />
 
-    <!-- See id/page_domain for textAlignment comment. -->
     <TextView
-        android:id="@+id/page_title"
+        android:id="@+id/card_history_label"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:layout_below="@id/page_domain"
+        android:layout_below="@id/page"
         android:layout_toEndOf="@id/icon_wrapper"
         android:layout_toLeftOf="@id/menu"
         android:layout_toRightOf="@id/icon_wrapper"
@@ -77,9 +70,6 @@
         android:maxLines="3"
         android:paddingLeft="@dimen/activity_stream_base_margin"
         android:paddingStart="@dimen/activity_stream_base_margin"
-        android:paddingRight="0dp"
-        android:paddingEnd="0dp"
-        android:textAlignment="viewStart"
         android:textColor="#ff000000"
         android:textSize="14sp"
         android:textStyle="bold"
@@ -89,7 +79,7 @@
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
         android:layout_alignParentBottom="true"
-        android:layout_below="@id/page_title"
+        android:layout_below="@id/card_history_label"
         android:layout_toEndOf="@id/icon_wrapper"
         android:layout_toRightOf="@id/icon_wrapper"
         android:gravity="center_vertical"
@@ -103,22 +93,17 @@
         tools:ignore="UseCompoundDrawables">
 
         <ImageView
-            android:id="@+id/page_source_icon"
+            android:id="@+id/source_icon"
             android:layout_width="12dp"
             android:layout_height="12dp"
             tools:src="@drawable/ic_as_bookmarked" />
 
-        <!-- See id/page_domain for textAlignment comment. -->
         <TextView
-            android:id="@+id/page_source"
+            android:id="@+id/card_history_source"
             android:layout_width="0dp"
             android:layout_height="wrap_content"
-            android:layout_marginStart="2dp"
             android:layout_marginLeft="2dp"
-            android:layout_marginRight="0dp"
-            android:layout_marginEnd="0dp"
             android:layout_weight="1"
-            android:textAlignment="viewStart"
             android:textColor="@color/activity_stream_subtitle"
             android:textSize="12sp"
             tools:text="Bookmarked" />
