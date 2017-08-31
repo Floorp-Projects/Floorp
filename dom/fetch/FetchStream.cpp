@@ -160,8 +160,6 @@ FetchStream::Create(JSContext* aCx, FetchStreamHolder* aStreamHolder,
     return;
   }
 
-  stream->mReadableStream = body;
-
   // This will be released in FetchStream::FinalizeCallback().  We are
   // guaranteed the jsapi will call FinalizeCallback when ReadableStream
   // js object is finalized.
@@ -383,7 +381,6 @@ FetchStream::FetchStream(nsIGlobalObject* aGlobal,
   , mStreamHolder(aStreamHolder)
   , mOwningEventTarget(aGlobal->EventTargetFor(TaskCategory::Other))
   , mOriginalInputStream(aInputStream)
-  , mReadableStream(nullptr)
 {
   MOZ_DIAGNOSTIC_ASSERT(aInputStream);
   MOZ_DIAGNOSTIC_ASSERT(aStreamHolder);
@@ -442,7 +439,7 @@ FetchStream::OnInputStreamReady(nsIAsyncInputStream* aStream)
   }
 
   JSContext* cx = jsapi.cx();
-  JS::Rooted<JSObject*> stream(cx, mReadableStream);
+  JS::Rooted<JSObject*> stream(cx, mStreamHolder->ReadableStreamBody());
 
   uint64_t size = 0;
   nsresult rv = mInputStream->Available(&size);
@@ -508,7 +505,7 @@ FetchStream::Close()
   }
 
   JSContext* cx = jsapi.cx();
-  JS::Rooted<JSObject*> stream(cx, mReadableStream);
+  JS::Rooted<JSObject*> stream(cx, mStreamHolder->ReadableStreamBody());
   CloseAndReleaseObjects(cx, stream);
 }
 
