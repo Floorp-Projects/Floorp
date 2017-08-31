@@ -1251,7 +1251,7 @@ Front.prototype = extend(Pool.prototype, {
       this.actor().then(actorID => {
         packet.to = actorID;
         this.conn._transport.send(packet);
-      }).catch(e => console.error(e));
+      }).catch(console.error);
     }
   },
 

@@ -1,4 +1,3 @@
-use std::collections::HashSet;
 use std::ffi::CString;
 use std::{mem, slice};
 use std::path::PathBuf;
@@ -926,7 +925,6 @@ pub unsafe extern "C" fn wr_api_get_namespace(dh: &mut DocumentHandle) -> WrIdNa
 pub struct WebRenderFrameBuilder {
     pub root_pipeline_id: WrPipelineId,
     pub dl_builder: webrender_api::DisplayListBuilder,
-    pub scroll_clips_defined: HashSet<ClipId>,
 }
 
 impl WebRenderFrameBuilder {
@@ -935,7 +933,6 @@ impl WebRenderFrameBuilder {
         WebRenderFrameBuilder {
             root_pipeline_id: root_pipeline_id,
             dl_builder: webrender_api::DisplayListBuilder::new(root_pipeline_id, content_size),
-            scroll_clips_defined: HashSet::new(),
         }
     }
 }
@@ -1102,21 +1099,22 @@ pub extern "C" fn wr_dp_pop_clip(state: &mut WrState) {
 }
 
 #[no_mangle]
-pub extern "C" fn wr_dp_push_scroll_layer(state: &mut WrState,
-                                          scroll_id: u64,
-                                          content_rect: LayoutRect,
-                                          clip_rect: LayoutRect) {
+pub extern "C" fn wr_dp_define_scroll_layer(state: &mut WrState,
+                                            scroll_id: u64,
+                                            content_rect: LayoutRect,
+                                            clip_rect: LayoutRect) {
     assert!(unsafe { is_in_main_thread() });
     let clip_id = ClipId::new(scroll_id, state.pipeline_id);
-    // Avoid defining multiple scroll clips with the same clip id, as that
-    // results in undefined behaviour or assertion failures.
-    if !state.frame_builder.scroll_clips_defined.contains(&clip_id) {
+    state.frame_builder.dl_builder.define_scroll_frame(
+        Some(clip_id), content_rect, clip_rect, vec![], None,
+        ScrollSensitivity::Script);
+}
 
-        state.frame_builder.dl_builder.define_scroll_frame(
-            Some(clip_id), content_rect, clip_rect, vec![], None,
-            ScrollSensitivity::Script);
-        state.frame_builder.scroll_clips_defined.insert(clip_id);
-    }
+#[no_mangle]
+pub extern "C" fn wr_dp_push_scroll_layer(state: &mut WrState,
+                                          scroll_id: u64) {
+    assert!(unsafe { is_in_main_thread() });
+    let clip_id = ClipId::new(scroll_id, state.pipeline_id);
     state.frame_builder.dl_builder.push_clip_id(clip_id);
 }
 
