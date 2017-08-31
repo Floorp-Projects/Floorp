@@ -118,6 +118,32 @@ this.FormAutofillUtils = {
       .join(this.getAddressSeparator());
   },
 
+  /**
+   * In-place concatenate tel-related components into a single "tel" field and
+   * delete unnecessary fields.
+   * @param {object} address An address record.
+   */
+  compressTel(address) {
+    let telCountryCode = address["tel-country-code"] || "";
+    let telAreaCode = address["tel-area-code"] || "";
+
+    if (!address.tel) {
+      if (address["tel-national"]) {
+        address.tel = telCountryCode + address["tel-national"];
+      } else if (address["tel-local"]) {
+        address.tel = telCountryCode + telAreaCode + address["tel-local"];
+      } else if (address["tel-local-prefix"] && address["tel-local-suffix"]) {
+        address.tel = telCountryCode + telAreaCode + address["tel-local-prefix"] + address["tel-local-suffix"];
+      }
+    }
+
+    for (let field in address) {
+      if (field != "tel" && this.getCategoryFromFieldName(field) == "tel") {
+        delete address[field];
+      }
+    }
+  },
+
   fmtMaskedCreditCardLabel(maskedCCNum = "") {
     return {
       affix: "****",
