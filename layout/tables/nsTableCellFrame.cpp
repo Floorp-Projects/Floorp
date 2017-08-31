@@ -491,6 +491,12 @@ nsTableCellFrame::ShouldPaintBordersAndBackgrounds() const
   return StyleTableBorder()->mEmptyCells == NS_STYLE_TABLE_EMPTY_CELLS_SHOW;
 }
 
+bool
+nsTableCellFrame::ShouldPaintBackground(nsDisplayListBuilder* aBuilder)
+{
+  return ShouldPaintBordersAndBackgrounds() && IsVisibleInSelection(aBuilder);
+}
+
 void
 nsTableCellFrame::BuildDisplayList(nsDisplayListBuilder*   aBuilder,
                                    const nsDisplayListSet& aLists)
