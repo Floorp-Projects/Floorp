@@ -75,7 +75,6 @@ awsy-stylo-sequential:
                 linux.*:
                     - awsy/linux_config.py
         extra-options:
-            - --enable-stylo
             - --single-stylo-traversal
 
 cppunit:

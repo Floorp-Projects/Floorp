@@ -97,11 +97,6 @@ stylo-tests:
     - mochitest-media
     - mochitest-webgl
 
-stylo-sequential-tests:
-    - crashtest
-    - reftest-stylo
-    - mochitest
-
 qr-talos:
     - talos-chrome
     - talos-dromaeojs
