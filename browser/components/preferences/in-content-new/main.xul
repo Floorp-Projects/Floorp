@@ -321,74 +321,67 @@
         <label id="isDefaultLabel" flex="1">&isDefault.label;</label>
       </hbox>
     </deck>
-    <separator class="thin"/>
   </vbox>
 #endif
 
-  <html:table id="startupTable">
-    <html:tr>
-      <html:td class="label-cell">
-        <label accesskey="&startupPage2.accesskey;"
-               control="browserStartupPage">&startupPage2.label;</label>
-      </html:td>
-      <html:td class="content-cell">
-        <menulist id="browserStartupPage"
-                  class="content-cell-item"
-                  preference="browser.startup.page">
-          <menupopup>
-          <menuitem label="&startupUserHomePage.label;"
-                    value="1"
-                    id="browserStartupHomePage"/>
-          <menuitem label="&startupBlankPage.label;"
-                    value="0"
-                    id="browserStartupBlank"/>
-          <menuitem label="&startupPrevSession.label;"
-                    value="3"
-                    id="browserStartupLastSession"/>
-          </menupopup>
-        </menulist>
-      </html:td>
-    </html:tr>
-    <html:tr class="tableGroup">
-      <html:td class="label-cell">
-        <label accesskey="&homepage2.accesskey;"
-               control="browserHomePage">&homepage2.label;</label>
-      </html:td>
-      <html:td class="content-cell">
-        <textbox id="browserHomePage"
-                 class="padded uri-element content-cell-item"
-                 type="autocomplete"
-                 autocompletesearch="unifiedcomplete"
-                 onsyncfrompreference="return gMainPane.syncFromHomePref();"
-                 onsynctopreference="return gMainPane.syncToHomePref(this.value);"
-                 placeholder="&abouthome.pageTitle;"
-                 preference="browser.startup.homepage"/>
-      </html:td>
-    </html:tr>
-    <html:tr class="tableSubGroup">
-      <html:td class="label-cell" />
-      <html:td class="content-cell homepage-buttons">
-        <button id="useCurrent"
-                class="content-cell-item"
-                label=""
-                accesskey="&useCurrentPage.accesskey;"
-                label1="&useCurrentPage.label;"
-                label2="&useMultiple.label;"
-                preference="pref.browser.homepage.disable_button.current_page"/>
-        <button id="useBookmark"
-                class="content-cell-item"
-                label="&chooseBookmark.label;"
-                accesskey="&chooseBookmark.accesskey;"
-                preference="pref.browser.homepage.disable_button.bookmark_page"
-                searchkeywords="&selectBookmark.title; &selectBookmark.label;"/>
-        <button id="restoreDefaultHomePage"
-                class="content-cell-item"
-                label="&restoreDefault.label;"
-                accesskey="&restoreDefault.accesskey;"
-                preference="pref.browser.homepage.disable_button.restore_default"/>
-      </html:td>
-    </html:tr>
-  </html:table>
+  <vbox id="startupPageBox">
+    <label accesskey="&startupPage2.accesskey;"
+           control="browserStartupPage">&startupPage2.label;</label>
+    <radiogroup id="browserStartupPage"
+                preference="browser.startup.page">
+      <radio label="&startupUserHomePage.label;"
+             value="1"
+             id="browserStartupHomePage"/>
+      <radio label="&startupBlankPage.label;"
+             value="0"
+             id="browserStartupBlank"/>
+      <radio label="&startupPrevSession.label;"
+             value="3"
+             id="browserStartupLastSession"/>
+    </radiogroup>
+  </vbox>
+</groupbox>
+
+<!-- Home Page -->
+<groupbox id="homepageGroup"
+          data-category="paneGeneral"
+          hidden="true">
+  <caption><label>&homepage2.label;</label></caption>
+
+  <vbox>
+    <textbox id="browserHomePage"
+             class="uri-element"
+             type="autocomplete"
+             autocompletesearch="unifiedcomplete"
+             onsyncfrompreference="return gMainPane.syncFromHomePref();"
+             onsynctopreference="return gMainPane.syncToHomePref(this.value);"
+             placeholder="&abouthome.pageTitle;"
+             preference="browser.startup.homepage"/>
+  </vbox>
+
+  <hbox class="homepage-buttons">
+    <button id="useCurrent"
+            flex="1"
+            class="homepage-button"
+            label=""
+            accesskey="&useCurrentPage.accesskey;"
+            label1="&useCurrentPage.label;"
+            label2="&useMultiple.label;"
+            preference="pref.browser.homepage.disable_button.current_page"/>
+    <button id="useBookmark"
+            flex="1"
+            class="homepage-button"
+            label="&chooseBookmark.label;"
+            accesskey="&chooseBookmark.accesskey;"
+            preference="pref.browser.homepage.disable_button.bookmark_page"
+            searchkeywords="&selectBookmark.title; &selectBookmark.label;"/>
+    <button id="restoreDefaultHomePage"
+            flex="1"
+            class="homepage-button"
+            label="&restoreDefault.label;"
+            accesskey="&restoreDefault.accesskey;"
+            preference="pref.browser.homepage.disable_button.restore_default"/>
+  </hbox>
 </groupbox>
 
 <!-- Tab preferences -->

@@ -18,8 +18,6 @@ import io
 from mozpack.chrome.manifest import (
     Manifest,
     ManifestLocale,
-    ManifestOverride,
-    ManifestResource,
     parse_manifest,
 )
 from mozbuild.preprocessor import Preprocessor
@@ -81,10 +79,84 @@ def convert_contributors(str):
 
 
 ###
+# Build the manifest author string based on the author string
+# and optionally adding the list of contributors, if provided.
+#
+# Args:
+#    author (str)       - a string with the name of the author
+#    contributors (str) - RDF based list of contributors from a chrome manifest
+#
+# Returns:
+#    (str) - a string to be placed in the author field of the manifest.json
+#
+# Example:
+#    s = build_author_string(
+#    'Aviary.pl',
+#    '
+#        <em:contributor>Marek Wawoczny</em:contributor>
+#        <em:contributor>Marek Stepien</em:contributor>
+#    ')
+#    s == 'Aviary.pl (contributors: Marek Wawoczny, Marek Stepien)'
+###
+def build_author_string(author, contributors):
+    contrib = convert_contributors(contributors)
+    if len(contrib) == 0:
+        return author
+    return '{0} (contributors: {1})'.format(author, contrib)
+
+
+##
+# Converts the list of chrome manifest entry flags to the list of platforms
+# for the langpack manifest.
+#
+# The list of result platforms is taken from AppConstants.platform.
+#
+# Args:
+#    flags (FlagList) - a list of Chrome Manifest entry flags
+#
+# Returns:
+#    (list) - a list of platform the entry applies to
+#
+# Example:
+#    str(flags) == "os==MacOS os==Windows"
+#    platforms = convert_entry_flags_to_platform_codes(flags)
+#    platforms == ['mac', 'win']
+#
+# The method supports only `os` flag name and equality operator.
+# It will throw if tried with other flags or operators.
+###
+def convert_entry_flags_to_platform_codes(flags):
+    if not flags:
+        return None
+
+    ret = []
+    for key in flags:
+        if key != 'os':
+            raise Exception('Unknown flag name')
+
+        for value in flags[key].values:
+            if value[0] != '==':
+                raise Exception('Inequality flag cannot be converted')
+
+            if value[1] == 'Android':
+                ret.append('android')
+            elif value[1] == 'LikeUnix':
+                ret.append('linux')
+            elif value[1] == 'Darwin':
+                ret.append('macosx')
+            elif value[1] == 'WINNT':
+                ret.append('win')
+            else:
+                raise Exception('Unknown flag value {0}'.format(value[1]))
+
+    return ret
+
+
+###
 # Recursively parse a chrome manifest file appending new entries
 # to the result list
 #
-# The function can handle three entry types: 'locale', 'override' and 'resource'
+# The function can handle two entry types: 'locale' and 'manifest'
 #
 # Args:
 #    path           (str)  - a path to a chrome manifest
@@ -102,12 +174,14 @@ def convert_contributors(str):
 #            'type': 'locale',
 #            'alias': 'devtools',
 #            'locale': 'pl',
+#            'platforms': null,
 #            'path': 'chrome/pl/locale/pl/devtools/'
 #        },
 #        {
 #            'type': 'locale',
 #            'alias': 'autoconfig',
 #            'locale': 'pl',
+#            'platforms': ['win', 'mac'],
 #            'path': 'chrome/pl/locale/pl/autoconfig/'
 #        },
 #    ]
@@ -125,6 +199,7 @@ def parse_chrome_manifest(path, base_path, chrome_entries):
                 'type': 'locale',
                 'alias': entry.name,
                 'locale': entry.id,
+                'platforms': convert_entry_flags_to_platform_codes(entry.flags),
                 'path': os.path.join(
                     os.path.relpath(
                         os.path.dirname(path),
@@ -133,20 +208,8 @@ def parse_chrome_manifest(path, base_path, chrome_entries):
                     entry.relpath
                 )
             })
-        elif isinstance(entry, ManifestOverride):
-            chrome_entries.append({
-                'type': 'override',
-                'real-path': entry.overloaded,
-                'overlay-path': entry.overload
-            })
-        elif isinstance(entry, ManifestResource):
-            chrome_entries.append({
-                'type': 'resource',
-                'alias': entry.name,
-                'path': entry.target
-            })
         else:
-            raise Exception('Unknown type %s' % entry[0])
+            raise Exception('Unknown type {0}'.format(entry.name))
 
 
 ###
@@ -168,19 +231,37 @@ def parse_chrome_manifest(path, base_path, chrome_entries):
 #    manifest = create_webmanifest(
 #      ['pl'],
 #      '{ec8030f7-c20a-464f-9b0e-13a3a9e97384}',
-#      '55.0a1',
+#      '57.0',
 #      {'MOZ_LANG_TITLE': 'Polski'},
 #      chrome_entries
 #    )
 #    manifest == {
-#        'languages': ['pl'],
-#        'applications': {
-#            'gecko':  {
-#                'strict_min_version': '55.0a1',
-#                'id': '',
+#        'languages': {
+#            'pl': {
+#                'version': '201709121481',
+#                'resources': None,
+#                'chrome_resources': {
+#                    'alert': 'chrome/pl/locale/pl/alert/',
+#                    'branding': 'browser/chrome/pl/locale/global/',
+#                    'global-platform': {
+#                      'macosx': 'chrome/pl/locale/pl/global-platform/mac/',
+#                      'win': 'chrome/pl/locale/pl/global-platform/win/',
+#                      'linux': 'chrome/pl/locale/pl/global-platform/unix/',
+#                      'android': 'chrome/pl/locale/pl/global-platform/unix/',
+#                    },
+#                    'forms': 'browser/chrome/pl/locale/forms/',
+#                    ...
+#                }
 #            }
 #        },
-#        'version': '55.0a1',
+#        'applications': {
+#            'gecko':  {
+#                'strict_min_version': '57.0',
+#                'strict_max_version': '57.0.*',
+#                'id': 'langpack-pl@mozilla.org',
+#            }
+#        },
+#        'version': '57.0',
 #        'name': 'Polski Language Pack',
 #        ...
 #    }
@@ -189,50 +270,50 @@ def create_webmanifest(locstr, appver, defines, chrome_entries):
     locales = map(lambda loc: loc.strip(), locstr.split(','))
     main_locale = locales[0]
 
-    contributors = convert_contributors(defines['MOZ_LANGPACK_CONTRIBUTORS'])
+    author = build_author_string(
+        defines['MOZ_LANGPACK_CREATOR'],
+        defines['MOZ_LANGPACK_CONTRIBUTORS']
+    )
 
     manifest = {
-        'langpack-id': main_locale,
+        'langpack_id': main_locale,
         'manifest_version': 2,
         'applications': {
             'gecko': {
-                'id': "langpack-" + main_locale + "@mozilla.org",
-                'strict_min_version': appver
+                'id': 'langpack-{0}@firefox.mozilla.org'.format(main_locale),
+                'strict_min_version': appver,
+                'strict_max_version': '{0}.*'.format(appver)
             }
         },
-        'name': defines['MOZ_LANG_TITLE'] + ' Language Pack',
-        'description': 'Language pack for Firefox for ' + main_locale,
+        'name': '{0} Language Pack'.format(defines['MOZ_LANG_TITLE']),
+        'description': 'Language pack for Firefox for {0}'.format(main_locale),
         'version': appver,
-        'languages': locales,
-        'author': '%s (contributors: %s)' % (defines['MOZ_LANGPACK_CREATOR'], contributors),
-        'chrome_entries': [
-        ]
+        'languages': {},
+        'author': author
     }
 
+    cr = {}
     for entry in chrome_entries:
-        line = ''
         if entry['type'] == 'locale':
-            line = '%s %s %s %s' % (
-                entry['type'],
-                entry['alias'],
-                entry['locale'],
-                entry['path']
-            )
-        elif entry['type'] == 'override':
-            line = '%s %s %s' % (
-                entry['type'],
-                entry['real-path'],
-                entry['overlay-path']
-            )
-        elif entry['type'] == 'resource':
-            line = '%s %s %s' % (
-                entry['type'],
-                entry['alias'],
-                entry['path']
-            )
+            platforms = entry['platforms']
+            if platforms:
+                if entry['alias'] not in cr:
+                    cr[entry['alias']] = {}
+                for platform in platforms:
+                    cr[entry['alias']][platform] = entry['path']
+            else:
+                assert entry['alias'] not in cr
+                cr[entry['alias']] = entry['path']
         else:
-            raise Exception('Unknown type %s' % entry['type'])
-        manifest['chrome_entries'].append(line)
+            raise Exception('Unknown type {0}'.format(entry['type']))
+
+    for loc in locales:
+        manifest['languages'][loc] = {
+            'version': appver,
+            'resources': None,
+            'chrome_resources': cr
+        }
+
     return json.dumps(manifest, indent=2, ensure_ascii=False, encoding='utf8')
 
 

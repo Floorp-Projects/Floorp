@@ -8,22 +8,9 @@
 
 #include "MediaSegment.h"
 #include "nsAutoPtr.h"
+#include "TrackID.h"
 
 namespace mozilla {
-
-/**
- * Unique ID for track within a StreamTracks. Tracks from different
- * StreamTrackss may have the same ID; this matters when appending StreamTrackss,
- * since tracks with the same ID are matched. Only IDs greater than 0 are allowed.
- */
-typedef int32_t TrackID;
-const TrackID TRACK_NONE = 0;
-const TrackID TRACK_INVALID = -1;
-const TrackID TRACK_ANY = -2;
-
-inline bool IsTrackIDExplicit(const TrackID& aId) {
-  return aId > TRACK_NONE;
-}
 
 inline TrackTicks RateConvertTicksRoundDown(TrackRate aOutRate,
                                             TrackRate aInRate,

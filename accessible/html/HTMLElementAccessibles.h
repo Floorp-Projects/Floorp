@@ -114,6 +114,26 @@ public:
   virtual bool IsWidget() const override;
 };
 
+/**
+ * Used for HTML header and footer elements.
+ */
+class HTMLHeaderOrFooterAccessible : public HyperTextAccessibleWrap
+{
+public:
+
+  HTMLHeaderOrFooterAccessible(nsIContent* aContent, DocAccessible* aDoc) :
+    HyperTextAccessibleWrap(aContent, aDoc) {}
+
+  NS_DECL_ISUPPORTS_INHERITED
+
+  // Accessible
+  virtual nsIAtom* LandmarkRole() const override;
+  virtual a11y::role NativeRole() override;
+
+protected:
+  virtual ~HTMLHeaderOrFooterAccessible() {}
+};
+
 } // namespace a11y
 } // namespace mozilla
 

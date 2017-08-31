@@ -1,0 +1,46 @@
+<?xml version="1.0" encoding="utf-8"?>
+<menu xmlns:android="http://schemas.android.com/apk/res/android">
+    <!-- Group ID's are required, otherwise NavigationView won't show any dividers. The ID's are unused, but still required. -->
+    <group android:id="@+id/group0">
+        <item
+            android:id="@+id/open_new_tab"
+            android:icon="@drawable/as_tab"
+            android:title="@string/contextmenu_open_new_tab"/>
+        <item
+            android:id="@+id/open_new_private_tab"
+            android:icon="@drawable/as_private"
+            android:title="@string/contextmenu_open_private_tab"/>
+    </group>
+
+    <group android:id="@+id/group1">
+        <item
+            android:id="@+id/dismiss"
+            android:icon="@drawable/as_dismiss"
+            android:title="@string/activity_stream_remove"/>
+
+        <item
+            android:id="@+id/delete"
+            android:icon="@drawable/as_bin"
+            android:visible="false"
+            android:title="@string/activity_stream_delete_history"/>
+    </group>
+
+    <group android:id="@+id/group2">
+        <item
+            android:id="@+id/bookmark"
+            android:icon="@drawable/as_bookmark"
+            android:title="@string/bookmark"/>
+        <item
+            android:id="@+id/share"
+            android:icon="@drawable/as_share"
+            android:title="@string/share"/>
+        <item
+            android:id="@+id/copy_url"
+            android:icon="@drawable/as_copy"
+            android:title="@string/contextmenu_copyurl"/>
+        <item
+            android:id="@+id/pin"
+            android:icon="@drawable/as_pin"
+            android:title="@string/contextmenu_top_sites_pin"/>
+    </group>
+</menu>

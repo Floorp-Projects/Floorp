@@ -66,6 +66,7 @@
 #elif defined(__GNUC__)
 #  define MOZ_HAVE_NEVER_INLINE          __attribute__((noinline))
 #  define MOZ_HAVE_NORETURN              __attribute__((noreturn))
+#  define MOZ_HAVE_NORETURN_PTR          __attribute__((noreturn))
 #endif
 
 /*
@@ -102,12 +103,20 @@
  * warnings about not initializing variables, or about any other seemingly-dodgy
  * operations performed after the function returns.
  *
+ * There are two variants. The GCC version of NORETURN may be applied to a
+ * function pointer, while for MSVC it may not.
+ *
  * This modifier does not affect the corresponding function's linking behavior.
  */
 #if defined(MOZ_HAVE_NORETURN)
 #  define MOZ_NORETURN          MOZ_HAVE_NORETURN
 #else
 #  define MOZ_NORETURN          /* no support */
+#endif
+#if defined(MOZ_HAVE_NORETURN_PTR)
+#  define MOZ_NORETURN_PTR      MOZ_HAVE_NORETURN_PTR
+#else
+#  define MOZ_NORETURN_PTR      /* no support */
 #endif
 
 /**

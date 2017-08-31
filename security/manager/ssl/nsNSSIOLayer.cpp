@@ -44,6 +44,7 @@
 #include "ssl.h"
 #include "sslerr.h"
 #include "sslproto.h"
+#include "sslexp.h"
 
 using namespace mozilla;
 using namespace mozilla::psm;
@@ -59,6 +60,44 @@ using namespace mozilla::psm;
                        //file.
 
 namespace {
+
+// The NSSSocketInfo tls flags are meant to be opaque to most calling applications
+// but provide a mechanism for direct TLS manipulation when experimenting with new
+// features in the scope of a single socket. They do not create a persistent ABI.
+//
+// Use of these flags creates a new 'sharedSSLState' so existing states for intolerance
+// are not carried to sockets that use these flags (and intolerance they discover
+// does not impact other normal sockets not using the flags.)
+//
+// Their current definitions are:
+//
+// bits 0-2 (mask 0x07) specify the max tls version
+//          0 means no override 1->4 are 1.0, 1.1, 1.2, 1.3, 4->7 unused
+// bits 3-5 (mask 0x38) specify the tls fallback limit
+//          0 means no override, values 1->4 match prefs
+// bit    6 (mask 0x40) specifies use of SSL_AltServerHelloType on handshake
+
+enum {
+  kTLSProviderFlagMaxVersion10   = 0x01,
+  kTLSProviderFlagMaxVersion11   = 0x02,
+  kTLSProviderFlagMaxVersion12   = 0x03,
+  kTLSProviderFlagMaxVersion13   = 0x04,
+};
+
+static uint32_t getTLSProviderFlagMaxVersion(uint32_t flags)
+{
+  return (flags & 0x07);
+}
+
+static uint32_t getTLSProviderFlagFallbackLimit(uint32_t flags)
+{
+  return (flags & 0x38) >> 3;
+}
+
+static bool getTLSProviderFlagAltServerHello(uint32_t flags)
+{
+  return (flags & 0x40);
+}
 
 #define MAX_ALPN_LENGTH 255
 
@@ -661,6 +700,12 @@ SharedSSLState&
 nsNSSSocketInfo::SharedState()
 {
   return mSharedState;
+}
+
+void
+nsNSSSocketInfo::SetSharedOwningReference(SharedSSLState* aRef)
+{
+  mOwningSharedRef = aRef;
 }
 
 void nsSSLIOLayerHelpers::Cleanup()
@@ -1357,11 +1402,12 @@ nsSSLIOLayerPoll(PRFileDesc* fd, int16_t in_flags, int16_t* out_flags)
   return result;
 }
 
-nsSSLIOLayerHelpers::nsSSLIOLayerHelpers()
+nsSSLIOLayerHelpers::nsSSLIOLayerHelpers(uint32_t aTlsFlags)
   : mTreatUnsafeNegotiationAsBroken(false)
   , mTLSIntoleranceInfo()
   , mVersionFallbackLimit(SSL_LIBRARY_VERSION_TLS_1_0)
   , mutex("nsSSLIOLayerHelpers.mutex")
+  , mTlsFlags(aTlsFlags)
 {
 }
 
@@ -1678,6 +1724,7 @@ nsresult
 nsSSLIOLayerHelpers::Init()
 {
   if (!nsSSLIOLayerInitialized) {
+    MOZ_ASSERT(NS_IsMainThread());
     nsSSLIOLayerInitialized = true;
     nsSSLIOLayerIdentity = PR_GetUniqueIdentity("NSS layer");
     nsSSLIOLayerMethods  = *PR_GetDefaultIOMethods();
@@ -1719,20 +1766,27 @@ nsSSLIOLayerHelpers::Init()
     nsSSLPlaintextLayerMethods.recv = PlaintextRecv;
   }
 
-  bool enabled = false;
-  Preferences::GetBool("security.ssl.treat_unsafe_negotiation_as_broken", &enabled);
-  setTreatUnsafeNegotiationAsBroken(enabled);
-
   loadVersionFallbackLimit();
-  initInsecureFallbackSites();
 
-  mPrefObserver = new PrefObserver(this);
-  Preferences::AddStrongObserver(mPrefObserver,
-                                 "security.ssl.treat_unsafe_negotiation_as_broken");
-  Preferences::AddStrongObserver(mPrefObserver,
-                                 "security.tls.version.fallback-limit");
-  Preferences::AddStrongObserver(mPrefObserver,
-                                 "security.tls.insecure_fallback_hosts");
+  // non main thread helpers will need to use defaults
+  if (NS_IsMainThread()) {
+    bool enabled = false;
+    Preferences::GetBool("security.ssl.treat_unsafe_negotiation_as_broken", &enabled);
+    setTreatUnsafeNegotiationAsBroken(enabled);
+
+    initInsecureFallbackSites();
+
+    mPrefObserver = new PrefObserver(this);
+    Preferences::AddStrongObserver(mPrefObserver,
+                                   "security.ssl.treat_unsafe_negotiation_as_broken");
+    Preferences::AddStrongObserver(mPrefObserver,
+                                   "security.tls.version.fallback-limit");
+    Preferences::AddStrongObserver(mPrefObserver,
+                                   "security.tls.insecure_fallback_hosts");
+  } else {
+    MOZ_ASSERT(mTlsFlags, "Only per socket version can ignore prefs");
+  }
+
   return NS_OK;
 }
 
@@ -1740,8 +1794,22 @@ void
 nsSSLIOLayerHelpers::loadVersionFallbackLimit()
 {
   // see nsNSSComponent::setEnabledTLSVersions for pref handling rules
-  uint32_t limit = Preferences::GetUint("security.tls.version.fallback-limit",
-                                        3); // 3 = TLS 1.2
+  uint32_t limit = 3; // TLS 1.2
+
+  if (NS_IsMainThread()) {
+    limit = Preferences::GetUint("security.tls.version.fallback-limit",
+                                 3); // 3 = TLS 1.2
+  }
+
+  // set fallback limit if it is set in the tls flags
+  uint32_t tlsFlagsFallbackLimit = getTLSProviderFlagFallbackLimit(mTlsFlags);
+
+  if (tlsFlagsFallbackLimit) {
+    limit = tlsFlagsFallbackLimit;
+    MOZ_LOG(gPIPNSSLog, LogLevel::Debug,
+            ("loadVersionFallbackLimit overriden by tlsFlags %d\n", limit));
+  }
+
   SSLVersionRange defaults = { SSL_LIBRARY_VERSION_TLS_1_2,
                                SSL_LIBRARY_VERSION_TLS_1_2 };
   SSLVersionRange filledInRange;
@@ -2498,7 +2566,37 @@ nsSSLIOLayerSetOptions(PRFileDesc* fd, bool forSTARTTLS,
     return NS_ERROR_FAILURE;
   }
 
-  // Use infoObject->GetProviderTlsFlags() to get the TLS flags
+  // setting TLS max version
+  uint32_t versionFlags =
+    getTLSProviderFlagMaxVersion(infoObject->GetProviderTlsFlags());
+  if (versionFlags) {
+    MOZ_LOG(gPIPNSSLog, LogLevel::Debug,
+            ("[%p] nsSSLIOLayerSetOptions: version flags %d\n", fd, versionFlags));
+    if (versionFlags == kTLSProviderFlagMaxVersion10) {
+      range.max = SSL_LIBRARY_VERSION_TLS_1_0;
+    } else if (versionFlags == kTLSProviderFlagMaxVersion11) {
+      range.max = SSL_LIBRARY_VERSION_TLS_1_1;
+    } else if (versionFlags == kTLSProviderFlagMaxVersion12) {
+      range.max = SSL_LIBRARY_VERSION_TLS_1_2;
+    } else if (versionFlags == kTLSProviderFlagMaxVersion13) {
+      range.max = SSL_LIBRARY_VERSION_TLS_1_3;
+    } else {
+      MOZ_LOG(gPIPNSSLog, LogLevel::Error,
+              ("[%p] nsSSLIOLayerSetOptions: unknown version flags %d\n",
+               fd, versionFlags));
+    }
+  }
+
+  // enabling alternative server hello
+  if (getTLSProviderFlagAltServerHello(infoObject->GetProviderTlsFlags())) {
+    MOZ_LOG(gPIPNSSLog, LogLevel::Debug,
+            ("[%p] nsSSLIOLayerSetOptions: Use AltServerHello\n", fd));
+    if (SECSuccess != SSL_UseAltServerHelloType(fd, PR_TRUE)) {
+          MOZ_LOG(gPIPNSSLog, LogLevel::Error,
+                  ("[%p] nsSSLIOLayerSetOptions: Use AltServerHello failed\n", fd));
+          // continue on default path
+    }
+  }
 
   if ((infoObject->GetProviderFlags() & nsISocketProvider::BE_CONSERVATIVE) &&
       (range.max > SSL_LIBRARY_VERSION_TLS_1_2)) {
@@ -2631,8 +2729,15 @@ nsSSLIOLayerAddToSocket(int32_t family,
   nsresult rv;
   PRStatus stat;
 
-  SharedSSLState* sharedState =
-    providerFlags & nsISocketProvider::NO_PERMANENT_STORAGE ? PrivateSSLState() : PublicSSLState();
+  SharedSSLState* sharedState = nullptr;
+  RefPtr<SharedSSLState> allocatedState;
+  if (providerTlsFlags) {
+    allocatedState = new SharedSSLState(providerTlsFlags);
+    sharedState = allocatedState.get();
+  } else {
+    sharedState = (providerFlags & nsISocketProvider::NO_PERMANENT_STORAGE) ? PrivateSSLState() : PublicSSLState();
+  }
+
   nsNSSSocketInfo* infoObject = new nsNSSSocketInfo(*sharedState, providerFlags, providerTlsFlags);
   if (!infoObject) return NS_ERROR_FAILURE;
 
@@ -2641,6 +2746,9 @@ nsSSLIOLayerAddToSocket(int32_t family,
   infoObject->SetHostName(host);
   infoObject->SetPort(port);
   infoObject->SetOriginAttributes(originAttributes);
+  if (allocatedState) {
+    infoObject->SetSharedOwningReference(allocatedState);
+  }
 
   bool haveProxy = false;
   if (proxy) {
