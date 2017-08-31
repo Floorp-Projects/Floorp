@@ -95,7 +95,7 @@ js::BoxNonStrictThis(JSContext* cx, HandleValue thisv, MutableHandleValue vp)
     MOZ_ASSERT(!thisv.isMagic());
 
     if (thisv.isNullOrUndefined()) {
-        vp.set(GetThisValue(cx->global()));
+        vp.set(cx->global()->lexicalEnvironment().thisValue());
         return true;
     }
 
@@ -127,6 +127,31 @@ js::GetFunctionThis(JSContext* cx, AbstractFramePtr frame, MutableHandleValue re
     }
 
     RootedValue thisv(cx, frame.thisArgument());
+
+    // If there is a NSVO on environment chain, use it as basis for fallback
+    // global |this|. This gives a consistent definition of global lexical
+    // |this| between function and global contexts.
+    //
+    // NOTE: If only non-syntactic WithEnvironments are on the chain, we use
+    // the global lexical |this| value.
+    if (frame.script()->hasNonSyntacticScope() && thisv.isNullOrUndefined()) {
+        RootedObject env(cx, frame.environmentChain());
+        while (true) {
+            if (IsNSVOLexicalEnvironment(env) || IsGlobalLexicalEnvironment(env)) {
+                res.set(GetThisValue(env));
+                return true;
+            }
+            if (!env->enclosingEnvironment()) {
+                // This can only happen in Debugger eval frames: in that case we
+                // don't always have a global lexical env, see EvaluateInEnv.
+                MOZ_ASSERT(env->is<GlobalObject>());
+                res.set(GetThisValue(env));
+                return true;
+            }
+            env = env->enclosingEnvironment();
+        }
+    }
+
     return BoxNonStrictThis(cx, thisv, res);
 }
 
