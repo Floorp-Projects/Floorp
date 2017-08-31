@@ -47,6 +47,10 @@ bool
 RenderBufferTextureHost::Lock()
 {
   if (!mLocked) {
+    if (!GetBuffer()) {
+      // We hit some problems to get the shmem.
+      return false;
+    }
     if (mFormat != gfx::SurfaceFormat::YUV) {
       mSurface = gfx::Factory::CreateWrappingDataSourceSurface(GetBuffer(),
                                                                layers::ImageDataSerializer::GetRGBStride(mDescriptor.get_RGBDescriptor()),
