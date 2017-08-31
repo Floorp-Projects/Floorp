@@ -9,16 +9,27 @@
 }
 
 .autocomplete-richlistbox {
-  padding: 4px;
+  padding: 4px 3px;
 }
 
 .autocomplete-richlistitem {
   min-height: 30px;
   font: message-box;
   border-radius: 2px;
-  border: 1px solid transparent;
 }
 
 :root[uidensity=touch] .autocomplete-richlistitem {
   min-height: 40px;
 }
+
+.autocomplete-richlistitem:hover,
+treechildren.searchbar-treebody::-moz-tree-row(hover) {
+  background-color: var(--arrowpanel-dimmed);
+}
+
+.autocomplete-richlistitem[selected],
+treechildren.searchbar-treebody::-moz-tree-row(selected) {
+  background-color: Highlight;
+  color: HighlightText;
+}
+

@@ -13,6 +13,7 @@
 #include <algorithm>
 #include "nsAnonymousTemporaryFile.h"
 #include "mozilla/dom/ContentChild.h"
+#include "mozilla/SystemGroup.h"
 #include "nsXULAppAPI.h"
 
 namespace mozilla {
