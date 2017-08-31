@@ -1084,14 +1084,26 @@ void ScreenCapturerMac::ScreenRefresh(CGRectCount count,
     ScreenConfigurationChanged();
 
   DesktopRegion region;
+#if defined(MAC_OS_X_VERSION_10_8) && \
+  (MAC_OS_X_VERSION_MIN_REQUIRED >= MAC_OS_X_VERSION_10_8)
   for (CGRectCount i = 0; i < count; ++i) {
     // All rects are already in physical pixel coordinates.
     DesktopRect rect = DesktopRect::MakeXYWH(
         rect_array[i].origin.x, rect_array[i].origin.y,
         rect_array[i].size.width, rect_array[i].size.height);
+     region.AddRect(rect);
+   }
+#else
+  DesktopVector translate_vector =
+      DesktopVector().subtract(screen_pixel_bounds_.top_left());
+  for (CGRectCount i = 0; i < count; ++i) {
+    // Convert from Density-Independent Pixel to physical pixel coordinates.
+    DesktopRect rect = ScaleAndRoundCGRect(rect_array[i], dip_to_pixel_scale_);
+    // Translate from local desktop to capturer framebuffer coordinates.
+    rect.Translate(translate_vector);
     region.AddRect(rect);
   }
-
+#endif
   helper_.InvalidateRegion(region);
 }
 
