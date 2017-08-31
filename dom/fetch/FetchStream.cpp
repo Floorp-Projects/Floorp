@@ -184,7 +184,13 @@ FetchStream::RequestDataCallback(JSContext* aCx,
   RefPtr<FetchStream> stream = static_cast<FetchStream*>(aUnderlyingSource);
 
   MOZ_DIAGNOSTIC_ASSERT(stream->mState == eWaiting ||
-                        stream->mState == eChecking);
+                        stream->mState == eChecking ||
+                        stream->mState == eReading);
+
+  if (stream->mState == eReading) {
+    // We are already reading data.
+    return;
+  }
 
   if (stream->mState == eChecking) {
     // If we are looking for more data, there is nothing else we should do:
