@@ -941,10 +941,6 @@
       <prefs/>
       <versionRange minVersion="0" maxVersion="*" severity="3"/>
     </emItem>
-    <emItem blockID="i485" id="/^brasilescape.*\@facebook\.com$//">
-      <prefs/>
-      <versionRange minVersion="0" maxVersion="*" severity="3"/>
-    </emItem>
     <emItem blockID="i816" id="noOpus@outlook.com">
       <prefs/>
       <versionRange minVersion="0" maxVersion="*" severity="3"/>
@@ -1916,6 +1912,10 @@
     <emItem blockID="i527" id="/^({bfec236d-e122-4102-864f-f5f19d897f5e}|{3f842035-47f4-4f10-846b-6199b07f09b8}|{92ed4bbd-83f2-4c70-bb4e-f8d3716143fe})$/">
       <prefs/>
       <versionRange minVersion="0" maxVersion="*" severity="1"/>
+    </emItem>
+    <emItem blockID="d83011de-67a4-479b-a778-916a7232095b" id="{efda3854-2bd9-45a1-9766-49d7ff18931d}">
+      <prefs/>
+      <versionRange minVersion="0" maxVersion="0.8.17.2" severity="1"/>
     </emItem>
     <emItem blockID="i800" id="{424b0d11-e7fe-4a04-b7df-8f2c77f58aaf}">
       <prefs>
@@ -4871,6 +4871,9 @@
     </certItem>
     <certItem issuerName="MHExKDAmBgNVBAMTH0dsb2JhbFNpZ24gUm9vdFNpZ24gUGFydG5lcnMgQ0ExHTAbBgNVBAsTFFJvb3RTaWduIFBhcnRuZXJzIENBMRkwFwYDVQQKExBHbG9iYWxTaWduIG52LXNhMQswCQYDVQQGEwJCRQ==">
       <serialNumber>BAAAAAABHkSHki0=</serialNumber>
+    </certItem>
+    <certItem issuerName="MFoxCzAJBgNVBAYTAklFMRIwEAYDVQQKEwlCYWx0aW1vcmUxEzARBgNVBAsTCkN5YmVyVHJ1c3QxIjAgBgNVBAMTGUJhbHRpbW9yZSBDeWJlclRydXN0IFJvb3Q=">
+      <serialNumber>ByeLBg==</serialNumber>
     </certItem>
     <certItem issuerName="MF8xCzAJBgNVBAYTAkJFMRkwFwYDVQQKExBHbG9iYWxTaWduIG52LXNhMRQwEgYDVQQLEwtQYXJ0bmVycyBDQTEfMB0GA1UEAxMWR2xvYmFsU2lnbiBQYXJ0bmVycyBDQQ==">
       <serialNumber>BAAAAAABCfhiO+s=</serialNumber>
