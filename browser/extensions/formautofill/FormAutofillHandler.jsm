@@ -53,6 +53,12 @@ function FormAutofillHandler(form) {
      */
     filledRecordGUID: null,
   };
+
+  this._cacheValue = {
+    allFieldNames: null,
+    oneLineStreetAddress: null,
+    matchingSelectOption: null,
+  };
 }
 
 FormAutofillHandler.prototype = {
@@ -153,12 +159,6 @@ FormAutofillHandler.prototype = {
 
   getFieldDetailByName(fieldName) {
     return this.fieldDetails.find(detail => detail.fieldName == fieldName);
-  },
-
-  _cacheValue: {
-    allFieldNames: null,
-    oneLineStreetAddress: null,
-    matchingSelectOption: null,
   },
 
   get allFieldNames() {
