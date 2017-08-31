@@ -6,6 +6,7 @@
 #include "VideoDecoderChild.h"
 #include "VideoDecoderManagerChild.h"
 #include "mozilla/layers/TextureClient.h"
+#include "mozilla/Telemetry.h"
 #include "base/thread.h"
 #include "MediaInfo.h"
 #include "ImageContainer.h"
@@ -18,6 +19,24 @@ using base::Thread;
 using namespace ipc;
 using namespace layers;
 using namespace gfx;
+
+#ifdef XP_WIN
+static void
+ReportUnblacklistingTelemetry(bool isGPUProcessCrashed,
+                              const nsCString& aD3D11BlacklistedDriver,
+                              const nsCString& aD3D9BlacklistedDriver)
+{
+  const nsCString& blacklistedDLL = !aD3D11BlacklistedDriver.IsEmpty()
+                                    ? aD3D11BlacklistedDriver
+                                    : aD3D9BlacklistedDriver;
+
+  if (!blacklistedDLL.IsEmpty()) {
+    Telemetry::Accumulate(Telemetry::VIDEO_UNBLACKINGLISTING_DXVA_DRIVER_RUNTIME_STATUS,
+                          blacklistedDLL,
+                          isGPUProcessCrashed ? 1 : 0);
+  }
+}
+#endif // XP_WIN
 
 VideoDecoderChild::VideoDecoderChild()
   : mThread(VideoDecoderManagerChild::GetManagerThread())
@@ -144,6 +163,12 @@ VideoDecoderChild::ActorDestroy(ActorDestroyReason aWhy)
       }));
   }
   mCanSend = false;
+
+#ifdef XP_WIN
+  ReportUnblacklistingTelemetry(aWhy == AbnormalShutdown,
+                                mBlacklistedD3D11Driver,
+                                mBlacklistedD3D9Driver);
+#endif // XP_WIN
 }
 
 bool
@@ -173,7 +198,9 @@ VideoDecoderChild::InitIPDL(const VideoInfo& aVideoInfo,
   mIPDLSelfRef = this;
   bool success = false;
   if (manager->SendPVideoDecoderConstructor(this, aVideoInfo, aIdentifier,
-                                            &success)) {
+                                            &success,
+                                            &mBlacklistedD3D11Driver,
+                                            &mBlacklistedD3D9Driver)) {
     mCanSend = true;
   }
   return success;

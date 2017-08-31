@@ -112,6 +112,9 @@ uint32_t sCubebMSGLatencyInFrames;
 bool sCubebPlaybackLatencyPrefSet;
 bool sCubebMSGLatencyPrefSet;
 bool sAudioStreamInitEverSucceeded = false;
+#ifdef MOZ_CUBEB_REMOTING
+bool sCubebSandbox;
+#endif
 StaticAutoPtr<char> sBrandName;
 StaticAutoPtr<char> sCubebBackendName;
 
@@ -249,11 +252,11 @@ void PrefChanged(const char* aPref, void* aClosure)
   }
 #ifdef MOZ_CUBEB_REMOTING
   else if (strcmp(aPref, PREF_CUBEB_SANDBOX) == 0) {
-    bool cubebSandbox = false;
-    Preferences::GetBool(aPref, cubebSandbox);
-    MOZ_LOG(gCubebLog, LogLevel::Verbose, ("%s: %s", PREF_CUBEB_SANDBOX, cubebSandbox ? "true" : "false"));
+    StaticMutexAutoLock lock(sMutex);
+    sCubebSandbox = Preferences::GetBool(aPref);
+    MOZ_LOG(gCubebLog, LogLevel::Verbose, ("%s: %s", PREF_CUBEB_SANDBOX, sCubebSandbox ? "true" : "false"));
 
-    if (cubebSandbox && !sServerHandle && XRE_IsParentProcess()) {
+    if (sCubebSandbox && !sServerHandle && XRE_IsParentProcess()) {
       MOZ_LOG(gCubebLog, LogLevel::Debug, ("Starting cubeb server..."));
       StartSoundServer();
     }
@@ -390,11 +393,9 @@ cubeb* GetCubebContextUnlocked()
   }
 
 #ifdef MOZ_CUBEB_REMOTING
-  bool cubebSandbox = false;
-  Preferences::GetBool(PREF_CUBEB_SANDBOX, cubebSandbox);
-  MOZ_LOG(gCubebLog, LogLevel::Info, ("%s: %s", PREF_CUBEB_SANDBOX, cubebSandbox ? "true" : "false"));
+  MOZ_LOG(gCubebLog, LogLevel::Info, ("%s: %s", PREF_CUBEB_SANDBOX, sCubebSandbox ? "true" : "false"));
 
-  int rv = cubebSandbox
+  int rv = sCubebSandbox
     ? audioipc_client_init(&sCubebContext, sBrandName)
     : cubeb_init(&sCubebContext, sBrandName, sCubebBackendName.get());
 #else // !MOZ_CUBEB_REMOTING

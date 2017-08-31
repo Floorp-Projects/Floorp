@@ -154,60 +154,21 @@ separator.thin:not([orient="vertical"]) {
 }
 
 /* General Pane */
-
-#startupGroup {
-  margin-top: 0px !important;
-}
-
-#startupTable {
-  margin-top: 32px;
-  margin-inline-end: -4px;
-  border-collapse: collapse;
-}
-
-#startupTable > tr > td {
-  padding: 0; /* remove the padding from html.css */
-}
-
-#startupTable > .tableGroup > td {
+#startupPageBox {
   padding-top: 32px;
 }
 
-#startupTable > .tableSubGroup > td {
-  padding-top: 8px;
+#browserHomePage {
+  margin-inline-start: 0;
+  margin-inline-end: 0;
 }
 
-#startupTable > tr > .label-cell {
-  text-align: end;
-  width: 0; /* make the column as small as possible */
+.homepage-button:first-of-type {
+  margin-inline-start: 0;
 }
 
-#startupTable > tr > .content-cell:not(:first-child) {
-  padding-inline-start: 8px;
-}
-
-#startupTable > tr > .label-cell > label {
-  white-space: nowrap;
-}
-
-#startupTable > tr > .content-cell > menulist,
-#startupTable > tr > .content-cell > textbox {
-  width: calc(100% - 8px);
-  margin-left: 4px;
-  margin-right: 4px;
-}
-
-#startupTable > tr > .homepage-buttons {
-  display: flex;
-  flex-wrap: wrap;
-}
-
-#startupTable > tr > .homepage-buttons > .content-cell-item {
-  flex-grow: 1;
-}
-
-.content-cell-item {
-  margin: 2px 4px;
+.homepage-button:last-of-type {
+  margin-inline-end: 0;
 }
 
 #getStarted {

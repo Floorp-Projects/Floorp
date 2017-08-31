@@ -30,31 +30,37 @@ PeriodicWave::PeriodicWave(AudioContext* aContext,
 
   // Caller should have checked this and thrown.
   MOZ_ASSERT(aLength > 0);
-  mLength = aLength;
+  mCoefficients.mDuration = aLength;
 
-  // Copy coefficient data. The two arrays share an allocation.
-  mCoefficients = new ThreadSharedFloatArrayBufferList(2);
-  float* buffer = static_cast<float*>(malloc(aLength*sizeof(float)*2));
-  if (buffer == nullptr) {
+  // Copy coefficient data.
+  // The SharedBuffer and two arrays share a single allocation.
+  RefPtr<SharedBuffer> buffer =
+    SharedBuffer::Create(sizeof(float) * aLength * 2, fallible);
+  if (!buffer) {
     aRv.Throw(NS_ERROR_OUT_OF_MEMORY);
     return;
   }
 
+  auto data = static_cast<float*>(buffer->Data());
+  mCoefficients.mBuffer = Move(buffer);
+
   if (aRealData) {
-    PodCopy(buffer, aRealData, aLength);
+    PodCopy(data, aRealData, aLength);
   } else {
-    PodZero(buffer, aLength);
+    PodZero(data, aLength);
   }
+  mCoefficients.mChannelData.AppendElement(data);
 
-  mCoefficients->SetData(0, buffer, free, buffer);
-
+  data += aLength;
   if (aImagData) {
-    PodCopy(buffer+aLength, aImagData, aLength);
+    PodCopy(data, aImagData, aLength);
   } else {
-    PodZero(buffer+aLength, aLength);
+    PodZero(data, aLength);
   }
+  mCoefficients.mChannelData.AppendElement(data);
 
-  mCoefficients->SetData(1, nullptr, free, buffer+aLength);
+  mCoefficients.mVolume = 1.0f;
+  mCoefficients.mBufferFormat = AUDIO_FORMAT_FLOAT32;
 }
 
 /* static */ already_AddRefed<PeriodicWave>
@@ -102,9 +108,7 @@ PeriodicWave::SizeOfExcludingThisIfNotShared(MallocSizeOf aMallocSizeOf) const
   // Not owned:
   // - mContext
   size_t amount = 0;
-  if (!mCoefficients->IsShared()) {
-    amount += mCoefficients->SizeOfIncludingThis(aMallocSizeOf);
-  }
+  amount += mCoefficients.SizeOfExcludingThisIfUnshared(aMallocSizeOf);
 
   return amount;
 }

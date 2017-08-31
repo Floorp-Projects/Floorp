@@ -7,6 +7,7 @@
 #ifndef AudioBuffer_h_
 #define AudioBuffer_h_
 
+#include "AudioSegment.h"
 #include "nsWrapperCache.h"
 #include "nsCycleCollectionParticipant.h"
 #include "mozilla/Attributes.h"
@@ -53,6 +54,11 @@ public:
                   nullptr, aRv);
   }
 
+  // Non-unit AudioChunk::mVolume is not supported
+  static already_AddRefed<AudioBuffer>
+  Create(nsPIDOMWindowInner* aWindow, float aSampleRate,
+         AudioChunk&& aInitialContents);
+
   size_t SizeOfIncludingThis(mozilla::MallocSizeOf aMallocSizeOf) const;
 
   NS_INLINE_DECL_CYCLE_COLLECTING_NATIVE_REFCOUNTING(AudioBuffer)
@@ -77,12 +83,12 @@ public:
 
   uint32_t Length() const
   {
-    return mLength;
+    return mSharedChannels.mDuration;
   }
 
   double Duration() const
   {
-    return mLength / static_cast<double> (mSampleRate);
+    return Length() / static_cast<double> (mSampleRate);
   }
 
   uint32_t NumberOfChannels() const
@@ -105,17 +111,18 @@ public:
                      ErrorResult& aRv);
 
   /**
-   * Returns a ThreadSharedFloatArrayBufferList containing the sample data.
-   * Can return null if there is no data.
+   * Returns a reference to an AudioChunk containing the sample data.
+   * The AudioChunk can have a null buffer if there is no data.
    */
-  ThreadSharedFloatArrayBufferList* GetThreadSharedChannelsForRate(JSContext* aContext);
+  const AudioChunk& GetThreadSharedChannelsForRate(JSContext* aContext);
 
 protected:
   AudioBuffer(nsPIDOMWindowInner* aWindow, uint32_t aNumberOfChannels,
-              uint32_t aLength, float aSampleRate,
-              already_AddRefed<ThreadSharedFloatArrayBufferList>
-                aInitialContents);
+              uint32_t aLength, float aSampleRate, ErrorResult& aRv);
   ~AudioBuffer();
+
+  void
+  SetSharedChannels(already_AddRefed<ThreadSharedFloatArrayBufferList> aBuffer);
 
   bool RestoreJSChannelData(JSContext* aJSContext);
 
@@ -124,15 +131,15 @@ protected:
 
   void ClearJSChannels();
 
-  nsWeakPtr mOwnerWindow;
   // Float32Arrays
   AutoTArray<JS::Heap<JSObject*>, 2> mJSChannels;
-
   // mSharedChannels aggregates the data from mJSChannels. This is non-null
-  // if and only if the mJSChannels' buffers are detached.
-  RefPtr<ThreadSharedFloatArrayBufferList> mSharedChannels;
+  // if and only if the mJSChannels' buffers are detached, but its mDuration
+  // member keeps the buffer length regardless of whether the buffer is
+  // provided by mJSChannels or mSharedChannels.
+  AudioChunk mSharedChannels;
 
-  uint32_t mLength;
+  nsWeakPtr mOwnerWindow;
   float mSampleRate;
 };
 
