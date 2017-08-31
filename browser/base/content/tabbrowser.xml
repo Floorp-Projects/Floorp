@@ -3009,6 +3009,16 @@
 
               newTab = true;
             }
+            aTab._endRemoveArgs = [closeWindow, newTab];
+
+            // swapBrowsersAndCloseOther will take care of closing the window without animation.
+            if (closeWindow && aAdoptedByTab) {
+              // Remove the tab's filter to avoid leaking.
+              if (aTab.linkedPanel) {
+                this._tabFilters.delete(aTab);
+              }
+              return true;
+            }
 
             if (!aTab._fullyOpen) {
               // If the opening tab animation hasn't finished before we start closing the
@@ -3079,7 +3089,6 @@
                 tab.owner = null;
             }
 
-            aTab._endRemoveArgs = [closeWindow, newTab];
             return true;
           ]]>
         </body>
@@ -3297,6 +3306,25 @@
             if (!remoteBrowser._beginRemoveTab(aOtherTab, aOurTab, true))
               return;
 
+            // If this is the last tab of the window, hide the window
+            // immediately without animation before the docshell swap, to avoid
+            // about:blank being painted.
+            let [closeWindow] = aOtherTab._endRemoveArgs;
+            if (closeWindow) {
+              let win = aOtherTab.ownerGlobal;
+              let dwu = win.QueryInterface(Ci.nsIInterfaceRequestor)
+                           .getInterface(Ci.nsIDOMWindowUtils);
+              dwu.suppressAnimation(true);
+              // Only suppressing window animations isn't enough to avoid
+              // an empty content area being painted.
+              let baseWin = win.QueryInterface(Ci.nsIInterfaceRequestor)
+                               .getInterface(Ci.nsIDocShell)
+                               .QueryInterface(Ci.nsIDocShellTreeItem)
+                               .treeOwner
+                               .QueryInterface(Ci.nsIBaseWindow);
+              baseWin.visibility = false;
+            }
+
             let modifiedAttrs = [];
             if (aOtherTab.hasAttribute("muted")) {
               aOurTab.setAttribute("muted", "true");
@@ -3363,7 +3391,11 @@
             }
 
             // Finish tearing down the tab that's going away.
-            remoteBrowser._endRemoveTab(aOtherTab);
+            if (closeWindow) {
+              aOtherTab.ownerGlobal.close();
+            } else {
+              remoteBrowser._endRemoveTab(aOtherTab);
+            }
 
             this.setTabTitle(aOurTab);
 
@@ -3729,6 +3761,14 @@
             for (var name in aOptions)
               options += "," + name + "=" + aOptions[name];
 
+            // Play the tab closing animation to give immediate feedback while
+            // waiting for the new window to appear.
+            // content area when the docshells are swapped.
+            if (this.animationsEnabled) {
+              aTab.style.maxWidth = ""; // ensure that fade-out transition happens
+              aTab.removeAttribute("fadein");
+            }
+
             // tell a new window to take the "dropped" tab
             return window.openDialog(getBrowserURL(), "_blank", options, aTab);
           ]]>
@@ -3851,7 +3891,8 @@
           let linkedBrowser = aTab.linkedBrowser;
           let params = { eventDetail: { adoptedTab: aTab },
                          preferredRemoteType: linkedBrowser.remoteType,
-                         sameProcessAsFrameLoader: linkedBrowser.frameLoader };
+                         sameProcessAsFrameLoader: linkedBrowser.frameLoader,
+                         skipAnimation: true };
           if (aTab.hasAttribute("usercontextid")) {
             // new tab must have the same usercontextid as the old one
             params.userContextId = aTab.getAttribute("usercontextid");
@@ -7407,7 +7448,7 @@
           window.moveTo(left, top);
           window.focus();
         } else {
-          let props = { screenX: left, screenY: top };
+          let props = { screenX: left, screenY: top, suppressanimation: 1 };
           if (AppConstants.platform != "win") {
             props.outerWidth = winWidth;
             props.outerHeight = winHeight;
