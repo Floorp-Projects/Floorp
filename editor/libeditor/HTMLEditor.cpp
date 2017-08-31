@@ -274,6 +274,10 @@ HTMLEditor::Init(nsIDOMDocument* aDoc,
     nsCOMPtr<nsINode> document = do_QueryInterface(aDoc);
     document->AddMutationObserverUnlessExists(this);
 
+    if (!mRootElement) {
+      UpdateRootElement();
+    }
+
     // disable Composer-only features
     if (IsMailEditor()) {
       SetAbsolutePositioningEnabled(false);
@@ -345,48 +349,27 @@ HTMLEditor::PreDestroy(bool aDestroyingFrames)
   return TextEditor::PreDestroy(aDestroyingFrames);
 }
 
-NS_IMETHODIMP
-HTMLEditor::GetRootElement(nsIDOMElement** aRootElement)
+void
+HTMLEditor::UpdateRootElement()
 {
-  NS_ENSURE_ARG_POINTER(aRootElement);
-
-  if (mRootElement) {
-    return EditorBase::GetRootElement(aRootElement);
-  }
-
-  *aRootElement = nullptr;
-
   // Use the HTML documents body element as the editor root if we didn't
   // get a root element during initialization.
 
   nsCOMPtr<nsIDOMElement> rootElement;
   nsCOMPtr<nsIDOMHTMLElement> bodyElement;
-  nsresult rv = GetBodyElement(getter_AddRefs(bodyElement));
-  NS_ENSURE_SUCCESS(rv, rv);
-
+  GetBodyElement(getter_AddRefs(bodyElement));
   if (bodyElement) {
     rootElement = bodyElement;
   } else {
     // If there is no HTML body element,
     // we should use the document root element instead.
     nsCOMPtr<nsIDOMDocument> domDocument = GetDOMDocument();
-    if (NS_WARN_IF(!domDocument)) {
-      return NS_ERROR_NOT_INITIALIZED;
-    }
-    rv = domDocument->GetDocumentElement(getter_AddRefs(rootElement));
-    if (NS_WARN_IF(NS_FAILED(rv))) {
-      return rv;
-    }
-    // Document can have no elements
-    if (!rootElement) {
-      return NS_ERROR_NOT_AVAILABLE;
+    if (domDocument) {
+      domDocument->GetDocumentElement(getter_AddRefs(rootElement));
     }
   }
 
   mRootElement = do_QueryInterface(rootElement);
-  rootElement.forget(aRootElement);
-
-  return NS_OK;
 }
 
 already_AddRefed<nsIContent>
@@ -3274,10 +3257,11 @@ HTMLEditor::DoContentInserted(nsIDocument* aDocument,
   nsCOMPtr<nsIHTMLEditor> kungFuDeathGrip(this);
 
   if (ShouldReplaceRootElement()) {
+    UpdateRootElement();
     nsContentUtils::AddScriptRunner(
-      NewRunnableMethod("HTMLEditor::ResetRootElementAndEventTarget",
+      NewRunnableMethod("HTMLEditor::NotifyRootChanged",
                         this,
-                        &HTMLEditor::ResetRootElementAndEventTarget));
+                        &HTMLEditor::NotifyRootChanged));
   }
   // We don't need to handle our own modifications
   else if (!mAction && (aContainer ? aContainer->IsEditable() : aDocument->IsEditable())) {
@@ -3324,10 +3308,11 @@ HTMLEditor::ContentRemoved(nsIDocument* aDocument,
   nsCOMPtr<nsIHTMLEditor> kungFuDeathGrip(this);
 
   if (SameCOMIdentity(aChild, mRootElement)) {
+    mRootElement = nullptr;
     nsContentUtils::AddScriptRunner(
-      NewRunnableMethod("HTMLEditor::ResetRootElementAndEventTarget",
+      NewRunnableMethod("HTMLEditor::NotifyRootChanged",
                         this,
-                        &HTMLEditor::ResetRootElementAndEventTarget));
+                        &HTMLEditor::NotifyRootChanged));
   }
   // We don't need to handle our own modifications
   else if (!mAction && (aContainer ? aContainer->IsEditable() : aDocument->IsEditable())) {
@@ -5094,24 +5079,18 @@ HTMLEditor::ShouldReplaceRootElement()
 }
 
 void
-HTMLEditor::ResetRootElementAndEventTarget()
+HTMLEditor::NotifyRootChanged()
 {
   nsCOMPtr<nsIMutationObserver> kungFuDeathGrip(this);
 
-  // Need to remove the event listeners first because BeginningOfDocument
-  // could set a new root (and event target is set by InstallEventListeners())
-  // and we won't be able to remove them from the old event target then.
   RemoveEventListeners();
-  mRootElement = nullptr;
   nsresult rv = InstallEventListeners();
   if (NS_FAILED(rv)) {
     return;
   }
 
-  // We must have mRootElement now.
-  nsCOMPtr<nsIDOMElement> root;
-  rv = GetRootElement(getter_AddRefs(root));
-  if (NS_FAILED(rv) || !mRootElement) {
+  UpdateRootElement();
+  if (!mRootElement) {
     return;
   }
 
