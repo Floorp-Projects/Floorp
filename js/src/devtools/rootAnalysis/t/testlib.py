@@ -19,10 +19,11 @@ def extract_unmangled(func):
 
 
 class Test(object):
-    def __init__(self, indir, outdir, cfg):
+    def __init__(self, indir, outdir, cfg, verbose=0):
         self.indir = indir
         self.outdir = outdir
         self.cfg = cfg
+        self.verbose = verbose
 
     def infile(self, path):
         return os.path.join(self.indir, path)
@@ -62,7 +63,7 @@ class Test(object):
 analysis_scriptdir = '{scriptdir}'
 sixgill_bin = '{bindir}'
 '''.format(scriptdir=scriptdir, bindir=self.cfg.sixgill_bin))
-        cmd = [os.path.join(scriptdir, "analyze.py"), phase]
+        cmd = [os.path.join(scriptdir, "analyze.py"), '-v' if self.verbose else '-q', phase]
         if upto:
             cmd += ["--upto", upto]
         cmd.append("--source=%s" % self.indir)
