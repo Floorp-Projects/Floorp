@@ -22,6 +22,7 @@ import org.mozilla.gecko.activitystream.ActivityStreamTelemetry;
 import org.mozilla.gecko.activitystream.homepanel.menu.ActivityStreamContextMenu;
 import org.mozilla.gecko.activitystream.homepanel.model.RowModel;
 import org.mozilla.gecko.activitystream.homepanel.model.WebpageRowModel;
+import org.mozilla.gecko.activitystream.homepanel.stream.HighlightsEmptyStateRow;
 import org.mozilla.gecko.activitystream.homepanel.stream.TopPanelRow;
 import org.mozilla.gecko.activitystream.homepanel.model.TopStory;
 import org.mozilla.gecko.activitystream.homepanel.topstories.PocketStoriesLoader;
@@ -37,8 +38,6 @@ import java.util.Collections;
 import java.util.EnumSet;
 import java.util.LinkedList;
 import java.util.List;
-
-import static android.R.attr.type;
 
 /**
  * The adapter for the Activity Stream panel.
@@ -69,6 +68,7 @@ public class StreamRecyclerAdapter extends RecyclerView.Adapter<StreamViewHolder
         TOP_STORIES_TITLE(-3),
         TOP_STORIES_ITEM(-1), // There can be multiple Top Stories items so caller should handle as a special case.
         HIGHLIGHTS_TITLE (-4),
+        HIGHLIGHTS_EMPTY_STATE(-5),
         HIGHLIGHT_ITEM (-1); // There can be multiple Highlight Items so caller should handle as a special case.
 
         public final int stableId;
@@ -138,6 +138,8 @@ public class StreamRecyclerAdapter extends RecyclerView.Adapter<StreamViewHolder
             final boolean bookmarksEnabled = sharedPreferences.getBoolean(ActivityStreamPanel.PREF_BOOKMARKS_ENABLED, true);
             final boolean visitedEnabled = sharedPreferences.getBoolean(ActivityStreamPanel.PREF_VISITED_ENABLED, true);
             return new StreamTitleRow(inflater.inflate(StreamTitleRow.LAYOUT_ID, parent, false), R.string.activity_stream_highlights, bookmarksEnabled || visitedEnabled);
+        } else if (type == RowItemType.HIGHLIGHTS_EMPTY_STATE.getViewType()) {
+            return new HighlightsEmptyStateRow(inflater.inflate(HighlightsEmptyStateRow.LAYOUT_ID, parent, false));
         } else {
             throw new IllegalStateException("Missing inflation for ViewType " + type);
         }
@@ -310,7 +312,11 @@ public class StreamRecyclerAdapter extends RecyclerView.Adapter<StreamViewHolder
 
     public void swapHighlights(List<Highlight> highlights) {
         recyclerViewModel = recyclerViewModel.subList(0, ACTIVITY_STREAM_SECTIONS.length + getNumOfTypeShown(RowItemType.TOP_STORIES_ITEM));
-        recyclerViewModel.addAll(highlights);
+        if (!highlights.isEmpty()) {
+            recyclerViewModel.addAll(highlights);
+        } else {
+            recyclerViewModel.add(makeRowModelFromType(RowItemType.HIGHLIGHTS_EMPTY_STATE));
+        }
         notifyDataSetChanged();
     }
 
