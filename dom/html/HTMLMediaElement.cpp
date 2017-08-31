@@ -449,10 +449,12 @@ private:
  * to an nsIChannel, which holds a reference to this listener.
  * We break the reference cycle in OnStartRequest by clearing mElement.
  */
-class HTMLMediaElement::MediaLoadListener final : public nsIStreamListener,
-                                                  public nsIChannelEventSink,
-                                                  public nsIInterfaceRequestor,
-                                                  public nsIObserver
+class HTMLMediaElement::MediaLoadListener final
+  : public nsIStreamListener
+  , public nsIChannelEventSink
+  , public nsIInterfaceRequestor
+  , public nsIObserver
+  , public nsIThreadRetargetableStreamListener
 {
   ~MediaLoadListener() {}
 
@@ -462,6 +464,7 @@ class HTMLMediaElement::MediaLoadListener final : public nsIStreamListener,
   NS_DECL_NSICHANNELEVENTSINK
   NS_DECL_NSIOBSERVER
   NS_DECL_NSIINTERFACEREQUESTOR
+  NS_DECL_NSITHREADRETARGETABLESTREAMLISTENER
 
 public:
   explicit MediaLoadListener(HTMLMediaElement* aElement)
@@ -477,9 +480,13 @@ private:
   const uint32_t mLoadID;
 };
 
-NS_IMPL_ISUPPORTS(HTMLMediaElement::MediaLoadListener, nsIRequestObserver,
-                  nsIStreamListener, nsIChannelEventSink,
-                  nsIInterfaceRequestor, nsIObserver)
+NS_IMPL_ISUPPORTS(HTMLMediaElement::MediaLoadListener,
+                  nsIRequestObserver,
+                  nsIStreamListener,
+                  nsIChannelEventSink,
+                  nsIInterfaceRequestor,
+                  nsIObserver,
+                  nsIThreadRetargetableStreamListener)
 
 NS_IMETHODIMP
 HTMLMediaElement::MediaLoadListener::Observe(nsISupports* aSubject,
@@ -619,6 +626,18 @@ HTMLMediaElement::MediaLoadListener::AsyncOnChannelRedirect(nsIChannel* aOldChan
   }
   cb->OnRedirectVerifyCallback(NS_OK);
   return NS_OK;
+}
+
+NS_IMETHODIMP
+HTMLMediaElement::MediaLoadListener::CheckListenerChain()
+{
+  MOZ_ASSERT(mNextListener);
+  nsCOMPtr<nsIThreadRetargetableStreamListener> retargetable =
+    do_QueryInterface(mNextListener);
+  if (retargetable) {
+    return retargetable->CheckListenerChain();
+  }
+  return NS_ERROR_NO_INTERFACE;
 }
 
 NS_IMETHODIMP

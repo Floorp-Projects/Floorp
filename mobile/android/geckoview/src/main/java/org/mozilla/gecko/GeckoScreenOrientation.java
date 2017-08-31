@@ -369,11 +369,13 @@ public class GeckoScreenOrientation {
     public static int screenOrientationToActivityInfoOrientation(ScreenOrientation aScreenOrientation) {
         switch (aScreenOrientation) {
             case PORTRAIT:
+                return ActivityInfo.SCREEN_ORIENTATION_SENSOR_PORTRAIT;
             case PORTRAIT_PRIMARY:
                 return ActivityInfo.SCREEN_ORIENTATION_PORTRAIT;
             case PORTRAIT_SECONDARY:
                 return ActivityInfo.SCREEN_ORIENTATION_REVERSE_PORTRAIT;
             case LANDSCAPE:
+                return ActivityInfo.SCREEN_ORIENTATION_SENSOR_LANDSCAPE;
             case LANDSCAPE_PRIMARY:
                 return ActivityInfo.SCREEN_ORIENTATION_LANDSCAPE;
             case LANDSCAPE_SECONDARY:

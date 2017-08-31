@@ -24,6 +24,12 @@
 #endif
 
 namespace mozilla {
+
+#ifdef XP_WIN
+extern const nsCString GetFoundD3D11BlacklistedDLL();
+extern const nsCString GetFoundD3D9BlacklistedDLL();
+#endif // XP_WIN
+
 namespace dom {
 
 using namespace ipc;
@@ -193,15 +199,24 @@ VideoDecoderManagerParent::ActorDestroy(mozilla::ipc::IProtocol::ActorDestroyRea
 PVideoDecoderParent*
 VideoDecoderManagerParent::AllocPVideoDecoderParent(const VideoInfo& aVideoInfo,
                                                     const layers::TextureFactoryIdentifier& aIdentifier,
-                                                    bool* aSuccess)
+                                                    bool* aSuccess,
+                                                    nsCString* aBlacklistedD3D11Driver,
+                                                    nsCString* aBlacklistedD3D9Driver)
 {
   RefPtr<TaskQueue> decodeTaskQueue = new TaskQueue(
     SharedThreadPool::Get(NS_LITERAL_CSTRING("VideoDecoderParent"), 4),
     "VideoDecoderParent::mDecodeTaskQueue");
 
-  return new VideoDecoderParent(
+  auto* parent = new VideoDecoderParent(
     this, aVideoInfo, aIdentifier,
     sManagerTaskQueue, decodeTaskQueue, aSuccess);
+
+#ifdef XP_WIN
+  *aBlacklistedD3D11Driver = GetFoundD3D11BlacklistedDLL();
+  *aBlacklistedD3D9Driver = GetFoundD3D9BlacklistedDLL();
+#endif // XP_WIN
+
+  return parent;
 }
 
 bool

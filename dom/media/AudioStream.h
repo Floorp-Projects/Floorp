@@ -17,6 +17,10 @@
 #include "CubebUtils.h"
 #include "soundtouch/SoundTouchFactory.h"
 
+#if defined(XP_WIN)
+#include "mozilla/audio/AudioNotificationReceiver.h"
+#endif
+
 namespace mozilla {
 
 struct CubebDestroyPolicy
@@ -150,6 +154,9 @@ public:
 // GetPosition, GetPositionInFrames, SetVolume, and Get{Rate,Channels},
 // SetMicrophoneActive is thread-safe without external synchronization.
 class AudioStream final
+#if defined(XP_WIN)
+  : public audio::DeviceChangeListener
+#endif
 {
   virtual ~AudioStream();
 
@@ -210,8 +217,10 @@ public:
   // Resume audio playback.
   void Resume();
 
-  // Reset stream to default device.
-  void ResetDefaultDevice();
+#if defined(XP_WIN)
+  // Reset stream to the default device.
+  void ResetDefaultDevice() override;
+#endif
 
   // Return the position in microseconds of the audio frame being played by
   // the audio hardware, compensated for playback rate change. Thread-safe.

@@ -460,6 +460,7 @@ pref("browser.tabs.loadInBackground", true);
 pref("browser.tabs.opentabfor.middleclick", true);
 pref("browser.tabs.loadDivertedInBackground", false);
 pref("browser.tabs.loadBookmarksInBackground", false);
+pref("browser.tabs.loadBookmarksInTabs", false);
 pref("browser.tabs.tabClipWidth", 140);
 #ifdef UNIX_BUT_NOT_MAC
 pref("browser.tabs.drawInTitlebar", false);

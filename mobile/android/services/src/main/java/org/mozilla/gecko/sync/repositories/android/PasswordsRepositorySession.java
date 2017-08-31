@@ -319,11 +319,12 @@ public class PasswordsRepositorySession extends
           return;
         }
 
-        Record toStore = reconcileRecords(remoteRecord, existingRecord, lastRemoteRetrieval, lastLocalRetrieval);
-        if (toStore == null) {
-          Logger.debug(LOG_TAG, "Reconciling returned null. Not inserting a record.");
+        if (!shouldReconcileRecords(remoteRecord, existingRecord)) {
+          Logger.debug(LOG_TAG, "shouldReconcileRecords returned false. Not inserting a record.");
           return;
         }
+
+        Record toStore = reconcileRecords(remoteRecord, existingRecord, lastRemoteRetrieval, lastLocalRetrieval);
 
         // TODO: pass in timestamps?
         Logger.debug(LOG_TAG, "Replacing " + existingRecord.guid + " with record " + toStore.guid);

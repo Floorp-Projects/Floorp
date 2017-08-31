@@ -24,7 +24,6 @@ add_task(async function test() {
   let placesItems = document.getElementById("PlacesToolbarItems");
   ok(placesItems, "PlacesToolbarItems should not be null");
   ok(placesItems.localName == "scrollbox", "PlacesToolbarItems should not be null");
-  ok(placesItems.childNodes[0], "PlacesToolbarItems must have at least one child");
 
   /**
    * Simulates a drop of a URI onto the bookmarks bar.
@@ -39,7 +38,12 @@ add_task(async function test() {
     let promiseItemAddedNotification = promiseBookmarksNotification(
       "onItemAdded", (itemId, parentId, index, type, uri, guid) => uri.spec == url);
 
-    EventUtils.synthesizeDrop(placesItems.childNodes[0],
+    // We use the toolbar as the drag source, as we just need almost any node
+    // to simulate the drag. The actual data for the drop is passed via the
+    // drag data. Note: The toolbar is used rather than another bookmark node,
+    // as we need something that is immovable from a places perspective, as this
+    // forces the move into a copy.
+    EventUtils.synthesizeDrop(toolbar,
                               placesItems,
                               [[{type: aMimeType,
                                 data: url}]],
@@ -80,7 +84,8 @@ add_task(async function test() {
     let promiseItemAddedNotification = promiseBookmarksNotification(
       "onItemAdded", (itemId, parentId, index, type, uri, guid) => uri.spec == urls[2]);
 
-    EventUtils.synthesizeDrop(placesItems.childNodes[0],
+    // See notes for EventUtils.synthesizeDrop in simulateDragDrop().
+    EventUtils.synthesizeDrop(toolbar,
                               placesItems,
                               [[{type: aMimeType,
                                  data}]],

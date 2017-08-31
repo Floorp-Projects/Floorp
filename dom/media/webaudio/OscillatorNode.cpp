@@ -41,7 +41,6 @@ public:
     , mFinalFrequency(0.)
     , mPhaseIncrement(0.)
     , mRecomputeParameters(true)
-    , mCustomLength(0)
     , mCustomDisableNormalization(false)
   {
     MOZ_ASSERT(NS_IsMainThread());
@@ -57,7 +56,6 @@ public:
     FREQUENCY,
     DETUNE,
     TYPE,
-    PERIODICWAVE_LENGTH,
     DISABLE_NORMALIZATION,
     START,
     STOP,
@@ -105,9 +103,7 @@ public:
         mType = static_cast<OscillatorType>(aParam);
         if (mType == OscillatorType::Sine) {
           // Forget any previous custom data.
-          mCustomLength = 0;
           mCustomDisableNormalization = false;
-          mCustom = nullptr;
           mPeriodicWave = nullptr;
           mRecomputeParameters = true;
         }
@@ -127,10 +123,6 @@ public:
         }
         // End type switch.
         break;
-      case PERIODICWAVE_LENGTH:
-        MOZ_ASSERT(aParam >= 0, "negative custom array length");
-        mCustomLength = static_cast<uint32_t>(aParam);
-        break;
       case DISABLE_NORMALIZATION:
         MOZ_ASSERT(aParam >= 0, "negative custom array length");
         mCustomDisableNormalization = static_cast<uint32_t>(aParam);
@@ -141,17 +133,17 @@ public:
     // End index switch.
   }
 
-  void SetBuffer(already_AddRefed<ThreadSharedFloatArrayBufferList> aBuffer) override
+  void SetBuffer(AudioChunk&& aBuffer) override
   {
-    MOZ_ASSERT(mCustomLength, "Custom buffer sent before length");
-    mCustom = aBuffer;
-    MOZ_ASSERT(mCustom->GetChannels() == 2,
+    MOZ_ASSERT(aBuffer.ChannelCount() == 2,
                "PeriodicWave should have sent two channels");
-    mPeriodicWave = WebCore::PeriodicWave::create(mSource->SampleRate(),
-                                                  mCustom->GetData(0),
-                                                  mCustom->GetData(1),
-                                                  mCustomLength,
-                                                  mCustomDisableNormalization);
+    MOZ_ASSERT(aBuffer.mVolume == 1.0f);
+    mPeriodicWave =
+      WebCore::PeriodicWave::create(mSource->SampleRate(),
+                                    aBuffer.ChannelData<float>()[0],
+                                    aBuffer.ChannelData<float>()[1],
+                                    aBuffer.mDuration,
+                                    mCustomDisableNormalization);
   }
 
   void IncrementPhase()
@@ -373,10 +365,6 @@ public:
     // - mFrequency (internal ref owned by node)
     // - mDetune (internal ref owned by node)
 
-    if (mCustom) {
-      amount += mCustom->SizeOfIncludingThis(aMallocSizeOf);
-    }
-
     if (mPeriodicWave) {
       amount += mPeriodicWave->sizeOfIncludingThis(aMallocSizeOf);
     }
@@ -401,9 +389,7 @@ public:
   float mFinalFrequency;
   float mPhaseIncrement;
   bool mRecomputeParameters;
-  RefPtr<ThreadSharedFloatArrayBufferList> mCustom;
   RefPtr<BasicWaveFormCache> mBasicWaveFormCache;
-  uint32_t mCustomLength;
   bool mCustomDisableNormalization;
   RefPtr<WebCore::PeriodicWave> mPeriodicWave;
 };
@@ -514,13 +500,10 @@ void OscillatorNode::SendPeriodicWaveToStream()
                "Sending custom waveform to engine thread with non-custom type");
   MOZ_ASSERT(mStream, "Missing node stream.");
   MOZ_ASSERT(mPeriodicWave, "Send called without PeriodicWave object.");
-  SendInt32ParameterToStream(OscillatorNodeEngine::PERIODICWAVE_LENGTH,
-                             mPeriodicWave->DataLength());
   SendInt32ParameterToStream(OscillatorNodeEngine::DISABLE_NORMALIZATION,
                              mPeriodicWave->DisableNormalization());
-  RefPtr<ThreadSharedFloatArrayBufferList> data =
-    mPeriodicWave->GetThreadSharedBuffer();
-  mStream->SetBuffer(data.forget());
+  AudioChunk data = mPeriodicWave->GetThreadSharedBuffer();
+  mStream->SetBuffer(Move(data));
 }
 
 void

@@ -147,6 +147,7 @@ EXPORTS += [
     'StreamTracks.h',
     'ThreadPoolCOMListener.h',
     'TimeUnits.h',
+    'TrackID.h',
     'TrackUnionStream.h',
     'VideoFrameContainer.h',
     'VideoLimits.h',

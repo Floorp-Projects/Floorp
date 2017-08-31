@@ -1300,6 +1300,11 @@ file, You can obtain one at http://mozilla.org/MPL/2.0/.
             this._value = this.inputField.value;
             gBrowser.userTypedValue = this.value;
             this.valueIsTyped = true;
+            if (this.inputField.value) {
+              this.setAttribute("usertyping", "true");
+            } else {
+              this.removeAttribute("usertyping");
+            }
             // Only wait for a result when we are sure to get one.  In some
             // cases, like when pasting the same exact text, we may not fire
             // a new search and we won't get a result.
