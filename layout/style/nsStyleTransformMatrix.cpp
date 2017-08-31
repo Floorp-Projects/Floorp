@@ -1215,10 +1215,13 @@ Decompose2DMatrix(const Matrix& aMatrix,
   D /= scaleY;
   XYshear /= scaleY;
 
-  // A*D - B*C should now be 1 or -1
-  NS_ASSERTION(0.99 < Abs(A*D - B*C) && Abs(A*D - B*C) < 1.01,
-               "determinant should now be 1 or -1");
-  if (A * D < B * C) {
+  float determinant = A * D - B * C;
+  // Determinant should now be 1 or -1.
+  if (0.99 > Abs(determinant) || Abs(determinant) > 1.01) {
+    return false;
+  }
+
+  if (determinant < 0) {
     A = -A;
     B = -B;
     C = -C;
