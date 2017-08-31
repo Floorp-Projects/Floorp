@@ -28,6 +28,7 @@ function checkExternalFunction(entry)
         "atof",
         /memchr/,
         "strlen",
+        "Servo_ComputedValues_EqualCustomProperties",
         /Servo_DeclarationBlock_GetCssText/,
         /nsIFrame::AppendOwnedAnonBoxes/,
         // Assume that atomic accesses are threadsafe.
