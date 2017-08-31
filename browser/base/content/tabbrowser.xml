@@ -729,6 +729,7 @@
                   // Only animate the "burst" indicating the page has loaded if
                   // the top-level page is the one that finished loading.
                   if (aWebProgress.isTopLevel && !aWebProgress.isLoadingDocument &&
+                      Components.isSuccessCode(aStatus) &&
                       !this.mTabBrowser.tabAnimationsInProgress &&
                       Services.prefs.getBoolPref("toolkit.cosmeticAnimations.enabled")) {
                     this.mTab.setAttribute("bursting", "true");

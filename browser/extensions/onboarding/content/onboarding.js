@@ -457,13 +457,15 @@ class Onboarding {
 
     switch (id) {
       case "onboarding-overlay-button":
+        this.showOverlay();
+        this.gotoPage(this.selectedTour.id);
+        break;
       case "onboarding-overlay-close-btn":
       // If the clicking target is directly on the outer-most overlay,
       // that means clicking outside the tour content area.
       // Let's toggle the overlay.
       case "onboarding-overlay":
-        this.toggleOverlay();
-        this.gotoPage(this.selectedTour.id);
+        this.hideOverlay();
         break;
       case "onboarding-notification-close-btn":
         this.hideNotification();
@@ -471,7 +473,7 @@ class Onboarding {
         break;
       case "onboarding-notification-action-btn":
         let tourId = this._notificationBar.dataset.targetTourId;
-        this.toggleOverlay();
+        this.showOverlay();
         this.gotoPage(tourId);
         this._removeTourFromNotificationQueue(tourId);
         break;
@@ -564,7 +566,7 @@ class Onboarding {
         event.preventDefault();
         break;
       case "Escape":
-        this.toggleOverlay();
+        this.hideOverlay();
         break;
       case "Tab":
         let next = this.wrapMoveFocus(target, shiftKey);
@@ -615,20 +617,22 @@ class Onboarding {
     this._overlayIcon = this._overlay = this._notificationBar = null;
   }
 
-  toggleOverlay() {
+  showOverlay() {
     if (this._tourItems.length == 0) {
       // Lazy loading until first toggle.
       this._loadTours(this._tours);
     }
 
     this.hideNotification();
-    this._overlay.classList.toggle("onboarding-opened");
-    this.toggleModal(this._overlay.classList.contains("onboarding-opened"));
+    this.toggleModal(this._overlay.classList.toggle("onboarding-opened"));
+  }
 
+  hideOverlay() {
     let hiddenCheckbox = this._window.document.getElementById("onboarding-tour-hidden-checkbox");
     if (hiddenCheckbox.checked) {
       this.hide();
     }
+    this.toggleModal(this._overlay.classList.toggle("onboarding-opened"));
   }
 
   /**
@@ -991,7 +995,7 @@ class Onboarding {
     let img = this._window.document.createElement("img");
     img.id = "onboarding-overlay-button-icon";
     img.setAttribute("role", "presentation");
-    img.src = "resource://onboarding/img/overlay-icon.svg";
+    img.src = "chrome://branding/content/icon64.png";
     button.appendChild(img);
     return button;
   }

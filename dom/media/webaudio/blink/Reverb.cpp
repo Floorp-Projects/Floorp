@@ -44,15 +44,15 @@ const float GainCalibrationSampleRate = 44100;
 // A minimum power value to when normalizing a silent (or very quiet) impulse response
 const float MinPower = 0.000125f;
 
-static float calculateNormalizationScale(ThreadSharedFloatArrayBufferList* response, size_t aLength, float sampleRate)
+static float calculateNormalizationScale(const nsTArray<const float*>& response, size_t aLength, float sampleRate)
 {
     // Normalize by RMS power
-    size_t numberOfChannels = response->GetChannels();
+    size_t numberOfChannels = response.Length();
 
     float power = 0;
 
     for (size_t i = 0; i < numberOfChannels; ++i) {
-        float channelPower = AudioBufferSumOfSquares(static_cast<const float*>(response->GetData(i)), aLength);
+        float channelPower = AudioBufferSumOfSquares(response[i], aLength);
         power += channelPower;
     }
 
@@ -71,33 +71,31 @@ static float calculateNormalizationScale(ThreadSharedFloatArrayBufferList* respo
         scale *= GainCalibrationSampleRate / sampleRate;
 
     // True-stereo compensation
-    if (response->GetChannels() == 4)
+    if (numberOfChannels == 4)
         scale *= 0.5f;
 
     return scale;
 }
 
-Reverb::Reverb(ThreadSharedFloatArrayBufferList* impulseResponse, size_t impulseResponseBufferLength, size_t maxFFTSize, bool useBackgroundThreads, bool normalize, float sampleRate)
+Reverb::Reverb(const AudioChunk& impulseResponse, size_t maxFFTSize, bool useBackgroundThreads, bool normalize, float sampleRate)
 {
-    float scale = 1;
+    size_t impulseResponseBufferLength = impulseResponse.mDuration;
+    float scale = impulseResponse.mVolume;
 
-    AutoTArray<const float*,4> irChannels;
-    for (size_t i = 0; i < impulseResponse->GetChannels(); ++i) {
-        irChannels.AppendElement(impulseResponse->GetData(i));
-    }
+    AutoTArray<const float*,4> irChannels(impulseResponse.ChannelData<float>());
     AutoTArray<float,1024> tempBuf;
 
     if (normalize) {
-        scale = calculateNormalizationScale(impulseResponse, impulseResponseBufferLength, sampleRate);
+        scale = calculateNormalizationScale(irChannels, impulseResponseBufferLength, sampleRate);
+    }
 
-        if (scale) {
-            tempBuf.SetLength(irChannels.Length()*impulseResponseBufferLength);
-            for (uint32_t i = 0; i < irChannels.Length(); ++i) {
-                float* buf = &tempBuf[i*impulseResponseBufferLength];
-                AudioBufferCopyWithScale(irChannels[i], scale, buf,
-                                         impulseResponseBufferLength);
-                irChannels[i] = buf;
-            }
+    if (scale != 1.0f) {
+        tempBuf.SetLength(irChannels.Length()*impulseResponseBufferLength);
+        for (uint32_t i = 0; i < irChannels.Length(); ++i) {
+            float* buf = &tempBuf[i*impulseResponseBufferLength];
+            AudioBufferCopyWithScale(irChannels[i], scale, buf,
+                                     impulseResponseBufferLength);
+            irChannels[i] = buf;
         }
     }
 

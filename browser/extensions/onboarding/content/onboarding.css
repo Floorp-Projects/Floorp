@@ -32,7 +32,9 @@
   border: none;
   /* Set to none so no grey contrast background in the high-contrast mode */
   background: none;
-  z-index: 10; /* We want this always under #onboarding-overlay */
+  /* make sure the icon stay above the activity-stream searchbar */
+  /* We want this always under #onboarding-overlay */
+  z-index: 10;
 }
 
 /* Keyboard focus styling */
@@ -44,27 +46,28 @@
 }
 
 #onboarding-overlay-button-icon {
-  width: 36px;
+  width: 32px;
   vertical-align: top;
 }
 
 #onboarding-overlay-button::after {
-  background: #5ce6e6;
-  font-size: 12px;
-  border: 1px solid #fff;
+  background: #0060df;
+  font-size: 13px;
   text-align: center;
-  color: #10404a;
+  color: #fff;
   box-sizing: content-box;
+  font-weight: 400;
   content: attr(aria-label);
   display: inline-block;
-  offset-inline-start: 39px;
-  border-radius: 22px;
-  padding: 5px 12px;
+  border: 1px solid transparent;
+  border-radius: 2px;
+  padding: 10px 16px;
   min-width: 100px;
   max-width: 140px;
   white-space: pre-line;
-  margin-inline-start: 3px;
-  margin-top: -5px;
+  margin-inline-start: 4px;
+  margin-top: -10px;
+  box-shadow: -2px 0 5px 0 rgba(74, 74, 79, 0.25);
 }
 
 #onboarding-overlay-dialog,
@@ -87,7 +90,7 @@
  }
 
 .onboarding-close-btn::before {
-  content: url(chrome://global/skin/icons/close.svg);
+  content: url("chrome://global/skin/icons/close.svg");
   -moz-context-properties: fill, fill-opacity;
   fill-opacity: 0;
 }
@@ -308,14 +311,14 @@
 }
 
 .onboarding-tour-action-button {
-  padding: 10px 20px;
-  font-size: 15px;
-  font-weight: 600;
-  line-height: 21px;
-  background: #0a84ff;
+  background: #0060df;
   /* With 1px transparent border, could see a border in the high-constrast mode */
   border: 1px solid transparent;
-  border-radius: 0;
+  border-radius: 2px;
+  padding: 10px 20px;
+  font-size: 14px;
+  font-weight: 600;
+  line-height: 16px;
   color: #fff;
   float: inline-end;
   margin-inline-end: 26px;
@@ -338,12 +341,12 @@
 }
 
 .onboarding-tour-action-button:hover:not([disabled])  {
-  background: #0060df;
+  background: #003eaa;
   cursor: pointer;
 }
 
 .onboarding-tour-action-button:active:not([disabled]) {
-  background: #003EAA;
+  background: #002275;
 }
 
 .onboarding-tour-action-button:disabled {
@@ -532,4 +535,10 @@
 
 #onboarding-notification-action-btn:active {
   background-color: #dadada;
+}
+
+@media (min-resolution: 2dppx) {
+  #onboarding-notification-tour-icon {
+    background-image: url("chrome://branding/content/icon128.png");
+  }
 }

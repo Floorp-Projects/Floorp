@@ -28,7 +28,7 @@ let WebCompatReporter = {
   init() {
     PageActions.addAction(new PageActions.Action({
       id: "webcompat-reporter-button",
-      title: wcStrings.GetStringFromName("wc-reporter.label"),
+      title: wcStrings.GetStringFromName("wc-reporter.label2"),
       iconURL: "chrome://webcompat-reporter/skin/lightbulb.svg",
       onCommand: (e) => this.reportIssue(e.target.ownerGlobal),
       onShowingInPanel: (buttonNode) => this.onShowingInPanel(buttonNode)

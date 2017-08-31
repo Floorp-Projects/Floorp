@@ -40,6 +40,8 @@ let gFaviconLoadDataMap = new Map();
 
 // copied from utilityOverlay.js
 const TAB_DROP_TYPE = "application/x-moz-tabbrowser-tab";
+const PREF_LOAD_BOOKMARKS_IN_BACKGROUND = "browser.tabs.loadBookmarksInBackground";
+const PREF_LOAD_BOOKMARKS_IN_TABS = "browser.tabs.loadBookmarksInTabs";
 
 // This function isn't public both because it's synchronous and because it is
 // going to be removed in bug 1072833.
@@ -54,25 +56,37 @@ function IsLivemark(aItemId) {
     self.ids = new Set(idsVec);
 
     let obs = Object.freeze({
-      QueryInterface: XPCOMUtils.generateQI(Ci.nsIAnnotationObserver),
+      QueryInterface: XPCOMUtils.generateQI([Ci.nsINavBookmarksObserver]),
 
-      onItemAnnotationSet(itemId, annoName) {
-        if (annoName == LIVEMARK_ANNO)
+      // Ci.nsINavBookmarkObserver items.
+
+      onItemChanged(itemId, property, isAnnoProperty, newValue, lastModified,
+                    itemType, parentId, guid) {
+        if (isAnnoProperty && property == LIVEMARK_ANNO) {
           self.ids.add(itemId);
+        }
       },
 
-      onItemAnnotationRemoved(itemId, annoName) {
-        // If annoName is set to an empty string, the item is gone.
-        if (annoName == LIVEMARK_ANNO || annoName == "")
-          self.ids.delete(itemId);
+      onItemRemoved(itemId) {
+        // Since the bookmark is removed, we know we can remove any references
+        // to it from the cache.
+        self.ids.delete(itemId);
       },
 
+      onItemAdded() {},
+      onBeginUpdateBatch() {},
+      onEndUpdateBatch() {},
+      onItemVisited() {},
+      onItemMoved() {},
       onPageAnnotationSet() { },
       onPageAnnotationRemoved() { },
+      skipDescendantsOnItemRemoval: false,
+      skipTags: false,
     });
-    PlacesUtils.annotations.addObserver(obs);
+
+    PlacesUtils.bookmarks.addObserver(obs);
     PlacesUtils.registerShutdownFunction(() => {
-      PlacesUtils.annotations.removeObserver(obs);
+      PlacesUtils.bookmarks.removeObserver(obs);
     });
   }
   return self.ids.has(aItemId);
@@ -1018,7 +1032,14 @@ this.PlacesUIUtils = {
   openNodeWithEvent:
   function PUIU_openNodeWithEvent(aNode, aEvent) {
     let window = aEvent.target.ownerGlobal;
-    this._openNodeIn(aNode, window.whereToOpenLink(aEvent, false, true), window);
+
+    let where = window.whereToOpenLink(aEvent, false, true);
+    if (where == "current" && this.loadBookmarksInTabs &&
+        PlacesUtils.nodeIsBookmark(aNode) && !aNode.uri.startsWith("javascript:")) {
+      where = "tab";
+    }
+
+    this._openNodeIn(aNode, where, window);
   },
 
   /**
@@ -1031,7 +1052,7 @@ this.PlacesUIUtils = {
     this._openNodeIn(aNode, aWhere, window, aPrivate);
   },
 
-  _openNodeIn: function PUIU_openNodeIn(aNode, aWhere, aWindow, aPrivate = false) {
+  _openNodeIn: function PUIU__openNodeIn(aNode, aWhere, aWindow, aPrivate = false) {
     if (aNode && PlacesUtils.nodeIsURI(aNode) &&
         this.checkURLSecurity(aNode, aWindow)) {
       let isBookmark = PlacesUtils.nodeIsBookmark(aNode);
@@ -1058,7 +1079,7 @@ this.PlacesUIUtils = {
 
       aWindow.openUILinkIn(aNode.uri, aWhere, {
         allowPopups: aNode.uri.startsWith("javascript:"),
-        inBackground: Services.prefs.getBoolPref("browser.tabs.loadBookmarksInBackground"),
+        inBackground: this.loadBookmarksInBackground,
         private: aPrivate,
       });
     }
@@ -1524,6 +1545,11 @@ XPCOMUtils.defineLazyGetter(PlacesUIUtils, "useAsyncTransactions", function() {
   } catch (ex) { }
   return false;
 });
+
+XPCOMUtils.defineLazyPreferenceGetter(PlacesUIUtils, "loadBookmarksInBackground",
+                                      PREF_LOAD_BOOKMARKS_IN_BACKGROUND, false);
+XPCOMUtils.defineLazyPreferenceGetter(PlacesUIUtils, "loadBookmarksInTabs",
+                                      PREF_LOAD_BOOKMARKS_IN_TABS, false);
 
 XPCOMUtils.defineLazyServiceGetter(this, "URIFixup",
                                    "@mozilla.org/docshell/urifixup;1",

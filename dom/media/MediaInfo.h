@@ -13,7 +13,7 @@
 #include "nsTArray.h"
 #include "ImageTypes.h"
 #include "MediaData.h"
-#include "StreamTracks.h" // for TrackID
+#include "TrackID.h" // for TrackID
 #include "TimeUnits.h"
 #include "mozilla/gfx/Point.h" // for gfx::IntSize
 #include "mozilla/gfx/Rect.h"  // for gfx::IntRect

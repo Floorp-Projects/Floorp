@@ -19,9 +19,6 @@
 #include "nsPrintfCString.h"
 #include "gfxPrefs.h"
 #include "AudioConverter.h"
-#if defined(XP_WIN)
-#include "mozilla/audio/AudioNotificationReceiver.h"
-#endif
 
 namespace mozilla {
 
@@ -475,6 +472,7 @@ AudioStream::Shutdown()
   mState = SHUTDOWN;
 }
 
+#if defined(XP_WIN)
 void
 AudioStream::ResetDefaultDevice()
 {
@@ -489,6 +487,7 @@ AudioStream::ResetDefaultDevice()
     mState = ERRORED;
   }
 }
+#endif
 
 int64_t
 AudioStream::GetPosition()

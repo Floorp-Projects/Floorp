@@ -161,6 +161,9 @@ static Accessible* New_HTMLFigcaption(nsIContent* aContent, Accessible* aContext
 static Accessible* New_HTMLFigure(nsIContent* aContent, Accessible* aContext)
   { return new HTMLFigureAccessible(aContent, aContext->Document()); }
 
+static Accessible* New_HTMLHeaderOrFooter(nsIContent* aContent, Accessible* aContext)
+  { return new HTMLHeaderOrFooterAccessible(aContent, aContext->Document()); }
+
 static Accessible* New_HTMLLegend(nsIContent* aContent, Accessible* aContext)
   { return new HTMLLegendAccessible(aContent, aContext->Document()); }
 
