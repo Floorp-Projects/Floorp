@@ -1324,11 +1324,7 @@ talos-chrome-stylo:
     try-name: chromez-stylo
     treeherder-symbol: tc-Ts(c)
     virtualization: hardware
-    run-on-projects:
-        by-test-platform:
-            windows.*: ['mozilla-central', 'try']
-            macosx.*: ['mozilla-central', 'try']
-            default: []
+    run-on-projects: ['mozilla-central', 'try']
     max-run-time: 3600
     mozharness:
         script: talos_script.py
@@ -1380,11 +1376,7 @@ talos-dromaeojs-stylo:
     try-name: dromaeojs-stylo
     treeherder-symbol: tc-Ts(d)
     virtualization: hardware
-    run-on-projects:
-        by-test-platform:
-            windows.*: ['mozilla-central', 'try']
-            macosx.*: ['mozilla-central', 'try']
-            default: []
+    run-on-projects: ['mozilla-central', 'try']
     max-run-time: 3600
     mozharness:
         script: talos_script.py
@@ -1436,11 +1428,7 @@ talos-g1-stylo:
     try-name: g1-stylo
     treeherder-symbol: tc-Ts(g1)
     virtualization: hardware
-    run-on-projects:
-        by-test-platform:
-            windows.*: ['mozilla-central', 'try']
-            macosx.*: ['mozilla-central', 'try']
-            default: []
+    run-on-projects: ['mozilla-central', 'try']
     max-run-time: 7200
     mozharness:
         script: talos_script.py
@@ -1493,11 +1481,7 @@ talos-g2-stylo:
     treeherder-symbol: tc-Ts(g2)
     virtualization: hardware
     max-run-time: 7200
-    run-on-projects:
-        by-test-platform:
-            windows.*: ['mozilla-central', 'try']
-            macosx.*: ['mozilla-central', 'try']
-            default: []
+    run-on-projects: ['mozilla-central', 'try']
     mozharness:
         script: talos_script.py
         no-read-buildbot-config: true
@@ -1542,6 +1526,30 @@ talos-g3:
             - --add-option
             - --webServer,localhost
 
+talos-g3-stylo:
+    description: "Talos Stylo g3"
+    suite: talos
+    try-name: g3-stylo
+    treeherder-symbol: tc-Ts(g3)
+    virtualization: hardware
+    run-on-projects: ['mozilla-central', 'try']
+    max-run-time: 3600
+    mozharness:
+        script: talos_script.py
+        no-read-buildbot-config: true
+        config:
+            by-test-platform:
+                macosx.*:
+                    - talos/mac_config.py
+                windows.*:
+                    - talos/windows_config.py
+                default:
+                    - talos/linux_config.py
+        extra-options:
+            - --suite=g3-stylo
+            - --add-option
+            - --webServer,localhost
+
 talos-g4:
     description: "Talos g4"
     suite: talos
@@ -1576,11 +1584,7 @@ talos-g4-stylo:
     try-name: g4-stylo
     treeherder-symbol: tc-Ts(g4)
     virtualization: hardware
-    run-on-projects:
-        by-test-platform:
-            windows.*: ['mozilla-central', 'try']
-            macosx.*: ['mozilla-central', 'try']
-            default: []
+    run-on-projects: ['mozilla-central', 'try']
     max-run-time: 3600
     mozharness:
         script: talos_script.py
@@ -1633,11 +1637,7 @@ talos-g5-stylo:
     try-name: g5-stylo
     treeherder-symbol: tc-Ts(g5)
     virtualization: hardware
-    run-on-projects:
-        by-test-platform:
-            windows.*: ['mozilla-central', 'try']
-            macosx.*: ['mozilla-central', 'try']
-            default: []
+    run-on-projects: ['mozilla-central', 'try']
     max-run-time: 3600
     mozharness:
         script: talos_script.py
@@ -1690,11 +1690,7 @@ talos-other-stylo:
     try-name: other-stylo
     treeherder-symbol: tc-Ts(o)
     virtualization: hardware
-    run-on-projects:
-        by-test-platform:
-            windows.*: ['mozilla-central', 'try']
-            macosx.*: ['mozilla-central', 'try']
-            default: []
+    run-on-projects: ['mozilla-central', 'try']
     max-run-time: 3600
     mozharness:
         script: talos_script.py
@@ -1768,11 +1764,7 @@ talos-perf-reftest-singletons-stylo:
     try-name: perf-reftest-singletons-stylo
     treeherder-symbol: tc-Ts(ps)
     virtualization: hardware
-    run-on-projects:
-        by-test-platform:
-            windows.*: ['mozilla-central', 'try']
-            macosx.*: ['mozilla-central', 'try']
-            default: []
+    run-on-projects: ['mozilla-central', 'try']
     max-run-time: 3600
     mozharness:
         script: talos_script.py
@@ -1794,11 +1786,7 @@ talos-perf-reftest-stylo:
     try-name: perf-reftest-stylo
     treeherder-symbol: tc-Ts(p)
     virtualization: hardware
-    run-on-projects:
-        by-test-platform:
-            windows.*: ['mozilla-central', 'try']
-            macosx.*: ['mozilla-central', 'try']
-            default: []
+    run-on-projects: ['mozilla-central', 'try']
     max-run-time: 3600
     mozharness:
         script: talos_script.py
@@ -1846,11 +1834,7 @@ talos-svgr-stylo:
     try-name: svgr-stylo
     treeherder-symbol: tc-Ts(s)
     virtualization: hardware
-    run-on-projects:
-        by-test-platform:
-            windows.*: ['mozilla-central', 'try']
-            macosx.*: ['mozilla-central', 'try']
-            default: []
+    run-on-projects: ['mozilla-central', 'try']
     max-run-time: 3600
     mozharness:
         script: talos_script.py
@@ -1902,11 +1886,7 @@ talos-tp5o-stylo:
     try-name: tp5o-stylo
     treeherder-symbol: tc-Ts(tp)
     virtualization: hardware
-    run-on-projects:
-        by-test-platform:
-            windows.*: ['mozilla-central', 'try']
-            macosx.*: ['mozilla-central', 'try']
-            default: []
+    run-on-projects: ['mozilla-central', 'try']
     max-run-time: 3600
     mozharness:
         script: talos_script.py
