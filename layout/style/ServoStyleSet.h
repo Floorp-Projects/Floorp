@@ -303,16 +303,6 @@ public:
   void StyleNewlyBoundElement(dom::Element* aElement);
 
   /**
-   * Like StyleNewSubtree, but in response to a request to reconstruct frames
-   * for the given subtree, and so works on elements that already have
-   * styles.  This will leave the subtree in a state just like after an initial
-   * styling, i.e. with new styles, no change hints, and with the dirty
-   * descendants bits cleared.  No comparison of old and new styles is done,
-   * so no change hints will be processed.
-   */
-  void StyleSubtreeForReconstruct(dom::Element* aRoot);
-
-  /**
    * Helper for correctly calling UpdateStylist without paying the cost of an
    * extra function call in the common no-rebuild-needed case.
    */
