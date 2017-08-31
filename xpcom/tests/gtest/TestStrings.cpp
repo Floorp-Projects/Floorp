@@ -1355,4 +1355,69 @@ MOZ_GTEST_BENCH(Strings, PerfStripCharsCRLF, [] {
     }
 });
 
+// Setup overhead test
+#define OneASCII "a"
+
+// Maximal non-SIMD legth
+#define FifteenASCII "Lorem ipsum dol"
+
+// Around hundred is common length for IsUTF8 check
+#define HundredASCII "Lorem ipsum dolor sit amet, consectetur adipiscing elit. Duis ac tellus eget velit viverra viverra i"
+
+MOZ_GTEST_BENCH(Strings, PerfIsUTF8One, [] {
+    nsCString test(OneASCII);
+    for (int i = 0; i < 200000; i++) {
+      IsUTF8(test);
+    }
+});
+
+MOZ_GTEST_BENCH(Strings, PerfIsUTF8Fifteen, [] {
+    nsCString test(FifteenASCII);
+    for (int i = 0; i < 200000; i++) {
+      IsUTF8(test);
+    }
+});
+
+MOZ_GTEST_BENCH(Strings, PerfIsUTF8Hundred, [] {
+    nsCString test(HundredASCII);
+    for (int i = 0; i < 200000; i++) {
+      IsUTF8(test);
+    }
+});
+
+MOZ_GTEST_BENCH(Strings, PerfIsUTF8Example3, [] {
+    nsCString test(TestExample3);
+    for (int i = 0; i < 100000; i++) {
+      IsUTF8(test);
+    }
+});
+
+MOZ_GTEST_BENCH(Strings, PerfIsASCII8One, [] {
+    nsCString test(OneASCII);
+    for (int i = 0; i < 200000; i++) {
+      IsASCII(test);
+    }
+});
+
+MOZ_GTEST_BENCH(Strings, PerfIsASCIIFifteen, [] {
+    nsCString test(FifteenASCII);
+    for (int i = 0; i < 200000; i++) {
+      IsASCII(test);
+    }
+});
+
+MOZ_GTEST_BENCH(Strings, PerfIsASCIIHundred, [] {
+    nsCString test(HundredASCII);
+    for (int i = 0; i < 200000; i++) {
+      IsASCII(test);
+    }
+});
+
+MOZ_GTEST_BENCH(Strings, PerfIsASCIIExample3, [] {
+    nsCString test(TestExample3);
+    for (int i = 0; i < 100000; i++) {
+      IsUTF8(test);
+    }
+});
+
 } // namespace TestStrings
