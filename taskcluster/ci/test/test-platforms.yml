@@ -40,12 +40,14 @@ linux64/debug:
     test-sets:
         - common-tests
         - web-platform-tests
+        - reftest-stylo
 linux64/opt:
     build-platform: linux64/opt
     test-sets:
         - common-tests
         - web-platform-tests
         - opt-only-tests
+        - reftest-stylo
         - desktop-screenshot-capture
         - talos
         - awsy
