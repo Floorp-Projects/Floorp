@@ -101,16 +101,6 @@ linux64-stylo/opt:
         - stylo-tests
         - devtools-tests
         - talos
-linux64-stylo-sequential/debug:
-    build-platform: linux64/debug
-    test-sets:
-        - stylo-sequential-tests
-linux64-stylo-sequential/opt:
-    build-platform: linux64/opt
-    test-sets:
-        - awsy-stylo-sequential
-        - stylo-sequential-tests
-        - talos
 macosx64-stylo/debug:
     build-platform: macosx64/debug
     test-sets:
@@ -138,6 +128,13 @@ windows10-64-stylo/opt:
     test-sets:
         - awsy-stylo
         - stylo-tests
+
+# Stylo sequential runs check memory and performance when using a single thread.
+linux64-stylo-sequential/opt:
+    build-platform: linux64/opt
+    test-sets:
+        - awsy-stylo-sequential
+        - talos
 
 # QR builds just run a subset right now. Note that the tests in this
 # test set are further restricted in tests.yml to run on certain projects
