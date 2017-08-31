@@ -39,6 +39,9 @@ import android.view.View;
         final int childCount = parent.getChildCount();
         for (int i = START_DRAWING_AT_POSITION; i < childCount; i++) {
             final View child = parent.getChildAt(i);
+            if (child.getVisibility() == View.GONE) {
+                continue;
+            }
             final RecyclerView.LayoutParams params = (RecyclerView.LayoutParams) child
                     .getLayoutParams();
             final int top = child.getBottom() + params.bottomMargin;
