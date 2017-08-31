@@ -171,7 +171,7 @@ SwatchColorPickerTooltip.prototype = extend(SwatchBasedEditorTooltip.prototype, 
       this.hide();
 
       this.tooltip.emit("eyedropper-opened");
-    }, e => console.error(e));
+    }, console.error);
 
     inspector.once("color-picked", color => {
       toolbox.win.focus();
