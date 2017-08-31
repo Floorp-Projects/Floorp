@@ -2764,7 +2764,7 @@ function URLBarSetURI(aURI) {
       }
     }
 
-    valid = !isBlankPageURL(uri.spec);
+    valid = !isBlankPageURL(uri.spec) || uri.schemeIs("moz-extension");
   }
 
   let isDifferentValidValue = valid && value != gURLBar.value;

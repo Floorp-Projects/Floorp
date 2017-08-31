@@ -59,3 +59,39 @@ add_task(async function testIdentityIndication() {
 
   confirmDefaults();
 });
+
+add_task(async function testIdentityIndicationNewTab() {
+  let extension = ExtensionTestUtils.loadExtension({
+    background() {
+      browser.test.sendMessage("url", browser.extension.getURL("newtab.html"));
+    },
+    manifest: {
+      name: "Test Extension",
+      applications: {
+        gecko: {
+          id: "@newtab",
+        },
+      },
+      chrome_url_overrides: {
+        newtab: "newtab.html",
+      },
+    },
+    files: {
+      "newtab.html": "<h1>New tab!</h1>",
+    },
+    useAddonManager: "temporary",
+  });
+
+  await extension.startup();
+
+  confirmDefaults();
+
+  let url = await extension.awaitMessage("url");
+  await BrowserTestUtils.withNewTab({gBrowser, url}, async function() {
+    confirmExtensionPage();
+  });
+
+  await extension.unload();
+
+  confirmDefaults();
+});
