@@ -55,6 +55,9 @@ task_description_schema = Schema({
     # attributes for this task
     Optional('attributes'): {basestring: object},
 
+    # relative path (from config.path) to the file task was defined in
+    Optional('job-from'): basestring,
+
     # dependencies of this task, keyed by name; these are passed through
     # verbatim and subject to the interpretation of the Task's get_dependencies
     # method.
