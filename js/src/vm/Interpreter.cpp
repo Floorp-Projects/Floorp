@@ -1492,6 +1492,9 @@ ComputeImplicitThis(JSObject* obj)
     if (obj->is<GlobalObject>())
         return UndefinedValue();
 
+    if (obj->is<NonSyntacticVariablesObject>())
+        return UndefinedValue();
+
     if (IsCacheableEnvironment(obj))
         return UndefinedValue();
 
