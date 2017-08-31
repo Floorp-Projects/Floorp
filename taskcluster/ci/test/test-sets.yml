@@ -84,7 +84,6 @@ stylo-tests:
     - cppunit
     - crashtest
     - reftest
-    - reftest-stylo
     - web-platform-tests
     - web-platform-tests-reftests
     - mochitest
@@ -96,6 +95,9 @@ stylo-tests:
     - mochitest-gpu
     - mochitest-media
     - mochitest-webgl
+
+reftest-stylo:
+    - reftest-stylo
 
 qr-talos:
     - talos-chrome
