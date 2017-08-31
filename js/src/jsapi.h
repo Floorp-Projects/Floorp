@@ -6711,6 +6711,20 @@ extern JS_PUBLIC_API(void)
 SetProcessLargeAllocationFailureCallback(LargeAllocationFailureCallback afc);
 
 /**
+ * SetSystemInformation() must be called to set up system information that
+ * SpiderMonkey requires.  Normally this is setup is performed at the same time
+ * as callbacks are set up.  The function copies the pointed-to structure.
+ */
+
+struct JS_PUBLIC_API(SystemInformation)
+{
+    uint32_t maxCpuClockMHz;    // 0 means "no information"
+};
+
+extern JS_PUBLIC_API(void)
+SetSystemInformation(const SystemInformation* info);
+
+/**
  * Unlike the error reporter, which is only called if the exception for an OOM
  * bubbles up and is not caught, the OutOfMemoryCallback is called immediately
  * at the OOM site to allow the embedding to capture the current state of heap
