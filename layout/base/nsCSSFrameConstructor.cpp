@@ -2549,13 +2549,13 @@ nsCSSFrameConstructor::ConstructDocElementFrame(Element*                 aDocEle
 
   // --------- CREATE AREA OR BOX FRAME -------
   if (ServoStyleSet* set = mPresShell->StyleSet()->GetAsServo()) {
-    // We need to explicitly set a restyle root for the first traversal.
-    aDocElement->OwnerDoc()->SetServoRestyleRoot(aDocElement->OwnerDocAsNode(),
-                                                 ELEMENT_HAS_DIRTY_DESCENDANTS_FOR_SERVO);
-    // NOTE(emilio): If the root has a non-null binding, we'll stop at the
-    // document element and won't process any children, loading the bindings (or
-    // failing to do so) will take care of the rest.
-    set->StyleDocument(ServoTraversalFlags::Empty);
+    // Ensure the document element is styled at this point.
+    if (!aDocElement->HasServoData()) {
+      // NOTE(emilio): If the root has a non-null binding, we'll stop at the
+      // document element and won't process any children, loading the bindings
+      // (or failing to do so) will take care of the rest.
+      set->StyleNewSubtree(aDocElement);
+    }
   }
 
   // FIXME: Should this use ResolveStyleContext?  (The calls in this
