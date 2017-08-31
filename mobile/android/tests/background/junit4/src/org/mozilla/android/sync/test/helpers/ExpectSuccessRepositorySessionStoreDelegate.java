@@ -28,8 +28,8 @@ public class ExpectSuccessRepositorySessionStoreDelegate extends
   }
 
   @Override
-  public void onStoreCompleted(long storeEnd) {
-    log("Record store completed at " + storeEnd);
+  public void onStoreCompleted() {
+    log("Record store completed");
   }
 
   @Override

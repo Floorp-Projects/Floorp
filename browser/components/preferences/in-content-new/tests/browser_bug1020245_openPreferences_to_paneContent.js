@@ -45,6 +45,49 @@ add_task(async function() {
   await BrowserTestUtils.removeTab(gBrowser.selectedTab);
 });
 
+// Test opening to a subcategory displays the correct values for preferences
+add_task(async function() {
+  // Skip if crash reporting isn't enabled since the checkbox will be missing.
+  if (!AppConstants.MOZ_CRASHREPORTER) {
+    return;
+  }
+
+  await SpecialPowers.pushPrefEnv({
+    set: [["browser.crashReports.unsubmittedCheck.autoSubmit", true]],
+  });
+  await openPreferencesViaOpenPreferencesAPI("privacy-reports", {leaveOpen: true});
+
+  let doc = gBrowser.contentDocument;
+  ok(
+    doc.querySelector("#automaticallySubmitCrashesBox").checked,
+    "Checkbox for automatically submitting crashes should be checked when the pref is true and only Reports are requested"
+  );
+
+  await BrowserTestUtils.removeTab(gBrowser.selectedTab);
+  await SpecialPowers.popPrefEnv();
+});
+
+add_task(async function() {
+  // Skip if crash reporting isn't enabled since the checkbox will be missing.
+  if (!AppConstants.MOZ_CRASHREPORTER) {
+    return;
+  }
+
+  await SpecialPowers.pushPrefEnv({
+    set: [["browser.crashReports.unsubmittedCheck.autoSubmit", false]],
+  });
+  await openPreferencesViaOpenPreferencesAPI("privacy-reports", {leaveOpen: true});
+
+  let doc = gBrowser.contentDocument;
+  ok(
+    !doc.querySelector("#automaticallySubmitCrashesBox").checked,
+    "Checkbox for automatically submitting crashes should not be checked when the pref is false only Reports are requested"
+  );
+
+  await BrowserTestUtils.removeTab(gBrowser.selectedTab);
+  await SpecialPowers.popPrefEnv();
+});
+
 
 function openPreferencesViaHash(aPane) {
   return new Promise(resolve => {

@@ -20,7 +20,6 @@ loader.lazyRequireGetter(this, "NetworkMonitor", "devtools/shared/webconsole/net
 loader.lazyRequireGetter(this, "NetworkMonitorChild", "devtools/shared/webconsole/network-monitor", true);
 loader.lazyRequireGetter(this, "ConsoleProgressListener", "devtools/shared/webconsole/network-monitor", true);
 loader.lazyRequireGetter(this, "StackTraceCollector", "devtools/shared/webconsole/network-monitor", true);
-loader.lazyRequireGetter(this, "events", "devtools/shared/event-emitter");
 loader.lazyRequireGetter(this, "ServerLoggingListener", "devtools/shared/webconsole/server-logger", true);
 loader.lazyRequireGetter(this, "JSPropertyProvider", "devtools/shared/webconsole/js-property-provider", true);
 loader.lazyRequireGetter(this, "Parser", "resource://devtools/shared/Parser.jsm", true);
@@ -29,6 +28,7 @@ loader.lazyRequireGetter(this, "addWebConsoleCommands", "devtools/server/actors/
 loader.lazyRequireGetter(this, "CONSOLE_WORKER_IDS", "devtools/server/actors/webconsole/utils", true);
 loader.lazyRequireGetter(this, "WebConsoleUtils", "devtools/server/actors/webconsole/utils", true);
 loader.lazyRequireGetter(this, "EnvironmentActor", "devtools/server/actors/environment", true);
+loader.lazyRequireGetter(this, "EventEmitter", "devtools/shared/event-emitter");
 
 // Overwrite implemented listeners for workers so that we don't attempt
 // to load an unsupported module.
@@ -71,7 +71,7 @@ function WebConsoleActor(connection, parentActor) {
   this.objectGrip = this.objectGrip.bind(this);
   this._onWillNavigate = this._onWillNavigate.bind(this);
   this._onChangedToplevelDocument = this._onChangedToplevelDocument.bind(this);
-  events.on(this.parentActor, "changed-toplevel-document",
+  EventEmitter.on(this.parentActor, "changed-toplevel-document",
             this._onChangedToplevelDocument);
   this._onObserverNotification = this._onObserverNotification.bind(this);
   if (this.parentActor.isRootActor) {
@@ -249,7 +249,7 @@ WebConsoleActor.prototype =
     this._evalWindow = window;
 
     if (!this._progressListenerActive) {
-      events.on(this.parentActor, "will-navigate", this._onWillNavigate);
+      EventEmitter.on(this.parentActor, "will-navigate", this._onWillNavigate);
       this._progressListenerActive = true;
     }
   },
@@ -374,7 +374,7 @@ WebConsoleActor.prototype =
       this.contentProcessListener = null;
     }
 
-    events.off(this.parentActor, "changed-toplevel-document",
+    EventEmitter.off(this.parentActor, "changed-toplevel-document",
                this._onChangedToplevelDocument);
 
     this.conn.removeActorPool(this._actorPool);
@@ -1865,7 +1865,7 @@ WebConsoleActor.prototype =
   _onWillNavigate: function ({ window, isTopLevel }) {
     if (isTopLevel) {
       this._evalWindow = null;
-      events.off(this.parentActor, "will-navigate", this._onWillNavigate);
+      EventEmitter.off(this.parentActor, "will-navigate", this._onWillNavigate);
       this._progressListenerActive = false;
     }
   },

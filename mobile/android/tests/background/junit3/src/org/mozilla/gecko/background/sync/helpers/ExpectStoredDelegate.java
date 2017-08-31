@@ -16,7 +16,7 @@ public class ExpectStoredDelegate extends DefaultStoreDelegate {
   }
 
   @Override
-  public synchronized void onStoreCompleted(long storeEnd) {
+  public synchronized void onStoreCompleted() {
     try {
       assertNotNull(storedGuid);
       performNotify();

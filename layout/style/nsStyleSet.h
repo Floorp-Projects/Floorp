@@ -106,7 +106,7 @@ class nsStyleSet final
   nsStyleSet();
   ~nsStyleSet();
 
-  size_t SizeOfIncludingThis(mozilla::MallocSizeOf aMallocSizeOf) const;
+  void AddSizeOfIncludingThis(nsWindowSizes& aSizes) const;
 
   void Init(nsPresContext* aPresContext, nsBindingManager* aBindingManager);
 

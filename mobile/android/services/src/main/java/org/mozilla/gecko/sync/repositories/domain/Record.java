@@ -77,7 +77,7 @@ public abstract class Record {
   // Not all record types support versioning. See Bug 1383894.
   @Nullable public Integer localVersion;
   @Nullable public Integer syncVersion;
-  public boolean insertFromSyncAsModified = false;
+  public boolean modifiedBySync = false;
 
   /**
    * An integer indicating the relative importance of this item in the collection.

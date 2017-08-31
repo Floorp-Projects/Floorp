@@ -133,7 +133,8 @@ public class HistoryRepositorySession extends StoreTrackingRepositorySession {
     storeWorkQueue.execute(new Runnable() {
       @Override
       public void run() {
-        storeDelegate.onStoreCompleted(now());
+        setLastStoreTimestamp(now());
+        storeDelegate.onStoreCompleted();
       }
     });
   }

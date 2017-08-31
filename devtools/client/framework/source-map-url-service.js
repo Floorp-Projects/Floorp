@@ -36,11 +36,14 @@ function SourceMapURLService(target, threadClient, sourceMapService) {
   Services.prefs.addObserver(SOURCE_MAP_PREF, this._onPrefChanged);
 
   // Start fetching the sources now.
-  this._loadingPromise = new Promise(resolve => {
-    threadClient.getSources(({sources}) => {
-      // Just ignore errors.
-      resolve(sources);
-    });
+  this._loadingPromise = threadClient.getSources().then(({sources}) => {
+    // Ignore errors.  Register the sources we got; we can't rely on
+    // an event to arrive if the source actor already existed.
+    for (let source of sources) {
+      this._onSourceUpdated(null, {source});
+    }
+  }, e => {
+    // Also ignore any protocol-based errors.
   });
 }
 

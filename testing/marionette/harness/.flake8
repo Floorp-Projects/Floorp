@@ -1,3 +1,7 @@
 [flake8]
-max-line-length = 99
-exclude = __init__.py,disti/*,build/*,marionette_harness/runner/mixins/*, marionette_harness/tests/*
+exclude =
+    __init__.py,
+    disti/*,
+    build/*,
+    marionette_harness/runner/mixins/*,
+    marionette_harness/tests/*,

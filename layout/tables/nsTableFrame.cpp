@@ -6488,9 +6488,9 @@ struct BCBorderParameters
   nscolor mBGColor;
   nsRect mBorderRect;
   int32_t mAppUnitsPerDevPixel;
-  uint8_t mStartBevelSide;
+  mozilla::Side mStartBevelSide;
   nscoord mStartBevelOffset;
-  uint8_t mEndBevelSide;
+  mozilla::Side mEndBevelSide;
   nscoord mEndBevelOffset;
 };
 

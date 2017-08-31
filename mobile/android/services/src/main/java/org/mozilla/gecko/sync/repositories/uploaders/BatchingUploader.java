@@ -246,8 +246,12 @@ public class BatchingUploader {
         });
     }
 
-    /* package-local */ void finished(AtomicLong lastModifiedTimestamp) {
-        sessionStoreDelegate.deferredStoreDelegate(executor).onStoreCompleted(lastModifiedTimestamp.get());
+    /* package-local */ void setLastStoreTimestamp(AtomicLong lastModifiedTimestamp) {
+        repositorySession.setLastStoreTimestamp(lastModifiedTimestamp.get());
+    }
+
+    /* package-local */ void finished() {
+        sessionStoreDelegate.deferredStoreDelegate(executor).onStoreCompleted();
     }
 
     // Will be called from a thread dispatched by PayloadDispatcher.

@@ -1323,7 +1323,7 @@ function dispatchPointerMove(a, inputState, tickDuration, seenEls, window) {
     const [startX, startY] = [inputState.x, inputState.y];
 
     let target = action.computePointerDestination(a, inputState,
-        getElementCenter(a.origin, seenEls, window));
+        getElementCenter(a.origin, seenEls));
     const [targetX, targetY] = [target.x, target.y];
 
     if (!inViewPort(targetX, targetY, window)) {
@@ -1432,11 +1432,11 @@ function inViewPort(x, y, win) {
   return !(x < 0 || y < 0 || x > win.innerWidth || y > win.innerHeight);
 }
 
-function getElementCenter(elementReference, seenEls, window) {
+function getElementCenter(elementReference, seenEls) {
   if (element.isWebElementReference(elementReference)) {
     let uuid = elementReference[element.Key] ||
         elementReference[element.LegacyKey];
-    let el = seenEls.get(uuid, {frame: window});
+    let el = seenEls.get(uuid);
     return element.coordinates(el);
   }
   return {};

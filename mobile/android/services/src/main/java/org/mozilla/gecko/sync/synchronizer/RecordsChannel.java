@@ -74,7 +74,6 @@ public class RecordsChannel implements
   public RepositorySession source;
   private RepositorySession sink;
   private final RecordsChannelDelegate delegate;
-  private long fetchEnd = -1;
 
   private volatile ReflowIsNecessaryException reflowException;
 
@@ -177,8 +176,7 @@ public class RecordsChannel implements
 
     if (!source.dataAvailable()) {
       Logger.info(LOG_TAG, "No data available: short-circuiting flow from source " + source);
-      long now = System.currentTimeMillis();
-      this.delegate.onFlowCompleted(this, now, now);
+      this.delegate.onFlowCompleted(this);
       return;
     }
 
@@ -236,10 +234,8 @@ public class RecordsChannel implements
   }
 
   @Override
-  public void onFetchCompleted(final long fetchEnd) {
+  public void onFetchCompleted() {
     Logger.trace(LOG_TAG, "onFetchCompleted. Stopping consumer once stores are done.");
-    Logger.trace(LOG_TAG, "Fetch timestamp is " + fetchEnd);
-    this.fetchEnd = fetchEnd;
     this.consumer.queueFilled();
   }
 
@@ -290,20 +286,19 @@ public class RecordsChannel implements
       // Let sink clean up or flush records if necessary.
       this.sink.storeIncomplete();
 
-      delegate.onFlowCompleted(this, fetchEnd, System.currentTimeMillis());
+      delegate.onFlowCompleted(this);
     }
   }
 
   @Override
-  public void onStoreCompleted(long storeEnd) {
-    Logger.trace(LOG_TAG, "onStoreCompleted. Notifying delegate of onFlowCompleted. " +
-                          "Fetch end is " + fetchEnd + ", store end is " + storeEnd);
+  public void onStoreCompleted() {
+    Logger.trace(LOG_TAG, "onStoreCompleted. Notifying delegate of onFlowCompleted.");
     // Source might have used caches used to facilitate flow of records, so now is a good
     // time to clean up. Particularly pertinent for buffered sources.
     // Rephrasing this in a more concrete way, buffers are cleared only once records have been merged
     // locally and results of the merge have been uploaded to the server successfully.
     this.source.performCleanup();
-    delegate.onFlowCompleted(this, fetchEnd, storeEnd);
+    delegate.onFlowCompleted(this);
 
   }
 
@@ -334,7 +329,7 @@ public class RecordsChannel implements
     this.consumer.halt();
 
     delegate.onFlowStoreFailed(this, ex, null);
-    delegate.onFlowCompleted(this, fetchEnd, System.currentTimeMillis());
+    delegate.onFlowCompleted(this);
   }
 
   @Override

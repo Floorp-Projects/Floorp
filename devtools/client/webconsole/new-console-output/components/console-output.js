@@ -46,6 +46,7 @@ const ConsoleOutput = createClass({
     messagesRepeat: PropTypes.object.isRequired,
     networkMessagesUpdate: PropTypes.object.isRequired,
     visibleMessages: PropTypes.array.isRequired,
+    networkMessageActiveTabId: PropTypes.string.isRequired,
   },
 
   componentDidMount() {
@@ -67,7 +68,7 @@ const ConsoleOutput = createClass({
     const visibleMessagesDelta =
       nextProps.visibleMessages.length - this.props.visibleMessages.length;
     const messagesDelta =
-      nextProps.messages.length - this.props.messages.length;
+      nextProps.messages.size - this.props.messages.size;
 
     // We need to scroll to the bottom if:
     // - the number of messages displayed changed
@@ -102,6 +103,7 @@ const ConsoleOutput = createClass({
       messagesObjectEntries,
       messagesRepeat,
       networkMessagesUpdate,
+      networkMessageActiveTabId,
       serviceContainer,
       timestampsVisible,
     } = this.props;
@@ -116,6 +118,7 @@ const ConsoleOutput = createClass({
       timestampsVisible,
       repeat: messagesRepeat[messageId],
       networkMessageUpdate: networkMessagesUpdate[messageId],
+      networkMessageActiveTabId,
       getMessage: () => messages.get(messageId),
       loadedObjectProperties: messagesObjectProperties.get(messageId),
       loadedObjectEntries: messagesObjectEntries.get(messageId),
@@ -156,6 +159,7 @@ function mapStateToProps(state, props) {
     messagesRepeat: getAllRepeatById(state),
     networkMessagesUpdate: getAllNetworkMessagesUpdateById(state),
     timestampsVisible: state.ui.timestampsVisible,
+    networkMessageActiveTabId: state.ui.networkMessageActiveTabId,
   };
 }
 

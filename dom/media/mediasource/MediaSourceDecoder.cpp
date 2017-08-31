@@ -10,7 +10,6 @@
 #include "MediaShutdownManager.h"
 #include "MediaSource.h"
 #include "MediaSourceDemuxer.h"
-#include "MediaSourceResource.h"
 #include "MediaSourceUtils.h"
 #include "SourceBufferList.h"
 #include "VideoUtils.h"
@@ -55,7 +54,6 @@ MediaSourceDecoder::Load(nsIPrincipal* aPrincipal)
   AbstractThread::AutoEnter context(AbstractMainThread());
 
   mPrincipal = aPrincipal;
-  mResource = MakeUnique<MediaSourceResource>();
 
   nsresult rv = MediaShutdownManager::Instance().Register(this);
   if (NS_WARN_IF(NS_FAILED(rv))) {
@@ -198,7 +196,6 @@ MediaSourceDecoder::Ended(bool aEnded)
 {
   MOZ_ASSERT(NS_IsMainThread());
   AbstractThread::AutoEnter context(AbstractMainThread());
-  mResource->SetEnded(aEnded);
   if (aEnded) {
     // We want the MediaSourceReader to refresh its buffered range as it may
     // have been modified (end lined up).

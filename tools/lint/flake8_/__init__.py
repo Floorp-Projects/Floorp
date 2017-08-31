@@ -6,11 +6,13 @@ import json
 import os
 import signal
 import subprocess
+from collections import defaultdict
 
 import which
 from mozprocess import ProcessHandlerMixin
 
 from mozlint import result
+from mozlint.pathutils import get_ancestors_by_name
 
 
 here = os.path.abspath(os.path.dirname(__file__))
@@ -138,7 +140,7 @@ def run_process(config, cmd):
         proc.kill()
 
 
-def lint(files, config, **lintargs):
+def lint(paths, config, **lintargs):
 
     if not reinstall_flake8():
         print(FLAKE8_INSTALL_ERROR)
@@ -156,21 +158,19 @@ def lint(files, config, **lintargs):
     # it gets picked up. This means only .flake8 files that live in
     # directories that are explicitly included will be considered.
     # See bug 1277851
-    no_config = []
-    for f in files:
-        if not os.path.isfile(os.path.join(f, '.flake8')):
-            no_config.append(f)
-            continue
-        run_process(config, cmdargs+[f])
+    paths_by_config = defaultdict(list)
+    for path in paths:
+        configs = get_ancestors_by_name('.flake8', path, lintargs['root'])
+        paths_by_config[os.pathsep.join(configs) if configs else 'default'].append(path)
 
-    # XXX For some reason passing in --exclude results in flake8 not using
-    # the local .flake8 file. So for now only pass in --exclude if there
-    # is no local config.
-    exclude = lintargs.get('exclude')
-    if exclude:
-        cmdargs += ['--exclude', ','.join(lintargs['exclude'])]
+    for configs, paths in paths_by_config.items():
+        cmd = cmdargs[:]
 
-    if no_config:
-        run_process(config, cmdargs+no_config)
+        if configs != 'default':
+            configs = reversed(configs.split(os.pathsep))
+            cmd.extend(['--append-config={}'.format(c) for c in configs])
+
+        cmd.extend(paths)
+        run_process(config, cmd)
 
     return results

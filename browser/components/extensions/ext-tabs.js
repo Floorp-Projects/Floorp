@@ -445,7 +445,7 @@ this.tabs = class extends ExtensionAPI {
           }
           if (updateProperties.muted !== null) {
             if (nativeTab.muted != updateProperties.muted) {
-              nativeTab.toggleMuteAudio(extension.uuid);
+              nativeTab.toggleMuteAudio(extension.id);
             }
           }
           if (updateProperties.pinned !== null) {

@@ -344,7 +344,7 @@ public class BookmarksDataAccessor extends DataAccessor {
     // We might want to indicate that this record is to be inserted as "modified". Incoming records
     // might be modified as we're processing them for insertion, and so should be re-uploaded.
     // Our data provider layer manages versions, so we don't pass in localVersion explicitly.
-    if (rec.insertFromSyncAsModified) {
+    if (rec.modifiedBySync) {
       cv.put(BrowserContract.Bookmarks.PARAM_INSERT_FROM_SYNC_AS_MODIFIED, true);
     }
 

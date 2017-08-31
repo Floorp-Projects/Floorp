@@ -13,9 +13,6 @@ pref("devtools.devedition.promo.url", "https://www.mozilla.org/firefox/developer
   pref("devtools.devedition.promo.enabled", false);
 #endif
 
-// DevTools development workflow
-pref("devtools.loader.hotreload", false);
-
 // Developer toolbar preferences
 pref("devtools.toolbar.enabled", true);
 

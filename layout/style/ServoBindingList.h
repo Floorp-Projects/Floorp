@@ -112,6 +112,10 @@ SERVO_BINDING_FUNC(Servo_StyleSet_ResolveForDeclarations,
                    RawServoStyleSetBorrowed set,
                    ServoStyleContextBorrowedOrNull parent_style,
                    RawServoDeclarationBlockBorrowed declarations)
+SERVO_BINDING_FUNC(Servo_StyleSet_AddSizeOfExcludingThis, void,
+                   mozilla::MallocSizeOf malloc_size_of,
+                   mozilla::ServoStyleSetSizes* sizes,
+                   RawServoStyleSetBorrowed set)
 SERVO_BINDING_FUNC(Servo_StyleContext_AddRef, void, ServoStyleContextBorrowed ctx);
 SERVO_BINDING_FUNC(Servo_StyleContext_Release, void, ServoStyleContextBorrowed ctx);
 

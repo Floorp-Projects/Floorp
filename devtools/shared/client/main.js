@@ -12,7 +12,7 @@ const { getStack, callFunctionWithAsyncStack } = require("devtools/shared/platfo
 
 const promise = Cu.import("resource://devtools/shared/deprecated-sync-thenables.js", {}).Promise;
 
-loader.lazyRequireGetter(this, "events", "devtools/shared/event-emitter");
+loader.lazyRequireGetter(this, "EventEmitter", "devtools/shared/event-emitter");
 loader.lazyRequireGetter(this, "WebConsoleClient", "devtools/shared/webconsole/client", true);
 loader.lazyRequireGetter(this, "DebuggerSocket", "devtools/shared/security/socket", true);
 loader.lazyRequireGetter(this, "Authentication", "devtools/shared/security/auth");
@@ -335,7 +335,7 @@ DebuggerClient.prototype = {
 
     // Also emit the event on the |DebuggerClient| object (not on the instance),
     // so it's possible to track all instances.
-    events.emit(DebuggerClient, "connect", this);
+    EventEmitter.emit(DebuggerClient, "connect", this);
 
     this.addOneTimeListener("connected", (name, applicationType, traits) => {
       this.traits = traits;
@@ -1310,33 +1310,16 @@ DebuggerClient.prototype = {
 
 eventSource(DebuggerClient.prototype);
 
-function Request(request) {
-  this.request = request;
-}
-
-Request.prototype = {
-
-  on: function (type, listener) {
-    events.on(this, type, listener);
-  },
-
-  off: function (type, listener) {
-    events.off(this, type, listener);
-  },
-
-  once: function (type, listener) {
-    events.once(this, type, listener);
-  },
-
-  emit: function (type, ...args) {
-    events.emit(this, type, ...args);
-  },
+class Request extends EventEmitter {
+  constructor(request) {
+    super();
+    this.request = request;
+  }
 
   get actor() {
     return this.request.to || this.request.actor;
   }
-
-};
+}
 
 /**
  * Creates a tab client for the remote debugging protocol server. This client

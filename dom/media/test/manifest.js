@@ -240,6 +240,9 @@ var gPlayTests = [
   // Test playback of a webm file
   { name:"seek-short.webm", type:"video/webm", duration:0.23 },
 
+  // Test playback of a webm file with 'matroska' doctype
+  { name:"bug1377278.webm", type:"video/webm", duration:4.0 },
+
   // Test playback of a WebM file with non-zero start time.
   { name:"split.webm", type:"video/webm", duration:1.967 },
 
@@ -548,7 +551,6 @@ var gErrorTests = [
   { name:"448636.ogv", type:"video/ogg" },
   { name:"bug504843.ogv", type:"video/ogg" },
   { name:"bug501279.ogg", type:"audio/ogg" },
-  { name:"bug580982.webm", type:"video/webm" },
   { name:"bug603918.webm", type:"video/webm" },
   { name:"bug604067.webm", type:"video/webm" },
   { name:"bogus.duh", type:"bogus/duh" }

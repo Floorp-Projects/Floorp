@@ -92,4 +92,8 @@ public class TopSite implements WebpageModel {
         throw new UnsupportedOperationException(
                 "Pinned state of a top site should be known at the time of querying the database already");
     }
+
+    // The TopSites cursor automatically notifies of data changes, so nothing needs to be done here.
+    @Override
+    public void onStateCommitted() {}
 }

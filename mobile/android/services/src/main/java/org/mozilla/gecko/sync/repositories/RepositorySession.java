@@ -4,6 +4,9 @@
 
 package org.mozilla.gecko.sync.repositories;
 
+import android.support.annotation.Nullable;
+import android.util.Log;
+
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Iterator;
@@ -67,6 +70,39 @@ public abstract class RepositorySession {
 
   // The time that the last sync on this collection completed, in milliseconds since epoch.
   private long lastSyncTimestamp = 0;
+
+  // As session progresses, it keeps track of the main points of interaction.
+  // If these timestamps aren't set, that means corresponding operation didn't complete.
+  private volatile Long fetchEnd;
+  private volatile Long storeEnd;
+
+  public void setLastFetchTimestamp(long timestamp) {
+    fetchEnd = timestamp;
+  }
+
+  public void setLastStoreTimestamp(long timestamp) {
+    storeEnd = timestamp;
+  }
+
+  /**
+   * @return timestamp of the last "fetch" from this session, or lastSyncTimestamp if fetch didn't happen.
+   */
+  public long getLastFetchTimestamp() {
+    if (fetchEnd != null) {
+      return fetchEnd;
+    }
+    return lastSyncTimestamp;
+  }
+
+  /**
+   * @return timestamp of the last "store" for this session, or lastSyncTimestamp if store didn't happen.
+   */
+  public long getLastStoreTimestamp() {
+    if (storeEnd != null) {
+      return storeEnd;
+    }
+    return lastSyncTimestamp;
+  }
 
   public long getLastSyncTimestamp() {
     return lastSyncTimestamp;
@@ -136,12 +172,13 @@ public abstract class RepositorySession {
     // For example, a session may choose to build up buffers which will need to be flushed in
     // storeDone, and so it will need to call onStoreComplete with the end timestamp after those
     // operations complete.
+    Logger.debug(LOG_TAG, "Scheduling onStoreCompleted for after storing is done");
     final long end = now();
-    Logger.debug(LOG_TAG, "Scheduling onStoreCompleted for after storing is done: " + end);
     Runnable command = new Runnable() {
       @Override
       public void run() {
-        storeDelegate.onStoreCompleted(end);
+        setLastStoreTimestamp(end);
+        storeDelegate.onStoreCompleted();
       }
     };
     storeWorkQueue.execute(command);

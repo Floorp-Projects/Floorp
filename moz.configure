@@ -270,9 +270,9 @@ option('--disable-gtest-in-build',
 # on Desktop platforms with the exception of Windows PGO, where linking
 # xul-gtest.dll takes too long.
 @depends('MOZ_PGO', build_project, target, 'MOZ_AUTOMATION', '--disable-gtest-in-build',
-         when='--enable-compile-environment')
-def build_gtest(pgo, build_project, target, automation, enabled):
-    if not enabled:
+         enable_tests, when='--enable-compile-environment')
+def build_gtest(pgo, build_project, target, automation, enabled, enable_tests):
+    if not enable_tests or not enabled:
         return None
     if (automation and build_project == 'browser' and
         not (pgo and target.os == 'WINNT')):

@@ -115,6 +115,11 @@ FormAutofillHandler.prototype = {
   },
 
   /**
+   * Time in milliseconds since epoch when a user started filling in the form.
+   */
+  timeStartedFillingMS: null,
+
+  /**
    * Set fieldDetails from the form about fields that can be autofilled.
    *
    * @param {boolean} allowDuplicates
@@ -127,6 +132,7 @@ FormAutofillHandler.prototype = {
     this._formFieldCount = this.form.elements.length;
     let fieldDetails = FormAutofillHeuristics.getFormInfo(this.form, allowDuplicates);
     this.fieldDetails = fieldDetails ? fieldDetails : [];
+    this.form.rootElement.addEventListener("input", this);
     log.debug("Collected details on", this.fieldDetails.length, "fields");
 
     this.address.fieldDetails = this.fieldDetails.filter(
@@ -581,5 +587,44 @@ FormAutofillHandler.prototype = {
 
       Services.cpmm.sendAsyncMessage("FormAutofill:GetDecryptedString", {cipherText, reauth});
     });
+  },
+
+  /**
+   * Find the fieldDetail by HTML element (assume all details were collected in collectFormFields).
+   *
+   * @param {HTMLElement} element
+   *
+   * @returns {Object|null}
+   *          Return fieldDetail if fieldDetail's element ref could match the target.
+   *          (or return null if the element could not match any fieldDetail).
+   */
+  getFieldDetailsForElement(element) {
+    for (let detail of this.fieldDetails) {
+      if (detail.elementWeakRef.get() == element) {
+        return detail;
+      }
+    }
+    return null;
+  },
+
+  handleEvent(event) {
+    switch (event.type) {
+      case "input":
+        if (!event.isTrusted) {
+          return;
+        }
+
+        if (!FormAutofillUtils.isFieldEligibleForAutofill(event.target)) {
+          return;
+        }
+
+        if (!this.getFieldDetailsForElement(event.target)) {
+          return;
+        }
+
+        this.form.rootElement.removeEventListener("input", this);
+        this.timeStartedFillingMS = Date.now();
+        break;
+    }
   },
 };

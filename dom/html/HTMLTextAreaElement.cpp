@@ -1331,13 +1331,6 @@ HTMLTextAreaElement::IsTextArea() const
 }
 
 NS_IMETHODIMP_(bool)
-HTMLTextAreaElement::IsPlainTextControl() const
-{
-  // need to check our HTML attribute and/or CSS.
-  return true;
-}
-
-NS_IMETHODIMP_(bool)
 HTMLTextAreaElement::IsPasswordTextControl() const
 {
   return false;

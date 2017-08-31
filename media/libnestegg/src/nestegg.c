@@ -2115,7 +2115,7 @@ nestegg_init(nestegg ** context, nestegg_io io, nestegg_log callback, int64_t ma
 
   if (ne_get_string(ctx->ebml.doctype, &doctype) != 0)
     doctype = "matroska";
-  if (strcmp(doctype, "webm") != 0) {
+  if (!!strcmp(doctype, "webm") && !!strcmp(doctype, "matroska")) {
     nestegg_destroy(ctx);
     return -1;
   }

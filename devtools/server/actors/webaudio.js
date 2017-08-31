@@ -7,12 +7,10 @@
 
 const { Cu, Cc, Ci } = require("chrome");
 
-const events = require("devtools/shared/event-emitter");
 const protocol = require("devtools/shared/protocol");
 const { CallWatcherActor } = require("devtools/server/actors/call-watcher");
 const { createValueGrip } = require("devtools/server/actors/object");
 const AutomationTimeline = require("./utils/automation-timeline");
-const { on, off, emit } = events;
 const {
   audionodeSpec,
   webAudioSpec
@@ -469,10 +467,10 @@ exports.WebAudioActor = protocol.ActorClassWithSpec(webAudioSpec, {
     });
     // Bind to `window-ready` so we can reenable recording on the
     // call watcher
-    on(this.tabActor, "window-ready", this._onGlobalCreated);
+    this.tabActor.on("window-ready", this._onGlobalCreated);
     // Bind to the `window-destroyed` event so we can unbind events between
     // the global destruction and the `finalize` cleanup method on the actor.
-    on(this.tabActor, "window-destroyed", this._onGlobalDestroyed);
+    this.tabActor.on("window-destroyed", this._onGlobalDestroyed);
   },
 
   /**
@@ -565,8 +563,8 @@ exports.WebAudioActor = protocol.ActorClassWithSpec(webAudioSpec, {
       // NS_ERROR_FAILURE errors with this silent try/catch.
     }
 
-    off(this.tabActor, "window-destroyed", this._onGlobalDestroyed);
-    off(this.tabActor, "window-ready", this._onGlobalCreated);
+    this.tabActor.off("window-destroyed", this._onGlobalDestroyed);
+    this.tabActor.off("window-ready", this._onGlobalCreated);
     this.tabActor = null;
     this._nativeToActorID = null;
     this._callWatcher.eraseRecording();
@@ -628,7 +626,7 @@ exports.WebAudioActor = protocol.ActorClassWithSpec(webAudioSpec, {
    */
   _onStartContext: function () {
     observerService.addObserver(this, "webaudio-node-demise");
-    emit(this, "start-context");
+    this.emit("start-context");
   },
 
   /**
@@ -638,7 +636,7 @@ exports.WebAudioActor = protocol.ActorClassWithSpec(webAudioSpec, {
     let sourceActor = this._getActorByNativeID(source.id);
     let destActor = this._getActorByNativeID(dest.id);
 
-    emit(this, "connect-node", {
+    this.emit("connect-node", {
       source: sourceActor,
       dest: destActor
     });
@@ -650,7 +648,7 @@ exports.WebAudioActor = protocol.ActorClassWithSpec(webAudioSpec, {
   _onConnectParam: function (source, param) {
     let sourceActor = this._getActorByNativeID(source.id);
     let destActor = this._getActorByNativeID(param._parentID);
-    emit(this, "connect-param", {
+    this.emit("connect-param", {
       source: sourceActor,
       dest: destActor,
       param: param._paramName
@@ -662,7 +660,7 @@ exports.WebAudioActor = protocol.ActorClassWithSpec(webAudioSpec, {
    */
   _onDisconnectNode: function (node) {
     let actor = this._getActorByNativeID(node.id);
-    emit(this, "disconnect-node", actor);
+    this.emit("disconnect-node", actor);
   },
 
   /**
@@ -670,7 +668,7 @@ exports.WebAudioActor = protocol.ActorClassWithSpec(webAudioSpec, {
    */
   _onParamChange: function (node, param, value) {
     let actor = this._getActorByNativeID(node.id);
-    emit(this, "param-change", {
+    this.emit("param-change", {
       source: actor,
       param: param,
       value: value
@@ -682,7 +680,7 @@ exports.WebAudioActor = protocol.ActorClassWithSpec(webAudioSpec, {
    */
   _onCreateNode: function (node) {
     let actor = this._constructAudioNode(node);
-    emit(this, "create-node", actor);
+    this.emit("create-node", actor);
   },
 
   /**
@@ -710,7 +708,7 @@ exports.WebAudioActor = protocol.ActorClassWithSpec(webAudioSpec, {
     // the mapping should not be found, so we do not emit an event.
     if (actor) {
       this._nativeToActorID.delete(nodeNativeID);
-      emit(this, "destroy-node", actor);
+      this.emit("destroy-node", actor);
     }
   },
 
@@ -734,7 +732,7 @@ exports.WebAudioActor = protocol.ActorClassWithSpec(webAudioSpec, {
    * Fired when an automation event is added to an AudioNode.
    */
   _onAutomationEvent: function ({node, paramName, eventName, args}) {
-    emit(this, "automation-event", {
+    this.emit("automation-event", {
       node: node,
       paramName: paramName,
       eventName: eventName,

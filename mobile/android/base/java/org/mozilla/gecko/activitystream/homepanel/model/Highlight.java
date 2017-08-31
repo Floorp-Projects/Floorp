@@ -223,4 +223,7 @@ public class Highlight implements WebpageRowModel {
     public long getUniqueId() {
         return historyId;
     }
-}
+
+    // The Highlights cursor automatically notifies of data changes, so nothing needs to be done here.
+    @Override
+    public void onStateCommitted() {}}

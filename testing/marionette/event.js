@@ -501,17 +501,17 @@ event.isKeypressFiredKey = function(key) {
  *     If unknown key.
  */
 event.synthesizeKey = function(key, event, win = undefined) {
-  var TIP = getTIP_(win);
+  let TIP = getTIP_(win);
   if (!TIP) {
     return;
   }
-  var KeyboardEvent = getKeyboardEvent_(win);
-  var modifiers = emulateToActivateModifiers_(TIP, event, win);
-  var keyEventDict = createKeyboardEventDictionary_(key, event, win);
-  var keyEvent = new KeyboardEvent("", keyEventDict.dictionary);
-  var dispatchKeydown =
+  let KeyboardEvent = getKeyboardEvent_(win);
+  let modifiers = emulateToActivateModifiers_(TIP, event, win);
+  let keyEventDict = createKeyboardEventDictionary_(key, event, win);
+  let keyEvent = new KeyboardEvent("", keyEventDict.dictionary);
+  let dispatchKeydown =
     !("type" in event) || event.type === "keydown" || !event.type;
-  var dispatchKeyup =
+  let dispatchKeyup =
     !("type" in event) || event.type === "keyup" || !event.type;
 
   try {
@@ -519,8 +519,8 @@ event.synthesizeKey = function(key, event, win = undefined) {
       TIP.keydown(keyEvent, keyEventDict.flags);
       if ("repeat" in event && event.repeat > 1) {
         keyEventDict.dictionary.repeat = true;
-        var repeatedKeyEvent = new KeyboardEvent("", keyEventDict.dictionary);
-        for (var i = 1; i < event.repeat; i++) {
+        let repeatedKeyEvent = new KeyboardEvent("", keyEventDict.dictionary);
+        for (let i = 1; i < event.repeat; i++) {
           TIP.keydown(repeatedKeyEvent, keyEventDict.flags);
         }
       }
@@ -533,19 +533,18 @@ event.synthesizeKey = function(key, event, win = undefined) {
   }
 };
 
-var TIPMap = new WeakMap();
+const TIPMap = new WeakMap();
 
 function getTIP_(win, callback) {
   if (!win) {
     win = window;
   }
-  var tip;
+  let tip;
   if (TIPMap.has(win)) {
     tip = TIPMap.get(win);
   } else {
-    tip =
-      Cc["@mozilla.org/text-input-processor;1"].
-        createInstance(Ci.nsITextInputProcessor);
+    tip = Cc["@mozilla.org/text-input-processor;1"]
+        .createInstance(Ci.nsITextInputProcessor);
     TIPMap.set(win, tip);
   }
   if (!tip.beginInputTransactionForTests(win, callback)) {
@@ -572,13 +571,13 @@ function getKeyboardEvent_(win = window) {
 }
 
 function createKeyboardEventDictionary_(key, keyEvent, win = window) {
-  var result = {dictionary: null, flags: 0};
-  var keyCodeIsDefined = "keyCode" in keyEvent &&
+  let result = {dictionary: null, flags: 0};
+  let keyCodeIsDefined = "keyCode" in keyEvent &&
       keyEvent.keyCode != undefined;
-  var keyCode =
+  let keyCode =
     (keyCodeIsDefined && keyEvent.keyCode >= 0 && keyEvent.keyCode <= 255) ?
       keyEvent.keyCode : 0;
-  var keyName = "Unidentified";
+  let keyName = "Unidentified";
   if (key.indexOf("KEY_") == 0) {
     keyName = key.substr("KEY_".length);
     result.flags |= Ci.nsITextInputProcessor.KEY_NON_PRINTABLE_KEY;
@@ -604,7 +603,7 @@ function createKeyboardEventDictionary_(key, keyEvent, win = window) {
       result.flags |= Ci.nsITextInputProcessor.KEY_FORCE_PRINTABLE_KEY;
     }
   }
-  var locationIsDefined = "location" in keyEvent;
+  let locationIsDefined = "location" in keyEvent;
   if (locationIsDefined && keyEvent.location === 0) {
     result.flags |= Ci.nsITextInputProcessor.KEY_KEEP_KEY_LOCATION_STANDARD;
   }
@@ -622,9 +621,9 @@ function emulateToActivateModifiers_(TIP, keyEvent, win = window) {
   if (!keyEvent) {
     return null;
   }
-  var KeyboardEvent = getKeyboardEvent_(win);
+  let KeyboardEvent = getKeyboardEvent_(win);
 
-  var modifiers = {
+  let modifiers = {
     normal: [
       {key: "Alt",        attr: "altKey"},
       {key: "AltGraph",   attr: "altGraphKey"},
@@ -715,7 +714,7 @@ function isMac_(win = window) {
 
 /* eslint-disable */
 function guessKeyNameFromKeyCode_(aKeyCode, win = window) {
-  var KeyboardEvent = getKeyboardEvent_(win);
+  let KeyboardEvent = getKeyboardEvent_(win);
   switch (aKeyCode) {
     case KeyboardEvent.DOM_VK_CANCEL:
       return "Cancel";

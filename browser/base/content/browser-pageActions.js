@@ -339,6 +339,7 @@ var BrowserPageActions = {
   _makeUrlbarButtonNode(action) {
     let buttonNode = document.createElement("image");
     buttonNode.classList.add("urlbar-icon", "urlbar-page-action");
+    buttonNode.setAttribute("role", "button");
     if (action.tooltip) {
       buttonNode.setAttribute("tooltiptext", action.tooltip);
     }
@@ -721,7 +722,7 @@ var BrowserPageActionFeedback = {
     // The timeout value used here allows the panel to stay open for
     // 1 second after the text transition (duration=120ms) has finished.
     setTimeout(() => {
-      this.panelNode.hidePopup();
+      this.panelNode.hidePopup(true);
     }, Services.prefs.getIntPref("browser.pageActions.feedbackTimeoutMS", 1120));
   },
 };

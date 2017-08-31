@@ -9,7 +9,7 @@
  */
 var protocol = require("devtools/shared/protocol");
 var {RetVal, Arg} = protocol;
-var events = require("devtools/shared/event-emitter");
+var EventEmitter = require("devtools/shared/event-emitter");
 var {LongStringActor} = require("devtools/server/actors/string");
 
 // The test implicitly relies on this.
@@ -77,11 +77,11 @@ var RootActor = protocol.ActorClassWithSpec(rootSpec, {
   },
 
   emitShortString: function () {
-    events.emit(this, "string-event", new LongStringActor(this.conn, SHORT_STR));
+    EventEmitter.emit(this, "string-event", new LongStringActor(this.conn, SHORT_STR));
   },
 
   emitLongString: function () {
-    events.emit(this, "string-event", new LongStringActor(this.conn, LONG_STR));
+    EventEmitter.emit(this, "string-event", new LongStringActor(this.conn, LONG_STR));
   },
 });
 

@@ -22,6 +22,10 @@ const {
 const { getGripPreviewItems } = require("devtools/client/shared/components/reps/reps");
 const { getSourceNames } = require("devtools/client/shared/source-utils");
 
+const {
+  UPDATE_PROPS
+} = require("devtools/client/netmonitor/src/constants");
+
 const MessageState = Immutable.Record({
   // List of all the messages added to the console.
   messagesById: Immutable.OrderedMap(),
@@ -166,8 +170,10 @@ function messages(state = new MessageState(), action, filtersState, prefsState) 
       return state.withMutations(function (record) {
         record.set("messagesUiById", messagesUiById.push(action.id));
 
+        let currMessage = messagesById.get(action.id);
+
         // If the message is a group
-        if (isGroupType(messagesById.get(action.id).type)) {
+        if (isGroupType(currMessage.type)) {
           // We want to make its children visible
           const messagesToShow = [...messagesById].reduce((res, [id, message]) => {
             if (
@@ -194,6 +200,21 @@ function messages(state = new MessageState(), action, filtersState, prefsState) 
             ...messagesToShow,
             ...visibleMessages.slice(insertIndex),
           ]);
+        }
+
+        // If the current message is a network event, mark it as opened-once,
+        // so HTTP details are not fetched again the next time the user
+        // opens the log.
+        if (currMessage.source == "network") {
+          record.set("messagesById",
+            messagesById.set(
+              action.id, Object.assign({},
+                currMessage, {
+                  openedOnce: true
+                }
+              )
+            )
+          );
         }
       });
 
@@ -249,6 +270,44 @@ function messages(state = new MessageState(), action, filtersState, prefsState) 
           [action.message.id]: action.message
         })
       );
+
+    case constants.NETWORK_UPDATE_REQUEST: {
+      let request = networkMessagesUpdateById[action.id];
+      if (!request) {
+        return state;
+      }
+
+      let values = {};
+      for (let [key, value] of Object.entries(action.data)) {
+        if (UPDATE_PROPS.includes(key)) {
+          values[key] = value;
+
+          switch (key) {
+            case "securityInfo":
+              values.securityState = value.state;
+              break;
+            case "totalTime":
+              values.totalTime = request.totalTime;
+              break;
+            case "requestPostData":
+              values.requestHeadersFromUploadStream = {
+                headers: [],
+                headersSize: 0,
+              };
+              break;
+          }
+        }
+      }
+
+      let newState = state.set(
+        "networkMessagesUpdateById",
+        Object.assign({}, networkMessagesUpdateById, {
+          [action.id]: Object.assign({}, request, values)
+        })
+      );
+
+      return newState;
+    }
 
     case constants.REMOVED_ACTORS_CLEAR:
       return state.set("removedActors", []);

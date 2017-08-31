@@ -456,6 +456,10 @@ ComputeDistanceForServo(const ValueWrapper* aFromWrapper,
     }
 
     double distance = Servo_AnimationValues_ComputeDistance(*fromValue, *toValue);
+    if (distance < 0.0) {
+      return NS_ERROR_FAILURE;
+    }
+
     if (len == 1) {
       aDistance = distance;
       return NS_OK;

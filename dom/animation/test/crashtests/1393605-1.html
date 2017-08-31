@@ -1,0 +1,15 @@
+<!doctype html>
+<html>
+  <head>
+    <title>
+      Bug 1393605 - Still work if determinant of 2d matrix is not 1 or -1
+    </title>
+  </head>
+  <script>
+    document.documentElement.animate(
+      [ { 'transform': 'scale(4)' },
+        { 'transform': 'rotate(3grad) scaleX(0) ' +
+                       'translate(2mm) matrix(2,7,1,.32,7,0)' } ],
+      { fill: 'both' });
+  </script>
+</html>

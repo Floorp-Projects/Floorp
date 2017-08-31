@@ -12,7 +12,7 @@ Cu.import("resource://testing-common/PromiseTestUtils.jsm", this);
 
 const { PromisesFront } = require("devtools/shared/fronts/promises");
 
-var events = require("devtools/shared/event-emitter");
+var EventEmitter = require("devtools/shared/event-emitter");
 
 add_task(function* () {
   let client = yield startTestDebuggerServer("promises-actor-test");
@@ -68,7 +68,7 @@ function* testPromisesSettled(client, form, makeResolvePromise,
 
 function oncePromiseSettled(front, resolution, resolveValue, rejectValue) {
   return new Promise(resolve => {
-    events.on(front, "promises-settled", promises => {
+    EventEmitter.on(front, "promises-settled", promises => {
       for (let p of promises) {
         equal(p.type, "object", "Expect type to be Object");
         equal(p.class, "Promise", "Expect class to be Promise");

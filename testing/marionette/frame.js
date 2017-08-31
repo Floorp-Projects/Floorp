@@ -16,9 +16,6 @@ this.frame = {};
 
 const FRAME_SCRIPT = "chrome://marionette/content/listener.js";
 
-// list of OOP frames that has the frame script loaded
-var remoteFrames = [];
-
 /**
  * An object representing a frame that Marionette has loaded a
  * frame script in.
@@ -151,14 +148,14 @@ frame.Manager = class {
 
     // see if this frame already has our frame script loaded in it;
     // if so, just wake it up
-    for (let i = 0; i < remoteFrames.length; i++) {
-      let f = remoteFrames[i];
+    for (let i = 0; i < this.remoteFrames.length; i++) {
+      let f = this.remoteFrames[i];
       let fmm = f.messageManager.get();
       try {
         fmm.sendAsyncMessage("aliveCheck", {});
       } catch (e) {
         if (e.result == Cr.NS_ERROR_NOT_INITIALIZED) {
-          remoteFrames.splice(i--, 1);
+          this.remoteFrames.splice(i--, 1);
           continue;
         }
       }
@@ -178,7 +175,7 @@ frame.Manager = class {
     this.addMessageManagerListeners(mm);
     let f = new frame.RemoteFrame(winId, frameId);
     f.messageManager = Cu.getWeakReference(mm);
-    remoteFrames.push(f);
+    this.remoteFrames.push(f);
     this.currentRemoteFrame = f;
 
     mm.loadFrameScript(FRAME_SCRIPT, true, true);
