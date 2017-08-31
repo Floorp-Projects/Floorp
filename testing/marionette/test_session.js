@@ -150,6 +150,7 @@ add_test(function test_Proxy_init() {
   for (let proxy of ["ftp", "http", "ssl", "socks"]) {
     p = new session.Proxy();
     p.proxyType = "manual";
+    p.noProxy = ["foo", "bar"];
     p[`${proxy}Proxy`] = "foo";
     p[`${proxy}ProxyPort`] = 42;
     if (proxy === "socks") {
@@ -158,6 +159,7 @@ add_test(function test_Proxy_init() {
 
     ok(p.init());
     equal(Preferences.get("network.proxy.type"), 1);
+    equal(Preferences.get("network.proxy.no_proxies_on"), "foo, bar");
     equal(Preferences.get(`network.proxy.${proxy}`), "foo");
     equal(Preferences.get(`network.proxy.${proxy}_port`), 42);
     if (proxy === "socks") {
@@ -277,6 +279,20 @@ add_test(function test_Proxy_fromJSON() {
   Assert.throws(() => session.Proxy.fromJSON(
       {proxyType: "manual", socksProxy: "foo:1234"}),
       InvalidArgumentError);
+
+  // invalid noProxy
+  for (let noProxy of [true, 42, {}, null, "foo",
+      [true], [42], [{}], [null]]) {
+    Assert.throws(() => session.Proxy.fromJSON(
+        {proxyType: "manual", noProxy: noProxy}),
+        InvalidArgumentError);
+  }
+
+  // valid noProxy
+  for (let noProxy of [[], ["foo"], ["foo", "bar"]]) {
+    let manual = {proxyType: "manual", "noProxy": noProxy}
+    deepEqual(manual, session.Proxy.fromJSON(manual).toJSON());
+  }
 
   run_next_test();
 });
