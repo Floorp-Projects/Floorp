@@ -965,6 +965,7 @@ gbjar.sources += ['java/org/mozilla/gecko/' + x for x in [
     'widget/DoorhangerConfig.java',
     'widget/EllipsisTextView.java',
     'widget/ExternalIntentDuringPrivateBrowsingPromptFragment.java',
+    'widget/FadedHorizontalScrollView.java',
     'widget/FadedMultiColorTextView.java',
     'widget/FadedSingleColorTextView.java',
     'widget/FadedTextView.java',
