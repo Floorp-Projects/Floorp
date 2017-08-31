@@ -316,7 +316,7 @@ class Nursery
     unsigned maxNurseryChunks_;
 
     /* Promotion rate for the previous minor collection. */
-    float previousPromotionRate_;
+    double previousPromotionRate_;
 
     /* Report minor collections taking at least this long, if enabled. */
     mozilla::TimeDuration profileThreshold_;
@@ -355,19 +355,9 @@ class Nursery
 
     struct {
         JS::gcreason::Reason reason;
-        size_t nurseryCapacity;
-        size_t nurseryUsedBytes;
-        size_t tenuredBytes;
+        uint64_t nurseryUsedBytes;
+        uint64_t tenuredBytes;
     } previousGC;
-
-    /*
-     * Calculate the promotion rate of the most recent minor GC.
-     * The valid_for_tenuring parameter is used to return whether this
-     * promotion rate is accurate enough (the nursery was full enough) to be
-     * used for tenuring and other decisions.
-     */
-    float
-    calcPromotionRate(bool *validForTenuring) const;
 
     /*
      * The set of externally malloced buffers potentially kept live by objects
@@ -448,7 +438,7 @@ class Nursery
     /* Common internal allocator function. */
     void* allocate(size_t size);
 
-    void doCollection(JS::gcreason::Reason reason,
+    double doCollection(JS::gcreason::Reason reason,
                         gc::TenureCountCache& tenureCounts);
 
     /*
@@ -476,7 +466,7 @@ class Nursery
     void sweepDictionaryModeObjects();
 
     /* Change the allocable space provided by the nursery. */
-    void maybeResizeNursery(JS::gcreason::Reason reason);
+    void maybeResizeNursery(JS::gcreason::Reason reason, double promotionRate);
     void growAllocableSpace();
     void shrinkAllocableSpace(unsigned removeNumChunks);
     void minimizeAllocableSpace();
