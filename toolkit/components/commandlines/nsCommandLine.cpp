@@ -483,14 +483,12 @@ nsCommandLine::Init(int32_t argc, const char* const* argv, nsIFile* aWorkingDir,
   return NS_OK;
 }
 
+template<typename ...T>
 static void
-LogConsoleMessage(const char16_t* fmt, ...)
+LogConsoleMessage(const char16_t* fmt, T... args)
 {
-  va_list args;
-  va_start(args, fmt);
   nsString msg;
-  nsTextFormatter::vssprintf(msg, fmt, args);
-  va_end(args);
+  nsTextFormatter::ssprintf(msg, fmt, args...);
 
   nsCOMPtr<nsIConsoleService> cs = do_GetService("@mozilla.org/consoleservice;1");
   if (cs)

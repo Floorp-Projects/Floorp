@@ -58,6 +58,8 @@ public:
    */
   static uint32_t ssprintf(nsAString& aOut, const char16_t* aFmt, ...);
 
+private:
+
   /*
    * va_list forms of the above.
    */
