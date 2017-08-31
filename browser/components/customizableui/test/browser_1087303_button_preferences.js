@@ -44,13 +44,12 @@ function waitForPageLoad(aTab) {
       reject("Page didn't load within " + 20000 + "ms");
     }, 20000);
 
-    async function onTabLoad(event) {
+    function onTabLoad(event) {
       clearTimeout(timeoutId);
       aTab.linkedBrowser.removeEventListener("load", onTabLoad, true);
       info("Tab event received: load");
       resolve();
-    }
-
+   }
     aTab.linkedBrowser.addEventListener("load", onTabLoad, true, true);
   });
 }

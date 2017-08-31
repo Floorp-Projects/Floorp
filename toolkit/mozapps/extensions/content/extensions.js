@@ -345,7 +345,7 @@ function getBrowserElement() {
  */
 function getMainWindowWithPreferencesPane() {
   let mainWindow = getMainWindow();
-  if (mainWindow && "openPreferences" in mainWindow) {
+  if (mainWindow && "openAdvancedPreferences" in mainWindow) {
     return mainWindow;
   }
   return null;
@@ -1512,7 +1512,13 @@ var gViewController = {
       },
       doCommand() {
         let mainWindow = getMainWindowWithPreferencesPane();
-        mainWindow.openPreferences("privacy-reports", { origin: "experimentsOpenPref" });
+        // The advanced subpanes are only supported in the old organization, which will
+        // be removed by bug 1349689.
+        if (Preferences.get("browser.preferences.useOldOrganization")) {
+          mainWindow.openAdvancedPreferences("dataChoicesTab", {origin: "experimentsOpenPref"});
+        } else {
+          mainWindow.openPreferences("privacy-reports", {origin: "experimentsOpenPref"});
+        }
       },
     },
 

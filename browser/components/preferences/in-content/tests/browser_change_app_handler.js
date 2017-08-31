@@ -16,9 +16,8 @@ function setupFakeHandler() {
 
 add_task(async function() {
   setupFakeHandler();
-
-  let prefs = await openPreferencesViaOpenPreferencesAPI("paneGeneral", {leaveOpen: true});
-  is(prefs.selectedPane, "paneGeneral", "General pane was selected");
+  await openPreferencesViaOpenPreferencesAPI("applications", null, {leaveOpen: true});
+  info("Preferences page opened on the applications pane.");
   let win = gBrowser.selectedBrowser.contentWindow;
 
   let container = win.document.getElementById("handlersView");
@@ -89,9 +88,7 @@ add_task(async function() {
   ok(!list.selectedItem.handlerApp,
      "No app should be visible as preferred item.");
 
-  let tabRemovedPromise = BrowserTestUtils.tabRemoved(gBrowser.selectedTab);
   gBrowser.removeCurrentTab();
-  await tabRemovedPromise;
 });
 
 registerCleanupFunction(function() {

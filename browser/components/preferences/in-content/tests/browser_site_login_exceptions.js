@@ -17,7 +17,7 @@ add_task(async function openLoginExceptionsSubDialog() {
     gBrowser.removeCurrentTab();
   });
 
-  await openPreferencesViaOpenPreferencesAPI("privacy", {leaveOpen: true});
+  await openPreferencesViaOpenPreferencesAPI("security", null, {leaveOpen: true});
 
   let dialogOpened = promiseLoadSubDialog(PERMISSIONS_URL);
 

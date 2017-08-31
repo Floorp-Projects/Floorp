@@ -4,12 +4,15 @@
 
 // Import globals from the files imported by the .xul files.
 /* import-globals-from subdialogs.js */
+/* import-globals-from advanced.js */
 /* import-globals-from main.js */
 /* import-globals-from search.js */
 /* import-globals-from containers.js */
+/* import-globals-from content.js */
 /* import-globals-from privacy.js */
+/* import-globals-from applications.js */
+/* import-globals-from security.js */
 /* import-globals-from sync.js */
-/* import-globals-from findInPage.js */
 /* import-globals-from ../../../base/content/utilityOverlay.js */
 
 "use strict";
@@ -57,9 +60,11 @@ function init_all() {
   register_module("paneSearch", gSearchPane);
   register_module("panePrivacy", gPrivacyPane);
   register_module("paneContainers", gContainersPane);
+  register_module("paneAdvanced", gAdvancedPane);
+  register_module("paneApplications", gApplicationsPane);
+  register_module("paneContent", gContentPane);
   register_module("paneSync", gSyncPane);
-  register_module("paneSearchResults", gSearchResultsPane);
-  gSearchResultsPane.init();
+  register_module("paneSecurity", gSecurityPane);
 
   let categories = document.getElementById("categories");
   categories.addEventListener("select", event => gotoPref(event.target.value));
@@ -78,14 +83,23 @@ function init_all() {
 
   init_dynamic_padding();
 
-  let helpButton = document.querySelector(".help-button");
-  let helpUrl = Services.urlFormatter.formatURLPref("app.support.baseURL") + "preferences";
-  helpButton.setAttribute("href", helpUrl);
-
-  document.dispatchEvent(new CustomEvent("Initialized", {
+  var initFinished = new CustomEvent("Initialized", {
     "bubbles": true,
     "cancelable": true
-  }));
+  });
+  document.dispatchEvent(initFinished);
+
+  categories = categories.querySelectorAll("richlistitem.category");
+  for (let category of categories) {
+    let name = internalPrefCategoryNameToFriendlyName(category.value);
+    let helpSelector = `#header-${name} > .help-button`;
+    let helpButton = document.querySelector(helpSelector);
+    helpButton.setAttribute("href", getHelpLinkURL(category.getAttribute("helpTopic")));
+  }
+
+  // Wait until initialization of all preferences are complete before
+  // notifying observers that the UI is now ready.
+  Services.obs.notifyObservers(window, "advanced-pane-loaded");
 }
 
 // Make the space above the categories list shrink on low window heights
@@ -93,25 +107,11 @@ function init_dynamic_padding() {
   let categories = document.getElementById("categories");
   let catPadding = Number.parseInt(getComputedStyle(categories)
                                      .getPropertyValue("padding-top"));
-  let helpButton = document.querySelector(".help-button");
-  let helpButtonCS = getComputedStyle(helpButton);
-  let helpHeight = Number.parseInt(helpButtonCS.height);
-  let helpBottom = Number.parseInt(helpButtonCS.bottom);
-  // Reduce the padding to account for less space, but due
-  // to bug 1357841, the status panel will overlap the link.
-  const reducedHelpButtonBottomFactor = .75;
-  let reducedHelpButtonBottom = helpBottom * reducedHelpButtonBottomFactor;
-  let fullHelpHeight = helpHeight + reducedHelpButtonBottom;
-  let fullHeight = categories.lastElementChild.getBoundingClientRect().bottom +
-                   fullHelpHeight;
+  let fullHeight = categories.lastElementChild.getBoundingClientRect().bottom;
   let mediaRule = `
   @media (max-height: ${fullHeight}px) {
     #categories {
       padding-top: calc(100vh - ${fullHeight - catPadding}px);
-      padding-bottom: ${fullHelpHeight}px;
-    }
-    .help-button {
-      bottom: ${reducedHelpButtonBottom / 2}px;
     }
   }
   `;
@@ -122,15 +122,30 @@ function init_dynamic_padding() {
 }
 
 function telemetryBucketForCategory(category) {
-  category = category.toLowerCase();
   switch (category) {
-    case "containers":
     case "general":
-    case "privacy":
     case "search":
+    case "content":
+    case "applications":
+    case "privacy":
+    case "security":
     case "sync":
-    case "searchresults":
       return category;
+    case "advanced":
+      let advancedPaneTabs = document.getElementById("advancedPrefs");
+      switch (advancedPaneTabs.selectedTab.id) {
+        case "generalTab":
+          return "advancedGeneral";
+        case "dataChoicesTab":
+          return "advancedDataChoices";
+        case "networkTab":
+          return "advancedNetwork";
+        case "updateTab":
+          return "advancedUpdates";
+        case "encryptionTab":
+          return "advancedCerts";
+      }
+      // fall-through for unknown.
     default:
       return "unknown";
   }
@@ -142,44 +157,19 @@ function onHashChange() {
 
 function gotoPref(aCategory) {
   let categories = document.getElementById("categories");
-  const kDefaultCategoryInternalName = "paneGeneral";
-  const kDefaultCategory = "general";
+  const kDefaultCategoryInternalName = categories.firstElementChild.value;
   let hash = document.location.hash;
-
   let category = aCategory || hash.substr(1) || kDefaultCategoryInternalName;
-  let breakIndex = category.indexOf("-");
-  // Subcategories allow for selecting smaller sections of the preferences
-  // until proper search support is enabled (bug 1353954).
-  let subcategory = breakIndex != -1 && category.substring(breakIndex + 1);
-  if (subcategory) {
-    category = category.substring(0, breakIndex);
-  }
   category = friendlyPrefCategoryNameToInternalName(category);
-  if (category != "paneSearchResults") {
-    gSearchResultsPane.searchInput.value = "";
-    gSearchResultsPane.getFindSelection(window).removeAllRanges();
-    gSearchResultsPane.removeAllSearchTooltips();
-    gSearchResultsPane.removeAllSearchMenuitemIndicators();
-  } else if (!gSearchResultsPane.searchInput.value) {
-    // Something tried to send us to the search results pane without
-    // a query string. Default to the General pane instead.
-    category = kDefaultCategoryInternalName;
-    document.location.hash = kDefaultCategory;
-    gSearchResultsPane.query = null;
-  }
 
   // Updating the hash (below) or changing the selected category
   // will re-enter gotoPref.
-  if (gLastHash == category && !subcategory)
+  if (gLastHash == category)
     return;
-
-  let item;
-  if (category != "paneSearchResults") {
+  let item = categories.querySelector(".category[value=" + category + "]");
+  if (!item) {
+    category = kDefaultCategoryInternalName;
     item = categories.querySelector(".category[value=" + category + "]");
-    if (!item) {
-      category = kDefaultCategoryInternalName;
-      item = categories.querySelector(".category[value=" + category + "]");
-    }
   }
 
   try {
@@ -190,53 +180,29 @@ function gotoPref(aCategory) {
   }
 
   let friendlyName = internalPrefCategoryNameToFriendlyName(category);
-  if (gLastHash || category != kDefaultCategoryInternalName || subcategory) {
+  if (gLastHash || category != kDefaultCategoryInternalName) {
     document.location.hash = friendlyName;
   }
   // Need to set the gLastHash before setting categories.selectedItem since
   // the categories 'select' event will re-enter the gotoPref codepath.
   gLastHash = category;
-  if (item) {
-    categories.selectedItem = item;
-  } else {
-    categories.clearSelection();
-  }
+  categories.selectedItem = item;
   window.history.replaceState(category, document.title);
-  search(category, "data-category", subcategory, "data-subcategory");
-
+  search(category, "data-category");
   let mainContent = document.querySelector(".main-content");
   mainContent.scrollTop = 0;
 
   Services.telemetry
-          .getHistogramById("FX_PREFERENCES_CATEGORY_OPENED_V2")
+          .getHistogramById("FX_PREFERENCES_CATEGORY_OPENED")
           .add(telemetryBucketForCategory(friendlyName));
 }
 
-function search(aQuery, aAttribute, aSubquery, aSubAttribute) {
+function search(aQuery, aAttribute) {
   let mainPrefPane = document.getElementById("mainPrefPane");
   let elements = mainPrefPane.children;
   for (let element of elements) {
-    // If the "data-hidden-from-search" is "true", the
-    // element will not get considered during search. This
-    // should only be used when an element is still under
-    // development and should not be shown for any reason.
-    if (element.getAttribute("data-hidden-from-search") != "true" ||
-        element.getAttribute("data-subpanel") == "true") {
-      let attributeValue = element.getAttribute(aAttribute);
-      if (attributeValue == aQuery) {
-        if (!element.classList.contains("header") &&
-            element.localName !== "preferences" &&
-            aSubquery && aSubAttribute) {
-          let subAttributeValue = element.getAttribute(aSubAttribute);
-          element.hidden = subAttributeValue != aSubquery;
-        } else {
-          element.hidden = false;
-        }
-      } else {
-        element.hidden = true;
-      }
-    }
-    element.classList.remove("visually-hidden");
+    let attributeValue = element.getAttribute(aAttribute);
+    element.hidden = (attributeValue != aQuery);
   }
 
   let keysets = mainPrefPane.getElementsByTagName("keyset");
@@ -344,15 +310,4 @@ function confirmRestartPrompt(aRestartToEnable, aDefaultButtonIndex,
     }
   }
   return buttonIndex;
-}
-
-// This function is used to append search keywords found
-// in the related subdialog to the button that will activate the subdialog.
-function appendSearchKeywords(aId, keywords) {
-  let element = document.getElementById(aId);
-  let searchKeywords = element.getAttribute("searchkeywords");
-  if (searchKeywords) {
-    keywords.push(searchKeywords);
-  }
-  element.setAttribute("searchkeywords", keywords.join(" "));
 }

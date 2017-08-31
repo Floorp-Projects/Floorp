@@ -169,7 +169,11 @@ var gEMEHandler = {
       label: gNavigatorBundle.getString(btnLabelId),
       accessKey: gNavigatorBundle.getString(btnAccessKeyId),
       callback() {
-        openPreferences("general-drm", {origin: "browserMedia"});
+        if (Services.prefs.getBoolPref("browser.preferences.useOldOrganization")) {
+          openPreferences("paneContent", {origin: "browserMedia"});
+        } else {
+          openPreferences("general-drm", {origin: "browserMedia"});
+        }
       },
       dismiss: true
     };
