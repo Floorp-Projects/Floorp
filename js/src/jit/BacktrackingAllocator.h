@@ -8,11 +8,19 @@
 #define jit_BacktrackingAllocator_h
 
 #include "mozilla/Array.h"
+#include "mozilla/Attributes.h"
 
 #include "ds/PriorityQueue.h"
 #include "ds/SplayTree.h"
 #include "jit/RegisterAllocator.h"
 #include "jit/StackSlotAllocator.h"
+
+// Gives better traces in Nightly/debug builds (could be EARLY_BETA_OR_EARLIER)
+#if defined(NIGHTLY_BUILD) || defined(DEBUG)
+#define AVOID_INLINE_FOR_DEBUGGING MOZ_NEVER_INLINE
+#else
+#define AVOID_INLINE_FOR_DEBUGGING
+#endif
 
 // Backtracking priority queue based register allocator based on that described
 // in the following blog post:
@@ -755,7 +763,7 @@ class BacktrackingAllocator : protected RegisterAllocator
     MOZ_MUST_USE bool splitAndRequeueBundles(LiveBundle* bundle,
                                              const LiveBundleVector& newBundles);
     MOZ_MUST_USE bool spill(LiveBundle* bundle);
-    MOZ_MUST_USE bool tryAllocatingRegistersForSpillBundles();
+    AVOID_INLINE_FOR_DEBUGGING MOZ_MUST_USE bool tryAllocatingRegistersForSpillBundles();
 
     bool isReusedInput(LUse* use, LNode* ins, bool considerCopy);
     bool isRegisterUse(UsePosition* use, LNode* ins, bool considerCopy = false);
@@ -764,12 +772,12 @@ class BacktrackingAllocator : protected RegisterAllocator
     MOZ_MUST_USE bool insertAllRanges(LiveRangeSet& set, LiveBundle* bundle);
 
     // Reification methods.
-    MOZ_MUST_USE bool pickStackSlots();
-    MOZ_MUST_USE bool resolveControlFlow();
-    MOZ_MUST_USE bool reifyAllocations();
-    MOZ_MUST_USE bool populateSafepoints();
-    MOZ_MUST_USE bool annotateMoveGroups();
-    MOZ_MUST_USE bool deadRange(LiveRange* range);
+    AVOID_INLINE_FOR_DEBUGGING MOZ_MUST_USE bool pickStackSlots();
+    AVOID_INLINE_FOR_DEBUGGING MOZ_MUST_USE bool resolveControlFlow();
+    AVOID_INLINE_FOR_DEBUGGING MOZ_MUST_USE bool reifyAllocations();
+    AVOID_INLINE_FOR_DEBUGGING MOZ_MUST_USE bool populateSafepoints();
+    AVOID_INLINE_FOR_DEBUGGING MOZ_MUST_USE bool annotateMoveGroups();
+    AVOID_INLINE_FOR_DEBUGGING MOZ_MUST_USE bool deadRange(LiveRange* range);
     size_t findFirstNonCallSafepoint(CodePosition from);
     size_t findFirstSafepoint(CodePosition pos, size_t startFrom);
     void addLiveRegistersForRange(VirtualRegister& reg, LiveRange* range);

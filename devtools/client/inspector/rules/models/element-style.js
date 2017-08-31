@@ -10,7 +10,7 @@ const promise = require("promise");
 const Rule = require("devtools/client/inspector/rules/models/rule");
 const {promiseWarn} = require("devtools/client/inspector/shared/utils");
 const {ELEMENT_STYLE} = require("devtools/shared/specs/styles");
-const {getCssProperties} = require("devtools/shared/fronts/css-properties");
+const {getCssProperties, isCssVariable} = require("devtools/shared/fronts/css-properties");
 
 /**
  * ElementStyle is responsible for the following:
@@ -40,6 +40,7 @@ function ElementStyle(element, ruleView, store, pageStyle,
   this.showUserAgentStyles = showUserAgentStyles;
   this.rules = [];
   this.cssProperties = getCssProperties(this.ruleView.inspector.toolbox);
+  this.variables = new Map();
 
   // We don't want to overwrite this.store.userProperties so we only create it
   // if it doesn't already exist.
@@ -199,7 +200,9 @@ ElementStyle.prototype = {
    * Calls markOverridden with all supported pseudo elements
    */
   markOverriddenAll: function () {
+    this.variables.clear();
     this.markOverridden();
+
     for (let pseudo of this.cssProperties.pseudoElements) {
       this.markOverridden(pseudo);
     }
@@ -288,6 +291,10 @@ ElementStyle.prototype = {
       computedProp.overridden = overridden;
       if (!computedProp.overridden && computedProp.textProp.enabled) {
         taken[computedProp.name] = computedProp;
+
+        if (isCssVariable(computedProp.name)) {
+          this.variables.set(computedProp.name, computedProp.value);
+        }
       }
     }
 
@@ -328,7 +335,20 @@ ElementStyle.prototype = {
     dirty = (!!prop.overridden !== overridden) || dirty;
     prop.overridden = overridden;
     return dirty;
-  }
+  },
+
+ /**
+  * Returns the current value of a CSS variable; or null if the
+  * variable is not defined.
+  *
+  * @param  {String} name
+  *         The name of the variable.
+  * @return {String} the variable's value or null if the variable is
+  *         not defined.
+  */
+  getVariable: function (name) {
+    return this.variables.get(name);
+  },
 };
 
 /**

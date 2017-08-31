@@ -263,6 +263,7 @@ define(function (require, exports, module) {
               ref,
               role: "presentation",
             },
+              DOM.span({className: "devtools-tab-line"}),
               DOM.a({
                 id: id ? id + "-tab" : "tab-" + index,
                 tabIndex: isTabSelected ? 0 : -1,

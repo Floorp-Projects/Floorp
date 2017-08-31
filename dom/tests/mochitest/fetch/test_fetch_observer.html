@@ -13,7 +13,8 @@
 <script class="testbody" type="text/javascript">
 
 SpecialPowers.pushPrefEnv({"set": [["dom.fetchObserver.enabled", true ],
-                                   ["dom.abortController.enabled", true ]]}, () => {
+                                   ["dom.abortController.enabled", true ],
+                                   ["dom.abortController.fetch.enabled", true ]]}, () => {
   let ifr = document.createElement('iframe');
   ifr.src = "file_fetch_observer.html";
   document.body.appendChild(ifr);
