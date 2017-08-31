@@ -83,7 +83,6 @@ if CONFIG['OS_TARGET'] in ['Darwin', 'Linux', 'WINNT']:
     elif CONFIG['OS_TARGET'] == 'Darwin':
         DEFINES['WEBRTC_MAC'] = True
         DEFINES['WEBRTC_POSIX'] = True
-        DEFINES['MOZ_JEMALLOC_IMPL'] = True
 
         LOCAL_INCLUDES += [
             '../third_party/gflags/gen/posix/include',
