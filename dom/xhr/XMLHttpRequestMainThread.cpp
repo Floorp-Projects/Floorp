@@ -2621,13 +2621,15 @@ XMLHttpRequestMainThread::MaybeLowerChannelPriority()
     return;
   }
 
-  nsCOMPtr<nsIClassOfService> cos = do_QueryInterface(mChannel);
-  if (cos) {
-    // Adding TailAllowed to overrule the Unblocked flag, but to preserve
-    // the effect of Unblocked when tailing is off.
-    cos->AddClassFlags(nsIClassOfService::Throttleable |
-                       nsIClassOfService::Tail |
-                       nsIClassOfService::TailAllowed);
+  if (nsContentUtils::IsTailingEnabled()) {
+    nsCOMPtr<nsIClassOfService> cos = do_QueryInterface(mChannel);
+    if (cos) {
+      // Adding TailAllowed to overrule the Unblocked flag, but to preserve
+      // the effect of Unblocked when tailing is off.
+      cos->AddClassFlags(nsIClassOfService::Throttleable |
+                         nsIClassOfService::Tail |
+                         nsIClassOfService::TailAllowed);
+    }
   }
 
   nsCOMPtr<nsISupportsPriority> p = do_QueryInterface(mChannel);
