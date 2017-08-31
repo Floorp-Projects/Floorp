@@ -44,6 +44,12 @@
 extern "C" {
 #endif
 
+#ifndef MALLOC_USABLE_SIZE_CONST_PTR
+#define MALLOC_USABLE_SIZE_CONST_PTR const
+#endif
+
+typedef MALLOC_USABLE_SIZE_CONST_PTR void* usable_ptr_t;
+
 /*
  * jemalloc_stats() is not a stable interface.  When using jemalloc_stats_t, be
  * sure that the compiled results of jemalloc.c are in sync with this header
