@@ -1,0 +1,32 @@
+/* -*- Mode: indent-tabs-mode: nil; js-indent-level: 2 -*- */
+/* vim: set sts=2 sw=2 et tw=80: */
+"use strict";
+
+const STARTUP_APIS = [
+  "backgroundPage",
+];
+
+// Tests that only the minimal set of API scripts are loaded at startup
+// for a simple extension.
+add_task(async function test_loaded_api_scripts() {
+  await ExtensionTestUtils.startAddonManager();
+
+  let extension = ExtensionTestUtils.loadExtension({
+    useAddonManager: "temporary",
+    background() {},
+    manifest: {},
+  });
+
+  await extension.startup();
+
+  const {apiManager} = ExtensionParent;
+
+  const loadedAPIs = Array.from(apiManager.modules.values())
+                          .filter(m => m.loaded || m.asyncLoaded)
+                          .map(m => m.namespaceName);
+
+  deepEqual(loadedAPIs.sort(), STARTUP_APIS,
+            "No extra APIs should be loaded at startup for a simple extension");
+
+  await extension.unload();
+});
