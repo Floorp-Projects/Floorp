@@ -36,7 +36,7 @@ public:
   static bool DestroyIPDLActor(PVRLayerChild* actor);
 
   void Initialize(dom::HTMLCanvasElement* aCanvasElement);
-  void SubmitFrame();
+  void SubmitFrame(uint64_t aFrameId);
   bool IsIPCOpen();
 
 private:
