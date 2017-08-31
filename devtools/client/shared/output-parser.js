@@ -18,6 +18,10 @@ const {
 const {appendText} = require("devtools/client/inspector/shared/utils");
 const Services = require("Services");
 
+const STYLE_INSPECTOR_PROPERTIES = "devtools/shared/locales/styleinspector.properties";
+const {LocalizationHelper} = require("devtools/shared/l10n");
+const STYLE_INSPECTOR_L10N = new LocalizationHelper(STYLE_INSPECTOR_PROPERTIES);
+
 const HTML_NS = "http://www.w3.org/1999/xhtml";
 const CSS_GRID_ENABLED_PREF = "layout.css.grid.enabled";
 const CSS_SHAPES_ENABLED_PREF = "devtools.inspector.shapesHighlighter.enabled";
@@ -96,24 +100,37 @@ OutputParser.prototype = {
   },
 
   /**
-   * Given an initial FUNCTION token, read tokens from |tokenStream|
-   * and collect all the (non-comment) text.  Return the collected
-   * text.  The function token and the close paren are included in the
-   * result.
+   * Read tokens from |tokenStream| and collect all the (non-comment)
+   * text. Return the collected texts and variable data (if any).
+   * Stop when an unmatched closing paren is seen.
+   * If |stopAtComma| is true, then also stop when a top-level
+   * (unparenthesized) comma is seen.
    *
-   * @param  {CSSToken} initialToken
-   *         The FUNCTION token.
    * @param  {String} text
-   *         The original CSS text.
+   *         The original source text.
    * @param  {CSSLexer} tokenStream
    *         The token stream from which to read.
-   * @return {String}
-   *         The text of body of the function call.
+   * @param  {Object} options
+   *         The options object in use; @see _mergeOptions.
+   * @param  {Boolean} stopAtComma
+   *         If true, stop at a comma.
+   * @return {Object}
+   *         An object of the form {tokens, functionData, sawComma, sawVariable}.
+   *         |tokens| is a list of the non-comment, non-whitespace tokens
+   *         that were seen. The stopping token (paren or comma) will not
+   *         be included.
+   *         |functionData| is a list of parsed strings and nodes that contain the
+   *         data between the matching parenthesis. The stopping token's text will
+   *         not be included.
+   *         |sawComma| is true if the stop was due to a comma, or false otherwise.
+   *         |sawVariable| is true if a variable was seen while parsing the text.
    */
-  _collectFunctionText: function (initialToken, text, tokenStream) {
-    let result = text.substring(initialToken.startOffset,
-                                initialToken.endOffset);
+  _parseMatchingParens: function (text, tokenStream, options, stopAtComma) {
     let depth = 1;
+    let functionData = [];
+    let tokens = [];
+    let sawVariable = false;
+
     while (depth > 0) {
       let token = tokenStream.nextToken();
       if (!token) {
@@ -122,37 +139,142 @@ OutputParser.prototype = {
       if (token.tokenType === "comment") {
         continue;
       }
-      result += text.substring(token.startOffset, token.endOffset);
+
       if (token.tokenType === "symbol") {
-        if (token.text === "(") {
+        if (stopAtComma && depth === 1 && token.text === ",") {
+          return { tokens, functionData, sawComma: true, sawVariable };
+        } else if (token.text === "(") {
           ++depth;
         } else if (token.text === ")") {
           --depth;
+          if (depth === 0) {
+            break;
+          }
         }
+      } else if (token.tokenType === "function" && token.text === "var" &&
+                 options.isVariableInUse) {
+        sawVariable = true;
+        let variableNode = this._parseVariable(token, text, tokenStream, options);
+        functionData.push(variableNode);
       } else if (token.tokenType === "function") {
         ++depth;
       }
+
+      if (token.tokenType !== "function" || token.text !== "var" ||
+          !options.isVariableInUse) {
+        functionData.push(text.substring(token.startOffset, token.endOffset));
+      }
+
+      if (token.tokenType !== "whitespace") {
+        tokens.push(token);
+      }
     }
-    return result;
+
+    return { tokens, functionData, sawComma: false, sawVariable };
   },
 
   /**
-   * Parse a string.
+   * Parse var() use and return a variable node to be added to the output state.
+   * This will read tokens up to and including the ")" that closes the "var("
+   * invocation.
+   *
+   * @param  {CSSToken} initialToken
+   *         The "var(" token that was already seen.
+   * @param  {String} text
+   *         The original input text.
+   * @param  {CSSLexer} tokenStream
+   *         The token stream from which to read.
+   * @param  {Object} options
+   *         The options object in use; @see _mergeOptions.
+   * @return {Object}
+   *         A node for the variable, with the appropriate text and
+   *         title. Eg. a span with "var(--var1)" as the textContent
+   *         and a title for --var1 like "--var1 = 10" or
+   *         "--var1 is not set".
+   */
+  _parseVariable: function (initialToken, text, tokenStream, options) {
+    // Handle the "var(".
+    let varText = text.substring(initialToken.startOffset,
+                                 initialToken.endOffset);
+    let variableNode = this._createNode("span", {}, varText);
+
+    // Parse the first variable name within the parens of var().
+    let {tokens, functionData, sawComma, sawVariable} =
+        this._parseMatchingParens(text, tokenStream, options, true);
+
+    let result = sawVariable ? "" : functionData.join("");
+
+    // Display options for the first and second argument in the var().
+    let firstOpts = {};
+    let secondOpts = {};
+
+    let varValue;
+
+    // Get the variable value if it is in use.
+    if (tokens && tokens.length === 1) {
+      varValue = options.isVariableInUse(tokens[0].text);
+    }
+
+    // Get the variable name.
+    let varName = text.substring(tokens[0].startOffset, tokens[0].endOffset);
+
+    if (typeof varValue === "string") {
+      // The variable value is valid, set the variable name's title of the first argument
+      // in var() to display the variable name and value.
+      firstOpts.title =
+        STYLE_INSPECTOR_L10N.getFormatStr("rule.variableValue", varName, varValue);
+      secondOpts.class = options.unmatchedVariableClass;
+    } else {
+      // The variable name is not valid, mark it unmatched.
+      firstOpts.class = options.unmatchedVariableClass;
+      firstOpts.title = STYLE_INSPECTOR_L10N.getFormatStr("rule.variableUnset",
+                                                          varName);
+    }
+
+    variableNode.appendChild(this._createNode("span", firstOpts, result));
+
+    // If we saw a ",", then append it and show the remainder using
+    // the correct highlighting.
+    if (sawComma) {
+      variableNode.appendChild(this.doc.createTextNode(","));
+
+      // Parse the text up until the close paren, being sure to
+      // disable the special case for filter.
+      let subOptions = Object.assign({}, options);
+      subOptions.expectFilter = false;
+      let saveParsed = this.parsed;
+      this.parsed = [];
+      let rest = this._doParse(text, subOptions, tokenStream, true);
+      this.parsed = saveParsed;
+
+      let span = this._createNode("span", secondOpts);
+      span.appendChild(rest);
+      variableNode.appendChild(span);
+    }
+    variableNode.appendChild(this.doc.createTextNode(")"));
+
+    return variableNode;
+  },
+
+  /* eslint-disable complexity */
+  /**
+   * The workhorse for @see _parse. This parses some CSS text,
+   * stopping at EOF; or optionally when an umatched close paren is
+   * seen.
    *
    * @param  {String} text
-   *         Text to parse.
-   * @param  {Object} [options]
-   *         Options object. For valid options and default values see
-   *         _mergeOptions().
+   *         The original input text.
+   * @param  {Object} options
+   *         The options object in use; @see _mergeOptions.
+   * @param  {CSSLexer} tokenStream
+   *         The token stream from which to read
+   * @param  {Boolean} stopAtCloseParen
+   *         If true, stop at an umatched close paren.
    * @return {DocumentFragment}
    *         A document fragment.
    */
-  _parse: function (text, options = {}) {
-    text = text.trim();
-    this.parsed.length = 0;
-
-    let tokenStream = getCSSLexer(text);
-    let parenDepth = 0;
+  _doParse: function (text, options, tokenStream, stopAtCloseParen) {
+    let parenDepth = stopAtCloseParen ? 1 : 0;
     let outerMostFunctionTakesColor = false;
 
     let colorOK = function () {
@@ -166,12 +288,17 @@ OutputParser.prototype = {
     };
 
     let spaceNeeded = false;
-    let token = tokenStream.nextToken();
-    while (token) {
+    let done = false;
+
+    while (!done) {
+      let token = tokenStream.nextToken();
+      if (!token) {
+        break;
+      }
+
       if (token.tokenType === "comment") {
         // This doesn't change spaceNeeded, because we didn't emit
         // anything to the output.
-        token = tokenStream.nextToken();
         continue;
       }
 
@@ -190,21 +317,44 @@ OutputParser.prototype = {
                 token.text);
             }
             ++parenDepth;
+          } else if (token.text === "var" && options.isVariableInUse) {
+            let variableNode = this._parseVariable(token, text, tokenStream, options);
+            this.parsed.push(variableNode);
           } else {
-            let functionText = this._collectFunctionText(token, text,
-                                                         tokenStream);
+            let {functionData, sawVariable} = this._parseMatchingParens(text, tokenStream,
+              options);
 
-            if (options.expectCubicBezier && token.text === "cubic-bezier") {
-              this._appendCubicBezier(functionText, options);
-            } else if (colorOK() &&
-                       colorUtils.isValidCSSColor(functionText, this.cssColor4)) {
-              this._appendColor(functionText, options);
-            } else if (options.expectShape &&
-                       Services.prefs.getBoolPref(CSS_SHAPES_ENABLED_PREF) &&
-                       BASIC_SHAPE_FUNCTIONS.includes(token.text)) {
-              this._appendShape(functionText, options);
+            let functionName = text.substring(token.startOffset, token.endOffset);
+
+            if (sawVariable) {
+              // If function contains variable, we need to add both strings
+              // and nodes.
+              this._appendTextNode(functionName);
+              for (let data of functionData) {
+                if (typeof data === "string") {
+                  this._appendTextNode(data);
+                } else if (data) {
+                  this.parsed.push(data);
+                }
+              }
+              this._appendTextNode(")");
             } else {
-              this._appendTextNode(functionText);
+              // If no variable in function, join the text together and add
+              // to DOM accordingly.
+              let functionText = functionName + functionData.join("") + ")";
+
+              if (options.expectCubicBezier && token.text === "cubic-bezier") {
+                this._appendCubicBezier(functionText, options);
+              } else if (colorOK() &&
+                         colorUtils.isValidCSSColor(functionText, this.cssColor4)) {
+                this._appendColor(functionText, options);
+              } else if (options.expectShape &&
+                         Services.prefs.getBoolPref(CSS_SHAPES_ENABLED_PREF) &&
+                         BASIC_SHAPE_FUNCTIONS.includes(token.text)) {
+                this._appendShape(functionText, options);
+              } else {
+                this._appendTextNode(functionText);
+              }
             }
           }
           break;
@@ -262,6 +412,12 @@ OutputParser.prototype = {
             ++parenDepth;
           } else if (token.text === ")") {
             --parenDepth;
+
+            if (stopAtCloseParen && parenDepth === 0) {
+              done = true;
+              break;
+            }
+
             if (parenDepth === 0) {
               outerMostFunctionTakesColor = false;
             }
@@ -279,8 +435,6 @@ OutputParser.prototype = {
                      token.tokenType === "id" || token.tokenType === "hash" ||
                      token.tokenType === "number" || token.tokenType === "dimension" ||
                      token.tokenType === "percentage" || token.tokenType === "dimension");
-
-      token = tokenStream.nextToken();
     }
 
     let result = this._toDOM();
@@ -290,6 +444,26 @@ OutputParser.prototype = {
     }
 
     return result;
+  },
+  /* eslint-enable complexity */
+
+  /**
+   * Parse a string.
+   *
+   * @param  {String} text
+   *         Text to parse.
+   * @param  {Object} [options]
+   *         Options object. For valid options and default values see
+   *         _mergeOptions().
+   * @return {DocumentFragment}
+   *         A document fragment.
+   */
+  _parse: function (text, options = {}) {
+    text = text.trim();
+    this.parsed.length = 0;
+
+    let tokenStream = getCSSLexer(text);
+    return this._doParse(text, options, tokenStream, false);
   },
 
   /**
@@ -1242,6 +1416,14 @@ OutputParser.prototype = {
    *           - urlClass: ""           // The class to be used for url() links.
    *           - baseURI: undefined     // A string used to resolve
    *                                    // relative links.
+   *           - isVariableInUse        // A function taking a single
+   *                                    // argument, the name of a variable.
+   *                                    // This should return the variable's
+   *                                    // value, if it is in use; or null.
+   *           - unmatchedVariableClass: ""
+   *                                    // The class to use for a component
+   *                                    // of a "var(...)" that is not in
+   *                                    // use.
    * @return {Object}
    *         Overridden options object
    */
@@ -1260,6 +1442,8 @@ OutputParser.prototype = {
       supportsColor: false,
       urlClass: "",
       baseURI: undefined,
+      isVariableInUse: null,
+      unmatchedVariableClass: null,
     };
 
     for (let item in overrides) {

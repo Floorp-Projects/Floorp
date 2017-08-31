@@ -33,6 +33,7 @@
   /* Set to none so no grey contrast background in the high-contrast mode */
   background: none;
   /* make sure the icon stay above the activity-stream searchbar */
+  /* We want this always under #onboarding-overlay */
   z-index: 10;
 }
 

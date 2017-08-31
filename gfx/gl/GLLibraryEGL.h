@@ -111,6 +111,8 @@ public:
         EXT_device_query,
         NV_stream_consumer_gltexture_yuv,
         ANGLE_stream_producer_d3d_texture_nv12,
+        ANGLE_device_creation,
+        ANGLE_device_creation_d3d11,
         Extensions_Max
     };
 
@@ -322,6 +324,13 @@ public:
     EGLBoolean  fStreamPostD3DTextureNV12ANGLE(EGLDisplay dpy, EGLStreamKHR stream, void* texture, const EGLAttrib* attrib_list) const
         WRAP(   fStreamPostD3DTextureNV12ANGLE(dpy, stream, texture, attrib_list) )
 
+    // ANGLE_device_creation
+    EGLDeviceEXT fCreateDeviceANGLE(EGLint device_type, void* native_device, const EGLAttrib* attrib_list) const
+        WRAP(   fCreateDeviceANGLE(device_type, native_device, attrib_list) )
+
+    EGLBoolean fReleaseDeviceANGLE(EGLDeviceEXT device)
+        WRAP(   fReleaseDeviceANGLE(device) )
+
     void           fANGLEPlatformInitialize(angle::Platform* platform) const
         VOID_WRAP( fANGLEPlatformInitialize(platform) )
 
@@ -481,6 +490,12 @@ private:
                                                                  EGLStreamKHR stream,
                                                                  void* texture,
                                                                  const EGLAttrib* attrib_list);
+        // ANGLE_device_creation
+        EGLDeviceEXT (GLAPIENTRY * fCreateDeviceANGLE) (EGLint device_type,
+                                                        void* native_device,
+                                                        const EGLAttrib* attrib_list);
+        EGLBoolean (GLAPIENTRY * fReleaseDeviceANGLE) (EGLDeviceEXT device);
+
         void       (GLAPIENTRY * fANGLEPlatformInitialize)(angle::Platform* platform);
         void       (GLAPIENTRY * fANGLEPlatformShutdown)();
     } mSymbols;

@@ -57,6 +57,8 @@ static const char* sEGLExtensionNames[] = {
     "EGL_EXT_device_query",
     "EGL_NV_stream_consumer_gltexture_yuv",
     "EGL_ANGLE_stream_producer_d3d_texture_nv12",
+    "EGL_ANGLE_device_creation",
+    "EGL_ANGLE_device_creation_d3d11",
 };
 
 #if defined(ANDROID)
@@ -650,6 +652,18 @@ GLLibraryEGL::EnsureInitialized(bool forceAccel, nsACString* const out_failureId
         if (!fnLoadSymbols(nvStreamSymbols)) {
             NS_ERROR("EGL supports ANGLE_stream_producer_d3d_texture_nv12 without exposing its functions!");
             MarkExtensionUnsupported(ANGLE_stream_producer_d3d_texture_nv12);
+        }
+    }
+
+    if (IsExtensionSupported(ANGLE_device_creation)) {
+        const GLLibraryLoader::SymLoadStruct createDeviceSymbols[] = {
+            SYMBOL(CreateDeviceANGLE),
+            SYMBOL(ReleaseDeviceANGLE),
+            END_OF_SYMBOLS
+        };
+        if (!fnLoadSymbols(createDeviceSymbols)) {
+            NS_ERROR("EGL supports ANGLE_device_creation without exposing its functions!");
+            MarkExtensionUnsupported(ANGLE_device_creation);
         }
     }
 

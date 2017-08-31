@@ -23,8 +23,6 @@
 #include "MainThreadUtils.h"
 #include "mozilla/Unused.h"
 
-#include "mozilla/net/NeckoChild.h"
-
 namespace mozilla {
 namespace net {
 
@@ -129,12 +127,7 @@ nsLoadGroup::~nsLoadGroup()
     if (mRequestContext) {
         uint64_t rcid;
         mRequestContext->GetID(&rcid);
-
-        if (IsNeckoChild() && gNeckoChild) {
-            gNeckoChild->SendRemoveRequestContext(rcid);
-        } else {
-            mRequestContextService->RemoveRequestContext(rcid);
-        }
+        mRequestContextService->RemoveRequestContext(rcid);
     }
 
     LOG(("LOADGROUP [%p]: Destroyed.\n", this));
@@ -272,6 +265,10 @@ nsLoadGroup::Cancel(nsresult status)
             firstError = rv;
 
         NS_RELEASE(request);
+    }
+
+    if (mRequestContext) {
+        Unused << mRequestContext->CancelTailPendingRequests(status);
     }
 
 #if defined(DEBUG)
