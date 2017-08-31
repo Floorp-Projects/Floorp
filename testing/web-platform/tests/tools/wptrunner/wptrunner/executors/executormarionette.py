@@ -180,6 +180,9 @@ class MarionetteProtocol(Protocol):
         while True:
             try:
                 self.marionette.execute_async_script("")
+            except errors.NoSuchWindowException:
+                # The window closed
+                break
             except errors.ScriptTimeoutException:
                 self.logger.debug("Script timed out")
                 pass
@@ -187,7 +190,7 @@ class MarionetteProtocol(Protocol):
                 self.logger.debug("Socket closed")
                 break
             except Exception as e:
-                self.logger.error(traceback.format_exc(e))
+                self.logger.warning(traceback.format_exc(e))
                 break
 
     def on_environment_change(self, old_environment, new_environment):
