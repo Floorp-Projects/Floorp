@@ -462,6 +462,106 @@ add_task(async function sendToDevice_devices() {
   });
 });
 
+add_task(async function sendToDevice_inUrlbar() {
+  // Open a tab that's sendable.
+  await BrowserTestUtils.withNewTab("http://example.com/", async () => {
+    await promiseSyncReady();
+    const sandbox = sinon.sandbox.create();
+    sandbox.stub(gSync, "syncReady").get(() => true);
+    sandbox.stub(Weave.Service.clientsEngine, "lastSync").get(() => Date.now());
+    sandbox.stub(UIState, "get").returns({ status: UIState.STATUS_SIGNED_IN });
+    sandbox.stub(gSync, "isSendableURI").returns(true);
+    sandbox.stub(gSync, "remoteClients").get(() => mockRemoteClients);
+
+    let cleanUp = () => {
+      sandbox.restore();
+    };
+    registerCleanupFunction(cleanUp);
+
+    // Disable the activated-action panel animation when it opens.  Otherwise
+    // it's necessary to wait a moment before trying to click the device menu
+    // item below.
+    BrowserPageActions._disableActivatedActionPanelAnimation = true;
+
+    // Add Send to Device to the urlbar.
+    let action = PageActions.actionForID("sendToDevice");
+    action.shownInUrlbar = true;
+
+    // Click it to open its panel.
+    let urlbarButton = document.getElementById(
+      BrowserPageActions._urlbarButtonNodeIDForActionID(action.id)
+    );
+    Assert.ok(!urlbarButton.disabled);
+    let panelPromise =
+      promisePanelShown(BrowserPageActions._activatedActionPanelID);
+    EventUtils.synthesizeMouseAtCenter(urlbarButton, {});
+    await panelPromise;
+
+    // The devices should be shown in the subview.
+    let expectedItems = [
+      {
+        id: "pageAction-urlbar-sendToDevice-notReady",
+        display: "none",
+        disabled: true,
+      },
+    ];
+    for (let client of mockRemoteClients) {
+      expectedItems.push({
+        attrs: {
+          clientId: client.id,
+          label: client.name,
+          clientType: client.type,
+        },
+      });
+    }
+    expectedItems.push(
+      null,
+      {
+        attrs: {
+          label: "Send to All Devices"
+        }
+      }
+    );
+    checkSendToDeviceItems(expectedItems, true);
+
+    // Get the first device menu item in the panel.
+    let bodyID =
+      BrowserPageActions._panelViewNodeIDForActionID("sendToDevice", true) +
+      "-body";
+    let body = document.getElementById(bodyID);
+    let deviceMenuItem = body.querySelector(".sendtab-target");
+    Assert.notEqual(deviceMenuItem, null);
+
+    // For good measure, wait until it's visible.
+    let dwu = window.QueryInterface(Ci.nsIInterfaceRequestor)
+                    .getInterface(Ci.nsIDOMWindowUtils);
+    await BrowserTestUtils.waitForCondition(() => {
+      let bounds = dwu.getBoundsWithoutFlushing(deviceMenuItem);
+      return bounds.height > 0 && bounds.width > 0;
+    }, "Waiting for first device menu item to appear");
+
+    // Click it, which should cause the panel to close.
+    let hiddenPromise =
+      promisePanelHidden(BrowserPageActions._activatedActionPanelID);
+    EventUtils.synthesizeMouseAtCenter(deviceMenuItem, {});
+    info("Waiting for Send to Device panel to close after clicking a device");
+    await hiddenPromise;
+
+    // And then the "Sent!" notification panel should open and close by itself
+    // after a moment.
+    info("Waiting for the Sent! notification panel to open");
+    await promisePanelShown(BrowserPageActionFeedback.panelNode.id);
+    info("Waiting for the Sent! notification panel to close");
+    await promisePanelHidden(BrowserPageActionFeedback.panelNode.id);
+
+    // Remove Send to Device from the urlbar.
+    action.shownInUrlbar = false;
+    BrowserPageActions._disableActivatedActionPanelAnimation = false;
+
+    cleanUp();
+  });
+});
+
 add_task(async function contextMenu() {
   // Open an actionable page so that the main page action button appears.
   let url = "http://example.com/";
@@ -577,9 +677,11 @@ function promiseSyncReady() {
   });
 }
 
-function checkSendToDeviceItems(expectedItems) {
-  let body =
-    document.getElementById("pageAction-panel-sendToDevice-subview-body");
+function checkSendToDeviceItems(expectedItems, forUrlbar = false) {
+  let bodyID =
+    BrowserPageActions._panelViewNodeIDForActionID("sendToDevice", forUrlbar) +
+    "-body";
+  let body = document.getElementById(bodyID);
   Assert.equal(body.childNodes.length, expectedItems.length);
   for (let i = 0; i < expectedItems.length; i++) {
     let expected = expectedItems[i];
