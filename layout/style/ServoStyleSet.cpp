@@ -1433,7 +1433,13 @@ void
 ServoStyleSet::UpdateStylist()
 {
   MOZ_ASSERT(StylistNeedsUpdate());
-  Element* root = mPresContext->Document()->GetDocumentElement();
+
+  // There's no need to compute invalidations and such for an XBL styleset,
+  // since they are loaded and unloaded synchronously, and they don't have to
+  // deal with dynamic content changes.
+  Element* root =
+    IsMaster() ? mPresContext->Document()->GetDocumentElement() : nullptr;
+
   Servo_StyleSet_FlushStyleSheets(mRawSet.get(), root);
   mStylistState = StylistState::NotDirty;
 }
