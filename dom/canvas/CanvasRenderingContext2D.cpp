@@ -5248,7 +5248,7 @@ CanvasRenderingContext2D::DrawImage(const CanvasImageSource& aImage,
       gl->fTexParameteri(LOCAL_GL_TEXTURE_2D, LOCAL_GL_TEXTURE_MAG_FILTER, LOCAL_GL_LINEAR);
       gl->fTexParameteri(LOCAL_GL_TEXTURE_2D, LOCAL_GL_TEXTURE_MIN_FILTER, LOCAL_GL_LINEAR);
 
-      const gl::OriginPos destOrigin = gl::OriginPos::TopLeft;
+      const auto destOrigin = gl::OriginPos::BottomLeft;
       bool ok = false;
       do {
         const gl::ScopedFramebufferForTexture autoFBForTex(gl, videoTexture);
