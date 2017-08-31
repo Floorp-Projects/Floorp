@@ -198,7 +198,7 @@ UiCompositorControllerChild::Destroy()
       NewRunnableMethod("layers::UiCompositorControllerChild::Destroy",
                         this,
                         &UiCompositorControllerChild::Destroy),
-      nsIThread::DISPATCH_NORMAL);
+      nsIThread::DISPATCH_SYNC);
     return;
   }
 
