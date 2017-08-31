@@ -4377,7 +4377,7 @@ NoteDirtyElement(Element* aElement, uint32_t aBit)
   }
 
   // There is an existing restyle root - walk up the tree from our element,
-  // propagating bits as wel go.
+  // propagating bits as we go.
   const bool reachedDocRoot = !parent || !PropagateBits(parent, aBit, existingRoot);
 
   if (!reachedDocRoot || existingRoot == doc) {
