@@ -4418,6 +4418,7 @@ XREMain::XRE_mainRun()
       rv = GetCurrentProfile(mProfileSvc, mProfD, getter_AddRefs(newProfile));
       if (NS_SUCCEEDED(rv)) {
         newProfile->SetName(gResetOldProfileName);
+        mProfileName.Assign(gResetOldProfileName);
         // Set the new profile as the default after we're done cleaning up the old profile,
         // iff that profile was already the default
         if (profileWasSelected) {
