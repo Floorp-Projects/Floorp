@@ -117,7 +117,7 @@ add_task(async function all_saved_fields_less_than_threshold() {
   await expectPopup();
   checkMenuEntries(["foo@mozilla.com"], false);
 
-  await cleanUpAddress();
+  await cleanUpAddresses();
 });
 
 // Form with both history and address storage.
