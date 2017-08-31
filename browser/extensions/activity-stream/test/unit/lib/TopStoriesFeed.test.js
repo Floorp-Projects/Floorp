@@ -8,6 +8,7 @@ describe("Top Stories Feed", () => {
   let TopStoriesFeed;
   let STORIES_UPDATE_TIME;
   let TOPICS_UPDATE_TIME;
+  let DOMAIN_AFFINITY_UPDATE_TIME;
   let SECTION_ID;
   let FEED_PREF;
   let instance;
@@ -32,7 +33,9 @@ describe("Top Stories Feed", () => {
 
     globals = new GlobalOverrider();
     globals.set("Services", {locale: {getRequestedLocale: () => "en-CA"}});
-
+    globals.set("PlacesUtils", {history: {}});
+    clock = sinon.useFakeTimers();
+    shortURLStub = sinon.stub().callsFake(site => site.url);
     sectionsManagerStub = {
       onceInitialized: sinon.stub().callsFake(callback => callback()),
       enableSection: sinon.spy(),
@@ -41,19 +44,19 @@ describe("Top Stories Feed", () => {
       sections: new Map([["topstories", {options: FAKE_OPTIONS}]])
     };
 
-    clock = sinon.useFakeTimers();
-
-    shortURLStub = sinon.stub().callsFake(site => site.url);
-
-    ({TopStoriesFeed, STORIES_UPDATE_TIME, TOPICS_UPDATE_TIME, SECTION_ID, FEED_PREF} = injector({
+    class FakeUserDomainAffinityProvider {}
+    ({TopStoriesFeed, STORIES_UPDATE_TIME, TOPICS_UPDATE_TIME, DOMAIN_AFFINITY_UPDATE_TIME, SECTION_ID, FEED_PREF} = injector({
       "lib/ActivityStreamPrefs.jsm": {Prefs: FakePrefs},
       "lib/ShortURL.jsm": {shortURL: shortURLStub},
+      "lib/UserDomainAffinityProvider.jsm": {UserDomainAffinityProvider: FakeUserDomainAffinityProvider},
       "lib/SectionsManager.jsm": {SectionsManager: sectionsManagerStub}
     }));
+
     instance = new TopStoriesFeed();
     instance.store = {getState() { return {}; }, dispatch: sinon.spy()};
     instance.storiesLastUpdated = 0;
     instance.topicsLastUpdated = 0;
+    instance.affinityProvider = {calculateItemRelevanceScore: s => 1};
   });
   afterEach(() => {
     globals.restore();
@@ -152,8 +155,8 @@ describe("Top Stories Feed", () => {
         "image": "image-url",
         "referrer": "referrer",
         "url": "rec-url",
-        "eTLD": "",
-        "hostname": "rec-url"
+        "hostname": "rec-url",
+        "score": 1
       }];
 
       instance.stories_endpoint = "stories-endpoint";
@@ -258,6 +261,104 @@ describe("Top Stories Feed", () => {
       assert.notCalled(instance.store.dispatch);
       assert.called(Components.utils.reportError);
     });
+    it("should initialize user domain affinity provider if personalization is preffed on", async () => {
+      const response = `{
+        "recommendations":  [{
+          "id" : "1",
+          "title": "title",
+          "excerpt": "description",
+          "image_src": "image-url",
+          "url": "rec-url",
+          "published_timestamp" : "123"}
+        ],
+        "settings": {"timeSegments": {}, "domainAffinityParameterSets": {}}
+      }`;
+
+      instance.affinityProvider = undefined;
+
+      instance.stories_endpoint = "stories-endpoint";
+      let fetchStub = globals.sandbox.stub();
+      globals.set("fetch", fetchStub);
+      fetchStub.resolves({ok: true, status: 200, text: () => response});
+
+      await instance.fetchStories();
+      assert.isUndefined(instance.affinityProvider);
+
+      instance.personalized = true;
+      await instance.fetchStories();
+      assert.isDefined(instance.affinityProvider);
+    });
+    it("should sort stories if personalization is preffed on", async () => {
+      const response = `{
+        "recommendations":  [{"id" : "1"}, {"id" : "2"}],
+        "settings": {"timeSegments": {}, "domainAffinityParameterSets": {}}
+      }`;
+
+      instance.personalized = true;
+      instance.compareScore = sinon.spy();
+      instance.stories_endpoint = "stories-endpoint";
+
+      let fetchStub = globals.sandbox.stub();
+      globals.set("fetch", fetchStub);
+      globals.set("NewTabUtils", {blockedLinks: {isBlocked: globals.sandbox.spy()}});
+      fetchStub.resolves({ok: true, status: 200, text: () => response});
+
+      await instance.fetchStories();
+      assert.calledOnce(instance.compareScore);
+    });
+    it("should not sort stories if personalization is preffed off", async () => {
+      const response = `{
+        "recommendations":  [{"id" : "1"}, {"id" : "2"}],
+        "settings": {"timeSegments": {}, "domainAffinityParameterSets": {}}
+      }`;
+
+      instance.personalized = false;
+      instance.compareScore = sinon.spy();
+      instance.stories_endpoint = "stories-endpoint";
+
+      let fetchStub = globals.sandbox.stub();
+      globals.set("fetch", fetchStub);
+      globals.set("NewTabUtils", {blockedLinks: {isBlocked: globals.sandbox.spy()}});
+      fetchStub.resolves({ok: true, status: 200, text: () => response});
+
+      await instance.fetchStories();
+      assert.notCalled(instance.compareScore);
+    });
+    it("should sort items based on relevance score", () => {
+      let items = [{"score": 0.1}, {"score": 0.2}];
+      items = items.sort(instance.compareScore);
+      assert.deepEqual(items, [{"score": 0.2}, {"score": 0.1}]);
+    });
+    it("should rotate items if personalization is preffed on", () => {
+      let items = [{"guid": "g1"}, {"guid": "g2"}, {"guid": "g3"}, {"guid": "g4"}];
+
+      instance.personalized = true;
+
+      let rotated = instance.rotate(items);
+      assert.deepEqual({"g1": 0}, instance.topItem);
+      assert.deepEqual(items, rotated);
+
+      rotated = instance.rotate(items);
+      assert.deepEqual({"g1": 1}, instance.topItem);
+      assert.deepEqual(items, rotated);
+
+      rotated = instance.rotate(items);
+      assert.deepEqual({"g2": 0}, instance.topItem);
+      assert.deepEqual([{"guid": "g2"}, {"guid": "g3"}, {"guid": "g4"}, {"guid": "g1"}], rotated);
+
+      rotated = instance.rotate(items);
+      assert.deepEqual({"g2": 1}, instance.topItem);
+      assert.deepEqual([{"guid": "g2"}, {"guid": "g3"}, {"guid": "g4"}, {"guid": "g1"}], rotated);
+    });
+    it("should note rotate items if personalization is preffed off", () => {
+      let items = [{"guid": "g1"}, {"guid": "g2"}, {"guid": "g3"}, {"guid": "g4"}];
+
+      instance.personalized = false;
+
+      instance.topItem = {"g1": 1};
+      const rotated = instance.rotate(items);
+      assert.deepEqual(items, rotated);
+    });
   });
   describe("#update", () => {
     it("should fetch stories after update interval", () => {
@@ -279,6 +380,19 @@ describe("Top Stories Feed", () => {
       clock.tick(TOPICS_UPDATE_TIME);
       instance.onAction({type: at.SYSTEM_TICK});
       assert.calledOnce(instance.fetchTopics);
+    });
+    it("should update domain affinities after update interval", () => {
+      instance.init();
+      instance.personalized = true;
+      const fakeSettings = {timeSegments: {}, parameterSets: {}};
+      instance.affinityProvider = {status: "not_changed"};
+
+      instance.updateDomainAffinities(fakeSettings);
+      assert.equal("not_changed", instance.affinityProvider.status);
+
+      clock.tick(DOMAIN_AFFINITY_UPDATE_TIME);
+      instance.updateDomainAffinities(fakeSettings);
+      assert.isUndefined(instance.affinityProvider.status);
     });
   });
 });

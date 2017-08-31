@@ -350,7 +350,7 @@ describe("Top Sites Feed", () => {
       assert.calledOnce(feed.store.dispatch);
       assert.calledWith(feed.store.dispatch, ac.BroadcastToContent({
         type: at.PINNED_SITES_UPDATED,
-        data: [site1]
+        data: [Object.assign({}, site1, {hostname: "foo.com"})]
       }));
     });
     it("should call unpin with correct parameters on TOP_SITES_UNPIN", () => {
@@ -380,10 +380,82 @@ describe("Top Sites Feed", () => {
       await feed.onAction({type: at.INIT});
       assert.calledOnce(feed.refresh);
     });
-    it("should call refresh on BLOCK_URL action", async () => {
+    it("should call refresh without a target on PLACES_LINK_BLOCKED action", async () => {
       sinon.stub(feed, "refresh");
-      await feed.onAction({type: at.BLOCK_URL});
+      await feed.onAction({type: at.PLACES_LINK_BLOCKED});
       assert.calledOnce(feed.refresh);
+      assert.equal(feed.refresh.firstCall.args[0], null);
+    });
+    it("should call refresh without a target on PLACES_LINK_DELETED action", async () => {
+      sinon.stub(feed, "refresh");
+      await feed.onAction({type: at.PLACES_LINK_DELETED});
+      assert.calledOnce(feed.refresh);
+      assert.equal(feed.refresh.firstCall.args[0], null);
+    });
+    it("should call pin with correct args on TOP_SITES_ADD", () => {
+      const addAction = {
+        type: at.TOP_SITES_ADD,
+        data: {site: {url: "foo.bar", label: "foo"}}
+      };
+      feed.onAction(addAction);
+      assert.calledOnce(fakeNewTabUtils.pinnedLinks.pin);
+      assert.calledWith(fakeNewTabUtils.pinnedLinks.pin, addAction.data.site, 0);
+    });
+  });
+  describe("#add", () => {
+    it("should pin site in first slot of empty pinned list", () => {
+      const site = {url: "foo.bar", label: "foo"};
+      feed.add({data: {site}});
+      assert.calledOnce(fakeNewTabUtils.pinnedLinks.pin);
+      assert.calledWith(fakeNewTabUtils.pinnedLinks.pin, site, 0);
+    });
+    it("should pin site in first slot of pinned list with empty first slot", () => {
+      fakeNewTabUtils.pinnedLinks.links = [null, {url: "example.com"}];
+      const site = {url: "foo.bar", label: "foo"};
+      feed.add({data: {site}});
+      assert.calledOnce(fakeNewTabUtils.pinnedLinks.pin);
+      assert.calledWith(fakeNewTabUtils.pinnedLinks.pin, site, 0);
+    });
+    it("should move a pinned site in first slot to the next slot: part 1", () => {
+      const site1 = {url: "example.com"};
+      fakeNewTabUtils.pinnedLinks.links = [site1];
+      const site = {url: "foo.bar", label: "foo"};
+      feed.add({data: {site}});
+      assert.calledTwice(fakeNewTabUtils.pinnedLinks.pin);
+      assert.calledWith(fakeNewTabUtils.pinnedLinks.pin, site, 0);
+      assert.calledWith(fakeNewTabUtils.pinnedLinks.pin, site1, 1);
+    });
+    it("should move a pinned site in first slot to the next slot: part 2", () => {
+      const site1 = {url: "example.com"};
+      const site2 = {url: "example.org"};
+      fakeNewTabUtils.pinnedLinks.links = [site1, null, site2];
+      const site = {url: "foo.bar", label: "foo"};
+      feed.add({data: {site}});
+      assert.calledTwice(fakeNewTabUtils.pinnedLinks.pin);
+      assert.calledWith(fakeNewTabUtils.pinnedLinks.pin, site, 0);
+      assert.calledWith(fakeNewTabUtils.pinnedLinks.pin, site1, 1);
+    });
+  });
+  describe("#pin", () => {
+    it("should pin site in specified slot empty pinned list", () => {
+      const site = {url: "foo.bar", label: "foo"};
+      feed.pin({data: {index: 2, site}});
+      assert.calledOnce(fakeNewTabUtils.pinnedLinks.pin);
+      assert.calledWith(fakeNewTabUtils.pinnedLinks.pin, site, 2);
+    });
+    it("should pin site in specified slot of pinned list that is free", () => {
+      fakeNewTabUtils.pinnedLinks.links = [null, {url: "example.com"}];
+      const site = {url: "foo.bar", label: "foo"};
+      feed.pin({data: {index: 2, site}});
+      assert.calledOnce(fakeNewTabUtils.pinnedLinks.pin);
+      assert.calledWith(fakeNewTabUtils.pinnedLinks.pin, site, 2);
+    });
+    it("should NOT move a pinned site in specified slot to the next slot", () => {
+      fakeNewTabUtils.pinnedLinks.links = [null, null, {url: "example.com"}];
+      const site = {url: "foo.bar", label: "foo"};
+      feed.pin({data: {index: 2, site}});
+      assert.calledOnce(fakeNewTabUtils.pinnedLinks.pin);
+      assert.calledWith(fakeNewTabUtils.pinnedLinks.pin, site, 2);
     });
   });
 });

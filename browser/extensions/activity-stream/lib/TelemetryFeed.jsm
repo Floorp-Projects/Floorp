@@ -12,16 +12,16 @@ Cu.import("resource://gre/modules/XPCOMUtils.jsm");
 const {actionTypes: at, actionUtils: au} = Cu.import("resource://activity-stream/common/Actions.jsm", {});
 const {Prefs} = Cu.import("resource://activity-stream/lib/ActivityStreamPrefs.jsm", {});
 
-XPCOMUtils.defineLazyModuleGetter(this, "ClientID",
-  "resource://gre/modules/ClientID.jsm");
 XPCOMUtils.defineLazyModuleGetter(this, "perfService",
   "resource://activity-stream/common/PerfService.jsm");
-XPCOMUtils.defineLazyModuleGetter(this, "TelemetrySender",
-  "resource://activity-stream/lib/TelemetrySender.jsm");
+XPCOMUtils.defineLazyModuleGetter(this, "PingCentre",
+  "resource:///modules/PingCentre.jsm");
 
 XPCOMUtils.defineLazyServiceGetter(this, "gUUIDGenerator",
   "@mozilla.org/uuid-generator;1",
   "nsIUUIDGenerator");
+
+const ACTIVITY_STREAM_ENDPOINT_PREF = "browser.newtabpage.activity-stream.telemetry.ping.endpoint";
 
 // This is a mapping table between the user preferences and its encoding code
 const USER_PREFS_ENCODING = {
@@ -34,6 +34,7 @@ const IMPRESSION_STATS_RESET_TIME = 60 * 60 * 1000; // 60 minutes
 const PREF_IMPRESSION_STATS_CLICKED = "impressionStats.clicked";
 const PREF_IMPRESSION_STATS_BLOCKED = "impressionStats.blocked";
 const PREF_IMPRESSION_STATS_POCKETED = "impressionStats.pocketed";
+const TELEMETRY_PREF = "telemetry";
 
 /**
  * A pref persistent GUID set
@@ -101,6 +102,10 @@ this.TelemetryFeed = class TelemetryFeed {
       blocked: new PersistentGuidSet(this._prefs, PREF_IMPRESSION_STATS_BLOCKED),
       pocketed: new PersistentGuidSet(this._prefs, PREF_IMPRESSION_STATS_POCKETED)
     };
+
+    this.telemetryEnabled = this._prefs.get(TELEMETRY_PREF);
+    this._onTelemetryPrefChange = this._onTelemetryPrefChange.bind(this);
+    this._prefs.observe(TELEMETRY_PREF, this._onTelemetryPrefChange);
   }
 
   init() {
@@ -146,20 +151,22 @@ this.TelemetryFeed = class TelemetryFeed {
     this.saveSessionPerfData(port, data_to_save);
   }
 
-  /**
-   * Lazily get the Telemetry id promise
-   */
-  get telemetryClientId() {
-    Object.defineProperty(this, "telemetryClientId", {value: ClientID.getClientID()});
-    return this.telemetryClientId;
+  _onTelemetryPrefChange(prefVal) {
+    this.telemetryEnabled = prefVal;
   }
 
   /**
-   * Lazily initialize TelemetrySender to send pings
+   * Lazily initialize PingCentre to send pings
    */
-  get telemetrySender() {
-    Object.defineProperty(this, "telemetrySender", {value: new TelemetrySender()});
-    return this.telemetrySender;
+  get pingCentre() {
+    Object.defineProperty(this, "pingCentre",
+      {
+        value: new PingCentre({
+          topic: "activity-stream",
+          overrideEndpointPref: ACTIVITY_STREAM_ENDPOINT_PREF
+        })
+      });
+    return this.pingCentre;
   }
 
   /**
@@ -222,10 +229,9 @@ this.TelemetryFeed = class TelemetryFeed {
    * @param  {string} id The portID of the session, if a session is relevant (optional)
    * @return {obj}    A telemetry ping
    */
-  async createPing(portID) {
+  createPing(portID) {
     const appInfo = this.store.getState().App;
     const ping = {
-      client_id: await this.telemetryClientId,
       addon_version: appInfo.version,
       locale: appInfo.locale,
       user_prefs: this.userPreferences
@@ -251,9 +257,9 @@ this.TelemetryFeed = class TelemetryFeed {
    *                     all the user specific IDs with "n/a" in the ping.
    * @return {obj}    A telemetry ping
    */
-  async createImpressionStats(action) {
+  createImpressionStats(action) {
     let ping = Object.assign(
-      await this.createPing(au.getPortIdOfSender(action)),
+      this.createPing(au.getPortIdOfSender(action)),
       action.data,
       {action: "activity_stream_impression_stats"}
     );
@@ -267,34 +273,34 @@ this.TelemetryFeed = class TelemetryFeed {
     return ping;
   }
 
-  async createUserEvent(action) {
+  createUserEvent(action) {
     return Object.assign(
-      await this.createPing(au.getPortIdOfSender(action)),
+      this.createPing(au.getPortIdOfSender(action)),
       action.data,
       {action: "activity_stream_user_event"}
     );
   }
 
-  async createUndesiredEvent(action) {
+  createUndesiredEvent(action) {
     return Object.assign(
-      await this.createPing(au.getPortIdOfSender(action)),
+      this.createPing(au.getPortIdOfSender(action)),
       {value: 0}, // Default value
       action.data,
       {action: "activity_stream_undesired_event"}
     );
   }
 
-  async createPerformanceEvent(action) {
+  createPerformanceEvent(action) {
     return Object.assign(
-      await this.createPing(),
+      this.createPing(),
       action.data,
       {action: "activity_stream_performance_event"}
     );
   }
 
-  async createSessionEndEvent(session) {
+  createSessionEndEvent(session) {
     return Object.assign(
-      await this.createPing(),
+      this.createPing(),
       {
         session_id: session.session_id,
         page: session.page,
@@ -305,8 +311,10 @@ this.TelemetryFeed = class TelemetryFeed {
     );
   }
 
-  async sendEvent(eventPromise) {
-    this.telemetrySender.sendPing(await eventPromise);
+  async sendEvent(event_object) {
+    if (this.telemetryEnabled) {
+      this.pingCentre.sendPing(event_object);
+    }
   }
 
   handleImpressionStats(action) {
@@ -408,8 +416,14 @@ this.TelemetryFeed = class TelemetryFeed {
       "browser-open-newtab-start");
 
     // Only uninit if the getter has initialized it
-    if (Object.prototype.hasOwnProperty.call(this, "telemetrySender")) {
-      this.telemetrySender.uninit();
+    if (Object.prototype.hasOwnProperty.call(this, "pingCentre")) {
+      this.pingCentre.uninit();
+    }
+
+    try {
+      this._prefs.ignore(TELEMETRY_PREF, this._onTelemetryPrefChange);
+    } catch (e) {
+      Cu.reportError(e);
     }
     // TODO: Send any unfinished sessions
   }
@@ -420,6 +434,7 @@ this.EXPORTED_SYMBOLS = [
   "PersistentGuidSet",
   "USER_PREFS_ENCODING",
   "IMPRESSION_STATS_RESET_TIME",
+  "TELEMETRY_PREF",
   "PREF_IMPRESSION_STATS_CLICKED",
   "PREF_IMPRESSION_STATS_BLOCKED",
   "PREF_IMPRESSION_STATS_POCKETED"
