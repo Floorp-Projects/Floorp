@@ -192,13 +192,13 @@ nsIContent::GetFlattenedTreeParentNodeInternal(FlattenedParentType aType) const
       // we are trying to eagerly restyle document level NAC in
       // nsCSSFrameConstructor::GetAnonymousContent before the root
       // element's frame has been constructed.
-      return nullptr;
+      return OwnerDoc();
     }
     nsIAnonymousContentCreator* creator = do_QueryFrame(parentFrame);
     if (!creator) {
       // If the root element does have a frame, but does not implement
       // nsIAnonymousContentCreator, then this must be document level NAC.
-      return nullptr;
+      return OwnerDoc();
     }
     AutoTArray<nsIContent*, 8> elements;
     creator->AppendAnonymousContentTo(elements, 0);
@@ -206,7 +206,7 @@ nsIContent::GetFlattenedTreeParentNodeInternal(FlattenedParentType aType) const
       // If the root element does have a frame, and also does implement
       // nsIAnonymousContentCreator, but didn't create this node, then
       // it must be document level NAC.
-      return nullptr;
+      return OwnerDoc();
     }
   }
 
