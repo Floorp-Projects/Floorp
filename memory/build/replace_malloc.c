@@ -224,15 +224,16 @@ MOZ_MEMORY_API __memalign_hook_type __memalign_hook = memalign_impl;
 static int
 default_posix_memalign(void** ptr, size_t alignment, size_t size)
 {
-  if (size == 0) {
-    *ptr = NULL;
-    return 0;
-  }
+  void *result;
   /* alignment must be a power of two and a multiple of sizeof(void *) */
-  if (((alignment - 1) & alignment) != 0 || (alignment % sizeof(void *)))
+  if (((alignment - 1) & alignment) != 0 || (alignment < sizeof(void *)))
     return EINVAL;
-  *ptr = replace_malloc_table.memalign(alignment, size);
-  return *ptr ? 0 : ENOMEM;
+  result = replace_malloc_table.memalign(alignment, size);
+  if (!result) {
+    return ENOMEM;
+  }
+  *ptr = result;
+  return 0;
 }
 
 static void*
