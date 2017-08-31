@@ -3,10 +3,10 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
 use api::{BuiltDisplayList, ColorF, ComplexClipRegion, DeviceIntRect, DeviceIntSize, DevicePoint};
-use api::{ExtendMode, FontKey, FontRenderMode, GlyphInstance, GlyphOptions, GradientStop};
+use api::{ExtendMode, FontRenderMode, GlyphInstance, GradientStop};
 use api::{ImageKey, ImageRendering, ItemRange, LayerPoint, LayerRect, LayerSize, TextShadow};
 use api::{GlyphKey, LayerToWorldTransform, TileOffset, YuvColorSpace, YuvFormat};
-use api::{device_length, FontInstance, LayerVector2D, LineOrientation, LineStyle, SubpixelDirection};
+use api::{device_length, FontInstance, LayerVector2D, LineOrientation, LineStyle};
 use app_units::Au;
 use border::BorderCornerInstance;
 use euclid::{Size2D};
@@ -504,21 +504,17 @@ pub struct TextShadowPrimitiveCpu {
 
 #[derive(Debug, Clone)]
 pub struct TextRunPrimitiveCpu {
-    pub font_key: FontKey,
+    pub font: FontInstance,
     pub offset: LayerVector2D,
-    pub logical_font_size: Au,
     pub glyph_range: ItemRange<GlyphInstance>,
     pub glyph_count: usize,
     pub glyph_keys: Vec<GlyphKey>,
     pub glyph_gpu_blocks: Vec<GpuBlockData>,
-    pub glyph_options: Option<GlyphOptions>,
-    pub normal_render_mode: FontRenderMode,
     pub shadow_render_mode: FontRenderMode,
     pub color: ColorF,
-    pub subpx_dir: SubpixelDirection,
 }
 
-#[derive(Debug, Copy, Clone)]
+#[derive(Debug, Copy, Clone, Eq, PartialEq)]
 pub enum TextRunMode {
     Normal,
     Shadow,
@@ -531,18 +527,18 @@ impl TextRunPrimitiveCpu {
                           display_list: &BuiltDisplayList,
                           run_mode: TextRunMode,
                           gpu_cache: &mut GpuCache) {
-        let font_size_dp = self.logical_font_size.scale_by(device_pixel_ratio);
-        let render_mode = match run_mode {
-            TextRunMode::Normal => self.normal_render_mode,
-            TextRunMode::Shadow => self.shadow_render_mode,
-        };
+        let mut font = self.font.clone();
+        font.size = font.size.scale_by(device_pixel_ratio);
+        match run_mode {
+            TextRunMode::Shadow => {
+                font.render_mode = self.shadow_render_mode;
+            }
+            TextRunMode::Normal => {}
+        }
 
-        let font = FontInstance::new(self.font_key,
-                                     font_size_dp,
-                                     self.color,
-                                     render_mode,
-                                     self.glyph_options,
-                                     self.subpx_dir);
+        if run_mode == TextRunMode::Shadow {
+            font.render_mode = self.shadow_render_mode;
+        }
 
         // Cache the glyph positions, if not in the cache already.
         // TODO(gw): In the future, remove `glyph_instances`
@@ -590,7 +586,7 @@ impl TextRunPrimitiveCpu {
         request.push(self.color);
         request.push([self.offset.x,
                       self.offset.y,
-                      self.subpx_dir as u32 as f32,
+                      self.font.subpx_dir as u32 as f32,
                       0.0]);
         request.extend_from_slice(&self.glyph_gpu_blocks);
 
