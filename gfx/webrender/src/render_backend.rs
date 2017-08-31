@@ -2,14 +2,18 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
+#[cfg(feature = "debugger")]
+use debug_server;
 use frame::Frame;
 use frame_builder::FrameBuilderConfig;
 use gpu_cache::GpuCache;
-use internal_types::{FastHashMap, ResultMsg, RendererFrame};
+use internal_types::{DebugOutput, FastHashMap, ResultMsg, RendererFrame};
 use profiler::{BackendProfileCounters, ResourceProfileCounters};
 use record::ApiRecordingReceiver;
 use resource_cache::ResourceCache;
 use scene::Scene;
+#[cfg(feature = "debugger")]
+use serde_json;
 use std::sync::{Arc, Mutex};
 use std::sync::mpsc::Sender;
 use std::u32;
@@ -19,9 +23,11 @@ use thread_profiler::register_thread_with_profiler;
 use rayon::ThreadPool;
 use api::channel::{MsgReceiver, PayloadReceiver, PayloadReceiverHelperMethods};
 use api::channel::{PayloadSender, PayloadSenderHelperMethods};
-use api::{ApiMsg, BlobImageRenderer, BuiltDisplayList, DeviceIntPoint};
+use api::{ApiMsg, DebugCommand, BlobImageRenderer, BuiltDisplayList, DeviceIntPoint};
 use api::{DeviceUintPoint, DeviceUintRect, DeviceUintSize, DocumentId, DocumentMsg};
 use api::{IdNamespace, LayerPoint, RenderNotifier};
+#[cfg(feature = "debugger")]
+use api::{BuiltDisplayListIter, SpecificDisplayItem};
 
 struct Document {
     scene: Scene,
@@ -275,6 +281,12 @@ impl RenderBackend {
                     DocumentOp::Nop
                 }
             }
+            DocumentMsg::RemovePipeline(pipeline_id) => {
+                profile_scope!("RemovePipeline");
+
+                doc.scene.remove_pipeline(pipeline_id);
+                DocumentOp::Nop
+            }
             DocumentMsg::Scroll(delta, cursor, move_phase) => {
                 profile_scope!("Scroll");
                 let _timer = profile_counters.total_time.timer();
@@ -462,7 +474,15 @@ impl RenderBackend {
                     self.notifier.lock().unwrap().as_mut().unwrap().new_frame_ready();
                 }
                 ApiMsg::DebugCommand(option) => {
-                    let msg = ResultMsg::DebugCommand(option);
+                    let msg = match option {
+                        DebugCommand::FetchDocuments => {
+                            let json = self.get_docs_for_debugger();
+                            ResultMsg::DebugOutput(DebugOutput::FetchDocuments(json))
+                        }
+                        _ => {
+                            ResultMsg::DebugCommand(option)
+                        }
+                    };
                     self.result_tx.send(msg).unwrap();
                     let notifier = self.notifier.lock();
                     notifier.unwrap()
@@ -513,5 +533,140 @@ impl RenderBackend {
         //           cleaner way to do this, or use the OnceMutex on crates.io?
         let mut notifier = self.notifier.lock();
         notifier.as_mut().unwrap().as_mut().unwrap().new_scroll_frame_ready(composite_needed);
+    }
+
+
+    #[cfg(not(feature = "debugger"))]
+    fn get_docs_for_debugger(&self) -> String {
+        String::new()
+    }
+
+    #[cfg(feature = "debugger")]
+    fn traverse_items<'a>(&self,
+                          traversal: &mut BuiltDisplayListIter<'a>,
+                          node: &mut debug_server::TreeNode) {
+        loop {
+            let subtraversal = {
+                let item = match traversal.next() {
+                    Some(item) => item,
+                    None => break,
+                };
+
+                match *item.item() {
+                    display_item @ SpecificDisplayItem::PushStackingContext(..) => {
+                        let mut subtraversal = item.sub_iter();
+                        let mut child_node = debug_server::TreeNode::new(&display_item.debug_string());
+                        self.traverse_items(&mut subtraversal, &mut child_node);
+                        node.add_child(child_node);
+                        Some(subtraversal)
+                    }
+                    SpecificDisplayItem::PopStackingContext => {
+                        return;
+                    }
+                    display_item => {
+                        node.add_item(&display_item.debug_string());
+                        None
+                    }
+                }
+            };
+
+            // If flatten_item created a sub-traversal, we need `traversal` to have the
+            // same state as the completed subtraversal, so we reinitialize it here.
+            if let Some(subtraversal) = subtraversal {
+                *traversal = subtraversal;
+            }
+        }
+    }
+
+    #[cfg(feature = "debugger")]
+    fn get_docs_for_debugger(&self) -> String {
+        let mut docs = debug_server::DocumentList::new();
+
+        for (_, doc) in &self.documents {
+            let mut debug_doc = debug_server::TreeNode::new("document");
+
+            for (_, display_list) in &doc.scene.display_lists {
+                let mut debug_dl = debug_server::TreeNode::new("display_list");
+                self.traverse_items(&mut display_list.iter(), &mut debug_dl);
+                debug_doc.add_child(debug_dl);
+            }
+
+            docs.add(debug_doc);
+        }
+
+        serde_json::to_string(&docs).unwrap()
+    }
+}
+
+#[cfg(feature = "debugger")]
+trait ToDebugString {
+    fn debug_string(&self) -> String;
+}
+
+#[cfg(feature = "debugger")]
+impl ToDebugString for SpecificDisplayItem {
+    fn debug_string(&self) -> String {
+        match *self {
+            SpecificDisplayItem::Image(..) => {
+                String::from("image")
+            }
+            SpecificDisplayItem::YuvImage(..) => {
+                String::from("yuv_image")
+            }
+            SpecificDisplayItem::Text(..) => {
+                String::from("text")
+            }
+            SpecificDisplayItem::Rectangle(..) => {
+                String::from("rectangle")
+            }
+            SpecificDisplayItem::Line(..) => {
+                String::from("line")
+            }
+            SpecificDisplayItem::Gradient(..) => {
+                String::from("gradient")
+            }
+            SpecificDisplayItem::RadialGradient(..) => {
+                String::from("radial_gradient")
+            }
+            SpecificDisplayItem::BoxShadow(..) => {
+                String::from("box_shadow")
+            }
+            SpecificDisplayItem::Border(..) => {
+                String::from("border")
+            }
+            SpecificDisplayItem::PushStackingContext(..) => {
+                String::from("push_stacking_context")
+            }
+            SpecificDisplayItem::Iframe(..) => {
+                String::from("iframe")
+            }
+            SpecificDisplayItem::Clip(..) => {
+                String::from("clip")
+            }
+            SpecificDisplayItem::ScrollFrame(..) => {
+                String::from("scroll_frame")
+            }
+            SpecificDisplayItem::StickyFrame(..) => {
+                String::from("sticky_frame")
+            }
+            SpecificDisplayItem::PushNestedDisplayList => {
+                String::from("push_nested_display_list")
+            }
+            SpecificDisplayItem::PopNestedDisplayList => {
+                String::from("pop_nested_display_list")
+            }
+            SpecificDisplayItem::SetGradientStops => {
+                String::from("set_gradient_stops")
+            }
+            SpecificDisplayItem::PopStackingContext => {
+                String::from("pop_stacking_context")
+            }
+            SpecificDisplayItem::PushTextShadow(..) => {
+                String::from("push_text_shadow")
+            }
+            SpecificDisplayItem::PopTextShadow => {
+                String::from("pop_text_shadow")
+            }
+        }
     }
 }

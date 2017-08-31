@@ -17,7 +17,7 @@ use api::DebugCommand;
 use debug_colors;
 use debug_render::DebugRenderer;
 #[cfg(feature = "debugger")]
-use debug_server::{self, DebugMsg, DebugServer};
+use debug_server::{self, DebugServer};
 use device::{DepthFunction, Device, FrameId, Program, Texture, VertexDescriptor, GpuMarker, GpuProfiler, PBOId};
 use device::{GpuTimer, TextureFilter, VAO, VertexUsageHint, FileWatcherHandler, TextureTarget, ShaderError};
 use device::{ExternalTexture, get_gl_format_bgra, TextureSlot, VertexAttribute, VertexAttributeKind};
@@ -26,7 +26,7 @@ use frame_builder::FrameBuilderConfig;
 use gleam::gl;
 use gpu_cache::{GpuBlockData, GpuCacheUpdate, GpuCacheUpdateList};
 use internal_types::{FastHashMap, CacheTextureId, RendererFrame, ResultMsg, TextureUpdateOp};
-use internal_types::{TextureUpdateList, RenderTargetMode, TextureUpdateSource};
+use internal_types::{DebugOutput, TextureUpdateList, RenderTargetMode, TextureUpdateSource};
 use internal_types::{BatchTextures, ORTHO_NEAR_PLANE, ORTHO_FAR_PLANE, SourceTexture};
 use profiler::{Profiler, BackendProfileCounters};
 use profiler::{GpuProfileTag, RendererProfileTimers, RendererProfileCounters};
@@ -1587,6 +1587,13 @@ impl Renderer {
                 ResultMsg::RefreshShader(path) => {
                     self.pending_shader_updates.push(path);
                 }
+                ResultMsg::DebugOutput(output) => {
+                    match output {
+                        DebugOutput::FetchDocuments(string) => {
+                            self.debug_server.send(string);
+                        }
+                    }
+                }
                 ResultMsg::DebugCommand(command) => {
                     self.handle_debug_command(command);
                 }
@@ -1595,72 +1602,66 @@ impl Renderer {
     }
 
     #[cfg(not(feature = "debugger"))]
-    fn update_debug_server(&self) {
+    fn get_passes_for_debugger(&self) -> String {
         // Avoid unused param warning.
         let _ = &self.debug_server;
+        String::new()
     }
 
     #[cfg(feature = "debugger")]
-    fn update_debug_server(&self) {
-        while let Ok(msg) = self.debug_server.debug_rx.try_recv() {
-            match msg {
-                DebugMsg::FetchPasses(sender) => {
-                    let mut debug_passes = debug_server::PassList::new();
+    fn get_passes_for_debugger(&self) -> String {
+        let mut debug_passes = debug_server::PassList::new();
 
-                    if let Some(frame) = self.current_frame.as_ref().and_then(|frame| frame.frame.as_ref()) {
-                        for pass in &frame.passes {
-                            let mut debug_pass = debug_server::Pass::new();
+        if let Some(frame) = self.current_frame.as_ref().and_then(|frame| frame.frame.as_ref()) {
+            for pass in &frame.passes {
+                let mut debug_pass = debug_server::Pass::new();
 
-                            for target in &pass.alpha_targets.targets {
-                                let mut debug_target = debug_server::Target::new("A8");
+                for target in &pass.alpha_targets.targets {
+                    let mut debug_target = debug_server::Target::new("A8");
 
-                                debug_target.add(debug_server::BatchKind::Clip, "Clear", target.clip_batcher.border_clears.len());
-                                debug_target.add(debug_server::BatchKind::Clip, "Borders", target.clip_batcher.borders.len());
-                                debug_target.add(debug_server::BatchKind::Clip, "Rectangles", target.clip_batcher.rectangles.len());
-                                for (_, items) in target.clip_batcher.images.iter() {
-                                    debug_target.add(debug_server::BatchKind::Clip, "Image mask", items.len());
-                                }
+                    debug_target.add(debug_server::BatchKind::Clip, "Clear", target.clip_batcher.border_clears.len());
+                    debug_target.add(debug_server::BatchKind::Clip, "Borders", target.clip_batcher.borders.len());
+                    debug_target.add(debug_server::BatchKind::Clip, "Rectangles", target.clip_batcher.rectangles.len());
+                    for (_, items) in target.clip_batcher.images.iter() {
+                        debug_target.add(debug_server::BatchKind::Clip, "Image mask", items.len());
+                    }
+                    debug_target.add(debug_server::BatchKind::Cache, "Box Shadow", target.box_shadow_cache_prims.len());
 
-                                debug_pass.add(debug_target);
-                            }
+                    debug_pass.add(debug_target);
+                }
 
-                            for target in &pass.color_targets.targets {
-                                let mut debug_target = debug_server::Target::new("RGBA8");
+                for target in &pass.color_targets.targets {
+                    let mut debug_target = debug_server::Target::new("RGBA8");
 
-                                debug_target.add(debug_server::BatchKind::Cache, "Vertical Blur", target.vertical_blurs.len());
-                                debug_target.add(debug_server::BatchKind::Cache, "Horizontal Blur", target.horizontal_blurs.len());
-                                debug_target.add(debug_server::BatchKind::Cache, "Box Shadow", target.box_shadow_cache_prims.len());
-                                debug_target.add(debug_server::BatchKind::Cache, "Text Shadow", target.text_run_cache_prims.len());
-                                debug_target.add(debug_server::BatchKind::Cache, "Lines", target.line_cache_prims.len());
+                    debug_target.add(debug_server::BatchKind::Cache, "Vertical Blur", target.vertical_blurs.len());
+                    debug_target.add(debug_server::BatchKind::Cache, "Horizontal Blur", target.horizontal_blurs.len());
+                    debug_target.add(debug_server::BatchKind::Cache, "Text Shadow", target.text_run_cache_prims.len());
+                    debug_target.add(debug_server::BatchKind::Cache, "Lines", target.line_cache_prims.len());
 
-                                for batch in target.alpha_batcher
-                                                   .batch_list
-                                                   .opaque_batch_list
-                                                   .batches
-                                                   .iter()
-                                                   .rev() {
-                                    debug_target.add(debug_server::BatchKind::Opaque, batch.key.kind.debug_name(), batch.instances.len());
-                                }
-
-                                for batch in &target.alpha_batcher
-                                                    .batch_list
-                                                    .alpha_batch_list
-                                                    .batches {
-                                    debug_target.add(debug_server::BatchKind::Alpha, batch.key.kind.debug_name(), batch.instances.len());
-                                }
-
-                                debug_pass.add(debug_target);
-                            }
-
-                            debug_passes.add(debug_pass);
-                        }
+                    for batch in target.alpha_batcher
+                                       .batch_list
+                                       .opaque_batch_list
+                                       .batches
+                                       .iter()
+                                       .rev() {
+                        debug_target.add(debug_server::BatchKind::Opaque, batch.key.kind.debug_name(), batch.instances.len());
                     }
 
-                    let json = serde_json::to_string(&debug_passes).unwrap();
-                    sender.send(json).ok();
+                    for batch in &target.alpha_batcher
+                                        .batch_list
+                                        .alpha_batch_list
+                                        .batches {
+                        debug_target.add(debug_server::BatchKind::Alpha, batch.key.kind.debug_name(), batch.instances.len());
+                    }
+
+                    debug_pass.add(debug_target);
                 }
+
+                debug_passes.add(debug_pass);
             }
         }
+
+        serde_json::to_string(&debug_passes).unwrap()
     }
 
     fn handle_debug_command(&mut self, command: DebugCommand) {
@@ -1686,8 +1687,10 @@ impl Renderer {
                     self.debug_flags.remove(RENDER_TARGET_DBG);
                 }
             }
-            DebugCommand::Flush => {
-                self.update_debug_server();
+            DebugCommand::FetchDocuments => {}
+            DebugCommand::FetchPasses => {
+                let json = self.get_passes_for_debugger();
+                self.debug_server.send(json);
             }
         }
     }
@@ -1839,7 +1842,6 @@ impl Renderer {
 
                         // Ensure no PBO is bound when creating the texture storage,
                         // or GL will attempt to read data from there.
-                        self.device.bind_pbo(None);
                         self.device.init_texture(texture,
                                                  width,
                                                  height,
@@ -1882,6 +1884,9 @@ impl Renderer {
                                                             layer_index,
                                                             stride,
                                                             0);
+
+                        // Ensure that other texture updates won't read from this PBO.
+                        self.device.bind_pbo(None);
                     }
                     TextureUpdateOp::Free => {
                         let texture = &mut self.texture_resolver.cache_texture_map[update.id.0];
@@ -1890,9 +1895,6 @@ impl Renderer {
                 }
             }
         }
-
-        // Ensure that other texture updates won't read from this PBO.
-        self.device.bind_pbo(None);
     }
 
     fn draw_instanced_batch<T>(&mut self,
@@ -2164,16 +2166,6 @@ impl Renderer {
             }
         }
 
-        // Draw any box-shadow caches for this target.
-        if !target.box_shadow_cache_prims.is_empty() {
-            self.device.set_blend(false);
-            let _gm = self.gpu_profile.add_marker(GPU_TAG_CACHE_BOX_SHADOW);
-            self.cs_box_shadow.bind(&mut self.device, projection);
-            self.draw_instanced_batch(&target.box_shadow_cache_prims,
-                                      VertexArrayKind::CacheBoxShadow,
-                                      &BatchTextures::no_texture());
-        }
-
         // Draw any textrun caches for this target. For now, this
         // is only used to cache text runs that are to be blurred
         // for text-shadow support. In the future it may be worth
@@ -2295,6 +2287,16 @@ impl Renderer {
             self.device.clear_target_rect(Some(clear_color),
                                           None,
                                           target.used_rect());
+        }
+
+        // Draw any box-shadow caches for this target.
+        if !target.box_shadow_cache_prims.is_empty() {
+            self.device.set_blend(false);
+            let _gm = self.gpu_profile.add_marker(GPU_TAG_CACHE_BOX_SHADOW);
+            self.cs_box_shadow.bind(&mut self.device, projection);
+            self.draw_instanced_batch(&target.box_shadow_cache_prims,
+                                      VertexArrayKind::CacheBoxShadow,
+                                      &BatchTextures::no_texture());
         }
 
         // Draw the clip items into the tiled alpha mask.
@@ -2863,4 +2865,6 @@ impl DebugServer {
     pub fn new(_: MsgSender<ApiMsg>) -> DebugServer {
         DebugServer
     }
+
+    pub fn send(&mut self, _: String) {}
 }
