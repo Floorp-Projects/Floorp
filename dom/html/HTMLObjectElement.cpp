@@ -96,22 +96,18 @@ NS_IMPL_CYCLE_COLLECTION_UNLINK_BEGIN_INHERITED(HTMLObjectElement,
   NS_IMPL_CYCLE_COLLECTION_UNLINK(mValidity)
 NS_IMPL_CYCLE_COLLECTION_UNLINK_END
 
-NS_IMPL_ADDREF_INHERITED(HTMLObjectElement, Element)
-NS_IMPL_RELEASE_INHERITED(HTMLObjectElement, Element)
-
-NS_INTERFACE_TABLE_HEAD_CYCLE_COLLECTION_INHERITED(HTMLObjectElement)
-  NS_INTERFACE_TABLE_INHERITED(HTMLObjectElement,
-                               nsIDOMHTMLObjectElement,
-                               imgINotificationObserver,
-                               nsIRequestObserver,
-                               nsIStreamListener,
-                               nsIFrameLoaderOwner,
-                               nsIObjectLoadingContent,
-                               nsIImageLoadingContent,
-                               imgIOnloadBlocker,
-                               nsIChannelEventSink,
-                               nsIConstraintValidation)
-NS_INTERFACE_TABLE_TAIL_INHERITING(nsGenericHTMLFormElement)
+NS_IMPL_ISUPPORTS_CYCLE_COLLECTION_INHERITED(HTMLObjectElement,
+                                             nsGenericHTMLFormElement,
+                                             nsIDOMHTMLObjectElement,
+                                             imgINotificationObserver,
+                                             nsIRequestObserver,
+                                             nsIStreamListener,
+                                             nsIFrameLoaderOwner,
+                                             nsIObjectLoadingContent,
+                                             nsIImageLoadingContent,
+                                             imgIOnloadBlocker,
+                                             nsIChannelEventSink,
+                                             nsIConstraintValidation)
 
 NS_IMPL_ELEMENT_CLONE(HTMLObjectElement)
 
