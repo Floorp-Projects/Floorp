@@ -12,28 +12,38 @@ namespace mozilla {
 
 struct TableArea
 {
-  TableArea() : mRect() { }
+  TableArea()
+    : mStartCol(0), mStartRow(0), mColCount(0), mRowCount(0) { }
   TableArea(int32_t aStartCol, int32_t aStartRow,
             int32_t aColCount, int32_t aRowCount)
-    : mRect(aStartCol, aStartRow, aColCount, aRowCount) { }
+    : mStartCol(aStartCol),
+      mStartRow(aStartRow),
+      mColCount(aColCount),
+      mRowCount(aRowCount) { }
 
-  int32_t& StartCol() { return mRect.x; }
-  int32_t& StartRow() { return mRect.y; }
-  int32_t& ColCount() { return mRect.width; }
-  int32_t& RowCount() { return mRect.height; }
+  int32_t& StartCol() { return mStartCol; }
+  int32_t& StartRow() { return mStartRow; }
+  int32_t& ColCount() { return mColCount; }
+  int32_t& RowCount() { return mRowCount; }
 
-  int32_t StartCol() const { return mRect.x; }
-  int32_t StartRow() const { return mRect.y; }
-  int32_t ColCount() const { return mRect.width; }
-  int32_t RowCount() const { return mRect.height; }
-  int32_t EndCol() const { return mRect.XMost(); }
-  int32_t EndRow() const { return mRect.YMost(); }
+  int32_t StartCol() const { return mStartCol; }
+  int32_t StartRow() const { return mStartRow; }
+  int32_t ColCount() const { return mColCount; }
+  int32_t RowCount() const { return mRowCount; }
+  int32_t EndCol() const { return mStartCol + mColCount; }
+  int32_t EndRow() const { return mStartRow + mRowCount; }
 
   void UnionArea(const TableArea& aArea1, const TableArea& aArea2)
-    { mRect.UnionRect(aArea1.mRect, aArea2.mRect); }
+    {
+      nsIntRect rect(aArea1.mStartCol, aArea1.mStartRow,
+                     aArea1.mColCount, aArea1.mRowCount);
+      rect.UnionRect(rect, nsIntRect(aArea2.mStartCol, aArea2.mStartRow,
+                                     aArea2.mColCount, aArea2.mRowCount));
+      rect.GetRect(&mStartCol, &mStartRow, &mColCount, &mRowCount);
+    }
 
 private:
-  nsIntRect mRect;
+  int32_t mStartCol, mStartRow, mColCount, mRowCount;
 };
 
 } // namespace mozilla
