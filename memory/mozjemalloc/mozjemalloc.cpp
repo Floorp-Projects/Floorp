@@ -5121,52 +5121,6 @@ MozJemalloc::jemalloc_purge_freed_pages()
 #endif /* defined MALLOC_DOUBLE_PURGE */
 
 
-
-#ifdef XP_WIN
-//TODO: these three functions should be rerouted through replace-malloc
-void*
-_recalloc(void* aPtr, size_t aCount, size_t aSize)
-{
-  size_t oldsize = aPtr ? isalloc(aPtr) : 0;
-  size_t newsize = aCount * aSize;
-
-  /*
-   * In order for all trailing bytes to be zeroed, the caller needs to
-   * use calloc(), followed by recalloc().  However, the current calloc()
-   * implementation only zeros the bytes requested, so if recalloc() is
-   * to work 100% correctly, calloc() will need to change to zero
-   * trailing bytes.
-   */
-
-  aPtr = MozJemalloc::realloc(aPtr, newsize);
-  if (aPtr && oldsize < newsize) {
-    memset((void*)((uintptr_t)aPtr + oldsize), 0, newsize - oldsize);
-  }
-
-  return aPtr;
-}
-
-/*
- * This impl of _expand doesn't ever actually expand or shrink blocks: it
- * simply replies that you may continue using a shrunk block.
- */
-void*
-_expand(void* aPtr, size_t newsize)
-{
-  if (isalloc(aPtr) >= newsize) {
-    return aPtr;
-  }
-
-  return nullptr;
-}
-
-size_t
-_msize(void* aPtr)
-{
-  return MozJemalloc::malloc_usable_size(aPtr);
-}
-#endif
-
 template<> inline void
 MozJemalloc::jemalloc_free_dirty_pages(void)
 {
@@ -5528,6 +5482,48 @@ MOZ_EXPORT void* (*__memalign_hook)(size_t, size_t) = memalign_impl;
 #endif
 
 #ifdef XP_WIN
+void*
+_recalloc(void* aPtr, size_t aCount, size_t aSize)
+{
+  size_t oldsize = aPtr ? isalloc(aPtr) : 0;
+  size_t newsize = aCount * aSize;
+
+  /*
+   * In order for all trailing bytes to be zeroed, the caller needs to
+   * use calloc(), followed by recalloc().  However, the current calloc()
+   * implementation only zeros the bytes requested, so if recalloc() is
+   * to work 100% correctly, calloc() will need to change to zero
+   * trailing bytes.
+   */
+
+  aPtr = DefaultMalloc::realloc(aPtr, newsize);
+  if (aPtr && oldsize < newsize) {
+    memset((void*)((uintptr_t)aPtr + oldsize), 0, newsize - oldsize);
+  }
+
+  return aPtr;
+}
+
+/*
+ * This impl of _expand doesn't ever actually expand or shrink blocks: it
+ * simply replies that you may continue using a shrunk block.
+ */
+void*
+_expand(void* aPtr, size_t newsize)
+{
+  if (isalloc(aPtr) >= newsize) {
+    return aPtr;
+  }
+
+  return nullptr;
+}
+
+size_t
+_msize(void* aPtr)
+{
+  return DefaultMalloc::malloc_usable_size(aPtr);
+}
+
 /*
  * In the new style jemalloc integration jemalloc is built as a separate
  * shared library.  Since we're no longer hooking into the CRT binary,
