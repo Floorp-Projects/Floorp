@@ -239,7 +239,7 @@ var ignoreFunctions = {
 };
 
 function extraGCFunctions() {
-    return ["ffi_call"];
+    return ["ffi_call"].filter(f => f in readableNames);
 }
 
 function isProtobuf(name)
@@ -261,7 +261,7 @@ function isGTest(name)
 
 function ignoreGCFunction(mangled)
 {
-    assert(mangled in readableNames);
+    assert(mangled in readableNames, mangled + " not in readableNames");
     var fun = readableNames[mangled][0];
 
     if (fun in ignoreFunctions)
