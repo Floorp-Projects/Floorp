@@ -195,9 +195,11 @@ public:
 
   void PushBuiltDisplayList(wr::BuiltDisplayList &dl);
 
-  void PushScrollLayer(const layers::FrameMetrics::ViewID& aScrollId,
-                       const wr::LayoutRect& aContentRect, // TODO: We should work with strongly typed rects
-                       const wr::LayoutRect& aClipRect);
+  bool IsScrollLayerDefined(layers::FrameMetrics::ViewID aScrollId) const;
+  void DefineScrollLayer(const layers::FrameMetrics::ViewID& aScrollId,
+                         const wr::LayoutRect& aContentRect, // TODO: We should work with strongly typed rects
+                         const wr::LayoutRect& aClipRect);
+  void PushScrollLayer(const layers::FrameMetrics::ViewID& aScrollId);
   void PopScrollLayer();
 
   void PushClipAndScrollInfo(const layers::FrameMetrics::ViewID& aScrollId,
@@ -348,8 +350,10 @@ protected:
   std::vector<wr::WrClipId> mClipIdStack;
   std::vector<layers::FrameMetrics::ViewID> mScrollIdStack;
 
-  // Track the parent scroll id of each scroll id that we encountered.
-  std::unordered_map<layers::FrameMetrics::ViewID, layers::FrameMetrics::ViewID> mScrollParents;
+  // Track the parent scroll id of each scroll id that we encountered. A
+  // Nothing() value indicates a root scroll id. We also use this structure to
+  // ensure that we don't define a particular scroll layer multiple times.
+  std::unordered_map<layers::FrameMetrics::ViewID, Maybe<layers::FrameMetrics::ViewID>> mScrollParents;
 
   friend class WebRenderAPI;
 };

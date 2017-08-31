@@ -234,7 +234,7 @@ StyleEditorUI.prototype = {
   _onNewDocument: function () {
     this._debuggee.getStyleSheets().then((styleSheets) => {
       return this._resetStyleSheetList(styleSheets);
-    }).catch(e => console.error(e));
+    }).catch(console.error);
   },
 
   /**
@@ -634,7 +634,7 @@ StyleEditorUI.prototype = {
               this.emit("error", { key: "error-compressed", level: "info" });
             }
           }
-        }.bind(this)).catch(e => console.error(e));
+        }.bind(this)).catch(console.error);
       }
     });
   },
@@ -919,7 +919,7 @@ StyleEditorUI.prototype = {
       sidebar.hidden = !showSidebar || !inSource;
 
       this.emit("media-list-changed", editor);
-    }.bind(this)).catch(e => console.error(e));
+    }.bind(this)).catch(console.error);
   },
 
   /**

@@ -51,7 +51,7 @@ ScrollingLayersHelper::ScrollingLayersHelper(WebRenderLayer* aLayer,
       PushLayerLocalClip(aStackingContext);
     }
 
-    PushScrollLayer(fm, aStackingContext);
+    DefineAndPushScrollLayer(fm, aStackingContext);
   }
 
   // The scrolled clip on the layer is "inside" all of the scrollable metadatas
@@ -146,10 +146,7 @@ ScrollingLayersHelper::DefineAndPushScrollLayers(nsDisplayItem* aItem,
   if (!aAsr) {
     return;
   }
-  Maybe<ScrollMetadata> metadata = aAsr->mScrollableFrame->ComputeScrollMetadata(
-      nullptr, aItem->ReferenceFrame(), ContainerLayerParameters(), nullptr);
-  MOZ_ASSERT(metadata);
-  FrameMetrics::ViewID scrollId = metadata->GetMetrics().GetScrollId();
+  FrameMetrics::ViewID scrollId = nsLayoutUtils::ViewIDForASR(aAsr);
   if (aBuilder.TopmostScrollId() == scrollId) {
     // it's already been pushed, so we don't need to recurse any further.
     return;
@@ -176,11 +173,19 @@ ScrollingLayersHelper::DefineAndPushScrollLayers(nsDisplayItem* aItem,
   // push exactly what we want.
   DefineAndPushChain(asrClippedBy, aBuilder, aStackingContext,
       aAppUnitsPerDevPixel, aCache);
-  // Finally, push the ASR itself as a scroll layer. Note that the
-  // implementation of wr_push_scroll_layer in bindings.rs makes sure the
-  // scroll layer doesn't get defined multiple times so we don't need to worry
-  // about that here.
-  if (PushScrollLayer(metadata->GetMetrics(), aStackingContext)) {
+  // Finally, push the ASR itself as a scroll layer. If it's already defined
+  // we can skip the expensive step of computing the ScrollMetadata.
+  bool pushed = false;
+  if (mBuilder->IsScrollLayerDefined(scrollId)) {
+    mBuilder->PushScrollLayer(scrollId);
+    pushed = true;
+  } else {
+    Maybe<ScrollMetadata> metadata = aAsr->mScrollableFrame->ComputeScrollMetadata(
+        nullptr, aItem->ReferenceFrame(), ContainerLayerParameters(), nullptr);
+    MOZ_ASSERT(metadata);
+    pushed = DefineAndPushScrollLayer(metadata->GetMetrics(), aStackingContext);
+  }
+  if (pushed) {
     mPushedClips.push_back(wr::ScrollOrClipId(scrollId));
   }
 }
@@ -228,8 +233,8 @@ ScrollingLayersHelper::DefineAndPushChain(const DisplayItemClipChain* aChain,
 }
 
 bool
-ScrollingLayersHelper::PushScrollLayer(const FrameMetrics& aMetrics,
-                                       const StackingContextHelper& aStackingContext)
+ScrollingLayersHelper::DefineAndPushScrollLayer(const FrameMetrics& aMetrics,
+                                                const StackingContextHelper& aStackingContext)
 {
   if (!aMetrics.IsScrollable()) {
     return false;
@@ -251,9 +256,10 @@ ScrollingLayersHelper::PushScrollLayer(const FrameMetrics& aMetrics,
   // WebRender at all. Instead, we take the position from the composition
   // bounds.
   contentRect.MoveTo(clipBounds.TopLeft());
-  mBuilder->PushScrollLayer(aMetrics.GetScrollId(),
+  mBuilder->DefineScrollLayer(aMetrics.GetScrollId(),
       aStackingContext.ToRelativeLayoutRect(contentRect),
       aStackingContext.ToRelativeLayoutRect(clipBounds));
+  mBuilder->PushScrollLayer(aMetrics.GetScrollId());
   return true;
 }
 

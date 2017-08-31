@@ -2640,6 +2640,46 @@ profiler_get_buffer_info_helper(uint32_t* aCurrentPosition,
 }
 
 static void
+PollJSSamplingForCurrentThread()
+{
+  MOZ_RELEASE_ASSERT(CorePS::Exists());
+
+  PSAutoLock lock(gPSMutex);
+
+  ThreadInfo* info = TLSInfo::Info(lock);
+  if (!info) {
+    return;
+  }
+
+  info->PollJSSampling();
+}
+
+// When the profiler is started on a background thread, we can't synchronously
+// call PollJSSampling on the main thread's ThreadInfo. And the next regular
+// call to PollJSSampling on the main thread would only happen once the main
+// thread triggers a JS interrupt callback.
+// This means that all the JS execution between profiler_start() and the first
+// JS interrupt would happen with JS sampling disabled, and we wouldn't get any
+// JS function information for that period of time.
+// So in order to start JS sampling as soon as possible, we dispatch a runnable
+// to the main thread which manually calls PollJSSamplingForCurrentThread().
+// In some cases this runnable will lose the race with the next JS interrupt.
+// That's fine; PollJSSamplingForCurrentThread() is immune to redundant calls.
+static void
+TriggerPollJSSamplingOnMainThread()
+{
+  nsCOMPtr<nsIThread> mainThread;
+  nsresult rv = NS_GetMainThread(getter_AddRefs(mainThread));
+  if (NS_SUCCEEDED(rv) && mainThread) {
+    nsCOMPtr<nsIRunnable> task =
+      NS_NewRunnableFunction("TriggerPollJSSamplingOnMainThread", []() {
+        PollJSSamplingForCurrentThread();
+      });
+    SystemGroup::Dispatch(TaskCategory::Other, task.forget());
+  }
+}
+
+static void
 locked_profiler_start(PSLockRef aLock, int aEntries, double aInterval,
                       uint32_t aFeatures,
                       const char** aFilters, uint32_t aFilterCount)
@@ -2689,6 +2729,11 @@ locked_profiler_start(PSLockRef aLock, int aEntries, double aInterval,
           // We can manually poll the current thread so it starts sampling
           // immediately.
           info->PollJSSampling();
+        } else if (info->IsMainThread()) {
+          // Dispatch a runnable to the main thread to call PollJSSampling(),
+          // so that we don't have wait for the next JS interrupt callback in
+          // order to start profiling JS.
+          TriggerPollJSSamplingOnMainThread();
         }
       }
     }
@@ -3076,17 +3121,7 @@ void
 profiler_js_interrupt_callback()
 {
   // This function runs on JS threads being sampled.
-
-  MOZ_RELEASE_ASSERT(CorePS::Exists());
-
-  PSAutoLock lock(gPSMutex);
-
-  ThreadInfo* info = TLSInfo::Info(lock);
-  if (!info) {
-    return;
-  }
-
-  info->PollJSSampling();
+  PollJSSamplingForCurrentThread();
 }
 
 double
