@@ -50,7 +50,7 @@ linux64/opt:
         - reftest-stylo
         - desktop-screenshot-capture
         - talos
-        - linux-talos-stylo
+        - linux-talos-stylo-disabled
         - awsy
 linux64-nightly/opt:
     build-platform: linux64-nightly/opt
@@ -75,62 +75,61 @@ linux64-pgo/opt:
         - common-tests
         - web-platform-tests
         - talos
-        - linux-talos-stylo
+        - linux-talos-stylo-disabled
 
 linux64-asan/opt:
     build-platform: linux64-asan/opt
     test-sets:
         - common-tests
 
-# Stylo builds only run a subset of tests for the moment. So give them
-# their own test set.
-linux32-stylo/debug:
+# Stylo disabled mode only runs a subset of tests.
+linux32-stylo-disabled/debug:
     build-platform: linux/debug
     test-sets:
-        - stylo-tests
-linux32-stylo/opt:
+        - stylo-disabled-tests
+linux32-stylo-disabled/opt:
     build-platform: linux/opt
     test-sets:
-        - awsy-stylo
-        - stylo-tests
-linux64-stylo/debug:
+        - awsy-stylo-disabled
+        - stylo-disabled-tests
+linux64-stylo-disabled/debug:
     build-platform: linux64/debug
     test-sets:
-        - stylo-tests
+        - stylo-disabled-tests
         - devtools-tests
-linux64-stylo/opt:
+linux64-stylo-disabled/opt:
     build-platform: linux64/opt
     test-sets:
-        - awsy-stylo
-        - stylo-tests
+        - awsy-stylo-disabled
+        - stylo-disabled-tests
         - devtools-tests
-macosx64-stylo/debug:
+macosx64-stylo-disabled/debug:
     build-platform: macosx64/debug
     test-sets:
-        - stylo-tests
-macosx64-stylo/opt:
+        - stylo-disabled-tests
+macosx64-stylo-disabled/opt:
     build-platform: macosx64/opt
     test-sets:
-        - awsy-stylo
-        - stylo-tests
-windows7-32-stylo/debug:
+        - awsy-stylo-disabled
+        - stylo-disabled-tests
+windows7-32-stylo-disabled/debug:
     build-platform: win32/debug
     test-sets:
-        - stylo-tests
-windows7-32-stylo/opt:
+        - stylo-disabled-tests
+windows7-32-stylo-disabled/opt:
     build-platform: win32/opt
     test-sets:
-        - awsy-stylo
-        - stylo-tests
-windows10-64-stylo/debug:
+        - awsy-stylo-disabled
+        - stylo-disabled-tests
+windows10-64-stylo-disabled/debug:
     build-platform: win64/debug
     test-sets:
-        - stylo-tests
-windows10-64-stylo/opt:
+        - stylo-disabled-tests
+windows10-64-stylo-disabled/opt:
     build-platform: win64/opt
     test-sets:
-        - awsy-stylo
-        - stylo-tests
+        - awsy-stylo-disabled
+        - stylo-disabled-tests
 
 # Stylo sequential runs check memory and performance when using a single thread.
 linux64-stylo-sequential/opt:
@@ -178,7 +177,7 @@ windows7-32/opt:
         - awsy
         - desktop-screenshot-capture
         - windows-talos
-        - windows-talos-stylo
+        - windows-talos-stylo-disabled
         - windows-tests
 
 windows7-32-pgo/opt:
@@ -188,7 +187,7 @@ windows7-32-pgo/opt:
         - desktop-screenshot-capture
         - windows-tests
         - windows-talos
-        - windows-talos-stylo
+        - windows-talos-stylo-disabled
 
 windows7-32-nightly/opt:
     build-platform: win32-nightly/opt
@@ -215,7 +214,7 @@ windows10-64/opt:
         - awsy
         - desktop-screenshot-capture
         - windows-talos
-        - windows-talos-stylo
+        - windows-talos-stylo-disabled
         - windows-tests
 
 windows10-64-pgo/opt:
@@ -224,7 +223,7 @@ windows10-64-pgo/opt:
         - awsy
         - desktop-screenshot-capture
         - windows-talos
-        - windows-talos-stylo
+        - windows-talos-stylo-disabled
         - windows-tests
 
 windows10-64-nightly/opt:
@@ -278,8 +277,8 @@ macosx64/debug:
 macosx64/opt:
     build-platform: macosx64/opt
     test-sets:
-        - macosx64-tests-talos
-        - macosx64-tests-talos-stylo
+        - macosx64-talos
+        - macosx64-talos-stylo-disabled
         - macosx64-tests
         - desktop-screenshot-capture
         - awsy
