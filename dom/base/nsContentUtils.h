@@ -412,6 +412,13 @@ public:
   }
 
   /**
+   * Returns the common flattened tree ancestor from the point of view of the
+   * style system, if any, for two given content nodes.
+   */
+  static Element* GetCommonFlattenedTreeAncestorForStyle(
+      Element* aElement1, Element* aElement2);
+
+  /**
    * Returns true if aNode1 is before aNode2 in the same connected
    * tree.
    */
