@@ -16,9 +16,12 @@ All notable changes to this program is documented in this file.
 [`SetWindowRect`]: https://docs.rs/webdriver/0.29.0/webdriver/command/enum.WebDriverCommand.html#variant.SetWindowRect
 
 ### Changed
+- Removed deprecated `socksProxyVersion` in favor of `socksVersion`.
+- Removed `ftpProxyPort`, `httpProxyPort`, `sslProxyPort`, and `socksProxyPort` because _ports_ have to be set for `ftpProxy`, `httpProxy`, `sslProxy`, and `socksProxy` using ":<PORT>".
 - To make sure no browser process is left behind when the [`New Session` command](https://docs.rs/webdriver/0.27.0/webdriver/command/enum.WebDriverCommand.html#variant.NewSession) fails, the process is closed immediately now.
 - The `proxyType` `noproxy` has been replaced with `direct` in accordance with recent WebDriver specification changes
 - `/moz/addon/install` command accepts an `addon` parameter, in lieu of `path`, containing an addon as a Base64 string
+- [webdriver crate](https://crates.io/crates/webdriver) upgraded to version 0.30.0
 - [mozrunner crate](https://crates.io/crates/mozrunner) upgraded to version 0.4.2
 
 ## 0.18.0 (2017-07-10)

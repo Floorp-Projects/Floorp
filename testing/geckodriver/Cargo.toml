@@ -27,7 +27,7 @@ slog-atomic = "0.4"
 slog-stdlog = "1"
 slog-stream = "1"
 uuid = "0.1.18"
-webdriver = "0.29.0"
+webdriver = "0.30.0"
 zip = "0.1"
 
 [[bin]]

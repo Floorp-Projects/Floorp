@@ -5400,11 +5400,14 @@ AnimationValue::ComputeDistance(nsCSSPropertyID aProperty,
              !mServo == !aOther.mServo,
              "Animation values should have the same style engine");
 
+  double distance= 0.0;
   if (mServo) {
-    return Servo_AnimationValues_ComputeDistance(mServo, aOther.mServo);
+    distance = Servo_AnimationValues_ComputeDistance(mServo, aOther.mServo);
+    return distance < 0.0
+           ? 0.0
+           : distance;
   }
 
-  double distance = 0.0;
   return StyleAnimationValue::ComputeDistance(aProperty,
                                               mGecko,
                                               aOther.mGecko,

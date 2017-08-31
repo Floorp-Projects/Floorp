@@ -1001,24 +1001,13 @@ EditorBase::EndPlaceholderTransaction()
       selection->SetCanCacheFrameOffset(true);
     }
 
-    {
-      // Hide the caret here to avoid hiding it twice, once in EndUpdateViewBatch
-      // and once in ScrollSelectionIntoView.
-      RefPtr<nsCaret> caret;
-      nsCOMPtr<nsIPresShell> presShell = GetPresShell();
+    // time to turn off the batch
+    EndUpdateViewBatch();
+    // make sure selection is in view
 
-      if (presShell) {
-        caret = presShell->GetCaret();
-      }
-
-      // time to turn off the batch
-      EndUpdateViewBatch();
-      // make sure selection is in view
-
-      // After ScrollSelectionIntoView(), the pending notifications might be
-      // flushed and PresShell/PresContext/Frames may be dead. See bug 418470.
-      ScrollSelectionIntoView(false);
-    }
+    // After ScrollSelectionIntoView(), the pending notifications might be
+    // flushed and PresShell/PresContext/Frames may be dead. See bug 418470.
+    ScrollSelectionIntoView(false);
 
     // cached for frame offset are Not available now
     if (selection) {

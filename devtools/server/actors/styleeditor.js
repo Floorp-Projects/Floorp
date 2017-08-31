@@ -7,7 +7,6 @@
 const {Cc, Ci} = require("chrome");
 const {XPCOMUtils} = require("resource://gre/modules/XPCOMUtils.jsm");
 const promise = require("promise");
-const events = require("devtools/shared/event-emitter");
 const protocol = require("devtools/shared/protocol");
 const {fetch} = require("devtools/shared/DevToolsUtils");
 const {oldStyleSheetSpec, styleEditorSpec} = require("devtools/shared/specs/styleeditor");
@@ -156,7 +155,7 @@ var OldStyleSheetActor = protocol.ActorClassWithSpec(oldStyleSheetSpec, {
    *         Name of the changed property
    */
   _notifyPropertyChanged: function (property) {
-    events.emit(this, "property-change", property, this.form()[property]);
+    this.emit("property-change", property, this.form()[property]);
   },
 
    /**
@@ -165,7 +164,7 @@ var OldStyleSheetActor = protocol.ActorClassWithSpec(oldStyleSheetSpec, {
     */
   fetchSource: function () {
     this._getText().then((content) => {
-      events.emit(this, "source-load", this.text);
+      this.emit("source-load", this.text);
     });
   },
 
@@ -295,7 +294,7 @@ var OldStyleSheetActor = protocol.ActorClassWithSpec(oldStyleSheetSpec, {
       this.rawSheet.deleteRule(this.rawSheet.cssRules.length - 1);
     }
 
-    events.emit(this, "style-applied");
+    this.emit("style-applied");
   }
 });
 
@@ -378,7 +377,7 @@ var StyleEditorActor = protocol.ActorClassWithSpec(styleEditorSpec, {
       }
     }
 
-    events.emit(this, "document-load", forms);
+    this.emit("document-load", forms);
   },
 
   /**

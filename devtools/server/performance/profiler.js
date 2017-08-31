@@ -352,7 +352,7 @@ const ProfilerManager = (function () {
       });
 
       for (let subscriber of subscribers) {
-        EventEmitter.emit(subscriber, eventName, data);
+        subscriber.emit(eventName, data);
       }
     },
 

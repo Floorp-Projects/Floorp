@@ -273,7 +273,8 @@ public class BookmarksRepositorySession extends StoreTrackingRepositorySession {
     storeWorkQueue.execute(new Runnable() {
       @Override
       public void run() {
-        storeDelegate.onStoreCompleted(now());
+        setLastStoreTimestamp(now());
+        storeDelegate.onStoreCompleted();
       }
     });
   }

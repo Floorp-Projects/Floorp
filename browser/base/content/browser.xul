@@ -881,11 +881,13 @@
                 </hbox>
                 <image id="page-report-button"
                        class="urlbar-icon urlbar-page-action"
+                       role="button"
                        hidden="true"
                        tooltiptext="&pageReportIcon.tooltip;"
                        onmousedown="gPopupBlockerObserver.onReportButtonMousedown(event);"/>
                 <image id="reader-mode-button"
                        class="urlbar-icon urlbar-page-action"
+                       role="button"
                        hidden="true"
                        onclick="ReaderParent.buttonClick(event);"/>
                 <toolbarbutton id="urlbar-zoom-button"
@@ -895,19 +897,23 @@
                 <box id="pageActionSeparator" class="urlbar-page-action"/>
                 <image id="pageActionButton"
                        class="urlbar-icon urlbar-page-action"
+                       role="button"
                        tooltiptext="&pageActionButton.tooltip;"
                        onclick="BrowserPageActions.mainButtonClicked(event);"/>
                 <hbox id="star-button-box"
                       hidden="true"
                       class="urlbar-icon-wrapper urlbar-page-action"
+                      role="button"
                       context="pageActionPanelContextMenu"
                       oncontextmenu="BrowserPageActions.onContextMenu(event);"
                       onclick="BrowserPageActions.bookmark.onUrlbarNodeClicked(event);">
                   <image id="star-button"
                          class="urlbar-icon"
+                         role="button"
                          observes="bookmarkThisPageBroadcaster"/>
                   <hbox id="star-button-animatable-box">
                     <image id="star-button-animatable-image"
+                           role="button"
                            observes="bookmarkThisPageBroadcaster"/>
                   </hbox>
                 </hbox>

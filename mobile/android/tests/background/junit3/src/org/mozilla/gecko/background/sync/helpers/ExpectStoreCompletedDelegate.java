@@ -11,7 +11,7 @@ public class ExpectStoreCompletedDelegate extends DefaultStoreDelegate {
   }
 
   @Override
-  public void onStoreCompleted(long storeEnd) {
+  public void onStoreCompleted() {
     performNotify();
   }
 }

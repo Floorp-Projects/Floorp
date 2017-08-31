@@ -226,8 +226,7 @@ protected:
 
   void ContentStateChangedInternal(Element* aElement,
                                    EventStates aStateMask,
-                                   nsChangeHint* aOutChangeHint,
-                                   nsRestyleHint* aOutRestyleHint);
+                                   nsChangeHint* aOutChangeHint);
 
   bool IsDisconnected() { return mPresContext == nullptr; }
 

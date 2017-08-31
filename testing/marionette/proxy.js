@@ -24,7 +24,7 @@ const logger = Log.repository.getLogger("Marionette");
 
 // Proxy handler that traps requests to get a property.  Will prioritise
 // properties that exist on the object's own prototype.
-var ownPriorityGetterTrap = {
+const ownPriorityGetterTrap = {
   get: (obj, prop) => {
     if (obj.hasOwnProperty(prop)) {
       return obj[prop];
@@ -442,9 +442,9 @@ proxy.SyncChromeSender = class {
   }
 };
 
-var marshal = function(args) {
+function marshal(args) {
   if (args.length == 1 && typeof args[0] == "object") {
     return args[0];
   }
   return args;
-};
+}

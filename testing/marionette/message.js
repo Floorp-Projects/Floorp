@@ -4,7 +4,7 @@
 
 "use strict";
 
-var {utils: Cu} = Components;
+const {utils: Cu} = Components;
 
 Cu.import("resource://gre/modules/Log.jsm");
 

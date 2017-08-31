@@ -1186,6 +1186,7 @@ nsTextEditorState::Construct(nsITextControlElement* aOwningElement,
     state->mPlaceholderVisibility = false;
     state->mPreviewVisibility = false;
     state->mIsCommittingComposition = false;
+    state->ClearValueCache();
     // When adding more member variable initializations here, add the same
     // also to the constructor.
     return state;
@@ -1412,6 +1413,8 @@ nsTextEditorState::PrepareEditor(const nsAString *aValue)
     return NS_ERROR_NOT_INITIALIZED;
   }
 
+  ClearValueCache();
+
   // Note that we don't check mTextEditor here, because we might already have
   // one around, in which case we don't create a new one, and we'll just tie
   // the required machinery to it.
@@ -1420,9 +1423,7 @@ nsTextEditorState::PrepareEditor(const nsAString *aValue)
   nsIPresShell *shell = presContext->GetPresShell();
 
   // Setup the editor flags
-  uint32_t editorFlags = 0;
-  if (IsPlainTextControl())
-    editorFlags |= nsIPlaintextEditor::eEditorPlaintextMask;
+  uint32_t editorFlags = nsIPlaintextEditor::eEditorPlaintextMask;
   if (IsSingleLineTextControl())
     editorFlags |= nsIPlaintextEditor::eEditorSingleLineMask;
   if (IsPasswordTextControl())
@@ -2286,11 +2287,8 @@ nsTextEditorState::CreateRootNode()
                                   NOT_FROM_PARSER);
   NS_ENSURE_SUCCESS(rv, rv);
 
-  if (!IsSingleLineTextControl()) {
-    mMutationObserver = new nsAnonDivObserver(this);
-    mRootNode->AddMutationObserver(mMutationObserver);
-  }
-
+  mMutationObserver = new nsAnonDivObserver(this);
+  mRootNode->AddMutationObserver(mMutationObserver);
   return rv;
 }
 
@@ -2437,8 +2435,7 @@ nsTextEditorState::GetValue(nsAString& aValue, bool aIgnoreWrap) const
 
   if (mTextEditor && mBoundFrame &&
       (mEditorInitialized || !IsSingleLineTextControl())) {
-    bool canCache = aIgnoreWrap && !IsSingleLineTextControl();
-    if (canCache && !mCachedValue.IsEmpty()) {
+    if (aIgnoreWrap && !mCachedValue.IsVoid()) {
       aValue = mCachedValue;
       return;
     }
@@ -2447,13 +2444,8 @@ nsTextEditorState::GetValue(nsAString& aValue, bool aIgnoreWrap) const
 
     uint32_t flags = (nsIDocumentEncoder::OutputLFLineBreak |
                       nsIDocumentEncoder::OutputPreformatted |
-                      nsIDocumentEncoder::OutputPersistNBSP);
-
-    if (IsPlainTextControl())
-    {
-      flags |= nsIDocumentEncoder::OutputBodyOnly;
-    }
-
+                      nsIDocumentEncoder::OutputPersistNBSP |
+                      nsIDocumentEncoder::OutputBodyOnly);
     if (!aIgnoreWrap) {
       nsITextControlElement::nsHTMLTextWrap wrapProp;
       nsCOMPtr<nsIContent> content = do_QueryInterface(mTextCtrlElement);
@@ -2482,10 +2474,12 @@ nsTextEditorState::GetValue(nsAString& aValue, bool aIgnoreWrap) const
       mTextEditor->OutputToString(NS_LITERAL_STRING("text/plain"), flags,
                                   aValue);
     }
-    if (canCache) {
-      mCachedValue = aValue;
+    // Only when the result doesn't include line breaks caused by hard-wrap,
+    // mCacheValue should cache the value.
+    if (!(flags & nsIDocumentEncoder::OutputWrap)) {
+      const_cast<nsTextEditorState*>(this)->SetValueCache(aValue);
     } else {
-      mCachedValue.Truncate();
+      const_cast<nsTextEditorState*>(this)->ClearValueCache();
     }
   } else {
     if (!mTextCtrlElement->ValueChanged() || !mValue) {
@@ -2726,10 +2720,10 @@ nsTextEditorState::SetValue(const nsAString& aValue, const nsAString* aOldValue,
           return true;
         }
 
-        if (!IsSingleLineTextControl()) {
-          if (!mCachedValue.Assign(newValue, fallible)) {
-            return false;
-          }
+        // The new value never includes line breaks caused by hard-wrap.
+        // So, mCachedValue can always cache the new value.
+        if (!SetValueCache(newValue, fallible)) {
+          return false;
         }
       }
     }

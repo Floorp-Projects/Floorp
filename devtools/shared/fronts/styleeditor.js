@@ -11,7 +11,6 @@ const {
 } = require("devtools/shared/specs/styleeditor");
 const promise = require("promise");
 const defer = require("devtools/shared/defer");
-const events = require("devtools/shared/event-emitter");
 
 /**
  * StyleSheetFront is the client-side counterpart to a StyleSheetActor.
@@ -21,11 +20,11 @@ const OldStyleSheetFront = FrontClassWithSpec(oldStyleSheetSpec, {
     Front.prototype.initialize.call(this, conn, form, ctx, detail);
 
     this._onPropertyChange = this._onPropertyChange.bind(this);
-    events.on(this, "property-change", this._onPropertyChange);
+    this.on("property-change", this._onPropertyChange);
   },
 
   destroy: function () {
-    events.off(this, "property-change", this._onPropertyChange);
+    this.off("property-change", this._onPropertyChange);
 
     Front.prototype.destroy.call(this);
   },
@@ -46,7 +45,7 @@ const OldStyleSheetFront = FrontClassWithSpec(oldStyleSheetSpec, {
   getText: function () {
     let deferred = defer();
 
-    events.once(this, "source-load", (source) => {
+    this.once("source-load", (source) => {
       let longStr = new SimpleStringFront(source);
       deferred.resolve(longStr);
     });
@@ -97,7 +96,7 @@ const StyleEditorFront = FrontClassWithSpec(styleEditorSpec, {
   getStyleSheets: function () {
     let deferred = defer();
 
-    events.once(this, "document-load", (styleSheets) => {
+    this.once("document-load", (styleSheets) => {
       deferred.resolve(styleSheets);
     });
     this.newDocument();

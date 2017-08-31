@@ -213,7 +213,8 @@ public class FormHistoryRepositorySession extends
           }
         }
 
-        delegate.onFetchCompleted(end);
+        setLastFetchTimestamp(end);
+        delegate.onFetchCompleted();
       }
     };
 
@@ -436,7 +437,8 @@ public class FormHistoryRepositorySession extends
           synchronized (recordsBufferMonitor) {
             flushInsertQueue();
           }
-          storeDelegate.deferredStoreDelegate(storeWorkQueue).onStoreCompleted(now());
+          setLastStoreTimestamp(now());
+          storeDelegate.deferredStoreDelegate(storeWorkQueue).onStoreCompleted();
         } catch (Exception e) {
           // XXX TODO
           storeDelegate.deferredStoreDelegate(storeWorkQueue).onRecordStoreFailed(e, null);

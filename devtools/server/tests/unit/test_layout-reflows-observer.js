@@ -10,6 +10,7 @@ var {
   releaseLayoutChangesObserver,
   LayoutChangesObserver
 } = require("devtools/server/actors/reflow");
+const EventEmitter = require("devtools/shared/event-emitter");
 
 // Override set/clearTimeout on LayoutChangesObserver to avoid depending on
 // time in this unit test. This means that LayoutChangesObserver.eventLoopTimer
@@ -20,10 +21,13 @@ LayoutChangesObserver.prototype._clearTimeout = function () {};
 
 // Mock the tabActor since we only really want to test the LayoutChangesObserver
 // and don't want to depend on a window object, nor want to test protocol.js
-function MockTabActor() {
-  this.window = new MockWindow();
-  this.windows = [this.window];
-  this.attached = true;
+class MockTabActor extends EventEmitter {
+  constructor() {
+    super();
+    this.window = new MockWindow();
+    this.windows = [this.window];
+    this.attached = true;
+  }
 }
 
 function MockWindow() {}

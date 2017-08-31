@@ -60,7 +60,7 @@ const wchar_t kAMDVP9DecoderDLLName[] =
 #error Unsupported Windows CPU Architecture
 #endif
 
-const CLSID CLSID_AMDWebmMfVp9Dec =
+extern const GUID CLSID_AMDWebmMfVp9Dec =
 {
   0x2d2d728a,
   0x67d6,
@@ -549,7 +549,13 @@ WMFVideoMFTManager::LoadAMDVP9Decoder()
   MOZ_ASSERT(mStreamType == VP9);
 
   RefPtr<MFTDecoder> decoder = new MFTDecoder();
-  // Check if we can load the AMD VP9 decoder.
+
+  HRESULT hr = decoder->Create(CLSID_AMDWebmMfVp9Dec);
+  if (SUCCEEDED(hr)) {
+    return decoder.forget();
+  }
+
+  // Check if we can load the AMD VP9 decoder using the path name.
   nsString path = GetProgramW6432Path();
   path.Append(kAMDVPXDecoderDLLPath);
   path.Append(kAMDVP9DecoderDLLName);
@@ -558,7 +564,7 @@ WMFVideoMFTManager::LoadAMDVP9Decoder()
   if (!decoderDLL) {
     return nullptr;
   }
-  HRESULT hr = decoder->Create(decoderDLL, CLSID_AMDWebmMfVp9Dec);
+  hr = decoder->Create(decoderDLL, CLSID_AMDWebmMfVp9Dec);
   NS_ENSURE_TRUE(SUCCEEDED(hr), nullptr);
   return decoder.forget();
 }
@@ -603,7 +609,8 @@ WMFVideoMFTManager::InitInternal()
   RefPtr<MFTDecoder> decoder;
 
   HRESULT hr;
-  if (mStreamType == VP9 && useDxva && mCheckForAMDDecoder) {
+  if (mStreamType == VP9 && useDxva && mCheckForAMDDecoder &&
+      MediaPrefs::PDMWMFAMDVP9DecoderEnabled()) {
     if ((decoder = LoadAMDVP9Decoder())) {
       mAMDVP9InUse = true;
     }

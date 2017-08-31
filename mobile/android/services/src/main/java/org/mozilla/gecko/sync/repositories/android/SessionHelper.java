@@ -336,7 +336,7 @@ import org.mozilla.gecko.sync.repositories.domain.Record;
                                 record.guid
                         );
                     } else {
-                        Logger.info(LOG_TAG, "Stored after reconcile attempt #" + reconcileAttempt);
+                        Logger.debug(LOG_TAG, "Stored after reconcile attempt #" + reconcileAttempt);
                     }
                 } catch (MultipleRecordsForGuidException e) {
                     Logger.error(LOG_TAG, "Multiple records returned for given guid: " + record.guid);
@@ -569,7 +569,7 @@ import org.mozilla.gecko.sync.repositories.domain.Record;
             try {
                 try {
                     if (!cursor.moveToFirst()) {
-                        delegate.onFetchCompleted(end);
+                        delegate.onFetchCompleted();
                         return;
                     }
                     while (!cursor.isAfterLast()) {
@@ -584,7 +584,8 @@ import org.mozilla.gecko.sync.repositories.domain.Record;
                         }
                         cursor.moveToNext();
                     }
-                    delegate.onFetchCompleted(end);
+                    session.setLastFetchTimestamp(end);
+                    delegate.onFetchCompleted();
 //                } catch (NoGuidForIdException e) {
 //                    Logger.warn(LOG_TAG, "No GUID for ID.", e);
 //                    delegate.onFetchFailed(e);

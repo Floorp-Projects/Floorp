@@ -675,7 +675,7 @@ MediaCache::CloseStreamsForPrivateBrowsing()
   MOZ_ASSERT(NS_IsMainThread());
   for (MediaCacheStream* s : mStreams) {
     if (s->mIsPrivateBrowsing) {
-      s->Close();
+      s->mClient->Close();
     }
   }
 }
@@ -1459,8 +1459,7 @@ MediaCache::Update()
       // Close the streams that failed due to error. This will cause all
       // client Read and Seek operations on those streams to fail. Blocked
       // Reads will also be woken up.
-      ReentrantMonitorAutoEnter mon(mReentrantMonitor);
-      stream->CloseInternal(mon);
+      stream->mClient->Close();
     }
   }
 
@@ -1880,11 +1879,8 @@ void
 MediaCacheStream::NotifyDataReceived(int64_t aSize, const char* aData,
     nsIPrincipal* aPrincipal)
 {
-  NS_ASSERTION(NS_IsMainThread(), "Only call on main thread");
-
-  if (mClosed) {
-    return;
-  }
+  // This might happen off the main thread.
+  MOZ_DIAGNOSTIC_ASSERT(!mClosed);
 
   // Update principals before putting the data in the cache. This is important,
   // we want to make sure all principals are updated before any consumer
@@ -2112,33 +2108,26 @@ MediaCacheStream::Close()
 {
   NS_ASSERTION(NS_IsMainThread(), "Only call on main thread");
 
-  if (!mMediaCache) {
+  if (!mMediaCache || mClosed) {
     return;
   }
 
-  ReentrantMonitorAutoEnter mon(mMediaCache->GetReentrantMonitor());
-  CloseInternal(mon);
-  // Queue an Update since we may have created more free space. Don't do
-  // it from CloseInternal since that gets called by Update() itself
-  // sometimes, and we try to not to queue updates from Update().
-  mMediaCache->QueueUpdate();
-}
-
-void
-MediaCacheStream::CloseInternal(ReentrantMonitorAutoEnter& aReentrantMonitor)
-{
-  NS_ASSERTION(NS_IsMainThread(), "Only call on main thread");
-
-  if (mClosed)
-    return;
   mClosed = true;
+
   // Closing a stream will change the return value of
   // MediaCacheStream::AreAllStreamsForResourceSuspended as well as
   // ChannelMediaResource::IsSuspendedByCache. Let's notify it.
   mMediaCache->QueueSuspendedStatusUpdate(mResourceID);
+
+  ReentrantMonitorAutoEnter mon(mMediaCache->GetReentrantMonitor());
   mMediaCache->ReleaseStreamBlocks(this);
   // Wake up any blocked readers
-  aReentrantMonitor.NotifyAll();
+  mon.NotifyAll();
+
+  // Queue an Update since we may have created more free space. Don't do
+  // it from CloseInternal since that gets called by Update() itself
+  // sometimes, and we try to not to queue updates from Update().
+  mMediaCache->QueueUpdate();
 }
 
 void

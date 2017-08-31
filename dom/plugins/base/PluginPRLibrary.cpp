@@ -4,6 +4,7 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
+#include "mozilla/Assertions.h"
 #include "mozilla/PluginPRLibrary.h"
 #include "nsNPAPIPluginInstance.h"
 
@@ -16,7 +17,7 @@
 // gNotOptimized exists so that the compiler will not optimize the alloca
 // below.
 static int gNotOptimized;
-#define CALLING_CONVENTION_HACK void* foo = _alloca(gNotOptimized);
+#define CALLING_CONVENTION_HACK void* foo MOZ_UNUSED_ATTRIBUTE = _alloca(gNotOptimized);
 #else
 #define CALLING_CONVENTION_HACK
 #endif

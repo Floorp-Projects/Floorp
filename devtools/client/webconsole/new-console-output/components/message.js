@@ -89,10 +89,11 @@ const Message = createClass({
   },
 
   onContextMenu(e) {
-    let { serviceContainer, source, request } = this.props;
+    let { serviceContainer, source, request, messageId } = this.props;
     let messageInfo = {
       source,
       request,
+      messageId,
     };
     serviceContainer.openContextMenu(e, messageInfo);
     e.stopPropagation();

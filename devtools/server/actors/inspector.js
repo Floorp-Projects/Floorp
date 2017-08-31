@@ -58,7 +58,7 @@ const {LongStringActor} = require("devtools/server/actors/string");
 const promise = require("promise");
 const defer = require("devtools/shared/defer");
 const {Task} = require("devtools/shared/task");
-const events = require("devtools/shared/event-emitter");
+const EventEmitter = require("devtools/shared/event-emitter");
 const {WalkerSearch} = require("devtools/server/actors/utils/walker-search");
 const {PageStyleActor, getFontPreviewData} = require("devtools/server/actors/styles");
 const {
@@ -298,7 +298,7 @@ var NodeActor = exports.NodeActor = protocol.ActorClassWithSpec(nodeSpec, {
 
     // Fire an event so, other modules can create its own properties
     // that should be passed to the client (within the form.props field).
-    events.emit(NodeActor, "form", {
+    EventEmitter.emit(NodeActor, "form", {
       target: this,
       data: form
     });
@@ -890,8 +890,8 @@ var WalkerActor = protocol.ActorClassWithSpec(walkerSpec, {
     this.onFrameLoad = this.onFrameLoad.bind(this);
     this.onFrameUnload = this.onFrameUnload.bind(this);
 
-    events.on(tabActor, "will-navigate", this.onFrameUnload);
-    events.on(tabActor, "window-ready", this.onFrameLoad);
+    tabActor.on("will-navigate", this.onFrameUnload);
+    tabActor.on("window-ready", this.onFrameLoad);
 
     // Ensure that the root document node actor is ready and
     // managed.
@@ -981,8 +981,8 @@ var WalkerActor = protocol.ActorClassWithSpec(walkerSpec, {
       this._retainedOrphans = null;
       this._refMap = null;
 
-      events.off(this.tabActor, "will-navigate", this.onFrameUnload);
-      events.off(this.tabActor, "window-ready", this.onFrameLoad);
+      this.tabActor.off("will-navigate", this.onFrameUnload);
+      this.tabActor.off("window-ready", this.onFrameLoad);
 
       this.onFrameLoad = null;
       this.onFrameUnload = null;
@@ -1002,7 +1002,7 @@ var WalkerActor = protocol.ActorClassWithSpec(walkerSpec, {
       this.layoutActor = null;
       this.tabActor = null;
 
-      events.emit(this, "destroyed");
+      this.emit("destroyed");
     } catch (e) {
       console.error(e);
     }
@@ -1077,7 +1077,7 @@ var WalkerActor = protocol.ActorClassWithSpec(walkerSpec, {
     }
 
     if (changes.length) {
-      events.emit(this, "display-change", changes);
+      this.emit("display-change", changes);
     }
   },
 
@@ -1085,7 +1085,7 @@ var WalkerActor = protocol.ActorClassWithSpec(walkerSpec, {
    * When the browser window gets resized, relay the event to the front.
    */
   _onResize: function () {
-    events.emit(this, "resize");
+    this.emit("resize");
   },
 
   /**
@@ -2333,7 +2333,7 @@ var WalkerActor = protocol.ActorClassWithSpec(walkerSpec, {
     this._pendingMutations.push(mutation);
 
     if (needEvent) {
-      events.emit(this, "new-mutations");
+      this.emit("new-mutations");
     }
   },
 
@@ -2347,7 +2347,7 @@ var WalkerActor = protocol.ActorClassWithSpec(walkerSpec, {
     // Notify any observers that want *all* mutations (even on nodes that aren't
     // referenced).  This is not sent over the protocol so can only be used by
     // scripts running in the server process.
-    events.emit(this, "any-mutation");
+    this.emit("any-mutation");
 
     for (let change of mutations) {
       let targetActor = this.getNode(change.target);
@@ -2760,7 +2760,7 @@ exports.InspectorActor = protocol.ActorClassWithSpec(inspectorSpec, {
       window.removeEventListener("DOMContentLoaded", domReady, true);
       this.walker = WalkerActor(this.conn, tabActor, options);
       this.manage(this.walker);
-      events.once(this.walker, "destroyed", () => {
+      this.walker.once("destroyed", () => {
         this._walkerPromise = null;
         this._pageStylePromise = null;
       });
@@ -2913,7 +2913,7 @@ exports.InspectorActor = protocol.ActorClassWithSpec(inspectorSpec, {
     this._eyeDropper.show(this.window.document.documentElement, options);
     this._eyeDropper.once("selected", this._onColorPicked);
     this._eyeDropper.once("canceled", this._onColorPickCanceled);
-    events.once(this.tabActor, "will-navigate", this.destroyEyeDropper);
+    this.tabActor.once("will-navigate", this.destroyEyeDropper);
   },
 
   /**
@@ -2926,7 +2926,7 @@ exports.InspectorActor = protocol.ActorClassWithSpec(inspectorSpec, {
       this._eyeDropper.hide();
       this._eyeDropper.off("selected", this._onColorPicked);
       this._eyeDropper.off("canceled", this._onColorPickCanceled);
-      events.off(this.tabActor, "will-navigate", this.destroyEyeDropper);
+      this.tabActor.off("will-navigate", this.destroyEyeDropper);
     }
   },
 
@@ -2954,11 +2954,11 @@ exports.InspectorActor = protocol.ActorClassWithSpec(inspectorSpec, {
   },
 
   _onColorPicked: function (e, color) {
-    events.emit(this, "color-picked", color);
+    this.emit("color-picked", color);
   },
 
   _onColorPickCanceled: function () {
-    events.emit(this, "color-pick-canceled");
+    this.emit("color-pick-canceled");
   }
 });
 

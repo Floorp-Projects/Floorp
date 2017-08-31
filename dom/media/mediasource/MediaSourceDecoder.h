@@ -14,7 +14,6 @@ namespace mozilla {
 
 class MediaDecoderStateMachine;
 class MediaSourceDemuxer;
-class MediaSourceResource;
 
 namespace dom {
 
@@ -74,7 +73,6 @@ private:
   bool CanPlayThroughImpl() override;
   bool IsLiveStream() override final { return !mEnded; }
 
-  UniquePtr<MediaSourceResource> mResource;
   RefPtr<nsIPrincipal> mPrincipal;
 
   // The owning MediaSource holds a strong reference to this decoder, and

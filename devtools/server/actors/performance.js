@@ -9,8 +9,6 @@ const { Actor, ActorClassWithSpec } = require("devtools/shared/protocol");
 const { actorBridgeWithSpec } = require("devtools/server/actors/common");
 const { performanceSpec } = require("devtools/shared/specs/performance");
 
-loader.lazyRequireGetter(this, "events", "devtools/shared/event-emitter");
-
 loader.lazyRequireGetter(this, "PerformanceRecorder",
   "devtools/server/performance/recorder", true);
 loader.lazyRequireGetter(this, "normalizePerformanceFeatures",
@@ -48,11 +46,11 @@ var PerformanceActor = ActorClassWithSpec(performanceSpec, {
     Actor.prototype.initialize.call(this, conn);
     this._onRecorderEvent = this._onRecorderEvent.bind(this);
     this.bridge = new PerformanceRecorder(conn, tabActor);
-    events.on(this.bridge, "*", this._onRecorderEvent);
+    this.bridge.on("*", this._onRecorderEvent);
   },
 
   destroy: function () {
-    events.off(this.bridge, "*", this._onRecorderEvent);
+    this.bridge.off("*", this._onRecorderEvent);
     this.bridge.destroy();
     Actor.prototype.destroy.call(this);
   },
@@ -98,7 +96,7 @@ var PerformanceActor = ActorClassWithSpec(performanceSpec, {
     }
 
     if (PIPE_TO_FRONT_EVENTS.has(eventName)) {
-      events.emit(this, eventName, ...data);
+      this.emit(eventName, ...data);
     }
   },
 });

@@ -19,8 +19,9 @@ flake8:
         - tools/mercurial
         - tools/tryselect
         - toolkit/components/telemetry
-    exclude:
-        - testing/mochitest/pywebsocket
+    # Excludes should be added to topsrcdir/.flake8 due to a bug in flake8 where
+    # specifying --exclude causes custom configuration files to be ignored.
+    exclude: []
     extensions: ['py']
     type: external
     payload: flake8_:lint

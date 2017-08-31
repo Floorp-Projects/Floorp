@@ -21,7 +21,7 @@ public interface RepositorySessionFetchRecordsDelegate {
    *        which the request was received.
    *        E.g., the (normalized) value of the X-Weave-Timestamp header.
    */
-  void onFetchCompleted(final long fetchEnd);
+  void onFetchCompleted();
 
   /**
    * Called when a number of records have been returned but more are still expected to come,

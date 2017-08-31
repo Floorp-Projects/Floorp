@@ -553,6 +553,21 @@ add_task(async function activitySteamProvider_deleteHistoryLink() {
   // ensure that there's only one link left
   size = await NewTabUtils.activityStreamProvider.getHistorySize();
   Assert.equal(size, 1, "expected history size");
+
+  // pin the link and delete it
+  const linkToPin = {"url": "https://mozilla1.com/0"};
+  NewTabUtils.pinnedLinks.pin(linkToPin, 0);
+
+  // sanity check that the correct link was pinned
+  Assert.equal(NewTabUtils.pinnedLinks.links.length, 1, "added a link to pinned sites");
+  Assert.equal(NewTabUtils.pinnedLinks.isPinned(linkToPin), true, "pinned the correct link");
+
+  // delete the pinned link and ensure it was both deleted from history and unpinned
+  deleted = await provider.deleteHistoryEntry("https://mozilla1.com/0");
+  size = await NewTabUtils.activityStreamProvider.getHistorySize();
+  Assert.equal(deleted, true, "link is deleted");
+  Assert.equal(size, 0, "expected history size");
+  Assert.equal(NewTabUtils.pinnedLinks.links.length, 0, "unpinned the deleted link");
 });
 
 add_task(async function activityStream_deleteBookmark() {

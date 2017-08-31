@@ -101,9 +101,7 @@ public class PayloadUploadDelegateTest {
         }
 
         @Override
-        public void onStoreCompleted(long storeEnd) {
-
-        }
+        public void onStoreCompleted() {}
 
         @Override
         public void onStoreFailed(Exception e) {

@@ -2,7 +2,6 @@ use command::Parameters;
 use error::{ErrorStatus, WebDriverError, WebDriverResult};
 use rustc_serialize::json::{Json, ToJson};
 use std::collections::BTreeMap;
-use std::net::Ipv6Addr;
 use url::Url;
 
 pub type Capabilities = BTreeMap<String, Json>;
@@ -171,14 +170,14 @@ impl SpecNewSessionParameters {
                         "proxyAutoconfigUrl was not a string"
                     ))
                 },
-                "ftpProxy" => try!(SpecNewSessionParameters::validate_host_domain("ftpProxy", "ftp", obj, value)),
-                "ftpProxyPort" => try!(SpecNewSessionParameters::validate_port("ftpProxyPort", value)),
-                "httpProxy" => try!(SpecNewSessionParameters::validate_host_domain("httpProxy", "http", obj, value)),
-                "httpProxyPort" => try!(SpecNewSessionParameters::validate_port("httpProxyPort", value)),
-                "sslProxy" => try!(SpecNewSessionParameters::validate_host_domain("sslProxy", "http", obj, value)),
-                "sslProxyPort" => try!(SpecNewSessionParameters::validate_port("sslProxyPort", value)),
-                "socksProxy" => try!(SpecNewSessionParameters::validate_host_domain("socksProxy", "ssh", obj, value)),
-                "socksProxyPort" => try!(SpecNewSessionParameters::validate_port("socksProxyPort", value)),
+                "ftpProxy" => try!(SpecNewSessionParameters::validate_host(value)),
+                "httpProxy" => try!(SpecNewSessionParameters::validate_host(value)),
+                "sslProxy" => try!(SpecNewSessionParameters::validate_host(value)),
+                "socksProxy" => try!(SpecNewSessionParameters::validate_host(value)),
+                "socksVersion" => if !value.is_number() {
+                    return Err(WebDriverError::new(ErrorStatus::InvalidArgument,
+                                                   "socksVersion was not a number"))
+                },
                 "socksUsername" => if !value.is_string() {
                     return Err(WebDriverError::new(ErrorStatus::InvalidArgument,
                                                    "socksUsername was not a string"))
@@ -197,32 +196,21 @@ impl SpecNewSessionParameters {
 
     /// Validate whether a named capability is JSON value is a string containing a host
     /// and possible port
-    fn validate_host_domain(name: &str,
-                            scheme: &str,
-                            obj: &Capabilities,
-                            value: &Json) -> WebDriverResult<()> {
+    fn validate_host(value: &Json) -> WebDriverResult<()> {
         match value.as_string() {
-            Some(x) => {
-                if x.contains("::/") {
+            Some(host) => {
+                if host.contains("://") {
                     return Err(WebDriverError::new(
                         ErrorStatus::InvalidArgument,
-                        format!("{} contains a scheme", name)));
+                        format!("{} contains a scheme", host)));
                 }
 
-                // IPv6 hosts must be enclosed with "[" and "]" in URLs
-                let host = match x.parse::<Ipv6Addr>() {
-                    Ok(ip) => format!("[{}]", ip),
-                    Err(_) => x.to_owned(),
-                };
-
-                let mut s = String::with_capacity(scheme.len() + host.len() + 3);
-                s.push_str(scheme);
-                s.push_str("://");
-                s.push_str(host.as_str());
-
-                let url = try!(Url::parse(&*s).or(Err(WebDriverError::new(
+                // Temporarily add a scheme so the host can be parsed as URL
+                let s = String::from(format!("http://{}", host));
+                let url = try!(Url::parse(s.as_str()).or(Err(WebDriverError::new(
                     ErrorStatus::InvalidArgument,
-                    format!("{} was not a valid url", name)))));
+                    format!("{} is not a valid host", host)))));
+
                 if url.username() != "" ||
                     url.password() != None ||
                     url.path() != "/" ||
@@ -230,39 +218,13 @@ impl SpecNewSessionParameters {
                     url.fragment() != None {
                         return Err(WebDriverError::new(
                             ErrorStatus::InvalidArgument,
-                            format!("{} was not of the form host[:port]", name)));
-                    }
-                let mut port_key = String::with_capacity(name.len() + 4);
-                port_key.push_str(name);
-                port_key.push_str("Port");
-                if url.port() != None &&
-                    obj.contains_key(&*port_key) {
-                        return Err(WebDriverError::new(
-                                    ErrorStatus::InvalidArgument,
-                                    format!("{} supplied with a port as well as {}",
-                                            name, port_key)));
+                            format!("{} was not of the form host[:port]", host)));
                     }
             },
             None => return Err(WebDriverError::new(
                 ErrorStatus::InvalidArgument,
-                format!("{} was not a string", name)
+                format!("{} was not a string", value)
             ))
-        }
-        Ok(())
-    }
-
-    fn validate_port(name: &str, value: &Json) -> WebDriverResult<()> {
-        match value.as_i64() {
-            Some(x) => {
-                if x < 0 || x > 2i64.pow(16) - 1 {
-                    return Err(WebDriverError::new(
-                        ErrorStatus::InvalidArgument,
-                        format!("{} is out of range", name)))
-                }
-            }
-            _ => return Err(WebDriverError::new(
-                ErrorStatus::InvalidArgument,
-                format!("{} was not an integer", name)))
         }
         Ok(())
     }
@@ -533,36 +495,26 @@ impl ToJson for LegacyNewSessionParameters {
 #[cfg(test)]
 mod tests {
     use rustc_serialize::json::Json;
-    use std::collections::BTreeMap;
     use super::{WebDriverResult, SpecNewSessionParameters};
 
-    fn parse(data: &str) -> BTreeMap<String, Json> {
-        Json::from_str(&*data).unwrap().as_object().unwrap().clone()
-    }
-
-    fn validate_host(name: &str, scheme: &str, caps: &str, value: &str) -> WebDriverResult<()> {
-        SpecNewSessionParameters::validate_host_domain(name,
-                                                       scheme,
-                                                       &parse(caps),
-                                                       &Json::String(value.into()))
+    fn validate_host(value: &str) -> WebDriverResult<()> {
+        SpecNewSessionParameters::validate_host(&Json::String(value.into()))
     }
 
     #[test]
-    fn test_validate_host_domain() {
-        validate_host("ftpProxy", "ftp", "{}", "example.org").unwrap();
-        validate_host("ftpProxy", "ftp", "{}", "::1").unwrap();
-        assert!(validate_host("ftpProxy", "ftp", "{}", "ftp://example.org").is_err());
-        assert!(validate_host("ftpProxy", "ftp", "{}", "example.org/foo").is_err());
-        assert!(validate_host("ftpProxy", "ftp", "{}", "example.org#bar").is_err());
-        assert!(validate_host("ftpProxy", "ftp", "{}", "example.org?bar=baz").is_err());
-        assert!(validate_host("ftpProxy", "ftp", "{}", "foo:bar@example.org").is_err());
-        assert!(validate_host("ftpProxy", "ftp", "{}", "foo@example.org").is_err());
-        validate_host("httpProxy", "http", "{}", "example.org:8000").unwrap();
-        validate_host("httpProxy", "http", "{}", "::1:8000").unwrap();
-        validate_host("httpProxy", "http", "{\"ftpProxyPort\": \"1234\"}", "example.org:8000").unwrap();
-        assert!(validate_host("httpProxy", "http", "{\"httpProxyPort\": \"1234\"}", "example.org:8000").is_err());
-        validate_host("sslProxy", "http", "{}", "example.org:8000").unwrap();
-        validate_host("sslProxy", "http", "{\"ftpProxyPort\": \"1234\"}", "example.org:8000").unwrap();
-        assert!(validate_host("sslProxy", "http", "{\"sslProxyPort\": \"1234\"}", "example.org:8000").is_err());
+    fn test_validate_host() {
+        validate_host("127.0.0.1").unwrap();
+        validate_host("127.0.0.1:").unwrap();
+        validate_host("127.0.0.1:3128").unwrap();
+        validate_host("[2001:db8::1]").unwrap();
+        validate_host("[2001:db8::1]:3128").unwrap();
+        validate_host("localhost").unwrap();
+        validate_host("localhost:3128").unwrap();
+        validate_host("example.org").unwrap();
+        validate_host("example.org:3128").unwrap();
+
+        assert!(validate_host("http://example.org").is_err());  // existing scheme
+        assert!(validate_host("example.org:-1").is_err());  // invalid port
+        assert!(validate_host("2001:db8::1").is_err());  // missing brackets
     }
 }

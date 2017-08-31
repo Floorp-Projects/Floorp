@@ -9,7 +9,7 @@ const { promisesSpec } = require("devtools/shared/specs/promises");
 const { expectState, ActorPool } = require("devtools/server/actors/common");
 const { ObjectActor, createValueGrip } = require("devtools/server/actors/object");
 const DevToolsUtils = require("devtools/shared/DevToolsUtils");
-loader.lazyRequireGetter(this, "events", "devtools/shared/event-emitter");
+const EventEmitter = require("devtools/shared/event-emitter");
 
 /**
  * The Promises Actor provides support for getting the list of live promises and
@@ -72,7 +72,7 @@ var PromisesActor = protocol.ActorClassWithSpec(promisesSpec, {
       this.parentActor.sources.createSourceActors(s.source);
     };
 
-    events.on(this.parentActor, "window-ready", this._onWindowReady);
+    EventEmitter.on(this.parentActor, "window-ready", this._onWindowReady);
 
     this.state = "attached";
   }, "attaching to the PromisesActor"),
@@ -92,7 +92,7 @@ var PromisesActor = protocol.ActorClassWithSpec(promisesSpec, {
       this._navigationLifetimePool = null;
     }
 
-    events.off(this.parentActor, "window-ready", this._onWindowReady);
+    EventEmitter.off(this.parentActor, "window-ready", this._onWindowReady);
 
     this.state = "detached";
   }),
@@ -180,7 +180,7 @@ var PromisesActor = protocol.ActorClassWithSpec(promisesSpec, {
 
       if (needsScheduling) {
         DevToolsUtils.executeSoon(() => {
-          events.emit(this, eventName, array.splice(0, array.length));
+          this.emit(eventName, array.splice(0, array.length));
         });
       }
     };

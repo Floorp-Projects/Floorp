@@ -35,4 +35,7 @@
     <circle cx="100" cy="100" r="5"/>
     <g/>
   </g>
+  <use x="100" y="100" id="use_v" href="#v"/>
+  <use x="100" y="100" id="use_h" href="#h"/>
+  <use x="100" y="100" id="use_e" href="#e"/>
 </svg>

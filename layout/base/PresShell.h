@@ -902,6 +902,8 @@ protected:
 
   static mozilla::TimeStamp sLastInputCreated;
   static mozilla::TimeStamp sLastInputProcessed;
+
+  static bool               sProcessInteractable;
 };
 
 } // namespace mozilla

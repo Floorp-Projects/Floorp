@@ -43,4 +43,10 @@ public interface WebpageModel {
     void updateBookmarked(boolean bookmarked);
 
     void updatePinned(boolean pinned);
+
+    /**
+     * Handle any model updates that need to happen when committing state, such as bookmark or
+     * pin state.
+     */
+    void onStateCommitted();
 }

@@ -49,6 +49,8 @@
       <hbox id="storage-toolbar" class="devtools-toolbar">
         <button id="add-button"
                 class="devtools-button add-button"></button>
+        <button id="refresh-button"
+                class="devtools-button refresh-button"></button>
         <spacer flex="1"/>
         <textbox id="storage-searchbox"
                  class="devtools-filterinput"

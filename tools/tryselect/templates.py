@@ -54,6 +54,20 @@ class Artifact(Template):
             pass
 
 
+class Environment(Template):
+
+    def add_arguments(self, parser):
+        parser.add_argument('--env', action='append', default=None,
+                            help='Set an environment variable, of the form FOO=BAR. '
+                                 'Can be passed in multiple times.')
+
+    def context(self, env, **kwargs):
+        if not env:
+            return
+        return dict(e.split('=', 1) for e in env)
+
+
 all_templates = {
     'artifact': Artifact,
+    'env': Environment,
 }

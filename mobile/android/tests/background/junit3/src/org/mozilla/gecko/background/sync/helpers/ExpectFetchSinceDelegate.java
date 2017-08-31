@@ -24,7 +24,7 @@ public class ExpectFetchSinceDelegate extends DefaultFetchDelegate {
   }
 
   @Override
-  public void onFetchCompleted(final long fetchEnd) {
+  public void onFetchCompleted() {
     AssertionFailedError err = null;
     try {
       int countSpecials = 0;

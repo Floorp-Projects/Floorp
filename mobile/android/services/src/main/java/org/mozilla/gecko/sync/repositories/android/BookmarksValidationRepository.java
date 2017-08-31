@@ -185,9 +185,9 @@ public class BookmarksValidationRepository extends Repository {
                 }
 
                 @Override
-                public void onFetchCompleted(long fetchEnd) {
+                public void onFetchCompleted() {
                     validateForTelemetry();
-                    delegate.onFetchCompleted(fetchEnd);
+                    delegate.onFetchCompleted();
                 }
 
                 @Override

@@ -1221,34 +1221,12 @@ ServoRestyleManager::ContentStateChanged(nsIContent* aContent,
   }
 
   Element* aElement = aContent->AsElement();
-  nsChangeHint changeHint;
-  nsRestyleHint restyleHint;
-
   if (!aElement->HasServoData()) {
     return;
   }
 
-  // NOTE: restyleHint here is effectively always 0, since that's what
-  // ServoStyleSet::HasStateDependentStyle returns. Servo computes on
-  // ProcessPendingRestyles using the ElementSnapshot, but in theory could
-  // compute it sequentially easily.
-  //
-  // Determine what's the best way to do it, and how much work do we save
-  // processing the restyle hint early (i.e., computing the style hint here
-  // sequentially, potentially saving the snapshot), vs lazily (snapshot
-  // approach).
-  //
-  // If we take the sequential approach we need to specialize Servo's restyle
-  // hints system a bit more, and mesure whether we save something storing the
-  // restyle hint in the table and deferring the dirtiness setting until
-  // ProcessPendingRestyles (that's a requirement if we store snapshots though),
-  // vs processing the restyle hint in-place, dirtying the nodes on
-  // PostRestyleEvent.
-  //
-  // If we definitely take the snapshot approach, we should take rid of
-  // HasStateDependentStyle, etc (though right now they're no-ops).
-  ContentStateChangedInternal(aElement, aChangedBits, &changeHint,
-                              &restyleHint);
+  nsChangeHint changeHint;
+  ContentStateChangedInternal(aElement, aChangedBits, &changeHint);
 
   // Don't bother taking a snapshot if no rules depend on these state bits.
   //
@@ -1264,8 +1242,8 @@ ServoRestyleManager::ContentStateChanged(nsIContent* aContent,
   EventStates previousState = aElement->StyleState() ^ aChangedBits;
   snapshot.AddState(previousState);
 
-  if (restyleHint || changeHint) {
-    Servo_NoteExplicitHints(aElement, restyleHint, changeHint);
+  if (changeHint) {
+    Servo_NoteExplicitHints(aElement, nsRestyleHint(0), changeHint);
   }
 
   // Assuming we need to invalidate cached style in getComputedStyle for

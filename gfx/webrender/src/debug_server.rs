@@ -15,7 +15,7 @@ use ws;
 // that none of these types are exposed to the RenderApi interfaces.
 // We can't use select!() as it's not stable...
 pub enum DebugMsg {
-    FetchBatches(ws::Sender),
+    FetchPasses(ws::Sender),
 }
 
 // Represents a connection to a client.
@@ -48,8 +48,8 @@ impl ws::Handler for Server {
                     "disable_render_target_debug" => {
                         DebugCommand::EnableRenderTargetDebug(false)
                     }
-                    "fetch_batches" => {
-                        let msg = DebugMsg::FetchBatches(self.ws.clone());
+                    "fetch_passes" => {
+                        let msg = DebugMsg::FetchPasses(self.ws.clone());
                         self.debug_tx.send(msg).unwrap();
                         DebugCommand::Flush
                     }
@@ -92,7 +92,9 @@ impl DebugServer {
         let broadcaster = socket.broadcaster();
 
         let join_handle = Some(thread::spawn(move || {
-            socket.listen("127.0.0.1:3583").unwrap();
+            if let Err(..) = socket.listen("127.0.0.1:3583") {
+                println!("ERROR: Unable to bind debugger websocket (port may be in use).");
+            }
         }));
 
         DebugServer {
@@ -105,39 +107,86 @@ impl DebugServer {
 
 impl Drop for DebugServer {
     fn drop(&mut self) {
-        self.broadcaster.shutdown().unwrap();
-        self.join_handle.take().unwrap().join().unwrap();
+        self.broadcaster.shutdown().ok();
+        self.join_handle.take().unwrap().join().ok();
     }
 }
 
-// A serializable list of debug information about batches
+// A serializable list of debug information about passes
 // that can be sent to the client.
+
 #[derive(Serialize)]
-pub struct BatchInfo {
-    kind: &'static str,
-    count: usize,
+pub enum BatchKind {
+    Clip,
+    Cache,
+    Opaque,
+    Alpha,
 }
 
 #[derive(Serialize)]
-pub struct BatchList {
+pub struct PassList {
     kind: &'static str,
-    batches: Vec<BatchInfo>,
+    passes: Vec<Pass>,
 }
 
-impl BatchList {
-    pub fn new() -> BatchList {
-        BatchList {
-            kind: "batches",
+impl PassList {
+    pub fn new() -> PassList {
+        PassList {
+            kind: "passes",
+            passes: Vec::new(),
+        }
+    }
+
+    pub fn add(&mut self, pass: Pass) {
+        self.passes.push(pass);
+    }
+}
+
+#[derive(Serialize)]
+pub struct Pass {
+    targets: Vec<Target>,
+}
+
+impl Pass {
+    pub fn new() -> Pass {
+        Pass {
+            targets: Vec::new(),
+        }
+    }
+
+    pub fn add(&mut self, target: Target) {
+        self.targets.push(target);
+    }
+}
+
+#[derive(Serialize)]
+pub struct Target {
+    kind: &'static str,
+    batches: Vec<Batch>,
+}
+
+impl Target {
+    pub fn new(kind: &'static str) -> Target {
+        Target {
+            kind,
             batches: Vec::new(),
         }
     }
 
-    pub fn push(&mut self, kind: &'static str, count: usize) {
+    pub fn add(&mut self, kind: BatchKind, description: &str, count: usize) {
         if count > 0 {
-            self.batches.push(BatchInfo {
+            self.batches.push(Batch {
                 kind,
+                description: description.to_owned(),
                 count,
             });
         }
     }
+}
+
+#[derive(Serialize)]
+struct Batch {
+    kind: BatchKind,
+    description: String,
+    count: usize,
 }

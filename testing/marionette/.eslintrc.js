@@ -17,6 +17,7 @@ module.exports = {
     "no-fallthrough": "error",
     "no-new-object": "error",
     "no-undef-init": "error",
+    "no-var": "error",
     "object-curly-spacing": ["error", "never"],
     "semi": "error",
   }

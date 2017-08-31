@@ -7,7 +7,7 @@
 const { Cc, Ci, Cu, Cr } = require("chrome");
 const { getCurrentZoom, getWindowDimensions, getViewportDimensions,
   getRootBindingParent, loadSheet } = require("devtools/shared/layout/utils");
-const { on, emit } = require("devtools/shared/event-emitter");
+const EventEmitter = require("devtools/shared/event-emitter");
 
 const lazyContainer = {};
 
@@ -61,7 +61,7 @@ ClassList.prototype = {
     if (!this.contains(token)) {
       this[_tokens].push(token);
     }
-    emit(this, "update");
+    EventEmitter.emit(this, "update");
   },
   remove(token) {
     let index = this[_tokens].indexOf(token);
@@ -69,7 +69,7 @@ ClassList.prototype = {
     if (index > -1) {
       this[_tokens].splice(index, 1);
     }
-    emit(this, "update");
+    EventEmitter.emit(this, "update");
   },
   toggle(token) {
     if (this.contains(token)) {
@@ -482,7 +482,7 @@ CanvasFrameAnonymousContentHelper.prototype = {
 
     let classList = new ClassList(this.getAttributeForElement(id, "class"));
 
-    on(classList, "update", () => {
+    EventEmitter.on(classList, "update", () => {
       this.setAttributeForElement(id, "class", classList.toString());
     });
 

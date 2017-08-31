@@ -188,9 +188,11 @@ SVGTransformableElement::GetBBox(const SVGBoundingBoxOptions& aOptions,
   }
 
   if (!NS_SVGNewGetBBoxEnabled()) {
-    return NS_NewSVGRect(this, ToRect(nsSVGUtils::GetBBox(frame)));
+    return NS_NewSVGRect(this, ToRect(nsSVGUtils::GetBBox(frame,
+                                      nsSVGUtils::eBBoxIncludeFillGeometry |
+                                      nsSVGUtils::eUseUserSpaceOfUseElement)));
   } else {
-    uint32_t flags = 0;
+    uint32_t flags = nsSVGUtils::eUseUserSpaceOfUseElement;
     if (aOptions.mFill) {
       flags |= nsSVGUtils::eBBoxIncludeFill;
     }

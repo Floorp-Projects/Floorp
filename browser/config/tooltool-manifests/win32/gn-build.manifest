@@ -1,0 +1,26 @@
+[
+  {
+    "version": "Visual Studio 2015 Update 3 14.0.25425.01 / SDK 10.0.14393.0",
+    "size": 326656969,
+    "digest": "babc414ffc0457d27f5a1ed24a8e4873afbe2f1c1a4075469a27c005e1babc3b2a788f643f825efedff95b79686664c67ec4340ed535487168a3482e68559bc7",
+    "algorithm": "sha512",
+    "filename": "vs2015u3.zip",
+    "unpack": true
+  },
+  {
+    "version": "Ninja 1.7.1",
+    "size": 184821,
+    "digest": "e4f9a1ae624a2630e75264ba37d396d9c7407d6e6aea3763056210ba6e1387908bd31cf4037a6a3661a418e86c4d2761e0c333e6a3bd0d66549d2b0d72d3f43b",
+    "algorithm": "sha512",
+    "filename": "ninja171.zip",
+    "unpack": true
+  },
+  {
+    "version": "MinGit-2.13.3-64-bit",
+    "size": 21482885,
+    "digest": "929bb3c07be8487ee519422a312bdbfeec8f4db4b62c49d02f9aad9fd2a66c0ee5fad63d2b06c8744c336dc9d50446fa4457897333ad17ffd783ecabd1e2ddbb",
+    "algorithm": "sha512",
+    "filename": "git.zip",
+    "unpack": true
+  }
+]

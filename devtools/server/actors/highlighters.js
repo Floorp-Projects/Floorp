@@ -8,7 +8,6 @@ const { Ci, Cu } = require("chrome");
 
 const { XPCOMUtils } = require("resource://gre/modules/XPCOMUtils.jsm");
 const EventEmitter = require("devtools/shared/old-event-emitter");
-const events = require("devtools/shared/event-emitter");
 const protocol = require("devtools/shared/protocol");
 const Services = require("Services");
 const { isWindowIncluded } = require("devtools/shared/layout/utils");
@@ -106,7 +105,7 @@ exports.HighlighterActor = protocol.ActorClassWithSpec(highlighterSpec, {
 
     // Listen to navigation events to switch from the BoxModelHighlighter to the
     // SimpleOutlineHighlighter, and back, if the top level window changes.
-    events.on(this._tabActor, "navigate", this._onNavigate);
+    this._tabActor.on("navigate", this._onNavigate);
   },
 
   get conn() {
@@ -165,7 +164,7 @@ exports.HighlighterActor = protocol.ActorClassWithSpec(highlighterSpec, {
 
     this.hideBoxModel();
     this._destroyHighlighter();
-    events.off(this._tabActor, "navigate", this._onNavigate);
+    this._tabActor.off("navigate", this._onNavigate);
 
     this._highlighterEnv.destroy();
     this._highlighterEnv = null;
@@ -255,7 +254,7 @@ exports.HighlighterActor = protocol.ActorClassWithSpec(highlighterSpec, {
       // If shift is pressed, this is only a preview click, send the event to
       // the client, but don't stop picking.
       if (event.shiftKey) {
-        events.emit(this._walker, "picker-node-previewed",
+        this._walker.emit("picker-node-previewed",
           this._findAndAttachElement(event));
         return;
       }
@@ -270,7 +269,7 @@ exports.HighlighterActor = protocol.ActorClassWithSpec(highlighterSpec, {
       if (!this._currentNode) {
         this._currentNode = this._findAndAttachElement(event);
       }
-      events.emit(this._walker, "picker-node-picked", this._currentNode);
+      this._walker.emit("picker-node-picked", this._currentNode);
     };
 
     this._onHovered = event => {
@@ -283,7 +282,7 @@ exports.HighlighterActor = protocol.ActorClassWithSpec(highlighterSpec, {
       this._currentNode = this._findAndAttachElement(event);
       if (this._hoveredNode !== this._currentNode.node) {
         this._highlighter.show(this._currentNode.node.rawNode);
-        events.emit(this._walker, "picker-node-hovered", this._currentNode);
+        this._walker.emit("picker-node-hovered", this._currentNode);
         this._hoveredNode = this._currentNode.node;
       }
     };
@@ -345,13 +344,13 @@ exports.HighlighterActor = protocol.ActorClassWithSpec(highlighterSpec, {
         // Cancel pick mode.
         case Ci.nsIDOMKeyEvent.DOM_VK_ESCAPE:
           this.cancelPick();
-          events.emit(this._walker, "picker-node-canceled");
+          this._walker.emit("picker-node-canceled");
           return;
         case Ci.nsIDOMKeyEvent.DOM_VK_C:
           if ((IS_OSX && event.metaKey && event.altKey) ||
             (!IS_OSX && event.ctrlKey && event.shiftKey)) {
             this.cancelPick();
-            events.emit(this._walker, "picker-node-canceled");
+            this._walker.emit("picker-node-canceled");
           }
           return;
         default: return;
@@ -360,7 +359,7 @@ exports.HighlighterActor = protocol.ActorClassWithSpec(highlighterSpec, {
       // Store currently attached element
       this._currentNode = this._walker.attachElement(currentNode);
       this._highlighter.show(this._currentNode.node.rawNode);
-      events.emit(this._walker, "picker-node-hovered", this._currentNode);
+      this._walker.emit("picker-node-hovered", this._currentNode);
     };
 
     this._startPickerListeners();
@@ -414,11 +413,11 @@ exports.HighlighterActor = protocol.ActorClassWithSpec(highlighterSpec, {
   },
 
   _highlighterReady: function () {
-    events.emit(this._inspector.walker, "highlighter-ready");
+    this._inspector.walker.emit("highlighter-ready");
   },
 
   _highlighterHidden: function () {
-    events.emit(this._inspector.walker, "highlighter-hide");
+    this._inspector.walker.emit("highlighter-hide");
   },
 
   cancelPick: function () {
@@ -518,7 +517,7 @@ exports.CustomHighlighterActor = protocol.ActorClassWithSpec(customHighlighterSp
    * Upon receiving an event from the highlighter, forward it to the client.
    */
   _onHighlighterEvent: function (type, data) {
-    events.emit(this, "highlighter-event", data);
+    this.emit("highlighter-event", data);
   },
 
   /**
@@ -567,9 +566,9 @@ exports.HighlighterEnvironment = HighlighterEnvironment;
 HighlighterEnvironment.prototype = {
   initFromTabActor: function (tabActor) {
     this._tabActor = tabActor;
-    events.on(this._tabActor, "window-ready", this.relayTabActorWindowReady);
-    events.on(this._tabActor, "navigate", this.relayTabActorNavigate);
-    events.on(this._tabActor, "will-navigate", this.relayTabActorWillNavigate);
+    this._tabActor.on("window-ready", this.relayTabActorWindowReady);
+    this._tabActor.on("navigate", this.relayTabActorNavigate);
+    this._tabActor.on("will-navigate", this.relayTabActorWillNavigate);
   },
 
   initFromWindow: function (win) {
@@ -686,9 +685,9 @@ HighlighterEnvironment.prototype = {
 
   destroy: function () {
     if (this._tabActor) {
-      events.off(this._tabActor, "window-ready", this.relayTabActorWindowReady);
-      events.off(this._tabActor, "navigate", this.relayTabActorNavigate);
-      events.off(this._tabActor, "will-navigate", this.relayTabActorWillNavigate);
+      this._tabActor.off("window-ready", this.relayTabActorWindowReady);
+      this._tabActor.off("navigate", this.relayTabActorNavigate);
+      this._tabActor.off("will-navigate", this.relayTabActorWillNavigate);
     }
 
     // In case the environment was initialized from a window, we need to remove

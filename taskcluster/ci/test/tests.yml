@@ -676,8 +676,6 @@ mochitest-chrome:
     run-on-projects:
         by-test-platform:
             windows7-32.*: ['try']
-            linux32-stylo/debug: ['try']
-            linux64-stylo/debug: ['try']
             linux.*-stylo.*: ['autoland', 'mozilla-central', 'try']
             macosx64-stylo/.*: ['mozilla-central', 'try']
             default: built-projects
@@ -721,8 +719,6 @@ mochitest-chrome:
         by-test-platform:
             windows7-32.*: 2
             macosx64-stylo/.*: 2
-            linux32-stylo/debug: 3
-            linux64-stylo/debug: 3
             default: default
 
 mochitest-clipboard:

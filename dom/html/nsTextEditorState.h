@@ -220,9 +220,6 @@ public:
   bool IsTextArea() const {
     return mTextCtrlElement->IsTextArea();
   }
-  bool IsPlainTextControl() const {
-    return mTextCtrlElement->IsPlainTextControl();
-  }
   bool IsPasswordTextControl() const {
     return mTextCtrlElement->IsPasswordTextControl();
   }
@@ -258,7 +255,27 @@ public:
    */
   int32_t GetMaxLength();
 
-  void ClearValueCache() { mCachedValue.Truncate(); }
+  void ClearValueCache()
+  {
+    mCachedValue.SetIsVoid(true);
+    MOZ_ASSERT(mCachedValue.IsEmpty());
+  }
+  void SetValueCache(const nsAString& aValue)
+  {
+    mCachedValue.Assign(aValue);
+    MOZ_ASSERT(!mCachedValue.IsVoid());
+  }
+  MOZ_MUST_USE bool
+  SetValueCache(const nsAString& aValue,
+                const mozilla::fallible_t& aFallible)
+  {
+    if (!mCachedValue.Assign(aValue, aFallible)) {
+      ClearValueCache();
+      return false;
+    }
+    MOZ_ASSERT(!mCachedValue.IsVoid());
+    return true;
+  }
 
   void HideSelectionIfBlurred();
 
@@ -462,7 +479,12 @@ private:
   RefPtr<nsTextInputListener> mTextListener;
   mozilla::Maybe<nsString> mValue;
   RefPtr<nsAnonDivObserver> mMutationObserver;
-  mutable nsString mCachedValue; // Caches non-hard-wrapped value on a multiline control.
+  // Cache of the |.value| of <input> or <textarea> element without hard-wrap.
+  // If its IsVoid() returns true, it doesn't cache |.value|.
+  // Otherwise, it's cached when setting specific value or getting value from
+  // TextEditor.  Additionally, when contents in the anonymous <div> element
+  // is modified, this is cleared.
+  nsString mCachedValue;
   // mValueBeingSet is available only while SetValue() is requesting to commit
   // composition.  I.e., this is valid only while mIsCommittingComposition is
   // true.  While active composition is being committed, GetValue() needs

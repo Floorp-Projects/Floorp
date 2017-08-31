@@ -83,3 +83,28 @@ macosx64-cctools-port:
     toolchains:
         - linux64-cctools-port
         - linux64-clang-3.9
+
+macosx64-gn:
+    description: "gn toolchain build"
+    treeherder:
+        kind: build
+        platform: toolchains/opt
+        symbol: TM(gn)
+        tier: 1
+    worker-type: aws-provisioner-v1/gecko-{level}-b-macosx64
+    worker:
+        docker-image: {in-tree: desktop-build}
+        max-run-time: 36000
+        env:
+            TOOLTOOL_MANIFEST: "browser/config/tooltool-manifests/macosx64/cross-clang.manifest"
+    run:
+        using: toolchain-script
+        script: build-gn-macosx.sh
+        tooltool-downloads: internal
+        resources:
+            - 'taskcluster/scripts/misc/tooltool-download.sh'
+            - 'taskcluster/scripts/misc/build-gn-common.sh'
+        toolchain-artifact: public/build/gn.tar.xz
+    toolchains:
+        - linux64-cctools-port
+        - linux64-clang-3.9

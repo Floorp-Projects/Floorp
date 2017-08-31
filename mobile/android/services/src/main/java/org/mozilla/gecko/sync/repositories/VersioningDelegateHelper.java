@@ -147,8 +147,8 @@ public class VersioningDelegateHelper {
         }
 
         @Override
-        public void onFetchCompleted(long fetchEnd) {
-            this.inner.onFetchCompleted(fetchEnd);
+        public void onFetchCompleted() {
+            this.inner.onFetchCompleted();
         }
 
         @Override
@@ -197,8 +197,8 @@ public class VersioningDelegateHelper {
         }
 
         @Override
-        public void onStoreCompleted(long storeEnd) {
-            inner.onStoreCompleted(storeEnd);
+        public void onStoreCompleted() {
+            inner.onStoreCompleted();
         }
 
         @Override

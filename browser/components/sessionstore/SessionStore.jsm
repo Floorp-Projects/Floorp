@@ -971,6 +971,8 @@ var SessionStoreInternal = {
         SessionStoreInternal.restoreNextTab();
 
         this._sendTabRestoredNotification(tab, data.isRemotenessUpdate);
+
+        Services.obs.notifyObservers(null, "sessionstore-one-or-no-tab-restored");
         break;
       case "SessionStore:crashedTabRevived":
         // The browser was revived by navigating to a different page
@@ -1149,6 +1151,7 @@ var SessionStoreInternal = {
 
           // Nothing to restore now, notify observers things are complete.
           Services.obs.notifyObservers(null, NOTIFY_WINDOWS_RESTORED);
+          Services.obs.notifyObservers(null, "sessionstore-one-or-no-tab-restored");
           this._deferredAllWindowsRestored.resolve();
         } else {
           TelemetryTimestamps.add("sessionRestoreRestoring");
@@ -1168,6 +1171,7 @@ var SessionStoreInternal = {
       } else {
         // Nothing to restore, notify observers things are complete.
         Services.obs.notifyObservers(null, NOTIFY_WINDOWS_RESTORED);
+        Services.obs.notifyObservers(null, "sessionstore-one-or-no-tab-restored");
         this._deferredAllWindowsRestored.resolve();
       }
     // this window was opened by _openWindowWithState

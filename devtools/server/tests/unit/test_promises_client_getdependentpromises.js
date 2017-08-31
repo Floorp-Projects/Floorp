@@ -9,7 +9,7 @@
 
 const { PromisesFront } = require("devtools/shared/fronts/promises");
 
-var events = require("devtools/shared/event-emitter");
+var EventEmitter = require("devtools/shared/event-emitter");
 
 add_task(function* () {
   let client = yield startTestDebuggerServer("test-promises-dependentpromises");
@@ -59,7 +59,7 @@ function* testGetDependentPromises(client, form, makePromises) {
 
   // Get the grip for promise p
   let onNewPromise = new Promise(resolve => {
-    events.on(front, "new-promises", promises => {
+    EventEmitter.on(front, "new-promises", promises => {
       for (let p of promises) {
         if (p.preview.ownProperties.name &&
             p.preview.ownProperties.name.value === "p") {

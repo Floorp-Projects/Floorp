@@ -808,6 +808,7 @@ xul|listbox {
   margin-inline-start: 0;
   background-color: var(--in-content-box-background);
   border: 1px solid var(--in-content-box-border-color);
+  border-radius: 2px;
   color: var(--in-content-text-color);
 }
 
@@ -839,6 +840,7 @@ xul|tree {
   -moz-appearance: none;
   font-size: 1em;
   border: 1px solid var(--in-content-box-border-color);
+  border-radius: 2px;
   background-color: var(--in-content-box-background);
   margin: 0;
 }

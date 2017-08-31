@@ -1,4 +1,0 @@
-[flake8]
-# See http://pep8.readthedocs.io/en/latest/intro.html#configuration
-max-line-length = 99
-filename = *.py, +.lint

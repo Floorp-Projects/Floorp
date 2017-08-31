@@ -110,8 +110,8 @@ public class Crypto5MiddlewareRepositorySession extends MiddlewareRepositorySess
     }
 
     @Override
-    public void onFetchCompleted(final long fetchEnd) {
-      next.onFetchCompleted(fetchEnd);
+    public void onFetchCompleted() {
+      next.onFetchCompleted();
     }
 
     @Override
