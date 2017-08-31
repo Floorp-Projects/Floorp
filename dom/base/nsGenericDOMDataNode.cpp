@@ -163,7 +163,8 @@ nsresult
 nsGenericDOMDataNode::GetData(nsAString& aData) const
 {
   if (mText.Is2b()) {
-    aData.Assign(mText.Get2b(), mText.GetLength());
+    aData.Truncate();
+    mText.AppendTo(aData);
   } else {
     // Must use Substring() since nsDependentCString() requires null
     // terminated strings.
