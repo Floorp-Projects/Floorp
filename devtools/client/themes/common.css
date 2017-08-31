@@ -7,6 +7,16 @@
 
 :root {
   font: message-box;
+
+  --tab-line-selected-color: highlight;
+}
+
+:root.theme-light {
+  --tab-line-hover-color: rgba(0,0,0,.2);
+}
+
+:root.theme-dark {
+  --tab-line-hover-color: rgba(255,255,255,.2);
 }
 
 :root[platform="mac"] {
@@ -681,6 +691,30 @@ checkbox:-moz-focusring {
   background-image: url("chrome://devtools/skin/images/dropmarker.svg");
   background-repeat: no-repeat;
   background-position: center;
+}
+
+.devtools-tab-line {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 2px;
+  background: transparent;
+}
+
+.devtools-tab:hover .devtools-tab-line,
+.tabs-menu-item:hover .devtools-tab-line {
+  background: var(--tab-line-hover-color);
+}
+
+.devtools-tab.selected .devtools-tab-line,
+.tabs-menu-item.is-active .devtools-tab-line {
+  background: var(--tab-line-selected-color);
+}
+
+/* Hide the tab line in the firebug theme */
+.theme-firebug .devtools-tab-line {
+  background: transparent !important;
 }
 
 /* No result message styles */
