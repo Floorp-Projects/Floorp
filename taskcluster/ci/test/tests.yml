@@ -1249,16 +1249,12 @@ reftest-no-accel:
             default: default
 
 reftest-stylo:
-    description: "Reftest run for Stylo"
+    description: "Reftest run in Stylo vs. Gecko mode"
     suite: reftest/reftest-stylo
     treeherder-symbol: tc-R(Rs)
     virtualization: virtual-with-gpu
     chunks: 8
-    run-on-projects:
-        by-test-platform:
-            windows10.*: []
-            macosx.*: []
-            default: ['autoland', 'mozilla-central', 'try']
+    run-on-projects: ['autoland', 'mozilla-central', 'try']
     mozharness:
         script: desktop_unittest.py
         no-read-buildbot-config: true
