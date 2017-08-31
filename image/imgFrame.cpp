@@ -14,7 +14,6 @@
 #include "gfxPlatform.h"
 #include "gfxPrefs.h"
 #include "gfxUtils.h"
-#include "gfxAlphaRecovery.h"
 
 #include "GeckoProfiler.h"
 #include "MainThreadUtils.h"
@@ -27,6 +26,9 @@
 #include "nsMargin.h"
 #include "nsThreadUtils.h"
 
+#ifdef ANDROID
+#define ANIMATED_FRAMES_USE_HEAP
+#endif
 
 namespace mozilla {
 
@@ -83,7 +85,9 @@ AllocateBufferForImage(const IntSize& size,
                        SurfaceFormat format,
                        bool aIsAnimated = false)
 {
-#ifdef ANDROID
+  int32_t stride = VolatileSurfaceStride(size, format);
+
+#ifdef ANIMATED_FRAMES_USE_HEAP
   if (aIsAnimated) {
     // For as long as an animated image is retained, its frames will never be
     // released to let the OS purge volatile buffers. On Android, a volatile
@@ -92,11 +96,11 @@ AllocateBufferForImage(const IntSize& size,
     // use the heap. On the other platforms we do not have the file handle
     // problem, and additionally we may avoid a superfluous memset since the
     // volatile memory starts out as zero-filled.
-    return Factory::CreateDataSourceSurface(size, format, false);
+    return Factory::CreateDataSourceSurfaceWithStride(size, format,
+                                                      stride, false);
   }
 #endif
 
-  int32_t stride = VolatileSurfaceStride(size, format);
   if (!aIsAnimated && gfxPrefs::ImageMemShared()) {
     RefPtr<SourceSurfaceSharedData> newSurf = new SourceSurfaceSharedData();
     if (newSurf->Init(size, stride, format)) {
