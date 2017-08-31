@@ -23,11 +23,6 @@ SOURCES += [
     'mozmemory_wrap.c',
 ]
 
-if CONFIG['MOZ_REPLACE_MALLOC']:
-    SOURCES += [
-        'replace_malloc.c',
-    ]
-
 if CONFIG['OS_TARGET'] == 'Darwin' and (CONFIG['MOZ_REPLACE_MALLOC'] or
         CONFIG['MOZ_MEMORY']):
     SOURCES += [
