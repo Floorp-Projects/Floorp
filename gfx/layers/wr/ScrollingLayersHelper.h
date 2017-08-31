@@ -49,8 +49,8 @@ private:
                           const StackingContextHelper& aStackingContext,
                           int32_t aAppUnitsPerDevPixel,
                           WebRenderLayerManager::ClipIdMap& aCache);
-  bool PushScrollLayer(const FrameMetrics& aMetrics,
-                       const StackingContextHelper& aStackingContext);
+  bool DefineAndPushScrollLayer(const FrameMetrics& aMetrics,
+                                const StackingContextHelper& aStackingContext);
   void PushLayerLocalClip(const StackingContextHelper& aStackingContext);
   void PushLayerClip(const LayerClip& aClip,
                      const StackingContextHelper& aSc);

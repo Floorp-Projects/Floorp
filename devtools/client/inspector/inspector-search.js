@@ -72,7 +72,7 @@ InspectorSearch.prototype = {
 
   _onSearch: function (reverse = false) {
     this.doFullTextSearch(this.searchBox.value, reverse)
-        .catch(e => console.error(e));
+        .catch(console.error);
   },
 
   doFullTextSearch: Task.async(function* (query, reverse) {

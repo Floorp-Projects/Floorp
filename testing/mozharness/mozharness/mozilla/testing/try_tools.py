@@ -163,8 +163,14 @@ class TryToolsMixin(TransferMixin):
         repo_path = None
         if self.buildbot_config and 'properties' in self.buildbot_config:
             repo_path = self.buildbot_config['properties'].get('branch')
-        return (self.config.get('branch', repo_path) == 'try' or
-                'TRY_COMMIT_MSG' in os.environ)
+        get_branch = self.config.get('branch', repo_path)
+        if get_branch is not None:
+            on_try = ('try' in get_branch or 'Try' in get_branch)
+        elif os.environ is not None:
+            on_try = ('TRY_COMMIT_MSG' in os.environ)
+        else:
+            on_try = False
+        return on_try
 
     @PostScriptAction('download-and-extract')
     def set_extra_try_arguments(self, action, success=None):
