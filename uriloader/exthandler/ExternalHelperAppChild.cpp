@@ -73,7 +73,7 @@ ExternalHelperAppChild::OnStartRequest(nsIRequest *request, nsISupports *ctx)
   NS_ENSURE_TRUE(window, NS_ERROR_NOT_AVAILABLE);
 
   TabChild *tabChild = mozilla::dom::TabChild::GetFrom(window);
-  MOZ_ASSERT(tabChild);
+  NS_ENSURE_TRUE(tabChild, NS_ERROR_NOT_AVAILABLE);
 
   nsCOMPtr<nsIDivertableChannel> divertable = do_QueryInterface(request);
   if (divertable) {
