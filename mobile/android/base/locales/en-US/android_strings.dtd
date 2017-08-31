@@ -410,6 +410,9 @@
 <!ENTITY pref_dialog_set_default "Set as default">
 <!ENTITY pref_dialog_default "Default">
 <!ENTITY pref_dialog_remove "Remove">
+<!ENTITY pref_dialog_activitystream_header_content "Additional content">
+<!ENTITY pref_dialog_activitystream_recentBookmarks "Recent Bookmarks">
+<!ENTITY pref_dialog_activitystream_visited "Visited">
 
 <!ENTITY pref_search_last_toast "You can\'t remove or disable your last search engine.">
 

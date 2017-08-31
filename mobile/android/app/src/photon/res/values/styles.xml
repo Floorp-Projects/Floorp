@@ -82,6 +82,19 @@
         <item name="android:minWidth">@dimen/doorhanger_input_width</item>
     </style>
 
+    <style name="Gecko.PreferenceCategory" parent="TextAppearance.AppCompat.Body2">
+        <item name="android:textColor">@color/fennec_ui_accent</item>
+        <item name="android:padding">24dp</item>
+    </style>
+
+    <style name="Gecko.SwitchPreferenceView" parent="TextAppearance">
+        <item name="android:textSize">16sp</item>
+        <item name="android:paddingStart">@dimen/dialog_switchpreferenceview_padding</item>
+        <item name="android:paddingLeft">@dimen/dialog_switchpreferenceview_padding</item>
+        <item name="android:paddingEnd">@dimen/dialog_switchpreferenceview_padding</item>
+        <item name="android:paddingRight">@dimen/dialog_switchpreferenceview_padding</item>
+    </style>
+
     <style name="Widget.GeckoMenuListView" parent="Widget.ListView">
         <item name="android:listSelector">@drawable/menu_item_action_bar_bg</item>
         <item name="android:divider">@null</item>

@@ -327,6 +327,10 @@
   <string name="pref_dialog_set_default">&pref_dialog_set_default;</string>
   <string name="pref_default">&pref_dialog_default;</string>
   <string name="pref_dialog_remove">&pref_dialog_remove;</string>
+  <string name="pref_dialog_activitystream_header_content">&pref_dialog_activitystream_header_content;</string>
+  <string name="pref_dialog_activitystream_recentBookmarks">&pref_dialog_activitystream_recentBookmarks;</string>
+  <string name="pref_dialog_activitystream_visited">&pref_dialog_activitystream_visited;</string>
+
 
   <string name="pref_search_last_toast">&pref_search_last_toast;</string>
 

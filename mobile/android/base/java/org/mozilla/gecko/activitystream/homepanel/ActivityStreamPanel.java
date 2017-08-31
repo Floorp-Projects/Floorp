@@ -5,6 +5,7 @@
  package org.mozilla.gecko.activitystream.homepanel;
 
 import android.content.Context;
+import android.content.SharedPreferences;
 import android.content.res.Resources;
 import android.database.Cursor;
 import android.os.Bundle;
@@ -16,6 +17,7 @@ import android.support.v7.widget.RecyclerView;
 import android.util.AttributeSet;
 import android.widget.FrameLayout;
 
+import org.mozilla.gecko.GeckoSharedPrefs;
 import org.mozilla.gecko.R;
 import org.mozilla.gecko.activitystream.ActivityStreamTelemetry;
 import org.mozilla.gecko.activitystream.homepanel.model.TopStory;
@@ -50,8 +52,13 @@ public class ActivityStreamPanel extends FrameLayout {
     public static final int TOP_SITES_COLUMNS = 4;
     public static final int TOP_SITES_ROWS = 2;
 
+    public static final String PREF_POCKET_ENABLED = "pref_activitystream_pocket_enabled";
+    public static final String PREF_VISITED_ENABLED = "pref_activitystream_visited_enabled";
+    public static final String PREF_BOOKMARKS_ENABLED = "pref_activitystream_recentbookmarks_enabled";
+
     private int desiredTileWidth;
     private int tileMargin;
+    private final SharedPreferences sharedPreferences;
 
     public ActivityStreamPanel(Context context, AttributeSet attrs) {
         super(context, attrs);
@@ -61,6 +68,7 @@ public class ActivityStreamPanel extends FrameLayout {
         inflate(context, R.layout.as_content, this);
 
         adapter = new StreamRecyclerAdapter();
+        sharedPreferences = GeckoSharedPrefs.forProfile(context);
 
         final RecyclerView rv = (RecyclerView) findViewById(R.id.activity_stream_main_recyclerview);
 
@@ -91,8 +99,11 @@ public class ActivityStreamPanel extends FrameLayout {
 
     public void load(LoaderManager lm) {
         lm.initLoader(LOADER_ID_TOPSITES, null, new TopSitesCallback());
-        lm.initLoader(LOADER_ID_HIGHLIGHTS, null, new HighlightsCallbacks());
-        if (StreamRecyclerAdapter.POCKET_ENABLED) {
+        if (sharedPreferences.getBoolean(PREF_BOOKMARKS_ENABLED, true) || sharedPreferences.getBoolean(PREF_VISITED_ENABLED, true)) {
+            lm.initLoader(LOADER_ID_HIGHLIGHTS, null, new HighlightsCallbacks());
+        }
+
+        if (sharedPreferences.getBoolean(PREF_POCKET_ENABLED, true)) {
             lm.initLoader(LOADER_ID_POCKET, null, new PocketStoriesCallbacks());
         }
 
