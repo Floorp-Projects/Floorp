@@ -139,6 +139,30 @@ add_task(async function test_contextualIdentity_with_permissions() {
     browser.test.assertEq("Personal", ci.name, "identity.name is correct");
     browser.test.assertEq("firefox-container-1", ci.cookieStoreId, "identity.cookieStoreId is correct");
 
+    function listenForMessage(messageName, stateChangeBool) {
+      return new Promise((resolve) => {
+        browser.test.onMessage.addListener(function listener(msg) {
+          browser.test.log(`Got message from background: ${msg}`);
+          if (msg === messageName + "-response") {
+            browser.test.onMessage.removeListener(listener);
+            resolve();
+          }
+        });
+        browser.test.log(`Sending message to background: ${messageName} ${stateChangeBool}`);
+        browser.test.sendMessage(messageName, stateChangeBool);
+      });
+    }
+
+    await listenForMessage("containers-state-change", false);
+
+    browser.test.assertRejects(
+      browser.contextualIdentities.query({}),
+      "Contextual identities are currently disabled",
+      "Throws when containers are disabled"
+    );
+
+    await listenForMessage("containers-state-change", true);
+
     let cis = await browser.contextualIdentities.query({});
     browser.test.assertEq(4, cis.length, "by default we should have 4 containers");
 
@@ -202,6 +226,7 @@ add_task(async function test_contextualIdentity_with_permissions() {
 
     browser.test.notifyPass("contextualIdentities");
   }
+
   function makeExtension(id) {
     return ExtensionTestUtils.loadExtension({
       useAddonManager: "temporary",
@@ -216,6 +241,14 @@ add_task(async function test_contextualIdentity_with_permissions() {
   }
 
   let extension = makeExtension("containers-test@mozilla.org");
+
+  extension.onMessage("containers-state-change", (stateBool) => {
+    Components.utils.reportError(`Got message "containers-state-change", ${stateBool}`);
+    Services.prefs.setBoolPref(CONTAINERS_PREF, stateBool);
+    Components.utils.reportError("Changed pref");
+    extension.sendMessage("containers-state-change-response");
+  });
+
   await extension.startup();
   await extension.awaitFinish("contextualIdentities");
   equal(Services.prefs.getBoolPref(CONTAINERS_PREF), true, "Pref should now be enabled, whatever it's initial state");
