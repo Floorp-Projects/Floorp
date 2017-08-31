@@ -132,6 +132,20 @@ jsdcov-code-coverage-tests:
     - mochitest-devtools-chrome
     - xpcshell
 
+linux-talos-stylo:
+    - talos-chrome-stylo
+    - talos-dromaeojs-stylo
+    - talos-g1-stylo
+    - talos-g2-stylo
+    - talos-g3-stylo
+    - talos-g4-stylo
+    - talos-g5-stylo
+    - talos-other-stylo
+    - talos-svgr-stylo
+    - talos-tp5o-stylo
+    - talos-perf-reftest-stylo
+    - talos-perf-reftest-singletons-stylo
+
 windows-tests:
     - cppunit
     - crashtest
