@@ -136,6 +136,11 @@ public:
 
     bool           PromptTempRedirect()      { return mPromptTempRedirect; }
     bool           IsUrgentStartEnabled() { return mUrgentStartEnabled; }
+    bool           IsTailBlockingEnabled() { return mTailBlockingEnabled; }
+    uint32_t       TailBlockingDelayQuantum(bool aAfterDOMContentLoaded) {
+      return aAfterDOMContentLoaded ? mTailDelayQuantumAfterDCL : mTailDelayQuantum;
+    }
+    uint32_t       TailBlockingDelayMax() { return mTailDelayMax; }
 
     // TCP Keepalive configuration values.
 
@@ -464,6 +469,10 @@ private:
     uint32_t mThrottleTimeWindow;
 
     bool mUrgentStartEnabled;
+    bool mTailBlockingEnabled;
+    uint32_t mTailDelayQuantum;
+    uint32_t mTailDelayQuantumAfterDCL;
+    uint32_t mTailDelayMax;
 
     uint8_t  mRedirectionLimit;
 

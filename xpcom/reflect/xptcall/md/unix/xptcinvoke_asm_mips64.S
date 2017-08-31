@@ -67,10 +67,10 @@ NESTED(_NS_InvokeByIndex, FRAMESZ, ra)
     jal      invoke_copy_to_stack
 
     REG_L    t3, 8(sp)     # get previous a0
-    REG_L    sp, 0(sp)     # get orig sp back
+    REG_L    s0, 0(sp)     # get orig sp back and save away our stack pointer
 
-    REG_L    a0, A0OFF(sp) # a0 - that
-    REG_L    a1, A1OFF(sp) # a1 - methodIndex
+    REG_L    a0, A0OFF(s0) # a0 - that
+    REG_L    a1, A1OFF(s0) # a1 - methodIndex
 
     # t1 = methodIndex * pow(2, PTRLOG)
     # (use shift instead of mult)
@@ -105,13 +105,12 @@ NESTED(_NS_InvokeByIndex, FRAMESZ, ra)
     l.d      $f18, 40(t1)
     l.d      $f19, 48(t1)
 
-    # save away our stack pointer and create
-    # the stack pointer for the function
-    move     s0, sp
+    # create the stack pointer for the function
     move     sp, t3
 
     jalr     t9
 
+    ## restore stack pointer.
     move     sp, s0
 
     RESTORE_GP64

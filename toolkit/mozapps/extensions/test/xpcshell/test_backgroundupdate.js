@@ -87,6 +87,9 @@ function run_test_2() {
     name: "Test Addon 3",
   }, profileDir);
 
+  // Disable rcwn to make cache behavior deterministic.
+  Services.prefs.setBoolPref("network.http.rcwn.enabled", false);
+
   // Background update uses a different pref, if set
   Services.prefs.setCharPref("extensions.update.background.url",
                              "http://localhost:" + gPort + "/data/test_backgroundupdate.rdf");

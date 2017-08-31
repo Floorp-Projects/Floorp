@@ -107,8 +107,8 @@ Handler::GetUnmarshalClass(REFIID riid, void* pv, DWORD dwDestContext,
                            void* pvDestContext, DWORD mshlflags,
                            CLSID* pCid)
 {
-  return mUnmarshal->GetUnmarshalClass(riid, pv, dwDestContext, pvDestContext,
-                                       mshlflags, pCid);
+  return mUnmarshal->GetUnmarshalClass(MarshalAs(riid), pv, dwDestContext,
+                                       pvDestContext, mshlflags, pCid);
 }
 
 HRESULT
@@ -187,12 +187,9 @@ Handler::MarshalInterface(IStream* pStm, REFIID riid, void* pv,
   if (FAILED(hr)) {
     return hr;
   }
-
-  // When marshaling without a handler, we just use the riid as passed in.
-  REFIID marshalAs = riid;
-#else
-  REFIID marshalAs = MarshalAs(riid);
 #endif // defined(MOZ_MSCOM_REMARSHAL_NO_HANDLER)
+
+  REFIID marshalAs = MarshalAs(riid);
 
   hr = mInnerUnk->QueryInterface(marshalAs, getter_AddRefs(unkToMarshal));
   if (FAILED(hr)) {
@@ -266,17 +263,20 @@ template <size_t N>
 static HRESULT
 BuildClsidPath(wchar_t (&aPath)[N], REFCLSID aClsid)
 {
-  const wchar_t kClsid[] = {L'C', L'L', L'S', L'I', L'D', L'\\'};
+  const wchar_t kSubkey[] = L"SOFTWARE\\Classes\\CLSID\\";
+
+  // We exclude kSubkey's null terminator in the length because we include
+  // the stringified GUID's null terminator.
+  constexpr uint32_t kSubkeyLen = mozilla::ArrayLength(kSubkey) - 1;
+
   const size_t kReqdGuidLen = 39;
-  static_assert(N >= kReqdGuidLen + mozilla::ArrayLength(kClsid),
-                "aPath array is too short");
-  if (wcsncpy_s(aPath, kClsid, mozilla::ArrayLength(kClsid))) {
+  static_assert(N >= kReqdGuidLen + kSubkeyLen, "aPath array is too short");
+  if (wcsncpy_s(aPath, kSubkey, kSubkeyLen)) {
     return E_INVALIDARG;
   }
 
   int guidConversionResult =
-    StringFromGUID2(aClsid, &aPath[mozilla::ArrayLength(kClsid)],
-                    N - mozilla::ArrayLength(kClsid));
+    StringFromGUID2(aClsid, &aPath[kSubkeyLen], N - kSubkeyLen);
   if (!guidConversionResult) {
     return E_INVALIDARG;
   }
@@ -293,7 +293,7 @@ Handler::Unregister(REFCLSID aClsid)
     return hr;
   }
 
-  hr = HRESULT_FROM_WIN32(SHDeleteKey(HKEY_CLASSES_ROOT, path));
+  hr = HRESULT_FROM_WIN32(SHDeleteKey(HKEY_LOCAL_MACHINE, path));
   if (FAILED(hr)) {
     return hr;
   }
@@ -312,7 +312,7 @@ Handler::Register(REFCLSID aClsid)
 
   HKEY rawClsidKey;
   DWORD disposition;
-  LONG result = RegCreateKeyEx(HKEY_CLASSES_ROOT, path, 0, nullptr,
+  LONG result = RegCreateKeyEx(HKEY_LOCAL_MACHINE, path, 0, nullptr,
                                REG_OPTION_NON_VOLATILE, KEY_ALL_ACCESS,
                                nullptr, &rawClsidKey, &disposition);
   if (result != ERROR_SUCCESS) {
@@ -325,7 +325,7 @@ Handler::Register(REFCLSID aClsid)
   }
 
   HKEY rawInprocHandlerKey;
-  result = RegCreateKeyEx(HKEY_CLASSES_ROOT, path, 0, nullptr,
+  result = RegCreateKeyEx(HKEY_LOCAL_MACHINE, path, 0, nullptr,
                           REG_OPTION_NON_VOLATILE, KEY_ALL_ACCESS,
                           nullptr, &rawInprocHandlerKey, &disposition);
   if (result != ERROR_SUCCESS) {

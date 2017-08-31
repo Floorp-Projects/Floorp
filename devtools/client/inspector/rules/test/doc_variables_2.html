@@ -1,0 +1,45 @@
+<!-- Any copyright is dedicated to the Public Domain.
+     http://creativecommons.org/publicdomain/zero/1.0/ -->
+<html>
+<head>
+  <title>variables test</title>
+  <style>
+    :root {
+      --var-border-px: 10px;
+      --var-border-style: solid;
+      --var-border-r: 255;
+      --var-border-g: 0;
+      --var-border-b: 0;
+    }
+    #a {
+      --var-defined-font-size: 60px;
+      font-size: var(--var-not-defined, var(--var-defined-font-size));
+    }
+    #b {
+      --var-defined-r-1: 255;
+      --var-defined-r-2: 0;
+      color: rgb(var(--var-defined-r-1, var(--var-defined-r-2)), 0, 0);
+    }
+    #c {
+      border: var(--var-undefined, var(--var-border-px)) var(--var-border-style) rgb(var(--var-border-r), var(--var-border-g), var(--var-border-b))
+    }
+    #d {
+      font-size: var(--var-undefined, 30px);
+    }
+    #e {
+      color: var(--var-undefined, var(--var-undefined-2, blue));
+    }
+    #f {
+      border-style: var(--var-undefined, var(--var-undefined-2, var(--var-undefined-3, solid)));
+    }
+  </style>
+</head>
+<body>
+  <div id="a">A</div><br>
+  <div id="b">B</div><br>
+  <div id="c">C</div><br>
+  <div id="d">D</div><br>
+  <div id="e">E</div><br>
+  <div id="f">F</div>
+</body>
+</html>
