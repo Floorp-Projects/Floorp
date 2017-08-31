@@ -21,3 +21,13 @@ struct Allocator: public T {
 /* The MozJemalloc allocator */
 struct MozJemallocBase {};
 typedef Allocator<MozJemallocBase> MozJemalloc;
+
+#ifdef MOZ_REPLACE_MALLOC
+/* The replace-malloc allocator */
+struct ReplaceMallocBase {};
+typedef Allocator<ReplaceMallocBase> ReplaceMalloc;
+
+typedef ReplaceMalloc DefaultMalloc;
+#else
+typedef MozJemalloc DefaultMalloc;
+#endif
