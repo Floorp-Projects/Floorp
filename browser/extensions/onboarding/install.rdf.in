@@ -11,7 +11,7 @@
     <em:id>onboarding@mozilla.org</em:id>
     <em:name>Photon onboarding</em:name>
     <em:description>Photon onboarding</em:description>
-    <em:version>0.1</em:version>
+    <em:version>1.0</em:version>
     <em:bootstrap>true</em:bootstrap>
     <em:type>2</em:type>
     <em:multiprocessCompatible>true</em:multiprocessCompatible>
