@@ -3,20 +3,18 @@ const PM_URL = "chrome://passwordmgr/content/passwordManager.xul";
 
 var passwordsDialog;
 
-add_task(async function test_setup() {
-  let pwmgr = Cc["@mozilla.org/login-manager;1"].
-                getService(Ci.nsILoginManager);
-  pwmgr.removeAllLogins();
+add_task(async function setup() {
+  Services.logins.removeAllLogins();
 
   // add login data
   let nsLoginInfo = new Components.Constructor("@mozilla.org/login-manager/loginInfo;1",
-                                                 Ci.nsILoginInfo, "init");
+                                               Ci.nsILoginInfo, "init");
   let login = new nsLoginInfo("http://example.com/", "http://example.com/", null,
                               "user", "password", "u1", "p1");
-  pwmgr.addLogin(login);
+  Services.logins.addLogin(login);
 
   registerCleanupFunction(async function() {
-    pwmgr.removeAllLogins();
+    Services.logins.removeAllLogins();
   });
 });
 
@@ -34,7 +32,7 @@ add_task(async function test_openPasswordSubDialog() {
     gBrowser.removeCurrentTab();
   });
 
-  await openPreferencesViaOpenPreferencesAPI("privacy", {leaveOpen: true});
+  await openPreferencesViaOpenPreferencesAPI("security", null, {leaveOpen: true});
 
   let dialogOpened = promiseLoadSubDialog(PM_URL);
 

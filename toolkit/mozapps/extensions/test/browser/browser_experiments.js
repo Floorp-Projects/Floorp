@@ -162,6 +162,8 @@ add_task(async function testExperimentLearnMore() {
 });
 
 add_task(async function testOpenPreferences() {
+  var useOldPrefs = Services.prefs.getBoolPref("browser.preferences.useOldOrganization");
+
   await gCategoryUtilities.openType("experiment");
   let btn = gManagerWindow.document.getElementById("experiments-change-telemetry");
 
@@ -188,7 +190,11 @@ add_task(async function testOpenPreferences() {
     }, preferencesPane + "-pane-loaded");
   }
 
-  ensureElementIsVisible("privacy", "dataCollectionGroup");
+  if (useOldPrefs) {
+    ensureElementIsVisible("advanced", "header-advanced");
+  } else {
+    ensureElementIsVisible("privacy", "dataCollectionGroup");
+  }
 
   info("Loading preferences pane.");
   // We need to focus before synthesizing the mouse event (bug 1240052) as

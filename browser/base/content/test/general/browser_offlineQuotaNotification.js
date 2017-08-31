@@ -15,6 +15,7 @@ registerCleanupFunction(function() {
   Services.perms.removeFromPrincipal(principal, "offline-app");
   Services.prefs.clearUserPref("offline-apps.quota.warn");
   Services.prefs.clearUserPref("offline-apps.allow_by_default");
+  Services.prefs.clearUserPref("browser.preferences.useOldOrganization");
   let {OfflineAppCacheHelper} = Components.utils.import("resource:///modules/offlineAppCache.jsm", {});
   OfflineAppCacheHelper.clear();
 });
@@ -33,6 +34,7 @@ function checkInContentPreferences(win) {
 function test() {
   waitForExplicitFinish();
 
+  Services.prefs.setBoolPref("browser.preferences.useOldOrganization", false);
   Services.prefs.setBoolPref("offline-apps.allow_by_default", false);
 
   // Open a new tab.

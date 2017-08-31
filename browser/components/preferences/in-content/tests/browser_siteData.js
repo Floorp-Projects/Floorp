@@ -15,11 +15,8 @@ const TEST_QUOTA_USAGE_URL = TEST_QUOTA_USAGE_ORIGIN + "/browser/browser/compone
 const TEST_OFFLINE_HOST = "example.org";
 const TEST_OFFLINE_ORIGIN = "https://" + TEST_OFFLINE_HOST;
 const TEST_OFFLINE_URL = TEST_OFFLINE_ORIGIN + "/browser/browser/components/preferences/in-content/tests/offline/offline.html";
-const REMOVE_DIALOG_URL = "chrome://browser/content/preferences/siteDataRemoveSelected.xul";
-
 const { NetUtil } = Cu.import("resource://gre/modules/NetUtil.jsm", {});
 const { DownloadUtils } = Cu.import("resource://gre/modules/DownloadUtils.jsm", {});
-const { SiteDataManager } = Cu.import("resource:///modules/SiteDataManager.jsm", {});
 const { OfflineAppCacheHelper } = Cu.import("resource:///modules/offlineAppCache.jsm", {});
 
 const mockOfflineAppCacheHelper = {
@@ -37,6 +34,12 @@ const mockOfflineAppCacheHelper = {
     OfflineAppCacheHelper.clear = this.originalClear;
   }
 };
+
+function addPersistentStoragePerm(origin) {
+  let uri = NetUtil.newURI(origin);
+  let principal = Services.scriptSecurityManager.createCodebasePrincipal(uri, {});
+  Services.perms.addFromPrincipal(principal, "persistent-storage", Ci.nsIPermissionManager.ALLOW_ACTION);
+}
 
 function getPersistentStoragePermStatus(origin) {
   let uri = NetUtil.newURI(origin);
@@ -92,6 +95,66 @@ registerCleanupFunction(function() {
   mockOfflineAppCacheHelper.unregister();
 });
 
+// Test grouping and listing sites across scheme, port and origin attributes by host
+add_task(async function() {
+  await SpecialPowers.pushPrefEnv({set: [["browser.storageManager.enabled", true]]});
+  const quotaUsage = 1024;
+  mockSiteDataManager.register();
+  mockSiteDataManager.fakeSites = [
+    {
+      usage: quotaUsage,
+      principal: Services.scriptSecurityManager
+                         .createCodebasePrincipalFromOrigin("https://account.xyz.com^userContextId=1"),
+      persisted: true
+    },
+    {
+      usage: quotaUsage,
+      principal: Services.scriptSecurityManager
+                         .createCodebasePrincipalFromOrigin("https://account.xyz.com"),
+      persisted: false
+    },
+    {
+      usage: quotaUsage,
+      principal: Services.scriptSecurityManager
+                         .createCodebasePrincipalFromOrigin("https://account.xyz.com:123"),
+      persisted: false
+    },
+    {
+      usage: quotaUsage,
+      principal: Services.scriptSecurityManager
+                         .createCodebasePrincipalFromOrigin("http://account.xyz.com"),
+      persisted: false
+    },
+  ];
+
+  let updatedPromise = promiseSitesUpdated();
+  await openPreferencesViaOpenPreferencesAPI("advanced", "networkTab", { leaveOpen: true });
+  await updatedPromise;
+  await openSettingsDialog();
+  let dialogFrame = content.gSubDialog._topDialog._frame;
+  let frameDoc = dialogFrame.contentDocument;
+
+  let siteItems = frameDoc.getElementsByTagName("richlistitem");
+  is(siteItems.length, 1, "Should group sites across scheme, port and origin attributes");
+
+  let expected = "account.xyz.com";
+  let hostCol = siteItems[0].getAttribute("host");
+  is(hostCol, expected, "Should group and list sites by host");
+
+  let prefStrBundle = frameDoc.getElementById("bundlePreferences");
+  expected = prefStrBundle.getFormattedString("siteUsage",
+    DownloadUtils.convertByteUnits(quotaUsage * mockSiteDataManager.fakeSites.length));
+  let usageCol = siteItems[0].getAttribute("usage");
+  is(usageCol, expected, "Should sum up usages across scheme, port and origin attributes");
+
+  expected = prefStrBundle.getString("persistent");
+  let statusCol = siteItems[0].getAttribute("status");
+  is(statusCol, expected, "Should mark persisted status across scheme, port and origin attributes");
+
+  mockSiteDataManager.unregister();
+  await BrowserTestUtils.removeTab(gBrowser.selectedTab);
+});
+
 // Test listing site using quota usage or site using appcache
 add_task(async function() {
   await SpecialPowers.pushPrefEnv({set: [["browser.storageManager.enabled", true]]});
@@ -105,12 +168,11 @@ add_task(async function() {
   await waitForEvent(gBrowser.selectedBrowser.contentWindow, "test-indexedDB-done");
   await BrowserTestUtils.removeTab(gBrowser.selectedTab);
 
-  let updatedPromise = promiseSiteDataManagerSitesUpdated();
-  await openPreferencesViaOpenPreferencesAPI("privacy", { leaveOpen: true });
+  let updatedPromise = promiseSitesUpdated();
+  await openPreferencesViaOpenPreferencesAPI("advanced", "networkTab", { leaveOpen: true });
   await updatedPromise;
-  await openSiteDataSettingsDialog();
-  let dialog = content.gSubDialog._topDialog;
-  let dialogFrame = dialog._frame;
+  await openSettingsDialog();
+  let dialogFrame = content.gSubDialog._topDialog._frame;
   let frameDoc = dialogFrame.contentDocument;
 
   let siteItems = frameDoc.getElementsByTagName("richlistitem");
@@ -136,8 +198,8 @@ add_task(async function() {
 // Test buttons are disabled and loading message shown while updating sites
 add_task(async function() {
   await SpecialPowers.pushPrefEnv({set: [["browser.storageManager.enabled", true]]});
-  let updatedPromise = promiseSiteDataManagerSitesUpdated();
-  await openPreferencesViaOpenPreferencesAPI("privacy", { leaveOpen: true });
+  let updatedPromise = promiseSitesUpdated();
+  await openPreferencesViaOpenPreferencesAPI("advanced", "networkTab", { leaveOpen: true });
   await updatedPromise;
 
   let actual = null;
@@ -169,8 +231,8 @@ add_task(async function() {
   is(settingsButton.disabled, false, "Should enable settings button after sites updated");
   await SiteDataManager.getTotalUsage()
                        .then(usage => {
-                         actual = totalSiteDataSizeLabel.textContent;
-                         expected = prefStrBundle.getFormattedString(
+                          actual = totalSiteDataSizeLabel.textContent;
+                          expected = prefStrBundle.getFormattedString(
                            "totalSiteDataSize", DownloadUtils.convertByteUnits(usage));
                           is(actual, expected, "Should show the right total site data size");
                        });
@@ -187,7 +249,7 @@ add_task(async function() {
   await waitForEvent(gBrowser.selectedBrowser.contentWindow, "test-indexedDB-done");
   await BrowserTestUtils.removeTab(gBrowser.selectedTab);
 
-  await openPreferencesViaOpenPreferencesAPI("privacy", { leaveOpen: true });
+  await openPreferencesViaOpenPreferencesAPI("advanced", "networkTab", { leaveOpen: true });
 
   // Test the initial states
   let cacheUsage = await cacheUsageGetter.get();
@@ -220,7 +282,7 @@ add_task(async function() {
   // Test accepting "Clear All Data"
   // Click "Clear All Data" button and then accept
   let acceptPromise = promiseAlertDialogOpen("accept");
-  let updatePromise = promiseSiteDataManagerSitesUpdated();
+  let updatePromise = promiseSitesUpdated();
   let cookiesClearedPromise = promiseCookiesCleared();
 
   mockOfflineAppCacheHelper.register();
@@ -251,7 +313,7 @@ add_task(async function() {
 // Test sorting
 add_task(async function() {
   await SpecialPowers.pushPrefEnv({set: [["browser.storageManager.enabled", true]]});
-  mockSiteDataManager.register(SiteDataManager);
+  mockSiteDataManager.register();
   mockSiteDataManager.fakeSites = [
     {
       usage: 1024,
@@ -273,12 +335,13 @@ add_task(async function() {
     },
   ];
 
-  let updatePromise = promiseSiteDataManagerSitesUpdated();
-  await openPreferencesViaOpenPreferencesAPI("privacy", { leaveOpen: true });
+  let updatePromise = promiseSitesUpdated();
+  await openPreferencesViaOpenPreferencesAPI("advanced", "networkTab", { leaveOpen: true });
   await updatePromise;
-  await openSiteDataSettingsDialog();
+  await openSettingsDialog();
 
-  let dialog = content.gSubDialog._topDialog;
+  let win = gBrowser.selectedBrowser.contentWindow;
+  let dialog = win.gSubDialog._topDialog;
   let dialogFrame = dialog._frame;
   let frameDoc = dialogFrame.contentDocument;
   let hostCol = frameDoc.getElementById("hostCol");

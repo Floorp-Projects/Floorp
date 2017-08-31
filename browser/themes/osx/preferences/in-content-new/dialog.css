@@ -1,0 +1,36 @@
+/* - This Source Code Form is subject to the terms of the Mozilla Public
+   - License, v. 2.0. If a copy of the MPL was not distributed with this file,
+   - You can obtain one at http://mozilla.org/MPL/2.0/. */
+
+%include ../../../shared/incontentprefs/dialog.inc.css
+
+prefwindow,
+.windowDialog {
+  font: message-box !important;
+}
+
+label:not(.menu-text),
+textbox,
+description,
+.tab-text,
+caption > label {
+  font-size: 1.3em;
+}
+
+/* Create a separate rule to unset these styles on .tree-input instead of
+   using :not(.tree-input) so the selector specifity doesn't change. */
+textbox.tree-input {
+  font-size: unset;
+}
+
+button {
+  font-size: 1em;
+}
+
+caption {
+  font: message-box;
+}
+
+.prefWindow-dlgbuttons {
+  margin: 0;
+}

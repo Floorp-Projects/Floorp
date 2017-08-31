@@ -16,35 +16,61 @@ this.Preferences = {
 
   init(libDir) {
     let panes = [
+      /* The "new" organization */
       ["paneGeneral"],
-      ["paneGeneral", browsingGroup],
-      ["paneGeneral", connectionDialog],
-      ["paneSearch"],
+      ["paneGeneral", scrollToBrowsingGroup],
+      ["paneApplications"],
+      ["paneSync"],
       ["panePrivacy"],
-      ["panePrivacy", cacheGroup],
+      ["panePrivacy", scrollToCacheGroup],
+      ["panePrivacy", DNTDialog],
       ["panePrivacy", clearRecentHistoryDialog],
+      ["panePrivacy", connectionDialog],
       ["panePrivacy", certManager],
       ["panePrivacy", deviceManager],
-      ["panePrivacy", DNTDialog],
-      ["paneSync"],
-    ];
+      ["paneAdvanced"],
 
-    for (let [primary, customFn] of panes) {
-      let configName = primary.replace(/^pane/, "prefs");
+      /* The "old" organization. The third argument says to
+         set the pref to show the old organization when
+         opening the preferences. */
+      ["paneGeneral", null, true],
+      ["paneSearch", null, true],
+      ["paneContent", null, true],
+      ["paneApplications", null, true],
+      ["panePrivacy", null, true],
+      ["panePrivacy", DNTDialog, true],
+      ["panePrivacy", clearRecentHistoryDialog, true],
+      ["paneSecurity", null, true],
+      ["paneSync", null, true],
+      ["paneAdvanced", null, true, "generalTab"],
+      ["paneAdvanced", null, true, "dataChoicesTab"],
+      ["paneAdvanced", null, true, "networkTab"],
+      ["paneAdvanced", connectionDialog, true, "networkTab"],
+      ["paneAdvanced", null, true, "updateTab"],
+      ["paneAdvanced", null, true, "encryptionTab"],
+      ["paneAdvanced", certManager, true, "encryptionTab"],
+      ["paneAdvanced", deviceManager, true, "encryptionTab"],
+    ];
+    for (let [primary, customFn, useOldOrg, advanced] of panes) {
+      let configName = primary.replace(/^pane/, "prefs") + (advanced ? "-" + advanced : "");
       if (customFn) {
         configName += "-" + customFn.name;
       }
       this.configurations[configName] = {};
-      this.configurations[configName].applyConfig = prefHelper.bind(null, primary, customFn);
+      this.configurations[configName].applyConfig = prefHelper.bind(null, primary, customFn, useOldOrg, advanced);
     }
   },
 
   configurations: {},
 };
 
-let prefHelper = async function(primary, customFn = null) {
+let prefHelper = async function(primary, customFn = null, useOldOrg = false, advanced = null) {
   let browserWindow = Services.wm.getMostRecentWindow("navigator:browser");
   let selectedBrowser = browserWindow.gBrowser.selectedBrowser;
+
+  if (useOldOrg) {
+    Services.prefs.setBoolPref("browser.preferences.useOldOrganization", !!useOldOrg);
+  }
 
   // close any dialog that might still be open
   await ContentTask.spawn(selectedBrowser, null, async function() {
@@ -63,10 +89,14 @@ let prefHelper = async function(primary, customFn = null) {
       readyPromise = paintPromise(browserWindow);
     }
   } else {
-    readyPromise = TestUtils.topicObserved("sync-pane-loaded");
+    readyPromise = TestUtils.topicObserved("advanced-pane-loaded");
   }
 
-  browserWindow.openPreferences(primary);
+  if (useOldOrg && primary == "paneAdvanced") {
+    browserWindow.openAdvancedPreferences(advanced);
+  } else {
+    browserWindow.openPreferences(primary);
+  }
 
   await readyPromise;
 
@@ -75,6 +105,8 @@ let prefHelper = async function(primary, customFn = null) {
     await customFn(selectedBrowser);
     await customPaintPromise;
   }
+
+  Services.prefs.clearUserPref("browser.preferences.useOldOrganization");
 };
 
 function paintPromise(browserWindow) {
@@ -85,13 +117,13 @@ function paintPromise(browserWindow) {
   });
 }
 
-async function browsingGroup(aBrowser) {
+async function scrollToBrowsingGroup(aBrowser) {
   await ContentTask.spawn(aBrowser, null, async function() {
     content.document.getElementById("browsingGroup").scrollIntoView();
   });
 }
 
-async function cacheGroup(aBrowser) {
+async function scrollToCacheGroup(aBrowser) {
   await ContentTask.spawn(aBrowser, null, async function() {
     content.document.getElementById("cacheGroup").scrollIntoView();
   });

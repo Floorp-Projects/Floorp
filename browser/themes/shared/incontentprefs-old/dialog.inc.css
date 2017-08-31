@@ -1,0 +1,68 @@
+%if 0
+/* - This Source Code Form is subject to the terms of the Mozilla Public
+   - License, v. 2.0. If a copy of the MPL was not distributed with this file,
+   - You can obtain one at http://mozilla.org/MPL/2.0/. */
+%endif
+
+dialog,
+window,
+prefpane,
+prefwindow,
+.windowDialog {
+  -moz-appearance: none;
+  background-color: #fbfbfb;
+  color: #424e5a;
+  margin: 0;
+  padding: 0;
+}
+
+.contentPane {
+  margin: 0;
+}
+
+tabbox {
+  /* override the rule in certManager.xul */
+  margin: 0 0 5px !important;
+}
+
+tabpanels {
+  font-size: 1em;
+}
+
+tabs,
+label,
+description,
+#useDocumentColors {
+  margin-right: 4px;
+  margin-left: 4px;
+}
+
+tree:not(#rejectsTree) {
+  min-height: 15em;
+}
+
+.actionButtons {
+  margin: 3px 0 0 !important;
+}
+
+caption {
+  padding-inline-start: 0;
+}
+
+groupbox {
+  font-size: 1em;
+  margin-top: 0;
+  margin-right: 4px;
+  margin-left: 4px;
+  padding-top: 0;
+  padding-bottom: 5px;
+}
+
+prefpane .groupbox-body {
+  padding: 0 0 5px;
+}
+
+groupbox description {
+  margin-right: 0;
+  margin-left: 0;
+}
