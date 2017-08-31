@@ -2,7 +2,7 @@
 // License, v. 2.0. If a copy of the MPL was not distributed with this
 // file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
-/* import-globals-from in-content/main.js */
+/* import-globals-from in-content/applications.js */
 
 var Cc = Components.classes;
 var Ci = Components.interfaces;
@@ -12,9 +12,19 @@ var gAppManagerDialog = {
 
   init: function appManager_init() {
     this.handlerInfo = window.arguments[0];
-    Services.scriptloader.loadSubScript("chrome://browser/content/preferences/in-content/main.js",
-      window);
-    var pane = gMainPane;
+    // The applicationManager will be used
+    // in in-content's gApplicationsPane and in-content-new's gMainPane.
+    // Remove this once we use the in-content-new preferences page.
+    var pane;
+    if (Services.prefs.getBoolPref("browser.preferences.useOldOrganization")) {
+      Services.scriptloader.loadSubScript("chrome://browser/content/preferences/in-content/applications.js",
+                                          window);
+      pane = gApplicationsPane;
+    } else {
+      Services.scriptloader.loadSubScript("chrome://browser/content/preferences/in-content-new/main.js",
+                                          window);
+      pane = gMainPane;
+    }
     var bundle = document.getElementById("appManagerBundle");
     var contentText;
     if (this.handlerInfo.type == TYPE_MAYBE_FEED)

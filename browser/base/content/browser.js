@@ -548,7 +548,11 @@ const gStoragePressureObserver = {
           // The advanced subpanes are only supported in the old organization, which will
           // be removed by bug 1349689.
           let win = gBrowser.ownerGlobal;
-          win.openPreferences("panePrivacy", { origin: "storagePressure" });
+          if (Services.prefs.getBoolPref("browser.preferences.useOldOrganization")) {
+            win.openAdvancedPreferences("networkTab", {origin: "storagePressure"});
+          } else {
+            win.openPreferences("panePrivacy", {origin: "storagePressure"});
+          }
         }
       });
     }
@@ -6528,7 +6532,13 @@ var OfflineApps = {
   },
 
   manage() {
-    openPreferences("panePrivacy", { origin: "offlineApps" });
+    // The advanced subpanes are only supported in the old organization, which will
+    // be removed by bug 1349689.
+    if (Services.prefs.getBoolPref("browser.preferences.useOldOrganization")) {
+      openAdvancedPreferences("networkTab", {origin: "offlineApps"});
+    } else {
+      openPreferences("panePrivacy", {origin: "offlineApps"});
+    }
   },
 
   receiveMessage(msg) {

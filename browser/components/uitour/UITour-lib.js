@@ -725,9 +725,20 @@ if (typeof Mozilla == "undefined") {
   /**
    * @param {String} pane - Pane to open/switch the preferences to.
    * Valid values match fragments on about:preferences and are subject to change e.g.:
+   * <ul>
+   * For the old Preferences
+   * <li>general
+   * <li>search
+   * <li>content
+   * <li>applications
+   * <li>privacy
+   * <li>security
+   * <li>sync
+   * <li>advanced
+   * </ul>
    *
    * <ul>
-   * For the Preferences
+   * For the new Preferences
    * <li>general
    * <li>applications
    * <li>sync
@@ -735,8 +746,9 @@ if (typeof Mozilla == "undefined") {
    * <li>advanced
    * </ul>
    *
+   * The mapping between the old and the new Preferences:
    * To open to the options of sending telemetry, health report, crach reports,
-   * that is, the privcacy pane > reports on the preferences.
+   * that is, the advanced pane > dataChoicesTab on the old and the privcacy pane > reports on the new.
    * Please call `Mozilla.UITour.openPreferences("privacy-reports")`.
    * UITour would do route mapping automatically.
    *
