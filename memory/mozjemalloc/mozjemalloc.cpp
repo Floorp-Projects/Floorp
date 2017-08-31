@@ -4738,7 +4738,7 @@ posix_memalign_impl(void **memptr, size_t alignment, size_t size)
 {
 	void *result;
 
-	/* Make sure that alignment is a large enough power of 2. */
+	/* alignment must be a power of two and a multiple of sizeof(void *) */
 	if (((alignment - 1) & alignment) != 0 || alignment < sizeof(void *)) {
 		return (EINVAL);
 	}
