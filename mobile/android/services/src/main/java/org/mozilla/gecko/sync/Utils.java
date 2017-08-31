@@ -244,12 +244,6 @@ public class Utils {
     return sha1Base32(account.toLowerCase(Locale.US));
   }
 
-  public static SharedPreferences getSharedPreferences(final Context context, final String product, final String username, final String serverURL, final String profile, final long version)
-      throws NoSuchAlgorithmException, UnsupportedEncodingException {
-    String prefsPath = getPrefsPath(product, username, serverURL, profile, version);
-    return context.getSharedPreferences(prefsPath, SHARED_PREFERENCES_MODE);
-  }
-
   /**
    * Get shared preferences path for a Sync account.
    *

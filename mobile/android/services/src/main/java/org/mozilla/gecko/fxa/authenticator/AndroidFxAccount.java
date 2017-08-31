@@ -244,26 +244,6 @@ public class AndroidFxAccount {
     return o.getString(key);
   }
 
-  protected boolean getBundleDataBoolean(String key, boolean def) {
-    ExtendedJSONObject o = unbundle();
-    if (o == null) {
-      return def;
-    }
-    Boolean b = o.getBoolean(key);
-    if (b == null) {
-      return def;
-    }
-    return b;
-  }
-
-  protected byte[] getBundleDataBytes(String key) {
-    ExtendedJSONObject o = unbundle();
-    if (o == null) {
-      return null;
-    }
-    return o.getByteArrayHex(key);
-  }
-
   private void updateBundleValues(String key, String value, String... more) {
     if (more.length % 2 != 0) {
       throw new IllegalArgumentException("more must be a list of key, value pairs");
