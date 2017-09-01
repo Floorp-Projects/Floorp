@@ -62,6 +62,9 @@ RemoteVideoDecoder::Init()
            [self, this](TrackType aTrack) {
              mDescription =
                mActor->GetDescriptionName() + NS_LITERAL_CSTRING(" (remote)");
+             mIsHardwareAccelerated =
+               mActor->IsHardwareAccelerated(mHardwareAcceleratedReason);
+             mConversion = mActor->NeedsConversion();
              return InitPromise::CreateAndResolve(aTrack, __func__);
            },
            [self, this](const MediaResult& aError) {
@@ -109,7 +112,8 @@ RemoteVideoDecoder::Shutdown()
 bool
 RemoteVideoDecoder::IsHardwareAccelerated(nsACString& aFailureReason) const
 {
-  return mActor->IsHardwareAccelerated(aFailureReason);
+  aFailureReason = mHardwareAcceleratedReason;
+  return mIsHardwareAccelerated;
 }
 
 void
@@ -129,7 +133,7 @@ RemoteVideoDecoder::SetSeekThreshold(const media::TimeUnit& aTime)
 MediaDataDecoder::ConversionRequired
 RemoteVideoDecoder::NeedsConversion() const
 {
-  return mActor->NeedsConversion();
+  return mConversion;
 }
 
 nsresult
