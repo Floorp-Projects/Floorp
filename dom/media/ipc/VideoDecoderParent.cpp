@@ -112,8 +112,10 @@ VideoDecoderParent::RecvInit()
           self->mDecoder->IsHardwareAccelerated(hardwareReason);
         uint32_t conversion =
           static_cast<uint32_t>(self->mDecoder->NeedsConversion());
-        Unused << self->SendInitComplete(
-          hardwareAccelerated, hardwareReason, conversion);
+        Unused << self->SendInitComplete(self->mDecoder->GetDescriptionName(),
+                                         hardwareAccelerated,
+                                         hardwareReason,
+                                         conversion);
       }
     },
     [self] (MediaResult aReason) {
