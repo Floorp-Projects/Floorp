@@ -8690,9 +8690,6 @@ nsCSSFrameConstructor::ContentRemoved(nsIContent* aContainer,
 #ifdef MOZ_XUL
   if (NotifyListBoxBody(presContext, aContainer, aChild, aOldNextSibling,
                         childFrame, CONTENT_REMOVED)) {
-    if (aFlags == REMOVE_DESTROY_FRAMES) {
-      CaptureStateForFramesOf(aChild, mTempFrameTreeState);
-    }
     return false;
   }
 #endif // MOZ_XUL
@@ -8732,10 +8729,6 @@ nsCSSFrameConstructor::ContentRemoved(nsIContent* aContainer,
     RecreateFramesForContent(bindingParent, aInsertionKind);
     LAYOUT_PHASE_TEMP_REENTER();
     return true;
-  }
-
-  if (aFlags == REMOVE_DESTROY_FRAMES) {
-    CaptureStateForFramesOf(aChild, mTempFrameTreeState);
   }
 
   if (childFrame) {
@@ -10058,7 +10051,9 @@ nsCSSFrameConstructor::RecreateFramesForContent(nsIContent* aContent,
 
     if (!didReconstruct) {
       if (aInsertionKind == InsertionKind::Async) {
-        // XXXmats doesn't frame state need to be restored in this case too?
+        // FIXME(emilio, bug 1397239): There's nothing removing the frame state
+        // for elements that go away before we come back to the frame
+        // constructor.
         RestyleManager()->PostRestyleEvent(aContent->AsElement(),
                                            nsRestyleHint(0),
                                            nsChangeHint_ReconstructFrame);
@@ -10083,11 +10078,13 @@ nsCSSFrameConstructor::DestroyFramesFor(Element* aElement)
 
   nsIContent* nextSibling =
     aElement->IsRootOfAnonymousSubtree() ? nullptr : aElement->GetNextSibling();
+
+  CaptureStateForFramesOf(aElement, mTempFrameTreeState);
   return ContentRemoved(aElement->GetParent(),
                         aElement,
                         nextSibling,
                         InsertionKind::Async,
-                        REMOVE_DESTROY_FRAMES);
+                        REMOVE_FOR_RECONSTRUCTION);
 }
 
 //////////////////////////////////////////////////////////////////////
