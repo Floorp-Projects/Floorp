@@ -9,6 +9,7 @@ const MONTH_YEAR = ".month-year",
       BTN_PREV_MONTH = ".prev",
       BTN_NEXT_MONTH = ".next";
 const DATE_FORMAT = new Intl.DateTimeFormat("en-US", { year: "numeric", month: "long", timeZone: "UTC" }).format;
+const DATE_FORMAT_LOCAL = new Intl.DateTimeFormat("en-US", { year: "numeric", month: "long" }).format;
 
 // Create a list of abbreviations for calendar class names
 const W = "weekend",
@@ -54,7 +55,11 @@ add_task(async function test_datepicker_today() {
 
   await helper.openPicker("data:text/html, <input type='date'>");
 
-  Assert.equal(helper.getElement(MONTH_YEAR).textContent, DATE_FORMAT(date));
+  if (date.getMonth() === new Date().getMonth()) {
+    Assert.equal(helper.getElement(MONTH_YEAR).textContent, DATE_FORMAT_LOCAL(date));
+  } else {
+    Assert.ok(true, "Skipping datepicker today test if month changes when opening picker.");
+  }
 
   await helper.tearDown();
 });
