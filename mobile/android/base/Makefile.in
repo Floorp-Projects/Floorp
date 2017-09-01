@@ -501,7 +501,7 @@ update-fennec-wrappers:
 	    $(CURDIR)/FennecJNINatives.h $(topsrcdir)/widget/android/fennec
 	@echo Updated Fennec JNI code
 
-.PHONY: update-generated-wrappers
+.PHONY: update-generated-wrappers update-fennec-wrappers
 
 # This target is only used by IDE integrations. It rebuilds resources
 # that end up in omni.ja using the equivalent of |mach build faster|,
@@ -537,10 +537,32 @@ endif
 # FennecJNIWrappers.cpp target also generates
 #   FennecJNIWrappers.h and FennecJNINatives.h
 ifndef MOZ_BUILD_MOBILE_ANDROID_WITH_GRADLE
+
+# List of build flags used by auto-generated JNI bindings (through the
+# @BuildFlag annotation in Java). For example, add a "MOZ_FOO \" line to this
+# list to support @BuildFlag(MOZ_FOO).
+BINDING_BUILD_FLAGS = \
+  $(NULL)
+
+# Preprocess a JNI binding file using the build flags defined above.
+# $(1): JNI binding file to preprocess.
+preprocess-binding = ($(call py_action,preprocessor, \
+                      $(foreach flag,$(BINDING_BUILD_FLAGS),$(if $($(flag)),-D$(flag))) \
+                      -DMOZ_PREPROCESSOR $(1)) || echo $(1))
+
+# Preprocess and compare two versions of a JNI binding file, one in-tree
+# version and one newly generated version.
+# $(1): Base file name of the JNI binding file.
+# $(2): Additional path to prepend to the in-tree file name. This is required
+#       because in-tree Fennec-specific bindings are in a separate fennec/ directory.
+compare-binding = $(call preprocess-binding,$(1)) | ( \
+                  $(call preprocess-binding,$(topsrcdir)/widget/android/$(2)$(1)) 3<&- | \
+                  diff /dev/fd/3 - >/dev/null ) 3<&0
+
 libs:: GeneratedJNIWrappers.cpp
-	@(diff GeneratedJNIWrappers.cpp $(topsrcdir)/widget/android/GeneratedJNIWrappers.cpp >/dev/null && \
-	  diff GeneratedJNIWrappers.h $(topsrcdir)/widget/android/GeneratedJNIWrappers.h >/dev/null && \
-	  diff GeneratedJNINatives.h $(topsrcdir)/widget/android/GeneratedJNINatives.h >/dev/null) || \
+	@($(call compare-binding,GeneratedJNIWrappers.cpp) && \
+	  $(call compare-binding,GeneratedJNIWrappers.h) && \
+	  $(call compare-binding,GeneratedJNINatives.h)) || \
 	 (echo '*****************************************************' && \
 	  echo '***   Error: The generated JNI code has changed   ***' && \
 	  echo '* To update generated code in the tree, please run  *' && \
@@ -552,9 +574,9 @@ libs:: GeneratedJNIWrappers.cpp
 	  exit 1)
 
 libs:: FennecJNIWrappers.cpp
-	@(diff FennecJNIWrappers.cpp $(topsrcdir)/widget/android/fennec/FennecJNIWrappers.cpp >/dev/null && \
-	  diff FennecJNIWrappers.h $(topsrcdir)/widget/android/fennec/FennecJNIWrappers.h >/dev/null && \
-	  diff FennecJNINatives.h $(topsrcdir)/widget/android/fennec/FennecJNINatives.h >/dev/null) || \
+	@($(call compare-binding,FennecJNIWrappers.cpp,fennec/) && \
+	  $(call compare-binding,FennecJNIWrappers.h,fennec/) && \
+	  $(call compare-binding,FennecJNINatives.h,fennec/)) || \
 	 (echo '*****************************************************' && \
 	  echo '***     Error: The Fennec JNI code has changed    ***' && \
 	  echo '* To update generated code in the tree, please run  *' && \
