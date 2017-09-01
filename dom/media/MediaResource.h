@@ -372,7 +372,6 @@ class ChannelSuspendAgent {
 public:
   explicit ChannelSuspendAgent(nsIChannel* aChannel)
   : mChannel(aChannel),
-    mSuspendCount(0),
     mIsChannelSuspended(false)
   {}
 
@@ -400,7 +399,7 @@ private:
   void SuspendInternal();
 
   nsIChannel* mChannel;
-  Atomic<uint32_t> mSuspendCount;
+  uint32_t mSuspendCount = 0;
   bool mIsChannelSuspended;
 };
 
