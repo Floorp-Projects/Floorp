@@ -85,8 +85,9 @@ private:
 
 } // namespace mozilla
 
-ServoStyleSet::ServoStyleSet()
-  : mPresContext(nullptr)
+ServoStyleSet::ServoStyleSet(Kind aKind)
+  : mKind(aKind)
+  , mPresContext(nullptr)
   , mAuthorStyleDisabled(false)
   , mStylistState(StylistState::NotDirty)
   , mUserFontSetUpdateGeneration(0)
@@ -1051,47 +1052,6 @@ ServoStyleSet::StyleNewlyBoundElement(Element* aElement)
 }
 
 void
-ServoStyleSet::StyleSubtreeForReconstruct(Element* aRoot)
-{
-  MOZ_ASSERT(MayTraverseFrom(aRoot));
-  MOZ_ASSERT(aRoot->HasServoData());
-
-  // If the restyle root is beneath |aRoot|, there won't be any descendants bit
-  // leading us to aRoot. In this case, we need to traverse from the restyle
-  // root instead.
-  nsIDocument* doc = mPresContext->Document();
-  nsINode* restyleRoot = doc->GetServoRestyleRoot();
-  if (!restyleRoot) {
-    return;
-  }
-  Element* el = restyleRoot->IsElement() ? restyleRoot->AsElement() : nullptr;
-  if (el && nsContentUtils::ContentIsFlattenedTreeDescendantOf(el, aRoot)) {
-    MOZ_ASSERT(MayTraverseFrom(el));
-    aRoot = el;
-    doc->ClearServoRestyleRoot();
-  }
-
-  auto flags = ServoTraversalFlags::Forgetful |
-               ServoTraversalFlags::AggressivelyForgetful |
-               ServoTraversalFlags::ClearDirtyBits;
-  PreTraverse(flags);
-
-  AutoPrepareTraversal guard(this);
-
-  const SnapshotTable& snapshots = Snapshots();
-
-  DebugOnly<bool> postTraversalRequired =
-    Servo_TraverseSubtree(aRoot, mRawSet.get(), &snapshots, flags);
-  MOZ_ASSERT(!postTraversalRequired);
-
-  if (mPresContext->EffectCompositor()->PreTraverseInSubtree(flags, aRoot)) {
-    postTraversalRequired =
-      Servo_TraverseSubtree(aRoot, mRawSet.get(), &snapshots, flags);
-    MOZ_ASSERT(!postTraversalRequired);
-  }
-}
-
-void
 ServoStyleSet::MarkOriginsDirty(OriginFlags aChangedOrigins)
 {
   SetStylistStyleSheetsDirty();
@@ -1432,7 +1392,13 @@ void
 ServoStyleSet::UpdateStylist()
 {
   MOZ_ASSERT(StylistNeedsUpdate());
-  Element* root = mPresContext->Document()->GetDocumentElement();
+
+  // There's no need to compute invalidations and such for an XBL styleset,
+  // since they are loaded and unloaded synchronously, and they don't have to
+  // deal with dynamic content changes.
+  Element* root =
+    IsMaster() ? mPresContext->Document()->GetDocumentElement() : nullptr;
+
   Servo_StyleSet_FlushStyleSheets(mRawSet.get(), root);
   mStylistState = StylistState::NotDirty;
 }

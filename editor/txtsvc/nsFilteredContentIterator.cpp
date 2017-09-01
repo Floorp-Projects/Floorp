@@ -230,8 +230,8 @@ nsFilteredContentIterator::Last()
 // ContentToParentOffset: returns the content node's parent and offset.
 //
 static void
-ContentToParentOffset(nsIContent *aContent, nsIDOMNode **aParent,
-                      int32_t *aOffset)
+ContentToParentOffset(nsIContent* aContent, nsIContent** aParent,
+                      int32_t* aOffset)
 {
   if (!aParent || !aOffset)
     return;
@@ -242,14 +242,12 @@ ContentToParentOffset(nsIContent *aContent, nsIDOMNode **aParent,
   if (!aContent)
     return;
 
-  nsIContent* parent = aContent->GetParent();
-
+  nsCOMPtr<nsIContent> parent = aContent->GetParent();
   if (!parent)
     return;
 
   *aOffset = parent->IndexOf(aContent);
-
-  CallQueryInterface(parent, aParent);
+  parent.forget(aParent);
 }
 
 ///////////////////////////////////////////////////////////////////////////
@@ -257,13 +255,13 @@ ContentToParentOffset(nsIContent *aContent, nsIDOMNode **aParent,
 // the traversal of the range in the specified mode.
 //
 static bool
-ContentIsInTraversalRange(nsIContent *aContent,   bool aIsPreMode,
-                          nsIDOMNode *aStartContainer, int32_t aStartOffset,
-                          nsIDOMNode *aEndContainer, int32_t aEndOffset)
+ContentIsInTraversalRange(nsIContent* aContent, bool aIsPreMode,
+                          nsINode* aStartContainer, int32_t aStartOffset,
+                          nsINode* aEndContainer, int32_t aEndOffset)
 {
   NS_ENSURE_TRUE(aStartContainer && aEndContainer && aContent, false);
 
-  nsCOMPtr<nsIDOMNode> parentNode;
+  nsCOMPtr<nsIContent> parentNode;
   int32_t indx = 0;
 
   ContentToParentOffset(aContent, getter_AddRefs(parentNode), &indx);
@@ -287,17 +285,11 @@ ContentIsInTraversalRange(nsRange* aRange, nsIDOMNode* aNextNode, bool aIsPreMod
   nsCOMPtr<nsIContent> content(do_QueryInterface(aNextNode));
   NS_ENSURE_TRUE(content && aRange, false);
 
-  nsCOMPtr<nsIDOMNode> sNode;
-  nsCOMPtr<nsIDOMNode> eNode;
-  uint32_t sOffset;
-  uint32_t eOffset;
-  aRange->GetStartContainer(getter_AddRefs(sNode));
-  aRange->GetStartOffset(&sOffset);
-  aRange->GetEndContainer(getter_AddRefs(eNode));
-  aRange->GetEndOffset(&eOffset);
   return ContentIsInTraversalRange(content, aIsPreMode,
-                                   sNode, static_cast<int32_t>(sOffset),
-                                   eNode, static_cast<int32_t>(eOffset));
+                                   aRange->GetStartContainer(),
+                                   static_cast<int32_t>(aRange->StartOffset()),
+                                   aRange->GetEndContainer(),
+                                   static_cast<int32_t>(aRange->EndOffset()));
 }
 
 //------------------------------------------------------------

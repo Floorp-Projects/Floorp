@@ -6,7 +6,6 @@ toolkit.jar:
 *  res/ua.css                                (res/ua.css)
 *  res/html.css                              (res/html.css)
    res/quirk.css                             (res/quirk.css)
-   res/plaintext.css                         (res/plaintext.css)
    res/counterstyles.css                     (res/counterstyles.css)
    res/noscript.css                          (res/noscript.css)
    res/noframes.css                          (res/noframes.css)

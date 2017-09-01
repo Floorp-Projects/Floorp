@@ -434,13 +434,13 @@ class Tab extends TabBase {
 }
 
 // Manages tab-specific context data and dispatches tab select and close events.
-class TabContext {
+class TabContext extends EventEmitter {
   constructor(getDefaults, extension) {
+    super();
+
     this.extension = extension;
     this.getDefaults = getDefaults;
     this.tabData = new Map();
-
-    EventEmitter.decorate(this);
 
     GlobalEventDispatcher.registerListener(this, [
       "Tab:Selected",

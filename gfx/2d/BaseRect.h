@@ -206,6 +206,11 @@ struct BaseRect {
   {
     SetRect(aPt.x, aPt.y, aSize.width, aSize.height);
   }
+  void GetRect(T* aX, T* aY, T* aWidth, T* aHeight)
+  {
+    *aX = x; *aY = y; *aWidth = width; *aHeight = height;
+  }
+
   void MoveTo(T aX, T aY) { x = aX; y = aY; }
   void MoveTo(const Point& aPoint) { x = aPoint.x; y = aPoint.y; }
   void MoveBy(T aDx, T aDy) { x += aDx; y += aDy; }

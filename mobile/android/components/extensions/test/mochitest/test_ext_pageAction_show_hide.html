@@ -39,8 +39,15 @@ add_task(async function test_pageAction() {
 
     browser.test.onMessage.addListener(async (msg, data) => {
       if (msg === "select-tab") {
+        const onActivatedListener = ({tabId}) => {
+          if (tabId === data) {
+            browser.tabs.onActivated.removeListener(onActivatedListener);
+            browser.test.sendMessage("tab-selected");
+          }
+        };
+        browser.tabs.onActivated.addListener(onActivatedListener);
+
         await browser.tabs.update(data, {active: true});
-        browser.test.sendMessage("tab-selected");
       } else if (msg === "pageAction-show") {
         browser.pageAction.show(data).then(() => {
           browser.test.sendMessage("page-action-shown");

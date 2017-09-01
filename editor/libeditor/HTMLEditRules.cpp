@@ -457,15 +457,15 @@ HTMLEditRules::AfterEditInner(EditAction action,
   RefPtr<Selection> selection = mHTMLEditor->GetSelection();
   NS_ENSURE_STATE(selection);
 
-  nsCOMPtr<nsIDOMNode> rangeStartContainer, rangeEndContainer;
+  nsCOMPtr<nsINode> rangeStartContainer, rangeEndContainer;
   uint32_t rangeStartOffset = 0, rangeEndOffset = 0;
   // do we have a real range to act on?
   bool bDamagedRange = false;
   if (mDocChangeRange) {
-    mDocChangeRange->GetStartContainer(getter_AddRefs(rangeStartContainer));
-    mDocChangeRange->GetEndContainer(getter_AddRefs(rangeEndContainer));
-    mDocChangeRange->GetStartOffset(&rangeStartOffset);
-    mDocChangeRange->GetEndOffset(&rangeEndOffset);
+    rangeStartContainer = mDocChangeRange->GetStartContainer();
+    rangeEndContainer = mDocChangeRange->GetEndContainer();
+    rangeStartOffset = mDocChangeRange->StartOffset();
+    rangeEndOffset = mDocChangeRange->EndOffset();
     if (rangeStartContainer && rangeEndContainer) {
       bDamagedRange = true;
     }
@@ -568,8 +568,10 @@ HTMLEditRules::AfterEditInner(EditAction action,
                    action, selection,
                    GetAsDOMNode(mRangeItem->mStartContainer),
                    mRangeItem->mStartOffset,
-                   rangeStartContainer, static_cast<int32_t>(rangeStartOffset),
-                   rangeEndContainer, static_cast<int32_t>(rangeEndOffset));
+                   GetAsDOMNode(rangeStartContainer),
+                   static_cast<int32_t>(rangeStartOffset),
+                   GetAsDOMNode(rangeEndContainer),
+                   static_cast<int32_t>(rangeEndOffset));
   NS_ENSURE_SUCCESS(rv, rv);
 
   // detect empty doc
@@ -7893,8 +7895,6 @@ HTMLEditRules::SelectionEndpointInNode(nsINode* aNode,
 {
   NS_ENSURE_TRUE(aNode && aResult, NS_ERROR_NULL_POINTER);
 
-  nsIDOMNode* node = aNode->AsDOMNode();
-
   *aResult = false;
 
   NS_ENSURE_STATE(mHTMLEditor);
@@ -7904,28 +7904,27 @@ HTMLEditRules::SelectionEndpointInNode(nsINode* aNode,
   uint32_t rangeCount = selection->RangeCount();
   for (uint32_t rangeIdx = 0; rangeIdx < rangeCount; ++rangeIdx) {
     RefPtr<nsRange> range = selection->GetRangeAt(rangeIdx);
-    nsCOMPtr<nsIDOMNode> startContainer, endContainer;
-    range->GetStartContainer(getter_AddRefs(startContainer));
+    nsINode* startContainer = range->GetStartContainer();
     if (startContainer) {
-      if (node == startContainer) {
+      if (aNode == startContainer) {
         *aResult = true;
         return NS_OK;
       }
-      if (EditorUtils::IsDescendantOf(startContainer, node)) {
+      if (EditorUtils::IsDescendantOf(startContainer, aNode)) {
         *aResult = true;
         return NS_OK;
       }
     }
-    range->GetEndContainer(getter_AddRefs(endContainer));
+    nsINode* endContainer = range->GetEndContainer();
     if (startContainer == endContainer) {
       continue;
     }
     if (endContainer) {
-      if (node == endContainer) {
+      if (aNode == endContainer) {
         *aResult = true;
         return NS_OK;
       }
-      if (EditorUtils::IsDescendantOf(endContainer, node)) {
+      if (EditorUtils::IsDescendantOf(endContainer, aNode)) {
         *aResult = true;
         return NS_OK;
       }
@@ -8151,9 +8150,10 @@ HTMLEditRules::UpdateDocChangeRange(nsRange* aRange)
   // portions of our editting action involved manipulating nodes
   // prior to placing them in the document (e.g., populating a list item
   // before placing it in its list)
-  nsCOMPtr<nsIDOMNode> startNode;
-  nsresult rv = aRange->GetStartContainer(getter_AddRefs(startNode));
-  NS_ENSURE_SUCCESS(rv, rv);
+  nsCOMPtr<nsINode> startNode = aRange->GetStartContainer();
+  if (NS_WARN_IF(!startNode)) {
+    return NS_ERROR_FAILURE;
+  }
   NS_ENSURE_STATE(mHTMLEditor);
   if (!mHTMLEditor->IsDescendantOfRoot(startNode)) {
     // just return - we don't need to adjust mDocChangeRange in this case
@@ -8167,8 +8167,9 @@ HTMLEditRules::UpdateDocChangeRange(nsRange* aRange)
     int16_t result;
 
     // compare starts of ranges
-    rv = mDocChangeRange->CompareBoundaryPoints(nsIDOMRange::START_TO_START,
-                                                aRange, &result);
+    nsresult rv =
+      mDocChangeRange->CompareBoundaryPoints(nsIDOMRange::START_TO_START,
+                                             aRange, &result);
     if (rv == NS_ERROR_NOT_INITIALIZED) {
       // This will happen is mDocChangeRange is non-null, but the range is
       // uninitialized. In this case we'll set the start to aRange start.
@@ -8180,10 +8181,7 @@ HTMLEditRules::UpdateDocChangeRange(nsRange* aRange)
     NS_ENSURE_SUCCESS(rv, rv);
     // Positive result means mDocChangeRange start is after aRange start.
     if (result > 0) {
-      uint32_t startOffset;
-      rv = aRange->GetStartOffset(&startOffset);
-      NS_ENSURE_SUCCESS(rv, rv);
-      rv = mDocChangeRange->SetStart(startNode, startOffset);
+      rv = mDocChangeRange->SetStart(startNode, aRange->StartOffset());
       NS_ENSURE_SUCCESS(rv, rv);
     }
 
@@ -8193,13 +8191,11 @@ HTMLEditRules::UpdateDocChangeRange(nsRange* aRange)
     NS_ENSURE_SUCCESS(rv, rv);
     // Negative result means mDocChangeRange end is before aRange end.
     if (result < 0) {
-      nsCOMPtr<nsIDOMNode> endNode;
-      rv = aRange->GetEndContainer(getter_AddRefs(endNode));
-      NS_ENSURE_SUCCESS(rv, rv);
-      uint32_t endOffset;
-      rv = aRange->GetEndOffset(&endOffset);
-      NS_ENSURE_SUCCESS(rv, rv);
-      rv = mDocChangeRange->SetEnd(endNode, endOffset);
+      nsINode* endNode = aRange->GetEndContainer();
+      if (NS_WARN_IF(!endNode)) {
+        return NS_ERROR_FAILURE;
+      }
+      rv = mDocChangeRange->SetEnd(endNode, aRange->EndOffset());
       NS_ENSURE_SUCCESS(rv, rv);
     }
   }

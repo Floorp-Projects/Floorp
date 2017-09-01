@@ -3708,7 +3708,7 @@ pref("font.name-list.sans-serif.ja", "Meiryo, Yu Gothic, MS PGothic, MS Gothic, 
 pref("font.name-list.monospace.ja", "MS Gothic, MS Mincho, Meiryo, Yu Gothic, Yu Mincho, MS PGothic, MS PMincho");
 
 pref("font.name-list.serif.ko", "Batang, Gulim");
-pref("font.name-list.sans-serif.ko", "Gulim");
+pref("font.name-list.sans-serif.ko", "Gulim, Malgun Gothic");
 pref("font.name-list.monospace.ko", "GulimChe");
 pref("font.name-list.cursive.ko", "Gungsuh");
 

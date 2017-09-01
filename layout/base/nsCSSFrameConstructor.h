@@ -185,13 +185,6 @@ private:
    */
   void StyleNewChildRange(nsIContent* aStartChild, nsIContent* aEndChild);
 
-  /**
-   * Calls StyleSubtreeForReconstruct on each child in the aStartChild/aEndChild
-   * range. Only used when we are styled by Servo.
-   */
-  void StyleChildRangeForReconstruct(nsIContent* aStartChild,
-                                     nsIContent* aEndChild);
-
 public:
   /**
    * Lazy frame construction is controlled by the aAllowLazyConstruction bool

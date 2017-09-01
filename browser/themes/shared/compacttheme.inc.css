@@ -51,6 +51,7 @@
 }
 
 .toolbarbutton-animatable-box[brighttext],
+toolbar[brighttext] .toolbarbutton-animatable-box,
 toolbar[brighttext] .toolbarbutton-1 {
   fill: rgba(249, 249, 250, .7);
 }

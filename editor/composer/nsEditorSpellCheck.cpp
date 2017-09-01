@@ -364,11 +364,7 @@ nsEditorSpellCheck::InitSpellChecker(nsIEditor* aEditor, bool aEnableSelectionCh
       RefPtr<nsRange> range = selection->GetRangeAt(0);
       NS_ENSURE_STATE(range);
 
-      bool collapsed = false;
-      rv = range->GetCollapsed(&collapsed);
-      NS_ENSURE_SUCCESS(rv, rv);
-
-      if (!collapsed) {
+      if (!range->Collapsed()) {
         // We don't want to touch the range in the selection,
         // so create a new copy of it.
 
