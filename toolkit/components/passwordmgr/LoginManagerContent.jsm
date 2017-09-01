@@ -1348,10 +1348,8 @@ var LoginManagerContent = {
     let form = LoginFormFactory.createFromField(aField);
 
     let doc = aField.ownerDocument;
-    let messageManager = messageManagerFromWindow(doc.defaultView);
-    let recipes = messageManager.sendSyncMessage("RemoteLogins:findRecipes", {
-      formOrigin: LoginUtils._getPasswordOrigin(doc.documentURI),
-    })[0];
+    let formOrigin = LoginUtils._getPasswordOrigin(doc.documentURI);
+    let recipes = LoginRecipesContent.getRecipes(formOrigin, doc.defaultView);
 
     let [usernameField, newPasswordField] =
           this._getFormFields(form, false, recipes);
