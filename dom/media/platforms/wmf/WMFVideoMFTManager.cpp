@@ -610,7 +610,7 @@ WMFVideoMFTManager::InitInternal()
 
   HRESULT hr;
   if (mStreamType == VP9 && useDxva && mCheckForAMDDecoder &&
-      MediaPrefs::PDMWMFAMDVP9DecoderEnabled()) {
+      gfxPrefs::PDMWMFAMDVP9DecoderEnabled()) {
     if ((decoder = LoadAMDVP9Decoder())) {
       mAMDVP9InUse = true;
     }
