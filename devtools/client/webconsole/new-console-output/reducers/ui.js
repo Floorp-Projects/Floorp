@@ -7,6 +7,7 @@
 
 const {
   FILTER_BAR_TOGGLE,
+  PERSIST_TOGGLE,
   TIMESTAMPS_TOGGLE,
   SELECT_NETWORK_MESSAGE_TAB,
 } = require("devtools/client/webconsole/new-console-output/constants");
@@ -19,6 +20,7 @@ const {
 const UiState = Immutable.Record({
   filterBarVisible: false,
   filteredMessageVisible: false,
+  persistLogs: false,
   timestampsVisible: true,
   networkMessageActiveTabId: PANELS.HEADERS,
 });
@@ -27,6 +29,8 @@ function ui(state = new UiState(), action) {
   switch (action.type) {
     case FILTER_BAR_TOGGLE:
       return state.set("filterBarVisible", !state.filterBarVisible);
+    case PERSIST_TOGGLE:
+      return state.set("persistLogs", !state.persistLogs);
     case TIMESTAMPS_TOGGLE:
       return state.set("timestampsVisible", action.visible);
     case SELECT_NETWORK_MESSAGE_TAB:

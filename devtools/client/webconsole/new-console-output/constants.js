@@ -24,6 +24,7 @@ const actionTypes = {
   DEFAULT_FILTERS_RESET: "DEFAULT_FILTERS_RESET",
   FILTER_BAR_TOGGLE: "FILTER_BAR_TOGGLE",
   SELECT_NETWORK_MESSAGE_TAB: "SELECT_NETWORK_MESSAGE_TAB",
+  PERSIST_TOGGLE: "PERSIST_TOGGLE",
 };
 
 const prefs = {
@@ -39,7 +40,8 @@ const prefs = {
       NETXHR: "devtools.webconsole.filter.netxhr",
     },
     UI: {
-      FILTER_BAR: "devtools.webconsole.ui.filterbar"
+      FILTER_BAR: "devtools.webconsole.ui.filterbar",
+      PERSIST: "devtools.webconsole.persistlog",
     }
   }
 };

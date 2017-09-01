@@ -13,6 +13,7 @@ DevToolsModules(
     'console-table.js',
     'filter-bar.js',
     'filter-button.js',
+    'filter-checkbox.js',
     'grip-message-body.js',
     'message-container.js',
     'message-icon.js',
