@@ -270,6 +270,69 @@ function drawRoundedRect(ctx, x, y, width, height, radius) {
 }
 
 /**
+ * Utility method to draw an arrow-bubble rectangle in the provided canvas context.
+ *
+ * @param  {CanvasRenderingContext2D} ctx
+ *         The 2d canvas context.
+ * @param  {Number} x
+ *         The x-axis origin of the rectangle.
+ * @param  {Number} y
+ *         The y-axis origin of the rectangle.
+ * @param  {Number} width
+ *         The width of the rectangle.
+ * @param  {Number} height
+ *         The height of the rectangle.
+ * @param  {Number} radius
+ *         The radius of the rounding.
+ * @param  {Number} margin
+ *         The distance of the origin point from the pointer.
+ * @param  {Number} arrowSize
+ *         The size of the arrow.
+ * @param  {String} alignment
+ *         The alignment of the rectangle in relation to its position to the grid.
+ */
+function drawBubbleRect(ctx, x, y, width, height, radius, margin, arrowSize, alignment) {
+  let angle = 0;
+
+  if (alignment === "bottom") {
+    angle = 180;
+  } else if (alignment === "right") {
+    angle = 90;
+    [width, height] = [height, width];
+  } else if (alignment === "left") {
+    [width, height] = [height, width];
+    angle = 270;
+  }
+
+  let originX = x;
+  let originY = y;
+
+  ctx.save();
+  ctx.translate(originX, originY);
+  ctx.rotate(angle * (Math.PI / 180));
+  ctx.translate(-originX, -originY);
+  ctx.translate(-width / 2, -height - arrowSize - margin);
+
+  ctx.beginPath();
+  ctx.moveTo(x, y + radius);
+  ctx.lineTo(x, y + height - radius);
+  ctx.arcTo(x, y + height, x + radius, y + height, radius);
+  ctx.lineTo(x + width / 2 - arrowSize, y + height);
+  ctx.lineTo(x + width / 2, y + height + arrowSize);
+  ctx.lineTo(x + width / 2 + arrowSize, y + height);
+  ctx.arcTo(x + width, y + height, x + width, y + height - radius, radius);
+  ctx.lineTo(x + width, y + radius);
+  ctx.arcTo(x + width, y, x + width - radius, y, radius);
+  ctx.lineTo(x + radius, y);
+  ctx.arcTo(x, y, x, y + radius, radius);
+
+  ctx.stroke();
+  ctx.fill();
+
+  ctx.restore();
+}
+
+/**
  * The CssGridHighlighter is the class that overlays a visual grid on top of
  * display:[inline-]grid elements.
  *
@@ -1528,53 +1591,58 @@ class CssGridHighlighter extends AutoRefreshHighlighter {
     let fontSize = (GRID_FONT_SIZE * displayPixelRatio);
     this.ctx.font = fontSize + "px " + GRID_FONT_FAMILY;
 
-    let textWidth = this.ctx.measureText(lineNumber).width;
-
-    // The width of the character 'm' approximates the height of the text.
+    // For a general grid box, the height of the character "m" will be its minimum width
+    // and height. If line number's text width is greater then grid box's text width
+    // will use that instead.
     let textHeight = this.ctx.measureText("m").width;
+    let textWidth = Math.max(textHeight, this.ctx.measureText(lineNumber).width);
 
     // Padding in pixels for the line number text inside of the line number container.
     let padding = 3 * displayPixelRatio;
+    let offsetFromEdge = 2 * displayPixelRatio;
 
     let boxWidth = textWidth + 2 * padding;
     let boxHeight = textHeight + 2 * padding;
 
-    // Calculate the x & y coordinates for the line number container, so that it is
-    // centered on the line, and in the middle of the gap if there is any.
+     // Calculate the x & y coordinates for the line number container, so that its arrow
+     // tip is centered on the line (or the gap if there is one), and is offset by the
+     // calculated padding value from the grid container edge.
     let x, y;
-
-    let startOffset = (boxHeight + 2) / devicePixelRatio;
-
-    if (Services.prefs.getBoolPref(NEGATIVE_LINE_NUMBERS_PREF)) {
-      // If the line number is negative, offset it from the grid container edge,
-      // (downwards if its a column, rightwards if its a row).
-      if (lineNumber < 0) {
-        startPos += startOffset;
-      } else {
-        startPos -= startOffset;
-      }
-    }
 
     if (dimensionType === COLUMNS) {
       x = linePos + breadth / 2;
       y = startPos;
-    } else {
+
+      if (lineNumber > 0) {
+        y -= offsetFromEdge;
+      } else {
+        y += offsetFromEdge;
+      }
+    } else if (dimensionType === ROWS) {
       x = startPos;
       y = linePos + breadth / 2;
+
+      if (lineNumber > 0) {
+        x -= offsetFromEdge;
+      } else {
+        x += offsetFromEdge;
+      }
     }
 
     [x, y] = apply(this.currentMatrix, [x, y]);
-
-    x -= boxWidth / 2;
-    y -= boxHeight / 2;
 
     if (stackedLineIndex) {
       // Offset the stacked line number by half of the box's width/height
       const xOffset = boxWidth / 4;
       const yOffset = boxHeight / 4;
 
-      x += xOffset;
-      y += yOffset;
+      if (lineNumber > 0) {
+        x -= xOffset;
+        y -= yOffset;
+      } else {
+        x += xOffset;
+        y += yOffset;
+      }
     }
 
     if (!this.hasNodeTransformations) {
@@ -1582,18 +1650,52 @@ class CssGridHighlighter extends AutoRefreshHighlighter {
       y = Math.max(y, padding);
     }
 
-    // Draw a rounded rectangle with a border width of 2 pixels, a border color matching
-    // the grid color and a white background (the line number will be written in black).
+    // Draw a bubble rectanglular arrow with a border width of 2 pixels, a border color
+    // matching the grid color and a white background (the line number will be written in
+    // black).
     this.ctx.lineWidth = 2 * displayPixelRatio;
     this.ctx.strokeStyle = this.color;
     this.ctx.fillStyle = "white";
+
+    // See param definitions of drawBubbleRect
     let radius = 2 * displayPixelRatio;
-    drawRoundedRect(this.ctx, x, y, boxWidth, boxHeight, radius);
+    let margin = 2 * displayPixelRatio;
+    let arrowSize = 8 * displayPixelRatio;
+
+    let minBoxSize = arrowSize * 2 + padding;
+    boxWidth = Math.max(boxWidth, minBoxSize);
+    boxHeight = Math.max(boxHeight, minBoxSize);
+
+    if (dimensionType === COLUMNS) {
+      if (lineNumber > 0) {
+        drawBubbleRect(this.ctx, x, y, boxWidth, boxHeight, radius, margin, arrowSize,
+          "top");
+        // After drawing the number box, we need to center the x/y coordinates of the
+        // number text written it.
+        y -= (boxHeight + arrowSize + radius) - boxHeight / 2;
+      } else {
+        drawBubbleRect(this.ctx, x, y, boxWidth, boxHeight, radius, margin, arrowSize,
+          "bottom");
+        y += (boxHeight + arrowSize + radius) - boxHeight / 2;
+      }
+    } else if (dimensionType === ROWS) {
+      if (lineNumber > 0) {
+        drawBubbleRect(this.ctx, x, y, boxWidth, boxHeight, radius, margin, arrowSize,
+          "left");
+        x -= (boxWidth + arrowSize + radius) - boxWidth / 2;
+      } else {
+        drawBubbleRect(this.ctx, x, y, boxWidth, boxHeight, radius, margin, arrowSize,
+          "right");
+        x += (boxWidth + arrowSize + radius) - boxWidth / 2;
+      }
+    }
 
     // Write the line number inside of the rectangle.
+    this.ctx.textAlign = "center";
+    this.ctx.textBaseline = "middle";
     this.ctx.fillStyle = "black";
     const numberText = stackedLineIndex ? "" : lineNumber;
-    this.ctx.fillText(numberText, x + padding, y + textHeight + padding);
+    this.ctx.fillText(numberText, x, y);
 
     this.ctx.restore();
   }
