@@ -14957,9 +14957,15 @@ class CGBindingImplClass(CGClass):
             if m.isMethod():
                 if m.isIdentifierLess():
                     continue
+                if m.isMaplikeOrSetlikeOrIterableMethod():
+                    # Handled by generated code already
+                    continue
                 if not m.isStatic() or not skipStaticMethods:
                     appendMethod(m)
             elif m.isAttr():
+                if m.isMaplikeOrSetlikeAttr():
+                    # Handled by generated code already
+                    continue
                 self.methodDecls.append(cgGetter(descriptor, m))
                 if not m.readonly:
                     self.methodDecls.append(cgSetter(descriptor, m))
@@ -15213,8 +15219,9 @@ class CGExampleRoot(CGThing):
                 continue
             if member.isStatic():
                 builder.addInMozillaDom("GlobalObject")
-            if member.isAttr() and not member.isMaplikeOrSetlikeAttr():
-                builder.forwardDeclareForType(member.type, config)
+            if member.isAttr():
+                if not member.isMaplikeOrSetlikeAttr():
+                    builder.forwardDeclareForType(member.type, config)
             else:
                 assert member.isMethod()
                 if not member.isMaplikeOrSetlikeOrIterableMethod():
@@ -15909,13 +15916,19 @@ class CGFastCallback(CGClass):
 class CGCallbackInterface(CGCallback):
     def __init__(self, descriptor, spiderMonkeyInterfacesAreStructs=False):
         iface = descriptor.interface
-        attrs = [m for m in iface.members if m.isAttr() and not m.isStatic()]
+        attrs = [m for m in iface.members
+                 if (m.isAttr() and not m.isStatic() and
+                     (not m.isMaplikeOrSetlikeAttr() or
+                      not iface.isJSImplemented()))]
         getters = [CallbackGetter(a, descriptor, spiderMonkeyInterfacesAreStructs)
                    for a in attrs]
         setters = [CallbackSetter(a, descriptor, spiderMonkeyInterfacesAreStructs)
                    for a in attrs if not a.readonly]
         methods = [m for m in iface.members
-                   if m.isMethod() and not m.isStatic() and not m.isIdentifierLess()]
+                   if (m.isMethod() and not m.isStatic() and
+                       not m.isIdentifierLess() and
+                       (not m.isMaplikeOrSetlikeOrIterableMethod() or
+                        not iface.isJSImplemented()))]
         methods = [CallbackOperation(m, sig, descriptor, spiderMonkeyInterfacesAreStructs)
                    for m in methods for sig in m.signatures()]
         if iface.isJSImplemented() and iface.ctor():
