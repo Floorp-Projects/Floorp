@@ -19,7 +19,6 @@ const {
 
 const UiState = Immutable.Record({
   filterBarVisible: false,
-  filteredMessageVisible: false,
   persistLogs: false,
   timestampsVisible: true,
   networkMessageActiveTabId: PANELS.HEADERS,
