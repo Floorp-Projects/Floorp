@@ -630,7 +630,7 @@ a.learn-more-link.webconsole-learn-more-link {
   padding: 0 1px;
   -moz-box-align: stretch;
   --toolbarbutton-checked-color: var(--theme-body-color);
-  --toolbarbutton-checked-background: var(--theme-selection-background-hover);
+  --toolbarbutton-checked-background: var(--theme-selection-background-semitransparent);
 }
 
 .devtools-toolbarbutton > .toolbarbutton-menubutton-button > .toolbarbutton-icon {

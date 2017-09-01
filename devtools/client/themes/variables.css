@@ -25,8 +25,8 @@
   --theme-toolbar-background-alt: #f5f5f5;
   --theme-toolbar-hover: rgba(170, 170, 170, .2);
   --theme-toolbar-hover-active: rgba(170, 170, 170, .4);
-  --theme-selection-background: var(--blue-55);
-  --theme-selection-background-hover: #F0F9FE;
+  --theme-selection-background: #4c9ed9;
+  --theme-selection-background-semitransparent: rgba(76, 158, 217, 0.15);
   --theme-selection-color: #f5f7fa;
   --theme-splitter-color: #dde1e4;
   --theme-comment: #696969;
@@ -93,8 +93,8 @@
   --theme-toolbar-background-alt: #2F343E;
   --theme-toolbar-hover: rgba(110, 120, 130, 0.1);
   --theme-toolbar-hover-active: rgba(110, 120, 130, 0.2);
-  --theme-selection-background: #204E8A;
-  --theme-selection-background-hover: #353B48;
+  --theme-selection-background: #5675B9;
+  --theme-selection-background-semitransparent: rgba(86, 117, 185, 0.5);
   --theme-selection-color: #f5f7fa;
   --theme-splitter-color: #454d5d;
   --theme-comment: #757873;
@@ -159,7 +159,7 @@
   --theme-toolbar-background: rgb(240, 240, 240) linear-gradient(rgba(255, 255, 255, 0.8), transparent);
   --theme-toolbar-tab-selected-background: rgb(253, 253, 253);
   --theme-selection-background: #3399ff;
-  --theme-selection-background-hover: rgba(128,128,128,0.2);
+  --theme-selection-background-semitransparent: rgba(128,128,128,0.2);
   --theme-selection-color: white;
   --theme-splitter-color: #bfbfbf;
   --theme-comment: darkgreen;
