@@ -1,0 +1,15 @@
+<!DOCTYPE html>
+<html class="reftest-wait">
+<img src="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAGQAAABQCAYAAADvCdDvAAAAZElEQVR4nO3RQQ0AIBDAMPybBgu8YJe0DpatxbX9wO/GUQyJMSTGkBhDYgyJMSTGkBhDYgyJMSTGkBhDYgyJMSTGkBhDYgyJMSTGEAAAAAAAAAAAAAAAAAAAAAAAAAAAAACAGQ4uFciajNXnVwAAAABJRU5ErkJggg==" usemap="#map">
+<map name="map"><area></map>
+<script>
+window.onload = () => {
+  let d = document.querySelector('area');
+  setTimeout(() => {
+    d.appendChild(document.createElement('div'));
+    document.body.offsetHeight;
+    document.documentElement.className = '';
+  }, 100);
+}
+</script>
+</html>

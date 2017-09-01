@@ -4359,6 +4359,13 @@ NoteDirtyElement(Element* aElement, uint32_t aBits)
     if (!parent->GetPrimaryFrame() && Servo_Element_IsDisplayNone(parent)) {
       return;
     }
+
+    // The check above doesn't work for <area> element because <area> always
+    // have display:none, but before we fix bug 135040, it may have primary
+    // frame from <img>.
+    if (parent->IsHTMLElement(nsGkAtoms::area)) {
+      return;
+    }
   }
 
   nsIDocument* doc = aElement->GetComposedDoc();
