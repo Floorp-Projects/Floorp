@@ -17,7 +17,8 @@
 
 namespace mozilla {
 
-class AppleVTDecoder : public MediaDataDecoder {
+class AppleVTDecoder : public MediaDataDecoder
+{
 public:
   AppleVTDecoder(const VideoInfo& aConfig,
                  TaskQueue* aTaskQueue,
