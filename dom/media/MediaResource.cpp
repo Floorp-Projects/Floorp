@@ -84,7 +84,6 @@ ChannelMediaResource::ChannelMediaResource(MediaResourceCallback* aCallback,
   , mReopenOnError(false)
   , mIgnoreClose(false)
   , mCacheStream(this, aIsPrivateBrowsing)
-  , mLock("ChannelMediaResource.mLock")
   , mIgnoreResume(false)
   , mSuspendAgent(mChannel)
 {
@@ -100,7 +99,6 @@ ChannelMediaResource::ChannelMediaResource(
   , mReopenOnError(false)
   , mIgnoreClose(false)
   , mCacheStream(this, /* aIsPrivateBrowsing = */ false)
-  , mLock("ChannelMediaResource.mLock")
   , mChannelStatistics(aStatistics)
   , mIgnoreResume(false)
   , mSuspendAgent(mChannel)
@@ -323,12 +321,7 @@ ChannelMediaResource::OnStartRequest(nsIRequest* aRequest)
     seekable = !isCompressed && acceptsRanges;
   }
   mCacheStream.SetTransportSeekable(seekable);
-
-  {
-    MutexAutoLock lock(mLock);
-    mChannelStatistics.Start();
-  }
-
+  mChannelStatistics.Start();
   mReopenOnError = false;
   mIgnoreClose = false;
 
@@ -400,10 +393,7 @@ ChannelMediaResource::OnStopRequest(nsIRequest* aRequest, nsresult aStatus)
   NS_ASSERTION(!mSuspendAgent.IsSuspended(),
                "How can OnStopRequest fire while we're suspended?");
 
-  {
-    MutexAutoLock lock(mLock);
-    mChannelStatistics.Stop();
-  }
+  mChannelStatistics.Stop();
 
   // Note that aStatus might have succeeded --- this might be a normal close
   // --- even in situations where the server cut us off because we were
@@ -678,10 +668,7 @@ void ChannelMediaResource::CloseChannel()
 {
   NS_ASSERTION(NS_IsMainThread(), "Only call on main thread");
 
-  {
-    MutexAutoLock lock(mLock);
-    mChannelStatistics.Stop();
-  }
+  mChannelStatistics.Stop();
 
   if (mChannel) {
     mSuspendAgent.NotifyChannelClosing();
@@ -763,10 +750,7 @@ void ChannelMediaResource::Suspend(bool aCloseImmediately)
 
   if (mSuspendAgent.Suspend()) {
     if (mChannel) {
-      {
-        MutexAutoLock lock(mLock);
-        mChannelStatistics.Stop();
-      }
+      mChannelStatistics.Stop();
       element->DownloadSuspended();
     }
   }
@@ -790,10 +774,7 @@ void ChannelMediaResource::Resume()
   if (mSuspendAgent.Resume()) {
     if (mChannel) {
       // Just wake up our existing channel
-      {
-        MutexAutoLock lock(mLock);
-        mChannelStatistics.Start();
-      }
+      mChannelStatistics.Start();
       // if an error occurs after Resume, assume it's because the server
       // timed out the connection and we should reopen it.
       mReopenOnError = true;
@@ -1008,7 +989,6 @@ double
 ChannelMediaResource::GetDownloadRate(bool* aIsReliable)
 {
   MOZ_ASSERT(NS_IsMainThread());
-  MutexAutoLock lock(mLock);
   return mChannelStatistics.GetRate(aIsReliable);
 }
 
