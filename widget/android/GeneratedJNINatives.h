@@ -7,8 +7,10 @@
 #ifndef GeneratedJNINatives_h
 #define GeneratedJNINatives_h
 
+#ifndef MOZ_PREPROCESSOR
 #include "GeneratedJNIWrappers.h"
 #include "mozilla/jni/Natives.h"
+#endif
 
 namespace mozilla {
 namespace java {
