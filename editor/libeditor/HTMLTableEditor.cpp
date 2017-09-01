@@ -760,8 +760,7 @@ HTMLEditor::DeleteTableCell(int32_t aNumber)
   AutoRules beginRulesSniffing(this, EditAction::deleteNode, nsIEditor::eNext);
 
   nsCOMPtr<nsIDOMElement> firstCell;
-  nsCOMPtr<nsIDOMRange> range;
-  rv = GetFirstSelectedCell(getter_AddRefs(range), getter_AddRefs(firstCell));
+  rv = GetFirstSelectedCell(nullptr, getter_AddRefs(firstCell));
   NS_ENSURE_SUCCESS(rv, rv);
 
   if (firstCell && selection->RangeCount() > 1) {
@@ -855,8 +854,7 @@ HTMLEditor::DeleteTableCell(int32_t aNumber)
         if (!deleteCol) {
           // First get the next cell to delete
           nsCOMPtr<nsIDOMElement> nextCell;
-          rv = GetNextSelectedCell(getter_AddRefs(range),
-                                   getter_AddRefs(nextCell));
+          rv = GetNextSelectedCell(nullptr, getter_AddRefs(nextCell));
           NS_ENSURE_SUCCESS(rv, rv);
 
           // Then delete the cell
@@ -948,8 +946,7 @@ HTMLEditor::DeleteTableCellContents()
 
 
   nsCOMPtr<nsIDOMElement> firstCell;
-  nsCOMPtr<nsIDOMRange> range;
-  rv = GetFirstSelectedCell(getter_AddRefs(range), getter_AddRefs(firstCell));
+  rv = GetFirstSelectedCell(nullptr, getter_AddRefs(firstCell));
   NS_ENSURE_SUCCESS(rv, rv);
 
 
@@ -1030,8 +1027,7 @@ HTMLEditor::DeleteTableColumn(int32_t aNumber)
 
   // Test if deletion is controlled by selected cells
   nsCOMPtr<nsIDOMElement> firstCell;
-  nsCOMPtr<nsIDOMRange> range;
-  rv = GetFirstSelectedCell(getter_AddRefs(range), getter_AddRefs(firstCell));
+  rv = GetFirstSelectedCell(nullptr, getter_AddRefs(firstCell));
   NS_ENSURE_SUCCESS(rv, rv);
 
   uint32_t rangeCount = selection->RangeCount();
@@ -1059,7 +1055,7 @@ HTMLEditor::DeleteTableColumn(int32_t aNumber)
       // to continue after we delete this column
       int32_t nextCol = startColIndex;
       while (nextCol == startColIndex) {
-        rv = GetNextSelectedCell(getter_AddRefs(range), getter_AddRefs(cell));
+        rv = GetNextSelectedCell(nullptr, getter_AddRefs(cell));
         NS_ENSURE_SUCCESS(rv, rv);
         if (!cell) {
           break;
@@ -1193,8 +1189,7 @@ HTMLEditor::DeleteTableRow(int32_t aNumber)
   AutoRules beginRulesSniffing(this, EditAction::deleteNode, nsIEditor::eNext);
 
   nsCOMPtr<nsIDOMElement> firstCell;
-  nsCOMPtr<nsIDOMRange> range;
-  rv = GetFirstSelectedCell(getter_AddRefs(range), getter_AddRefs(firstCell));
+  rv = GetFirstSelectedCell(nullptr, getter_AddRefs(firstCell));
   NS_ENSURE_SUCCESS(rv, rv);
 
   uint32_t rangeCount = selection->RangeCount();
@@ -1225,7 +1220,7 @@ HTMLEditor::DeleteTableRow(int32_t aNumber)
       // to continue after we delete this row
       int32_t nextRow = startRowIndex;
       while (nextRow == startRowIndex) {
-        rv = GetNextSelectedCell(getter_AddRefs(range), getter_AddRefs(cell));
+        rv = GetNextSelectedCell(nullptr, getter_AddRefs(cell));
         NS_ENSURE_SUCCESS(rv, rv);
         if (!cell) break;
         rv = GetCellIndexes(cell, &nextRow, &startColIndex);
