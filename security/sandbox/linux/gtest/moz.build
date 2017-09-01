@@ -8,10 +8,8 @@ Library('sandboxtest')
 
 SOURCES = [
     '../SandboxBrokerClient.cpp',
-    '../SandboxUtil.cpp',
     'TestBroker.cpp',
     'TestBrokerPolicy.cpp',
-    'TestSandboxUtil.cpp',
 ]
 
 LOCAL_INCLUDES += [

@@ -6,10 +6,8 @@
 
 #include "Sandbox.h"
 
-#include "LinuxCapabilities.h"
 #include "LinuxSched.h"
 #include "SandboxBrokerClient.h"
-#include "SandboxChroot.h"
 #include "SandboxFilter.h"
 #include "SandboxInternal.h"
 #include "SandboxLogging.h"
@@ -17,7 +15,6 @@
 #include "SandboxOpenedFiles.h"
 #endif
 #include "SandboxReporterClient.h"
-#include "SandboxUtil.h"
 
 #include <dirent.h>
 #ifdef NIGHTLY_BUILD
@@ -44,6 +41,7 @@
 #include "mozilla/Span.h"
 #include "mozilla/UniquePtr.h"
 #include "mozilla/Unused.h"
+#include "prenv.h"
 #include "sandbox/linux/bpf_dsl/codegen.h"
 #include "sandbox/linux/bpf_dsl/dump_bpf.h"
 #include "sandbox/linux/bpf_dsl/policy.h"
@@ -88,7 +86,6 @@ static bool gSandboxCrashOnError = false;
 SandboxCrashFunc gSandboxCrashFunc;
 
 static SandboxReporterClient* gSandboxReporterClient;
-static UniquePtr<SandboxChroot> gChrootHelper;
 static void (*gChromiumSigSysHandler)(int, siginfo_t*, void*);
 
 // Test whether a ucontext, interpreted as the state after a syscall,
@@ -303,10 +300,6 @@ SetThreadSandboxHandler(int signum)
 static void
 EnterChroot()
 {
-  if (gChrootHelper) {
-    gChrootHelper->Invoke();
-    gChrootHelper = nullptr;
-  }
 }
 
 static void
@@ -456,12 +449,77 @@ ApplySandboxWithTSync(sock_fprog* aFilter)
   }
 }
 
+#ifdef NIGHTLY_BUILD
+static bool
+IsLibPresent(const char* aName)
+{
+  if (const auto handle = dlopen(aName, RTLD_LAZY | RTLD_NOLOAD)) {
+    dlclose(handle);
+    return true;
+  }
+  return false;
+}
+
+static const Array<const char*, 1> kLibsThatWillCrash {
+  "libesets_pac.so",
+};
+#endif // NIGHTLY_BUILD
+
+void
+SandboxEarlyInit() {
+  // If TSYNC is not supported, set up signal handler
+  // used to enable seccomp on each thread.
+  if (!SandboxInfo::Get().Test(SandboxInfo::kHasSeccompTSync)) {
+    // The signal number has to be chosen early, so that the
+    // interceptions in SandboxHooks.cpp can prevent it from being
+    // masked.
+    const int tsyncSignum = FindFreeSignalNumber();
+    if (tsyncSignum == 0) {
+      SANDBOX_LOG_ERROR("No available signal numbers!");
+      MOZ_CRASH();
+    }
+    gSeccompTsyncBroadcastSignum = tsyncSignum;
+
+    // ...and the signal handler also needs to be installed now, to
+    // indicate to anything else looking for free signals that it's
+    // claimed.
+    void (*oldHandler)(int);
+    oldHandler = signal(tsyncSignum, SetThreadSandboxHandler);
+    if (oldHandler != SIG_DFL) {
+      // See the comment on FindFreeSignalNumber about race conditions.
+      SANDBOX_LOG_ERROR("signal %d in use by handler %p!\n",
+                        tsyncSignum, oldHandler);
+      MOZ_CRASH();
+    }
+  }
+}
+
+static void
+SandboxLateInit() {
+#ifdef NIGHTLY_BUILD
+  gSandboxCrashOnError = true;
+  for (const char* name : kLibsThatWillCrash) {
+    if (IsLibPresent(name)) {
+      gSandboxCrashOnError = false;
+      break;
+    }
+  }
+#endif
+
+  if (const char* envVar = PR_GetEnv("MOZ_SANDBOX_CRASH_ON_ERROR")) {
+    if (envVar[0]) {
+      gSandboxCrashOnError = envVar[0] != '0';
+    }
+  }
+}
+
 // Common code for sandbox startup.
 static void
 SetCurrentProcessSandbox(UniquePtr<sandbox::bpf_dsl::Policy> aPolicy)
 {
   MOZ_ASSERT(gSandboxCrashFunc);
   MOZ_RELEASE_ASSERT(gSandboxReporterClient != nullptr);
+  SandboxLateInit();
 
   // Note: PolicyCompiler borrows the policy and registry for its
   // lifetime, but does not take ownership of them.
@@ -505,165 +563,6 @@ SetCurrentProcessSandbox(UniquePtr<sandbox::bpf_dsl::Policy> aPolicy)
       SANDBOX_LOG_ERROR("no tsync support; using signal broadcast");
     }
     BroadcastSetThreadSandbox(&fprog);
-  }
-  MOZ_RELEASE_ASSERT(!gChrootHelper, "forgot to chroot");
-}
-
-#ifdef NIGHTLY_BUILD
-static bool
-IsLibPresent(const char* aName)
-{
-  if (const auto handle = dlopen(aName, RTLD_LAZY | RTLD_NOLOAD)) {
-    dlclose(handle);
-    return true;
-  }
-  return false;
-}
-
-static const Array<const char*, 1> kLibsThatWillCrash {
-  "libesets_pac.so",
-};
-#endif // NIGHTLY_BUILD
-
-void
-SandboxEarlyInit(GeckoProcessType aType)
-{
-  const SandboxInfo info = SandboxInfo::Get();
-  if (info.Test(SandboxInfo::kUnexpectedThreads)) {
-    return;
-  }
-  MOZ_RELEASE_ASSERT(IsSingleThreaded());
-
-  // Set gSandboxCrashOnError if appropriate.  This doesn't need to
-  // happen this early, but for now it's here so that I don't need to
-  // add NSPR dependencies for PR_GetEnv.
-  //
-  // This also means that users with "unexpected threads" setups won't
-  // crash even on nightly.
-#ifdef NIGHTLY_BUILD
-  gSandboxCrashOnError = true;
-  for (const char* name : kLibsThatWillCrash) {
-    if (IsLibPresent(name)) {
-      gSandboxCrashOnError = false;
-      break;
-    }
-  }
-#endif
-  if (const char* envVar = getenv("MOZ_SANDBOX_CRASH_ON_ERROR")) {
-    if (envVar[0]) {
-      gSandboxCrashOnError = envVar[0] != '0';
-    }
-  }
-
-  // Which kinds of resource isolation (of those that need to be set
-  // up at this point) can be used by this process?
-  bool canChroot = false;
-  bool canUnshareNet = false;
-  bool canUnshareIPC = false;
-
-  switch (aType) {
-  case GeckoProcessType_Default:
-    MOZ_ASSERT(false, "SandboxEarlyInit in parent process");
-    return;
-#ifdef MOZ_GMP_SANDBOX
-  case GeckoProcessType_GMPlugin:
-    if (!info.Test(SandboxInfo::kEnabledForMedia)) {
-      break;
-    }
-    canUnshareNet = true;
-    canUnshareIPC = true;
-    // Need seccomp-bpf to intercept open().
-    canChroot = info.Test(SandboxInfo::kHasSeccompBPF);
-    break;
-#endif
-    // In the future, content processes will be able to use some of
-    // these.
-  default:
-    // Other cases intentionally left blank.
-    break;
-  }
-
-  // If TSYNC is not supported, set up signal handler
-  // used to enable seccomp on each thread.
-  if (!info.Test(SandboxInfo::kHasSeccompTSync)) {
-    const int tsyncSignum = FindFreeSignalNumber();
-    if (tsyncSignum == 0) {
-      SANDBOX_LOG_ERROR("No available signal numbers!");
-      MOZ_CRASH();
-    }
-    gSeccompTsyncBroadcastSignum = tsyncSignum;
-
-    void (*oldHandler)(int);
-    oldHandler = signal(tsyncSignum, SetThreadSandboxHandler);
-    if (oldHandler != SIG_DFL) {
-      // See the comment on FindFreeSignalNumber about race conditions.
-      SANDBOX_LOG_ERROR("signal %d in use by handler %p!\n",
-                        tsyncSignum, oldHandler);
-      MOZ_CRASH();
-    }
-  }
-
-  // If there's nothing to do, then we're done.
-  if (!canChroot && !canUnshareNet && !canUnshareIPC) {
-    return;
-  }
-
-  {
-    LinuxCapabilities existingCaps;
-    if (existingCaps.GetCurrent() && existingCaps.AnyEffective()) {
-      SANDBOX_LOG_ERROR("PLEASE DO NOT RUN THIS AS ROOT.  Strange things may"
-                        " happen when capabilities are dropped.");
-    }
-  }
-
-  // If capabilities can't be gained, then nothing can be done.
-  if (!info.Test(SandboxInfo::kHasUserNamespaces)) {
-    // Drop any existing capabilities; unsharing the user namespace
-    // would implicitly drop them, so if we're running in a broken
-    // configuration where that would matter (e.g., running as root
-    // from a non-root-owned mode-0700 directory) this means it will
-    // break the same way on all kernels and be easier to troubleshoot.
-    LinuxCapabilities().SetCurrent();
-    return;
-  }
-
-  // The failure cases for the various unshares, and setting up the
-  // chroot helper, don't strictly need to be fatal -- but they also
-  // shouldn't fail on any reasonable system, so let's take the small
-  // risk of breakage over the small risk of quietly providing less
-  // security than we expect.  (Unlike in SandboxInfo, this is in the
-  // child process, so crashing here isn't as severe a response to the
-  // unexpected.)
-  if (!UnshareUserNamespace()) {
-    SANDBOX_LOG_ERROR("unshare(CLONE_NEWUSER): %s", strerror(errno));
-    // If CanCreateUserNamespace (SandboxInfo.cpp) returns true, then
-    // the unshare shouldn't have failed.
-    MOZ_CRASH("unshare(CLONE_NEWUSER)");
-  }
-  // No early returns after this point!  We need to drop the
-  // capabilities that were gained by unsharing the user namesapce.
-
-  if (canUnshareIPC && syscall(__NR_unshare, CLONE_NEWIPC) != 0) {
-    SANDBOX_LOG_ERROR("unshare(CLONE_NEWIPC): %s", strerror(errno));
-    MOZ_CRASH("unshare(CLONE_NEWIPC)");
-  }
-
-  if (canUnshareNet && syscall(__NR_unshare, CLONE_NEWNET) != 0) {
-    SANDBOX_LOG_ERROR("unshare(CLONE_NEWNET): %s", strerror(errno));
-    MOZ_CRASH("unshare(CLONE_NEWNET)");
-  }
-
-  if (canChroot) {
-    gChrootHelper = MakeUnique<SandboxChroot>();
-    if (!gChrootHelper->Prepare()) {
-      SANDBOX_LOG_ERROR("failed to set up chroot helper");
-      MOZ_CRASH("SandboxChroot::Prepare");
-    }
-  }
-
-  if (!LinuxCapabilities().SetCurrent()) {
-    SANDBOX_LOG_ERROR("dropping capabilities: %s", strerror(errno));
-    MOZ_CRASH("can't drop capabilities");
   }
 }
 
