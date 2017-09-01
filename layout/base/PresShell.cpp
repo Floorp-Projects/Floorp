@@ -4509,6 +4509,7 @@ PresShell::ContentRemoved(nsIDocument *aDocument,
   }
 
   mFrameConstructor->ContentRemoved(aMaybeContainer, aChild, oldNextSibling,
+                                    nsCSSFrameConstructor::InsertionKind::Async,
                                     nsCSSFrameConstructor::REMOVE_CONTENT);
 
   if (aChild->NodeType() == nsIDOMNode::DOCUMENT_TYPE_NODE) {

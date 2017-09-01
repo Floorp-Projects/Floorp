@@ -299,6 +299,19 @@ private:
                             TreeMatchContext* aProvidedTreeMatchContext);
 
 public:
+  /**
+   * Whether insertion should be done synchronously or asynchronously.
+   *
+   * Generally, insertion is synchronous if we're reconstructing something from
+   * frame construction/reconstruction, and async if we're removing stuff, like
+   * from ContentRemoved.
+   */
+  enum class InsertionKind
+  {
+    Sync,
+    Async,
+  };
+
   // FIXME(emilio): How important is it to keep the frame tree state around for
   // REMOVE_DESTROY_FRAMES?
   //
@@ -324,6 +337,7 @@ public:
   bool ContentRemoved(nsIContent* aContainer,
                       nsIContent* aChild,
                       nsIContent* aOldNextSibling,
+                      InsertionKind aInsertionKind,
                       RemoveFlags aFlags);
 
   void CharacterDataChanged(nsIContent* aContent,
@@ -1782,26 +1796,12 @@ private:
   nsStyleContext* MaybeRecreateFramesForElement(Element* aElement);
 
   /**
-   * Whether insertion should be done synchronously or asynchronously.
-   *
-   * Generally, insertion is synchronous if we're reconstructing something from
-   * frame construction/reconstruction, and async if we're removing stuff, like
-   * from ContentRemoved.
-   */
-  enum class InsertionKind
-  {
-    Sync,
-    Async,
-  };
-
-  /**
    * Recreate frames for aContent.
    * @param aContent the content to recreate frames for
    * @param aFlags normally you want to pass REMOVE_FOR_RECONSTRUCTION here
    */
   void RecreateFramesForContent(nsIContent*   aContent,
-                                InsertionKind aInsertionKind,
-                                RemoveFlags   aFlags);
+                                InsertionKind aInsertionKind);
 
   /**
    *  Handles change of rowspan and colspan attributes on table cells.
@@ -1815,8 +1815,7 @@ private:
   // GetPrimaryFrame() call on a content node (which means its parent is also
   // not null).
   bool MaybeRecreateContainerForFrameRemoval(nsIFrame*     aFrame,
-                                             InsertionKind aInsertionKind,
-                                             RemoveFlags   aFlags);
+                                             InsertionKind aInsertionKind);
 
   nsIFrame* CreateContinuingOuterTableFrame(nsIPresShell*     aPresShell,
                                             nsPresContext*    aPresContext,
@@ -1940,9 +1939,7 @@ private:
                              bool                     aIsAppend,
                              nsIFrame*                aPrevSibling);
 
-  void ReframeContainingBlock(nsIFrame*     aFrame,
-                              InsertionKind aInsertionKind,
-                              RemoveFlags   aFlags);
+  void ReframeContainingBlock(nsIFrame* aFrame, InsertionKind aInsertionKind);
 
   //----------------------------------------
 
