@@ -60,7 +60,7 @@
 /******/ 	__webpack_require__.p = "";
 /******/
 /******/ 	// Load entry module and return exports
-/******/ 	return __webpack_require__(__webpack_require__.s = 7);
+/******/ 	return __webpack_require__(__webpack_require__.s = 10);
 /******/ })
 /************************************************************************/
 /******/ ([
@@ -100,7 +100,7 @@ const globalImportContext = typeof Window === "undefined" ? BACKGROUND_PROCESS :
 //   UNINIT: "UNINIT"
 // }
 const actionTypes = {};
-for (const type of ["BLOCK_URL", "BOOKMARK_URL", "DELETE_BOOKMARK_BY_ID", "DELETE_HISTORY_URL", "DELETE_HISTORY_URL_CONFIRM", "DIALOG_CANCEL", "DIALOG_OPEN", "FEED_INIT", "INIT", "LOCALE_UPDATED", "MIGRATION_CANCEL", "MIGRATION_START", "NEW_TAB_INIT", "NEW_TAB_INITIAL_STATE", "NEW_TAB_LOAD", "NEW_TAB_UNLOAD", "OPEN_LINK", "OPEN_NEW_WINDOW", "OPEN_PRIVATE_WINDOW", "PINNED_SITES_UPDATED", "PLACES_BOOKMARK_ADDED", "PLACES_BOOKMARK_CHANGED", "PLACES_BOOKMARK_REMOVED", "PLACES_HISTORY_CLEARED", "PLACES_LINK_BLOCKED", "PLACES_LINK_DELETED", "PREFS_INITIAL_VALUES", "PREF_CHANGED", "SAVE_SESSION_PERF_DATA", "SAVE_TO_POCKET", "SCREENSHOT_UPDATED", "SECTION_DEREGISTER", "SECTION_DISABLE", "SECTION_ENABLE", "SECTION_REGISTER", "SECTION_UPDATE", "SET_PREF", "SNIPPETS_DATA", "SNIPPETS_RESET", "SYSTEM_TICK", "TELEMETRY_IMPRESSION_STATS", "TELEMETRY_PERFORMANCE_EVENT", "TELEMETRY_UNDESIRED_EVENT", "TELEMETRY_USER_EVENT", "TOP_SITES_EDIT_CLOSE", "TOP_SITES_EDIT_OPEN", "TOP_SITES_PIN", "TOP_SITES_UNPIN", "TOP_SITES_UPDATED", "UNINIT"]) {
+for (const type of ["BLOCK_URL", "BOOKMARK_URL", "DELETE_BOOKMARK_BY_ID", "DELETE_HISTORY_URL", "DELETE_HISTORY_URL_CONFIRM", "DIALOG_CANCEL", "DIALOG_OPEN", "FEED_INIT", "INIT", "LOCALE_UPDATED", "MIGRATION_CANCEL", "MIGRATION_START", "NEW_TAB_INIT", "NEW_TAB_INITIAL_STATE", "NEW_TAB_LOAD", "NEW_TAB_UNLOAD", "OPEN_LINK", "OPEN_NEW_WINDOW", "OPEN_PRIVATE_WINDOW", "PINNED_SITES_UPDATED", "PLACES_BOOKMARK_ADDED", "PLACES_BOOKMARK_CHANGED", "PLACES_BOOKMARK_REMOVED", "PLACES_HISTORY_CLEARED", "PLACES_LINK_BLOCKED", "PLACES_LINK_DELETED", "PREFS_INITIAL_VALUES", "PREF_CHANGED", "SAVE_SESSION_PERF_DATA", "SAVE_TO_POCKET", "SCREENSHOT_UPDATED", "SECTION_DEREGISTER", "SECTION_DISABLE", "SECTION_ENABLE", "SECTION_REGISTER", "SECTION_UPDATE", "SET_PREF", "SHOW_FIREFOX_ACCOUNTS", "SNIPPETS_DATA", "SNIPPETS_RESET", "SYSTEM_TICK", "TELEMETRY_IMPRESSION_STATS", "TELEMETRY_PERFORMANCE_EVENT", "TELEMETRY_UNDESIRED_EVENT", "TELEMETRY_USER_EVENT", "TOP_SITES_ADD", "TOP_SITES_PIN", "TOP_SITES_UNPIN", "TOP_SITES_UPDATED", "UNINIT"]) {
   actionTypes[type] = type;
 }
 
@@ -315,2024 +315,13 @@ module.exports = ReactRedux;
 "use strict";
 
 
-const React = __webpack_require__(0);
-
-var _require = __webpack_require__(2);
-
-const injectIntl = _require.injectIntl;
-
-const ContextMenu = __webpack_require__(11);
-
-var _require2 = __webpack_require__(1);
-
-const ac = _require2.actionCreators;
-
-const linkMenuOptions = __webpack_require__(12);
-const DEFAULT_SITE_MENU_OPTIONS = ["CheckPinTopSite", "Separator", "OpenInNewWindow", "OpenInPrivateWindow", "Separator", "BlockUrl"];
-
-class LinkMenu extends React.Component {
-  getOptions() {
-    const props = this.props;
-    const site = props.site,
-          index = props.index,
-          source = props.source;
-
-    // Handle special case of default site
-
-    const propOptions = !site.isDefault ? props.options : DEFAULT_SITE_MENU_OPTIONS;
-
-    const options = propOptions.map(o => linkMenuOptions[o](site, index, source)).map(option => {
-      const action = option.action,
-            impression = option.impression,
-            id = option.id,
-            type = option.type,
-            userEvent = option.userEvent;
-
-      if (!type && id) {
-        option.label = props.intl.formatMessage(option);
-        option.onClick = () => {
-          props.dispatch(action);
-          if (userEvent) {
-            props.dispatch(ac.UserEvent({
-              event: userEvent,
-              source,
-              action_position: index
-            }));
-          }
-          if (impression) {
-            props.dispatch(impression);
-          }
-        };
-      }
-      return option;
-    });
-
-    // This is for accessibility to support making each item tabbable.
-    // We want to know which item is the first and which item
-    // is the last, so we can close the context menu accordingly.
-    options[0].first = true;
-    options[options.length - 1].last = true;
-    return options;
-  }
-  render() {
-    return React.createElement(ContextMenu, {
-      visible: this.props.visible,
-      onUpdate: this.props.onUpdate,
-      options: this.getOptions() });
-  }
-}
-
-module.exports = injectIntl(LinkMenu);
-module.exports._unconnected = LinkMenu;
+module.exports = {
+  TOP_SITES_SOURCE: "TOP_SITES",
+  TOP_SITES_CONTEXT_MENU_OPTIONS: ["CheckPinTopSite", "Separator", "OpenInNewWindow", "OpenInPrivateWindow", "Separator", "BlockUrl", "DeleteUrl"]
+};
 
 /***/ }),
 /* 5 */
-/***/ (function(module, exports, __webpack_require__) {
-
-"use strict";
-/* globals Services */
-
-
-let usablePerfObj;
-
-let Cu;
-const isRunningInChrome = typeof Window === "undefined";
-
-/* istanbul ignore if */
-if (isRunningInChrome) {
-  Cu = Components.utils;
-} else {
-  Cu = { import() {} };
-}
-
-Cu.import("resource://gre/modules/Services.jsm");
-
-/* istanbul ignore if */
-if (isRunningInChrome) {
-  // Borrow the high-resolution timer from the hidden window....
-  usablePerfObj = Services.appShell.hiddenDOMWindow.performance;
-} else {
-  // we must be running in content space
-  usablePerfObj = performance;
-}
-
-var _PerfService = function _PerfService(options) {
-  // For testing, so that we can use a fake Window.performance object with
-  // known state.
-  if (options && options.performanceObj) {
-    this._perf = options.performanceObj;
-  } else {
-    this._perf = usablePerfObj;
-  }
-};
-
-_PerfService.prototype = {
-  /**
-   * Calls the underlying mark() method on the appropriate Window.performance
-   * object to add a mark with the given name to the appropriate performance
-   * timeline.
-   *
-   * @param  {String} name  the name to give the current mark
-   * @return {void}
-   */
-  mark: function mark(str) {
-    this._perf.mark(str);
-  },
-
-  /**
-   * Calls the underlying getEntriesByName on the appropriate Window.performance
-   * object.
-   *
-   * @param  {String} name
-   * @param  {String} type eg "mark"
-   * @return {Array}       Performance* objects
-   */
-  getEntriesByName: function getEntriesByName(name, type) {
-    return this._perf.getEntriesByName(name, type);
-  },
-
-  /**
-   * The timeOrigin property from the appropriate performance object.
-   * Used to ensure that timestamps from the add-on code and the content code
-   * are comparable.
-   *
-   * @return {Number} A double of milliseconds with a precision of 0.5us.
-   */
-  get timeOrigin() {
-    return this._perf.timeOrigin;
-  },
-
-  /**
-   * Returns the "absolute" version of performance.now(), i.e. one that
-   * based on the timeOrigin of the XUL hiddenwindow.
-   *
-   * @return {Number}
-   */
-  absNow: function absNow() {
-    return this.timeOrigin + this._perf.now();
-  },
-
-  /**
-   * This returns the absolute startTime from the most recent performance.mark()
-   * with the given name.
-   *
-   * @param  {String} name  the name to lookup the start time for
-   *
-   * @return {Number}       the returned start time, as a DOMHighResTimeStamp
-   *
-   * @throws {Error}        "No Marks with the name ..." if none are available
-   *
-   * @note Always surround calls to this by try/catch.  Otherwise your code
-   * may fail when the `privacy.resistFingerprinting` pref is true.  When
-   * this pref is set, all attempts to get marks will likely fail, which will
-   * cause this method to throw.
-   *
-   * See [bug 1369303](https://bugzilla.mozilla.org/show_bug.cgi?id=1369303)
-   * for more info.
-   */
-  getMostRecentAbsMarkStartByName(name) {
-    let entries = this.getEntriesByName(name, "mark");
-
-    if (!entries.length) {
-      throw new Error(`No marks with the name ${name}`);
-    }
-
-    let mostRecentEntry = entries[entries.length - 1];
-    return this._perf.timeOrigin + mostRecentEntry.startTime;
-  }
-};
-
-var perfService = new _PerfService();
-module.exports = {
-  _PerfService,
-  perfService
-};
-
-/***/ }),
-/* 6 */
-/***/ (function(module, exports) {
-
-var g;
-
-// This works in non-strict mode
-g = (function() {
-	return this;
-})();
-
-try {
-	// This works if eval is allowed (see CSP)
-	g = g || Function("return this")() || (1,eval)("this");
-} catch(e) {
-	// This works if the window reference is available
-	if(typeof window === "object")
-		g = window;
-}
-
-// g can still be undefined, but nothing to do about it...
-// We return undefined, instead of nothing here, so it's
-// easier to handle this case. if(!global) { ...}
-
-module.exports = g;
-
-
-/***/ }),
-/* 7 */
-/***/ (function(module, exports, __webpack_require__) {
-
-"use strict";
-
-
-const React = __webpack_require__(0);
-const ReactDOM = __webpack_require__(8);
-const Base = __webpack_require__(9);
-
-var _require = __webpack_require__(3);
-
-const Provider = _require.Provider;
-
-const initStore = __webpack_require__(21);
-
-var _require2 = __webpack_require__(23);
-
-const reducers = _require2.reducers;
-
-const DetectUserSessionStart = __webpack_require__(24);
-
-var _require3 = __webpack_require__(25);
-
-const addSnippetsSubscriber = _require3.addSnippetsSubscriber;
-
-
-new DetectUserSessionStart().sendEventOrAddListener();
-
-const store = initStore(reducers);
-
-ReactDOM.render(React.createElement(
-  Provider,
-  { store: store },
-  React.createElement(Base, null)
-), document.getElementById("root"));
-
-addSnippetsSubscriber(store);
-
-/***/ }),
-/* 8 */
-/***/ (function(module, exports) {
-
-module.exports = ReactDOM;
-
-/***/ }),
-/* 9 */
-/***/ (function(module, exports, __webpack_require__) {
-
-"use strict";
-
-
-const React = __webpack_require__(0);
-
-var _require = __webpack_require__(3);
-
-const connect = _require.connect;
-
-var _require2 = __webpack_require__(2);
-
-const addLocaleData = _require2.addLocaleData,
-      IntlProvider = _require2.IntlProvider;
-
-const TopSites = __webpack_require__(10);
-const Search = __webpack_require__(13);
-const ConfirmDialog = __webpack_require__(14);
-const ManualMigration = __webpack_require__(15);
-const PreferencesPane = __webpack_require__(16);
-const Sections = __webpack_require__(17);
-
-// Locales that should be displayed RTL
-const RTL_LIST = ["ar", "he", "fa", "ur"];
-
-// Add the locale data for pluralization and relative-time formatting for now,
-// this just uses english locale data. We can make this more sophisticated if
-// more features are needed.
-function addLocaleDataForReactIntl(_ref) {
-  let locale = _ref.locale;
-
-  addLocaleData([{ locale, parentLocale: "en" }]);
-  document.documentElement.lang = locale;
-  document.documentElement.dir = RTL_LIST.indexOf(locale.split("-")[0]) >= 0 ? "rtl" : "ltr";
-}
-
-class Base extends React.Component {
-  componentDidMount() {
-    // Also wait for the preloaded page to show, so the tab's title and favicon updates
-    addEventListener("visibilitychange", () => {
-      this.updateTitle(this.props.App);
-      document.getElementById("favicon").href += "#";
-    }, { once: true });
-  }
-  componentWillUpdate(_ref2) {
-    let App = _ref2.App;
-
-    // Early loads might not have locale yet, so wait until we do
-    if (App.locale && App.locale !== this.props.App.locale) {
-      addLocaleDataForReactIntl(App);
-      this.updateTitle(App);
-    }
-  }
-
-  updateTitle(_ref3) {
-    let strings = _ref3.strings;
-
-    if (strings) {
-      document.title = strings.newtab_page_title;
-    }
-  }
-
-  render() {
-    const props = this.props;
-    var _props$App = props.App;
-    const locale = _props$App.locale,
-          strings = _props$App.strings,
-          initialized = _props$App.initialized;
-
-    const prefs = props.Prefs.values;
-    if (!initialized || !strings) {
-      return null;
-    }
-
-    return React.createElement(
-      IntlProvider,
-      { key: locale, locale: locale, messages: strings },
-      React.createElement(
-        "div",
-        { className: "outer-wrapper" },
-        React.createElement(
-          "main",
-          null,
-          prefs.showSearch && React.createElement(Search, null),
-          !prefs.migrationExpired && React.createElement(ManualMigration, null),
-          prefs.showTopSites && React.createElement(TopSites, null),
-          React.createElement(Sections, null),
-          React.createElement(ConfirmDialog, null)
-        ),
-        React.createElement(PreferencesPane, null)
-      )
-    );
-  }
-}
-
-module.exports = connect(state => ({ App: state.App, Prefs: state.Prefs }))(Base);
-
-/***/ }),
-/* 10 */
-/***/ (function(module, exports, __webpack_require__) {
-
-"use strict";
-
-
-const React = __webpack_require__(0);
-
-var _require = __webpack_require__(3);
-
-const connect = _require.connect;
-
-var _require2 = __webpack_require__(2);
-
-const FormattedMessage = _require2.FormattedMessage,
-      injectIntl = _require2.injectIntl;
-
-const LinkMenu = __webpack_require__(4);
-
-var _require3 = __webpack_require__(1);
-
-const ac = _require3.actionCreators,
-      at = _require3.actionTypes;
-
-var _require4 = __webpack_require__(5);
-
-const perfSvc = _require4.perfService;
-
-const TOP_SITES_SOURCE = "TOP_SITES";
-const TOP_SITES_CONTEXT_MENU_OPTIONS = ["CheckPinTopSite", "Separator", "OpenInNewWindow", "OpenInPrivateWindow", "Separator", "BlockUrl", "DeleteUrl"];
-
-class TopSite extends React.Component {
-  constructor(props) {
-    super(props);
-    this.state = { showContextMenu: false, activeTile: null };
-    this.onLinkClick = this.onLinkClick.bind(this);
-    this.onMenuButtonClick = this.onMenuButtonClick.bind(this);
-    this.onMenuUpdate = this.onMenuUpdate.bind(this);
-    this.onDismissButtonClick = this.onDismissButtonClick.bind(this);
-    this.onPinButtonClick = this.onPinButtonClick.bind(this);
-  }
-  toggleContextMenu(event, index) {
-    this.setState({
-      activeTile: index,
-      showContextMenu: true
-    });
-  }
-  userEvent(event) {
-    this.props.dispatch(ac.UserEvent({
-      event,
-      source: TOP_SITES_SOURCE,
-      action_position: this.props.index
-    }));
-  }
-  onLinkClick(ev) {
-    if (this.props.editMode) {
-      // Ignore clicks if we are in the edit modal.
-      ev.preventDefault();
-      return;
-    }
-    this.userEvent("CLICK");
-  }
-  onMenuButtonClick(event) {
-    event.preventDefault();
-    this.toggleContextMenu(event, this.props.index);
-  }
-  onMenuUpdate(showContextMenu) {
-    this.setState({ showContextMenu });
-  }
-  onDismissButtonClick() {
-    const link = this.props.link;
-
-    if (link.isPinned) {
-      this.props.dispatch(ac.SendToMain({
-        type: at.TOP_SITES_UNPIN,
-        data: { site: { url: link.url } }
-      }));
-    }
-    this.props.dispatch(ac.SendToMain({
-      type: at.BLOCK_URL,
-      data: link.url
-    }));
-    this.userEvent("BLOCK");
-  }
-  onPinButtonClick() {
-    var _props = this.props;
-    const link = _props.link,
-          index = _props.index;
-
-    if (link.isPinned) {
-      this.props.dispatch(ac.SendToMain({
-        type: at.TOP_SITES_UNPIN,
-        data: { site: { url: link.url } }
-      }));
-      this.userEvent("UNPIN");
-    } else {
-      this.props.dispatch(ac.SendToMain({
-        type: at.TOP_SITES_PIN,
-        data: { site: { url: link.url }, index }
-      }));
-      this.userEvent("PIN");
-    }
-  }
-  render() {
-    var _props2 = this.props;
-    const link = _props2.link,
-          index = _props2.index,
-          dispatch = _props2.dispatch,
-          editMode = _props2.editMode;
-
-    const isContextMenuOpen = this.state.showContextMenu && this.state.activeTile === index;
-    const title = link.hostname;
-    const topSiteOuterClassName = `top-site-outer${isContextMenuOpen ? " active" : ""}`;
-    const tippyTopIcon = link.tippyTopIcon;
-
-    let imageClassName;
-    let imageStyle;
-    if (tippyTopIcon) {
-      imageClassName = "tippy-top-icon";
-      imageStyle = {
-        backgroundColor: link.backgroundColor,
-        backgroundImage: `url(${tippyTopIcon})`
-      };
-    } else {
-      imageClassName = `screenshot${link.screenshot ? " active" : ""}`;
-      imageStyle = { backgroundImage: link.screenshot ? `url(${link.screenshot})` : "none" };
-    }
-    return React.createElement(
-      "li",
-      { className: topSiteOuterClassName, key: link.guid || link.url },
-      React.createElement(
-        "a",
-        { href: link.url, onClick: this.onLinkClick },
-        React.createElement(
-          "div",
-          { className: "tile", "aria-hidden": true },
-          React.createElement(
-            "span",
-            { className: "letter-fallback" },
-            title[0]
-          ),
-          React.createElement("div", { className: imageClassName, style: imageStyle })
-        ),
-        React.createElement(
-          "div",
-          { className: `title ${link.isPinned ? "pinned" : ""}` },
-          link.isPinned && React.createElement("div", { className: "icon icon-pin-small" }),
-          React.createElement(
-            "span",
-            { dir: "auto" },
-            title
-          )
-        )
-      ),
-      !editMode && React.createElement(
-        "div",
-        null,
-        React.createElement(
-          "button",
-          { className: "context-menu-button icon", onClick: this.onMenuButtonClick },
-          React.createElement(
-            "span",
-            { className: "sr-only" },
-            `Open context menu for ${title}`
-          )
-        ),
-        React.createElement(LinkMenu, {
-          dispatch: dispatch,
-          index: index,
-          onUpdate: this.onMenuUpdate,
-          options: TOP_SITES_CONTEXT_MENU_OPTIONS,
-          site: link,
-          source: TOP_SITES_SOURCE,
-          visible: isContextMenuOpen })
-      ),
-      editMode && React.createElement(
-        "div",
-        { className: "edit-menu" },
-        React.createElement("button", {
-          className: `icon icon-${link.isPinned ? "unpin" : "pin"}`,
-          title: this.props.intl.formatMessage({ id: `edit_topsites_${link.isPinned ? "unpin" : "pin"}_button` }),
-          onClick: this.onPinButtonClick }),
-        React.createElement("button", {
-          className: "icon icon-dismiss",
-          title: this.props.intl.formatMessage({ id: "edit_topsites_dismiss_button" }),
-          onClick: this.onDismissButtonClick })
-      )
-    );
-  }
-}
-
-TopSite.defaultProps = { editMode: false };
-
-/**
- * A proxy class that uses double requestAnimationFrame from
- * componentDidMount to dispatch a SAVE_SESSION_PERF_DATA to the main procsess
- * after the paint.
- *
- * This uses two callbacks because, after one callback, this part of the tree
- * may have rendered but not yet reflowed.  This strategy is modeled after
- * https://stackoverflow.com/a/34999925 but uses a double rFA because
- * we want to get to the closest reliable paint for measuring, and
- * setTimeout is often throttled or queued by browsers in ways that could
- * make it lag too long.
- *
- * XXX Should be made more generic by using this.props.children, or potentially
- * even split out into a higher-order component to wrap whatever.
- *
- * @class TopSitesPerfTimer
- * @extends {React.Component}
- */
-class TopSitesPerfTimer extends React.Component {
-  constructor(props) {
-    super(props);
-    // Just for test dependency injection:
-    this.perfSvc = this.props.perfSvc || perfSvc;
-
-    this._sendPaintedEvent = this._sendPaintedEvent.bind(this);
-    this._timestampHandled = false;
-  }
-
-  componentDidMount() {
-    this._maybeSendPaintedEvent();
-  }
-
-  componentDidUpdate() {
-    this._maybeSendPaintedEvent();
-  }
-
-  /**
-   * Call the given callback after the upcoming frame paints.
-   *
-   * @note Both setTimeout and requestAnimationFrame are throttled when the page
-   * is hidden, so this callback may get called up to a second or so after the
-   * requestAnimationFrame "paint" for hidden tabs.
-   *
-   * Newtabs hidden while loading will presumably be fairly rare (other than
-   * preloaded tabs, which we will be filtering out on the server side), so such
-   * cases should get lost in the noise.
-   *
-   * If we decide that it's important to find out when something that's hidden
-   * has "painted", however, another option is to post a message to this window.
-   * That should happen even faster than setTimeout, and, at least as of this
-   * writing, it's not throttled in hidden windows in Firefox.
-   *
-   * @param {Function} callback
-   *
-   * @returns void
-   */
-  _afterFramePaint(callback) {
-    requestAnimationFrame(() => setTimeout(callback, 0));
-  }
-
-  _maybeSendPaintedEvent() {
-    // We don't want this to ever happen, but sometimes it does.  And when it
-    // does (typically on the first newtab at startup time calling
-    // componentDidMount), the paint(s) we care about will be later (eg
-    // in a subsequent componentDidUpdate).
-    if (!this.props.TopSites.initialized) {
-      // XXX should send bad event
-      return;
-    }
-
-    // If we've already handled a timestamp, don't do it again
-    if (this._timestampHandled) {
-      return;
-    }
-
-    // And if we haven't, we're doing so now, so remember that. Even if
-    // something goes wrong in the callback, we can't try again, as we'd be
-    // sending back the wrong data, and we have to do it here, so that other
-    // calls to this method while waiting for the next frame won't also try to
-    // handle handle it.
-    this._timestampHandled = true;
-
-    this._afterFramePaint(this._sendPaintedEvent);
-  }
-
-  _sendPaintedEvent() {
-    this.perfSvc.mark("topsites_first_painted_ts");
-
-    try {
-      let topsites_first_painted_ts = this.perfSvc.getMostRecentAbsMarkStartByName("topsites_first_painted_ts");
-
-      this.props.dispatch(ac.SendToMain({
-        type: at.SAVE_SESSION_PERF_DATA,
-        data: { topsites_first_painted_ts }
-      }));
-    } catch (ex) {
-      // If this failed, it's likely because the `privacy.resistFingerprinting`
-      // pref is true.  We should at least not blow up, and should continue
-      // to set this._timestampHandled to avoid going through this again.
-    }
-  }
-
-  render() {
-    return React.createElement(TopSites, this.props);
-  }
-}
-
-const TopSites = props => React.createElement(
-  "section",
-  { className: "top-sites" },
-  React.createElement(
-    "h3",
-    { className: "section-title" },
-    React.createElement("span", { className: `icon icon-small-spacer icon-topsites` }),
-    React.createElement(FormattedMessage, { id: "header_top_sites" })
-  ),
-  React.createElement(
-    "ul",
-    { className: "top-sites-list" },
-    props.TopSites.rows.map((link, index) => link && React.createElement(TopSite, {
-      key: link.guid || link.url,
-      dispatch: props.dispatch,
-      link: link,
-      index: index,
-      intl: props.intl }))
-  ),
-  React.createElement(TopSitesEditIntl, props)
-);
-
-class TopSitesEdit extends React.Component {
-  constructor(props) {
-    super(props);
-    this.state = { showEditModal: false };
-    this.onEditButtonClick = this.onEditButtonClick.bind(this);
-  }
-  onEditButtonClick() {
-    this.setState({ showEditModal: !this.state.showEditModal });
-    const event = this.state.showEditModal ? "TOP_SITES_EDIT_OPEN" : "TOP_SITES_EDIT_CLOSE";
-    this.props.dispatch(ac.UserEvent({
-      source: TOP_SITES_SOURCE,
-      event
-    }));
-  }
-  render() {
-    return React.createElement(
-      "div",
-      { className: "edit-topsites-wrapper" },
-      React.createElement(
-        "div",
-        { className: "edit-topsites-button" },
-        React.createElement(
-          "button",
-          {
-            className: "edit",
-            title: this.props.intl.formatMessage({ id: "edit_topsites_button_label" }),
-            onClick: this.onEditButtonClick },
-          React.createElement(FormattedMessage, { id: "edit_topsites_button_text" })
-        )
-      ),
-      this.state.showEditModal && React.createElement(
-        "div",
-        { className: "edit-topsites" },
-        React.createElement("div", { className: "modal-overlay" }),
-        React.createElement(
-          "div",
-          { className: "modal" },
-          React.createElement(
-            "section",
-            { className: "edit-topsites-inner-wrapper" },
-            React.createElement(
-              "h3",
-              { className: "section-title" },
-              React.createElement("span", { className: `icon icon-small-spacer icon-topsites` }),
-              React.createElement(FormattedMessage, { id: "header_top_sites" })
-            ),
-            React.createElement(
-              "ul",
-              { className: "top-sites-list" },
-              this.props.TopSites.rows.map((link, index) => link && React.createElement(TopSite, {
-                key: link.guid || link.url,
-                dispatch: this.props.dispatch,
-                link: link,
-                index: index,
-                intl: this.props.intl,
-                editMode: true }))
-            )
-          ),
-          React.createElement(
-            "section",
-            { className: "actions" },
-            React.createElement(
-              "button",
-              { className: "done", onClick: this.onEditButtonClick },
-              React.createElement(FormattedMessage, { id: "edit_topsites_done_button" })
-            )
-          )
-        )
-      )
-    );
-  }
-}
-
-const TopSitesEditIntl = injectIntl(TopSitesEdit);
-
-module.exports = connect(state => ({ TopSites: state.TopSites }))(TopSitesPerfTimer);
-module.exports._unconnected = TopSitesPerfTimer;
-module.exports.TopSite = TopSite;
-module.exports.TopSites = TopSites;
-module.exports.TopSitesEdit = TopSitesEdit;
-
-/***/ }),
-/* 11 */
-/***/ (function(module, exports, __webpack_require__) {
-
-"use strict";
-
-
-const React = __webpack_require__(0);
-
-class ContextMenu extends React.Component {
-  constructor(props) {
-    super(props);
-    this.hideContext = this.hideContext.bind(this);
-  }
-  hideContext() {
-    this.props.onUpdate(false);
-  }
-  componentWillMount() {
-    this.hideContext();
-  }
-  componentDidUpdate(prevProps) {
-    if (this.props.visible && !prevProps.visible) {
-      setTimeout(() => {
-        window.addEventListener("click", this.hideContext);
-      }, 0);
-    }
-    if (!this.props.visible && prevProps.visible) {
-      window.removeEventListener("click", this.hideContext);
-    }
-  }
-  componentWillUnmount() {
-    window.removeEventListener("click", this.hideContext);
-  }
-  render() {
-    return React.createElement(
-      "span",
-      { hidden: !this.props.visible, className: "context-menu" },
-      React.createElement(
-        "ul",
-        { role: "menu", className: "context-menu-list" },
-        this.props.options.map((option, i) => option.type === "separator" ? React.createElement("li", { key: i, className: "separator" }) : React.createElement(ContextMenuItem, { key: i, option: option, hideContext: this.hideContext }))
-      )
-    );
-  }
-}
-
-class ContextMenuItem extends React.Component {
-  constructor(props) {
-    super(props);
-    this.onClick = this.onClick.bind(this);
-    this.onKeyDown = this.onKeyDown.bind(this);
-  }
-  onClick() {
-    this.props.hideContext();
-    this.props.option.onClick();
-  }
-  onKeyDown(event) {
-    const option = this.props.option;
-
-    switch (event.key) {
-      case "Tab":
-        // tab goes down in context menu, shift + tab goes up in context menu
-        // if we're on the last item, one more tab will close the context menu
-        // similarly, if we're on the first item, one more shift + tab will close it
-        if (event.shiftKey && option.first || !event.shiftKey && option.last) {
-          this.props.hideContext();
-        }
-        break;
-      case "Enter":
-        this.props.hideContext();
-        option.onClick();
-        break;
-    }
-  }
-  render() {
-    const option = this.props.option;
-
-    return React.createElement(
-      "li",
-      { role: "menuitem", className: "context-menu-item" },
-      React.createElement(
-        "a",
-        { onClick: this.onClick, onKeyDown: this.onKeyDown, tabIndex: "0" },
-        option.icon && React.createElement("span", { className: `icon icon-spacer icon-${option.icon}` }),
-        option.label
-      )
-    );
-  }
-}
-
-module.exports = ContextMenu;
-module.exports.ContextMenu = ContextMenu;
-module.exports.ContextMenuItem = ContextMenuItem;
-
-/***/ }),
-/* 12 */
-/***/ (function(module, exports, __webpack_require__) {
-
-"use strict";
-
-
-var _require = __webpack_require__(1);
-
-const at = _require.actionTypes,
-      ac = _require.actionCreators;
-
-/**
- * List of functions that return items that can be included as menu options in a
- * LinkMenu. All functions take the site as the first parameter, and optionally
- * the index of the site.
- */
-
-module.exports = {
-  Separator: () => ({ type: "separator" }),
-  RemoveBookmark: site => ({
-    id: "menu_action_remove_bookmark",
-    icon: "bookmark-added",
-    action: ac.SendToMain({
-      type: at.DELETE_BOOKMARK_BY_ID,
-      data: site.bookmarkGuid
-    }),
-    userEvent: "BOOKMARK_DELETE"
-  }),
-  AddBookmark: site => ({
-    id: "menu_action_bookmark",
-    icon: "bookmark-hollow",
-    action: ac.SendToMain({
-      type: at.BOOKMARK_URL,
-      data: { url: site.url, title: site.title }
-    }),
-    userEvent: "BOOKMARK_ADD"
-  }),
-  OpenInNewWindow: site => ({
-    id: "menu_action_open_new_window",
-    icon: "new-window",
-    action: ac.SendToMain({
-      type: at.OPEN_NEW_WINDOW,
-      data: { url: site.url, referrer: site.referrer }
-    }),
-    userEvent: "OPEN_NEW_WINDOW"
-  }),
-  OpenInPrivateWindow: site => ({
-    id: "menu_action_open_private_window",
-    icon: "new-window-private",
-    action: ac.SendToMain({
-      type: at.OPEN_PRIVATE_WINDOW,
-      data: { url: site.url, referrer: site.referrer }
-    }),
-    userEvent: "OPEN_PRIVATE_WINDOW"
-  }),
-  BlockUrl: (site, index, eventSource) => ({
-    id: "menu_action_dismiss",
-    icon: "dismiss",
-    action: ac.SendToMain({
-      type: at.BLOCK_URL,
-      data: site.url
-    }),
-    impression: ac.ImpressionStats({
-      source: eventSource,
-      block: 0,
-      incognito: true,
-      tiles: [{ id: site.guid, pos: index }]
-    }),
-    userEvent: "BLOCK"
-  }),
-  DeleteUrl: site => ({
-    id: "menu_action_delete",
-    icon: "delete",
-    action: {
-      type: at.DIALOG_OPEN,
-      data: {
-        onConfirm: [ac.SendToMain({ type: at.DELETE_HISTORY_URL, data: site.url }), ac.UserEvent({ event: "DELETE" })],
-        body_string_id: ["confirm_history_delete_p1", "confirm_history_delete_notice_p2"],
-        confirm_button_string_id: "menu_action_delete"
-      }
-    },
-    userEvent: "DIALOG_OPEN"
-  }),
-  PinTopSite: (site, index) => ({
-    id: "menu_action_pin",
-    icon: "pin",
-    action: ac.SendToMain({
-      type: at.TOP_SITES_PIN,
-      data: { site: { url: site.url }, index }
-    }),
-    userEvent: "PIN"
-  }),
-  UnpinTopSite: site => ({
-    id: "menu_action_unpin",
-    icon: "unpin",
-    action: ac.SendToMain({
-      type: at.TOP_SITES_UNPIN,
-      data: { site: { url: site.url } }
-    }),
-    userEvent: "UNPIN"
-  }),
-  SaveToPocket: (site, index, eventSource) => ({
-    id: "menu_action_save_to_pocket",
-    icon: "pocket",
-    action: ac.SendToMain({
-      type: at.SAVE_TO_POCKET,
-      data: { site: { url: site.url, title: site.title } }
-    }),
-    impression: ac.ImpressionStats({
-      source: eventSource,
-      pocket: 0,
-      incognito: true,
-      tiles: [{ id: site.guid, pos: index }]
-    }),
-    userEvent: "SAVE_TO_POCKET"
-  })
-};
-
-module.exports.CheckBookmark = site => site.bookmarkGuid ? module.exports.RemoveBookmark(site) : module.exports.AddBookmark(site);
-module.exports.CheckPinTopSite = (site, index) => site.isPinned ? module.exports.UnpinTopSite(site) : module.exports.PinTopSite(site, index);
-
-/***/ }),
-/* 13 */
-/***/ (function(module, exports, __webpack_require__) {
-
-"use strict";
-/* globals ContentSearchUIController */
-
-
-const React = __webpack_require__(0);
-
-var _require = __webpack_require__(3);
-
-const connect = _require.connect;
-
-var _require2 = __webpack_require__(2);
-
-const FormattedMessage = _require2.FormattedMessage,
-      injectIntl = _require2.injectIntl;
-
-var _require3 = __webpack_require__(1);
-
-const ac = _require3.actionCreators;
-
-
-class Search extends React.Component {
-  constructor(props) {
-    super(props);
-    this.onClick = this.onClick.bind(this);
-    this.onInputMount = this.onInputMount.bind(this);
-  }
-
-  handleEvent(event) {
-    // Also track search events with our own telemetry
-    if (event.detail.type === "Search") {
-      this.props.dispatch(ac.UserEvent({ event: "SEARCH" }));
-    }
-  }
-  onClick(event) {
-    this.controller.search(event);
-  }
-  onInputMount(input) {
-    if (input) {
-      // The first "newtab" parameter here is called the "healthReportKey" and needs
-      // to be "newtab" so that BrowserUsageTelemetry.jsm knows to handle events with
-      // this name, and can add the appropriate telemetry probes for search. Without the
-      // correct name, certain tests like browser_UsageTelemetry_content.js will fail (See
-      // github ticket #2348 for more details)
-      this.controller = new ContentSearchUIController(input, input.parentNode, "newtab", "newtab");
-      addEventListener("ContentSearchClient", this);
-    } else {
-      this.controller = null;
-      removeEventListener("ContentSearchClient", this);
-    }
-  }
-
-  /*
-   * Do not change the ID on the input field, as legacy newtab code
-   * specifically looks for the id 'newtab-search-text' on input fields
-   * in order to execute searches in various tests
-   */
-  render() {
-    return React.createElement(
-      "form",
-      { className: "search-wrapper" },
-      React.createElement(
-        "label",
-        { htmlFor: "newtab-search-text", className: "search-label" },
-        React.createElement(
-          "span",
-          { className: "sr-only" },
-          React.createElement(FormattedMessage, { id: "search_web_placeholder" })
-        )
-      ),
-      React.createElement("input", {
-        id: "newtab-search-text",
-        maxLength: "256",
-        placeholder: this.props.intl.formatMessage({ id: "search_web_placeholder" }),
-        ref: this.onInputMount,
-        title: this.props.intl.formatMessage({ id: "search_web_placeholder" }),
-        type: "search" }),
-      React.createElement(
-        "button",
-        {
-          className: "search-button",
-          onClick: this.onClick,
-          title: this.props.intl.formatMessage({ id: "search_button" }) },
-        React.createElement(
-          "span",
-          { className: "sr-only" },
-          React.createElement(FormattedMessage, { id: "search_button" })
-        )
-      )
-    );
-  }
-}
-
-module.exports = connect()(injectIntl(Search));
-module.exports._unconnected = Search;
-
-/***/ }),
-/* 14 */
-/***/ (function(module, exports, __webpack_require__) {
-
-"use strict";
-
-
-const React = __webpack_require__(0);
-
-var _require = __webpack_require__(3);
-
-const connect = _require.connect;
-
-var _require2 = __webpack_require__(2);
-
-const FormattedMessage = _require2.FormattedMessage;
-
-var _require3 = __webpack_require__(1);
-
-const actionTypes = _require3.actionTypes,
-      ac = _require3.actionCreators;
-
-/**
- * ConfirmDialog component.
- * One primary action button, one cancel button.
- *
- * Content displayed is controlled by `data` prop the component receives.
- * Example:
- * data: {
- *   // Any sort of data needed to be passed around by actions.
- *   payload: site.url,
- *   // Primary button SendToMain action.
- *   action: "DELETE_HISTORY_URL",
- *   // Primary button USerEvent action.
- *   userEvent: "DELETE",
- *   // Array of locale ids to display.
- *   message_body: ["confirm_history_delete_p1", "confirm_history_delete_notice_p2"],
- *   // Text for primary button.
- *   confirm_button_string_id: "menu_action_delete"
- * },
- */
-
-const ConfirmDialog = React.createClass({
-  displayName: "ConfirmDialog",
-
-  getDefaultProps() {
-    return {
-      visible: false,
-      data: {}
-    };
-  },
-
-  _handleCancelBtn() {
-    this.props.dispatch({ type: actionTypes.DIALOG_CANCEL });
-    this.props.dispatch(ac.UserEvent({ event: actionTypes.DIALOG_CANCEL }));
-  },
-
-  _handleConfirmBtn() {
-    this.props.data.onConfirm.forEach(this.props.dispatch);
-  },
-
-  _renderModalMessage() {
-    const message_body = this.props.data.body_string_id;
-
-    if (!message_body) {
-      return null;
-    }
-
-    return React.createElement(
-      "span",
-      null,
-      message_body.map(msg => React.createElement(
-        "p",
-        { key: msg },
-        React.createElement(FormattedMessage, { id: msg })
-      ))
-    );
-  },
-
-  render() {
-    if (!this.props.visible) {
-      return null;
-    }
-
-    return React.createElement(
-      "div",
-      { className: "confirmation-dialog" },
-      React.createElement("div", { className: "modal-overlay", onClick: this._handleCancelBtn }),
-      React.createElement(
-        "div",
-        { className: "modal", ref: "modal" },
-        React.createElement(
-          "section",
-          { className: "modal-message" },
-          this._renderModalMessage()
-        ),
-        React.createElement(
-          "section",
-          { className: "actions" },
-          React.createElement(
-            "button",
-            { ref: "cancelButton", onClick: this._handleCancelBtn },
-            React.createElement(FormattedMessage, { id: "topsites_form_cancel_button" })
-          ),
-          React.createElement(
-            "button",
-            { ref: "confirmButton", className: "done", onClick: this._handleConfirmBtn },
-            React.createElement(FormattedMessage, { id: this.props.data.confirm_button_string_id })
-          )
-        )
-      )
-    );
-  }
-});
-
-module.exports = connect(state => state.Dialog)(ConfirmDialog);
-module.exports._unconnected = ConfirmDialog;
-module.exports.Dialog = ConfirmDialog;
-
-/***/ }),
-/* 15 */
-/***/ (function(module, exports, __webpack_require__) {
-
-"use strict";
-
-
-const React = __webpack_require__(0);
-
-var _require = __webpack_require__(3);
-
-const connect = _require.connect;
-
-var _require2 = __webpack_require__(2);
-
-const FormattedMessage = _require2.FormattedMessage;
-
-var _require3 = __webpack_require__(1);
-
-const at = _require3.actionTypes,
-      ac = _require3.actionCreators;
-
-/**
- * Manual migration component used to start the profile import wizard.
- * Message is presented temporarily and will go away if:
- * 1.  User clicks "No Thanks"
- * 2.  User completed the data import
- * 3.  After 3 active days
- * 4.  User clicks "Cancel" on the import wizard (currently not implemented).
- */
-
-class ManualMigration extends React.Component {
-  constructor(props) {
-    super(props);
-    this.onLaunchTour = this.onLaunchTour.bind(this);
-    this.onCancelTour = this.onCancelTour.bind(this);
-  }
-  onLaunchTour() {
-    this.props.dispatch(ac.SendToMain({ type: at.MIGRATION_START }));
-    this.props.dispatch(ac.UserEvent({ event: at.MIGRATION_START }));
-  }
-
-  onCancelTour() {
-    this.props.dispatch(ac.SendToMain({ type: at.MIGRATION_CANCEL }));
-    this.props.dispatch(ac.UserEvent({ event: at.MIGRATION_CANCEL }));
-  }
-
-  render() {
-    return React.createElement(
-      "div",
-      { className: "manual-migration-container" },
-      React.createElement(
-        "p",
-        null,
-        React.createElement("span", { className: "icon icon-info" }),
-        React.createElement(FormattedMessage, { id: "manual_migration_explanation" })
-      ),
-      React.createElement(
-        "div",
-        { className: "manual-migration-actions actions" },
-        React.createElement(
-          "button",
-          { onClick: this.onCancelTour },
-          React.createElement(FormattedMessage, { id: "manual_migration_cancel_button" })
-        ),
-        React.createElement(
-          "button",
-          { className: "done", onClick: this.onLaunchTour },
-          React.createElement(FormattedMessage, { id: "manual_migration_import_button" })
-        )
-      )
-    );
-  }
-}
-
-module.exports = connect()(ManualMigration);
-module.exports._unconnected = ManualMigration;
-
-/***/ }),
-/* 16 */
-/***/ (function(module, exports, __webpack_require__) {
-
-"use strict";
-
-
-const React = __webpack_require__(0);
-
-var _require = __webpack_require__(3);
-
-const connect = _require.connect;
-
-var _require2 = __webpack_require__(2);
-
-const injectIntl = _require2.injectIntl,
-      FormattedMessage = _require2.FormattedMessage;
-
-var _require3 = __webpack_require__(1);
-
-const ac = _require3.actionCreators,
-      at = _require3.actionTypes;
-
-
-const getFormattedMessage = message => typeof message === "string" ? React.createElement(
-  "span",
-  null,
-  message
-) : React.createElement(FormattedMessage, message);
-
-const PreferencesInput = props => React.createElement(
-  "section",
-  null,
-  React.createElement("input", { type: "checkbox", id: props.prefName, name: props.prefName, checked: props.value, onChange: props.onChange, className: props.className }),
-  React.createElement(
-    "label",
-    { htmlFor: props.prefName },
-    getFormattedMessage(props.titleString)
-  ),
-  props.descString && React.createElement(
-    "p",
-    { className: "prefs-input-description" },
-    getFormattedMessage(props.descString)
-  )
-);
-
-class PreferencesPane extends React.Component {
-  constructor(props) {
-    super(props);
-    this.state = { visible: false };
-    this.handleClickOutside = this.handleClickOutside.bind(this);
-    this.handlePrefChange = this.handlePrefChange.bind(this);
-    this.handleSectionChange = this.handleSectionChange.bind(this);
-    this.togglePane = this.togglePane.bind(this);
-  }
-  componentDidMount() {
-    document.addEventListener("click", this.handleClickOutside);
-  }
-  componentWillUnmount() {
-    document.removeEventListener("click", this.handleClickOutside);
-  }
-  handleClickOutside(event) {
-    // if we are showing the sidebar and there is a click outside, close it.
-    if (this.state.visible && !this.refs.wrapper.contains(event.target)) {
-      this.togglePane();
-    }
-  }
-  handlePrefChange(event) {
-    const target = event.target;
-    this.props.dispatch(ac.SetPref(target.name, target.checked));
-  }
-  handleSectionChange(event) {
-    const target = event.target;
-    const id = target.name;
-    const type = target.checked ? at.SECTION_ENABLE : at.SECTION_DISABLE;
-    this.props.dispatch(ac.SendToMain({ type, data: id }));
-  }
-  togglePane() {
-    this.setState({ visible: !this.state.visible });
-    const event = this.state.visible ? "CLOSE_NEWTAB_PREFS" : "OPEN_NEWTAB_PREFS";
-    this.props.dispatch(ac.UserEvent({ event }));
-  }
-  render() {
-    const props = this.props;
-    const prefs = props.Prefs.values;
-    const sections = props.Sections;
-    const isVisible = this.state.visible;
-    return React.createElement(
-      "div",
-      { className: "prefs-pane-wrapper", ref: "wrapper" },
-      React.createElement(
-        "div",
-        { className: "prefs-pane-button" },
-        React.createElement("button", {
-          className: `prefs-button icon ${isVisible ? "icon-dismiss" : "icon-settings"}`,
-          title: props.intl.formatMessage({ id: isVisible ? "settings_pane_done_button" : "settings_pane_button_label" }),
-          onClick: this.togglePane })
-      ),
-      React.createElement(
-        "div",
-        { className: "prefs-pane" },
-        React.createElement(
-          "div",
-          { className: `sidebar ${isVisible ? "" : "hidden"}` },
-          React.createElement(
-            "div",
-            { className: "prefs-modal-inner-wrapper" },
-            React.createElement(
-              "h1",
-              null,
-              React.createElement(FormattedMessage, { id: "settings_pane_header" })
-            ),
-            React.createElement(
-              "p",
-              null,
-              React.createElement(FormattedMessage, { id: "settings_pane_body" })
-            ),
-            React.createElement(PreferencesInput, { className: "showSearch", prefName: "showSearch", value: prefs.showSearch, onChange: this.handlePrefChange,
-              titleString: { id: "settings_pane_search_header" }, descString: { id: "settings_pane_search_body" } }),
-            React.createElement(PreferencesInput, { className: "showTopSites", prefName: "showTopSites", value: prefs.showTopSites, onChange: this.handlePrefChange,
-              titleString: { id: "settings_pane_topsites_header" }, descString: { id: "settings_pane_topsites_body" } }),
-            sections.filter(section => !section.shouldHidePref).map((_ref) => {
-              let id = _ref.id,
-                  title = _ref.title,
-                  enabled = _ref.enabled,
-                  pref = _ref.pref;
-              return React.createElement(PreferencesInput, { key: id, className: "showSection", prefName: pref && pref.feed || id,
-                value: enabled, onChange: pref && pref.feed ? this.handlePrefChange : this.handleSectionChange,
-                titleString: pref && pref.titleString || title, descString: pref && pref.descString });
-            })
-          ),
-          React.createElement(
-            "section",
-            { className: "actions" },
-            React.createElement(
-              "button",
-              { className: "done", onClick: this.togglePane },
-              React.createElement(FormattedMessage, { id: "settings_pane_done_button" })
-            )
-          )
-        )
-      )
-    );
-  }
-}
-
-module.exports = connect(state => ({ Prefs: state.Prefs, Sections: state.Sections }))(injectIntl(PreferencesPane));
-module.exports.PreferencesPane = PreferencesPane;
-module.exports.PreferencesInput = PreferencesInput;
-
-/***/ }),
-/* 17 */
-/***/ (function(module, exports, __webpack_require__) {
-
-"use strict";
-/* WEBPACK VAR INJECTION */(function(global) {
-
-var _extends = Object.assign || function (target) { for (var i = 1; i < arguments.length; i++) { var source = arguments[i]; for (var key in source) { if (Object.prototype.hasOwnProperty.call(source, key)) { target[key] = source[key]; } } } return target; };
-
-const React = __webpack_require__(0);
-
-var _require = __webpack_require__(3);
-
-const connect = _require.connect;
-
-var _require2 = __webpack_require__(2);
-
-const injectIntl = _require2.injectIntl,
-      FormattedMessage = _require2.FormattedMessage;
-
-const Card = __webpack_require__(18);
-const Topics = __webpack_require__(20);
-
-var _require3 = __webpack_require__(1);
-
-const ac = _require3.actionCreators;
-
-
-const VISIBLE = "visible";
-const VISIBILITY_CHANGE_EVENT = "visibilitychange";
-
-class Section extends React.Component {
-  constructor(props) {
-    super(props);
-    this.onInfoEnter = this.onInfoEnter.bind(this);
-    this.onInfoLeave = this.onInfoLeave.bind(this);
-    this.state = { infoActive: false };
-  }
-
-  /**
-   * Take a truthy value to conditionally change the infoActive state.
-   */
-  _setInfoState(nextActive) {
-    const infoActive = !!nextActive;
-    if (infoActive !== this.state.infoActive) {
-      this.setState({ infoActive });
-    }
-  }
-
-  onInfoEnter() {
-    // We're getting focus or hover, so info state should be true if not yet.
-    this._setInfoState(true);
-  }
-
-  onInfoLeave(event) {
-    // We currently have an active (true) info state, so keep it true only if we
-    // have a related event target that is contained "within" the current target
-    // (section-info-option) as itself or a descendant. Set to false otherwise.
-    this._setInfoState(event && event.relatedTarget && (event.relatedTarget === event.currentTarget || event.relatedTarget.compareDocumentPosition(event.currentTarget) & Node.DOCUMENT_POSITION_CONTAINS));
-  }
-
-  getFormattedMessage(message) {
-    return typeof message === "string" ? React.createElement(
-      "span",
-      null,
-      message
-    ) : React.createElement(FormattedMessage, message);
-  }
-
-  _dispatchImpressionStats() {
-    const props = this.props;
-
-    const maxCards = 3 * props.maxRows;
-    props.dispatch(ac.ImpressionStats({
-      source: props.eventSource,
-      tiles: props.rows.slice(0, maxCards).map(link => ({ id: link.guid }))
-    }));
-  }
-
-  // This sends an event when a user sees a set of new content. If content
-  // changes while the page is hidden (i.e. preloaded or on a hidden tab),
-  // only send the event if the page becomes visible again.
-  sendImpressionStatsOrAddListener() {
-    const props = this.props;
-
-
-    if (!props.dispatch) {
-      return;
-    }
-
-    if (props.document.visibilityState === VISIBLE) {
-      this._dispatchImpressionStats();
-    } else {
-      // We should only ever send the latest impression stats ping, so remove any
-      // older listeners.
-      if (this._onVisibilityChange) {
-        props.document.removeEventListener(VISIBILITY_CHANGE_EVENT, this._onVisibilityChange);
-      }
-
-      // When the page becoems visible, send the impression stats ping.
-      this._onVisibilityChange = () => {
-        if (props.document.visibilityState === VISIBLE) {
-          this._dispatchImpressionStats();
-          props.document.removeEventListener(VISIBILITY_CHANGE_EVENT, this._onVisibilityChange);
-        }
-      };
-      props.document.addEventListener(VISIBILITY_CHANGE_EVENT, this._onVisibilityChange);
-    }
-  }
-
-  componentDidMount() {
-    if (this.props.rows.length) {
-      this.sendImpressionStatsOrAddListener();
-    }
-  }
-
-  componentDidUpdate(prevProps) {
-    const props = this.props;
-
-    if (
-    // Don't send impression stats for the empty state
-    props.rows.length &&
-    // We only want to send impression stats if the content of the cards has changed
-    props.rows !== prevProps.rows) {
-      this.sendImpressionStatsOrAddListener();
-    }
-  }
-
-  render() {
-    var _props = this.props;
-    const id = _props.id,
-          eventSource = _props.eventSource,
-          title = _props.title,
-          icon = _props.icon,
-          rows = _props.rows,
-          infoOption = _props.infoOption,
-          emptyState = _props.emptyState,
-          dispatch = _props.dispatch,
-          maxRows = _props.maxRows,
-          contextMenuOptions = _props.contextMenuOptions,
-          intl = _props.intl;
-
-    const maxCards = 3 * maxRows;
-    const initialized = rows && rows.length > 0;
-    const shouldShowTopics = id === "topstories" && this.props.topics && this.props.topics.length > 0 && this.props.read_more_endpoint;
-
-    const infoOptionIconA11yAttrs = {
-      "aria-haspopup": "true",
-      "aria-controls": "info-option",
-      "aria-expanded": this.state.infoActive ? "true" : "false",
-      "role": "note",
-      "tabIndex": 0
-    };
-
-    const sectionInfoTitle = intl.formatMessage({ id: "section_info_option" });
-
-    // <Section> <-- React component
-    // <section> <-- HTML5 element
-    return React.createElement(
-      "section",
-      null,
-      React.createElement(
-        "div",
-        { className: "section-top-bar" },
-        React.createElement(
-          "h3",
-          { className: "section-title" },
-          icon && icon.startsWith("moz-extension://") ? React.createElement("span", { className: "icon icon-small-spacer", style: { "background-image": `url('${icon}')` } }) : React.createElement("span", { className: `icon icon-small-spacer icon-${icon || "webextension"}` }),
-          this.getFormattedMessage(title)
-        ),
-        infoOption && React.createElement(
-          "span",
-          { className: "section-info-option",
-            onBlur: this.onInfoLeave,
-            onFocus: this.onInfoEnter,
-            onMouseOut: this.onInfoLeave,
-            onMouseOver: this.onInfoEnter },
-          React.createElement("img", _extends({ className: "info-option-icon", title: sectionInfoTitle
-          }, infoOptionIconA11yAttrs)),
-          React.createElement(
-            "div",
-            { className: "info-option" },
-            infoOption.header && React.createElement(
-              "div",
-              { className: "info-option-header", role: "heading" },
-              this.getFormattedMessage(infoOption.header)
-            ),
-            infoOption.body && React.createElement(
-              "p",
-              { className: "info-option-body" },
-              this.getFormattedMessage(infoOption.body)
-            ),
-            infoOption.link && React.createElement(
-              "a",
-              { href: infoOption.link.href, target: "_blank", rel: "noopener noreferrer", className: "info-option-link" },
-              this.getFormattedMessage(infoOption.link.title || infoOption.link)
-            )
-          )
-        )
-      ),
-      React.createElement(
-        "ul",
-        { className: "section-list", style: { padding: 0 } },
-        rows.slice(0, maxCards).map((link, index) => link && React.createElement(Card, { index: index, dispatch: dispatch, link: link, contextMenuOptions: contextMenuOptions, eventSource: eventSource }))
-      ),
-      !initialized && React.createElement(
-        "div",
-        { className: "section-empty-state" },
-        React.createElement(
-          "div",
-          { className: "empty-state" },
-          React.createElement("img", { className: `empty-state-icon icon icon-${emptyState.icon}` }),
-          React.createElement(
-            "p",
-            { className: "empty-state-message" },
-            this.getFormattedMessage(emptyState.message)
-          )
-        )
-      ),
-      shouldShowTopics && React.createElement(Topics, { topics: this.props.topics, read_more_endpoint: this.props.read_more_endpoint })
-    );
-  }
-}
-
-Section.defaultProps = { document: global.document };
-
-const SectionIntl = injectIntl(Section);
-
-class Sections extends React.Component {
-  render() {
-    const sections = this.props.Sections;
-    return React.createElement(
-      "div",
-      { className: "sections-list" },
-      sections.filter(section => section.enabled).map(section => React.createElement(SectionIntl, _extends({ key: section.id }, section, { dispatch: this.props.dispatch })))
-    );
-  }
-}
-
-module.exports = connect(state => ({ Sections: state.Sections }))(Sections);
-module.exports._unconnected = Sections;
-module.exports.SectionIntl = SectionIntl;
-module.exports._unconnectedSection = Section;
-/* WEBPACK VAR INJECTION */}.call(exports, __webpack_require__(6)))
-
-/***/ }),
-/* 18 */
-/***/ (function(module, exports, __webpack_require__) {
-
-"use strict";
-
-
-const React = __webpack_require__(0);
-const LinkMenu = __webpack_require__(4);
-
-var _require = __webpack_require__(2);
-
-const FormattedMessage = _require.FormattedMessage;
-
-const cardContextTypes = __webpack_require__(19);
-
-var _require2 = __webpack_require__(1);
-
-const ac = _require2.actionCreators,
-      at = _require2.actionTypes;
-
-/**
- * Card component.
- * Cards are found within a Section component and contain information about a link such
- * as preview image, page title, page description, and some context about if the page
- * was visited, bookmarked, trending etc...
- * Each Section can make an unordered list of Cards which will create one instane of
- * this class. Each card will then get a context menu which reflects the actions that
- * can be done on this Card.
- */
-
-class Card extends React.Component {
-  constructor(props) {
-    super(props);
-    this.state = { showContextMenu: false, activeCard: null };
-    this.onMenuButtonClick = this.onMenuButtonClick.bind(this);
-    this.onMenuUpdate = this.onMenuUpdate.bind(this);
-    this.onLinkClick = this.onLinkClick.bind(this);
-  }
-  onMenuButtonClick(event) {
-    event.preventDefault();
-    this.setState({
-      activeCard: this.props.index,
-      showContextMenu: true
-    });
-  }
-  onLinkClick(event) {
-    event.preventDefault();
-    const altKey = event.altKey,
-          button = event.button,
-          ctrlKey = event.ctrlKey,
-          metaKey = event.metaKey,
-          shiftKey = event.shiftKey;
-
-    this.props.dispatch(ac.SendToMain({
-      type: at.OPEN_LINK,
-      data: Object.assign(this.props.link, { event: { altKey, button, ctrlKey, metaKey, shiftKey } })
-    }));
-    this.props.dispatch(ac.UserEvent({
-      event: "CLICK",
-      source: this.props.eventSource,
-      action_position: this.props.index
-    }));
-    this.props.dispatch(ac.ImpressionStats({
-      source: this.props.eventSource,
-      click: 0,
-      incognito: true,
-      tiles: [{ id: this.props.link.guid, pos: this.props.index }]
-    }));
-  }
-  onMenuUpdate(showContextMenu) {
-    this.setState({ showContextMenu });
-  }
-  render() {
-    var _props = this.props;
-    const index = _props.index,
-          link = _props.link,
-          dispatch = _props.dispatch,
-          contextMenuOptions = _props.contextMenuOptions,
-          eventSource = _props.eventSource;
-
-    const isContextMenuOpen = this.state.showContextMenu && this.state.activeCard === index;
-
-    var _ref = link.type ? cardContextTypes[link.type] : {};
-
-    const icon = _ref.icon,
-          intlID = _ref.intlID;
-
-
-    return React.createElement(
-      "li",
-      { className: `card-outer${isContextMenuOpen ? " active" : ""}` },
-      React.createElement(
-        "a",
-        { href: link.url, onClick: this.onLinkClick },
-        React.createElement(
-          "div",
-          { className: "card" },
-          link.image && React.createElement("div", { className: "card-preview-image", style: { backgroundImage: `url(${link.image})` } }),
-          React.createElement(
-            "div",
-            { className: `card-details${link.image ? "" : " no-image"}` },
-            link.hostname && React.createElement(
-              "div",
-              { className: "card-host-name" },
-              link.hostname
-            ),
-            React.createElement(
-              "div",
-              { className: `card-text${link.image ? "" : " no-image"}${link.hostname ? "" : " no-host-name"}${icon ? "" : " no-context"}` },
-              React.createElement(
-                "h4",
-                { className: "card-title", dir: "auto" },
-                link.title
-              ),
-              React.createElement(
-                "p",
-                { className: "card-description", dir: "auto" },
-                link.description
-              )
-            ),
-            icon && React.createElement(
-              "div",
-              { className: "card-context" },
-              React.createElement("span", { className: `card-context-icon icon icon-${icon}` }),
-              React.createElement(
-                "div",
-                { className: "card-context-label" },
-                React.createElement(FormattedMessage, { id: intlID, defaultMessage: "Visited" })
-              )
-            )
-          )
-        )
-      ),
-      React.createElement(
-        "button",
-        { className: "context-menu-button icon",
-          onClick: this.onMenuButtonClick },
-        React.createElement(
-          "span",
-          { className: "sr-only" },
-          `Open context menu for ${link.title}`
-        )
-      ),
-      React.createElement(LinkMenu, {
-        dispatch: dispatch,
-        index: index,
-        source: eventSource,
-        onUpdate: this.onMenuUpdate,
-        options: link.context_menu_options || contextMenuOptions,
-        site: link,
-        visible: isContextMenuOpen })
-    );
-  }
-}
-module.exports = Card;
-
-/***/ }),
-/* 19 */
-/***/ (function(module, exports, __webpack_require__) {
-
-"use strict";
-
-
-module.exports = {
-  history: {
-    intlID: "type_label_visited",
-    icon: "historyItem"
-  },
-  bookmark: {
-    intlID: "type_label_bookmarked",
-    icon: "bookmark"
-  },
-  trending: {
-    intlID: "type_label_recommended",
-    icon: "trending"
-  },
-  now: {
-    intlID: "type_label_now",
-    icon: "now"
-  }
-};
-
-/***/ }),
-/* 20 */
-/***/ (function(module, exports, __webpack_require__) {
-
-"use strict";
-
-
-const React = __webpack_require__(0);
-
-var _require = __webpack_require__(2);
-
-const FormattedMessage = _require.FormattedMessage;
-
-
-class Topic extends React.Component {
-  render() {
-    var _props = this.props;
-    const url = _props.url,
-          name = _props.name;
-
-    return React.createElement(
-      "li",
-      null,
-      React.createElement(
-        "a",
-        { key: name, className: "topic-link", href: url },
-        name
-      )
-    );
-  }
-}
-
-class Topics extends React.Component {
-  render() {
-    var _props2 = this.props;
-    const topics = _props2.topics,
-          read_more_endpoint = _props2.read_more_endpoint;
-
-    return React.createElement(
-      "div",
-      { className: "topic" },
-      React.createElement(
-        "span",
-        null,
-        React.createElement(FormattedMessage, { id: "pocket_read_more" })
-      ),
-      React.createElement(
-        "ul",
-        null,
-        topics.map(t => React.createElement(Topic, { key: t.name, url: t.url, name: t.name }))
-      ),
-      React.createElement(
-        "a",
-        { className: "topic-read-more", href: read_more_endpoint },
-        React.createElement(FormattedMessage, { id: "pocket_read_even_more" }),
-        React.createElement("span", { className: "topic-read-more-logo" })
-      )
-    );
-  }
-}
-
-module.exports = Topics;
-module.exports._unconnected = Topics;
-module.exports.Topic = Topic;
-
-/***/ }),
-/* 21 */
-/***/ (function(module, exports, __webpack_require__) {
-
-"use strict";
-
-
-/* eslint-env mozilla/frame-script */
-
-var _require = __webpack_require__(22);
-
-const createStore = _require.createStore,
-      combineReducers = _require.combineReducers,
-      applyMiddleware = _require.applyMiddleware;
-
-var _require2 = __webpack_require__(1);
-
-const au = _require2.actionUtils;
-
-
-const MERGE_STORE_ACTION = "NEW_TAB_INITIAL_STATE";
-const OUTGOING_MESSAGE_NAME = "ActivityStream:ContentToMain";
-const INCOMING_MESSAGE_NAME = "ActivityStream:MainToContent";
-
-/**
- * A higher-order function which returns a reducer that, on MERGE_STORE action,
- * will return the action.data object merged into the previous state.
- *
- * For all other actions, it merely calls mainReducer.
- *
- * Because we want this to merge the entire state object, it's written as a
- * higher order function which takes the main reducer (itself often a call to
- * combineReducers) as a parameter.
- *
- * @param  {function} mainReducer reducer to call if action != MERGE_STORE_ACTION
- * @return {function}             a reducer that, on MERGE_STORE_ACTION action,
- *                                will return the action.data object merged
- *                                into the previous state, and the result
- *                                of calling mainReducer otherwise.
- */
-function mergeStateReducer(mainReducer) {
-  return (prevState, action) => {
-    if (action.type === MERGE_STORE_ACTION) {
-      return Object.assign({}, prevState, action.data);
-    }
-
-    return mainReducer(prevState, action);
-  };
-}
-
-/**
- * messageMiddleware - Middleware that looks for SentToMain type actions, and sends them if necessary
- */
-const messageMiddleware = store => next => action => {
-  if (au.isSendToMain(action)) {
-    sendAsyncMessage(OUTGOING_MESSAGE_NAME, action);
-  }
-  next(action);
-};
-
-/**
- * initStore - Create a store and listen for incoming actions
- *
- * @param  {object} reducers An object containing Redux reducers
- * @return {object}          A redux store
- */
-module.exports = function initStore(reducers) {
-  const store = createStore(mergeStateReducer(combineReducers(reducers)), applyMiddleware(messageMiddleware));
-
-  addMessageListener(INCOMING_MESSAGE_NAME, msg => {
-    try {
-      store.dispatch(msg.data);
-    } catch (ex) {
-      console.error("Content msg:", msg, "Dispatch error: ", ex); // eslint-disable-line no-console
-      dump(`Content msg: ${JSON.stringify(msg)}\nDispatch error: ${ex}\n${ex.stack}`);
-    }
-  });
-
-  return store;
-};
-
-module.exports.MERGE_STORE_ACTION = MERGE_STORE_ACTION;
-module.exports.OUTGOING_MESSAGE_NAME = OUTGOING_MESSAGE_NAME;
-module.exports.INCOMING_MESSAGE_NAME = INCOMING_MESSAGE_NAME;
-
-/***/ }),
-/* 22 */
-/***/ (function(module, exports) {
-
-module.exports = Redux;
-
-/***/ }),
-/* 23 */
 /***/ (function(module, exports, __webpack_require__) {
 
 "use strict";
@@ -2346,6 +335,7 @@ var _require = __webpack_require__(1);
 const at = _require.actionTypes;
 
 
+const TOP_SITES_DEFAULT_LENGTH = 6;
 const TOP_SITES_SHOWMORE_LENGTH = 12;
 
 const INITIAL_STATE = {
@@ -2491,8 +481,11 @@ function TopSites() {
         return site;
       });
       return Object.assign({}, prevState, { rows: newRows });
-    case at.PLACES_LINK_DELETED:
-    case at.PLACES_LINK_BLOCKED:
+    case at.BLOCK_URL:
+    case at.DELETE_HISTORY_URL:
+      // Optimistically update the UI by responding to the context menu action
+      // events and removing the site that was blocked/deleted with an empty slot.
+      // Once refresh() finishes, we update the UI again with a new site
       newRows = prevState.rows.filter(val => val && val.url !== action.data.url);
       return Object.assign({}, prevState, { rows: newRows });
     case at.PINNED_SITES_UPDATED:
@@ -2644,11 +637,2420 @@ module.exports = {
   reducers,
   INITIAL_STATE,
   insertPinned,
+  TOP_SITES_DEFAULT_LENGTH,
   TOP_SITES_SHOWMORE_LENGTH
 };
 
 /***/ }),
+/* 6 */
+/***/ (function(module, exports, __webpack_require__) {
+
+"use strict";
+/* globals Services */
+
+
+let usablePerfObj;
+
+let Cu;
+const isRunningInChrome = typeof Window === "undefined";
+
+/* istanbul ignore if */
+if (isRunningInChrome) {
+  Cu = Components.utils;
+} else {
+  Cu = { import() {} };
+}
+
+Cu.import("resource://gre/modules/Services.jsm");
+
+/* istanbul ignore if */
+if (isRunningInChrome) {
+  // Borrow the high-resolution timer from the hidden window....
+  usablePerfObj = Services.appShell.hiddenDOMWindow.performance;
+} else {
+  // we must be running in content space
+  usablePerfObj = performance;
+}
+
+var _PerfService = function _PerfService(options) {
+  // For testing, so that we can use a fake Window.performance object with
+  // known state.
+  if (options && options.performanceObj) {
+    this._perf = options.performanceObj;
+  } else {
+    this._perf = usablePerfObj;
+  }
+};
+
+_PerfService.prototype = {
+  /**
+   * Calls the underlying mark() method on the appropriate Window.performance
+   * object to add a mark with the given name to the appropriate performance
+   * timeline.
+   *
+   * @param  {String} name  the name to give the current mark
+   * @return {void}
+   */
+  mark: function mark(str) {
+    this._perf.mark(str);
+  },
+
+  /**
+   * Calls the underlying getEntriesByName on the appropriate Window.performance
+   * object.
+   *
+   * @param  {String} name
+   * @param  {String} type eg "mark"
+   * @return {Array}       Performance* objects
+   */
+  getEntriesByName: function getEntriesByName(name, type) {
+    return this._perf.getEntriesByName(name, type);
+  },
+
+  /**
+   * The timeOrigin property from the appropriate performance object.
+   * Used to ensure that timestamps from the add-on code and the content code
+   * are comparable.
+   *
+   * @return {Number} A double of milliseconds with a precision of 0.5us.
+   */
+  get timeOrigin() {
+    return this._perf.timeOrigin;
+  },
+
+  /**
+   * Returns the "absolute" version of performance.now(), i.e. one that
+   * based on the timeOrigin of the XUL hiddenwindow.
+   *
+   * @return {Number}
+   */
+  absNow: function absNow() {
+    return this.timeOrigin + this._perf.now();
+  },
+
+  /**
+   * This returns the absolute startTime from the most recent performance.mark()
+   * with the given name.
+   *
+   * @param  {String} name  the name to lookup the start time for
+   *
+   * @return {Number}       the returned start time, as a DOMHighResTimeStamp
+   *
+   * @throws {Error}        "No Marks with the name ..." if none are available
+   *
+   * @note Always surround calls to this by try/catch.  Otherwise your code
+   * may fail when the `privacy.resistFingerprinting` pref is true.  When
+   * this pref is set, all attempts to get marks will likely fail, which will
+   * cause this method to throw.
+   *
+   * See [bug 1369303](https://bugzilla.mozilla.org/show_bug.cgi?id=1369303)
+   * for more info.
+   */
+  getMostRecentAbsMarkStartByName(name) {
+    let entries = this.getEntriesByName(name, "mark");
+
+    if (!entries.length) {
+      throw new Error(`No marks with the name ${name}`);
+    }
+
+    let mostRecentEntry = entries[entries.length - 1];
+    return this._perf.timeOrigin + mostRecentEntry.startTime;
+  }
+};
+
+var perfService = new _PerfService();
+module.exports = {
+  _PerfService,
+  perfService
+};
+
+/***/ }),
+/* 7 */
+/***/ (function(module, exports, __webpack_require__) {
+
+"use strict";
+
+
+const React = __webpack_require__(0);
+
+var _require = __webpack_require__(1);
+
+const ac = _require.actionCreators,
+      at = _require.actionTypes;
+
+
+const LinkMenu = __webpack_require__(8);
+
+var _require2 = __webpack_require__(4);
+
+const TOP_SITES_SOURCE = _require2.TOP_SITES_SOURCE,
+      TOP_SITES_CONTEXT_MENU_OPTIONS = _require2.TOP_SITES_CONTEXT_MENU_OPTIONS;
+
+
+class TopSite extends React.Component {
+  constructor(props) {
+    super(props);
+    this.state = { showContextMenu: false, activeTile: null };
+    this.onLinkClick = this.onLinkClick.bind(this);
+    this.onMenuButtonClick = this.onMenuButtonClick.bind(this);
+    this.onMenuUpdate = this.onMenuUpdate.bind(this);
+    this.onDismissButtonClick = this.onDismissButtonClick.bind(this);
+    this.onPinButtonClick = this.onPinButtonClick.bind(this);
+    this.onEditButtonClick = this.onEditButtonClick.bind(this);
+  }
+  toggleContextMenu(event, index) {
+    this.setState({
+      activeTile: index,
+      showContextMenu: true
+    });
+  }
+  userEvent(event) {
+    this.props.dispatch(ac.UserEvent({
+      event,
+      source: TOP_SITES_SOURCE,
+      action_position: this.props.index
+    }));
+  }
+  onLinkClick(ev) {
+    if (this.props.editMode) {
+      // Ignore clicks if we are in the edit modal.
+      ev.preventDefault();
+      return;
+    }
+    this.userEvent("CLICK");
+  }
+  onMenuButtonClick(event) {
+    event.preventDefault();
+    this.toggleContextMenu(event, this.props.index);
+  }
+  onMenuUpdate(showContextMenu) {
+    this.setState({ showContextMenu });
+  }
+  onDismissButtonClick() {
+    const link = this.props.link;
+
+    if (link.isPinned) {
+      this.props.dispatch(ac.SendToMain({
+        type: at.TOP_SITES_UNPIN,
+        data: { site: { url: link.url } }
+      }));
+    }
+    this.props.dispatch(ac.SendToMain({
+      type: at.BLOCK_URL,
+      data: link.url
+    }));
+    this.userEvent("BLOCK");
+  }
+  onPinButtonClick() {
+    var _props = this.props;
+    const link = _props.link,
+          index = _props.index;
+
+    if (link.isPinned) {
+      this.props.dispatch(ac.SendToMain({
+        type: at.TOP_SITES_UNPIN,
+        data: { site: { url: link.url } }
+      }));
+      this.userEvent("UNPIN");
+    } else {
+      this.props.dispatch(ac.SendToMain({
+        type: at.TOP_SITES_PIN,
+        data: { site: { url: link.url }, index }
+      }));
+      this.userEvent("PIN");
+    }
+  }
+  onEditButtonClick() {
+    this.props.onEdit(this.props.index);
+  }
+  render() {
+    var _props2 = this.props;
+    const link = _props2.link,
+          index = _props2.index,
+          dispatch = _props2.dispatch,
+          editMode = _props2.editMode;
+
+    const isContextMenuOpen = this.state.showContextMenu && this.state.activeTile === index;
+    const title = link.label || link.hostname;
+    const topSiteOuterClassName = `top-site-outer${isContextMenuOpen ? " active" : ""}`;
+    const tippyTopIcon = link.tippyTopIcon;
+
+    let imageClassName;
+    let imageStyle;
+    if (tippyTopIcon) {
+      imageClassName = "tippy-top-icon";
+      imageStyle = {
+        backgroundColor: link.backgroundColor,
+        backgroundImage: `url(${tippyTopIcon})`
+      };
+    } else {
+      imageClassName = `screenshot${link.screenshot ? " active" : ""}`;
+      imageStyle = { backgroundImage: link.screenshot ? `url(${link.screenshot})` : "none" };
+    }
+    return React.createElement(
+      "li",
+      { className: topSiteOuterClassName, key: link.guid || link.url },
+      React.createElement(
+        "a",
+        { href: link.url, onClick: this.onLinkClick },
+        React.createElement(
+          "div",
+          { className: "tile", "aria-hidden": true },
+          React.createElement(
+            "span",
+            { className: "letter-fallback" },
+            title[0]
+          ),
+          React.createElement("div", { className: imageClassName, style: imageStyle })
+        ),
+        React.createElement(
+          "div",
+          { className: `title ${link.isPinned ? "pinned" : ""}` },
+          link.isPinned && React.createElement("div", { className: "icon icon-pin-small" }),
+          React.createElement(
+            "span",
+            { dir: "auto" },
+            title
+          )
+        )
+      ),
+      !editMode && React.createElement(
+        "div",
+        null,
+        React.createElement(
+          "button",
+          { className: "context-menu-button icon", onClick: this.onMenuButtonClick },
+          React.createElement(
+            "span",
+            { className: "sr-only" },
+            `Open context menu for ${title}`
+          )
+        ),
+        React.createElement(LinkMenu, {
+          dispatch: dispatch,
+          index: index,
+          onUpdate: this.onMenuUpdate,
+          options: TOP_SITES_CONTEXT_MENU_OPTIONS,
+          site: link,
+          source: TOP_SITES_SOURCE,
+          visible: isContextMenuOpen })
+      ),
+      editMode && React.createElement(
+        "div",
+        { className: "edit-menu" },
+        React.createElement("button", {
+          className: `icon icon-${link.isPinned ? "unpin" : "pin"}`,
+          title: this.props.intl.formatMessage({ id: `edit_topsites_${link.isPinned ? "unpin" : "pin"}_button` }),
+          onClick: this.onPinButtonClick }),
+        React.createElement("button", {
+          className: "icon icon-edit",
+          title: this.props.intl.formatMessage({ id: "edit_topsites_edit_button" }),
+          onClick: this.onEditButtonClick }),
+        React.createElement("button", {
+          className: "icon icon-dismiss",
+          title: this.props.intl.formatMessage({ id: "edit_topsites_dismiss_button" }),
+          onClick: this.onDismissButtonClick })
+      )
+    );
+  }
+}
+
+TopSite.defaultProps = {
+  editMode: false,
+  onEdit() {}
+};
+
+module.exports = TopSite;
+
+/***/ }),
+/* 8 */
+/***/ (function(module, exports, __webpack_require__) {
+
+"use strict";
+
+
+const React = __webpack_require__(0);
+
+var _require = __webpack_require__(2);
+
+const injectIntl = _require.injectIntl;
+
+const ContextMenu = __webpack_require__(17);
+
+var _require2 = __webpack_require__(1);
+
+const ac = _require2.actionCreators;
+
+const linkMenuOptions = __webpack_require__(18);
+const DEFAULT_SITE_MENU_OPTIONS = ["CheckPinTopSite", "Separator", "OpenInNewWindow", "OpenInPrivateWindow", "Separator", "BlockUrl"];
+
+class LinkMenu extends React.Component {
+  getOptions() {
+    const props = this.props;
+    const site = props.site,
+          index = props.index,
+          source = props.source;
+
+    // Handle special case of default site
+
+    const propOptions = !site.isDefault ? props.options : DEFAULT_SITE_MENU_OPTIONS;
+
+    const options = propOptions.map(o => linkMenuOptions[o](site, index, source)).map(option => {
+      const action = option.action,
+            impression = option.impression,
+            id = option.id,
+            type = option.type,
+            userEvent = option.userEvent;
+
+      if (!type && id) {
+        option.label = props.intl.formatMessage(option);
+        option.onClick = () => {
+          props.dispatch(action);
+          if (userEvent) {
+            props.dispatch(ac.UserEvent({
+              event: userEvent,
+              source,
+              action_position: index
+            }));
+          }
+          if (impression) {
+            props.dispatch(impression);
+          }
+        };
+      }
+      return option;
+    });
+
+    // This is for accessibility to support making each item tabbable.
+    // We want to know which item is the first and which item
+    // is the last, so we can close the context menu accordingly.
+    options[0].first = true;
+    options[options.length - 1].last = true;
+    return options;
+  }
+  render() {
+    return React.createElement(ContextMenu, {
+      visible: this.props.visible,
+      onUpdate: this.props.onUpdate,
+      options: this.getOptions() });
+  }
+}
+
+module.exports = injectIntl(LinkMenu);
+module.exports._unconnected = LinkMenu;
+
+/***/ }),
+/* 9 */
+/***/ (function(module, exports) {
+
+var g;
+
+// This works in non-strict mode
+g = (function() {
+	return this;
+})();
+
+try {
+	// This works if eval is allowed (see CSP)
+	g = g || Function("return this")() || (1,eval)("this");
+} catch(e) {
+	// This works if the window reference is available
+	if(typeof window === "object")
+		g = window;
+}
+
+// g can still be undefined, but nothing to do about it...
+// We return undefined, instead of nothing here, so it's
+// easier to handle this case. if(!global) { ...}
+
+module.exports = g;
+
+
+/***/ }),
+/* 10 */
+/***/ (function(module, exports, __webpack_require__) {
+
+"use strict";
+
+
+const React = __webpack_require__(0);
+const ReactDOM = __webpack_require__(11);
+const Base = __webpack_require__(12);
+
+var _require = __webpack_require__(3);
+
+const Provider = _require.Provider;
+
+const initStore = __webpack_require__(27);
+
+var _require2 = __webpack_require__(5);
+
+const reducers = _require2.reducers;
+
+const DetectUserSessionStart = __webpack_require__(29);
+
+var _require3 = __webpack_require__(30);
+
+const addSnippetsSubscriber = _require3.addSnippetsSubscriber;
+
+
+new DetectUserSessionStart().sendEventOrAddListener();
+
+const store = initStore(reducers);
+
+ReactDOM.render(React.createElement(
+  Provider,
+  { store: store },
+  React.createElement(Base, null)
+), document.getElementById("root"));
+
+addSnippetsSubscriber(store);
+
+/***/ }),
+/* 11 */
+/***/ (function(module, exports) {
+
+module.exports = ReactDOM;
+
+/***/ }),
+/* 12 */
+/***/ (function(module, exports, __webpack_require__) {
+
+"use strict";
+
+
+const React = __webpack_require__(0);
+
+var _require = __webpack_require__(3);
+
+const connect = _require.connect;
+
+var _require2 = __webpack_require__(2);
+
+const addLocaleData = _require2.addLocaleData,
+      IntlProvider = _require2.IntlProvider;
+
+const TopSites = __webpack_require__(13);
+const Search = __webpack_require__(19);
+const ConfirmDialog = __webpack_require__(20);
+const ManualMigration = __webpack_require__(21);
+const PreferencesPane = __webpack_require__(22);
+const Sections = __webpack_require__(23);
+
+// Locales that should be displayed RTL
+const RTL_LIST = ["ar", "he", "fa", "ur"];
+
+// Add the locale data for pluralization and relative-time formatting for now,
+// this just uses english locale data. We can make this more sophisticated if
+// more features are needed.
+function addLocaleDataForReactIntl(_ref) {
+  let locale = _ref.locale;
+
+  addLocaleData([{ locale, parentLocale: "en" }]);
+  document.documentElement.lang = locale;
+  document.documentElement.dir = RTL_LIST.indexOf(locale.split("-")[0]) >= 0 ? "rtl" : "ltr";
+}
+
+class Base extends React.Component {
+  componentDidMount() {
+    // Also wait for the preloaded page to show, so the tab's title and favicon updates
+    addEventListener("visibilitychange", () => {
+      this.updateTitle(this.props.App);
+      document.getElementById("favicon").href += "#";
+    }, { once: true });
+  }
+  componentWillUpdate(_ref2) {
+    let App = _ref2.App;
+
+    // Early loads might not have locale yet, so wait until we do
+    if (App.locale && App.locale !== this.props.App.locale) {
+      addLocaleDataForReactIntl(App);
+      this.updateTitle(App);
+    }
+  }
+
+  updateTitle(_ref3) {
+    let strings = _ref3.strings;
+
+    if (strings) {
+      document.title = strings.newtab_page_title;
+    }
+  }
+
+  render() {
+    const props = this.props;
+    var _props$App = props.App;
+    const locale = _props$App.locale,
+          strings = _props$App.strings,
+          initialized = _props$App.initialized;
+
+    const prefs = props.Prefs.values;
+    if (!initialized || !strings) {
+      return null;
+    }
+
+    return React.createElement(
+      IntlProvider,
+      { key: locale, locale: locale, messages: strings },
+      React.createElement(
+        "div",
+        { className: "outer-wrapper" },
+        React.createElement(
+          "main",
+          null,
+          prefs.showSearch && React.createElement(Search, null),
+          !prefs.migrationExpired && React.createElement(ManualMigration, null),
+          prefs.showTopSites && React.createElement(TopSites, null),
+          React.createElement(Sections, null),
+          React.createElement(ConfirmDialog, null)
+        ),
+        React.createElement(PreferencesPane, null)
+      )
+    );
+  }
+}
+
+module.exports = connect(state => ({ App: state.App, Prefs: state.Prefs }))(Base);
+
+/***/ }),
+/* 13 */
+/***/ (function(module, exports, __webpack_require__) {
+
+"use strict";
+
+
+const React = __webpack_require__(0);
+
+var _require = __webpack_require__(3);
+
+const connect = _require.connect;
+
+var _require2 = __webpack_require__(2);
+
+const FormattedMessage = _require2.FormattedMessage;
+
+
+const TopSitesPerfTimer = __webpack_require__(14);
+const TopSitesEdit = __webpack_require__(15);
+const TopSite = __webpack_require__(7);
+
+const TopSites = props => React.createElement(
+  TopSitesPerfTimer,
+  null,
+  React.createElement(
+    "section",
+    { className: "top-sites" },
+    React.createElement(
+      "h3",
+      { className: "section-title" },
+      React.createElement("span", { className: `icon icon-small-spacer icon-topsites` }),
+      React.createElement(FormattedMessage, { id: "header_top_sites" })
+    ),
+    React.createElement(
+      "ul",
+      { className: "top-sites-list" },
+      props.TopSites.rows.slice(0, props.TopSitesCount).map((link, index) => link && React.createElement(TopSite, {
+        key: link.guid || link.url,
+        dispatch: props.dispatch,
+        link: link,
+        index: index,
+        intl: props.intl }))
+    ),
+    React.createElement(TopSitesEdit, props)
+  )
+);
+
+module.exports = connect(state => ({ TopSites: state.TopSites, TopSitesCount: state.Prefs.values.topSitesCount }))(TopSites);
+module.exports._unconnected = TopSites;
+
+/***/ }),
+/* 14 */
+/***/ (function(module, exports, __webpack_require__) {
+
+"use strict";
+
+
+const React = __webpack_require__(0);
+
+var _require = __webpack_require__(3);
+
+const connect = _require.connect;
+
+var _require2 = __webpack_require__(1);
+
+const ac = _require2.actionCreators,
+      at = _require2.actionTypes;
+
+var _require3 = __webpack_require__(6);
+
+const perfSvc = _require3.perfService;
+
+/**
+ * A proxy class that uses double requestAnimationFrame from
+ * componentDidMount to dispatch a SAVE_SESSION_PERF_DATA to the main procsess
+ * after the paint.
+ *
+ * This uses two callbacks because, after one callback, this part of the tree
+ * may have rendered but not yet reflowed.  This strategy is modeled after
+ * https://stackoverflow.com/a/34999925 but uses a double rFA because
+ * we want to get to the closest reliable paint for measuring, and
+ * setTimeout is often throttled or queued by browsers in ways that could
+ * make it lag too long.
+ *
+ * XXX Should be made more generic by using this.props.children, or potentially
+ * even split out into a higher-order component to wrap whatever.
+ *
+ * @class TopSitesPerfTimer
+ * @extends {React.Component}
+ */
+
+class TopSitesPerfTimer extends React.Component {
+  constructor(props) {
+    super(props);
+    // Just for test dependency injection:
+    this.perfSvc = this.props.perfSvc || perfSvc;
+
+    this._sendPaintedEvent = this._sendPaintedEvent.bind(this);
+    this._timestampHandled = false;
+  }
+
+  componentDidMount() {
+    this._maybeSendPaintedEvent();
+  }
+
+  componentDidUpdate() {
+    this._maybeSendPaintedEvent();
+  }
+
+  /**
+   * Call the given callback after the upcoming frame paints.
+   *
+   * @note Both setTimeout and requestAnimationFrame are throttled when the page
+   * is hidden, so this callback may get called up to a second or so after the
+   * requestAnimationFrame "paint" for hidden tabs.
+   *
+   * Newtabs hidden while loading will presumably be fairly rare (other than
+   * preloaded tabs, which we will be filtering out on the server side), so such
+   * cases should get lost in the noise.
+   *
+   * If we decide that it's important to find out when something that's hidden
+   * has "painted", however, another option is to post a message to this window.
+   * That should happen even faster than setTimeout, and, at least as of this
+   * writing, it's not throttled in hidden windows in Firefox.
+   *
+   * @param {Function} callback
+   *
+   * @returns void
+   */
+  _afterFramePaint(callback) {
+    requestAnimationFrame(() => setTimeout(callback, 0));
+  }
+
+  _maybeSendPaintedEvent() {
+    // We don't want this to ever happen, but sometimes it does.  And when it
+    // does (typically on the first newtab at startup time calling
+    // componentDidMount), the paint(s) we care about will be later (eg
+    // in a subsequent componentDidUpdate).
+    if (!this.props.TopSites.initialized) {
+      // XXX should send bad event
+      return;
+    }
+
+    // If we've already handled a timestamp, don't do it again
+    if (this._timestampHandled) {
+      return;
+    }
+
+    // And if we haven't, we're doing so now, so remember that. Even if
+    // something goes wrong in the callback, we can't try again, as we'd be
+    // sending back the wrong data, and we have to do it here, so that other
+    // calls to this method while waiting for the next frame won't also try to
+    // handle handle it.
+    this._timestampHandled = true;
+
+    this._afterFramePaint(this._sendPaintedEvent);
+  }
+
+  _sendPaintedEvent() {
+    this.perfSvc.mark("topsites_first_painted_ts");
+
+    try {
+      let topsites_first_painted_ts = this.perfSvc.getMostRecentAbsMarkStartByName("topsites_first_painted_ts");
+
+      this.props.dispatch(ac.SendToMain({
+        type: at.SAVE_SESSION_PERF_DATA,
+        data: { topsites_first_painted_ts }
+      }));
+    } catch (ex) {
+      // If this failed, it's likely because the `privacy.resistFingerprinting`
+      // pref is true.  We should at least not blow up, and should continue
+      // to set this._timestampHandled to avoid going through this again.
+    }
+  }
+
+  render() {
+    return this.props.children;
+  }
+}
+
+module.exports = connect(state => ({ TopSites: state.TopSites }))(TopSitesPerfTimer);
+module.exports._unconnected = TopSitesPerfTimer;
+
+/***/ }),
+/* 15 */
+/***/ (function(module, exports, __webpack_require__) {
+
+"use strict";
+
+
+const React = __webpack_require__(0);
+
+var _require = __webpack_require__(2);
+
+const FormattedMessage = _require.FormattedMessage,
+      injectIntl = _require.injectIntl;
+
+var _require2 = __webpack_require__(1);
+
+const ac = _require2.actionCreators,
+      at = _require2.actionTypes;
+
+
+const TopSiteForm = __webpack_require__(16);
+const TopSite = __webpack_require__(7);
+
+var _require3 = __webpack_require__(5);
+
+const TOP_SITES_DEFAULT_LENGTH = _require3.TOP_SITES_DEFAULT_LENGTH,
+      TOP_SITES_SHOWMORE_LENGTH = _require3.TOP_SITES_SHOWMORE_LENGTH;
+
+var _require4 = __webpack_require__(4);
+
+const TOP_SITES_SOURCE = _require4.TOP_SITES_SOURCE;
+
+
+class TopSitesEdit extends React.Component {
+  constructor(props) {
+    super(props);
+    this.state = {
+      showEditModal: false,
+      showAddForm: false,
+      showEditForm: false,
+      editIndex: -1 // Index of top site being edited
+    };
+    this.onEditButtonClick = this.onEditButtonClick.bind(this);
+    this.onShowMoreLessClick = this.onShowMoreLessClick.bind(this);
+    this.onModalOverlayClick = this.onModalOverlayClick.bind(this);
+    this.onAddButtonClick = this.onAddButtonClick.bind(this);
+    this.onFormClose = this.onFormClose.bind(this);
+    this.onEdit = this.onEdit.bind(this);
+  }
+  onEditButtonClick() {
+    this.setState({ showEditModal: !this.state.showEditModal });
+    const event = this.state.showEditModal ? "TOP_SITES_EDIT_OPEN" : "TOP_SITES_EDIT_CLOSE";
+    this.props.dispatch(ac.UserEvent({
+      source: TOP_SITES_SOURCE,
+      event
+    }));
+  }
+  onModalOverlayClick() {
+    this.setState({ showEditModal: false, showAddForm: false, showEditForm: false });
+    this.props.dispatch(ac.UserEvent({
+      source: TOP_SITES_SOURCE,
+      event: "TOP_SITES_EDIT_CLOSE"
+    }));
+  }
+  onShowMoreLessClick() {
+    const prefIsSetToDefault = this.props.TopSitesCount === TOP_SITES_DEFAULT_LENGTH;
+    this.props.dispatch(ac.SendToMain({
+      type: at.SET_PREF,
+      data: { name: "topSitesCount", value: prefIsSetToDefault ? TOP_SITES_SHOWMORE_LENGTH : TOP_SITES_DEFAULT_LENGTH }
+    }));
+    this.props.dispatch(ac.UserEvent({
+      source: TOP_SITES_SOURCE,
+      event: prefIsSetToDefault ? "TOP_SITES_EDIT_SHOW_MORE" : "TOP_SITES_EDIT_SHOW_LESS"
+    }));
+  }
+  onAddButtonClick() {
+    this.setState({ showAddForm: true });
+    this.props.dispatch(ac.UserEvent({
+      source: TOP_SITES_SOURCE,
+      event: "TOP_SITES_ADD_FORM_OPEN"
+    }));
+  }
+  onFormClose() {
+    this.setState({ showAddForm: false, showEditForm: false });
+  }
+  onEdit(index) {
+    this.setState({ showEditForm: true, editIndex: index });
+    this.props.dispatch(ac.UserEvent({
+      source: TOP_SITES_SOURCE,
+      event: "TOP_SITES_EDIT_FORM_OPEN"
+    }));
+  }
+  render() {
+    return React.createElement(
+      "div",
+      { className: "edit-topsites-wrapper" },
+      React.createElement(
+        "div",
+        { className: "edit-topsites-button" },
+        React.createElement(
+          "button",
+          {
+            className: "edit",
+            title: this.props.intl.formatMessage({ id: "edit_topsites_button_label" }),
+            onClick: this.onEditButtonClick },
+          React.createElement(FormattedMessage, { id: "edit_topsites_button_text" })
+        )
+      ),
+      this.state.showEditModal && !this.state.showAddForm && !this.state.showEditForm && React.createElement(
+        "div",
+        { className: "edit-topsites" },
+        React.createElement("div", { className: "modal-overlay", onClick: this.onModalOverlayClick }),
+        React.createElement(
+          "div",
+          { className: "modal" },
+          React.createElement(
+            "section",
+            { className: "edit-topsites-inner-wrapper" },
+            React.createElement(
+              "h3",
+              { className: "section-title" },
+              React.createElement("span", { className: `icon icon-small-spacer icon-topsites` }),
+              React.createElement(FormattedMessage, { id: "header_top_sites" })
+            ),
+            React.createElement(
+              "ul",
+              { className: "top-sites-list" },
+              this.props.TopSites.rows.slice(0, this.props.TopSitesCount).map((link, index) => link && React.createElement(TopSite, {
+                key: link.guid || link.url,
+                dispatch: this.props.dispatch,
+                link: link,
+                index: index,
+                intl: this.props.intl,
+                onEdit: this.onEdit,
+                editMode: true }))
+            )
+          ),
+          React.createElement(
+            "section",
+            { className: "actions" },
+            React.createElement(
+              "button",
+              { className: "add", onClick: this.onAddButtonClick },
+              React.createElement(FormattedMessage, { id: "edit_topsites_add_button" })
+            ),
+            React.createElement(
+              "button",
+              { className: `icon icon-topsites show-${this.props.TopSitesCount === TOP_SITES_DEFAULT_LENGTH ? "more" : "less"}`, onClick: this.onShowMoreLessClick },
+              React.createElement(FormattedMessage, { id: `edit_topsites_show${this.props.TopSitesCount === TOP_SITES_DEFAULT_LENGTH ? "more" : "less"}_button` })
+            ),
+            React.createElement(
+              "button",
+              { className: "done", onClick: this.onEditButtonClick },
+              React.createElement(FormattedMessage, { id: "edit_topsites_done_button" })
+            )
+          )
+        )
+      ),
+      this.state.showEditModal && this.state.showAddForm && React.createElement(
+        "div",
+        { className: "edit-topsites" },
+        React.createElement("div", { className: "modal-overlay", onClick: this.onModalOverlayClick }),
+        React.createElement(
+          "div",
+          { className: "modal" },
+          React.createElement(TopSiteForm, { onClose: this.onFormClose, dispatch: this.props.dispatch, intl: this.props.intl })
+        )
+      ),
+      this.state.showEditModal && this.state.showEditForm && React.createElement(
+        "div",
+        { className: "edit-topsites" },
+        React.createElement("div", { className: "modal-overlay", onClick: this.onModalOverlayClick }),
+        React.createElement(
+          "div",
+          { className: "modal" },
+          React.createElement(TopSiteForm, {
+            label: this.props.TopSites.rows[this.state.editIndex].label || this.props.TopSites.rows[this.state.editIndex].hostname,
+            url: this.props.TopSites.rows[this.state.editIndex].url,
+            index: this.state.editIndex,
+            editMode: true,
+            onClose: this.onFormClose,
+            dispatch: this.props.dispatch,
+            intl: this.props.intl })
+        )
+      )
+    );
+  }
+}
+
+module.exports = injectIntl(TopSitesEdit);
+module.exports._unconnected = TopSitesEdit;
+
+/***/ }),
+/* 16 */
+/***/ (function(module, exports, __webpack_require__) {
+
+"use strict";
+
+
+const React = __webpack_require__(0);
+
+var _require = __webpack_require__(1);
+
+const ac = _require.actionCreators,
+      at = _require.actionTypes;
+
+var _require2 = __webpack_require__(2);
+
+const FormattedMessage = _require2.FormattedMessage;
+
+var _require3 = __webpack_require__(4);
+
+const TOP_SITES_SOURCE = _require3.TOP_SITES_SOURCE;
+
+
+class TopSiteForm extends React.Component {
+  constructor(props) {
+    super(props);
+    this.state = {
+      label: props.label || "",
+      url: props.url || "",
+      validationError: false
+    };
+    this.onLabelChange = this.onLabelChange.bind(this);
+    this.onUrlChange = this.onUrlChange.bind(this);
+    this.onCancelButtonClick = this.onCancelButtonClick.bind(this);
+    this.onAddButtonClick = this.onAddButtonClick.bind(this);
+    this.onSaveButtonClick = this.onSaveButtonClick.bind(this);
+    this.onUrlInputMount = this.onUrlInputMount.bind(this);
+  }
+  onLabelChange(event) {
+    this.resetValidation();
+    this.setState({ "label": event.target.value });
+  }
+  onUrlChange(event) {
+    this.resetValidation();
+    this.setState({ "url": event.target.value });
+  }
+  onCancelButtonClick(ev) {
+    ev.preventDefault();
+    this.props.onClose();
+  }
+  onAddButtonClick(ev) {
+    ev.preventDefault();
+    if (this.validateForm()) {
+      let site = { url: this.cleanUrl() };
+      if (this.state.label !== "") {
+        site.label = this.state.label;
+      }
+      this.props.dispatch(ac.SendToMain({
+        type: at.TOP_SITES_ADD,
+        data: { site }
+      }));
+      this.props.dispatch(ac.UserEvent({
+        source: TOP_SITES_SOURCE,
+        event: "TOP_SITES_ADD"
+      }));
+      this.props.onClose();
+    }
+  }
+  onSaveButtonClick(ev) {
+    ev.preventDefault();
+    if (this.validateForm()) {
+      let site = { url: this.cleanUrl() };
+      if (this.state.label !== "") {
+        site.label = this.state.label;
+      }
+      this.props.dispatch(ac.SendToMain({
+        type: at.TOP_SITES_PIN,
+        data: { site, index: this.props.index }
+      }));
+      this.props.dispatch(ac.UserEvent({
+        source: TOP_SITES_SOURCE,
+        event: "TOP_SITES_EDIT",
+        action_position: this.props.index
+      }));
+      this.props.onClose();
+    }
+  }
+  cleanUrl() {
+    let url = this.state.url;
+    // If we are missing a protocol, prepend http://
+    if (!url.startsWith("http:") && !url.startsWith("https:")) {
+      url = `http://${url}`;
+    }
+    return url;
+  }
+  resetValidation() {
+    if (this.state.validationError) {
+      this.setState({ validationError: false });
+    }
+  }
+  validateUrl() {
+    try {
+      return !!new URL(this.cleanUrl());
+    } catch (e) {
+      return false;
+    }
+  }
+  validateForm() {
+    this.resetValidation();
+    // Only the URL is required and must be valid.
+    if (!this.state.url || !this.validateUrl()) {
+      this.setState({ validationError: true });
+      this.inputUrl.focus();
+      return false;
+    }
+    return true;
+  }
+  onUrlInputMount(input) {
+    this.inputUrl = input;
+  }
+  render() {
+    return React.createElement(
+      "form",
+      { className: "topsite-form" },
+      React.createElement(
+        "section",
+        { className: "edit-topsites-inner-wrapper" },
+        React.createElement(
+          "div",
+          { className: "form-wrapper" },
+          React.createElement(
+            "h3",
+            { className: "section-title" },
+            React.createElement(FormattedMessage, { id: this.props.editMode ? "topsites_form_edit_header" : "topsites_form_add_header" })
+          ),
+          React.createElement(
+            "div",
+            { className: "field title" },
+            React.createElement("input", {
+              type: "text",
+              value: this.state.label,
+              onChange: this.onLabelChange,
+              placeholder: this.props.intl.formatMessage({ id: "topsites_form_title_placeholder" }) })
+          ),
+          React.createElement(
+            "div",
+            { className: `field url${this.state.validationError ? " invalid" : ""}` },
+            React.createElement("input", {
+              type: "text",
+              ref: this.onUrlInputMount,
+              value: this.state.url,
+              onChange: this.onUrlChange,
+              placeholder: this.props.intl.formatMessage({ id: "topsites_form_url_placeholder" }) }),
+            this.state.validationError && React.createElement(
+              "aside",
+              { className: "error-tooltip" },
+              React.createElement(FormattedMessage, { id: "topsites_form_url_validation" })
+            )
+          )
+        )
+      ),
+      React.createElement(
+        "section",
+        { className: "actions" },
+        React.createElement(
+          "button",
+          { className: "cancel", type: "button", onClick: this.onCancelButtonClick },
+          React.createElement(FormattedMessage, { id: "topsites_form_cancel_button" })
+        ),
+        this.props.editMode && React.createElement(
+          "button",
+          { className: "done save", type: "submit", onClick: this.onSaveButtonClick },
+          React.createElement(FormattedMessage, { id: "topsites_form_save_button" })
+        ),
+        !this.props.editMode && React.createElement(
+          "button",
+          { className: "done add", type: "submit", onClick: this.onAddButtonClick },
+          React.createElement(FormattedMessage, { id: "topsites_form_add_button" })
+        )
+      )
+    );
+  }
+}
+
+TopSiteForm.defaultProps = {
+  label: "",
+  url: "",
+  index: 0,
+  editMode: false // by default we are in "Add New Top Site" mode
+};
+
+module.exports = TopSiteForm;
+
+/***/ }),
+/* 17 */
+/***/ (function(module, exports, __webpack_require__) {
+
+"use strict";
+
+
+const React = __webpack_require__(0);
+
+class ContextMenu extends React.Component {
+  constructor(props) {
+    super(props);
+    this.hideContext = this.hideContext.bind(this);
+  }
+  hideContext() {
+    this.props.onUpdate(false);
+  }
+  componentWillMount() {
+    this.hideContext();
+  }
+  componentDidUpdate(prevProps) {
+    if (this.props.visible && !prevProps.visible) {
+      setTimeout(() => {
+        window.addEventListener("click", this.hideContext);
+      }, 0);
+    }
+    if (!this.props.visible && prevProps.visible) {
+      window.removeEventListener("click", this.hideContext);
+    }
+  }
+  componentWillUnmount() {
+    window.removeEventListener("click", this.hideContext);
+  }
+  render() {
+    return React.createElement(
+      "span",
+      { hidden: !this.props.visible, className: "context-menu" },
+      React.createElement(
+        "ul",
+        { role: "menu", className: "context-menu-list" },
+        this.props.options.map((option, i) => option.type === "separator" ? React.createElement("li", { key: i, className: "separator" }) : React.createElement(ContextMenuItem, { key: i, option: option, hideContext: this.hideContext }))
+      )
+    );
+  }
+}
+
+class ContextMenuItem extends React.Component {
+  constructor(props) {
+    super(props);
+    this.onClick = this.onClick.bind(this);
+    this.onKeyDown = this.onKeyDown.bind(this);
+  }
+  onClick() {
+    this.props.hideContext();
+    this.props.option.onClick();
+  }
+  onKeyDown(event) {
+    const option = this.props.option;
+
+    switch (event.key) {
+      case "Tab":
+        // tab goes down in context menu, shift + tab goes up in context menu
+        // if we're on the last item, one more tab will close the context menu
+        // similarly, if we're on the first item, one more shift + tab will close it
+        if (event.shiftKey && option.first || !event.shiftKey && option.last) {
+          this.props.hideContext();
+        }
+        break;
+      case "Enter":
+        this.props.hideContext();
+        option.onClick();
+        break;
+    }
+  }
+  render() {
+    const option = this.props.option;
+
+    return React.createElement(
+      "li",
+      { role: "menuitem", className: "context-menu-item" },
+      React.createElement(
+        "a",
+        { onClick: this.onClick, onKeyDown: this.onKeyDown, tabIndex: "0" },
+        option.icon && React.createElement("span", { className: `icon icon-spacer icon-${option.icon}` }),
+        option.label
+      )
+    );
+  }
+}
+
+module.exports = ContextMenu;
+module.exports.ContextMenu = ContextMenu;
+module.exports.ContextMenuItem = ContextMenuItem;
+
+/***/ }),
+/* 18 */
+/***/ (function(module, exports, __webpack_require__) {
+
+"use strict";
+
+
+var _require = __webpack_require__(1);
+
+const at = _require.actionTypes,
+      ac = _require.actionCreators;
+
+/**
+ * List of functions that return items that can be included as menu options in a
+ * LinkMenu. All functions take the site as the first parameter, and optionally
+ * the index of the site.
+ */
+
+module.exports = {
+  Separator: () => ({ type: "separator" }),
+  RemoveBookmark: site => ({
+    id: "menu_action_remove_bookmark",
+    icon: "bookmark-added",
+    action: ac.SendToMain({
+      type: at.DELETE_BOOKMARK_BY_ID,
+      data: site.bookmarkGuid
+    }),
+    userEvent: "BOOKMARK_DELETE"
+  }),
+  AddBookmark: site => ({
+    id: "menu_action_bookmark",
+    icon: "bookmark-hollow",
+    action: ac.SendToMain({
+      type: at.BOOKMARK_URL,
+      data: { url: site.url, title: site.title }
+    }),
+    userEvent: "BOOKMARK_ADD"
+  }),
+  OpenInNewWindow: site => ({
+    id: "menu_action_open_new_window",
+    icon: "new-window",
+    action: ac.SendToMain({
+      type: at.OPEN_NEW_WINDOW,
+      data: { url: site.url, referrer: site.referrer }
+    }),
+    userEvent: "OPEN_NEW_WINDOW"
+  }),
+  OpenInPrivateWindow: site => ({
+    id: "menu_action_open_private_window",
+    icon: "new-window-private",
+    action: ac.SendToMain({
+      type: at.OPEN_PRIVATE_WINDOW,
+      data: { url: site.url, referrer: site.referrer }
+    }),
+    userEvent: "OPEN_PRIVATE_WINDOW"
+  }),
+  BlockUrl: (site, index, eventSource) => ({
+    id: "menu_action_dismiss",
+    icon: "dismiss",
+    action: ac.SendToMain({
+      type: at.BLOCK_URL,
+      data: site.url
+    }),
+    impression: ac.ImpressionStats({
+      source: eventSource,
+      block: 0,
+      incognito: true,
+      tiles: [{ id: site.guid, pos: index }]
+    }),
+    userEvent: "BLOCK"
+  }),
+  DeleteUrl: site => ({
+    id: "menu_action_delete",
+    icon: "delete",
+    action: {
+      type: at.DIALOG_OPEN,
+      data: {
+        onConfirm: [ac.SendToMain({ type: at.DELETE_HISTORY_URL, data: site.url }), ac.UserEvent({ event: "DELETE" })],
+        body_string_id: ["confirm_history_delete_p1", "confirm_history_delete_notice_p2"],
+        confirm_button_string_id: "menu_action_delete"
+      }
+    },
+    userEvent: "DIALOG_OPEN"
+  }),
+  PinTopSite: (site, index) => ({
+    id: "menu_action_pin",
+    icon: "pin",
+    action: ac.SendToMain({
+      type: at.TOP_SITES_PIN,
+      data: { site: { url: site.url }, index }
+    }),
+    userEvent: "PIN"
+  }),
+  UnpinTopSite: site => ({
+    id: "menu_action_unpin",
+    icon: "unpin",
+    action: ac.SendToMain({
+      type: at.TOP_SITES_UNPIN,
+      data: { site: { url: site.url } }
+    }),
+    userEvent: "UNPIN"
+  }),
+  SaveToPocket: (site, index, eventSource) => ({
+    id: "menu_action_save_to_pocket",
+    icon: "pocket",
+    action: ac.SendToMain({
+      type: at.SAVE_TO_POCKET,
+      data: { site: { url: site.url, title: site.title } }
+    }),
+    impression: ac.ImpressionStats({
+      source: eventSource,
+      pocket: 0,
+      incognito: true,
+      tiles: [{ id: site.guid, pos: index }]
+    }),
+    userEvent: "SAVE_TO_POCKET"
+  })
+};
+
+module.exports.CheckBookmark = site => site.bookmarkGuid ? module.exports.RemoveBookmark(site) : module.exports.AddBookmark(site);
+module.exports.CheckPinTopSite = (site, index) => site.isPinned ? module.exports.UnpinTopSite(site) : module.exports.PinTopSite(site, index);
+
+/***/ }),
+/* 19 */
+/***/ (function(module, exports, __webpack_require__) {
+
+"use strict";
+/* globals ContentSearchUIController */
+
+
+const React = __webpack_require__(0);
+
+var _require = __webpack_require__(3);
+
+const connect = _require.connect;
+
+var _require2 = __webpack_require__(2);
+
+const FormattedMessage = _require2.FormattedMessage,
+      injectIntl = _require2.injectIntl;
+
+var _require3 = __webpack_require__(1);
+
+const ac = _require3.actionCreators;
+
+
+class Search extends React.Component {
+  constructor(props) {
+    super(props);
+    this.onClick = this.onClick.bind(this);
+    this.onInputMount = this.onInputMount.bind(this);
+  }
+
+  handleEvent(event) {
+    // Also track search events with our own telemetry
+    if (event.detail.type === "Search") {
+      this.props.dispatch(ac.UserEvent({ event: "SEARCH" }));
+    }
+  }
+  onClick(event) {
+    this.controller.search(event);
+  }
+  onInputMount(input) {
+    if (input) {
+      // The first "newtab" parameter here is called the "healthReportKey" and needs
+      // to be "newtab" so that BrowserUsageTelemetry.jsm knows to handle events with
+      // this name, and can add the appropriate telemetry probes for search. Without the
+      // correct name, certain tests like browser_UsageTelemetry_content.js will fail (See
+      // github ticket #2348 for more details)
+      this.controller = new ContentSearchUIController(input, input.parentNode, "newtab", "newtab");
+      addEventListener("ContentSearchClient", this);
+    } else {
+      this.controller = null;
+      removeEventListener("ContentSearchClient", this);
+    }
+  }
+
+  /*
+   * Do not change the ID on the input field, as legacy newtab code
+   * specifically looks for the id 'newtab-search-text' on input fields
+   * in order to execute searches in various tests
+   */
+  render() {
+    return React.createElement(
+      "div",
+      { className: "search-wrapper" },
+      React.createElement(
+        "label",
+        { htmlFor: "newtab-search-text", className: "search-label" },
+        React.createElement(
+          "span",
+          { className: "sr-only" },
+          React.createElement(FormattedMessage, { id: "search_web_placeholder" })
+        )
+      ),
+      React.createElement("input", {
+        id: "newtab-search-text",
+        maxLength: "256",
+        placeholder: this.props.intl.formatMessage({ id: "search_web_placeholder" }),
+        ref: this.onInputMount,
+        title: this.props.intl.formatMessage({ id: "search_web_placeholder" }),
+        type: "search" }),
+      React.createElement(
+        "button",
+        {
+          className: "search-button",
+          onClick: this.onClick,
+          title: this.props.intl.formatMessage({ id: "search_button" }) },
+        React.createElement(
+          "span",
+          { className: "sr-only" },
+          React.createElement(FormattedMessage, { id: "search_button" })
+        )
+      )
+    );
+  }
+}
+
+module.exports = connect()(injectIntl(Search));
+module.exports._unconnected = Search;
+
+/***/ }),
+/* 20 */
+/***/ (function(module, exports, __webpack_require__) {
+
+"use strict";
+
+
+const React = __webpack_require__(0);
+
+var _require = __webpack_require__(3);
+
+const connect = _require.connect;
+
+var _require2 = __webpack_require__(2);
+
+const FormattedMessage = _require2.FormattedMessage;
+
+var _require3 = __webpack_require__(1);
+
+const actionTypes = _require3.actionTypes,
+      ac = _require3.actionCreators;
+
+/**
+ * ConfirmDialog component.
+ * One primary action button, one cancel button.
+ *
+ * Content displayed is controlled by `data` prop the component receives.
+ * Example:
+ * data: {
+ *   // Any sort of data needed to be passed around by actions.
+ *   payload: site.url,
+ *   // Primary button SendToMain action.
+ *   action: "DELETE_HISTORY_URL",
+ *   // Primary button USerEvent action.
+ *   userEvent: "DELETE",
+ *   // Array of locale ids to display.
+ *   message_body: ["confirm_history_delete_p1", "confirm_history_delete_notice_p2"],
+ *   // Text for primary button.
+ *   confirm_button_string_id: "menu_action_delete"
+ * },
+ */
+
+const ConfirmDialog = React.createClass({
+  displayName: "ConfirmDialog",
+
+  getDefaultProps() {
+    return {
+      visible: false,
+      data: {}
+    };
+  },
+
+  _handleCancelBtn() {
+    this.props.dispatch({ type: actionTypes.DIALOG_CANCEL });
+    this.props.dispatch(ac.UserEvent({ event: actionTypes.DIALOG_CANCEL }));
+  },
+
+  _handleConfirmBtn() {
+    this.props.data.onConfirm.forEach(this.props.dispatch);
+  },
+
+  _renderModalMessage() {
+    const message_body = this.props.data.body_string_id;
+
+    if (!message_body) {
+      return null;
+    }
+
+    return React.createElement(
+      "span",
+      null,
+      message_body.map(msg => React.createElement(
+        "p",
+        { key: msg },
+        React.createElement(FormattedMessage, { id: msg })
+      ))
+    );
+  },
+
+  render() {
+    if (!this.props.visible) {
+      return null;
+    }
+
+    return React.createElement(
+      "div",
+      { className: "confirmation-dialog" },
+      React.createElement("div", { className: "modal-overlay", onClick: this._handleCancelBtn }),
+      React.createElement(
+        "div",
+        { className: "modal" },
+        React.createElement(
+          "section",
+          { className: "modal-message" },
+          this._renderModalMessage()
+        ),
+        React.createElement(
+          "section",
+          { className: "actions" },
+          React.createElement(
+            "button",
+            { onClick: this._handleCancelBtn },
+            React.createElement(FormattedMessage, { id: "topsites_form_cancel_button" })
+          ),
+          React.createElement(
+            "button",
+            { className: "done", onClick: this._handleConfirmBtn },
+            React.createElement(FormattedMessage, { id: this.props.data.confirm_button_string_id })
+          )
+        )
+      )
+    );
+  }
+});
+
+module.exports = connect(state => state.Dialog)(ConfirmDialog);
+module.exports._unconnected = ConfirmDialog;
+module.exports.Dialog = ConfirmDialog;
+
+/***/ }),
+/* 21 */
+/***/ (function(module, exports, __webpack_require__) {
+
+"use strict";
+
+
+const React = __webpack_require__(0);
+
+var _require = __webpack_require__(3);
+
+const connect = _require.connect;
+
+var _require2 = __webpack_require__(2);
+
+const FormattedMessage = _require2.FormattedMessage;
+
+var _require3 = __webpack_require__(1);
+
+const at = _require3.actionTypes,
+      ac = _require3.actionCreators;
+
+/**
+ * Manual migration component used to start the profile import wizard.
+ * Message is presented temporarily and will go away if:
+ * 1.  User clicks "No Thanks"
+ * 2.  User completed the data import
+ * 3.  After 3 active days
+ * 4.  User clicks "Cancel" on the import wizard (currently not implemented).
+ */
+
+class ManualMigration extends React.Component {
+  constructor(props) {
+    super(props);
+    this.onLaunchTour = this.onLaunchTour.bind(this);
+    this.onCancelTour = this.onCancelTour.bind(this);
+  }
+  onLaunchTour() {
+    this.props.dispatch(ac.SendToMain({ type: at.MIGRATION_START }));
+    this.props.dispatch(ac.UserEvent({ event: at.MIGRATION_START }));
+  }
+
+  onCancelTour() {
+    this.props.dispatch(ac.SendToMain({ type: at.MIGRATION_CANCEL }));
+    this.props.dispatch(ac.UserEvent({ event: at.MIGRATION_CANCEL }));
+  }
+
+  render() {
+    return React.createElement(
+      "div",
+      { className: "manual-migration-container" },
+      React.createElement(
+        "p",
+        null,
+        React.createElement("span", { className: "icon icon-import" }),
+        React.createElement(FormattedMessage, { id: "manual_migration_explanation" })
+      ),
+      React.createElement(
+        "div",
+        { className: "manual-migration-actions actions" },
+        React.createElement(
+          "button",
+          { className: "dismiss", onClick: this.onCancelTour },
+          React.createElement(FormattedMessage, { id: "manual_migration_cancel_button" })
+        ),
+        React.createElement(
+          "button",
+          { onClick: this.onLaunchTour },
+          React.createElement(FormattedMessage, { id: "manual_migration_import_button" })
+        )
+      )
+    );
+  }
+}
+
+module.exports = connect()(ManualMigration);
+module.exports._unconnected = ManualMigration;
+
+/***/ }),
+/* 22 */
+/***/ (function(module, exports, __webpack_require__) {
+
+"use strict";
+
+
+const React = __webpack_require__(0);
+
+var _require = __webpack_require__(3);
+
+const connect = _require.connect;
+
+var _require2 = __webpack_require__(2);
+
+const injectIntl = _require2.injectIntl,
+      FormattedMessage = _require2.FormattedMessage;
+
+var _require3 = __webpack_require__(1);
+
+const ac = _require3.actionCreators,
+      at = _require3.actionTypes;
+
+var _require4 = __webpack_require__(5);
+
+const TOP_SITES_DEFAULT_LENGTH = _require4.TOP_SITES_DEFAULT_LENGTH,
+      TOP_SITES_SHOWMORE_LENGTH = _require4.TOP_SITES_SHOWMORE_LENGTH;
+
+
+const getFormattedMessage = message => typeof message === "string" ? React.createElement(
+  "span",
+  null,
+  message
+) : React.createElement(FormattedMessage, message);
+
+const PreferencesInput = props => React.createElement(
+  "section",
+  null,
+  React.createElement("input", { type: "checkbox", id: props.prefName, name: props.prefName, checked: props.value, onChange: props.onChange, className: props.className }),
+  React.createElement(
+    "label",
+    { htmlFor: props.prefName, className: props.labelClassName },
+    getFormattedMessage(props.titleString)
+  ),
+  props.descString && React.createElement(
+    "p",
+    { className: "prefs-input-description" },
+    getFormattedMessage(props.descString)
+  )
+);
+
+class PreferencesPane extends React.Component {
+  constructor(props) {
+    super(props);
+    this.state = { visible: false };
+    this.handleClickOutside = this.handleClickOutside.bind(this);
+    this.handlePrefChange = this.handlePrefChange.bind(this);
+    this.handleSectionChange = this.handleSectionChange.bind(this);
+    this.togglePane = this.togglePane.bind(this);
+    this.onWrapperMount = this.onWrapperMount.bind(this);
+  }
+  componentDidMount() {
+    document.addEventListener("click", this.handleClickOutside);
+  }
+  componentWillUnmount() {
+    document.removeEventListener("click", this.handleClickOutside);
+  }
+  handleClickOutside(event) {
+    // if we are showing the sidebar and there is a click outside, close it.
+    if (this.state.visible && !this.wrapper.contains(event.target)) {
+      this.togglePane();
+    }
+  }
+  handlePrefChange(event) {
+    const target = event.target;
+    const name = target.name,
+          checked = target.checked;
+
+    let value = checked;
+    if (name === "topSitesCount") {
+      value = checked ? TOP_SITES_SHOWMORE_LENGTH : TOP_SITES_DEFAULT_LENGTH;
+    }
+    this.props.dispatch(ac.SetPref(name, value));
+  }
+  handleSectionChange(event) {
+    const target = event.target;
+    const id = target.name;
+    const type = target.checked ? at.SECTION_ENABLE : at.SECTION_DISABLE;
+    this.props.dispatch(ac.SendToMain({ type, data: id }));
+  }
+  togglePane() {
+    this.setState({ visible: !this.state.visible });
+    const event = this.state.visible ? "CLOSE_NEWTAB_PREFS" : "OPEN_NEWTAB_PREFS";
+    this.props.dispatch(ac.UserEvent({ event }));
+  }
+  onWrapperMount(wrapper) {
+    this.wrapper = wrapper;
+  }
+  render() {
+    const props = this.props;
+    const prefs = props.Prefs.values;
+    const sections = props.Sections;
+    const isVisible = this.state.visible;
+    return React.createElement(
+      "div",
+      { className: "prefs-pane-wrapper", ref: this.onWrapperMount },
+      React.createElement(
+        "div",
+        { className: "prefs-pane-button" },
+        React.createElement("button", {
+          className: `prefs-button icon ${isVisible ? "icon-dismiss" : "icon-settings"}`,
+          title: props.intl.formatMessage({ id: isVisible ? "settings_pane_done_button" : "settings_pane_button_label" }),
+          onClick: this.togglePane })
+      ),
+      React.createElement(
+        "div",
+        { className: "prefs-pane" },
+        React.createElement(
+          "div",
+          { className: `sidebar ${isVisible ? "" : "hidden"}` },
+          React.createElement(
+            "div",
+            { className: "prefs-modal-inner-wrapper" },
+            React.createElement(
+              "h1",
+              null,
+              React.createElement(FormattedMessage, { id: "settings_pane_header" })
+            ),
+            React.createElement(
+              "p",
+              null,
+              React.createElement(FormattedMessage, { id: "settings_pane_body" })
+            ),
+            React.createElement(PreferencesInput, { className: "showSearch", prefName: "showSearch", value: prefs.showSearch, onChange: this.handlePrefChange,
+              titleString: { id: "settings_pane_search_header" }, descString: { id: "settings_pane_search_body" } }),
+            React.createElement(PreferencesInput, { className: "showTopSites", prefName: "showTopSites", value: prefs.showTopSites, onChange: this.handlePrefChange,
+              titleString: { id: "settings_pane_topsites_header" }, descString: { id: "settings_pane_topsites_body" } }),
+            React.createElement(
+              "div",
+              { className: "options" },
+              React.createElement(PreferencesInput, { className: "showMoreTopSites", prefName: "topSitesCount", value: prefs.topSitesCount !== TOP_SITES_DEFAULT_LENGTH, onChange: this.handlePrefChange,
+                titleString: { id: "settings_pane_topsites_options_showmore" }, labelClassName: "icon icon-topsites" })
+            ),
+            sections.filter(section => !section.shouldHidePref).map((_ref) => {
+              let id = _ref.id,
+                  title = _ref.title,
+                  enabled = _ref.enabled,
+                  pref = _ref.pref;
+              return React.createElement(PreferencesInput, { key: id, className: "showSection", prefName: pref && pref.feed || id,
+                value: enabled, onChange: pref && pref.feed ? this.handlePrefChange : this.handleSectionChange,
+                titleString: pref && pref.titleString || title, descString: pref && pref.descString });
+            })
+          ),
+          React.createElement(
+            "section",
+            { className: "actions" },
+            React.createElement(
+              "button",
+              { className: "done", onClick: this.togglePane },
+              React.createElement(FormattedMessage, { id: "settings_pane_done_button" })
+            )
+          )
+        )
+      )
+    );
+  }
+}
+
+module.exports = connect(state => ({ Prefs: state.Prefs, Sections: state.Sections }))(injectIntl(PreferencesPane));
+module.exports.PreferencesPane = PreferencesPane;
+module.exports.PreferencesInput = PreferencesInput;
+
+/***/ }),
+/* 23 */
+/***/ (function(module, exports, __webpack_require__) {
+
+"use strict";
+/* WEBPACK VAR INJECTION */(function(global) {
+
+var _extends = Object.assign || function (target) { for (var i = 1; i < arguments.length; i++) { var source = arguments[i]; for (var key in source) { if (Object.prototype.hasOwnProperty.call(source, key)) { target[key] = source[key]; } } } return target; };
+
+const React = __webpack_require__(0);
+
+var _require = __webpack_require__(3);
+
+const connect = _require.connect;
+
+var _require2 = __webpack_require__(2);
+
+const injectIntl = _require2.injectIntl,
+      FormattedMessage = _require2.FormattedMessage;
+
+const Card = __webpack_require__(24);
+const Topics = __webpack_require__(26);
+
+var _require3 = __webpack_require__(1);
+
+const ac = _require3.actionCreators;
+
+
+const VISIBLE = "visible";
+const VISIBILITY_CHANGE_EVENT = "visibilitychange";
+
+class Section extends React.Component {
+  constructor(props) {
+    super(props);
+    this.onInfoEnter = this.onInfoEnter.bind(this);
+    this.onInfoLeave = this.onInfoLeave.bind(this);
+    this.state = { infoActive: false };
+  }
+
+  /**
+   * Take a truthy value to conditionally change the infoActive state.
+   */
+  _setInfoState(nextActive) {
+    const infoActive = !!nextActive;
+    if (infoActive !== this.state.infoActive) {
+      this.setState({ infoActive });
+    }
+  }
+
+  onInfoEnter() {
+    // We're getting focus or hover, so info state should be true if not yet.
+    this._setInfoState(true);
+  }
+
+  onInfoLeave(event) {
+    // We currently have an active (true) info state, so keep it true only if we
+    // have a related event target that is contained "within" the current target
+    // (section-info-option) as itself or a descendant. Set to false otherwise.
+    this._setInfoState(event && event.relatedTarget && (event.relatedTarget === event.currentTarget || event.relatedTarget.compareDocumentPosition(event.currentTarget) & Node.DOCUMENT_POSITION_CONTAINS));
+  }
+
+  getFormattedMessage(message) {
+    return typeof message === "string" ? React.createElement(
+      "span",
+      null,
+      message
+    ) : React.createElement(FormattedMessage, message);
+  }
+
+  _dispatchImpressionStats() {
+    const props = this.props;
+
+    const maxCards = 3 * props.maxRows;
+    props.dispatch(ac.ImpressionStats({
+      source: props.eventSource,
+      tiles: props.rows.slice(0, maxCards).map(link => ({ id: link.guid })),
+      incognito: props.options && props.options.personalized
+    }));
+  }
+
+  // This sends an event when a user sees a set of new content. If content
+  // changes while the page is hidden (i.e. preloaded or on a hidden tab),
+  // only send the event if the page becomes visible again.
+  sendImpressionStatsOrAddListener() {
+    const props = this.props;
+
+
+    if (!props.dispatch) {
+      return;
+    }
+
+    if (props.document.visibilityState === VISIBLE) {
+      this._dispatchImpressionStats();
+    } else {
+      // We should only ever send the latest impression stats ping, so remove any
+      // older listeners.
+      if (this._onVisibilityChange) {
+        props.document.removeEventListener(VISIBILITY_CHANGE_EVENT, this._onVisibilityChange);
+      }
+
+      // When the page becoems visible, send the impression stats ping.
+      this._onVisibilityChange = () => {
+        if (props.document.visibilityState === VISIBLE) {
+          this._dispatchImpressionStats();
+          props.document.removeEventListener(VISIBILITY_CHANGE_EVENT, this._onVisibilityChange);
+        }
+      };
+      props.document.addEventListener(VISIBILITY_CHANGE_EVENT, this._onVisibilityChange);
+    }
+  }
+
+  componentDidMount() {
+    if (this.props.rows.length) {
+      this.sendImpressionStatsOrAddListener();
+    }
+  }
+
+  componentDidUpdate(prevProps) {
+    const props = this.props;
+
+    if (
+    // Don't send impression stats for the empty state
+    props.rows.length &&
+    // We only want to send impression stats if the content of the cards has changed
+    props.rows !== prevProps.rows) {
+      this.sendImpressionStatsOrAddListener();
+    }
+  }
+
+  render() {
+    var _props = this.props;
+    const id = _props.id,
+          eventSource = _props.eventSource,
+          title = _props.title,
+          icon = _props.icon,
+          rows = _props.rows,
+          infoOption = _props.infoOption,
+          emptyState = _props.emptyState,
+          dispatch = _props.dispatch,
+          maxRows = _props.maxRows,
+          contextMenuOptions = _props.contextMenuOptions,
+          intl = _props.intl;
+
+    const maxCards = 3 * maxRows;
+    const initialized = rows && rows.length > 0;
+    const shouldShowTopics = id === "topstories" && this.props.topics && this.props.topics.length > 0 && this.props.read_more_endpoint;
+
+    const infoOptionIconA11yAttrs = {
+      "aria-haspopup": "true",
+      "aria-controls": "info-option",
+      "aria-expanded": this.state.infoActive ? "true" : "false",
+      "role": "note",
+      "tabIndex": 0
+    };
+
+    const sectionInfoTitle = intl.formatMessage({ id: "section_info_option" });
+
+    // <Section> <-- React component
+    // <section> <-- HTML5 element
+    return React.createElement(
+      "section",
+      null,
+      React.createElement(
+        "div",
+        { className: "section-top-bar" },
+        React.createElement(
+          "h3",
+          { className: "section-title" },
+          icon && icon.startsWith("moz-extension://") ? React.createElement("span", { className: "icon icon-small-spacer", style: { "background-image": `url('${icon}')` } }) : React.createElement("span", { className: `icon icon-small-spacer icon-${icon || "webextension"}` }),
+          this.getFormattedMessage(title)
+        ),
+        infoOption && React.createElement(
+          "span",
+          { className: "section-info-option",
+            onBlur: this.onInfoLeave,
+            onFocus: this.onInfoEnter,
+            onMouseOut: this.onInfoLeave,
+            onMouseOver: this.onInfoEnter },
+          React.createElement("img", _extends({ className: "info-option-icon", title: sectionInfoTitle
+          }, infoOptionIconA11yAttrs)),
+          React.createElement(
+            "div",
+            { className: "info-option" },
+            infoOption.header && React.createElement(
+              "div",
+              { className: "info-option-header", role: "heading" },
+              this.getFormattedMessage(infoOption.header)
+            ),
+            infoOption.body && React.createElement(
+              "p",
+              { className: "info-option-body" },
+              this.getFormattedMessage(infoOption.body)
+            ),
+            infoOption.link && React.createElement(
+              "a",
+              { href: infoOption.link.href, target: "_blank", rel: "noopener noreferrer", className: "info-option-link" },
+              this.getFormattedMessage(infoOption.link.title || infoOption.link)
+            )
+          )
+        )
+      ),
+      React.createElement(
+        "ul",
+        { className: "section-list", style: { padding: 0 } },
+        rows.slice(0, maxCards).map((link, index) => link && React.createElement(Card, { index: index, dispatch: dispatch, link: link, contextMenuOptions: contextMenuOptions, eventSource: eventSource }))
+      ),
+      !initialized && React.createElement(
+        "div",
+        { className: "section-empty-state" },
+        React.createElement(
+          "div",
+          { className: "empty-state" },
+          emptyState.icon && emptyState.icon.startsWith("moz-extension://") ? React.createElement("img", { className: "empty-state-icon icon", style: { "background-image": `url('${emptyState.icon}')` } }) : React.createElement("img", { className: `empty-state-icon icon icon-${emptyState.icon}` }),
+          React.createElement(
+            "p",
+            { className: "empty-state-message" },
+            this.getFormattedMessage(emptyState.message)
+          )
+        )
+      ),
+      shouldShowTopics && React.createElement(Topics, { topics: this.props.topics, read_more_endpoint: this.props.read_more_endpoint })
+    );
+  }
+}
+
+Section.defaultProps = { document: global.document };
+
+const SectionIntl = injectIntl(Section);
+
+class Sections extends React.Component {
+  render() {
+    const sections = this.props.Sections;
+    return React.createElement(
+      "div",
+      { className: "sections-list" },
+      sections.filter(section => section.enabled).map(section => React.createElement(SectionIntl, _extends({ key: section.id }, section, { dispatch: this.props.dispatch })))
+    );
+  }
+}
+
+module.exports = connect(state => ({ Sections: state.Sections }))(Sections);
+module.exports._unconnected = Sections;
+module.exports.SectionIntl = SectionIntl;
+module.exports._unconnectedSection = Section;
+/* WEBPACK VAR INJECTION */}.call(exports, __webpack_require__(9)))
+
+/***/ }),
 /* 24 */
+/***/ (function(module, exports, __webpack_require__) {
+
+"use strict";
+
+
+const React = __webpack_require__(0);
+const LinkMenu = __webpack_require__(8);
+
+var _require = __webpack_require__(2);
+
+const FormattedMessage = _require.FormattedMessage;
+
+const cardContextTypes = __webpack_require__(25);
+
+var _require2 = __webpack_require__(1);
+
+const ac = _require2.actionCreators,
+      at = _require2.actionTypes;
+
+/**
+ * Card component.
+ * Cards are found within a Section component and contain information about a link such
+ * as preview image, page title, page description, and some context about if the page
+ * was visited, bookmarked, trending etc...
+ * Each Section can make an unordered list of Cards which will create one instane of
+ * this class. Each card will then get a context menu which reflects the actions that
+ * can be done on this Card.
+ */
+
+class Card extends React.Component {
+  constructor(props) {
+    super(props);
+    this.state = { showContextMenu: false, activeCard: null };
+    this.onMenuButtonClick = this.onMenuButtonClick.bind(this);
+    this.onMenuUpdate = this.onMenuUpdate.bind(this);
+    this.onLinkClick = this.onLinkClick.bind(this);
+  }
+  onMenuButtonClick(event) {
+    event.preventDefault();
+    this.setState({
+      activeCard: this.props.index,
+      showContextMenu: true
+    });
+  }
+  onLinkClick(event) {
+    event.preventDefault();
+    const altKey = event.altKey,
+          button = event.button,
+          ctrlKey = event.ctrlKey,
+          metaKey = event.metaKey,
+          shiftKey = event.shiftKey;
+
+    this.props.dispatch(ac.SendToMain({
+      type: at.OPEN_LINK,
+      data: Object.assign(this.props.link, { event: { altKey, button, ctrlKey, metaKey, shiftKey } })
+    }));
+    this.props.dispatch(ac.UserEvent({
+      event: "CLICK",
+      source: this.props.eventSource,
+      action_position: this.props.index
+    }));
+    this.props.dispatch(ac.ImpressionStats({
+      source: this.props.eventSource,
+      click: 0,
+      incognito: true,
+      tiles: [{ id: this.props.link.guid, pos: this.props.index }]
+    }));
+  }
+  onMenuUpdate(showContextMenu) {
+    this.setState({ showContextMenu });
+  }
+  render() {
+    var _props = this.props;
+    const index = _props.index,
+          link = _props.link,
+          dispatch = _props.dispatch,
+          contextMenuOptions = _props.contextMenuOptions,
+          eventSource = _props.eventSource;
+
+    const isContextMenuOpen = this.state.showContextMenu && this.state.activeCard === index;
+
+    var _ref = link.type ? cardContextTypes[link.type] : {};
+
+    const icon = _ref.icon,
+          intlID = _ref.intlID;
+
+
+    return React.createElement(
+      "li",
+      { className: `card-outer${isContextMenuOpen ? " active" : ""}` },
+      React.createElement(
+        "a",
+        { href: link.url, onClick: this.onLinkClick },
+        React.createElement(
+          "div",
+          { className: "card" },
+          link.image && React.createElement("div", { className: "card-preview-image", style: { backgroundImage: `url(${link.image})` } }),
+          React.createElement(
+            "div",
+            { className: `card-details${link.image ? "" : " no-image"}` },
+            link.hostname && React.createElement(
+              "div",
+              { className: "card-host-name" },
+              link.hostname
+            ),
+            React.createElement(
+              "div",
+              { className: `card-text${link.image ? "" : " no-image"}${link.hostname ? "" : " no-host-name"}${icon ? "" : " no-context"}` },
+              React.createElement(
+                "h4",
+                { className: "card-title", dir: "auto" },
+                link.title
+              ),
+              React.createElement(
+                "p",
+                { className: "card-description", dir: "auto" },
+                link.description
+              )
+            ),
+            icon && React.createElement(
+              "div",
+              { className: "card-context" },
+              React.createElement("span", { className: `card-context-icon icon icon-${icon}` }),
+              React.createElement(
+                "div",
+                { className: "card-context-label" },
+                React.createElement(FormattedMessage, { id: intlID, defaultMessage: "Visited" })
+              )
+            )
+          )
+        )
+      ),
+      React.createElement(
+        "button",
+        { className: "context-menu-button icon",
+          onClick: this.onMenuButtonClick },
+        React.createElement(
+          "span",
+          { className: "sr-only" },
+          `Open context menu for ${link.title}`
+        )
+      ),
+      React.createElement(LinkMenu, {
+        dispatch: dispatch,
+        index: index,
+        source: eventSource,
+        onUpdate: this.onMenuUpdate,
+        options: link.contextMenuOptions || contextMenuOptions,
+        site: link,
+        visible: isContextMenuOpen })
+    );
+  }
+}
+module.exports = Card;
+
+/***/ }),
+/* 25 */
+/***/ (function(module, exports, __webpack_require__) {
+
+"use strict";
+
+
+module.exports = {
+  history: {
+    intlID: "type_label_visited",
+    icon: "historyItem"
+  },
+  bookmark: {
+    intlID: "type_label_bookmarked",
+    icon: "bookmark"
+  },
+  trending: {
+    intlID: "type_label_recommended",
+    icon: "trending"
+  },
+  now: {
+    intlID: "type_label_now",
+    icon: "now"
+  }
+};
+
+/***/ }),
+/* 26 */
+/***/ (function(module, exports, __webpack_require__) {
+
+"use strict";
+
+
+const React = __webpack_require__(0);
+
+var _require = __webpack_require__(2);
+
+const FormattedMessage = _require.FormattedMessage;
+
+
+class Topic extends React.Component {
+  render() {
+    var _props = this.props;
+    const url = _props.url,
+          name = _props.name;
+
+    return React.createElement(
+      "li",
+      null,
+      React.createElement(
+        "a",
+        { key: name, className: "topic-link", href: url },
+        name
+      )
+    );
+  }
+}
+
+class Topics extends React.Component {
+  render() {
+    var _props2 = this.props;
+    const topics = _props2.topics,
+          read_more_endpoint = _props2.read_more_endpoint;
+
+    return React.createElement(
+      "div",
+      { className: "topic" },
+      React.createElement(
+        "span",
+        null,
+        React.createElement(FormattedMessage, { id: "pocket_read_more" })
+      ),
+      React.createElement(
+        "ul",
+        null,
+        topics.map(t => React.createElement(Topic, { key: t.name, url: t.url, name: t.name }))
+      ),
+      React.createElement(
+        "a",
+        { className: "topic-read-more", href: read_more_endpoint },
+        React.createElement(FormattedMessage, { id: "pocket_read_even_more" })
+      )
+    );
+  }
+}
+
+module.exports = Topics;
+module.exports._unconnected = Topics;
+module.exports.Topic = Topic;
+
+/***/ }),
+/* 27 */
+/***/ (function(module, exports, __webpack_require__) {
+
+"use strict";
+
+
+/* eslint-env mozilla/frame-script */
+
+var _require = __webpack_require__(28);
+
+const createStore = _require.createStore,
+      combineReducers = _require.combineReducers,
+      applyMiddleware = _require.applyMiddleware;
+
+var _require2 = __webpack_require__(1);
+
+const au = _require2.actionUtils;
+
+
+const MERGE_STORE_ACTION = "NEW_TAB_INITIAL_STATE";
+const OUTGOING_MESSAGE_NAME = "ActivityStream:ContentToMain";
+const INCOMING_MESSAGE_NAME = "ActivityStream:MainToContent";
+
+/**
+ * A higher-order function which returns a reducer that, on MERGE_STORE action,
+ * will return the action.data object merged into the previous state.
+ *
+ * For all other actions, it merely calls mainReducer.
+ *
+ * Because we want this to merge the entire state object, it's written as a
+ * higher order function which takes the main reducer (itself often a call to
+ * combineReducers) as a parameter.
+ *
+ * @param  {function} mainReducer reducer to call if action != MERGE_STORE_ACTION
+ * @return {function}             a reducer that, on MERGE_STORE_ACTION action,
+ *                                will return the action.data object merged
+ *                                into the previous state, and the result
+ *                                of calling mainReducer otherwise.
+ */
+function mergeStateReducer(mainReducer) {
+  return (prevState, action) => {
+    if (action.type === MERGE_STORE_ACTION) {
+      return Object.assign({}, prevState, action.data);
+    }
+
+    return mainReducer(prevState, action);
+  };
+}
+
+/**
+ * messageMiddleware - Middleware that looks for SentToMain type actions, and sends them if necessary
+ */
+const messageMiddleware = store => next => action => {
+  if (au.isSendToMain(action)) {
+    sendAsyncMessage(OUTGOING_MESSAGE_NAME, action);
+  }
+  next(action);
+};
+
+/**
+ * initStore - Create a store and listen for incoming actions
+ *
+ * @param  {object} reducers An object containing Redux reducers
+ * @return {object}          A redux store
+ */
+module.exports = function initStore(reducers) {
+  const store = createStore(mergeStateReducer(combineReducers(reducers)), applyMiddleware(messageMiddleware));
+
+  addMessageListener(INCOMING_MESSAGE_NAME, msg => {
+    try {
+      store.dispatch(msg.data);
+    } catch (ex) {
+      console.error("Content msg:", msg, "Dispatch error: ", ex); // eslint-disable-line no-console
+      dump(`Content msg: ${JSON.stringify(msg)}\nDispatch error: ${ex}\n${ex.stack}`);
+    }
+  });
+
+  return store;
+};
+
+module.exports.MERGE_STORE_ACTION = MERGE_STORE_ACTION;
+module.exports.OUTGOING_MESSAGE_NAME = OUTGOING_MESSAGE_NAME;
+module.exports.INCOMING_MESSAGE_NAME = INCOMING_MESSAGE_NAME;
+
+/***/ }),
+/* 28 */
+/***/ (function(module, exports) {
+
+module.exports = Redux;
+
+/***/ }),
+/* 29 */
 /***/ (function(module, exports, __webpack_require__) {
 
 "use strict";
@@ -2658,7 +3060,7 @@ var _require = __webpack_require__(1);
 
 const at = _require.actionTypes;
 
-var _require2 = __webpack_require__(5);
+var _require2 = __webpack_require__(6);
 
 const perfSvc = _require2.perfService;
 
@@ -2728,7 +3130,7 @@ module.exports = class DetectUserSessionStart {
 };
 
 /***/ }),
-/* 25 */
+/* 30 */
 /***/ (function(module, exports, __webpack_require__) {
 
 "use strict";
@@ -2739,6 +3141,11 @@ const DATABASE_VERSION = 1;
 const SNIPPETS_OBJECTSTORE_NAME = "snippets";
 const SNIPPETS_UPDATE_INTERVAL_MS = 14400000; // 4 hours.
 
+var _require = __webpack_require__(1);
+
+const at = _require.actionTypes,
+      ac = _require.actionCreators;
+
 /**
  * SnippetsMap - A utility for cacheing values related to the snippet. It has
  *               the same interface as a Map, but is optionally backed by
@@ -2747,10 +3154,12 @@ const SNIPPETS_UPDATE_INTERVAL_MS = 14400000; // 4 hours.
  *               previously cached data, if necessary.
  *
  */
+
 class SnippetsMap extends Map {
-  constructor() {
-    super(...arguments);
+  constructor(dispatch) {
+    super();
     this._db = null;
+    this._dispatch = dispatch;
   }
 
   set(key, value) {
@@ -2788,6 +3197,10 @@ class SnippetsMap extends Map {
       blockList.push(id);
     }
     await this.set("blockList", blockList);
+  }
+
+  showFirefoxAccounts() {
+    this._dispatch(ac.SendToMain({ type: at.SHOW_FIREFOX_ACCOUNTS }));
   }
 
   /**
@@ -2898,10 +3311,10 @@ class SnippetsMap extends Map {
  *                    snippets cannot be retrieved.
  */
 class SnippetsProvider {
-  constructor() {
+  constructor(dispatch) {
     // Initialize the Snippets Map and attaches it to a global so that
     // the snippet payload can interact with it.
-    global.gSnippetsMap = new SnippetsMap();
+    global.gSnippetsMap = new SnippetsMap(dispatch);
   }
 
   get snippetsMap() {
@@ -3019,7 +3432,7 @@ class SnippetsProvider {
  * @return {obj}        Returns the snippets instance and unsubscribe function
  */
 function addSnippetsSubscriber(store) {
-  const snippets = new SnippetsProvider();
+  const snippets = new SnippetsProvider(store.dispatch);
   const unsubscribe = store.subscribe(() => {
     const state = store.getState();
     if (state.Snippets.initialized) {
@@ -3039,7 +3452,7 @@ module.exports = {
   SnippetsProvider,
   SNIPPETS_UPDATE_INTERVAL_MS
 };
-/* WEBPACK VAR INJECTION */}.call(exports, __webpack_require__(6)))
+/* WEBPACK VAR INJECTION */}.call(exports, __webpack_require__(9)))
 
 /***/ })
 /******/ ]);

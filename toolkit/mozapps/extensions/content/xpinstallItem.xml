@@ -23,7 +23,6 @@
         <xul:vbox flex="1" pack="center">
           <xul:hbox class="xpinstallItemNameRow" align="center">
             <xul:label class="xpinstallItemName" xbl:inherits="value=name" crop="right"/>
-            <xul:label class="xpinstallItemSigned" xbl:inherits="value=cert,signed"/>
           </xul:hbox>
           <xul:hbox class="xpinstallItemDetailsRow" align="center">
             <xul:textbox class="xpinstallItemURL" xbl:inherits="value=url" flex="1" readonly="true" crop="right"/>

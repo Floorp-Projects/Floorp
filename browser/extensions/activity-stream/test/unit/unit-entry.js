@@ -44,12 +44,14 @@ overrider.set({
       addObserver() {},
       removeObserver() {}
     },
+    console: {logStringMessage: () => {}},
     prefs: {
       addObserver() {},
       prefHasUserValue() {},
       removeObserver() {},
       getStringPref() {},
       getBoolPref() {},
+      getBranch() {},
       getDefaultBranch() {
         return {
           setBoolPref() {},

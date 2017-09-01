@@ -114,6 +114,7 @@ session.Proxy = class {
     this.ftpProxyPort = null;
     this.httpProxy = null;
     this.httpProxyPort = null;
+    this.noProxy = null;
     this.sslProxy = null;
     this.sslProxyPort = null;
     this.socksProxy = null;
@@ -172,6 +173,10 @@ session.Proxy = class {
           if (this.socksVersion) {
             Preferences.set("network.proxy.socks_version", this.socksVersion);
           }
+        }
+
+        if (this.noProxy && this.noProxy.length > 0) {
+          Preferences.set("network.proxy.no_proxies_on", this.noProxy.join(", "));
         }
         return true;
 
@@ -278,6 +283,13 @@ session.Proxy = class {
           [p.socksProxy, p.socksProxyPort] = fromHost("socks", json.socksProxy);
           p.socksVersion = assert.positiveInteger(json.socksVersion);
         }
+        if (typeof json.noProxy != "undefined") {
+          let entries = assert.array(json.noProxy);
+          for (let entry of entries) {
+            assert.string(entry);
+          }
+          p.noProxy = entries;
+        }
         break;
 
       default:
@@ -309,6 +321,7 @@ session.Proxy = class {
       proxyType: this.proxyType,
       ftpProxy: toHost(this.ftpProxy, this.ftpProxyPort),
       httpProxy: toHost(this.httpProxy, this.httpProxyPort),
+      noProxy: this.noProxy,
       sslProxy: toHost(this.sslProxy, this.sslProxyPort),
       socksProxy: toHost(this.socksProxy, this.socksProxyPort),
       socksVersion: this.socksVersion,

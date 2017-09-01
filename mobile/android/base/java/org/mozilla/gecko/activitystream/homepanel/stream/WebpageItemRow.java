@@ -31,7 +31,7 @@ import java.util.UUID;
 public class WebpageItemRow extends StreamViewHolder {
     private static final String LOGTAG = "GeckoWebpageItemRow";
 
-    public static final int LAYOUT_ID = R.layout.activity_stream_card_history_item;
+    public static final int LAYOUT_ID = R.layout.activity_stream_webpage_item_row;
     private static final double SIZE_RATIO = 0.75;
 
     private WebpageRowModel webpageModel;
@@ -47,11 +47,11 @@ public class WebpageItemRow extends StreamViewHolder {
     public WebpageItemRow(final View itemView, final StreamHighlightItemRowContextMenuListener contextMenuListener) {
         super(itemView);
 
-        pageTitleView = (TextView) itemView.findViewById(R.id.card_history_label);
-        pageIconLayout = (StreamOverridablePageIconLayout) itemView.findViewById(R.id.icon);
-        pageSourceView = (TextView) itemView.findViewById(R.id.card_history_source);
-        pageDomainView = (TextView) itemView.findViewById(R.id.page);
-        pageSourceIconView = (ImageView) itemView.findViewById(R.id.source_icon);
+        pageTitleView = (TextView) itemView.findViewById(R.id.page_title);
+        pageIconLayout = (StreamOverridablePageIconLayout) itemView.findViewById(R.id.page_icon);
+        pageSourceView = (TextView) itemView.findViewById(R.id.page_source);
+        pageDomainView = (TextView) itemView.findViewById(R.id.page_domain);
+        pageSourceIconView = (ImageView) itemView.findViewById(R.id.page_source_icon);
 
         menuButton = (ImageView) itemView.findViewById(R.id.menu);
         menuButton.setImageDrawable(

@@ -445,6 +445,12 @@ public:
     return this;
   }
 
+  uint32_t OutputChannelCount()
+  {
+    MOZ_ASSERT(mOuputChannels != 0 && mOuputChannels <= 8);
+    return mOuputChannels;
+  }
+
   /* Enqueue a promise that is going to be resolved when a specific operation
    * occurs on the cubeb stream. */
   void EnqueueStreamAndPromiseForOperation(MediaStream* aStream,

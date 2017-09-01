@@ -50,6 +50,8 @@ import java.util.concurrent.TimeUnit;
 public class PocketStoriesLoader extends AsyncTaskLoader<List<TopStory>> {
     public static String LOGTAG = "PocketStoriesLoader";
 
+    public static final String POCKET_REFERRER_URI = "https://getpocket.com/recommendations";
+
     // Pocket SharedPreferences keys
     private static final String POCKET_PREFS_FILE = "PocketStories";
     private static final String CACHE_TIMESTAMP_MILLIS_PREFIX = "timestampMillis-";

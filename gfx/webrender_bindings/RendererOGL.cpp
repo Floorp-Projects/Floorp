@@ -26,23 +26,32 @@ wr::WrExternalImage LockExternalImage(void* aObj, wr::WrExternalImageId aId, uin
   if (texture->AsBufferTextureHost()) {
     RenderBufferTextureHost* bufferTexture = texture->AsBufferTextureHost();
     MOZ_ASSERT(bufferTexture);
-    bufferTexture->Lock();
-    RenderBufferTextureHost::RenderBufferData data =
-        bufferTexture->GetBufferDataForRender(aChannelIndex);
 
-    return RawDataToWrExternalImage(data.mData, data.mBufferSize);
+    if (bufferTexture->Lock()) {
+      RenderBufferTextureHost::RenderBufferData data =
+          bufferTexture->GetBufferDataForRender(aChannelIndex);
+
+      return RawDataToWrExternalImage(data.mData, data.mBufferSize);
+    } else {
+      return RawDataToWrExternalImage(nullptr, 0);
+    }
   } else {
     // texture handle case
     RenderTextureHostOGL* textureOGL = texture->AsTextureHostOGL();
     MOZ_ASSERT(textureOGL);
 
     textureOGL->SetGLContext(renderer->mGL);
-    textureOGL->Lock();
     gfx::IntSize size = textureOGL->GetSize(aChannelIndex);
-
-    return NativeTextureToWrExternalImage(textureOGL->GetGLHandle(aChannelIndex),
-                                          0, 0,
-                                          size.width, size.height);
+    if (textureOGL->Lock()) {
+      return NativeTextureToWrExternalImage(textureOGL->GetGLHandle(aChannelIndex),
+                                            0, 0,
+                                            size.width, size.height);
+    } else {
+      // Just use 0 for the gl handle if the lock() was failed.
+      return NativeTextureToWrExternalImage(0,
+                                            0, 0,
+                                            size.width, size.height);
+    }
   }
 }
 

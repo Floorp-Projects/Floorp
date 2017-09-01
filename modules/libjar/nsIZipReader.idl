@@ -15,7 +15,6 @@ struct PRFileDesc;
 interface nsIUTF8StringEnumerator;
 interface nsIInputStream;
 interface nsIFile;
-interface nsIX509Cert;
 
 [scriptable, uuid(fad6f72f-13d8-4e26-9173-53007a4afe71)]
 interface nsIZipEntry : nsISupports
@@ -191,18 +190,6 @@ interface nsIZipReader : nsISupports
      * @param zipEntry the name of the entry to open the stream from
      */
     nsIInputStream getInputStreamWithSpec(in AUTF8String aJarSpec, in AUTF8String zipEntry);
-
-     /**
-     * Returns an object describing the entity which signed 
-     * an entry. parseManifest must be called first. If aEntryName is an
-     * entry in the jar, getInputStream must be called after parseManifest.
-     * If aEntryName is an external file which has meta-information 
-     * stored in the jar, verifyExternalFile (not yet implemented) must 
-     * be called before getPrincipal.
-     */
-    nsIX509Cert getSigningCert(in AUTF8String aEntryName);
-
-    readonly attribute uint32_t manifestEntriesCount;
 };
 
 ////////////////////////////////////////////////////////////////////////////////

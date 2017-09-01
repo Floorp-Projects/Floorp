@@ -736,17 +736,6 @@ function openPreferences(paneID, extraArgs) {
   } else {
     histogram.add("other");
   }
-  function switchToAdvancedSubPane(doc) {
-    if (extraArgs && extraArgs.advancedTab) {
-      // After the Preferences reorg works in Bug 1335907, no more advancedPrefs element.
-      // The old Preference is pref-off behind `browser.preferences.useOldOrganization` on Nightly.
-      // During the transition between the old and new Preferences, should do checking before proceeding.
-      let advancedPaneTabs = doc.getElementById("advancedPrefs");
-      if (advancedPaneTabs) {
-        advancedPaneTabs.selectedTab = doc.getElementById(extraArgs.advancedTab);
-      }
-    }
-  }
 
   // This function is duplicated from preferences.js.
   function internalPrefCategoryNameToFriendlyName(aName) {
@@ -766,21 +755,21 @@ function openPreferences(paneID, extraArgs) {
     }
   }
   let preferencesURL = "about:preferences" + (params ? "?" + params : "") +
-                       (friendlyCategoryName ? "#" + friendlyCategoryName : "");
+    (friendlyCategoryName ? "#" + friendlyCategoryName : "");
   let newLoad = true;
   let browser = null;
   if (!win) {
     const Cc = Components.classes;
     const Ci = Components.interfaces;
     let windowArguments = Cc["@mozilla.org/array;1"]
-                            .createInstance(Ci.nsIMutableArray);
+      .createInstance(Ci.nsIMutableArray);
     let supportsStringPrefURL = Cc["@mozilla.org/supports-string;1"]
-                                  .createInstance(Ci.nsISupportsString);
+      .createInstance(Ci.nsISupportsString);
     supportsStringPrefURL.data = preferencesURL;
     windowArguments.appendElement(supportsStringPrefURL);
 
     win = Services.ww.openWindow(null, Services.prefs.getCharPref("browser.chromeURL"),
-                                 "_blank", "chrome,dialog=no,all", windowArguments);
+      "_blank", "chrome,dialog=no,all", windowArguments);
   } else {
     let shouldReplaceFragment = friendlyCategoryName ? "whenComparingAndReplace" : "whenComparing";
     newLoad = !win.switchToTabHavingURI(preferencesURL, true, {
@@ -792,26 +781,18 @@ function openPreferences(paneID, extraArgs) {
   }
 
   if (newLoad) {
-    Services.obs.addObserver(function advancedPaneLoadedObs(prefWin, topic, data) {
+    Services.obs.addObserver(function panesLoadedObs(prefWin, topic, data) {
       if (!browser) {
         browser = win.gBrowser.selectedBrowser;
       }
       if (prefWin != browser.contentWindow) {
         return;
       }
-      Services.obs.removeObserver(advancedPaneLoadedObs, "advanced-pane-loaded");
-      switchToAdvancedSubPane(browser.contentDocument);
-    }, "advanced-pane-loaded");
-  } else {
-    if (paneID) {
-      browser.contentWindow.gotoPref(paneID);
-    }
-    switchToAdvancedSubPane(browser.contentDocument);
+      Services.obs.removeObserver(panesLoadedObs, "sync-pane-loaded");
+    }, "sync-pane-loaded");
+  } else if (paneID) {
+    browser.contentWindow.gotoPref(paneID);
   }
-}
-
-function openAdvancedPreferences(tabID, origin) {
-  openPreferences("paneAdvanced", { "advancedTab": tabID, origin });
 }
 
 /**

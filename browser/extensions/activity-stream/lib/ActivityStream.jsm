@@ -59,7 +59,8 @@ const PREFS_CONFIG = new Map([
       stories_endpoint: `https://getpocket.cdn.mozilla.net/v3/firefox/global-recs?version=2&consumer_key=$apiKey&locale_lang=${args.locale}`,
       stories_referrer: "https://getpocket.com/recommendations",
       survey_link: "https://www.surveymonkey.com/r/newtabffx",
-      topics_endpoint: `https://getpocket.cdn.mozilla.net/v3/firefox/trending-topics?version=2&consumer_key=$apiKey&locale_lang=${args.locale}`
+      topics_endpoint: `https://getpocket.cdn.mozilla.net/v3/firefox/trending-topics?version=2&consumer_key=$apiKey&locale_lang=${args.locale}`,
+      personalized: false
     })
   }],
   ["migrationExpired", {
@@ -82,6 +83,10 @@ const PREFS_CONFIG = new Map([
     title: "Show the Top Sites section on the New Tab page",
     value: true
   }],
+  ["topSitesCount", {
+    title: "Number of Top Sites to display",
+    value: 6
+  }],
   ["impressionStats.clicked", {
     title: "GUIDs of clicked Top stories items",
     value: "[]"
@@ -98,11 +103,6 @@ const PREFS_CONFIG = new Map([
     title: "Enable system error and usage data collection",
     value: true,
     value_local_dev: false
-  }],
-  ["telemetry.log", {
-    title: "Log telemetry events in the console",
-    value: false,
-    value_local_dev: true
   }],
   ["telemetry.ping.endpoint", {
     title: "Telemetry server endpoint",
@@ -177,7 +177,7 @@ const FEEDS_DATA = [
   {
     name: "telemetry",
     factory: () => new TelemetryFeed(),
-    title: "Relays telemetry-related actions to TelemetrySender",
+    title: "Relays telemetry-related actions to PingCentre",
     value: true
   },
   {

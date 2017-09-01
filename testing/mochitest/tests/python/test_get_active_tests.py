@@ -5,11 +5,11 @@
 from __future__ import print_function, unicode_literals
 
 import os
-import sys
 from argparse import Namespace
 
 from manifestparser import TestManifest
 
+import mozunit
 import pytest
 
 
@@ -88,4 +88,4 @@ prefs=foo=bar
 
 
 if __name__ == '__main__':
-    sys.exit(pytest.main(['--verbose', __file__]))
+    mozunit.main()

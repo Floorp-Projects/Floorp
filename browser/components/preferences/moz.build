@@ -5,12 +5,10 @@
 # file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
 DIRS += [
-	'in-content-new',
 	'in-content'
 ]
 
 BROWSER_CHROME_MANIFESTS += [
-    'in-content-new/tests/browser.ini',
     'in-content/tests/browser.ini'
 ]
 

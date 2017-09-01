@@ -127,19 +127,19 @@ separator.thin:not([orient="vertical"]) {
 /* Category List */
 
 #category-general > .category-icon {
-  list-style-image: url("chrome://browser/skin/preferences/in-content-new/general.svg");
+  list-style-image: url("chrome://browser/skin/preferences/in-content/general.svg");
 }
 
 #category-search > .category-icon {
-  list-style-image: url("chrome://browser/skin/preferences/in-content-new/search.svg");
+  list-style-image: url("chrome://browser/skin/preferences/in-content/search.svg");
 }
 
 #category-privacy > .category-icon {
-  list-style-image: url("chrome://browser/skin/preferences/in-content-new/privacy-security.svg");
+  list-style-image: url("chrome://browser/skin/preferences/in-content/privacy-security.svg");
 }
 
 #category-sync > .category-icon {
-  list-style-image: url("chrome://browser/skin/preferences/in-content-new/sync.svg");
+  list-style-image: url("chrome://browser/skin/preferences/in-content/sync.svg");
 }
 
 /* header */
@@ -465,7 +465,7 @@ separator.thin:not([orient="vertical"]) {
   height: 80px;
   border-radius: 50%;
   border: 1px solid transparent;
-  list-style-image: url("chrome://browser/skin/preferences/in-content-new/fxa-avatar.svg");
+  list-style-image: url("chrome://browser/skin/preferences/in-content/fxa-avatar.svg");
   margin-inline-end: 24px;
   -moz-user-focus: normal;
 }
@@ -514,7 +514,7 @@ separator.thin:not([orient="vertical"]) {
 }
 
 .fxaSyncIllustration {
-  list-style-image: url("chrome://browser/skin/preferences/in-content-new/sync-devices.svg");
+  list-style-image: url("chrome://browser/skin/preferences/in-content/sync-devices.svg");
   width: 312px;
   height: 136px;
 }
@@ -568,11 +568,11 @@ separator.thin:not([orient="vertical"]) {
 }
 
 .androidLink {
-  list-style-image: url("chrome://browser/skin/preferences/in-content-new/logo-android.svg");
+  list-style-image: url("chrome://browser/skin/preferences/in-content/logo-android.svg");
 }
 
 .iOSLink {
-  list-style-image: url("chrome://browser/skin/preferences/in-content-new/logo-ios.svg");
+  list-style-image: url("chrome://browser/skin/preferences/in-content/logo-ios.svg");
 }
 
 .androidLink,
@@ -639,7 +639,7 @@ separator.thin:not([orient="vertical"]) {
 }
 
 .face-sad {
-  list-style-image: url("chrome://browser/skin/preferences/in-content-new/face-sad.svg");
+  list-style-image: url("chrome://browser/skin/preferences/in-content/face-sad.svg");
   width: 20px;
   height: 20px;
   margin-inline-end: 8px;
@@ -648,7 +648,7 @@ separator.thin:not([orient="vertical"]) {
 }
 
 .face-smile {
-  list-style-image: url("chrome://browser/skin/preferences/in-content-new/face-smile.svg");
+  list-style-image: url("chrome://browser/skin/preferences/in-content/face-smile.svg");
   width: 20px;
   height: 20px;
   margin-inline-end: 8px;
@@ -727,7 +727,7 @@ menulist[indicator=true] > menupopup menuitem:not([image]) > .menu-iconic-left >
 }
 
 menulist[indicator=true] > menupopup menuitem[indicator=true]:not([image]) > .menu-iconic-left > .menu-iconic-icon {
-  list-style-image: url(chrome://browser/skin/preferences/in-content-new/search-arrow-indicator.svg);
+  list-style-image: url(chrome://browser/skin/preferences/in-content/search-arrow-indicator.svg);
 }
 
 menulist[indicator=true] > menupopup menuitem[indicator=true]:not([image]) > .menu-iconic-left > .menu-iconic-icon:-moz-locale-dir(rtl) {
@@ -748,7 +748,7 @@ menulist[indicator=true] > menupopup menuitem[indicator=true]:not([image]) > .me
 }
 
 .no-results-container > image {
-  list-style-image: url("chrome://browser/skin/preferences/in-content-new/no-search-results.svg");
+  list-style-image: url("chrome://browser/skin/preferences/in-content/no-search-results.svg");
   width: 380px;
   height: 293px;
 }

@@ -5,8 +5,8 @@ var container;
 SimpleTest.requestCompleteLog();
 
 add_task(async function setup() {
-  await openPreferencesViaOpenPreferencesAPI("applications", null, {leaveOpen: true});
-  info("Preferences page opened on the applications pane.");
+  await openPreferencesViaOpenPreferencesAPI("general", { leaveOpen: true });
+  info("Preferences page opened on the general pane.");
 
   registerCleanupFunction(() => {
     gBrowser.removeCurrentTab();
@@ -19,7 +19,7 @@ add_task(async function getFeedItem() {
   container = win.document.getElementById("handlersView");
   feedItem = container.querySelector("richlistitem[type='application/vnd.mozilla.maybe.feed']");
   Assert.ok(feedItem, "feedItem is present in handlersView.");
-})
+});
 
 add_task(async function selectInternalOptionForFeed() {
   // Select the item.

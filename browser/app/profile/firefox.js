@@ -725,9 +725,6 @@ pref("browser.preferences.instantApply", true);
 // Toggling Search bar on and off in about:preferences
 pref("browser.preferences.search", true);
 
-// Use the new in-content about:preferences in Nightly only for now
-pref("browser.preferences.useOldOrganization", false);
-
 // Once the Storage Management is completed.
 // (The Storage Management-related prefs are browser.storageManager.* )
 // The Offline(Appcache) Group section in about:preferences will be hidden.

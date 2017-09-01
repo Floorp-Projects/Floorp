@@ -34,7 +34,7 @@ from mach.decorators import (
 @CommandProvider
 class MachCommands(MachCommandBase):
     @Command('python', category='devenv',
-        description='Run Python.')
+             description='Run Python.')
     @CommandArgument('args', nargs=argparse.REMAINDER)
     def python(self, args):
         # Avoid logging the command
@@ -43,33 +43,33 @@ class MachCommands(MachCommandBase):
         self._activate_virtualenv()
 
         return self.run_process([self.virtualenv_manager.python_path] + args,
-            pass_thru=True,  # Allow user to run Python interactively.
-            ensure_exit_code=False,  # Don't throw on non-zero exit code.
-            # Note: subprocess requires native strings in os.environ on Windows
-            append_env={b'PYTHONDONTWRITEBYTECODE': str('1')})
+                                pass_thru=True,  # Allow user to run Python interactively.
+                                ensure_exit_code=False,  # Don't throw on non-zero exit code.
+                                # Note: subprocess requires native strings in os.environ on Windows
+                                append_env={b'PYTHONDONTWRITEBYTECODE': str('1')})
 
     @Command('python-test', category='testing',
-        description='Run Python unit tests with an appropriate test runner.')
+             description='Run Python unit tests with an appropriate test runner.')
     @CommandArgument('--verbose',
-        default=False,
-        action='store_true',
-        help='Verbose output.')
+                     default=False,
+                     action='store_true',
+                     help='Verbose output.')
     @CommandArgument('--stop',
-        default=False,
-        action='store_true',
-        help='Stop running tests after the first error or failure.')
+                     default=False,
+                     action='store_true',
+                     help='Stop running tests after the first error or failure.')
     @CommandArgument('-j', '--jobs',
-        default=1,
-        type=int,
-        help='Number of concurrent jobs to run. Default is 1.')
+                     default=1,
+                     type=int,
+                     help='Number of concurrent jobs to run. Default is 1.')
     @CommandArgument('--subsuite',
-        default=None,
-        help=('Python subsuite to run. If not specified, all subsuites are run. '
-             'Use the string `default` to only run tests without a subsuite.'))
+                     default=None,
+                     help=('Python subsuite to run. If not specified, all subsuites are run. '
+                           'Use the string `default` to only run tests without a subsuite.'))
     @CommandArgument('tests', nargs='*',
-        metavar='TEST',
-        help=('Tests to run. Each test can be a single file or a directory. '
-              'Default test resolution relies on PYTHON_UNITTEST_MANIFESTS.'))
+                     metavar='TEST',
+                     help=('Tests to run. Each test can be a single file or a directory. '
+                           'Default test resolution relies on PYTHON_UNITTEST_MANIFESTS.'))
     def python_test(self, *args, **kwargs):
         try:
             tempdir = os.environ[b'PYTHON_TEST_TMP'] = str(tempfile.mkdtemp(suffix='-python-test'))
@@ -99,8 +99,8 @@ class MachCommands(MachCommandBase):
                         files += glob.glob(mozpath.join(root, 'unit*.py'))
                 else:
                     self.log(logging.WARN, 'python-test',
-                                 {'test': t},
-                                 'TEST-UNEXPECTED-FAIL | Invalid test: {test}')
+                             {'test': t},
+                             'TEST-UNEXPECTED-FAIL | Invalid test: {test}')
                     if stop:
                         break
             return files
@@ -206,7 +206,7 @@ class MachCommands(MachCommandBase):
                     file_displayed_test.append(True)
 
             # Hack to make sure treeherder highlights pytest failures
-            if line.endswith('FAILED'):
+            if 'FAILED' in line.rsplit(' ', 1)[-1]:
                 line = line.replace('FAILED', 'TEST-UNEXPECTED-FAIL')
 
             _log(line)

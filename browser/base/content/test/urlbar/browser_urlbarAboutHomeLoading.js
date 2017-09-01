@@ -11,7 +11,7 @@ add_task(async function clearURLBarAfterParentProcessURL() {
   let tab = await new Promise(resolve => {
     gBrowser.selectedTab = BrowserTestUtils.addTab(gBrowser, "about:preferences");
     let newTabBrowser = gBrowser.getBrowserForTab(gBrowser.selectedTab);
-    newTabBrowser.addEventListener("Initialized", function() {
+    newTabBrowser.addEventListener("Initialized", async function() {
       resolve(gBrowser.selectedTab);
     }, {capture: true, once: true});
   });
@@ -30,7 +30,7 @@ add_task(async function clearURLBarAfterParentProcessURLInExistingTab() {
   let tab = await new Promise(resolve => {
     gBrowser.selectedTab = BrowserTestUtils.addTab(gBrowser);
     let newTabBrowser = gBrowser.getBrowserForTab(gBrowser.selectedTab);
-    newTabBrowser.addEventListener("Initialized", function() {
+    newTabBrowser.addEventListener("Initialized", async function() {
       resolve(gBrowser.selectedTab);
     }, {capture: true, once: true});
     newTabBrowser.loadURI("about:preferences");

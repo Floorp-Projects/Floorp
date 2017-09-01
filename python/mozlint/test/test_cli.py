@@ -3,9 +3,9 @@
 # file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
 import os
-import sys
 from distutils.spawn import find_executable
 
+import mozunit
 import pytest
 
 from mozlint import cli
@@ -58,4 +58,4 @@ def test_cli_run_with_edit(run, parser, capfd):
 
 
 if __name__ == '__main__':
-    sys.exit(pytest.main(['--verbose', __file__]))
+    mozunit.main()

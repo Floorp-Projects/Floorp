@@ -14,7 +14,7 @@ add_task(function* () {
 
   let { document } = monitor.panelWin;
 
-  Services.prefs.setBoolPref("devtools.webconsole.persistlog", false);
+  Services.prefs.setBoolPref("devtools.netmonitor.persistlog", false);
 
   yield reloadAndWait();
 
@@ -28,7 +28,7 @@ add_task(function* () {
     "The request list should still have two items at this point.");
 
   // Now we toggle the persistence logs on
-  Services.prefs.setBoolPref("devtools.webconsole.persistlog", true);
+  Services.prefs.setBoolPref("devtools.netmonitor.persistlog", true);
 
   yield reloadAndWait();
 
@@ -36,7 +36,7 @@ add_task(function* () {
   is(document.querySelectorAll(".request-list-item").length, 4,
     "The request list should now have four items at this point.");
 
-  Services.prefs.setBoolPref("devtools.webconsole.persistlog", false);
+  Services.prefs.setBoolPref("devtools.netmonitor.persistlog", false);
   return teardown(monitor);
 
   /**

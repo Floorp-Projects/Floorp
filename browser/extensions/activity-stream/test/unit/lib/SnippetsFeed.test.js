@@ -100,4 +100,10 @@ describe("SnippetsFeed", () => {
     assert.equal(action.type, at.SNIPPETS_DATA);
     assert.deepEqual(action.data, {selectedSearchEngine: searchData});
   });
+  it("should open Firefox Accounts", () => {
+    const feed = new SnippetsFeed();
+    const browser = {loadURI: sinon.spy()};
+    feed.onAction({type: at.SHOW_FIREFOX_ACCOUNTS, _target: {browser}});
+    assert.calledWith(browser.loadURI, "about:accounts?action=signup&entrypoint=snippets");
+  });
 });

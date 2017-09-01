@@ -1,0 +1,130 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- This Source Code Form is subject to the terms of the Mozilla Public
+   - License, v. 2.0. If a copy of the MPL was not distributed with this
+   - file, You can obtain one at http://mozilla.org/MPL/2.0/. -->
+<RelativeLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:gecko="http://schemas.android.com/apk/res-auto"
+    xmlns:tools="http://schemas.android.com/tools"
+    android:layout_width="match_parent"
+    android:layout_height="wrap_content"
+    android:background="?android:attr/selectableItemBackground"
+    android:orientation="horizontal">
+
+    <!-- On some devices, marginBottom is ignored for Views within a RelativeLayout.
+         Wrapping in a FrameLayout appears to be a sufficient workaround for this issue -->
+    <FrameLayout
+        android:id="@+id/icon_wrapper"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content">
+
+        <org.mozilla.gecko.activitystream.homepanel.stream.StreamOverridablePageIconLayout
+                android:id="@+id/page_icon"
+                android:layout_width="@dimen/favicon_bg"
+                android:layout_height="@dimen/favicon_bg"
+                android:layout_marginStart="@dimen/activity_stream_base_margin"
+                android:layout_marginLeft="@dimen/activity_stream_base_margin"
+                android:layout_marginTop="@dimen/activity_stream_base_margin"
+                android:layout_marginBottom="@dimen/activity_stream_base_margin"
+                android:layout_gravity="center"
+                tools:background="@drawable/favicon_globe" />
+
+    </FrameLayout>
+
+    <ImageView
+        android:id="@+id/menu"
+        android:layout_width="32dp"
+        android:layout_height="48dp"
+        android:layout_alignParentEnd="true"
+        android:layout_alignParentRight="true"
+        android:layout_alignParentTop="true"
+        android:layout_gravity="right|end|top"
+        android:contentDescription="@string/menu"
+        android:paddingBottom="16dp"
+        android:paddingTop="16dp" />
+
+    <!-- In RTL locales, we don't want a large horizontal gap between the domain, page title and source
+         text so we set textAlignment=viewStart for all of them so that it's to the left in LTR and
+         right in RTL. Note: to appease the RtlCompat lint warning, gravity="start" is also required. -->
+    <TextView
+        android:id="@+id/page_domain"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_toEndOf="@id/icon_wrapper"
+        android:layout_toLeftOf="@id/menu"
+        android:layout_toRightOf="@id/icon_wrapper"
+        android:layout_toStartOf="@id/menu"
+        android:paddingLeft="@dimen/activity_stream_base_margin"
+        android:paddingStart="@dimen/activity_stream_base_margin"
+        android:paddingRight="0dp"
+        android:paddingEnd="0dp"
+        android:paddingTop="@dimen/activity_stream_base_margin"
+        android:textAlignment="viewStart"
+        android:gravity="start"
+        android:textColor="@color/activity_stream_subtitle"
+        android:textSize="12sp"
+        tools:text="twitter" />
+
+    <!-- See id/page_domain for textAlignment comment. -->
+    <TextView
+        android:id="@+id/page_title"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_below="@id/page_domain"
+        android:layout_toEndOf="@id/icon_wrapper"
+        android:layout_toLeftOf="@id/menu"
+        android:layout_toRightOf="@id/icon_wrapper"
+        android:layout_toStartOf="@id/menu"
+        android:ellipsize="end"
+        android:maxLines="3"
+        android:paddingLeft="@dimen/activity_stream_base_margin"
+        android:paddingStart="@dimen/activity_stream_base_margin"
+        android:paddingRight="0dp"
+        android:paddingEnd="0dp"
+        android:textAlignment="viewStart"
+        android:gravity="start"
+        android:textColor="#ff000000"
+        android:textSize="14sp"
+        android:textStyle="bold"
+        tools:text="Descriptive title of a page that is veeeeeeery long - maybe even too long?" />
+
+    <LinearLayout
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_alignParentBottom="true"
+        android:layout_below="@id/page_title"
+        android:layout_toEndOf="@id/icon_wrapper"
+        android:layout_toRightOf="@id/icon_wrapper"
+        android:gravity="center_vertical"
+        android:orientation="horizontal"
+        android:paddingBottom="@dimen/activity_stream_base_margin"
+        android:paddingEnd="@dimen/activity_stream_base_margin"
+        android:paddingLeft="@dimen/activity_stream_base_margin"
+        android:paddingRight="@dimen/activity_stream_base_margin"
+        android:paddingStart="@dimen/activity_stream_base_margin"
+        android:paddingTop="4dp"
+        tools:ignore="UseCompoundDrawables">
+
+        <ImageView
+            android:id="@+id/page_source_icon"
+            android:layout_width="12dp"
+            android:layout_height="12dp"
+            tools:src="@drawable/ic_as_bookmarked" />
+
+        <!-- See id/page_domain for textAlignment comment. -->
+        <TextView
+            android:id="@+id/page_source"
+            android:layout_width="0dp"
+            android:layout_height="wrap_content"
+            android:layout_marginStart="2dp"
+            android:layout_marginLeft="2dp"
+            android:layout_marginRight="0dp"
+            android:layout_marginEnd="0dp"
+            android:layout_weight="1"
+            android:textAlignment="viewStart"
+            android:gravity="start"
+            android:textColor="@color/activity_stream_subtitle"
+            android:textSize="12sp"
+            tools:text="Bookmarked" />
+
+    </LinearLayout>
+</RelativeLayout>
