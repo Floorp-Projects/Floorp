@@ -1384,7 +1384,7 @@ class Assembler : public AssemblerShared
 
     static uintptr_t GetPointer(uint8_t*);
     template <class Iter>
-    static const uint32_t* GetPtr32Target(Iter* iter, Register* dest = nullptr, RelocStyle* rs = nullptr);
+    static const uint32_t* GetPtr32Target(Iter iter, Register* dest = nullptr, RelocStyle* rs = nullptr);
 
     bool oom() const;
 

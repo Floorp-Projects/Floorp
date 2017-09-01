@@ -790,16 +790,16 @@ uintptr_t
 Assembler::GetPointer(uint8_t* instPtr)
 {
     InstructionIterator iter((Instruction*)instPtr);
-    uintptr_t ret = (uintptr_t)GetPtr32Target(&iter, nullptr, nullptr);
+    uintptr_t ret = (uintptr_t)GetPtr32Target(iter, nullptr, nullptr);
     return ret;
 }
 
 template<class Iter>
 const uint32_t*
-Assembler::GetPtr32Target(Iter* start, Register* dest, RelocStyle* style)
+Assembler::GetPtr32Target(Iter start, Register* dest, RelocStyle* style)
 {
-    Instruction* load1 = start->cur();
-    Instruction* load2 = start->next();
+    Instruction* load1 = start.cur();
+    Instruction* load2 = start.next();
 
     if (load1->is<InstMovW>() && load2->is<InstMovT>()) {
         if (style)
@@ -863,10 +863,8 @@ Assembler::TraceJumpRelocations(JSTracer* trc, JitCode* code, CompactBufferReade
 
 template <class Iter>
 static void
-TraceOneDataRelocation(JSTracer* trc, Iter* iter)
+TraceOneDataRelocation(JSTracer* trc, Iter iter)
 {
-    Iter iterCopy(*iter);
-
     Register dest;
     Assembler::RelocStyle rs;
     const void* prior = Assembler::GetPtr32Target(iter, &dest, &rs);
@@ -877,12 +875,12 @@ TraceOneDataRelocation(JSTracer* trc, Iter* iter)
                                              "ion-masm-ptr");
 
     if (ptr != prior) {
-        MacroAssemblerARM::ma_mov_patch(Imm32(int32_t(ptr)), dest, Assembler::Always, rs, iterCopy);
+        MacroAssemblerARM::ma_mov_patch(Imm32(int32_t(ptr)), dest, Assembler::Always, rs, iter);
 
         // L_LDR won't cause any instructions to be updated.
         if (rs != Assembler::L_LDR) {
-            AutoFlushICache::flush(uintptr_t(iter->cur()), 4);
-            AutoFlushICache::flush(uintptr_t(iter->next()), 4);
+            AutoFlushICache::flush(uintptr_t(iter.cur()), 4);
+            AutoFlushICache::flush(uintptr_t(iter.next()), 4);
         }
     }
 }
@@ -893,7 +891,7 @@ TraceDataRelocations(JSTracer* trc, uint8_t* buffer, CompactBufferReader& reader
     while (reader.more()) {
         size_t offset = reader.readUnsigned();
         InstructionIterator iter((Instruction*)(buffer + offset));
-        TraceOneDataRelocation(trc, &iter);
+        TraceOneDataRelocation(trc, iter);
     }
 }
 
@@ -903,7 +901,7 @@ TraceDataRelocations(JSTracer* trc, ARMBuffer* buffer, CompactBufferReader& read
     while (reader.more()) {
         BufferOffset offset(reader.readUnsigned());
         BufferInstructionIterator iter(offset, buffer);
-        TraceOneDataRelocation(trc, &iter);
+        TraceOneDataRelocation(trc, iter);
     }
 }
 
@@ -3128,12 +3126,11 @@ Assembler::PatchDataWithValueCheck(CodeLocationLabel label, PatchedImmPtr newVal
 
     Register dest;
     Assembler::RelocStyle rs;
-    InstructionIterator iter(ptr);
-    DebugOnly<const uint32_t*> val = GetPtr32Target(&iter, &dest, &rs);
+    DebugOnly<const uint32_t*> val = GetPtr32Target(InstructionIterator(ptr), &dest, &rs);
     MOZ_ASSERT(uint32_t((const uint32_t*)val) == uint32_t(expectedValue.value));
 
-    iter = InstructionIterator(ptr);
-    MacroAssembler::ma_mov_patch(Imm32(int32_t(newValue.value)), dest, Always, rs, iter);
+    MacroAssembler::ma_mov_patch(Imm32(int32_t(newValue.value)), dest, Always, rs,
+                                 InstructionIterator(ptr));
 
     // L_LDR won't cause any instructions to be updated.
     if (rs != L_LDR) {
