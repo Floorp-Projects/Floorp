@@ -57,12 +57,12 @@ add_task(async function duration() {
   let writeAtomicOptions = {
     // This field should be first initialized with the actual
     // duration measurement then progressively incremented.
+    outSerializationDuration: null,
     outExecutionDuration: null,
     tmpPath
   };
-  // Note that |contents| cannot be reused after this call since it is detached.
   await OS.File.writeAtomic(pathDest, contents, writeAtomicOptions);
-  testOptions(writeAtomicOptions, "OS.File.writeAtomic", ["outExecutionDuration"]);
+  testOptions(writeAtomicOptions, "OS.File.writeAtomic");
   await OS.File.remove(pathDest);
 
   do_print(`Ensuring that we can use ${availableDurations.join(", ")} to accumulate durations`);
@@ -88,16 +88,11 @@ add_task(async function duration() {
 
   // Trying an operation where options are cloned.
   // Options structure passed to a OS.File writeAtomic method.
-  writeAtomicOptions = {
-    // We do not check for |outSerializationDuration| since |Scheduler.post|
-    // may not be called whenever |writeAtomic| is called.
-    outExecutionDuration: ARBITRARY_BASE_DURATION
-  };
+  writeAtomicOptions = copyOptions;
   writeAtomicOptions.tmpPath = tmpPath;
-  backupDuration = Object.assign({}, writeAtomicOptions);
-  contents = await OS.File.read(pathSource, undefined, readOptions);
+  backupDuration = Object.assign({}, copyOptions);
   await OS.File.writeAtomic(pathDest, contents, writeAtomicOptions);
-  testOptionIncrements(writeAtomicOptions, "writeAtomicOptions", backupDuration, ["outExecutionDuration"]);
+  testOptionIncrements(writeAtomicOptions, "writeAtomicOptions", backupDuration);
   OS.File.remove(pathDest);
 
   // Testing an operation that doesn't take arguments at all
