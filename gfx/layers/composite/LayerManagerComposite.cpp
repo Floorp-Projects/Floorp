@@ -1064,7 +1064,16 @@ private:
 void
 LayerManagerComposite::RenderToPresentationSurface()
 {
+  if (!mCompositor) {
+    return;
+  }
+
   widget::CompositorWidget* const widget = mCompositor->GetWidget();
+
+  if (!widget) {
+    return;
+  }
+
   ANativeWindow* window = widget->AsAndroid()->GetPresentationANativeWindow();
 
   if (!window) {
