@@ -110,6 +110,7 @@ class Sandbox(dict):
         'True': True,
         'sorted': alphabetical_sorted,
         'int': int,
+        'set': set,
     })
 
     def __init__(self, context, builtins=None, finder=default_finder):
