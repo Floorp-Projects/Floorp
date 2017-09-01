@@ -18,7 +18,6 @@ import org.mozilla.gecko.GeckoSharedPrefs;
 import org.mozilla.gecko.R;
 import org.mozilla.gecko.Telemetry;
 import org.mozilla.gecko.TelemetryContract;
-import org.mozilla.gecko.activitystream.ActivityStream;
 import org.mozilla.gecko.activitystream.ActivityStreamTelemetry;
 import org.mozilla.gecko.activitystream.homepanel.menu.ActivityStreamContextMenu;
 import org.mozilla.gecko.activitystream.homepanel.model.RowModel;
@@ -54,7 +53,8 @@ public class StreamRecyclerAdapter extends RecyclerView.Adapter<StreamViewHolder
     private List<RowModel> recyclerViewModel; // List of item types backing this RecyclerView.
     private List<TopStory> topStoriesQueue;
 
-    private final RowItemType[] FIXED_ROWS = {RowItemType.TOP_PANEL, RowItemType.WELCOME, RowItemType.TOP_STORIES_TITLE, RowItemType.HIGHLIGHTS_TITLE};
+    // Content sections available on the Activity Stream page. These may be hidden if the sections are disabled.
+    private final RowItemType[] ACTIVITY_STREAM_SECTIONS = { RowItemType.TOP_PANEL, RowItemType.WELCOME, RowItemType.TOP_STORIES_TITLE, RowItemType.HIGHLIGHTS_TITLE };
     private final int MAX_TOP_STORIES = 3;
 
     private HomePager.OnUrlOpenListener onUrlOpenListener;
@@ -94,7 +94,7 @@ public class StreamRecyclerAdapter extends RecyclerView.Adapter<StreamViewHolder
     public StreamRecyclerAdapter() {
         setHasStableIds(true);
         recyclerViewModel = new LinkedList<>();
-        for (RowItemType type : FIXED_ROWS) {
+        for (RowItemType type : ACTIVITY_STREAM_SECTIONS) {
             recyclerViewModel.add(makeRowModelFromType(type));
         }
         topStoriesQueue = Collections.emptyList();
@@ -311,7 +311,7 @@ public class StreamRecyclerAdapter extends RecyclerView.Adapter<StreamViewHolder
     }
 
     public void swapHighlights(List<Highlight> highlights) {
-        recyclerViewModel = recyclerViewModel.subList(0, FIXED_ROWS.length + getNumOfTypeShown(RowItemType.TOP_STORIES_ITEM));
+        recyclerViewModel = recyclerViewModel.subList(0, ACTIVITY_STREAM_SECTIONS.length + getNumOfTypeShown(RowItemType.TOP_STORIES_ITEM));
         recyclerViewModel.addAll(highlights);
         notifyDataSetChanged();
     }
