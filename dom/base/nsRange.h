@@ -22,7 +22,6 @@
 #include "nsWrapperCache.h"
 #include "mozilla/Attributes.h"
 #include "mozilla/GuardObjects.h"
-#include "mozilla/LinkedList.h"
 
 namespace mozilla {
 class ErrorResult;
@@ -37,9 +36,7 @@ class Selection;
 
 class nsRange final : public nsIDOMRange,
                       public nsStubMutationObserver,
-                      public nsWrapperCache,
-                      // For linking together selection-associated ranges.
-                      public mozilla::LinkedListElement<nsRange>
+                      public nsWrapperCache
 {
   typedef mozilla::ErrorResult ErrorResult;
   typedef mozilla::dom::DOMRect DOMRect;
