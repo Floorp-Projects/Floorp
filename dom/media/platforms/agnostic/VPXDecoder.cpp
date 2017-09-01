@@ -25,10 +25,8 @@ using namespace layers;
 
 static VPXDecoder::Codec MimeTypeToCodec(const nsACString& aMimeType)
 {
-  if (aMimeType.EqualsLiteral("video/webm; codecs=vp8")) {
+  if (aMimeType.EqualsLiteral("video/vp8")) {
     return VPXDecoder::Codec::VP8;
-  } else if (aMimeType.EqualsLiteral("video/webm; codecs=vp9")) {
-    return VPXDecoder::Codec::VP9;
   } else if (aMimeType.EqualsLiteral("video/vp9")) {
     return VPXDecoder::Codec::VP9;
   }
@@ -288,9 +286,7 @@ bool
 VPXDecoder::IsVPX(const nsACString& aMimeType, uint8_t aCodecMask)
 {
   return ((aCodecMask & VPXDecoder::VP8)
-          && aMimeType.EqualsLiteral("video/webm; codecs=vp8"))
-         || ((aCodecMask & VPXDecoder::VP9)
-             && aMimeType.EqualsLiteral("video/webm; codecs=vp9"))
+          && aMimeType.EqualsLiteral("video/vp8"))
          || ((aCodecMask & VPXDecoder::VP9)
              && aMimeType.EqualsLiteral("video/vp9"));
 }
