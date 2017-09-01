@@ -1,0 +1,27 @@
+<!DOCTYPE html>
+<html class="reftest-wait">
+<script>
+window.onload = () => {
+  a = document.createElement("frameset")
+  document.documentElement.appendChild(a)
+  b = document.createElement("f")
+  b.setAttribute("class", "x")
+  a.appendChild(b)
+  c = document.createElement("t")
+  document.documentElement.appendChild(c)
+  d = document.createElement('m')
+  d.setAttribute("class", "x")
+  c.appendChild(d)
+  f = document.createElement('d')
+  d.appendChild(f)
+  g = document.createElement('n')
+  f.appendChild(g)
+  setTimeout(() => {
+    g.setAttribute("class", "")
+    sheet = document.createElement("style")
+    sheet.appendChild(document.createTextNode(".x:-moz-broken{"))
+    document.head.appendChild(sheet)
+    document.documentElement.className = "";
+  }, 500)
+}
+</script>
