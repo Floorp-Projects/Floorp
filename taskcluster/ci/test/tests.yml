@@ -33,7 +33,7 @@ awsy:
 awsy-stylo-disabled:
     description: "Are we slim yet for Stylo disabled"
     suite: awsy
-    treeherder-symbol: tc-SY-stylo-disabled(sy)
+    treeherder-symbol: tc-SYsd(sy)
     max-run-time: 7200
     instance-size: xlarge
     allow-software-gl-layers: false
@@ -58,7 +58,7 @@ awsy-stylo-disabled:
 awsy-stylo-sequential:
     description: "Are we slim yet for Stylo sequential"
     suite: awsy
-    treeherder-symbol: tc-SY-stylo-seq(sy)
+    treeherder-symbol: tc-SYss(sy)
     max-run-time: 7200
     instance-size: xlarge
     allow-software-gl-layers: false
@@ -1313,7 +1313,7 @@ talos-chrome-stylo-disabled:
     description: "Talos Stylo disabled chrome"
     suite: talos
     try-name: chromez-stylo-disabled
-    treeherder-symbol: tc-Ts(c)
+    treeherder-symbol: tc-Tsd(c)
     virtualization: hardware
     run-on-projects: ['mozilla-central', 'try']
     max-run-time: 3600
@@ -1365,7 +1365,7 @@ talos-dromaeojs-stylo-disabled:
     description: "Talos Stylo disabled dromaeojs"
     suite: talos
     try-name: dromaeojs-stylo-disabled
-    treeherder-symbol: tc-Ts(d)
+    treeherder-symbol: tc-Tsd(d)
     virtualization: hardware
     run-on-projects: ['mozilla-central', 'try']
     max-run-time: 3600
@@ -1417,7 +1417,7 @@ talos-g1-stylo-disabled:
     description: "Talos Stylo disabled g1"
     suite: talos
     try-name: g1-stylo-disabled
-    treeherder-symbol: tc-Ts(g1)
+    treeherder-symbol: tc-Tsd(g1)
     virtualization: hardware
     run-on-projects: ['mozilla-central', 'try']
     max-run-time: 7200
@@ -1469,7 +1469,7 @@ talos-g2-stylo-disabled:
     description: "Talos Stylo disabled g2"
     suite: talos
     try-name: g2-stylo-disabled
-    treeherder-symbol: tc-Ts(g2)
+    treeherder-symbol: tc-Tsd(g2)
     virtualization: hardware
     max-run-time: 7200
     run-on-projects: ['mozilla-central', 'try']
@@ -1521,7 +1521,7 @@ talos-g3-stylo-disabled:
     description: "Talos Stylo disabled g3"
     suite: talos
     try-name: g3-stylo-disabled
-    treeherder-symbol: tc-Ts(g3)
+    treeherder-symbol: tc-Tsd(g3)
     virtualization: hardware
     run-on-projects: ['mozilla-central', 'try']
     max-run-time: 3600
@@ -1573,7 +1573,7 @@ talos-g4-stylo-disabled:
     description: "Talos Stylo disabled g4"
     suite: talos
     try-name: g4-stylo-disabled
-    treeherder-symbol: tc-Ts(g4)
+    treeherder-symbol: tc-Tsd(g4)
     virtualization: hardware
     run-on-projects: ['mozilla-central', 'try']
     max-run-time: 3600
@@ -1626,7 +1626,7 @@ talos-g5-stylo-disabled:
     description: "Talos Stylo disabled g5"
     suite: talos
     try-name: g5-stylo-disabled
-    treeherder-symbol: tc-Ts(g5)
+    treeherder-symbol: tc-Tsd(g5)
     virtualization: hardware
     run-on-projects: ['mozilla-central', 'try']
     max-run-time: 3600
@@ -1679,7 +1679,7 @@ talos-other-stylo-disabled:
     description: "Talos Stylo disabled other"
     suite: talos
     try-name: other-stylo-disabled
-    treeherder-symbol: tc-Ts(o)
+    treeherder-symbol: tc-Tsd(o)
     virtualization: hardware
     run-on-projects: ['mozilla-central', 'try']
     max-run-time: 3600
@@ -1753,7 +1753,7 @@ talos-perf-reftest-singletons-stylo-disabled:
     description: "Talos Stylo disabled perf-reftest singletons"
     suite: talos
     try-name: perf-reftest-singletons-stylo-disabled
-    treeherder-symbol: tc-Ts(ps)
+    treeherder-symbol: tc-Tsd(ps)
     virtualization: hardware
     run-on-projects: ['mozilla-central', 'try']
     max-run-time: 3600
@@ -1775,7 +1775,7 @@ talos-perf-reftest-stylo-disabled:
     description: "Talos Stylo disabled perf-reftest"
     suite: talos
     try-name: perf-reftest-stylo-disabled
-    treeherder-symbol: tc-Ts(p)
+    treeherder-symbol: tc-Tsd(p)
     virtualization: hardware
     run-on-projects: ['mozilla-central', 'try']
     max-run-time: 3600
@@ -1823,7 +1823,7 @@ talos-svgr-stylo-disabled:
     description: "Talos Stylo disabled svgr"
     suite: talos
     try-name: svgr-stylo-disabled
-    treeherder-symbol: tc-Ts(s)
+    treeherder-symbol: tc-Tsd(s)
     virtualization: hardware
     run-on-projects: ['mozilla-central', 'try']
     max-run-time: 3600
@@ -1875,7 +1875,7 @@ talos-tp5o-stylo-disabled:
     description: "Talos Stylo disabled tp5o"
     suite: talos
     try-name: tp5o-stylo-disabled
-    treeherder-symbol: tc-Ts(tp)
+    treeherder-symbol: tc-Tsd(tp)
     virtualization: hardware
     run-on-projects: ['mozilla-central', 'try']
     max-run-time: 3600
@@ -1926,7 +1926,7 @@ talos-tp6-stylo-disabled:
     description: "Talos Stylo disabled Tp6"
     suite: talos
     try-name: tp6-stylo-disabled
-    treeherder-symbol: tc-Ts(tp6s)
+    treeherder-symbol: tc-Tsd(tp6)
     virtualization: hardware
     run-on-projects:
         by-test-platform:
@@ -1949,10 +1949,10 @@ talos-tp6-stylo-disabled:
             - --suite=tp6-stylo-disabled
 
 talos-tp6-stylo-threads:
-    description: "Talos Stylo Threads Tp6"
+    description: "Talos Stylo sequential Tp6"
     suite: talos
     try-name: tp6-stylo-threads
-    treeherder-symbol: tc-Ts(tp6st)
+    treeherder-symbol: tc-Tss(tp6)
     virtualization: hardware
     run-on-projects:
         by-test-platform:
@@ -2005,7 +2005,7 @@ talos-xperf-stylo-disabled:
     description: "Talos Stylo disabled xperf"
     suite: talos
     try-name: xperf-stylo-disabled
-    treeherder-symbol: tc-Ts(x)
+    treeherder-symbol: tc-Tsd(x)
     run-on-projects:
         by-test-platform:
             windows7-32.*: ['mozilla-central', 'try']
