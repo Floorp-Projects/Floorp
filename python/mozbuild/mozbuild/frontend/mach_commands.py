@@ -17,7 +17,6 @@ from mach.decorators import (
 from mozbuild.base import MachCommandBase
 import mozpack.path as mozpath
 
-TOPSRCDIR = os.path.abspath(os.path.join(__file__, '../../../../../'))
 
 class InvalidPathException(Exception):
     """Represents an error due to an invalid path."""
@@ -222,23 +221,3 @@ class MozbuildFileCommands(MachCommandBase):
 
         reader = self._get_reader(finder=reader_finder)
         return reader.files_info(allpaths)
-
-
-    @SubCommand('file-info', 'schedules',
-                'Show the combined SCHEDULES for the files listed.')
-    @CommandArgument('paths', nargs='+',
-                     help='Paths whose data to query')
-    def file_info_schedules(self, paths):
-        """Show what is scheduled by the given files.
-
-        Given a requested set of files (which can be specified using
-        wildcards), print the total set of scheduled components.
-        """
-        from mozbuild.frontend.reader import EmptyConfig, BuildReader
-	config = EmptyConfig(TOPSRCDIR)
-	reader = BuildReader(config)
-        schedules = set()
-	for p, m in reader.files_info(paths).items():
-	    schedules |= set(m['SCHEDULES'].components)
-
-        print(", ".join(schedules))
