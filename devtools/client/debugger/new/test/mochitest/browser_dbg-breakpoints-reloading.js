@@ -32,7 +32,7 @@ add_task(function*() {
 
   yield selectSource(dbg, source.url);
   yield addBreakpoint(dbg, 5);
-  yield addBreakpoint(dbg, 2);
+  yield addBreakpoint(dbg, 4);
 
   const syncedBps = waitForDispatch(dbg, "SYNC_BREAKPOINT", 2);
   yield reload(dbg, "simple1");
