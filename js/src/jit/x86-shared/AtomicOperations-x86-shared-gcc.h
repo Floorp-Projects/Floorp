@@ -62,6 +62,12 @@
 // -latomic to get the proper 64-bit intrinsics.
 
 inline bool
+js::jit::AtomicOperations::hasAtomic8()
+{
+    return true;
+}
+
+inline bool
 js::jit::AtomicOperations::isLockfree8()
 {
     MOZ_ASSERT(__atomic_always_lock_free(sizeof(int8_t), 0));

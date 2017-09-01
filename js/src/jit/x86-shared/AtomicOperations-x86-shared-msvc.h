@@ -35,6 +35,12 @@
 // to guarantee that the C++ compiler won't optimize the code.
 
 inline bool
+js::jit::AtomicOperations::hasAtomic8()
+{
+    return true;
+}
+
+inline bool
 js::jit::AtomicOperations::isLockfree8()
 {
     // The MSDN docs suggest very strongly that if code is compiled for Pentium
