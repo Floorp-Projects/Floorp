@@ -372,8 +372,10 @@ class AutofillRecords {
    *         Indicates which record to update.
    * @param  {Object} record
    *         The new record used to overwrite the old one.
+   * @param  {boolean} [preserveOldProperties = false]
+   *         Preserve old record's properties if they don't exist in new record.
    */
-  update(guid, record) {
+  update(guid, record, preserveOldProperties = false) {
     this.log.debug("update:", guid, record);
 
     let recordFound = this._findByGUID(guid);
@@ -381,17 +383,23 @@ class AutofillRecords {
       throw new Error("No matching record.");
     }
 
-    let recordToUpdate = this._clone(record);
+    // Clone the record by Object assign API to preserve the property with empty string.
+    let recordToUpdate = Object.assign({}, record);
     this._normalizeRecord(recordToUpdate);
 
     for (let field of this.VALID_FIELDS) {
       let oldValue = recordFound[field];
       let newValue = recordToUpdate[field];
 
-      if (newValue != null) {
-        recordFound[field] = newValue;
-      } else {
+      // Resume the old field value in the perserve case
+      if (preserveOldProperties && newValue === undefined) {
+        newValue = oldValue;
+      }
+
+      if (!newValue) {
         delete recordFound[field];
+      } else {
+        recordFound[field] = newValue;
       }
 
       this._maybeStoreLastSyncedField(recordFound, field, oldValue);
