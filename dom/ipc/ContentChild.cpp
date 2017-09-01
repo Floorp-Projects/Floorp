@@ -1029,7 +1029,7 @@ ContentChild::ProvideWindowCommon(TabChild* aTabOpener,
   }
 
   // If the TabChild has been torn down, we don't need to do this anymore.
-  if (NS_WARN_IF(!newChild->IPCOpen())) {
+  if (NS_WARN_IF(!newChild->IPCOpen() || newChild->IsDestroyed())) {
     return NS_ERROR_ABORT;
   }
 
