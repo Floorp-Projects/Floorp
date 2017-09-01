@@ -35,9 +35,7 @@
 
 #include <stddef.h>
 
-typedef struct LinkedList_s LinkedList;
-
-struct LinkedList_s {
+struct LinkedList {
 	LinkedList *next;
 	LinkedList *prev;
 };
