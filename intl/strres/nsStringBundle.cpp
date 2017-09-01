@@ -25,6 +25,9 @@
 #include "nsIErrorService.h"
 #include "nsICategoryManager.h"
 #include "nsContentUtils.h"
+#include "nsStringStream.h"
+#include "mozilla/ResultExtensions.h"
+#include "mozilla/URLPreloader.h"
 
 // for async loading
 #ifdef ASYNC_LOADING
@@ -93,21 +96,27 @@ nsStringBundle::LoadProperties()
     return NS_ERROR_ABORT;
   }
 
-  nsCOMPtr<nsIChannel> channel;
-  rv = NS_NewChannel(getter_AddRefs(channel),
-                     uri,
-                     nsContentUtils::GetSystemPrincipal(),
-                     nsILoadInfo::SEC_ALLOW_CROSS_ORIGIN_DATA_IS_NULL,
-                     nsIContentPolicy::TYPE_OTHER);
-
-  if (NS_FAILED(rv)) return rv;
-
-  // It's a string bundle.  We expect a text/plain type, so set that as hint
-  channel->SetContentType(NS_LITERAL_CSTRING("text/plain"));
-
   nsCOMPtr<nsIInputStream> in;
-  rv = channel->Open2(getter_AddRefs(in));
-  if (NS_FAILED(rv)) return rv;
+
+  auto result = URLPreloader::ReadURI(uri);
+  if (result.isOk()) {
+    MOZ_TRY(NS_NewCStringInputStream(getter_AddRefs(in), result.unwrap()));
+  } else {
+    nsCOMPtr<nsIChannel> channel;
+    rv = NS_NewChannel(getter_AddRefs(channel),
+                       uri,
+                       nsContentUtils::GetSystemPrincipal(),
+                       nsILoadInfo::SEC_ALLOW_CROSS_ORIGIN_DATA_IS_NULL,
+                       nsIContentPolicy::TYPE_OTHER);
+
+    if (NS_FAILED(rv)) return rv;
+
+    // It's a string bundle.  We expect a text/plain type, so set that as hint
+    channel->SetContentType(NS_LITERAL_CSTRING("text/plain"));
+
+    rv = channel->Open2(getter_AddRefs(in));
+    if (NS_FAILED(rv)) return rv;
+  }
 
   NS_ASSERTION(NS_SUCCEEDED(rv) && in, "Error in OpenBlockingStream");
   NS_ENSURE_TRUE(NS_SUCCEEDED(rv) && in, NS_ERROR_FAILURE);
