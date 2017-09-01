@@ -1,0 +1,70 @@
+<!DOCTYPE HTML>
+<html>
+<head>
+  <meta charset="utf-8">
+  <title>Test autofill submit</title>
+  <script type="text/javascript" src="/tests/SimpleTest/EventUtils.js"></script>
+  <script type="text/javascript" src="/tests/SimpleTest/SimpleTest.js"></script>
+  <script type="text/javascript" src="/tests/SimpleTest/SpawnTask.js"></script>
+  <script type="text/javascript" src="formautofill_common.js"></script>
+  <script type="text/javascript" src="satchel_common.js"></script>
+  <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css" />
+</head>
+<body>
+
+<script>
+/* import-globals-from ../../../../../testing/mochitest/tests/SimpleTest/SpawnTask.js */
+/* import-globals-from ../../../../../toolkit/components/satchel/test/satchel_common.js */
+/* import-globals-from formautofill_common.js */
+
+"use strict";
+
+let MOCK_STORAGE = [{
+  "given-name": "John",
+  "additional-name": "R",
+  "family-name": "Smith",
+}];
+
+initPopupListener();
+
+add_task(async function setupStorage() {
+  await addAddress(MOCK_STORAGE[0]);
+});
+
+add_task(async function check_switch_form_popup() {
+  await setInput("#additional-name", "");
+  doKey("down");
+  await expectPopup();
+
+  // We need an intentional wait here before switching form.
+  await sleep();
+  await setInput("#organization", "");
+  doKey("down");
+  const {open: popupOpen} = await getPopupState();
+  is(popupOpen, false);
+
+  await sleep();
+  await setInput("#given-name", "");
+  doKey("down");
+  await expectPopup();
+});
+
+</script>
+
+<div>
+
+  <form>
+    <label>Name:<input id="name" autocomplete="name"></label>
+    <label>Organization:<input id="organization" autocomplete="organization"></label>
+    <label>City:<input autocomplete="address-level2"></label>
+  </form>
+
+  <form>
+    <label>Given-Name: <input id="given-name" autocomplete="given-name"></label>
+	  <label>Additional-Name/Middle: <input id="additional-name" autocomplete="additional-name"></label>
+	  <label>FamilyName-LastName: <input id="family-name" autocomplete="family-name"></label>
+  </form>
+
+</div>
+</body>
+</html>
