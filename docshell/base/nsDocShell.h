@@ -61,6 +61,7 @@
 #include "nsRect.h"
 #include "Units.h"
 #include "nsIDeprecationWarner.h"
+#include "nsILoadURIDelegate.h"
 
 namespace mozilla {
 class Encoding;
@@ -911,6 +912,8 @@ protected:
   mozilla::dom::EventTarget* mChromeEventHandler; // Weak Reference
 
   eCharsetReloadState mCharsetReloadState;
+
+  nsCOMPtr<nsILoadURIDelegate> mLoadURIDelegate;
 
   // Offset in the parent's child list.
   // -1 if the docshell is added dynamically to the parent shell.
