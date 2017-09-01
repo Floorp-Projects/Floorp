@@ -723,7 +723,7 @@ class Window extends WindowBase {
     }
   }
 
-  get title() {
+  get _title() {
     return this.window.document.title;
   }
 
@@ -826,6 +826,12 @@ class Window extends WindowBase {
     for (let nativeTab of this.window.gBrowser.tabs) {
       yield tabManager.getWrapper(nativeTab);
     }
+  }
+
+  get activeTab() {
+    let {tabManager} = this.extension;
+
+    return tabManager.getWrapper(this.window.gBrowser.selectedTab);
   }
 
   /**

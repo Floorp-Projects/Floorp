@@ -655,6 +655,12 @@ class Window extends WindowBase {
       yield tabManager.getWrapper(nativeTab);
     }
   }
+
+  get activeTab() {
+    let {tabManager} = this.extension;
+
+    return tabManager.getWrapper(this.window.BrowserApp.selectedTab);
+  }
 }
 
 Object.assign(global, {Tab, TabContext, Window});
