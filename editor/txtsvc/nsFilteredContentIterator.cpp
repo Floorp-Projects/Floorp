@@ -289,15 +289,13 @@ ContentIsInTraversalRange(nsRange* aRange, nsIDOMNode* aNextNode, bool aIsPreMod
 
   nsCOMPtr<nsIDOMNode> sNode;
   nsCOMPtr<nsIDOMNode> eNode;
-  uint32_t sOffset;
-  uint32_t eOffset;
   aRange->GetStartContainer(getter_AddRefs(sNode));
-  aRange->GetStartOffset(&sOffset);
   aRange->GetEndContainer(getter_AddRefs(eNode));
-  aRange->GetEndOffset(&eOffset);
   return ContentIsInTraversalRange(content, aIsPreMode,
-                                   sNode, static_cast<int32_t>(sOffset),
-                                   eNode, static_cast<int32_t>(eOffset));
+                                   sNode,
+                                   static_cast<int32_t>(aRange->StartOffset()),
+                                   eNode,
+                                   static_cast<int32_t>(aRange->EndOffset()));
 }
 
 //------------------------------------------------------------

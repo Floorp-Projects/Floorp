@@ -464,8 +464,8 @@ HTMLEditRules::AfterEditInner(EditAction action,
   if (mDocChangeRange) {
     mDocChangeRange->GetStartContainer(getter_AddRefs(rangeStartContainer));
     mDocChangeRange->GetEndContainer(getter_AddRefs(rangeEndContainer));
-    mDocChangeRange->GetStartOffset(&rangeStartOffset);
-    mDocChangeRange->GetEndOffset(&rangeEndOffset);
+    rangeStartOffset = mDocChangeRange->StartOffset();
+    rangeEndOffset = mDocChangeRange->EndOffset();
     if (rangeStartContainer && rangeEndContainer) {
       bDamagedRange = true;
     }
@@ -8180,10 +8180,7 @@ HTMLEditRules::UpdateDocChangeRange(nsRange* aRange)
     NS_ENSURE_SUCCESS(rv, rv);
     // Positive result means mDocChangeRange start is after aRange start.
     if (result > 0) {
-      uint32_t startOffset;
-      rv = aRange->GetStartOffset(&startOffset);
-      NS_ENSURE_SUCCESS(rv, rv);
-      rv = mDocChangeRange->SetStart(startNode, startOffset);
+      rv = mDocChangeRange->SetStart(startNode, aRange->StartOffset());
       NS_ENSURE_SUCCESS(rv, rv);
     }
 
@@ -8196,10 +8193,7 @@ HTMLEditRules::UpdateDocChangeRange(nsRange* aRange)
       nsCOMPtr<nsIDOMNode> endNode;
       rv = aRange->GetEndContainer(getter_AddRefs(endNode));
       NS_ENSURE_SUCCESS(rv, rv);
-      uint32_t endOffset;
-      rv = aRange->GetEndOffset(&endOffset);
-      NS_ENSURE_SUCCESS(rv, rv);
-      rv = mDocChangeRange->SetEnd(endNode, endOffset);
+      rv = mDocChangeRange->SetEnd(endNode, aRange->EndOffset());
       NS_ENSURE_SUCCESS(rv, rv);
     }
   }
