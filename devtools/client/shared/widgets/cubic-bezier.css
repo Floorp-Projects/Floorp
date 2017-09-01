@@ -212,6 +212,6 @@
 
 .cubic-bezier-container .active-preset canvas,
 .cubic-bezier-container .active-preset:hover canvas {
-  background-color: var(--theme-selection-background-hover);
+  background-color: var(--theme-selection-background-semitransparent);
   border-color: var(--theme-selection-background);
 }
