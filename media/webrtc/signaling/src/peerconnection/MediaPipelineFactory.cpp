@@ -749,7 +749,7 @@ MediaPipelineFactory::GetOrCreateAudioConduit(
 
     const SdpExtmapAttributeList::Extmap* audioLevelExt =
         aTrack.GetNegotiatedDetails()->GetExt(
-            "urn:ietf:params:rtp-hdrext:ssrc-audio-level");
+            webrtc::RtpExtension::kAudioLevelUri);
 
     if (audioLevelExt) {
       MOZ_MTLOG(ML_DEBUG, "Calling EnableAudioLevelExtension");
