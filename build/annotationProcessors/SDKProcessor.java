@@ -412,7 +412,8 @@ public class SDKProcessor {
                                       StringBuilder headerFile) throws ParseException {
         String generatedName = clazz.getSimpleName();
 
-        CodeGenerator generator = new CodeGenerator(new ClassWithOptions(clazz, generatedName));
+        CodeGenerator generator = new CodeGenerator(
+                new ClassWithOptions(clazz, generatedName, /* ifdef */ ""));
 
         generateMembers(generator, clsInfo,
                         sortAndFilterMembers(clazz, clazz.getConstructors()));
