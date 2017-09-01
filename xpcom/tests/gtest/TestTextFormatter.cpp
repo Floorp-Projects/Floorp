@@ -30,5 +30,10 @@ TEST(TextFormatter, Tests)
   for (uint32_t i=0; i<out.Length(); i++) {
     ASSERT_EQ(uout[i], expected[i]);
   }
+
+  // Test that an unrecognized escape is passed through.
+  nsString out2;
+  nsTextFormatter::ssprintf(out2, u"%1m!", 23);
+  EXPECT_STREQ("%1m!", NS_ConvertUTF16toUTF8(out2).get());
 }
 
