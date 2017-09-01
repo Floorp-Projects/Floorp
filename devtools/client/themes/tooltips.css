@@ -396,7 +396,7 @@
 }
 
 .stack-frame-call:hover {
-  background-color: var(--theme-selection-background-hover);
+  background-color: var(--theme-selection-background-semitransparent);
 }
 
 .stack-frame-async {
