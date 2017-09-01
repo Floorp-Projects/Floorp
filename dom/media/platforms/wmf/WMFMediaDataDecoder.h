@@ -60,7 +60,7 @@ public:
 
   virtual TrackInfo::TrackType GetType() = 0;
 
-  virtual const char* GetDescriptionName() const = 0;
+  virtual nsCString GetDescriptionName() const = 0;
 
   virtual void SetSeekThreshold(const media::TimeUnit& aTime)
   {
@@ -102,9 +102,10 @@ public:
 
   bool IsHardwareAccelerated(nsACString& aFailureReason) const override;
 
-  const char* GetDescriptionName() const override
+  nsCString GetDescriptionName() const override
   {
-    return mMFTManager ? mMFTManager->GetDescriptionName() : "";
+    return mMFTManager
+           ? mMFTManager->GetDescriptionName() : NS_LITERAL_CSTRING("");
   }
 
   ConversionRequired NeedsConversion() const override

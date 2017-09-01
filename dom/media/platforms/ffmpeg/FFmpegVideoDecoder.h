@@ -37,12 +37,12 @@ public:
 
   RefPtr<InitPromise> Init() override;
   void InitCodecContext() override;
-  const char* GetDescriptionName() const override
+  nsCString GetDescriptionName() const override
   {
 #ifdef USING_MOZFFVPX
-    return "ffvpx video decoder";
+    return NS_LITERAL_CSTRING("ffvpx video decoder");
 #else
-    return "ffmpeg video decoder";
+    return NS_LITERAL_CSTRING("ffmpeg video decoder");
 #endif
   }
   ConversionRequired NeedsConversion() const override
