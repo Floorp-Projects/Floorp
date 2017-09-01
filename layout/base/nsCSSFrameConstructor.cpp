@@ -8681,19 +8681,19 @@ nsCSSFrameConstructor::ContentRemoved(nsIContent* aContainer,
     }
 
     FlattenedChildIterator iter(aChild);
-    bool didReconstruct = false;
     for (nsIContent* c = iter.GetNextChild(); c; c = iter.GetNextChild()) {
       if (c->GetPrimaryFrame() || GetDisplayContentsStyleFor(c)) {
         LAYOUT_PHASE_TEMP_EXIT();
-        didReconstruct |= ContentRemoved(aChild, c, nullptr, aFlags);
+        bool didReconstruct =
+          ContentRemoved(aChild, c, nullptr, aFlags);
         LAYOUT_PHASE_TEMP_REENTER();
-        if (aFlags != REMOVE_DESTROY_FRAMES && didReconstruct) {
+        if (didReconstruct) {
           return true;
         }
       }
     }
     UnregisterDisplayContentsStyleFor(aChild, aContainer);
-    return didReconstruct;
+    return false;
   }
 
 #ifdef MOZ_XUL
