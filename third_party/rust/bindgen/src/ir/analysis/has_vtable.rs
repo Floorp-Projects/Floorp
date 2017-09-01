@@ -1,10 +1,11 @@
 //! Determining which types has vtable
+
 use super::{ConstrainResult, MonotoneFramework, generate_dependencies};
-use std::collections::HashSet;
-use std::collections::HashMap;
 use ir::context::{BindgenContext, ItemId};
 use ir::traversal::EdgeKind;
 use ir::ty::TypeKind;
+use std::collections::HashMap;
+use std::collections::HashSet;
 
 /// An analysis that finds for each IR item whether it has vtable or not
 ///
@@ -18,7 +19,8 @@ use ir::ty::TypeKind;
 ///   vtable if template definition has vtable
 #[derive(Debug, Clone)]
 pub struct HasVtableAnalysis<'ctx, 'gen>
-    where 'gen: 'ctx
+where
+    'gen: 'ctx,
 {
     ctx: &'ctx BindgenContext<'gen>,
 
@@ -90,7 +92,7 @@ impl<'ctx, 'gen> MonotoneFramework for HasVtableAnalysis<'ctx, 'gen> {
         let item = self.ctx.resolve_item(id);
         let ty = match item.as_type() {
             None => return ConstrainResult::Same,
-            Some(ty) => ty
+            Some(ty) => ty,
         };
 
         // TODO #851: figure out a way to handle deriving from template type parameters.
@@ -104,7 +106,7 @@ impl<'ctx, 'gen> MonotoneFramework for HasVtableAnalysis<'ctx, 'gen> {
                 } else {
                     ConstrainResult::Same
                 }
-            },
+            }
 
             TypeKind::Comp(ref info) => {
                 if info.has_own_virtual_method() {
@@ -118,7 +120,7 @@ impl<'ctx, 'gen> MonotoneFramework for HasVtableAnalysis<'ctx, 'gen> {
                 } else {
                     ConstrainResult::Same
                 }
-            },
+            }
 
             TypeKind::TemplateInstantiation(ref inst) => {
                 if self.have_vtable.contains(&inst.template_definition()) {
@@ -126,14 +128,15 @@ impl<'ctx, 'gen> MonotoneFramework for HasVtableAnalysis<'ctx, 'gen> {
                 } else {
                     ConstrainResult::Same
                 }
-            },
+            }
 
             _ => ConstrainResult::Same,
         }
     }
 
     fn each_depending_on<F>(&self, id: ItemId, mut f: F)
-        where F: FnMut(ItemId),
+    where
+        F: FnMut(ItemId),
     {
         if let Some(edges) = self.dependencies.get(&id) {
             for item in edges {

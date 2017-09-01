@@ -11,19 +11,35 @@ pub mod attributes {
     use syntax::ast;
 
     pub fn allow(which_ones: &[&str]) -> ast::Attribute {
-        aster::AstBuilder::new().attr().list("allow").words(which_ones).build()
+        aster::AstBuilder::new()
+            .attr()
+            .list("allow")
+            .words(which_ones)
+            .build()
     }
 
     pub fn repr(which: &str) -> ast::Attribute {
-        aster::AstBuilder::new().attr().list("repr").words(&[which]).build()
+        aster::AstBuilder::new()
+            .attr()
+            .list("repr")
+            .words(&[which])
+            .build()
     }
 
     pub fn repr_list(which_ones: &[&str]) -> ast::Attribute {
-        aster::AstBuilder::new().attr().list("repr").words(which_ones).build()
+        aster::AstBuilder::new()
+            .attr()
+            .list("repr")
+            .words(which_ones)
+            .build()
     }
 
     pub fn derives(which_ones: &[&str]) -> ast::Attribute {
-        aster::AstBuilder::new().attr().list("derive").words(which_ones).build()
+        aster::AstBuilder::new()
+            .attr()
+            .list("derive")
+            .words(which_ones)
+            .build()
     }
 
     pub fn inline() -> ast::Attribute {
@@ -35,46 +51,37 @@ pub mod attributes {
     }
 
     pub fn link_name(name: &str) -> ast::Attribute {
-        aster::AstBuilder::new().attr().name_value("link_name").str(name)
+        aster::AstBuilder::new()
+            .attr()
+            .name_value("link_name")
+            .str(name)
     }
 }
 
 /// Generates a proper type for a field or type with a given `Layout`, that is,
 /// a type with the correct size and alignment restrictions.
-pub struct BlobTyBuilder {
-    layout: Layout,
-}
+pub fn blob(layout: Layout) -> P<ast::Ty> {
+    let opaque = layout.opaque();
 
-impl BlobTyBuilder {
-    pub fn new(layout: Layout) -> Self {
-        BlobTyBuilder {
-            layout: layout,
+    // FIXME(emilio, #412): We fall back to byte alignment, but there are
+    // some things that legitimately are more than 8-byte aligned.
+    //
+    // Eventually we should be able to `unwrap` here, but...
+    let ty_name = match opaque.known_rust_type_for_array() {
+        Some(ty) => ty,
+        None => {
+            warn!("Found unknown alignment on code generation!");
+            "u8"
         }
-    }
+    };
 
-    pub fn build(self) -> P<ast::Ty> {
-        let opaque = self.layout.opaque();
+    let data_len = opaque.array_size().unwrap_or(layout.size);
 
-        // FIXME(emilio, #412): We fall back to byte alignment, but there are
-        // some things that legitimately are more than 8-byte aligned.
-        //
-        // Eventually we should be able to `unwrap` here, but...
-        let ty_name = match opaque.known_rust_type_for_array() {
-            Some(ty) => ty,
-            None => {
-                warn!("Found unknown alignment on code generation!");
-                "u8"
-            }
-        };
-
-        let data_len = opaque.array_size().unwrap_or(self.layout.size);
-
-        let inner_ty = aster::AstBuilder::new().ty().path().id(ty_name).build();
-        if data_len == 1 {
-            inner_ty
-        } else {
-            aster::ty::TyBuilder::new().array(data_len).build(inner_ty)
-        }
+    let inner_ty = aster::AstBuilder::new().ty().path().id(ty_name).build();
+    if data_len == 1 {
+        inner_ty
+    } else {
+        aster::ty::TyBuilder::new().array(data_len).build(inner_ty)
     }
 }
 
@@ -97,9 +104,10 @@ pub mod ast_ty {
         }
     }
 
-    pub fn float_kind_rust_type(ctx: &BindgenContext,
-                                fk: FloatKind)
-                                -> P<ast::Ty> {
+    pub fn float_kind_rust_type(
+        ctx: &BindgenContext,
+        fk: FloatKind,
+    ) -> P<ast::Ty> {
         // TODO: we probably should just take the type layout into
         // account?
         //
@@ -153,14 +161,17 @@ pub mod ast_ty {
 
     pub fn cstr_expr(mut string: String) -> P<ast::Expr> {
         string.push('\0');
-        aster::AstBuilder::new()
-            .expr()
-            .build_lit(aster::AstBuilder::new().lit().byte_str(string))
+        aster::AstBuilder::new().expr().build_lit(
+            aster::AstBuilder::new()
+                .lit()
+                .byte_str(string),
+        )
     }
 
-    pub fn float_expr(ctx: &BindgenContext,
-                      f: f64)
-                      -> Result<P<ast::Expr>, ()> {
+    pub fn float_expr(
+        ctx: &BindgenContext,
+        f: f64,
+    ) -> Result<P<ast::Expr>, ()> {
         use aster::symbol::ToSymbol;
 
         if f.is_finite() {
@@ -171,8 +182,9 @@ pub mod ast_ty {
                 string.push('.');
             }
 
-            let kind = ast::LitKind::FloatUnsuffixed(string.as_str().to_symbol());
-            return Ok(aster::AstBuilder::new().expr().lit().build_lit(kind))
+            let kind =
+                ast::LitKind::FloatUnsuffixed(string.as_str().to_symbol());
+            return Ok(aster::AstBuilder::new().expr().lit().build_lit(kind));
         }
 
         let prefix = ctx.trait_prefix();
@@ -192,13 +204,15 @@ pub mod ast_ty {
         return Err(());
     }
 
-    pub fn arguments_from_signature(signature: &FunctionSig,
-                                    ctx: &BindgenContext)
-                                    -> Vec<P<ast::Expr>> {
+    pub fn arguments_from_signature(
+        signature: &FunctionSig,
+        ctx: &BindgenContext,
+    ) -> Vec<P<ast::Expr>> {
         // TODO: We need to keep in sync the argument names, so we should unify
         // this with the other loop that decides them.
         let mut unnamed_arguments = 0;
-        signature.argument_types()
+        signature
+            .argument_types()
             .iter()
             .map(|&(ref name, _ty)| {
                 let arg_name = match *name {
