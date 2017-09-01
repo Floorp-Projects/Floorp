@@ -495,12 +495,14 @@ ChannelMediaResource::OnDataAvailable(nsIRequest* aRequest,
                                       nsIInputStream* aStream,
                                       uint32_t aCount)
 {
+  // This might happen off the main thread.
   NS_ASSERTION(mChannel.get() == aRequest, "Wrong channel!");
 
-  {
-    MutexAutoLock lock(mLock);
-    mChannelStatistics.AddBytes(aCount);
-  }
+  RefPtr<ChannelMediaResource> self = this;
+  nsCOMPtr<nsIRunnable> r = NS_NewRunnableFunction(
+    "ChannelMediaResource::OnDataAvailable",
+    [self, aCount]() { self->mChannelStatistics.AddBytes(aCount); });
+  mCallback->AbstractMainThread()->Dispatch(r.forget());
 
   CopySegmentClosure closure;
   nsIScriptSecurityManager* secMan = nsContentUtils::GetSecurityManager();
