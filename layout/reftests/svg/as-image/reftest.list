@@ -58,7 +58,7 @@ fuzzy(1,2) fuzzy-if(azureSkia,1,40000) == canvas-drawImage-alpha-2.html canvas-d
 # context-fill:
 == context-fill-01.html blue100x100-ref.html
 test-pref(svg.context-properties.content.enabled,true) == context-fill-01.html lime100x100-ref.html
-fails-if(styloVsGecko||stylo) == context-fill-02.html transparent100x100-w-border-ref.html # Bug 1380590
+== context-fill-02.html transparent100x100-w-border-ref.html
 test-pref(svg.context-properties.content.enabled,true) == context-fill-02.html lime100x100-w-border-ref.html
 test-pref(svg.context-properties.content.enabled,true) == context-fill-03.html lime100x100-50pct-ref.html
 # fuzz because on win8 the r & b components are off by one
