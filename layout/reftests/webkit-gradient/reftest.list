@@ -18,3 +18,6 @@ default-preferences pref(layout.css.prefixes.webkit,true)
 == webkit-gradient-radial-1a.html webkit-gradient-radial-1-ref.html
 == webkit-gradient-radial-1b.html webkit-gradient-radial-1-ref.html
 == webkit-gradient-radial-2.html webkit-gradient-radial-2-ref.html
+
+# Tests for -webkit-linear-gradient
+== webkit-linear-gradient-1.html webkit-linear-gradient-1-ref.html

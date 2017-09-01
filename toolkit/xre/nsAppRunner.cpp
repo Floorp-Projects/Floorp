@@ -1106,17 +1106,6 @@ nsXULAppInfo::GetDistributionID(nsACString& aResult)
 }
 
 NS_IMETHODIMP
-nsXULAppInfo::GetIsOfficial(bool* aResult)
-{
-#ifdef MOZILLA_OFFICIAL
-  *aResult = true;
-#else
-  *aResult = false;
-#endif
-  return NS_OK;
-}
-
-NS_IMETHODIMP
 nsXULAppInfo::GetWindowsDLLBlocklistStatus(bool* aResult)
 {
 #if defined(HAS_DLL_BLOCKLIST)

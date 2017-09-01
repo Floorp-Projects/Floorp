@@ -9072,7 +9072,8 @@ nsLayoutUtils::ComputeScrollMetadata(nsIFrame* aForFrame,
 /*static*/ Maybe<ScrollMetadata>
 nsLayoutUtils::GetRootMetadata(nsDisplayListBuilder* aBuilder,
                                Layer* aRootLayer,
-                               const ContainerLayerParameters& aContainerParameters)
+                               const ContainerLayerParameters& aContainerParameters,
+                               const std::function<bool(ViewID& aScrollId)>& aCallback)
 {
   nsIFrame* frame = aBuilder->RootReferenceFrame();
   nsPresContext* presContext = frame->PresContext();
@@ -9108,7 +9109,7 @@ nsLayoutUtils::GetRootMetadata(nsDisplayListBuilder* aBuilder,
 
   if (ensureMetricsForRootId && content) {
     ViewID scrollId = nsLayoutUtils::FindOrCreateIDFor(content);
-    if (aRootLayer && nsLayoutUtils::ContainsMetricsWithId(aRootLayer, scrollId)) {
+    if (aCallback(scrollId)) {
       ensureMetricsForRootId = false;
     }
   }
