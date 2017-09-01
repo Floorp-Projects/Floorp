@@ -35,7 +35,7 @@ pref("devtools.netmonitor.har.compress", false);
 pref("devtools.netmonitor.har.forceExport", false);
 pref("devtools.netmonitor.har.pageLoadedTimeout", 1500);
 pref("devtools.netmonitor.har.enableAutoExportToFile", false);
-pref("devtools.webconsole.persistlog", false);
+pref("devtools.netmonitor.persistlog", false);
 pref("devtools.styleeditor.enabled", true);
 
 const { configureStore } = require("./src/utils/create-store");

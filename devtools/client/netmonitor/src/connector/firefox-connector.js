@@ -82,7 +82,7 @@ class FirefoxConnector {
   }
 
   willNavigate() {
-    if (!Services.prefs.getBoolPref("devtools.webconsole.persistlog")) {
+    if (!Services.prefs.getBoolPref("devtools.netmonitor.persistlog")) {
       this.actions.batchReset();
       this.actions.clearRequests();
     } else {
