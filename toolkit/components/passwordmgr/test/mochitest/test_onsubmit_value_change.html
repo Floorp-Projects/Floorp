@@ -24,7 +24,21 @@ Login Manager test: input value change right after onsubmit event
       });
     });
   }
+</script>
+<p id="display"></p>
 
+<div id="content" style="display: none">
+
+  <form id="form1" action="formTest.js" onsubmit="return false;">
+    <input  type="text"     name="uname" id="ufield">
+    <input  type="password" name="pword" id="pfield">
+    <button type="submit" id="submitBtn">Submit</button>
+  </form>
+
+</div>
+
+<pre id="test"></pre>
+<script>
   /** Test for Login Manager: input value change right after onsubmit event **/
   add_task(async function checkFormValues() {
     document.getElementById("ufield").value = "testuser";
@@ -49,18 +63,5 @@ Login Manager test: input value change right after onsubmit event
     is(submittedResult.newPasswordField.value, "testpass", "Should have registered \"testpass\" for username");
   });
 </script>
-<p id="display"></p>
-
-<div id="content" style="display: none">
-
-  <form id="form1" action="formTest.js" onsubmit="return false;">
-    <input  type="text"     name="uname" id="ufield">
-    <input  type="password" name="pword" id="pfield">
-    <button type="submit" id="submitBtn">Submit</button>
-  </form>
-
-</div>
-
-<pre id="test"></pre>
 </body>
 </html>
