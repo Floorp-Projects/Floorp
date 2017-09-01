@@ -2,14 +2,13 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-use app_units::Au;
 use bincode;
 use serde::{Deserialize, Serialize, Serializer};
 use serde::ser::{SerializeSeq, SerializeMap};
 use time::precise_time_ns;
 use {BorderDetails, BorderDisplayItem, BorderWidths, BoxShadowClipMode, BoxShadowDisplayItem};
 use {ClipAndScrollInfo, ClipDisplayItem, ClipId, ColorF, ComplexClipRegion, DisplayItem};
-use {ExtendMode, FastHashMap, FastHashSet, FilterOp, FontKey, GlyphIndex, GlyphInstance};
+use {ExtendMode, FastHashMap, FastHashSet, FilterOp, FontInstanceKey, GlyphIndex, GlyphInstance};
 use {GlyphOptions, Gradient, GradientDisplayItem, GradientStop, IframeDisplayItem};
 use {ImageDisplayItem, ImageKey, ImageMask, ImageRendering, LayoutPoint, LayoutRect, LayoutSize};
 use {LayoutTransform, LayoutVector2D, LineDisplayItem, LineOrientation, LineStyle, LocalClip};
@@ -301,7 +300,7 @@ impl<'a> BuiltDisplayListIter<'a> {
 }
 
 impl<'a> Iterator for GlyphsIter<'a> {
-    type Item = (FontKey, ColorF, ItemRange<GlyphIndex>);
+    type Item = (FontInstanceKey, ColorF, ItemRange<GlyphIndex>);
 
     fn next(&mut self) -> Option<Self::Item> {
         if self.data.len() == 0 { return None; }
@@ -457,7 +456,7 @@ pub struct DisplayListBuilder {
     pub pipeline_id: PipelineId,
     clip_stack: Vec<ClipAndScrollInfo>,
     // FIXME: audit whether fast hashers (FNV?) are safe here
-    glyphs: FastHashMap<(FontKey, ColorF), FastHashSet<GlyphIndex>>,
+    glyphs: FastHashMap<(FontInstanceKey, ColorF), FastHashSet<GlyphIndex>>,
     next_clip_id: u64,
     builder_start_time: u64,
 
@@ -605,38 +604,28 @@ impl DisplayListBuilder {
                      rect: LayoutRect,
                      local_clip: Option<LocalClip>,
                      glyphs: &[GlyphInstance],
-                     font_key: FontKey,
+                     font_key: FontInstanceKey,
                      color: ColorF,
-                     size: Au,
                      glyph_options: Option<GlyphOptions>) {
-        // Sanity check - anything with glyphs bigger than this
-        // is probably going to consume too much memory to render
-        // efficiently anyway. This is specifically to work around
-        // the font_advance.html reftest, which creates a very large
-        // font as a crash test - the rendering is also ignored
-        // by the azure renderer.
-        if size < Au::from_px(4096) {
-            let item = SpecificDisplayItem::Text(TextDisplayItem {
-                color,
-                font_key,
-                size,
-                glyph_options,
-            });
+        let item = SpecificDisplayItem::Text(TextDisplayItem {
+            color,
+            font_key,
+            glyph_options,
+        });
 
-            for split_glyphs in glyphs.chunks(MAX_TEXT_RUN_LENGTH) {
-                self.push_item(item, rect, local_clip);
-                self.push_iter(split_glyphs);
+        for split_glyphs in glyphs.chunks(MAX_TEXT_RUN_LENGTH) {
+            self.push_item(item, rect, local_clip);
+            self.push_iter(split_glyphs);
 
-                // Remember that we've seen these glyphs
-                self.cache_glyphs(font_key, color, split_glyphs.iter().map(|glyph| glyph.index));
-            }
+            // Remember that we've seen these glyphs
+            self.cache_glyphs(font_key, color, split_glyphs.iter().map(|glyph| glyph.index));
         }
     }
 
     fn cache_glyphs<I: Iterator<Item=GlyphIndex>>(&mut self,
-                                                     font_key: FontKey,
-                                                     color: ColorF,
-                                                     glyphs: I) {
+                                                  font_key: FontInstanceKey,
+                                                  color: ColorF,
+                                                  glyphs: I) {
         let mut font_glyphs = self.glyphs.entry((font_key, color))
                                          .or_insert(FastHashSet::default());
 

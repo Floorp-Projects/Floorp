@@ -14957,9 +14957,15 @@ class CGBindingImplClass(CGClass):
             if m.isMethod():
                 if m.isIdentifierLess():
                     continue
+                if m.isMaplikeOrSetlikeOrIterableMethod():
+                    # Handled by generated code already
+                    continue
                 if not m.isStatic() or not skipStaticMethods:
                     appendMethod(m)
             elif m.isAttr():
+                if m.isMaplikeOrSetlikeAttr():
+                    # Handled by generated code already
+                    continue
                 self.methodDecls.append(cgGetter(descriptor, m))
                 if not m.readonly:
                     self.methodDecls.append(cgSetter(descriptor, m))
@@ -15213,8 +15219,9 @@ class CGExampleRoot(CGThing):
                 continue
             if member.isStatic():
                 builder.addInMozillaDom("GlobalObject")
-            if member.isAttr() and not member.isMaplikeOrSetlikeAttr():
-                builder.forwardDeclareForType(member.type, config)
+            if member.isAttr():
+                if not member.isMaplikeOrSetlikeAttr():
+                    builder.forwardDeclareForType(member.type, config)
             else:
                 assert member.isMethod()
                 if not member.isMaplikeOrSetlikeOrIterableMethod():
@@ -15563,6 +15570,17 @@ class CGJSImplClass(CGBindingImplClass):
                         static=True,
                         body=self.getCreateFromExistingBody()))
 
+        if (descriptor.interface.isJSImplemented() and
+            descriptor.interface.maplikeOrSetlikeOrIterable and
+            descriptor.interface.maplikeOrSetlikeOrIterable.isMaplike()):
+            self.methodDecls.append(
+                ClassMethod("__OnGet",
+                            "void",
+                            [Argument("JS::Handle<JS::Value>", "aKey"),
+                             Argument("JS::Handle<JS::Value>", "aValue"),
+                             Argument("ErrorResult&", "aRv")],
+                            body="mImpl->__OnGet(aKey, aValue, aRv);\n"))
+
         CGClass.__init__(self, descriptor.name,
                          bases=baseClasses,
                          constructors=[constructor],
@@ -15909,25 +15927,46 @@ class CGFastCallback(CGClass):
 class CGCallbackInterface(CGCallback):
     def __init__(self, descriptor, spiderMonkeyInterfacesAreStructs=False):
         iface = descriptor.interface
-        attrs = [m for m in iface.members if m.isAttr() and not m.isStatic()]
+        attrs = [m for m in iface.members
+                 if (m.isAttr() and not m.isStatic() and
+                     (not m.isMaplikeOrSetlikeAttr() or
+                      not iface.isJSImplemented()))]
         getters = [CallbackGetter(a, descriptor, spiderMonkeyInterfacesAreStructs)
                    for a in attrs]
         setters = [CallbackSetter(a, descriptor, spiderMonkeyInterfacesAreStructs)
                    for a in attrs if not a.readonly]
         methods = [m for m in iface.members
-                   if m.isMethod() and not m.isStatic() and not m.isIdentifierLess()]
+                   if (m.isMethod() and not m.isStatic() and
+                       not m.isIdentifierLess() and
+                       (not m.isMaplikeOrSetlikeOrIterableMethod() or
+                        not iface.isJSImplemented()))]
         methods = [CallbackOperation(m, sig, descriptor, spiderMonkeyInterfacesAreStructs)
                    for m in methods for sig in m.signatures()]
+
+        needInitId = False
         if iface.isJSImplemented() and iface.ctor():
             sigs = descriptor.interface.ctor().signatures()
             if len(sigs) != 1:
                 raise TypeError("We only handle one constructor.  See bug 869268.")
             methods.append(CGJSImplInitOperation(sigs[0], descriptor))
-        if any(m.isAttr() or m.isMethod() for m in iface.members) or (iface.isJSImplemented() and iface.ctor()):
-            methods.append(initIdsClassMethod([descriptor.binaryNameFor(m.identifier.name)
-                                               for m in iface.members
-                                               if m.isAttr() or m.isMethod()] +
-                                              (["__init"] if iface.isJSImplemented() and iface.ctor() else []),
+            needInitId = True
+
+        needOnGetId = False
+        if (iface.isJSImplemented() and
+            iface.maplikeOrSetlikeOrIterable and
+            iface.maplikeOrSetlikeOrIterable.isMaplike()):
+            methods.append(CGJSImplOnGetOperation(descriptor))
+            needOnGetId = True
+
+        idlist = [descriptor.binaryNameFor(m.identifier.name)
+                  for m in iface.members
+                  if m.isAttr() or m.isMethod()]
+        if needInitId:
+            idlist.append("__init")
+        if needOnGetId:
+            idlist.append("__onget")
+        if len(idlist) != 0:
+            methods.append(initIdsClassMethod(idlist,
                                               iface.identifier.name + "Atoms"))
         CGCallback.__init__(self, iface, descriptor, "CallbackInterface",
                             methods, getters=getters, setters=setters)
@@ -16446,6 +16485,32 @@ class CGJSImplInitOperation(CallbackOperationBase):
         return "__init"
 
 
+class CGJSImplOnGetOperation(CallbackOperationBase):
+    """
+    Codegen the __OnGet() method used to notify the JS impl that a get() is
+    happening on a JS-implemented maplike.  This method takes two arguments
+    (key and value) and returns nothing.
+    """
+    def __init__(self, descriptor):
+        CallbackOperationBase.__init__(
+            self,
+            (BuiltinTypes[IDLBuiltinType.Types.void],
+             [FakeArgument(BuiltinTypes[IDLBuiltinType.Types.any],
+                           None,
+                           "key"),
+              FakeArgument(BuiltinTypes[IDLBuiltinType.Types.any],
+                           None,
+                           "value")]),
+            "__onget", "__OnGet",
+            descriptor,
+            singleOperation=False,
+            rethrowContentException=True,
+            spiderMonkeyInterfacesAreStructs=True)
+
+    def getPrettyName(self):
+        return "__onget"
+
+
 def getMaplikeOrSetlikeErrorReturn(helperImpl):
     """
     Generate return values based on whether a maplike or setlike generated
@@ -16728,7 +16793,21 @@ class CGMaplikeOrSetlikeMethodGenerator(CGThing):
             JS::Rooted<JS::Value> result(cx);
             """))]
         arguments = ["&result"]
-        return self.mergeTuples(r, (code, arguments, []))
+        if self.descriptor.interface.isJSImplemented():
+            callOnGet = [CGGeneric(dedent(
+                """
+                {
+                  JS::ExposeValueToActiveJS(result);
+                  ErrorResult onGetResult;
+                  self->__OnGet(arg0Val, result, onGetResult);
+                  if (onGetResult.MaybeSetPendingException(cx)) {
+                    return false;
+                  }
+                }
+                """))]
+        else:
+            callOnGet = []
+        return self.mergeTuples(r, (code, arguments, callOnGet))
 
     def has(self):
         """
@@ -17028,6 +17107,11 @@ class GlobalGenRoots():
             if d.interface.isJSImplemented() and d.interface.ctor():
                 # We'll have an __init() method.
                 members.append(FakeMember('__init'))
+            if (d.interface.isJSImplemented() and
+                d.interface.maplikeOrSetlikeOrIterable and
+                d.interface.maplikeOrSetlikeOrIterable.isMaplike()):
+                # We'll have an __onget() method.
+                members.append(FakeMember('__onget'))
             if len(members) == 0:
                 continue
 

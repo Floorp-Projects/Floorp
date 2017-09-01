@@ -59,6 +59,14 @@ enum class ExternalImageType : uint32_t {
   Sentinel /* this must be last for serialization purposes. */
 };
 
+enum class FontRenderMode : uint32_t {
+  Mono = 0,
+  Alpha = 1,
+  Subpixel = 2,
+
+  Sentinel /* this must be last for serialization purposes. */
+};
+
 enum class ImageFormat : uint32_t {
   Invalid = 0,
   A8 = 1,
@@ -244,6 +252,18 @@ struct WrExternalImageId {
 
 typedef ExternalImageType WrExternalImageBufferType;
 
+struct FontInstanceKey {
+  IdNamespace mNamespace;
+  uint32_t mHandle;
+
+  bool operator==(const FontInstanceKey& aOther) const {
+    return mNamespace == aOther.mNamespace &&
+           mHandle == aOther.mHandle;
+  }
+};
+
+typedef FontInstanceKey WrFontInstanceKey;
+
 struct FontKey {
   IdNamespace mNamespace;
   uint32_t mHandle;
@@ -255,6 +275,24 @@ struct FontKey {
 };
 
 typedef FontKey WrFontKey;
+
+struct FontInstanceOptions {
+  FontRenderMode render_mode;
+
+  bool operator==(const FontInstanceOptions& aOther) const {
+    return render_mode == aOther.render_mode;
+  }
+};
+
+struct FontInstancePlatformOptions {
+  bool use_embedded_bitmap;
+  bool force_gdi_rendering;
+
+  bool operator==(const FontInstancePlatformOptions& aOther) const {
+    return use_embedded_bitmap == aOther.use_embedded_bitmap &&
+           force_gdi_rendering == aOther.force_gdi_rendering;
+  }
+};
 
 struct Epoch {
   uint32_t mHandle;
@@ -592,6 +630,14 @@ struct GlyphInstance {
   }
 };
 
+struct GlyphOptions {
+  FontRenderMode render_mode;
+
+  bool operator==(const GlyphOptions& aOther) const {
+    return render_mode == aOther.render_mode;
+  }
+};
+
 struct TextShadow {
   LayoutVector2D offset;
   ColorF color;
@@ -728,6 +774,15 @@ void wr_api_add_external_image(DocumentHandle *aDh,
 WR_FUNC;
 
 WR_INLINE
+void wr_api_add_font_instance(DocumentHandle *aDh,
+                              WrFontInstanceKey aKey,
+                              WrFontKey aFontKey,
+                              float aGlyphSize,
+                              const FontInstanceOptions *aOptions,
+                              const FontInstancePlatformOptions *aPlatformOptions)
+WR_FUNC;
+
+WR_INLINE
 void wr_api_add_image(DocumentHandle *aDh,
                       WrImageKey aImageKey,
                       const WrImageDescriptor *aDescriptor,
@@ -760,6 +815,11 @@ WR_DESTRUCTOR_SAFE_FUNC;
 WR_INLINE
 void wr_api_delete_font(DocumentHandle *aDh,
                         WrFontKey aKey)
+WR_FUNC;
+
+WR_INLINE
+void wr_api_delete_font_instance(DocumentHandle *aDh,
+                                 WrFontInstanceKey aKey)
 WR_FUNC;
 
 WR_INLINE
@@ -1055,10 +1115,10 @@ void wr_dp_push_text(WrState *aState,
                      LayoutRect aBounds,
                      LayoutRect aClip,
                      ColorF aColor,
-                     WrFontKey aFontKey,
+                     WrFontInstanceKey aFontKey,
                      const GlyphInstance *aGlyphs,
                      uint32_t aGlyphCount,
-                     float aGlyphSize)
+                     const GlyphOptions *aGlyphOptions)
 WR_FUNC;
 
 WR_INLINE

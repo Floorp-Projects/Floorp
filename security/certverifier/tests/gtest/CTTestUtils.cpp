@@ -754,83 +754,83 @@ ExtractEmbeddedSCTList(const Buffer& cert, Buffer& result)
 class OCSPExtensionTrustDomain : public TrustDomain
 {
 public:
-  Result GetCertTrust(EndEntityOrCA, const CertPolicyId&,
-                      Input, TrustLevel&) override
+  pkix::Result GetCertTrust(EndEntityOrCA, const CertPolicyId&,
+                            Input, TrustLevel&) override
   {
     ADD_FAILURE();
-    return Result::FATAL_ERROR_LIBRARY_FAILURE;
+    return pkix::Result::FATAL_ERROR_LIBRARY_FAILURE;
   }
 
-  Result FindIssuer(Input, IssuerChecker&, Time) override
+  pkix::Result FindIssuer(Input, IssuerChecker&, Time) override
   {
     ADD_FAILURE();
-    return Result::FATAL_ERROR_LIBRARY_FAILURE;
+    return pkix::Result::FATAL_ERROR_LIBRARY_FAILURE;
   }
 
-  Result CheckRevocation(EndEntityOrCA, const CertID&, Time, Duration,
-                         const Input*, const Input*) override
+  pkix::Result CheckRevocation(EndEntityOrCA, const CertID&, Time, Duration,
+                               const Input*, const Input*) override
   {
     ADD_FAILURE();
-    return Result::FATAL_ERROR_LIBRARY_FAILURE;
+    return pkix::Result::FATAL_ERROR_LIBRARY_FAILURE;
   }
 
-  Result IsChainValid(const DERArray&, Time, const CertPolicyId&) override
+  pkix::Result IsChainValid(const DERArray&, Time, const CertPolicyId&) override
   {
     ADD_FAILURE();
-    return Result::FATAL_ERROR_LIBRARY_FAILURE;
+    return pkix::Result::FATAL_ERROR_LIBRARY_FAILURE;
   }
 
-  Result DigestBuf(Input item, DigestAlgorithm digestAlg,
-                   /*out*/ uint8_t* digestBuf, size_t digestBufLen) override
+  pkix::Result DigestBuf(Input item, DigestAlgorithm digestAlg,
+                         /*out*/ uint8_t* digestBuf, size_t digestBufLen) override
   {
     return DigestBufNSS(item, digestAlg, digestBuf, digestBufLen);
   }
 
-  Result CheckSignatureDigestAlgorithm(DigestAlgorithm, EndEntityOrCA, Time)
+  pkix::Result CheckSignatureDigestAlgorithm(DigestAlgorithm, EndEntityOrCA, Time)
                                        override
   {
     ADD_FAILURE();
-    return Result::FATAL_ERROR_LIBRARY_FAILURE;
+    return pkix::Result::FATAL_ERROR_LIBRARY_FAILURE;
   }
 
-  Result CheckECDSACurveIsAcceptable(EndEntityOrCA, NamedCurve) override
+  pkix::Result CheckECDSACurveIsAcceptable(EndEntityOrCA, NamedCurve) override
   {
     ADD_FAILURE();
-    return Result::FATAL_ERROR_LIBRARY_FAILURE;
+    return pkix::Result::FATAL_ERROR_LIBRARY_FAILURE;
   }
 
-  Result VerifyECDSASignedDigest(const SignedDigest& signedDigest,
-                                 Input subjectPublicKeyInfo) override
+  pkix::Result VerifyECDSASignedDigest(const SignedDigest& signedDigest,
+                                       Input subjectPublicKeyInfo) override
   {
     return VerifyECDSASignedDigestNSS(signedDigest, subjectPublicKeyInfo,
                                       nullptr);
   }
 
-  Result CheckRSAPublicKeyModulusSizeInBits(EndEntityOrCA, unsigned int)
+  pkix::Result CheckRSAPublicKeyModulusSizeInBits(EndEntityOrCA, unsigned int)
                                             override
   {
     ADD_FAILURE();
-    return Result::FATAL_ERROR_LIBRARY_FAILURE;
+    return pkix::Result::FATAL_ERROR_LIBRARY_FAILURE;
   }
 
-  Result VerifyRSAPKCS1SignedDigest(const SignedDigest& signedDigest,
-                                    Input subjectPublicKeyInfo) override
+  pkix::Result VerifyRSAPKCS1SignedDigest(const SignedDigest& signedDigest,
+                                          Input subjectPublicKeyInfo) override
   {
     return VerifyRSAPKCS1SignedDigestNSS(signedDigest, subjectPublicKeyInfo,
                                          nullptr);
   }
 
-  Result CheckValidityIsAcceptable(Time, Time, EndEntityOrCA, KeyPurposeId)
+  pkix::Result CheckValidityIsAcceptable(Time, Time, EndEntityOrCA, KeyPurposeId)
                                    override
   {
     ADD_FAILURE();
-    return Result::FATAL_ERROR_LIBRARY_FAILURE;
+    return pkix::Result::FATAL_ERROR_LIBRARY_FAILURE;
   }
 
-  Result NetscapeStepUpMatchesServerAuth(Time, bool&) override
+  pkix::Result NetscapeStepUpMatchesServerAuth(Time, bool&) override
   {
     ADD_FAILURE();
-    return Result::FATAL_ERROR_LIBRARY_FAILURE;
+    return pkix::Result::FATAL_ERROR_LIBRARY_FAILURE;
   }
 
   void NoteAuxiliaryExtension(AuxiliaryExtension extension, Input data) override
@@ -864,10 +864,10 @@ ExtractSCTListFromOCSPResponse(Input cert,
 
   bool expired;
   OCSPExtensionTrustDomain trustDomain;
-  Result rv = VerifyEncodedOCSPResponse(trustDomain, certID,
-                                        time, /*time*/
-                                        1000, /*maxLifetimeInDays*/
-                                        encodedResponse, expired);
+  pkix::Result rv = VerifyEncodedOCSPResponse(trustDomain, certID,
+                                              time, /*time*/
+                                              1000, /*maxLifetimeInDays*/
+                                              encodedResponse, expired);
   ASSERT_EQ(Success, rv);
 
   result = Move(trustDomain.signedCertificateTimestamps);

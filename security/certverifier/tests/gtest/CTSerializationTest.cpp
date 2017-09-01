@@ -229,14 +229,14 @@ TEST_F(CTSerializationTest, FailsDecodingInvalidSignedCertificateTimestamp)
   const uint8_t INVALID_VERSION_BYTES[] = { 0x02, 0x00 };
   Input invalidVersionSctInput(INVALID_VERSION_BYTES);
   Reader invalidVersionSctReader(invalidVersionSctInput);
-  EXPECT_EQ(Result::ERROR_BAD_DER,
+  EXPECT_EQ(pkix::Result::ERROR_BAD_DER,
     DecodeSignedCertificateTimestamp(invalidVersionSctReader, sct));
 
   // Valid version, invalid length (missing data)
   const uint8_t INVALID_LENGTH_BYTES[] = { 0x00, 0x0a, 0x0b, 0x0c };
   Input invalidLengthSctInput(INVALID_LENGTH_BYTES);
   Reader invalidLengthSctReader(invalidLengthSctInput);
-  EXPECT_EQ(Result::ERROR_BAD_DER,
+  EXPECT_EQ(pkix::Result::ERROR_BAD_DER,
     DecodeSignedCertificateTimestamp(invalidLengthSctReader, sct));
 }
 

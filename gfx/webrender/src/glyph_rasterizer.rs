@@ -378,14 +378,12 @@ fn raterize_200_glyphs() {
     let font_key = FontKey::new(IdNamespace(0), 0);
     glyph_rasterizer.add_font(font_key, FontTemplate::Raw(Arc::new(font_data), 0));
 
-    let font = FontInstance {
-        font_key,
-        color: ColorF::new(0.0, 0.0, 0.0, 1.0).into(),
-        size: Au::from_px(32),
-        render_mode: FontRenderMode::Subpixel,
-        glyph_options: None,
-        subpx_dir: SubpixelDirection::Horizontal,
-    };
+    let font = FontInstance::new(font_key,
+                                 Au::from_px(32),
+                                 ColorF::new(0.0, 0.0, 0.0, 1.0),
+                                 FontRenderMode::Subpixel,
+                                 SubpixelDirection::Horizontal,
+                                 None);
 
     let mut glyph_keys = Vec::with_capacity(200);
     for i in 0..200 {

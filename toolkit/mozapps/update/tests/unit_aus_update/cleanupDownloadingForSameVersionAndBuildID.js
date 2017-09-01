@@ -18,12 +18,33 @@ function run_test() {
   writeUpdatesToXMLFile(getLocalUpdatesXMLString(updates), true);
   writeStatusFile(STATE_DOWNLOADING);
 
+  patchProps = {state: STATE_FAILED};
+  patches = getLocalPatchString(patchProps);
+  updateProps = {name: "Existing"};
+  updates = getLocalUpdateString(updateProps, patches);
+  writeUpdatesToXMLFile(getLocalUpdatesXMLString(updates), false);
+
   standardInit();
 
   Assert.ok(!gUpdateManager.activeUpdate,
             "there should not be an active update");
-  Assert.equal(gUpdateManager.updateCount, 0,
+  let activeUpdateXML = getUpdatesXMLFile(true);
+  Assert.ok(!activeUpdateXML.exists(),
+            MSG_SHOULD_NOT_EXIST + getMsgPath(activeUpdateXML.path));
+  Assert.equal(gUpdateManager.updateCount, 2,
                "the update manager update count" + MSG_SHOULD_EQUAL);
+  let update = gUpdateManager.getUpdateAt(0);
+  Assert.equal(update.state, STATE_FAILED,
+               "the first update state" + MSG_SHOULD_EQUAL);
+  Assert.equal(update.errorCode, ERR_OLDER_VERSION_OR_SAME_BUILD,
+               "the first update errorCode" + MSG_SHOULD_EQUAL);
+  Assert.equal(update.statusText, getString("statusFailed"),
+               "the first update statusText " + MSG_SHOULD_EQUAL);
+  update = gUpdateManager.getUpdateAt(1);
+  Assert.equal(update.state, STATE_FAILED,
+               "the second update state" + MSG_SHOULD_EQUAL);
+  Assert.equal(update.name, "Existing",
+               "the second update name" + MSG_SHOULD_EQUAL);
 
   doTestFinish();
 }

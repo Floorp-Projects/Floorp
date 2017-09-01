@@ -1,0 +1,17 @@
+<html>
+<head>
+<meta charset=UTF-8>
+<title>Test for Bug 13870787</title>
+<script>
+function load() {
+  var url = window.URL.createObjectURL(new Blob(["test"], {type:"text/plain"}));
+  var a = document.getElementById("download");
+  a.href = url;
+  a.download = "download.bin";
+}
+</script>
+</head>
+<body onload='load()'>
+<a id="download">download</a>
+</body>
+</html>

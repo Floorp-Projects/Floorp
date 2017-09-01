@@ -917,6 +917,10 @@ class CanOfAPIs {
  *       its appropriate event handler method to be called. Currently
  *       only accepts "startup".
  *
+ * @property {Array<string>} permissions
+ *       An optional list of permissions, any of which must be present
+ *       in order for the module to load.
+ *
  * @property {Array<Array<string>>} paths
  *       A list of paths from the root API object which, when accessed,
  *       will cause the API module to be instantiated and injected.
@@ -1218,6 +1222,10 @@ class SchemaAPIManager extends EventEmitter {
    */
   _checkGetAPI(name, extension, scope = null) {
     let module = this.modules.get(name);
+
+    if (module.permissions && !module.permissions.some(perm => extension.hasPermission(perm))) {
+      return false;
+    }
 
     if (!scope) {
       return true;

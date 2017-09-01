@@ -66,6 +66,7 @@ MOZ_MEMORY_API char *strndup_impl(const char *, size_t);
 
 #include <sys/types.h>
 
+#include "mozilla/Assertions.h"
 #include "mozilla/mozalloc.h"
 #include "mozilla/mozalloc_oom.h"  // for mozalloc_handle_oom
 
@@ -214,8 +215,30 @@ moz_malloc_usable_size(void *ptr)
 #endif
 }
 
-size_t moz_malloc_size_of(const void *ptr)
+size_t
+moz_malloc_size_of(const void *ptr)
 {
     return moz_malloc_usable_size((void *)ptr);
+}
+
+#if defined(MOZ_MEMORY)
+#include "mozjemalloc_types.h"
+// mozmemory.h declares jemalloc_ptr_info(), but including that header in this
+// file is complicated. So we just redeclare it here instead, and include
+// mozjemalloc_types.h for jemalloc_ptr_info_t.
+MOZ_JEMALLOC_API void jemalloc_ptr_info(const void* ptr,
+                                        jemalloc_ptr_info_t* info);
+#endif
+
+size_t
+moz_malloc_enclosing_size_of(const void *ptr)
+{
+#if defined(MOZ_MEMORY)
+    jemalloc_ptr_info_t info;
+    jemalloc_ptr_info(ptr, &info);
+    return jemalloc_ptr_is_live(&info) ? info.size : 0;
+#else
+    return 0;
+#endif
 }
 #endif

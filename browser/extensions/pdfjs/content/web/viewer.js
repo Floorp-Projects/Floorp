@@ -1323,7 +1323,9 @@ let PDFViewerApplication = {
         }
       }
     }
-    console.error(message + '\n' + moreInfoText);
+    Promise.all(moreInfoText).then(parts => {
+      console.error(message + '\n' + parts.join('\n'));
+    });
     this.fallback();
   },
   progress(level) {
@@ -4916,7 +4918,6 @@ class PDFPageView {
     this.reset();
     if (this.pdfPage) {
       this.pdfPage.cleanup();
-      this.pdfPage = null;
     }
   }
   _resetZoomLayer(removeFromDOM = false) {

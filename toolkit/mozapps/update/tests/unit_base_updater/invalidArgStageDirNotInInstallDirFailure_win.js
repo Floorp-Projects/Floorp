@@ -32,6 +32,9 @@ function setupUpdaterTestFinished() {
  */
 function runUpdateFinished() {
   standardInit();
+  let errorCode = IS_SERVICE_TEST ? SERVICE_INVALID_APPLYTO_DIR_STAGED_ERROR
+                                  : INVALID_APPLYTO_DIR_STAGED_ERROR;
+  checkUpdateManager(STATE_NONE, false, STATE_FAILED, errorCode, 1);
   checkPostUpdateRunningFile(false);
   checkFilesAfterUpdateFailure(getApplyDirFile);
   waitForFilesInUse();

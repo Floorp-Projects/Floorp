@@ -74,7 +74,7 @@ TEST_F(BTSerializationTest, FailsDecodingInclusionProofUnexpectedData)
   Reader encodedProofReader(encodedProofInput);
   InclusionProofDataV2 ipr;
 
-  ASSERT_EQ(Result::ERROR_BAD_DER, DecodeInclusionProof(encodedProofReader, ipr));
+  ASSERT_EQ(pkix::Result::ERROR_BAD_DER, DecodeInclusionProof(encodedProofReader, ipr));
 }
 
 TEST_F(BTSerializationTest, FailsDecodingInvalidHashSize)
@@ -83,7 +83,7 @@ TEST_F(BTSerializationTest, FailsDecodingInvalidHashSize)
   Reader encodedProofReader(encodedProofInput);
   InclusionProofDataV2 ipr;
 
-  ASSERT_EQ(Result::ERROR_BAD_DER, DecodeInclusionProof(encodedProofReader, ipr));
+  ASSERT_EQ(pkix::Result::ERROR_BAD_DER, DecodeInclusionProof(encodedProofReader, ipr));
 }
 
 TEST_F(BTSerializationTest, FailsDecodingInvalidHash)
@@ -92,7 +92,7 @@ TEST_F(BTSerializationTest, FailsDecodingInvalidHash)
   Reader encodedProofReader(encodedProofInput);
   InclusionProofDataV2 ipr;
 
-  ASSERT_EQ(Result::ERROR_BAD_DER, DecodeInclusionProof(encodedProofReader, ipr));
+  ASSERT_EQ(pkix::Result::ERROR_BAD_DER, DecodeInclusionProof(encodedProofReader, ipr));
 }
 
 TEST_F(BTSerializationTest, FailsDecodingMissingLogId)
@@ -101,7 +101,7 @@ TEST_F(BTSerializationTest, FailsDecodingMissingLogId)
   Reader encodedProofReader(encodedProofInput);
   InclusionProofDataV2 ipr;
 
-  ASSERT_EQ(Result::ERROR_BAD_DER, DecodeInclusionProof(encodedProofReader, ipr));
+  ASSERT_EQ(pkix::Result::ERROR_BAD_DER, DecodeInclusionProof(encodedProofReader, ipr));
 }
 
 TEST_F(BTSerializationTest, FailsDecodingNullPathLength)
@@ -110,7 +110,7 @@ TEST_F(BTSerializationTest, FailsDecodingNullPathLength)
   Reader encodedProofReader(encodedProofInput);
   InclusionProofDataV2 ipr;
 
-  ASSERT_EQ(Result::ERROR_BAD_DER, DecodeInclusionProof(encodedProofReader, ipr));
+  ASSERT_EQ(pkix::Result::ERROR_BAD_DER, DecodeInclusionProof(encodedProofReader, ipr));
 }
 
 TEST_F(BTSerializationTest, FailsDecodingPathLengthTooSmall)
@@ -119,7 +119,7 @@ TEST_F(BTSerializationTest, FailsDecodingPathLengthTooSmall)
   Reader encodedProofReader(encodedProofInput);
   InclusionProofDataV2 ipr;
 
-  ASSERT_EQ(Result::ERROR_BAD_DER, DecodeInclusionProof(encodedProofReader, ipr));
+  ASSERT_EQ(pkix::Result::ERROR_BAD_DER, DecodeInclusionProof(encodedProofReader, ipr));
 }
 
 TEST_F(BTSerializationTest, FailsDecodingPathLengthTooLarge)
@@ -128,7 +128,7 @@ TEST_F(BTSerializationTest, FailsDecodingPathLengthTooLarge)
   Reader encodedProofReader(encodedProofInput);
   InclusionProofDataV2 ipr;
 
-  ASSERT_EQ(Result::ERROR_BAD_DER, DecodeInclusionProof(encodedProofReader, ipr));
+  ASSERT_EQ(pkix::Result::ERROR_BAD_DER, DecodeInclusionProof(encodedProofReader, ipr));
 }
 
 TEST_F(BTSerializationTest, FailsDecodingNullTreeSize)
@@ -137,7 +137,7 @@ TEST_F(BTSerializationTest, FailsDecodingNullTreeSize)
   Reader encodedProofReader(encodedProofInput);
   InclusionProofDataV2 ipr;
 
-  ASSERT_EQ(Result::ERROR_BAD_DER, DecodeInclusionProof(encodedProofReader, ipr));
+  ASSERT_EQ(pkix::Result::ERROR_BAD_DER, DecodeInclusionProof(encodedProofReader, ipr));
 }
 
 TEST_F(BTSerializationTest, FailsDecodingLeafIndexOutOfBounds)
@@ -146,7 +146,7 @@ TEST_F(BTSerializationTest, FailsDecodingLeafIndexOutOfBounds)
   Reader encodedProofReader(encodedProofInput);
   InclusionProofDataV2 ipr;
 
-  ASSERT_EQ(Result::ERROR_BAD_DER, DecodeInclusionProof(encodedProofReader, ipr));
+  ASSERT_EQ(pkix::Result::ERROR_BAD_DER, DecodeInclusionProof(encodedProofReader, ipr));
 }
 
 TEST_F(BTSerializationTest, FailsDecodingExtraData)
@@ -155,6 +155,6 @@ TEST_F(BTSerializationTest, FailsDecodingExtraData)
   Reader encodedProofReader(encodedProofInput);
   InclusionProofDataV2 ipr;
 
-  ASSERT_EQ(Result::ERROR_BAD_DER, DecodeInclusionProof(encodedProofReader, ipr));
+  ASSERT_EQ(pkix::Result::ERROR_BAD_DER, DecodeInclusionProof(encodedProofReader, ipr));
 }
 } } // namespace mozilla::ct

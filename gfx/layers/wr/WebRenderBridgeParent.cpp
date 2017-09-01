@@ -312,11 +312,58 @@ WebRenderBridgeParent::RecvDeleteFont(const wr::FontKey& aFontKey)
     return IPC_OK();
   }
 
-  if (mFontKeys.find(wr::AsUint64(aFontKey)) != mFontKeys.end()) {
-    mFontKeys.erase(wr::AsUint64(aFontKey));
+  if (mFontKeys.erase(wr::AsUint64(aFontKey)) > 0) {
     mApi->DeleteFont(aFontKey);
   } else {
     MOZ_ASSERT_UNREACHABLE("invalid FontKey");
+  }
+
+  return IPC_OK();
+}
+
+mozilla::ipc::IPCResult
+WebRenderBridgeParent::RecvAddFontInstance(const wr::FontInstanceKey& aInstanceKey,
+                                           const wr::FontKey& aFontKey,
+                                           const float& aGlyphSize,
+                                           const MaybeFontInstanceOptions& aOptions,
+                                           const MaybeFontInstancePlatformOptions& aPlatformOptions)
+{
+  if (mDestroyed) {
+    return IPC_OK();
+  }
+
+  // Check if key is obsoleted.
+  if (aInstanceKey.mNamespace != mIdNamespace) {
+    return IPC_OK();
+  }
+
+  MOZ_ASSERT(mApi);
+  MOZ_ASSERT(mFontInstanceKeys.find(wr::AsUint64(aInstanceKey)) == mFontInstanceKeys.end());
+
+  mFontInstanceKeys.insert(wr::AsUint64(aInstanceKey));
+  mApi->AddFontInstance(aInstanceKey, aFontKey, aGlyphSize,
+                        aOptions.ptrOr(nullptr), aPlatformOptions.ptrOr(nullptr));
+
+  return IPC_OK();
+}
+
+mozilla::ipc::IPCResult
+WebRenderBridgeParent::RecvDeleteFontInstance(const wr::FontInstanceKey& aInstanceKey)
+{
+  if (mDestroyed) {
+    return IPC_OK();
+  }
+  MOZ_ASSERT(mApi);
+
+  // Check if key is obsoleted.
+  if (aInstanceKey.mNamespace != mIdNamespace) {
+    return IPC_OK();
+  }
+
+  if (mFontInstanceKeys.erase(wr::AsUint64(aInstanceKey)) > 0) {
+    mApi->DeleteFontInstance(aInstanceKey);
+  } else {
+    MOZ_ASSERT_UNREACHABLE("invalid FontInstanceKey");
   }
 
   return IPC_OK();
@@ -357,8 +404,7 @@ WebRenderBridgeParent::RecvDeleteImage(const wr::ImageKey& aImageKey)
     return IPC_OK();
   }
 
-  if (mActiveImageKeys.find(wr::AsUint64(aImageKey)) != mActiveImageKeys.end()) {
-    mActiveImageKeys.erase(wr::AsUint64(aImageKey));
+  if (mActiveImageKeys.erase(wr::AsUint64(aImageKey)) > 0) {
     mKeysToDelete.push_back(aImageKey);
   } else {
     MOZ_ASSERT_UNREACHABLE("invalid ImageKey");
@@ -374,9 +420,8 @@ WebRenderBridgeParent::RecvDeleteCompositorAnimations(InfallibleTArray<uint64_t>
   }
 
   for (uint32_t i = 0; i < aIds.Length(); i++) {
-    if (mActiveAnimations.find(aIds[i]) != mActiveAnimations.end()) {
+    if (mActiveAnimations.erase(aIds[i]) > 0) {
       mAnimStorage->ClearById(aIds[i]);
-      mActiveAnimations.erase(aIds[i]);
     } else {
       NS_ERROR("Tried to delete invalid animation");
     }
@@ -1307,6 +1352,7 @@ WebRenderBridgeParent::ClearResources()
   // Schedule composition to clean up Pipeline
   mCompositorScheduler->ScheduleComposition();
   // WrFontKeys and WrImageKeys are deleted during WebRenderAPI destruction.
+  mFontInstanceKeys.clear();
   mFontKeys.clear();
   mActiveImageKeys.clear();
   mKeysToDelete.clear();

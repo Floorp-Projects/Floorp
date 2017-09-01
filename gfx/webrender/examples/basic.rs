@@ -241,6 +241,9 @@ impl Example for App {
             let font_bytes = load_file("res/FreeSans.ttf");
             resources.add_raw_font(font_key, font_bytes, 0);
 
+            let font_instance_key = api.generate_font_instance_key();
+            resources.add_font_instance(font_instance_key, font_key, Au::from_px(32), None, None);
+
             let text_bounds = (100, 200).by(700, 300);
             let glyphs = vec![
                 GlyphInstance {
@@ -296,9 +299,8 @@ impl Example for App {
             builder.push_text(text_bounds,
                               None,
                               &glyphs,
-                              font_key,
+                              font_instance_key,
                               ColorF::new(1.0, 1.0, 0.0, 1.0),
-                              Au::from_px(32),
                               None);
         }
 

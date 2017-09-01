@@ -1460,6 +1460,31 @@ extent_ad_comp(extent_node_t *a, extent_node_t *b)
 rb_wrap(static, extent_tree_ad_, extent_tree_t, extent_node_t, link_ad,
     extent_ad_comp)
 
+static inline int
+extent_bounds_comp(extent_node_t* aKey, extent_node_t* aNode)
+{
+  uintptr_t key_addr = (uintptr_t)aKey->addr;
+  uintptr_t node_addr = (uintptr_t)aNode->addr;
+  size_t node_size = aNode->size;
+
+  // Is aKey within aNode?
+  if (node_addr <= key_addr && key_addr < node_addr + node_size) {
+    return 0;
+  }
+
+  return ((key_addr > node_addr) - (key_addr < node_addr));
+}
+
+/*
+ * This is an expansion of just the search function from the rb_wrap macro.
+ */
+static extent_node_t *
+extent_tree_bounds_search(extent_tree_t *tree, extent_node_t *key) {
+    extent_node_t *ret;
+    rb_search(extent_node_t, link_ad, extent_bounds_comp, tree, key, ret);
+    return ret;
+}
+
 /*
  * End extent tree code.
  */
@@ -3544,6 +3569,134 @@ isalloc(const void *ptr)
 	return (ret);
 }
 
+MOZ_JEMALLOC_API void
+jemalloc_ptr_info_impl(const void* aPtr, jemalloc_ptr_info_t* aInfo)
+{
+  arena_chunk_t* chunk = (arena_chunk_t*)CHUNK_ADDR2BASE(aPtr);
+
+  // Is the pointer null, or within one chunk's size of null?
+  if (!chunk) {
+    *aInfo = { TagUnknown, nullptr, 0 };
+    return;
+  }
+
+  // Look for huge allocations before looking for |chunk| in chunk_rtree.
+  // This is necessary because |chunk| won't be in chunk_rtree if it's
+  // the second or subsequent chunk in a huge allocation.
+  extent_node_t* node;
+  extent_node_t key;
+  malloc_mutex_lock(&huge_mtx);
+  key.addr = const_cast<void*>(aPtr);
+  node = extent_tree_bounds_search(&huge, &key);
+  if (node) {
+    *aInfo = { TagLiveHuge, node->addr, node->size };
+  }
+  malloc_mutex_unlock(&huge_mtx);
+  if (node) {
+    return;
+  }
+
+  // It's not a huge allocation. Check if we have a known chunk.
+  if (!malloc_rtree_get(chunk_rtree, (uintptr_t)chunk)) {
+    *aInfo = { TagUnknown, nullptr, 0 };
+    return;
+  }
+
+  MOZ_DIAGNOSTIC_ASSERT(chunk->arena->magic == ARENA_MAGIC);
+
+  // Get the page number within the chunk.
+  size_t pageind = (((uintptr_t)aPtr - (uintptr_t)chunk) >> pagesize_2pow);
+  if (pageind < arena_chunk_header_npages) {
+    // Within the chunk header.
+    *aInfo = { TagUnknown, nullptr, 0 };
+    return;
+  }
+
+  size_t mapbits = chunk->map[pageind].bits;
+
+  if (!(mapbits & CHUNK_MAP_ALLOCATED)) {
+    PtrInfoTag tag = TagFreedPageDirty;
+    if (mapbits & CHUNK_MAP_DIRTY)
+      tag = TagFreedPageDirty;
+    else if (mapbits & CHUNK_MAP_DECOMMITTED)
+      tag = TagFreedPageDecommitted;
+    else if (mapbits & CHUNK_MAP_MADVISED)
+      tag = TagFreedPageMadvised;
+    else if (mapbits & CHUNK_MAP_ZEROED)
+      tag = TagFreedPageZeroed;
+    else
+      MOZ_CRASH();
+
+    void* pageaddr = (void*)(uintptr_t(aPtr) & ~pagesize_mask);
+    *aInfo = { tag, pageaddr, pagesize };
+    return;
+  }
+
+  if (mapbits & CHUNK_MAP_LARGE) {
+    // It's a large allocation. Only the first page of a large
+    // allocation contains its size, so if the address is not in
+    // the first page, scan back to find the allocation size.
+    size_t size;
+    while (true) {
+      size = mapbits & ~pagesize_mask;
+      if (size != 0) {
+        break;
+      }
+
+      // The following two return paths shouldn't occur in
+      // practice unless there is heap corruption.
+
+      pageind--;
+      MOZ_DIAGNOSTIC_ASSERT(pageind >= arena_chunk_header_npages);
+      if (pageind < arena_chunk_header_npages) {
+        *aInfo = { TagUnknown, nullptr, 0 };
+        return;
+      }
+
+      mapbits = chunk->map[pageind].bits;
+      MOZ_DIAGNOSTIC_ASSERT(mapbits & CHUNK_MAP_LARGE);
+      if (!(mapbits & CHUNK_MAP_LARGE)) {
+        *aInfo = { TagUnknown, nullptr, 0 };
+        return;
+      }
+    }
+
+    void* addr = ((char*)chunk) + (pageind << pagesize_2pow);
+    *aInfo = { TagLiveLarge, addr, size };
+    return;
+  }
+
+  // It must be a small allocation.
+
+  auto run = (arena_run_t *)(mapbits & ~pagesize_mask);
+  MOZ_DIAGNOSTIC_ASSERT(run->magic == ARENA_RUN_MAGIC);
+
+  // The allocation size is stored in the run metadata.
+  size_t size = run->bin->reg_size;
+
+  // Address of the first possible pointer in the run after its headers.
+  uintptr_t reg0_addr = (uintptr_t)run + run->bin->reg0_offset;
+  if (aPtr < (void*)reg0_addr) {
+    // In the run header.
+    *aInfo = { TagUnknown, nullptr, 0 };
+    return;
+  }
+
+  // Position in the run.
+  unsigned regind = ((uintptr_t)aPtr - reg0_addr) / size;
+
+  // Pointer to the allocation's base address.
+  void* addr = (void*)(reg0_addr + regind * size);
+
+  // Check if the allocation has been freed.
+  unsigned elm = regind >> (SIZEOF_INT_2POW + 3);
+  unsigned bit = regind - (elm << (SIZEOF_INT_2POW + 3));
+  PtrInfoTag tag = ((run->regs_mask[elm] & (1U << bit)))
+                 ? TagFreedSmall : TagLiveSmall;
+
+  *aInfo = { tag, addr, size};
+}
+
 static inline void
 arena_dalloc_small(arena_t *arena, arena_chunk_t *chunk, void *ptr,
     arena_chunk_map_t *mapelm)
@@ -4772,6 +4925,7 @@ jemalloc_stats_impl(jemalloc_stats_t *stats)
 	stats->small_max = small_max;
 	stats->large_max = arena_maxclass;
 	stats->chunksize = chunksize;
+	stats->page_size = pagesize;
 	stats->dirty_max = opt_dirty_max;
 
 	/*

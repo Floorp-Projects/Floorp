@@ -305,6 +305,7 @@ bool nsContentUtils::sGetBoxQuadsEnabled = false;
 bool nsContentUtils::sSkipCursorMoveForSameValueSet = false;
 bool nsContentUtils::sRequestIdleCallbackEnabled = false;
 bool nsContentUtils::sLowerNetworkPriority = false;
+bool nsContentUtils::sTailingEnabled = false;
 bool nsContentUtils::sShowInputPlaceholderOnFocus = true;
 bool nsContentUtils::sAutoFocusEnabled = true;
 #ifndef RELEASE_OR_BETA
@@ -768,6 +769,9 @@ nsContentUtils::Init()
 
   Preferences::AddBoolVarCache(&sLowerNetworkPriority,
                                "privacy.trackingprotection.lower_network_priority", false);
+
+  Preferences::AddBoolVarCache(&sTailingEnabled,
+                               "network.http.tailing.enabled", true);
 
   Preferences::AddBoolVarCache(&sShowInputPlaceholderOnFocus,
                                "dom.placeholder.show_on_focus", true);
@@ -3085,22 +3089,15 @@ nsContentUtils::GenerateStateKey(nsIContent* aContent,
                                     /* aDeep = */ true,
                                     /* aLiveList = */ false);
     }
-    RefPtr<nsContentList> htmlFormControls = htmlDoc->GetExistingFormControls();
-    if (!htmlFormControls) {
-      // If the document doesn't have an existing form controls content list,
-      // create a new one, but avoid creating a live list since we only need to
-      // use the list here and it doesn't need to listen to mutation events.
-      htmlFormControls = new nsContentList(aDocument,
-                                           nsHTMLDocument::MatchFormControls,
-                                           nullptr, nullptr,
-                                           /* aDeep = */ true,
-                                           /* aMatchAtom = */ nullptr,
-                                           /* aMatchNameSpaceId = */ kNameSpaceID_None,
-                                           /* aFuncMayDependOnAttr = */ true,
-                                           /* aLiveList = */ false);
-    }
-
-    NS_ENSURE_TRUE(htmlForms && htmlFormControls, NS_ERROR_OUT_OF_MEMORY);
+    RefPtr<nsContentList> htmlFormControls =
+      new nsContentList(aDocument,
+                        nsHTMLDocument::MatchFormControls,
+                        nullptr, nullptr,
+                        /* aDeep = */ true,
+                        /* aMatchAtom = */ nullptr,
+                        /* aMatchNameSpaceId = */ kNameSpaceID_None,
+                        /* aFuncMayDependOnAttr = */ true,
+                        /* aLiveList = */ false);
 
     // If we have a form control and can calculate form information, use that
     // as the key - it is more reliable than just recording position in the
@@ -3117,7 +3114,7 @@ nsContentUtils::GenerateStateKey(nsIContent* aContent,
     // XXXbz We don't?  Why not?  I don't follow.
     //
     nsCOMPtr<nsIFormControl> control(do_QueryInterface(aContent));
-    if (control && htmlFormControls && htmlForms) {
+    if (control) {
 
       // Append the control type
       KeyAppendInt(control->ControlType(), aKey);

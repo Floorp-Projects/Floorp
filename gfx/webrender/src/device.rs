@@ -1176,6 +1176,7 @@ impl Device {
 
     pub fn free_texture_storage(&mut self, texture: &mut Texture) {
         debug_assert!(self.inside_frame);
+        debug_assert_eq!(self.bound_pbo, PBOId(0));
 
         if texture.format == ImageFormat::Invalid {
             return;
@@ -1373,7 +1374,7 @@ impl Device {
 
     pub fn update_pbo_data<T>(&mut self, data: &[T]) {
         debug_assert!(self.inside_frame);
-        debug_assert!(self.bound_pbo.0 != 0);
+        debug_assert_ne!(self.bound_pbo, PBOId(0));
 
         gl::buffer_data(&*self.gl,
                         gl::PIXEL_UNPACK_BUFFER,
@@ -1383,7 +1384,7 @@ impl Device {
 
     pub fn orphan_pbo(&mut self, new_size: usize) {
         debug_assert!(self.inside_frame);
-        debug_assert!(self.bound_pbo.0 != 0);
+        debug_assert_ne!(self.bound_pbo, PBOId(0));
 
         self.gl.buffer_data_untyped(gl::PIXEL_UNPACK_BUFFER,
                                     new_size as isize,

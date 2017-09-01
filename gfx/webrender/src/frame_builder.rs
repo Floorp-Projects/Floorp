@@ -4,7 +4,8 @@
 
 use api::{BorderDetails, BorderDisplayItem, BoxShadowClipMode, ClipAndScrollInfo, ClipId, ColorF};
 use api::{DeviceIntPoint, DeviceIntRect, DeviceIntSize, DeviceUintRect, DeviceUintSize};
-use api::{ExtendMode, FontKey, FontRenderMode, GlyphInstance, GlyphOptions, GradientStop};
+use api::{ExtendMode, FontInstance, FontRenderMode};
+use api::{GlyphInstance, GlyphOptions, GradientStop};
 use api::{ImageKey, ImageRendering, ItemRange, LayerPoint, LayerRect, LayerSize};
 use api::{LayerToScrollTransform, LayerVector2D, LayoutVector2D, LineOrientation, LineStyle};
 use api::{LocalClip, PipelineId, RepeatMode, ScrollSensitivity, SubpixelDirection, TextShadow};
@@ -875,24 +876,37 @@ impl FrameBuilder {
                     run_offset: LayoutVector2D,
                     rect: LayerRect,
                     local_clip: &LocalClip,
-                    font_key: FontKey,
-                    size: Au,
+                    font: &FontInstance,
                     color: &ColorF,
                     glyph_range: ItemRange<GlyphInstance>,
                     glyph_count: usize,
                     glyph_options: Option<GlyphOptions>) {
         // Trivial early out checks
-        if size.0 <= 0 {
+        if font.size.0 <= 0 {
+            return
+        }
+
+        // Sanity check - anything with glyphs bigger than this
+        // is probably going to consume too much memory to render
+        // efficiently anyway. This is specifically to work around
+        // the font_advance.html reftest, which creates a very large
+        // font as a crash test - the rendering is also ignored
+        // by the azure renderer.
+        if font.size >= Au::from_px(4096) {
             return
         }
 
         // TODO(gw): Use a proper algorithm to select
         // whether this item should be rendered with
         // subpixel AA!
-        let mut normal_render_mode = self.config.default_font_render_mode;
+        let mut default_render_mode = self.config.default_font_render_mode.limit_by(font.render_mode);
+        if let Some(options) = glyph_options {
+            default_render_mode = default_render_mode.limit_by(options.render_mode);
+        }
 
         // There are some conditions under which we can't use
         // subpixel text rendering, even if enabled.
+        let mut normal_render_mode = default_render_mode;
         if normal_render_mode == FontRenderMode::Subpixel {
             if color.a != 1.0 {
                 normal_render_mode = FontRenderMode::Alpha;
@@ -913,30 +927,32 @@ impl FrameBuilder {
 
         // Shadows never use subpixel AA, but need to respect the alpha/mono flag
         // for reftests.
-        let (shadow_render_mode, subpx_dir) = match self.config.default_font_render_mode {
+        let (shadow_render_mode, subpx_dir) = match default_render_mode {
             FontRenderMode::Subpixel | FontRenderMode::Alpha => {
                 // TODO(gw): Expose subpixel direction in API once WR supports
                 //           vertical text runs.
-                (FontRenderMode::Alpha, SubpixelDirection::Horizontal)
+                (FontRenderMode::Alpha, font.subpx_dir)
             }
             FontRenderMode::Mono => {
                 (FontRenderMode::Mono, SubpixelDirection::None)
             }
         };
 
+        let prim_font = FontInstance::new(font.font_key,
+                                          font.size,
+                                          *color,
+                                          normal_render_mode,
+                                          subpx_dir,
+                                          font.platform_options);
         let prim = TextRunPrimitiveCpu {
-            font_key,
-            logical_font_size: size,
+            font: prim_font,
             glyph_range,
             glyph_count,
             glyph_gpu_blocks: Vec::new(),
             glyph_keys: Vec::new(),
-            glyph_options,
-            normal_render_mode,
             shadow_render_mode,
             offset: run_offset,
             color: *color,
-            subpx_dir,
         };
 
         // Text shadows that have a blur radius of 0 need to be rendered as normal
@@ -953,6 +969,7 @@ impl FrameBuilder {
             let shadow_prim = &self.prim_store.cpu_text_shadows[shadow_metadata.cpu_prim_index.0];
             if shadow_prim.shadow.blur_radius == 0.0 {
                 let mut text_prim = prim.clone();
+                text_prim.font.color = shadow_prim.shadow.color.into();
                 text_prim.color = shadow_prim.shadow.color;
                 text_prim.offset += shadow_prim.shadow.offset;
                 fast_text_shadow_prims.push(text_prim);

@@ -283,39 +283,51 @@ struct Orientation
 };
 
 static Orientation
-RotationVectorToOrientation(double aX, double aY, double aZ, double aW)
-{
-  static const double kFuzzyOne = 1.0 - 1e-6;
-  static const double kCircleRad = 2.0 * M_PI;
+RotationVectorToOrientation(double aX, double aY, double aZ, double aW) {
+  double mat[9];
 
-  Orientation orient = { 2.0 * std::atan2(aY, aW),
-                         M_PI_2,
-                         0.0 };
+  mat[0] = 1 - 2*aY*aY - 2*aZ*aZ;
+  mat[1] = 2*aX*aY - 2*aZ*aW;
+  mat[2] = 2*aX*aZ + 2*aY*aW;
 
-  const double sqX = aX * aX;
-  const double sqY = aY * aY;
-  const double sqZ = aZ * aZ;
-  const double sqW = aW * aW;
-  const double unitLength = sqX + sqY + sqZ + sqW;
-  const double xwyz = 2.0 * (aX * aW + aY * aZ) / unitLength;
+  mat[3] = 2*aX*aY + 2*aZ*aW;
+  mat[4] = 1 - 2*aX*aX - 2*aZ*aZ;
+  mat[5] = 2*aY*aZ - 2*aX*aW;
 
-  if (xwyz < -kFuzzyOne) {
-    orient.alpha *= -1.0;
-    orient.beta *= -1.0;
-  } else if (xwyz <= kFuzzyOne) {
-    const double gammaX = -sqX - sqY + sqZ + sqW;
-    const double gammaY = 2.0 * (aY * aW - aX * aZ);
-    const double alphaX = -sqX + sqY - sqZ + sqW;
-    const double alphaY = 2.0 * (aZ * aW - aX * aY);
-    const double fac = gammaX > 0 ? 1.0 : -1.0;
+  mat[6] = 2*aX*aZ - 2*aY*aW;
+  mat[7] = 2*aY*aZ + 2*aX*aW;
+  mat[8] = 1 - 2*aX*aX - 2*aY*aY;
 
-    orient.alpha = std::fmod(kCircleRad + std::atan2(fac * alphaY, fac * alphaX),
-                             kCircleRad);
-    orient.beta = fac * std::asin(xwyz);
-    orient.gamma = std::atan2(fac * gammaY, fac * gammaX);
-    if (fac < 0.0) {
-      orient.beta = fmod(M_PI + orient.beta, M_PI);
+  Orientation orient;
+
+  if (mat[8] > 0) {
+    orient.alpha = atan2(-mat[1], mat[4]);
+    orient.beta = asin(mat[7]);
+    orient.gamma = atan2(-mat[6], mat[8]);
+  } else if (mat[8] < 0) {
+    orient.alpha = atan2(mat[1], -mat[4]);
+    orient.beta = -asin(mat[7]);
+    orient.beta += (orient.beta >= 0) ? -M_PI : M_PI;
+    orient.gamma = atan2(mat[6], -mat[8]);
+  } else {
+    if (mat[6] > 0) {
+      orient.alpha = atan2(-mat[1], mat[4]);
+      orient.beta = asin(mat[7]);
+      orient.gamma = -M_PI_2;
+    } else if (mat[6] < 0) {
+      orient.alpha = atan2(mat[1], -mat[4]);
+      orient.beta = -asin(mat[7]);
+      orient.beta += (orient.beta >= 0) ? -M_PI : M_PI;
+      orient.gamma = -M_PI_2;
+    } else {
+      orient.alpha = atan2(mat[3], mat[0]);
+      orient.beta = (mat[7] > 0) ? M_PI_2 : -M_PI_2;
+      orient.gamma = 0;
     }
+  }
+
+  if (orient.alpha < 0) {
+    orient.alpha += 2*M_PI;
   }
 
   return Orientation::RadToDeg(orient);
