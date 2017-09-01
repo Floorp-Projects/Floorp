@@ -1745,7 +1745,7 @@ WebSocketChannel::ProcessInput(uint8_t *buffer, uint32_t count)
         }
 
         // Section 8.1 says to fail connection if invalid utf-8 in text message
-        if (!IsUTF8(utf8Data, false)) {
+        if (!IsUTF8(utf8Data)) {
           LOG(("WebSocketChannel:: text frame invalid utf-8\n"));
           return NS_ERROR_CANNOT_CONVERT_DATA;
         }
@@ -1796,7 +1796,7 @@ WebSocketChannel::ProcessInput(uint8_t *buffer, uint32_t count)
             // (which are non-conformant to send) with u+fffd,
             // but secteam feels that silently rewriting messages is
             // inappropriate - so we will fail the connection instead.
-            if (!IsUTF8(mServerCloseReason, false)) {
+            if (!IsUTF8(mServerCloseReason)) {
               LOG(("WebSocketChannel:: close frame invalid utf-8\n"));
               return NS_ERROR_CANNOT_CONVERT_DATA;
             }
