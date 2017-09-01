@@ -301,6 +301,10 @@ var gInitialPages = [
   "about:sessionrestore"
 ];
 
+function isInitialPage(url) {
+  return gInitialPages.includes(url) || url == BROWSER_NEW_TAB_URL;
+}
+
 function* browserWindows() {
   let windows = Services.wm.getEnumerator("navigator:browser");
   while (windows.hasMoreElements())
@@ -2751,7 +2755,7 @@ function URLBarSetURI(aURI) {
 
     // Replace initial page URIs with an empty string
     // only if there's no opener (bug 370555).
-    if (gInitialPages.includes(uri.spec) &&
+    if (isInitialPage(uri.spec) &&
         checkEmptyPageOrigin(gBrowser.selectedBrowser, uri)) {
       value = "";
     } else {
@@ -2764,6 +2768,10 @@ function URLBarSetURI(aURI) {
     }
 
     valid = !isBlankPageURL(uri.spec) || uri.schemeIs("moz-extension");
+  } else if (isInitialPage(value) &&
+             checkEmptyPageOrigin(gBrowser.selectedBrowser)) {
+    value = "";
+    valid = true;
   }
 
   let isDifferentValidValue = valid && value != gURLBar.value;
