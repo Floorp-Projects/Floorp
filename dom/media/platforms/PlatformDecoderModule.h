@@ -280,9 +280,8 @@ public:
   }
 
   // Return the name of the MediaDataDecoder, only used for decoding.
-  // Only return a static const string, as the information may be accessed
-  // in a non thread-safe fashion.
-  virtual const char* GetDescriptionName() const = 0;
+  // May be accessed in a non thread-safe fashion.
+  virtual nsCString GetDescriptionName() const = 0;
 
   // Set a hint of seek target time to decoder. Decoder will drop any decoded
   // data which pts is smaller than this value. This threshold needs to be clear

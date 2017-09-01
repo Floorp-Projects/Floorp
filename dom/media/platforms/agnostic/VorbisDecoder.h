@@ -29,9 +29,9 @@ public:
   RefPtr<DecodePromise> Drain() override;
   RefPtr<FlushPromise> Flush() override;
   RefPtr<ShutdownPromise> Shutdown() override;
-  const char* GetDescriptionName() const override
+  nsCString GetDescriptionName() const override
   {
-    return "vorbis audio decoder";
+    return NS_LITERAL_CSTRING("vorbis audio decoder");
   }
 
   // Return true if mimetype is Vorbis
