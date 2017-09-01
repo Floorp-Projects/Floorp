@@ -353,8 +353,10 @@ NativeObject::getChildProperty(JSContext* cx,
     Shape* shape = cx->zone()->propertyTree().inlinedGetChild(cx, parent, child);
     if (!shape)
         return nullptr;
-    //MOZ_ASSERT(shape->parent == parent);
-    //MOZ_ASSERT_IF(parent != lastProperty(), parent == lastProperty()->parent);
+
+    MOZ_ASSERT(shape->parent == parent);
+    MOZ_ASSERT_IF(parent != obj->lastProperty(), parent == obj->lastProperty()->parent);
+
     if (!obj->setLastProperty(cx, shape))
         return nullptr;
     return shape;
