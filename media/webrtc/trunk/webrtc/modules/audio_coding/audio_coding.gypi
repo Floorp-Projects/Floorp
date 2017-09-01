@@ -71,6 +71,10 @@
           'audio_codec_dependencies': ['red',],
           'audio_codec_defines': ['WEBRTC_CODEC_RED',],
         }],
+        ['build_with_mozilla==1', {
+          'audio_codec_dependencies': ['g722',],
+          'audio_codec_defines': ['WEBRTC_CODEC_G722',],
+        }],
       ],
     },
     'audio_codec_dependencies': '<(audio_codec_dependencies)',
