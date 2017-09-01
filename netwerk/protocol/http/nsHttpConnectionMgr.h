@@ -242,6 +242,15 @@ public:
     // NOTE: relatively expensive to call, there are two hashtable lookups.
     bool IsConnEntryUnderPressure(nsHttpConnectionInfo*);
 
+    // This disables preconnecting for all existing connection entries matching
+    // the host and port.  Existing speculative connections that have never been
+    // used will not be used.
+    void DontPreconnect(nsACString const &host, int32_t port);
+
+    // The information is stored on the entry, not on conn-info (which is just
+    // a passive descriptor).
+    bool IsSpeculativeConnectDisabled(nsHttpConnectionInfo*);
+
     uint64_t CurrentTopLevelOuterContentWindowId()
     {
         return mCurrentTopLevelOuterContentWindowId;
@@ -318,6 +327,8 @@ private:
         bool mUseFastOpen : 1;
 
         bool mDoNotDestroy : 1;
+
+        bool mDisallowPreconnects : 1;
 
         // Set the IP family preference flags according the connected family
         void RecordIPFamilyPreference(uint16_t family);

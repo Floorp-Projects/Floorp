@@ -1263,8 +1263,12 @@ nsSocketTransport::BuildSocket(PRFileDesc *&fd, bool &proxyTransparent, bool &us
                 }
                 // don't call into PSM while holding mLock!!
                 nsCOMPtr<nsISSLSocketControl> secCtrl(do_QueryInterface(secinfo));
-                if (secCtrl)
+                if (secCtrl) {
+                    if (mConnectionFlags & nsISocketTransport::SPECULATIVE) {
+                        secCtrl->SetSpeculative(true);
+                    }
                     secCtrl->SetNotificationCallbacks(callbacks);
+                }
                 // remember if socket type is SSL so we can ProxyStartSSL if need be.
                 usingSSL = isSSL;
             }
