@@ -7578,6 +7578,9 @@ nsHttpChannel::OnStopRequest(nsIRequest *request, nsISupports *ctxt, nsresult st
         mOnStopRequestCalled = true;
     }
 
+    // notify "http-on-stop-connect" observers
+    gHttpHandler->OnStopRequest(this);
+
     RemoveAsNonTailRequest();
 
     // If a preferred alt-data type was set, this signals the consumer is

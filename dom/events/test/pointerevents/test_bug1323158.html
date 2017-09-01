@@ -43,7 +43,7 @@ function runTests() {
   pointerBoundaryEvents.forEach((event) => {
     target1.addEventListener(event, (e) => {
       receivedPointerBoundaryEvents[event] = e;
-    });
+    }, {once: true});
   });
 
   let attributes = ["target", "relatedTarget"];
@@ -59,7 +59,7 @@ function runTests() {
         });
       }
       receivedPointerBoundaryEvents[mouseEvent2pointerEvent[event]] = null;
-    });
+    }, {once: true});
   });
   target0.addEventListener("pointerdown", (e) => {
     target1.setPointerCapture(e.pointerId);

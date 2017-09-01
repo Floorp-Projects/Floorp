@@ -17,7 +17,6 @@
 #include <alsa/asoundlib.h>
 #include "cubeb/cubeb.h"
 #include "cubeb-internal.h"
-#include "cubeb_utils.h"
 
 #define CUBEB_STREAM_MAX 16
 #define CUBEB_WATCHDOG_MS 10000

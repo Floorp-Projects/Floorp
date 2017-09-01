@@ -335,10 +335,8 @@ RequestContext::IsContextTailBlocked(nsIRequestTailUnblockCallback * aRequest,
 
   *aBlocked = false;
 
-  if (mUntailAt.IsNull() || mUntailAt <= TimeStamp::NowLoRes()) {
+  if (mUntailAt.IsNull()) {
     LOG(("  untail time passed"));
-    // To save the expansive compare to now next time
-    mUntailAt = TimeStamp();
     return NS_OK;
   }
 

@@ -193,23 +193,13 @@ Interceptor::GetClassForHandler(DWORD aDestContext, void* aDestContextPtr,
   return mEventSink->GetHandler(WrapNotNull(aHandlerClsid));
 }
 
-REFIID
-Interceptor::MarshalAs(REFIID aIid) const
-{
-#if defined(MOZ_MSCOM_REMARSHAL_NO_HANDLER)
-  return IsCallerExternalProcess() ? aIid : mEventSink->MarshalAs(aIid);
-#else
-  return mEventSink->MarshalAs(aIid);
-#endif // defined(MOZ_MSCOM_REMARSHAL_NO_HANDLER)
-}
-
 HRESULT
 Interceptor::GetUnmarshalClass(REFIID riid, void* pv, DWORD dwDestContext,
                                void* pvDestContext, DWORD mshlflags,
                                CLSID* pCid)
 {
-  return mStdMarshal->GetUnmarshalClass(MarshalAs(riid), pv, dwDestContext,
-                                        pvDestContext, mshlflags, pCid);
+  return mStdMarshal->GetUnmarshalClass(riid, pv, dwDestContext, pvDestContext,
+                                        mshlflags, pCid);
 }
 
 HRESULT
@@ -217,7 +207,7 @@ Interceptor::GetMarshalSizeMax(REFIID riid, void* pv, DWORD dwDestContext,
                                void* pvDestContext, DWORD mshlflags,
                                DWORD* pSize)
 {
-  HRESULT hr = mStdMarshal->GetMarshalSizeMax(MarshalAs(riid), pv, dwDestContext,
+  HRESULT hr = mStdMarshal->GetMarshalSizeMax(riid, pv, dwDestContext,
                                               pvDestContext, mshlflags, pSize);
   if (FAILED(hr)) {
     return hr;
@@ -430,7 +420,7 @@ Interceptor::GetInitialInterceptorForIID(detail::LiveSetAutoLock& aLock,
                                          unkInterceptor,
                                          aTarget.release()));
 
-  if (MarshalAs(aTargetIid) == aTargetIid) {
+  if (mEventSink->MarshalAs(aTargetIid) == aTargetIid) {
     return unkInterceptor->QueryInterface(aTargetIid, aOutInterceptor);
   }
 
@@ -459,7 +449,7 @@ Interceptor::GetInterceptorForIID(REFIID aIid, void** aOutInterceptor)
     return S_OK;
   }
 
-  REFIID interceptorIid = MarshalAs(aIid);
+  REFIID interceptorIid = mEventSink->MarshalAs(aIid);
 
   RefPtr<IUnknown> unkInterceptor;
   IUnknown* interfaceForQILog = nullptr;

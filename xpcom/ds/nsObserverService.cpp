@@ -212,10 +212,11 @@ nsObserverService::AddObserver(nsIObserver* aObserver, const char* aTopic,
     return NS_ERROR_INVALID_ARG;
   }
 
-  // Specifically allow http-on-opening-request in the child process;
-  // see bug 1269765.
+  // Specifically allow http-on-opening-request and http-on-stop-request in the
+  // child process; see bug 1269765.
   if (mozilla::net::IsNeckoChild() && !strncmp(aTopic, "http-on-", 8) &&
-      strcmp(aTopic, "http-on-opening-request")) {
+      strcmp(aTopic, "http-on-opening-request") &&
+      strcmp(aTopic, "http-on-stop-request")) {
     nsCOMPtr<nsIConsoleService> console(do_GetService(NS_CONSOLESERVICE_CONTRACTID));
     nsCOMPtr<nsIScriptError> error(do_CreateInstance(NS_SCRIPTERROR_CONTRACTID));
     error->Init(NS_LITERAL_STRING("http-on-* observers only work in the parent process"),
