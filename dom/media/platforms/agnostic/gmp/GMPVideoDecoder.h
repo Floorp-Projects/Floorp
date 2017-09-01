@@ -38,9 +38,9 @@ public:
   RefPtr<DecodePromise> Drain() override;
   RefPtr<FlushPromise> Flush() override;
   RefPtr<ShutdownPromise> Shutdown() override;
-  const char* GetDescriptionName() const override
+  nsCString GetDescriptionName() const override
   {
-    return "GMP video decoder";
+    return NS_LITERAL_CSTRING("gmp video decoder");
   }
   ConversionRequired NeedsConversion() const override
   {
