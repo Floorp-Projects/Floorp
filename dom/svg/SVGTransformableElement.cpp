@@ -205,9 +205,6 @@ SVGTransformableElement::GetBBox(const SVGBoundingBoxOptions& aOptions,
     if (aOptions.mClipped) {
       flags |= nsSVGUtils::eBBoxIncludeClipped;
     }
-    if (flags == 0) {
-      return NS_NewSVGRect(this,0,0,0,0);
-    }
     if (flags == nsSVGUtils::eBBoxIncludeMarkers ||
         flags == nsSVGUtils::eBBoxIncludeClipped) {
       flags |= nsSVGUtils::eBBoxIncludeFill;
