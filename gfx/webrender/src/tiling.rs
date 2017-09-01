@@ -22,7 +22,7 @@ use std::{f32, i32, usize};
 use texture_allocator::GuillotineAllocator;
 use util::{TransformedRect, TransformedRectKind};
 use api::{BuiltDisplayList, ClipAndScrollInfo, ClipId, ColorF, DeviceIntPoint, ImageKey};
-use api::{DeviceIntRect, DeviceIntSize, DeviceUintPoint, DeviceUintSize, FontInstance};
+use api::{DeviceIntRect, DeviceIntSize, DeviceUintPoint, DeviceUintSize};
 use api::{ExternalImageType, FilterOp, FontRenderMode, ImageRendering, LayerRect};
 use api::{LayerToWorldTransform, MixBlendMode, PipelineId, PropertyBinding, TransformStyle};
 use api::{TileOffset, WorldToLayerTransform, YuvColorSpace, YuvFormat, LayerVector2D};
@@ -44,7 +44,7 @@ impl AlphaBatchHelpers for PrimitiveStore {
         match metadata.prim_kind {
             PrimitiveKind::TextRun => {
                 let text_run_cpu = &self.cpu_text_runs[metadata.cpu_prim_index.0];
-                match text_run_cpu.normal_render_mode {
+                match text_run_cpu.font.render_mode {
                     FontRenderMode::Subpixel => BlendMode::Subpixel(text_run_cpu.color),
                     FontRenderMode::Alpha | FontRenderMode::Mono => BlendMode::Alpha,
                 }
@@ -453,17 +453,12 @@ impl AlphaRenderItem {
                     }
                     PrimitiveKind::TextRun => {
                         let text_cpu = &ctx.prim_store.cpu_text_runs[prim_metadata.cpu_prim_index.0];
-                        let font_size_dp = text_cpu.logical_font_size.scale_by(ctx.device_pixel_ratio);
 
                         // TODO(gw): avoid / recycle this allocation in the future.
                         let mut instances = Vec::new();
 
-                        let font = FontInstance::new(text_cpu.font_key,
-                                                     font_size_dp,
-                                                     text_cpu.color,
-                                                     text_cpu.normal_render_mode,
-                                                     text_cpu.glyph_options,
-                                                     text_cpu.subpx_dir);
+                        let mut font = text_cpu.font.clone();
+                        font.size = font.size.scale_by(ctx.device_pixel_ratio);
 
                         let texture_id = ctx.resource_cache.get_glyphs(font,
                                                                        &text_cpu.glyph_keys,
@@ -576,8 +571,9 @@ impl AlphaRenderItem {
                         let box_shadow = &ctx.prim_store.cpu_box_shadows[prim_metadata.cpu_prim_index.0];
                         let cache_task_id = prim_metadata.render_task_id.unwrap();
                         let cache_task_address = render_tasks.get_task_address(cache_task_id);
+                        let textures = BatchTextures::render_target_cache();
 
-                        let key = AlphaBatchKey::new(AlphaBatchKind::BoxShadow, flags, blend_mode, no_textures);
+                        let key = AlphaBatchKey::new(AlphaBatchKind::BoxShadow, flags, blend_mode, textures);
                         let batch = batch_list.get_suitable_batch(&key, item_bounding_rect);
 
                         for rect_index in 0..box_shadow.rects.len() {
@@ -906,7 +902,6 @@ impl<T: RenderTarget> RenderTargetList<T> {
 /// A render target represents a number of rendering operations on a surface.
 pub struct ColorRenderTarget {
     pub alpha_batcher: AlphaBatcher,
-    pub box_shadow_cache_prims: Vec<BoxShadowCacheInstance>,
     // List of text runs to be cached to this render target.
     // TODO(gw): For now, assume that these all come from
     //           the same source texture id. This is almost
@@ -933,7 +928,6 @@ impl RenderTarget for ColorRenderTarget {
     fn new(size: DeviceUintSize) -> ColorRenderTarget {
         ColorRenderTarget {
             alpha_batcher: AlphaBatcher::new(),
-            box_shadow_cache_prims: Vec::new(),
             text_run_cache_prims: Vec::new(),
             line_cache_prims: Vec::new(),
             text_run_textures: BatchTextures::no_texture(),
@@ -993,16 +987,9 @@ impl RenderTarget for ColorRenderTarget {
             }
             RenderTaskKind::CachePrimitive(prim_index) => {
                 let prim_metadata = ctx.prim_store.get_metadata(prim_index);
-
                 let prim_address = prim_metadata.gpu_location.as_int(gpu_cache);
 
                 match prim_metadata.prim_kind {
-                    PrimitiveKind::BoxShadow => {
-                        self.box_shadow_cache_prims.push(BoxShadowCacheInstance {
-                            prim_address: gpu_cache.get_address(&prim_metadata.gpu_location),
-                            task_index: render_tasks.get_task_address(task_id),
-                        });
-                    }
                     PrimitiveKind::TextShadow => {
                         let prim = &ctx.prim_store.cpu_text_shadows[prim_metadata.cpu_prim_index.0];
 
@@ -1026,14 +1013,9 @@ impl RenderTarget for ColorRenderTarget {
                                     // the parent text-shadow prim address as a user data field, allowing
                                     // the shader to fetch the text-shadow parameters.
                                     let text = &ctx.prim_store.cpu_text_runs[sub_metadata.cpu_prim_index.0];
-                                    let font_size_dp = text.logical_font_size.scale_by(ctx.device_pixel_ratio);
 
-                                    let font = FontInstance::new(text.font_key,
-                                                                 font_size_dp,
-                                                                 text.color,
-                                                                 text.shadow_render_mode,
-                                                                 text.glyph_options,
-                                                                 text.subpx_dir);
+                                    let mut font = text.font.clone();
+                                    font.size = font.size.scale_by(ctx.device_pixel_ratio);
 
                                     let texture_id = ctx.resource_cache.get_glyphs(font,
                                                                                    &text.glyph_keys,
@@ -1073,7 +1055,8 @@ impl RenderTarget for ColorRenderTarget {
                     }
                 }
             }
-            RenderTaskKind::CacheMask(..) => {
+            RenderTaskKind::CacheMask(..) |
+            RenderTaskKind::BoxShadow(..) => {
                 panic!("Should not be added to color target!");
             }
             RenderTaskKind::Readback(device_rect) => {
@@ -1085,6 +1068,7 @@ impl RenderTarget for ColorRenderTarget {
 
 pub struct AlphaRenderTarget {
     pub clip_batcher: ClipBatcher,
+    pub box_shadow_cache_prims: Vec<BoxShadowCacheInstance>,
     allocator: TextureAllocator,
 }
 
@@ -1096,6 +1080,7 @@ impl RenderTarget for AlphaRenderTarget {
     fn new(size: DeviceUintSize) -> AlphaRenderTarget {
         AlphaRenderTarget {
             clip_batcher: ClipBatcher::new(),
+            box_shadow_cache_prims: Vec::new(),
             allocator: TextureAllocator::new(size),
         }
     }
@@ -1120,6 +1105,21 @@ impl RenderTarget for AlphaRenderTarget {
             RenderTaskKind::CachePrimitive(..) |
             RenderTaskKind::Readback(..) => {
                 panic!("Should not be added to alpha target!");
+            }
+            RenderTaskKind::BoxShadow(prim_index) => {
+                let prim_metadata = ctx.prim_store.get_metadata(prim_index);
+
+                match prim_metadata.prim_kind {
+                    PrimitiveKind::BoxShadow => {
+                        self.box_shadow_cache_prims.push(BoxShadowCacheInstance {
+                            prim_address: gpu_cache.get_address(&prim_metadata.gpu_location),
+                            task_index: render_tasks.get_task_address(task_id),
+                        });
+                    }
+                    _ => {
+                        panic!("BUG: invalid prim kind");
+                    }
+                }
             }
             RenderTaskKind::CacheMask(ref task_info) => {
                 let task_address = render_tasks.get_task_address(task_id);

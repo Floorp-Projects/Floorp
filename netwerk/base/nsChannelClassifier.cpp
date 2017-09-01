@@ -210,16 +210,23 @@ LowerPriorityHelper(nsIChannel* aChannel)
 
   nsCOMPtr<nsIClassOfService> cos(do_QueryInterface(aChannel));
   if (cos) {
-    uint32_t cosFlags = 0;
-    cos->GetClassFlags(&cosFlags);
-    isBlockingResource = cosFlags & (nsIClassOfService::UrgentStart |
-                                     nsIClassOfService::Leader |
-                                     nsIClassOfService::Unblocked);
+    if (nsContentUtils::IsTailingEnabled()) {
+      uint32_t cosFlags = 0;
+      cos->GetClassFlags(&cosFlags);
+      isBlockingResource = cosFlags & (nsIClassOfService::UrgentStart |
+                                       nsIClassOfService::Leader |
+                                       nsIClassOfService::Unblocked);
 
-    // Requests not allowed to be tailed are usually those with higher
-    // prioritization.  That overweights being a tracker: don't throttle
-    // them when not in background.
-    if (!(cosFlags & nsIClassOfService::TailForbidden)) {
+      // Requests not allowed to be tailed are usually those with higher
+      // prioritization.  That overweights being a tracker: don't throttle
+      // them when not in background.
+      if (!(cosFlags & nsIClassOfService::TailForbidden)) {
+        cos->AddClassFlags(nsIClassOfService::Throttleable);
+      }
+    } else {
+      // Yes, we even don't want to evaluate the isBlockingResource when tailing is off
+      // see bug 1395525.
+
       cos->AddClassFlags(nsIClassOfService::Throttleable);
     }
   }

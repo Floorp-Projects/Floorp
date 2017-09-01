@@ -327,6 +327,10 @@ class RTCStatsReport {
   }
 
   get mozPcid() { return this._pcid; }
+
+  __onget(key, value) {
+    /* Do whatever here */
+  }
 }
 setupPrototype(RTCStatsReport, {
   classID: PC_STATS_CID,

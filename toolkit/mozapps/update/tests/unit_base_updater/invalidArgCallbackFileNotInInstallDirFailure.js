@@ -31,6 +31,8 @@ function setupUpdaterTestFinished() {
  */
 function runUpdateFinished() {
   standardInit();
+  checkUpdateManager(STATE_NONE, false, STATE_FAILED,
+                     INVALID_CALLBACK_DIR_ERROR, 1);
   checkPostUpdateRunningFile(false);
   checkFilesAfterUpdateFailure(getApplyDirFile);
   waitForFilesInUse();

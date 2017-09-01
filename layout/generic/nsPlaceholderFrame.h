@@ -146,6 +146,9 @@ public:
 
   nsStyleContext* GetParentStyleContextForOutOfFlow(nsIFrame** aProviderFrame) const;
 
+  // Like GetParentStyleContextForOutOfFlow, but ignores display:contents bits.
+  nsStyleContext* GetLayoutParentStyleForOutOfFlow(nsIFrame** aProviderFrame) const;
+
   bool RenumberFrameAndDescendants(int32_t* aOrdinal,
                                    int32_t aDepth,
                                    int32_t aIncrement,

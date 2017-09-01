@@ -8,7 +8,7 @@
 :root {
   font: message-box;
 
-  --tab-line-selected-color: highlight;
+  --tab-line-selected-color: var(--blue-50);
 }
 
 :root.theme-light {

@@ -8,6 +8,7 @@
 
 #include "mozilla/net/NeckoParent.h"
 #include "mozilla/LazyIdleThread.h"
+#include "mozilla/Result.h"
 #include "SubstitutingProtocolHandler.h"
 
 namespace mozilla {

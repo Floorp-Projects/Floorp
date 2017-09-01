@@ -29,6 +29,7 @@
     "schema": "chrome://extensions/content/schemas/contextual_identities.json",
     "scopes": ["addon_parent"],
     "events": ["startup"],
+    "permissions": ["contextualIdentities"],
     "paths": [
       ["contextualIdentities"]
     ]

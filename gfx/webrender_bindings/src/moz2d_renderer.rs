@@ -64,7 +64,7 @@ impl BlobImageRenderer for Moz2dImageRenderer {
         self.workers.spawn(move || {
             let buf_size = (descriptor.width
                 * descriptor.height
-                * descriptor.format.bytes_per_pixel().unwrap()) as usize;
+                * descriptor.format.bytes_per_pixel()) as usize;
             let mut output = vec![255u8; buf_size];
 
             let result = unsafe {
@@ -120,7 +120,11 @@ impl BlobImageRenderer for Moz2dImageRenderer {
         // If we break out of the loop above it means the channel closed unexpectedly.
         Err(BlobImageError::Other("Channel closed".into()))
     }
+
     fn delete_font(&mut self, _font: FontKey) {
+    }
+
+    fn delete_font_instance(&mut self, _key: FontInstanceKey) {
     }
 }
 

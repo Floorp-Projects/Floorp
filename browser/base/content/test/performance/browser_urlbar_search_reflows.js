@@ -67,7 +67,7 @@ const EXPECTED_REFLOWS_FIRST_OPEN = [
       "_invalidate@chrome://global/content/bindings/autocomplete.xml",
       "invalidate@chrome://global/content/bindings/autocomplete.xml"
     ],
-    times: 390, // This number should only ever go down - never up.
+    times: 330, // This number should only ever go down - never up.
   },
 
   {
@@ -119,7 +119,7 @@ const EXPECTED_REFLOWS_SECOND_OPEN = [
       "_invalidate@chrome://global/content/bindings/autocomplete.xml",
       "invalidate@chrome://global/content/bindings/autocomplete.xml"
     ],
-    times: 444, // This number should only ever go down - never up.
+    times: 384, // This number should only ever go down - never up.
   },
 
   // Bug 1384256
