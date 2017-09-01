@@ -107,23 +107,16 @@ nsTableColGroupFrame::GetLastRealColGroup(nsTableFrame* aTableFrame)
 {
   nsFrameList colGroups = aTableFrame->GetColGroups();
 
-  nsIFrame* nextToLastColGroup = nullptr;
-  nsFrameList::FrameLinkEnumerator link(colGroups);
-  for ( ; !link.AtEnd(); link.Next()) {
-    nextToLastColGroup = link.PrevFrame();
+  auto lastColGroup = static_cast<nsTableColGroupFrame*>(colGroups.LastChild());
+  if (!lastColGroup) {
+    return nullptr;
   }
 
-  if (!link.PrevFrame()) {
-    return nullptr; // there are no col group frames
+  if (!lastColGroup->IsSynthetic()) {
+    return lastColGroup;
   }
 
-  bool lastColGroupIsSynthetic =
-    static_cast<nsTableColGroupFrame*>(link.PrevFrame())->IsSynthetic();
-  if (lastColGroupIsSynthetic) {
-    return static_cast<nsTableColGroupFrame*>(nextToLastColGroup);
-  }
-
-  return static_cast<nsTableColGroupFrame*>(link.PrevFrame());
+  return static_cast<nsTableColGroupFrame*>(lastColGroup->GetPrevSibling());
 }
 
 // don't set mColCount here, it is done in AddColsToTable
