@@ -111,6 +111,14 @@ public:
   virtual void Play(ErrorResult& aRv, LimitBehavior aLimitBehavior) override;
   virtual void Pause(ErrorResult& aRv) override;
 
+  // NOTE: tabbrowser.xml currently relies on the fact that reading the
+  // currentTime of a CSSAnimation does *not* flush style (whereas reading the
+  // playState does). If CSS Animations 2 specifies that reading currentTime
+  // also flushes style we will need to find another way to detect canceled
+  // animations in tabbrowser.xml. On the other hand, if CSS Animations 2
+  // specifies that reading playState does *not* flush style (and we drop the
+  // following override), then we should update tabbrowser.xml to check
+  // the playState instead.
   virtual AnimationPlayState PlayStateFromJS() const override;
   virtual void PlayFromJS(ErrorResult& aRv) override;
 
