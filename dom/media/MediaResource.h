@@ -580,8 +580,6 @@ protected:
   // Any thread access
   MediaCacheStream mCacheStream;
 
-  // This lock protects mChannelStatistics
-  Mutex               mLock;
   MediaChannelStatistics mChannelStatistics;
 
   // True if we couldn't suspend the stream and we therefore don't want
