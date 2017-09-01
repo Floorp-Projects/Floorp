@@ -15,6 +15,7 @@
 #include "WMFAudioMFTManager.h"
 #include "WMFMediaDataDecoder.h"
 #include "WMFVideoMFTManager.h"
+#include "gfxPrefs.h"
 #include "mozilla/DebugOnly.h"
 #include "mozilla/Maybe.h"
 #include "mozilla/Services.h"
@@ -264,7 +265,7 @@ WMFDecoderModule::Supports(const TrackInfo& aTrackInfo,
   if (MediaPrefs::PDMWMFVP9DecoderEnabled()) {
     if ((VPXDecoder::IsVP8(aTrackInfo.mMimeType) ||
          VPXDecoder::IsVP9(aTrackInfo.mMimeType)) &&
-        ((MediaPrefs::PDMWMFAMDVP9DecoderEnabled() &&
+        ((gfxPrefs::PDMWMFAMDVP9DecoderEnabled() &&
           CanCreateWMFDecoder<CLSID_AMDWebmMfVp9Dec>()) ||
          CanCreateWMFDecoder<CLSID_WebmMfVpxDec>())) {
       return true;
