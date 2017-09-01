@@ -15,6 +15,7 @@
 #include "mozilla/NSPRLogModulesParser.h"
 #include "mozilla/UniquePtr.h"
 #include "mozilla/Telemetry.h"
+#include "mozilla/WindowsVersion.h"
 #include "nsAppDirectoryServiceDefs.h"
 #include "nsCOMPtr.h"
 #include "nsDirectoryServiceDefs.h"
@@ -253,6 +254,67 @@ AddCachedDirRule(sandbox::TargetPolicy* aPolicy,
   }
 }
 
+// Checks whether we can use a job object as part of the sandbox.
+static bool
+CanUseJob()
+{
+  // Windows 8 and later allows nested jobs, no need for further checks.
+  if (IsWin8OrLater()) {
+    return true;
+  }
+
+  BOOL inJob = true;
+  // If we can't determine if we are in a job then assume we can use one.
+  if (!::IsProcessInJob(::GetCurrentProcess(), nullptr, &inJob)) {
+    return true;
+  }
+
+  // If there is no job then we are fine to use one.
+  if (!inJob) {
+    return true;
+  }
+
+  JOBOBJECT_EXTENDED_LIMIT_INFORMATION job_info = {};
+  // If we can't get the job object flags then again assume we can use a job.
+  if (!::QueryInformationJobObject(nullptr, JobObjectExtendedLimitInformation,
+                                   &job_info, sizeof(job_info), nullptr)) {
+    return true;
+  }
+
+  // If we can break away from the current job then we are free to set our own.
+  if (job_info.BasicLimitInformation.LimitFlags & JOB_OBJECT_LIMIT_BREAKAWAY_OK) {
+    return true;
+  }
+
+  // Chromium added a command line flag to allow no job to be used, which was
+  // originally supposed to only be used for remote sessions. If you use runas
+  // to start Firefox then this also uses a separate job and we would fail to
+  // start on Windows 7. An unknown number of people use (or used to use) runas
+  // with Firefox for some security benefits (see bug 1228880). This is now a
+  // counterproductive technique, but allowing both the remote and local case
+  // for now and adding telemetry to see if we can restrict this to just remote.
+  nsAutoString localRemote(::GetSystemMetrics(SM_REMOTESESSION)
+                           ? u"remote" : u"local");
+  Telemetry::ScalarSet(Telemetry::ScalarID::SANDBOX_NO_JOB, localRemote, true);
+
+  // Allow running without the job object in this case. This slightly reduces the
+  // ability of the sandbox to protect its children from spawning new processes
+  // or preventing them from shutting down Windows or accessing the clipboard.
+  return false;
+}
+
+static sandbox::ResultCode
+SetJobLevel(sandbox::TargetPolicy* aPolicy, sandbox::JobLevel aJobLevel,
+            uint32_t aUiExceptions)
+{
+  static bool sCanUseJob = CanUseJob();
+  if (sCanUseJob) {
+    return aPolicy->SetJobLevel(aJobLevel, aUiExceptions);
+  }
+
+  return aPolicy->SetJobLevel(sandbox::JOB_NONE, 0);
+}
+
 #if defined(MOZ_CONTENT_SANDBOX)
 
 void
@@ -314,7 +376,7 @@ SandboxBroker::SetSecurityLevelForContentProcess(int32_t aSandboxLevel,
 #else
   DWORD uiExceptions = 0;
 #endif
-  sandbox::ResultCode result = mPolicy->SetJobLevel(jobLevel, uiExceptions);
+  sandbox::ResultCode result = SetJobLevel(mPolicy, jobLevel, uiExceptions);
   MOZ_RELEASE_ASSERT(sandbox::SBOX_ALL_OK == result,
                      "Setting job level failed, have you set memory limit when jobLevel == JOB_NONE?");
 
@@ -470,8 +532,8 @@ SandboxBroker::SetSecurityLevelForGPUProcess(int32_t aSandboxLevel)
     delayedIntegrityLevel = sandbox::INTEGRITY_LEVEL_LOW;
   }
 
-  sandbox::ResultCode result = mPolicy->SetJobLevel(jobLevel,
-                                                    0 /* ui_exceptions */);
+  sandbox::ResultCode result = SetJobLevel(mPolicy, jobLevel,
+                                           0 /* ui_exceptions */);
   MOZ_RELEASE_ASSERT(sandbox::SBOX_ALL_OK == result,
                      "Setting job level failed, have you set memory limit when jobLevel == JOB_NONE?");
 
@@ -580,8 +642,8 @@ SandboxBroker::SetSecurityLevelForPluginProcess(int32_t aSandboxLevel)
 
   mPolicy->SetDoNotUseRestrictingSIDs();
 
-  sandbox::ResultCode result = mPolicy->SetJobLevel(jobLevel,
-                                                    0 /* ui_exceptions */);
+  sandbox::ResultCode result = SetJobLevel(mPolicy, jobLevel,
+                                           0 /* ui_exceptions */);
   SANDBOX_ENSURE_SUCCESS(result,
                          "Setting job level failed, have you set memory limit when jobLevel == JOB_NONE?");
 
@@ -699,7 +761,8 @@ SandboxBroker::SetSecurityLevelForGMPlugin(SandboxLevel aLevel)
     return false;
   }
 
-  auto result = mPolicy->SetJobLevel(sandbox::JOB_LOCKDOWN, 0);
+  auto result = SetJobLevel(mPolicy, sandbox::JOB_LOCKDOWN,
+                            0 /* ui_exceptions */);
   SANDBOX_ENSURE_SUCCESS(result,
                          "SetJobLevel should never fail with these arguments, what happened?");
   auto level = (aLevel == Restricted) ?
