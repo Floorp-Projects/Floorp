@@ -2919,24 +2919,24 @@ HTMLEditor::GetCellFromRange(nsRange* aRange,
 
   *aCell = nullptr;
 
-  nsCOMPtr<nsIDOMNode> startContainer;
-  nsresult rv = aRange->GetStartContainer(getter_AddRefs(startContainer));
-  NS_ENSURE_SUCCESS(rv, rv);
-  NS_ENSURE_TRUE(startContainer, NS_ERROR_FAILURE);
+  nsCOMPtr<nsINode> startContainer = aRange->GetStartContainer();
+  if (NS_WARN_IF(!startContainer)) {
+    return NS_ERROR_FAILURE;
+  }
 
   uint32_t startOffset = aRange->StartOffset();
 
-  nsCOMPtr<nsIDOMNode> childNode =
-    GetChildAt(startContainer, static_cast<int32_t>(startOffset));
+  nsCOMPtr<nsINode> childNode =
+    startContainer->GetChildAt(static_cast<int32_t>(startOffset));
   // This means selection is probably at a text node (or end of doc?)
   if (!childNode) {
     return NS_ERROR_FAILURE;
   }
 
-  nsCOMPtr<nsIDOMNode> endContainer;
-  rv = aRange->GetEndContainer(getter_AddRefs(endContainer));
-  NS_ENSURE_SUCCESS(rv, rv);
-  NS_ENSURE_TRUE(startContainer, NS_ERROR_FAILURE);
+  nsCOMPtr<nsINode> endContainer = aRange->GetEndContainer();
+  if (NS_WARN_IF(!endContainer)) {
+    return NS_ERROR_FAILURE;
+  }
 
   // If a cell is deleted, the range is collapse
   //   (startOffset == aRange->EndOffset())
@@ -2947,8 +2947,7 @@ HTMLEditor::GetCellFromRange(nsRange* aRange,
     // Should we also test if frame is selected? (Use GetCellDataAt())
     // (Let's not for now -- more efficient)
     nsCOMPtr<nsIDOMElement> cellElement = do_QueryInterface(childNode);
-    *aCell = cellElement.get();
-    NS_ADDREF(*aCell);
+    cellElement.forget(aCell);
     return NS_OK;
   }
   return NS_SUCCESS_EDITOR_ELEMENT_NOT_FOUND;
