@@ -1554,9 +1554,15 @@ ServoRestyleManager::DoReparentStyleContext(nsIFrame* aFrame,
 
   if (!providerFrame) {
     // No providerFrame means we inherited from a display:contents thing.  Our
-    // layout parent style is the style of our nearest ancestor frame.
-    providerFrame = nsFrame::CorrectStyleParentFrame(aFrame->GetParent(),
-                                                     oldContext->GetPseudo());
+    // layout parent style is the style of our nearest ancestor frame.  But we have
+    // to be careful to do that with our placeholder, not with us, if we're out of
+    // flow.
+    if (aFrame->HasAnyStateBits(NS_FRAME_OUT_OF_FLOW)) {
+      aFrame->GetPlaceholderFrame()->GetLayoutParentStyleForOutOfFlow(&providerFrame);
+    } else {
+      providerFrame = nsFrame::CorrectStyleParentFrame(aFrame->GetParent(),
+                                                       oldContext->GetPseudo());
+    }
   }
   ServoStyleContext* layoutParent = providerFrame->StyleContext()->AsServo();
 
