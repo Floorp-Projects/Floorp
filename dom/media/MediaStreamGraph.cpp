@@ -948,8 +948,7 @@ MediaStreamGraphImpl::PlayAudio(MediaStream* aStream)
 
     // Need unique id for stream & track - and we want it to match the inserter
     output.WriteTo(LATENCY_STREAM_ID(aStream, track->GetID()),
-                                     mMixer,
-                                     CurrentDriver()->AsAudioCallbackDriver()->OutputChannelCount(),
+                                     mMixer, AudioChannelCount(),
                                      mSampleRate);
   }
   return ticksWritten;
