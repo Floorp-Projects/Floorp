@@ -2916,6 +2916,20 @@ nsDocShell::SetSecurityUI(nsISecureBrowserUI* aSecurityUI)
 }
 
 NS_IMETHODIMP
+nsDocShell::GetLoadURIDelegate(nsILoadURIDelegate** aLoadURIDelegate)
+{
+  NS_IF_ADDREF(*aLoadURIDelegate = mLoadURIDelegate);
+  return NS_OK;
+}
+
+NS_IMETHODIMP
+nsDocShell::SetLoadURIDelegate(nsILoadURIDelegate* aLoadURIDelegate)
+{
+  mLoadURIDelegate = aLoadURIDelegate;
+  return NS_OK;
+}
+
+NS_IMETHODIMP
 nsDocShell::GetUseErrorPages(bool* aUseErrorPages)
 {
   *aUseErrorPages = UseErrorPages();
@@ -10098,6 +10112,31 @@ nsDocShell::InternalLoad(nsIURI* aURI,
     }
   }
 
+  const nsIDocument* doc = mContentViewer ? mContentViewer->GetDocument()
+                                          : nullptr;
+  const bool isDocumentAuxSandboxed = doc &&
+    (doc->GetSandboxFlags() & SANDBOXED_AUXILIARY_NAVIGATION);
+
+  if (aURI && mLoadURIDelegate &&
+      (!targetDocShell || targetDocShell == static_cast<nsIDocShell*>(this))) {
+    // Dispatch only load requests for the current or a new window to the
+    // delegate, e.g., to allow for GeckoView apps to handle the load event
+    // outside of Gecko.
+    const int where = (aWindowTarget.IsEmpty() || targetDocShell)
+                      ? nsIBrowserDOMWindow::OPEN_CURRENTWINDOW
+                      : nsIBrowserDOMWindow::OPEN_NEW;
+
+    if (where == nsIBrowserDOMWindow::OPEN_NEW && isDocumentAuxSandboxed) {
+      return NS_ERROR_DOM_INVALID_ACCESS_ERR;
+    }
+
+    if (NS_SUCCEEDED(mLoadURIDelegate->LoadURI(aURI, where, aFlags,
+                                               aTriggeringPrincipal))) {
+      // The request has been handled, nothing to do here.
+      return NS_OK;
+    }
+  }
+
   //
   // Resolve the window target before going any further...
   // If the load has been targeted to another DocShell, then transfer the
@@ -10115,14 +10154,8 @@ nsDocShell::InternalLoad(nsIURI* aURI,
       // if the document's SANDBOXED_AUXILLARY_NAVIGATION flag is not set.
       // (i.e. if allow-popups is specified)
       NS_ENSURE_TRUE(mContentViewer, NS_ERROR_FAILURE);
-      nsIDocument* doc = mContentViewer->GetDocument();
-      uint32_t sandboxFlags = 0;
-
-      if (doc) {
-        sandboxFlags = doc->GetSandboxFlags();
-        if (sandboxFlags & SANDBOXED_AUXILIARY_NAVIGATION) {
-          return NS_ERROR_DOM_INVALID_ACCESS_ERR;
-        }
+      if (isDocumentAuxSandboxed) {
+        return NS_ERROR_DOM_INVALID_ACCESS_ERR;
       }
 
       nsCOMPtr<nsPIDOMWindowOuter> win = GetWindow();
