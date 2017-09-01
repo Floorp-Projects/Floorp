@@ -3242,6 +3242,9 @@ HttpBaseChannel::DoNotifyListener()
     mOnStopRequestCalled = true;
   }
 
+  // notify "http-on-stop-connect" observers
+  gHttpHandler->OnStopRequest(this);
+
   // This channel has finished its job, potentially release any tail-blocked
   // requests with this.
   RemoveAsNonTailRequest();
