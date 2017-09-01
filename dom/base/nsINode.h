@@ -19,7 +19,6 @@
 #include "nsTObserverArray.h"       // for member
 #include "nsWindowSizes.h"          // for nsStyleSizes
 #include "mozilla/ErrorResult.h"
-#include "mozilla/LinkedList.h"
 #include "mozilla/MemoryReporting.h"
 #include "mozilla/dom/EventTarget.h" // for base class
 #include "js/TypeDecls.h"     // for Handle, Value, JSObject, JSContext
@@ -1133,12 +1132,10 @@ public:
     nsNodeWeakReference* MOZ_NON_OWNING_REF mWeakReference;
 
     /**
-     * A set of ranges which are in the selection and which have this node as
-     * their endpoints' common ancestor.  This is a UniquePtr instead of just a
-     * LinkedList, because that prevents us from pushing DOMSlots up to the next
-     * allocation bucket size, at the cost of some complexity.
+     * A set of ranges in the common ancestor for the selection to which
+     * this node belongs to.
      */
-    mozilla::UniquePtr<mozilla::LinkedList<nsRange>> mCommonAncestorRanges;
+    mozilla::UniquePtr<nsTHashtable<nsPtrHashKey<nsRange>>> mCommonAncestorRanges;
 
     /**
      * Number of descendant nodes in the uncomposed document that have been
@@ -1946,23 +1943,23 @@ public:
                                                   CallerType aCallerType,
                                                   ErrorResult& aRv);
 
-  const mozilla::LinkedList<nsRange>* GetExistingCommonAncestorRanges() const
+  const nsTHashtable<nsPtrHashKey<nsRange>>* GetExistingCommonAncestorRanges() const
   {
     if (!HasSlots()) {
       return nullptr;
     }
-    return GetExistingSlots()->mCommonAncestorRanges.get();
+    mozilla::UniquePtr<nsTHashtable<nsPtrHashKey<nsRange>>>& ranges =
+      GetExistingSlots()->mCommonAncestorRanges;
+    return ranges.get();
   }
 
-  mozilla::LinkedList<nsRange>* GetExistingCommonAncestorRanges()
+  nsTHashtable<nsPtrHashKey<nsRange>>* GetExistingCommonAncestorRanges()
   {
-    if (!HasSlots()) {
-      return nullptr;
-    }
-    return GetExistingSlots()->mCommonAncestorRanges.get();
+    nsINode::nsSlots* slots = GetExistingSlots();
+    return slots ? slots->mCommonAncestorRanges.get() : nullptr;
   }
 
-  mozilla::UniquePtr<mozilla::LinkedList<nsRange>>& GetCommonAncestorRangesPtr()
+  mozilla::UniquePtr<nsTHashtable<nsPtrHashKey<nsRange>>>& GetCommonAncestorRangesPtr()
   {
     return Slots()->mCommonAncestorRanges;
   }
