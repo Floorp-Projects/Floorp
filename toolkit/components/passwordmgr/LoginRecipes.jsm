@@ -204,6 +204,7 @@ var LoginRecipesContent = {
    * @param {Set} recipes - recipes that apply to the host
    */
   cacheRecipes(aHost, win, recipes) {
+    log.debug("cacheRecipes: for:", aHost);
     let recipeMap = this._recipeCache.get(win);
 
     if (!recipeMap) {
@@ -240,6 +241,7 @@ var LoginRecipesContent = {
                 .QueryInterface(Ci.nsIInterfaceRequestor)
                 .getInterface(Ci.nsIContentFrameMessageManager);
 
+    log.warn("getRecipes: falling back to a synchronous message for:", aHost);
     recipes = mm.sendSyncMessage("RemoteLogins:findRecipes", { formOrigin: aHost })[0];
     this.cacheRecipes(aHost, win, recipes);
 
