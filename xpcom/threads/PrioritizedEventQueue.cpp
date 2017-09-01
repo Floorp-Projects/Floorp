@@ -342,4 +342,5 @@ ResumeInputEventPrioritization(const MutexAutoLock& aProofOfLock)
 
 namespace mozilla {
 template class PrioritizedEventQueue<EventQueue>;
+template class PrioritizedEventQueue<LabeledEventQueue>;
 }
