@@ -1181,4 +1181,16 @@ WMFVideoMFTManager::IsHardwareAccelerated(nsACString& aFailureReason) const
   return mDecoder && mUseHwAccel;
 }
 
+nsCString
+WMFVideoMFTManager::GetDescriptionName() const
+{
+  nsCString failureReason;
+  if (mAMDVP9InUse) {
+      return NS_LITERAL_CSTRING("amd vp9 hardware video decoder");
+  }
+  return nsPrintfCString("wmf %s video decoder",
+                         IsHardwareAccelerated(failureReason) ? "hardware"
+                                                              : "software");
+}
+
 } // namespace mozilla
