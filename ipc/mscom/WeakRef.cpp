@@ -109,18 +109,6 @@ WeakReferenceSupport::~WeakReferenceSupport()
   ::DeleteCriticalSection(&mCSForQI);
 }
 
-void
-WeakReferenceSupport::Lock()
-{
-  ::EnterCriticalSection(&mCSForQI);
-}
-
-void
-WeakReferenceSupport::Unlock()
-{
-  ::LeaveCriticalSection(&mCSForQI);
-}
-
 HRESULT
 WeakReferenceSupport::QueryInterface(REFIID riid, void** ppv)
 {
