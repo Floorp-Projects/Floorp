@@ -12,12 +12,7 @@ const { connect } = require("devtools/client/shared/vendor/react-redux");
 const { getAllFilters } = require("devtools/client/webconsole/new-console-output/selectors/filters");
 const { getFilteredMessagesCount } = require("devtools/client/webconsole/new-console-output/selectors/messages");
 const { getAllUi } = require("devtools/client/webconsole/new-console-output/selectors/ui");
-const {
-  filterBarToggle,
-  defaultFiltersReset,
-  filterTextSet,
-  messagesClear,
-} = require("devtools/client/webconsole/new-console-output/actions/index");
+const actions = require("devtools/client/webconsole/new-console-output/actions/index");
 const { l10n } = require("devtools/client/webconsole/new-console-output/utils/messages");
 const { PluralForm } = require("devtools/shared/plural-form");
 const {
@@ -26,6 +21,7 @@ const {
 } = require("../constants");
 
 const FilterButton = require("devtools/client/webconsole/new-console-output/components/filter-button");
+const FilterCheckbox = require("devtools/client/webconsole/new-console-output/components/filter-checkbox");
 
 const FilterBar = createClass({
 
@@ -38,6 +34,7 @@ const FilterBar = createClass({
       attachRefToHud: PropTypes.func.isRequired,
     }).isRequired,
     filterBarVisible: PropTypes.bool.isRequired,
+    persistLogs: PropTypes.bool.isRequired,
     filteredMessagesCount: PropTypes.object.isRequired,
   },
 
@@ -47,6 +44,10 @@ const FilterBar = createClass({
     }
 
     if (nextProps.filterBarVisible !== this.props.filterBarVisible) {
+      return true;
+    }
+
+    if (nextProps.persistLogs !== this.props.persistLogs) {
       return true;
     }
 
@@ -66,23 +67,27 @@ const FilterBar = createClass({
   },
 
   onClickMessagesClear: function () {
-    this.props.dispatch(messagesClear());
+    this.props.dispatch(actions.messagesClear());
   },
 
   onClickFilterBarToggle: function () {
-    this.props.dispatch(filterBarToggle());
+    this.props.dispatch(actions.filterBarToggle());
   },
 
   onClickRemoveAllFilters: function () {
-    this.props.dispatch(defaultFiltersReset());
+    this.props.dispatch(actions.defaultFiltersReset());
   },
 
   onClickRemoveTextFilter: function () {
-    this.props.dispatch(filterTextSet(""));
+    this.props.dispatch(actions.filterTextSet(""));
   },
 
   onSearchInput: function (e) {
-    this.props.dispatch(filterTextSet(e.target.value));
+    this.props.dispatch(actions.filterTextSet(e.target.value));
+  },
+
+  onChangePersistToggle: function () {
+    this.props.dispatch(actions.persistToggle());
   },
 
   renderFiltersConfigBar() {
@@ -160,7 +165,7 @@ const FilterBar = createClass({
         label: l10n.getStr("webconsole.requestsFilterButton.label"),
         filterKey: FILTERS.NET,
         dispatch
-      })
+      }),
     );
   },
 
@@ -202,6 +207,7 @@ const FilterBar = createClass({
     const {
       filter,
       filterBarVisible,
+      persistLogs,
       filteredMessagesCount,
     } = this.props;
 
@@ -227,6 +233,12 @@ const FilterBar = createClass({
           value: filter.text,
           placeholder: l10n.getStr("webconsole.filterInput.placeholder"),
           onInput: this.onSearchInput
+        }),
+        FilterCheckbox({
+          label: l10n.getStr("webconsole.enablePersistentLogs.label"),
+          title: l10n.getStr("webconsole.enablePersistentLogs.tooltip"),
+          onChange: this.onChangePersistToggle,
+          checked: persistLogs,
         })
       )
     ];
@@ -252,9 +264,11 @@ const FilterBar = createClass({
 });
 
 function mapStateToProps(state) {
+  let uiState = getAllUi(state);
   return {
     filter: getAllFilters(state),
-    filterBarVisible: getAllUi(state).filterBarVisible,
+    filterBarVisible: uiState.filterBarVisible,
+    persistLogs: uiState.persistLogs,
     filteredMessagesCount: getFilteredMessagesCount(state),
   };
 }

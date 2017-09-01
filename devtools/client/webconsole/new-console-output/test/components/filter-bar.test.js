@@ -210,7 +210,7 @@ describe("FilterBar component:", () => {
       filterBtn({ label: "Logs", filterKey: FILTERS.LOG }),
       filterBtn({ label: "Info", filterKey: FILTERS.INFO }),
       filterBtn({ label: "Debug", filterKey: FILTERS.DEBUG }),
-      DOM.span({
+      DOM.div({
         className: "devtools-separator",
       }),
       filterBtn({ label: "CSS", filterKey: "css", active: false }),
@@ -241,5 +241,16 @@ describe("FilterBar component:", () => {
     const wrapper = mount(Provider({store}, FilterBar({ serviceContainer })));
     wrapper.find(".devtools-plaininput").simulate("input", { target: { value: "a" } });
     expect(store.getState().filters.text).toBe("a");
+  });
+
+  it("toggles persist logs when checkbox is clicked", () => {
+    const store = setupStore([]);
+
+    expect(getAllUi(store.getState()).persistLogs).toBe(false);
+
+    const wrapper = mount(Provider({store}, FilterBar({ serviceContainer })));
+    wrapper.find(".filter-checkbox input").simulate("change");
+
+    expect(getAllUi(store.getState()).persistLogs).toBe(true);
   });
 });

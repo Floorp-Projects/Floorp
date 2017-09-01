@@ -770,17 +770,23 @@ a.learn-more-link.webconsole-learn-more-link {
   display: flex;
   /* We want the toolbar (which contain the text search input) to be at least 200px
   so we don't allow to shrink it */
-  flex: 1 0 200px;
+  flex: 100 0 200px;
 }
 
 .devtools-toolbar.webconsole-filterbar-secondary {
   display: flex;
   width: 100%;
   align-items: center;
+  -moz-user-select: none;
 }
 
 .webconsole-filterbar-primary .devtools-plaininput {
   flex: 1 1 100%;
+}
+
+.webconsole-filterbar-primary .filter-checkbox {
+  flex-shrink: 0;
+  margin: 0 3px;
 }
 
 .webconsole-filterbar-secondary .devtools-separator {
@@ -790,6 +796,7 @@ a.learn-more-link.webconsole-learn-more-link {
 .webconsole-filterbar-filtered-messages {
   /* Needed so the bar takes the whole horizontal space when it is wrapped */
   flex-grow: 1;
+  justify-content: flex-end;
   color: var(--theme-comment);
   text-align: end;
 }
