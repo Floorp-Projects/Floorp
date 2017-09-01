@@ -1682,8 +1682,14 @@ CreateObjectConstructor(JSContext* cx, JSProtoKey key)
         return nullptr;
 
     /* Create the Object function now that we have a [[Prototype]] for it. */
-    return NewNativeConstructor(cx, obj_construct, 1, HandlePropertyName(cx->names().Object),
-                                gc::AllocKind::FUNCTION, SingletonObject);
+    JSFunction *fun = NewNativeConstructor(cx, obj_construct, 1,
+                                           HandlePropertyName(cx->names().Object),
+                                           gc::AllocKind::FUNCTION, SingletonObject);
+    if (!fun)
+        return nullptr;
+
+    fun->setJitInfo(&jit::JitInfo_Object);
+    return fun;
 }
 
 static JSObject*

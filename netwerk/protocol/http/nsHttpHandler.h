@@ -317,6 +317,12 @@ public:
         NotifyObservers(chan, NS_HTTP_ON_MODIFY_REQUEST_TOPIC);
     }
 
+    // Called by the channel before writing a request
+    void OnStopRequest(nsIHttpChannel *chan)
+    {
+        NotifyObservers(chan, NS_HTTP_ON_STOP_REQUEST_TOPIC);
+    }
+
     // Called by the channel and cached in the loadGroup
     void OnUserAgentRequest(nsIHttpChannel *chan)
     {

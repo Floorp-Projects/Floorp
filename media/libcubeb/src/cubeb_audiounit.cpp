@@ -63,6 +63,8 @@ void audiounit_stream_stop_internal(cubeb_stream * stm);
 void audiounit_stream_start_internal(cubeb_stream * stm);
 static void audiounit_close_stream(cubeb_stream *stm);
 static int audiounit_setup_stream(cubeb_stream *stm);
+static std::vector<AudioObjectID>
+audiounit_get_devices_of_type(cubeb_device_type devtype);
 
 extern cubeb_ops const audiounit_ops;
 
@@ -2874,35 +2876,6 @@ int audiounit_stream_register_device_changed_callback(cubeb_stream * stream,
   return CUBEB_OK;
 }
 
-static OSStatus
-audiounit_get_devices(std::vector<AudioObjectID> & devices)
-{
-  OSStatus ret;
-  UInt32 size = 0;
-  AudioObjectPropertyAddress adr = { kAudioHardwarePropertyDevices,
-                                     kAudioObjectPropertyScopeGlobal,
-                                     kAudioObjectPropertyElementMaster };
-
-  ret = AudioObjectGetPropertyDataSize(kAudioObjectSystemObject, &adr, 0, NULL, &size);
-  if (ret != noErr) {
-    return ret;
-  }
-
-  uint32_t count = static_cast<uint32_t>(size / sizeof(AudioObjectID));
-  if (count == 0) {
-    return -1;
-  }
-  assert(devices.empty());
-  devices.resize(count);
-
-  ret = AudioObjectGetPropertyData(kAudioObjectSystemObject, &adr, 0, NULL, &size, devices.data());
-  if (ret != noErr) {
-    devices.clear();
-  }
-
-  return ret;
-}
-
 static char *
 audiounit_strref_to_cstr_utf8(CFStringRef strref)
 {
@@ -3109,22 +3082,30 @@ static int
 audiounit_enumerate_devices(cubeb * /* context */, cubeb_device_type type,
                             cubeb_device_collection * collection)
 {
-  std::vector<AudioObjectID> hwdevs;
-  uint32_t i;
-  OSStatus err;
+  std::vector<AudioObjectID> input_devs;
+  std::vector<AudioObjectID> output_devs;
 
-  err = audiounit_get_devices(hwdevs);
-  if (err != noErr) {
-    return CUBEB_ERROR;
+  // Count number of input and output devices.  This is not
+  // necessarily the same as the count of raw devices supported by the
+  // system since, for example, with Soundflower installed, some
+  // devices may report as being both input *and* output and cubeb
+  // separates those into two different devices.
+
+  if (type & CUBEB_DEVICE_TYPE_OUTPUT) {
+    output_devs = audiounit_get_devices_of_type(CUBEB_DEVICE_TYPE_OUTPUT);
   }
 
-  auto devices = new cubeb_device_info[hwdevs.size()];
+  if (type & CUBEB_DEVICE_TYPE_INPUT) {
+    input_devs = audiounit_get_devices_of_type(CUBEB_DEVICE_TYPE_INPUT);
+  }
+
+  auto devices = new cubeb_device_info[output_devs.size() + input_devs.size()];
   collection->count = 0;
 
   if (type & CUBEB_DEVICE_TYPE_OUTPUT) {
-    for (i = 0; i < hwdevs.size(); i++) {
+    for (auto dev: output_devs) {
       auto device = &devices[collection->count];
-      auto err = audiounit_create_device_from_hwdev(device, hwdevs[i], CUBEB_DEVICE_TYPE_OUTPUT);
+      auto err = audiounit_create_device_from_hwdev(device, dev, CUBEB_DEVICE_TYPE_OUTPUT);
       if (err != CUBEB_OK) {
         continue;
       }
@@ -3133,9 +3114,9 @@ audiounit_enumerate_devices(cubeb * /* context */, cubeb_device_type type,
   }
 
   if (type & CUBEB_DEVICE_TYPE_INPUT) {
-    for (i = 0; i < hwdevs.size(); i++) {
+    for (auto dev: input_devs) {
       auto device = &devices[collection->count];
-      auto err = audiounit_create_device_from_hwdev(device, hwdevs[i], CUBEB_DEVICE_TYPE_INPUT);
+      auto err = audiounit_create_device_from_hwdev(device, dev, CUBEB_DEVICE_TYPE_INPUT);
       if (err != CUBEB_OK) {
         continue;
       }

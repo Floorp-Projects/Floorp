@@ -99,6 +99,10 @@
   white-space: nowrap;
 }
 
+.gcli-row-out .nowrap {
+  white-space: nowrap;
+}
+
 .gcli-out-shortcut,
 .gcli-help-synopsis {
   padding: 0 3px;
@@ -108,12 +112,15 @@
   border-radius: 3px;
   background-color: var(--gcli-background-color);
   border: 1px solid var(--gcli-border-color);
+  cursor: pointer;
+  display: inline-block;
 }
 
 .gcli-out-shortcut:before,
 .gcli-help-synopsis:before {
   color: var(--gcli-input-color);
   padding-inline-end: 2px;
+  content: '\bb';
 }
 
 .gcli-help-arrow {
@@ -174,4 +181,70 @@
 
 .gcli-breakpoint-lineText {
   font-family: monospace;
+}
+
+.gcli-help-name {
+  text-align: end;
+}
+
+.gcli-menu-template {
+  white-space: nowrap;
+  width: 290px;
+  display: flex;
+}
+
+.gcli-menu-names {
+  white-space: nowrap;
+  flex-grow: 0;
+  flex-shrink: 0;
+}
+
+.gcli-menu-descs {
+  flex-grow: 1;
+  flex-shrink: 1;
+}
+
+.gcli-menu-name,
+.gcli-menu-desc {
+  white-space: nowrap;
+}
+
+.gcli-menu-name {
+  padding-inline-end: 10px;
+}
+
+.gcli-menu-desc {
+  text-overflow: ellipsis;
+  overflow: hidden;
+}
+
+.gcli-menu-name,
+.gcli-out-shortcut,
+.gcli-help-synopsis {
+  direction: ltr;
+}
+
+.gcli-cookielist-list {
+  list-style-type: none;
+  padding-left: 0;
+}
+
+.gcli-cookielist-detail {
+  padding-left: 20px;
+  padding-bottom: 10px;
+}
+
+.gcli-appcache-list {
+  list-style-type: none;
+  padding-left: 0;
+}
+
+.gcli-appcache-detail {
+  padding-left: 20px;
+  padding-bottom: 10px;
+}
+
+.gcli-mdn-url {
+  text-decoration: underline;
+  cursor: pointer;
 }

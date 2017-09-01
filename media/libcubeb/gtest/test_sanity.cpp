@@ -633,3 +633,42 @@ TEST(cubeb, DISABLED_stream_destroy_pending_drain)
 {
   // This test needs to be implemented.
 }
+
+TEST(cubeb, stable_devid)
+{
+  /* Test that the devid field of cubeb_device_info is stable
+   * (ie. compares equal) over two invocations of
+   * cubeb_enumerate_devices(). */
+
+  int r;
+  cubeb * ctx;
+  cubeb_device_collection first;
+  cubeb_device_collection second;
+  cubeb_device_type all_devices =
+    (cubeb_device_type) (CUBEB_DEVICE_TYPE_INPUT | CUBEB_DEVICE_TYPE_OUTPUT);
+  size_t n;
+
+  r = common_init(&ctx, "test_sanity");
+  ASSERT_EQ(r, CUBEB_OK);
+  ASSERT_NE(ctx, nullptr);
+
+  r = cubeb_enumerate_devices(ctx, all_devices, &first);
+  if (r == CUBEB_ERROR_NOT_SUPPORTED)
+    return;
+
+  ASSERT_EQ(r, CUBEB_OK);
+
+  r = cubeb_enumerate_devices(ctx, all_devices, &second);
+  ASSERT_EQ(r, CUBEB_OK);
+
+  ASSERT_EQ(first.count, second.count);
+  for (n = 0; n < first.count; n++) {
+    ASSERT_EQ(first.device[n].devid, second.device[n].devid);
+  }
+
+  r = cubeb_device_collection_destroy(ctx, &first);
+  ASSERT_EQ(r, CUBEB_OK);
+  r = cubeb_device_collection_destroy(ctx, &second);
+  ASSERT_EQ(r, CUBEB_OK);
+  cubeb_destroy(ctx);
+}
