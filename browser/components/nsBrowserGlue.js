@@ -1740,7 +1740,7 @@ BrowserGlue.prototype = {
 
   // eslint-disable-next-line complexity
   _migrateUI: function BG__migrateUI() {
-    const UI_VERSION = 51;
+    const UI_VERSION = 52;
     const BROWSER_DOCURL = "chrome://browser/content/browser.xul";
 
     let currentUIVersion;
@@ -2107,6 +2107,14 @@ BrowserGlue.prototype = {
       if (currentTheme == "firefox-compact-dark@mozilla.org" ||
           currentTheme == "firefox-compact-light@mozilla.org") {
         Services.prefs.setIntPref("browser.uidensity", 1);
+      }
+    }
+
+    if (currentUIVersion < 52) {
+      // Keep old devtools log persistence behavior after splitting netmonitor and
+      // webconsole prefs (bug 1307881).
+      if (Services.prefs.getBoolPref("devtools.webconsole.persistlog")) {
+        Services.prefs.setBoolPref("devtools.netmonitor.persistlog", true);
       }
     }
 
