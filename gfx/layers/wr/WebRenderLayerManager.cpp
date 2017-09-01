@@ -158,6 +158,11 @@ WebRenderLayerManager::BeginTransactionWithTarget(gfxContext* aTarget)
 bool
 WebRenderLayerManager::BeginTransaction()
 {
+  if (!WrBridge()->IPCOpen()) {
+    gfxCriticalNote << "IPC Channel is already torn down unexpectedly\n";
+    return false;
+  }
+
   // Increment the paint sequence number even if test logging isn't
   // enabled in this process; it may be enabled in the parent process,
   // and the parent process expects unique sequence numbers.
