@@ -7,6 +7,7 @@
 #ifndef mozilla_LabeledEventQueue_h
 #define mozilla_LabeledEventQueue_h
 
+#include <stdint.h>
 #include "mozilla/AbstractEventQueue.h"
 #include "mozilla/Queue.h"
 #include "nsClassHashtable.h"
@@ -131,10 +132,19 @@ private:
   using LabeledMap = nsClassHashtable<nsRefPtrHashKey<SchedulerGroup>, RunnableEpochQueue>;
   using EpochQueue = Queue<Epoch, 8>;
 
+  // List of SchedulerGroups that have events in the queue.
+  LinkedList<SchedulerGroup> mSchedulerGroups;
+
   LabeledMap mLabeled;
   RunnableEpochQueue mUnlabeled;
   EpochQueue mEpochs;
   size_t mNumEvents = 0;
+
+  // Number of SchedulerGroups that must be processed before we prioritize an
+  // active tab. This field is designed to guarantee a 1:1 interleaving between
+  // foreground and background SchedulerGroups. For details, see its usage in
+  // LabeledEventQueue.cpp.
+  int64_t mAvoidActiveTabCount = 0;
 };
 
 } // namespace mozilla
