@@ -742,7 +742,7 @@ body,
 }
 
 .request-list-item:not(.selected):hover {
-  background-color: var(--theme-selection-background-semitransparent);
+  background-color: var(--theme-selection-background-hover);
 }
 
 .request-list-item.fromCache > .requests-list-column:not(.requests-list-waterfall) {
