@@ -62,6 +62,7 @@ public:
   static void SetPrefs(const char* aPrefs);
 
   static bool IsSchedulerEnabled();
+  static bool UseMultipleQueues();
 
   static bool IsCooperativeThread();
 
