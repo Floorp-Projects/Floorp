@@ -705,7 +705,7 @@ pref("apz.frame_delay.enabled", true);
 #else
 pref("apz.frame_delay.enabled", false);
 #endif
-#if defined(NIGHTLY_BUILD) && !defined(MOZ_WIDGET_ANDROID)
+#if !defined(MOZ_WIDGET_ANDROID)
 pref("apz.keyboard.enabled", true);
 pref("apz.keyboard.passive-listeners", true);
 #else
