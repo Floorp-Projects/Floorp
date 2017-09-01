@@ -589,7 +589,7 @@ ArrayBufferObject::changeContents(JSContext* cx, BufferContents newContents,
  *    perform bounds checks. It is always a constant offset smaller than
  *    mappedSize. Currently that constant offset is 64k (wasm::GuardSize).
  *
- *  - max - the optional declared limit on how much length can grow.
+ *  - maxSize - the optional declared limit on how much length can grow.
  *
  *  - mappedSize - the actual mmaped size. Access in the range
  *    [0, mappedSize] will either succeed, or be handled by the wasm signal
@@ -638,10 +638,9 @@ ArrayBufferObject::changeContents(JSContext* cx, BufferContents newContents,
  *  to grow memory up to max (when present) without having to patch/update the
  *  bounds checks.
  *
- *  - from boundsCheckLimit to mappedSize - (Note: In current patch 0) - this
- *  part of the SLOP allows us to bounds check against base pointers and fold
- *  some constant offsets inside loads. This enables better Bounds
- *  Check Elimination.
+ *  - from boundsCheckLimit to mappedSize - this part of the SLOP allows us to
+ *  bounds check against base pointers and fold some constant offsets inside
+ *  loads. This enables better Bounds Check Elimination.
  *
  */
 
@@ -723,7 +722,7 @@ class js::WasmArrayRawBuffer
         return true;
     }
 
-    // Try and grow the mapped region of memory. Does not changes current size.
+    // Try and grow the mapped region of memory. Does not change current size.
     // Does not move memory if no space to grow.
     void tryGrowMaxSizeInPlace(uint32_t deltaMaxSize) {
         CheckedInt<uint32_t> newMaxSize = maxSize_.value();
