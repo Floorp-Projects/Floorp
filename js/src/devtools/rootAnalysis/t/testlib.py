@@ -10,7 +10,6 @@ scriptdir = os.path.abspath(os.path.join(os.path.dirname(__file__), ".."))
 
 HazardSummary = namedtuple('HazardSummary', ['function', 'variable', 'type', 'GCFunction', 'location'])
 
-
 def equal(got, expected):
     if got != expected:
         print("Got '%s', expected '%s'" % (got, expected))
@@ -44,20 +43,22 @@ class Test(object):
         '''Look up an entry from an XDB database file, 'pattern' may be an exact
         matching string, or an re pattern object matching a single entry.'''
 
-        if not isinstance(pattern, basestring):
-            output = subprocess.check_output([self.binpath("xdbkeys"), dbname + ".xdb"])
-            matches = filter(lambda _: re.search(pattern, _), output.splitlines())
+        if hasattr(pattern, 'match'):
+            output = subprocess.check_output([self.binpath("xdbkeys"), dbname + ".xdb"],
+                                             universal_newlines=True)
+            matches = list(filter(lambda _: re.search(pattern, _), output.splitlines()))
             if len(matches) == 0:
                 raise Exception("entry not found")
             if len(matches) > 1:
                 raise Exception("multiple entries found")
             pattern = matches[0]
 
-        output = subprocess.check_output([self.binpath("xdbfind"), "-json", dbname + ".xdb", pattern])
+        output = subprocess.check_output([self.binpath("xdbfind"), "-json", dbname + ".xdb", pattern],
+                                         universal_newlines=True)
         return json.loads(output)
 
     def run_analysis_script(self, phase, upto=None):
-        file("defaults.py", "w").write('''\
+        open("defaults.py", "w").write('''\
 analysis_scriptdir = '{scriptdir}'
 sixgill_bin = '{bindir}'
 '''.format(scriptdir=scriptdir, bindir=self.cfg.sixgill_bin))
@@ -80,8 +81,8 @@ sixgill_bin = '{bindir}'
 
     def load_text_file(self, filename, extract=lambda l: l):
         fullpath = os.path.join(self.outdir, filename)
-        values = (extract(line.strip()) for line in file(fullpath))
-        return filter(lambda _: _ is not None, values)
+        values = (extract(line.strip()) for line in open(fullpath, "r"))
+        return list(filter(lambda _: _ is not None, values))
 
     def load_suppressed_functions(self):
         return set(self.load_text_file("suppressedFunctions.lst"))
