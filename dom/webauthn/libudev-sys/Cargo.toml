@@ -1,0 +1,9 @@
+[package]
+name = "libudev-sys"
+version = "0.1.3"
+authors = ["Tim Taubert <ttaubert@mozilla.com>"]
+description = "FFI bindings to libudev"
+
+[dependencies]
+lazy_static = "0.2"
+libc = "0.2"

@@ -69,7 +69,7 @@ add_task(async function test_swap_frameloader_pagevisibility_events() {
 
   // We have to wait for the window to load so we can get the selected browser
   // to listen to.
-  await BrowserTestUtils.waitForEvent(newWindow, "load");
+  await BrowserTestUtils.waitForEvent(newWindow, "DOMContentLoaded");
   let newWindowBrowser = newWindow.gBrowser.selectedBrowser;
 
   // Wait for the expected pagehide and pageshow events on the initial browser

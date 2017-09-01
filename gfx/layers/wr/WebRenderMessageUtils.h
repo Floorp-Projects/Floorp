@@ -54,6 +54,24 @@ struct ParamTraits<mozilla::wr::FontKey>
 };
 
 template<>
+struct ParamTraits<mozilla::wr::FontInstanceKey>
+  : public PlainOldDataSerializer<mozilla::wr::FontInstanceKey>
+{
+};
+
+template<>
+struct ParamTraits<mozilla::wr::FontInstanceOptions>
+  : public PlainOldDataSerializer<mozilla::wr::FontInstanceOptions>
+{
+};
+
+template<>
+struct ParamTraits<mozilla::wr::FontInstancePlatformOptions>
+  : public PlainOldDataSerializer<mozilla::wr::FontInstancePlatformOptions>
+{
+};
+
+template<>
 struct ParamTraits<mozilla::wr::ExternalImageId>
   : public PlainOldDataSerializer<mozilla::wr::ExternalImageId>
 {

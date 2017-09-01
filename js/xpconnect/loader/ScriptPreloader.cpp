@@ -4,8 +4,8 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-#include "mozilla/ScriptPreloader.h"
 #include "ScriptPreloader-inl.h"
+#include "mozilla/ScriptPreloader.h"
 #include "mozilla/loader/ScriptCacheActors.h"
 
 #include "mozilla/ArrayUtils.h"
@@ -362,12 +362,12 @@ Result<nsCOMPtr<nsIFile>, nsresult>
 ScriptPreloader::GetCacheFile(const nsAString& suffix)
 {
     nsCOMPtr<nsIFile> cacheFile;
-    NS_TRY(mProfD->Clone(getter_AddRefs(cacheFile)));
+    MOZ_TRY(mProfD->Clone(getter_AddRefs(cacheFile)));
 
-    NS_TRY(cacheFile->AppendNative(NS_LITERAL_CSTRING("startupCache")));
+    MOZ_TRY(cacheFile->AppendNative(NS_LITERAL_CSTRING("startupCache")));
     Unused << cacheFile->Create(nsIFile::DIRECTORY_TYPE, 0777);
 
-    NS_TRY(cacheFile->Append(mBaseName + suffix));
+    MOZ_TRY(cacheFile->Append(mBaseName + suffix));
 
     return Move(cacheFile);
 }
@@ -377,18 +377,18 @@ static const uint8_t MAGIC[] = "mozXDRcachev001";
 Result<Ok, nsresult>
 ScriptPreloader::OpenCache()
 {
-    NS_TRY(NS_GetSpecialDirectory("ProfLDS", getter_AddRefs(mProfD)));
+    MOZ_TRY(NS_GetSpecialDirectory("ProfLDS", getter_AddRefs(mProfD)));
 
     nsCOMPtr<nsIFile> cacheFile;
     MOZ_TRY_VAR(cacheFile, GetCacheFile(NS_LITERAL_STRING(".bin")));
 
     bool exists;
-    NS_TRY(cacheFile->Exists(&exists));
+    MOZ_TRY(cacheFile->Exists(&exists));
     if (exists) {
-        NS_TRY(cacheFile->MoveTo(nullptr, mBaseName + NS_LITERAL_STRING("-current.bin")));
+        MOZ_TRY(cacheFile->MoveTo(nullptr, mBaseName + NS_LITERAL_STRING("-current.bin")));
     } else {
-        NS_TRY(cacheFile->SetLeafName(mBaseName + NS_LITERAL_STRING("-current.bin")));
-        NS_TRY(cacheFile->Exists(&exists));
+        MOZ_TRY(cacheFile->SetLeafName(mBaseName + NS_LITERAL_STRING("-current.bin")));
+        MOZ_TRY(cacheFile->Exists(&exists));
         if (!exists) {
             return Err(NS_ERROR_FILE_NOT_FOUND);
         }
@@ -627,14 +627,14 @@ ScriptPreloader::WriteCache()
     MOZ_TRY_VAR(cacheFile, GetCacheFile(NS_LITERAL_STRING("-new.bin")));
 
     bool exists;
-    NS_TRY(cacheFile->Exists(&exists));
+    MOZ_TRY(cacheFile->Exists(&exists));
     if (exists) {
-        NS_TRY(cacheFile->Remove(false));
+        MOZ_TRY(cacheFile->Remove(false));
     }
 
     {
         AutoFDClose fd;
-        NS_TRY(cacheFile->OpenNSPRFileDesc(PR_WRONLY | PR_CREATE_FILE, 0644, &fd.rwget()));
+        MOZ_TRY(cacheFile->OpenNSPRFileDesc(PR_WRONLY | PR_CREATE_FILE, 0644, &fd.rwget()));
 
         // We also need to hold mMonitor while we're touching scripts in
         // mScripts, or they may be freed before we're done with them.
@@ -675,7 +675,7 @@ ScriptPreloader::WriteCache()
         }
     }
 
-    NS_TRY(cacheFile->MoveTo(nullptr, mBaseName + NS_LITERAL_STRING(".bin")));
+    MOZ_TRY(cacheFile->MoveTo(nullptr, mBaseName + NS_LITERAL_STRING(".bin")));
 
     return Ok();
 }

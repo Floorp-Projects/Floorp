@@ -166,6 +166,7 @@ pub struct RenderTaskData {
 pub enum RenderTaskKind {
     Alpha(AlphaRenderTask),
     CachePrimitive(PrimitiveIndex),
+    BoxShadow(PrimitiveIndex),
     CacheMask(CacheMaskTask),
     VerticalBlur(DeviceIntLength),
     HorizontalBlur(DeviceIntLength),
@@ -217,7 +218,7 @@ impl RenderTask {
             cache_key: Some(RenderTaskKey::BoxShadow(key)),
             children: Vec::new(),
             location: RenderTaskLocation::Dynamic(None, size),
-            kind: RenderTaskKind::CachePrimitive(prim_index),
+            kind: RenderTaskKind::BoxShadow(prim_index),
         }
     }
 
@@ -344,6 +345,7 @@ impl RenderTask {
         match self.kind {
             RenderTaskKind::Alpha(ref mut task) => task,
             RenderTaskKind::CachePrimitive(..) |
+            RenderTaskKind::BoxShadow(..) |
             RenderTaskKind::CacheMask(..) |
             RenderTaskKind::VerticalBlur(..) |
             RenderTaskKind::Readback(..) |
@@ -356,6 +358,7 @@ impl RenderTask {
         match self.kind {
             RenderTaskKind::Alpha(ref task) => task,
             RenderTaskKind::CachePrimitive(..) |
+            RenderTaskKind::BoxShadow(..) |
             RenderTaskKind::CacheMask(..) |
             RenderTaskKind::VerticalBlur(..) |
             RenderTaskKind::Readback(..) |
@@ -396,7 +399,8 @@ impl RenderTask {
                     ],
                 }
             }
-            RenderTaskKind::CachePrimitive(..) => {
+            RenderTaskKind::CachePrimitive(..) |
+            RenderTaskKind::BoxShadow(..) => {
                 let (target_rect, target_index) = self.get_target_rect();
                 RenderTaskData {
                     data: [
@@ -500,7 +504,10 @@ impl RenderTask {
             RenderTaskKind::VerticalBlur(..) |
             RenderTaskKind::Readback(..) |
             RenderTaskKind::HorizontalBlur(..) => RenderTargetKind::Color,
-            RenderTaskKind::CacheMask(..) => RenderTargetKind::Alpha,
+
+            RenderTaskKind::CacheMask(..) |
+            RenderTaskKind::BoxShadow(..) => RenderTargetKind::Alpha,
+
             RenderTaskKind::Alias(..) => {
                 panic!("BUG: target_kind() called on invalidated task");
             }

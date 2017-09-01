@@ -261,6 +261,7 @@ class BaseBootstrapper(object):
 
     def install_tooltool_clang_package(self, state_dir, checkout_root, toolchain_job):
         mach_binary = os.path.join(checkout_root, 'mach')
+        mach_binary = os.path.abspath(mach_binary)
         if not os.path.exists(mach_binary):
             raise ValueError("mach not found at %s" % mach_binary)
 

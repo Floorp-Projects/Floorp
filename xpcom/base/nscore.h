@@ -194,6 +194,35 @@
 
 typedef MozRefCountType nsrefcnt;
 
+namespace mozilla {
+// Extensions to the mozilla::Result type for handling of nsresult values.
+//
+// Note that these specializations need to be defined before Result.h is
+// included, or we run into explicit specialization after instantiation errors,
+// especially if Result.h is used in multiple sources in a unified compile.
+
+namespace detail {
+// When used as an error value, nsresult should never be NS_OK.
+// This specialization allows us to pack Result<Ok, nsresult> into a
+// nsresult-sized value.
+template<typename T> struct UnusedZero;
+template<>
+struct UnusedZero<nsresult>
+{
+  static const bool value = true;
+};
+} // namespace detail
+
+template <typename T> class MOZ_MUST_USE_TYPE GenericErrorResult;
+template <> class MOZ_MUST_USE_TYPE GenericErrorResult<nsresult>;
+
+struct Ok;
+template <typename V, typename E> class Result;
+
+// Allow MOZ_TRY to handle `nsresult` values.
+inline Result<Ok, nsresult> ToResult(nsresult aValue);
+} // namespace mozilla
+
 /*
  * Use these macros to do 64bit safe pointer conversions.
  */

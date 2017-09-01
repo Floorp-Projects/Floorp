@@ -26,6 +26,11 @@
         setTimeout(function() { designMode.contentDocument.designMode = "on" }, 0);
       }
 
+      // Add key listeners to trigger dummy key synthesis.
+      input.addEventListener("keydown", function() {});
+      textArea.addEventListener("keydown", function() {});
+      contentEditable.addEventListener("keydown", function() {});
+
       // An input that resets the editor on every input by resetting the value property.
       let resetting_input = document.getElementById("resetting-input");
       resetting_input.addEventListener("input", function() {
@@ -60,6 +65,27 @@
             break;
           default:
             events_log += "?";
+            break;
+        }
+      }
+
+      let key_log;
+      function get_key_metastate(event) {
+        return (event.ctrlKey ? "C" : "c") +
+               (event.altKey ? "A" : "a") +
+               (event.shiftKey ? "S" : "s") +
+               (event.metaKey ? "M" : "m");
+      }
+
+      function log_key(event) {
+        switch (event.type) {
+          case "keydown":
+          case "keypress":
+          case "keyup":
+            key_log += `${event.type}:${event.key},${get_key_metastate(event)};`;
+            break;
+          default:
+            key_log += "unknown;";
             break;
         }
       }
@@ -180,6 +206,25 @@
           target.removeEventListener("compositionupdate", log_event);
           target.removeEventListener("compositionend", log_event);
           target.removeEventListener("selectionchange", log_event);
+        },
+
+        start_key_log: function() {
+          // Reset the log
+          key_log = "";
+
+          let target = get_event_target();
+          target.addEventListener("keydown", log_key);
+          target.addEventListener("keypress", log_key);
+          target.addEventListener("keyup", log_key);
+        },
+
+        end_key_log: function() {
+          java.asyncCall("setKeyLog", key_log);
+
+          let target = get_event_target();
+          target.removeEventListener("keydown", log_key);
+          target.removeEventListener("keypress", log_key);
+          target.removeEventListener("keyup", log_key);
         },
 
         test_bug1123514: function() {

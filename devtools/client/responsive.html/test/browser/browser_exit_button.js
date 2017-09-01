@@ -26,8 +26,9 @@ add_task(function* () {
   // Detach the tab with RDM open.
   let newWindow = gBrowser.replaceTabWithWindow(tab);
 
-  // Waiting the tab is detached.
+  // Wait until the tab is detached and the new window is fully initialized.
   yield waitTabIsDetached;
+  yield newWindow.delayedStartupPromise;
 
   // Get the new tab instance.
   tab = newWindow.gBrowser.tabs[0];

@@ -10,22 +10,17 @@ Components.utils.import("resource://gre/modules/XPCOMUtils.jsm");
 Components.utils.import("resource://gre/modules/Timer.jsm");
 Components.utils.import("resource://testing-common/AddonTestUtils.jsm");
 
-XPCOMUtils.defineLazyModuleGetter(this, "ContentTask",
-                                  "resource://testing-common/ContentTask.jsm");
-XPCOMUtils.defineLazyModuleGetter(this, "Extension",
-                                  "resource://gre/modules/Extension.jsm");
-XPCOMUtils.defineLazyModuleGetter(this, "ExtensionData",
-                                  "resource://gre/modules/Extension.jsm");
-XPCOMUtils.defineLazyModuleGetter(this, "ExtensionTestUtils",
-                                  "resource://testing-common/ExtensionXPCShellUtils.jsm");
-XPCOMUtils.defineLazyModuleGetter(this, "FileUtils",
-                                  "resource://gre/modules/FileUtils.jsm");
-XPCOMUtils.defineLazyModuleGetter(this, "HttpServer",
-                                  "resource://testing-common/httpd.js");
-XPCOMUtils.defineLazyModuleGetter(this, "NetUtil",
-                                  "resource://gre/modules/NetUtil.jsm");
-XPCOMUtils.defineLazyModuleGetter(this, "Schemas",
-                                  "resource://gre/modules/Schemas.jsm");
+XPCOMUtils.defineLazyModuleGetters(this, {
+  ContentTask: "resource://testing-common/ContentTask.jsm",
+  Extension: "resource://gre/modules/Extension.jsm",
+  ExtensionData: "resource://gre/modules/Extension.jsm",
+  ExtensionParent: "resource://gre/modules/ExtensionParent.jsm",
+  ExtensionTestUtils: "resource://testing-common/ExtensionXPCShellUtils.jsm",
+  FileUtils: "resource://gre/modules/FileUtils.jsm",
+  HttpServer: "resource://testing-common/httpd.js",
+  NetUtil: "resource://gre/modules/NetUtil.jsm",
+  Schemas: "resource://gre/modules/Schemas.jsm",
+});
 
 Services.prefs.setBoolPref("extensions.webextensions.remote", false);
 

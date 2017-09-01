@@ -95,6 +95,7 @@ impl NestedDisplayListInfo {
 struct FlattenContext<'a> {
     scene: &'a Scene,
     builder: &'a mut FrameBuilder,
+    resource_cache: &'a ResourceCache,
     tiled_image_map: TiledImageMap,
     replacements: Vec<(ClipId, ClipId)>,
     nested_display_list_info: Vec<NestedDisplayListInfo>,
@@ -104,11 +105,12 @@ struct FlattenContext<'a> {
 impl<'a> FlattenContext<'a> {
     fn new(scene: &'a Scene,
            builder: &'a mut FrameBuilder,
-           resource_cache: &ResourceCache)
+           resource_cache: &'a ResourceCache)
            -> FlattenContext<'a> {
         FlattenContext {
             scene,
             builder,
+            resource_cache,
             tiled_image_map: resource_cache.get_tiled_image_map(),
             replacements: Vec::new(),
             nested_display_list_info: Vec::new(),
@@ -565,12 +567,12 @@ impl Frame {
                                               info.image_rendering);
             }
             SpecificDisplayItem::Text(ref text_info) => {
+                let instance = context.resource_cache.get_font_instance(text_info.font_key).unwrap();
                 context.builder.add_text(clip_and_scroll,
                                          reference_frame_relative_offset,
                                          item_rect_with_offset,
                                          &clip_with_offset,
-                                         text_info.font_key,
-                                         text_info.size,
+                                         instance,
                                          &text_info.color,
                                          item.glyphs(),
                                          item.display_list().get(item.glyphs()).count(),

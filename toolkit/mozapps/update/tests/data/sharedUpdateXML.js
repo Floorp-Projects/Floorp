@@ -45,6 +45,12 @@ const INVALID_WORKING_DIR_PATH_ERROR           = 76;
 const INVALID_CALLBACK_PATH_ERROR              = 77;
 const INVALID_CALLBACK_DIR_ERROR               = 78;
 
+// Error codes 80 through 99 are reserved for nsUpdateService.js and are not
+// defined in common/errors.h
+const ERR_OLDER_VERSION_OR_SAME_BUILD      = 90;
+const ERR_UPDATE_STATE_NONE                = 91;
+const ERR_CHANNEL_CHANGE                   = 92;
+
 const STATE_FAILED_DELIMETER = ": ";
 
 const STATE_FAILED_LOADSOURCE_ERROR_WRONG_SIZE =
@@ -111,16 +117,16 @@ function getRemoteUpdatesXMLString(aUpdates) {
  */
 function getRemoteUpdateString(aUpdateProps, aPatches) {
   const updateProps = {
-    type: "major",
-    name: "App Update Test",
-    displayVersion: null,
     appVersion: DEFAULT_UPDATE_VERSION,
-    buildID: "20080811053724",
-    detailsURL: URL_HTTP_UPDATE_SJS + "?uiURL=DETAILS",
-    promptWaitTime: null,
     backgroundInterval: null,
+    buildID: "20080811053724",
     custom1: null,
-    custom2: null
+    custom2: null,
+    detailsURL: URL_HTTP_UPDATE_SJS + "?uiURL=DETAILS",
+    displayVersion: null,
+    name: "App Update Test",
+    promptWaitTime: null,
+    type: "major"
   };
 
   for (let name in aUpdateProps) {
@@ -196,9 +202,6 @@ function getLocalUpdatesXMLString(aUpdates) {
  */
 function getLocalUpdateString(aUpdateProps, aPatches) {
   const updateProps = {
-    type: "major",
-    name: "App Update Test",
-    displayVersion: null,
     _appVersion: null,
     get appVersion() {
       if (this._appVersion) {
@@ -212,46 +215,49 @@ function getLocalUpdateString(aUpdateProps, aPatches) {
     set appVersion(val) {
       this._appVersion = val;
     },
-    buildID: "20080811053724",
-    detailsURL: URL_HTTP_UPDATE_SJS + "?uiURL=DETAILS",
-    promptWaitTime: null,
     backgroundInterval: null,
+    buildID: "20080811053724",
+    channel: gDefaultPrefBranch.getCharPref(PREF_APP_UPDATE_CHANNEL),
     custom1: null,
     custom2: null,
-    serviceURL: "http://test_service/",
-    installDate: "1238441400314",
-    statusText: "Install Pending",
-    isCompleteUpdate: "true",
-    channel: gDefaultPrefBranch.getCharPref(PREF_APP_UPDATE_CHANNEL),
+    detailsURL: URL_HTTP_UPDATE_SJS + "?uiURL=DETAILS",
+    displayVersion: null,
     foregroundDownload: "true",
-    previousAppVersion: null
+    installDate: "1238441400314",
+    isCompleteUpdate: "true",
+    name: "App Update Test",
+    previousAppVersion: null,
+    promptWaitTime: null,
+    serviceURL: "http://test_service/",
+    statusText: "Install Pending",
+    type: "major"
   };
 
   for (let name in aUpdateProps) {
     updateProps[name] = aUpdateProps[name];
   }
 
-  let previousAppVersion = updateProps.previousAppVersion ?
-    "previousAppVersion=\"" + updateProps.previousAppVersion + "\" " : "";
-  let serviceURL = "serviceURL=\"" + updateProps.serviceURL + "\" ";
-  let installDate = "installDate=\"" + updateProps.installDate + "\" ";
-  let statusText = updateProps.statusText ?
-    "statusText=\"" + updateProps.statusText + "\" " : "";
+  let channel = "channel=\"" + updateProps.channel + "\" ";
   let isCompleteUpdate =
     "isCompleteUpdate=\"" + updateProps.isCompleteUpdate + "\" ";
-  let channel = "channel=\"" + updateProps.channel + "\" ";
   let foregroundDownload = updateProps.foregroundDownload ?
-    "foregroundDownload=\"" + updateProps.foregroundDownload + "\">" : ">";
+    "foregroundDownload=\"" + updateProps.foregroundDownload + "\" " : "";
+  let installDate = "installDate=\"" + updateProps.installDate + "\" ";
+  let previousAppVersion = updateProps.previousAppVersion ?
+    "previousAppVersion=\"" + updateProps.previousAppVersion + "\" " : "";
+  let statusText = updateProps.statusText ?
+    "statusText=\"" + updateProps.statusText + "\" " : "";
+  let serviceURL = "serviceURL=\"" + updateProps.serviceURL + "\">";
 
   return getUpdateString(updateProps) +
          " " +
-         previousAppVersion +
-         serviceURL +
-         installDate +
-         statusText +
-         isCompleteUpdate +
          channel +
+         isCompleteUpdate +
          foregroundDownload +
+         installDate +
+         previousAppVersion +
+         statusText +
+         serviceURL +
          aPatches +
          "</update>";
 }
@@ -310,16 +316,16 @@ function getUpdateString(aUpdateProps) {
   let custom2 = aUpdateProps.custom2 ? aUpdateProps.custom2 + " " : "";
   let buildID = "buildID=\"" + aUpdateProps.buildID + "\"";
 
-  return "  <update " + type +
-                        name +
-                        displayVersion +
-                        appVersion +
-                        detailsURL +
-                        promptWaitTime +
-                        backgroundInterval +
-                        custom1 +
-                        custom2 +
-                        buildID;
+  return "<update " + type +
+                      name +
+                      displayVersion +
+                      appVersion +
+                      detailsURL +
+                      promptWaitTime +
+                      backgroundInterval +
+                      custom1 +
+                      custom2 +
+                      buildID;
 }
 
 /**

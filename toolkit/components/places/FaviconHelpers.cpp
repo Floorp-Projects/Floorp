@@ -594,10 +594,12 @@ AsyncFetchAndSetIconForPage::FetchFromNetwork() {
     priorityChannel->AdjustPriority(nsISupportsPriority::PRIORITY_LOWEST);
   }
 
-  nsCOMPtr<nsIClassOfService> cos = do_QueryInterface(channel);
-  if (cos) {
-    cos->AddClassFlags(nsIClassOfService::Tail |
-                       nsIClassOfService::Throttleable);
+  if (nsContentUtils::IsTailingEnabled()) {
+    nsCOMPtr<nsIClassOfService> cos = do_QueryInterface(channel);
+    if (cos) {
+      cos->AddClassFlags(nsIClassOfService::Tail |
+                         nsIClassOfService::Throttleable);
+    }
   }
 
   rv = channel->AsyncOpen2(this);

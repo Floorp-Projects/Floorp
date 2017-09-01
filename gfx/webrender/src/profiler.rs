@@ -131,6 +131,11 @@ impl ResourceProfileCounter {
         self.value += 1;
         self.size += size;
     }
+
+    pub fn set(&mut self, count: usize, size: usize) {
+        self.value = count;
+        self.size = size;
+    }
 }
 
 impl ProfileCounter for ResourceProfileCounter {

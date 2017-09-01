@@ -585,6 +585,11 @@ var DebuggerServer = {
       constructor: "WebExtensionInspectedWindowActor",
       type: { tab: true }
     });
+    this.registerModule("devtools/server/actors/accessibility", {
+      prefix: "accessibility",
+      constructor: "AccessibilityActor",
+      type: { tab: true }
+    });
   },
 
   /**
