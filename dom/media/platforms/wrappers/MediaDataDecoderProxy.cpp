@@ -79,7 +79,7 @@ MediaDataDecoderProxy::Shutdown()
                      [self, this]() { return mProxyDecoder->Shutdown(); });
 }
 
-const char*
+nsCString
 MediaDataDecoderProxy::GetDescriptionName() const
 {
   MOZ_ASSERT(!mIsShutdown);

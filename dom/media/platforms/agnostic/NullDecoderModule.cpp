@@ -34,8 +34,8 @@ public:
   already_AddRefed<MediaDataDecoder>
   CreateVideoDecoder(const CreateDecoderParams& aParams) override {
     UniquePtr<DummyDataCreator> creator = MakeUnique<NullVideoDataCreator>();
-    RefPtr<MediaDataDecoder> decoder =
-      new DummyMediaDataDecoder(Move(creator), "null media data decoder", aParams);
+    RefPtr<MediaDataDecoder> decoder = new DummyMediaDataDecoder(
+      Move(creator), NS_LITERAL_CSTRING("null media data decoder"), aParams);
     return decoder.forget();
   }
 
