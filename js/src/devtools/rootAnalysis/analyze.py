@@ -256,7 +256,7 @@ if args.tag and not args.buildcommand:
 if args.jobs is not None:
     data['jobs'] = args.jobs
 if not data.get('jobs'):
-    data['jobs'] = subprocess.check_output(['nproc', '--ignore=1']).strip()
+    data['jobs'] = int(subprocess.check_output(['nproc', '--ignore=1']).strip())
 
 if args.buildcommand:
     data['buildcommand'] = args.buildcommand
