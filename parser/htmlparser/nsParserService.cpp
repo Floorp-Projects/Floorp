@@ -50,16 +50,7 @@ nsParserService::IsContainer(int32_t aId, bool& aIsContainer) const
 NS_IMETHODIMP
 nsParserService::IsBlock(int32_t aId, bool& aIsBlock) const
 {
-  if((aId>eHTMLTag_unknown) && (aId<eHTMLTag_userdefined)) {
-    aIsBlock=((gHTMLElements[aId].IsMemberOf(kBlock))       ||
-              (gHTMLElements[aId].IsMemberOf(kBlockEntity)) ||
-              (gHTMLElements[aId].IsMemberOf(kHeading))     ||
-              (gHTMLElements[aId].IsMemberOf(kPreformatted))||
-              (gHTMLElements[aId].IsMemberOf(kList)));
-  }
-  else {
-    aIsBlock = false;
-  }
+  aIsBlock = nsHTMLElement::IsBlock((eHTMLTags)aId);
 
   return NS_OK;
 }
