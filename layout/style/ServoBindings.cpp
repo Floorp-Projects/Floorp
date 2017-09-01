@@ -364,6 +364,13 @@ Gecko_NoteDirtyElement(RawGeckoElementBorrowed aElement)
 }
 
 void
+Gecko_NoteDirtySubtreeForInvalidation(RawGeckoElementBorrowed aElement)
+{
+  MOZ_ASSERT(NS_IsMainThread());
+  const_cast<Element*>(aElement)->NoteDirtySubtreeForServo();
+}
+
+void
 Gecko_NoteAnimationOnlyDirtyElement(RawGeckoElementBorrowed aElement)
 {
   MOZ_ASSERT(NS_IsMainThread());

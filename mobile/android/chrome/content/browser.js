@@ -1897,6 +1897,15 @@ var BrowserApp = {
 
         params.userRequested = url;
 
+        if (data.referrerURI) {
+          try {
+            params.referrerURI = Services.io.newURI(data.referrerURI);
+          } catch (e) {
+            console.warn("Tab:Load referrerURI is invalid - ignoring."); // don't log exception to avoid leaking urls.
+            params.referrerURI = null;
+          }
+        }
+
         if (data.engine) {
           let engine = Services.search.getEngineByName(data.engine);
           if (engine) {

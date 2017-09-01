@@ -3,19 +3,23 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 "use strict";
 
-const {utils: Cu} = Components;
+const {classes: Cc, interfaces: Ci, utils: Cu} = Components;
 Cu.import("resource://gre/modules/XPCOMUtils.jsm");
 Cu.import("resource://gre/modules/Services.jsm");
 Cu.import("resource://gre/modules/NewTabUtils.jsm");
 Cu.importGlobalProperties(["fetch"]);
 
 const {actionTypes: at} = Cu.import("resource://activity-stream/common/Actions.jsm", {});
+
 const {Prefs} = Cu.import("resource://activity-stream/lib/ActivityStreamPrefs.jsm", {});
 const {shortURL} = Cu.import("resource://activity-stream/lib/ShortURL.jsm", {});
 const {SectionsManager} = Cu.import("resource://activity-stream/lib/SectionsManager.jsm", {});
 
+const {UserDomainAffinityProvider} = Cu.import("resource://activity-stream/lib/UserDomainAffinityProvider.jsm", {});
+
 const STORIES_UPDATE_TIME = 30 * 60 * 1000; // 30 minutes
 const TOPICS_UPDATE_TIME = 3 * 60 * 60 * 1000; // 3 hours
+const DOMAIN_AFFINITY_UPDATE_TIME = 24 * 60 * 60 * 1000; // 24 hours
 const STORIES_NOW_THRESHOLD = 24 * 60 * 60 * 1000; // 24 hours
 const SECTION_ID = "topstories";
 const FEED_PREF = "feeds.section.topstories";
@@ -25,6 +29,7 @@ this.TopStoriesFeed = class TopStoriesFeed {
   init() {
     this.storiesLastUpdated = 0;
     this.topicsLastUpdated = 0;
+    this.affinityLastUpdated = 0;
 
     SectionsManager.onceInitialized(this.parseOptions.bind(this));
   }
@@ -36,9 +41,10 @@ this.TopStoriesFeed = class TopStoriesFeed {
       const apiKey = this._getApiKeyFromPref(options.api_key_pref);
       this.stories_endpoint = this._produceFinalEndpointUrl(options.stories_endpoint, apiKey);
       this.topics_endpoint = this._produceFinalEndpointUrl(options.topics_endpoint, apiKey);
-
       this.read_more_endpoint = options.read_more_endpoint;
       this.stories_referrer = options.stories_referrer;
+      this.personalized = options.personalized;
+      this.maxHistoryQueryResults = options.maxHistoryQueryResults;
 
       this.fetchStories();
       this.fetchTopics();
@@ -61,8 +67,10 @@ this.TopStoriesFeed = class TopStoriesFeed {
           throw new Error(`Stories endpoint returned unexpected status: ${response.status}`);
         })
         .then(body => {
-          let items = JSON.parse(body).recommendations;
-          items = items
+          const response = JSON.parse(body);
+          this.updateDomainAffinities(response.settings);
+
+          const items = response.recommendations
             .filter(s => !NewTabUtils.blockedLinks.isBlocked({"url": s.url}))
             .map(s => ({
               "guid": s.id,
@@ -73,9 +81,11 @@ this.TopStoriesFeed = class TopStoriesFeed {
               "image": this._normalizeUrl(s.image_src),
               "referrer": this.stories_referrer,
               "url": s.url,
-              "eTLD": this._addETLD(s.url)
-            }));
-          return items;
+              "score": this.personalized ? this.affinityProvider.calculateItemRelevanceScore(s) : 1
+            }))
+            .sort(this.personalized ? this.compareScore : (a, b) => 0);
+
+          return this.rotate(items);
         })
         .catch(error => Cu.reportError(`Failed to fetch content: ${error.message}`));
 
@@ -109,6 +119,42 @@ this.TopStoriesFeed = class TopStoriesFeed {
     SectionsManager.updateSection(SECTION_ID, data, lastUpdated === 0);
   }
 
+  compareScore(a, b) {
+    return b.score - a.score;
+  }
+
+  updateDomainAffinities(settings) {
+    if (!this.personalized) {
+      return;
+    }
+
+    if (!this.affinityProvider || (Date.now() - this.affinityLastUpdated >= DOMAIN_AFFINITY_UPDATE_TIME)) {
+      this.affinityProvider = new UserDomainAffinityProvider(
+        settings.timeSegments,
+        settings.domainAffinityParameterSets,
+        this.maxHistoryQueryResults);
+      this.affinityLastUpdated = Date.now();
+    }
+  }
+
+  // If personalization is turned on we have to rotate stories on the client.
+  // An item can only be on top for two iterations (1hr) before it gets moved
+  // to the end. This will later be improved based on interactions/impressions.
+  rotate(items) {
+    if (!this.personalized || items.length <= 3) {
+      return items;
+    }
+
+    const guid = items[0].guid;
+    if (!this.topItem || !(guid in this.topItem)) {
+      this.topItem = {[guid]: 0};
+    } else if (++this.topItem[guid] === 2) {
+      items.push(items.shift());
+      this.topItem = {[items[0].guid]: 0};
+    }
+    return items;
+  }
+
   _getApiKeyFromPref(apiKeyPref) {
     if (!apiKeyPref) {
       return apiKeyPref;
@@ -134,14 +180,6 @@ this.TopStoriesFeed = class TopStoriesFeed {
       return url.replace(/\(/g, "%28").replace(/\)/g, "%29");
     }
     return url;
-  }
-
-  _addETLD(url) {
-    try {
-      return Services.eTLD.getPublicSuffix(Services.io.newURI(url));
-    } catch (err) {
-      return "";
-    }
   }
 
   onAction(action) {
@@ -173,4 +211,4 @@ this.STORIES_UPDATE_TIME = STORIES_UPDATE_TIME;
 this.TOPICS_UPDATE_TIME = TOPICS_UPDATE_TIME;
 this.SECTION_ID = SECTION_ID;
 this.FEED_PREF = FEED_PREF;
-this.EXPORTED_SYMBOLS = ["TopStoriesFeed", "STORIES_UPDATE_TIME", "TOPICS_UPDATE_TIME", "SECTION_ID", "FEED_PREF"];
+this.EXPORTED_SYMBOLS = ["TopStoriesFeed", "STORIES_UPDATE_TIME", "TOPICS_UPDATE_TIME", "DOMAIN_AFFINITY_UPDATE_TIME", "SECTION_ID", "FEED_PREF"];

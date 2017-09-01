@@ -19,7 +19,7 @@
     <content>
       <xul:stringbundle anonid="tbstringbundle" src="chrome://browser/locale/tabbrowser.properties"/>
       <xul:tabbox anonid="tabbox" class="tabbrowser-tabbox"
-                  flex="1" eventnode="document" xbl:inherits="handleCtrlPageUpDown"
+                  flex="1" eventnode="document" xbl:inherits="handleCtrlPageUpDown,tabcontainer"
                   onselect="if (event.target.localName == 'tabpanels') this.parentNode.updateCurrentBrowser();">
         <xul:tabpanels flex="1" class="plain" selectedIndex="0" anonid="panelcontainer">
           <xul:notificationbox flex="1" notificationside="top">
@@ -6028,14 +6028,6 @@
         ]]>
       </handler>
     </handlers>
-  </binding>
-
-  <binding id="tabbrowser-tabbox"
-           extends="chrome://global/content/bindings/tabbox.xml#tabbox">
-    <implementation>
-      <property name="tabs" readonly="true"
-                onget="return document.getBindingParent(this).tabContainer;"/>
-    </implementation>
   </binding>
 
   <binding id="tabbrowser-arrowscrollbox" extends="chrome://global/content/bindings/scrollbox.xml#arrowscrollbox-clicktoscroll">

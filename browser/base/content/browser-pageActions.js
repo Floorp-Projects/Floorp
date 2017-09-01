@@ -820,7 +820,11 @@ BrowserPageActions.sendToDevice = {
       }
       item.setAttribute("tooltiptext", name);
       item.addEventListener("command", event => {
-        BrowserPageActionFeedback.show("sendToDevice", event);
+        // There are items in the subview that don't represent devices: "Sign
+        // in", "Learn about Sync", etc.  Device items will be .sendtab-target.
+        if (event.target.classList.contains("sendtab-target")) {
+          BrowserPageActionFeedback.show("sendToDevice", event);
+        }
       });
       return item;
     });

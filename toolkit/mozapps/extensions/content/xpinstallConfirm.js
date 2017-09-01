@@ -60,12 +60,6 @@ XPInstallConfirm.init = function() {
     var type = install.type;
     if (type)
       installItem.type = type;
-    if (install.certName) {
-      installItem.cert = bundle.getFormattedString("signed", [install.certName]);
-    } else {
-      installItem.cert = bundle.getString("unverified");
-    }
-    installItem.signed = install.certName ? "true" : "false";
 
     installMap.set(install.wrapped, installItem);
     install.addListener(installListener);

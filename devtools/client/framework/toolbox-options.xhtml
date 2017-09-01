@@ -41,14 +41,6 @@
         <legend>&options.selectDevToolsTheme.label2;</legend>
       </fieldset>
 
-      <fieldset id="commonprefs-options" class="options-groupbox">
-        <legend>&options.commonPrefs.label;</legend>
-        <label title="&options.enablePersistentLogs.tooltip;">
-          <input type="checkbox" data-pref="devtools.webconsole.persistlog" />
-          <span>&options.enablePersistentLogs.label;</span>
-        </label>
-      </fieldset>
-
       <fieldset id="inspector-options" class="options-groupbox">
         <legend>&options.context.inspector;</legend>
         <label title="&options.showUserAgentStyles.tooltip;">
@@ -91,6 +83,14 @@
                  id="debugger-sourcemaps"
                  data-pref="devtools.debugger.client-source-maps-enabled"/>
           <span>&options.sourceMaps.label;</span>
+        </label>
+      </fieldset>
+
+      <fieldset id="netmonitor-options" class="options-groupbox">
+        <legend>&options.netmonitor.label;</legend>
+        <label title="&options.netmonitor.enablePersistentLogs.tooltip;">
+          <input type="checkbox" data-pref="devtools.netmonitor.persistlog" />
+          <span>&options.netmonitor.enablePersistentLogs.label;</span>
         </label>
       </fieldset>
 

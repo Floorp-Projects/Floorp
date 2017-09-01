@@ -5,6 +5,7 @@
 
 const {actionTypes: at} = Components.utils.import("resource://activity-stream/common/Actions.jsm", {});
 
+const TOP_SITES_DEFAULT_LENGTH = 6;
 const TOP_SITES_SHOWMORE_LENGTH = 12;
 
 const INITIAL_STATE = {
@@ -134,8 +135,11 @@ function TopSites(prevState = INITIAL_STATE.TopSites, action) {
         return site;
       });
       return Object.assign({}, prevState, {rows: newRows});
-    case at.PLACES_LINK_DELETED:
-    case at.PLACES_LINK_BLOCKED:
+    case at.BLOCK_URL:
+    case at.DELETE_HISTORY_URL:
+      // Optimistically update the UI by responding to the context menu action
+      // events and removing the site that was blocked/deleted with an empty slot.
+      // Once refresh() finishes, we update the UI again with a new site
       newRows = prevState.rows.filter(val => val && val.url !== action.data.url);
       return Object.assign({}, prevState, {rows: newRows});
     case at.PINNED_SITES_UPDATED:
@@ -268,9 +272,10 @@ function Snippets(prevState = INITIAL_STATE.Snippets, action) {
 }
 
 this.INITIAL_STATE = INITIAL_STATE;
+this.TOP_SITES_DEFAULT_LENGTH = TOP_SITES_DEFAULT_LENGTH;
 this.TOP_SITES_SHOWMORE_LENGTH = TOP_SITES_SHOWMORE_LENGTH;
 
 this.reducers = {TopSites, App, Snippets, Prefs, Dialog, Sections};
 this.insertPinned = insertPinned;
 
-this.EXPORTED_SYMBOLS = ["reducers", "INITIAL_STATE", "insertPinned", "TOP_SITES_SHOWMORE_LENGTH"];
+this.EXPORTED_SYMBOLS = ["reducers", "INITIAL_STATE", "insertPinned", "TOP_SITES_DEFAULT_LENGTH", "TOP_SITES_SHOWMORE_LENGTH"];

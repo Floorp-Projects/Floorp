@@ -83,6 +83,7 @@ add_task(async function test_initialializeWithCurrentIdentity() {
     await globalBrowseridManager.whenReadyToAuthenticate.promise;
     do_check_true(!!globalBrowseridManager._token);
     do_check_true(globalBrowseridManager.hasValidToken());
+    Assert.deepEqual(getLoginTelemetryScalar(), {SUCCESS: 1});
   }
 );
 
@@ -132,6 +133,7 @@ add_task(async function test_initialializeWithAuthErrorAndDeletedAccount() {
     do_check_true(accountStatusCalled);
     do_check_false(browseridManager._token);
     do_check_false(browseridManager.hasValidToken());
+    Assert.deepEqual(getLoginTelemetryScalar(), {REJECTED: 1});
 });
 
 add_task(async function test_initialializeWithNoKeys() {

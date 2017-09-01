@@ -2,7 +2,9 @@
 flake8:
     description: Python linter
     include:
+        - config/mozunit.py
         - layout/tools/reftest
+        - python/mach_commands.py
         - python/mozlint
         - security/manager
         - taskcluster
@@ -24,4 +26,4 @@ flake8:
     exclude: []
     extensions: ['py']
     type: external
-    payload: flake8_:lint
+    payload: python.flake8:lint

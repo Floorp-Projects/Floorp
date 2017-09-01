@@ -4,12 +4,20 @@ const {GlobalOverrider} = require("test/unit/utils");
 describe("shortURL", () => {
   let globals;
   let IDNStub;
+  let getPublicSuffixStub;
+  let newURIStub;
 
   beforeEach(() => {
     IDNStub = sinon.stub().callsFake(id => id);
+    getPublicSuffixStub = sinon.stub();
+    newURIStub = sinon.stub().callsFake(id => id);
 
     globals = new GlobalOverrider();
     globals.set("IDNService", {convertToDisplayIDN: IDNStub});
+    globals.set("Services", {
+      eTLD: {getPublicSuffix: getPublicSuffixStub},
+      io: {newURI: newURIStub}
+    });
   });
 
   afterEach(() => {
@@ -26,14 +34,28 @@ describe("shortURL", () => {
   });
 
   it("should call convertToDisplayIDN when calling shortURL", () => {
-    shortURL({hostname: "com.blah.com", eTLD: "com"});
+    const hostname = shortURL({hostname: "com.blah.com", eTLD: "com"});
 
     assert.calledOnce(IDNStub);
-    assert.calledWithExactly(IDNStub, "com.blah.com", {});
+    assert.calledWithExactly(IDNStub, hostname, {});
   });
 
   it("should use the hostname, if provided", () => {
     assert.equal(shortURL({hostname: "foo.com", url: "http://bar.com", eTLD: "com"}), "foo");
+  });
+
+  it("should call getPublicSuffix if no eTLD provided", () => {
+    shortURL({url: "http://bar.com"});
+
+    assert.calledWithExactly(newURIStub, "http://bar.com");
+    assert.calledOnce(newURIStub);
+    assert.calledOnce(getPublicSuffixStub);
+  });
+
+  it("should not call getPublicSuffix when eTLD provided", () => {
+    shortURL({hostname: "com.blah.com", eTLD: "com"});
+
+    assert.equal(getPublicSuffixStub.callCount, 0);
   });
 
   it("should get the hostname from .url if necessary", () => {

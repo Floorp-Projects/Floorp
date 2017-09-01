@@ -355,7 +355,9 @@ var gSync = {
 
     const clients = this.remoteClients;
     for (let client of clients) {
-      addTargetDevice(client.id, client.name, client.type);
+      const type = client.formfactor && client.formfactor.includes("tablet") ?
+                   "tablet" : client.type;
+      addTargetDevice(client.id, client.name, type);
     }
 
     // "Send to All Devices" menu item

@@ -94,7 +94,8 @@ public class HomePager extends RtlViewPager implements HomeScreen {
             NO_READER_VIEW
         }
 
-        public void onUrlOpen(String url, EnumSet<Flags> flags);
+        void onUrlOpen(String url, EnumSet<Flags> flags);
+        void onUrlOpenWithReferrer(String url, String referrerUri, EnumSet<Flags> flags);
     }
 
     /**
@@ -116,6 +117,7 @@ public class HomePager extends RtlViewPager implements HomeScreen {
          * @param flags to open new tab with.
          */
         public void onUrlOpenInBackground(String url, EnumSet<Flags> flags);
+        void onUrlOpenInBackgroundWithReferrer(String url, String referrerUri, EnumSet<Flags> flags);
     }
 
     /**

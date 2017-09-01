@@ -78,6 +78,25 @@ class TestProxyCapabilities(MarionetteTestCase):
         with self.assertRaises(errors.SessionNotCreatedException):
             self.marionette.start_session(capabilities)
 
+    def test_proxy_type_manual_no_proxy_on(self):
+        capabilities = {"proxy": {
+            "proxyType": "manual",
+            "noProxy": ["foo", "bar"],
+        }}
+
+        self.marionette.start_session(capabilities)
+        self.assertEqual(self.marionette.session_capabilities["proxy"],
+                         capabilities["proxy"])
+
+    def test_proxy_type_manual_invalid_no_proxy_on(self):
+        capabilities = {"proxy": {
+            "proxyType": "manual",
+            "noProxy": "foo, bar",
+        }}
+
+        with self.assertRaises(errors.SessionNotCreatedException):
+            self.marionette.start_session(capabilities)
+
     def test_proxy_type_pac(self):
         pac_url = "http://marionette.test"
         capabilities = {"proxy": {"proxyType": "pac", "proxyAutoconfigUrl": pac_url}}

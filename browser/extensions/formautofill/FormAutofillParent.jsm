@@ -84,7 +84,7 @@ FormAutofillParent.prototype = {
    * Initializes ProfileStorage and registers the message handler.
    */
   async init() {
-    Services.obs.addObserver(this, "advanced-pane-loaded");
+    Services.obs.addObserver(this, "sync-pane-loaded");
     Services.ppmm.addMessageListener("FormAutofill:InitStorage", this);
     Services.ppmm.addMessageListener("FormAutofill:GetRecords", this);
     Services.ppmm.addMessageListener("FormAutofill:SaveAddress", this);
@@ -104,18 +104,12 @@ FormAutofillParent.prototype = {
   observe(subject, topic, data) {
     log.debug("observe:", topic, "with data:", data);
     switch (topic) {
-      case "advanced-pane-loaded": {
-        let useOldOrganization = Services.prefs.getBoolPref("browser.preferences.useOldOrganization",
-                                                            false);
-        let formAutofillPreferences = new FormAutofillPreferences({useOldOrganization});
+      case "sync-pane-loaded": {
+        let formAutofillPreferences = new FormAutofillPreferences();
         let document = subject.document;
         let prefGroup = formAutofillPreferences.init(document);
-        let parentNode = useOldOrganization ?
-                         document.getElementById("mainPrefPane") :
-                         document.getElementById("passwordsGroup");
-        let insertBeforeNode = useOldOrganization ?
-                               document.getElementById("locationBarGroup") :
-                               document.getElementById("masterPasswordRow");
+        let parentNode = document.getElementById("passwordsGroup");
+        let insertBeforeNode = document.getElementById("masterPasswordRow");
         parentNode.insertBefore(prefGroup, insertBeforeNode);
         break;
       }
@@ -257,7 +251,7 @@ FormAutofillParent.prototype = {
     Services.ppmm.removeMessageListener("FormAutofill:SaveCreditCard", this);
     Services.ppmm.removeMessageListener("FormAutofill:RemoveAddresses", this);
     Services.ppmm.removeMessageListener("FormAutofill:RemoveCreditCards", this);
-    Services.obs.removeObserver(this, "advanced-pane-loaded");
+    Services.obs.removeObserver(this, "sync-pane-loaded");
     Services.prefs.removeObserver(ENABLED_AUTOFILL_ADDRESSES_PREF, this);
     Services.prefs.removeObserver(ENABLED_AUTOFILL_CREDITCARDS_PREF, this);
   },

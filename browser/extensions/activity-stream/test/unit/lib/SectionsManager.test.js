@@ -7,20 +7,23 @@ const FAKE_ID = "FAKE_ID";
 const FAKE_OPTIONS = {icon: "FAKE_ICON", title: "FAKE_TITLE"};
 const FAKE_ROWS = [{url: "1"}, {url: "2"}, {"url": "3"}];
 
-let globals;
-
-beforeEach(() => {
-  globals = new GlobalOverrider();
-});
-
-afterEach(() => {
-  globals.restore();
-  // Redecorate SectionsManager to remove any listeners that have been added
-  EventEmitter.decorate(SectionsManager);
-  SectionsManager.init();
-});
-
 describe("SectionsManager", () => {
+  let globals;
+  let fakeServices;
+
+  beforeEach(() => {
+    globals = new GlobalOverrider();
+    fakeServices = {prefs: {getBoolPref: sinon.spy(), addObserver: sinon.spy(), removeObserver: sinon.spy()}};
+    globals.set("Services", fakeServices);
+  });
+
+  afterEach(() => {
+    // Redecorate SectionsManager to remove any listeners that have been added
+    EventEmitter.decorate(SectionsManager);
+    SectionsManager.init();
+    globals.restore();
+  });
+
   describe("#init", () => {
     it("should initialise the sections map with the built in sections", () => {
       SectionsManager.sections.clear();
@@ -34,6 +37,24 @@ describe("SectionsManager", () => {
       SectionsManager.initialized = false;
       SectionsManager.init();
       assert.ok(SectionsManager.initialized);
+    });
+    it("should add observer for context menu prefs", () => {
+      SectionsManager.sections.clear();
+      SectionsManager.initialized = false;
+      SectionsManager.CONTEXT_MENU_PREFS = {"MENU_ITEM": "MENU_ITEM_PREF"};
+      SectionsManager.init();
+      assert.calledOnce(fakeServices.prefs.addObserver);
+      assert.calledWith(fakeServices.prefs.addObserver, "MENU_ITEM_PREF", SectionsManager);
+    });
+  });
+  describe("#uninit", () => {
+    it("should remove observer for context menu prefs", () => {
+      SectionsManager.CONTEXT_MENU_PREFS = {"MENU_ITEM": "MENU_ITEM_PREF"};
+      SectionsManager.initialized = true;
+      SectionsManager.uninit();
+      assert.calledOnce(fakeServices.prefs.removeObserver);
+      assert.calledWith(fakeServices.prefs.removeObserver, "MENU_ITEM_PREF", SectionsManager);
+      assert.isFalse(SectionsManager.initialized);
     });
   });
   describe("#addBuiltInSection", () => {
@@ -79,6 +100,13 @@ describe("SectionsManager", () => {
       assert.calledWith(SectionsManager.updateSection, FAKE_ID, {enabled: true}, true);
       SectionsManager.updateSection.restore();
     });
+    it("should emit an ENABLE_SECTION event", () => {
+      const spy = sinon.spy();
+      SectionsManager.on(SectionsManager.ENABLE_SECTION, spy);
+      SectionsManager.enableSection(FAKE_ID);
+      assert.calledOnce(spy);
+      assert.calledWith(spy, SectionsManager.ENABLE_SECTION, FAKE_ID);
+    });
   });
   describe("#disableSection", () => {
     it("should call updateSection with {enabled: false, rows: []}", () => {
@@ -88,6 +116,13 @@ describe("SectionsManager", () => {
       assert.calledOnce(SectionsManager.updateSection);
       assert.calledWith(SectionsManager.updateSection, FAKE_ID, {enabled: false, rows: []}, true);
       SectionsManager.updateSection.restore();
+    });
+    it("should emit a DISABLE_SECTION event", () => {
+      const spy = sinon.spy();
+      SectionsManager.on(SectionsManager.DISABLE_SECTION, spy);
+      SectionsManager.disableSection(FAKE_ID);
+      assert.calledOnce(spy);
+      assert.calledWith(spy, SectionsManager.DISABLE_SECTION, FAKE_ID);
     });
   });
   describe("#updateSection", () => {
@@ -105,6 +140,30 @@ describe("SectionsManager", () => {
       SectionsManager.on(SectionsManager.UPDATE_SECTION, spy);
       SectionsManager.updateSection(FAKE_ID, {rows: FAKE_ROWS}, true);
       assert.notCalled(spy);
+    });
+    it("should update all sections", () => {
+      SectionsManager.sections.clear();
+      SectionsManager.updateSection = sinon.spy();
+
+      SectionsManager.addSection("ID1", {title: "FAKE_TITLE_1"});
+      SectionsManager.addSection("ID2", {title: "FAKE_TITLE_2"});
+      SectionsManager.updateSections();
+
+      assert.calledTwice(SectionsManager.updateSection);
+      assert.calledWith(SectionsManager.updateSection, "ID1", {title: "FAKE_TITLE_1"}, true);
+      assert.calledWith(SectionsManager.updateSection, "ID2", {title: "FAKE_TITLE_2"}, true);
+    });
+    it("context menu pref change should update sections", () => {
+      let observer;
+      const services = {prefs: {getBoolPref: sinon.spy(), addObserver: (pref, o) => (observer = o), removeObserver: sinon.spy()}};
+      globals.set("Services", services);
+
+      SectionsManager.updateSections = sinon.spy();
+      SectionsManager.CONTEXT_MENU_PREFS = {"MENU_ITEM": "MENU_ITEM_PREF"};
+      SectionsManager.init();
+      observer.observe("", "nsPref:changed", "MENU_ITEM_PREF");
+
+      assert.calledOnce(SectionsManager.updateSections);
     });
   });
   describe("#onceInitialized", () => {

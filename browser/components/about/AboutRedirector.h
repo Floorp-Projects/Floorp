@@ -26,7 +26,6 @@ protected:
   virtual ~AboutRedirector() {}
 
 private:
-  static bool sUseOldPreferences;
   static bool sActivityStreamEnabled;
   static bool sActivityStreamAboutHomeEnabled;
 

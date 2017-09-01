@@ -210,8 +210,10 @@ Creating a Custom Action Task
 
 It is possible to define an action that doesn't take a callback. Instead, you'll
 then have to provide a task template. For details on how the task template
-language works refer to `the actions.json spec`_, the example below illustrates
-how to create such an action::
+language works refer to `the actions.json spec`_. There are two options for
+creating this sort of action in-tree. The first option is to create a yaml file
+and the second allows you to use Python to do some extra work if you'd like.
+The example below illustrates how to create such an action in Python::
 
   from registry import register_task_action
 
@@ -253,9 +255,39 @@ how to create such an action::
           ...
       },
 
-This kind of action is useful for creating simple derivative tasks, but is
-limited by the expressiveness of the template language. On the other hand, it
-is more efficient than an action callback as it does not involve an
+An equivalent in yaml. Notice that we can't inspect parameters in this case::
+
+  ---
+  name: retrigger
+  title: Retrigger
+  description: Create a clone of the task
+  order: 1
+  context:
+    - platform: linux
+  input:
+    title: priority
+    description: Priority that should be given to the tasks
+    type: string
+    enum:
+      - low
+      - normal
+      - high
+    default: low'
+  ---
+  created: {'$fromNow': ''}
+  deadline: {'$fromNow': '1 hour'}
+  expires: {'$fromNow': '14 days'}
+  provisionerId: '...'
+  workerType: '...'
+  priority: '${input}'
+  payload:
+    command: '...'
+    env:
+      TASK_DEFINITION: {'$json': {'eval': 'task'}}
+
+These kinds of actions are useful for creating simple derivative tasks, but are
+limited by the expressiveness of the template language. On the other hand, they
+are more efficient than an action callback as they do not involve an
 intermediate action task before creating the task the user requested.
 
 For further details on the template language, see `the actions.json spec`_.

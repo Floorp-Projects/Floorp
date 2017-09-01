@@ -2,6 +2,7 @@
 # License, v. 2.0. If a copy of the MPL was not distributed with this
 # file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
+import mozunit
 import pytest
 
 from marionette_harness import MarionetteTestResult
@@ -50,6 +51,4 @@ def test_crash_is_recorded_as_error(empty_marionette_test,
 
 
 if __name__ == '__main__':
-    import sys
-    sys.exit(pytest.main(
-        ['--log-tbpl=-', __file__]))
+    mozunit.main('--log-tbpl=-')

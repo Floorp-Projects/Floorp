@@ -78,7 +78,7 @@ class GlobalOverrider {
 }
 
 /**
- * Very simple fake for the most basic semantics of Preferences.jsm. Lots of
+ * Very simple fake for the most basic semantics of nsIPrefBranch. Lots of
  * things aren't yet supported.  Feel free to add them in.
  *
  * @param {Object} args - optional arguments
@@ -87,29 +87,52 @@ class GlobalOverrider {
  *                   to save off a pointer to the created instance so that
  *                   stubs and spies can be inspected by the test code.
  */
-function FakePrefs(args) {
-  if (args) {
-    if ("initHook" in args) {
-      args.initHook.call(this);
+class FakensIPrefBranch {
+  constructor(args) {
+    if (args) {
+      if ("initHook" in args) {
+        args.initHook.call(this);
+      }
     }
+    this._prefBranch = {};
+    this.observers = {};
   }
-}
-FakePrefs.prototype = {
-  observers: {},
-  observe(prefName, callback) {
+  addObserver(prefName, callback) {
     this.observers[prefName] = callback;
-  },
-  ignore(prefName, callback) {
+  }
+  removeObserver(prefName, callback) {
     if (prefName in this.observers) {
       delete this.observers[prefName];
     }
-  },
-  _prefBranch: {},
-  observeBranch(listener) {},
-  ignoreBranch(listener) {},
+  }
+  observeBranch(listener) {}
+  ignoreBranch(listener) {}
+  setStringPref(prefName) {}
 
-  prefs: {},
-  get(prefName) { return this.prefs[prefName]; },
+  getStringPref(prefName) { return this.get(prefName); }
+  getBoolPref(prefName) { return this.get(prefName); }
+  get(prefName) { return this.prefs[prefName]; }
+  setBoolPref(prefName, value) {
+    this.prefs[prefName] = value;
+
+    if (prefName in this.observers) {
+      this.observers[prefName]("", "", prefName);
+    }
+  }
+}
+FakensIPrefBranch.prototype.prefs = {};
+
+/**
+ * Very simple fake for the most basic semantics of Preferences.jsm.
+ * Extends FakensIPrefBranch.
+ */
+class FakePrefs extends FakensIPrefBranch {
+  observe(prefName, callback) {
+    super.addObserver(prefName, callback);
+  }
+  ignore(prefName, callback) {
+    super.removeObserver(prefName, callback);
+  }
   set(prefName, value) {
     this.prefs[prefName] = value;
 
@@ -117,7 +140,7 @@ FakePrefs.prototype = {
       this.observers[prefName](value);
     }
   }
-};
+}
 
 /**
  * Slimmed down version of toolkit/modules/EventEmitter.jsm

@@ -8,17 +8,15 @@ function test() {
 
   gBrowser.selectedTab = BrowserTestUtils.addTab(gBrowser, "about:blank");
   BrowserTestUtils.browserLoaded(gBrowser.selectedBrowser).then(() => {
-    gBrowser.loadURI(TESTROOT + "signed.xpi");
+    gBrowser.loadURI(TESTROOT + "amosigned.xpi");
   });
 }
 
 function confirm_install(window) {
   let items = window.document.getElementById("itemList").childNodes;
   is(items.length, 1, "Should only be 1 item listed in the confirmation dialog");
-  is(items[0].name, "Signed XPI Test", "Should have had the name");
-  is(items[0].url, TESTROOT + "signed.xpi", "Should have listed the correct url for the item");
-  is(items[0].cert, "(Object Signer)", "Should have seen the signer");
-  is(items[0].signed, "true", "Should have listed the item as signed");
+  is(items[0].name, "XPI Test", "Should have had the name");
+  is(items[0].url, TESTROOT + "amosigned.xpi", "Should have listed the correct url for the item");
   return true;
 }
 

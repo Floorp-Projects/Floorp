@@ -102,13 +102,7 @@ promise_test(t => {
     // The Gecko style backend, however, does not do this. Since we expect the
     // Gecko style backend to be obsolete in the near future, we only perform
     // this check when the Servo backend is in use.
-    let isServo = false;
-    try {
-      isServo = SpecialPowers.getBoolPref('layout.css.servo.enabled');
-    } catch(e) {
-      // getBoolPref throws if the pref does not exist, in which case isServo
-      // should remain false.
-    }
+    let isServo = SpecialPowers.DOMWindowUtils.isStyledByServo;
     if (isServo) {
       assert_equals(getComputedStyle(div).opacity, '1',
                     'Style should NOT be updated');

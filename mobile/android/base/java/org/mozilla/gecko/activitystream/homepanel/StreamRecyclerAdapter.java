@@ -22,6 +22,7 @@ import org.mozilla.gecko.activitystream.homepanel.model.RowModel;
 import org.mozilla.gecko.activitystream.homepanel.model.WebpageRowModel;
 import org.mozilla.gecko.activitystream.homepanel.stream.TopPanelRow;
 import org.mozilla.gecko.activitystream.homepanel.model.TopStory;
+import org.mozilla.gecko.activitystream.homepanel.topstories.PocketStoriesLoader;
 import org.mozilla.gecko.home.HomePager;
 import org.mozilla.gecko.activitystream.homepanel.model.Highlight;
 import org.mozilla.gecko.activitystream.homepanel.stream.WebpageItemRow;
@@ -186,16 +187,19 @@ public class StreamRecyclerAdapter extends RecyclerView.Adapter<StreamViewHolder
         final String sourceType;
         final int actionPosition;
         final int size;
+        final String referrerUri;
         final int viewType = getItemViewType(position);
 
         if (viewType == RowItemType.HIGHLIGHT_ITEM.getViewType()) {
             sourceType = ActivityStreamTelemetry.Contract.TYPE_HIGHLIGHTS;
             actionPosition = getHighlightsIndexFromAdapterPosition(position);
             size = getNumOfTypeShown(RowItemType.HIGHLIGHT_ITEM);
+            referrerUri = null;
         } else {
             sourceType = ActivityStreamTelemetry.Contract.TYPE_POCKET;
             actionPosition = getTopStoriesIndexFromAdapterPosition(position);
             size = getNumOfTypeShown(RowItemType.TOP_STORIES_ITEM);
+            referrerUri = PocketStoriesLoader.POCKET_REFERRER_URI;
         }
 
         ActivityStreamTelemetry.Extras.Builder extras = ActivityStreamTelemetry.Extras.builder()
@@ -213,7 +217,8 @@ public class StreamRecyclerAdapter extends RecyclerView.Adapter<StreamViewHolder
         // NB: This is hacky. We need to process telemetry data first, otherwise we run a risk of
         // not having a cursor to work with once url is opened and BrowserApp closes A-S home screen
         // and clears its resources (read: cursors). See Bug 1326018.
-        onUrlOpenListener.onUrlOpen(model.getUrl(), EnumSet.of(HomePager.OnUrlOpenListener.Flags.ALLOW_SWITCH_TO_TAB));
+        onUrlOpenListener.onUrlOpenWithReferrer(model.getUrl(), referrerUri,
+                EnumSet.of(HomePager.OnUrlOpenListener.Flags.ALLOW_SWITCH_TO_TAB));
     }
 
     @Override

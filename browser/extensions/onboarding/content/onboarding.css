@@ -434,6 +434,23 @@
   background-image: url("img/icons_performance-colored.svg");
 }
 
+#onboarding-tour-screenshots,
+#onboarding-notification-bar[data-target-tour-id=onboarding-tour-screenshots] #onboarding-notification-tour-title::before {
+  background-image: url("img/icons_screenshots.svg");
+}
+
+#onboarding-tour-screenshots.onboarding-active,
+#onboarding-tour-screenshots:hover {
+  background-image: url("img/icons_screenshots-colored.svg");
+}
+
+a#onboarding-tour-screenshots-button,
+a#onboarding-tour-screenshots-button:hover,
+a#onboarding-tour-screenshots-button:visited {
+  color: #fff;
+  text-decoration: none;
+}
+
 /* Tour Notifications */
 #onboarding-notification-bar {
   --onboarding-notification-bar-background-color: rgba(255, 255, 255, 0.97);

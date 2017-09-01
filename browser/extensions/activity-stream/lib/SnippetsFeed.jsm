@@ -114,6 +114,7 @@ this.SnippetsFeed = class SnippetsFeed {
     Services.prefs.addObserver(FXA_USERNAME_PREF, this._refresh);
     Services.obs.addObserver(this, SEARCH_ENGINE_OBSERVER_TOPIC);
   }
+
   uninit() {
     Services.prefs.removeObserver(ONBOARDING_FINISHED_PREF, this._refresh);
     Services.prefs.removeObserver(SNIPPETS_URL_PREF, this._refresh);
@@ -122,6 +123,12 @@ this.SnippetsFeed = class SnippetsFeed {
     Services.obs.removeObserver(this, SEARCH_ENGINE_OBSERVER_TOPIC);
     this.store.dispatch({type: at.SNIPPETS_RESET});
   }
+
+  showFirefoxAccounts(browser) {
+    // We want to replace the current tab.
+    browser.loadURI("about:accounts?action=signup&entrypoint=snippets");
+  }
+
   onAction(action) {
     switch (action.type) {
       case at.INIT:
@@ -129,6 +136,9 @@ this.SnippetsFeed = class SnippetsFeed {
         break;
       case at.FEED_INIT:
         if (action.data === "feeds.snippets") { this.init(); }
+        break;
+      case at.SHOW_FIREFOX_ACCOUNTS:
+        this.showFirefoxAccounts(action._target.browser);
         break;
     }
   }

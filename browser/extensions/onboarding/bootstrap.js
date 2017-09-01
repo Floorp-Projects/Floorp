@@ -34,6 +34,7 @@ const PREF_WHITELIST = [
   "onboarding-tour-library",
   "onboarding-tour-performance",
   "onboarding-tour-private-browsing",
+  "onboarding-tour-screenshots",
   "onboarding-tour-singlesearch",
   "onboarding-tour-sync",
 ].forEach(tourId => PREF_WHITELIST.push([`browser.onboarding.tour.${tourId}.completed`, PREF_BOOL]));
