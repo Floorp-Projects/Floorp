@@ -5,6 +5,7 @@
 import os
 import sys
 
+import mozunit
 import pytest
 
 from mozlint import ResultContainer
@@ -79,4 +80,4 @@ def test_roll_with_failure_code(lint, lintdir, files):
 
 
 if __name__ == '__main__':
-    sys.exit(pytest.main(['--verbose', __file__]))
+    mozunit.main()

@@ -8,7 +8,7 @@ const URI = Services.io.newURI("http://www.example.com");
 var cookiesDialog;
 
 add_task(async function openCookiesSubDialog() {
-  await openPreferencesViaOpenPreferencesAPI("panePrivacy", null, {leaveOpen: true});
+  await openPreferencesViaOpenPreferencesAPI("privacy", {leaveOpen: true});
 
   let dialogOpened = promiseLoadSubDialog(COOKIES_URL);
 

@@ -21,7 +21,6 @@ namespace browser {
 
 NS_IMPL_ISUPPORTS(AboutRedirector, nsIAboutModule)
 
-bool AboutRedirector::sUseOldPreferences = false;
 bool AboutRedirector::sActivityStreamEnabled = false;
 bool AboutRedirector::sActivityStreamAboutHomeEnabled = false;
 
@@ -150,12 +149,6 @@ AboutRedirector::NewChannel(nsIURI* aURI,
   nsCOMPtr<nsIIOService> ioService = do_GetIOService(&rv);
   NS_ENSURE_SUCCESS(rv, rv);
 
-  static bool sPrefCacheInited = false;
-  if (!sPrefCacheInited) {
-    Preferences::AddBoolVarCache(&sUseOldPreferences,
-                                 "browser.preferences.useOldOrganization");
-    sPrefCacheInited = true;
-  }
   LoadActivityStreamPrefs();
 
   for (auto & redir : kRedirMap) {
@@ -170,8 +163,6 @@ AboutRedirector::NewChannel(nsIURI* aURI,
         NS_ENSURE_SUCCESS(rv, rv);
         rv = aboutNewTabService->GetDefaultURL(url);
         NS_ENSURE_SUCCESS(rv, rv);
-      } else if (path.EqualsLiteral("preferences") && !sUseOldPreferences) {
-        url.AssignASCII("chrome://browser/content/preferences/in-content-new/preferences.xul");
       }
       // fall back to the specified url in the map
       if (url.IsEmpty()) {

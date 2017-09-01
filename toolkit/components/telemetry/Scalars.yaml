@@ -428,6 +428,21 @@ services.sync:
     record_in_processes:
       - main
 
+  sync_login_state_transitions:
+    bug_numbers:
+      - 1375635
+    description: >
+      Records transitions between login states of "success", "unverified"
+      and "rejected.
+    expires: "65"
+    kind: boolean
+    keyed: true
+    notification_emails:
+      - sync-staff@mozilla.com
+    release_channel_collection: opt-out
+    record_in_processes:
+      - main
+
 security:
   pkcs11_modules_loaded:
     bug_numbers:

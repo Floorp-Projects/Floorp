@@ -19,28 +19,32 @@
 
     <stringbundle id="engineManagerBundle" src="chrome://browser/locale/engineManager.properties"/>
 
-    <hbox id="header-search"
-          class="header"
+    <hbox id="searchCategory"
+          class="subcategory"
           hidden="true"
           data-category="paneSearch">
       <label class="header-name" flex="1">&paneSearch.title;</label>
-      <html:a class="help-button" target="_blank" aria-label="&helpButton.label;"></html:a>
     </hbox>
 
     <!-- Default Search Engine -->
-    <groupbox id="defaultEngineGroup" align="start" data-category="paneSearch">
-      <caption label="&defaultSearchEngine.label;"/>
-      <label>&chooseYourDefaultSearchEngine.label;</label>
-      <menulist id="defaultEngine">
-        <menupopup/>
-      </menulist>
+    <groupbox id="defaultEngineGroup" data-category="paneSearch">
+      <caption><label>&defaultSearchEngine.label;</label></caption>
+      <description>&chooseYourDefaultSearchEngine2.label;</description>
+      <hbox>
+        <!-- Please don't remove the wrapping hbox/vbox/box for these elements. It's used to properly compute the search tooltip position. -->
+        <hbox>
+          <menulist id="defaultEngine">
+            <menupopup/>
+          </menulist>
+        </hbox>
+      </hbox>
       <checkbox id="suggestionsInSearchFieldsCheckbox"
                 label="&provideSearchSuggestions.label;"
                 accesskey="&provideSearchSuggestions.accesskey;"
                 preference="browser.search.suggest.enabled"/>
       <vbox class="indent">
-        <checkbox id="urlBarSuggestion" label="&showURLBarSuggestions.label;"
-                  accesskey="&showURLBarSuggestions.accesskey;"
+        <checkbox id="urlBarSuggestion" label="&showURLBarSuggestions2.label;"
+                  accesskey="&showURLBarSuggestions2.accesskey;"
                   preference="browser.urlbar.suggest.searches"/>
         <hbox id="urlBarSuggestionPermanentPBLabel"
               align="center" class="indent">
@@ -50,8 +54,8 @@
     </groupbox>
 
     <groupbox id="oneClickSearchProvidersGroup" data-category="paneSearch">
-      <caption label="&oneClickSearchEngines.label;"/>
-      <label>&chooseWhichOneToDisplay.label;</label>
+      <caption><label>&oneClickSearchEngines.label;</label></caption>
+      <description>&chooseWhichOneToDisplay2.label;</description>
 
       <tree id="engineList" flex="1" rows="8" hidecolumnpicker="true" editable="true"
             seltype="single">
@@ -77,10 +81,7 @@
                 disabled="true"
                 />
       </hbox>
-
-      <separator class="thin"/>
-
       <hbox id="addEnginesBox" pack="start">
-        <label id="addEngines" class="text-link" value="&addMoreSearchEngines.label;"/>
+        <label id="addEngines" class="text-link">&findMoreSearchEngines.label;</label>
       </hbox>
     </groupbox>

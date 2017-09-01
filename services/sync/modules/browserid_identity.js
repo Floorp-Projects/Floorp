@@ -46,6 +46,94 @@ const OBSERVER_TOPICS = [
   fxAccountsCommon.ON_ACCOUNT_STATE_CHANGE_NOTIFICATION,
 ];
 
+// A telemetry helper that records how long a user was in a "bad" state.
+// It is recorded in the *main* ping, *not* the Sync ping.
+// These bad states may persist across browser restarts, and may never change
+// (eg, users may *never* validate)
+this.telemetryHelper = {
+  // These are both the "status" values passed to maybeRecordLoginState and
+  // the key we use for our keyed scalar.
+  STATES: {
+    SUCCESS: "SUCCESS",
+    NOTVERIFIED: "NOTVERIFIED",
+    REJECTED: "REJECTED",
+  },
+
+  PREFS: {
+    REJECTED_AT: "identity.telemetry.loginRejectedAt",
+    APPEARS_PERMANENTLY_REJECTED: "identity.telemetry.loginAppearsPermanentlyRejected",
+    LAST_RECORDED_STATE: "identity.telemetry.lastRecordedState",
+  },
+
+  // How long, in minutes, that we continue to wait for a user to transition
+  // from a "bad" state to a success state. After this has expired, we record
+  // the "how long were they rejected for?" histogram.
+  NUM_MINUTES_TO_RECORD_REJECTED_TELEMETRY: 20160, // 14 days in minutes.
+
+  SCALAR: "services.sync.sync_login_state_transitions", // The scalar we use to report
+
+  maybeRecordLoginState(status) {
+    try {
+      this._maybeRecordLoginState(status);
+    } catch (ex) {
+      log.error("Failed to record login telemetry", ex);
+    }
+  },
+
+  _maybeRecordLoginState(status) {
+    let key = this.STATES[status];
+    if (!key) {
+      throw new Error(`invalid state ${status}`);
+    }
+
+    let when = Svc.Prefs.get(this.PREFS.REJECTED_AT);
+    let howLong = when ? this.nowInMinutes() - when : 0; // minutes.
+    let isNewState = Svc.Prefs.get(this.PREFS.LAST_RECORDED_STATE) != status;
+
+    if (status == this.STATES.SUCCESS) {
+      if (isNewState) {
+        Services.telemetry.keyedScalarSet(this.SCALAR, key, true);
+        Svc.Prefs.set(this.PREFS.LAST_RECORDED_STATE, status);
+      }
+      // If we previously recorded an error state, report how long they were
+      // in the bad state for (in minutes)
+      if (when) {
+        // If we are "permanently rejected" we've already recorded for how
+        // long, so don't do it again.
+        if (!Svc.Prefs.get(this.PREFS.APPEARS_PERMANENTLY_REJECTED)) {
+          Services.telemetry.getHistogramById("WEAVE_LOGIN_FAILED_FOR").add(howLong);
+        }
+      }
+      Svc.Prefs.reset(this.PREFS.REJECTED_AT);
+      Svc.Prefs.reset(this.PREFS.APPEARS_PERMANENTLY_REJECTED);
+    } else {
+      // We are in a failure state.
+      if (Svc.Prefs.get(this.PREFS.APPEARS_PERMANENTLY_REJECTED)) {
+        return; // we've given up, so don't record errors.
+      }
+      if (isNewState) {
+        Services.telemetry.keyedScalarSet(this.SCALAR, key, true);
+        Svc.Prefs.set(this.PREFS.LAST_RECORDED_STATE, status);
+      }
+      if (howLong > this.NUM_MINUTES_TO_RECORD_REJECTED_TELEMETRY) {
+        // We are giving up for this user, so report this "max time" as how
+        // long they were in this state for.
+        Services.telemetry.getHistogramById("WEAVE_LOGIN_FAILED_FOR").add(howLong);
+        Svc.Prefs.set(this.PREFS.APPEARS_PERMANENTLY_REJECTED, true);
+      }
+      if (!Svc.Prefs.has(this.PREFS.REJECTED_AT)) {
+        Svc.Prefs.set(this.PREFS.REJECTED_AT, this.nowInMinutes());
+      }
+    }
+  },
+
+  // hookable by tests.
+  nowInMinutes() {
+    return Math.floor(Date.now() / 1000 / 60);
+  },
+}
+
+
 function deriveKeyBundle(kB) {
   let out = CryptoUtils.hkdf(kB, undefined,
                              "identity.mozilla.com/picl/v1/oldsync", 2 * 32);
@@ -197,6 +285,9 @@ this.BrowserIDManager.prototype = {
       // this and the rest of initialization off in the background (ie, we
       // don't return the promise)
       this._log.info("Waiting for user to be verified.");
+      if (!accountData.verified) {
+        telemetryHelper.maybeRecordLoginState(telemetryHelper.STATES.NOTVERIFIED);
+      }
       this._fxaService.whenVerified(accountData).then(accountData => {
         this._updateSignedInUser(accountData);
 
@@ -611,6 +702,7 @@ this.BrowserIDManager.prototype = {
           // We are given kA/kB as hex.
           this._syncKeyBundle = deriveKeyBundle(CommonUtils.hexToBytes(userData.kB));
         }
+        telemetryHelper.maybeRecordLoginState(telemetryHelper.STATES.SUCCESS);
         return token;
       })
       .catch(err => {
@@ -634,6 +726,7 @@ this.BrowserIDManager.prototype = {
           this._log.error("Authentication error in _fetchTokenForUser", err);
           // set it to the "fatal" LOGIN_FAILED_LOGIN_REJECTED reason.
           this._authFailureReason = LOGIN_FAILED_LOGIN_REJECTED;
+          telemetryHelper.maybeRecordLoginState(telemetryHelper.STATES.REJECTED);
         } else {
           this._log.error("Non-authentication error in _fetchTokenForUser", err);
           // for now assume it is just a transient network related problem

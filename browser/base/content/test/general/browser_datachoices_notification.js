@@ -83,15 +83,10 @@ var checkInfobarButton = async function(aNotification) {
   Assert.equal(buttons.length, 1, "There is 1 button in the data reporting notification.");
   let button = buttons[0];
 
-  // Add an observer to ensure the "advanced" pane opened (but don't bother
-  // closing it - we close the entire window when done.)
-  let paneLoadedPromise = promiseTopicObserved("advanced-pane-loaded");
-
   // Click on the button.
   button.click();
 
   // Wait for the preferences panel to open.
-  await paneLoadedPromise;
   await promiseNextTick();
 };
 

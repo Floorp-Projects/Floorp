@@ -78,10 +78,10 @@ add_task(async function test_yandex_attribution() {
 
 
 add_task(async function test_preference_attribution() {
-
     let prefUrl = "about:preferences#general";
+    let waitPrefLoaded = TestUtils.topicObserved("sync-pane-loaded", () => true);
     let tab = await promiseTestPageLoad(prefUrl);
-
+    await waitPrefLoaded;
     let browser = gBrowser.getBrowserForTab(tab);
     let win = browser.contentWindow;
     let bingAttribution = win.document.getElementById("bingAttribution");
@@ -89,7 +89,6 @@ add_task(async function test_preference_attribution() {
     ok(bingAttribution.hidden, "Bing attribution should be hidden.");
 
     gBrowser.removeTab(tab);
-
 });
 
 /**

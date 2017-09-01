@@ -37,6 +37,4 @@ EXPORTS
   jemalloc_free_dirty_pages
   jemalloc_thread_local_arena
   jemalloc_ptr_info
-  ; A hack to work around the CRT (see giant comment in Makefile.in)
-  frex=dumb_free_thunk
 #endif

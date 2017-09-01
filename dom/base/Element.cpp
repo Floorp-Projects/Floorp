@@ -4245,14 +4245,14 @@ Element::AddSizeOfExcludingThis(nsWindowSizes& aSizes, size_t* aNodeSize) const
 
 #ifdef DEBUG
 static bool
-BitIsPropagated(const Element* aElement, uint32_t aBit, nsINode* aRestyleRoot)
+BitsArePropagated(const Element* aElement, uint32_t aBits, nsINode* aRestyleRoot)
 {
   const Element* curr = aElement;
   while (curr) {
     if (curr == aRestyleRoot) {
       return true;
     }
-    if (!curr->HasFlag(aBit)) {
+    if (!curr->HasAllFlags(aBits)) {
       return false;
     }
     nsINode* parentNode = curr->GetParentNode();
@@ -4264,6 +4264,21 @@ BitIsPropagated(const Element* aElement, uint32_t aBit, nsINode* aRestyleRoot)
   return true;
 }
 #endif
+
+static inline void
+AssertNoBitsPropagatedFrom(nsINode* aRoot) {
+#ifdef DEBUG
+  if (!aRoot || !aRoot->IsElement()) {
+    return;
+  }
+
+  auto* element = aRoot->GetFlattenedTreeParentElementForStyle();
+  while (element) {
+    MOZ_ASSERT(!element->HasAnyOfFlags(Element::kAllServoDescendantBits));
+    element = element->GetFlattenedTreeParentElementForStyle();
+  }
+#endif
+}
 
 // Sets |aBits| on aElement and all of its flattened-tree ancestors up to and
 // including aStopAt or the root element (whichever is encountered first).
@@ -4312,8 +4327,12 @@ PropagateBits(Element* aElement, uint32_t aBits, nsINode* aStopAt)
 //   (which are the main DOM + each piece of document-level native-anoymous
 //   content), we set the restyle root to the nsINode of the document itself.
 //   This is the bail-out case where we traverse everything.
+//
+// Note that, since we track a root, we try to optimize the case where an
+// element under the current root is dirtied, that's why we don't trivially use
+// `nsContentUtils::GetCommonFlattenedTreeAncestorForStyle`.
 static void
-NoteDirtyElement(Element* aElement, uint32_t aBit)
+NoteDirtyElement(Element* aElement, uint32_t aBits)
 {
   MOZ_ASSERT(aElement->IsInComposedDoc());
   MOZ_ASSERT(aElement->IsStyledByServo());
@@ -4329,7 +4348,7 @@ NoteDirtyElement(Element* aElement, uint32_t aBit)
 
     // Similarly, if our parent already has the bit we're propagating, we can
     // assume everything is already set up.
-    if (parent->HasFlag(aBit)) {
+    if (parent->HasAllFlags(aBits)) {
       MOZ_ASSERT(aElement->GetComposedDoc()->GetServoRestyleRoot());
       return;
     }
@@ -4347,48 +4366,84 @@ NoteDirtyElement(Element* aElement, uint32_t aBit)
     shell->EnsureStyleFlush();
   }
 
-  // If there's no existing restyle root, or if the root is already aElement,
-  // just note the root+bits and return.
   nsINode* existingRoot = doc->GetServoRestyleRoot();
   uint32_t existingBits = existingRoot ? doc->GetServoRestyleRootDirtyBits() : 0;
+
+  // The bit checks below rely on this to arrive to useful conclusions about the
+  // shape of the tree.
+  AssertNoBitsPropagatedFrom(existingRoot);
+
+  // If there's no existing restyle root, or if the root is already aElement,
+  // just note the root+bits and return.
   if (!existingRoot || existingRoot == aElement) {
-    doc->SetServoRestyleRoot(aElement, existingBits | aBit);
+    doc->SetServoRestyleRoot(aElement, existingBits | aBits);
     return;
   }
 
   // There is an existing restyle root - walk up the tree from our element,
-  // propagating bits as wel go.
-  const bool reachedDocRoot = !parent || !PropagateBits(parent, aBit, existingRoot);
+  // propagating bits as we go.
+  const bool reachedDocRoot = !parent || !PropagateBits(parent, aBits, existingRoot);
 
   if (!reachedDocRoot || existingRoot == doc) {
       // We're a descendant of the existing root. All that's left to do is to
       // make sure the bit we propagated is also registered on the root.
-      doc->SetServoRestyleRoot(existingRoot, existingBits | aBit);
+      doc->SetServoRestyleRoot(existingRoot, existingBits | aBits);
   } else {
     // We reached the root without crossing the pre-existing restyle root. We
     // now need to find the nearest common ancestor, so climb up from the
     // existing root, extending bits along the way.
     Element* rootParent = existingRoot->GetFlattenedTreeParentElementForStyle();
     if (Element* commonAncestor = PropagateBits(rootParent, existingBits, aElement)) {
+      MOZ_ASSERT(commonAncestor == aElement ||
+                 commonAncestor == nsContentUtils::GetCommonFlattenedTreeAncestorForStyle(aElement, rootParent));
+
       // We found a common ancestor. Make that the new style root, and clear the
       // bits between the new style root and the document root.
-      doc->SetServoRestyleRoot(commonAncestor, existingBits | aBit);
+      doc->SetServoRestyleRoot(commonAncestor, existingBits | aBits);
       Element* curr = commonAncestor;
       while ((curr = curr->GetFlattenedTreeParentElementForStyle())) {
-        MOZ_ASSERT(curr->HasFlag(aBit));
-        curr->UnsetFlags(aBit);
+        MOZ_ASSERT(curr->HasAllFlags(aBits));
+        curr->UnsetFlags(aBits);
       }
     } else {
       // We didn't find a common ancestor element. That means we're descended
       // from two different document style roots, so the common ancestor is the
       // document.
-      doc->SetServoRestyleRoot(doc, existingBits | aBit);
+      doc->SetServoRestyleRoot(doc, existingBits | aBits);
     }
   }
 
   MOZ_ASSERT(aElement == doc->GetServoRestyleRoot() ||
-             BitIsPropagated(parent, aBit, doc->GetServoRestyleRoot()));
-  MOZ_ASSERT(doc->GetServoRestyleRootDirtyBits() & aBit);
+             nsContentUtils::ContentIsFlattenedTreeDescendantOfForStyle(
+               aElement, doc->GetServoRestyleRoot()));
+  MOZ_ASSERT(aElement == doc->GetServoRestyleRoot() ||
+             BitsArePropagated(parent, aBits, doc->GetServoRestyleRoot()));
+  MOZ_ASSERT(doc->GetServoRestyleRootDirtyBits() & aBits);
+}
+
+void
+Element::NoteDirtySubtreeForServo()
+{
+  MOZ_ASSERT(IsInComposedDoc());
+  MOZ_ASSERT(HasServoData());
+
+  nsIDocument* doc = GetComposedDoc();
+  nsINode* existingRoot = doc->GetServoRestyleRoot();
+  uint32_t existingBits = existingRoot ? doc->GetServoRestyleRootDirtyBits() : 0;
+
+  if (existingRoot &&
+      existingRoot->IsElement() &&
+      existingRoot != this &&
+      nsContentUtils::ContentIsFlattenedTreeDescendantOfForStyle(
+        existingRoot->AsElement(), this)) {
+    PropagateBits(existingRoot->AsElement()->GetFlattenedTreeParentElementForStyle(),
+                  existingBits,
+                  this);
+
+    doc->ClearServoRestyleRoot();
+  }
+
+  NoteDirtyElement(this, existingBits | ELEMENT_HAS_DIRTY_DESCENDANTS_FOR_SERVO);
 }
 
 void

@@ -381,6 +381,7 @@ nsStyleContentData::CounterFunction* Gecko_SetCounterFunction(
 void Gecko_SetNodeFlags(RawGeckoNodeBorrowed node, uint32_t flags);
 void Gecko_UnsetNodeFlags(RawGeckoNodeBorrowed node, uint32_t flags);
 void Gecko_NoteDirtyElement(RawGeckoElementBorrowed element);
+void Gecko_NoteDirtySubtreeForInvalidation(RawGeckoElementBorrowed element);
 void Gecko_NoteAnimationOnlyDirtyElement(RawGeckoElementBorrowed element);
 
 // Incremental restyle.

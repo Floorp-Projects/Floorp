@@ -111,8 +111,8 @@ describe("Reducers", () => {
       const nextState = TopSites(undefined, {type: at.PLACES_BOOKMARK_REMOVED});
       assert.equal(nextState, INITIAL_STATE.TopSites);
     });
-    it("should remove a link on PLACES_LINK_BLOCKED and PLACES_LINK_DELETED", () => {
-      const events = [at.PLACES_LINK_BLOCKED, at.PLACES_LINK_DELETED];
+    it("should remove a link on BLOCK_URL and DELETE_HISTORY_URL", () => {
+      const events = [at.BLOCK_URL, at.DELETE_HISTORY_URL];
       events.forEach(event => {
         const oldState = {rows: [{url: "foo.com"}, {url: "bar.com"}]};
         const action = {type: event, data: {url: "bar.com"}};

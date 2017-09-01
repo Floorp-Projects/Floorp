@@ -116,6 +116,7 @@
   border: 1px solid var(--in-content-box-border-color);
   border-radius: 2px;
   background-color: #ebebeb;
+  text-align: center;
 }
 
 .alert .alert-title {
@@ -126,6 +127,10 @@
 
 .alert button {
   margin: 1em 2em;
+}
+
+.experiment-info-container > .alert button {
+  margin: 0 4px;
 }
 
 .loading {

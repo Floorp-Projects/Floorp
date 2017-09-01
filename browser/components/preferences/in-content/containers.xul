@@ -18,7 +18,7 @@
 <hbox hidden="true"
       class="container-header-links"
       data-category="paneContainers">
-  <label class="text-link" id="backContainersLink" value="&backLink.label;" />
+  <label class="text-link" id="backContainersLink">&backLink2.label;</label>
 </hbox>
 
 <hbox id="header-containers"
@@ -26,12 +26,11 @@
       hidden="true"
       data-category="paneContainers">
   <label class="header-name" flex="1">&paneContainers.title;</label>
-  <button class="help-button"
-          aria-label="&helpButton.label;"/>
 </hbox>
 
 <!-- Containers -->
-<groupbox id="browserContainersGroup" data-category="paneContainers" hidden="true">
+<groupbox id="browserContainersGroupPane" data-category="paneContainers" hidden="true"
+          data-hidden-from-search="true" data-subpanel="true">
   <vbox id="browserContainersbox">
 
     <richlistbox id="containersView" orient="vertical" persist="lastSelectedType"

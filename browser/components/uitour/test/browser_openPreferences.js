@@ -35,27 +35,11 @@ add_UITour_task(async function test_openPrivacyPreferences() {
   await BrowserTestUtils.removeTab(tab);
 });
 
-add_UITour_task(async function test_openOldDataChoicesTab() {
-  if (!AppConstants.MOZ_DATA_REPORTING) {
-    return;
-  }
-  await SpecialPowers.pushPrefEnv({set: [["browser.preferences.useOldOrganization", true]]});
-  let promiseTabOpened = BrowserTestUtils.waitForNewTab(gBrowser, "about:preferences#advanced");
-  await gContentAPI.openPreferences("privacy-reports");
-  let tab = await promiseTabOpened;
-  await BrowserTestUtils.waitForEvent(gBrowser.selectedBrowser, "Initialized");
-  let doc = gBrowser.selectedBrowser.contentDocument;
-  let selectedTab = doc.getElementById("advancedPrefs").selectedTab;
-  is(selectedTab.id, "dataChoicesTab", "Should open to the dataChoicesTab in the old Preferences");
-  await BrowserTestUtils.removeTab(tab);
-});
-
 add_UITour_task(async function test_openPrivacyReports() {
   if (!AppConstants.MOZ_TELEMETRY_REPORTING &&
       !(AppConstants.MOZ_DATA_REPORTING && AppConstants.MOZ_CRASHREPORTER)) {
     return;
   }
-  await SpecialPowers.pushPrefEnv({set: [["browser.preferences.useOldOrganization", false]]});
   let promiseTabOpened = BrowserTestUtils.waitForNewTab(gBrowser, "about:preferences#privacy-reports");
   await gContentAPI.openPreferences("privacy-reports");
   let tab = await promiseTabOpened;

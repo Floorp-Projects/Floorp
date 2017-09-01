@@ -61,11 +61,6 @@ installitem {
   font-weight: bold;
 }
 
-.xpinstallItemSigned {
-  font-style: italic;
-  font-size: 0.9em;
-}
-
 .xpinstallItemURL {
   -moz-appearance: none;
   border: none;

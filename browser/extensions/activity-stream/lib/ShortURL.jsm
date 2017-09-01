@@ -1,5 +1,6 @@
 const {utils: Cu} = Components;
 Cu.import("resource://gre/modules/XPCOMUtils.jsm");
+Cu.import("resource://gre/modules/Services.jsm");
 
 XPCOMUtils.defineLazyServiceGetter(this, "IDNService", "@mozilla.org/network/idn-service;1", "nsIIDNService");
 
@@ -21,6 +22,20 @@ function handleIDNHost(hostname) {
 }
 
 /**
+ * Returns the public suffix of a URL or empty string in case of error.
+ * @param {string} url The url to be analyzed.
+ */
+function getETLD(url) {
+  try {
+    return Services.eTLD.getPublicSuffix(Services.io.newURI(url));
+  } catch (err) {
+    return "";
+  }
+}
+
+this.getETLD = getETLD;
+
+  /**
  * shortURL - Creates a short version of a link's url, used for display purposes
  *            e.g. {url: http://www.foosite.com, eTLD: "com"}  =>  "foosite"
  *
@@ -39,15 +54,14 @@ this.shortURL = function shortURL(link) {
   if (!link.url && !link.hostname) {
     return "";
   }
-  const {eTLD} = link;
-  const asciiHost = (link.hostname || new URL(link.url).hostname).replace(/^www\./i, "");
-  const hostname = handleIDNHost(asciiHost);
+  const eTLD = link.eTLD || getETLD(link.url);
+  const hostname = (link.hostname || new URL(link.url).hostname).replace(/^www\./i, "");
 
   // Remove the eTLD (e.g., com, net) and the preceding period from the hostname
-  const eTLDLength = (eTLD || "").length || (hostname.match(/\.com$/) && 3);
+  const eTLDLength = (eTLD || "").length;
   const eTLDExtra = eTLDLength > 0 ? -(eTLDLength + 1) : Infinity;
   // If URL and hostname are not present fallback to page title.
-  return hostname.slice(0, eTLDExtra).toLowerCase() || hostname || link.title || link.url;
+  return handleIDNHost(hostname.slice(0, eTLDExtra).toLowerCase() || hostname) || link.title || link.url;
 };
 
-this.EXPORTED_SYMBOLS = ["shortURL"];
+this.EXPORTED_SYMBOLS = ["shortURL", "getETLD"];

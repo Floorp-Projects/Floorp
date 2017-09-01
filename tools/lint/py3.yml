@@ -1,0 +1,55 @@
+---
+py3:
+    description: Python 3 compatibility check
+    include: ['.']
+    exclude:
+        - addon-sdk/source
+        - browser/app
+        - browser/components
+        - browser/extensions
+        - build
+        - client.py
+        - config
+        - dom/bindings
+        - dom/canvas/test
+        - dom/media/test
+        - gfx
+        - intl/icu
+        - ipc/chromium
+        - ipc/ipdl
+        - js/src
+        - layout/reftests
+        - layout/style
+        - layout/tools/reftest
+        - media
+        - memory/replace
+        - modules/freetype2
+        - nsprpub
+        - security/manager/ssl
+        - security/nss
+        - services/common/tests/mach_commands.py
+        - servo
+        - testing/awsy
+        - testing/firefox-ui/harness/firefox_ui_harness/runners/update.py
+        - testing/gtest
+        - testing/marionette
+        - testing/mochitest
+        - testing/mozbase
+        - testing/mozharness
+        - testing/talos
+        - testing/tools/iceserver
+        - testing/tps
+        - testing/xpcshell
+        - testing/web-platform
+        - third_party
+        - toolkit
+        - tools/git
+        - tools/jprof
+        - tools/profiler
+        - tools/rb
+        - tools/update-packaging
+        - xpcom/idl-parser
+        - xpcom/typelib
+    extensions: ['py']
+    type: external
+    payload: python.compat:lintpy3

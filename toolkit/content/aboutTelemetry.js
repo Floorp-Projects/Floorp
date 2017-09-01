@@ -151,7 +151,7 @@ function getMainWindow() {
  */
 function getMainWindowWithPreferencesPane() {
   let mainWindow = getMainWindow();
-  if (mainWindow && "openAdvancedPreferences" in mainWindow) {
+  if (mainWindow && "openPreferences" in mainWindow) {
     return mainWindow;
   }
   return null;
@@ -241,13 +241,7 @@ var Settings = {
         } else {
           // Show the data choices preferences on desktop.
           let mainWindow = getMainWindowWithPreferencesPane();
-          // The advanced subpanes are only supported in the old organization,
-          // which will be removed by bug 1349689.
-          if (Preferences.get("browser.preferences.useOldOrganization")) {
-            mainWindow.openAdvancedPreferences("dataChoicesTab", {origin: "aboutTelemetry"});
-          } else {
-            mainWindow.openPreferences("privacy-reports", {origin: "aboutTelemetry"});
-          }
+          mainWindow.openPreferences("privacy-reports", { origin: "aboutTelemetry" });
         }
       });
     }
@@ -1872,6 +1866,16 @@ function setupPageHeader() {
 
   let subtitleElement = document.getElementById("page-subtitle");
   subtitleElement.appendChild(document.createTextNode(subtitleText));
+
+  let links = [
+    "https://docs.telemetry.mozilla.org/",
+    "https://firefox-source-docs.mozilla.org/toolkit/components/telemetry/telemetry/index.html",
+    "https://telemetry.mozilla.org/",
+  ];
+  let htmlLink = document.querySelectorAll("#home-section > ul > li > a");
+  htmlLink.forEach((a, index) => {
+    a.href = links[index];
+  });
 }
 
 function displayProcessesSelector(selectedSection) {

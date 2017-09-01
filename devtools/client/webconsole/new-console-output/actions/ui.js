@@ -11,6 +11,7 @@ const Services = require("Services");
 
 const {
   FILTER_BAR_TOGGLE,
+  PERSIST_TOGGLE,
   PREFS,
   TIMESTAMPS_TOGGLE,
   SELECT_NETWORK_MESSAGE_TAB,
@@ -23,6 +24,16 @@ function filterBarToggle(show) {
     });
     const uiState = getAllUi(getState());
     Services.prefs.setBoolPref(PREFS.UI.FILTER_BAR, uiState.get("filterBarVisible"));
+  };
+}
+
+function persistToggle(show) {
+  return (dispatch, getState) => {
+    dispatch({
+      type: PERSIST_TOGGLE,
+    });
+    const uiState = getAllUi(getState());
+    Services.prefs.setBoolPref(PREFS.UI.PERSIST, uiState.get("persistLogs"));
   };
 }
 
@@ -42,6 +53,7 @@ function selectNetworkMessageTab(id) {
 
 module.exports = {
   filterBarToggle,
+  persistToggle,
   timestampsToggle,
   selectNetworkMessageTab,
 };

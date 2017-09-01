@@ -1026,37 +1026,6 @@ function getTemporaryFile() {
 }
 
 /**
- * Verifies that a zip file's contents are all signed by the same principal.
- * Directory entries and anything in the META-INF directory are not checked.
- *
- * @param  aZip
- *         A nsIZipReader to check
- * @param  aCertificate
- *         The nsIX509Cert to compare against
- * @return true if all the contents that should be signed were signed by the
- *         principal
- */
-function verifyZipSigning(aZip, aCertificate) {
-  var count = 0;
-  var entries = aZip.findEntries(null);
-  while (entries.hasMore()) {
-    var entry = entries.getNext();
-    // Nothing in META-INF is in the manifest.
-    if (entry.substr(0, 9) == "META-INF/")
-      continue;
-    // Directory entries aren't in the manifest.
-    if (entry.substr(-1) == "/")
-      continue;
-    count++;
-    var entryCertificate = aZip.getSigningCert(entry);
-    if (!entryCertificate || !aCertificate.equals(entryCertificate)) {
-      return false;
-    }
-  }
-  return aZip.manifestEntriesCount == count;
-}
-
-/**
  * Returns the signedState for a given return code and certificate by verifying
  * it against the expected ID.
  */
@@ -1454,8 +1423,6 @@ class AddonInstall {
 
     this.file = null;
     this.ownsTempFile = null;
-    this.certificate = null;
-    this.certName = null;
 
     this.addon = null;
     this.state = null;
@@ -1669,25 +1636,6 @@ class AddonInstall {
 
         return Promise.reject([AddonManager.ERROR_CORRUPT_FILE,
                                "signature verification failed"])
-      }
-    } else if (this.addon.signedState == AddonManager.SIGNEDSTATE_UNKNOWN ||
-             this.addon.signedState == AddonManager.SIGNEDSTATE_NOT_REQUIRED) {
-      // Check object signing certificate, if any
-      let x509 = zipreader.getSigningCert(null);
-      if (x509) {
-        logger.debug("Verifying XPI signature");
-        if (verifyZipSigning(zipreader, x509)) {
-          this.certificate = x509;
-          if (this.certificate.commonName.length > 0) {
-            this.certName = this.certificate.commonName;
-          } else {
-            this.certName = this.certificate.organization;
-          }
-        } else {
-          zipreader.close();
-          return Promise.reject([AddonManager.ERROR_CORRUPT_FILE,
-                                 "XPI is incorrectly signed"]);
-        }
       }
     }
 
@@ -2711,7 +2659,7 @@ AddonInstallWrapper.prototype = {
 };
 
 ["name", "version", "icons", "releaseNotesURI", "file", "state", "error",
- "progress", "maxProgress", "certificate", "certName"].forEach(function(aProp) {
+ "progress", "maxProgress"].forEach(function(aProp) {
   Object.defineProperty(AddonInstallWrapper.prototype, aProp, {
     get() {
       return installFor(this)[aProp];

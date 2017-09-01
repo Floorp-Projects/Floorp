@@ -7,6 +7,13 @@
 <script type="application/javascript"
         src="chrome://browser/content/preferences/in-content/main.js"/>
 
+#ifdef MOZ_UPDATER
+  <script type="application/javascript" src="chrome://browser/content/aboutDialog-appUpdater.js"/>
+#endif
+
+<script type="application/javascript"
+        src="chrome://mozapps/content/preferences/fontbuilder.js"/>
+
 <stringbundle id="bundlePreferences" src="chrome://browser/locale/preferences.properties"/>
 
 <preferences id="mainPreferences" hidden="true" data-category="paneGeneral">
@@ -111,6 +118,64 @@
                 name="browser.ctrlTab.previews"
                 type="bool"/>
 
+  <!-- Fonts -->
+  <preference id="font.language.group"
+              name="font.language.group"
+              type="wstring"/>
+
+  <!-- Languages -->
+  <preference id="browser.translation.detectLanguage"
+              name="browser.translation.detectLanguage"
+              type="bool"/>
+
+  <!-- General tab -->
+
+  <!-- Accessibility
+   * accessibility.browsewithcaret
+     - true enables keyboard navigation and selection within web pages using a
+       visible caret, false uses normal keyboard navigation with no caret
+   * accessibility.typeaheadfind
+     - when set to true, typing outside text areas and input boxes will
+       automatically start searching for what's typed within the current
+       document; when set to false, no search action happens -->
+  <preference id="accessibility.browsewithcaret"
+              name="accessibility.browsewithcaret"
+              type="bool"/>
+  <preference id="accessibility.typeaheadfind"
+              name="accessibility.typeaheadfind"
+              type="bool"/>
+  <preference id="accessibility.blockautorefresh"
+              name="accessibility.blockautorefresh"
+              type="bool"/>
+#ifdef XP_WIN
+  <preference id="ui.osk.enabled"
+              name="ui.osk.enabled"
+              type="bool"/>
+#endif
+  <!-- Browsing
+   * general.autoScroll
+     - when set to true, clicking the scroll wheel on the mouse activates a
+       mouse mode where moving the mouse down scrolls the document downward with
+       speed correlated with the distance of the cursor from the original
+       position at which the click occurred (and likewise with movement upward);
+       if false, this behavior is disabled
+   * general.smoothScroll
+     - set to true to enable finer page scrolling than line-by-line on page-up,
+       page-down, and other such page movements -->
+  <preference id="general.autoScroll"
+              name="general.autoScroll"
+              type="bool"/>
+  <preference id="general.smoothScroll"
+              name="general.smoothScroll"
+              type="bool"/>
+  <preference id="layout.spellcheckDefault"
+              name="layout.spellcheckDefault"
+              type="int"/>
+
+  <preference id="toolkit.telemetry.enabled"
+              name="toolkit.telemetry.enabled"
+              type="bool"/>
+
   <preference id="browser.preferences.defaultPerformanceSettings.enabled"
               name="browser.preferences.defaultPerformanceSettings.enabled"
               type="bool"/>
@@ -127,14 +192,90 @@
               name="layers.acceleration.disabled"
               type="bool"
               inverted="true"/>
+
+  <!-- Files and Applications -->
+  <preference id="browser.feeds.handler"
+              name="browser.feeds.handler"
+              type="string"/>
+  <preference id="browser.feeds.handler.default"
+              name="browser.feeds.handler.default"
+              type="string"/>
+  <preference id="browser.feeds.handlers.application"
+              name="browser.feeds.handlers.application"
+              type="file"/>
+  <preference id="browser.feeds.handlers.webservice"
+              name="browser.feeds.handlers.webservice"
+              type="string"/>
+
+  <preference id="browser.videoFeeds.handler"
+              name="browser.videoFeeds.handler"
+              type="string"/>
+  <preference id="browser.videoFeeds.handler.default"
+              name="browser.videoFeeds.handler.default"
+              type="string"/>
+  <preference id="browser.videoFeeds.handlers.application"
+              name="browser.videoFeeds.handlers.application"
+              type="file"/>
+  <preference id="browser.videoFeeds.handlers.webservice"
+              name="browser.videoFeeds.handlers.webservice"
+              type="string"/>
+
+  <preference id="browser.audioFeeds.handler"
+              name="browser.audioFeeds.handler"
+              type="string"/>
+  <preference id="browser.audioFeeds.handler.default"
+              name="browser.audioFeeds.handler.default"
+              type="string"/>
+  <preference id="browser.audioFeeds.handlers.application"
+              name="browser.audioFeeds.handlers.application"
+              type="file"/>
+  <preference id="browser.audioFeeds.handlers.webservice"
+              name="browser.audioFeeds.handlers.webservice"
+              type="string"/>
+
+  <preference id="pref.downloads.disable_button.edit_actions"
+              name="pref.downloads.disable_button.edit_actions"
+              type="bool"/>
+
+  <!-- DRM content -->
+  <preference id="media.eme.enabled"
+              name="media.eme.enabled"
+              type="bool"/>
+
+  <!-- Update -->
+  <preference id="browser.preferences.advanced.selectedTabIndex"
+              name="browser.preferences.advanced.selectedTabIndex"
+              type="int"/>
+
+#ifdef MOZ_UPDATER
+  <preference id="app.update.enabled"
+              name="app.update.enabled"
+              type="bool"/>
+  <preference id="app.update.auto"
+              name="app.update.auto"
+              type="bool"/>
+
+  <preference id="app.update.disable_button.showUpdateHistory"
+              name="app.update.disable_button.showUpdateHistory"
+              type="bool"/>
+
+#ifdef MOZ_MAINTENANCE_SERVICE
+  <preference id="app.update.service.enabled"
+              name="app.update.service.enabled"
+              type="bool"/>
+#endif
+#endif
+
+  <preference id="browser.search.update"
+              name="browser.search.update"
+              type="bool"/>
 </preferences>
 
-<hbox id="header-general"
-      class="header"
+<hbox id="generalCategory"
+      class="subcategory"
       hidden="true"
       data-category="paneGeneral">
   <label class="header-name" flex="1">&paneGeneral.title;</label>
-  <html:a class="help-button" target="_blank" aria-label="&helpButton.label;"></html:a>
 </hbox>
 
 <!-- Startup -->
@@ -164,139 +305,88 @@
 
 #ifdef HAVE_SHELL_SERVICE
   <vbox id="defaultBrowserBox">
-    <hbox align="center">
-      <checkbox id="alwaysCheckDefault" preference="browser.shell.checkDefaultBrowser"
-                label="&alwaysCheckDefault2.label;" accesskey="&alwaysCheckDefault2.accesskey;"/>
-    </hbox>
+    <checkbox id="alwaysCheckDefault" preference="browser.shell.checkDefaultBrowser"
+              label="&alwaysCheckDefault2.label;" accesskey="&alwaysCheckDefault2.accesskey;"/>
     <deck id="setDefaultPane">
       <hbox align="center" class="indent">
+        <image class="face-sad"/>
         <label id="isNotDefaultLabel" flex="1">&isNotDefault.label;</label>
         <button id="setDefaultButton"
-                label="&setAsMyDefaultBrowser2.label;" accesskey="&setAsMyDefaultBrowser2.accesskey;"
+                class="accessory-button"
+                label="&setAsMyDefaultBrowser3.label;" accesskey="&setAsMyDefaultBrowser3.accesskey;"
                 preference="pref.general.disable_button.default_browser"/>
       </hbox>
       <hbox align="center" class="indent">
+        <image class="face-smile"/>
         <label id="isDefaultLabel" flex="1">&isDefault.label;</label>
       </hbox>
     </deck>
-    <separator class="thin"/>
   </vbox>
 #endif
 
-  <html:table id="startupTable">
-    <html:tr>
-      <html:td class="label-cell">
-        <label accesskey="&startupPage.accesskey;"
-               control="browserStartupPage">&startupPage.label;</label>
-      </html:td>
-      <html:td class="content-cell">
-        <menulist id="browserStartupPage"
-                  class="content-cell-item"
-                  preference="browser.startup.page">
-          <menupopup>
-          <menuitem label="&startupUserHomePage.label;"
-                    value="1"
-                    id="browserStartupHomePage"/>
-          <menuitem label="&startupBlankPage.label;"
-                    value="0"
-                    id="browserStartupBlank"/>
-          <menuitem label="&startupPrevSession.label;"
-                    value="3"
-                    id="browserStartupLastSession"/>
-          </menupopup>
-        </menulist>
-      </html:td>
-    </html:tr>
-    <html:tr>
-      <html:td class="label-cell">
-        <label accesskey="&homepage.accesskey;"
-               control="browserHomePage">&homepage.label;</label>
-      </html:td>
-      <html:td class="content-cell">
-        <textbox id="browserHomePage"
-                 class="padded uri-element content-cell-item"
-                 type="autocomplete"
-                 autocompletesearch="unifiedcomplete"
-                 onsyncfrompreference="return gMainPane.syncFromHomePref();"
-                 onsynctopreference="return gMainPane.syncToHomePref(this.value);"
-                 placeholder="&abouthome.pageTitle;"
-                 preference="browser.startup.homepage"/>
-      </html:td>
-    </html:tr>
-    <html:tr>
-      <html:td class="label-cell" />
-      <html:td class="content-cell homepage-buttons">
-        <button id="useCurrent"
-                class="content-cell-item"
-                label=""
-                accesskey="&useCurrentPage.accesskey;"
-                label1="&useCurrentPage.label;"
-                label2="&useMultiple.label;"
-                preference="pref.browser.homepage.disable_button.current_page"/>
-        <button id="useBookmark"
-                class="content-cell-item"
-                label="&chooseBookmark.label;"
-                accesskey="&chooseBookmark.accesskey;"
-                preference="pref.browser.homepage.disable_button.bookmark_page"/>
-        <button id="restoreDefaultHomePage"
-                class="content-cell-item"
-                label="&restoreDefault.label;"
-                accesskey="&restoreDefault.accesskey;"
-                preference="pref.browser.homepage.disable_button.restore_default"/>
-      </html:td>
-    </html:tr>
-  </html:table>
+  <vbox id="startupPageBox">
+    <label accesskey="&startupPage2.accesskey;"
+           control="browserStartupPage">&startupPage2.label;</label>
+    <radiogroup id="browserStartupPage"
+                preference="browser.startup.page">
+      <radio label="&startupUserHomePage.label;"
+             value="1"
+             id="browserStartupHomePage"/>
+      <radio label="&startupBlankPage.label;"
+             value="0"
+             id="browserStartupBlank"/>
+      <radio label="&startupPrevSession.label;"
+             value="3"
+             id="browserStartupLastSession"/>
+    </radiogroup>
+  </vbox>
 </groupbox>
 
-<!-- Downloads -->
-<groupbox id="downloadsGroup"
+<!-- Home Page -->
+<groupbox id="homepageGroup"
           data-category="paneGeneral"
           hidden="true">
-  <caption><label>&downloads.label;</label></caption>
+  <caption><label>&homepage2.label;</label></caption>
 
-  <radiogroup id="saveWhere"
-              preference="browser.download.useDownloadDir"
-              onsyncfrompreference="return gMainPane.readUseDownloadDir();">
-    <hbox id="saveToRow">
-      <radio id="saveTo"
-             value="true"
-             label="&saveTo.label;"
-             accesskey="&saveTo.accesskey;"
-             aria-labelledby="saveTo downloadFolder"/>
-      <filefield id="downloadFolder"
-                 flex="1"
-                 preference="browser.download.folderList"
-                 preference-editable="true"
-                 aria-labelledby="saveTo"
-                 onsyncfrompreference="return gMainPane.displayDownloadDirPref();"/>
-      <button id="chooseFolder"
-#ifdef XP_MACOSX
-              accesskey="&chooseFolderMac.accesskey;"
-              label="&chooseFolderMac.label;"
-#else
-              accesskey="&chooseFolderWin.accesskey;"
-              label="&chooseFolderWin.label;"
-#endif
-      />
-    </hbox>
-    <hbox>
-      <!-- Additional radio button added to support CloudStorage - Bug 1357171 -->
-      <radio id="saveToCloud"
-            value="true"
-            hidden="true"/>
-    </hbox>
-    <hbox>
-      <radio id="alwaysAsk"
-            value="false"
-            label="&alwaysAskWhere.label;"
-            accesskey="&alwaysAskWhere.accesskey;"/>
-    </hbox>
-  </radiogroup>
+  <vbox>
+    <textbox id="browserHomePage"
+             class="uri-element"
+             type="autocomplete"
+             autocompletesearch="unifiedcomplete"
+             onsyncfrompreference="return gMainPane.syncFromHomePref();"
+             onsynctopreference="return gMainPane.syncToHomePref(this.value);"
+             placeholder="&abouthome.pageTitle;"
+             preference="browser.startup.homepage"/>
+  </vbox>
+
+  <hbox class="homepage-buttons">
+    <button id="useCurrent"
+            flex="1"
+            class="homepage-button"
+            label=""
+            accesskey="&useCurrentPage.accesskey;"
+            label1="&useCurrentPage.label;"
+            label2="&useMultiple.label;"
+            preference="pref.browser.homepage.disable_button.current_page"/>
+    <button id="useBookmark"
+            flex="1"
+            class="homepage-button"
+            label="&chooseBookmark.label;"
+            accesskey="&chooseBookmark.accesskey;"
+            preference="pref.browser.homepage.disable_button.bookmark_page"
+            searchkeywords="&selectBookmark.title; &selectBookmark.label;"/>
+    <button id="restoreDefaultHomePage"
+            flex="1"
+            class="homepage-button"
+            label="&restoreDefault.label;"
+            accesskey="&restoreDefault.accesskey;"
+            preference="pref.browser.homepage.disable_button.restore_default"/>
+  </hbox>
 </groupbox>
 
 <!-- Tab preferences -->
 <groupbox data-category="paneGeneral"
-          hidden="true" align="start">
+          hidden="true">
     <caption><label>&tabsGroup.label;</label></caption>
 
     <checkbox id="ctrlTabRecentlyUsedOrder" label="&ctrlTabRecentlyUsedOrder.label;"
@@ -326,20 +416,501 @@
               accesskey="&showTabsInTaskbar.accesskey;"
               preference="browser.taskbar.previews.enable"/>
 #endif
+
+    <hbox id="browserContainersbox" hidden="true" align="center">
+      <checkbox id="browserContainersCheckbox"
+                label="&browserContainersEnabled.label;"
+                accesskey="&browserContainersEnabled.accesskey;"
+                preference="privacy.userContext.enabled"
+                onsyncfrompreference="return gPrivacyPane.readBrowserContainersCheckbox();"/>
+      <label id="browserContainersLearnMore" class="learnMore text-link">
+        &browserContainersLearnMore.label;
+      </label>
+      <spacer flex="1"/>
+      <!-- Please don't remove the wrapping hbox/vbox/box for these elements. It's used to properly compute the search tooltip position. -->
+      <hbox>
+        <button id="browserContainersSettings"
+                class="accessory-button"
+                label="&browserContainersSettings.label;"
+                accesskey="&browserContainersSettings.accesskey;"
+                searchkeywords="&addButton.label;
+                                &preferencesButton.label;
+                                &removeButton.label;"/>
+      </hbox>
+    </hbox>
 </groupbox>
+
+<hbox id="languageAndAppearanceCategory"
+      class="subcategory"
+      hidden="true"
+      data-category="paneGeneral">
+  <label class="header-name" flex="1">&languageAndAppearance.label;</label>
+</hbox>
+
+<!-- Fonts and Colors -->
+<groupbox id="fontsGroup" data-category="paneGeneral" hidden="true">
+  <caption><label>&fontsAndColors.label;</label></caption>
+
+  <vbox>
+    <hbox id="fontSettings">
+      <hbox align="center" flex="1">
+        <label control="defaultFont" accesskey="&defaultFont2.accesskey;">&defaultFont2.label;</label>
+        <!-- Please don't remove the wrapping hbox/vbox/box for these elements. It's used to properly compute the search tooltip position. -->
+        <hbox flex="1">
+          <menulist id="defaultFont" flex="1" delayprefsave="true" onsyncfrompreference="return FontBuilder.readFontSelection(this);"/>
+        </hbox>
+        <label id="defaultFontSizeLabel" control="defaultFontSize" accesskey="&defaultSize2.accesskey;">&defaultSize2.label;</label>
+        <!-- Please don't remove the wrapping hbox/vbox/box for these elements. It's used to properly compute the search tooltip position. -->
+        <hbox>
+          <menulist id="defaultFontSize" delayprefsave="true">
+            <menupopup>
+              <menuitem value="9" label="9"/>
+              <menuitem value="10" label="10"/>
+              <menuitem value="11" label="11"/>
+              <menuitem value="12" label="12"/>
+              <menuitem value="13" label="13"/>
+              <menuitem value="14" label="14"/>
+              <menuitem value="15" label="15"/>
+              <menuitem value="16" label="16"/>
+              <menuitem value="17" label="17"/>
+              <menuitem value="18" label="18"/>
+              <menuitem value="20" label="20"/>
+              <menuitem value="22" label="22"/>
+              <menuitem value="24" label="24"/>
+              <menuitem value="26" label="26"/>
+              <menuitem value="28" label="28"/>
+              <menuitem value="30" label="30"/>
+              <menuitem value="32" label="32"/>
+              <menuitem value="34" label="34"/>
+              <menuitem value="36" label="36"/>
+              <menuitem value="40" label="40"/>
+              <menuitem value="44" label="44"/>
+              <menuitem value="48" label="48"/>
+              <menuitem value="56" label="56"/>
+              <menuitem value="64" label="64"/>
+              <menuitem value="72" label="72"/>
+            </menupopup>
+          </menulist>
+        </hbox>
+      </hbox>
+      <spacer flex="1" />
+      <!-- Please don't remove the wrapping hbox/vbox/box for these elements. It's used to properly compute the search tooltip position. -->
+      <hbox>
+        <button id="advancedFonts"
+                class="accessory-button"
+                icon="select-font"
+                label="&advancedFonts.label;"
+                accesskey="&advancedFonts.accesskey;"
+                searchkeywords="&fontsDialog.title;
+                                &fonts.label;
+                                &size2.label;
+                                &proportional2.label;
+                                &serif2.label;
+                                &sans-serif2.label;
+                                &monospace2.label;
+                                &font.langGroup.latin;
+                                &font.langGroup.japanese;
+                                &font.langGroup.trad-chinese;
+                                &font.langGroup.simpl-chinese;
+                                &font.langGroup.trad-chinese-hk;
+                                &font.langGroup.korean;
+                                &font.langGroup.cyrillic;
+                                &font.langGroup.el;
+                                &font.langGroup.other;
+                                &font.langGroup.thai;
+                                &font.langGroup.hebrew;
+                                &font.langGroup.arabic;
+                                &font.langGroup.devanagari;
+                                &font.langGroup.tamil;
+                                &font.langGroup.armenian;
+                                &font.langGroup.bengali;
+                                &font.langGroup.canadian;
+                                &font.langGroup.ethiopic;
+                                &font.langGroup.georgian;
+                                &font.langGroup.gujarati;
+                                &font.langGroup.gurmukhi;
+                                &font.langGroup.khmer;
+                                &font.langGroup.malayalam;
+                                &font.langGroup.math;
+                                &font.langGroup.odia;
+                                &font.langGroup.telugu;
+                                &font.langGroup.kannada;
+                                &font.langGroup.sinhala;
+                                &font.langGroup.tibetan;
+                                &minSize2.label;
+                                &minSize.none;
+                                &useDefaultFontSerif.label;
+                                &useDefaultFontSansSerif.label;
+                                &allowPagesToUseOwn.label;
+                                &languages.customize.Fallback2.grouplabel;
+                                &languages.customize.Fallback3.label;
+                                &languages.customize.Fallback2.desc;
+                                &languages.customize.Fallback.auto;
+                                &languages.customize.Fallback.arabic;
+                                &languages.customize.Fallback.baltic;
+                                &languages.customize.Fallback.ceiso;
+                                &languages.customize.Fallback.cewindows;
+                                &languages.customize.Fallback.simplified;
+                                &languages.customize.Fallback.traditional;
+                                &languages.customize.Fallback.cyrillic;
+                                &languages.customize.Fallback.greek;
+                                &languages.customize.Fallback.hebrew;
+                                &languages.customize.Fallback.japanese;
+                                &languages.customize.Fallback.korean;
+                                &languages.customize.Fallback.thai;
+                                &languages.customize.Fallback.turkish;
+                                &languages.customize.Fallback.vietnamese;
+                                &languages.customize.Fallback.other;"/>
+      </hbox>
+    </hbox>
+    <hbox id="colorsSettings">
+      <spacer flex="1" />
+      <!-- Please don't remove the wrapping hbox/vbox/box for these elements. It's used to properly compute the search tooltip position. -->
+      <hbox>
+        <button id="colors"
+                class="accessory-button"
+                icon="select-color"
+                label="&colors.label;"
+                accesskey="&colors.accesskey;"
+                searchkeywords="&overrideDefaultPageColors.label;
+                                &overrideDefaultPageColors.always.label;
+                                &overrideDefaultPageColors.auto.label;
+                                &overrideDefaultPageColors.never.label;
+                                &color;
+                                &textColor2.label;
+                                &backgroundColor2.label;
+                                &useSystemColors.label;
+                                &underlineLinks.label;
+                                &linkColor2.label;
+                                &visitedLinkColor2.label;"/>
+      </hbox>
+    </hbox>
+  </vbox>
+</groupbox>
+
+<!-- Languages -->
+<groupbox id="languagesGroup" data-category="paneGeneral" hidden="true">
+  <caption><label>&language2.label;</label></caption>
+
+  <hbox id="languagesBox" align="center">
+    <description flex="1" control="chooseLanguage">&chooseLanguage.label;</description>
+    <!-- Please don't remove the wrapping hbox/vbox/box for these elements. It's used to properly compute the search tooltip position. -->
+    <hbox>
+      <button id="chooseLanguage"
+              class="accessory-button"
+              label="&chooseButton.label;"
+              accesskey="&chooseButton.accesskey;"
+              searchkeywords="&languages.customize.Header;
+                              &languages.customize2.description;
+                              &languages.customize.moveUp.label;
+                              &languages.customize.moveDown.label;
+                              &languages.customize.deleteButton.label;
+                              &languages.customize.selectLanguage.label;
+                              &languages.customize.addButton.label;"/>
+    </hbox>
+  </hbox>
+
+  <hbox id="translationBox" hidden="true">
+    <hbox align="center" flex="1">
+      <checkbox id="translate" preference="browser.translation.detectLanguage"
+                label="&translateWebPages.label;." accesskey="&translateWebPages.accesskey;"
+                onsyncfrompreference="return gMainPane.updateButtons('translateButton',
+                                              'browser.translation.detectLanguage');"/>
+      <hbox id="bingAttribution" hidden="true">
+        <label>&translation.options.attribution.beforeLogo;</label>
+        <separator orient="vertical" class="thin"/>
+        <image id="translationAttributionImage" aria-label="Microsoft Translator"
+               src="chrome://browser/content/microsoft-translator-attribution.png"/>
+        <separator orient="vertical" class="thin"/>
+        <label>&translation.options.attribution.afterLogo;</label>
+      </hbox>
+    </hbox>
+    <button id="translateButton"
+            class="accessory-button"
+            label="&translateExceptions.label;"
+            accesskey="&translateExceptions.accesskey;"/>
+  </hbox>
+  <checkbox id="checkSpelling"
+          label="&checkUserSpelling.label;"
+          accesskey="&checkUserSpelling.accesskey;"
+          onsyncfrompreference="return gMainPane.readCheckSpelling();"
+          onsynctopreference="return gMainPane.writeCheckSpelling();"
+          preference="layout.spellcheckDefault"/>
+</groupbox>
+
+<!-- Files and Applications -->
+<hbox id="filesAndApplicationsCategory"
+      class="subcategory"
+      hidden="true"
+      data-category="paneGeneral">
+  <label class="header-name" flex="1">&filesAndApplications.label;</label>
+</hbox>
+
+<!--Downloads-->
+<groupbox id="downloadsGroup" data-category="paneGeneral" hidden="true">
+  <caption><label>&downloads.label;</label></caption>
+
+  <radiogroup id="saveWhere"
+              preference="browser.download.useDownloadDir"
+              onsyncfrompreference="return gMainPane.readUseDownloadDir();">
+    <hbox id="saveToRow">
+      <radio id="saveTo"
+            value="true"
+            label="&saveTo.label;"
+            accesskey="&saveTo.accesskey;"
+            aria-labelledby="saveTo downloadFolder"/>
+      <filefield id="downloadFolder"
+                flex="1"
+                preference="browser.download.folderList"
+                preference-editable="true"
+                aria-labelledby="saveTo"
+                onsyncfrompreference="return gMainPane.displayDownloadDirPref();"/>
+      <button id="chooseFolder"
+#ifdef XP_MACOSX
+              accesskey="&chooseFolderMac.accesskey;"
+              label="&chooseFolderMac.label;"
+#else
+              accesskey="&chooseFolderWin.accesskey;"
+              label="&chooseFolderWin.label;"
+#endif
+      />
+    </hbox>
+    <!-- Additional radio button added to support CloudStorage - Bug 1357171 -->
+    <radio id="saveToCloud"
+          value="true"
+          hidden="true"/>
+    <radio id="alwaysAsk"
+          value="false"
+          label="&alwaysAskWhere.label;"
+          accesskey="&alwaysAskWhere.accesskey;"/>
+  </radiogroup>
+</groupbox>
+
+<groupbox id="applicationsGroup" data-category="paneGeneral" hidden="true">
+  <caption><label>&applications.label;</label></caption>
+  <description>&applications.description;</description>
+  <textbox id="filter" flex="1"
+           type="search"
+           placeholder="&filter2.emptytext;"
+           aria-controls="handlersView"/>
+
+  <richlistbox id="handlersView" orient="vertical" persist="lastSelectedType"
+               preference="pref.downloads.disable_button.edit_actions"
+               flex="1">
+    <listheader equalsize="always">
+        <treecol id="typeColumn" label="&typeColumn.label;" value="type"
+                 accesskey="&typeColumn.accesskey;" persist="sortDirection"
+                 flex="1" sortDirection="ascending"/>
+        <treecol id="actionColumn" label="&actionColumn2.label;" value="action"
+                 accesskey="&actionColumn2.accesskey;" persist="sortDirection"
+                 flex="1"/>
+    </listheader>
+  </richlistbox>
+</groupbox>
+
+
+<!-- DRM Content -->
+<groupbox id="drmGroup" data-category="paneGeneral" data-subcategory="drm" hidden="true">
+  <caption><label>&drmContent2.label;</label></caption>
+  <grid id="contentGrid2">
+    <columns>
+      <column flex="1"/>
+      <column/>
+    </columns>
+    <rows id="contentRows-2">
+      <row id="playDRMContentRow">
+        <hbox align="center">
+          <checkbox id="playDRMContent" preference="media.eme.enabled"
+                    label="&playDRMContent2.label;" accesskey="&playDRMContent2.accesskey;"/>
+          <label id="playDRMContentLink" class="learnMore text-link">
+            &playDRMContent.learnMore.label;
+          </label>
+        </hbox>
+      </row>
+    </rows>
+  </grid>
+</groupbox>
+
+#ifdef HAVE_SHELL_SERVICE
+  <stringbundle id="bundleShell" src="chrome://browser/locale/shellservice.properties"/>
+  <stringbundle id="bundleBrand" src="chrome://branding/locale/brand.properties"/>
+#endif
+
+<hbox id="updatesCategory"
+      class="subcategory"
+      hidden="true"
+      data-category="paneGeneral">
+  <label class="header-name" flex="1">&updateApplication.label;</label>
+</hbox>
+
+<!-- Update -->
+<groupbox id="updateApp" data-category="paneGeneral" hidden="true">
+  <caption class="search-header" hidden="true"><label>&updateApplication.label;</label></caption>
+
+  <label>&updateApplicationDescription.label;</label>
+  <hbox align="start">
+    <vbox flex="1">
+      <description>
+        &updateApplication.version.pre;<label id="version"/>&updateApplication.version.post;
+        <label id="releasenotes" class="learnMore text-link" hidden="true">&releaseNotes.link;</label>
+      </description>
+      <description id="distribution" class="text-blurb" hidden="true"/>
+      <description id="distributionId" class="text-blurb" hidden="true"/>
+    </vbox>
+#ifdef MOZ_UPDATER
+    <spacer flex="1"/>
+    <!-- Please don't remove the wrapping hbox/vbox/box for these elements. It's used to properly compute the search tooltip position. -->
+    <vbox>
+      <button id="showUpdateHistory"
+              class="accessory-button"
+              label="&updateHistory2.label;"
+              accesskey="&updateHistory2.accesskey;"
+              preference="app.update.disable_button.showUpdateHistory"
+              searchkeywords="&history.title; &history2.intro;"/>
+    </vbox>
+#endif
+  </hbox>
+#ifdef MOZ_UPDATER
+  <vbox id="updateBox">
+    <deck id="updateDeck" orient="vertical">
+      <hbox id="checkForUpdates" align="start">
+        <spacer flex="1"/>
+        <button id="checkForUpdatesButton"
+                label="&update.checkForUpdatesButton.label;"
+                accesskey="&update.checkForUpdatesButton.accesskey;"
+                oncommand="gAppUpdater.checkForUpdates();"/>
+      </hbox>
+      <hbox id="downloadAndInstall" align="start">
+        <spacer flex="1"/>
+        <button id="downloadAndInstallButton"
+                oncommand="gAppUpdater.startDownload();"/>
+                <!-- label and accesskey will be filled by JS -->
+      </hbox>
+      <hbox id="apply" align="start">
+        <spacer flex="1"/>
+        <button id="updateButton"
+                label="&update.updateButton.label3;"
+                accesskey="&update.updateButton.accesskey;"
+                oncommand="gAppUpdater.buttonRestartAfterDownload();"/>
+      </hbox>
+      <hbox id="checkingForUpdates" align="start">
+        <image class="update-throbber"/><label>&update.checkingForUpdates;</label>
+        <spacer flex="1"/>
+        <button label="&update.checkForUpdatesButton.label;"
+                accesskey="&update.checkForUpdatesButton.accesskey;"
+                disabled="true"/>
+      </hbox>
+      <hbox id="downloading" align="start">
+        <image class="update-throbber"/><label>&update.downloading.start;</label><label id="downloadStatus"/><label>&update.downloading.end;</label>
+      </hbox>
+      <hbox id="applying" align="start">
+        <image class="update-throbber"/><label>&update.applying;</label>
+      </hbox>
+      <hbox id="downloadFailed" align="start">
+        <label>&update.failed.start;</label><label id="failedLink" class="text-link">&update.failed.linkText;</label><label>&update.failed.end;</label>
+        <spacer flex="1"/>
+        <button label="&update.checkForUpdatesButton.label;"
+                accesskey="&update.checkForUpdatesButton.accesskey;"
+                oncommand="gAppUpdater.checkForUpdates();"/>
+      </hbox>
+      <hbox id="adminDisabled" align="start">
+        <label>&update.adminDisabled;</label>
+        <spacer flex="1"/>
+        <button label="&update.checkForUpdatesButton.label;"
+                accesskey="&update.checkForUpdatesButton.accesskey;"
+                disabled="true"/>
+      </hbox>
+      <hbox id="noUpdatesFound" align="start">
+        <image class="face-smile"/>
+        <label>&update.noUpdatesFound;</label>
+        <spacer flex="1"/>
+        <button label="&update.checkForUpdatesButton.label;"
+                accesskey="&update.checkForUpdatesButton.accesskey;"
+                oncommand="gAppUpdater.checkForUpdates();"/>
+      </hbox>
+      <hbox id="otherInstanceHandlingUpdates" align="start">
+        <label>&update.otherInstanceHandlingUpdates;</label>
+        <spacer flex="1"/>
+        <button label="&update.checkForUpdatesButton.label;"
+                accesskey="&update.checkForUpdatesButton.accesskey;"
+                disabled="true"/>
+      </hbox>
+      <hbox id="manualUpdate" align="start">
+        <image class="face-sad"/>
+        <description flex="1">
+          <label>&update.manual.start;</label><label id="manualLink" class="text-link"/><label>&update.manual.end;</label>
+        </description>
+        <spacer flex="1"/>
+        <button label="&update.checkForUpdatesButton.label;"
+                accesskey="&update.checkForUpdatesButton.accesskey;"
+                disabled="true"/>
+      </hbox>
+      <hbox id="unsupportedSystem" align="start">
+        <description flex="1">
+          <label>&update.unsupported.start;</label><label id="unsupportedLink" class="learnMore text-link">&update.unsupported.linkText;</label><label>&update.unsupported.end;</label>
+        </description>
+        <spacer flex="1"/>
+        <button label="&update.checkForUpdatesButton.label;"
+                accesskey="&update.checkForUpdatesButton.accesskey;"
+                disabled="true"/>
+      </hbox>
+      <hbox id="restarting" align="start">
+        <image class="update-throbber"/><label>&update.restarting;</label>
+        <spacer flex="1"/>
+        <button label="&update.updateButton.label3;"
+                accesskey="&update.updateButton.accesskey;"
+                disabled="true"/>
+      </hbox>
+    </deck>
+  </vbox>
+#endif
+
+#ifdef MOZ_UPDATER
+  <description>&updateApplication.description;</description>
+  <radiogroup id="updateRadioGroup">
+    <radio id="autoDesktop"
+           value="auto"
+           label="&updateAuto3.label;"
+           accesskey="&updateAuto3.accesskey;"/>
+    <radio value="checkOnly"
+          label="&updateCheckChoose2.label;"
+          accesskey="&updateCheckChoose2.accesskey;"/>
+    <radio value="manual"
+          label="&updateManual2.label;"
+          accesskey="&updateManual2.accesskey;"/>
+  </radiogroup>
+#ifdef MOZ_MAINTENANCE_SERVICE
+  <checkbox id="useService"
+            label="&useService.label;"
+            accesskey="&useService.accesskey;"
+            preference="app.update.service.enabled"/>
+#endif
+#endif
+  <checkbox id="enableSearchUpdate"
+            label="&enableSearchUpdate2.label;"
+            accesskey="&enableSearchUpdate2.accesskey;"
+            preference="browser.search.update"/>
+</groupbox>
+
+<hbox id="performanceCategory"
+      class="subcategory"
+      hidden="true"
+      data-category="paneGeneral">
+  <label class="header-name" flex="1">&performance.label;</label>
+</hbox>
 
 <!-- Performance -->
 <groupbox id="performanceGroup" data-category="paneGeneral" hidden="true">
-  <caption><label>&performance.label;</label></caption>
+  <caption class="search-header" hidden="true"><label>&performance.label;</label></caption>
 
   <hbox align="center">
     <checkbox id="useRecommendedPerformanceSettings"
-              label="&useRecommendedPerformanceSettings.label;"
-              accesskey="&useRecommendedPerformanceSettings.accesskey;"
+              label="&useRecommendedPerformanceSettings2.label;"
+              accesskey="&useRecommendedPerformanceSettings2.accesskey;"
               preference="browser.preferences.defaultPerformanceSettings.enabled"/>
     <label id="performanceSettingsLearnMore" class="learnMore text-link">&performanceSettingsLearnMore.label;</label>
   </hbox>
-  <description class="indent">&useRecommendedPerformanceSettings.description;</description>
+  <description class="indent">&useRecommendedPerformanceSettings2.description;</description>
 
   <vbox id="performanceSettings" class="indent" hidden="true">
     <checkbox id="allowHWAccel"
@@ -363,4 +934,84 @@
     <description id="contentProcessCountEnabledDescription">&limitContentProcessOption.description;</description>
     <description id="contentProcessCountDisabledDescription">&limitContentProcessOption.disabledDescription;<label class="text-link" href="https://wiki.mozilla.org/Electrolysis">&limitContentProcessOption.disabledDescriptionLink;</label></description>
   </vbox>
+</groupbox>
+
+<hbox id="browsingCategory"
+      class="subcategory"
+      hidden="true"
+      data-category="paneGeneral">
+  <label class="header-name" flex="1">&browsing.label;</label>
+</hbox>
+
+<!-- Browsing -->
+<groupbox id="browsingGroup" data-category="paneGeneral" hidden="true">
+  <caption class="search-header" hidden="true"><label>&browsing.label;</label></caption>
+
+  <checkbox id="useAutoScroll"
+            label="&useAutoScroll.label;"
+            accesskey="&useAutoScroll.accesskey;"
+            preference="general.autoScroll"/>
+  <checkbox id="useSmoothScrolling"
+            label="&useSmoothScrolling.label;"
+            accesskey="&useSmoothScrolling.accesskey;"
+            preference="general.smoothScroll"/>
+
+#ifdef XP_WIN
+  <checkbox id="useOnScreenKeyboard"
+            hidden="true"
+            label="&useOnScreenKeyboard.label;"
+            accesskey="&useOnScreenKeyboard.accesskey;"
+            preference="ui.osk.enabled"/>
+#endif
+  <checkbox id="useCursorNavigation"
+            label="&useCursorNavigation.label;"
+            accesskey="&useCursorNavigation.accesskey;"
+            preference="accessibility.browsewithcaret"/>
+  <checkbox id="searchStartTyping"
+            label="&searchOnStartTyping.label;"
+            accesskey="&searchOnStartTyping.accesskey;"
+            preference="accessibility.typeaheadfind"/>
+</groupbox>
+
+<hbox id="networkProxyCategory"
+      class="subcategory"
+      hidden="true"
+      data-category="paneGeneral">
+  <label class="header-name" flex="1">&networkProxy.label;</label>
+</hbox>
+
+<!-- Network Proxy-->
+<groupbox id="connectionGroup" data-category="paneGeneral" hidden="true">
+  <caption class="search-header" hidden="true"><label>&networkProxy.label;</label></caption>
+
+  <hbox align="center">
+    <description flex="1" control="connectionSettings">&connectionDesc.label;</description>
+    <!-- Please don't remove the wrapping hbox/vbox/box for these elements. It's used to properly compute the search tooltip position. -->
+    <hbox>
+      <button id="connectionSettings"
+              class="accessory-button"
+              icon="network"
+              label="&connectionSettings.label;"
+              accesskey="&connectionSettings.accesskey;"
+              searchkeywords="&connectionsDialog.title;
+                              &noProxyTypeRadio.label;
+                              &WPADTypeRadio.label;
+                              &systemTypeRadio.label;
+                              &manualTypeRadio2.label;
+                              &http2.label;
+                              &ssl2.label;
+                              &ftp2.label;
+                              &port2.label;
+                              &socks2.label;
+                              &socks4.label;
+                              &socks5.label;
+                              &noproxy2.label;
+                              &noproxyExplain.label;
+                              &shareproxy.label;
+                              &autoTypeRadio2.label;
+                              &reload.label;
+                              &autologinproxy.label;
+                              &socksRemoteDNS.label2;"/>
+    </hbox>
+  </hbox>
 </groupbox>

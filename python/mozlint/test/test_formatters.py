@@ -5,9 +5,9 @@
 from __future__ import unicode_literals
 
 import json
-import sys
 from collections import defaultdict
 
+import mozunit
 import pytest
 
 from mozlint import ResultContainer
@@ -104,4 +104,4 @@ def test_json_formatter(results):
 
 
 if __name__ == '__main__':
-    sys.exit(pytest.main(['--verbose', __file__]))
+    mozunit.main()
