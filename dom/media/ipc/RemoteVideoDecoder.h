@@ -48,6 +48,9 @@ private:
   // Only ever written/modified during decoder initialisation.
   // As such can be accessed from any threads after that.
   nsCString mDescription;
+  bool mIsHardwareAccelerated;
+  nsCString mHardwareAcceleratedReason;
+  MediaDataDecoder::ConversionRequired mConversion;
 };
 
 // A PDM implementation that creates RemoteVideoDecoders.
