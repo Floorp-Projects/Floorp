@@ -1005,6 +1005,7 @@ ChannelMediaResource::Unpin()
 double
 ChannelMediaResource::GetDownloadRate(bool* aIsReliable)
 {
+  MOZ_ASSERT(NS_IsMainThread());
   MutexAutoLock lock(mLock);
   return mChannelStatistics.GetRate(aIsReliable);
 }
