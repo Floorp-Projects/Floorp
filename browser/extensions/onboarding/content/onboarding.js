@@ -452,11 +452,6 @@ class Onboarding {
     }
 
     this._prefsObserved = new Map();
-    this._prefsObserved.set("browser.onboarding.hidden", prefValue => {
-      if (prefValue) {
-        this.destroy();
-      }
-    });
     this._tours.forEach(tour => {
       let tourId = tour.id;
       this._prefsObserved.set(`browser.onboarding.tour.${tourId}.completed`, () => {
@@ -498,6 +493,11 @@ class Onboarding {
       case "onboarding-overlay-button":
         this.showOverlay();
         this.gotoPage(this._firstUncompleteTour.id);
+        break;
+      case "onboarding-skip-tour-button":
+        this.hideNotification();
+        this.hideOverlay();
+        this.skipTour();
         break;
       case "onboarding-overlay-close-btn":
       // If the clicking target is directly on the outer-most overlay,
@@ -666,10 +666,6 @@ class Onboarding {
   }
 
   hideOverlay() {
-    let hiddenCheckbox = this._window.document.getElementById("onboarding-tour-hidden-checkbox");
-    if (hiddenCheckbox.checked) {
-      this.hide();
-    }
     this.toggleModal(this._overlay.classList.toggle("onboarding-opened"));
   }
 
@@ -993,7 +989,7 @@ class Onboarding {
           <h1 id="onboarding-notification-tour-title"></h1>
           <p id="onboarding-notification-tour-message"></p>
         </div>
-        <button id="onboarding-notification-action-btn"></button>
+        <button id="onboarding-notification-action-btn" class="onboarding-action-button"></button>
       </section>
       <button id="onboarding-notification-close-btn" class="onboarding-close-btn"></button>
     `;
@@ -1004,13 +1000,9 @@ class Onboarding {
     return footer;
   }
 
-  hide() {
+  skipTour() {
     this.setToursCompleted(this._tours.map(tour => tour.id));
     sendMessageToChrome("set-prefs", [
-      {
-        name: "browser.onboarding.hidden",
-        value: true
-      },
       {
         name: "browser.onboarding.notification.finished",
         value: true
@@ -1030,7 +1022,7 @@ class Onboarding {
           <ul id="onboarding-tour-list" role="tablist"></ul>
         </nav>
         <footer id="onboarding-footer">
-          <input type="checkbox" id="onboarding-tour-hidden-checkbox" /><label for="onboarding-tour-hidden-checkbox"></label>
+          <button id="onboarding-skip-tour-button" class="onboarding-action-button"></button>
         </footer>
         <button id="onboarding-overlay-close-btn" class="onboarding-close-btn"></button>
       </div>
@@ -1039,8 +1031,8 @@ class Onboarding {
     this._dialog = div.querySelector(`[role="dialog"]`);
     this._dialog.id = ONBOARDING_DIALOG_ID;
 
-    div.querySelector("label[for='onboarding-tour-hidden-checkbox']").textContent =
-      this._bundle.GetStringFromName("onboarding.hidden-checkbox-label-text");
+    div.querySelector("#onboarding-skip-tour-button").textContent =
+      this._bundle.GetStringFromName("onboarding.skip-tour-button-label");
     div.querySelector("#onboarding-header").textContent =
       this._bundle.GetStringFromName("onboarding.overlay-title2");
     let closeBtn = div.querySelector("#onboarding-overlay-close-btn");
@@ -1154,20 +1146,18 @@ if (Services.prefs.getBoolPref("browser.onboarding.enabled", false)) {
       return;
     }
 
-    if (!Services.prefs.getBoolPref("browser.onboarding.hidden", false)) {
-      let window = evt.target.defaultView;
-      let location = window.location.href;
-      if (location == ABOUT_NEWTAB_URL || location == ABOUT_HOME_URL) {
-        // We just want to run tests as quick as possible
-        // so in the automation test, we don't do `requestIdleCallback`.
-        if (Cu.isInAutomation) {
-          new Onboarding(window);
-          return;
-        }
-        window.requestIdleCallback(() => {
-          new Onboarding(window);
-        });
+    let window = evt.target.defaultView;
+    let location = window.location.href;
+    if (location == ABOUT_NEWTAB_URL || location == ABOUT_HOME_URL) {
+      // We just want to run tests as quick as possible
+      // so in the automation test, we don't do `requestIdleCallback`.
+      if (Cu.isInAutomation) {
+        new Onboarding(window);
+        return;
       }
+      window.requestIdleCallback(() => {
+        new Onboarding(window);
+      });
     }
   }, true);
 }
