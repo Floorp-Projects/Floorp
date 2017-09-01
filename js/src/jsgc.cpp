@@ -8091,6 +8091,8 @@ js::gc::AssertGCThingHasType(js::gc::Cell* cell, JS::TraceKind kind)
 }
 #endif
 
+#ifdef MOZ_DIAGNOSTIC_ASSERT_ENABLED
+
 JS::AutoAssertNoGC::AutoAssertNoGC(JSContext* maybecx)
   : cx_(maybecx ? maybecx : TlsContext.get())
 {
@@ -8106,25 +8108,9 @@ JS::AutoAssertNoGC::~AutoAssertNoGC()
     }
 }
 
+#endif // MOZ_DIAGNOSTIC_ASSERT_ENABLED
+
 #ifdef DEBUG
-JS::AutoAssertNoAlloc::AutoAssertNoAlloc(JSContext* cx)
-  : gc(nullptr)
-{
-    disallowAlloc(cx->runtime());
-}
-
-void JS::AutoAssertNoAlloc::disallowAlloc(JSRuntime* rt)
-{
-    MOZ_ASSERT(!gc);
-    gc = &rt->gc;
-    TlsContext.get()->disallowAlloc();
-}
-
-JS::AutoAssertNoAlloc::~AutoAssertNoAlloc()
-{
-    if (gc)
-        TlsContext.get()->allowAlloc();
-}
 
 AutoAssertNoNurseryAlloc::AutoAssertNoNurseryAlloc()
 {
@@ -8153,7 +8139,8 @@ JS::AutoAssertGCCallback::AutoAssertGCCallback()
 {
     MOZ_ASSERT(JS::CurrentThreadIsHeapCollecting());
 }
-#endif
+
+#endif // DEBUG
 
 JS_FRIEND_API(const char*)
 JS::GCTraceKindToAscii(JS::TraceKind kind)
