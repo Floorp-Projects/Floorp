@@ -37,7 +37,7 @@ add_task(async function test_overflow_anchor() {
   await waitForOverflowed(button, true);
 
   let promise = promisePanelOpened();
-  button.node.doCommand();
+  button.node.dispatchEvent(new Event("mousedown"));
   await promise;
 
   let panel = DownloadsPanel.panel;
@@ -57,7 +57,7 @@ add_task(async function test_overflow_anchor() {
 
   // Now try opening the panel again.
   promise = promisePanelOpened();
-  button.node.doCommand();
+  button.node.dispatchEvent(new Event("mousedown"));
   await promise;
 
   is(panel.anchorNode.id, "downloads-indicator-anchor");
