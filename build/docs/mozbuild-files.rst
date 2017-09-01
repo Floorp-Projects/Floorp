@@ -34,10 +34,10 @@ The following properties make execution of ``moz.build`` files special:
    files.
 
 The limited subset of Python is actually an extremely limited subset.
-Only a few symbols from ``__builtins__`` are exposed. These include
-``True``, ``False``, and ``None``. Global functions like ``import``,
-``print``, and ``open`` aren't available. Without these, ``moz.build``
-files can do very little. *This is by design*.
+Only a few symbols from ``__builtin__`` are exposed. These include
+``True``, ``False``, ``None``, ``sorted``, ``int``, and ``set``. Global
+functions like ``import``, ``print``, and ``open`` aren't available.
+Without these, ``moz.build`` files can do very little. *This is by design*.
 
 The execution sandbox treats all ``UPPERCASE`` variables specially. Any
 ``UPPERCASE`` variable must be known to the sandbox before the script
