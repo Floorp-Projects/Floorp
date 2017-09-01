@@ -67,14 +67,14 @@ class TestCapabilities(MarionetteTestCase):
 
         self.assertIn("moz:accessibilityChecks", self.caps)
         self.assertFalse(self.caps["moz:accessibilityChecks"])
-        self.assertIn("specificationLevel", self.caps)
-        self.assertEqual(self.caps["specificationLevel"], 0)
+        self.assertIn("moz:webdriverClick", self.caps)
+        self.assertEqual(self.caps["moz:webdriverClick"], False)
 
-    def test_set_specification_level(self):
+    def test_set_webdriver_click(self):
         self.marionette.delete_session()
-        self.marionette.start_session({"specificationLevel": 2})
+        self.marionette.start_session({"moz:webdriverClick": True})
         caps = self.marionette.session_capabilities
-        self.assertEqual(2, caps["specificationLevel"])
+        self.assertEqual(True, caps["moz:webdriverClick"])
 
     def test_we_get_valid_uuid4_when_creating_a_session(self):
         self.assertNotIn("{", self.marionette.session_id,
