@@ -309,8 +309,7 @@ AOMDecoder::Drain()
 bool
 AOMDecoder::IsAV1(const nsACString& aMimeType)
 {
-  return aMimeType.EqualsLiteral("video/webm; codecs=av1")
-         || aMimeType.EqualsLiteral("video/av1");
+  return aMimeType.EqualsLiteral("video/av1");
 }
 
 /* static */

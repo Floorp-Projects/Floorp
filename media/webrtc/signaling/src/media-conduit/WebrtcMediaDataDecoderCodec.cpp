@@ -36,10 +36,10 @@ WebrtcMediaDataDecoder::InitDecode(const webrtc::VideoCodec* aCodecSettings,
   nsCString codec;
   switch (aCodecSettings->codecType) {
     case webrtc::VideoCodecType::kVideoCodecVP8:
-      codec = "video/webm; codecs=vp8";
+      codec = "video/vp8";
       break;
     case webrtc::VideoCodecType::kVideoCodecVP9:
-      codec = "video/webm; codecs=vp9";
+      codec = "video/vp9";
       break;
     case webrtc::VideoCodecType::kVideoCodecH264:
       codec = "video/avc";
