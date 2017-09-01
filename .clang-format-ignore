@@ -23,7 +23,7 @@
 ^testing/gtest/.*
 ^tools/profiler/tests/.*
 ^uriloader/exthandler/tests/.*
-# JNI code is generated
+# JNI code is generated
 ^widget/android/GeneratedJNINatives.h
 ^widget/android/GeneratedJNIWrappers.cpp
 ^widget/android/GeneratedJNIWrappers.h
