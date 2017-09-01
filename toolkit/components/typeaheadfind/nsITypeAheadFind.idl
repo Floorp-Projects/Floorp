@@ -57,11 +57,8 @@ interface nsITypeAheadFind : nsISupports
    * necessarily happen automatically. */
   void collapseSelection();
 
-  /* Check if a range is visible using heuristics */
+  /* Check if a range is visible */
   boolean isRangeVisible(in nsIDOMRange aRange, in boolean aMustBeInViewPort);
-
-  /* Check if a range is actually rendered (out of viewport always false) */
-  boolean isRangeRendered(in nsIDOMRange aRange);
 
   /******************************* Attributes ******************************/
 
