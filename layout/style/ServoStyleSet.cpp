@@ -874,14 +874,14 @@ ServoStyleSet::HasStateDependentStyle(dom::Element* aElement,
 }
 
 bool
-ServoStyleSet::StyleDocument(ServoTraversalFlags aBaseFlags)
+ServoStyleSet::StyleDocument(ServoTraversalFlags aFlags)
 {
   nsIDocument* doc = mPresContext->Document();
   if (!doc->GetServoRestyleRoot()) {
     return false;
   }
 
-  PreTraverse(aBaseFlags);
+  PreTraverse(aFlags);
   AutoPrepareTraversal guard(this);
   const SnapshotTable& snapshots = Snapshots();
 
@@ -892,6 +892,10 @@ ServoStyleSet::StyleDocument(ServoTraversalFlags aBaseFlags)
   Element* rootElement = doc->GetRootElement();
   MOZ_ASSERT_IF(rootElement, rootElement->HasServoData());
 
+  if (ShouldTraverseInParallel()) {
+    aFlags |= ServoTraversalFlags::ParallelTraversal;
+  }
+
   // Do the first traversal.
   DocumentStyleRootIterator iter(doc->GetServoRestyleRoot());
   while (Element* root = iter.GetNextStyleRoot()) {
@@ -901,17 +905,7 @@ ServoStyleSet::StyleDocument(ServoTraversalFlags aBaseFlags)
     // there may be lazy frame construction to do even if no styling is required.
     postTraversalRequired |= root->HasFlag(NODE_DESCENDANTS_NEED_FRAMES);
 
-    // Allow the parallel traversal, unless we're traversing traversing one of
-    // the native anonymous document style roots, which are tiny and not worth
-    // parallelizing over.
-    //
-    // We only allow the parallel traversal in active (foreground) tabs.
-    auto flags = aBaseFlags;
-    if (!root->IsInNativeAnonymousSubtree() && mPresContext->PresShell()->IsActive()) {
-      flags |= ServoTraversalFlags::ParallelTraversal;
-    }
-
-    bool required = Servo_TraverseSubtree(root, mRawSet.get(), &snapshots, flags);
+    bool required = Servo_TraverseSubtree(root, mRawSet.get(), &snapshots, aFlags);
     postTraversalRequired |= required;
   }
 
@@ -927,13 +921,11 @@ ServoStyleSet::StyleDocument(ServoTraversalFlags aBaseFlags)
   // values once at the begin of a tick. As a result, even if the previous
   // traversal caused, for example, the font-size to change, the SMIL style
   // won't be updated until the next tick anyway.
-  if (mPresContext->EffectCompositor()->PreTraverse(aBaseFlags)) {
+  if (mPresContext->EffectCompositor()->PreTraverse(aFlags)) {
     nsINode* styleRoot = doc->GetServoRestyleRoot();
     Element* root = styleRoot->IsElement() ? styleRoot->AsElement() : rootElement;
 
-    auto flags = aBaseFlags | ServoTraversalFlags::ParallelTraversal;
-
-    bool required = Servo_TraverseSubtree(root, mRawSet.get(), &snapshots, flags);
+    bool required = Servo_TraverseSubtree(root, mRawSet.get(), &snapshots, aFlags);
     postTraversalRequired |= required;
   }
 
@@ -950,6 +942,10 @@ ServoStyleSet::StyleNewSubtree(Element* aRoot)
   // Do the traversal. The snapshots will not be used.
   const SnapshotTable& snapshots = Snapshots();
   auto flags = ServoTraversalFlags::Empty;
+  if (ShouldTraverseInParallel()) {
+    flags |= ServoTraversalFlags::ParallelTraversal;
+  }
+
   DebugOnly<bool> postTraversalRequired =
     Servo_TraverseSubtree(aRoot, mRawSet.get(), &snapshots, flags);
   MOZ_ASSERT(!postTraversalRequired);
@@ -1004,13 +1000,7 @@ ServoStyleSet::StyleNewChildren(Element* aParent)
   aParent->SetHasDirtyDescendantsForServo();
 
   auto flags = ServoTraversalFlags::UnstyledOnly;
-
-  // If there is an XBL binding on the root element, we do the initial document
-  // styling with this API. Not clear how common that is, but we allow parallel
-  // traversals in this case to preserve the old behavior (where Servo would
-  // use the parallel traversal i.f.f. the traversal root was the document root).
-  if (aParent == aParent->OwnerDoc()->GetRootElement() &&
-      mPresContext->PresShell()->IsActive()) {
+  if (ShouldTraverseInParallel()) {
     flags |= ServoTraversalFlags::ParallelTraversal;
   }
 
@@ -1413,6 +1403,12 @@ ServoStyleSet::MayTraverseFrom(Element* aElement)
   }
 
   return !Servo_Element_IsDisplayNone(parent);
+}
+
+bool
+ServoStyleSet::ShouldTraverseInParallel() const
+{
+  return mPresContext->PresShell()->IsActive();
 }
 
 void
