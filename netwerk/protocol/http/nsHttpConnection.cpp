@@ -956,6 +956,18 @@ nsHttpConnection::CanReuse()
         return false;
     }
 
+    if (!mExperienced) {
+        uint32_t flags = 0;
+        mSocketTransport->GetConnectionFlags(&flags);
+        if (flags & nsISocketTransport::SPECULATIVE) {
+            if (gHttpHandler->ConnMgr()->IsSpeculativeConnectDisabled(mConnInfo)) {
+                LOG(("nsHttpConnection::CanReuse %p can't reuse because speculative"
+                      " connections are disabled for this host", this));
+                return false;
+            }
+        }
+    }
+
     bool canReuse;
     if (mSpdySession) {
         canReuse = mSpdySession->CanReuse();
