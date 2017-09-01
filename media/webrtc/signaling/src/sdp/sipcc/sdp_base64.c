@@ -239,6 +239,15 @@ base64_result_t base64_encode(unsigned char *src, int src_bytes, unsigned char *
     return BASE64_SUCCESS;
 }
 
+unsigned char base64_decode_get_raw(unsigned char index)
+{
+    /* only have 128 values, MSB must not be set! */
+    if (index >= 128) {
+      return INVALID_CHAR;
+    }
+    return base64_to_raw_table[index];
+}
+
 /*
  * base64_decode
  *
@@ -280,8 +289,8 @@ base64_result_t base64_decode(unsigned char *src, int src_bytes, unsigned char *
     for (i=0; i<src_bytes; i++) {
 	cindex = src[i];
 
-	if ((cindex & 0x80) || /* only have 128 values, MSB must not be set! */
-	    ((val = base64_to_raw_table[cindex]) == INVALID_CHAR)) {
+	val = base64_decode_get_raw(cindex);
+	if (val  == INVALID_CHAR) {
 	    /* Invalid base64 character */
 	    return BASE64_BAD_DATA;
 	}
@@ -296,7 +305,7 @@ base64_result_t base64_decode(unsigned char *src, int src_bytes, unsigned char *
 	    pad_count++;
 	    if (++i<src_bytes) {
 		/* can have up to 2 pad chars */
-		if (base64_to_raw_table[src[i]] != PADDING) {
+                if (base64_decode_get_raw(src[i]) != PADDING) {
 		    return BASE64_BAD_PADDING;
 		}
 
@@ -340,7 +349,7 @@ base64_result_t base64_decode(unsigned char *src, int src_bytes, unsigned char *
 		 */
 		if ((val & 0x0F) ||
 		    (i+1>=src_bytes) ||
-		    (base64_to_raw_table[src[i+1]] != PADDING)) {
+		    (base64_decode_get_raw(src[i+1]) != PADDING)) {
 		    return BASE64_BUFFER_OVERRUN;
 		}
 	    }
@@ -363,7 +372,7 @@ base64_result_t base64_decode(unsigned char *src, int src_bytes, unsigned char *
 		 */
 		if ((val & 0x03) ||
 		    (i+1>=src_bytes) ||
-		    (base64_to_raw_table[src[i+1]] != PADDING)) {
+		    (base64_decode_get_raw(src[i+1]) != PADDING)) {
 		    return BASE64_BUFFER_OVERRUN;
 		}
 	    }
