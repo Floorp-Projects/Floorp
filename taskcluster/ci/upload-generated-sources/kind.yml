@@ -29,7 +29,7 @@ job-template:
   run:
     using: run-task
     command: >
-            cd /home/worker/checkouts/gecko &&
+            cd /builds/worker/checkouts/gecko &&
             ./mach python build/upload_generated_sources.py ${ARTIFACT_URL}
   scopes:
       - secrets:get:project/releng/gecko/build/level-{level}/gecko-generated-sources-upload

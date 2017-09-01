@@ -8,6 +8,8 @@ TaskCluster Docker images are defined in the source directory under
 ``taskcluster/docker``. Each directory therein contains the name of an
 image used as part of the task graph.
 
+More information is available in the ``README.md`` file in that directory.
+
 Adding Extra Files to Images
 ============================
 
@@ -39,4 +41,4 @@ preserved. However, the file owner/group is changed to ``root`` and the
 Here is an example Dockerfile snippet::
 
    # %include mach
-   ADD topsrcdir/mach /home/worker/mach
+   ADD topsrcdir/mach /builds/worker/mach

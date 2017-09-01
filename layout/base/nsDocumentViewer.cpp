@@ -2319,7 +2319,7 @@ nsDocumentViewer::CreateStyleSet(nsIDocument* aDocument)
   if (backendType == StyleBackendType::Gecko) {
     styleSet = new nsStyleSet();
   } else {
-    styleSet = new ServoStyleSet();
+    styleSet = new ServoStyleSet(ServoStyleSet::Kind::Master);
   }
 
   styleSet->BeginUpdate();

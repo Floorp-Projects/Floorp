@@ -110,7 +110,6 @@
         </xul:box>
         <xul:box id="splitview-resizer-target" class="theme-sidebar splitview-nav-container"
                 persist="height">
-          <div class="devtools-throbber"></div>
           <ol class="splitview-nav" tabindex="0"></ol>
           <div class="splitview-nav placeholder empty">
             <p><strong>&noStyleSheet.label;</strong></p>

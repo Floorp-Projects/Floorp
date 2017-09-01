@@ -95,11 +95,14 @@ version of the image has been built the `HASH` file should be updated with the
 hash of the image.
 
 The `HASH` file is the image hash as computed by docker, this is always on the
-format `sha256:<digest>`. In production images will be referenced by image hash.
-This mitigates attacks against the registry as well as simplifying validate of
-correctness. The `VERSION` file only serves to provide convenient names, such
-that old versions are easy to discover in the registry (and ensuring old
-versions aren't deleted by garbage-collection).
+format `sha256:<digest>`. Note that Docker produces a numbre of hashes in this
+format; the hash used in this context is the one returned from `docker push`.
+
+In production images will be referenced by image hash.  This mitigates attacks
+against the registry as well as simplifying validate of correctness. The
+`VERSION` file only serves to provide convenient names, such that old versions
+are easy to discover in the registry (and ensuring old versions aren't deleted
+by garbage-collection).
 
 This way, older tasks which were designed to run on an older version of the image
 can still be executed in taskcluster, while new tasks can use the new version.

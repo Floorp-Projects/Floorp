@@ -243,6 +243,9 @@
   --toolbarbutton-checked-color: var(--theme-selection-color);
   --toolbarbutton-checked-border-color: var(--toolbarbutton-border-color);
 
+  /* The photon animation curve */
+  --animation-curve: cubic-bezier(.07,.95,0,1);
+
   /* Firefox Colors CSS Variables v1.0.3
    * Colors are taken from: https://github.com/FirefoxUX/design-tokens */
   --magenta-65: #dd00a9;
