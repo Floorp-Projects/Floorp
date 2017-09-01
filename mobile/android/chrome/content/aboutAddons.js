@@ -397,7 +397,7 @@ var Addons = {
         // Allow the options to use all the available width space.
         optionsBox.classList.remove("inner");
 
-        this.createWebExtensionOptions(optionsBox, addon);
+        this.createWebExtensionOptions(optionsBox, addon, addonItem);
         break;
       case AddonManager.OPTIONS_TYPE_TAB:
         // Keep the usual layout for any options related the legacy (or system) add-ons
@@ -405,7 +405,7 @@ var Addons = {
         // details page.
         optionsBox.classList.add("inner");
 
-        this.createOptionsInTabButton(optionsBox, addon);
+        this.createOptionsInTabButton(optionsBox, addon, addonItem);
         break;
       case AddonManager.OPTIONS_TYPE_INLINE:
         // Keep the usual layout for any options related the legacy (or system) add-ons.
@@ -418,7 +418,7 @@ var Addons = {
     showAddonOptions();
   },
 
-  createOptionsInTabButton: function(destination, addon) {
+  createOptionsInTabButton: function(destination, addon, detailItem) {
     let frame = destination.querySelector("iframe#addon-options");
     let button = destination.querySelector("button#open-addon-options");
 
@@ -446,9 +446,13 @@ var Addons = {
       const {optionsURL} = addon;
       openOptionsInTab(optionsURL);
     };
+
+    // Ensure that the Addon Options are visible (the options box will be hidden if the optionsURL
+    // attribute is an empty string, which happens when a WebExtensions is still loading).
+    detailItem.removeAttribute("optionsURL");
   },
 
-  createWebExtensionOptions: async function(destination, addon) {
+  createWebExtensionOptions: async function(destination, addon, detailItem) {
     // WebExtensions are loaded asynchronously and the optionsURL
     // may not be available until the addon has been started.
     await addon.startupPromise;
@@ -493,6 +497,10 @@ var Addons = {
     // Loading the URL this way prevents the native back
     // button from applying to the iframe.
     frame.contentWindow.location.replace(optionsURL);
+
+    // Ensure that the Addon Options are visible (the options box will be hidden if the optionsURL
+    // attribute is an empty string, which happens when a WebExtensions is still loading).
+    detailItem.removeAttribute("optionsURL");
   },
 
   createInlineOptions(destination, optionsURL, aListItem) {
