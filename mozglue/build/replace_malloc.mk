@@ -20,6 +20,7 @@ OS_LDFLAGS += \
   -Wl,-U,_replace_jemalloc_purge_freed_pages \
   -Wl,-U,_replace_jemalloc_free_dirty_pages \
   -Wl,-U,_replace_jemalloc_thread_local_arena \
+  -Wl,-U,_replace_jemalloc_ptr_info \
   $(NULL)
 
 EXTRA_DEPS += $(topsrcdir)/mozglue/build/replace_malloc.mk

@@ -26,9 +26,16 @@ using namespace std;
 namespace mozilla {
 namespace gfx {
 
-uint32_t UnscaledFont::sDeletionCounter = 0;
+Atomic<uint32_t> UnscaledFont::sDeletionCounter(0);
 
 UnscaledFont::~UnscaledFont()
+{
+  sDeletionCounter++;
+}
+
+Atomic<uint32_t> ScaledFont::sDeletionCounter(0);
+
+ScaledFont::~ScaledFont()
 {
   sDeletionCounter++;
 }

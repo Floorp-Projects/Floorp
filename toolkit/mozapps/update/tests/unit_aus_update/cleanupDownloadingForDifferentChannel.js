@@ -28,19 +28,25 @@ function run_test() {
 
   standardInit();
 
-  Assert.equal(gUpdateManager.updateCount, 1,
-               "the update manager update count" + MSG_SHOULD_EQUAL);
-  let update = gUpdateManager.getUpdateAt(0);
-  Assert.equal(update.name, "Existing",
-               "the update's name" + MSG_SHOULD_EQUAL);
-
   Assert.ok(!gUpdateManager.activeUpdate,
             "there should not be an active update");
-  // Verify that the active-update.xml file has had the update from the old
-  // channel removed.
-  let file = getUpdatesXMLFile(true);
-  Assert.equal(readFile(file), getLocalUpdatesXMLString(""),
-               "the contents of active-update.xml" + MSG_SHOULD_EQUAL);
+  let activeUpdateXML = getUpdatesXMLFile(true);
+  Assert.ok(!activeUpdateXML.exists(),
+            MSG_SHOULD_NOT_EXIST + getMsgPath(activeUpdateXML.path));
+  Assert.equal(gUpdateManager.updateCount, 2,
+               "the update manager update count" + MSG_SHOULD_EQUAL);
+  let update = gUpdateManager.getUpdateAt(0);
+  Assert.equal(update.state, STATE_FAILED,
+               "the first update state" + MSG_SHOULD_EQUAL);
+  Assert.equal(update.errorCode, ERR_CHANNEL_CHANGE,
+               "the first update errorCode" + MSG_SHOULD_EQUAL);
+  Assert.equal(update.statusText, getString("statusFailed"),
+               "the first update statusText " + MSG_SHOULD_EQUAL);
+  update = gUpdateManager.getUpdateAt(1);
+  Assert.equal(update.state, STATE_FAILED,
+               "the second update state" + MSG_SHOULD_EQUAL);
+  Assert.equal(update.name, "Existing",
+               "the second update name" + MSG_SHOULD_EQUAL);
 
   doTestFinish();
 }

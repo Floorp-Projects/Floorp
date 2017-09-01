@@ -1024,16 +1024,13 @@ GeckoRestyleManager::ReparentStyleContext(nsIFrame* aFrame)
 #endif
 
   if (!newParentContext && !oldContext->GetParent()) {
-    // No need to do anything here.
-#ifdef DEBUG
-    // Make sure we have no children, so we really know there is nothing to do.
-    nsIFrame::ChildListIterator lists(aFrame);
-    for (; !lists.IsDone(); lists.Next()) {
-      MOZ_ASSERT(lists.CurrentList().IsEmpty(),
-                 "Failing to reparent style context for child of "
-                 "non-inheriting anon box");
-    }
-#endif // DEBUG
+    // No need to do anything here for this frame, but we should still reparent
+    // its descendants, because those may have styles that inherit from the
+    // parent of this frame (e.g. non-anonymous columns in an anonymous
+    // colgroup).
+    MOZ_ASSERT(aFrame->StyleContext()->IsNonInheritingAnonBox(),
+               "Why did this frame not end up with a parent context?");
+    ReparentFrameDescendants(aFrame, providerChild);
     return NS_OK;
   }
 
@@ -1091,26 +1088,7 @@ GeckoRestyleManager::ReparentStyleContext(nsIFrame* aFrame)
 
       aFrame->SetStyleContext(newContext);
 
-      nsIFrame::ChildListIterator lists(aFrame);
-      for (; !lists.IsDone(); lists.Next()) {
-        for (nsIFrame* child : lists.CurrentList()) {
-          // only do frames that are in flow
-          if (!(child->GetStateBits() & NS_FRAME_OUT_OF_FLOW) &&
-              child != providerChild) {
-#ifdef DEBUG
-            if (child->IsPlaceholderFrame()) {
-              nsIFrame* outOfFlowFrame =
-                nsPlaceholderFrame::GetRealFrameForPlaceholder(child);
-              NS_ASSERTION(outOfFlowFrame, "no out-of-flow frame");
-
-              NS_ASSERTION(outOfFlowFrame != providerChild,
-                           "Out of flow provider?");
-            }
-#endif
-            ReparentStyleContext(child);
-          }
-        }
-      }
+      ReparentFrameDescendants(aFrame, providerChild);
 
       // If this frame is part of an IB split, then the style context of
       // the next part of the split might be a child of our style context.
@@ -1152,6 +1130,32 @@ GeckoRestyleManager::ReparentStyleContext(nsIFrame* aFrame)
   }
 
   return NS_OK;
+}
+
+void
+GeckoRestyleManager::ReparentFrameDescendants(nsIFrame* aFrame,
+                                              nsIFrame* aProviderChild)
+{
+  nsIFrame::ChildListIterator lists(aFrame);
+  for (; !lists.IsDone(); lists.Next()) {
+    for (nsIFrame* child : lists.CurrentList()) {
+      // only do frames that are in flow
+      if (!(child->GetStateBits() & NS_FRAME_OUT_OF_FLOW) &&
+          child != aProviderChild) {
+#ifdef DEBUG
+        if (child->IsPlaceholderFrame()) {
+          nsIFrame* outOfFlowFrame =
+            nsPlaceholderFrame::GetRealFrameForPlaceholder(child);
+          NS_ASSERTION(outOfFlowFrame, "no out-of-flow frame");
+
+          NS_ASSERTION(outOfFlowFrame != aProviderChild,
+                       "Out of flow provider?");
+        }
+#endif
+        ReparentStyleContext(child);
+      }
+    }
+  }
 }
 
 ElementRestyler::ElementRestyler(nsPresContext* aPresContext,

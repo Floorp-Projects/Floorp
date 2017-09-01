@@ -29,6 +29,7 @@ WebRenderBridgeChild::WebRenderBridgeChild(const wr::PipelineId& aPipelineId)
   , mIPCOpen(false)
   , mDestroyed(false)
   , mFontKeysDeleted(0)
+  , mFontInstanceKeysDeleted(0)
 {
 }
 
@@ -219,7 +220,7 @@ WebRenderBridgeChild::PushGlyphs(wr::DisplayListBuilder& aBuilder, const nsTArra
   MOZ_ASSERT(aFont);
   MOZ_ASSERT(!aGlyphs.IsEmpty());
 
-  wr::WrFontKey key = GetFontKeyForScaledFont(aFont);
+  wr::WrFontInstanceKey key = GetFontKeyForScaledFont(aFont);
   MOZ_ASSERT(key.mNamespace.mHandle && key.mHandle);
 
   nsTArray<wr::GlyphInstance> wr_glyph_instances;
@@ -235,11 +236,10 @@ WebRenderBridgeChild::PushGlyphs(wr::DisplayListBuilder& aBuilder, const nsTArra
                     aSc.ToRelativeLayoutRect(aClip),
                     aColor,
                     key,
-                    Range<const wr::GlyphInstance>(wr_glyph_instances.Elements(), wr_glyph_instances.Length()),
-                    aFont->GetSize());
+                    Range<const wr::GlyphInstance>(wr_glyph_instances.Elements(), wr_glyph_instances.Length()));
 }
 
-wr::FontKey
+wr::FontInstanceKey
 WebRenderBridgeChild::GetFontKeyForScaledFont(gfx::ScaledFont* aScaledFont)
 {
   MOZ_ASSERT(!mDestroyed);
@@ -248,34 +248,54 @@ WebRenderBridgeChild::GetFontKeyForScaledFont(gfx::ScaledFont* aScaledFont)
              (aScaledFont->GetType() == gfx::FontType::MAC) ||
              (aScaledFont->GetType() == gfx::FontType::FONTCONFIG));
 
+  wr::FontInstanceKey instanceKey = { wr::IdNamespace { 0 }, 0 };
+  if (mFontInstanceKeys.Get(aScaledFont, &instanceKey)) {
+    return instanceKey;
+  }
+
   RefPtr<gfx::UnscaledFont> unscaled = aScaledFont->GetUnscaledFont();
   MOZ_ASSERT(unscaled);
 
-  wr::FontKey key = { wr::IdNamespace { 0 }, 0};
-  if (mFontKeys.Get(unscaled, &key)) {
-    return key;
+  wr::FontKey fontKey = { wr::IdNamespace { 0 }, 0};
+  if (!mFontKeys.Get(unscaled, &fontKey)) {
+    FontFileData data;
+    if (!unscaled->GetFontFileData(WriteFontFileData, &data) ||
+        !data.mFontBuffer.mData) {
+      return instanceKey;
+    }
+
+    fontKey.mNamespace = GetNamespace();
+    fontKey.mHandle = GetNextResourceId();
+
+    SendAddRawFont(fontKey, data.mFontBuffer, data.mFontIndex);
+
+    mFontKeys.Put(unscaled, fontKey);
   }
 
-  FontFileData data;
-  if (!unscaled->GetFontFileData(WriteFontFileData, &data) ||
-      !data.mFontBuffer.mData) {
-    return key;
-  }
+  instanceKey.mNamespace = GetNamespace();
+  instanceKey.mHandle = GetNextResourceId();
 
-  key.mNamespace = GetNamespace();
-  key.mHandle = GetNextResourceId();
+  SendAddFontInstance(instanceKey, fontKey, aScaledFont->GetSize(), Nothing(), Nothing());
 
-  SendAddRawFont(key, data.mFontBuffer, data.mFontIndex);
+  mFontInstanceKeys.Put(aScaledFont, instanceKey);
 
-  mFontKeys.Put(unscaled, key);
-
-  return key;
+  return instanceKey;
 }
 
 void
 WebRenderBridgeChild::RemoveExpiredFontKeys()
 {
-  uint32_t counter = gfx::UnscaledFont::DeletionCounter();
+  uint32_t counter = gfx::ScaledFont::DeletionCounter();
+  if (mFontInstanceKeysDeleted != counter) {
+    mFontInstanceKeysDeleted = counter;
+    for (auto iter = mFontInstanceKeys.Iter(); !iter.Done(); iter.Next()) {
+      if (!iter.Key()) {
+        SendDeleteFontInstance(iter.Data());
+        iter.Remove();
+      }
+    }
+  }
+  counter = gfx::UnscaledFont::DeletionCounter();
   if (mFontKeysDeleted != counter) {
     mFontKeysDeleted = counter;
     for (auto iter = mFontKeys.Iter(); !iter.Done(); iter.Next()) {
@@ -459,7 +479,8 @@ WebRenderBridgeChild::RecvWrUpdated(const wr::IdNamespace& aNewIdNamespace)
   // Update mIdNamespace to identify obsolete keys and messages by WebRenderBridgeParent.
   // Since usage of invalid keys could cause crash in webrender.
   mIdNamespace = aNewIdNamespace;
-  // Just clear FontKeys, they are removed during WebRenderAPI destruction.
+  // Just clear FontInstaceKeys/FontKeys, they are removed during WebRenderAPI destruction.
+  mFontInstanceKeys.Clear();
   mFontKeys.Clear();
   GetCompositorBridgeChild()->RecvInvalidateLayers(wr::AsUint64(mPipelineId));
   return IPC_OK();

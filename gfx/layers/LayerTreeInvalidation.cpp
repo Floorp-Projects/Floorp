@@ -315,6 +315,11 @@ public:
                                      nsIntRegion& aOutRegion,
                                      NotifySubDocInvalidationFunc aCallback)
   {
+    if (mLayer->AsHostLayer() && !mLayer->GetLocalVisibleRegion().ToUnknownRegion().IsEqual(mVisibleRegion)) {
+      IntRect result = NewTransformedBoundsForLeaf();
+      result = result.Union(OldTransformedBoundsForLeaf());
+      aOutRegion = result;
+    }
     return true;
   }
 
