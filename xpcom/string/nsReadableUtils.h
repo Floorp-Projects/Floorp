@@ -18,6 +18,12 @@
 
 #include "nsTArrayForwardDeclare.h"
 
+// Can't include mozilla/Encoding.h here
+extern "C" {
+  size_t encoding_utf8_valid_up_to(uint8_t const* buffer, size_t buffer_len);
+  size_t encoding_ascii_valid_up_to(uint8_t const* buffer, size_t buffer_len);
+}
+
 inline size_t
 Distance(const nsReadingIterator<char16_t>& aStart,
          const nsReadingIterator<char16_t>& aEnd)
@@ -253,40 +259,57 @@ bool IsASCII(const nsAString& aString);
  *
  * @param aString a 8-bit wide string to scan
  */
-bool IsASCII(const nsACString& aString);
+inline bool IsASCII(const nsACString& aString)
+{
+  size_t length = aString.Length();
+  const uint8_t* ptr = reinterpret_cast<const uint8_t*>(aString.BeginReading());
+  // For short strings, calling into Rust is a pessimization, and the SIMD
+  // code won't have a chance to kick in anyway. Additionally, handling the
+  // case of the empty string here makes null-checking ptr unnecessary.
+  // (Passing nullptr to Rust would technically be UB.)
+  if (length < 16) {
+    size_t accu = 0;
+    for (size_t i = 0; i < length; i++) {
+      accu |= ptr[i];
+    }
+    return accu < 0x80;
+  }
+  // This is not quite optimal, because it's not fail-fast when the by-register
+  // check already finds non-ASCII. Also, input to this function is almost
+  // always ASCII, so even the by-register check wouldn't need to be fail-fast
+  // and could be more like the loop above.
+  return length == encoding_ascii_valid_up_to(ptr, length);
+}
 
 /**
  * Returns |true| if |aString| is a valid UTF-8 string.
- * XXX This is not bullet-proof and nor an all-purpose UTF-8 validator.
- * It is mainly written to replace and roughly equivalent to
  *
- *    str.Equals(NS_ConvertUTF16toUTF8(NS_ConvertUTF8toUTF16(str)))
- *
- * (see bug 191541)
- * As such,  it does not check for non-UTF-8 7bit encodings such as
- * ISO-2022-JP and HZ.
- *
- * It rejects sequences with the following errors:
- *
- * byte sequences that cannot be decoded into characters according to
- *   UTF-8's rules (including cases where the input is part of a valid
- *   UTF-8 sequence but starts or ends mid-character)
- * overlong sequences (i.e., cases where a character was encoded
- *   non-canonically by using more bytes than necessary)
- * surrogate codepoints (i.e., the codepoints reserved for
-     representing astral characters in UTF-16)
- * codepoints above the unicode range (i.e., outside the first 17
- *   planes; higher than U+10FFFF), in accordance with
- *   http://tools.ietf.org/html/rfc3629
- * when aRejectNonChar is true (the default), any codepoint whose low
- *   16 bits are 0xFFFE or 0xFFFF
-
+ * Note that this doesn't check whether the string might look like a valid
+ * string in another encoding, too, e.g. ISO-2022-JP.
  *
  * @param aString an 8-bit wide string to scan
- * @param aRejectNonChar a boolean to control the rejection of utf-8
- *        non characters
  */
-bool IsUTF8(const nsACString& aString, bool aRejectNonChar = true);
+inline bool IsUTF8(const nsACString& aString)
+{
+  size_t length = aString.Length();
+  const uint8_t* ptr = reinterpret_cast<const uint8_t*>(aString.BeginReading());
+  // For short strings, calling into Rust is a pessimization, and the SIMD
+  // code won't have a chance to kick in anyway. Additionally, handling the
+  // case of the empty string here makes null-checking ptr unnecessary.
+  // (Passing nullptr to Rust would technically be UB.)
+  if (length < 16) {
+    for (size_t i = 0; i < length; i++) {
+      if (ptr[i] >= 0x80) {
+        ptr += i;
+        length -= i;
+        goto end;
+      }
+    }
+    return true;
+  }
+  end:
+  return length == encoding_utf8_valid_up_to(ptr, length);
+}
 
 bool ParseString(const nsACString& aAstring, char aDelimiter,
                  nsTArray<nsCString>& aArray);
