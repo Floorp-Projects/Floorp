@@ -34,8 +34,19 @@
 //#define ATOMICS_IMPLEMENTED_WITH_SYNC_INTRINSICS
 
 inline bool
+js::jit::AtomicOperations::hasAtomic8()
+{
+    // NOTE, change this when primitives below have been properly changed to
+    // support 8-byte atomics.
+    return false;
+}
+
+inline bool
 js::jit::AtomicOperations::isLockfree8()
 {
+    if (!hasAtomic8())
+        return false;
+
 #ifndef ATOMICS_IMPLEMENTED_WITH_SYNC_INTRINSICS
     MOZ_ASSERT(__atomic_always_lock_free(sizeof(int8_t), 0));
     MOZ_ASSERT(__atomic_always_lock_free(sizeof(int16_t), 0));
