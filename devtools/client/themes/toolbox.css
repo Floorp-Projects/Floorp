@@ -106,6 +106,7 @@
 }
 
 .devtools-tab-label {
+  font-size: 12px;
   mask-image: linear-gradient(to left, transparent 0, black 6px);
   /* Set the end padding on the label to make sure the label gets faded out properly */
   padding-inline-end: 10px;

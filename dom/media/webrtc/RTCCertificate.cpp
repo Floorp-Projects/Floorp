@@ -280,10 +280,6 @@ RTCCertificate::GenerateCertificate(
   RefPtr<WebCryptoTask> task =
       new GenerateRTCCertificateTask(global, aGlobal.Context(),
                                      aOptions, usages, expires);
-  if (!task) {
-    aRv.Throw(NS_ERROR_OUT_OF_MEMORY);
-    return nullptr;
-  }
   task->DispatchWithPromise(p);
   return p.forget();
 }

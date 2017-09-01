@@ -203,6 +203,12 @@ nsPlaceholderFrame::GetParentStyleContextForOutOfFlow(nsIFrame** aProviderFrame)
     }
   }
 
+  return GetLayoutParentStyleForOutOfFlow(aProviderFrame);
+}
+
+nsStyleContext*
+nsPlaceholderFrame::GetLayoutParentStyleForOutOfFlow(nsIFrame** aProviderFrame) const
+{
   nsIFrame* parentFrame = GetParent();
   // Placeholder of backdrop frame is a child of the corresponding top
   // layer frame, and its style context inherits from that frame. In

@@ -128,6 +128,12 @@ def main():
             continue
 
         filename = m.group(1)
+
+        # mozalloc contains calls to memalign. These are ok, so we whitelist
+        # them.
+        if "mozalloc" in filename:
+            continue
+
         fn = m.group(2)
         if filename == 'jsutil.o':
             jsutil_cpp.add(fn)
@@ -188,4 +194,3 @@ def main():
 
 if __name__ == '__main__':
     main()
-
