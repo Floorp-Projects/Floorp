@@ -205,14 +205,14 @@ nsRange::IsNodeSelected(nsINode* aNode, uint32_t aStartOffset,
   nsTHashtable<nsPtrHashKey<Selection>> ancestorSelections;
   uint32_t maxRangeCount = 0;
   for (; n; n = GetNextRangeCommonAncestor(n->GetParentNode())) {
-    nsTHashtable<nsPtrHashKey<nsRange>>* ranges =
-      n->GetExistingCommonAncestorRanges();
+    LinkedList<nsRange>* ranges = n->GetExistingCommonAncestorRanges();
     if (!ranges) {
       continue;
     }
-    for (auto iter = ranges->ConstIter(); !iter.Done(); iter.Next()) {
-      nsRange* range = iter.Get()->GetKey();
-      if (range->IsInSelection() && !range->Collapsed()) {
+    for (nsRange* range : *ranges) {
+      MOZ_ASSERT(range->IsInSelection(),
+                 "Why is this range registeed with a node?");
+      if (!range->Collapsed()) {
         ancestorSelectionRanges.PutEntry(range);
         Selection* selection = range->mSelection;
         ancestorSelections.PutEntry(selection);
@@ -410,12 +410,11 @@ nsRange::RegisterCommonAncestor(nsINode* aNode)
 
   MarkDescendants(aNode);
 
-  UniquePtr<nsTHashtable<nsPtrHashKey<nsRange>>>& ranges =
-    aNode->GetCommonAncestorRangesPtr();
+  UniquePtr<LinkedList<nsRange>>& ranges = aNode->GetCommonAncestorRangesPtr();
   if (!ranges) {
-    ranges = MakeUnique<nsRange::RangeHashTable>();
+    ranges = MakeUnique<LinkedList<nsRange>>();
   }
-  ranges->PutEntry(this);
+  ranges->insertBack(this);
   aNode->SetCommonAncestorForRangeInSelection();
 }
 
@@ -425,30 +424,28 @@ nsRange::UnregisterCommonAncestor(nsINode* aNode)
   NS_PRECONDITION(aNode, "bad arg");
   NS_ASSERTION(aNode->IsCommonAncestorForRangeInSelection(), "wrong node");
   MOZ_DIAGNOSTIC_ASSERT(aNode == mRegisteredCommonAncestor, "wrong node");
-  nsTHashtable<nsPtrHashKey<nsRange>>* ranges =
-    aNode->GetExistingCommonAncestorRanges();
+  LinkedList<nsRange>* ranges = aNode->GetExistingCommonAncestorRanges();
   MOZ_ASSERT(ranges);
-  NS_ASSERTION(ranges->GetEntry(this), "unknown range");
 
   mRegisteredCommonAncestor = nullptr;
 
-  bool isNativeAnon = aNode->IsInNativeAnonymousSubtree();
-  bool removed = false;
-
-  if (ranges->Count() == 1) {
-    aNode->ClearCommonAncestorForRangeInSelection();
-    if (!isNativeAnon) {
-      // For nodes which are in native anonymous subtrees, we optimize away the
-      // cost of deallocating the hashtable here because we may need to create
-      // it again shortly afterward.  We don't do this for all nodes in order
-      // to avoid the additional memory usage unconditionally.
-      aNode->GetCommonAncestorRangesPtr().reset();
-      removed = true;
+#ifdef DEBUG
+  bool found = false;
+  for (nsRange* range : *ranges) {
+    if (range == this) {
+      found = true;
+      break;
     }
-    UnmarkDescendants(aNode);
   }
-  if (!removed) {
-    ranges->RemoveEntry(this);
+  MOZ_ASSERT(found,
+             "We should be in the list on our registered common ancestor");
+#endif // DEBUG
+
+  remove();
+
+  if (ranges->isEmpty()) {
+    aNode->ClearCommonAncestorForRangeInSelection();
+    UnmarkDescendants(aNode);
   }
 }
 
