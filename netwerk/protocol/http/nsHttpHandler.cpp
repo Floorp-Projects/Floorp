@@ -2275,6 +2275,15 @@ nsHttpHandler::GetMisc(nsACString &value)
     return NS_OK;
 }
 
+NS_IMETHODIMP
+nsHttpHandler::DontPreconnect(nsACString const &host, int32_t port)
+{
+    if (mConnMgr) {
+        mConnMgr->DontPreconnect(host, port);
+    }
+    return NS_OK;
+};
+
 //-----------------------------------------------------------------------------
 // nsHttpHandler::nsIObserver
 //-----------------------------------------------------------------------------

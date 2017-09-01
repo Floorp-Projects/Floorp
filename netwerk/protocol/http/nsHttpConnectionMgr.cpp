@@ -3232,6 +3232,32 @@ bool nsHttpConnectionMgr::IsConnEntryUnderPressure(nsHttpConnectionInfo *connInf
     return transactions && !transactions->IsEmpty();
 }
 
+void nsHttpConnectionMgr::DontPreconnect(nsACString const & host, int32_t port)
+{
+    MOZ_ASSERT(OnSocketThread(), "not on socket thread");
+
+    for (auto iter = mCT.Iter(); !iter.Done(); iter.Next()) {
+        RefPtr<nsConnectionEntry> ent = iter.Data();
+        nsHttpConnectionInfo* info = ent->mConnInfo;
+
+        if ((info->GetOrigin() == host && info->OriginPort() == port) ||
+            (info->ProxyInfo() && info->GetProxyHost() == host && info->ProxyPort() == port)) {
+
+            LOG(("nsHttpConnectionMgr::DontPreconnect disabling preconnects on %s",
+                 info->HashKey().get()));
+
+            ent->mDisallowPreconnects = true;
+        }
+    }
+}
+
+bool nsHttpConnectionMgr::IsSpeculativeConnectDisabled(nsHttpConnectionInfo *connInfo)
+{
+    nsConnectionEntry *ent = mCT.GetWeak(connInfo->HashKey());
+    return ent && ent->mDisallowPreconnects;
+}
+
+
 bool nsHttpConnectionMgr::IsThrottleTickerNeeded()
 {
     LOG(("nsHttpConnectionMgr::IsThrottleTickerNeeded"));
@@ -3675,6 +3701,11 @@ nsHttpConnectionMgr::OnMsgSpeculativeConnect(int32_t, ARefBase *param)
     nsConnectionEntry *ent =
         GetOrCreateConnectionEntry(args->mTrans->ConnectionInfo(), false);
 
+    if (ent->mDisallowPreconnects) {
+        LOG(("  explicitely disabled for this host:port"));
+        return;
+    }
+
     uint32_t parallelSpeculativeConnectLimit =
         gHttpHandler->ParallelSpeculativeConnectLimit();
     bool ignoreIdle = false;
@@ -3892,6 +3923,10 @@ nsHalfOpenSocket::SetupStreams(nsISocketTransport **transport,
 
     if (!Allow1918()) {
         tmpFlags |= nsISocketTransport::DISABLE_RFC1918;
+    }
+
+    if (mSpeculative) {
+        tmpFlags |= nsISocketTransport::SPECULATIVE;
     }
 
     if (!isBackup && mEnt->mUseFastOpen) {
@@ -4958,6 +4993,7 @@ nsConnectionEntry::nsConnectionEntry(nsHttpConnectionInfo *ci)
     , mPreferIPv6(false)
     , mUsedForConnection(false)
     , mDoNotDestroy(false)
+    , mDisallowPreconnects(false)
 {
     MOZ_COUNT_CTOR(nsConnectionEntry);
 
