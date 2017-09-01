@@ -397,7 +397,7 @@ private:
     Mutex mMutex;
     // The platform decoder.
     RefPtr<MediaDataDecoder> mDecoder;
-    const char* mDescription;
+    nsCString mDescription;
     void ShutdownDecoder();
 
     // Only accessed from reader's task queue.
