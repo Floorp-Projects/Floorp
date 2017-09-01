@@ -178,7 +178,7 @@ private:
   nsresult GetDocumentContentRootNode(nsIDOMNode **aNode);
   nsresult CreateDocumentContentRange(nsRange** aRange);
   nsresult CreateDocumentContentRootToNodeOffsetRange(nsIDOMNode* aParent,
-                                                      int32_t aOffset,
+                                                      uint32_t aOffset,
                                                       bool aToStart,
                                                       nsRange** aRange);
   nsresult CreateDocumentContentIterator(nsIContentIterator **aIterator);

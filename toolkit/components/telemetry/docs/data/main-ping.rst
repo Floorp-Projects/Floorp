@@ -427,11 +427,9 @@ Contains special statistics gathered by WebRTC related components.
 So far only a bitmask for the ICE candidate type present in a successful or
 failed WebRTC connection is getting reported through C++ code as
 IceCandidatesStats, because the required bitmask is too big to be represented
-in a regular enum histogram. Further this data differentiates between Loop
-(aka Firefox Hello) connections and everything else, which is categorized as
-WebRTC.
+in a regular enum histogram.
 
-Note: in most cases the webrtc and loop dictionaries inside of
+Note: in most cases the webrtc dictionary inside of
 IceCandidatesStats will simply be empty as the user has not used any WebRTC
 PeerConnection at all during the ping report time.
 
@@ -449,15 +447,6 @@ Structure:
             "failureCount": 1
           }
         },
-        "loop": {
-          "2349346359": {
-            "successCount": 3
-          },
-          "73424": {
-            "successCount": 1,
-            "failureCount": 5
-          }
-        }
       }
     },
 

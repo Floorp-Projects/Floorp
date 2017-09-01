@@ -16,6 +16,8 @@ XPCOMUtils.defineLazyModuleGetter(this, "ShellService",
                                   "resource:///modules/ShellService.jsm");
 XPCOMUtils.defineLazyServiceGetter(this, "WindowsUIUtils",
                                    "@mozilla.org/windows-ui-utils;1", "nsIWindowsUIUtils");
+XPCOMUtils.defineLazyModuleGetter(this, "UpdatePing",
+                                  "resource://gre/modules/UpdatePing.jsm");
 
 const nsISupports            = Components.interfaces.nsISupports;
 
@@ -491,6 +493,7 @@ nsBrowserContentHandler.prototype = {
       // to have the overridePage's content vary depending on the version we're
       // upgrading from.
       let old_mstone = Services.prefs.getCharPref("browser.startup.homepage_override.mstone", "unknown");
+      let old_buildId = Services.prefs.getCharPref("browser.startup.homepage_override.buildID", "unknown");
       override = needHomepageOverride(prefb);
       if (override != OVERRIDE_NONE) {
         switch (override) {
@@ -512,10 +515,19 @@ nsBrowserContentHandler.prototype = {
             willRestoreSession = ss.isAutomaticRestoreEnabled();
 
             overridePage = Services.urlFormatter.formatURLPref("startup.homepage_override_url");
-            if (prefb.prefHasUserValue("app.update.postupdate"))
+            if (prefb.prefHasUserValue("app.update.postupdate")) {
               overridePage = getPostUpdateOverridePage(overridePage);
+              // Send the update ping to signal that the update was successful.
+              UpdatePing.handleUpdateSuccess(old_mstone, old_buildId);
+            }
 
             overridePage = overridePage.replace("%OLD_VERSION%", old_mstone);
+            break;
+          case OVERRIDE_NEW_BUILD_ID:
+            if (prefb.prefHasUserValue("app.update.postupdate")) {
+              // Send the update ping to signal that the update was successful.
+              UpdatePing.handleUpdateSuccess(old_mstone, old_buildId);
+            }
             break;
         }
       }

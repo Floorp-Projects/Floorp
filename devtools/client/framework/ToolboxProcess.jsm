@@ -21,6 +21,9 @@ XPCOMUtils.defineLazyGetter(this, "Telemetry", function () {
 XPCOMUtils.defineLazyGetter(this, "EventEmitter", function () {
   return require("devtools/shared/old-event-emitter");
 });
+XPCOMUtils.defineLazyGetter(this, "system", function () {
+  return require("devtools/shared/system");
+});
 const promise = require("promise");
 const Services = require("Services");
 
@@ -265,7 +268,7 @@ BrowserToolboxProcess.prototype = {
     // well.
     //
     // As an approximation of "isLocalBuild", check for an unofficial build.
-    if (!Services.appinfo.isOfficial) {
+    if (!system.constants.MOZILLA_OFFICIAL) {
       args.push("-purgecaches");
     }
 

@@ -287,6 +287,7 @@ const BackgroundPageThumbs = {
     });
 
     browser.messageManager.loadFrameScript(FRAME_SCRIPT_URL, false);
+    browser.docShellIsActive = false;
     this._thumbBrowser = browser;
   },
 

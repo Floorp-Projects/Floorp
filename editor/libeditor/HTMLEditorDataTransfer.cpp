@@ -136,16 +136,14 @@ HTMLEditor::LoadHTML(const nsAString& aInputString)
     rv = range->CreateContextualFragment(aInputString, getter_AddRefs(docfrag));
     NS_ENSURE_SUCCESS(rv, rv);
     // put the fragment into the document
-    nsCOMPtr<nsIDOMNode> parent;
-    rv = range->GetStartContainer(getter_AddRefs(parent));
-    NS_ENSURE_SUCCESS(rv, rv);
+    nsCOMPtr<nsINode> parent = range->GetStartContainer();
     NS_ENSURE_TRUE(parent, NS_ERROR_NULL_POINTER);
     uint32_t childOffset = range->StartOffset();
 
     nsCOMPtr<nsIDOMNode> nodeToInsert;
     docfrag->GetFirstChild(getter_AddRefs(nodeToInsert));
     while (nodeToInsert) {
-      rv = InsertNode(nodeToInsert, parent,
+      rv = InsertNode(nodeToInsert, GetAsDOMNode(parent),
                       static_cast<int32_t>(childOffset++));
       NS_ENSURE_SUCCESS(rv, rv);
       docfrag->GetFirstChild(getter_AddRefs(nodeToInsert));

@@ -417,8 +417,15 @@ FormAutofillParent.prototype = {
     //   - User fills form manually
     if (creditCard.guid &&
         Object.keys(creditCard.record).every(key => creditCard.untouchedFields.includes(key))) {
+      // Add probe to record credit card autofill(without modification).
+      Services.telemetry.scalarAdd("formautofill.creditCards.fill_type_autofill", 1);
       return;
     }
+
+    // Add the probe to record credit card manual filling or autofill but modified case.
+    let ccScalar = creditCard.guid ? "formautofill.creditCards.fill_type_autofill_modified" :
+                                     "formautofill.creditCards.fill_type_manual";
+    Services.telemetry.scalarAdd(ccScalar, 1);
 
     let state = await FormAutofillDoorhanger.show(target, "creditCard");
     if (state == "cancel") {
