@@ -1515,11 +1515,7 @@ pref("experiments.manifest.uri", "https://telemetry-experiment.cdn.mozilla.net/m
 pref("experiments.supported", true);
 
 // Ping Centre Telemetry settings.
-#ifdef NIGHTLY_BUILD
 pref("browser.ping-centre.telemetry", true);
-#else
-pref("browser.ping-centre.telemetry", false);
-#endif
 pref("browser.ping-centre.log", false);
 pref("browser.ping-centre.staging.endpoint", "https://onyx_tiles.stage.mozaws.net/v3/links/ping-centre");
 pref("browser.ping-centre.production.endpoint", "https://tiles.services.mozilla.com/v3/links/ping-centre");
