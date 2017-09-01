@@ -914,7 +914,13 @@ ContentParent* gContentParent; //long-lived, manually refcounted
 TestShellParent* GetOrCreateTestShellParent()
 {
     if (!gContentParent) {
-        RefPtr<ContentParent> parent = ContentParent::GetNewOrUsedBrowserProcess();
+        // Use a "web" child process by default.  File a bug if you don't like
+        // this and you're sure you wouldn't be better off writing a "browser"
+        // chrome mochitest where you can have multiple types of content
+        // processes.
+        RefPtr<ContentParent> parent =
+            ContentParent::GetNewOrUsedBrowserProcess(
+                NS_LITERAL_STRING(DEFAULT_REMOTE_TYPE));
         parent.forget(&gContentParent);
     } else if (!gContentParent->IsAlive()) {
         return nullptr;
