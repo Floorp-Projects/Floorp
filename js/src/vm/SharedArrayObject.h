@@ -45,8 +45,8 @@ class SharedArrayRawBuffer
 {
   private:
     mozilla::Atomic<uint32_t, mozilla::ReleaseAcquire> refcount_;
-    uint32_t length;
-    bool preparedForAsmJS;
+    uint32_t length_;
+    bool preparedForAsmJS_;
 
     // A list of structures representing tasks waiting on some
     // location within this buffer.
@@ -55,15 +55,15 @@ class SharedArrayRawBuffer
   protected:
     SharedArrayRawBuffer(uint8_t* buffer, uint32_t length, bool preparedForAsmJS)
       : refcount_(1),
-        length(length),
-        preparedForAsmJS(preparedForAsmJS),
+        length_(length),
+        preparedForAsmJS_(preparedForAsmJS),
         waiters_(nullptr)
     {
         MOZ_ASSERT(buffer == dataPointerShared());
     }
 
   public:
-    static SharedArrayRawBuffer* New(JSContext* cx, uint32_t length);
+    static SharedArrayRawBuffer* New(uint32_t length);
 
     // This may be called from multiple threads.  The caller must take
     // care of mutual exclusion.
@@ -83,11 +83,11 @@ class SharedArrayRawBuffer
     }
 
     uint32_t byteLength() const {
-        return length;
+        return length_;
     }
 
     bool isPreparedForAsmJS() const {
-        return preparedForAsmJS;
+        return preparedForAsmJS_;
     }
 
     uint32_t refcount() const { return refcount_; }
@@ -186,6 +186,10 @@ bool IsSharedArrayBuffer(HandleObject o);
 bool IsSharedArrayBuffer(JSObject* o);
 
 SharedArrayBufferObject& AsSharedArrayBuffer(HandleObject o);
+
+typedef Rooted<SharedArrayBufferObject*> RootedSharedArrayBufferObject;
+typedef Handle<SharedArrayBufferObject*> HandleSharedArrayBufferObject;
+typedef MutableHandle<SharedArrayBufferObject*> MutableHandleSharedArrayBufferObject;
 
 } // namespace js
 

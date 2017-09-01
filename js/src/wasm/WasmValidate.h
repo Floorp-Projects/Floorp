@@ -111,7 +111,10 @@ struct ModuleEnvironment
         return funcSigs.length() - funcImportGlobalDataOffsets.length();
     }
     bool usesMemory() const {
-        return UsesMemory(memoryUsage);
+        return memoryUsage != MemoryUsage::None;
+    }
+    bool usesSharedMemory() const {
+        return memoryUsage == MemoryUsage::Shared;
     }
     bool isAsmJS() const {
         return kind == ModuleKind::AsmJS;
