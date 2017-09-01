@@ -224,8 +224,7 @@ GeckoRestyleManager::RestyleElement(Element*               aElement,
   if (aMinHint & nsChangeHint_ReconstructFrame) {
     FrameConstructor()->RecreateFramesForContent(
       aElement,
-      nsCSSFrameConstructor::InsertionKind::Sync,
-      nsCSSFrameConstructor::REMOVE_FOR_RECONSTRUCTION);
+      nsCSSFrameConstructor::InsertionKind::Sync);
   } else if (aPrimaryFrame) {
     ComputeAndProcessStyleChange(aPrimaryFrame, aMinHint, aRestyleTracker,
                                  aRestyleHint, aRestyleHintData);
