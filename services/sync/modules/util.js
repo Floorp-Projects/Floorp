@@ -578,11 +578,19 @@ this.Utils = {
       "chrome://branding/locale/brand.properties");
     let brandName = brand.GetStringFromName("brandShortName");
 
+    // The DNS service may fail to provide a hostname in edge-cases we don't
+    // fully understand - bug 1391488.
+    let hostname;
+    try {
+      // hostname of the system, usually assigned by the user or admin
+      hostname = Cc["@mozilla.org/network/dns-service;1"].getService(Ci.nsIDNSService).myHostName;
+    } catch (ex) {
+      Cu.reportError(ex);
+    }
     let system =
       // 'device' is defined on unix systems
       Cc["@mozilla.org/system-info;1"].getService(Ci.nsIPropertyBag2).get("device") ||
-      // hostname of the system, usually assigned by the user or admin
-      Cc["@mozilla.org/network/dns-service;1"].getService(Ci.nsIDNSService).myHostName ||
+      hostname ||
       // fall back on ua info string
       Cc["@mozilla.org/network/protocol;1?name=http"].getService(Ci.nsIHttpProtocolHandler).oscpu;
 
