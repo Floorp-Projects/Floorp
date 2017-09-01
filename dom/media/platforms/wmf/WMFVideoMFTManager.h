@@ -40,14 +40,14 @@ public:
 
   TrackInfo::TrackType GetType() override { return TrackInfo::kVideoTrack; }
 
-  const char* GetDescriptionName() const override
+  nsCString GetDescriptionName() const override
   {
     nsCString failureReason;
     return IsHardwareAccelerated(failureReason)
       ? mAMDVP9InUse
-        ? "AMD VP9 hardware video decoder"
-        : "wmf hardware video decoder"
-      : "wmf software video decoder";
+        ? NS_LITERAL_CSTRING("AMD VP9 hardware video decoder")
+        : NS_LITERAL_CSTRING("wmf hardware video decoder")
+      : NS_LITERAL_CSTRING("wmf software video decoder");
   }
 
   void Flush() override
