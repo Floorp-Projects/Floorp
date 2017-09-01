@@ -630,12 +630,12 @@ protected:
   }
 
   /**
-   * For a range for which IsInSelection() is true, return the common
-   * ancestor for the range.  This method uses the selection bits and
-   * node slots to quickly find the ancestor.  That is, it's a faster
-   * version of GetCommonAncestor that only works for ranges in a
-   * Selection.  The method will assert and the behavior is undefined if
-   * called on a range where IsInSelection() is false.
+   * For a range for which IsInSelection() is true, return the common ancestor
+   * for the range, which we had to compute when the common ancestor changed or
+   * IsInSelection became true, so we could register with it.  That is, it's a
+   * faster version of GetCommonAncestor that only works for ranges in a
+   * Selection.  The method will assert and the behavior is undefined if called
+   * on a range where IsInSelection() is false.
    */
   nsINode* GetRegisteredCommonAncestor();
 
@@ -676,26 +676,24 @@ protected:
   {
     explicit AutoInvalidateSelection(nsRange* aRange) : mRange(aRange)
     {
-#ifdef DEBUG
-      mWasInSelection = mRange->IsInSelection();
-#endif
-      if (!mRange->IsInSelection() || mIsNested) {
+      if (!mRange->IsInSelection() || sIsNested) {
         return;
       }
-      mIsNested = true;
+      sIsNested = true;
       mCommonAncestor = mRange->GetRegisteredCommonAncestor();
     }
     ~AutoInvalidateSelection();
     nsRange* mRange;
     RefPtr<nsINode> mCommonAncestor;
-#ifdef DEBUG
-    bool mWasInSelection;
-#endif
-    static bool mIsNested;
+    static bool sIsNested;
   };
 
   nsCOMPtr<nsIDocument> mOwner;
   nsCOMPtr<nsINode> mRoot;
+  // mRegisteredCommonAncestor is only non-null when the range
+  // IsInSelection().  It's kept alive via mStartContainer/mEndContainer,
+  // because we update it any time those could become disconnected from it.
+  nsINode* MOZ_NON_OWNING_REF mRegisteredCommonAncestor;
   RefPtr<mozilla::dom::Selection> mSelection;
 
   // These raw pointers are used to remember a child that is about
