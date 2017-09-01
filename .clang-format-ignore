@@ -13,7 +13,7 @@
 ^js/src/jsapi-tests/.*
 # See bug 1395584
 ^js/src/vm/Opcodes.h
-# Ignored because of bug 1342657
+# Ignored because of bug 1342657
 ^layout/style/nsCSSPropAliasList.h
 # Ignored because of bug 1342657
 ^layout/style/nsCSSPropList.h
