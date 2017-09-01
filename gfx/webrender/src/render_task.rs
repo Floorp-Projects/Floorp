@@ -68,6 +68,16 @@ impl RenderTaskTree {
             }
         }
 
+        // If this task can be shared between multiple
+        // passes, render it in the first pass so that
+        // it is available to all subsequent passes.
+        let pass_index = if task.is_shared() {
+            debug_assert!(task.children.is_empty());
+            0
+        } else {
+            pass_index
+        };
+
         let pass = &mut passes[pass_index];
         pass.add_render_task(id);
     }
@@ -510,6 +520,29 @@ impl RenderTask {
 
             RenderTaskKind::Alias(..) => {
                 panic!("BUG: target_kind() called on invalidated task");
+            }
+        }
+    }
+
+    // Check if this task wants to be made available as an input
+    // to all passes (except the first) in the render task tree.
+    // To qualify for this, the task needs to have no children / dependencies.
+    // Currently, this is only supported for A8 targets, but it can be
+    // trivially extended to also support RGBA8 targets in the future
+    // if we decide that is useful.
+    pub fn is_shared(&self) -> bool {
+        match self.kind {
+            RenderTaskKind::Alpha(..) |
+            RenderTaskKind::CachePrimitive(..) |
+            RenderTaskKind::VerticalBlur(..) |
+            RenderTaskKind::Readback(..) |
+            RenderTaskKind::HorizontalBlur(..) => false,
+
+            RenderTaskKind::CacheMask(..) |
+            RenderTaskKind::BoxShadow(..) => true,
+
+            RenderTaskKind::Alias(..) => {
+                panic!("BUG: is_shared() called on aliased task");
             }
         }
     }
