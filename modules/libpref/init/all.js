@@ -664,11 +664,7 @@ pref("layers.geometry.d3d11.enabled", true);
 pref("apz.allow_checkerboarding", true);
 pref("apz.allow_immediate_handoff", true);
 pref("apz.allow_zooming", false);
-#ifdef NIGHTLY_BUILD
 pref("apz.autoscroll.enabled", true);
-#else
-pref("apz.autoscroll.enabled", false);
-#endif
 
 // Whether to lock touch scrolling to one axis at a time
 // 0 = FREE (No locking at all)
