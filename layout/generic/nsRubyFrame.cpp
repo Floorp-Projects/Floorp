@@ -315,11 +315,6 @@ nsRubyFrame::ReflowSegment(nsPresContext* aPresContext,
     ReflowOutput textMetrics(aReflowInput);
     ReflowInput textReflowInput(aPresContext, aReflowInput, textContainer,
                                       availSize.ConvertTo(rtcWM, lineWM));
-    // FIXME We probably shouldn't be using the same nsLineLayout for
-    //       the text containers. But it should be fine now as we are
-    //       not actually using this line layout to reflow something,
-    //       but just read the writing mode from it.
-    textReflowInput.mLineLayout = aReflowInput.mLineLayout;
     textContainer->Reflow(aPresContext, textMetrics,
                           textReflowInput, textReflowStatus);
     // Ruby text containers always return complete reflow status even when
