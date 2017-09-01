@@ -7,6 +7,7 @@ package org.mozilla.gecko.tabs;
 import org.mozilla.gecko.R;
 import org.mozilla.gecko.Tab;
 import org.mozilla.gecko.Tabs;
+import org.mozilla.gecko.widget.HoverDelegateWithReset;
 import org.mozilla.gecko.widget.TabThumbnailWrapper;
 import org.mozilla.gecko.widget.TouchDelegateWithReset;
 import org.mozilla.gecko.widget.themed.ThemedRelativeLayout;
@@ -18,6 +19,7 @@ import android.support.v4.widget.TextViewCompat;
 import android.support.v7.widget.ViewUtils;
 import android.util.AttributeSet;
 import android.util.TypedValue;
+import android.view.MotionEvent;
 import android.view.View;
 import android.view.ViewTreeObserver;
 import android.widget.Checkable;
@@ -36,6 +38,7 @@ public class TabsLayoutItemView extends LinearLayout
     private TabsPanelThumbnailView mThumbnail;
     private ImageView mCloseButton;
     private TabThumbnailWrapper mThumbnailWrapper;
+    private HoverDelegateWithReset mHoverDelegate;
 
     public TabsLayoutItemView(Context context, AttributeSet attrs) {
         super(context, attrs);
@@ -113,6 +116,7 @@ public class TabsLayoutItemView extends LinearLayout
                 final Rect hitRect = getHitRectRelatively(targetHitArea);
 
                 setTouchDelegate(new TouchDelegateWithReset(hitRect, mCloseButton));
+                setHoverDelegate(new HoverDelegateWithReset(hitRect, mCloseButton));
 
                 return true;
             }
@@ -127,6 +131,24 @@ public class TabsLayoutItemView extends LinearLayout
         hitRect.left = isRtl ? 0 : getWidth() - targetHitArea;
         hitRect.bottom = targetHitArea;
         return hitRect;
+    }
+
+    /**
+     * Sets the HoverDelegate for this View.
+     */
+    public void setHoverDelegate(HoverDelegateWithReset delegate) {
+        mHoverDelegate = delegate;
+    }
+
+    @Override
+    public boolean onHoverEvent(MotionEvent event) {
+        if (mHoverDelegate != null) {
+            if (mHoverDelegate.onHoverEvent(event)) {
+                return true;
+            }
+        }
+
+        return super.onHoverEvent(event);
     }
 
     protected void assignValues(Tab tab)  {
