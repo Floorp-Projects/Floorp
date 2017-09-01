@@ -286,6 +286,9 @@ public class GeckoViewActivity extends Activity {
                                  final TargetWindow where) {
             Log.d(LOGTAG, "onLoadUri=" + uri +
                           " where=" + where);
+            if (where != TargetWindow.NEW) {
+                return false;
+            }
             view.loadUri(uri);
             return true;
         }
