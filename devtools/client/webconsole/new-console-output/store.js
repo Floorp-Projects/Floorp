@@ -54,6 +54,7 @@ function configureStore(hud, options = {}) {
     ui: new UiState({
       filterBarVisible: Services.prefs.getBoolPref(PREFS.UI.FILTER_BAR),
       networkMessageActiveTabId: "headers",
+      persistLogs: Services.prefs.getBoolPref(PREFS.UI.PERSIST),
     })
   };
 
