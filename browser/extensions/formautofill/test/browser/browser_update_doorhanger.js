@@ -136,3 +136,38 @@ add_task(async function test_submit_untouched_fields() {
   is(addresses[0].organization, "Organization", "organization should change");
   is(addresses[0].tel, "+16172535702", "tel should remain unchanged");
 });
+
+add_task(async function test_submit_reduced_fields() {
+  let addresses = await getAddresses();
+  is(addresses.length, 2, "2 addresses in storage");
+
+  let url = BASE_URL + "autocomplete_simple_basic.html";
+  await BrowserTestUtils.withNewTab({gBrowser, url},
+    async function(browser) {
+      let promiseShown = BrowserTestUtils.waitForEvent(PopupNotifications.panel,
+                                                       "popupshown");
+      await openPopupOn(browser, "form#simple input[name=tel]");
+      await BrowserTestUtils.synthesizeKey("VK_DOWN", {}, browser);
+      await BrowserTestUtils.synthesizeKey("VK_RETURN", {}, browser);
+
+      await ContentTask.spawn(browser, null, async function() {
+        let form = content.document.querySelector("form#simple");
+        let tel = form.querySelector("input[name=tel]");
+        await new Promise(resolve => setTimeout(resolve, 1000));
+        tel.setUserInput("123456789");
+
+        // Wait 1000ms before submission to make sure the input value applied
+        await new Promise(resolve => setTimeout(resolve, 1000));
+        form.querySelector("input[type=submit]").click();
+      });
+
+      await promiseShown;
+      await clickDoorhangerButton(MAIN_BUTTON);
+    }
+  );
+
+  addresses = await getAddresses();
+  is(addresses.length, 2, "Still 2 addresses in storage");
+  is(addresses[0].tel, "123456789", "tel should should be changed");
+  is(addresses[0]["postal-code"], "02139", "postal code should be kept");
+});
