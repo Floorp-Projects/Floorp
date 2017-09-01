@@ -7,8 +7,10 @@
 #ifndef FennecJNINatives_h
 #define FennecJNINatives_h
 
+#ifndef MOZ_PREPROCESSOR
 #include "FennecJNIWrappers.h"
 #include "mozilla/jni/Natives.h"
+#endif
 
 namespace mozilla {
 namespace java {

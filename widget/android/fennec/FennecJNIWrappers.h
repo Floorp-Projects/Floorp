@@ -7,7 +7,9 @@
 #ifndef FennecJNIWrappers_h
 #define FennecJNIWrappers_h
 
+#ifndef MOZ_PREPROCESSOR
 #include "mozilla/jni/Refs.h"
+#endif
 
 namespace mozilla {
 namespace java {
