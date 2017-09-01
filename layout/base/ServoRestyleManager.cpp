@@ -1488,20 +1488,6 @@ ServoRestyleManager::DoReparentStyleContext(nsIFrame* aFrame,
   nsIFrame* providerFrame;
   nsStyleContext* newParentContext =
     aFrame->GetParentStyleContext(&providerFrame);
-  if (!newParentContext) {
-    // No need to do anything here.
-#ifdef DEBUG
-    // Make sure we have no children, so we really know there is nothing to do.
-    nsIFrame::ChildListIterator lists(aFrame);
-    for (; !lists.IsDone(); lists.Next()) {
-      MOZ_ASSERT(lists.CurrentList().IsEmpty(),
-                 "Failing to reparent style context for child of "
-                 "non-inheriting anon box");
-    }
-#endif // DEBUG
-    return;
-  }
-
   // If our provider is our child, we want to reparent it first, because we
   // inherit style from it.
   bool isChild = providerFrame && providerFrame->GetParent() == aFrame;
@@ -1514,6 +1500,17 @@ ServoRestyleManager::DoReparentStyleContext(nsIFrame* aFrame,
     providerChild = providerFrame;
     MOZ_ASSERT(!providerFrame->HasAnyStateBits(NS_FRAME_OUT_OF_FLOW),
                "Out of flow provider?");
+  }
+
+  if (!newParentContext) {
+    // No need to do anything here for this frame, but we should still reparent
+    // its descendants, because those may have styles that inherit from the
+    // parent of this frame (e.g. non-anonymous columns in an anonymous
+    // colgroup).
+    MOZ_ASSERT(aFrame->StyleContext()->IsNonInheritingAnonBox(),
+               "Why did this frame not end up with a parent context?");
+    ReparentFrameDescendants(aFrame, providerChild, aStyleSet);
+    return;
   }
 
   bool isElement = aFrame->GetContent()->IsElement();
@@ -1605,19 +1602,27 @@ ServoRestyleManager::DoReparentStyleContext(nsIFrame* aFrame,
   // reparenting the table wrapper frame.  So no need to
   // UpdateStyleOfOwnedAnonBoxes() here.
 
+  ReparentFrameDescendants(aFrame, providerChild, aStyleSet);
+
+  // We do not need to do the equivalent of UpdateFramePseudoElementStyles,
+  // because those are hadled by our descendant walk.
+}
+
+void
+ServoRestyleManager::ReparentFrameDescendants(nsIFrame* aFrame,
+                                              nsIFrame* aProviderChild,
+                                              ServoStyleSet& aStyleSet)
+{
   nsIFrame::ChildListIterator lists(aFrame);
   for (; !lists.IsDone(); lists.Next()) {
     for (nsIFrame* child : lists.CurrentList()) {
       // only do frames that are in flow
       if (!(child->GetStateBits() & NS_FRAME_OUT_OF_FLOW) &&
-          child != providerChild) {
+          child != aProviderChild) {
         DoReparentStyleContext(child, aStyleSet);
       }
     }
   }
-
-  // We do not need to do the equivalent of UpdateFramePseudoElementStyles,
-  // because those are hadled by our descendant walk.
 }
 
 } // namespace mozilla
