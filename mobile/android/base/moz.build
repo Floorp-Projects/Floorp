@@ -148,6 +148,7 @@ thirdparty_source_dir = TOPSRCDIR + '/mobile/android/thirdparty/'
 
 constants_jar = add_java_jar('constants')
 constants_jar.sources += [geckoview_source_dir + 'java/org/mozilla/gecko/' + x for x in [
+    'annotation/BuildFlag.java',
     'annotation/JNITarget.java',
     'annotation/ReflectionTarget.java',
     'annotation/RobocopTarget.java',

@@ -4,6 +4,8 @@
 
 package org.mozilla.gecko.annotationProcessors.classloader;
 
+import java.lang.annotation.Annotation;
+import java.lang.reflect.Method;
 import java.util.Iterator;
 
 /**
@@ -67,7 +69,27 @@ public class JarClassIterator implements Iterator<ClassWithOptions> {
                 return fillLookAheadIfPossible();
             }
 
-            lookAhead = new ClassWithOptions(ret, ret.getSimpleName());
+            String ifdef = "";
+            for (final Annotation annotation : ret.getDeclaredAnnotations()) {
+                Class<? extends Annotation> annotationType = annotation.annotationType();
+                if (!annotationType.getName().equals(
+                        "org.mozilla.gecko.annotation.BuildFlag")) {
+                    continue;
+                }
+
+                try {
+                    final Method valueMethod = annotationType.getDeclaredMethod("value");
+                    valueMethod.setAccessible(true);
+                    ifdef = (String) valueMethod.invoke(annotation);
+                    break;
+                } catch (final Exception e) {
+                    System.err.println("Unable to read BuildFlag annotation.");
+                    e.printStackTrace(System.err);
+                    System.exit(1);
+                }
+            }
+
+            lookAhead = new ClassWithOptions(ret, ret.getSimpleName(), ifdef);
             return true;
         } catch (ClassNotFoundException e) {
             System.err.println("Unable to enumerate class: " + className + ". Corrupted jar file?");
