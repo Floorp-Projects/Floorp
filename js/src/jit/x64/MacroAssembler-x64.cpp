@@ -790,7 +790,8 @@ MacroAssembler::wasmLoad(const wasm::MemoryAccessDesc& access, Operand srcAddr, 
 void
 MacroAssembler::wasmLoadI64(const wasm::MemoryAccessDesc& access, Operand srcAddr, Register64 out)
 {
-    MOZ_ASSERT(!access.isAtomic());
+    memoryBarrier(access.barrierBefore());
+
     MOZ_ASSERT(!access.isSimd());
 
     size_t loadOffset = size();
@@ -829,6 +830,8 @@ MacroAssembler::wasmLoadI64(const wasm::MemoryAccessDesc& access, Operand srcAdd
         MOZ_CRASH("unexpected array type");
     }
     append(access, loadOffset, framePushed());
+
+    memoryBarrier(access.barrierAfter());
 }
 
 void
