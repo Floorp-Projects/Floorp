@@ -45,7 +45,7 @@ SharedArrayAllocSize(uint32_t length)
 }
 
 SharedArrayRawBuffer*
-SharedArrayRawBuffer::New(JSContext* cx, uint32_t length)
+SharedArrayRawBuffer::New(uint32_t length)
 {
     // The value (uint32_t)-1 is used as a signal in various places,
     // so guard against it on principle.
@@ -69,22 +69,22 @@ SharedArrayRawBuffer::New(JSContext* cx, uint32_t length)
     uint8_t* buffer = reinterpret_cast<uint8_t*>(p) + gc::SystemPageSize();
     uint8_t* base = buffer - sizeof(SharedArrayRawBuffer);
     SharedArrayRawBuffer* rawbuf = new (base) SharedArrayRawBuffer(buffer, length, preparedForAsmJS);
-    MOZ_ASSERT(rawbuf->length == length); // Deallocation needs this
+    MOZ_ASSERT(rawbuf->length_ == length); // Deallocation needs this
     return rawbuf;
 }
 
 bool
 SharedArrayRawBuffer::addReference()
 {
-    MOZ_RELEASE_ASSERT(this->refcount_ > 0);
+    MOZ_RELEASE_ASSERT(refcount_ > 0);
 
     // Be careful never to overflow the refcount field.
     for (;;) {
-        uint32_t old_refcount = this->refcount_;
-        uint32_t new_refcount = old_refcount+1;
+        uint32_t old_refcount = refcount_;
+        uint32_t new_refcount = old_refcount + 1;
         if (new_refcount == 0)
             return false;
-        if (this->refcount_.compareExchange(old_refcount, new_refcount))
+        if (refcount_.compareExchange(old_refcount, new_refcount))
             return true;
     }
 }
@@ -95,20 +95,20 @@ SharedArrayRawBuffer::dropReference()
     // Normally if the refcount is zero then the memory will have been unmapped
     // and this test may just crash, but if the memory has been retained for any
     // reason we will catch the underflow here.
-    MOZ_RELEASE_ASSERT(this->refcount_ > 0);
+    MOZ_RELEASE_ASSERT(refcount_ > 0);
 
     // Drop the reference to the buffer.
-    uint32_t refcount = --this->refcount_; // Atomic.
-    if (refcount)
+    uint32_t new_refcount = --refcount_; // Atomic.
+    if (new_refcount)
         return;
 
     // If this was the final reference, release the buffer.
-    SharedMem<uint8_t*> p = this->dataPointerShared() - gc::SystemPageSize();
+    SharedMem<uint8_t*> p = dataPointerShared() - gc::SystemPageSize();
     MOZ_ASSERT(p.asValue() % gc::SystemPageSize() == 0);
 
     uint8_t* address = p.unwrap(/*safe - only reference*/);
-    uint32_t allocSize = SharedArrayAllocSize(this->length);
-    if (this->preparedForAsmJS)
+    uint32_t allocSize = SharedArrayAllocSize(length_);
+    if (preparedForAsmJS_)
         UnmapBufferMemory(address, SharedArrayMappedSize(allocSize));
     else
         UnmapBufferMemory(address, allocSize);
@@ -170,11 +170,17 @@ SharedArrayBufferObject::class_constructor(JSContext* cx, unsigned argc, Value* 
 SharedArrayBufferObject*
 SharedArrayBufferObject::New(JSContext* cx, uint32_t length, HandleObject proto)
 {
-    SharedArrayRawBuffer* buffer = SharedArrayRawBuffer::New(cx, length);
+    SharedArrayRawBuffer* buffer = SharedArrayRawBuffer::New(length);
     if (!buffer)
         return nullptr;
 
-    return New(cx, buffer, proto);
+    SharedArrayBufferObject* obj = New(cx, buffer, proto);
+    if (!obj) {
+        buffer->dropReference();
+        return nullptr;
+    }
+
+    return obj;
 }
 
 SharedArrayBufferObject*
