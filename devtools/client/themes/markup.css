@@ -175,6 +175,11 @@ ul.children + .tag-line::before {
   z-index: 0;
 }
 
+.tag-line .tag-hover:not(.theme-selected) {
+  background: var(--theme-selection-background-hover);
+  z-index: -1;
+}
+
 .expander {
   display: inline-block;
   margin-left: -14px;
