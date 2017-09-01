@@ -551,11 +551,6 @@ Request::Constructor(const GlobalObject& aGlobal,
       return nullptr;
     }
 
-    if (!request->GetIntegrity().IsEmpty()) {
-      aRv.ThrowTypeError<MSG_REQUEST_INTEGRITY_METADATA_NOT_EMPTY>();
-      return nullptr;
-    }
-
     requestHeaders->SetGuard(HeadersGuardEnum::Request_no_cors, aRv);
     if (aRv.Failed()) {
       return nullptr;

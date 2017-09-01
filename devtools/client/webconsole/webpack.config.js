@@ -61,6 +61,11 @@ let webpackConfig = {
 };
 
 webpackConfig.resolve = {
+  modules: [
+    // Make sure webpack is always looking for modules in
+    // `webconsole/node_modules` directory first.
+    path.resolve(__dirname, "node_modules"), "node_modules"
+  ],
   alias: {
     "Services": "devtools-modules/src/Services",
 
@@ -70,12 +75,12 @@ webpackConfig.resolve = {
     "devtools/client/webconsole/webconsole-connection-proxy": path.join(__dirname, "webconsole-connection-proxy"),
     "devtools/client/webconsole/webconsole-l10n": path.join(__dirname, "webconsole-l10n"),
 
-    "react": path.join(__dirname, "node_modules/react"),
     "devtools/client/shared/vendor/immutable": "immutable",
     "devtools/client/shared/vendor/react": "react",
     "devtools/client/shared/vendor/react-dom": "react-dom",
     "devtools/client/shared/vendor/react-redux": "react-redux",
     "devtools/client/shared/vendor/redux": "redux",
+    "devtools/client/shared/vendor/reselect": "reselect",
 
     "devtools/client/locales": path.join(__dirname, "../../client/locales/en-US"),
     "toolkit/locales": path.join(__dirname, "../../../toolkit/locales/en-US"),
@@ -88,21 +93,41 @@ webpackConfig.resolve = {
     "devtools/client/framework/devtools": path.join(__dirname, "../../client/shims/devtools"),
     "devtools/client/framework/menu": "devtools-modules/src/menu",
     "devtools/client/framework/menu-item": path.join(__dirname, "../../client/framework/menu-item"),
+    "devtools/client/sourceeditor/editor": "devtools-source-editor/src/source-editor",
 
-    "devtools/client/shared/components/reps/reps": path.join(__dirname, "../../client/shared/components/reps/reps"),
     "devtools/client/shared/redux/middleware/thunk": path.join(__dirname, "../../client/shared/redux/middleware/thunk"),
     "devtools/client/shared/redux/middleware/debounce": path.join(__dirname, "../../client/shared/redux/middleware/debounce"),
-    "devtools/client/shared/components/stack-trace": path.join(__dirname, "../../client/shared/components/stack-trace"),
-    "devtools/client/shared/source-utils": path.join(__dirname, "../../client/shared/source-utils"),
-    "devtools/client/shared/components/frame": path.join(__dirname, "../../client/shared/components/frame"),
-    "devtools/client/shared/key-shortcuts": "devtools-modules/src/key-shortcuts",
-    "devtools/client/shared/zoom-keys": "devtools-modules/src/zoom-keys",
 
+    "devtools/client/shared/components/reps/reps": path.join(__dirname, "../../client/shared/components/reps/reps"),
+    "devtools/client/shared/components/stack-trace": path.join(__dirname, "../../client/shared/components/stack-trace"),
+    "devtools/client/shared/components/search-box": path.join(__dirname, "../../client/shared/components/search-box"),
+    "devtools/client/shared/components/splitter/draggable": path.join(__dirname, "../../client/shared/components/splitter/draggable"),
+    "devtools/client/shared/components/splitter/split-box": path.join(__dirname, "../../client/shared/components/splitter/split-box"),
+    "devtools/client/shared/components/frame": path.join(__dirname, "../../client/shared/components/frame"),
+    "devtools/client/shared/components/autocomplete-popup": path.join(__dirname, "../../client/shared/components/autocomplete-popup"),
+    "devtools/client/shared/components/tabs/tabbar": path.join(__dirname, "../../client/shared/components/tabs/tabbar"),
+    "devtools/client/shared/components/tabs/tabs": path.join(__dirname, "../../client/shared/components/tabs/tabs"),
+    "devtools/client/shared/components/tree/tree-view": path.join(__dirname, "../../client/shared/components/tree/tree-view"),
+    "devtools/client/shared/components/tree/tree-row": path.join(__dirname, "../../client/shared/components/tree/tree-row"),
+
+    "devtools/client/shared/source-utils": path.join(__dirname, "../../client/shared/source-utils"),
+    "devtools/client/shared/key-shortcuts": path.join(__dirname, "../../client/shared/key-shortcuts"),
+    "devtools/client/shared/keycodes": path.join(__dirname, "../../client/shared/keycodes"),
+    "devtools/client/shared/zoom-keys": "devtools-modules/src/zoom-keys",
+    "devtools/client/shared/curl": path.join(__dirname, "../../client/shared/curl"),
+    "devtools/client/shared/scroll": path.join(__dirname, "../../client/shared/scroll"),
+
+    "devtools/shared/fronts/timeline": path.join(__dirname, "../../shared/shims/fronts/timeline"),
     "devtools/shared/defer": path.join(__dirname, "../../shared/defer"),
     "devtools/shared/old-event-emitter": "devtools-modules/src/utils/event-emitter",
     "devtools/shared/client/main": path.join(__dirname, "new-console-output/test/fixtures/ObjectClient"),
     "devtools/shared/platform/clipboard": path.join(__dirname, "../../shared/platform/content/clipboard"),
     "devtools/shared/platform/stack": path.join(__dirname, "../../shared/platform/content/stack"),
+
+    "devtools/client/netmonitor/src/utils/request-utils": path.join(__dirname, "../netmonitor/src/utils/request-utils"),
+    "devtools/client/netmonitor/src/components/tabbox-panel": path.join(__dirname, "../netmonitor/src/components/tabbox-panel"),
+    "devtools/client/netmonitor/src/connector/firefox-data-provider": path.join(__dirname, "../netmonitor/src/connector/firefox-data-provider"),
+    "devtools/client/netmonitor/src/constants": path.join(__dirname, "../netmonitor/src/constants"),
   }
 };
 

@@ -2232,7 +2232,11 @@ already_AddRefed<LayerManager> nsDisplayList::PaintRoot(nsDisplayListBuilder* aB
       root->SetEventRegionsOverride(EventRegionsOverride::NoOverride);
     }
 
-    if (Maybe<ScrollMetadata> rootMetadata = nsLayoutUtils::GetRootMetadata(aBuilder, root, containerParameters)) {
+    auto callback = [root](FrameMetrics::ViewID aScrollId) -> bool {
+      return nsLayoutUtils::ContainsMetricsWithId(root, aScrollId);
+    };
+    if (Maybe<ScrollMetadata> rootMetadata = nsLayoutUtils::GetRootMetadata(
+          aBuilder, root, containerParameters, callback)) {
       root->SetScrollMetadata(rootMetadata.value());
     }
 

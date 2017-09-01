@@ -29,7 +29,7 @@ chmod +x /usr/local/bin/run-task
 chmod +x /usr/local/bin/download-and-compress
 
 # Create workspace
-mkdir -p /home/worker/workspace
+mkdir -p /builds/worker/workspace
 
 # Install python-zstandard.
 cd /setup

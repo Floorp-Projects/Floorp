@@ -3271,9 +3271,6 @@ js::GetThisValue(JSObject* obj)
     if (obj->is<WithEnvironmentObject>())
         return ObjectValue(*obj->as<WithEnvironmentObject>().withThis());
 
-    if (obj->is<NonSyntacticVariablesObject>())
-        return GetThisValue(obj->enclosingEnvironment());
-
     return ObjectValue(*obj);
 }
 

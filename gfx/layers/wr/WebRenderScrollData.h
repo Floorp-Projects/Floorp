@@ -152,6 +152,7 @@ public:
   const WebRenderLayerScrollData* GetLayerData(size_t aIndex) const;
 
   const ScrollMetadata& GetScrollMetadata(size_t aIndex) const;
+  bool HasMetadataFor(const FrameMetrics::ViewID& aScrollId) const;
 
   const FocusTarget& GetFocusTarget() const { return mFocusTarget; }
   void SetFocusTarget(const FocusTarget& aFocusTarget);
