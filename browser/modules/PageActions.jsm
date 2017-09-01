@@ -9,6 +9,7 @@ this.EXPORTED_SYMBOLS = [
   // PageActions.Action
   // PageActions.Button
   // PageActions.Subview
+  // PageActions.ACTION_ID_BOOKMARK
   // PageActions.ACTION_ID_BOOKMARK_SEPARATOR
   // PageActions.ACTION_ID_BUILT_IN_SEPARATOR
 ];
@@ -24,6 +25,7 @@ XPCOMUtils.defineLazyModuleGetter(this, "BinarySearch",
   "resource://gre/modules/BinarySearch.jsm");
 
 
+const ACTION_ID_BOOKMARK = "bookmark";
 const ACTION_ID_BOOKMARK_SEPARATOR = "bookmarkSeparator";
 const ACTION_ID_BUILT_IN_SEPARATOR = "builtInSeparator";
 
@@ -228,7 +230,17 @@ this.PageActions = {
       // The action is new.  Store it in the persisted actions.
       this._persistedActions.ids[action.id] = true;
       if (action.shownInUrlbar) {
-        this._persistedActions.idsInUrlbar.push(action.id);
+        // Also store it in idsInUrlbar.
+        let index =
+          !action.__urlbarInsertBeforeActionID ? -1 :
+          this._persistedActions.idsInUrlbar.indexOf(
+            action.__urlbarInsertBeforeActionID
+          );
+        if (index < 0) {
+          // Append the action.
+          index = this._persistedActions.idsInUrlbar.length;
+        }
+        this._persistedActions.idsInUrlbar.splice(index, 0, action.id);
       }
       this._storePersistedActions();
     }
@@ -486,9 +498,14 @@ function Action(options) {
     // private
 
     // (string, optional)
-    // The ID of another action before which to insert this new action.  Applies
-    // to the page action panel only, not the urlbar.
+    // The ID of another action before which to insert this new action in the
+    // panel.
     _insertBeforeActionID: false,
+
+    // (string, optional)
+    // The ID of another action before which to insert this new action in the
+    // urlbar.
+    _urlbarInsertBeforeActionID: false,
 
     // (bool, optional)
     // True if this isn't really an action but a separator to be shown in the
@@ -877,8 +894,8 @@ Button.prototype = {
 this.PageActions.Button = Button;
 
 
-// This is only necessary so that Pocket and the test can specify it for
-// action._insertBeforeActionID.
+// These are only necessary so that Pocket and the test can use them.
+this.PageActions.ACTION_ID_BOOKMARK = ACTION_ID_BOOKMARK;
 this.PageActions.ACTION_ID_BOOKMARK_SEPARATOR = ACTION_ID_BOOKMARK_SEPARATOR;
 
 // This is only necessary so that the test can access it.
@@ -892,7 +909,7 @@ var gBuiltInActions = [
 
   // bookmark
   {
-    id: "bookmark",
+    id: ACTION_ID_BOOKMARK,
     urlbarIDOverride: "star-button-box",
     _urlbarNodeInMarkup: true,
     title: "",
