@@ -125,6 +125,7 @@ private:
 
 class EventQueue;
 extern template class PrioritizedEventQueue<EventQueue>;
+extern template class PrioritizedEventQueue<LabeledEventQueue>;
 
 } // namespace mozilla
 
