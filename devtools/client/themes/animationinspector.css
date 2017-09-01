@@ -377,8 +377,7 @@ body {
 }
 
 .animation-timeline .animation.selected {
-  background-color: var(--theme-selection-background-hover);
-  z-index: -1;
+  background-color: var(--theme-selection-background-semitransparent);
 }
 
 .animation-timeline .animation:last-child {

@@ -624,15 +624,17 @@ MarkupContainer.prototype = {
     this._hovered = value;
     if (value) {
       if (!this.selected) {
-        this.tagState.classList.add("tag-hover");
+        this.tagState.classList.add("theme-bg-darker");
       }
       if (this.closeTagLine) {
-        this.closeTagLine.querySelector(".tag-state").classList.add("tag-hover");
+        this.closeTagLine.querySelector(".tag-state").classList.add(
+          "theme-bg-darker");
       }
     } else {
-      this.tagState.classList.remove("tag-hover");
+      this.tagState.classList.remove("theme-bg-darker");
       if (this.closeTagLine) {
-        this.closeTagLine.querySelector(".tag-state").classList.remove("tag-hover");
+        this.closeTagLine.querySelector(".tag-state").classList.remove(
+          "theme-bg-darker");
       }
     }
   },
