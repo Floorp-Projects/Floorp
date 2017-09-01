@@ -129,7 +129,6 @@ private:
   HRESULT ThreadSafeQueryInterface(REFIID aIid,
                                    IUnknown** aOutInterface) override;
   HRESULT CreateInterceptor(REFIID aIid, IUnknown* aOuter, IUnknown** aOutput);
-  REFIID MarshalAs(REFIID aIid) const;
 
 private:
   InterceptorTargetPtr<IUnknown>  mTarget;

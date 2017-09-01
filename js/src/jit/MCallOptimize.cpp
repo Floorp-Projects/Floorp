@@ -242,6 +242,8 @@ IonBuilder::inlineNativeCall(CallInfo& callInfo, JSFunction* target)
         return inlineNewIterator(callInfo, MNewIterator::StringIterator);
 
       // Object natives.
+      case InlinableNative::Object:
+        return inlineObject(callInfo);
       case InlinableNative::ObjectCreate:
         return inlineObjectCreate(callInfo);
       case InlinableNative::ObjectToString:
@@ -2322,6 +2324,25 @@ IonBuilder::inlineSubstringKernel(CallInfo& callInfo)
                                             callInfo.getArg(2));
     current->add(substr);
     current->push(substr);
+
+    return InliningStatus_Inlined;
+}
+
+IonBuilder::InliningResult
+IonBuilder::inlineObject(CallInfo& callInfo)
+{
+    if (callInfo.argc() != 1 || callInfo.constructing())
+        return InliningStatus_NotInlined;
+
+    if (getInlineReturnType() != MIRType::Object)
+        return InliningStatus_NotInlined;
+
+    MDefinition* arg = callInfo.getArg(0);
+    if (arg->type() != MIRType::Object)
+        return InliningStatus_NotInlined;
+
+    callInfo.setImplicitlyUsedUnchecked();
+    current->push(arg);
 
     return InliningStatus_Inlined;
 }

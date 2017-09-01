@@ -4721,7 +4721,7 @@ js::AtomicIsLockFree(JSContext* cx, HandleValue in, int* out)
     int i;
     if (!ToInt32(cx, in, &i))
         return false;
-    *out = js::jit::AtomicOperations::isLockfree(i);
+    *out = js::jit::AtomicOperations::isLockfreeJS(i);
     return true;
 }
 

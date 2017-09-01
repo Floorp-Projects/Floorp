@@ -121,7 +121,7 @@ with Files('PrivateBrowsingUtils.jsm'):
 with Files('Promise*.jsm'):
     BUG_COMPONENT = ('Toolkit', 'Async Tooling')
 
-with Files('RemoteController.jsm'):
+with Files('RemoteController.js'):
     BUG_COMPONENT = ('Core', 'Widget')
 
 with Files('RemoteFinder.jsm'):
@@ -220,7 +220,7 @@ EXTRA_JS_MODULES += [
     'Promise.jsm',
     'PromiseMessage.jsm',
     'PromiseUtils.jsm',
-    'RemoteController.jsm',
+    'RemoteController.js',
     'RemoteFinder.jsm',
     'RemotePageManager.jsm',
     'RemoteSecurityUI.jsm',
