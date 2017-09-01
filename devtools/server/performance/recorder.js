@@ -8,8 +8,6 @@ const { Task } = require("devtools/shared/task");
 
 loader.lazyRequireGetter(this, "Services");
 loader.lazyRequireGetter(this, "promise");
-loader.lazyRequireGetter(this, "Class",
-  "sdk/core/heritage", true);
 loader.lazyRequireGetter(this, "EventEmitter", "devtools/shared/event-emitter");
 
 loader.lazyRequireGetter(this, "Memory",
