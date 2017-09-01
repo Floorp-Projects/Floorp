@@ -132,5 +132,11 @@ interface nsIHttpProtocolHandler : nsIProxiedProtocolHandler
  */
 #define NS_HTTP_ON_USERAGENT_REQUEST_TOPIC "http-on-useragent-request"
 
+/**
+ * This topic is notified for every http channel right after it called
+ * OnStopRequest on its listener, regardless whether it was finished
+ * successfully, failed or has been canceled.
+ */
+#define NS_HTTP_ON_STOP_REQUEST_TOPIC "http-on-stop-request"
 
 %}

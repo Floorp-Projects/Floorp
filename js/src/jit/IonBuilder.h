@@ -683,6 +683,7 @@ class IonBuilder
     InliningResult inlineGetFirstDollarIndex(CallInfo& callInfo);
 
     // Object natives and intrinsics.
+    InliningResult inlineObject(CallInfo& callInfo);
     InliningResult inlineObjectCreate(CallInfo& callInfo);
     InliningResult inlineObjectToString(CallInfo& callInfo);
     InliningResult inlineDefineDataProperty(CallInfo& callInfo);
