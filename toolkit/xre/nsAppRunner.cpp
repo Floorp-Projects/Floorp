@@ -4721,10 +4721,6 @@ XREMain::XRE_main(int argc, char* argv[], const BootstrapConfig& aConfig)
 
   mozilla::LogModule::Init();
 
-#if defined(MOZ_SANDBOX) && defined(XP_LINUX) && !defined(ANDROID)
-  SandboxInfo::ThreadingCheck();
-#endif
-
 #ifdef MOZ_CODE_COVERAGE
   CodeCoverageHandler::Init();
 #endif
