@@ -15,7 +15,7 @@ if (typeof scriptArgs[0] != 'string' || typeof scriptArgs[1] != 'string')
     throw "Usage: analyzeRoots.js [-f function_name] <gcFunctions.lst> <gcEdges.txt> <suppressedFunctions.lst> <gcTypes.txt> <typeInfo.txt> [start end [tmpfile]]";
 
 var theFunctionNameToFind;
-if (scriptArgs[0] == '--function') {
+if (scriptArgs[0] == '--function' || scriptArgs[0] == '-f') {
     theFunctionNameToFind = scriptArgs[1];
     scriptArgs = scriptArgs.slice(2);
 }
@@ -131,15 +131,25 @@ function isReturningImmobileValue(edge, variable)
     return false;
 }
 
-// If the edge uses the given variable, return the earliest point at which the
-// use is definite. Usually, that means the source of the edge (anything that
-// reaches that source point will end up using the variable, but there may be
-// other ways to reach the destination of the edge.)
+// If the edge uses the given variable's value, return the earliest point at
+// which the use is definite. Usually, that means the source of the edge
+// (anything that reaches that source point will end up using the variable, but
+// there may be other ways to reach the destination of the edge.)
 //
 // Return values are implicitly used at the very last point in the function.
 // This makes a difference: if an RAII class GCs in its destructor, we need to
 // start looking at the final point in the function, not one point back from
 // that, since that would skip over the GCing call.
+//
+// Note that this returns true only if the variable's incoming value is used.
+// So this would return false for 'obj':
+//
+//     obj = someFunction();
+//
+// but these would return true:
+//
+//     obj = someFunction(obj);
+//     obj->foo = someFunction();
 //
 function edgeUsesVariable(edge, variable, body)
 {
@@ -153,24 +163,39 @@ function edgeUsesVariable(edge, variable, body)
 
     switch (edge.Kind) {
 
-    case "Assign":
+    case "Assign": {
         if (isReturningImmobileValue(edge, variable))
             return 0;
-        if (expressionUsesVariable(edge.Exp[0], variable))
+        const [lhs, rhs] = edge.Exp;
+        if (expressionUsesVariable(rhs, variable))
             return src;
-        return expressionUsesVariable(edge.Exp[1], variable) ? src : 0;
+        if (expressionUsesVariable(lhs, variable) && !expressionIsVariable(lhs, variable))
+            return src;
+        return 0;
+    }
 
     case "Assume":
         return expressionUsesVariableContents(edge.Exp[0], variable) ? src : 0;
 
-    case "Call":
-        if (expressionUsesVariable(edge.Exp[0], variable))
-            return src;
-        if (1 in edge.Exp && expressionUsesVariable(edge.Exp[1], variable))
+    case "Call": {
+        const callee = edge.Exp[0];
+        if (expressionUsesVariable(callee, variable))
             return src;
         if ("PEdgeCallInstance" in edge) {
-            if (expressionUsesVariable(edge.PEdgeCallInstance.Exp, variable))
-                return src;
+            if (expressionUsesVariable(edge.PEdgeCallInstance.Exp, variable)) {
+                if (edgeKillsVariable(edge, variable)) {
+                    // If the variable is being constructed, then the incoming
+                    // value is not used here; it didn't exist before
+                    // construction. (The analysis doesn't get told where
+                    // variables are defined, so must infer it from
+                    // construction. If the variable does not have a
+                    // constructor, its live range may be larger than it really
+                    // ought to be if it is defined within a loop body, but
+                    // that is conservative.)
+                } else {
+                    return src;
+                }
+            }
         }
         if ("PEdgeCallArguments" in edge) {
             for (var exp of edge.PEdgeCallArguments.Exp) {
@@ -178,7 +203,15 @@ function edgeUsesVariable(edge, variable, body)
                     return src;
             }
         }
+        if (edge.Exp.length == 1)
+            return 0;
+
+        // Assigning call result to a variable.
+        const lhs = edge.Exp[1];
+        if (expressionUsesVariable(lhs, variable) && !expressionIsVariable(lhs, variable))
+            return src;
         return 0;
+    }
 
     case "Loop":
         return 0;
@@ -217,13 +250,26 @@ function edgeTakesVariableAddress(edge, variable, body)
     }
 }
 
+function expressionIsVariable(exp, variable)
+{
+    return exp.Kind == "Var" && sameVariable(exp.Variable, variable);
+}
+
+// Return whether the edge kills (overwrites) the variable's incoming value.
+// Examples of killing 'obj':
+//
+//     obj = foo;
+//     obj = foo();
+//     obj = foo(obj);         // uses previous value but then kills it
+//     SomeClass obj(true, 1); // constructor
+//
 function edgeKillsVariable(edge, variable)
 {
     // Direct assignments kill their lhs: var = value
     if (edge.Kind == "Assign") {
-        var lhs = edge.Exp[0];
-        if (lhs.Kind == "Var" && sameVariable(lhs.Variable, variable))
-            return !isReturningImmobileValue(edge, variable);
+        const [lhs] = edge.Exp;
+        return (expressionIsVariable(lhs, variable) &&
+                !isReturningImmobileValue(edge, variable));
     }
 
     if (edge.Kind != "Call")
@@ -232,48 +278,46 @@ function edgeKillsVariable(edge, variable)
     // Assignments of call results kill their lhs.
     if (1 in edge.Exp) {
         var lhs = edge.Exp[1];
-        if (lhs.Kind == "Var" && sameVariable(lhs.Variable, variable))
+        if (expressionIsVariable(lhs, variable))
             return true;
     }
 
     // Constructor calls kill their 'this' value.
     if ("PEdgeCallInstance" in edge) {
-        do {
-            var instance = edge.PEdgeCallInstance.Exp;
+        var instance = edge.PEdgeCallInstance.Exp;
 
-            // Kludge around incorrect dereference on some constructor calls.
-            if (instance.Kind == "Drf")
-                instance = instance.Exp[0];
+        // Kludge around incorrect dereference on some constructor calls.
+        if (instance.Kind == "Drf")
+            instance = instance.Exp[0];
 
-            if (instance.Kind != "Var" || !sameVariable(instance.Variable, variable))
-                break;
+        if (!expressionIsVariable(instance, variable))
+            return false;
 
-            var callee = edge.Exp[0];
-            if (callee.Kind != "Var")
-                break;
+        var callee = edge.Exp[0];
+        if (callee.Kind != "Var")
+            return false;
 
-            assert(callee.Variable.Kind == "Func");
-            var calleeName = readable(callee.Variable.Name[0]);
+        assert(callee.Variable.Kind == "Func");
+        var calleeName = readable(callee.Variable.Name[0]);
 
-            // Constructor calls include the text 'Name::Name(' or 'Name<...>::Name('.
-            var openParen = calleeName.indexOf('(');
-            if (openParen < 0)
-                break;
-            calleeName = calleeName.substring(0, openParen);
+        // Constructor calls include the text 'Name::Name(' or 'Name<...>::Name('.
+        var openParen = calleeName.indexOf('(');
+        if (openParen < 0)
+            return false;
+        calleeName = calleeName.substring(0, openParen);
 
-            var lastColon = calleeName.lastIndexOf('::');
-            if (lastColon < 0)
-                break;
-            var constructorName = calleeName.substr(lastColon + 2);
-            calleeName = calleeName.substr(0, lastColon);
+        var lastColon = calleeName.lastIndexOf('::');
+        if (lastColon < 0)
+            return false;
+        var constructorName = calleeName.substr(lastColon + 2);
+        calleeName = calleeName.substr(0, lastColon);
 
-            var lastTemplateOpen = calleeName.lastIndexOf('<');
-            if (lastTemplateOpen >= 0)
-                calleeName = calleeName.substr(0, lastTemplateOpen);
+        var lastTemplateOpen = calleeName.lastIndexOf('<');
+        if (lastTemplateOpen >= 0)
+            calleeName = calleeName.substr(0, lastTemplateOpen);
 
-            if (calleeName.endsWith(constructorName))
-                return true;
-        } while (false);
+        if (calleeName.endsWith(constructorName))
+            return true;
     }
 
     return false;
@@ -313,14 +357,14 @@ function edgeCanGC(edge)
     }
 }
 
-// Search recursively through predecessors from a variable use, returning
-// whether a GC call is reachable (in the reverse direction; this means that
-// the variable use is reachable from the GC call, and therefore the variable
-// is live after the GC call), along with some additional information. What
-// info we want depends on whether the variable turns out to be live across any
-// GC call. We are looking for both hazards (unrooted variables live across GC
-// calls) and unnecessary roots (rooted variables that have no GC calls in
-// their live ranges.)
+// Search recursively through predecessors from the use of a variable's value,
+// returning whether a GC call is reachable (in the reverse direction; this
+// means that the variable use is reachable from the GC call, and therefore the
+// variable is live after the GC call), along with some additional information.
+// What info we want depends on whether the variable turns out to be live
+// across a GC call. We are looking for both hazards (unrooted variables live
+// across GC calls) and unnecessary roots (rooted variables that have no GC
+// calls in their live ranges.)
 //
 // If not:
 //
@@ -334,7 +378,7 @@ function edgeCanGC(edge)
 //
 //  - 'gcInfo': a direct pointer to the GC call edge
 //
-function findGCBeforeVariableUse(start_body, start_point, suppressed, variable)
+function findGCBeforeValueUse(start_body, start_point, suppressed, variable)
 {
     // Scan through all edges preceding an unrooted variable use, using an
     // explicit worklist, looking for a GC call. A worklist contains an
@@ -399,6 +443,11 @@ function findGCBeforeVariableUse(start_body, start_point, suppressed, variable)
                         assert(found);
                     }
                 }
+
+                // Also propagate to the *end* of this loop, for the previous
+                // iteration.
+                worklist.push({body: body, ppoint: body.Index[1],
+                               gcInfo: gcInfo, why: entry});
             } else if (variable.Kind == "Arg" && gcInfo) {
                 // The scope of arguments starts at the beginning of the
                 // function
@@ -473,7 +522,8 @@ function findGCBeforeVariableUse(start_body, start_point, suppressed, variable)
                 // will only return here if edge.Kind is Assign; otherwise,
                 // we'll pass a "preGCLive" value up through the worklist to
                 // remember that the variable *is* alive before the GC and so
-                // this function should be returning a true value.
+                // this function should be returning a true value even if we
+                // don't find an assignment.
 
                 if (src_gcInfo) {
                     src_preGCLive = true;
@@ -496,6 +546,9 @@ function findGCBeforeVariableUse(start_body, start_point, suppressed, variable)
                     }
                 }
                 assert(found);
+                // Don't continue to predecessors here without going through
+                // the loop. (The points in this body that enter the loop will
+                // be traversed when we reach the entry point of the loop.)
                 break;
             }
 
@@ -522,16 +575,33 @@ function variableLiveAcrossGC(suppressed, variable)
         if (!("PEdge" in body))
             continue;
         for (var edge of body.PEdge) {
-            var usePoint = edgeUsesVariable(edge, variable, body);
-            // Example for !edgeKillsVariable:
+            // Examples:
             //
             //   JSObject* obj = NewObject();
             //   cangc();
-            //   obj = NewObject();    <-- uses 'obj', but kills previous value
+            //   obj = NewObject();     <-- mentions 'obj' but kills previous value
             //
-            if (usePoint && !edgeKillsVariable(edge, variable)) {
-                // Found a use, possibly after a GC.
-                var call = findGCBeforeVariableUse(body, usePoint, suppressed, variable);
+            // This is not a hazard. Contrast this with:
+            //
+            //   JSObject* obj = NewObject();
+            //   cangc();
+            //   obj = LookAt(obj);  <-- uses 'obj' and kills previous value
+            //
+            // This is a hazard; the initial value of obj is live across
+            // cangc(). And a third possibility:
+            //
+            //   JSObject* obj = NewObject();
+            //   obj = CopyObject(obj);
+            //
+            // This is not a hazard, because even though CopyObject can GC, obj
+            // is not live across it. (obj is live before CopyObject, and
+            // probably after, but not across.) There may be a hazard within
+            // CopyObject, of course.
+            //
+
+            var usePoint = edgeUsesVariable(edge, variable, body);
+            if (usePoint) {
+                var call = findGCBeforeValueUse(body, usePoint, suppressed, variable);
                 if (!call)
                     continue;
 
@@ -645,8 +715,12 @@ function printEntryTrace(functionName, entry)
                 var table = {};
                 entry.body.edgeTable = table;
                 for (var line of entry.body.lines) {
-                    if (match = /\((\d+,\d+),/.exec(line))
+                    if (match = /^\w+\((\d+,\d+),/.exec(line))
                         table[match[1]] = line; // May be multiple?
+                }
+                if (entry.body.BlockId.Kind == 'Loop') {
+                    const [startPoint, endPoint] = entry.body.Index;
+                    table[`${endPoint},${startPoint}`] = '(loop to next iteration)';
                 }
             }
 

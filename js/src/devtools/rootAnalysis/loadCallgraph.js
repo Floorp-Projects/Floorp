@@ -131,6 +131,12 @@ function loadCallgraph(file)
     for (var func of extraGCFunctions())
         addGCFunction(func, "annotation");
 
+    // mess up the id <-> name correspondence. Also, we need to know if the
+    // functions even exist in the first place.)
+    for (var func of extraGCFunctions()) {
+        addGCFunction(func, "annotation");
+    }
+
     // Initialize suppressedFunctions to the set of all functions, and the
     // worklist to all toplevel callers.
     var worklist = [];

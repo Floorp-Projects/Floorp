@@ -20,9 +20,10 @@ assert('cell5' not in hazmap)
 assert('cell6' not in hazmap)
 assert('<returnvalue>' in hazmap)
 
-# All hazards should be in f()
+# All hazards should be in f() and loopy()
 assert(hazmap['cell2'].function == 'Cell* f()')
-assert(len(set(haz.function for haz in hazards)) == 1)
+print(len(set(haz.function for haz in hazards)))
+assert(len(set(haz.function for haz in hazards)) == 2)
 
 # Check that the correct GC call is reported for each hazard. (cell3 has a
 # hazard from two different GC calls; it doesn't really matter which is
@@ -34,3 +35,13 @@ assert(hazmap['<returnvalue>'].GCFunction == 'void GCInDestructor::~GCInDestruct
 # Type names are handy to have in the report.
 assert(hazmap['cell2'].type == 'Cell*')
 assert(hazmap['<returnvalue>'].type == 'Cell*')
+
+# loopy hazards. See comments in source.
+assert('haz1' not in hazmap);
+assert('haz2' not in hazmap);
+assert('haz3' in hazmap);
+assert('haz4' in hazmap);
+assert('haz5' in hazmap);
+assert('haz6' not in hazmap);
+assert('haz7' not in hazmap);
+assert('haz8' in hazmap);
