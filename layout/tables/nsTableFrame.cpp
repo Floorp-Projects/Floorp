@@ -604,9 +604,10 @@ nsTableFrame::InsertCol(nsTableColFrame& aColFrame,
           if (eColAnonymousCell == lastColType) {
             // remove the col from the cache
             mColFrames.RemoveElementAt(numCacheCols - 1);
-            // remove the col from the eColGroupAnonymousCell col group
+            // remove the col from the synthetic col group
             nsTableColGroupFrame* lastColGroup = (nsTableColGroupFrame *)mColGroups.LastChild();
             if (lastColGroup) {
+              MOZ_ASSERT(lastColGroup->IsSynthetic());
               lastColGroup->RemoveChild(*lastCol, false);
 
               // remove the col group if it is empty
@@ -678,9 +679,8 @@ nsTableFrame::GetCellMap() const
   return static_cast<nsTableFrame*>(FirstInFlow())->mCellMap;
 }
 
-// XXX this needs to be moved to nsCSSFrameConstructor
 nsTableColGroupFrame*
-nsTableFrame::CreateAnonymousColGroupFrame(nsTableColGroupType aColGroupType)
+nsTableFrame::CreateSyntheticColGroupFrame()
 {
   nsIContent* colGroupContent = GetContent();
   nsPresContext* presContext = PresContext();
@@ -690,10 +690,11 @@ nsTableFrame::CreateAnonymousColGroupFrame(nsTableColGroupType aColGroupType)
   colGroupStyle = shell->StyleSet()->
     ResolveNonInheritingAnonymousBoxStyle(nsCSSAnonBoxes::tableColGroup);
   // Create a col group frame
-  nsIFrame* newFrame = NS_NewTableColGroupFrame(shell, colGroupStyle);
-  ((nsTableColGroupFrame *)newFrame)->SetColType(aColGroupType);
+  nsTableColGroupFrame* newFrame =
+    NS_NewTableColGroupFrame(shell, colGroupStyle);
+  newFrame->SetIsSynthetic();
   newFrame->Init(colGroupContent, this, nullptr);
-  return (nsTableColGroupFrame *)newFrame;
+  return newFrame;
 }
 
 void
@@ -704,12 +705,11 @@ nsTableFrame::AppendAnonymousColFrames(int32_t aNumColsToAdd)
   nsTableColGroupFrame* colGroupFrame =
     static_cast<nsTableColGroupFrame*>(mColGroups.LastChild());
 
-  if (!colGroupFrame ||
-      (colGroupFrame->GetColType() != eColGroupAnonymousCell)) {
+  if (!colGroupFrame || !colGroupFrame->IsSynthetic()) {
     int32_t colIndex = (colGroupFrame) ?
                         colGroupFrame->GetStartColumnIndex() +
                         colGroupFrame->GetColCount() : 0;
-    colGroupFrame = CreateAnonymousColGroupFrame(eColGroupAnonymousCell);
+    colGroupFrame = CreateSyntheticColGroupFrame();
     if (!colGroupFrame) {
       return;
     }
