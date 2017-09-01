@@ -17,7 +17,8 @@ namespace mozilla {
 
 class TaskQueue;
 
-class AppleATDecoder : public MediaDataDecoder {
+class AppleATDecoder : public MediaDataDecoder
+{
 public:
   AppleATDecoder(const AudioInfo& aConfig,
                  TaskQueue* aTaskQueue);
