@@ -1906,6 +1906,13 @@ class MacroAssemblerCompat : public vixl::MacroAssembler
         MOZ_CRASH("atomicEffectOp");
     }
 
+    template <typename T>
+    void atomicFetchOp64(AtomicOp op, Register64 value, const T& mem, Register64 temp,
+                         Register64 output)
+    {
+        MOZ_CRASH("AtomicFetchOp64");
+    }
+
   public:
     // T in {Address,BaseIndex}
     // S in {Imm32,Register}
@@ -2125,6 +2132,43 @@ class MacroAssemblerCompat : public vixl::MacroAssembler
     template <typename T, typename S>
     void atomicXor32(const S& value, const T& mem) {
         atomicEffectOp(4, AtomicFetchXorOp, value, mem);
+    }
+
+    template <typename T>
+    void atomicFetchAdd64(Register64 value, const T& mem, Register64 temp, Register64 output) {
+        atomicFetchOp64(AtomicFetchAddOp, value, mem, temp, output);
+    }
+
+    template <typename T>
+    void atomicFetchSub64(Register64 value, const T& mem, Register64 temp, Register64 output) {
+        atomicFetchOp64(AtomicFetchSubOp, value, mem, temp, output);
+    }
+
+    template <typename T>
+    void atomicFetchAnd64(Register64 value, const T& mem, Register64 temp, Register64 output) {
+        atomicFetchOp64(AtomicFetchAndOp, value, mem, temp, output);
+    }
+
+    template <typename T>
+    void atomicFetchOr64(Register64 value, const T& mem, Register64 temp, Register64 output) {
+        atomicFetchOp64(AtomicFetchOrOp, value, mem, temp, output);
+    }
+
+    template <typename T>
+    void atomicFetchXor64(Register64 value, const T& mem, Register64 temp, Register64 output) {
+        atomicFetchOp64(AtomicFetchXorOp, value, mem, temp, output);
+    }
+
+    template <typename T>
+    void atomicExchange64(const T& mem, Register64 src, Register64 output) {
+        MOZ_CRASH("atomicExchange64");
+    }
+
+    template <typename T>
+    void compareExchange64(const T& mem, Register64 expected, Register64 replacement,
+                           Register64 output)
+    {
+        MOZ_CRASH("compareExchange64");
     }
 
     template<typename T>
