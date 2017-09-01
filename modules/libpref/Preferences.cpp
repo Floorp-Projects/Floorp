@@ -10,9 +10,12 @@
 #include "mozilla/ArrayUtils.h"
 #include "mozilla/Attributes.h"
 #include "mozilla/HashFunctions.h"
+#include "mozilla/ResultExtensions.h"
+#include "mozilla/ScopeExit.h"
 #include "mozilla/ServoStyleSet.h"
 #include "mozilla/SyncRunnable.h"
 #include "mozilla/Telemetry.h"
+#include "mozilla/URLPreloader.h"
 #include "mozilla/UniquePtrExtensions.h"
 
 #include "nsXULAppAPI.h"
@@ -1265,46 +1268,20 @@ Preferences::WritePrefFile(nsIFile* aFile, SaveMethod aSaveMethod)
 
 static nsresult openPrefFile(nsIFile* aFile)
 {
-  nsCOMPtr<nsIInputStream> inStr;
-
-  nsresult rv = NS_NewLocalFileInputStream(getter_AddRefs(inStr), aFile);
-  if (NS_FAILED(rv))
-    return rv;
-
-  int64_t fileSize64;
-  rv = aFile->GetFileSize(&fileSize64);
-  if (NS_FAILED(rv))
-    return rv;
-  NS_ENSURE_TRUE(fileSize64 <= UINT32_MAX, NS_ERROR_FILE_TOO_BIG);
-
-  uint32_t fileSize = (uint32_t)fileSize64;
-  auto fileBuffer = MakeUniqueFallible<char[]>(fileSize);
-  if (fileBuffer == nullptr)
-    return NS_ERROR_OUT_OF_MEMORY;
-
   PrefParseState ps;
   PREF_InitParseState(&ps, PREF_ReaderCallback, ReportToConsole, nullptr);
+  auto cleanup = MakeScopeExit([&] () {
+    PREF_FinalizeParseState(&ps);
+  });
 
-  // Read is not guaranteed to return a buf the size of fileSize,
-  // but usually will.
-  nsresult rv2 = NS_OK;
-  uint32_t offset = 0;
-  for (;;) {
-    uint32_t amtRead = 0;
-    rv = inStr->Read(fileBuffer.get(), fileSize, &amtRead);
-    if (NS_FAILED(rv) || amtRead == 0)
-      break;
-    if (!PREF_ParseBuf(&ps, fileBuffer.get(), amtRead))
-      rv2 = NS_ERROR_FILE_CORRUPTED;
-    offset += amtRead;
-    if (offset == fileSize) {
-      break;
-    }
+  nsCString data;
+  MOZ_TRY_VAR(data, URLPreloader::ReadFile(aFile));
+  if (!PREF_ParseBuf(&ps, data.get(), data.Length())) {
+    return NS_ERROR_FILE_CORRUPTED;
   }
 
-  PREF_FinalizeParseState(&ps);
+  return NS_OK;
 
-  return NS_FAILED(rv) ? rv : rv2;
 }
 
 /*
@@ -1461,12 +1438,12 @@ static nsresult pref_LoadPrefsInDirList(const char *listId)
 
 static nsresult pref_ReadPrefFromJar(nsZipArchive* jarReader, const char *name)
 {
-  nsZipItemPtr<char> manifest(jarReader, name, true);
-  NS_ENSURE_TRUE(manifest.Buffer(), NS_ERROR_NOT_AVAILABLE);
+  nsCString manifest;
+  MOZ_TRY_VAR(manifest, URLPreloader::ReadZip(jarReader, nsDependentCString(name)));
 
   PrefParseState ps;
   PREF_InitParseState(&ps, PREF_ReaderCallback, ReportToConsole, nullptr);
-  PREF_ParseBuf(&ps, manifest, manifest.Length());
+  PREF_ParseBuf(&ps, manifest.get(), manifest.Length());
   PREF_FinalizeParseState(&ps);
 
   return NS_OK;
