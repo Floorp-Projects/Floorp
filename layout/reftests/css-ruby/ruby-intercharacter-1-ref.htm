@@ -1,0 +1,34 @@
+<!DOCTYPE html>
+<!--
+Reftest 1 for Bug 1395777 (reference file)
+-->
+<html lang="zh-TW">
+<head>
+<meta charset="UTF-8">
+<style>
+body {
+  font-size: 30px;
+  line-height: 1;
+}
+.rbc {
+  height: 30px;
+  display: inline-block;
+  vertical-align: top;
+}
+.rtc {
+  height: 30px;
+  display: inline-block;
+  writing-mode: vertical-rl;
+  text-orientation: upright;
+  vertical-align: top;
+  text-align: center;
+  font-size: 30%;
+}
+</style>
+</head>
+<body>
+  <div>
+    <span class="rbc">BASE</span><span class="rtc">RT</span>
+  </div>
+</body>
+</html>
