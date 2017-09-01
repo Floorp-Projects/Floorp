@@ -183,6 +183,6 @@ void main(void) {
     float value = color(pos, p0Rect, p1Rect, radii, sigma);
 
     value = max(value, 0.0);
-    oFragColor = dither(vec4(1.0, 1.0, 1.0, vInverted == 1.0 ? 1.0 - value : value));
+    oFragColor = dither(vec4(vInverted == 1.0 ? 1.0 - value : value));
 }
 #endif

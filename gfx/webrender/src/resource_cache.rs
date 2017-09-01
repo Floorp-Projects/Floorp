@@ -2,6 +2,7 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
+use app_units::Au;
 use device::TextureFilter;
 use frame::FrameId;
 use glyph_cache::GlyphCache;
@@ -17,7 +18,9 @@ use texture_cache::{TextureCache, TextureCacheHandle};
 use api::{BlobImageRenderer, BlobImageDescriptor, BlobImageError, BlobImageRequest};
 use api::{BlobImageResources, BlobImageData, ResourceUpdates, ResourceUpdate, AddFont};
 use api::{DevicePoint, DeviceUintRect, DeviceUintSize};
-use api::{Epoch, FontInstance, FontKey, FontTemplate};
+use api::{Epoch, FontInstance, FontInstanceKey, FontKey, FontTemplate};
+use api::{FontInstanceOptions, FontInstancePlatformOptions};
+use api::{ColorF, FontRenderMode, SubpixelDirection};
 use api::{GlyphDimensions, GlyphKey, IdNamespace};
 use api::{ImageData, ImageDescriptor, ImageKey, ImageRendering};
 use api::{TileOffset, TileSize};
@@ -170,6 +173,7 @@ impl Into<BlobImageRequest> for ImageRequest {
 
 struct Resources {
     font_templates: FastHashMap<FontKey, FontTemplate>,
+    font_instances: FastHashMap<FontInstanceKey, FontInstance>,
     image_templates: ImageTemplates,
 }
 
@@ -213,6 +217,7 @@ impl ResourceCache {
             cached_images: ResourceClassCache::new(),
             resources: Resources {
                 font_templates: FastHashMap::default(),
+                font_instances: FastHashMap::default(),
                 image_templates: ImageTemplates::new(),
             },
             cached_glyph_dimensions: FastHashMap::default(),
@@ -279,6 +284,13 @@ impl ResourceCache {
                 ResourceUpdate::DeleteFont(font) => {
                     self.delete_font_template(font);
                 }
+                ResourceUpdate::AddFontInstance(instance) => {
+                    self.add_font_instance(instance.key, instance.font_key, instance.glyph_size,
+                                           instance.options, instance.platform_options);
+                }
+                ResourceUpdate::DeleteFontInstance(instance) => {
+                    self.delete_font_instance(instance);
+                }
             }
         }
     }
@@ -296,6 +308,40 @@ impl ResourceCache {
         if let Some(ref mut r) = self.blob_image_renderer {
             r.delete_font(font_key);
         }
+    }
+
+    pub fn add_font_instance(&mut self,
+                             instance_key: FontInstanceKey,
+                             font_key: FontKey,
+                             glyph_size: Au,
+                             options: Option<FontInstanceOptions>,
+                             platform_options: Option<FontInstancePlatformOptions>) {
+        let mut render_mode = FontRenderMode::Subpixel;
+        let mut subpx_dir = SubpixelDirection::Horizontal;
+        if let Some(options) = options {
+            render_mode = options.render_mode;
+            if render_mode == FontRenderMode::Mono {
+                subpx_dir = SubpixelDirection::None;
+            }
+        }
+        let instance = FontInstance::new(font_key,
+                                         glyph_size,
+                                         ColorF::new(0.0, 0.0, 0.0, 1.0),
+                                         render_mode,
+                                         subpx_dir,
+                                         platform_options);
+        self.resources.font_instances.insert(instance_key, instance);
+    }
+
+    pub fn delete_font_instance(&mut self, instance_key: FontInstanceKey) {
+        self.resources.font_instances.remove(&instance_key);
+        if let Some(ref mut r) = self.blob_image_renderer {
+            r.delete_font_instance(instance_key);
+        }
+    }
+
+    pub fn get_font_instance(&self, instance_key: FontInstanceKey) -> Option<&FontInstance> {
+        self.resources.font_instances.get(&instance_key)
     }
 
     pub fn add_image_template(&mut self,
@@ -607,13 +653,11 @@ impl ResourceCache {
         );
 
         // Apply any updates of new / updated images (incl. blobs) to the texture cache.
-        self.update_texture_cache(gpu_cache, texture_cache_profile);
-        self.texture_cache.end_frame();
+        self.update_texture_cache(gpu_cache);
+        self.texture_cache.end_frame(texture_cache_profile);
     }
 
-    fn update_texture_cache(&mut self,
-                            gpu_cache: &mut GpuCache,
-                            _texture_cache_profile: &mut TextureCacheProfileCounters) {
+    fn update_texture_cache(&mut self, gpu_cache: &mut GpuCache) {
         for request in self.pending_image_requests.drain() {
             let image_template = self.resources.image_templates.get_mut(request.key).unwrap();
             debug_assert!(image_template.data.uses_texture_cache());
@@ -667,7 +711,7 @@ impl ResourceCache {
                 let (stride, offset) = if tiled_on_cpu {
                     (image_descriptor.stride, 0)
                 } else {
-                    let bpp = image_descriptor.format.bytes_per_pixel().unwrap();
+                    let bpp = image_descriptor.format.bytes_per_pixel();
                     let stride = image_descriptor.compute_stride();
                     let offset = image_descriptor.offset + tile.y as u32 * tile_size as u32 * stride
                                                          + tile.x as u32 * tile_size as u32 * bpp;

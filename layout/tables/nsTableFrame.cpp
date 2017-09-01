@@ -688,8 +688,7 @@ nsTableFrame::CreateAnonymousColGroupFrame(nsTableColGroupType aColGroupType)
 
   RefPtr<nsStyleContext> colGroupStyle;
   colGroupStyle = shell->StyleSet()->
-    ResolveInheritingAnonymousBoxStyle(nsCSSAnonBoxes::tableColGroup,
-                                       mStyleContext);
+    ResolveNonInheritingAnonymousBoxStyle(nsCSSAnonBoxes::tableColGroup);
   // Create a col group frame
   nsIFrame* newFrame = NS_NewTableColGroupFrame(shell, colGroupStyle);
   ((nsTableColGroupFrame *)newFrame)->SetColType(aColGroupType);
@@ -8051,27 +8050,6 @@ nsTableFrame::AppendDirectlyOwnedAnonBoxes(nsTArray<OwnedAnonBox>& aResult)
              "What happened to our parent?");
   aResult.AppendElement(
     OwnedAnonBox(wrapper, &UpdateStyleOfOwnedAnonBoxesForTableWrapper));
-
-  // We may also have an anonymous colgroup that we're responsible for.
-  // Specifically, we can have three types of colgroup frames: (A) corresponding
-  // to actual elements with "display: table-column-group", (B) wrapping runs of
-  // "display: table-column" kids, and (C) one colgroup frame added at the end
-  // to hold the anonymous colframes we need so each cell has an associated
-  // colframe.
-  //
-  // These types of colgroups are supposed to correspond to the values of the
-  // nsTableColGroupType enum: type (A) to eColGroupContent, type (B) to
-  // eColGroupAnonymousCol, and type (C) to eColGroupAnonymousCell.  But we
-  // never actually set eColGroupAnonymousCol on any colgroups right now; see
-  // bug 1387568.  In any case, eColGroupAnonymousCell works correctly to detect
-  // colgroups of type (C), which are the ones we want to restyle here.  Type
-  // (A) will be restyled via their element, and type (B) via the machinery for
-  // restyling wrapper anonymous frames.
-  auto colGroupFrame =
-    static_cast<nsTableColGroupFrame*>(mColGroups.LastChild());
-  if (colGroupFrame && colGroupFrame->GetColType() == eColGroupAnonymousCell) {
-    aResult.AppendElement(colGroupFrame);
-  }
 }
 
 /* static */ void

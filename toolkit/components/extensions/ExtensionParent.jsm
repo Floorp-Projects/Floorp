@@ -80,7 +80,9 @@ let apiManager = new class extends SchemaAPIManager {
       let promises = [];
       for (let apiName of this.eventModules.get("startup")) {
         promises.push(this.asyncGetAPI(apiName, extension).then(api => {
-          api.onStartup(extension.startupReason);
+          if (api) {
+            api.onStartup(extension.startupReason);
+          }
         }));
       }
 

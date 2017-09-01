@@ -33,6 +33,8 @@ EXPORTS
   wcsdup=wrap_wcsdup
   _wcsdup=wrap_wcsdup
   jemalloc_stats
+  jemalloc_purge_freed_pages
   jemalloc_free_dirty_pages
   jemalloc_thread_local_arena
+  jemalloc_ptr_info
 #endif

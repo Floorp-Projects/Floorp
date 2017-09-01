@@ -127,6 +127,11 @@ ProxyStream::ProxyStream(REFIID aIID, const BYTE* aInitBuf,
     CrashReporter::AnnotateCrashReport(
         NS_LITERAL_CSTRING("CoUnmarshalInterfaceResult"), hrAsStr);
     AnnotateInterfaceRegistration(aIID);
+    if (!mUnmarshaledProxy) {
+      CrashReporter::AnnotateCrashReport(kCrashReportKey,
+                                         NS_LITERAL_CSTRING("!mUnmarshaledProxy"));
+    }
+
 #if defined(ACCESSIBILITY)
     AnnotateClassRegistration(CLSID_AccessibleHandler);
     CrashReporter::AnnotateCrashReport(NS_LITERAL_CSTRING("UnmarshalActCtx"),
@@ -253,13 +258,6 @@ ProxyStream::GetInterface(void** aOutInterface)
   if (!aOutInterface) {
     return false;
   }
-
-#if defined(MOZ_CRASHREPORTER)
-  if (!mUnmarshaledProxy) {
-    CrashReporter::AnnotateCrashReport(NS_LITERAL_CSTRING("ProxyStreamUnmarshalStatus"),
-                                       NS_LITERAL_CSTRING("!mUnmarshaledProxy"));
-  }
-#endif // defined(MOZ_CRASHREPORTER)
 
   *aOutInterface = mUnmarshaledProxy.release();
   return true;

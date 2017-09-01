@@ -318,15 +318,15 @@ const PanelUI = {
    *
    * @return a Promise that resolves once the panel is ready to roll.
    */
-  ensureReady() {
-    if (this._readyPromise) {
-      return this._readyPromise;
+  async ensureReady() {
+    if (this._isReady) {
+      return;
     }
+
+    await window.delayedStartupPromise;
     this._ensureEventListenersAdded();
     this.panel.hidden = false;
-    this._readyPromise = Promise.resolve();
     this._isReady = true;
-    return this._readyPromise;
   },
 
   /**

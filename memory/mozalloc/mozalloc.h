@@ -98,6 +98,12 @@ MFBT_API size_t moz_malloc_usable_size(void *ptr);
 
 MFBT_API size_t moz_malloc_size_of(const void *ptr);
 
+/*
+ * Like moz_malloc_size_of(), but works reliably with interior pointers, i.e.
+ * pointers into the middle of a live allocation.
+ */
+MFBT_API size_t moz_malloc_enclosing_size_of(const void *ptr);
+
 #if defined(HAVE_STRNDUP)
 MFBT_API char* moz_xstrndup(const char* str, size_t strsize)
     MOZ_ALLOCATOR;
