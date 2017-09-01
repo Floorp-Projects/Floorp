@@ -12448,8 +12448,14 @@ IonBuilder::jsop_functionthis()
         return Ok();
     }
 
+    // Beyond this point we may need to access non-syntactic global. Ion doesn't
+    // currently support this so just abort.
+    if (script()->hasNonSyntacticScope())
+        return abort(AbortReason::Disable, "JSOP_FUNCTIONTHIS would need non-syntactic global");
+
     if (IsNullOrUndefined(def->type())) {
-        pushConstant(GetThisValue(&script()->global()));
+        LexicalEnvironmentObject* globalLexical = &script()->global().lexicalEnvironment();
+        pushConstant(globalLexical->thisValue());
         return Ok();
     }
 

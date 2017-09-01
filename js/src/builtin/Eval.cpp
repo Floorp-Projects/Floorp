@@ -469,7 +469,9 @@ js::ExecuteInGlobalAndReturnScope(JSContext* cx, HandleObject global, HandleScri
 
     // Unlike the non-syntactic scope chain API used by the subscript loader,
     // this API creates a fresh block scope each time.
-    env = LexicalEnvironmentObject::createNonSyntactic(cx, env);
+    //
+    // NOTE: Gecko FrameScripts expect lexical |this| to be the global.
+    env = LexicalEnvironmentObject::createNonSyntactic(cx, env, global);
     if (!env)
         return false;
 

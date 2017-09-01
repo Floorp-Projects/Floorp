@@ -2407,24 +2407,19 @@ HTMLEditor::GetSelectedElement(const nsAString& aTagName,
   RefPtr<nsRange> range = selection->GetRangeAt(0);
   NS_ENSURE_STATE(range);
 
-  nsCOMPtr<nsIDOMNode> startContainer;
-  nsresult rv = range->GetStartContainer(getter_AddRefs(startContainer));
-  NS_ENSURE_SUCCESS(rv, rv);
+  nsCOMPtr<nsINode> startContainer = range->GetStartContainer();
   uint32_t startOffset = range->StartOffset();
 
-  nsCOMPtr<nsIDOMNode> endContainer;
-  rv = range->GetEndContainer(getter_AddRefs(endContainer));
-  NS_ENSURE_SUCCESS(rv, rv);
+  nsCOMPtr<nsINode> endContainer = range->GetEndContainer();
   uint32_t endOffset = range->EndOffset();
 
   // Optimization for a single selected element
   if (startContainer && startContainer == endContainer &&
       endOffset - startOffset == 1) {
-    nsCOMPtr<nsIDOMNode> selectedNode =
-      GetChildAt(startContainer, static_cast<int32_t>(startOffset));
-    NS_ENSURE_SUCCESS(rv, NS_OK);
+    nsCOMPtr<nsINode> selectedNode =
+      startContainer->GetChildAt(static_cast<int32_t>(startOffset));
     if (selectedNode) {
-      selectedNode->GetNodeName(domTagName);
+      selectedNode->AsDOMNode()->GetNodeName(domTagName);
       ToLowerCase(domTagName);
 
       // Test for appropriate node type requested
@@ -2457,9 +2452,10 @@ HTMLEditor::GetSelectedElement(const nsAString& aTagName,
       // Link node must be the same for both ends of selection
       if (anchorNode) {
         nsCOMPtr<nsIDOMElement> parentLinkOfAnchor;
-        rv = GetElementOrParentByTagName(NS_LITERAL_STRING("href"),
-                                         GetAsDOMNode(anchorNode),
-                                         getter_AddRefs(parentLinkOfAnchor));
+        nsresult rv =
+          GetElementOrParentByTagName(NS_LITERAL_STRING("href"),
+                                      GetAsDOMNode(anchorNode),
+                                      getter_AddRefs(parentLinkOfAnchor));
         // XXX: ERROR_HANDLING  can parentLinkOfAnchor be null?
         if (NS_SUCCEEDED(rv) && parentLinkOfAnchor) {
           if (isCollapsed) {
@@ -2498,6 +2494,7 @@ HTMLEditor::GetSelectedElement(const nsAString& aTagName,
     if (!isCollapsed) {
       RefPtr<nsRange> currange = selection->GetRangeAt(0);
       if (currange) {
+        nsresult rv;
         nsCOMPtr<nsIContentIterator> iter =
           do_CreateInstance("@mozilla.org/content/post-content-iterator;1",
                             &rv);
@@ -2563,7 +2560,7 @@ HTMLEditor::GetSelectedElement(const nsAString& aTagName,
     // Getters must addref
     NS_ADDREF(*aReturn);
   }
-  return rv;
+  return NS_OK;
 }
 
 already_AddRefed<Element>

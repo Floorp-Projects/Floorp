@@ -582,7 +582,7 @@ JSCompartment::getOrCreateNonSyntacticLexicalEnvironment(JSContext* cx, HandleOb
     RootedObject lexicalEnv(cx, nonSyntacticLexicalEnvironments_->lookup(key));
 
     if (!lexicalEnv) {
-        lexicalEnv = LexicalEnvironmentObject::createNonSyntactic(cx, enclosing);
+        lexicalEnv = LexicalEnvironmentObject::createNonSyntactic(cx, enclosing, enclosing);
         if (!lexicalEnv)
             return nullptr;
         if (!nonSyntacticLexicalEnvironments_->add(cx, key, lexicalEnv))

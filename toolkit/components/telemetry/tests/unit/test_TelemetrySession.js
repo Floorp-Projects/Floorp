@@ -9,6 +9,7 @@
  */
 
 Cu.import("resource://services-common/utils.js");
+Cu.import("resource://gre/modules/AppConstants.jsm");
 Cu.import("resource://gre/modules/ClientID.jsm");
 Cu.import("resource://gre/modules/Services.jsm");
 Cu.import("resource://gre/modules/LightweightThemeManager.jsm", this);
@@ -165,7 +166,7 @@ function checkPayloadInfo(data) {
   let positiveNumberCheck = arg => { return numberCheck(arg) && (arg >= 0); };
   let stringCheck = arg => { return (typeof arg == "string") && (arg != ""); };
   let revisionCheck = arg => {
-    return (Services.appinfo.isOfficial) ? stringCheck(arg) : (typeof arg == "string");
+    return (AppConstants.MOZILLA_OFFICIAL) ? stringCheck(arg) : (typeof arg == "string");
   };
   let uuidCheck = arg => {
     return UUID_REGEX.test(arg);
