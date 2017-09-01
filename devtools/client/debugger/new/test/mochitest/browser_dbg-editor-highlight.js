@@ -44,7 +44,7 @@ add_task(function*() {
   // Make sure the source is in the loading state, wait for it to be
   // fully loaded, and check the highlighted line.
   const simple1 = findSource(dbg, "simple1.js");
-  ok(getSource(getState(), simple1.id).get("loading"));
+  ok(getSource(getState(), simple1.id).get("loadedState"));
   yield waitForDispatch(dbg, "LOAD_SOURCE_TEXT");
   ok(getSource(getState(), simple1.id).get("text"));
   assertHighlightLocation(dbg, "simple1.js", 6);
