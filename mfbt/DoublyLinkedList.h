@@ -365,6 +365,19 @@ public:
   bool contains(const T& aElm) {
     return find(aElm) != Iterator();
   }
+
+  /**
+   * Returns whether the given element might be in the list. Note that this
+   * assumes the element is either in the list or not in the list, and ignores
+   * the case where the element might be in another list in order to make the
+   * check fast.
+   */
+  bool ElementProbablyInList(T* aElm) {
+    if (isEmpty()) {
+      return false;
+    }
+    return !ElementNotInList(aElm);
+  }
 };
 
 } // namespace mozilla
