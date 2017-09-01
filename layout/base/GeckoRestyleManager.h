@@ -88,6 +88,16 @@ public:
    */
   nsresult ReparentStyleContext(nsIFrame* aFrame);
 
+private:
+  /**
+   * Reparent the descendants of aFrame.  This is used by ReparentStyleContext
+   * and shouldn't be called by anyone else.  aProviderChild, if non-null, is a
+   * child that was the style parent for aFrame and hence shouldn't be
+   * reparented.
+   */
+  void ReparentFrameDescendants(nsIFrame* aFrame, nsIFrame* aProviderChild);
+
+public:
   void ClearSelectors() {
     mPendingRestyles.ClearSelectors();
   }
