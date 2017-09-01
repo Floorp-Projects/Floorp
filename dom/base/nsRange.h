@@ -173,6 +173,19 @@ public:
                           nsINode* aEndContainer, uint32_t aEndOffset);
 
   /**
+   * Adds all nodes between |aStartContent| and |aEndContent| to the range.
+   * The start offset will be set before |aStartContent|,
+   * while the end offset will be set immediately after |aEndContent|.
+   *
+   * Caller must guarantee both nodes are non null and
+   * children of |aContainer| and that |aEndContent| is after |aStartContent|.
+   */
+  void
+  SelectNodesInContainer(nsINode* aContainer,
+                         nsIContent* aStartContent,
+                         nsIContent* aEndContent);
+
+  /**
    * CollapseTo() works similar to call both SetStart() and SetEnd() with
    * same node and offset.  This just calls SetStartAndParent() to set
    * collapsed range at aContainer and aOffset.
