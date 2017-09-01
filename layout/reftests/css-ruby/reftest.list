@@ -45,6 +45,10 @@ load nested-ruby-1.html
 == ruby-align-1a.html ruby-align-1-ref.html
 == ruby-align-2.html ruby-align-2-ref.html
 == ruby-align-2a.html ruby-align-2-ref.html
+pref(layout.css.ruby.intercharacter.enabled,true) == ruby-intercharacter-1.htm ruby-intercharacter-1-ref.htm
+pref(layout.css.ruby.intercharacter.enabled,false) != ruby-intercharacter-1.htm ruby-intercharacter-1-ref.htm
+pref(layout.css.ruby.intercharacter.enabled,true) == ruby-intercharacter-2.htm ruby-intercharacter-2-ref.htm
+pref(layout.css.ruby.intercharacter.enabled,false) != ruby-intercharacter-2.htm ruby-intercharacter-2-ref.htm
 == ruby-position-horizontal.html ruby-position-horizontal-ref.html
 == ruby-position-vertical-lr.html ruby-position-vertical-lr-ref.html
 == ruby-position-vertical-rl.html ruby-position-vertical-rl-ref.html

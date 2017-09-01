@@ -345,7 +345,18 @@ nsRubyFrame::ReflowSegment(nsPresContext* aPresContext,
 
     LogicalPoint position(lineWM);
     if (side.isSome()) {
-      if (side.value() == eLogicalSideBStart) {
+      if (nsLayoutUtils::IsInterCharacterRubyEnabled() &&
+          rtcWM.IsVerticalRL() &&
+          lineWM.GetInlineDir() == WritingMode::eInlineLTR) {
+        // Inter-character ruby annotations are only supported for vertical-rl
+        // in ltr horizontal writing. Fall back to non-inter-character behavior
+        // otherwise.
+        LogicalPoint offset(lineWM, offsetRect.ISize(lineWM),
+          offsetRect.BSize(lineWM) > size.BSize(lineWM) ?
+          (offsetRect.BSize(lineWM) - size.BSize(lineWM)) / 2 : 0);
+        position = offsetRect.Origin(lineWM) + offset;
+        aReflowInput.mLineLayout->AdvanceICoord(size.ISize(lineWM));
+      } else if (side.value() == eLogicalSideBStart) {
         offsetRect.BStart(lineWM) -= size.BSize(lineWM);
         offsetRect.BSize(lineWM) += size.BSize(lineWM);
         position = offsetRect.Origin(lineWM);

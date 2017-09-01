@@ -2361,6 +2361,11 @@ public:
    */
   static bool IsTextAlignUnsafeValueEnabled();
 
+  /**
+   * Checks whether support for inter-character ruby is enabled.
+   */
+  static bool IsInterCharacterRubyEnabled();
+
   static bool InterruptibleReflowEnabled()
   {
     return sInterruptibleReflowEnabled;
