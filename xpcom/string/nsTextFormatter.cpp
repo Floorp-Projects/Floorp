@@ -864,6 +864,10 @@ dosprintf(SprintfStateStr* aState, const char16_t* aFmt, va_list aAp)
       continue;
     }
 
+    // Save the location of the "%" in case we decide it isn't a
+    // format and want to just emit the text from the format string.
+    const char16_t* percentPointer = aFmt - 1;
+
     /*
     ** Gobble up the % format string. Hopefully we have handled all
     ** of the strange cases!
@@ -1159,17 +1163,7 @@ dosprintf(SprintfStateStr* aState, const char16_t* aFmt, va_list aAp)
 
       default:
         /* Not a % token after all... skip it */
-#if 0
-        MOZ_ASSERT(0);
-#endif
-        char16_t perct = '%';
-        rv = (*aState->stuff)(aState, &perct, 1);
-        if (rv < 0) {
-          va_end(aAp);
-          FREE_IF_NECESSARY(nas);
-          return rv;
-        }
-        rv = (*aState->stuff)(aState, aFmt - 1, 1);
+        rv = (*aState->stuff)(aState, percentPointer, aFmt - percentPointer);
         if (rv < 0) {
           va_end(aAp);
           FREE_IF_NECESSARY(nas);
