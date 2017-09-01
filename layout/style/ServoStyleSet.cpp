@@ -890,8 +890,7 @@ ServoStyleSet::StyleDocument(ServoTraversalFlags aBaseFlags)
   bool postTraversalRequired = false;
 
   Element* rootElement = doc->GetRootElement();
-  // NB: We distinguish between the main document and document-level NAC here.
-  const bool isInitialForMainDoc = rootElement && !rootElement->HasServoData();
+  MOZ_ASSERT_IF(rootElement, rootElement->HasServoData());
 
   // Do the first traversal.
   DocumentStyleRootIterator iter(doc->GetServoRestyleRoot());
@@ -931,18 +930,8 @@ ServoStyleSet::StyleDocument(ServoTraversalFlags aBaseFlags)
   if (mPresContext->EffectCompositor()->PreTraverse(aBaseFlags)) {
     nsINode* styleRoot = doc->GetServoRestyleRoot();
     Element* root = styleRoot->IsElement() ? styleRoot->AsElement() : rootElement;
-    auto flags = aBaseFlags;
-    flags |= ServoTraversalFlags::ParallelTraversal;
-    if (isInitialForMainDoc) {
-      // We're doing initial styling, and the additional animation
-      // traversal will change the styles that were set by the first traversal.
-      // This would normally require a post-traversal to update the style
-      // contexts, but since this is actually the initial styling, there are
-      // no style contexts to update and no frames to apply the change hints to,
-      // so we just do a forgetful traversal and clear the flags on the way.
-      flags |= ServoTraversalFlags::Forgetful |
-               ServoTraversalFlags::ClearAnimationOnlyDirtyDescendants;
-    }
+
+    auto flags = aBaseFlags | ServoTraversalFlags::ParallelTraversal;
 
     bool required = Servo_TraverseSubtree(root, mRawSet.get(), &snapshots, flags);
     postTraversalRequired |= required;
