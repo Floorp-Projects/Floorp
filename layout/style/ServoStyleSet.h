@@ -118,6 +118,10 @@ public:
   explicit ServoStyleSet(Kind aKind);
   ~ServoStyleSet();
 
+  static UniquePtr<ServoStyleSet>
+  CreateXBLServoStyleSet(nsPresContext* aPresContext,
+                         const nsTArray<RefPtr<ServoStyleSheet>>& aNewSheets);
+
   void Init(nsPresContext* aPresContext, nsBindingManager* aBindingManager);
   void BeginShutdown();
   void Shutdown();
@@ -429,11 +433,6 @@ public:
 
   // Returns the style rule map.
   ServoStyleRuleMap* StyleRuleMap();
-
-  // Clear mPresContext. This is needed after XBL ServoStyleSet is created.
-  void ClearPresContext() {
-    mPresContext = nullptr;
-  }
 
   // Return whether this is the last PresContext which uses this XBL styleset.
   bool IsPresContextChanged(nsPresContext* aPresContext) const {
