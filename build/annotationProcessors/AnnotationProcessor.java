@@ -29,7 +29,7 @@ public class AnnotationProcessor {
 
     public static void main(String[] args) {
         // We expect a list of jars on the commandline. If missing, whinge about it.
-        if (args.length <= 2) {
+        if (args.length < 2) {
             System.err.println("Usage: java AnnotationProcessor outprefix jarfiles ...");
             System.exit(1);
         }
@@ -56,15 +56,19 @@ public class AnnotationProcessor {
                 "#ifndef " + getHeaderGuardName(HEADER_FILE) + "\n" +
                 "#define " + getHeaderGuardName(HEADER_FILE) + "\n" +
                 "\n" +
+                "#ifndef MOZ_PREPROCESSOR\n" +
                 "#include \"mozilla/jni/Refs.h\"\n" +
+                "#endif\n" +
                 "\n" +
                 "namespace mozilla {\n" +
                 "namespace java {\n" +
                 "\n");
 
         implementationFile.append(
+                "#ifndef MOZ_PREPROCESSOR\n" +
                 "#include \"" + HEADER_FILE + "\"\n" +
                 "#include \"mozilla/jni/Accessors.h\"\n" +
+                "#endif\n" +
                 "\n" +
                 "namespace mozilla {\n" +
                 "namespace java {\n" +
@@ -74,8 +78,10 @@ public class AnnotationProcessor {
                 "#ifndef " + getHeaderGuardName(NATIVES_FILE) + "\n" +
                 "#define " + getHeaderGuardName(NATIVES_FILE) + "\n" +
                 "\n" +
+                "#ifndef MOZ_PREPROCESSOR\n" +
                 "#include \"" + HEADER_FILE + "\"\n" +
                 "#include \"mozilla/jni/Natives.h\"\n" +
+                "#endif\n" +
                 "\n" +
                 "namespace mozilla {\n" +
                 "namespace java {\n" +
