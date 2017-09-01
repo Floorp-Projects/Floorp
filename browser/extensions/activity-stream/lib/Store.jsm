@@ -9,7 +9,6 @@ const {ActivityStreamMessageChannel} = Cu.import("resource://activity-stream/lib
 const {Prefs} = Cu.import("resource://activity-stream/lib/ActivityStreamPrefs.jsm", {});
 const {reducers} = Cu.import("resource://activity-stream/common/Reducers.jsm", {});
 const {redux} = Cu.import("resource://activity-stream/vendor/Redux.jsm", {});
-const {actionTypes: at} = Cu.import("resource://activity-stream/common/Actions.jsm", {});
 
 /**
  * Store - This has a similar structure to a redux store, but includes some extra
@@ -61,11 +60,15 @@ this.Store = class Store {
    *
    * @param  {string} feedName The name of a feed, as defined in the object
    *                           passed to Store.init
+   * @param {Action} initAction An optional action to initialize the feed
    */
-  initFeed(feedName) {
+  initFeed(feedName, initAction) {
     const feed = this._feedFactories.get(feedName)();
     feed.store = this;
     this.feeds.set(feedName, feed);
+    if (initAction && feed.onAction) {
+      feed.onAction(initAction);
+    }
   }
 
   /**
@@ -73,14 +76,15 @@ this.Store = class Store {
    *
    * @param  {string} feedName The name of a feed, as defined in the object
    *                           passed to Store.init
+   * @param {Action} uninitAction An optional action to uninitialize the feed
    */
-  uninitFeed(feedName) {
+  uninitFeed(feedName, uninitAction) {
     const feed = this.feeds.get(feedName);
     if (!feed) {
       return;
     }
-    if (feed.uninit) {
-      feed.uninit();
+    if (uninitAction && feed.onAction) {
+      feed.onAction(uninitAction);
     }
     this.feeds.delete(feedName);
   }
@@ -91,10 +95,9 @@ this.Store = class Store {
   onPrefChanged(name, value) {
     if (this._feedFactories.has(name)) {
       if (value) {
-        this.initFeed(name);
-        this.dispatch({type: at.FEED_INIT, data: name});
+        this.initFeed(name, this._initAction);
       } else {
-        this.uninitFeed(name);
+        this.uninitFeed(name, this._uninitAction);
       }
     }
   }
@@ -105,9 +108,15 @@ this.Store = class Store {
    * @param  {Map} feedFactories A Map of feeds with the name of the pref for
    *                                the feed as the key and a function that
    *                                constructs an instance of the feed.
+   * @param {Action} initAction An optional action that will be dispatched
+   *                            to feeds when they're created.
+   * @param {Action} uninitAction An optional action for when feeds uninit.
    */
-  init(feedFactories) {
+  init(feedFactories, initAction, uninitAction) {
     this._feedFactories = feedFactories;
+    this._initAction = initAction;
+    this._uninitAction = uninitAction;
+
     for (const pref of feedFactories.keys()) {
       if (this._prefs.get(pref)) {
         this.initFeed(pref);
@@ -116,6 +125,11 @@ this.Store = class Store {
 
     this._prefs.observeBranch(this);
     this._messageChannel.createChannel();
+
+    // Dispatch an initial action after all enabled feeds are ready
+    if (initAction) {
+      this.dispatch(initAction);
+    }
   }
 
   /**
@@ -125,8 +139,10 @@ this.Store = class Store {
    * @return {type}  description
    */
   uninit() {
+    if (this._uninitAction) {
+      this.dispatch(this._uninitAction);
+    }
     this._prefs.ignoreBranch(this);
-    this.feeds.forEach(feed => this.uninitFeed(feed));
     this.feeds.clear();
     this._feedFactories = null;
     this._messageChannel.destroyChannel();

@@ -109,12 +109,12 @@ describe("SectionsManager", () => {
     });
   });
   describe("#disableSection", () => {
-    it("should call updateSection with {enabled: false, rows: []}", () => {
+    it("should call updateSection with {enabled: false, rows: [], initialized: false}", () => {
       sinon.spy(SectionsManager, "updateSection");
       SectionsManager.addSection(FAKE_ID, FAKE_OPTIONS);
       SectionsManager.disableSection(FAKE_ID);
       assert.calledOnce(SectionsManager.updateSection);
-      assert.calledWith(SectionsManager.updateSection, FAKE_ID, {enabled: false, rows: []}, true);
+      assert.calledWith(SectionsManager.updateSection, FAKE_ID, {enabled: false, rows: [], initialized: false}, true);
       SectionsManager.updateSection.restore();
     });
     it("should emit a DISABLE_SECTION event", () => {
@@ -319,6 +319,13 @@ describe("SectionsFeed", () => {
       assert.calledOnce(SectionsManager.enableSection);
       assert.calledWith(SectionsManager.enableSection, 1234);
       SectionsManager.enableSection.restore();
+    });
+    it("should call the feed's uninit on UNINIT", () => {
+      sinon.stub(feed, "uninit");
+
+      feed.onAction({type: "UNINIT"});
+
+      assert.calledOnce(feed.uninit);
     });
     it("should emit a ACTION_DISPATCHED event and forward any action in ACTIONS_TO_PROXY if there are any sections", () => {
       const spy = sinon.spy();

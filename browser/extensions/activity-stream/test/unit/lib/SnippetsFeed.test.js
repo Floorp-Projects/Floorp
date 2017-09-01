@@ -62,7 +62,7 @@ describe("SnippetsFeed", () => {
     assert.deepEqual(action.data.selectedSearchEngine, searchData);
     assert.propertyVal(action.data, "defaultBrowser", true);
   });
-  it("should call .init on an INIT aciton", () => {
+  it("should call .init on an INIT action", () => {
     const feed = new SnippetsFeed();
     sandbox.stub(feed, "init");
     feed.store = {dispatch: sandbox.stub()};
@@ -70,14 +70,13 @@ describe("SnippetsFeed", () => {
     feed.onAction({type: at.INIT});
     assert.calledOnce(feed.init);
   });
-  it("should call .init when a FEED_INIT happens for feeds.snippets", () => {
+  it("should call .uninit on an UNINIT action", () => {
     const feed = new SnippetsFeed();
-    sandbox.stub(feed, "init");
+    sandbox.stub(feed, "uninit");
     feed.store = {dispatch: sandbox.stub()};
 
-    feed.onAction({type: at.FEED_INIT, data: "feeds.snippets"});
-
-    assert.calledOnce(feed.init);
+    feed.onAction({type: at.UNINIT});
+    assert.calledOnce(feed.uninit);
   });
   it("should dispatch a SNIPPETS_RESET on uninit", () => {
     const feed = new SnippetsFeed();

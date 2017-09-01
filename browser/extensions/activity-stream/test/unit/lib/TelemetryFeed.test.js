@@ -479,6 +479,11 @@ describe("TelemetryFeed", () => {
       instance.onAction({type: at.INIT});
       assert.calledOnce(stub);
     });
+    it("should call .uninit() on an UNINIT action", () => {
+      const stub = sandbox.stub(instance, "uninit");
+      instance.onAction({type: at.UNINIT});
+      assert.calledOnce(stub);
+    });
     it("should call .addSession() on a NEW_TAB_INIT action", () => {
       const stub = sandbox.stub(instance, "addSession");
       sandbox.stub(instance, "setLoadTriggerInfo");

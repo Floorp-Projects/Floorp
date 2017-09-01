@@ -13,13 +13,12 @@ this.Dedupe = class Dedupe {
   }
 
   /**
-   * Dedupe an array containing groups of elements.
-   * Duplicate removal favors earlier groups.
+   * Dedupe any number of grouped elements favoring those from earlier groups.
    *
    * @param {Array} groups Contains an arbitrary number of arrays of elements.
-   * @returns {Array}
+   * @returns {Array} A matching array of each provided group deduped.
    */
-  group(groups) {
+  group(...groups) {
     const globalKeys = new Set();
     const result = [];
     for (const values of groups) {

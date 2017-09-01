@@ -62,7 +62,7 @@ describe("Top Sites Feed", () => {
     }));
     feed = new TopSitesFeed();
     feed.store = {dispatch: sinon.spy(), getState() { return {TopSites: {rows: Array(12).fill("site")}}; }};
-    feed.dedupe.group = sites => sites;
+    feed.dedupe.group = (...sites) => sites;
     links = FAKE_LINKS;
     clock = sinon.useFakeTimers();
   });
@@ -86,6 +86,12 @@ describe("Top Sites Feed", () => {
       feed.refreshDefaults("https://foo.com");
 
       DEFAULT_TOP_SITES.forEach(link => assert.propertyVal(link, "isDefault", true));
+    });
+    it("should have default sites with appropriate hostname", () => {
+      feed.refreshDefaults("https://foo.com");
+
+      DEFAULT_TOP_SITES.forEach(link => assert.propertyVal(link, "hostname",
+        shortURLStub(link)));
     });
     it("should add no defaults on empty pref", () => {
       feed.refreshDefaults("");
@@ -143,7 +149,7 @@ describe("Top Sites Feed", () => {
       assert.notInclude(result, blockedDefaultSite);
     });
     it("should call dedupe on the links", async () => {
-      const stub = sinon.stub(feed.dedupe, "group").callsFake(id => id);
+      const stub = sinon.stub(feed.dedupe, "group").callsFake((...id) => id);
 
       await feed.getLinksWithDefaults();
 
@@ -187,6 +193,7 @@ describe("Top Sites Feed", () => {
           "common/Reducers.jsm": {insertPinned, TOP_SITES_SHOWMORE_LENGTH},
           "lib/Screenshots.jsm": {Screenshots: fakeScreenshot}
         }));
+        sandbox.stub(global.Services.eTLD, "getPublicSuffix").returns("com");
         feed = new TopSitesFeed();
       });
       it("should not dedupe pinned sites", async () => {
@@ -202,21 +209,25 @@ describe("Top Sites Feed", () => {
         assert.equal(sites[1].url, fakeNewTabUtils.pinnedLinks.links[1].url);
         assert.equal(sites[0].hostname, sites[1].hostname);
       });
-      it("should not dedupe pinned sites", async () => {
+      it("should prefer pinned sites over links", async () => {
         fakeNewTabUtils.pinnedLinks.links = [
           {url: "https://developer.mozilla.org/en-US/docs/Web"},
           {url: "https://developer.mozilla.org/en-US/docs/Learn"}
         ];
         // These will be the frecent results.
         links = [
-          {url: "https://developer.mozilla.org/en-US/docs/Web"},
-          {url: "https://developer.mozilla.org/en-US/docs/Learn"}
+          {frecency: FAKE_FRECENCY, url: "https://developer.mozilla.org/"},
+          {frecency: FAKE_FRECENCY, url: "https://www.mozilla.org/"}
         ];
 
         const sites = await feed.getLinksWithDefaults();
 
-        // Frecent results are removed and only pinned are kept.
-        assert.lengthOf(sites, 2);
+        // Expecting 3 links where there's 2 pinned and 1 www.mozilla.org, so
+        // the frecent with matching hostname as pinned is removed.
+        assert.lengthOf(sites, 3);
+        assert.equal(sites[0].url, fakeNewTabUtils.pinnedLinks.links[0].url);
+        assert.equal(sites[1].url, fakeNewTabUtils.pinnedLinks.links[1].url);
+        assert.equal(sites[2].url, links[1].url);
       });
       it("should return sites that have a title", async () => {
         // Simulate a pinned link with no title.
@@ -379,6 +390,12 @@ describe("Top Sites Feed", () => {
       sinon.stub(feed, "refresh");
       await feed.onAction({type: at.INIT});
       assert.calledOnce(feed.refresh);
+    });
+    it("should call refresh without a target on MIGRATION_COMPLETED action", async () => {
+      sinon.stub(feed, "refresh");
+      await feed.onAction({type: at.MIGRATION_COMPLETED});
+      assert.calledOnce(feed.refresh);
+      assert.equal(feed.refresh.firstCall.args[0], null);
     });
     it("should call refresh without a target on PLACES_LINK_BLOCKED action", async () => {
       sinon.stub(feed, "refresh");

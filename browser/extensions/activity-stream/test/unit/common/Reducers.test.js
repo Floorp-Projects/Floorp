@@ -268,6 +268,20 @@ describe("Reducers", () => {
       const updatedSection = newState.find(section => section.id === "foo_bar_2");
       assert.ok(updatedSection && updatedSection.title === NEW_TITLE);
     });
+    it("should set initialized to false on SECTION_REGISTER if there are no rows", () => {
+      const NEW_TITLE = "New Title";
+      const action = {type: at.SECTION_REGISTER, data: {id: "bloop", title: NEW_TITLE}};
+      const newState = Sections(oldState, action);
+      const updatedSection = newState.find(section => section.id === "bloop");
+      assert.propertyVal(updatedSection, "initialized", false);
+    });
+    it("should set initialized to true on SECTION_REGISTER if there are rows", () => {
+      const NEW_TITLE = "New Title";
+      const action = {type: at.SECTION_REGISTER, data: {id: "bloop", title: NEW_TITLE, rows: [{}, {}]}};
+      const newState = Sections(oldState, action);
+      const updatedSection = newState.find(section => section.id === "bloop");
+      assert.propertyVal(updatedSection, "initialized", true);
+    });
     it("should have no effect on SECTION_UPDATE if the id doesn't exist", () => {
       const action = {type: at.SECTION_UPDATE, data: {id: "fake_id", data: "fake_data"}};
       const newState = Sections(oldState, action);
@@ -279,6 +293,20 @@ describe("Reducers", () => {
       const newState = Sections(oldState, action);
       const updatedSection = newState.find(section => section.id === "foo_bar_2");
       assert.include(updatedSection, FAKE_DATA);
+    });
+    it("should set initialized to true on SECTION_UPDATE if rows is defined on action.data", () => {
+      const data = {rows: [], id: "foo_bar_2"};
+      const action = {type: at.SECTION_UPDATE, data};
+      const newState = Sections(oldState, action);
+      const updatedSection = newState.find(section => section.id === "foo_bar_2");
+      assert.propertyVal(updatedSection, "initialized", true);
+    });
+    it("should allow action.data to set .initialized", () => {
+      const data = {rows: [], initialized: false, id: "foo_bar_2"};
+      const action = {type: at.SECTION_UPDATE, data};
+      const newState = Sections(oldState, action);
+      const updatedSection = newState.find(section => section.id === "foo_bar_2");
+      assert.propertyVal(updatedSection, "initialized", false);
     });
     it("should remove blocked and deleted urls from all rows in all sections", () => {
       const blockAction = {type: at.PLACES_LINK_BLOCKED, data: {url: "www.foo.bar"}};

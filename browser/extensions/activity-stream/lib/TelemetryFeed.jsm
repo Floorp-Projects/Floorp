@@ -378,6 +378,9 @@ this.TelemetryFeed = class TelemetryFeed {
       case at.TELEMETRY_PERFORMANCE_EVENT:
         this.sendEvent(this.createPerformanceEvent(action));
         break;
+      case at.UNINIT:
+        this.uninit();
+        break;
     }
   }
 

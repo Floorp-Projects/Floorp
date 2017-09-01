@@ -38,10 +38,12 @@ this.TopSitesFeed = class TopSitesFeed {
     // Add default sites if any based on the pref
     if (sites) {
       for (const url of sites.split(",")) {
-        DEFAULT_TOP_SITES.push({
+        const site = {
           isDefault: true,
           url
-        });
+        };
+        site.hostname = shortURL(site);
+        DEFAULT_TOP_SITES.push(site);
       }
     }
   }
@@ -65,18 +67,16 @@ this.TopSitesFeed = class TopSitesFeed {
     } else {
       // Get the best history links that pass the frecency threshold
       frecent = frecent.filter(link => link && link.type !== "affiliate" &&
-        link.frecency > FRECENCY_THRESHOLD);
+        link.frecency > FRECENCY_THRESHOLD).map(site => {
+          site.hostname = shortURL(site);
+          return site;
+        });
     }
 
-    // Group together websites that require deduping.
-    let topsitesGroup = [];
-    for (const group of [pinned, frecent, notBlockedDefaultSites]) {
-      topsitesGroup.push(group.filter(site => site).map(site => Object.assign({}, site, {hostname: shortURL(site)})));
-    }
-
-    const dedupedGroups = this.dedupe.group(topsitesGroup);
-    // Insert original pinned websites in the result of the dedupe operation.
-    pinned = insertPinned([...dedupedGroups[1], ...dedupedGroups[2]], pinned);
+    // Remove any duplicates from frecent and default sites then insert the
+    // original pinned sites into the deduped frecent ([1]) and defaults ([2])
+    const deduped = this.dedupe.group(pinned, frecent, notBlockedDefaultSites);
+    pinned = insertPinned([...deduped[1], ...deduped[2]], pinned);
 
     return pinned.slice(0, TOP_SITES_SHOWMORE_LENGTH);
   }
@@ -177,7 +177,9 @@ this.TopSitesFeed = class TopSitesFeed {
           this.refresh(action.meta.fromTarget);
         }
         break;
-      case at.PLACES_HISTORY_CLEARED: // All these actions mean we need new top sites
+      // All these actions mean we need new top sites
+      case at.MIGRATION_COMPLETED:
+      case at.PLACES_HISTORY_CLEARED:
       case at.PLACES_LINK_DELETED:
       case at.PLACES_LINK_BLOCKED:
         this.refresh();

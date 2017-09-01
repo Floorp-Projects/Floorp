@@ -52,13 +52,14 @@ const PREFS_CONFIG = new Map([
       // Use the opposite value as what default value the feed would have used
       hidden: !PREFS_CONFIG.get("feeds.section.topstories").getValue(args),
       learn_more_endpoint: "https://getpocket.cdn.mozilla.net/firefox_learnmore?src=ff_newtab",
-      provider_description: "pocket_feedback_body",
+      provider_header: "pocket_feedback_header",
+      provider_description: "pocket_description",
       provider_icon: "pocket",
       provider_name: "Pocket",
       read_more_endpoint: "https://getpocket.cdn.mozilla.net/explore/trending?src=ff_new_tab",
       stories_endpoint: `https://getpocket.cdn.mozilla.net/v3/firefox/global-recs?version=2&consumer_key=$apiKey&locale_lang=${args.locale}`,
       stories_referrer: "https://getpocket.com/recommendations",
-      survey_link: "https://www.surveymonkey.com/r/newtabffx",
+      info_link: "https://www.mozilla.org/privacy/firefox/#pocketstories",
       topics_endpoint: `https://getpocket.cdn.mozilla.net/v3/firefox/trending-topics?version=2&consumer_key=$apiKey&locale_lang=${args.locale}`,
       personalized: false
     })
@@ -217,11 +218,10 @@ this.ActivityStream = class ActivityStream {
     this._defaultPrefs.init();
 
     // Hook up the store and let all feeds and pages initialize
-    this.store.init(this.feeds);
-    this.store.dispatch(ac.BroadcastToContent({
+    this.store.init(this.feeds, ac.BroadcastToContent({
       type: at.INIT,
       data: {version: this.options.version}
-    }));
+    }), {type: at.UNINIT});
 
     this.initialized = true;
   }
@@ -230,9 +230,7 @@ this.ActivityStream = class ActivityStream {
       Services.prefs.removeObserver(GEO_PREF, this);
     }
 
-    this.store.dispatch({type: at.UNINIT});
     this.store.uninit();
-
     this.initialized = false;
   }
   uninstall(reason) {
