@@ -461,16 +461,12 @@ nsHttpHandler::Init()
         mAppVersion.AssignLiteral(MOZ_APP_UA_VERSION);
     }
 
-    // Generating the spoofed userAgent for fingerprinting resistance.
-    // The browser version will be rounded down to a multiple of 10.
-    // By doing so, the anonymity group will cover more versions instead of one
-    // version.
-    uint32_t spoofedVersion = mAppVersion.ToInteger(&rv);
-    if (NS_SUCCEEDED(rv)) {
-        spoofedVersion = spoofedVersion - (spoofedVersion % 10);
-        mSpoofedUserAgent.Assign(nsPrintfCString(
-            "Mozilla/5.0 (%s; rv:%d.0) Gecko/%s Firefox/%d.0",
-            SPOOFED_OSCPU, spoofedVersion, LEGACY_BUILD_ID, spoofedVersion));
+    // Generating the spoofed User Agent for fingerprinting resistance.
+    rv = nsRFPService::GetSpoofedUserAgent(mSpoofedUserAgent);
+    if (NS_FAILED(rv)) {
+      // Empty mSpoofedUserAgent to make sure the unsuccessful spoofed UA string
+      // will not be used anywhere.
+      mSpoofedUserAgent.Truncate();
     }
 
     mSessionStartTime = NowInSeconds();

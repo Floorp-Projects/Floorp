@@ -91,7 +91,7 @@ add_task(async function setup() {
 
   let appInfo = Cc["@mozilla.org/xre/app-info;1"].getService(Ci.nsIXULAppInfo);
   let appVersion = parseInt(appInfo.version);
-  let spoofedVersion = appVersion - (appVersion % 10);
+  let spoofedVersion = appVersion - ((appVersion - 3) % 7);
   spoofedUserAgent = `Mozilla/5.0 (Windows NT 6.1; rv:${spoofedVersion}.0) Gecko/20100101 Firefox/${spoofedVersion}.0`;
 });
 
