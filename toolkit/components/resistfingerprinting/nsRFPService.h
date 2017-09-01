@@ -49,6 +49,9 @@ public:
   static uint32_t GetSpoofedDroppedFrames(double aTime, uint32_t aWidth, uint32_t aHeight);
   static uint32_t GetSpoofedPresentedFrames(double aTime, uint32_t aWidth, uint32_t aHeight);
 
+  // This method generates the spoofed value of User Agent.
+  static nsresult GetSpoofedUserAgent(nsACString &userAgent);
+
 private:
   nsresult Init();
 
