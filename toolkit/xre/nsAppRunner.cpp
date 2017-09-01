@@ -981,9 +981,16 @@ NS_IMETHODIMP
 nsXULAppInfo::GetAccessibilityInstantiator(nsAString &aInstantiator)
 {
 #if defined(ACCESSIBILITY) && defined(XP_WIN)
-  if (!a11y::GetInstantiator(aInstantiator)) {
+  if (!GetAccService()) {
     aInstantiator = NS_LITERAL_STRING("");
+    return NS_OK;
   }
+  nsAutoString oopClientInfo, ipClientInfo;
+  a11y::Compatibility::GetHumanReadableConsumersStr(ipClientInfo);
+  aInstantiator.Append(ipClientInfo);
+  aInstantiator.AppendLiteral("|");
+  a11y::GetInstantiator(oopClientInfo);
+  aInstantiator.Append(oopClientInfo);
 #else
   aInstantiator = NS_LITERAL_STRING("");
 #endif
