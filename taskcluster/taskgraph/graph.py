@@ -78,9 +78,16 @@ class Graph(object):
             new_edges = edges | add_edges
         return Graph(new_nodes, new_edges)
 
-    def _visit(self, reverse):
+    def visit_postorder(self):
+        """
+        Generate a sequence of nodes in postorder, such that every node is
+        visited *after* any nodes it links to.
+
+        Behavior is undefined (read: it will hang) if the graph contains a
+        cycle.
+        """
         queue = collections.deque(sorted(self.nodes))
-        links_by_node = self.reverse_links_dict() if reverse else self.links_dict()
+        links_by_node = self.links_dict()
         seen = set()
         while queue:
             node = queue.popleft()
@@ -93,23 +100,6 @@ class Graph(object):
             else:
                 queue.extend(n for n in links if n not in seen)
                 queue.append(node)
-
-    def visit_postorder(self):
-        """
-        Generate a sequence of nodes in postorder, such that every node is
-        visited *after* any nodes it links to.
-
-        Behavior is undefined (read: it will hang) if the graph contains a
-        cycle.
-        """
-        return self._visit(False)
-
-    def visit_preorder(self):
-        """
-        Like visit_postorder, but in reverse: evrey node is visited *before*
-        any nodes it links to.
-        """
-        return self._visit(True)
 
     def links_dict(self):
         """

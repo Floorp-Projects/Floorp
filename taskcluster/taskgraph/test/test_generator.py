@@ -59,7 +59,6 @@ class TestGenerator(unittest.TestCase):
         parameters = {
             '_kinds': kinds,
             'target_tasks_method': 'test_method',
-            'try_mode': None,
         }
 
         return WithFakeKind('/root', parameters)
