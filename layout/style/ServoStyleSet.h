@@ -238,11 +238,6 @@ public:
                                   ServoStyleSheet* aNewSheet,
                                   ServoStyleSheet* aReferenceSheet);
 
-  // Notify servo that the underlying raw sheet has changed, through cloning.
-  // This should only be called on a just-cloned sheet, because it does not
-  // mark the stylesheets as dirty either here or in servo.
-  void UpdateStyleSheet(ServoStyleSheet* aSheet);
-
   int32_t SheetCount(SheetType aType) const;
   ServoStyleSheet* StyleSheetAt(SheetType aType, int32_t aIndex) const;
 
