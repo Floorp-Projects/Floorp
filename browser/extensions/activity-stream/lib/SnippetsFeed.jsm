@@ -134,8 +134,8 @@ this.SnippetsFeed = class SnippetsFeed {
       case at.INIT:
         this.init();
         break;
-      case at.FEED_INIT:
-        if (action.data === "feeds.snippets") { this.init(); }
+      case at.UNINIT:
+        this.uninit();
         break;
       case at.SHOW_FIREFOX_ACCOUNTS:
         this.showFirefoxAccounts(action._target.browser);

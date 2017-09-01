@@ -55,6 +55,16 @@ class HistoryObserver extends Observer {
   onClearHistory() {
     this.dispatch({type: at.PLACES_HISTORY_CLEARED});
   }
+
+  // Empty functions to make xpconnect happy
+  onBeginUpdateBatch() {}
+  onEndUpdateBatch() {}
+  onVisit() {}
+  onTitleChanged() {}
+  onFrecencyChanged() {}
+  onManyFrecenciesChanged() {}
+  onPageChanged() {}
+  onDeleteVisits() {}
 }
 
 /**
@@ -127,6 +137,16 @@ class BookmarksObserver extends Observer {
    * @param  {str} guid         The unique id of the bookmark
    */
   async onItemChanged(...args) {
+
+    /*
+    // Disabled due to performance cost, see Issue 3203 /
+    // https://bugzilla.mozilla.org/show_bug.cgi?id=1392267.
+    //
+    // If this is used, please consider avoiding the call to
+    // NewTabUtils.activityStreamProvider.getBookmark which performs an additional
+    // fetch to the database.
+    // If you need more fields, please talk to the places team.
+
     const property = args[1];
     const type = args[5];
     const guid = args[7];
@@ -142,7 +162,14 @@ class BookmarksObserver extends Observer {
     } catch (e) {
       Cu.reportError(e);
     }
+    */
   }
+
+  // Empty functions to make xpconnect happy
+  onBeginUpdateBatch() {}
+  onEndUpdateBatch() {}
+  onItemVisited() {}
+  onItemMoved() {}
 }
 
 class PlacesFeed {

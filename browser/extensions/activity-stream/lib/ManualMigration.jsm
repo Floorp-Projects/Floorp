@@ -76,6 +76,7 @@ this.ManualMigration = class ManualMigration {
    */
   observe() {
     this.expireMigration();
+    this.store.dispatch({type: at.MIGRATION_COMPLETED});
   }
 
   onAction(action) {

@@ -97,7 +97,8 @@ class PingCentre {
     let clientID = data.client_id || await this.telemetryClientId;
     const payload = Object.assign({
       topic: this._topic,
-      client_id: clientID
+      client_id: clientID,
+      release_channel: AppConstants.MOZ_UPDATE_CHANNEL
     }, data);
 
     if (this.logging) {
