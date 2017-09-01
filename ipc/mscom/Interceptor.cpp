@@ -305,7 +305,6 @@ Interceptor::MapEntry*
 Interceptor::Lookup(REFIID aIid)
 {
   mMutex.AssertCurrentThreadOwns();
-
   for (uint32_t index = 0, len = mInterceptorMap.Length(); index < len; ++index) {
     if (mInterceptorMap[index].mIID == aIid) {
       return &mInterceptorMap[index];
@@ -368,56 +367,14 @@ Interceptor::CreateInterceptor(REFIID aIid, IUnknown* aOuter, IUnknown** aOutput
 }
 
 HRESULT
-Interceptor::PublishTarget(detail::LiveSetAutoLock& aLiveSetLock,
-                           RefPtr<IUnknown> aInterceptor,
-                           REFIID aTargetIid,
-                           STAUniquePtr<IUnknown> aTarget)
-{
-  RefPtr<IWeakReference> weakRef;
-  HRESULT hr = GetWeakReference(getter_AddRefs(weakRef));
-  if (FAILED(hr)) {
-    return hr;
-  }
-
-  // mTarget is a weak reference to aTarget. This is safe because we transfer
-  // ownership of aTarget into mInterceptorMap which remains live for the
-  // lifetime of this Interceptor.
-  mTarget = ToInterceptorTargetPtr(aTarget);
-  GetLiveSet().Put(mTarget.get(), weakRef.forget());
-
-  // Now we transfer aTarget's ownership into mInterceptorMap.
-  mInterceptorMap.AppendElement(MapEntry(aTargetIid,
-                                         aInterceptor,
-                                         aTarget.release()));
-
-  // Release the live set lock because subsequent operations may post work to
-  // the main thread, creating potential for deadlocks.
-  aLiveSetLock.Unlock();
-  return S_OK;
-}
-
-HRESULT
-Interceptor::GetInitialInterceptorForIID(detail::LiveSetAutoLock& aLiveSetLock,
+Interceptor::GetInitialInterceptorForIID(detail::LiveSetAutoLock& aLock,
                                          REFIID aTargetIid,
                                          STAUniquePtr<IUnknown> aTarget,
                                          void** aOutInterceptor)
 {
   MOZ_ASSERT(aOutInterceptor);
-  MOZ_ASSERT(aTargetIid != IID_IMarshal);
+  MOZ_ASSERT(aTargetIid != IID_IUnknown && aTargetIid != IID_IMarshal);
   MOZ_ASSERT(!IsProxy(aTarget.get()));
-
-  if (aTargetIid == IID_IUnknown) {
-    // We must lock ourselves so that nothing can race with us once we have been
-    // published to the live set.
-    AutoLock lock(*this);
-
-    HRESULT hr = PublishTarget(aLiveSetLock, nullptr, aTargetIid, Move(aTarget));
-    if (FAILED(hr)) {
-      return hr;
-    }
-
-    return QueryInterface(aTargetIid, aOutInterceptor);
-  }
 
   // Raise the refcount for stabilization purposes during aggregation
   RefPtr<IUnknown> kungFuDeathGrip(static_cast<IUnknown*>(
@@ -442,14 +399,26 @@ Interceptor::GetInitialInterceptorForIID(detail::LiveSetAutoLock& aLiveSetLock,
     return hr;
   }
 
-  // We must lock ourselves so that nothing can race with us once we have been
-  // published to the live set.
-  AutoLock lock(*this);
-
-  hr = PublishTarget(aLiveSetLock, unkInterceptor, aTargetIid, Move(aTarget));
+  RefPtr<IWeakReference> weakRef;
+  hr = GetWeakReference(getter_AddRefs(weakRef));
   if (FAILED(hr)) {
     return hr;
   }
+
+  // mTarget is a weak reference to aTarget. This is safe because we transfer
+  // ownership of aTarget into mInterceptorMap which remains live for the
+  // lifetime of this Interceptor.
+  mTarget = ToInterceptorTargetPtr(aTarget);
+  GetLiveSet().Put(mTarget.get(), weakRef.forget());
+
+  // Release the live set lock because GetInterceptorForIID will post work to
+  // the main thread, creating potential for deadlocks.
+  aLock.Unlock();
+
+  // Now we transfer aTarget's ownership into mInterceptorMap.
+  mInterceptorMap.AppendElement(MapEntry(aTargetIid,
+                                         unkInterceptor,
+                                         aTarget.release()));
 
   if (mEventSink->MarshalAs(aTargetIid) == aTargetIid) {
     return unkInterceptor->QueryInterface(aTargetIid, aOutInterceptor);
