@@ -3939,7 +3939,15 @@ GetModuleEnvironmentValue(JSContext* cx, unsigned argc, Value* vp)
     if (!JS_StringToId(cx, name, &id))
         return false;
 
-    return GetProperty(cx, env, env, id, args.rval());
+    if (!GetProperty(cx, env, env, id, args.rval()))
+        return false;
+
+    if (args.rval().isMagic(JS_UNINITIALIZED_LEXICAL)) {
+        ReportRuntimeLexicalError(cx, JSMSG_UNINITIALIZED_LEXICAL, id);
+        return false;
+    }
+
+    return true;
 }
 
 #ifdef DEBUG
