@@ -199,7 +199,7 @@ function Sections(prevState = INITIAL_STATE.Sections, action) {
       // the section has an order, insert it at the correct place in the array.
       // Otherwise, prepend it and set the order to be minimal.
       if (!hasMatch) {
-        const initialized = action.data.rows && action.data.rows.length > 0;
+        const initialized = !!(action.data.rows && action.data.rows.length > 0);
         let order;
         let index;
         if (prevState.length > 0) {
@@ -209,14 +209,17 @@ function Sections(prevState = INITIAL_STATE.Sections, action) {
           order = action.data.order || 1;
           index = 0;
         }
-        const section = Object.assign({title: "", initialized, rows: [], order, enabled: false}, action.data);
+        const section = Object.assign({title: "", rows: [], order, enabled: false}, action.data, {initialized});
         newState.splice(index, 0, section);
       }
       return newState;
     case at.SECTION_UPDATE:
       return prevState.map(section => {
         if (section && section.id === action.data.id) {
-          return Object.assign({}, section, action.data);
+          // If the action is updating rows, we should consider initialized to be true.
+          // This can be overridden if initialized is defined in the action.data
+          const initialized = action.data.rows ? {initialized: true} : {};
+          return Object.assign({}, section, initialized, action.data);
         }
         return section;
       });

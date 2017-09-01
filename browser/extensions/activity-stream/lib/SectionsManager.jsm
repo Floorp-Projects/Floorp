@@ -18,7 +18,7 @@ const BUILT_IN_SECTIONS = {
     id: "topstories",
     pref: {
       titleString: {id: "header_recommended_by", values: {provider: options.provider_name}},
-      descString: {id: options.provider_description}
+      descString: {id: options.provider_description || "pocket_feedback_body"}
     },
     shouldHidePref:  options.hidden,
     eventSource: "TOP_STORIES",
@@ -27,9 +27,9 @@ const BUILT_IN_SECTIONS = {
     maxRows: 1,
     availableContextMenuOptions: ["CheckBookmark", "SaveToPocket", "Separator", "OpenInNewWindow", "OpenInPrivateWindow", "Separator", "BlockUrl"],
     infoOption: {
-      header: {id: "pocket_feedback_header"},
-      body: {id: options.provider_description},
-      link: {href: options.survey_link, id: "pocket_send_feedback"}
+      header: {id: options.provider_header || "pocket_feedback_header"},
+      body: {id: options.provider_description || "pocket_feedback_body"},
+      link: {href: options.info_link, id: "section_info_privacy_notice"}
     },
     emptyState: {
       message: {id: "topstories_empty_state", values: {provider: options.provider_name}},
@@ -92,7 +92,7 @@ const SectionsManager = {
     this.emit(this.ENABLE_SECTION, id);
   },
   disableSection(id) {
-    this.updateSection(id, {enabled: false, rows: []}, true);
+    this.updateSection(id, {enabled: false, rows: [], initialized: false}, true);
     this.emit(this.DISABLE_SECTION, id);
   },
   updateSections() {
@@ -210,6 +210,9 @@ class SectionsFeed {
         break;
       case at.SECTION_ENABLE:
         SectionsManager.enableSection(action.data);
+        break;
+      case at.UNINIT:
+        this.uninit();
         break;
     }
     if (SectionsManager.ACTIONS_TO_PROXY.includes(action.type) && SectionsManager.sections.size > 0) {

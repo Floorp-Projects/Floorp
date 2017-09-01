@@ -50,6 +50,20 @@ describe("Store", () => {
       assert.isTrue(store.feeds.has("foo"), "foo is set");
       assert.instanceOf(store.feeds.get("foo"), Foo);
     });
+    it("should call the feed's onAction with uninit action if it exists", () => {
+      let feed;
+      function createFeed() {
+        feed = {onAction: sinon.spy()};
+        return feed;
+      }
+      const action = {type: "FOO"};
+      store._feedFactories = new Map([["foo", createFeed]]);
+
+      store.initFeed("foo", action);
+
+      assert.calledOnce(feed.onAction);
+      assert.calledWith(feed.onAction, action);
+    });
     it("should add a .store property to the feed", () => {
       class Foo {}
       store._feedFactories = new Map([["foo", () => new Foo()]]);
@@ -64,18 +78,20 @@ describe("Store", () => {
         store.uninitFeed("bar");
       });
     });
-    it("should call the feed's uninit function if it is defined", () => {
+    it("should call the feed's onAction with uninit action if it exists", () => {
       let feed;
       function createFeed() {
-        feed = {uninit: sinon.spy()};
+        feed = {onAction: sinon.spy()};
         return feed;
       }
+      const action = {type: "BAR"};
       store._feedFactories = new Map([["foo", createFeed]]);
-
       store.initFeed("foo");
-      store.uninitFeed("foo");
 
-      assert.calledOnce(feed.uninit);
+      store.uninitFeed("foo", action);
+
+      assert.calledOnce(feed.onAction);
+      assert.calledWith(feed.onAction, action);
     });
     it("should remove the feed from .feeds", () => {
       class Foo {}
@@ -138,8 +154,27 @@ describe("Store", () => {
       store.init(new Map());
       assert.calledOnce(store._messageChannel.createChannel);
     });
+    it("should emit an initial event if provided", () => {
+      sinon.stub(store, "dispatch");
+      const action = {type: "FOO"};
+
+      store.init(new Map(), action);
+
+      assert.calledOnce(store.dispatch);
+      assert.calledWith(store.dispatch, action);
+    });
   });
   describe("#uninit", () => {
+    it("should emit an uninit event if provided on init", () => {
+      sinon.stub(store, "dispatch");
+      const action = {type: "BAR"};
+      store.init(new Map(), null, action);
+
+      store.uninit();
+
+      assert.calledOnce(store.dispatch);
+      assert.calledWith(store.dispatch, action);
+    });
     it("should clear .feeds and ._feedFactories", () => {
       store._prefs.set("a", true);
       store.init(new Map([

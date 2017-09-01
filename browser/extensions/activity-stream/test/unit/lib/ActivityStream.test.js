@@ -53,25 +53,27 @@ describe("ActivityStream", () => {
     it("should call .store.init", () => {
       assert.calledOnce(as.store.init);
     });
-    it("should emit an INIT event with the right version", () => {
+    it("should pass to Store an INIT event with the right version", () => {
       as = new ActivityStream({version: "1.2.3"});
       sandbox.stub(as.store, "init");
-      sandbox.stub(as.store, "dispatch");
       sandbox.stub(as._defaultPrefs, "init");
 
       as.init();
 
-      assert.calledOnce(as.store.dispatch);
-      const action = as.store.dispatch.firstCall.args[0];
+      const action = as.store.init.firstCall.args[1];
       assert.propertyVal(action.data, "version", "1.2.3");
     });
-    it("should emit an INIT event to content", () => {
-      sandbox.stub(as.store, "dispatch");
-
+    it("should pass to Store an INIT event for content", () => {
       as.init();
 
-      const action = as.store.dispatch.firstCall.args[0];
+      const action = as.store.init.firstCall.args[1];
       assert.equal(action.meta.to, CONTENT_MESSAGE_TYPE);
+    });
+    it("should pass to Store an UNINIT event", () => {
+      as.init();
+
+      const action = as.store.init.firstCall.args[2];
+      assert.equal(action.type, "UNINIT");
     });
   });
   describe("#uninit", () => {
