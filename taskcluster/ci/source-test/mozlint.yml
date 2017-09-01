@@ -95,7 +95,7 @@ mozlint-py-compat:
         mach: lint -l py2 -l py3 -f treeherder
     when:
         files-changed:
-            - '**/.py'
+            - '**/*.py'
             - 'python/mozlint/**'
             - 'tools/lint/**'
 

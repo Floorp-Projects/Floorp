@@ -336,17 +336,4 @@ private:
 using auto_lock = std::lock_guard<owned_critical_section>;
 #endif // __cplusplus
 
-// C language helpers
-
-#ifdef __cplusplus
-extern "C" {
-#endif
-
-int cubeb_utils_default_device_collection_destroy(cubeb * context,
-                                                  cubeb_device_collection * collection);
-
-#ifdef __cplusplus
-}
-#endif
-
 #endif /* CUBEB_UTILS */

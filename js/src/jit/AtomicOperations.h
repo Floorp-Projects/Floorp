@@ -108,9 +108,6 @@ class AtomicOperations
     template<typename T>
     static inline T compareExchangeSeqCst(T* addr, T oldval, T newval);
 
-    // The following functions are defined for T = int8_t, uint8_t,
-    // int16_t, uint16_t, int32_t, uint32_t only.
-
     // Atomically add, subtract, bitwise-AND, bitwise-OR, or bitwise-XOR
     // val into *addr and return the old value of *addr.
     template<typename T>
@@ -129,14 +126,17 @@ class AtomicOperations
     static inline T fetchXorSeqCst(T* addr, T val);
 
     // The SafeWhenRacy functions are to be used when C++ code has to access
-    // memory without synchronization and can't guarantee that there
-    // won't be a race on the access.
+    // memory without synchronization and can't guarantee that there won't be a
+    // race on the access.  But they are access-atomic for integer data so long
+    // as any racing writes are of the same size and to the same address.
 
-    // Defined for all the integral types as well as for float32 and float64.
+    // Defined for all the integral types as well as for float32 and float64,
+    // but not access-atomic for floats.
     template<typename T>
     static inline T loadSafeWhenRacy(T* addr);
 
-    // Defined for all the integral types as well as for float32 and float64.
+    // Defined for all the integral types as well as for float32 and float64,
+    // but not access-atomic for floats.
     template<typename T>
     static inline void storeSafeWhenRacy(T* addr, T val);
 
@@ -148,19 +148,19 @@ class AtomicOperations
 
   public:
     // Test lock-freedom for any int32 value.  This implements the
-    // Atomics::isLockFree() operation in the Shared Memory and
+    // Atomics::isLockFree() operation in the ECMAScript Shared Memory and
     // Atomics specification, as follows:
     //
-    // 1, 2, and 4 bytes are always lock free (in SpiderMonkey).
+    // 4-byte accesses are always lock free (in the spec).
+    // 1- and 2-byte accesses are always lock free (in SpiderMonkey).
     //
-    // Lock-freedom for 8 bytes is determined by the platform's
-    // isLockfree8().  However, the spec stipulates that isLockFree(8)
-    // is true only if there is an integer array that admits atomic
-    // operations whose BYTES_PER_ELEMENT=8; at the moment (February
-    // 2016) there are no such arrays.
+    // Lock-freedom for 8 bytes is determined by the platform's isLockfree8().
+    // However, the spec stipulates that isLockFree(8) is true only if there is
+    // an integer array that admits atomic operations whose BYTES_PER_ELEMENT=8;
+    // at the moment (August 2017) there are no such arrays.
     //
     // There is no lock-freedom for any other values on any platform.
-    static inline bool isLockfree(int32_t n);
+    static inline bool isLockfreeJS(int32_t n);
 
     // If the return value is true then a call to the 64-bit (8-byte)
     // routines below will work, otherwise those functions will assert in
@@ -293,7 +293,7 @@ class RegionLock
 };
 
 inline bool
-AtomicOperations::isLockfree(int32_t size)
+AtomicOperations::isLockfreeJS(int32_t size)
 {
     // Keep this in sync with visitAtomicIsLockFree() in jit/CodeGenerator.cpp.
 
@@ -306,11 +306,10 @@ AtomicOperations::isLockfree(int32_t size)
         // The spec requires Atomics.isLockFree(4) to return true.
         return true;
       case 8:
-        // The spec requires Atomics.isLockFree(n) to return false
-        // unless n is the BYTES_PER_ELEMENT value of some integer
-        // TypedArray that admits atomic operations.  At the time of
-        // writing (February 2016) there is no such array with n=8.
-        // return AtomicOperations::isLockfree8();
+        // The spec requires Atomics.isLockFree(n) to return false unless n is
+        // the BYTES_PER_ELEMENT value of some integer TypedArray that admits
+        // atomic operations.  At this time (August 2017) there is no such array
+        // with n=8.
         return false;
       default:
         return false;
@@ -351,8 +350,10 @@ AtomicOperations::isLockfree(int32_t size)
 // Such a solution is likely to be difficult.
 
 #if defined(__x86_64__) || defined(_M_X64) || defined(__i386__) || defined(_M_IX86)
-# if defined(__clang__) || defined(__GNUC__) || defined(_MSC_VER)
-#  include "jit/x86-shared/AtomicOperations-x86-shared.h"
+# if defined(__clang__) || defined(__GNUC__)
+#  include "jit/x86-shared/AtomicOperations-x86-shared-gcc.h"
+# elif defined(_MSC_VER)
+#  include "jit/x86-shared/AtomicOperations-x86-shared-msvc.h"
 # else
 #  error "No AtomicOperations support for this platform+compiler combination"
 # endif
@@ -363,7 +364,11 @@ AtomicOperations::isLockfree(int32_t size)
 #  error "No AtomicOperations support for this platform+compiler combination"
 # endif
 #elif defined(__aarch64__)
-# include "jit/arm64/AtomicOperations-arm64.h"
+# if defined(__clang__) || defined(__GNUC__)
+#  include "jit/arm64/AtomicOperations-arm64.h"
+# else
+#  error "No AtomicOperations support for this platform+compiler combination"
+# endif
 #elif defined(__mips__)
 # if defined(__clang__) || defined(__GNUC__)
 #  include "jit/mips-shared/AtomicOperations-mips-shared.h"

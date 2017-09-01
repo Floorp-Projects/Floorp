@@ -518,7 +518,7 @@ js::atomics_isLockFree(JSContext* cx, unsigned argc, Value* vp)
             return true;
         }
     }
-    args.rval().setBoolean(jit::AtomicOperations::isLockfree(size));
+    args.rval().setBoolean(jit::AtomicOperations::isLockfreeJS(size));
     return true;
 }
 

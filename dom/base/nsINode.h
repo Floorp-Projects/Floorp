@@ -409,6 +409,16 @@ public:
    */
   virtual bool IsNodeOfType(uint32_t aFlags) const = 0;
 
+  bool
+  IsContainerNode() const
+  {
+    return IsElement() ||
+      !(IsNodeOfType(eTEXT) ||
+        IsNodeOfType(ePROCESSING_INSTRUCTION) ||
+        IsNodeOfType(eCOMMENT) ||
+        IsNodeOfType(eDATA_NODE));
+  }
+
   virtual JSObject* WrapObject(JSContext *aCx, JS::Handle<JSObject*> aGivenProto) override;
 
   /**

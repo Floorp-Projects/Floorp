@@ -12,12 +12,17 @@
 #include "mozilla/Assertions.h"
 #include "mozilla/Types.h"
 
+#if !defined(__clang__) && !defined(__GNUC__)
+# error "This file only for gcc-compatible compilers"
+#endif
+
 inline bool
 js::jit::AtomicOperations::isLockfree8()
 {
     MOZ_ASSERT(__atomic_always_lock_free(sizeof(int8_t), 0));
     MOZ_ASSERT(__atomic_always_lock_free(sizeof(int16_t), 0));
     MOZ_ASSERT(__atomic_always_lock_free(sizeof(int32_t), 0));
+    MOZ_ASSERT(__atomic_always_lock_free(sizeof(int64_t), 0));
     return true;
 }
 
@@ -31,7 +36,7 @@ template<typename T>
 inline T
 js::jit::AtomicOperations::loadSeqCst(T* addr)
 {
-    MOZ_ASSERT(sizeof(T) < 8 || isLockfree8());
+    static_assert(sizeof(T) <= 8, "atomics supported up to 8 bytes only");
     T v;
     __atomic_load(addr, &v, __ATOMIC_SEQ_CST);
     return v;
@@ -41,7 +46,7 @@ template<typename T>
 inline void
 js::jit::AtomicOperations::storeSeqCst(T* addr, T val)
 {
-    MOZ_ASSERT(sizeof(T) < 8 || isLockfree8());
+    static_assert(sizeof(T) <= 8, "atomics supported up to 8 bytes only");
     __atomic_store(addr, &val, __ATOMIC_SEQ_CST);
 }
 
@@ -49,7 +54,7 @@ template<typename T>
 inline T
 js::jit::AtomicOperations::exchangeSeqCst(T* addr, T val)
 {
-    MOZ_ASSERT(sizeof(T) < 8 || isLockfree8());
+    static_assert(sizeof(T) <= 8, "atomics supported up to 8 bytes only");
     T v;
     __atomic_exchange(addr, &val, &v, __ATOMIC_SEQ_CST);
     return v;
@@ -59,7 +64,7 @@ template<typename T>
 inline T
 js::jit::AtomicOperations::compareExchangeSeqCst(T* addr, T oldval, T newval)
 {
-    MOZ_ASSERT(sizeof(T) < 8 || isLockfree8());
+    static_assert(sizeof(T) <= 8, "atomics supported up to 8 bytes only");
     __atomic_compare_exchange(addr, &oldval, &newval, false, __ATOMIC_SEQ_CST, __ATOMIC_SEQ_CST);
     return oldval;
 }
@@ -68,7 +73,7 @@ template<typename T>
 inline T
 js::jit::AtomicOperations::fetchAddSeqCst(T* addr, T val)
 {
-    static_assert(sizeof(T) <= 4, "not available for 8-byte values yet");
+    static_assert(sizeof(T) <= 8, "atomics supported up to 8 bytes only");
     return __atomic_fetch_add(addr, val, __ATOMIC_SEQ_CST);
 }
 
@@ -76,7 +81,7 @@ template<typename T>
 inline T
 js::jit::AtomicOperations::fetchSubSeqCst(T* addr, T val)
 {
-    static_assert(sizeof(T) <= 4, "not available for 8-byte values yet");
+    static_assert(sizeof(T) <= 8, "atomics supported up to 8 bytes only");
     return __atomic_fetch_sub(addr, val, __ATOMIC_SEQ_CST);
 }
 
@@ -84,7 +89,7 @@ template<typename T>
 inline T
 js::jit::AtomicOperations::fetchAndSeqCst(T* addr, T val)
 {
-    static_assert(sizeof(T) <= 4, "not available for 8-byte values yet");
+    static_assert(sizeof(T) <= 8, "atomics supported up to 8 bytes only");
     return __atomic_fetch_and(addr, val, __ATOMIC_SEQ_CST);
 }
 
@@ -92,7 +97,7 @@ template<typename T>
 inline T
 js::jit::AtomicOperations::fetchOrSeqCst(T* addr, T val)
 {
-    static_assert(sizeof(T) <= 4, "not available for 8-byte values yet");
+    static_assert(sizeof(T) <= 8, "atomics supported up to 8 bytes only");
     return __atomic_fetch_or(addr, val, __ATOMIC_SEQ_CST);
 }
 
@@ -100,7 +105,7 @@ template<typename T>
 inline T
 js::jit::AtomicOperations::fetchXorSeqCst(T* addr, T val)
 {
-    static_assert(sizeof(T) <= 4, "not available for 8-byte values yet");
+    static_assert(sizeof(T) <= 8, "atomics supported up to 8 bytes only");
     return __atomic_fetch_xor(addr, val, __ATOMIC_SEQ_CST);
 }
 
@@ -108,14 +113,18 @@ template <typename T>
 inline T
 js::jit::AtomicOperations::loadSafeWhenRacy(T* addr)
 {
-    return *addr; // FIXME (1208663): not yet safe
+    static_assert(sizeof(T) <= 8, "atomics supported up to 8 bytes only");
+    T v;
+    __atomic_load(addr, &v, __ATOMIC_RELAXED);
+    return v;
 }
 
 template <typename T>
 inline void
 js::jit::AtomicOperations::storeSafeWhenRacy(T* addr, T val)
 {
-    *addr = val; // FIXME (1208663): not yet safe
+    static_assert(sizeof(T) <= 8, "atomics supported up to 8 bytes only");
+    __atomic_store(addr, &val, __ATOMIC_RELAXED);
 }
 
 inline void
@@ -124,14 +133,14 @@ js::jit::AtomicOperations::memcpySafeWhenRacy(void* dest, const void* src,
 {
     MOZ_ASSERT(!((char*)dest <= (char*)src && (char*)src < (char*)dest+nbytes));
     MOZ_ASSERT(!((char*)src <= (char*)dest && (char*)dest < (char*)src+nbytes));
-    memcpy(dest, src, nbytes); // FIXME (1208663): not yet safe
+    memcpy(dest, src, nbytes);
 }
 
 inline void
 js::jit::AtomicOperations::memmoveSafeWhenRacy(void* dest, const void* src,
                                                size_t nbytes)
 {
-    memmove(dest, src, nbytes); // FIXME (1208663): not yet safe
+    memmove(dest, src, nbytes);
 }
 
 template<size_t nbytes>

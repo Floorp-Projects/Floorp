@@ -1990,8 +1990,7 @@ private:
                                     nsFrameItems&      aLetterFrames,
                                     bool*              aStopLooking);
 
-  void RecoverLetterFrames(nsContainerFrame* aBlockFrame,
-                           bool aMayHaveFirstLine);
+  void RecoverLetterFrames(nsContainerFrame* aBlockFrame);
 
   //
   void RemoveLetterFrames(nsIPresShell*     aPresShell,
