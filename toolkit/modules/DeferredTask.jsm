@@ -109,10 +109,15 @@ const Timer = Components.Constructor("@mozilla.org/timer;1", "nsITimer",
  *        inactivity is guaranteed to pass between multiple executions of the
  *        task, except on finalization, when the task may restart immediately
  *        after the previous execution finished.
+ * @param aIdleTimeoutMs
+ *        The maximum time to wait for an idle slot on the main thread after
+ *        aDelayMs have elapsed. If omitted, waits indefinitely for an idle
+ *        callback.
  */
-this.DeferredTask = function(aTaskFn, aDelayMs) {
+this.DeferredTask = function(aTaskFn, aDelayMs, aIdleTimeoutMs) {
   this._taskFn = aTaskFn;
   this._delayMs = aDelayMs;
+  this._timeoutMs = aIdleTimeoutMs;
 
   if (aTaskFn.isGenerator()) {
     Cu.reportError(new Error("Unexpected generator function passed to DeferredTask"));
@@ -299,11 +304,17 @@ this.DeferredTask.prototype = {
   },
 
   /**
-   * Executes the associated task and catches exceptions.
+   * Executes the associated task in an idle callback and catches exceptions.
    */
   async _runTask() {
     try {
-      await this._taskFn();
+      // If we're being finalized, execute the task immediately, so we don't
+      // risk blocking async shutdown longer than necessary.
+      if (this._finalized || this._timeoutMs === 0) {
+        await this._taskFn();
+      } else {
+        await PromiseUtils.idleDispatch(this._taskFn, this._timeoutMs);
+      }
     } catch (ex) {
       Cu.reportError(ex);
     }
