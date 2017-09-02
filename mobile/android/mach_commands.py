@@ -262,7 +262,7 @@ class MachCommands(MachCommandBase):
 
     @SubCommand('android', 'gradle-dependencies',
         """Collect Android Gradle dependencies.
-        See https://gecko.readthedocs.io/en/latest/build/buildsystem/toolchains.html#firefox-for-android-with-gradle""")
+        See http://firefox-source-docs.mozilla.org/build/buildsystem/toolchains.html#firefox-for-android-with-gradle""")
     @CommandArgument('args', nargs=argparse.REMAINDER)
     def android_gradle_dependencies(self, args):
         # The union, plus a bit more, of all of the Gradle tasks

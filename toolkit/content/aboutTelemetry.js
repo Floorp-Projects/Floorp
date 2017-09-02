@@ -350,7 +350,7 @@ var PingPicker = {
 
   render() {
     let pings = bundle.GetStringFromName("pingExplanationLink");
-    let pingLink = "<a href=\"http://gecko.readthedocs.io/en/latest/toolkit/components/telemetry/telemetry/concepts/pings.html\">" + pings + "</a>";
+    let pingLink = "<a href=\"https://firefox-source-docs.mozilla.org/toolkit/components/telemetry/telemetry/concepts/pings.html\">" + pings + "</a>";
     let pingName = this._getSelectedPingName();
 
     // Display the type and controls if the ping is not current

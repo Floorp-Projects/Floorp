@@ -26,7 +26,7 @@ import java.util.TimeZone;
 
 /**
  * Responsible for building a Sync Ping, based on the telemetry docs:
- * http://gecko.readthedocs.io/en/latest/toolkit/components/telemetry/telemetry/data/sync-ping.html
+ * https://firefox-source-docs.mozilla.org/toolkit/components/telemetry/telemetry/data/sync-ping.html
  *
  * This builder takes two stores ('sync' and 'event') and produces a single "sync ping".
  *

@@ -38,7 +38,7 @@ If it's the first time you add one of these, it's advised to follow the style of
 
 New data types have been added over the years, so it's quite feasible that some of our probes are not the most suitable nowadays.
 
-There's more information about types (and telemetry in general) on [this page](https://developer.mozilla.org/en-US/docs/Mozilla/Performance/Adding_a_new_Telemetry_probe) and [this other page](https://gecko.readthedocs.io/en/latest/toolkit/components/telemetry/telemetry/collection/index.html).
+There's more information about types (and telemetry in general) on [this page](https://developer.mozilla.org/en-US/docs/Mozilla/Performance/Adding_a_new_Telemetry_probe) and [this other page](https://firefox-source-docs.mozilla.org/toolkit/components/telemetry/telemetry/collection/index.html).
 
 And of course, in case of doubt, ask!
 
