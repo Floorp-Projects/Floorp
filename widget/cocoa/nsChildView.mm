@@ -3357,10 +3357,9 @@ NSEvent* gLastDragMouseDownEvent = nil;
                                            selector:@selector(systemMetricsChanged)
                                                name:NSSystemColorsDidChangeNotification
                                              object:nil];
-  // TODO: replace the string with the constant once we build with the 10.7 SDK
   [[NSNotificationCenter defaultCenter] addObserver:self
                                            selector:@selector(scrollbarSystemMetricChanged)
-                                               name:@"NSPreferredScrollerStyleDidChangeNotification"
+                                               name:NSPreferredScrollerStyleDidChangeNotification
                                              object:nil];
   [[NSDistributedNotificationCenter defaultCenter] addObserver:self
                                                       selector:@selector(systemMetricsChanged)
@@ -3629,19 +3628,6 @@ NSEvent* gLastDragMouseDownEvent = nil;
 - (BOOL)isOpaque
 {
   return [[self window] isOpaque];
-}
-
-// XXX Is this really used?
-- (void)sendFocusEvent:(EventMessage)eventMessage
-{
-  if (!mGeckoChild)
-    return;
-
-  nsEventStatus status = nsEventStatus_eIgnore;
-  WidgetGUIEvent focusGuiEvent(true, eventMessage, mGeckoChild);
-  focusGuiEvent.mTime = PR_IntervalNow();
-  focusGuiEvent.mTimeStamp = nsCocoaUtils::GetEventTimeStamp(0);
-  mGeckoChild->DispatchEvent(&focusGuiEvent, status);
 }
 
 // We accept key and mouse events, so don't keep passing them up the chain. Allow
