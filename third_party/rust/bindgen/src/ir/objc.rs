@@ -95,10 +95,9 @@ impl ObjCInterface {
     }
 
     /// Parses the Objective C interface from the cursor
-    pub fn from_ty(
-        cursor: &clang::Cursor,
-        ctx: &mut BindgenContext,
-    ) -> Option<Self> {
+    pub fn from_ty(cursor: &clang::Cursor,
+                   ctx: &mut BindgenContext)
+                   -> Option<Self> {
         let name = cursor.spelling();
         let mut interface = Self::new(&name);
 
@@ -171,11 +170,10 @@ impl ObjCInterface {
 }
 
 impl ObjCMethod {
-    fn new(
-        name: &str,
-        signature: FunctionSig,
-        is_class_method: bool,
-    ) -> ObjCMethod {
+    fn new(name: &str,
+           signature: FunctionSig,
+           is_class_method: bool)
+           -> ObjCMethod {
         let split_name: Vec<&str> = name.split(':').collect();
 
         let rust_name = split_name.join("_");
@@ -222,15 +220,12 @@ impl ObjCMethod {
 
         // Check right amount of arguments
         if args.len() != split_name.len() {
-            panic!(
-                "Incorrect method name or arguments for objc method, {:?} vs {:?}",
-                args,
-                split_name
-            );
+            panic!("Incorrect method name or arguments for objc method, {:?} vs {:?}",
+                   args,
+                   split_name);
         }
 
-        split_name
-            .iter()
+        split_name.iter()
             .zip(args.iter())
             .map(|parts| format!("{}:{} ", parts.0, parts.1))
             .collect::<Vec<_>>()
@@ -242,8 +237,7 @@ impl Trace for ObjCInterface {
     type Extra = ();
 
     fn trace<T>(&self, context: &BindgenContext, tracer: &mut T, _: &())
-    where
-        T: Tracer,
+        where T: Tracer,
     {
         for method in &self.methods {
             method.signature.trace(context, tracer, &());

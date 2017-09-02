@@ -26,8 +26,6 @@
 //! # fn main() {}
 //! ```
 
-#![no_std]
-
 #![doc(html_root_url = "http://alexcrichton.com/cfg-if")]
 #![deny(missing_docs)]
 #![cfg_attr(test, deny(warnings))]
@@ -69,7 +67,7 @@ macro_rules! __cfg_if_apply {
 mod tests {
     cfg_if! {
         if #[cfg(test)] {
-            use core::option::Option as Option2;
+            use std::option::Option as Option2;
             fn works1() -> Option2<u32> { Some(1) }
         } else {
             fn works1() -> Option<u32> { None }

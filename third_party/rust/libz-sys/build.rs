@@ -1,6 +1,4 @@
 extern crate pkg_config;
-#[cfg(target_env = "msvc")]
-extern crate vcpkg;
 extern crate gcc;
 
 use std::env;
@@ -36,10 +34,6 @@ fn main() {
     // Practically all platforms come with libz installed already, but MSVC is
     // one of those sole platforms that doesn't!
     if target.contains("msvc") {
-        if try_vcpkg() {
-            return;
-        }
-
         build_msvc_zlib(&target);
     } else if target.contains("pc-windows-gnu") {
         build_zlib_mingw();
@@ -71,9 +65,9 @@ fn build_zlib() {
                 .env("CC", compiler.path())
                 .env("CFLAGS", cflags)
                 .arg(format!("--prefix={}", dst.display())), "sh");
-    run(make()
-            .current_dir(&build)
-            .arg("libz.a"), "make");
+    run(Command::new("make")
+                .current_dir(&build)
+                .arg("libz.a"), "make");
 
     t!(fs::create_dir_all(dst.join("lib/pkgconfig")));
     t!(fs::create_dir_all(dst.join("include")));
@@ -88,36 +82,6 @@ fn build_zlib() {
     println!("cargo:include={}/include", dst.to_string_lossy());
 }
 
-fn make() -> Command {
-    let cmd = if cfg!(target_os = "freebsd") {"gmake"} else {"make"};
-    let mut cmd = Command::new(cmd);
-    // We're using the MSYS make which doesn't work with the mingw32-make-style
-    // MAKEFLAGS, so remove that from the env if present.
-    if cfg!(windows) {
-        cmd.env_remove("MAKEFLAGS").env_remove("MFLAGS");
-    }
-    return cmd
-}
-
-// We have to run a few shell scripts, which choke quite a bit on both `\`
-// characters and on `C:\` paths, so normalize both of them away.
-fn sanitize_sh(path: &Path) -> String {
-    let path = path.to_str().unwrap().replace("\\", "/");
-    return change_drive(&path).unwrap_or(path);
-
-    fn change_drive(s: &str) -> Option<String> {
-        let mut ch = s.chars();
-        let drive = ch.next().unwrap_or('C');
-        if ch.next() != Some(':') {
-            return None
-        }
-        if ch.next() != Some('/') {
-            return None
-        }
-        Some(format!("/{}/{}", drive, &s[drive.len_utf8() + 2..]))
-    }
-}
-
 fn build_zlib_mingw() {
     let src = env::current_dir().unwrap().join("src/zlib-1.2.8");
     let dst = PathBuf::from(env::var_os("OUT_DIR").unwrap());
@@ -130,17 +94,16 @@ fn build_zlib_mingw() {
         cflags.push(arg);
         cflags.push(" ");
     }
-    let gcc = sanitize_sh(compiler.path());
-    let mut cmd = make();
+    let gcc = compiler.path().to_str().unwrap();
+    let mut cmd = Command::new("make");
     cmd.arg("-f").arg("win32/Makefile.gcc")
        .current_dir(&build)
        .arg("install")
-       .arg(format!("prefix={}", sanitize_sh(&dst)))
+       .arg(format!("prefix={}", dst.display()))
        .arg("IMPLIB=")
-       .arg(format!("INCLUDE_PATH={}", sanitize_sh(&dst.join("include"))))
-       .arg(format!("LIBRARY_PATH={}", sanitize_sh(&dst.join("lib"))))
-       .arg(format!("BINARY_PATH={}", sanitize_sh(&dst.join("bin"))))
-       .env("CFLAGS", cflags);
+       .arg(format!("INCLUDE_PATH={}", dst.join("include").display()))
+       .arg(format!("LIBRARY_PATH={}", dst.join("lib").display()))
+       .arg(format!("BINARY_PATH={}", dst.join("bin").display()));
 
     if gcc != "gcc" {
         match gcc.find("gcc") {
@@ -196,12 +159,6 @@ fn build_msvc_zlib(target: &str) {
 
     let nmake = gcc::windows_registry::find(target, "nmake.exe");
     let mut nmake = nmake.unwrap_or(Command::new("nmake.exe"));
-
-    // These env vars are intended for mingw32-make, not `namek`, which chokes
-    // on them anyway.
-    nmake.env_remove("MAKEFLAGS")
-         .env_remove("MFLAGS");
-
     run(nmake.current_dir(dst.join("build"))
              .arg("/nologo")
              .arg("/f")
@@ -244,24 +201,4 @@ fn run(cmd: &mut Command, program: &str) {
 fn fail(s: &str) -> ! {
     println!("\n\n{}\n\n", s);
     std::process::exit(1);
-}
-
-#[cfg(not(target_env = "msvc"))]
-fn try_vcpkg() -> bool {
-    false
-}
-
-#[cfg(target_env = "msvc")]
-fn try_vcpkg() -> bool {
-    // see if there is a vcpkg tree with zlib installed
-    match vcpkg::Config::new()
-            .emit_includes(true)
-            .lib_names("zlib", "zlib1")
-            .probe("zlib") {
-        Ok(_) => { true },
-        Err(e) => {
-            println!("note, vcpkg did not find zlib: {}", e);
-            false
-        },
-    }
 }

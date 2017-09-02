@@ -89,4 +89,3 @@ checked_impl!(CheckedDiv, checked_div, i16);
 checked_impl!(CheckedDiv, checked_div, i32);
 checked_impl!(CheckedDiv, checked_div, i64);
 checked_impl!(CheckedDiv, checked_div, isize);
-

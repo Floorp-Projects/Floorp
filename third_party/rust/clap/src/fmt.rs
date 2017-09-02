@@ -7,7 +7,6 @@ use ansi_term::Colour::{Green, Red, Yellow};
 #[cfg(feature = "color")]
 use atty;
 use std::fmt;
-use std::env;
 
 #[doc(hidden)]
 #[derive(Debug, Copy, Clone, PartialEq)]
@@ -34,23 +33,20 @@ pub fn is_a_tty(_: bool) -> bool {
     false
 }
 
-pub fn is_term_dumb() -> bool { env::var("TERM").ok() == Some(String::from("dumb")) }
-
-#[doc(hidden)]
-pub struct ColorizerOption {
-    pub use_stderr: bool,
-    pub when: ColorWhen,
-}
-
 #[doc(hidden)]
 pub struct Colorizer {
-    when: ColorWhen,
+    pub use_stderr: bool,
+    pub when: ColorWhen,
 }
 
 macro_rules! color {
     ($_self:ident, $c:ident, $m:expr) => {
         match $_self.when {
-            ColorWhen::Auto => Format::$c($m),
+            ColorWhen::Auto => if is_a_tty($_self.use_stderr) {
+                Format::$c($m)
+            } else {
+                Format::None($m)
+            },
             ColorWhen::Always => Format::$c($m),
             ColorWhen::Never => Format::None($m),
         }
@@ -58,18 +54,6 @@ macro_rules! color {
 }
 
 impl Colorizer {
-    pub fn new(option: ColorizerOption) -> Colorizer {
-        let is_a_tty = is_a_tty(option.use_stderr);
-        let is_term_dumb = is_term_dumb();
-        Colorizer {
-            when: if is_a_tty && !is_term_dumb {
-                option.when
-            } else {
-                ColorWhen::Never
-            },
-        }
-    }
-
     pub fn good<T>(&self, msg: T) -> Format<T>
         where T: fmt::Display + AsRef<str>
     {
@@ -101,10 +85,10 @@ impl Colorizer {
 
 impl Default for Colorizer {
     fn default() -> Self {
-        Colorizer::new(ColorizerOption {
+        Colorizer {
             use_stderr: true,
             when: ColorWhen::Auto,
-        })
+        }
     }
 }
 

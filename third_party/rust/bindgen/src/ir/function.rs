@@ -8,13 +8,10 @@ use super::traversal::{EdgeKind, Trace, Tracer};
 use super::ty::TypeKind;
 use clang;
 use clang_sys::{self, CXCallingConv};
-use ir::derive::{CanTriviallyDeriveDebug, CanTriviallyDeriveHash,
-                 CanTriviallyDerivePartialEq};
+use ir::derive::CanTriviallyDeriveDebug;
 use parse::{ClangItemParser, ClangSubItemParser, ParseError, ParseResult};
 use std::io;
 use syntax::abi;
-
-const RUST_DERIVE_FUNPTR_LIMIT: usize = 12;
 
 /// What kind of a function are we looking at?
 #[derive(Debug, Copy, Clone, PartialEq)]
@@ -29,12 +26,8 @@ impl FunctionKind {
     fn from_cursor(cursor: &clang::Cursor) -> Option<FunctionKind> {
         Some(match cursor.kind() {
             clang_sys::CXCursor_FunctionDecl => FunctionKind::Function,
-            clang_sys::CXCursor_Constructor => FunctionKind::Method(
-                MethodKind::Constructor,
-            ),
-            clang_sys::CXCursor_Destructor => FunctionKind::Method(
-                MethodKind::Destructor,
-            ),
+            clang_sys::CXCursor_Constructor => FunctionKind::Method(MethodKind::Constructor),
+            clang_sys::CXCursor_Destructor => FunctionKind::Method(MethodKind::Destructor),
             clang_sys::CXCursor_CXXMethod => {
                 if cursor.method_is_virtual() {
                     FunctionKind::Method(MethodKind::Virtual)
@@ -73,13 +66,12 @@ pub struct Function {
 
 impl Function {
     /// Construct a new function.
-    pub fn new(
-        name: String,
-        mangled_name: Option<String>,
-        sig: ItemId,
-        comment: Option<String>,
-        kind: FunctionKind,
-    ) -> Self {
+    pub fn new(name: String,
+               mangled_name: Option<String>,
+               sig: ItemId,
+               comment: Option<String>,
+               kind: FunctionKind)
+               -> Self {
         Function {
             name: name,
             mangled_name: mangled_name,
@@ -111,22 +103,17 @@ impl Function {
 }
 
 impl DotAttributes for Function {
-    fn dot_attributes<W>(
-        &self,
-        _ctx: &BindgenContext,
-        out: &mut W,
-    ) -> io::Result<()>
-    where
-        W: io::Write,
+    fn dot_attributes<W>(&self,
+                         _ctx: &BindgenContext,
+                         out: &mut W)
+                         -> io::Result<()>
+        where W: io::Write,
     {
         if let Some(ref mangled) = self.mangled_name {
-            let mangled: String =
-                mangled.chars().flat_map(|c| c.escape_default()).collect();
-            try!(writeln!(
-                out,
-                "<tr><td>mangled name</td><td>{}</td></tr>",
-                mangled
-            ));
+            let mangled: String = mangled.chars().flat_map(|c| c.escape_default()).collect();
+            try!(writeln!(out,
+                          "<tr><td>mangled name</td><td>{}</td></tr>",
+                          mangled));
         }
 
         Ok(())
@@ -187,23 +174,18 @@ fn mangling_hack_if_needed(ctx: &BindgenContext, symbol: &mut String) {
         match symbol.chars().next().unwrap() {
             // Stripping leading underscore for all names on Darwin and
             // C linkage functions on Win32.
-            '_' => {
-                symbol.remove(0);
-            }
+            '_' => { symbol.remove(0); }
             // Stop Rust from prepending underscore for variables on Win32.
-            '?' => {
-                symbol.insert(0, '\x01');
-            }
+            '?' => { symbol.insert(0, '\x01'); }
             _ => {}
         }
     }
 }
 
 /// Get the mangled name for the cursor's referent.
-pub fn cursor_mangling(
-    ctx: &BindgenContext,
-    cursor: &clang::Cursor,
-) -> Option<String> {
+pub fn cursor_mangling(ctx: &BindgenContext,
+                       cursor: &clang::Cursor)
+                       -> Option<String> {
     use clang_sys;
     if !ctx.options().enable_mangling {
         return None;
@@ -262,12 +244,11 @@ pub fn cursor_mangling(
 
 impl FunctionSig {
     /// Construct a new function signature.
-    pub fn new(
-        return_type: ItemId,
-        arguments: Vec<(Option<String>, ItemId)>,
-        is_variadic: bool,
-        abi: Abi,
-    ) -> Self {
+    pub fn new(return_type: ItemId,
+               arguments: Vec<(Option<String>, ItemId)>,
+               is_variadic: bool,
+               abi: Abi)
+               -> Self {
         FunctionSig {
             return_type: return_type,
             argument_types: arguments,
@@ -277,11 +258,10 @@ impl FunctionSig {
     }
 
     /// Construct a new function signature from the given Clang type.
-    pub fn from_ty(
-        ty: &clang::Type,
-        cursor: &clang::Cursor,
-        ctx: &mut BindgenContext,
-    ) -> Result<Self, ParseError> {
+    pub fn from_ty(ty: &clang::Type,
+                   cursor: &clang::Cursor,
+                   ctx: &mut BindgenContext)
+                   -> Result<Self, ParseError> {
         use clang_sys::*;
         debug!("FunctionSig::from_ty {:?} {:?}", ty, cursor);
 
@@ -310,8 +290,7 @@ impl FunctionSig {
             CXCursor_ObjCClassMethodDecl => {
                 // For CXCursor_FunctionDecl, cursor.args() is the reliable way
                 // to get parameter names and types.
-                cursor
-                    .args()
+                cursor.args()
                     .unwrap()
                     .iter()
                     .map(|arg| {
@@ -347,8 +326,7 @@ impl FunctionSig {
         let is_constructor = cursor.kind() == CXCursor_Constructor;
         let is_destructor = cursor.kind() == CXCursor_Destructor;
         if (is_constructor || is_destructor || is_method) &&
-            cursor.lexical_parent() != cursor.semantic_parent()
-        {
+           cursor.lexical_parent() != cursor.semantic_parent() {
             // Only parse constructors once.
             return Err(ParseError::Continue);
         }
@@ -372,11 +350,10 @@ impl FunctionSig {
         }
 
         let ty_ret_type = if cursor.kind() == CXCursor_ObjCInstanceMethodDecl ||
-            cursor.kind() == CXCursor_ObjCClassMethodDecl
-        {
-            try!(ty.ret_type().or_else(|| cursor.ret_type()).ok_or(
-                ParseError::Continue,
-            ))
+                             cursor.kind() == CXCursor_ObjCClassMethodDecl {
+            try!(ty.ret_type()
+                   .or_else(|| cursor.ret_type())
+                   .ok_or(ParseError::Continue))
         } else {
             try!(ty.ret_type().ok_or(ParseError::Continue))
         };
@@ -416,10 +393,9 @@ impl FunctionSig {
 }
 
 impl ClangSubItemParser for Function {
-    fn parse(
-        cursor: clang::Cursor,
-        context: &mut BindgenContext,
-    ) -> Result<ParseResult<Self>, ParseError> {
+    fn parse(cursor: clang::Cursor,
+             context: &mut BindgenContext)
+             -> Result<ParseResult<Self>, ParseError> {
         use clang_sys::*;
 
         let kind = match FunctionKind::from_cursor(&cursor) {
@@ -439,15 +415,13 @@ impl ClangSubItemParser for Function {
         }
 
         if !context.options().generate_inline_functions &&
-            cursor.is_inlined_function()
-        {
+            cursor.is_inlined_function() {
             return Err(ParseError::Continue);
         }
 
         let linkage = cursor.linkage();
         if linkage != CXLinkage_External &&
-            linkage != CXLinkage_UniqueExternal
-        {
+           linkage != CXLinkage_UniqueExternal {
             return Err(ParseError::Continue);
         }
 
@@ -488,8 +462,7 @@ impl Trace for FunctionSig {
     type Extra = ();
 
     fn trace<T>(&self, _: &BindgenContext, tracer: &mut T, _: &())
-    where
-        T: Tracer,
+        where T: Tracer,
     {
         tracer.visit_kind(self.return_type(), EdgeKind::FunctionReturn);
 
@@ -507,35 +480,10 @@ impl Trace for FunctionSig {
 //
 // Note that copy is always derived, so we don't need to implement it.
 impl CanTriviallyDeriveDebug for FunctionSig {
-    fn can_trivially_derive_debug(&self) -> bool {
-        if self.argument_types.len() > RUST_DERIVE_FUNPTR_LIMIT {
-            return false;
-        }
+    type Extra = ();
 
-        match self.abi {
-            Abi::Known(abi::Abi::C) |
-            Abi::Unknown(..) => true,
-            _ => false,
-        }
-    }
-}
-
-impl CanTriviallyDeriveHash for FunctionSig {
-    fn can_trivially_derive_hash(&self) -> bool {
-        if self.argument_types.len() > RUST_DERIVE_FUNPTR_LIMIT {
-            return false;
-        }
-
-        match self.abi {
-            Abi::Known(abi::Abi::C) |
-            Abi::Unknown(..) => true,
-            _ => false,
-        }
-    }
-}
-
-impl CanTriviallyDerivePartialEq for FunctionSig {
-    fn can_trivially_derive_partialeq(&self) -> bool {
+    fn can_trivially_derive_debug(&self, _ctx: &BindgenContext, _: ()) -> bool {
+        const RUST_DERIVE_FUNPTR_LIMIT: usize = 12;
         if self.argument_types.len() > RUST_DERIVE_FUNPTR_LIMIT {
             return false;
         }

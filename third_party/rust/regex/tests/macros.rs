@@ -13,8 +13,9 @@ macro_rules! ismatch {
     ($name:ident, $re:expr, $text:expr, $ismatch:expr) => {
         #[test]
         fn $name() {
+            let text = text!($text);
             let re = regex!($re);
-            assert!($ismatch == re.is_match(text!($text)));
+            assert!($ismatch == re.is_match(text));
         }
     };
 }

@@ -11,19 +11,16 @@ use std::path::Path;
 pub trait DotAttributes {
     /// Write this thing's attributes to the given output. Each attribute must
     /// be its own `<tr>...</tr>`.
-    fn dot_attributes<W>(
-        &self,
-        ctx: &BindgenContext,
-        out: &mut W,
-    ) -> io::Result<()>
-    where
-        W: io::Write;
+    fn dot_attributes<W>(&self,
+                         ctx: &BindgenContext,
+                         out: &mut W)
+                         -> io::Result<()>
+        where W: io::Write;
 }
 
 /// Write a graphviz dot file containing our IR.
 pub fn write_dot_file<P>(ctx: &BindgenContext, path: P) -> io::Result<()>
-where
-    P: AsRef<Path>,
+    where P: AsRef<Path>,
 {
     let file = try!(File::create(path));
     let mut dot_file = io::BufWriter::new(file);
@@ -32,34 +29,28 @@ where
     let mut err: Option<io::Result<_>> = None;
 
     for (id, item) in ctx.items() {
-        try!(writeln!(
-            &mut dot_file,
-            r#"{} [fontname="courier", label=< <table border="0" align="left">"#,
-            id.as_usize()
-        ));
+        try!(writeln!(&mut dot_file,
+                      r#"{} [fontname="courier", label=< <table border="0" align="left">"#,
+                      id.as_usize()));
         try!(item.dot_attributes(ctx, &mut dot_file));
         try!(writeln!(&mut dot_file, r#"</table> >];"#));
 
-        item.trace(
-            ctx,
-            &mut |sub_id: ItemId, edge_kind| {
-                if err.is_some() {
-                    return;
-                }
+        item.trace(ctx,
+                   &mut |sub_id: ItemId, edge_kind| {
+            if err.is_some() {
+                return;
+            }
 
-                match writeln!(
-                    &mut dot_file,
-                    "{} -> {} [label={:?}];",
-                    id.as_usize(),
-                    sub_id.as_usize(),
-                    edge_kind
-                ) {
-                    Ok(_) => {}
-                    Err(e) => err = Some(Err(e)),
-                }
-            },
-            &(),
-        );
+            match writeln!(&mut dot_file,
+                           "{} -> {} [label={:?}];",
+                           id.as_usize(),
+                           sub_id.as_usize(),
+                           edge_kind) {
+                Ok(_) => {}
+                Err(e) => err = Some(Err(e)),
+            }
+        },
+                   &());
 
         if let Some(err) = err {
             return err;
@@ -67,12 +58,10 @@ where
 
         if let Some(module) = item.as_module() {
             for child in module.children() {
-                try!(writeln!(
-                    &mut dot_file,
-                    "{} -> {} [style=dotted]",
-                    item.id().as_usize(),
-                    child.as_usize()
-                ));
+                try!(writeln!(&mut dot_file,
+                              "{} -> {} [style=dotted]",
+                              item.id().as_usize(),
+                              child.as_usize()));
             }
         }
     }
