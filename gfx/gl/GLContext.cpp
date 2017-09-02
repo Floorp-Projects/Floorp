@@ -553,11 +553,8 @@ GLContext::InitWithPrefixImpl(const char* prefix, bool trygl)
     MOZ_ASSERT(majorVer < 10);
     MOZ_ASSERT(minorVer < 10);
     mVersion = majorVer*100 + minorVer*10;
-    if (mVersion < 200) {
-        // Mac OSX 10.6/10.7 machines with Intel GPUs claim only OpenGL 1.4 but
-        // have all the GL2+ extensions that we need.
-        mVersion = 200;
-    }
+    if (mVersion < 200)
+        return false;
 
     ////
 

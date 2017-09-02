@@ -71,6 +71,7 @@
           "title": {"type": "string", "optional": true, "permissions": ["tabs"], "description": "The title of the tab. This property is only present if the extension's manifest includes the <code>\"tabs\"</code> permission."},
           "favIconUrl": {"type": "string", "optional": true, "permissions": ["tabs"], "description": "The URL of the tab's favicon. This property is only present if the extension's manifest includes the <code>\"tabs\"</code> permission. It may also be an empty string if the tab is loading."},
           "status": {"type": "string", "optional": true, "description": "Either <em>loading</em> or <em>complete</em>."},
+          "discarded": {"type": "boolean", "optional": true, "description": "True while the tab is not loaded with content."},
           "incognito": {"type": "boolean", "description": "Whether the tab is in an incognito window."},
           "width": {"type": "integer", "optional": true, "description": "The width of the tab in pixels."},
           "height": {"type": "integer", "optional": true, "description": "The height of the tab in pixels."},
@@ -588,6 +589,11 @@
                 "$ref": "TabStatus",
                 "optional": true,
                 "description": "Whether the tabs have completed loading."
+              },
+              "discarded": {
+                "type": "boolean",
+                "optional": true,
+                "description": "True while the tabs are not loaded with content."
               },
               "title": {
                 "type": "string",
@@ -1194,6 +1200,11 @@
                 "type": "string",
                 "optional": true,
                 "description": "The status of the tab. Can be either <em>loading</em> or <em>complete</em>."
+              },
+              "discarded": {
+                "type": "boolean",
+                "optional": true,
+                "description": "True while the tab is not loaded with content."
               },
               "url": {
                 "type": "string",

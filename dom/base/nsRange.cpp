@@ -205,14 +205,14 @@ nsRange::IsNodeSelected(nsINode* aNode, uint32_t aStartOffset,
   nsTHashtable<nsPtrHashKey<Selection>> ancestorSelections;
   uint32_t maxRangeCount = 0;
   for (; n; n = GetNextRangeCommonAncestor(n->GetParentNode())) {
-    nsTHashtable<nsPtrHashKey<nsRange>>* ranges =
-      n->GetExistingCommonAncestorRanges();
+    LinkedList<nsRange>* ranges = n->GetExistingCommonAncestorRanges();
     if (!ranges) {
       continue;
     }
-    for (auto iter = ranges->ConstIter(); !iter.Done(); iter.Next()) {
-      nsRange* range = iter.Get()->GetKey();
-      if (range->IsInSelection() && !range->Collapsed()) {
+    for (nsRange* range : *ranges) {
+      MOZ_ASSERT(range->IsInSelection(),
+                 "Why is this range registeed with a node?");
+      if (!range->Collapsed()) {
         ancestorSelectionRanges.PutEntry(range);
         Selection* selection = range->mSelection;
         ancestorSelections.PutEntry(selection);
@@ -337,6 +337,14 @@ NS_IMPL_CYCLE_COLLECTION_CLASS(nsRange)
 NS_IMPL_CYCLE_COLLECTION_UNLINK_BEGIN(nsRange)
   NS_IMPL_CYCLE_COLLECTION_UNLINK_PRESERVED_WRAPPER
   NS_IMPL_CYCLE_COLLECTION_UNLINK(mOwner);
+
+  // We _could_ just rely on Reset() to UnregisterCommonAncestor(),
+  // but it wouldn't know we're calling it from Unlink and so would do
+  // more work than it really needs to.
+  if (tmp->mRegisteredCommonAncestor) {
+    tmp->UnregisterCommonAncestor(tmp->mRegisteredCommonAncestor, true);
+  }
+
   tmp->Reset();
 
   // This needs to be unlinked after Reset() is called, as it controls
@@ -410,45 +418,44 @@ nsRange::RegisterCommonAncestor(nsINode* aNode)
 
   MarkDescendants(aNode);
 
-  UniquePtr<nsTHashtable<nsPtrHashKey<nsRange>>>& ranges =
-    aNode->GetCommonAncestorRangesPtr();
+  UniquePtr<LinkedList<nsRange>>& ranges = aNode->GetCommonAncestorRangesPtr();
   if (!ranges) {
-    ranges = MakeUnique<nsRange::RangeHashTable>();
+    ranges = MakeUnique<LinkedList<nsRange>>();
   }
-  ranges->PutEntry(this);
+  ranges->insertBack(this);
   aNode->SetCommonAncestorForRangeInSelection();
 }
 
 void
-nsRange::UnregisterCommonAncestor(nsINode* aNode)
+nsRange::UnregisterCommonAncestor(nsINode* aNode, bool aIsUnlinking)
 {
   NS_PRECONDITION(aNode, "bad arg");
   NS_ASSERTION(aNode->IsCommonAncestorForRangeInSelection(), "wrong node");
   MOZ_DIAGNOSTIC_ASSERT(aNode == mRegisteredCommonAncestor, "wrong node");
-  nsTHashtable<nsPtrHashKey<nsRange>>* ranges =
-    aNode->GetExistingCommonAncestorRanges();
+  LinkedList<nsRange>* ranges = aNode->GetExistingCommonAncestorRanges();
   MOZ_ASSERT(ranges);
-  NS_ASSERTION(ranges->GetEntry(this), "unknown range");
 
   mRegisteredCommonAncestor = nullptr;
 
-  bool isNativeAnon = aNode->IsInNativeAnonymousSubtree();
-  bool removed = false;
-
-  if (ranges->Count() == 1) {
-    aNode->ClearCommonAncestorForRangeInSelection();
-    if (!isNativeAnon) {
-      // For nodes which are in native anonymous subtrees, we optimize away the
-      // cost of deallocating the hashtable here because we may need to create
-      // it again shortly afterward.  We don't do this for all nodes in order
-      // to avoid the additional memory usage unconditionally.
-      aNode->GetCommonAncestorRangesPtr().reset();
-      removed = true;
+#ifdef DEBUG
+  bool found = false;
+  for (nsRange* range : *ranges) {
+    if (range == this) {
+      found = true;
+      break;
     }
-    UnmarkDescendants(aNode);
   }
-  if (!removed) {
-    ranges->RemoveEntry(this);
+  MOZ_ASSERT(found,
+             "We should be in the list on our registered common ancestor");
+#endif // DEBUG
+
+  remove();
+
+  // We don't want to waste time unmarking flags on nodes that are
+  // being unlinked anyway.
+  if (!aIsUnlinking && ranges->isEmpty()) {
+    aNode->ClearCommonAncestorForRangeInSelection();
+    UnmarkDescendants(aNode);
   }
 }
 
@@ -512,7 +519,7 @@ nsRange::CharacterDataChanged(nsIDocument* aDocument,
       bool isCommonAncestor =
         IsInSelection() && mStart.Container() == mEnd.Container();
       if (isCommonAncestor) {
-        UnregisterCommonAncestor(mStart.Container());
+        UnregisterCommonAncestor(mStart.Container(), false);
         RegisterCommonAncestor(newStart.Container());
       }
       if (mStart.Container()->IsDescendantOfCommonAncestorForRangeInSelection()) {
@@ -546,7 +553,7 @@ nsRange::CharacterDataChanged(nsIDocument* aDocument,
         IsInSelection() && mStart.Container() == mEnd.Container();
       if (isCommonAncestor && !newStart.Container()) {
         // The split occurs inside the range.
-        UnregisterCommonAncestor(mStart.Container());
+        UnregisterCommonAncestor(mStart.Container(), false);
         RegisterCommonAncestor(mStart.Container()->GetParentNode());
         newEnd.Container()->SetDescendantOfCommonAncestorForRangeInSelection();
       } else if (mEnd.Container()->
@@ -974,15 +981,19 @@ nsRange::DoSetRange(const RawRangeBoundary& aStart,
   bool checkCommonAncestor =
     (mStart.Container() != aStart.Container() || mEnd.Container() != aEnd.Container()) &&
     IsInSelection() && !aNotInsertedYet;
-  nsINode* oldCommonAncestor = checkCommonAncestor ? GetCommonAncestor() : nullptr;
+
+  // GetCommonAncestor is unreliable while we're unlinking (could
+  // return null if our start/end have already been unlinked), so make
+  // sure to not use it here to determine our "old" current ancestor.
   mStart = aStart;
   mEnd = aEnd;
   mIsPositioned = !!mStart.Container();
   if (checkCommonAncestor) {
+    nsINode* oldCommonAncestor = mRegisteredCommonAncestor;
     nsINode* newCommonAncestor = GetCommonAncestor();
     if (newCommonAncestor != oldCommonAncestor) {
       if (oldCommonAncestor) {
-        UnregisterCommonAncestor(oldCommonAncestor);
+        UnregisterCommonAncestor(oldCommonAncestor, false);
       }
       if (newCommonAncestor) {
         RegisterCommonAncestor(newCommonAncestor);
@@ -1034,12 +1045,12 @@ nsRange::SetSelection(mozilla::dom::Selection* aSelection)
   MOZ_ASSERT(!aSelection || !mSelection);
 
   mSelection = aSelection;
-  nsINode* commonAncestor = GetCommonAncestor();
-  NS_ASSERTION(commonAncestor, "unexpected disconnected nodes");
   if (mSelection) {
+    nsINode* commonAncestor = GetCommonAncestor();
+    NS_ASSERTION(commonAncestor, "unexpected disconnected nodes");
     RegisterCommonAncestor(commonAncestor);
   } else {
-    UnregisterCommonAncestor(commonAncestor);
+    UnregisterCommonAncestor(mRegisteredCommonAncestor, false);
   }
 }
 

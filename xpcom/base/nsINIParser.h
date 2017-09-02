@@ -110,9 +110,9 @@ private:
   };
 
   nsClassHashtable<nsDepCharHashKey, INIValue> mSections;
-  mozilla::UniquePtr<char[]> mFileContents;
+  nsCString mFileContents;
 
-  nsresult InitFromFILE(FILE* aFd);
+  nsresult InitFromString(const nsCString& aStr);
 };
 
 #endif /* nsINIParser_h__ */
