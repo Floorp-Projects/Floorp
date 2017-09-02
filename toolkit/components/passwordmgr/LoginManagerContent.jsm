@@ -37,6 +37,10 @@ XPCOMUtils.defineLazyGetter(this, "log", () => {
   return logger.log.bind(logger);
 });
 
+Services.cpmm.addMessageListener("clearRecipeCache", () => {
+  LoginRecipesContent._clearRecipeCache();
+});
+
 // These mirror signon.* prefs.
 var gEnabled, gAutofillForms, gStoreWhenAutocompleteOff;
 var gLastRightClickTimeStamp = Number.NEGATIVE_INFINITY;
@@ -560,6 +564,9 @@ var LoginManagerContent = {
     let doc = form.ownerDocument;
     let autofillForm = gAutofillForms && !PrivateBrowsingUtils.isContentWindowPrivate(doc.defaultView);
 
+    let formOrigin = LoginUtils._getPasswordOrigin(doc.documentURI);
+    LoginRecipesContent.cacheRecipes(formOrigin, doc.defaultView, recipes);
+
     this._fillForm(form, loginsFound, recipes, {autofillForm});
   },
 
@@ -631,10 +638,8 @@ var LoginManagerContent = {
     log("onUsernameInput from", event.type);
 
     let doc = acForm.ownerDocument;
-    let messageManager = messageManagerFromWindow(doc.defaultView);
-    let recipes = messageManager.sendSyncMessage("RemoteLogins:findRecipes", {
-      formOrigin: LoginUtils._getPasswordOrigin(doc.documentURI),
-    })[0];
+    let formOrigin = LoginUtils._getPasswordOrigin(doc.documentURI);
+    let recipes = LoginRecipesContent.getRecipes(formOrigin, doc.defaultView);
 
     // Make sure the username field fillForm will use is the
     // same field as the autocomplete was activated on.
@@ -928,9 +933,7 @@ var LoginManagerContent = {
     let formSubmitURL = LoginUtils._getActionOrigin(form);
     let messageManager = messageManagerFromWindow(win);
 
-    let recipes = messageManager.sendSyncMessage("RemoteLogins:findRecipes", {
-      formOrigin: hostname,
-    })[0];
+    let recipes = LoginRecipesContent.getRecipes(hostname, win);
 
     // Get the appropriate fields from the form.
     var [usernameField, newPasswordField, oldPasswordField] =
@@ -1345,10 +1348,8 @@ var LoginManagerContent = {
     let form = LoginFormFactory.createFromField(aField);
 
     let doc = aField.ownerDocument;
-    let messageManager = messageManagerFromWindow(doc.defaultView);
-    let recipes = messageManager.sendSyncMessage("RemoteLogins:findRecipes", {
-      formOrigin: LoginUtils._getPasswordOrigin(doc.documentURI),
-    })[0];
+    let formOrigin = LoginUtils._getPasswordOrigin(doc.documentURI);
+    let recipes = LoginRecipesContent.getRecipes(formOrigin, doc.defaultView);
 
     let [usernameField, newPasswordField] =
           this._getFormFields(form, false, recipes);
