@@ -80,16 +80,8 @@ struct SurfaceDescriptorSharedGLTexture {
   bool hasAlpha;
 };
 
-
-union GPUVideoSubDescriptor {
-  SurfaceDescriptorD3D10;
-  SurfaceDescriptorDXGIYCbCr;
-  null_t;
-};
-
 struct SurfaceDescriptorGPUVideo {
   uint64_t handle;
-  GPUVideoSubDescriptor subdesc;
 };
 
 struct RGBDescriptor {

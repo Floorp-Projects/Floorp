@@ -69,7 +69,6 @@ if CONFIG['MOZ_WIDGET_TOOLKIT'] == 'windows':
         'WGLLibrary.h',
     ]
     UNIFIED_SOURCES += [
-        'GLBlitHelperD3D.cpp',
         'GLContextProviderWGL.cpp',
         'SharedSurfaceANGLE.cpp',
         'SharedSurfaceD3D11Interop.cpp',

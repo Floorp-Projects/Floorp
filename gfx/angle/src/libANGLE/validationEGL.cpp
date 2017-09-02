@@ -1515,22 +1515,9 @@ Error ValidateCreateStreamProducerD3DTextureNV12ANGLE(const Display *display,
         return Error(EGL_BAD_STATE_KHR, "Stream not in connecting state");
     }
 
-    switch (stream->getConsumerType()) {
-    case Stream::ConsumerType::GLTextureYUV:
-        if (stream->getPlaneCount() != 2)
-        {
-            return Error(EGL_BAD_MATCH, "Incompatible stream consumer type");
-        }
-        break;
-
-    case Stream::ConsumerType::GLTextureRGB:
-        if (stream->getPlaneCount() != 1)
-        {
-            return Error(EGL_BAD_MATCH, "Incompatible stream consumer type");
-        }
-        break;
-
-    default:
+    if (stream->getConsumerType() != Stream::ConsumerType::GLTextureYUV ||
+        stream->getPlaneCount() != 2)
+    {
         return Error(EGL_BAD_MATCH, "Incompatible stream consumer type");
     }
 
@@ -1565,12 +1552,6 @@ Error ValidateStreamPostD3DTextureNV12ANGLE(const Display *display,
                     return Error(EGL_BAD_PARAMETER, "Invalid subresource index");
                 }
                 break;
-            case EGL_NATIVE_BUFFER_PLANE_OFFSET_IMG:
-                if (value < 0)
-                {
-                    return Error(EGL_BAD_PARAMETER, "Invalid plane offset");
-                }
-                break;
             default:
                 return Error(EGL_BAD_ATTRIBUTE, "Invalid attribute");
         }
@@ -1593,7 +1574,7 @@ Error ValidateStreamPostD3DTextureNV12ANGLE(const Display *display,
         return egl::Error(EGL_BAD_PARAMETER, "Texture is null");
     }
 
-    return stream->validateD3D11NV12Texture(texture, attribs);
+    return stream->validateD3D11NV12Texture(texture);
 }
 
 Error ValidateSwapBuffersWithDamageEXT(const Display *display,
