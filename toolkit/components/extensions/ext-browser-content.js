@@ -7,12 +7,13 @@ const {classes: Cc, interfaces: Ci, utils: Cu, results: Cr} = Components;
 
 Cu.import("resource://gre/modules/XPCOMUtils.jsm");
 
-XPCOMUtils.defineLazyModuleGetter(this, "clearTimeout",
-                                  "resource://gre/modules/Timer.jsm");
-XPCOMUtils.defineLazyModuleGetter(this, "ExtensionCommon",
-                                  "resource://gre/modules/ExtensionCommon.jsm");
-XPCOMUtils.defineLazyModuleGetter(this, "setTimeout",
-                                  "resource://gre/modules/Timer.jsm");
+XPCOMUtils.defineLazyModuleGetters(this, {
+  BrowserUtils: "resource://gre/modules/BrowserUtils.jsm",
+  clearTimeout: "resource://gre/modules/Timer.jsm",
+  E10SUtils: "resource:///modules/E10SUtils.jsm",
+  ExtensionCommon: "resource://gre/modules/ExtensionCommon.jsm",
+  setTimeout: "resource://gre/modules/Timer.jsm",
+});
 
 Cu.import("resource://gre/modules/ExtensionUtils.jsm");
 const {
@@ -288,3 +289,34 @@ const BrowserListener = {
 
 addMessageListener("Extension:InitBrowser", BrowserListener);
 addMessageListener("Extension:UnblockParser", BrowserListener);
+
+var WebBrowserChrome = {
+  onBeforeLinkTraversal(originalTarget, linkURI, linkNode, isAppTab) {
+    return BrowserUtils.onBeforeLinkTraversal(originalTarget, linkURI, linkNode, isAppTab);
+  },
+
+  shouldLoadURI(docShell, URI, referrer, hasPostData, triggeringPrincipal) {
+    return true;
+  },
+
+  shouldLoadURIInThisProcess(URI) {
+    return E10SUtils.shouldLoadURIInThisProcess(URI);
+  },
+
+  reloadInFreshProcess(docShell, URI, referrer, triggeringPrincipal, loadFlags) {
+    return false;
+  },
+
+  startPrerenderingDocument(href, referrer, triggeringPrincipal) {
+  },
+
+  shouldSwitchToPrerenderedDocument(href, referrer, success, failure) {
+    return false;
+  },
+};
+
+if (Services.appinfo.processType == Services.appinfo.PROCESS_TYPE_CONTENT) {
+  let tabchild = docShell.QueryInterface(Ci.nsIInterfaceRequestor)
+                         .getInterface(Ci.nsITabChild);
+  tabchild.webBrowserChrome = WebBrowserChrome;
+}
