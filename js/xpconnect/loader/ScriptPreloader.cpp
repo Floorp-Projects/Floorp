@@ -8,6 +8,8 @@
 #include "mozilla/ScriptPreloader.h"
 #include "mozilla/loader/ScriptCacheActors.h"
 
+#include "mozilla/URLPreloader.h"
+
 #include "mozilla/ArrayUtils.h"
 #include "mozilla/ClearOnShutdown.h"
 #include "mozilla/FileUtils.h"
@@ -413,6 +415,10 @@ ScriptPreloader::InitCache(const nsAString& basePath)
         return Ok();
     }
 
+    // Note: Code on the main thread *must not access Omnijar in any way* until
+    // this AutoBeginReading guard is destroyed.
+    URLPreloader::AutoBeginReading abr;
+
     MOZ_TRY(OpenCache());
 
     return InitCacheInternal();
@@ -517,15 +523,6 @@ ScriptPreloader::InitCacheInternal()
     return Ok();
 }
 
-static inline Result<Ok, nsresult>
-Write(PRFileDesc* fd, const void* data, int32_t len)
-{
-    if (PR_Write(fd, data, len) != len) {
-        return Err(NS_ERROR_FAILURE);
-    }
-    return Ok();
-}
-
 void
 ScriptPreloader::PrepareCacheWriteInternal()
 {
@@ -602,6 +599,8 @@ Result<Ok, nsresult>
 ScriptPreloader::WriteCache()
 {
     MOZ_ASSERT(!NS_IsMainThread());
+
+    Unused << URLPreloader::GetSingleton().WriteCache();
 
     if (!mDataPrepared && !mSaveComplete) {
         MOZ_ASSERT(!mBlockedOnSyncDispatch);

@@ -209,25 +209,10 @@ nsPlaceholderFrame::GetParentStyleContextForOutOfFlow(nsIFrame** aProviderFrame)
 nsStyleContext*
 nsPlaceholderFrame::GetLayoutParentStyleForOutOfFlow(nsIFrame** aProviderFrame) const
 {
-  nsIFrame* parentFrame = GetParent();
-  // Placeholder of backdrop frame is a child of the corresponding top
-  // layer frame, and its style context inherits from that frame. In
-  // case of table, the top layer frame is the table wrapper frame.
-  // However, it will be skipped in CorrectStyleParentFrame below, so
-  // we need to handle it specially here.
-  if ((GetStateBits() & PLACEHOLDER_FOR_TOPLAYER) &&
-      parentFrame->IsTableWrapperFrame()) {
-    MOZ_ASSERT(mOutOfFlowFrame->IsBackdropFrame(),
-               "Only placeholder of backdrop frame can be put inside "
-               "a table wrapper frame");
-    *aProviderFrame = parentFrame;
-    return parentFrame->StyleContext();
-  }
-
   // Lie about our pseudo so we can step out of all anon boxes and
   // pseudo-elements.  The other option would be to reimplement the
   // {ib} split gunk here.
-  *aProviderFrame = CorrectStyleParentFrame(parentFrame,
+  *aProviderFrame = CorrectStyleParentFrame(GetParent(),
                                             nsGkAtoms::placeholderFrame);
   return *aProviderFrame ? (*aProviderFrame)->StyleContext() : nullptr;
 }

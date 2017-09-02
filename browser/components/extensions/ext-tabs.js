@@ -262,6 +262,9 @@ this.tabs = class extends ExtensionAPI {
               needed.push("pinned");
             } else if (event.type == "TabUnpinned") {
               needed.push("pinned");
+            } else if (event.type == "TabBrowserInserted" &&
+                       !event.detail.insertedOnTabCreation) {
+              needed.push("discarded");
             }
 
             let tab = tabManager.getWrapper(event.originalTarget);
@@ -290,12 +293,14 @@ this.tabs = class extends ExtensionAPI {
           windowTracker.addListener("TabAttrModified", listener);
           windowTracker.addListener("TabPinned", listener);
           windowTracker.addListener("TabUnpinned", listener);
+          windowTracker.addListener("TabBrowserInserted", listener);
 
           return () => {
             windowTracker.removeListener("status", statusListener);
             windowTracker.removeListener("TabAttrModified", listener);
             windowTracker.removeListener("TabPinned", listener);
             windowTracker.removeListener("TabUnpinned", listener);
+            windowTracker.removeListener("TabBrowserInserted", listener);
           };
         }).api(),
 

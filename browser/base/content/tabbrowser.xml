@@ -2327,6 +2327,7 @@
 
       <method name="_insertBrowser">
         <parameter name="aTab"/>
+        <parameter name="aInsertedOnTabCreation"/>
         <body>
           <![CDATA[
             "use strict";
@@ -2388,7 +2389,8 @@
               this._outerWindowIDBrowserMap.set(browser.outerWindowID, browser);
             }
 
-            var evt = new CustomEvent("TabBrowserInserted", { bubbles: true, detail: {} });
+            var evt = new CustomEvent("TabBrowserInserted",
+              { bubbles: true, detail: { insertedOnTabCreation: aInsertedOnTabCreation } });
             aTab.dispatchEvent(evt);
           ]]>
         </body>
@@ -2639,7 +2641,7 @@
                 b.registeredOpenURI = lazyBrowserURI;
               }
             } else {
-              this._insertBrowser(t);
+              this._insertBrowser(t, true);
             }
 
             // Dispatch a new tab notification.  We do this once we're

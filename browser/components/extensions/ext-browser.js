@@ -569,6 +569,10 @@ class Tab extends TabBase {
     return this.nativeTab.linkedBrowser;
   }
 
+  get discarded() {
+    return !this.nativeTab.linkedPanel;
+  }
+
   get frameLoader() {
     // If we don't have a frameLoader yet, just return a dummy with no width and
     // height.
