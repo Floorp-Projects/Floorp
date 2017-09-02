@@ -46,17 +46,21 @@ struct TreeMatchContext;
 
 namespace mozilla {
 
-/**
- * A few flags used to track which kind of stylist state we may need to
- * update.
- */
+// A few flags used to track which kind of stylist state we may need to
+// update.
 enum class StylistState : uint8_t {
-  /** The stylist is not dirty, we should do nothing */
+  // The stylist is not dirty, we should do nothing.
   NotDirty = 0,
 
-  /** The style sheets have changed, so we need to update the style data. */
-  StyleSheetsDirty,
+  // The style sheets have changed, so we need to update the style data.
+  StyleSheetsDirty = 1 << 0,
+
+  // Some of the style sheets of the bound elements in binding manager have
+  // changed, so we need to tell the binding manager to update style data.
+  XBLStyleSheetsDirty = 1 << 1,
 };
+
+MOZ_MAKE_ENUM_CLASS_BITWISE_OPERATORS(StylistState)
 
 // Bitfield type to represent Servo stylesheet origins.
 enum class OriginFlags : uint8_t {
@@ -132,6 +136,9 @@ public:
   }
 
   nsRestyleHint MediumFeaturesChanged(bool aViewportChanged);
+
+  // aViewportChanged outputs whether any viewport units is used.
+  bool MediumFeaturesChangedRules(bool* aViewportUnitsUsed);
 
   void InvalidateStyleForCSSRuleChanges();
 
@@ -433,6 +440,11 @@ public:
     mPresContext = nullptr;
   }
 
+  // Return whether this is the PresContext that initialized us.
+  bool IsPresContextChanged(nsPresContext* aPresContext) const {
+    return aPresContext != mPresContextInitXBLStyleSet;
+  }
+
   /**
    * Returns true if a modification to an an attribute with the specified
    * local name might require us to restyle the element.
@@ -525,7 +537,12 @@ private:
    */
   void SetStylistStyleSheetsDirty()
   {
-    mStylistState = StylistState::StyleSheetsDirty;
+    mStylistState |= StylistState::StyleSheetsDirty;
+  }
+
+  void SetStylistXBLStyleSheetsDirty()
+  {
+    mStylistState |= StylistState::XBLStyleSheetsDirty;
   }
 
   bool StylistNeedsUpdate() const
@@ -565,7 +582,15 @@ private:
                          ServoStyleSheet* aSheet);
 
   const Kind mKind;
-  nsPresContext* mPresContext;
+
+  // Nullptr if this is an XBL style set.
+  nsPresContext* MOZ_NON_OWNING_REF mPresContext = nullptr;
+
+  // Because XBL style set could be used by multiple PresContext, we need to
+  // store the PresContext pointer which initializes this style set for
+  // computing medium rule changes.
+  void* MOZ_NON_OWNING_REF mPresContextInitXBLStyleSet = nullptr;
+
   UniquePtr<RawServoStyleSet> mRawSet;
   EnumeratedArray<SheetType, SheetType::Count,
                   nsTArray<RefPtr<ServoStyleSheet>>> mSheets;
