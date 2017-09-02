@@ -20,6 +20,7 @@ public class PermissionBlock {
     private Context context;
     private String[] permissions;
     private boolean onUIThread;
+    private boolean onBackgroundThread;
     private Runnable onPermissionsGranted;
     private Runnable onPermissionsDenied;
     private boolean doNotPrompt;
@@ -46,7 +47,17 @@ public class PermissionBlock {
     }
 
     /**
+     * Execute all callbacks on the background thread.
+     */
+    public PermissionBlock onBackgroundThread() {
+        this.onBackgroundThread = true;
+        return this;
+    }
+
+    /**
      * Do not prompt the user to accept the permission if it has not been granted yet.
+     * This also guarantees that the callback will run on the current thread if no callback
+     * thread has been explicitly specified.
      */
     public PermissionBlock doNotPrompt() {
         doNotPrompt = true;
@@ -116,8 +127,14 @@ public class PermissionBlock {
             return;
         }
 
-        if (onUIThread) {
+        if (onUIThread && onBackgroundThread) {
+            throw new IllegalStateException("Cannot run callback on more than one thread");
+        }
+
+        if (onUIThread && !ThreadUtils.isOnUiThread()) {
             ThreadUtils.postToUiThread(runnable);
+        } else if (onBackgroundThread && !ThreadUtils.isOnBackgroundThread()) {
+            ThreadUtils.postToBackgroundThread(runnable);
         } else {
             runnable.run();
         }

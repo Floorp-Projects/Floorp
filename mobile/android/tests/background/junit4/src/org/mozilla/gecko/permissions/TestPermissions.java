@@ -223,6 +223,20 @@ public class TestPermissions {
         verify(helper, never()).prompt(anyActivity(), any(String[].class));
     }
 
+    @Test(expected = IllegalStateException.class)
+    public void testCannotRunCallbackOnMultipleThreads() {
+        PermissionsHelper helper = mockDenyingHelper();
+        Permissions.setPermissionHelper(helper);
+
+        Permissions.from(mockActivity())
+                .onBackgroundThread()
+                .onUIThread()
+                .withPermissions(Manifest.permission.WRITE_EXTERNAL_STORAGE)
+                .doNotPromptIf(true)
+                .andFallback(mock(Runnable.class))
+                .run(mock(Runnable.class));
+    }
+
     private Activity mockActivity() {
         return mock(Activity.class);
     }
