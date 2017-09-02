@@ -13,6 +13,11 @@
 <!ENTITY aboutTelemetry.optionGroupYesterday "Yesterday">
 <!ENTITY aboutTelemetry.optionGroupOlder "Older">
 <!ENTITY aboutTelemetry.payloadChoiceHeader "Payload">
+<!-- LOCALIZATION NOTE(aboutTelemetry.previousPing, aboutTelemetry.nextPing):
+	These strings are displayed when selecting Archived pings, and they’re
+	used to move to the next or previous ping. -->
+<!ENTITY aboutTelemetry.previousPing "&lt;&lt;">
+<!ENTITY aboutTelemetry.nextPing "&gt;&gt;">
 
 <!ENTITY aboutTelemetry.pageTitle "Telemetry Data">
 <!ENTITY aboutTelemetry.moreInformations "Looking for more information?">
@@ -22,6 +27,7 @@
 
 <!ENTITY aboutTelemetry.showInFirefoxJsonViewer "Open in the JSON viewer">
 
+<!ENTITY aboutTelemetry.homeSection "Home">
 <!ENTITY aboutTelemetry.generalDataSection "General Data">
 <!ENTITY aboutTelemetry.environmentDataSection "Environment Data">
 <!ENTITY aboutTelemetry.sessionInfoSection "Session Information">
