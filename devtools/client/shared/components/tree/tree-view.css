@@ -182,7 +182,7 @@
 
 .theme-light .treeTable .treeRow:hover,
 .theme-dark .treeTable .treeRow:hover {
-  background-color: var(--theme-selection-background-semitransparent) !important;
+  background-color: var(--theme-selection-background-hover) !important;
 }
 
 .theme-firebug .treeTable .treeRow:hover {
