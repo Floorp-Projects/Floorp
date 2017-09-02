@@ -41,8 +41,8 @@ fuzzy-if(styloVsGecko&&cocoaWidget,1,56781) != backgr_layers-opacity.html empty.
 == border-collapse-table-row.html border-collapse-table-row-ref.html
 == border-collapse-table.html border-collapse-table-ref.html
 fuzzy-if(d2d,1,1083) fuzzy-if(skiaContent,1,2200) == border-collapse-opacity-table-cell.html border-collapse-opacity-table-cell-ref.html
-fails-if(!styloVsGecko&&!webrender) == border-collapse-opacity-table-column-group.html border-collapse-opacity-table-column-group-ref.html # bug 424274
-fails-if(!styloVsGecko&&!webrender) == border-collapse-opacity-table-column.html border-collapse-opacity-table-column-ref.html # bug 424274
+fails-if(!webrender) == border-collapse-opacity-table-column-group.html border-collapse-opacity-table-column-group-ref.html # bug 424274
+fails-if(!webrender) == border-collapse-opacity-table-column.html border-collapse-opacity-table-column-ref.html # bug 424274
 fuzzy-if(d2d,1,16359) fuzzy-if(skiaContent,1,17000) == border-collapse-opacity-table-row-group.html border-collapse-opacity-table-row-group-ref.html
 fuzzy-if(d2d,1,11000) fuzzy-if(skiaContent,1,11000) == border-collapse-opacity-table-row.html border-collapse-opacity-table-row-ref.html
 fuzzy-if(d2d||skiaContent,1,60000) == border-collapse-opacity-table.html border-collapse-opacity-table-ref.html

@@ -1255,7 +1255,17 @@ function ReadManifest(aURL, inherited_status, aFilter)
             if (gCompareStyloToGecko) {
                 type = TYPE_REFTEST_EQUAL;
                 refURI = testURI;
+
+                // Skip the test if it is expected to fail in both Stylo and
+                // Gecko modes. It would unexpectedly "pass" in styloVsGecko
+                // mode when comparing the two failures, which is not a useful
+                // result.
+                if (expected_status === EXPECTED_FAIL ||
+                    expected_status === EXPECTED_RANDOM) {
+                    expected_status = EXPECTED_DEATH;
+                }
             }
+
             AddTestItem({ type: type,
                           expected: expected_status,
                           allowSilentFail: allow_silent_fail,

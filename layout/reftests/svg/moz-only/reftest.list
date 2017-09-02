@@ -1,4 +1,3 @@
-
 # XBL tests
 == xbl-basic-01.svg                             pass.svg
 == xbl-basic-02.svg                             pass.svg
@@ -6,9 +5,9 @@
 == xbl-grad-ref--grad-in-binding-01.svg         pass.svg
 == xbl-grad-ref--grad-in-binding-02.svg         pass.svg
 == xbl-grad-ref--grad-in-bound-01.svg           pass.svg
-fails-if(!styloVsGecko) == xbl-grad-ref--grad-in-bound-02.svg     pass-black.svg
-fails-if(!styloVsGecko) == xbl-grad-ref--grad-in-resources-01.svg pass.svg
-fails-if(!styloVsGecko) == xbl-grad-ref--grad-in-resources-02.svg pass.svg
+fails == xbl-grad-ref--grad-in-bound-02.svg     pass-black.svg
+fails == xbl-grad-ref--grad-in-resources-01.svg pass.svg
+fails == xbl-grad-ref--grad-in-resources-02.svg pass.svg
 == xbl-grad-ref--grad-in-binding-03.svg         pass.svg
 == xbl-grad-ref--grad-in-bound-03.svg           pass.svg
 == xbl-grad-ref--grad-in-binding-04.svg         pass.svg
