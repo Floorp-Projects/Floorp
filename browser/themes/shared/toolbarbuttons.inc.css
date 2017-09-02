@@ -6,6 +6,9 @@
   --toolbarbutton-hover-background: hsla(240,5%,5%,.1);
   --toolbarbutton-active-background: hsla(240,5%,5%,.15);
 
+  --toolbarbutton-hover-transition-duration: 150ms;
+  --toolbarbutton-active-transition-duration: 10ms;
+
   --toolbarbutton-inner-padding: 6px;
 
   --backbutton-background: hsla(0,100%,100%,.8);
@@ -110,7 +113,7 @@ toolbar .toolbarbutton-1 > .toolbarbutton-badge-stack {
   padding: var(--toolbarbutton-inner-padding);
   border-radius: var(--toolbarbutton-border-radius);
   transition-property: background-color, border-color, box-shadow;
-  transition-duration: 150ms;
+  transition-duration: var(--toolbarbutton-hover-transition-duration);
 }
 
 toolbar .toolbarbutton-1 > .toolbarbutton-icon {
@@ -178,7 +181,7 @@ toolbar .toolbarbutton-1:not([disabled=true]):-moz-any([open],[checked],:hover:a
 toolbar .toolbarbutton-1:not([disabled=true]):-moz-any([open],[checked],:hover:active) > .toolbarbutton-text,
 toolbar .toolbarbutton-1:not([disabled=true]):-moz-any([open],[checked],:hover:active) > .toolbarbutton-badge-stack {
   background-color: var(--toolbarbutton-active-background);
-  transition-duration: 10ms;
+  transition-duration: var(--toolbarbutton-active-transition-duration);
   color: inherit;
 }
 
