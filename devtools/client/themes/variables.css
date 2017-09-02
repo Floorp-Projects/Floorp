@@ -6,11 +6,13 @@
 /* Variable declarations for light and dark devtools themes.
  * Colors are taken from:
  * https://developer.mozilla.org/en-US/docs/Tools/DevToolsColors.
- * Changes should be kept in sync with commandline.css and commandline.inc.css.
  */
 
-/* IMPORTANT NOTE:
- * This file is parsed in js (see client/shared/theme.js)
+/*
+ * IMPORTANT NOTE
+ * 1. Changes should be kept in sync with commandline.css and commandline-browser.css.
+ *
+ * 2. This file is parsed in js (see client/shared/theme.js)
  * so the formatting should be consistent (i.e. no '}' inside a rule).
  */
 
@@ -25,10 +27,14 @@
   --theme-toolbar-background-alt: #f5f5f5;
   --theme-toolbar-hover: rgba(170, 170, 170, .2);
   --theme-toolbar-hover-active: rgba(170, 170, 170, .4);
-  --theme-selection-background: #4c9ed9;
-  --theme-selection-background-semitransparent: rgba(76, 158, 217, 0.15);
+  --theme-selection-background: var(--blue-55);
+  --theme-selection-background-hover: #F0F9FE;
   --theme-selection-color: #f5f7fa;
-  --theme-splitter-color: #dde1e4;
+
+  /* Border color that splits the toolbars/panels/headers.
+   * This needs to be sync with commandline.css and commandline-browser.css. */
+  --theme-splitter-color: #e0e0e1;
+
   --theme-comment: #696969;
   --theme-comment-alt: #ccd1d5;
 
@@ -93,10 +99,14 @@
   --theme-toolbar-background-alt: #2F343E;
   --theme-toolbar-hover: rgba(110, 120, 130, 0.1);
   --theme-toolbar-hover-active: rgba(110, 120, 130, 0.2);
-  --theme-selection-background: #5675B9;
-  --theme-selection-background-semitransparent: rgba(86, 117, 185, 0.5);
+  --theme-selection-background: #204E8A;
+  --theme-selection-background-hover: #353B48;
   --theme-selection-color: #f5f7fa;
-  --theme-splitter-color: #454d5d;
+
+  /* Border color that splits the toolbars/panels/headers.
+   * This needs to be sync with commandline.css and commandline-browser.css. */
+  --theme-splitter-color: #3c3c3d;
+
   --theme-comment: #757873;
   --theme-comment-alt: #5a6375;
 
@@ -159,7 +169,7 @@
   --theme-toolbar-background: rgb(240, 240, 240) linear-gradient(rgba(255, 255, 255, 0.8), transparent);
   --theme-toolbar-tab-selected-background: rgb(253, 253, 253);
   --theme-selection-background: #3399ff;
-  --theme-selection-background-semitransparent: rgba(128,128,128,0.2);
+  --theme-selection-background-hover: rgba(128,128,128,0.2);
   --theme-selection-color: white;
   --theme-splitter-color: #bfbfbf;
   --theme-comment: darkgreen;
