@@ -27,10 +27,6 @@ body {
   color: var(--theme-selection-color);
 }
 
-.theme-bg-darker {
-  background-color: var(--theme-selection-background-semitransparent);
-}
-
 .theme-selected,
 .CodeMirror-hint-active {
   background-color: var(--theme-selection-background);
@@ -57,7 +53,6 @@ body {
 .CodeMirror-Tern-type {
   color: var(--theme-highlight-blue);
 }
-
 
 .theme-comment,
 .cm-s-mozilla .cm-meta,

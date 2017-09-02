@@ -342,7 +342,7 @@ checkbox:-moz-focusring {
 
 .devtools-button:not(:empty):not(.checked):not(:disabled):hover:active,
 .devtools-toolbarbutton:not(:-moz-any([checked=true],[disabled]))[label]:hover:active {
-  background-color: var(--theme-selection-background-semitransparent);
+  background-color: var(--theme-selection-background-hover);
 }
 
 .devtools-toolbarbutton:not([disabled])[label][checked=true],

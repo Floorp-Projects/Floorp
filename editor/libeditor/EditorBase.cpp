@@ -2428,17 +2428,12 @@ EditorBase::FindBetterInsertionPoint(nsCOMPtr<nsINode>& aNode,
     // In some other cases, aNode is the anonymous DIV, and offset points to the
     // terminating mozBR.  In that case, we'll adjust aInOutNode and
     // aInOutOffset to the preceding text node, if any.
-    if (offset) {
-      nsIContent* child = node->GetLastChild();
-      while (child) {
-        if (child->IsNodeOfType(nsINode::eTEXT)) {
-          NS_ENSURE_TRUE_VOID(node->Length() <= INT32_MAX);
-          aNode = child;
-          aOffset = static_cast<int32_t>(aNode->Length());
-          return;
-        }
-        child = child->GetPreviousSibling();
-      }
+    if (offset > 0 && node->GetChildAt(offset - 1) &&
+        node->GetChildAt(offset - 1)->IsNodeOfType(nsINode::eTEXT)) {
+      NS_ENSURE_TRUE_VOID(node->Length() <= INT32_MAX);
+      aNode = node->GetChildAt(offset - 1);
+      aOffset = static_cast<int32_t>(aNode->Length());
+      return;
     }
   }
 
