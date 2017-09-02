@@ -337,6 +337,7 @@ body {
 
 .animation-timeline .time-body {
   top: var(--toolbar-height);
+  z-index: 3;
 }
 
 .progress-tick-container .progress-tick,
@@ -377,7 +378,7 @@ body {
 }
 
 .animation-timeline .animation.selected {
-  background-color: var(--theme-selection-background-semitransparent);
+  background-color: var(--theme-selection-background-hover);
 }
 
 .animation-timeline .animation:last-child {

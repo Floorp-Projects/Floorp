@@ -829,7 +829,7 @@ html .arrow.expanded svg {
 }
 
 .theme-dark .managed-tree .tree .node.focused {
-  background-color: var(--theme-selection-background-semitransparent);
+  background-color: var(--theme-selection-background-hover);
   padding-bottom: 2px;
 }
 
@@ -2199,7 +2199,7 @@ html[dir="rtl"] .editor-mount {
 }
 
 .editor-wrapper .highlight-lines {
-  background: var(--theme-selection-background-semitransparent);
+  background: var(--theme-selection-background-hover);
 }
 
 .coverage-on .CodeMirror-code :not(.hit-marker) .CodeMirror-line,

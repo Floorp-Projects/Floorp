@@ -38,6 +38,6 @@
 }
 
 .toolbar .btn:not([disabled]):hover:active {
-  background-color: var(--theme-selection-background-semitransparent);
+  background-color: var(--theme-selection-background-hover);
 }
 
