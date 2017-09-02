@@ -166,23 +166,19 @@ ifndef MOZ_DEBUG
 # Used for generating an optimized build with debugging symbols.
 # Used in the Windows nightlies to generate symbols for crash reporting.
 ifdef MOZ_DEBUG_SYMBOLS
-ifdef HAVE_64BIT_BUILD
-OS_LDFLAGS += -DEBUG -OPT:REF,ICF
-else
-OS_LDFLAGS += -DEBUG -OPT:REF
-endif
+OS_LDFLAGS += -DEBUG
 endif
 
 #
 # Handle DMD in optimized builds.
 #
 ifdef MOZ_DMD
-ifdef HAVE_64BIT_BUILD
-OS_LDFLAGS = -DEBUG -OPT:REF,ICF
-else
-OS_LDFLAGS = -DEBUG -OPT:REF
-endif
+OS_LDFLAGS = -DEBUG
 endif # MOZ_DMD
+
+ifdef MOZ_OPTIMIZE
+OS_LDFLAGS += -OPT:REF,ICF
+endif # MOZ_OPTIMIZE
 
 endif # MOZ_DEBUG
 
