@@ -14,5 +14,5 @@ fuzzy-if(skiaContent,1,60000) == not-full-row-leaf-align.xul not-full-basic-ref.
 fuzzy-if(skiaContent,1,50000) == not-full-row-leaf-pack.xul not-full-row-leaf-pack-ref.xhtml
 fuzzy-if(skiaContent,1,80000) == not-full-row-leaf-direction.xul not-full-row-leaf-pack-ref.xhtml
 random-if(transparentScrollbars) fuzzy-if(OSX==1010,1,565) == scrollable-columns.xul scrollable-columns-ref.xhtml # bug 650597
-fails-if(!styloVsGecko) == scrollable-rows.xul scrollable-rows-ref.xhtml
+fails == scrollable-rows.xul scrollable-rows-ref.xhtml
 == sizing-2d.xul sizing-2d-ref.xul
