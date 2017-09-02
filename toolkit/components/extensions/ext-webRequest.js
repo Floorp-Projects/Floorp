@@ -100,10 +100,12 @@ function WebRequestEventManager(context, eventName) {
       filter2.windowId = filter.windowId;
     }
 
+    let blockingAllowed = context.extension.hasPermission("webRequestBlocking");
+
     let info2 = [];
     if (info) {
       for (let desc of info) {
-        if (desc == "blocking" && !context.extension.hasPermission("webRequestBlocking")) {
+        if (desc == "blocking" && !blockingAllowed) {
           Cu.reportError("Using webRequest.addListener with the blocking option " +
                          "requires the 'webRequestBlocking' permission.");
         } else {
@@ -112,7 +114,15 @@ function WebRequestEventManager(context, eventName) {
       }
     }
 
-    WebRequest[eventName].addListener(listener, filter2, info2);
+    let listenerDetails = {
+      addonId: context.extension.id,
+      blockingAllowed,
+      tabParent: context.xulBrowser.frameLoader.tabParent,
+    };
+
+    WebRequest[eventName].addListener(
+      listener, filter2, info2,
+      listenerDetails);
     return () => {
       WebRequest[eventName].removeListener(listener);
     };
