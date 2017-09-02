@@ -307,6 +307,5 @@ random-if(Android) == object--auto-auto--px-px.html        object--auto-auto--px
 == dynamic--inline-css-width.xhtml              pass.svg
 skip == dynamic--inline-resize-window-height.xhtml  pass.svg # XXX breaks the reftest run as the window height somehow is not restored
 skip == dynamic--inline-resize-window-width.xhtml    pass.svg # Fails way too much
-fails-if(!styloVsGecko) random-if(Android) == dynamic--object-svg-unloaded.xhtml     pass.svg
+fails random-if(Android) == dynamic--object-svg-unloaded.xhtml     pass.svg
 # == dynamic--object--auto-auto--pct-px.html 
-
