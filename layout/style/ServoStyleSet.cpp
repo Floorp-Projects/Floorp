@@ -109,6 +109,8 @@ void
 ServoStyleSet::Init(nsPresContext* aPresContext, nsBindingManager* aBindingManager)
 {
   mPresContext = aPresContext;
+  mPresContextInitXBLStyleSet = aPresContext;
+
   mRawSet.reset(Servo_StyleSet_Init(aPresContext));
   mBindingManager = aBindingManager;
 
@@ -168,11 +170,15 @@ nsRestyleHint
 ServoStyleSet::MediumFeaturesChanged(bool aViewportChanged)
 {
   bool viewportUnitsUsed = false;
-  const OriginFlags rulesChanged = static_cast<OriginFlags>(
-    Servo_StyleSet_MediumFeaturesChanged(mRawSet.get(), &viewportUnitsUsed));
+  bool rulesChanged = MediumFeaturesChangedRules(&viewportUnitsUsed);
 
-  if (rulesChanged != OriginFlags(0)) {
-    MarkOriginsDirty(rulesChanged);
+  if (mBindingManager &&
+      mBindingManager->MediumFeaturesChanged(mPresContext)) {
+    SetStylistXBLStyleSheetsDirty();
+    rulesChanged = true;
+  }
+
+  if (rulesChanged) {
     return eRestyle_Subtree;
   }
 
@@ -181,6 +187,22 @@ ServoStyleSet::MediumFeaturesChanged(bool aViewportChanged)
   }
 
   return nsRestyleHint(0);
+}
+
+bool
+ServoStyleSet::MediumFeaturesChangedRules(bool* aViewportUnitsUsed)
+{
+  MOZ_ASSERT(aViewportUnitsUsed);
+
+  const OriginFlags rulesChanged = static_cast<OriginFlags>(
+    Servo_StyleSet_MediumFeaturesChanged(mRawSet.get(), aViewportUnitsUsed));
+
+  if (rulesChanged != OriginFlags(0)) {
+    MarkOriginsDirty(rulesChanged);
+    return true;
+  }
+
+  return false;
 }
 
 MOZ_DEFINE_MALLOC_SIZE_OF(ServoStyleSetMallocSizeOf)
@@ -1372,13 +1394,21 @@ ServoStyleSet::UpdateStylist()
 {
   MOZ_ASSERT(StylistNeedsUpdate());
 
-  // There's no need to compute invalidations and such for an XBL styleset,
-  // since they are loaded and unloaded synchronously, and they don't have to
-  // deal with dynamic content changes.
-  Element* root =
-    IsMaster() ? mPresContext->Document()->GetDocumentElement() : nullptr;
+  if (mStylistState & StylistState::StyleSheetsDirty) {
+    // There's no need to compute invalidations and such for an XBL styleset,
+    // since they are loaded and unloaded synchronously, and they don't have to
+    // deal with dynamic content changes.
+    Element* root =
+      IsMaster() ? mPresContext->Document()->GetDocumentElement() : nullptr;
 
-  Servo_StyleSet_FlushStyleSheets(mRawSet.get(), root);
+    Servo_StyleSet_FlushStyleSheets(mRawSet.get(), root);
+  }
+
+  if (MOZ_UNLIKELY(mStylistState & StylistState::XBLStyleSheetsDirty)) {
+    MOZ_ASSERT(IsMaster(), "Only master styleset can mark XBL stylesets dirty!");
+    mBindingManager->UpdateBoundContentBindingsForServo(mPresContext);
+  }
+
   mStylistState = StylistState::NotDirty;
 }
 
