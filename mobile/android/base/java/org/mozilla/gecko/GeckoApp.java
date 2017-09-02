@@ -942,6 +942,7 @@ public abstract class GeckoApp extends GeckoActivity
     private void setImageAs(final String aSrc) {
         Permissions
                 .from(this)
+                .onBackgroundThread()
                 .withPermissions(Manifest.permission.WRITE_EXTERNAL_STORAGE)
                 .andFallback(new Runnable() {
                     @Override
@@ -965,6 +966,9 @@ public abstract class GeckoApp extends GeckoActivity
      * @param aSrc The URI to download the image from.
      */
     private void downloadImageForSetImage(final String aSrc) {
+        // Network access from the main thread can cause a StrictMode crash on release builds.
+        ThreadUtils.assertOnBackgroundThread();
+
         boolean isDataURI = aSrc.startsWith("data:");
         Bitmap image = null;
         InputStream is = null;
