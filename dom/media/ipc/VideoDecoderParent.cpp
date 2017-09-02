@@ -199,7 +199,7 @@ VideoDecoderParent::ProcessDecodedData(
       video->mDisplay,
       texture ? texture->GetSize() : IntSize(),
       texture ? mParent->StoreImage(video->mImage, texture)
-              : SurfaceDescriptorGPUVideo(0, null_t()),
+              : SurfaceDescriptorGPUVideo(0),
       video->mFrameID);
     Unused << SendOutput(output);
   }

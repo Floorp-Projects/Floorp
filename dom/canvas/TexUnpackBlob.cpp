@@ -639,10 +639,6 @@ TexUnpackImage::TexOrSubImage(bool isSubImage, bool needsRespec, const char* fun
             fallbackReason = "depth is not 1";
             break;
         }
-        if (xOffset != 0 || yOffset != 0 || zOffset != 0) {
-            fallbackReason = "x/y/zOffset is not 0";
-            break;
-        }
 
         if (webgl->mPixelStore_UnpackSkipPixels ||
             webgl->mPixelStore_UnpackSkipRows ||
@@ -705,7 +701,9 @@ TexUnpackImage::TexOrSubImage(bool isSubImage, bool needsRespec, const char* fun
         const gfx::IntSize destSize(mWidth, mHeight);
         const auto dstOrigin = (webgl->mPixelStore_FlipY ? gl::OriginPos::TopLeft
                                                          : gl::OriginPos::BottomLeft);
-        if (!gl->BlitHelper()->BlitImageToFramebuffer(mImage, destSize, dstOrigin)) {
+        if (!gl->BlitHelper()->BlitImageToFramebuffer(mImage, destSize, scopedFB.FB(),
+                                                      dstOrigin))
+        {
             fallbackReason = "likely bug: failed to blit";
             break;
         }
