@@ -721,12 +721,6 @@ WebGLContext::InitAndValidateGL(FailureReason* const out_failReason)
         return false;
     }
 
-    if (!gl->IsSupported(GLFeature::vertex_array_object)) {
-        *out_failReason = { "FEATURE_FAILURE_WEBGL_VAOS",
-                            "Requires vertex_array_object." };
-        return false;
-    }
-
     mDefaultVertexArray = WebGLVertexArray::Create(this);
     mDefaultVertexArray->mAttribs.SetLength(mGLMaxVertexAttribs);
     mBoundVertexArray = mDefaultVertexArray;

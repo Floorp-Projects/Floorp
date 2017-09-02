@@ -97,7 +97,7 @@ D3D11YCbCrImage::SetData(KnowsCompositor* aAllocator,
                          aData.mCbCrStride,
                          aData.mCbCrStride * aData.mCbCrSize.height);
 
-
+  
   return true;
 }
 
@@ -111,15 +111,6 @@ TextureClient*
 D3D11YCbCrImage::GetTextureClient(KnowsCompositor* aForwarder)
 {
   return mTextureClient;
-}
-
-const DXGIYCbCrTextureData*
-D3D11YCbCrImage::GetData() const
-{
-  if (!mTextureClient)
-    return nullptr;
-
-  return static_cast<DXGIYCbCrTextureData*>(mTextureClient->GetInternalData());
 }
 
 already_AddRefed<SourceSurface>
