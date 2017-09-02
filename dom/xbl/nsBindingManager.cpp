@@ -709,35 +709,49 @@ nsBindingManager::WalkRules(nsIStyleRuleProcessor::EnumFunc aFunc,
   return NS_OK;
 }
 
-void
-nsBindingManager::EnumerateBoundContentBindings(
-  const BoundContentBindingCallback& aCallback) const
-{
-  if (!mBoundContentSet) {
-    return;
-  }
+typedef nsTHashtable<nsPtrHashKey<nsIStyleRuleProcessor> > RuleProcessorSet;
 
-  for (auto iter = mBoundContentSet->Iter(); !iter.Done(); iter.Next()) {
+static RuleProcessorSet*
+GetContentSetRuleProcessors(nsTHashtable<nsRefPtrHashKey<nsIContent>>* aContentSet)
+{
+  RuleProcessorSet* set = nullptr;
+
+  for (auto iter = aContentSet->Iter(); !iter.Done(); iter.Next()) {
     nsIContent* boundContent = iter.Get()->GetKey();
-    for (nsXBLBinding* binding = boundContent->GetXBLBinding();
-         binding;
+    for (nsXBLBinding* binding = boundContent->GetXBLBinding(); binding;
          binding = binding->GetBaseBinding()) {
-      aCallback(binding);
+      nsIStyleRuleProcessor* ruleProc =
+        binding->PrototypeBinding()->GetRuleProcessor();
+      if (ruleProc) {
+        if (!set) {
+          set = new RuleProcessorSet;
+        }
+        set->PutEntry(ruleProc);
+      }
     }
   }
+
+  return set;
 }
 
 void
 nsBindingManager::WalkAllRules(nsIStyleRuleProcessor::EnumFunc aFunc,
                                ElementDependentRuleProcessorData* aData)
 {
-  EnumerateBoundContentBindings([=](nsXBLBinding* aBinding) {
-    nsIStyleRuleProcessor* ruleProcessor =
-      aBinding->PrototypeBinding()->GetRuleProcessor();
-    if (ruleProcessor) {
-      (*(aFunc))(ruleProcessor, aData);
-    }
-  });
+  if (!mBoundContentSet) {
+    return;
+  }
+
+  nsAutoPtr<RuleProcessorSet> set;
+  set = GetContentSetRuleProcessors(mBoundContentSet);
+  if (!set) {
+    return;
+  }
+
+  for (auto iter = set->Iter(); !iter.Done(); iter.Next()) {
+    nsIStyleRuleProcessor* ruleProcessor = iter.Get()->GetKey();
+    (*(aFunc))(ruleProcessor, aData);
+  }
 }
 
 nsresult
@@ -745,16 +759,21 @@ nsBindingManager::MediumFeaturesChanged(nsPresContext* aPresContext,
                                         bool* aRulesChanged)
 {
   *aRulesChanged = false;
-  RefPtr<nsPresContext> presContext = aPresContext;
+  if (!mBoundContentSet) {
+    return NS_OK;
+  }
 
-  EnumerateBoundContentBindings([=](nsXBLBinding* aBinding) {
-    nsIStyleRuleProcessor* ruleProcessor =
-      aBinding->PrototypeBinding()->GetRuleProcessor();
-    if (ruleProcessor) {
-      bool thisChanged = ruleProcessor->MediumFeaturesChanged(presContext);
-      *aRulesChanged = *aRulesChanged || thisChanged;
-    }
-  });
+  nsAutoPtr<RuleProcessorSet> set;
+  set = GetContentSetRuleProcessors(mBoundContentSet);
+  if (!set) {
+    return NS_OK;
+  }
+
+  for (auto iter = set->Iter(); !iter.Done(); iter.Next()) {
+    nsIStyleRuleProcessor* ruleProcessor = iter.Get()->GetKey();
+    bool thisChanged = ruleProcessor->MediumFeaturesChanged(aPresContext);
+    *aRulesChanged = *aRulesChanged || thisChanged;
+  }
 
   return NS_OK;
 }
@@ -762,9 +781,17 @@ nsBindingManager::MediumFeaturesChanged(nsPresContext* aPresContext,
 void
 nsBindingManager::AppendAllSheets(nsTArray<StyleSheet*>& aArray)
 {
-  EnumerateBoundContentBindings([&aArray](nsXBLBinding* aBinding) {
-    aBinding->PrototypeBinding()->AppendStyleSheetsTo(aArray);
-  });
+  if (!mBoundContentSet) {
+    return;
+  }
+
+  for (auto iter = mBoundContentSet->Iter(); !iter.Done(); iter.Next()) {
+    nsIContent* boundContent = iter.Get()->GetKey();
+    for (nsXBLBinding* binding = boundContent->GetXBLBinding(); binding;
+         binding = binding->GetBaseBinding()) {
+      binding->PrototypeBinding()->AppendStyleSheetsTo(aArray);
+    }
+  }
 }
 
 static void
