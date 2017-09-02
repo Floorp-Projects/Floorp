@@ -469,10 +469,10 @@ enum ChunkType {
 /* Tree of extents. */
 struct extent_node_t {
 	/* Linkage for the size/address-ordered tree. */
-	rb_node(extent_node_t) link_szad;
+	RedBlackTreeNode<extent_node_t> link_szad;
 
 	/* Linkage for the address-ordered tree. */
-	rb_node(extent_node_t) link_ad;
+	RedBlackTreeNode<extent_node_t> link_ad;
 
 	/* Pointer to the extent that this tree node is responsible for. */
 	void	*addr;
@@ -483,7 +483,7 @@ struct extent_node_t {
 	/* What type of chunk is there; used by chunk recycling code. */
 	ChunkType chunk_type;
 };
-typedef rb_tree(extent_node_t) extent_tree_t;
+typedef RedBlackTree<extent_node_t> extent_tree_t;
 
 /******************************************************************************/
 /*
@@ -524,7 +524,7 @@ struct arena_chunk_map_t {
 	 * 2) arena_run_t conceptually uses this linkage for in-use non-full
 	 *    runs, rather than directly embedding linkage.
 	 */
-	rb_node(arena_chunk_map_t)	link;
+	RedBlackTreeNode<arena_chunk_map_t>	link;
 
 	/*
 	 * Run address (or size) and various flags are stored together.  The bit
@@ -595,8 +595,8 @@ struct arena_chunk_map_t {
 #define	CHUNK_MAP_LARGE		((size_t)0x02U)
 #define	CHUNK_MAP_ALLOCATED	((size_t)0x01U)
 };
-typedef rb_tree(arena_chunk_map_t) arena_avail_tree_t;
-typedef rb_tree(arena_chunk_map_t) arena_run_tree_t;
+typedef RedBlackTree<arena_chunk_map_t> arena_avail_tree_t;
+typedef RedBlackTree<arena_chunk_map_t> arena_run_tree_t;
 
 /* Arena chunk header. */
 struct arena_chunk_t {
@@ -604,7 +604,7 @@ struct arena_chunk_t {
 	arena_t		*arena;
 
 	/* Linkage for the arena's tree of dirty chunks. */
-	rb_node(arena_chunk_t) link_dirty;
+	RedBlackTreeNode<arena_chunk_t> link_dirty;
 
 #ifdef MALLOC_DOUBLE_PURGE
 	/* If we're double-purging, we maintain a linked list of chunks which
@@ -622,7 +622,7 @@ struct arena_chunk_t {
 	/* Map of pages within chunk that keeps track of free/large/small. */
 	arena_chunk_map_t map[1]; /* Dynamically sized. */
 };
-typedef rb_tree(arena_chunk_t) arena_chunk_tree_t;
+typedef RedBlackTree<arena_chunk_t> arena_chunk_tree_t;
 
 #ifdef MALLOC_DOUBLE_PURGE
 namespace mozilla {
@@ -701,7 +701,7 @@ struct arena_t {
 
   arena_id_t mId;
   /* Linkage for the tree of arenas by id. */
-  rb_node(arena_t) mLink;
+  RedBlackTreeNode<arena_t> mLink;
 
   /* All operations on this arena require that lock be locked. */
   malloc_spinlock_t mLock;
@@ -823,7 +823,7 @@ public:
   void HardPurge();
 };
 
-typedef rb_tree(arena_t) arena_tree_t;
+typedef RedBlackTree<arena_t> arena_tree_t;
 
 /******************************************************************************/
 /*
