@@ -59,6 +59,9 @@ const ACTIVITY_STREAM_DEFAULT_FRECENCY = 150;
 // Some default query limit for Activity Stream requests
 const ACTIVITY_STREAM_DEFAULT_LIMIT = 12;
 
+// Some default seconds ago for Activity Stream recent requests
+const ACTIVITY_STREAM_DEFAULT_RECENT = 5 * 24 * 60 * 60;
+
 /**
  * Calculate the MD5 hash for a string.
  * @param aValue
@@ -877,6 +880,28 @@ var ActivityStreamProvider = {
   },
 
   /**
+   * Shared columns for Highlights related queries.
+   */
+  _highlightsColumns: ["bookmarkGuid", "description", "guid",
+    "preview_image_url", "title", "url"],
+
+  /**
+   * Shared post-processing of Highlights links.
+   */
+  _processHighlights(aLinks, aOptions, aType) {
+    // Filter out blocked if necessary
+    if (!aOptions.ignoreBlocked) {
+      aLinks = aLinks.filter(link => !BlockedLinks.isBlocked(link));
+    }
+
+    // Limit the results to the requested number and set a type corresponding to
+    // which query selected it
+    return aLinks.slice(0, aOptions.numItems).map(item => Object.assign(item, {
+      type: aType
+    }));
+  },
+
+  /**
    * From an Array of links, if favicons are present, convert to data URIs
    *
    * @param {Array} aLinks
@@ -940,6 +965,86 @@ var ActivityStreamProvider = {
       ));
     }
     return aLinks;
+  },
+
+  /**
+   * Get most-recently-created visited bookmarks for Activity Stream.
+   *
+   * @param {Object} aOptions
+   *   {num}  bookmarkSecondsAgo: Maximum age of added bookmark.
+   *   {bool} ignoreBlocked: Do not filter out blocked links.
+   *   {int}  numItems: Maximum number of items to return.
+   */
+  async getRecentBookmarks(aOptions) {
+    const options = Object.assign({
+      bookmarkSecondsAgo: ACTIVITY_STREAM_DEFAULT_RECENT,
+      ignoreBlocked: false,
+      numItems: ACTIVITY_STREAM_DEFAULT_LIMIT
+    }, aOptions || {});
+
+    const sqlQuery = `
+      SELECT
+        b.guid AS bookmarkGuid,
+        description,
+        h.guid,
+        preview_image_url,
+        b.title,
+        url
+      FROM moz_bookmarks b
+      JOIN moz_bookmarks p
+        ON p.id = b.parent
+      JOIN moz_places h
+        ON h.id = b.fk
+      WHERE b.dateAdded >= :dateAddedThreshold
+        AND b.title NOTNULL
+        AND b.type = :bookmarkType
+        AND p.parent <> :tagsFolderId
+        ${this._commonPlacesWhere}
+      ORDER BY b.dateAdded DESC
+      LIMIT :limit
+    `;
+
+    return this._processHighlights(await this.executePlacesQuery(sqlQuery, {
+      columns: this._highlightsColumns,
+      params: this._getCommonParams(options, {
+        dateAddedThreshold: (Date.now() - options.bookmarkSecondsAgo * 1000) * 1000
+      })
+    }), options, "bookmark");
+  },
+
+  /**
+   * Get most-recently-visited history with metadata for Activity Stream.
+   *
+   * @param {Object} aOptions
+   *   {bool} ignoreBlocked: Do not filter out blocked links.
+   *   {int}  numItems: Maximum number of items to return.
+   */
+  async getRecentHistory(aOptions) {
+    const options = Object.assign({
+      ignoreBlocked: false,
+      numItems: ACTIVITY_STREAM_DEFAULT_LIMIT,
+    }, aOptions || {});
+
+    const sqlQuery = `
+      SELECT
+        ${this._commonBookmarkGuidSelect},
+        description,
+        guid,
+        preview_image_url,
+        title,
+        url
+      FROM moz_places h
+      WHERE description NOTNULL
+        AND preview_image_url NOTNULL
+        ${this._commonPlacesWhere}
+      ORDER BY last_visit_date DESC
+      LIMIT :limit
+    `;
+
+    return this._processHighlights(await this.executePlacesQuery(sqlQuery, {
+      columns: this._highlightsColumns,
+      params: this._getCommonParams(options)
+    }), options, "history");
   },
 
   /*
@@ -1178,6 +1283,47 @@ var ActivityStreamLinks = {
     const url = aUrl;
     PinnedLinks.unpin({url});
     return PlacesUtils.history.remove(url);
+  },
+
+  /**
+   * Get the Highlights links to show on Activity Stream
+   *
+   * @param {Object} aOptions
+   *   {bool} excludeBookmarks: Don't add bookmark items.
+   *   {bool} excludeHistory: Don't add history items.
+   *   {int}  numItems: Maximum number of (bookmark or history) items to return.
+   *
+   * @return {Promise} Returns a promise with the array of links as the payload
+   */
+  async getHighlights(aOptions = {}) {
+    aOptions.numItems = aOptions.numItems || ACTIVITY_STREAM_DEFAULT_LIMIT;
+    const results = [];
+
+    // First get bookmarks if we want them
+    if (!aOptions.excludeBookmarks) {
+      results.push(...await ActivityStreamProvider.getRecentBookmarks(aOptions));
+    }
+
+    // Add in history if we need more and want them
+    if (aOptions.numItems - results.length > 0 && !aOptions.excludeHistory) {
+      // Use the same numItems as bookmarks above in case we remove duplicates
+      const history = await ActivityStreamProvider.getRecentHistory(aOptions);
+
+      // Only include a url once in the result preferring the bookmark
+      const bookmarkUrls = new Set(results.map(({url}) => url));
+      for (const page of history) {
+        if (!bookmarkUrls.has(page.url)) {
+          results.push(page);
+
+          // Stop adding pages once we reach the desired maximum
+          if (results.length === aOptions.numItems) {
+            break;
+          }
+        }
+      }
+    }
+
+    return results;
   },
 
   /**
