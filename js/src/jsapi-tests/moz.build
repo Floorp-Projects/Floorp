@@ -29,6 +29,7 @@ UNIFIED_SOURCES += [
     'testDifferentNewTargetInvokeConstructor.cpp',
     'testErrorCopying.cpp',
     'testException.cpp',
+    'testExecuteInJSMEnvironment.cpp',
     'testExternalArrayBuffer.cpp',
     'testExternalStrings.cpp',
     'testFindSCCs.cpp',
