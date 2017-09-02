@@ -66,6 +66,7 @@ PerformanceObserverEntryList::GetEntries(
 
     aRetval.AppendElement(entry);
   }
+  aRetval.Sort(PerformanceEntryComparator());
 }
 
 void
@@ -79,6 +80,7 @@ PerformanceObserverEntryList::GetEntriesByType(
       aRetval.AppendElement(entry);
     }
   }
+  aRetval.Sort(PerformanceEntryComparator());
 }
 
 void
@@ -93,4 +95,5 @@ PerformanceObserverEntryList::GetEntriesByName(
       aRetval.AppendElement(entry);
     }
   }
+  aRetval.Sort(PerformanceEntryComparator());
 }
