@@ -2304,6 +2304,18 @@ HttpChannelChild::AsyncOpen(nsIStreamListener *listener, nsISupports *aContext)
 
   LOG(("HttpChannelChild::AsyncOpen [this=%p uri=%s]\n", this, mSpec.get()));
 
+  if (LOG4_ENABLED()) {
+    JSContext* cx = nsContentUtils::GetCurrentJSContext();
+    if (cx) {
+      nsAutoCString fileNameString;
+      uint32_t line = 0, col = 0;
+      if (nsJSUtils::GetCallingLocation(cx, fileNameString, &line, &col)) {
+        LOG(("HttpChannelChild %p source script=%s:%u:%u",
+             this, fileNameString.get(), line, col));
+      }
+    }
+  }
+
 #ifdef DEBUG
   AssertPrivateBrowsingId();
 #endif

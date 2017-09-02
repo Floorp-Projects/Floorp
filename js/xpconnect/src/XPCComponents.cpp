@@ -21,6 +21,8 @@
 #include "mozilla/Preferences.h"
 #include "nsJSEnvironment.h"
 #include "mozilla/TimeStamp.h"
+#include "mozilla/ResultExtensions.h"
+#include "mozilla/URLPreloader.h"
 #include "mozilla/XPTInterfaceInfoManager.h"
 #include "mozilla/dom/DOMException.h"
 #include "mozilla/dom/DOMExceptionBinding.h"
@@ -3376,6 +3378,15 @@ nsXPCComponents_Utils::AllowCPOWsInAddon(const nsACString& addonIdStr,
     if (!XPCWrappedNativeScope::AllowCPOWsInAddon(cx, addonId, allow))
         return NS_ERROR_FAILURE;
 
+    return NS_OK;
+}
+
+NS_IMETHODIMP
+nsXPCComponents_Utils::ReadFile(nsIFile* aFile, nsACString& aResult)
+{
+    NS_ENSURE_TRUE(aFile, NS_ERROR_INVALID_ARG);
+
+    MOZ_TRY_VAR(aResult, URLPreloader::ReadFile(aFile));
     return NS_OK;
 }
 

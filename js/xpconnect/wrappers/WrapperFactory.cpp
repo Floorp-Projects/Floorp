@@ -565,9 +565,11 @@ WrapperFactory::Rewrap(JSContext* cx, HandleObject existing, HandleObject obj)
             wrapper = SelectAddonWrapper(cx, obj, wrapper);
     }
 
-    if (!targetSubsumesOrigin) {
+    if (!targetSubsumesOrigin &&
+        !originCompartmentPrivate->forcePermissiveCOWs) {
         // Do a belt-and-suspenders check against exposing eval()/Function() to
-        // non-subsuming content.
+        // non-subsuming content.  But don't worry about doing it in the
+        // SpecialPowers case.
         if (JSFunction* fun = JS_GetObjectFunction(obj)) {
             if (JS_IsBuiltinEvalFunction(fun) || JS_IsBuiltinFunctionConstructor(fun)) {
                 NS_WARNING("Trying to expose eval or Function to non-subsuming content!");
