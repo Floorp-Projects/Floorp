@@ -19,7 +19,7 @@
 
 // This is the schema version. Update it at any schema change and add a
 // corresponding migrateVxx method below.
-#define DATABASE_SCHEMA_VERSION 38
+#define DATABASE_SCHEMA_VERSION 39
 
 // Fired after Places inited.
 #define TOPIC_PLACES_INIT_COMPLETE "places-init-complete"
@@ -303,6 +303,7 @@ protected:
   nsresult MigrateV36Up();
   nsresult MigrateV37Up();
   nsresult MigrateV38Up();
+  nsresult MigrateV39Up();
 
   nsresult UpdateBookmarkRootTitles();
 
