@@ -444,13 +444,16 @@ js::IsAnyBuiltinEval(JSFunction* fun)
     return fun->maybeNative() == IndirectEval;
 }
 
-JS_FRIEND_API(bool)
-js::ExecuteInGlobalAndReturnScope(JSContext* cx, HandleObject global, HandleScript scriptArg,
-                                  MutableHandleObject envArg)
+static bool
+ExecuteInNonSyntacticGlobalInternal(JSContext* cx, HandleObject global, HandleScript scriptArg,
+                                    HandleObject varEnv, HandleObject lexEnv)
 {
     CHECK_REQUEST(cx);
-    assertSameCompartment(cx, global);
+    assertSameCompartment(cx, global, varEnv, lexEnv);
     MOZ_ASSERT(global->is<GlobalObject>());
+    MOZ_ASSERT(varEnv->is<NonSyntacticVariablesObject>());
+    MOZ_ASSERT(IsExtensibleLexicalEnvironment(lexEnv));
+    MOZ_ASSERT(lexEnv->enclosingEnvironment() == varEnv);
     MOZ_RELEASE_ASSERT(scriptArg->hasNonSyntacticScope());
 
     RootedScript script(cx, scriptArg);
@@ -463,25 +466,28 @@ js::ExecuteInGlobalAndReturnScope(JSContext* cx, HandleObject global, HandleScri
         Debugger::onNewScript(cx, script);
     }
 
-    Rooted<EnvironmentObject*> env(cx, NonSyntacticVariablesObject::create(cx));
-    if (!env)
-        return false;
-
-    // Unlike the non-syntactic scope chain API used by the subscript loader,
-    // this API creates a fresh block scope each time.
-    //
-    // NOTE: Gecko FrameScripts expect lexical |this| to be the global.
-    env = LexicalEnvironmentObject::createNonSyntactic(cx, env, global);
-    if (!env)
-        return false;
-
     RootedValue rval(cx);
-    if (!ExecuteKernel(cx, script, *env, UndefinedValue(),
-                       NullFramePtr() /* evalInFrame */, rval.address()))
-    {
-        return false;
-    }
+    return ExecuteKernel(cx, script, *lexEnv, UndefinedValue(),
+                         NullFramePtr() /* evalInFrame */, rval.address());
+}
 
-    envArg.set(env);
+JS_FRIEND_API(bool)
+js::ExecuteInGlobalAndReturnScope(JSContext* cx, HandleObject global, HandleScript scriptArg,
+                                  MutableHandleObject envArg)
+{
+    RootedObject varEnv(cx, NonSyntacticVariablesObject::create(cx));
+    if (!varEnv)
+        return false;
+
+    // Create lexical environment with |this| == global.
+    // NOTE: This is required behavior for Gecko FrameScriptLoader
+    RootedObject lexEnv(cx, LexicalEnvironmentObject::createNonSyntactic(cx, varEnv, global));
+    if (!lexEnv)
+        return false;
+
+    if (!ExecuteInNonSyntacticGlobalInternal(cx, global, scriptArg, varEnv, lexEnv))
+        return false;
+
+    envArg.set(lexEnv);
     return true;
 }
