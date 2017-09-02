@@ -57,6 +57,7 @@ pub enum BasicParseError<'a> {
 }
 
 impl<'a, T> From<BasicParseError<'a>> for ParseError<'a, T> {
+    #[inline]
     fn from(this: BasicParseError<'a>) -> ParseError<'a, T> {
         ParseError::Basic(this)
     }
@@ -200,16 +201,19 @@ mod ClosingDelimiter {
 impl BitOr<Delimiters> for Delimiters {
     type Output = Delimiters;
 
+    #[inline]
     fn bitor(self, other: Delimiters) -> Delimiters {
         Delimiters { bits: self.bits | other.bits }
     }
 }
 
 impl Delimiters {
+    #[inline]
     fn contains(self, other: Delimiters) -> bool {
         (self.bits & other.bits) != 0
     }
 
+    #[inline]
     fn from_byte(byte: Option<u8>) -> Delimiters {
         match byte {
             Some(b';') => Delimiter::Semicolon,
@@ -349,20 +353,6 @@ impl<'i: 't, 't> Parser<'i, 't> {
         self.input.tokenizer.seen_var_functions()
     }
 
-    /// Start looking for viewport percentage lengths. (See the `seen_viewport_percentages`
-    /// method.)
-    #[inline]
-    pub fn look_for_viewport_percentages(&mut self) {
-        self.input.tokenizer.look_for_viewport_percentages()
-    }
-
-    /// Return whether a `vh`, `vw`, `vmin`, or `vmax` dimension has been seen by the tokenizer
-    /// since `look_for_viewport_percentages` was called, and stop looking.
-    #[inline]
-    pub fn seen_viewport_percentages(&mut self) -> bool {
-        self.input.tokenizer.seen_viewport_percentages()
-    }
-
     /// Execute the given closure, passing it the parser.
     /// If the result (returned unchanged) is `Err`,
     /// the internal state of the parser  (including position within the input)
@@ -441,7 +431,6 @@ impl<'i: 't, 't> Parser<'i, 't> {
             if cached_token.start_position == token_start_position => {
                 self.input.tokenizer.reset(&cached_token.end_state);
                 match cached_token.token {
-                    Token::Dimension { ref unit, .. } => self.input.tokenizer.see_dimension(unit),
                     Token::Function(ref name) => self.input.tokenizer.see_function(name),
                     _ => {}
                 }
@@ -822,6 +811,7 @@ pub fn parse_until_after<'i: 't, 't, F, T, E>(parser: &mut Parser<'i, 't>,
     let next_byte = (parser.input.tokenizer).next_byte();
     if next_byte.is_some() && !parser.stop_before.contains(Delimiters::from_byte(next_byte)) {
         debug_assert!(delimiters.contains(Delimiters::from_byte(next_byte)));
+        // We know this byte is ASCII.
         (parser.input.tokenizer).advance(1);
         if next_byte == Some(b'{') {
             consume_until_end_of_block(BlockType::CurlyBracket, &mut parser.input.tokenizer);
@@ -860,6 +850,8 @@ pub fn parse_nested_block<'i: 't, 't, F, T, E>(parser: &mut Parser<'i, 't>, pars
     result
 }
 
+#[inline(never)]
+#[cold]
 fn consume_until_end_of_block(block_type: BlockType, tokenizer: &mut Tokenizer) {
     let mut stack = SmallVec::<[BlockType; 16]>::new();
     stack.push(block_type);

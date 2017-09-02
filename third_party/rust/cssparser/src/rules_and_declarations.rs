@@ -23,24 +23,17 @@ pub fn parse_important<'i, 't>(input: &mut Parser<'i, 't>) -> Result<(), BasicPa
 /// The return value for `AtRuleParser::parse_prelude`.
 /// Indicates whether the at-rule is expected to have a `{ /* ... */ }` block
 /// or end with a `;` semicolon.
-pub enum AtRuleType<P, R> {
+pub enum AtRuleType<P, PB> {
     /// The at-rule is expected to end with a `;` semicolon. Example: `@import`.
     ///
-    /// The value is the finished representation of an at-rule
-    /// as returned by `RuleListParser::next` or `DeclarationListParser::next`.
-    WithoutBlock(R),
+    /// The value is the representation of all data of the rule which would be
+    /// handled in rule_without_block.
+    WithoutBlock(P),
 
     /// The at-rule is expected to have a a `{ /* ... */ }` block. Example: `@media`
     ///
     /// The value is the representation of the "prelude" part of the rule.
-    WithBlock(P),
-
-    /// The at-rule may either have a block or end with a semicolon.
-    ///
-    /// This is mostly for testing. As of this writing no real CSS at-rule behaves like this.
-    ///
-    /// The value is the representation of the "prelude" part of the rule.
-    OptionalBlock(P),
+    WithBlock(PB),
 }
 
 /// A trait to provide various parsing of declaration values.
@@ -85,8 +78,11 @@ pub trait DeclarationParser<'i> {
 /// so that `impl AtRuleParser<(), ()> for ... {}` can be used
 /// for using `DeclarationListParser` to parse a declartions list with only qualified rules.
 pub trait AtRuleParser<'i> {
-    /// The intermediate representation of an at-rule prelude.
-    type Prelude;
+    /// The intermediate representation of prelude of an at-rule without block;
+    type PreludeNoBlock;
+
+    /// The intermediate representation of prelude of an at-rule with block;
+    type PreludeBlock;
 
     /// The finished representation of an at-rule.
     type AtRule;
@@ -112,10 +108,23 @@ pub trait AtRuleParser<'i> {
     /// that ends wherever the prelude should end.
     /// (Before the next semicolon, the next `{`, or the end of the current block.)
     fn parse_prelude<'t>(&mut self, name: CowRcStr<'i>, input: &mut Parser<'i, 't>)
-                     -> Result<AtRuleType<Self::Prelude, Self::AtRule>, ParseError<'i, Self::Error>> {
+                     -> Result<AtRuleType<Self::PreludeNoBlock, Self::PreludeBlock>,
+                               ParseError<'i, Self::Error>> {
         let _ = name;
         let _ = input;
         Err(ParseError::Basic(BasicParseError::AtRuleInvalid(name)))
+    }
+
+    /// End an at-rule which doesn't have block. Return the finished
+    /// representation of the at-rule.
+    ///
+    /// This is only called when `parse_prelude` returned `WithoutBlock`, and
+    /// either the `;` semicolon indeed follows the prelude, or parser is at
+    /// the end of the input.
+    fn rule_without_block(&mut self, prelude: Self::PreludeNoBlock) -> Self::AtRule {
+        let _ = prelude;
+        panic!("The `AtRuleParser::rule_without_block` method must be overriden \
+                if `AtRuleParser::parse_prelude` ever returns `AtRuleType::WithoutBlock`.")
     }
 
     /// Parse the content of a `{ /* ... */ }` block for the body of the at-rule.
@@ -124,23 +133,13 @@ pub trait AtRuleParser<'i> {
     /// as returned by `RuleListParser::next` or `DeclarationListParser::next`,
     /// or `Err(())` to ignore the entire at-rule as invalid.
     ///
-    /// This is only called when `parse_prelude` returned `WithBlock` or `OptionalBlock`,
-    /// and a block was indeed found following the prelude.
-    fn parse_block<'t>(&mut self, prelude: Self::Prelude, input: &mut Parser<'i, 't>)
+    /// This is only called when `parse_prelude` returned `WithBlock`, and a block
+    /// was indeed found following the prelude.
+    fn parse_block<'t>(&mut self, prelude: Self::PreludeBlock, input: &mut Parser<'i, 't>)
                        -> Result<Self::AtRule, ParseError<'i, Self::Error>> {
         let _ = prelude;
         let _ = input;
         Err(ParseError::Basic(BasicParseError::AtRuleBodyInvalid))
-    }
-
-    /// An `OptionalBlock` prelude was followed by `;`.
-    ///
-    /// Convert the prelude into the finished representation of the at-rule
-    /// as returned by `RuleListParser::next` or `DeclarationListParser::next`.
-    fn rule_without_block(&mut self, prelude: Self::Prelude) -> Self::AtRule {
-        let _ = prelude;
-        panic!("The `AtRuleParser::rule_without_block` method must be overriden \
-                if `AtRuleParser::parse_prelude` ever returns `AtRuleType::OptionalBlock`.")
     }
 }
 
@@ -460,9 +459,9 @@ fn parse_at_rule<'i: 't, 't, P, E>(start: &ParserState, name: CowRcStr<'i>,
         parser.parse_prelude(name, input)
     });
     match result {
-        Ok(AtRuleType::WithoutBlock(rule)) => {
+        Ok(AtRuleType::WithoutBlock(prelude)) => {
             match input.next() {
-                Ok(&Token::Semicolon) | Err(_) => Ok(rule),
+                Ok(&Token::Semicolon) | Err(_) => Ok(parser.rule_without_block(prelude)),
                 Ok(&Token::CurlyBracketBlock) => Err(PreciseParseError {
                     error: ParseError::Basic(BasicParseError::UnexpectedToken(Token::CurlyBracketBlock)),
                     slice: input.slice_from(start.position()),
@@ -493,21 +492,6 @@ fn parse_at_rule<'i: 't, 't, P, E>(start: &ParserState, name: CowRcStr<'i>,
                     location: start.source_location(),
                 }),
                 Ok(_) => unreachable!()
-            }
-        }
-        Ok(AtRuleType::OptionalBlock(prelude)) => {
-            match input.next() {
-                Ok(&Token::Semicolon) | Err(_) => Ok(parser.rule_without_block(prelude)),
-                Ok(&Token::CurlyBracketBlock) => {
-                    // FIXME: https://github.com/rust-lang/rust/issues/42508
-                    parse_nested_block::<'i, 't, _, _, _>(input, move |input| parser.parse_block(prelude, input))
-                        .map_err(|e| PreciseParseError {
-                            error: e,
-                            slice: input.slice_from(start.position()),
-                            location: start.source_location(),
-                        })
-                }
-                _ => unreachable!()
             }
         }
         Err(error) => {

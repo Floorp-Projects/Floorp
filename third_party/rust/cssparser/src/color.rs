@@ -100,18 +100,26 @@ impl ToCss for RGBA {
     fn to_css<W>(&self, dest: &mut W) -> fmt::Result
         where W: fmt::Write,
     {
-        // Try first with two decimal places, then with three.
-        let mut rounded_alpha = (self.alpha_f32() * 100.).round() / 100.;
-        if clamp_unit_f32(rounded_alpha) != self.alpha {
-            rounded_alpha = (self.alpha_f32() * 1000.).round() / 1000.;
-        }
+        let serialize_alpha = self.alpha != 255;
 
-        if self.alpha == 255 {
-            write!(dest, "rgb({}, {}, {})", self.red, self.green, self.blue)
-        } else {
-            write!(dest, "rgba({}, {}, {}, {})",
-                   self.red, self.green, self.blue, rounded_alpha)
+        dest.write_str(if serialize_alpha { "rgba(" } else { "rgb(" })?;
+        self.red.to_css(dest)?;
+        dest.write_str(", ")?;
+        self.green.to_css(dest)?;
+        dest.write_str(", ")?;
+        self.blue.to_css(dest)?;
+        if serialize_alpha {
+            dest.write_str(", ")?;
+
+            // Try first with two decimal places, then with three.
+            let mut rounded_alpha = (self.alpha_f32() * 100.).round() / 100.;
+            if clamp_unit_f32(rounded_alpha) != self.alpha {
+                rounded_alpha = (self.alpha_f32() * 1000.).round() / 1000.;
+            }
+
+            rounded_alpha.to_css(dest)?;
         }
+        dest.write_char(')')
     }
 }
 
