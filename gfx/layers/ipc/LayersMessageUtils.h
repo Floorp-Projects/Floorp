@@ -448,6 +448,11 @@ struct ParamTraits<mozilla::layers::FocusTarget::FocusTargetType>
 {};
 
 template <>
+struct ParamTraits<mozilla::layers::FocusTarget::NoFocusTarget>
+  : public EmptyStructSerializer<mozilla::layers::FocusTarget::NoFocusTarget>
+{};
+
+template <>
 struct ParamTraits<mozilla::layers::FocusTarget>
 {
   typedef mozilla::layers::FocusTarget paramType;
@@ -456,28 +461,16 @@ struct ParamTraits<mozilla::layers::FocusTarget>
   {
     WriteParam(aMsg, aParam.mSequenceNumber);
     WriteParam(aMsg, aParam.mFocusHasKeyEventListeners);
-    WriteParam(aMsg, aParam.mType);
-    if (aParam.mType == mozilla::layers::FocusTarget::eRefLayer) {
-      WriteParam(aMsg, aParam.mData.mRefLayerId);
-    } else if (aParam.mType == mozilla::layers::FocusTarget::eScrollLayer) {
-      WriteParam(aMsg, aParam.mData.mScrollTargets);
-    }
+    WriteParam(aMsg, aParam.mData);
   }
 
   static bool Read(const Message* aMsg, PickleIterator* aIter, paramType* aResult)
   {
     if (!ReadParam(aMsg, aIter, &aResult->mSequenceNumber) ||
         !ReadParam(aMsg, aIter, &aResult->mFocusHasKeyEventListeners) ||
-        !ReadParam(aMsg, aIter, &aResult->mType)) {
+        !ReadParam(aMsg, aIter, &aResult->mData)) {
       return false;
     }
-
-    if (aResult->mType == mozilla::layers::FocusTarget::eRefLayer) {
-      return ReadParam(aMsg, aIter, &aResult->mData.mRefLayerId);
-    } else if (aResult->mType == mozilla::layers::FocusTarget::eScrollLayer) {
-      return ReadParam(aMsg, aIter, &aResult->mData.mScrollTargets);
-    }
-
     return true;
   }
 };
