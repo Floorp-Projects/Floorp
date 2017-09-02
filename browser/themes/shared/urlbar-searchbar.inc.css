@@ -19,7 +19,7 @@
 #urlbar:hover,
 .searchbar-textbox:hover {
   border-color: hsla(240,5%,5%,.35);
-  box-shadow: 0 1px 6px rgba(0,0,0,.1), 0 0 1px rgba(0,0,0,.1);
+  box-shadow: 0 1px 6px rgba(0,0,0,.1);
 }
 
 #urlbar:-moz-lwtheme,

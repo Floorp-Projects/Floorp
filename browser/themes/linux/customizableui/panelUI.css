@@ -26,33 +26,6 @@
   padding-top: 4px;
 }
 
-.subviewbutton > .toolbarbutton-text {
-  padding-top: 3px;
-  padding-bottom: 3px;
-}
-
-.widget-overflow-list .toolbarbutton-1 > .toolbarbutton-menubutton-button {
-  -moz-appearance: none;
-  border: 0;
-  margin-inline-start: 3px;
-}
-
-.widget-overflow-list .toolbarbutton-1 > .toolbarbutton-menubutton-dropmarker {
-  margin-inline-start: 0;
-}
-
-.subviewbutton > .toolbarbutton-text {
-  padding-inline-start: 16px;
-}
-
-.subviewbutton:-moz-any([image],[targetURI],.cui-withicon, .restoreallitem, .bookmark-item) > .toolbarbutton-text {
-  padding-inline-start: 0;
-}
-
-.subviewbutton:-moz-any([image],[targetURI],.cui-withicon, .restoreallitem, .bookmark-item)[checked="true"] > .toolbarbutton-icon {
-  visibility: hidden;
-}
-
 menuitem.subviewbutton {
   -moz-appearance: none !important;
 }
@@ -73,18 +46,6 @@ menu.subviewbutton > .menu-right:-moz-locale-dir(rtl) {
   transform: scaleX(-1);
 }
 
-.subviewbutton > .toolbarbutton-icon {
-  margin-inline-end: 5px;
-}
-
-.subviewbutton > .menu-right,
-.subviewbutton > .menu-iconic-left {
-  padding-top: 1px;
-  /* These need !important to override menu.css */
-  margin-top: 1px !important;
-  margin-bottom: 2px !important;
-}
-
 .subviewradio > .radio-label-box {
   -moz-appearance: none;
 }
@@ -99,26 +60,3 @@ menu.subviewbutton > .menu-right:-moz-locale-dir(rtl) {
   box-shadow: none;
 }
 
-/* START photon adjustments */
-
-photonpanelmultiview .subviewbutton > .toolbarbutton-text,
-photonpanelmultiview .subviewbutton > .toolbarbutton-icon,
-photonpanelmultiview .panel-banner-item > .toolbarbutton-multiline-text {
-  margin: 0;
-}
-
-photonpanelmultiview .subviewbutton > .toolbarbutton-icon {
-  padding: 0;
-}
-
-photonpanelmultiview .subviewbutton:-moz-any([image],[targetURI],.cui-withicon,
-  .restoreallitem, .bookmark-item) > .toolbarbutton-text {
-  padding-inline-start: 8px;
-}
-
-photonpanelmultiview .subviewbutton:-moz-any([image],[targetURI],.cui-withicon,
-  .restoreallitem, .bookmark-item)[checked="true"] > .toolbarbutton-icon {
-  visibility: visible;
-}
-
-/* END photon adjustments */

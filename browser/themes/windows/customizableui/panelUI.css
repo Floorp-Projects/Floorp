@@ -8,23 +8,15 @@
   background-color: var(--arrowpanel-background);
 }
 
-#PanelUI-contents #zoom-out-btn {
-  padding-left: 12px;
-  padding-right: 12px;
-}
-
-#PanelUI-contents #zoom-in-btn {
-  padding-left: 12px;
-  padding-right: 12px;
-}
-
 /* bookmark panel submenus */
 
 #BMB_bookmarksPopup menupopup[placespopup=true] {
   -moz-appearance: none;
   background: transparent;
   border: none;
-  padding: 6px;
+  padding: 0;
+  padding-top: 4px;
+  padding-inline-start: 3px;
 }
 
 #BMB_bookmarksPopup menupopup[placespopup=true] > hbox {
@@ -35,10 +27,6 @@
   border: 1px solid var(--arrowpanel-border-color);
   border-radius: 3.5px;
   margin-top: -4px;
-}
-
-#BMB_bookmarksPopup menupopup {
-  padding-top: 2px;
 }
 
 /* Add some space at the top because there are no headers: */
@@ -52,13 +40,6 @@
   padding-bottom: 0;
 }
 
-.subviewbutton > .menu-right,
-.subviewbutton > .menu-iconic-left {
-  padding-top: 1px;
-  margin-top: 1px;
-  margin-bottom: 2px;
-}
-
 /* Disabled empty item looks too small otherwise, because it has no icon. */
 menuitem.subviewbutton[disabled]:not(.menuitem-iconic),
 /* Same for checkbox menu items, whose icons lose size due to -moz-appearance: none: */
@@ -66,39 +47,6 @@ menuitem[type="checkbox"].subviewbutton {
   /* This is 16px for an icon + 3px for its margins + 1px for its padding +
    * 2px for its border, see above */
   min-height: 22px;
-}
-
-.subviewbutton > .toolbarbutton-text {
-  padding-top: 3px;
-  padding-bottom: 3px;
-}
-
-.widget-overflow-list .toolbarbutton-1 > .toolbarbutton-menubutton-button {
-  -moz-appearance: none;
-  border: 0;
-  margin-inline-start: 3px;
-}
-
-.widget-overflow-list .toolbarbutton-1 > .toolbarbutton-menubutton-dropmarker {
-  padding: 0 2px;
-  padding-inline-start: 0;
-  height: 18px;
-}
-
-.widget-overflow-list .toolbarbutton-1 > .toolbarbutton-menubutton-dropmarker > .dropmarker-icon {
-  padding: 0 6px;
-}
-
-.subviewbutton > .toolbarbutton-text {
-  padding-inline-start: 16px;
-}
-
-.subviewbutton:-moz-any([image],[targetURI],.cui-withicon, .restoreallitem, .bookmark-item) > .toolbarbutton-text {
-  padding-inline-start: 0;
-}
-
-.subviewbutton:-moz-any([image],[targetURI],.cui-withicon, .restoreallitem, .bookmark-item)[checked="true"] > .toolbarbutton-icon {
-  visibility: hidden;
 }
 
 menu.subviewbutton > .menu-right {
@@ -126,10 +74,6 @@ menu.subviewbutton > .menu-right:-moz-locale-dir(rtl) {
 
 /* Win8 and beyond. */
 @media not all and (-moz-os-version: windows-win7) {
-  panelview .toolbarbutton-1,
-  .subviewbutton,
-  .widget-overflow-list .toolbarbutton-1,
-  .panelUI-grid .toolbarbutton-1 > .toolbarbutton-menubutton-button,
   #BMB_bookmarksPopup menupopup[placespopup=true] > hbox,
   #edit-controls@inAnyPanel@,
   #zoom-controls@inAnyPanel@,
@@ -139,26 +83,3 @@ menu.subviewbutton > .menu-right:-moz-locale-dir(rtl) {
   }
 }
 
-/* START photon adjustments */
-
-photonpanelmultiview .subviewbutton > .toolbarbutton-text,
-photonpanelmultiview .subviewbutton > .toolbarbutton-icon,
-photonpanelmultiview .panel-banner-item > .toolbarbutton-multiline-text {
-  margin: 0;
-}
-
-photonpanelmultiview .subviewbutton > .toolbarbutton-icon {
-  padding: 0;
-}
-
-photonpanelmultiview .subviewbutton:-moz-any([image],[targetURI],.cui-withicon,
-  .restoreallitem, .bookmark-item) > .toolbarbutton-text {
-  padding-inline-start: 8px;
-}
-
-photonpanelmultiview .subviewbutton:-moz-any([image],[targetURI],.cui-withicon,
-  .restoreallitem, .bookmark-item)[checked="true"] > .toolbarbutton-icon {
-  visibility: visible;
-}
-
-/* END photon adjustments */

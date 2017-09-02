@@ -101,8 +101,9 @@
 #sidebarMenu-popup .subviewbutton-iconic > .toolbarbutton-icon {
   margin-inline-start: 16px;
 }
-#sidebarMenu-popup .subviewbutton-iconic > .toolbarbutton-text {
-  padding-inline-start: 0;
+/* Align items without icons to the start of the icons: */
+#sidebarMenu-popup .subviewbutton:not(.subviewbutton-iconic) > .toolbarbutton-text {
+  padding-inline-start: 16px;
 }
 %endif
 
