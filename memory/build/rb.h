@@ -706,52 +706,52 @@ struct RedBlackTree
  * call point.
  */
 
-#define	rb_wrap(a_attr, a_prefix, a_tree_type, a_type, a_field, a_cmp)	\
-a_attr void								\
+#define	rb_wrap(a_prefix, a_tree_type, a_type, a_field, a_cmp)		\
+static void								\
 a_prefix##new(a_tree_type *tree) {					\
     rb_new(a_type, a_field, tree);					\
 }									\
-a_attr a_type *								\
+static a_type *								\
 a_prefix##first(a_tree_type *tree) {					\
     a_type *ret;							\
     rb_first(a_type, a_field, tree, ret);				\
     return (ret);							\
 }									\
-a_attr a_type *								\
+static a_type *								\
 a_prefix##last(a_tree_type *tree) {					\
     a_type *ret;							\
     rb_last(a_type, a_field, tree, ret);				\
     return (ret);							\
 }									\
-a_attr a_type *								\
+static a_type *								\
 a_prefix##next(a_tree_type *tree, a_type *node) {			\
     a_type *ret;							\
     rb_next(a_type, a_field, a_cmp, tree, node, ret);			\
     return (ret);							\
 }									\
-a_attr a_type *								\
+static a_type *								\
 a_prefix##prev(a_tree_type *tree, a_type *node) {			\
     a_type *ret;							\
     rb_prev(a_type, a_field, a_cmp, tree, node, ret);			\
     return (ret);							\
 }									\
-a_attr a_type *								\
+static a_type *								\
 a_prefix##search(a_tree_type *tree, a_type *key) {			\
     a_type *ret;							\
     rb_search(a_type, a_field, a_cmp, tree, key, ret);			\
     return (ret);							\
 }									\
-a_attr a_type *								\
+static a_type *								\
 a_prefix##nsearch(a_tree_type *tree, a_type *key) {			\
     a_type *ret;							\
     rb_nsearch(a_type, a_field, a_cmp, tree, key, ret);			\
     return (ret);							\
 }									\
-a_attr void								\
+static void								\
 a_prefix##insert(a_tree_type *tree, a_type *node) {			\
     rb_insert(a_type, a_field, a_cmp, tree, node);			\
 }									\
-a_attr void								\
+static void								\
 a_prefix##remove(a_tree_type *tree, a_type *node) {			\
     rb_remove(a_type, a_field, a_cmp, tree, node);			\
 }
