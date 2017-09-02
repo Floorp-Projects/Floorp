@@ -617,6 +617,116 @@ IsASCII(const nsAString& aString)
   return true;
 }
 
+bool
+IsASCII(const nsACString& aString)
+{
+  static const char NOT_ASCII = char(~0x7F);
+
+
+  // Don't want to use |copy_string| for this task, since we can stop at the first non-ASCII character
+
+  nsACString::const_iterator iter, done_reading;
+  aString.BeginReading(iter);
+  aString.EndReading(done_reading);
+
+  const char* c = iter.get();
+  const char* end = done_reading.get();
+
+  while (c < end) {
+    if (*c++ & NOT_ASCII) {
+      return false;
+    }
+  }
+
+  return true;
+}
+
+bool
+IsUTF8(const nsACString& aString, bool aRejectNonChar)
+{
+  nsReadingIterator<char> done_reading;
+  aString.EndReading(done_reading);
+
+  int32_t state = 0;
+  bool overlong = false;
+  bool surrogate = false;
+  bool nonchar = false;
+  uint16_t olupper = 0; // overlong byte upper bound.
+  uint16_t slower = 0;  // surrogate byte lower bound.
+
+  nsReadingIterator<char> iter;
+  aString.BeginReading(iter);
+
+  const char* ptr = iter.get();
+  const char* end = done_reading.get();
+  while (ptr < end) {
+    uint8_t c;
+
+    if (0 == state) {
+      c = *ptr++;
+
+      if (UTF8traits::isASCII(c)) {
+        continue;
+      }
+
+      if (c <= 0xC1) { // [80-BF] where not expected, [C0-C1] for overlong.
+        return false;
+      } else if (UTF8traits::is2byte(c)) {
+        state = 1;
+      } else if (UTF8traits::is3byte(c)) {
+        state = 2;
+        if (c == 0xE0) { // to exclude E0[80-9F][80-BF]
+          overlong = true;
+          olupper = 0x9F;
+        } else if (c == 0xED) { // ED[A0-BF][80-BF] : surrogate codepoint
+          surrogate = true;
+          slower = 0xA0;
+        } else if (c == 0xEF) { // EF BF [BE-BF] : non-character
+          nonchar = true;
+        }
+      } else if (c <= 0xF4) { // XXX replace /w UTF8traits::is4byte when it's updated to exclude [F5-F7].(bug 199090)
+        state = 3;
+        nonchar = true;
+        if (c == 0xF0) { // to exclude F0[80-8F][80-BF]{2}
+          overlong = true;
+          olupper = 0x8F;
+        } else if (c == 0xF4) { // to exclude F4[90-BF][80-BF]
+          // actually not surrogates but codepoints beyond 0x10FFFF
+          surrogate = true;
+          slower = 0x90;
+        }
+      } else {
+        return false;  // Not UTF-8 string
+      }
+    }
+
+    if (nonchar && !aRejectNonChar) {
+      nonchar = false;
+    }
+
+    while (ptr < end && state) {
+      c = *ptr++;
+      --state;
+
+      // non-character : EF BF [BE-BF] or F[0-7] [89AB]F BF [BE-BF]
+      if (nonchar &&
+          ((!state && c < 0xBE) ||
+           (state == 1 && c != 0xBF)  ||
+           (state == 2 && 0x0F != (0x0F & c)))) {
+        nonchar = false;
+      }
+
+      if (!UTF8traits::isInSeq(c) || (overlong && c <= olupper) ||
+          (surrogate && slower <= c) || (nonchar && !state)) {
+        return false;  // Not UTF-8 string
+      }
+
+      overlong = surrogate = false;
+    }
+  }
+  return !state; // state != 0 at the end indicates an invalid UTF-8 seq.
+}
+
 /**
  * A character sink for in-place case conversion.
  */
