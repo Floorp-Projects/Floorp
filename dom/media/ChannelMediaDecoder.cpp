@@ -201,6 +201,7 @@ MediaDecoderStateMachine* ChannelMediaDecoder::CreateStateMachine()
   init.mCrashHelper = GetOwner()->CreateGMPCrashHelper();
   init.mFrameStats = mFrameStats;
   init.mResource = mResource;
+  init.mMediaDecoderOwnerID = mOwner;
   mReader = DecoderTraits::CreateReader(ContainerType(), init);
   return new MediaDecoderStateMachine(this, mReader);
 }

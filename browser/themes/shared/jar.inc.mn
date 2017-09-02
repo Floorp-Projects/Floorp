@@ -156,6 +156,7 @@
   skin/classic/browser/print.svg                      (../shared/icons/print.svg)
   skin/classic/browser/private-browsing.svg           (../shared/icons/private-browsing.svg)
   skin/classic/browser/privateBrowsing.svg            (../shared/icons/privateBrowsing.svg)
+  skin/classic/browser/restore-session.svg            (../shared/icons/restore-session.svg)
   skin/classic/browser/quit.svg                       (../shared/icons/quit.svg)
   skin/classic/browser/reload.svg                     (../shared/icons/reload.svg)
   skin/classic/browser/reload-to-stop.svg             (../shared/icons/reload-to-stop.svg)
