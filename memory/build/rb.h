@@ -1,4 +1,11 @@
-/******************************************************************************
+/* -*- Mode: C++; tab-width: 8; indent-tabs-mode: nil; c-basic-offset: 2 -*- */
+/* vim: set ts=8 sts=2 et sw=2 tw=80: */
+/* This Source Code Form is subject to the terms of the Mozilla Public
+ * License, v. 2.0. If a copy of the MPL was not distributed with this
+ * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
+
+/*
+ * Portions of this file were originally under the following license:
  *
  * Copyright (C) 2008 Jason Evans <jasone@FreeBSD.org>.
  * All rights reserved.
@@ -68,18 +75,20 @@
 #define	RB_H_
 
 /* Node structure. */
-#define	rb_node(a_type)							\
-struct {								\
-    a_type *rbn_left;							\
-    a_type *rbn_right_red;						\
-}
+template <typename T>
+struct RedBlackTreeNode
+{
+  T* rbn_left;
+  T* rbn_right_red;
+};
 
 /* Root structure. */
-#define	rb_tree(a_type)							\
-struct {								\
-    a_type *rbt_root;							\
-    a_type rbt_nil;							\
-}
+template <typename T>
+struct RedBlackTree
+{
+  T* rbt_root;
+  T rbt_nil;
+};
 
 /* Left accessors. */
 #define	rbp_left_get(a_type, a_field, a_node)				\
