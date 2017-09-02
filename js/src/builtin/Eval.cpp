@@ -491,3 +491,48 @@ js::ExecuteInGlobalAndReturnScope(JSContext* cx, HandleObject global, HandleScri
     envArg.set(lexEnv);
     return true;
 }
+
+JS_FRIEND_API(JSObject*)
+js::NewJSMEnvironment(JSContext* cx)
+{
+    RootedObject varEnv(cx, NonSyntacticVariablesObject::create(cx));
+    if (!varEnv)
+        return nullptr;
+
+    // Force LexicalEnvironmentObject to be created
+    MOZ_ASSERT(!cx->compartment()->getNonSyntacticLexicalEnvironment(varEnv));
+    if (!cx->compartment()->getOrCreateNonSyntacticLexicalEnvironment(cx, varEnv))
+        return nullptr;
+
+    return varEnv;
+}
+
+JS_FRIEND_API(bool)
+js::ExecuteInJSMEnvironment(JSContext* cx, HandleScript scriptArg, HandleObject varEnv)
+{
+    assertSameCompartment(cx, varEnv);
+    MOZ_ASSERT(cx->compartment()->getNonSyntacticLexicalEnvironment(varEnv));
+
+    RootedObject global(cx, &varEnv->global());
+    RootedObject lexEnv(cx, JS_ExtensibleLexicalEnvironment(varEnv));
+
+    return ExecuteInNonSyntacticGlobalInternal(cx, global, scriptArg, varEnv, lexEnv);
+}
+
+JS_FRIEND_API(JSObject*)
+js::GetJSMEnvironmentOfScriptedCaller(JSContext* cx)
+{
+    FrameIter iter(cx);
+    if (iter.done())
+        return nullptr;
+
+    // WASM frames don't always provide their environment, but we also shouldn't
+    // expect to see any calling into here.
+    MOZ_RELEASE_ASSERT(!iter.isWasm());
+
+    RootedObject env(cx, iter.environmentChain(cx));
+    while (env && !env->is<NonSyntacticVariablesObject>())
+        env = env->enclosingEnvironment();
+
+    return env;
+}
