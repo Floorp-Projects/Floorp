@@ -6,11 +6,13 @@
 /* Variable declarations for light and dark devtools themes.
  * Colors are taken from:
  * https://developer.mozilla.org/en-US/docs/Tools/DevToolsColors.
- * Changes should be kept in sync with commandline.css and commandline.inc.css.
  */
 
-/* IMPORTANT NOTE:
- * This file is parsed in js (see client/shared/theme.js)
+/*
+ * IMPORTANT NOTE
+ * 1. Changes should be kept in sync with commandline.css and commandline-browser.css.
+ *
+ * 2. This file is parsed in js (see client/shared/theme.js)
  * so the formatting should be consistent (i.e. no '}' inside a rule).
  */
 
@@ -28,7 +30,11 @@
   --theme-selection-background: var(--blue-55);
   --theme-selection-background-hover: #F0F9FE;
   --theme-selection-color: #f5f7fa;
-  --theme-splitter-color: #dde1e4;
+
+  /* Border color that splits the toolbars/panels/headers.
+   * This needs to be sync with commandline.css and commandline-browser.css. */
+  --theme-splitter-color: #e0e0e1;
+
   --theme-comment: #696969;
   --theme-comment-alt: #ccd1d5;
 
@@ -96,7 +102,11 @@
   --theme-selection-background: #204E8A;
   --theme-selection-background-hover: #353B48;
   --theme-selection-color: #f5f7fa;
-  --theme-splitter-color: #454d5d;
+
+  /* Border color that splits the toolbars/panels/headers.
+   * This needs to be sync with commandline.css and commandline-browser.css. */
+  --theme-splitter-color: #3c3c3d;
+
   --theme-comment: #757873;
   --theme-comment-alt: #5a6375;
 
