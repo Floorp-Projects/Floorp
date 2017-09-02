@@ -74,7 +74,7 @@ include event/reftest.list
 == anim-indefinite-to-3.svg        anim-standard-ref.svg
 == anim-indefinite-to-4.svg        anim-standard-ref.svg
 
-fails-if(!styloVsGecko) == anim-fillcolor-1.svg      anim-standard-ref.svg # bug 436296
+fails == anim-fillcolor-1.svg      anim-standard-ref.svg # bug 436296
 == anim-fillopacity-1none.svg anim-standard-ref.svg
 == anim-fillopacity-1css.svg  anim-standard-ref.svg
 == anim-fillopacity-1xml.svg  anim-standard-ref.svg
@@ -193,7 +193,7 @@ skip-if(styloVsGecko) == anim-view-01.svg#view lime.svg # bug 1354406
 == anim-retarget-7.svg anim-standard-ref.svg
 == anim-retarget-8.svg anim-standard-ref.svg
 
-fails-if(!styloVsGecko) == anim-strokecolor-1.svg anim-standard-ref.svg # bug 436296
+fails == anim-strokecolor-1.svg anim-standard-ref.svg # bug 436296
 == anim-strokewidth-1xml.svg anim-standard-ref.svg
 
 == anim-targethref-1.svg anim-standard-ref.svg
@@ -236,7 +236,7 @@ skip == anim-text-x-y-dx-dy-01.svg anim-text-x-y-dx-dy-01-ref.svg # bug 579588
 # Test we don't rely on HasAttr to see if an attribute has been set
 == anim-rect-rxry-1.svg anim-rect-rxry-1-ref.svg
 == anim-pattern-attr-presence-01.svg anim-pattern-attr-presence-01-ref.svg
-fails-if(!styloVsGecko) == anim-pattern-attr-presence-02.svg anim-pattern-attr-presence-02-ref.svg
+fails == anim-pattern-attr-presence-02.svg anim-pattern-attr-presence-02-ref.svg
 # ^ bug 621651
 fuzzy-if(cocoaWidget&&layersGPUAccelerated,1,2) == anim-gradient-attr-presence-01.svg anim-gradient-attr-presence-01-ref.svg
 
