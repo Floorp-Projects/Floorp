@@ -38,7 +38,9 @@
 #define MOZ_SUPPORTS_FIFO 1
 #endif
 
-#if defined(XP_LINUX) || defined(__FreeBSD__)
+// Some Android devices seem to send RT signals to Firefox so we want to avoid
+// consuming those as they're not user triggered.
+#if !defined(ANDROID) && (defined(XP_LINUX) || defined(__FreeBSD__))
 #define MOZ_SUPPORTS_RT_SIGNALS 1
 #endif
 

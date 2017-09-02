@@ -16,6 +16,8 @@
 #include "mozilla/MemoryReporting.h"
 #include "mozilla/StyleSheetInlines.h"
 #include "mozilla/SystemGroup.h"
+#include "mozilla/ResultExtensions.h"
+#include "mozilla/URLPreloader.h"
 #include "nsIRunnable.h"
 #include "nsIUnicharStreamLoader.h"
 #include "nsSyncLoadService.h"
@@ -44,6 +46,7 @@
 #include "nsGkAtoms.h"
 #include "nsIThreadInternal.h"
 #include "nsINetworkPredictor.h"
+#include "nsStringStream.h"
 #include "mozilla/dom/MediaList.h"
 #include "mozilla/dom/ShadowRoot.h"
 #include "mozilla/dom/URL.h"
@@ -1356,11 +1359,24 @@ Loader::LoadSheet(SheetLoadData* aLoadData,
       // we should always have a requestingNode, or we are loading something
       // outside a document, in which case the loadingPrincipal and the
       // triggeringPrincipal should always be the systemPrincipal.
-      rv = NS_NewChannel(getter_AddRefs(channel),
-                         aLoadData->mURI,
-                         nsContentUtils::GetSystemPrincipal(),
-                         securityFlags,
-                         contentPolicyType);
+      auto result = URLPreloader::ReadURI(aLoadData->mURI);
+      if (result.isOk()) {
+        nsCOMPtr<nsIInputStream> stream;
+        MOZ_TRY(NS_NewCStringInputStream(getter_AddRefs(stream), result.unwrap()));
+
+        rv = NS_NewInputStreamChannel(getter_AddRefs(channel),
+                                      aLoadData->mURI,
+                                      stream,
+                                      nsContentUtils::GetSystemPrincipal(),
+                                      securityFlags,
+                                      contentPolicyType);
+      } else {
+        rv = NS_NewChannel(getter_AddRefs(channel),
+                           aLoadData->mURI,
+                           nsContentUtils::GetSystemPrincipal(),
+                           securityFlags,
+                           contentPolicyType);
+      }
     }
     if (NS_FAILED(rv)) {
       LOG_ERROR(("  Failed to create channel"));

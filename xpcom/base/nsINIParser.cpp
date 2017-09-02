@@ -10,18 +10,14 @@
 #include "nsIFile.h"
 #include "nsINIParser.h"
 #include "mozilla/FileUtils.h" // AutoFILE
+#include "mozilla/ResultExtensions.h"
+#include "mozilla/URLPreloader.h"
 
 // System headers (alphabetical)
 #include <stdio.h>
 #include <stdlib.h>
 #ifdef XP_WIN
 #include <windows.h>
-#endif
-
-#if defined(XP_WIN)
-#define READ_BINARYMODE L"rb"
-#else
-#define READ_BINARYMODE "r"
 #endif
 
 using namespace mozilla;
@@ -65,44 +61,19 @@ private:
 nsresult
 nsINIParser::Init(nsIFile* aFile)
 {
-  /* open the file. Don't use OpenANSIFileDesc, because you mustn't
-     pass FILE* across shared library boundaries, which may be using
-     different CRTs */
+  nsCString result;
+  MOZ_TRY_VAR(result, URLPreloader::ReadFile(aFile));
 
-  AutoFILE fd;
-
-#ifdef XP_WIN
-  nsAutoString path;
-  nsresult rv = aFile->GetPath(path);
-  if (NS_WARN_IF(NS_FAILED(rv))) {
-    return rv;
-  }
-
-  fd = _wfopen(path.get(), READ_BINARYMODE);
-#else
-  nsAutoCString path;
-  aFile->GetNativePath(path);
-
-  fd = fopen(path.get(), READ_BINARYMODE);
-#endif
-
-  if (!fd) {
-    return NS_ERROR_FAILURE;
-  }
-
-  return InitFromFILE(fd);
+  return InitFromString(result);
 }
 
 nsresult
 nsINIParser::Init(const char* aPath)
 {
-  /* open the file */
-  AutoFILE fd(TS_tfopen(aPath, READ_BINARYMODE));
-  if (!fd) {
-    return NS_ERROR_FAILURE;
-  }
+  nsCString result;
+  MOZ_TRY_VAR(result, URLPreloader::ReadFile(nsDependentCString(aPath)));
 
-  return InitFromFILE(fd);
+  return InitFromString(result);
 }
 
 static const char kNL[] = "\r\n";
@@ -111,78 +82,29 @@ static const char kWhitespace[] = " \t";
 static const char kRBracket[] = "]";
 
 nsresult
-nsINIParser::InitFromFILE(FILE* aFd)
+nsINIParser::InitFromString(const nsCString& aStr)
 {
-  /* get file size */
-  if (fseek(aFd, 0, SEEK_END) != 0) {
-    return NS_ERROR_FAILURE;
-  }
+  char* buffer;
 
-  long flen = ftell(aFd);
-  /* zero-sized file, or an error */
-  if (flen <= 0) {
-    return NS_ERROR_FAILURE;
-  }
-
-  /* malloc an internal buf the size of the file */
-  mFileContents = MakeUnique<char[]>(flen + 2);
-  if (!mFileContents) {
-    return NS_ERROR_OUT_OF_MEMORY;
-  }
-
-  /* read the file in one swoop */
-  if (fseek(aFd, 0, SEEK_SET) != 0) {
-    return NS_BASE_STREAM_OSERROR;
-  }
-
-  int rd = fread(mFileContents.get(), sizeof(char), flen, aFd);
-  if (rd != flen) {
-    return NS_BASE_STREAM_OSERROR;
-  }
-
-  // We write a UTF16 null so that the file is easier to convert to UTF8
-  mFileContents[flen] = mFileContents[flen + 1] = '\0';
-
-  char* buffer = &mFileContents[0];
-
-  if (flen >= 3 &&
-      mFileContents[0] == '\xEF' &&
-      mFileContents[1] == '\xBB' &&
-      mFileContents[2] == '\xBF') {
+  if (StringHead(aStr, 3) == "\xEF\xBB\xBF") {
     // Someone set us up the Utf-8 BOM
     // This case is easy, since we assume that BOM-less
     // files are Utf-8 anyway.  Just skip the BOM and process as usual.
-    buffer = &mFileContents[3];
-  }
+    mFileContents.Append(aStr);
+    buffer = mFileContents.BeginWriting() + 3;
+  } else {
+    if (StringHead(aStr, 2) == "\xFF\xFE") {
+      // Someone set us up the Utf-16LE BOM
+      nsDependentSubstring str(reinterpret_cast<const char16_t*>(aStr.get()),
+                               aStr.Length() / 2);
 
-#ifdef XP_WIN
-  if (flen >= 2 &&
-      mFileContents[0] == '\xFF' &&
-      mFileContents[1] == '\xFE') {
-    // Someone set us up the Utf-16LE BOM
-    buffer = &mFileContents[2];
-    // Get the size required for our Utf8 buffer
-    flen = WideCharToMultiByte(CP_UTF8,
-                               0,
-                               reinterpret_cast<LPWSTR>(buffer),
-                               -1,
-                               nullptr,
-                               0,
-                               nullptr,
-                               nullptr);
-    if (flen == 0) {
-      return NS_ERROR_FAILURE;
+      AppendUTF16toUTF8(Substring(str, 1), mFileContents);
+    } else {
+      mFileContents.Append(aStr);
     }
 
-    UniquePtr<char[]> utf8Buffer(new char[flen]);
-    if (WideCharToMultiByte(CP_UTF8, 0, reinterpret_cast<LPWSTR>(buffer), -1,
-                            utf8Buffer.get(), flen, nullptr, nullptr) == 0) {
-      return NS_ERROR_FAILURE;
-    }
-    mFileContents = Move(utf8Buffer);
-    buffer = mFileContents.get();
+    buffer = mFileContents.BeginWriting();
   }
-#endif
 
   char* currSection = nullptr;
 

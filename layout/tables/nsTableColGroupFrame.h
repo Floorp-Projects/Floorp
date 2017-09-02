@@ -54,19 +54,20 @@ public:
                                 const nsDisplayListSet& aLists) override;
 
   /** A colgroup can be caused by three things:
-    * 1)	An element with table-column-group display
-    * 2)	An element with a table-column display without a
-	   *    table-column-group parent
-    * 3)	Cells that are not in a column (and hence get an anonymous
-	   *    column and colgroup).
-    * @return colgroup type
+    * 1) An element with table-column-group display
+    * 2) An element with a table-column display without a
+    *    table-column-group parent
+    * 3) Cells that are not in a column (and hence get an anonymous
+    *    column and colgroup).
+    *
+    * In practice, we don't need to differentiate between cases (1) and (2),
+    * because they both correspond to table-column-group boxes in the spec and
+    * hence have observably identical behavior.  Case three is flagged as a
+    * synthetic colgroup, because it may need to have different behavior in some
+    * cases.
     */
-  nsTableColGroupType GetColType() const;
-
-  /** Set the colgroup type based on the creation cause
-    * @param aType - the reason why this colgroup is needed
-    */
-  void SetColType(nsTableColGroupType aType);
+  bool IsSynthetic() const;
+  void SetIsSynthetic();
 
   /** Real in this context are colgroups that come from an element
     * with table-column-group display or wrap around columns that
@@ -224,7 +225,6 @@ inline nsTableColGroupFrame::nsTableColGroupFrame(nsStyleContext* aContext)
   , mColCount(0)
   , mStartColIndex(0)
 {
-  SetColType(eColGroupContent);
 }
 
 inline int32_t nsTableColGroupFrame::GetStartColumnIndex()

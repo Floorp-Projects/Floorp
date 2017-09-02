@@ -35,6 +35,11 @@ public:
   FileLocation();
   ~FileLocation();
 
+  FileLocation(const FileLocation& aOther);
+  FileLocation(FileLocation&& aOther);
+
+  FileLocation& operator=(const FileLocation&) = default;
+
   /**
    * Constructor for plain files
    */
@@ -51,7 +56,7 @@ public:
   /**
    * Creates a new file location relative to another one.
    */
-  FileLocation(const FileLocation& aFile, const char* aPath = nullptr);
+  FileLocation(const FileLocation& aFile, const char* aPath);
 
   /**
    * Initialization functions corresponding to constructors
@@ -74,6 +79,8 @@ public:
    * - The outer archive file when the location is in an archive in an archive
    */
   already_AddRefed<nsIFile> GetBaseFile();
+
+  nsZipArchive* GetBaseZip() { return mBaseZip; }
 
   /**
    * Returns whether the "base file" (see GetBaseFile) is an archive
