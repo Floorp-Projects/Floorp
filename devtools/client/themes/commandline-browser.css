@@ -14,7 +14,7 @@
   --gcli-input-background: #fcfcfc; /* --theme-toolbar-background */
   --gcli-input-focused-background: #ffffff; /* --theme-sidebar-background */
   --gcli-input-color: #393f4c; /* --theme-body-color */
-  --gcli-border-color: #dde1e4; /* --theme-splitter-color */
+  --gcli-border-color: #e0e0e1; /* --theme-splitter-color */
   --selection-background: #4c9ed9; /* --theme-selection-background */
   --selection-color: #f5f7fa; /* --theme-selection-color */
   --command-line-image: url(chrome://devtools/skin/images/commandline-icon.svg#light-theme); /* --theme-command-line-image */
@@ -26,7 +26,7 @@
   --gcli-input-background: #272b35; /* --theme-tab-toolbar-background */
   --gcli-input-focused-background: #272b35; /* --theme-tab-toolbar-background */
   --gcli-input-color: #b6babf; /* --theme-body-color-alt */
-  --gcli-border-color: #454d5d; /* --theme-splitter-color */
+  --gcli-border-color: #3c3c3d; /* --theme-splitter-color */
   --selection-background: #5675b9; /* --theme-selection-background */
   --selection-color: #f5f7fa; /* --theme-selection-color */
   --command-line-image: url(chrome://devtools/skin/images/commandline-icon.svg#dark-theme); /* --theme-command-line-image */
