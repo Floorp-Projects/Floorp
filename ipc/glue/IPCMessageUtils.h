@@ -286,6 +286,23 @@ struct PlainOldDataSerializer
   }
 };
 
+/**
+ * A helper class for serializing empty structs. Since the struct is empty there
+ * is nothing to write, and a priori we know the result of the read.
+ */
+template <typename T>
+struct EmptyStructSerializer
+{
+  typedef T paramType;
+
+  static void Write(Message* aMsg, const paramType& aParam) {}
+
+  static bool Read(const Message* aMsg, PickleIterator* aIter, paramType* aResult) {
+    *aResult = {};
+    return true;
+  }
+};
+
 template<>
 struct ParamTraits<int8_t>
 {
