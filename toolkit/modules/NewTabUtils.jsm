@@ -53,11 +53,11 @@ const LINKS_GET_LINKS_LIMIT = 100;
 // The gather telemetry topic.
 const TOPIC_GATHER_TELEMETRY = "gather-telemetry";
 
-// The number of top sites to display on Activity Stream page
-const TOP_SITES_LENGTH = 6;
+// Some default frecency threshold for Activity Stream requests
+const ACTIVITY_STREAM_DEFAULT_FRECENCY = 150;
 
-// Use double the number to allow for immediate display when blocking sites
-const TOP_SITES_LIMIT = TOP_SITES_LENGTH * 2;
+// Some default query limit for Activity Stream requests
+const ACTIVITY_STREAM_DEFAULT_LIMIT = 12;
 
 /**
  * Calculate the MD5 hash for a string.
@@ -824,19 +824,56 @@ var PlacesProvider = {
  * history changes.
  */
 var ActivityStreamProvider = {
+  /**
+   * Shared adjustment for selecting potentially blocked links.
+   */
+  _adjustLimitForBlocked({ignoreBlocked, numItems}) {
+    // Just use the usual number if blocked links won't be filtered out
+    if (ignoreBlocked) {
+      return numItems;
+    }
+    // Additionally select the number of blocked links in case they're removed
+    return Object.keys(BlockedLinks.links).length + numItems;
+  },
 
   /**
-   * Process links after getting them from the database.
-   *
-   * @param {Array} aLinks
-   *          an array containing link objects
-   *
-   * @returns {Array} an array of checked links with favicons and eTLDs added
+   * Shared sub-SELECT to get the guid of a bookmark of the current url while
+   * avoiding LEFT JOINs on moz_bookmarks. This avoids gettings tags. The guid
+   * could be one of multiple possible guids. Assumes `moz_places h` is in FROM.
    */
-  _processLinks(aLinks) {
-    let links_ = aLinks.filter(link => LinkChecker.checkLoadURI(link.url));
-    links_ = this._faviconBytesToDataURI(links_);
-    return this._addETLD(links_);
+  _commonBookmarkGuidSelect: `(
+    SELECT guid
+    FROM moz_bookmarks b
+    WHERE fk = h.id
+      AND type = :bookmarkType
+      AND (
+        SELECT id
+        FROM moz_bookmarks p
+        WHERE p.id = b.parent
+          AND p.parent <> :tagsFolderId
+      ) NOTNULL
+    ) AS bookmarkGuid`,
+
+  /**
+   * Shared WHERE expression filtering out undesired pages, e.g., hidden,
+   * unvisited, and non-http/s urls. Assumes moz_places is in FROM / JOIN.
+   */
+  _commonPlacesWhere: `
+    AND hidden = 0
+    AND last_visit_date > 0
+    AND (SUBSTR(url, 1, 6) == "https:"
+      OR SUBSTR(url, 1, 5) == "http:")
+  `,
+
+  /**
+   * Shared parameters for getting correct bookmarks and LIMITed queries.
+   */
+  _getCommonParams(aOptions, aParams = {}) {
+    return Object.assign({
+      bookmarkType: PlacesUtils.bookmarks.TYPE_BOOKMARK,
+      limit: this._adjustLimitForBlocked(aOptions),
+      tagsFolderId: PlacesUtils.tagsFolderId
+    }, aParams);
   },
 
   /**
@@ -905,58 +942,45 @@ var ActivityStreamProvider = {
     return aLinks;
   },
 
-  /**
-   * Add the eTLD to each link in the array of links.
-   *
-   * @param {Array} aLinks
-   *          an array containing objects with urls
-   *
-   * @returns {Array} an array of links with eTLDs added
-   */
-  _addETLD(aLinks) {
-    return aLinks.map(link => {
-      try {
-        link.eTLD = Services.eTLD.getPublicSuffix(Services.io.newURI(link.url));
-      } catch (e) {
-        link.eTLD = "";
-      }
-      return link;
-    });
-  },
-
   /*
    * Gets the top frecent sites for Activity Stream.
    *
    * @param {Object} aOptions
-   *          options.ignoreBlocked: Do not filter out blocked links .
+   *   {bool} ignoreBlocked: Do not filter out blocked links.
+   *   {int}  numItems: Maximum number of items to return.
+   *   {int}  topsiteFrecency: Minimum amount of frecency for a site.
    *
    * @returns {Promise} Returns a promise with the array of links as payload.
    */
-  async getTopFrecentSites(aOptions = {}) {
-    let {ignoreBlocked} = aOptions;
+  async getTopFrecentSites(aOptions) {
+    const options = Object.assign({
+      ignoreBlocked: false,
+      numItems: ACTIVITY_STREAM_DEFAULT_LIMIT,
+      topsiteFrecency: ACTIVITY_STREAM_DEFAULT_FRECENCY
+    }, aOptions || {});
 
-    // Get extra links in case they're blocked and double the usual limit in
-    // case the host is deduped between with www or not-www (i.e., 2 hosts) as
-    // well as an extra buffer for multiple pages from the same exact host.
-    const limit = Object.keys(BlockedLinks.links).length + TOP_SITES_LIMIT * 2 * 10;
+    // Double the item count in case the host is deduped between with www or
+    // not-www (i.e., 2 hosts) and an extra buffer for multiple pages per host.
+    const origNumItems = options.numItems;
+    options.numItems *= 2 * 10;
 
     // Keep this query fast with frecency-indexed lookups (even with excess
     // rows) and shift the more complex logic to post-processing afterwards
-    const sqlQuery = `SELECT
-                        moz_bookmarks.guid AS bookmarkGuid,
-                        frecency,
-                        moz_places.guid,
-                        last_visit_date / 1000 AS lastVisitDate,
-                        rev_host,
-                        moz_places.title,
-                        url
-                      FROM moz_places
-                      LEFT JOIN moz_bookmarks
-                      ON moz_places.id = moz_bookmarks.fk
-                      WHERE hidden = 0 AND last_visit_date NOTNULL
-                      AND (SUBSTR(moz_places.url, 1, 6) == "https:" OR SUBSTR(moz_places.url, 1, 5) == "http:")
-                      ORDER BY frecency DESC
-                      LIMIT ${limit}`;
+    const sqlQuery = `
+      SELECT
+        ${this._commonBookmarkGuidSelect},
+        frecency,
+        guid,
+        last_visit_date / 1000 AS lastVisitDate,
+        rev_host,
+        title,
+        url
+      FROM moz_places h
+      WHERE frecency >= :frecencyThreshold
+        ${this._commonPlacesWhere}
+      ORDER BY frecency DESC
+      LIMIT :limit
+    `;
 
     let links = await this.executePlacesQuery(sqlQuery, {
       columns: [
@@ -966,7 +990,10 @@ var ActivityStreamProvider = {
         "lastVisitDate",
         "title",
         "url"
-      ]
+      ],
+      params: this._getCommonParams(options, {
+        frecencyThreshold: options.topsiteFrecency
+      })
     });
 
     // Determine if the other link is "better" (larger frecency, more recent,
@@ -993,7 +1020,7 @@ var ActivityStreamProvider = {
     // Clean up the returned links by removing blocked, deduping, etc.
     const exactHosts = new Map();
     for (const link of links) {
-      if (!ignoreBlocked && BlockedLinks.isBlocked(link)) {
+      if (!options.ignoreBlocked && BlockedLinks.isBlocked(link)) {
         continue;
       }
 
@@ -1014,10 +1041,10 @@ var ActivityStreamProvider = {
     }
 
     // Pick out the top links using the same comparer as before
-    links = [...hosts.values()].sort(isOtherBetter).slice(0, TOP_SITES_LIMIT);
+    links = [...hosts.values()].sort(isOtherBetter).slice(0, origNumItems);
 
-    links = await this._addFavicons(links);
-    return this._processLinks(links);
+    // Get the favicons as data URI for now (until we use the favicon protocol)
+    return this._faviconBytesToDataURI(await this._addFavicons(links));
   },
 
   /**
@@ -1036,31 +1063,6 @@ var ActivityStreamProvider = {
     result.bookmarkTitle = bookmark.title;
     result.lastModified = bookmark.lastModified.getTime();
     result.url = bookmark.url.href;
-    return result;
-  },
-
-  /**
-   * Gets History size
-   *
-   * @returns {Promise} Returns a promise with the count of moz_places records
-   */
-  async getHistorySize() {
-    let sqlQuery = `SELECT count(*) FROM moz_places
-                    WHERE hidden = 0 AND last_visit_date NOT NULL`;
-
-    let result = await this.executePlacesQuery(sqlQuery);
-    return result;
-  },
-
-  /**
-   * Gets Bookmarks count
-   *
-   * @returns {Promise} Returns a promise with the count of bookmarks
-   */
-  async getBookmarksSize() {
-    let sqlQuery = `SELECT count(*) FROM moz_bookmarks WHERE type = :type`;
-
-    let result = await this.executePlacesQuery(sqlQuery, {params: {type: PlacesUtils.bookmarks.TYPE_BOOKMARK}});
     return result;
   },
 
