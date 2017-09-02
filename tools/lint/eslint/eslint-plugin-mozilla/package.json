@@ -12,7 +12,7 @@
   "bugs": {
     "url": "https://bugzilla.mozilla.org/enter_bug.cgi?product=Testing&component=Lint"
   },
-  "homepage": "http://gecko.readthedocs.io/en/latest/tools/lint/linters/eslint-plugin-mozilla.html",
+  "homepage": "http://firefox-source-docs.mozilla.org/tools/lint/linters/eslint-plugin-mozilla.html",
   "repository": {
     "type": "hg",
     "url": "https://hg.mozilla.org/mozilla-central/"
