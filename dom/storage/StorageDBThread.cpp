@@ -1091,8 +1091,10 @@ StorageDBThread::DBOperation::Perform(StorageDBThread* aThread)
         break;
       }
     }
-
-    mCache->LoadDone(NS_OK);
+    // The loop condition's call to ExecuteStep() may have terminated because
+    // !NS_SUCCEEDED(), we need an early return to cover that case.  This also
+    // covers success cases as well, but that's inductively safe.
+    NS_ENSURE_SUCCESS(rv, rv);
     break;
   }
 

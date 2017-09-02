@@ -25,6 +25,15 @@ namespace loader {
 
 using mozilla::dom::AutoJSAPI;
 
+static inline Result<Ok, nsresult>
+Write(PRFileDesc* fd, const void* data, int32_t len)
+{
+    if (PR_Write(fd, data, len) != len) {
+        return Err(NS_ERROR_FAILURE);
+    }
+    return Ok();
+}
+
 struct MOZ_RAII AutoSafeJSAPI : public AutoJSAPI
 {
     AutoSafeJSAPI() { Init(); }
@@ -259,7 +268,14 @@ public:
           return iter().Data();
         }
 
+        const ElemType get() const
+        {
+          return const_cast<Elem*>(this)->get();
+        }
+
         ElemType operator->() { return get(); }
+
+        const ElemType operator->() const { return get(); }
 
         operator ElemType() { return get(); }
 

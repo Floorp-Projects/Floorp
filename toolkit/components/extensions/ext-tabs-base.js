@@ -491,6 +491,7 @@ class TabBase {
       active: this.selected,
       pinned: this.pinned,
       status: this.status,
+      discarded: this.discarded,
       incognito: this.incognito,
       width: this.width,
       height: this.height,

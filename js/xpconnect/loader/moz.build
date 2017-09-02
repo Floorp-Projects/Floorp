@@ -11,6 +11,7 @@ UNIFIED_SOURCES += [
     'mozJSSubScriptLoader.cpp',
     'ScriptCacheActors.cpp',
     'ScriptPreloader.cpp',
+    'URLPreloader.cpp',
 ]
 
 # mozJSComponentLoader.cpp cannot be built in unified mode because it uses
@@ -25,6 +26,7 @@ IPDL_SOURCES += [
 
 EXPORTS.mozilla += [
     'ScriptPreloader.h',
+    'URLPreloader.h',
 ]
 
 EXPORTS.mozilla.dom += [

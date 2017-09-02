@@ -2327,12 +2327,6 @@ FragmentOrElement::GetChildAt(uint32_t aIndex) const
   return mAttrsAndChildren.GetSafeChildAt(aIndex);
 }
 
-nsIContent * const *
-FragmentOrElement::GetChildArray(uint32_t* aChildCount) const
-{
-  return mAttrsAndChildren.GetChildArray(aChildCount);
-}
-
 int32_t
 FragmentOrElement::IndexOf(const nsINode* aPossibleChild) const
 {

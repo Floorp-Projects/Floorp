@@ -19,6 +19,7 @@
 #include "mozilla/ResultExtensions.h"
 #include "mozilla/ScopeExit.h"
 #include "mozilla/Services.h"
+#include "mozilla/URLPreloader.h"
 #include "mozilla/Unused.h"
 #include "mozilla/ErrorResult.h"
 #include "mozilla/dom/ipc/StructuredCloneData.h"
@@ -104,28 +105,6 @@ IsNormalFile(nsIFile* file)
   return NS_SUCCEEDED(file->IsFile(&result)) && result;
 }
 
-static Result<nsCString, nsresult>
-ReadFile(nsIFile* file)
-{
-  nsCString result;
-
-  AutoFDClose fd;
-  MOZ_TRY(file->OpenNSPRFileDesc(PR_RDONLY, 0, &fd.rwget()));
-
-  auto size = PR_Seek64(fd, 0, PR_SEEK_END);
-  PR_Seek64(fd, 0, PR_SEEK_SET);
-
-  result.SetLength(size);
-
-  auto len = PR_Read(fd, result.BeginWriting(), size);
-
-  if (size != len) {
-    return Err(NS_ERROR_FAILURE);
-  }
-
-  return result;
-}
-
 static const char STRUCTURED_CLONE_MAGIC[] = "mozJSSCLz40v001";
 
 template <typename T>
@@ -189,19 +168,14 @@ static_assert(sizeof STRUCTURED_CLONE_MAGIC % 8 == 0,
 /**
  * Reads the contents of a LZ4-compressed file, as stored by the OS.File
  * module, and returns the decompressed contents on success.
- *
- * A nonexistent or empty file is treated as success. A corrupt or non-LZ4
- * file is treated as failure.
  */
 static Result<nsCString, nsresult>
 ReadFileLZ4(nsIFile* file)
 {
   static const char MAGIC_NUMBER[] = "mozLz40";
 
-  nsCString result;
-
   nsCString lz4;
-  MOZ_TRY_VAR(lz4, ReadFile(file));
+  MOZ_TRY_VAR(lz4, URLPreloader::ReadFile(file));
 
   if (lz4.IsEmpty()) {
     return lz4;
@@ -586,7 +560,12 @@ AddonManagerStartup::ReadStartupData(JSContext* cx, JS::MutableHandleValue locat
   nsCOMPtr<nsIFile> file = CloneAndAppend(ProfileDir(), "addonStartup.json.lz4");
 
   nsCString data;
-  MOZ_TRY_VAR(data, ReadFileLZ4(file));
+  auto res = ReadFileLZ4(file);
+  if (res.isOk()) {
+    data = res.unwrap();
+  } else if (res.unwrapErr() != NS_ERROR_FILE_NOT_FOUND) {
+    return res.unwrapErr();
+  }
 
   if (data.IsEmpty() || !ParseJSON(cx, data, locations)) {
     return NS_OK;

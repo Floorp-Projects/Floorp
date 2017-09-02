@@ -81,6 +81,8 @@ install:: js-config
 	cp $^ js$(MOZJS_MAJOR_VERSION)-config
 	$(SYSINSTALL) js$(MOZJS_MAJOR_VERSION)-config $(DESTDIR)$(bindir)
 
+# Use install_name_tool to set the install_name properly for standalone
+# installed libraries on macOS
 install:: $(REAL_LIBRARY) $(SHARED_LIBRARY) $(IMPORT_LIBRARY)
 ifneq (,$(REAL_LIBRARY))
 	$(SYSINSTALL) $(REAL_LIBRARY) $(DESTDIR)$(libdir)
@@ -88,7 +90,12 @@ ifneq (,$(REAL_LIBRARY))
 endif
 ifneq (,$(SHARED_LIBRARY))
 	$(SYSINSTALL) $(SHARED_LIBRARY) $(DESTDIR)$(libdir)
+ifeq ($(OS_ARCH),Darwin)
+	install_name_tool -id $(abspath $(libdir)/$(SHARED_LIBRARY)) $(DESTDIR)$(libdir)/$(SHARED_LIBRARY)
+endif
 endif
 ifneq (,$(IMPORT_LIBRARY))
+ifneq ($(IMPORT_LIBRARY),$(SHARED_LIBRARY))
 	$(SYSINSTALL) $(IMPORT_LIBRARY) $(DESTDIR)$(libdir)
+endif
 endif

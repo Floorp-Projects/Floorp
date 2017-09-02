@@ -8050,10 +8050,13 @@
     "description": "Whether the subject principal was accessed without script on the stack during the current session"
   },
   "TOUCH_ENABLED_DEVICE": {
-    "record_in_processes": ["main", "content"],
+    "record_in_processes": ["main"],
     "expires_in_version": "never",
     "kind": "boolean",
-    "description": "The device supports touch input",
+    "releaseChannelCollection": "opt-out",
+    "bug_numbers": [795307, 1390269],
+    "alert_emails": ["jimm@mozilla.com"],
+    "description": "Boolean indicating if a touch input device is detected.",
     "cpp_guard": "XP_WIN"
   },
   "COMPONENTS_SHIM_ACCESSED_BY_CONTENT": {
