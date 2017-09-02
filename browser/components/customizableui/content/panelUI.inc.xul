@@ -92,10 +92,6 @@
                        label="&appMenuHistory.clearRecent.label;"
                        class="subviewbutton subviewbutton-iconic"
                        command="Tools:Sanitize"/>
-        <toolbarbutton id="appMenuRestoreLastSession"
-                       label="&appMenuHistory.restoreSession.label;"
-                       class="subviewbutton subviewbutton-iconic"
-                       command="Browser:RestoreLastSession"/>
         <toolbarseparator/>
         <toolbarbutton id="appMenuRecentlyClosedTabs"
                        label="&historyUndoMenu.label;"
@@ -556,6 +552,10 @@
                        label="&newPrivateWindow.label;"
                        key="key_privatebrowsing"
                        command="Tools:PrivateBrowsing"/>
+        <toolbarbutton id="appMenuRestoreLastSession"
+                       label="&appMenuHistory.restoreSession.label;"
+                       class="subviewbutton subviewbutton-iconic"
+                       command="Browser:RestoreLastSession"/>
         <toolbarseparator/>
         <toolbaritem id="appMenu-zoom-controls" class="toolbaritem-combined-buttons">
           <label value="&fullZoom.label;"/>

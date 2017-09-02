@@ -120,7 +120,7 @@ toolbarpaletteitem[place="palette"] > #bookmarks-menu-button,
 }
 
 #appMenuRestoreLastSession {
-  list-style-image: url("chrome://browser/skin/reload.svg");
+  list-style-image: url("chrome://browser/skin/restore-session.svg");
 }
 
 #appMenuRecentlyClosedWindows {

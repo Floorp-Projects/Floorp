@@ -128,6 +128,7 @@ XPCOMUtils.defineLazyServiceGetters(this, {
   gDNSService: ["@mozilla.org/network/dns-service;1", "nsIDNSService"],
   gSerializationHelper: ["@mozilla.org/network/serialization-helper;1", "nsISerializationHelper"],
   Marionette: ["@mozilla.org/remote/marionette;1", "nsIMarionette"],
+  SessionStartup: ["@mozilla.org/browser/sessionstartup;1", "nsISessionStartup"],
   WindowsUIUtils: ["@mozilla.org/windows-ui-utils;1", "nsIWindowsUIUtils"],
 });
 
@@ -1785,9 +1786,7 @@ var gBrowserInit = {
 
       // The URI appears to be the the homepage. We want to load it only if
       // session restore isn't about to override the homepage.
-      let sessionStartup = Cc["@mozilla.org/browser/sessionstartup;1"]
-                             .getService(Ci.nsISessionStartup);
-      sessionStartup.willOverrideHomepagePromise.then(willOverrideHomepage => {
+      SessionStartup.willOverrideHomepagePromise.then(willOverrideHomepage => {
         resolve(willOverrideHomepage ? null : uri);
       });
     });
@@ -8289,6 +8288,8 @@ var RestoreLastSessionObserver = {
       }
       Services.obs.addObserver(this, "sessionstore-last-session-cleared", true);
       goSetCommandEnabled("Browser:RestoreLastSession", true);
+    } else if (SessionStartup.isAutomaticRestoreEnabled()) {
+      document.getElementById("Browser:RestoreLastSession").setAttribute("hidden", true);
     }
   },
 
