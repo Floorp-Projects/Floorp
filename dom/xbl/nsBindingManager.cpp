@@ -740,22 +740,23 @@ nsBindingManager::WalkAllRules(nsIStyleRuleProcessor::EnumFunc aFunc,
   });
 }
 
-bool
-nsBindingManager::MediumFeaturesChanged(nsPresContext* aPresContext)
+nsresult
+nsBindingManager::MediumFeaturesChanged(nsPresContext* aPresContext,
+                                        bool* aRulesChanged)
 {
-  bool rulesChanged = false;
+  *aRulesChanged = false;
   RefPtr<nsPresContext> presContext = aPresContext;
 
-  EnumerateBoundContentBindings([=, &rulesChanged](nsXBLBinding* aBinding) {
+  EnumerateBoundContentBindings([=](nsXBLBinding* aBinding) {
     nsIStyleRuleProcessor* ruleProcessor =
       aBinding->PrototypeBinding()->GetRuleProcessor();
     if (ruleProcessor) {
       bool thisChanged = ruleProcessor->MediumFeaturesChanged(presContext);
-      rulesChanged = rulesChanged || thisChanged;
+      *aRulesChanged = *aRulesChanged || thisChanged;
     }
   });
 
-  return rulesChanged;
+  return NS_OK;
 }
 
 void
