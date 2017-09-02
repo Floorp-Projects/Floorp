@@ -106,6 +106,7 @@ fn gnu_i686() {
             .compile("libfoo.a");
 
         test.cmd(0)
+            .must_not_have("-fPIC")
             .must_have("-m32");
     }
 }
@@ -170,34 +171,6 @@ fn gnu_compile_assembly() {
 }
 
 #[test]
-fn gnu_shared() {
-    let test = Test::gnu();
-    test.gcc()
-        .file("foo.c")
-        .shared_flag(true)
-        .static_flag(false)
-        .compile("libfoo.a");
-
-    test.cmd(0)
-        .must_have("-shared")
-        .must_not_have("-static");
-}
-
-#[test]
-fn gnu_static() {
-    let test = Test::gnu();
-    test.gcc()
-        .file("foo.c")
-        .shared_flag(false)
-        .static_flag(true)
-        .compile("libfoo.a");
-
-    test.cmd(0)
-        .must_have("-static")
-        .must_not_have("-shared");
-}
-
-#[test]
 fn msvc_smoke() {
     let test = Test::msvc();
     test.gcc()
@@ -208,8 +181,7 @@ fn msvc_smoke() {
         .must_have("/O2")
         .must_have("foo.c")
         .must_not_have("/Z7")
-        .must_have("/c")
-        .must_have("/MD");
+        .must_have("/c");
     test.cmd(1).must_have(test.td.path().join("foo.o"));
 }
 
@@ -255,26 +227,4 @@ fn msvc_define() {
         .compile("libfoo.a");
 
     test.cmd(0).must_have("/DFOO=bar").must_have("/DBAR");
-}
-
-#[test]
-fn msvc_static_crt() {
-    let test = Test::msvc();
-    test.gcc()
-        .static_crt(true)
-        .file("foo.c")
-        .compile("libfoo.a");
-
-    test.cmd(0).must_have("/MT");
-}
-
-#[test]
-fn msvc_no_static_crt() {
-    let test = Test::msvc();
-    test.gcc()
-        .static_crt(false)
-        .file("foo.c")
-        .compile("libfoo.a");
-
-    test.cmd(0).must_have("/MD");
 }

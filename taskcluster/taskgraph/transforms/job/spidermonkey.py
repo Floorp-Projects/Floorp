@@ -20,7 +20,7 @@ from taskgraph.transforms.job.common import (
 )
 
 sm_run_schema = Schema({
-    Required('using'): Any('spidermonkey', 'spidermonkey-package', 'spidermonkey-mozjs-crate', 'spidermonkey-rust-bindings'),
+    Required('using'): Any('spidermonkey', 'spidermonkey-package', 'spidermonkey-mozjs-crate'),
 
     # The SPIDERMONKEY_VARIANT
     Required('spidermonkey-variant'): basestring,
@@ -30,8 +30,6 @@ sm_run_schema = Schema({
 @run_job_using("docker-worker", "spidermonkey", schema=sm_run_schema)
 @run_job_using("docker-worker", "spidermonkey-package", schema=sm_run_schema)
 @run_job_using("docker-worker", "spidermonkey-mozjs-crate",
-               schema=sm_run_schema)
-@run_job_using("docker-worker", "spidermonkey-rust-bindings",
                schema=sm_run_schema)
 def docker_worker_spidermonkey(config, job, taskdesc):
     run = job['run']
@@ -64,8 +62,6 @@ def docker_worker_spidermonkey(config, job, taskdesc):
         script = "build-sm-package.sh"
     elif run['using'] == 'spidermonkey-mozjs-crate':
         script = "build-sm-mozjs-crate.sh"
-    elif run['using'] == 'spidermonkey-rust-bindings':
-        script = "build-sm-rust-bindings.sh"
 
     worker['command'] = [
         '/builds/worker/bin/run-task',
@@ -108,11 +104,7 @@ def generic_worker_spidermonkey(config, job, taskdesc):
     elif run['using'] == 'spidermonkey-mozjs-crate':
         script = "build-sm-mozjs-crate.sh"
         # Don't allow untested configurations yet
-        raise Exception("spidermonkey-mozjs-crate is not a supported configuration")
-    elif run['using'] == 'spidermonkey-rust-bindings':
-        script = "build-sm-rust-bindings.sh"
-        # Don't allow untested configurations yet
-        raise Exception("spidermonkey-rust-bindings is not a supported configuration")
+        raise Exception("spidermonkey-mozhs-crate is not a supported configuration")
 
     hg_command = ['"c:\\Program Files\\Mercurial\\hg.exe"']
     hg_command.append('robustcheckout')

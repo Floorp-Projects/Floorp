@@ -1,5 +1,4 @@
 use std::ops::{Add, Mul};
-use std::num::Wrapping;
 
 /// Defines an additive identity element for `Self`.
 pub trait Zero: Sized + Add<Self, Output = Self> {
@@ -51,16 +50,6 @@ zero_impl!(i64,   0i64);
 zero_impl!(f32, 0.0f32);
 zero_impl!(f64, 0.0f64);
 
-impl<T: Zero> Zero for Wrapping<T> where Wrapping<T>: Add<Output=Wrapping<T>> {
-    fn is_zero(&self) -> bool {
-        self.0.is_zero()
-    }
-    fn zero() -> Self {
-        Wrapping(T::zero())
-    }
-}
-
-
 /// Defines a multiplicative identity element for `Self`.
 pub trait One: Sized + Mul<Self, Output = Self> {
     /// Returns the multiplicative identity element of `Self`, `1`.
@@ -105,11 +94,6 @@ one_impl!(i64,   1i64);
 one_impl!(f32, 1.0f32);
 one_impl!(f64, 1.0f64);
 
-impl<T: One> One for Wrapping<T> where Wrapping<T>: Mul<Output=Wrapping<T>> {
-    fn one() -> Self {
-        Wrapping(T::one())
-    }
-}
 
 // Some helper functions provided for backwards compatibility.
 
@@ -118,31 +102,3 @@ impl<T: One> One for Wrapping<T> where Wrapping<T>: Mul<Output=Wrapping<T>> {
 
 /// Returns the multiplicative identity, `1`.
 #[inline(always)] pub fn one<T: One>() -> T { One::one() }
-
-
-macro_rules! test_wrapping_identities {
-    ($($t:ty)+) => {
-        $(
-            assert_eq!(zero::<$t>(), zero::<Wrapping<$t>>().0);
-            assert_eq!(one::<$t>(), one::<Wrapping<$t>>().0);
-            assert_eq!((0 as $t).is_zero(), Wrapping(0 as $t).is_zero());
-            assert_eq!((1 as $t).is_zero(), Wrapping(1 as $t).is_zero());
-        )+   
-    };
-}
-
-#[test]
-fn wrapping_identities() {
-    test_wrapping_identities!(isize i8 i16 i32 i64 usize u8 u16 u32 u64);
-}
-
-#[test]
-fn wrapping_is_zero() {
-    fn require_zero<T: Zero>(_: &T) {}
-    require_zero(&Wrapping(42));
-}
-#[test]
-fn wrapping_is_one() {
-    fn require_one<T: One>(_: &T) {}
-    require_one(&Wrapping(42));
-}

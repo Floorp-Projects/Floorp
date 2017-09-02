@@ -15,8 +15,6 @@
        html_playground_url = "http://play.integer32.com/")]
 
 use std::ops::{Add, Sub, Mul, Div, Rem};
-use std::ops::{AddAssign, SubAssign, MulAssign, DivAssign, RemAssign};
-use std::num::Wrapping;
 
 pub use bounds::Bounded;
 pub use float::{Float, FloatConst};
@@ -38,9 +36,10 @@ pub mod cast;
 pub mod int;
 pub mod pow;
 
-/// The base trait for numeric types, covering `0` and `1` values,
-/// comparisons, basic numeric operations, and string conversion.
-pub trait Num: PartialEq + Zero + One + NumOps
+/// The base trait for numeric types
+pub trait Num: PartialEq + Zero + One
+    + Add<Output = Self> + Sub<Output = Self>
+    + Mul<Output = Self> + Div<Output = Self> + Rem<Output = Self>
 {
     type FromStrRadixErr;
 
@@ -60,72 +59,6 @@ pub trait Num: PartialEq + Zero + One + NumOps
     fn from_str_radix(str: &str, radix: u32) -> Result<Self, Self::FromStrRadixErr>;
 }
 
-/// The trait for types implementing basic numeric operations
-///
-/// This is automatically implemented for types which implement the operators.
-pub trait NumOps<Rhs = Self, Output = Self>
-    : Add<Rhs, Output = Output>
-    + Sub<Rhs, Output = Output>
-    + Mul<Rhs, Output = Output>
-    + Div<Rhs, Output = Output>
-    + Rem<Rhs, Output = Output>
-{}
-
-impl<T, Rhs, Output> NumOps<Rhs, Output> for T
-where T: Add<Rhs, Output = Output>
-       + Sub<Rhs, Output = Output>
-       + Mul<Rhs, Output = Output>
-       + Div<Rhs, Output = Output>
-       + Rem<Rhs, Output = Output>
-{}
-
-/// The trait for `Num` types which also implement numeric operations taking
-/// the second operand by reference.
-///
-/// This is automatically implemented for types which implement the operators.
-pub trait NumRef: Num + for<'r> NumOps<&'r Self> {}
-impl<T> NumRef for T where T: Num + for<'r> NumOps<&'r T> {}
-
-/// The trait for references which implement numeric operations, taking the
-/// second operand either by value or by reference.
-///
-/// This is automatically implemented for types which implement the operators.
-pub trait RefNum<Base>: NumOps<Base, Base> + for<'r> NumOps<&'r Base, Base> {}
-impl<T, Base> RefNum<Base> for T where T: NumOps<Base, Base> + for<'r> NumOps<&'r Base, Base> {}
-
-/// The trait for types implementing numeric assignment operators (like `+=`).
-///
-/// This is automatically implemented for types which implement the operators.
-pub trait NumAssignOps<Rhs = Self>
-    : AddAssign<Rhs>
-    + SubAssign<Rhs>
-    + MulAssign<Rhs>
-    + DivAssign<Rhs>
-    + RemAssign<Rhs>
-{}
-
-impl<T, Rhs> NumAssignOps<Rhs> for T
-where T: AddAssign<Rhs>
-       + SubAssign<Rhs>
-       + MulAssign<Rhs>
-       + DivAssign<Rhs>
-       + RemAssign<Rhs>
-{}
-
-/// The trait for `Num` types which also implement assignment operators.
-///
-/// This is automatically implemented for types which implement the operators.
-pub trait NumAssign: Num + NumAssignOps {}
-impl<T> NumAssign for T where T: Num + NumAssignOps {}
-
-/// The trait for `NumAssign` types which also implement assignment operations
-/// taking the second operand by reference.
-///
-/// This is automatically implemented for types which implement the operators.
-pub trait NumAssignRef: NumAssign + for<'r> NumAssignOps<&'r Self> {}
-impl<T> NumAssignRef for T where T: NumAssign + for<'r> NumAssignOps<&'r T> {}
-
-
 macro_rules! int_trait_impl {
     ($name:ident for $($t:ty)*) => ($(
         impl $name for $t {
@@ -140,18 +73,6 @@ macro_rules! int_trait_impl {
     )*)
 }
 int_trait_impl!(Num for usize u8 u16 u32 u64 isize i8 i16 i32 i64);
-
-impl<T: Num> Num for Wrapping<T>
-    where Wrapping<T>:
-          Add<Output = Wrapping<T>> + Sub<Output = Wrapping<T>>
-        + Mul<Output = Wrapping<T>> + Div<Output = Wrapping<T>> + Rem<Output = Wrapping<T>>
-{
-    type FromStrRadixErr = T::FromStrRadixErr;
-    fn from_str_radix(str: &str, radix: u32) -> Result<Self, Self::FromStrRadixErr> {
-        T::from_str_radix(str, radix).map(Wrapping)
-    }
-}
-
 
 #[derive(Debug)]
 pub enum FloatErrorKind {
@@ -322,9 +243,9 @@ float_trait_impl!(Num for f32 f64);
 
 /// A value bounded by a minimum and a maximum
 ///
-///  If input is less than min then this returns min.
-///  If input is greater than max then this returns max.
-///  Otherwise this returns input.
+///  If input is less than min then this returns min. 
+///  If input is greater than max then this returns max.  
+///  Otherwise this returns input. 
 #[inline]
 pub fn clamp<T: PartialOrd>(input: T, min: T, max: T) -> T {
     debug_assert!(min <= max, "min must be less than or equal to max");
@@ -360,76 +281,3 @@ fn from_str_radix_unwrap() {
     let f: f32 = Num::from_str_radix("0.0", 10).unwrap();
     assert_eq!(f, 0.0);
 }
-
-macro_rules! test_wrapping_from_str_radix {
-    ($($t:ty)+) => {
-        $(
-            for &(s, r) in &[("42", 10), ("42", 2), ("-13.0", 10), ("foo", 10)] {
-                let w = Wrapping::<$t>::from_str_radix(s, r).map(|w| w.0);
-                assert_eq!(w, <$t as Num>::from_str_radix(s, r));
-            } 
-        )+   
-    };
-}
-#[test]
-fn wrapping_is_num() {
-    fn require_num<T: Num>(_: &T) {}
-    require_num(&Wrapping(42_u32));
-    require_num(&Wrapping(-42));
-}
-#[test]
-fn wrapping_from_str_radix() {
-    test_wrapping_from_str_radix!(usize u8 u16 u32 u64 isize i8 i16 i32 i64);
-}
-
-#[test]
-fn check_num_ops() {
-    fn compute<T: Num + Copy>(x: T, y: T) -> T {
-        x * y / y % y + y - y
-    }
-    assert_eq!(compute(1, 2), 1)
-}
-
-#[test]
-fn check_numref_ops() {
-    fn compute<T: NumRef>(x: T, y: &T) -> T {
-        x * y / y % y + y - y
-    }
-    assert_eq!(compute(1, &2), 1)
-}
-
-#[test]
-fn check_refnum_ops() {
-    fn compute<T: Copy>(x: &T, y: T) -> T
-        where for<'a> &'a T: RefNum<T>
-    {
-        &(&(&(&(x * y) / y) % y) + y) - y
-    }
-    assert_eq!(compute(&1, 2), 1)
-}
-
-#[test]
-fn check_refref_ops() {
-    fn compute<T>(x: &T, y: &T) -> T
-        where for<'a> &'a T: RefNum<T>
-    {
-        &(&(&(&(x * y) / y) % y) + y) - y
-    }
-    assert_eq!(compute(&1, &2), 1)
-}
-
-#[test]
-fn check_numassign_ops() {
-    fn compute<T: NumAssign + Copy>(mut x: T, y: T) -> T {
-        x *= y;
-        x /= y;
-        x %= y;
-        x += y;
-        x -= y;
-        x
-    }
-    assert_eq!(compute(1, 2), 1)
-}
-
-// TODO test `NumAssignRef`, but even the standard numeric types don't
-// implement this yet. (see rust pr41336)

@@ -60,31 +60,28 @@ impl Module {
 }
 
 impl DotAttributes for Module {
-    fn dot_attributes<W>(
-        &self,
-        _ctx: &BindgenContext,
-        out: &mut W,
-    ) -> io::Result<()>
-    where
-        W: io::Write,
+    fn dot_attributes<W>(&self,
+                         _ctx: &BindgenContext,
+                         out: &mut W)
+                         -> io::Result<()>
+        where W: io::Write,
     {
         writeln!(out, "<tr><td>ModuleKind</td><td>{:?}</td></tr>", self.kind)
     }
 }
 
 impl ClangSubItemParser for Module {
-    fn parse(
-        cursor: clang::Cursor,
-        ctx: &mut BindgenContext,
-    ) -> Result<ParseResult<Self>, ParseError> {
+    fn parse(cursor: clang::Cursor,
+             ctx: &mut BindgenContext)
+             -> Result<ParseResult<Self>, ParseError> {
         use clang_sys::*;
         match cursor.kind() {
             CXCursor_Namespace => {
                 let module_id = ctx.module(cursor);
                 ctx.with_module(module_id, |ctx| {
-                    cursor.visit(
-                        |cursor| parse_one(ctx, cursor, Some(module_id)),
-                    )
+                    cursor.visit(|cursor| {
+                        parse_one(ctx, cursor, Some(module_id))
+                    })
                 });
 
                 Ok(ParseResult::AlreadyResolved(module_id))

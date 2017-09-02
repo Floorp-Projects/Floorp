@@ -53,10 +53,9 @@ impl Enum {
     }
 
     /// Construct an enumeration from the given Clang type.
-    pub fn from_ty(
-        ty: &clang::Type,
-        ctx: &mut BindgenContext,
-    ) -> Result<Self, ParseError> {
+    pub fn from_ty(ty: &clang::Type,
+                   ctx: &mut BindgenContext)
+                   -> Result<Self, ParseError> {
         use clang_sys::*;
         debug!("Enum::from_ty {:?}", ty);
 
@@ -65,20 +64,20 @@ impl Enum {
         }
 
         let declaration = ty.declaration().canonical();
-        let repr = declaration.enum_type().and_then(|et| {
-            Item::from_ty(&et, declaration, None, ctx).ok()
-        });
+        let repr = declaration.enum_type()
+            .and_then(|et| Item::from_ty(&et, declaration, None, ctx).ok());
         let mut variants = vec![];
 
         // Assume signedness since the default type by the C standard is an int.
-        let is_signed = repr.and_then(
-            |r| ctx.resolve_type(r).safe_canonical_type(ctx),
-        ).map_or(true, |ty| match *ty.kind() {
-                TypeKind::Int(ref int_kind) => int_kind.is_signed(),
-                ref other => {
-                    panic!("Since when enums can be non-integers? {:?}", other)
-                }
-            });
+        let is_signed =
+            repr.and_then(|r| ctx.resolve_type(r).safe_canonical_type(ctx))
+                .map_or(true, |ty| match *ty.kind() {
+                    TypeKind::Int(ref int_kind) => int_kind.is_signed(),
+                    ref other => {
+                        panic!("Since when enums can be non-integers? {:?}",
+                               other)
+                    }
+                });
 
         let type_name = ty.spelling();
         let type_name = if type_name.is_empty() {
@@ -99,28 +98,26 @@ impl Enum {
                 if let Some(val) = value {
                     let name = cursor.spelling();
                     let custom_behavior = ctx.parse_callbacks()
-                        .and_then(
-                            |t| t.enum_variant_behavior(type_name, &name, val),
-                        )
+                        .and_then(|t| {
+                            t.enum_variant_behavior(type_name, &name, val)
+                        })
                         .or_else(|| {
-                            Annotations::new(&cursor).and_then(
-                                |anno| if anno.hide() {
+                            Annotations::new(&cursor)
+                                .and_then(|anno| if anno.hide() {
                                     Some(EnumVariantCustomBehavior::Hide)
-                                } else if anno.constify_enum_variant() {
+                                } else if
+                                    anno.constify_enum_variant() {
                                     Some(EnumVariantCustomBehavior::Constify)
                                 } else {
                                     None
-                                },
-                            )
+                                })
                         });
 
                     let comment = cursor.raw_comment();
-                    variants.push(EnumVariant::new(
-                        name,
-                        comment,
-                        val,
-                        custom_behavior,
-                    ));
+                    variants.push(EnumVariant::new(name,
+                                                   comment,
+                                                   val,
+                                                   custom_behavior));
                 }
             }
             CXChildVisit_Continue
@@ -129,19 +126,15 @@ impl Enum {
     }
 
     /// Whether the enum should be an constified enum module
-    pub fn is_constified_enum_module(
-        &self,
-        ctx: &BindgenContext,
-        item: &Item,
-    ) -> bool {
+    pub fn is_constified_enum_module(&self, ctx: &BindgenContext, item: &Item) -> bool {
         let name = item.canonical_name(ctx);
         let enum_ty = item.expect_type();
 
         ctx.options().constified_enum_modules.matches(&name) ||
-            (enum_ty.name().is_none() &&
-                 self.variants().iter().any(|v| {
-                    ctx.options().constified_enum_modules.matches(&v.name())
-                }))
+        (enum_ty.name().is_none() &&
+            self.variants()
+            .iter()
+            .any(|v| ctx.options().constified_enum_modules.matches(&v.name())))
     }
 }
 
@@ -173,12 +166,11 @@ pub enum EnumVariantValue {
 
 impl EnumVariant {
     /// Construct a new enumeration variant from the given parts.
-    pub fn new(
-        name: String,
-        comment: Option<String>,
-        val: EnumVariantValue,
-        custom_behavior: Option<EnumVariantCustomBehavior>,
-    ) -> Self {
+    pub fn new(name: String,
+               comment: Option<String>,
+               val: EnumVariantValue,
+               custom_behavior: Option<EnumVariantCustomBehavior>)
+               -> Self {
         EnumVariant {
             name: name,
             comment: comment,
@@ -200,16 +192,14 @@ impl EnumVariant {
     /// Returns whether this variant should be enforced to be a constant by code
     /// generation.
     pub fn force_constification(&self) -> bool {
-        self.custom_behavior.map_or(false, |b| {
-            b == EnumVariantCustomBehavior::Constify
-        })
+        self.custom_behavior
+            .map_or(false, |b| b == EnumVariantCustomBehavior::Constify)
     }
 
     /// Returns whether the current variant should be hidden completely from the
     /// resulting rust enum.
     pub fn hidden(&self) -> bool {
-        self.custom_behavior.map_or(false, |b| {
-            b == EnumVariantCustomBehavior::Hide
-        })
+        self.custom_behavior
+            .map_or(false, |b| b == EnumVariantCustomBehavior::Hide)
     }
 }

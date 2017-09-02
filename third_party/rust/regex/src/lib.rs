@@ -161,10 +161,6 @@ assert_eq!(after, "03/14/2012, 01/01/2013 and 07/05/2014");
 # }
 ```
 
-If you wish to match against whitespace in this mode, you can still use `\s`,
-`\n`, `\t`, etc. For escaping a single space character, you can use its hex
-character code `\x20` or temporarily disable the `x` flag, e.g., `(?-x: )`.
-
 # Example: match multiple regular expressions simultaneously
 
 This demonstrates how to use a `RegexSet` to match multiple (possibly
@@ -288,38 +284,22 @@ a separate crate, [`regex-syntax`](../regex_syntax/index.html).
 
 <pre class="rust">
 .             any character except new line (includes new line with s flag)
+[xyz]         A character class matching either x, y or z.
+[^xyz]        A character class matching any character except x, y and z.
+[a-z]         A character class matching any character in range a-z.
 \d            digit (\p{Nd})
 \D            not digit
+[[:alpha:]]   ASCII character class ([A-Za-z])
+[[:^alpha:]]  Negated ASCII character class ([^A-Za-z])
 \pN           One-letter name Unicode character class
 \p{Greek}     Unicode character class (general category or script)
 \PN           Negated one-letter name Unicode character class
 \P{Greek}     negated Unicode character class (general category or script)
 </pre>
 
-### Character classes
-
-<pre class="rust">
-[xyz]         A character class matching either x, y or z (union).
-[^xyz]        A character class matching any character except x, y and z.
-[a-z]         A character class matching any character in range a-z.
-[[:alpha:]]   ASCII character class ([A-Za-z])
-[[:^alpha:]]  Negated ASCII character class ([^A-Za-z])
-[x[^xyz]]     Nested/grouping character class (matching any character except y and z)
-[a-y&&xyz]    Intersection (matching x or y)
-[0-9&&[^4]]   Subtraction using intersection and negation (matching 0-9 except 4)
-[\[\]]        Escaping in character classes (matching [ or ])
-</pre>
-
 Any named character class may appear inside a bracketed `[...]` character
 class. For example, `[\p{Greek}[:digit:]]` matches any Greek or ASCII
-digit. `[\p{Greek}&&\pL]` matches Greek letters.
-
-Precedence in character classes, from most binding to least:
-
-1. Ranges: `a-cd` == `[a-c]d`
-2. Union: `ab&&bc` == `[ab]&&[bc]`
-3. Intersection: `^a-z&&b` == `^[a-z&&b]`
-4. Negation
+digit.
 
 ## Composites
 
@@ -450,7 +430,7 @@ These classes are based on the definitions provided in
 [[:graph:]]    graphical ([!-~])
 [[:lower:]]    lower case ([a-z])
 [[:print:]]    printable ([ -~])
-[[:punct:]]    punctuation ([!-/:-@\[-`{-~])
+[[:punct:]]    punctuation ([!-/:-@[-`{-~])
 [[:space:]]    whitespace ([\t\n\v\f\r ])
 [[:upper:]]    upper case ([A-Z])
 [[:word:]]     word characters ([0-9A-Za-z_])

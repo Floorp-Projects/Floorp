@@ -45,13 +45,7 @@ Created by [gh-md-toc](https://github.com/ekalinin/github-markdown-toc)
 
 ## What's New
 
-Here's the highlights for v2.25.0
-
-* use textwrap crate for wrapping help texts 
-* suggests to use flag after subcommand when applicable 
-* Bumps bitflags crate to v0.9
-
-Here's the highlights for v2.21.0 to v2.24.2
+Here's the highlights for v2.24.2
 
 * fixes a bug where args that allow values to start with a hyphen couldnt contain a double hyphen -- as a value 
 * fixes a bug where positional argument help text is misaligned 
@@ -59,6 +53,9 @@ Here's the highlights for v2.21.0 to v2.24.2
 * **Arg::allow_hyphen_values docs:**  updates the docs to include warnings for allow_hyphen_values and multiple(true) used together 
 * **clap_app! docs:**  adds using the @group specifier to the macro docs 
 * adds a debug assertion to ensure all args added to groups actually exist 
+
+Here's the highlights for v2.21.0 to v2.24.1
+
 * fixes a bug where args with last(true) and required(true) set were not being printed in the usage string 
 * fixes a bug that was printing the arg name, instead of value name when Arg::last(true) was used 
 * fixes a bug where flags were parsed as flags AND positional values when specific combinations of settings were used 
@@ -620,28 +617,6 @@ clap = "~2.19.0"
 ```
 
 This will cause *only* the patch version to be updated upon a `cargo update` call, and therefore cannot break due to new features, or bumped minimum versions of Rust.
-
-#### Warning about '~' Dependencies
-
-Using `~` can cause issues in certain circumstances.
-
-From @alexcrichton:
-
-Right now Cargo's version resolution is pretty naive, it's just a brute-force search of the solution space, returning the first resolvable graph. This also means that it currently won't terminate until it proves there is not possible resolvable graph. This leads to situations where workspaces with multiple binaries, for example, have two different dependencies such as:
-
-```toml
-
-# In one Cargo.toml
-[dependencies]
-clap = "~2.19.0"
-
-# In another Cargo.toml
-[dependencies]
-clap = "2.22"
-
-```
-
-This is inherently an unresolvable crate graph in Cargo right now. Cargo requires there's only one major version of a crate, and being in the same workspace these two crates must share a version. This is impossible in this location, though, as these version constraints cannot be met.
 
 #### Minimum Version of Rust
 

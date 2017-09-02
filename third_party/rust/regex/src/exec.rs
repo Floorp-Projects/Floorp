@@ -210,9 +210,6 @@ impl ExecBuilder {
         let mut prefixes = Some(Literals::empty());
         let mut suffixes = Some(Literals::empty());
         let mut bytes = false;
-        let is_set = self.options.pats.len() > 1;
-        // If we're compiling a regex set and that set has any anchored
-        // expressions, then disable all literal optimizations.
         for pat in &self.options.pats {
             let parser =
                 ExprBuilder::new()
@@ -230,10 +227,6 @@ impl ExecBuilder {
                 // Partial anchors unfortunately make it hard to use prefixes,
                 // so disable them.
                 prefixes = None;
-            } else if is_set && expr.is_anchored_start() {
-                // Regex sets with anchors do not go well with literal
-                // optimizations.
-                prefixes = None;
             }
             prefixes = prefixes.and_then(|mut prefixes| {
                 if !prefixes.union_prefixes(&expr) {
@@ -247,10 +240,6 @@ impl ExecBuilder {
                 // Partial anchors unfortunately make it hard to use suffixes,
                 // so disable them.
                 suffixes = None;
-            } else if is_set && expr.is_anchored_end() {
-                // Regex sets with anchors do not go well with literal
-                // optimizations.
-                prefixes = None;
             }
             suffixes = suffixes.and_then(|mut suffixes| {
                 if !suffixes.union_suffixes(&expr) {
@@ -861,12 +850,9 @@ impl<'c> ExecNoSync<'c> {
         match_start: usize,
         match_end: usize,
     ) -> Option<(usize, usize)> {
-        // We can't use match_end directly, because we may need to examine one
-        // "character" after the end of a match for lookahead operators. We
-        // need to move two characters beyond the end, since some look-around
-        // operations may falsely assume a premature end of text otherwise.
-        let e = cmp::min(
-            next_utf8(text, next_utf8(text, match_end)), text.len());
+        // We can't use match_end directly, because we may need to examine
+        // one "character" after the end of a match for lookahead operators.
+        let e = cmp::min(next_utf8(text, match_end), text.len());
         self.captures_nfa(slots, &text[..e], match_start)
     }
 
