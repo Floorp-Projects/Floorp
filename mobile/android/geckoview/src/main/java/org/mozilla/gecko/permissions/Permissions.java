@@ -12,11 +12,9 @@ import android.support.annotation.NonNull;
 
 import org.mozilla.gecko.util.ThreadUtils;
 
-import java.util.ArrayList;
 import java.util.Collections;
 import java.util.HashSet;
 import java.util.LinkedList;
-import java.util.List;
 import java.util.Queue;
 import java.util.concurrent.Callable;
 import java.util.concurrent.CancellationException;
