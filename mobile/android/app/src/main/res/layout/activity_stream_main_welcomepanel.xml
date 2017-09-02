@@ -1,0 +1,16 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Viewstub requires a parent (since inflation involves removing the stub and replacing it with
+     the new layout, hence we need this empty framelayout (we don't attach the welcomepanel
+     to it's enclosing RecyclerView until after inflation - otherwise this issue wouldn't exist).
+     In this case, we need a FrameLayout for animations to work correctly, it would originally have lived
+     within welcomepanel_content, but this placing it here is just as good. -->
+<FrameLayout
+    xmlns:android="http://schemas.android.com/apk/res/android"
+    android:layout_width="match_parent"
+    android:layout_height="wrap_content">
+
+    <ViewStub android:id="@+id/welcomepanel_stub"
+              android:layout="@layout/activity_stream_main_welcomepanel_content"
+              android:layout_width="match_parent"
+              android:layout_height="wrap_content"/>
+</FrameLayout>
