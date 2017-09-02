@@ -222,5 +222,5 @@ check-clobber-l10n-%:
 	$(MAKE) clobber-x-test
 	$(RM) -r $(DIST)/l10n-stage $(DIST)/xpi-stage/locale-$(AB_CD)
 	$(RM) -r $(DIST)/*.$(AB_CD).*
-	$(RM) -r $(UNPACKED_INSTALLER) $(ABS_DIST)/$(LANGPACK)
+	$(RM) -r $(UNPACKED_INSTALLER)
 	$(RM) -rf $(DIST)/install/sea/*.$(AB_CD).*
