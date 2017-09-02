@@ -88,7 +88,6 @@ JOB_NAME_WHITELIST = set([
     'sm-plaindebug-debug',
     'sm-win-plaindebug-debug',
     'sm-rootanalysis-debug',
-    'sm-rust-bindings-debug',
     'sm-tsan-opt',
     'win32-add-on-devel',
     'win32-clang-tidy',

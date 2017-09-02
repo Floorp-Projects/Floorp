@@ -115,6 +115,8 @@ impl RegexBuilder {
     }
 
     /// Set the value for the Unicode (`u`) flag.
+    ///
+    /// For byte based regular expressions, this is disabled by default.
     pub fn unicode(&mut self, yes: bool) -> &mut RegexBuilder {
         self.0.unicode = yes;
         self
@@ -226,6 +228,8 @@ impl RegexSetBuilder {
     }
 
     /// Set the value for the Unicode (`u`) flag.
+    ///
+    /// For byte based regular expressions, this is disabled by default.
     pub fn unicode(&mut self, yes: bool) -> &mut RegexSetBuilder {
         self.0.unicode = yes;
         self

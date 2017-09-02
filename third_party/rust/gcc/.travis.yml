@@ -14,7 +14,8 @@ sudo: false
 install:
   - if [ "$TRAVIS_OS_NAME" = "linux" ]; then OS=unknown-linux-gnu; else OS=apple-darwin; fi
   - export TARGET=$ARCH-$OS
-  - if [ -z "$NO_ADD" ]; then rustup target add $TARGET; fi
+  - curl https://static.rust-lang.org/rustup.sh |
+    sh -s -- --add-target=$TARGET --disable-sudo -y --prefix=`rustc --print sysroot`
 before_script:
   - pip install 'travis-cargo<0.2' --user && export PATH=$HOME/.local/bin:$PATH
 script:
@@ -34,7 +35,7 @@ env:
     secure: "CBtqrudgE0PS8x3kTr44jKbC2D4nfnmdYVecooNm0qnER4B4TSvZpZSQoCgKK6k4BYQuOSyFTOwYx6M79w39ZMOgyCP9ytB+tyMWL0/+ZuUQL04yVg4M5vd3oJMkOaXbvG56ncgPyFrseY+FPDg+mXAzvJk/nily37YXjkQj2D0="
 
   matrix:
-    - ARCH=x86_64 NO_ADD=1
+    - ARCH=x86_64
     - ARCH=i686
 notifications:
   email:

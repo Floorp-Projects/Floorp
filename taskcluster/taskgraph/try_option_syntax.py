@@ -167,7 +167,6 @@ RIDEALONG_BUILDS = {
         'sm-mozjs-sys',
         'sm-msan',
         'sm-fuzzing',
-        'sm-rust-bindings',
     ],
 }
 

@@ -29,16 +29,11 @@ This will print two different numbers.
 
 License
 -------
-Thread-ID is licensed under either the [Apache 2.0 license][apache2], or the
-[MIT license][mit], at your option. It may be used in free software as well as
-closed-source applications, both for commercial and non-commercial use under the
-conditions given in the license.
-
-Contributing
-------------
-Unless you explicitly state otherwise, any contribution intentionally submitted
-for inclusion in the work by you, as defined in the Apache 2.0 license, shall be
-dual licensed as above, without any additional terms or conditions.
+Thread-ID is licensed under the [Apache 2.0][apache2] license. It may be used
+in free software as well as closed-source applications, both for commercial and
+non-commercial use under the conditions given in the license. If you want to use
+Thread-ID in your GPLv2-licensed software, you can add an [exception][except]
+to your copyright notice.
 
 [tr-img]:    https://travis-ci.org/ruuda/thread-id.svg?branch=master
 [tr]:        https://travis-ci.org/ruuda/thread-id
@@ -50,4 +45,4 @@ dual licensed as above, without any additional terms or conditions.
 [docs]:      https://docs.rs/thread-id
 [stdlib-pr]: https://github.com/rust-lang/rust/pull/36341
 [apache2]:   https://www.apache.org/licenses/LICENSE-2.0
-[mit]:       https://opensource.org/licenses/MIT
+[except]:    https://www.gnu.org/licenses/gpl-faq.html#GPLIncompatibleLibs

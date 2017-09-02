@@ -1,39 +1,3 @@
-0.2.2 (2017-05-21)
-==================
-New features:
-
-* [FEATURE #341](https://github.com/rust-lang/regex/issues/341):
-  Support nested character classes and intersection operation.
-  For example, `[\p{Greek}&&\pL]` matches greek letters and
-  `[[0-9]&&[^4]]` matches every decimal digit except `4`.
-  (Much thanks to @robinst, who contributed this awesome feature.)
-
-Bug fixes:
-
-* [BUG #321](https://github.com/rust-lang/regex/issues/321):
-  Fix bug in literal extraction and UTF-8 decoding.
-* [BUG #326](https://github.com/rust-lang/regex/issues/326):
-  Add documentation tip about the `(?x)` flag.
-* [BUG #333](https://github.com/rust-lang/regex/issues/333):
-  Show additional replacement example using curly braces.
-* [BUG #334](https://github.com/rust-lang/regex/issues/334):
-  Fix bug when resolving captures after a match.
-* [BUG #338](https://github.com/rust-lang/regex/issues/338):
-  Add example that uses `Captures::get` to API documentation.
-* [BUG #353](https://github.com/rust-lang/regex/issues/353):
-  Fix RegexSet bug that caused match failure in some cases.
-* [BUG #354](https://github.com/rust-lang/regex/pull/354):
-  Fix panic in parser when `(?x)` is used.
-* [BUG #358](https://github.com/rust-lang/regex/issues/358):
-  Fix literal optimization bug with RegexSet.
-* [BUG #359](https://github.com/rust-lang/regex/issues/359):
-  Fix example code in README.
-* [BUG #365](https://github.com/rust-lang/regex/pull/365):
-  Fix bug in `rure_captures_len` in the C binding.
-* [BUG #367](https://github.com/rust-lang/regex/issues/367):
-  Fix byte class bug that caused a panic.
-
-
 0.2.1
 =====
 One major bug with `replace_all` has been fixed along with a couple of other
@@ -48,7 +12,6 @@ touchups.
   (`RegexBuilder::compile` was renamed to `RegexBuilder::build`.)
 * [BUG #324](https://github.com/rust-lang/regex/issues/324):
   Compiling `regex` should only require one version of `memchr` crate.
-
 
 0.2.0
 =====

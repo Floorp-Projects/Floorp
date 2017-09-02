@@ -106,9 +106,7 @@ gcc = { version = "0.3", features = ["parallel"] }
 ```
 
 By default gcc-rs will limit parallelism to `$NUM_JOBS`, or if not present it
-will limit it to the number of cpus on the machine. If you are using cargo,
-use `-jN` option of `build`, `test` and `run` commands as `$NUM_JOBS`
-is supplied by cargo.
+will limit it to the number of cpus on the machine.
 
 ## Compile-time Requirements
 

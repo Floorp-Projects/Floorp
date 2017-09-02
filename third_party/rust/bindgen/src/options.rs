@@ -1,23 +1,14 @@
-use bindgen::{Builder, CodegenConfig, RUST_TARGET_STRINGS, RustTarget, builder};
+use bindgen::{Builder, CodegenConfig, builder};
 use clap::{App, Arg};
 use std::fs::File;
-use std::io::{self, Error, ErrorKind, Write, stderr};
-use std::path::PathBuf;
-use std::str::FromStr;
+use std::io::{self, Error, ErrorKind};
 
 /// Construct a new [`Builder`](./struct.Builder.html) from command line flags.
-pub fn builder_from_flags<I>(
-    args: I,
-) -> Result<(Builder, Box<io::Write>, bool), io::Error>
-where
-    I: Iterator<Item = String>,
+pub fn builder_from_flags<I>
+    (args: I)
+     -> Result<(Builder, Box<io::Write>, bool), io::Error>
+    where I: Iterator<Item = String>,
 {
-    let rust_target_help = format!(
-        "Version of the Rust compiler to target. Valid options are: {:?}. Defaults to {:?}.",
-        RUST_TARGET_STRINGS,
-        String::from(RustTarget::default())
-    );
-
     let matches = App::new("bindgen")
         .version(env!("CARGO_PKG_VERSION"))
         .about("Generates Rust bindings from C/C++ headers.")
@@ -64,10 +55,6 @@ where
             Arg::with_name("no-derive-debug")
                 .long("no-derive-debug")
                 .help("Avoid deriving Debug on any type."),
-            Arg::with_name("impl-debug")
-                .long("impl-debug")
-                .help("Create Debug implementation, if it can not be derived \
-                       automatically."),
             Arg::with_name("no-derive-default")
                 .long("no-derive-default")
                 .hidden(true)
@@ -75,15 +62,6 @@ where
             Arg::with_name("with-derive-default")
                 .long("with-derive-default")
                 .help("Derive Default on any type."),
-            Arg::with_name("with-derive-hash")
-                .long("with-derive-hash")
-                .help("Derive hash on any type."),
-            Arg::with_name("with-derive-partialeq")
-                .long("with-derive-partialeq")
-                .help("Derive partialeq on any type."),
-            Arg::with_name("with-derive-eq")
-                .long("with-derive-eq")
-                .help("Derive eq on any type. Enable this option also enables --with-derive-partialeq"),
             Arg::with_name("no-doc-comments")
                 .long("no-doc-comments")
                 .help("Avoid including doc comments in the output, see: \
@@ -110,6 +88,11 @@ where
             // All positional arguments after the end of options marker, `--`
             Arg::with_name("clang-args")
                 .multiple(true),
+            Arg::with_name("dummy-uses")
+                .long("dummy-uses")
+                .help("For testing purposes, generate a C/C++ file containing \
+                       dummy uses of all types defined in the input header.")
+                .takes_value(true),
             Arg::with_name("emit-clang-ast")
                 .long("emit-clang-ast")
                 .help("Output the Clang AST for debugging purposes."),
@@ -163,7 +146,7 @@ where
                 .help("Do not prepend the enum name to bitfield or constant variants."),
             Arg::with_name("unstable-rust")
                 .long("unstable-rust")
-                .help("Generate unstable Rust code (deprecated; use --rust-target instead).")
+                .help("Generate unstable Rust code.")
                 .multiple(true), // FIXME: Pass legacy test suite
             Arg::with_name("opaque-type")
                 .long("opaque-type")
@@ -183,10 +166,6 @@ where
                 .takes_value(true)
                 .multiple(true)
                 .number_of_values(1),
-            Arg::with_name("rust-target")
-                .long("rust-target")
-                .help(&rust_target_help)
-                .takes_value(true),
             Arg::with_name("static")
                 .long("static-link")
                 .help("Link to static library.")
@@ -240,20 +219,7 @@ where
                 .help("Preprocess and dump the input header files to disk. \
                        Useful when debugging bindgen, using C-Reduce, or when \
                        filing issues. The resulting file will be named \
-                       something like `__bindgen.i` or `__bindgen.ii`."),
-            Arg::with_name("rustfmt-bindings")
-                .long("rustfmt-bindings")
-                .help("Format the generated bindings with rustfmt. \
-                       Rustfmt needs to be in the global PATH."),
-            Arg::with_name("rustfmt-configuration-file")
-                .long("rustfmt-configuration-file")
-                .help("The absolute path to the rustfmt configuration file. \
-                       The configuration file will be used for formatting the bindings. \
-                       Setting this parameter, will automatically set --rustfmt-bindings.")
-                .value_name("path")
-                .takes_value(true)
-                .multiple(false)
-                .number_of_values(1),
+                       something like `__bindgen.i` or `__bindgen.ii`.")
         ]) // .args()
         .get_matches_from(args);
 
@@ -263,18 +229,6 @@ where
         builder = builder.header(header);
     } else {
         return Err(Error::new(ErrorKind::Other, "Header not found"));
-    }
-
-    if matches.is_present("unstable-rust") {
-        builder = builder.rust_target(RustTarget::Nightly);
-        writeln!(
-            &mut stderr(),
-            "warning: the `--unstable-rust` option is deprecated"
-        ).expect("Unable to write error message");
-    }
-
-    if let Some(rust_target) = matches.value_of("rust-target") {
-        builder = builder.rust_target(RustTarget::from_str(rust_target)?);
     }
 
     if let Some(bitfields) = matches.values_of("bitfield-enum") {
@@ -312,24 +266,8 @@ where
         builder = builder.derive_debug(false);
     }
 
-    if matches.is_present("impl-debug") {
-        builder = builder.impl_debug(true);
-    }
-
     if matches.is_present("with-derive-default") {
         builder = builder.derive_default(true);
-    }
-
-    if matches.is_present("with-derive-hash") {
-        builder = builder.derive_hash(true);
-    }
-
-    if matches.is_present("with-derive-partialeq") {
-        builder = builder.derive_partialeq(true);
-    }
-
-    if matches.is_present("with-derive-eq") {
-        builder = builder.derive_eq(true);
     }
 
     if matches.is_present("no-derive-default") {
@@ -342,6 +280,10 @@ where
 
     if let Some(prefix) = matches.value_of("ctypes-prefix") {
         builder = builder.ctypes_prefix(prefix);
+    }
+
+    if let Some(dummy) = matches.value_of("dummy-uses") {
+        builder = builder.dummy_uses(dummy);
     }
 
     if let Some(links) = matches.values_of("dynamic") {
@@ -361,10 +303,9 @@ where
                 "constructors" => config.constructors = true,
                 "destructors" => config.destructors = true,
                 otherwise => {
-                    return Err(Error::new(
-                        ErrorKind::Other,
-                        format!("Unknown generate item: {}", otherwise),
-                    ));
+                    return Err(Error::new(ErrorKind::Other,
+                                          format!("Unknown generate item: {}",
+                                                  otherwise)));
                 }
             }
         }
@@ -403,6 +344,10 @@ where
 
     if matches.is_present("ignore-methods") {
         builder = builder.ignore_methods();
+    }
+
+    if matches.is_present("unstable-rust") {
+        builder = builder.unstable_rust(true);
     }
 
     if matches.is_present("no-convert-floats") {
@@ -488,30 +433,6 @@ where
 
     if matches.is_present("dump-preprocessed-input") {
         builder.dump_preprocessed_input()?;
-    }
-
-    if matches.is_present("rustfmt-bindings") {
-        builder = builder.rustfmt_bindings(true);
-    }
-
-    if let Some(path_str) = matches.value_of("rustfmt-configuration-file") {
-        let path = PathBuf::from(path_str);
-
-        if !path.is_absolute() {
-            return Err(Error::new(
-                ErrorKind::Other,
-                "--rustfmt-configuration--file needs to be an absolute path!",
-            ));
-        }
-
-        if path.to_str().is_none() {
-            return Err(Error::new(
-                ErrorKind::Other,
-                "--rustfmt-configuration-file contains non-valid UTF8 characters.",
-            ));
-        }
-
-        builder = builder.rustfmt_configuration_file(Some(path));
     }
 
     let verbose = matches.is_present("verbose");

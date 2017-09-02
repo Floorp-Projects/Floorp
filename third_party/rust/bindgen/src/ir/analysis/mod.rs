@@ -43,22 +43,8 @@ pub use self::template_params::UsedTemplateParameters;
 mod derive_debug;
 pub use self::derive_debug::CannotDeriveDebug;
 mod has_vtable;
-pub use self::has_vtable::HasVtable;
 pub use self::has_vtable::HasVtableAnalysis;
-mod has_destructor;
-pub use self::has_destructor::HasDestructorAnalysis;
-mod derive_default;
-pub use self::derive_default::CannotDeriveDefault;
-mod derive_copy;
-pub use self::derive_copy::CannotDeriveCopy;
-mod has_type_param_in_array;
-pub use self::has_type_param_in_array::HasTypeParameterInArray;
-mod derive_hash;
-pub use self::derive_hash::CannotDeriveHash;
-mod derive_partial_eq;
-pub use self::derive_partial_eq::CannotDerivePartialEq;
-mod has_float;
-pub use self::has_float::HasFloat;
+pub use self::has_vtable::HasVtable;
 
 use ir::context::{BindgenContext, ItemId};
 use ir::traversal::{EdgeKind, Trace};
@@ -119,8 +105,7 @@ pub trait MonotoneFramework: Sized + fmt::Debug {
     /// queue up in the worklist when `constrain(node)` reports updated
     /// information.
     fn each_depending_on<F>(&self, node: Self::Node, f: F)
-    where
-        F: FnMut(Self::Node);
+        where F: FnMut(Self::Node);
 }
 
 /// Whether an analysis's `constrain` function modified the incremental results
@@ -136,18 +121,16 @@ pub enum ConstrainResult {
 
 /// Run an analysis in the monotone framework.
 pub fn analyze<Analysis>(extra: Analysis::Extra) -> Analysis::Output
-where
-    Analysis: MonotoneFramework,
+    where Analysis: MonotoneFramework,
 {
     let mut analysis = Analysis::new(extra);
     let mut worklist = analysis.initial_worklist();
 
     while let Some(node) = worklist.pop() {
         if let ConstrainResult::Changed = analysis.constrain(node) {
-            analysis.each_depending_on(
-                node,
-                |needs_work| { worklist.push(needs_work); },
-            );
+            analysis.each_depending_on(node, |needs_work| {
+                worklist.push(needs_work);
+            });
         }
     }
 
@@ -155,13 +138,8 @@ where
 }
 
 /// Generate the dependency map for analysis
-pub fn generate_dependencies<F>(
-    ctx: &BindgenContext,
-    consider_edge: F,
-) -> HashMap<ItemId, Vec<ItemId>>
-where
-    F: Fn(EdgeKind) -> bool,
-{
+pub fn generate_dependencies<F>(ctx: &BindgenContext, consider_edge: F) -> HashMap<ItemId, Vec<ItemId>>
+    where F: Fn(EdgeKind) -> bool {
     let mut dependencies = HashMap::new();
 
     for &item in ctx.whitelisted_items() {
@@ -170,19 +148,14 @@ where
         {
             // We reverse our natural IR graph edges to find dependencies
             // between nodes.
-            item.trace(
-                ctx,
-                &mut |sub_item: ItemId, edge_kind| {
-                    if ctx.whitelisted_items().contains(&sub_item) &&
-                        consider_edge(edge_kind)
-                    {
-                        dependencies.entry(sub_item).or_insert(vec![]).push(
-                            item,
-                        );
+            item.trace(ctx, &mut |sub_item: ItemId, edge_kind| {
+                if ctx.whitelisted_items().contains(&sub_item) &&
+                    consider_edge(edge_kind) {
+                        dependencies.entry(sub_item)
+                            .or_insert(vec![])
+                            .push(item);
                     }
-                },
-                &(),
-            );
+            }, &());
         }
     }
     dependencies
@@ -330,8 +303,7 @@ mod tests {
         }
 
         fn each_depending_on<F>(&self, node: Node, mut f: F)
-        where
-            F: FnMut(Node),
+            where F: FnMut(Node),
         {
             for dep in self.reversed.0[&node].iter() {
                 f(*dep);
@@ -352,8 +324,7 @@ mod tests {
         println!("reachable = {:#?}", reachable);
 
         fn nodes<A>(nodes: A) -> HashSet<Node>
-        where
-            A: AsRef<[usize]>,
+            where A: AsRef<[usize]>,
         {
             nodes.as_ref().iter().cloned().map(Node).collect()
         }

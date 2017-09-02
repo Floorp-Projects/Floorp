@@ -8,6 +8,7 @@ use std::panic::UnwindSafe;
 /// A trait to allow configuring different kinds of types in different
 /// situations.
 pub trait ParseCallbacks: fmt::Debug + UnwindSafe {
+
     /// This function will be run on every macro that is identified
     fn parsed_macro(&self, _name: &str) {}
 
@@ -20,12 +21,11 @@ pub trait ParseCallbacks: fmt::Debug + UnwindSafe {
     /// This function should return whether, given the a given enum variant
     /// name, and value, returns whether this enum variant will forcibly be a
     /// constant.
-    fn enum_variant_behavior(
-        &self,
-        _enum_name: Option<&str>,
-        _variant_name: &str,
-        _variant_value: EnumVariantValue,
-    ) -> Option<EnumVariantCustomBehavior> {
+    fn enum_variant_behavior(&self,
+                             _enum_name: Option<&str>,
+                             _variant_name: &str,
+                             _variant_value: EnumVariantValue)
+                             -> Option<EnumVariantCustomBehavior> {
         None
     }
 }

@@ -13,7 +13,7 @@
 // regexes on small inputs because of its memory requirements.
 //
 // In particular, this is a *bounded* backtracking engine. It retains worst
-// case linear time by keeping track of the states that it has visited (using a
+// case linear time by keeping track of the states that is has visited (using a
 // bitmap). Namely, once a state is visited, it is never visited again. Since a
 // state is keyed by `(instruction index, input index)`, we have that its time
 // complexity is `O(mn)` (i.e., linear in the size of the search text).
