@@ -569,14 +569,6 @@ nsXBLPrototypeBinding::GetRuleProcessor()
   return nullptr;
 }
 
-void
-nsXBLPrototypeBinding::ComputeServoStyleSet(nsPresContext* aPresContext)
-{
-  if (mResources) {
-    mResources->ComputeServoStyleSet(aPresContext);
-  }
-}
-
 ServoStyleSet*
 nsXBLPrototypeBinding::GetServoStyleSet() const
 {
