@@ -126,7 +126,7 @@ random-if(OSX==1010) == background-size-monster-rem.html background-size-monster
 # the image aren't the issue, because they're being obscured to avoid sampling
 # algorithm dependencies (at least assuming the sampling algorithm in use
 # doesn't sample too far astray from the boundaries).
-fails-if(!styloVsGecko) == background-size-zoom-repeat.html background-size-zoom-repeat-ref.html
+fails == background-size-zoom-repeat.html background-size-zoom-repeat-ref.html # bug 1073209
 
 # -moz-default-background-color and -moz-default-color (bug 591341)
 == background-moz-default-background-color.html background-moz-default-background-color-ref.html
