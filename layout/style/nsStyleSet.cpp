@@ -2686,8 +2686,8 @@ nsStyleSet::MediumFeaturesChanged(bool aViewportChanged)
   }
 
   if (mBindingManager) {
-    bool thisChanged =
-      mBindingManager->MediumFeaturesChanged(presContext);
+    bool thisChanged = false;
+    mBindingManager->MediumFeaturesChanged(presContext, &thisChanged);
     stylesChanged = stylesChanged || thisChanged;
   }
 

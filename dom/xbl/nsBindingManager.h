@@ -135,7 +135,8 @@ public:
    * the characteristics of the medium, and return whether this rule
    * processor's rules have changed (e.g., because of media queries).
    */
-  bool MediumFeaturesChanged(nsPresContext* aPresContext);
+  nsresult MediumFeaturesChanged(nsPresContext* aPresContext,
+                                 bool* aRulesChanged);
 
   void AppendAllSheets(nsTArray<mozilla::StyleSheet*>& aArray);
 
