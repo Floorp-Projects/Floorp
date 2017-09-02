@@ -50,6 +50,7 @@
 #include "nsThreadUtils.h"
 #include "mozilla/dom/NodeListBinding.h"
 #include "mozilla/dom/ScriptSettings.h"
+#include "mozilla/ServoStyleSet.h"
 #include "mozilla/Unused.h"
 
 using namespace mozilla;
@@ -745,17 +746,57 @@ nsBindingManager::MediumFeaturesChanged(nsPresContext* aPresContext)
 {
   bool rulesChanged = false;
   RefPtr<nsPresContext> presContext = aPresContext;
+  bool isStyledByServo = mDocument->IsStyledByServo();
 
   EnumerateBoundContentBindings([=, &rulesChanged](nsXBLBinding* aBinding) {
-    nsIStyleRuleProcessor* ruleProcessor =
-      aBinding->PrototypeBinding()->GetRuleProcessor();
-    if (ruleProcessor) {
-      bool thisChanged = ruleProcessor->MediumFeaturesChanged(presContext);
-      rulesChanged = rulesChanged || thisChanged;
+    if (isStyledByServo) {
+      ServoStyleSet* styleSet = aBinding->PrototypeBinding()->GetServoStyleSet();
+      if (styleSet) {
+        bool styleSetChanged = false;
+
+        if (styleSet->IsPresContextChanged(presContext)) {
+          styleSetChanged = true;
+        } else {
+          // PresContext is not changed. This means aPresContext is still
+          // alive since the last time it initialized this XBL styleset.
+          // It's safe to check whether medium features changed.
+          bool viewportUnitsUsed = false;
+          styleSetChanged =
+            styleSet->MediumFeaturesChangedRules(&viewportUnitsUsed);
+          MOZ_ASSERT(!viewportUnitsUsed,
+                     "Non-master stylesets shouldn't get flagged as using "
+                     "viewport units!");
+        }
+        rulesChanged = rulesChanged || styleSetChanged;
+      }
+    } else {
+      nsIStyleRuleProcessor* ruleProcessor =
+        aBinding->PrototypeBinding()->GetRuleProcessor();
+      if (ruleProcessor) {
+        bool thisChanged = ruleProcessor->MediumFeaturesChanged(presContext);
+        rulesChanged = rulesChanged || thisChanged;
+      }
     }
   });
 
   return rulesChanged;
+}
+
+void
+nsBindingManager::UpdateBoundContentBindingsForServo(nsPresContext* aPresContext)
+{
+  MOZ_ASSERT(mDocument->IsStyledByServo(),
+             "This should be called only by servo-backend!");
+
+  RefPtr<nsPresContext> presContext = aPresContext;
+
+  EnumerateBoundContentBindings([=](nsXBLBinding* aBinding) {
+    nsXBLPrototypeBinding* protoBinding = aBinding->PrototypeBinding();
+    ServoStyleSet* styleSet = protoBinding->GetServoStyleSet();
+    if (styleSet && styleSet->StyleSheetsHaveChanged()) {
+      protoBinding->ComputeServoStyleSet(presContext);
+    }
+  });
 }
 
 void

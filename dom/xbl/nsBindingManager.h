@@ -130,12 +130,16 @@ public:
 
   void WalkAllRules(nsIStyleRuleProcessor::EnumFunc aFunc,
                     ElementDependentRuleProcessorData* aData);
-  /**
-   * Do any processing that needs to happen as a result of a change in
-   * the characteristics of the medium, and return whether this rule
-   * processor's rules have changed (e.g., because of media queries).
-   */
+
+  // Do any processing that needs to happen as a result of a change in the
+  // characteristics of the medium, and return whether this rule processor's
+  // rules or the servo style set have changed (e.g., because of media
+  // queries).
   bool MediumFeaturesChanged(nsPresContext* aPresContext);
+
+  // Update the content bindings in mBoundContentSet due to medium features
+  // changed.
+  void UpdateBoundContentBindingsForServo(nsPresContext* aPresContext);
 
   void AppendAllSheets(nsTArray<mozilla::StyleSheet*>& aArray);
 
