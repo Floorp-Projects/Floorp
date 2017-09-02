@@ -42,8 +42,8 @@
 == percent-basis.html percent-basis-ref.html
 == default-box-sizing-separate-standards.html default-box-sizing-separate-standards-ref.html
 == default-box-sizing-separate-quirks.html default-box-sizing-separate-quirks-ref.html
-fails-if(!styloVsGecko) == default-box-sizing-collapse-standards.html default-box-sizing-collapse-standards-ref.html # bug 371180
-fails-if(!styloVsGecko) == default-box-sizing-collapse-quirks.html default-box-sizing-collapse-quirks-ref.html # bug 371180
+fails == default-box-sizing-collapse-standards.html default-box-sizing-collapse-standards-ref.html # bug 371180
+fails == default-box-sizing-collapse-quirks.html default-box-sizing-collapse-quirks-ref.html # bug 371180
 == colspan-percent-distribution-1.html colspan-percent-distribution-1-ref.html
 == colspan-percent-distribution-2.html colspan-percent-distribution-2-ref.html
 == spanning-cell-sort-1-small.html spanning-cell-sort-1-ref.html

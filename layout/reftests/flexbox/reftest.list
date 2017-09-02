@@ -13,7 +13,7 @@
 include pagination/reftest.list
 
 # Tests for cross-axis alignment (align-self / align-items properties)
-fails-if(!styloVsGecko) == flexbox-align-self-baseline-horiz-2.xhtml  flexbox-align-self-baseline-horiz-2-ref.xhtml # bug 793456, and possibly others
+fails == flexbox-align-self-baseline-horiz-2.xhtml  flexbox-align-self-baseline-horiz-2-ref.xhtml # bug 793456, and possibly others
 # This one fails on windows R (but not Ru, strangely) and GTK.
 # On Windows R and GTK, the single-line <label> flex item has a different
 # background size in test vs. ref
@@ -70,7 +70,7 @@ fuzzy-if(skiaContent,3,10) == flexbox-dyn-insertAroundSpan-3.xhtml flexbox-dyn-i
 == flexbox-float-2b.xhtml  flexbox-float-2-ref.xhtml
 
 # Tests for the order in which we paint flex items
-fails-if(!styloVsGecko) == flexbox-paint-ordering-3.html  flexbox-paint-ordering-3-ref.html # bug 874718
+fails == flexbox-paint-ordering-3.html  flexbox-paint-ordering-3-ref.html # bug 874718
 
 # Tests for handling of absolutely/fixed/relatively-positioned flex items.
 == flexbox-position-absolute-1.xhtml  flexbox-position-absolute-1-ref.xhtml
@@ -84,8 +84,8 @@ fuzzy-if(Android,16,400) == flexbox-position-fixed-2.xhtml     flexbox-position-
 == flexbox-position-fixed-4.xhtml     flexbox-position-fixed-4-ref.xhtml
 
 # Tests for inline content in a flexbox that gets wrapped in an anonymous block
-fails-if(!styloVsGecko) == flexbox-inlinecontent-horiz-1a.xhtml flexbox-inlinecontent-horiz-1-ref.xhtml # reference case rendering is incorrect; bug 858333
-fails-if(!styloVsGecko) == flexbox-inlinecontent-horiz-1b.xhtml flexbox-inlinecontent-horiz-1-ref.xhtml # reference case rendering is incorrect; bug 858333
+fails == flexbox-inlinecontent-horiz-1a.xhtml flexbox-inlinecontent-horiz-1-ref.xhtml # reference case rendering is incorrect; bug 858333
+fails == flexbox-inlinecontent-horiz-1b.xhtml flexbox-inlinecontent-horiz-1-ref.xhtml # reference case rendering is incorrect; bug 858333
 == flexbox-inlinecontent-horiz-2.xhtml  flexbox-inlinecontent-horiz-2-ref.xhtml
 == flexbox-inlinecontent-horiz-3a.xhtml flexbox-inlinecontent-horiz-3-ref.xhtml
 == flexbox-inlinecontent-horiz-3b.xhtml flexbox-inlinecontent-horiz-3-ref.xhtml
