@@ -113,12 +113,13 @@ PerformanceObserver::Notify()
   RefPtr<PerformanceObserverEntryList> list =
     new PerformanceObserverEntryList(this, mQueuedEntries);
 
+  mQueuedEntries.Clear();
+
   ErrorResult rv;
   mCallback->Call(this, *list, *this, rv);
   if (NS_WARN_IF(rv.Failed())) {
     rv.SuppressException();
   }
-  mQueuedEntries.Clear();
 }
 
 void
