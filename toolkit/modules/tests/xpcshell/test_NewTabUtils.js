@@ -364,6 +364,119 @@ add_task(async function addFavicons() {
   Assert.equal(provider._faviconBytesToDataURI(links)[0].favicon, base64URL, "Got the right favicon");
 });
 
+add_task(async function getHighlights() {
+  const addMetadata = url => PlacesUtils.history.update({
+    description: "desc",
+    previewImageURL: "https://image/",
+    url
+  });
+
+  await setUpActivityStreamTest();
+
+  let provider = NewTabUtils.activityStreamLinks;
+  let links = await provider.getHighlights();
+  Assert.equal(links.length, 0, "empty history yields empty links");
+
+  // Add bookmarks
+  const now = Date.now();
+  const oldSeconds = 24 * 60 * 60; // 1 day old
+  let bookmarks = [
+    {
+      dateAdded: new Date(now - oldSeconds * 1000),
+      parentGuid: PlacesUtils.bookmarks.unfiledGuid,
+      title: "foo",
+      url: "https://mozilla1.com/dayOld"
+    },
+    {
+      parentGuid: PlacesUtils.bookmarks.unfiledGuid,
+      title: "foo",
+      url: "https://mozilla1.com/nowNew"
+    }
+  ];
+  for (let placeInfo of bookmarks) {
+    await PlacesUtils.bookmarks.insert(placeInfo);
+  }
+
+  links = await provider.getHighlights();
+  Assert.equal(links.length, 0, "adding bookmarks without visits doesn't yield more links");
+
+  // Add a history visit
+  let testURI = "http://mozilla.com/";
+  await PlacesTestUtils.addVisits(testURI);
+
+  links = await provider.getHighlights();
+  Assert.equal(links.length, 0, "adding visits without metadata doesn't yield more links");
+
+  // Add bookmark visits
+  for (let placeInfo of bookmarks) {
+    await PlacesTestUtils.addVisits(placeInfo.url);
+  }
+
+  links = await provider.getHighlights();
+  Assert.equal(links.length, 2, "adding visits to bookmarks yields more links");
+  Assert.equal(links[0].url, bookmarks[1].url, "first bookmark is younger bookmark");
+  Assert.equal(links[0].type, "bookmark", "first bookmark is bookmark");
+  Assert.equal(links[1].url, bookmarks[0].url, "second bookmark is older bookmark");
+  Assert.equal(links[1].type, "bookmark", "second bookmark is bookmark");
+
+  // Add metadata to history
+  await addMetadata(testURI);
+
+  links = await provider.getHighlights();
+  Assert.equal(links.length, 3, "adding metadata yield more links");
+  Assert.equal(links[0].url, bookmarks[1].url, "still have younger bookmark");
+  Assert.equal(links[1].url, bookmarks[0].url, "still have older bookmark");
+  Assert.equal(links[2].url, testURI, "added visit corresponds to added url");
+  Assert.equal(links[2].type, "history", "added visit is history");
+
+  links = await provider.getHighlights({numItems: 2});
+  Assert.equal(links.length, 2, "limited to 2 items");
+  Assert.equal(links[0].url, bookmarks[1].url, "still have younger bookmark");
+  Assert.equal(links[1].url, bookmarks[0].url, "still have older bookmark");
+
+  links = await provider.getHighlights({excludeHistory: true});
+  Assert.equal(links.length, 2, "only have bookmarks");
+  Assert.equal(links[0].url, bookmarks[1].url, "still have younger bookmark");
+  Assert.equal(links[1].url, bookmarks[0].url, "still have older bookmark");
+
+  links = await provider.getHighlights({excludeBookmarks: true});
+  Assert.equal(links.length, 1, "only have history");
+  Assert.equal(links[0].url, testURI, "only have the history now");
+
+  links = await provider.getHighlights({excludeBookmarks: true, excludeHistory: true});
+  Assert.equal(links.length, 0, "requested nothing, get nothing");
+
+  links = await provider.getHighlights({bookmarkSecondsAgo: oldSeconds / 2});
+  Assert.equal(links.length, 2, "old bookmark filtered out with");
+  Assert.equal(links[0].url, bookmarks[1].url, "still have newer bookmark");
+  Assert.equal(links[1].url, testURI, "still have the history");
+
+  // Add a visit and metadata to the older bookmark
+  await PlacesTestUtils.addVisits(bookmarks[0].url);
+  await addMetadata(bookmarks[0].url);
+
+  links = await provider.getHighlights({bookmarkSecondsAgo: oldSeconds / 2});
+  Assert.equal(links.length, 3, "old bookmark returns as history");
+  Assert.equal(links[0].url, bookmarks[1].url, "still have newer bookmark");
+  Assert.equal(links[1].url, bookmarks[0].url, "old bookmark now is newer history");
+  Assert.equal(links[1].type, "history", "old bookmark now is history");
+  Assert.equal(links[2].url, testURI, "still have the history");
+
+  // Bookmark the history item
+  await PlacesUtils.bookmarks.insert({
+    parentGuid: PlacesUtils.bookmarks.unfiledGuid,
+    title: "now a bookmark",
+    url: testURI
+  });
+
+  links = await provider.getHighlights();
+  Assert.equal(links.length, 3, "a visited bookmark doesn't appear as bookmark and history");
+  Assert.equal(links[0].url, testURI, "history is now the first, i.e., most recent, bookmark");
+  Assert.equal(links[0].type, "bookmark", "was history now bookmark");
+  Assert.equal(links[1].url, bookmarks[1].url, "still have younger bookmark now second");
+  Assert.equal(links[2].url, bookmarks[0].url, "still have older bookmark now third");
+});
+
 add_task(async function getTopFrecentSites() {
   await setUpActivityStreamTest();
 

@@ -89,6 +89,11 @@
     "itemlastmodifiedindex", "moz_bookmarks", "fk, lastModified", "" \
   )
 
+#define CREATE_IDX_MOZ_BOOKMARKS_DATEADDED \
+  CREATE_PLACES_IDX( \
+    "dateaddedindex", "moz_bookmarks", "dateAdded", "" \
+  )
+
 #define CREATE_IDX_MOZ_BOOKMARKS_GUID \
   CREATE_PLACES_IDX( \
     "guid_uniqueindex", "moz_bookmarks", "guid", "UNIQUE" \
