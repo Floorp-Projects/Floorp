@@ -9,6 +9,7 @@
 
 #include "mozilla/dom/BindingDeclarations.h"
 #include "mozilla/dom/StreamFilterDataEventBinding.h"
+#include "mozilla/extensions/StreamFilter.h"
 
 #include "jsapi.h"
 
