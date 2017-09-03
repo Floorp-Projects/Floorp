@@ -3,3 +3,4 @@
 As of right now this is an implementation
 for the server side of the WebDriver API in Rust,
 not the client side.
+
