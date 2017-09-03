@@ -125,7 +125,7 @@ Error Stream::createConsumerGLTextureExternal(const AttributeMap &attributes, gl
         ASSERT(mPlanes[0].texture != nullptr);
         mPlanes[0].texture->bindStream(this);
         mConsumerType = ConsumerType::GLTextureRGB;
-        mPlaneCount   = 1;
+        mPlaneCount = 1;
     }
     else
     {
@@ -163,9 +163,9 @@ Error Stream::createConsumerGLTextureExternal(const AttributeMap &attributes, gl
 Error Stream::createProducerD3D11TextureNV12(const AttributeMap &attributes)
 {
     ASSERT(mState == EGL_STREAM_STATE_CONNECTING_KHR);
-    ASSERT(mConsumerType == ConsumerType::GLTextureYUV);
+    ASSERT(mConsumerType == ConsumerType::GLTextureRGB ||
+           mConsumerType == ConsumerType::GLTextureYUV);
     ASSERT(mProducerType == ProducerType::NoProducer);
-    ASSERT(mPlaneCount == 2);
 
     mProducerImplementation = mDisplay->getImplementation()->createStreamProducerD3DTextureNV12(
         mConsumerType, attributes);
@@ -174,6 +174,7 @@ Error Stream::createProducerD3D11TextureNV12(const AttributeMap &attributes)
 
     return Error(EGL_SUCCESS);
 }
+
 
 // Called when the consumer of this stream starts using the stream
 Error Stream::consumerAcquire()
@@ -226,14 +227,14 @@ bool Stream::isConsumerBoundToContext(const gl::Context *context) const
     return (context == mContext);
 }
 
-Error Stream::validateD3D11NV12Texture(void *texture) const
+Error Stream::validateD3D11NV12Texture(void *texture, const AttributeMap &attributes) const
 {
     ASSERT(mConsumerType == ConsumerType::GLTextureRGB ||
            mConsumerType == ConsumerType::GLTextureYUV);
     ASSERT(mProducerType == ProducerType::D3D11TextureNV12);
     ASSERT(mProducerImplementation != nullptr);
 
-    return mProducerImplementation->validateD3DNV12Texture(texture);
+    return mProducerImplementation->validateD3DNV12Texture(texture, attributes);
 }
 
 Error Stream::postD3D11NV12Texture(void *texture, const AttributeMap &attributes)

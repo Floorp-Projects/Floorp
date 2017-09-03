@@ -43,14 +43,16 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=1212477
       "Get a context using unexisting id should throw"
     );
 
-    let webgl = anonymousContent.getCanvasContext("canvas-webgl", "webgl");
+    const normalWebGL = document.createElement('canvas').getContext('webgl');
+    if (normalWebGL) {
+      let webgl = anonymousContent.getCanvasContext("canvas-webgl", "webgl");
 
-    is(webgl.toString(), "[object WebGLRenderingContext]",
-        "WebGL Context is returned properly");
+      is(webgl.toString(), "[object WebGLRenderingContext]",
+          "WebGL Context is returned properly");
 
-    is(webgl.canvas, null,
-        "WebGL context's canvas property is null in anonymous content");
-
+      is(webgl.canvas, null,
+          "WebGL context's canvas property is null in anonymous content");
+    }
     chromeDocument.removeAnonymousContent(anonymousContent);
   </script>
 </body>

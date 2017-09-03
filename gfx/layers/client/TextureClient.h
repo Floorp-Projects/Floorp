@@ -266,6 +266,7 @@ public:
   virtual void Forget(LayersIPCChannel* aAllocator) {}
 
   virtual bool Serialize(SurfaceDescriptor& aDescriptor) = 0;
+  virtual void GetSubDescriptor(GPUVideoSubDescriptor* aOutDesc) { }
 
   virtual TextureData*
   CreateSimilar(LayersIPCChannel* aAllocator,
@@ -598,12 +599,13 @@ public:
   const TextureData* GetInternalData() const { return mData; }
 
   uint64_t GetSerial() const { return mSerial; }
+  void GPUVideoDesc(SurfaceDescriptorGPUVideo* aOutDesc);
 
   void CancelWaitForRecycle();
 
   /**
    * Set last transaction id of CompositableForwarder.
-   * 
+   *
    * Called when TextureClient has TextureFlags::RECYCLE flag.
    * When CompositableForwarder forwards the TextureClient with
    * TextureFlags::RECYCLE, it holds TextureClient's ref until host side
@@ -642,7 +644,7 @@ public:
 
 private:
   static void TextureClientRecycleCallback(TextureClient* aClient, void* aClosure);
- 
+
   // Internal helpers for creating texture clients using the actual forwarder instead
   // of KnowsCompositor. TextureClientPool uses these to let it cache texture clients
   // per-process instead of per ShadowLayerForwarder, but everyone else should
@@ -657,7 +659,7 @@ private:
                    BackendSelector aSelector,
                    TextureFlags aTextureFlags,
                    TextureAllocationFlags aAllocFlags = ALLOC_DEFAULT);
-  
+
   static already_AddRefed<TextureClient>
   CreateForRawBufferAccess(LayersIPCChannel* aAllocator,
                            gfx::SurfaceFormat aFormat,
