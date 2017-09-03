@@ -10,6 +10,7 @@
 #include "nsComponentManagerUtils.h"
 #include "nsISupportsPrimitives.h"
 #include "nsIMutableArray.h"
+#include "nsXULAppAPI.h"
 #include "prlink.h"
 
 #include <gconf/gconf-client.h>
@@ -75,6 +76,10 @@ nsGConfService::Init()
     GCONF_FUNCTIONS
   };
 #undef FUNC
+
+  if (NS_WARN_IF(XRE_IsContentProcess())) {
+    return NS_ERROR_SERVICE_NOT_AVAILABLE;
+  }
 
   if (!gconfLib) {
     gconfLib = PR_LoadLibrary("libgconf-2.so.4");
