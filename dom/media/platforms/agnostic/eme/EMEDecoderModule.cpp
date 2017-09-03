@@ -206,7 +206,7 @@ public:
     return decoder->Shutdown();
   }
 
-  nsCString GetDescriptionName() const override
+  const char* GetDescriptionName() const override
   {
     return mDecoder->GetDescriptionName();
   }

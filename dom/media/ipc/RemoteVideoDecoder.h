@@ -35,10 +35,7 @@ public:
   bool IsHardwareAccelerated(nsACString& aFailureReason) const override;
   void SetSeekThreshold(const media::TimeUnit& aTime) override;
 
-  nsCString GetDescriptionName() const override
-  {
-    return NS_LITERAL_CSTRING("RemoteVideoDecoder");
-  }
+  const char* GetDescriptionName() const override { return "RemoteVideoDecoder"; }
   ConversionRequired NeedsConversion() const override;
 
 private:

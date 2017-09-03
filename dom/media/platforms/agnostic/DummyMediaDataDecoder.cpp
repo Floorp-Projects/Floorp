@@ -14,7 +14,7 @@ namespace mozilla {
 DummyDataCreator::~DummyDataCreator() {}
 
 DummyMediaDataDecoder::DummyMediaDataDecoder(UniquePtr<DummyDataCreator>&& aCreator,
-                                             const nsACString& aDescription,
+                                             const char* aDescription,
                                              const CreateDecoderParams& aParams)
   : mCreator(Move(aCreator))
   , mIsH264(MP4Decoder::IsH264(aParams.mConfig.mMimeType))
@@ -77,10 +77,10 @@ DummyMediaDataDecoder::Flush()
   return FlushPromise::CreateAndResolve(true, __func__);
 }
 
-nsCString
+const char*
 DummyMediaDataDecoder::GetDescriptionName() const
 {
-  return NS_LITERAL_CSTRING("blank media data decoder");
+  return "blank media data decoder";
 }
 
 MediaDataDecoder::ConversionRequired

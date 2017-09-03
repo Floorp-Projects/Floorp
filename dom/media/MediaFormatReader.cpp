@@ -479,7 +479,7 @@ MediaFormatReader::DecoderData::ShutdownDecoder()
   // mShutdownPromisePool will handle the order of decoder shutdown so
   // we can forget mDecoder and be ready to create a new one.
   mDecoder = nullptr;
-  mDescription = NS_LITERAL_CSTRING("shutdown");
+  mDescription = "shutdown";
   mOwner->ScheduleUpdate(mType == MediaData::AUDIO_DATA
                          ? TrackType::kAudioTrack
                          : TrackType::kVideoTrack);
@@ -630,7 +630,7 @@ public:
   {
     return mDecoder->IsHardwareAccelerated(aFailureReason);
   }
-  nsCString GetDescriptionName() const override
+  const char* GetDescriptionName() const override
   {
     return mDecoder->GetDescriptionName();
   }
@@ -2445,7 +2445,7 @@ MediaFormatReader::Update(TrackType aTrack)
        uint32_t(size_t(decoder.mSizeOfQueue)),
        decoder.mDecodeRequest.Exists(),
        decoder.mFlushing,
-       decoder.mDescription.get(),
+       decoder.mDescription,
        uint32_t(decoder.mOutput.Length()),
        decoder.mWaitingForData,
        decoder.mDemuxEOS,
@@ -3113,8 +3113,8 @@ void
 MediaFormatReader::GetMozDebugReaderData(nsACString& aString)
 {
   nsAutoCString result;
-  nsAutoCString audioName("unavailable");
-  nsAutoCString videoName = audioName;
+  const char* audioName = "unavailable";
+  const char* videoName = audioName;
 
   if (HasAudio()) {
     MutexAutoLock lock(mAudio.mMutex);
@@ -3125,7 +3125,7 @@ MediaFormatReader::GetMozDebugReaderData(nsACString& aString)
     videoName = mVideo.mDescription;
   }
 
-  result += nsPrintfCString("Audio Decoder: %s\n", audioName.get());
+  result += nsPrintfCString("Audio Decoder: %s\n", audioName);
   result += nsPrintfCString("Audio Frames Decoded: %" PRIu64 "\n",
                             mAudio.mNumSamplesOutputTotal);
   if (HasAudio()) {
@@ -3152,7 +3152,7 @@ MediaFormatReader::GetMozDebugReaderData(nsACString& aString)
       mAudio.mWaitingForKey,
       mAudio.mLastStreamSourceID);
   }
-  result += nsPrintfCString("Video Decoder: %s\n", videoName.get());
+  result += nsPrintfCString("Video Decoder: %s\n", videoName);
   result +=
     nsPrintfCString("Hardware Video Decoding: %s\n",
                     VideoIsHardwareAccelerated() ? "enabled" : "disabled");

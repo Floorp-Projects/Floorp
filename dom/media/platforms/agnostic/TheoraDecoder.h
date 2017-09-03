@@ -27,9 +27,9 @@ public:
   // Return true if mimetype is a Theora codec
   static bool IsTheora(const nsACString& aMimeType);
 
-  nsCString GetDescriptionName() const override
+  const char* GetDescriptionName() const override
   {
-    return NS_LITERAL_CSTRING("theora video decoder");
+    return "theora video decoder";
   }
 
 private:
