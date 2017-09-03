@@ -407,15 +407,17 @@ var ClickEventHandler = {
     }
 
     // Handle click events from about pages
-    if (ownerDoc.documentURI.startsWith("about:certerror")) {
-      this.onCertError(originalTarget, ownerDoc);
-      return;
-    } else if (ownerDoc.documentURI.startsWith("about:blocked")) {
-      this.onAboutBlocked(originalTarget, ownerDoc);
-      return;
-    } else if (ownerDoc.documentURI.startsWith("about:neterror")) {
-      this.onAboutNetError(event, ownerDoc.documentURI);
-      return;
+    if (event.button == 0) {
+      if (ownerDoc.documentURI.startsWith("about:certerror")) {
+        this.onCertError(originalTarget, ownerDoc);
+        return;
+      } else if (ownerDoc.documentURI.startsWith("about:blocked")) {
+        this.onAboutBlocked(originalTarget, ownerDoc);
+        return;
+      } else if (ownerDoc.documentURI.startsWith("about:neterror")) {
+        this.onAboutNetError(event, ownerDoc.documentURI);
+        return;
+      }
     }
 
     let [href, node, principal] = this._hrefAndLinkNodeForClickEvent(event);
