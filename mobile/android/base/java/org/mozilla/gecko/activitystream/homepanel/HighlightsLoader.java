@@ -6,12 +6,16 @@
 package org.mozilla.gecko.activitystream.homepanel;
 
 import android.content.Context;
+import android.content.SharedPreferences;
+import android.content.res.Resources;
 import android.database.ContentObserver;
 import android.database.Cursor;
 import android.os.SystemClock;
 import android.support.annotation.WorkerThread;
 import android.support.v4.content.AsyncTaskLoader;
 
+import org.mozilla.gecko.GeckoSharedPrefs;
+import org.mozilla.gecko.R;
 import org.mozilla.gecko.Telemetry;
 import org.mozilla.gecko.activitystream.ranking.HighlightsRanking;
 import org.mozilla.gecko.db.BrowserContract;
@@ -63,7 +67,12 @@ import java.util.List;
             // From now on get notified about content updates and reload data - until loader is reset.
             enableContentUpdates();
 
-            final List<Highlight> highlights = HighlightsRanking.rank(candidatesCursor, highlightsLimit);
+            final SharedPreferences prefs = GeckoSharedPrefs.forProfile(getContext());
+            final Resources res = getContext().getResources();
+            final boolean includeHistory = prefs.getBoolean(ActivityStreamPanel.PREF_VISITED_ENABLED, res.getBoolean(R.bool.pref_activitystream_visited_enabled_default));
+            final boolean includeBookmarks = prefs.getBoolean(ActivityStreamPanel.PREF_BOOKMARKS_ENABLED, res.getBoolean(R.bool.pref_activitystream_recentbookmarks_enabled_default));
+
+            final List<Highlight> highlights = HighlightsRanking.rank(candidatesCursor, highlightsLimit, includeHistory, includeBookmarks);
             forceLoadHighlightMetadata(highlights); // force load now that we have a short list of the data.
 
             addToPerformanceHistogram(startTime);

@@ -11,6 +11,8 @@ import android.support.annotation.VisibleForTesting;
 import android.text.TextUtils;
 import android.util.Log;
 import android.util.SparseArray;
+
+import org.mozilla.gecko.SharedPreferencesHelper;
 import org.mozilla.gecko.activitystream.homepanel.model.Highlight;
 import org.mozilla.gecko.util.MapUtils;
 
@@ -22,6 +24,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.Set;
 
+import static android.R.attr.candidatesTextStyleSpans;
 import static android.R.attr.filter;
 import static java.util.Collections.sort;
 import static org.mozilla.gecko.activitystream.ranking.HighlightCandidate.FEATURE_AGE_IN_DAYS;
@@ -103,8 +106,10 @@ public class HighlightsRanking {
      * THIS METHOD IS CRITICAL FOR HIGHLIGHTS PERFORMANCE AND HAS BEEN OPTIMIZED (bug 1369604):
      * please be careful what you add to it!
      */
-    public static List<Highlight> rank(Cursor cursor, int limit) {
+    public static List<Highlight> rank(Cursor cursor, int limit, boolean includeHistory, boolean includeBookmarks) {
         List<HighlightCandidate> highlights = extractFeatures(cursor);
+
+        filterOutItemsPreffedOff(highlights, includeHistory, includeBookmarks);
 
         normalize(highlights);
 
@@ -202,6 +207,23 @@ public class HighlightsRanking {
                     return 1;
                 } else {
                     return 0;
+                }
+            }
+        });
+    }
+
+    @VisibleForTesting static void filterOutItemsPreffedOff(List<HighlightCandidate> candidates, final boolean includeHistory, final boolean includeBookmarks) {
+        // Pinned items are not bookmarks, and will be grouped with history.
+        filter(candidates, new Func1<HighlightCandidate, Boolean>() {
+            @Override
+            public Boolean call(HighlightCandidate candidate) {
+                if (includeBookmarks && includeHistory) {
+                    return true;
+                } else if (!includeBookmarks && !includeHistory) {
+                    return false;
+                } else {
+                    // Either B or H are enabled, but not both, so we can filter on bookmark state.
+                    return includeBookmarks == candidate.isBookmark();
                 }
             }
         });
