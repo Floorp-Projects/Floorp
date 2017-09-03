@@ -170,6 +170,17 @@ PerformanceObserver::Observe(const PerformanceObserverInit& aOptions,
   mEntryTypes.SwapElements(validEntryTypes);
 
   mPerformance->AddObserver(this);
+
+  if (aOptions.mBuffered) {
+    for (auto entryType : mEntryTypes) {
+      nsTArray<RefPtr<PerformanceEntry>> existingEntries;
+      mPerformance->GetEntriesByType(entryType, existingEntries);
+      if (!existingEntries.IsEmpty()) {
+        mQueuedEntries.AppendElements(existingEntries);
+      }
+    }
+  }
+
   mConnected = true;
 }
 
