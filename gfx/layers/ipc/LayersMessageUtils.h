@@ -440,14 +440,6 @@ struct ParamTraits<mozilla::layers::FocusTarget::ScrollTargets>
 };
 
 template <>
-struct ParamTraits<mozilla::layers::FocusTarget::FocusTargetType>
-  : public ContiguousEnumSerializerInclusive<
-             mozilla::layers::FocusTarget::FocusTargetType,
-             mozilla::layers::FocusTarget::eNone,
-             mozilla::layers::FocusTarget::sHighestFocusTargetType>
-{};
-
-template <>
 struct ParamTraits<mozilla::layers::FocusTarget::NoFocusTarget>
   : public EmptyStructSerializer<mozilla::layers::FocusTarget::NoFocusTarget>
 {};
