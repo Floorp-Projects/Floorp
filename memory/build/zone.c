@@ -153,6 +153,9 @@ other_zone_free(malloc_zone_t* original_zone, void* ptr)
   // one. We can't call libSystem's free directly because we're exporting
   // free from libmozglue and we'd pick that one, so we manually find the
   // right zone and free with it.
+  if (!ptr) {
+    return;
+  }
   malloc_zone_t* zone = malloc_zone_from_ptr(ptr);
   // The system allocator crashes voluntarily by default when a pointer can't
   // be traced back to a zone. Do the same.
