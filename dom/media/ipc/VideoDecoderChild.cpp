@@ -327,7 +327,6 @@ VideoDecoderChild::Shutdown()
 bool
 VideoDecoderChild::IsHardwareAccelerated(nsACString& aFailureReason) const
 {
-  AssertOnManagerThread();
   aFailureReason = mHardwareAcceleratedReason;
   return mIsHardwareAccelerated;
 }
@@ -351,7 +350,6 @@ VideoDecoderChild::SetSeekThreshold(const media::TimeUnit& aTime)
 MediaDataDecoder::ConversionRequired
 VideoDecoderChild::NeedsConversion() const
 {
-  AssertOnManagerThread();
   return mConversion;
 }
 
