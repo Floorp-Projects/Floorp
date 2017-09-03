@@ -91,7 +91,7 @@
 Object.defineProperty(exports, "__esModule", {
   value: true
 });
-exports.localized = exports.animationStarted = exports.normalizeWheelEventDelta = exports.binarySearchFirstItem = exports.watchScroll = exports.scrollIntoView = exports.getOutputScale = exports.approximateFraction = exports.roundToDivide = exports.getVisibleElements = exports.parseQueryString = exports.noContextMenuHandler = exports.getPDFFileNameFromURL = exports.ProgressBar = exports.EventBus = exports.NullL10n = exports.mozL10n = exports.RendererType = exports.cloneObj = exports.VERTICAL_PADDING = exports.SCROLLBAR_PADDING = exports.MAX_AUTO_SCALE = exports.UNKNOWN_SCALE = exports.MAX_SCALE = exports.MIN_SCALE = exports.DEFAULT_SCALE = exports.DEFAULT_SCALE_VALUE = exports.CSS_UNITS = undefined;
+exports.waitOnEventOrTimeout = exports.WaitOnType = exports.localized = exports.animationStarted = exports.normalizeWheelEventDelta = exports.binarySearchFirstItem = exports.watchScroll = exports.scrollIntoView = exports.getOutputScale = exports.approximateFraction = exports.roundToDivide = exports.getVisibleElements = exports.parseQueryString = exports.noContextMenuHandler = exports.getPDFFileNameFromURL = exports.ProgressBar = exports.EventBus = exports.NullL10n = exports.mozL10n = exports.RendererType = exports.cloneObj = exports.VERTICAL_PADDING = exports.SCROLLBAR_PADDING = exports.MAX_AUTO_SCALE = exports.UNKNOWN_SCALE = exports.MAX_SCALE = exports.MIN_SCALE = exports.DEFAULT_SCALE = exports.DEFAULT_SCALE_VALUE = exports.CSS_UNITS = undefined;
 
 var _pdfjsLib = __webpack_require__(1);
 
@@ -382,6 +382,36 @@ function cloneObj(obj) {
   }
   return result;
 }
+const WaitOnType = {
+  EVENT: 'event',
+  TIMEOUT: 'timeout'
+};
+function waitOnEventOrTimeout({ target, name, delay = 0 }) {
+  if (typeof target !== 'object' || !(name && typeof name === 'string') || !(Number.isInteger(delay) && delay >= 0)) {
+    return Promise.reject(new Error('waitOnEventOrTimeout - invalid paramaters.'));
+  }
+  let capability = (0, _pdfjsLib.createPromiseCapability)();
+  function handler(type) {
+    if (target instanceof EventBus) {
+      target.off(name, eventHandler);
+    } else {
+      target.removeEventListener(name, eventHandler);
+    }
+    if (timeout) {
+      clearTimeout(timeout);
+    }
+    capability.resolve(type);
+  }
+  let eventHandler = handler.bind(null, WaitOnType.EVENT);
+  if (target instanceof EventBus) {
+    target.on(name, eventHandler);
+  } else {
+    target.addEventListener(name, eventHandler);
+  }
+  let timeoutHandler = handler.bind(null, WaitOnType.TIMEOUT);
+  let timeout = setTimeout(timeoutHandler, delay);
+  return capability.promise;
+}
 let animationStarted = new Promise(function (resolve) {
   window.requestAnimationFrame(resolve);
 });
@@ -505,6 +535,8 @@ exports.binarySearchFirstItem = binarySearchFirstItem;
 exports.normalizeWheelEventDelta = normalizeWheelEventDelta;
 exports.animationStarted = animationStarted;
 exports.localized = localized;
+exports.WaitOnType = WaitOnType;
+exports.waitOnEventOrTimeout = waitOnEventOrTimeout;
 
 /***/ }),
 /* 1 */
@@ -838,7 +870,6 @@ const DefaultExternalServices = {
 };
 let PDFViewerApplication = {
   initialBookmark: document.location.hash.substring(1),
-  initialDestination: null,
   initialized: false,
   fellback: false,
   appConfig: null,
@@ -1376,19 +1407,14 @@ let PDFViewerApplication = {
     firstPagePromise.then(pdfPage => {
       this.loadingBar.setWidth(this.appConfig.viewerContainer);
       if (!_pdfjsLib.PDFJS.disableHistory && !this.isViewerEmbedded) {
-        if (!this.viewerPrefs['showPreviousViewOnLoad']) {
-          this.pdfHistory.clearHistoryState();
-        }
-        this.pdfHistory.initialize(this.documentFingerprint);
-        if (this.pdfHistory.initialDestination) {
-          this.initialDestination = this.pdfHistory.initialDestination;
-        } else if (this.pdfHistory.initialBookmark) {
+        let resetHistory = !this.viewerPrefs['showPreviousViewOnLoad'];
+        this.pdfHistory.initialize(id, resetHistory);
+        if (this.pdfHistory.initialBookmark) {
           this.initialBookmark = this.pdfHistory.initialBookmark;
         }
       }
       let initialParams = {
-        destination: this.initialDestination,
-        bookmark: this.initialBookmark,
+        bookmark: null,
         hash: null
       };
       let storePromise = store.getMultiple({
@@ -1414,20 +1440,20 @@ let PDFViewerApplication = {
           sidebarView
         };
       }).then(({ hash, sidebarView }) => {
-        this.setInitialView(hash, { sidebarView });
+        initialParams.bookmark = this.initialBookmark;
         initialParams.hash = hash;
+        this.setInitialView(hash, { sidebarView });
         if (!this.isViewerEmbedded) {
           pdfViewer.focus();
         }
         return pagesPromise;
       }).then(() => {
-        if (!initialParams.destination && !initialParams.bookmark && !initialParams.hash) {
+        if (!initialParams.bookmark && !initialParams.hash) {
           return;
         }
         if (pdfViewer.hasEqualPageSizes) {
           return;
         }
-        this.initialDestination = initialParams.destination;
         this.initialBookmark = initialParams.bookmark;
         pdfViewer.currentScaleValue = pdfViewer.currentScaleValue;
         this.setInitialView(initialParams.hash);
@@ -1530,12 +1556,8 @@ let PDFViewerApplication = {
   setInitialView(storedHash, { sidebarView } = {}) {
     this.isInitialViewSet = true;
     this.pdfSidebar.setInitialView(sidebarView);
-    if (this.initialDestination) {
-      this.pdfLinkService.navigateTo(this.initialDestination);
-      this.initialDestination = null;
-    } else if (this.initialBookmark) {
+    if (this.initialBookmark) {
       this.pdfLinkService.setHash(this.initialBookmark);
-      this.pdfHistory.push({ hash: this.initialBookmark }, true);
       this.initialBookmark = null;
     } else if (storedHash) {
       this.pdfLinkService.setHash(storedHash);
@@ -1938,7 +1960,6 @@ function webViewerUpdateViewarea(evt) {
   let href = PDFViewerApplication.pdfLinkService.getAnchorUrl(location.pdfOpenParams);
   PDFViewerApplication.appConfig.toolbar.viewBookmark.href = href;
   PDFViewerApplication.appConfig.secondaryToolbar.viewBookmarkButton.href = href;
-  PDFViewerApplication.pdfHistory.updateCurrentBookmark(location.pdfOpenParams, location.pageNumber);
   let currentPage = PDFViewerApplication.pdfViewer.getPageView(PDFViewerApplication.page - 1);
   let loading = currentPage.renderingState !== _pdf_rendering_queue.RenderingStates.FINISHED;
   PDFViewerApplication.toolbar.updateLoadingIndicatorState(loading);
@@ -1955,16 +1976,14 @@ function webViewerResize() {
   pdfViewer.update();
 }
 function webViewerHashchange(evt) {
-  if (PDFViewerApplication.pdfHistory.isHashChangeUnlocked) {
-    let hash = evt.hash;
-    if (!hash) {
-      return;
-    }
-    if (!PDFViewerApplication.isInitialViewSet) {
-      PDFViewerApplication.initialBookmark = hash;
-    } else {
-      PDFViewerApplication.pdfLinkService.setHash(hash);
-    }
+  let hash = evt.hash;
+  if (!hash) {
+    return;
+  }
+  if (!PDFViewerApplication.isInitialViewSet) {
+    PDFViewerApplication.initialBookmark = hash;
+  } else if (!PDFViewerApplication.pdfHistory.popStateInProgress) {
+    PDFViewerApplication.pdfLinkService.setHash(hash);
   }
 }
 let webViewerFileInputChange;
@@ -2302,22 +2321,6 @@ function webViewerKeyDown(evt) {
       ensureViewerFocused = true;
     }
   }
-  if (cmd === 2) {
-    switch (evt.keyCode) {
-      case 37:
-        if (isViewerInPresentationMode) {
-          PDFViewerApplication.pdfHistory.back();
-          handled = true;
-        }
-        break;
-      case 39:
-        if (isViewerInPresentationMode) {
-          PDFViewerApplication.pdfHistory.forward();
-          handled = true;
-        }
-        break;
-    }
-  }
   if (ensureViewerFocused && !pdfViewer.containsElement(curElement)) {
     pdfViewer.focus();
   }
@@ -2424,17 +2427,18 @@ class PDFLinkService {
         console.error(`PDFLinkService.navigateTo: "${pageNumber}" is not ` + `a valid page number, for dest="${dest}".`);
         return;
       }
+      if (this.pdfHistory) {
+        this.pdfHistory.pushCurrentPosition();
+        this.pdfHistory.push({
+          namedDest,
+          explicitDest,
+          pageNumber
+        });
+      }
       this.pdfViewer.scrollPageIntoView({
         pageNumber,
         destArray: explicitDest
       });
-      if (this.pdfHistory) {
-        this.pdfHistory.push({
-          dest: explicitDest,
-          hash: namedDest,
-          page: pageNumber
-        });
-      }
     };
     new Promise((resolve, reject) => {
       if (typeof dest === 'string') {
@@ -2483,9 +2487,6 @@ class PDFLinkService {
         });
       }
       if ('nameddest' in params) {
-        if (this.pdfHistory) {
-          this.pdfHistory.updateNextHashParam(params.nameddest);
-        }
         this.navigateTo(params.nameddest);
         return;
       }
@@ -2538,9 +2539,6 @@ class PDFLinkService {
         }
       } catch (ex) {}
       if (typeof dest === 'string' || isValidExplicitDestination(dest)) {
-        if (this.pdfHistory) {
-          this.pdfHistory.updateNextHashParam(dest);
-        }
         this.navigateTo(dest);
         return;
       }
@@ -4410,302 +4408,345 @@ exports.PDFFindBar = PDFFindBar;
 Object.defineProperty(exports, "__esModule", {
   value: true
 });
-exports.PDFHistory = undefined;
+exports.isDestsEqual = exports.PDFHistory = undefined;
+
+var _ui_utils = __webpack_require__(0);
 
 var _dom_events = __webpack_require__(2);
 
-function PDFHistory(options) {
-  this.linkService = options.linkService;
-  this.eventBus = options.eventBus || (0, _dom_events.getGlobalEventBus)();
-  this.initialized = false;
-  this.initialDestination = null;
-  this.initialBookmark = null;
+const HASH_CHANGE_TIMEOUT = 1000;
+const POSITION_UPDATED_THRESHOLD = 50;
+const UPDATE_VIEWAREA_TIMEOUT = 2000;
+function getCurrentHash() {
+  return document.location.hash;
 }
-PDFHistory.prototype = {
-  initialize: function pdfHistoryInitialize(fingerprint) {
-    this.initialized = true;
-    this.reInitialized = false;
-    this.allowHashChange = true;
-    this.historyUnlocked = true;
-    this.isViewerInPresentationMode = false;
-    this.previousHash = window.location.hash.substring(1);
-    this.currentBookmark = '';
-    this.currentPage = 0;
-    this.updatePreviousBookmark = false;
-    this.previousBookmark = '';
-    this.previousPage = 0;
-    this.nextHashParam = '';
+function parseCurrentHash(linkService) {
+  let hash = unescape(getCurrentHash()).substring(1);
+  let params = (0, _ui_utils.parseQueryString)(hash);
+  let page = params.page | 0;
+  if (!(Number.isInteger(page) && page > 0 && page <= linkService.pagesCount)) {
+    page = null;
+  }
+  return {
+    hash,
+    page
+  };
+}
+class PDFHistory {
+  constructor({ linkService, eventBus }) {
+    this.linkService = linkService;
+    this.eventBus = eventBus || (0, _dom_events.getGlobalEventBus)();
+    this.initialized = false;
+    this.initialBookmark = null;
+    this._boundEvents = Object.create(null);
+    this._isViewerInPresentationMode = false;
+    this._isPagesLoaded = false;
+    this.eventBus.on('presentationmodechanged', evt => {
+      this._isViewerInPresentationMode = evt.active || evt.switchInProgress;
+    });
+    this.eventBus.on('pagesloaded', evt => {
+      this._isPagesLoaded = !!evt.pagesCount;
+    });
+  }
+  initialize(fingerprint, resetHistory = false) {
+    if (!fingerprint || typeof fingerprint !== 'string') {
+      console.error('PDFHistory.initialize: The "fingerprint" must be a non-empty string.');
+      return;
+    }
+    let reInitialized = this.initialized && this.fingerprint !== fingerprint;
     this.fingerprint = fingerprint;
-    this.currentUid = this.uid = 0;
-    this.current = {};
-    var state = window.history.state;
-    if (this._isStateObjectDefined(state)) {
-      if (state.target.dest) {
-        this.initialDestination = state.target.dest;
-      } else {
-        this.initialBookmark = state.target.hash;
-      }
-      this.currentUid = state.uid;
-      this.uid = state.uid + 1;
-      this.current = state.target;
-    } else {
-      if (state && state.fingerprint && this.fingerprint !== state.fingerprint) {
-        this.reInitialized = true;
-      }
-      this._pushOrReplaceState({ fingerprint: this.fingerprint }, true);
-    }
-    var self = this;
-    window.addEventListener('popstate', function pdfHistoryPopstate(evt) {
-      if (!self.historyUnlocked) {
-        return;
-      }
-      if (evt.state) {
-        self._goTo(evt.state);
-        return;
-      }
-      if (self.uid === 0) {
-        var previousParams = self.previousHash && self.currentBookmark && self.previousHash !== self.currentBookmark ? {
-          hash: self.currentBookmark,
-          page: self.currentPage
-        } : { page: 1 };
-        replacePreviousHistoryState(previousParams, function () {
-          updateHistoryWithCurrentHash();
-        });
-      } else {
-        updateHistoryWithCurrentHash();
-      }
-    });
-    function updateHistoryWithCurrentHash() {
-      self.previousHash = window.location.hash.slice(1);
-      self._pushToHistory({ hash: self.previousHash }, false, true);
-      self._updatePreviousBookmark();
-    }
-    function replacePreviousHistoryState(params, callback) {
-      self.historyUnlocked = false;
-      self.allowHashChange = false;
-      window.addEventListener('popstate', rewriteHistoryAfterBack);
-      history.back();
-      function rewriteHistoryAfterBack() {
-        window.removeEventListener('popstate', rewriteHistoryAfterBack);
-        window.addEventListener('popstate', rewriteHistoryAfterForward);
-        self._pushToHistory(params, false, true);
-        history.forward();
-      }
-      function rewriteHistoryAfterForward() {
-        window.removeEventListener('popstate', rewriteHistoryAfterForward);
-        self.allowHashChange = true;
-        self.historyUnlocked = true;
-        callback();
-      }
-    }
-    function pdfHistoryBeforeUnload() {
-      var previousParams = self._getPreviousParams(null, true);
-      if (previousParams) {
-        var replacePrevious = !self.current.dest && self.current.hash !== self.previousHash;
-        self._pushToHistory(previousParams, false, replacePrevious);
-        self._updatePreviousBookmark();
-      }
-      window.removeEventListener('beforeunload', pdfHistoryBeforeUnload);
-    }
-    window.addEventListener('beforeunload', pdfHistoryBeforeUnload);
-    window.addEventListener('pageshow', function pdfHistoryPageShow(evt) {
-      window.addEventListener('beforeunload', pdfHistoryBeforeUnload);
-    });
-    self.eventBus.on('presentationmodechanged', function (e) {
-      self.isViewerInPresentationMode = e.active;
-    });
-  },
-  clearHistoryState: function pdfHistory_clearHistoryState() {
-    this._pushOrReplaceState(null, true);
-  },
-  _isStateObjectDefined: function pdfHistory_isStateObjectDefined(state) {
-    return state && state.uid >= 0 && state.fingerprint && this.fingerprint === state.fingerprint && state.target && state.target.hash ? true : false;
-  },
-  _pushOrReplaceState: function pdfHistory_pushOrReplaceState(stateObj, replace) {
-    if (replace) {
-      window.history.replaceState(stateObj, '');
-    } else {
-      window.history.pushState(stateObj, '');
-    }
-  },
-  get isHashChangeUnlocked() {
     if (!this.initialized) {
-      return true;
+      this._bindEvents();
     }
-    return this.allowHashChange;
-  },
-  _updatePreviousBookmark: function pdfHistory_updatePreviousBookmark() {
-    if (this.updatePreviousBookmark && this.currentBookmark && this.currentPage) {
-      this.previousBookmark = this.currentBookmark;
-      this.previousPage = this.currentPage;
-      this.updatePreviousBookmark = false;
-    }
-  },
-  updateCurrentBookmark: function pdfHistoryUpdateCurrentBookmark(bookmark, pageNum) {
-    if (this.initialized) {
-      this.currentBookmark = bookmark.substring(1);
-      this.currentPage = pageNum | 0;
-      this._updatePreviousBookmark();
-    }
-  },
-  updateNextHashParam: function pdfHistoryUpdateNextHashParam(param) {
-    if (this.initialized) {
-      this.nextHashParam = param;
-    }
-  },
-  push: function pdfHistoryPush(params, isInitialBookmark) {
-    if (!(this.initialized && this.historyUnlocked)) {
-      return;
-    }
-    if (params.dest && !params.hash) {
-      params.hash = this.current.hash && this.current.dest && this.current.dest === params.dest ? this.current.hash : this.linkService.getDestinationHash(params.dest).split('#')[1];
-    }
-    if (params.page) {
-      params.page |= 0;
-    }
-    if (isInitialBookmark) {
-      var target = window.history.state.target;
-      if (!target) {
-        this._pushToHistory(params, false);
-        this.previousHash = window.location.hash.substring(1);
-      }
-      this.updatePreviousBookmark = this.nextHashParam ? false : true;
-      if (target) {
-        this._updatePreviousBookmark();
-      }
-      return;
-    }
-    if (this.nextHashParam) {
-      if (this.nextHashParam === params.hash) {
-        this.nextHashParam = null;
-        this.updatePreviousBookmark = true;
+    let state = window.history.state;
+    this.initialized = true;
+    this.initialBookmark = null;
+    this._popStateInProgress = false;
+    this._blockHashChange = 0;
+    this._currentHash = getCurrentHash();
+    this._numPositionUpdates = 0;
+    this._currentUid = this._uid = 0;
+    this._destination = null;
+    this._position = null;
+    if (!this._isValidState(state) || resetHistory) {
+      let { hash, page } = parseCurrentHash(this.linkService);
+      if (!hash || reInitialized || resetHistory) {
+        this._pushOrReplaceState(null, true);
         return;
       }
-      this.nextHashParam = null;
-    }
-    if (params.hash) {
-      if (this.current.hash) {
-        if (this.current.hash !== params.hash) {
-          this._pushToHistory(params, true);
-        } else {
-          if (!this.current.page && params.page) {
-            this._pushToHistory(params, false, true);
-          }
-          this.updatePreviousBookmark = true;
-        }
-      } else {
-        this._pushToHistory(params, true);
-      }
-    } else if (this.current.page && params.page && this.current.page !== params.page) {
-      this._pushToHistory(params, true);
-    }
-  },
-  _getPreviousParams: function pdfHistory_getPreviousParams(onlyCheckPage, beforeUnload) {
-    if (!(this.currentBookmark && this.currentPage)) {
-      return null;
-    } else if (this.updatePreviousBookmark) {
-      this.updatePreviousBookmark = false;
-    }
-    if (this.uid > 0 && !(this.previousBookmark && this.previousPage)) {
-      return null;
-    }
-    if (!this.current.dest && !onlyCheckPage || beforeUnload) {
-      if (this.previousBookmark === this.currentBookmark) {
-        return null;
-      }
-    } else if (this.current.page || onlyCheckPage) {
-      if (this.previousPage === this.currentPage) {
-        return null;
-      }
-    } else {
-      return null;
-    }
-    var params = {
-      hash: this.currentBookmark,
-      page: this.currentPage
-    };
-    if (this.isViewerInPresentationMode) {
-      params.hash = null;
-    }
-    return params;
-  },
-  _stateObj: function pdfHistory_stateObj(params) {
-    return {
-      fingerprint: this.fingerprint,
-      uid: this.uid,
-      target: params
-    };
-  },
-  _pushToHistory: function pdfHistory_pushToHistory(params, addPrevious, overwrite) {
-    if (!this.initialized) {
+      this._pushOrReplaceState({
+        hash,
+        page
+      }, true);
       return;
     }
-    if (!params.hash && params.page) {
-      params.hash = 'page=' + params.page;
-    }
-    if (addPrevious && !overwrite) {
-      var previousParams = this._getPreviousParams();
-      if (previousParams) {
-        var replacePrevious = !this.current.dest && this.current.hash !== this.previousHash;
-        this._pushToHistory(previousParams, false, replacePrevious);
-      }
-    }
-    this._pushOrReplaceState(this._stateObj(params), overwrite || this.uid === 0);
-    this.currentUid = this.uid++;
-    this.current = params;
-    this.updatePreviousBookmark = true;
-  },
-  _goTo: function pdfHistory_goTo(state) {
-    if (!(this.initialized && this.historyUnlocked && this._isStateObjectDefined(state))) {
-      return;
-    }
-    if (!this.reInitialized && state.uid < this.currentUid) {
-      var previousParams = this._getPreviousParams(true);
-      if (previousParams) {
-        this._pushToHistory(this.current, false);
-        this._pushToHistory(previousParams, false);
-        this.currentUid = state.uid;
-        window.history.back();
-        return;
-      }
-    }
-    this.historyUnlocked = false;
-    if (state.target.dest) {
-      this.linkService.navigateTo(state.target.dest);
-    } else {
-      this.linkService.setHash(state.target.hash);
-    }
-    this.currentUid = state.uid;
-    if (state.uid > this.uid) {
-      this.uid = state.uid;
-    }
-    this.current = state.target;
-    this.updatePreviousBookmark = true;
-    var currentHash = window.location.hash.substring(1);
-    if (this.previousHash !== currentHash) {
-      this.allowHashChange = false;
-    }
-    this.previousHash = currentHash;
-    this.historyUnlocked = true;
-  },
-  back: function pdfHistoryBack() {
-    this.go(-1);
-  },
-  forward: function pdfHistoryForward() {
-    this.go(1);
-  },
-  go: function pdfHistoryGo(direction) {
-    if (this.initialized && this.historyUnlocked) {
-      var state = window.history.state;
-      if (direction === -1 && state && state.uid > 0) {
-        window.history.back();
-      } else if (direction === 1 && state && state.uid < this.uid - 1) {
-        window.history.forward();
-      }
+    let destination = state.destination;
+    this._updateInternalState(destination, state.uid, true);
+    if (destination.dest) {
+      this.initialBookmark = JSON.stringify(destination.dest);
+      this._destination.page = null;
+    } else if (destination.hash) {
+      this.initialBookmark = destination.hash;
+    } else if (destination.page) {
+      this.initialBookmark = `page=${destination.page}`;
     }
   }
-};
+  push({ namedDest, explicitDest, pageNumber }) {
+    if (!this.initialized) {
+      return;
+    }
+    if (namedDest && typeof namedDest !== 'string' || !(explicitDest instanceof Array) || !(Number.isInteger(pageNumber) && pageNumber > 0 && pageNumber <= this.linkService.pagesCount)) {
+      console.error('PDFHistory.push: Invalid parameters.');
+      return;
+    }
+    let hash = namedDest || JSON.stringify(explicitDest);
+    if (!hash) {
+      return;
+    }
+    let forceReplace = false;
+    if (this._destination && (this._destination.hash === hash || isDestsEqual(this._destination.dest, explicitDest))) {
+      if (this._destination.page) {
+        return;
+      }
+      forceReplace = true;
+    }
+    if (this._popStateInProgress && !forceReplace) {
+      return;
+    }
+    this._pushOrReplaceState({
+      dest: explicitDest,
+      hash,
+      page: pageNumber
+    }, forceReplace);
+  }
+  pushCurrentPosition() {
+    if (!this.initialized || this._popStateInProgress) {
+      return;
+    }
+    this._tryPushCurrentPosition();
+  }
+  back() {
+    if (!this.initialized || this._popStateInProgress) {
+      return;
+    }
+    let state = window.history.state;
+    if (this._isValidState(state) && state.uid > 0) {
+      window.history.back();
+    }
+  }
+  forward() {
+    if (!this.initialized || this._popStateInProgress) {
+      return;
+    }
+    let state = window.history.state;
+    if (this._isValidState(state) && state.uid < this._uid - 1) {
+      window.history.forward();
+    }
+  }
+  get popStateInProgress() {
+    return this.initialized && (this._popStateInProgress || this._blockHashChange > 0);
+  }
+  _pushOrReplaceState(destination, forceReplace = false) {
+    let shouldReplace = forceReplace || !this._destination;
+    let newState = {
+      fingerprint: this.fingerprint,
+      uid: shouldReplace ? this._currentUid : this._uid,
+      destination
+    };
+    this._updateInternalState(destination, newState.uid);
+    if (shouldReplace) {
+      window.history.replaceState(newState, '');
+    } else {
+      window.history.pushState(newState, '');
+    }
+  }
+  _tryPushCurrentPosition(temporary = false) {
+    if (!this._position) {
+      return;
+    }
+    let position = this._position;
+    if (temporary) {
+      position = (0, _ui_utils.cloneObj)(this._position);
+      position.temporary = true;
+    }
+    if (!this._destination) {
+      this._pushOrReplaceState(position);
+      return;
+    }
+    if (this._destination.temporary) {
+      this._pushOrReplaceState(position, true);
+      return;
+    }
+    if (this._destination.hash === position.hash) {
+      return;
+    }
+    if (!this._destination.page && (POSITION_UPDATED_THRESHOLD <= 0 || this._numPositionUpdates <= POSITION_UPDATED_THRESHOLD)) {
+      return;
+    }
+    let forceReplace = false;
+    if (this._destination.page === position.first || this._destination.page === position.page) {
+      if (this._destination.dest || !this._destination.first) {
+        return;
+      }
+      forceReplace = true;
+    }
+    this._pushOrReplaceState(position, forceReplace);
+  }
+  _isValidState(state) {
+    if (!state) {
+      return false;
+    }
+    if (state.fingerprint !== this.fingerprint) {
+      return false;
+    }
+    if (!Number.isInteger(state.uid) || state.uid < 0) {
+      return false;
+    }
+    if (state.destination === null || typeof state.destination !== 'object') {
+      return false;
+    }
+    return true;
+  }
+  _updateInternalState(destination, uid, removeTemporary = false) {
+    if (removeTemporary && destination && destination.temporary) {
+      delete destination.temporary;
+    }
+    this._destination = destination;
+    this._currentUid = uid;
+    this._uid = this._currentUid + 1;
+    this._numPositionUpdates = 0;
+  }
+  _updateViewarea({ location }) {
+    if (this._updateViewareaTimeout) {
+      clearTimeout(this._updateViewareaTimeout);
+      this._updateViewareaTimeout = null;
+    }
+    this._position = {
+      hash: this._isViewerInPresentationMode ? `page=${location.pageNumber}` : location.pdfOpenParams.substring(1),
+      page: this.linkService.page,
+      first: location.pageNumber
+    };
+    if (this._popStateInProgress) {
+      return;
+    }
+    if (POSITION_UPDATED_THRESHOLD > 0 && this._isPagesLoaded && this._destination && !this._destination.page) {
+      this._numPositionUpdates++;
+    }
+    if (UPDATE_VIEWAREA_TIMEOUT > 0) {
+      this._updateViewareaTimeout = setTimeout(() => {
+        if (!this._popStateInProgress) {
+          this._tryPushCurrentPosition(true);
+        }
+        this._updateViewareaTimeout = null;
+      }, UPDATE_VIEWAREA_TIMEOUT);
+    }
+  }
+  _popState({ state }) {
+    let newHash = getCurrentHash(),
+        hashChanged = this._currentHash !== newHash;
+    this._currentHash = newHash;
+    if (!state || false) {
+      this._currentUid = this._uid;
+      let { hash, page } = parseCurrentHash(this.linkService);
+      this._pushOrReplaceState({
+        hash,
+        page
+      }, true);
+      return;
+    }
+    if (!this._isValidState(state)) {
+      return;
+    }
+    this._popStateInProgress = true;
+    if (hashChanged) {
+      this._blockHashChange++;
+      (0, _ui_utils.waitOnEventOrTimeout)({
+        target: window,
+        name: 'hashchange',
+        delay: HASH_CHANGE_TIMEOUT
+      }).then(() => {
+        this._blockHashChange--;
+      });
+    }
+    if (state.uid < this._currentUid && this._position && this._destination) {
+      let shouldGoBack = false;
+      if (this._destination.temporary) {
+        this._pushOrReplaceState(this._position);
+        shouldGoBack = true;
+      } else if (this._destination.page && this._destination.page !== this._position.first && this._destination.page !== this._position.page) {
+        this._pushOrReplaceState(this._destination);
+        this._pushOrReplaceState(this._position);
+        shouldGoBack = true;
+      }
+      if (shouldGoBack) {
+        this._currentUid = state.uid;
+        window.history.back();
+        return;
+      }
+    }
+    let destination = state.destination;
+    this._updateInternalState(destination, state.uid, true);
+    if (destination.dest) {
+      this.linkService.navigateTo(destination.dest);
+    } else if (destination.hash) {
+      this.linkService.setHash(destination.hash);
+    } else if (destination.page) {
+      this.linkService.page = destination.page;
+    }
+    Promise.resolve().then(() => {
+      this._popStateInProgress = false;
+    });
+  }
+  _bindEvents() {
+    let { _boundEvents, eventBus } = this;
+    _boundEvents.updateViewarea = this._updateViewarea.bind(this);
+    _boundEvents.popState = this._popState.bind(this);
+    _boundEvents.pageHide = evt => {
+      if (!this._destination) {
+        this._tryPushCurrentPosition();
+      }
+    };
+    eventBus.on('updateviewarea', _boundEvents.updateViewarea);
+    window.addEventListener('popstate', _boundEvents.popState);
+    window.addEventListener('pagehide', _boundEvents.pageHide);
+  }
+}
+function isDestsEqual(firstDest, secondDest) {
+  function isEntryEqual(first, second) {
+    if (typeof first !== typeof second) {
+      return false;
+    }
+    if (first instanceof Array || second instanceof Array) {
+      return false;
+    }
+    if (first !== null && typeof first === 'object' && second !== null) {
+      if (Object.keys(first).length !== Object.keys(second).length) {
+        return false;
+      }
+      for (var key in first) {
+        if (!isEntryEqual(first[key], second[key])) {
+          return false;
+        }
+      }
+      return true;
+    }
+    return first === second || Number.isNaN(first) && Number.isNaN(second);
+  }
+  if (!(firstDest instanceof Array && secondDest instanceof Array)) {
+    return false;
+  }
+  if (firstDest.length !== secondDest.length) {
+    return false;
+  }
+  for (let i = 0, ii = firstDest.length; i < ii; i++) {
+    if (!isEntryEqual(firstDest[i], secondDest[i])) {
+      return false;
+    }
+  }
+  return true;
+}
 exports.PDFHistory = PDFHistory;
+exports.isDestsEqual = isDestsEqual;
 
 /***/ }),
 /* 19 */
