@@ -11,7 +11,28 @@ protocol PStreamFilter
 {
   manager PBackground;
 
+parent:
+  async Write(uint8_t[] data);
+
+  async FlushedData();
+
+  async Suspend();
+  async Resume();
+  async Close();
+  async Disconnect();
+
 child:
+  async Initialized(bool aSuccess);
+  async Resumed();
+  async Suspended();
+  async Closed();
+
+  async FlushData();
+
+  async StartRequest();
+  async Data(uint8_t[] data);
+  async StopRequest(nsresult aStatus);
+
   async __delete__();
 };
 
