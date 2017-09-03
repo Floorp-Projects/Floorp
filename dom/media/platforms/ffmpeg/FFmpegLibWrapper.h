@@ -16,7 +16,8 @@ struct AVDictionary;
 struct AVCodecParserContext;
 struct PRLibrary;
 
-namespace mozilla {
+namespace mozilla
+{
 
 struct MOZ_ONLY_USED_TO_AVOID_STATIC_CONSTRUCTORS FFmpegLibWrapper
 {

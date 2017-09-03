@@ -14,8 +14,7 @@ namespace mozilla {
 // Wrapper class to call CFRelease on reference types
 // when they go out of scope.
 template <class T>
-class AutoCFRelease
-{
+class AutoCFRelease {
 public:
   MOZ_IMPLICIT AutoCFRelease(T aRef)
     : mRef(aRef)
@@ -46,8 +45,7 @@ private:
 
 // CFRefPtr: A CoreFoundation smart pointer.
 template <class T>
-class CFRefPtr
-{
+class CFRefPtr {
 public:
   explicit CFRefPtr(T aRef)
     : mRef(aRef)

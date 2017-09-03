@@ -40,10 +40,9 @@ class TrackInfo;
  * All of functions and members in this class should be run in the same
  * TaskQueue.
  */
-class OmxPromiseLayer
-{
+class OmxPromiseLayer {
 protected:
-  virtual ~OmxPromiseLayer() { }
+  virtual ~OmxPromiseLayer() {}
 
 public:
   NS_INLINE_DECL_THREADSAFE_REFCOUNTING(OmxPromiseLayer)
@@ -61,8 +60,7 @@ public:
     OmxBufferFailureHolder(OMX_ERRORTYPE aError, BufferData* aBuffer)
       : mError(aError)
       , mBuffer(aBuffer)
-    {
-    }
+    {}
 
     OMX_ERRORTYPE mError;
     BufferData* mBuffer;
@@ -70,15 +68,13 @@ public:
 
   typedef MozPromise<BufferData*, OmxBufferFailureHolder, /* IsExclusive = */ false> OmxBufferPromise;
 
-  class OmxCommandFailureHolder
-  {
+  class OmxCommandFailureHolder {
   public:
     OmxCommandFailureHolder(OMX_ERRORTYPE aErrorType,
                             OMX_COMMANDTYPE aCommandType)
       : mErrorType(aErrorType)
       , mCommandType(aCommandType)
-    {
-    }
+    {}
 
     OMX_ERRORTYPE mErrorType;
     OMX_COMMANDTYPE mCommandType;
@@ -124,18 +120,16 @@ public:
   // BufferData maintains the status of OMX buffer (OMX_BUFFERHEADERTYPE).
   // mStatus tracks the buffer owner.
   // And a promise because OMX buffer working among different threads.
-  class BufferData
-  {
+  class BufferData {
   protected:
-    virtual ~BufferData() { }
+    virtual ~BufferData() {}
 
   public:
     explicit BufferData(OMX_BUFFERHEADERTYPE* aBuffer)
       : mEos(false)
       , mStatus(BufferStatus::FREE)
       , mBuffer(aBuffer)
-    {
-    }
+    {}
 
     typedef void* BufferID;
 
@@ -179,8 +173,7 @@ public:
     // For input port buffer, the status transition is:
     // FREE -> OMX_COMPONENT -> OMX_CLIENT -> FREE
     //
-    enum BufferStatus
-    {
+    enum BufferStatus {
       FREE,
       OMX_COMPONENT,
       OMX_CLIENT,
@@ -216,8 +209,7 @@ public:
   bool Event(OMX_EVENTTYPE aEvent, OMX_U32 aData1, OMX_U32 aData2);
 
 protected:
-  struct FlushCommand
-  {
+  struct FlushCommand {
     OMX_DIRTYPE type;
     OMX_PTR cmd;
   };
