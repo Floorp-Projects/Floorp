@@ -18,8 +18,7 @@ class ImageContainer;
 class MediaData;
 class MediaRawData;
 
-class BlankVideoDataCreator : public DummyDataCreator
-{
+class BlankVideoDataCreator : public DummyDataCreator {
 public:
   BlankVideoDataCreator(uint32_t aFrameWidth,
                         uint32_t aFrameHeight,
