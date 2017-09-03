@@ -78,12 +78,11 @@ GLImage::GetAsSourceSurface()
   }
 
   const gl::OriginPos destOrigin = gl::OriginPos::TopLeft;
-
-  if (!sSnapshotContext->BlitHelper()->BlitImageToFramebuffer(this, size,
-                                                              autoFBForTex.FB(),
-                                                              destOrigin))
   {
-    return nullptr;
+    const ScopedBindFramebuffer bindFB(sSnapshotContext, autoFBForTex.FB());
+    if (!sSnapshotContext->BlitHelper()->BlitImageToFramebuffer(this, size, destOrigin)) {
+      return nullptr;
+    }
   }
 
   RefPtr<gfx::DataSourceSurface> source =

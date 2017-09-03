@@ -373,7 +373,7 @@ D3D11TextureData::SyncWithObject(SyncObjectClient* aSyncObject)
 }
 
 bool
-DXGITextureData::Serialize(SurfaceDescriptor& aOutDescriptor)
+DXGITextureData::SerializeSpecific(SurfaceDescriptorD3D10* const aOutDesc)
 {
   RefPtr<IDXGIResource> resource;
   GetDXGIResource((IDXGIResource**)getter_AddRefs(resource));
@@ -387,8 +387,29 @@ DXGITextureData::Serialize(SurfaceDescriptor& aOutDescriptor)
     return false;
   }
 
-  aOutDescriptor = SurfaceDescriptorD3D10((WindowsHandle)sharedHandle, mFormat, mSize);
+  *aOutDesc = SurfaceDescriptorD3D10((WindowsHandle)sharedHandle, mFormat, mSize);
   return true;
+}
+
+bool
+DXGITextureData::Serialize(SurfaceDescriptor& aOutDescriptor)
+{
+  SurfaceDescriptorD3D10 desc;
+  if (!SerializeSpecific(&desc))
+    return false;
+
+  aOutDescriptor = Move(desc);
+  return true;
+}
+
+void
+DXGITextureData::GetSubDescriptor(GPUVideoSubDescriptor* const aOutDesc)
+{
+  SurfaceDescriptorD3D10 ret;
+  if (!SerializeSpecific(&ret))
+    return;
+
+  *aOutDesc = Move(ret);
 }
 
 DXGITextureData*
@@ -659,14 +680,32 @@ DXGIYCbCrTextureData::FillInfo(TextureData::Info& aInfo) const
   aInfo.hasSynchronization = false;
 }
 
-bool
-DXGIYCbCrTextureData::Serialize(SurfaceDescriptor& aOutDescriptor)
+void
+DXGIYCbCrTextureData::SerializeSpecific(SurfaceDescriptorDXGIYCbCr* const aOutDesc)
 {
-  aOutDescriptor = SurfaceDescriptorDXGIYCbCr(
+  *aOutDesc = SurfaceDescriptorDXGIYCbCr(
     (WindowsHandle)mHandles[0], (WindowsHandle)mHandles[1], (WindowsHandle)mHandles[2],
     mSize, mSizeY, mSizeCbCr
   );
+}
+
+bool
+DXGIYCbCrTextureData::Serialize(SurfaceDescriptor& aOutDescriptor)
+{
+  SurfaceDescriptorDXGIYCbCr desc;
+  SerializeSpecific(&desc);
+
+  aOutDescriptor = Move(desc);
   return true;
+}
+
+void
+DXGIYCbCrTextureData::GetSubDescriptor(GPUVideoSubDescriptor* const aOutDesc)
+{
+  SurfaceDescriptorDXGIYCbCr desc;
+  SerializeSpecific(&desc);
+
+  *aOutDesc = Move(desc);
 }
 
 void
