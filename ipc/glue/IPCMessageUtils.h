@@ -922,7 +922,7 @@ struct ParamTraits<mozilla::Variant<Ts...>>
   static void Write(Message* msg, const paramType& param)
   {
     WriteParam(msg, param.tag);
-    param.match(VariantWriter(msg));
+    param.match(VariantWriter{msg});
   }
 
   // Because VariantReader is a nested struct, we need the dummy template
@@ -945,12 +945,12 @@ struct ParamTraits<mozilla::Variant<Ts...>>
         // actually interested in the N - 1 tag.
         typename mozilla::detail::Nth<N - 1, Ts...>::Type val;
         if (ReadParam(msg, iter, &val)) {
-          *result = paramType::AsVariant(val);
+          *result = mozilla::AsVariant(val);
           return true;
         }
         return false;
       } else {
-        return Next::Read(msg, iter, tag);
+        return Next::Read(msg, iter, tag, result);
       }
     }
 
