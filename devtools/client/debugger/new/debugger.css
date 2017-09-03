@@ -12,7 +12,7 @@
   /* Customs properties */
   --title-font-size: 24px;
   --ui-element-font-size: 16px;
-  --primary-line-height: 30px;
+  --primary-line-height: 22px;
   --secondary-line-height: 25px;
   --base-spacing: 20px;
   --base-transition: all 0.25s ease;
@@ -55,7 +55,7 @@
   justify-content: center;
 }
 
-.landing-page .panel input[type=button] {
+.landing-page button {
   background-color: var(--theme-tab-toolbar-background);
   color: var(--theme-comment);
   font-size: var(--ui-element-font-size);
@@ -63,6 +63,7 @@
   padding: calc(var(--base-spacing) / 2);
   margin: 0 var(--base-spacing);
   transition: var(--base-transition);
+  cursor: pointer;
 }
 
 .landing-page .panel header h1 {
@@ -102,6 +103,27 @@
   text-align: center;
   font-size: 14px;
   color: var(--theme-comment);
+}
+
+.landing-page .panel .launch-action-container {
+  text-align: center;
+}
+
+.landing-page .panel .under-construction {
+  display: flex;
+  width: 417px;
+  color: var(--theme-comment);
+  font-size: calc(var(--ui-element-font-size) / 1);
+  margin: var(--base-spacing) auto;
+  line-height: 1.4em;
+}
+
+.landing-page .panel .under-construction .under-construction-message {
+  max-width: 350px;
+}
+
+.landing-page .panel .under-construction .github-link {
+  display: block;
 }
 /* This Source Code Form is subject to the terms of the Mozilla Public
  * License, v. 2.0. If a copy of the MPL was not distributed with this
@@ -170,9 +192,10 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
 .landing-page .sidebar {
+  --sidebar-width: 200px;
   display: flex;
   background-color: var(--theme-tab-toolbar-background);
-  width: 200px;
+  width: var(--sidebar-width);
   flex-direction: column;
   border-right: 1px solid var(--theme-splitter-color);
 }
@@ -182,8 +205,8 @@
   font-size: var(--title-font-size);
   margin: 0;
   line-height: var(--primary-line-height);
-  font-weight: normal;
-  padding: calc(2 * var(--base-spacing)) var(--base-spacing);
+  font-weight: bold;
+  padding: var(--base-spacing) var(--base-spacing);
 }
 
 .landing-page .sidebar ul {
@@ -221,6 +244,35 @@
 .landing-page .sidebar li:hover a,
 .landing-page .sidebar li:focus a {
   color: inherit;
+}
+
+.landing-page .sidebar li:last-child {
+  border-top: 2px solid var(--theme-splitter-color);
+  margin: 2px;
+}
+
+.landing-page .sidebar .title-wrapper .launchpad-container {
+  padding-left: var(--base-spacing);
+}
+
+.landing-page .sidebar .title-wrapper  .launchpad-container .launchpad-container-icon {
+  display: inline-block;
+}
+
+.landing-page .sidebar .title-wrapper  .launchpad-container svg {
+  width: 24px;
+  height: 24px;
+}
+
+.landing-page .sidebar .title-wrapper  .launchpad-container svg path {
+  width: 24px;
+  height: 24px;
+  fill: var(--theme-body-color);
+}
+
+.landing-page .sidebar .title-wrapper .launchpad-container .launchpad-container-title {
+  display: inline;
+  padding-left: 3px;
 }
 /* This Source Code Form is subject to the terms of the Mozilla Public
  * License, v. 2.0. If a copy of the MPL was not distributed with this
@@ -439,11 +491,11 @@ menuitem:hover {
   color: white;
 }
 
-menuitem[disabled=true] {
+menuitem[disabled="true"] {
   color: #cccccc;
 }
 
-menuitem[disabled=true]:hover {
+menuitem[disabled="true"]:hover {
   background-color: transparent;
   cursor: default;
 }
@@ -1006,13 +1058,14 @@ html[dir="rtl"] .managed-tree .tree .node > div {
   display: flex;
   flex-direction: column;
   overflow-y: hidden;
+  height: 100%;
 }
 
 .project-text-search .result {
   display: flex;
   cursor: default;
-  margin-bottom: 1px;
   padding: 4px 0 4px 30px;
+  line-height: 16px;
   font-size: 10px;
 }
 
@@ -1049,8 +1102,7 @@ html[dir="rtl"] .managed-tree .tree .node > div {
   font-weight: bold;
   line-height: 20px;
   cursor: default;
-  margin: 2px 0;
-  padding: 3px 0 3px 5px;
+  padding: 2px 0 2px 5px;
   font-size: 12px;
 }
 
@@ -1075,6 +1127,11 @@ html[dir="rtl"] .managed-tree .tree .node > div {
 
 .project-text-search .managed-tree {
   overflow-y: auto;
+  height: calc(100% - 81px);
+}
+
+.project-text-search .managed-tree .tree {
+  height: 100%;
 }
 .autocomplete {
   position: relative;
@@ -1132,7 +1189,7 @@ html[dir="rtl"] .managed-tree .tree .node > div {
   color: white;
 }
 
-.theme-dark  .result-list.small li.selected {
+.theme-dark .result-list.small li.selected {
   background-color: var(--theme-body-background);
 }
 
@@ -1324,7 +1381,7 @@ html[dir="rtl"] .managed-tree .tree .node > div {
   transition: all 0.25s ease;
   overflow: hidden;
   padding: 5px;
-  margin-bottom: 4px;
+  margin-bottom: 0px;
   margin-top: -1px;
 }
 
@@ -1925,7 +1982,7 @@ html[dir="rtl"] .arrow svg,
 
 .bracket-arrow::before,
 .bracket-arrow::after {
-  content: '';
+  content: "";
   height: 0;
   width: 0;
   position: absolute;
@@ -1970,7 +2027,7 @@ html[dir="rtl"] .arrow svg,
   height: 5px;
   padding-top: 5px;
 }
-.popover .preview {
+.popover .preview-popup {
   background: var(--theme-body-background);
   width: 350px;
   min-height: 80px;
@@ -1983,11 +2040,11 @@ html[dir="rtl"] .arrow svg,
   box-shadow: 1px 2px 3px var(--popup-shadow-color);
 }
 
-.theme-dark .popover .preview {
+.theme-dark .popover .preview-popup {
   box-shadow: 1px 2px 3px var(--popup-shadow-color);
 }
 
-.popover .preview .header {
+.popover .preview-popup .header {
   width: 100%;
   line-height: 20px;
   border-bottom: 1px solid #cccccc;
@@ -1995,36 +2052,40 @@ html[dir="rtl"] .arrow svg,
   flex-direction: column;
 }
 
-.popover .preview .header .link {
+.popover .preview-popup .header .link {
   align-self: flex-end;
   color: var(--theme-highlight-blue);
   text-decoration: underline;
 }
 
-.selection,
-.debug-expression.selection {
+.preview-selection:hover {
+  cursor: default;
+}
+
+.preview-selection,
+.debug-expression.preview-selection {
   background-color: var(--theme-highlight-yellow);
 }
 
-.theme-dark .selection,
-.theme-dark .debug-expression.selection {
+.theme-dark .preview-selection,
+.theme-dark .debug-expression.preview-selection {
   background-color: #743884;
 }
 
-.theme-dark .cm-s-mozilla .selection,
-.theme-dark .cm-s-mozilla .debug-expression.selection {
+.theme-dark .cm-s-mozilla .preview-selection,
+.theme-dark .cm-s-mozilla .debug-expression.preview-selection {
   color: #e7ebee;
 }
 
-.popover .preview .function-signature {
+.popover .preview-popup .function-signature {
   padding-top: 10px;
 }
 
-.theme-dark .popover .preview {
+.theme-dark .popover .preview-popup {
   border-color: var(--theme-body-color);
 }
 
-.theme-dark .popover .preview .arrow svg {
+.theme-dark .popover .preview-popup .arrow svg {
   fill: var(--theme-content-color3);
 }
 
@@ -2033,7 +2094,7 @@ html[dir="rtl"] .arrow svg,
   z-index: 100;
 }
 
-.tooltip .preview {
+.tooltip .preview-popup {
   background: var(--theme-toolbar-background);
   max-width: inherit;
   min-height: 80px;
@@ -2046,7 +2107,7 @@ html[dir="rtl"] .arrow svg,
   overflow: auto;
 }
 
-.theme-dark .tooltip .preview {
+.theme-dark .tooltip .preview-popup {
   border-color: var(--theme-body-color);
 }
 
@@ -2127,6 +2188,9 @@ html[dir="rtl"] .arrow svg,
 
 .theme-dark .call-site-bp::before {
   border-bottom-color: #dd4d4d;
+}
+.empty-line .CodeMirror-linenumber {
+  opacity: 0.5;
 }
 .editor-wrapper {
   --debug-line-border: rgb(145, 188, 219);
@@ -2827,6 +2891,10 @@ html .breakpoints-list .breakpoint.paused {
   font-size: 12px;
 }
 
+.accordion div:last-child ._content {
+  border-bottom: none;
+}
+
 .accordion ._header .header-buttons {
   display: flex;
   margin-left: auto;
@@ -2862,6 +2930,10 @@ html .breakpoints-list .breakpoint.paused {
   top: 0;
   z-index: 1;
   background-color: var(--theme-body-background);
+}
+
+.command-bar.vertical {
+  width: 100vw;
 }
 
 html[dir="rtl"] .command-bar {
@@ -3016,6 +3088,11 @@ html .command-bar > button:disabled {
   z-index: 100;
 }
 
+.alignlabel {
+  display: inline-block;
+  text-align: left;
+}
+
 .welcomebox .toggle-button-end {
   position: absolute;
   top: auto;
@@ -3041,15 +3118,21 @@ html .welcomebox .toggle-button-end.collapsed {
 }
 
 .source-header .new-tab-btn {
-  padding: 0px 4px;
+  padding: 4px;
   margin-top: 4px;
+  margin-left: 2px;
   fill: var(--theme-content-color3);
   transition: 0.1s ease;
   align-self: center;
 }
 
+.source-header .new-tab-btn:hover {
+  background-color: var(--theme-toolbar-background-hover);
+}
+
 .source-header .new-tab-btn svg {
   width: 12px;
+  display: block;
 }
 
 .source-tabs {

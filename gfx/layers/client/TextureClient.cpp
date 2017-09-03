@@ -162,7 +162,7 @@ private:
   // Lock tile A
   // Lock tile B
   // Lock tile C
-  // Apply drawing commands to tiles A, B and C 
+  // Apply drawing commands to tiles A, B and C
   // Unlock tile A
   // Unlock tile B
   // Unlock tile C
@@ -1400,6 +1400,18 @@ TextureClient::PrintInfo(std::stringstream& aStream, const char* aPrefix)
     }
   }
 #endif
+}
+
+void
+TextureClient::GPUVideoDesc(SurfaceDescriptorGPUVideo* const aOutDesc)
+{
+  const auto handle = GetSerial();
+
+  GPUVideoSubDescriptor subDesc = null_t();
+  MOZ_RELEASE_ASSERT(mData);
+  mData->GetSubDescriptor(&subDesc);
+
+  *aOutDesc = SurfaceDescriptorGPUVideo(handle, Move(subDesc));
 }
 
 class MemoryTextureReadLock : public NonBlockingTextureReadLock {

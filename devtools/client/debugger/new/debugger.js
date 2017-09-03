@@ -540,7 +540,7 @@ function isDirectory(url) {
 }
 
 function isInvalidUrl(url, source) {
-  return IGNORED_URLS.indexOf(url) != -1 || !source.get("url") || source.get("loading") || !url.group || (0, _source.isPretty)(source.toJS());
+  return IGNORED_URLS.indexOf(url) != -1 || !source.get("url") || source.get("loadedState") === "loading" || !url.group || (0, _source.isPretty)(source.toJS());
 }
 
 function partIsFile(index, parts, url) {
@@ -710,8 +710,8 @@ function getWasmText(sourceId, data) {
     result = { lines: ["No luck with wast conversion"], offsets: [0], done };
   }
 
-  var offsets = result.offsets,
-      lines = [];
+  var offsets = result.offsets;
+  var lines = [];
   for (var i = 0; i < offsets.length; i++) {
     lines[offsets[i]] = i;
   }
@@ -5906,7 +5906,7 @@ var _require6 = __webpack_require__(1130),
     showMenu = _require6.showMenu,
     buildMenu = _require6.buildMenu;
 
-setConfig({"environment":"firefox-panel","logging":false,"clientLogging":false,"firefox":{"mcPath":"./firefox"},"workers":{"parserURL":"resource://devtools/client/debugger/new/parser-worker.js","prettyPrintURL":"resource://devtools/client/debugger/new/pretty-print-worker.js","searchURL":"resource://devtools/client/debugger/new/search-worker.js"},"features":{"blackbox":{"enabled":true},"chromeScopes":{"enabled":false},"eventListeners":{"enabled":false},"codeCoverage":{"enabled":false},"codeFolding":{"enabled":false},"searchNav":{"enabled":true},"collapseFrame":{"enabled":true},"outline":{"enabled":true}}});
+setConfig({"environment":"firefox-panel","logging":false,"clientLogging":false,"firefox":{"mcPath":"./firefox"},"workers":{"parserURL":"resource://devtools/client/debugger/new/parser-worker.js","prettyPrintURL":"resource://devtools/client/debugger/new/pretty-print-worker.js","searchURL":"resource://devtools/client/debugger/new/search-worker.js"},"features":{"blackbox":{"enabled":true},"chromeScopes":{"enabled":false},"eventListeners":{"enabled":false},"codeCoverage":{"enabled":false},"codeFolding":{"enabled":false},"searchNav":{"enabled":true},"collapseFrame":{"enabled":true},"outline":{"enabled":true},"wasm":{"enabled":true}}});
 
 // Set various flags before requiring app code.
 if (getValue("logging.client")) {
@@ -6773,13 +6773,15 @@ var sidePanelItems = {
     name: "Chrome",
     clientType: "chrome",
     paramName: "chrome-tab",
-    docsUrlPart: "chrome"
+    docsUrlPart: "chrome",
+    isUnderConstruction: true
   },
   Node: {
     name: "Node",
     clientType: "node",
     paramName: "node-tab",
-    docsUrlPart: "node"
+    docsUrlPart: "node",
+    isUnderConstruction: true
   },
   Settings: {
     name: "Settings",
@@ -13909,7 +13911,7 @@ module.exports = {
 
 var React = __webpack_require__(0);
 
-__webpack_require__(680);
+__webpack_require__(851);
 var dom = React.DOM;
 
 var ImPropTypes = __webpack_require__(150);
@@ -13926,7 +13928,8 @@ function getTabsByClientType(tabs, clientType) {
 
 function firstTimeMessage(title, urlPart) {
   return dom.div({ className: "footer-note" }, `First time connecting to ${title}? Checkout out the `, dom.a({
-    href: `${githubUrl}/docs/getting-setup.md#starting-${urlPart}`
+    href: `${githubUrl}/docs/getting-setup.md#starting-${urlPart}`,
+    target: "_blank"
   }, "docs"), ".");
 }
 
@@ -13969,25 +13972,38 @@ var LandingPage = React.createClass({
     }
   },
 
-  renderLaunchButton() {
+  renderLaunchOptions() {
     var selectedPane = this.state.selectedPane;
-    var name = configMap[selectedPane].name;
+    var _configMap$selectedPa = configMap[selectedPane],
+        name = _configMap$selectedPa.name,
+        isUnderConstruction = _configMap$selectedPa.isUnderConstruction;
 
 
     var isConnected = name === configMap.Firefox.name ? this.state.firefoxConnected : this.state.chromeConnected;
     var isNodeSelected = name === configMap.Node.name;
 
     if (isNodeSelected) {
-      return dom.h3({}, "Run a node script in the terminal with `--inspect`");
+      return dom.div({ className: "launch-action-container" }, dom.h3({}, "Run a node script in the terminal with `--inspect`"), isUnderConstruction ? this.renderExperimentalMessage(name) : null);
     }
 
     var connectedStateText = isNodeSelected ? null : `Please open a tab in ${name}`;
 
-    return isConnected ? connectedStateText : dom.input({
-      type: "button",
-      value: `Launch ${configMap[selectedPane].name}`,
-      onClick: () => this.launchBrowser(configMap[selectedPane].name)
-    });
+    return isConnected ? connectedStateText : this.renderLaunchButton(name, isUnderConstruction);
+  },
+
+  renderLaunchButton(browserName, isUnderConstruction) {
+    return dom.div({ className: "launch-action-container" }, dom.button({ onClick: () => this.launchBrowser(browserName) }, `Launch ${browserName}`), isUnderConstruction ? this.renderExperimentalMessage(browserName) // eslint-disable-line max-len
+    : null);
+  },
+
+  renderExperimentalMessage(browserName) {
+    var underConstructionMessage = "Debugging is experimental and certain features won't work (i.e, seeing variables, attaching breakpoints)"; // eslint-disable-line max-len
+    var githubIssuesUrl = "https://github.com/devtools-html/debugger.html/issues?q=is%3Aopen+is%3Aissue+label%3A";
+    var underConstructionImageSrc = __webpack_require__(855);
+    return dom.div({ className: "under-construction" }, dom.img({ src: underConstructionImageSrc }), dom.div({ className: "under-construction-message" }, underConstructionMessage, // eslint-disable-line max-len
+    dom.a({ className: "github-link",
+      href: `${githubIssuesUrl}${browserName}`,
+      target: "_blank" }, "Help us make it happen")));
   },
 
   launchBrowser(browser) {
@@ -14009,7 +14025,7 @@ var LandingPage = React.createClass({
   },
 
   renderEmptyPanel() {
-    return dom.div({ className: "hero" }, this.renderLaunchButton());
+    return dom.div({ className: "hero" }, this.renderLaunchOptions());
   },
 
   renderSettings() {
@@ -14027,9 +14043,9 @@ var LandingPage = React.createClass({
         tabs = _props2.tabs,
         _props2$filterString = _props2.filterString,
         filterString = _props2$filterString === undefined ? "" : _props2$filterString;
-    var _configMap$selectedPa = configMap[selectedPane],
-        clientType = _configMap$selectedPa.clientType,
-        paramName = _configMap$selectedPa.paramName;
+    var _configMap$selectedPa2 = configMap[selectedPane],
+        clientType = _configMap$selectedPa2.clientType,
+        paramName = _configMap$selectedPa2.paramName;
 
 
     var targets = getTabsByClientType(tabs, clientType);
@@ -14054,10 +14070,10 @@ var LandingPage = React.createClass({
         onTabClick = _props3.onTabClick,
         tabs = _props3.tabs;
     var selectedPane = this.state.selectedPane;
-    var _configMap$selectedPa2 = configMap[selectedPane],
-        name = _configMap$selectedPa2.name,
-        clientType = _configMap$selectedPa2.clientType,
-        paramName = _configMap$selectedPa2.paramName;
+    var _configMap$selectedPa3 = configMap[selectedPane],
+        name = _configMap$selectedPa3.name,
+        clientType = _configMap$selectedPa3.clientType,
+        paramName = _configMap$selectedPa3.paramName;
 
 
     var clientTargets = getTabsByClientType(tabs, clientType);
@@ -14084,9 +14100,9 @@ var LandingPage = React.createClass({
         title = _props4.title;
     var selectedPane = this.state.selectedPane;
     var onSideBarItemClick = this.onSideBarItemClick;
-    var _configMap$selectedPa3 = configMap[selectedPane],
-        name = _configMap$selectedPa3.name,
-        docsUrlPart = _configMap$selectedPa3.docsUrlPart;
+    var _configMap$selectedPa4 = configMap[selectedPane],
+        name = _configMap$selectedPa4.name,
+        docsUrlPart = _configMap$selectedPa4.docsUrlPart;
 
 
     return dom.div({
@@ -14322,7 +14338,7 @@ function combineReducers(reducers) {
 
 var React = __webpack_require__(0);
 
-__webpack_require__(681);
+__webpack_require__(852);
 var dom = React.DOM;
 
 var classnames = __webpack_require__(175);
@@ -14558,7 +14574,9 @@ var __WEBPACK_AMD_DEFINE_ARRAY__, __WEBPACK_AMD_DEFINE_RESULT__;/*!
 
 var React = __webpack_require__(0);
 
-__webpack_require__(682);
+__webpack_require__(853);
+var rocketSvg = __webpack_require__(1126);
+
 var dom = React.DOM;
 
 var classnames = __webpack_require__(175);
@@ -14574,22 +14592,15 @@ var Sidebar = React.createClass({
     onSideBarItemClick: React.PropTypes.func.isRequired
   },
 
-  render() {
-    var connections = [];
+  renderTitle(title) {
+    return dom.div({ className: "title-wrapper" }, dom.h1({}, title), dom.div({ className: "launchpad-container" }, dom.div({
+      className: "launchpad-container-icon",
+      dangerouslySetInnerHTML: { __html: rocketSvg }
+    }), dom.h2({ className: "launchpad-container-title" }, "Launchpad")));
+  },
 
-    if (this.props.supportsFirefox) {
-      connections.push("Firefox");
-    }
-
-    if (this.props.supportsChrome) {
-      connections.push("Chrome", "Node");
-    }
-
-    connections.push("Settings");
-
-    return dom.aside({
-      className: "sidebar"
-    }, dom.h1({}, this.props.title), dom.ul({}, connections.map(title => dom.li({
+  renderItem(title) {
+    return dom.li({
       className: classnames({
         selected: title == this.props.selectedPane
       }),
@@ -14602,9 +14613,24 @@ var Sidebar = React.createClass({
           this.props.onSideBarItemClick(title);
         }
       }
-    }, dom.a({}, title)))));
-  }
-});
+    }, dom.a({}, title));
+  },
+
+  render() {
+    var connections = [];
+
+    if (this.props.supportsFirefox) {
+      connections.push("Firefox");
+    }
+
+    if (this.props.supportsChrome) {
+      connections.push("Chrome", "Node");
+    }
+
+    return dom.aside({
+      className: "sidebar"
+    }, this.renderTitle(this.props.title), dom.ul({}, connections.map(title => this.renderItem(title)), this.renderItem("Settings")));
+  } });
 
 module.exports = Sidebar;
 
@@ -15213,7 +15239,7 @@ module.exports = {
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
 var classnames = __webpack_require__(175);
-__webpack_require__(684);
+__webpack_require__(856);
 
 module.exports = function (className) {
   var root = document.createElement("div");
@@ -15641,7 +15667,7 @@ function createPrettySource(sourceId) {
 
       var source = (0, _selectors.getSource)(getState(), sourceId).toJS();
       var url = (0, _source.getPrettySourceURL)(source.url);
-      var id = sourceMaps.generatedToOriginalId(sourceId, url);
+      var id = yield sourceMaps.generatedToOriginalId(sourceId, url);
 
       var _ref3 = yield (0, _prettyPrint.prettyPrint)({
         source,
@@ -15664,7 +15690,7 @@ function createPrettySource(sourceId) {
         text: code,
         contentType: "text/javascript",
         frames,
-        loading: false
+        loadedState: "loaded"
       };
 
       return dispatch({
@@ -15900,8 +15926,10 @@ function thunk(makeArgs) {
 /***/ }),
 /* 225 */,
 /* 226 */
-/***/ (function(module, exports, __webpack_require__) {
+/***/ (function(module, __webpack_exports__, __webpack_require__) {
 
+"use strict";
+Object.defineProperty(__webpack_exports__, "__esModule", { value: true });
 // @flow
 
 const { isDevelopment } = __webpack_require__(828);
@@ -15929,6 +15957,7 @@ if (isDevelopment()) {
   pref("devtools.debugger.file-search-regex-match", false);
   pref("devtools.debugger.prefs-schema-version", "1.0.1");
   pref("devtools.debugger.project-text-search-enabled", true);
+  pref("devtools.debugger.features.async-stepping", false);
 }
 
 const prefs = new PrefsHelper("devtools", {
@@ -15954,14 +15983,22 @@ const prefs = new PrefsHelper("devtools", {
     false
   ]
 });
+/* harmony export (immutable) */ __webpack_exports__["prefs"] = prefs;
+
+
+const features = new PrefsHelper("devtools.debugger.features", {
+  asyncStepping: ["Bool", "async-stepping", false]
+});
+/* harmony export (immutable) */ __webpack_exports__["features"] = features;
+
+
+debugger;
 
 if (prefs.debuggerPrefsSchemaVersion !== prefsSchemaVersion) {
   // clear pending Breakpoints
   prefs.pendingBreakpoints = {};
   prefs.debuggerPrefsSchemaVersion = prefsSchemaVersion;
 }
-
-module.exports = { prefs };
 
 
 /***/ }),
@@ -16019,7 +16056,15 @@ var _projectTextSearch = __webpack_require__(31);
 
 var _projectTextSearch2 = _interopRequireDefault(_projectTextSearch);
 
+var _sourceSearch = __webpack_require__(1132);
+
+var _sourceSearch2 = _interopRequireDefault(_sourceSearch);
+
 function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { default: obj }; }
+
+/* This Source Code Form is subject to the terms of the Mozilla Public
+ * License, v. 2.0. If a copy of the MPL was not distributed with this
+ * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
 exports.default = {
   expressions: _expressions2.default,
@@ -16032,10 +16077,9 @@ exports.default = {
   ui: _ui2.default,
   ast: _ast2.default,
   coverage: _coverage2.default,
-  projectTextSearch: _projectTextSearch2.default
-}; /* This Source Code Form is subject to the terms of the Mozilla Public
-    * License, v. 2.0. If a copy of the MPL was not distributed with this
-    * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
+  projectTextSearch: _projectTextSearch2.default,
+  sourceSearch: _sourceSearch2.default
+};
 
 /***/ }),
 /* 228 */
@@ -16047,7 +16091,7 @@ exports.default = {
 Object.defineProperty(exports, "__esModule", {
   value: true
 });
-exports.getVisibleExpressions = exports.getExpressions = exports.State = undefined;
+exports.getExpressions = exports.State = undefined;
 exports.getExpression = getExpression;
 
 var _makeRecord = __webpack_require__(230);
@@ -16055,6 +16099,8 @@ var _makeRecord = __webpack_require__(230);
 var _makeRecord2 = _interopRequireDefault(_makeRecord);
 
 var _immutable = __webpack_require__(146);
+
+var _lodash = __webpack_require__(2);
 
 var _reselect = __webpack_require__(993);
 
@@ -16075,24 +16121,21 @@ function update() {
       return appendToList(state, ["expressions"], {
         input: action.input,
         value: null,
-        updating: true,
-        visible: action.visible
+        updating: true
       });
     case "UPDATE_EXPRESSION":
       var key = action.expression.input;
       return updateItemInList(state, ["expressions"], key, {
         input: action.input,
         value: null,
-        updating: true,
-        visible: action.visible
+        updating: true
       });
     case "EVALUATE_EXPRESSION":
       if (action.status === "done") {
         return updateItemInList(state, ["expressions"], action.input, {
           input: action.input,
           value: action.value,
-          updating: false,
-          visible: action.visible
+          updating: false
         });
       }
       break;
@@ -16112,7 +16155,9 @@ function restoreExpressions() {
 }
 
 function storeExpressions(state) {
-  _prefs.prefs.expressions = state.getIn(["expressions"]).filter(e => e.visible).toJS();
+  var expressions = state.getIn(["expressions"]).map(expression => (0, _lodash.omit)(expression, "value")).toJS();
+
+  _prefs.prefs.expressions = expressions;
 }
 
 function appendToList(state, path, value) {
@@ -16143,8 +16188,6 @@ function deleteExpression(state, input) {
 var getExpressionsWrapper = state => state.expressions;
 
 var getExpressions = exports.getExpressions = (0, _reselect.createSelector)(getExpressionsWrapper, expressions => expressions.get("expressions"));
-
-var getVisibleExpressions = exports.getVisibleExpressions = (0, _reselect.createSelector)(getExpressions, expressions => expressions.filter(e => e.visible));
 
 function getExpression(state, input) {
   return getExpressions(state).find(exp => exp.input == input);
@@ -16392,13 +16435,13 @@ function update() {
 
     case "NAVIGATE":
       var source = getSelectedSource({ sources: state });
-      var _url = source && source.get("url");
+      var url = source && source.get("url");
 
-      if (!_url) {
+      if (!url) {
         return initialState();
       }
 
-      return initialState().set("pendingSelectedLocation", { url: _url });
+      return initialState().set("pendingSelectedLocation", { url });
   }
 
   return state;
@@ -16410,15 +16453,15 @@ function getTextPropsFromAction(action) {
 
 
   if (action.status === "start") {
-    return { id: source.id, loading: true };
+    return { id: source.id, loadedState: "loading" };
   } else if (action.status === "error") {
-    return { id: source.id, error: action.error, loading: false };
+    return { id: source.id, error: action.error, loadedState: "loaded" };
   }
   return {
     text: value.text,
     id: source.id,
     contentType: value.contentType,
-    loading: false
+    loadedState: "loaded"
   };
 }
 
@@ -16612,7 +16655,7 @@ exports.default = update;
 Object.defineProperty(exports, "__esModule", {
   value: true
 });
-exports.getMode = exports.getSourceLineCount = exports.getSourcePath = exports.getFilenameFromURL = exports.getFilename = exports.getRawSourceURL = exports.getPrettySourceURL = exports.shouldPrettyPrint = exports.isPretty = exports.isJavaScript = undefined;
+exports.isLoaded = exports.getMode = exports.getSourceLineCount = exports.getSourcePath = exports.getFilenameFromURL = exports.getFilename = exports.getRawSourceURL = exports.getPrettySourceURL = exports.shouldPrettyPrint = exports.isPretty = exports.isJavaScript = undefined;
 
 var _devtoolsSourceMap = __webpack_require__(898);
 
@@ -16822,6 +16865,10 @@ function getMode(source) {
   return { name: "text" };
 }
 
+function isLoaded(source) {
+  return source.loadedState === "loaded";
+}
+
 exports.isJavaScript = isJavaScript;
 exports.isPretty = isPretty;
 exports.shouldPrettyPrint = shouldPrettyPrint;
@@ -16832,6 +16879,7 @@ exports.getFilenameFromURL = getFilenameFromURL;
 exports.getSourcePath = getSourcePath;
 exports.getSourceLineCount = getSourceLineCount;
 exports.getMode = getMode;
+exports.isLoaded = isLoaded;
 
 /***/ }),
 /* 234 */
@@ -16974,6 +17022,7 @@ exports.join = join;
 Object.defineProperty(exports, "__esModule", {
   value: true
 });
+exports.getHiddenBreakpointLocation = exports.getHiddenBreakpoint = undefined;
 
 var _extends = Object.assign || function (target) { for (var i = 1; i < arguments.length; i++) { var source = arguments[i]; for (var key in source) { if (Object.prototype.hasOwnProperty.call(source, key)) { target[key] = source[key]; } } } return target; };
 /* This Source Code Form is subject to the terms of the Mozilla Public
@@ -17003,6 +17052,8 @@ var _makeRecord2 = _interopRequireDefault(_makeRecord);
 var _devtoolsSourceMap = __webpack_require__(898);
 
 var _breakpoint2 = __webpack_require__(1057);
+
+var _reselect = __webpack_require__(993);
 
 function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { default: obj }; }
 
@@ -17150,6 +17201,18 @@ function getBreakpointsForSource(state, sourceId) {
     return location.sourceId === sourceId;
   });
 }
+
+var getHiddenBreakpoint = exports.getHiddenBreakpoint = (0, _reselect.createSelector)(getBreakpoints, function (breakpoints) {
+  var hiddenBreakpoints = breakpoints.valueSeq().filter(breakpoint => breakpoint.hidden).first();
+  return hiddenBreakpoints;
+});
+
+var getHiddenBreakpointLocation = exports.getHiddenBreakpointLocation = (0, _reselect.createSelector)(getHiddenBreakpoint, function (hiddenBreakpoint) {
+  if (!hiddenBreakpoint) {
+    return null;
+  }
+  return hiddenBreakpoint.location;
+});
 
 exports.default = update;
 
@@ -17844,6 +17907,10 @@ var _projectTextSearch = __webpack_require__(31);
 
 var projectTextSearch = _interopRequireWildcard(_projectTextSearch);
 
+var _sourceSearch = __webpack_require__(1132);
+
+var sourceSearch = _interopRequireWildcard(_sourceSearch);
+
 var _breakpointAtLocation = __webpack_require__(1134);
 
 var _breakpointAtLocation2 = _interopRequireDefault(_breakpointAtLocation);
@@ -17856,6 +17923,10 @@ var _visibleBreakpoints = __webpack_require__(1135);
 
 var _visibleBreakpoints2 = _interopRequireDefault(_visibleBreakpoints);
 
+var _isSelectedFrameVisible = __webpack_require__(805);
+
+var _isSelectedFrameVisible2 = _interopRequireDefault(_isSelectedFrameVisible);
+
 function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { default: obj }; }
 
 function _interopRequireWildcard(obj) { if (obj && obj.__esModule) { return obj; } else { var newObj = {}; if (obj != null) { for (var key in obj) { if (Object.prototype.hasOwnProperty.call(obj, key)) newObj[key] = obj[key]; } } newObj.default = obj; return newObj; } }
@@ -17864,7 +17935,12 @@ function _interopRequireWildcard(obj) { if (obj && obj.__esModule) { return obj;
  * @param object - location
  */
 
-module.exports = Object.assign({}, expressions, sources, pause, breakpoints, pendingBreakpoints, eventListeners, ui, ast, coverage, projectTextSearch, { getBreakpointAtLocation: _breakpointAtLocation2.default, getInScopeLines: _linesInScope2.default, getVisibleBreakpoints: _visibleBreakpoints2.default });
+module.exports = Object.assign({}, expressions, sources, pause, breakpoints, pendingBreakpoints, eventListeners, ui, ast, coverage, projectTextSearch, sourceSearch, {
+  getBreakpointAtLocation: _breakpointAtLocation2.default,
+  getInScopeLines: _linesInScope2.default,
+  getVisibleBreakpoints: _visibleBreakpoints2.default,
+  isSelectedFrameVisible: _isSelectedFrameVisible2.default
+});
 
 /***/ }),
 /* 243 */
@@ -17895,13 +17971,13 @@ var _ui = __webpack_require__(1128);
 
 var _devtoolsModules = __webpack_require__(830);
 
-__webpack_require__(685);
+__webpack_require__(857);
 
-__webpack_require__(686);
+__webpack_require__(858);
 
-__webpack_require__(687);
+__webpack_require__(859);
 
-__webpack_require__(688);
+__webpack_require__(860);
 
 var _devtoolsSplitter = __webpack_require__(910);
 
@@ -18151,9 +18227,13 @@ var _projectTextSearch = __webpack_require__(37);
 
 var projectTextSearch = _interopRequireWildcard(_projectTextSearch);
 
+var _sourceSearch = __webpack_require__(1143);
+
+var sourceSearch = _interopRequireWildcard(_sourceSearch);
+
 function _interopRequireWildcard(obj) { if (obj && obj.__esModule) { return obj; } else { var newObj = {}; if (obj != null) { for (var key in obj) { if (Object.prototype.hasOwnProperty.call(obj, key)) newObj[key] = obj[key]; } } newObj.default = obj; return newObj; } }
 
-exports.default = Object.assign({}, navigation, breakpoints, expressions, eventListeners, sources, pause, ui, ast, coverage, projectTextSearch);
+exports.default = Object.assign({}, navigation, breakpoints, expressions, eventListeners, sources, pause, ui, ast, coverage, projectTextSearch, sourceSearch);
 
 /***/ }),
 /* 245 */
@@ -18183,6 +18263,7 @@ var _extends = Object.assign || function (target) { for (var i = 1; i < argument
 
 exports.syncBreakpoint = syncBreakpoint;
 exports.addBreakpoint = addBreakpoint;
+exports.addHiddenBreakpoint = addHiddenBreakpoint;
 exports.removeBreakpoint = removeBreakpoint;
 exports.enableBreakpoint = enableBreakpoint;
 exports.disableBreakpoint = disableBreakpoint;
@@ -18193,6 +18274,7 @@ exports.removeBreakpoints = removeBreakpoints;
 exports.remapBreakpoints = remapBreakpoints;
 exports.setBreakpointCondition = setBreakpointCondition;
 exports.toggleBreakpoint = toggleBreakpoint;
+exports.addOrToggleDisabledBreakpoint = addOrToggleDisabledBreakpoint;
 exports.toggleDisabledBreakpoint = toggleDisabledBreakpoint;
 
 var _promise = __webpack_require__(193);
@@ -18221,7 +18303,7 @@ function _asyncToGenerator(fn) { return function () { var gen = fn.apply(this, a
  *
  * @memberof actions/breakpoints
  * @static
- * @param {String} $1.source Source  value
+ * @param {String} $1.sourceId String  value
  * @param {PendingBreakpoint} $1.location PendingBreakpoint  value
  */
 function syncBreakpoint(source, pendingBreakpoint) {
@@ -18231,8 +18313,8 @@ function syncBreakpoint(source, pendingBreakpoint) {
         client = _ref.client,
         sourceMaps = _ref.sourceMaps;
 
-		var sourceId = source.id;
-		var _pendingBreakpoint$lo = pendingBreakpoint.location,
+    var sourceId = source.id;
+    var _pendingBreakpoint$lo = pendingBreakpoint.location,
         line = _pendingBreakpoint$lo.line,
         sourceUrl = _pendingBreakpoint$lo.sourceUrl,
         column = _pendingBreakpoint$lo.column;
@@ -18259,8 +18341,8 @@ function syncBreakpoint(source, pendingBreakpoint) {
  * @param {Boolean} $1.disabled Disable value for breakpoint value
  */
 
-function addBreakpoint(location, condition) {
-  var breakpoint = (0, _breakpoint.createBreakpoint)(location, { condition });
+function addBreakpoint(location, condition, hidden) {
+  var breakpoint = (0, _breakpoint.createBreakpoint)(location, { condition, hidden });
   return (_ref2) => {
     var dispatch = _ref2.dispatch,
         getState = _ref2.getState,
@@ -18274,16 +18356,31 @@ function addBreakpoint(location, condition) {
 }
 
 /**
+ * Add a new hidden breakpoint
+ *
+ * @memberOf actions/breakpoints
+ * @param location
+ * @return {function(ThunkArgs)}
+ */
+function addHiddenBreakpoint(location) {
+  return (_ref3) => {
+    var dispatch = _ref3.dispatch;
+
+    return dispatch(addBreakpoint(location, "", true));
+  };
+}
+
+/**
  * Remove a single breakpoint
  *
  * @memberof actions/breakpoints
  * @static
  */
 function removeBreakpoint(location) {
-  return (_ref3) => {
-    var dispatch = _ref3.dispatch,
-        getState = _ref3.getState,
-        client = _ref3.client;
+  return (_ref4) => {
+    var dispatch = _ref4.dispatch,
+        getState = _ref4.getState,
+        client = _ref4.client;
 
     var bp = (0, _selectors.getBreakpoint)(getState(), location);
     if (!bp) {
@@ -18325,11 +18422,11 @@ function removeBreakpoint(location) {
  */
 function enableBreakpoint(location) {
   return (() => {
-    var _ref4 = _asyncToGenerator(function* (_ref5) {
-      var dispatch = _ref5.dispatch,
-          getState = _ref5.getState,
-          client = _ref5.client,
-          sourceMaps = _ref5.sourceMaps;
+    var _ref5 = _asyncToGenerator(function* (_ref6) {
+      var dispatch = _ref6.dispatch,
+          getState = _ref6.getState,
+          client = _ref6.client,
+          sourceMaps = _ref6.sourceMaps;
 
       var breakpoint = (0, _selectors.getBreakpoint)(getState(), location);
       if (!breakpoint) {
@@ -18346,7 +18443,7 @@ function enableBreakpoint(location) {
     });
 
     return function (_x) {
-      return _ref4.apply(this, arguments);
+      return _ref5.apply(this, arguments);
     };
   })();
 }
@@ -18359,10 +18456,10 @@ function enableBreakpoint(location) {
  */
 function disableBreakpoint(location) {
   return (() => {
-    var _ref6 = _asyncToGenerator(function* (_ref7) {
-      var dispatch = _ref7.dispatch,
-          getState = _ref7.getState,
-          client = _ref7.client;
+    var _ref7 = _asyncToGenerator(function* (_ref8) {
+      var dispatch = _ref8.dispatch,
+          getState = _ref8.getState,
+          client = _ref8.client;
 
       var bp = (0, _selectors.getBreakpoint)(getState(), location);
 
@@ -18386,7 +18483,7 @@ function disableBreakpoint(location) {
     });
 
     return function (_x2) {
-      return _ref6.apply(this, arguments);
+      return _ref7.apply(this, arguments);
     };
   })();
 }
@@ -18399,15 +18496,15 @@ function disableBreakpoint(location) {
  */
 function toggleAllBreakpoints(shouldDisableBreakpoints) {
   return (() => {
-    var _ref8 = _asyncToGenerator(function* (_ref9) {
-      var dispatch = _ref9.dispatch,
-          getState = _ref9.getState;
+    var _ref9 = _asyncToGenerator(function* (_ref10) {
+      var dispatch = _ref10.dispatch,
+          getState = _ref10.getState;
 
       var breakpoints = (0, _selectors.getBreakpoints)(getState());
-      for (var _ref10 of breakpoints) {
-        var _ref11 = _slicedToArray(_ref10, 2);
+      for (var _ref11 of breakpoints) {
+        var _ref12 = _slicedToArray(_ref11, 2);
 
-        var breakpoint = _ref11[1];
+        var breakpoint = _ref12[1];
 
         if (shouldDisableBreakpoints) {
           yield dispatch(disableBreakpoint(breakpoint.location));
@@ -18418,7 +18515,7 @@ function toggleAllBreakpoints(shouldDisableBreakpoints) {
     });
 
     return function (_x3) {
-      return _ref8.apply(this, arguments);
+      return _ref9.apply(this, arguments);
     };
   })();
 }
@@ -18431,13 +18528,13 @@ function toggleAllBreakpoints(shouldDisableBreakpoints) {
  */
 function toggleBreakpoints(shouldDisableBreakpoints, breakpoints) {
   return (() => {
-    var _ref12 = _asyncToGenerator(function* (_ref13) {
-      var dispatch = _ref13.dispatch;
+    var _ref13 = _asyncToGenerator(function* (_ref14) {
+      var dispatch = _ref14.dispatch;
 
-      for (var _ref14 of breakpoints) {
-        var _ref15 = _slicedToArray(_ref14, 2);
+      for (var _ref15 of breakpoints) {
+        var _ref16 = _slicedToArray(_ref15, 2);
 
-        var breakpoint = _ref15[1];
+        var breakpoint = _ref16[1];
 
         if (shouldDisableBreakpoints) {
           yield dispatch(disableBreakpoint(breakpoint.location));
@@ -18448,7 +18545,7 @@ function toggleBreakpoints(shouldDisableBreakpoints, breakpoints) {
     });
 
     return function (_x4) {
-      return _ref12.apply(this, arguments);
+      return _ref13.apply(this, arguments);
     };
   })();
 }
@@ -18461,22 +18558,22 @@ function toggleBreakpoints(shouldDisableBreakpoints, breakpoints) {
  */
 function removeAllBreakpoints() {
   return (() => {
-    var _ref16 = _asyncToGenerator(function* (_ref17) {
-      var dispatch = _ref17.dispatch,
-          getState = _ref17.getState;
+    var _ref17 = _asyncToGenerator(function* (_ref18) {
+      var dispatch = _ref18.dispatch,
+          getState = _ref18.getState;
 
       var breakpoints = (0, _selectors.getBreakpoints)(getState());
-      for (var _ref18 of breakpoints) {
-        var _ref19 = _slicedToArray(_ref18, 2);
+      for (var _ref19 of breakpoints) {
+        var _ref20 = _slicedToArray(_ref19, 2);
 
-        var breakpoint = _ref19[1];
+        var breakpoint = _ref20[1];
 
         yield dispatch(removeBreakpoint(breakpoint.location));
       }
     });
 
     return function (_x5) {
-      return _ref16.apply(this, arguments);
+      return _ref17.apply(this, arguments);
     };
   })();
 }
@@ -18489,30 +18586,30 @@ function removeAllBreakpoints() {
  */
 function removeBreakpoints(breakpoints) {
   return (() => {
-    var _ref20 = _asyncToGenerator(function* (_ref21) {
-      var dispatch = _ref21.dispatch;
+    var _ref21 = _asyncToGenerator(function* (_ref22) {
+      var dispatch = _ref22.dispatch;
 
-      for (var _ref22 of breakpoints) {
-        var _ref23 = _slicedToArray(_ref22, 2);
+      for (var _ref23 of breakpoints) {
+        var _ref24 = _slicedToArray(_ref23, 2);
 
-        var breakpoint = _ref23[1];
+        var breakpoint = _ref24[1];
 
         yield dispatch(removeBreakpoint(breakpoint.location));
       }
     });
 
     return function (_x6) {
-      return _ref20.apply(this, arguments);
+      return _ref21.apply(this, arguments);
     };
   })();
 }
 
 function remapBreakpoints(sourceId) {
   return (() => {
-    var _ref24 = _asyncToGenerator(function* (_ref25) {
-      var dispatch = _ref25.dispatch,
-          getState = _ref25.getState,
-          sourceMaps = _ref25.sourceMaps;
+    var _ref25 = _asyncToGenerator(function* (_ref26) {
+      var dispatch = _ref26.dispatch,
+          getState = _ref26.getState,
+          sourceMaps = _ref26.sourceMaps;
 
       var breakpoints = (0, _selectors.getBreakpoints)(getState());
       var newBreakpoints = yield (0, _remapLocations2.default)(breakpoints, sourceId, sourceMaps);
@@ -18524,7 +18621,7 @@ function remapBreakpoints(sourceId) {
     });
 
     return function (_x7) {
-      return _ref24.apply(this, arguments);
+      return _ref25.apply(this, arguments);
     };
   })();
 }
@@ -18542,15 +18639,15 @@ function remapBreakpoints(sourceId) {
  * @param {Boolean} $1.disabled Disable value for breakpoint value
  */
 function setBreakpointCondition(location) {
-  var _ref26 = arguments.length > 1 && arguments[1] !== undefined ? arguments[1] : {},
-      condition = _ref26.condition;
+  var _ref27 = arguments.length > 1 && arguments[1] !== undefined ? arguments[1] : {},
+      condition = _ref27.condition;
 
   return (() => {
-    var _ref27 = _asyncToGenerator(function* (_ref28) {
-      var dispatch = _ref28.dispatch,
-          getState = _ref28.getState,
-          client = _ref28.client,
-          sourceMaps = _ref28.sourceMaps;
+    var _ref28 = _asyncToGenerator(function* (_ref29) {
+      var dispatch = _ref29.dispatch,
+          getState = _ref29.getState,
+          client = _ref29.client,
+          sourceMaps = _ref29.sourceMaps;
 
       var bp = (0, _selectors.getBreakpoint)(getState(), location);
       if (!bp) {
@@ -18561,6 +18658,11 @@ function setBreakpointCondition(location) {
         // TODO(jwl): when this function is called, make sure the action
         // creator waits for the breakpoint to exist
         throw new Error("breakpoint must be saved");
+      }
+
+      if (bp.disabled) {
+        yield dispatch(enableBreakpoint(location));
+        bp.disabled = !bp.disabled;
       }
 
       yield client.setBreakpointCondition(bp.id, location, condition, sourceMaps.isOriginalId(bp.location.sourceId));
@@ -18576,17 +18678,17 @@ function setBreakpointCondition(location) {
     });
 
     return function (_x9) {
-      return _ref27.apply(this, arguments);
+      return _ref28.apply(this, arguments);
     };
   })();
 }
 
 function toggleBreakpoint(line, column) {
-  return (_ref29) => {
-    var dispatch = _ref29.dispatch,
-        getState = _ref29.getState,
-        client = _ref29.client,
-        sourceMaps = _ref29.sourceMaps;
+  return (_ref30) => {
+    var dispatch = _ref30.dispatch,
+        getState = _ref30.getState,
+        client = _ref30.client,
+        sourceMaps = _ref30.sourceMaps;
 
     var selectedSource = (0, _selectors.getSelectedSource)(getState());
     var bp = (0, _selectors.getBreakpointAtLocation)(getState(), { line, column });
@@ -18614,12 +18716,40 @@ function toggleBreakpoint(line, column) {
   };
 }
 
+function addOrToggleDisabledBreakpoint(line, column) {
+  return (_ref31) => {
+    var dispatch = _ref31.dispatch,
+        getState = _ref31.getState,
+        client = _ref31.client,
+        sourceMaps = _ref31.sourceMaps;
+
+    var selectedSource = (0, _selectors.getSelectedSource)(getState());
+    var bp = (0, _selectors.getBreakpointAtLocation)(getState(), { line, column });
+
+    if (bp && bp.loading) {
+      return;
+    }
+
+    if (bp) {
+      // NOTE: it's possible the breakpoint has slid to a column
+      return dispatch(toggleDisabledBreakpoint(line, column || bp.location.column));
+    }
+
+    return dispatch(addBreakpoint({
+      sourceId: selectedSource.get("id"),
+      sourceUrl: selectedSource.get("url"),
+      line: line,
+      column: column
+    }));
+  };
+}
+
 function toggleDisabledBreakpoint(line, column) {
-  return (_ref30) => {
-    var dispatch = _ref30.dispatch,
-        getState = _ref30.getState,
-        client = _ref30.client,
-        sourceMaps = _ref30.sourceMaps;
+  return (_ref32) => {
+    var dispatch = _ref32.dispatch,
+        getState = _ref32.getState,
+        client = _ref32.client,
+        sourceMaps = _ref32.sourceMaps;
 
     var bp = (0, _selectors.getBreakpointAtLocation)(getState(), { line, column });
     if (bp && bp.loading) {
@@ -19008,55 +19138,44 @@ function _asyncToGenerator(fn) { return function () { var gen = fn.apply(this, a
  * @static
  */
 function addExpression(input) {
-  var _ref = arguments.length > 1 && arguments[1] !== undefined ? arguments[1] : {},
-      _ref$visible = _ref.visible,
-      visible = _ref$visible === undefined ? true : _ref$visible;
-
   return (() => {
-    var _ref2 = _asyncToGenerator(function* (_ref3) {
-      var dispatch = _ref3.dispatch,
-          getState = _ref3.getState;
+    var _ref = _asyncToGenerator(function* (_ref2) {
+      var dispatch = _ref2.dispatch,
+          getState = _ref2.getState;
 
       if (!input) {
         return;
       }
 
       var expression = (0, _selectors.getExpression)(getState(), input);
-      if (expression && expression.visible) {
-        return;
-      }
-
-      // Lets make the expression visible
       if (expression) {
         return dispatch({
           type: "UPDATE_EXPRESSION",
           expression,
-          input,
-          visible: true
+          input
         });
       }
 
       dispatch({
         type: "ADD_EXPRESSION",
-        input,
-        visible
+        input
       });
 
       var selectedFrame = (0, _selectors.getSelectedFrame)(getState());
       var selectedFrameId = selectedFrame ? selectedFrame.id : null;
-      dispatch(evaluateExpression({ input, visible }, selectedFrameId));
+      dispatch(evaluateExpression({ input }, selectedFrameId));
     });
 
-    return function (_x2) {
-      return _ref2.apply(this, arguments);
+    return function (_x) {
+      return _ref.apply(this, arguments);
     };
   })();
 }
 
 function updateExpression(input, expression) {
-  return (_ref4) => {
-    var dispatch = _ref4.dispatch,
-        getState = _ref4.getState;
+  return (_ref3) => {
+    var dispatch = _ref3.dispatch,
+        getState = _ref3.getState;
 
     if (!input || input == expression.input) {
       return;
@@ -19065,8 +19184,7 @@ function updateExpression(input, expression) {
     dispatch({
       type: "UPDATE_EXPRESSION",
       expression,
-      input: input,
-      visible: expression.visible
+      input: input
     });
 
     var selectedFrame = (0, _selectors.getSelectedFrame)(getState());
@@ -19083,8 +19201,8 @@ function updateExpression(input, expression) {
  * @static
  */
 function deleteExpression(expression) {
-  return (_ref5) => {
-    var dispatch = _ref5.dispatch;
+  return (_ref4) => {
+    var dispatch = _ref4.dispatch;
 
     dispatch({
       type: "DELETE_EXPRESSION",
@@ -19101,10 +19219,10 @@ function deleteExpression(expression) {
  */
 function evaluateExpressions(frameId) {
   return (() => {
-    var _ref6 = _asyncToGenerator(function* (_ref7) {
-      var dispatch = _ref7.dispatch,
-          getState = _ref7.getState,
-          client = _ref7.client;
+    var _ref5 = _asyncToGenerator(function* (_ref6) {
+      var dispatch = _ref6.dispatch,
+          getState = _ref6.getState,
+          client = _ref6.client;
 
       var expressions = (0, _selectors.getExpressions)(getState()).toJS();
       if (!frameId) {
@@ -19116,17 +19234,17 @@ function evaluateExpressions(frameId) {
       }
     });
 
-    return function (_x3) {
-      return _ref6.apply(this, arguments);
+    return function (_x2) {
+      return _ref5.apply(this, arguments);
     };
   })();
 }
 
 function evaluateExpression(expression, frameId) {
-  return function (_ref8) {
-    var dispatch = _ref8.dispatch,
-        getState = _ref8.getState,
-        client = _ref8.client;
+  return function (_ref7) {
+    var dispatch = _ref7.dispatch,
+        getState = _ref7.getState,
+        client = _ref7.client;
 
     if (!expression.input) {
       console.warn("Expressions should not be empty");
@@ -19136,7 +19254,6 @@ function evaluateExpression(expression, frameId) {
     return dispatch({
       type: "EVALUATE_EXPRESSION",
       input: expression.input,
-      visible: expression.visible,
       [_promise.PROMISE]: client.evaluate(expression.input, { frameId })
     });
   };
@@ -19359,8 +19476,24 @@ Object.defineProperty(exports, "__esModule", {
 
 var _slicedToArray = function () { function sliceIterator(arr, i) { var _arr = []; var _n = true; var _d = false; var _e = undefined; try { for (var _i = arr[Symbol.iterator](), _s; !(_n = (_s = _i.next()).done); _n = true) { _arr.push(_s.value); if (i && _arr.length === i) break; } } catch (err) { _d = true; _e = err; } finally { try { if (!_n && _i["return"]) _i["return"](); } finally { if (_d) throw _e; } } return _arr; } return function (arr, i) { if (Array.isArray(arr)) { return arr; } else if (Symbol.iterator in Object(arr)) { return sliceIterator(arr, i); } else { throw new TypeError("Invalid attempt to destructure non-iterable instance"); } }; }();
 
+// If a request has been made to show this source, go ahead and
+// select it.
+var checkSelectedSource = (() => {
+  var _ref = _asyncToGenerator(function* (state, dispatch, source) {
+    var pendingLocation = (0, _selectors.getPendingSelectedLocation)(state);
+
+    if (pendingLocation && !!source.url && pendingLocation.url === source.url) {
+      yield dispatch(selectSource(source.id, { line: pendingLocation.line }));
+    }
+  });
+
+  return function checkSelectedSource(_x, _x2, _x3) {
+    return _ref.apply(this, arguments);
+  };
+})();
+
 var checkPendingBreakpoint = (() => {
-  var _ref = _asyncToGenerator(function* (state, dispatch, pendingBreakpoint, source) {
+  var _ref2 = _asyncToGenerator(function* (state, dispatch, pendingBreakpoint, source) {
     var sourceUrl = pendingBreakpoint.location.sourceUrl;
 
     var sameSource = sourceUrl && sourceUrl === source.url;
@@ -19370,13 +19503,13 @@ var checkPendingBreakpoint = (() => {
     }
   });
 
-  return function checkPendingBreakpoint(_x, _x2, _x3, _x4) {
-    return _ref.apply(this, arguments);
+  return function checkPendingBreakpoint(_x4, _x5, _x6, _x7) {
+    return _ref2.apply(this, arguments);
   };
 })();
 
 var checkPendingBreakpoints = (() => {
-  var _ref2 = _asyncToGenerator(function* (state, dispatch, source) {
+  var _ref3 = _asyncToGenerator(function* (state, dispatch, source) {
     var pendingBreakpoints = (0, _selectors.getPendingBreakpoints)(state);
     if (!pendingBreakpoints) {
       return;
@@ -19388,8 +19521,8 @@ var checkPendingBreakpoints = (() => {
     }
   });
 
-  return function checkPendingBreakpoints(_x5, _x6, _x7) {
-    return _ref2.apply(this, arguments);
+  return function checkPendingBreakpoints(_x8, _x9, _x10) {
+    return _ref3.apply(this, arguments);
   };
 })();
 
@@ -19449,42 +19582,33 @@ function _asyncToGenerator(fn) { return function () { var gen = fn.apply(this, a
  * @module actions/sources
  */
 
-// If a request has been made to show this source, go ahead and
-// select it.
-function checkSelectedSource(state, dispatch, source) {
-  var pendingLocation = (0, _selectors.getPendingSelectedLocation)(state);
-
-  if (pendingLocation && !!source.url && pendingLocation.url === source.url) {
-    dispatch(selectSource(source.id, { line: pendingLocation.line }));
-  }
-}
-
 function newSource(source) {
   return (() => {
-    var _ref3 = _asyncToGenerator(function* (_ref4) {
-      var dispatch = _ref4.dispatch,
-          getState = _ref4.getState;
+    var _ref4 = _asyncToGenerator(function* (_ref5) {
+      var dispatch = _ref5.dispatch,
+          getState = _ref5.getState;
 
       dispatch({ type: "ADD_SOURCE", source });
+
       if (_prefs.prefs.clientSourceMapsEnabled) {
         yield dispatch(loadSourceMap(source));
       }
 
-      checkSelectedSource(getState(), dispatch, source);
+      yield checkSelectedSource(getState(), dispatch, source);
       yield checkPendingBreakpoints(getState(), dispatch, source);
     });
 
-    return function (_x8) {
-      return _ref3.apply(this, arguments);
+    return function (_x11) {
+      return _ref4.apply(this, arguments);
     };
   })();
 }
 
 function newSources(sources) {
   return (() => {
-    var _ref5 = _asyncToGenerator(function* (_ref6) {
-      var dispatch = _ref6.dispatch,
-          getState = _ref6.getState;
+    var _ref6 = _asyncToGenerator(function* (_ref7) {
+      var dispatch = _ref7.dispatch,
+          getState = _ref7.getState;
 
       var filteredSources = sources.filter(function (source) {
         return !(0, _selectors.getSource)(getState(), source.id);
@@ -19495,8 +19619,8 @@ function newSources(sources) {
       }
     });
 
-    return function (_x9) {
-      return _ref5.apply(this, arguments);
+    return function (_x12) {
+      return _ref6.apply(this, arguments);
     };
   })();
 }
@@ -19507,10 +19631,10 @@ function newSources(sources) {
  */
 function loadSourceMap(generatedSource) {
   return (() => {
-    var _ref7 = _asyncToGenerator(function* (_ref8) {
-      var dispatch = _ref8.dispatch,
-          getState = _ref8.getState,
-          sourceMaps = _ref8.sourceMaps;
+    var _ref8 = _asyncToGenerator(function* (_ref9) {
+      var dispatch = _ref9.dispatch,
+          getState = _ref9.getState,
+          sourceMaps = _ref9.sourceMaps;
 
       var urls = yield sourceMaps.getOriginalURLs(generatedSource);
       if (!urls) {
@@ -19535,8 +19659,8 @@ function loadSourceMap(generatedSource) {
       });
     });
 
-    return function (_x10) {
-      return _ref7.apply(this, arguments);
+    return function (_x13) {
+      return _ref8.apply(this, arguments);
     };
   })();
 }
@@ -19553,22 +19677,28 @@ function loadSourceMap(generatedSource) {
 function selectSourceURL(url) {
   var options = arguments.length > 1 && arguments[1] !== undefined ? arguments[1] : {};
 
-  return (_ref9) => {
-    var dispatch = _ref9.dispatch,
-        getState = _ref9.getState;
+  return (() => {
+    var _ref10 = _asyncToGenerator(function* (_ref11) {
+      var dispatch = _ref11.dispatch,
+          getState = _ref11.getState;
 
-    var source = (0, _selectors.getSourceByURL)(getState(), url);
-    if (source) {
-      dispatch(selectSource(source.get("id"), options));
-    } else {
-      dispatch({
-        type: "SELECT_SOURCE_URL",
-        url: url,
-        tabIndex: options.tabIndex,
-        line: options.line
-      });
-    }
-  };
+      var source = (0, _selectors.getSourceByURL)(getState(), url);
+      if (source) {
+        yield dispatch(selectSource(source.get("id"), options));
+      } else {
+        dispatch({
+          type: "SELECT_SOURCE_URL",
+          url: url,
+          tabIndex: options.tabIndex,
+          line: options.line
+        });
+      }
+    });
+
+    return function (_x15) {
+      return _ref10.apply(this, arguments);
+    };
+  })();
 }
 
 /**
@@ -19578,10 +19708,10 @@ function selectSourceURL(url) {
 function selectSource(id) {
   var options = arguments.length > 1 && arguments[1] !== undefined ? arguments[1] : {};
 
-  return (_ref10) => {
-    var dispatch = _ref10.dispatch,
-        getState = _ref10.getState,
-        client = _ref10.client;
+  return (_ref12) => {
+    var dispatch = _ref12.dispatch,
+        getState = _ref12.getState,
+        client = _ref12.client;
 
     if (!client) {
       // No connection, do nothing. This happens when the debugger is
@@ -19621,11 +19751,11 @@ function selectSource(id) {
  */
 function jumpToMappedLocation(sourceLocation) {
   return (() => {
-    var _ref12 = _asyncToGenerator(function* (_ref13) {
-      var dispatch = _ref13.dispatch,
-          getState = _ref13.getState,
-          client = _ref13.client,
-          sourceMaps = _ref13.sourceMaps;
+    var _ref14 = _asyncToGenerator(function* (_ref15) {
+      var dispatch = _ref15.dispatch,
+          getState = _ref15.getState,
+          client = _ref15.client,
+          sourceMaps = _ref15.sourceMaps;
 
       if (!client) {
         return;
@@ -19642,8 +19772,8 @@ function jumpToMappedLocation(sourceLocation) {
       return dispatch(selectSource(pairedLocation.sourceId, { line: pairedLocation.line }));
     });
 
-    return function (_x13) {
-      return _ref12.apply(this, arguments);
+    return function (_x17) {
+      return _ref14.apply(this, arguments);
     };
   })();
 }
@@ -19669,10 +19799,10 @@ function moveTab(url, tabIndex) {
  * @static
  */
 function closeTab(url) {
-  return (_ref14) => {
-    var dispatch = _ref14.dispatch,
-        getState = _ref14.getState,
-        client = _ref14.client;
+  return (_ref16) => {
+    var dispatch = _ref16.dispatch,
+        getState = _ref16.getState,
+        client = _ref16.client;
 
     (0, _editor.removeDocument)(url);
     var tabs = (0, _selectors.removeSourceFromTabList)((0, _selectors.getSourceTabs)(getState()), url);
@@ -19688,10 +19818,10 @@ function closeTab(url) {
  * @static
  */
 function closeTabs(urls) {
-  return (_ref15) => {
-    var dispatch = _ref15.dispatch,
-        getState = _ref15.getState,
-        client = _ref15.client;
+  return (_ref17) => {
+    var dispatch = _ref17.dispatch,
+        getState = _ref17.getState,
+        client = _ref17.client;
 
     urls.forEach(url => {
       var source = (0, _selectors.getSourceByURL)(getState(), url);
@@ -19722,15 +19852,15 @@ function closeTabs(urls) {
  */
 function togglePrettyPrint(sourceId) {
   return (() => {
-    var _ref16 = _asyncToGenerator(function* (_ref17) {
-      var dispatch = _ref17.dispatch,
-          getState = _ref17.getState,
-          client = _ref17.client,
-          sourceMaps = _ref17.sourceMaps;
+    var _ref18 = _asyncToGenerator(function* (_ref19) {
+      var dispatch = _ref19.dispatch,
+          getState = _ref19.getState,
+          client = _ref19.client,
+          sourceMaps = _ref19.sourceMaps;
 
       var source = (0, _selectors.getSource)(getState(), sourceId).toJS();
 
-      if (source && source.loading) {
+      if (source && !(0, _source.isLoaded)(source)) {
         return {};
       }
 
@@ -19748,29 +19878,30 @@ function togglePrettyPrint(sourceId) {
         }));
       }
 
-      var _ref18 = yield dispatch((0, _createPrettySource.createPrettySource)(sourceId)),
-          newPrettySource = _ref18.source;
+      var _ref20 = yield dispatch((0, _createPrettySource.createPrettySource)(sourceId)),
+          newPrettySource = _ref20.source;
 
       yield dispatch((0, _breakpoints.remapBreakpoints)(sourceId));
+      yield dispatch((0, _ast.setEmptyLines)(newPrettySource.id));
 
       return dispatch(selectSource(newPrettySource.id, {
         line: selectedOriginalLocation.line
       }));
     });
 
-    return function (_x14) {
-      return _ref16.apply(this, arguments);
+    return function (_x18) {
+      return _ref18.apply(this, arguments);
     };
   })();
 }
 
 function toggleBlackBox(source) {
   return (() => {
-    var _ref19 = _asyncToGenerator(function* (_ref20) {
-      var dispatch = _ref20.dispatch,
-          getState = _ref20.getState,
-          client = _ref20.client,
-          sourceMaps = _ref20.sourceMaps;
+    var _ref21 = _asyncToGenerator(function* (_ref22) {
+      var dispatch = _ref22.dispatch,
+          getState = _ref22.getState,
+          client = _ref22.client,
+          sourceMaps = _ref22.sourceMaps;
       var isBlackBoxed = source.isBlackBoxed,
           id = source.id;
 
@@ -19782,8 +19913,8 @@ function toggleBlackBox(source) {
       });
     });
 
-    return function (_x15) {
-      return _ref19.apply(this, arguments);
+    return function (_x19) {
+      return _ref21.apply(this, arguments);
     };
   })();
 }
@@ -19794,11 +19925,11 @@ function toggleBlackBox(source) {
  */
 function loadSourceText(source) {
   return (() => {
-    var _ref21 = _asyncToGenerator(function* (_ref22) {
-      var dispatch = _ref22.dispatch,
-          getState = _ref22.getState,
-          client = _ref22.client,
-          sourceMaps = _ref22.sourceMaps;
+    var _ref23 = _asyncToGenerator(function* (_ref24) {
+      var dispatch = _ref24.dispatch,
+          getState = _ref24.getState,
+          client = _ref24.client,
+          sourceMaps = _ref24.sourceMaps;
 
       // Fetch the source text only once.
       if (source.text) {
@@ -19824,10 +19955,11 @@ function loadSourceText(source) {
       });
 
       yield dispatch((0, _ast.setSymbols)(source.id));
+      yield dispatch((0, _ast.setEmptyLines)(source.id));
     });
 
-    return function (_x16) {
-      return _ref21.apply(this, arguments);
+    return function (_x20) {
+      return _ref23.apply(this, arguments);
     };
   })();
 }
@@ -19839,16 +19971,16 @@ function loadSourceText(source) {
  */
 function loadAllSources() {
   return (() => {
-    var _ref24 = _asyncToGenerator(function* (_ref25) {
-      var dispatch = _ref25.dispatch,
-          getState = _ref25.getState;
+    var _ref26 = _asyncToGenerator(function* (_ref27) {
+      var dispatch = _ref27.dispatch,
+          getState = _ref27.getState;
 
       var sources = (0, _selectors.getSources)(getState());
       var query = (0, _selectors.getTextSearchQuery)(getState());
-      for (var _ref26 of sources) {
-        var _ref27 = _slicedToArray(_ref26, 2);
+      for (var _ref28 of sources) {
+        var _ref29 = _slicedToArray(_ref28, 2);
 
-        var src = _ref27[1];
+        var src = _ref29[1];
 
         var source = src.toJS();
         yield dispatch(loadSourceText(source));
@@ -19860,8 +19992,8 @@ function loadAllSources() {
       }
     });
 
-    return function (_x17) {
-      return _ref24.apply(this, arguments);
+    return function (_x21) {
+      return _ref26.apply(this, arguments);
     };
   })();
 }
@@ -19876,10 +20008,30 @@ function loadAllSources() {
 Object.defineProperty(exports, "__esModule", {
   value: true
 });
+exports.getPausedPosition = undefined;
+
+var getPausedPosition = exports.getPausedPosition = (() => {
+  var _ref = _asyncToGenerator(function* (pauseInfo, sourceMaps) {
+    var frames = pauseInfo.frames;
+
+    frames = yield updateFrameLocations(frames, sourceMaps);
+    var frame = frames[0];
+    var location = frame.location;
+
+    return location;
+  });
+
+  return function getPausedPosition(_x, _x2) {
+    return _ref.apply(this, arguments);
+  };
+})();
+
 exports.updateFrameLocations = updateFrameLocations;
 exports.getPauseReason = getPauseReason;
 
 var _lodash = __webpack_require__(2);
+
+function _asyncToGenerator(fn) { return function () { var gen = fn.apply(this, arguments); return new Promise(function (resolve, reject) { function step(key, arg) { try { var info = gen[key](arg); var value = info.value; } catch (error) { reject(error); return; } if (info.done) { resolve(value); } else { return Promise.resolve(value).then(function (value) { step("next", value); }, function (err) { step("throw", err); }); } } return step("next"); }); }; }
 
 function updateFrameLocations(frames, sourceMaps) {
   if (!frames || frames.length == 0) {
@@ -20145,6 +20297,11 @@ var _source = __webpack_require__(233);
 
 var _wasm = __webpack_require__(23);
 
+var _devtoolsSourceEditor = __webpack_require__(994);
+
+var resizeBreakpointGutter = _devtoolsSourceEditor.SourceEditorUtils.resizeBreakpointGutter;
+
+
 var sourceDocs = {};
 
 function getDocument(key) {
@@ -20166,16 +20323,17 @@ function clearDocuments() {
 function resetLineNumberFormat(editor) {
   var cm = editor.codeMirror;
   cm.setOption("lineNumberFormatter", number => number);
+  resizeBreakpointGutter(cm);
 }
 
 function updateLineNumberFormat(editor, sourceId) {
   if (!(0, _wasm.isWasm)(sourceId)) {
-    resetLineNumberFormat(editor);
-    return;
+    return resetLineNumberFormat(editor);
   }
   var cm = editor.codeMirror;
   var lineNumberFormatter = (0, _wasm.getWasmLineNumberFormatter)(sourceId);
   cm.setOption("lineNumberFormatter", lineNumberFormatter);
+  resizeBreakpointGutter(cm);
 }
 
 function updateDocument(editor, sourceId) {
@@ -20810,7 +20968,78 @@ module.exports = hasPath;
 /* 301 */,
 /* 302 */,
 /* 303 */,
-/* 304 */,
+/* 304 */
+/***/ (function(module, exports, __webpack_require__) {
+
+var isObject = __webpack_require__(84),
+    isSymbol = __webpack_require__(72);
+
+/** Used as references for various `Number` constants. */
+var NAN = 0 / 0;
+
+/** Used to match leading and trailing whitespace. */
+var reTrim = /^\s+|\s+$/g;
+
+/** Used to detect bad signed hexadecimal string values. */
+var reIsBadHex = /^[-+]0x[0-9a-f]+$/i;
+
+/** Used to detect binary string values. */
+var reIsBinary = /^0b[01]+$/i;
+
+/** Used to detect octal string values. */
+var reIsOctal = /^0o[0-7]+$/i;
+
+/** Built-in method references without a dependency on `root`. */
+var freeParseInt = parseInt;
+
+/**
+ * Converts `value` to a number.
+ *
+ * @static
+ * @memberOf _
+ * @since 4.0.0
+ * @category Lang
+ * @param {*} value The value to process.
+ * @returns {number} Returns the number.
+ * @example
+ *
+ * _.toNumber(3.2);
+ * // => 3.2
+ *
+ * _.toNumber(Number.MIN_VALUE);
+ * // => 5e-324
+ *
+ * _.toNumber(Infinity);
+ * // => Infinity
+ *
+ * _.toNumber('3.2');
+ * // => 3.2
+ */
+function toNumber(value) {
+  if (typeof value == 'number') {
+    return value;
+  }
+  if (isSymbol(value)) {
+    return NAN;
+  }
+  if (isObject(value)) {
+    var other = typeof value.valueOf == 'function' ? value.valueOf() : value;
+    value = isObject(other) ? (other + '') : other;
+  }
+  if (typeof value != 'string') {
+    return value === 0 ? value : +value;
+  }
+  value = value.replace(reTrim, '');
+  var isBinary = reIsBinary.test(value);
+  return (isBinary || reIsOctal.test(value))
+    ? freeParseInt(value.slice(2), isBinary ? 2 : 8)
+    : (reIsBadHex.test(value) ? NAN : +value);
+}
+
+module.exports = toNumber;
+
+
+/***/ }),
 /* 305 */
 /***/ (function(module, exports, __webpack_require__) {
 
@@ -21067,6 +21296,7 @@ exports.resume = resume;
 exports.breakOnNext = breakOnNext;
 exports.selectFrame = selectFrame;
 exports.loadObjectProperties = loadObjectProperties;
+exports.astCommand = astCommand;
 
 var _sources = __webpack_require__(254);
 
@@ -21077,6 +21307,18 @@ var _selectors = __webpack_require__(242);
 var _pause = __webpack_require__(255);
 
 var _expressions = __webpack_require__(252);
+
+var _breakpoints = __webpack_require__(245);
+
+var _breakpoints2 = __webpack_require__(236);
+
+var _parser = __webpack_require__(827);
+
+var parser = _interopRequireWildcard(_parser);
+
+var _prefs = __webpack_require__(226);
+
+function _interopRequireWildcard(obj) { if (obj && obj.__esModule) { return obj; } else { var newObj = {}; if (obj != null) { for (var key in obj) { if (Object.prototype.hasOwnProperty.call(obj, key)) newObj[key] = obj[key]; } } newObj.default = obj; return newObj; } }
 
 function _asyncToGenerator(fn) { return function () { var gen = fn.apply(this, arguments); return new Promise(function (resolve, reject) { function step(key, arg) { try { var info = gen[key](arg); var value = info.value; } catch (error) { reject(error); return; } if (info.done) { resolve(value); } else { return Promise.resolve(value).then(function (value) { step("next", value); }, function (err) { step("throw", err); }); } } return step("next"); }); }; }
 
@@ -21207,7 +21449,7 @@ function stepIn() {
         getState = _ref7.getState;
 
     if ((0, _selectors.getPause)(getState())) {
-      return dispatch(command({ type: "stepIn" }));
+      return dispatch(astCommand("stepIn"));
     }
   };
 }
@@ -21224,7 +21466,7 @@ function stepOver() {
         getState = _ref8.getState;
 
     if ((0, _selectors.getPause)(getState())) {
-      return dispatch(command({ type: "stepOver" }));
+      return dispatch(astCommand("stepOver"));
     }
   };
 }
@@ -21241,7 +21483,7 @@ function stepOut() {
         getState = _ref9.getState;
 
     if ((0, _selectors.getPause)(getState())) {
-      return dispatch(command({ type: "stepOut" }));
+      return dispatch(astCommand("stepOut"));
     }
   };
 }
@@ -21335,6 +21577,47 @@ function loadObjectProperties(object) {
       [_promise.PROMISE]: client.getProperties(object)
     });
   };
+}
+
+/**
+ * @memberOf actions/pause
+ * @static
+ * @param stepType
+ * @returns {function(ThunkArgs)}
+ */
+function astCommand(stepType) {
+  return (() => {
+    var _ref15 = _asyncToGenerator(function* (_ref16) {
+      var dispatch = _ref16.dispatch,
+          getState = _ref16.getState,
+          sourceMaps = _ref16.sourceMaps;
+
+      if (!_prefs.features.asyncStepping) {
+        return dispatch(command({ type: stepType }));
+      }
+
+      var pauseInfo = (0, _selectors.getPause)(getState());
+      var source = (0, _selectors.getSelectedSource)(getState()).toJS();
+      var currentHiddenBreakpointLocation = (0, _breakpoints2.getHiddenBreakpointLocation)(getState());
+      if (currentHiddenBreakpointLocation) {
+        dispatch((0, _breakpoints.removeBreakpoint)(currentHiddenBreakpointLocation));
+      }
+      var pausedPosition = yield (0, _pause.getPausedPosition)(pauseInfo, sourceMaps);
+
+      var _ref17 = yield parser.getNextStep(source, stepType, pausedPosition),
+          nextStepType = _ref17.nextStepType,
+          nextHiddenBreakpointLocation = _ref17.nextHiddenBreakpointLocation;
+
+      if (nextHiddenBreakpointLocation) {
+        yield dispatch((0, _breakpoints.addHiddenBreakpoint)(nextHiddenBreakpointLocation));
+      }
+      return dispatch(command({ type: nextStepType }));
+    });
+
+    return function (_x3) {
+      return _ref15.apply(this, arguments);
+    };
+  })();
 }
 
 /***/ }),
@@ -21530,6 +21813,12 @@ function showSource(sourceId) {
         getState = _ref4.getState;
 
     var source = (0, _selectors.getSource)(getState(), sourceId);
+
+    dispatch({
+      type: "SHOW_SOURCE",
+      sourceUrl: ""
+    });
+
     dispatch({
       type: "SHOW_SOURCE",
       sourceUrl: source.get("url")
@@ -21636,7 +21925,7 @@ var _Transition = __webpack_require__(333);
 
 var _Transition2 = _interopRequireDefault(_Transition);
 
-__webpack_require__(737);
+__webpack_require__(952);
 
 function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { default: obj }; }
 
@@ -23088,7 +23377,7 @@ var _classnames2 = _interopRequireDefault(_classnames);
 
 var _resultList = __webpack_require__(343);
 
-__webpack_require__(695);
+__webpack_require__(867);
 
 var _SearchInput = __webpack_require__(377);
 
@@ -23107,7 +23396,6 @@ class Autocomplete extends _react.Component {
 
     this.onKeyDown = this.onKeyDown.bind(this);
     this.state = {
-      inputValue: props.inputValue,
       selectedIndex: 0,
       focused: false
     };
@@ -23120,13 +23408,12 @@ class Autocomplete extends _react.Component {
   }
 
   getSearchResults() {
-    var inputValue = this.state.inputValue;
-
+    var inputValue = this.props.inputValue;
     if (inputValue == "") {
       return [];
     }
 
-    return (0, _fuzzaldrinPlus.filter)(this.props.items, this.state.inputValue, {
+    return (0, _fuzzaldrinPlus.filter)(this.props.items, inputValue, {
       key: "value"
     });
   }
@@ -23153,11 +23440,11 @@ class Autocomplete extends _react.Component {
       if (searchResults.length) {
         this.props.selectItem(e, searchResults[this.state.selectedIndex]);
       } else {
-        this.props.close(this.state.inputValue);
+        this.props.close(this.props.inputValue);
       }
       e.preventDefault();
     } else if (e.key === "Tab") {
-      this.props.close(this.state.inputValue);
+      this.props.close(this.props.inputValue);
       e.preventDefault();
     }
   }
@@ -23177,7 +23464,7 @@ class Autocomplete extends _react.Component {
       };
 
       return _react2.default.createElement(_ResultList2.default, props);
-    } else if (this.state.inputValue && !results.length) {
+    } else if (this.props.inputValue && !results.length) {
       return _react2.default.createElement(
         "div",
         { className: "no-result-msg absolute-center" },
@@ -23196,16 +23483,18 @@ class Autocomplete extends _react.Component {
     var summaryMsg = L10N.getFormatStr("sourceSearch.resultsSummary1", searchResults.length);
 
     var searchProps = {
-      query: this.state.inputValue,
+      query: this.props.inputValue,
       count: searchResults.length,
       placeholder: this.props.placeholder,
       size,
       showErrorEmoji: true,
       summaryMsg,
-      onChange: e => this.setState({
-        inputValue: e.target.value,
-        selectedIndex: 0
-      }),
+      onChange: e => {
+        this.props.onChangeHandler(e.target.value);
+        this.setState({
+          selectedIndex: 0
+        });
+      },
       onFocus: () => this.setState({ focused: true }),
       onBlur: () => this.setState({ focused: false }),
       onKeyDown: this.onKeyDown,
@@ -23321,7 +23610,7 @@ var _Svg = __webpack_require__(345);
 
 var _Svg2 = _interopRequireDefault(_Svg);
 
-__webpack_require__(690);
+__webpack_require__(862);
 
 function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { default: obj }; }
 
@@ -23354,6 +23643,7 @@ var svg = {
   "column-breakpoint": __webpack_require__(998),
   "case-match": __webpack_require__(351),
   close: __webpack_require__(352),
+  dojo: __webpack_require__(806),
   domain: __webpack_require__(353),
   file: __webpack_require__(354),
   folder: __webpack_require__(355),
@@ -23395,10 +23685,14 @@ var svg = {
   showOutline: __webpack_require__(1045)
 };
 
-module.exports = function (name, props) {
-  // eslint-disable-line
+function Svg(_ref) {
+  var name = _ref.name,
+      className = _ref.className,
+      onClick = _ref.onClick,
+      ariaLabel = _ref["aria-label"];
+
   if (!svg[name]) {
-    var error = "Unknown SVG: " + name;
+    var error = `Unknown SVG: ${name}`;
     if (isDevelopment()) {
       throw new Error(error);
     }
@@ -23407,16 +23701,22 @@ module.exports = function (name, props) {
     return;
   }
 
-  var className = name;
-  if (props && props.className) {
-    className = `${name} ${props.className}`;
-  }
+  className = `${name} ${className || ""}`;
   if (name === "subSettings") {
     className = "";
   }
-  props = Object.assign({}, props, { className, src: svg[name] });
+  var props = {
+    className,
+    onClick,
+    ["aria-label"]: ariaLabel,
+    src: svg[name]
+  };
   return React.createElement(InlineSVG, props);
-};
+}
+
+Svg.displayName = "Svg";
+
+module.exports = Svg;
 
 /***/ }),
 /* 346 */
@@ -23770,7 +24070,7 @@ var _Close = __webpack_require__(378);
 
 var _Close2 = _interopRequireDefault(_Close);
 
-__webpack_require__(693);
+__webpack_require__(865);
 
 function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { default: obj }; }
 
@@ -23786,7 +24086,7 @@ var arrowBtn = (onClick, type, className, tooltip) => {
   return _react2.default.createElement(
     "button",
     props,
-    (0, _Svg2.default)(type)
+    _react2.default.createElement(_Svg2.default, { name: type })
   );
 };
 
@@ -23809,10 +24109,10 @@ class SearchInput extends _react.Component {
 
   renderSvg() {
     if (this.shouldShowErrorEmoji()) {
-      return (0, _Svg2.default)("sad-face");
+      return _react2.default.createElement(_Svg2.default, { name: "sad-face" });
     }
 
-    return (0, _Svg2.default)("magnifying-glass");
+    return _react2.default.createElement(_Svg2.default, { name: "magnifying-glass" });
   }
 
   renderArrowButtons() {
@@ -23916,7 +24216,7 @@ var _Svg = __webpack_require__(344);
 
 var _Svg2 = _interopRequireDefault(_Svg);
 
-__webpack_require__(692);
+__webpack_require__(864);
 
 function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { default: obj }; }
 
@@ -23932,7 +24232,7 @@ function CloseButton(_ref) {
       onClick: handleClick,
       title: tooltip
     },
-    (0, _Svg2.default)("close")
+    _react2.default.createElement(_Svg2.default, { name: "close" })
   );
 }
 
@@ -23967,7 +24267,7 @@ var _classnames = __webpack_require__(175);
 
 var _classnames2 = _interopRequireDefault(_classnames);
 
-__webpack_require__(696);
+__webpack_require__(868);
 
 function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { default: obj }; }
 
@@ -24124,7 +24424,7 @@ var _react = __webpack_require__(0);
 
 var _react2 = _interopRequireDefault(_react);
 
-__webpack_require__(691);
+__webpack_require__(863);
 
 var _devtoolsComponents = __webpack_require__(1007);
 
@@ -24315,8 +24615,6 @@ var _classnames2 = _interopRequireDefault(_classnames);
 
 var _devtoolsConfig = __webpack_require__(828);
 
-var _lodash = __webpack_require__(2);
-
 var _GutterMenu = __webpack_require__(655);
 
 var _GutterMenu2 = _interopRequireDefault(_GutterMenu);
@@ -24328,6 +24626,10 @@ var _EditorMenu2 = _interopRequireDefault(_EditorMenu);
 var _ConditionalPanel = __webpack_require__(711);
 
 var _devtoolsLaunchpad = __webpack_require__(131);
+
+var _source = __webpack_require__(233);
+
+var _ast = __webpack_require__(1058);
 
 var _selectors = __webpack_require__(242);
 
@@ -24347,7 +24649,7 @@ var _HighlightLines = __webpack_require__(1025);
 
 var _HighlightLines2 = _interopRequireDefault(_HighlightLines);
 
-var _Preview = __webpack_require__(657);
+var _Preview = __webpack_require__(809);
 
 var _Preview2 = _interopRequireDefault(_Preview);
 
@@ -24367,11 +24669,15 @@ var _DebugLine = __webpack_require__(313);
 
 var _DebugLine2 = _interopRequireDefault(_DebugLine);
 
+var _EmptyLines = __webpack_require__(1144);
+
+var _EmptyLines2 = _interopRequireDefault(_EmptyLines);
+
 var _editor = __webpack_require__(257);
 
-__webpack_require__(716);
+__webpack_require__(905);
 
-__webpack_require__(717);
+__webpack_require__(906);
 
 var _devtoolsSourceEditor = __webpack_require__(994);
 
@@ -24403,10 +24709,8 @@ class Editor extends _react.PureComponent {
     self.onEscape = this.onEscape.bind(this);
     self.onGutterClick = this.onGutterClick.bind(this);
     self.onGutterContextMenu = this.onGutterContextMenu.bind(this);
-    self.onScroll = this.onScroll.bind(this);
     self.onSearchAgain = this.onSearchAgain.bind(this);
     self.onToggleBreakpoint = this.onToggleBreakpoint.bind(this);
-    self.onMouseOver = (0, _lodash.debounce)(this.onMouseOver, 40);
     self.toggleConditionalPanel = this.toggleConditionalPanel.bind(this);
   }
 
@@ -24424,7 +24728,7 @@ class Editor extends _react.PureComponent {
       if (this.props.selectedSource) {
         this.showMessage("");
       }
-    } else if (selectedSource.get("loading")) {
+    } else if (!(0, _source.isLoaded)(selectedSource.toJS())) {
       this.showMessage(L10N.getStr("loadingText"));
     } else if (selectedSource.get("error")) {
       this.showMessage(selectedSource.get("error"));
@@ -24464,7 +24768,6 @@ class Editor extends _react.PureComponent {
     // Set code editor wrapper to be focusable
     codeMirrorWrapper.tabIndex = 0;
     codeMirrorWrapper.addEventListener("keydown", e => this.onKeyDown(e));
-    codeMirrorWrapper.addEventListener("mouseover", e => this.onMouseOver(e));
 
     var toggleFoldMarkerVisibility = e => {
       if (node instanceof HTMLElement) {
@@ -24485,8 +24788,6 @@ class Editor extends _react.PureComponent {
     } else {
       codeMirrorWrapper.addEventListener("contextmenu", event => this.openMenu(event, codeMirror));
     }
-
-    codeMirror.on("scroll", this.onScroll);
 
     this.setState({ editor });
     return editor;
@@ -24619,10 +24920,6 @@ class Editor extends _react.PureComponent {
     }
   }
 
-  onScroll() {
-    this.clearPreviewSelection();
-  }
-
   onSearchAgain(_, e) {
     var _props3 = this.props,
         query = _props3.query,
@@ -24633,10 +24930,6 @@ class Editor extends _react.PureComponent {
 
     var direction = e.shiftKey ? "prev" : "next";
     (0, _editor.traverseResults)(e, ctx, query, direction, searchModifiers.toJS());
-  }
-
-  clearPreviewSelection() {
-    this.props.clearSelection();
   }
 
   inSelectedFrameSource() {
@@ -24673,11 +24966,17 @@ class Editor extends _react.PureComponent {
   onGutterClick(cm, line, gutter, ev) {
     var _props6 = this.props,
         selectedSource = _props6.selectedSource,
-        toggleBreakpoint = _props6.toggleBreakpoint;
+        toggleBreakpoint = _props6.toggleBreakpoint,
+        addOrToggleDisabledBreakpoint = _props6.addOrToggleDisabledBreakpoint,
+        isEmptyLine = _props6.isEmptyLine;
 
     // ignore right clicks in the gutter
 
     if (ev.ctrlKey && ev.button === 0 || ev.which === 3 || selectedSource && selectedSource.get("isBlackBoxed")) {
+      return;
+    }
+
+    if (isEmptyLine(line)) {
       return;
     }
 
@@ -24690,7 +24989,11 @@ class Editor extends _react.PureComponent {
     }
 
     if (gutter !== "CodeMirror-foldgutter") {
-      toggleBreakpoint((0, _editor.toSourceLine)(selectedSource.get("id"), line));
+      if (ev.shiftKey) {
+        addOrToggleDisabledBreakpoint((0, _editor.toSourceLine)(selectedSource.get("id"), line));
+      } else {
+        toggleBreakpoint((0, _editor.toSourceLine)(selectedSource.get("id"), line));
+      }
     }
   }
 
@@ -24699,7 +25002,8 @@ class Editor extends _react.PureComponent {
         selectedSource = _props7.selectedSource,
         breakpoints = _props7.breakpoints,
         toggleBreakpoint = _props7.toggleBreakpoint,
-        toggleDisabledBreakpoint = _props7.toggleDisabledBreakpoint;
+        toggleDisabledBreakpoint = _props7.toggleDisabledBreakpoint,
+        isEmptyLine = _props7.isEmptyLine;
 
 
     if (selectedSource && selectedSource.get("isBlackBoxed")) {
@@ -24710,6 +25014,10 @@ class Editor extends _react.PureComponent {
     var sourceId = selectedSource ? selectedSource.get("id") : "";
     var line = (0, _editor.lineAtHeight)(this.state.editor, sourceId, event);
     var breakpoint = breakpoints.find(bp => bp.location.line === line);
+
+    if (isEmptyLine(line - 1)) {
+      return;
+    }
 
     (0, _GutterMenu2.default)({
       event,
@@ -24722,14 +25030,6 @@ class Editor extends _react.PureComponent {
       isCbPanelOpen: this.isCbPanelOpen(),
       closeConditionalPanel: this.closeConditionalPanel
     });
-  }
-
-  onMouseOver(e) {
-    var target = e.target;
-
-    if (this.inSelectedFrameSource()) {
-      (0, _editor.updateSelection)(target, this.state.editor, this.props);
-    }
   }
 
   toggleConditionalPanel(line) {
@@ -24855,7 +25155,7 @@ class Editor extends _react.PureComponent {
         selectedSource = _props10.selectedSource;
 
 
-    if (!selectedSource || selectedSource.get("loading") || !hitCount || !this.state.editor) {
+    if (!selectedSource || !(0, _source.isLoaded)(selectedSource.toJS()) || !hitCount || !this.state.editor) {
       return;
     }
 
@@ -24867,38 +25167,13 @@ class Editor extends _react.PureComponent {
   }
 
   renderPreview() {
-    var _props11 = this.props,
-        selectedSource = _props11.selectedSource,
-        selection = _props11.selection;
+    var selectedSource = this.props.selectedSource;
 
     if (!this.state.editor || !selectedSource) {
       return null;
     }
 
-    if (!selection || selection.updating) {
-      return;
-    }
-
-    var result = selection.result,
-        expression = selection.expression,
-        location = selection.location,
-        cursorPos = selection.cursorPos;
-
-    var value = result;
-    if (typeof value == "undefined" || value.optimizedOut) {
-      return;
-    }
-
-    var editorRange = (0, _editor.toEditorRange)(selectedSource.get("id"), location);
-
-    return _react2.default.createElement(_Preview2.default, {
-      value: value,
-      editor: this.state.editor,
-      range: editorRange,
-      expression: expression,
-      popoverPos: cursorPos,
-      onClose: () => this.clearPreviewSelection()
-    });
+    return _react2.default.createElement(_Preview2.default, { editor: this.state.editor });
   }
 
   renderInScopeLines() {
@@ -24925,11 +25200,11 @@ class Editor extends _react.PureComponent {
   }
 
   renderSearchBar() {
-    var _props12 = this.props,
-        selectSource = _props12.selectSource,
-        selectedSource = _props12.selectedSource,
-        highlightLineRange = _props12.highlightLineRange,
-        clearHighlightLineRange = _props12.clearHighlightLineRange;
+    var _props11 = this.props,
+        selectSource = _props11.selectSource,
+        selectedSource = _props11.selectedSource,
+        highlightLineRange = _props11.highlightLineRange,
+        clearHighlightLineRange = _props11.clearHighlightLineRange;
 
 
     if (!this.state.editor) {
@@ -24963,11 +25238,19 @@ class Editor extends _react.PureComponent {
     return _react2.default.createElement(_Breakpoints2.default, { editor: this.state.editor });
   }
 
+  renderEmptyLines() {
+    if (!this.state.editor) {
+      return null;
+    }
+
+    return _react2.default.createElement(_EmptyLines2.default, { editor: this.state.editor });
+  }
+
   renderDebugLine() {
     var editor = this.state.editor;
-    var _props13 = this.props,
-        selectedLocation = _props13.selectedLocation,
-        selectedFrame = _props13.selectedFrame;
+    var _props12 = this.props,
+        selectedLocation = _props12.selectedLocation,
+        selectedFrame = _props12.selectedFrame;
 
     if (!editor || !selectedLocation || !selectedFrame || !selectedLocation.line || selectedFrame.location.sourceId !== selectedLocation.sourceId) {
       return null;
@@ -24981,9 +25264,9 @@ class Editor extends _react.PureComponent {
   }
 
   render() {
-    var _props14 = this.props,
-        coverageOn = _props14.coverageOn,
-        pauseData = _props14.pauseData;
+    var _props13 = this.props,
+        coverageOn = _props13.coverageOn,
+        pauseData = _props13.pauseData;
 
 
     return _react2.default.createElement(
@@ -25006,7 +25289,8 @@ class Editor extends _react.PureComponent {
       this.renderPreview(),
       this.renderCallSites(),
       this.renderDebugLine(),
-      this.renderBreakpoints()
+      this.renderBreakpoints(),
+      this.renderEmptyLines()
     );
   }
 }
@@ -25042,13 +25326,13 @@ Editor.propTypes = {
     regexMatch: _react.PropTypes.bool.isRequired,
     wholeWord: _react.PropTypes.bool.isRequired
   }).isRequired,
-  selection: _react.PropTypes.object,
   startPanelSize: _react.PropTypes.number,
   endPanelSize: _react.PropTypes.number,
-  clearSelection: _react.PropTypes.func.isRequired,
   linesInScope: _react.PropTypes.array,
   toggleBreakpoint: _react.PropTypes.func.isRequired,
-  toggleDisabledBreakpoint: _react.PropTypes.func.isRequired
+  addOrToggleDisabledBreakpoint: _react.PropTypes.func.isRequired,
+  toggleDisabledBreakpoint: _react.PropTypes.func.isRequired,
+  isEmptyLine: _react.PropTypes.func
 };
 
 Editor.contextTypes = {
@@ -25074,7 +25358,7 @@ exports.default = (0, _reactRedux.connect)(state => {
     query: (0, _selectors.getFileSearchQueryState)(state),
     searchModifiers: (0, _selectors.getFileSearchModifierState)(state),
     linesInScope: (0, _selectors.getInScopeLines)(state),
-    selection: (0, _selectors.getSelection)(state)
+    isEmptyLine: line => (0, _ast.isEmptyLineInSource)(state, line, selectedSource.toJS())
   };
 }, dispatch => (0, _redux.bindActionCreators)(_actions2.default, dispatch))(Editor);
 
@@ -25121,7 +25405,7 @@ var _PaneToggle = __webpack_require__(428);
 
 var _PaneToggle2 = _interopRequireDefault(_PaneToggle);
 
-__webpack_require__(705);
+__webpack_require__(875);
 
 function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { default: obj }; }
 
@@ -25132,7 +25416,7 @@ class SourceFooter extends _react.PureComponent {
         selectedSource = _props.selectedSource,
         togglePrettyPrint = _props.togglePrettyPrint;
 
-    var sourceLoaded = selectedSource && !selectedSource.get("loading");
+    var sourceLoaded = selectedSource && (0, _source.isLoaded)(selectedSource.toJS());
 
     if (!(0, _editor.shouldShowPrettyPrint)(selectedSource)) {
       return;
@@ -25153,7 +25437,7 @@ class SourceFooter extends _react.PureComponent {
         title: tooltip,
         "aria-label": tooltip
       },
-      (0, _Svg2.default)(type)
+      _react2.default.createElement(_Svg2.default, { name: type })
     );
   }
 
@@ -25162,7 +25446,7 @@ class SourceFooter extends _react.PureComponent {
         selectedSource = _props2.selectedSource,
         toggleBlackBox = _props2.toggleBlackBox;
 
-    var sourceLoaded = selectedSource && !selectedSource.get("loading");
+    var sourceLoaded = selectedSource && (0, _source.isLoaded)(selectedSource.toJS());
 
     var blackboxed = selectedSource.get("isBlackBoxed");
 
@@ -25185,7 +25469,7 @@ class SourceFooter extends _react.PureComponent {
         title: tooltip,
         "aria-label": tooltip
       },
-      (0, _Svg2.default)("blackBox")
+      _react2.default.createElement(_Svg2.default, { name: "blackBox" })
     );
   }
 
@@ -25309,7 +25593,7 @@ var _Svg = __webpack_require__(344);
 
 var _Svg2 = _interopRequireDefault(_Svg);
 
-__webpack_require__(704);
+__webpack_require__(874);
 
 function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { default: obj }; }
 
@@ -25343,7 +25627,7 @@ class PaneToggleButton extends _react.Component {
         onClick: () => handleClick(position, collapsed),
         title: title
       },
-      (0, _Svg2.default)("togglePanes")
+      _react2.default.createElement(_Svg2.default, { name: "togglePanes" })
     );
   }
 }
@@ -25391,6 +25675,8 @@ var _editor = __webpack_require__(257);
 
 var _search = __webpack_require__(1115);
 
+var _source = __webpack_require__(233);
+
 var _resultList = __webpack_require__(343);
 
 var _classnames = __webpack_require__(175);
@@ -25405,7 +25691,7 @@ var _SearchInput = __webpack_require__(377);
 
 var _SearchInput2 = _interopRequireDefault(_SearchInput);
 
-__webpack_require__(706);
+__webpack_require__(876);
 
 function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { default: obj }; }
 
@@ -25502,8 +25788,8 @@ class SearchBar extends _react.Component {
       (0, _resultList.scrollList)(this.refs.resultList.refs, this.state.selectedResultIndex);
     }
 
-    var hasLoaded = selectedSource && !selectedSource.get("loading");
-    var wasLoading = prevProps.selectedSource && prevProps.selectedSource.get("loading");
+    var hasLoaded = selectedSource && (0, _source.isLoaded)(selectedSource.toJS());
+    var wasLoading = prevProps.selectedSource && (0, _source.isLoaded)(prevProps.selectedSource.toJS());
 
     var doneLoading = wasLoading && hasLoaded;
     var changedFiles = selectedSource != prevProps.selectedSource && hasLoaded;
@@ -25739,7 +26025,7 @@ class SearchBar extends _react.Component {
           onClick: () => toggleFileSearchModifier(modVal),
           title: tooltip
         },
-        (0, _Svg2.default)(svgName)
+        _react2.default.createElement(_Svg2.default, { name: svgName })
       );
     }
 
@@ -26054,8 +26340,229 @@ exports.default = (0, _reactRedux.connect)(state => {
 /* 648 */,
 /* 649 */,
 /* 650 */,
-/* 651 */,
-/* 652 */,
+/* 651 */
+/***/ (function(module, exports, __webpack_require__) {
+
+var isObject = __webpack_require__(84),
+    now = __webpack_require__(652),
+    toNumber = __webpack_require__(304);
+
+/** Error message constants. */
+var FUNC_ERROR_TEXT = 'Expected a function';
+
+/* Built-in method references for those with the same name as other `lodash` methods. */
+var nativeMax = Math.max,
+    nativeMin = Math.min;
+
+/**
+ * Creates a debounced function that delays invoking `func` until after `wait`
+ * milliseconds have elapsed since the last time the debounced function was
+ * invoked. The debounced function comes with a `cancel` method to cancel
+ * delayed `func` invocations and a `flush` method to immediately invoke them.
+ * Provide `options` to indicate whether `func` should be invoked on the
+ * leading and/or trailing edge of the `wait` timeout. The `func` is invoked
+ * with the last arguments provided to the debounced function. Subsequent
+ * calls to the debounced function return the result of the last `func`
+ * invocation.
+ *
+ * **Note:** If `leading` and `trailing` options are `true`, `func` is
+ * invoked on the trailing edge of the timeout only if the debounced function
+ * is invoked more than once during the `wait` timeout.
+ *
+ * If `wait` is `0` and `leading` is `false`, `func` invocation is deferred
+ * until to the next tick, similar to `setTimeout` with a timeout of `0`.
+ *
+ * See [David Corbacho's article](https://css-tricks.com/debouncing-throttling-explained-examples/)
+ * for details over the differences between `_.debounce` and `_.throttle`.
+ *
+ * @static
+ * @memberOf _
+ * @since 0.1.0
+ * @category Function
+ * @param {Function} func The function to debounce.
+ * @param {number} [wait=0] The number of milliseconds to delay.
+ * @param {Object} [options={}] The options object.
+ * @param {boolean} [options.leading=false]
+ *  Specify invoking on the leading edge of the timeout.
+ * @param {number} [options.maxWait]
+ *  The maximum time `func` is allowed to be delayed before it's invoked.
+ * @param {boolean} [options.trailing=true]
+ *  Specify invoking on the trailing edge of the timeout.
+ * @returns {Function} Returns the new debounced function.
+ * @example
+ *
+ * // Avoid costly calculations while the window size is in flux.
+ * jQuery(window).on('resize', _.debounce(calculateLayout, 150));
+ *
+ * // Invoke `sendMail` when clicked, debouncing subsequent calls.
+ * jQuery(element).on('click', _.debounce(sendMail, 300, {
+ *   'leading': true,
+ *   'trailing': false
+ * }));
+ *
+ * // Ensure `batchLog` is invoked once after 1 second of debounced calls.
+ * var debounced = _.debounce(batchLog, 250, { 'maxWait': 1000 });
+ * var source = new EventSource('/stream');
+ * jQuery(source).on('message', debounced);
+ *
+ * // Cancel the trailing debounced invocation.
+ * jQuery(window).on('popstate', debounced.cancel);
+ */
+function debounce(func, wait, options) {
+  var lastArgs,
+      lastThis,
+      maxWait,
+      result,
+      timerId,
+      lastCallTime,
+      lastInvokeTime = 0,
+      leading = false,
+      maxing = false,
+      trailing = true;
+
+  if (typeof func != 'function') {
+    throw new TypeError(FUNC_ERROR_TEXT);
+  }
+  wait = toNumber(wait) || 0;
+  if (isObject(options)) {
+    leading = !!options.leading;
+    maxing = 'maxWait' in options;
+    maxWait = maxing ? nativeMax(toNumber(options.maxWait) || 0, wait) : maxWait;
+    trailing = 'trailing' in options ? !!options.trailing : trailing;
+  }
+
+  function invokeFunc(time) {
+    var args = lastArgs,
+        thisArg = lastThis;
+
+    lastArgs = lastThis = undefined;
+    lastInvokeTime = time;
+    result = func.apply(thisArg, args);
+    return result;
+  }
+
+  function leadingEdge(time) {
+    // Reset any `maxWait` timer.
+    lastInvokeTime = time;
+    // Start the timer for the trailing edge.
+    timerId = setTimeout(timerExpired, wait);
+    // Invoke the leading edge.
+    return leading ? invokeFunc(time) : result;
+  }
+
+  function remainingWait(time) {
+    var timeSinceLastCall = time - lastCallTime,
+        timeSinceLastInvoke = time - lastInvokeTime,
+        result = wait - timeSinceLastCall;
+
+    return maxing ? nativeMin(result, maxWait - timeSinceLastInvoke) : result;
+  }
+
+  function shouldInvoke(time) {
+    var timeSinceLastCall = time - lastCallTime,
+        timeSinceLastInvoke = time - lastInvokeTime;
+
+    // Either this is the first call, activity has stopped and we're at the
+    // trailing edge, the system time has gone backwards and we're treating
+    // it as the trailing edge, or we've hit the `maxWait` limit.
+    return (lastCallTime === undefined || (timeSinceLastCall >= wait) ||
+      (timeSinceLastCall < 0) || (maxing && timeSinceLastInvoke >= maxWait));
+  }
+
+  function timerExpired() {
+    var time = now();
+    if (shouldInvoke(time)) {
+      return trailingEdge(time);
+    }
+    // Restart the timer.
+    timerId = setTimeout(timerExpired, remainingWait(time));
+  }
+
+  function trailingEdge(time) {
+    timerId = undefined;
+
+    // Only invoke if we have `lastArgs` which means `func` has been
+    // debounced at least once.
+    if (trailing && lastArgs) {
+      return invokeFunc(time);
+    }
+    lastArgs = lastThis = undefined;
+    return result;
+  }
+
+  function cancel() {
+    if (timerId !== undefined) {
+      clearTimeout(timerId);
+    }
+    lastInvokeTime = 0;
+    lastArgs = lastCallTime = lastThis = timerId = undefined;
+  }
+
+  function flush() {
+    return timerId === undefined ? result : trailingEdge(now());
+  }
+
+  function debounced() {
+    var time = now(),
+        isInvoking = shouldInvoke(time);
+
+    lastArgs = arguments;
+    lastThis = this;
+    lastCallTime = time;
+
+    if (isInvoking) {
+      if (timerId === undefined) {
+        return leadingEdge(lastCallTime);
+      }
+      if (maxing) {
+        // Handle invocations in a tight loop.
+        timerId = setTimeout(timerExpired, wait);
+        return invokeFunc(lastCallTime);
+      }
+    }
+    if (timerId === undefined) {
+      timerId = setTimeout(timerExpired, wait);
+    }
+    return result;
+  }
+  debounced.cancel = cancel;
+  debounced.flush = flush;
+  return debounced;
+}
+
+module.exports = debounce;
+
+
+/***/ }),
+/* 652 */
+/***/ (function(module, exports, __webpack_require__) {
+
+var root = __webpack_require__(8);
+
+/**
+ * Gets the timestamp of the number of milliseconds that have elapsed since
+ * the Unix epoch (1 January 1970 00:00:00 UTC).
+ *
+ * @static
+ * @memberOf _
+ * @since 2.4.0
+ * @category Date
+ * @returns {number} Returns the timestamp.
+ * @example
+ *
+ * _.defer(function(stamp) {
+ *   console.log(_.now() - stamp);
+ * }, _.now());
+ * // => Logs the number of milliseconds it took for the deferred invocation.
+ */
+var now = function() {
+  return root.Date.now();
+};
+
+module.exports = now;
+
+
+/***/ }),
 /* 653 */,
 /* 654 */,
 /* 655 */
@@ -26192,6 +26699,8 @@ function getMenuItems(event, _ref) {
       toggleBlackBox = _ref.toggleBlackBox,
       addExpression = _ref.addExpression;
 
+  var copySourceLabel = L10N.getStr("copySource");
+  var copySourceKey = L10N.getStr("copySource.accesskey");
   var copySourceUrlLabel = L10N.getStr("copySourceUrl");
   var copySourceUrlKey = L10N.getStr("copySourceUrl.accesskey");
   var revealInTreeLabel = L10N.getStr("sourceTabs.revealInTree");
@@ -26202,11 +26711,19 @@ function getMenuItems(event, _ref) {
   var toggleBlackBoxLabel = selectedSource.get("isBlackBoxed") ? unblackboxLabel : blackboxLabel;
 
   var copySourceUrl = {
-    id: "node-menu-copy-source",
+    id: "node-menu-copy-source-url",
     label: copySourceUrlLabel,
     accesskey: copySourceUrlKey,
     disabled: false,
     click: () => (0, _clipboard.copyToTheClipboard)(selectedSource.get("url"))
+  };
+
+  var copySource = {
+    id: "node-menu-copy-source",
+    label: copySourceLabel,
+    accesskey: copySourceKey,
+    disabled: false,
+    click: () => (0, _clipboard.copyToTheClipboard)(codeMirror.getSelection())
   };
 
   var _codeMirror$coordsCha = codeMirror.coordsChar({
@@ -26260,7 +26777,7 @@ function getMenuItems(event, _ref) {
     return [blackBoxMenuItem];
   }
 
-  var menuItems = [copySourceUrl, jumpLabel, showSourceMenuItem, blackBoxMenuItem];
+  var menuItems = [copySource, copySourceUrl, jumpLabel, showSourceMenuItem, blackBoxMenuItem];
 
   if (textSelected) {
     menuItems.push(watchExpressionLabel);
@@ -26272,241 +26789,7 @@ function getMenuItems(event, _ref) {
 exports.default = EditorMenu;
 
 /***/ }),
-/* 657 */
-/***/ (function(module, exports, __webpack_require__) {
-
-"use strict";
-
-
-Object.defineProperty(exports, "__esModule", {
-  value: true
-});
-exports.Preview = undefined;
-
-var _react = __webpack_require__(0);
-
-var _react2 = _interopRequireDefault(_react);
-
-var _reactRedux = __webpack_require__(151);
-
-var _redux = __webpack_require__(3);
-
-var _devtoolsConfig = __webpack_require__(828);
-
-var _devtoolsReps = __webpack_require__(924);
-
-var _devtoolsReps2 = _interopRequireDefault(_devtoolsReps);
-
-var _Popover = __webpack_require__(698);
-
-var _Popover2 = _interopRequireDefault(_Popover);
-
-var _previewFunction = __webpack_require__(701);
-
-var _previewFunction2 = _interopRequireDefault(_previewFunction);
-
-var _selectors = __webpack_require__(242);
-
-var _actions = __webpack_require__(244);
-
-var _actions2 = _interopRequireDefault(_actions);
-
-var _editor = __webpack_require__(257);
-
-__webpack_require__(712);
-
-function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { default: obj }; }
-
-var Rep = _devtoolsReps2.default.REPS.Rep,
-    MODE = _devtoolsReps2.default.MODE,
-    ObjectInspectorUtils = _devtoolsReps2.default.ObjectInspectorUtils;
-var ObjectInspector = _devtoolsReps2.default.ObjectInspector;
-var getChildren = ObjectInspectorUtils.getChildren;
-class Preview extends _react.Component {
-
-  componentDidMount() {
-    var _props = this.props,
-        loadObjectProperties = _props.loadObjectProperties,
-        loadedObjects = _props.loadedObjects,
-        value = _props.value,
-        editor = _props.editor,
-        range = _props.range;
-
-
-    this.marker = (0, _editor.markText)(editor, "selection", range);
-
-    if (!value || !value.type == "object") {
-      return;
-    }
-
-    if (value.actor && !loadedObjects[value.actor]) {
-      loadObjectProperties(value);
-    }
-  }
-
-  componentWillUnmount() {
-    if (this.marker) {
-      this.marker.clear();
-    }
-  }
-
-  getChildren(root, getObjectProperties) {
-    var actors = {};
-
-    var children = getChildren({
-      getObjectProperties,
-      actors,
-      item: root
-    });
-
-    if (children.length > 0) {
-      return children;
-    }
-
-    return [root];
-  }
-
-  renderFunctionPreview(value, root) {
-    var selectSourceURL = this.props.selectSourceURL;
-    var location = value.location;
-
-
-    return _react2.default.createElement(
-      "div",
-      {
-        className: "preview",
-        onClick: () => selectSourceURL(location.url, { line: location.line })
-      },
-      (0, _previewFunction2.default)(value)
-    );
-  }
-
-  renderObjectPreview(expression, root) {
-    return _react2.default.createElement(
-      "div",
-      { className: "preview" },
-      this.renderObjectInspector(root)
-    );
-  }
-
-  renderSimplePreview(value) {
-    return _react2.default.createElement(
-      "div",
-      { className: "preview" },
-      Rep({ object: value, mode: MODE.LONG })
-    );
-  }
-
-  renderObjectInspector(root) {
-    var _props2 = this.props,
-        loadObjectProperties = _props2.loadObjectProperties,
-        loadedObjects = _props2.loadedObjects;
-
-
-    var getObjectProperties = id => loadedObjects[id];
-    var roots = this.getChildren(root, getObjectProperties);
-
-    return _react2.default.createElement(ObjectInspector, {
-      roots: roots,
-      autoExpandDepth: 0,
-      disableWrap: true,
-      disabledFocus: true,
-      getObjectProperties: getObjectProperties,
-      loadObjectProperties: loadObjectProperties
-      // TODO: See https://github.com/devtools-html/debugger.html/issues/3555.
-      , getObjectEntries: actor => {},
-      loadObjectEntries: grip => {}
-    });
-  }
-
-  renderAddToExpressionBar(expression) {
-    if (!(0, _devtoolsConfig.isEnabled)("previewWatch")) {
-      return null;
-    }
-
-    var addExpression = this.props.addExpression;
-
-    return _react2.default.createElement(
-      "div",
-      { className: "add-to-expression-bar" },
-      _react2.default.createElement(
-        "div",
-        { className: "prompt" },
-        "\xBB"
-      ),
-      _react2.default.createElement(
-        "div",
-        { className: "expression-to-save-label" },
-        expression
-      ),
-      _react2.default.createElement(
-        "div",
-        {
-          className: "expression-to-save-button",
-          onClick: event => addExpression(event)
-        },
-        L10N.getStr("addWatchExpressionButton")
-      )
-    );
-  }
-
-  renderPreview(expression, value) {
-    var root = {
-      name: expression,
-      path: expression,
-      contents: { value }
-    };
-
-    if (value.class === "Function") {
-      return this.renderFunctionPreview(value, root);
-    }
-
-    if (value.type === "object") {
-      return _react2.default.createElement(
-        "div",
-        null,
-        this.renderObjectPreview(expression, root),
-        this.renderAddToExpressionBar(expression)
-      );
-    }
-
-    return this.renderSimplePreview(value);
-  }
-
-  getPreviewType(value) {
-    if (typeof value == "boolean" || value.type == "null" || value.type == "undefined" || value.class === "Function") {
-      return "tooltip";
-    }
-
-    return "popover";
-  }
-
-  render() {
-    var _props3 = this.props,
-        popoverPos = _props3.popoverPos,
-        onClose = _props3.onClose,
-        value = _props3.value,
-        expression = _props3.expression;
-
-
-    var type = this.getPreviewType(value);
-
-    return _react2.default.createElement(
-      _Popover2.default,
-      { targetPosition: popoverPos, onMouseLeave: onClose, type: type },
-      this.renderPreview(expression, value)
-    );
-  }
-}
-
-exports.Preview = Preview;
-Preview.displayName = "Preview";
-
-exports.default = (0, _reactRedux.connect)(state => ({
-  loadedObjects: (0, _selectors.getLoadedObjects)(state)
-}), dispatch => (0, _redux.bindActionCreators)(_actions2.default, dispatch))(Preview);
-
-/***/ }),
+/* 657 */,
 /* 658 */,
 /* 659 */,
 /* 660 */,
@@ -26538,120 +26821,25 @@ module.exports = __WEBPACK_EXTERNAL_MODULE_677__;
 module.exports = __WEBPACK_EXTERNAL_MODULE_678__;
 
 /***/ }),
-/* 679 */
-/***/ (function(module, exports) {
-
-// removed by extract-text-webpack-plugin
-
-/***/ }),
-/* 680 */
-/***/ (function(module, exports) {
-
-// removed by extract-text-webpack-plugin
-
-/***/ }),
-/* 681 */
-/***/ (function(module, exports) {
-
-// removed by extract-text-webpack-plugin
-
-/***/ }),
-/* 682 */
-/***/ (function(module, exports) {
-
-// removed by extract-text-webpack-plugin
-
-/***/ }),
-/* 683 */
-/***/ (function(module, exports) {
-
-// removed by extract-text-webpack-plugin
-
-/***/ }),
-/* 684 */
-/***/ (function(module, exports) {
-
-// removed by extract-text-webpack-plugin
-
-/***/ }),
-/* 685 */
-/***/ (function(module, exports) {
-
-// removed by extract-text-webpack-plugin
-
-/***/ }),
-/* 686 */
-/***/ (function(module, exports) {
-
-// removed by extract-text-webpack-plugin
-
-/***/ }),
-/* 687 */
-/***/ (function(module, exports) {
-
-// removed by extract-text-webpack-plugin
-
-/***/ }),
-/* 688 */
-/***/ (function(module, exports) {
-
-// removed by extract-text-webpack-plugin
-
-/***/ }),
-/* 689 */
-/***/ (function(module, exports) {
-
-// removed by extract-text-webpack-plugin
-
-/***/ }),
-/* 690 */
-/***/ (function(module, exports) {
-
-// removed by extract-text-webpack-plugin
-
-/***/ }),
-/* 691 */
-/***/ (function(module, exports) {
-
-// removed by extract-text-webpack-plugin
-
-/***/ }),
-/* 692 */
-/***/ (function(module, exports) {
-
-// removed by extract-text-webpack-plugin
-
-/***/ }),
-/* 693 */
-/***/ (function(module, exports) {
-
-// removed by extract-text-webpack-plugin
-
-/***/ }),
-/* 694 */
-/***/ (function(module, exports) {
-
-// removed by extract-text-webpack-plugin
-
-/***/ }),
-/* 695 */
-/***/ (function(module, exports) {
-
-// removed by extract-text-webpack-plugin
-
-/***/ }),
-/* 696 */
-/***/ (function(module, exports) {
-
-// removed by extract-text-webpack-plugin
-
-/***/ }),
-/* 697 */
-/***/ (function(module, exports) {
-
-// removed by extract-text-webpack-plugin
-
-/***/ }),
+/* 679 */,
+/* 680 */,
+/* 681 */,
+/* 682 */,
+/* 683 */,
+/* 684 */,
+/* 685 */,
+/* 686 */,
+/* 687 */,
+/* 688 */,
+/* 689 */,
+/* 690 */,
+/* 691 */,
+/* 692 */,
+/* 693 */,
+/* 694 */,
+/* 695 */,
+/* 696 */,
+/* 697 */,
 /* 698 */
 /***/ (function(module, exports, __webpack_require__) {
 
@@ -26678,13 +26866,14 @@ var _BracketArrow = __webpack_require__(1029);
 
 var _BracketArrow2 = _interopRequireDefault(_BracketArrow);
 
-__webpack_require__(710);
+__webpack_require__(880);
 
 function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { default: obj }; }
 
 class Popover extends _react.Component {
   constructor() {
     super();
+    this.onMouseLeave = this.onMouseLeave.bind(this);
     this.state = {
       left: 0,
       top: 0
@@ -26779,8 +26968,18 @@ class Popover extends _react.Component {
     return _react2.default.createElement(_BracketArrow2.default, arrowProps);
   }
 
-  renderPopover() {
+  onMouseLeave(e) {
     var onMouseLeave = this.props.onMouseLeave;
+
+
+    if (e.target.className.match(/(bracket-arrow|gap)/)) {
+      return;
+    }
+
+    onMouseLeave();
+  }
+
+  renderPopover() {
     var _state = this.state,
         top = _state.top,
         left = _state.left,
@@ -26794,7 +26993,7 @@ class Popover extends _react.Component {
       "div",
       {
         className: (0, _classnames2.default)("popover", { up: orientation === "up" }),
-        onMouseLeave: onMouseLeave,
+        onMouseLeave: this.onMouseLeave,
         style: { top, left }
       },
       arrow,
@@ -26850,124 +27049,18 @@ Popover.displayName = "Popover";
 exports.default = Popover;
 
 /***/ }),
-/* 699 */
-/***/ (function(module, exports) {
-
-// removed by extract-text-webpack-plugin
-
-/***/ }),
-/* 700 */
-/***/ (function(module, exports) {
-
-// removed by extract-text-webpack-plugin
-
-/***/ }),
-/* 701 */
-/***/ (function(module, exports, __webpack_require__) {
-
-"use strict";
-
-
-Object.defineProperty(exports, "__esModule", {
-  value: true
-});
-
-var _react = __webpack_require__(0);
-
-var _lodash = __webpack_require__(2);
-
-var _frame = __webpack_require__(1014);
-
-__webpack_require__(702);
-
-function _toConsumableArray(arr) { if (Array.isArray(arr)) { for (var i = 0, arr2 = Array(arr.length); i < arr.length; i++) { arr2[i] = arr[i]; } return arr2; } else { return Array.from(arr); } }
-
-function getFunctionName(func) {
-  var name = func.userDisplayName || func.displayName || func.name;
-  return (0, _frame.simplifyDisplayName)(name);
-}
-
-function renderFunctionName(func) {
-  var name = getFunctionName(func);
-  return _react.DOM.span({ className: "function-name" }, name);
-}
-
-function renderParams(func) {
-  var _func$parameterNames = func.parameterNames,
-      parameterNames = _func$parameterNames === undefined ? [] : _func$parameterNames;
-
-  var params = parameterNames.filter(i => i).map(param => _react.DOM.span({ className: "param" }, param));
-
-  var commas = (0, _lodash.times)(params.length - 1).map(() => _react.DOM.span({ className: "delimiter" }, ", "));
-
-  return (0, _lodash.flatten)((0, _lodash.zip)(params, commas));
-}
-
-function renderParen(paren) {
-  return _react.DOM.span({ className: "paren" }, paren);
-}
-
-function previewFunction(func) {
-  return _react.DOM.span.apply(_react.DOM, [{ className: "function-signature" }, renderFunctionName(func), renderParen("(")].concat(_toConsumableArray(renderParams(func)), [renderParen(")")]));
-}
-
-exports.default = previewFunction;
-
-/***/ }),
-/* 702 */
-/***/ (function(module, exports) {
-
-// removed by extract-text-webpack-plugin
-
-/***/ }),
-/* 703 */
-/***/ (function(module, exports) {
-
-// removed by extract-text-webpack-plugin
-
-/***/ }),
-/* 704 */
-/***/ (function(module, exports) {
-
-// removed by extract-text-webpack-plugin
-
-/***/ }),
-/* 705 */
-/***/ (function(module, exports) {
-
-// removed by extract-text-webpack-plugin
-
-/***/ }),
-/* 706 */
-/***/ (function(module, exports) {
-
-// removed by extract-text-webpack-plugin
-
-/***/ }),
-/* 707 */
-/***/ (function(module, exports) {
-
-// removed by extract-text-webpack-plugin
-
-/***/ }),
-/* 708 */
-/***/ (function(module, exports) {
-
-// removed by extract-text-webpack-plugin
-
-/***/ }),
-/* 709 */
-/***/ (function(module, exports) {
-
-// removed by extract-text-webpack-plugin
-
-/***/ }),
-/* 710 */
-/***/ (function(module, exports) {
-
-// removed by extract-text-webpack-plugin
-
-/***/ }),
+/* 699 */,
+/* 700 */,
+/* 701 */,
+/* 702 */,
+/* 703 */,
+/* 704 */,
+/* 705 */,
+/* 706 */,
+/* 707 */,
+/* 708 */,
+/* 709 */,
+/* 710 */,
 /* 711 */
 /***/ (function(module, exports, __webpack_require__) {
 
@@ -26981,6 +27074,8 @@ exports.renderConditionalPanel = undefined;
 
 var _react = __webpack_require__(0);
 
+var _react2 = _interopRequireDefault(_react);
+
 var _reactDom = __webpack_require__(4);
 
 var _reactDom2 = _interopRequireDefault(_reactDom);
@@ -26989,7 +27084,7 @@ var _Close = __webpack_require__(378);
 
 var _Close2 = _interopRequireDefault(_Close);
 
-__webpack_require__(703);
+__webpack_require__(873);
 
 function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { default: obj }; }
 
@@ -27021,16 +27116,26 @@ function renderConditionalPanel(_ref) {
     }
   }
 
-  _reactDom2.default.render(_react.DOM.div({ className: "conditional-breakpoint-panel" }, _react.DOM.div({ className: "prompt" }, "»"), _react.DOM.input({
-    defaultValue: condition,
-    placeholder: L10N.getStr("editor.conditionalPanel.placeholder"),
-    onKeyDown: onKey,
-    ref: setInput
-  }), (0, _Close2.default)({
-    handleClick: closePanel,
-    buttonClass: "big",
-    tooltip: L10N.getStr("editor.conditionalPanel.close")
-  })), panel);
+  _reactDom2.default.render(_react2.default.createElement(
+    "div",
+    { className: "conditional-breakpoint-panel" },
+    _react2.default.createElement(
+      "div",
+      { className: "prompt" },
+      "\xBB"
+    ),
+    _react2.default.createElement("input", {
+      defaultValue: condition,
+      placeholder: L10N.getStr("editor.conditionalPanel.placeholder"),
+      onKeyDown: onKey,
+      ref: setInput
+    }),
+    _react2.default.createElement(_Close2.default, {
+      handleClick: closePanel,
+      buttonClass: "big",
+      tooltip: L10N.getStr("editor.conditionalPanel.close")
+    })
+  ), panel);
 
   return panel;
 }
@@ -27038,18 +27143,8 @@ function renderConditionalPanel(_ref) {
 exports.renderConditionalPanel = renderConditionalPanel;
 
 /***/ }),
-/* 712 */
-/***/ (function(module, exports) {
-
-// removed by extract-text-webpack-plugin
-
-/***/ }),
-/* 713 */
-/***/ (function(module, exports) {
-
-// removed by extract-text-webpack-plugin
-
-/***/ }),
+/* 712 */,
+/* 713 */,
 /* 714 */
 /***/ (function(module, exports, __webpack_require__) {
 
@@ -27061,6 +27156,8 @@ Object.defineProperty(exports, "__esModule", {
 });
 
 var _react = __webpack_require__(0);
+
+var _react2 = _interopRequireDefault(_react);
 
 var _devtoolsConfig = __webpack_require__(828);
 
@@ -27081,7 +27178,7 @@ var _editor = __webpack_require__(257);
 function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { default: obj }; }
 
 var breakpointSvg = document.createElement("div");
-_reactDom2.default.render((0, _Svg2.default)("breakpoint"), breakpointSvg);
+_reactDom2.default.render(_react2.default.createElement(_Svg2.default, { name: "breakpoint" }), breakpointSvg);
 
 function makeMarker(isDisabled) {
   var bp = breakpointSvg.cloneNode(true);
@@ -27106,9 +27203,14 @@ class Breakpoint extends _react.Component {
         editor = _props.editor,
         selectedSource = _props.selectedSource;
 
+    // Hidden Breakpoints are never rendered on the client
+
+    if (breakpoint.hidden) {
+      return;
+    }
+
     // NOTE: we need to wait for the breakpoint to be loaded
     // to get the generated location
-
     if (!selectedSource || breakpoint.loading) {
       return;
     }
@@ -27134,7 +27236,7 @@ class Breakpoint extends _react.Component {
         breakpoint = _props2.breakpoint,
         selectedSource = _props2.selectedSource;
 
-    return editor !== nextProps.editor || breakpoint.disabled !== nextProps.breakpoint.disabled || breakpoint.condition !== nextProps.breakpoint.condition || breakpoint.loading !== nextProps.breakpoint.loading || selectedSource !== nextProps.selectedSource;
+    return editor !== nextProps.editor || breakpoint.disabled !== nextProps.breakpoint.disabled || breakpoint.hidden !== nextProps.breakpoint.hidden || breakpoint.condition !== nextProps.breakpoint.condition || breakpoint.loading !== nextProps.breakpoint.loading || selectedSource !== nextProps.selectedSource;
   }
 
   componentDidMount() {
@@ -27251,18 +27353,8 @@ HitMarker.displayName = "HitMarker";
 exports.default = HitMarker;
 
 /***/ }),
-/* 716 */
-/***/ (function(module, exports) {
-
-// removed by extract-text-webpack-plugin
-
-/***/ }),
-/* 717 */
-/***/ (function(module, exports) {
-
-// removed by extract-text-webpack-plugin
-
-/***/ }),
+/* 716 */,
+/* 717 */,
 /* 718 */
 /***/ (function(module, exports, __webpack_require__) {
 
@@ -27274,6 +27366,8 @@ Object.defineProperty(exports, "__esModule", {
 });
 
 var _react = __webpack_require__(0);
+
+var _react2 = _interopRequireDefault(_react);
 
 var _reactRedux = __webpack_require__(151);
 
@@ -27297,33 +27391,37 @@ var _Svg2 = _interopRequireDefault(_Svg);
 
 var _prefs = __webpack_require__(226);
 
-var _Breakpoints2 = __webpack_require__(725);
+var _Breakpoints = __webpack_require__(725);
 
-var _Breakpoints3 = _interopRequireDefault(_Breakpoints2);
+var _Breakpoints2 = _interopRequireDefault(_Breakpoints);
 
-var _Expressions2 = __webpack_require__(719);
+var _Expressions = __webpack_require__(719);
 
-var _Expressions3 = _interopRequireDefault(_Expressions2);
+var _Expressions2 = _interopRequireDefault(_Expressions);
 
 var _devtoolsSplitter = __webpack_require__(910);
 
 var _devtoolsSplitter2 = _interopRequireDefault(_devtoolsSplitter);
 
-var _Frames2 = __webpack_require__(1012);
+var _Frames = __webpack_require__(1012);
 
-var _Frames3 = _interopRequireDefault(_Frames2);
+var _Frames2 = _interopRequireDefault(_Frames);
 
-var _EventListeners2 = __webpack_require__(736);
+var _EventListeners = __webpack_require__(736);
 
-var _EventListeners3 = _interopRequireDefault(_EventListeners2);
+var _EventListeners2 = _interopRequireDefault(_EventListeners);
 
-var _Accordion2 = __webpack_require__(739);
+var _Workers = __webpack_require__(1147);
 
-var _Accordion3 = _interopRequireDefault(_Accordion2);
+var _Workers2 = _interopRequireDefault(_Workers);
 
-var _CommandBar2 = __webpack_require__(742);
+var _Accordion = __webpack_require__(739);
 
-var _CommandBar3 = _interopRequireDefault(_CommandBar2);
+var _Accordion2 = _interopRequireDefault(_Accordion);
+
+var _CommandBar = __webpack_require__(742);
+
+var _CommandBar2 = _interopRequireDefault(_CommandBar);
 
 var _ChromeScopes = __webpack_require__(728);
 
@@ -27333,32 +27431,27 @@ var _Scopes2 = __webpack_require__(731);
 
 var _Scopes3 = _interopRequireDefault(_Scopes2);
 
-__webpack_require__(730);
+__webpack_require__(921);
 
 function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { default: obj }; }
 
 function _toConsumableArray(arr) { if (Array.isArray(arr)) { for (var i = 0, arr2 = Array(arr.length); i < arr.length; i++) { arr2[i] = arr[i]; } return arr2; } else { return Array.from(arr); } }
 
-var Breakpoints = (0, _react.createFactory)(_Breakpoints3.default);
-
-var Expressions = (0, _react.createFactory)(_Expressions3.default);
-
-var SplitBox = (0, _react.createFactory)(_devtoolsSplitter2.default);
-
-var Frames = (0, _react.createFactory)(_Frames3.default);
-
-var EventListeners = (0, _react.createFactory)(_EventListeners3.default);
-
-var Accordion = (0, _react.createFactory)(_Accordion3.default);
-
-var CommandBar = (0, _react.createFactory)(_CommandBar3.default);
-
-var Scopes = (0, _devtoolsConfig.isEnabled)("chromeScopes") ? (0, _react.createFactory)(_ChromeScopes2.default) : (0, _react.createFactory)(_Scopes3.default);
+var Scopes = (0, _devtoolsConfig.isEnabled)("chromeScopes") ? _ChromeScopes2.default : _Scopes3.default;
 
 function debugBtn(onClick, type, className, tooltip) {
-  className = `${type} ${className}`;
-  return _react.DOM.button({ onClick, className, key: type, title: tooltip }, (0, _Svg2.default)(type, { title: tooltip, "aria-label": tooltip }));
+  return _react2.default.createElement(
+    "button",
+    {
+      onClick: onClick,
+      className: `${type} ${className}`,
+      key: type,
+      title: tooltip
+    },
+    _react2.default.createElement(_Svg2.default, { name: type, title: tooltip, "aria-label": tooltip })
+  );
 }
+debugBtn.displayName = "DebugButton";
 
 class SecondaryPanes extends _react.Component {
   renderBreakpointsToggle() {
@@ -27375,7 +27468,7 @@ class SecondaryPanes extends _react.Component {
       return null;
     }
 
-    return _react.DOM.input({
+    var inputProps = {
       type: "checkbox",
       "aria-label": breakpointsDisabled ? L10N.getStr("breakpoints.enable") : L10N.getStr("breakpoints.disable"),
       className: boxClassName,
@@ -27392,7 +27485,9 @@ class SecondaryPanes extends _react.Component {
         }
       },
       title: breakpointsDisabled ? L10N.getStr("breakpoints.enable") : L10N.getStr("breakpoints.disable")
-    });
+    };
+
+    return _react2.default.createElement("input", inputProps);
   }
 
   watchExpressionHeaderButtons() {
@@ -27420,7 +27515,7 @@ class SecondaryPanes extends _react.Component {
     return {
       header: L10N.getStr("watchExpressions.header"),
       buttons: this.watchExpressionHeaderButtons(),
-      component: Expressions,
+      component: _Expressions2.default,
       opened: true
     };
   }
@@ -27432,11 +27527,11 @@ class SecondaryPanes extends _react.Component {
     var items = [{
       header: L10N.getStr("breakpoints.header"),
       buttons: this.renderBreakpointsToggle(),
-      component: Breakpoints,
+      component: _Breakpoints2.default,
       opened: true
     }, {
       header: L10N.getStr("callStack.header"),
-      component: Frames,
+      component: _Frames2.default,
       opened: _prefs.prefs.callStackVisible,
       onToggle: opened => {
         _prefs.prefs.callStackVisible = opened;
@@ -27447,7 +27542,14 @@ class SecondaryPanes extends _react.Component {
     if ((0, _devtoolsConfig.isEnabled)("eventListeners")) {
       items.push({
         header: L10N.getStr("eventListenersHeader"),
-        component: EventListeners
+        component: _EventListeners2.default
+      });
+    }
+
+    if ((0, _devtoolsConfig.isEnabled)("workers")) {
+      items.push({
+        header: L10N.getStr("workersHeader"),
+        component: _Workers2.default
       });
     }
 
@@ -27459,9 +27561,7 @@ class SecondaryPanes extends _react.Component {
   }
 
   renderHorizontalLayout() {
-    return Accordion({
-      items: this.getItems()
-    });
+    return _react2.default.createElement(_Accordion2.default, { items: this.getItems() });
   }
 
   getEndItems() {
@@ -27483,21 +27583,24 @@ class SecondaryPanes extends _react.Component {
   }
 
   renderVerticalLayout() {
-    return SplitBox({
+    return _react2.default.createElement(_devtoolsSplitter2.default, {
       style: { width: "100vw" },
       initialSize: "300px",
       minSize: 10,
       maxSize: "50%",
       splitterSize: 1,
-      startPanel: Accordion({ items: this.getStartItems() }),
-      endPanel: Accordion({ items: this.getEndItems() })
+      startPanel: _react2.default.createElement(_Accordion2.default, { items: this.getStartItems() }),
+      endPanel: _react2.default.createElement(_Accordion2.default, { items: this.getEndItems() })
     });
   }
 
   render() {
-    return _react.DOM.div({
-      className: "secondary-panes secondary-panes--sticky-commandbar"
-    }, CommandBar(), this.props.horizontal ? this.renderHorizontalLayout() : this.renderVerticalLayout());
+    return _react2.default.createElement(
+      "div",
+      { className: "secondary-panes secondary-panes--sticky-commandbar" },
+      _react2.default.createElement(_CommandBar2.default, { horizontal: this.props.horizontal }),
+      this.props.horizontal ? this.renderHorizontalLayout() : this.renderVerticalLayout()
+    );
   }
 }
 
@@ -27555,7 +27658,7 @@ var _Close2 = _interopRequireDefault(_Close);
 
 var _devtoolsReps = __webpack_require__(924);
 
-__webpack_require__(721);
+__webpack_require__(908);
 
 function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { default: obj }; }
 
@@ -27784,41 +27887,16 @@ Expressions.displayName = "Expressions";
 
 exports.default = (0, _reactRedux.connect)(state => ({
   pauseInfo: (0, _selectors.getPause)(state),
-  expressions: (0, _selectors.getVisibleExpressions)(state),
+  expressions: (0, _selectors.getExpressions)(state),
   loadedObjects: (0, _selectors.getLoadedObjects)(state)
 }), dispatch => (0, _redux.bindActionCreators)(_actions2.default, dispatch))(Expressions);
 
 /***/ }),
-/* 720 */
-/***/ (function(module, exports) {
-
-// removed by extract-text-webpack-plugin
-
-/***/ }),
-/* 721 */
-/***/ (function(module, exports) {
-
-// removed by extract-text-webpack-plugin
-
-/***/ }),
-/* 722 */
-/***/ (function(module, exports) {
-
-// removed by extract-text-webpack-plugin
-
-/***/ }),
-/* 723 */
-/***/ (function(module, exports) {
-
-// removed by extract-text-webpack-plugin
-
-/***/ }),
-/* 724 */
-/***/ (function(module, exports) {
-
-// removed by extract-text-webpack-plugin
-
-/***/ }),
+/* 720 */,
+/* 721 */,
+/* 722 */,
+/* 723 */,
+/* 724 */,
 /* 725 */
 /***/ (function(module, exports, __webpack_require__) {
 
@@ -27830,6 +27908,8 @@ Object.defineProperty(exports, "__esModule", {
 });
 
 var _react = __webpack_require__(0);
+
+var _react2 = _interopRequireDefault(_react);
 
 var _immutable = __webpack_require__(146);
 
@@ -27865,13 +27945,13 @@ var _Close = __webpack_require__(378);
 
 var _Close2 = _interopRequireDefault(_Close);
 
-__webpack_require__(720);
+__webpack_require__(907);
 
 var _lodash = __webpack_require__(2);
 
-function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { default: obj }; }
-
 function _interopRequireWildcard(obj) { if (obj && obj.__esModule) { return obj; } else { var newObj = {}; if (obj != null) { for (var key in obj) { if (Object.prototype.hasOwnProperty.call(obj, key)) newObj[key] = obj[key]; } } newObj.default = obj; return newObj; } }
+
+function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { default: obj }; }
 
 function isCurrentlyPausedAtBreakpoint(pause, breakpoint) {
   if (!pause || pause.isInterrupted) {
@@ -27889,8 +27969,17 @@ function renderSourceLocation(source, line, column) {
   var columnVal = (0, _devtoolsConfig.isEnabled)("columnBreakpoints") && column ? `:${column}` : "";
   var bpLocation = isWasm ? `0x${line.toString(16).toUpperCase()}` : `${line}${columnVal}`;
 
-  return filename ? _react.DOM.div({ className: "location" }, `${(0, _utils.endTruncateStr)(filename, 30)}: ${bpLocation}`) : null;
+  if (!filename) {
+    return null;
+  }
+
+  return _react2.default.createElement(
+    "div",
+    { className: "location" },
+    `${(0, _utils.endTruncateStr)(filename, 30)}: ${bpLocation}`
+  );
 }
+renderSourceLocation.displayName = "SourceLocation";
 
 class Breakpoints extends _react.PureComponent {
 
@@ -28058,37 +28147,67 @@ class Breakpoints extends _react.PureComponent {
     var isCurrentlyPaused = breakpoint.isCurrentlyPaused;
     var isDisabled = breakpoint.disabled;
     var isConditional = !!breakpoint.condition;
+    var isHidden = breakpoint.hidden;
 
-    return _react.DOM.div({
-      className: (0, _classnames2.default)({
-        breakpoint,
-        paused: isCurrentlyPaused,
-        disabled: isDisabled,
-        "is-conditional": isConditional
+    if (isHidden) {
+      return;
+    }
+
+    return _react2.default.createElement(
+      "div",
+      {
+        className: (0, _classnames2.default)({
+          breakpoint,
+          paused: isCurrentlyPaused,
+          disabled: isDisabled,
+          "is-conditional": isConditional
+        }),
+        key: locationId,
+        onClick: () => this.selectBreakpoint(breakpoint),
+        onContextMenu: e => this.showContextMenu(e, breakpoint)
+      },
+      _react2.default.createElement("input", {
+        type: "checkbox",
+        className: "breakpoint-checkbox",
+        checked: !isDisabled,
+        onChange: () => this.handleCheckbox(breakpoint),
+        onClick: ev => ev.stopPropagation()
       }),
-      key: locationId,
-      onClick: () => this.selectBreakpoint(breakpoint),
-      onContextMenu: e => this.showContextMenu(e, breakpoint)
-    }, _react.DOM.input({
-      type: "checkbox",
-      className: "breakpoint-checkbox",
-      checked: !isDisabled,
-      onChange: () => this.handleCheckbox(breakpoint),
-      // Prevent clicking on the checkbox from triggering the onClick of
-      // the surrounding div
-      onClick: ev => ev.stopPropagation()
-    }), _react.DOM.div({ className: "breakpoint-label", title: breakpoint.text }, _react.DOM.div({}, renderSourceLocation(breakpoint.location.source, line, column))), _react.DOM.div({ className: "breakpoint-snippet" }, snippet), (0, _Close2.default)({
-      handleClick: ev => this.removeBreakpoint(ev, breakpoint),
-      tooltip: L10N.getStr("breakpoints.removeBreakpointTooltip")
-    }));
+      _react2.default.createElement(
+        "div",
+        { className: "breakpoint-label", title: breakpoint.text },
+        _react2.default.createElement(
+          "div",
+          null,
+          renderSourceLocation(breakpoint.location.source, line, column)
+        )
+      ),
+      _react2.default.createElement(
+        "div",
+        { className: "breakpoint-snippet" },
+        snippet
+      ),
+      _react2.default.createElement(_Close2.default, {
+        handleClick: ev => this.removeBreakpoint(ev, breakpoint),
+        tooltip: L10N.getStr("breakpoints.removeBreakpointTooltip")
+      })
+    );
   }
 
   render() {
     var breakpoints = this.props.breakpoints;
 
-    return _react.DOM.div({ className: "pane breakpoints-list" }, breakpoints.size === 0 ? _react.DOM.div({ className: "pane-info" }, L10N.getStr("breakpoints.none")) : breakpoints.valueSeq().map(bp => {
-      return this.renderBreakpoint(bp);
-    }));
+    var children = breakpoints.size === 0 ? _react2.default.createElement(
+      "div",
+      { className: "pane-info" },
+      L10N.getStr("breakpoints.none")
+    ) : breakpoints.valueSeq().map(bp => this.renderBreakpoint(bp));
+
+    return _react2.default.createElement(
+      "div",
+      { className: "pane breakpoints-list" },
+      children
+    );
   }
 }
 
@@ -28114,18 +28233,8 @@ var _getBreakpoints = (0, _reselect.createSelector)(_selectors.getBreakpoints, _
 exports.default = (0, _reactRedux.connect)((state, props) => ({ breakpoints: _getBreakpoints(state) }), dispatch => (0, _redux.bindActionCreators)(_actions2.default, dispatch))(Breakpoints);
 
 /***/ }),
-/* 726 */
-/***/ (function(module, exports) {
-
-// removed by extract-text-webpack-plugin
-
-/***/ }),
-/* 727 */
-/***/ (function(module, exports) {
-
-// removed by extract-text-webpack-plugin
-
-/***/ }),
+/* 726 */,
+/* 727 */,
 /* 728 */
 /***/ (function(module, exports, __webpack_require__) {
 
@@ -28160,19 +28269,13 @@ var _Svg = __webpack_require__(344);
 
 var _Svg2 = _interopRequireDefault(_Svg);
 
-__webpack_require__(679);
+var _ManagedTree = __webpack_require__(419);
 
-var _ManagedTree2 = __webpack_require__(419);
+var _ManagedTree2 = _interopRequireDefault(_ManagedTree);
 
-var _ManagedTree3 = _interopRequireDefault(_ManagedTree2);
+__webpack_require__(850);
 
 function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { default: obj }; }
-
-var ManagedTree = (0, _react.createFactory)(_ManagedTree3.default);
-
-function info(text) {
-  return _react.DOM.div({ className: "pane-info" }, text);
-}
 
 // check to see if its an object with propertie
 function nodeHasProperties(item) {
@@ -28238,23 +28341,43 @@ class Scopes extends _react.Component {
     var notEnumberable = false;
     var objectValue = "";
 
-    return _react.DOM.div({
-      className: (0, _classnames2.default)("node object-node", {
-        focused: false,
-        "not-enumerable": notEnumberable
+    return React.createElement(
+      "div",
+      {
+        className: (0, _classnames2.default)("node object-node", {
+          focused: false,
+          "not-enumerable": notEnumberable
+        }),
+        style: { marginLeft: depth * 15 },
+        key: item.path,
+        onClick: e => {
+          e.stopPropagation();
+          setExpanded(item, !expanded);
+        }
+      },
+      React.createElement(_Svg2.default, {
+        name: "arrow",
+        className: (0, _classnames2.default)({
+          expanded,
+          hidden: nodeIsPrimitive(item)
+        })
       }),
-      style: { marginLeft: depth * 15 },
-      key: item.path,
-      onClick: e => {
-        e.stopPropagation();
-        setExpanded(item, !expanded);
-      }
-    }, (0, _Svg2.default)("arrow", {
-      className: (0, _classnames2.default)({
-        expanded: expanded,
-        hidden: nodeIsPrimitive(item)
-      })
-    }), _react.DOM.span({ className: "object-label" }, item.name), _react.DOM.span({ className: "object-delimiter" }, objectValue ? ": " : ""), _react.DOM.span({ className: "object-value" }, objectValue || ""));
+      React.createElement(
+        "span",
+        { className: "object-label" },
+        item.name
+      ),
+      React.createElement(
+        "span",
+        { className: "object-delimiter" },
+        objectValue ? ": " : ""
+      ),
+      React.createElement(
+        "span",
+        { className: "object-value" },
+        objectValue || ""
+      )
+    );
   }
 
   getObjectProperties(item) {
@@ -28319,24 +28442,36 @@ class Scopes extends _react.Component {
 
 
     if (!pauseInfo) {
-      return _react.DOM.div({ className: "pane scopes-list" }, info(L10N.getStr("scopes.notPaused")));
+      return React.createElement(
+        "div",
+        { className: (0, _classnames2.default)("pane", "scopes-list") },
+        React.createElement(
+          "div",
+          { className: "pane-info" },
+          L10N.getStr("scopes.notPaused")
+        )
+      );
     }
 
     var roots = this.getRoots();
 
-    return _react.DOM.div({ className: "pane scopes-list" }, ManagedTree({
-      itemHeight: 20,
-      getParent: item => null,
-      getChildren: this.getChildren,
-      getRoots: () => roots,
-      getPath: item => item.path,
-      autoExpand: 0,
-      autoExpandDepth: 1,
-      autoExpandAll: false,
-      disabledFocus: true,
-      onExpand: this.onExpand,
-      renderItem: this.renderItem
-    }));
+    return React.createElement(
+      "div",
+      { className: (0, _classnames2.default)("pane", "scopes-list") },
+      React.createElement(_ManagedTree2.default, {
+        itemHeight: 20,
+        getParent: item => null,
+        getChildren: this.getChildren,
+        getRoots: () => roots,
+        getPath: item => item.path,
+        autoExpand: 0,
+        autoExpandDepth: 1,
+        autoExpandAll: false,
+        disabledFocus: true,
+        onExpand: this.onExpand,
+        renderItem: this.renderItem
+      })
+    );
   }
 }
 
@@ -28356,18 +28491,8 @@ exports.default = (0, _reactRedux.connect)(state => ({
 }), dispatch => (0, _redux.bindActionCreators)(_actions2.default, dispatch))(Scopes);
 
 /***/ }),
-/* 729 */
-/***/ (function(module, exports) {
-
-// removed by extract-text-webpack-plugin
-
-/***/ }),
-/* 730 */
-/***/ (function(module, exports) {
-
-// removed by extract-text-webpack-plugin
-
-/***/ }),
+/* 729 */,
+/* 730 */,
 /* 731 */
 /***/ (function(module, exports, __webpack_require__) {
 
@@ -28396,7 +28521,7 @@ var _scopes = __webpack_require__(732);
 
 var _devtoolsReps = __webpack_require__(924);
 
-__webpack_require__(679);
+__webpack_require__(850);
 
 function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { default: obj }; }
 
@@ -28640,24 +28765,9 @@ function getScopes(pauseInfo, selectedFrame, selectedScope) {
 }
 
 /***/ }),
-/* 733 */
-/***/ (function(module, exports) {
-
-// removed by extract-text-webpack-plugin
-
-/***/ }),
-/* 734 */
-/***/ (function(module, exports) {
-
-// removed by extract-text-webpack-plugin
-
-/***/ }),
-/* 735 */
-/***/ (function(module, exports) {
-
-// removed by extract-text-webpack-plugin
-
-/***/ }),
+/* 733 */,
+/* 734 */,
+/* 735 */,
 /* 736 */
 /***/ (function(module, exports, __webpack_require__) {
 
@@ -28686,7 +28796,7 @@ var _Close = __webpack_require__(378);
 
 var _Close2 = _interopRequireDefault(_Close);
 
-__webpack_require__(726);
+__webpack_require__(915);
 
 function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { default: obj }; }
 
@@ -28784,18 +28894,8 @@ exports.default = (0, _reactRedux.connect)(state => {
 }, dispatch => (0, _redux.bindActionCreators)(_actions2.default, dispatch))(EventListeners);
 
 /***/ }),
-/* 737 */
-/***/ (function(module, exports) {
-
-// removed by extract-text-webpack-plugin
-
-/***/ }),
-/* 738 */
-/***/ (function(module, exports) {
-
-// removed by extract-text-webpack-plugin
-
-/***/ }),
+/* 737 */,
+/* 738 */,
 /* 739 */
 /***/ (function(module, exports, __webpack_require__) {
 
@@ -28814,7 +28914,7 @@ var _Svg = __webpack_require__(344);
 
 var _Svg2 = _interopRequireDefault(_Svg);
 
-__webpack_require__(727);
+__webpack_require__(917);
 
 function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { default: obj }; }
 
@@ -28877,7 +28977,7 @@ class Accordion extends _react.Component {
       _react2.default.createElement(
         "div",
         { className: "_header", onClick: () => this.handleHeaderClick(i) },
-        (0, _Svg2.default)("arrow", { className: opened[i] ? "expanded" : "" }),
+        _react2.default.createElement(_Svg2.default, { name: "arrow", className: opened[i] ? "expanded" : "" }),
         item.header,
         item.buttons ? _react2.default.createElement(
           "div",
@@ -28948,7 +29048,7 @@ var _actions = __webpack_require__(244);
 
 var _actions2 = _interopRequireDefault(_actions);
 
-__webpack_require__(729);
+__webpack_require__(918);
 
 var _devtoolsModules = __webpack_require__(830);
 
@@ -29018,7 +29118,7 @@ function debugBtn(onClick, type, className, tooltip) {
   return _react2.default.createElement(
     "button",
     _extends({ className: (0, _classnames2.default)(type, className) }, props),
-    (0, _Svg2.default)(type)
+    _react2.default.createElement(_Svg2.default, { name: type })
   );
 }
 
@@ -29106,7 +29206,11 @@ class CommandBar extends _react.Component {
   render() {
     return _react2.default.createElement(
       "div",
-      { className: "command-bar" },
+      {
+        className: (0, _classnames2.default)("command-bar", {
+          vertical: !this.props.horizontal
+        })
+      },
       this.renderPauseButton(),
       this.renderStepButtons(),
       this.renderPauseOnExceptions()
@@ -29164,9 +29268,12 @@ var _PaneToggle = __webpack_require__(428);
 
 var _PaneToggle2 = _interopRequireDefault(_PaneToggle);
 
-__webpack_require__(733);
+__webpack_require__(922);
 
 function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { default: obj }; }
+
+var _require = __webpack_require__(828),
+    isEnabled = _require.isEnabled;
 
 class WelcomeBox extends _react.Component {
 
@@ -29189,13 +29296,45 @@ class WelcomeBox extends _react.Component {
   }
 
   render() {
-    var searchLabel = L10N.getFormatStr("welcome.search", (0, _text.formatKeyShortcut)(L10N.getStr("sources.search.key2")));
+    var keyCombinationOne = (0, _text.formatKeyShortcut)(L10N.getStr("sources.search.key2"));
+
+    var keyCombinationTwo = (0, _text.formatKeyShortcut)(L10N.getStr("projectTextSearch.key"));
+
+    var searchSourcesLabel = L10N.getStr("welcome.search").substring(2);
+    var searchProjectLabel = L10N.getStr("welcome.findInFiles").substring(2);
+
+    var searchProjectLabelComp = _react2.default.createElement(
+      "div",
+      null,
+      _react2.default.createElement(
+        "b",
+        null,
+        keyCombinationTwo
+      ),
+      searchProjectLabel
+    );
+
+    var searchSourcesLabelComp = _react2.default.createElement(
+      "div",
+      null,
+      _react2.default.createElement(
+        "b",
+        null,
+        keyCombinationOne
+      ),
+      searchSourcesLabel
+    );
 
     return _react2.default.createElement(
       "div",
       { className: "welcomebox" },
-      searchLabel,
-      this.renderToggleButton()
+      _react2.default.createElement(
+        "div",
+        { className: "alignlabel" },
+        searchSourcesLabelComp,
+        isEnabled("searchNav") ? searchProjectLabelComp : null,
+        this.renderToggleButton()
+      )
     );
   }
 }
@@ -29259,7 +29398,7 @@ var _lodash = __webpack_require__(2);
 
 var _text = __webpack_require__(389);
 
-__webpack_require__(734);
+__webpack_require__(923);
 
 var _PaneToggle = __webpack_require__(428);
 
@@ -29644,7 +29783,7 @@ class SourceTabs extends _react.PureComponent {
         onClick: onButtonClick,
         title: newTabTooltip
       },
-      (0, _Svg2.default)("plus")
+      _react2.default.createElement(_Svg2.default, { name: "plus" })
     );
   }
 
@@ -29688,10 +29827,10 @@ class SourceTabs extends _react.PureComponent {
     var sourceObj = source.toJS();
 
     if ((0, _source.isPretty)(sourceObj)) {
-      return (0, _Svg2.default)("prettyPrint");
+      return _react2.default.createElement(_Svg2.default, { name: "prettyPrint" });
     }
     if (sourceObj.isBlackBoxed) {
-      return (0, _Svg2.default)("blackBox");
+      return _react2.default.createElement(_Svg2.default, { name: "blackBox" });
     }
   }
 
@@ -29735,7 +29874,7 @@ var _react = __webpack_require__(0);
 
 var _react2 = _interopRequireDefault(_react);
 
-__webpack_require__(735);
+__webpack_require__(935);
 
 function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { default: obj }; }
 
@@ -29964,20 +30103,600 @@ function sortTree(tree) {
 /***/ }),
 /* 795 */,
 /* 796 */,
-/* 797 */,
-/* 798 */,
+/* 797 */
+/***/ (function(module, exports, __webpack_require__) {
+
+"use strict";
+
+
+Object.defineProperty(exports, "__esModule", {
+  value: true
+});
+exports.getGeneratedLocation = undefined;
+
+var _extends = Object.assign || function (target) { for (var i = 1; i < arguments.length; i++) { var source = arguments[i]; for (var key in source) { if (Object.prototype.hasOwnProperty.call(source, key)) { target[key] = source[key]; } } } return target; };
+
+var getGeneratedLocation = exports.getGeneratedLocation = (() => {
+  var _ref = _asyncToGenerator(function* (state, source, location, sourceMaps) {
+    if (!sourceMaps.isOriginalId(location.sourceId)) {
+      return location;
+    }
+
+    var generatedLocation = yield sourceMaps.getGeneratedLocation(location, source);
+    var generatedSource = (0, _selectors.getSource)(state, generatedLocation.sourceId);
+    var sourceUrl = generatedSource.get("url");
+    return _extends({}, generatedLocation, { sourceUrl });
+  });
+
+  return function getGeneratedLocation(_x, _x2, _x3, _x4) {
+    return _ref.apply(this, arguments);
+  };
+})();
+
+var _selectors = __webpack_require__(242);
+
+function _asyncToGenerator(fn) { return function () { var gen = fn.apply(this, arguments); return new Promise(function (resolve, reject) { function step(key, arg) { try { var info = gen[key](arg); var value = info.value; } catch (error) { reject(error); return; } if (info.done) { resolve(value); } else { return Promise.resolve(value).then(function (value) { step("next", value); }, function (err) { step("throw", err); }); } } return step("next"); }); }; }
+
+/***/ }),
+/* 798 */
+/***/ (function(module, exports, __webpack_require__) {
+
+"use strict";
+
+
+Object.defineProperty(exports, "__esModule", {
+  value: true
+});
+
+var _react = __webpack_require__(0);
+
+var _react2 = _interopRequireDefault(_react);
+
+var _lodash = __webpack_require__(2);
+
+var _frame = __webpack_require__(1014);
+
+__webpack_require__(872);
+
+function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { default: obj }; }
+
+function getFunctionName(func) {
+  var name = func.userDisplayName || func.displayName || func.name;
+  return (0, _frame.simplifyDisplayName)(name);
+}
+
+class PreviewFunction extends _react.Component {
+  renderFunctionName(func) {
+    var name = getFunctionName(func);
+    return _react2.default.createElement(
+      "span",
+      { className: "function-name" },
+      name
+    );
+  }
+
+  renderParams(func) {
+    var _func$parameterNames = func.parameterNames,
+        parameterNames = _func$parameterNames === undefined ? [] : _func$parameterNames;
+
+    var params = parameterNames.filter(i => i).map(param => _react2.default.createElement(
+      "span",
+      { className: "param", key: param },
+      param
+    ));
+
+    var commas = (0, _lodash.times)(params.length - 1).map((_, i) => _react2.default.createElement(
+      "span",
+      { className: "delimiter", key: i },
+      ", "
+    ));
+
+    return (0, _lodash.flatten)((0, _lodash.zip)(params, commas));
+  }
+
+  render() {
+    return _react2.default.createElement(
+      "span",
+      { className: "function-signature" },
+      this.renderFunctionName(this.props.func),
+      _react2.default.createElement(
+        "span",
+        { className: "paren" },
+        "("
+      ),
+      this.renderParams(this.props.func),
+      _react2.default.createElement(
+        "span",
+        { className: "paren" },
+        ")"
+      )
+    );
+  }
+}
+
+exports.default = PreviewFunction;
+PreviewFunction.displayName = "PreviewFunction";
+
+/***/ }),
 /* 799 */,
 /* 800 */,
 /* 801 */,
 /* 802 */,
 /* 803 */,
-/* 804 */,
-/* 805 */,
-/* 806 */,
+/* 804 */
+/***/ (function(module, exports, __webpack_require__) {
+
+"use strict";
+
+
+Object.defineProperty(exports, "__esModule", {
+  value: true
+});
+exports.findScopeByName = exports.getASTLocation = undefined;
+
+var getASTLocation = exports.getASTLocation = (() => {
+  var _ref = _asyncToGenerator(function* (source, location) {
+    var symbols = yield (0, _parser.getSymbols)(source);
+    var functions = [].concat(_toConsumableArray(symbols.functions), _toConsumableArray(symbols.memberExpressions));
+
+    var scope = findClosestScope(functions, location);
+    if (scope) {
+      var line = location.line - scope.location.start.line;
+      var column = location.column;
+      return { name: scope.name, offset: { line, column } };
+    }
+    return { name: undefined, offset: location };
+  });
+
+  return function getASTLocation(_x, _x2) {
+    return _ref.apply(this, arguments);
+  };
+})();
+
+var findScopeByName = exports.findScopeByName = (() => {
+  var _ref2 = _asyncToGenerator(function* (source, name) {
+    var symbols = yield (0, _parser.getSymbols)(source);
+    var functions = symbols.functions;
+
+    return functions.find(function (node) {
+      return node.name === name;
+    });
+  });
+
+  return function findScopeByName(_x3, _x4) {
+    return _ref2.apply(this, arguments);
+  };
+})();
+
+var _parser = __webpack_require__(827);
+
+var _contains = __webpack_require__(1127);
+
+function _toConsumableArray(arr) { if (Array.isArray(arr)) { for (var i = 0, arr2 = Array(arr.length); i < arr.length; i++) { arr2[i] = arr[i]; } return arr2; } else { return Array.from(arr); } }
+
+function _asyncToGenerator(fn) { return function () { var gen = fn.apply(this, arguments); return new Promise(function (resolve, reject) { function step(key, arg) { try { var info = gen[key](arg); var value = info.value; } catch (error) { reject(error); return; } if (info.done) { resolve(value); } else { return Promise.resolve(value).then(function (value) { step("next", value); }, function (err) { step("throw", err); }); } } return step("next"); }); }; }
+
+function findClosestScope(functions, location) {
+  return functions.reduce((found, currNode) => {
+    if (currNode.name === "anonymous" || !(0, _contains.containsPosition)(currNode.location, location)) {
+      return found;
+    }
+
+    if (!found) {
+      return currNode;
+    }
+
+    if (found.location.start.line > currNode.location.start.line || found.location.start.column > currNode.location.start.column) {
+      return found;
+    }
+
+    return currNode;
+  }, null);
+}
+
+/***/ }),
+/* 805 */
+/***/ (function(module, exports, __webpack_require__) {
+
+"use strict";
+
+
+Object.defineProperty(exports, "__esModule", {
+  value: true
+});
+exports.default = isSelectedFrameVisible;
+
+var _pause = __webpack_require__(239);
+
+var _sources = __webpack_require__(232);
+
+/*
+ * Checks to if the selected frame's source is currently
+ * selected.
+ */
+function isSelectedFrameVisible(state) {
+  var selectedLocation = (0, _sources.getSelectedLocation)(state);
+  var selectedFrame = (0, _pause.getSelectedFrame)(state);
+
+  return selectedFrame && selectedLocation && selectedFrame.location.sourceId == selectedLocation.sourceId;
+}
+
+/***/ }),
+/* 806 */
+/***/ (function(module, exports) {
+
+module.exports = "<svg xmlns=\"http://www.w3.org/2000/svg\" xmlns:xlink=\"http://www.w3.org/1999/xlink\" viewBox=\"0 0 256 256\"><defs><style>.cls-1{isolation:isolate;}.cls-17,.cls-2,.cls-25{fill:none;}.cls-17,.cls-2{stroke-miterlimit:10;}.cls-2{stroke-width:0.75px;stroke:url(#linear-gradient);}.cls-3{fill:url(#linear-gradient-2);}.cls-4{fill:#f15a24;}.cls-5{fill:#ed1c24;}.cls-6{fill:#c1272d;}.cls-7{fill:url(#linear-gradient-3);}.cls-8{fill:url(#linear-gradient-4);}.cls-9{fill:url(#linear-gradient-5);}.cls-10{fill:url(#linear-gradient-6);}.cls-11{opacity:0.49;fill:url(#linear-gradient-7);}.cls-12{fill:url(#linear-gradient-8);}.cls-13{fill:#2db5f9;}.cls-13,.cls-14{mix-blend-mode:screen;}.cls-14{fill:#5fd2ff;}.cls-15{fill:#219058;}.cls-16{fill:url(#linear-gradient-9);}.cls-17{stroke:#fff;stroke-width:1.87px;}.cls-18{fill:#f7b852;}.cls-19{fill:#ff8431;}.cls-20{fill:#fffb69;}.cls-21{fill:#44c688;}.cls-22{fill:#29b36e;}.cls-23{fill:#6fd191;}.cls-24{fill:#c83ad7;}.cls-26{fill:#fba9ff;}.cls-27{fill:#ff737d;}.cls-28{fill:#fdc666;}</style><linearGradient id=\"linear-gradient\" x1=\"67.45\" y1=\"154.72\" x2=\"67.29\" y2=\"155.43\" gradientUnits=\"userSpaceOnUse\"><stop offset=\"0\" stop-color=\"#ff1d25\" stop-opacity=\"0.5\"></stop><stop offset=\"0.06\" stop-color=\"#ff1d25\" stop-opacity=\"0.54\"></stop><stop offset=\"0.37\" stop-color=\"#ff1d25\" stop-opacity=\"0.74\"></stop><stop offset=\"0.64\" stop-color=\"#ff1d25\" stop-opacity=\"0.88\"></stop><stop offset=\"0.86\" stop-color=\"#ff1d25\" stop-opacity=\"0.97\"></stop><stop offset=\"1\" stop-color=\"#ff1d25\"></stop></linearGradient><linearGradient id=\"linear-gradient-2\" x1=\"73.09\" y1=\"170.74\" x2=\"73.09\" y2=\"153.5\" gradientUnits=\"userSpaceOnUse\"><stop offset=\"0\" stop-color=\"#ffdd42\"></stop><stop offset=\"1\" stop-color=\"#fb784b\"></stop></linearGradient><linearGradient id=\"linear-gradient-3\" x1=\"201.52\" y1=\"95.13\" x2=\"207.88\" y2=\"89.89\" gradientUnits=\"userSpaceOnUse\"><stop offset=\"0\" stop-color=\"#5bcb99\"></stop><stop offset=\"1\" stop-color=\"#85a8e8\"></stop></linearGradient><linearGradient id=\"linear-gradient-4\" x1=\"81.17\" y1=\"158.3\" x2=\"279.32\" y2=\"55.49\" gradientUnits=\"userSpaceOnUse\"><stop offset=\"0\" stop-color=\"#34e28b\"></stop><stop offset=\"1\"></stop></linearGradient><linearGradient id=\"linear-gradient-5\" x1=\"117.57\" y1=\"178.22\" x2=\"133.15\" y2=\"178.22\" gradientUnits=\"userSpaceOnUse\"><stop offset=\"0\" stop-color=\"#c297ff\"></stop><stop offset=\"1\" stop-color=\"#ae31bb\"></stop></linearGradient><linearGradient id=\"linear-gradient-6\" x1=\"54.05\" y1=\"253.29\" x2=\"251.08\" y2=\"99.63\" gradientUnits=\"userSpaceOnUse\"><stop offset=\"0\"></stop><stop offset=\"1\" stop-color=\"#d23de2\"></stop></linearGradient><linearGradient id=\"linear-gradient-7\" x1=\"199.8\" y1=\"86.45\" x2=\"191.83\" y2=\"113.37\" gradientUnits=\"userSpaceOnUse\"><stop offset=\"0\"></stop><stop offset=\"1\" stop-opacity=\"0\"></stop></linearGradient><linearGradient id=\"linear-gradient-8\" x1=\"126.87\" y1=\"190.63\" x2=\"182.9\" y2=\"204.2\" gradientUnits=\"userSpaceOnUse\"><stop offset=\"0\" stop-color=\"#2db5f9\"></stop><stop offset=\"1\" stop-color=\"#092432\"></stop></linearGradient><linearGradient id=\"linear-gradient-9\" x1=\"83.08\" y1=\"49.55\" x2=\"46.06\" y2=\"151.24\" gradientUnits=\"userSpaceOnUse\"><stop offset=\"0\"></stop><stop offset=\"0.21\" stop-color=\"#48080a\"></stop><stop offset=\"0.42\" stop-color=\"#891014\"></stop><stop offset=\"0.61\" stop-color=\"#bc151b\"></stop><stop offset=\"0.78\" stop-color=\"#e01a21\"></stop><stop offset=\"0.91\" stop-color=\"#f71c24\"></stop><stop offset=\"1\" stop-color=\"#ff1d25\"></stop></linearGradient></defs><title>dojo_square</title><g class=\"cls-1\"><g id=\"Layer_1\" data-name=\"Layer 1\"><line class=\"cls-2\" x1=\"67.37\" y1=\"155.08\" x2=\"67.37\" y2=\"155.08\"></line><path class=\"cls-3\" d=\"M42.28,150.4l.52.82A58,58,0,0,0,52,161.49a45.23,45.23,0,0,0,28.74,10.25c.65,0,1.31,0,2,0a67.32,67.32,0,0,0,21.13-5.26,67.38,67.38,0,0,1-9.09.83,36.92,36.92,0,0,1-27.44-12.17A66.82,66.82,0,0,1,42.28,150.4Z\"></path><path class=\"cls-4\" d=\"M80.79,80.88a45.4,45.4,0,0,1,38.89,21.94A37,37,0,0,0,84.43,94.7c8.29,4,19.66,7.08,35.28,8.15,0,0-.77-14.87-19.8-22.64-26.57-10.84-30.33-8.69-37.06-19.9a30.09,30.09,0,0,0,6,22.15A45.45,45.45,0,0,1,80.79,80.88Z\"></path><path class=\"cls-5\" d=\"M99.92,80.21c-9.1-3.71-15.52-5.9-20.3-7.62A33.4,33.4,0,0,0,84.54,81a45.42,45.42,0,0,1,35.13,21.78,36.87,36.87,0,0,0-20.54-9.34,109,109,0,0,0,20,9.32l.59,0S118.94,88,99.92,80.21Z\"></path><path class=\"cls-6\" d=\"M119.69,102.85h.1c.29-1.62,2.07-14.46-12.4-25.7C85.78,60.37,81.56,58.82,80.53,49.94a27.8,27.8,0,0,0-.91,22.65c4.78,1.72,11.21,3.91,20.3,7.62,19,7.77,19.8,22.64,19.8,22.64Z\"></path><path class=\"cls-7\" d=\"M185.28,88.22a33.64,33.64,0,0,1,22.08,8.23,29.8,29.8,0,0,1,19,8S208.22,78,176.19,89a41.72,41.72,0,0,0-8.2,4A33.64,33.64,0,0,1,185.28,88.22Z\"></path><path class=\"cls-8\" d=\"M185.28,88.22A33.62,33.62,0,0,0,168,93l.93-.56c-25.88,15.24-57.6,62.06-101.56,62.65h0a36.92,36.92,0,0,0,27.44,12.17,67.38,67.38,0,0,0,9.09-.83c28.6-11.79,56.09-40,68.55-53.64,11.56-12.67,24.22-17,34.91-16.34A33.64,33.64,0,0,0,185.28,88.22Z\"></path><path class=\"cls-9\" d=\"M118.48,179a20.94,20.94,0,0,0-.92,5.86,22.25,22.25,0,0,0,1,6.74,16.56,16.56,0,0,1,5.5-14.74c0-.17.09-.34.14-.51a20.37,20.37,0,0,1,8.91-11.47l-.08,0a37.84,37.84,0,0,0-4,1.53A20.87,20.87,0,0,0,118.48,179Z\"></path><path class=\"cls-10\" d=\"M234.26,129.11a42.41,42.41,0,0,0-7.94-24.76,29.82,29.82,0,0,0-19-7.9A33.69,33.69,0,0,1,219.06,122c0,11.34-4.12,24.3-17.45,31.28-19.42,10.16-49.21,5.33-68.54,11.6l.08,0a20.37,20.37,0,0,0-8.91,11.47c-.05.17-.09.34-.14.51h0c5.67-5,16.84-8.54,38.63-5.73,15.56,2,27.93,2.55,38.54-.5a41.2,41.2,0,0,0,25.23-17h0A42.41,42.41,0,0,0,234.26,129.11Z\"></path><path class=\"cls-11\" d=\"M234.26,129.11a42.41,42.41,0,0,0-7.94-24.76,29.82,29.82,0,0,0-19-7.9A33.69,33.69,0,0,1,219.06,122c0,11.34-4.12,24.3-17.45,31.28-19.42,10.16-49.21,5.33-68.54,11.6l.08,0a20.37,20.37,0,0,0-8.91,11.47c-.05.17-.09.34-.14.51h0c5.67-5,16.84-8.54,38.63-5.73,15.56,2,27.93,2.55,38.54-.5a41.2,41.2,0,0,0,25.23-17h0A42.41,42.41,0,0,0,234.26,129.11Z\"></path><path class=\"cls-12\" d=\"M137.8,201.88a20.44,20.44,0,0,1-13.68-25.12h0l0,.08a16.56,16.56,0,0,0-5.5,14.73,20.94,20.94,0,0,0,33.63,9.38A20.37,20.37,0,0,1,137.8,201.88Z\"></path><path class=\"cls-13\" d=\"M144.91,200.4c2.12-6.17,9-15.7,16.33-11.34,0,0,6,3.36,7.23-6.11,0,0,4.49,22.28-17.1,21.53,0,0,4.86-3.55,4.81-7.2A24.73,24.73,0,0,1,144.91,200.4Z\"></path><path class=\"cls-14\" d=\"M153.52,186.75c2.14-1.09,4.16-2.18,8.08-.44,3,1.35,6.88-3.94,3.56-8.66,0,0,.21,4.88-3.72,4.84A8.81,8.81,0,0,0,153.52,186.75Z\"></path><path class=\"cls-15\" d=\"M175.21,115.88c-5.17,7-12.75,12.95-13.64,14.39s1.5,6.11,5,6.45.82-1.36.52-3,1.06,1,5.27.42-1.53-2.2-1.14-4.33,4.74-6.17,6.47-10.25,4.7,0,3.18,3.18c-.6,1.26,4.81-3.54,2.08-7.21S178.22,111.77,175.21,115.88Z\"></path><path class=\"cls-15\" d=\"M160.47,131.28c-.76.73-3,2.37-3,2.37s2.19,3.05,5,3c0,0,.61-.29-.27-1.18S160.27,131.82,160.47,131.28Z\"></path><path class=\"cls-16\" d=\"M84.43,94.7c-7.35-3.56-12.27-7.88-15.54-12.24A45.42,45.42,0,0,0,42.28,150.4a66.82,66.82,0,0,0,25.09,4.67h0A37,37,0,0,1,84.43,94.7Z\"></path><line class=\"cls-17\" x1=\"67.37\" y1=\"155.08\" x2=\"67.37\" y2=\"155.08\"></line><path class=\"cls-18\" d=\"M84.52,81c2,2.91,7.81,7.94,14.63,12.44a36.87,36.87,0,0,1,20.52,9.33A45.42,45.42,0,0,0,84.52,81Z\"></path><path class=\"cls-19\" d=\"M84.52,81c-1.23-.1-2.48-.16-3.74-.16a45.45,45.45,0,0,0-11.89,1.58c3.27,4.36,8.19,8.67,15.54,12.24a36.72,36.72,0,0,1,14.72-1.22C92.33,89,86.54,83.95,84.52,81Z\"></path><path class=\"cls-20\" d=\"M109.73,91.38a33.29,33.29,0,0,0-12.21-7.29C100.46,89.66,103,91.38,109.73,91.38Z\"></path><path class=\"cls-6\" d=\"M96.89,67.66a63.16,63.16,0,0,1,6.54,4.58c.52.39-.93-3.55-2.62-4.3A7.5,7.5,0,0,0,96.89,67.66Z\"></path><path class=\"cls-6\" d=\"M105,73.37a70.75,70.75,0,0,1,6.5,4.64c.53.38-.9-3.56-2.57-4.33A7.5,7.5,0,0,0,105,73.37Z\"></path><path class=\"cls-6\" d=\"M112.55,79a19.59,19.59,0,0,1,3.52,4.39c.26.38.07-2.58-.92-3.42A5.28,5.28,0,0,0,112.55,79Z\"></path><path class=\"cls-21\" d=\"M77.55,151c-.2-.65,2.35-1.48,3-1.51a11.91,11.91,0,0,1,3.57,1.19,16.34,16.34,0,0,1-4.89,1A4.46,4.46,0,0,1,77.55,151Z\"></path><path class=\"cls-21\" d=\"M86.73,148.78c-.22-.51,1.75-1.38,2.29-1.46a9.58,9.58,0,0,1,3,.65,13.15,13.15,0,0,1-3.83,1.23A3.59,3.59,0,0,1,86.73,148.78Z\"></path><path class=\"cls-21\" d=\"M94.41,146c-.22-.4,1.32-1.29,1.76-1.41a7.92,7.92,0,0,1,2.48.27,10.87,10.87,0,0,1-3,1.35A3,3,0,0,1,94.41,146Z\"></path><path class=\"cls-21\" d=\"M100.52,143.19c-.23-.35,1.11-1.27,1.5-1.41a7.25,7.25,0,0,1,2.29.07,10,10,0,0,1-2.67,1.45A2.72,2.72,0,0,1,100.52,143.19Z\"></path><path class=\"cls-21\" d=\"M106.23,140.07c-.22-.29.9-1.16,1.24-1.3a6.31,6.31,0,0,1,2,0,8.66,8.66,0,0,1-2.25,1.39A2.36,2.36,0,0,1,106.23,140.07Z\"></path><path class=\"cls-21\" d=\"M68.34,151.69c-.11-.73,2.73-1.16,3.46-1.09a12.76,12.76,0,0,1,3.57,1.86,17.51,17.51,0,0,1-5.35.26A4.78,4.78,0,0,1,68.34,151.69Z\"></path><path class=\"cls-6\" d=\"M70.08,65.82c2,2.27,6.68,3.74,6.68,3.74A19,19,0,0,1,75.83,62c0-.18-5.75-.09-6.73-4.81C68.91,56.23,68.1,63.55,70.08,65.82Z\"></path><path class=\"cls-4\" d=\"M50.54,174.68a5.49,5.49,0,0,1,2.24-3.88l.19-.11a14,14,0,0,0-1.43-.25c-6.85-1-8.59,3.06-8.95,7.64,0,.26,0,.53,0,.78a8.31,8.31,0,0,1,7.89-4.2Z\"></path><path class=\"cls-4\" d=\"M58.88,173.19c-6.81-4.13-10.63-4.43-12.15,7.14,0,0,7.17-5.67,10.55-1.92,3.68,4.07,8.68.32,6.05-2.06A18.77,18.77,0,0,0,58.88,173.19Z\"></path><path class=\"cls-4\" d=\"M56.06,174.53c-3.86,2.57-3.86,8.62-3.86,8.62s7-3.81,6.5-6.19A2.93,2.93,0,0,0,56.06,174.53Z\"></path><path class=\"cls-4\" d=\"M24,127a5.49,5.49,0,0,1,4.43-.68l.2.08a14,14,0,0,0-.7-1.27c-3.49-6-7.76-4.79-11.56-2.21-.22.15-.43.31-.63.47a8.31,8.31,0,0,1,8.21,3.53Z\"></path><path class=\"cls-4\" d=\"M31.29,134.08c-2.48-9.82-4.47-13.62-14-6.83,0,0,8.13-2.34,9.06,9.22.44,5.47,5.69,6.57,5.63,3A18.77,18.77,0,0,0,31.29,134.08Z\"></path><path class=\"cls-4\" d=\"M27.83,128.82c-4.52-1.07-8.94,3.06-8.94,3.06s6.94-.24,7.78,4C27.14,138.23,27.83,128.82,27.83,128.82Z\"></path><path class=\"cls-22\" d=\"M172.45,112.79a55.39,55.39,0,0,1,15.49-12.5c5.64-3,13.66-4.84,18.5-4.61l1.85,1.59-1-.08a37.75,37.75,0,0,0-19,3.76A55,55,0,0,0,172.45,112.79Z\"></path><path class=\"cls-23\" d=\"M207.12,95.74a34.5,34.5,0,0,1,10.45,2.68,27.42,27.42,0,0,1,8.81,6,27.05,27.05,0,0,0-9.09-5.29,43.65,43.65,0,0,0-9-1.84l-1.84-1.59Z\"></path><path class=\"cls-24\" d=\"M124.52,175.47a27.43,27.43,0,0,1,3.11-1.9,25.35,25.35,0,0,1,2.31-1c.78-.34,1.58-.58,2.38-.84a45.63,45.63,0,0,1,9.84-1.81,95.67,95.67,0,0,1,19.84.78,194.33,194.33,0,0,0,19.66,1.89,66.25,66.25,0,0,0,19.6-1.93,66.44,66.44,0,0,1-19.6,2.3,194.82,194.82,0,0,1-19.75-1.52,94.77,94.77,0,0,0-19.65-.41,44.43,44.43,0,0,0-9.55,1.94c-.76.27-1.53.52-2.27.85a24,24,0,0,0-2.18,1,21.38,21.38,0,0,0-3.93,2.7l-.53.47A18.42,18.42,0,0,1,124.52,175.47Z\"></path><line class=\"cls-25\" x1=\"124.09\" y1=\"176.84\" x2=\"124.09\" y2=\"176.84\"></line><path class=\"cls-6\" d=\"M85.66,97.64c-6.36,1.4-5.37,6.45-5.37,6.45s2-2.43,13.09-3.74A52.36,52.36,0,0,1,85.66,97.64Z\"></path><path class=\"cls-26\" d=\"M118.59,191.58a16.4,16.4,0,0,1-.08-4.24,18.64,18.64,0,0,1,.91-4.18,18.86,18.86,0,0,1,1.87-3.9,19.81,19.81,0,0,1,2.78-3.38l.46-.42s-.63,2-.7,2.51a19.27,19.27,0,0,0-1.61,1.93,17.84,17.84,0,0,0-3.33,7.5A16.22,16.22,0,0,0,118.59,191.58Z\"></path><path class=\"cls-27\" d=\"M65.89,155.08c-3.61-4-6.65-10.29-7.95-16.2a36.79,36.79,0,0,1-.82-9.49l.14-2.38.33-2.36a23,23,0,0,1,.47-2.33,19.65,19.65,0,0,1,.6-2.3,35.6,35.6,0,0,1,3.83-8.64,39.45,39.45,0,0,1,2.68-3.89l1.53-1.8c.51-.6,1.1-1.13,1.64-1.69a37.2,37.2,0,0,1,7.47-5.68,39.82,39.82,0,0,1,8.62-3.62A39.67,39.67,0,0,0,76,98.56a36.78,36.78,0,0,0-7.22,5.83c-.52.57-1.08,1.11-1.56,1.71l-1.45,1.81a38.67,38.67,0,0,0-2.51,3.89,34.62,34.62,0,0,0-3.48,8.52,18.77,18.77,0,0,0-.52,2.24,21.9,21.9,0,0,0-.38,2.27l-.25,2.28-.06,2.3a35.25,35.25,0,0,0,1.06,9.07,36.17,36.17,0,0,0,8.62,15.83l.66.71S66.44,155.12,65.89,155.08Z\"></path><path class=\"cls-28\" d=\"M103.89,166.42A47.14,47.14,0,0,1,94,167.55,37.09,37.09,0,0,1,84,165.91,46.7,46.7,0,0,1,74.71,162a34.57,34.57,0,0,1-8.12-6.17l-.69-.74s2.38,0,3-.06a33.57,33.57,0,0,0,6.72,5.5,45.26,45.26,0,0,0,8.82,4.27A36.2,36.2,0,0,0,94,166.91,47.78,47.78,0,0,0,103.89,166.42Z\"></path></g></g></svg>"
+
+/***/ }),
 /* 807 */,
 /* 808 */,
-/* 809 */,
-/* 810 */,
+/* 809 */
+/***/ (function(module, exports, __webpack_require__) {
+
+"use strict";
+
+
+Object.defineProperty(exports, "__esModule", {
+  value: true
+});
+
+var _react = __webpack_require__(0);
+
+var _react2 = _interopRequireDefault(_react);
+
+var _redux = __webpack_require__(3);
+
+var _reactRedux = __webpack_require__(151);
+
+var _debounce = __webpack_require__(651);
+
+var _debounce2 = _interopRequireDefault(_debounce);
+
+var _Popup = __webpack_require__(810);
+
+var _Popup2 = _interopRequireDefault(_Popup);
+
+var _selectors = __webpack_require__(242);
+
+var _actions = __webpack_require__(244);
+
+var _actions2 = _interopRequireDefault(_actions);
+
+var _editor = __webpack_require__(257);
+
+function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { default: obj }; }
+
+class Preview extends _react.PureComponent {
+
+  constructor() {
+    super();
+
+    var self = this;
+    self.onScroll = this.onScroll.bind(this);
+    self.onMouseOver = (0, _debounce2.default)(this.onMouseOver, 40);
+  }
+
+  componentDidMount() {
+    var codeMirror = this.props.editor.codeMirror;
+
+    var codeMirrorWrapper = codeMirror.getWrapperElement();
+
+    codeMirror.on("scroll", this.onScroll);
+    codeMirrorWrapper.addEventListener("mouseover", e => this.onMouseOver(e));
+    codeMirrorWrapper.addEventListener("mouseup", e => this.onMouseUp(e));
+    codeMirrorWrapper.addEventListener("mousedown", e => this.onMouseDown(e));
+  }
+
+  onMouseOver(e) {
+    var target = e.target;
+
+    if (this.props.selectedFrameVisible) {
+      (0, _editor.updatePreview)(target, this.props.editor, this.props);
+    }
+  }
+
+  onMouseUp() {
+    this.currentlySelecting = false;
+  }
+
+  onMouseDown() {
+    this.currentlySelecting = true;
+  }
+
+  onScroll() {
+    this.props.clearPreview();
+  }
+
+  onClose(e) {
+    this.props.clearPreview();
+  }
+
+  render() {
+    var _props = this.props,
+        selectedSource = _props.selectedSource,
+        preview = _props.preview;
+
+
+    if (!this.props.editor || !selectedSource || this.currentlySelecting) {
+      return null;
+    }
+
+    if (!preview || preview.updating) {
+      return null;
+    }
+
+    var result = preview.result,
+        expression = preview.expression,
+        location = preview.location,
+        cursorPos = preview.cursorPos;
+
+    var value = result;
+    if (typeof value == "undefined" || value.optimizedOut) {
+      return null;
+    }
+
+    var editorRange = (0, _editor.toEditorRange)(selectedSource.get("id"), location);
+
+    return _react2.default.createElement(_Popup2.default, {
+      value: value,
+      editor: this.props.editor,
+      range: editorRange,
+      expression: expression,
+      popoverPos: cursorPos,
+      onClose: e => this.onClose(e)
+    });
+  }
+}
+
+Preview.displayName = "Preview";
+
+exports.default = (0, _reactRedux.connect)(state => ({
+  preview: (0, _selectors.getPreview)(state),
+  selectedSource: (0, _selectors.getSelectedSource)(state),
+  linesInScope: (0, _selectors.getInScopeLines)(state),
+  selectedFrameVisible: (0, _selectors.isSelectedFrameVisible)(state)
+}), dispatch => (0, _redux.bindActionCreators)(_actions2.default, dispatch))(Preview);
+
+/***/ }),
+/* 810 */
+/***/ (function(module, exports, __webpack_require__) {
+
+"use strict";
+
+
+Object.defineProperty(exports, "__esModule", {
+  value: true
+});
+exports.Popup = undefined;
+
+var _react = __webpack_require__(0);
+
+var _react2 = _interopRequireDefault(_react);
+
+var _reactRedux = __webpack_require__(151);
+
+var _redux = __webpack_require__(3);
+
+var _devtoolsConfig = __webpack_require__(828);
+
+var _devtoolsReps = __webpack_require__(924);
+
+var _devtoolsReps2 = _interopRequireDefault(_devtoolsReps);
+
+var _actions = __webpack_require__(244);
+
+var _actions2 = _interopRequireDefault(_actions);
+
+var _selectors = __webpack_require__(242);
+
+var _Popover = __webpack_require__(698);
+
+var _Popover2 = _interopRequireDefault(_Popover);
+
+var _PreviewFunction = __webpack_require__(798);
+
+var _PreviewFunction2 = _interopRequireDefault(_PreviewFunction);
+
+var _editor = __webpack_require__(257);
+
+__webpack_require__(881);
+
+function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { default: obj }; }
+
+var Rep = _devtoolsReps2.default.REPS.Rep,
+    MODE = _devtoolsReps2.default.MODE,
+    ObjectInspectorUtils = _devtoolsReps2.default.ObjectInspectorUtils;
+var ObjectInspector = _devtoolsReps2.default.ObjectInspector;
+var getChildren = ObjectInspectorUtils.getChildren;
+class Popup extends _react.Component {
+
+  componentDidMount() {
+    var _props = this.props,
+        loadObjectProperties = _props.loadObjectProperties,
+        loadedObjects = _props.loadedObjects,
+        value = _props.value,
+        editor = _props.editor,
+        range = _props.range;
+
+
+    this.marker = (0, _editor.markText)(editor, "preview-selection", range);
+
+    if (!value || !value.type == "object") {
+      return;
+    }
+
+    if (value.actor && !loadedObjects[value.actor]) {
+      loadObjectProperties(value);
+    }
+  }
+
+  componentWillUnmount() {
+    if (this.marker) {
+      this.marker.clear();
+    }
+  }
+
+  getChildren(root, getObjectProperties) {
+    var actors = {};
+
+    var children = getChildren({
+      getObjectProperties,
+      actors,
+      item: root
+    });
+
+    if (children.length > 0) {
+      return children;
+    }
+
+    return null;
+  }
+
+  renderFunctionPreview(value, root) {
+    var selectSourceURL = this.props.selectSourceURL;
+    var location = value.location;
+
+
+    return _react2.default.createElement(
+      "div",
+      {
+        className: "preview-popup",
+        onClick: () => selectSourceURL(location.url, { line: location.line })
+      },
+      _react2.default.createElement(_PreviewFunction2.default, { func: value })
+    );
+  }
+
+  renderObjectPreview(expression, root) {
+    return _react2.default.createElement(
+      "div",
+      { className: "preview-popup" },
+      this.renderObjectInspector(root)
+    );
+  }
+
+  renderSimplePreview(value) {
+    return _react2.default.createElement(
+      "div",
+      { className: "preview-popup" },
+      Rep({ object: value, mode: MODE.LONG })
+    );
+  }
+
+  renderObjectInspector(root) {
+    var _props2 = this.props,
+        loadObjectProperties = _props2.loadObjectProperties,
+        loadedObjects = _props2.loadedObjects;
+
+
+    var getObjectProperties = id => loadedObjects[id];
+    var roots = this.getChildren(root, getObjectProperties);
+
+    if (!roots) {
+      return null;
+    }
+
+    return _react2.default.createElement(ObjectInspector, {
+      roots: roots,
+      autoExpandDepth: 0,
+      disableWrap: true,
+      disabledFocus: true,
+      getObjectProperties: getObjectProperties,
+      loadObjectProperties: loadObjectProperties
+      // TODO: See https://github.com/devtools-html/debugger.html/issues/3555.
+      , getObjectEntries: actor => {},
+      loadObjectEntries: grip => {}
+    });
+  }
+
+  renderAddToExpressionBar(expression) {
+    if (!(0, _devtoolsConfig.isEnabled)("previewWatch")) {
+      return null;
+    }
+
+    var addExpression = this.props.addExpression;
+
+    return _react2.default.createElement(
+      "div",
+      { className: "add-to-expression-bar" },
+      _react2.default.createElement(
+        "div",
+        { className: "prompt" },
+        "\xBB"
+      ),
+      _react2.default.createElement(
+        "div",
+        { className: "expression-to-save-label" },
+        expression
+      ),
+      _react2.default.createElement(
+        "div",
+        {
+          className: "expression-to-save-button",
+          onClick: event => addExpression(event)
+        },
+        L10N.getStr("addWatchExpressionButton")
+      )
+    );
+  }
+
+  renderPreview(expression, value) {
+    var root = {
+      name: expression,
+      path: expression,
+      contents: { value }
+    };
+
+    if (value.class === "Function") {
+      return this.renderFunctionPreview(value, root);
+    }
+
+    if (value.type === "object") {
+      return _react2.default.createElement(
+        "div",
+        null,
+        this.renderObjectPreview(expression, root),
+        this.renderAddToExpressionBar(expression)
+      );
+    }
+
+    return this.renderSimplePreview(value);
+  }
+
+  getPreviewType(value) {
+    if (typeof value == "boolean" || value.type == "null" || value.type == "undefined" || value.class === "Function") {
+      return "tooltip";
+    }
+
+    return "popover";
+  }
+
+  render() {
+    var _props3 = this.props,
+        popoverPos = _props3.popoverPos,
+        onClose = _props3.onClose,
+        value = _props3.value,
+        expression = _props3.expression;
+
+
+    var type = this.getPreviewType(value);
+
+    return _react2.default.createElement(
+      _Popover2.default,
+      { targetPosition: popoverPos, onMouseLeave: onClose, type: type },
+      this.renderPreview(expression, value)
+    );
+  }
+}
+
+exports.Popup = Popup;
+Popup.displayName = "Popup";
+
+exports.default = (0, _reactRedux.connect)(state => ({
+  loadedObjects: (0, _selectors.getLoadedObjects)(state)
+}), dispatch => (0, _redux.bindActionCreators)(_actions2.default, dispatch))(Popup);
+
+/***/ }),
 /* 811 */,
 /* 812 */,
 /* 813 */,
@@ -30003,7 +30722,7 @@ function sortTree(tree) {
 Object.defineProperty(exports, "__esModule", {
   value: true
 });
-exports.clearSymbols = exports.getOutOfScopeLocations = exports.getVariablesInScope = exports.getSymbols = exports.getClosestExpression = exports.stopParserWorker = exports.startParserWorker = undefined;
+exports.getEmptyLines = exports.getNextStep = exports.clearSymbols = exports.getOutOfScopeLocations = exports.getVariablesInScope = exports.getSymbols = exports.getClosestExpression = exports.stopParserWorker = exports.startParserWorker = undefined;
 
 var _devtoolsUtils = __webpack_require__(900);
 
@@ -30019,6 +30738,8 @@ var getSymbols = exports.getSymbols = dispatcher.task("getSymbols");
 var getVariablesInScope = exports.getVariablesInScope = dispatcher.task("getVariablesInScope");
 var getOutOfScopeLocations = exports.getOutOfScopeLocations = dispatcher.task("getOutOfScopeLocations");
 var clearSymbols = exports.clearSymbols = dispatcher.task("clearSymbols");
+var getNextStep = exports.getNextStep = dispatcher.task("getNextStep");
+var getEmptyLines = exports.getEmptyLines = dispatcher.task("getEmptyLines");
 
 /***/ }),
 /* 828 */
@@ -30184,39 +30905,204 @@ module.exports = {
 /* 847 */,
 /* 848 */,
 /* 849 */,
-/* 850 */,
-/* 851 */,
-/* 852 */,
-/* 853 */,
-/* 854 */,
-/* 855 */,
-/* 856 */,
-/* 857 */,
-/* 858 */,
-/* 859 */,
-/* 860 */,
-/* 861 */,
-/* 862 */,
-/* 863 */,
-/* 864 */,
-/* 865 */,
-/* 866 */,
-/* 867 */,
-/* 868 */,
-/* 869 */,
-/* 870 */,
-/* 871 */,
-/* 872 */,
-/* 873 */,
-/* 874 */,
-/* 875 */,
-/* 876 */,
-/* 877 */,
-/* 878 */,
-/* 879 */,
-/* 880 */,
-/* 881 */,
-/* 882 */,
+/* 850 */
+/***/ (function(module, exports) {
+
+// removed by extract-text-webpack-plugin
+
+/***/ }),
+/* 851 */
+/***/ (function(module, exports) {
+
+// removed by extract-text-webpack-plugin
+
+/***/ }),
+/* 852 */
+/***/ (function(module, exports) {
+
+// removed by extract-text-webpack-plugin
+
+/***/ }),
+/* 853 */
+/***/ (function(module, exports) {
+
+// removed by extract-text-webpack-plugin
+
+/***/ }),
+/* 854 */
+/***/ (function(module, exports) {
+
+// removed by extract-text-webpack-plugin
+
+/***/ }),
+/* 855 */
+/***/ (function(module, exports) {
+
+module.exports = "data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAF4AAABqCAMAAAAC5xbnAAAABGdBTUEAALGPC/xhBQAAAAFzUkdCAK7OHOkAAAFZaVRYdFhNTDpjb20uYWRvYmUueG1wAAAAAAA8eDp4bXBtZXRhIHhtbG5zOng9ImFkb2JlOm5zOm1ldGEvIiB4OnhtcHRrPSJYTVAgQ29yZSA1LjQuMCI+CiAgIDxyZGY6UkRGIHhtbG5zOnJkZj0iaHR0cDovL3d3dy53My5vcmcvMTk5OS8wMi8yMi1yZGYtc3ludGF4LW5zIyI+CiAgICAgIDxyZGY6RGVzY3JpcHRpb24gcmRmOmFib3V0PSIiCiAgICAgICAgICAgIHhtbG5zOnRpZmY9Imh0dHA6Ly9ucy5hZG9iZS5jb20vdGlmZi8xLjAvIj4KICAgICAgICAgPHRpZmY6T3JpZW50YXRpb24+MTwvdGlmZjpPcmllbnRhdGlvbj4KICAgICAgPC9yZGY6RGVzY3JpcHRpb24+CiAgIDwvcmRmOlJERj4KPC94OnhtcG1ldGE+CkzCJ1kAAAMAUExURUxpcf/fQOF4Wf6qob2GSbyGTP61q++hVlpCNO+ATLuESaZzPYdWLZ1uN/KOQywvJ/OGDfeTGWRSMlpFNvqrQ/yNkPipLfeTGviRGyobJAYCC5BgL/y2MKJrRg0gKH5ULfSTIWhnYyIeJv5/g7K1tfiSGviWIIZgPP+jn6KnqJxqNvmWH/qdTJNkM/6GjPmdKX5JIKiIafeVHTcuLK9uHvTn0/iUH5NiKQUbM/eTH0ExL/6hmv/TStTCqvidK/6Oi/uTkOnZv/mgNLaHbZppFu6ooPeMGYJVJOzbu5pqOap2RY+WnZaOgv+cmahkY/LjzvaEE+vew/2blzs+Ov6enQohIsVvb/+QkP6Bg4+YntB4de7Ru7yfg6KEaf+movj07s7Husx9atqYPJVKKLqESf/47v22GuJOM/3LLf/////ZY//37fyzGP3y4v2rFv3JLP3z5fuiEt9HM/3CKAAAAN1BL//+9f7NLtk7KP726NY0ILB4P/7XYvukH95HLf/88v65Gvy6J/7IKPPizLZ7QPqPEPru3N1AJ7+ITP+vprqAQ+p5IPiZGbV/Rfz8/PyzJv+lmP7VOfitIvqzT/zozeTMtf/RLvycCcSKTP29Hv/ocf/Btv3LOOdpHQQaI/7RY+JcJaltNP66r/3AM6OEMPCMH+nq6/Lz9JpiLzk3M/nYxE40H7WTMcgvHk9AMsLEwyQsL/u8ANrEqurWwJp2Jtrc3WRNR//76fzPsmJHI+FZHvfo1+WiHf3BV/p4dHVdMwABKfDALbV6Kt9PJ91+YHY/L6OVhJksJyIdGcUjB4VrMLd9OMqiL7EqIEJAP/3LXtu5maAFBP7OQ/yWj5GXl7w7K8GLHH1RLNyuLXklJ83Q0WYzLs2THIJJC/+PeXp4cIoABOe4LTUlJ//hbMWXYISKivqqA8udeemXhXtaHOiHc9YLAM1AKI+Ec7ideFVgYNs0BrgSAJh3YcRwII1ZGMCsj2QCAteBEXqDgviWNfW4esd1S8e4ofbDnNVeSrxWUew/xBkAAABkdFJOUwD+EP7//v4CAwX8/mb9HhH/MP3+/TT9TdYm/oP90bA4bPtYefztff7J+buL991SyUn+Y9v62T+cfp3S9P5co9TrkLj++vmqnHCp90X+nf3EvKx27ZH14bSWoqznwX6h/sly7fPC0KykAAAQBUlEQVRo3tyYe0xTWR7Hb+nwKKs4IK9UnAED+CIiLMvE9ZH1Oc64Pnc0O7O7/0nDo8/0BtKUptQ+VgzSUqCVR0oKXWhpAx0oQsOrGDWkQ8AVFggBFBWVSZTERxzHcXZ/59wWWakOGdl/9isgve39nO/9nd/5/c6BIP6/Fcj4X4EDA+Eb/4+00nTkPJAICcW/en6sJB2FJTQmJgp+i00lVtQ/wLYmJ0bFRpfQEnYk7tPx0vGzrNyEhtbR1BKuurpEreaqS0qi4SGIFZpmwIRG19FiWGxZdYlMxpJVVxcpD6UTKxIhYDASi7iyEhmFxz8lXIHyUOgKzDDQ05PrhDKMV9ct4LkCQULsB/Ph9tTIEhpNpi6pk7FldTRZhQfPZXMlWz+QD95jY2ggoZomZHO16jqtlqsVYjyL9cF8BhGlRvQSobYuMjy8lFJ4JODZLDbwUz8EzyBCIhE8kyeMLO0eqqnJR6qp6Q4XAB7xE0KAH8hgMH5d4PdA3Et4vDx1aU12dr5H2fmlAqADnsXdQfzq9QWrKQbRMzMBn79I2d0YD3x2AqSn3+5TET5X4/tGDoIH3lqC6bw82X/h73rwMIAkkTj8l4Ba+qkl3hjvK334OiOZRuN58DWL8JVDXvcsffJJToAmoDZg2+IigStSYOg7Fx5c/XTd51siaTqgv42/Wzkk8eDVyiRR7TCdHlC1aQFFtYOQ2H3h4e9I3EAi6JurPVevqkuw+UweK3wBn323ksKzIfQS/UvNMF2D8H7YPlVJ/aL2JHXDHaVRvgoffOLP06Akdh4Puxe+wQO8srJGgtKexRYIJMokOoVn4BRFt4cmJpcO1UCCZQ/t8Z0yERrNTo1m+j4PWT8nRPhsr3WEj2QVQFYK9Hrlxy81dE1hQNVRz2yGpO4LR8bxx2uSQnzYZxDbAgI0GA8SgioQ3sOuvAt4rqRIiVUE/MKAgMJtuKVF7YCgLCyR7PzuWJ/4CHpt4cOHSXqJRKvVqtVqbThatDVDQ90gKAuIXQRvqiH4SRpqZqmg5NekxN3btWvXTdCu/Jp9PiYXSvymqoOXX9TdrNMWUZJERkokEgEWlLaYOpCMfV9f9PTL/RvXHoS8REEZGtq1yzbY1NQ3PnMOKfNmeKjv6NQetL6IjLlJo1XfrPaKl5kH0unOfYt0X69/+Y9nrvl5O/PBV4zkGLBbzTvXZxkYcJtclnH4JEQ2JtF3UztaldJvvfbiPgJVfEsJHMeAIsNLf/zx9euOxk5V24h98PJpw3oiNaY6D+zydLawTN2AxdZks5n6YARhtJ+P1A8k/DZV7Tcw48obGzs6Hr7uQLqRlvb06VPz1HV+hrQ4Kwu+srIaNpPMy2dCiER1Jg+nWa9jfMbkmAmzNbl6+/ryzhVF+VpZDOAXriVnGwBRb59ApKwJst8sNjrJWQxui6tHIzSTd85AQQstEiK+LtPhOu0IGze5HW6bZSDMMS7Y4TM6ML1Hn5A/FAOimYzH+M3kmOKiwsycBy51FeN/j3N7nwxqx8yArs80MGC3rbWFjdvcpqbT9iLcEnzuP1aRcQ0Y34x4DXGk+YJCYbSSE+hlGzmCxownNxBowcZKhJk6k3t8QKfrC3OZTO4ZGMI9OaoVpPreETGINX9itgG+fnMDZddqVIjF4jEUHfg324zcz5J/I4JQX0tg5fF6bb0mGzzBTN9a+1q3ze4arWBxT7yrrh1+To7gOCPVz5PXxK9eKRTmfngar9qYU+sDcZHcIxGOh7mbIGdMjj7duLt3IOzAZBcLdxyfdc3vd3IrM76+obi4oaF+4hZ559nVnp6eV0Yr83IzXIXcaWi7Rf5GvB1uh6ZfVDBqt/eGmUx2l6lvJk83bjA4cN1L9I3fm6V60M+c/2F29lbcIEnap4wYL3522kAOxs2OjIzMzpNjwZe2UGaiuXOuXnvvQNO422RymYQFXQfmtAXQ76MZS6MDdUeVm9N6z0lSsjqnzGKx8WcjTO6U9Y7nKukU+5//8lM8uVslcw63axwnfa/bNTnZVUE1zKL0JfahoRwvzskQNd54nPLkScqTKbPRKEYTi2Q0ms0bx65Zr21crfjobPD5dajUQ+pztc8cWsuAyW1yTjpHnaOjk97txNv2YV6l0pycDKmqDCRvfZCWRqEVlIzmMeuY+IK/v//Z4Evr1xBBcH8yt0DL7rIarKNOg8uRZp1zjVI9Lfrt1EfzCuYz4Isjb5XDCC33FIoLFxUKsdG82jzmtPYbmAeuXElL+84/GEUnCKc+G5rM5NykY+7ZXJfT5ewqADirgpuwFH84F7FBIlX54+vPf2q5sd/8bAo0t9pJMg12i+HxjfLW8hv3rpz1P7sKRyckAbXIgoKCtEmHY9RlmKyAVyzY6u55Kzhe86AcPoff+Ueyv99iSXn8+Dkg5U9Ii2WQvCUv44hEfFXLd8GX1lEN+pAAB4PFKhh1OA84RyvYbDgIRCf6LTG/my+l8Bl8DkfEeURa7OTjMg6H097efp0ctNj7W8rk8JKTkVsefOkLXKOIKKV3e1XQNdplvcLVKxN2RDF8TOze3IyMBbyqvdViHyQfcdo5ZRw+5zoJ5h/J5Sp4iyPKyG25soXA0fGL1gu4XgmevlCeiA0hfB6Sjhd78SLkUQSODU1ywKva2x/+s8lwx2Oen5Mj7aTco9RXCjzSK5XRW0MXNj5L8ibXExsUfMC3kBbDvzra28vK2jume3puPyrzms+Rqu595jn6pn+sx2wIyqEoP7zTDPRdbhbwlP3Wy8x/90x3lEHv0tALNT3lco95jF+HowvxOaHHex8qKEGMd+0wg46/wUP0+Sr5rdtQb6Y1AYWwqYFtTaPXPOA7L26HvMeFJFaJgpJO/Y3gPdvvk960R+EBfNlPP08P02sDKNFr5Z0eOuAbD6zB+CAi6JOxNE9Q3n8u2d0ufWMfwqNqHB4upESn0wsbVRwvPUfa8jllPYjYMGjYQPzyHwQWLauF8Hc2VtUiVXU0NnZyvN7BPH//dk9FXPPbwU+I5ZyGFq8rD58v4nNUWBw+n5pVCp/xV5w3EQxiQxNzAzULv6y9uYv5OD35lHDKiLxv5PIjUKhDdh6N+AP9m2WfCoNOSqUZix8AY7H4b+Bgfu8RtBMJKaw9M4wOEYHLPBYSezszUMl/8wQibF60cA33g+b45t2QNat2Hjw2XPjVMo/p8KEjX8fL+ainLBrhzVBI0lyRfGKieGL9Z1+sN35/7Bi96uDy3EPqfB3fVh+f0sqBEGHYIix+JZVKOY0P4toaiidSLp0//5HxzrHhnaeWeTw/srkNth8jt//+fXnnfzq1vpC2rjAe9F4bc80MhhZCpqIWnDJLhw8V+2BhD4Wtb13pnvZ0axzahN6QeU0w/ol6r0muFldbRSK2I7F/Fh2KsqogGmOUzGGpobMOdFKmqN10o66Ubuw79yaptrGc5PeQnHvP+X7fd77z7zvnnpq6iApJRx1CTcv9f2d2t/cLPG0jswSsiQ/XN3uSk3DOqI7JPj/paWvzjIzOm7Z3P371o62lRuQET4H/r47bOhdffXtLtWtm5tVP2zyzdppX/tCb+dUXSXieKYAoqd9TsMZYGZ/qlsoxs7nY2Tk8PGwDDP31n297W/W70+0yWZm1l/39BTQhPOwt1uA5Ri7LvjAoGc/omL4T39W6tre3d3e5efXwuK3lwtqu2WRyfNiud/oYHbs/+PXgJ/a7vXO5YriAwa4pCs4+7fcsgfE6k8NYXeVgdDrGxDFrS5XfjKh3dAx6bSjXu0w63d6fnpFZYaA3S4Y1YGFAFXYR5NLI4IMdE/C4DQaRRsT+YOXLRyjB9HVUdOvdVkitLXlOrs7NYU4HctlpC6Gwf1qQs2ey6hhfbYXB2ceI5IzOO7oakBSZ3GD+tT7Q61WfLPh5DtN4sF5LkDTN5yxzyHhXA+yPfEzYet3CfjhhcrVXG/UOoGcWLubMzWkw5zK5TAuBEU892OGsopHVRuSDMEL+SMpXa6joRvViTP5L61m4M6XkHDojYEWOtQKJ0c2aIgj5GcbEILBu2Kx1IPN1oXuXcI1Hc0Yh35W/bDazJisHLQj0LkcEf/v7wrA6GlAWC6rZALbxYsdUCgMhl8vhdjtrgcPQADCKaJx4cqK9o70DQcyqdTscrr6d4vR4+LMv3u5oB0bxNKdC3OoDIHXzl8mpmxWRJ/Gox9jQ3l57uyQu89VTYXHEAGg0RqyfnKo2iK8MYo6ovaJxIh7zZVk/3ZTEgbYbUF9eHglNn/zWaKg4BIOxobzqbi5+19FkgPFQ7W4IzlEw+gZ695OJ+vLublQRBHSShILu+l9xhxV0nZLvq43l+mvOZpUKGs7lGovCNeb/B96qmpudTlCmr6qSIu76jgwN7qSQXjqhd6ugQ/isVqm3M1HsrOzAW6vP5xvrg77lULmdSEt5/XQJLn2uHzEj0uhgZaxh7KyEoqpAL8tyvjGXQ9Wsn8D0jlxWEmCjzCKvVAWOY1nWuxIyA9iDgGduzIHrHVnWAhfl5oAUxL3zYeythLiDxPCDikDKj9V3IMwt9cJ0gJhZs9e7EAgs7y/7/aMS1OuP9h6FsbfnNYerwsHEUIJHn14sSQHz8opanZH/4vXroaFOCUOro6vPL8wCnj9fzVlZDgQWxNIsF8rC7ThexA3Uk/lKCrbhGzcgPKgJY3wcYu+WlvEbNlvnH3fzJzPUoANUcKFSvJYF55gXlgcmlZYmu91O03Rww3al7ko4yqkTgx74rxzegGzYpivzkYqFUCnWvHAMmjZwL59qEqkRyCA/BOGmqKGyBoWYEPDYFsmglA06LMpJ9co9DZ7zc9cHlE0RbpHfPv1syHZVCs9QhDY+vMhP28loAYIghPySdMwpp5iyC/RBkGTTNL+BNvw223Dn0ItnQSAnD5YQD40wh22acEhUUmAPTgftBI/+p4M0+VYJBX8GM/aG1YTiFfS7CkjkZ2gRkiTfzRXSsEOF9Myud+nf6IgBBU9l4y/mWuII+qMArpfjrycxvfM+4PtG7ACF8dEr+KI41tpU2en4zCcFbRwrOXj/DB2rDRUIsYzPlMfzZRU6TxFBvsVLkoQEkjysRMErs+MxXgw0lQIflSf5ri6eoAVBsAgCbKR4eIoqIGkqLT52VNPzSguaSwiQJ2gqs/CMVpsmQQvb2M8EqJ1YF1qgzsf9TRu5x0JRYKygIJTa7Lemq3RNWhGtgMpAGSqeXnNg5rEIlBJAFWVLNZKnSpC4NEWQd5uiBEtaAhcuYIuVOYPQZQdx+eFNn1wuT5WlzWxtbm5tbWUmYDzQHz93J6U1+fHZx3mxB8flnp6UO9eTW88dT+Bzf6osr+d+T0pKMsgnxTzeb0XZ6NguLwHnpMpOtYJ4a2tya1ls+rOIHZ2s5SV22SXv8kdlZWWXvzwe+/5F3rnrwH39cVkizhFFUpOSUo/O/uBUHuBUkiwxRD+tH3V/5HC5hO5zvUcWhsCx9991OIT/AVwXLXUhLDYVAAAAAElFTkSuQmCC"
+
+/***/ }),
+/* 856 */
+/***/ (function(module, exports) {
+
+// removed by extract-text-webpack-plugin
+
+/***/ }),
+/* 857 */
+/***/ (function(module, exports) {
+
+// removed by extract-text-webpack-plugin
+
+/***/ }),
+/* 858 */
+/***/ (function(module, exports) {
+
+// removed by extract-text-webpack-plugin
+
+/***/ }),
+/* 859 */
+/***/ (function(module, exports) {
+
+// removed by extract-text-webpack-plugin
+
+/***/ }),
+/* 860 */
+/***/ (function(module, exports) {
+
+// removed by extract-text-webpack-plugin
+
+/***/ }),
+/* 861 */
+/***/ (function(module, exports) {
+
+// removed by extract-text-webpack-plugin
+
+/***/ }),
+/* 862 */
+/***/ (function(module, exports) {
+
+// removed by extract-text-webpack-plugin
+
+/***/ }),
+/* 863 */
+/***/ (function(module, exports) {
+
+// removed by extract-text-webpack-plugin
+
+/***/ }),
+/* 864 */
+/***/ (function(module, exports) {
+
+// removed by extract-text-webpack-plugin
+
+/***/ }),
+/* 865 */
+/***/ (function(module, exports) {
+
+// removed by extract-text-webpack-plugin
+
+/***/ }),
+/* 866 */
+/***/ (function(module, exports) {
+
+// removed by extract-text-webpack-plugin
+
+/***/ }),
+/* 867 */
+/***/ (function(module, exports) {
+
+// removed by extract-text-webpack-plugin
+
+/***/ }),
+/* 868 */
+/***/ (function(module, exports) {
+
+// removed by extract-text-webpack-plugin
+
+/***/ }),
+/* 869 */
+/***/ (function(module, exports) {
+
+// removed by extract-text-webpack-plugin
+
+/***/ }),
+/* 870 */
+/***/ (function(module, exports) {
+
+// removed by extract-text-webpack-plugin
+
+/***/ }),
+/* 871 */
+/***/ (function(module, exports) {
+
+// removed by extract-text-webpack-plugin
+
+/***/ }),
+/* 872 */
+/***/ (function(module, exports) {
+
+// removed by extract-text-webpack-plugin
+
+/***/ }),
+/* 873 */
+/***/ (function(module, exports) {
+
+// removed by extract-text-webpack-plugin
+
+/***/ }),
+/* 874 */
+/***/ (function(module, exports) {
+
+// removed by extract-text-webpack-plugin
+
+/***/ }),
+/* 875 */
+/***/ (function(module, exports) {
+
+// removed by extract-text-webpack-plugin
+
+/***/ }),
+/* 876 */
+/***/ (function(module, exports) {
+
+// removed by extract-text-webpack-plugin
+
+/***/ }),
+/* 877 */
+/***/ (function(module, exports) {
+
+// removed by extract-text-webpack-plugin
+
+/***/ }),
+/* 878 */
+/***/ (function(module, exports) {
+
+// removed by extract-text-webpack-plugin
+
+/***/ }),
+/* 879 */
+/***/ (function(module, exports) {
+
+// removed by extract-text-webpack-plugin
+
+/***/ }),
+/* 880 */
+/***/ (function(module, exports) {
+
+// removed by extract-text-webpack-plugin
+
+/***/ }),
+/* 881 */
+/***/ (function(module, exports) {
+
+// removed by extract-text-webpack-plugin
+
+/***/ }),
+/* 882 */
+/***/ (function(module, exports) {
+
+// removed by extract-text-webpack-plugin
+
+/***/ }),
 /* 883 */
 /***/ (function(module, exports, __webpack_require__) {
 
@@ -31109,6 +31995,7 @@ var onConnect = (() => {
         selectors,
         client: client.clientCommands,
         prefs: _prefs.prefs,
+        features: _prefs.features,
         connection
       };
     };
@@ -31593,7 +32480,8 @@ function createSource(source, _ref) {
     isPrettyPrinted: false,
     isWasm: supportsWasm && source.introductionType === "wasm",
     sourceMapURL: source.sourceMapURL,
-    isBlackBoxed: false
+    isBlackBoxed: false,
+    loadedState: "unloaded"
   };
 }
 
@@ -32441,12 +33329,17 @@ function workerHandler(publicInterface) {
     try {
       const response = publicInterface[method].apply(undefined, args);
       if (response instanceof Promise) {
-        response.then(val => self.postMessage({ id, response: val }), err => self.postMessage({ id, error: err }));
+        response.then(val => self.postMessage({ id, response: val }),
+        // Error can't be sent via postMessage, so be sure to
+        // convert to string.
+        err => self.postMessage({ id, error: err.toString() }));
       } else {
         self.postMessage({ id, response });
       }
     } catch (error) {
-      self.postMessage({ id, error });
+      // Error can't be sent via postMessage, so be sure to convert to
+      // string.
+      self.postMessage({ id, error: error.toString() });
     }
   };
 }
@@ -32574,7 +33467,7 @@ Object.defineProperty(exports, "__esModule", {
   value: true
 });
 exports.getTokenLocation = getTokenLocation;
-exports.updateSelection = updateSelection;
+exports.updatePreview = updatePreview;
 
 var _lodash = __webpack_require__(2);
 
@@ -32598,46 +33491,71 @@ function getTokenLocation(codeMirror, tokenEl) {
   };
 }
 
-function updateSelection(target, editor, _ref) {
+function updatePreview(target, editor, _ref) {
   var linesInScope = _ref.linesInScope,
-      selection = _ref.selection,
-      setSelection = _ref.setSelection,
-      clearSelection = _ref.clearSelection;
+      preview = _ref.preview,
+      setPreview = _ref.setPreview,
+      clearPreview = _ref.clearPreview;
 
   var location = getTokenLocation(editor.codeMirror, target);
   var tokenText = target.innerText ? target.innerText.trim() : "";
   var cursorPos = target.getBoundingClientRect();
 
-  if (selection) {
+  if (preview) {
     // We are mousing over the same token as before
-    if ((0, _lodash.isEqual)(selection.tokenPos, location)) {
+    if ((0, _lodash.isEqual)(preview.tokenPos, location)) {
       return;
     }
 
-    // We are mousing over a new token that is not in the selection
+    // We are mousing over a new token that is not in the preview
     if (!target.classList.contains("debug-expression")) {
-      clearSelection();
+      clearPreview();
     }
   }
 
   var invalidToken = tokenText === "" || tokenText.match(/[(){},.;\s]/);
   var invalidTarget = target.parentElement && !target.parentElement.closest(".CodeMirror-line") || cursorPos.top == 0;
-  var isUpdating = selection && selection.updating;
+  var isUpdating = preview && preview.updating;
   var inScope = linesInScope && linesInScope.includes(location.line);
 
   if (invalidTarget || !inScope || isUpdating || invalidToken) {
     return;
   }
 
-  setSelection(tokenText, location, cursorPos);
+  setPreview(tokenText, location, cursorPos);
 }
 
 /***/ }),
-/* 905 */,
-/* 906 */,
-/* 907 */,
-/* 908 */,
-/* 909 */,
+/* 905 */
+/***/ (function(module, exports) {
+
+// removed by extract-text-webpack-plugin
+
+/***/ }),
+/* 906 */
+/***/ (function(module, exports) {
+
+// removed by extract-text-webpack-plugin
+
+/***/ }),
+/* 907 */
+/***/ (function(module, exports) {
+
+// removed by extract-text-webpack-plugin
+
+/***/ }),
+/* 908 */
+/***/ (function(module, exports) {
+
+// removed by extract-text-webpack-plugin
+
+/***/ }),
+/* 909 */
+/***/ (function(module, exports) {
+
+// removed by extract-text-webpack-plugin
+
+/***/ }),
 /* 910 */
 /***/ (function(module, exports, __webpack_require__) {
 
@@ -32662,7 +33580,7 @@ var dom = React.DOM,
     PropTypes = React.PropTypes;
 
 
-__webpack_require__(689);
+__webpack_require__(861);
 
 /**
  * This component represents a Splitter. The splitter supports vertical
@@ -32965,9 +33883,24 @@ var Draggable = React.createClass({
 module.exports = Draggable;
 
 /***/ }),
-/* 913 */,
-/* 914 */,
-/* 915 */,
+/* 913 */
+/***/ (function(module, exports) {
+
+// removed by extract-text-webpack-plugin
+
+/***/ }),
+/* 914 */
+/***/ (function(module, exports) {
+
+// removed by extract-text-webpack-plugin
+
+/***/ }),
+/* 915 */
+/***/ (function(module, exports) {
+
+// removed by extract-text-webpack-plugin
+
+/***/ }),
 /* 916 */
 /***/ (function(module, exports, __webpack_require__) {
 
@@ -33507,8 +34440,18 @@ module.exports = Draggable;
 /* WEBPACK VAR INJECTION */}.call(exports, __webpack_require__(793)(module), __webpack_require__(792)))
 
 /***/ }),
-/* 917 */,
-/* 918 */,
+/* 917 */
+/***/ (function(module, exports) {
+
+// removed by extract-text-webpack-plugin
+
+/***/ }),
+/* 918 */
+/***/ (function(module, exports) {
+
+// removed by extract-text-webpack-plugin
+
+/***/ }),
 /* 919 */
 /***/ (function(module, exports) {
 
@@ -33521,9 +34464,24 @@ module.exports = "<svg xmlns=\"http://www.w3.org/2000/svg\" viewBox=\"0 0 1792 1
 module.exports = "<svg xmlns=\"http://www.w3.org/2000/svg\" viewBox=\"0 0 1792 1792\"><path d=\"M1395 736q0 13-10 23l-466 466q-10 10-23 10t-23-10l-466-466q-10-10-10-23t10-23l50-50q10-10 23-10t23 10l393 393 393-393q10-10 23-10t23 10l50 50q10 10 10 23z\" fill=\"#696969\"></path></svg>"
 
 /***/ }),
-/* 921 */,
-/* 922 */,
-/* 923 */,
+/* 921 */
+/***/ (function(module, exports) {
+
+// removed by extract-text-webpack-plugin
+
+/***/ }),
+/* 922 */
+/***/ (function(module, exports) {
+
+// removed by extract-text-webpack-plugin
+
+/***/ }),
+/* 923 */
+/***/ (function(module, exports) {
+
+// removed by extract-text-webpack-plugin
+
+/***/ }),
 /* 924 */
 /***/ (function(module, exports, __webpack_require__) {
 
@@ -33592,7 +34550,7 @@ module.exports = {
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-__webpack_require__(707);
+__webpack_require__(877);
 
 // Load all existing rep templates
 var Undefined = __webpack_require__(929);
@@ -34677,7 +35635,12 @@ module.exports = {
 };
 
 /***/ }),
-/* 935 */,
+/* 935 */
+/***/ (function(module, exports) {
+
+// removed by extract-text-webpack-plugin
+
+/***/ }),
 /* 936 */
 /***/ (function(module, exports, __webpack_require__) {
 
@@ -36360,7 +37323,12 @@ module.exports = {
 };
 
 /***/ }),
-/* 952 */,
+/* 952 */
+/***/ (function(module, exports) {
+
+// removed by extract-text-webpack-plugin
+
+/***/ }),
 /* 953 */
 /***/ (function(module, exports, __webpack_require__) {
 
@@ -37210,11 +38178,16 @@ module.exports = {
 /* 960 */
 /***/ (function(module, exports) {
 
-module.exports = "# This Source Code Form is subject to the terms of the Mozilla Public\n# License, v. 2.0. If a copy of the MPL was not distributed with this\n# file, You can obtain one at http://mozilla.org/MPL/2.0/.\n\n# LOCALIZATION NOTE These strings are used inside the Debugger\n# which is available from the Web Developer sub-menu -> 'Debugger'.\n# The correct localization of this file might be to keep it in\n# English, or another language commonly spoken among web developers.\n# You want to make that choice consistent across the developer tools.\n# A good criteria is the language in which you'd find the best\n# documentation on web development on the web.\n\n# LOCALIZATION NOTE (collapsePanes): This is the tooltip for the button\n# that collapses the left and right panes in the debugger UI.\ncollapsePanes=Collapse panes\n\n# LOCALIZATION NOTE (copySourceUrl): This is the text that appears in the\n# context menu to copy the source URL of file open.\ncopySourceUrl=Copy Source Url\n\n# LOCALIZATION NOTE (copySourceUrl.accesskey): Access key to copy the source URL of a file from\n# the context menu.\ncopySourceUrl.accesskey=u\n\n# LOCALIZATION NOTE (copyStackTrace): This is the text that appears in the\n# context menu to copy the stack trace methods, file names and row number.\ncopyStackTrace=Copy Stack Trace\n\n# LOCALIZATION NOTE (copyStackTrace.accesskey): Access key to copy the stack trace data from\n# the context menu.\ncopyStackTrace.accesskey=c\n\n# LOCALIZATION NOTE (expandPanes): This is the tooltip for the button\n# that expands the left and right panes in the debugger UI.\nexpandPanes=Expand panes\n\n# LOCALIZATION NOTE (pauseButtonTooltip): The tooltip that is displayed for the pause\n# button when the debugger is in a running state.\npauseButtonTooltip=Pause %S\n\n# LOCALIZATION NOTE (pausePendingButtonTooltip): The tooltip that is displayed for\n# the pause button after it's been clicked but before the next JavaScript to run.\npausePendingButtonTooltip=Waiting for next execution\n\n# LOCALIZATION NOTE (resumeButtonTooltip): The label that is displayed on the pause\n# button when the debugger is in a paused state.\nresumeButtonTooltip=Resume %S\n\n# LOCALIZATION NOTE (stepOverTooltip): The label that is displayed on the\n# button that steps over a function call.\nstepOverTooltip=Step Over %S\n\n# LOCALIZATION NOTE (stepInTooltip): The label that is displayed on the\n# button that steps into a function call.\nstepInTooltip=Step In %S\n\n# LOCALIZATION NOTE (stepOutTooltip): The label that is displayed on the\n# button that steps out of a function call.\nstepOutTooltip=Step Out %S\n\n# LOCALIZATION NOTE (noWorkersText): The text to display in the workers list\n# when there are no workers.\nnoWorkersText=This page has no workers.\n\n# LOCALIZATION NOTE (noSourcesText): The text to display in the sources list\n# when there are no sources.\nnoSourcesText=This page has no sources.\n\n# LOCALIZATION NOTE (noEventListenersText): The text to display in the events tab\n# when there are no events.\nnoEventListenersText=No event listeners to display\n\n# LOCALIZATION NOTE (eventListenersHeader): The text to display in the events\n# header.\neventListenersHeader=Event Listeners\n\n# LOCALIZATION NOTE (noStackFramesText): The text to display in the call stack tab\n# when there are no stack frames.\nnoStackFramesText=No stack frames to display\n\n# LOCALIZATION NOTE (eventCheckboxTooltip): The tooltip text to display when\n# the user hovers over the checkbox used to toggle an event breakpoint.\neventCheckboxTooltip=Toggle breaking on this event\n\n# LOCALIZATION NOTE (eventOnSelector): The text to display in the events tab\n# for every event item, between the event type and event selector.\neventOnSelector=on\n\n# LOCALIZATION NOTE (eventInSource): The text to display in the events tab\n# for every event item, between the event selector and listener's owner source.\neventInSource=in\n\n# LOCALIZATION NOTE (eventNodes): The text to display in the events tab when\n# an event is listened on more than one target node.\neventNodes=%S nodes\n\n# LOCALIZATION NOTE (eventNative): The text to display in the events tab when\n# a listener is added from plugins, thus getting translated to native code.\neventNative=[native code]\n\n# LOCALIZATION NOTE (*Events): The text to display in the events tab for\n# each group of sub-level event entries.\nanimationEvents=Animation\naudioEvents=Audio\nbatteryEvents=Battery\nclipboardEvents=Clipboard\ncompositionEvents=Composition\ndeviceEvents=Device\ndisplayEvents=Display\ndragAndDropEvents=Drag and Drop\ngamepadEvents=Gamepad\nindexedDBEvents=IndexedDB\ninteractionEvents=Interaction\nkeyboardEvents=Keyboard\nmediaEvents=HTML5 Media\nmouseEvents=Mouse\nmutationEvents=Mutation\nnavigationEvents=Navigation\npointerLockEvents=Pointer Lock\nsensorEvents=Sensor\nstorageEvents=Storage\ntimeEvents=Time\ntouchEvents=Touch\notherEvents=Other\n\n# LOCALIZATION NOTE (blackboxCheckboxTooltip2): The tooltip text to display when\n# the user hovers over the checkbox used to toggle blackboxing its associated\n# source.\nblackboxCheckboxTooltip2=Toggle blackboxing\n\n# LOCALIZATION NOTE (sources.search.key2): Key shortcut to open the search for\n# searching all the source files the debugger has seen.\nsources.search.key2=CmdOrCtrl+P\n\n# LOCALIZATION NOTE (sources.search.alt.key): A second key shortcut to open the\n# search for searching all the source files the debugger has seen.\nsources.search.alt.key=CmdOrCtrl+O\n\n# LOCALIZATION NOTE (projectTextSearch.key): A key shortcut to open the\n# full project text search for searching all the files the debugger has seen.\nprojectTextSearch.key=CmdOrCtrl+Shift+F\n\n# LOCALIZATION NOTE (projectTextSearch.placeholder): A placeholder shown\n# when searching across all of the files in a project.\nprojectTextSearch.placeholder=Find in files…\n\n# LOCALIZATION NOTE (sources.noSourcesAvailable): Text shown when the debugger\n# does not have any sources.\nsources.noSourcesAvailable=This page has no sources\n\n# LOCALIZATION NOTE (sourceSearch.search.key2): Key shortcut to open the search\n# for searching within a the currently opened files in the editor\nsourceSearch.search.key2=CmdOrCtrl+F\n\n# LOCALIZATION NOTE (sourceSearch.search.placeholder): placeholder text in\n# the source search input bar\nsourceSearch.search.placeholder=Search in file…\n\n# LOCALIZATION NOTE (sourceSearch.search.again.key2): Key shortcut to highlight\n# the next occurrence of the last search triggered from a source search\nsourceSearch.search.again.key2=CmdOrCtrl+G\n\n# LOCALIZATION NOTE (sourceSearch.search.againPrev.key2): Key shortcut to highlight\n# the previous occurrence of the last search triggered from a source search\nsourceSearch.search.againPrev.key2=CmdOrCtrl+Shift+G\n\n# LOCALIZATION NOTE (sourceSearch.resultsSummary1): Shows a summary of\n# the number of matches for autocomplete\nsourceSearch.resultsSummary1=%d results\n\n# LOCALIZATION NOTE (noMatchingStringsText): The text to display in the\n# global search results when there are no matching strings after filtering.\nnoMatchingStringsText=No matches found\n\n# LOCALIZATION NOTE (emptySearchText): This is the text that appears in the\n# filter text box when it is empty and the scripts container is selected.\nemptySearchText=Search scripts (%S)\n\n# LOCALIZATION NOTE (emptyVariablesFilterText): This is the text that\n# appears in the filter text box for the variables view container.\nemptyVariablesFilterText=Filter variables\n\n# LOCALIZATION NOTE (emptyPropertiesFilterText): This is the text that\n# appears in the filter text box for the editor's variables view bubble.\nemptyPropertiesFilterText=Filter properties\n\n# LOCALIZATION NOTE (searchPanelFilter): This is the text that appears in the\n# filter panel popup for the filter scripts operation.\nsearchPanelFilter=Filter scripts (%S)\n\n# LOCALIZATION NOTE (searchPanelGlobal): This is the text that appears in the\n# filter panel popup for the global search operation.\nsearchPanelGlobal=Search in all files (%S)\n\n# LOCALIZATION NOTE (searchPanelFunction): This is the text that appears in the\n# filter panel popup for the function search operation.\nsearchPanelFunction=Search for function definition (%S)\n\n# LOCALIZATION NOTE (searchPanelToken): This is the text that appears in the\n# filter panel popup for the token search operation.\nsearchPanelToken=Find in this file (%S)\n\n# LOCALIZATION NOTE (searchPanelGoToLine): This is the text that appears in the\n# filter panel popup for the line search operation.\nsearchPanelGoToLine=Go to line (%S)\n\n# LOCALIZATION NOTE (searchPanelVariable): This is the text that appears in the\n# filter panel popup for the variables search operation.\nsearchPanelVariable=Filter variables (%S)\n\n# LOCALIZATION NOTE (breakpointMenuItem): The text for all the elements that\n# are displayed in the breakpoints menu item popup.\nbreakpointMenuItem.setConditional=Configure conditional breakpoint\nbreakpointMenuItem.enableSelf=Enable breakpoint\nbreakpointMenuItem.disableSelf=Disable breakpoint\nbreakpointMenuItem.deleteSelf=Remove breakpoint\nbreakpointMenuItem.enableOthers=Enable others\nbreakpointMenuItem.disableOthers=Disable others\nbreakpointMenuItem.deleteOthers=Remove others\nbreakpointMenuItem.enableAll=Enable all breakpoints\nbreakpointMenuItem.disableAll=Disable all breakpoints\nbreakpointMenuItem.deleteAll=Remove all breakpoints\n\n# LOCALIZATION NOTE (breakpointMenuItem.deleteSelf.accesskey): Access key to remove the \n# currently selected breakpoint from the context menu\nbreakpointMenuItem.deleteSelf.accesskey=r\n\n# LOCALIZATION NOTE (breakpointMenuItem.enableSelf.accesskey): Access key to enable the \n# currently selected breakpoint from the context menu\nbreakpointMenuItem.enableSelf.accesskey=e\n\n# LOCALIZATION NOTE (breakpointMenuItem.disableSelf.accesskey): Access key to disable the \n# currently selected breakpoint from the context menu\nbreakpointMenuItem.disableSelf.accesskey=d\n\n# LOCALIZATION NOTE (breakpointMenuItem.deleteAll.accesskey): Access key to remove all \n# the breakpoints from the context menu\nbreakpointMenuItem.deleteAll.accesskey=a\n\n# LOCALIZATION NOTE (breakpointMenuItem.enableAll.accesskey): Access key to enable all \n# the breakpoints from the context menu\nbreakpointMenuItem.enableAll.accesskey=b\n\n# LOCALIZATION NOTE (breakpointMenuItem.disableAll.accesskey): Access key to disable all \n# the breakpoints from the context menu\nbreakpointMenuItem.disableAll.accesskey=c\n\n# LOCALIZATION NOTE (breakpointMenuItem.deleteOthers.accesskey): Access key to remove  \n# other breakpoints from the context menu\nbreakpointMenuItem.deleteOthers.accesskey=p\n\n# LOCALIZATION NOTE (breakpointMenuItem.enableOthers.accesskey): Access key to enable  \n# other breakpoints from the context menu\nbreakpointMenuItem.enableOthers.accesskey=q\n\n# LOCALIZATION NOTE (breakpointMenuItem.disableOthers.accesskey): Access key to disable  \n# other breakpoints from the context menu\nbreakpointMenuItem.disableOthers.accesskey=s\n\n# LOCALIZATION NOTE (breakpoints.header): Breakpoints right sidebar pane header.\nbreakpoints.header=Breakpoints\n\n# LOCALIZATION NOTE (breakpoints.none): The text that appears when there are\n# no breakpoints present\nbreakpoints.none=No Breakpoints\n\n# LOCALIZATION NOTE (breakpoints.enable): The text that may appear as a tooltip\n# when hovering over the 'disable breakpoints' switch button in right sidebar\nbreakpoints.enable=Enable Breakpoints\n\n# LOCALIZATION NOTE (breakpoints.disable): The text that may appear as a tooltip\n# when hovering over the 'disable breakpoints' switch button in right sidebar\nbreakpoints.disable=Disable Breakpoints\n\n# LOCALIZATION NOTE (breakpoints.removeBreakpointTooltip): The tooltip that is displayed\n# for remove breakpoint button in right sidebar\nbreakpoints.removeBreakpointTooltip=Remove Breakpoint\n\n# LOCALIZATION NOTE (callStack.header): Call Stack right sidebar pane header.\ncallStack.header=Call Stack\n\n# LOCALIZATION NOTE (callStack.notPaused): Call Stack right sidebar pane\n# message when not paused.\ncallStack.notPaused=Not Paused\n\n# LOCALIZATION NOTE (callStack.collapse): Call Stack right sidebar pane\n# message to hide some of the frames that are shown.\ncallStack.collapse=Collapse Rows\n\n# LOCALIZATION NOTE (callStack.expand): Call Stack right sidebar pane\n# message to show more of the frames.\ncallStack.expand=Expand Rows\n\n# LOCALIZATION NOTE (editor.searchResults): Editor Search bar message\n# for the summarizing the selected search result. e.g. 5 of 10 results.\neditor.searchResults=%d of %d results\n\n# LOCALIZATION NOTE (sourceSearch.singleResult): Copy shown when there is one result.\neditor.singleResult=1 result\n\n# LOCALIZATION NOTE (editor.noResults): Editor Search bar message\n# for when no results found.\neditor.noResults=no results\n\n# LOCALIZATION NOTE (editor.searchResults.nextResult): Editor Search bar\n# tooltip for traversing to the Next Result\neditor.searchResults.nextResult=Next Result\n\n# LOCALIZATION NOTE (editor.searchResults.prevResult): Editor Search bar\n# tooltip for traversing to the Previous Result\neditor.searchResults.prevResult=Previous Result\n\n# LOCALIZATION NOTE (editor.searchTypeToggleTitle): Search bar title for\n# toggling search type buttons(function search, variable search)\neditor.searchTypeToggleTitle=Search for:\n\n# LOCALIZATION NOTE (editor.addBreakpoint): Editor gutter context menu item\n# for adding a breakpoint on a line.\neditor.addBreakpoint=Add Breakpoint\n\n# LOCALIZATION NOTE (editor.disableBreakpoint): Editor gutter context menu item\n# for disabling a breakpoint on a line.\neditor.disableBreakpoint=Disable Breakpoint\n\n# LOCALIZATION NOTE (editor.enableBreakpoint): Editor gutter context menu item\n# for enabling a breakpoint on a line.\neditor.enableBreakpoint=Enable Breakpoint\n\n# LOCALIZATION NOTE (editor.removeBreakpoint): Editor gutter context menu item\n# for removing a breakpoint on a line.\neditor.removeBreakpoint=Remove Breakpoint\n\n# LOCALIZATION NOTE (editor.editBreakpoint): Editor gutter context menu item\n# for setting a breakpoint condition on a line.\neditor.editBreakpoint=Edit Breakpoint\n\n# LOCALIZATION NOTE (editor.addConditionalBreakpoint): Editor gutter context\n# menu item for adding a breakpoint condition on a line.\neditor.addConditionalBreakpoint=Add Conditional Breakpoint\n\n# LOCALIZATION NOTE (editor.conditionalPanel.placeholder): Placeholder text for\n# input element inside ConditionalPanel component\neditor.conditionalPanel.placeholder=This breakpoint will pause when the expression is true\n\n# LOCALIZATION NOTE (editor.conditionalPanel.placeholder): Tooltip text for\n# close button inside ConditionalPanel component\neditor.conditionalPanel.close=Cancel edit breakpoint and close\n\n# LOCALIZATION NOTE (editor.jumpToMappedLocation1): Context menu item\n# for navigating to a source mapped location\neditor.jumpToMappedLocation1=Jump to %S location\n\n# LOCALIZATION NOTE (framework.disableGrouping): This is the text that appears in the\n# context menu to disable framework grouping.\nframework.disableGrouping=Disable Framework Grouping\n\n# LOCALIZATION NOTE (framework.disableGrouping.accesskey): Access key to toggle\n# framework grouping from the context menu.\nframework.disableGrouping.accesskey=u\n\n# LOCALIZATION NOTE (framework.enableGrouping): This is the text that appears in the\n# context menu to enable framework grouping.\nframework.enableGrouping=Enable Framework Grouping\n\n# LOCALIZATION NOTE (framework.enableGrouping.accesskey): Access key to toggle\n# framework grouping from the context menu.\nframework.enableGrouping.accesskey=u\n\n# LOCALIZATION NOTE (generated): Source Map term for a server source location\ngenerated=generated\n\n# LOCALIZATION NOTE (original): Source Map term for a debugger UI source location\noriginal=original\n\n# LOCALIZATION NOTE (expressions.placeholder): Placeholder text for expression\n# input element\nexpressions.placeholder=Add Watch Expression\n\n# LOCALIZATION NOTE (sourceTabs.closeTab): Editor source tab context menu item\n# for closing the selected tab below the mouse.\nsourceTabs.closeTab=Close tab\n\n# LOCALIZATION NOTE (sourceTabs.closeTab.accesskey): Access key to close the currently select\n# source tab from the editor context menu item.\nsourceTabs.closeTab.accesskey=c\n\n# LOCALIZATION NOTE (sourceTabs.closeOtherTabs): Editor source tab context menu item\n# for closing the other tabs.\nsourceTabs.closeOtherTabs=Close others\n\n# LOCALIZATION NOTE (sourceTabs.closeOtherTabs.accesskey): Access key to close other source tabs\n# from the editor context menu.\nsourceTabs.closeOtherTabs.accesskey=o\n\n# LOCALIZATION NOTE (sourceTabs.closeTabsToEnd): Editor source tab context menu item\n# for closing the tabs to the end (the right for LTR languages) of the selected tab.\nsourceTabs.closeTabsToEnd=Close tabs to the right\n\n# LOCALIZATION NOTE (sourceTabs.closeTabsToEnd.accesskey): Access key to close source tabs\n# after the selected tab from the editor context menu.\nsourceTabs.closeTabsToEnd.accesskey=e\n\n# LOCALIZATION NOTE (sourceTabs.closeAllTabs): Editor source tab context menu item\n# for closing all tabs.\nsourceTabs.closeAllTabs=Close all tabs\n\n# LOCALIZATION NOTE (sourceTabs.closeAllTabs.accesskey): Access key to close all tabs from the\n# editor context menu.\nsourceTabs.closeAllTabs.accesskey=a\n\n# LOCALIZATION NOTE (sourceTabs.revealInTree): Editor source tab context menu item\n# for revealing source in tree.\nsourceTabs.revealInTree=Reveal in Tree\n\n# LOCALIZATION NOTE (sourceTabs.revealInTree.accesskey): Access key to reveal a source in the\n# tree from the context menu.\nsourceTabs.revealInTree.accesskey=r\n\n# LOCALIZATION NOTE (sourceTabs.copyLink): Editor source tab context menu item\n# for copying a link address.\nsourceTabs.copyLink=Copy Link Address\n\n# LOCALIZATION NOTE (sourceTabs.copyLink.accesskey): Access key to copy a link addresss from the\n# editor context menu.\nsourceTabs.copyLink.accesskey=l\n\n# LOCALIZATION NOTE (sourceTabs.prettyPrint): Editor source tab context menu item\n# for pretty printing the source.\nsourceTabs.prettyPrint=Pretty Print Source\n\n# LOCALIZATION NOTE (sourceTabs.prettyPrint.accesskey): Access key to pretty print a source from\n# the editor context menu.\nsourceTabs.prettyPrint.accesskey=p\n\n# LOCALIZATION NOTE (sourceFooter.blackbox): Tooltip text associated\n# with the blackbox button\nsourceFooter.blackbox=Blackbox Source\n\n# LOCALIZATION NOTE (sourceFooter.unblackbox): Tooltip text associated\n# with the blackbox button\nsourceFooter.unblackbox=Unblackbox Source\n\n# LOCALIZATION NOTE (sourceFooter.unblackbox.accesskey): Access key to blackbox\n# an associated source\nsourceFooter.unblackbox.accesskey=b\n\n# LOCALIZATION NOTE (sourceFooter.blackbox.accesskey): Access key to blackbox\n# an associated source\nsourceFooter.blackbox.accesskey=b\n\n# LOCALIZATION NOTE (sourceFooter.blackboxed): Text associated\n# with a blackboxed source\nsourceFooter.blackboxed=Blackboxed Source\n\n# LOCALIZATION NOTE (sourceTabs.closeTabButtonTooltip): The tooltip that is displayed\n# for close tab button in source tabs.\nsourceTabs.closeTabButtonTooltip=Close tab\n\n# LOCALIZATION NOTE (sourceTabs.newTabButtonTooltip): The tooltip that is displayed for\n# new tab button in source tabs.\nsourceTabs.newTabButtonTooltip=Search for sources (%S)\n\n# LOCALIZATION NOTE (scopes.header): Scopes right sidebar pane header.\nscopes.header=Scopes\n\n# LOCALIZATION NOTE (scopes.notAvailable): Scopes right sidebar pane message\n# for when the debugger is paused, but there isn't pause data.\nscopes.notAvailable=Scopes Unavailable\n\n# LOCALIZATION NOTE (scopes.notPaused): Scopes right sidebar pane message\n# for when the debugger is not paused.\nscopes.notPaused=Not Paused\n\n# LOCALIZATION NOTE (scopes.block): Refers to a block of code in\n# the scopes pane when the debugger is paused.\nscopes.block=Block\n\n# LOCALIZATION NOTE (sources.header): Sources left sidebar header\nsources.header=Sources\n\n# LOCALIZATION NOTE (sources.search): Sources left sidebar prompt\n# e.g. Cmd+P to search. On a mac, we use the command unicode character.\n# On windows, it's ctrl.\nsources.search=%S to search\n\n# LOCALIZATION NOTE (watchExpressions.header): Watch Expressions right sidebar\n# pane header.\nwatchExpressions.header=Watch Expressions\n\n# LOCALIZATION NOTE (watchExpressions.refreshButton): Watch Expressions header\n# button for refreshing the expressions.\nwatchExpressions.refreshButton=Refresh\n\n# LOCALIZATION NOTE (welcome.search): The center pane welcome panel's\n# search prompt. e.g. cmd+p to search for files. On windows, it's ctrl, on\n# a mac we use the unicode character.\nwelcome.search=%S to search for sources\n\n# LOCALIZATION NOTE (sourceSearch.search): The center pane Source Search\n# prompt for searching for files.\nsourceSearch.search=Search Sources…\n\n# LOCALIZATION NOTE (sourceSearch.noResults): The center pane Source Search\n# message when the query did not match any of the sources.\nsourceSearch.noResults2=No results found\n\n# LOCALIZATION NOTE (ignoreExceptions): The pause on exceptions button tooltip\n# when the debugger will not pause on exceptions.\nignoreExceptions=Ignore exceptions. Click to pause on uncaught exceptions\n\n# LOCALIZATION NOTE (pauseOnUncaughtExceptions): The pause on exceptions button\n# tooltip when the debugger will pause on uncaught exceptions.\npauseOnUncaughtExceptions=Pause on uncaught exceptions. Click to pause on all exceptions\n\n# LOCALIZATION NOTE (pauseOnExceptions): The pause on exceptions button tooltip\n# when the debugger will pause on all exceptions.\npauseOnExceptions=Pause on all exceptions. Click to ignore exceptions\n\n# LOCALIZATION NOTE (loadingText): The text that is displayed in the script\n# editor when the loading process has started but there is no file to display\n# yet.\nloadingText=Loading\\u2026\n\n# LOCALIZATION NOTE (errorLoadingText2): The text that is displayed in the debugger\n# viewer when there is an error loading a file\nerrorLoadingText2=Error loading this URL: %S\n\n# LOCALIZATION NOTE (addWatchExpressionText): The text that is displayed in the\n# watch expressions list to add a new item.\naddWatchExpressionText=Add watch expression\n\n# LOCALIZATION NOTE (addWatchExpressionButton): The button that is displayed in the\n# variables view popup.\naddWatchExpressionButton=Watch\n\n# LOCALIZATION NOTE (emptyVariablesText): The text that is displayed in the\n# variables pane when there are no variables to display.\nemptyVariablesText=No variables to display\n\n# LOCALIZATION NOTE (scopeLabel): The text that is displayed in the variables\n# pane as a header for each variable scope (e.g. \"Global scope, \"With scope\",\n# etc.).\nscopeLabel=%S scope\n\n# LOCALIZATION NOTE (watchExpressionsScopeLabel): The name of the watch\n# expressions scope. This text is displayed in the variables pane as a header for\n# the watch expressions scope.\nwatchExpressionsScopeLabel=Watch expressions\n\n# LOCALIZATION NOTE (globalScopeLabel): The name of the global scope. This text\n# is added to scopeLabel and displayed in the variables pane as a header for\n# the global scope.\nglobalScopeLabel=Global\n\n# LOCALIZATION NOTE (variablesViewErrorStacktrace): This is the text that is\n# shown before the stack trace in an error.\nvariablesViewErrorStacktrace=Stack trace:\n\n# LOCALIZATION NOTE (variablesViewMoreObjects): the text that is displayed\n# when you have an object preview that does not show all of the elements. At the end of the list\n# you see \"N more...\" in the web console output.\n# This is a semi-colon list of plural forms.\n# See: http://developer.mozilla.org/en/docs/Localization_and_Plurals\n# #1 number of remaining items in the object\n# example: 3 more…\nvariablesViewMoreObjects=#1 more…;#1 more…\n\n# LOCALIZATION NOTE (variablesEditableNameTooltip): The text that is displayed\n# in the variables list on an item with an editable name.\nvariablesEditableNameTooltip=Double click to edit\n\n# LOCALIZATION NOTE (variablesEditableValueTooltip): The text that is displayed\n# in the variables list on an item with an editable value.\nvariablesEditableValueTooltip=Click to change value\n\n# LOCALIZATION NOTE (variablesCloseButtonTooltip): The text that is displayed\n# in the variables list on an item which can be removed.\nvariablesCloseButtonTooltip=Click to remove\n\n# LOCALIZATION NOTE (variablesEditButtonTooltip): The text that is displayed\n# in the variables list on a getter or setter which can be edited.\nvariablesEditButtonTooltip=Click to set value\n\n# LOCALIZATION NOTE (variablesEditableValueTooltip): The text that is displayed\n# in a tooltip on the \"open in inspector\" button in the the variables list for a\n# DOMNode item.\nvariablesDomNodeValueTooltip=Click to select the node in the inspector\n\n# LOCALIZATION NOTE (configurable|...|Tooltip): The text that is displayed\n# in the variables list on certain variables or properties as tooltips.\n# Expanations of what these represent can be found at the following links:\n# https://developer.mozilla.org/docs/Web/JavaScript/Reference/Global_Objects/Object/defineProperty\n# https://developer.mozilla.org/docs/Web/JavaScript/Reference/Global_Objects/Object/isExtensible\n# https://developer.mozilla.org/docs/Web/JavaScript/Reference/Global_Objects/Object/isFrozen\n# https://developer.mozilla.org/docs/Web/JavaScript/Reference/Global_Objects/Object/isSealed\n# It's probably best to keep these in English.\nconfigurableTooltip=configurable\nenumerableTooltip=enumerable\nwritableTooltip=writable\nfrozenTooltip=frozen\nsealedTooltip=sealed\nextensibleTooltip=extensible\noverriddenTooltip=overridden\nWebIDLTooltip=WebIDL\n\n# LOCALIZATION NOTE (variablesSeparatorLabel): The text that is displayed\n# in the variables list as a separator between the name and value.\nvariablesSeparatorLabel=:\n\n# LOCALIZATION NOTE (watchExpressionsSeparatorLabel2): The text that is displayed\n# in the watch expressions list as a separator between the code and evaluation.\nwatchExpressionsSeparatorLabel2=\\u0020→\n\n# LOCALIZATION NOTE (functionSearchSeparatorLabel): The text that is displayed\n# in the functions search panel as a separator between function's inferred name\n# and its real name (if available).\nfunctionSearchSeparatorLabel=←\n\n# LOCALIZATION NOTE(symbolSearch.search.functionsPlaceholder): The placeholder\n# text displayed when the user searches for functions in a file\nsymbolSearch.search.functionsPlaceholder=Search functions…\n\n# LOCALIZATION NOTE(symbolSearch.search.variablesPlaceholder): The placeholder\n# text displayed when the user searches for variables in a file\nsymbolSearch.search.variablesPlaceholder=Search variables…\n\n# LOCALIZATION NOTE(symbolSearch.search.key2): The Key Shortcut for\n# searching for a function or variable\nsymbolSearch.search.key2=CmdOrCtrl+Shift+O\n\n# LOCALIZATION NOTE(symbolSearch.searchModifier.modifiersLabel): A label\n# preceding the group of modifiers\nsymbolSearch.searchModifier.modifiersLabel=Modifiers:\n\n# LOCALIZATION NOTE(symbolSearch.searchModifier.regex): A search option\n# when searching text in a file\nsymbolSearch.searchModifier.regex=Regex\n\n# LOCALIZATION NOTE(symbolSearch.searchModifier.caseSensitive): A search option\n# when searching text in a file\nsymbolSearch.searchModifier.caseSensitive=Case sensitive\n\n# LOCALIZATION NOTE(symbolSearch.searchModifier.wholeWord): A search option\n# when searching text in a file\nsymbolSearch.searchModifier.wholeWord=Whole word\n\n# LOCALIZATION NOTE (resumptionOrderPanelTitle): This is the text that appears\n# as a description in the notification panel popup, when multiple debuggers are\n# open in separate tabs and the user tries to resume them in the wrong order.\n# The substitution parameter is the URL of the last paused window that must be\n# resumed first.\nresumptionOrderPanelTitle=There are one or more paused debuggers. Please resume the most-recently paused debugger first at: %S\n\nvariablesViewOptimizedOut=(optimized away)\nvariablesViewUninitialized=(uninitialized)\nvariablesViewMissingArgs=(unavailable)\n\nanonymousSourcesLabel=Anonymous Sources\n\nexperimental=This is an experimental feature\n\n# LOCALIZATION NOTE (whyPaused.debuggerStatement): The text that is displayed\n# in a info block explaining how the debugger is currently paused due to a `debugger`\n# statement in the code\nwhyPaused.debuggerStatement=Paused on debugger statement\n\n# LOCALIZATION NOTE (whyPaused.breakpoint): The text that is displayed\n# in a info block explaining how the debugger is currently paused on a breakpoint\nwhyPaused.breakpoint=Paused on breakpoint\n\n# LOCALIZATION NOTE (whyPaused.exception): The text that is displayed\n# in a info block explaining how the debugger is currently paused on an exception\nwhyPaused.exception=Paused on exception\n\n# LOCALIZATION NOTE (whyPaused.resumeLimit): The text that is displayed\n# in a info block explaining how the debugger is currently paused while stepping\n# in or out of the stack\nwhyPaused.resumeLimit=Paused while stepping\n\n# LOCALIZATION NOTE (whyPaused.pauseOnDOMEvents): The text that is displayed\n# in a info block explaining how the debugger is currently paused on a\n# dom event\nwhyPaused.pauseOnDOMEvents=Paused on event listener\n\n# LOCALIZATION NOTE (whyPaused.breakpointConditionThrown): The text that is displayed\n# in an info block when evaluating a conditional breakpoint throws an error\nwhyPaused.breakpointConditionThrown=Error with conditional breakpoint\n\n# LOCALIZATION NOTE (whyPaused.xhr): The text that is displayed\n# in a info block explaining how the debugger is currently paused on an\n# xml http request\nwhyPaused.xhr=Paused on XMLHttpRequest\n\n# LOCALIZATION NOTE (whyPaused.promiseRejection): The text that is displayed\n# in a info block explaining how the debugger is currently paused on a\n# promise rejection\nwhyPaused.promiseRejection=Paused on promise rejection\n\n# LOCALIZATION NOTE (whyPaused.assert): The text that is displayed\n# in a info block explaining how the debugger is currently paused on an\n# assert\nwhyPaused.assert=Paused on assertion\n\n# LOCALIZATION NOTE (whyPaused.debugCommand): The text that is displayed\n# in a info block explaining how the debugger is currently paused on a\n# debugger statement\nwhyPaused.debugCommand=Paused on debugged function\n\n# LOCALIZATION NOTE (whyPaused.other): The text that is displayed\n# in a info block explaining how the debugger is currently paused on an event\n# listener breakpoint set\nwhyPaused.other=Debugger paused\n\n# LOCALIZATION NOTE (ctrl): The text that is used for documenting\n# keyboard shortcuts that use the control key\nctrl=Ctrl\n"
+module.exports = "# This Source Code Form is subject to the terms of the Mozilla Public\n# License, v. 2.0. If a copy of the MPL was not distributed with this\n# file, You can obtain one at http://mozilla.org/MPL/2.0/.\n\n# LOCALIZATION NOTE These strings are used inside the Debugger\n# which is available from the Web Developer sub-menu -> 'Debugger'.\n# The correct localization of this file might be to keep it in\n# English, or another language commonly spoken among web developers.\n# You want to make that choice consistent across the developer tools.\n# A good criteria is the language in which you'd find the best\n# documentation on web development on the web.\n\n# LOCALIZATION NOTE (collapsePanes): This is the tooltip for the button\n# that collapses the left and right panes in the debugger UI.\ncollapsePanes=Collapse panes\n\n# LOCALIZATION NOTE (copySource): This is the text that appears in the\n# context menu to copy the selected source of file open.\ncopySource=Copy\ncopySource.accesskey=y\n\n# LOCALIZATION NOTE (copySourceUrl): This is the text that appears in the\n# context menu to copy the source URL of file open.\ncopySourceUrl=Copy Source Url\ncopySourceUrl.accesskey=u\n\n# LOCALIZATION NOTE (copyStackTrace): This is the text that appears in the\n# context menu to copy the stack trace methods, file names and row number.\ncopyStackTrace=Copy Stack Trace\ncopyStackTrace.accesskey=c\n\n# LOCALIZATION NOTE (expandPanes): This is the tooltip for the button\n# that expands the left and right panes in the debugger UI.\nexpandPanes=Expand panes\n\n# LOCALIZATION NOTE (pauseButtonTooltip): The tooltip that is displayed for the pause\n# button when the debugger is in a running state.\npauseButtonTooltip=Pause %S\n\n# LOCALIZATION NOTE (pausePendingButtonTooltip): The tooltip that is displayed for\n# the pause button after it's been clicked but before the next JavaScript to run.\npausePendingButtonTooltip=Waiting for next execution\n\n# LOCALIZATION NOTE (resumeButtonTooltip): The label that is displayed on the pause\n# button when the debugger is in a paused state.\nresumeButtonTooltip=Resume %S\n\n# LOCALIZATION NOTE (stepOverTooltip): The label that is displayed on the\n# button that steps over a function call.\nstepOverTooltip=Step Over %S\n\n# LOCALIZATION NOTE (stepInTooltip): The label that is displayed on the\n# button that steps into a function call.\nstepInTooltip=Step In %S\n\n# LOCALIZATION NOTE (stepOutTooltip): The label that is displayed on the\n# button that steps out of a function call.\nstepOutTooltip=Step Out %S\n\n# LOCALIZATION NOTE (workersHeader): The text to display in the events\n# header.\nworkersHeader=Workers\n\n# LOCALIZATION NOTE (noWorkersText): The text to display in the workers list\n# when there are no workers.\nnoWorkersText=This page has no workers.\n\n# LOCALIZATION NOTE (noSourcesText): The text to display in the sources list\n# when there are no sources.\nnoSourcesText=This page has no sources.\n\n# LOCALIZATION NOTE (noEventListenersText): The text to display in the events tab\n# when there are no events.\nnoEventListenersText=No event listeners to display\n\n# LOCALIZATION NOTE (eventListenersHeader): The text to display in the events\n# header.\neventListenersHeader=Event Listeners\n\n# LOCALIZATION NOTE (noStackFramesText): The text to display in the call stack tab\n# when there are no stack frames.\nnoStackFramesText=No stack frames to display\n\n# LOCALIZATION NOTE (eventCheckboxTooltip): The tooltip text to display when\n# the user hovers over the checkbox used to toggle an event breakpoint.\neventCheckboxTooltip=Toggle breaking on this event\n\n# LOCALIZATION NOTE (eventOnSelector): The text to display in the events tab\n# for every event item, between the event type and event selector.\neventOnSelector=on\n\n# LOCALIZATION NOTE (eventInSource): The text to display in the events tab\n# for every event item, between the event selector and listener's owner source.\neventInSource=in\n\n# LOCALIZATION NOTE (eventNodes): The text to display in the events tab when\n# an event is listened on more than one target node.\neventNodes=%S nodes\n\n# LOCALIZATION NOTE (eventNative): The text to display in the events tab when\n# a listener is added from plugins, thus getting translated to native code.\neventNative=[native code]\n\n# LOCALIZATION NOTE (*Events): The text to display in the events tab for\n# each group of sub-level event entries.\nanimationEvents=Animation\naudioEvents=Audio\nbatteryEvents=Battery\nclipboardEvents=Clipboard\ncompositionEvents=Composition\ndeviceEvents=Device\ndisplayEvents=Display\ndragAndDropEvents=Drag and Drop\ngamepadEvents=Gamepad\nindexedDBEvents=IndexedDB\ninteractionEvents=Interaction\nkeyboardEvents=Keyboard\nmediaEvents=HTML5 Media\nmouseEvents=Mouse\nmutationEvents=Mutation\nnavigationEvents=Navigation\npointerLockEvents=Pointer Lock\nsensorEvents=Sensor\nstorageEvents=Storage\ntimeEvents=Time\ntouchEvents=Touch\notherEvents=Other\n\n# LOCALIZATION NOTE (blackboxCheckboxTooltip2): The tooltip text to display when\n# the user hovers over the checkbox used to toggle blackboxing its associated\n# source.\nblackboxCheckboxTooltip2=Toggle blackboxing\n\n# LOCALIZATION NOTE (sources.search.key2): Key shortcut to open the search for\n# searching all the source files the debugger has seen.\nsources.search.key2=CmdOrCtrl+P\n\n# LOCALIZATION NOTE (sources.search.alt.key): A second key shortcut to open the\n# search for searching all the source files the debugger has seen.\nsources.search.alt.key=CmdOrCtrl+O\n\n# LOCALIZATION NOTE (projectTextSearch.key): A key shortcut to open the\n# full project text search for searching all the files the debugger has seen.\nprojectTextSearch.key=CmdOrCtrl+Shift+F\n\n# LOCALIZATION NOTE (projectTextSearch.placeholder): A placeholder shown\n# when searching across all of the files in a project.\nprojectTextSearch.placeholder=Find in files…\n\n# LOCALIZATION NOTE (sources.noSourcesAvailable): Text shown when the debugger\n# does not have any sources.\nsources.noSourcesAvailable=This page has no sources\n\n# LOCALIZATION NOTE (sourceSearch.search.key2): Key shortcut to open the search\n# for searching within a the currently opened files in the editor\nsourceSearch.search.key2=CmdOrCtrl+F\n\n# LOCALIZATION NOTE (sourceSearch.search.placeholder): placeholder text in\n# the source search input bar\nsourceSearch.search.placeholder=Search in file…\n\n# LOCALIZATION NOTE (sourceSearch.search.again.key2): Key shortcut to highlight\n# the next occurrence of the last search triggered from a source search\nsourceSearch.search.again.key2=CmdOrCtrl+G\n\n# LOCALIZATION NOTE (sourceSearch.search.againPrev.key2): Key shortcut to highlight\n# the previous occurrence of the last search triggered from a source search\nsourceSearch.search.againPrev.key2=CmdOrCtrl+Shift+G\n\n# LOCALIZATION NOTE (sourceSearch.resultsSummary1): Shows a summary of\n# the number of matches for autocomplete\nsourceSearch.resultsSummary1=%d results\n\n# LOCALIZATION NOTE (noMatchingStringsText): The text to display in the\n# global search results when there are no matching strings after filtering.\nnoMatchingStringsText=No matches found\n\n# LOCALIZATION NOTE (emptySearchText): This is the text that appears in the\n# filter text box when it is empty and the scripts container is selected.\nemptySearchText=Search scripts (%S)\n\n# LOCALIZATION NOTE (emptyVariablesFilterText): This is the text that\n# appears in the filter text box for the variables view container.\nemptyVariablesFilterText=Filter variables\n\n# LOCALIZATION NOTE (emptyPropertiesFilterText): This is the text that\n# appears in the filter text box for the editor's variables view bubble.\nemptyPropertiesFilterText=Filter properties\n\n# LOCALIZATION NOTE (searchPanelFilter): This is the text that appears in the\n# filter panel popup for the filter scripts operation.\nsearchPanelFilter=Filter scripts (%S)\n\n# LOCALIZATION NOTE (searchPanelGlobal): This is the text that appears in the\n# filter panel popup for the global search operation.\nsearchPanelGlobal=Search in all files (%S)\n\n# LOCALIZATION NOTE (searchPanelFunction): This is the text that appears in the\n# filter panel popup for the function search operation.\nsearchPanelFunction=Search for function definition (%S)\n\n# LOCALIZATION NOTE (searchPanelToken): This is the text that appears in the\n# filter panel popup for the token search operation.\nsearchPanelToken=Find in this file (%S)\n\n# LOCALIZATION NOTE (searchPanelGoToLine): This is the text that appears in the\n# filter panel popup for the line search operation.\nsearchPanelGoToLine=Go to line (%S)\n\n# LOCALIZATION NOTE (searchPanelVariable): This is the text that appears in the\n# filter panel popup for the variables search operation.\nsearchPanelVariable=Filter variables (%S)\n\n# LOCALIZATION NOTE (breakpointMenuItem): The text for all the elements that\n# are displayed in the breakpoints menu item popup.\nbreakpointMenuItem.setConditional=Configure conditional breakpoint\nbreakpointMenuItem.enableSelf=Enable breakpoint\nbreakpointMenuItem.enableSelf.accesskey=E\nbreakpointMenuItem.disableSelf=Disable breakpoint\nbreakpointMenuItem.disableSelf.accesskey=D\nbreakpointMenuItem.deleteSelf=Remove breakpoint\nbreakpointMenuItem.deleteSelf.accesskey=R\nbreakpointMenuItem.enableOthers=Enable others\nbreakpointMenuItem.enableOthers.accesskey=o\nbreakpointMenuItem.disableOthers=Disable others\nbreakpointMenuItem.disableOthers.accesskey=s\nbreakpointMenuItem.deleteOthers=Remove others\nbreakpointMenuItem.deleteOthers.accesskey=h\nbreakpointMenuItem.enableAll=Enable all breakpoints\nbreakpointMenuItem.enableAll.accesskey=b\nbreakpointMenuItem.disableAll=Disable all breakpoints\nbreakpointMenuItem.disableAll.accesskey=k\nbreakpointMenuItem.deleteAll=Remove all breakpoints\nbreakpointMenuItem.deleteAll.accesskey=a\n\n# LOCALIZATION NOTE (breakpoints.header): Breakpoints right sidebar pane header.\nbreakpoints.header=Breakpoints\n\n# LOCALIZATION NOTE (breakpoints.none): The text that appears when there are\n# no breakpoints present\nbreakpoints.none=No Breakpoints\n\n# LOCALIZATION NOTE (breakpoints.enable): The text that may appear as a tooltip\n# when hovering over the 'disable breakpoints' switch button in right sidebar\nbreakpoints.enable=Enable Breakpoints\n\n# LOCALIZATION NOTE (breakpoints.disable): The text that may appear as a tooltip\n# when hovering over the 'disable breakpoints' switch button in right sidebar\nbreakpoints.disable=Disable Breakpoints\n\n# LOCALIZATION NOTE (breakpoints.removeBreakpointTooltip): The tooltip that is displayed\n# for remove breakpoint button in right sidebar\nbreakpoints.removeBreakpointTooltip=Remove Breakpoint\n\n# LOCALIZATION NOTE (callStack.header): Call Stack right sidebar pane header.\ncallStack.header=Call Stack\n\n# LOCALIZATION NOTE (callStack.notPaused): Call Stack right sidebar pane\n# message when not paused.\ncallStack.notPaused=Not Paused\n\n# LOCALIZATION NOTE (callStack.collapse): Call Stack right sidebar pane\n# message to hide some of the frames that are shown.\ncallStack.collapse=Collapse Rows\n\n# LOCALIZATION NOTE (callStack.expand): Call Stack right sidebar pane\n# message to show more of the frames.\ncallStack.expand=Expand Rows\n\n# LOCALIZATION NOTE (editor.searchResults): Editor Search bar message\n# for the summarizing the selected search result. e.g. 5 of 10 results.\neditor.searchResults=%d of %d results\n\n# LOCALIZATION NOTE (sourceSearch.singleResult): Copy shown when there is one result.\neditor.singleResult=1 result\n\n# LOCALIZATION NOTE (editor.noResults): Editor Search bar message\n# for when no results found.\neditor.noResults=no results\n\n# LOCALIZATION NOTE (editor.searchResults.nextResult): Editor Search bar\n# tooltip for traversing to the Next Result\neditor.searchResults.nextResult=Next Result\n\n# LOCALIZATION NOTE (editor.searchResults.prevResult): Editor Search bar\n# tooltip for traversing to the Previous Result\neditor.searchResults.prevResult=Previous Result\n\n# LOCALIZATION NOTE (editor.searchTypeToggleTitle): Search bar title for\n# toggling search type buttons(function search, variable search)\neditor.searchTypeToggleTitle=Search for:\n\n# LOCALIZATION NOTE (editor.addBreakpoint): Editor gutter context menu item\n# for adding a breakpoint on a line.\neditor.addBreakpoint=Add Breakpoint\n\n# LOCALIZATION NOTE (editor.disableBreakpoint): Editor gutter context menu item\n# for disabling a breakpoint on a line.\neditor.disableBreakpoint=Disable Breakpoint\n\n# LOCALIZATION NOTE (editor.enableBreakpoint): Editor gutter context menu item\n# for enabling a breakpoint on a line.\neditor.enableBreakpoint=Enable Breakpoint\n\n# LOCALIZATION NOTE (editor.removeBreakpoint): Editor gutter context menu item\n# for removing a breakpoint on a line.\neditor.removeBreakpoint=Remove Breakpoint\n\n# LOCALIZATION NOTE (editor.editBreakpoint): Editor gutter context menu item\n# for setting a breakpoint condition on a line.\neditor.editBreakpoint=Edit Breakpoint\n\n# LOCALIZATION NOTE (editor.addConditionalBreakpoint): Editor gutter context\n# menu item for adding a breakpoint condition on a line.\neditor.addConditionalBreakpoint=Add Conditional Breakpoint\n\n# LOCALIZATION NOTE (editor.conditionalPanel.placeholder): Placeholder text for\n# input element inside ConditionalPanel component\neditor.conditionalPanel.placeholder=This breakpoint will pause when the expression is true\n\n# LOCALIZATION NOTE (editor.conditionalPanel.placeholder): Tooltip text for\n# close button inside ConditionalPanel component\neditor.conditionalPanel.close=Cancel edit breakpoint and close\n\n# LOCALIZATION NOTE (editor.jumpToMappedLocation1): Context menu item\n# for navigating to a source mapped location\neditor.jumpToMappedLocation1=Jump to %S location\n\n# LOCALIZATION NOTE (framework.disableGrouping): This is the text that appears in the\n# context menu to disable framework grouping.\nframework.disableGrouping=Disable Framework Grouping\nframework.disableGrouping.accesskey=u\n\n# LOCALIZATION NOTE (framework.enableGrouping): This is the text that appears in the\n# context menu to enable framework grouping.\nframework.enableGrouping=Enable Framework Grouping\nframework.enableGrouping.accesskey=u\n\n# LOCALIZATION NOTE (generated): Source Map term for a server source location\ngenerated=generated\n\n# LOCALIZATION NOTE (original): Source Map term for a debugger UI source location\noriginal=original\n\n# LOCALIZATION NOTE (expressions.placeholder): Placeholder text for expression\n# input element\nexpressions.placeholder=Add Watch Expression\n\n# LOCALIZATION NOTE (sourceTabs.closeTab): Editor source tab context menu item\n# for closing the selected tab below the mouse.\nsourceTabs.closeTab=Close tab\nsourceTabs.closeTab.accesskey=c\n\n# LOCALIZATION NOTE (sourceTabs.closeOtherTabs): Editor source tab context menu item\n# for closing the other tabs.\nsourceTabs.closeOtherTabs=Close others\nsourceTabs.closeOtherTabs.accesskey=o\n\n# LOCALIZATION NOTE (sourceTabs.closeTabsToEnd): Editor source tab context menu item\n# for closing the tabs to the end (the right for LTR languages) of the selected tab.\nsourceTabs.closeTabsToEnd=Close tabs to the right\nsourceTabs.closeTabsToEnd.accesskey=e\n\n# LOCALIZATION NOTE (sourceTabs.closeAllTabs): Editor source tab context menu item\n# for closing all tabs.\nsourceTabs.closeAllTabs=Close all tabs\nsourceTabs.closeAllTabs.accesskey=a\n\n# LOCALIZATION NOTE (sourceTabs.revealInTree): Editor source tab context menu item\n# for revealing source in tree.\nsourceTabs.revealInTree=Reveal in Tree\nsourceTabs.revealInTree.accesskey=r\n\n# LOCALIZATION NOTE (sourceTabs.copyLink): Editor source tab context menu item\n# for copying a link address.\nsourceTabs.copyLink=Copy Link Address\nsourceTabs.copyLink.accesskey=l\n\n# LOCALIZATION NOTE (sourceTabs.prettyPrint): Editor source tab context menu item\n# for pretty printing the source.\nsourceTabs.prettyPrint=Pretty Print Source\nsourceTabs.prettyPrint.accesskey=p\n\n# LOCALIZATION NOTE (sourceFooter.blackbox): Tooltip text associated\n# with the blackbox button\nsourceFooter.blackbox=Blackbox Source\nsourceFooter.blackbox.accesskey=B\n\n# LOCALIZATION NOTE (sourceFooter.unblackbox): Tooltip text associated\n# with the blackbox button\nsourceFooter.unblackbox=Unblackbox Source\nsourceFooter.unblackbox.accesskey=b\n\n# LOCALIZATION NOTE (sourceFooter.blackboxed): Text associated\n# with a blackboxed source\nsourceFooter.blackboxed=Blackboxed Source\n\n# LOCALIZATION NOTE (sourceTabs.closeTabButtonTooltip): The tooltip that is displayed\n# for close tab button in source tabs.\nsourceTabs.closeTabButtonTooltip=Close tab\n\n# LOCALIZATION NOTE (sourceTabs.newTabButtonTooltip): The tooltip that is displayed for\n# new tab button in source tabs.\nsourceTabs.newTabButtonTooltip=Search for sources (%S)\n\n# LOCALIZATION NOTE (scopes.header): Scopes right sidebar pane header.\nscopes.header=Scopes\n\n# LOCALIZATION NOTE (scopes.notAvailable): Scopes right sidebar pane message\n# for when the debugger is paused, but there isn't pause data.\nscopes.notAvailable=Scopes Unavailable\n\n# LOCALIZATION NOTE (scopes.notPaused): Scopes right sidebar pane message\n# for when the debugger is not paused.\nscopes.notPaused=Not Paused\n\n# LOCALIZATION NOTE (scopes.block): Refers to a block of code in\n# the scopes pane when the debugger is paused.\nscopes.block=Block\n\n# LOCALIZATION NOTE (sources.header): Sources left sidebar header\nsources.header=Sources\n\n# LOCALIZATION NOTE (sources.search): Sources left sidebar prompt\n# e.g. Cmd+P to search. On a mac, we use the command unicode character.\n# On windows, it's ctrl.\nsources.search=%S to search\n\n# LOCALIZATION NOTE (watchExpressions.header): Watch Expressions right sidebar\n# pane header.\nwatchExpressions.header=Watch Expressions\n\n# LOCALIZATION NOTE (watchExpressions.refreshButton): Watch Expressions header\n# button for refreshing the expressions.\nwatchExpressions.refreshButton=Refresh\n\n# LOCALIZATION NOTE (welcome.search): The center pane welcome panel's\n# search prompt. e.g. cmd+p to search for files. On windows, it's ctrl, on\n# a mac we use the unicode character.\nwelcome.search=%S to search for sources\n\n# LOCALIZATION NOTE (welcome.findInFiles): The center pane welcome panel's\n# search prompt. e.g. cmd+f to search for files. On windows, it's ctrl+shift+f, on\n# a mac we use the unicode character.\nwelcome.findInFiles=%S to find in files\n\n# LOCALIZATION NOTE (sourceSearch.search): The center pane Source Search\n# prompt for searching for files.\nsourceSearch.search=Search Sources…\n\n# LOCALIZATION NOTE (sourceSearch.noResults): The center pane Source Search\n# message when the query did not match any of the sources.\nsourceSearch.noResults2=No results found\n\n# LOCALIZATION NOTE (ignoreExceptions): The pause on exceptions button tooltip\n# when the debugger will not pause on exceptions.\nignoreExceptions=Ignore exceptions. Click to pause on uncaught exceptions\n\n# LOCALIZATION NOTE (pauseOnUncaughtExceptions): The pause on exceptions button\n# tooltip when the debugger will pause on uncaught exceptions.\npauseOnUncaughtExceptions=Pause on uncaught exceptions. Click to pause on all exceptions\n\n# LOCALIZATION NOTE (pauseOnExceptions): The pause on exceptions button tooltip\n# when the debugger will pause on all exceptions.\npauseOnExceptions=Pause on all exceptions. Click to ignore exceptions\n\n# LOCALIZATION NOTE (loadingText): The text that is displayed in the script\n# editor when the loading process has started but there is no file to display\n# yet.\nloadingText=Loading\\u2026\n\n# LOCALIZATION NOTE (errorLoadingText2): The text that is displayed in the debugger\n# viewer when there is an error loading a file\nerrorLoadingText2=Error loading this URL: %S\n\n# LOCALIZATION NOTE (addWatchExpressionText): The text that is displayed in the\n# watch expressions list to add a new item.\naddWatchExpressionText=Add watch expression\n\n# LOCALIZATION NOTE (addWatchExpressionButton): The button that is displayed in the\n# variables view popup.\naddWatchExpressionButton=Watch\n\n# LOCALIZATION NOTE (emptyVariablesText): The text that is displayed in the\n# variables pane when there are no variables to display.\nemptyVariablesText=No variables to display\n\n# LOCALIZATION NOTE (scopeLabel): The text that is displayed in the variables\n# pane as a header for each variable scope (e.g. \"Global scope, \"With scope\",\n# etc.).\nscopeLabel=%S scope\n\n# LOCALIZATION NOTE (watchExpressionsScopeLabel): The name of the watch\n# expressions scope. This text is displayed in the variables pane as a header for\n# the watch expressions scope.\nwatchExpressionsScopeLabel=Watch expressions\n\n# LOCALIZATION NOTE (globalScopeLabel): The name of the global scope. This text\n# is added to scopeLabel and displayed in the variables pane as a header for\n# the global scope.\nglobalScopeLabel=Global\n\n# LOCALIZATION NOTE (variablesViewErrorStacktrace): This is the text that is\n# shown before the stack trace in an error.\nvariablesViewErrorStacktrace=Stack trace:\n\n# LOCALIZATION NOTE (variablesViewMoreObjects): the text that is displayed\n# when you have an object preview that does not show all of the elements. At the end of the list\n# you see \"N more...\" in the web console output.\n# This is a semi-colon list of plural forms.\n# See: http://developer.mozilla.org/en/docs/Localization_and_Plurals\n# #1 number of remaining items in the object\n# example: 3 more…\nvariablesViewMoreObjects=#1 more…;#1 more…\n\n# LOCALIZATION NOTE (variablesEditableNameTooltip): The text that is displayed\n# in the variables list on an item with an editable name.\nvariablesEditableNameTooltip=Double click to edit\n\n# LOCALIZATION NOTE (variablesEditableValueTooltip): The text that is displayed\n# in the variables list on an item with an editable value.\nvariablesEditableValueTooltip=Click to change value\n\n# LOCALIZATION NOTE (variablesCloseButtonTooltip): The text that is displayed\n# in the variables list on an item which can be removed.\nvariablesCloseButtonTooltip=Click to remove\n\n# LOCALIZATION NOTE (variablesEditButtonTooltip): The text that is displayed\n# in the variables list on a getter or setter which can be edited.\nvariablesEditButtonTooltip=Click to set value\n\n# LOCALIZATION NOTE (variablesEditableValueTooltip): The text that is displayed\n# in a tooltip on the \"open in inspector\" button in the the variables list for a\n# DOMNode item.\nvariablesDomNodeValueTooltip=Click to select the node in the inspector\n\n# LOCALIZATION NOTE (configurable|...|Tooltip): The text that is displayed\n# in the variables list on certain variables or properties as tooltips.\n# Expanations of what these represent can be found at the following links:\n# https://developer.mozilla.org/docs/Web/JavaScript/Reference/Global_Objects/Object/defineProperty\n# https://developer.mozilla.org/docs/Web/JavaScript/Reference/Global_Objects/Object/isExtensible\n# https://developer.mozilla.org/docs/Web/JavaScript/Reference/Global_Objects/Object/isFrozen\n# https://developer.mozilla.org/docs/Web/JavaScript/Reference/Global_Objects/Object/isSealed\n# It's probably best to keep these in English.\nconfigurableTooltip=configurable\nenumerableTooltip=enumerable\nwritableTooltip=writable\nfrozenTooltip=frozen\nsealedTooltip=sealed\nextensibleTooltip=extensible\noverriddenTooltip=overridden\nWebIDLTooltip=WebIDL\n\n# LOCALIZATION NOTE (variablesSeparatorLabel): The text that is displayed\n# in the variables list as a separator between the name and value.\nvariablesSeparatorLabel=:\n\n# LOCALIZATION NOTE (watchExpressionsSeparatorLabel2): The text that is displayed\n# in the watch expressions list as a separator between the code and evaluation.\nwatchExpressionsSeparatorLabel2=\\u0020→\n\n# LOCALIZATION NOTE (functionSearchSeparatorLabel): The text that is displayed\n# in the functions search panel as a separator between function's inferred name\n# and its real name (if available).\nfunctionSearchSeparatorLabel=←\n\n# LOCALIZATION NOTE(symbolSearch.search.functionsPlaceholder): The placeholder\n# text displayed when the user searches for functions in a file\nsymbolSearch.search.functionsPlaceholder=Search functions…\n\n# LOCALIZATION NOTE(symbolSearch.search.variablesPlaceholder): The placeholder\n# text displayed when the user searches for variables in a file\nsymbolSearch.search.variablesPlaceholder=Search variables…\n\n# LOCALIZATION NOTE(symbolSearch.search.key2): The Key Shortcut for\n# searching for a function or variable\nsymbolSearch.search.key2=CmdOrCtrl+Shift+O\n\n# LOCALIZATION NOTE(symbolSearch.searchModifier.modifiersLabel): A label\n# preceding the group of modifiers\nsymbolSearch.searchModifier.modifiersLabel=Modifiers:\n\n# LOCALIZATION NOTE(symbolSearch.searchModifier.regex): A search option\n# when searching text in a file\nsymbolSearch.searchModifier.regex=Regex\n\n# LOCALIZATION NOTE(symbolSearch.searchModifier.caseSensitive): A search option\n# when searching text in a file\nsymbolSearch.searchModifier.caseSensitive=Case sensitive\n\n# LOCALIZATION NOTE(symbolSearch.searchModifier.wholeWord): A search option\n# when searching text in a file\nsymbolSearch.searchModifier.wholeWord=Whole word\n\n# LOCALIZATION NOTE (resumptionOrderPanelTitle): This is the text that appears\n# as a description in the notification panel popup, when multiple debuggers are\n# open in separate tabs and the user tries to resume them in the wrong order.\n# The substitution parameter is the URL of the last paused window that must be\n# resumed first.\nresumptionOrderPanelTitle=There are one or more paused debuggers. Please resume the most-recently paused debugger first at: %S\n\nvariablesViewOptimizedOut=(optimized away)\nvariablesViewUninitialized=(uninitialized)\nvariablesViewMissingArgs=(unavailable)\n\nanonymousSourcesLabel=Anonymous Sources\n\nexperimental=This is an experimental feature\n\n# LOCALIZATION NOTE (whyPaused.debuggerStatement): The text that is displayed\n# in a info block explaining how the debugger is currently paused due to a `debugger`\n# statement in the code\nwhyPaused.debuggerStatement=Paused on debugger statement\n\n# LOCALIZATION NOTE (whyPaused.breakpoint): The text that is displayed\n# in a info block explaining how the debugger is currently paused on a breakpoint\nwhyPaused.breakpoint=Paused on breakpoint\n\n# LOCALIZATION NOTE (whyPaused.exception): The text that is displayed\n# in a info block explaining how the debugger is currently paused on an exception\nwhyPaused.exception=Paused on exception\n\n# LOCALIZATION NOTE (whyPaused.resumeLimit): The text that is displayed\n# in a info block explaining how the debugger is currently paused while stepping\n# in or out of the stack\nwhyPaused.resumeLimit=Paused while stepping\n\n# LOCALIZATION NOTE (whyPaused.pauseOnDOMEvents): The text that is displayed\n# in a info block explaining how the debugger is currently paused on a\n# dom event\nwhyPaused.pauseOnDOMEvents=Paused on event listener\n\n# LOCALIZATION NOTE (whyPaused.breakpointConditionThrown): The text that is displayed\n# in an info block when evaluating a conditional breakpoint throws an error\nwhyPaused.breakpointConditionThrown=Error with conditional breakpoint\n\n# LOCALIZATION NOTE (whyPaused.xhr): The text that is displayed\n# in a info block explaining how the debugger is currently paused on an\n# xml http request\nwhyPaused.xhr=Paused on XMLHttpRequest\n\n# LOCALIZATION NOTE (whyPaused.promiseRejection): The text that is displayed\n# in a info block explaining how the debugger is currently paused on a\n# promise rejection\nwhyPaused.promiseRejection=Paused on promise rejection\n\n# LOCALIZATION NOTE (whyPaused.assert): The text that is displayed\n# in a info block explaining how the debugger is currently paused on an\n# assert\nwhyPaused.assert=Paused on assertion\n\n# LOCALIZATION NOTE (whyPaused.debugCommand): The text that is displayed\n# in a info block explaining how the debugger is currently paused on a\n# debugger statement\nwhyPaused.debugCommand=Paused on debugged function\n\n# LOCALIZATION NOTE (whyPaused.other): The text that is displayed\n# in a info block explaining how the debugger is currently paused on an event\n# listener breakpoint set\nwhyPaused.other=Debugger paused\n\n# LOCALIZATION NOTE (ctrl): The text that is used for documenting\n# keyboard shortcuts that use the control key\nctrl=Ctrl\n"
 
 /***/ }),
 /* 961 */,
-/* 962 */,
+/* 962 */
+/***/ (function(module, exports) {
+
+// removed by extract-text-webpack-plugin
+
+/***/ }),
 /* 963 */,
 /* 964 */,
 /* 965 */
@@ -39568,6 +40541,8 @@ exports.getAndProcessFrames = getAndProcessFrames;
 
 var _react = __webpack_require__(0);
 
+var _react2 = _interopRequireDefault(_react);
+
 var _redux = __webpack_require__(3);
 
 var _reactRedux = __webpack_require__(151);
@@ -39598,7 +40573,7 @@ var _clipboard = __webpack_require__(423);
 
 var _selectors = __webpack_require__(242);
 
-__webpack_require__(724);
+__webpack_require__(914);
 
 function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { default: obj }; }
 
@@ -39680,25 +40655,29 @@ class Frames extends _react.Component {
     var framesOrGroups = this.truncateFrames(this.collapseFrames(frames));
 
 
-    return _react.DOM.ul({}, framesOrGroups.map(frameOrGroup => frameOrGroup.id ? FrameComponent({
-      frame: frameOrGroup,
-      toggleFrameworkGrouping: this.toggleFrameworkGrouping,
-      copyStackTrace: this.copyStackTrace,
-      frameworkGroupingOn,
-      selectFrame,
-      selectedFrame,
-      toggleBlackBox,
-      key: frameOrGroup.id
-    }) : Group({
-      group: frameOrGroup,
-      toggleFrameworkGrouping: this.toggleFrameworkGrouping,
-      copyStackTrace: this.copyStackTrace,
-      frameworkGroupingOn,
-      selectFrame,
-      selectedFrame,
-      toggleBlackBox,
-      key: frameOrGroup[0].id
-    })));
+    return _react2.default.createElement(
+      "ul",
+      null,
+      framesOrGroups.map(frameOrGroup => frameOrGroup.id ? FrameComponent({
+        frame: frameOrGroup,
+        toggleFrameworkGrouping: this.toggleFrameworkGrouping,
+        copyStackTrace: this.copyStackTrace,
+        frameworkGroupingOn,
+        selectFrame,
+        selectedFrame,
+        toggleBlackBox,
+        key: frameOrGroup.id
+      }) : Group({
+        group: frameOrGroup,
+        toggleFrameworkGrouping: this.toggleFrameworkGrouping,
+        copyStackTrace: this.copyStackTrace,
+        frameworkGroupingOn,
+        selectFrame,
+        selectedFrame,
+        toggleBlackBox,
+        key: frameOrGroup[0].id
+      }))
+    );
   }
 
   renderToggleButton(frames) {
@@ -39709,7 +40688,11 @@ class Frames extends _react.Component {
       return null;
     }
 
-    return _react.DOM.div({ className: "show-more", onClick: this.toggleFramesDisplay }, buttonMessage);
+    return _react2.default.createElement(
+      "div",
+      { className: "show-more", onClick: this.toggleFramesDisplay },
+      buttonMessage
+    );
   }
 
   render() {
@@ -39719,10 +40702,24 @@ class Frames extends _react.Component {
 
 
     if (!frames) {
-      return _react.DOM.div({ className: "pane frames" }, _react.DOM.div({ className: "pane-info empty" }, L10N.getStr("callStack.notPaused")));
+      return _react2.default.createElement(
+        "div",
+        { className: "pane frames" },
+        _react2.default.createElement(
+          "div",
+          { className: "pane-info empty" },
+          L10N.getStr("callStack.notPaused")
+        )
+      );
     }
 
-    return _react.DOM.div({ className: "pane frames" }, this.renderFrames(frames), (0, _WhyPaused2.default)({ pause }), this.renderToggleButton(frames));
+    return _react2.default.createElement(
+      "div",
+      { className: "pane frames" },
+      this.renderFrames(frames),
+      (0, _WhyPaused2.default)({ pause }),
+      this.renderToggleButton(frames)
+    );
   }
 }
 
@@ -39780,6 +40777,8 @@ Object.defineProperty(exports, "__esModule", {
 
 var _react = __webpack_require__(0);
 
+var _react2 = _interopRequireDefault(_react);
+
 var _classnames = __webpack_require__(175);
 
 var _classnames2 = _interopRequireDefault(_classnames);
@@ -39798,27 +40797,45 @@ var _FrameMenu2 = _interopRequireDefault(_FrameMenu);
 
 function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { default: obj }; }
 
-function renderFrameTitle(frame, options) {
+function FrameTitle(_ref) {
+  var frame = _ref.frame,
+      options = _ref.options;
+
   var displayName = (0, _frame.formatDisplayName)(frame, options);
-  return _react.DOM.div({ className: "title" }, displayName);
+  return _react2.default.createElement(
+    "div",
+    { className: "title" },
+    displayName
+  );
 }
 
-function renderFrameLocation(_ref) {
-  var source = _ref.source,
-      location = _ref.location,
-      library = _ref.library;
+FrameTitle.displayName = "FrameTitle";
 
-  if (!source) {
+function FrameLocation(_ref2) {
+  var frame = _ref2.frame;
+
+  if (!frame.source) {
     return;
   }
 
-  if (library) {
-    return _react.DOM.div({ className: "location" }, library, (0, _Svg2.default)(library.toLowerCase(), { className: "annotation-logo" }));
+  if (frame.library) {
+    return _react2.default.createElement(
+      "div",
+      { className: "location" },
+      frame.library,
+      _react2.default.createElement(_Svg2.default, { name: frame.library.toLowerCase(), className: "annotation-logo" })
+    );
   }
 
-  var filename = (0, _source.getFilename)(source);
-  return _react.DOM.div({ className: "location" }, `${filename}: ${location.line}`);
+  var filename = (0, _source.getFilename)(frame.source);
+  return _react2.default.createElement(
+    "div",
+    { className: "location" },
+    `${filename}: ${frame.location.line}`
+  );
 }
+
+FrameLocation.displayName = "FrameLocation";
 
 class FrameComponent extends _react.Component {
 
@@ -39859,16 +40876,22 @@ class FrameComponent extends _react.Component {
         shouldMapDisplayName = _props2.shouldMapDisplayName;
 
 
-    return _react.DOM.li({
-      key: frame.id,
-      className: (0, _classnames2.default)("frame", {
-        selected: selectedFrame && selectedFrame.id === frame.id
-      }),
-      onMouseDown: e => this.onMouseDown(e, frame, selectedFrame),
-      onKeyUp: e => this.onKeyUp(e, frame, selectedFrame),
-      onContextMenu: e => this.onContextMenu(e),
-      tabIndex: 0
-    }, renderFrameTitle(frame, { shouldMapDisplayName }), !hideLocation ? renderFrameLocation(frame) : null);
+    var className = (0, _classnames2.default)("frame", {
+      selected: selectedFrame && selectedFrame.id === frame.id
+    });
+    return _react2.default.createElement(
+      "li",
+      {
+        key: frame.id,
+        className: className,
+        onMouseDown: e => this.onMouseDown(e, frame, selectedFrame),
+        onKeyUp: e => this.onKeyUp(e, frame, selectedFrame),
+        onContextMenu: e => this.onContextMenu(e),
+        tabIndex: 0
+      },
+      _react2.default.createElement(FrameTitle, { frame: frame, options: { shouldMapDisplayName } }),
+      !hideLocation && _react2.default.createElement(FrameLocation, { frame: frame })
+    );
   }
 }
 
@@ -39979,6 +41002,10 @@ function isRedux(frame) {
   return getFrameUrl(frame).match(/redux/i);
 }
 
+function isDojo(frame) {
+  return getFrameUrl(frame).match(/dojo/i);
+}
+
 function getLibraryFromUrl(frame) {
   // @TODO each of these fns calls getFrameUrl, just call it once
   // (assuming there's not more complex logic to identify a lib)
@@ -40041,6 +41068,10 @@ function getLibraryFromUrl(frame) {
 
   if (isRedux(frame)) {
     return "Redux";
+  }
+
+  if (isDojo(frame)) {
+    return "Dojo";
   }
 
   if (isImmutable(frame)) {
@@ -40210,6 +41241,8 @@ Object.defineProperty(exports, "__esModule", {
 
 var _react = __webpack_require__(0);
 
+var _react2 = _interopRequireDefault(_react);
+
 var _classnames = __webpack_require__(175);
 
 var _classnames2 = _interopRequireDefault(_classnames);
@@ -40224,7 +41257,7 @@ var _FrameMenu = __webpack_require__(1032);
 
 var _FrameMenu2 = _interopRequireDefault(_FrameMenu);
 
-__webpack_require__(722);
+__webpack_require__(909);
 
 var _Frame = __webpack_require__(1013);
 
@@ -40234,15 +41267,23 @@ function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { de
 
 var FrameComponent = (0, _react.createFactory)(_Frame2.default);
 
+function FrameLocation(_ref) {
+  var frame = _ref.frame;
 
-function renderFrameLocation(frame) {
   var library = (0, _frame.getLibraryFromUrl)(frame);
   if (!library) {
     return null;
   }
 
-  return _react.DOM.div({ className: "location" }, library, (0, _Svg2.default)(library.toLowerCase(), { className: "annotation-logo" }));
+  return _react2.default.createElement(
+    "div",
+    { className: "location" },
+    library,
+    _react2.default.createElement(_Svg2.default, { name: library.toLowerCase(), className: "annotation-logo" })
+  );
 }
+
+FrameLocation.displayName = "FrameLocation";
 
 class Group extends _react.Component {
 
@@ -40284,38 +41325,57 @@ class Group extends _react.Component {
     if (!expanded) {
       return null;
     }
-    return _react.DOM.div({ className: "frames-list" }, group.map(frame => FrameComponent({
-      frame,
-      copyStackTrace,
-      toggleFrameworkGrouping,
-      frameworkGroupingOn,
-      selectFrame,
-      selectedFrame,
-      toggleBlackBox,
-      key: frame.id,
-      hideLocation: true,
-      shouldMapDisplayName: false
-    })));
+
+    return _react2.default.createElement(
+      "div",
+      { className: "frames-list" },
+      group.map(frame => FrameComponent({
+        frame,
+        copyStackTrace,
+        toggleFrameworkGrouping,
+        frameworkGroupingOn,
+        selectFrame,
+        selectedFrame,
+        toggleBlackBox,
+        key: frame.id,
+        hideLocation: true,
+        shouldMapDisplayName: false
+      }))
+    );
   }
 
   renderDescription() {
     var frame = this.props.group[0];
     var displayName = (0, _frame.formatDisplayName)(frame);
-    return _react.DOM.li({
-      key: frame.id,
-      className: (0, _classnames2.default)("group"),
-      onClick: this.toggleFrames,
-      tabIndex: 0
-    }, _react.DOM.div({ className: "title" }, displayName), renderFrameLocation(frame));
+    return _react2.default.createElement(
+      "li",
+      {
+        key: frame.id,
+        className: (0, _classnames2.default)("group"),
+        onClick: this.toggleFrames,
+        tabIndex: 0
+      },
+      _react2.default.createElement(
+        "div",
+        { className: "title" },
+        displayName
+      ),
+      _react2.default.createElement(FrameLocation, { frame: frame })
+    );
   }
 
   render() {
     var expanded = this.state.expanded;
 
-    return _react.DOM.div({
-      className: (0, _classnames2.default)("frames-group", { expanded }),
-      onContextMenu: e => this.onContextMenu(e)
-    }, this.renderDescription(), this.renderFrames());
+    return _react2.default.createElement(
+      "div",
+      {
+        className: (0, _classnames2.default)("frames-group", { expanded }),
+        onContextMenu: e => this.onContextMenu(e)
+      },
+      this.renderDescription(),
+      this.renderFrames()
+    );
   }
 }
 
@@ -40446,7 +41506,7 @@ var _classnames = __webpack_require__(175);
 
 var _classnames2 = _interopRequireDefault(_classnames);
 
-__webpack_require__(709);
+__webpack_require__(879);
 
 function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { default: obj }; }
 
@@ -40598,22 +41658,22 @@ module.exports = "<svg viewBox=\"0 0 14 5\" version=\"1.1\" xmlns=\"http://www.w
 Object.defineProperty(exports, "__esModule", {
   value: true
 });
-exports.getGeneratedLocation = undefined;
+exports.findScopeByName = exports.getASTLocation = undefined;
 
-var getGeneratedLocation = exports.getGeneratedLocation = (() => {
-  var _ref2 = _asyncToGenerator(function* (source, sourceMaps, location) {
-    if (!sourceMaps.isOriginalId(location.sourceId)) {
-      return location;
-    }
+var _astBreakpointLocation = __webpack_require__(804);
 
-    return yield sourceMaps.getGeneratedLocation(location, source.toJS());
-  });
-
-  return function getGeneratedLocation(_x2, _x3, _x4) {
-    return _ref2.apply(this, arguments);
-  };
-})();
-
+Object.defineProperty(exports, "getASTLocation", {
+  enumerable: true,
+  get: function () {
+    return _astBreakpointLocation.getASTLocation;
+  }
+});
+Object.defineProperty(exports, "findScopeByName", {
+  enumerable: true,
+  get: function () {
+    return _astBreakpointLocation.findScopeByName;
+  }
+});
 exports.firstString = firstString;
 exports.locationMoved = locationMoved;
 exports.makeLocationId = makeLocationId;
@@ -40636,8 +41696,6 @@ var _assert = __webpack_require__(223);
 var _assert2 = _interopRequireDefault(_assert);
 
 function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { default: obj }; }
-
-function _asyncToGenerator(fn) { return function () { var gen = fn.apply(this, arguments); return new Promise(function (resolve, reject) { function step(key, arg) { try { var info = gen[key](arg); var value = info.value; } catch (error) { reject(error); return; } if (info.done) { resolve(value); } else { return Promise.resolve(value).then(function (value) { step("next", value); }, function (err) { step("throw", err); }); } } return step("next"); }); }; }
 
 // Return the first argument that is a string, or null if nothing is a
 // string.
@@ -40738,11 +41796,13 @@ function createBreakpoint(location) {
   var overrides = arguments.length > 1 && arguments[1] !== undefined ? arguments[1] : {};
   var condition = overrides.condition,
       disabled = overrides.disabled,
+      hidden = overrides.hidden,
       generatedLocation = overrides.generatedLocation;
 
   var properties = {
     condition: condition || null,
     disabled: disabled || false,
+    hidden: hidden || false,
     generatedLocation: generatedLocation || location,
     location
   };
@@ -40755,14 +41815,13 @@ function createPendingLocation(location) {
       line = location.line,
       column = location.column;
 
-  return { sourceUrl: sourceUrl, line, column };
+  return { sourceUrl, line, column };
 }
 
 function createPendingBreakpoint(bp) {
   var pendingLocation = createPendingLocation(bp.location);
   var pendingGeneratedLocation = createPendingLocation(bp.generatedLocation);
 
-  assertPendingLocation(pendingLocation);
   assertPendingLocation(pendingLocation);
 
   return {
@@ -40786,8 +41845,10 @@ Object.defineProperty(exports, "__esModule", {
 exports.initialState = initialState;
 exports.getSymbols = getSymbols;
 exports.hasSymbols = hasSymbols;
+exports.isEmptyLineInSource = isEmptyLineInSource;
+exports.getEmptyLines = getEmptyLines;
 exports.getOutOfScopeLocations = getOutOfScopeLocations;
-exports.getSelection = getSelection;
+exports.getPreview = getPreview;
 
 var _immutable = __webpack_require__(146);
 
@@ -40809,8 +41870,9 @@ function _interopRequireWildcard(obj) { if (obj && obj.__esModule) { return obj;
 function initialState() {
   return (0, _makeRecord2.default)({
     symbols: I.Map(),
+    emptyLines: I.Map(),
     outOfScopeLocations: null,
-    selection: null
+    preview: null
   })();
 }
 
@@ -40827,6 +41889,14 @@ function update() {
         return state.setIn(["symbols", source.id], _symbols);
       }
 
+    case "SET_EMPTY_LINES":
+      {
+        var _source = action.source,
+            _emptyLines = action.emptyLines;
+
+        return state.setIn(["emptyLines", _source.id], _emptyLines);
+      }
+
     case "OUT_OF_SCOPE_LOCATIONS":
       {
         return state.set("outOfScopeLocations", action.locations);
@@ -40834,17 +41904,17 @@ function update() {
 
     case "CLEAR_SELECTION":
       {
-        return state.set("selection", null);
+        return state.set("preview", null);
       }
 
-    case "SET_SELECTION":
+    case "SET_PREVIEW":
       {
         if (action.status == "start") {
-          return state.set("selection", { updating: true });
+          return state.set("preview", { updating: true });
         }
 
         if (!action.value) {
-          return state.set("selection", null);
+          return state.set("preview", null);
         }
 
         var _action$value = action.value,
@@ -40854,7 +41924,7 @@ function update() {
             _tokenPos = _action$value.tokenPos,
             _cursorPos = _action$value.cursorPos;
 
-        return state.set("selection", {
+        return state.set("preview", {
           updating: false,
           expression: _expression,
           location: _location,
@@ -40896,12 +41966,25 @@ function hasSymbols(state, source) {
   return !!state.ast.getIn(["symbols", source.id]);
 }
 
+function isEmptyLineInSource(state, line, selectedSource) {
+  var emptyLines = getEmptyLines(state, selectedSource);
+  return emptyLines.includes(line);
+}
+
+function getEmptyLines(state, source) {
+  if (!source) {
+    return [];
+  }
+
+  return state.ast.getIn(["emptyLines", source.id]) || [];
+}
+
 function getOutOfScopeLocations(state) {
   return state.ast.get("outOfScopeLocations");
 }
 
-function getSelection(state) {
-  return state.ast.get("selection");
+function getPreview(state) {
+  return state.ast.get("preview");
 }
 
 exports.default = update;
@@ -40917,9 +42000,10 @@ Object.defineProperty(exports, "__esModule", {
   value: true
 });
 exports.setSymbols = setSymbols;
+exports.setEmptyLines = setEmptyLines;
 exports.setOutOfScopeLocations = setOutOfScopeLocations;
-exports.clearSelection = clearSelection;
-exports.setSelection = setSelection;
+exports.clearPreview = clearPreview;
+exports.setPreview = setPreview;
 
 var _selectors = __webpack_require__(242);
 
@@ -40964,11 +42048,42 @@ function setSymbols(sourceId) {
   })();
 }
 
-function setOutOfScopeLocations() {
+function setEmptyLines(sourceId) {
   return (() => {
     var _ref3 = _asyncToGenerator(function* (_ref4) {
       var dispatch = _ref4.dispatch,
           getState = _ref4.getState;
+
+      var sourceRecord = (0, _selectors.getSource)(getState(), sourceId);
+      if (!sourceRecord) {
+        return;
+      }
+
+      var source = sourceRecord.toJS();
+      if (!source.text) {
+        return;
+      }
+
+      var emptyLines = yield parser.getEmptyLines(source);
+
+      dispatch({
+        type: "SET_EMPTY_LINES",
+        source,
+        emptyLines
+      });
+    });
+
+    return function (_x2) {
+      return _ref3.apply(this, arguments);
+    };
+  })();
+}
+
+function setOutOfScopeLocations() {
+  return (() => {
+    var _ref5 = _asyncToGenerator(function* (_ref6) {
+      var dispatch = _ref6.dispatch,
+          getState = _ref6.getState;
 
       var location = (0, _selectors.getSelectedLocation)(getState());
       if (!location) {
@@ -40992,19 +42107,19 @@ function setOutOfScopeLocations() {
       });
     });
 
-    return function (_x2) {
-      return _ref3.apply(this, arguments);
+    return function (_x3) {
+      return _ref5.apply(this, arguments);
     };
   })();
 }
 
-function clearSelection() {
-  return (_ref5) => {
-    var dispatch = _ref5.dispatch,
-        getState = _ref5.getState,
-        client = _ref5.client;
+function clearPreview() {
+  return (_ref7) => {
+    var dispatch = _ref7.dispatch,
+        getState = _ref7.getState,
+        client = _ref7.client;
 
-    var currentSelection = (0, _selectors.getSelection)(getState());
+    var currentSelection = (0, _selectors.getPreview)(getState());
     if (!currentSelection) {
       return;
     }
@@ -41032,20 +42147,20 @@ function findBestMatch(symbols, tokenPos, token) {
   }, {});
 }
 
-function setSelection(token, tokenPos, cursorPos) {
+function setPreview(token, tokenPos, cursorPos) {
   return (() => {
-    var _ref6 = _asyncToGenerator(function* (_ref7) {
-      var dispatch = _ref7.dispatch,
-          getState = _ref7.getState,
-          client = _ref7.client;
+    var _ref8 = _asyncToGenerator(function* (_ref9) {
+      var dispatch = _ref9.dispatch,
+          getState = _ref9.getState,
+          client = _ref9.client;
 
-      var currentSelection = (0, _selectors.getSelection)(getState());
+      var currentSelection = (0, _selectors.getPreview)(getState());
       if (currentSelection && currentSelection.updating) {
         return;
       }
 
       yield dispatch({
-        type: "SET_SELECTION",
+        type: "SET_PREVIEW",
         [_promise.PROMISE]: _asyncToGenerator(function* () {
           var source = (0, _selectors.getSelectedSource)(getState());
           var _symbols = yield parser.getSymbols(source.toJS());
@@ -41065,10 +42180,10 @@ function setSelection(token, tokenPos, cursorPos) {
 
           var selectedFrame = (0, _selectors.getSelectedFrame)(getState());
 
-          var _ref9 = yield client.evaluate(expression, {
+          var _ref11 = yield client.evaluate(expression, {
             frameId: selectedFrame.id
           }),
-              result = _ref9.result;
+              result = _ref11.result;
 
           if (!result) {
             return;
@@ -41085,8 +42200,8 @@ function setSelection(token, tokenPos, cursorPos) {
       });
     });
 
-    return function (_x3) {
-      return _ref6.apply(this, arguments);
+    return function (_x4) {
+      return _ref8.apply(this, arguments);
     };
   })();
 }
@@ -41128,7 +42243,7 @@ var _SearchInput = __webpack_require__(377);
 
 var _SearchInput2 = _interopRequireDefault(_SearchInput);
 
-__webpack_require__(694);
+__webpack_require__(866);
 
 var _sourcesTree = __webpack_require__(39);
 
@@ -41207,14 +42322,6 @@ class TextSearch extends _react.Component {
       this.focused = { setExpanded, file, expanded };
     }
 
-    var svgArrow = (0, _Svg2.default)("arrow", {
-      className: (0, _classnames2.default)({
-        expanded
-      })
-    });
-
-    var svgFile = (0, _Svg2.default)("file");
-
     var matches = ` (${file.matches.length} match${file.matches.length > 1 ? "es" : ""})`;
 
     return _react2.default.createElement(
@@ -41224,8 +42331,8 @@ class TextSearch extends _react.Component {
         key: file.sourceId,
         onClick: e => setExpanded(file, !expanded)
       },
-      svgArrow,
-      svgFile,
+      _react2.default.createElement(_Svg2.default, { name: "arrow", className: (0, _classnames2.default)({ expanded }) }),
+      _react2.default.createElement(_Svg2.default, { name: "file" }),
       _react2.default.createElement(
         "span",
         { className: "file-path" },
@@ -41274,14 +42381,14 @@ class TextSearch extends _react.Component {
       if (matchIndex > 0 && index === 0) {
         matches.push(_react2.default.createElement(
           "span",
-          { className: "line-match" },
+          { className: "line-match", key: `case1-${index}` },
           value.slice(0, matchIndex)
         ));
       }
       if (matchIndex > matchIndexes[index - 1] + len) {
         matches.push(_react2.default.createElement(
           "span",
-          { className: "line-match" },
+          { className: "line-match", key: `case2-${index}` },
           value.slice(matchIndexes[index - 1] + len, matchIndex)
         ));
       }
@@ -41293,13 +42400,17 @@ class TextSearch extends _react.Component {
       if (index === matchIndexes.length - 1) {
         matches.push(_react2.default.createElement(
           "span",
-          { className: "line-match" },
+          { className: "line-match", key: `case3-${index}` },
           value.slice(matchIndex + len, value.length)
         ));
       }
     });
 
-    return _react.DOM.span.apply(_react.DOM, [{ className: "line-value" }].concat(matches));
+    return _react2.default.createElement(
+      "span",
+      { className: "line-value" },
+      matches
+    );
   }
 
   getResults() {
@@ -41324,7 +42435,7 @@ class TextSearch extends _react.Component {
     return _react2.default.createElement(_ManagedTree2.default, {
       getRoots: () => results,
       getChildren: file => file.matches || [],
-      itemHeight: 20,
+      itemHeight: 24,
       autoExpand: 1,
       autoExpandDepth: 1,
       focused: results[0],
@@ -41506,7 +42617,7 @@ var _lodash = __webpack_require__(2);
 
 var _pause = __webpack_require__(255);
 
-__webpack_require__(723);
+__webpack_require__(913);
 
 function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { default: obj }; }
 
@@ -41626,8 +42737,39 @@ function getInScopeLines(state) {
 
 /***/ }),
 /* 1125 */,
-/* 1126 */,
-/* 1127 */,
+/* 1126 */
+/***/ (function(module, exports) {
+
+module.exports = "<svg enable-background=\"new 0 0 800 800\" id=\"GUIDE\" version=\"1.1\" viewBox=\"0 0 800 800\" xml:space=\"preserve\" xmlns=\"http://www.w3.org/2000/svg\" xmlns:cc=\"http://creativecommons.org/ns#\" xmlns:dc=\"http://purl.org/dc/elements/1.1/\" xmlns:inkscape=\"http://www.inkscape.org/namespaces/inkscape\" xmlns:rdf=\"http://www.w3.org/1999/02/22-rdf-syntax-ns#\" xmlns:sodipodi=\"http://sodipodi.sourceforge.net/DTD/sodipodi-0.dtd\" xmlns:svg=\"http://www.w3.org/2000/svg\" xmlns:xlink=\"http://www.w3.org/1999/xlink\"><path d=\"M580.562,219.439c-12.721-12.723-29.637-19.728-47.623-19.728c-17.987,0-34.903,7.005-47.625,19.728 c-12.72,12.72-19.725,29.634-19.725,47.621c0,17.99,7.005,34.904,19.725,47.625c12.722,12.721,29.633,19.723,47.618,19.726 c0.007,0,0.007,0,0.007,0c17.986,0,34.902-7.005,47.623-19.726c12.721-12.723,19.726-29.636,19.726-47.625 C600.286,249.073,593.281,232.16,580.562,219.439z M553.771,287.895c-5.566,5.568-12.96,8.636-20.834,8.636l0,0 c-7.872-0.002-15.271-3.068-20.834-8.636c-5.566-5.562-8.633-12.96-8.633-20.834c0-7.868,3.065-15.269,8.633-20.834 c5.563-5.565,12.967-8.63,20.834-8.63c7.868,0,15.268,3.063,20.834,8.63C565.263,257.715,565.263,276.407,553.771,287.895z\" fill=\"#041C3F\"></path><g><path d=\"M62.282,627.218c-4.847,0-9.693-1.847-13.392-5.546c-7.398-7.397-7.398-19.395,0-26.79L158.42,485.35 c7.398-7.397,19.392-7.397,26.79,0s7.398,19.395,0,26.792L75.676,621.672C71.978,625.371,67.131,627.218,62.282,627.218z\" fill=\"#041C3F\"></path></g><g><path d=\"M86.774,732.172c-4.85,0-9.696-1.85-13.395-5.549c-7.398-7.397-7.398-19.389,0-26.786L187.545,585.67 c7.398-7.398,19.392-7.398,26.787,0c7.398,7.398,7.398,19.393,0,26.79L100.168,726.623C96.47,730.322,91.62,732.172,86.774,732.172 z\" fill=\"#041C3F\"></path></g><g><path d=\"M191.725,756.661c-4.849,0-9.696-1.847-13.395-5.546c-7.398-7.397-7.398-19.393,0-26.789L287.863,614.79 c7.396-7.394,19.392-7.396,26.787,0c7.398,7.397,7.398,19.395,0,26.793L205.12,751.115 C201.421,754.813,196.574,756.661,191.725,756.661z\" fill=\"#041C3F\"></path></g><path d=\"M751.113,48.891c-4.302-4.3-10.409-6.278-16.403-5.311c-2.202,0.357-54.705,8.98-126.25,36.316 c-41.974,16.034-81.85,35.237-118.529,57.076c-45.039,26.814-85.356,57.721-119.899,91.871l-143.055,27.85 c-3.693,0.718-7.086,2.524-9.753,5.177L87.618,391.06c-5.907,5.886-7.267,14.938-3.36,22.301c3.33,6.27,9.818,10.059,16.725,10.059 c1.202,0,2.415-0.114,3.628-0.347l146.185-28.463c-9.516,18.672-18.419,38.055-26.683,58.144 c-2.904,7.072-1.279,15.194,4.125,20.603l35.811,35.811l-33.27,33.27c-7.398,7.398-7.398,19.39,0,26.787 c3.699,3.699,8.545,5.549,13.397,5.549c4.847,0,9.693-1.85,13.392-5.546l33.27-33.271l35.811,35.813 c3.625,3.619,8.469,5.548,13.4,5.548c2.423,0,4.871-0.467,7.199-1.426c20.091-8.262,39.475-17.165,58.141-26.678l-28.455,146.186 c-1.593,8.183,2.35,16.443,9.709,20.352c2.806,1.488,5.852,2.213,8.879,2.213c4.917,0,9.778-1.918,13.417-5.573l129.188-129.604 c2.656-2.663,4.459-6.061,5.181-9.753l27.845-143.055c34.148-34.547,65.06-74.859,91.876-119.901 c21.834-36.683,41.04-76.558,57.077-118.529c27.33-71.551,35.958-124.048,36.313-126.25 C757.386,59.292,755.407,53.188,751.113,48.891z M158.393,374.001l81.489-81.224l87.674-17.069 c-19.015,23.391-36.655,48.634-52.847,75.648L158.393,374.001z M507.219,560.121l-81.222,81.489l22.643-116.316 c27.021-16.192,52.259-33.83,75.648-52.848L507.219,560.121z M684.359,178.936c-23.915,62.371-68.01,152.302-142.237,226.531 c-34.171,34.168-73.96,64.54-118.89,90.838c-0.804,0.401-1.585,0.854-2.322,1.366c-24.049,13.943-49.566,26.728-76.476,38.302 l-26.806-26.809l54.11-54.106c7.395-7.397,7.395-19.392,0-26.79c-7.398-7.397-19.392-7.396-26.79,0l-54.109,54.106l-26.806-26.809 c11.578-26.913,24.361-52.433,38.308-76.488c0.508-0.732,0.951-1.5,1.35-2.295c26.298-44.938,56.672-84.732,90.849-118.909 c74.225-74.225,164.156-118.319,226.527-142.235c37.897-14.537,70.522-23.601,92.09-28.797 C707.959,108.412,698.894,141.038,684.359,178.936z\" fill=\"#041C3F\"></path></svg>"
+
+/***/ }),
+/* 1127 */
+/***/ (function(module, exports, __webpack_require__) {
+
+"use strict";
+
+
+Object.defineProperty(exports, "__esModule", {
+  value: true
+});
+exports.containsPosition = containsPosition;
+exports.containsLocation = containsLocation;
+exports.nodeContainsPosition = nodeContainsPosition;
+function containsPosition(a, b) {
+  var startsBefore = a.start.line < b.line || a.start.line === b.line && a.start.column <= b.column;
+  var endsAfter = a.end.line > b.line || a.end.line === b.line && a.end.column >= b.column;
+
+  return startsBefore && endsAfter;
+}
+function containsLocation(a, b) {
+  return containsPosition(a, b.start) && containsPosition(a, b.end);
+}
+
+function nodeContainsPosition(node, position) {
+  return containsPosition(node.loc, position);
+}
+
+/***/ }),
 /* 1128 */
 /***/ (function(module, exports, __webpack_require__) {
 
@@ -41669,7 +42811,7 @@ function inToolbox() {
 }
 
 if (!inToolbox()) {
-  __webpack_require__(683);
+  __webpack_require__(854);
 }
 
 function createPopup(doc) {
@@ -41805,7 +42947,49 @@ module.exports = {
 
 /***/ }),
 /* 1131 */,
-/* 1132 */,
+/* 1132 */
+/***/ (function(module, exports, __webpack_require__) {
+
+"use strict";
+
+
+Object.defineProperty(exports, "__esModule", {
+  value: true
+});
+exports.default = update;
+exports.getSourceSearchQuery = getSourceSearchQuery;
+
+var _makeRecord = __webpack_require__(230);
+
+var _makeRecord2 = _interopRequireDefault(_makeRecord);
+
+function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { default: obj }; }
+
+function InitialState() {
+  return (0, _makeRecord2.default)({
+    queryString: ""
+  })();
+}
+
+function update() {
+  var state = arguments.length > 0 && arguments[0] !== undefined ? arguments[0] : InitialState();
+  var action = arguments[1];
+
+  switch (action.type) {
+    case "SET_QUERY_STRING":
+      return state.update("queryString", value => action.queryString);
+    case "CLEAR_QUERY_STRING":
+      return state.update("queryString", value => "");
+    default:
+      return state;
+  }
+}
+
+function getSourceSearchQuery(state) {
+  return state.sourceSearch.get("queryString");
+}
+
+/***/ }),
 /* 1133 */
 /***/ (function(module, exports, __webpack_require__) {
 
@@ -42034,7 +43218,8 @@ function getLocation(breakpoint, isGeneratedSource) {
 function formatBreakpoint(breakpoint, selectedSource) {
   var condition = breakpoint.condition,
       loading = breakpoint.loading,
-      disabled = breakpoint.disabled;
+      disabled = breakpoint.disabled,
+      hidden = breakpoint.hidden;
 
   var sourceId = selectedSource.get("id");
   var isGeneratedSource = (0, _devtoolsSourceMap.isGeneratedId)(sourceId);
@@ -42043,7 +43228,8 @@ function formatBreakpoint(breakpoint, selectedSource) {
     location: getLocation(breakpoint, isGeneratedSource),
     condition,
     loading,
-    disabled
+    disabled,
+    hidden
   };
 }
 
@@ -42081,35 +43267,23 @@ Object.defineProperty(exports, "__esModule", {
 
 var _extends = Object.assign || function (target) { for (var i = 1; i < arguments.length; i++) { var source = arguments[i]; for (var key in source) { if (Object.prototype.hasOwnProperty.call(source, key)) { target[key] = source[key]; } } } return target; };
 
-var _getGeneratedLocation = (() => {
-  var _ref = _asyncToGenerator(function* (state, source, sourceMaps, location) {
-    var generatedLocation = yield (0, _breakpoint.getGeneratedLocation)(source, sourceMaps, location);
-
-    var generatedSource = (0, _selectors.getSource)(state, generatedLocation.sourceId);
-    var sourceUrl = generatedSource.get("url");
-    return _extends({}, generatedLocation, { sourceUrl });
-  });
-
-  return function _getGeneratedLocation(_x, _x2, _x3, _x4) {
-    return _ref.apply(this, arguments);
-  };
-})();
-
 var _breakpoint = __webpack_require__(1057);
 
 var _selectors = __webpack_require__(242);
 
+var _sourceMaps = __webpack_require__(797);
+
 function _asyncToGenerator(fn) { return function () { var gen = fn.apply(this, arguments); return new Promise(function (resolve, reject) { function step(key, arg) { try { var info = gen[key](arg); var value = info.value; } catch (error) { reject(error); return; } if (info.done) { resolve(value); } else { return Promise.resolve(value).then(function (value) { step("next", value); }, function (err) { step("throw", err); }); } } return step("next"); }); }; }
 
 exports.default = (() => {
-  var _ref2 = _asyncToGenerator(function* (getState, client, sourceMaps, _ref3) {
-    var breakpoint = _ref3.breakpoint;
+  var _ref = _asyncToGenerator(function* (getState, client, sourceMaps, _ref2) {
+    var breakpoint = _ref2.breakpoint;
 
     var state = getState();
 
     var source = (0, _selectors.getSource)(state, breakpoint.location.sourceId);
     var location = _extends({}, breakpoint.location, { sourceUrl: source.get("url") });
-    var generatedLocation = yield _getGeneratedLocation(state, source, sourceMaps, location);
+    var generatedLocation = yield (0, _sourceMaps.getGeneratedLocation)(state, source.toJS(), location, sourceMaps);
 
     (0, _breakpoint.assertLocation)(location);
     (0, _breakpoint.assertLocation)(generatedLocation);
@@ -42120,10 +43294,10 @@ exports.default = (() => {
       return { breakpoint: _newBreakpoint };
     }
 
-    var _ref4 = yield client.setBreakpoint(generatedLocation, breakpoint.condition, sourceMaps.isOriginalId(location.sourceId)),
-        id = _ref4.id,
-        hitCount = _ref4.hitCount,
-        actualLocation = _ref4.actualLocation;
+    var _ref3 = yield client.setBreakpoint(generatedLocation, breakpoint.condition, sourceMaps.isOriginalId(location.sourceId)),
+        id = _ref3.id,
+        hitCount = _ref3.hitCount,
+        actualLocation = _ref3.actualLocation;
 
     var newGeneratedLocation = actualLocation || generatedLocation;
     var newLocation = yield sourceMaps.getOriginalLocation(newGeneratedLocation);
@@ -42131,6 +43305,7 @@ exports.default = (() => {
     var newBreakpoint = {
       id,
       disabled: false,
+      hidden: breakpoint.hidden,
       loading: false,
       condition: breakpoint.condition,
       location: newLocation,
@@ -42148,8 +43323,8 @@ exports.default = (() => {
     };
   });
 
-  function addBreakpoint(_x5, _x6, _x7, _x8) {
-    return _ref2.apply(this, arguments);
+  function addBreakpoint(_x, _x2, _x3, _x4) {
+    return _ref.apply(this, arguments);
   }
 
   return addBreakpoint;
@@ -42166,35 +43341,15 @@ Object.defineProperty(exports, "__esModule", {
   value: true
 });
 exports.syncClientBreakpoint = undefined;
-var _selectors = __webpack_require__(242);
 
 var _extends = Object.assign || function (target) { for (var i = 1; i < arguments.length; i++) { var source = arguments[i]; for (var key in source) { if (Object.prototype.hasOwnProperty.call(source, key)) { target[key] = source[key]; } } } return target; };
-
-async function getGeneratedLocation(
-  state,
-  source,
-  location,
-  sourceMaps
-) {
-  if (!sourceMaps.isOriginalId(location.sourceId)) {
-    return location;
-  }
-
-  const generatedLocation = await sourceMaps.getGeneratedLocation(
-    location,
-    source
-  );
-  const generatedSource = _selectors.getSource(state, generatedLocation.sourceId);
-  const sourceUrl = generatedSource.get("url");
-  return { ...generatedLocation, sourceUrl };
-}
 
 // we have three forms of syncing: disabled syncing, existing server syncing
 // and adding a new breakpoint
 var syncClientBreakpoint = exports.syncClientBreakpoint = (() => {
   var _ref = _asyncToGenerator(function* (getState, client, sourceMaps, source, pendingBreakpoint) {
-		var sourceId = source.id;
-		var generatedSourceId = sourceMaps.isOriginalId(sourceId) ? (0, _devtoolsSourceMap.originalToGeneratedId)(sourceId) : sourceId;
+    var sourceId = source.id;
+    var generatedSourceId = sourceMaps.isOriginalId(sourceId) ? (0, _devtoolsSourceMap.originalToGeneratedId)(sourceId) : sourceId;
 
     // this is the generatedLocation of the pending breakpoint, with
     // the source id updated to reflect the new connection
@@ -42203,7 +43358,7 @@ var syncClientBreakpoint = exports.syncClientBreakpoint = (() => {
     });
 
     var location = _extends({}, pendingBreakpoint.location, {
-      sourceId: sourceId
+      sourceId
     });
 
     (0, _breakpoint3.assertPendingBreakpoint)(pendingBreakpoint);
@@ -42232,32 +43387,21 @@ var syncClientBreakpoint = exports.syncClientBreakpoint = (() => {
     var existingClient = client.getBreakpointByLocation(generatedLocation);
 
     if (existingClient) {
-			const newGeneratedLocation = yield getGeneratedLocation(
-	      getState(),
-	      source,
-	      location,
-	      sourceMaps
-	    );
+      var _newGeneratedLocation = yield (0, _sourceMaps.getGeneratedLocation)(getState(), source, location, sourceMaps);
 
-	    if ((0, _breakpoint3.locationMoved)(generatedLocation, newGeneratedLocation)) {
-	      yield client.removeBreakpoint(generatedLocation);
-	      yield client.setBreakpoint(
-	        newGeneratedLocation,
-	        pendingBreakpoint.condition,
-	        sourceMaps.isOriginalId(sourceId)
-	      );
-	    }
+      if ((0, _breakpoint3.locationMoved)(generatedLocation, _newGeneratedLocation)) {
+        yield client.removeBreakpoint(generatedLocation);
+        yield client.setBreakpoint(_newGeneratedLocation, pendingBreakpoint.condition, sourceMaps.isOriginalId(sourceId));
+      }
 
-	    const breakpoint = {
-	      ...pendingBreakpoint,
-	      id: (0, _breakpoint3.makeLocationId)(location),
-	      generatedLocation: newGeneratedLocation,
-	      location: location
-	    };
+      var _breakpoint2 = _extends({}, pendingBreakpoint, {
+        id: (0, _breakpoint3.makeLocationId)(location),
+        generatedLocation: _newGeneratedLocation,
+        location: location
+      });
 
-	    (0, _breakpoint3.assertPendingBreakpoint)(breakpoint);
-	    return { breakpoint, previousLocation: location };
-
+      (0, _breakpoint3.assertBreakpoint)(_breakpoint2);
+      return { breakpoint: _breakpoint2, previousLocation: location };
     }
 
     /** ******* CASE 3: Add New Breakpoint ***********/
@@ -42278,12 +43422,14 @@ var syncClientBreakpoint = exports.syncClientBreakpoint = (() => {
     return { breakpoint, previousLocation: location };
   });
 
-  return function syncClientBreakpoint(_x, _x2, _x3, _x4) {
+  return function syncClientBreakpoint(_x, _x2, _x3, _x4, _x5) {
     return _ref.apply(this, arguments);
   };
 })();
 
 var _breakpoint3 = __webpack_require__(1057);
+
+var _sourceMaps = __webpack_require__(797);
 
 var _devtoolsSourceMap = __webpack_require__(898);
 
@@ -42415,7 +43561,7 @@ var _prefs = __webpack_require__(226);
 
 var _selectors = __webpack_require__(242);
 
-__webpack_require__(697);
+__webpack_require__(869);
 
 function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { default: obj }; }
 
@@ -42492,13 +43638,19 @@ class ProjectSearch extends _react.Component {
     var _props3 = this.props,
         sources = _props3.sources,
         selectSource = _props3.selectSource,
-        closeActiveSearch = _props3.closeActiveSearch;
+        closeActiveSearch = _props3.closeActiveSearch,
+        sourceSearchQuery = _props3.sourceSearchQuery,
+        setSourceSearchQuery = _props3.setSourceSearchQuery,
+        clearSourceSearchQuery = _props3.clearSourceSearchQuery;
 
     return _react2.default.createElement(_SourceSearch2.default, {
       sources: sources,
       selectSource: selectSource,
       closeActiveSearch: closeActiveSearch,
-      searchBottomBar: _react2.default.createElement(_ToggleSearch2.default, { kind: "sources", toggle: this.toggleProjectTextSearch })
+      searchBottomBar: _react2.default.createElement(_ToggleSearch2.default, { kind: "sources", toggle: this.toggleProjectTextSearch }),
+      query: sourceSearchQuery,
+      setQuery: setSourceSearchQuery,
+      clearQuery: clearSourceSearchQuery
     });
   }
 
@@ -42509,7 +43661,7 @@ class ProjectSearch extends _react.Component {
         searchSources = _props4.searchSources,
         closeActiveSearch = _props4.closeActiveSearch,
         selectSource = _props4.selectSource,
-        query = _props4.query;
+        textSearchQuery = _props4.textSearchQuery;
 
 
     return _react2.default.createElement(_TextSearch2.default, {
@@ -42518,7 +43670,7 @@ class ProjectSearch extends _react.Component {
       searchSources: searchSources,
       closeActiveSearch: closeActiveSearch,
       selectSource: selectSource,
-      query: query,
+      query: textSearchQuery,
       searchBottomBar: _react2.default.createElement(_ToggleSearch2.default, { kind: "project", toggle: this.toggleSourceSearch })
     });
   }
@@ -42539,12 +43691,15 @@ class ProjectSearch extends _react.Component {
 ProjectSearch.propTypes = {
   sources: _react.PropTypes.object.isRequired,
   results: _react.PropTypes.object,
-  query: _react.PropTypes.string,
+  textSearchQuery: _react.PropTypes.string,
   setActiveSearch: _react.PropTypes.func.isRequired,
   closeActiveSearch: _react.PropTypes.func.isRequired,
   searchSources: _react.PropTypes.func,
   activeSearch: _react.PropTypes.string,
-  selectSource: _react.PropTypes.func.isRequired
+  selectSource: _react.PropTypes.func.isRequired,
+  sourceSearchQuery: _react.PropTypes.string,
+  setSourceSearchQuery: _react.PropTypes.func,
+  clearSourceSearchQuery: _react.PropTypes.func
 };
 
 ProjectSearch.contextTypes = {
@@ -42557,7 +43712,8 @@ exports.default = (0, _reactRedux.connect)(state => ({
   sources: (0, _selectors.getSources)(state),
   activeSearch: (0, _selectors.getActiveSearchState)(state),
   results: (0, _selectors.getTextSearchResults)(state),
-  query: (0, _selectors.getTextSearchQuery)(state)
+  textSearchQuery: (0, _selectors.getTextSearchQuery)(state),
+  sourceSearchQuery: (0, _selectors.getSourceSearchQuery)(state)
 }), dispatch => (0, _redux.bindActionCreators)(_actions2.default, dispatch))(ProjectSearch);
 
 /***/ }),
@@ -42592,10 +43748,6 @@ class SourceSearch extends _react.Component {
     super(props);
 
     this.close = this.close.bind(this);
-
-    this.state = {
-      inputValue: ""
-    };
   }
 
   componentWillUnmount() {
@@ -42625,7 +43777,7 @@ class SourceSearch extends _react.Component {
   }
 
   close() {
-    this.setState({ inputValue: "" });
+    this.props.clearQuery();
     this.props.closeActiveSearch();
   }
 
@@ -42633,7 +43785,9 @@ class SourceSearch extends _react.Component {
     var _props = this.props,
         sources = _props.sources,
         searchBottomBar = _props.searchBottomBar,
-        selectSource = _props.selectSource;
+        selectSource = _props.selectSource,
+        query = _props.query,
+        setQuery = _props.setQuery;
 
     return _react2.default.createElement(
       _Autocomplete2.default,
@@ -42644,8 +43798,9 @@ class SourceSearch extends _react.Component {
         },
         close: this.close,
         items: this.searchResults(sources),
-        inputValue: this.state.inputValue,
+        inputValue: query,
         placeholder: L10N.getStr("sourceSearch.search"),
+        onChangeHandler: setQuery,
         size: "big"
       },
       searchBottomBar
@@ -42673,6 +43828,8 @@ Object.defineProperty(exports, "__esModule", {
 
 var _react = __webpack_require__(0);
 
+var _react2 = _interopRequireDefault(_react);
+
 var _redux = __webpack_require__(3);
 
 var _reactRedux = __webpack_require__(151);
@@ -42687,25 +43844,21 @@ var _selectors = __webpack_require__(242);
 
 var _devtoolsConfig = __webpack_require__(828);
 
-__webpack_require__(699);
+__webpack_require__(870);
 
 var _classnames = __webpack_require__(175);
 
 var _classnames2 = _interopRequireDefault(_classnames);
 
-var _Outline2 = __webpack_require__(1145);
+var _Outline = __webpack_require__(1145);
 
-var _Outline3 = _interopRequireDefault(_Outline2);
+var _Outline2 = _interopRequireDefault(_Outline);
 
-var _SourcesTree2 = __webpack_require__(1148);
+var _SourcesTree = __webpack_require__(1148);
 
-var _SourcesTree3 = _interopRequireDefault(_SourcesTree2);
+var _SourcesTree2 = _interopRequireDefault(_SourcesTree);
 
 function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { default: obj }; }
-
-var Outline = (0, _react.createFactory)(_Outline3.default);
-
-var SourcesTree = (0, _react.createFactory)(_SourcesTree3.default);
 
 class PrimaryPanes extends _react.Component {
 
@@ -42727,44 +43880,59 @@ class PrimaryPanes extends _react.Component {
       return;
     }
 
-    return [_react.DOM.div({
-      className: (0, _classnames2.default)("tab", {
-        active: this.state.selectedPane === "sources"
-      }),
-      onClick: () => this.showPane("sources"),
-      key: "sources-tab"
-    }, "Sources View"), _react.DOM.div({
-      className: (0, _classnames2.default)("tab", {
-        active: this.state.selectedPane === "outline"
-      }),
-      onClick: () => this.showPane("outline"),
-      key: "outline-tab"
-    }, "Outline View")];
+    return [_react2.default.createElement(
+      "div",
+      {
+        className: (0, _classnames2.default)("tab", {
+          active: this.state.selectedPane === "sources"
+        }),
+        onClick: () => this.showPane("sources"),
+        key: "sources-tab"
+      },
+      "Sources View"
+    ), _react2.default.createElement(
+      "div",
+      {
+        className: (0, _classnames2.default)("tab", {
+          active: this.state.selectedPane === "outline"
+        }),
+        onClick: () => this.showPane("outline"),
+        key: "outline-tab"
+      },
+      "Outline View"
+    )];
   }
 
   renderFooter() {
-    return _react.DOM.div({
-      className: "source-footer"
-    }, this.renderOutlineTabs());
+    return _react2.default.createElement(
+      "div",
+      { className: "source-footer" },
+      this.renderOutlineTabs()
+    );
   }
 
   renderShortcut() {
     if (this.props.horizontal) {
-      return _react.DOM.span({
-        className: "sources-header-info",
-        dir: "ltr",
-        onClick: () => {
-          if (this.props.sourceSearchOn) {
-            return this.props.closeActiveSearch();
-          }
-          this.props.setActiveSearch("source");
+      var onClick = () => {
+        if (this.props.sourceSearchOn) {
+          return this.props.closeActiveSearch();
         }
-      }, L10N.getFormatStr("sources.search", (0, _text.formatKeyShortcut)(L10N.getStr("sources.search.key2"))));
+        this.props.setActiveSearch("source");
+      };
+      return _react2.default.createElement(
+        "span",
+        { className: "sources-header-info", dir: "ltr", onClick: onClick },
+        L10N.getFormatStr("sources.search", (0, _text.formatKeyShortcut)(L10N.getStr("sources.search.key2")))
+      );
     }
   }
 
   renderHeader() {
-    return _react.DOM.div({ className: "sources-header" }, this.renderShortcut());
+    return _react2.default.createElement(
+      "div",
+      { className: "sources-header" },
+      this.renderShortcut()
+    );
   }
 
   render() {
@@ -42774,11 +43942,21 @@ class PrimaryPanes extends _react.Component {
         selectSource = _props.selectSource;
 
 
-    return _react.DOM.div({ className: "sources-panel" }, this.renderHeader(), SourcesTree({
-      sources,
-      selectSource,
-      isHidden: selectedPane === "outline"
-    }), Outline({ selectSource, isHidden: selectedPane === "sources" }), this.renderFooter());
+    return _react2.default.createElement(
+      "div",
+      { className: "sources-panel" },
+      this.renderHeader(),
+      _react2.default.createElement(_SourcesTree2.default, {
+        sources: sources,
+        selectSource: selectSource,
+        isHidden: selectedPane === "outline"
+      }),
+      _react2.default.createElement(_Outline2.default, {
+        selectSource: selectSource,
+        isHidden: selectedPane === "sources"
+      }),
+      this.renderFooter()
+    );
   }
 }
 
@@ -42790,8 +43968,121 @@ exports.default = (0, _reactRedux.connect)(state => ({
 }), dispatch => (0, _redux.bindActionCreators)(_actions2.default, dispatch))(PrimaryPanes);
 
 /***/ }),
-/* 1143 */,
-/* 1144 */,
+/* 1143 */
+/***/ (function(module, exports, __webpack_require__) {
+
+"use strict";
+
+
+Object.defineProperty(exports, "__esModule", {
+  value: true
+});
+exports.setSourceSearchQuery = setSourceSearchQuery;
+exports.clearSourceSearchQuery = clearSourceSearchQuery;
+function setSourceSearchQuery(queryString) {
+  return (_ref) => {
+    var dispatch = _ref.dispatch,
+        getState = _ref.getState;
+
+    dispatch({
+      type: "SET_QUERY_STRING",
+      queryString
+    });
+  };
+}
+
+function clearSourceSearchQuery() {
+  return (_ref2) => {
+    var dispatch = _ref2.dispatch,
+        getState = _ref2.getState;
+
+    dispatch({
+      type: "CLEAR_QUERY_STRING"
+    });
+  };
+}
+
+/***/ }),
+/* 1144 */
+/***/ (function(module, exports, __webpack_require__) {
+
+"use strict";
+
+
+Object.defineProperty(exports, "__esModule", {
+  value: true
+});
+
+var _reactRedux = __webpack_require__(151);
+
+var _redux = __webpack_require__(3);
+
+var _react = __webpack_require__(0);
+
+var _actions = __webpack_require__(244);
+
+var _actions2 = _interopRequireDefault(_actions);
+
+var _selectors = __webpack_require__(242);
+
+__webpack_require__(1146);
+
+function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { default: obj }; }
+
+class EmptyLines extends _react.Component {
+
+  componentDidMount() {
+    this.disableEmptyLines();
+  }
+
+  componentDidUpdate() {
+    this.disableEmptyLines();
+  }
+
+  componentWillUnmount() {
+    var _props = this.props,
+        emptyLines = _props.emptyLines,
+        editor = _props.editor;
+
+
+    if (!emptyLines) {
+      return;
+    }
+    editor.codeMirror.operation(() => {
+      emptyLines.forEach(line => editor.codeMirror.removeLineClass(line, "line", "empty-line"));
+    });
+  }
+
+  disableEmptyLines() {
+    var _props2 = this.props,
+        emptyLines = _props2.emptyLines,
+        editor = _props2.editor;
+
+
+    if (!emptyLines) {
+      return;
+    }
+    editor.codeMirror.operation(() => {
+      emptyLines.forEach(line => editor.codeMirror.addLineClass(line, "line", "empty-line"));
+    });
+  }
+
+  render() {
+    return null;
+  }
+}
+
+EmptyLines.displayName = "EmptyLines";
+
+exports.default = (0, _reactRedux.connect)(state => {
+  var selectedSource = (0, _selectors.getSelectedSource)(state);
+  return {
+    selectedSource,
+    emptyLines: selectedSource ? (0, _selectors.getEmptyLines)(state, selectedSource.toJS()) : []
+  };
+}, dispatch => (0, _redux.bindActionCreators)(_actions2.default, dispatch))(EmptyLines);
+
+/***/ }),
 /* 1145 */
 /***/ (function(module, exports, __webpack_require__) {
 
@@ -42801,6 +44092,7 @@ exports.default = (0, _reactRedux.connect)(state => ({
 Object.defineProperty(exports, "__esModule", {
   value: true
 });
+exports.Outline = undefined;
 
 var _react = __webpack_require__(0);
 
@@ -42822,20 +44114,15 @@ var _selectors = __webpack_require__(242);
 
 var _devtoolsConfig = __webpack_require__(828);
 
-__webpack_require__(700);
+__webpack_require__(871);
 
-var _previewFunction = __webpack_require__(701);
+var _PreviewFunction = __webpack_require__(798);
 
-var _previewFunction2 = _interopRequireDefault(_previewFunction);
+var _PreviewFunction2 = _interopRequireDefault(_PreviewFunction);
 
 function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { default: obj }; }
 
 class Outline extends _react.Component {
-
-  constructor(props) {
-    super(props);
-    this.state = {};
-  }
 
   selectItem(location) {
     var _props = this.props,
@@ -42862,7 +44149,7 @@ class Outline extends _react.Component {
         className: "outline-list__element",
         onClick: () => this.selectItem(location)
       },
-      (0, _previewFunction2.default)({ name })
+      _react2.default.createElement(_PreviewFunction2.default, { func: { name } })
     );
   }
 
@@ -42892,6 +44179,7 @@ class Outline extends _react.Component {
   }
 }
 
+exports.Outline = Outline;
 Outline.displayName = "Outline";
 
 exports.default = (0, _reactRedux.connect)(state => {
@@ -42903,8 +44191,73 @@ exports.default = (0, _reactRedux.connect)(state => {
 }, dispatch => (0, _redux.bindActionCreators)(_actions2.default, dispatch))(Outline);
 
 /***/ }),
-/* 1146 */,
-/* 1147 */,
+/* 1146 */
+/***/ (function(module, exports) {
+
+// removed by extract-text-webpack-plugin
+
+/***/ }),
+/* 1147 */
+/***/ (function(module, exports, __webpack_require__) {
+
+"use strict";
+
+
+Object.defineProperty(exports, "__esModule", {
+  value: true
+});
+exports.Workers = undefined;
+
+var _react = __webpack_require__(0);
+
+var _react2 = _interopRequireDefault(_react);
+
+__webpack_require__(1149);
+
+var _reactRedux = __webpack_require__(151);
+
+function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { default: obj }; }
+
+class Workers extends _react.PureComponent {
+  renderWorkers(workers) {
+    return workers.map(w => _react2.default.createElement(
+      "div",
+      null,
+      w
+    ));
+  }
+
+  renderNoWorkersPlaceholder() {
+    return L10N.getStr("noWorkersText");
+  }
+
+  render() {
+    var workers = this.props.workers;
+
+    return _react2.default.createElement(
+      "div",
+      { className: "pane" },
+      _react2.default.createElement(
+        "div",
+        { className: "pane-info" },
+        workers && workers.length > 0 ? this.renderWorkers(workers) : this.renderNoWorkersPlaceholder()
+      )
+    );
+  }
+}
+
+exports.Workers = Workers;
+Workers.displayName = "Workers";
+Workers.propTypes = {
+  workers: _react.PropTypes.array.isRequired
+};
+
+function mapStateToProps(state) {
+  return { workers: [] };
+}
+exports.default = (0, _reactRedux.connect)(mapStateToProps)(Workers);
+
+/***/ }),
 /* 1148 */
 /***/ (function(module, exports, __webpack_require__) {
 
@@ -42921,6 +44274,8 @@ var _reactRedux = __webpack_require__(151);
 
 var _react = __webpack_require__(0);
 
+var _react2 = _interopRequireDefault(_react);
+
 var _classnames = __webpack_require__(175);
 
 var _classnames2 = _interopRequireDefault(_classnames);
@@ -42935,9 +44290,9 @@ var _selectors = __webpack_require__(242);
 
 var _sourcesTree = __webpack_require__(39);
 
-var _ManagedTree2 = __webpack_require__(419);
+var _ManagedTree = __webpack_require__(419);
 
-var _ManagedTree3 = _interopRequireDefault(_ManagedTree2);
+var _ManagedTree2 = _interopRequireDefault(_ManagedTree);
 
 var _actions = __webpack_require__(244);
 
@@ -42954,8 +44309,6 @@ var _clipboard = __webpack_require__(423);
 var _utils = __webpack_require__(234);
 
 function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { default: obj }; }
-
-var ManagedTree = (0, _react.createFactory)(_ManagedTree3.default);
 
 class SourcesTree extends _react.Component {
 
@@ -43065,14 +44418,14 @@ class SourcesTree extends _react.Component {
 
   getIcon(item, depth) {
     if (depth === 0) {
-      return (0, _Svg2.default)("domain");
+      return _react2.default.createElement(_Svg2.default, { name: "domain" });
     }
 
     if (!(0, _sourcesTree.nodeHasChildren)(item)) {
-      return (0, _Svg2.default)("file");
+      return _react2.default.createElement(_Svg2.default, { name: "file" });
     }
 
-    return (0, _Svg2.default)("folder");
+    return _react2.default.createElement(_Svg2.default, { name: "folder" });
   }
 
   onContextMenu(event, item) {
@@ -43103,7 +44456,8 @@ class SourcesTree extends _react.Component {
   renderItem(item, depth, focused, _, expanded, _ref) {
     var setExpanded = _ref.setExpanded;
 
-    var arrow = (0, _Svg2.default)("arrow", {
+    var arrow = _react2.default.createElement(_Svg2.default, {
+      name: "arrow",
       className: (0, _classnames2.default)({
         expanded: expanded,
         hidden: !(0, _sourcesTree.nodeHasChildren)(item)
@@ -43120,16 +44474,26 @@ class SourcesTree extends _react.Component {
       paddingDir = document.body.parentElement.dir == "ltr" ? "paddingLeft" : "paddingRight";
     }
 
-    return _react.DOM.div({
-      className: (0, _classnames2.default)("node", { focused }),
-      style: { [paddingDir]: `${depth * 15}px` },
-      key: item.path,
-      onClick: () => {
-        this.selectItem(item);
-        setExpanded(item, !expanded);
+    return _react2.default.createElement(
+      "div",
+      {
+        className: (0, _classnames2.default)("node", { focused }),
+        style: { [paddingDir]: `${depth * 15}px` },
+        key: item.path,
+        onClick: () => {
+          this.selectItem(item);
+          setExpanded(item, !expanded);
+        },
+        onContextMenu: e => this.onContextMenu(e, item)
       },
-      onContextMenu: e => this.onContextMenu(e, item)
-    }, _react.DOM.div(null, arrow, icon, item.name));
+      _react2.default.createElement(
+        "div",
+        null,
+        arrow,
+        icon,
+        item.name
+      )
+    );
   }
 
   render() {
@@ -43144,17 +44508,10 @@ class SourcesTree extends _react.Component {
 
     var isEmpty = sourceTree.contents.length === 0;
 
-    var tree = ManagedTree({
+    var treeProps = {
       key: isEmpty ? "empty" : "full",
-      getParent: item => {
-        return parentMap.get(item);
-      },
-      getChildren: item => {
-        if ((0, _sourcesTree.nodeHasChildren)(item)) {
-          return item.contents;
-        }
-        return [];
-      },
+      getParent: item => parentMap.get(item),
+      getChildren: item => (0, _sourcesTree.nodeHasChildren)(item) ? item.contents : [],
       getRoots: () => sourceTree.contents,
       getPath: item => `${item.path}/${item.name}`,
       itemHeight: 21,
@@ -43164,23 +44521,32 @@ class SourcesTree extends _react.Component {
       listItems,
       highlightItems,
       renderItem: this.renderItem
-    });
+    };
 
-    var noSourcesMessage = _react.DOM.div({
-      className: "no-sources-message"
-    }, L10N.getStr("sources.noSourcesAvailable"));
+    var tree = _react2.default.createElement(_ManagedTree2.default, treeProps);
 
     if (isEmpty) {
-      return noSourcesMessage;
+      return _react2.default.createElement(
+        "div",
+        { className: "no-sources-message" },
+        L10N.getStr("sources.noSourcesAvailable")
+      );
     }
-    return _react.DOM.div({
-      className: (0, _classnames2.default)("sources-list", { hidden: isHidden }),
-      onKeyDown: e => {
-        if (e.keyCode === 13 && focusedItem) {
-          this.selectItem(focusedItem);
-        }
+
+    var onKeyDown = e => {
+      if (e.keyCode === 13 && focusedItem) {
+        this.selectItem(focusedItem);
       }
-    }, tree);
+    };
+
+    return _react2.default.createElement(
+      "div",
+      {
+        className: (0, _classnames2.default)("sources-list", { hidden: isHidden }),
+        onKeyDown: onKeyDown
+      },
+      tree
+    );
   }
 }
 
@@ -43204,7 +44570,12 @@ exports.default = (0, _reactRedux.connect)(state => {
 }, dispatch => (0, _redux.bindActionCreators)(_actions2.default, dispatch))(SourcesTree);
 
 /***/ }),
-/* 1149 */,
+/* 1149 */
+/***/ (function(module, exports) {
+
+// removed by extract-text-webpack-plugin
+
+/***/ }),
 /* 1150 */,
 /* 1151 */
 /***/ (function(module, exports, __webpack_require__) {
@@ -43275,7 +44646,7 @@ var _require = __webpack_require__(0),
     PropTypes = _require.PropTypes;
 
 var Tree = createFactory(__webpack_require__(1007).Tree);
-__webpack_require__(708);
+__webpack_require__(878);
 
 var classnames = __webpack_require__(175);
 var Svg = __webpack_require__(1151);
@@ -44169,12 +45540,14 @@ var _visibleBreakpoints2 = _interopRequireDefault(_visibleBreakpoints);
 
 var _breakpoint = __webpack_require__(1057);
 
+var _source = __webpack_require__(233);
+
 function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { default: obj }; }
 
 class Breakpoints extends _react.Component {
 
   shouldComponentUpdate(nextProps) {
-    if (nextProps.selectedSource && nextProps.selectedSource.get("loading")) {
+    if (nextProps.selectedSource && !(0, _source.isLoaded)(nextProps.selectedSource.toJS())) {
       return false;
     }
 
@@ -44229,6 +45602,8 @@ var _extends = Object.assign || function (target) { for (var i = 1; i < argument
 
 var _react = __webpack_require__(0);
 
+var _react2 = _interopRequireDefault(_react);
+
 var _reactRedux = __webpack_require__(151);
 
 var _redux = __webpack_require__(3);
@@ -44237,9 +45612,9 @@ var _devtoolsConfig = __webpack_require__(828);
 
 var _lodash = __webpack_require__(2);
 
-var _CallSite2 = __webpack_require__(1167);
+var _CallSite = __webpack_require__(1167);
 
-var _CallSite3 = _interopRequireDefault(_CallSite2);
+var _CallSite2 = _interopRequireDefault(_CallSite);
 
 var _selectors = __webpack_require__(242);
 
@@ -44250,8 +45625,6 @@ var _actions = __webpack_require__(244);
 var _actions2 = _interopRequireDefault(_actions);
 
 function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { default: obj }; }
-
-var CallSite = (0, _react.createFactory)(_CallSite3.default);
 
 function getCallSiteAtLocation(callSites, location) {
   return (0, _lodash.find)(callSites, callSite => (0, _lodash.isEqualWith)(callSite.location, location, (cloc, loc) => {
@@ -44312,7 +45685,7 @@ class CallSites extends _react.Component {
         selectedLocation = _props.selectedLocation;
 
 
-    if (!(0, _devtoolsConfig.isEnabled)("columnBreakpoints") || !e.altKey || !target.classList.contains("call-site") && !target.classList.contains("call-site-bp")) {
+    if (!(0, _devtoolsConfig.isEnabled)("columnBreakpoints") || !e.altKey && !target.classList.contains("call-site-bp") || !target.classList.contains("call-site") && !target.classList.contains("call-site-bp")) {
       return;
     }
 
@@ -44322,7 +45695,7 @@ class CallSites extends _react.Component {
         line = _getTokenLocation.line,
         column = _getTokenLocation.column;
 
-    this.toggleBreakpoint((0, _editor.toSourceLine)(sourceId, line), (0, _editor.isWasm)(sourceId) ? undefined : column - 2);
+    this.toggleBreakpoint(line, (0, _editor.isWasm)(sourceId) ? undefined : column);
   }
 
   toggleBreakpoint(line) {
@@ -44381,16 +45754,22 @@ class CallSites extends _react.Component {
     }
 
     editor.codeMirror.operation(() => {
-      sites = _react.DOM.div({}, callSites.map((callSite, index) => {
-        return CallSite({
+      var childCallSites = callSites.map((callSite, index) => {
+        var props = {
           key: index,
           callSite,
           editor,
           source: selectedSource,
           breakpoint: callSite.breakpoint,
           showCallSite: showCallSites
-        });
-      }));
+        };
+        return _react2.default.createElement(_CallSite2.default, props);
+      });
+      sites = _react2.default.createElement(
+        "div",
+        null,
+        childCallSites
+      );
     });
     return sites;
   }
@@ -44478,7 +45857,7 @@ var _react = __webpack_require__(0);
 
 var _editor = __webpack_require__(257);
 
-__webpack_require__(713);
+__webpack_require__(882);
 
 class CallSite extends _react.Component {
 
@@ -44536,9 +45915,11 @@ class CallSite extends _react.Component {
 
     if (nextProps.breakpoint !== breakpoint) {
       if (this.marker) {
-        this.marker.clear();
+        this.clearCallSite();
       }
-      this.addCallSite(nextProps);
+      if (nextProps.showCallSite) {
+        this.addCallSite(nextProps);
+      }
     }
 
     if (nextProps.showCallSite !== showCallSite) {
@@ -44610,7 +45991,7 @@ var _ResultList = __webpack_require__(383);
 
 var _ResultList2 = _interopRequireDefault(_ResultList);
 
-__webpack_require__(738);
+__webpack_require__(962);
 
 function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { default: obj }; }
 
