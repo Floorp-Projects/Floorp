@@ -39,9 +39,12 @@ using namespace gfx;
 SurfaceDescriptorGPUVideo
 VideoDecoderManagerParent::StoreImage(Image* aImage, TextureClient* aTexture)
 {
-  mImageMap[aTexture->GetSerial()] = aImage;
-  mTextureMap[aTexture->GetSerial()] = aTexture;
-  return SurfaceDescriptorGPUVideo(aTexture->GetSerial());
+  SurfaceDescriptorGPUVideo ret;
+  aTexture->GPUVideoDesc(&ret);
+
+  mImageMap[ret.handle()] = aImage;
+  mTextureMap[ret.handle()] = aTexture;
+  return Move(ret);
 }
 
 StaticRefPtr<nsIThread> sVideoDecoderManagerThread;

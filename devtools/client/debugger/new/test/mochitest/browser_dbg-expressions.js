@@ -20,6 +20,16 @@ function getValue(dbg, index) {
   return findElement(dbg, "expressionValue", index).innerText;
 }
 
+function assertEmptyValue(dbg, index) {
+  const value = findElement(dbg, "expressionValue", index);
+  if (value) {
+    is(value.innerText, "");
+    return;
+  }
+
+  is(value, null);
+}
+
 function toggleExpression(dbg, index) {
   findElement(dbg, "expressionNode", index).click();
 }
@@ -55,8 +65,9 @@ add_task(function*() {
 
   yield editExpression(dbg, "oo");
   is(getLabel(dbg, 1), "foo()");
+
   // There is no "value" element for functions.
-  is(findElement(dbg, "expressionValue", 1), null);
+  assertEmptyValue(dbg, 1);
 
   yield addExpression(dbg, "location");
   is(getLabel(dbg, 2), "location");
@@ -68,5 +79,6 @@ add_task(function*() {
 
   yield deleteExpression(dbg, "foo");
   yield deleteExpression(dbg, "location");
+
   is(findAllElements(dbg, "expressionNodes").length, 0);
 });

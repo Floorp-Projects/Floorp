@@ -65,11 +65,12 @@ SharedSurface::ProdCopy(SharedSurface* src, SharedSurface* dest,
             GLuint destTex = dest->ProdTexture();
             GLenum destTarget = dest->ProdTextureTarget();
 
-            gl->BlitHelper()->BlitFramebufferToTexture(0, destTex,
+            const ScopedBindFramebuffer bindFB(gl, 0);
+
+            gl->BlitHelper()->BlitFramebufferToTexture(destTex,
                                                        src->mSize,
                                                        dest->mSize,
-                                                       destTarget,
-                                                       true);
+                                                       destTarget);
         } else if (dest->mAttachType == AttachmentType::GLRenderbuffer) {
             GLuint destRB = dest->ProdRenderbuffer();
             ScopedFramebufferForRenderbuffer destWrapper(gl, destRB);
@@ -77,8 +78,7 @@ SharedSurface::ProdCopy(SharedSurface* src, SharedSurface* dest,
             gl->BlitHelper()->BlitFramebufferToFramebuffer(0,
                                                            destWrapper.FB(),
                                                            src->mSize,
-                                                           dest->mSize,
-                                                           true);
+                                                           dest->mSize);
         } else {
             MOZ_CRASH("GFX: Unhandled dest->mAttachType 1.");
         }
@@ -110,11 +110,12 @@ SharedSurface::ProdCopy(SharedSurface* src, SharedSurface* dest,
             GLuint srcTex = src->ProdTexture();
             GLenum srcTarget = src->ProdTextureTarget();
 
-            gl->BlitHelper()->BlitTextureToFramebuffer(srcTex, 0,
+            const ScopedBindFramebuffer bindFB(gl, 0);
+
+            gl->BlitHelper()->BlitTextureToFramebuffer(srcTex,
                                                        src->mSize,
                                                        dest->mSize,
-                                                       srcTarget,
-                                                       !!gl->Screen());
+                                                       srcTarget);
         } else if (src->mAttachType == AttachmentType::GLRenderbuffer) {
             GLuint srcRB = src->ProdRenderbuffer();
             ScopedFramebufferForRenderbuffer srcWrapper(gl, srcRB);
@@ -122,8 +123,7 @@ SharedSurface::ProdCopy(SharedSurface* src, SharedSurface* dest,
             gl->BlitHelper()->BlitFramebufferToFramebuffer(srcWrapper.FB(),
                                                            0,
                                                            src->mSize,
-                                                           dest->mSize,
-                                                           true);
+                                                           dest->mSize);
         } else {
             MOZ_CRASH("GFX: Unhandled src->mAttachType 2.");
         }
@@ -158,9 +158,9 @@ SharedSurface::ProdCopy(SharedSurface* src, SharedSurface* dest,
         if (dest->mAttachType == AttachmentType::GLRenderbuffer) {
             GLuint destRB = dest->ProdRenderbuffer();
             ScopedFramebufferForRenderbuffer destWrapper(gl, destRB);
-
-            gl->BlitHelper()->BlitTextureToFramebuffer(srcTex, destWrapper.FB(),
-                                                       src->mSize, dest->mSize, srcTarget);
+            const ScopedBindFramebuffer bindFB(gl, destWrapper.FB());
+            gl->BlitHelper()->BlitTextureToFramebuffer(srcTex, src->mSize, dest->mSize,
+                                                       srcTarget);
 
             return;
         }
@@ -175,9 +175,10 @@ SharedSurface::ProdCopy(SharedSurface* src, SharedSurface* dest,
         if (dest->mAttachType == AttachmentType::GLTexture) {
             GLuint destTex = dest->ProdTexture();
             GLenum destTarget = dest->ProdTextureTarget();
+            const ScopedBindFramebuffer bindFB(gl, srcWrapper.FB());
 
-            gl->BlitHelper()->BlitFramebufferToTexture(srcWrapper.FB(), destTex,
-                                                       src->mSize, dest->mSize, destTarget);
+            gl->BlitHelper()->BlitFramebufferToTexture(destTex, src->mSize, dest->mSize,
+                                                       destTarget);
 
             return;
         }

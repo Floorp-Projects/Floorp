@@ -12,10 +12,14 @@
 #include "ImageContainer.h"
 
 namespace mozilla {
+namespace gl {
+class GLBlitHelper;
+}
 namespace layers {
 
 class ImageContainer;
 class DXGIYCbCrTextureClient;
+class DXGIYCbCrTextureData;
 
 class D3D11YCbCrRecycleAllocator : public TextureClientRecycleAllocator
 {
@@ -46,6 +50,7 @@ protected:
 
 class D3D11YCbCrImage : public Image
 {
+  friend class gl::GLBlitHelper;
 public:
   D3D11YCbCrImage();
   virtual ~D3D11YCbCrImage();
@@ -65,6 +70,8 @@ public:
   gfx::IntRect GetPictureRect() override { return mPictureRect; }
 
 private:
+  const DXGIYCbCrTextureData* GetData() const;
+
   gfx::IntSize mYSize;
   gfx::IntSize mCbCrSize;
   gfx::IntRect mPictureRect;
