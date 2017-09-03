@@ -27,9 +27,9 @@ public:
   RefPtr<DecodePromise> Drain() override;
   RefPtr<FlushPromise> Flush() override;
   RefPtr<ShutdownPromise> Shutdown() override;
-  nsCString GetDescriptionName() const override
+  const char* GetDescriptionName() const override
   {
-    return NS_LITERAL_CSTRING("libvpx video decoder");
+    return "libvpx video decoder";
   }
 
   enum Codec: uint8_t

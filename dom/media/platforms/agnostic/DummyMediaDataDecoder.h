@@ -29,7 +29,7 @@ class DummyMediaDataDecoder : public MediaDataDecoder
 {
 public:
   DummyMediaDataDecoder(UniquePtr<DummyDataCreator>&& aCreator,
-                        const nsACString& aDescription,
+                        const char* aDescription,
                         const CreateDecoderParams& aParams);
 
   RefPtr<InitPromise> Init() override;
@@ -42,7 +42,7 @@ public:
 
   RefPtr<FlushPromise> Flush() override;
 
-  nsCString GetDescriptionName() const override;
+  const char* GetDescriptionName() const override;
 
   ConversionRequired NeedsConversion() const override;
 

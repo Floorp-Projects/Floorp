@@ -24,9 +24,9 @@ public:
   RefPtr<DecodePromise> Drain() override;
   RefPtr<FlushPromise> Flush() override;
   RefPtr<ShutdownPromise> Shutdown() override;
-  nsCString GetDescriptionName() const override
+  const char* GetDescriptionName() const override
   {
-    return NS_LITERAL_CSTRING("av1 libaom video decoder");
+    return "libaom (AV1) video decoder";
   }
 
   // Return true if aMimeType is a one of the strings used
