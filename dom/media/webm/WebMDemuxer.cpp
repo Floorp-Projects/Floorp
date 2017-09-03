@@ -323,13 +323,13 @@ WebMDemuxer::ReadMetadata()
       mVideoCodec = nestegg_track_codec_id(context, track);
       switch(mVideoCodec) {
         case NESTEGG_CODEC_VP8:
-          mInfo.mVideo.mMimeType = "video/vp8";
+          mInfo.mVideo.mMimeType = "video/webm; codecs=vp8";
           break;
         case NESTEGG_CODEC_VP9:
-          mInfo.mVideo.mMimeType = "video/vp9";
+          mInfo.mVideo.mMimeType = "video/webm; codecs=vp9";
           break;
         case NESTEGG_CODEC_AV1:
-          mInfo.mVideo.mMimeType = "video/av1";
+          mInfo.mVideo.mMimeType = "video/webm; codecs=av1";
           break;
         default:
           NS_WARNING("Unknown WebM video codec");
