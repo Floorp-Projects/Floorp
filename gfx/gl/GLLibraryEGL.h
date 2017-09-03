@@ -300,6 +300,9 @@ public:
         WRAP(   fQueryStreamKHR(dpy, stream, attribute, value) )
 
     // KHR_stream_consumer_gltexture
+    EGLBoolean  fStreamConsumerGLTextureExternalKHR(EGLDisplay dpy, EGLStreamKHR stream) const
+        WRAP(   fStreamConsumerGLTextureExternalKHR(dpy, stream) )
+
     EGLBoolean  fStreamConsumerAcquireKHR(EGLDisplay dpy, EGLStreamKHR stream) const
         WRAP(   fStreamConsumerAcquireKHR(dpy, stream) )
 
@@ -467,6 +470,8 @@ private:
                                                   EGLenum attribute,
                                                   EGLint* value);
         // KHR_stream_consumer_gltexture
+        EGLBoolean (GLAPIENTRY * fStreamConsumerGLTextureExternalKHR)(EGLDisplay dpy,
+                                                                      EGLStreamKHR stream);
         EGLBoolean (GLAPIENTRY * fStreamConsumerAcquireKHR)(EGLDisplay dpy,
                                                             EGLStreamKHR stream);
         EGLBoolean (GLAPIENTRY * fStreamConsumerReleaseKHR)(EGLDisplay dpy,
