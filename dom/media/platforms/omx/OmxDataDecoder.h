@@ -70,9 +70,9 @@ public:
   RefPtr<FlushPromise> Flush() override;
   RefPtr<ShutdownPromise> Shutdown() override;
 
-  nsCString GetDescriptionName() const override
+  const char* GetDescriptionName() const override
   {
-    return NS_LITERAL_CSTRING("omx decoder");
+    return "omx decoder";
   }
 
   ConversionRequired NeedsConversion() const override

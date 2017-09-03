@@ -91,10 +91,10 @@ ChromiumCDMVideoDecoder::Init()
     });
 }
 
-nsCString
+const char*
 ChromiumCDMVideoDecoder::GetDescriptionName() const
 {
-  return NS_LITERAL_CSTRING("chromium cdm video decoder");
+  return "Chromium CDM video decoder";
 }
 
 MediaDataDecoder::ConversionRequired

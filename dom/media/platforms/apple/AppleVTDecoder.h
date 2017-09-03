@@ -53,11 +53,11 @@ public:
     return mIsHardwareAccelerated;
   }
 
-  nsCString GetDescriptionName() const override
+  const char* GetDescriptionName() const override
   {
     return mIsHardwareAccelerated
-           ? NS_LITERAL_CSTRING("apple hardware VT decoder")
-           : NS_LITERAL_CSTRING("apple software VT decoder");
+           ? "apple hardware VT decoder"
+           : "apple software VT decoder";
   }
 
   ConversionRequired NeedsConversion() const override

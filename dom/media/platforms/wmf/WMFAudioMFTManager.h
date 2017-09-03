@@ -36,9 +36,9 @@ public:
     return TrackInfo::kAudioTrack;
   }
 
-  nsCString GetDescriptionName() const override
+  const char* GetDescriptionName() const override
   {
-    return NS_LITERAL_CSTRING("wmf audio decoder");
+    return "wmf audio decoder";
   }
 
 private:

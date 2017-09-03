@@ -26,7 +26,7 @@ public:
   RefPtr<FlushPromise> Flush() override;
   RefPtr<DecodePromise> Drain() override;
   RefPtr<ShutdownPromise> Shutdown() override;
-  nsCString GetDescriptionName() const override;
+  const char* GetDescriptionName() const override;
   ConversionRequired NeedsConversion() const override;
 
 private:
