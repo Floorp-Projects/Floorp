@@ -11,8 +11,7 @@
 
 namespace mozilla {
 
-class AppleDecoderModule : public PlatformDecoderModule
-{
+class AppleDecoderModule : public PlatformDecoderModule {
 public:
   AppleDecoderModule();
   virtual ~AppleDecoderModule();
