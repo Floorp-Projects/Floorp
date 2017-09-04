@@ -127,26 +127,26 @@ const substitutions = [
                                          s: "\\1c \\1d \\1e \\1f  " },
 
   // U+007F (DELETE) and U+0080 - U+009F (C1 controls)
-  { t: "\\\x7f\\\x80\\\x81\\\x82",       i: "\\7f \\80 \\81 \\82 ",
-                                         s: "\\7f \\80 \\81 \\82 " },
-  { t: "\\\x83\\\x84\\\x85\\\x86",       i: "\\83 \\84 \\85 \\86 ",
-                                         s: "\\83 \\84 \\85 \\86 " },
-  { t: "\\\x87\\\x88\\\x89\\\x8A",       i: "\\87 \\88 \\89 \\8a ",
-                                         s: "\\87 \\88 \\89 \\8a " },
-  { t: "\\\x8B\\\x8C\\\x8D\\\x8E",       i: "\\8b \\8c \\8d \\8e ",
-                                         s: "\\8b \\8c \\8d \\8e " },
-  { t: "\\\x8F\\\x90\\\x91\\\x92",       i: "\\8f \\90 \\91 \\92 ",
-                                         s: "\\8f \\90 \\91 \\92 " },
-  { t: "\\\x93\\\x94\\\x95\\\x96",       i: "\\93 \\94 \\95 \\96 ",
-                                         s: "\\93 \\94 \\95 \\96 " },
-  { t: "\\\x97\\\x98\\\x99\\\x9A",       i: "\\97 \\98 \\99 \\9a ",
-                                         s: "\\97 \\98 \\99 \\9a " },
-  { t: "\\\x9B\\\x9C\\\x9D\\\x9E\\\x9F", i: "\\9b \\9c \\9d \\9e \\9f ",
-                                         s: "\\9b \\9c \\9d \\9e \\9f " },
+  { t: "\\\x7f\\\x80\\\x81\\\x82",       i: "\\7f \x80\x81\x82",
+                                         s: "\\7f \x80\x81\x82" },
+  { t: "\\\x83\\\x84\\\x85\\\x86",       i: "\x83\x84\x85\x86",
+                                         s: "\x83\x84\x85\x86" },
+  { t: "\\\x87\\\x88\\\x89\\\x8A",       i: "\x87\x88\x89\x8A",
+                                         s: "\x87\x88\x89\x8A" },
+  { t: "\\\x8B\\\x8C\\\x8D\\\x8E",       i: "\x8B\x8C\x8D\x8E",
+                                         s: "\x8B\x8C\x8D\x8E" },
+  { t: "\\\x8F\\\x90\\\x91\\\x92",       i: "\x8F\x90\x91\x92",
+                                         s: "\x8F\x90\x91\x92" },
+  { t: "\\\x93\\\x94\\\x95\\\x96",       i: "\x93\x94\x95\x96",
+                                         s: "\x93\x94\x95\x96" },
+  { t: "\\\x97\\\x98\\\x99\\\x9A",       i: "\x97\x98\x99\x9A",
+                                         s: "\x97\x98\x99\x9A" },
+  { t: "\\\x9B\\\x9C\\\x9D\\\x9E\\\x9F", i: "\x9B\x9C\x9D\x9E\x9F",
+                                         s: "\x9B\x9C\x9D\x9E\x9F" },
 
   // CSS doesn't bother with the full Unicode rules for identifiers,
   // instead declaring that any code point greater than or equal to
-  // U+00A0 is a valid identifier character.  Test a small handful
+  // U+0080 is a valid identifier character.  Test a small handful
   // of both basic and astral plane characters.
 
   // Arabic (caution to editors: there is a possibly-invisible U+200E
