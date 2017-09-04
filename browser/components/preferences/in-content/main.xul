@@ -910,7 +910,7 @@
               preference="browser.preferences.defaultPerformanceSettings.enabled"/>
     <label id="performanceSettingsLearnMore" class="learnMore text-link">&performanceSettingsLearnMore.label;</label>
   </hbox>
-  <description class="indent">&useRecommendedPerformanceSettings2.description;</description>
+  <description class="indent tip-caption">&useRecommendedPerformanceSettings2.description;</description>
 
   <vbox id="performanceSettings" class="indent" hidden="true">
     <checkbox id="allowHWAccel"
@@ -931,8 +931,8 @@
         </menupopup>
       </menulist>
     </hbox>
-    <description id="contentProcessCountEnabledDescription">&limitContentProcessOption.description;</description>
-    <description id="contentProcessCountDisabledDescription">&limitContentProcessOption.disabledDescription;<label class="text-link" href="https://wiki.mozilla.org/Electrolysis">&limitContentProcessOption.disabledDescriptionLink;</label></description>
+    <description id="contentProcessCountEnabledDescription" class="tip-caption">&limitContentProcessOption.description;</description>
+    <description id="contentProcessCountDisabledDescription" class="tip-caption">&limitContentProcessOption.disabledDescription;<label class="text-link" href="https://wiki.mozilla.org/Electrolysis">&limitContentProcessOption.disabledDescriptionLink;</label></description>
   </vbox>
 </groupbox>
 
