@@ -384,7 +384,7 @@ class GetNextTokenRunnable final : public mozilla::Runnable
             // Use negotiate service to call GenerateCredentials outside of main thread
             nsAutoCString contractId;
             contractId.AssignLiteral(NS_HTTP_AUTHENTICATOR_CONTRACTID_PREFIX);
-            contractId.Append("negotiate");
+            contractId.AppendLiteral("negotiate");
             nsCOMPtr<nsIHttpAuthenticator> authenticator =
               do_GetService(contractId.get(), &rv);
             NS_ENSURE_SUCCESS(rv, rv);

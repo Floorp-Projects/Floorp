@@ -1343,11 +1343,11 @@ StyleRule::List(FILE* out, int32_t aIndent) const
     if (sheet) {
       nsIURI* uri = sheet->GetSheetURI();
       if (uri) {
-        str.Append(" /* ");
+        str.AppendLiteral(" /* ");
         str.Append(uri->GetSpecOrDefault());
         str.Append(':');
         str.AppendInt(mLineNumber);
-        str.Append(" */");
+        str.AppendLiteral(" */");
       }
     }
   }

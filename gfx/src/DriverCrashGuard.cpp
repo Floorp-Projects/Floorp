@@ -191,7 +191,7 @@ DriverCrashGuard::GetGuardFile()
 
   nsCString filename;
   filename.Assign(sCrashGuardNames[size_t(mType)]);
-  filename.Append(".guard");
+  filename.AppendLiteral(".guard");
 
   nsCOMPtr<nsIFile> file;
   NS_GetSpecialDirectory(NS_APP_USER_PROFILE_LOCAL_50_DIR, getter_AddRefs(file));

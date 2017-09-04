@@ -75,7 +75,7 @@ ExpandedPrincipal::Create(nsTArray<nsCOMPtr<nsIPrincipal>>& aWhiteList,
     MOZ_ASSERT(NS_SUCCEEDED(rv));
     origin.Append(subOrigin);
   }
-  origin.Append("]]");
+  origin.AppendLiteral("]]");
 
   ep->FinishInit(origin, aAttrs);
   return ep.forget();
@@ -198,7 +198,7 @@ ExpandedPrincipal::GetScriptLocation(nsACString& aStr)
 
     aStr.Append(spec);
   }
-  aStr.Append("]]");
+  aStr.AppendLiteral("]]");
   return NS_OK;
 }
 

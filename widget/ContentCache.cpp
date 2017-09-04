@@ -44,13 +44,13 @@ public:
   {
     AssignLiteral("{ x=");
     AppendInt(aRect.x);
-    Append(", y=");
+    AppendLiteral(", y=");
     AppendInt(aRect.y);
-    Append(", width=");
+    AppendLiteral(", width=");
     AppendInt(aRect.width);
-    Append(", height=");
+    AppendLiteral(", height=");
     AppendInt(aRect.height);
-    Append(" }");
+    AppendLiteral(" }");
   }
   virtual ~GetRectText() {}
 };
