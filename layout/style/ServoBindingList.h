@@ -226,8 +226,9 @@ SERVO_BINDING_FUNC(Servo_KeyframesRule_SetName, void,
                    RawServoKeyframesRuleBorrowed rule, nsIAtom* name)
 SERVO_BINDING_FUNC(Servo_KeyframesRule_GetCount, uint32_t,
                    RawServoKeyframesRuleBorrowed rule)
-SERVO_BINDING_FUNC(Servo_KeyframesRule_GetKeyframe, RawServoKeyframeStrong,
-                   RawServoKeyframesRuleBorrowed rule, uint32_t index)
+SERVO_BINDING_FUNC(Servo_KeyframesRule_GetKeyframeAt, RawServoKeyframeStrong,
+                   RawServoKeyframesRuleBorrowed rule, uint32_t index,
+                   uint32_t* line, uint32_t* column)
 // Returns the index of the rule, max value of uint32_t if nothing found.
 SERVO_BINDING_FUNC(Servo_KeyframesRule_FindRule, uint32_t,
                    RawServoKeyframesRuleBorrowed rule, const nsACString* key)
