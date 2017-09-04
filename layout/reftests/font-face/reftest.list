@@ -86,8 +86,8 @@ random-if(cocoaWidget) HTTP(..) == sheet-set-switch-1.html sheet-set-switch-1-re
 HTTP(..) == insert-rule-1a.html insert-rule-1-ref.html
 HTTP(..) == insert-rule-1b.html insert-rule-1-ref.html
 HTTP(..) == delete-rule-1.html delete-rule-1-ref.html
-random-if(styloVsGecko) HTTP(..) == media-query-add-1.html media-query-add-1-ref.html
-random-if(styloVsGecko) HTTP(..) == media-query-remove-1.html media-query-remove-1-ref.html
+skip-if(styloVsGecko) HTTP(..) == media-query-add-1.html media-query-add-1-ref.html # skip styloVsGecko for imperceptible pixel rounding differences between Stylo and Gecko
+skip-if(styloVsGecko) HTTP(..) == media-query-remove-1.html media-query-remove-1-ref.html # skip styloVsGecko for imperceptible pixel rounding differences between Stylo and Gecko
 HTTP(..) != media-query-add-1-ref.html media-query-remove-1-ref.html
 
 HTTP(..) == ahem-metrics-1.html ahem-metrics-1-ref.html
