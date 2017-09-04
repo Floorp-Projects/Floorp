@@ -56,15 +56,17 @@ void VideoFrameUtils::CopyVideoFrameBuffers(uint8_t* aDestBuffer,
   MOZ_ASSERT(aDestBufferSize >= aggregateSize);
 
   // If planes are ordered YUV and contiguous then do a single copy
-  if ((aFrame.video_frame_buffer()->DataY() != nullptr)
+  if ((aFrame.video_frame_buffer()->DataY() != nullptr) &&
       // Check that the three planes are ordered
-      && (aFrame.video_frame_buffer()->DataY() < aFrame.video_frame_buffer()->DataU())
-      && (aFrame.video_frame_buffer()->DataU() < aFrame.video_frame_buffer()->DataV())
+      (aFrame.video_frame_buffer()->DataY()
+       < aFrame.video_frame_buffer()->DataU()) &&
+      (aFrame.video_frame_buffer()->DataU()
+       < aFrame.video_frame_buffer()->DataV()) &&
       //  Check that the last plane ends at firstPlane[totalsize]
-      && (&aFrame.video_frame_buffer()->DataY()[aggregateSize] ==
-          &aFrame.video_frame_buffer()->DataV()[((aFrame.video_frame_buffer()->height()+1)/2) *
-                                                aFrame.video_frame_buffer()->StrideV()]))
-  {
+      (&aFrame.video_frame_buffer()->DataY()[aggregateSize] ==
+       &aFrame.video_frame_buffer()
+          ->DataV()[((aFrame.video_frame_buffer()->height() + 1) / 2)
+                    * aFrame.video_frame_buffer()->StrideV()])) {
     memcpy(aDestBuffer, aFrame.video_frame_buffer()->DataY(), aggregateSize);
     return;
   }

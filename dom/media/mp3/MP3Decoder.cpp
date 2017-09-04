@@ -21,12 +21,10 @@ MP3Decoder::IsEnabled() {
 /* static */
 bool MP3Decoder::IsSupportedType(const MediaContainerType& aContainerType)
 {
-  if (aContainerType.Type() == MEDIAMIMETYPE("audio/mp3")
-      || aContainerType.Type() == MEDIAMIMETYPE("audio/mpeg")) {
-    return
-      IsEnabled()
-      && (aContainerType.ExtendedType().Codecs().IsEmpty()
-          || aContainerType.ExtendedType().Codecs() == "mp3");
+  if (aContainerType.Type() == MEDIAMIMETYPE("audio/mp3") ||
+      aContainerType.Type() == MEDIAMIMETYPE("audio/mpeg")) {
+    return IsEnabled() && (aContainerType.ExtendedType().Codecs().IsEmpty() ||
+                           aContainerType.ExtendedType().Codecs() == "mp3");
   }
   return false;
 }

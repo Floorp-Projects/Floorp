@@ -360,8 +360,8 @@ MediaEngineWebRTCMicrophoneSource::UpdateSingleSource(
         mAudioInput->GetChannelCount(channelCount);
         MOZ_ASSERT(channelCount > 0 && mLastPrefs.mChannels > 0);
         // Check if new validated channels is the same as previous
-        if (static_cast<uint32_t>(mLastPrefs.mChannels) != channelCount
-            && !source->OpenNewAudioCallbackDriver(mListener)) {
+        if (static_cast<uint32_t>(mLastPrefs.mChannels) != channelCount &&
+            !source->OpenNewAudioCallbackDriver(mListener)) {
           return NS_ERROR_FAILURE;
         }
         // Update settings

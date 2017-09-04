@@ -401,12 +401,12 @@ FrameParser::VBRHeader::IsValid() const
 bool
 FrameParser::VBRHeader::IsComplete() const
 {
-  return IsValid()
-         && mNumAudioFrames.valueOr(0) > 0
-         && mNumBytes.valueOr(0) > 0
+  return IsValid() &&
+         mNumAudioFrames.valueOr(0) > 0 &&
+         mNumBytes.valueOr(0) > 0
          // We don't care about the scale for any computations here.
          // && mScale < 101
-         && true;
+         ;
 }
 
 int64_t
@@ -699,8 +699,8 @@ ID3Parser::ID3Header::IsValid(int aPos) const
       // Expecting "ID3".
       return id3_header::ID[aPos] == c;
     case 3:
-      return MajorVersion() >= id3_header::MIN_MAJOR_VER
-             && MajorVersion() <= id3_header::MAX_MAJOR_VER;
+      return MajorVersion() >= id3_header::MIN_MAJOR_VER &&
+             MajorVersion() <= id3_header::MAX_MAJOR_VER;
     case 4:
       return MinorVersion() < 0xFF;
     case 5:
@@ -721,8 +721,8 @@ ID3Parser::ID3Header::IsValid() const
 bool
 ID3Parser::ID3Header::Update(uint8_t c)
 {
-  if (mPos >= id3_header::SIZE_END - id3_header::SIZE_LEN
-      && mPos < id3_header::SIZE_END) {
+  if (mPos >= id3_header::SIZE_END - id3_header::SIZE_LEN &&
+      mPos < id3_header::SIZE_END) {
     mSize <<= 7;
     mSize |= c;
   }
