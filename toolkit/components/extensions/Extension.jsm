@@ -1496,7 +1496,7 @@ this.Langpack = class extends ExtensionData {
     // If there is one, add it with the name `toolkit` as a FileSource.
     const entries = await this.readDirectory("./localization");
     if (entries.length > 0) {
-      l10nRegistrySources["toolkit"] = "";
+      l10nRegistrySources.toolkit = "";
     }
 
     // Add any additional sources listed in the manifest
@@ -1573,4 +1573,4 @@ this.Langpack = class extends ExtensionData {
     }
     return chromeEntries;
   }
-}
+};
