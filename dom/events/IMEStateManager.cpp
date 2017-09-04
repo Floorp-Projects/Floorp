@@ -266,6 +266,17 @@ IMEStateManager::NotifyIMEOfBlurForChildProcess()
   }
 
   MOZ_ASSERT(sFocusedIMEWidget);
+
+  if (MOZ_LOG_TEST(sISMLog, LogLevel::Debug) && sTextCompositions) {
+    RefPtr<TextComposition> composition =
+      sTextCompositions->GetCompositionFor(sFocusedIMEWidget);
+    if (composition) {
+      MOZ_LOG(sISMLog, LogLevel::Debug,
+        ("  NotifyIMEOfBlurForChildProcess(), sFocusedIMEWidget still has "
+         "composition"));
+    }
+  }
+
   NotifyIME(NOTIFY_IME_OF_BLUR, sFocusedIMEWidget, sFocusedIMETabParent);
 
   MOZ_ASSERT(!sFocusedIMETabParent);
@@ -486,9 +497,12 @@ IMEStateManager::OnChangeFocusInternal(nsPresContext* aPresContext,
     if (composition) {
       // However, don't commit the composition if we're being inactivated
       // but the composition should be kept even during deactive.
+      // Note that oldWidget and sFocusedIMEWidget may be different here (in
+      // such case, sFocusedIMEWidget is perhaps nullptr).  For example, IME
+      // may receive only blur notification but still has composition.
+      // We need to clean up only the oldWidget's composition state here.
       if (aPresContext ||
-          !sFocusedIMEWidget->IMENotificationRequestsRef().
-           WantDuringDeactive()) {
+          !oldWidget->IMENotificationRequestsRef().WantDuringDeactive()) {
         MOZ_LOG(sISMLog, LogLevel::Info,
           ("  OnChangeFocusInternal(), requesting to commit composition to "
            "the (previous) focused widget"));
