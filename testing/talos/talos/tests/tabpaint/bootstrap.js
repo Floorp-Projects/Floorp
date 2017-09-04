@@ -133,7 +133,7 @@ var TabPaint = {
    *            The time (ms) it took to present a tab that
    *            was opened from content.
    */
-  go: Task.async(function*(gBrowser) {
+  go: Task.async(function* (gBrowser) {
     let fromParent = yield this.openTabFromParent(gBrowser);
     let fromContent = yield this.openTabFromContent(gBrowser);
 
