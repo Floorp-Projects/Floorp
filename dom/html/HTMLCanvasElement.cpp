@@ -652,7 +652,7 @@ HTMLCanvasElement::ToDataURL(JSContext* aCx, const nsAString& aType,
 {
   // do a trust check if this is a write-only canvas
   if (mWriteOnly &&
-      !nsContentUtils::CallerHasPermission(aCx, NS_LITERAL_STRING("<all_urls>"))) {
+      !nsContentUtils::CallerHasPermission(aCx, nsGkAtoms::all_urlsPermission)) {
     aRv.Throw(NS_ERROR_DOM_SECURITY_ERR);
     return;
   }
@@ -835,7 +835,7 @@ HTMLCanvasElement::ToBlob(JSContext* aCx,
 {
   // do a trust check if this is a write-only canvas
   if (mWriteOnly &&
-      !nsContentUtils::CallerHasPermission(aCx, NS_LITERAL_STRING("<all_urls>"))) {
+      !nsContentUtils::CallerHasPermission(aCx, nsGkAtoms::all_urlsPermission)) {
     aRv.Throw(NS_ERROR_DOM_SECURITY_ERR);
     return;
   }

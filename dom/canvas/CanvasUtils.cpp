@@ -118,7 +118,7 @@ CoerceDouble(const JS::Value& v, double* d)
 bool
 HasDrawWindowPrivilege(JSContext* aCx, JSObject* /* unused */)
 {
-  return nsContentUtils::CallerHasPermission(aCx, NS_LITERAL_STRING("<all_urls>"));
+  return nsContentUtils::CallerHasPermission(aCx, nsGkAtoms::all_urlsPermission);
 }
 
 } // namespace CanvasUtils
