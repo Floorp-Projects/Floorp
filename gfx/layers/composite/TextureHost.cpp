@@ -596,28 +596,28 @@ BufferTextureHost::AddWRImage(wr::WebRenderAPI* aAPI,
     wr::ImageDescriptor descriptor(GetSize(),
                                    ImageDataSerializer::ComputeRGBStride(GetFormat(), GetSize().width),
                                    GetFormat());
-    aAPI->AddExternalImageBuffer(aImageKeys[0], descriptor, aExtID);
+    aAPI->Resources().AddExternalImageBuffer(aImageKeys[0], descriptor, aExtID);
   } else {
     MOZ_ASSERT(aImageKeys.length() == 3);
 
     const layers::YCbCrDescriptor& desc = mDescriptor.get_YCbCrDescriptor();
     wr::ImageDescriptor yDescriptor(desc.ySize(), desc.ySize().width, gfx::SurfaceFormat::A8);
     wr::ImageDescriptor cbcrDescriptor(desc.cbCrSize(), desc.cbCrSize().width, gfx::SurfaceFormat::A8);
-    aAPI->AddExternalImage(aImageKeys[0],
-                           yDescriptor,
-                           aExtID,
-                           wr::WrExternalImageBufferType::ExternalBuffer,
-                           0);
-    aAPI->AddExternalImage(aImageKeys[1],
-                           cbcrDescriptor,
-                           aExtID,
-                           wr::WrExternalImageBufferType::ExternalBuffer,
-                           1);
-    aAPI->AddExternalImage(aImageKeys[2],
-                           cbcrDescriptor,
-                           aExtID,
-                           wr::WrExternalImageBufferType::ExternalBuffer,
-                           2);
+    aAPI->Resources().AddExternalImage(aImageKeys[0],
+                                       yDescriptor,
+                                       aExtID,
+                                       wr::WrExternalImageBufferType::ExternalBuffer,
+                                       0);
+    aAPI->Resources().AddExternalImage(aImageKeys[1],
+                                       cbcrDescriptor,
+                                       aExtID,
+                                       wr::WrExternalImageBufferType::ExternalBuffer,
+                                       1);
+    aAPI->Resources().AddExternalImage(aImageKeys[2],
+                                       cbcrDescriptor,
+                                       aExtID,
+                                       wr::WrExternalImageBufferType::ExternalBuffer,
+                                       2);
   }
 }
 
