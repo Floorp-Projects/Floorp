@@ -185,7 +185,7 @@ ExpandedPrincipal::AddonHasPermission(const nsIAtom* aPerm)
 nsresult
 ExpandedPrincipal::GetScriptLocation(nsACString& aStr)
 {
-  aStr.Assign("[Expanded Principal [");
+  aStr.AssignLiteral("[Expanded Principal [");
   for (size_t i = 0; i < mPrincipals.Length(); ++i) {
     if (i != 0) {
       aStr.AppendLiteral(", ");

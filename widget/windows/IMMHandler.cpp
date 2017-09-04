@@ -117,14 +117,14 @@ public:
   explicit GetWritingModeName(const WritingMode& aWritingMode)
   {
     if (!aWritingMode.IsVertical()) {
-      Assign("Horizontal");
+      AssignLiteral("Horizontal");
       return;
     }
     if (aWritingMode.IsVerticalLR()) {
-      Assign("Vertical (LR)");
+      AssignLiteral("Vertical (LR)");
       return;
     }
-    Assign("Vertical (RL)");
+    AssignLiteral("Vertical (RL)");
   }
   virtual ~GetWritingModeName() {}
 };
