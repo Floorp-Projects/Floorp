@@ -26,6 +26,9 @@ class HandlerServiceParent final : public mozilla::dom::PHandlerServiceParent
   virtual mozilla::ipc::IPCResult RecvGetTypeFromExtension(const nsCString& aFileExtension,
                                                            nsCString* type) override;
 
+  virtual mozilla::ipc::IPCResult RecvExistsForProtocol(const nsCString& aProtocolScheme,
+                                                        bool* aHandlerExists) override;
+
 };
 
 #endif
