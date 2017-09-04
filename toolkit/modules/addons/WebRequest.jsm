@@ -29,6 +29,10 @@ XPCOMUtils.defineLazyModuleGetter(this, "WebRequestCommon",
 XPCOMUtils.defineLazyModuleGetter(this, "WebRequestUpload",
                                   "resource://gre/modules/WebRequestUpload.jsm");
 
+XPCOMUtils.defineLazyServiceGetter(this, "webReqService",
+                                   "@mozilla.org/addons/webrequest-service;1",
+                                   "mozIWebRequestService");
+
 XPCOMUtils.defineLazyGetter(this, "ExtensionError", () => ExtensionUtils.ExtensionError);
 
 let WebRequestListener = Components.Constructor("@mozilla.org/webextensions/webRequestListener;1",
@@ -52,7 +56,8 @@ function extractFromChannel(channel, key) {
 
 function getData(channel) {
   const key = "mozilla.webRequest.data";
-  return extractFromChannel(channel, key) || attachToChannel(channel, key, {});
+  return (extractFromChannel(channel, key) ||
+          attachToChannel(channel, key, {registeredFilters: new Map()}));
 }
 
 function getFinalChannelURI(channel) {
@@ -89,7 +94,7 @@ function parseFilter(filter) {
   return {urls: filter.urls || null, types: filter.types || null};
 }
 
-function parseExtra(extra, allowed = []) {
+function parseExtra(extra, allowed = [], optionsObj = {}) {
   if (extra) {
     for (let ex of extra) {
       if (allowed.indexOf(ex) == -1) {
@@ -98,7 +103,7 @@ function parseExtra(extra, allowed = []) {
     }
   }
 
-  let result = {};
+  let result = Object.assign({}, optionsObj);
   for (let al of allowed) {
     if (extra && extra.indexOf(al) != -1) {
       result[al] = true;
@@ -577,9 +582,15 @@ HttpObserverManager = {
       this.modifyInitialized = false;
       Services.obs.removeObserver(this, "http-on-before-connect");
     }
+
+    let haveBlocking = Object.values(this.listeners)
+                             .some(listeners => Array.from(listeners.values())
+                                                     .some(listener => listener.blockingAllowed));
+
     this.needTracing = this.listeners.onStart.size ||
                        this.listeners.onError.size ||
-                       this.listeners.onStop.size;
+                       this.listeners.onStop.size ||
+                       haveBlocking;
 
     let needExamine = this.needTracing ||
                       this.listeners.headersReceived.size ||
@@ -597,7 +608,7 @@ HttpObserverManager = {
       Services.obs.removeObserver(this, "http-on-examine-merged-response");
     }
 
-    let needRedirect = this.listeners.onRedirect.size;
+    let needRedirect = this.listeners.onRedirect.size || haveBlocking;
     if (needRedirect && !this.redirectInitialized) {
       this.redirectInitialized = true;
       ChannelEventSink.register();
@@ -886,6 +897,33 @@ HttpObserverManager = {
     return true;
   },
 
+  registerChannel(channel, opts) {
+    if (!opts.blockingAllowed || !opts.addonId) {
+      return;
+    }
+
+    let data = getData(channel);
+    if (data.registeredFilters.has(opts.addonId)) {
+      return;
+    }
+
+    let filter = webReqService.registerTraceableChannel(
+      parseInt(data.requestId, 10),
+      channel,
+      opts.addonId,
+      opts.tabParent);
+
+    data.registeredFilters.set(opts.addonId, filter);
+  },
+
+  destroyFilters(channel) {
+    let filters = getData(channel).registeredFilters;
+    for (let [key, filter] of filters.entries()) {
+      filter.destruct();
+      filters.delete(key);
+    }
+  },
+
   runChannelListener(channel, loadContext = null, kind, extraData = null) {
     let handlerResults = [];
     let requestHeaders;
@@ -895,6 +933,7 @@ HttpObserverManager = {
       if (this.activityInitialized) {
         let channelData = getData(channel);
         if (kind === "onError") {
+          this.destroyFilters(channel);
           if (channelData.errorNotified) {
             return;
           }
@@ -908,8 +947,8 @@ HttpObserverManager = {
       let policyType = (loadInfo ? loadInfo.externalContentPolicyType
                                  : Ci.nsIContentPolicy.TYPE_OTHER);
 
-      let includeStatus = (["headersReceived", "authRequired", "onRedirect", "onStart", "onStop"].includes(kind) &&
-                           channel instanceof Ci.nsIHttpChannel);
+      let includeStatus = ["headersReceived", "authRequired", "onRedirect", "onStart", "onStop"].includes(kind);
+      let registerFilter = ["opening", "modify", "afterModify", "headersReceived", "authRequired", "onRedirect"].includes(kind);
 
       let canModify = this.canModify(channel);
       let commonData = null;
@@ -924,6 +963,10 @@ HttpObserverManager = {
           commonData = this.getRequestData(channel, loadContext, policyType, extraData);
         }
         let data = Object.assign({}, commonData);
+
+        if (registerFilter) {
+          this.registerChannel(channel, opts);
+        }
 
         if (opts.requestHeaders) {
           requestHeaders = requestHeaders || new RequestHeaderChanger(channel);
@@ -1096,11 +1139,13 @@ HttpObserverManager = {
   onChannelReplaced(oldChannel, newChannel) {
     // We want originalURI, this will provide a moz-ext rather than jar or file
     // uri on redirects.
+    this.destroyFilters(oldChannel);
     this.runChannelListener(oldChannel, this.getLoadContext(oldChannel),
                             "onRedirect", {redirectUrl: newChannel.originalURI.spec});
   },
 
   onStartRequest(channel, loadContext) {
+    this.destroyFilters(channel);
     this.runChannelListener(channel, loadContext, "onStart");
   },
 
@@ -1112,10 +1157,12 @@ HttpObserverManager = {
 var onBeforeRequest = {
   allowedOptions: ["blocking", "requestBody"],
 
-  addListener(callback, filter = null, opt_extraInfoSpec = null) {
-    let opts = parseExtra(opt_extraInfoSpec, this.allowedOptions);
+  addListener(callback, filter = null, options = null, optionsObject = null) {
+    let opts = parseExtra(options, this.allowedOptions);
     opts.filter = parseFilter(filter);
     ContentPolicyManager.addListener(callback, opts);
+
+    opts = Object.assign({}, opts, optionsObject);
     HttpObserverManager.addListener("opening", callback, opts);
   },
 
@@ -1131,8 +1178,8 @@ function HttpEvent(internalEvent, options) {
 }
 
 HttpEvent.prototype = {
-  addListener(callback, filter = null, opt_extraInfoSpec = null) {
-    let opts = parseExtra(opt_extraInfoSpec, this.options);
+  addListener(callback, filter = null, options = null, optionsObject = null) {
+    let opts = parseExtra(options, this.options, optionsObject);
     opts.filter = parseFilter(filter);
     HttpObserverManager.addListener(this.internalEvent, callback, opts);
   },
@@ -1145,7 +1192,7 @@ HttpEvent.prototype = {
 var onBeforeSendHeaders = new HttpEvent("modify", ["requestHeaders", "blocking"]);
 var onSendHeaders = new HttpEvent("afterModify", ["requestHeaders"]);
 var onHeadersReceived = new HttpEvent("headersReceived", ["blocking", "responseHeaders"]);
-var onAuthRequired = new HttpEvent("authRequired", ["blocking", "responseHeaders"]); // TODO asyncBlocking
+var onAuthRequired = new HttpEvent("authRequired", ["blocking", "responseHeaders"]);
 var onBeforeRedirect = new HttpEvent("onRedirect", ["responseHeaders"]);
 var onResponseStarted = new HttpEvent("onStart", ["responseHeaders"]);
 var onCompleted = new HttpEvent("onStop", ["responseHeaders"]);

@@ -338,15 +338,19 @@ def _makePromise(returns, side, resolver=False):
         resolvetype = _tuple([d.bareType(side) for d in returns])
     else:
         resolvetype = returns[0].bareType(side)
+
+    needmove = not all(d.isCopyable() for d in returns)
+
     return _promise(resolvetype,
                     _PromiseRejectReason.Type(),
-                    ExprLiteral.FALSE, resolver=resolver)
+                    ExprLiteral.TRUE if needmove else ExprLiteral.FALSE,
+                    resolver=resolver)
 
 def _makeResolver(returns, side):
     if len(returns) > 1:
-        resolvetype = _tuple([d.bareType(side) for d in returns])
+        resolvetype = _tuple([d.moveType(side) for d in returns])
     else:
-        resolvetype = returns[0].bareType(side)
+        resolvetype = returns[0].moveType(side)
     return TypeFunction([Decl(resolvetype, '')])
 
 def _cxxArrayType(basetype, const=0, ref=0):
@@ -586,9 +590,14 @@ def _cxxConstRefType(ipdltype, side):
     t.ref = 1
     return t
 
+def _cxxTypeNeedsMove(ipdltype):
+    return ipdltype.isIPDL() and (ipdltype.isArray() or
+                                  ipdltype.isShmem() or
+                                  ipdltype.isEndpoint())
+
 def _cxxMoveRefType(ipdltype, side):
     t = _cxxBareType(ipdltype, side)
-    if ipdltype.isIPDL() and (ipdltype.isArray() or ipdltype.isShmem() or ipdltype.isEndpoint()):
+    if _cxxTypeNeedsMove(ipdltype):
         t.ref = 2
         return t
     return _cxxConstRefType(ipdltype, side)
@@ -630,6 +639,9 @@ info needed by later passes, along with a basic name for the decl."""
         self.ipdltype = ipdltype
         self.name = name
         self.idnum = 0
+
+    def isCopyable(self):
+        return not _cxxTypeNeedsMove(self.ipdltype)
 
     def var(self):
         return ExprVar(self.name)
@@ -4084,9 +4096,9 @@ class _GenerateProtocolActorCode(ipdl.ast.Visitor):
                        ifnotpromise ]
         if len(md.returns) > 1:
             resolvearg = ExprCall(ExprVar('MakeTuple'),
-                                  args=[p.var() for p in md.returns])
+                                  args=[ExprMove(p.var()) for p in md.returns])
         else:
-            resolvearg = md.returns[0].var()
+            resolvearg = ExprMove(md.returns[0].var())
 
         resolvepromise = [ StmtExpr(ExprCall(ExprSelect(ExprVar('promise'), '->', 'Resolve'),
                                              args=[ resolvearg,
@@ -4287,13 +4299,13 @@ class _GenerateProtocolActorCode(ipdl.ast.Visitor):
                                     args=[ self.replyvar ])),
                        failifsendok ])
         if len(md.returns) > 1:
-            resolvedecl = Decl(_tuple([p.bareType(self.side) for p in md.returns],
+            resolvedecl = Decl(_tuple([p.moveType(self.side) for p in md.returns],
                                       const=1, ref=1),
                                'aParam')
             destructexpr = ExprCall(ExprVar('Tie'),
                                     args=[ p.var() for p in md.returns ])
         else:
-            resolvedecl = Decl(md.returns[0].bareType(self.side), 'aParam')
+            resolvedecl = Decl(md.returns[0].moveType(self.side), 'aParam')
             destructexpr = md.returns[0].var()
         selfvar = ExprVar('self__')
         ifactorisdead = StmtIf(ExprNot(selfvar))
@@ -4312,7 +4324,7 @@ class _GenerateProtocolActorCode(ipdl.ast.Visitor):
                                          init=ExprLiteral.TRUE) ]
                             + [ StmtDecl(Decl(p.bareType(self.side), p.var().name))
                                for p in md.returns ]
-                            + [ StmtExpr(ExprAssn(destructexpr, ExprVar('aParam'))),
+                            + [ StmtExpr(ExprAssn(destructexpr, ExprMove(ExprVar('aParam')))),
                                 StmtDecl(Decl(Type('IPC::Message', ptr=1), self.replyvar.name),
                                          init=ExprCall(ExprVar(md.pqReplyCtorFunc()),
                                                        args=[ routingId ])) ]

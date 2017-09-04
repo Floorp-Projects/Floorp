@@ -38,6 +38,7 @@
 #include "mozilla/AddonManagerStartup.h"
 #include "mozilla/AddonPathService.h"
 #include "mozilla/ExtensionPolicyService.h"
+#include "mozilla/WebRequestService.h"
 
 #if defined(XP_WIN)
 #include "NativeFileWatcherWin.h"
@@ -128,6 +129,7 @@ NS_GENERIC_FACTORY_CONSTRUCTOR(AddonContentPolicy)
 NS_GENERIC_FACTORY_SINGLETON_CONSTRUCTOR(AddonPathService, AddonPathService::GetInstance)
 NS_GENERIC_FACTORY_SINGLETON_CONSTRUCTOR(AddonManagerStartup, AddonManagerStartup::GetInstance)
 NS_GENERIC_FACTORY_SINGLETON_CONSTRUCTOR(ExtensionPolicyService, ExtensionPolicyService::GetInstance)
+NS_GENERIC_FACTORY_SINGLETON_CONSTRUCTOR(WebRequestService, WebRequestService::GetInstance)
 
 NS_GENERIC_FACTORY_CONSTRUCTOR(nsWebRequestListener)
 
@@ -164,6 +166,7 @@ NS_DEFINE_NAMED_CID(NS_ADDONCONTENTPOLICY_CID);
 NS_DEFINE_NAMED_CID(NS_ADDON_PATH_SERVICE_CID);
 NS_DEFINE_NAMED_CID(NS_ADDON_MANAGER_STARTUP_CID);
 NS_DEFINE_NAMED_CID(NS_ADDON_POLICY_SERVICE_CID);
+NS_DEFINE_NAMED_CID(NS_WEBREQUEST_SERVICE_CID);
 NS_DEFINE_NAMED_CID(NATIVE_FILEWATCHER_SERVICE_CID);
 NS_DEFINE_NAMED_CID(NS_WEBREQUESTLISTENER_CID);
 
@@ -200,6 +203,7 @@ static const Module::CIDEntry kToolkitCIDs[] = {
   { &kNS_ADDON_PATH_SERVICE_CID, false, nullptr, AddonPathServiceConstructor },
   { &kNS_ADDON_MANAGER_STARTUP_CID, false, nullptr, AddonManagerStartupConstructor },
   { &kNS_ADDON_POLICY_SERVICE_CID, false, nullptr, ExtensionPolicyServiceConstructor },
+  { &kNS_WEBREQUEST_SERVICE_CID, false, nullptr, WebRequestServiceConstructor },
   { &kNATIVE_FILEWATCHER_SERVICE_CID, false, nullptr, NativeFileWatcherServiceConstructor },
   { &kNS_WEBREQUESTLISTENER_CID, false, nullptr, nsWebRequestListenerConstructor },
   { nullptr }
@@ -239,6 +243,7 @@ static const Module::ContractIDEntry kToolkitContracts[] = {
   { NS_ADDONPATHSERVICE_CONTRACTID, &kNS_ADDON_PATH_SERVICE_CID },
   { NS_ADDONMANAGERSTARTUP_CONTRACTID, &kNS_ADDON_MANAGER_STARTUP_CID },
   { NS_ADDON_POLICY_SERVICE_CONTRACTID, &kNS_ADDON_POLICY_SERVICE_CID },
+  { NS_WEBREQUESTSERVICE_CONTRACTID, &kNS_WEBREQUEST_SERVICE_CID },
   { NATIVE_FILEWATCHER_SERVICE_CONTRACTID, &kNATIVE_FILEWATCHER_SERVICE_CID },
   { NS_WEBREQUESTLISTENER_CONTRACTID, &kNS_WEBREQUESTLISTENER_CID },
   { nullptr }
