@@ -165,6 +165,44 @@ var AboutBlockedSiteListener = {
       }
     }
 
+    let doc = content.document;
+
+    /**
+    * Set error description link in error details.
+    * For example, the "reported as a deceptive site" link for
+    * blocked phishing pages.
+    */
+    let desc = Services.prefs.getCharPref(
+      "browser.safebrowsing.provider." + provider + ".reportURL", "");
+    if (desc) {
+      doc.getElementById("error_desc_link").setAttribute("href", desc + aEvent.detail.url);
+    }
+
+    // Set other links in error details.
+    switch (aEvent.detail.err) {
+      case "malware":
+        doc.getElementById("report_detection").setAttribute("href",
+          "https://www.stopbadware.org/firefox");
+        doc.getElementById("learn_more_link").setAttribute("href",
+          "https://www.stopbadware.org/firefox");
+        break;
+      case "unwanted":
+        doc.getElementById("learn_more_link").setAttribute("href",
+          "https://www.google.com/about/unwanted-software-policy.html");
+        break;
+      case "phishing":
+        doc.getElementById("report_detection").setAttribute("href",
+          "https://safebrowsing.google.com/safebrowsing/report_error/?tpl=mozilla");
+        doc.getElementById("learn_more_link").setAttribute("href",
+          "https://www.antiphishing.org//");
+        break;
+    }
+
+    // Set the firefox support url.
+    doc.getElementById("firefox_support").setAttribute("href",
+      "https://support.mozilla.org/kb/how-does-phishing-and-malware-protection-work");
+
+    // Set safe browsing advisory link.
     let advisoryUrl = Services.prefs.getCharPref(
       "browser.safebrowsing.provider." + provider + ".advisoryURL", "");
     if (!advisoryUrl) {

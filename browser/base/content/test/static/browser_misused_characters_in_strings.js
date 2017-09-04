@@ -30,19 +30,55 @@ let gWhitelist = [{
     type: "single-quote"
   }, {
     file: "phishing-afterload-warning-message.dtd",
-    key: "safeb.palm.advisory.desc",
+    key: "safeb.palm.advisory.desc2",
     type: "single-quote"
   }, {
     file: "phishing-afterload-warning-message.dtd",
-    key: "safeb.blocked.malwarePage.shortDesc",
+    key: "safeb.blocked.malwarePage.errorDesc.override",
     type: "single-quote"
   }, {
     file: "phishing-afterload-warning-message.dtd",
-    key: "safeb.blocked.unwantedPage.shortDesc",
+    key: "safeb.blocked.malwarePage.errorDesc.noOverride",
     type: "single-quote"
   }, {
     file: "phishing-afterload-warning-message.dtd",
-    key: "safeb.blocked.phishingPage.shortDesc2",
+    key: "safeb.blocked.malwarePage.learnMore",
+    type: "single-quote"
+  }, {
+    file: "phishing-afterload-warning-message.dtd",
+    key: "safeb.blocked.unwantedPage.errorDesc.override",
+    type: "single-quote"
+  }, {
+    file: "phishing-afterload-warning-message.dtd",
+    key: "safeb.blocked.unwantedPage.errorDesc.noOverride",
+    type: "single-quote"
+  }, {
+    file: "phishing-afterload-warning-message.dtd",
+    key: "safeb.blocked.unwantedPage.learnMore",
+    type: "single-quote"
+  }, {
+    file: "phishing-afterload-warning-message.dtd",
+    key: "safeb.blocked.phishingPage.errorDesc.override",
+    type: "single-quote"
+  }, {
+    file: "phishing-afterload-warning-message.dtd",
+    key: "safeb.blocked.phishingPage.errorDesc.noOverride",
+    type: "single-quote"
+  }, {
+    file: "phishing-afterload-warning-message.dtd",
+    key: "safeb.blocked.phishingPage.learnMore",
+    type: "single-quote"
+  }, {
+    file: "phishing-afterload-warning-message.dtd",
+    key: "safeb.blocked.harmfulPage.errorDesc.override",
+    type: "single-quote"
+  }, {
+    file: "phishing-afterload-warning-message.dtd",
+    key: "safeb.blocked.harmfulPage.errorDesc.noOverride",
+    type: "single-quote"
+  }, {
+    file: "phishing-afterload-warning-message.dtd",
+    key: "safeb.blocked.harmfulPage.learnMore",
     type: "single-quote"
   }, {
     file: "mathfont.properties",

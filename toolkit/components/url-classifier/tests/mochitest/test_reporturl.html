@@ -120,9 +120,9 @@ var createBlockedIframe = function(aWindow, aBrowser, aTopUrl, aUrl) {
     });
 
     let doc = aWindow.gBrowser.contentDocument.getElementsByTagName("iframe")[0].contentDocument;
-    let ignoreButton = doc.getElementById("ignoreWarningButton");
-    ok(ignoreButton, "ignoreWarningButton should exist");
-    ignoreButton.click();
+    let ignoreWarningLink = doc.getElementById("ignore_warning_link");
+    ok(ignoreWarningLink, "Ignore warning link should exist");
+    ignoreWarningLink.click();
   })();
 };
 
@@ -132,9 +132,9 @@ var createBlockedPage = function(aWindow, aBrowser, aTopUrl, aUrl) {
     await BrowserTestUtils.waitForContentEvent(aBrowser, "DOMContentLoaded")
 
     let doc = aWindow.gBrowser.contentDocument;
-    let ignoreButton = doc.getElementById("ignoreWarningButton");
-    ok(ignoreButton, "ignoreWarningButton should exist");
-    ignoreButton.click();
+    let ignoreWarningLink = doc.getElementById("ignore_warning_link");
+    ok(ignoreWarningLink, "Ignore warning link should exist");
+    ignoreWarningLink.click();
   })();
 };
 
