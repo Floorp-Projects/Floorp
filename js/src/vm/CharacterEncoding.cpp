@@ -503,22 +503,35 @@ JS::StringIsUTF8(const uint8_t* s, uint32_t length)
     const uint8_t* limit = s + length;
     while (s < limit) {
         uint32_t len;
-        if ((*s & 0x80) == 0)
+        uint32_t min;
+        uint32_t n = *s;
+        if ((n & 0x80) == 0) {
             len = 1;
-        else if ((*s & 0xE0) == 0xC0)
+            min = 0;
+        } else if ((n & 0xE0) == 0xC0) {
             len = 2;
-        else if ((*s & 0xF0) == 0xE0)
+            min = 0x80;
+            n &= 0x1F;
+        } else if ((n & 0xF0) == 0xE0) {
             len = 3;
-        else if ((*s & 0xF8) == 0xF0)
+            min = 0x800;
+            n &= 0x0F;
+        } else if ((n & 0xF8) == 0xF0) {
             len = 4;
-        else
+            min = 0x10000;
+            n &= 0x07;
+        } else {
             return false;
+        }
         if (s + len > limit)
             return false;
         for (uint32_t i = 1; i < len; i++) {
             if ((s[i] & 0xC0) != 0x80)
                 return false;
+            n = (n << 6) | (s[i] & 0x3F);
         }
+        if (n < min || (0xD800 <= n && n < 0xE000) || n >= 0x110000)
+            return false;
         s += len;
     }
     return true;
