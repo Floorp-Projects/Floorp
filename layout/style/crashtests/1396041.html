@@ -1,0 +1,9 @@
+<script>
+document.documentElement.appendChild(document.createElement("meter"))
+a = document.createElement("textarea")
+document.documentElement.appendChild(a)
+b = document.createElement("style")
+b.appendChild(document.createTextNode("*::-moz-meter-bar { text-indent: calc(50%); scroll-behavior: smooth; transition-duration: 250ms; }"))
+a.select()
+document.head.appendChild(b)
+</script>
