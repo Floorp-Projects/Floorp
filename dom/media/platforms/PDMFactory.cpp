@@ -230,7 +230,7 @@ PDMFactory::CreateDecoder(const CreateDecoderParams& aParams)
   }
 
   for (auto& current : mCurrentPDMs) {
-    if (!current->SupportsMimeType(config.mMimeType, diagnostics)) {
+    if (!current->Supports(config, diagnostics)) {
       continue;
     }
     RefPtr<MediaDataDecoder> m = CreateDecoderWithPDM(current, aParams);
