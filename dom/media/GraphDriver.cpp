@@ -672,7 +672,7 @@ AudioCallbackDriver::Init()
     StaticMutexAutoLock lock(AudioInputCubeb::Mutex());
     uint32_t userChannels = 0;
     AudioInputCubeb::GetUserChannelCount(mGraphImpl->mInputDeviceID, userChannels);
-    input.channels = mInputChannels = userChannels;
+    input.channels = mInputChannels = std::min<uint32_t>(8, userChannels);
   }
 #endif
 
