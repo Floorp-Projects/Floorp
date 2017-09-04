@@ -1,0 +1,17 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <title>Bug 1392161 - Transform translate rounding (viewport size)</title>
+    <style>
+      div {
+        height: 100px;
+        width: 100px;
+        background: blue;
+        transform: scale(100000) translate(0.0005vw) scale(0.00001);
+      }
+    </style>
+  </head>
+  <body>
+    <div></div>
+  </body>
+</html>
