@@ -1119,9 +1119,9 @@ CssSelector.prototype = {
     if (this.elementStyle) {
       // We can't ask specificity from DOMUtils as element styles don't provide
       // CSSStyleRule interface DOMUtils expect. However, specificity of element
-      // style is constant, 1,0,0,0 or 0x01000000, just return the constant
+      // style is constant, 1,0,0,0 or 0x40000000, just return the constant
       // directly. @see http://www.w3.org/TR/CSS2/cascade.html#specificity
-      return 0x01000000;
+      return 0x40000000;
     }
 
     if (this._specificity) {
