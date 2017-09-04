@@ -72,6 +72,7 @@ public:
   mozilla::ipc::IPCResult RecvCreate(const gfx::IntSize& aSize) override;
   mozilla::ipc::IPCResult RecvShutdown() override;
   mozilla::ipc::IPCResult RecvShutdownSync() override;
+  mozilla::ipc::IPCResult RecvUpdateResources(const wr::ByteBuffer& aUpdates) override;
   mozilla::ipc::IPCResult RecvAddImage(const wr::ImageKey& aImageKey,
                                        const gfx::IntSize& aSize,
                                        const uint32_t& aStride,
@@ -98,33 +99,34 @@ public:
                                               const MaybeFontInstanceOptions& aOptions,
                                               const MaybeFontInstancePlatformOptions& aPlatformOptions) override;
   mozilla::ipc::IPCResult RecvDeleteFontInstance(const wr::FontInstanceKey& aInstanceKey) override;
-  mozilla::ipc::IPCResult RecvDPBegin(const gfx::IntSize& aSize) override;
-  mozilla::ipc::IPCResult RecvDPEnd(const gfx::IntSize& aSize,
-                                    InfallibleTArray<WebRenderParentCommand>&& aCommands,
-                                    InfallibleTArray<OpDestroy>&& aToDestroy,
-                                    const uint64_t& aFwdTransactionId,
-                                    const uint64_t& aTransactionId,
-                                    const wr::LayoutSize& aContentSize,
-                                    const wr::ByteBuffer& dl,
-                                    const wr::BuiltDisplayListDescriptor& dlDesc,
-                                    const WebRenderScrollData& aScrollData,
-                                    const wr::IdNamespace& aIdNamespace,
-                                    const TimeStamp& aTxnStartTime,
-                                    const TimeStamp& aFwdTime) override;
-  mozilla::ipc::IPCResult RecvDPSyncEnd(const gfx::IntSize& aSize,
-                                        InfallibleTArray<WebRenderParentCommand>&& aCommands,
-                                        InfallibleTArray<OpDestroy>&& aToDestroy,
-                                        const uint64_t& aFwdTransactionId,
-                                        const uint64_t& aTransactionId,
-                                        const wr::LayoutSize& aContentSize,
-                                        const wr::ByteBuffer& dl,
-                                        const wr::BuiltDisplayListDescriptor& dlDesc,
-                                        const WebRenderScrollData& aScrollData,
-                                        const wr::IdNamespace& aIdNamespace,
-                                        const TimeStamp& aTxnStartTime,
-                                        const TimeStamp& aFwdTime) override;
+  mozilla::ipc::IPCResult RecvSetDisplayList(const gfx::IntSize& aSize,
+                                             InfallibleTArray<WebRenderParentCommand>&& aCommands,
+                                             InfallibleTArray<OpDestroy>&& aToDestroy,
+                                             const uint64_t& aFwdTransactionId,
+                                             const uint64_t& aTransactionId,
+                                             const wr::LayoutSize& aContentSize,
+                                             const wr::ByteBuffer& dl,
+                                             const wr::BuiltDisplayListDescriptor& dlDesc,
+                                             const WebRenderScrollData& aScrollData,
+                                             const wr::ByteBuffer& aResourceUpdates,
+                                             const wr::IdNamespace& aIdNamespace,
+                                             const TimeStamp& aTxnStartTime,
+                                             const TimeStamp& aFwdTime) override;
+  mozilla::ipc::IPCResult RecvSetDisplayListSync(const gfx::IntSize& aSize,
+                                                 InfallibleTArray<WebRenderParentCommand>&& aCommands,
+                                                 InfallibleTArray<OpDestroy>&& aToDestroy,
+                                                 const uint64_t& aFwdTransactionId,
+                                                 const uint64_t& aTransactionId,
+                                                 const wr::LayoutSize& aContentSize,
+                                                 const wr::ByteBuffer& dl,
+                                                 const wr::BuiltDisplayListDescriptor& dlDesc,
+                                                 const WebRenderScrollData& aScrollData,
+                                                 const wr::ByteBuffer& aResourceUpdates,
+                                                 const wr::IdNamespace& aIdNamespace,
+                                                 const TimeStamp& aTxnStartTime,
+                                                 const TimeStamp& aFwdTime) override;
   mozilla::ipc::IPCResult RecvParentCommands(nsTArray<WebRenderParentCommand>&& commands) override;
-  mozilla::ipc::IPCResult RecvDPGetSnapshot(PTextureParent* aTexture) override;
+  mozilla::ipc::IPCResult RecvGetSnapshot(PTextureParent* aTexture) override;
 
   mozilla::ipc::IPCResult RecvAddPipelineIdForCompositable(const wr::PipelineId& aPipelineIds,
                                                            const CompositableHandle& aHandle,
@@ -216,22 +218,11 @@ private:
                                 const wr::LayoutSize& aContentSize,
                                 const wr::ByteBuffer& dl,
                                 const wr::BuiltDisplayListDescriptor& dlDesc,
+                                wr::ResourceUpdateQueue& aResourceUpdates,
                                 const wr::IdNamespace& aIdNamespace);
   void ClearResources();
   uint64_t GetChildLayerObserverEpoch() const { return mChildLayerObserverEpoch; }
   bool ShouldParentObserveEpoch();
-  void HandleDPEnd(const gfx::IntSize& aSize,
-                   InfallibleTArray<WebRenderParentCommand>&& aCommands,
-                   InfallibleTArray<OpDestroy>&& aToDestroy,
-                   const uint64_t& aFwdTransactionId,
-                   const uint64_t& aTransactionId,
-                   const wr::LayoutSize& aContentSize,
-                   const wr::ByteBuffer& dl,
-                   const wr::BuiltDisplayListDescriptor& dlDesc,
-                   const WebRenderScrollData& aScrollData,
-                   const wr::IdNamespace& aIdNamespace,
-                   const TimeStamp& aTxnStartTime,
-                   const TimeStamp& aFwdTime);
   mozilla::ipc::IPCResult HandleShutdown();
 
   void AdvanceAnimations();

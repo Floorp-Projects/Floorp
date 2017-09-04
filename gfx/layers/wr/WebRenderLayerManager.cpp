@@ -699,7 +699,7 @@ WebRenderLayerManager::EndTransactionInternal(DrawPaintedLayerCallback aCallback
   mAnimationReadyTime = TimeStamp::Now();
 
   LayoutDeviceIntSize size = mWidget->GetClientSize();
-  if (!WrBridge()->DPBegin(size.ToUnknownSize())) {
+  if (!WrBridge()->BeginTransaction(size.ToUnknownSize())) {
     return false;
   }
   DiscardCompositorAnimations();
@@ -815,7 +815,8 @@ WebRenderLayerManager::EndTransactionInternal(DrawPaintedLayerCallback aCallback
   {
     AutoProfilerTracing
       tracing("Paint", sync ? "ForwardDPTransactionSync":"ForwardDPTransaction");
-    WrBridge()->DPEnd(builder, size.ToUnknownSize(), sync, mLatestTransactionId, mScrollData, transactionStart);
+    WrBridge()->EndTransaction(builder, size.ToUnknownSize(), sync,
+                               mLatestTransactionId, mScrollData, transactionStart);
   }
 
   MakeSnapshotIfRequired(size);
@@ -870,7 +871,7 @@ WebRenderLayerManager::MakeSnapshotIfRequired(LayoutDeviceIntSize aSize)
   }
 
   IntRect bounds = ToOutsideIntRect(mTarget->GetClipExtents());
-  if (!WrBridge()->SendDPGetSnapshot(texture->GetIPDLActor())) {
+  if (!WrBridge()->SendGetSnapshot(texture->GetIPDLActor())) {
     return;
   }
 

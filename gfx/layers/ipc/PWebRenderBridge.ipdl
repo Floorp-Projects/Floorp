@@ -47,6 +47,7 @@ parent:
   async InitReadLocks(ReadLockInit[] locks);
 
   sync Create(IntSize aSize);
+  async UpdateResources(ByteBuffer aUpdates);
   async AddImage(ImageKey aImageKey, IntSize aSize, uint32_t aStride,
                  SurfaceFormat aFormat, ByteBuffer aBytes);
   async AddBlobImage(ImageKey aImageKey, IntSize aSize, uint32_t aStride,
@@ -60,15 +61,18 @@ parent:
   async AddFontInstance(FontInstanceKey aInstanceKey, FontKey aFontKey, float aGlyphSize,
                         MaybeFontInstanceOptions aOptions, MaybeFontInstancePlatformOptions aPlatformOptions);
   async DeleteFontInstance(FontInstanceKey aInstanceKey);
-  async DPBegin(IntSize aSize);
-  async DPEnd(IntSize aSize, WebRenderParentCommand[] commands, OpDestroy[] toDestroy, uint64_t fwdTransactionId, uint64_t transactionId,
-              LayoutSize aContentSize, ByteBuffer aDL, BuiltDisplayListDescriptor aDLDesc,
-              WebRenderScrollData aScrollData, IdNamespace aIdNamespace, TimeStamp txnStartTime, TimeStamp fwdTime);
-  sync DPSyncEnd(IntSize aSize, WebRenderParentCommand[] commands, OpDestroy[] toDestroy, uint64_t fwdTransactionId, uint64_t transactionId,
-                 LayoutSize aContentSize, ByteBuffer aDL, BuiltDisplayListDescriptor aDLDesc,
-                 WebRenderScrollData aScrollData, IdNamespace aIdNamespace, TimeStamp txnStartTime, TimeStamp fwdTime);
+  async SetDisplayList(IntSize aSize, WebRenderParentCommand[] commands, OpDestroy[] toDestroy, uint64_t fwdTransactionId, uint64_t transactionId,
+                       LayoutSize aContentSize, ByteBuffer aDL, BuiltDisplayListDescriptor aDLDesc,
+                       WebRenderScrollData aScrollData,
+                       ByteBuffer aResourceUpdates,
+                       IdNamespace aIdNamespace, TimeStamp txnStartTime, TimeStamp fwdTime);
+  sync SetDisplayListSync(IntSize aSize, WebRenderParentCommand[] commands, OpDestroy[] toDestroy, uint64_t fwdTransactionId, uint64_t transactionId,
+                          LayoutSize aContentSize, ByteBuffer aDL, BuiltDisplayListDescriptor aDLDesc,
+                          WebRenderScrollData aScrollData,
+                          ByteBuffer aResourceUpdates,
+                          IdNamespace aIdNamespace, TimeStamp txnStartTime, TimeStamp fwdTime);
   async ParentCommands(WebRenderParentCommand[] commands);
-  sync DPGetSnapshot(PTexture texture);
+  sync GetSnapshot(PTexture texture);
   async AddPipelineIdForCompositable(PipelineId aImageId, CompositableHandle aHandle, bool aAsync);
   async RemovePipelineIdForCompositable(PipelineId aPipelineId);
   async AddExternalImageIdForCompositable(ExternalImageId aImageId, CompositableHandle aHandle);
