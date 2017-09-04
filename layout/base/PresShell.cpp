@@ -7109,32 +7109,6 @@ DispatchPointerFromMouseOrTouch(PresShell* aShell,
   return NS_OK;
 }
 
-class ReleasePointerCaptureCaller final
-{
-public:
-  ReleasePointerCaptureCaller()
-    : mPointerEvent(nullptr)
-  {
-  }
-  ~ReleasePointerCaptureCaller()
-  {
-    if (mPointerEvent) {
-      nsIPresShell::ReleasePointerCapturingContent(mPointerEvent->pointerId);
-      nsIPresShell::CheckPointerCaptureState(mPointerEvent);
-    }
-  }
-
-  void SetTarget(const WidgetPointerEvent* aPointerEvent)
-  {
-    MOZ_ASSERT(aPointerEvent);
-    mPointerEvent = aPointerEvent;
-  }
-
-private:
-  // This is synchronously used inside PresShell::HandleEvent.
-  const WidgetPointerEvent* mPointerEvent;
-};
-
 bool
 PresShell::CanDispatchEvent(const WidgetGUIEvent* aEvent) const
 {
@@ -7351,7 +7325,6 @@ PresShell::HandleEvent(nsIFrame* aFrame,
   nsIFrame* frame = aFrame;
 
   if (aEvent->IsUsingCoordinates()) {
-    ReleasePointerCaptureCaller releasePointerCaptureCaller;
     if (mDocument) {
       if (aEvent->mClass == eTouchEventClass) {
         nsIDocument::UnlockPointer();
@@ -7620,16 +7593,6 @@ PresShell::HandleEvent(nsIFrame* aFrame,
         if (pointerCapturingContent) {
           if (nsIFrame* capturingFrame = pointerCapturingContent->GetPrimaryFrame()) {
             frame = capturingFrame;
-          }
-
-          if (aEvent->mMessage == ePointerUp ||
-              aEvent->mMessage == ePointerCancel) {
-            // Implicitly releasing capture for given pointer.
-            // ePointerLostCapture should be send after ePointerUp or
-            // ePointerCancel.
-            WidgetPointerEvent* pointerEvent = aEvent->AsPointerEvent();
-            MOZ_ASSERT(pointerEvent);
-            releasePointerCaptureCaller.SetTarget(pointerEvent);
           }
         }
       }
@@ -8192,6 +8155,17 @@ PresShell::HandleEventInternal(WidgetEvent* aEvent,
       }
 
       nsContentUtils::SetIsHandlingKeyBoardEvent(wasHandlingKeyBoardEvent);
+
+      if (aEvent->mMessage == ePointerUp ||
+          aEvent->mMessage == ePointerCancel) {
+        // Implicitly releasing capture for given pointer.
+        // ePointerLostCapture should be send after ePointerUp or
+        // ePointerCancel.
+        WidgetPointerEvent* pointerEvent = aEvent->AsPointerEvent();
+        MOZ_ASSERT(pointerEvent);
+        nsIPresShell::ReleasePointerCapturingContent(pointerEvent->pointerId);
+        nsIPresShell::CheckPointerCaptureState(pointerEvent);
+      }
 
       // 3. Give event to event manager for post event state changes and
       //    generation of synthetic events.
