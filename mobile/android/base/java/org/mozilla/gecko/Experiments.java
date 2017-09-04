@@ -25,11 +25,6 @@ public class Experiments {
     // Show a system notification linking to a "What's New" page on app update.
     public static final String WHATSNEW_NOTIFICATION = "whatsnew-notification";
 
-    // Subscribe to known, bookmarked sites and show a notification if new content is available.
-    public static final String CONTENT_NOTIFICATIONS_12HRS = "content-notifications-12hrs";
-    public static final String CONTENT_NOTIFICATIONS_8AM = "content-notifications-8am";
-    public static final String CONTENT_NOTIFICATIONS_5PM = "content-notifications-5pm";
-
     // Onboarding: "Features and Story". These experiments are determined
     // on the client, they are not part of the server config.
     public static final String ONBOARDING3_A = "onboarding3-a"; // Control: No first run
