@@ -85,8 +85,8 @@ FFmpegVideoDecoder<LIBAV_VER>::PtsCorrectionContext::GuessCorrectPts(
     mNumFaultyPts += aPts <= mLastPts;
     mLastPts = aPts;
   }
-  if ((mNumFaultyPts <= mNumFaultyDts || aDts == int64_t(AV_NOPTS_VALUE))
-      && aPts != int64_t(AV_NOPTS_VALUE)) {
+  if ((mNumFaultyPts <= mNumFaultyDts || aDts == int64_t(AV_NOPTS_VALUE)) &&
+      aPts != int64_t(AV_NOPTS_VALUE)) {
     pts = aPts;
   } else {
     pts = aDts;

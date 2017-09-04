@@ -284,9 +284,9 @@ public:
   // container.
   gfx::IntRect ScaledImageRect(int64_t aWidth, int64_t aHeight) const
   {
-    if ((aWidth == mImage.width && aHeight == mImage.height)
-        || !mImage.width
-        || !mImage.height) {
+    if ((aWidth == mImage.width && aHeight == mImage.height) ||
+        !mImage.width ||
+        !mImage.height) {
       return ImageRect();
     }
     gfx::IntRect imageRect = ImageRect();
@@ -370,8 +370,8 @@ public:
 
   bool IsValid() const override
   {
-    return mChannels > 0 && mChannels <= MAX_AUDIO_CHANNELS
-           && mRate > 0 && mRate <= MAX_RATE;
+    return mChannels > 0 && mChannels <= MAX_AUDIO_CHANNELS &&
+           mRate > 0 && mRate <= MAX_RATE;
   }
 
   AudioInfo* GetAsAudioInfo() override
@@ -500,8 +500,8 @@ public:
 
   bool IsEncrypted() const
   {
-    return (HasAudio() && mAudio.mCrypto.mValid)
-           || (HasVideo() && mVideo.mCrypto.mValid);
+    return (HasAudio() && mAudio.mCrypto.mValid) ||
+           (HasVideo() && mVideo.mCrypto.mValid);
   }
 
   bool HasValidMedia() const
@@ -515,9 +515,8 @@ public:
                  "Audio track ID must be valid");
     NS_ASSERTION(!HasVideo() || mVideo.mTrackId != TRACK_INVALID,
                  "Audio track ID must be valid");
-    NS_ASSERTION(!HasAudio()
-                 || !HasVideo()
-                 || mAudio.mTrackId != mVideo.mTrackId,
+    NS_ASSERTION(!HasAudio() || !HasVideo() ||
+                 mAudio.mTrackId != mVideo.mTrackId,
                  "Duplicate track IDs");
   }
 
@@ -733,10 +732,8 @@ public:
   }
   bool operator==(const AudioConfig& aOther) const
   {
-    return mChannelLayout == aOther.mChannelLayout
-      && mRate == aOther.mRate
-      && mFormat == aOther.mFormat
-      && mInterleaved == aOther.mInterleaved;
+    return mChannelLayout == aOther.mChannelLayout && mRate == aOther.mRate &&
+           mFormat == aOther.mFormat && mInterleaved == aOther.mInterleaved;
   }
   bool operator!=(const AudioConfig& aOther) const
   {

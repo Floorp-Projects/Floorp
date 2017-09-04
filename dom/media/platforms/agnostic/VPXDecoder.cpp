@@ -285,10 +285,10 @@ VPXDecoder::DecodeAlpha(vpx_image_t** aImgAlpha, const MediaRawData* aSample)
 bool
 VPXDecoder::IsVPX(const nsACString& aMimeType, uint8_t aCodecMask)
 {
-  return ((aCodecMask & VPXDecoder::VP8)
-          && aMimeType.EqualsLiteral("video/vp8"))
-         || ((aCodecMask & VPXDecoder::VP9)
-             && aMimeType.EqualsLiteral("video/vp9"));
+  return ((aCodecMask & VPXDecoder::VP8) &&
+          aMimeType.EqualsLiteral("video/vp8")) ||
+         ((aCodecMask & VPXDecoder::VP9) &&
+          aMimeType.EqualsLiteral("video/vp9"));
 }
 
 /* static */

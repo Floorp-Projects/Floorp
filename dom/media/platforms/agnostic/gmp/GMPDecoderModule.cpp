@@ -52,9 +52,9 @@ CreateDecoderWrapper()
 already_AddRefed<MediaDataDecoder>
 GMPDecoderModule::CreateVideoDecoder(const CreateDecoderParams& aParams)
 {
-  if (!MP4Decoder::IsH264(aParams.mConfig.mMimeType)
-      && !VPXDecoder::IsVP8(aParams.mConfig.mMimeType)
-      && !VPXDecoder::IsVP9(aParams.mConfig.mMimeType)) {
+  if (!MP4Decoder::IsH264(aParams.mConfig.mMimeType) &&
+      !VPXDecoder::IsVP8(aParams.mConfig.mMimeType) &&
+      !VPXDecoder::IsVP9(aParams.mConfig.mMimeType)) {
     return nullptr;
   }
 
