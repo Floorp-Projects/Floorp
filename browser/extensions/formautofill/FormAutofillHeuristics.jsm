@@ -62,7 +62,7 @@ class FieldScanner {
    *        The latest index of elements waiting for parsing.
    */
   set parsingIndex(index) {
-    if (index > this.fieldDetails.length) {
+    if (index > this._elements.length) {
       throw new Error("The parsing index is out of range.");
     }
     this._parsingIndex = index;
@@ -289,6 +289,70 @@ this.FormAutofillHeuristics = {
   RULES: null,
 
   /**
+   * Try to find a contiguous sub-array within an array.
+   *
+   * @param {Array} array
+   * @param {Array} subArray
+   *
+   * @returns {boolean}
+   *          Return whether subArray was found within the array or not.
+   */
+  _matchContiguousSubArray(array, subArray) {
+    return array.some((elm, i) => subArray.every((sElem, j) => sElem == array[i + j]));
+  },
+
+  /**
+   * Try to find the field that is look like a month select.
+   *
+   * @param {DOMElement} element
+   * @returns {boolean}
+   *          Return true if we observe the trait of month select in
+   *          the current element.
+   */
+  _isExpirationMonthLikely(element) {
+    if (!(element instanceof Ci.nsIDOMHTMLSelectElement)) {
+      return false;
+    }
+
+    const options = [...element.options];
+    const desiredValues = Array(12).fill(1).map((v, i) => v + i);
+
+    // The number of month options shouldn't be less than 12 or larger than 13
+    // including the default option.
+    if (options.length < 12 || options.length > 13) {
+      return false;
+    }
+
+    return this._matchContiguousSubArray(options.map(e => +e.value), desiredValues) ||
+           this._matchContiguousSubArray(options.map(e => +e.label), desiredValues);
+  },
+
+
+  /**
+   * Try to find the field that is look like a year select.
+   *
+   * @param {DOMElement} element
+   * @returns {boolean}
+   *          Return true if we observe the trait of year select in
+   *          the current element.
+   */
+  _isExpirationYearLikely(element) {
+    if (!(element instanceof Ci.nsIDOMHTMLSelectElement)) {
+      return false;
+    }
+
+    const options = [...element.options];
+    // A normal expiration year select should contain at least the last three years
+    // in the list.
+    const curYear = new Date().getFullYear();
+    const desiredValues = Array(3).fill(0).map((v, i) => v + curYear + i);
+
+    return this._matchContiguousSubArray(options.map(e => +e.value), desiredValues) ||
+           this._matchContiguousSubArray(options.map(e => +e.label), desiredValues);
+  },
+
+
+  /**
    * Try to match the telephone related fields to the grammar
    * list to see if there is any valid telephone set and correct their
    * field names.
@@ -393,6 +457,72 @@ this.FormAutofillHeuristics = {
   },
 
   /**
+   * Try to look for expiration date fields and revise the field names if needed.
+   *
+   * @param {FieldScanner} fieldScanner
+   *        The current parsing status for all elements
+   * @returns {boolean}
+   *          Return true if there is any field can be recognized in the parser,
+   *          otherwise false.
+   */
+  _parseCreditCardExpirationDateFields(fieldScanner) {
+    if (fieldScanner.parsingFinished) {
+      return false;
+    }
+
+    const savedIndex = fieldScanner.parsingIndex;
+    const monthAndYearFieldNames = ["cc-exp-month", "cc-exp-year"];
+    const detail = fieldScanner.getFieldDetailByIndex(fieldScanner.parsingIndex);
+    const element = detail.elementWeakRef.get();
+
+    // Skip the uninteresting fields
+    if (!detail || !["cc-exp", ...monthAndYearFieldNames].includes(detail.fieldName)) {
+      return false;
+    }
+
+    // If the input type is a month picker, then assume it's cc-exp.
+    if (element.type == "month") {
+      fieldScanner.updateFieldName(fieldScanner.parsingIndex, "cc-exp");
+      fieldScanner.parsingIndex++;
+
+      return true;
+    }
+
+    // Don't process the fields if expiration month and expiration year are already
+    // matched by regex in correct order.
+    if (fieldScanner.getFieldDetailByIndex(fieldScanner.parsingIndex++).fieldName == "cc-exp-month" &&
+        !fieldScanner.parsingFinished &&
+        fieldScanner.getFieldDetailByIndex(fieldScanner.parsingIndex++).fieldName == "cc-exp-year") {
+      return true;
+    }
+    fieldScanner.parsingIndex = savedIndex;
+
+    // Determine the field name by checking if the fields are month select and year select
+    // likely.
+    if (this._isExpirationMonthLikely(element)) {
+      fieldScanner.updateFieldName(fieldScanner.parsingIndex, "cc-exp-month");
+      fieldScanner.parsingIndex++;
+      const nextDetail = fieldScanner.getFieldDetailByIndex(fieldScanner.parsingIndex);
+      const nextElement = nextDetail.elementWeakRef.get();
+      if (this._isExpirationYearLikely(nextElement) && !fieldScanner.parsingFinished) {
+        fieldScanner.updateFieldName(fieldScanner.parsingIndex, "cc-exp-year");
+        fieldScanner.parsingIndex++;
+
+        return true;
+      }
+    }
+    fieldScanner.parsingIndex = savedIndex;
+
+    // If no possible regular expiration fields are detected in current parsing window
+    // fallback to "cc-exp" as there's no such case that cc-exp-month or cc-exp-year
+    // presents alone.
+    fieldScanner.updateFieldName(fieldScanner.parsingIndex, "cc-exp");
+    fieldScanner.parsingIndex++;
+
+    return true;
+  },
+
+  /**
    * This function should provide all field details of a form. The details
    * contain the autocomplete info (e.g. fieldName, section, etc).
    *
@@ -417,10 +547,11 @@ this.FormAutofillHeuristics = {
     while (!fieldScanner.parsingFinished) {
       let parsedPhoneFields = this._parsePhoneFields(fieldScanner);
       let parsedAddressFields = this._parseAddressFields(fieldScanner);
+      let parsedExpirationDateFields = this._parseCreditCardExpirationDateFields(fieldScanner);
 
       // If there is no any field parsed, the parsing cursor can be moved
       // forward to the next one.
-      if (!parsedPhoneFields && !parsedAddressFields) {
+      if (!parsedPhoneFields && !parsedAddressFields && !parsedExpirationDateFields) {
         fieldScanner.parsingIndex++;
       }
     }
