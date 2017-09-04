@@ -186,7 +186,8 @@ private:
 
   uint64_t GetLayersId() const;
   void DeleteOldImages();
-  void ProcessWebRenderParentCommands(InfallibleTArray<WebRenderParentCommand>& aCommands);
+  void ProcessWebRenderParentCommands(const InfallibleTArray<WebRenderParentCommand>& aCommands,
+                                      wr::ResourceUpdateQueue& aResources);
   void ProcessWebRenderCommands(const gfx::IntSize &aSize,
                                 InfallibleTArray<WebRenderParentCommand>& commands,
                                 const wr::Epoch& aEpoch,
