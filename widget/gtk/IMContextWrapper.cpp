@@ -1046,8 +1046,8 @@ IMContextWrapper::OnStartCompositionNative(GtkIMContext* aContext)
 {
     MOZ_LOG(gGtkIMLog, LogLevel::Info,
         ("0x%p OnStartCompositionNative(aContext=0x%p), "
-         "current context=0x%p",
-         this, aContext, GetCurrentContext()));
+         "current context=0x%p, mComposingContext=0x%p",
+         this, aContext, GetCurrentContext(), mComposingContext));
 
     // See bug 472635, we should do nothing if IM context doesn't match.
     if (GetCurrentContext() != aContext) {
@@ -1058,7 +1058,17 @@ IMContextWrapper::OnStartCompositionNative(GtkIMContext* aContext)
         return;
     }
 
-    mComposingContext = static_cast<GtkIMContext*>(g_object_ref(aContext));
+    if (mComposingContext && aContext != mComposingContext) {
+        // XXX For now, we should ignore this odd case, just logging.
+        MOZ_LOG(gGtkIMLog, LogLevel::Warning,
+            ("0x%p   OnStartCompositionNative(), Warning, "
+             "there is already a composing context but starting new "
+             "composition with different context",
+             this));
+    }
+
+    // IME may start composition without "preedit_start" signal.  Therefore,
+    // mComposingContext will be initialized in DispatchCompositionStart().
 
     if (!DispatchCompositionStart(aContext)) {
         return;
@@ -1079,8 +1089,8 @@ void
 IMContextWrapper::OnEndCompositionNative(GtkIMContext* aContext)
 {
     MOZ_LOG(gGtkIMLog, LogLevel::Info,
-        ("0x%p OnEndCompositionNative(aContext=0x%p)",
-         this, aContext));
+        ("0x%p OnEndCompositionNative(aContext=0x%p), mComposingContext=0x%p",
+         this, aContext, mComposingContext));
 
     // See bug 472635, we should do nothing if IM context doesn't match.
     // Note that if this is called after focus move, the context may different
@@ -1089,6 +1099,15 @@ IMContextWrapper::OnEndCompositionNative(GtkIMContext* aContext)
         MOZ_LOG(gGtkIMLog, LogLevel::Error,
             ("0x%p    OnEndCompositionNative(), FAILED, "
              "given context doesn't match with any context",
+             this));
+        return;
+    }
+
+    // If we've not started composition with aContext, we should ignore it.
+    if (aContext != mComposingContext) {
+        MOZ_LOG(gGtkIMLog, LogLevel::Warning,
+            ("0x%p    OnEndCompositionNative(), Warning, "
+             "given context doesn't match with mComposingContext",
              this));
         return;
     }
@@ -1121,8 +1140,9 @@ void
 IMContextWrapper::OnChangeCompositionNative(GtkIMContext* aContext)
 {
     MOZ_LOG(gGtkIMLog, LogLevel::Info,
-        ("0x%p OnChangeCompositionNative(aContext=0x%p)",
-         this, aContext));
+        ("0x%p OnChangeCompositionNative(aContext=0x%p), "
+         "mComposingContext=0x%p",
+         this, aContext, mComposingContext));
 
     // See bug 472635, we should do nothing if IM context doesn't match.
     // Note that if this is called after focus move, the context may different
@@ -1135,9 +1155,21 @@ IMContextWrapper::OnChangeCompositionNative(GtkIMContext* aContext)
         return;
     }
 
+    if (mComposingContext && aContext != mComposingContext) {
+        // XXX For now, we should ignore this odd case, just logging.
+        MOZ_LOG(gGtkIMLog, LogLevel::Warning,
+            ("0x%p   OnChangeCompositionNative(), Warning, "
+             "given context doesn't match with composing context",
+             this));
+    }
+
     nsAutoString compositionString;
     GetCompositionString(aContext, compositionString);
     if (!IsComposing() && compositionString.IsEmpty()) {
+        MOZ_LOG(gGtkIMLog, LogLevel::Warning,
+            ("0x%p   OnChangeCompositionNative(), Warning, does nothing "
+             "because has not started composition and composing string is "
+             "empty", this));
         mDispatchedCompositionString.Truncate();
         return; // Don't start the composition with empty string.
     }
@@ -1267,6 +1299,10 @@ IMContextWrapper::OnCommitCompositionNative(GtkIMContext* aContext,
     // events with empty string.  Of course, they are unnecessary events
     // for Web applications and our editor.
     if (!IsComposingOn(aContext) && !commitString[0]) {
+        MOZ_LOG(gGtkIMLog, LogLevel::Warning,
+            ("0x%p   OnCommitCompositionNative(), Warning, does nothing "
+             "because has not started composition and commit string is empty",
+             this));
         return;
     }
 
@@ -1355,6 +1391,9 @@ IMContextWrapper::DispatchCompositionStart(GtkIMContext* aContext)
         return false;
     }
 
+    mComposingContext = static_cast<GtkIMContext*>(g_object_ref(aContext));
+    MOZ_ASSERT(mComposingContext);
+
     // Keep the last focused window alive
     RefPtr<nsWindow> lastFocusedWindow(mLastFocusedWindow);
 
@@ -1367,21 +1406,46 @@ IMContextWrapper::DispatchCompositionStart(GtkIMContext* aContext)
 
     if (mProcessingKeyEvent && !mKeyDownEventWasSent &&
         mProcessingKeyEvent->type == GDK_KEY_PRESS) {
+        // A keydown event handler may change focus with the following keydown
+        // event.  In such case, we need to cancel this composition.  So, we
+        // need to store IM context now because mComposingContext may be
+        // overwritten with different context if calling this method
+        // recursively.
+        // Note that we don't need to grab the context here because |context|
+        // will be used only for checking if it's same as mComposingContext.
+        GtkIMContext* context = mComposingContext;
+
         // If this composition is started by a native keydown event, we need to
         // dispatch our keydown event here (before composition start).
         bool isCancelled;
         mLastFocusedWindow->DispatchKeyDownEvent(mProcessingKeyEvent,
                                                  &isCancelled);
         MOZ_LOG(gGtkIMLog, LogLevel::Debug,
-            ("0x%p   DispatchCompositionStart(), FAILED, keydown event "
-             "is dispatched",
+            ("0x%p   DispatchCompositionStart(), preceding keydown event is "
+             "dispatched",
              this));
         if (lastFocusedWindow->IsDestroyed() ||
             lastFocusedWindow != mLastFocusedWindow) {
-            MOZ_LOG(gGtkIMLog, LogLevel::Error,
-                ("0x%p   DispatchCompositionStart(), FAILED, the focused "
+            MOZ_LOG(gGtkIMLog, LogLevel::Warning,
+                ("0x%p   DispatchCompositionStart(), Warning, the focused "
                  "widget was destroyed/changed by keydown event",
                  this));
+            return false;
+        }
+
+        // If the dispatched keydown event caused moving focus and that also
+        // caused changing active context, we need to cancel composition here.
+        if (GetCurrentContext() != context) {
+            MOZ_LOG(gGtkIMLog, LogLevel::Warning,
+                ("0x%p   DispatchCompositionStart(), Warning, the preceding "
+                 "keydown event causes changing active IM context",
+                 this));
+            if (mComposingContext == context) {
+                // Only when the context is still composing, we should call
+                // ResetIME() here.  Otherwise, it should've already been
+                // cleaned up.
+                ResetIME();
+            }
             return false;
         }
     }
