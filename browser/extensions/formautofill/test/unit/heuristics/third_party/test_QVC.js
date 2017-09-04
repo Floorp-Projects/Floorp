@@ -17,10 +17,10 @@ runHeuristicsTest([
         // FIXME: bug 1392947 - this is a compound cc-exp field rather than the
         // separated ones below. the birthday fields are misdetected as
         // cc-exp-year and cc-exp-month.
-//      {"section": "", "addressType": "", "contactType": "", "fieldName": "cc-exp"},
-        {"section": "", "addressType": "", "contactType": "", "fieldName": "cc-exp-year"},
+        {"section": "", "addressType": "", "contactType": "", "fieldName": "cc-exp"},
+//      {"section": "", "addressType": "", "contactType": "", "fieldName": "cc-exp-year"},
         {"section": "", "addressType": "", "contactType": "", "fieldName": "cc-number"},
-        {"section": "", "addressType": "", "contactType": "", "fieldName": "cc-exp-month"},
+//      {"section": "", "addressType": "", "contactType": "", "fieldName": "cc-exp"},
 
 //      {"section": "", "addressType": "", "contactType": "", "fieldName": "cc-csc"},
       ],
@@ -42,10 +42,10 @@ runHeuristicsTest([
         // FIXME: bug 1392947 - this is a compound cc-exp field rather than the
         // separated ones below. the birthday fields are misdetected as
         // cc-exp-year and cc-exp-month.
-//      {"section": "", "addressType": "", "contactType": "", "fieldName": "cc-exp"}, // select
-        {"section": "", "addressType": "", "contactType": "", "fieldName": "cc-exp-year"},
+        {"section": "", "addressType": "", "contactType": "", "fieldName": "cc-exp"}, // select
+//      {"section": "", "addressType": "", "contactType": "", "fieldName": "cc-exp-year"},
         {"section": "", "addressType": "", "contactType": "", "fieldName": "cc-number"}, // ac-off
-        {"section": "", "addressType": "", "contactType": "", "fieldName": "cc-exp-month"},
+//      {"section": "", "addressType": "", "contactType": "", "fieldName": "cc-exp"},
 
 //      {"section": "", "addressType": "", "contactType": "", "fieldName": "cc-csc"},
       ],
