@@ -4,7 +4,7 @@ fuzzy-if(cocoaWidget,2,6) random-if(Android) == component-alpha-exit-1.html comp
 # The pull-background-* tests are specific to "layers" and are not valid with WebRender.
 # We mark them random-if to make sure they don't crash, but allow any result.
 random-if(webrender) != pull-background-1.html about:blank
-random-if(webrender) random-if(styloVsGecko) != pull-background-2.html about:blank
+random-if(webrender) skip-if(styloVsGecko) != pull-background-2.html about:blank # skip styloVsGecko for imperceptible pixel rounding differences between Stylo and Gecko
 random-if(webrender) != pull-background-3.html about:blank
 random-if(webrender) != pull-background-4.html about:blank
 random-if(webrender) fuzzy-if(styloVsGecko,1,1) != pull-background-5.html about:blank
@@ -20,7 +20,7 @@ skip != pull-background-animated-position-5.html about:blank # Fails because own
 # The pull-background-displayport-* tests are specific to "layers" and are not valid with webrender.
 # We mark them random-if to make sure they don't crash, but allow any result.
 random-if(webrender) skip-if(!asyncPan) != pull-background-displayport-1.html about:blank
-random-if(webrender) skip-if(!asyncPan) random-if(styloVsGecko) != pull-background-displayport-2.html about:blank
+random-if(webrender) skip-if(!asyncPan) skip-if(styloVsGecko) != pull-background-displayport-2.html about:blank # skip styloVsGecko for imperceptible pixel rounding differences between Stylo and Gecko
 random-if(webrender) skip-if(!asyncPan) != pull-background-displayport-3.html about:blank # fails with non-overlay scrollbars and event regions due to bug 1148515
 random-if(webrender) skip-if(!asyncPan) != pull-background-displayport-4.html about:blank # fails with non-overlay scrollbars and event regions due to bug 1148515
 random-if(webrender) skip-if(!asyncPan) fuzzy-if(styloVsGecko,1,1) != pull-background-displayport-5.html about:blank
