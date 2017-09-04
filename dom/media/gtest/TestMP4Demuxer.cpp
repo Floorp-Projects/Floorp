@@ -184,7 +184,7 @@ ToCryptoString(const CryptoSample& aCrypto)
     for (size_t i = 0; i < aCrypto.mKeyId.Length(); i++) {
       res.AppendPrintf("%02x", aCrypto.mKeyId[i]);
     }
-    res.Append(" ");
+    res.AppendLiteral(" ");
     for (size_t i = 0; i < aCrypto.mIV.Length(); i++) {
       res.AppendPrintf("%02x", aCrypto.mIV[i]);
     }
@@ -194,7 +194,7 @@ ToCryptoString(const CryptoSample& aCrypto)
                        aCrypto.mEncryptedSizes[i]);
     }
   } else {
-    res.Append("no crypto");
+    res.AppendLiteral("no crypto");
   }
   return res;
 }

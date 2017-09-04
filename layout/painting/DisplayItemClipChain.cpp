@@ -44,7 +44,7 @@ DisplayItemClipChain::ToString(const DisplayItemClipChain* aClipChain)
       str.AppendPrintf("<%s> [root asr]", sc->mClip.ToString().get());
     }
     if (sc->mParent) {
-      str.Append(", ");
+      str.AppendLiteral(", ");
     }
   }
   return str;

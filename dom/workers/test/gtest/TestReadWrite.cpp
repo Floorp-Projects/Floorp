@@ -154,33 +154,33 @@ TEST(ServiceWorkerRegistrar, TestReadData)
 {
   nsAutoCString buffer(SERVICEWORKERREGISTRAR_VERSION "\n");
 
-  buffer.Append("^appId=123&inBrowser=1\n");
-  buffer.Append("scope 0\ncurrentWorkerURL 0\n");
+  buffer.AppendLiteral("^appId=123&inBrowser=1\n");
+  buffer.AppendLiteral("scope 0\ncurrentWorkerURL 0\n");
   buffer.Append(SERVICEWORKERREGISTRAR_TRUE "\n");
-  buffer.Append("cacheName 0\n");
+  buffer.AppendLiteral("cacheName 0\n");
   buffer.AppendInt(nsIServiceWorkerRegistrationInfo::UPDATE_VIA_CACHE_IMPORTS, 16);
-  buffer.Append("\n");
+  buffer.AppendLiteral("\n");
   buffer.AppendInt(0);
-  buffer.Append("\n");
+  buffer.AppendLiteral("\n");
   buffer.AppendInt(0);
-  buffer.Append("\n");
+  buffer.AppendLiteral("\n");
   buffer.AppendInt(0);
-  buffer.Append("\n");
+  buffer.AppendLiteral("\n");
   buffer.Append(SERVICEWORKERREGISTRAR_TERMINATOR "\n");
 
-  buffer.Append("\n");
-  buffer.Append("scope 1\ncurrentWorkerURL 1\n");
+  buffer.AppendLiteral("\n");
+  buffer.AppendLiteral("scope 1\ncurrentWorkerURL 1\n");
   buffer.Append(SERVICEWORKERREGISTRAR_FALSE "\n");
-  buffer.Append("cacheName 1\n");
+  buffer.AppendLiteral("cacheName 1\n");
   buffer.AppendInt(nsIServiceWorkerRegistrationInfo::UPDATE_VIA_CACHE_ALL, 16);
-  buffer.Append("\n");
+  buffer.AppendLiteral("\n");
   PRTime ts = PR_Now();
   buffer.AppendInt(ts);
-  buffer.Append("\n");
+  buffer.AppendLiteral("\n");
   buffer.AppendInt(ts);
-  buffer.Append("\n");
+  buffer.AppendLiteral("\n");
   buffer.AppendInt(ts);
-  buffer.Append("\n");
+  buffer.AppendLiteral("\n");
   buffer.Append(SERVICEWORKERREGISTRAR_TERMINATOR "\n");
 
   ASSERT_TRUE(CreateFile(buffer)) << "CreateFile should not fail";
@@ -333,13 +333,13 @@ TEST(ServiceWorkerRegistrar, TestVersion2Migration)
 {
   nsAutoCString buffer("2" "\n");
 
-  buffer.Append("^appId=123&inBrowser=1\n");
-  buffer.Append("spec 0\nscope 0\nscriptSpec 0\ncurrentWorkerURL 0\nactiveCache 0\nwaitingCache 0\n");
-  buffer.Append(SERVICEWORKERREGISTRAR_TERMINATOR "\n");
+  buffer.AppendLiteral("^appId=123&inBrowser=1\n");
+  buffer.AppendLiteral("spec 0\nscope 0\nscriptSpec 0\ncurrentWorkerURL 0\nactiveCache 0\nwaitingCache 0\n");
+  buffer.AppendLiteral(SERVICEWORKERREGISTRAR_TERMINATOR "\n");
 
-  buffer.Append("\n");
-  buffer.Append("spec 1\nscope 1\nscriptSpec 1\ncurrentWorkerURL 1\nactiveCache 1\nwaitingCache 1\n");
-  buffer.Append(SERVICEWORKERREGISTRAR_TERMINATOR "\n");
+  buffer.AppendLiteral("\n");
+  buffer.AppendLiteral("spec 1\nscope 1\nscriptSpec 1\ncurrentWorkerURL 1\nactiveCache 1\nwaitingCache 1\n");
+  buffer.AppendLiteral(SERVICEWORKERREGISTRAR_TERMINATOR "\n");
 
   ASSERT_TRUE(CreateFile(buffer)) << "CreateFile should not fail";
 
@@ -394,13 +394,13 @@ TEST(ServiceWorkerRegistrar, TestVersion3Migration)
 {
   nsAutoCString buffer("3" "\n");
 
-  buffer.Append("^appId=123&inBrowser=1\n");
-  buffer.Append("spec 0\nscope 0\ncurrentWorkerURL 0\ncacheName 0\n");
-  buffer.Append(SERVICEWORKERREGISTRAR_TERMINATOR "\n");
+  buffer.AppendLiteral("^appId=123&inBrowser=1\n");
+  buffer.AppendLiteral("spec 0\nscope 0\ncurrentWorkerURL 0\ncacheName 0\n");
+  buffer.AppendLiteral(SERVICEWORKERREGISTRAR_TERMINATOR "\n");
 
-  buffer.Append("\n");
-  buffer.Append("spec 1\nscope 1\ncurrentWorkerURL 1\ncacheName 1\n");
-  buffer.Append(SERVICEWORKERREGISTRAR_TERMINATOR "\n");
+  buffer.AppendLiteral("\n");
+  buffer.AppendLiteral("spec 1\nscope 1\ncurrentWorkerURL 1\ncacheName 1\n");
+  buffer.AppendLiteral(SERVICEWORKERREGISTRAR_TERMINATOR "\n");
 
   ASSERT_TRUE(CreateFile(buffer)) << "CreateFile should not fail";
 
@@ -455,13 +455,13 @@ TEST(ServiceWorkerRegistrar, TestVersion4Migration)
 {
   nsAutoCString buffer("4" "\n");
 
-  buffer.Append("^appId=123&inBrowser=1\n");
-  buffer.Append("scope 0\ncurrentWorkerURL 0\ncacheName 0\n");
-  buffer.Append(SERVICEWORKERREGISTRAR_TERMINATOR "\n");
+  buffer.AppendLiteral("^appId=123&inBrowser=1\n");
+  buffer.AppendLiteral("scope 0\ncurrentWorkerURL 0\ncacheName 0\n");
+  buffer.AppendLiteral(SERVICEWORKERREGISTRAR_TERMINATOR "\n");
 
-  buffer.Append("\n");
-  buffer.Append("scope 1\ncurrentWorkerURL 1\ncacheName 1\n");
-  buffer.Append(SERVICEWORKERREGISTRAR_TERMINATOR "\n");
+  buffer.AppendLiteral("\n");
+  buffer.AppendLiteral("scope 1\ncurrentWorkerURL 1\ncacheName 1\n");
+  buffer.AppendLiteral(SERVICEWORKERREGISTRAR_TERMINATOR "\n");
 
   ASSERT_TRUE(CreateFile(buffer)) << "CreateFile should not fail";
 
@@ -518,17 +518,17 @@ TEST(ServiceWorkerRegistrar, TestVersion5Migration)
 {
   nsAutoCString buffer("5" "\n");
 
-  buffer.Append("^appId=123&inBrowser=1\n");
-  buffer.Append("scope 0\ncurrentWorkerURL 0\n");
-  buffer.Append(SERVICEWORKERREGISTRAR_TRUE "\n");
-  buffer.Append("cacheName 0\n");
-  buffer.Append(SERVICEWORKERREGISTRAR_TERMINATOR "\n");
+  buffer.AppendLiteral("^appId=123&inBrowser=1\n");
+  buffer.AppendLiteral("scope 0\ncurrentWorkerURL 0\n");
+  buffer.AppendLiteral(SERVICEWORKERREGISTRAR_TRUE "\n");
+  buffer.AppendLiteral("cacheName 0\n");
+  buffer.AppendLiteral(SERVICEWORKERREGISTRAR_TERMINATOR "\n");
 
-  buffer.Append("\n");
-  buffer.Append("scope 1\ncurrentWorkerURL 1\n");
-  buffer.Append(SERVICEWORKERREGISTRAR_FALSE "\n");
-  buffer.Append("cacheName 1\n");
-  buffer.Append(SERVICEWORKERREGISTRAR_TERMINATOR "\n");
+  buffer.AppendLiteral("\n");
+  buffer.AppendLiteral("scope 1\ncurrentWorkerURL 1\n");
+  buffer.AppendLiteral(SERVICEWORKERREGISTRAR_FALSE "\n");
+  buffer.AppendLiteral("cacheName 1\n");
+  buffer.AppendLiteral(SERVICEWORKERREGISTRAR_TERMINATOR "\n");
 
   ASSERT_TRUE(CreateFile(buffer)) << "CreateFile should not fail";
 
@@ -583,21 +583,21 @@ TEST(ServiceWorkerRegistrar, TestVersion6Migration)
 {
   nsAutoCString buffer("6" "\n");
 
-  buffer.Append("^appId=123&inBrowser=1\n");
-  buffer.Append("scope 0\ncurrentWorkerURL 0\n");
-  buffer.Append(SERVICEWORKERREGISTRAR_TRUE "\n");
-  buffer.Append("cacheName 0\n");
+  buffer.AppendLiteral("^appId=123&inBrowser=1\n");
+  buffer.AppendLiteral("scope 0\ncurrentWorkerURL 0\n");
+  buffer.AppendLiteral(SERVICEWORKERREGISTRAR_TRUE "\n");
+  buffer.AppendLiteral("cacheName 0\n");
   buffer.AppendInt(nsIRequest::LOAD_NORMAL, 16);
-  buffer.Append("\n");
-  buffer.Append(SERVICEWORKERREGISTRAR_TERMINATOR "\n");
+  buffer.AppendLiteral("\n");
+  buffer.AppendLiteral(SERVICEWORKERREGISTRAR_TERMINATOR "\n");
 
-  buffer.Append("\n");
-  buffer.Append("scope 1\ncurrentWorkerURL 1\n");
-  buffer.Append(SERVICEWORKERREGISTRAR_FALSE "\n");
-  buffer.Append("cacheName 1\n");
+  buffer.AppendLiteral("\n");
+  buffer.AppendLiteral("scope 1\ncurrentWorkerURL 1\n");
+  buffer.AppendLiteral(SERVICEWORKERREGISTRAR_FALSE "\n");
+  buffer.AppendLiteral("cacheName 1\n");
   buffer.AppendInt(nsIRequest::VALIDATE_ALWAYS, 16);
-  buffer.Append("\n");
-  buffer.Append(SERVICEWORKERREGISTRAR_TERMINATOR "\n");
+  buffer.AppendLiteral("\n");
+  buffer.AppendLiteral(SERVICEWORKERREGISTRAR_TERMINATOR "\n");
 
   ASSERT_TRUE(CreateFile(buffer)) << "CreateFile should not fail";
 
@@ -652,34 +652,34 @@ TEST(ServiceWorkerRegistrar, TestVersion7Migration)
 {
   nsAutoCString buffer("7" "\n");
 
-  buffer.Append("^appId=123&inBrowser=1\n");
-  buffer.Append("scope 0\ncurrentWorkerURL 0\n");
-  buffer.Append(SERVICEWORKERREGISTRAR_TRUE "\n");
-  buffer.Append("cacheName 0\n");
+  buffer.AppendLiteral("^appId=123&inBrowser=1\n");
+  buffer.AppendLiteral("scope 0\ncurrentWorkerURL 0\n");
+  buffer.AppendLiteral(SERVICEWORKERREGISTRAR_TRUE "\n");
+  buffer.AppendLiteral("cacheName 0\n");
   buffer.AppendInt(nsIRequest::LOAD_NORMAL, 16);
-  buffer.Append("\n");
+  buffer.AppendLiteral("\n");
   buffer.AppendInt(0);
-  buffer.Append("\n");
+  buffer.AppendLiteral("\n");
   buffer.AppendInt(0);
-  buffer.Append("\n");
+  buffer.AppendLiteral("\n");
   buffer.AppendInt(0);
-  buffer.Append("\n");
-  buffer.Append(SERVICEWORKERREGISTRAR_TERMINATOR "\n");
+  buffer.AppendLiteral("\n");
+  buffer.AppendLiteral(SERVICEWORKERREGISTRAR_TERMINATOR "\n");
 
-  buffer.Append("\n");
-  buffer.Append("scope 1\ncurrentWorkerURL 1\n");
-  buffer.Append(SERVICEWORKERREGISTRAR_FALSE "\n");
-  buffer.Append("cacheName 1\n");
+  buffer.AppendLiteral("\n");
+  buffer.AppendLiteral("scope 1\ncurrentWorkerURL 1\n");
+  buffer.AppendLiteral(SERVICEWORKERREGISTRAR_FALSE "\n");
+  buffer.AppendLiteral("cacheName 1\n");
   buffer.AppendInt(nsIRequest::VALIDATE_ALWAYS, 16);
-  buffer.Append("\n");
+  buffer.AppendLiteral("\n");
   PRTime ts = PR_Now();
   buffer.AppendInt(ts);
-  buffer.Append("\n");
+  buffer.AppendLiteral("\n");
   buffer.AppendInt(ts);
-  buffer.Append("\n");
+  buffer.AppendLiteral("\n");
   buffer.AppendInt(ts);
-  buffer.Append("\n");
-  buffer.Append(SERVICEWORKERREGISTRAR_TERMINATOR "\n");
+  buffer.AppendLiteral("\n");
+  buffer.AppendLiteral(SERVICEWORKERREGISTRAR_TERMINATOR "\n");
 
   ASSERT_TRUE(CreateFile(buffer)) << "CreateFile should not fail";
 
@@ -735,26 +735,26 @@ TEST(ServiceWorkerRegistrar, TestDedupeRead)
   nsAutoCString buffer("3" "\n");
 
   // unique entries
-  buffer.Append("^appId=123&inBrowser=1\n");
-  buffer.Append("spec 0\nscope 0\ncurrentWorkerURL 0\ncacheName 0\n");
-  buffer.Append(SERVICEWORKERREGISTRAR_TERMINATOR "\n");
+  buffer.AppendLiteral("^appId=123&inBrowser=1\n");
+  buffer.AppendLiteral("spec 0\nscope 0\ncurrentWorkerURL 0\ncacheName 0\n");
+  buffer.AppendLiteral(SERVICEWORKERREGISTRAR_TERMINATOR "\n");
 
-  buffer.Append("\n");
-  buffer.Append("spec 1\nscope 1\ncurrentWorkerURL 1\ncacheName 1\n");
-  buffer.Append(SERVICEWORKERREGISTRAR_TERMINATOR "\n");
+  buffer.AppendLiteral("\n");
+  buffer.AppendLiteral("spec 1\nscope 1\ncurrentWorkerURL 1\ncacheName 1\n");
+  buffer.AppendLiteral(SERVICEWORKERREGISTRAR_TERMINATOR "\n");
 
   // dupe entries
-  buffer.Append("^appId=123&inBrowser=1\n");
-  buffer.Append("spec 1\nscope 0\ncurrentWorkerURL 0\ncacheName 0\n");
-  buffer.Append(SERVICEWORKERREGISTRAR_TERMINATOR "\n");
+  buffer.AppendLiteral("^appId=123&inBrowser=1\n");
+  buffer.AppendLiteral("spec 1\nscope 0\ncurrentWorkerURL 0\ncacheName 0\n");
+  buffer.AppendLiteral(SERVICEWORKERREGISTRAR_TERMINATOR "\n");
 
-  buffer.Append("^appId=123&inBrowser=1\n");
-  buffer.Append("spec 2\nscope 0\ncurrentWorkerURL 0\ncacheName 0\n");
-  buffer.Append(SERVICEWORKERREGISTRAR_TERMINATOR "\n");
+  buffer.AppendLiteral("^appId=123&inBrowser=1\n");
+  buffer.AppendLiteral("spec 2\nscope 0\ncurrentWorkerURL 0\ncacheName 0\n");
+  buffer.AppendLiteral(SERVICEWORKERREGISTRAR_TERMINATOR "\n");
 
-  buffer.Append("\n");
-  buffer.Append("spec 3\nscope 1\ncurrentWorkerURL 1\ncacheName 1\n");
-  buffer.Append(SERVICEWORKERREGISTRAR_TERMINATOR "\n");
+  buffer.AppendLiteral("\n");
+  buffer.AppendLiteral("spec 3\nscope 1\ncurrentWorkerURL 1\ncacheName 1\n");
+  buffer.AppendLiteral(SERVICEWORKERREGISTRAR_TERMINATOR "\n");
 
   ASSERT_TRUE(CreateFile(buffer)) << "CreateFile should not fail";
 

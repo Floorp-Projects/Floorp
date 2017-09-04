@@ -144,13 +144,13 @@ class OriginKeyStore : public nsISupports
             PrincipalInfoToString(info.whitelist()[i], str);
 
             if (i != 0) {
-              aString.Append(", ");
+              aString.AppendLiteral(", ");
             }
 
             aString.Append(str);
           }
 
-          aString.Append("]]");
+          aString.AppendLiteral("]]");
           return;
         }
 
