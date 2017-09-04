@@ -325,7 +325,7 @@ function ModuleInstantiate()
 
         assert(module.status === MODULE_STATUS_ERRORED,
                "Bad module status after failed instantiation");
-        assert(UnsafeGetReservedSlot(module, MODULE_OBJECT_ERROR_SLOT) === error,
+        assert(SameValue(UnsafeGetReservedSlot(module, MODULE_OBJECT_ERROR_SLOT), error),
                "Module has different error set after failed instantiation");
 
         throw error;
@@ -550,7 +550,7 @@ function ModuleEvaluate()
 
         assert(module.status === MODULE_STATUS_ERRORED,
                "Bad module status after failed evaluation");
-        assert(UnsafeGetReservedSlot(module, MODULE_OBJECT_ERROR_SLOT) === error,
+        assert(SameValue(UnsafeGetReservedSlot(module, MODULE_OBJECT_ERROR_SLOT), error),
                "Module has different error set after failed evaluation");
 
         throw error;
