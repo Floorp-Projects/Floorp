@@ -673,7 +673,7 @@ UpgradeHostToOriginAndInsert(const nsACString& aHost, const nsCString& aType,
     if (aHost.FindChar(':') != -1) {
       hostSegment.AssignLiteral("[");
       hostSegment.Append(aHost);
-      hostSegment.Append("]");
+      hostSegment.AppendLiteral("]");
     } else {
       hostSegment.Assign(aHost);
     }

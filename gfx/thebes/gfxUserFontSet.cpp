@@ -1453,7 +1453,7 @@ gfxUserFontSet::UserFontCache::Entry::ReportMemory(
             if (NS_SUCCEEDED(mURI->get()->SchemeIs("data", &isData)) && isData &&
                 spec.Length() > 255) {
                 spec.Truncate(252);
-                spec.Append("...");
+                spec.AppendLiteral("...");
             }
             path.AppendPrintf(", url=%s", spec.get());
         }

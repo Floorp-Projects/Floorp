@@ -423,7 +423,7 @@ LookupCache::GetHostKeys(const nsACString& aSpec,
       return NS_ERROR_OUT_OF_MEMORY;
 
     key->Assign(host);
-    key->Append("/");
+    key->AppendLiteral("/");
     return NS_OK;
   }
 
@@ -442,9 +442,9 @@ LookupCache::GetHostKeys(const nsACString& aSpec,
     return NS_ERROR_OUT_OF_MEMORY;
 
   lookupHost->Assign(hostComponents[last - 1]);
-  lookupHost->Append(".");
+  lookupHost->AppendLiteral(".");
   lookupHost->Append(hostComponents[last]);
-  lookupHost->Append("/");
+  lookupHost->AppendLiteral("/");
 
   // Now check with three domain components
   if (hostComponents.Length() > 2) {
@@ -452,7 +452,7 @@ LookupCache::GetHostKeys(const nsACString& aSpec,
     if (!lookupHost2)
       return NS_ERROR_OUT_OF_MEMORY;
     lookupHost2->Assign(hostComponents[last - 2]);
-    lookupHost2->Append(".");
+    lookupHost2->AppendLiteral(".");
     lookupHost2->Append(*lookupHost);
   }
 

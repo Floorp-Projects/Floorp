@@ -193,15 +193,15 @@ NeckoParent::GetValidatedOriginAttributes(const SerializedLoadContext& aSerializ
 
     if (!ChromeUtils::IsOriginAttributesEqual(aSerialized.mOriginAttributes,
                                               tabContext.OriginAttributesRef())) {
-      debugString.Append("(");
+      debugString.AppendLiteral("(");
       debugString.Append(serializedSuffix);
-      debugString.Append(",");
+      debugString.AppendLiteral(",");
 
       nsAutoCString tabSuffix;
       tabContext.OriginAttributesRef().CreateAnonymizedSuffix(tabSuffix);
       debugString.Append(tabSuffix);
 
-      debugString.Append(")");
+      debugString.AppendLiteral(")");
       continue;
     }
 
@@ -224,7 +224,7 @@ NeckoParent::GetValidatedOriginAttributes(const SerializedLoadContext& aSerializ
   }
 
   nsAutoCString errorString;
-  errorString.Append("GetValidatedOriginAttributes | App does not have permission -");
+  errorString.AppendLiteral("GetValidatedOriginAttributes | App does not have permission -");
   errorString.Append(debugString);
 
   // Leak the buffer on the heap to make sure that it lives long enough, as

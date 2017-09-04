@@ -129,7 +129,7 @@ ReportError(JSContext* cx, const char* origMsg, nsIURI* uri)
         spec.AssignLiteral("(unknown)");
 
     nsAutoCString msg(origMsg);
-    msg.Append(": ");
+    msg.AppendLiteral(": ");
     msg.Append(spec);
     ReportError(cx, msg);
 }

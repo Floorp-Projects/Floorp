@@ -1073,7 +1073,7 @@ PendingLookup::GetStrippedSpec(nsIURI* aUri, nsACString& escaped)
   rv = url->GetHostPort(temp);
   NS_ENSURE_SUCCESS(rv, rv);
 
-  escaped.Append("://");
+  escaped.AppendLiteral("://");
   escaped.Append(temp);
 
   rv = url->GetFilePath(temp);
