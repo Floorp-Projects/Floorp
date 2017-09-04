@@ -63,8 +63,7 @@ nsSVGMaskFrame::GetMaskForMaskedFrame(MaskParams& aParams)
   // and maskArea) is important for performance.
   context->Save();
   nsSVGUtils::SetClipRect(context, aParams.toUserSpace, maskArea);
-  context->SetMatrix(gfxMatrix());
-  gfxRect maskSurfaceRect = context->GetClipExtents();
+  gfxRect maskSurfaceRect = context->GetClipExtents(gfxContext::eDeviceSpace);
   maskSurfaceRect.RoundOut();
   context->Restore();
 
