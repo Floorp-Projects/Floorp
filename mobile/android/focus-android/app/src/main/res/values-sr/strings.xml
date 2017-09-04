@@ -42,7 +42,6 @@
   <string name="preference_performance_block_images">Блокирај слике</string>
   <string name="preference_default_browser">Учини подразумеваним прегледачем</string>
   <string name="preference_category_mozilla">Mozilla</string>
-  <string name="preference_mozilla_telemetry">Анонимно шаљи податке о коришћењу</string>
   <string name="preference_mozilla_telemetry_summary">Сазнајте више</string>
   <string name="preference_mozilla_telemetry_summary2">Mozilla тежи ка прикупљању само оних података који су потребни да бисмо пружали и побољшали %1$s за све.</string>
   <string name="preference_privacy_notice">Обавештење о приватности</string>

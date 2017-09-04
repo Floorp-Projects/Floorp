@@ -39,7 +39,6 @@
   <string name="preference_performance_block_images">이미지 차단</string>
   <string name="preference_default_browser">기본 브라우저로 설정</string>
   <string name="preference_category_mozilla">Mozilla</string>
-  <string name="preference_mozilla_telemetry">익명으로 사용 데이터 보내기</string>
   <string name="preference_mozilla_telemetry_summary">상세정보</string>
   <string name="preference_about">%1$s에 대한 정보</string>
   <string name="content_description_clear_input">입력 값 초기화</string>

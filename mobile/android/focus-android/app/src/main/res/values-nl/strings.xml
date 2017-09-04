@@ -42,7 +42,6 @@
   <string name="preference_performance_block_images">Afbeeldingen blokkeren</string>
   <string name="preference_default_browser">Standaardbrowser maken</string>
   <string name="preference_category_mozilla">Mozilla</string>
-  <string name="preference_mozilla_telemetry">Anonieme gebruiksgegevens verzenden</string>
   <string name="preference_mozilla_telemetry_summary">Meer info</string>
   <string name="preference_mozilla_telemetry_summary2">Mozilla streeft ernaar alleen te verzamelen wat nodig is om %1$s voor iedereen aan te bieden en te verbeteren.</string>
   <string name="preference_privacy_notice">Privacyverklaring</string>

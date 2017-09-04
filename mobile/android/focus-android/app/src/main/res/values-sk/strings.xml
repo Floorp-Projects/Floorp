@@ -42,7 +42,6 @@
   <string name="preference_performance_block_images">Blokovať obrázky</string>
   <string name="preference_default_browser">Nastaviť ako predvolený prehliadač</string>
   <string name="preference_category_mozilla">Mozilla</string>
-  <string name="preference_mozilla_telemetry">Odosielať anonymné údaje o používaní</string>
   <string name="preference_mozilla_telemetry_summary">Ďalšie informácie</string>
   <string name="preference_mozilla_telemetry_summary2">Mozilla sa usiluje zbierať len údaje, ktoré potrebujeme na vylepšenie aplikácie %1$s pre všetkých.</string>
   <string name="preference_privacy_notice">Zásady ochrany súkromia</string>

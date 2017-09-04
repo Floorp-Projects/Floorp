@@ -42,7 +42,6 @@
   <string name="preference_performance_block_images">Képek blokkolása</string>
   <string name="preference_default_browser">Alapértelmezett böngészővé tétel</string>
   <string name="preference_category_mozilla">Mozilla</string>
-  <string name="preference_mozilla_telemetry">Névtelen használati adatok küldése</string>
   <string name="preference_mozilla_telemetry_summary">Tudjon meg többet</string>
   <string name="preference_mozilla_telemetry_summary2">A Mozilla arra törekszik, hogy csak azt gyűjtse, ami a %1$s fejlesztéséhez és támogatásához szükséges.</string>
   <string name="preference_privacy_notice">Adatvédelmi nyilatkozat</string>

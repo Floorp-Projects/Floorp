@@ -42,7 +42,6 @@
   <string name="preference_performance_block_images">Blockera bilder</string>
   <string name="preference_default_browser">Gör till standardwebbläsare</string>
   <string name="preference_category_mozilla">Mozilla</string>
-  <string name="preference_mozilla_telemetry">Skicka anonym användardata</string>
   <string name="preference_mozilla_telemetry_summary">Läs mer</string>
   <string name="preference_mozilla_telemetry_summary2">Mozilla strävar efter att endast samla in det vi behöver för att tillhandahålla och förbättra %1$s för alla.</string>
   <string name="preference_privacy_notice">Sekretesspolicy</string>

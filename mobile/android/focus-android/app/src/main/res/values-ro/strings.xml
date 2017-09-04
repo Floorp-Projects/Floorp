@@ -38,7 +38,6 @@
   <string name="preference_performance_block_images">Blochează imaginile</string>
   <string name="preference_default_browser">Desemnează ca browser implicit</string>
   <string name="preference_category_mozilla">Mozilla</string>
-  <string name="preference_mozilla_telemetry">Trimite date anonime de utilizare</string>
   <string name="preference_mozilla_telemetry_summary">Află mai multe</string>
   <string name="preference_about">Despre %1$s</string>
   <string name="content_description_clear_input">Șterge adresa introdusă</string>

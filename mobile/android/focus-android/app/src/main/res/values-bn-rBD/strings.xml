@@ -39,7 +39,6 @@
   <string name="preference_performance_block_images">ইমেজ ব্লক করুন</string>
   <string name="preference_default_browser">ডিফল্ট ব্রাউজার করুন</string>
   <string name="preference_category_mozilla">Mozilla</string>
-  <string name="preference_mozilla_telemetry">ব্যবহার সম্পর্কিত ডাটা ছদ্মনামে প্রেরণ করুন</string>
   <string name="preference_mozilla_telemetry_summary">আরও জানুন</string>
   <string name="preference_about">%1$s সম্পর্কে</string>
   <string name="content_description_clear_input">ইনপুট পরিস্কার</string>

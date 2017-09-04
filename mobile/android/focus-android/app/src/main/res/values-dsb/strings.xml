@@ -42,7 +42,6 @@
   <string name="preference_performance_block_images">Wobraze blokěrowaś</string>
   <string name="preference_default_browser">Jako standardny wobglědowak nastajiś</string>
   <string name="preference_category_mozilla">Mozilla</string>
-  <string name="preference_mozilla_telemetry">Anonymne wužywańske daty pósłaś</string>
   <string name="preference_mozilla_telemetry_summary">Dalšne informacije</string>
   <string name="preference_mozilla_telemetry_summary2">Mozilla se procujo, jano informacije gromaźiś, z kótarymiž móžomy %1$s za kuždego póbitowaś a pólěpšyś.</string>
   <string name="preference_privacy_notice">Powěźeńka priwatnosći</string>

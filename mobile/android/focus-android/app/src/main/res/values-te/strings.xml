@@ -42,7 +42,6 @@
   <string name="preference_performance_block_images">బొమ్మలను నిరోధించు</string>
   <string name="preference_default_browser">అప్రమేయ విహరిణిగా చేయి</string>
   <string name="preference_category_mozilla">Mozilla</string>
-  <string name="preference_mozilla_telemetry">అనామక వాడుక దత్తాంశాన్ని పంపించు</string>
   <string name="preference_mozilla_telemetry_summary">ఇంకా తెలుసుకోండి</string>
   <string name="preference_about">%1$s గురించి</string>
   <string name="content_description_clear_input">ఇన్‌పుట్‌ను తుడిచివేయి</string>

@@ -38,7 +38,6 @@
   <string name="preference_performance_block_images">ရုပ်ပုံများကို မပြပါနှင့်</string>
   <string name="preference_default_browser">ပုံသေအသုံးပြုမည့် ဘရောင်ဇာအဖြစ် သတ်မှတ်ပါ</string>
   <string name="preference_category_mozilla">Mozilla</string>
-  <string name="preference_mozilla_telemetry">အမျိုးအမည်မဲ့ အသုံးပြုမှု အချက်အလက်များကို ပေးပို့ရန်</string>
   <string name="preference_mozilla_telemetry_summary">ပိုမိုလေ့လာရန်</string>
   <string name="preference_about">%1$s အကြောင်း</string>
   <string name="content_description_clear_input">Input ကို ရှင်းလင်းရန်</string>

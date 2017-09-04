@@ -42,7 +42,6 @@
   <string name="preference_performance_block_images">სურათების შეზღუდვა</string>
   <string name="preference_default_browser">ნაგულისხმევ ბრაუზერად დაყენება</string>
   <string name="preference_category_mozilla">Mozilla</string>
-  <string name="preference_mozilla_telemetry">გამოყენების შესახებ, ანონიმური მონაცემების გაგზავნა</string>
   <string name="preference_mozilla_telemetry_summary">შეიტყვეთ მეტი</string>
   <string name="preference_mozilla_telemetry_summary2">Mozill აღრიცხავს მხოლოდ იმ მონაცემებს, რაც საჭიროა %1$s-ის გასაუმჯობესებლად.</string>
   <string name="preference_privacy_notice">პირადი მონაცემების დაცვა</string>

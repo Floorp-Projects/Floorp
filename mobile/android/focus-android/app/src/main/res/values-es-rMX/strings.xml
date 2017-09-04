@@ -42,7 +42,6 @@
   <string name="preference_performance_block_images">Bloquear imágenes</string>
   <string name="preference_default_browser">Hacer el navegador predeterminado</string>
   <string name="preference_category_mozilla">Mozilla</string>
-  <string name="preference_mozilla_telemetry">Enviar datos de uso de forma anónima</string>
   <string name="preference_mozilla_telemetry_summary">Saber más</string>
   <string name="preference_mozilla_telemetry_summary2">Mozilla lucha por recolectar solo lo necesario para brindar y mejorar %1$s para todos.</string>
   <string name="preference_privacy_notice">Aviso de privacidad</string>

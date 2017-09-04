@@ -42,7 +42,6 @@
   <string name="preference_performance_block_images">画像をブロック</string>
   <string name="preference_default_browser">既定のブラウザーに設定</string>
   <string name="preference_category_mozilla">Mozilla</string>
-  <string name="preference_mozilla_telemetry">匿名の使用状況データを送信</string>
   <string name="preference_mozilla_telemetry_summary">詳細情報</string>
   <string name="preference_mozilla_telemetry_summary2">Mozilla は %1$s を皆さんに提供し改善するために必要な情報だけを収集するよう努めています。</string>
   <string name="preference_privacy_notice">プライバシー通知</string>

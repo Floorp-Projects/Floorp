@@ -34,7 +34,6 @@
   <string name="preference_performance_block_images">Bloker billeder</string>
   <string name="preference_default_browser">Angiv som standard-browser</string>
   <string name="preference_category_mozilla">Mozilla</string>
-  <string name="preference_mozilla_telemetry">Send anonyme brugsdata</string>
   <string name="preference_mozilla_telemetry_summary">Læs mere</string>
   <string name="preference_privacy_notice">Privatlivspolitik</string>
   <string name="preference_about">Om %1$s</string>
