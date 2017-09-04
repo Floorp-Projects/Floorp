@@ -765,9 +765,19 @@ public class BrowserFragment extends WebFragment implements View.OnClickListener
             }
 
             case R.id.share: {
+                final String url = getUrl();
                 final Intent shareIntent = new Intent(Intent.ACTION_SEND);
                 shareIntent.setType("text/plain");
-                shareIntent.putExtra(Intent.EXTRA_TEXT, getUrl());
+                shareIntent.putExtra(Intent.EXTRA_TEXT, url);
+                // Use title from webView if it's content matches the url
+                final IWebView webView = getWebView();
+                if (webView != null) {
+                    final String contentUrl = webView.getUrl();
+                    if (contentUrl != null && contentUrl.equals(url)) {
+                        final String contentTitle = webView.getTitle();
+                        shareIntent.putExtra(Intent.EXTRA_SUBJECT, contentTitle);
+                    }
+                }
                 startActivity(Intent.createChooser(shareIntent, getString(R.string.share_dialog_title)));
 
                 TelemetryWrapper.shareEvent();
