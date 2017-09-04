@@ -1480,18 +1480,10 @@ GeckoDriver.prototype.setWindowRect = async function(cmd, resp) {
   let {x, y, width, height} = cmd.parameters;
   let origRect = this.curBrowser.rect;
 
-  // Throttle resize event by forcing the event queue to flush and delay
-  // until the main thread is idle.
-  function optimisedResize(resolve) {
-    return () => Services.tm.idleDispatchToMainThread(() => {
-      win.requestAnimationFrame(resolve);
-    });
-  }
-
   // Exit fullscreen and wait for window to resize.
   async function exitFullscreen() {
     return new Promise(resolve => {
-      win.addEventListener("sizemodechange", optimisedResize(resolve), {once: true});
+      win.addEventListener("sizemodechange", whenIdle(win, resolve), {once: true});
       win.fullScreen = false;
     });
   }
@@ -1499,7 +1491,7 @@ GeckoDriver.prototype.setWindowRect = async function(cmd, resp) {
   // Restore window and wait for the window state to change.
   async function restoreWindow() {
     return new Promise(resolve => {
-      win.addEventListener("sizemodechange", resolve, {once: true});
+      win.addEventListener("sizemodechange", whenIdle(win, resolve), {once: true});
       win.restore();
     });
   }
@@ -1507,7 +1499,7 @@ GeckoDriver.prototype.setWindowRect = async function(cmd, resp) {
   // Synchronous resize to |width| and |height| dimensions.
   async function resizeWindow(width, height) {
     return new Promise(resolve => {
-      win.addEventListener("resize", optimisedResize(resolve), {once: true});
+      win.addEventListener("resize", whenIdle(win, resolve), {once: true});
       win.resizeTo(width, height);
     });
   }
@@ -3026,7 +3018,7 @@ GeckoDriver.prototype.minimizeWindow = async function(cmd, resp) {
   let state = WindowState.from(win.windowState);
   if (state != WindowState.Minimized) {
     await new Promise(resolve => {
-      win.addEventListener("sizemodechange", resolve, {once: true});
+      win.addEventListener("sizemodechange", whenIdle(win, resolve), {once: true});
       win.minimize();
     });
   }
@@ -3704,4 +3696,24 @@ function getOuterWindowId(win) {
   return win.QueryInterface(Ci.nsIInterfaceRequestor)
       .getInterface(Ci.nsIDOMWindowUtils)
       .outerWindowID;
+}
+
+/**
+ * Throttle <var>callback</var> until the main thread is idle and
+ * <var>window</var> has performed an animation frame.
+ *
+ * @param {ChromeWindow} window
+ *     Window to request the animation frame from.
+ * @param {function()} callback
+ *     Called when done.
+ *
+ * @return {function()}
+ *     Anonymous function that when invoked will wait for the main
+ *     thread to clear up and request an animation frame before calling
+ *     <var>callback</var>.
+ */
+function whenIdle(window, callback) {
+  return () => Services.tm.idleDispatchToMainThread(() => {
+    window.requestAnimationFrame(callback);
+  });
 }
