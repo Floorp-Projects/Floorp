@@ -155,30 +155,70 @@ private:
 };
 NS_IMPL_ISUPPORTS(DictionaryFetcher, nsIContentPrefCallback2)
 
+class ContentPrefInitializerRunnable final : public Runnable
+{
+public:
+  ContentPrefInitializerRunnable(nsIEditor* aEditor,
+                                 nsIContentPrefCallback2* aCallback)
+    : Runnable("ContentPrefInitializerRunnable")
+    , mEditor(aEditor)
+    , mCallback(aCallback)
+  {
+  }
+
+  NS_IMETHOD Run() override
+  {
+    if (mEditor->AsEditorBase()->Destroyed()) {
+      mCallback->HandleError(NS_ERROR_NOT_AVAILABLE);
+      return NS_OK;
+    }
+
+    nsCOMPtr<nsIContentPrefService2> contentPrefService =
+      do_GetService(NS_CONTENT_PREF_SERVICE_CONTRACTID);
+    if (NS_WARN_IF(!contentPrefService)) {
+      mCallback->HandleError(NS_ERROR_NOT_AVAILABLE);
+      return NS_OK;
+    }
+
+    nsCOMPtr<nsIURI> docUri;
+    nsresult rv = GetDocumentURI(mEditor, getter_AddRefs(docUri));
+    if (NS_WARN_IF(NS_FAILED(rv))) {
+      mCallback->HandleError(rv);
+      return NS_OK;
+    }
+
+    nsAutoCString docUriSpec;
+    rv = docUri->GetSpec(docUriSpec);
+    if (NS_WARN_IF(NS_FAILED(rv))) {
+      mCallback->HandleError(rv);
+      return NS_OK;
+    }
+
+    nsCOMPtr<nsILoadContext> loadContext = GetLoadContext(mEditor);
+    rv = contentPrefService->GetByDomainAndName(
+                               NS_ConvertUTF8toUTF16(docUriSpec),
+                               CPS_PREF_NAME, loadContext,
+                               mCallback);
+    if (NS_WARN_IF(NS_FAILED(rv))) {
+      mCallback->HandleError(rv);
+      return NS_OK;
+    }
+    return NS_OK;
+  }
+
+private:
+  nsCOMPtr<nsIEditor> mEditor;
+  nsCOMPtr<nsIContentPrefCallback2> mCallback;
+};
+
 NS_IMETHODIMP
 DictionaryFetcher::Fetch(nsIEditor* aEditor)
 {
   NS_ENSURE_ARG_POINTER(aEditor);
 
-  nsresult rv;
-
-  nsCOMPtr<nsIURI> docUri;
-  rv = GetDocumentURI(aEditor, getter_AddRefs(docUri));
-  NS_ENSURE_SUCCESS(rv, rv);
-
-  nsAutoCString docUriSpec;
-  rv = docUri->GetSpec(docUriSpec);
-  NS_ENSURE_SUCCESS(rv, rv);
-
-  nsCOMPtr<nsIContentPrefService2> contentPrefService =
-    do_GetService(NS_CONTENT_PREF_SERVICE_CONTRACTID);
-  NS_ENSURE_TRUE(contentPrefService, NS_ERROR_NOT_AVAILABLE);
-
-  nsCOMPtr<nsILoadContext> loadContext = GetLoadContext(aEditor);
-  rv = contentPrefService->GetByDomainAndName(NS_ConvertUTF8toUTF16(docUriSpec),
-                                              CPS_PREF_NAME, loadContext,
-                                              this);
-  NS_ENSURE_SUCCESS(rv, rv);
+  nsCOMPtr<nsIRunnable> runnable =
+     new ContentPrefInitializerRunnable(aEditor, this);
+  NS_IdleDispatchToCurrentThread(runnable.forget(), 1000);
 
   return NS_OK;
 }
