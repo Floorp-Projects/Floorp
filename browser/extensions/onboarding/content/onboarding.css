@@ -90,6 +90,10 @@
   box-shadow: -2px 0 5px 0 rgba(74, 74, 79, 0.25);
 }
 
+#onboarding-overlay-button:dir(rtl)::after {
+  box-shadow: 2px 0 5px 0 rgba(74, 74, 79, 0.25);
+}
+
 #onboarding-overlay-dialog,
 .onboarding-hidden,
 #onboarding-tour-sync-page[data-login-state=logged-in] .show-on-logged-out,
