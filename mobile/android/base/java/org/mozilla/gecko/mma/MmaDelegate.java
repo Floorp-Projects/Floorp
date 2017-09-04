@@ -18,6 +18,7 @@ import android.text.TextUtils;
 import android.util.Log;
 
 import org.mozilla.gecko.Experiments;
+import org.mozilla.gecko.GeckoThread;
 import org.mozilla.gecko.MmaConstants;
 import org.mozilla.gecko.PrefsHelper;
 import org.mozilla.gecko.R;
@@ -64,6 +65,7 @@ public class MmaDelegate {
     private static final String[] PREFS = { KEY_PREF_BOOLEAN_MMA_ENABLED };
 
 
+    @Deprecated
     private static boolean isGeckoPrefOn = false;
     private static MmaInterface mmaHelper = MmaConstants.getMma();
     private static WeakReference<Context> applicationContext;
@@ -92,7 +94,6 @@ public class MmaDelegate {
                         // Note that generateUserAttribute always return a non null HashMap.
                         Map<String, Object> attributes = gatherUserAttributes(activity);
                         mmaHelper.setGcmSenderId(PushManager.getSenderIds());
-                        mmaHelper.setCustomIcon(R.drawable.ic_status_logo);
                         mmaHelper.init(activity, attributes);
 
                         if (!isDefaultBrowser(activity)) {
@@ -123,52 +124,59 @@ public class MmaDelegate {
         return attributes;
     }
 
-
     public static void track(String event) {
-        if (isMmaEnabled()) {
+        if (applicationContext != null && isMmaEnabled(applicationContext.get())) {
             mmaHelper.event(event);
         }
     }
 
+
     public static void track(String event, long value) {
-        if (isMmaEnabled()) {
+        if (applicationContext != null && isMmaEnabled(applicationContext.get())) {
             mmaHelper.event(event, value);
         }
     }
 
-    private static boolean isMmaEnabled() {
-        if (applicationContext == null) {
-            return false;
-        }
+    // isMmaEnabled should use pass-in context. The context comes from
+    // 1. track(), it's called from UI (where we inject events). Context is from weak reference to Activity (assigned in init())
+    // 2. handleGcmMessage(), it's called from GcmListenerService (where we handle GCM messages). Context is from the Service
+    private static boolean isMmaEnabled(Context context) {
 
-        final Context context = applicationContext.get();
         if (context == null) {
             return false;
         }
-
         final boolean healthReport = GeckoPreferences.getBooleanPref(context, GeckoPreferences.PREFS_HEALTHREPORT_UPLOAD_ENABLED, true);
         final boolean inExperiment = SwitchBoard.isInExperiment(context, Experiments.LEANPLUM);
         final Tab selectedTab = Tabs.getInstance().getSelectedTab();
-        // if selected tab is null or private, mma should be disabled.
-        final boolean isInPrivateBrowsing = selectedTab == null || selectedTab.isPrivate();
-        return inExperiment && healthReport && isGeckoPrefOn && !isInPrivateBrowsing;
+
+        // if selected tab is private, mma should be disabled.
+        final boolean isInPrivateBrowsing = selectedTab != null && selectedTab.isPrivate();
+        // only check Gecko Pref when Gecko is running
+        // FIXME : Remove isGeckoPrefOn in bug 1396714
+        final boolean skipGeckoPrefCheck = !GeckoThread.isRunning();
+        return inExperiment && (skipGeckoPrefCheck || isGeckoPrefOn) && healthReport && !isInPrivateBrowsing;
     }
 
 
-    public static boolean isDefaultBrowser(Context context) {
+    private static boolean isDefaultBrowser(Context context) {
         final Intent viewIntent = new Intent(Intent.ACTION_VIEW, Uri.parse("http://www.mozilla.org"));
         final ResolveInfo info = context.getPackageManager().resolveActivity(viewIntent, PackageManager.MATCH_DEFAULT_ONLY);
         if (info == null) {
             // No default is set
             return false;
         }
-
         final String packageName = info.activityInfo.packageName;
         return (TextUtils.equals(packageName, context.getPackageName()));
     }
 
+    // Always use pass-in context. Do not use applicationContext here. applicationContext will be null if MmaDelegate.init() is not called.
     public static boolean handleGcmMessage(@NonNull Context context, String from, @NonNull Bundle bundle) {
-        return isMmaEnabled() && mmaHelper.handleGcmMessage(context, from, bundle);
+        if (isMmaEnabled(context)) {
+            mmaHelper.setCustomIcon(R.drawable.ic_status_logo);
+            return mmaHelper.handleGcmMessage(context, from, bundle);
+        } else {
+            return false;
+        }
     }
 
     public static String getMmaSenderId() {
