@@ -75,7 +75,7 @@ is(CSS.escape('-9a'), '-\\39 a', "escapingFailed Char: -9a");
 
 is(CSS.escape('--a'), '--a', 'Should not need to escape leading "--"');
 
-is(CSS.escape('\x80\x2D\x5F\xA9'), '\\80 \x2D\x5F\xA9', "escapingFailed Char: \\x80\\x2D\\x5F\\xA9");
+is(CSS.escape('\x7F\x80\x2D\x5F\xA9'), '\\7f \x80\x2D\x5F\xA9', "escapingFailed Char: \\x7F\\x80\\x2D\\x5F\\xA9");
 is(CSS.escape('\xA0\xA1\xA2'), '\xA0\xA1\xA2', "escapingFailed Char: \\xA0\\xA1\\xA2");
 is(CSS.escape('a0123456789b'), 'a0123456789b', "escapingFailed Char: a0123465789");
 is(CSS.escape('abcdefghijklmnopqrstuvwxyz'), 'abcdefghijklmnopqrstuvwxyz', "escapingFailed Char: abcdefghijklmnopqrstuvwxyz");
