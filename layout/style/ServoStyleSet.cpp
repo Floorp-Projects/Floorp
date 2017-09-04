@@ -109,7 +109,7 @@ void
 ServoStyleSet::Init(nsPresContext* aPresContext, nsBindingManager* aBindingManager)
 {
   mPresContext = aPresContext;
-  mPresContextInitXBLStyleSet = aPresContext;
+  mLastPresContextUsesXBLStyleSet = aPresContext;
 
   mRawSet.reset(Servo_StyleSet_Init(aPresContext));
   mBindingManager = aBindingManager;
@@ -164,6 +164,24 @@ ServoStyleSet::InvalidateStyleForCSSRuleChanges()
 {
   MOZ_ASSERT(StylistNeedsUpdate());
   mPresContext->RestyleManager()->AsServo()->PostRestyleEventForCSSRuleChanges();
+}
+
+bool
+ServoStyleSet::SetPresContext(nsPresContext* aPresContext)
+{
+  MOZ_ASSERT(IsForXBL(), "Only XBL styleset can set PresContext!");
+
+  mLastPresContextUsesXBLStyleSet = aPresContext;
+
+  const OriginFlags rulesChanged = static_cast<OriginFlags>(
+    Servo_StyleSet_SetDevice(mRawSet.get(), aPresContext));
+
+  if (rulesChanged != OriginFlags(0)) {
+    MarkOriginsDirty(rulesChanged);
+    return true;
+  }
+
+  return false;
 }
 
 nsRestyleHint
