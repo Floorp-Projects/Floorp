@@ -236,15 +236,8 @@ WebRenderAPI::SetDisplayList(gfx::Color aBgColor,
                              wr::BuiltDisplayListDescriptor dl_descriptor,
                              uint8_t *dl_data,
                              size_t dl_size,
-                             ResourceUpdateQueue* aResources)
+                             ResourceUpdateQueue& aResources)
 {
-  ResourceUpdateQueue* resources = aResources ? aResources : &mResources;
-  if (aResources) {
-    // TODO(nical) properly separate ResourceUpdateQueue from the api object.
-    // In the mean time, it makes sense to flush mResources it has updates
-    // and we pass another resource update queue.
-    UpdateResources(mResources);
-  }
   wr_api_set_display_list(mDocHandle,
                           ToColorF(aBgColor),
                           aEpoch,
@@ -254,14 +247,13 @@ WebRenderAPI::SetDisplayList(gfx::Color aBgColor,
                           dl_descriptor,
                           dl_data,
                           dl_size,
-                          resources->Raw());
+                          aResources.Raw());
 }
 
 void
-WebRenderAPI::ClearDisplayList(Epoch aEpoch,
-                               wr::WrPipelineId pipeline_id)
+WebRenderAPI::ClearDisplayList(Epoch aEpoch, wr::WrPipelineId pipeline_id)
 {
-  wr_api_clear_display_list(mDocHandle, aEpoch, pipeline_id, mResources.Raw());
+  wr_api_clear_display_list(mDocHandle, aEpoch, pipeline_id);
 }
 
 void

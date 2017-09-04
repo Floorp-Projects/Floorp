@@ -763,8 +763,7 @@ WR_FUNC;
 WR_INLINE
 void wr_api_clear_display_list(DocumentHandle *aDh,
                                WrEpoch aEpoch,
-                               WrPipelineId aPipelineId,
-                               ResourceUpdates *aResources)
+                               WrPipelineId aPipelineId)
 WR_FUNC;
 
 WR_INLINE
