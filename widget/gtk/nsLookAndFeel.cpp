@@ -711,19 +711,16 @@ GetSystemFontInfo(GtkWidget *aWidget,
                   nsString *aFontName,
                   gfxFontStyle *aFontStyle)
 {
-    GtkSettings *settings = gtk_widget_get_settings(aWidget);
-
     aFontStyle->style       = NS_FONT_STYLE_NORMAL;
 
-    gchar *fontname;
-    g_object_get(settings, "gtk-font-name", &fontname, nullptr);
-
+    // As in
+    // https://git.gnome.org/browse/gtk+/tree/gtk/gtkwidget.c?h=3.22.19#n10333
+    GtkStyleContext *style = gtk_widget_get_style_context(aWidget);
     PangoFontDescription *desc;
-    desc = pango_font_description_from_string(fontname);
+    gtk_style_context_get(style, gtk_style_context_get_state(style),
+                          "font", &desc, nullptr);
 
     aFontStyle->systemFont = true;
-
-    g_free(fontname);
 
     NS_NAMED_LITERAL_STRING(quote, "\"");
     NS_ConvertUTF8toUTF16 family(pango_font_description_get_family(desc));
