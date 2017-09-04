@@ -707,7 +707,7 @@ nsLookAndFeel::GetFloatImpl(FloatID aID, float &aResult)
 }
 
 static void
-GetSystemFontInfo(GtkWidget *aWidget,
+GetSystemFontInfo(GtkStyleContext *aStyle,
                   nsString *aFontName,
                   gfxFontStyle *aFontStyle)
 {
@@ -715,9 +715,8 @@ GetSystemFontInfo(GtkWidget *aWidget,
 
     // As in
     // https://git.gnome.org/browse/gtk+/tree/gtk/gtkwidget.c?h=3.22.19#n10333
-    GtkStyleContext *style = gtk_widget_get_style_context(aWidget);
     PangoFontDescription *desc;
-    gtk_style_context_get(style, gtk_style_context_get_state(style),
+    gtk_style_context_get(aStyle, gtk_style_context_get_state(aStyle),
                           "font", &desc, nullptr);
 
     aFontStyle->systemFont = true;
@@ -752,96 +751,28 @@ GetSystemFontInfo(GtkWidget *aWidget,
     pango_font_description_free(desc);
 }
 
-static void
-GetSystemFontInfo(LookAndFeel::FontID aID,
-                  nsString *aFontName,
-                  gfxFontStyle *aFontStyle)
-{
-    if (aID == LookAndFeel::eFont_Widget) {
-        GtkWidget *label = gtk_label_new("M");
-        GtkWidget *parent = gtk_fixed_new();
-        GtkWidget *window = gtk_window_new(GTK_WINDOW_POPUP);
-
-        gtk_container_add(GTK_CONTAINER(parent), label);
-        gtk_container_add(GTK_CONTAINER(window), parent);
-
-        gtk_widget_ensure_style(label);
-        GetSystemFontInfo(label, aFontName, aFontStyle);
-        gtk_widget_destroy(window);  // no unref, windows are different
-
-    } else if (aID == LookAndFeel::eFont_Button) {
-        GtkWidget *label = gtk_label_new("M");
-        GtkWidget *parent = gtk_fixed_new();
-        GtkWidget *button = gtk_button_new();
-        GtkWidget *window = gtk_window_new(GTK_WINDOW_POPUP);
-
-        gtk_container_add(GTK_CONTAINER(button), label);
-        gtk_container_add(GTK_CONTAINER(parent), button);
-        gtk_container_add(GTK_CONTAINER(window), parent);
-
-        gtk_widget_ensure_style(label);
-        GetSystemFontInfo(label, aFontName, aFontStyle);
-        gtk_widget_destroy(window);  // no unref, windows are different
-
-    } else if (aID == LookAndFeel::eFont_Field) {
-        GtkWidget *entry = gtk_entry_new();
-        GtkWidget *parent = gtk_fixed_new();
-        GtkWidget *window = gtk_window_new(GTK_WINDOW_POPUP);
-
-        gtk_container_add(GTK_CONTAINER(parent), entry);
-        gtk_container_add(GTK_CONTAINER(window), parent);
-
-        gtk_widget_ensure_style(entry);
-        GetSystemFontInfo(entry, aFontName, aFontStyle);
-        gtk_widget_destroy(window);  // no unref, windows are different
-
-    } else {
-        MOZ_ASSERT(aID == LookAndFeel::eFont_Menu, "unexpected font ID");
-        GtkWidget *accel_label = gtk_accel_label_new("M");
-        GtkWidget *menuitem = gtk_menu_item_new();
-        GtkWidget *menu = gtk_menu_new();
-        g_object_ref_sink(menu);
-
-        gtk_container_add(GTK_CONTAINER(menuitem), accel_label);
-        gtk_menu_shell_append((GtkMenuShell *)GTK_MENU(menu), menuitem);
-
-        gtk_widget_ensure_style(accel_label);
-        GetSystemFontInfo(accel_label, aFontName, aFontStyle);
-        g_object_unref(menu);
-    }
-}
-
 bool
 nsLookAndFeel::GetFontImpl(FontID aID, nsString& aFontName,
                            gfxFontStyle& aFontStyle,
                            float aDevPixPerCSSPixel)
 {
-  nsString *cachedFontName = nullptr;
-  gfxFontStyle *cachedFontStyle = nullptr;
-  bool *isCached = nullptr;
-
   switch (aID) {
     case eFont_Menu:         // css2
     case eFont_PullDownMenu: // css3
-      cachedFontName = &mMenuFontName;
-      cachedFontStyle = &mMenuFontStyle;
-      isCached = &mMenuFontCached;
-      aID = eFont_Menu;
-      break;
+      aFontName = mMenuFontName;
+      aFontStyle = mMenuFontStyle;
+      return true;
 
     case eFont_Field:        // css3
     case eFont_List:         // css3
-      cachedFontName = &mFieldFontName;
-      cachedFontStyle = &mFieldFontStyle;
-      isCached = &mFieldFontCached;
-      aID = eFont_Field;
-      break;
+      aFontName = mFieldFontName;
+      aFontStyle = mFieldFontStyle;
+      return true;
 
     case eFont_Button:       // css3
-      cachedFontName = &mButtonFontName;
-      cachedFontStyle = &mButtonFontStyle;
-      isCached = &mButtonFontCached;
-      break;
+      aFontName = mButtonFontName;
+      aFontStyle = mButtonFontStyle;
+      return true;
 
     case eFont_Caption:      // css2
     case eFont_Icon:         // css2
@@ -856,21 +787,11 @@ nsLookAndFeel::GetFontImpl(FontID aID, nsString& aFontName,
     case eFont_Dialog:       // css3
     case eFont_Tooltips:     // moz
     case eFont_Widget:       // moz
-      cachedFontName = &mDefaultFontName;
-      cachedFontStyle = &mDefaultFontStyle;
-      isCached = &mDefaultFontCached;
-      aID = eFont_Widget;
-      break;
+    default:
+      aFontName = mDefaultFontName;
+      aFontStyle = mDefaultFontStyle;
+      return true;
   }
-
-  if (!*isCached) {
-    GetSystemFontInfo(aID, cachedFontName, cachedFontStyle);
-    *isCached = true;
-  }
-
-  aFontName = *cachedFontName;
-  aFontStyle = *cachedFontStyle;
-  return true;
 }
 
 void
@@ -930,6 +851,12 @@ nsLookAndFeel::EnsureInit()
         }
     }
 
+    // The label is not added to a parent widget, but shared for constructing
+    // different style contexts.  The node hierarchy is constructed only on
+    // the label style context.
+    GtkWidget *labelWidget = gtk_label_new("M");
+    g_object_ref_sink(labelWidget);
+
     // Scrollbar colors
     style = ClaimStyleContext(MOZ_GTK_SCROLLBAR_TROUGH_VERTICAL);
     gtk_style_context_get_background_color(style, GTK_STATE_FLAG_NORMAL, &color);
@@ -942,6 +869,13 @@ nsLookAndFeel::EnsureInit()
     sMozWindowBackground = GDK_RGBA_TO_NS_RGBA(color);
     gtk_style_context_get_color(style, GTK_STATE_FLAG_NORMAL, &color);
     sMozWindowText = GDK_RGBA_TO_NS_RGBA(color);
+    ReleaseStyleContext(style);
+    style = ClaimStyleContext(MOZ_GTK_WINDOW_CONTAINER);
+    {
+        GtkStyleContext* labelStyle = CreateStyleForWidget(labelWidget, style);
+        GetSystemFontInfo(labelStyle, &mDefaultFontName, &mDefaultFontStyle);
+        g_object_unref(labelStyle);
+    }
     ReleaseStyleContext(style);
 
     // tooltip foreground and background
@@ -959,6 +893,9 @@ nsLookAndFeel::EnsureInit()
     {
         GtkStyleContext* accelStyle =
             CreateStyleForWidget(gtk_accel_label_new("M"), style);
+
+        GetSystemFontInfo(accelStyle, &mMenuFontName, &mMenuFontStyle);
+
         gtk_style_context_get_color(accelStyle, GTK_STATE_FLAG_NORMAL, &color);
         sMenuText = GDK_RGBA_TO_NS_RGBA(color);
         gtk_style_context_get_color(accelStyle, GTK_STATE_FLAG_INSENSITIVE, &color);
@@ -979,10 +916,7 @@ nsLookAndFeel::EnsureInit()
     sMenuHoverText = GDK_RGBA_TO_NS_RGBA(color);
     ReleaseStyleContext(style);
 
-    // button styles
     GtkWidget *parent = gtk_fixed_new();
-    GtkWidget *button = gtk_button_new();
-    GtkWidget *label = gtk_label_new("M");
     GtkWidget *window = gtk_window_new(GTK_WINDOW_POPUP);
     GtkWidget *treeView = gtk_tree_view_new();
     GtkWidget *linkButton = gtk_link_button_new("http://example.com/");
@@ -991,8 +925,6 @@ nsLookAndFeel::EnsureInit()
     GtkWidget *entry = gtk_entry_new();
     GtkWidget *textView = gtk_text_view_new();
 
-    gtk_container_add(GTK_CONTAINER(button), label);
-    gtk_container_add(GTK_CONTAINER(parent), button);
     gtk_container_add(GTK_CONTAINER(parent), treeView);
     gtk_container_add(GTK_CONTAINER(parent), linkButton);
     gtk_container_add(GTK_CONTAINER(parent), menuBar);
@@ -1032,8 +964,10 @@ nsLookAndFeel::EnsureInit()
     // Button text color
     style = ClaimStyleContext(MOZ_GTK_BUTTON);
     {
-        GtkStyleContext* labelStyle =
-            CreateStyleForWidget(gtk_label_new("M"), style);
+        GtkStyleContext* labelStyle = CreateStyleForWidget(labelWidget, style);
+
+        GetSystemFontInfo(labelStyle, &mButtonFontName, &mButtonFontStyle);
+
         gtk_style_context_get_color(labelStyle, GTK_STATE_FLAG_NORMAL, &color);
         sButtonText = GDK_RGBA_TO_NS_RGBA(color);
         gtk_style_context_get_color(labelStyle, GTK_STATE_FLAG_PRELIGHT, &color);
@@ -1140,7 +1074,11 @@ nsLookAndFeel::EnsureInit()
                          "cursor-aspect-ratio", &sCaretRatio,
                          nullptr);
 
+    GetSystemFontInfo(gtk_widget_get_style_context(entry),
+                      &mFieldFontName, &mFieldFontStyle);
+
     gtk_widget_destroy(window);
+    g_object_unref(labelWidget);
 }
 
 // virtual
