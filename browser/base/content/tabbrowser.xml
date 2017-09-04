@@ -2271,8 +2271,7 @@
         "audioPlaybackStopped", "pauseMedia", "stopMedia",
         "resumeMedia", "mute", "unmute", "blockedPopups", "lastURI",
         "purgeSessionHistory", "stopScroll", "startScroll",
-        "userTypedValue", "userTypedClear", "mediaBlocked",
-        "didStartLoadSinceLastUserTyping"
+        "userTypedValue", "userTypedClear", "mediaBlocked"
       ]</field>
 
       <method name="_createLazyBrowser">
@@ -2299,9 +2298,6 @@
                     let url = SessionStore.getLazyTabValue(aTab, "url");
                     return Services.io.newURI(url);
                   };
-                  break;
-                case "didStartLoadSinceLastUserTyping":
-                  getter = () => () => false;
                   break;
                 case "fullZoom":
                 case "textZoom":
@@ -2441,56 +2437,6 @@
             var evt = new CustomEvent("TabBrowserInserted",
               { bubbles: true, detail: { insertedOnTabCreation: aInsertedOnTabCreation } });
             aTab.dispatchEvent(evt);
-          ]]>
-        </body>
-      </method>
-
-      <method name="discardBrowser">
-        <parameter name="aBrowser"/>
-        <body>
-          <![CDATA[
-            "use strict";
-
-            let tab = this.getTabForBrowser(aBrowser);
-
-            if (!tab ||
-                tab.selected ||
-                tab.closing ||
-                this._windowIsClosing ||
-                !aBrowser.isConnected ||
-                !aBrowser.isRemoteBrowser ||
-                aBrowser.frameLoader.tabParent.hasBeforeUnload) {
-              return;
-            }
-
-            // Set browser parameters for when browser is restored.  Also remove
-            // listeners and set up lazy restore data in SessionStore. This must
-            // be done before aBrowser is destroyed and removed from the document.
-            tab._browserParams = { uriIsAboutBlank: aBrowser.currentURI.spec == "about:blank",
-                                   remoteType: aBrowser.remoteType,
-                                   usingPreloadedContent: false };
-
-            SessionStore.resetBrowserToLazyState(tab);
-
-            this._outerWindowIDBrowserMap.delete(aBrowser.outerWindowID);
-
-            // Remove the tab's filter and progress listener.
-            let filter = this._tabFilters.get(tab);
-            let listener = this._tabListeners.get(tab);
-            aBrowser.webProgress.removeProgressListener(filter);
-            filter.removeProgressListener(listener);
-            listener.destroy();
-
-            this._tabListeners.delete(tab);
-            this._tabFilters.delete(tab);
-
-            aBrowser.destroy();
-
-            let notificationbox = this.getNotificationBox(aBrowser);
-            this.mPanelContainer.removeChild(notificationbox);
-            tab.removeAttribute("linkedpanel");
-
-            this._createLazyBrowser(tab);
           ]]>
         </body>
       </method>
