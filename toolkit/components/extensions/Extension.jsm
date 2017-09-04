@@ -576,6 +576,10 @@ this.ExtensionData = class {
     let webAccessibleResources = [];
 
     if (this.type === "extension") {
+      if (this.manifest.devtools_page) {
+        permissions.add("devtools");
+      }
+
       for (let perm of manifest.permissions) {
         if (perm === "geckoProfiler") {
           const acceptedExtensions = Services.prefs.getStringPref("extensions.geckoProfiler.acceptedExtensionIds", "");
