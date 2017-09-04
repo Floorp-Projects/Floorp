@@ -5,17 +5,44 @@
 # file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
 XPIDL_SOURCES += [
+    'mozIWebRequestService.idl',
     'nsIWebRequestListener.idl',
 ]
 
 XPIDL_MODULE = 'webextensions'
 
+UNIFIED_SOURCES += [
+    'nsWebRequestListener.cpp',
+    'StreamFilter.cpp',
+    'StreamFilterChild.cpp',
+    'StreamFilterEvents.cpp',
+    'StreamFilterParent.cpp',
+    'WebRequestService.cpp',
+]
+
+IPDL_SOURCES += [
+    'PStreamFilter.ipdl',
+]
+
 EXPORTS += [
     'nsWebRequestListener.h',
 ]
 
-UNIFIED_SOURCES += [
-    'nsWebRequestListener.cpp',
+EXPORTS.mozilla += [
+    'WebRequestService.h',
 ]
 
+EXPORTS.mozilla.extensions += [
+    'StreamFilter.h',
+    'StreamFilterBase.h',
+    'StreamFilterChild.h',
+    'StreamFilterEvents.h',
+    'StreamFilterParent.h',
+]
+
+include('/ipc/chromium/chromium-config.mozbuild')
+
 FINAL_LIBRARY = 'xul'
+
+with Files("**"):
+    BUG_COMPONENT = ("Toolkit", "WebExtensions: Request Handling")
