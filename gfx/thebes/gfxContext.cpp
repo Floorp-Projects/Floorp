@@ -595,7 +595,7 @@ gfxContext::PopClip()
 }
 
 gfxRect
-gfxContext::GetClipExtents() const
+gfxContext::GetClipExtents(ClipExtentsSpace aSpace) const
 {
   Rect rect = GetAzureDeviceSpaceClipBounds();
 
@@ -603,9 +603,11 @@ gfxContext::GetClipExtents() const
     return gfxRect(0, 0, 0, 0);
   }
 
-  Matrix mat = mTransform;
-  mat.Invert();
-  rect = mat.TransformBounds(rect);
+  if (aSpace == eUserSpace) {
+    Matrix mat = mTransform;
+    mat.Invert();
+    rect = mat.TransformBounds(rect);
+  }
 
   return ThebesRect(rect);
 }
