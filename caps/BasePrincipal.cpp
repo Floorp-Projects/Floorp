@@ -347,7 +347,7 @@ BasePrincipal::AddonPolicy()
 }
 
 bool
-BasePrincipal::AddonHasPermission(const nsAString& aPerm)
+BasePrincipal::AddonHasPermission(const nsIAtom* aPerm)
 {
   if (auto policy = AddonPolicy()) {
     return policy->HasPermission(aPerm);
