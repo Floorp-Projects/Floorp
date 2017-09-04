@@ -957,6 +957,11 @@ pub extern "C" fn wr_resource_updates_new() -> *mut ResourceUpdates {
     Box::into_raw(updates)
 }
 
+#[no_mangle]
+pub extern "C" fn wr_resource_updates_clear(resources: &mut ResourceUpdates) {
+    resources.updates.clear();
+}
+
 /// cbindgen:postfix=WR_DESTRUCTOR_SAFE_FUNC
 #[no_mangle]
 pub extern "C" fn wr_resource_updates_delete(updates: *mut ResourceUpdates) {

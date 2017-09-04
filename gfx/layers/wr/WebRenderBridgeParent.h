@@ -72,33 +72,8 @@ public:
   mozilla::ipc::IPCResult RecvCreate(const gfx::IntSize& aSize) override;
   mozilla::ipc::IPCResult RecvShutdown() override;
   mozilla::ipc::IPCResult RecvShutdownSync() override;
-  mozilla::ipc::IPCResult RecvUpdateResources(const wr::ByteBuffer& aUpdates) override;
-  mozilla::ipc::IPCResult RecvAddImage(const wr::ImageKey& aImageKey,
-                                       const gfx::IntSize& aSize,
-                                       const uint32_t& aStride,
-                                       const gfx::SurfaceFormat& aFormat,
-                                       const ByteBuffer& aBuffer) override;
-  mozilla::ipc::IPCResult RecvAddBlobImage(const wr::ImageKey& aImageKey,
-                                           const gfx::IntSize& aSize,
-                                           const uint32_t& aStride,
-                                           const gfx::SurfaceFormat& aFormat,
-                                           const ByteBuffer& aBuffer) override;
-  mozilla::ipc::IPCResult RecvUpdateImage(const wr::ImageKey& aImageKey,
-                                          const gfx::IntSize& aSize,
-                                          const gfx::SurfaceFormat& aFormat,
-                                          const ByteBuffer& aBuffer) override;
-  mozilla::ipc::IPCResult RecvDeleteImage(const wr::ImageKey& a1) override;
   mozilla::ipc::IPCResult RecvDeleteCompositorAnimations(InfallibleTArray<uint64_t>&& aIds) override;
-  mozilla::ipc::IPCResult RecvAddRawFont(const wr::FontKey& aFontKey,
-                                         const ByteBuffer& aBuffer,
-                                         const uint32_t& aFontIndex) override;
-  mozilla::ipc::IPCResult RecvDeleteFont(const wr::FontKey& aFontKey) override;
-  mozilla::ipc::IPCResult RecvAddFontInstance(const wr::FontInstanceKey& aInstanceKey,
-                                              const wr::FontKey& aFontKey,
-                                              const float& aGlyphSize,
-                                              const MaybeFontInstanceOptions& aOptions,
-                                              const MaybeFontInstancePlatformOptions& aPlatformOptions) override;
-  mozilla::ipc::IPCResult RecvDeleteFontInstance(const wr::FontInstanceKey& aInstanceKey) override;
+  mozilla::ipc::IPCResult RecvUpdateResources(const ByteBuffer& aUpdates) override;
   mozilla::ipc::IPCResult RecvSetDisplayList(const gfx::IntSize& aSize,
                                              InfallibleTArray<WebRenderParentCommand>&& aCommands,
                                              InfallibleTArray<OpDestroy>&& aToDestroy,

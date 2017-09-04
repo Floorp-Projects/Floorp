@@ -2108,13 +2108,15 @@ nsChildView::AddWindowOverlayWebRenderCommands(layers::WebRenderBridgeChild* aWr
 
     if (!mTitlebarImageKey) {
       mTitlebarImageKey = Some(aWrBridge->GetNextImageKey());
-      aWrBridge->SendAddImage(*mTitlebarImageKey, size, stride, format, buffer);
+      wr::ImageDescriptor descriptor(size, stride, format);
+      aBuilder.Resources().AddImage(*mTitlebarImageKey, descriptor, buffer);
       mTitlebarImageSize = size;
       updatedTitlebarRegion.SetEmpty();
     }
 
     if (!updatedTitlebarRegion.IsEmpty()) {
-      aWrBridge->SendUpdateImage(*mTitlebarImageKey, size, format, buffer);
+      wr::ImageDescriptor descriptor(size, stride, format);
+      aBuilder.Resources().UpdateImage(*mTitlebarImageKey, descriptor, buffer);
     }
 
     wr::LayoutRect rect = wr::ToLayoutRect(mTitlebarRect);
@@ -2127,7 +2129,9 @@ void
 nsChildView::CleanupWebRenderWindowOverlay(layers::WebRenderBridgeChild* aWrBridge)
 {
   if (mTitlebarImageKey) {
-    aWrBridge->SendDeleteImage(*mTitlebarImageKey);
+    ResourceUpdateQueue resources;
+    resources.DeleteImage(*mTitlebarImageKey);
+    aWrBridge->UpdateResources(resources);
     mTitlebarImageKey = Nothing();
   }
 }
