@@ -4,9 +4,8 @@
 
 "use strict";
 
-const {Cc, Ci} = require("chrome");
+const {Ci} = require("chrome");
 const Services = require("Services");
-const {XPCOMUtils} = require("resource://gre/modules/XPCOMUtils.jsm");
 const promise = require("promise");
 const defer = require("devtools/shared/defer");
 const {Task} = require("devtools/shared/task");
@@ -19,11 +18,13 @@ const {SourceMapConsumer} = require("source-map");
 const {
   addPseudoClassLock, removePseudoClassLock } = require("devtools/server/actors/highlighters/utils/markup");
 
-loader.lazyGetter(this, "CssLogic", () => require("devtools/shared/inspector/css-logic"));
+loader.lazyRequireGetter(this, "CssLogic", "devtools/shared/inspector/css-logic");
+loader.lazyRequireGetter(this, "addPseudoClassLock",
+  "devtools/server/actors/highlighters/utils/markup", true);
+loader.lazyRequireGetter(this, "removePseudoClassLock",
+  "devtools/server/actors/highlighters/utils/markup", true);
 
-XPCOMUtils.defineLazyGetter(this, "DOMUtils", function () {
-  return Cc["@mozilla.org/inspector/dom-utils;1"].getService(Ci.inIDOMUtils);
-});
+loader.lazyServiceGetter(this, "DOMUtils", "@mozilla.org/inspector/dom-utils;1", "inIDOMUtils");
 
 var TRANSITION_PSEUDO_CLASS = ":-moz-styleeditor-transitioning";
 var TRANSITION_DURATION_MS = 500;
