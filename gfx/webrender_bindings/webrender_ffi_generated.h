@@ -1225,7 +1225,16 @@ void wr_resource_updates_delete_image(ResourceUpdates *aResources,
 WR_FUNC;
 
 WR_INLINE
+ResourceUpdates *wr_resource_updates_deserialize(ByteSlice aData)
+WR_FUNC;
+
+WR_INLINE
 ResourceUpdates *wr_resource_updates_new()
+WR_FUNC;
+
+WR_INLINE
+void wr_resource_updates_serialize(ResourceUpdates *aResources,
+                                   VecU8 *aInto)
 WR_FUNC;
 
 WR_INLINE

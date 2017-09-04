@@ -59,6 +59,11 @@ public:
   ResourceUpdateQueue& operator=(ResourceUpdateQueue&&);
   ResourceUpdateQueue& operator=(const ResourceUpdateQueue&) = delete;
 
+  /// Serializes into a buffer of bytes and clears the queue.
+  ByteBuffer Serialize();
+
+  static ResourceUpdateQueue Deserialize(Range<uint8_t> aData);
+
   void AddImage(wr::ImageKey aKey,
                 const ImageDescriptor& aDescriptor,
                 Range<uint8_t> aBytes);
@@ -109,6 +114,9 @@ public:
   wr::ResourceUpdates* Raw() { return mUpdates; }
 
 protected:
+  ResourceUpdateQueue(wr::ResourceUpdates* aUpdates)
+  : mUpdates(aUpdates) {}
+
   wr::ResourceUpdates* mUpdates;
 };
 
@@ -143,7 +151,8 @@ public:
                       const wr::LayoutSize& content_size,
                       wr::BuiltDisplayListDescriptor dl_descriptor,
                       uint8_t *dl_data,
-                      size_t dl_size);
+                      size_t dl_size,
+                      ResourceUpdateQueue* aResources = nullptr);
 
   void ClearDisplayList(Epoch aEpoch, wr::WrPipelineId pipeline_id);
 

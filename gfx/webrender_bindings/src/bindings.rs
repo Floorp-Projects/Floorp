@@ -15,6 +15,7 @@ use moz2d_renderer::Moz2dImageRenderer;
 use app_units::Au;
 use rayon;
 use euclid::SideOffsets2D;
+use bincode;
 
 extern crate webrender_api;
 
@@ -962,6 +963,22 @@ pub extern "C" fn wr_resource_updates_delete(updates: *mut ResourceUpdates) {
     unsafe {
         Box::from_raw(updates);
     }
+}
+
+#[no_mangle]
+pub extern "C" fn wr_resource_updates_serialize(resources: &mut ResourceUpdates, into: &mut VecU8) {
+    let mut data = Vec::new();
+    bincode::serialize_into(&mut data, &resources.updates, bincode::Infinite).unwrap();
+    resources.updates.clear();
+    *into = data;
+}
+
+#[no_mangle]
+pub extern "C" fn wr_resource_updates_deserialize(data: ByteSlice) -> *mut ResourceUpdates {
+    let resources: Box<ResourceUpdates> = Box::new(
+        bincode::deserialize_from(&mut data.as_slice(), bincode::Infinite).expect("Invalid wr::ResourceUpdate serialization?")
+    );
+    Box::into_raw(resources)
 }
 
 #[no_mangle]
