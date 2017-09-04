@@ -67,7 +67,7 @@ RemoteVideoDecoder::Init()
              mConversion = mActor->NeedsConversion();
              return InitPromise::CreateAndResolve(aTrack, __func__);
            },
-           [self, this](const MediaResult& aError) {
+           [self](const MediaResult& aError) {
              return InitPromise::CreateAndReject(aError, __func__);
            });
 }
