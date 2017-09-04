@@ -3837,6 +3837,8 @@ HTMLMediaElement::HTMLMediaElement(already_AddRefed<mozilla::dom::NodeInfo>& aNo
     mReadyState(nsIDOMHTMLMediaElement::HAVE_NOTHING, "HTMLMediaElement::mReadyState"),
     mLoadWaitStatus(NOT_WAITING),
     mVolume(1.0),
+    mIsAudioTrackAudible(false),
+    mMuted(0),
     mPreloadAction(PRELOAD_UNDEFINED),
     mLastCurrentTime(0.0),
     mFragmentStart(-1.0),
@@ -3850,8 +3852,7 @@ HTMLMediaElement::HTMLMediaElement(already_AddRefed<mozilla::dom::NodeInfo>& aNo
     mLoadedDataFired(false),
     mAutoplaying(true),
     mAutoplayEnabled(true),
-    mPaused(true),
-    mMuted(0),
+    mPaused(true, *this),
     mStatsShowing(false),
     mAllowCasting(false),
     mIsCasting(false),
@@ -3881,7 +3882,6 @@ HTMLMediaElement::HTMLMediaElement(already_AddRefed<mozilla::dom::NodeInfo>& aNo
     mHasUserInteraction(false),
     mFirstFrameLoaded(false),
     mDefaultPlaybackStartPosition(0.0),
-    mIsAudioTrackAudible(false),
     mHasSuspendTaint(false),
     mMediaTracksConstructed(false),
     mVisibilityState(Visibility::UNTRACKED),
@@ -3895,8 +3895,6 @@ HTMLMediaElement::HTMLMediaElement(already_AddRefed<mozilla::dom::NodeInfo>& aNo
 
   double defaultVolume = Preferences::GetFloat("media.default_volume", 1.0);
   SetVolume(defaultVolume, rv);
-
-  mPaused.SetOuter(this);
 
   RegisterActivityObserver();
   NotifyOwnerDocumentActivityChanged();
@@ -4188,17 +4186,16 @@ void
 HTMLMediaElement::WakeLockBoolWrapper::UpdateWakeLock()
 {
   MOZ_ASSERT(NS_IsMainThread());
-  MOZ_ASSERT(mOuter);
 
   bool playing = !mValue;
-  bool isAudible = mOuter->Volume() > 0.0 &&
-                   !mOuter->mMuted &&
-                   mOuter->mIsAudioTrackAudible;
+  bool isAudible = mOuter.Volume() > 0.0 &&
+                   !mOuter.mMuted &&
+                   mOuter.mIsAudioTrackAudible;
   // when playing audible media.
   if (playing && isAudible) {
-    mOuter->WakeLockCreate();
+    mOuter.WakeLockCreate();
   } else {
-    mOuter->WakeLockRelease();
+    mOuter.WakeLockRelease();
   }
 }
 
