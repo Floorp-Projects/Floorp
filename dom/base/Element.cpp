@@ -1886,6 +1886,8 @@ Element::UnbindFromTree(bool aDeep, bool aNullParent)
   }
 #endif
 
+  ClearInDocument();
+
   // Ensure that CSS transitions don't continue on an element at a
   // different place in the tree (even if reinserted before next
   // animation refresh).
@@ -1900,8 +1902,6 @@ Element::UnbindFromTree(bool aDeep, bool aNullParent)
     DeleteProperty(nsGkAtoms::animationsOfAfterProperty);
     DeleteProperty(nsGkAtoms::animationsProperty);
   }
-
-  ClearInDocument();
 
   // Computed style data isn't useful for detached nodes, and we'll need to
   // recompute it anyway if we ever insert the nodes back into a document.
