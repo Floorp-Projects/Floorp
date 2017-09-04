@@ -132,7 +132,7 @@ var AccessFuTest = {
     }
 
     // Create an Iterator for gTestFuncs array.
-    gIterator = (function*() {
+    gIterator = (function* () {
       for (var testFunc of gTestFuncs) {
         yield testFunc;
       }
