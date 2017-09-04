@@ -134,7 +134,7 @@
     <string name="preference_default_browser">Make default browser</string>
 
     <string name="preference_category_mozilla">Mozilla</string>
-    <string name="preference_mozilla_telemetry">Send anonymous usage data</string>
+    <string name="preference_mozilla_telemetry2">Send usage data</string>
 
     <!-- A link to SUMO at the end of the summary (preference_mozilla_telemetry_summary2) of the "Send anonymous usage data" setting. -->
     <string name="preference_mozilla_telemetry_summary">Learn more</string>

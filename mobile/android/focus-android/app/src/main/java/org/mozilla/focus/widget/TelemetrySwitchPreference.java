@@ -7,11 +7,13 @@ package org.mozilla.focus.widget;
 
 import android.content.Context;
 import android.content.Intent;
+import android.content.res.Resources;
 import android.content.res.TypedArray;
 import android.graphics.Color;
 import android.graphics.Paint;
 import android.graphics.drawable.Drawable;
 import android.preference.Preference;
+import android.support.v4.content.ContextCompat;
 import android.util.AttributeSet;
 import android.view.View;
 import android.widget.CompoundButton;
@@ -41,7 +43,7 @@ class TelemetrySwitchPreference extends Preference {
     }
 
     private void init() {
-        setWidgetLayoutResource(R.layout.preference_telemetry);
+        setLayoutResource(R.layout.preference_telemetry);
 
         // We are keeping track of the preference value ourselves.
         setPersistent(false);
@@ -51,7 +53,7 @@ class TelemetrySwitchPreference extends Preference {
     protected void onBindView(final View view) {
         super.onBindView(view);
 
-        final Switch switchWidget = (Switch) view.findViewById(R.id.switch_widget);
+        final Switch switchWidget = view.findViewById(R.id.switch_widget);
 
         switchWidget.setChecked(TelemetryWrapper.isTelemetryEnabled(getContext()));
 
@@ -62,15 +64,15 @@ class TelemetrySwitchPreference extends Preference {
             }
         });
 
-        // The docs don't actually specify that R.id.summary will exist, but we rely on Android
-        // using it in e.g. Fennec's AlignRightLinkPreference, so it should be safe to use it (especially
-        // since we support a narrower set of Android versions in Focus).
-        final TextView summary = (TextView) view.findViewById(android.R.id.summary);
+        final Resources resources = view.getResources();
 
-        summary.setPaintFlags(summary.getPaintFlags() | Paint.UNDERLINE_TEXT_FLAG);
-        summary.setTextColor(Color.WHITE);
+        final TextView summary = view.findViewById(android.R.id.summary);
+        summary.setText(resources.getString(R.string.preference_mozilla_telemetry_summary2, resources.getString(R.string.app_name)));
 
-        summary.setOnClickListener(new View.OnClickListener() {
+        final TextView learnMoreLink = view.findViewById(R.id.link);
+        learnMoreLink.setPaintFlags(learnMoreLink.getPaintFlags() | Paint.UNDERLINE_TEXT_FLAG);
+        learnMoreLink.setTextColor(ContextCompat.getColor(view.getContext(), R.color.colorAction));
+        learnMoreLink.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
                 // This is a hardcoded link: if we ever end up needing more of these links, we should
@@ -86,7 +88,7 @@ class TelemetrySwitchPreference extends Preference {
         final TypedArray backgroundDrawableArray = view.getContext().obtainStyledAttributes(new int[]{R.attr.selectableItemBackground});
         final Drawable backgroundDrawable = backgroundDrawableArray.getDrawable(0);
         backgroundDrawableArray.recycle();
-        summary.setBackground(backgroundDrawable);
+        learnMoreLink.setBackground(backgroundDrawable);
 
         // We still want to allow toggling the pref by touching any part of the pref (except for
         // the "learn more" link)
