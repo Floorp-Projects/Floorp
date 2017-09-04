@@ -64,7 +64,7 @@
   <string name="content_description_stop">停止载入网站</string>
   <string name="content_description_customtab_exit">返回之前的应用</string>
   <string name="content_description_blocking_switch">拦截跟踪器</string>
-  <string name="context_menu_paste_go">粘贴并访问</string>
+  <string name="context_menu_paste_go">粘贴并前往</string>
   <string name="your_rights">您的权利</string>
   <string name="external_app_prompt_title">用另一个应用打开链接</string>
   <string name="external_app_prompt">您可以离开 %1$s，用 %2$s 打开此链接。</string>

@@ -106,6 +106,7 @@
   <string name="firstrun_search_title">Via serĉo laŭ via maniero</string>
   <string name="firstrun_search_text">Ĉu vi serĉas ion alian, malsaman? Elektu alian norman serĉilon en la agordoj.</string>
   <string name="firstrun_shortcut_title">Aldoni rektajn alirojn al via hejmekrano</string>
+  <string name="firstrun_shortcut_text">En %1$s, por reiri rapide al viaj plej ŝatataj retejoj, elektu \"Aldoni al hejmekrano\" en la menuo.</string>
   <string name="firstrun_privacy_title">Alkutimiĝu al la privateco</string>
   <string name="firstrun_privacy_text">Elektu %1$s kiel via normal retumilo kaj ricevu ĉiujn avantaĝojn de la privata retumo, kiam vi malfermas paĝojn el aliaj programoj.</string>
   <string name="firstrun_close_button">En ordo, mi komprenis!</string>

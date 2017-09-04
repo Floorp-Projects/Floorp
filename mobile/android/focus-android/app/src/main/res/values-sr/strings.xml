@@ -44,11 +44,14 @@
   <string name="preference_category_mozilla">Mozilla</string>
   <string name="preference_mozilla_telemetry">Анонимно шаљи податке о коришћењу</string>
   <string name="preference_mozilla_telemetry_summary">Сазнајте више</string>
+  <string name="preference_mozilla_telemetry_summary2">Mozilla тежи ка прикупљању само оних података који су потребни да бисмо пружали и побољшали %1$s за све.</string>
+  <string name="preference_privacy_notice">Обавештење о приватности</string>
   <string name="preference_about">О %1$s</string>
   <string name="content_description_clear_input">Празно поље</string>
   <string name="content_description_dismiss_input">Одбаци</string>
   <string name="content_description_erase">Избриши историјат прегледања</string>
   <string name="content_description_fab_expand">Прошири</string>
+  <string name="content_description_tab_counter">Отворених језичака: %1$s</string>
   <string name="content_description_open_tab">Отвори језичак</string>
   <string name="content_description_close_tab">Затвори језичак</string>
   <string name="content_description_lock">Безбедна веза</string>
@@ -113,6 +116,10 @@
   <string name="dialog_addtohomescreen_title">Додај на почетни екран</string>
   <string name="dialog_addtohomescreen_action_add">Додај</string>
   <string name="dialog_addtohomescreen_action_cancel">Откажи</string>
+  <string name="dialog_addtohomescreen_tracking_protection">Пречица ће се отворити са онемогућеном заштитом од праћења</string>
   <string name="dialog_opentab_title">Отвори везу у изабраном језичку</string>
   <string name="dialog_opentab_action_open">Отвори</string>
+  <string name="notification_browsing_session_channel_name">Сесија за приватно прегледање</string>
+  <string name="notification_browsing_session_channel_description">Обавештења вам омогућавају да обришете вашу %1$s сесију једним притиском. Не морате да отворите апликацију или да проверите шта се извршава у вашем прегледачу.</string>
+  <string name="tabs_tray_action_erase">Обриши историјат прегледања</string>
 </resources>

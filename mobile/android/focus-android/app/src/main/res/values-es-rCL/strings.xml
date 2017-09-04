@@ -44,6 +44,7 @@
   <string name="preference_category_mozilla">Mozilla</string>
   <string name="preference_mozilla_telemetry">Enviar datos de uso anónimos</string>
   <string name="preference_mozilla_telemetry_summary">Aprender más</string>
+  <string name="preference_mozilla_telemetry_summary2">Mozilla se esfuerza por recolectar solo lo que necesitama para proporcionar y mejorar %1$s para todos.</string>
   <string name="preference_privacy_notice">Aviso de privacidad</string>
   <string name="preference_about">Acerca de %1$s</string>
   <string name="content_description_clear_input">Limpiar texto ingresado</string>
@@ -105,6 +106,7 @@
   <string name="firstrun_search_title">Tu búsqueda, a tu manera</string>
   <string name="firstrun_search_text">¿Buscas algo diferente? Elige otro motor de búsqueda predeterminado en los ajustes.</string>
   <string name="firstrun_shortcut_title">Añade atajos a tu pantalla de inicio</string>
+  <string name="firstrun_shortcut_text">Regresa rápidamente a tus sitios favoritos en %1$s. Selecciona \"Añadir a la pantalla de inicio\" desde el menú %1$s.</string>
   <string name="firstrun_privacy_title">Haz de la privacidad un hábito</string>
   <string name="firstrun_privacy_text">Establece %1$s como navegador predeterminado y experimenta los beneficios de la navegación privada al abrir páginas web desde otras aplicaciones.</string>
   <string name="firstrun_close_button">Ok, ¡ya caché!</string>
@@ -114,6 +116,10 @@
   <string name="dialog_addtohomescreen_title">Añadir a la pantalla de inicio</string>
   <string name="dialog_addtohomescreen_action_add">Añadir</string>
   <string name="dialog_addtohomescreen_action_cancel">Cancelar</string>
+  <string name="dialog_addtohomescreen_tracking_protection">El acceso directo se abrirá con la protección de seguimiento desactivada</string>
   <string name="dialog_opentab_title">Abrir enlace en pestaña seleccionada</string>
   <string name="dialog_opentab_action_open">Abrir</string>
+  <string name="notification_browsing_session_channel_name">Sesión de navegación privada</string>
+  <string name="notification_browsing_session_channel_description">Las notificaciones te permiten eliminar tu sesión de %1$s con un solo toque. No necesitas abrir la aplicación o ver lo que está corriendo en el navegador.</string>
+  <string name="tabs_tray_action_erase">Eliminar historial de navegación</string>
 </resources>

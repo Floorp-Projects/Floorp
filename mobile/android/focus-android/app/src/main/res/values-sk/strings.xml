@@ -116,8 +116,10 @@
   <string name="dialog_addtohomescreen_title">Pridať na úvodnú obrazovku</string>
   <string name="dialog_addtohomescreen_action_add">Pridať</string>
   <string name="dialog_addtohomescreen_action_cancel">Zrušiť</string>
+  <string name="dialog_addtohomescreen_tracking_protection">Skratka sa otvorí s vypnutou ochranou pred sledovaním</string>
   <string name="dialog_opentab_title">Otvoriť odkaz na zvolenej karte</string>
   <string name="dialog_opentab_action_open">Otvoriť</string>
   <string name="notification_browsing_session_channel_name">Súkromné prehliadanie</string>
+  <string name="notification_browsing_session_channel_description">Upozornenia aplikácie %1$s vám umožnia vymazať históriu jedným ťuknutím. Nemusíte ani otvárať aplikáciu.</string>
   <string name="tabs_tray_action_erase">Vymazať históriu prehliadania</string>
 </resources>

@@ -44,11 +44,14 @@
   <string name="preference_category_mozilla">Mozilla</string>
   <string name="preference_mozilla_telemetry">Ուղարկել օգտագործման անանուն տվյալը</string>
   <string name="preference_mozilla_telemetry_summary">Իմանալ ավելին</string>
+  <string name="preference_mozilla_telemetry_summary2">Mozilla-ն ձգտում է հավաքել միայն այն, ինչ պետք է՝ %1$s-ը լավարկելու համար:</string>
+  <string name="preference_privacy_notice">Գաղտնիության ծանուցում</string>
   <string name="preference_about">%1$s-ի մասին</string>
   <string name="content_description_clear_input">Մաքրել ներածումը</string>
   <string name="content_description_dismiss_input">Բաց թողնել</string>
   <string name="content_description_erase">Ջնջել դիտարկման պատմությունը</string>
   <string name="content_description_fab_expand">Ընդարձակել</string>
+  <string name="content_description_tab_counter">Բաց ներդիրներ. %1$s</string>
   <string name="content_description_open_tab">Բացել ներդիր</string>
   <string name="content_description_close_tab">Փակել ներդիրը</string>
   <string name="content_description_lock">Անվտանգ կապակցում</string>
@@ -99,12 +102,24 @@
   <string name="contextmenu_open_in_new_tab">Բացել հղումը նոր ներդիրում</string>
   <string name="contextmenu_image_warning"><![CDATA["Պահպանված և համօգտագործված պատկերները "<b xmlns:xliff="urn:oasis:names:tc:xliff:document:1.2">&#1401;&#1381;&#1398; &#1403;&#1398;&#1403;&#1406;&#1387;</b>, երբ դուք ջնջեք %1$s-ը]]></string>
   <string name="firstrun_defaultbrowser_title">Հզորացրեք ձեր գաղտնիությունը</string>
+  <string name="firstrun_defaultbrowser_text2">Տարեք գաղտնի դիտարկումը հաջորդ մակարդակ: Արգելափակեք գովազդները և այլ բովանդակություն, որը կարող է հետագծել ձեզ կայքերում և արագացրեք էջի բեռնումը:</string>
+  <string name="firstrun_search_title">Ձեր որոնումը, ձեր ընտրությունը</string>
+  <string name="firstrun_search_text">Այլ բա՞ն եք փնտրում: Ընտրեք այլ որոնիչ Կարգավորումներում:</string>
+  <string name="firstrun_shortcut_title">Հավելել դյուրանցումները տուն էկրանին:</string>
+  <string name="firstrun_shortcut_text">Արագորեն վերադարձեք ձեր ընտրյալ կայքերին %1$s-ում: Պարզապես ընտեք\"Հավելել Տուն էկրանին\" %1$s ցանկից:</string>
+  <string name="firstrun_privacy_title">Գայղտնիությունը դարձրեք սովորույթ</string>
+  <string name="firstrun_privacy_text">Կայեք %1$s-ը որպես հիմնական դիտարկիչ և ստացեք գաղտնի դիտարկման բոլոր առավելությունները՝ այլ հավելվածներից վեբ էջեր բացելիս:</string>
   <string name="firstrun_close_button">Լավ, հասկացա:</string>
   <string name="firstrun_skip_button">Բաց թողնել</string>
   <string name="firstrun_next_button">Հաջորդը</string>
+  <string name="content_blocking_disabled">-</string>
   <string name="dialog_addtohomescreen_title">Ավելացնել Տուն էկրանին</string>
   <string name="dialog_addtohomescreen_action_add">Ավելացնել</string>
   <string name="dialog_addtohomescreen_action_cancel">Չեղարկել</string>
+  <string name="dialog_addtohomescreen_tracking_protection">Դյուրանցումը կբացվի Հետագծման պաշտպանությունը անջատած</string>
   <string name="dialog_opentab_title">Բացել հղումը ընտրված ներդիրում</string>
   <string name="dialog_opentab_action_open">Բացել</string>
+  <string name="notification_browsing_session_channel_name">Գանղտնի դիտարկման աշխատաշրջան</string>
+  <string name="notification_browsing_session_channel_description">Ծանուցումները հնարավորություն են տալիս ջնջել ձեր %1$s աշխատարջանը մեկ հպումով: Կարիք չկա բացել հավելվածը կամ տեսնել, թե ինչ է աշխատեցվում դիտարկիչում:</string>
+  <string name="tabs_tray_action_erase">Ջնջել դիտարկման պատմությունը</string>
 </resources>

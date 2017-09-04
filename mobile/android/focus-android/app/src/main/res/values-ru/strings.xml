@@ -44,11 +44,14 @@
   <string name="preference_category_mozilla">Mozilla</string>
   <string name="preference_mozilla_telemetry">Отправлять анонимные данные об использовании</string>
   <string name="preference_mozilla_telemetry_summary">Подробнее</string>
+  <string name="preference_mozilla_telemetry_summary2">Mozilla обязуется собирать только ту информацию, которая необходима для работы %1$s и его улучшения в будущем.</string>
+  <string name="preference_privacy_notice">Политика приватности</string>
   <string name="preference_about">О %1$s</string>
   <string name="content_description_clear_input">Очистить ввод</string>
   <string name="content_description_dismiss_input">Пропустить</string>
   <string name="content_description_erase">Удалить историю веб-сёрфинга</string>
   <string name="content_description_fab_expand">Развернуть</string>
+  <string name="content_description_tab_counter">Открытых вкладок: %1$s</string>
   <string name="content_description_open_tab">Открыть вкладку</string>
   <string name="content_description_close_tab">Закрыть вкладку</string>
   <string name="content_description_lock">Защищённое соединение</string>
@@ -113,6 +116,10 @@
   <string name="dialog_addtohomescreen_title">Добавить на домашний экран</string>
   <string name="dialog_addtohomescreen_action_add">Добавить</string>
   <string name="dialog_addtohomescreen_action_cancel">Отмена</string>
+  <string name="dialog_addtohomescreen_tracking_protection">Ссылка будет открываться без защиты от отслеживания</string>
   <string name="dialog_opentab_title">Открыть ссылку в выбранной вкладке</string>
   <string name="dialog_opentab_action_open">Открыть</string>
+  <string name="notification_browsing_session_channel_name">Приватная сессия</string>
+  <string name="notification_browsing_session_channel_description">Уведомления позволяют стереть вашу сессию в %1$s одним касанием. Вам не нужно открывать приложение или видеть, что запущено в вашем браузере.</string>
+  <string name="tabs_tray_action_erase">Удалить историю веб-сёрфинга</string>
 </resources>
