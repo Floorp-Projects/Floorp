@@ -18,6 +18,8 @@ class VsyncParent;
 
 namespace ipc {
 
+using mozilla::extensions::PStreamFilterParent;
+
 // Instances of this class should never be created directly. This class is meant
 // to be inherited in BackgroundImpl.
 class BackgroundParentImpl : public PBackgroundParent
@@ -201,6 +203,18 @@ protected:
   RecvMessagePortForceClose(const nsID& aUUID,
                             const nsID& aDestinationUUID,
                             const uint32_t& aSequenceID) override;
+
+  virtual PStreamFilterParent*
+  AllocPStreamFilterParent(const uint64_t& aChannelId,
+                           const nsString& aAddonId) override;
+
+  virtual mozilla::ipc::IPCResult
+  RecvPStreamFilterConstructor(PStreamFilterParent* aActor,
+                               const uint64_t& aChannelId,
+                               const nsString& aAddonId) override;
+
+  virtual bool
+  DeallocPStreamFilterParent(PStreamFilterParent* aActor) override;
 
   virtual PAsmJSCacheEntryParent*
   AllocPAsmJSCacheEntryParent(const dom::asmjscache::OpenMode& aOpenMode,

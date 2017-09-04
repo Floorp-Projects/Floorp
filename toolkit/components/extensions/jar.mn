@@ -41,3 +41,4 @@ toolkit.jar:
     content/extensions/ext-c-storage.js
     content/extensions/ext-c-test.js
     content/extensions/ext-c-toolkit.js
+    content/extensions/ext-c-webRequest.js
