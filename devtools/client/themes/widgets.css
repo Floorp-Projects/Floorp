@@ -233,7 +233,7 @@
   /* The color of the thin line in the arrow-shaped separator between 2 unselected
      crumbs. There is no theme variable for this, this used to be an image. */
   --line-color: #ACACAC;
-  --background-color: var(--theme-body-background);
+  --background-color: var(--theme-toolbar-background);
 }
 
 #debugger-toolbar .breadcrumbs-widget-item::before {
