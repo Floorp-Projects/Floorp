@@ -818,22 +818,13 @@ gfxContext::PushGroupForBlendBack(gfxContentType content, Float aOpacity, Source
   mDT->PushLayer(content == gfxContentType::COLOR, aOpacity, aMask, aMaskTransform);
 }
 
-static gfxRect
-GetRoundOutDeviceClipExtents(gfxContext* aCtx)
-{
-  gfxContextMatrixAutoSaveRestore save(aCtx);
-  aCtx->SetMatrix(gfxMatrix());
-  gfxRect r = aCtx->GetClipExtents();
-  r.RoundOut();
-  return r;
-}
-
 void
 gfxContext::PushGroupAndCopyBackground(gfxContentType content, Float aOpacity, SourceSurface* aMask, const Matrix& aMaskTransform)
 {
   IntRect clipExtents;
   if (mDT->GetFormat() != SurfaceFormat::B8G8R8X8) {
-    gfxRect clipRect = GetRoundOutDeviceClipExtents(this);
+    gfxRect clipRect = GetClipExtents(gfxContext::eDeviceSpace);
+    clipRect.RoundOut();
     clipExtents = IntRect::Truncate(clipRect.x, clipRect.y, clipRect.width, clipRect.height);
   }
   bool pushOpaqueWithCopiedBG = (mDT->GetFormat() == SurfaceFormat::B8G8R8X8 ||
