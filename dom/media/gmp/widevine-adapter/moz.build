@@ -5,17 +5,12 @@
 # file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
 SOURCES += [
-    'WidevineAdapter.cpp',
-    'WidevineDecryptor.cpp',
-    'WidevineDummyDecoder.cpp',
     'WidevineFileIO.cpp',
     'WidevineUtils.cpp',
-    'WidevineVideoDecoder.cpp',
     'WidevineVideoFrame.cpp',
 ]
 
 EXPORTS += [
-    'WidevineDecryptor.h',
     'WidevineFileIO.h',
     'WidevineUtils.h',
     'WidevineVideoFrame.h'

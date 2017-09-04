@@ -15,7 +15,6 @@
 #include "mozilla/dom/DOMException.h"
 #include "mozilla/dom/UnionTypes.h"
 #include "mozilla/Telemetry.h"
-#include "GMPCDMProxy.h"
 #ifdef MOZ_WIDGET_ANDROID
 #include "mozilla/MediaDrmCDMProxy.h"
 #endif
@@ -342,23 +341,13 @@ MediaKeys::CreateCDMProxy(nsIEventTarget* aMainThread)
   } else
 #endif
   {
-    if (MediaPrefs::EMEChromiumAPIEnabled()) {
-      proxy = new ChromiumCDMProxy(
-        this,
-        mKeySystem,
-        new MediaKeysGMPCrashHelper(this),
-        mConfig.mDistinctiveIdentifier == MediaKeysRequirement::Required,
-        mConfig.mPersistentState == MediaKeysRequirement::Required,
-        aMainThread);
-    } else {
-      proxy = new GMPCDMProxy(
-        this,
-        mKeySystem,
-        new MediaKeysGMPCrashHelper(this),
-        mConfig.mDistinctiveIdentifier == MediaKeysRequirement::Required,
-        mConfig.mPersistentState == MediaKeysRequirement::Required,
-        aMainThread);
-    }
+    proxy = new ChromiumCDMProxy(
+      this,
+      mKeySystem,
+      new MediaKeysGMPCrashHelper(this),
+      mConfig.mDistinctiveIdentifier == MediaKeysRequirement::Required,
+      mConfig.mPersistentState == MediaKeysRequirement::Required,
+      aMainThread);
   }
   return proxy.forget();
 }

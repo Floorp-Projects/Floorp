@@ -17,7 +17,8 @@
 
 namespace mozilla {
 
-class AppleVTDecoder : public MediaDataDecoder {
+class AppleVTDecoder : public MediaDataDecoder
+{
 public:
   AppleVTDecoder(const VideoInfo& aConfig,
                  TaskQueue* aTaskQueue,
@@ -53,11 +54,11 @@ public:
     return mIsHardwareAccelerated;
   }
 
-  const char* GetDescriptionName() const override
+  nsCString GetDescriptionName() const override
   {
     return mIsHardwareAccelerated
-           ? "apple hardware VT decoder"
-           : "apple software VT decoder";
+           ? NS_LITERAL_CSTRING("apple hardware VT decoder")
+           : NS_LITERAL_CSTRING("apple software VT decoder");
   }
 
   ConversionRequired NeedsConversion() const override
