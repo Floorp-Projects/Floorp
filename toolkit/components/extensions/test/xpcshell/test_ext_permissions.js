@@ -372,17 +372,13 @@ add_task(async function test_alreadyGranted() {
 const GRANTED_WITHOUT_USER_PROMPT = [
   "activeTab",
   "alarms",
-  "browsingData",
   "contextMenus",
   "contextualIdentities",
   "cookies",
-  "downloads.open",
-  "downloads.shelf",
   "geckoProfiler",
   "identity",
   "idle",
   "menus",
-  "proxy",
   "storage",
   "theme",
   "webRequest",
@@ -401,6 +397,7 @@ add_task(function test_permissions_have_localization_strings() {
     for (const perm of choice.enumeration || []) {
       try {
         const str = bundle.GetStringFromName(`webextPerms.description.${perm}`);
+
         ok(str.length, `Found localization string for '${perm}' permission`);
       } catch (e) {
         ok(GRANTED_WITHOUT_USER_PROMPT.includes(perm),
