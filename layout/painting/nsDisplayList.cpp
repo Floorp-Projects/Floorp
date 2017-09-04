@@ -785,14 +785,8 @@ GenerateAndPushTextMask(nsIFrame* aFrame, gfxContext* aContext,
   }
 
   // Evaluate required surface size.
-  IntRect drawRect;
-  {
-    gfxContextMatrixAutoSaveRestore matRestore(sourceCtx);
-
-    sourceCtx->SetMatrix(gfxMatrix());
-    gfxRect clipRect = sourceCtx->GetClipExtents();
-    drawRect = RoundedOut(ToRect(clipRect));
-  }
+  IntRect drawRect =
+    RoundedOut(ToRect(sourceCtx->GetClipExtents(gfxContext::eDeviceSpace)));
 
   // Create a mask surface.
   RefPtr<DrawTarget> sourceTarget = sourceCtx->GetDrawTarget();
@@ -8602,11 +8596,9 @@ bool nsDisplaySVGEffects::ValidateSVGFrame()
 static IntRect
 ComputeClipExtsInDeviceSpace(gfxContext& aCtx)
 {
-  gfxContextMatrixAutoSaveRestore matRestore(&aCtx);
-
   // Get the clip extents in device space.
-  aCtx.SetMatrix(gfxMatrix());
-  gfxRect clippedFrameSurfaceRect = aCtx.GetClipExtents();
+  gfxRect clippedFrameSurfaceRect =
+    aCtx.GetClipExtents(gfxContext::eDeviceSpace);
   clippedFrameSurfaceRect.RoundOut();
 
   IntRect result;
@@ -8708,15 +8700,14 @@ ComputeMaskGeometry(PaintFramesParams& aParams)
     maskInUserSpace = maskInUserSpace.Union(currentMaskSurfaceRect);
   }
 
-  ctx.Save();
+  gfxContextAutoSaveRestore autoSR;
 
   if (!maskInUserSpace.IsEmpty()) {
+    autoSR.SetContext(&ctx);
     ctx.Clip(maskInUserSpace);
   }
 
   IntRect result = ComputeClipExtsInDeviceSpace(ctx);
-  ctx.Restore();
-
   aParams.maskRect = result;
 }
 
