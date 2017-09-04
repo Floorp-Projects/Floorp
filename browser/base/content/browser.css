@@ -453,7 +453,7 @@ toolbar:not(#TabsToolbar) > #personal-bookmarks {
 
 #reload-button:not([displaystop]) + #stop-button,
 #reload-button[displaystop] {
-  visibility: collapse;
+  display: none;
 }
 
 /* The reload-button is only disabled temporarily when it becomes visible
@@ -675,7 +675,7 @@ html|input.urlbar-input[textoverflow]:not([focused]) {
 #urlbar[pageproxystate="invalid"] > #identity-box > #blocked-permissions-container,
 #urlbar[pageproxystate="invalid"] > #identity-box > #notification-popup-box,
 #urlbar[pageproxystate="invalid"] > #identity-box > #identity-icon-labels {
-  visibility: collapse;
+  display: none;
 }
 
 #identity-box {
