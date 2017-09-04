@@ -363,8 +363,11 @@ protected:
     // Initializes the instance.
     void Init();
 
-    // Reset the current composition of IME.  All native composition events
-    // during this processing are ignored.
+    /**
+     * Reset the active context, i.e., if there is mComposingContext, reset it.
+     * Otherwise, reset current context.  Note that all native composition
+     * events during calling this will be ignored.
+     */
     void ResetIME();
 
     // Gets the current composition string by the native APIs.
