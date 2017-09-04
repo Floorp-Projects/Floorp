@@ -1979,6 +1979,7 @@ file, You can obtain one at http://mozilla.org/MPL/2.0/.
           // Don't show the one-off buttons if we are showing onboarding and
           // there's no result, since it would be ugly and pointless.
           this.footer.collapsed = this._matchCount == 0;
+          this.input.tabScrolling = this._matchCount != 0;
 
           // This event allows accessibility APIs to see the notification.
           if (!this.popupOpen) {
@@ -2197,6 +2198,7 @@ file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
             // When a result is present the footer should always be visible.
             this.footer.collapsed = false;
+            this.input.tabScrolling = true;
 
             this.input.gotResultForCurrentQuery = true;
             this.input.maybeReplayDeferredKeyEvents();
