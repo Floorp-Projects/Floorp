@@ -34,8 +34,7 @@ public:
   RefPtr<ShutdownPromise> Shutdown() override;
   bool IsHardwareAccelerated(nsACString& aFailureReason) const override;
   void SetSeekThreshold(const media::TimeUnit& aTime) override;
-
-  const char* GetDescriptionName() const override { return "RemoteVideoDecoder"; }
+  nsCString GetDescriptionName() const override;
   ConversionRequired NeedsConversion() const override;
 
 private:
@@ -46,6 +45,12 @@ private:
   // destructor when we can guarantee no other threads are accessing it). Only
   // read from the manager thread.
   RefPtr<VideoDecoderChild> mActor;
+  // Only ever written/modified during decoder initialisation.
+  // As such can be accessed from any threads after that.
+  nsCString mDescription;
+  bool mIsHardwareAccelerated;
+  nsCString mHardwareAcceleratedReason;
+  MediaDataDecoder::ConversionRequired mConversion;
 };
 
 // A PDM implementation that creates RemoteVideoDecoders.

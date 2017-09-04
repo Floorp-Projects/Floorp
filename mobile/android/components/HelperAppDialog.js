@@ -240,7 +240,7 @@ HelperAppLauncherDialog.prototype = {
    * around starting from Lollipop.
    */
   _useNewButtonOrder: function() {
-    let _useNewButtonOrder = true;
+    let useNewButtonOrder = true;
     let jenv = null;
 
     try {

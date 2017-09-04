@@ -27,9 +27,9 @@ public:
   RefPtr<InitPromise> Init() override;
   void InitCodecContext() override;
   static AVCodecID GetCodecId(const nsACString& aMimeType);
-  const char* GetDescriptionName() const override
+  nsCString GetDescriptionName() const override
   {
-    return "ffmpeg audio decoder";
+    return NS_LITERAL_CSTRING("ffmpeg audio decoder");
   }
 
 private:

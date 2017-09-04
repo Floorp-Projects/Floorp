@@ -23,6 +23,7 @@ using namespace gfx;
 
 RemoteVideoDecoder::RemoteVideoDecoder()
   : mActor(new VideoDecoderChild())
+  , mDescription("RemoteVideoDecoder")
 {
 }
 
@@ -45,7 +46,8 @@ RemoteVideoDecoder::~RemoteVideoDecoder()
   actor = nullptr;
   mActor = nullptr;
 
-  VideoDecoderManagerChild::GetManagerThread()->Dispatch(task.forget(), NS_DISPATCH_NORMAL);
+  VideoDecoderManagerChild::GetManagerThread()->Dispatch(task.forget(),
+                                                         NS_DISPATCH_NORMAL);
 }
 
 RefPtr<MediaDataDecoder::InitPromise>
@@ -53,7 +55,21 @@ RemoteVideoDecoder::Init()
 {
   RefPtr<RemoteVideoDecoder> self = this;
   return InvokeAsync(VideoDecoderManagerChild::GetManagerAbstractThread(),
-                     __func__, [self, this]() { return mActor->Init(); });
+                     __func__,
+                     [self, this]() { return mActor->Init(); })
+    ->Then(VideoDecoderManagerChild::GetManagerAbstractThread(),
+           __func__,
+           [self, this](TrackType aTrack) {
+             mDescription =
+               mActor->GetDescriptionName() + NS_LITERAL_CSTRING(" (remote)");
+             mIsHardwareAccelerated =
+               mActor->IsHardwareAccelerated(mHardwareAcceleratedReason);
+             mConversion = mActor->NeedsConversion();
+             return InitPromise::CreateAndResolve(aTrack, __func__);
+           },
+           [self, this](const MediaResult& aError) {
+             return InitPromise::CreateAndReject(aError, __func__);
+           });
 }
 
 RefPtr<MediaDataDecoder::DecodePromise>
@@ -96,7 +112,8 @@ RemoteVideoDecoder::Shutdown()
 bool
 RemoteVideoDecoder::IsHardwareAccelerated(nsACString& aFailureReason) const
 {
-  return mActor->IsHardwareAccelerated(aFailureReason);
+  aFailureReason = mHardwareAcceleratedReason;
+  return mIsHardwareAccelerated;
 }
 
 void
@@ -116,7 +133,7 @@ RemoteVideoDecoder::SetSeekThreshold(const media::TimeUnit& aTime)
 MediaDataDecoder::ConversionRequired
 RemoteVideoDecoder::NeedsConversion() const
 {
-  return mActor->NeedsConversion();
+  return mConversion;
 }
 
 nsresult
@@ -181,6 +198,12 @@ RemoteDecoderModule::CreateVideoDecoder(const CreateDecoderParams& aParams)
   }
 
   return object.forget();
+}
+
+nsCString
+RemoteVideoDecoder::GetDescriptionName() const
+{
+  return mDescription;
 }
 
 } // namespace dom

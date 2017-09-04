@@ -107,13 +107,15 @@ VideoDecoderChild::RecvError(const nsresult& aError)
 }
 
 mozilla::ipc::IPCResult
-VideoDecoderChild::RecvInitComplete(const bool& aHardware,
+VideoDecoderChild::RecvInitComplete(const nsCString& aDecoderDescription,
+                                    const bool& aHardware,
                                     const nsCString& aHardwareReason,
                                     const uint32_t& aConversion)
 {
   AssertOnManagerThread();
   mInitPromise.ResolveIfExists(TrackInfo::kVideoTrack, __func__);
   mInitialized = true;
+  mDescription = aDecoderDescription;
   mIsHardwareAccelerated = aHardware;
   mHardwareAcceleratedReason = aHardwareReason;
   mConversion = static_cast<MediaDataDecoder::ConversionRequired>(aConversion);
@@ -325,8 +327,16 @@ VideoDecoderChild::Shutdown()
 bool
 VideoDecoderChild::IsHardwareAccelerated(nsACString& aFailureReason) const
 {
+  AssertOnManagerThread();
   aFailureReason = mHardwareAcceleratedReason;
   return mIsHardwareAccelerated;
+}
+
+nsCString
+VideoDecoderChild::GetDescriptionName() const
+{
+  AssertOnManagerThread();
+  return mDescription;
 }
 
 void
@@ -341,6 +351,7 @@ VideoDecoderChild::SetSeekThreshold(const media::TimeUnit& aTime)
 MediaDataDecoder::ConversionRequired
 VideoDecoderChild::NeedsConversion() const
 {
+  AssertOnManagerThread();
   return mConversion;
 }
 

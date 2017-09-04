@@ -493,7 +493,6 @@ public:
     // Might be useful to track in the future:
     //   - mListener (seems minor)
     //   - mChannelStatistics (seems minor)
-    //   - mDataReceivedEvent (seems minor)
     size_t size = BaseMediaResource::SizeOfExcludingThis(aMallocSizeOf);
     size += mCacheStream.SizeOfExcludingThis(aMallocSizeOf);
 
@@ -557,8 +556,6 @@ protected:
                                    int64_t& aRangeEnd,
                                    int64_t& aRangeTotal);
 
-  void DoNotifyDataReceived();
-
   static nsresult CopySegmentToCache(nsIInputStream* aInStream,
                                      void* aClosure,
                                      const char* aFromSegment,
@@ -574,9 +571,6 @@ protected:
   // Main thread access only
   int64_t            mOffset;
   RefPtr<Listener> mListener;
-  // A data received event for the decoder that has been dispatched but has
-  // not yet been processed.
-  nsRevocableEventPtr<nsRunnableMethod<ChannelMediaResource, void, false> > mDataReceivedEvent;
   // When this flag is set, if we get a network error we should silently
   // reopen the stream.
   bool               mReopenOnError;

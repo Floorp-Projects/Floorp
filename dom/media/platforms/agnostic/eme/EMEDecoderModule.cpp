@@ -5,7 +5,6 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
 #include "EMEDecoderModule.h"
-#include "EMEVideoDecoder.h"
 #include "GMPDecoderModule.h"
 #include "GMPService.h"
 #include "MediaInfo.h"
@@ -206,7 +205,7 @@ public:
     return decoder->Shutdown();
   }
 
-  const char* GetDescriptionName() const override
+  nsCString GetDescriptionName() const override
   {
     return mDecoder->GetDescriptionName();
   }
@@ -357,11 +356,7 @@ EMEDecoderModule::CreateVideoDecoder(const CreateDecoderParams& aParams)
     RefPtr<MediaDataDecoderProxy> wrapper =
       CreateDecoderWrapper(mProxy, aParams);
     auto params = GMPVideoDecoderParams(aParams);
-    if (MediaPrefs::EMEChromiumAPIEnabled()) {
-      wrapper->SetProxyTarget(new ChromiumCDMVideoDecoder(params, mProxy));
-    } else {
-      wrapper->SetProxyTarget(new EMEVideoDecoder(mProxy, params));
-    }
+    wrapper->SetProxyTarget(new ChromiumCDMVideoDecoder(params, mProxy));
     return wrapper.forget();
   }
 

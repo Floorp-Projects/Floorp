@@ -192,7 +192,7 @@ SVGTransformableElement::GetBBox(const SVGBoundingBoxOptions& aOptions,
                                       nsSVGUtils::eBBoxIncludeFillGeometry |
                                       nsSVGUtils::eUseUserSpaceOfUseElement)));
   } else {
-    uint32_t flags = nsSVGUtils::eUseUserSpaceOfUseElement;
+    uint32_t flags = 0;
     if (aOptions.mFill) {
       flags |= nsSVGUtils::eBBoxIncludeFill;
     }
@@ -205,10 +205,14 @@ SVGTransformableElement::GetBBox(const SVGBoundingBoxOptions& aOptions,
     if (aOptions.mClipped) {
       flags |= nsSVGUtils::eBBoxIncludeClipped;
     }
+    if (flags == 0) {
+      return NS_NewSVGRect(this,0,0,0,0);
+    }
     if (flags == nsSVGUtils::eBBoxIncludeMarkers ||
         flags == nsSVGUtils::eBBoxIncludeClipped) {
       flags |= nsSVGUtils::eBBoxIncludeFill;
     }
+    flags |= nsSVGUtils::eUseUserSpaceOfUseElement;
     return NS_NewSVGRect(this, ToRect(nsSVGUtils::GetBBox(frame, flags)));
   }
 }

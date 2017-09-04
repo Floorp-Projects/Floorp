@@ -56,7 +56,8 @@ typedef OmxPromiseLayer::BUFFERLIST BUFFERLIST;
  *
  *   OmxPlatformLayer acts as the OpenMAX IL core.
  */
-class OmxDataDecoder : public MediaDataDecoder {
+class OmxDataDecoder : public MediaDataDecoder
+{
 protected:
   virtual ~OmxDataDecoder();
 
@@ -70,9 +71,9 @@ public:
   RefPtr<FlushPromise> Flush() override;
   RefPtr<ShutdownPromise> Shutdown() override;
 
-  const char* GetDescriptionName() const override
+  nsCString GetDescriptionName() const override
   {
-    return "omx decoder";
+    return NS_LITERAL_CSTRING("omx decoder");
   }
 
   ConversionRequired NeedsConversion() const override
