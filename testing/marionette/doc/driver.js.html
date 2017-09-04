@@ -33,9 +33,9 @@
 "use strict";
 /* global XPCNativeWrapper */
 
-var {classes: Cc, interfaces: Ci, utils: Cu, results: Cr} = Components;
+const {classes: Cc, interfaces: Ci, utils: Cu, results: Cr} = Components;
 
-var loader = Cc["@mozilla.org/moz/jssubscript-loader;1"]
+const loader = Cc["@mozilla.org/moz/jssubscript-loader;1"]
     .getService(Ci.mozIJSSubScriptLoader);
 
 Cu.import("resource://gre/modules/Log.jsm");
@@ -85,12 +85,11 @@ Cu.importGlobalProperties(["URL"]);
 
 this.EXPORTED_SYMBOLS = ["GeckoDriver", "Context"];
 
-var FRAME_SCRIPT = "chrome://marionette/content/listener.js";
+const FRAME_SCRIPT = "chrome://marionette/content/listener.js";
+const XUL_NS = "http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul";
 
 const CLICK_TO_START_PREF = "marionette.debugging.clicktostart";
 const CONTENT_LISTENER_PREF = "marionette.contentListener";
-
-const XUL_NS = "http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul";
 
 const SUPPORTED_STRATEGIES = new Set([
   element.Strategy.ClassName,
@@ -113,15 +112,6 @@ const globalMessageManager = Cc["@mozilla.org/globalmessagemanager;1"]
  * @see {@link https://w3c.github.io/webdriver/webdriver-spec.html}
  * @namespace driver
  */
-
-// This is used to prevent newSession from returning before the telephony
-// API's are ready; see bug 792647.  This assumes that marionette-server.js
-// will be loaded before the 'system-message-listener-ready' message
-// is fired.  If this stops being true, this approach will have to change.
-var systemMessageListenerReady = false;
-Services.obs.addObserver(function() {
-  systemMessageListenerReady = true;
-}, "system-message-listener-ready");
 
 /**
  * @enum
@@ -384,7 +374,7 @@ GeckoDriver.prototype.sendAsync = function(name, data, commandID) {
   // is used for all chrome &lt;-> content communication
   // this can be removed.
   if (commandID) {
-    payload.command_id = commandID;
+    payload.commandID = commandID;
   }
 
   if (!this.curBrowser.frameManager.currentRemoteFrame) {
@@ -489,22 +479,22 @@ GeckoDriver.prototype.addFrameCloseListener = function(action) {
 /**
  * Create a new browsing context for window and add to known browsers.
  *
- * @param {nsIDOMWindow} win
+ * @param {ChromeWindow} win
  *     Window for which we will create a browsing context.
  *
  * @return {string}
  *     Returns the unique server-assigned ID of the window.
  */
-GeckoDriver.prototype.addBrowser = function(win) {
-  let bc = new browser.Context(win, this);
-  let winId = getOuterWindowId(win);
+GeckoDriver.prototype.addBrowser = function(window) {
+  let bc = new browser.Context(window, this);
+  let winId = getOuterWindowId(window);
 
   this.browsers[winId] = bc;
   this.curBrowser = this.browsers[winId];
   if (!this.wins.has(winId)) {
     // add this to seenItems so we can guarantee
     // the user will get winId as this window's id
-    this.wins.set(winId, win);
+    this.wins.set(winId, window);
   }
 };
 
@@ -515,30 +505,30 @@ GeckoDriver.prototype.addBrowser = function(win) {
  * frame script will be loaded into it.  If isNewSession is true, we will
  * switch focus to the start frame when it registers.
  *
- * @param {nsIDOMWindow} win
+ * @param {ChromeWindow} win
  *     Window whose browser we need to access.
  * @param {boolean=} [false] isNewSession
  *     True if this is the first time we're talking to this browser.
  */
-GeckoDriver.prototype.startBrowser = function(win, isNewSession = false) {
-  this.mainFrame = win;
+GeckoDriver.prototype.startBrowser = function(window, isNewSession = false) {
+  this.mainFrame = window;
   this.curFrame = null;
-  this.addBrowser(win);
+  this.addBrowser(window);
   this.curBrowser.isNewSession = isNewSession;
-  this.whenBrowserStarted(win, isNewSession);
+  this.whenBrowserStarted(window, isNewSession);
 };
 
 /**
  * Callback invoked after a new session has been started in a browser.
  * Loads the Marionette frame script into the browser if needed.
  *
- * @param {nsIDOMWindow} win
+ * @param {ChromeWindow} window
  *     Window whose browser we need to access.
  * @param {boolean} isNewSession
  *     True if this is the first time we're talking to this browser.
  */
-GeckoDriver.prototype.whenBrowserStarted = function(win, isNewSession) {
-  let mm = win.window.messageManager;
+GeckoDriver.prototype.whenBrowserStarted = function(window, isNewSession) {
+  let mm = window.messageManager;
   if (mm) {
     if (!isNewSession) {
       // Loading the frame script corresponds to a situation we need to
@@ -567,15 +557,14 @@ GeckoDriver.prototype.whenBrowserStarted = function(win, isNewSession) {
       Preferences.set(CONTENT_LISTENER_PREF, true);
     }
   } else {
-    logger.error(
-        `Could not load listener into content for page ${win.location.href}`);
+    logger.error("Unable to load content frame script");
   }
 };
 
 /**
  * Recursively get all labeled text.
  *
- * @param {nsIDOMElement} el
+ * @param {Element} el
  *     The parent element.
  * @param {Array.&lt;string>} lines
  *      Array that holds the text lines.
@@ -801,20 +790,21 @@ GeckoDriver.prototype.newSession = async function(cmd, resp) {
   }
   this.sessionID = element.generateUUID();
   this.newSessionCommandId = cmd.id;
+
   try {
     this.capabilities = session.Capabilities.fromJSON(cmd.parameters);
+
+    if (!this.secureTLS) {
+      logger.warn("TLS certificate errors will be ignored for this session");
+      let acceptAllCerts = new cert.InsecureSweepingOverride();
+      cert.installOverride(acceptAllCerts);
+    }
+
+    if (this.proxy.init()) {
+      logger.info("Proxy settings initialised: " + JSON.stringify(this.proxy));
+    }
   } catch (e) {
     throw new SessionNotCreatedError(e);
-  }
-
-  if (!this.secureTLS) {
-    logger.warn("TLS certificate errors will be ignored for this session");
-    let acceptAllCerts = new cert.InsecureSweepingOverride();
-    cert.installOverride(acceptAllCerts);
-  }
-
-  if (this.proxy.init()) {
-    logger.info("Proxy settings initialised: " + JSON.stringify(this.proxy));
   }
 
   // If we are testing accessibility with marionette, start a11y service in
@@ -1146,7 +1136,7 @@ GeckoDriver.prototype.get = async function(cmd, resp) {
   this.curBrowser.pendingCommands.push(() => {
     let parameters = {
       // TODO(ato): Bug 1242595
-      command_id: this.listener.activeMessageId,
+      commandID: this.listener.activeMessageId,
       pageTimeout: this.timeouts.pageLoad,
       startTime: new Date().getTime(),
     };
@@ -1265,7 +1255,7 @@ GeckoDriver.prototype.goBack = async function(cmd, resp) {
   this.curBrowser.pendingCommands.push(() => {
     let parameters = {
       // TODO(ato): Bug 1242595
-      command_id: this.listener.activeMessageId,
+      commandID: this.listener.activeMessageId,
       lastSeenURL: lastURL.toString(),
       pageTimeout: this.timeouts.pageLoad,
       startTime: new Date().getTime(),
@@ -1309,7 +1299,7 @@ GeckoDriver.prototype.goForward = async function(cmd, resp) {
   this.curBrowser.pendingCommands.push(() => {
     let parameters = {
       // TODO(ato): Bug 1242595
-      command_id: this.listener.activeMessageId,
+      commandID: this.listener.activeMessageId,
       lastSeenURL: lastURL.toString(),
       pageTimeout: this.timeouts.pageLoad,
       startTime: new Date().getTime(),
@@ -1347,7 +1337,7 @@ GeckoDriver.prototype.refresh = async function(cmd, resp) {
   this.curBrowser.pendingCommands.push(() => {
     let parameters = {
       // TODO(ato): Bug 1242595
-      command_id: this.listener.activeMessageId,
+      commandID: this.listener.activeMessageId,
       pageTimeout: this.timeouts.pageLoad,
       startTime: new Date().getTime(),
     };
@@ -1535,6 +1525,14 @@ GeckoDriver.prototype.setWindowRect = async function(cmd, resp) {
     });
   }
 
+  // Restore window and wait for the window state to change.
+  async function restoreWindow() {
+    return new Promise(resolve => {
+      win.addEventListener("sizemodechange", resolve, {once: true});
+      win.restore();
+    });
+  }
+
   // Synchronous resize to |width| and |height| dimensions.
   async function resizeWindow(width, height) {
     return new Promise(resolve => {
@@ -1570,8 +1568,14 @@ GeckoDriver.prototype.setWindowRect = async function(cmd, resp) {
     });
   }
 
-  if (win.windowState == win.STATE_FULLSCREEN) {
-    await exitFullscreen();
+  switch (win.windowState) {
+    case win.STATE_FULLSCREEN:
+      await exitFullscreen();
+      break;
+
+    case win.STATE_MINIMIZED:
+      await restoreWindow();
+      break;
   }
 
   if (height != null &amp;&amp; width != null) {
@@ -1821,8 +1825,7 @@ GeckoDriver.prototype.switchToFrame = async function(cmd, resp) {
     // by element
     if (this.curBrowser.seenEls.has(element)) {
       // HTMLIFrameElement
-      let wantedFrame = this.curBrowser.seenEls.get(
-          element, {frame: curWindow});
+      let wantedFrame = this.curBrowser.seenEls.get(element);
       // Deal with an embedded xul:browser case
       if (wantedFrame.tagName == "xul:browser" ||
           wantedFrame.tagName == "browser") {
@@ -1932,7 +1935,7 @@ GeckoDriver.prototype.switchToFrame = async function(cmd, resp) {
       // listener.
       this.switchToGlobalMessageManager();
     }
-    cmd.command_id = cmd.id;
+    cmd.commandID = cmd.id;
 
     let res = await this.listener.switchToFrame(cmd.parameters);
     if (res) {
@@ -2091,7 +2094,7 @@ GeckoDriver.prototype.multiAction = async function(cmd, resp) {
   assert.window(this.getCurrentWindow());
   assert.noUserPrompt(this.dialog);
 
-  let {value, max_length} = cmd.parameters;
+  let {value, max_length} = cmd.parameters;  // eslint-disable-line camelcase
 
   this.addFrameCloseListener("multi action chain");
   await this.listener.multiAction(value, max_length);
@@ -2130,8 +2133,7 @@ GeckoDriver.prototype.findElement = async function(cmd, resp) {
 
       let container = {frame: win};
       if (opts.startNode) {
-        opts.startNode = this.curBrowser.seenEls.get(
-            opts.startNode, container);
+        opts.startNode = this.curBrowser.seenEls.get(opts.startNode);
       }
       let el = await element.find(container, strategy, expr, opts);
       let elRef = this.curBrowser.seenEls.add(el);
@@ -2176,8 +2178,7 @@ GeckoDriver.prototype.findElements = async function(cmd, resp) {
 
       let container = {frame: win};
       if (opts.startNode) {
-        opts.startNode = this.curBrowser.seenEls.get(
-            opts.startNode, container);
+        opts.startNode = this.curBrowser.seenEls.get(opts.startNode);
       }
       let els = await element.find(container, strategy, expr, opts);
 
@@ -2228,14 +2229,14 @@ GeckoDriver.prototype.getActiveElement = async function(cmd, resp) {
  *     A modal dialog is open, blocking this operation.
  */
 GeckoDriver.prototype.clickElement = async function(cmd, resp) {
-  const win = assert.window(this.getCurrentWindow());
+  assert.window(this.getCurrentWindow());
   assert.noUserPrompt(this.dialog);
 
   let id = cmd.parameters.id;
 
   switch (this.context) {
     case Context.CHROME:
-      let el = this.curBrowser.seenEls.get(id, {frame: win});
+      let el = this.curBrowser.seenEls.get(id);
       await interaction.clickElement(el, this.a11yChecks);
       break;
 
@@ -2256,7 +2257,7 @@ GeckoDriver.prototype.clickElement = async function(cmd, resp) {
       this.curBrowser.pendingCommands.push(() => {
         let parameters = {
           // TODO(ato): Bug 1242595
-          command_id: this.listener.activeMessageId,
+          commandID: this.listener.activeMessageId,
           pageTimeout: this.timeouts.pageLoad,
           startTime: new Date().getTime(),
         };
@@ -2287,14 +2288,14 @@ GeckoDriver.prototype.clickElement = async function(cmd, resp) {
  *     A modal dialog is open, blocking this operation.
  */
 GeckoDriver.prototype.getElementAttribute = async function(cmd, resp) {
-  const win = assert.window(this.getCurrentWindow());
+  assert.window(this.getCurrentWindow());
   assert.noUserPrompt(this.dialog);
 
   let {id, name} = cmd.parameters;
 
   switch (this.context) {
     case Context.CHROME:
-      let el = this.curBrowser.seenEls.get(id, {frame: win});
+      let el = this.curBrowser.seenEls.get(id);
       resp.body.value = el.getAttribute(name);
       break;
 
@@ -2321,14 +2322,14 @@ GeckoDriver.prototype.getElementAttribute = async function(cmd, resp) {
  *     A modal dialog is open, blocking this operation.
  */
 GeckoDriver.prototype.getElementProperty = async function(cmd, resp) {
-  const win = assert.window(this.getCurrentWindow());
+  assert.window(this.getCurrentWindow());
   assert.noUserPrompt(this.dialog);
 
   let {id, name} = cmd.parameters;
 
   switch (this.context) {
     case Context.CHROME:
-      let el = this.curBrowser.seenEls.get(id, {frame: win});
+      let el = this.curBrowser.seenEls.get(id);
       resp.body.value = el[name];
       break;
 
@@ -2354,7 +2355,7 @@ GeckoDriver.prototype.getElementProperty = async function(cmd, resp) {
  *     A modal dialog is open, blocking this operation.
  */
 GeckoDriver.prototype.getElementText = async function(cmd, resp) {
-  const win = assert.window(this.getCurrentWindow());
+  assert.window(this.getCurrentWindow());
   assert.noUserPrompt(this.dialog);
 
   let id = cmd.parameters.id;
@@ -2362,7 +2363,7 @@ GeckoDriver.prototype.getElementText = async function(cmd, resp) {
   switch (this.context) {
     case Context.CHROME:
       // for chrome, we look at text nodes, and any node with a "label" field
-      let el = this.curBrowser.seenEls.get(id, {frame: win});
+      let el = this.curBrowser.seenEls.get(id);
       let lines = [];
       this.getVisibleText(el, lines);
       resp.body.value = lines.join("\n");
@@ -2389,14 +2390,14 @@ GeckoDriver.prototype.getElementText = async function(cmd, resp) {
  *     A modal dialog is open, blocking this operation.
  */
 GeckoDriver.prototype.getElementTagName = async function(cmd, resp) {
-  const win = assert.window(this.getCurrentWindow());
+  assert.window(this.getCurrentWindow());
   assert.noUserPrompt(this.dialog);
 
   let id = cmd.parameters.id;
 
   switch (this.context) {
     case Context.CHROME:
-      let el = this.curBrowser.seenEls.get(id, {frame: win});
+      let el = this.curBrowser.seenEls.get(id);
       resp.body.value = el.tagName.toLowerCase();
       break;
 
@@ -2421,14 +2422,14 @@ GeckoDriver.prototype.getElementTagName = async function(cmd, resp) {
  *     A modal dialog is open, blocking this operation.
  */
 GeckoDriver.prototype.isElementDisplayed = async function(cmd, resp) {
-  const win = assert.window(this.getCurrentWindow());
+  assert.window(this.getCurrentWindow());
   assert.noUserPrompt(this.dialog);
 
   let id = cmd.parameters.id;
 
   switch (this.context) {
     case Context.CHROME:
-      let el = this.curBrowser.seenEls.get(id, {frame: win});
+      let el = this.curBrowser.seenEls.get(id);
       resp.body.value = await interaction.isElementDisplayed(
           el, this.a11yChecks);
       break;
@@ -2464,7 +2465,7 @@ GeckoDriver.prototype.getElementValueOfCssProperty = async function(
 
   switch (this.context) {
     case Context.CHROME:
-      let el = this.curBrowser.seenEls.get(id, {frame: win});
+      let el = this.curBrowser.seenEls.get(id);
       let sty = win.document.defaultView.getComputedStyle(el);
       resp.body.value = sty.getPropertyValue(prop);
       break;
@@ -2491,7 +2492,7 @@ GeckoDriver.prototype.getElementValueOfCssProperty = async function(
  *     A modal dialog is open, blocking this operation.
  */
 GeckoDriver.prototype.isElementEnabled = async function(cmd, resp) {
-  const win = assert.window(this.getCurrentWindow());
+  assert.window(this.getCurrentWindow());
   assert.noUserPrompt(this.dialog);
 
   let id = cmd.parameters.id;
@@ -2499,7 +2500,7 @@ GeckoDriver.prototype.isElementEnabled = async function(cmd, resp) {
   switch (this.context) {
     case Context.CHROME:
       // Selenium atom doesn't quite work here
-      let el = this.curBrowser.seenEls.get(id, {frame: win});
+      let el = this.curBrowser.seenEls.get(id);
       resp.body.value = await interaction.isElementEnabled(
           el, this.a11yChecks);
       break;
@@ -2525,7 +2526,7 @@ GeckoDriver.prototype.isElementEnabled = async function(cmd, resp) {
  *     A modal dialog is open, blocking this operation.
  */
 GeckoDriver.prototype.isElementSelected = async function(cmd, resp) {
-  const win = assert.window(this.getCurrentWindow());
+  assert.window(this.getCurrentWindow());
   assert.noUserPrompt(this.dialog);
 
   let id = cmd.parameters.id;
@@ -2533,7 +2534,7 @@ GeckoDriver.prototype.isElementSelected = async function(cmd, resp) {
   switch (this.context) {
     case Context.CHROME:
       // Selenium atom doesn't quite work here
-      let el = this.curBrowser.seenEls.get(id, {frame: win});
+      let el = this.curBrowser.seenEls.get(id);
       resp.body.value = await interaction.isElementSelected(
           el, this.a11yChecks);
       break;
@@ -2558,7 +2559,7 @@ GeckoDriver.prototype.getElementRect = async function(cmd, resp) {
 
   switch (this.context) {
     case Context.CHROME:
-      let el = this.curBrowser.seenEls.get(id, {frame: win});
+      let el = this.curBrowser.seenEls.get(id);
       let rect = el.getBoundingClientRect();
       resp.body = {
         x: rect.x + win.pageXOffset,
@@ -2588,7 +2589,7 @@ GeckoDriver.prototype.getElementRect = async function(cmd, resp) {
  *     A modal dialog is open, blocking this operation.
  */
 GeckoDriver.prototype.sendKeysToElement = async function(cmd, resp) {
-  const win = assert.window(this.getCurrentWindow());
+  assert.window(this.getCurrentWindow());
   assert.noUserPrompt(this.dialog);
 
   let {id, text} = cmd.parameters;
@@ -2596,7 +2597,7 @@ GeckoDriver.prototype.sendKeysToElement = async function(cmd, resp) {
 
   switch (this.context) {
     case Context.CHROME:
-      let el = this.curBrowser.seenEls.get(id, {frame: win});
+      let el = this.curBrowser.seenEls.get(id);
       await interaction.sendKeysToElement(
           el, text, true, this.a11yChecks);
       break;
@@ -2619,7 +2620,7 @@ GeckoDriver.prototype.sendKeysToElement = async function(cmd, resp) {
  *     A modal dialog is open, blocking this operation.
  */
 GeckoDriver.prototype.clearElement = async function(cmd, resp) {
-  const win = assert.window(this.getCurrentWindow());
+  assert.window(this.getCurrentWindow());
   assert.noUserPrompt(this.dialog);
 
   let id = cmd.parameters.id;
@@ -2627,7 +2628,7 @@ GeckoDriver.prototype.clearElement = async function(cmd, resp) {
   switch (this.context) {
     case Context.CHROME:
       // the selenium atom doesn't work here
-      let el = this.curBrowser.seenEls.get(id, {frame: win});
+      let el = this.curBrowser.seenEls.get(id);
       if (el.nodeName == "textbox") {
         el.value = "";
       } else if (el.nodeName == "checkbox") {
@@ -2945,23 +2946,21 @@ GeckoDriver.prototype.takeScreenshot = function(cmd, resp) {
 
   switch (this.context) {
     case Context.CHROME:
-      let container = {frame: win.document.defaultView};
-
       let highlightEls = highlights.map(
-          ref => this.curBrowser.seenEls.get(ref, container));
+          ref => this.curBrowser.seenEls.get(ref));
 
       // viewport
       let canvas;
       if (!id &amp;&amp; !full) {
-        canvas = capture.viewport(container.frame, highlightEls);
+        canvas = capture.viewport(win, highlightEls);
 
       // element or full document element
       } else {
         let node;
         if (id) {
-          node = this.curBrowser.seenEls.get(id, container);
+          node = this.curBrowser.seenEls.get(id);
         } else {
-          node = container.frame.document.documentElement;
+          node = win.document.documentElement;
         }
 
         canvas = capture.element(node, highlightEls);
@@ -3032,7 +3031,9 @@ GeckoDriver.prototype.setScreenOrientation = function(cmd, resp) {
 
 /**
  * Synchronously minimizes the user agent window as if the user pressed
- * the minimize button, or restores it if it is already minimized.
+ * the minimize button.
+ *
+ * No action is taken if the window is already minimized.
  *
  * Not supported on Fennec.
  *
@@ -3051,22 +3052,22 @@ GeckoDriver.prototype.minimizeWindow = async function(cmd, resp) {
   const win = assert.window(this.getCurrentWindow());
   assert.noUserPrompt(this.dialog);
 
-  await new Promise(resolve => {
-    win.addEventListener("sizemodechange", resolve, {once: true});
-
-    if (win.windowState == win.STATE_MINIMIZED) {
-      win.restore();
-    } else {
+  let state = WindowState.from(win.windowState);
+  if (state != WindowState.Minimized) {
+    await new Promise(resolve => {
+      win.addEventListener("sizemodechange", resolve, {once: true});
       win.minimize();
-    }
-  });
+    });
+  }
 
   return this.curBrowser.rect;
 };
 
 /**
  * Synchronously maximizes the user agent window as if the user pressed
- * the maximize button, or restores it if it is already maximized.
+ * the maximize button.
+ *
+ * No action is taken if the window is already maximized.
  *
  * Not supported on Fennec.
  *
@@ -3106,48 +3107,44 @@ GeckoDriver.prototype.maximizeWindow = async function(cmd, resp) {
     });
   }
 
-  let modeChangeEv;
-  await new TimedPromise(resolve => {
-    modeChangeEv = resolve;
-    win.addEventListener("sizemodechange", modeChangeEv, {once: true});
-
-    if (win.windowState == win.STATE_MAXIMIZED) {
-      win.restore();
-    } else {
+  let state = WindowState.from(win.windowState);
+  if (state != WindowState.Maximized) {
+    await new TimedPromise(resolve => {
+      win.addEventListener("sizemodechange", resolve, {once: true});
       win.maximize();
-    }
-  }, {throws: null});
-  win.removeEventListener("sizemodechange", modeChangeEv);
+    }, {throws: null});
 
-  // Transitioning into a window state is asynchronous on Linux, and we
-  // cannot rely on sizemodechange to accurately tell us when the
-  // transition has completed.
-  //
-  // To counter for this we wait for the window size to change, which
-  // it usually will.  On platforms where the transition is synchronous,
-  // the wait will have the cost of one iteration because the size will
-  // have changed as part of the transition.  Where the platform
-  // is asynchronous, the cost may be greater as we have to poll
-  // continuously until we see a change, but it ensures conformity in
-  // behaviour.
-  //
-  // Certain window managers, however, do not have a concept of maximised
-  // windows and here sizemodechange may never fire.  Indeed, if the
-  // window covers the maximum available screen real estate, the window
-  // size may also not change.  In this circumstance, which admittedly
-  // is a somewhat bizarre edge case, we assume that the timeout of
-  // waiting for sizemodechange to fire is sufficient to give the window
-  // enough time to transition itself into whatever form or shape the
-  // WM is programmed to give it.
-  await windowSizeChange();
+    // Transitioning into a window state is asynchronous on Linux,
+    // and we cannot rely on sizemodechange to accurately tell us when
+    // the transition has completed.
+    //
+    // To counter for this we wait for the window size to change, which
+    // it usually will.  On platforms where the transition is synchronous,
+    // the wait will have the cost of one iteration because the size
+    // will have changed as part of the transition.  Where the platform is
+    // asynchronous, the cost may be greater as we have to poll
+    // continuously until we see a change, but it ensures conformity in
+    // behaviour.
+    //
+    // Certain window managers, however, do not have a concept of
+    // maximised windows and here sizemodechange may never fire.  Indeed,
+    // if the window covers the maximum available screen real estate,
+    // the window size may also not change.  In this circumstance,
+    // which admittedly is a somewhat bizarre edge case, we assume that
+    // the timeout of waiting for sizemodechange to fire is sufficient
+    // to give the window enough time to transition itself into whatever
+    // form or shape the WM is programmed to give it.
+    await windowSizeChange();
+  }
 
   return this.curBrowser.rect;
 };
 
 /**
  * Synchronously sets the user agent window to full screen as if the user
- * had done "View > Enter Full Screen", or restores it if it is already
- * in full screen.
+ * had done "View > Enter Full Screen".
+ *
+ * No action is taken if the window is already in full screen mode.
  *
  * Not supported on Fennec.
  *
@@ -3161,15 +3158,18 @@ GeckoDriver.prototype.maximizeWindow = async function(cmd, resp) {
  * @throws {UnexpectedAlertOpenError}
  *     A modal dialog is open, blocking this operation.
  */
-GeckoDriver.prototype.fullscreen = async function(cmd, resp) {
+GeckoDriver.prototype.fullscreenWindow = async function(cmd, resp) {
   assert.firefox();
   const win = assert.window(this.getCurrentWindow());
   assert.noUserPrompt(this.dialog);
 
-  await new Promise(resolve => {
-    win.addEventListener("sizemodechange", resolve, {once: true});
-    win.fullScreen = !win.fullScreen;
-  });
+  let state = WindowState.from(win.windowState);
+  if (state != WindowState.Fullscreen) {
+    await new Promise(resolve => {
+      win.addEventListener("sizemodechange", resolve, {once: true});
+      win.fullScreen = true;
+    });
+  }
 
   return this.curBrowser.rect;
 };
@@ -3607,7 +3607,7 @@ GeckoDriver.prototype.commands = {
   "WebDriver:FindElement": GeckoDriver.prototype.findElement,
   "WebDriver:FindElements": GeckoDriver.prototype.findElements,
   "WebDriver:Forward": GeckoDriver.prototype.goForward,
-  "WebDriver:FullscreenWindow": GeckoDriver.prototype.fullscreen,
+  "WebDriver:FullscreenWindow": GeckoDriver.prototype.fullscreenWindow,
   "WebDriver:GetActiveElement": GeckoDriver.prototype.getActiveElement,
   "WebDriver:GetActiveFrame": GeckoDriver.prototype.getActiveFrame,
   "WebDriver:GetAlertText": GeckoDriver.prototype.getTextFromDialog,
@@ -3667,7 +3667,7 @@ GeckoDriver.prototype.commands = {
   "executeScript": GeckoDriver.prototype.executeScript,
   "findElement": GeckoDriver.prototype.findElement,
   "findElements": GeckoDriver.prototype.findElements,
-  "fullscreen": GeckoDriver.prototype.fullscreen,
+  "fullscreen": GeckoDriver.prototype.fullscreenWindow,
   "getActiveElement": GeckoDriver.prototype.getActiveElement,
   "getActiveFrame": GeckoDriver.prototype.getActiveFrame,
   "getChromeWindowHandle": GeckoDriver.prototype.getChromeWindowHandle,
@@ -3729,15 +3729,6 @@ function copy(obj) {
   return obj;
 }
 
-/**
- * Get the outer window ID for the specified window.
- *
- * @param {nsIDOMWindow} win
- *     Window whose browser we need to access.
- *
- * @return {string}
- *     Returns the unique window ID.
- */
 function getOuterWindowId(win) {
   return win.QueryInterface(Ci.nsIInterfaceRequestor)
       .getInterface(Ci.nsIDOMWindowUtils)
@@ -3753,13 +3744,13 @@ function getOuterWindowId(win) {
 </div>
 
 <nav>
-    <h2><a href="index.html">Home</a></h2><h3>Classes</h3><ul><li><a href="accessibility.Checks.html">Checks</a></li><li><a href="action.Action.html">Action</a></li><li><a href="action.html#.Chain">Chain</a></li><li><a href="action.InputState.Key.html">Key</a></li><li><a href="action.InputState.Null.html">Null</a></li><li><a href="action.InputState.Pointer.html">Pointer</a></li><li><a href="action.Key.html">Key</a></li><li><a href="action.Mouse.html">Mouse</a></li><li><a href="action.PointerParameters.html">PointerParameters</a></li><li><a href="action.Sequence.html">Sequence</a></li><li><a href="AsyncChromeSender.html">AsyncChromeSender</a></li><li><a href="browser.Context.html">Context</a></li><li><a href="browser.Windows.html">Windows</a></li><li><a href="Command.html">Command</a></li><li><a href="DebuggerTransport.html">DebuggerTransport</a></li><li><a href="element.Store.html">Store</a></li><li><a href="ElementClickInterceptedError.html">ElementClickInterceptedError</a></li><li><a href="ElementNotAccessibleError.html">ElementNotAccessibleError</a></li><li><a href="ElementNotInteractableError.html">ElementNotInteractableError</a></li><li><a href="evaluate.this.Sandboxes.html">this.Sandboxes</a></li><li><a href="frame.Manager.html">Manager</a></li><li><a href="GeckoDriver.html">GeckoDriver</a></li><li><a href="InputState.html">InputState</a></li><li><a href="InsecureCertificateError.html">InsecureCertificateError</a></li><li><a href="InvalidArgumentError.html">InvalidArgumentError</a></li><li><a href="JavaScriptError.html">JavaScriptError</a></li><li><a href="Message.html">Message</a></li><li><a href="modal.Dialog.html">Dialog</a></li><li><a href="Packet.html">Packet</a></li><li><a href="proxy.AsyncMessageChannel.html">AsyncMessageChannel</a></li><li><a href="proxy.SyncChromeSender.html">SyncChromeSender</a></li><li><a href="reftest.Runner.html">Runner</a></li><li><a href="Response.html">Response</a></li><li><a href="server.TCPConnection.html">TCPConnection</a></li><li><a href="server.TCPListener.html">TCPListener</a></li><li><a href="session.Capabilities.html">Capabilities</a></li><li><a href="session.Proxy.html">Proxy</a></li><li><a href="session.Timeouts.html">Timeouts</a></li><li><a href="StreamCopier.html">StreamCopier</a></li><li><a href="WebDriverError.html">WebDriverError</a></li></ul><h3>Namespaces</h3><ul><li><a href="accessibility.html">accessibility</a></li><li><a href="action.html">action</a></li><li><a href="addon.html">addon</a></li><li><a href="assert.html">assert</a></li><li><a href="atom.html">atom</a></li><li><a href="browser.html">browser</a></li><li><a href="capture.html">capture</a></li><li><a href="cert.html">cert</a></li><li><a href="cookie.html">cookie</a></li><li><a href="driver.html">driver</a></li><li><a href="element.html">element</a></li><li><a href="error.html">error</a></li><li><a href="evaluate.html">evaluate</a></li><li><a href="global.html#event">event</a></li><li><a href="frame.html">frame</a></li><li><a href="interaction.html">interaction</a></li><li><a href="l10n.html">l10n</a></li><li><a href="legacyaction.html">legacyaction</a></li><li><a href="modal.html">modal</a></li><li><a href="navigate.html">navigate</a></li><li><a href="proxy.html">proxy</a></li><li><a href="reftest.html">reftest</a></li><li><a href="server.html">server</a></li><li><a href="session.html">session</a></li><li><a href="wait.html">wait</a></li></ul><h3>Global</h3><ul><li><a href="global.html#actionChain">actionChain</a></li><li><a href="global.html#addMessageListenerId">addMessageListenerId</a></li><li><a href="global.html#BulkPacket">BulkPacket</a></li><li><a href="global.html#cancelRequest">cancelRequest</a></li><li><a href="global.html#CHECKED_PROPERTY_SUPPORTED_XUL">CHECKED_PROPERTY_SUPPORTED_XUL</a></li><li><a href="global.html#checkExpectedEvent_">checkExpectedEvent_</a></li><li><a href="global.html#ChildDebuggerTransport">ChildDebuggerTransport</a></li><li><a href="global.html#clearElement">clearElement</a></li><li><a href="global.html#clickElement">clickElement</a></li><li><a href="global.html#COMMON_FORM_CONTROLS">COMMON_FORM_CONTROLS</a></li><li><a href="global.html#Cookie">Cookie</a></li><li><a href="global.html#copyStream">copyStream</a></li><li><a href="global.html#createATouch">createATouch</a></li><li><a href="global.html#deleteSession">deleteSession</a></li><li><a href="global.html#delimitedRead">delimitedRead</a></li><li><a href="global.html#DISABLED_ATTRIBUTE_SUPPORTED_XUL">DISABLED_ATTRIBUTE_SUPPORTED_XUL</a></li><li><a href="global.html#dispatchKeyDown">dispatchKeyDown</a></li><li><a href="global.html#dispatchKeyUp">dispatchKeyUp</a></li><li><a href="global.html#dispatchPause">dispatchPause</a></li><li><a href="global.html#dispatchPointerDown">dispatchPointerDown</a></li><li><a href="global.html#dispatchPointerMove">dispatchPointerMove</a></li><li><a href="global.html#dispatchPointerUp">dispatchPointerUp</a></li><li><a href="global.html#filterLinks">filterLinks</a></li><li><a href="global.html#findElement">findElement</a></li><li><a href="global.html#findElementContent">findElementContent</a></li><li><a href="global.html#findElements">findElements</a></li><li><a href="global.html#findElementsContent">findElementsContent</a></li><li><a href="global.html#focusElement">focusElement</a></li><li><a href="global.html#get">get</a></li><li><a href="global.html#getActiveElement">getActiveElement</a></li><li><a href="global.html#getElementRect">getElementRect</a></li><li><a href="global.html#getElementTagName">getElementTagName</a></li><li><a href="global.html#getElementText">getElementText</a></li><li><a href="global.html#getElementValueOfCssProperty">getElementValueOfCssProperty</a></li><li><a href="global.html#getOuterWindowId">getOuterWindowId</a></li><li><a href="global.html#getPageSource">getPageSource</a></li><li><a href="global.html#goBack">goBack</a></li><li><a href="global.html#goForward">goForward</a></li><li><a href="global.html#hex">hex</a></li><li><a href="global.html#INPUT_TYPES_NO_EVENT">INPUT_TYPES_NO_EVENT</a></li><li><a href="global.html#isElementDisplayed">isElementDisplayed</a></li><li><a href="global.html#isElementEnabled">isElementEnabled</a></li><li><a href="global.html#isElementSelected">isElementSelected</a></li><li><a href="global.html#JSONPacket">JSONPacket</a></li><li><a href="global.html#KEY_LOCATION_LOOKUP">KEY_LOCATION_LOOKUP</a></li><li><a href="global.html#loadListener">loadListener</a></li><li><a href="global.html#LocalDebuggerTransport">LocalDebuggerTransport</a></li><li><a href="global.html#MessageOrigin">MessageOrigin</a></li><li><a href="global.html#MODIFIER_NAME_LOOKUP">MODIFIER_NAME_LOOKUP</a></li><li><a href="global.html#multiAction">multiAction</a></li><li><a href="global.html#newSession">newSession</a></li><li><a href="global.html#NORMALIZED_KEY_LOOKUP">NORMALIZED_KEY_LOOKUP</a></li><li><a href="global.html#performActions">performActions</a></li><li><a href="global.html#RawPacket">RawPacket</a></li><li><a href="global.html#refresh">refresh</a></li><li><a href="global.html#registerSelf">registerSelf</a></li><li><a href="global.html#releaseActions">releaseActions</a></li><li><a href="global.html#removeMessageListenerId">removeMessageListenerId</a></li><li><a href="global.html#resetValues">resetValues</a></li><li><a href="global.html#ResponseBody">ResponseBody</a></li><li><a href="global.html#restart">restart</a></li><li><a href="global.html#SELECTED_PROPERTY_SUPPORTED_XUL">SELECTED_PROPERTY_SUPPORTED_XUL</a></li><li><a href="global.html#sendError">sendError</a></li><li><a href="global.html#sendOk">sendOk</a></li><li><a href="global.html#sendResponse">sendResponse</a></li><li><a href="global.html#sendToServer">sendToServer</a></li><li><a href="global.html#set">set</a></li><li><a href="global.html#singleTap">singleTap</a></li><li><a href="global.html#sleepSession">sleepSession</a></li><li><a href="global.html#startListeners">startListeners</a></li><li><a href="global.html#switchToFrame">switchToFrame</a></li><li><a href="global.html#switchToParentFrame">switchToParentFrame</a></li><li><a href="global.html#switchToShadowRoot">switchToShadowRoot</a></li><li><a href="global.html#takeScreenshot">takeScreenshot</a></li><li><a href="global.html#TimedPromise">TimedPromise</a></li><li><a href="global.html#toEvents">toEvents</a></li><li><a href="global.html#waitForPageLoaded">waitForPageLoaded</a></li><li><a href="global.html#WindowState">WindowState</a></li></ul>
+    <h2><a href="index.html">Home</a></h2><h3>Classes</h3><ul><li><a href="accessibility.Checks.html">Checks</a></li><li><a href="action.Action.html">Action</a></li><li><a href="action.html#.Chain">Chain</a></li><li><a href="action.InputState.Key.html">Key</a></li><li><a href="action.InputState.Null.html">Null</a></li><li><a href="action.InputState.Pointer.html">Pointer</a></li><li><a href="action.Key.html">Key</a></li><li><a href="action.Mouse.html">Mouse</a></li><li><a href="action.PointerParameters.html">PointerParameters</a></li><li><a href="action.Sequence.html">Sequence</a></li><li><a href="AsyncChromeSender.html">AsyncChromeSender</a></li><li><a href="browser.Context.html">Context</a></li><li><a href="browser.Windows.html">Windows</a></li><li><a href="Command.html">Command</a></li><li><a href="DebuggerTransport.html">DebuggerTransport</a></li><li><a href="element.Store.html">Store</a></li><li><a href="ElementClickInterceptedError.html">ElementClickInterceptedError</a></li><li><a href="ElementNotAccessibleError.html">ElementNotAccessibleError</a></li><li><a href="ElementNotInteractableError.html">ElementNotInteractableError</a></li><li><a href="evaluate.this.Sandboxes.html">this.Sandboxes</a></li><li><a href="frame.Manager.html">Manager</a></li><li><a href="GeckoDriver.html">GeckoDriver</a></li><li><a href="InputState.html">InputState</a></li><li><a href="InsecureCertificateError.html">InsecureCertificateError</a></li><li><a href="InvalidArgumentError.html">InvalidArgumentError</a></li><li><a href="JavaScriptError.html">JavaScriptError</a></li><li><a href="Message.html">Message</a></li><li><a href="modal.Dialog.html">Dialog</a></li><li><a href="Packet.html">Packet</a></li><li><a href="proxy.AsyncMessageChannel.html">AsyncMessageChannel</a></li><li><a href="proxy.SyncChromeSender.html">SyncChromeSender</a></li><li><a href="reftest.Runner.html">Runner</a></li><li><a href="Response.html">Response</a></li><li><a href="server.TCPConnection.html">TCPConnection</a></li><li><a href="server.TCPListener.html">TCPListener</a></li><li><a href="session.Capabilities.html">Capabilities</a></li><li><a href="session.Proxy.html">Proxy</a></li><li><a href="session.Timeouts.html">Timeouts</a></li><li><a href="StreamCopier.html">StreamCopier</a></li><li><a href="WebDriverError.html">WebDriverError</a></li></ul><h3>Namespaces</h3><ul><li><a href="accessibility.html">accessibility</a></li><li><a href="action.html">action</a></li><li><a href="addon.html">addon</a></li><li><a href="assert.html">assert</a></li><li><a href="atom.html">atom</a></li><li><a href="browser.html">browser</a></li><li><a href="capture.html">capture</a></li><li><a href="cert.html">cert</a></li><li><a href="cookie.html">cookie</a></li><li><a href="driver.html">driver</a></li><li><a href="element.html">element</a></li><li><a href="error.html">error</a></li><li><a href="evaluate.html">evaluate</a></li><li><a href="global.html#event">event</a></li><li><a href="frame.html">frame</a></li><li><a href="interaction.html">interaction</a></li><li><a href="l10n.html">l10n</a></li><li><a href="legacyaction.html">legacyaction</a></li><li><a href="modal.html">modal</a></li><li><a href="navigate.html">navigate</a></li><li><a href="proxy.html">proxy</a></li><li><a href="reftest.html">reftest</a></li><li><a href="server.html">server</a></li><li><a href="session.html">session</a></li><li><a href="wait.html">wait</a></li></ul><h3>Global</h3><ul><li><a href="global.html#actionChain">actionChain</a></li><li><a href="global.html#addMessageListenerId">addMessageListenerId</a></li><li><a href="global.html#BulkPacket">BulkPacket</a></li><li><a href="global.html#cancelRequest">cancelRequest</a></li><li><a href="global.html#CHECKED_PROPERTY_SUPPORTED_XUL">CHECKED_PROPERTY_SUPPORTED_XUL</a></li><li><a href="global.html#checkExpectedEvent_">checkExpectedEvent_</a></li><li><a href="global.html#ChildDebuggerTransport">ChildDebuggerTransport</a></li><li><a href="global.html#clearElement">clearElement</a></li><li><a href="global.html#clickElement">clickElement</a></li><li><a href="global.html#COMMON_FORM_CONTROLS">COMMON_FORM_CONTROLS</a></li><li><a href="global.html#Cookie">Cookie</a></li><li><a href="global.html#copyStream">copyStream</a></li><li><a href="global.html#createATouch">createATouch</a></li><li><a href="global.html#deleteSession">deleteSession</a></li><li><a href="global.html#delimitedRead">delimitedRead</a></li><li><a href="global.html#DISABLED_ATTRIBUTE_SUPPORTED_XUL">DISABLED_ATTRIBUTE_SUPPORTED_XUL</a></li><li><a href="global.html#dispatchKeyDown">dispatchKeyDown</a></li><li><a href="global.html#dispatchKeyUp">dispatchKeyUp</a></li><li><a href="global.html#dispatchPause">dispatchPause</a></li><li><a href="global.html#dispatchPointerDown">dispatchPointerDown</a></li><li><a href="global.html#dispatchPointerMove">dispatchPointerMove</a></li><li><a href="global.html#dispatchPointerUp">dispatchPointerUp</a></li><li><a href="global.html#filterLinks">filterLinks</a></li><li><a href="global.html#findElement">findElement</a></li><li><a href="global.html#findElementContent">findElementContent</a></li><li><a href="global.html#findElements">findElements</a></li><li><a href="global.html#findElementsContent">findElementsContent</a></li><li><a href="global.html#focusElement">focusElement</a></li><li><a href="global.html#get">get</a></li><li><a href="global.html#getActiveElement">getActiveElement</a></li><li><a href="global.html#getElementRect">getElementRect</a></li><li><a href="global.html#getElementTagName">getElementTagName</a></li><li><a href="global.html#getElementText">getElementText</a></li><li><a href="global.html#getElementValueOfCssProperty">getElementValueOfCssProperty</a></li><li><a href="global.html#getPageSource">getPageSource</a></li><li><a href="global.html#goBack">goBack</a></li><li><a href="global.html#goForward">goForward</a></li><li><a href="global.html#hex">hex</a></li><li><a href="global.html#INPUT_TYPES_NO_EVENT">INPUT_TYPES_NO_EVENT</a></li><li><a href="global.html#isElementDisplayed">isElementDisplayed</a></li><li><a href="global.html#isElementEnabled">isElementEnabled</a></li><li><a href="global.html#isElementSelected">isElementSelected</a></li><li><a href="global.html#JSONPacket">JSONPacket</a></li><li><a href="global.html#KEY_LOCATION_LOOKUP">KEY_LOCATION_LOOKUP</a></li><li><a href="global.html#loadListener">loadListener</a></li><li><a href="global.html#LocalDebuggerTransport">LocalDebuggerTransport</a></li><li><a href="global.html#MessageOrigin">MessageOrigin</a></li><li><a href="global.html#MODIFIER_NAME_LOOKUP">MODIFIER_NAME_LOOKUP</a></li><li><a href="global.html#multiAction">multiAction</a></li><li><a href="global.html#newSession">newSession</a></li><li><a href="global.html#NORMALIZED_KEY_LOOKUP">NORMALIZED_KEY_LOOKUP</a></li><li><a href="global.html#performActions">performActions</a></li><li><a href="global.html#pprint">pprint</a></li><li><a href="global.html#RawPacket">RawPacket</a></li><li><a href="global.html#refresh">refresh</a></li><li><a href="global.html#registerSelf">registerSelf</a></li><li><a href="global.html#releaseActions">releaseActions</a></li><li><a href="global.html#removeMessageListenerId">removeMessageListenerId</a></li><li><a href="global.html#resetValues">resetValues</a></li><li><a href="global.html#ResponseBody">ResponseBody</a></li><li><a href="global.html#restart">restart</a></li><li><a href="global.html#SELECTED_PROPERTY_SUPPORTED_XUL">SELECTED_PROPERTY_SUPPORTED_XUL</a></li><li><a href="global.html#sendError">sendError</a></li><li><a href="global.html#sendOk">sendOk</a></li><li><a href="global.html#sendResponse">sendResponse</a></li><li><a href="global.html#sendToServer">sendToServer</a></li><li><a href="global.html#set">set</a></li><li><a href="global.html#singleTap">singleTap</a></li><li><a href="global.html#sleepSession">sleepSession</a></li><li><a href="global.html#stack">stack</a></li><li><a href="global.html#startListeners">startListeners</a></li><li><a href="global.html#switchToFrame">switchToFrame</a></li><li><a href="global.html#switchToParentFrame">switchToParentFrame</a></li><li><a href="global.html#switchToShadowRoot">switchToShadowRoot</a></li><li><a href="global.html#takeScreenshot">takeScreenshot</a></li><li><a href="global.html#TimedPromise">TimedPromise</a></li><li><a href="global.html#toEvents">toEvents</a></li><li><a href="global.html#waitForPageLoaded">waitForPageLoaded</a></li><li><a href="global.html#WindowState">WindowState</a></li></ul>
 </nav>
 
 <br class="clear">
 
 <footer>
-    Documentation generated by <a href="https://github.com/jsdoc3/jsdoc">JSDoc 3.5.3</a> on Tue Aug 15 2017 19:56:03 GMT+0100 (BST)
+    Documentation generated by <a href="https://github.com/jsdoc3/jsdoc">JSDoc 3.5.3</a> on Mon Sep 04 2017 15:31:26 GMT+0100 (BST)
 </footer>
 
 <script> prettyPrint(); </script>
