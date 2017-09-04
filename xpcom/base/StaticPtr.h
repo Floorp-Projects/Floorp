@@ -274,4 +274,12 @@ RefPtr<T>::operator=(const mozilla::StaticRefPtr<U>& aOther)
   return operator=(aOther.get());
 }
 
+template <class T>
+inline already_AddRefed<T>
+do_AddRef(const mozilla::StaticRefPtr<T>& aObj)
+{
+  RefPtr<T> ref(aObj);
+  return ref.forget();
+}
+
 #endif

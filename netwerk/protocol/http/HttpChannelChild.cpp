@@ -203,7 +203,7 @@ HttpChannelChild::HttpChannelChild()
   // IPC HTTP channel is created.
   // We require that the parent cookie service actor exists while
   // processing HTTP responses.
-  CookieServiceChild::GetSingleton();
+  RefPtr<CookieServiceChild> cookieService = CookieServiceChild::GetSingleton();
 }
 
 HttpChannelChild::~HttpChannelChild()
