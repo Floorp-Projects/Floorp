@@ -86,7 +86,7 @@ private:
   AssertIsOnTargetThread() const;
 
   bool
-  RegisterWorkerHolder(workers::WorkerPrivate* aWorkerPrivate);
+  RegisterWorkerHolder();
 
   nsCOMPtr<nsIThread> mTargetThread;
   nsCOMPtr<nsIEventTarget> mMainThreadEventTarget;
