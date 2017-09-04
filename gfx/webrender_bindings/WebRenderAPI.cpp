@@ -483,6 +483,12 @@ ResourceUpdateQueue::Deserialize(Range<uint8_t> aData)
 }
 
 void
+ResourceUpdateQueue::Clear()
+{
+  wr_resource_updates_clear(mUpdates);
+}
+
+void
 ResourceUpdateQueue::AddImage(ImageKey key, const ImageDescriptor& aDescriptor,
                               Range<uint8_t> aBytes)
 {

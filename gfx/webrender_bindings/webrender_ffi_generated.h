@@ -1206,6 +1206,10 @@ void wr_resource_updates_add_raw_font(ResourceUpdates *aResources,
 WR_FUNC;
 
 WR_INLINE
+void wr_resource_updates_clear(ResourceUpdates *aResources)
+WR_FUNC;
+
+WR_INLINE
 void wr_resource_updates_delete(ResourceUpdates *aUpdates)
 WR_DESTRUCTOR_SAFE_FUNC;
 

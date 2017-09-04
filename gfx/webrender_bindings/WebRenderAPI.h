@@ -110,6 +110,8 @@ public:
 
   void DeleteFontInstance(wr::FontInstanceKey aKey);
 
+  void Clear();
+
   // Try to avoid using this when possible.
   wr::ResourceUpdates* Raw() { return mUpdates; }
 
@@ -368,6 +370,8 @@ public:
                      const float& aBorderRadius,
                      const wr::BoxShadowClipMode& aClipMode);
 
+  ResourceUpdateQueue& Resources() { return mResourceUpdates; }
+
   // Returns the clip id that was most recently pushed with PushClip and that
   // has not yet been popped with PopClip. Return Nothing() if the clip stack
   // is empty.
@@ -383,6 +387,8 @@ public:
   wr::WrState* Raw() { return mWrState; }
 protected:
   wr::WrState* mWrState;
+
+  ResourceUpdateQueue mResourceUpdates;
 
   // Track the stack of clip ids and scroll layer ids that have been pushed
   // (by PushClip and PushScrollLayer, respectively) and are still active.
