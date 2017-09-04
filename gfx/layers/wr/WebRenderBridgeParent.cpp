@@ -222,6 +222,13 @@ WebRenderBridgeParent::Destroy()
 }
 
 mozilla::ipc::IPCResult
+WebRenderBridgeParent::RecvUpdateResources(const wr::ByteBuffer& aUpdates)
+{
+  wr::ResourceUpdateQueue updates = wr::ResourceUpdateQueue::Deserialize(aUpdates.AsSlice());
+  mApi->UpdateResources(updates);
+}
+
+ mozilla::ipc::IPCResult
 WebRenderBridgeParent::RecvAddImage(const wr::ImageKey& aImageKey,
                                     const gfx::IntSize& aSize,
                                     const uint32_t& aStride,
@@ -408,60 +415,6 @@ WebRenderBridgeParent::RecvDeleteCompositorAnimations(InfallibleTArray<uint64_t>
   return IPC_OK();
 }
 
-
-mozilla::ipc::IPCResult
-WebRenderBridgeParent::RecvDPBegin(const gfx::IntSize& aSize)
-{
-  if (mDestroyed) {
-    return IPC_OK();
-  }
-  return IPC_OK();
-}
-
-void
-WebRenderBridgeParent::HandleDPEnd(const gfx::IntSize& aSize,
-                                 InfallibleTArray<WebRenderParentCommand>&& aCommands,
-                                 InfallibleTArray<OpDestroy>&& aToDestroy,
-                                 const uint64_t& aFwdTransactionId,
-                                 const uint64_t& aTransactionId,
-                                 const wr::LayoutSize& aContentSize,
-                                 const wr::ByteBuffer& dl,
-                                 const wr::BuiltDisplayListDescriptor& dlDesc,
-                                 const WebRenderScrollData& aScrollData,
-                                 const wr::IdNamespace& aIdNamespace,
-                                 const TimeStamp& aTxnStartTime,
-                                 const TimeStamp& aFwdTime)
-{
-  AutoProfilerTracing tracing("Paint", "DPTransaction");
-  UpdateFwdTransactionId(aFwdTransactionId);
-  AutoClearReadLocks clearLocks(mReadLocks);
-
-  if (mDestroyed) {
-    for (const auto& op : aToDestroy) {
-      DestroyActor(op);
-    }
-    return;
-  }
-  // This ensures that destroy operations are always processed. It is not safe
-  // to early-return from RecvDPEnd without doing so.
-  AutoWebRenderBridgeParentAsyncMessageSender autoAsyncMessageSender(this, &aToDestroy);
-
-  uint32_t wrEpoch = GetNextWrEpoch();
-  ProcessWebRenderCommands(aSize, aCommands, wr::NewEpoch(wrEpoch),
-                           aContentSize, dl, dlDesc, aIdNamespace);
-  HoldPendingTransactionId(wrEpoch, aTransactionId, aTxnStartTime, aFwdTime);
-
-  mScrollData = aScrollData;
-  UpdateAPZ();
-
-  if (mIdNamespace != aIdNamespace) {
-    // Pretend we composited since someone is wating for this event,
-    // though DisplayList was not pushed to webrender.
-    TimeStamp now = TimeStamp::Now();
-    mCompositorBridge->DidComposite(wr::AsUint64(mPipelineId), now, now);
-  }
-}
-
 CompositorBridgeParent*
 WebRenderBridgeParent::GetRootCompositorBridgeParent() const
 {
@@ -536,47 +489,73 @@ WebRenderBridgeParent::GetScrollData() const
 }
 
 mozilla::ipc::IPCResult
-WebRenderBridgeParent::RecvDPEnd(const gfx::IntSize& aSize,
-                                 InfallibleTArray<WebRenderParentCommand>&& aCommands,
-                                 InfallibleTArray<OpDestroy>&& aToDestroy,
-                                 const uint64_t& aFwdTransactionId,
-                                 const uint64_t& aTransactionId,
-                                 const wr::LayoutSize& aContentSize,
-                                 const wr::ByteBuffer& dl,
-                                 const wr::BuiltDisplayListDescriptor& dlDesc,
-                                 const WebRenderScrollData& aScrollData,
-                                 const wr::IdNamespace& aIdNamespace,
-                                 const TimeStamp& aTxnStartTime,
-                                 const TimeStamp& aFwdTime)
+WebRenderBridgeParent::RecvSetDisplayList(const gfx::IntSize& aSize,
+                                          InfallibleTArray<WebRenderParentCommand>&& aCommands,
+                                          InfallibleTArray<OpDestroy>&& aToDestroy,
+                                          const uint64_t& aFwdTransactionId,
+                                          const uint64_t& aTransactionId,
+                                          const wr::LayoutSize& aContentSize,
+                                          const wr::ByteBuffer& dl,
+                                          const wr::BuiltDisplayListDescriptor& dlDesc,
+                                          const WebRenderScrollData& aScrollData,
+                                          const wr::ByteBuffer& aResourceUpdates,
+                                          const wr::IdNamespace& aIdNamespace,
+                                          const TimeStamp& aTxnStartTime,
+                                          const TimeStamp& aFwdTime)
 {
   if (mDestroyed) {
+    for (const auto& op : aToDestroy) {
+      DestroyActor(op);
+    }
     return IPC_OK();
   }
-  HandleDPEnd(aSize, Move(aCommands), Move(aToDestroy), aFwdTransactionId, aTransactionId,
-              aContentSize, dl, dlDesc, aScrollData, aIdNamespace, aTxnStartTime, aFwdTime);
+
+  AutoProfilerTracing tracing("Paint", "SetDisplayList");
+  UpdateFwdTransactionId(aFwdTransactionId);
+  AutoClearReadLocks clearLocks(mReadLocks);
+
+  // This ensures that destroy operations are always processed. It is not safe
+  // to early-return from RecvDPEnd without doing so.
+  AutoWebRenderBridgeParentAsyncMessageSender autoAsyncMessageSender(this, &aToDestroy);
+
+  wr::ResourceUpdateQueue resources = wr::ResourceUpdateQueue::Deserialize(aResourceUpdates.AsSlice());
+
+  uint32_t wrEpoch = GetNextWrEpoch();
+  ProcessWebRenderCommands(aSize, aCommands, wr::NewEpoch(wrEpoch),
+                           aContentSize, dl, dlDesc, resources, aIdNamespace);
+  HoldPendingTransactionId(wrEpoch, aTransactionId, aTxnStartTime, aFwdTime);
+
+  mScrollData = aScrollData;
+  UpdateAPZ();
+
+  if (mIdNamespace != aIdNamespace) {
+    // Pretend we composited since someone is wating for this event,
+    // though DisplayList was not pushed to webrender.
+    TimeStamp now = TimeStamp::Now();
+    mCompositorBridge->DidComposite(wr::AsUint64(mPipelineId), now, now);
+  }
+
   return IPC_OK();
 }
 
 mozilla::ipc::IPCResult
-WebRenderBridgeParent::RecvDPSyncEnd(const gfx::IntSize &aSize,
-                                     InfallibleTArray<WebRenderParentCommand>&& aCommands,
-                                     InfallibleTArray<OpDestroy>&& aToDestroy,
-                                     const uint64_t& aFwdTransactionId,
-                                     const uint64_t& aTransactionId,
-                                     const wr::LayoutSize& aContentSize,
-                                     const wr::ByteBuffer& dl,
-                                     const wr::BuiltDisplayListDescriptor& dlDesc,
-                                     const WebRenderScrollData& aScrollData,
-                                     const wr::IdNamespace& aIdNamespace,
-                                     const TimeStamp& aTxnStartTime,
-                                     const TimeStamp& aFwdTime)
+WebRenderBridgeParent::RecvSetDisplayListSync(const gfx::IntSize &aSize,
+                                              InfallibleTArray<WebRenderParentCommand>&& aCommands,
+                                              InfallibleTArray<OpDestroy>&& aToDestroy,
+                                              const uint64_t& aFwdTransactionId,
+                                              const uint64_t& aTransactionId,
+                                              const wr::LayoutSize& aContentSize,
+                                              const wr::ByteBuffer& dl,
+                                              const wr::BuiltDisplayListDescriptor& dlDesc,
+                                              const WebRenderScrollData& aScrollData,
+                                              const wr::ByteBuffer& aResourceUpdates,
+                                              const wr::IdNamespace& aIdNamespace,
+                                              const TimeStamp& aTxnStartTime,
+                                              const TimeStamp& aFwdTime)
 {
-  if (mDestroyed) {
-    return IPC_OK();
-  }
-  HandleDPEnd(aSize, Move(aCommands), Move(aToDestroy), aFwdTransactionId, aTransactionId,
-              aContentSize, dl, dlDesc, aScrollData, aIdNamespace, aTxnStartTime, aFwdTime);
-  return IPC_OK();
+  return RecvSetDisplayList(aSize, Move(aCommands), Move(aToDestroy), aFwdTransactionId, aTransactionId,
+                            aContentSize, dl, dlDesc, aScrollData, aResourceUpdates,
+                            aIdNamespace, aTxnStartTime, aFwdTime);
 }
 
 mozilla::ipc::IPCResult
@@ -688,6 +667,7 @@ WebRenderBridgeParent::ProcessWebRenderCommands(const gfx::IntSize &aSize,
                                                 InfallibleTArray<WebRenderParentCommand>& aCommands, const wr::Epoch& aEpoch,
                                                 const wr::LayoutSize& aContentSize, const wr::ByteBuffer& dl,
                                                 const wr::BuiltDisplayListDescriptor& dlDesc,
+                                                wr::ResourceUpdateQueue& aResourceUpdates,
                                                 const wr::IdNamespace& aIdNamespace)
 {
   mAsyncImageManager->SetCompositionTime(TimeStamp::Now());
@@ -706,7 +686,8 @@ WebRenderBridgeParent::ProcessWebRenderCommands(const gfx::IntSize &aSize,
   gfx::Color color = mWidget ? gfx::Color(0.3f, 0.f, 0.f, 1.f) : gfx::Color(0.f, 0.f, 0.f, 0.f);
   mApi->SetDisplayList(color, aEpoch, LayerSize(aSize.width, aSize.height),
                        mPipelineId, aContentSize,
-                       dlDesc, dl.mData, dl.mLength);
+                       dlDesc, dl.mData, dl.mLength,
+                       &aResourceUpdates);
 
   ScheduleComposition();
   DeleteOldImages();
@@ -717,7 +698,7 @@ WebRenderBridgeParent::ProcessWebRenderCommands(const gfx::IntSize &aSize,
 }
 
 mozilla::ipc::IPCResult
-WebRenderBridgeParent::RecvDPGetSnapshot(PTextureParent* aTexture)
+WebRenderBridgeParent::RecvGetSnapshot(PTextureParent* aTexture)
 {
   if (mDestroyed) {
     return IPC_OK();
