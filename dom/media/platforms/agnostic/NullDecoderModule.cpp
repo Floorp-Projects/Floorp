@@ -8,9 +8,10 @@
 
 namespace mozilla {
 
-class NullVideoDataCreator : public DummyDataCreator {
+class NullVideoDataCreator : public DummyDataCreator
+{
 public:
-  NullVideoDataCreator() {}
+  NullVideoDataCreator() { }
 
   already_AddRefed<MediaData> Create(MediaRawData* aSample) override
   {
@@ -27,34 +28,37 @@ public:
   }
 };
 
-class NullDecoderModule : public PlatformDecoderModule {
+class NullDecoderModule : public PlatformDecoderModule
+{
 public:
 
   // Decode thread.
-  already_AddRefed<MediaDataDecoder>
-  CreateVideoDecoder(const CreateDecoderParams& aParams) override {
+  already_AddRefed<MediaDataDecoder> CreateVideoDecoder(
+    const CreateDecoderParams& aParams) override
+  {
     UniquePtr<DummyDataCreator> creator = MakeUnique<NullVideoDataCreator>();
-    RefPtr<MediaDataDecoder> decoder =
-      new DummyMediaDataDecoder(Move(creator), "null media data decoder", aParams);
+    RefPtr<MediaDataDecoder> decoder = new DummyMediaDataDecoder(
+      Move(creator), NS_LITERAL_CSTRING("null media data decoder"), aParams);
     return decoder.forget();
   }
 
   // Decode thread.
-  already_AddRefed<MediaDataDecoder>
-  CreateAudioDecoder(const CreateDecoderParams& aParams) override {
+  already_AddRefed<MediaDataDecoder> CreateAudioDecoder(
+    const CreateDecoderParams& aParams) override
+  {
     MOZ_ASSERT(false, "Audio decoders are unsupported.");
     return nullptr;
   }
 
-  bool
-  SupportsMimeType(const nsACString& aMimeType,
-                   DecoderDoctorDiagnostics* aDiagnostics) const override
+  bool SupportsMimeType(const nsACString& aMimeType,
+                        DecoderDoctorDiagnostics* aDiagnostics) const override
   {
     return true;
   }
 };
 
-already_AddRefed<PlatformDecoderModule> CreateNullDecoderModule()
+already_AddRefed<PlatformDecoderModule>
+CreateNullDecoderModule()
 {
   RefPtr<PlatformDecoderModule> pdm = new NullDecoderModule();
   return pdm.forget();

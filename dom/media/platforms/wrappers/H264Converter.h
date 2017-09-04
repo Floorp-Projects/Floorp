@@ -35,12 +35,12 @@ public:
   RefPtr<FlushPromise> Flush() override;
   RefPtr<ShutdownPromise> Shutdown() override;
   bool IsHardwareAccelerated(nsACString& aFailureReason) const override;
-  const char* GetDescriptionName() const override
+  nsCString GetDescriptionName() const override
   {
     if (mDecoder) {
       return mDecoder->GetDescriptionName();
     }
-    return "H264Converter decoder (pending)";
+    return NS_LITERAL_CSTRING("H264Converter decoder (pending)");
   }
   void SetSeekThreshold(const media::TimeUnit& aTime) override;
   bool SupportDecoderRecycling() const override

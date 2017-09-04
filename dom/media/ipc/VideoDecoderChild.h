@@ -7,7 +7,6 @@
 #define include_dom_ipc_VideoDecoderChild_h
 
 #include "PlatformDecoderModule.h"
-#include "mozilla/Atomics.h"
 #include "mozilla/dom/PVideoDecoderChild.h"
 
 namespace mozilla {
@@ -29,7 +28,8 @@ public:
   mozilla::ipc::IPCResult RecvInputExhausted() override;
   mozilla::ipc::IPCResult RecvDrainComplete() override;
   mozilla::ipc::IPCResult RecvError(const nsresult& aError) override;
-  mozilla::ipc::IPCResult RecvInitComplete(const bool& aHardware,
+  mozilla::ipc::IPCResult RecvInitComplete(const nsCString& aDecoderDescription,
+                                           const bool& aHardware,
                                            const nsCString& aHardwareReason,
                                            const uint32_t& aConversion) override;
   mozilla::ipc::IPCResult RecvInitFailed(const nsresult& aReason) override;
@@ -43,6 +43,7 @@ public:
   RefPtr<MediaDataDecoder::FlushPromise> Flush();
   void Shutdown();
   bool IsHardwareAccelerated(nsACString& aFailureReason) const;
+  nsCString GetDescriptionName() const;
   void SetSeekThreshold(const media::TimeUnit& aTime);
   MediaDataDecoder::ConversionRequired NeedsConversion() const;
 
@@ -70,10 +71,11 @@ private:
   MozPromiseHolder<MediaDataDecoder::FlushPromise> mFlushPromise;
 
   nsCString mHardwareAcceleratedReason;
+  nsCString mDescription;
   bool mCanSend;
   bool mInitialized;
-  Atomic<bool> mIsHardwareAccelerated;
-  Atomic<MediaDataDecoder::ConversionRequired> mConversion;
+  bool mIsHardwareAccelerated;
+  MediaDataDecoder::ConversionRequired mConversion;
 
   // Set to true if the actor got destroyed and we haven't yet notified the
   // caller.

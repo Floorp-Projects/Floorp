@@ -871,29 +871,13 @@ ChannelMediaResource::RecreateChannel()
 }
 
 void
-ChannelMediaResource::DoNotifyDataReceived()
-{
-  mDataReceivedEvent.Revoke();
-  mCallback->NotifyDataArrived();
-}
-
-void
 ChannelMediaResource::CacheClientNotifyDataReceived()
 {
-  NS_ASSERTION(NS_IsMainThread(), "Don't call on non-main thread");
-  // NOTE: this can be called with the media cache lock held, so don't
-  // block or do anything which might try to acquire a lock!
-
-  if (mDataReceivedEvent.IsPending())
-    return;
-
-  mDataReceivedEvent =
-    NewNonOwningRunnableMethod("ChannelMediaResource::DoNotifyDataReceived",
-                               this, &ChannelMediaResource::DoNotifyDataReceived);
-
-  nsCOMPtr<nsIRunnable> event = mDataReceivedEvent.get();
-
-  SystemGroup::AbstractMainThreadFor(TaskCategory::Other)->Dispatch(event.forget());
+  SystemGroup::Dispatch(
+    TaskCategory::Other,
+    NewRunnableMethod("MediaResourceCallback::NotifyDataArrived",
+                      mCallback.get(),
+                      &MediaResourceCallback::NotifyDataArrived));
 }
 
 void
