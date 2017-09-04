@@ -386,11 +386,6 @@
             android:name="org.mozilla.gecko.dlc.DownloadContentService">
         </service>
 
-        <service
-            android:exported="false"
-            android:name="org.mozilla.gecko.feeds.FeedService">
-        </service>
-
         <!-- DON'T EXPORT THIS, please! An attacker could delete arbitrary files. -->
         <service
             android:exported="false"
@@ -400,14 +395,6 @@
         <receiver
             android:name="org.mozilla.gecko.feeds.FeedAlarmReceiver"
             android:exported="false" />
-
-        <receiver
-            android:name="org.mozilla.gecko.BootReceiver"
-            android:exported="false">
-            <intent-filter>
-                <action android:name="android.intent.action.BOOT_COMPLETED"></action>
-            </intent-filter>
-        </receiver>
 
         <receiver
             android:name="org.mozilla.gecko.PackageReplacedReceiver"
