@@ -313,18 +313,12 @@ this.ExtensionTestCommon = class ExtensionTestCommon {
   }
 
   /**
-   * Properly serialize a script into eval-able code string.
+   * Properly serialize a function into eval-able code string.
    *
-   * @param {string|function|Array} script
+   * @param {function} script
    * @returns {string}
    */
-  static serializeScript(script) {
-    if (Array.isArray(script)) {
-      return script.map(this.serializeScript).join(";");
-    }
-    if (typeof script !== "function") {
-      return script;
-    }
+  static serializeFunction(script) {
     // Serialization of object methods doesn't include `function` anymore.
     const method = /^(async )?(\w+)\(/;
 
@@ -333,7 +327,23 @@ this.ExtensionTestCommon = class ExtensionTestCommon {
     if (match && match[2] !== "function") {
       code = code.replace(method, "$1function $2(");
     }
-    return `(${code})();`;
+    return code;
+  }
+
+  /**
+   * Properly serialize a script into eval-able code string.
+   *
+   * @param {string|function|Array} script
+   * @returns {string}
+   */
+  static serializeScript(script) {
+    if (Array.isArray(script)) {
+      return Array.from(script, this.serializeScript, this).join(";");
+    }
+    if (typeof script !== "function") {
+      return script;
+    }
+    return `(${this.serializeFunction(script)})();`;
   }
 
   /**

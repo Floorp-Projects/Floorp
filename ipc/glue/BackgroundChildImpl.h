@@ -153,6 +153,13 @@ protected:
   virtual bool
   DeallocPMessagePortChild(PMessagePortChild* aActor) override;
 
+  virtual PStreamFilterChild*
+  AllocPStreamFilterChild(const uint64_t& aChannelId,
+                          const nsString& aAddonId) override;
+
+  virtual bool
+  DeallocPStreamFilterChild(PStreamFilterChild* aActor) override;
+
   virtual PChildToParentStreamChild*
   AllocPChildToParentStreamChild() override;
 
