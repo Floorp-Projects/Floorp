@@ -26,7 +26,7 @@ fuzzy-if(Android,255,30) == clipPath-html-06-extref.xhtml clipPath-html-06-ref.x
 == dynamic-conditions-outer-svg-04.xhtml ../pass.svg
 == filter-html-01.xhtml filter-html-01-ref.svg
 == filter-html-dynamic-01.xhtml filter-html-dynamic-01-ref.xhtml
-random-if(Android) random-if(styloVsGecko) == filter-html-01-extref.xhtml filter-html-01-ref.svg # Android: bug 1198380
+random-if(Android) skip-if(styloVsGecko) == filter-html-01-extref.xhtml filter-html-01-ref.svg # Android: bug 1198380. skip styloVsGecko for imperceptible pixel rounding differences between Stylo and Gecko
 == filter-html-zoomed-01.xhtml filter-html-01-ref.svg
 fuzzy-if(webrender,1,125414) == mask-html-01.xhtml mask-html-01-ref.svg
 fuzzy-if(webrender,1,125414) == mask-html-01-extref-01.xhtml mask-html-01-ref.svg
