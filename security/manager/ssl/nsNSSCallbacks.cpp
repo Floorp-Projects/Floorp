@@ -903,6 +903,9 @@ getSignatureName(uint32_t aSignatureScheme)
     case ssl_sig_ecdsa_sha1:
       signatureName = NS_LITERAL_CSTRING("ECDSA-SHA1");
       break;
+    case ssl_sig_rsa_pkcs1_sha1md5:
+      signatureName = NS_LITERAL_CSTRING("RSA-PKCS1-SHA1MD5");
+      break;
     // All other groups are not enabled in Firefox. See sEnabledSignatureSchemes
     // in nsNSSIOLayer.cpp.
     default:
