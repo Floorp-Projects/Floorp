@@ -64,7 +64,7 @@ ReadUserLocale(nsCString& aRetVal)
   WCHAR locale[LOCALE_NAME_MAX_LENGTH];
   if (NS_WARN_IF(!LCIDToLocaleName(LOCALE_USER_DEFAULT, locale,
                                    LOCALE_NAME_MAX_LENGTH, 0))) {
-    aRetVal.Assign("en-US");
+    aRetVal.AssignLiteral("en-US");
     return;
   }
 

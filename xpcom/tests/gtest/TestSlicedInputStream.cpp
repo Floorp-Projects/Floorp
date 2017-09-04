@@ -332,7 +332,7 @@ TEST(TestSlicedInputStream, Length0) {
 // Seek test NS_SEEK_SET
 TEST(TestSlicedInputStream, Seek_SET) {
   nsCString buf;
-  buf.Assign("Hello world");
+  buf.AssignLiteral("Hello world");
 
   nsCOMPtr<nsIInputStream> stream;
   NS_NewCStringInputStream(getter_AddRefs(stream), buf);
@@ -355,7 +355,7 @@ TEST(TestSlicedInputStream, Seek_SET) {
 // Seek test NS_SEEK_CUR
 TEST(TestSlicedInputStream, Seek_CUR) {
   nsCString buf;
-  buf.Assign("Hello world");
+  buf.AssignLiteral("Hello world");
 
   nsCOMPtr<nsIInputStream> stream;
   NS_NewCStringInputStream(getter_AddRefs(stream), buf);
@@ -384,7 +384,7 @@ TEST(TestSlicedInputStream, Seek_CUR) {
 // Seek test NS_SEEK_END - length > real one
 TEST(TestSlicedInputStream, Seek_END_Bigger) {
   nsCString buf;
-  buf.Assign("Hello world");
+  buf.AssignLiteral("Hello world");
 
   nsCOMPtr<nsIInputStream> stream;
   NS_NewCStringInputStream(getter_AddRefs(stream), buf);
@@ -418,7 +418,7 @@ TEST(TestSlicedInputStream, Seek_END_Bigger) {
 // Seek test NS_SEEK_END - length < real one
 TEST(TestSlicedInputStream, Seek_END_Lower) {
   nsCString buf;
-  buf.Assign("Hello world");
+  buf.AssignLiteral("Hello world");
 
   nsCOMPtr<nsIInputStream> stream;
   NS_NewCStringInputStream(getter_AddRefs(stream), buf);
