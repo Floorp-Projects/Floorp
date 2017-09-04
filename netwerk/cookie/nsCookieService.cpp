@@ -5,6 +5,7 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
 #include "mozilla/Attributes.h"
+#include "mozilla/ClearOnShutdown.h"
 #include "mozilla/DebugOnly.h"
 #include "mozilla/Likely.h"
 #include "mozilla/Printf.h"
@@ -72,7 +73,7 @@ using namespace mozilla::net;
  * useful types & constants
  ******************************************************************************/
 
-static nsCookieService *gCookieService;
+static StaticRefPtr<nsCookieService> gCookieService;
 
 // XXX_hack. See bug 178993.
 // This is a hack to hide HttpOnly cookies from older browsers
@@ -638,7 +639,7 @@ DBState::SizeOfIncludingThis(MallocSizeOf aMallocSizeOf) const
  * singleton instance ctor/dtor methods
  ******************************************************************************/
 
-nsICookieService*
+already_AddRefed<nsICookieService>
 nsCookieService::GetXPCOMSingleton()
 {
   if (IsNeckoChild())
@@ -647,14 +648,13 @@ nsCookieService::GetXPCOMSingleton()
   return GetSingleton();
 }
 
-nsCookieService*
+already_AddRefed<nsCookieService>
 nsCookieService::GetSingleton()
 {
   NS_ASSERTION(!IsNeckoChild(), "not a parent process");
 
   if (gCookieService) {
-    NS_ADDREF(gCookieService);
-    return gCookieService;
+    return do_AddRef(gCookieService);
   }
 
   // Create a new singleton nsCookieService.
@@ -665,13 +665,14 @@ nsCookieService::GetSingleton()
   // See bug 209571.
   gCookieService = new nsCookieService();
   if (gCookieService) {
-    NS_ADDREF(gCookieService);
-    if (NS_FAILED(gCookieService->Init())) {
-      NS_RELEASE(gCookieService);
+    if (NS_SUCCEEDED(gCookieService->Init())) {
+      ClearOnShutdown(&gCookieService);
+    } else {
+      gCookieService = nullptr;
     }
   }
 
-  return gCookieService;
+  return do_AddRef(gCookieService);
 }
 
 /* static */ void
