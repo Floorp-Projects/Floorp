@@ -961,7 +961,7 @@ nsGIOProtocolHandler::IsSupportedProtocol(const nsCString &aSpec)
 NS_IMETHODIMP
 nsGIOProtocolHandler::GetScheme(nsACString &aScheme)
 {
-  aScheme.Assign(MOZ_GIO_SCHEME);
+  aScheme.AssignLiteral(MOZ_GIO_SCHEME);
   return NS_OK;
 }
 

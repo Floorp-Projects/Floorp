@@ -531,7 +531,7 @@ nsHttpChannelAuthProvider::PrepareForAuthentication(bool proxyAuth)
     // non-request based authentication handshake (e.g., for NTLM auth).
 
     nsAutoCString contractId;
-    contractId.Assign(NS_HTTP_AUTHENTICATOR_CONTRACTID_PREFIX);
+    contractId.AssignLiteral(NS_HTTP_AUTHENTICATOR_CONTRACTID_PREFIX);
     contractId.Append(mProxyAuthType);
 
     nsresult rv;
@@ -1084,7 +1084,7 @@ nsHttpChannelAuthProvider::GetAuthenticator(const char            *challenge,
     ToLowerCase(authType);
 
     nsAutoCString contractid;
-    contractid.Assign(NS_HTTP_AUTHENTICATOR_CONTRACTID_PREFIX);
+    contractid.AssignLiteral(NS_HTTP_AUTHENTICATOR_CONTRACTID_PREFIX);
     contractid.Append(authType);
 
     return CallGetService(contractid.get(), auth);

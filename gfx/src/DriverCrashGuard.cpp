@@ -39,7 +39,7 @@ BuildCrashGuardPrefName(CrashGuardType aType, nsCString& aOutPrefName)
   MOZ_ASSERT(aType < CrashGuardType::NUM_TYPES);
   MOZ_ASSERT(sCrashGuardNames[size_t(aType)]);
 
-  aOutPrefName.Assign("gfx.crash-guard.status.");
+  aOutPrefName.AssignLiteral("gfx.crash-guard.status.");
   aOutPrefName.Append(sCrashGuardNames[size_t(aType)]);
 }
 
