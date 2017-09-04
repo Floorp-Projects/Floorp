@@ -440,10 +440,14 @@ public:
     mPresContext = nullptr;
   }
 
-  // Return whether this is the PresContext that initialized us.
+  // Return whether this is the last PresContext which uses this XBL styleset.
   bool IsPresContextChanged(nsPresContext* aPresContext) const {
-    return aPresContext != mPresContextInitXBLStyleSet;
+    return aPresContext != mLastPresContextUsesXBLStyleSet;
   }
+
+  // Set PresContext (i.e. Device) for mRawSet. This should be called only
+  // by XBL stylesets. Returns true if there is any rule changing.
+  bool SetPresContext(nsPresContext* aPresContext);
 
   /**
    * Returns true if a modification to an an attribute with the specified
@@ -587,9 +591,9 @@ private:
   nsPresContext* MOZ_NON_OWNING_REF mPresContext = nullptr;
 
   // Because XBL style set could be used by multiple PresContext, we need to
-  // store the PresContext pointer which initializes this style set for
+  // store the last PresContext pointer which uses this XBL styleset for
   // computing medium rule changes.
-  void* MOZ_NON_OWNING_REF mPresContextInitXBLStyleSet = nullptr;
+  void* MOZ_NON_OWNING_REF mLastPresContextUsesXBLStyleSet = nullptr;
 
   UniquePtr<RawServoStyleSet> mRawSet;
   EnumeratedArray<SheetType, SheetType::Count,

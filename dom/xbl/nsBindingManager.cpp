@@ -755,7 +755,7 @@ nsBindingManager::MediumFeaturesChanged(nsPresContext* aPresContext)
         bool styleSetChanged = false;
 
         if (styleSet->IsPresContextChanged(presContext)) {
-          styleSetChanged = true;
+          styleSetChanged = styleSet->SetPresContext(presContext);
         } else {
           // PresContext is not changed. This means aPresContext is still
           // alive since the last time it initialized this XBL styleset.
