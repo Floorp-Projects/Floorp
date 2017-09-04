@@ -224,8 +224,13 @@ WebRenderBridgeParent::Destroy()
 mozilla::ipc::IPCResult
 WebRenderBridgeParent::RecvUpdateResources(const wr::ByteBuffer& aUpdates)
 {
+  if (mDestroyed) {
+    return IPC_OK();
+  }
+
   wr::ResourceUpdateQueue updates = wr::ResourceUpdateQueue::Deserialize(aUpdates.AsSlice());
   mApi->UpdateResources(updates);
+  return IPC_OK();
 }
 
 mozilla::ipc::IPCResult
@@ -402,6 +407,7 @@ WebRenderBridgeParent::RecvParentCommands(nsTArray<WebRenderParentCommand>&& aCo
 void
 WebRenderBridgeParent::ProcessWebRenderParentCommands(InfallibleTArray<WebRenderParentCommand>& aCommands)
 {
+  wr::ResourceUpdateQueue resources;
   for (InfallibleTArray<WebRenderParentCommand>::index_type i = 0; i < aCommands.Length(); ++i) {
     const WebRenderParentCommand& cmd = aCommands[i];
     switch (cmd.type()) {
@@ -427,7 +433,7 @@ WebRenderBridgeParent::ProcessWebRenderParentCommands(InfallibleTArray<WebRender
           }
           WebRenderTextureHost* wrTexture = texture->AsWebRenderTextureHost();
           if (wrTexture) {
-            wrTexture->AddWRImage(mApi, keys, wrTexture->GetExternalImageKey());
+            wrTexture->AddWRImage(resources, keys, wrTexture->GetExternalImageKey());
             break;
           }
         }
@@ -446,7 +452,7 @@ WebRenderBridgeParent::ProcessWebRenderParentCommands(InfallibleTArray<WebRender
         IntSize size = dSurf->GetSize();
         wr::ImageDescriptor descriptor(size, map.mStride, dSurf->GetFormat());
         auto slice = Range<uint8_t>(map.mData, size.height * map.mStride);
-        mApi->Resources().AddImage(keys[0], descriptor, slice);
+        resources.AddImage(keys[0], descriptor, slice);
 
         dSurf->Unmap();
         break;
@@ -491,6 +497,7 @@ WebRenderBridgeParent::ProcessWebRenderParentCommands(InfallibleTArray<WebRender
       }
     }
   }
+  mApi->UpdateResources(resources);
 }
 
 void
@@ -518,7 +525,7 @@ WebRenderBridgeParent::ProcessWebRenderCommands(const gfx::IntSize &aSize,
   mApi->SetDisplayList(color, aEpoch, LayerSize(aSize.width, aSize.height),
                        mPipelineId, aContentSize,
                        dlDesc, dl.mData, dl.mLength,
-                       &aResourceUpdates);
+                       aResourceUpdates);
 
   ScheduleComposition();
   DeleteOldImages();
@@ -1064,10 +1071,11 @@ WebRenderBridgeParent::GetLayersId() const
 void
 WebRenderBridgeParent::DeleteOldImages()
 {
+  wr::ResourceUpdateQueue resources;
   for (wr::ImageKey key : mKeysToDelete) {
-    mApi->Resources().DeleteImage(key);
+    resources.DeleteImage(key);
   }
-  mApi->UpdateResources(mApi->Resources());
+  mApi->UpdateResources(resources);
   mKeysToDelete.clear();
 }
 

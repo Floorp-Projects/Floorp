@@ -41,7 +41,7 @@ class Shmem;
 
 namespace wr {
 class DisplayListBuilder;
-class WebRenderAPI;
+class ResourceUpdateQueue;
 }
 
 namespace layers {
@@ -633,9 +633,9 @@ public:
     MOZ_ASSERT_UNREACHABLE("No GetWRImageKeys() implementation for this TextureHost type.");
   }
 
-  // Add all necessary textureHost informations to WebrenderAPI. Then, WR could
-  // use these informations to compose this textureHost.
-  virtual void AddWRImage(wr::WebRenderAPI* aAPI,
+  // Add all necessary TextureHost informations to the resource update queue.
+  // Then, WR will use this informations to read from the TextureHost.
+  virtual void AddWRImage(wr::ResourceUpdateQueue& aResources,
                           Range<const wr::ImageKey>& aImageKeys,
                           const wr::ExternalImageId& aExtID)
   {
@@ -750,7 +750,7 @@ public:
   virtual void GetWRImageKeys(nsTArray<wr::ImageKey>& aImageKeys,
                               const std::function<wr::ImageKey()>& aImageKeyAllocator) override;
 
-  virtual void AddWRImage(wr::WebRenderAPI* aAPI,
+  virtual void AddWRImage(wr::ResourceUpdateQueue& aResources,
                           Range<const wr::ImageKey>& aImageKeys,
                           const wr::ExternalImageId& aExtID) override;
 
