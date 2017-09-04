@@ -27,8 +27,7 @@ function cloneLoaded(event) {
   manager.finished(e.token);
 }
 
-function tryClone(event) {
-  var e = event.target;
+function tryClone(e) {
   var clone = e.cloneNode(false);
   clone.token = `${e.token}(cloned)`;
   manager.started(clone.token);
@@ -70,15 +69,26 @@ function tryClone(event) {
 // does a network fetch it will get a resource with the wrong length and we get a test
 // failure.
 
-function initTest(test, token) {
+async function initTest(test, token) {
   var e = document.createElement("video");
   e.preload = "auto";
   e.src = test.name;
   e._expectedDuration = test.duration;
   ok(true, `Trying to load ${test.name}, duration=${test.duration}`);
-  e.addEventListener("loadeddata", tryClone, {once: true});
   e.token = token;
   manager.started(token);
+
+  // Since 320x240.ogv is less than 32KB, we need to wait for the
+  // 'suspend' event to ensure the partial block is flushed to the cache
+  // otherwise the cloned resource will create a new channel when it
+  // has no data to read at position 0. The new channel will download
+  // a different file than the original resource and fail the duration
+  // test.
+  let p1 = once(e, "loadeddata");
+  let p2 = once(e, "suspend");
+  await p1;
+  await p2;
+  tryClone(e);
 }
 
 SimpleTest.waitForExplicitFinish();
