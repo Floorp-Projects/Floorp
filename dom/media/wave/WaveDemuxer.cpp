@@ -864,8 +864,8 @@ FormatParser::FormatChunk::ParseNext(uint8_t c)
 bool
 FormatParser::FormatChunk::IsValid() const
 {
-  return (FrameSize() == SampleRate() * Channels() / 8)
-         && (mPos >= FMT_CHUNK_MIN_SIZE);
+  return (FrameSize() == SampleRate() * Channels() / 8) &&
+         (mPos >= FMT_CHUNK_MIN_SIZE);
 }
 
 void

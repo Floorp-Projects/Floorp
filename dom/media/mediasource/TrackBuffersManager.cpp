@@ -832,8 +832,8 @@ TrackBuffersManager::CreateDemuxerforMIMEType()
   }
 
 #ifdef MOZ_FMP4
-  if (mType.Type() == MEDIAMIMETYPE("video/mp4")
-      || mType.Type() == MEDIAMIMETYPE("audio/mp4")) {
+  if (mType.Type() == MEDIAMIMETYPE("video/mp4") ||
+      mType.Type() == MEDIAMIMETYPE("audio/mp4")) {
     mInputDemuxer = new MP4Demuxer(mCurrentInputBuffer);
     return;
   }
@@ -1775,8 +1775,8 @@ TrackBuffersManager::InsertFrames(TrackBuffer& aSamples,
 
   if (intersection.Length()) {
     if (aSamples[0]->mKeyframe &&
-        (mType.Type() == MEDIAMIMETYPE("video/webm")
-         || mType.Type() == MEDIAMIMETYPE("audio/webm"))) {
+        (mType.Type() == MEDIAMIMETYPE("video/webm") ||
+         mType.Type() == MEDIAMIMETYPE("audio/webm"))) {
       // We are starting a new GOP, we do not have to worry about breaking an
       // existing current coded frame group. Reset the next insertion index
       // so the search for when to start our frames removal can be exhaustive.

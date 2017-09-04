@@ -695,8 +695,9 @@ CamerasParent::RecvAllocateCaptureDevice(const CaptureEngine& aCapEngine,
       bool allowed = HasCameraPermission(aPrincipalInfo);
       if (!allowed) {
         // Developer preference for turning off permission check.
-        if (Preferences::GetBool("media.navigator.permission.disabled", false)
-            || Preferences::GetBool("media.navigator.permission.fake")) {
+        if (Preferences::GetBool("media.navigator.permission.disabled",
+                                 false) ||
+            Preferences::GetBool("media.navigator.permission.fake")) {
           allowed = true;
           LOG(("No permission but checks are disabled or fake sources active"));
         } else {
@@ -860,10 +861,10 @@ CamerasParent::StopCapture(const CaptureEngine& aCapEngine,
     });
     // we're removing elements, iterate backwards
     for (size_t i = mCallbacks.Length(); i > 0; i--) {
-      if (mCallbacks[i-1]->mCapEngine == aCapEngine
-          && mCallbacks[i-1]->mStreamId == (uint32_t) capnum) {
-        delete mCallbacks[i-1];
-        mCallbacks.RemoveElementAt(i-1);
+      if (mCallbacks[i - 1]->mCapEngine == aCapEngine &&
+          mCallbacks[i - 1]->mStreamId == (uint32_t)capnum) {
+        delete mCallbacks[i - 1];
+        mCallbacks.RemoveElementAt(i - 1);
         break;
       }
     }

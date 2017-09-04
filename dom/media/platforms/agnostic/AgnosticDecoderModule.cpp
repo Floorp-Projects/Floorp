@@ -24,14 +24,14 @@ AgnosticDecoderModule::SupportsMimeType(
   DecoderDoctorDiagnostics* aDiagnostics) const
 {
   bool supports =
-    VPXDecoder::IsVPX(aMimeType)
+    VPXDecoder::IsVPX(aMimeType) ||
 #ifdef MOZ_AV1
-    || AOMDecoder::IsAV1(aMimeType)
+    AOMDecoder::IsAV1(aMimeType) ||
 #endif
-    || OpusDataDecoder::IsOpus(aMimeType)
-    || VorbisDataDecoder::IsVorbis(aMimeType)
-    || WaveDataDecoder::IsWave(aMimeType)
-    || TheoraDecoder::IsTheora(aMimeType);
+    OpusDataDecoder::IsOpus(aMimeType) ||
+    VorbisDataDecoder::IsVorbis(aMimeType) ||
+    WaveDataDecoder::IsWave(aMimeType) ||
+    TheoraDecoder::IsTheora(aMimeType);
   MOZ_LOG(sPDMLog, LogLevel::Debug, ("Agnostic decoder %s requested type",
         supports ? "supports" : "rejects"));
   return supports;

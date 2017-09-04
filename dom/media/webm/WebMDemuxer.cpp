@@ -196,8 +196,8 @@ WebMDemuxer::Init()
                                         __func__);
   }
 
-  if (!GetNumberTracks(TrackInfo::kAudioTrack)
-      && !GetNumberTracks(TrackInfo::kVideoTrack)) {
+  if (!GetNumberTracks(TrackInfo::kAudioTrack) &&
+      !GetNumberTracks(TrackInfo::kVideoTrack)) {
     return InitPromise::CreateAndReject(NS_ERROR_DOM_MEDIA_METADATA_ERR,
                                         __func__);
   }
@@ -297,8 +297,8 @@ WebMDemuxer::ReadMetadata()
     MOZ_ASSERT(mBufferedState->GetInitEndOffset() <= resource.Tell());
   }
   mInitData = resource.MediaReadAt(0, mBufferedState->GetInitEndOffset());
-  if (!mInitData
-      || mInitData->Length() != size_t(mBufferedState->GetInitEndOffset())) {
+  if (!mInitData ||
+      mInitData->Length() != size_t(mBufferedState->GetInitEndOffset())) {
     return NS_ERROR_FAILURE;
   }
 
@@ -345,10 +345,10 @@ WebMDemuxer::ReadMetadata()
                                params.height - cropV);
 
       // If the cropping data appears invalid then use the frame data
-      if (pictureRect.width <= 0
-          || pictureRect.height <= 0
-          || pictureRect.x < 0
-          || pictureRect.y < 0) {
+      if (pictureRect.width <= 0 ||
+          pictureRect.height <= 0 ||
+          pictureRect.x < 0 ||
+          pictureRect.y < 0) {
         pictureRect.x = 0;
         pictureRect.y = 0;
         pictureRect.width = params.width;
@@ -473,15 +473,15 @@ WebMDemuxer::ReadMetadata()
 bool
 WebMDemuxer::IsSeekable() const
 {
-  return Context(TrackInfo::kVideoTrack)
-         && nestegg_has_cues(Context(TrackInfo::kVideoTrack));
+  return Context(TrackInfo::kVideoTrack) &&
+         nestegg_has_cues(Context(TrackInfo::kVideoTrack));
 }
 
 bool
 WebMDemuxer::IsSeekableOnlyInBufferedRanges() const
 {
-  return Context(TrackInfo::kVideoTrack)
-         && !nestegg_has_cues(Context(TrackInfo::kVideoTrack));
+  return Context(TrackInfo::kVideoTrack) &&
+         !nestegg_has_cues(Context(TrackInfo::kVideoTrack));
 }
 
 void
@@ -606,8 +606,8 @@ WebMDemuxer::GetNextPacket(TrackInfo::TrackType aType,
       PushAudioPacket(next_holder);
     } else if (duration >= 0) {
       next_tstamp = tstamp + duration;
-    } else if (!mIsMediaSource
-               || (mIsMediaSource && mLastAudioFrameTime.isSome())) {
+    } else if (!mIsMediaSource ||
+               (mIsMediaSource && mLastAudioFrameTime.isSome())) {
       next_tstamp = tstamp;
       next_tstamp += tstamp - mLastAudioFrameTime.refOr(0);
     } else {
@@ -625,8 +625,8 @@ WebMDemuxer::GetNextPacket(TrackInfo::TrackType aType,
       PushVideoPacket(next_holder);
     } else if (duration >= 0) {
       next_tstamp = tstamp + duration;
-    } else if (!mIsMediaSource
-               || (mIsMediaSource && mLastVideoFrameTime.isSome())) {
+    } else if (!mIsMediaSource ||
+               (mIsMediaSource && mLastVideoFrameTime.isSome())) {
       next_tstamp = tstamp;
       next_tstamp += tstamp - mLastVideoFrameTime.refOr(0);
     } else {
@@ -712,8 +712,8 @@ WebMDemuxer::GetNextPacket(TrackInfo::TrackType aType,
             break;
 #endif
           }
-          if (mLastSeenFrameSize.isSome()
-              && (dimensions != mLastSeenFrameSize.value())) {
+          if (mLastSeenFrameSize.isSome() &&
+              (dimensions != mLastSeenFrameSize.value())) {
             mInfo.mVideo.mDisplay = dimensions;
             mSharedVideoTrackInfo =
               new TrackInfoSharedPtr(mInfo.mVideo, ++sStreamSourceID);
@@ -761,9 +761,9 @@ WebMDemuxer::GetNextPacket(TrackInfo::TrackType aType,
       }
     }
 
-    if (packetEncryption == NESTEGG_PACKET_HAS_SIGNAL_BYTE_UNENCRYPTED
-        || packetEncryption == NESTEGG_PACKET_HAS_SIGNAL_BYTE_ENCRYPTED
-        || packetEncryption == NESTEGG_PACKET_HAS_SIGNAL_BYTE_PARTITIONED) {
+    if (packetEncryption == NESTEGG_PACKET_HAS_SIGNAL_BYTE_UNENCRYPTED ||
+        packetEncryption == NESTEGG_PACKET_HAS_SIGNAL_BYTE_ENCRYPTED ||
+        packetEncryption == NESTEGG_PACKET_HAS_SIGNAL_BYTE_PARTITIONED) {
       nsAutoPtr<MediaRawDataWriter> writer(sample->CreateWriter());
       unsigned char const* iv;
       size_t ivLength;
@@ -1188,8 +1188,8 @@ WebMTrackDemuxer::SetNextKeyFrameTime()
     skipSamplesQueue.Push(sample.forget());
     if (!startTime) {
       startTime.emplace(sampleTimecode);
-    } else if (!foundKeyframe
-               && sampleTimecode > startTime.ref() + MAX_LOOK_AHEAD) {
+    } else if (!foundKeyframe &&
+               sampleTimecode > startTime.ref() + MAX_LOOK_AHEAD) {
       WEBM_DEBUG("Couldn't find keyframe in a reasonable time, aborting");
       break;
     }
@@ -1236,8 +1236,8 @@ WebMTrackDemuxer::UpdateSamples(nsTArray<RefPtr<MediaRawData>>& aSamples)
       writer->mCrypto.mKeyId.AppendElements(mInfo->mCrypto.mKeyId);
     }
   }
-  if (mNextKeyframeTime.isNothing()
-      || aSamples.LastElement()->mTime >= mNextKeyframeTime.value()) {
+  if (mNextKeyframeTime.isNothing() ||
+      aSamples.LastElement()->mTime >= mNextKeyframeTime.value()) {
     SetNextKeyFrameTime();
   }
 }
