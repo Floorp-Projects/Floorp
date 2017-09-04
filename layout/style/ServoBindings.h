@@ -393,8 +393,8 @@ mozilla::CSSPseudoElementType Gecko_GetImplementedPseudo(RawGeckoElementBorrowed
 // they wrap the value in a struct.
 uint32_t Gecko_CalcStyleDifference(ServoStyleContextBorrowed old_style,
                                    ServoStyleContextBorrowed new_style,
-                                   uint64_t old_style_bits,
-                                   bool* any_style_changed);
+                                   bool* any_style_changed,
+                                   bool* reset_only_changed);
 
 // Get an element snapshot for a given element from the table.
 const ServoElementSnapshot*

@@ -189,7 +189,7 @@ struct ServoRawOffsetArc {
 };
 
 struct ServoComputedValueFlags {
-  uint8_t mFlags;
+  uint16_t mFlags;
 };
 
 #define STYLE_STRUCT(name_, checkdata_cb_) struct Gecko##name_;
