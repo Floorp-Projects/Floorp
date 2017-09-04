@@ -71,6 +71,7 @@ public:
   void
   NullifyConsumeBodyPump()
   {
+    mShuttingDown = true;
     mConsumeBodyPump = nullptr;
   }
 
