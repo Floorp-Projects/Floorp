@@ -206,6 +206,7 @@ MediaEngineWebRTCMicrophoneSource::MediaEngineWebRTCMicrophoneSource(
   , mPlayoutDelay(0)
   , mNullTransport(nullptr)
   , mSkipProcessing(false)
+  , mInputDownmixBuffer(MAX_SAMPLING_FREQ * MAX_CHANNELS / 100)
 {
   MOZ_ASSERT(aVoiceEnginePtr);
   MOZ_ASSERT(aAudioInput);
@@ -623,7 +624,16 @@ MediaEngineWebRTCMicrophoneSource::PacketizeAndProcess(MediaStreamGraph* aGraph,
     int16_t* packet = mInputBuffer.Elements();
     mPacketizer->Output(packet);
 
-    mVoERender->ExternalRecordingInsertData(packet, samplesPerPacket, aRate, 0);
+    if (aChannels > MAX_CHANNELS) {
+      AudioConverter converter(AudioConfig(aChannels, 0, AudioConfig::FORMAT_S16),
+                               AudioConfig(MAX_CHANNELS, 0, AudioConfig::FORMAT_S16));
+      converter.Process(mInputDownmixBuffer, packet, mPacketizer->PacketSize());
+      mVoERender->ExternalRecordingInsertData(mInputDownmixBuffer.Data(),
+                                              mPacketizer->PacketSize() * MAX_CHANNELS,
+                                              aRate, 0);
+    } else {
+      mVoERender->ExternalRecordingInsertData(packet, samplesPerPacket, aRate, 0);
+    }
   }
 }
 
@@ -661,8 +671,8 @@ MediaEngineWebRTCMicrophoneSource::InsertInGraph(const T* aBuffer,
             (i+1 < len) ? 0 : 1, insertTime);
 
     // Bug 971528 - Support stereo capture in gUM
-    MOZ_ASSERT(aChannels == 1 || aChannels == 2,
-        "GraphDriver only supports mono and stereo audio for now");
+    MOZ_ASSERT(aChannels >= 1 && aChannels <= 8,
+               "Support up to 8 channels");
 
     nsAutoPtr<AudioSegment> segment(new AudioSegment());
     RefPtr<SharedBuffer> buffer =
@@ -848,7 +858,8 @@ MediaEngineWebRTCMicrophoneSource::AllocChannel()
           codec.channels = CHANNELS;
           uint32_t maxChannels = 0;
           if (mAudioInput->GetMaxAvailableChannels(maxChannels) == 0) {
-            codec.channels = maxChannels;
+            MOZ_ASSERT(maxChannels);
+            codec.channels = std::min<uint32_t>(maxChannels, MAX_CHANNELS);
           }
           MOZ_ASSERT(mSampleFrequency == 16000 || mSampleFrequency == 32000);
           codec.rate = SAMPLE_RATE(mSampleFrequency);
