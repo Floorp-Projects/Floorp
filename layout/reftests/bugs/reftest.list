@@ -1330,7 +1330,7 @@ fuzzy-if(skiaContent,1,5) == 482659-1d.html 482659-1-ref.html
 == 483565.xul 483565-ref.xul
 == 484256-1.html 484256-1-ref.html
 == 484256-2.html 484256-1-ref.html
-fails-if(stylo||styloVsGecko) == 485012-1.html 485012-1-ref.html # bug 1396093
+== 485012-1.html 485012-1-ref.html
 == 485275-1.html 485275-1-ref.html
 == 485275-1.svg 485275-1-ref.html
 == 486052-1.html 486052-1-ref.html
