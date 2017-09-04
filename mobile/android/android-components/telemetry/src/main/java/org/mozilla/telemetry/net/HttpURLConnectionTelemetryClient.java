@@ -101,6 +101,11 @@ public class HttpURLConnectionTelemetryClient implements TelemetryClient {
             writer.close();
 
             return connection.getResponseCode();
+        } catch (ArrayIndexOutOfBoundsException e) {
+            // This exception is sometimes thrown from the inside of HttpUrlConnection/OkHttp:
+            // https://github.com/mozilla-mobile/telemetry-android/issues/54
+            // We wrap it and handle it like other IO exceptions.
+            throw new IOException(e);
         } finally {
             IOUtils.safeClose(stream);
         }
