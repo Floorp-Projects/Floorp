@@ -51,6 +51,25 @@
 }
 
 #onboarding-overlay-button::after {
+  content: " ";
+  border-radius: 50%;
+  margin-top: -1px;
+  margin-inline-start: -13px;
+  border: 2px solid #f2f2f2;
+  background: #0A84FF;
+  padding: 0;
+  width: 10px;
+  height: 10px;
+  min-width: unset;
+  max-width: unset;
+  display: block;
+  box-sizing: content-box;
+  float: inline-end;
+  position: relative;
+}
+
+#onboarding-overlay-button:hover::after,
+#onboarding-overlay-button.onboarding-speech-bubble::after {
   background: #0060df;
   font-size: 13px;
   text-align: center;
@@ -58,10 +77,11 @@
   box-sizing: content-box;
   font-weight: 400;
   content: attr(aria-label);
-  display: inline-block;
   border: 1px solid transparent;
   border-radius: 2px;
   padding: 10px 16px;
+  width: auto;
+  height: auto;
   min-width: 100px;
   max-width: 140px;
   white-space: pre-line;
