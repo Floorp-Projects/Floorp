@@ -35,9 +35,6 @@ module.exports = {
     // Require braces around blocks that start a new line
     "curly": ["error", "all"],
 
-    // Require function* name()
-    "generator-star-spacing": ["error", {"before": false, "after": true}],
-
     // Two space indent
     "indent": ["error", 2, {"SwitchCase": 1}],
 
