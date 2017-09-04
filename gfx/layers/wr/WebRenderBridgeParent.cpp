@@ -238,10 +238,8 @@ WebRenderBridgeParent::RecvAddImage(const wr::ImageKey& aImageKey,
   }
 
   MOZ_ASSERT(mApi);
-  MOZ_ASSERT(mActiveImageKeys.find(wr::AsUint64(aImageKey)) == mActiveImageKeys.end());
 
   wr::ImageDescriptor descriptor(aSize, aStride, aFormat);
-  mActiveImageKeys.insert(wr::AsUint64(aImageKey));
   mApi->Resources().AddImage(aImageKey, descriptor, aBuffer.AsSlice());
 
   return IPC_OK();
@@ -264,10 +262,8 @@ WebRenderBridgeParent::RecvAddBlobImage(const wr::ImageKey& aImageKey,
   }
 
   MOZ_ASSERT(mApi);
-  MOZ_ASSERT(mActiveImageKeys.find(wr::AsUint64(aImageKey)) == mActiveImageKeys.end());
 
   wr::ImageDescriptor descriptor(aSize, aStride, aFormat);
-  mActiveImageKeys.insert(wr::AsUint64(aImageKey));
   mApi->Resources().AddBlobImage(aImageKey, descriptor, aBuffer.AsSlice());
 
   return IPC_OK();
@@ -288,10 +284,8 @@ WebRenderBridgeParent::RecvAddRawFont(const wr::FontKey& aFontKey,
   }
 
   MOZ_ASSERT(mApi);
-  MOZ_ASSERT(mFontKeys.find(wr::AsUint64(aFontKey)) == mFontKeys.end());
 
   auto slice = aBuffer.AsSlice();
-  mFontKeys.insert(wr::AsUint64(aFontKey));
   mApi->Resources().AddRawFont(aFontKey, slice, aFontIndex);
 
   return IPC_OK();
@@ -310,11 +304,7 @@ WebRenderBridgeParent::RecvDeleteFont(const wr::FontKey& aFontKey)
     return IPC_OK();
   }
 
-  if (mFontKeys.erase(wr::AsUint64(aFontKey)) > 0) {
-    mApi->Resources().DeleteFont(aFontKey);
-  } else {
-    MOZ_ASSERT_UNREACHABLE("invalid FontKey");
-  }
+  mApi->Resources().DeleteFont(aFontKey);
 
   return IPC_OK();
 }
@@ -336,9 +326,6 @@ WebRenderBridgeParent::RecvAddFontInstance(const wr::FontInstanceKey& aInstanceK
   }
 
   MOZ_ASSERT(mApi);
-  MOZ_ASSERT(mFontInstanceKeys.find(wr::AsUint64(aInstanceKey)) == mFontInstanceKeys.end());
-
-  mFontInstanceKeys.insert(wr::AsUint64(aInstanceKey));
   mApi->Resources().AddFontInstance(aInstanceKey, aFontKey, aGlyphSize,
                                     aOptions.ptrOr(nullptr), aPlatformOptions.ptrOr(nullptr));
 
@@ -358,11 +345,7 @@ WebRenderBridgeParent::RecvDeleteFontInstance(const wr::FontInstanceKey& aInstan
     return IPC_OK();
   }
 
-  if (mFontInstanceKeys.erase(wr::AsUint64(aInstanceKey)) > 0) {
-    mApi->Resources().DeleteFontInstance(aInstanceKey);
-  } else {
-    MOZ_ASSERT_UNREACHABLE("invalid FontInstanceKey");
-  }
+  mApi->Resources().DeleteFontInstance(aInstanceKey);
 
   return IPC_OK();
 }
@@ -402,11 +385,8 @@ WebRenderBridgeParent::RecvDeleteImage(const wr::ImageKey& aImageKey)
     return IPC_OK();
   }
 
-  if (mActiveImageKeys.erase(wr::AsUint64(aImageKey)) > 0) {
-    mKeysToDelete.push_back(aImageKey);
-  } else {
-    MOZ_ASSERT_UNREACHABLE("invalid ImageKey");
-  }
+  mKeysToDelete.push_back(aImageKey);
+
   return IPC_OK();
 }
 
@@ -623,8 +603,6 @@ WebRenderBridgeParent::ProcessWebRenderParentCommands(InfallibleTArray<WebRender
           break;
         }
         MOZ_ASSERT(mExternalImageIds.Get(wr::AsUint64(op.externalImageId())).get());
-        MOZ_ASSERT(mActiveImageKeys.find(wr::AsUint64(keys[0])) == mActiveImageKeys.end());
-        mActiveImageKeys.insert(wr::AsUint64(keys[0]));
 
         RefPtr<WebRenderImageHost> host = mExternalImageIds.Get(wr::AsUint64(op.externalImageId()));
         if (!host) {
@@ -1351,9 +1329,6 @@ WebRenderBridgeParent::ClearResources()
   // Schedule composition to clean up Pipeline
   mCompositorScheduler->ScheduleComposition();
   // WrFontKeys and WrImageKeys are deleted during WebRenderAPI destruction.
-  mFontInstanceKeys.clear();
-  mFontKeys.clear();
-  mActiveImageKeys.clear();
   mKeysToDelete.clear();
   for (auto iter = mExternalImageIds.Iter(); !iter.Done(); iter.Next()) {
     iter.Data()->ClearWrBridge();
