@@ -400,14 +400,16 @@ WebRenderBridgeParent::RecvParentCommands(nsTArray<WebRenderParentCommand>&& aCo
   if (mDestroyed) {
     return IPC_OK();
   }
-  ProcessWebRenderParentCommands(aCommands);
+  wr::ResourceUpdateQueue resources;
+  ProcessWebRenderParentCommands(aCommands, resources);
+  mApi->UpdateResources(resources);
   return IPC_OK();
 }
 
 void
-WebRenderBridgeParent::ProcessWebRenderParentCommands(InfallibleTArray<WebRenderParentCommand>& aCommands)
+WebRenderBridgeParent::ProcessWebRenderParentCommands(const InfallibleTArray<WebRenderParentCommand>& aCommands,
+                                                      wr::ResourceUpdateQueue& aResources)
 {
-  wr::ResourceUpdateQueue resources;
   for (InfallibleTArray<WebRenderParentCommand>::index_type i = 0; i < aCommands.Length(); ++i) {
     const WebRenderParentCommand& cmd = aCommands[i];
     switch (cmd.type()) {
@@ -433,7 +435,7 @@ WebRenderBridgeParent::ProcessWebRenderParentCommands(InfallibleTArray<WebRender
           }
           WebRenderTextureHost* wrTexture = texture->AsWebRenderTextureHost();
           if (wrTexture) {
-            wrTexture->AddWRImage(resources, keys, wrTexture->GetExternalImageKey());
+            wrTexture->AddWRImage(aResources, keys, wrTexture->GetExternalImageKey());
             break;
           }
         }
@@ -452,7 +454,7 @@ WebRenderBridgeParent::ProcessWebRenderParentCommands(InfallibleTArray<WebRender
         IntSize size = dSurf->GetSize();
         wr::ImageDescriptor descriptor(size, map.mStride, dSurf->GetFormat());
         auto slice = Range<uint8_t>(map.mData, size.height * map.mStride);
-        resources.AddImage(keys[0], descriptor, slice);
+        aResources.AddImage(keys[0], descriptor, slice);
 
         dSurf->Unmap();
         break;
@@ -497,7 +499,6 @@ WebRenderBridgeParent::ProcessWebRenderParentCommands(InfallibleTArray<WebRender
       }
     }
   }
-  mApi->UpdateResources(resources);
 }
 
 void
@@ -509,7 +510,7 @@ WebRenderBridgeParent::ProcessWebRenderCommands(const gfx::IntSize &aSize,
                                                 const wr::IdNamespace& aIdNamespace)
 {
   mAsyncImageManager->SetCompositionTime(TimeStamp::Now());
-  ProcessWebRenderParentCommands(aCommands);
+  ProcessWebRenderParentCommands(aCommands, aResourceUpdates);
 
   // The command is obsoleted.
   // Do not set the command to webrender since it causes crash in webrender.
