@@ -503,6 +503,9 @@ int32_t nsCSSSelector::CalcWeightWithoutNegations() const
              "If pseudo-elements can have id or attribute selectors "
              "after them, specificity calculation must be updated");
 
+  if (IsPseudoElement()) {
+    weight += 0x000001;
+  }
   if (nullptr != mCasedTag) {
     weight += 0x000001;
   }
