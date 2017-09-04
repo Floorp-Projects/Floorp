@@ -2095,9 +2095,10 @@ nsChildView::AddWindowOverlayWebRenderCommands(layers::WebRenderBridgeChild* aWr
     size_t stride = CGBitmapContextGetBytesPerRow(mTitlebarCGContext);
     size_t titlebarCGContextDataLength = stride * size.height;
     gfx::SurfaceFormat format = gfx::SurfaceFormat::B8G8R8A8;
-    wr::ByteBuffer buffer(
-      titlebarCGContextDataLength,
-      static_cast<uint8_t *>(CGBitmapContextGetData(mTitlebarCGContext)));
+    Range<uint8_t> buffer(
+      static_cast<uint8_t *>(CGBitmapContextGetData(mTitlebarCGContext)),
+      titlebarCGContextDataLength
+    );
 
     if (mTitlebarImageKey &&
         mTitlebarImageSize != size) {
@@ -2116,7 +2117,7 @@ nsChildView::AddWindowOverlayWebRenderCommands(layers::WebRenderBridgeChild* aWr
 
     if (!updatedTitlebarRegion.IsEmpty()) {
       wr::ImageDescriptor descriptor(size, stride, format);
-      aBuilder.Resources().UpdateImage(*mTitlebarImageKey, descriptor, buffer);
+      aBuilder.Resources().UpdateImageBuffer(*mTitlebarImageKey, descriptor, buffer);
     }
 
     wr::LayoutRect rect = wr::ToLayoutRect(mTitlebarRect);
@@ -2129,7 +2130,7 @@ void
 nsChildView::CleanupWebRenderWindowOverlay(layers::WebRenderBridgeChild* aWrBridge)
 {
   if (mTitlebarImageKey) {
-    ResourceUpdateQueue resources;
+    wr::ResourceUpdateQueue resources;
     resources.DeleteImage(*mTitlebarImageKey);
     aWrBridge->UpdateResources(resources);
     mTitlebarImageKey = Nothing();

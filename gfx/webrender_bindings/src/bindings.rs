@@ -832,11 +832,10 @@ pub unsafe extern "C" fn wr_api_clear_display_list(
     dh: &mut DocumentHandle,
     epoch: WrEpoch,
     pipeline_id: WrPipelineId,
-    resources: &mut ResourceUpdates
 ) {
     let preserve_frame_state = true;
     let frame_builder = WebRenderFrameBuilder::new(pipeline_id, LayoutSize::zero());
-    let resource_updates = mem::replace(resources, ResourceUpdates::new());
+    let resource_updates = ResourceUpdates::new();
 
     dh.api.set_display_list(
         dh.document_id,

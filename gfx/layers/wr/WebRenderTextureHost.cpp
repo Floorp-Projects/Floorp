@@ -145,14 +145,14 @@ WebRenderTextureHost::GetWRImageKeys(nsTArray<wr::ImageKey>& aImageKeys,
 }
 
 void
-WebRenderTextureHost::AddWRImage(wr::WebRenderAPI* aAPI,
+WebRenderTextureHost::AddWRImage(wr::ResourceUpdateQueue& aResources,
                                  Range<const wr::ImageKey>& aImageKeys,
                                  const wr::ExternalImageId& aExtID)
 {
   MOZ_ASSERT(mWrappedTextureHost);
   MOZ_ASSERT(mExternalImageId == aExtID);
 
-  mWrappedTextureHost->AddWRImage(aAPI, aImageKeys, aExtID);
+  mWrappedTextureHost->AddWRImage(aResources, aImageKeys, aExtID);
 }
 
 void

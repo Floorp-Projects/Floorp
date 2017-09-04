@@ -116,7 +116,7 @@ public:
   wr::ResourceUpdates* Raw() { return mUpdates; }
 
 protected:
-  ResourceUpdateQueue(wr::ResourceUpdates* aUpdates)
+  explicit ResourceUpdateQueue(wr::ResourceUpdates* aUpdates)
   : mUpdates(aUpdates) {}
 
   wr::ResourceUpdates* mUpdates;
@@ -154,15 +154,13 @@ public:
                       wr::BuiltDisplayListDescriptor dl_descriptor,
                       uint8_t *dl_data,
                       size_t dl_size,
-                      ResourceUpdateQueue* aResources = nullptr);
+                      ResourceUpdateQueue& aResources);
 
   void ClearDisplayList(Epoch aEpoch, wr::WrPipelineId pipeline_id);
 
   void SetRootPipeline(wr::PipelineId aPipeline);
 
   void UpdateResources(ResourceUpdateQueue& aUpdates);
-
-  ResourceUpdateQueue& Resources() { return mResources; }
 
   void SetFrameStartTime(const TimeStamp& aTime);
 
@@ -191,7 +189,6 @@ protected:
   // Should be used only for shutdown handling
   void WaitFlushed();
 
-  ResourceUpdateQueue mResources;
   wr::DocumentHandle* mDocHandle;
   wr::WindowId mId;
   uint32_t mMaxTextureSize;

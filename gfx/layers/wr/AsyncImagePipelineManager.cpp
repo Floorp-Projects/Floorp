@@ -57,10 +57,11 @@ void
 AsyncImagePipelineManager::DeleteOldAsyncImages()
 {
   MOZ_ASSERT(!mDestroyed);
+  wr::ResourceUpdateQueue resources;
   for (wr::ImageKey key : mKeysToDelete) {
-    mApi->Resources().DeleteImage(key);
+    resources.DeleteImage(key);
   }
-  mApi->UpdateResources(mApi->Resources());
+  mApi->UpdateResources(resources);
   mKeysToDelete.Clear();
 }
 
@@ -127,9 +128,11 @@ AsyncImagePipelineManager::RemoveAsyncImagePipeline(const wr::PipelineId& aPipel
     AsyncImagePipeline* holder = entry.Data();
     ++mAsyncImageEpoch; // Update webrender epoch
     mApi->ClearDisplayList(wr::NewEpoch(mAsyncImageEpoch), aPipelineId);
+    wr::ResourceUpdateQueue resources;
     for (wr::ImageKey key : holder->mKeys) {
-      mApi->Resources().DeleteImage(key);
+      resources.DeleteImage(key);
     }
+    mApi->UpdateResources(resources);
     entry.Remove();
     RemovePipeline(aPipelineId, wr::NewEpoch(mAsyncImageEpoch));
   }
@@ -160,7 +163,9 @@ AsyncImagePipelineManager::UpdateAsyncImagePipeline(const wr::PipelineId& aPipel
 }
 
 bool
-AsyncImagePipelineManager::GenerateImageKeyForTextureHost(TextureHost* aTexture, nsTArray<wr::ImageKey>& aKeys)
+AsyncImagePipelineManager::GenerateImageKeyForTextureHost(wr::ResourceUpdateQueue& aResources,
+                                                          TextureHost* aTexture,
+                                                          nsTArray<wr::ImageKey>& aKeys)
 {
   MOZ_ASSERT(aKeys.IsEmpty());
   MOZ_ASSERT(aTexture);
@@ -171,7 +176,7 @@ AsyncImagePipelineManager::GenerateImageKeyForTextureHost(TextureHost* aTexture,
     wrTexture->GetWRImageKeys(aKeys, std::bind(&AsyncImagePipelineManager::GenerateImageKey, this));
     MOZ_ASSERT(!aKeys.IsEmpty());
     Range<const wr::ImageKey> keys(&aKeys[0], aKeys.Length());
-    wrTexture->AddWRImage(mApi, keys, wrTexture->GetExternalImageKey());
+    wrTexture->AddWRImage(aResources, keys, wrTexture->GetExternalImageKey());
     return true;
   } else {
     RefPtr<gfx::DataSourceSurface> dSurf = aTexture->GetAsSurface();
@@ -190,14 +195,15 @@ AsyncImagePipelineManager::GenerateImageKeyForTextureHost(TextureHost* aTexture,
 
     wr::ImageKey key = GenerateImageKey();
     aKeys.AppendElement(key);
-    mApi->Resources().AddImage(key, descriptor, slice);
+    aResources.AddImage(key, descriptor, slice);
     dSurf->Unmap();
   }
   return false;
 }
 
 bool
-AsyncImagePipelineManager::UpdateImageKeys(bool& aUseExternalImage,
+AsyncImagePipelineManager::UpdateImageKeys(wr::ResourceUpdateQueue& aResources,
+                                           bool& aUseExternalImage,
                                            AsyncImagePipeline* aImageMgr,
                                            nsTArray<wr::ImageKey>& aKeys,
                                            nsTArray<wr::ImageKey>& aKeysToDelete)
@@ -235,7 +241,7 @@ AsyncImagePipelineManager::UpdateImageKeys(bool& aUseExternalImage,
     return true;
   }
 
-  aUseExternalImage = aImageMgr->mUseExternalImage = GenerateImageKeyForTextureHost(texture, aKeys);
+  aUseExternalImage = aImageMgr->mUseExternalImage = GenerateImageKeyForTextureHost(aResources, texture, aKeys);
   MOZ_ASSERT(!aKeys.IsEmpty());
   aImageMgr->mKeys.AppendElements(aKeys);
   aImageMgr->mCurrentTexture = texture;
@@ -253,13 +259,16 @@ AsyncImagePipelineManager::ApplyAsyncImages()
   wr::Epoch epoch = wr::NewEpoch(mAsyncImageEpoch);
   nsTArray<wr::ImageKey> keysToDelete;
 
+  wr::ResourceUpdateQueue resourceUpdates;
+
   for (auto iter = mAsyncImagePipelines.Iter(); !iter.Done(); iter.Next()) {
     wr::PipelineId pipelineId = wr::AsPipelineId(iter.Key());
     AsyncImagePipeline* pipeline = iter.Data();
 
     nsTArray<wr::ImageKey> keys;
     bool useExternalImage = false;
-    bool updateDisplayList = UpdateImageKeys(useExternalImage,
+    bool updateDisplayList = UpdateImageKeys(resourceUpdates,
+                                             useExternalImage,
                                              pipeline,
                                              keys,
                                              keysToDelete);
@@ -312,7 +321,8 @@ AsyncImagePipelineManager::ApplyAsyncImages()
     builder.Finalize(builderContentSize, dl);
     mApi->SetDisplayList(gfx::Color(0.f, 0.f, 0.f, 0.f), epoch, LayerSize(pipeline->mScBounds.Width(), pipeline->mScBounds.Height()),
                          pipelineId, builderContentSize,
-                         dl.dl_desc, dl.dl.inner.data, dl.dl.inner.length);
+                         dl.dl_desc, dl.dl.inner.data, dl.dl.inner.length,
+                         resourceUpdates);
   }
   DeleteOldAsyncImages();
   mKeysToDelete.SwapElements(keysToDelete);
