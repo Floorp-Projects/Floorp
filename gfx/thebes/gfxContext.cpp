@@ -595,7 +595,7 @@ gfxContext::PopClip()
 }
 
 gfxRect
-gfxContext::GetClipExtents()
+gfxContext::GetClipExtents() const
 {
   Rect rect = GetAzureDeviceSpaceClipBounds();
 
@@ -1062,13 +1062,13 @@ gfxContext::ChangeTransform(const Matrix &aNewMatrix, bool aUpdatePatternTransfo
 }
 
 Rect
-gfxContext::GetAzureDeviceSpaceClipBounds()
+gfxContext::GetAzureDeviceSpaceClipBounds() const
 {
   Rect rect(CurrentState().deviceOffset.x, CurrentState().deviceOffset.y,
             Float(mDT->GetSize().width), Float(mDT->GetSize().height));
   for (unsigned int i = 0; i < mStateStack.Length(); i++) {
     for (unsigned int c = 0; c < mStateStack[i].pushedClips.Length(); c++) {
-      AzureState::PushedClip &clip = mStateStack[i].pushedClips[c];
+      const AzureState::PushedClip &clip = mStateStack[i].pushedClips[c];
       if (clip.path) {
         Rect bounds = clip.path->GetBounds(clip.transform);
         rect.IntersectRect(rect, bounds);

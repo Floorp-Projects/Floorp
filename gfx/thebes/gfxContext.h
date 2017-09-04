@@ -381,7 +381,7 @@ public:
      * This will return the current bounds of the clip region in user
      * space.
      */
-    gfxRect GetClipExtents();
+    gfxRect GetClipExtents() const;
 
     /**
      * Returns true if the given rectangle is fully contained in the current clip.
@@ -519,7 +519,7 @@ private:
   void FillAzure(const Pattern& aPattern, mozilla::gfx::Float aOpacity);
   CompositionOp GetOp();
   void ChangeTransform(const mozilla::gfx::Matrix &aNewMatrix, bool aUpdatePatternTransform = true);
-  Rect GetAzureDeviceSpaceClipBounds();
+  Rect GetAzureDeviceSpaceClipBounds() const;
   Matrix GetDeviceTransform() const;
   Matrix GetDTTransform() const;
 
