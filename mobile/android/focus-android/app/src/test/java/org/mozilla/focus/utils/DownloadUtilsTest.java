@@ -65,17 +65,4 @@ public class DownloadUtilsTest {
         assertUrl("filename.jpg", "http://example.com/filename.jpg");
         assertUrl("filename.jpg", "http://example.com/foo/bar/filename.jpg");
     }
-
-    private static void assertMimeType(String expected, String mimeType) {
-        Download download = new Download("ftp://example.url/test", null, null, mimeType, 0, null);
-        assertEquals(expected, DownloadUtils.guessFileName(download));
-    }
-
-    @Test
-    public void testGuessFileName_mimeType() {
-        assertMimeType("test.html", "text/html");
-        assertMimeType("test.txt", "text/plain");
-        assertMimeType("test.jpg", "image/jpeg");
-        assertMimeType("test.bin", "application/octet-stream");
-    }
 }
