@@ -263,7 +263,7 @@ if toolkit in {'gtk2', 'gtk3', 'cocoa', 'windows',
         'nsBaseFilePicker.cpp',
     ]
 
-if toolkit in ('gtk2', 'gtk3', 'windows', 'cocoa'):
+if toolkit in ('gtk2', 'gtk3', 'windows', 'cocoa', 'android'):
     UNIFIED_SOURCES += [
         'nsNativeTheme.cpp',
     ]
