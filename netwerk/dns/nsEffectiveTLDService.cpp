@@ -212,9 +212,10 @@ nsEffectiveTLDService::GetBaseDomainInternal(nsCString  &aHostname,
   if (result == PR_SUCCESS)
     return NS_ERROR_HOST_IS_IP_ADDRESS;
 
-  // Lookup in the cache if this is a normal query.
+  // Lookup in the cache if this is a normal query. This is restricted to
+  // main thread-only as the cache is not thread-safe.
   TLDCacheEntry* entry = nullptr;
-  if (aAdditionalParts == 1) {
+  if (aAdditionalParts == 1 && NS_IsMainThread()) {
     if (LookupForAdd(aHostname, &entry)) {
       // There was a match, just return the cached value.
       aBaseDomain = entry->mBaseDomain;
