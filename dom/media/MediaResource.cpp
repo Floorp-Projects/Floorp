@@ -650,17 +650,17 @@ ChannelMediaResource::CloneData(MediaResourceCallback* aCallback)
 
   RefPtr<ChannelMediaResource> resource =
     new ChannelMediaResource(aCallback, nullptr, mURI, mChannelStatistics);
-  if (resource) {
-    // Initially the clone is treated as suspended by the cache, because
-    // we don't have a channel. If the cache needs to read data from the clone
-    // it will call CacheClientResume (or CacheClientSeek with aResume true)
-    // which will recreate the channel. This way, if all of the media data
-    // is already in the cache we don't create an unnecessary HTTP channel
-    // and perform a useless HTTP transaction.
-    resource->mSuspendAgent.Suspend();
-    resource->mCacheStream.InitAsClone(&mCacheStream);
-    resource->mChannelStatistics.Stop();
-  }
+
+  // Initially the clone is treated as suspended by the cache, because
+  // we don't have a channel. If the cache needs to read data from the clone
+  // it will call CacheClientResume (or CacheClientSeek with aResume true)
+  // which will recreate the channel. This way, if all of the media data
+  // is already in the cache we don't create an unnecessary HTTP channel
+  // and perform a useless HTTP transaction.
+  resource->mSuspendAgent.Suspend();
+  resource->mCacheStream.InitAsClone(&mCacheStream);
+  resource->mChannelStatistics.Stop();
+
   return resource.forget();
 }
 
