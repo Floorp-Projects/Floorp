@@ -1,55 +1,56 @@
 <!DOCTYPE html>
 <meta charset=utf-8>
 <head>
-  <script src="u2futil.js"></script>
+  <script type="text/javascript" src="frame_utils.js"></script>
+  <script type="text/javascript" src="u2futil.js"></script>
 </head>
 <body>
-<p>Test for AppID / FacetID behavior for FIDO Universal Second Factor</p>
+<p>AppID / FacetID behavior check</p>
 <script class="testbody" type="text/javascript">
 "use strict";
 
-var version = "U2F_V2";
-var challenge = new Uint8Array(16);
+async function doTests() {
+  var version = "U2F_V2";
+  var challenge = new Uint8Array(16);
 
-local_is(window.location.origin, "https://test1.example.com", "Is loaded correctly");
+  local_is(window.location.origin, "https://test1.example.com", "Is loaded correctly");
 
-local_expectThisManyTests(4);
+  // same domain check
+  await promiseU2FRegister("https://test1.example.com/appId", [{
+    version: version,
+    challenge: bytesToBase64UrlSafe(challenge),
+  }], [], function(res){
+    local_is(res.errorCode, 0, "AppID should work from a different path of this domain");
+  });
 
-// same domain check
-u2f.register("https://test1.example.com/appId", [{
-  version: version,
-  challenge: bytesToBase64UrlSafe(challenge),
-}], [], function(res){
-  local_is(res.errorCode, 0, "AppID should work from a different path of this domain");
-  local_completeTest();
-});
+  // same domain check, but wrong scheme
+  await promiseU2FRegister("http://test1.example.com/appId", [{
+    version: version,
+    challenge: bytesToBase64UrlSafe(challenge),
+  }], [], function(res){
+    local_isnot(res.errorCode, 0, "AppID should not work when using a different scheme");
+  });
 
-// same domain check, but wrong scheme
-u2f.register("http://test1.example.com/appId", [{
-  version: version,
-  challenge: bytesToBase64UrlSafe(challenge),
-}], [], function(res){
-  local_isnot(res.errorCode, 0, "AppID should not work when using a different scheme");
-  local_completeTest();
-});
+  // eTLD+1 subdomain check
+  await promiseU2FRegister("https://example.com/appId", [{
+    version: version,
+    challenge: bytesToBase64UrlSafe(challenge),
+  }], [], function(res){
+    local_isnot(res.errorCode, 0, "AppID should not work from another subdomain in this registered domain");
+  });
 
-// eTLD+1 subdomain check
-u2f.register("https://example.com/appId", [{
-  version: version,
-  challenge: bytesToBase64UrlSafe(challenge),
-}], [], function(res){
-  local_isnot(res.errorCode, 0, "AppID should not work from another subdomain in this registered domain");
-  local_completeTest();
-});
+  // other domain check
+  await promiseU2FRegister("https://mochi.test:8888/appId", [{
+    version: version,
+    challenge: bytesToBase64UrlSafe(challenge),
+  }], [], function(res){
+    local_isnot(res.errorCode, 0, "AppID should not work from other domains");
+  });
 
-// other domain check
-u2f.register("https://mochi.test:8888/appId", [{
-  version: version,
-  challenge: bytesToBase64UrlSafe(challenge),
-}], [], function(res){
-  local_isnot(res.errorCode, 0, "AppID should not work from other domains");
-  local_completeTest();
-});
+  local_finished();
+};
+
+doTests();
 
 </script>
 </body>

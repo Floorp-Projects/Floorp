@@ -1,33 +1,187 @@
 <!DOCTYPE html>
 <meta charset=utf-8>
 <head>
-  <title>Register and Sign Test for FIDO Universal Second Factor</title>
+  <title>FIDO U2F: Sign and Register behavior</title>
   <script type="text/javascript" src="/tests/SimpleTest/SimpleTest.js"></script>
-  <script src="u2futil.js"></script>
+  <script type="text/javascript" src="/tests/SimpleTest/SpawnTask.js"></script>
+  <script type="text/javascript" src="u2futil.js"></script>
+  <script type="text/javascript" src="pkijs/common.js"></script>
+  <script type="text/javascript" src="pkijs/asn1.js"></script>
+  <script type="text/javascript" src="pkijs/x509_schema.js"></script>
+  <script type="text/javascript" src="pkijs/x509_simpl.js"></script>
   <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css" />
 </head>
 <body>
-<a target="_blank" href="https://bugzilla.mozilla.org/show_bug.cgi?id=1231681">Mozilla Bug 1231681</a>
-
-<div id="framediv">
-  <iframe id="testing_frame"></iframe>
-</div>
+<h1>FIDO U2F: Sign and Register behavior</h1>
+<ul>
+  <li><a target="_blank" href="https://bugzilla.mozilla.org/show_bug.cgi?id=1231681">Mozilla Bug 1231681 (initial implementation)</a></li>
+  <li><a target="_blank" href="https://bugzilla.mozilla.org/show_bug.cgi?id=1245527">Mozilla Bug 1245527 (hardware rewrite)</a></li>
+</ul>
 
 <pre id="log"></pre>
 
 <script class="testbody" type="text/javascript">
+"use strict";
 
-SimpleTest.waitForExplicitFinish();
+var version = "U2F_V2";
+var challenge = new Uint8Array(16);
 
-SpecialPowers.pushPrefEnv({"set": [["security.webauth.u2f", true],
-                                   ["security.webauth.u2f_enable_softtoken", true],
-                                   ["security.webauth.u2f_enable_usbtoken", false]]},
-function() {
-  // listen for messages from the test harness
-  window.addEventListener("message", handleEventMessage);
-  document.getElementById('testing_frame').src = "https://example.com/tests/dom/u2f/tests/frame_appid_facet.html";
+add_task(async function(){
+  is(window.location.origin, "https://example.com", "Is loaded correctly");
 });
 
+var state = {
+  // Raw messages
+  regRequest: null,
+  regResponse: null,
+
+  regKey: null,
+  signChallenge: null,
+  signResponse: null,
+
+  // Parsed values
+  publicKey: null,
+  keyHandle: null,
+
+  // Constants
+  version: "U2F_V2",
+  appId: window.location.origin,
+};
+
+add_task(async function(){
+  isnot(window.u2f, undefined, "U2F API endpoint must exist");
+  isnot(window.u2f.register, undefined, "U2F Register API endpoint must exist");
+  isnot(window.u2f.sign, undefined, "U2F Sign API endpoint must exist");
+
+  var challenge = new Uint8Array(16);
+  window.crypto.getRandomValues(challenge);
+
+  state.regRequest = {
+    version: state.version,
+    challenge: bytesToBase64UrlSafe(challenge),
+  };
+
+  await promiseU2FRegister(state.appId, [state.regRequest], [], function(regResponse) {
+      state.regResponse = regResponse;
+  });
+
+  is(state.regResponse.errorCode, 0, "The registration did not error");
+  isnot(state.regResponse.registrationData, undefined, "The registration did not provide registration data");
+  if (state.regResponse.errorCode > 0) {
+    return;
+  }
+
+  // Parse the response data from the U2F token
+  var registrationData = base64ToBytesUrlSafe(state.regResponse.registrationData);
+  is(registrationData[0], 0x05, "Reserved byte is correct")
+
+  state.publicKeyBytes = registrationData.slice(1, 66);
+  var keyHandleLength = registrationData[66];
+  state.keyHandleBytes = registrationData.slice(67, 67 + keyHandleLength);
+  state.keyHandle = bytesToBase64UrlSafe(state.keyHandleBytes);
+  state.attestation = registrationData.slice(67 + keyHandleLength);
+
+  is(state.attestation[0], 0x30, "Attestation Certificate has correct starting byte");
+  var asn1 = org.pkijs.fromBER(state.attestation.buffer);
+  console.log(asn1);
+  state.attestationCert = new org.pkijs.simpl.CERT({ schema: asn1.result });
+  console.log(state.attestationCert);
+  state.attestationSig = state.attestation.slice(asn1.offset);
+  is(state.attestationCert.subject.types_and_values[0].value.value_block.value, "Firefox U2F Soft Token", "Expected Subject");
+  is(state.attestationCert.issuer.types_and_values[0].value.value_block.value, "Firefox U2F Soft Token", "Expected Issuer");
+  is(state.attestationCert.notAfter.value - state.attestationCert.notBefore.value, 1000*60*60*48, "Valid 48 hours (in millis)");
+
+  // Verify that the clientData from the U2F token makes sense
+  var clientDataJSON = "";
+  base64ToBytesUrlSafe(state.regResponse.clientData).map(x => clientDataJSON += String.fromCharCode(x));
+  var clientData = JSON.parse(clientDataJSON);
+  is(clientData.typ, "navigator.id.finishEnrollment", "Register - Data type matches");
+  is(clientData.challenge, state.regRequest.challenge, "Register - Challenge matches");
+  is(clientData.origin, window.location.origin, "Register - Origins are the same");
+
+  // Verify the signature from the attestation certificate
+  await deriveAppAndChallengeParam(state.appId, string2buffer(clientDataJSON))
+  .then(function(params){
+    state.appParam = params.appParam;
+    state.challengeParam = params.challengeParam;
+    return state.attestationCert.getPublicKey();
+  }).then(function(attestationPublicKey) {
+    var signedData = assembleRegistrationSignedData(state.appParam, state.challengeParam, state.keyHandleBytes, state.publicKeyBytes);
+    return verifySignature(attestationPublicKey, signedData, state.attestationSig);
+  }).then(function(verified) {
+    ok(verified, "Attestation Certificate signature verified")
+     // Import the public key of the U2F token into WebCrypto
+    return importPublicKey(state.publicKeyBytes)
+  }).then(function(key) {
+    state.publicKey = key;
+    ok(true, "Imported public key")
+
+    // Ensure the attestation certificate is properly self-signed
+    return state.attestationCert.verify()
+  }).then(function(verified) {
+    ok(verified, "Register attestation signature verified")
+  });
+
+  state.regKey = {
+    version: state.version,
+    keyHandle: state.keyHandle,
+  };
+
+  // Test that we don't re-register if we provide regKey as an
+  // "already known" key handle. The U2F module should recognize regKey
+  // as being usable and, thus, give back errorCode 4.
+  await promiseU2FRegister(state.appId, [state.regRequest], [state.regKey], function(regResponse) {
+    // Since we attempted to register with state.regKey as a known key, expect
+    // ineligible (=4).
+    is(regResponse.errorCode, 4, "The re-registration should show device ineligible");
+    is(regResponse.registrationData, undefined, "The re-registration did not provide registration data");
+  });
+
+
+  window.crypto.getRandomValues(challenge);
+  state.signChallenge = bytesToBase64UrlSafe(challenge);
+
+  // Now try to sign the signature challenge
+  await promiseU2FSign(state.appId, state.signChallenge, [state.regKey], function(signResponse) {
+    state.signResponse = signResponse;
+  });
+
+  // Make sure this signature op worked, bailing early if it failed.
+  is(state.signResponse.errorCode, 0, "The signing did not error");
+  isnot(state.signResponse.clientData, undefined, "The signing did provide client data");
+
+  if (state.signResponse.errorCode > 0) {
+    return;
+  }
+
+  // Decode the clientData that was returned from the module
+  var clientDataJSON = "";
+  base64ToBytesUrlSafe(state.signResponse.clientData).map(x => clientDataJSON += String.fromCharCode(x));
+  var clientData = JSON.parse(clientDataJSON);
+  is(clientData.typ, "navigator.id.getAssertion", "Sign - Data type matches");
+  is(clientData.challenge, state.signChallenge, "Sign - Challenge matches");
+  is(clientData.origin, window.location.origin, "Sign - Origins are the same");
+
+  // Parse the signature data
+  var signatureData = base64ToBytesUrlSafe(state.signResponse.signatureData);
+  if (signatureData[0] != 0x01) {
+    throw "User presence byte not set";
+  }
+  var presenceAndCounter = signatureData.slice(0,5);
+  var signatureValue = signatureData.slice(5);
+
+  // Assemble the signed data and verify the signature
+  await deriveAppAndChallengeParam(state.appId, string2buffer(clientDataJSON))
+  .then(function(params){
+    return assembleSignedData(params.appParam, presenceAndCounter, params.challengeParam);
+  })
+  .then(function(signedData) {
+    return verifySignature(state.publicKey, signedData, signatureValue);
+  })
+  .then(function(verified) {
+    ok(verified, "Signing signature verified")
+  });
+});
 </script>
 
 </body>
