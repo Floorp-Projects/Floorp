@@ -115,9 +115,5 @@ ec_Curve25519_pt_mul(SECItem *X, SECItem *k, SECItem *P)
         px = P->data;
     }
 
-    SECStatus rv = ec_Curve25519_mul(X->data, k->data, px);
-    if (NSS_SecureMemcmpZero(X->data, X->len) == 0) {
-        return SECFailure;
-    }
-    return rv;
+    return ec_Curve25519_mul(X->data, k->data, px);
 }
