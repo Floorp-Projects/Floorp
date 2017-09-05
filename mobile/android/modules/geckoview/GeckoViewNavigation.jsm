@@ -16,9 +16,8 @@ XPCOMUtils.defineLazyModuleGetter(this, "EventDispatcher",
 XPCOMUtils.defineLazyModuleGetter(this, "Services",
   "resource://gre/modules/Services.jsm");
 
-XPCOMUtils.defineLazyGetter(this, "dump", () =>
-    Cu.import("resource://gre/modules/AndroidLog.jsm",
-              {}).AndroidLog.d.bind(null, "ViewNavigation"));
+var dump = Cu.import("resource://gre/modules/AndroidLog.jsm", {})
+           .AndroidLog.d.bind(null, "ViewNavigation");
 
 function debug(aMsg) {
   // dump(aMsg);
