@@ -1145,7 +1145,7 @@ void wr_renderer_readback(Renderer *aRenderer,
 WR_FUNC;
 
 WR_INLINE
-void wr_renderer_render(Renderer *aRenderer,
+bool wr_renderer_render(Renderer *aRenderer,
                         uint32_t aWidth,
                         uint32_t aHeight)
 WR_FUNC;

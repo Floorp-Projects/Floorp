@@ -86,6 +86,22 @@ enum Build {
     },
 }
 
+/// A type for representing the elements of a bracket stack used for parsing
+/// character classes.
+///
+/// This is for parsing nested character classes without recursion.
+#[derive(Debug)]
+enum Bracket {
+    /// The opening of a character class (possibly negated)
+    LeftBracket {
+        negated: bool,
+    },
+    /// A set of characters within a character class, e.g., `a-z`
+    Set(CharClass),
+    /// An intersection operator (`&&`)
+    Intersection,
+}
+
 // Primary expression parsing routines.
 impl Parser {
     pub fn parse(s: &str, flags: Flags) -> Result<Expr> {
@@ -104,7 +120,11 @@ impl Parser {
     // Starts at the beginning of the input and consumes until either the end
     // of input or an error.
     fn parse_expr(mut self) -> Result<Expr> {
-        while !self.eof() {
+        loop {
+            self.ignore_space();
+            if self.eof() {
+                break;
+            }
             let build_expr = match self.cur() {
                 '\\' => try!(self.parse_escape()),
                 '|' => { let e = try!(self.alternate()); self.bump(); e }
@@ -177,7 +197,7 @@ impl Parser {
             return Err(self.err(ErrorKind::UnexpectedEscapeEof));
         }
         let c = self.cur();
-        if is_punct(c) {
+        if is_punct(c) || (self.flags.ignore_space && c.is_whitespace()) {
             let c = self.bump();
             return Ok(try!(self.lit(c)));
         }
@@ -234,6 +254,7 @@ impl Parser {
         let chari = self.chari;
         let mut name: CaptureName = None;
         self.bump();
+        self.ignore_space();
         if self.bump_if("?P<") {
             let n = try!(self.parse_group_name());
             if self.names.iter().any(|n2| n2 == &n) {
@@ -370,13 +391,16 @@ impl Parser {
             return Err(self.err(ErrorKind::RepeaterUnexpectedExpr(e)));
         }
         self.bump();
-        let min = try!(self.parse_decimal(|c| c != ',' && c != '}'));
+        self.ignore_space();
+        let min = try!(self.parse_decimal());
         let mut max_opt = Some(min);
+        self.ignore_space();
         if self.bump_if(',') {
+            self.ignore_space();
             if self.peek_is('}') {
                 max_opt = None;
             } else {
-                let max = try!(self.parse_decimal(|c| c != '}'));
+                let max = try!(self.parse_decimal());
                 if min > max {
                     // e.g., a{2,1}
                     return Err(self.err(ErrorKind::InvalidRepeatRange {
@@ -387,6 +411,7 @@ impl Parser {
                 max_opt = Some(max);
             }
         }
+        self.ignore_space();
         if !self.bump_if('}') {
             Err(self.err(ErrorKind::UnclosedRepeat))
         } else {
@@ -423,8 +448,8 @@ impl Parser {
     //
     // Start: `1`
     // End:   `,` (where `until == ','`)
-    fn parse_decimal<B: Bumpable>(&mut self, until: B) -> Result<u32> {
-        match self.bump_get(until) {
+    fn parse_decimal(&mut self) -> Result<u32> {
+        match self.bump_get(|c| is_ascii_word(c) || c.is_whitespace()) {
             // e.g., a{}
             None => Err(self.err(ErrorKind::MissingBase10)),
             Some(n) => {
@@ -472,6 +497,7 @@ impl Parser {
     // Start: `{`
     // End:   `b`
     fn parse_hex(&mut self) -> Result<Build> {
+        self.ignore_space();
         if self.bump_if('{') {
             self.parse_hex_many_digits()
         } else {
@@ -486,9 +512,11 @@ impl Parser {
     fn parse_hex_many_digits(&mut self) -> Result<Build> {
         use std::char;
 
-        let s = self.bump_get(|c| c != '}').unwrap_or("".into());
+        self.ignore_space();
+        let s = self.bump_get(is_ascii_word).unwrap_or("".into());
         let n = try!(u32::from_str_radix(&s, 16)
                          .map_err(|_| self.err(ErrorKind::InvalidBase16(s))));
+        self.ignore_space();
         if !self.bump_if('}') {
             // e.g., a\x{d
             return Err(self.err(ErrorKind::UnclosedHex));
@@ -526,81 +554,13 @@ impl Parser {
 
     // Parses a character class, e.g., `[^a-zA-Z0-9]+`.
     //
+    // If the Unicode flag is enabled, the class is returned as a `CharClass`,
+    // otherwise it is converted to a `ByteClass`.
+    //
     // Start: `[`
     // End:   `+`
     fn parse_class(&mut self) -> Result<Build> {
-        self.bump();
-        let negated = self.bump_if('^');
-        let mut class = CharClass::empty();
-        while self.bump_if('-') {
-            class.ranges.push(ClassRange::one('-'));
-        }
-        loop {
-            if self.eof() {
-                // e.g., [a
-                return Err(self.err(ErrorKind::UnexpectedClassEof));
-            }
-            match self.cur() {
-                // If no ranges have been added, then `]` is the first
-                // character (sans, perhaps, the `^` symbol), so it should
-                // be interpreted as a `]` instead of a closing class bracket.
-                ']' if class.len() > 0 => { self.bump(); break }
-                '[' => match self.maybe_parse_ascii() {
-                    Some(class2) => class.ranges.extend(class2),
-                    None => {
-                        return Err(self.err(
-                            ErrorKind::UnsupportedClassChar('[')));
-                    }
-                },
-                '\\' => match try!(self.parse_escape()) {
-                    Build::Expr(Expr::Class(class2)) => {
-                        class.ranges.extend(class2);
-                    }
-                    Build::Expr(Expr::ClassBytes(class2)) => {
-                        for byte_range in class2 {
-                            let s = byte_range.start as char;
-                            let e = byte_range.end as char;
-                            class.ranges.push(ClassRange::new(s, e));
-                        }
-                    }
-                    Build::Expr(Expr::Literal { chars, .. }) => {
-                        try!(self.parse_class_range(&mut class, chars[0]));
-                    }
-                    Build::Expr(Expr::LiteralBytes { bytes, .. }) => {
-                        let start = bytes[0] as char;
-                        try!(self.parse_class_range(&mut class, start));
-                    }
-                    Build::Expr(e) => {
-                        let err = ErrorKind::InvalidClassEscape(e);
-                        return Err(self.err(err));
-                    }
-                    // Because `parse_escape` can never return `LeftParen`.
-                    _ => unreachable!(),
-                },
-                start => {
-                    if !self.flags.unicode {
-                        let _ = try!(self.codepoint_to_one_byte(start));
-                    }
-                    self.bump();
-                    match start {
-                        '&'|'~'|'-' => {
-                            // Only report an error if we see && or ~~ or --.
-                            if self.peek_is(start) {
-                                return Err(self.err(
-                                    ErrorKind::UnsupportedClassChar(start)));
-                            }
-                        }
-                        _ => {}
-                    }
-                    try!(self.parse_class_range(&mut class, start));
-                }
-            }
-        }
-        class = self.class_transform(negated, class).canonicalize();
-        if class.is_empty() {
-            // e.g., [^\d\D]
-            return Err(self.err(ErrorKind::EmptyClass));
-        }
+        let class = try!(self.parse_class_as_chars());
         Ok(Build::Expr(if self.flags.unicode {
             Expr::Class(class)
         } else {
@@ -619,23 +579,155 @@ impl Parser {
         }))
     }
 
-    // Parses a single range in a character class.
+    // Parses a character class as a `CharClass`, e.g., `[^a-zA-Z0-9]+`.
     //
-    // Since this is a helper for `parse_class`, its signature sticks out.
-    // Namely, it requires the start character of the range and the char
-    // class to mutate.
+    // Start: `[`
+    // End:   `+`
+    fn parse_class_as_chars(&mut self) -> Result<CharClass> {
+        let mut bracket_stack = vec![];
+        bracket_stack.extend(self.parse_open_bracket());
+        loop {
+            self.ignore_space();
+            if self.eof() {
+                // e.g., [a
+                return Err(self.err(ErrorKind::UnexpectedClassEof));
+            }
+            match self.cur() {
+                '[' => {
+                    if let Some(class) = self.maybe_parse_ascii() {
+                        // e.g. `[:alnum:]`
+                        bracket_stack.push(Bracket::Set(class));
+                    } else {
+                        // nested set, e.g. `[c-d]` in `[a-b[c-d]]`
+                        bracket_stack.extend(self.parse_open_bracket());
+                    }
+                }
+                ']' => {
+                    self.bump();
+                    let class = try!(self.close_bracket(&mut bracket_stack));
+                    if bracket_stack.is_empty() {
+                        // That was the outermost class, so stop now
+                        return Ok(class);
+                    }
+                    bracket_stack.push(Bracket::Set(class));
+                }
+                '\\' => {
+                    let class = try!(self.parse_class_escape());
+                    bracket_stack.push(Bracket::Set(class));
+                }
+                '&' if self.peek_is("&&") => {
+                    self.bump();
+                    self.bump();
+                    bracket_stack.push(Bracket::Intersection);
+                }
+                start => {
+                    if !self.flags.unicode {
+                        let _ = try!(self.codepoint_to_one_byte(start));
+                    }
+                    self.bump();
+                    match start {
+                        '~'|'-' => {
+                            // Only report an error if we see ~~ or --.
+                            if self.peek_is(start) {
+                                return Err(self.err(
+                                    ErrorKind::UnsupportedClassChar(start)));
+                            }
+                        }
+                        _ => {}
+                    }
+                    let class = try!(self.parse_class_range(start));
+                    bracket_stack.push(Bracket::Set(class));
+                }
+            }
+        }
+    }
+
+    // Parses the start of a character class or a nested character class.
+    // That includes negation using `^` and unescaped `-` and `]` allowed at
+    // the start of the class.
+    //
+    // e.g., `[^a]` or `[-a]` or `[]a]`
+    //
+    // Start: `[`
+    // End:   `a`
+    fn parse_open_bracket(&mut self) -> Vec<Bracket> {
+        self.bump();
+        self.ignore_space();
+        let negated = self.bump_if('^');
+        self.ignore_space();
+
+        let mut class = CharClass::empty();
+        while self.bump_if('-') {
+            class.ranges.push(ClassRange::one('-'));
+            self.ignore_space();
+        }
+        if class.is_empty() {
+            if self.bump_if(']') {
+                class.ranges.push(ClassRange::one(']'));
+                self.ignore_space();
+            }
+        }
+
+        let bracket = Bracket::LeftBracket { negated: negated };
+        if class.is_empty() {
+            vec![bracket]
+        } else {
+            vec![bracket, Bracket::Set(class)]
+        }
+    }
+
+    // Parses an escape in a character class.
+    //
+    // This is a helper for `parse_class`. Instead of returning an `Ok` value,
+    // it either mutates the char class or returns an error.
+    //
+    // e.g., `\wx`
+    //
+    // Start: `\`
+    // End:   `x`
+    fn parse_class_escape(&mut self) -> Result<CharClass> {
+        match try!(self.parse_escape()) {
+            Build::Expr(Expr::Class(class)) => {
+                Ok(class)
+            }
+            Build::Expr(Expr::ClassBytes(class2)) => {
+                let mut class = CharClass::empty();
+                for byte_range in class2 {
+                    let s = byte_range.start as char;
+                    let e = byte_range.end as char;
+                    class.ranges.push(ClassRange::new(s, e));
+                }
+                Ok(class)
+            }
+            Build::Expr(Expr::Literal { chars, .. }) => {
+                self.parse_class_range(chars[0])
+            }
+            Build::Expr(Expr::LiteralBytes { bytes, .. }) => {
+                let start = bytes[0] as char;
+                self.parse_class_range(start)
+            }
+            Build::Expr(e) => {
+                let err = ErrorKind::InvalidClassEscape(e);
+                Err(self.err(err))
+            }
+            // Because `parse_escape` can never return `LeftParen`.
+            _ => unreachable!(),
+        }
+    }
+
+    // Parses a single range in a character class.
     //
     // e.g., `[a-z]`
     //
     // Start: `-` (with start == `a`)
     // End:   `]`
-    fn parse_class_range(&mut self, class: &mut CharClass, start: char)
-                        -> Result<()> {
+    fn parse_class_range(&mut self, start: char) -> Result<CharClass> {
+        self.ignore_space();
         if !self.bump_if('-') {
-            // Not a range, so just push a singleton range.
-            class.ranges.push(ClassRange::one(start));
-            return Ok(());
+            // Not a range, so just return a singleton range.
+            return Ok(CharClass::new(vec![ClassRange::one(start)]));
         }
+        self.ignore_space();
         if self.eof() {
             // e.g., [a-
             return Err(self.err(ErrorKind::UnexpectedClassEof));
@@ -643,9 +735,7 @@ impl Parser {
         if self.peek_is(']') {
             // This is the end of the class, so we permit use of `-` as a
             // regular char (just like we do in the beginning).
-            class.ranges.push(ClassRange::one(start));
-            class.ranges.push(ClassRange::one('-'));
-            return Ok(());
+            return Ok(CharClass::new(vec![ClassRange::one(start), ClassRange::one('-')]));
         }
 
         // We have a real range. Just need to check to parse literal and
@@ -682,8 +772,7 @@ impl Parser {
                 end: end,
             }));
         }
-        class.ranges.push(ClassRange::new(start, end));
-        Ok(())
+        Ok(CharClass::new(vec![ClassRange::new(start, end)]))
     }
 
     // Parses an ASCII class, e.g., `[:alnum:]+`.
@@ -730,9 +819,12 @@ impl Parser {
     //
     // `negate` is true when the class name is used with `\P`.
     fn parse_unicode_class(&mut self, neg: bool) -> Result<CharClass> {
+        self.ignore_space();
         let name =
             if self.bump_if('{') {
-                let n = self.bump_get(|c| c != '}').unwrap_or("".into());
+                self.ignore_space();
+                let n = self.bump_get(is_ascii_word).unwrap_or("".into());
+                self.ignore_space();
                 if n.is_empty() || !self.bump_if('}') {
                     // e.g., \p{Greek
                     return Err(self.err(ErrorKind::UnclosedUnicodeName));
@@ -796,7 +888,31 @@ impl Parser {
 // Auxiliary helper methods.
 impl Parser {
     fn chars(&self) -> Chars {
-        Chars::new(&self.chars[self.chari..], self.flags.ignore_space)
+        Chars::new(&self.chars[self.chari..])
+    }
+
+    fn ignore_space(&mut self) {
+        if !self.flags.ignore_space {
+            return;
+        }
+        while !self.eof() {
+            match self.cur() {
+                '#' => {
+                    self.bump();
+                    while !self.eof() {
+                        match self.bump() {
+                            '\n' => break,
+                            _ => continue,
+                        }
+                    }
+                },
+                c => if !c.is_whitespace() {
+                    return;
+                } else {
+                    self.bump();
+                }
+            }
+        }
     }
 
     fn bump(&mut self) -> char {
@@ -924,48 +1040,22 @@ impl Parser {
 struct Chars<'a> {
     chars: &'a [char],
     cur: usize,
-    ignore_space: bool,
 }
 
 impl<'a> Iterator for Chars<'a> {
     type Item = char;
     fn next(&mut self) -> Option<char> {
-        if !self.ignore_space {
-            let x = self.c();
-            self.advance();
-            return x;
-        }
-        while let Some(c) = self.c() {
-            self.advance();
-            match c {
-                '\\' => return match self.c() {
-                            Some('#') => {self.advance(); Some('#')}
-                            _ => Some('\\')
-                        },
-                '#'  => loop {
-                            match self.c() {
-                                Some(c) => {
-                                    self.advance();
-                                    if c == '\n' {
-                                        break;
-                                    }
-                                },
-                                None => return None
-                            }
-                        },
-                _    => if !c.is_whitespace() {return Some(c);}
-            }
-        }
-        None
+        let x = self.c();
+        self.advance();
+        return x;
     }
 }
 
 impl<'a> Chars<'a> {
-    fn new(chars: &[char], ignore_space: bool) -> Chars {
+    fn new(chars: &[char]) -> Chars {
         Chars {
             chars: chars,
             cur: 0,
-            ignore_space: ignore_space,
         }
     }
 
@@ -1146,6 +1236,62 @@ impl Parser {
     }
 }
 
+// Methods for working with the bracket stack used for character class parsing.
+impl Parser {
+
+    // After parsing a closing bracket `]`, process elements of the bracket
+    // stack until finding the corresponding opening bracket `[`, and return
+    // the combined character class. E.g. with `[^b-f&&ab-c]`:
+    //
+    // 1. Adjacent sets are merged into a single union: `ab-c` -> `a-c`
+    // 2. Unions separated by `&&` are intersected: `b-f` and `a-c` -> `b-c`
+    // 3. Negation is applied if necessary: `b-c` -> negation of `b-c`
+    fn close_bracket(&self, stack: &mut Vec<Bracket>) -> Result<CharClass> {
+        let mut union = CharClass::empty();
+        let mut intersect = vec![];
+        loop {
+            match stack.pop() {
+                Some(Bracket::Set(class)) => {
+                    union.ranges.extend(class);
+                }
+                Some(Bracket::Intersection) => {
+                    let class = self.class_union_transform(union);
+                    intersect.push(class);
+                    union = CharClass::empty();
+                }
+                Some(Bracket::LeftBracket { negated }) => {
+                    let mut class = self.class_union_transform(union);
+                    for c in intersect {
+                        class = class.intersection(&c);
+                    }
+                    // negate after combining all sets (`^` has lower precedence than `&&`)
+                    if negated {
+                        class = class.negate();
+                    }
+                    if class.is_empty() {
+                        // e.g., [^\d\D]
+                        return Err(self.err(ErrorKind::EmptyClass));
+                    }
+                    return Ok(class);
+                }
+                // The first element on the stack is a `LeftBracket`
+                None => unreachable!()
+            }
+        }
+    }
+
+    // Apply case folding if requested on the union character class, and
+    // return a canonicalized class.
+    fn class_union_transform(&self, class: CharClass) -> CharClass {
+        if self.flags.casei {
+            // Case folding canonicalizes too
+            class.case_fold()
+        } else {
+            class.canonicalize()
+        }
+    }
+}
+
 impl Build {
     fn is_empty(&self) -> bool {
         match *self {
@@ -1219,6 +1365,13 @@ fn rev_concat(mut exprs: Vec<Expr>) -> Expr {
 fn is_valid_capture_char(c: char) -> bool {
     c == '_' || (c >= '0' && c <= '9')
     || (c >= 'a' && c <= 'z') || (c >= 'A' && c <= 'Z')
+}
+
+fn is_ascii_word(c: char) -> bool {
+    match c {
+        'a' ... 'z' | 'A' ... 'Z' | '_' | '0' ... '9' => true,
+        _ => false,
+    }
 }
 
 /// Returns true if the give character has significance in a regex.
@@ -2222,10 +2375,266 @@ mod tests {
     }
 
     #[test]
+    fn class_nested_class_union() {
+        assert_eq!(p(r"[c[a-b]]"), Expr::Class(class(&[('a', 'c')])));
+        assert_eq!(p(r"[[a-b]]"), Expr::Class(class(&[('a', 'b')])));
+        assert_eq!(p(r"[[c][a-b]]"), Expr::Class(class(&[('a', 'c')])));
+
+        assert_eq!(pb(r"(?-u)[c[a-b]]"),
+                   Expr::ClassBytes(bclass(&[(b'a', b'c')])));
+        assert_eq!(pb(r"(?-u)[[a-b]]"),
+                   Expr::ClassBytes(bclass(&[(b'a', b'b')])));
+        assert_eq!(pb(r"(?-u)[[c][a-b]]"),
+                   Expr::ClassBytes(bclass(&[(b'a', b'c')])));
+    }
+
+    #[test]
+    fn class_nested_class_union_casei() {
+        assert_eq!(p(r"(?i)[c[a-b]]"),
+                   Expr::Class(class(&[('a', 'c')]).case_fold()));
+        assert_eq!(p(r"(?i)[[a-b]]"),
+                   Expr::Class(class(&[('a', 'b')]).case_fold()));
+        assert_eq!(p(r"(?i)[[c][a-b]]"),
+                   Expr::Class(class(&[('a', 'c')]).case_fold()));
+
+        assert_eq!(pb(r"(?i-u)[[\d]]"),
+                   Expr::ClassBytes(asciid_bytes().case_fold()));
+    }
+
+    #[test]
+    fn class_nested_class_negate() {
+        assert_eq!(p(r"[^[\d]]"), Expr::Class(class(PERLD).negate()));
+        assert_eq!(p(r"[[^\d]]"), Expr::Class(class(PERLD).negate()));
+        assert_eq!(p(r"[^[^\d]]"), Expr::Class(class(PERLD)));
+        assert_eq!(p(r"[^[\w]]"), Expr::Class(class(PERLW).negate()));
+        assert_eq!(p(r"[[^\w]]"), Expr::Class(class(PERLW).negate()));
+        assert_eq!(p(r"[^[^\w]]"), Expr::Class(class(PERLW)));
+        assert_eq!(p(r"[a-b[^c]]"),
+                   Expr::Class(class(&[('\u{0}', 'b'), ('d', '\u{10FFFF}')])));
+
+        assert_eq!(pb(r"(?-u)[^[\d]]"),
+                   Expr::ClassBytes(asciid_bytes().negate()));
+        assert_eq!(pb(r"(?-u)[[^\d]]"),
+                   Expr::ClassBytes(asciid_bytes().negate()));
+        assert_eq!(pb(r"(?-u)[^[^\d]]"),
+                   Expr::ClassBytes(asciid_bytes()));
+        assert_eq!(pb(r"(?-u)[^[\w]]"),
+                   Expr::ClassBytes(asciiw_bytes().negate()));
+        assert_eq!(pb(r"(?-u)[[^\w]]"),
+                   Expr::ClassBytes(asciiw_bytes().negate()));
+        assert_eq!(pb(r"(?-u)[^[^\w]]"),
+                   Expr::ClassBytes(asciiw_bytes()));
+        assert_eq!(pb(r"(?-u)[a-b[^c]]"),
+                   Expr::ClassBytes(bclass(&[(b'\x00', b'b'), (b'd', b'\xFF')])))
+    }
+
+    #[test]
+    fn class_nested_class_negate_casei() {
+        assert_eq!(p(r"(?i)[^[\d]]"),
+                   Expr::Class(class(PERLD).case_fold().negate()));
+        assert_eq!(p(r"(?i)[[^\d]]"),
+                   Expr::Class(class(PERLD).case_fold().negate()));
+        assert_eq!(p(r"(?i)[^[^\d]]"),
+                   Expr::Class(class(PERLD).case_fold()));
+        assert_eq!(p(r"(?i)[^[\w]]"),
+                   Expr::Class(class(PERLW).case_fold().negate()));
+        assert_eq!(p(r"(?i)[[^\w]]"),
+                   Expr::Class(class(PERLW).case_fold().negate()));
+        assert_eq!(p(r"(?i)[^[^\w]]"),
+                   Expr::Class(class(PERLW).case_fold()));
+        let mut cls = CharClass::empty().negate();
+        cls.remove('c');
+        cls.remove('C');
+        assert_eq!(p(r"(?i)[a-b[^c]]"), Expr::Class(cls));
+
+        assert_eq!(pb(r"(?i-u)[^[\d]]"),
+                   Expr::ClassBytes(asciid_bytes().case_fold().negate()));
+        assert_eq!(pb(r"(?i-u)[[^\d]]"),
+                   Expr::ClassBytes(asciid_bytes().case_fold().negate()));
+        assert_eq!(pb(r"(?i-u)[^[^\d]]"),
+                   Expr::ClassBytes(asciid_bytes().case_fold()));
+        assert_eq!(pb(r"(?i-u)[^[\w]]"),
+                   Expr::ClassBytes(asciiw_bytes().case_fold().negate()));
+        assert_eq!(pb(r"(?i-u)[[^\w]]"),
+                   Expr::ClassBytes(asciiw_bytes().case_fold().negate()));
+        assert_eq!(pb(r"(?i-u)[^[^\w]]"),
+                   Expr::ClassBytes(asciiw_bytes().case_fold()));
+        let mut bytes = ByteClass::new(vec![]).negate();
+        bytes.remove(b'c');
+        bytes.remove(b'C');
+        assert_eq!(pb(r"(?i-u)[a-b[^c]]"), Expr::ClassBytes(bytes));
+    }
+
+    #[test]
+    fn class_nested_class_brackets_hyphen() {
+        // This is confusing, but `]` is allowed if first character within a class
+        // It parses as a nested class with the `]` and `-` characters
+        assert_eq!(p(r"[[]-]]"), Expr::Class(class(&[('-', '-'), (']', ']')])));
+        assert_eq!(p(r"[[\[]]"), Expr::Class(class(&[('[', '[')])));
+        assert_eq!(p(r"[[\]]]"), Expr::Class(class(&[(']', ']')])));
+    }
+
+    #[test]
+    fn class_nested_class_deep_nesting() {
+        // Makes sure that implementation can handle deep nesting.
+        // With recursive parsing, this regex would blow the stack size.
+        use std::iter::repeat;
+        let nesting = 10_000;
+        let open: String = repeat("[").take(nesting).collect();
+        let close: String = repeat("]").take(nesting).collect();
+        let s  = format!("{}a{}", open, close);
+        assert_eq!(p(&s), Expr::Class(class(&[('a', 'a')])));
+    }
+
+    #[test]
+    fn class_intersection_ranges() {
+        assert_eq!(p(r"[abc&&b-c]"), Expr::Class(class(&[('b', 'c')])));
+        assert_eq!(p(r"[abc&&[b-c]]"), Expr::Class(class(&[('b', 'c')])));
+        assert_eq!(p(r"[[abc]&&[b-c]]"), Expr::Class(class(&[('b', 'c')])));
+        assert_eq!(p(r"[a-z&&b-y&&c-x]"), Expr::Class(class(&[('c', 'x')])));
+        assert_eq!(p(r"[c-da-b&&a-d]"), Expr::Class(class(&[('a', 'd')])));
+        assert_eq!(p(r"[a-d&&c-da-b]"), Expr::Class(class(&[('a', 'd')])));
+
+        assert_eq!(pb(r"(?-u)[abc&&b-c]"),
+                   Expr::ClassBytes(bclass(&[(b'b', b'c')])));
+        assert_eq!(pb(r"(?-u)[abc&&[b-c]]"),
+                   Expr::ClassBytes(bclass(&[(b'b', b'c')])));
+        assert_eq!(pb(r"(?-u)[[abc]&&[b-c]]"),
+                   Expr::ClassBytes(bclass(&[(b'b', b'c')])));
+        assert_eq!(pb(r"(?-u)[a-z&&b-y&&c-x]"),
+                   Expr::ClassBytes(bclass(&[(b'c', b'x')])));
+        assert_eq!(pb(r"(?-u)[c-da-b&&a-d]"),
+                   Expr::ClassBytes(bclass(&[(b'a', b'd')])));
+    }
+
+    #[test]
+    fn class_intersection_ranges_casei() {
+        assert_eq!(p(r"(?i)[abc&&b-c]"),
+                   Expr::Class(class(&[('b', 'c')]).case_fold()));
+        assert_eq!(p(r"(?i)[abc&&[b-c]]"),
+                   Expr::Class(class(&[('b', 'c')]).case_fold()));
+        assert_eq!(p(r"(?i)[[abc]&&[b-c]]"),
+                   Expr::Class(class(&[('b', 'c')]).case_fold()));
+        assert_eq!(p(r"(?i)[a-z&&b-y&&c-x]"),
+                   Expr::Class(class(&[('c', 'x')]).case_fold()));
+        assert_eq!(p(r"(?i)[c-da-b&&a-d]"),
+                   Expr::Class(class(&[('a', 'd')]).case_fold()));
+
+        assert_eq!(pb(r"(?i-u)[abc&&b-c]"),
+                   Expr::ClassBytes(bclass(&[(b'b', b'c')]).case_fold()));
+        assert_eq!(pb(r"(?i-u)[abc&&[b-c]]"),
+                   Expr::ClassBytes(bclass(&[(b'b', b'c')]).case_fold()));
+        assert_eq!(pb(r"(?i-u)[[abc]&&[b-c]]"),
+                   Expr::ClassBytes(bclass(&[(b'b', b'c')]).case_fold()));
+        assert_eq!(pb(r"(?i-u)[a-z&&b-y&&c-x]"),
+                   Expr::ClassBytes(bclass(&[(b'c', b'x')]).case_fold()));
+        assert_eq!(pb(r"(?i-u)[c-da-b&&a-d]"),
+                   Expr::ClassBytes(bclass(&[(b'a', b'd')]).case_fold()));
+    }
+
+    #[test]
+    fn class_intersection_classes() {
+        assert_eq!(p(r"[\w&&\d]"), Expr::Class(class(PERLD)));
+        assert_eq!(p(r"[\w&&[[:ascii:]]]"), Expr::Class(asciiw()));
+        assert_eq!(p(r"[\x00-\xFF&&\pZ]"),
+                   Expr::Class(class(&[('\u{20}', '\u{20}'), ('\u{a0}', '\u{a0}')])));
+
+        assert_eq!(pb(r"(?-u)[\w&&\d]"), Expr::ClassBytes(asciid_bytes()));
+        assert_eq!(pb(r"(?-u)[\w&&[[:ascii:]]]"), Expr::ClassBytes(asciiw_bytes()));
+    }
+
+    #[test]
+    fn class_intersection_classes_casei() {
+        assert_eq!(p(r"(?i)[\w&&\d]"), Expr::Class(class(PERLD).case_fold()));
+        assert_eq!(p(r"(?i)[\w&&[[:ascii:]]]"), Expr::Class(asciiw().case_fold()));
+        assert_eq!(p(r"(?i)[\x00-\xFF&&\pZ]"),
+                   Expr::Class(class(&[('\u{20}', '\u{20}'), ('\u{a0}', '\u{a0}')])));
+
+        assert_eq!(pb(r"(?i-u)[\w&&\d]"), Expr::ClassBytes(asciid_bytes().case_fold()));
+        assert_eq!(pb(r"(?i-u)[\w&&[[:ascii:]]]"), Expr::ClassBytes(asciiw_bytes().case_fold()));
+    }
+
+    #[test]
+    fn class_intersection_negate() {
+        assert_eq!(p(r"[^\w&&\d]"), Expr::Class(class(PERLD).negate()));
+        assert_eq!(p(r"[^[\w&&\d]]"), Expr::Class(class(PERLD).negate()));
+        assert_eq!(p(r"[^[^\w&&\d]]"), Expr::Class(class(PERLD)));
+        assert_eq!(p(r"[\w&&[^\d]]"),
+                   Expr::Class(class(PERLW).intersection(&class(PERLD).negate())));
+        assert_eq!(p(r"[[^\w]&&[^\d]]"),
+                   Expr::Class(class(PERLW).negate()));
+
+        assert_eq!(pb(r"(?-u)[^\w&&\d]"),
+                   Expr::ClassBytes(asciid_bytes().negate()));
+        assert_eq!(pb(r"(?-u)[^[\w&&\d]]"),
+                   Expr::ClassBytes(asciid_bytes().negate()));
+        assert_eq!(pb(r"(?-u)[^[^\w&&\d]]"),
+                   Expr::ClassBytes(asciid_bytes()));
+        assert_eq!(pb(r"(?-u)[\w&&[^\d]]"),
+                   Expr::ClassBytes(asciiw().intersection(&asciid().negate()).to_byte_class()));
+        assert_eq!(pb(r"(?-u)[[^\w]&&[^\d]]"),
+                   Expr::ClassBytes(asciiw_bytes().negate()));
+    }
+
+    #[test]
+    fn class_intersection_negate_casei() {
+        assert_eq!(p(r"(?i)[^\w&&a-z]"),
+                   Expr::Class(class(&[('a', 'z')]).case_fold().negate()));
+        assert_eq!(p(r"(?i)[^[\w&&a-z]]"),
+                   Expr::Class(class(&[('a', 'z')]).case_fold().negate()));
+        assert_eq!(p(r"(?i)[^[^\w&&a-z]]"),
+                   Expr::Class(class(&[('a', 'z')]).case_fold()));
+        assert_eq!(p(r"(?i)[\w&&[^a-z]]"),
+                   Expr::Class(
+                       class(PERLW).intersection(&class(&[('a', 'z')])
+                       .case_fold().negate())));
+        assert_eq!(p(r"(?i)[[^\w]&&[^a-z]]"),
+                   Expr::Class(class(PERLW).negate()));
+
+        assert_eq!(pb(r"(?i-u)[^\w&&a-z]"),
+                   Expr::ClassBytes(bclass(&[(b'a', b'z')]).case_fold().negate()));
+        assert_eq!(pb(r"(?i-u)[^[\w&&a-z]]"),
+                   Expr::ClassBytes(bclass(&[(b'a', b'z')]).case_fold().negate()));
+        assert_eq!(pb(r"(?i-u)[^[^\w&&a-z]]"),
+                   Expr::ClassBytes(bclass(&[(b'a', b'z')]).case_fold()));
+        assert_eq!(pb(r"(?i-u)[\w&&[^a-z]]"),
+                   Expr::ClassBytes(bclass(&[(b'0', b'9'), (b'_', b'_')])));
+        assert_eq!(pb(r"(?i-u)[[^\w]&&[^a-z]]"),
+                   Expr::ClassBytes(asciiw_bytes().negate()));
+    }
+
+    #[test]
+    fn class_intersection_caret() {
+        // In `[a^]`, `^` does not need to be escaped, so it makes sense that
+        // `^` is also allowed to be unescaped after `&&`.
+        assert_eq!(p(r"[\^&&^]"), Expr::Class(class(&[('^', '^')])));
+    }
+
+    #[test]
+    fn class_intersection_brackets_hyphen() {
+        // `]` needs to be escaped after `&&` because it is not at the start of the class.
+        assert_eq!(p(r"[]&&\]]"), Expr::Class(class(&[(']', ']')])));
+
+        assert_eq!(p(r"[-&&-]"), Expr::Class(class(&[('-', '-')])));
+    }
+
+    #[test]
+    fn class_intersection_ampersand() {
+        // Unescaped `&` after `&&`
+        assert_eq!(p(r"[\&&&&]"), Expr::Class(class(&[('&', '&')])));
+        assert_eq!(p(r"[\&&&\&]"), Expr::Class(class(&[('&', '&')])));
+    }
+
+    #[test]
+    fn class_intersection_precedence() {
+        assert_eq!(p(r"[a-w&&[^c-g]z]"), Expr::Class(class(&[('a', 'b'), ('h', 'w')])));
+    }
+
+    #[test]
     fn class_special_escaped_set_chars() {
         // These tests ensure that some special characters require escaping
         // for use in character classes. The intention is to use these
-        // characters to implement sets as described in UTC#18 RL1.3. Once
+        // characters to implement sets as described in UTS#18 RL1.3. Once
         // that's done, these tests should be removed and replaced with others.
         assert_eq!(p(r"[\[]"), Expr::Class(class(&[('[', '[')])));
         assert_eq!(p(r"[&]"), Expr::Class(class(&[('&', '&')])));
@@ -2368,10 +2777,49 @@ mod tests {
     }
 
     #[test]
-    fn ignore_space_escape() {
-        assert_eq!(p(r"(?x)\ d"), Expr::Class(class(PERLD)));
-        assert_eq!(p(r"(?x)\
-                     D"), Expr::Class(class(PERLD).negate()));
+    fn ignore_space_escape_octal() {
+        assert_eq!(p(r"(?x)\12 3"), Expr::Concat(vec![
+            lit('\n'),
+            lit('3'),
+        ]));
+    }
+
+    #[test]
+    fn ignore_space_escape_hex() {
+        assert_eq!(p(r"(?x)\x { 53 }"), lit('S'));
+        assert_eq!(p(r"(?x)\x # comment
+{ # comment
+    53 # comment
+} # comment"), lit('S'));
+    }
+
+    #[test]
+    fn ignore_space_escape_hex2() {
+        assert_eq!(p(r"(?x)\x 53"), lit('S'));
+        assert_eq!(p(r"(?x)\x # comment
+        53 # comment"), lit('S'));
+    }
+
+    #[test]
+    fn ignore_space_escape_unicode_name() {
+        assert_eq!(p(r"(?x)\p # comment
+{ # comment
+    Yi # comment
+} # comment"), Expr::Class(class(YI)));
+    }
+
+    #[test]
+    fn ignore_space_repeat_counted() {
+        assert_eq!(p("(?x)a # comment
+{ # comment
+    5 # comment
+    , # comment
+    10 # comment
+}"), Expr::Repeat {
+            e: b(lit('a')),
+            r: Repeater::Range { min: 5, max: Some(10) },
+            greedy: true,
+        });
     }
 
     #[test]
@@ -2421,6 +2869,14 @@ mod tests {
         assert_eq!(p(r"(?x)a\# # hi there"), Expr::Concat(vec![
             lit('a'),
             lit('#'),
+        ]));
+    }
+
+    #[test]
+    fn ignore_space_escape_space() {
+        assert_eq!(p(r"(?x)a\  # hi there"), Expr::Concat(vec![
+            lit('a'),
+            lit(' '),
         ]));
     }
 
@@ -2801,18 +3257,55 @@ mod tests {
     fn error_class_unsupported_char() {
         // These tests ensure that some unescaped special characters are
         // rejected in character classes. The intention is to use these
-        // characters to implement sets as described in UTC#18 RL1.3. Once
+        // characters to implement sets as described in UTS#18 RL1.3. Once
         // that's done, these tests should be removed and replaced with others.
-        test_err!("[[]", 1, ErrorKind::UnsupportedClassChar('['));
-        test_err!("[&&]", 2, ErrorKind::UnsupportedClassChar('&'));
         test_err!("[~~]", 2, ErrorKind::UnsupportedClassChar('~'));
         test_err!("[+--]", 4, ErrorKind::UnsupportedClassChar('-'));
         test_err!(r"[a-a--\xFF]", 5, ErrorKind::UnsupportedClassChar('-'));
+        test_err!(r"[a&&~~]", 5, ErrorKind::UnsupportedClassChar('~'));
+        test_err!(r"[a&&--]", 5, ErrorKind::UnsupportedClassChar('-'));
+    }
+
+    #[test]
+    fn error_class_nested_class() {
+        test_err!(r"[[]]", 4, ErrorKind::UnexpectedClassEof);
+        test_err!(r"[[][]]", 6, ErrorKind::UnexpectedClassEof);
+        test_err!(r"[[^\d\D]]", 8, ErrorKind::EmptyClass);
+        test_err!(r"[[]", 3, ErrorKind::UnexpectedClassEof);
+        test_err!(r"[[^]", 4, ErrorKind::UnexpectedClassEof);
+    }
+
+    #[test]
+    fn error_class_intersection() {
+        test_err!(r"[&&]", 4, ErrorKind::EmptyClass);
+        test_err!(r"[a&&]", 5, ErrorKind::EmptyClass);
+        test_err!(r"[&&&&]", 6, ErrorKind::EmptyClass);
+        // `]` after `&&` is not the same as in (`[]]`), because it's also not
+        // allowed unescaped in `[a]]`.
+        test_err!(r"[]&&]]", 5, ErrorKind::EmptyClass);
+
+        let flags = Flags { allow_bytes: true, .. Flags::default() };
+        test_err!(r"(?-u)[a&&\pZ]", 12, ErrorKind::UnicodeNotAllowed, flags);
     }
 
     #[test]
     fn error_duplicate_capture_name() {
         test_err!("(?P<a>.)(?P<a>.)", 14,
                   ErrorKind::DuplicateCaptureName("a".into()));
+    }
+
+    #[test]
+    fn error_ignore_space_escape_hex() {
+        test_err!(r"(?x)\x{ 5 3 }", 10, ErrorKind::UnclosedHex);
+    }
+
+    #[test]
+    fn error_ignore_space_escape_hex2() {
+        test_err!(r"(?x)\x 5 3", 9, ErrorKind::InvalidBase16("5 ".into()));
+    }
+
+    #[test]
+    fn error_ignore_space_escape_unicode_name() {
+        test_err!(r"(?x)\p{Y i}", 9, ErrorKind::UnclosedUnicodeName);
     }
 }

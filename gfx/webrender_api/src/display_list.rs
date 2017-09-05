@@ -626,7 +626,7 @@ impl DisplayListBuilder {
                                                   font_key: FontInstanceKey,
                                                   color: ColorF,
                                                   glyphs: I) {
-        let mut font_glyphs = self.glyphs.entry((font_key, color))
+        let font_glyphs = self.glyphs.entry((font_key, color))
                                          .or_insert(FastHashSet::default());
 
         font_glyphs.extend(glyphs);

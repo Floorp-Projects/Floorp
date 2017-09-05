@@ -27,6 +27,7 @@ class NameResolver
 
     JSContext* cx;
     size_t nparents;                /* number of parents in the parents array */
+    MOZ_INIT_OUTSIDE_CTOR
     ParseNode* parents[MaxParents]; /* history of ParseNodes we've been looking at */
     StringBuffer* buf;              /* when resolving, buffer to append to */
 

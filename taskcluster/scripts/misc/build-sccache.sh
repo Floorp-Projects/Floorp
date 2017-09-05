@@ -39,7 +39,39 @@ cd sccache
 
 git checkout $SCCACHE_REVISION
 
-cargo build --verbose --release
+# Link openssl statically so we don't have to bother with different sonames
+# across Linux distributions.  We can't use the system openssl; see the sad
+# story in https://bugzilla.mozilla.org/show_bug.cgi?id=1163171#c26.
+case "$(uname -s)" in
+Linux)
+    OPENSSL_TARBALL=openssl-1.1.0f.tar.gz
+
+    curl -O https://www.openssl.org/source/$OPENSSL_TARBALL
+cat >$OPENSSL_TARBALL.sha256sum <<EOF
+12f746f3f2493b2f39da7ecf63d7ee19c6ac9ec6a4fcd8c229da8a522cb12765  openssl-1.1.0f.tar.gz
+EOF
+    cat $OPENSSL_TARBALL.sha256sum
+    sha256sum -c $OPENSSL_TARBALL.sha256sum
+
+    tar zxf $OPENSSL_TARBALL
+
+    OPENSSL_BUILD_DIRECTORY=$PWD/ourssl
+    pushd $(basename $OPENSSL_TARBALL .tar.gz)
+    ./Configure --prefix=$OPENSSL_BUILD_DIRECTORY no-shared linux-x86_64
+    make -j `nproc --all`
+    # `make install` installs a *ton* of docs that we don't care about.
+    # Just the software, please.
+    make install_sw
+    popd
+
+    # We don't need to set OPENSSL_STATIC here, because we only have static
+    # libraries in the directory we are passing.
+    env "OPENSSL_DIR=$OPENSSL_BUILD_DIRECTORY" cargo build --verbose --release
+    ;;
+MINGW*)
+    cargo build --verbose --release
+    ;;
+esac
 
 mkdir sccache2
 cp target/release/sccache* sccache2/

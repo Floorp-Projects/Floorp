@@ -82,3 +82,11 @@ mat!(endl_or_wb, r"(?m:$)|(?-u:\b)", "\u{6084e}", Some((4, 4)));
 mat!(zero_or_end, r"(?i-u:\x00)|$", "\u{e682f}", Some((4, 4)));
 mat!(y_or_endl, r"(?i-u:y)|(?m:$)", "\u{b4331}", Some((4, 4)));
 mat!(wb_start_x, r"(?u:\b)^(?-u:X)", "X", Some((0, 1)));
+
+// See: https://github.com/rust-lang/regex/issues/321
+ismatch!(strange_anchor_non_complete_prefix, r"a^{2}", "", false);
+ismatch!(strange_anchor_non_complete_suffix, r"${2}a", "", false);
+
+// See: https://github.com/rust-lang/regex/issues/334
+mat!(captures_after_dfa_premature_end, r"a(b*(X|$))?", "abcbX",
+     Some((0, 1)), None, None);

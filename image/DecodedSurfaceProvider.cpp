@@ -200,6 +200,12 @@ DecodedSurfaceProvider::FinishDecoding()
   // Send notifications.
   NotifyDecodeComplete(WrapNotNull(mImage), WrapNotNull(mDecoder));
 
+  // If we have a new and complete surface, we can try to prune similarly sized
+  // surfaces if the cache supports it.
+  if (mSurface && mSurface->IsFinished()) {
+    SurfaceCache::PruneImage(ImageKey(mImage));
+  }
+
   // Destroy our decoder; we don't need it anymore. (And if we don't destroy it,
   // our surface can never be optimized, because the decoder has a
   // RawAccessFrameRef to it.)

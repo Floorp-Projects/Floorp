@@ -161,6 +161,7 @@ public:
 #endif
 
   nsresult GetNativeSizes(nsTArray<gfx::IntSize>& aNativeSizes) const override;
+  size_t GetNativeSizesLength() const override;
   virtual nsresult StartAnimation() override;
   virtual nsresult StopAnimation() override;
 

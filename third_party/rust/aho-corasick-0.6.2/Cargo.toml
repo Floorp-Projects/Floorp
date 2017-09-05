@@ -1,0 +1,47 @@
+[package]
+name = "aho-corasick"
+version = "0.6.2"  #:version
+authors = ["Andrew Gallant <jamslam@gmail.com>"]
+description = "Fast multiple substring searching with finite state machines."
+documentation = "http://burntsushi.net/rustdoc/aho_corasick/"
+homepage = "https://github.com/BurntSushi/aho-corasick"
+repository = "https://github.com/BurntSushi/aho-corasick"
+readme = "README.md"
+keywords = ["string", "search", "text", "aho", "corasick"]
+license = "Unlicense/MIT"
+exclude = ["benches/sherlock.txt"]
+
+[lib]
+name = "aho_corasick"
+
+[[bin]]
+name = "aho-corasick-dot"
+test = false
+doc = false
+bench = false
+
+[dependencies]
+memchr = "1"
+
+[dev-dependencies]
+csv = "0.15"
+docopt = "0.7"
+memmap = "0.5"
+quickcheck = { version = "0.4", default-features = false }
+rand = "0.3"
+rustc-serialize = "0.3"
+
+[[bench]]
+name = "bench"
+path = "benches/bench.rs"
+test = false
+bench = true
+
+[profile.test]
+debug = true
+
+[profile.bench]
+debug = true
+
+[profile.release]
+debug = true

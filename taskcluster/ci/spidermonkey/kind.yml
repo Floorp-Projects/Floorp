@@ -35,6 +35,7 @@ job-defaults:
             - intl/icu/**
             - js/moz.configure
             - js/public/**
+            - js/rust/**
             - js/src/**
             - layout/tools/reftest/reftest/**
             - Makefile.in
@@ -92,6 +93,23 @@ jobs:
               TOOLTOOL_MANIFEST: "browser/config/tooltool-manifests/linux64/releng.manifest"
         run:
             using: spidermonkey-mozjs-crate
+            spidermonkey-variant: plain
+        run-on-projects: ['integration', 'release', 'try']
+
+    sm-rust-bindings/debug:
+        description: "Build and test the Rust bindings for SpiderMonkey"
+        index:
+            job-name: sm-rust-bindings-debug
+        treeherder:
+            symbol: SM-tc(rust)
+            tier: 2
+        worker:
+            max-run-time: 36000
+            docker-image: {in-tree: desktop-build}
+            env:
+              TOOLTOOL_MANIFEST: "browser/config/tooltool-manifests/linux64/releng.manifest"
+        run:
+            using: spidermonkey-rust-bindings
             spidermonkey-variant: plain
         run-on-projects: ['integration', 'release', 'try']
 

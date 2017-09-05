@@ -1,9 +1,9 @@
 // Thread-ID -- Get a unique thread ID
 // Copyright 2016 Ruud van Asseldonk
 //
-// Licensed under the Apache License, Version 2.0 (the "License");
-// you may not use this file except in compliance with the License.
-// A copy of the License has been included in the root of the repository.
+// Licensed under either the Apache License, Version 2.0, or the MIT license, at
+// your option. A copy of both licenses has been included in the root of the
+// repository.
 
 //! Thread-ID: get a unique ID for the current thread.
 //!

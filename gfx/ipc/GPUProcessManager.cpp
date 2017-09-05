@@ -435,18 +435,22 @@ GPUProcessManager::DisableWebRender(wr::WebRenderError aError)
   if (!gfx::gfxVars::UseWebRender()) {
     return;
   }
+  // Disable WebRender
   if (aError == wr::WebRenderError::INITIALIZE) {
-    // Disable WebRender
     gfx::gfxConfig::GetFeature(gfx::Feature::WEBRENDER).ForceDisable(
       gfx::FeatureStatus::Unavailable,
       "WebRender initialization failed",
       NS_LITERAL_CSTRING("FEATURE_FAILURE_WEBRENDER_INITIALIZE"));
   } else if (aError == wr::WebRenderError::MAKE_CURRENT) {
-    // Disable WebRender
     gfx::gfxConfig::GetFeature(gfx::Feature::WEBRENDER).ForceDisable(
       gfx::FeatureStatus::Unavailable,
       "Failed to make render context current",
       NS_LITERAL_CSTRING("FEATURE_FAILURE_WEBRENDER_MAKE_CURRENT"));
+  } else if (aError == wr::WebRenderError::RENDER) {
+    gfx::gfxConfig::GetFeature(gfx::Feature::WEBRENDER).ForceDisable(
+      gfx::FeatureStatus::Unavailable,
+      "Failed to render WebRender",
+      NS_LITERAL_CSTRING("FEATURE_FAILURE_WEBRENDER_RENDER"));
   } else {
     MOZ_ASSERT_UNREACHABLE("Invalid value");
   }

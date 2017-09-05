@@ -20,7 +20,7 @@ supported.
 
 Documentation with examples for the various matching functions and iterators
 can be found on the
-[`Regex` type](https://doc.rust-lang.org/regex/regex/enum.Regex.html).
+[`Regex` type](https://doc.rust-lang.org/regex/regex/struct.Regex.html).
 
 ### Usage
 
@@ -55,9 +55,9 @@ fn main() {
 ").unwrap();
     let caps = re.captures("2010-03-14").unwrap();
 
-    assert_eq!("2010", caps["year"]);
-    assert_eq!("03", caps["month"]);
-    assert_eq!("14", caps["day"]);
+    assert_eq!("2010", &caps["year"]);
+    assert_eq!("03", &caps["month"]);
+    assert_eq!("14", &caps["day"]);
 }
 ```
 

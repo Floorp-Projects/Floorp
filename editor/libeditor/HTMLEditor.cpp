@@ -691,49 +691,6 @@ HTMLEditor::HandleKeyPressEvent(WidgetKeyboardEvent* aKeyboardEvent)
   return TypedText(str, eTypedText);
 }
 
-static void
-AssertParserServiceIsCorrect(nsIAtom* aTag, bool aIsBlock)
-{
-#ifdef DEBUG
-  // Check this against what we would have said with the old code:
-  if (aTag == nsGkAtoms::p ||
-      aTag == nsGkAtoms::div ||
-      aTag == nsGkAtoms::blockquote ||
-      aTag == nsGkAtoms::h1 ||
-      aTag == nsGkAtoms::h2 ||
-      aTag == nsGkAtoms::h3 ||
-      aTag == nsGkAtoms::h4 ||
-      aTag == nsGkAtoms::h5 ||
-      aTag == nsGkAtoms::h6 ||
-      aTag == nsGkAtoms::ul ||
-      aTag == nsGkAtoms::ol ||
-      aTag == nsGkAtoms::dl ||
-      aTag == nsGkAtoms::noscript ||
-      aTag == nsGkAtoms::form ||
-      aTag == nsGkAtoms::hr ||
-      aTag == nsGkAtoms::table ||
-      aTag == nsGkAtoms::fieldset ||
-      aTag == nsGkAtoms::address ||
-      aTag == nsGkAtoms::col ||
-      aTag == nsGkAtoms::colgroup ||
-      aTag == nsGkAtoms::li ||
-      aTag == nsGkAtoms::dt ||
-      aTag == nsGkAtoms::dd ||
-      aTag == nsGkAtoms::legend) {
-    if (!aIsBlock) {
-      nsAutoString assertmsg (NS_LITERAL_STRING("Parser and editor disagree on blockness: "));
-
-      nsAutoString tagName;
-      aTag->ToString(tagName);
-      assertmsg.Append(tagName);
-      char* assertstr = ToNewCString(assertmsg);
-      NS_ASSERTION(aIsBlock, assertstr);
-      free(assertstr);
-    }
-  }
-#endif // DEBUG
-}
-
 /**
  * Returns true if the id represents an element of block type.
  * Can be used to determine if a new paragraph should be started.
@@ -753,10 +710,8 @@ HTMLEditor::NodeIsBlockStatic(const nsINode* aElement)
                                     nsGkAtoms::tr,
                                     nsGkAtoms::th,
                                     nsGkAtoms::td,
-                                    nsGkAtoms::li,
                                     nsGkAtoms::dt,
-                                    nsGkAtoms::dd,
-                                    nsGkAtoms::pre)) {
+                                    nsGkAtoms::dd)) {
     return true;
   }
 
@@ -770,8 +725,6 @@ HTMLEditor::NodeIsBlockStatic(const nsINode* aElement)
               aElement->NodeInfo()->NameAtom()),
             isBlock);
   MOZ_ASSERT(rv == NS_OK);
-
-  AssertParserServiceIsCorrect(aElement->NodeInfo()->NameAtom(), isBlock);
 
   return isBlock;
 }

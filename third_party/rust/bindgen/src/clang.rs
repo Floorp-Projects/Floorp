@@ -24,12 +24,14 @@ pub struct Cursor {
 
 impl fmt::Debug for Cursor {
     fn fmt(&self, fmt: &mut fmt::Formatter) -> fmt::Result {
-        write!(fmt,
-               "Cursor({} kind: {}, loc: {}, usr: {:?})",
-               self.spelling(),
-               kind_to_str(self.kind()),
-               self.location(),
-               self.usr())
+        write!(
+            fmt,
+            "Cursor({} kind: {}, loc: {}, usr: {:?})",
+            self.spelling(),
+            kind_to_str(self.kind()),
+            self.location(),
+            self.usr()
+        )
     }
 }
 
@@ -213,11 +215,12 @@ impl Cursor {
         let mut semantic_parent = self.fallible_semantic_parent();
 
         while semantic_parent.is_some() &&
-              (semantic_parent.unwrap().kind() == CXCursor_Namespace ||
-               semantic_parent.unwrap().kind() == CXCursor_NamespaceAlias ||
-               semantic_parent.unwrap().kind() == CXCursor_NamespaceRef) {
-            semantic_parent = semantic_parent.unwrap()
-                .fallible_semantic_parent();
+            (semantic_parent.unwrap().kind() == CXCursor_Namespace ||
+                 semantic_parent.unwrap().kind() == CXCursor_NamespaceAlias ||
+                 semantic_parent.unwrap().kind() == CXCursor_NamespaceRef)
+        {
+            semantic_parent =
+                semantic_parent.unwrap().fallible_semantic_parent();
         }
 
         let tu = self.translation_unit();
@@ -256,8 +259,8 @@ impl Cursor {
     /// remaining free template arguments?
     pub fn is_fully_specialized_template(&self) -> bool {
         self.is_template_specialization() &&
-        self.kind() != CXCursor_ClassTemplatePartialSpecialization &&
-        self.num_template_args().unwrap_or(0) > 0
+            self.kind() != CXCursor_ClassTemplatePartialSpecialization &&
+            self.num_template_args().unwrap_or(0) > 0
     }
 
     /// Is the referent a template specialization that still has remaining free
@@ -388,12 +391,15 @@ impl Cursor {
     ///
     /// Call the given function on each AST node traversed.
     pub fn visit<Visitor>(&self, mut visitor: Visitor)
-        where Visitor: FnMut(Cursor) -> CXChildVisitResult,
+    where
+        Visitor: FnMut(Cursor) -> CXChildVisitResult,
     {
         unsafe {
-            clang_visitChildren(self.x,
-                                visit_children::<Visitor>,
-                                mem::transmute(&mut visitor));
+            clang_visitChildren(
+                self.x,
+                visit_children::<Visitor>,
+                mem::transmute(&mut visitor),
+            );
         }
     }
 
@@ -451,7 +457,7 @@ impl Cursor {
     /// Is the referent an inlined function?
     pub fn is_inlined_function(&self) -> bool {
         clang_Cursor_isFunctionInlined::is_loaded() &&
-        unsafe { clang_Cursor_isFunctionInlined(self.x) != 0 }
+            unsafe { clang_Cursor_isFunctionInlined(self.x) != 0 }
     }
 
     /// Get the width of this cursor's referent bit field, or `None` if the
@@ -572,7 +578,7 @@ impl Cursor {
     /// `mutable`?
     pub fn is_mutable_field(&self) -> bool {
         clang_CXXField_isMutable::is_loaded() &&
-        unsafe { clang_CXXField_isMutable(self.x) != 0 }
+            unsafe { clang_CXXField_isMutable(self.x) != 0 }
     }
 
     /// Get the offset of the field represented by the Cursor.
@@ -628,18 +634,21 @@ impl Cursor {
 /// (including '_') and does not start with a digit.
 pub fn is_valid_identifier(name: &str) -> bool {
     let mut chars = name.chars();
-    let first_valid = chars.next()
+    let first_valid = chars
+        .next()
         .map(|c| c.is_alphabetic() || c == '_')
         .unwrap_or(false);
 
     first_valid && chars.all(|c| c.is_alphanumeric() || c == '_')
 }
 
-extern "C" fn visit_children<Visitor>(cur: CXCursor,
-                                      _parent: CXCursor,
-                                      data: CXClientData)
-                                      -> CXChildVisitResult
-    where Visitor: FnMut(Cursor) -> CXChildVisitResult,
+extern "C" fn visit_children<Visitor>(
+    cur: CXCursor,
+    _parent: CXCursor,
+    data: CXClientData,
+) -> CXChildVisitResult
+where
+    Visitor: FnMut(Cursor) -> CXChildVisitResult,
 {
     let func: &mut Visitor = unsafe { mem::transmute(data) };
     let child = Cursor {
@@ -679,13 +688,15 @@ impl Eq for Type {}
 
 impl fmt::Debug for Type {
     fn fmt(&self, fmt: &mut fmt::Formatter) -> fmt::Result {
-        write!(fmt,
-               "Type({}, kind: {}, cconv: {}, decl: {:?}, canon: {:?})",
-               self.spelling(),
-               type_to_str(self.kind()),
-               self.call_conv(),
-               self.declaration(),
-               self.declaration().canonical())
+        write!(
+            fmt,
+            "Type({}, kind: {}, cconv: {}, decl: {:?}, canon: {:?})",
+            self.spelling(),
+            type_to_str(self.kind()),
+            self.call_conv(),
+            self.declaration(),
+            self.declaration().canonical()
+        )
     }
 }
 
@@ -738,9 +749,10 @@ impl Type {
     }
 
     /// Get the canonical declaration of this type, if it is available.
-    pub fn canonical_declaration(&self,
-                                 location: Option<&Cursor>)
-                                 -> Option<CanonicalTypeDeclaration> {
+    pub fn canonical_declaration(
+        &self,
+        location: Option<&Cursor>,
+    ) -> Option<CanonicalTypeDeclaration> {
         let mut declaration = self.declaration();
         if !declaration.is_valid() {
             if let Some(location) = location {
@@ -957,12 +969,12 @@ impl Type {
         // nasty... But can happen in <type_traits>. Unfortunately I couldn't
         // reduce it enough :(
         self.template_args().map_or(false, |args| args.len() > 0) &&
-        match self.declaration().kind() {
-            CXCursor_ClassTemplatePartialSpecialization |
-            CXCursor_TypeAliasTemplateDecl |
-            CXCursor_TemplateTemplateParameter => false,
-            _ => true,
-        }
+            match self.declaration().kind() {
+                CXCursor_ClassTemplatePartialSpecialization |
+                CXCursor_TypeAliasTemplateDecl |
+                CXCursor_TemplateTemplateParameter => false,
+                _ => true,
+            }
     }
 
     /// Is this type an associated template type? Eg `T::Associated` in
@@ -985,8 +997,8 @@ impl Type {
         }
 
         self.kind() == CXType_Unexposed &&
-        (hacky_parse_associated_type(self.spelling()) ||
-         hacky_parse_associated_type(self.canonical_type().spelling()))
+            (hacky_parse_associated_type(self.spelling()) ||
+                 hacky_parse_associated_type(self.canonical_type().spelling()))
     }
 }
 
@@ -1054,17 +1066,21 @@ impl SourceLocation {
             let mut line = 0;
             let mut col = 0;
             let mut off = 0;
-            clang_getSpellingLocation(self.x,
-                                      &mut file,
-                                      &mut line,
-                                      &mut col,
-                                      &mut off);
-            (File {
-                 x: file,
-             },
-             line as usize,
-             col as usize,
-             off as usize)
+            clang_getSpellingLocation(
+                self.x,
+                &mut file,
+                &mut line,
+                &mut col,
+                &mut off,
+            );
+            (
+                File {
+                    x: file,
+                },
+                line as usize,
+                col as usize,
+                off as usize,
+            )
         }
     }
 }
@@ -1164,11 +1180,13 @@ impl Iterator for CommentAttributesIterator {
             Some(CommentAttribute {
                 name: unsafe {
                     cxstring_into_string(
-                        clang_HTMLStartTag_getAttrName(self.x, idx))
+                        clang_HTMLStartTag_getAttrName(self.x, idx),
+                    )
                 },
                 value: unsafe {
                     cxstring_into_string(
-                        clang_HTMLStartTag_getAttrValue(self.x, idx))
+                        clang_HTMLStartTag_getAttrValue(self.x, idx),
+                    )
                 },
             })
         } else {
@@ -1264,27 +1282,32 @@ impl fmt::Debug for TranslationUnit {
 
 impl TranslationUnit {
     /// Parse a source file into a translation unit.
-    pub fn parse(ix: &Index,
-                 file: &str,
-                 cmd_args: &[String],
-                 unsaved: &[UnsavedFile],
-                 opts: CXTranslationUnit_Flags)
-                 -> Option<TranslationUnit> {
+    pub fn parse(
+        ix: &Index,
+        file: &str,
+        cmd_args: &[String],
+        unsaved: &[UnsavedFile],
+        opts: CXTranslationUnit_Flags,
+    ) -> Option<TranslationUnit> {
         let fname = CString::new(file).unwrap();
-        let _c_args: Vec<CString> =
-            cmd_args.iter().map(|s| CString::new(s.clone()).unwrap()).collect();
+        let _c_args: Vec<CString> = cmd_args
+            .iter()
+            .map(|s| CString::new(s.clone()).unwrap())
+            .collect();
         let c_args: Vec<*const c_char> =
             _c_args.iter().map(|s| s.as_ptr()).collect();
         let mut c_unsaved: Vec<CXUnsavedFile> =
             unsaved.iter().map(|f| f.x).collect();
         let tu = unsafe {
-            clang_parseTranslationUnit(ix.x,
-                                       fname.as_ptr(),
-                                       c_args.as_ptr(),
-                                       c_args.len() as c_int,
-                                       c_unsaved.as_mut_ptr(),
-                                       c_unsaved.len() as c_uint,
-                                       opts)
+            clang_parseTranslationUnit(
+                ix.x,
+                fname.as_ptr(),
+                c_args.as_ptr(),
+                c_args.len() as c_int,
+                c_unsaved.as_mut_ptr(),
+                c_unsaved.len() as c_uint,
+                opts,
+            )
         };
         if tu.is_null() {
             None
@@ -1337,8 +1360,8 @@ impl TranslationUnit {
                 return None;
             }
 
-            let token_array = slice::from_raw_parts(token_ptr,
-                                                    num_tokens as usize);
+            let token_array =
+                slice::from_raw_parts(token_ptr, num_tokens as usize);
             for &token in token_array.iter() {
                 let kind = clang_getTokenKind(token);
                 let spelling =
@@ -1356,9 +1379,10 @@ impl TranslationUnit {
 
     /// Convert a set of tokens from clang into `cexpr` tokens, for further
     /// processing.
-    pub fn cexpr_tokens(&self,
-                        cursor: &Cursor)
-                        -> Option<Vec<cexpr::token::Token>> {
+    pub fn cexpr_tokens(
+        &self,
+        cursor: &Cursor,
+    ) -> Option<Vec<cexpr::token::Token>> {
         use cexpr::token;
 
         self.tokens(cursor).map(|tokens| {
@@ -1375,7 +1399,7 @@ impl TranslationUnit {
                         CXToken_Comment => return None,
                         _ => {
                             error!("Found unexpected token kind: {:?}", token);
-                            return None
+                            return None;
                         }
                     };
 
@@ -1457,10 +1481,12 @@ impl UnsavedFile {
 
 impl fmt::Debug for UnsavedFile {
     fn fmt(&self, fmt: &mut fmt::Formatter) -> fmt::Result {
-        write!(fmt,
-               "UnsavedFile(name: {:?}, contents: {:?})",
-               self.name,
-               self.contents)
+        write!(
+            fmt,
+            "UnsavedFile(name: {:?}, contents: {:?})",
+            self.name,
+            self.contents
+        )
     }
 }
 
@@ -1485,30 +1511,38 @@ pub fn ast_dump(c: &Cursor, depth: isize) -> CXChildVisitResult {
 
     fn print_cursor<S: AsRef<str>>(depth: isize, prefix: S, c: &Cursor) {
         let prefix = prefix.as_ref();
-        print_indent(depth,
-                     format!(" {}kind = {}", prefix, kind_to_str(c.kind())));
-        print_indent(depth,
-                     format!(" {}spelling = \"{}\"", prefix, c.spelling()));
+        print_indent(
+            depth,
+            format!(" {}kind = {}", prefix, kind_to_str(c.kind())),
+        );
+        print_indent(
+            depth,
+            format!(" {}spelling = \"{}\"", prefix, c.spelling()),
+        );
         print_indent(depth, format!(" {}location = {}", prefix, c.location()));
-        print_indent(depth,
-                     format!(" {}is-definition? {}",
-                             prefix,
-                             c.is_definition()));
-        print_indent(depth,
-                     format!(" {}is-declaration? {}",
-                             prefix,
-                             c.is_declaration()));
-        print_indent(depth,
-                     format!(" {}is-inlined-function? {}",
-                             prefix,
-                             c.is_inlined_function()));
+        print_indent(
+            depth,
+            format!(" {}is-definition? {}", prefix, c.is_definition()),
+        );
+        print_indent(
+            depth,
+            format!(" {}is-declaration? {}", prefix, c.is_declaration()),
+        );
+        print_indent(
+            depth,
+            format!(
+                " {}is-inlined-function? {}",
+                prefix,
+                c.is_inlined_function()
+            ),
+        );
 
         let templ_kind = c.template_kind();
         if templ_kind != CXCursor_NoDeclFound {
-            print_indent(depth,
-                         format!(" {}template-kind = {}",
-                                 prefix,
-                                 kind_to_str(templ_kind)));
+            print_indent(
+                depth,
+                format!(" {}template-kind = {}", prefix, kind_to_str(templ_kind)),
+            );
         }
         if let Some(usr) = c.usr() {
             print_indent(depth, format!(" {}usr = \"{}\"", prefix, usr));
@@ -1517,67 +1551,75 @@ pub fn ast_dump(c: &Cursor, depth: isize) -> CXChildVisitResult {
             print_indent(depth, format!(" {}number-of-args = {}", prefix, num));
         }
         if let Some(num) = c.num_template_args() {
-            print_indent(depth,
-                         format!(" {}number-of-template-args = {}",
-                                 prefix,
-                                 num));
+            print_indent(
+                depth,
+                format!(" {}number-of-template-args = {}", prefix, num),
+            );
         }
         if let Some(width) = c.bit_width() {
             print_indent(depth, format!(" {}bit-width = {}", prefix, width));
         }
         if let Some(ty) = c.enum_type() {
-            print_indent(depth,
-                         format!(" {}enum-type = {}",
-                                 prefix,
-                                 type_to_str(ty.kind())));
+            print_indent(
+                depth,
+                format!(" {}enum-type = {}", prefix, type_to_str(ty.kind())),
+            );
         }
         if let Some(val) = c.enum_val_signed() {
             print_indent(depth, format!(" {}enum-val = {}", prefix, val));
         }
         if let Some(ty) = c.typedef_type() {
-            print_indent(depth,
-                         format!(" {}typedef-type = {}",
-                                 prefix,
-                                 type_to_str(ty.kind())));
+            print_indent(
+                depth,
+                format!(" {}typedef-type = {}", prefix, type_to_str(ty.kind())),
+            );
         }
         if let Some(ty) = c.ret_type() {
-            print_indent(depth,
-                         format!(" {}ret-type = {}",
-                                 prefix,
-                                 type_to_str(ty.kind())));
+            print_indent(
+                depth,
+                format!(" {}ret-type = {}", prefix, type_to_str(ty.kind())),
+            );
         }
 
         if let Some(refd) = c.referenced() {
             if refd != *c {
                 println!("");
-                print_cursor(depth,
-                             String::from(prefix) + "referenced.",
-                             &refd);
+                print_cursor(
+                    depth,
+                    String::from(prefix) + "referenced.",
+                    &refd,
+                );
             }
         }
 
         let canonical = c.canonical();
         if canonical != *c {
             println!("");
-            print_cursor(depth,
-                         String::from(prefix) + "canonical.",
-                         &canonical);
+            print_cursor(
+                depth,
+                String::from(prefix) + "canonical.",
+                &canonical,
+            );
         }
 
         if let Some(specialized) = c.specialized() {
             if specialized != *c {
                 println!("");
-                print_cursor(depth,
-                             String::from(prefix) + "specialized.",
-                             &specialized);
+                print_cursor(
+                    depth,
+                    String::from(prefix) + "specialized.",
+                    &specialized,
+                );
             }
         }
 
         if let Some(parent) = c.fallible_semantic_parent() {
             println!("");
-            print_cursor(depth,
-                         String::from(prefix) + "semantic-parent.",
-                         &parent);
+            print_cursor(
+                depth,
+                String::from(prefix) + "semantic-parent.",
+                &parent,
+            );
         }
     }
 
@@ -1592,22 +1634,32 @@ pub fn ast_dump(c: &Cursor, depth: isize) -> CXChildVisitResult {
 
         print_indent(depth, format!(" {}cconv = {}", prefix, ty.call_conv()));
 
-        print_indent(depth,
-                     format!(" {}spelling = \"{}\"", prefix, ty.spelling()));
+        print_indent(
+            depth,
+            format!(" {}spelling = \"{}\"", prefix, ty.spelling()),
+        );
         let num_template_args =
             unsafe { clang_Type_getNumTemplateArguments(ty.x) };
         if num_template_args >= 0 {
-            print_indent(depth,
-                         format!(" {}number-of-template-args = {}",
-                                 prefix,
-                                 num_template_args));
+            print_indent(
+                depth,
+                format!(
+                    " {}number-of-template-args = {}",
+                    prefix,
+                    num_template_args
+                ),
+            );
         }
         if let Some(num) = ty.num_elements() {
-            print_indent(depth,
-                         format!(" {}number-of-elements = {}", prefix, num));
+            print_indent(
+                depth,
+                format!(" {}number-of-elements = {}", prefix, num),
+            );
         }
-        print_indent(depth,
-                     format!(" {}is-variadic? {}", prefix, ty.is_variadic()));
+        print_indent(
+            depth,
+            format!(" {}is-variadic? {}", prefix, ty.is_variadic()),
+        );
 
         let canonical = ty.canonical_type();
         if canonical != *ty {
@@ -1699,7 +1751,8 @@ impl EvalResult {
         // `CXType_Unexposed` from evaluation.
         let mut found_cant_eval = false;
         cursor.visit(|c| if c.kind() == CXCursor_TypeRef &&
-                            c.cur_type().kind() == CXType_Unexposed {
+            c.cur_type().kind() == CXType_Unexposed
+        {
             found_cant_eval = true;
             CXChildVisit_Break
         } else {

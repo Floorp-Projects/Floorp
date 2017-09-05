@@ -70,6 +70,8 @@
 #define PORT_UCS2_ASCIIConversion PORT_UCS2_ASCIIConversion_Util
 #define PORT_UCS2_UTF8Conversion PORT_UCS2_UTF8Conversion_Util
 #define PORT_ZAlloc PORT_ZAlloc_Util
+#define PORT_ZAllocAligned PORT_ZAllocAligned_Util
+#define PORT_ZAllocAlignedOffset PORT_ZAllocAlignedOffset_Util
 #define PORT_ZFree PORT_ZFree_Util
 #define SEC_ASN1Decode SEC_ASN1Decode_Util
 #define SEC_ASN1DecodeInteger SEC_ASN1DecodeInteger_Util
