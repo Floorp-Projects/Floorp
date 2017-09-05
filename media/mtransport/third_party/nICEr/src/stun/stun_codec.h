@@ -70,7 +70,7 @@ extern nr_stun_attr_codec nr_stun_attr_codec_xor_mapped_address;
 extern nr_stun_attr_codec nr_stun_attr_codec_xor_peer_address;
 extern nr_stun_attr_codec nr_stun_attr_codec_old_xor_mapped_address;
 
-
+size_t nr_count_utf8_code_points_without_validation(const char *s);
 int nr_stun_encode_message(nr_stun_message *msg);
 int nr_stun_decode_message(nr_stun_message *msg, int (*get_password)(void *arg, nr_stun_message *msg, Data **password), void *arg);
 
