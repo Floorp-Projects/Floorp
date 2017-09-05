@@ -1017,7 +1017,7 @@ nsFtpState::S_cwd() {
         cwdStr.Insert(mPwd,0);
     if (mServerType == FTP_VMS_TYPE)
         ConvertDirspecToVMS(cwdStr);
-    cwdStr.Insert("CWD ",0);
+    cwdStr.InsertLiteral("CWD ", 0);
     cwdStr.AppendLiteral(CRLF);
 
     return SendFTPCommand(cwdStr);
@@ -1042,7 +1042,7 @@ nsFtpState::S_size() {
         sizeBuf.Insert(mPwd,0);
     if (mServerType == FTP_VMS_TYPE)
         ConvertFilespecToVMS(sizeBuf);
-    sizeBuf.Insert("SIZE ",0);
+    sizeBuf.InsertLiteral("SIZE ", 0);
     sizeBuf.AppendLiteral(CRLF);
 
     return SendFTPCommand(sizeBuf);
@@ -1066,7 +1066,7 @@ nsFtpState::S_mdtm() {
         mdtmBuf.Insert(mPwd,0);
     if (mServerType == FTP_VMS_TYPE)
         ConvertFilespecToVMS(mdtmBuf);
-    mdtmBuf.Insert("MDTM ",0);
+    mdtmBuf.InsertLiteral("MDTM ", 0);
     mdtmBuf.AppendLiteral(CRLF);
 
     return SendFTPCommand(mdtmBuf);
@@ -1209,7 +1209,7 @@ nsFtpState::S_retr() {
         retrStr.Insert(mPwd,0);
     if (mServerType == FTP_VMS_TYPE)
         ConvertFilespecToVMS(retrStr);
-    retrStr.Insert("RETR ",0);
+    retrStr.InsertLiteral("RETR ", 0);
     retrStr.AppendLiteral(CRLF);
 
     return SendFTPCommand(retrStr);
@@ -1288,7 +1288,7 @@ nsFtpState::S_stor() {
         ConvertFilespecToVMS(storStr);
 
     NS_UnescapeURL(storStr);
-    storStr.Insert("STOR ",0);
+    storStr.InsertLiteral("STOR ", 0);
     storStr.AppendLiteral(CRLF);
 
     return SendFTPCommand(storStr);
@@ -2194,4 +2194,3 @@ nsFtpState::OnCallbackPending()
         mDataStream->AsyncWait(this, 0, 0, CallbackTarget());
     }
 }
-
