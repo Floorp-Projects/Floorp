@@ -9928,39 +9928,6 @@ nsDocShell::InternalLoad(nsIURI* aURI,
     isTargetTopLevelDocShell = true;
   }
 
-  if (contentType == nsIContentPolicy::TYPE_DOCUMENT &&
-      nsIOService::BlockToplevelDataUriNavigations()) {
-    bool isDataURI =
-      (NS_SUCCEEDED(aURI->SchemeIs("data", &isDataURI)) && isDataURI);
-    // Let's block all toplevel document navigations to a data: URI.
-    // In all cases where the toplevel document is navigated to a
-    // data: URI the triggeringPrincipal is a codeBasePrincipal, or
-    // a NullPrincipal. In other cases, e.g. typing a data: URL into
-    // the URL-Bar, the triggeringPrincipal is a SystemPrincipal;
-    // we don't want to block those loads. Only exception, loads coming
-    // from an external applicaton (e.g. Thunderbird) don't load
-    // using a codeBasePrincipal, but we want to block those loads.
-    bool loadFromExternal =
-      LOAD_TYPE_HAS_FLAGS(aLoadType, LOAD_NORMAL_EXTERNAL);
-    if (isDataURI && (loadFromExternal || 
-        !nsContentUtils::IsSystemPrincipal(aTriggeringPrincipal))) {
-      NS_ConvertUTF8toUTF16 specUTF16(aURI->GetSpecOrDefault());
-      if (specUTF16.Length() > 50) {
-        specUTF16.Truncate(50);
-        specUTF16.AppendLiteral("...");
-      }
-      const char16_t* params[] = { specUTF16.get() };
-      nsContentUtils::ReportToConsole(nsIScriptError::warningFlag,
-                                      NS_LITERAL_CSTRING("DATA_URI_BLOCKED"),
-                                      // no doc available, log to browser console
-                                      nullptr,
-                                      nsContentUtils::eSECURITY_PROPERTIES,
-                                      "BlockTopLevelDataURINavigation",
-                                      params, ArrayLength(params));
-      return NS_OK;
-    }
-  }
-
   // If there's no targetDocShell, that means we are about to create a new
   // window (or aWindowTarget is empty). Perform a content policy check before
   // creating the window.
@@ -11137,6 +11104,37 @@ nsDocShell::DoURILoad(nsIURI* aURI,
                    securityFlags) :
       new LoadInfo(loadingPrincipal, aTriggeringPrincipal, loadingNode,
                    securityFlags, aContentPolicyType);
+
+  if (aContentPolicyType == nsIContentPolicy::TYPE_DOCUMENT &&
+      nsIOService::BlockToplevelDataUriNavigations()) {
+    bool isDataURI =
+      (NS_SUCCEEDED(aURI->SchemeIs("data", &isDataURI)) && isDataURI);
+    // Let's block all toplevel document navigations to a data: URI.
+    // In all cases where the toplevel document is navigated to a
+    // data: URI the triggeringPrincipal is a codeBasePrincipal, or
+    // a NullPrincipal. In other cases, e.g. typing a data: URL into
+    // the URL-Bar, the triggeringPrincipal is a SystemPrincipal;
+    // we don't want to block those loads. Only exception, loads coming
+    // from an external applicaton (e.g. Thunderbird) don't load
+    // using a codeBasePrincipal, but we want to block those loads.
+    if (isDataURI && (aLoadFromExternal || 
+        !nsContentUtils::IsSystemPrincipal(aTriggeringPrincipal))) {
+      NS_ConvertUTF8toUTF16 specUTF16(aURI->GetSpecOrDefault());
+      if (specUTF16.Length() > 50) {
+        specUTF16.Truncate(50);
+        specUTF16.AppendLiteral("...");
+      }
+      const char16_t* params[] = { specUTF16.get() };
+      nsContentUtils::ReportToConsole(nsIScriptError::warningFlag,
+                                      NS_LITERAL_CSTRING("DATA_URI_BLOCKED"),
+                                      // no doc available, log to browser console
+                                      nullptr,
+                                      nsContentUtils::eSECURITY_PROPERTIES,
+                                      "BlockTopLevelDataURINavigation",
+                                      params, ArrayLength(params));
+      return NS_OK;
+    }
+  }
 
   if (aPrincipalToInherit) {
     loadInfo->SetPrincipalToInherit(aPrincipalToInherit);
