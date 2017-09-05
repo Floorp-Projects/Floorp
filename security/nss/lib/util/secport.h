@@ -45,6 +45,7 @@
 #include <string.h>
 #include <stddef.h>
 #include <stdlib.h>
+#include <stdint.h>
 #include "prtypes.h"
 #include "prlog.h" /* for PR_ASSERT */
 #include "plarena.h"
@@ -88,6 +89,9 @@ SEC_BEGIN_PROTOS
 extern void *PORT_Alloc(size_t len);
 extern void *PORT_Realloc(void *old, size_t len);
 extern void *PORT_ZAlloc(size_t len);
+extern void *PORT_ZAllocAligned(size_t bytes, size_t alignment, void **mem);
+extern void *PORT_ZAllocAlignedOffset(size_t bytes, size_t alignment,
+                                      size_t offset);
 extern void PORT_Free(void *ptr);
 extern void PORT_ZFree(void *ptr, size_t len);
 extern char *PORT_Strdup(const char *s);
@@ -131,6 +135,8 @@ SEC_END_PROTOS
 #define PORT_CheckSuccess(f) (f)
 #endif
 #define PORT_ZNew(type) (type *)PORT_ZAlloc(sizeof(type))
+#define PORT_ZNewAligned(type, alignment, mem) \
+    (type *)PORT_ZAllocAlignedOffset(sizeof(type), alignment, offsetof(type, mem))
 #define PORT_New(type) (type *)PORT_Alloc(sizeof(type))
 #define PORT_ArenaNew(poolp, type) \
     (type *)PORT_ArenaAlloc(poolp, sizeof(type))
@@ -246,6 +252,7 @@ sec_port_iso88591_utf8_conversion_function(
 extern int NSS_PutEnv(const char *envVarName, const char *envValue);
 
 extern int NSS_SecureMemcmp(const void *a, const void *b, size_t n);
+extern unsigned int NSS_SecureMemcmpZero(const void *mem, size_t n);
 
 /*
  * Load a shared library called "newShLibName" in the same directory as
