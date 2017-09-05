@@ -354,6 +354,8 @@ js::jit::AtomicOperations::loadSafeWhenRacy(T* addr)
 
 namespace js { namespace jit {
 
+// For double and float there are no access-atomicity guarantees so go directly
+// to the default implementation.
 MSC_RACYLOADOP(int64_t)
 MSC_RACYLOADOP(uint64_t)
 
@@ -389,6 +391,8 @@ namespace js { namespace jit {
         }                                                 \
     }
 
+// For double and float there are no access-atomicity guarantees so go directly
+// to the default implementation.
 MSC_RACYSTOREOP(int64_t)
 MSC_RACYSTOREOP(uint64_t)
 
