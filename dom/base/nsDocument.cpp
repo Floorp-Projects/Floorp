@@ -13183,9 +13183,15 @@ nsDocument::UpdateIntersectionObservations()
       time = perf->Now();
     }
   }
+  nsTArray<RefPtr<DOMIntersectionObserver>> observers(mIntersectionObservers.Count());
   for (auto iter = mIntersectionObservers.Iter(); !iter.Done(); iter.Next()) {
     DOMIntersectionObserver* observer = iter.Get()->GetKey();
-    observer->Update(this, time);
+      observers.AppendElement(observer);
+  }
+  for (const auto& observer : observers) {
+    if (observer) {
+      observer->Update(this, time);
+    }
   }
 }
 
@@ -13212,7 +13218,9 @@ nsDocument::NotifyIntersectionObservers()
     observers.AppendElement(observer);
   }
   for (const auto& observer : observers) {
-    observer->Notify();
+    if (observer) {
+      observer->Notify();
+    }
   }
 }
 
