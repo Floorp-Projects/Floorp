@@ -6,6 +6,7 @@
 
 import json
 import os
+import re
 import utils
 
 KEY_XRE = '{xre}'
@@ -70,9 +71,12 @@ class Whitelist:
                 filename = "%s%s" % (subst, path.join(parts[1:]))
 
         for old_name, new_name in self.name_substitutions.iteritems():
-            parts = filename.split(old_name)
-            if len(parts) >= 2:
-                filename = "%s%s" % (parts[0], new_name)
+            if isinstance(old_name, re._pattern_type):
+                filename = re.sub(old_name, new_name, filename)
+            else:
+                parts = filename.split(old_name)
+                if len(parts) >= 2:
+                    filename = "%s%s" % (parts[0], new_name)
 
         return filename.strip('/\\\ \t')
 
