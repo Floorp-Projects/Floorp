@@ -158,3 +158,20 @@ test tests::it_adds_one ... ok
 
 test result: ok. 1 passed; 0 failed; 0 ignored; 0 measured
 ```
+
+## Configuring log target
+
+By default, `env_logger` logs to stderr. If you want to log to stdout instead,
+you can use the `LogBuilder` to change the log target:
+
+```rust
+use std::env;
+use env_logger::{LogBuilder, LogTarget};
+
+let mut builder = LogBuilder::new();
+builder.target(LogTarget::Stdout);
+if env::var("RUST_LOG").is_ok() {
+    builder.parse(&env::var("RUST_LOG").unwrap());
+}
+builder.init().unwrap();
+```
