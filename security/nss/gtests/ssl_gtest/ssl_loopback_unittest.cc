@@ -226,14 +226,14 @@ TEST_P(TlsConnectStream, ShortRead) {
   ASSERT_EQ(50U, client_->received_bytes());
 }
 
-// We enable compression via the API but it's disabled internally,
-// so we should never get it.
-TEST_P(TlsConnectGeneric, ConnectWithCompressionEnabled) {
+TEST_P(TlsConnectGeneric, ConnectWithCompressionMaybe) {
   EnsureTlsSetup();
   client_->EnableCompression();
   server_->EnableCompression();
   Connect();
-  EXPECT_FALSE(client_->is_compressed());
+  EXPECT_EQ(client_->version() < SSL_LIBRARY_VERSION_TLS_1_3 &&
+                variant_ != ssl_variant_datagram,
+            client_->is_compressed());
   SendReceive();
 }
 
