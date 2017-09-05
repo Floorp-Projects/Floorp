@@ -188,6 +188,12 @@ file, You can obtain one at http://mozilla.org/MPL/2.0/.
                 onget="return this.popup.maxResults;"/>
 
       <!--
+        Set by focusAndSelectUrlBar to indicate whether the next focus event was
+        initiated by an explicit user action. See the "focus" handler below.
+      -->
+      <field name="userInitiatedFocus">false</field>
+
+      <!--
         onBeforeValueGet is called by the base-binding's .value getter.
         It can return an object with a "value" property, to override the
         return value of the getter.
@@ -1453,6 +1459,27 @@ file, You can obtain one at http://mozilla.org/MPL/2.0/.
         ]]></body>
       </method>
 
+      <method name="maybeShowSearchSuggestionsNotificationOnFocus">
+        <parameter name="mouseFocused"/>
+        <body><![CDATA[
+          let whichNotification = this.whichSearchSuggestionsNotification;
+          if (this._showSearchSuggestionNotificationOnMouseFocus &&
+              mouseFocused) {
+            // Force showing the opt-out notification.
+            this._whichSearchSuggestionsNotification = whichNotification = "opt-out";
+          }
+          if (whichNotification == "opt-out") {
+            try {
+              this.popup.openAutocompletePopup(this, this);
+            } finally {
+              if (mouseFocused) {
+                delete this._whichSearchSuggestionsNotification;
+                this._showSearchSuggestionNotificationOnMouseFocus = false;
+              }
+            }
+          }
+        ]]></body>
+      </method>
     </implementation>
 
     <handlers>
@@ -1477,6 +1504,14 @@ file, You can obtain one at http://mozilla.org/MPL/2.0/.
         }
       ]]></handler>
 
+      <handler event="mousedown"><![CDATA[
+        // Eventually show the opt-out notification even if the location bar is
+        // empty, focused, and the user clicks on it.
+        if (event.button == 0 && this.focused && this.textValue == "") {
+          this.maybeShowSearchSuggestionsNotificationOnFocus(true);
+        }
+      ]]></handler>
+
       <handler event="focus"><![CDATA[
         if (event.originalTarget == this.inputField) {
           this._hideURLTooltip();
@@ -1485,8 +1520,8 @@ file, You can obtain one at http://mozilla.org/MPL/2.0/.
             UpdatePopupNotificationsVisibility();
           }
 
-          // We show the opt-out notification on every kind of focus to the urlbar
-          // included opening a new tab, but we want to enforce at least one
+          // We show the opt-out notification when the mouse/keyboard focus the
+          // urlbar, but in any case we want to enforce at least one
           // notification when the user focuses it with the mouse.
           let whichNotification = this.whichSearchSuggestionsNotification;
           if (whichNotification == "opt-out" &&
@@ -1494,25 +1529,16 @@ file, You can obtain one at http://mozilla.org/MPL/2.0/.
             this._showSearchSuggestionNotificationOnMouseFocus = true;
           }
 
-          // Check whether the focus change came from a user mouse action.
+          // Check whether the focus change came from a keyboard/mouse action.
           let focusMethod = Services.focus.getLastFocusMethod(window);
-          let mouseFocused = !!(focusMethod & Services.focus.FLAG_BYMOUSE);
-          if (this._showSearchSuggestionNotificationOnMouseFocus &&
-              mouseFocused) {
-            // Force showing the opt-out notification.
-            this._whichSearchSuggestionsNotification = whichNotification = "opt-out";
+          // If it's a focus started by code and the primary user intention was
+          // not to go to the location bar, don't show a notification.
+          if (!focusMethod && !this.userInitiatedFocus) {
+            return;
           }
 
-          if (whichNotification == "opt-out") {
-            try {
-              this.popup.openAutocompletePopup(this, this);
-            } finally {
-              if (mouseFocused) {
-                delete this._whichSearchSuggestionsNotification;
-                this._showSearchSuggestionNotificationOnMouseFocus = false;
-              }
-            }
-          }
+          let mouseFocused = !!(focusMethod & Services.focus.FLAG_BYMOUSE);
+          this.maybeShowSearchSuggestionsNotificationOnFocus(mouseFocused);
         }
       ]]></handler>
 

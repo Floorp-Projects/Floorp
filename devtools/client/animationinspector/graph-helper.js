@@ -62,9 +62,9 @@ function ProgressGraphHelper(win, propertyCSSName, animationType, keyframes, dur
 
   this.keyframes = keyframesObject;
   this.devtoolsKeyframes = keyframes;
+  this.valueHelperFunction = this.getValueHelperFunction();
   this.animation = this.targetEl.animate(this.keyframes, effectTiming);
   this.animation.pause();
-  this.valueHelperFunction = this.getValueHelperFunction();
 }
 
 ProgressGraphHelper.prototype = {
@@ -216,10 +216,15 @@ ProgressGraphHelper.prototype = {
   getDiscreteValueHelperFunction: function () {
     const discreteValues = [];
     this.keyframes.forEach(keyframe => {
-      if (!discreteValues.includes(keyframe.value)) {
-        discreteValues.push(keyframe.value);
+      // Set style once since the computed value may differ from specified keyframe value.
+      this.targetEl.style[this.propertyJSName] = keyframe.value;
+      const style = this.win.getComputedStyle(this.targetEl)[this.propertyJSName];
+      if (!discreteValues.includes(style)) {
+        discreteValues.push(style);
       }
     });
+    this.targetEl.style[this.propertyJSName] = "unset";
+
     return value => {
       return discreteValues.indexOf(value) / (discreteValues.length - 1);
     };

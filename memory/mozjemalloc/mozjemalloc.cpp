@@ -420,12 +420,12 @@ static pthread_key_t tlsIndex;
 #define malloc_mutex_t CRITICAL_SECTION
 #define malloc_spinlock_t CRITICAL_SECTION
 #elif defined(XP_DARWIN)
-typedef struct {
+struct malloc_mutex_t {
 	OSSpinLock	lock;
-} malloc_mutex_t;
-typedef struct {
+};
+struct malloc_spinlock_t {
 	OSSpinLock	lock;
-} malloc_spinlock_t;
+};
 #else
 typedef pthread_mutex_t malloc_mutex_t;
 typedef pthread_mutex_t malloc_spinlock_t;
@@ -449,14 +449,12 @@ static malloc_mutex_t init_lock = PTHREAD_MUTEX_INITIALIZER;
  * Statistics data structures.
  */
 
-typedef struct malloc_bin_stats_s malloc_bin_stats_t;
-struct malloc_bin_stats_s {
+struct malloc_bin_stats_t {
 	/* Current number of runs in this bin. */
 	unsigned long	curruns;
 };
 
-typedef struct arena_stats_s arena_stats_t;
-struct arena_stats_s {
+struct arena_stats_t {
 	/* Number of bytes currently mapped. */
 	size_t		mapped;
 
@@ -483,8 +481,7 @@ enum ChunkType {
 };
 
 /* Tree of extents. */
-typedef struct extent_node_s extent_node_t;
-struct extent_node_s {
+struct extent_node_t {
 	/* Linkage for the size/address-ordered tree. */
 	rb_node(extent_node_t) link_szad;
 
@@ -517,8 +514,7 @@ typedef rb_tree(extent_node_t) extent_tree_t;
 #  define MALLOC_RTREE_NODESIZE CACHELINE
 #endif
 
-typedef struct malloc_rtree_s malloc_rtree_t;
-struct malloc_rtree_s {
+struct malloc_rtree_t {
 	malloc_spinlock_t	lock;
 	void			**root;
 	unsigned		height;
@@ -530,12 +526,11 @@ struct malloc_rtree_s {
  * Arena data structures.
  */
 
-typedef struct arena_s arena_t;
-typedef struct arena_bin_s arena_bin_t;
+struct arena_t;
+struct arena_bin_t;
 
 /* Each element of the chunk map corresponds to one page within the chunk. */
-typedef struct arena_chunk_map_s arena_chunk_map_t;
-struct arena_chunk_map_s {
+struct arena_chunk_map_t {
 	/*
 	 * Linkage for run trees.  There are two disjoint uses:
 	 *
@@ -618,8 +613,7 @@ typedef rb_tree(arena_chunk_map_t) arena_avail_tree_t;
 typedef rb_tree(arena_chunk_map_t) arena_run_tree_t;
 
 /* Arena chunk header. */
-typedef struct arena_chunk_s arena_chunk_t;
-struct arena_chunk_s {
+struct arena_chunk_t {
 	/* Arena that owns the chunk. */
 	arena_t		*arena;
 
@@ -644,8 +638,7 @@ struct arena_chunk_s {
 };
 typedef rb_tree(arena_chunk_t) arena_chunk_tree_t;
 
-typedef struct arena_run_s arena_run_t;
-struct arena_run_s {
+struct arena_run_t {
 #if defined(MOZ_DEBUG) || defined(MOZ_DIAGNOSTIC_ASSERT_ENABLED)
 	uint32_t	magic;
 #  define ARENA_RUN_MAGIC 0x384adf93
@@ -664,7 +657,7 @@ struct arena_run_s {
 	unsigned	regs_mask[1]; /* Dynamically sized. */
 };
 
-struct arena_bin_s {
+struct arena_bin_t {
 	/*
 	 * Current run being used to service allocations of this bin's size
 	 * class.
@@ -699,7 +692,7 @@ struct arena_bin_s {
 	malloc_bin_stats_t stats;
 };
 
-struct arena_s {
+struct arena_t {
 #if defined(MOZ_DEBUG) || defined(MOZ_DIAGNOSTIC_ASSERT_ENABLED)
 	uint32_t		magic;
 #  define ARENA_MAGIC 0x947d3d24

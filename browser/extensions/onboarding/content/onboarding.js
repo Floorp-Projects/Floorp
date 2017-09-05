@@ -21,6 +21,8 @@ const BRAND_SHORT_NAME = Services.strings
                      .GetStringFromName("brandShortName");
 const PROMPT_COUNT_PREF = "browser.onboarding.notification.prompt-count";
 const ONBOARDING_DIALOG_ID = "onboarding-overlay-dialog";
+const ONBOARDING_MIN_WIDTH_PX = 960;
+const SPEECH_BUBBLE_MIN_WIDTH_PX = 1150;
 
 /**
  * Add any number of tours, key is the tourId, value should follow the format below
@@ -380,11 +382,18 @@ class Onboarding {
   }
 
   _resizeUI() {
-    // Don't show the overlay UI before we get to a better, responsive design.
-    if (this._window.document.body.getBoundingClientRect().width < 960) {
+    let width = this._window.document.body.getBoundingClientRect().width;
+    if (width < ONBOARDING_MIN_WIDTH_PX) {
+      // Don't show the overlay UI before we get to a better, responsive design.
       this.destroy();
+      return;
+    }
+
+    this._initUI();
+    if (this._isFirstSession && width >= SPEECH_BUBBLE_MIN_WIDTH_PX) {
+      this._overlayIcon.classList.add("onboarding-speech-bubble");
     } else {
-      this._initUI();
+      this._overlayIcon.classList.remove("onboarding-speech-bubble");
     }
   }
 
@@ -780,15 +789,31 @@ class Onboarding {
     }
   }
 
-  _muteNotificationOnFirstSession() {
-    if (Services.prefs.prefHasUserValue("browser.onboarding.notification.tour-ids-queue")) {
-      // There is a queue. We had prompted before, this must not be the 1st session.
+  get _isFirstSession() {
+    // Should only directly return on the "false" case. Consider:
+    //   1. On the 1st session, `_firstSession` is true
+    //   2. During the 1st session, user resizes window so that the UI is destroyed
+    //   3. After the 1st mute session, user resizes window so that the UI is re-init
+    if (this._firstSession === false) {
       return false;
     }
+    this._firstSession = true;
 
-    let muteDuration = Services.prefs.getIntPref("browser.onboarding.notification.mute-duration-on-first-session-ms");
-    if (muteDuration == 0) {
-      // Don't mute when this is set to 0 on purpose.
+    // There is a queue, which means we had prompted tour notifications before. Therefore this is not the 1st session.
+    if (Services.prefs.prefHasUserValue("browser.onboarding.notification.tour-ids-queue")) {
+      this._firstSession = false;
+    }
+
+    // When this is set to 0 on purpose, always judge as not the 1st session
+    if (Services.prefs.getIntPref("browser.onboarding.notification.mute-duration-on-first-session-ms") === 0) {
+      this._firstSession = false;
+    }
+
+    return this._firstSession;
+  }
+
+  _muteNotificationOnFirstSession() {
+    if (!this._isFirstSession) {
       return false;
     }
 
@@ -802,6 +827,7 @@ class Onboarding {
       }]);
       return true;
     }
+    let muteDuration = Services.prefs.getIntPref("browser.onboarding.notification.mute-duration-on-first-session-ms");
     return Date.now() - lastTime <= muteDuration;
   }
 
@@ -869,6 +895,9 @@ class Onboarding {
     if (this._muteNotificationOnFirstSession()) {
       return;
     }
+    // After the notification mute on the 1st session,
+    // we don't want to show the speech bubble by default
+    this._overlayIcon.classList.remove("onboarding-speech-bubble");
 
     let queue = this._getNotificationQueue();
     let startQueueLength = queue.length;

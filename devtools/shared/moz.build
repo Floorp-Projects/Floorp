@@ -44,6 +44,7 @@ JAR_MANIFESTS += ['jar.mn']
 DevToolsModules(
     'async-storage.js',
     'async-utils.js',
+    'base-loader.js',
     'builtin-modules.js',
     'content-observer.js',
     'debounce.js',

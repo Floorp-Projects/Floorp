@@ -23,6 +23,7 @@ XPCOMUtils.defineLazyModuleGetters(this, {
   AppConstants: "resource://gre/modules/AppConstants.jsm",
   ChromeManifestParser: "resource://gre/modules/ChromeManifestParser.jsm",
   Extension: "resource://gre/modules/Extension.jsm",
+  Langpack: "resource://gre/modules/Extension.jsm",
   LightweightThemeManager: "resource://gre/modules/LightweightThemeManager.jsm",
   FileUtils: "resource://gre/modules/FileUtils.jsm",
   ZipUtils: "resource://gre/modules/ZipUtils.jsm",
@@ -207,6 +208,7 @@ const TYPE_ALIASES = {
   "apiextension": "extension",
   "webextension": "extension",
   "webextension-theme": "theme",
+  "webextension-langpack": "locale",
 };
 
 const CHROME_TYPES = new Set([
@@ -4213,6 +4215,8 @@ this.XPIProvider = {
 
     if (isWebExtension(aType)) {
       activeAddon.bootstrapScope = Extension.getBootstrapScope(aId, aFile);
+    } else if (aType === "webextension-langpack") {
+      activeAddon.bootstrapScope = Langpack.getBootstrapScope(aId, aFile);
     } else {
       let uri = getURIForResourceInFile(aFile, "bootstrap.js").spec;
       if (aType == "dictionary")

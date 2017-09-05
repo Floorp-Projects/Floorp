@@ -401,9 +401,7 @@ class MediaRecorder::Session: public nsIObserver,
       // safe to delete this Session.
       // Also avoid to run if this session already call stop before
       if (!mSession->mStopIssued) {
-        ErrorResult result;
-        mSession->mStopIssued = true;
-        recorder->Stop(result);
+        recorder->StopForSessionDestruction();
         if (NS_FAILED(NS_DispatchToMainThread(new DestroyRunnable(mSession.forget())))) {
           MOZ_ASSERT(false, "NS_DispatchToMainThread failed");
         }
@@ -818,10 +816,12 @@ private:
   {
     MOZ_ASSERT(NS_IsMainThread());
     CleanupStreams();
+
     NS_DispatchToMainThread(
       new DispatchStartEventRunnable(this, NS_LITERAL_STRING("start")));
 
     if (NS_FAILED(rv)) {
+      mRecorder->ForceInactive();
       NS_DispatchToMainThread(
         NewRunnableMethod<nsresult>("dom::MediaRecorder::NotifyError",
                                     mRecorder,
@@ -1473,6 +1473,25 @@ MediaRecorder::GetSourceMediaStream()
   }
   MOZ_ASSERT(mAudioNode != nullptr);
   return mPipeStream ? mPipeStream.get() : mAudioNode->GetStream();
+}
+
+void
+MediaRecorder::ForceInactive()
+{
+  LOG(LogLevel::Debug, ("MediaRecorder.ForceInactive %p", this));
+  mState = RecordingState::Inactive;
+}
+
+void
+MediaRecorder::StopForSessionDestruction()
+{
+  LOG(LogLevel::Debug, ("MediaRecorder.StopForSessionDestruction %p", this));
+  MediaRecorderReporter::RemoveMediaRecorder(this);
+  // We do not perform a mState != RecordingState::Recording) check here as
+  // we may already be inactive due to ForceInactive().
+  mState = RecordingState::Inactive;
+  MOZ_ASSERT(mSessions.Length() > 0);
+  mSessions.LastElement()->Stop();
 }
 
 void
