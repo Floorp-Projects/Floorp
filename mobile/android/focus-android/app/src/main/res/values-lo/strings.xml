@@ -48,6 +48,9 @@
   <string name="content_description_clear_input">ລົບລ້າງຂໍ້ມູນທີ່ປ້ອນເຂົ້າ</string>
   <string name="content_description_dismiss_input">ຍົກເລີກ</string>
   <string name="content_description_erase">ລຶບປະຫວັດການທ່ອງເວັບ</string>
+  <string name="content_description_fab_expand">ຂະຫຍາຍ</string>
+  <string name="content_description_open_tab">ເປີດແທັບ</string>
+  <string name="content_description_close_tab">ປິດແທັບ</string>
   <string name="content_description_lock">ການເຊື່ອມຕໍ່ທີ່ປອດໄພ</string>
   <string name="accessibility_announcement_loading">ກຳລັງໂຫລດ</string>
   <string name="accessibility_announcement_loading_finished">ໂຫລດເວັບໄຊທ໌ນີ້ແລ້ວ</string>
