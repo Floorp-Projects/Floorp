@@ -1,59 +1,61 @@
 <!DOCTYPE html>
 <meta charset=utf-8>
 <head>
-  <script src="u2futil.js"></script>
+  <script type="text/javascript" src="frame_utils.js"></script>
+  <script type="text/javascript" src="u2futil.js"></script>
 </head>
 <body>
-<p>Test for AppID / FacetID behavior for FIDO Universal Second Factor</p>
+<p>Insecure AppID / FacetID behavior check</p>
 <script class="testbody" type="text/javascript">
 "use strict";
 
-local_is(window.location.origin, "http://mochi.test:8888", "Is loaded correctly");
+local_setParentOrigin("http://mochi.test:8888");
 
-var version = "U2F_V2";
-var challenge = new Uint8Array(16);
+async function doTests() {
+  var version = "U2F_V2";
+  var challenge = new Uint8Array(16);
 
-local_expectThisManyTests(5);
+  local_is(window.location.origin, "http://test2.example.com", "Is loaded correctly");
 
-u2f.register(null, [{
-  version: version,
-  challenge: bytesToBase64UrlSafe(challenge),
-}], [], function(res){
-  local_isnot(res.errorCode, 0, "Insecure origin disallowed for null AppID");
-  local_completeTest();
-});
+  await promiseU2FRegister(null, [{
+    version: version,
+    challenge: bytesToBase64UrlSafe(challenge),
+  }], [], function(res){
+    local_isnot(res.errorCode, 0, "Insecure origin disallowed for null AppID");
+  });
 
-u2f.register("", [{
-  version: version,
-  challenge: bytesToBase64UrlSafe(challenge),
-}], [], function(res){
-  local_isnot(res.errorCode, 0, "Insecure origin disallowed for empty AppID");
-  local_completeTest();
-});
+  await promiseU2FRegister("", [{
+    version: version,
+    challenge: bytesToBase64UrlSafe(challenge),
+  }], [], function(res){
+    local_isnot(res.errorCode, 0, "Insecure origin disallowed for empty AppID");
+  });
 
-u2f.register("http://example.com/appId", [{
-  version: version,
-  challenge: bytesToBase64UrlSafe(challenge),
-}], [], function(res){
-  local_isnot(res.errorCode, 0, "Insecure origin disallowed for HTTP AppID");
-  local_completeTest();
-});
+  await promiseU2FRegister("http://example.com/appId", [{
+    version: version,
+    challenge: bytesToBase64UrlSafe(challenge),
+  }], [], function(res){
+    local_isnot(res.errorCode, 0, "Insecure origin disallowed for HTTP AppID");
+  });
 
-u2f.register("https://example.com/appId", [{
-  version: version,
-  challenge: bytesToBase64UrlSafe(challenge),
-}], [], function(res){
-  local_isnot(res.errorCode, 0, "Insecure origin disallowed for HTTPS AppID from HTTP origin");
-  local_completeTest();
-});
+  await promiseU2FRegister("https://example.com/appId", [{
+    version: version,
+    challenge: bytesToBase64UrlSafe(challenge),
+  }], [], function(res){
+    local_isnot(res.errorCode, 0, "Insecure origin disallowed for HTTPS AppID from HTTP origin");
+  });
 
-u2f.register(window.location.origin + "/otherAppId", [{
-  version: version,
-  challenge: bytesToBase64UrlSafe(challenge),
-}], [], function(res){
-  local_isnot(res.errorCode, 0, "Insecure origin disallowed for HTTP origin");
-  local_completeTest();
-});
+  await promiseU2FRegister(window.location.origin + "/otherAppId", [{
+    version: version,
+    challenge: bytesToBase64UrlSafe(challenge),
+  }], [], function(res){
+    local_isnot(res.errorCode, 0, "Insecure origin disallowed for HTTP origin");
+  });
+
+  local_finished();
+};
+
+doTests();
 
 </script>
 </body>
