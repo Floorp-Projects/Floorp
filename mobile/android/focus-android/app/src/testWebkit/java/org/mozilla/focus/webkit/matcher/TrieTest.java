@@ -6,7 +6,9 @@ import org.mozilla.focus.webkit.matcher.Trie.WhiteListTrie;
 import org.mozilla.focus.webkit.matcher.util.FocusString;
 import org.robolectric.RobolectricTestRunner;
 
-import static org.junit.Assert.*;
+import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertNotNull;
+import static org.junit.Assert.assertNull;
 
 @RunWith(RobolectricTestRunner.class)
 public class TrieTest {

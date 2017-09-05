@@ -21,7 +21,6 @@ import org.junit.Ignore;
 import org.junit.Rule;
 import org.junit.Test;
 import org.junit.runner.RunWith;
-import org.mozilla.focus.session.SessionManager;
 
 import java.io.IOException;
 
@@ -29,7 +28,6 @@ import okhttp3.mockwebserver.MockResponse;
 import okhttp3.mockwebserver.MockWebServer;
 
 import static android.support.test.espresso.action.ViewActions.click;
-import static org.mozilla.focus.activity.TestHelper.mDevice;
 import static org.mozilla.focus.activity.TestHelper.waitingTime;
 import static org.mozilla.focus.fragment.FirstrunFragment.FIRSTRUN_PREF;
 

@@ -6,10 +6,7 @@ package org.mozilla.focus.session.ui;
 
 import android.animation.Animator;
 import android.animation.AnimatorListenerAdapter;
-import android.content.Context;
-import android.graphics.Color;
 import android.graphics.drawable.Drawable;
-import android.net.Uri;
 import android.support.v4.content.ContextCompat;
 import android.support.v4.graphics.drawable.DrawableCompat;
 import android.support.v7.content.res.AppCompatResources;

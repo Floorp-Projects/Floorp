@@ -6,16 +6,8 @@
 package org.mozilla.focus.widget;
 
 import android.content.Context;
-import android.content.res.TypedArray;
-import android.graphics.Rect;
-import android.support.annotation.Nullable;
-import android.support.design.widget.CoordinatorLayout;
 import android.util.AttributeSet;
-import android.view.View;
-import android.view.ViewTreeObserver;
 import android.widget.LinearLayout;
-
-import org.mozilla.focus.R;
 
 /**
  * A CoordinatorLayout implementation that resizes dynamically based on whether a keyboard is visible or not.

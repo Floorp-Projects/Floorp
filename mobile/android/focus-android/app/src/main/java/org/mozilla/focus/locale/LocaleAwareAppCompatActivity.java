@@ -9,7 +9,6 @@ import android.content.res.Configuration;
 import android.os.Bundle;
 import android.support.v4.text.TextUtilsCompat;
 import android.support.v4.view.ViewCompat;
-import android.support.v7.app.AppCompatActivity;
 import android.view.View;
 
 import org.mozilla.focus.activity.LifecycleAppCompatActivity;

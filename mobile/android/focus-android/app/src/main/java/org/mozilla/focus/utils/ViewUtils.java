@@ -13,10 +13,8 @@ import android.support.annotation.StringRes;
 import android.support.design.widget.Snackbar;
 import android.support.v4.content.ContextCompat;
 import android.support.v4.view.ViewCompat;
-import android.util.Log;
 import android.view.Gravity;
 import android.view.View;
-import android.view.WindowManager;
 import android.view.inputmethod.InputMethodManager;
 import android.widget.TextView;
 
@@ -44,7 +42,7 @@ public class ViewUtils {
         private int tries;
 
         private ShowKeyboard(View view) {
-            this.viewReferemce= new WeakReference<>(view);
+            this.viewReferemce = new WeakReference<>(view);
             this.handler = new Handler(Looper.getMainLooper());
             this.tries = 10;
         }

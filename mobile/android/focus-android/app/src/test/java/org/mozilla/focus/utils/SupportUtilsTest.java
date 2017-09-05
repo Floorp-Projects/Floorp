@@ -7,7 +7,7 @@ import org.robolectric.RuntimeEnvironment;
 
 import java.util.Locale;
 
-import static org.junit.Assert.*;
+import static org.junit.Assert.assertEquals;
 
 @RunWith(RobolectricTestRunner.class)
 public class SupportUtilsTest {

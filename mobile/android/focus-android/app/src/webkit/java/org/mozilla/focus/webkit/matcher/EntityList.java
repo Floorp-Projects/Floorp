@@ -12,9 +12,6 @@ import org.mozilla.focus.utils.UrlUtils;
 import org.mozilla.focus.webkit.matcher.Trie.WhiteListTrie;
 import org.mozilla.focus.webkit.matcher.util.FocusString;
 
-import java.net.MalformedURLException;
-import java.net.URL;
-
 /* package-private */ class EntityList {
 
     private WhiteListTrie rootNode;

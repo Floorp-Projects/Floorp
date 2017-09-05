@@ -6,7 +6,6 @@
 package org.mozilla.focus.locale;
 
 import android.arch.lifecycle.LifecycleFragment;
-import android.support.v4.app.Fragment;
 
 import java.util.Locale;
 

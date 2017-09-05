@@ -6,10 +6,8 @@
 package org.mozilla.focus.activity;
 
 import android.content.Context;
-import android.os.SystemClock;
 import android.preference.PreferenceManager;
 import android.support.test.InstrumentationRegistry;
-import android.support.test.espresso.Espresso;
 import android.support.test.espresso.IdlingRegistry;
 import android.support.test.rule.ActivityTestRule;
 import android.support.test.runner.AndroidJUnit4;
@@ -23,8 +21,6 @@ import org.junit.runner.RunWith;
 import org.mozilla.focus.R;
 import org.mozilla.focus.activity.helpers.SessionLoadedIdlingResource;
 
-import java.util.Objects;
-
 import static android.support.test.espresso.Espresso.onView;
 import static android.support.test.espresso.action.ViewActions.click;
 import static android.support.test.espresso.action.ViewActions.pressImeActionButton;
@@ -35,9 +31,7 @@ import static android.support.test.espresso.matcher.ViewMatchers.isChecked;
 import static android.support.test.espresso.matcher.ViewMatchers.isDisplayed;
 import static android.support.test.espresso.matcher.ViewMatchers.withId;
 import static android.support.test.espresso.matcher.ViewMatchers.withText;
-import static junit.framework.Assert.assertTrue;
 import static org.hamcrest.Matchers.not;
-import static org.mozilla.focus.activity.TestHelper.waitingTime;
 import static org.mozilla.focus.fragment.FirstrunFragment.FIRSTRUN_PREF;
 
 // This test toggles blocking within the browser view

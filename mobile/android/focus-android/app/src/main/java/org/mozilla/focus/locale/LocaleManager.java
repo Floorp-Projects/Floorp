@@ -5,12 +5,6 @@
 
 package org.mozilla.focus.locale;
 
-import java.util.Arrays;
-import java.util.Collection;
-import java.util.Locale;
-import java.util.concurrent.atomic.AtomicBoolean;
-import java.util.concurrent.atomic.AtomicReference;
-
 import android.content.BroadcastReceiver;
 import android.content.Context;
 import android.content.Intent;
@@ -23,6 +17,11 @@ import android.util.Log;
 
 import org.mozilla.focus.R;
 import org.mozilla.focus.generated.LocaleList;
+
+import java.util.Collection;
+import java.util.Locale;
+import java.util.concurrent.atomic.AtomicBoolean;
+import java.util.concurrent.atomic.AtomicReference;
 
 /**
  * This class manages persistence, application, and otherwise handling of

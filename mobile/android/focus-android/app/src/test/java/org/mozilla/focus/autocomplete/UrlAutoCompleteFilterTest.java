@@ -10,7 +10,6 @@ import org.junit.runner.RunWith;
 import org.mozilla.focus.widget.InlineAutocompleteEditText;
 import org.robolectric.RobolectricTestRunner;
 
-import java.util.Arrays;
 import java.util.Collections;
 import java.util.HashSet;
 import java.util.Set;

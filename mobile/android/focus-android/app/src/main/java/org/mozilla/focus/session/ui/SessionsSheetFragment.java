@@ -6,7 +6,6 @@ package org.mozilla.focus.session.ui;
 
 import android.animation.Animator;
 import android.animation.AnimatorListenerAdapter;
-import android.content.res.Resources;
 import android.os.Bundle;
 import android.support.annotation.Nullable;
 import android.support.v7.widget.LinearLayoutManager;

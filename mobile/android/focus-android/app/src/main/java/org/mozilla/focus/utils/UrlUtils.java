@@ -14,10 +14,8 @@ import android.text.TextUtils;
 import org.mozilla.focus.search.SearchEngine;
 import org.mozilla.focus.search.SearchEngineManager;
 
-import java.io.UnsupportedEncodingException;
 import java.net.URI;
 import java.net.URISyntaxException;
-import java.net.URLDecoder;
 
 public class UrlUtils {
     public static String normalize(@NonNull String input) {

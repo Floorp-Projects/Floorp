@@ -4,14 +4,6 @@
 
 package org.mozilla.focus.widget;
 
-import java.nio.ByteBuffer;
-import java.text.Collator;
-import java.util.Arrays;
-import java.util.Collection;
-import java.util.HashSet;
-import java.util.Locale;
-import java.util.Set;
-
 import android.content.Context;
 import android.graphics.Bitmap;
 import android.graphics.Canvas;
@@ -24,6 +16,14 @@ import android.util.Log;
 import org.mozilla.focus.R;
 import org.mozilla.focus.locale.LocaleManager;
 import org.mozilla.focus.locale.Locales;
+
+import java.nio.ByteBuffer;
+import java.text.Collator;
+import java.util.Arrays;
+import java.util.Collection;
+import java.util.HashSet;
+import java.util.Locale;
+import java.util.Set;
 
 public class LocaleListPreference extends ListPreference {
     private static final String LOG_TAG = "GeckoLocaleList";

@@ -24,7 +24,6 @@ import org.mozilla.telemetry.config.TelemetryConfiguration;
 import org.mozilla.telemetry.event.TelemetryEvent;
 import org.mozilla.telemetry.measurement.DefaultSearchMeasurement;
 import org.mozilla.telemetry.measurement.SearchesMeasurement;
-import org.mozilla.telemetry.net.DebugLogClient;
 import org.mozilla.telemetry.net.HttpURLConnectionTelemetryClient;
 import org.mozilla.telemetry.net.TelemetryClient;
 import org.mozilla.telemetry.ping.TelemetryCorePingBuilder;

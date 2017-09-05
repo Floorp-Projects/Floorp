@@ -7,7 +7,8 @@ import org.junit.runner.RunWith;
 import org.mozilla.focus.webkit.matcher.util.FocusString;
 import org.robolectric.RobolectricTestRunner;
 
-import static org.junit.Assert.*;
+import static org.junit.Assert.assertFalse;
+import static org.junit.Assert.assertTrue;
 
 /**
  * Integration test to make sure all our whitelisting methods work as expected.

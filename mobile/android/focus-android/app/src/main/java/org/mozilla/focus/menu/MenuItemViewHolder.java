@@ -9,7 +9,6 @@ import android.view.View;
 import android.widget.TextView;
 
 import org.mozilla.focus.R;
-import org.mozilla.focus.fragment.BrowserFragment;
 
 /* package-private */ class MenuItemViewHolder extends BrowserMenuViewHolder {
     /* package-private */ static final int LAYOUT_ID = R.layout.menu_item;

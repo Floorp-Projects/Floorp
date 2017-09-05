@@ -7,7 +7,6 @@ package org.mozilla.focus.utils;
 
 import android.content.Context;
 import android.content.pm.PackageManager;
-import android.os.Build;
 
 import org.mozilla.focus.locale.Locales;
 
