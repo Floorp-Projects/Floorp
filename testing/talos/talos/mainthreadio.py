@@ -5,8 +5,11 @@
 # file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
 import os
+import re
 import utils
 import whitelist
+
+from collections import OrderedDict
 
 SCRIPT_DIR = os.path.abspath(os.path.realpath(os.path.dirname(__file__)))
 
@@ -29,12 +32,23 @@ KEY_RUN_COUNT = 'RunCount'
 
 LEAKED_SYMLINK_PREFIX = "::\\{"
 
-PATH_SUBSTITUTIONS = {'profile': '{profile}', 'firefox': '{xre}',
-                      'desktop': '{desktop}',
-                      'fonts': '{fonts}', 'appdata': ' {appdata}'}
-NAME_SUBSTITUTIONS = {'installtime': '{time}', 'prefetch': '{prefetch}',
-                      'thumbnails': '{thumbnails}',
-                      'windows media player': '{media_player}'}
+PATH_SUBSTITUTIONS = OrderedDict([
+                    ('profile', '{profile}'),
+                    ('firefox', '{xre}'),
+                    ('desktop', '{desktop}'),
+                    ('fonts', '{fonts}'),
+                    ('appdata', ' {appdata}')])
+NAME_SUBSTITUTIONS = OrderedDict([
+                    ('installtime', '{time}'),
+                    ('prefetch', '{prefetch}'),
+                    ('thumbnails', '{thumbnails}'),
+                    # {appdata}\locallow\mozilla\temp-{*}
+                    ('temp-{', '{temp}'),
+                    ('cltbld.', '{cltbld}'),
+                    ('windows media player', '{media_player}'),
+                    # regex order matters
+                    (re.compile(r'{\w{8}-\w{4}-\w{4}-\w{4}-\w{12}}'), '{uuid}'),
+                    (re.compile(r'{uuid}\.\d+\.ver\w+\.db'), '{uuid-db}')])
 
 TUPLE_FILENAME_INDEX = 2
 WHITELIST_FILENAME = os.path.join(SCRIPT_DIR, 'mtio-whitelist.json')
