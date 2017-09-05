@@ -15,6 +15,7 @@
 #include "nsIDOMElement.h"
 #include "nsIContent.h"
 #include "nsIDocument.h"
+#include "nsElementTable.h"
 #include "nsNameSpaceManager.h"
 #include "nsString.h"
 #include "nsUnicharUtils.h"
@@ -25,7 +26,6 @@
 #include "nsNetUtil.h"
 #include "nsEscape.h"
 #include "nsCRT.h"
-#include "nsIParserService.h"
 #include "nsContentUtils.h"
 #include "nsLWBrkCIID.h"
 #include "nsIScriptElement.h"
@@ -339,20 +339,13 @@ nsHTMLContentSerializer::AppendElementEnd(Element* aElement,
   }
 
   if (ns == kNameSpaceID_XHTML) {
-    nsIParserService* parserService = nsContentUtils::GetParserService();
-
-    if (parserService) {
-      bool isContainer;
-
-      parserService->
-        IsContainer(parserService->HTMLCaseSensitiveAtomTagToId(name),
-                    isContainer);
-      if (!isContainer) {
-        // Keep this in sync with the cleanup at the end of this method.
-        MOZ_ASSERT(name != nsGkAtoms::body);
-        MaybeLeaveFromPreContent(content);
-        return NS_OK;
-      }
+    bool isContainer =
+      nsHTMLElement::IsContainer(nsHTMLTags::CaseSensitiveAtomTagToId(name));
+    if (!isContainer) {
+      // Keep this in sync with the cleanup at the end of this method.
+      MOZ_ASSERT(name != nsGkAtoms::body);
+      MaybeLeaveFromPreContent(content);
+      return NS_OK;
     }
   }
 

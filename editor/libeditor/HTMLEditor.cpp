@@ -59,13 +59,13 @@
 #include "nsIWidget.h"
 
 #include "nsIFrame.h"
-#include "nsIParserService.h"
 #include "mozilla/dom/Selection.h"
 #include "mozilla/dom/DocumentFragment.h"
 #include "mozilla/dom/Element.h"
 #include "mozilla/dom/Event.h"
 #include "mozilla/dom/EventTarget.h"
 #include "mozilla/dom/HTMLBodyElement.h"
+#include "nsElementTable.h"
 #include "nsTextFragment.h"
 #include "nsContentList.h"
 #include "mozilla/StyleSheet.h"
@@ -700,8 +700,8 @@ HTMLEditor::NodeIsBlockStatic(const nsINode* aElement)
 {
   MOZ_ASSERT(aElement);
 
-  // Nodes we know we want to treat as block
-  // even though the parser says they're not:
+  // We want to treat these as block nodes even though nsHTMLElement says
+  // they're not.
   if (aElement->IsAnyOfHTMLElements(nsGkAtoms::body,
                                     nsGkAtoms::head,
                                     nsGkAtoms::tbody,
@@ -715,18 +715,8 @@ HTMLEditor::NodeIsBlockStatic(const nsINode* aElement)
     return true;
   }
 
-  bool isBlock;
-#ifdef DEBUG
-  // XXX we can't use DebugOnly here because VC++ is stupid (bug 802884)
-  nsresult rv =
-#endif
-    nsContentUtils::GetParserService()->
-    IsBlock(nsContentUtils::GetParserService()->HTMLAtomTagToId(
-              aElement->NodeInfo()->NameAtom()),
-            isBlock);
-  MOZ_ASSERT(rv == NS_OK);
-
-  return isBlock;
+  return nsHTMLElement::IsBlock(
+    nsHTMLTags::AtomTagToId(aElement->NodeInfo()->NameAtom()));
 }
 
 nsresult
@@ -3446,17 +3436,15 @@ bool
 HTMLEditor::TagCanContainTag(nsIAtom& aParentTag,
                              nsIAtom& aChildTag)
 {
-  nsIParserService* parserService = nsContentUtils::GetParserService();
-
   int32_t childTagEnum;
   // XXX Should this handle #cdata-section too?
   if (&aChildTag == nsGkAtoms::textTagName) {
     childTagEnum = eHTMLTag_text;
   } else {
-    childTagEnum = parserService->HTMLAtomTagToId(&aChildTag);
+    childTagEnum = nsHTMLTags::AtomTagToId(&aChildTag);
   }
 
-  int32_t parentTagEnum = parserService->HTMLAtomTagToId(&aParentTag);
+  int32_t parentTagEnum = nsHTMLTags::AtomTagToId(&aParentTag);
   return HTMLEditUtils::CanContain(parentTagEnum, childTagEnum);
 }
 
@@ -3470,8 +3458,7 @@ HTMLEditor::IsContainer(nsINode* aNode)
   if (aNode->IsNodeOfType(nsINode::eTEXT)) {
     tagEnum = eHTMLTag_text;
   } else {
-    tagEnum =
-      nsContentUtils::GetParserService()->HTMLStringTagToId(aNode->NodeName());
+    tagEnum = nsHTMLTags::StringTagToId(aNode->NodeName());
   }
 
   return HTMLEditUtils::IsContainer(tagEnum);
