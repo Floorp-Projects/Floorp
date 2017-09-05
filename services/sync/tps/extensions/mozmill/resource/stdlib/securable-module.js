@@ -91,7 +91,7 @@
        // and use it here. Until that's in the platform, though,
        // we'll play it safe and parentify the filename unless
        // we're absolutely certain things will be ok if we don't.
-       var filenameURI = ios.newURI(options.filename,
+       var filenameURI = ios.newURI(filename,
                                     null,
                                     baseURI);
        if (filenameURI.scheme == 'chrome' &&

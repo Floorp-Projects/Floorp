@@ -66,7 +66,7 @@ waitForEvents.prototype = {
     for (var e in this.registry) {
       assert.waitFor(function () {
         return this.node.firedEvents[e] == true;
-      }, "waitForEvents.wait(): Event '" + ex + "' has been fired.", timeout, interval);
+      }, "waitForEvents.wait(): Event '" + e + "' has been fired.", timeout, interval);
 
       this.node.removeEventListener(e, this.registry[e], true);
     }
@@ -793,7 +793,7 @@ MozMillController.prototype.assertImageLoaded = function (el) {
   // Workaround for Safari -- it only supports the
   // complete attrib on script-created images
   if (typeof comp == 'undefined') {
-    test = new Image();
+    let test = new Image();
     // If the original image was successfully loaded,
     // src for new one should be pulled from cache
     test.src = img.src;
@@ -982,9 +982,9 @@ function browserAdditions (controller) {
       timed_out = true;
     }
     finally {
-      state = 'URI=' + win.document.location.href +
+      let state = 'URI=' + win.document.location.href +
               ', readyState=' + win.document.readyState;
-      message = "controller.waitForPageLoad(" + state + ")";
+      let message = "controller.waitForPageLoad(" + state + ")";
 
       if (timed_out) {
         throw new errors.AssertionError(message);

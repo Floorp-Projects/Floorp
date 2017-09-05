@@ -6,7 +6,7 @@ var EXPORTED_SYMBOLS = ['getLength', ];//'compare'];
 
 var getLength = function (obj) {
   var len = 0;
-  for (i in obj) {
+  for (let i in obj) {
     len++;
   }
 
