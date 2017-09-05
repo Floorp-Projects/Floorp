@@ -1203,19 +1203,17 @@ StringStuff(SprintfStateStr* aState, const char16_t* aStr, uint32_t aLen)
   return 0;
 }
 
-uint32_t
+void
 nsTextFormatter::ssprintf(nsAString& aOut, const char16_t* aFmt, ...)
 {
   va_list ap;
-  uint32_t rv;
 
   va_start(ap, aFmt);
-  rv = nsTextFormatter::vssprintf(aOut, aFmt, ap);
+  nsTextFormatter::vssprintf(aOut, aFmt, ap);
   va_end(ap);
-  return rv;
 }
 
-uint32_t
+void
 nsTextFormatter::vssprintf(nsAString& aOut, const char16_t* aFmt, va_list aAp)
 {
   SprintfStateStr ss;
@@ -1226,8 +1224,7 @@ nsTextFormatter::vssprintf(nsAString& aOut, const char16_t* aFmt, va_list aAp)
   ss.stuffclosure = &aOut;
 
   aOut.Truncate();
-  int n = dosprintf(&ss, aFmt, aAp);
-  return n ? n - 1 : n;
+  dosprintf(&ss, aFmt, aAp);
 }
 
 /*
@@ -1286,11 +1283,15 @@ nsTextFormatter::vsnprintf(char16_t* aOut, uint32_t aOutLen,
   ss.base = aOut;
   ss.cur = aOut;
   ss.maxlen = aOutLen;
-  (void) dosprintf(&ss, aFmt, aAp);
+  int result = dosprintf(&ss, aFmt, aAp);
 
   /* If we added chars, and we didn't append a null, do it now. */
   if ((ss.cur != ss.base) && (*(ss.cur - 1) != '\0')) {
     *(--ss.cur) = '\0';
+  }
+
+  if (result < 0) {
+    return -1;
   }
 
   n = ss.cur - ss.base;

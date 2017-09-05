@@ -55,7 +55,7 @@ public:
    * sprintf into an existing nsAString, overwriting any contents it already
    * has. Infallible.
    */
-  static uint32_t ssprintf(nsAString& aOut, const char16_t* aFmt, ...);
+  static void ssprintf(nsAString& aOut, const char16_t* aFmt, ...);
 
 private:
 
@@ -64,7 +64,7 @@ private:
    */
   static uint32_t vsnprintf(char16_t* aOut, uint32_t aOutLen, const char16_t* aFmt,
                             va_list aAp);
-  static uint32_t vssprintf(nsAString& aOut, const char16_t* aFmt, va_list aAp);
+  static void vssprintf(nsAString& aOut, const char16_t* aFmt, va_list aAp);
 };
 
 #endif /* nsTextFormatter_h___ */
