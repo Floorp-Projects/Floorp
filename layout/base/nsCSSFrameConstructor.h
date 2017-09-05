@@ -1803,6 +1803,11 @@ private:
                                 InsertionKind aInsertionKind,
                                 RemoveFlags   aFlags);
 
+  /**
+   *  Handles change of rowspan and colspan attributes on table cells.
+   */
+  void UpdateTableCellSpans(nsIContent* aContent);
+
   // If removal of aFrame from the frame tree requires reconstruction of some
   // containing block (either of aFrame or of its parent) due to {ib} splits or
   // table pseudo-frames, recreate the relevant frame subtree.  The return value

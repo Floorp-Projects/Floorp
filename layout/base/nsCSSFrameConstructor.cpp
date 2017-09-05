@@ -9959,6 +9959,21 @@ nsCSSFrameConstructor::MaybeRecreateContainerForFrameRemoval(
 }
 
 void
+nsCSSFrameConstructor::UpdateTableCellSpans(nsIContent* aContent)
+{
+  nsTableCellFrame* cellFrame = do_QueryFrame(aContent->GetPrimaryFrame());
+
+  // It's possible that this warning could fire if some other style change
+  // simultaneously changes the 'display' of the element and makes it no
+  // longer be a table cell.
+  NS_WARNING_ASSERTION(cellFrame, "Hint should only be posted on table cells!");
+
+  if (cellFrame) {
+    cellFrame->GetTableFrame()->RowOrColSpanChanged(cellFrame);
+  }
+}
+
+void
 nsCSSFrameConstructor::RecreateFramesForContent(nsIContent* aContent,
                                                 InsertionKind aInsertionKind,
                                                 RemoveFlags aFlags)
