@@ -270,9 +270,6 @@ private:
 
   bool IsSameAsLastResults(CacheResultArray& aResult);
 
-  // Can only be used on the background thread
-  nsCOMPtr<nsICryptoHash> mCryptoHash;
-
   nsAutoPtr<mozilla::safebrowsing::Classifier> mClassifier;
   // The class that actually parses the update chunks.
   nsAutoPtr<ProtocolParser> mProtocolParser;

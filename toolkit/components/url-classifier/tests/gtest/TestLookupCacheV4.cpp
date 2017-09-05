@@ -17,8 +17,7 @@ TestHasPrefix(const _Fragment& aFragment, bool aExpectedHas, bool aExpectedCompl
     UniquePtr<LookupCache> cache = SetupLookupCache<LookupCacheV4>(array);
 
     Completion lookupHash;
-    nsCOMPtr<nsICryptoHash> cryptoHash = do_CreateInstance(NS_CRYPTO_HASH_CONTRACTID);
-    lookupHash.FromPlaintext(aFragment, cryptoHash);
+    lookupHash.FromPlaintext(aFragment);
 
     bool has, confirmed;
     uint32_t matchLength;
