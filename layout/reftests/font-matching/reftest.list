@@ -133,3 +133,9 @@ skip-if(!cocoaWidget) HTTP(..) != apple-symbols-1.html apple-symbols-1-notref.ht
 # random-if(!OSX) != system-generic-fallback-zh-tw.html system-generic-fallback-ja.html
 # random-if(!OSX) != system-generic-fallback-zh-cn.html system-generic-fallback-ja.html
 # random-if(!OSX) != system-generic-fallback-zh-tw.html system-generic-fallback-zh-cn.html
+
+# Tests for legacy font family name (GDI-model families) matching;
+# these depend on specific fonts that are available as standard on macOS and Windows,
+# and are not expected to pass on platforms that don't have those same fonts.
+skip-if(!cocoaWidget) == legacy-family-names-1.html legacy-family-names-1-ref.html
+skip-if(!winWidget) == legacy-family-names-2.html legacy-family-names-2-ref.html

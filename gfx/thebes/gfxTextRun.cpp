@@ -1873,7 +1873,9 @@ gfxFontGroup::AddPlatformFont(const nsAString& aName,
 
     // Not known in the user font set ==> check system fonts
     gfxPlatformFontList::PlatformFontList()
-        ->FindAndAddFamilies(aName, &aFamilyList, true, &mStyle, mDevToCssSize);
+        ->FindAndAddFamilies(aName, &aFamilyList,
+                             gfxPlatformFontList::FindFamiliesFlags(0),
+                             &mStyle, mDevToCssSize);
 }
 
 void

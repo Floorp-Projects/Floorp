@@ -465,7 +465,7 @@ this.WindowState = {
   /**
    * Converts {@link nsIDOMChromeWindow.windowState} to WindowState.
    *
-   * @param {unsigned short} windowState
+   * @param {number} windowState
    *     Attribute from {@link nsIDOMChromeWindow.windowState}.
    *
    * @return {WindowState}

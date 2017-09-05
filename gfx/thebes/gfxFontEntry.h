@@ -108,6 +108,12 @@ public:
 
     explicit gfxFontEntry(const nsAString& aName, bool aIsStandardFace = false);
 
+    // Create a new entry that refers to the same font as this, but without
+    // additional state that may have been set up (such as family name).
+    // (This is only to be used for system fonts in the platform font list,
+    // not user fonts.)
+    virtual gfxFontEntry* Clone() const = 0;
+
     // unique name for the face, *not* the family; not necessarily the
     // "real" or user-friendly name, may be an internal identifier
     const nsString& Name() const { return mName; }
@@ -606,14 +612,23 @@ public:
         mIsBadUnderlineFamily(false),
         mFamilyCharacterMapInitialized(false),
         mSkipDefaultFeatureSpaceCheck(false),
-        mCheckForFallbackFaces(false)
+        mCheckForFallbackFaces(false),
+        mCheckedForLegacyFamilyNames(false)
         { }
 
     const nsString& Name() { return mName; }
 
     virtual void LocalizedName(nsAString& aLocalizedName);
     virtual bool HasOtherFamilyNames();
-    
+
+    // See https://bugzilla.mozilla.org/show_bug.cgi?id=835204:
+    // check the font's 'name' table to see if it has a legacy family name
+    // that would have been used by GDI (e.g. to split extra-bold or light
+    // faces in a large family into separate "styled families" because of
+    // GDI's 4-faces-per-family limitation). If found, the styled family
+    // name will be added to the font list's "other family names" table.
+    bool CheckForLegacyFamilyNames(gfxPlatformFontList* aFontList);
+
     nsTArray<RefPtr<gfxFontEntry> >& GetFontList() { return mAvailableFonts; }
     
     void AddFontEntry(RefPtr<gfxFontEntry> aFontEntry) {
@@ -767,6 +782,7 @@ protected:
     bool mFamilyCharacterMapInitialized : 1;
     bool mSkipDefaultFeatureSpaceCheck : 1;
     bool mCheckForFallbackFaces : 1;  // check other faces for character
+    bool mCheckedForLegacyFamilyNames : 1;
 
     enum {
         // for "simple" families, the faces are stored in mAvailableFonts

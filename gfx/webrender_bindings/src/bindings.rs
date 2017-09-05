@@ -15,6 +15,7 @@ use moz2d_renderer::Moz2dImageRenderer;
 use app_units::Au;
 use rayon;
 use euclid::SideOffsets2D;
+use bincode;
 
 extern crate webrender_api;
 
@@ -649,116 +650,125 @@ pub unsafe extern "C" fn wr_api_delete(dh: *mut DocumentHandle) {
 }
 
 #[no_mangle]
-pub extern "C" fn wr_api_add_image(dh: &mut DocumentHandle,
-                                   image_key: WrImageKey,
-                                   descriptor: &WrImageDescriptor,
-                                   bytes: ByteSlice) {
-    assert!(unsafe { is_in_compositor_thread() });
+pub extern "C" fn wr_resource_updates_add_image(
+    resources: &mut ResourceUpdates,
+    image_key: WrImageKey,
+    descriptor: &WrImageDescriptor,
+    bytes: ByteSlice
+) {
     let copied_bytes = bytes.as_slice().to_owned();
-    let mut resources = ResourceUpdates::new();
-    resources.add_image(image_key,
-                        descriptor.into(),
-                        ImageData::new(copied_bytes),
-                        None);
-    dh.api.update_resources(resources);
+    resources.add_image(
+        image_key,
+        descriptor.into(),
+        ImageData::new(copied_bytes),
+        None
+    );
 }
 
 #[no_mangle]
-pub extern "C" fn wr_api_add_blob_image(dh: &mut DocumentHandle,
-                                        image_key: WrImageKey,
-                                        descriptor: &WrImageDescriptor,
-                                        bytes: ByteSlice) {
-    assert!(unsafe { is_in_compositor_thread() });
+pub extern "C" fn wr_resource_updates_add_blob_image(
+    resources: &mut ResourceUpdates,
+    image_key: WrImageKey,
+    descriptor: &WrImageDescriptor,
+    bytes: ByteSlice
+) {
     let copied_bytes = bytes.as_slice().to_owned();
-    let mut resources = ResourceUpdates::new();
-    resources.add_image(image_key,
-                        descriptor.into(),
-                        ImageData::new_blob_image(copied_bytes),
-                        None);
-    dh.api.update_resources(resources);
+    resources.add_image(
+        image_key,
+        descriptor.into(),
+        ImageData::new_blob_image(copied_bytes),
+        None
+    );
 }
 
 #[no_mangle]
-pub extern "C" fn wr_api_add_external_image(dh: &mut DocumentHandle,
-                                            image_key: WrImageKey,
-                                            descriptor: &WrImageDescriptor,
-                                            external_image_id: WrExternalImageId,
-                                            buffer_type: WrExternalImageBufferType,
-                                            channel_index: u8) {
-    assert!(unsafe { is_in_compositor_thread() });
-    let mut resources = ResourceUpdates::new();
-    resources.add_image(image_key,
-                        descriptor.into(),
-                        ImageData::External(ExternalImageData {
-                                             id: external_image_id.into(),
-                                             channel_index: channel_index,
-                                             image_type: buffer_type,
-                                         }),
-                        None);
-    dh.api.update_resources(resources);
+pub extern "C" fn wr_resource_updates_add_external_image(
+    resources: &mut ResourceUpdates,
+    image_key: WrImageKey,
+    descriptor: &WrImageDescriptor,
+    external_image_id: WrExternalImageId,
+    buffer_type: WrExternalImageBufferType,
+    channel_index: u8
+) {
+    resources.add_image(
+        image_key,
+        descriptor.into(),
+        ImageData::External(
+            ExternalImageData {
+                id: external_image_id.into(),
+                channel_index: channel_index,
+                image_type: buffer_type,
+            }
+        ),
+        None
+    );
 }
 
 #[no_mangle]
-pub extern "C" fn wr_api_update_image(dh: &mut DocumentHandle,
-                                      key: WrImageKey,
-                                      descriptor: &WrImageDescriptor,
-                                      bytes: ByteSlice) {
-    assert!(unsafe { is_in_compositor_thread() });
+pub extern "C" fn wr_resource_updates_update_image(
+    resources: &mut ResourceUpdates,
+    key: WrImageKey,
+    descriptor: &WrImageDescriptor,
+    bytes: ByteSlice
+) {
     let copied_bytes = bytes.as_slice().to_owned();
-
-    let mut resources = ResourceUpdates::new();
     resources.update_image(key, descriptor.into(), ImageData::new(copied_bytes), None);
-    dh.api.update_resources(resources);
 }
 
 #[no_mangle]
-pub extern "C" fn wr_api_update_external_image(
-    dh: &mut DocumentHandle,
+pub extern "C" fn wr_resource_updates_update_external_image(
+    resources: &mut ResourceUpdates,
     key: WrImageKey,
     descriptor: &WrImageDescriptor,
     external_image_id: WrExternalImageId,
     image_type: WrExternalImageBufferType,
     channel_index: u8
 ) {
-    assert!(unsafe { is_in_compositor_thread() });
-
-    let data = ImageData::External(
-        ExternalImageData {
-            id: external_image_id.into(),
-            channel_index,
-            image_type,
-        }
+    resources.update_image(
+        key,
+        descriptor.into(),
+        ImageData::External(
+            ExternalImageData {
+                id: external_image_id.into(),
+                channel_index,
+                image_type,
+            }
+        ),
+        None
     );
-
-    let mut resources = ResourceUpdates::new();
-    resources.update_image(key, descriptor.into(), data, None);
-    dh.api.update_resources(resources);
 }
 
 #[no_mangle]
-pub extern "C" fn wr_api_update_blob_image(dh: &mut DocumentHandle,
-                                           image_key: WrImageKey,
-                                           descriptor: &WrImageDescriptor,
-                                           bytes: ByteSlice) {
-    assert!(unsafe { is_in_compositor_thread() });
+pub extern "C" fn wr_resource_updates_update_blob_image(
+    resources: &mut ResourceUpdates,
+    image_key: WrImageKey,
+    descriptor: &WrImageDescriptor,
+    bytes: ByteSlice
+) {
     let copied_bytes = bytes.as_slice().to_owned();
-    let mut resources = ResourceUpdates::new();
     resources.update_image(
         image_key,
         descriptor.into(),
         ImageData::new_blob_image(copied_bytes),
         None
     );
-    dh.api.update_resources(resources);
 }
 
 #[no_mangle]
-pub extern "C" fn wr_api_delete_image(dh: &mut DocumentHandle,
-                                      key: WrImageKey) {
-    assert!(unsafe { is_in_compositor_thread() });
-    let mut resources = ResourceUpdates::new();
+pub extern "C" fn wr_resource_updates_delete_image(
+    resources: &mut ResourceUpdates,
+    key: WrImageKey
+) {
     resources.delete_image(key);
-    dh.api.update_resources(resources);
+}
+
+#[no_mangle]
+pub extern "C" fn wr_api_update_resources(
+    dh: &mut DocumentHandle,
+    resources: &mut ResourceUpdates
+) {
+    let resource_updates = mem::replace(resources, ResourceUpdates::new());
+    dh.api.update_resources(resource_updates);
 }
 
 #[no_mangle]
@@ -778,21 +788,23 @@ pub extern "C" fn wr_api_set_window_parameters(dh: &mut DocumentHandle,
 }
 
 #[no_mangle]
-pub unsafe extern "C" fn wr_api_set_root_display_list(dh: &mut DocumentHandle,
-                                                      color: ColorF,
-                                                      epoch: WrEpoch,
-                                                      viewport_width: f32,
-                                                      viewport_height: f32,
-                                                      pipeline_id: WrPipelineId,
-                                                      content_size: LayoutSize,
-                                                      dl_descriptor: BuiltDisplayListDescriptor,
-                                                      dl_data: *mut u8,
-                                                      dl_size: usize) {
-    let color = if color.a == 0.0 {
-        None
-    } else {
-        Some(color)
-    };
+pub unsafe extern "C" fn wr_api_set_display_list(
+    dh: &mut DocumentHandle,
+    color: ColorF,
+    epoch: WrEpoch,
+    viewport_width: f32,
+    viewport_height: f32,
+    pipeline_id: WrPipelineId,
+    content_size: LayoutSize,
+    dl_descriptor: BuiltDisplayListDescriptor,
+    dl_data: *mut u8,
+    dl_size: usize,
+    resources: &mut ResourceUpdates,
+) {
+    let resource_updates = mem::replace(resources, ResourceUpdates::new());
+
+    let color = if color.a == 0.0 { None } else { Some(color) };
+
     // See the documentation of set_display_list in api.rs. I don't think
     // it makes a difference in gecko at the moment(until APZ is figured out)
     // but I suppose it is a good default.
@@ -804,29 +816,36 @@ pub unsafe extern "C" fn wr_api_set_root_display_list(dh: &mut DocumentHandle,
     dl_vec.extend_from_slice(dl_slice);
     let dl = BuiltDisplayList::from_data(dl_vec, dl_descriptor);
 
-    dh.api.set_display_list(dh.document_id,
-                            epoch,
-                            color,
-                            LayoutSize::new(viewport_width, viewport_height),
-                            (pipeline_id, content_size, dl),
-                            preserve_frame_state,
-                            ResourceUpdates::new());
+    dh.api.set_display_list(
+        dh.document_id,
+        epoch,
+        color,
+        LayoutSize::new(viewport_width, viewport_height),
+        (pipeline_id, content_size, dl),
+        preserve_frame_state,
+        resource_updates
+    );
 }
 
 #[no_mangle]
-pub unsafe extern "C" fn wr_api_clear_root_display_list(dh: &mut DocumentHandle,
-                                                        epoch: WrEpoch,
-                                                        pipeline_id: WrPipelineId) {
+pub unsafe extern "C" fn wr_api_clear_display_list(
+    dh: &mut DocumentHandle,
+    epoch: WrEpoch,
+    pipeline_id: WrPipelineId,
+) {
     let preserve_frame_state = true;
     let frame_builder = WebRenderFrameBuilder::new(pipeline_id, LayoutSize::zero());
+    let resource_updates = ResourceUpdates::new();
 
-    dh.api.set_display_list(dh.document_id,
-                            epoch,
-                            None,
-                            LayoutSize::new(0.0, 0.0),
-                            frame_builder.dl_builder.finalize(),
-                            preserve_frame_state,
-                            ResourceUpdates::new());
+    dh.api.set_display_list(
+        dh.document_id,
+        epoch,
+        None,
+        LayoutSize::new(0.0, 0.0),
+        frame_builder.dl_builder.finalize(),
+        preserve_frame_state,
+        resource_updates
+    );
 }
 
 #[no_mangle]
@@ -883,55 +902,87 @@ pub extern "C" fn wr_api_send_external_event(dh: &mut DocumentHandle,
 }
 
 #[no_mangle]
-pub extern "C" fn wr_api_add_raw_font(dh: &mut DocumentHandle,
-                                      key: WrFontKey,
-                                      font_buffer: *mut u8,
-                                      buffer_size: usize,
-                                      index: u32) {
-    assert!(unsafe { is_in_compositor_thread() });
-
+pub extern "C" fn wr_resource_updates_add_raw_font(
+    resources: &mut ResourceUpdates,
+    key: WrFontKey,
+    font_buffer: *mut u8,
+    buffer_size: usize,
+    index: u32
+) {
     let font_slice = make_slice(font_buffer, buffer_size);
     let mut font_vector = Vec::new();
     font_vector.extend_from_slice(font_slice);
 
-    let mut resources = ResourceUpdates::new();
     resources.add_raw_font(key, font_vector, index);
-    dh.api.update_resources(resources);
 }
 
 #[no_mangle]
-pub extern "C" fn wr_api_delete_font(dh: &mut DocumentHandle,
-                                     key: WrFontKey) {
-    assert!(unsafe { is_in_compositor_thread() });
-    let mut resources = ResourceUpdates::new();
+pub extern "C" fn wr_resource_updates_delete_font(
+    resources: &mut ResourceUpdates,
+    key: WrFontKey
+) {
     resources.delete_font(key);
-    dh.api.update_resources(resources);
 }
 
 #[no_mangle]
-pub extern "C" fn wr_api_add_font_instance(dh: &mut DocumentHandle,
-                                           key: WrFontInstanceKey,
-                                           font_key: WrFontKey,
-                                           glyph_size: f32,
-                                           options: *const FontInstanceOptions,
-                                           platform_options: *const FontInstancePlatformOptions) {
-    assert!(unsafe { is_in_compositor_thread() });
-    let mut resources = ResourceUpdates::new();
-    resources.add_font_instance(key,
-                                font_key,
-                                Au::from_f32_px(glyph_size),
-                                unsafe { options.as_ref().cloned() },
-                                unsafe { platform_options.as_ref().cloned() });
-    dh.api.update_resources(resources);
+pub extern "C" fn wr_resource_updates_add_font_instance(
+    resources: &mut ResourceUpdates,
+    key: WrFontInstanceKey,
+    font_key: WrFontKey,
+    glyph_size: f32,
+    options: *const FontInstanceOptions,
+    platform_options: *const FontInstancePlatformOptions
+) {
+    resources.add_font_instance(
+        key,
+        font_key,
+        Au::from_f32_px(glyph_size),
+        unsafe { options.as_ref().cloned() },
+        unsafe { platform_options.as_ref().cloned() }
+    );
 }
 
 #[no_mangle]
-pub extern "C" fn wr_api_delete_font_instance(dh: &mut DocumentHandle,
-                                              key: WrFontInstanceKey) {
-    assert!(unsafe { is_in_compositor_thread() });
-    let mut resources = ResourceUpdates::new();
+pub extern "C" fn wr_resource_updates_delete_font_instance(
+    resources: &mut ResourceUpdates,
+    key: WrFontInstanceKey
+) {
     resources.delete_font_instance(key);
-    dh.api.update_resources(resources);
+}
+
+#[no_mangle]
+pub extern "C" fn wr_resource_updates_new() -> *mut ResourceUpdates {
+    let updates = Box::new(ResourceUpdates::new());
+    Box::into_raw(updates)
+}
+
+#[no_mangle]
+pub extern "C" fn wr_resource_updates_clear(resources: &mut ResourceUpdates) {
+    resources.updates.clear();
+}
+
+/// cbindgen:postfix=WR_DESTRUCTOR_SAFE_FUNC
+#[no_mangle]
+pub extern "C" fn wr_resource_updates_delete(updates: *mut ResourceUpdates) {
+    unsafe {
+        Box::from_raw(updates);
+    }
+}
+
+#[no_mangle]
+pub extern "C" fn wr_resource_updates_serialize(resources: &mut ResourceUpdates, into: &mut VecU8) {
+    let mut data = Vec::new();
+    bincode::serialize_into(&mut data, &resources.updates, bincode::Infinite).unwrap();
+    resources.updates.clear();
+    *into = data;
+}
+
+#[no_mangle]
+pub extern "C" fn wr_resource_updates_deserialize(data: ByteSlice) -> *mut ResourceUpdates {
+    let resources: Box<ResourceUpdates> = Box::new(
+        bincode::deserialize_from(&mut data.as_slice(), bincode::Infinite).expect("Invalid wr::ResourceUpdate serialization?")
+    );
+    Box::into_raw(resources)
 }
 
 #[no_mangle]

@@ -73,13 +73,14 @@ WebRenderPaintedLayerBlob::RenderLayer(wr::DisplayListBuilder& aBuilder,
 
     wr::ByteBuffer bytes(recorder->mOutputStream.mLength, (uint8_t*)recorder->mOutputStream.mData);
 
-    //XXX: We should switch to updating the blob image instead of adding a new one
-    //     That will get rid of this discard bit
     if (mImageKey.isSome()) {
-      WrManager()->AddImageKeyForDiscard(mImageKey.value());
+      //XXX: We should switch to updating the blob image instead of adding a new one
+      aBuilder.Resources().DeleteImage(mImageKey.value());
     }
     mImageKey = Some(GenerateImageKey());
-    WrBridge()->SendAddBlobImage(mImageKey.value(), imageSize, 0, dt->GetFormat(), bytes);
+
+    wr::ImageDescriptor descriptor(imageSize, 0, dt->GetFormat());
+    aBuilder.Resources().AddBlobImage(mImageKey.value(), descriptor, bytes.AsSlice());
     mImageBounds = visibleRegion.GetBounds();
   }
 

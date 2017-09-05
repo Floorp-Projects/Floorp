@@ -870,6 +870,9 @@ getSignatureName(uint32_t aSignatureScheme)
     case ssl_sig_none:
       signatureName = NS_LITERAL_CSTRING("none");
       break;
+    case ssl_sig_rsa_pkcs1_sha1:
+      signatureName = NS_LITERAL_CSTRING("RSA-PKCS1-SHA1");
+      break;
     case ssl_sig_rsa_pkcs1_sha256:
       signatureName = NS_LITERAL_CSTRING("RSA-PKCS1-SHA256");
       break;

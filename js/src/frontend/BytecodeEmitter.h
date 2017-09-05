@@ -278,7 +278,7 @@ struct MOZ_STACK_CLASS BytecodeEmitter
     const EmitterMode emitterMode;
 
     // The end location of a function body that is being emitted.
-    uint32_t functionBodyEndPos;
+    MOZ_INIT_OUTSIDE_CTOR uint32_t functionBodyEndPos;
     // Whether functionBodyEndPos was set.
     bool functionBodyEndPosSet;
 

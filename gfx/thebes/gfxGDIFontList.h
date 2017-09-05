@@ -233,6 +233,8 @@ public:
     virtual void AddSizeOfIncludingThis(mozilla::MallocSizeOf aMallocSizeOf,
                                         FontListSizes* aSizes) const;
 
+    gfxFontEntry* Clone() const override;
+
     // create a font entry for a font with a given name
     static GDIFontEntry* CreateFontEntry(const nsAString& aName,
                                          gfxWindowsFontType aFontType,
@@ -287,7 +289,7 @@ protected:
 class GDIFontFamily : public gfxFontFamily
 {
 public:
-    explicit GDIFontFamily(nsAString &aName) :
+    explicit GDIFontFamily(const nsAString& aName) :
         gfxFontFamily(aName) {}
 
     virtual void FindStyleVariations(FontInfoData *aFontInfoData = nullptr);
@@ -307,9 +309,11 @@ public:
     // initialize font lists
     virtual nsresult InitFontListForPlatform() override;
 
+    gfxFontFamily* CreateFontFamily(const nsAString& aName) const override;
+
     bool FindAndAddFamilies(const nsAString& aFamily,
                             nsTArray<gfxFontFamily*>* aOutput,
-                            bool aDeferOtherFamilyNamesLoading,
+                            FindFamiliesFlags aFlags,
                             gfxFontStyle* aStyle = nullptr,
                             gfxFloat aDevToCssSize = 1.0) override;
 

@@ -9,7 +9,7 @@ const Ci = Components.interfaces;
 
 Cu.import("resource://gre/modules/AppConstants.jsm");
 
-const DELAY = AppConstants.DEBUG ? 2000 : 200;
+const DELAY = AppConstants.DEBUG ? 2000 : 500;
 
 let nsTimer = Components.Constructor("@mozilla.org/timer;1", "nsITimer", "initWithCallback");
 

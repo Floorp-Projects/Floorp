@@ -122,13 +122,13 @@ GPUVideoTextureHost::GetWRImageKeys(nsTArray<wr::ImageKey>& aImageKeys,
 }
 
 void
-GPUVideoTextureHost::AddWRImage(wr::WebRenderAPI* aAPI,
+GPUVideoTextureHost::AddWRImage(wr::ResourceUpdateQueue& aResources,
                                 Range<const wr::ImageKey>& aImageKeys,
                                 const wr::ExternalImageId& aExtID)
 {
   MOZ_ASSERT(mWrappedTextureHost);
 
-  mWrappedTextureHost->AddWRImage(aAPI, aImageKeys, aExtID);
+  mWrappedTextureHost->AddWRImage(aResources, aImageKeys, aExtID);
 }
 
 void

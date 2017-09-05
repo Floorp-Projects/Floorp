@@ -71,12 +71,11 @@ WebRenderBridgeChild::AddWebRenderParentCommands(const nsTArray<WebRenderParentC
 }
 
 bool
-WebRenderBridgeChild::DPBegin(const gfx::IntSize& aSize)
+WebRenderBridgeChild::BeginTransaction(const gfx::IntSize& aSize)
 {
   MOZ_ASSERT(!mDestroyed);
 
   UpdateFwdTransactionId();
-  this->SendDPBegin(aSize);
   mIsInTransaction = true;
   mReadLockSequenceNumber = 0;
   mReadLocks.AppendElement();
@@ -99,12 +98,23 @@ WebRenderBridgeChild::ClearReadLocks()
 }
 
 void
-WebRenderBridgeChild::DPEnd(wr::DisplayListBuilder &aBuilder,
-                            const gfx::IntSize& aSize,
-                            bool aIsSync,
-                            uint64_t aTransactionId,
-                            const WebRenderScrollData& aScrollData,
-                            const mozilla::TimeStamp& aTxnStartTime)
+WebRenderBridgeChild::UpdateResources(wr::ResourceUpdateQueue& aResources)
+{
+  if (!IPCOpen()) {
+    aResources.Clear();
+    return;
+  }
+  wr::ByteBuffer serializedUpdates(Move(aResources.Serialize()));
+  this->SendUpdateResources(serializedUpdates);
+}
+
+void
+WebRenderBridgeChild::EndTransaction(wr::DisplayListBuilder &aBuilder,
+                                     const gfx::IntSize& aSize,
+                                     bool aIsSync,
+                                     uint64_t aTransactionId,
+                                     const WebRenderScrollData& aScrollData,
+                                     const mozilla::TimeStamp& aTxnStartTime)
 {
   MOZ_ASSERT(!mDestroyed);
   MOZ_ASSERT(mIsInTransaction);
@@ -119,12 +129,18 @@ WebRenderBridgeChild::DPEnd(wr::DisplayListBuilder &aBuilder,
   fwdTime = TimeStamp::Now();
 #endif
 
+  wr::ByteBuffer resourceUpdates(Move(aBuilder.Resources().Serialize()));
+
   if (aIsSync) {
-    this->SendDPSyncEnd(aSize, mParentCommands, mDestroyedActors, GetFwdTransactionId(), aTransactionId,
-                        contentSize, dlData, dl.dl_desc, aScrollData, mIdNamespace, aTxnStartTime, fwdTime);
+    this->SendSetDisplayListSync(aSize, mParentCommands, mDestroyedActors,
+                                 GetFwdTransactionId(), aTransactionId,
+                                 contentSize, dlData, dl.dl_desc, aScrollData,
+                                 resourceUpdates, mIdNamespace, aTxnStartTime, fwdTime);
   } else {
-    this->SendDPEnd(aSize, mParentCommands, mDestroyedActors, GetFwdTransactionId(), aTransactionId,
-                    contentSize, dlData, dl.dl_desc, aScrollData, mIdNamespace, aTxnStartTime, fwdTime);
+    this->SendSetDisplayList(aSize, mParentCommands, mDestroyedActors,
+                             GetFwdTransactionId(), aTransactionId,
+                             contentSize, dlData, dl.dl_desc, aScrollData,
+                             resourceUpdates, mIdNamespace, aTxnStartTime, fwdTime);
   }
 
   mParentCommands.Clear();
@@ -256,6 +272,8 @@ WebRenderBridgeChild::GetFontKeyForScaledFont(gfx::ScaledFont* aScaledFont)
   RefPtr<gfx::UnscaledFont> unscaled = aScaledFont->GetUnscaledFont();
   MOZ_ASSERT(unscaled);
 
+  wr::ResourceUpdateQueue resources;
+
   wr::FontKey fontKey = { wr::IdNamespace { 0 }, 0};
   if (!mFontKeys.Get(unscaled, &fontKey)) {
     FontFileData data;
@@ -267,7 +285,7 @@ WebRenderBridgeChild::GetFontKeyForScaledFont(gfx::ScaledFont* aScaledFont)
     fontKey.mNamespace = GetNamespace();
     fontKey.mHandle = GetNextResourceId();
 
-    SendAddRawFont(fontKey, data.mFontBuffer, data.mFontIndex);
+    resources.AddRawFont(fontKey, data.mFontBuffer.AsSlice(), data.mFontIndex);
 
     mFontKeys.Put(unscaled, fontKey);
   }
@@ -275,7 +293,8 @@ WebRenderBridgeChild::GetFontKeyForScaledFont(gfx::ScaledFont* aScaledFont)
   instanceKey.mNamespace = GetNamespace();
   instanceKey.mHandle = GetNextResourceId();
 
-  SendAddFontInstance(instanceKey, fontKey, aScaledFont->GetSize(), Nothing(), Nothing());
+  resources.AddFontInstance(instanceKey, fontKey, aScaledFont->GetSize(), nullptr, nullptr);
+  UpdateResources(resources);
 
   mFontInstanceKeys.Put(aScaledFont, instanceKey);
 
@@ -286,11 +305,12 @@ void
 WebRenderBridgeChild::RemoveExpiredFontKeys()
 {
   uint32_t counter = gfx::ScaledFont::DeletionCounter();
+  wr::ResourceUpdateQueue resources;
   if (mFontInstanceKeysDeleted != counter) {
     mFontInstanceKeysDeleted = counter;
     for (auto iter = mFontInstanceKeys.Iter(); !iter.Done(); iter.Next()) {
       if (!iter.Key()) {
-        SendDeleteFontInstance(iter.Data());
+        resources.DeleteFontInstance(iter.Data());
         iter.Remove();
       }
     }
@@ -300,11 +320,12 @@ WebRenderBridgeChild::RemoveExpiredFontKeys()
     mFontKeysDeleted = counter;
     for (auto iter = mFontKeys.Iter(); !iter.Done(); iter.Next()) {
       if (!iter.Key()) {
-        SendDeleteFont(iter.Data());
+        resources.DeleteFont(iter.Data());
         iter.Remove();
       }
     }
   }
+  UpdateResources(resources);
 }
 
 CompositorBridgeChild*
