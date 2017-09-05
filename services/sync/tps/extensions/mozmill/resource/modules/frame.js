@@ -285,7 +285,7 @@ events.fail = function (obj) {
     events.currentTest.__fails__.push(obj);
   }
 
-  for (var time of timers) {
+  for (var timer of timers) {
     timer.actions.push(
       {"currentTest": events.currentModule.__file__ + "::" + events.currentTest.__name__,
        "obj": obj,
