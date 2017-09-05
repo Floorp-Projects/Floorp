@@ -1473,16 +1473,16 @@ var gCSSProperties = {
 };
 
 function testAnimationSamples(animation, idlName, testSamples) {
-  var type = animation.effect.target.type;
-  var target = type
-               ? animation.effect.target.parentElement
-               : animation.effect.target;
-  testSamples.forEach(function(testSample) {
+  const type = animation.effect.target.type;
+  const target = animation.effect.target.constructor.name === 'CSSPseudoElement'
+                 ? animation.effect.target.parentElement
+                 : animation.effect.target;
+  testSamples.forEach(testSample => {
     animation.currentTime = testSample.time;
     assert_equals(getComputedStyle(target, type)[idlName],
                   testSample.expected,
-                  'The value should be ' + testSample.expected +
-                  ' at ' + testSample.time + 'ms');
+                  `The value should be ${testSample.expected}` +
+                  ` at ${testSample.time}ms`);
   });
 }
 
