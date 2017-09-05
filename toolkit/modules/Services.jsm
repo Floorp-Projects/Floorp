@@ -77,7 +77,6 @@ var initTable = {
   droppedLinkHandler: ["@mozilla.org/content/dropped-link-handler;1", "nsIDroppedLinkHandler"],
   els: ["@mozilla.org/eventlistenerservice;1", "nsIEventListenerService"],
   eTLD: ["@mozilla.org/network/effective-tld-service;1", "nsIEffectiveTLDService"],
-  idle: ["@mozilla.org/widget/idleservice;1", "nsIIdleService"],
   intl: ["@mozilla.org/mozintl;1", "mozIMozIntl"],
   locale: ["@mozilla.org/intl/localeservice;1", "mozILocaleService"],
   logins: ["@mozilla.org/login-manager;1", "nsILoginManager"],
