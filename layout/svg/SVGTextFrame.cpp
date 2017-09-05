@@ -3914,27 +3914,6 @@ SVGTextFrame::GetBBoxContribution(const gfx::Matrix &aToBBoxUserspace,
 }
 
 //----------------------------------------------------------------------
-// nsSVGContainerFrame methods
-
-gfxMatrix
-SVGTextFrame::GetCanvasTM()
-{
-  if (!mCanvasTM) {
-    NS_ASSERTION(GetParent(), "null parent");
-    NS_ASSERTION(!(GetStateBits() & NS_FRAME_IS_NONDISPLAY),
-                 "should not call GetCanvasTM() when we are non-display");
-
-    nsSVGContainerFrame *parent = static_cast<nsSVGContainerFrame*>(GetParent());
-    dom::SVGTextContentElement *content = static_cast<dom::SVGTextContentElement*>(GetContent());
-
-    gfxMatrix tm = content->PrependLocalTransformsTo(parent->GetCanvasTM());
-
-    mCanvasTM = new gfxMatrix(tm);
-  }
-  return *mCanvasTM;
-}
-
-//----------------------------------------------------------------------
 // SVGTextFrame SVG DOM methods
 
 /**
