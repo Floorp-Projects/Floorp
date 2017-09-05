@@ -976,11 +976,37 @@ void
 imgCacheQueue::Remove(imgCacheEntry* entry)
 {
   auto it = find(mQueue.begin(), mQueue.end(), entry);
-  if (it != mQueue.end()) {
-    mSize -= (*it)->GetDataSize();
-    mQueue.erase(it);
-    MarkDirty();
+  if (it == mQueue.end()) {
+    return;
   }
+
+  mSize -= (*it)->GetDataSize();
+
+  // If the queue is clean and this is the first entry,
+  // then we can efficiently remove the entry without
+  // dirtying the sort order.
+  if (!IsDirty() && it == mQueue.begin()) {
+    std::pop_heap(mQueue.begin(), mQueue.end(),
+                  imgLoader::CompareCacheEntries);
+    mQueue.pop_back();
+    return;
+  }
+
+  // Remove from the middle of the list.  This potentially
+  // breaks the binary heap sort order.
+  mQueue.erase(it);
+
+  // If we only have one entry or the queue is empty, though,
+  // then the sort order is still effectively good.  Simply
+  // refresh the list to clear the dirty flag.
+  if (mQueue.size() <= 1) {
+    Refresh();
+    return;
+  }
+
+  // Otherwise we must mark the queue dirty and potentially
+  // trigger an expensive sort later.
+  MarkDirty();
 }
 
 void
@@ -1620,7 +1646,12 @@ void
 imgLoader::CacheEntriesChanged(bool aForChrome, int32_t aSizeDiff /* = 0 */)
 {
   imgCacheQueue& queue = GetCacheQueue(aForChrome);
-  queue.MarkDirty();
+  // We only need to dirty the queue if there is any sorting
+  // taking place.  Empty or single-entry lists can't become
+  // dirty.
+  if (queue.GetNumElements() > 1) {
+    queue.MarkDirty();
+  }
   queue.UpdateSize(aSizeDiff);
 }
 
