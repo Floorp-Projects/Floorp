@@ -12,11 +12,9 @@ import android.support.annotation.NonNull;
 
 import org.mozilla.gecko.util.ThreadUtils;
 
-import java.util.ArrayList;
 import java.util.Collections;
 import java.util.HashSet;
 import java.util.LinkedList;
-import java.util.List;
 import java.util.Queue;
 import java.util.concurrent.Callable;
 import java.util.concurrent.CancellationException;
@@ -36,8 +34,11 @@ import java.util.concurrent.FutureTask;
  *
  * This example will run the runnable returned by onPermissionGranted() if the WRITE_EXTERNAL_STORAGE permission is
  * already granted. Otherwise it will prompt the user and run the runnable returned by onPermissionGranted() or
- * onPermissionDenied() depending on whether the user accepted or not. If onUiThread() is specified then all callbacks
- * will be run on the UI thread.
+ * onPermissionDenied() depending on whether the user accepted or not.
+ * <p>
+ * If onUiThread()/onBackgroundThread() is specified, all callbacks will be run on the respective
+ * thread. Otherwise, the callback may run on the current thread, but will switch to the UI thread
+ * if a permissions prompt is required.
  */
 public class Permissions {
     private static final Queue<PermissionBlock> waiting = new LinkedList<>();

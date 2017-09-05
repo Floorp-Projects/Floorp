@@ -29,6 +29,7 @@
 
 #include "nsToolkitCompsCID.h"
 #include "AndroidAlerts.h"
+#include "nsNativeThemeAndroid.h"
 
 NS_GENERIC_FACTORY_CONSTRUCTOR(nsWindow)
 NS_GENERIC_FACTORY_CONSTRUCTOR(nsScreenManagerAndroid)
@@ -52,10 +53,31 @@ NS_GENERIC_FACTORY_CONSTRUCTOR(AndroidAlerts)
 }
 }
 
+static nsresult
+nsNativeThemeAndroidConstructor(nsISupports *aOuter, REFNSIID aIID,
+                                void **aResult)
+{
+  nsresult rv;
+
+  if (aOuter) {
+    rv = NS_ERROR_NO_AGGREGATION;
+    return rv;
+  }
+
+  *aResult = nullptr;
+  nsNativeThemeAndroid* inst = new nsNativeThemeAndroid();
+  NS_ADDREF(inst);
+  rv = inst->QueryInterface(aIID, aResult);
+  NS_RELEASE(inst);
+
+  return rv;
+}
+
 NS_DEFINE_NAMED_CID(NS_APPSHELL_CID);
 NS_DEFINE_NAMED_CID(NS_WINDOW_CID);
 NS_DEFINE_NAMED_CID(NS_CHILD_CID);
 NS_DEFINE_NAMED_CID(NS_SCREENMANAGER_CID);
+NS_DEFINE_NAMED_CID(NS_THEMERENDERER_CID);
 NS_DEFINE_NAMED_CID(NS_IDLE_SERVICE_CID);
 NS_DEFINE_NAMED_CID(NS_TRANSFERABLE_CID);
 NS_DEFINE_NAMED_CID(NS_CLIPBOARD_CID);
@@ -74,6 +96,7 @@ static const mozilla::Module::CIDEntry kWidgetCIDs[] = {
   { &kNS_CHILD_CID, false, nullptr, nsWindowConstructor },
   { &kNS_APPSHELL_CID, false, nullptr, nsAppShellConstructor },
   { &kNS_SCREENMANAGER_CID, false, nullptr, nsScreenManagerAndroidConstructor },
+  { &kNS_THEMERENDERER_CID, false, nullptr, nsNativeThemeAndroidConstructor },
   { &kNS_IDLE_SERVICE_CID, false, nullptr, nsIdleServiceAndroidConstructor },
   { &kNS_TRANSFERABLE_CID, false, nullptr, nsTransferableConstructor },
   { &kNS_CLIPBOARD_CID, false, nullptr, nsClipboardConstructor },
@@ -94,6 +117,7 @@ static const mozilla::Module::ContractIDEntry kWidgetContracts[] = {
   { "@mozilla.org/widgets/child_window/android;1", &kNS_CHILD_CID },
   { "@mozilla.org/widget/appshell/android;1", &kNS_APPSHELL_CID },
   { "@mozilla.org/gfx/screenmanager;1", &kNS_SCREENMANAGER_CID },
+  { "@mozilla.org/chrome/chrome-native-theme;1", &kNS_THEMERENDERER_CID },
   { "@mozilla.org/widget/idleservice;1", &kNS_IDLE_SERVICE_CID },
   { "@mozilla.org/widget/transferable;1", &kNS_TRANSFERABLE_CID },
   { "@mozilla.org/widget/clipboard;1", &kNS_CLIPBOARD_CID },

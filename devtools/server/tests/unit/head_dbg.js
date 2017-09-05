@@ -767,6 +767,20 @@ function stepOver(client, threadClient) {
 }
 
 /**
+ * Resume JS execution for a step out and wait for the pause after the step
+ * has been taken.
+ *
+ * @param DebuggerClient client
+ * @param ThreadClient threadClient
+ * @returns Promise
+ */
+function stepOut(client, threadClient) {
+  dumpn("Stepping out.");
+  return threadClient.stepOut()
+    .then(() => waitForPause(client));
+}
+
+/**
  * Get the list of `count` frames currently on stack, starting at the index
  * `first` for the specified thread.
  *

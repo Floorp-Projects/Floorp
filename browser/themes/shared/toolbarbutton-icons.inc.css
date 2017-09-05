@@ -458,11 +458,11 @@ toolbar[brighttext] .toolbarbutton-1 {
   }
 }
 
-#library-button[animate="bookmark"] > .toolbarbutton-icon {
+#library-button[animate] > .toolbarbutton-icon {
   fill: transparent;
 }
 
-.toolbarbutton-animatable-box[animate="bookmark"] {
+.toolbarbutton-animatable-box[animate] {
   position: absolute;
   overflow: hidden;
   /* Position the sprite at the y-position of the library-button, then adjust
@@ -482,9 +482,12 @@ toolbar[brighttext] .toolbarbutton-1 {
   z-index: 2;
 }
 
-.toolbarbutton-animatable-box[animate="bookmark"] > .toolbarbutton-animatable-image {
+.toolbarbutton-animatable-box[animate] > .toolbarbutton-animatable-image {
   height: var(--toolbarbutton-height);
   min-height: 54px; /* Minimum height must be equal to the height of the SVG sprite */
+}
+
+.toolbarbutton-animatable-box[animate="bookmark"] > .toolbarbutton-animatable-image {
   background-image: url("chrome://browser/skin/library-bookmark-animation.svg");
   width: 1078px;
   animation-name: library-bookmark-animation;

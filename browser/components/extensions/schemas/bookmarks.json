@@ -29,6 +29,12 @@
         "description": "Indicates the reason why this node is unmodifiable. The <var>managed</var> value indicates that this node was configured by the system administrator or by the custodian of a supervised user. Omitted if the node can be modified by the user and the extension (default)."
       },
       {
+        "id": "BookmarkTreeNodeType",
+        "type": "string",
+        "enum": ["bookmark", "folder", "separator"],
+        "description": "Indicates the type of a BookmarkTreeNode, which can be one of bookmark, folder or separator."
+      },
+      {
         "id": "BookmarkTreeNode",
         "type": "object",
         "description": "A node (either a bookmark or a folder) in the bookmark tree.  Child nodes are ordered within their parent folder.",
@@ -71,6 +77,11 @@
             "optional": true,
             "description": "Indicates the reason why this node is unmodifiable. The <var>managed</var> value indicates that this node was configured by the system administrator or by the custodian of a supervised user. Omitted if the node can be modified by the user and the extension (default)."
           },
+          "type": {
+            "$ref": "BookmarkTreeNodeType",
+            "optional": true,
+            "description": "Indicates the type of the BookmarkTreeNode, which can be one of bookmark, folder or separator."
+          },
           "children": {
             "type": "array",
             "optional": true,
@@ -101,6 +112,11 @@
           "url": {
             "type": "string",
             "optional": true
+          },
+          "type": {
+            "$ref": "BookmarkTreeNodeType",
+            "optional": true,
+            "description": "Indicates the type of BookmarkTreeNode to create, which can be one of bookmark, folder or separator."
           }
         }
       }

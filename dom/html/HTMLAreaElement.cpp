@@ -28,26 +28,14 @@ HTMLAreaElement::~HTMLAreaElement()
 {
 }
 
-NS_INTERFACE_TABLE_HEAD_CYCLE_COLLECTION_INHERITED(HTMLAreaElement)
-  NS_INTERFACE_TABLE_INHERITED(HTMLAreaElement,
-                               nsIDOMHTMLAreaElement,
-                               Link)
-NS_INTERFACE_TABLE_TAIL_INHERITING(nsGenericHTMLElement)
+NS_IMPL_ISUPPORTS_CYCLE_COLLECTION_INHERITED(HTMLAreaElement,
+                                             nsGenericHTMLElement,
+                                             nsIDOMHTMLAreaElement,
+                                             Link)
 
-NS_IMPL_ADDREF_INHERITED(HTMLAreaElement, Element)
-NS_IMPL_RELEASE_INHERITED(HTMLAreaElement, Element)
-
-NS_IMPL_CYCLE_COLLECTION_CLASS(HTMLAreaElement)
-
-NS_IMPL_CYCLE_COLLECTION_TRAVERSE_BEGIN_INHERITED(HTMLAreaElement,
-                                                  nsGenericHTMLElement)
-  NS_IMPL_CYCLE_COLLECTION_TRAVERSE(mRelList)
-NS_IMPL_CYCLE_COLLECTION_TRAVERSE_END
-
-NS_IMPL_CYCLE_COLLECTION_UNLINK_BEGIN_INHERITED(HTMLAreaElement,
-                                                nsGenericHTMLElement)
-  NS_IMPL_CYCLE_COLLECTION_UNLINK(mRelList)
-NS_IMPL_CYCLE_COLLECTION_UNLINK_END
+NS_IMPL_CYCLE_COLLECTION_INHERITED(HTMLAreaElement,
+                                   nsGenericHTMLElement,
+                                   mRelList)
 
 NS_IMPL_ELEMENT_CLONE(HTMLAreaElement)
 

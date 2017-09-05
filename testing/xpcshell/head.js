@@ -598,7 +598,7 @@ function _execute_test() {
   };
 
   let complete = _cleanupFunctions.length == 0;
-  _Task.spawn(function*() {
+  _Task.spawn(function* () {
     for (let func of _cleanupFunctions.reverse()) {
       try {
         yield func();

@@ -104,9 +104,10 @@ public:
   virtual mozilla::ipc::IPCResult RecvEnsureInitialized(const CaptureEngine&) override;
 
   nsIEventTarget* GetBackgroundEventTarget() { return mPBackgroundEventTarget; };
-  bool IsShuttingDown() { return !mChildIsAlive
-                              ||  mDestroyed
-                              || !mWebRTCAlive; };
+  bool IsShuttingDown()
+  {
+    return !mChildIsAlive || mDestroyed || !mWebRTCAlive;
+  };
   ShmemBuffer GetBuffer(size_t aSize);
 
   // helper to forward to the PBackground thread

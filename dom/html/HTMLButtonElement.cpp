@@ -76,16 +76,10 @@ NS_IMPL_CYCLE_COLLECTION_INHERITED(HTMLButtonElement,
                                    nsGenericHTMLFormElementWithState,
                                    mValidity)
 
-NS_IMPL_ADDREF_INHERITED(HTMLButtonElement, Element)
-NS_IMPL_RELEASE_INHERITED(HTMLButtonElement, Element)
-
-
-// QueryInterface implementation for HTMLButtonElement
-NS_INTERFACE_TABLE_HEAD_CYCLE_COLLECTION_INHERITED(HTMLButtonElement)
-  NS_INTERFACE_TABLE_INHERITED(HTMLButtonElement,
-                               nsIDOMHTMLButtonElement,
-                               nsIConstraintValidation)
-NS_INTERFACE_TABLE_TAIL_INHERITING(nsGenericHTMLFormElementWithState)
+NS_IMPL_ISUPPORTS_CYCLE_COLLECTION_INHERITED(HTMLButtonElement,
+                                             nsGenericHTMLFormElementWithState,
+                                             nsIDOMHTMLButtonElement,
+                                             nsIConstraintValidation)
 
 void
 HTMLButtonElement::SetCustomValidity(const nsAString& aError)

@@ -788,10 +788,10 @@ pub fn parse_until_before<'i: 't, 't, F, T, E>(parser: &mut Parser<'i, 't>,
     }
     // FIXME: have a special-purpose tokenizer method for this that does less work.
     loop {
-        if delimiters.contains(Delimiters::from_byte((parser.input.tokenizer).next_byte())) {
+        if delimiters.contains(Delimiters::from_byte(parser.input.tokenizer.next_byte())) {
             break
         }
-        if let Ok(token) = (parser.input.tokenizer).next() {
+        if let Ok(token) = parser.input.tokenizer.next() {
             if let Some(block_type) = BlockType::opening(&token) {
                 consume_until_end_of_block(block_type, &mut parser.input.tokenizer);
             }
@@ -808,11 +808,11 @@ pub fn parse_until_after<'i: 't, 't, F, T, E>(parser: &mut Parser<'i, 't>,
                                               -> Result <T, ParseError<'i, E>>
     where F: for<'tt> FnOnce(&mut Parser<'i, 'tt>) -> Result<T, ParseError<'i, E>> {
     let result = parser.parse_until_before(delimiters, parse);
-    let next_byte = (parser.input.tokenizer).next_byte();
+    let next_byte = parser.input.tokenizer.next_byte();
     if next_byte.is_some() && !parser.stop_before.contains(Delimiters::from_byte(next_byte)) {
         debug_assert!(delimiters.contains(Delimiters::from_byte(next_byte)));
         // We know this byte is ASCII.
-        (parser.input.tokenizer).advance(1);
+        parser.input.tokenizer.advance(1);
         if next_byte == Some(b'{') {
             consume_until_end_of_block(BlockType::CurlyBracket, &mut parser.input.tokenizer);
         }

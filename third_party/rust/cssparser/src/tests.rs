@@ -442,6 +442,26 @@ fn serializer(preserve_comments: bool) {
 }
 
 #[test]
+fn serialize_bad_tokens() {
+    let mut input = ParserInput::new("url(foo\\) b\\)ar)'ba\\'\"z\n4");
+    let mut parser = Parser::new(&mut input);
+
+    let token = parser.next().unwrap().clone();
+    assert!(matches!(token, Token::BadUrl(_)));
+    assert_eq!(token.to_css_string(), "url(foo\\) b\\)ar)");
+
+    let token = parser.next().unwrap().clone();
+    assert!(matches!(token, Token::BadString(_)));
+    assert_eq!(token.to_css_string(), "\"ba'\\\"z");
+
+    let token = parser.next().unwrap().clone();
+    assert!(matches!(token, Token::Number { .. }));
+    assert_eq!(token.to_css_string(), "4");
+
+    assert!(parser.next().is_err());
+}
+
+#[test]
 fn serialize_current_color() {
     let c = Color::CurrentColor;
     assert!(c.to_css_string() == "currentcolor");

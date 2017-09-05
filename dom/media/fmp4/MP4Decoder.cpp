@@ -58,11 +58,11 @@ MP4Decoder::IsSupportedType(const MediaContainerType& aType,
   // Whitelist MP4 types, so they explicitly match what we encounter on
   // the web, as opposed to what we use internally (i.e. what our demuxers
   // etc output).
-  const bool isAudio = aType.Type() == MEDIAMIMETYPE("audio/mp4")
-                       || aType.Type() == MEDIAMIMETYPE("audio/x-m4a");
-  const bool isVideo = aType.Type() == MEDIAMIMETYPE("video/mp4")
-                       || aType.Type() == MEDIAMIMETYPE("video/quicktime")
-                       || aType.Type() == MEDIAMIMETYPE("video/x-m4v");
+  const bool isAudio = aType.Type() == MEDIAMIMETYPE("audio/mp4") ||
+                       aType.Type() == MEDIAMIMETYPE("audio/x-m4a");
+  const bool isVideo = aType.Type() == MEDIAMIMETYPE("video/mp4") ||
+                       aType.Type() == MEDIAMIMETYPE("video/quicktime") ||
+                       aType.Type() == MEDIAMIMETYPE("video/x-m4v");
 
   if (!isAudio && !isVideo) {
     return false;

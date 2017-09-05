@@ -29,19 +29,16 @@ def test_handle_user_prompt(session):
 
 def test_maximize(session):
     before_size = session.window.size
-    assert session.window.state == "normal"
 
     # step 4
     response = maximize(session)
     assert_success(response)
 
     assert before_size != session.window.size
-    assert session.window.state == "maximized"
 
 
 def test_payload(session):
     before_size = session.window.size
-    assert session.window.state == "normal"
 
     response = maximize(session)
 
@@ -54,27 +51,22 @@ def test_payload(session):
     assert "height" in value
     assert "x" in value
     assert "y" in value
-    assert "state" in value
     assert isinstance(value["width"], (int, float))
     assert isinstance(value["height"], (int, float))
     assert isinstance(value["x"], (int, float))
     assert isinstance(value["y"], (int, float))
-    assert isinstance(value["state"], basestring)
 
     assert before_size != session.window.size
-    assert session.window.state == "maximized"
 
 
 def test_maximize_twice_is_idempotent(session):
-    assert session.window.state == "normal"
-
     first_response = maximize(session)
     assert_success(first_response)
-    assert session.window.state == "maximized"
+    max_size = session.window.size
 
     second_response = maximize(session)
     assert_success(second_response)
-    assert session.window.state == "maximized"
+    assert session.window.size == max_size
 
 
 def test_maximize_when_resized_to_max_size(session):
@@ -83,9 +75,7 @@ def test_maximize_when_resized_to_max_size(session):
     #
     # Then resize the window to the maximum available size.
     session.end()
-    assert session.window.state == "normal"
     available = session.window.maximize()
-    assert session.window.state == "maximized"
     session.end()
 
     session.window.size = (int(available["width"]), int(available["height"]))
@@ -95,8 +85,6 @@ def test_maximize_when_resized_to_max_size(session):
     # since this is often a special state.  If a remote end expects a DOM
     # resize event, this may not fire if the window has already reached
     # its expected dimensions.
-    assert session.window.state == "normal"
     before = session.window.size
     session.window.maximize()
     assert session.window.size == before
-    assert session.window.state == "maximized"

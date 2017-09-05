@@ -24,10 +24,10 @@ FlacDecoder::IsEnabled()
 /* static */ bool
 FlacDecoder::IsSupportedType(const MediaContainerType& aContainerType)
 {
-  return IsEnabled()
-         && (aContainerType.Type() == MEDIAMIMETYPE("audio/flac")
-             || aContainerType.Type() == MEDIAMIMETYPE("audio/x-flac")
-             || aContainerType.Type() == MEDIAMIMETYPE("application/x-flac"));
+  return IsEnabled() &&
+         (aContainerType.Type() == MEDIAMIMETYPE("audio/flac") ||
+          aContainerType.Type() == MEDIAMIMETYPE("audio/x-flac") ||
+          aContainerType.Type() == MEDIAMIMETYPE("application/x-flac"));
 }
 
 } // namespace mozilla
