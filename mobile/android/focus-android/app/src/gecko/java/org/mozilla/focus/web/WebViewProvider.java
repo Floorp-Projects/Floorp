@@ -109,11 +109,6 @@ public class WebViewProvider {
             // We can't actually do this?
         }
 
-        @Override
-        public boolean isBlockingEnabled() {
-            return true;
-        }
-
         private ContentListener createContentListener() {
             return new ContentListener() {
                 @Override

@@ -247,10 +247,7 @@ public class BrowserFragment extends WebFragment implements View.OnClickListener
             }
         });
 
-        backgroundTransitionGroup = new TransitionDrawableGroup(
-                (TransitionDrawable) urlBar.getBackground(),
-                (TransitionDrawable) statusBar.getBackground()
-        );
+        setBlockingEnabled(session.isBlockingEnabled());
 
         session.getLoading().observe(this, new NonNullObserver<Boolean>() {
             @Override
@@ -266,7 +263,7 @@ public class BrowserFragment extends WebFragment implements View.OnClickListener
                     progressView.setVisibility(View.GONE);
                 }
 
-                updateBlockingBadging(loading || isBlockingEnabled());
+                updateBlockingBadging(loading || session.isBlockingEnabled());
 
                 updateToolbarButtonStates(loading);
 
@@ -454,6 +451,9 @@ public class BrowserFragment extends WebFragment implements View.OnClickListener
 
             @Override
             public void resetBlockedTrackers() {}
+
+            @Override
+            public void onBlockingStateChanged(boolean isBlockingEnabled) {}
 
             @Override
             public void onLongPress(final IWebView.HitTarget hitTarget) {
@@ -973,11 +973,6 @@ public class BrowserFragment extends WebFragment implements View.OnClickListener
                     (TransitionDrawable) statusBar.getBackground()
             );
         }
-    }
-
-    public boolean isBlockingEnabled() {
-        final IWebView webView = getWebView();
-        return webView == null || webView.isBlockingEnabled();
     }
 
     // In the future, if more badging icons are needed, this should be abstracted

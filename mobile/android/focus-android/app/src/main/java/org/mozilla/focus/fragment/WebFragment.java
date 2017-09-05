@@ -64,6 +64,10 @@ public abstract class WebFragment extends LocaleAwareFragment {
 
         final Session session = getSession();
 
+        if (session != null) {
+            webView.setBlockingEnabled(session.isBlockingEnabled());
+        }
+
         if (session == null || !session.hasWebViewState()) {
             final String url = getInitialUrl();
             if (!TextUtils.isEmpty(url)) {

@@ -139,10 +139,10 @@ public class WebkitView extends NestedWebView implements IWebView, SharedPrefere
     @Override
     public void setBlockingEnabled(boolean enabled) {
         client.setBlockingEnabled(enabled);
-    }
 
-    public boolean isBlockingEnabled() {
-        return client.isBlockingEnabled();
+        if (callback != null) {
+            callback.onBlockingStateChanged(enabled);
+        }
     }
 
     @Override

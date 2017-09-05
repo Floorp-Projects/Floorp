@@ -26,8 +26,8 @@ import org.mozilla.focus.utils.ThreadUtils;
 
         this.fragment = fragment;
 
-        final Switch switchView = (Switch) itemView.findViewById(R.id.blocking_switch);
-        switchView.setChecked(fragment.isBlockingEnabled());
+        final Switch switchView = itemView.findViewById(R.id.blocking_switch);
+        switchView.setChecked(fragment.getSession().isBlockingEnabled());
         switchView.setOnCheckedChangeListener(this);
 
         final View helpView = itemView.findViewById(R.id.help_trackers);
@@ -40,13 +40,13 @@ import org.mozilla.focus.utils.ThreadUtils;
             }
         });
 
-        trackerCounter = (TextView) itemView.findViewById(R.id.trackers_count);
+        trackerCounter = itemView.findViewById(R.id.trackers_count);
 
         updateTrackers(fragment.getSession().getBlockedTrackers().getValue());
     }
 
     /* package */ void updateTrackers(int trackers) {
-        if (fragment.isBlockingEnabled()) {
+        if (fragment.getSession().isBlockingEnabled()) {
             updateTrackingCount(trackerCounter, trackers);
         } else {
             disableTrackingCount(trackerCounter);

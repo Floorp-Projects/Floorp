@@ -107,6 +107,9 @@ public class InfoFragment extends WebFragment {
 
             @Override
             public void resetBlockedTrackers() {}
+
+            @Override
+            public void onBlockingStateChanged(boolean isBlockingEnabled) {}
         };
     }
 

@@ -30,6 +30,7 @@ public class Session {
     private String searchUrl;
     private boolean isRecorded;
     private boolean isSearch;
+    private boolean isBlockingEnabled;
 
     /* package */ Session(Source source, String url) {
         this.uuid = UUID.randomUUID().toString();
@@ -41,6 +42,7 @@ public class Session {
         this.loading = new NonNullMutableLiveData<>(false);
         this.trackersBlocked = new NonNullMutableLiveData<>(0);
 
+        this.isBlockingEnabled = true;
         this.isRecorded = false;
     }
 
@@ -152,5 +154,13 @@ public class Session {
 
     public boolean isSameAs(@NonNull Session session) {
         return uuid.equals(session.getUUID());
+    }
+
+    public boolean isBlockingEnabled() {
+        return isBlockingEnabled;
+    }
+
+    public void setBlockingEnabled(boolean blockingEnabled) {
+        this.isBlockingEnabled = blockingEnabled;
     }
 }
