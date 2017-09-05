@@ -536,7 +536,10 @@ ChannelMediaResource::Open(nsIStreamListener** aStreamListener)
   }
 
   MOZ_ASSERT(mOffset == 0, "Who set mOffset already?");
-  return OpenChannel(aStreamListener);
+  mListener = new Listener(this);
+  *aStreamListener = mListener;
+  NS_ADDREF(*aStreamListener);
+  return NS_OK;
 }
 
 nsresult ChannelMediaResource::OpenChannel(nsIStreamListener** aStreamListener)
