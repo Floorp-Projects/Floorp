@@ -98,7 +98,7 @@ select[size="1"] xul|scrollbarbutton {
 textarea,
 button,
 xul|button,
-* > input:not([type="image"]) {
+* > input:not(:-moz-any([type="image"], [type="checkbox"], [type="radio"])) {
   -moz-appearance: none !important;  /* See bug 598421 for fixing the platform */
 }
 
@@ -138,14 +138,6 @@ button {
   background-color: var(--form_background);
 }
 
-input[type="checkbox"] {
-  background-color: var(--form_background);
-}
-
-input[type="radio"] {
-  background-color: var(--form_background)
-}
-
 select {
   border-width: 1px;
   padding: 1px;
@@ -158,7 +150,7 @@ select[size="1"] {
   padding: 0 1px 0 1px;
 }
 
-* > input:not([type="image"]) {
+* > input:not(:-moz-any([type="image"], [type="checkbox"], [type="radio"])) {
   border-width: 1px;
   padding: 1px;
 }
@@ -183,15 +175,6 @@ button {
   padding-block-end: 0;
 }
 
-input[type="radio"],
-input[type="checkbox"] {
-  border: 1px solid var(--form_border) !important;
-  padding-inline-start: 1px;
-  padding-inline-end: 1px;
-  padding-block-start: 2px;
-  padding-block-end: 2px;
-}
-
 select > button {
   border-width: 0px !important;
   margin: 0px !important;
@@ -213,7 +196,7 @@ select[multiple]:focus,
 select[size][multiple]:focus,
 textarea:focus,
 input[type="file"]:focus > input[type="text"],
-* > input:not([type="image"]):focus {
+* > input:not(:-moz-any([type="image"], [type="checkbox"], [type="radio"])):focus {
   outline: 0px !important;
   border-style: solid;
   border-color: var(--form_border);
@@ -233,19 +216,6 @@ button:focus {
   background-color: var(--form_background);
 }
 
-input[type="checkbox"]:focus,
-input[type="radio"]:focus {
-  border-color: var(--form_border) !important;
-}
-
-input[type="checkbox"]:focus {
-  background-color: var(--form_background);
-}
-
-input[type="radio"]:focus {
-  background-color: var(--form_background);
-}
-
 /* we need to be specific for selects because the above rules are specific too */
 textarea:disabled,
 select[size]:disabled,
@@ -256,8 +226,8 @@ select[size="0"]:disabled,
 select[size="1"]:disabled,
 button:disabled,
 button:disabled:active,
-* > input:not([type="image"]):disabled,
-* > input:not([type="image"]):disabled:active {
+* > input:not(:-moz-any([type="image"], [type="checkbox"], [type="radio"])):disabled,
+* > input:not(:-moz-any([type="image"], [type="checkbox"], [type="radio"])):disabled:active {
   color: var(--form_text_disabled);
   border-color: var(--form_border);
   border-style: solid;
@@ -286,17 +256,6 @@ button:disabled:active {
   background-color: var(--form_background_disabled);
 }
 
-input[type="radio"]:disabled,
-input[type="radio"]:disabled:active,
-input[type="radio"]:disabled:hover,
-input[type="radio"]:disabled:hover:active,
-input[type="checkbox"]:disabled,
-input[type="checkbox"]:disabled:active,
-input[type="checkbox"]:disabled:hover,
-input[type="checkbox"]:disabled:hover:active {
-  border:1px solid var(--form_border) !important;
-}
-
 select:disabled > button {
   opacity: 0.6;
   padding-inline-start: 7px;
@@ -319,7 +278,7 @@ video:not([controls]) > xul|videocontrols {
 *:any-link:active,
 *[role=button]:active,
 button:not(:disabled):active,
-input:not(:focus):not(:disabled):active,
+input:not(:-moz-any([type="checkbox"], [type="radio"])):not(:focus):not(:disabled):active,
 select:not(:disabled):active,
 textarea:not(:focus):not(:disabled):active,
 option:active,
