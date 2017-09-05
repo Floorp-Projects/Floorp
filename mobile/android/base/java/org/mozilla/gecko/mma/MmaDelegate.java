@@ -16,12 +16,9 @@ import android.net.Uri;
 import android.os.Bundle;
 import android.support.annotation.NonNull;
 import android.text.TextUtils;
-import android.util.Log;
 
 import org.mozilla.gecko.Experiments;
-import org.mozilla.gecko.GeckoThread;
 import org.mozilla.gecko.MmaConstants;
-import org.mozilla.gecko.PrefsHelper;
 import org.mozilla.gecko.R;
 import org.mozilla.gecko.Tab;
 import org.mozilla.gecko.Tabs;
@@ -63,57 +60,33 @@ public class MmaDelegate {
     public static final String PACKAGE_NAME_POCKET = "com.ideashower.readitlater.pro";
 
     private static final String TAG = "MmaDelegate";
-    private static final String KEY_PREF_BOOLEAN_MMA_ENABLED = "mma.enabled";
-    private static final String[] PREFS = { KEY_PREF_BOOLEAN_MMA_ENABLED };
 
     private static final String KEY_ANDROID_PREF_STRING_LEANPLUM_DEVICE_ID = "android.not_a_preference.leanplum.device_id";
     private static final String DEBUG_LEANPLUM_DEVICE_ID = "8effda84-99df-11e7-abc4-cec278b6b50a";
 
-
-    @Deprecated
-    private static boolean isGeckoPrefOn = false;
     private static MmaInterface mmaHelper = MmaConstants.getMma();
     private static WeakReference<Context> applicationContext;
 
     public static void init(Activity activity) {
         applicationContext = new WeakReference<>(activity.getApplicationContext());
-        setupPrefHandler(activity);
+        // Since user attributes are gathered in Fennec, not in MMA implementation,
+        // we gather the information here then pass to mmaHelper.init()
+        // Note that generateUserAttribute always return a non null HashMap.
+        Map<String, Object> attributes = gatherUserAttributes(activity);
+        mmaHelper.setGcmSenderId(PushManager.getSenderIds());
+        mmaHelper.setDeviceId(getDeviceId(activity));
+        // above two config setup required to be invoked before mmaHelper.init.
+        mmaHelper.init(activity, attributes);
+
+        if (!isDefaultBrowser(activity)) {
+            mmaHelper.event(MmaDelegate.LAUNCH_BUT_NOT_DEFAULT_BROWSER);
+        }
+        mmaHelper.event(MmaDelegate.LAUNCH_BROWSER);
+
     }
 
     public static void stop() {
         mmaHelper.stop();
-    }
-
-    private static void setupPrefHandler(final Activity activity) {
-        PrefsHelper.PrefHandler handler = new PrefsHelper.PrefHandlerBase() {
-            @Override
-            public void prefValue(String pref, boolean value) {
-                if (pref.equals(KEY_PREF_BOOLEAN_MMA_ENABLED)) {
-                    Log.d(TAG, "prefValue() called with: pref = [" + pref + "], value = [" + value + "]");
-                    if (value) {
-                        // isGeckoPrefOn needs to be set before mmaHelper.init() cause we need it for isMmaEnabled()
-                        isGeckoPrefOn = true;
-
-                        // Since user attributes are gathered in Fennec, not in MMA implementation,
-                        // we gather the information here then pass to mmaHelper.init()
-                        // Note that generateUserAttribute always return a non null HashMap.
-                        Map<String, Object> attributes = gatherUserAttributes(activity);
-                        mmaHelper.setGcmSenderId(PushManager.getSenderIds());
-                        mmaHelper.setDeviceId(getDeviceId(activity));
-                        // above two config setup required to be invoked before mmaHelper.init.
-                        mmaHelper.init(activity, attributes);
-
-                        if (!isDefaultBrowser(activity)) {
-                            mmaHelper.event(MmaDelegate.LAUNCH_BUT_NOT_DEFAULT_BROWSER);
-                        }
-                        mmaHelper.event(MmaDelegate.LAUNCH_BROWSER);
-                    } else {
-                        isGeckoPrefOn = false;
-                    }
-                }
-            }
-        };
-        PrefsHelper.addObserver(PREFS, handler);
     }
 
     /* This method must be called at background thread to avoid performance issues in some API level */
@@ -159,9 +132,7 @@ public class MmaDelegate {
         // if selected tab is private, mma should be disabled.
         final boolean isInPrivateBrowsing = selectedTab != null && selectedTab.isPrivate();
         // only check Gecko Pref when Gecko is running
-        // FIXME : Remove isGeckoPrefOn in bug 1396714
-        final boolean skipGeckoPrefCheck = !GeckoThread.isRunning();
-        return inExperiment && (skipGeckoPrefCheck || isGeckoPrefOn) && healthReport && !isInPrivateBrowsing;
+        return inExperiment && healthReport && !isInPrivateBrowsing;
     }
 
 
