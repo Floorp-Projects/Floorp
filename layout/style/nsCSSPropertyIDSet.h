@@ -67,11 +67,40 @@ public:
       return mozilla::PodEqual(mProperties, aOther.mProperties);
     }
 
+    bool IsEmpty() const {
+      for (size_t i = 0; i < mozilla::ArrayLength(mProperties); ++i) {
+          if (mProperties[i] != 0) {
+            return false;
+          }
+      }
+      return true;
+    }
+
     // Return a new nsCSSPropertyIDSet which is the inverse of this set.
     nsCSSPropertyIDSet Inverse() const {
       nsCSSPropertyIDSet result;
       for (size_t i = 0; i < mozilla::ArrayLength(mProperties); ++i) {
         result.mProperties[i] = ~mProperties[i];
+      }
+      return result;
+    }
+
+    // Returns a new nsCSSPropertyIDSet with all properties that are both in
+    // this set and |aOther|.
+    nsCSSPropertyIDSet Intersect(const nsCSSPropertyIDSet& aOther) const {
+      nsCSSPropertyIDSet result;
+      for (size_t i = 0; i < mozilla::ArrayLength(mProperties); ++i) {
+        result.mProperties[i] = mProperties[i] & aOther.mProperties[i];
+      }
+      return result;
+    }
+
+    // Return a new nsCSSPropertyIDSet with all properties that are in either
+    // this set or |aOther| but not both.
+    nsCSSPropertyIDSet Xor(const nsCSSPropertyIDSet& aOther) const {
+      nsCSSPropertyIDSet result;
+      for (size_t i = 0; i < mozilla::ArrayLength(mProperties); ++i) {
+        result.mProperties[i] = mProperties[i] ^ aOther.mProperties[i];
       }
       return result;
     }

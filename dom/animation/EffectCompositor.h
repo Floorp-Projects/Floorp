@@ -280,7 +280,8 @@ private:
                           nsStyleContext* aStyleContext);
 
   // Update the mPropertiesWithImportantRules and
-  // mPropertiesForAnimationsLevel members of the given EffectSet.
+  // mPropertiesForAnimationsLevel members of the given EffectSet, and also
+  // request any restyles required by changes to the cascade result.
   //
   // This can be expensive so we should only call it if styles that apply
   // above the animation level of the cascade might have changed. For all

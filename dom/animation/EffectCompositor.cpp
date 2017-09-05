@@ -881,14 +881,14 @@ EffectCompositor::UpdateCascadeResults(StyleBackendType aBackendType,
   std::bitset<LayerAnimationInfo::kRecords>
     prevCompositorPropertiesWithImportantRules =
       compositorPropertiesInSet(propertiesWithImportantRules);
-  std::bitset<LayerAnimationInfo::kRecords>
-    prevCompositorPropertiesForAnimationsLevel =
-      compositorPropertiesInSet(propertiesForAnimationsLevel);
+
+  nsCSSPropertyIDSet prevPropertiesForAnimationsLevel =
+    propertiesForAnimationsLevel;
 
   propertiesWithImportantRules.Empty();
   propertiesForAnimationsLevel.Empty();
 
-  bool hasCompositorPropertiesForTransition = false;
+  nsCSSPropertyIDSet propertiesForTransitionsLevel;
 
   for (const KeyframeEffectReadOnly* effect : sortedEffectList) {
     MOZ_ASSERT(effect->GetAnimation(),
@@ -899,14 +899,14 @@ EffectCompositor::UpdateCascadeResults(StyleBackendType aBackendType,
       if (overriddenProperties.HasProperty(prop.mProperty)) {
         propertiesWithImportantRules.AddProperty(prop.mProperty);
       }
-      if (cascadeLevel == EffectCompositor::CascadeLevel::Animations) {
-        propertiesForAnimationsLevel.AddProperty(prop.mProperty);
-      }
 
-      if (nsCSSProps::PropHasFlags(prop.mProperty,
-                                   CSS_PROPERTY_CAN_ANIMATE_ON_COMPOSITOR) &&
-          cascadeLevel == EffectCompositor::CascadeLevel::Transitions) {
-        hasCompositorPropertiesForTransition = true;
+      switch (cascadeLevel) {
+        case EffectCompositor::CascadeLevel::Animations:
+          propertiesForAnimationsLevel.AddProperty(prop.mProperty);
+          break;
+        case EffectCompositor::CascadeLevel::Transitions:
+          propertiesForTransitionsLevel.AddProperty(prop.mProperty);
+          break;
       }
     }
   }
@@ -929,15 +929,23 @@ EffectCompositor::UpdateCascadeResults(StyleBackendType aBackendType,
                      EffectCompositor::RestyleType::Layer,
                      EffectCompositor::CascadeLevel::Animations);
   }
-  // If we have transition properties for compositor and if the same propery
-  // for animations level is newly added or removed, we need to update layers
-  // for transitions level because composite order has been changed now.
-  if (hasCompositorPropertiesForTransition &&
-      prevCompositorPropertiesForAnimationsLevel !=
-        compositorPropertiesInSet(propertiesForAnimationsLevel)) {
+
+  // If we have transition properties and if the same propery for animations
+  // level is newly added or removed, we need to update the transition level
+  // rule since the it will be added/removed from the rule tree.
+  nsCSSPropertyIDSet changedPropertiesForAnimationLevel =
+    prevPropertiesForAnimationsLevel.Xor(propertiesForAnimationsLevel);
+  nsCSSPropertyIDSet commonProperties =
+    propertiesForTransitionsLevel.Intersect(
+      changedPropertiesForAnimationLevel);
+  if (!commonProperties.IsEmpty()) {
+    EffectCompositor::RestyleType restyleType =
+      compositorPropertiesInSet(changedPropertiesForAnimationLevel).none()
+      ? EffectCompositor::RestyleType::Standard
+      : EffectCompositor::RestyleType::Layer;
     presContext->EffectCompositor()->
       RequestRestyle(aElement, aPseudoType,
-                     EffectCompositor::RestyleType::Layer,
+                     restyleType,
                      EffectCompositor::CascadeLevel::Transitions);
   }
 }
