@@ -1475,6 +1475,10 @@ nsWindow::~nsWindow()
 {
     gTopLevelWindows.RemoveElement(this);
     ALOG("nsWindow %p destructor", (void*)this);
+    // The mCompositorSession should have been cleaned up in nsWindow::Destroy()
+    // DestroyLayerManager() will call DestroyCompositor() which will crash if
+    // called from nsBaseWidget destructor. See Bug 1392705
+    MOZ_ASSERT(!mCompositorSession);
 }
 
 bool
@@ -1545,6 +1549,9 @@ nsWindow::Destroy()
         ALOG("### Warning: Destroying window %p and reparenting child %p to null!", (void*)this, (void*)mChildren[0]);
         mChildren[0]->SetParent(nullptr);
     }
+
+    // Ensure the compositor has been shutdown before this nsWindow is potentially deleted
+    nsBaseWidget::DestroyCompositor();
 
     nsBaseWidget::Destroy();
 
