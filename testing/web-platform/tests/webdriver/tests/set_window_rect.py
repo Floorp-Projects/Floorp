@@ -299,7 +299,6 @@ def test_fully_exit_fullscreen(session):
     value = assert_success(response)
     assert value["width"] == 400
     assert value["height"] == 400
-    assert value["state"] == "normal"
 
     assert session.execute_script("return window.fullScreen") is False
 
@@ -326,7 +325,6 @@ def test_restore_from_minimized(session):
     value = assert_success(response)
     assert value["width"] == 450
     assert value["height"] == 450
-    assert value["state"] == "normal"
 
     assert session.execute_script("return document.hidden") is False
 
@@ -349,13 +347,11 @@ def test_restore_from_maximized(session):
     original_size = session.window.size
     session.window.maximize()
     assert session.window.size != original_size
-    assert session.window.state == "maximized"
 
     response = set_window_rect(session, {"width": 400, "height": 400})
     value = assert_success(response)
     assert value["width"] == 400
     assert value["height"] == 400
-    assert value["state"] == "normal"
 
 
 def test_height_width(session):
@@ -374,8 +370,7 @@ def test_height_width(session):
     assert_success(response, {"x": original["x"],
                               "y": original["y"],
                               "width": max["width"] - 100,
-                              "height": max["height"] - 100,
-                              "state": "normal"})
+                              "height": max["height"] - 100})
 
 
 def test_height_width_larger_than_max(session):
@@ -393,7 +388,6 @@ def test_height_width_larger_than_max(session):
     rect = assert_success(response)
     assert rect["width"] >= max["width"]
     assert rect["height"] >= max["height"]
-    assert rect["state"] == "normal"
 
 
 def test_height_width_as_current(session):
@@ -407,8 +401,7 @@ def test_height_width_as_current(session):
     assert_success(response, {"x": original["x"],
                               "y": original["y"],
                               "width": original["width"],
-                              "height": original["height"],
-                              "state": original["state"]})
+                              "height": original["height"]})
 
 
 def test_x_y(session):
@@ -422,8 +415,7 @@ def test_x_y(session):
     assert_success(response, {"x": original["x"] + 10,
                               "y": original["y"] + 10,
                               "width": original["width"],
-                              "height": original["height"],
-                              "state": original["state"]})
+                              "height": original["height"]})
 
 
 def test_negative_x_y(session):
@@ -441,7 +433,6 @@ def test_negative_x_y(session):
         assert rect["y"] <= 0
         assert rect["width"] == original["width"]
         assert rect["height"] == original["height"]
-        assert rect["state"] == original["state"]
 
     # On macOS, windows can only be moved off the screen on the
     # horizontal axis.  The system menu bar also blocks windows from
@@ -450,8 +441,7 @@ def test_negative_x_y(session):
         assert_success(response, {"x": -8,
                                   "y": 23,
                                   "width": original["width"],
-                                  "height": original["height"],
-                                  "state": original["state"]})
+                                  "height": original["height"]})
 
     # It turns out that Windows is the only platform on which the
     # window can be reliably positioned off-screen.
@@ -459,8 +449,7 @@ def test_negative_x_y(session):
         assert_success(response, {"x": -8,
                                   "y": -8,
                                   "width": original["width"],
-                                  "height": original["height"],
-                                  "state": original["state"]})
+                                  "height": original["height"]})
 
 
 def test_move_to_same_position(session):
@@ -510,9 +499,7 @@ def test_payload(session):
     assert "height" in rect
     assert "x" in rect
     assert "y" in rect
-    assert "state" in rect
     assert isinstance(rect["width"], (int, float))
     assert isinstance(rect["height"], (int, float))
     assert isinstance(rect["x"], (int, float))
     assert isinstance(rect["y"], (int, float))
-    assert isinstance(rect["state"], basestring)
