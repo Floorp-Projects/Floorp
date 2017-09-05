@@ -270,7 +270,7 @@ license file's hash.
         crates_and_roots = (
             ('gkrust', 'toolkit/library/rust'),
             ('gkrust-gtest', 'toolkit/library/gtest/rust'),
-            ('mozjs_sys', 'js/src'),
+            ('js', 'js/rust'),
             ('geckodriver', 'testing/geckodriver'),
         )
 
