@@ -22,9 +22,6 @@ if (AppConstants.ACCESSIBILITY) {
                                     "resource://gre/modules/accessibility/AccessFu.jsm");
 }
 
-XPCOMUtils.defineLazyModuleGetter(this, "AsyncPrefs",
-                                  "resource://gre/modules/AsyncPrefs.jsm");
-
 XPCOMUtils.defineLazyModuleGetter(this, "Manifests",
                                   "resource://gre/modules/Manifest.jsm");
 
@@ -531,9 +528,6 @@ var BrowserApp = {
 
       InitLater(() => Services.obs.notifyObservers(window, "browser-delayed-startup-finished"));
       InitLater(() => GlobalEventDispatcher.sendRequest({ type: "Gecko:DelayedStartup" }));
-
-      // AsyncPrefs is needed for reader mode.
-      InitLater(() => AsyncPrefs.init());
 
       if (!AppConstants.RELEASE_OR_BETA) {
         InitLater(() => WebcompatReporter.init());
