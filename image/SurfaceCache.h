@@ -68,6 +68,11 @@ public:
     return hash;
   }
 
+  SurfaceKey CloneWithSize(const IntSize& aSize) const
+  {
+    return SurfaceKey(aSize, mSVGContext, mPlayback, mFlags);
+  }
+
   const IntSize& Size() const { return mSize; }
   Maybe<SVGImageContext> SVGContext() const { return mSVGContext; }
   PlaybackType Playback() const { return mPlayback; }
