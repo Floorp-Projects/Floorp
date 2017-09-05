@@ -1,5 +1,6 @@
 use std::ops::Neg;
 use std::{f32, f64};
+use std::num::Wrapping;
 
 use Num;
 
@@ -72,6 +73,30 @@ macro_rules! signed_impl {
 }
 
 signed_impl!(isize i8 i16 i32 i64);
+
+impl<T: Signed> Signed for Wrapping<T> where Wrapping<T>: Num + Neg<Output=Wrapping<T>>
+{
+    #[inline]
+    fn abs(&self) -> Self {
+        Wrapping(self.0.abs())
+    }
+
+    #[inline]
+    fn abs_sub(&self, other: &Self) -> Self {
+        Wrapping(self.0.abs_sub(&other.0))
+    }
+
+    #[inline]
+    fn signum(&self) -> Self {
+        Wrapping(self.0.signum())
+    }
+
+    #[inline]
+    fn is_positive(&self) -> bool { self.0.is_positive() }
+
+    #[inline]
+    fn is_negative(&self) -> bool { self.0.is_negative() }
+}
 
 macro_rules! signed_float_impl {
     ($t:ty, $nan:expr, $inf:expr, $neg_inf:expr) => {
@@ -159,3 +184,21 @@ macro_rules! empty_trait_impl {
 }
 
 empty_trait_impl!(Unsigned for usize u8 u16 u32 u64);
+
+impl<T: Unsigned> Unsigned for Wrapping<T> where Wrapping<T>: Num {}
+
+#[test]
+fn unsigned_wrapping_is_unsigned() {
+    fn require_unsigned<T: Unsigned>(_: &T) {}
+    require_unsigned(&Wrapping(42_u32));
+}
+/*
+// Commenting this out since it doesn't compile on Rust 1.8,
+// because on this version Wrapping doesn't implement Neg and therefore can't
+// implement Signed.
+#[test]
+fn signed_wrapping_is_signed() {
+    fn require_signed<T: Signed>(_: &T) {}
+    require_signed(&Wrapping(-42));
+}
+*/

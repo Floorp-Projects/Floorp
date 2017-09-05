@@ -680,7 +680,7 @@ impl CharClass {
         self.canonicalize()
     }
 
-    /// Canonicalze any sequence of ranges.
+    /// Canonicalize any sequence of ranges.
     ///
     /// This is responsible for enforcing the canonical format invariants
     /// as described on the docs for the `CharClass` type.
@@ -701,6 +701,41 @@ impl CharClass {
             ordered.ranges.push(candidate);
         }
         ordered
+    }
+
+    /// Calculate the intersection of two canonical character classes.
+    ///
+    /// The returned intersection is canonical.
+    fn intersection(&self, other: &CharClass) -> CharClass {
+        if self.ranges.is_empty() || other.ranges.is_empty() {
+            return CharClass::empty();
+        }
+
+        let mut intersection = CharClass::empty();
+
+        let mut iter_a = self.ranges.iter();
+        let mut iter_b = other.ranges.iter();
+        let mut a = iter_a.next().unwrap();
+        let mut b = iter_b.next().unwrap();
+        loop {
+            if let Some(i) = a.intersection(&b) {
+                intersection.ranges.push(i);
+            }
+
+            // If the range with the smaller end didn't match this time,
+            // it won't ever match, so move on to the next one.
+            let (iter, item) = if a.end < b.end {
+                (&mut iter_a, &mut a)
+            } else {
+                (&mut iter_b, &mut b)
+            };
+            match iter.next() {
+                Some(v) => *item = v,
+                None => break, // no more ranges to check, done
+            }
+        }
+
+        intersection.canonicalize()
     }
 
     /// Negates the character class.
@@ -799,6 +834,18 @@ impl ClassRange {
     /// since ranges are inclusive, `a-c` and `d-f` are overlapping!
     fn overlapping(self, other: ClassRange) -> bool {
         max(self.start, other.start) <= inc_char(min(self.end, other.end))
+    }
+
+    /// Returns the intersection of the two ranges if they have common
+    /// characters, `None` otherwise.
+    fn intersection(&self, other: &ClassRange) -> Option<ClassRange> {
+        let start = max(self.start, other.start);
+        let end = min(self.end, other.end);
+        if start <= end {
+            Some(ClassRange::new(start, end))
+        } else {
+            None
+        }
     }
 
     /// Creates a new range representing the union of `self` and `other.
@@ -1908,6 +1955,108 @@ mod tests {
     }
 
     #[test]
+    fn class_intersection_empty() {
+        let cls1 = class(&[]);
+        let cls2 = class(&[('a', 'a')]);
+        assert_intersection(cls1, cls2, class(&[]));
+    }
+
+    #[test]
+    fn class_intersection_single_equal() {
+        let cls1 = class(&[('a', 'a')]);
+        let cls2 = class(&[('a', 'a')]);
+        assert_intersection(cls1, cls2, class(&[('a', 'a')]));
+    }
+
+    #[test]
+    fn class_intersection_single_unequal() {
+        let cls1 = class(&[('a', 'a')]);
+        let cls2 = class(&[('b', 'b')]);
+        assert_intersection(cls1, cls2, class(&[]));
+    }
+
+    #[test]
+    fn class_intersection_single_in_other() {
+        let cls1 = class(&[('a', 'a')]);
+        let cls2 = class(&[('a', 'c')]);
+        assert_intersection(cls1, cls2, class(&[('a', 'a')]));
+    }
+
+    #[test]
+    fn class_intersection_range_in_other() {
+        let cls1 = class(&[('a', 'b')]);
+        let cls2 = class(&[('a', 'c')]);
+        assert_intersection(cls1, cls2, class(&[('a', 'b')]));
+    }
+
+    #[test]
+    fn class_intersection_range_intersection() {
+        let cls1 = class(&[('a', 'b')]);
+        let cls2 = class(&[('b', 'c')]);
+        assert_intersection(cls1, cls2, class(&[('b', 'b')]));
+    }
+
+    #[test]
+    fn class_intersection_only_adjacent() {
+        let cls1 = class(&[('a', 'b')]);
+        let cls2 = class(&[('c', 'd')]);
+        assert_intersection(cls1, cls2, class(&[]));
+    }
+
+    #[test]
+    fn class_intersection_range_subset() {
+        let cls1 = class(&[('b', 'c')]);
+        let cls2 = class(&[('a', 'd')]);
+        assert_intersection(cls1, cls2, class(&[('b', 'c')]));
+    }
+
+    #[test]
+    fn class_intersection_many_ranges_in_one_big() {
+        let cls1 = class(&[('a', 'b'), ('d', 'e'), ('g', 'h')]);
+        let cls2 = class(&[('a', 'h')]);
+        assert_intersection(cls1, cls2, class(&[
+            ('a', 'b'), ('d', 'e'), ('g', 'h')
+        ]));
+    }
+
+    #[test]
+    fn class_intersection_many_ranges_same() {
+        let cls1 = class(&[('a', 'b'), ('d', 'e'), ('g', 'h')]);
+        let cls2 = class(&[('a', 'b'), ('d', 'e'), ('g', 'h')]);
+        assert_intersection(cls1, cls2, class(&[
+            ('a', 'b'), ('d', 'e'), ('g', 'h')
+        ]));
+    }
+
+    #[test]
+    fn class_intersection_multiple_non_intersecting() {
+        let cls1 = class(&[('a', 'b'), ('g', 'h')]);
+        let cls2 = class(&[('d', 'e'), ('k', 'l')]);
+        assert_intersection(cls1, cls2, class(&[]));
+    }
+
+    #[test]
+    fn class_intersection_non_intersecting_then_intersecting() {
+        let cls1 = class(&[('a', 'b'), ('d', 'e'), ('g', 'h')]);
+        let cls2 = class(&[('h', 'h')]);
+        assert_intersection(cls1, cls2, class(&[('h', 'h')]));
+    }
+
+    #[test]
+    fn class_intersection_adjacent_alternating() {
+        let cls1 = class(&[('a', 'b'), ('e', 'f'), ('i', 'j')]);
+        let cls2 = class(&[('c', 'd'), ('g', 'h'), ('k', 'l')]);
+        assert_intersection(cls1, cls2, class(&[]));
+    }
+
+    #[test]
+    fn class_intersection_overlapping_alternating() {
+        let cls1 = class(&[('a', 'b'), ('c', 'd'), ('e', 'f')]);
+        let cls2 = class(&[('b', 'c'), ('d', 'e'), ('f', 'g')]);
+        assert_intersection(cls1, cls2, class(&[('b', 'f')]));
+    }
+
+    #[test]
     fn class_canon_overlap_many_case_fold() {
         let cls = class(&[
             ('C', 'F'), ('A', 'G'), ('D', 'J'), ('A', 'C'),
@@ -2055,5 +2204,11 @@ mod tests {
 
         let expr = e("(?-u)[-./]");
         assert_eq!("(?-u:[-\\.-/])", expr.to_string());
+    }
+
+    fn assert_intersection(cls1: CharClass, cls2: CharClass, expected: CharClass) {
+        // intersection operation should be commutative
+        assert_eq!(cls1.intersection(&cls2), expected);
+        assert_eq!(cls2.intersection(&cls1), expected);
     }
 }

@@ -1581,16 +1581,19 @@ impl<T: Iterator<Item = char>> Parser<T> {
         }
 
         let mut dec = 1.0;
+        let mut frac = 0.0;
         while !self.eof() {
             match self.ch_or_null() {
                 c @ '0' ... '9' => {
                     dec /= 10.0;
-                    res += (((c as isize) - ('0' as isize)) as f64) * dec;
+                    frac += (((c as isize) - ('0' as isize)) as f64) * dec;
                     self.bump();
                 }
                 _ => break,
             }
         }
+
+        res += frac;
 
         Ok(res)
     }
@@ -2945,6 +2948,7 @@ mod tests {
         assert_eq!(Json::from_str("0.4e5"), Ok(F64(0.4e5)));
         assert_eq!(Json::from_str("0.4e+15"), Ok(F64(0.4e15)));
         assert_eq!(Json::from_str("0.4e-01"), Ok(F64(0.4e-01)));
+        assert_eq!(Json::from_str("123456789.5024"), Ok(F64(123456789.5024)));
         assert_eq!(Json::from_str(" 3 "), Ok(U64(3)));
 
         assert_eq!(Json::from_str("-9223372036854775808"), Ok(I64(i64::MIN)));
@@ -2974,6 +2978,9 @@ mod tests {
 
         let v: f64 = super::decode("0.4e-01").unwrap();
         assert_eq!(v, 0.4e-01);
+
+        let v: f64 = super::decode("123456789.5024").unwrap();
+        assert_eq!(v, 123456789.5024);
 
         let v: u64 = super::decode("0").unwrap();
         assert_eq!(v, 0);
