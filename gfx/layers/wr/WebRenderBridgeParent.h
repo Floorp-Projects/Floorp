@@ -72,59 +72,36 @@ public:
   mozilla::ipc::IPCResult RecvCreate(const gfx::IntSize& aSize) override;
   mozilla::ipc::IPCResult RecvShutdown() override;
   mozilla::ipc::IPCResult RecvShutdownSync() override;
-  mozilla::ipc::IPCResult RecvAddImage(const wr::ImageKey& aImageKey,
-                                       const gfx::IntSize& aSize,
-                                       const uint32_t& aStride,
-                                       const gfx::SurfaceFormat& aFormat,
-                                       const ByteBuffer& aBuffer) override;
-  mozilla::ipc::IPCResult RecvAddBlobImage(const wr::ImageKey& aImageKey,
-                                           const gfx::IntSize& aSize,
-                                           const uint32_t& aStride,
-                                           const gfx::SurfaceFormat& aFormat,
-                                           const ByteBuffer& aBuffer) override;
-  mozilla::ipc::IPCResult RecvUpdateImage(const wr::ImageKey& aImageKey,
-                                          const gfx::IntSize& aSize,
-                                          const gfx::SurfaceFormat& aFormat,
-                                          const ByteBuffer& aBuffer) override;
-  mozilla::ipc::IPCResult RecvDeleteImage(const wr::ImageKey& a1) override;
   mozilla::ipc::IPCResult RecvDeleteCompositorAnimations(InfallibleTArray<uint64_t>&& aIds) override;
-  mozilla::ipc::IPCResult RecvAddRawFont(const wr::FontKey& aFontKey,
-                                         const ByteBuffer& aBuffer,
-                                         const uint32_t& aFontIndex) override;
-  mozilla::ipc::IPCResult RecvDeleteFont(const wr::FontKey& aFontKey) override;
-  mozilla::ipc::IPCResult RecvAddFontInstance(const wr::FontInstanceKey& aInstanceKey,
-                                              const wr::FontKey& aFontKey,
-                                              const float& aGlyphSize,
-                                              const MaybeFontInstanceOptions& aOptions,
-                                              const MaybeFontInstancePlatformOptions& aPlatformOptions) override;
-  mozilla::ipc::IPCResult RecvDeleteFontInstance(const wr::FontInstanceKey& aInstanceKey) override;
-  mozilla::ipc::IPCResult RecvDPBegin(const gfx::IntSize& aSize) override;
-  mozilla::ipc::IPCResult RecvDPEnd(const gfx::IntSize& aSize,
-                                    InfallibleTArray<WebRenderParentCommand>&& aCommands,
-                                    InfallibleTArray<OpDestroy>&& aToDestroy,
-                                    const uint64_t& aFwdTransactionId,
-                                    const uint64_t& aTransactionId,
-                                    const wr::LayoutSize& aContentSize,
-                                    const wr::ByteBuffer& dl,
-                                    const wr::BuiltDisplayListDescriptor& dlDesc,
-                                    const WebRenderScrollData& aScrollData,
-                                    const wr::IdNamespace& aIdNamespace,
-                                    const TimeStamp& aTxnStartTime,
-                                    const TimeStamp& aFwdTime) override;
-  mozilla::ipc::IPCResult RecvDPSyncEnd(const gfx::IntSize& aSize,
-                                        InfallibleTArray<WebRenderParentCommand>&& aCommands,
-                                        InfallibleTArray<OpDestroy>&& aToDestroy,
-                                        const uint64_t& aFwdTransactionId,
-                                        const uint64_t& aTransactionId,
-                                        const wr::LayoutSize& aContentSize,
-                                        const wr::ByteBuffer& dl,
-                                        const wr::BuiltDisplayListDescriptor& dlDesc,
-                                        const WebRenderScrollData& aScrollData,
-                                        const wr::IdNamespace& aIdNamespace,
-                                        const TimeStamp& aTxnStartTime,
-                                        const TimeStamp& aFwdTime) override;
+  mozilla::ipc::IPCResult RecvUpdateResources(const ByteBuffer& aUpdates) override;
+  mozilla::ipc::IPCResult RecvSetDisplayList(const gfx::IntSize& aSize,
+                                             InfallibleTArray<WebRenderParentCommand>&& aCommands,
+                                             InfallibleTArray<OpDestroy>&& aToDestroy,
+                                             const uint64_t& aFwdTransactionId,
+                                             const uint64_t& aTransactionId,
+                                             const wr::LayoutSize& aContentSize,
+                                             const wr::ByteBuffer& dl,
+                                             const wr::BuiltDisplayListDescriptor& dlDesc,
+                                             const WebRenderScrollData& aScrollData,
+                                             const wr::ByteBuffer& aResourceUpdates,
+                                             const wr::IdNamespace& aIdNamespace,
+                                             const TimeStamp& aTxnStartTime,
+                                             const TimeStamp& aFwdTime) override;
+  mozilla::ipc::IPCResult RecvSetDisplayListSync(const gfx::IntSize& aSize,
+                                                 InfallibleTArray<WebRenderParentCommand>&& aCommands,
+                                                 InfallibleTArray<OpDestroy>&& aToDestroy,
+                                                 const uint64_t& aFwdTransactionId,
+                                                 const uint64_t& aTransactionId,
+                                                 const wr::LayoutSize& aContentSize,
+                                                 const wr::ByteBuffer& dl,
+                                                 const wr::BuiltDisplayListDescriptor& dlDesc,
+                                                 const WebRenderScrollData& aScrollData,
+                                                 const wr::ByteBuffer& aResourceUpdates,
+                                                 const wr::IdNamespace& aIdNamespace,
+                                                 const TimeStamp& aTxnStartTime,
+                                                 const TimeStamp& aFwdTime) override;
   mozilla::ipc::IPCResult RecvParentCommands(nsTArray<WebRenderParentCommand>&& commands) override;
-  mozilla::ipc::IPCResult RecvDPGetSnapshot(PTextureParent* aTexture) override;
+  mozilla::ipc::IPCResult RecvGetSnapshot(PTextureParent* aTexture) override;
 
   mozilla::ipc::IPCResult RecvAddPipelineIdForCompositable(const wr::PipelineId& aPipelineIds,
                                                            const CompositableHandle& aHandle,
@@ -209,29 +186,19 @@ private:
 
   uint64_t GetLayersId() const;
   void DeleteOldImages();
-  void ProcessWebRenderParentCommands(InfallibleTArray<WebRenderParentCommand>& aCommands);
+  void ProcessWebRenderParentCommands(const InfallibleTArray<WebRenderParentCommand>& aCommands,
+                                      wr::ResourceUpdateQueue& aResources);
   void ProcessWebRenderCommands(const gfx::IntSize &aSize,
                                 InfallibleTArray<WebRenderParentCommand>& commands,
                                 const wr::Epoch& aEpoch,
                                 const wr::LayoutSize& aContentSize,
                                 const wr::ByteBuffer& dl,
                                 const wr::BuiltDisplayListDescriptor& dlDesc,
+                                wr::ResourceUpdateQueue& aResourceUpdates,
                                 const wr::IdNamespace& aIdNamespace);
   void ClearResources();
   uint64_t GetChildLayerObserverEpoch() const { return mChildLayerObserverEpoch; }
   bool ShouldParentObserveEpoch();
-  void HandleDPEnd(const gfx::IntSize& aSize,
-                   InfallibleTArray<WebRenderParentCommand>&& aCommands,
-                   InfallibleTArray<OpDestroy>&& aToDestroy,
-                   const uint64_t& aFwdTransactionId,
-                   const uint64_t& aTransactionId,
-                   const wr::LayoutSize& aContentSize,
-                   const wr::ByteBuffer& dl,
-                   const wr::BuiltDisplayListDescriptor& dlDesc,
-                   const WebRenderScrollData& aScrollData,
-                   const wr::IdNamespace& aIdNamespace,
-                   const TimeStamp& aTxnStartTime,
-                   const TimeStamp& aFwdTime);
   mozilla::ipc::IPCResult HandleShutdown();
 
   void AdvanceAnimations();
@@ -274,11 +241,6 @@ private:
   RefPtr<CompositorVsyncScheduler> mCompositorScheduler;
   RefPtr<CompositorAnimationStorage> mAnimStorage;
   std::vector<wr::ImageKey> mKeysToDelete;
-  // mActiveImageKeys and mFontKeys are used to avoid leaking animations when
-  // WebRenderBridgeParent is destroyed abnormally and Tab move between different windows.
-  std::unordered_set<uint64_t> mActiveImageKeys;
-  std::unordered_set<uint64_t> mFontKeys;
-  std::unordered_set<uint64_t> mFontInstanceKeys;
   // mActiveAnimations is used to avoid leaking animations when WebRenderBridgeParent is
   // destroyed abnormally and Tab move between different windows.
   std::unordered_set<uint64_t> mActiveAnimations;

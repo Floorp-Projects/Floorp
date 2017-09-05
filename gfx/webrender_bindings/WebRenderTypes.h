@@ -587,6 +587,16 @@ struct ByteBuffer
     }
   }
 
+  ByteBuffer(ByteBuffer&& aFrom)
+  : mLength(aFrom.mLength)
+  , mData(aFrom.mData)
+  , mOwned(aFrom.mOwned)
+  {
+    aFrom.mLength = 0;
+    aFrom.mData = nullptr;
+    aFrom.mOwned = false;
+  }
+
   ByteBuffer()
     : mLength(0)
     , mData(nullptr)

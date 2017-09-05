@@ -18,7 +18,6 @@
 
     COMPONENT(ARRAY, nsArrayBase::XPCOMConstructor)
     COMPONENT(CONSOLESERVICE, nsConsoleServiceConstructor)
-    COMPONENT(ATOMSERVICE, nsAtomServiceConstructor)
     COMPONENT_M(OBSERVERSERVICE, nsObserverService::Create, Module::ALLOW_IN_GPU_PROCESS)
 
     COMPONENT_M(TIMER, nsTimerConstructor, Module::ALLOW_IN_GPU_PROCESS)
