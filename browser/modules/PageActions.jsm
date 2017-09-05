@@ -40,11 +40,20 @@ this.PageActions = {
 
     this._loadPersistedActions();
 
-    // Add the built-in actions, which are defined below in this file.
+    // Register the built-in actions, which are defined below in this file.
     for (let options of gBuiltInActions) {
       if (!this.actionForID(options.id)) {
-        this.addAction(new Action(options));
+        this._registerAction(new Action(options));
       }
+    }
+
+    // Now place them all in each window.  Instead of splitting the register and
+    // place steps, we could simply call addAction, which does both, but doing
+    // it this way means that all windows initially place their actions the same
+    // way -- placeAllActions -- regardless of whether they're open when this
+    // method is called or opened later.
+    for (let bpa of allBrowserPageActions()) {
+      bpa.placeAllActions();
     }
 
     // These callbacks are deferred until init happens and all built-in actions
@@ -95,6 +104,27 @@ this.PageActions = {
   },
 
   /**
+   * The list of actions in the urlbar, sorted in the order in which they should
+   * appear there.  Not live.  (array of Action objects)
+   */
+  get actionsInUrlbar() {
+    if (!this._persistedActions) {
+      // This is the case before init is called.  No one should be calling us
+      // then, but return something sensible.
+      return [];
+    }
+    // Remember that IDs in idsInUrlbar may belong to actions that aren't
+    // currently registered.
+    return this._persistedActions.idsInUrlbar.reduce((actions, id) => {
+      let action = this.actionForID(id);
+      if (action) {
+        actions.push(action);
+      }
+      return actions;
+    }, []);
+  },
+
+  /**
    * Gets an action.
    *
    * @param  id (string, required)
@@ -128,21 +158,35 @@ this.PageActions = {
       return action;
     }
 
+    let hadSep = this.actions.some(a => a.id == ACTION_ID_BUILT_IN_SEPARATOR);
+
+    this._registerAction(action);
+
+    let sep = null;
+    if (!hadSep) {
+      sep = this.actions.find(a => a.id == ACTION_ID_BUILT_IN_SEPARATOR);
+    }
+
+    for (let bpa of allBrowserPageActions()) {
+      if (sep) {
+        // There are now both built-in and non-built-in actions, so place the
+        // separator between the two groups.
+        bpa.placeAction(sep);
+      }
+      bpa.placeAction(action);
+    }
+
+    return action;
+  },
+
+  _registerAction(action) {
     if (this.actionForID(action.id)) {
       throw new Error(`Action with ID '${action.id}' already added`);
     }
     this._actionsByID.set(action.id, action);
 
-    // The IDs of the actions in the panel and urlbar before which the new
-    // action shoud be inserted.  null means at the end, or it's irrelevant.
-    let panelInsertBeforeID = null;
-    let urlbarInsertBeforeID = null;
-
-    let oldBuiltInCount = this._builtInActions.length;
-    let oldNonBuiltInCount = this._nonBuiltInActions.length;
-
     // Insert the action into the appropriate list, either _builtInActions or
-    // _nonBuiltInActions, and find panelInsertBeforeID.
+    // _nonBuiltInActions.
 
     // Keep in mind that _insertBeforeActionID may be present but null, which
     // means the action should be appended to the built-ins.
@@ -158,29 +202,18 @@ this.PageActions = {
       if (index < 0) {
         // Append the action.
         index = this._builtInActions.length;
-        if (this._nonBuiltInActions.length) {
-          panelInsertBeforeID = ACTION_ID_BUILT_IN_SEPARATOR;
-        }
-      } else {
-        panelInsertBeforeID = this._builtInActions[index].id;
       }
       this._builtInActions.splice(index, 0, action);
     } else if (gBuiltInActions.find(a => a.id == action.id)) {
       // A built-in action.  These are always added on init before all other
       // actions, one after the other, so just push onto the array.
       this._builtInActions.push(action);
-      if (this._nonBuiltInActions.length) {
-        panelInsertBeforeID = ACTION_ID_BUILT_IN_SEPARATOR;
-      }
     } else {
       // A non-built-in action, like a non-bundled extension potentially.
       // Keep this list sorted by title.
       let index = BinarySearch.insertionIndexOf((a1, a2) => {
         return a1.title.localeCompare(a2.title);
       }, this._nonBuiltInActions, action);
-      if (index < this._nonBuiltInActions.length) {
-        panelInsertBeforeID = this._nonBuiltInActions[index].id;
-      }
       this._nonBuiltInActions.splice(index, 0, action);
     }
 
@@ -199,36 +232,6 @@ this.PageActions = {
       }
       this._storePersistedActions();
     }
-
-    if (action.shownInUrlbar) {
-      urlbarInsertBeforeID = this.insertBeforeActionIDInUrlbar(action);
-    }
-
-    // If there are now both built-in and non-built-in actions, add a separator
-    // in the panel between the two groups.
-    let placeBuiltInSeparator =
-      (oldNonBuiltInCount == 0 &&
-       this._nonBuiltInActions.length &&
-       this._builtInActions.length) ||
-      (oldBuiltInCount == 0 &&
-       this._builtInActions.length &&
-       this._nonBuiltInActions.length);
-
-    for (let win of browserWindows()) {
-      if (placeBuiltInSeparator) {
-        let sep = new Action({
-          id: ACTION_ID_BUILT_IN_SEPARATOR,
-          _isSeparator: true,
-        });
-        let sepPanelInsertBeforeID =
-          this._nonBuiltInActions.length ? this._nonBuiltInActions[0].id : null;
-        browserPageActions(win).placeAction(sep, sepPanelInsertBeforeID, null);
-      }
-      browserPageActions(win).placeAction(action, panelInsertBeforeID,
-                                          urlbarInsertBeforeID);
-    }
-
-    return action;
   },
 
   _builtInActions: [],
@@ -236,59 +239,34 @@ this.PageActions = {
   _actionsByID: new Map(),
 
   /**
-   * Returns the ID of the action among the actions in the panel before which
-   * the given action should be inserted.
+   * The DOM nodes of actions should be ordered properly, both in the panel and
+   * the urlbar.  This method returns the ID of the action that comes after the
+   * given action in the given array.  You can use the returned ID to get a DOM
+   * node ID to pass to node.insertBefore().
    *
+   * Pass PageActions.actions to get the ID of the next action in the panel.
+   * Pass PageActions.actionsInUrlbar to get the ID of the next action in the
+   * urlbar.
+   *
+   * @param  action
+   *         The action whose node you want to insert into your DOM.
+   * @param  actionArray
+   *         The relevant array of actions, either PageActions.actions or
+   *         actionsInUrlbar.
    * @return The ID of the action before which the given action should be
    *         inserted.  If the given action should be inserted last, returns
    *         null.
    */
-  insertBeforeActionIDInPanel(action) {
-    let index = this._builtInActions.findIndex(a => {
-      return a.id == action.id;
-    });
-    if (index >= 0) {
-      return this._builtInActions[index + 1] ||
-             this._nonBuiltInActions.length ? ACTION_ID_BUILT_IN_SEPARATOR
-                                            : null;
-    }
-
-    index = this._nonBuiltInActions.findIndex(a => {
-      return a.id == action.id;
-    });
-    if (index >= 0) {
-      return this._nonBuiltInActions[index + 1] || null;
-    }
-
-    return null;
-  },
-
-  /**
-   * Returns the ID of the action among the current registered actions in the
-   * urlbar before which the given action should be inserted, ignoring whether
-   * the given action's shownInUrlbar is true or false.
-   *
-   * @return The ID of the action before which the given action should be
-   *         inserted.  If the given action should be inserted last or it should
-   *         not be inserted at all, returns null.
-   */
-  insertBeforeActionIDInUrlbar(action) {
-    // First, find the index of the given action.
-    let idsInUrlbar = this._persistedActions.idsInUrlbar;
-    let index = idsInUrlbar.indexOf(action.id);
+  nextActionID(action, actionArray) {
+    let index = actionArray.findIndex(a => a.id == action.id);
     if (index < 0) {
       return null;
     }
-    // Now start at the next index and find the ID of the first action that's
-    // currently registered.  Remember that IDs in idsInUrlbar may belong to
-    // actions that aren't currently registered.
-    for (let i = index + 1; i < idsInUrlbar.length; i++) {
-      let id = idsInUrlbar[i];
-      if (this.actionForID(id)) {
-        return id;
-      }
+    let nextAction = actionArray[index + 1];
+    if (!nextAction) {
+      return null;
     }
-    return null;
+    return nextAction.id;
   },
 
   /**
@@ -320,8 +298,8 @@ this.PageActions = {
     }
     this._storePersistedActions();
 
-    for (let win of browserWindows()) {
-      browserPageActions(win).removeAction(action);
+    for (let bpa of allBrowserPageActions()) {
+      bpa.removeAction(action);
     }
   },
 
@@ -336,8 +314,8 @@ this.PageActions = {
       // This may be called before the action has been added.
       return;
     }
-    for (let win of browserWindows()) {
-      browserPageActions(win).updateActionIconURL(action);
+    for (let bpa of allBrowserPageActions()) {
+      bpa.updateActionIconURL(action);
     }
   },
 
@@ -352,8 +330,8 @@ this.PageActions = {
       // This may be called before the action has been added.
       return;
     }
-    for (let win of browserWindows()) {
-      browserPageActions(win).updateActionTitle(action);
+    for (let bpa of allBrowserPageActions()) {
+      bpa.updateActionTitle(action);
     }
   },
 
@@ -380,9 +358,8 @@ this.PageActions = {
     }
     this._storePersistedActions();
 
-    let insertBeforeID = this.insertBeforeActionIDInUrlbar(action);
-    for (let win of browserWindows()) {
-      browserPageActions(win).placeActionInUrlbar(action, insertBeforeID);
+    for (let bpa of allBrowserPageActions()) {
+      bpa.placeActionInUrlbar(action);
     }
   },
 
@@ -1010,10 +987,16 @@ function browserPageActions(obj) {
 /**
  * A generator function for all open browser windows.
  */
-function* browserWindows() {
+function* allBrowserWindows() {
   let windows = Services.wm.getEnumerator("navigator:browser");
   while (windows.hasMoreElements()) {
     yield windows.getNext();
+  }
+}
+
+function* allBrowserPageActions() {
+  for (let win of allBrowserWindows()) {
+    yield browserPageActions(win);
   }
 }
 

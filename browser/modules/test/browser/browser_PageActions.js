@@ -762,6 +762,83 @@ add_task(async function nonBuiltFirst() {
 });
 
 
+// Makes sure that urlbar nodes appear in the correct order in a new window.
+add_task(async function urlbarOrderNewWindow() {
+  // Make some new actions.
+  let actions = [0, 1, 2].map(i => {
+    return PageActions.addAction(new PageActions.Action({
+      id: `test-urlbarOrderNewWindow-${i}`,
+      title: `Test urlbarOrderNewWindow ${i}`,
+      shownInUrlbar: true,
+    }));
+  });
+
+  // Make sure PageActions knows they're appended to the urlbar actions.
+  Assert.deepEqual(
+    PageActions._persistedActions.idsInUrlbar.slice(
+      PageActions._persistedActions.idsInUrlbar.length - actions.length
+    ),
+    actions.map(a => a.id),
+    "PageActions._persistedActions.idsInUrlbar has new actions appended"
+  );
+  Assert.deepEqual(
+    PageActions.actionsInUrlbar.slice(
+      PageActions.actionsInUrlbar.length - actions.length
+    ).map(a => a.id),
+    actions.map(a => a.id),
+    "PageActions.actionsInUrlbar has new actions appended"
+  );
+
+  // Reach into _persistedActions to move the new actions to the front of the
+  // urlbar, same as if the user moved them.  That way we can test that insert-
+  // before IDs are correctly non-null when the urlbar nodes are inserted in the
+  // new window below.
+  PageActions._persistedActions.idsInUrlbar.splice(
+    PageActions._persistedActions.idsInUrlbar.length - actions.length,
+    actions.length
+  );
+  for (let i = 0; i < actions.length; i++) {
+    PageActions._persistedActions.idsInUrlbar.splice(i, 0, actions[i].id);
+  }
+
+  // Save the right-ordered IDs to use below, just in case they somehow get
+  // changed when the new window opens, which shouldn't happen, but maybe
+  // there's bugs.
+  let ids = PageActions._persistedActions.idsInUrlbar.slice();
+
+  // Make sure that worked.
+  Assert.deepEqual(
+    ids.slice(0, actions.length),
+    actions.map(a => a.id),
+    "PageActions._persistedActions.idsInUrlbar now has new actions at front"
+  );
+
+  // Open the new window.
+  let win = await BrowserTestUtils.openNewBrowserWindow();
+
+  // Collect its urlbar nodes.
+  let actualUrlbarNodeIDs = [];
+  for (let node = win.BrowserPageActions.mainButtonNode.nextSibling;
+       node;
+       node = node.nextSibling) {
+    actualUrlbarNodeIDs.push(node.id);
+  }
+
+  // Now check that they're in the right order.
+  Assert.deepEqual(
+    actualUrlbarNodeIDs,
+    ids.map(id => win.BrowserPageActions._urlbarButtonNodeIDForActionID(id)),
+    "Expected actions in new window's urlbar"
+  );
+
+  // Done, clean up.
+  await BrowserTestUtils.closeWindow(win);
+  for (let action of actions) {
+    action.remove();
+  }
+});
+
+
 function promisePageActionPanelOpen() {
   let button = document.getElementById("pageActionButton");
   // The main page action button is hidden for some URIs, so make sure it's
