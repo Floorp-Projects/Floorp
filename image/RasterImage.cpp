@@ -366,6 +366,14 @@ RasterImage::LookupFrame(const IntSize& aSize,
                !mAnimationState || mAnimationState->KnownFrameCount() < 1,
                "Animated frames should be locked");
 
+    // The surface cache may suggest the preferred size we are supposed to
+    // decode at. This should only happen if we accept substitutions.
+    if (!result.SuggestedSize().IsEmpty()) {
+      MOZ_ASSERT(!(aFlags & FLAG_SYNC_DECODE) &&
+                  (aFlags & FLAG_HIGH_QUALITY_SCALING));
+      requestedSize = result.SuggestedSize();
+    }
+
     bool ranSync = Decode(requestedSize, aFlags, aPlaybackType);
 
     // If we can or did sync decode, we should already have the frame.
