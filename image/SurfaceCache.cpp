@@ -319,27 +319,10 @@ public:
       }
 
       SurfaceKey bestMatchKey = bestMatch->GetSurfaceKey();
-
-      // Compare sizes. We use an area-based heuristic here instead of computing a
-      // truly optimal answer, since it seems very unlikely to make a difference
-      // for realistic sizes.
-      int64_t idealArea = AreaOfIntSize(aIdealKey.Size());
-      int64_t currentArea = AreaOfIntSize(currentKey.Size());
-      int64_t bestMatchArea = AreaOfIntSize(bestMatchKey.Size());
-
-      // If the best match is smaller than the ideal size, prefer bigger sizes.
-      if (bestMatchArea < idealArea) {
-        if (currentArea > bestMatchArea) {
-          bestMatch = current;
-        }
-        continue;
-      }
-      // Other, prefer sizes closer to the ideal size, but still not smaller.
-      if (idealArea <= currentArea && currentArea < bestMatchArea) {
+      if (CompareArea(aIdealKey.Size(), bestMatchKey.Size(),
+                      currentKey.Size())) {
         bestMatch = current;
-        continue;
       }
-      // This surface isn't an improvement over the current best match.
     }
 
     MatchType matchType;
@@ -366,6 +349,34 @@ public:
     }
 
     return MakePair(bestMatch.forget(), matchType);
+  }
+
+  bool CompareArea(const IntSize& aIdealSize,
+                   const IntSize& aBestSize,
+                   const IntSize& aSize) const
+  {
+    // Compare sizes. We use an area-based heuristic here instead of computing a
+    // truly optimal answer, since it seems very unlikely to make a difference
+    // for realistic sizes.
+    int64_t idealArea = AreaOfIntSize(aIdealSize);
+    int64_t currentArea = AreaOfIntSize(aSize);
+    int64_t bestMatchArea = AreaOfIntSize(aBestSize);
+
+    // If the best match is smaller than the ideal size, prefer bigger sizes.
+    if (bestMatchArea < idealArea) {
+      if (currentArea > bestMatchArea) {
+        return true;
+      }
+      return false;
+    }
+
+    // Other, prefer sizes closer to the ideal size, but still not smaller.
+    if (idealArea <= currentArea && currentArea < bestMatchArea) {
+      return true;
+    }
+
+    // This surface isn't an improvement over the current best match.
+    return false;
   }
 
   SurfaceTable::Iterator ConstIter() const
