@@ -22,7 +22,6 @@ public class TopSitesPanelsPreference extends PanelsPreference {
     @Override
     protected void configureDialogBuilder(AlertDialog.Builder builder) {
         final LayoutInflater inflater = LayoutInflater.from(getContext());
-        builder.setView(R.layout.preference_topsites_panel_dialog);
         builder.setView(inflater.inflate(R.layout.preference_topsites_panel_dialog, null));
     }
 }

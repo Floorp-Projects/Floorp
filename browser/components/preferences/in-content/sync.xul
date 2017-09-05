@@ -45,7 +45,7 @@
   <groupbox id="noFxaAccount">
     <hbox>
       <vbox flex="1">
-        <label id="noFxaCaption">&signedOut.caption;</label>
+        <caption><label id="noFxaCaption">&signedOut.caption;</label></caption>
         <description id="noFxaDescription" flex="1">&signedOut.description;</description>
       </vbox>
       <vbox>
@@ -59,7 +59,7 @@
       <vbox flex="1">
         <hbox align="center" flex="1">
           <hbox align="center" flex="1">
-            <label id="signedOutAccountBoxTitle">&signedOut.accountBox.title;</label>
+            <caption><label id="signedOutAccountBoxTitle">&signedOut.accountBox.title;</label></caption>
           </hbox>
           <button id="noFxaSignIn"
                   class="accessory-button"
@@ -104,8 +104,8 @@
                      onkeypress="gSyncPane.openChangeProfileImage(event);"
                      tooltiptext="&profilePicture.tooltip;"/>
               <vbox flex="1" pack="center">
-                <hbox flex="1" align="center">
-                  <label id="fxaDisplayName" hidden="true"/>
+                <hbox flex="1" align="baseline">
+                  <caption><label id="fxaDisplayName" hidden="true"/></caption>
                   <label class="fxaEmailAddress" flex="1" crop="end"/>
                   <button id="fxaUnlinkButton"
                           class="accessory-button"

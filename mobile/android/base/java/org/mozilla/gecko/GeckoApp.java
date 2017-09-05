@@ -78,21 +78,17 @@ import android.util.Base64;
 import android.util.Log;
 import android.util.SparseBooleanArray;
 import android.util.SparseIntArray;
-import android.view.Gravity;
 import android.view.KeyEvent;
 import android.view.Menu;
 import android.view.MenuInflater;
 import android.view.MenuItem;
 import android.view.MotionEvent;
 import android.view.OrientationEventListener;
-import android.view.SurfaceView;
 import android.view.View;
-import android.view.ViewGroup;
 import android.view.ViewTreeObserver;
 import android.view.Window;
 import android.widget.AdapterView;
 import android.widget.Button;
-import android.widget.FrameLayout;
 import android.widget.ListView;
 import android.widget.RelativeLayout;
 import android.widget.SimpleAdapter;
@@ -913,6 +909,7 @@ public abstract class GeckoApp extends GeckoActivity
     private void setImageAs(final String aSrc) {
         Permissions
                 .from(this)
+                .onBackgroundThread()
                 .withPermissions(Manifest.permission.WRITE_EXTERNAL_STORAGE)
                 .andFallback(new Runnable() {
                     @Override
@@ -936,6 +933,9 @@ public abstract class GeckoApp extends GeckoActivity
      * @param aSrc The URI to download the image from.
      */
     private void downloadImageForSetImage(final String aSrc) {
+        // Network access from the main thread can cause a StrictMode crash on release builds.
+        ThreadUtils.assertOnBackgroundThread();
+
         boolean isDataURI = aSrc.startsWith("data:");
         Bitmap image = null;
         InputStream is = null;

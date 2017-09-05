@@ -26,9 +26,11 @@
 using namespace mozilla;
 using namespace mozilla::dom;
 
-NS_IMPL_QUERY_INTERFACE_INHERITED(nsStyledElement,
-                                  nsStyledElementBase,
-                                  nsStyledElement)
+// Use the CC variant of this, even though this class does not define
+// a new CC participant, to make QIing to the CC interfaces faster.
+NS_IMPL_QUERY_INTERFACE_CYCLE_COLLECTION_INHERITED(nsStyledElement,
+                                                   nsStyledElementBase,
+                                                   nsStyledElement)
 
 //----------------------------------------------------------------------
 // nsIContent methods

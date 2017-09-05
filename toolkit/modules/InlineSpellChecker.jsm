@@ -508,7 +508,7 @@ RemoteSpellChecker.prototype = {
 
   GetSuggestedWord() {
     if (!this._suggestionGenerator) {
-      this._suggestionGenerator = (function*(spellInfo) {
+      this._suggestionGenerator = (function* (spellInfo) {
         for (let i of spellInfo.spellSuggestions)
           yield i;
       })(this._spellInfo);

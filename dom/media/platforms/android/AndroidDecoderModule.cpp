@@ -139,25 +139,25 @@ AndroidDecoderModule::SupportsMimeType(
   // When checking "audio/x-wav", CreateDecoder can cause a JNI ERROR by
   // Accessing a stale local reference leading to a SIGSEGV crash.
   // To avoid this we check for wav types here.
-  if (aMimeType.EqualsLiteral("audio/x-wav")
-      || aMimeType.EqualsLiteral("audio/wave; codecs=1")
-      || aMimeType.EqualsLiteral("audio/wave; codecs=6")
-      || aMimeType.EqualsLiteral("audio/wave; codecs=7")
-      || aMimeType.EqualsLiteral("audio/wave; codecs=65534")) {
+  if (aMimeType.EqualsLiteral("audio/x-wav") ||
+      aMimeType.EqualsLiteral("audio/wave; codecs=1") ||
+      aMimeType.EqualsLiteral("audio/wave; codecs=6") ||
+      aMimeType.EqualsLiteral("audio/wave; codecs=7") ||
+      aMimeType.EqualsLiteral("audio/wave; codecs=65534")) {
     return false;
   }
 
-  if ((VPXDecoder::IsVPX(aMimeType, VPXDecoder::VP8)
-       && !GetFeatureStatus(nsIGfxInfo::FEATURE_VP8_HW_DECODE))
-      || (VPXDecoder::IsVPX(aMimeType, VPXDecoder::VP9)
-          && !GetFeatureStatus(nsIGfxInfo::FEATURE_VP9_HW_DECODE))) {
+  if ((VPXDecoder::IsVPX(aMimeType, VPXDecoder::VP8) &&
+       !GetFeatureStatus(nsIGfxInfo::FEATURE_VP8_HW_DECODE)) ||
+      (VPXDecoder::IsVPX(aMimeType, VPXDecoder::VP9) &&
+       !GetFeatureStatus(nsIGfxInfo::FEATURE_VP9_HW_DECODE))) {
     return false;
   }
 
   // Prefer the gecko decoder for opus and vorbis; stagefright crashes
   // on content demuxed from mp4.
-  if (OpusDataDecoder::IsOpus(aMimeType)
-      || VorbisDataDecoder::IsVorbis(aMimeType)) {
+  if (OpusDataDecoder::IsOpus(aMimeType) ||
+      VorbisDataDecoder::IsVorbis(aMimeType)) {
     LOG("Rejecting audio of type %s", aMimeType.Data());
     return false;
   }

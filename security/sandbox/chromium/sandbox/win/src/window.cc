@@ -31,7 +31,7 @@ bool GetSecurityAttributes(HANDLE handle, SECURITY_ATTRIBUTES* attributes) {
   return false;
 }
 
-}
+}  // namespace
 
 namespace sandbox {
 
@@ -64,6 +64,10 @@ ResultCode CreateAltWindowStation(HWINSTA* winsta) {
 
 ResultCode CreateAltDesktop(HWINSTA winsta, HDESK* desktop) {
   base::string16 desktop_name = L"sbox_alternate_desktop_";
+
+  if (!winsta) {
+    desktop_name += L"local_winstation_";
+  }
 
   // Append the current PID to the desktop name.
   wchar_t buffer[16];

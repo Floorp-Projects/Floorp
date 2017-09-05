@@ -260,6 +260,7 @@ StyleSheetInfo::StyleSheetInfo(StyleSheetInfo& aCopy,
   , mFirstChild()  // We don't rebuild the child because we're making a copy
                    // without children.
   , mSourceMapURL(aCopy.mSourceMapURL)
+  , mSourceMapURLFromComment(aCopy.mSourceMapURLFromComment)
 #ifdef DEBUG
   , mPrincipalSet(aCopy.mPrincipalSet)
 #endif
@@ -510,13 +511,23 @@ StyleSheet::GetCssRules(nsIPrincipal& aSubjectPrincipal,
 void
 StyleSheet::GetSourceMapURL(nsAString& aSourceMapURL)
 {
-  aSourceMapURL = mInner->mSourceMapURL;
+  if (mInner->mSourceMapURL.IsEmpty()) {
+    aSourceMapURL = mInner->mSourceMapURLFromComment;
+  } else {
+    aSourceMapURL = mInner->mSourceMapURL;
+  }
 }
 
 void
 StyleSheet::SetSourceMapURL(const nsAString& aSourceMapURL)
 {
   mInner->mSourceMapURL = aSourceMapURL;
+}
+
+void
+StyleSheet::SetSourceMapURLFromComment(const nsAString& aSourceMapURLFromComment)
+{
+  mInner->mSourceMapURLFromComment = aSourceMapURLFromComment;
 }
 
 css::Rule*

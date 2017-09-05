@@ -3836,10 +3836,6 @@ nsCSSFrameConstructor::FindInputData(Element* aElement,
 
   auto controlType = control->ControlType();
 
-  // Note that Android widgets don't have theming support and thus
-  // appearance:none is the same as any other appearance value.
-  // So this chunk doesn't apply there:
-#if !defined(MOZ_WIDGET_ANDROID)
   // radio and checkbox inputs with appearance:none should be constructed
   // by display type.  (Note that we're not checking that appearance is
   // not (respectively) NS_THEME_RADIO and NS_THEME_CHECKBOX.)
@@ -3848,7 +3844,6 @@ nsCSSFrameConstructor::FindInputData(Element* aElement,
       aStyleContext->StyleDisplay()->mAppearance == NS_THEME_NONE) {
     return nullptr;
   }
-#endif
 
   return FindDataByInt(controlType, aElement, aStyleContext,
                        sInputData, ArrayLength(sInputData));

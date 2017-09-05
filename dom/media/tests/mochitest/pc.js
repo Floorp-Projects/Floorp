@@ -846,32 +846,12 @@ PeerConnectionWrapper.prototype = {
   },
 
   /**
-   * Sets the local description.
-   *
-   * @param {object} desc
-   *        The new local description
-   */
-  set localDescription(desc) {
-    this._pc.localDescription = desc;
-  },
-
-  /**
    * Returns the remote description.
    *
    * @returns {object} The remote description
    */
   get remoteDescription() {
     return this._pc.remoteDescription;
-  },
-
-  /**
-   * Sets the remote description.
-   *
-   * @param {object} desc
-   *        The new remote description
-   */
-  set remoteDescription(desc) {
-    this._pc.remoteDescription = desc;
   },
 
   /**

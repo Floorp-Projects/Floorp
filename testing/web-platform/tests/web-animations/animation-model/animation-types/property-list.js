@@ -618,6 +618,16 @@ var gCSSProperties = {
       { type: 'discrete', options: [ [ 'sub', 'super' ] ] }
     ]
   },
+  'font-variation-settings': {
+    // https://drafts.csswg.org/css-fonts-4/#descdef-font-face-font-variation-settings
+    types: [
+      'fontVariationSettings',
+      { type: 'discrete',
+        options: [ ['"wght" 1.1, "wdth" 1', '"wdth" 5'],
+                   ['"wdth" 5', 'normal']
+                 ] },
+    ]
+  },
   'font-weight': {
     // https://drafts.csswg.org/css-fonts-3/#propdef-font-weight
     types: [
@@ -1463,16 +1473,43 @@ var gCSSProperties = {
 };
 
 function testAnimationSamples(animation, idlName, testSamples) {
-  var type = animation.effect.target.type;
-  var target = type
-               ? animation.effect.target.parentElement
-               : animation.effect.target;
-  testSamples.forEach(function(testSample) {
+  const type = animation.effect.target.type;
+  const target = animation.effect.target.constructor.name === 'CSSPseudoElement'
+                 ? animation.effect.target.parentElement
+                 : animation.effect.target;
+  testSamples.forEach(testSample => {
     animation.currentTime = testSample.time;
     assert_equals(getComputedStyle(target, type)[idlName],
                   testSample.expected,
-                  'The value should be ' + testSample.expected +
-                  ' at ' + testSample.time + 'ms');
+                  `The value should be ${testSample.expected}` +
+                  ` at ${testSample.time}ms`);
+  });
+}
+
+function toOrderedArray(string) {
+  return string.split(/\s*,\s/).sort();
+}
+
+// This test is for some list-based CSS properties such as font-variant-settings
+// don't specify an order for serializing computed values.
+// This test is for such the property.
+function testAnimationSamplesWithAnyOrder(animation, idlName, testSamples) {
+  const type = animation.effect.target.type;
+  const target = animation.effect.target.constructor.name === 'CSSPseudoElement'
+                 ? animation.effect.target.parentElement
+                 : animation.effect.target;
+  testSamples.forEach(testSample => {
+    animation.currentTime = testSample.time;
+
+    // Convert to array and sort the expected and actual value lists first
+    // before comparing them.
+    const computedValues =
+      toOrderedArray(getComputedStyle(target, type)[idlName]);
+    const expectedValues = toOrderedArray(testSample.expected);
+
+    assert_array_equals(computedValues, expectedValues,
+                        `The computed values should be ${expectedValues}` +
+                        ` at ${testSample.time}ms`);
   });
 }
 

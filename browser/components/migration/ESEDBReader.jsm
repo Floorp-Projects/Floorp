@@ -357,7 +357,7 @@ ESEDB.prototype = {
     return true;
   },
 
-  *tableItems(tableName, columns) {
+  * tableItems(tableName, columns) {
     if (!this._opened) {
       throw new Error("The database was closed!");
     }

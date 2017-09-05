@@ -702,7 +702,7 @@
              class="learnMore text-link">&healthReportLearnMore.label;</label>
     </description>
 #ifndef MOZ_TELEMETRY_REPORTING
-    <description id="TelemetryDisabledDesc" class="indent" control="telemetryGroup">&healthReportingDisabled.label;</description>
+    <description id="TelemetryDisabledDesc" class="indent tip-caption" control="telemetryGroup">&healthReportingDisabled.label;</description>
 #endif
   </vbox>
 #ifdef MOZ_CRASHREPORTER
