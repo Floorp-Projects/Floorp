@@ -2561,17 +2561,13 @@ MediaCacheStream::Init(int64_t aContentLength)
   return NS_OK;
 }
 
-nsresult
+void
 MediaCacheStream::InitAsClone(MediaCacheStream* aOriginal)
 {
-  if (!aOriginal->IsAvailableForSharing())
-    return NS_ERROR_FAILURE;
+  MOZ_ASSERT(aOriginal->IsAvailableForSharing());
+  MOZ_ASSERT(!mMediaCache, "Has been initialized.");
+  MOZ_ASSERT(aOriginal->mMediaCache, "Don't clone an uninitialized stream.");
 
-  if (mMediaCache) {
-    return NS_OK;
-  }
-
-  NS_ASSERTION(aOriginal->mMediaCache, "Don't clone an uninitialized stream");
   // Use the same MediaCache as our clone.
   mMediaCache = aOriginal->mMediaCache;
 
@@ -2609,8 +2605,6 @@ MediaCacheStream::InitAsClone(MediaCacheStream* aOriginal)
     // stream offset is zero
     mMediaCache->AddBlockOwnerAsReadahead(cacheBlockIndex, this, i);
   }
-
-  return NS_OK;
 }
 
 nsresult MediaCacheStream::GetCachedRanges(MediaByteRangeSet& aRanges)
