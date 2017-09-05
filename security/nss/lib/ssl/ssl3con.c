@@ -1,3 +1,4 @@
+
 /* -*- Mode: C; tab-width: 8; indent-tabs-mode: nil; c-basic-offset: 4 -*- */
 /*
  * SSL3 Protocol
@@ -233,11 +234,15 @@ static const unsigned int ssl_compression_method_count =
 static PRBool
 ssl_CompressionEnabled(sslSocket *ss, SSLCompressionMethod compression)
 {
-    SSL3ProtocolVersion version;
-
     if (compression == ssl_compression_null) {
         return PR_TRUE; /* Always enabled */
     }
+/* Compression was disabled in NSS 3.33. It is temporarily possible
+     * to re-enable it by unifdefing the following block. We will remove
+     * compression entirely in future versions of NSS. */
+#if 0
+    SSL3ProtocolVersion version;
+
     if (ss->sec.isServer) {
         /* We can't easily check that the client didn't attempt TLS 1.3,
          * so this will have to do. */
@@ -256,6 +261,7 @@ ssl_CompressionEnabled(sslSocket *ss, SSLCompressionMethod compression)
         }
         return ss->opt.enableDeflate;
     }
+#endif
 #endif
     return PR_FALSE;
 }
