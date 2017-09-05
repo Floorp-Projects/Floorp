@@ -47,7 +47,8 @@ fn preprocess_single_lines(comment: &str, indent: usize) -> String {
 
     let indent = make_indent(indent);
     let mut is_first = true;
-    let lines: Vec<_> = comment.lines()
+    let lines: Vec<_> = comment
+        .lines()
         .map(|l| l.trim_left_matches('/').trim())
         .map(|l| {
             let indent = if is_first { "" } else { &*indent };
@@ -60,12 +61,13 @@ fn preprocess_single_lines(comment: &str, indent: usize) -> String {
 }
 
 fn preprocess_multi_line(comment: &str, indent: usize) -> String {
-    let comment = comment.trim_left_matches('/')
-                         .trim_left_matches('*')
-                         .trim_left_matches('!')
-                         .trim_right_matches('/')
-                         .trim_right_matches('*')
-                         .trim();
+    let comment = comment
+        .trim_left_matches('/')
+        .trim_left_matches('*')
+        .trim_left_matches('!')
+        .trim_right_matches('/')
+        .trim_right_matches('*')
+        .trim();
 
     let indent = make_indent(indent);
     // Strip any potential `*` characters preceding each line.
@@ -109,10 +111,14 @@ mod test {
 
     #[test]
     fn processes_multi_lines_correctly() {
-        assert_eq!(preprocess("/** hello \n * world \n * foo \n */", 0),
-                   "/// hello\n/// world\n/// foo");
+        assert_eq!(
+            preprocess("/** hello \n * world \n * foo \n */", 0),
+            "/// hello\n/// world\n/// foo"
+        );
 
-        assert_eq!(preprocess("/**\nhello\n*world\n*foo\n*/", 0),
-                   "/// hello\n/// world\n/// foo");
+        assert_eq!(
+            preprocess("/**\nhello\n*world\n*foo\n*/", 0),
+            "/// hello\n/// world\n/// foo"
+        );
     }
 }

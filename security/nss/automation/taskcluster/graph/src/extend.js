@@ -15,6 +15,11 @@ const LINUX_CLANG39_IMAGE = {
   path: "automation/taskcluster/docker-clang-3.9"
 };
 
+const LINUX_GCC44_IMAGE = {
+  name: "linux-gcc-4.4",
+  path: "automation/taskcluster/docker-gcc-4.4"
+};
+
 const FUZZ_IMAGE = {
   name: "fuzz",
   path: "automation/taskcluster/docker-fuzz"
@@ -403,6 +408,26 @@ async function scheduleLinux(name, base, args = "") {
       CCC: "clang++",
     },
     symbol: "clang-4.0"
+  }));
+
+  queue.scheduleTask(merge(extra_base, {
+    name: `${name} w/ gcc-4.4`,
+    image: LINUX_GCC44_IMAGE,
+    env: {
+      USE_64: "1",
+      CC: "gcc-4.4",
+      CCC: "g++-4.4",
+      // gcc-4.6 introduced nullptr.
+      NSS_DISABLE_GTESTS: "1",
+    },
+    // Use the old Makefile-based build system, GYP doesn't have a proper GCC
+    // version check for __int128 support. It's mainly meant to cover RHEL6.
+    command: [
+      "/bin/bash",
+      "-c",
+      "bin/checkout.sh && nss/automation/taskcluster/scripts/build.sh",
+    ],
+    symbol: "gcc-4.4"
   }));
 
   queue.scheduleTask(merge(extra_base, {

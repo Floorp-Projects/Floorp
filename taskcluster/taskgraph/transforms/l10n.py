@@ -221,6 +221,10 @@ def setup_nightly_dependency(config, jobs):
             job['dependencies'].update({
                 'signed-build': 'build-signing-{}'.format(job['name']),
             })
+        if job['attributes']['build_platform'].startswith('macosx'):
+            job['dependencies'].update({
+                'repackage': 'repackage-{}'.format(job['name'])
+            })
         if job['attributes']['build_platform'].startswith('win'):
             job['dependencies'].update({
                 'repackage-signed': 'repackage-signing-{}'.format(job['name'])

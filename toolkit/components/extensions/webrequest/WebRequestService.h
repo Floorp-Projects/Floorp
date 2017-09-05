@@ -88,7 +88,8 @@ private:
   class ChannelEntry
   {
   public:
-    ~ChannelEntry();
+    void DetachAll();
+
     // Note: We can't keep a strong pointer to the channel here, since channels
     // are not cycle collected, and a reference to this object will be stored on
     // the channel in order to keep the entry alive.

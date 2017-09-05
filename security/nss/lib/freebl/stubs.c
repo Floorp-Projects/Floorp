@@ -136,6 +136,11 @@ STUB_DECLARE(int, PORT_GetError_Util, (void));
 STUB_DECLARE(PLArenaPool *, PORT_NewArena_Util, (unsigned long chunksize));
 STUB_DECLARE(void, PORT_SetError_Util, (int value));
 STUB_DECLARE(void *, PORT_ZAlloc_Util, (size_t len));
+STUB_DECLARE(void *, PORT_ZAllocAligned_Util, (size_t bytes, size_t alignment,
+                                               void **mem));
+STUB_DECLARE(void *, PORT_ZAllocAlignedOffset_Util, (size_t bytes,
+                                                     size_t alignment,
+                                                     size_t offset));
 STUB_DECLARE(void, PORT_ZFree_Util, (void *ptr, size_t len));
 
 STUB_DECLARE(void, PR_Assert, (const char *s, const char *file, PRIntn ln));
@@ -174,11 +179,14 @@ STUB_DECLARE(void, SECITEM_FreeItem_Util, (SECItem * zap, PRBool freeit));
 STUB_DECLARE(void, SECITEM_ZfreeItem_Util, (SECItem * zap, PRBool freeit));
 STUB_DECLARE(SECOidTag, SECOID_FindOIDTag_Util, (const SECItem *oid));
 STUB_DECLARE(int, NSS_SecureMemcmp, (const void *a, const void *b, size_t n));
+STUB_DECLARE(unsigned int, NSS_SecureMemcmpZero, (const void *mem, size_t n));
 
 #define PORT_ZNew_stub(type) (type *)PORT_ZAlloc_stub(sizeof(type))
 #define PORT_New_stub(type) (type *)PORT_Alloc_stub(sizeof(type))
 #define PORT_ZNewArray_stub(type, num) \
     (type *)PORT_ZAlloc_stub(sizeof(type) * (num))
+#define PORT_ZNewAligned_stub(type, alignment, mem) \
+    (type *)PORT_ZAllocAlignedOffset_stub(sizeof(type), alignment, offsetof(type, mem))
 
 /*
  * NOTE: in order to support hashing only the memory allocation stubs,
@@ -212,6 +220,52 @@ PORT_ZAlloc_stub(size_t len)
         memset(ptr, 0, len);
     }
     return ptr;
+}
+
+/* aligned_alloc is C11. This is an alternative to get aligned memory. */
+extern void *
+PORT_ZAllocAligned_stub(size_t bytes, size_t alignment, void **mem)
+{
+    STUB_SAFE_CALL3(PORT_ZAllocAligned_Util, bytes, alignment, mem);
+
+    /* This only works if alignement is a power of 2. */
+    if ((alignment == 0) || (alignment & (alignment - 1))) {
+        return NULL;
+    }
+
+    size_t x = alignment - 1;
+    size_t len = (bytes ? bytes : 1) + x;
+
+    if (!mem) {
+        return NULL;
+    }
+
+    /* Always allocate a non-zero amount of bytes */
+    *mem = malloc(len);
+    if (!*mem) {
+        return NULL;
+    }
+
+    memset(*mem, 0, len);
+    return (void *)(((uintptr_t)*mem + x) & ~(uintptr_t)x);
+}
+
+extern void *
+PORT_ZAllocAlignedOffset_stub(size_t size, size_t alignment, size_t offset)
+{
+    STUB_SAFE_CALL3(PORT_ZAllocAlignedOffset_Util, size, alignment, offset);
+    if (offset > size) {
+        return NULL;
+    }
+
+    void *mem = NULL;
+    void *v = PORT_ZAllocAligned_stub(size, alignment, &mem);
+    if (!v) {
+        return NULL;
+    }
+
+    *((void **)((uintptr_t)v + offset)) = mem;
+    return v;
 }
 
 extern void
@@ -590,6 +644,13 @@ NSS_SecureMemcmp_stub(const void *a, const void *b, size_t n)
     abort();
 }
 
+extern unsigned int
+NSS_SecureMemcmpZero_stub(const void *mem, size_t n)
+{
+    STUB_SAFE_CALL2(NSS_SecureMemcmpZero, mem, n);
+    abort();
+}
+
 #ifdef FREEBL_NO_WEAK
 
 static const char *nsprLibName = SHLIB_PREFIX "nspr4." SHLIB_SUFFIX;
@@ -642,6 +703,7 @@ freebl_InitNSSUtil(void *lib)
     STUB_FETCH_FUNCTION(SECITEM_ZfreeItem_Util);
     STUB_FETCH_FUNCTION(SECOID_FindOIDTag_Util);
     STUB_FETCH_FUNCTION(NSS_SecureMemcmp);
+    STUB_FETCH_FUNCTION(NSS_SecureMemcmpZero);
     return SECSuccess;
 }
 

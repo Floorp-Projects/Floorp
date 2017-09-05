@@ -2818,6 +2818,9 @@ Simulator::decodeTypeRegister(SimInstruction* instr)
                 MOZ_CRASH();
                 break;
               case ff_movf_fmt:
+              // location of cc field in MOVF is equal to float branch instructions
+                cc = instr->fbccValue();
+                fcsr_cc = GetFCSRConditionBit(cc);
                 if (testFCSRBit(fcsr_cc)) {
                   setFpuRegisterFloat(fd_reg, getFpuRegisterFloat(fs_reg));
                 }
@@ -2959,6 +2962,9 @@ Simulator::decodeTypeRegister(SimInstruction* instr)
                 MOZ_CRASH();
                 break;
               case ff_movf_fmt:
+              // location of cc field in MOVF is equal to float branch instructions
+                cc = instr->fbccValue();
+                fcsr_cc = GetFCSRConditionBit(cc);
                 if (testFCSRBit(fcsr_cc)) {
                   setFpuRegisterDouble(fd_reg, getFpuRegisterDouble(fs_reg));
                 }
