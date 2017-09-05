@@ -1,0 +1,37 @@
+<!doctype html>
+<meta charset=utf-8>
+<script src="/resources/testharness.js"></script>
+<script src="/resources/testharnessreport.js"></script>
+<script src="../testcommon.js"></script>
+<style>
+@keyframes margin-left {
+  from { margin-left: 20px; }
+  to   { margin-left: 80px; }
+}
+</style>
+<body>
+<div id="log"></div>
+<script>
+'use strict';
+
+test(function(t) {
+  var div = addDiv(t, { style: 'transition: margin-left 100s; ' +
+                               'margin-left: 80px' });
+  var cs = getComputedStyle(div);
+
+  assert_equals(cs.marginLeft, '80px', 'initial margin-left');
+
+  div.style.marginLeft = "20px";
+  assert_equals(cs.marginLeft, '80px', 'margin-left transition at 0s');
+
+  div.style.animation = "margin-left 2s";
+  assert_equals(cs.marginLeft, '20px',
+                'margin-left animation overrides transition at 0s');
+
+  div.style.animation = "none";
+  assert_equals(cs.marginLeft, '80px',
+                'margin-left animation stops overriding transition at 0s');
+}, 'Animation overrides/stops overriding transition immediately');
+
+</script>
+</body>
