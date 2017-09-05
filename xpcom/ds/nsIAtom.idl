@@ -18,20 +18,13 @@ native MallocSizeOf(mozilla::MallocSizeOf);
  * pointer identity.
  */
 
-[scriptable, builtinclass, uuid(8b8c11d4-3ed5-4079-8974-73c7576cdb34)]
+[builtinclass, uuid(8b8c11d4-3ed5-4079-8974-73c7576cdb34)]
 interface nsIAtom : nsISupports
 {
   /**
-   * Get the Unicode or UTF8 value for the string
+   * Get the UTF8 value for the string
    */
-  [binaryname(ScriptableToString)] AString toString();
   [noscript] AUTF8String toUTF8String();
-
-  /**
-   * Compare the atom to a specific string value
-   * Note that this will NEVER return/throw an error condition.
-   */
-  [binaryname(ScriptableEquals)] boolean equals(in AString aString);
 
   [noscript, notxpcom]
   size_t SizeOfIncludingThis(in MallocSizeOf aMallocSizeOf);
