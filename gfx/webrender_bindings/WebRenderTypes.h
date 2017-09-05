@@ -703,6 +703,7 @@ typedef Variant<layers::FrameMetrics::ViewID, WrClipId> ScrollOrClipId;
 enum class WebRenderError : int8_t {
   INITIALIZE = 0,
   MAKE_CURRENT,
+  RENDER,
 
   Sentinel /* this must be last for serialization purposes. */
 };

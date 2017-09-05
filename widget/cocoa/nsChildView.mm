@@ -166,7 +166,6 @@ static NSMutableDictionary* sNativeKeyEventsMap =
 
 // sets up our view, attaching it to its owning gecko view
 - (id)initWithFrame:(NSRect)inFrame geckoChild:(nsChildView*)inChild;
-- (void)forceRefreshOpenGL;
 
 // set up a gecko mouse event based on a cocoa mouse event
 - (void) convertCocoaMouseWheelEvent:(NSEvent*)aMouseEvent
@@ -3333,12 +3332,6 @@ NSEvent* gLastDragMouseDownEvent = nil;
     mCumulativeMagnification = 0.0;
     mCumulativeRotation = 0.0;
 
-    // We can't call forceRefreshOpenGL here because, in order to work around
-    // the bug, it seems we need to have a draw already happening. Therefore,
-    // we call it in drawRect:inContext:, when we know that a draw is in
-    // progress.
-    mDidForceRefreshOpenGL = NO;
-
     mNeedsGLUpdate = NO;
 
     [self setFocusRingType:NSFocusRingTypeNone];
@@ -3418,25 +3411,6 @@ NSEvent* gLastDragMouseDownEvent = nil;
 - (void)uninstallTextInputHandler
 {
   mTextInputHandler = nullptr;
-}
-
-// Work around bug 603134.
-// OS X has a bug that causes new OpenGL windows to only paint once or twice,
-// then stop painting altogether. By clearing the drawable from the GL context,
-// and then resetting the view to ourselves, we convince OS X to start updating
-// again.
-// This can cause a flash in new windows - bug 631339 - but it's very hard to
-// fix that while maintaining this workaround.
-- (void)forceRefreshOpenGL
-{
-  NS_OBJC_BEGIN_TRY_ABORT_BLOCK;
-
-  [mGLContext clearDrawable];
-  CGLLockContext((CGLContextObj)[mGLContext CGLContextObj]);
-  [self updateGLContext];
-  CGLUnlockContext((CGLContextObj)[mGLContext CGLContextObj]);
-
-  NS_OBJC_END_TRY_ABORT_BLOCK;
 }
 
 - (bool)preRender:(NSOpenGLContext *)aGLContext
@@ -3902,13 +3876,6 @@ NSEvent* gLastDragMouseDownEvent = nil;
   LayoutDeviceIntRegion region(geckoBounds);
 
   mGeckoChild->PaintWindow(region);
-
-  // Force OpenGL to refresh the very first time we draw. This works around a
-  // Mac OS X bug that stops windows updating on OS X when we use OpenGL.
-  if (!mDidForceRefreshOpenGL) {
-    [self performSelector:@selector(forceRefreshOpenGL) withObject:nil afterDelay:0];
-    mDidForceRefreshOpenGL = YES;
-  }
 }
 
 // Called asynchronously after setNeedsDisplay in order to avoid entering the

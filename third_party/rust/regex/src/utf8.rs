@@ -92,6 +92,9 @@ pub fn decode_utf8(src: &[u8]) -> Option<(char, usize)> {
                 return None;
             }
             let b1 = src[1];
+            if 0b11_000000 & b1 != TAG_CONT {
+                return None;
+            }
             let cp = ((b0 & !TAG_TWO) as u32) << 6
                      | ((b1 & !TAG_CONT) as u32);
             match cp {
@@ -104,6 +107,12 @@ pub fn decode_utf8(src: &[u8]) -> Option<(char, usize)> {
                 return None;
             }
             let (b1, b2) = (src[1], src[2]);
+            if 0b11_000000 & b1 != TAG_CONT {
+                return None;
+            }
+            if 0b11_000000 & b2 != TAG_CONT {
+                return None;
+            }
             let cp = ((b0 & !TAG_THREE) as u32) << 12
                      | ((b1 & !TAG_CONT) as u32) << 6
                      | ((b2 & !TAG_CONT) as u32);
@@ -118,6 +127,15 @@ pub fn decode_utf8(src: &[u8]) -> Option<(char, usize)> {
                 return None;
             }
             let (b1, b2, b3) = (src[1], src[2], src[3]);
+            if 0b11_000000 & b1 != TAG_CONT {
+                return None;
+            }
+            if 0b11_000000 & b2 != TAG_CONT {
+                return None;
+            }
+            if 0b11_000000 & b3 != TAG_CONT {
+                return None;
+            }
             let cp = ((b0 & !TAG_FOUR) as u32) << 18
                      | ((b1 & !TAG_CONT) as u32) << 12
                      | ((b2 & !TAG_CONT) as u32) << 6
@@ -236,6 +254,8 @@ mod tests {
         assert_eq!(decode_utf8(&[0xFF]), None);
         // Surrogate pair
         assert_eq!(decode_utf8(&[0xED, 0xA0, 0x81]), None);
+        // Invalid continuation byte.
+        assert_eq!(decode_utf8(&[0xD4, 0xC2]), None);
         // Bad lengths
         assert_eq!(decode_utf8(&[0xC3]), None); // 2 bytes
         assert_eq!(decode_utf8(&[0xEF, 0xBF]), None); // 3 bytes

@@ -47,3 +47,8 @@ BROWSER_PLATFORM=$PLATFORM_OS$BITS
 export TOOLTOOL_CHECKOUT
 
 (cd $TOOLTOOL_CHECKOUT && ${SRCDIR}/mach artifact toolchain -v --tooltool-url $TOOLTOOL_SERVER --tooltool-manifest $SRCDIR/$TOOLTOOL_MANIFEST ${TOOLTOOL_CACHE:+ --cache-dir $TOOLTOOL_CACHE}${MOZ_TOOLCHAINS:+ ${MOZ_TOOLCHAINS}})
+
+# Add all the tooltool binaries to our $PATH.
+for bin in ls $TOOLTOOL_CHECKOUT/*/bin; do
+    export PATH="$bin:$PATH"
+done

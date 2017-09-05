@@ -1,0 +1,40 @@
+environment:
+  matrix:
+    - target: 1.8.0-x86_64-pc-windows-msvc
+    - target: 1.8.0-i686-pc-windows-msvc
+    - target: 1.9.0-x86_64-pc-windows-msvc
+    - target: 1.9.0-i686-pc-windows-msvc
+    - target: 1.10.0-x86_64-pc-windows-msvc
+    - target: 1.10.0-i686-pc-windows-msvc
+    - target: 1.11.0-x86_64-pc-windows-msvc
+    - target: 1.11.0-i686-pc-windows-msvc
+    - target: 1.12.0-x86_64-pc-windows-msvc
+    - target: 1.12.0-i686-pc-windows-msvc
+    - target: beta-x86_64-pc-windows-msvc
+    - target: beta-i686-pc-windows-msvc
+    - target: beta-x86_64-pc-windows-gnu
+    - target: beta-i686-pc-windows-gnu
+    - target: nightly-x86_64-pc-windows-msvc
+    - target: nightly-i686-pc-windows-msvc
+    - target: nightly-x86_64-pc-windows-gnu
+    - target: nightly-i686-pc-windows-gnu
+
+install:
+  # Download the Rust and Cargo installer.
+  - ps: Start-FileDownload "https://static.rust-lang.org/dist/rust-${env:target}.msi"
+
+  # Install Rust and Cargo and wait for installation to finish by using Write-Output.
+  - ps: msiexec /package "rust-${env:target}.msi" /quiet /norestart | Write-Output
+
+  # Pick up the new Path variable after the installer modified it.
+  - ps: $env:Path = [System.Environment]::GetEnvironmentVariable("Path","Machine")
+
+  # Print versions for future reference.
+  - rustc --version
+  - cargo --version
+
+build_script:
+  - cargo build
+
+test_script:
+  - cargo test

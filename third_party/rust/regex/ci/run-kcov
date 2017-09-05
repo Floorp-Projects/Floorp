@@ -48,7 +48,7 @@ for t in ${tests[@]}; do
     --verify \
     --include-pattern '/regex/src/' \
     "$tmpdir/$t" \
-    $(ls -t ./target/debug/"$t"-* | head -n1)
+    $(find ./target/debug -executable -wholename "./target/debug/$t-*" | head -n1)
 done
 
 if [ -n "$coveralls_id" ]; then

@@ -46,8 +46,13 @@ public:
   static void ReleaseTable(void);
 
   // Functions for converting string or atom to id
-  static nsHTMLTag LookupTag(const nsAString& aTagName);
-  static nsHTMLTag CaseSensitiveLookupTag(const char16_t* aTagName)
+  static nsHTMLTag StringTagToId(const nsAString& aTagName);
+  static nsHTMLTag AtomTagToId(nsIAtom* aTagName)
+  {
+    return StringTagToId(nsDependentAtomString(aTagName));
+  }
+
+  static nsHTMLTag CaseSensitiveStringTagToId(const char16_t* aTagName)
   {
     NS_ASSERTION(gTagTable, "no lookup table, needs addref");
     NS_ASSERTION(aTagName, "null tagname!");
@@ -56,7 +61,7 @@ public:
 
     return tag ? (nsHTMLTag)NS_PTR_TO_INT32(tag) : eHTMLTag_userdefined;
   }
-  static nsHTMLTag CaseSensitiveLookupTag(nsIAtom* aTagName)
+  static nsHTMLTag CaseSensitiveAtomTagToId(nsIAtom* aTagName)
   {
     NS_ASSERTION(gTagAtomTable, "no lookup table, needs addref");
     NS_ASSERTION(aTagName, "null tagname!");

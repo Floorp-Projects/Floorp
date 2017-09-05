@@ -1,4 +1,5 @@
 use std::ops::{Add, Sub, Mul};
+use std::num::Wrapping;
 
 macro_rules! wrapping_impl {
     ($trait_name:ident, $method:ident, $t:ty) => {
@@ -76,6 +77,23 @@ wrapping_impl!(WrappingMul, wrapping_mul, i32);
 wrapping_impl!(WrappingMul, wrapping_mul, i64);
 wrapping_impl!(WrappingMul, wrapping_mul, isize);
 
+// Well this is a bit funny, but all the more appropriate.
+impl<T: WrappingAdd> WrappingAdd for Wrapping<T> where Wrapping<T>: Add<Output = Wrapping<T>> {
+    fn wrapping_add(&self, v: &Self) -> Self {
+        Wrapping(self.0.wrapping_add(&v.0))
+    }
+}
+impl<T: WrappingSub> WrappingSub for Wrapping<T> where Wrapping<T>: Sub<Output = Wrapping<T>> {
+    fn wrapping_sub(&self, v: &Self) -> Self {
+        Wrapping(self.0.wrapping_sub(&v.0))
+    }
+}
+impl<T: WrappingMul> WrappingMul for Wrapping<T> where Wrapping<T>: Mul<Output = Wrapping<T>> {
+    fn wrapping_mul(&self, v: &Self) -> Self {
+        Wrapping(self.0.wrapping_mul(&v.0))
+    }
+}
+
 
 #[test]
 fn test_wrapping_traits() {
@@ -85,4 +103,25 @@ fn test_wrapping_traits() {
     assert_eq!(wrapping_add(255, 1), 0u8);
     assert_eq!(wrapping_sub(0, 1), 255u8);
     assert_eq!(wrapping_mul(255, 2), 254u8);
+    assert_eq!(wrapping_add(255, 1), (Wrapping(255u8) + Wrapping(1u8)).0);
+    assert_eq!(wrapping_sub(0, 1), (Wrapping(0u8) - Wrapping(1u8)).0);
+    assert_eq!(wrapping_mul(255, 2), (Wrapping(255u8) * Wrapping(2u8)).0);
+}
+
+#[test]
+fn wrapping_is_wrappingadd() {
+    fn require_wrappingadd<T: WrappingAdd>(_: &T) {}
+    require_wrappingadd(&Wrapping(42));
+}
+
+#[test]
+fn wrapping_is_wrappingsub() {
+    fn require_wrappingsub<T: WrappingSub>(_: &T) {}
+    require_wrappingsub(&Wrapping(42));
+}
+
+#[test]
+fn wrapping_is_wrappingmul() {
+    fn require_wrappingmul<T: WrappingMul>(_: &T) {}
+    require_wrappingmul(&Wrapping(42));
 }

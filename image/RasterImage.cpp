@@ -242,6 +242,21 @@ RasterImage::GetNativeSizes(nsTArray<IntSize>& aNativeSizes) const
 }
 
 //******************************************************************************
+size_t
+RasterImage::GetNativeSizesLength() const
+{
+  if (mError || !mHasSize) {
+    return 0;
+  }
+
+  if (mNativeSizes.IsEmpty()) {
+    return 1;
+  }
+
+  return mNativeSizes.Length();
+}
+
+//******************************************************************************
 NS_IMETHODIMP
 RasterImage::GetIntrinsicSize(nsSize* aSize)
 {
@@ -350,6 +365,14 @@ RasterImage::LookupFrame(const IntSize& aSize,
                gfxPrefs::ImageMemAnimatedDiscardable() ||
                !mAnimationState || mAnimationState->KnownFrameCount() < 1,
                "Animated frames should be locked");
+
+    // The surface cache may suggest the preferred size we are supposed to
+    // decode at. This should only happen if we accept substitutions.
+    if (!result.SuggestedSize().IsEmpty()) {
+      MOZ_ASSERT(!(aFlags & FLAG_SYNC_DECODE) &&
+                  (aFlags & FLAG_HIGH_QUALITY_SCALING));
+      requestedSize = result.SuggestedSize();
+    }
 
     bool ranSync = Decode(requestedSize, aFlags, aPlaybackType);
 
@@ -1262,6 +1285,12 @@ RasterImage::Decode(const IntSize& aSize,
   }
   if (mHasBeenDecoded) {
     decoderFlags |= DecoderFlags::IS_REDECODE;
+  }
+  if ((aFlags & FLAG_SYNC_DECODE) || !(aFlags & FLAG_HIGH_QUALITY_SCALING)) {
+    // Used SurfaceCache::Lookup instead of SurfaceCache::LookupBestMatch. That
+    // means the caller can handle a differently sized surface to be returned
+    // at any point.
+    decoderFlags |= DecoderFlags::CANNOT_SUBSTITUTE;
   }
 
   SurfaceFlags surfaceFlags = ToSurfaceFlags(aFlags);

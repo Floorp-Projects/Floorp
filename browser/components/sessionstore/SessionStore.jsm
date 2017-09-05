@@ -370,6 +370,10 @@ this.SessionStore = {
     return SessionStoreInternal.undoCloseById(aClosedId);
   },
 
+  resetBrowserToLazyState(tab) {
+    return SessionStoreInternal.resetBrowserToLazyState(tab);
+  },
+
   /**
    * Determines whether the passed version number is compatible with
    * the current version number of the SessionStore.
@@ -1898,19 +1902,7 @@ var SessionStoreInternal = {
    *        bool Do not save state if we're updating an existing tab
    */
   onTabRemove: function ssi_onTabRemove(aWindow, aTab, aNoNotification) {
-    let browser = aTab.linkedBrowser;
-    browser.removeEventListener("SwapDocShells", this);
-    browser.removeEventListener("oop-browser-crashed", this);
-
-    // If this tab was in the middle of restoring or still needs to be restored,
-    // we need to reset that state. If the tab was restoring, we will attempt to
-    // restore the next tab.
-    let previousState = browser.__SS_restoreState;
-    if (previousState) {
-      this._resetTabRestoringState(aTab);
-      if (previousState == TAB_STATE_RESTORING)
-        this.restoreNextTab();
-    }
+    this.cleanUpRemovedBrowser(aTab);
 
     if (!aNoNotification) {
       this.saveStateDelayed(aWindow);
@@ -1977,6 +1969,57 @@ var SessionStoreInternal = {
     // Remember the closed tab to properly handle any last updates included in
     // the final "update" message sent by the frame script's unload handler.
     this._closedTabs.set(permanentKey, {closedTabs, tabData});
+  },
+
+  /**
+   * Remove listeners which were added when browser was inserted and reset restoring state.
+   * Also re-instate lazy data and basically revert tab to its lazy browser state.
+   * @param aTab
+   *        Tab reference
+   */
+  resetBrowserToLazyState(aTab) {
+    let browser = aTab.linkedBrowser;
+    // Browser is already lazy so don't do anything.
+    if (!browser.isConnected) {
+      return;
+    }
+
+    this.cleanUpRemovedBrowser(aTab);
+
+    aTab.setAttribute("pending", "true");
+
+    this._lastKnownFrameLoader.delete(browser.permanentKey);
+    this._crashedBrowsers.delete(browser.permanentKey);
+    aTab.removeAttribute("crashed");
+
+    aTab.__SS_lazyData = {
+      url: browser.currentURI.spec,
+      title: aTab.label,
+      userTypedValue: browser.userTypedValue || "",
+      userTypedClear: browser.userTypedClear || 0
+    }
+  },
+
+  /**
+   * When a tab is removed or suspended, remove listeners and reset restoring state.
+   * @param aBrowser
+   *        Browser reference
+   */
+  cleanUpRemovedBrowser(aTab) {
+    let browser = aTab.linkedBrowser;
+
+    browser.removeEventListener("SwapDocShells", this);
+    browser.removeEventListener("oop-browser-crashed", this);
+
+    // If this tab was in the middle of restoring or still needs to be restored,
+    // we need to reset that state. If the tab was restoring, we will attempt to
+    // restore the next tab.
+    let previousState = browser.__SS_restoreState;
+    if (previousState) {
+      this._resetTabRestoringState(aTab);
+      if (previousState == TAB_STATE_RESTORING)
+        this.restoreNextTab();
+    }
   },
 
   /**

@@ -27,6 +27,10 @@ WebRequestService::WebRequestService()
 
 WebRequestService::~WebRequestService()
 {
+  for (auto iter = mChannelEntries.Iter(); !iter.Done(); iter.Next()) {
+    auto& channel = iter.Data();
+    channel->DetachAll();
+  }
 }
 
 NS_IMPL_ISUPPORTS(WebRequestService, mozIWebRequestService)
@@ -132,7 +136,8 @@ WebRequestService::ChannelParent::Detach()
   mDetached = true;
 }
 
-WebRequestService::ChannelEntry::~ChannelEntry()
+void
+WebRequestService::ChannelEntry::DetachAll()
 {
   while (ChannelParent* parent = mTabParents.getFirst()) {
     parent->Detach();

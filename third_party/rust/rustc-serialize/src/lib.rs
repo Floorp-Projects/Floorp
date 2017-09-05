@@ -10,6 +10,13 @@
 
 //! Support code for encoding and decoding types.
 //!
+//! > **NOTE**: This crate is deprecated in favor of [`serde`]. No new feature
+//! > development will happen in this crate, although bug fixes proposed through
+//! > PRs will still be merged. It is very highly recommended by the Rust
+//! > Library Team that you use [`serde`], not this crate.
+//!
+//! [`serde`]: https://serde.rs
+//!
 //! # Usage
 //!
 //! This crate is [on crates.io](https://crates.io/crates/rustc-serialize) and
@@ -26,6 +33,9 @@
 //! ```rust
 //! extern crate rustc_serialize;
 //! ```
+
+#![cfg_attr(rustbuild, feature(staged_api, rustc_private))]
+#![cfg_attr(rustbuild, unstable(feature = "rustc_private", issue = "27812"))]
 
 #![doc(html_logo_url = "https://www.rust-lang.org/logos/rust-logo-128x128-blk-v2.png",
        html_favicon_url = "https://www.rust-lang.org/favicon.ico",

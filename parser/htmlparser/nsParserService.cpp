@@ -24,19 +24,19 @@ NS_IMPL_ISUPPORTS(nsParserService, nsIParserService)
 int32_t
 nsParserService::HTMLAtomTagToId(nsIAtom* aAtom) const
 {
-  return nsHTMLTags::LookupTag(nsDependentAtomString(aAtom));
+  return nsHTMLTags::StringTagToId(nsDependentAtomString(aAtom));
 }
 
 int32_t
 nsParserService::HTMLCaseSensitiveAtomTagToId(nsIAtom* aAtom) const
 {
-  return nsHTMLTags::CaseSensitiveLookupTag(aAtom);
+  return nsHTMLTags::CaseSensitiveAtomTagToId(aAtom);
 }
 
 int32_t
 nsParserService::HTMLStringTagToId(const nsAString& aTag) const
 {
-  return nsHTMLTags::LookupTag(aTag);
+  return nsHTMLTags::StringTagToId(aTag);
 }
 
 NS_IMETHODIMP

@@ -281,6 +281,12 @@ private:
     for (const SurfaceMemoryCounter& counter : aCounter.Surfaces()) {
       nsAutoCString surfacePathPrefix(aPathPrefix);
       surfacePathPrefix.Append(counter.IsLocked() ? "locked/" : "unlocked/");
+      if (counter.IsFactor2()) {
+        surfacePathPrefix.Append("factor2/");
+      }
+      if (counter.CannotSubstitute()) {
+        surfacePathPrefix.Append("cannot_substitute/");
+      }
       surfacePathPrefix.Append("surface(");
       surfacePathPrefix.AppendInt(counter.Key().Size().width);
       surfacePathPrefix.Append("x");

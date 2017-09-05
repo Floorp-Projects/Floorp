@@ -10,7 +10,7 @@
 
 //! A lightweight logging facade.
 //!
-//! A logging facade provides a single logging API that abstracts over the
+//! The `log` crate provides a single logging API that abstracts over the
 //! actual logging implementation. Libraries can use the logging API provided
 //! by this crate, and the consumer of those libraries can choose the logging
 //! framework that is most suitable for its use case.
@@ -19,11 +19,10 @@
 //! implementation that ignores all log messages. The overhead in this case
 //! is very small - just an integer load, comparison and jump.
 //!
-//! A log request consists of a target, a level, and a body. A target is a
-//! string which defaults to the module path of the location of the log
-//! request, though that default may be overridden. Logger implementations
-//! typically use the target to filter requests based on some user
-//! configuration.
+//! A log request consists of a _target_, a _level_, and a _body_. A target is a
+//! string which defaults to the module path of the location of the log request,
+//! though that default may be overridden. Logger implementations typically use
+//! the target to filter requests based on some user configuration.
 //!
 //! # Use
 //!
@@ -79,21 +78,25 @@
 //! ```rust,ignore
 //! #[macro_use]
 //! extern crate log;
-//! extern crate my_logger;
+//! extern crate env_logger;
 //!
 //! fn main() {
-//!     my_logger::init();
-//!
+//!     // Select env_logger, one possible logger implementation
+//!     // (see https://doc.rust-lang.org/log/env_logger/index.html)
+//!     env_logger::init().unwrap();
+//!     
 //!     info!("starting up");
-//!
+//!     error!("error: {}", 404);
+//!     
 //!     // ...
 //! }
 //! ```
 //!
 //! # Logger implementations
 //!
-//! Loggers implement the `Log` trait. Here's a very basic example that simply
-//! logs all messages at the `Error`, `Warn` or `Info` levels to stdout:
+//! Loggers implement the [`Log`] trait. Here's a very basic example that simply
+//! logs all messages at the [`Error`][level_link], [`Warn`][level_link] or
+//! [`Info`][level_link] levels to stdout:
 //!
 //! ```rust
 //! extern crate log;
@@ -117,15 +120,16 @@
 //! # fn main() {}
 //! ```
 //!
-//! Loggers are installed by calling the `set_logger` function. It takes a
-//! closure which is provided a `MaxLogLevel` token and returns a `Log` trait
-//! object. The `MaxLogLevel` token controls the global maximum log level. The
-//! logging facade uses this as an optimization to improve performance of log
-//! messages at levels that are disabled. In the case of our example logger,
-//! we'll want to set the maximum log level to `Info`, since we ignore any
-//! `Debug` or `Trace` level log messages. A logging framework should provide a
-//! function that wraps a call to `set_logger`, handling initialization of the
-//! logger:
+//! Loggers are installed by calling the [`set_logger`] function. It takes a
+//! closure which is provided a [`MaxLogLevelFilter`] token and returns a
+//! [`Log`] trait object. The [`MaxLogLevelFilter`] token controls the global
+//! maximum log level. The logging facade uses this as an optimization to
+//! improve performance of log messages at levels that are disabled. In the
+//! case of our example logger, we'll want to set the maximum log level to
+//! [`Info`][level_link], since we ignore any [`Debug`][level_link] or
+//! [`Trace`][level_link] level log messages. A logging framework should
+//! provide a function that wraps a call to [`set_logger`], handling
+//! initialization of the logger:
 //!
 //! ```rust
 //! # extern crate log;
@@ -150,8 +154,8 @@
 //! To use the `log` crate without depending on `libstd`, you need to specify
 //! `default-features = false` when specifying the dependency in `Cargo.toml`.
 //! This makes no difference to libraries using `log` since the logging API
-//! remains the same. However executables will need to use the `set_logger_raw`
-//! function to initialize a logger and the `shutdown_logger_raw` function to
+//! remains the same. However executables will need to use the [`set_logger_raw`]
+//! function to initialize a logger and the [`shutdown_logger_raw`] function to
 //! shut down the global logger before exiting:
 //!
 //! ```rust
@@ -183,14 +187,27 @@
 //!     })
 //! }
 //! ```
+//!
+//! [`Log`]: trait.Log.html
+//! [level_link]: enum.LogLevel.html
+//! [`set_logger`]: fn.set_logger.html
+//! [`MaxLogLevelFilter`]: struct.MaxLogLevelFilter.html
+//! [`set_logger_raw`]: fn.set_logger_raw.html
+//! [`shutdown_logger_raw`]: fn.shutdown_logger_raw.html
 
 #![doc(html_logo_url = "https://www.rust-lang.org/logos/rust-logo-128x128-blk-v2.png",
        html_favicon_url = "https://www.rust-lang.org/favicon.ico",
        html_root_url = "https://doc.rust-lang.org/log/")]
 #![warn(missing_docs)]
+#![deny(missing_debug_implementations)]
 #![cfg_attr(feature = "nightly", feature(panic_handler))]
 
 #![cfg_attr(not(feature = "use_std"), no_std)]
+
+// When compiled for the rustc compiler itself we want to make sure that this is
+// an unstable crate
+#![cfg_attr(rustbuild, feature(staged_api, rustc_private))]
+#![cfg_attr(rustbuild, unstable(feature = "rustc_private", issue = "27812"))]
 
 #[cfg(not(feature = "use_std"))]
 extern crate core as std;
@@ -239,11 +256,14 @@ static MAX_LOG_LEVEL_FILTER: AtomicUsize = ATOMIC_USIZE_INIT;
 static LOG_LEVEL_NAMES: [&'static str; 6] = ["OFF", "ERROR", "WARN", "INFO",
                                              "DEBUG", "TRACE"];
 
-/// An enum representing the available verbosity levels of the logging framework
+/// An enum representing the available verbosity levels of the logging framework.
 ///
-/// A `LogLevel` may be compared directly to a `LogLevelFilter`.
+/// Typical usage includes: checking if a certain `LogLevel` is enabled with
+/// [`log_enabled!`](macro.log_enabled.html), specifying the `LogLevel` of
+/// [`log!`](macro.log.html), and comparing a `LogLevel` directly to a
+/// [`LogLevelFilter`](enum.LogLevelFilter.html).
 #[repr(usize)]
-#[derive(Copy, Eq, Debug)]
+#[derive(Copy, Eq, Debug, Hash)]
 pub enum LogLevel {
     /// The "error" level.
     ///
@@ -381,9 +401,13 @@ impl LogLevel {
 /// An enum representing the available verbosity level filters of the logging
 /// framework.
 ///
-/// A `LogLevelFilter` may be compared directly to a `LogLevel`.
+/// A `LogLevelFilter` may be compared directly to a [`LogLevel`](enum.LogLevel.html).
+/// Use this type to [`get()`](struct.MaxLogLevelFilter.html#method.get) and
+/// [`set()`](struct.MaxLogLevelFilter.html#method.set) the
+/// [`MaxLogLevelFilter`](struct.MaxLogLevelFilter.html), or to match with the getter
+/// [`max_log_level()`](fn.max_log_level.html).
 #[repr(usize)]
-#[derive(Copy, Eq, Debug)]
+#[derive(Copy, Eq, Debug, Hash)]
 pub enum LogLevelFilter {
     /// A level lower than all log levels.
     Off,
@@ -485,7 +509,12 @@ impl LogLevelFilter {
     }
 }
 
-/// The "payload" of a log message.
+/// The "payload" of a log message. This structure is primarily used as a
+/// parameter in the [`log`] method of the [`Log`] trait.
+///
+/// [`log`]: trait.Log.html#tymethod.log
+/// [`Log`]: trait.Log.html
+#[derive(Debug)]
 pub struct LogRecord<'a> {
     metadata: LogMetadata<'a>,
     location: &'a LogLocation,
@@ -520,6 +549,7 @@ impl<'a> LogRecord<'a> {
 }
 
 /// Metadata about a log message.
+#[derive(Eq, PartialEq, Ord, PartialOrd, Hash, Debug)]
 pub struct LogMetadata<'a> {
     level: LogLevel,
     target: &'a str,
@@ -571,7 +601,7 @@ impl Log for NopLogger {
 /// The fields of this struct are public so that they may be initialized by the
 /// `log!` macro. They are subject to change at any time and should never be
 /// accessed directly.
-#[derive(Copy, Clone, Debug)]
+#[derive(Copy, Clone, Debug, Eq, PartialEq, Ord, PartialOrd, Hash)]
 pub struct LogLocation {
     #[doc(hidden)]
     pub __module_path: &'static str,
@@ -778,12 +808,9 @@ impl error::Error for ShutdownLoggerError {
     fn description(&self) -> &str { "shutdown_logger() called without an active logger" }
 }
 
-/// Registers a panic hook which logs at the error level.
+/// Deprecated
 ///
-/// The format is the same as the default panic hook . The reporting module is
-/// `log::panic`.
-///
-/// Requires the `use_std` (enabled by default) and `nightly` features.
+/// Use https://crates.io/crates/log-panics instead.
 #[cfg(all(feature = "nightly", feature = "use_std"))]
 pub fn log_panics() {
     std::panic::set_hook(Box::new(panic::log));

@@ -332,6 +332,16 @@ interface nsILoadInfo : nsISupports
   nsINode binaryLoadingNode();
 
   /**
+   * A C++ friendly version of the loadingContext for toplevel loads.
+   * Most likely you want to query the ownerDocument or LoadingNode
+   * and not this context only available for TYPE_DOCUMENT loads.
+   * Please note that except for loads of TYPE_DOCUMENT, this
+   * ContextForTopLevelLoad will always return null.
+   */
+  [noscript, notxpcom, nostdcall, binaryname(ContextForTopLevelLoad)]
+  nsISupports binaryContextForTopLevelLoad();
+
+  /**
    * The securityFlags of that channel.
    */
   readonly attribute nsSecurityFlags securityFlags;

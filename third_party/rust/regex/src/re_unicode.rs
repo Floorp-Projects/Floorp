@@ -321,7 +321,7 @@ impl Regex {
     ///
     /// Here we name the capture groups, which we can access with the `name`
     /// method or the `Index` notation with a `&str`. Note that the named
-    /// capture groups are still accessible with `at` or the `Index` notation
+    /// capture groups are still accessible with `get` or the `Index` notation
     /// with a `usize`.
     ///
     /// The `0`th capture group is always unnamed, so it must always be
@@ -500,6 +500,24 @@ impl Regex {
     ///
     /// Note that using `$2` instead of `$first` or `$1` instead of `$last`
     /// would produce the same result. To write a literal `$` use `$$`.
+    ///
+    /// Sometimes the replacement string requires use of curly braces to
+    /// delineate a capture group replacement and surrounding literal text.
+    /// For example, if we wanted to join two words together with an
+    /// underscore:
+    ///
+    /// ```rust
+    /// # extern crate regex; use regex::Regex;
+    /// # fn main() {
+    /// let re = Regex::new(r"(?P<first>\w+)\s+(?P<second>\w+)").unwrap();
+    /// let result = re.replace("deep fried", "${first}_$second");
+    /// assert_eq!(result, "deep_fried");
+    /// # }
+    /// ```
+    ///
+    /// Without the curly braces, the capture group name `first_` would be
+    /// used, and since it doesn't exist, it would be replaced with the empty
+    /// string.
     ///
     /// Finally, sometimes you just want to replace a literal string with no
     /// regard for capturing group expansion. This can be done by wrapping a
@@ -901,7 +919,7 @@ impl<'n> Iterator for NamedGroupsIter<'n> {
 /// index corresponds to the next capture group in the regex. If a capture
 /// group is named, then the matched string is *also* available via the `name`
 /// method. (Note that the 0th capture is always unnamed and so must be
-/// accessed with the `at` method.)
+/// accessed with the `get` method.)
 ///
 /// Positions returned from a capture group are always byte indices.
 ///
@@ -916,6 +934,22 @@ impl<'t> Captures<'t> {
     /// Returns the match associated with the capture group at index `i`. If
     /// `i` does not correspond to a capture group, or if the capture group
     /// did not participate in the match, then `None` is returned.
+    ///
+    /// # Examples
+    ///
+    /// Get the text of the match with a default of an empty string if this
+    /// group didn't participate in the match:
+    ///
+    /// ```rust
+    /// # use regex::Regex;
+    /// let re = Regex::new(r"[a-z]+(?:([0-9]+)|([A-Z]+))").unwrap();
+    /// let caps = re.captures("abc123").unwrap();
+    ///
+    /// let text1 = caps.get(1).map_or("", |m| m.as_str());
+    /// let text2 = caps.get(2).map_or("", |m| m.as_str());
+    /// assert_eq!(text1, "123");
+    /// assert_eq!(text2, "");
+    /// ```
     pub fn get(&self, i: usize) -> Option<Match<'t>> {
         self.locs.pos(i).map(|(s, e)| Match::new(self.text, s, e))
     }
@@ -1001,7 +1035,7 @@ impl<'c, 't> fmt::Debug for CapturesDebug<'c, 't> {
 ///
 /// The text can't outlive the `Captures` object if this method is
 /// used, because of how `Index` is defined (normally `a[i]` is part
-/// of `a` and can't outlive it); to do that, use `at()` instead.
+/// of `a` and can't outlive it); to do that, use `get()` instead.
 ///
 /// # Panics
 ///

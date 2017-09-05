@@ -21,6 +21,8 @@
 #include "prenv.h"
 #include "prinit.h"
 
+#include <stdint.h>
+
 #ifdef DEBUG
 #define THREADMARK
 #endif /* DEBUG */
@@ -117,6 +119,51 @@ PORT_ZAlloc(size_t bytes)
         PORT_SetError(SEC_ERROR_NO_MEMORY);
     }
     return rv;
+}
+
+/* aligned_alloc is C11. This is an alternative to get aligned memory. */
+void *
+PORT_ZAllocAligned(size_t bytes, size_t alignment, void **mem)
+{
+    size_t x = alignment - 1;
+
+    /* This only works if alignment is a power of 2. */
+    if ((alignment == 0) || (alignment & (alignment - 1))) {
+        PORT_SetError(SEC_ERROR_INVALID_ARGS);
+        return NULL;
+    }
+
+    if (!mem) {
+        return NULL;
+    }
+
+    /* Always allocate a non-zero amount of bytes */
+    *mem = PORT_ZAlloc((bytes ? bytes : 1) + x);
+    if (!*mem) {
+        PORT_SetError(SEC_ERROR_NO_MEMORY);
+        return NULL;
+    }
+
+    return (void *)(((uintptr_t)*mem + x) & ~(uintptr_t)x);
+}
+
+void *
+PORT_ZAllocAlignedOffset(size_t size, size_t alignment, size_t offset)
+{
+    PORT_Assert(offset < size);
+    if (offset > size) {
+        return NULL;
+    }
+
+    void *mem = NULL;
+    void *v = PORT_ZAllocAligned(size, alignment, &mem);
+    if (!v) {
+        return NULL;
+    }
+
+    PORT_Assert(mem);
+    *((void **)((uintptr_t)v + offset)) = mem;
+    return v;
 }
 
 void
@@ -732,4 +779,19 @@ NSS_SecureMemcmp(const void *ia, const void *ib, size_t n)
     }
 
     return r;
+}
+
+/*
+ * Perform a constant-time check if a memory region is all 0. The return value
+ * is 0 if the memory region is all zero.
+ */
+unsigned int
+NSS_SecureMemcmpZero(const void *mem, size_t n)
+{
+    PRUint8 zero = 0;
+    int i;
+    for (i = 0; i < n; ++i) {
+        zero |= *(PRUint8 *)((uintptr_t)mem + i);
+    }
+    return zero;
 }

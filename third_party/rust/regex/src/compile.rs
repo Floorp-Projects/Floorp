@@ -178,18 +178,19 @@ impl Compiler {
         }
         self.fill_to_next(dotstar_patch.hole);
 
+        let mut prev_hole = Hole::None;
         for (i, expr) in exprs[0..exprs.len() - 1].iter().enumerate() {
+            self.fill_to_next(prev_hole);
             let split = self.push_split_hole();
             let Patch { hole, entry } = try!(self.c_capture(0, expr));
             self.fill_to_next(hole);
             self.compiled.matches.push(self.insts.len());
             self.push_compiled(Inst::Match(i));
-
-            let next = self.insts.len();
-            self.fill_split(split, Some(entry), Some(next));
+            prev_hole = self.fill_split(split, Some(entry), None);
         }
         let i = exprs.len() - 1;
-        let Patch { hole, .. } = try!(self.c_capture(0, &exprs[i]));
+        let Patch { hole, entry } = try!(self.c_capture(0, &exprs[i]));
+        self.fill(prev_hole, entry);
         self.fill_to_next(hole);
         self.compiled.matches.push(self.insts.len());
         self.push_compiled(Inst::Match(i));
@@ -1033,11 +1034,16 @@ impl ByteClassSet {
         // (0usize..256).map(|x| x as u8).collect()
         let mut byte_classes = vec![0; 256];
         let mut class = 0u8;
-        for i in 0..256 {
-            byte_classes[i] = class;
+        let mut i = 0;
+        loop {
+            byte_classes[i] = class as u8;
+            if i >= 255 {
+                break;
+            }
             if self.0[i] {
                 class = class.checked_add(1).unwrap();
             }
+            i += 1;
         }
         byte_classes
     }
@@ -1083,5 +1089,14 @@ mod tests {
         assert_eq!(classes[6], 2);
         assert_eq!(classes[7], 3);
         assert_eq!(classes[255], 3);
+    }
+
+    #[test]
+    fn full_byte_classes() {
+        let mut set = ByteClassSet::new();
+        for i in 0..256u16 {
+            set.set_range(i as u8, i as u8);
+        }
+        assert_eq!(set.byte_classes().len(), 256);
     }
 }
