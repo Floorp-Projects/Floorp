@@ -990,7 +990,11 @@ imgCacheQueue::Push(imgCacheEntry* entry)
 
   RefPtr<imgCacheEntry> refptr(entry);
   mQueue.push_back(refptr);
-  MarkDirty();
+  // If we're not dirty already, then we can efficiently add this to the
+  // binary heap immediately.  This is only O(log n).
+  if (!IsDirty()) {
+    std::push_heap(mQueue.begin(), mQueue.end(), imgLoader::CompareCacheEntries);
+  }
 }
 
 already_AddRefed<imgCacheEntry>
@@ -1014,6 +1018,8 @@ imgCacheQueue::Pop()
 void
 imgCacheQueue::Refresh()
 {
+  // Resort the list.  This is an O(3 * n) operation and best avoided
+  // if possible.
   std::make_heap(mQueue.begin(), mQueue.end(), imgLoader::CompareCacheEntries);
   mDirty = false;
 }
