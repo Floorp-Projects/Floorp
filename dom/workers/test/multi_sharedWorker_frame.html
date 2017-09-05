@@ -7,15 +7,31 @@
   <head>
     <title>Test for SharedWorker</title>
   </head>
-  <body>
+  <body onload="notifyOpenerLoadEvent();">
     <script type="text/javascript">
       "use strict";
+
+      function postMessageToParentOrOpener(message) {
+        if (parent != window) {
+          parent.postMessage(message, "*");
+        }
+        if (opener) {
+          opener.postMessage(message, "*");
+        }
+      }
+
+      // Used by test_multi_sharedWorker_lifetimes.html
+      function notifyOpenerLoadEvent() {
+        if (opener) {
+          opener.postMessage({event: "load"}, "*");
+        }
+      }
 
       function debug(message) {
         if (typeof(message) != "string") {
           throw new Error("debug() only accepts strings!");
         }
-        parent.postMessage(message, "*");
+        postMessageToParentOrOpener(message);
       }
 
       let worker;
@@ -35,12 +51,12 @@
               lineno: event.lineno,
               isErrorEvent: event instanceof ErrorEvent
             };
-            parent.postMessage(data, "*");
+            postMessageToParentOrOpener(data);
           };
 
           worker.port.onmessage = function(event) {
             debug("Worker message: " + JSON.stringify(event.data));
-            parent.postMessage(event.data, "*");
+            postMessageToParentOrOpener(event.data);
           };
         }
 
