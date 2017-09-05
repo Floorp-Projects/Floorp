@@ -2536,10 +2536,7 @@ nsresult
 MediaCacheStream::Init(int64_t aContentLength)
 {
   NS_ASSERTION(NS_IsMainThread(), "Only call on main thread");
-
-  if (mMediaCache) {
-    return NS_OK;
-  }
+  MOZ_ASSERT(!mMediaCache, "Has been initialized.");
 
   if (aContentLength > 0) {
     uint32_t length = uint32_t(std::min(aContentLength, int64_t(UINT32_MAX)));
