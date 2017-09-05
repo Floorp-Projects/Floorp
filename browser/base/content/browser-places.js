@@ -1539,13 +1539,16 @@ var LibraryUI = {
         !this.COSMETIC_ANIMATIONS_ENABLED) {
       return;
     }
+
     let animatableBox = document.getElementById("library-animatable-box");
     let navBar = document.getElementById("nav-bar");
     let libraryIcon = document.getAnonymousElementByAttribute(libraryButton, "class", "toolbarbutton-icon");
     let dwu = window.getInterface(Ci.nsIDOMWindowUtils);
     let iconBounds = dwu.getBoundsWithoutFlushing(libraryIcon);
     let libraryBounds = dwu.getBoundsWithoutFlushing(libraryButton);
+    let toolboxBounds = dwu.getBoundsWithoutFlushing(gNavToolbox);
 
+    animatableBox.style.setProperty("--toolbox-y", toolboxBounds.y + "px");
     animatableBox.style.setProperty("--library-button-y", libraryBounds.y + "px");
     animatableBox.style.setProperty("--library-button-height", libraryBounds.height + "px");
     animatableBox.style.setProperty("--library-icon-x", iconBounds.x + "px");
