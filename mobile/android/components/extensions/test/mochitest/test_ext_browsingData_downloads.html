@@ -77,7 +77,11 @@ async function setupDownloads() {
 add_task(async function testDownloads() {
   function background() {
     browser.test.onMessage.addListener(async (msg, options) => {
-      await browser.browsingData.removeDownloads(options);
+      if (msg == "removeDownloads") {
+        await browser.browsingData.removeDownloads(options);
+      } else {
+        await browser.browsingData.remove(options, {downloads: true});
+      }
       browser.test.sendMessage("downloadsRemoved");
     });
   }
@@ -112,6 +116,7 @@ add_task(async function testDownloads() {
   await extension.startup();
 
   await testRemovalMethod("removeDownloads");
+  await testRemovalMethod("remove");
 
   await extension.unload();
 });

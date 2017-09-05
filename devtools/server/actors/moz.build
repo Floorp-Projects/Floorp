@@ -47,7 +47,6 @@ DevToolsModules(
     'preference.js',
     'pretty-print-worker.js',
     'process.js',
-    'profiler.js',
     'promises.js',
     'reflow.js',
     'root.js',
@@ -94,9 +93,6 @@ with Files('monitor.js'):
     BUG_COMPONENT = ('Firefox', 'Developer Tools')
 
 with Files('performance*'):
-    BUG_COMPONENT = ('Firefox', 'Developer Tools: Performance Tools (Profiler/Timeline)')
-
-with Files('profiler.js'):
     BUG_COMPONENT = ('Firefox', 'Developer Tools: Performance Tools (Profiler/Timeline)')
 
 with Files('source.js'):

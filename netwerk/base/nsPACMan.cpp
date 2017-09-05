@@ -348,6 +348,8 @@ nsPACMan::nsPACMan(nsIEventTarget *mainThreadEventTarget)
 
 nsPACMan::~nsPACMan()
 {
+  MOZ_ASSERT(mShutdown, "Shutdown must be called before dtor.");
+
   if (mPACThread) {
     if (NS_IsMainThread()) {
       mPACThread->Shutdown();
@@ -371,6 +373,8 @@ nsPACMan::Shutdown()
   }
   mShutdown = true;
   CancelExistingLoad();
+
+  MOZ_ASSERT(mPACThread, "mPAC requires mPACThread to shutdown");
   PostCancelPendingQ(NS_ERROR_ABORT);
 
   RefPtr<WaitForThreadShutdown> runnable = new WaitForThreadShutdown(this);

@@ -5,12 +5,13 @@
 "use strict";
 
 /**
- * Manages the addon-sdk loader instance used to load the developer tools.
+ * Manages the base loader (base-loader.js) instance used to load the developer tools.
  */
 
 var { utils: Cu } = Components;
 var { Services } = Cu.import("resource://gre/modules/Services.jsm", {});
-var { Loader, descriptor, resolveURI } = Cu.import("resource://gre/modules/commonjs/toolkit/loader.js", {});
+var { Loader, Require, resolveURI, unload } =
+  Cu.import("resource://devtools/shared/base-loader.js", {});
 var { requireRawId } = Cu.import("resource://devtools/shared/loader-plugin-raw.jsm", {});
 
 this.EXPORTED_SYMBOLS = ["DevToolsLoader", "devtools", "BuiltinProvider",
@@ -67,14 +68,11 @@ BuiltinProvider.prototype = {
     if (this.invisibleToDebugger) {
       paths.promise = "resource://gre/modules/Promise-backend.js";
     }
-    this.loader = new Loader.Loader({
-      id: "fx-devtools",
+    this.loader = new Loader({
       paths,
       invisibleToDebugger: this.invisibleToDebugger,
       sharedGlobal: true,
-      sharedGlobalBlocklist: [],
       sandboxName: "DevTools (Module loader)",
-      noSandboxAddonId: true,
       requireHook: (id, require) => {
         if (id.startsWith("raw!")) {
           return requireRawId(id, require);
@@ -85,7 +83,7 @@ BuiltinProvider.prototype = {
   },
 
   unload: function (reason) {
-    Loader.unload(this.loader, reason);
+    unload(this.loader, reason);
     delete this.loader;
   },
 };
@@ -168,7 +166,7 @@ DevToolsLoader.prototype = {
     this._provider.invisibleToDebugger = this.invisibleToDebugger;
 
     this._provider.load();
-    this.require = Loader.Require(this._provider.loader, { id: "devtools" });
+    this.require = Require(this._provider.loader, { id: "devtools" });
 
     // Fetch custom pseudo modules and globals
     let { modules, globals } = this.require("devtools/shared/builtin-modules");
@@ -193,7 +191,7 @@ DevToolsLoader.prototype = {
 
     // Register custom globals to the current loader instance
     globals.loader.id = this.id;
-    Object.defineProperties(loader.globals, descriptor(globals));
+    Object.defineProperties(loader.globals, Object.getOwnPropertyDescriptors(globals));
 
     // Expose lazy helpers on loader
     this.lazyGetter = globals.loader.lazyGetter;

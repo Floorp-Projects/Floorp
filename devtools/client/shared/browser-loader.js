@@ -4,7 +4,7 @@
 "use strict";
 
 var Cu = Components.utils;
-const loaders = Cu.import("resource://gre/modules/commonjs/toolkit/loader.js", {});
+const loaders = Cu.import("resource://devtools/shared/base-loader.js", {});
 const { devtools } = Cu.import("resource://devtools/shared/Loader.jsm", {});
 const { joinURI } = devtools.require("devtools/shared/path");
 const { assert } = devtools.require("devtools/shared/DevToolsUtils");
@@ -103,11 +103,9 @@ function BrowserLoaderBuilder({ baseURI, window, useOnlyShared, commonLibRequire
   }
 
   const opts = {
-    id: "browser-loader",
     sharedGlobal: true,
     sandboxPrototype: window,
     sandboxName: "DevTools (UI loader)",
-    noSandboxAddonId: true,
     paths: Object.assign({}, dynamicPaths, loaderOptions.paths),
     invisibleToDebugger: loaderOptions.invisibleToDebugger,
     requireHook: (id, require) => {

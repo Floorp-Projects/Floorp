@@ -278,7 +278,7 @@ Tools.performance = {
   inMenu: true,
 
   isTargetSupported: function (target) {
-    return target.hasActor("profiler");
+    return target.hasActor("performance");
   },
 
   build: function (frame, target) {
