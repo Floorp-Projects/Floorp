@@ -47,7 +47,7 @@ use webdriver::command::{
 use webdriver::response::{CloseWindowResponse, Cookie, CookieResponse, CookiesResponse,
                           ElementRectResponse, NewSessionResponse, TimeoutsResponse,
                           ValueResponse, WebDriverResponse, WindowRectResponse};
-use webdriver::common::{Date, ELEMENT_KEY, FrameId, Nullable, WebElement, WindowState};
+use webdriver::common::{Date, ELEMENT_KEY, FrameId, Nullable, WebElement};
 use webdriver::error::{ErrorStatus, WebDriverError, WebDriverResult};
 use webdriver::server::{WebDriverHandler, Session};
 use webdriver::httpapi::{WebDriverExtensionRoute};
@@ -804,12 +804,7 @@ impl MarionetteSession {
                     ErrorStatus::UnknownError,
                     "Failed to interpret y as float");
 
-                let state = match resp.result.find("state") {
-                    Some(json) => WindowState::from_json(json)?,
-                    None => WindowState::Normal,
-                };
-
-                let rect = WindowRectResponse { x, y, width, height, state };
+                let rect = WindowRectResponse { x, y, width, height };
                 WebDriverResponse::WindowRect(rect)
             },
             GetCookies => {
