@@ -231,12 +231,25 @@ AreaOfIntSize(const IntSize& aSize) {
  *
  * ImageSurfaceCache also keeps track of whether its associated image is locked
  * or unlocked.
+ *
+ * The cache may also enter "factor of 2" mode which occurs when the number of
+ * surfaces in the cache exceeds the "image.cache.factor2.threshold-surfaces"
+ * pref plus the number of native sizes of the image. When in "factor of 2"
+ * mode, the cache will strongly favour sizes which are a factor of 2 of the
+ * largest native size. It accomplishes this by suggesting a factor of 2 size
+ * when lookups fail and substituting the nearest factor of 2 surface to the
+ * ideal size as the "best" available (as opposed to subsitution but not found).
+ * This allows us to minimize memory consumption and CPU time spent decoding
+ * when a website requires many variants of the same surface.
  */
 class ImageSurfaceCache
 {
   ~ImageSurfaceCache() { }
 public:
-  ImageSurfaceCache() : mLocked(false) { }
+  ImageSurfaceCache()
+    : mLocked(false)
+    , mFactor2Mode(false)
+  { }
 
   MOZ_DECLARE_REFCOUNTED_TYPENAME(ImageSurfaceCache)
   NS_INLINE_DECL_THREADSAFE_REFCOUNTING(ImageSurfaceCache)
@@ -351,6 +364,47 @@ public:
     return MakePair(bestMatch.forget(), matchType);
   }
 
+  void MaybeSetFactor2Mode()
+  {
+    MOZ_ASSERT(!mFactor2Mode);
+
+    // Typically an image cache will not have too many size-varying surfaces, so
+    // if we exceed the given threshold, we should consider using a subset.
+    int32_t thresholdSurfaces = gfxPrefs::ImageCacheFactor2ThresholdSurfaces();
+    if (thresholdSurfaces < 0 ||
+        mSurfaces.Count() <= static_cast<uint32_t>(thresholdSurfaces)) {
+      return;
+    }
+
+    // Determine how many native surfaces this image has. Zero means we either
+    // don't know yet (in which case do nothing), or we don't want to limit the
+    // number of surfaces for this image.
+    //
+    // XXX(aosmond): Vector images have zero native sizes. This is because they
+    // are regenerated at the given size. There isn't an equivalent concept to
+    // the native size (and w/h ratio) to provide a frame of reference to what
+    // are "good" sizes. While it is desirable to have a similar mechanism as
+    // that for raster images, it will need a different approach.
+    auto first = ConstIter();
+    NotNull<CachedSurface*> current = WrapNotNull(first.UserData());
+    Image* image = static_cast<Image*>(current->GetImageKey());
+    size_t nativeSizes = image->GetNativeSizesLength();
+    if (nativeSizes == 0) {
+      return;
+    }
+
+    // Increase the threshold by the number of native sizes. This ensures that
+    // we do not prevent decoding of the image at all its native sizes. It does
+    // not guarantee we will provide a surface at that size however (i.e. many
+    // other sized surfaces are requested, in addition to the native sizes).
+    thresholdSurfaces += nativeSizes;
+    if (mSurfaces.Count() <= static_cast<uint32_t>(thresholdSurfaces)) {
+      return;
+    }
+
+    mFactor2Mode = true;
+  }
+
   bool CompareArea(const IntSize& aIdealSize,
                    const IntSize& aBestSize,
                    const IntSize& aSize) const
@@ -388,8 +442,12 @@ public:
   bool IsLocked() const { return mLocked; }
 
 private:
-  SurfaceTable mSurfaces;
-  bool         mLocked;
+  SurfaceTable      mSurfaces;
+
+  bool              mLocked;
+
+  // True in "factor of 2" mode.
+  bool              mFactor2Mode;
 };
 
 /**
