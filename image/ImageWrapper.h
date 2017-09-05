@@ -23,6 +23,7 @@ public:
 
   // Inherited methods from Image.
   nsresult GetNativeSizes(nsTArray<gfx::IntSize>& aNativeSizes) const override;
+  size_t GetNativeSizesLength() const override;
   virtual already_AddRefed<ProgressTracker> GetProgressTracker() override;
 
   virtual size_t

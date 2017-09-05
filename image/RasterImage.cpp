@@ -242,6 +242,21 @@ RasterImage::GetNativeSizes(nsTArray<IntSize>& aNativeSizes) const
 }
 
 //******************************************************************************
+size_t
+RasterImage::GetNativeSizesLength() const
+{
+  if (mError || !mHasSize) {
+    return 0;
+  }
+
+  if (mNativeSizes.IsEmpty()) {
+    return 1;
+  }
+
+  return mNativeSizes.Length();
+}
+
+//******************************************************************************
 NS_IMETHODIMP
 RasterImage::GetIntrinsicSize(nsSize* aSize)
 {
