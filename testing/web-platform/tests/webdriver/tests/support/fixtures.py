@@ -38,12 +38,11 @@ def _dismiss_user_prompts(session):
 
 
 def _restore_window_state(session):
-    """If the window is maximized, minimized, or fullscreened it will
-    be returned to normal state.
+    """Reset window to an acceptable size, bringing it out of maximized,
+    minimized, or fullscreened state.
 
     """
-    if session.window.state in ("maximized", "minimized", "fullscreen"):
-        session.window.size = (800, 600)
+    session.window.size = (800, 600)
 
 
 def _restore_windows(session):
