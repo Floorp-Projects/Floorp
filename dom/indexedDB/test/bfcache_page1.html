@@ -2,7 +2,7 @@
 <html>
 <head>
   <script>
-  var request = indexedDB.open(parent.location, 1);
+  var request = indexedDB.open(opener.location, 1);
   request.onupgradeneeded = function(e) {
     var db = e.target.result;
     // This should never be called
@@ -16,7 +16,7 @@
     var store = db.createObjectStore("mystore");
     store.add({ hello: "world" }, 42);
     trans.oncomplete = function() {
-      parent.postMessage("go", "http://mochi.test:8888");
+      opener.postMessage("go", "http://mochi.test:8888");
     }
   };
   </script>

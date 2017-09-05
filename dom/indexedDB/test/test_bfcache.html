@@ -10,41 +10,16 @@
   <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css"/>
   <script type="text/javascript">
     /* import-globals-from helpers.js */
-    var gOrigMaxTotalViewers = undefined;
-    function setCachePref(enabled) {
-      if (enabled) {
-        is(typeof gOrigMaxTotalViewers, "undefined",
-           "don't double-enable bfcache");
-        SpecialPowers.setBoolPref("browser.sessionhistory.cache_subframes",
-                                  true);
-        gOrigMaxTotalViewers =
-          SpecialPowers.getIntPref("browser.sessionhistory.max_total_viewers");
-        SpecialPowers.setIntPref("browser.sessionhistory.max_total_viewers",
-                                 10);
-      }
-      else {
-        is(typeof gOrigMaxTotalViewers, "number",
-           "don't double-disable bfcache");
-        SpecialPowers.setIntPref("browser.sessionhistory.max_total_viewers",
-                                 gOrigMaxTotalViewers);
-        gOrigMaxTotalViewers = undefined;
-        try {
-          SpecialPowers.clearUserPref("browser.sessionhistory.cache_subframes");
-        } catch (e) { /* Pref didn't exist, meh */ }
-      }
-    }
 
     function* testSteps()
     {
-      var iframe = $("iframe");
-      setCachePref(true);
       window.onmessage = grabEventAndContinueHandler;
 
-      iframe.src = "bfcache_iframe1.html";
+      let testWin = window.open("bfcache_page1.html", "testWin");
       var event = yield undefined;
       is(event.data, "go", "set up database successfully");
 
-      iframe.src = "bfcache_iframe2.html";
+      testWin.location = "bfcache_page2.html";
       let res = JSON.parse((yield).data);
       is(res.version, 2, "version was set correctly");
       is(res.storeCount, 1, "correct set of stores");
@@ -52,7 +27,7 @@
       is(res.value, JSON.stringify({ hello: "world" }),
          "correct value found in store");
 
-      setCachePref(false);
+      testWin.close();
       finishTest();
     }
   </script>
@@ -61,7 +36,6 @@
 </head>
 
 <body onload="runTest();">
-  <iframe id="iframe"></iframe>
 </body>
 
 </html>
