@@ -115,6 +115,18 @@ CallbackObject::FinishSlowJSInitIfMoreThanOneOwner(JSContext* aCx)
   }
 }
 
+JSObject*
+CallbackObject::Callback(JSContext* aCx)
+{
+  JSObject* callback = CallbackOrNull();
+  if (!callback) {
+    callback = JS_NewDeadWrapper(aCx);
+  }
+
+  MOZ_DIAGNOSTIC_ASSERT(callback);
+  return callback;
+}
+
 CallbackObject::CallSetup::CallSetup(CallbackObject* aCallback,
                                      ErrorResult& aRv,
                                      const char* aExecutionReason,

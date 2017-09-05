@@ -593,6 +593,9 @@ CustomElementRegistry::Define(const nsAString& aName,
   }
 
   JSContext *cx = jsapi.cx();
+  // Note: No calls that might run JS or trigger CC before this point, or
+  // there's a (vanishingly small) chance of our constructor being nulled
+  // before we access it.
   JS::Rooted<JSObject*> constructor(cx, aFunctionConstructor.CallableOrNull());
 
   /**
@@ -878,7 +881,7 @@ CustomElementRegistry::Get(JSContext* aCx, const nsAString& aName,
     return;
   }
 
-  aRetVal.setObjectOrNull(data->mConstructor->CallableOrNull());
+  aRetVal.setObject(*data->mConstructor->Callback(aCx));
 }
 
 already_AddRefed<Promise>
