@@ -14,8 +14,9 @@ Cu.import("resource://gre/modules/XPCOMUtils.jsm");
 XPCOMUtils.defineLazyModuleGetter(this, "SafeBrowsing",
   "resource://gre/modules/SafeBrowsing.jsm");
 
-var dump = Cu.import("resource://gre/modules/AndroidLog.jsm", {})
-           .AndroidLog.d.bind(null, "ViewSettings");
+XPCOMUtils.defineLazyGetter(this, "dump", () =>
+    Cu.import("resource://gre/modules/AndroidLog.jsm",
+              {}).AndroidLog.d.bind(null, "ViewSettings"));
 
 function debug(aMsg) {
   // dump(aMsg);
