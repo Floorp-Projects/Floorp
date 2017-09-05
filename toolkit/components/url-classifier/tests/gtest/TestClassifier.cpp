@@ -71,8 +71,7 @@ TestReadNoiseEntries(Classifier* classifier,
                      const nsCString& aFragment)
 {
   Completion lookupHash;
-  nsCOMPtr<nsICryptoHash> cryptoHash = do_CreateInstance(NS_CRYPTO_HASH_CONTRACTID);
-  lookupHash.FromPlaintext(aFragment, cryptoHash);
+  lookupHash.FromPlaintext(aFragment);
   LookupResult result;
   result.hash.complete = lookupHash;
 
