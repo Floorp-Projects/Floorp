@@ -17,7 +17,6 @@ UNIFIED_SOURCES = [
     'TestRemoveFrameRectFilter.cpp',
     'TestSourceBuffer.cpp',
     'TestStreamingLexer.cpp',
-    'TestSurfaceCache.cpp',
     'TestSurfaceSink.cpp',
 ]
 
