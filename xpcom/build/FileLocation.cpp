@@ -121,7 +121,7 @@ FileLocation::GetURIString(nsACString& aResult) const
     handler->mFile.GetURIString(aResult);
   }
   if (IsZip()) {
-    aResult.Insert("jar:", 0);
+    aResult.InsertLiteral("jar:", 0);
     aResult += "!/";
     aResult += mPath;
   }

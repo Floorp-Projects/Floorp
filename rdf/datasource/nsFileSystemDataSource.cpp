@@ -1019,7 +1019,7 @@ FileSystemDataSource::GetFolderList(nsIRDFResource *source, bool allowHidden,
         while ((aOffset = leaf.FindChar('/')) >= 0)
         {
             leaf.Cut((uint32_t)aOffset, 1);
-            leaf.Insert("%2F", (uint32_t)aOffset);
+            leaf.InsertLiteral("%2F", (uint32_t)aOffset);
         }
 
         // append the encoded name
