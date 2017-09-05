@@ -266,6 +266,25 @@ class AtomicOperations
     static void podMoveSafeWhenRacy(SharedMem<T*> dest, SharedMem<T*> src, size_t nelem) {
         memmoveSafeWhenRacy(dest, src, nelem * sizeof(T));
     }
+
+#ifdef DEBUG
+    // Constraints that must hold for atomic operations on all tier-1 platforms:
+    //
+    // - atomic cells can be 1, 2, 4, or 8 bytes
+    // - all atomic operations are lock-free, including 8-byte operations
+    // - atomic operations can only be performed on naturally aligned cells
+    //
+    // (Tier-2 and tier-3 platforms need not support 8-byte atomics, and if they
+    // do, they need not be lock-free.)
+
+    template<typename T>
+    static bool
+    tier1Constraints(const T* addr) {
+        static_assert(sizeof(T) <= 8, "atomics supported up to 8 bytes only");
+        return (sizeof(T) < 8 || (hasAtomic8() && isLockfree8())) &&
+               !(uintptr_t(addr) & (sizeof(T) - 1));
+    }
+#endif
 };
 
 /* A data type representing a lock on some region of a
