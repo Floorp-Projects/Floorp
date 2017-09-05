@@ -283,14 +283,41 @@ public:
     return surface.forget();
   }
 
-  Pair<already_AddRefed<CachedSurface>, MatchType>
+  /**
+   * @returns A tuple containing the best matching CachedSurface if available,
+   *          a MatchType describing how the CachedSurface was selected, and
+   *          an IntSize which is the size the caller should choose to decode
+   *          at should it attempt to do so.
+   */
+  Tuple<already_AddRefed<CachedSurface>, MatchType, IntSize>
   LookupBestMatch(const SurfaceKey& aIdealKey)
   {
     // Try for an exact match first.
     RefPtr<CachedSurface> exactMatch;
     mSurfaces.Get(aIdealKey, getter_AddRefs(exactMatch));
-    if (exactMatch && exactMatch->IsDecoded()) {
-      return MakePair(exactMatch.forget(), MatchType::EXACT);
+    if (exactMatch) {
+      if (exactMatch->IsDecoded()) {
+        return MakeTuple(exactMatch.forget(), MatchType::EXACT, IntSize());
+      }
+    } else if (!mFactor2Mode) {
+      // If no exact match is found, and we are not in factor of 2 mode, then
+      // we know that we will trigger a decode because at best we will provide
+      // a substitute. Make sure we switch now to factor of 2 mode if necessary.
+      MaybeSetFactor2Mode();
+    }
+
+    // Try for a best match second, if using compact.
+    IntSize suggestedSize = SuggestedSize(aIdealKey.Size());
+    if (mFactor2Mode) {
+      if (!exactMatch) {
+        SurfaceKey compactKey = aIdealKey.CloneWithSize(suggestedSize);
+        mSurfaces.Get(compactKey, getter_AddRefs(exactMatch));
+        if (exactMatch && exactMatch->IsDecoded()) {
+          return MakeTuple(exactMatch.forget(),
+                           MatchType::SUBSTITUTE_BECAUSE_BEST,
+                           suggestedSize);
+        }
+      }
     }
 
     // There's no perfect match, so find the best match we can.
@@ -341,14 +368,26 @@ public:
     MatchType matchType;
     if (bestMatch) {
       if (!exactMatch) {
-        // No exact match, but we found a substitute.
-        matchType = MatchType::SUBSTITUTE_BECAUSE_NOT_FOUND;
+        const IntSize& bestMatchSize = bestMatch->GetSurfaceKey().Size();
+        if (mFactor2Mode && suggestedSize == bestMatchSize) {
+          // No exact match, but this is the best we are willing to decode.
+          matchType = MatchType::SUBSTITUTE_BECAUSE_BEST;
+        } else {
+          // No exact match, but we found a substitute.
+          matchType = MatchType::SUBSTITUTE_BECAUSE_NOT_FOUND;
+        }
       } else if (exactMatch != bestMatch) {
         // The exact match is still decoding, but we found a substitute.
         matchType = MatchType::SUBSTITUTE_BECAUSE_PENDING;
       } else {
-        // The exact match is still decoding, but it's the best we've got.
-        matchType = MatchType::EXACT;
+        const IntSize& bestMatchSize = bestMatch->GetSurfaceKey().Size();
+        if (mFactor2Mode && aIdealKey.Size() != bestMatchSize) {
+          // The best factor of 2 match is still decoding.
+          matchType = MatchType::SUBSTITUTE_BECAUSE_BEST;
+        } else {
+          // The exact match is still decoding, but it's the best we've got.
+          matchType = MatchType::EXACT;
+        }
       }
     } else {
       if (exactMatch) {
@@ -361,7 +400,7 @@ public:
       }
     }
 
-    return MakePair(bestMatch.forget(), matchType);
+    return MakeTuple(bestMatch.forget(), matchType, suggestedSize);
   }
 
   void MaybeSetFactor2Mode()
@@ -629,7 +668,7 @@ public:
     return InsertOutcome::SUCCESS;
   }
 
-  void Remove(NotNull<CachedSurface*> aSurface,
+  bool Remove(NotNull<CachedSurface*> aSurface,
               const StaticMutexAutoLock& aAutoLock)
   {
     ImageKey imageKey = aSurface->GetImageKey();
@@ -653,7 +692,10 @@ public:
     // have been removed, so it is safe to free while holding the lock.
     if (cache->IsEmpty() && !cache->IsLocked()) {
       mImageCaches.Remove(imageKey);
+      return true;
     }
+
+    return false;
   }
 
   void StartTracking(NotNull<CachedSurface*> aSurface,
@@ -763,8 +805,10 @@ public:
     RefPtr<CachedSurface> surface;
     DrawableSurface drawableSurface;
     MatchType matchType = MatchType::NOT_FOUND;
+    IntSize suggestedSize;
     while (true) {
-      Tie(surface, matchType) = cache->LookupBestMatch(aSurfaceKey);
+      Tie(surface, matchType, suggestedSize)
+        = cache->LookupBestMatch(aSurfaceKey);
 
       if (!surface) {
         return LookupResult(matchType);  // Lookup in the per-image cache missed.
@@ -777,7 +821,9 @@ public:
 
       // The surface was released by the operating system. Remove the cache
       // entry as well.
-      Remove(WrapNotNull(surface), aAutoLock);
+      if (Remove(WrapNotNull(surface), aAutoLock)) {
+        break;
+      }
     }
 
     MOZ_ASSERT_IF(matchType == MatchType::EXACT,
@@ -788,8 +834,17 @@ public:
       surface->GetSurfaceKey().Playback() == aSurfaceKey.Playback() &&
       surface->GetSurfaceKey().Flags() == aSurfaceKey.Flags());
 
-    if (matchType == MatchType::EXACT) {
+    if (matchType == MatchType::EXACT ||
+        matchType == MatchType::SUBSTITUTE_BECAUSE_BEST) {
       MarkUsed(WrapNotNull(surface), WrapNotNull(cache), aAutoLock);
+    }
+
+    // When the caller may choose to decode at an uncached size because there is
+    // no pending decode at the requested size, we should give it the alternative
+    // size it should decode at.
+    if (matchType == MatchType::SUBSTITUTE_BECAUSE_NOT_FOUND ||
+        matchType == MatchType::NOT_FOUND) {
+      return LookupResult(Move(drawableSurface), matchType, suggestedSize);
     }
 
     return LookupResult(Move(drawableSurface), matchType);
