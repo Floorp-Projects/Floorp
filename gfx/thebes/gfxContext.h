@@ -377,11 +377,16 @@ public:
 
     void PopClip();
 
+    enum ClipExtentsSpace {
+        eUserSpace = 0,
+        eDeviceSpace = 1,
+    };
+
     /**
-     * This will return the current bounds of the clip region in user
-     * space.
+     * According to aSpace, this function will return the current bounds of
+     * the clip region in user space or device space.
      */
-    gfxRect GetClipExtents();
+    gfxRect GetClipExtents(ClipExtentsSpace aSpace = eUserSpace) const;
 
     /**
      * Returns true if the given rectangle is fully contained in the current clip.
@@ -519,7 +524,7 @@ private:
   void FillAzure(const Pattern& aPattern, mozilla::gfx::Float aOpacity);
   CompositionOp GetOp();
   void ChangeTransform(const mozilla::gfx::Matrix &aNewMatrix, bool aUpdatePatternTransform = true);
-  Rect GetAzureDeviceSpaceClipBounds();
+  Rect GetAzureDeviceSpaceClipBounds() const;
   Matrix GetDeviceTransform() const;
   Matrix GetDTTransform() const;
 

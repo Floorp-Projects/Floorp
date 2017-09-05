@@ -1491,8 +1491,8 @@ nsCellMap::AppendCell(nsTableCellMap&   aMap,
     //the caller depends on the damageArea
     // The special case for zeroRowSpan is to adjust for the '2' in
     // GetRowSpanForNewCell.
-    uint32_t height = zeroRowSpan ? endRowIndex - aRowIndex  :
-                                    1 + endRowIndex - aRowIndex;
+    uint32_t height = std::min(zeroRowSpan ? rowSpan - 1 : rowSpan,
+                               GetRowCount() - aRowIndex);
     SetDamageArea(startColIndex, aRgFirstRowIndex + aRowIndex,
                   1 + endColIndex - startColIndex, height, aDamageArea);
   }

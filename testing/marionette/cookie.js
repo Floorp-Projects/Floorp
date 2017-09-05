@@ -164,7 +164,7 @@ cookie.remove = function(toDelete) {
  * @return {Iterable.<Cookie>}
  *     Iterator.
  */
-cookie.iter = function*(host, currentPath = "/") {
+cookie.iter = function* (host, currentPath = "/") {
   assert.string(host, "host must be string");
   assert.string(currentPath, "currentPath must be string");
 

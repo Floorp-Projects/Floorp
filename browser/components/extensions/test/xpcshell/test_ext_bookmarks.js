@@ -11,6 +11,7 @@ add_task(async function test_bookmarks() {
     let initialBookmarkCount = 0;
     let createdBookmarks = new Set();
     let createdFolderId;
+    let createdSeparatorId;
     let collectedEvents = [];
     const nonExistentId = "000000000000";
     const bookmarkGuids = {
@@ -28,12 +29,14 @@ add_task(async function test_bookmarks() {
       browser.test.assertTrue("dateAdded" in bookmark, "Bookmark has a dateAdded");
       browser.test.assertFalse("dateGroupModified" in bookmark, "Bookmark does not have a dateGroupModified");
       browser.test.assertFalse("unmodifiable" in bookmark, "Bookmark is not unmodifiable");
+      browser.test.assertEq("bookmark", bookmark.type, "Bookmark is of type bookmark");
     }
 
     function checkBookmark(expected, bookmark) {
       browser.test.assertEq(expected.url, bookmark.url, "Bookmark has the expected url");
       browser.test.assertEq(expected.title, bookmark.title, "Bookmark has the expected title");
       browser.test.assertEq(expected.index, bookmark.index, "Bookmark has expected index");
+      browser.test.assertEq("bookmark", bookmark.type, "Bookmark is of type bookmark");
       if ("parentId" in expected) {
         browser.test.assertEq(expected.parentId, bookmark.parentId, "Bookmark has the expected parentId");
       }
@@ -43,7 +46,7 @@ add_task(async function test_bookmarks() {
       browser.test.fail("Did not get expected error");
     }
 
-    function checkOnCreated(id, parentId, index, title, url, dateAdded) {
+    function checkOnCreated(id, parentId, index, title, url, dateAdded, type = "bookmark") {
       let createdData = collectedEvents.pop();
       browser.test.assertEq("onCreated", createdData.event, "onCreated was the last event received");
       browser.test.assertEq(id, createdData.id, "onCreated event received the expected id");
@@ -54,6 +57,7 @@ add_task(async function test_bookmarks() {
       browser.test.assertEq(title, bookmark.title, "onCreated event received the expected bookmark title");
       browser.test.assertEq(url, bookmark.url, "onCreated event received the expected bookmark url");
       browser.test.assertEq(dateAdded, bookmark.dateAdded, "onCreated event received the expected bookmark dateAdded");
+      browser.test.assertEq(type, bookmark.type, "onCreated event received the expected bookmark type");
     }
 
     function checkOnChanged(id, url, title) {
@@ -80,7 +84,7 @@ add_task(async function test_bookmarks() {
       browser.test.assertEq(oldIndex, info.oldIndex, "onMoved event received the expected oldIndex");
     }
 
-    function checkOnRemoved(id, parentId, index, url) {
+    function checkOnRemoved(id, parentId, index, url, type = "folder") {
       let removedData = collectedEvents.pop();
       browser.test.assertEq("onRemoved", removedData.event, "onRemoved was the last event received");
       browser.test.assertEq(id, removedData.id, "onRemoved event received the expected id");
@@ -92,6 +96,7 @@ add_task(async function test_bookmarks() {
       browser.test.assertEq(parentId, node.parentId, "onRemoved event received the expected node parentId");
       browser.test.assertEq(index, node.index, "onRemoved event received the expected node index");
       browser.test.assertEq(url, node.url, "onRemoved event received the expected node url");
+      browser.test.assertEq(type, node.type, "onRemoved event received the expected node type");
     }
 
     browser.bookmarks.onChanged.addListener((id, info) => {
@@ -126,7 +131,7 @@ add_task(async function test_bookmarks() {
       return browser.bookmarks.search({});
     }).then(results => {
       initialBookmarkCount = results.length;
-      return browser.bookmarks.create({title: "test bookmark", url: "http://example.org"});
+      return browser.bookmarks.create({title: "test bookmark", url: "http://example.org", type: "bookmark"});
     }).then(result => {
       ourId = result.id;
       checkOurBookmark(result);
@@ -147,11 +152,12 @@ add_task(async function test_bookmarks() {
       browser.test.assertEq(unsortedId, folder.id, "Folder has the expected id");
       browser.test.assertTrue("parentId" in folder, "Folder has a parentId");
       browser.test.assertTrue("index" in folder, "Folder has an index");
-      browser.test.assertFalse("url" in folder, "Folder does not have a url");
+      browser.test.assertEq(undefined, folder.url, "Folder does not have a url");
       browser.test.assertEq("Other Bookmarks", folder.title, "Folder has the expected title");
       browser.test.assertTrue("dateAdded" in folder, "Folder has a dateAdded");
       browser.test.assertTrue("dateGroupModified" in folder, "Folder has a dateGroupModified");
       browser.test.assertFalse("unmodifiable" in folder, "Folder is not unmodifiable"); // TODO: Do we want to enable this?
+      browser.test.assertEq("folder", folder.type, "Folder has a type of folder");
 
       return browser.bookmarks.getChildren(unsortedId);
     }).then(results => {
@@ -170,6 +176,7 @@ add_task(async function test_bookmarks() {
       browser.test.assertEq("new test title", result.title, "Updated bookmark has the expected title");
       browser.test.assertEq("http://example.com/", result.url, "Updated bookmark has the expected URL");
       browser.test.assertEq(ourId, result.id, "Updated bookmark has the expected id");
+      browser.test.assertEq("bookmark", result.type, "Updated bookmark has a type of bookmark");
 
       browser.test.assertEq(2, collectedEvents.length, "2 expected events received");
       checkOnChanged(ourId, "http://example.com/", "new test title");
@@ -191,6 +198,8 @@ add_task(async function test_bookmarks() {
           bookmark.title,
           "Folder returned from getTree has the expected title"
       );
+      browser.test.assertEq("folder", bookmark.type,
+                            "Folder returned from getTree has the expected type");
 
       return browser.bookmarks.create({parentId: "invalid"}).then(expectedError, error => {
         browser.test.assertTrue(
@@ -208,7 +217,7 @@ add_task(async function test_bookmarks() {
       browser.test.assertEq(undefined, result, "Removing a bookmark returns undefined");
 
       browser.test.assertEq(1, collectedEvents.length, "1 expected events received");
-      checkOnRemoved(ourId, bookmarkGuids.unfiledGuid, 0, "http://example.com/");
+      checkOnRemoved(ourId, bookmarkGuids.unfiledGuid, 0, "http://example.com/", "bookmark");
 
       return browser.bookmarks.get(ourId).then(expectedError, error => {
         browser.test.assertTrue(
@@ -228,7 +237,7 @@ add_task(async function test_bookmarks() {
       return Promise.all([
         browser.bookmarks.create({title: "MØzillä", url: "http://møzîllä.örg/"}),
         browser.bookmarks.create({title: "Example", url: "http://example.org/"}),
-        browser.bookmarks.create({title: "Mozilla Folder"}),
+        browser.bookmarks.create({title: "Mozilla Folder", type: "folder"}),
         browser.bookmarks.create({title: "EFF", url: "http://eff.org/"}),
         browser.bookmarks.create({title: "Menu Item", url: "http://menu.org/", parentId: bookmarkGuids.menuGuid}),
         browser.bookmarks.create({title: "Toolbar Item", url: "http://toolbar.org/", parentId: bookmarkGuids.toolbarGuid}),
@@ -238,7 +247,7 @@ add_task(async function test_bookmarks() {
       checkOnCreated(results[5].id, bookmarkGuids.toolbarGuid, 0, "Toolbar Item", "http://toolbar.org/", results[5].dateAdded);
       checkOnCreated(results[4].id, bookmarkGuids.menuGuid, 0, "Menu Item", "http://menu.org/", results[4].dateAdded);
       checkOnCreated(results[3].id, bookmarkGuids.unfiledGuid, 0, "EFF", "http://eff.org/", results[3].dateAdded);
-      checkOnCreated(results[2].id, bookmarkGuids.unfiledGuid, 0, "Mozilla Folder", undefined, results[2].dateAdded);
+      checkOnCreated(results[2].id, bookmarkGuids.unfiledGuid, 0, "Mozilla Folder", undefined, results[2].dateAdded, "folder");
       checkOnCreated(results[1].id, bookmarkGuids.unfiledGuid, 0, "Example", "http://example.org/", results[1].dateAdded);
       checkOnCreated(results[0].id, bookmarkGuids.unfiledGuid, 0, "MØzillä", "http://xn--mzll-ooa1dud.xn--rg-eka/", results[0].dateAdded);
 
@@ -251,12 +260,14 @@ add_task(async function test_bookmarks() {
       createdFolderId = folderResult.id;
       return Promise.all([
         browser.bookmarks.create({title: "Mozilla", url: "http://allizom.org/", parentId: createdFolderId}),
+        browser.bookmarks.create({parentId: createdFolderId, type: "separator"}),
         browser.bookmarks.create({title: "Mozilla Corporation", url: "http://allizom.com/", parentId: createdFolderId}),
         browser.bookmarks.create({title: "Firefox", url: "http://allizom.org/firefox/", parentId: createdFolderId}),
       ]).then(newBookmarks => {
-        browser.test.assertEq(3, collectedEvents.length, "3 expected events received");
-        checkOnCreated(newBookmarks[2].id, createdFolderId, 0, "Firefox", "http://allizom.org/firefox/", newBookmarks[2].dateAdded);
-        checkOnCreated(newBookmarks[1].id, createdFolderId, 0, "Mozilla Corporation", "http://allizom.com/", newBookmarks[1].dateAdded);
+        browser.test.assertEq(4, collectedEvents.length, "4 expected events received");
+        checkOnCreated(newBookmarks[3].id, createdFolderId, 0, "Firefox", "http://allizom.org/firefox/", newBookmarks[3].dateAdded);
+        checkOnCreated(newBookmarks[2].id, createdFolderId, 0, "Mozilla Corporation", "http://allizom.com/", newBookmarks[2].dateAdded);
+        checkOnCreated(newBookmarks[1].id, createdFolderId, 0, "", "data:", newBookmarks[1].dateAdded, "separator");
         checkOnCreated(newBookmarks[0].id, createdFolderId, 0, "Mozilla", "http://allizom.org/", newBookmarks[0].dateAdded);
 
         return browser.bookmarks.create({
@@ -272,7 +283,7 @@ add_task(async function test_bookmarks() {
         // returns all items on empty object
         return browser.bookmarks.search({});
       }).then(bookmarksSearchResults => {
-        browser.test.assertTrue(bookmarksSearchResults.length >= 9, "At least as many bookmarks as added were returned by search({})");
+        browser.test.assertTrue(bookmarksSearchResults.length >= 10, "At least as many bookmarks as added were returned by search({})");
 
         return Promise.resolve().then(() => {
           return browser.bookmarks.remove(createdFolderId);
@@ -288,13 +299,19 @@ add_task(async function test_bookmarks() {
       browser.test.assertEq(1, results.length, "Expected number of nodes returned by getSubTree");
       browser.test.assertEq("Mozilla Folder", results[0].title, "Folder has the expected title");
       browser.test.assertEq(bookmarkGuids.unfiledGuid, results[0].parentId, "Folder has the expected parentId");
+      browser.test.assertEq("folder", results[0].type, "Folder has the expected type");
       let children = results[0].children;
-      browser.test.assertEq(4, children.length, "Expected number of bookmarks returned by getSubTree");
+      browser.test.assertEq(5, children.length, "Expected number of bookmarks returned by getSubTree");
       browser.test.assertEq("Firefox", children[0].title, "Bookmark has the expected title");
+      browser.test.assertEq("bookmark", children[0].type, "Bookmark has the expected type");
       browser.test.assertEq("About Mozilla", children[1].title, "Bookmark has the expected title");
+      browser.test.assertEq("bookmark", children[1].type, "Bookmark has the expected type");
       browser.test.assertEq(1, children[1].index, "Bookmark has the expected index");
       browser.test.assertEq("Mozilla Corporation", children[2].title, "Bookmark has the expected title");
-      browser.test.assertEq("Mozilla", children[3].title, "Bookmark has the expected title");
+      browser.test.assertEq("", children[3].title, "Separator has the expected title");
+      browser.test.assertEq("data:", children[3].url, "Separator has the expected url");
+      browser.test.assertEq("separator", children[3].type, "Separator has the expected type");
+      browser.test.assertEq("Mozilla", children[4].title, "Bookmark has the expected title");
 
       // throws an error for invalid query objects
       Promise.resolve().then(() => {
@@ -377,6 +394,7 @@ add_task(async function test_bookmarks() {
     }).then(results => {
       browser.test.assertEq(1, results.length, "Expected number of folders returned");
       browser.test.assertEq("Mozilla Folder", results[0].title, "Folder has the expected title");
+      browser.test.assertEq("folder", results[0].type, "Folder has the expected type");
 
       // is case-insensitive
       return browser.bookmarks.search("corporation");
@@ -421,13 +439,13 @@ add_task(async function test_bookmarks() {
       return browser.bookmarks.search({title: "Mozilla"});
     }).then(results => {
       browser.test.assertEq(results.length, 1, "Expected number of results returned for title field");
-      checkBookmark({title: "Mozilla", url: "http://allizom.org/", index: 3}, results[0]);
+      checkBookmark({title: "Mozilla", url: "http://allizom.org/", index: 4}, results[0]);
 
       // can combine title and query
       return browser.bookmarks.search({title: "Mozilla", query: "allizom"});
     }).then(results => {
       browser.test.assertEq(1, results.length, "Expected number of results returned for title and query fields");
-      checkBookmark({title: "Mozilla", url: "http://allizom.org/", index: 3}, results[0]);
+      checkBookmark({title: "Mozilla", url: "http://allizom.org/", index: 4}, results[0]);
 
       // uses AND conditions
       return browser.bookmarks.search({title: "EFF", query: "allizom"});
@@ -532,7 +550,7 @@ add_task(async function test_bookmarks() {
 
         return browser.bookmarks.search({}).then(searchResults => {
           browser.test.assertEq(
-            startBookmarkCount - 4,
+            startBookmarkCount - 5,
             searchResults.length,
             "Expected number of results returned after removeTree");
         });
@@ -540,22 +558,34 @@ add_task(async function test_bookmarks() {
     }).then(() => {
       return browser.bookmarks.create({title: "Empty Folder"});
     }).then(result => {
-      let emptyFolderId = result.id;
+      createdFolderId = result.id;
 
       browser.test.assertEq(1, collectedEvents.length, "1 expected events received");
-      checkOnCreated(emptyFolderId, bookmarkGuids.unfiledGuid, 3, "Empty Folder", undefined, result.dateAdded);
+      checkOnCreated(createdFolderId, bookmarkGuids.unfiledGuid, 3, "Empty Folder", undefined, result.dateAdded, "folder");
 
       browser.test.assertEq("Empty Folder", result.title, "Folder has the expected title");
-      return browser.bookmarks.remove(emptyFolderId).then(() => {
-        browser.test.assertEq(1, collectedEvents.length, "1 expected events received");
-        checkOnRemoved(emptyFolderId, bookmarkGuids.unfiledGuid, 3);
+      browser.test.assertEq("folder", result.type, "Folder has the expected type");
 
-        return browser.bookmarks.get(emptyFolderId).then(expectedError, error => {
-          browser.test.assertTrue(
-            error.message.includes("Bookmark not found"),
-            "Expected error thrown when trying to get a removed folder"
-          );
-        });
+      return browser.bookmarks.create({parentId: createdFolderId, type: "separator"});
+    }).then(result => {
+      createdSeparatorId = result.id;
+      browser.test.assertEq(1, collectedEvents.length, "1 expected events received");
+      checkOnCreated(createdSeparatorId, createdFolderId, 0, "", "data:", result.dateAdded, "separator");
+      return browser.bookmarks.remove(createdSeparatorId);
+    }).then(() => {
+      browser.test.assertEq(1, collectedEvents.length, "1 expected events received");
+      checkOnRemoved(createdSeparatorId, createdFolderId, 0, "data:", "separator");
+
+      return browser.bookmarks.remove(createdFolderId);
+    }).then(() => {
+      browser.test.assertEq(1, collectedEvents.length, "1 expected events received");
+      checkOnRemoved(createdFolderId, bookmarkGuids.unfiledGuid, 3);
+
+      return browser.bookmarks.get(createdFolderId).then(expectedError, error => {
+        browser.test.assertTrue(
+          error.message.includes("Bookmark not found"),
+          "Expected error thrown when trying to get a removed folder"
+        );
       });
     }).then(() => {
       return browser.bookmarks.getChildren(nonExistentId).then(expectedError, error => {

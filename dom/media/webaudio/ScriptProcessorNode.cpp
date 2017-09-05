@@ -545,9 +545,9 @@ ScriptProcessorNode::WrapObject(JSContext* aCx, JS::Handle<JSObject*> aGivenProt
 void
 ScriptProcessorNode::UpdateConnectedStatus()
 {
-  bool isConnected = mHasPhantomInput ||
-    !(OutputNodes().IsEmpty() && OutputParams().IsEmpty()
-      && InputNodes().IsEmpty());
+  bool isConnected =
+    mHasPhantomInput || !(OutputNodes().IsEmpty() && OutputParams().IsEmpty() &&
+                          InputNodes().IsEmpty());
 
   // Events are queued even when there is no listener because a listener
   // may be added while events are in the queue.

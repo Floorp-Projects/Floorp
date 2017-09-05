@@ -78,7 +78,7 @@ Damp.prototype = {
     });
   },
 
-  closeToolbox: Task.async(function*() {
+  closeToolbox: Task.async(function* () {
     let tab = getActiveTab(getMostRecentBrowserWindow());
     let target = devtools.TargetFactory.forTab(tab);
     yield target.client.waitForRequestsToSettle();
@@ -119,7 +119,7 @@ Damp.prototype = {
     return Promise.resolve();
   },
 
-  waitForNetworkRequests: Task.async(function*(label, toolbox) {
+  waitForNetworkRequests: Task.async(function* (label, toolbox) {
     const start = performance.now();
     yield this.waitForAllRequestsFinished();
     const end = performance.now();
@@ -129,7 +129,7 @@ Damp.prototype = {
     });
   }),
 
-  _consoleBulkLoggingTest: Task.async(function*() {
+  _consoleBulkLoggingTest: Task.async(function* () {
     let TOTAL_MESSAGES = 10;
     let tab = yield this.testSetup(SIMPLE_URL);
     let messageManager = tab.linkedBrowser.messageManager;
@@ -181,7 +181,7 @@ Damp.prototype = {
   // Log a stream of console messages, 1 per rAF.  Then record the average
   // time per rAF.  The idea is that the console being slow can slow down
   // content (i.e. Bug 1237368).
-  _consoleStreamLoggingTest: Task.async(function*() {
+  _consoleStreamLoggingTest: Task.async(function* () {
     let TOTAL_MESSAGES = 100;
     let tab = yield this.testSetup(SIMPLE_URL);
     let messageManager = tab.linkedBrowser.messageManager;
@@ -265,24 +265,24 @@ Damp.prototype = {
 
   _getToolLoadingTests(url, label) {
 
-    let openToolboxAndLog = Task.async(function*(name, tool) {
+    let openToolboxAndLog = Task.async(function* (name, tool) {
       let {time, toolbox} = yield this.openToolbox(tool);
       this._results.push({name: name + ".open.DAMP", value: time });
       return toolbox;
     }.bind(this));
 
-    let closeToolboxAndLog = Task.async(function*(name) {
+    let closeToolboxAndLog = Task.async(function* (name) {
       let {time} = yield this.closeToolbox();
       this._results.push({name: name + ".close.DAMP", value: time });
     }.bind(this));
 
-    let reloadPageAndLog = Task.async(function*(name) {
+    let reloadPageAndLog = Task.async(function* (name) {
       let {time} = yield this.reloadPage();
       this._results.push({name: name + ".reload.DAMP", value: time });
     }.bind(this));
 
     let subtests = {
-      webconsoleOpen: Task.async(function*() {
+      webconsoleOpen: Task.async(function* () {
         yield this.testSetup(url);
         yield openToolboxAndLog(label + ".webconsole", "webconsole");
         yield reloadPageAndLog(label + ".webconsole");
@@ -290,7 +290,7 @@ Damp.prototype = {
         yield this.testTeardown();
       }),
 
-      inspectorOpen: Task.async(function*() {
+      inspectorOpen: Task.async(function* () {
         yield this.testSetup(url);
         yield openToolboxAndLog(label + ".inspector", "inspector");
         yield reloadPageAndLog(label + ".inspector");
@@ -298,7 +298,7 @@ Damp.prototype = {
         yield this.testTeardown();
       }),
 
-      debuggerOpen: Task.async(function*() {
+      debuggerOpen: Task.async(function* () {
         yield this.testSetup(url);
         yield openToolboxAndLog(label + ".jsdebugger", "jsdebugger");
         yield reloadPageAndLog(label + ".jsdebugger");
@@ -306,7 +306,7 @@ Damp.prototype = {
         yield this.testTeardown();
       }),
 
-      styleEditorOpen: Task.async(function*() {
+      styleEditorOpen: Task.async(function* () {
         yield this.testSetup(url);
         yield openToolboxAndLog(label + ".styleeditor", "styleeditor");
         yield reloadPageAndLog(label + ".styleeditor");
@@ -314,7 +314,7 @@ Damp.prototype = {
         yield this.testTeardown();
       }),
 
-      performanceOpen: Task.async(function*() {
+      performanceOpen: Task.async(function* () {
         yield this.testSetup(url);
         yield openToolboxAndLog(label + ".performance", "performance");
         yield reloadPageAndLog(label + ".performance");
@@ -322,7 +322,7 @@ Damp.prototype = {
         yield this.testTeardown();
       }),
 
-      netmonitorOpen: Task.async(function*() {
+      netmonitorOpen: Task.async(function* () {
         yield this.testSetup(url);
         const toolbox = yield openToolboxAndLog(label + ".netmonitor", "netmonitor");
         const requestsDone = this.waitForNetworkRequests(label + ".netmonitor", toolbox);
@@ -332,7 +332,7 @@ Damp.prototype = {
         yield this.testTeardown();
       }),
 
-      saveAndReadHeapSnapshot: Task.async(function*() {
+      saveAndReadHeapSnapshot: Task.async(function* () {
         yield this.testSetup(url);
         yield openToolboxAndLog(label + ".memory", "memory");
         yield reloadPageAndLog(label + ".memory");
@@ -360,7 +360,7 @@ Damp.prototype = {
     return sequenceArray;
   },
 
-  testSetup: Task.async(function*(url) {
+  testSetup: Task.async(function* (url) {
     let tab = yield this.addTab(url);
     yield new Promise(resolve => {
       setTimeout(resolve, this._config.rest);
@@ -368,7 +368,7 @@ Damp.prototype = {
     return tab;
   }),
 
-  testTeardown: Task.async(function*(url) {
+  testTeardown: Task.async(function* (url) {
     this.closeCurrentTab();
     this._nextCommand();
   }),

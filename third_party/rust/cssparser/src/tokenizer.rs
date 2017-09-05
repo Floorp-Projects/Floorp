@@ -1289,8 +1289,9 @@ fn consume_unquoted_url<'a>(tokenizer: &mut Tokenizer<'a>) -> Result<Token<'a>, 
         while !tokenizer.is_eof() {
             match_byte! { tokenizer.next_byte_unchecked(),
                 b')' => {
+                    let contents = tokenizer.slice_from(start_pos).into();
                     tokenizer.advance(1);
-                    break
+                    return BadUrl(contents)
                 }
                 b'\\' => {
                     tokenizer.advance(1);

@@ -645,6 +645,8 @@ private:
 
   // To only update microphone when needed, we keep track of previous settings.
   MediaEnginePrefs mLastPrefs;
+
+  AlignedShortBuffer mInputDownmixBuffer;
 };
 
 class MediaEngineWebRTC : public MediaEngine

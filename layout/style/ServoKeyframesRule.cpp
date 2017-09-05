@@ -53,11 +53,15 @@ public:
 
   ServoKeyframeRule* GetRule(uint32_t aIndex) {
     if (!mRules[aIndex]) {
-      ServoKeyframeRule* rule = new ServoKeyframeRule(
-        Servo_KeyframesRule_GetKeyframe(mRawRule, aIndex).Consume());
-      mRules.ReplaceObjectAt(rule, aIndex);
-      rule->SetStyleSheet(mStyleSheet);
-      rule->SetParentRule(mParentRule);
+      uint32_t line = 0, column = 0;
+      RefPtr<RawServoKeyframe> rule =
+        Servo_KeyframesRule_GetKeyframeAt(mRawRule, aIndex,
+                                          &line, &column).Consume();
+      ServoKeyframeRule* ruleObj =
+        new ServoKeyframeRule(rule.forget(), line, column);
+      mRules.ReplaceObjectAt(ruleObj, aIndex);
+      ruleObj->SetStyleSheet(mStyleSheet);
+      ruleObj->SetParentRule(mParentRule);
     }
     return static_cast<ServoKeyframeRule*>(mRules[aIndex]);
   }

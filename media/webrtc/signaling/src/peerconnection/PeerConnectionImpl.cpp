@@ -1984,6 +1984,11 @@ PeerConnectionImpl::RemoveOldRemoteTracks(RefPtr<PeerConnectionObserver>& aPco)
     const std::string& streamId = removedTrack->GetStreamId();
     const std::string& trackId = removedTrack->GetTrackId();
 
+    if (removedTrack->GetMediaType() == SdpMediaSection::kApplication) {
+      // TODO do we need to notify content somehow here?
+      continue;
+    }
+
     RefPtr<RemoteSourceStreamInfo> info = mMedia->GetRemoteStreamById(streamId);
     if (!info) {
       MOZ_ASSERT(false, "A stream/track was removed that wasn't in PCMedia. "

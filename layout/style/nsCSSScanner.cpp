@@ -548,8 +548,23 @@ nsCSSScanner::SkipWhitespace()
 void
 nsCSSScanner::SkipComment()
 {
+  static const char sourceMappingURLDirective[] = "# sourceMappingURL=";
+
   MOZ_ASSERT(Peek() == '/' && Peek(1) == '*', "should not have been called");
   Advance(2);
+  // Look in each comment for a source map directive; using a simple
+  // state machine.  The states are:
+  // * sourceMapIndex >= 0 means that we're still looking for the
+  //   directive and expect the next character to be at that index of
+  //   sourceMappingURLDirective.
+  //   As a special case, when sourceMapIndex == 0, '@' is also recognized.
+  // * sourceMapIndex < 0 means that we don't need to look for the
+  //   directive any more -- whether it was found or not.
+  // * copying == true means that the directive was found and we're
+  //   copying characters into mSourceMapURL.  This stops at the first
+  //   whitespace, or at the end of the comment.
+  int sourceMapIndex = 0;
+  bool copying = false;
   for (;;) {
     int32_t ch = Peek();
     if (ch < 0) {
@@ -558,10 +573,29 @@ nsCSSScanner::SkipComment()
       SetEOFCharacters(eEOFCharacters_Asterisk | eEOFCharacters_Slash);
       return;
     }
+    if (sourceMapIndex >= 0) {
+      if ((sourceMapIndex == 0 && ch == '@') || ch == sourceMappingURLDirective[sourceMapIndex]) {
+        ++sourceMapIndex;
+        if (sourceMappingURLDirective[sourceMapIndex] == '\0') {
+          sourceMapIndex = -1;
+          mSourceMapURL.Truncate();
+          copying = true;
+          Advance();
+          // Make sure we don't copy out the '=' by falling through.
+          continue;
+        }
+      } else {
+        // Did not see the directive.
+        sourceMapIndex = -1;
+      }
+    }
+
     if (ch == '*') {
       Advance();
       ch = Peek();
       if (ch < 0) {
+        // In this case, even if we saw a source map directive, leave
+        // the "*" out of it.
         if (mReporter)
           mReporter->ReportUnexpectedEOF("PECommentEOF");
         SetEOFCharacters(eEOFCharacters_Slash);
@@ -571,9 +605,21 @@ nsCSSScanner::SkipComment()
         Advance();
         return;
       }
+      if (copying) {
+        mSourceMapURL.Append('*');
+      }
     } else if (IsVertSpace(ch)) {
       AdvanceLine();
+      // Done with the directive, so stop copying.
+      copying = false;
+    } else if (IsWhitespace(ch)) {
+      Advance();
+      // Done with the directive, so stop copying.
+      copying = false;
     } else {
+      if (copying) {
+        mSourceMapURL.Append(ch);
+      }
       Advance();
     }
   }

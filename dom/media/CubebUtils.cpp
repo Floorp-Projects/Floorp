@@ -343,8 +343,8 @@ uint32_t PreferredChannelMap(uint32_t aChannels)
 {
   // Use SMPTE default channel map if we can't get preferred layout
   // or the channel counts of preferred layout is different from input's one
-  if (!InitPreferredChannelLayout()
-      || kLayoutInfos[sPreferredChannelLayout].channels != aChannels) {
+  if (!InitPreferredChannelLayout() ||
+      kLayoutInfos[sPreferredChannelLayout].channels != aChannels) {
     AudioConfig::ChannelLayout smpteLayout(aChannels);
     return smpteLayout.Map();
   }

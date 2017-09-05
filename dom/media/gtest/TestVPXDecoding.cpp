@@ -50,9 +50,8 @@ ParseIVFConfig(nsTArray<uint8_t>& data, vpx_codec_dec_cfg_t& config)
     // Expect version==0.
     return nullptr;
   }
-  if (data[8] != 'V' || data[9] != 'P'
-      || (data[10] != '8' && data[10] != '9')
-      || data[11] != '0') {
+  if (data[8] != 'V' || data[9] != 'P' ||
+      (data[10] != '8' && data[10] != '9') || data[11] != '0') {
     // Expect 'VP80' or 'VP90'.
     return nullptr;
   }
