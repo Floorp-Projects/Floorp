@@ -161,7 +161,7 @@ MacIOSurfaceTextureHostOGL::GetWRImageKeys(nsTArray<wr::ImageKey>& aImageKeys,
 }
 
 void
-MacIOSurfaceTextureHostOGL::AddWRImage(wr::WebRenderAPI* aAPI,
+MacIOSurfaceTextureHostOGL::AddWRImage(wr::ResourceUpdateQueue& aResources,
                                        Range<const wr::ImageKey>& aImageKeys,
                                        const wr::ExternalImageId& aExtID)
 {
@@ -175,11 +175,11 @@ MacIOSurfaceTextureHostOGL::AddWRImage(wr::WebRenderAPI* aAPI,
       MOZ_ASSERT(aImageKeys.length() == 1);
       MOZ_ASSERT(mSurface->GetPlaneCount() == 0);
       wr::ImageDescriptor descriptor(GetSize(), GetFormat());
-      aAPI->AddExternalImage(aImageKeys[0],
-                             descriptor,
-                             aExtID,
-                             wr::WrExternalImageBufferType::TextureRectHandle,
-                             0);
+      aResources.AddExternalImage(aImageKeys[0],
+                                  descriptor,
+                                  aExtID,
+                                  wr::WrExternalImageBufferType::TextureRectHandle,
+                                  0);
       break;
     }
     case gfx::SurfaceFormat::YUV422: {
@@ -190,11 +190,11 @@ MacIOSurfaceTextureHostOGL::AddWRImage(wr::WebRenderAPI* aAPI,
       MOZ_ASSERT(aImageKeys.length() == 1);
       MOZ_ASSERT(mSurface->GetPlaneCount() == 0);
       wr::ImageDescriptor descriptor(GetSize(), gfx::SurfaceFormat::R8G8B8X8);
-      aAPI->AddExternalImage(aImageKeys[0],
-                             descriptor,
-                             aExtID,
-                             wr::WrExternalImageBufferType::TextureRectHandle,
-                             0);
+      aResources.AddExternalImage(aImageKeys[0],
+                                  descriptor,
+                                  aExtID,
+                                  wr::WrExternalImageBufferType::TextureRectHandle,
+                                  0);
       break;
     }
     case gfx::SurfaceFormat::NV12: {
@@ -204,16 +204,16 @@ MacIOSurfaceTextureHostOGL::AddWRImage(wr::WebRenderAPI* aAPI,
                                       gfx::SurfaceFormat::A8);
       wr::ImageDescriptor descriptor1(gfx::IntSize(mSurface->GetDevicePixelWidth(1), mSurface->GetDevicePixelHeight(1)),
                                       gfx::SurfaceFormat::R8G8);
-      aAPI->AddExternalImage(aImageKeys[0],
-                             descriptor0,
-                             aExtID,
-                             wr::WrExternalImageBufferType::TextureRectHandle,
-                             0);
-      aAPI->AddExternalImage(aImageKeys[1],
-                             descriptor1,
-                             aExtID,
-                             wr::WrExternalImageBufferType::TextureRectHandle,
-                             1);
+      aResources.AddExternalImage(aImageKeys[0],
+                                  descriptor0,
+                                  aExtID,
+                                  wr::WrExternalImageBufferType::TextureRectHandle,
+                                  0);
+      aResources.AddExternalImage(aImageKeys[1],
+                                  descriptor1,
+                                  aExtID,
+                                  wr::WrExternalImageBufferType::TextureRectHandle,
+                                  1);
       break;
     }
     default: {

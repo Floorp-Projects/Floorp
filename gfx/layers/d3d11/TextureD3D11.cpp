@@ -1063,7 +1063,7 @@ DXGITextureHostD3D11::GetWRImageKeys(nsTArray<wr::ImageKey>& aImageKeys,
 }
 
 void
-DXGITextureHostD3D11::AddWRImage(wr::WebRenderAPI* aAPI,
+DXGITextureHostD3D11::AddWRImage(wr::ResourceUpdateQueue& aResources,
                                  Range<const wr::ImageKey>& aImageKeys,
                                  const wr::ExternalImageId& aExtID)
 {
@@ -1077,11 +1077,11 @@ DXGITextureHostD3D11::AddWRImage(wr::WebRenderAPI* aAPI,
       MOZ_ASSERT(aImageKeys.length() == 1);
 
       wr::ImageDescriptor descriptor(GetSize(), GetFormat());
-      aAPI->AddExternalImage(aImageKeys[0],
-                             descriptor,
-                             aExtID,
-                             wr::WrExternalImageBufferType::Texture2DHandle,
-                             0);
+      aResources.AddExternalImage(aImageKeys[0],
+                                  descriptor,
+                                  aExtID,
+                                  wr::WrExternalImageBufferType::Texture2DHandle,
+                                  0);
       break;
     }
     case gfx::SurfaceFormat::NV12: {
@@ -1089,16 +1089,16 @@ DXGITextureHostD3D11::AddWRImage(wr::WebRenderAPI* aAPI,
 
       wr::ImageDescriptor descriptor0(GetSize(), gfx::SurfaceFormat::A8);
       wr::ImageDescriptor descriptor1(GetSize() / 2, gfx::SurfaceFormat::R8G8);
-      aAPI->AddExternalImage(aImageKeys[0],
-                             descriptor0,
-                             aExtID,
-                             wr::WrExternalImageBufferType::TextureExternalHandle,
-                             0);
-      aAPI->AddExternalImage(aImageKeys[1],
-                             descriptor1,
-                             aExtID,
-                             wr::WrExternalImageBufferType::TextureExternalHandle,
-                             1);
+      aResources.AddExternalImage(aImageKeys[0],
+                                  descriptor0,
+                                  aExtID,
+                                  wr::WrExternalImageBufferType::TextureExternalHandle,
+                                  0);
+      aResources.AddExternalImage(aImageKeys[1],
+                                  descriptor1,
+                                  aExtID,
+                                  wr::WrExternalImageBufferType::TextureExternalHandle,
+                                  1);
       break;
     }
     default: {
@@ -1313,7 +1313,7 @@ DXGIYCbCrTextureHostD3D11::GetWRImageKeys(nsTArray<wr::ImageKey>& aImageKeys,
 }
 
 void
-DXGIYCbCrTextureHostD3D11::AddWRImage(wr::WebRenderAPI* aAPI,
+DXGIYCbCrTextureHostD3D11::AddWRImage(wr::ResourceUpdateQueue& aResources,
                                       Range<const wr::ImageKey>& aImageKeys,
                                       const wr::ExternalImageId& aExtID)
 {
@@ -1338,7 +1338,7 @@ DXGIYCbCrTextureHostD3D11::AddWRImage(wr::WebRenderAPI* aAPI,
   IntSize size = dataSourceSurface->GetSize();
   wr::ImageDescriptor descriptor(size, map.mStride, dataSourceSurface->GetFormat());
   auto slice = Range<uint8_t>(map.mData, size.height * map.mStride);
-  aAPI->AddImage(aImageKeys[0], descriptor, slice);
+  aResources.AddImage(aImageKeys[0], descriptor, slice);
 
   dataSourceSurface->Unmap();
 }

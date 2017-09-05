@@ -103,7 +103,9 @@ private:
     key.mHandle = GetNextResourceId();
     return key;
   }
-  bool GenerateImageKeyForTextureHost(TextureHost* aTexture, nsTArray<wr::ImageKey>& aKeys);
+  bool GenerateImageKeyForTextureHost(wr::ResourceUpdateQueue& aResources,
+                                      TextureHost* aTexture,
+                                      nsTArray<wr::ImageKey>& aKeys);
 
   struct ForwardingTextureHost {
     ForwardingTextureHost(const wr::Epoch& aEpoch, TextureHost* aTexture)
@@ -136,7 +138,8 @@ private:
     nsTArray<wr::ImageKey> mKeys;
   };
 
-  bool UpdateImageKeys(bool& aUseExternalImage,
+  bool UpdateImageKeys(wr::ResourceUpdateQueue& aResourceUpdates,
+                       bool& aUseExternalImage,
                        AsyncImagePipeline* aImageMgr,
                        nsTArray<wr::ImageKey>& aKeys,
                        nsTArray<wr::ImageKey>& aKeysToDelete);

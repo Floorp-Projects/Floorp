@@ -155,17 +155,22 @@ class AtomicOperations
     // 1- and 2-byte accesses are always lock free (in SpiderMonkey).
     //
     // Lock-freedom for 8 bytes is determined by the platform's isLockfree8().
-    // However, the spec stipulates that isLockFree(8) is true only if there is
-    // an integer array that admits atomic operations whose BYTES_PER_ELEMENT=8;
-    // at the moment (August 2017) there are no such arrays.
+    // However, the ES spec stipulates that isLockFree(8) is true only if there
+    // is an integer array that admits atomic operations whose
+    // BYTES_PER_ELEMENT=8; at the moment (August 2017) there are no such
+    // arrays.
     //
-    // There is no lock-freedom for any other values on any platform.
+    // There is no lock-freedom for JS for any other values on any platform.
     static inline bool isLockfreeJS(int32_t n);
 
-    // If the return value is true then a call to the 64-bit (8-byte)
-    // routines below will work, otherwise those functions will assert in
-    // debug builds and may crash in release build.  (See the code in
-    // ../arm for an example.)  The value of this call does not change
+    // If the return value is true then the templated functions below are
+    // supported for int64_t and uint64_t.  If the return value is false then
+    // those functions will MOZ_CRASH.  The value of this call does not change
+    // during execution.
+    static inline bool hasAtomic8();
+
+    // If the return value is true then hasAtomic8() is true and the atomic
+    // operations are indeed lock-free.  The value of this call does not change
     // during execution.
     static inline bool isLockfree8();
 

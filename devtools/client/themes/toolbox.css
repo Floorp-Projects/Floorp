@@ -43,14 +43,11 @@
 
 .devtools-tabbar {
   -moz-appearance: none;
-  min-height: 29px;
-  border: 0px solid;
-  border-bottom-width: 1px;
-  padding: 0;
-  background: var(--theme-tab-toolbar-background);
-  border-bottom-color: var(--theme-splitter-color);
   display: flex;
+  background: var(--theme-tab-toolbar-background);
+  border-bottom: 1px solid var(--theme-splitter-color);
   box-sizing: border-box;
+  min-height: 29px;
 }
 
 .toolbox-tabs-wrapper {
@@ -145,12 +142,10 @@
 
 .theme-dark .devtools-tab {
   color: var(--theme-body-color-alt);
-  border-color: #42484f;
 }
 
 .theme-light .devtools-tab {
   color: var(--theme-body-color);
-  border-color: var(--theme-splitter-color);
 }
 
 .theme-dark .devtools-tab:hover {
@@ -215,21 +210,6 @@
   opacity: 1;
 }
 
-.toolbox-tabs .devtools-tab.selected,
-.toolbox-tabs .devtools-tab.highlighted,
-.toolbox-tabs .devtools-tab.selected + .devtools-tab,
-.toolbox-tabs .devtools-tab.highlighted + .devtools-tab {
-  border-inline-start-color: transparent;
-}
-
-.toolbox-tabs .devtools-tab:first-child {
-  border-inline-start-width: 0;
-}
-
-.toolbox-tabs .devtools-tab:last-child {
-  border-inline-end-width: 1px;
-}
-
 .devtools-tab:not(.highlighted) > .highlighted-icon,
 .devtools-tab.selected > .highlighted-icon,
 .devtools-tab:not(.selected).highlighted > .default-icon {
@@ -278,15 +258,6 @@
 
 #toolbox-dock-bottom-minimize.minimized::before {
   background-image: url("chrome://devtools/skin/images/dock-bottom-maximize@2x.png");
-}
-
-/**
- * Ensure that when the toolbar collapses in on itself when there is not enough room
- * that it still looks reasonable.
- */
-.devtools-tabbar > div {
-  background-color: var(--theme-tab-toolbar-background);
-  z-index: 0;
 }
 
 /* Command buttons */

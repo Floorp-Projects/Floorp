@@ -92,29 +92,19 @@ IDBKeyRange::FromJSVal(JSContext* aCx,
   }
 
   JS::Rooted<JSObject*> obj(aCx, aVal.isObject() ? &aVal.toObject() : nullptr);
-  bool isValidKey = aVal.isPrimitive();
-  if (!isValidKey) {
-    js::ESClass cls;
-    if (!js::GetBuiltinClass(aCx, obj, &cls)) {
-      return NS_ERROR_UNEXPECTED;
-    }
-    isValidKey = cls == js::ESClass::Array || cls == js::ESClass::Date;
-  }
-  if (isValidKey) {
-    // A valid key returns an 'only' IDBKeyRange.
-    keyRange = new IDBKeyRange(nullptr, false, false, true);
 
-    nsresult rv = GetKeyFromJSVal(aCx, aVal, keyRange->Lower());
-    if (NS_FAILED(rv)) {
-      return rv;
-    }
+  // Unwrap an IDBKeyRange object if possible.
+  if (obj && NS_SUCCEEDED(UNWRAP_OBJECT(IDBKeyRange, obj, keyRange))) {
+    MOZ_ASSERT(keyRange);
+    keyRange.forget(aKeyRange);
+    return NS_OK;
   }
-  else {
-    MOZ_ASSERT(aVal.isObject());
-    // An object is not permitted unless it's another IDBKeyRange.
-    if (NS_FAILED(UNWRAP_OBJECT(IDBKeyRange, obj, keyRange))) {
-      return NS_ERROR_DOM_INDEXEDDB_DATA_ERR;
-    }
+
+  // A valid key returns an 'only' IDBKeyRange.
+  keyRange = new IDBKeyRange(nullptr, false, false, true);
+  nsresult rv = GetKeyFromJSVal(aCx, aVal, keyRange->Lower());
+  if (NS_FAILED(rv)) {
+    return rv;
   }
 
   keyRange.forget(aKeyRange);

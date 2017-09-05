@@ -6,6 +6,7 @@ license = "MPL-2.0"
 
 [dependencies]
 webrender_api = {path = "../webrender_api", version = "0.50.0"}
+bincode = "0.8"
 rayon = "0.8"
 thread_profiler = "0.1.1"
 euclid = "0.15"

@@ -174,14 +174,23 @@ const nsHTMLElement gHTMLElements[] = {
 
 /*********************************************************************************************/
 
-bool nsHTMLElement::IsContainer(eHTMLTags aChild)
-{
-  return !gHTMLElements[aChild].mLeaf;
-}
-
 bool nsHTMLElement::IsMemberOf(int32_t aSet) const
 {
-  return TestBits(aSet,mParentBits);
+  return TestBits(aSet, mParentBits);
+}
+
+bool nsHTMLElement::IsContainer(eHTMLTags aId)
+{
+  return !gHTMLElements[aId].mLeaf;
+}
+
+bool nsHTMLElement::IsBlock(eHTMLTags aId)
+{
+  return gHTMLElements[aId].IsMemberOf(kBlock)       ||
+         gHTMLElements[aId].IsMemberOf(kBlockEntity) ||
+         gHTMLElements[aId].IsMemberOf(kHeading)     ||
+         gHTMLElements[aId].IsMemberOf(kPreformatted)||
+         gHTMLElements[aId].IsMemberOf(kList);
 }
 
 #ifdef DEBUG
