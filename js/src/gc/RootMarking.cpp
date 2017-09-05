@@ -86,6 +86,17 @@ JS::RootingContext::traceStackRoots(JSTracer* trc)
     TraceStackRoots(trc, stackRoots_);
 }
 
+namespace js {
+namespace frontend {
+
+// Placeholder implementation.
+void
+TraceBinParser(JSTracer*, JS::AutoGCRooter*)
+{ }
+
+}
+}
+
 static void
 TraceExactStackRoots(const CooperatingContext& target, JSTracer* trc)
 {
@@ -152,6 +163,12 @@ AutoGCRooter::trace(JSTracer* trc)
       case PARSER:
         frontend::TraceParser(trc, this);
         return;
+
+#if defined(JS_BUILD_BINAST)
+      case BINPARSER:
+        frontend::TraceBinParser(trc, this);
+        return;
+#endif // defined(JS_BUILD_BINAST)
 
       case VALARRAY: {
         /*
@@ -554,3 +571,4 @@ JS::AddPersistentRoot(JSRuntime* rt, RootKind kind, PersistentRooted<void*>* roo
 {
     rt->heapRoots.ref()[kind].insertBack(root);
 }
+
