@@ -1596,14 +1596,15 @@ Evaluate(JSContext* cx, unsigned argc, Value* vp)
                 return false;
             }
 
-            if (v.isObject()) {
-                if (!envChain.append(&v.toObject())) {
-                    JS_ReportOutOfMemory(cx);
-                    return false;
-                }
-            } else {
+            if (!v.isObject()) {
                 JS_ReportErrorNumberASCII(cx, GetErrorMessage, nullptr, JSMSG_UNEXPECTED_TYPE,
                                           "\"envChainObject\" passed to evaluate()", "not an object");
+                return false;
+            } else if (v.toObject().is<GlobalObject>()) {
+                JS_ReportErrorASCII(cx, "\"envChainObject\" passed to evaluate() should not be a global");
+                return false;
+            } else if (!envChain.append(&v.toObject())) {
+                JS_ReportOutOfMemory(cx);
                 return false;
             }
         }
