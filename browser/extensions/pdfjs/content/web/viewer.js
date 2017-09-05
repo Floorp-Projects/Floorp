@@ -4930,7 +4930,6 @@ class PDFPageView {
     this.reset();
     if (this.pdfPage) {
       this.pdfPage.cleanup();
-      this.pdfPage = null;
     }
   }
   _resetZoomLayer(removeFromDOM = false) {
