@@ -235,7 +235,7 @@ Inspector.prototype = {
     });
   },
 
-  _deferredOpen: function (defaultSelection) {
+  _deferredOpen: async function (defaultSelection) {
     this.breadcrumbs = new HTMLBreadcrumbs(this);
 
     this.walker.on("new-root", this.onNewRoot);
@@ -275,27 +275,25 @@ Inspector.prototype = {
     this._initMarkup();
     this.isReady = false;
 
-    return new Promise(resolve => {
-      this.once("markuploaded", () => {
-        this.isReady = true;
+    this.setupSearchBox();
+    this.setupSidebar();
+    this.setupExtensionSidebars();
 
-        // All the components are initialized. Let's select a node.
-        if (defaultSelection) {
-          this.selection.setNodeFront(defaultSelection, "inspector-open");
-          this.markup.expandNode(this.selection.nodeFront);
-        }
+    await this.once("markuploaded");
+    this.isReady = true;
 
-        // And setup the toolbar only now because it may depend on the document.
-        this.setupToolbar();
+    // All the components are initialized. Let's select a node.
+    if (defaultSelection) {
+      let onAllPanelsUpdated = this.once("inspector-updated");
+      this.selection.setNodeFront(defaultSelection, "inspector-open");
+      await onAllPanelsUpdated;
+      await this.markup.expandNode(this.selection.nodeFront);
+    }
 
-        this.emit("ready");
-        resolve(this);
-      });
-
-      this.setupSearchBox();
-      this.setupSidebar();
-      this.setupExtensionSidebars();
-    });
+    // And setup the toolbar only now because it may depend on the document.
+    await this.setupToolbar();
+    this.emit("ready");
+    return this;
   },
 
   _onBeforeNavigate: function () {
