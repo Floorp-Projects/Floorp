@@ -22,7 +22,6 @@
 #include "nsNSSCertificate.h"
 #include "nsNSSCertificateDB.h"
 #include "nsNSSComponent.h"
-#include "nsNSSU2FToken.h"
 #include "nsNSSVersion.h"
 #include "nsNTLMAuthModule.h"
 #include "nsNetCID.h"
@@ -155,7 +154,6 @@ NS_DEFINE_NAMED_CID(NS_DATASIGNATUREVERIFIER_CID);
 NS_DEFINE_NAMED_CID(NS_CONTENTSIGNATUREVERIFIER_CID);
 NS_DEFINE_NAMED_CID(NS_CERTOVERRIDE_CID);
 NS_DEFINE_NAMED_CID(NS_RANDOMGENERATOR_CID);
-NS_DEFINE_NAMED_CID(NS_NSSU2FTOKEN_CID);
 NS_DEFINE_NAMED_CID(NS_SSLSTATUS_CID);
 NS_DEFINE_NAMED_CID(TRANSPORTSECURITYINFO_CID);
 NS_DEFINE_NAMED_CID(NS_NSSERRORSSERVICE_CID);
@@ -204,8 +202,6 @@ static const mozilla::Module::CIDEntry kNSSCIDs[] = {
                 ThreadRestriction::MainThreadOnly> },
   { &kNS_RANDOMGENERATOR_CID, false, nullptr,
     Constructor<nsRandomGenerator, nullptr, ProcessRestriction::AnyProcess> },
-  { &kNS_NSSU2FTOKEN_CID, false, nullptr,
-    Constructor<nsNSSU2FToken, &nsNSSU2FToken::Init> },
   { &kNS_SSLSTATUS_CID, false, nullptr,
     Constructor<nsSSLStatus, nullptr, ProcessRestriction::AnyProcess> },
   { &kTRANSPORTSECURITYINFO_CID, false, nullptr,
@@ -251,7 +247,6 @@ static const mozilla::Module::ContractIDEntry kNSSContracts[] = {
   { NS_CONTENTSIGNATUREVERIFIER_CONTRACTID, &kNS_CONTENTSIGNATUREVERIFIER_CID },
   { NS_CERTOVERRIDE_CONTRACTID, &kNS_CERTOVERRIDE_CID },
   { NS_RANDOMGENERATOR_CONTRACTID, &kNS_RANDOMGENERATOR_CID },
-  { NS_NSSU2FTOKEN_CONTRACTID, &kNS_NSSU2FTOKEN_CID },
   { NS_SECURE_BROWSER_UI_CONTRACTID, &kNS_SECURE_BROWSER_UI_CID },
   { NS_SSSERVICE_CONTRACTID, &kNS_SITE_SECURITY_SERVICE_CID },
   { NS_CERTBLOCKLIST_CONTRACTID, &kNS_CERT_BLOCKLIST_CID },
