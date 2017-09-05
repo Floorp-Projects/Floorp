@@ -48,42 +48,21 @@ struct Line {
   wr::LineStyle style;
 };
 
-class WebRenderAPI
-{
-  NS_INLINE_DECL_REFCOUNTING(WebRenderAPI);
-
+/// Updates to retained resources such as images and fonts, applied within the
+/// same transaction.
+class ResourceUpdateQueue {
 public:
-  /// This can be called on the compositor thread only.
-  static already_AddRefed<WebRenderAPI> Create(layers::CompositorBridgeParentBase* aBridge,
-                                               RefPtr<widget::CompositorWidget>&& aWidget,
-                                               LayoutDeviceIntSize aSize);
+  ResourceUpdateQueue();
+  ~ResourceUpdateQueue();
+  ResourceUpdateQueue(ResourceUpdateQueue&&);
+  ResourceUpdateQueue(const ResourceUpdateQueue&) = delete;
+  ResourceUpdateQueue& operator=(ResourceUpdateQueue&&);
+  ResourceUpdateQueue& operator=(const ResourceUpdateQueue&) = delete;
 
-  already_AddRefed<WebRenderAPI> Clone();
+  /// Serializes into a buffer of bytes and clears the queue.
+  ByteBuffer Serialize();
 
-  wr::WindowId GetId() const { return mId; }
-
-  void UpdateScrollPosition(const wr::WrPipelineId& aPipelineId,
-                            const layers::FrameMetrics::ViewID& aScrollId,
-                            const wr::LayoutPoint& aScrollPosition);
-
-  void GenerateFrame();
-  void GenerateFrame(const nsTArray<wr::WrOpacityProperty>& aOpacityArray,
-                     const nsTArray<wr::WrTransformProperty>& aTransformArray);
-
-  void SetWindowParameters(LayoutDeviceIntSize size);
-  void SetRootDisplayList(gfx::Color aBgColor,
-                          Epoch aEpoch,
-                          mozilla::LayerSize aViewportSize,
-                          wr::WrPipelineId pipeline_id,
-                          const wr::LayoutSize& content_size,
-                          wr::BuiltDisplayListDescriptor dl_descriptor,
-                          uint8_t *dl_data,
-                          size_t dl_size);
-
-  void ClearRootDisplayList(Epoch aEpoch,
-                            wr::WrPipelineId pipeline_id);
-
-  void SetRootPipeline(wr::PipelineId aPipeline);
+  static ResourceUpdateQueue Deserialize(Range<uint8_t> aData);
 
   void AddImage(wr::ImageKey aKey,
                 const ImageDescriptor& aDescriptor,
@@ -131,9 +110,62 @@ public:
 
   void DeleteFontInstance(wr::FontInstanceKey aKey);
 
+  void Clear();
+
+  // Try to avoid using this when possible.
+  wr::ResourceUpdates* Raw() { return mUpdates; }
+
+protected:
+  explicit ResourceUpdateQueue(wr::ResourceUpdates* aUpdates)
+  : mUpdates(aUpdates) {}
+
+  wr::ResourceUpdates* mUpdates;
+};
+
+class WebRenderAPI
+{
+  NS_INLINE_DECL_REFCOUNTING(WebRenderAPI);
+
+public:
+  /// This can be called on the compositor thread only.
+  static already_AddRefed<WebRenderAPI> Create(layers::CompositorBridgeParentBase* aBridge,
+                                               RefPtr<widget::CompositorWidget>&& aWidget,
+                                               LayoutDeviceIntSize aSize);
+
+  already_AddRefed<WebRenderAPI> Clone();
+
+  wr::WindowId GetId() const { return mId; }
+
+  void UpdateScrollPosition(const wr::WrPipelineId& aPipelineId,
+                            const layers::FrameMetrics::ViewID& aScrollId,
+                            const wr::LayoutPoint& aScrollPosition);
+
+  void GenerateFrame();
+  void GenerateFrame(const nsTArray<wr::WrOpacityProperty>& aOpacityArray,
+                     const nsTArray<wr::WrTransformProperty>& aTransformArray);
+
+  void SetWindowParameters(LayoutDeviceIntSize size);
+
+  void SetDisplayList(gfx::Color aBgColor,
+                      Epoch aEpoch,
+                      mozilla::LayerSize aViewportSize,
+                      wr::WrPipelineId pipeline_id,
+                      const wr::LayoutSize& content_size,
+                      wr::BuiltDisplayListDescriptor dl_descriptor,
+                      uint8_t *dl_data,
+                      size_t dl_size,
+                      ResourceUpdateQueue& aResources);
+
+  void ClearDisplayList(Epoch aEpoch, wr::WrPipelineId pipeline_id);
+
+  void SetRootPipeline(wr::PipelineId aPipeline);
+
+  void UpdateResources(ResourceUpdateQueue& aUpdates);
+
   void SetFrameStartTime(const TimeStamp& aTime);
 
   void RunOnRenderThread(UniquePtr<RendererEvent> aEvent);
+
   void Readback(gfx::IntSize aSize, uint8_t *aBuffer, uint32_t aBufferSize);
 
   void Pause();
@@ -335,6 +367,8 @@ public:
                      const float& aBorderRadius,
                      const wr::BoxShadowClipMode& aClipMode);
 
+  ResourceUpdateQueue& Resources() { return mResourceUpdates; }
+
   // Returns the clip id that was most recently pushed with PushClip and that
   // has not yet been popped with PopClip. Return Nothing() if the clip stack
   // is empty.
@@ -350,6 +384,8 @@ public:
   wr::WrState* Raw() { return mWrState; }
 protected:
   wr::WrState* mWrState;
+
+  ResourceUpdateQueue mResourceUpdates;
 
   // Track the stack of clip ids and scroll layer ids that have been pushed
   // (by PushClip and PushScrollLayer, respectively) and are still active.

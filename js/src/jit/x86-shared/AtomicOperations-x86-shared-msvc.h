@@ -34,6 +34,15 @@
 // and (b) I expect we'll end up dropping into assembler here eventually so as
 // to guarantee that the C++ compiler won't optimize the code.
 
+// Note, _InterlockedCompareExchange takes the *new* value as the second argument
+// and the *comparand* (expected old value) as the third argument.
+
+inline bool
+js::jit::AtomicOperations::hasAtomic8()
+{
+    return true;
+}
+
 inline bool
 js::jit::AtomicOperations::isLockfree8()
 {
@@ -56,10 +65,18 @@ js::jit::AtomicOperations::fenceSeqCst()
 }
 
 template<typename T>
+static bool
+IsAligned(const T* addr)
+{
+    return (uintptr_t(addr) & (sizeof(T) - 1)) == 0;
+}
+
+template<typename T>
 inline T
 js::jit::AtomicOperations::loadSeqCst(T* addr)
 {
     static_assert(sizeof(T) <= 8, "atomics supported up to 8 bytes only");
+    MOZ_ASSERT(IsAligned(addr));
     _ReadWriteBarrier();
     T v = *addr;
     _ReadWriteBarrier();
@@ -73,6 +90,7 @@ namespace js { namespace jit {
     template<>                              \
     inline T                                \
     AtomicOperations::loadSeqCst(T* addr) { \
+        MOZ_ASSERT(IsAligned(addr));        \
         _ReadWriteBarrier();                \
         return (T)_InterlockedCompareExchange64((__int64 volatile*)addr, 0, 0); \
     }
@@ -90,6 +108,7 @@ inline void
 js::jit::AtomicOperations::storeSeqCst(T* addr, T val)
 {
     static_assert(sizeof(T) <= 8, "atomics supported up to 8 bytes only");
+    MOZ_ASSERT(IsAligned(addr));
     _ReadWriteBarrier();
     *addr = val;
     fenceSeqCst();
@@ -102,12 +121,13 @@ namespace js { namespace jit {
     template<>                                      \
     inline void                                     \
     AtomicOperations::storeSeqCst(T* addr, T val) { \
+        MOZ_ASSERT(IsAligned(addr));                \
         _ReadWriteBarrier();                        \
         T oldval = *addr;                           \
         for (;;) {                                  \
             T nextval = (T)_InterlockedCompareExchange64((__int64 volatile*)addr, \
-                                                         (__int64)oldval,         \
-                                                         (__int64)val);           \
+                                                         (__int64)val,            \
+                                                         (__int64)oldval);        \
             if (nextval == oldval)                  \
                 break;                              \
             oldval = nextval;                       \
@@ -127,6 +147,7 @@ MSC_STOREOP(uint64_t)
     template<> inline T                                         \
     AtomicOperations::exchangeSeqCst(T* addr, T val) {          \
         static_assert(sizeof(T) <= 8, "atomics supported up to 8 bytes only"); \
+        MOZ_ASSERT(IsAligned(addr));                            \
         return (T)xchgop((U volatile*)addr, (U)val);            \
     }
 
@@ -135,12 +156,13 @@ MSC_STOREOP(uint64_t)
     template<> inline T                                              \
     AtomicOperations::exchangeSeqCst(T* addr, T val) {               \
         static_assert(sizeof(T) == 8, "8-byte variant");             \
+        MOZ_ASSERT(IsAligned(addr));                                 \
         _ReadWriteBarrier();                                         \
         T oldval = *addr;                                            \
         for (;;) {                                                   \
             T nextval = (T)_InterlockedCompareExchange64((__int64 volatile*)addr, \
-                                                         (__int64)oldval,         \
-                                                         (__int64)val);           \
+                                                         (__int64)val,            \
+                                                         (__int64)oldval);        \
             if (nextval == oldval)                                   \
                 break;                                               \
             oldval = nextval;                                        \
@@ -176,6 +198,7 @@ MSC_EXCHANGEOP(uint64_t, __int64, _InterlockedExchange64)
     template<> inline T                                                 \
     AtomicOperations::compareExchangeSeqCst(T* addr, T oldval, T newval) { \
         static_assert(sizeof(T) <= 8, "atomics supported up to 8 bytes only"); \
+        MOZ_ASSERT(IsAligned(addr));                                    \
         return (T)cmpxchg((U volatile*)addr, (U)newval, (U)oldval);     \
     }
 
@@ -199,6 +222,7 @@ MSC_CAS(uint64_t, __int64, _InterlockedCompareExchange64)
     AtomicOperations::fetchAddSeqCst(T* addr, T val) {                  \
         static_assert(sizeof(T) <= 8,                                   \
                       "atomics supported up to 8 bytes only");          \
+        MOZ_ASSERT(IsAligned(addr));                                    \
         return (T)xadd((U volatile*)addr, (U)val);                      \
     }                                                                   \
 
@@ -213,12 +237,13 @@ MSC_CAS(uint64_t, __int64, _InterlockedCompareExchange64)
     template<> inline T                                              \
     AtomicOperations::fetchAddSeqCst(T* addr, T val) {               \
         static_assert(sizeof(T) == 8, "8-byte variant");             \
+        MOZ_ASSERT(IsAligned(addr));                                 \
         _ReadWriteBarrier();                                         \
         T oldval = *addr;                                            \
         for (;;) {                                                   \
             T nextval = (T)_InterlockedCompareExchange64((__int64 volatile*)addr, \
-                                                         (__int64)oldval, \
-                                                         (__int64)(oldval + val)); \
+                                                         (__int64)(oldval + val), \
+                                                         (__int64)oldval);        \
             if (nextval == oldval)                                   \
                 break;                                               \
             oldval = nextval;                                        \
@@ -265,6 +290,7 @@ MSC_FETCHSUBOP(uint64_t)
     AtomicOperations::name(T* addr, T val) {                            \
         static_assert(sizeof(T) <= 8,                                   \
                       "atomics supported up to 8 bytes only");          \
+        MOZ_ASSERT(IsAligned(addr));                                    \
         return (T)op((U volatile*)addr, (U)val);                        \
     }
 
@@ -281,12 +307,13 @@ MSC_FETCHSUBOP(uint64_t)
     template<> inline T                                              \
     AtomicOperations::name(T* addr, T val) {                         \
         static_assert(sizeof(T) == 8, "8-byte variant");             \
+        MOZ_ASSERT(IsAligned(addr));                                 \
         _ReadWriteBarrier();                                         \
         T oldval = *addr;                                            \
         for (;;) {                                                   \
-            T nextval = (T)_InterlockedCompareExchange64((__int64 volatile*)addr, \
-                                                         (__int64)oldval, \
-                                                         (__int64)(oldval OP val)); \
+            T nextval = (T)_InterlockedCompareExchange64((__int64 volatile*)addr,  \
+                                                         (__int64)(oldval OP val), \
+                                                         (__int64)oldval);         \
             if (nextval == oldval)                                   \
                 break;                                               \
             oldval = nextval;                                        \
@@ -330,6 +357,7 @@ template<typename T>
 inline T
 js::jit::AtomicOperations::loadSafeWhenRacy(T* addr)
 {
+    MOZ_ASSERT(IsAligned(addr));
     return *addr;
 }
 
@@ -338,6 +366,7 @@ js::jit::AtomicOperations::loadSafeWhenRacy(T* addr)
     template<>                                    \
     inline T                                      \
     AtomicOperations::loadSafeWhenRacy(T* addr) { \
+        MOZ_ASSERT(IsAligned(addr));              \
         return (T)_InterlockedCompareExchange64((__int64 volatile*)addr, 0, 0); \
     }
 
@@ -355,6 +384,7 @@ template<typename T>
 inline void
 js::jit::AtomicOperations::storeSafeWhenRacy(T* addr, T val)
 {
+    MOZ_ASSERT(IsAligned(addr));
     *addr = val;
 }
 
@@ -365,11 +395,12 @@ namespace js { namespace jit {
     template<>                                            \
     inline void                                           \
     AtomicOperations::storeSafeWhenRacy(T* addr, T val) { \
+        MOZ_ASSERT(IsAligned(addr));                      \
         T oldval = *addr;                                 \
         for (;;) {                                        \
             T nextval = (T)_InterlockedCompareExchange64((__int64 volatile*)addr, \
-                                                         (__int64)oldval,         \
-                                                         (__int64)val);           \
+                                                         (__int64)val,            \
+                                                         (__int64)oldval);        \
             if (nextval == oldval)                        \
                 break;                                    \
             oldval = nextval;                             \

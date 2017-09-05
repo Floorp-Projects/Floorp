@@ -1274,7 +1274,8 @@ Http2Stream::UpdatePriorityDependency()
 
   mPriorityDependency = GetPriorityDependencyFromTransaction(trans);
 
-  if (mTransactionTabId != mCurrentForegroundTabOuterContentWindowId &&
+  if (gHttpHandler->ActiveTabPriority() &&
+      mTransactionTabId != mCurrentForegroundTabOuterContentWindowId &&
       mPriorityDependency != Http2Session::kUrgentStartGroupID) {
     LOG3(("Http2Stream::UpdatePriorityDependency %p "
           " depends on background group for trans %p\n",
@@ -1290,6 +1291,8 @@ Http2Stream::UpdatePriorityDependency()
 void
 Http2Stream::TopLevelOuterContentWindowIdChanged(uint64_t windowId)
 {
+  MOZ_ASSERT(gHttpHandler->ActiveTabPriority());
+
   LOG3(("Http2Stream::TopLevelOuterContentWindowIdChanged "
         "%p windowId=%" PRIx64 "\n",
         this, windowId));
