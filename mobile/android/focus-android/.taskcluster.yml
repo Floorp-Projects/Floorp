@@ -1,0 +1,29 @@
+version: 0
+tasks:
+  - provisionerId: '{{ taskcluster.docker.provisionerId }}'
+    workerType: '{{ taskcluster.docker.workerType }}'
+    extra:
+      github:
+        events:
+          - pull_request.opened
+          - pull_request.closed
+          - pull_request.synchronize
+          - pull_request.reopened
+          - push
+    payload:
+      maxRunTime: 3600
+      image: 'mozillamobile/focus-android'
+      command:
+        - /bin/bash
+        - '--login'
+        - '-c'
+        - >-
+          git fetch origin
+          && git config advice.detachedHead false
+          && git checkout {{event.head.sha}}
+          && ./gradlew assemble
+    metadata:
+      name: FocusAndroidBuild
+      description: Building Focus for Android (via Gradle)
+      owner: '{{ event.head.user.email }}'
+      source: '{{ event.head.repo.url }}'
