@@ -402,7 +402,64 @@ public:
       return;
     }
 
+    // Get our native size. While we know the image should be fully decoded,
+    // if it is an SVG, it is valid to have a zero size. We can't do compacting
+    // in that case because we need to know the width/height ratio to define a
+    // candidate set.
+    IntSize nativeSize;
+    if (NS_FAILED(image->GetWidth(&nativeSize.width)) ||
+        NS_FAILED(image->GetHeight(&nativeSize.height)) ||
+        nativeSize.IsEmpty()) {
+      return;
+    }
+
+    // We have a valid size, we can change modes.
     mFactor2Mode = true;
+  }
+
+  IntSize SuggestedSize(const IntSize& aSize) const
+  {
+    // When not in factor of 2 mode, we can always decode at the given size.
+    if (!mFactor2Mode) {
+      return aSize;
+    }
+
+    MOZ_ASSERT(!IsEmpty());
+
+    // This bit of awkwardness gets the largest native size of the image.
+    auto iter = ConstIter();
+    NotNull<CachedSurface*> firstSurface = WrapNotNull(iter.UserData());
+    Image* image = static_cast<Image*>(firstSurface->GetImageKey());
+    IntSize factorSize;
+    if (NS_FAILED(image->GetWidth(&factorSize.width)) ||
+        NS_FAILED(image->GetHeight(&factorSize.height)) ||
+        factorSize.IsEmpty()) {
+      // We should not have entered factor of 2 mode without a valid size, and
+      // several successfully decoded surfaces.
+      MOZ_ASSERT_UNREACHABLE("Expected valid native size!");
+      return aSize;
+    }
+
+    // Start with the native size as the best first guess.
+    IntSize bestSize = factorSize;
+    factorSize.width /= 2;
+    factorSize.height /= 2;
+
+    while (!factorSize.IsEmpty()) {
+      if (!CompareArea(aSize, bestSize, factorSize)) {
+        // This size is not better than the last. Since we proceed from largest
+        // to smallest, we know that the next size will not be better if the
+        // previous size was rejected. Break early.
+        break;
+      }
+
+      // The current factor of 2 size is better than the last selected size.
+      bestSize = factorSize;
+      factorSize.width /= 2;
+      factorSize.height /= 2;
+    }
+
+    return bestSize;
   }
 
   bool CompareArea(const IntSize& aIdealSize,
