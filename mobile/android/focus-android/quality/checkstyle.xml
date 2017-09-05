@@ -34,6 +34,12 @@
         <module name="RightCurly" />
         <module name="OneStatementPerLine" />
         <module name="FallThrough" />
+
+        <!-- Imports -->
+        <module name="AvoidStarImport" />
+        <module name="IllegalImport" />
+        <module name="RedundantImport" />
+        <module name="UnusedImports" />
     </module>
 
 </module>
