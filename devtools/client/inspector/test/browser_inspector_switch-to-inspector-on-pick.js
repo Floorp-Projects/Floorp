@@ -33,4 +33,7 @@ function* startPickerAndAssertSwitchToInspector(toolbox) {
   info("Waiting for inspector to be selected.");
   yield toolbox.once("inspector-selected");
   is(toolbox.currentToolId, "inspector", "Switched to the inspector");
+
+  info("Waiting for inspector to update.");
+  yield toolbox.getCurrentPanel().once("inspector-updated");
 }
