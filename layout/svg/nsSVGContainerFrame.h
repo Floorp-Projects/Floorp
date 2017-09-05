@@ -147,6 +147,13 @@ public:
   virtual SVGBBox GetBBoxContribution(const Matrix &aToBBoxUserspace,
                                       uint32_t aFlags) override;
   virtual bool IsDisplayContainer() override { return true; }
+  virtual gfxMatrix GetCanvasTM() override;
+
+protected:
+  /**
+   * Cached canvasTM value.
+   */
+  nsAutoPtr<gfxMatrix> mCanvasTM;
 };
 
 #endif
