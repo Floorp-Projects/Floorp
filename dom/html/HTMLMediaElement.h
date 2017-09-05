@@ -818,14 +818,12 @@ protected:
 
   class WakeLockBoolWrapper {
   public:
-    explicit WakeLockBoolWrapper(bool val = false)
-      : mValue(val)
-      , mOuter(nullptr)
+    WakeLockBoolWrapper(bool aVal, HTMLMediaElement& aOuter)
+      : mValue(aVal)
+      , mOuter(aOuter)
     {}
 
     ~WakeLockBoolWrapper() {};
-
-    void SetOuter(HTMLMediaElement* outer) { mOuter = outer; }
 
     MOZ_IMPLICIT operator bool() const { return mValue; }
 
@@ -836,7 +834,7 @@ protected:
     void UpdateWakeLock();
   private:
     bool mValue;
-    HTMLMediaElement* mOuter;
+    HTMLMediaElement& mOuter;
   };
 
   // Holds references to the DOM wrappers for the MediaStreams that we're
@@ -1450,6 +1448,18 @@ protected:
   // Current audio volume
   double mVolume;
 
+  // True if the audio track is not silent.
+  bool mIsAudioTrackAudible;
+
+  enum MutedReasons {
+    MUTED_BY_CONTENT               = 0x01,
+    MUTED_BY_INVALID_PLAYBACK_RATE = 0x02,
+    MUTED_BY_AUDIO_CHANNEL         = 0x04,
+    MUTED_BY_AUDIO_TRACK           = 0x08
+  };
+
+  uint32_t mMuted;
+
   UniquePtr<const MetadataTags> mTags;
 
   // URI of the resource we're attempting to load. This stores the value we
@@ -1550,15 +1560,6 @@ protected:
   // Playback of the video is paused either due to calling the
   // 'Pause' method, or playback not yet having started.
   WakeLockBoolWrapper mPaused;
-
-  enum MutedReasons {
-    MUTED_BY_CONTENT               = 0x01,
-    MUTED_BY_INVALID_PLAYBACK_RATE = 0x02,
-    MUTED_BY_AUDIO_CHANNEL         = 0x04,
-    MUTED_BY_AUDIO_TRACK           = 0x08
-  };
-
-  uint32_t mMuted;
 
   // True if the media statistics are currently being shown by the builtin
   // video controls
@@ -1779,9 +1780,6 @@ private:
   // initially be set to zero seconds. This time is used to allow the element to
   // be seeked even before the media is loaded.
   double mDefaultPlaybackStartPosition;
-
-  // True if the audio track is not silent.
-  bool mIsAudioTrackAudible;
 
   // True if media element has been marked as 'tainted' and can't
   // participate in video decoder suspending.

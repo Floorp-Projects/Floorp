@@ -29,6 +29,8 @@ class ManageRecords {
     this._subStorageName = subStorageName;
     this._elements = elements;
     this._records = [];
+    this._newRequest = false;
+    this._isLoadingRecords = false;
     this.prefWin = window.opener;
     this.localizeDocument();
     window.addEventListener("DOMContentLoaded", this, {once: true});
@@ -70,17 +72,40 @@ class ManageRecords {
   }
 
   /**
-   * Load records and render them.
+   * Load records and render them. This function is a wrapper for _loadRecords
+   * to ensure any reentrant will be handled well.
    */
   async loadRecords() {
+    // This function can be early returned when there is any reentrant happends.
+    // "_newRequest" needs to be set to ensure all changes will be applied.
+    if (this._isLoadingRecords) {
+      this._newRequest = true;
+      return;
+    }
+    this._isLoadingRecords = true;
+
+    await this._loadRecords();
+
+    // _loadRecords should be invoked again if there is any multiple entrant
+    // during running _loadRecords(). This step ensures that the latest request
+    // still is applied.
+    while (this._newRequest) {
+      this._newRequest = false;
+      await this._loadRecords();
+    }
+    this._isLoadingRecords = false;
+
+    // For testing only: Notify when records are loaded
+    this._elements.records.dispatchEvent(new CustomEvent("RecordsLoaded"));
+  }
+
+  async _loadRecords() {
     let storage = await this.getStorage();
     let records = storage.getAll();
     // Sort by last modified time starting with most recent
     records.sort((a, b) => b.timeLastModified - a.timeLastModified);
     await this.renderRecordElements(records);
     this.updateButtonsStates(this._selectedOptions.length);
-    // For testing only: Notify when records are loaded
-    this._elements.records.dispatchEvent(new CustomEvent("RecordsLoaded"));
   }
 
   /**

@@ -45,6 +45,8 @@ SpecialPowers.pushPrefEnv({"set": [["media.ogg.enabled", false]]},
            'Mime type in ondataavailable = ' + expectedMimeType);
       };
       mediaRecorder.onerror = function(evt) {
+        is(evt.target.state, 'inactive',
+           'Media recorder is inactive after firing error');
         ok(evt instanceof MediaRecorderErrorEvent,
           'Events fired from onerror should be MediaRecorderErrorEvent');
         is(evt.type, 'error',
@@ -56,13 +58,17 @@ SpecialPowers.pushPrefEnv({"set": [["media.ogg.enabled", false]]},
         ok(evt.error.stack.includes('test_mediarecorder_getencodeddata.html'),
           'Events fired from onerror should include an error with a stack trace indicating ' +
           'an error in this test');
+        try {
+          mediaRecorder.requestData();
+          ok(false, 'requestdata should fire an exception if called on an inactive recorder');
+        } catch (e) {
+          ok(e instanceof DOMException, 'requestdata should fire an exception ' +
+            'if called on an inactive recorder');
+          is(e.name, 'InvalidStateError', 'Exception name should be InvalidStateError');
+        }
         onErrorFired = true;
       };
       mediaRecorder.start(0);
-      is(mediaRecorder.state, 'recording', 'Media recorder should be recording');
-      is(mediaRecorder.stream, stream,
-         'Media recorder stream = element stream at the start of recording');
-      mediaRecorder.requestData();
     }, 100);
   }
 );

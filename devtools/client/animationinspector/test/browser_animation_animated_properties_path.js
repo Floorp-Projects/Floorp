@@ -26,6 +26,15 @@ const TEST_CASES = [
         { x: 1000, y: 1, color: "rgb(0, 255, 0)" }
       ]
     },
+    "background-repeat": {
+      expectedClass: "discrete",
+      expectedValues: [
+        { x: 0, y: 0 },
+        { x: 499.999, y: 0 },
+        { x: 500, y: 1 },
+        { x: 1000, y: 1 },
+      ]
+    },
     "font-size": {
       expectedClass: "length",
       expectedValues: [
@@ -72,6 +81,15 @@ const TEST_CASES = [
         { x: 0, y: 0 },
         { x: 0, y: 1, color: "rgb(0, 255, 0)" },
         { x: 1000, y: 1, color: "rgb(255, 0, 0)" }
+      ]
+    },
+    "background-repeat": {
+      expectedClass: "discrete",
+      expectedValues: [
+        { x: 0, y: 0 },
+        { x: 499.999, y: 0 },
+        { x: 500, y: 1 },
+        { x: 1000, y: 1 },
       ]
     },
     "font-size": {
@@ -125,6 +143,17 @@ const TEST_CASES = [
         { x: 0, y: 1, color: "rgb(255, 0, 0)" },
         { x: 500, y: 1, color: "rgb(0, 0, 255)" },
         { x: 1000, y: 1, color: "rgb(0, 255, 0)" }
+      ]
+    },
+    "background-repeat": {
+      expectedClass: "discrete",
+      expectedValues: [
+        { x: 0, y: 0 },
+        { x: 249.999, y: 0 },
+        { x: 250, y: 1 },
+        { x: 749.999, y: 1 },
+        { x: 750, y: 0 },
+        { x: 1000, y: 0 },
       ]
     },
     "font-size": {
@@ -182,6 +211,15 @@ const TEST_CASES = [
         { x: 500, y: 1, color: "rgb(128, 128, 0)" },
         { x: 999.999, y: 1, color: "rgb(128, 128, 0)" },
         { x: 1000, y: 1, color: "rgb(0, 255, 0)" }
+      ]
+    },
+    "background-repeat": {
+      expectedClass: "discrete",
+      expectedValues: [
+        { x: 0, y: 0 },
+        { x: 499.999, y: 0 },
+        { x: 500, y: 1 },
+        { x: 1000, y: 1 },
       ]
     },
     "font-size": {

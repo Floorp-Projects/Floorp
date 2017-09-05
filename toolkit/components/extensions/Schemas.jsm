@@ -250,11 +250,8 @@ function getValueBaseType(value) {
       if (value === null) {
         return "null";
       }
-      switch (ChromeUtils.getClassName(value, true)) {
-        case "Array":
-          return "array";
-        case "ArrayBuffer":
-          return "binary";
+      if (Array.isArray(value)) {
+        return "array";
       }
       break;
 

@@ -219,7 +219,9 @@ def parse_chrome_manifest(path, base_path, chrome_entries):
 #    locstr         (str)  - A string with a comma separated list of locales
 #                            for which resources are embedded in the
 #                            language pack
-#    appver         (str)  - A version of the application the language
+#    min_app_ver    (str)  - A minimum version of the application the language
+#                            resources are for
+#    max_app_ver    (str)  - A maximum version of the application the language
 #                            resources are for
 #    defines        (dict) - A dictionary of defines entries
 #    chrome_entries (dict) - A dictionary of chrome registry entries
@@ -232,6 +234,7 @@ def parse_chrome_manifest(path, base_path, chrome_entries):
 #      ['pl'],
 #      '{ec8030f7-c20a-464f-9b0e-13a3a9e97384}',
 #      '57.0',
+#      '57.0.*',
 #      {'MOZ_LANG_TITLE': 'Polski'},
 #      chrome_entries
 #    )
@@ -239,7 +242,6 @@ def parse_chrome_manifest(path, base_path, chrome_entries):
 #        'languages': {
 #            'pl': {
 #                'version': '201709121481',
-#                'resources': None,
 #                'chrome_resources': {
 #                    'alert': 'chrome/pl/locale/pl/alert/',
 #                    'branding': 'browser/chrome/pl/locale/global/',
@@ -254,6 +256,11 @@ def parse_chrome_manifest(path, base_path, chrome_entries):
 #                }
 #            }
 #        },
+#        'sources': {
+#            'browser': {
+#                'base_path': 'browser/'
+#            }
+#        },
 #        'applications': {
 #            'gecko':  {
 #                'strict_min_version': '57.0',
@@ -266,7 +273,7 @@ def parse_chrome_manifest(path, base_path, chrome_entries):
 #        ...
 #    }
 ###
-def create_webmanifest(locstr, appver, defines, chrome_entries):
+def create_webmanifest(locstr, min_app_ver, max_app_ver, defines, chrome_entries):
     locales = map(lambda loc: loc.strip(), locstr.split(','))
     main_locale = locales[0]
 
@@ -281,14 +288,19 @@ def create_webmanifest(locstr, appver, defines, chrome_entries):
         'applications': {
             'gecko': {
                 'id': 'langpack-{0}@firefox.mozilla.org'.format(main_locale),
-                'strict_min_version': appver,
-                'strict_max_version': '{0}.*'.format(appver)
+                'strict_min_version': min_app_ver,
+                'strict_max_version': max_app_ver,
             }
         },
         'name': '{0} Language Pack'.format(defines['MOZ_LANG_TITLE']),
         'description': 'Language pack for Firefox for {0}'.format(main_locale),
-        'version': appver,
+        'version': min_app_ver,
         'languages': {},
+        'sources': {
+            'browser': {
+                'base_path': 'browser/'
+            }
+        },
         'author': author
     }
 
@@ -309,8 +321,7 @@ def create_webmanifest(locstr, appver, defines, chrome_entries):
 
     for loc in locales:
         manifest['languages'][loc] = {
-            'version': appver,
-            'resources': None,
+            'version': min_app_ver,
             'chrome_resources': cr
         }
 
@@ -321,8 +332,10 @@ def main(args):
     parser = argparse.ArgumentParser()
     parser.add_argument('--locales',
                         help='List of language codes provided by the langpack')
-    parser.add_argument('--appver',
-                        help='Version of the application the langpack is for')
+    parser.add_argument('--min-app-ver',
+                        help='Min version of the application the langpack is for')
+    parser.add_argument('--max-app-ver',
+                        help='Max version of the application the langpack is for')
     parser.add_argument('--defines', default=[], nargs='+',
                         help='List of defines files to load data from')
     parser.add_argument('--input',
@@ -338,7 +351,8 @@ def main(args):
 
     res = create_webmanifest(
         args.locales,
-        args.appver,
+        args.min_app_ver,
+        args.max_app_ver,
         defines,
         chrome_entries
     )

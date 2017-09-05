@@ -8,6 +8,7 @@
 
 #ifdef XP_WIN
 #include "WMFDecoderModule.h"
+#include "mozilla/WindowsVersion.h"
 #endif
 #ifdef MOZ_FFVPX
 #include "FFVPXRuntimeLinker.h"
@@ -341,7 +342,7 @@ PDMFactory::CreatePDMs()
   }
 
 #ifdef XP_WIN
-  if (MediaPrefs::PDMWMFEnabled()) {
+  if (MediaPrefs::PDMWMFEnabled() && !IsWin7AndPre2000Compatible()) {
     m = new WMFDecoderModule();
     RefPtr<PlatformDecoderModule> remote = new dom::RemoteDecoderModule(m);
     StartupPDM(remote);

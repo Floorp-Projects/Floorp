@@ -50,6 +50,7 @@
 #include "nsThreadUtils.h"
 #include "mozilla/dom/NodeListBinding.h"
 #include "mozilla/dom/ScriptSettings.h"
+#include "mozilla/ServoStyleSet.h"
 #include "mozilla/Unused.h"
 
 using namespace mozilla;
@@ -709,77 +710,9 @@ nsBindingManager::WalkRules(nsIStyleRuleProcessor::EnumFunc aFunc,
   return NS_OK;
 }
 
-typedef nsTHashtable<nsPtrHashKey<nsIStyleRuleProcessor> > RuleProcessorSet;
-
-static RuleProcessorSet*
-GetContentSetRuleProcessors(nsTHashtable<nsRefPtrHashKey<nsIContent>>* aContentSet)
-{
-  RuleProcessorSet* set = nullptr;
-
-  for (auto iter = aContentSet->Iter(); !iter.Done(); iter.Next()) {
-    nsIContent* boundContent = iter.Get()->GetKey();
-    for (nsXBLBinding* binding = boundContent->GetXBLBinding(); binding;
-         binding = binding->GetBaseBinding()) {
-      nsIStyleRuleProcessor* ruleProc =
-        binding->PrototypeBinding()->GetRuleProcessor();
-      if (ruleProc) {
-        if (!set) {
-          set = new RuleProcessorSet;
-        }
-        set->PutEntry(ruleProc);
-      }
-    }
-  }
-
-  return set;
-}
-
 void
-nsBindingManager::WalkAllRules(nsIStyleRuleProcessor::EnumFunc aFunc,
-                               ElementDependentRuleProcessorData* aData)
-{
-  if (!mBoundContentSet) {
-    return;
-  }
-
-  nsAutoPtr<RuleProcessorSet> set;
-  set = GetContentSetRuleProcessors(mBoundContentSet);
-  if (!set) {
-    return;
-  }
-
-  for (auto iter = set->Iter(); !iter.Done(); iter.Next()) {
-    nsIStyleRuleProcessor* ruleProcessor = iter.Get()->GetKey();
-    (*(aFunc))(ruleProcessor, aData);
-  }
-}
-
-nsresult
-nsBindingManager::MediumFeaturesChanged(nsPresContext* aPresContext,
-                                        bool* aRulesChanged)
-{
-  *aRulesChanged = false;
-  if (!mBoundContentSet) {
-    return NS_OK;
-  }
-
-  nsAutoPtr<RuleProcessorSet> set;
-  set = GetContentSetRuleProcessors(mBoundContentSet);
-  if (!set) {
-    return NS_OK;
-  }
-
-  for (auto iter = set->Iter(); !iter.Done(); iter.Next()) {
-    nsIStyleRuleProcessor* ruleProcessor = iter.Get()->GetKey();
-    bool thisChanged = ruleProcessor->MediumFeaturesChanged(aPresContext);
-    *aRulesChanged = *aRulesChanged || thisChanged;
-  }
-
-  return NS_OK;
-}
-
-void
-nsBindingManager::AppendAllSheets(nsTArray<StyleSheet*>& aArray)
+nsBindingManager::EnumerateBoundContentBindings(
+  const BoundContentBindingCallback& aCallback) const
 {
   if (!mBoundContentSet) {
     return;
@@ -787,11 +720,91 @@ nsBindingManager::AppendAllSheets(nsTArray<StyleSheet*>& aArray)
 
   for (auto iter = mBoundContentSet->Iter(); !iter.Done(); iter.Next()) {
     nsIContent* boundContent = iter.Get()->GetKey();
-    for (nsXBLBinding* binding = boundContent->GetXBLBinding(); binding;
+    for (nsXBLBinding* binding = boundContent->GetXBLBinding();
+         binding;
          binding = binding->GetBaseBinding()) {
-      binding->PrototypeBinding()->AppendStyleSheetsTo(aArray);
+      aCallback(binding);
     }
   }
+}
+
+void
+nsBindingManager::WalkAllRules(nsIStyleRuleProcessor::EnumFunc aFunc,
+                               ElementDependentRuleProcessorData* aData)
+{
+  EnumerateBoundContentBindings([=](nsXBLBinding* aBinding) {
+    nsIStyleRuleProcessor* ruleProcessor =
+      aBinding->PrototypeBinding()->GetRuleProcessor();
+    if (ruleProcessor) {
+      (*(aFunc))(ruleProcessor, aData);
+    }
+  });
+}
+
+bool
+nsBindingManager::MediumFeaturesChanged(nsPresContext* aPresContext)
+{
+  bool rulesChanged = false;
+  RefPtr<nsPresContext> presContext = aPresContext;
+  bool isStyledByServo = mDocument->IsStyledByServo();
+
+  EnumerateBoundContentBindings([=, &rulesChanged](nsXBLBinding* aBinding) {
+    if (isStyledByServo) {
+      ServoStyleSet* styleSet = aBinding->PrototypeBinding()->GetServoStyleSet();
+      if (styleSet) {
+        bool styleSetChanged = false;
+
+        if (styleSet->IsPresContextChanged(presContext)) {
+          styleSetChanged = styleSet->SetPresContext(presContext);
+        } else {
+          // PresContext is not changed. This means aPresContext is still
+          // alive since the last time it initialized this XBL styleset.
+          // It's safe to check whether medium features changed.
+          bool viewportUnitsUsed = false;
+          styleSetChanged =
+            styleSet->MediumFeaturesChangedRules(&viewportUnitsUsed);
+          MOZ_ASSERT(!viewportUnitsUsed,
+                     "Non-master stylesets shouldn't get flagged as using "
+                     "viewport units!");
+        }
+        rulesChanged = rulesChanged || styleSetChanged;
+      }
+    } else {
+      nsIStyleRuleProcessor* ruleProcessor =
+        aBinding->PrototypeBinding()->GetRuleProcessor();
+      if (ruleProcessor) {
+        bool thisChanged = ruleProcessor->MediumFeaturesChanged(presContext);
+        rulesChanged = rulesChanged || thisChanged;
+      }
+    }
+  });
+
+  return rulesChanged;
+}
+
+void
+nsBindingManager::UpdateBoundContentBindingsForServo(nsPresContext* aPresContext)
+{
+  MOZ_ASSERT(mDocument->IsStyledByServo(),
+             "This should be called only by servo-backend!");
+
+  RefPtr<nsPresContext> presContext = aPresContext;
+
+  EnumerateBoundContentBindings([=](nsXBLBinding* aBinding) {
+    nsXBLPrototypeBinding* protoBinding = aBinding->PrototypeBinding();
+    ServoStyleSet* styleSet = protoBinding->GetServoStyleSet();
+    if (styleSet && styleSet->StyleSheetsHaveChanged()) {
+      protoBinding->ComputeServoStyleSet(presContext);
+    }
+  });
+}
+
+void
+nsBindingManager::AppendAllSheets(nsTArray<StyleSheet*>& aArray)
+{
+  EnumerateBoundContentBindings([&aArray](nsXBLBinding* aBinding) {
+    aBinding->PrototypeBinding()->AppendStyleSheetsTo(aArray);
+  });
 }
 
 static void

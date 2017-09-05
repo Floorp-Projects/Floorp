@@ -9,6 +9,7 @@
 
 dictionary PerformanceObserverInit {
   required sequence<DOMString> entryTypes;
+  boolean buffered = false;
 };
 
 callback PerformanceObserverCallback = void (PerformanceObserverEntryList entries, PerformanceObserver observer);
