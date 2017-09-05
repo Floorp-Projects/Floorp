@@ -1768,8 +1768,7 @@ GetNSSProfilePath(nsAutoCString& aProfilePath)
 // returns NS_OK even if renaming the file didn't work. This simplifies the
 // logic of the calling code.
 static nsresult
-AttemptToRenamePKCS11ModuleDB(const nsACString& profilePath,
-                              const nsACString& moduleDBFilename)
+AttemptToRenamePKCS11ModuleDB(const nsACString& profilePath)
 {
   // profilePath may come from the environment variable
   // MOZPSM_NSSDBDIR_OVERRIDE. If so, the user's NSS DBs are most likely not in
@@ -1780,8 +1779,8 @@ AttemptToRenamePKCS11ModuleDB(const nsACString& profilePath,
             ("MOZPSM_NSSDBDIR_OVERRIDE set - not renaming PKCS#11 module DB"));
     return NS_OK;
   }
-  nsAutoCString destModuleDBFilename(moduleDBFilename);
-  destModuleDBFilename.Append(".fips");
+  NS_NAMED_LITERAL_CSTRING(moduleDBFilename, "secmod.db");
+  NS_NAMED_LITERAL_CSTRING(destModuleDBFilename, "secmod.db.fips");
   nsCOMPtr<nsIFile> dbFile = do_CreateInstance("@mozilla.org/file/local;1");
   if (!dbFile) {
     return NS_ERROR_FAILURE;
@@ -1803,7 +1802,7 @@ AttemptToRenamePKCS11ModuleDB(const nsACString& profilePath,
   // This is strange, but not a catastrophic failure.
   if (!exists) {
     MOZ_LOG(gPIPNSSLog, LogLevel::Debug,
-            ("%s doesn't exist?", PromiseFlatCString(moduleDBFilename).get()));
+            ("%s doesn't exist?", moduleDBFilename.get()));
     return NS_OK;
   }
   nsCOMPtr<nsIFile> destDBFile = do_CreateInstance("@mozilla.org/file/local;1");
@@ -1845,22 +1844,6 @@ AttemptToRenamePKCS11ModuleDB(const nsACString& profilePath,
   // initializing NSS in no-DB mode.
   Unused << dbFile->MoveToNative(profileDir, destModuleDBFilename);
   return NS_OK;
-}
-
-// We may be using the legacy databases, in which case we need to use
-// "secmod.db". We may be using the sqlite-backed databases, in which case we
-// need to use "pkcs11.txt".
-static nsresult
-AttemptToRenameBothPKCS11ModuleDBVersions(const nsACString& profilePath)
-{
-  NS_NAMED_LITERAL_CSTRING(legacyModuleDBFilename, "secmod.db");
-  NS_NAMED_LITERAL_CSTRING(sqlModuleDBFilename, "pkcs11.txt");
-  nsresult rv = AttemptToRenamePKCS11ModuleDB(profilePath,
-                                              legacyModuleDBFilename);
-  if (NS_FAILED(rv)) {
-    return rv;
-  }
-  return AttemptToRenamePKCS11ModuleDB(profilePath, sqlModuleDBFilename);
 }
 #endif // ifndef ANDROID
 
@@ -1911,18 +1894,12 @@ InitializeNSSWithFallbacks(const nsACString& profilePath, bool nocertdb,
   savedPRErrorCode2 = PR_GetError();
 #endif // ifndef ANDROID
 
-  MOZ_LOG(gPIPNSSLog, LogLevel::Debug,
-          ("failed to initialize NSS with codes %d %d", savedPRErrorCode1,
-           savedPRErrorCode2));
-
 #ifndef ANDROID
   // That failed as well. Maybe we're trying to load a PKCS#11 module DB that is
   // in FIPS mode, but we don't support FIPS? Test load NSS without PKCS#11
   // modules. If that succeeds, that's probably what's going on.
   if (!safeMode && (savedPRErrorCode1 == SEC_ERROR_LEGACY_DATABASE ||
-                    savedPRErrorCode2 == SEC_ERROR_LEGACY_DATABASE ||
-                    savedPRErrorCode1 == SEC_ERROR_PKCS11_DEVICE_ERROR ||
-                    savedPRErrorCode2 == SEC_ERROR_PKCS11_DEVICE_ERROR)) {
+                    savedPRErrorCode2 == SEC_ERROR_LEGACY_DATABASE)) {
     MOZ_LOG(gPIPNSSLog, LogLevel::Debug, ("attempting no-module db init"));
     // It would make sense to initialize NSS in read-only mode here since this
     // is just a test to see if the PKCS#11 module DB being in FIPS mode is the
@@ -1941,7 +1918,7 @@ InitializeNSSWithFallbacks(const nsACString& profilePath, bool nocertdb,
       // If this fails non-catastrophically, we'll attempt to initialize NSS
       // again in r/w then r-o mode (both of which will fail), and then we'll
       // fall back to NSS_NoDB_Init, which is the behavior we want.
-      nsresult rv = AttemptToRenameBothPKCS11ModuleDBVersions(profilePath);
+      nsresult rv = AttemptToRenamePKCS11ModuleDB(profilePath);
       if (NS_FAILED(rv)) {
         return rv;
       }
