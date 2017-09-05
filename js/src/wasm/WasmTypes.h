@@ -1459,7 +1459,8 @@ class CalleeDesc
     };
 
   private:
-    Which which_;
+    // which_ shall be initialized in the static constructors
+    MOZ_INIT_OUTSIDE_CTOR Which which_;
     union U {
         U() {}
         uint32_t funcIndex_;

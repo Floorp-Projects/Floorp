@@ -201,7 +201,7 @@ pub fn main_wrapper(example: &mut Example,
         }
 
         renderer.update();
-        renderer.render(DeviceUintSize::new(width, height));
+        renderer.render(DeviceUintSize::new(width, height)).unwrap();
         window.swap_buffers().ok();
     }
 

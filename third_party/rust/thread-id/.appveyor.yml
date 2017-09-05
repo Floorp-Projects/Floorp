@@ -10,6 +10,16 @@ environment:
     - target: 1.11.0-i686-pc-windows-msvc
     - target: 1.12.0-x86_64-pc-windows-msvc
     - target: 1.12.0-i686-pc-windows-msvc
+    - target: 1.13.0-x86_64-pc-windows-msvc
+    - target: 1.13.0-i686-pc-windows-msvc
+    - target: 1.14.0-x86_64-pc-windows-msvc
+    - target: 1.14.0-i686-pc-windows-msvc
+    - target: 1.15.1-x86_64-pc-windows-msvc
+    - target: 1.15.1-i686-pc-windows-msvc
+    - target: 1.16.0-x86_64-pc-windows-msvc
+    - target: 1.16.0-i686-pc-windows-msvc
+    - target: 1.17.0-x86_64-pc-windows-msvc
+    - target: 1.17.0-i686-pc-windows-msvc
     - target: beta-x86_64-pc-windows-msvc
     - target: beta-i686-pc-windows-msvc
     - target: beta-x86_64-pc-windows-gnu

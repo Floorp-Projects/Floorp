@@ -409,7 +409,7 @@ impl FontContext {
             let current_height = (i * metrics.rasterized_width * 4) as usize;
             let end_row = current_height + (metrics.rasterized_width as usize * 4);
 
-            for mut pixel in rasterized_pixels[current_height .. end_row].chunks_mut(4) {
+            for pixel in rasterized_pixels[current_height .. end_row].chunks_mut(4) {
                 pixel[0] = 255 - pixel[0];
                 pixel[1] = 255 - pixel[1];
                 pixel[2] = 255 - pixel[2];

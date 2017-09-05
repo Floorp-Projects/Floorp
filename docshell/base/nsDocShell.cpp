@@ -2916,6 +2916,20 @@ nsDocShell::SetSecurityUI(nsISecureBrowserUI* aSecurityUI)
 }
 
 NS_IMETHODIMP
+nsDocShell::GetLoadURIDelegate(nsILoadURIDelegate** aLoadURIDelegate)
+{
+  NS_IF_ADDREF(*aLoadURIDelegate = mLoadURIDelegate);
+  return NS_OK;
+}
+
+NS_IMETHODIMP
+nsDocShell::SetLoadURIDelegate(nsILoadURIDelegate* aLoadURIDelegate)
+{
+  mLoadURIDelegate = aLoadURIDelegate;
+  return NS_OK;
+}
+
+NS_IMETHODIMP
 nsDocShell::GetUseErrorPages(bool* aUseErrorPages)
 {
   *aUseErrorPages = UseErrorPages();
@@ -9928,41 +9942,60 @@ nsDocShell::InternalLoad(nsIURI* aURI,
     isTargetTopLevelDocShell = true;
   }
 
+  if (contentType == nsIContentPolicy::TYPE_DOCUMENT &&
+      nsIOService::BlockToplevelDataUriNavigations()) {
+    bool isDataURI =
+      (NS_SUCCEEDED(aURI->SchemeIs("data", &isDataURI)) && isDataURI);
+    // Let's block all toplevel document navigations to a data: URI.
+    // In all cases where the toplevel document is navigated to a
+    // data: URI the triggeringPrincipal is a codeBasePrincipal, or
+    // a NullPrincipal. In other cases, e.g. typing a data: URL into
+    // the URL-Bar, the triggeringPrincipal is a SystemPrincipal;
+    // we don't want to block those loads. Only exception, loads coming
+    // from an external applicaton (e.g. Thunderbird) don't load
+    // using a codeBasePrincipal, but we want to block those loads.
+    bool loadFromExternal = (aLoadType == LOAD_NORMAL_EXTERNAL);
+    if (isDataURI && (loadFromExternal || 
+        !nsContentUtils::IsSystemPrincipal(aTriggeringPrincipal))) {
+      NS_ConvertUTF8toUTF16 specUTF16(aURI->GetSpecOrDefault());
+      if (specUTF16.Length() > 50) {
+        specUTF16.Truncate(50);
+        specUTF16.AppendLiteral("...");
+      }
+      const char16_t* params[] = { specUTF16.get() };
+      nsContentUtils::ReportToConsole(nsIScriptError::warningFlag,
+                                      NS_LITERAL_CSTRING("DATA_URI_BLOCKED"),
+                                      // no doc available, log to browser console
+                                      nullptr,
+                                      nsContentUtils::eSECURITY_PROPERTIES,
+                                      "BlockTopLevelDataURINavigation",
+                                      params, ArrayLength(params));
+      return NS_OK;
+    }
+  }
+
   // If there's no targetDocShell, that means we are about to create a new
   // window (or aWindowTarget is empty). Perform a content policy check before
-  // creating the window.
-  if (!targetDocShell) {
-    nsCOMPtr<Element> requestingElement;
+  // creating the window. Please note for all other docshell loads
+  // content policy checks are performed within the contentSecurityManager
+  // when the channel is about to be openend.
+  if (!targetDocShell && !aWindowTarget.IsEmpty()) {
+    MOZ_ASSERT(contentType == nsIContentPolicy::TYPE_DOCUMENT,
+               "opening a new window requires type to be TYPE_DOCUMENT");
+
     nsISupports* requestingContext = nullptr;
-
-    if (contentType == nsIContentPolicy::TYPE_DOCUMENT) {
-      if (XRE_IsContentProcess()) {
-        // In e10s the child process doesn't have access to the element that
-        // contains the browsing context (because that element is in the chrome
-        // process). So we just pass mScriptGlobal.
-        requestingContext = ToSupports(mScriptGlobal);
-      } else {
-        // This is for loading non-e10s tabs and toplevel windows of various
-        // sorts.
-        // For the toplevel window cases, requestingElement will be null.
-        requestingElement = mScriptGlobal->AsOuter()->GetFrameElementInternal();
-        requestingContext = requestingElement;
-      }
+    if (XRE_IsContentProcess()) {
+      // In e10s the child process doesn't have access to the element that
+      // contains the browsing context (because that element is in the chrome
+      // process). So we just pass mScriptGlobal.
+      requestingContext = ToSupports(mScriptGlobal);
     } else {
-      requestingElement = mScriptGlobal->AsOuter()->GetFrameElementInternal();
+      // This is for loading non-e10s tabs and toplevel windows of various
+      // sorts.
+      // For the toplevel window cases, requestingElement will be null.
+      nsCOMPtr<Element> requestingElement =
+        mScriptGlobal->AsOuter()->GetFrameElementInternal();
       requestingContext = requestingElement;
-
-#ifdef DEBUG
-      if (requestingElement) {
-        // Get the docshell type for requestingElement.
-        nsCOMPtr<nsIDocument> requestingDoc = requestingElement->OwnerDoc();
-        nsCOMPtr<nsIDocShell> elementDocShell = requestingDoc->GetDocShell();
-
-        // requestingElement docshell type = current docshell type.
-        MOZ_ASSERT(mItemType == elementDocShell->ItemType(),
-                  "subframes should have the same docshell type as their parent");
-      }
-#endif
     }
 
     // Since Content Policy checks are performed within docShell as well as
@@ -10066,6 +10099,31 @@ nsDocShell::InternalLoad(nsIURI* aURI,
     }
   }
 
+  const nsIDocument* doc = mContentViewer ? mContentViewer->GetDocument()
+                                          : nullptr;
+  const bool isDocumentAuxSandboxed = doc &&
+    (doc->GetSandboxFlags() & SANDBOXED_AUXILIARY_NAVIGATION);
+
+  if (aURI && mLoadURIDelegate &&
+      (!targetDocShell || targetDocShell == static_cast<nsIDocShell*>(this))) {
+    // Dispatch only load requests for the current or a new window to the
+    // delegate, e.g., to allow for GeckoView apps to handle the load event
+    // outside of Gecko.
+    const int where = (aWindowTarget.IsEmpty() || targetDocShell)
+                      ? nsIBrowserDOMWindow::OPEN_CURRENTWINDOW
+                      : nsIBrowserDOMWindow::OPEN_NEW;
+
+    if (where == nsIBrowserDOMWindow::OPEN_NEW && isDocumentAuxSandboxed) {
+      return NS_ERROR_DOM_INVALID_ACCESS_ERR;
+    }
+
+    if (NS_SUCCEEDED(mLoadURIDelegate->LoadURI(aURI, where, aFlags,
+                                               aTriggeringPrincipal))) {
+      // The request has been handled, nothing to do here.
+      return NS_OK;
+    }
+  }
+
   //
   // Resolve the window target before going any further...
   // If the load has been targeted to another DocShell, then transfer the
@@ -10083,14 +10141,8 @@ nsDocShell::InternalLoad(nsIURI* aURI,
       // if the document's SANDBOXED_AUXILLARY_NAVIGATION flag is not set.
       // (i.e. if allow-popups is specified)
       NS_ENSURE_TRUE(mContentViewer, NS_ERROR_FAILURE);
-      nsIDocument* doc = mContentViewer->GetDocument();
-      uint32_t sandboxFlags = 0;
-
-      if (doc) {
-        sandboxFlags = doc->GetSandboxFlags();
-        if (sandboxFlags & SANDBOXED_AUXILIARY_NAVIGATION) {
-          return NS_ERROR_DOM_INVALID_ACCESS_ERR;
-        }
+      if (isDocumentAuxSandboxed) {
+        return NS_ERROR_DOM_INVALID_ACCESS_ERR;
       }
 
       nsCOMPtr<nsPIDOMWindowOuter> win = GetWindow();
@@ -11029,17 +11081,40 @@ nsDocShell::DoURILoad(nsIURI* aURI,
   nsCOMPtr<nsINode> loadingNode;
   nsCOMPtr<nsPIDOMWindowOuter> loadingWindow;
   nsCOMPtr<nsIPrincipal> loadingPrincipal;
+  nsCOMPtr<nsISupports> topLevelLoadingContext;
 
   if (aContentPolicyType == nsIContentPolicy::TYPE_DOCUMENT) {
     loadingNode = nullptr;
     loadingPrincipal = nullptr;
     loadingWindow = mScriptGlobal->AsOuter();
+    if (XRE_IsContentProcess()) {
+      // In e10s the child process doesn't have access to the element that
+      // contains the browsing context (because that element is in the chrome
+      // process).
+      nsCOMPtr<nsITabChild> tabChild = GetTabChild();
+      topLevelLoadingContext = ToSupports(tabChild);
+    } else {
+      // This is for loading non-e10s tabs and toplevel windows of various
+      // sorts.
+      // For the toplevel window cases, requestingElement will be null.
+      nsCOMPtr<Element> requestingElement =
+        loadingWindow->GetFrameElementInternal();
+      topLevelLoadingContext = requestingElement;
+    }
   } else {
     loadingWindow = nullptr;
     loadingNode = mScriptGlobal->AsOuter()->GetFrameElementInternal();
     if (loadingNode) {
       // If we have a loading node, then use that as our loadingPrincipal.
       loadingPrincipal = loadingNode->NodePrincipal();
+#ifdef DEBUG
+      // Get the docshell type for requestingElement.
+      nsCOMPtr<nsIDocument> requestingDoc = loadingNode->OwnerDoc();
+      nsCOMPtr<nsIDocShell> elementDocShell = requestingDoc->GetDocShell();
+      // requestingElement docshell type = current docshell type.
+      MOZ_ASSERT(mItemType == elementDocShell->ItemType(),
+                "subframes should have the same docshell type as their parent");
+#endif
     } else {
       // If this isn't a top-level load and mScriptGlobal's frame element is
       // null, then the element got removed from the DOM while we were trying
@@ -11100,41 +11175,10 @@ nsDocShell::DoURILoad(nsIURI* aURI,
 
   nsCOMPtr<nsILoadInfo> loadInfo =
     (aContentPolicyType == nsIContentPolicy::TYPE_DOCUMENT) ?
-      new LoadInfo(loadingWindow, aTriggeringPrincipal,
+      new LoadInfo(loadingWindow, aTriggeringPrincipal, topLevelLoadingContext,
                    securityFlags) :
       new LoadInfo(loadingPrincipal, aTriggeringPrincipal, loadingNode,
                    securityFlags, aContentPolicyType);
-
-  if (aContentPolicyType == nsIContentPolicy::TYPE_DOCUMENT &&
-      nsIOService::BlockToplevelDataUriNavigations()) {
-    bool isDataURI =
-      (NS_SUCCEEDED(aURI->SchemeIs("data", &isDataURI)) && isDataURI);
-    // Let's block all toplevel document navigations to a data: URI.
-    // In all cases where the toplevel document is navigated to a
-    // data: URI the triggeringPrincipal is a codeBasePrincipal, or
-    // a NullPrincipal. In other cases, e.g. typing a data: URL into
-    // the URL-Bar, the triggeringPrincipal is a SystemPrincipal;
-    // we don't want to block those loads. Only exception, loads coming
-    // from an external applicaton (e.g. Thunderbird) don't load
-    // using a codeBasePrincipal, but we want to block those loads.
-    if (isDataURI && (aLoadFromExternal || 
-        !nsContentUtils::IsSystemPrincipal(aTriggeringPrincipal))) {
-      NS_ConvertUTF8toUTF16 specUTF16(aURI->GetSpecOrDefault());
-      if (specUTF16.Length() > 50) {
-        specUTF16.Truncate(50);
-        specUTF16.AppendLiteral("...");
-      }
-      const char16_t* params[] = { specUTF16.get() };
-      nsContentUtils::ReportToConsole(nsIScriptError::warningFlag,
-                                      NS_LITERAL_CSTRING("DATA_URI_BLOCKED"),
-                                      // no doc available, log to browser console
-                                      nullptr,
-                                      nsContentUtils::eSECURITY_PROPERTIES,
-                                      "BlockTopLevelDataURINavigation",
-                                      params, ArrayLength(params));
-      return NS_OK;
-    }
-  }
 
   if (aPrincipalToInherit) {
     loadInfo->SetPrincipalToInherit(aPrincipalToInherit);

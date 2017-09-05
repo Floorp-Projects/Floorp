@@ -1,0 +1,50 @@
+[package]
+name = "js"
+version = "0.1.4"
+authors = ["The Servo Project Developers"]
+build = "build.rs"
+license = "MPL-2.0"
+
+[build-dependencies]
+env_logger = "0.4"
+log = "0.3"
+bindgen = "0.30.0"
+cmake = "0.1"
+glob = "0.2.11"
+
+[[test]]
+name = "callback"
+[[test]]
+name = "enumerate"
+[[test]]
+name = "evaluate"
+[[test]]
+name = "panic"
+[[test]]
+name = "rooting"
+[[test]]
+name = "runtime"
+[[test]]
+name = "typedarray"
+[[test]]
+name = "stack_limit"
+[[test]]
+name = "vec_conversion"
+
+[lib]
+doctest = false
+
+[features]
+debugmozjs = ['mozjs_sys/debugmozjs']
+promises = ['mozjs_sys/promises']
+nonzero = []
+
+[dependencies.mozjs_sys]
+path = "../src"
+
+[dependencies]
+lazy_static = "0.2.1"
+libc = "0.2"
+log = "0.3"
+heapsize = "0.4"
+num-traits = "0.1.32"

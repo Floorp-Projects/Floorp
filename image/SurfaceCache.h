@@ -68,6 +68,11 @@ public:
     return hash;
   }
 
+  SurfaceKey CloneWithSize(const IntSize& aSize) const
+  {
+    return SurfaceKey(aSize, mSVGContext, mPlayback, mFlags);
+  }
+
   const IntSize& Size() const { return mSize; }
   Maybe<SVGImageContext> SVGContext() const { return mSVGContext; }
   PlaybackType Playback() const { return mPlayback; }
@@ -129,6 +134,10 @@ VectorSurfaceKey(const gfx::IntSize& aSize,
  * changes), an ISurfaceProvider which starts as a placeholder can only reveal
  * the fact that it now has a surface available via a call to
  * SurfaceCache::SurfaceAvailable().
+ *
+ * It also tracks whether or not there are "explicit" users of this surface
+ * which will not accept substitutes. This is used by SurfaceCache when pruning
+ * unnecessary surfaces from the cache.
  */
 class AvailabilityState
 {
@@ -138,15 +147,22 @@ public:
 
   bool IsAvailable() const { return mIsAvailable; }
   bool IsPlaceholder() const { return !mIsAvailable; }
+  bool CannotSubstitute() const { return mCannotSubstitute; }
+
+  void SetCannotSubstitute() { mCannotSubstitute = true; }
 
 private:
   friend class SurfaceCacheImpl;
 
-  explicit AvailabilityState(bool aIsAvailable) : mIsAvailable(aIsAvailable) { }
+  explicit AvailabilityState(bool aIsAvailable)
+    : mIsAvailable(aIsAvailable)
+    , mCannotSubstitute(false)
+  { }
 
   void SetAvailable() { mIsAvailable = true; }
 
-  bool mIsAvailable;
+  bool mIsAvailable : 1;
+  bool mCannotSubstitute : 1;
 };
 
 enum class InsertOutcome : uint8_t {
@@ -387,6 +403,16 @@ struct SurfaceCache
    * @param aImageKey  The image which should be removed from the cache.
    */
   static void RemoveImage(const ImageKey aImageKey);
+
+  /**
+   * Attempts to remove cache entries (including placeholders) associated with
+   * the given image from the cache, assuming there is an equivalent entry that
+   * it is able substitute that entry with. Note that this only applies if the
+   * image is in factor of 2 mode. If it is not, this operation does nothing.
+   *
+   * @param aImageKey  The image whose cache which should be pruned.
+   */
+  static void PruneImage(const ImageKey aImageKey);
 
   /**
    * Evicts all evictable entries from the cache.

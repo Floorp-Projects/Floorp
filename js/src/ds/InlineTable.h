@@ -113,10 +113,10 @@ class InlineTable
         friend class InlineTable;
 
       protected:
-        Entry        entry_;
-        TablePtr     tablePtr_;
-        InlineEntry* inlPtr_;
-        bool         isInlinePtr_;
+        MOZ_INIT_OUTSIDE_CTOR Entry        entry_;
+        MOZ_INIT_OUTSIDE_CTOR TablePtr     tablePtr_;
+        MOZ_INIT_OUTSIDE_CTOR InlineEntry* inlPtr_;
+        MOZ_INIT_OUTSIDE_CTOR bool         isInlinePtr_;
 
         explicit Ptr(TablePtr p)
           : entry_(p.found() ? &*p : nullptr),
@@ -180,12 +180,12 @@ class InlineTable
         friend class InlineTable;
 
       protected:
-        Entry        entry_;
-        TableAddPtr  tableAddPtr_;
-        InlineEntry* inlAddPtr_;
-        bool         isInlinePtr_;
+        MOZ_INIT_OUTSIDE_CTOR Entry        entry_;
+        MOZ_INIT_OUTSIDE_CTOR TableAddPtr  tableAddPtr_;
+        MOZ_INIT_OUTSIDE_CTOR InlineEntry* inlAddPtr_;
+        MOZ_INIT_OUTSIDE_CTOR bool         isInlinePtr_;
         // Indicates whether inlAddPtr is a found result or an add pointer.
-        bool         inlPtrFound_;
+        MOZ_INIT_OUTSIDE_CTOR bool         inlPtrFound_;
 
         AddPtr(InlineEntry* ptr, bool found)
           : entry_(ptr),

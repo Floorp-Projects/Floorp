@@ -75,6 +75,8 @@
 #undef PORT_UCS2_ASCIIConversion
 #undef PORT_UCS2_UTF8Conversion
 #undef PORT_ZAlloc
+#undef PORT_ZAllocAligned
+#undef PORT_ZAllocAlignedOffset
 #undef PORT_ZFree
 #undef SEC_ASN1Decode
 #undef SEC_ASN1DecodeInteger
@@ -142,6 +144,18 @@ void *
 PORT_ZAlloc(size_t bytes)
 {
     return PORT_ZAlloc_Util(bytes);
+}
+
+void *
+PORT_ZAllocAligned(size_t bytes, size_t alignment, void **mem)
+{
+    return PORT_ZAllocAligned_Util(bytes, alignment, mem);
+}
+
+void *
+PORT_ZAllocAlignedOffset(size_t bytes, size_t alignment, size_t offset)
+{
+    return PORT_ZAllocAlignedOffset_Util(bytes, alignment, offset);
 }
 
 void

@@ -1,6 +1,6 @@
 [package]
 name = "regex-syntax"
-version = "0.4.0"  #:version
+version = "0.4.1"  #:version
 authors = ["The Rust Project Developers"]
 license = "MIT/Apache-2.0"
 repository = "https://github.com/rust-lang/regex"
@@ -9,5 +9,5 @@ homepage = "https://github.com/rust-lang/regex"
 description = "A regular expression parser."
 
 [dev-dependencies]
-quickcheck = "0.4.1"
+quickcheck = { version = "0.4.1", default-features = false }
 rand = "0.3.15"
