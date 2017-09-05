@@ -66,14 +66,17 @@ public class HomeScreen {
      */
     @TargetApi(26)
     private static void installShortCutViaManager(Context context, Bitmap bitmap, String url, String title) {
-        final Intent shortcutIntent = createShortcutIntent(context, url);
-        ShortcutManager shortcutManager = context.getSystemService(ShortcutManager.class);
+        final ShortcutManager shortcutManager = context.getSystemService(ShortcutManager.class);
+        if (shortcutManager == null) {
+            return;
+        }
+
         if (shortcutManager.isRequestPinShortcutSupported()) {
-            ShortcutInfo shortcut = new ShortcutInfo.Builder(context, url)
+            final ShortcutInfo shortcut = new ShortcutInfo.Builder(context, url)
                     .setShortLabel(title)
-                    .setLongLabel(url)
+                    .setLongLabel(title)
                     .setIcon(Icon.createWithBitmap(bitmap))
-                    .setIntent(new Intent(shortcutIntent))
+                    .setIntent(createShortcutIntent(context, url))
                     .build();
             shortcutManager.requestPinShortcut(shortcut, null);
         }
