@@ -595,7 +595,7 @@ gfxContext::PopClip()
 }
 
 gfxRect
-gfxContext::GetClipExtents(ClipExtentsSpace aSpace) const
+gfxContext::GetClipExtents()
 {
   Rect rect = GetAzureDeviceSpaceClipBounds();
 
@@ -603,11 +603,9 @@ gfxContext::GetClipExtents(ClipExtentsSpace aSpace) const
     return gfxRect(0, 0, 0, 0);
   }
 
-  if (aSpace == eUserSpace) {
-    Matrix mat = mTransform;
-    mat.Invert();
-    rect = mat.TransformBounds(rect);
-  }
+  Matrix mat = mTransform;
+  mat.Invert();
+  rect = mat.TransformBounds(rect);
 
   return ThebesRect(rect);
 }
@@ -818,13 +816,22 @@ gfxContext::PushGroupForBlendBack(gfxContentType content, Float aOpacity, Source
   mDT->PushLayer(content == gfxContentType::COLOR, aOpacity, aMask, aMaskTransform);
 }
 
+static gfxRect
+GetRoundOutDeviceClipExtents(gfxContext* aCtx)
+{
+  gfxContextMatrixAutoSaveRestore save(aCtx);
+  aCtx->SetMatrix(gfxMatrix());
+  gfxRect r = aCtx->GetClipExtents();
+  r.RoundOut();
+  return r;
+}
+
 void
 gfxContext::PushGroupAndCopyBackground(gfxContentType content, Float aOpacity, SourceSurface* aMask, const Matrix& aMaskTransform)
 {
   IntRect clipExtents;
   if (mDT->GetFormat() != SurfaceFormat::B8G8R8X8) {
-    gfxRect clipRect = GetClipExtents(gfxContext::eDeviceSpace);
-    clipRect.RoundOut();
+    gfxRect clipRect = GetRoundOutDeviceClipExtents(this);
     clipExtents = IntRect::Truncate(clipRect.x, clipRect.y, clipRect.width, clipRect.height);
   }
   bool pushOpaqueWithCopiedBG = (mDT->GetFormat() == SurfaceFormat::B8G8R8X8 ||
@@ -1055,13 +1062,13 @@ gfxContext::ChangeTransform(const Matrix &aNewMatrix, bool aUpdatePatternTransfo
 }
 
 Rect
-gfxContext::GetAzureDeviceSpaceClipBounds() const
+gfxContext::GetAzureDeviceSpaceClipBounds()
 {
   Rect rect(CurrentState().deviceOffset.x, CurrentState().deviceOffset.y,
             Float(mDT->GetSize().width), Float(mDT->GetSize().height));
   for (unsigned int i = 0; i < mStateStack.Length(); i++) {
     for (unsigned int c = 0; c < mStateStack[i].pushedClips.Length(); c++) {
-      const AzureState::PushedClip &clip = mStateStack[i].pushedClips[c];
+      AzureState::PushedClip &clip = mStateStack[i].pushedClips[c];
       if (clip.path) {
         Rect bounds = clip.path->GetBounds(clip.transform);
         rect.IntersectRect(rect, bounds);
