@@ -74,8 +74,6 @@ file, You can obtain one at http://mozilla.org/MPL/2.0/.
                                        .getService(Components.interfaces.nsIPrefService)
                                        .getDefaultBranch("browser.urlbar.");
 
-        Services.prefs.addObserver("browser.search.openintab", this);
-        this.browserSearchOpenInTab = Services.prefs.getBoolPref("browser.search.openintab");
         Services.prefs.addObserver("browser.search.suggest.enabled", this);
         this.browserSearchSuggestEnabled = Services.prefs.getBoolPref("browser.search.suggest.enabled");
 
@@ -139,7 +137,6 @@ file, You can obtain one at http://mozilla.org/MPL/2.0/.
       <destructor><![CDATA[
         this._prefs.removeObserver("", this);
         this._prefs = null;
-        Services.prefs.removeObserver("browser.search.openintab", this);
         Services.prefs.removeObserver("browser.search.suggest.enabled", this);
         this.inputField.controllers.removeController(this._copyCutController);
         this.inputField.removeEventListener("paste", this);
@@ -560,8 +557,6 @@ file, You can obtain one at http://mozilla.org/MPL/2.0/.
           if (!where) {
             if (isMouseEvent) {
               where = whereToOpenLink(event, false, false);
-            } else if (this.browserSearchOpenInTab) {
-              where = "tab";
             } else {
               // If the current tab is empty, ignore Alt+Enter (reuse this tab)
               let altEnter = !isMouseEvent &&
@@ -1097,9 +1092,6 @@ file, You can obtain one at http://mozilla.org/MPL/2.0/.
                 break;
               case "speculativeConnect.enabled":
                 this.speculativeConnectEnabled = this._prefs.getBoolPref(aData);
-                break;
-              case "browser.search.openintab":
-                this.browserSearchOpenInTab = Services.prefs.getBoolPref(aData);
                 break;
               case "browser.search.suggest.enabled":
                 this.browserSearchSuggestEnabled = Services.prefs.getBoolPref(aData);
