@@ -639,8 +639,8 @@ private:
     }
 
     // Get the clip extents in device space.
-    gfxRect clippedFrameSurfaceRect =
-      mSourceCtx->GetClipExtents(gfxContext::eDeviceSpace);
+    mSourceCtx->SetMatrix(gfxMatrix());
+    gfxRect clippedFrameSurfaceRect = mSourceCtx->GetClipExtents();
     clippedFrameSurfaceRect.RoundOut();
 
     IntRect result;

@@ -96,7 +96,10 @@ BasicLayerManager::PushGroupForLayer(gfxContext* aContext, Layer* aLayer, const 
     gfxUtils::ClipToRegion(aGroupResult.mFinalTarget, aGroupResult.mVisibleRegion);
 
     // PushGroup/PopGroup do not support non operator over.
-    gfxRect rect = aContext->GetClipExtents(gfxContext::eDeviceSpace);
+    gfxMatrix oldMat = aContext->CurrentMatrix();
+    aContext->SetMatrix(gfxMatrix());
+    gfxRect rect = aContext->GetClipExtents();
+    aContext->SetMatrix(oldMat);
     rect.RoundOut();
     IntRect surfRect;
     ToRect(rect).ToIntRect(&surfRect);
@@ -110,7 +113,7 @@ BasicLayerManager::PushGroupForLayer(gfxContext* aContext, Layer* aLayer, const 
         gfxCriticalNote << "BasicLayerManager context problem in PushGroupForLayer " << gfx::hexa(dt);
         return false;
       }
-      ctx->SetMatrix(aContext->CurrentMatrix());
+      ctx->SetMatrix(oldMat);
 
       aGroupResult.mGroupOffset = surfRect.TopLeft();
       aGroupResult.mGroupTarget = ctx;
@@ -601,8 +604,13 @@ BasicLayerManager::EndTransactionInternal(DrawPaintedLayerCallback aCallback,
   if (mTarget && mRoot &&
       !(aFlags & END_NO_IMMEDIATE_REDRAW) &&
       !(aFlags & END_NO_COMPOSITE)) {
-    IntRect clipRect =
-      ToOutsideIntRect(mTarget->GetClipExtents(gfxContext::eDeviceSpace));
+    IntRect clipRect;
+
+    {
+      gfxContextMatrixAutoSaveRestore save(mTarget);
+      mTarget->SetMatrix(gfxMatrix());
+      clipRect = ToOutsideIntRect(mTarget->GetClipExtents());
+    }
 
     if (IsRetained()) {
       nsIntRegion region;
