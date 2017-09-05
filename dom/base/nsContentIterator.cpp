@@ -15,7 +15,7 @@
 #include "nsContentUtils.h"
 #include "nsINode.h"
 #include "nsCycleCollectionParticipant.h"
-#include "nsIParserService.h"
+#include "nsElementTable.h"
 
 using mozilla::DebugOnly;
 
@@ -407,10 +407,9 @@ nsContentIterator::InitInternal(nsINode* aStartContainer, uint32_t aStartOffset,
       // case in order to address bug 1215798.
       bool startIsContainer = true;
       if (aStartContainer->IsHTMLElement()) {
-        if (nsIParserService* ps = nsContentUtils::GetParserService()) {
-          nsIAtom* name = aStartContainer->NodeInfo()->NameAtom();
-          ps->IsContainer(ps->HTMLAtomTagToId(name), startIsContainer);
-        }
+        nsIAtom* name = aStartContainer->NodeInfo()->NameAtom();
+        startIsContainer =
+          nsHTMLElement::IsContainer(nsHTMLTags::AtomTagToId(name));
       }
       if (!startIsData && (startIsContainer || aStartOffset)) {
         mFirst = GetNextSibling(aStartContainer);
@@ -471,10 +470,9 @@ nsContentIterator::InitInternal(nsINode* aStartContainer, uint32_t aStartOffset,
         // include the end node in the range).
         bool endIsContainer = true;
         if (aEndContainer->IsHTMLElement()) {
-          if (nsIParserService* ps = nsContentUtils::GetParserService()) {
-            nsIAtom* name = aEndContainer->NodeInfo()->NameAtom();
-            ps->IsContainer(ps->HTMLAtomTagToId(name), endIsContainer);
-          }
+          nsIAtom* name = aEndContainer->NodeInfo()->NameAtom();
+          endIsContainer =
+            nsHTMLElement::IsContainer(nsHTMLTags::AtomTagToId(name));
         }
         if (!endIsData && !endIsContainer && !aEndOffset) {
           mLast = PrevNode(aEndContainer);

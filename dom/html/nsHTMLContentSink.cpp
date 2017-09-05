@@ -14,6 +14,7 @@
 
 #include "nsContentSink.h"
 #include "nsCOMPtr.h"
+#include "nsHTMLTags.h"
 #include "nsReadableUtils.h"
 #include "nsUnicharUtils.h"
 #include "nsIHTMLContentSink.h"
@@ -56,8 +57,6 @@
 #include "nsTextFragment.h"
 #include "nsIScriptGlobalObject.h"
 #include "nsNameSpaceManager.h"
-
-#include "nsIParserService.h"
 
 #include "nsIStyleSheetLinkingElement.h"
 #include "nsITimer.h"
@@ -232,16 +231,12 @@ NS_NewHTMLElement(Element** aResult, already_AddRefed<mozilla::dom::NodeInfo>&& 
 
   RefPtr<mozilla::dom::NodeInfo> nodeInfo = aNodeInfo;
 
-  nsIParserService* parserService = nsContentUtils::GetParserService();
-  if (!parserService)
-    return NS_ERROR_OUT_OF_MEMORY;
-
   nsIAtom *name = nodeInfo->NameAtom();
 
   NS_ASSERTION(nodeInfo->NamespaceEquals(kNameSpaceID_XHTML),
                "Trying to HTML elements that don't have the XHTML namespace");
 
-  int32_t tag = parserService->HTMLCaseSensitiveAtomTagToId(name);
+  int32_t tag = nsHTMLTags::CaseSensitiveAtomTagToId(name);
 
   // Per the Custom Element specification, unknown tags that are valid custom
   // element names should be HTMLElement instead of HTMLUnknownElement.
