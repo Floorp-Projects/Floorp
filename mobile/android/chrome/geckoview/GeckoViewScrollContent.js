@@ -6,9 +6,11 @@
 const { classes: Cc, interfaces: Ci, utils: Cu } = Components;
 
 Cu.import("resource://gre/modules/GeckoViewContentModule.jsm");
+Cu.import("resource://gre/modules/XPCOMUtils.jsm");
 
-var dump = Cu.import("resource://gre/modules/AndroidLog.jsm", {})
-           .AndroidLog.d.bind(null, "ViewScrollContent");
+XPCOMUtils.defineLazyGetter(this, "dump", () =>
+    Cu.import("resource://gre/modules/AndroidLog.jsm",
+              {}).AndroidLog.d.bind(null, "ViewScrollContent"));
 
 function debug(aMsg) {
   // dump(aMsg);

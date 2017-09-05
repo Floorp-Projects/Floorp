@@ -8,8 +8,11 @@ this.EXPORTED_SYMBOLS = ["GeckoViewModule"];
 
 const { classes: Cc, interfaces: Ci, utils: Cu, results: Cr } = Components;
 
-var dump = Cu.import("resource://gre/modules/AndroidLog.jsm", {})
-           .AndroidLog.d.bind(null, "ViewModule");
+Cu.import("resource://gre/modules/XPCOMUtils.jsm");
+
+XPCOMUtils.defineLazyGetter(this, "dump", () =>
+    Cu.import("resource://gre/modules/AndroidLog.jsm",
+              {}).AndroidLog.d.bind(null, "ViewModule"));
 
 function debug(aMsg) {
   // dump(aMsg);
