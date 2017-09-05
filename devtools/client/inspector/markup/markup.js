@@ -1155,7 +1155,7 @@ MarkupView.prototype = {
    */
   expandNode: function (node) {
     let container = this.getContainer(node);
-    return this._expandContainer(container);
+    this._expandContainer(container);
   },
 
   /**
