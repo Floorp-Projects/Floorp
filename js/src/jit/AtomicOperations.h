@@ -140,10 +140,10 @@ class AtomicOperations
     template<typename T>
     static inline void storeSafeWhenRacy(T* addr, T val);
 
-    // Replacement for memcpy().
+    // Replacement for memcpy().  No access-atomicity guarantees.
     static inline void memcpySafeWhenRacy(void* dest, const void* src, size_t nbytes);
 
-    // Replacement for memmove().
+    // Replacement for memmove().  No access-atomicity guarantees.
     static inline void memmoveSafeWhenRacy(void* dest, const void* src, size_t nbytes);
 
   public:
@@ -287,10 +287,9 @@ class AtomicOperations
 #endif
 };
 
-/* A data type representing a lock on some region of a
- * SharedArrayRawBuffer's memory, to be used only when the hardware
- * does not provide necessary atomicity (eg, float64 access on ARMv6
- * and some ARMv7 systems).
+/* A data type representing a lock on some region of a SharedArrayRawBuffer's
+ * memory, to be used only when the hardware does not provide necessary
+ * atomicity.
  */
 class RegionLock
 {
@@ -299,7 +298,7 @@ class RegionLock
 
     /* Addr is the address to be locked, nbytes the number of bytes we
      * need to lock.  The lock that is taken may cover a larger range
-     * of bytes.
+     * of bytes, indeed it may cover all of memory.
      */
     template<size_t nbytes>
     void acquire(void* addr);
