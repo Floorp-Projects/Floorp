@@ -205,10 +205,10 @@ public:
   nsresult Init(int64_t aContentLength);
 
   // Set up this stream with the cache, assuming it's for the same data
-  // as the aOriginal stream. Can fail on OOM.
+  // as the aOriginal stream.
   // Exactly one of InitAsClone or Init must be called before any other method
-  // on this class. Does nothing if already initialized.
-  nsresult InitAsClone(MediaCacheStream* aOriginal);
+  // on this class.
+  void InitAsClone(MediaCacheStream* aOriginal);
 
   // These are called on the main thread.
   // Tell us whether the stream is seekable or not. Non-seekable streams
