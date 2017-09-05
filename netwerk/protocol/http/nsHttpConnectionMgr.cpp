@@ -3473,7 +3473,9 @@ nsHttpConnectionMgr::OnMsgUpdateCurrentTopLevelOuterContentWindowId(
     uint64_t previousWindowId = mCurrentTopLevelOuterContentWindowId;
     mCurrentTopLevelOuterContentWindowId = winId;
 
-    NotifyConnectionOfWindowIdChange(previousWindowId);
+    if (gHttpHandler->ActiveTabPriority()) {
+        NotifyConnectionOfWindowIdChange(previousWindowId);
+    }
 
     LOG(("nsHttpConnectionMgr::OnMsgUpdateCurrentTopLevelOuterContentWindowId"
          " id=%" PRIx64 "\n",

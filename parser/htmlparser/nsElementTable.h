@@ -87,6 +87,7 @@ struct nsHTMLElement {
   bool            mLeaf;
 
   static  bool    IsContainer(eHTMLTags aTag);
+  static  bool    IsBlock(eHTMLTags aTag);
 };
 
 extern const nsHTMLElement gHTMLElements[];

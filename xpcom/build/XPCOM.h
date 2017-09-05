@@ -60,7 +60,6 @@
 
 #include "nsIArray.h"
 #include "nsIAtom.h"
-#include "nsIAtomService.h"
 #include "nsICategoryManager.h"
 #include "nsIClassInfo.h"
 #include "nsIComponentManager.h"

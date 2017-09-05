@@ -92,6 +92,16 @@
 #ifdef GNUC_COMPATIBLE
 
 inline bool
+js::jit::AtomicOperations::hasAtomic8()
+{
+#if defined(HAS_64BIT_ATOMICS)
+    return true;
+#else
+    return false;
+#endif
+}
+
+inline bool
 js::jit::AtomicOperations::isLockfree8()
 {
 #if defined(HAS_64BIT_LOCKFREE)

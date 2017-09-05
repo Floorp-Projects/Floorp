@@ -103,7 +103,7 @@ WebRenderLayerManager::DoDestroy(bool aIsSync)
 
   if (WrBridge()) {
     // Just clear ImageKeys, they are deleted during WebRenderAPI destruction.
-    mImageKeysToDelete.clear();
+    mImageKeysToDelete.Clear();
     // CompositorAnimations are cleared by WebRenderBridgeParent.
     mDiscardedCompositorAnimationsIds.Clear();
     WrBridge()->Destroy(aIsSync);
@@ -579,9 +579,10 @@ WebRenderLayerManager::GenerateFallbackData(nsDisplayItem* aItem,
       PaintItemByDrawTarget(aItem, dt, aImageRect, aOffset, aDisplayListBuilder);
       recorder->Finish();
 
-      wr::ByteBuffer bytes(recorder->mOutputStream.mLength, (uint8_t*)recorder->mOutputStream.mData);
+      Range<uint8_t> bytes((uint8_t*)recorder->mOutputStream.mData, recorder->mOutputStream.mLength);
       wr::ImageKey key = WrBridge()->GetNextImageKey();
-      WrBridge()->SendAddBlobImage(key, imageSize.ToUnknownSize(), 0, dt->GetFormat(), bytes);
+      wr::ImageDescriptor descriptor(imageSize.ToUnknownSize(), 0, dt->GetFormat());
+      aBuilder.Resources().AddBlobImage(key, descriptor, bytes);
       fallbackData->SetKey(key);
     } else {
       fallbackData->CreateImageClientIfNeeded();
@@ -699,7 +700,7 @@ WebRenderLayerManager::EndTransactionInternal(DrawPaintedLayerCallback aCallback
   mAnimationReadyTime = TimeStamp::Now();
 
   LayoutDeviceIntSize size = mWidget->GetClientSize();
-  if (!WrBridge()->DPBegin(size.ToUnknownSize())) {
+  if (!WrBridge()->BeginTransaction(size.ToUnknownSize())) {
     return false;
   }
   DiscardCompositorAnimations();
@@ -815,7 +816,8 @@ WebRenderLayerManager::EndTransactionInternal(DrawPaintedLayerCallback aCallback
   {
     AutoProfilerTracing
       tracing("Paint", sync ? "ForwardDPTransactionSync":"ForwardDPTransaction");
-    WrBridge()->DPEnd(builder, size.ToUnknownSize(), sync, mLatestTransactionId, mScrollData, transactionStart);
+    WrBridge()->EndTransaction(builder, size.ToUnknownSize(), sync,
+                               mLatestTransactionId, mScrollData, transactionStart);
   }
 
   MakeSnapshotIfRequired(size);
@@ -870,7 +872,7 @@ WebRenderLayerManager::MakeSnapshotIfRequired(LayoutDeviceIntSize aSize)
   }
 
   IntRect bounds = ToOutsideIntRect(mTarget->GetClipExtents());
-  if (!WrBridge()->SendDPGetSnapshot(texture->GetIPDLActor())) {
+  if (!WrBridge()->SendGetSnapshot(texture->GetIPDLActor())) {
     return;
   }
 
@@ -908,18 +910,13 @@ WebRenderLayerManager::MakeSnapshotIfRequired(LayoutDeviceIntSize aSize)
 void
 WebRenderLayerManager::AddImageKeyForDiscard(wr::ImageKey key)
 {
-  mImageKeysToDelete.push_back(key);
+  mImageKeysToDelete.DeleteImage(key);
 }
 
 void
 WebRenderLayerManager::DiscardImages()
 {
-  if (WrBridge()->IPCOpen()) {
-    for (auto key : mImageKeysToDelete) {
-      WrBridge()->SendDeleteImage(key);
-    }
-  }
-  mImageKeysToDelete.clear();
+  WrBridge()->UpdateResources(mImageKeysToDelete);
 }
 
 void
@@ -944,7 +941,7 @@ WebRenderLayerManager::DiscardLocalImages()
   // Removes images but doesn't tell the parent side about them
   // This is useful in empty / failed transactions where we created
   // image keys but didn't tell the parent about them yet.
-  mImageKeysToDelete.clear();
+  mImageKeysToDelete.Clear();
 }
 
 void

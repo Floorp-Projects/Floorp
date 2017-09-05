@@ -1039,7 +1039,8 @@ nsPIDOMWindow<T>::nsPIDOMWindow(nsPIDOMWindowOuter *aOuterWindow)
   mLargeAllocStatus(LargeAllocStatus::NONE),
   mHasTriedToCacheTopInnerWindow(false),
   mNumOfIndexedDBDatabases(0),
-  mNumOfOpenWebSockets(0)
+  mNumOfOpenWebSockets(0),
+  mNumOfActiveUserMedia(0)
 {
   if (aOuterWindow) {
     mTimeoutManager =
@@ -4383,19 +4384,31 @@ nsPIDOMWindowInner::SyncStateFromParentWindow()
 void
 nsPIDOMWindowInner::AddPeerConnection()
 {
-  nsGlobalWindow::Cast(this)->AddPeerConnection();
+  MOZ_ASSERT(NS_IsMainThread());
+  MOZ_ASSERT(IsInnerWindow());
+  mTopInnerWindow ? mTopInnerWindow->mActivePeerConnections++
+                  : mActivePeerConnections++;
 }
 
 void
 nsPIDOMWindowInner::RemovePeerConnection()
 {
-  nsGlobalWindow::Cast(this)->RemovePeerConnection();
+  MOZ_ASSERT(NS_IsMainThread());
+  MOZ_ASSERT(IsInnerWindow());
+  MOZ_ASSERT(mTopInnerWindow ? mTopInnerWindow->mActivePeerConnections
+                             : mActivePeerConnections);
+
+  mTopInnerWindow ? mTopInnerWindow->mActivePeerConnections--
+                  : mActivePeerConnections--;
 }
 
 bool
 nsPIDOMWindowInner::HasActivePeerConnections()
 {
-  return nsGlobalWindow::Cast(this)->HasActivePeerConnections();
+  MOZ_ASSERT(NS_IsMainThread());
+  MOZ_ASSERT(IsInnerWindow());
+  return mTopInnerWindow ? mTopInnerWindow->mActivePeerConnections
+                         : mActivePeerConnections;
 }
 
 bool
@@ -4522,6 +4535,30 @@ nsPIDOMWindowInner::HasOpenWebSockets() const
 
   return (mTopInnerWindow ? mTopInnerWindow->mNumOfOpenWebSockets
                           : mNumOfOpenWebSockets) > 0;
+}
+
+void
+nsPIDOMWindowInner::UpdateUserMediaCount(int32_t aDelta)
+{
+  MOZ_ASSERT(NS_IsMainThread());
+
+  if (aDelta == 0) {
+    return;
+  }
+
+  uint32_t& counter = mTopInnerWindow ? mTopInnerWindow->mNumOfActiveUserMedia
+                                      : mNumOfActiveUserMedia;
+
+  MOZ_DIAGNOSTIC_ASSERT(aDelta > 0 || ((aDelta + counter) < counter));
+
+  counter += aDelta;
+}
+
+bool
+nsPIDOMWindowInner::HasActiveUserMedia() const
+{
+  return (mTopInnerWindow ? mTopInnerWindow->mNumOfActiveUserMedia
+                          : mNumOfActiveUserMedia) > 0;
 }
 
 void
@@ -12616,31 +12653,6 @@ nsGlobalWindow::SyncStateFromParentWindow()
   for (uint32_t i = 0; i < (parentSuspendDepth - parentFreezeDepth); ++i) {
     Suspend();
   }
-}
-
-void
-nsGlobalWindow::AddPeerConnection()
-{
-  MOZ_ASSERT(NS_IsMainThread());
-  MOZ_ASSERT(IsInnerWindow());
-  mActivePeerConnections++;
-}
-
-void
-nsGlobalWindow::RemovePeerConnection()
-{
-  MOZ_ASSERT(NS_IsMainThread());
-  MOZ_ASSERT(IsInnerWindow());
-  MOZ_ASSERT(mActivePeerConnections);
-  mActivePeerConnections--;
-}
-
-bool
-nsGlobalWindow::HasActivePeerConnections()
-{
-  MOZ_ASSERT(NS_IsMainThread());
-  MOZ_ASSERT(IsInnerWindow());
-  return mActivePeerConnections;
 }
 
 template<typename Method>

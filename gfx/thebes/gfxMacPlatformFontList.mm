@@ -348,6 +348,18 @@ MacOSFontEntry::MacOSFontEntry(const nsAString& aPostscriptName,
     mIsLocalUserFont = aIsLocalUserFont;
 }
 
+gfxFontEntry*
+MacOSFontEntry::Clone() const
+{
+    MOZ_ASSERT(!IsUserFont(), "we can only clone installed fonts!");
+    MacOSFontEntry* fe =
+        new MacOSFontEntry(Name(), mWeight, mStandardFace, mSizeHint);
+    fe->mStyle = mStyle;
+    fe->mStretch = mStretch;
+    fe->mFixedPitch = mFixedPitch;
+    return fe;
+}
+
 CGFontRef
 MacOSFontEntry::GetFontRef()
 {
@@ -1280,7 +1292,7 @@ static const char kSystemFont_system[] = "-apple-system";
 bool
 gfxMacPlatformFontList::FindAndAddFamilies(const nsAString& aFamily,
                                            nsTArray<gfxFontFamily*>* aOutput,
-                                           bool aDeferOtherFamilyNamesLoading,
+                                           FindFamiliesFlags aFlags,
                                            gfxFontStyle* aStyle,
                                            gfxFloat aDevToCssSize)
 {
@@ -1297,7 +1309,7 @@ gfxMacPlatformFontList::FindAndAddFamilies(const nsAString& aFamily,
 
     return gfxPlatformFontList::FindAndAddFamilies(aFamily,
                                                    aOutput,
-                                                   aDeferOtherFamilyNamesLoading,
+                                                   aFlags,
                                                    aStyle,
                                                    aDevToCssSize);
 }
@@ -1514,6 +1526,12 @@ gfxMacPlatformFontList::CreateFontInfoData()
     RefPtr<MacFontInfo> fi =
         new MacFontInfo(true, NeedFullnamePostscriptNames(), loadCmaps);
     return fi.forget();
+}
+
+gfxFontFamily*
+gfxMacPlatformFontList::CreateFontFamily(const nsAString& aName) const
+{
+    return new gfxMacFontFamily(aName, 0.0);
 }
 
 void

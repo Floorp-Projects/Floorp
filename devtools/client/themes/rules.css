@@ -222,7 +222,7 @@
   background-color: var(--theme-toolbar-background);
   border-bottom: 1px solid var(--theme-splitter-color);
   font-size: 12px;
-  padding: 5px;
+  padding: 4px;
   width: 100%;
   align-items: center;
   display: flex;
