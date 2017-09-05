@@ -8,37 +8,40 @@
 
 "use strict";
 
-var Services = require("Services");
-var promise = require("promise");
-var EventEmitter = require("devtools/shared/old-event-emitter");
+const Services = require("Services");
+const promise = require("promise");
+const EventEmitter = require("devtools/shared/old-event-emitter");
 const {executeSoon} = require("devtools/shared/DevToolsUtils");
-var KeyShortcuts = require("devtools/client/shared/key-shortcuts");
-var {Task} = require("devtools/shared/task");
-const {initCssProperties} = require("devtools/shared/fronts/css-properties");
-const nodeConstants = require("devtools/shared/dom-node-constants");
+const {Task} = require("devtools/shared/task");
+
+// constructor
 const Telemetry = require("devtools/client/shared/telemetry");
-
-const Menu = require("devtools/client/framework/menu");
-const MenuItem = require("devtools/client/framework/menu-item");
-
-const {HTMLBreadcrumbs} = require("devtools/client/inspector/breadcrumbs");
-const ExtensionSidebar = require("devtools/client/inspector/extensions/extension-sidebar");
-const GridInspector = require("devtools/client/inspector/grids/grid-inspector");
-const {InspectorSearch} = require("devtools/client/inspector/inspector-search");
 const HighlightersOverlay = require("devtools/client/inspector/shared/highlighters-overlay");
 const ReflowTracker = require("devtools/client/inspector/shared/reflow-tracker");
-const {ToolSidebar} = require("devtools/client/inspector/toolsidebar");
-const MarkupView = require("devtools/client/inspector/markup/markup");
-const {CommandUtils} = require("devtools/client/shared/developer-toolbar");
-const {ViewHelpers} = require("devtools/client/shared/widgets/view-helpers");
-const clipboardHelper = require("devtools/shared/platform/clipboard");
-
 const Store = require("devtools/client/inspector/store");
+
+loader.lazyRequireGetter(this, "initCssProperties", "devtools/shared/fronts/css-properties", true);
+loader.lazyRequireGetter(this, "HTMLBreadcrumbs", "devtools/client/inspector/breadcrumbs", true);
+loader.lazyRequireGetter(this, "KeyShortcuts", "devtools/client/shared/key-shortcuts");
+loader.lazyRequireGetter(this, "GridInspector", "devtools/client/inspector/grids/grid-inspector");
+loader.lazyRequireGetter(this, "InspectorSearch", "devtools/client/inspector/inspector-search", true);
+loader.lazyRequireGetter(this, "ToolSidebar", "devtools/client/inspector/toolsidebar", true);
+loader.lazyRequireGetter(this, "MarkupView", "devtools/client/inspector/markup/markup");
+
+loader.lazyRequireGetter(this, "nodeConstants", "devtools/shared/dom-node-constants");
+loader.lazyRequireGetter(this, "Menu", "devtools/client/framework/menu");
+loader.lazyRequireGetter(this, "MenuItem", "devtools/client/framework/menu-item");
+loader.lazyRequireGetter(this, "ExtensionSidebar", "devtools/client/inspector/extensions/extension-sidebar");
+loader.lazyRequireGetter(this, "CommandUtils", "devtools/client/shared/developer-toolbar", true);
+loader.lazyRequireGetter(this, "ViewHelpers", "devtools/client/shared/widgets/view-helpers", true);
+loader.lazyRequireGetter(this, "clipboardHelper", "devtools/shared/platform/clipboard");
 
 const {LocalizationHelper, localizeMarkup} = require("devtools/shared/l10n");
 const INSPECTOR_L10N =
       new LocalizationHelper("devtools/client/locales/inspector.properties");
-const TOOLBOX_L10N = new LocalizationHelper("devtools/client/locales/toolbox.properties");
+loader.lazyGetter(this, "TOOLBOX_L10N", function () {
+  return new LocalizationHelper("devtools/client/locales/toolbox.properties");
+});
 
 // Sidebar dimensions
 const INITIAL_SIDEBAR_SIZE = 350;
