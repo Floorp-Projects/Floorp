@@ -93,6 +93,10 @@ public:
     return CallbackPreserveColor();
   }
 
+  // Like CallbackOrNull(), but will return a new dead proxy object in the
+  // caller's compartment if the callback is null.
+  JSObject* Callback(JSContext* aCx);
+
   JSObject* GetCreationStack() const
   {
     return mCreationStack;
@@ -594,10 +598,15 @@ public:
     this->get().operator=(arg);
   }
 
-  // Codegen relies on being able to do CallbackOrNull() on us.
+  // Codegen relies on being able to do CallbackOrNull() and Callback() on us.
   JS::Handle<JSObject*> CallbackOrNull() const
   {
     return this->get()->CallbackOrNull();
+  }
+
+  JSObject* Callback(JSContext* aCx) const
+  {
+    return this->get()->Callback(aCx);
   }
 
   ~RootedCallback()
