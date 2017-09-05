@@ -47,10 +47,6 @@
     <dimen name="tablet_fwd_button_padding_start">4dp</dimen>
     <dimen name="tablet_fwd_button_padding_end">4dp</dimen>
 
-    <!-- This is the system default for the vertical padding for the divider of the TabWidget.
-         Used to mimic the divider padding on the tablet tabs panel back button. -->
-    <dimen name="tab_panel_divider_vertical_padding">12dp</dimen>
-
     <dimen name="tablet_tab_strip_height">48dp</dimen>
     <dimen name="tablet_tab_strip_item_width">178dp</dimen>
     <dimen name="tablet_tab_strip_item_height">40dp</dimen>
