@@ -283,9 +283,6 @@ ChannelMediaDecoder::Load(BaseMediaResource* aOriginal)
     return rv;
   }
 
-  rv = OpenResource(nullptr);
-  NS_ENSURE_SUCCESS(rv, rv);
-
   SetStateMachine(CreateStateMachine());
   NS_ENSURE_TRUE(GetStateMachine(), NS_ERROR_FAILURE);
 
