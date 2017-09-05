@@ -130,13 +130,16 @@ public:
 
   void WalkAllRules(nsIStyleRuleProcessor::EnumFunc aFunc,
                     ElementDependentRuleProcessorData* aData);
-  /**
-   * Do any processing that needs to happen as a result of a change in
-   * the characteristics of the medium, and return whether this rule
-   * processor's rules have changed (e.g., because of media queries).
-   */
-  nsresult MediumFeaturesChanged(nsPresContext* aPresContext,
-                                 bool* aRulesChanged);
+
+  // Do any processing that needs to happen as a result of a change in the
+  // characteristics of the medium, and return whether this rule processor's
+  // rules or the servo style set have changed (e.g., because of media
+  // queries).
+  bool MediumFeaturesChanged(nsPresContext* aPresContext);
+
+  // Update the content bindings in mBoundContentSet due to medium features
+  // changed.
+  void UpdateBoundContentBindingsForServo(nsPresContext* aPresContext);
 
   void AppendAllSheets(nsTArray<mozilla::StyleSheet*>& aArray);
 
@@ -192,6 +195,12 @@ protected:
 
   // Call PostProcessAttachedQueueEvent() on a timer.
   static void PostPAQEventCallback(nsITimer* aTimer, void* aClosure);
+
+  // Enumerate each bound content's bindings (including its base bindings)
+  // in mBoundContentSet.
+  using BoundContentBindingCallback = std::function<void (nsXBLBinding*)>;
+  void EnumerateBoundContentBindings(
+    const BoundContentBindingCallback& aCallback) const;
 
 // MEMBER VARIABLES
 protected:

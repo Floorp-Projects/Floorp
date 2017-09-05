@@ -804,9 +804,15 @@ DefineTransaction.defineArrayInputProp = function(name, basePropertyName) {
       if (!Array.isArray(aValue))
         throw new Error(`${name} input property value must be an array`);
 
-      // This also takes care of abandoning the global scope of the input
-      // array (through Array.prototype).
-      return aValue.map(baseProp.validateValue);
+      // We must create a new array in the local scope to avoid a memory leak due
+      // to the array global object. We can't use Cu.cloneInto as that doesn't
+      // handle the URIs. Slice & map also aren't good enough, so we start off
+      // with a clean array and insert what we need into it.
+      let newArray = [];
+      for (let item of aValue) {
+        newArray.push(baseProp.validateValue(item));
+      }
+      return newArray;
     },
 
     // We allow setting either the array property itself (e.g. urls), or a

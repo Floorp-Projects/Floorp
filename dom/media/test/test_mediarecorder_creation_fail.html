@@ -26,7 +26,7 @@ function startTest() {
       'Events fired from onerror should include an error with a stack trace indicating ' +
       'an error in this test');
     is(mediaRecorder.mimeType, '', 'mimetype should be empty');
-    is(mediaRecorder.state, 'recording', 'state is recording');
+    is(mediaRecorder.state, 'inactive', 'state is inactive');
     info('onerror callback fired');
     callbackStep = 1;
   };

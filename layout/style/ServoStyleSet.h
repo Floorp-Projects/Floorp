@@ -46,17 +46,21 @@ struct TreeMatchContext;
 
 namespace mozilla {
 
-/**
- * A few flags used to track which kind of stylist state we may need to
- * update.
- */
+// A few flags used to track which kind of stylist state we may need to
+// update.
 enum class StylistState : uint8_t {
-  /** The stylist is not dirty, we should do nothing */
+  // The stylist is not dirty, we should do nothing.
   NotDirty = 0,
 
-  /** The style sheets have changed, so we need to update the style data. */
-  StyleSheetsDirty,
+  // The style sheets have changed, so we need to update the style data.
+  StyleSheetsDirty = 1 << 0,
+
+  // Some of the style sheets of the bound elements in binding manager have
+  // changed, so we need to tell the binding manager to update style data.
+  XBLStyleSheetsDirty = 1 << 1,
 };
+
+MOZ_MAKE_ENUM_CLASS_BITWISE_OPERATORS(StylistState)
 
 // Bitfield type to represent Servo stylesheet origins.
 enum class OriginFlags : uint8_t {
@@ -114,6 +118,10 @@ public:
   explicit ServoStyleSet(Kind aKind);
   ~ServoStyleSet();
 
+  static UniquePtr<ServoStyleSet>
+  CreateXBLServoStyleSet(nsPresContext* aPresContext,
+                         const nsTArray<RefPtr<ServoStyleSheet>>& aNewSheets);
+
   void Init(nsPresContext* aPresContext, nsBindingManager* aBindingManager);
   void BeginShutdown();
   void Shutdown();
@@ -132,6 +140,9 @@ public:
   }
 
   nsRestyleHint MediumFeaturesChanged(bool aViewportChanged);
+
+  // aViewportChanged outputs whether any viewport units is used.
+  bool MediumFeaturesChangedRules(bool* aViewportUnitsUsed);
 
   void InvalidateStyleForCSSRuleChanges();
 
@@ -230,11 +241,6 @@ public:
   nsresult InsertStyleSheetBefore(SheetType aType,
                                   ServoStyleSheet* aNewSheet,
                                   ServoStyleSheet* aReferenceSheet);
-
-  // Notify servo that the underlying raw sheet has changed, through cloning.
-  // This should only be called on a just-cloned sheet, because it does not
-  // mark the stylesheets as dirty either here or in servo.
-  void UpdateStyleSheet(ServoStyleSheet* aSheet);
 
   int32_t SheetCount(SheetType aType) const;
   ServoStyleSheet* StyleSheetAt(SheetType aType, int32_t aIndex) const;
@@ -428,10 +434,14 @@ public:
   // Returns the style rule map.
   ServoStyleRuleMap* StyleRuleMap();
 
-  // Clear mPresContext. This is needed after XBL ServoStyleSet is created.
-  void ClearPresContext() {
-    mPresContext = nullptr;
+  // Return whether this is the last PresContext which uses this XBL styleset.
+  bool IsPresContextChanged(nsPresContext* aPresContext) const {
+    return aPresContext != mLastPresContextUsesXBLStyleSet;
   }
+
+  // Set PresContext (i.e. Device) for mRawSet. This should be called only
+  // by XBL stylesets. Returns true if there is any rule changing.
+  bool SetPresContext(nsPresContext* aPresContext);
 
   /**
    * Returns true if a modification to an an attribute with the specified
@@ -525,7 +535,12 @@ private:
    */
   void SetStylistStyleSheetsDirty()
   {
-    mStylistState = StylistState::StyleSheetsDirty;
+    mStylistState |= StylistState::StyleSheetsDirty;
+  }
+
+  void SetStylistXBLStyleSheetsDirty()
+  {
+    mStylistState |= StylistState::XBLStyleSheetsDirty;
   }
 
   bool StylistNeedsUpdate() const
@@ -565,7 +580,15 @@ private:
                          ServoStyleSheet* aSheet);
 
   const Kind mKind;
-  nsPresContext* mPresContext;
+
+  // Nullptr if this is an XBL style set.
+  nsPresContext* MOZ_NON_OWNING_REF mPresContext = nullptr;
+
+  // Because XBL style set could be used by multiple PresContext, we need to
+  // store the last PresContext pointer which uses this XBL styleset for
+  // computing medium rule changes.
+  void* MOZ_NON_OWNING_REF mLastPresContextUsesXBLStyleSet = nullptr;
+
   UniquePtr<RawServoStyleSet> mRawSet;
   EnumeratedArray<SheetType, SheetType::Count,
                   nsTArray<RefPtr<ServoStyleSheet>>> mSheets;

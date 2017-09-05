@@ -30,6 +30,16 @@ SimpleTest.waitForExplicitFinish();
 function verifyStyle(aNode, aPropertyName, aExpectedVal)
 {
   var computedVal = SMILUtil.getComputedStyleSimple(aNode, aPropertyName);
+
+  // Bug 1379908: The computed value of stroke-* properties should be
+  // serialized with px units, but currently Gecko and Servo don't do that
+  // when animating these values.
+  if ('stroke-width' == aPropertyName) {
+    var expectedVal = SMILUtil.stripPx(aExpectedVal);
+    var unitlessComputedVal = SMILUtil.stripPx(computedVal);
+    is(unitlessComputedVal, expectedVal, "computed value of " + aPropertyName);
+    return;
+  }
   is(computedVal, aExpectedVal, "computed value of " + aPropertyName);
 }
 
@@ -58,16 +68,16 @@ function main()
     verifyStyle(rect, "stroke-width", "5px");
     svg.setCurrentTime(1);
     verifyStyle(text, "font-size",    "20px");
-    verifyStyle(rect, "stroke-width", "20");
+    verifyStyle(rect, "stroke-width", "20px");
     svg.setCurrentTime(1.5);
     verifyStyle(text, "font-size",    "30px");
-    verifyStyle(rect, "stroke-width", "30");
+    verifyStyle(rect, "stroke-width", "30px");
     svg.setCurrentTime(2);
     verifyStyle(text, "font-size",    "40px");
-    verifyStyle(rect, "stroke-width", "40");
+    verifyStyle(rect, "stroke-width", "40px");
     svg.setCurrentTime(3);
     verifyStyle(text, "font-size",    "40px");
-    verifyStyle(rect, "stroke-width", "40");
+    verifyStyle(rect, "stroke-width", "40px");
   } catch (e) {
     // If anything goes wrong, make sure we restore textZoom before bubbling
     // the exception upwards, so that we don't mess up subsequent tests.

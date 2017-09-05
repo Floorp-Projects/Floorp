@@ -207,7 +207,7 @@ package-langpack-%: AB_CD=$*
 package-langpack-%:
 	$(NSINSTALL) -D $(DIST)/$(PKG_LANGPACK_PATH)
 ifdef WEBEXT_LANGPACKS
-	$(call py_action,langpack_manifest,--locales $(AB_CD) --appver $(MOZ_APP_VERSION) --defines $(NEW_APP_DEFINES) --input $(DIST)/xpi-stage/locale-$(AB_CD))
+	$(call py_action,langpack_manifest,--locales $(AB_CD) --min-app-ver $(MOZ_APP_VERSION) --max-app-ver $(MOZ_APP_MAXVERSION) --defines $(NEW_APP_DEFINES) --input $(DIST)/xpi-stage/locale-$(AB_CD))
 	$(call py_action,zip,-C $(DIST)/xpi-stage/locale-$(AB_CD) -x **/*.manifest -x **/*.js -x **/*.ini $(LANGPACK_FILE) $(PKG_ZIP_DIRS) manifest.json)
 else
 	$(call py_action,preprocessor,$(DEFINES) $(ACDEFINES) \
