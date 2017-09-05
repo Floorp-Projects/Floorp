@@ -14,9 +14,8 @@ XPCOMUtils.defineLazyModuleGetter(this, "EventDispatcher",
 XPCOMUtils.defineLazyGetter(this, "WindowEventDispatcher",
   () => EventDispatcher.for(window));
 
-XPCOMUtils.defineLazyGetter(this, "dump", () =>
-    Cu.import("resource://gre/modules/AndroidLog.jsm",
-              {}).AndroidLog.d.bind(null, "View"));
+var dump = Cu.import("resource://gre/modules/AndroidLog.jsm", {})
+           .AndroidLog.d.bind(null, "View");
 
 // Creates and manages GeckoView modules.
 // A module must extend GeckoViewModule.

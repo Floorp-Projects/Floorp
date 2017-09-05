@@ -15,9 +15,8 @@ Cu.import("resource://gre/modules/XPCOMUtils.jsm");
 XPCOMUtils.defineLazyModuleGetter(this, "EventDispatcher",
   "resource://gre/modules/Messaging.jsm");
 
-XPCOMUtils.defineLazyGetter(this, "dump", () =>
-    Cu.import("resource://gre/modules/AndroidLog.jsm",
-              {}).AndroidLog.d.bind(null, "ViewProgress"));
+var dump = Cu.import("resource://gre/modules/AndroidLog.jsm", {})
+           .AndroidLog.d.bind(null, "ViewProgress");
 
 function debug(aMsg) {
   // dump(aMsg);
