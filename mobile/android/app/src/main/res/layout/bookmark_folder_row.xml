@@ -8,8 +8,4 @@
                                            android:layout_width="match_parent"
                                            android:layout_height="wrap_content"
                                            android:minHeight="@dimen/page_row_height"
-                                           android:paddingLeft="16dp"
-                                           android:paddingStart="16dp"
-                                           android:paddingRight="16dp"
-                                           android:paddingEnd="16dp"
                                            android:gravity="center_vertical" />
