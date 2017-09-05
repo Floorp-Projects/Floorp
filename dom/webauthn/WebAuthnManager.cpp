@@ -12,14 +12,15 @@
 #include "mozilla/ClearOnShutdown.h"
 #include "mozilla/dom/AuthenticatorAttestationResponse.h"
 #include "mozilla/dom/Promise.h"
+#include "mozilla/dom/PWebAuthnTransaction.h"
+#include "mozilla/dom/U2FUtil.h"
 #include "mozilla/dom/WebAuthnCBORUtil.h"
 #include "mozilla/dom/WebAuthnManager.h"
-#include "mozilla/dom/WebAuthnUtil.h"
-#include "mozilla/dom/PWebAuthnTransaction.h"
 #include "mozilla/dom/WebAuthnTransactionChild.h"
+#include "mozilla/dom/WebAuthnUtil.h"
 #include "mozilla/dom/WebCryptoCommon.h"
-#include "mozilla/ipc/PBackgroundChild.h"
 #include "mozilla/ipc/BackgroundChild.h"
+#include "mozilla/ipc/PBackgroundChild.h"
 
 using namespace mozilla::ipc;
 
@@ -73,35 +74,6 @@ GetAlgorithmName(const OOS& aAlgorithm,
   }
 
   return NS_OK;
-}
-
-static nsresult
-HashCString(nsICryptoHash* aHashService, const nsACString& aIn,
-            /* out */ CryptoBuffer& aOut)
-{
-  MOZ_ASSERT(aHashService);
-
-  nsresult rv = aHashService->Init(nsICryptoHash::SHA256);
-  if (NS_WARN_IF(NS_FAILED(rv))) {
-    return rv;
-  }
-
-  rv = aHashService->Update(
-    reinterpret_cast<const uint8_t*>(aIn.BeginReading()),aIn.Length());
-  if (NS_WARN_IF(NS_FAILED(rv))) {
-    return rv;
-  }
-
-  nsAutoCString fullHash;
-  // Passing false below means we will get a binary result rather than a
-  // base64-encoded string.
-  rv = aHashService->Finish(false, fullHash);
-  if (NS_WARN_IF(NS_FAILED(rv))) {
-    return rv;
-  }
-
-  aOut.Assign(fullHash);
-  return rv;
 }
 
 static nsresult
