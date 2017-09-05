@@ -276,10 +276,19 @@ public:
     return surface.forget();
   }
 
-  already_AddRefed<CachedSurface> Lookup(const SurfaceKey& aSurfaceKey)
+  already_AddRefed<CachedSurface> Lookup(const SurfaceKey& aSurfaceKey,
+                                         bool aForAccess)
   {
     RefPtr<CachedSurface> surface;
     mSurfaces.Get(aSurfaceKey, getter_AddRefs(surface));
+
+    // If no exact match is found, and this is for use rather than internal
+    // accounting (i.e. insert and removal), we know this will trigger a
+    // decode. Make sure we switch now to factor of 2 mode if necessary.
+    if (!surface && aForAccess && !mFactor2Mode) {
+      MaybeSetFactor2Mode();
+    }
+
     return surface.forget();
   }
 
@@ -759,7 +768,7 @@ public:
       return LookupResult(MatchType::NOT_FOUND);
     }
 
-    RefPtr<CachedSurface> surface = cache->Lookup(aSurfaceKey);
+    RefPtr<CachedSurface> surface = cache->Lookup(aSurfaceKey, aMarkUsed);
     if (!surface) {
       // Lookup in the per-image cache missed.
       return LookupResult(MatchType::NOT_FOUND);
@@ -1099,7 +1108,8 @@ private:
       return;  // No cached surfaces for this image.
     }
 
-    RefPtr<CachedSurface> surface = cache->Lookup(aSurfaceKey);
+    RefPtr<CachedSurface> surface =
+      cache->Lookup(aSurfaceKey, /* aForAccess = */ false);
     if (!surface) {
       return;  // Lookup in the per-image cache missed.
     }
