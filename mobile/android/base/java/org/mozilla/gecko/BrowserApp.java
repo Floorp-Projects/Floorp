@@ -3720,7 +3720,7 @@ public class BrowserApp extends GeckoApp
     private int resolveMenuIconTint(final boolean isPrivate) {
         final int tintResId;
 
-        if (isPrivate && HardwareUtils.isTablet()) {
+        if (isPrivate && HardwareUtils.isLargeTablet()) {
             tintResId = R.color.menu_item_tint_private;
         } else {
             tintResId = R.color.menu_item_tint;
