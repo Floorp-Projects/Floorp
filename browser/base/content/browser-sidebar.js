@@ -15,8 +15,8 @@
  *  - sidebartitle or label (in that order) specify the title to
  *                 display on the sidebar.
  *  - checked      indicates whether the sidebar is currently displayed.
- *                 Note that toggleSidebar updates this attribute when
- *                 it changes the sidebar's visibility.
+ *                 Note that this attribute is updated when
+ *                 the sidebar's visibility is changed.
  *  - group        this attribute must be set to "sidebar".
  */
 var SidebarUI = {
@@ -256,9 +256,6 @@ var SidebarUI = {
   _fireFocusedEvent() {
     let event = new CustomEvent("SidebarFocused", {bubbles: true});
     this.browser.contentWindow.dispatchEvent(event);
-
-    // Run the original function for backwards compatibility.
-    fireSidebarFocusedEvent();
   },
 
   /**
@@ -393,9 +390,6 @@ var SidebarUI = {
           // SidebarFocused event.
           setTimeout(() => this._fireFocusedEvent(), 0);
 
-          // Run the original function for backwards compatibility.
-          sidebarOnLoad(event);
-
           resolve();
 
           // Now that the currentId is updated, fire a show event.
@@ -469,37 +463,3 @@ XPCOMUtils.defineLazyPreferenceGetter(SidebarUI, "_positionStart",
 XPCOMUtils.defineLazyGetter(SidebarUI, "isRTL", () => {
   return getComputedStyle(document.documentElement).direction == "rtl";
 });
-
-/**
- * This exists for backwards compatibility - it will be called once a sidebar is
- * ready, following any request to show it.
- *
- * @deprecated
- */
-function fireSidebarFocusedEvent() {}
-
-/**
- * This exists for backwards compatibility - it gets called when a sidebar has
- * been loaded.
- *
- * @deprecated
- */
-function sidebarOnLoad(event) {}
-
-/**
- * This exists for backwards compatibility, and is equivilent to
- * SidebarUI.toggle() without the forceOpen param. With forceOpen set to true,
- * it is equivalent to SidebarUI.show().
- *
- * @deprecated
- */
-function toggleSidebar(commandID, forceOpen = false) {
-  Deprecated.warning("toggleSidebar() is deprecated, please use SidebarUI.toggle() or SidebarUI.show() instead",
-                     "https://developer.mozilla.org/en-US/Add-ons/Code_snippets/Sidebar");
-
-  if (forceOpen) {
-    SidebarUI.show(commandID);
-  } else {
-    SidebarUI.toggle(commandID);
-  }
-}

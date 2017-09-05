@@ -8,7 +8,41 @@
 XPCOMUtils.defineLazyModuleGetter(this, "PlacesUtils",
                                   "resource://gre/modules/PlacesUtils.jsm");
 
+const {
+  TYPE_BOOKMARK,
+  TYPE_FOLDER,
+  TYPE_SEPARATOR,
+} = PlacesUtils.bookmarks;
+
+const BOOKMARKS_TYPES_TO_API_TYPES_MAP = new Map([
+  [TYPE_BOOKMARK, "bookmark"],
+  [TYPE_FOLDER, "folder"],
+  [TYPE_SEPARATOR, "separator"],
+]);
+
+const BOOKMARK_SEPERATOR_URL = "data:";
+
+XPCOMUtils.defineLazyGetter(this, "API_TYPES_TO_BOOKMARKS_TYPES_MAP", () => {
+  let theMap = new Map();
+
+  for (let [code, name] of BOOKMARKS_TYPES_TO_API_TYPES_MAP) {
+    theMap.set(name, code);
+  }
+  return theMap;
+});
+
 let listenerCount = 0;
+
+function getUrl(type, url) {
+  switch (type) {
+    case TYPE_BOOKMARK:
+      return url;
+    case TYPE_SEPARATOR:
+      return BOOKMARK_SEPERATOR_URL;
+    default:
+      return undefined;
+  }
+}
 
 const getTree = (rootGuid, onlyChildren) => {
   function convert(node, parent) {
@@ -17,16 +51,15 @@ const getTree = (rootGuid, onlyChildren) => {
       title: node.title || "",
       index: node.index,
       dateAdded: node.dateAdded / 1000,
+      type: BOOKMARKS_TYPES_TO_API_TYPES_MAP.get(node.typeCode),
+      url: getUrl(node.typeCode, node.uri),
     };
 
     if (parent && node.guid != PlacesUtils.bookmarks.rootGuid) {
       treenode.parentId = parent.guid;
     }
 
-    if (node.type == PlacesUtils.TYPE_X_MOZ_PLACE) {
-      // This isn't quite correct. Recently Bookmarked ends up here ...
-      treenode.url = node.uri;
-    } else {
+    if (node.typeCode == TYPE_FOLDER) {
       treenode.dateGroupModified = node.lastModified / 1000;
 
       if (!onlyChildren) {
@@ -41,9 +74,6 @@ const getTree = (rootGuid, onlyChildren) => {
 
   return PlacesUtils.promiseBookmarksTree(rootGuid, {
     excludeItemsCallback: item => {
-      if (item.type == PlacesUtils.TYPE_X_MOZ_PLACE_SEPARATOR) {
-        return true;
-      }
       return item.annos &&
              item.annos.find(a => a.name == PlacesUtils.EXCLUDE_FROM_BACKUP_ANNO);
     },
@@ -65,15 +95,15 @@ const convertBookmarks = result => {
     title: result.title || "",
     index: result.index,
     dateAdded: result.dateAdded.getTime(),
+    type: BOOKMARKS_TYPES_TO_API_TYPES_MAP.get(result.type),
+    url: getUrl(result.type, result.url && result.url.href),
   };
 
   if (result.guid != PlacesUtils.bookmarks.rootGuid) {
     node.parentId = result.parentGuid;
   }
 
-  if (result.type == PlacesUtils.bookmarks.TYPE_BOOKMARK) {
-    node.url = result.url.href; // Output is always URL object.
-  } else {
+  if (result.type == TYPE_FOLDER) {
     node.dateGroupModified = result.lastModified.getTime();
   }
 
@@ -92,21 +122,17 @@ let observer = new class extends EventEmitter {
   onEndUpdateBatch() {}
 
   onItemAdded(id, parentId, index, itemType, uri, title, dateAdded, guid, parentGuid, source) {
-    if (itemType == PlacesUtils.bookmarks.TYPE_SEPARATOR) {
-      return;
-    }
-
     let bookmark = {
       id: guid,
       parentId: parentGuid,
       index,
       title,
       dateAdded: dateAdded / 1000,
+      type: BOOKMARKS_TYPES_TO_API_TYPES_MAP.get(itemType),
+      url: getUrl(itemType, uri && uri.spec),
     };
 
-    if (itemType == PlacesUtils.bookmarks.TYPE_BOOKMARK) {
-      bookmark.url = uri.spec;
-    } else {
+    if (itemType == TYPE_FOLDER) {
       bookmark.dateGroupModified = bookmark.dateAdded;
     }
 
@@ -116,10 +142,6 @@ let observer = new class extends EventEmitter {
   onItemVisited() {}
 
   onItemMoved(id, oldParentId, oldIndex, newParentId, newIndex, itemType, guid, oldParentGuid, newParentGuid, source) {
-    if (itemType == PlacesUtils.bookmarks.TYPE_SEPARATOR) {
-      return;
-    }
-
     let info = {
       parentId: newParentGuid,
       index: newIndex,
@@ -130,28 +152,18 @@ let observer = new class extends EventEmitter {
   }
 
   onItemRemoved(id, parentId, index, itemType, uri, guid, parentGuid, source) {
-    if (itemType == PlacesUtils.bookmarks.TYPE_SEPARATOR) {
-      return;
-    }
-
     let node = {
       id: guid,
       parentId: parentGuid,
       index,
+      type: BOOKMARKS_TYPES_TO_API_TYPES_MAP.get(itemType),
+      url: getUrl(itemType, uri && uri.spec),
     };
-
-    if (itemType == PlacesUtils.bookmarks.TYPE_BOOKMARK) {
-      node.url = uri.spec;
-    }
 
     this.emit("removed", {guid, info: {parentId: parentGuid, index, node}});
   }
 
   onItemChanged(id, prop, isAnno, val, lastMod, itemType, parentId, guid, parentGuid, oldVal, source) {
-    if (itemType == PlacesUtils.bookmarks.TYPE_SEPARATOR) {
-      return;
-    }
-
     let info = {};
     if (prop == "title") {
       info.title = val;
@@ -228,12 +240,18 @@ this.bookmarks = class extends ExtensionAPI {
             title: bookmark.title || "",
           };
 
-          // If url is NULL or missing, it will be a folder.
-          if (bookmark.url !== null) {
-            info.type = PlacesUtils.bookmarks.TYPE_BOOKMARK;
+          info.type = API_TYPES_TO_BOOKMARKS_TYPES_MAP.get(bookmark.type);
+          if (!info.type) {
+            // If url is NULL or missing, it will be a folder.
+            if (bookmark.url !== null) {
+              info.type = TYPE_BOOKMARK;
+            } else {
+              info.type = TYPE_FOLDER;
+            }
+          }
+
+          if (info.type === TYPE_BOOKMARK) {
             info.url = bookmark.url || "";
-          } else {
-            info.type = PlacesUtils.bookmarks.TYPE_FOLDER;
           }
 
           if (bookmark.index !== null) {

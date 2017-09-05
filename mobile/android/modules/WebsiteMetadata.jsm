@@ -391,7 +391,7 @@ function resultsOf(rule, node, flavor, kb) {
 
 // Pull the DOM tree off the special property of the root "dom" fact, and query
 // against it.
-function *resultsOfDomRule(rule, specialDomNode, kb) {
+function* resultsOfDomRule(rule, specialDomNode, kb) {
     // Use the special "tree" property of the special starting node:
     const matches = specialDomNode.tree.querySelectorAll(rule.source.selector);
 
@@ -411,7 +411,7 @@ function *resultsOfDomRule(rule, specialDomNode, kb) {
 }
 
 
-function *resultsOfFlavorRule(rule, node, flavor) {
+function* resultsOfFlavorRule(rule, node, flavor) {
     const newFacts = explicitFacts(rule.ranker(node));
 
     for (let fact of newFacts) {
@@ -433,7 +433,7 @@ function *resultsOfFlavorRule(rule, node, flavor) {
 //
 // Rankers can return undefined, which means "no facts", a single fact, or an
 // array of facts.
-function *explicitFacts(rankerResult) {
+function* explicitFacts(rankerResult) {
     const array = (rankerResult === undefined) ? [] : (Array.isArray(rankerResult) ? rankerResult : [rankerResult]);
     for (let fact of array) {
         if (fact.score === undefined) {

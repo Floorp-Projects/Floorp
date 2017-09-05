@@ -61,6 +61,8 @@ SERVO_BINDING_FUNC(Servo_StyleSheet_Clone, RawServoStyleSheetContentsStrong,
 SERVO_BINDING_FUNC(Servo_StyleSheet_SizeOfIncludingThis, size_t,
                    mozilla::MallocSizeOf malloc_size_of,
                    RawServoStyleSheetContentsBorrowed sheet)
+SERVO_BINDING_FUNC(Servo_StyleSheet_GetSourceMapURL, void,
+                   RawServoStyleSheetContentsBorrowed sheet, nsAString* result)
 // We'd like to return `OriginFlags` here, but bindgen bitfield enums don't
 // work as return values with the Linux 32-bit ABI at the moment because
 // they wrap the value in a struct.
@@ -224,8 +226,9 @@ SERVO_BINDING_FUNC(Servo_KeyframesRule_SetName, void,
                    RawServoKeyframesRuleBorrowed rule, nsIAtom* name)
 SERVO_BINDING_FUNC(Servo_KeyframesRule_GetCount, uint32_t,
                    RawServoKeyframesRuleBorrowed rule)
-SERVO_BINDING_FUNC(Servo_KeyframesRule_GetKeyframe, RawServoKeyframeStrong,
-                   RawServoKeyframesRuleBorrowed rule, uint32_t index)
+SERVO_BINDING_FUNC(Servo_KeyframesRule_GetKeyframeAt, RawServoKeyframeStrong,
+                   RawServoKeyframesRuleBorrowed rule, uint32_t index,
+                   uint32_t* line, uint32_t* column)
 // Returns the index of the rule, max value of uint32_t if nothing found.
 SERVO_BINDING_FUNC(Servo_KeyframesRule_FindRule, uint32_t,
                    RawServoKeyframesRuleBorrowed rule, const nsACString* key)

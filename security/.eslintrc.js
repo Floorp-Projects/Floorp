@@ -17,9 +17,6 @@ module.exports = {
     // Require default case in switch statements.
     "default-case": "error",
 
-    // Require function* name()
-    "generator-star-spacing": ["error", {"before": false, "after": true}],
-
     // Always require parenthesis for new calls
     "new-parens": "error",
 

@@ -95,10 +95,10 @@ BlankAudioDataCreator::Create(MediaRawData* aSample)
   // rounding errors, so we get a consistent tone.
   CheckedInt64 frames = UsecsToFrames(
     aSample->mDuration.ToMicroseconds()+1, mSampleRate);
-  if (!frames.isValid()
-      || !mChannelCount
-      || !mSampleRate
-      || frames.value() > (UINT32_MAX / mChannelCount)) {
+  if (!frames.isValid() ||
+      !mChannelCount ||
+      !mSampleRate ||
+      frames.value() > (UINT32_MAX / mChannelCount)) {
     return nullptr;
   }
   AlignedAudioBuffer samples(frames.value() * mChannelCount);

@@ -55,21 +55,16 @@ NS_IMPL_CYCLE_COLLECTION_TRAVERSE_BEGIN_INHERITED(HTMLEmbedElement,
 nsObjectLoadingContent::Traverse(tmp, cb);
 NS_IMPL_CYCLE_COLLECTION_TRAVERSE_END
 
-NS_IMPL_ADDREF_INHERITED(HTMLEmbedElement, Element)
-NS_IMPL_RELEASE_INHERITED(HTMLEmbedElement, Element)
-
-NS_INTERFACE_TABLE_HEAD_CYCLE_COLLECTION_INHERITED(HTMLEmbedElement)
-NS_INTERFACE_TABLE_INHERITED(HTMLEmbedElement,
-                             nsIRequestObserver,
-                             nsIStreamListener,
-                             nsIFrameLoaderOwner,
-                             nsIObjectLoadingContent,
-                             imgINotificationObserver,
-                             nsIImageLoadingContent,
-                             imgIOnloadBlocker,
-                             nsIChannelEventSink)
-NS_INTERFACE_TABLE_TO_MAP_SEGUE
-NS_INTERFACE_MAP_END_INHERITING(nsGenericHTMLElement)
+NS_IMPL_ISUPPORTS_CYCLE_COLLECTION_INHERITED(HTMLEmbedElement,
+                                             nsGenericHTMLElement,
+                                             nsIRequestObserver,
+                                             nsIStreamListener,
+                                             nsIFrameLoaderOwner,
+                                             nsIObjectLoadingContent,
+                                             imgINotificationObserver,
+                                             nsIImageLoadingContent,
+                                             imgIOnloadBlocker,
+                                             nsIChannelEventSink)
 
 NS_IMPL_ELEMENT_CLONE(HTMLEmbedElement)
 

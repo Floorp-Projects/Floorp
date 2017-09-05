@@ -2967,7 +2967,7 @@ this.CustomizableUI = {
    *     for (let window of CustomizableUI.windows) { ... }
    */
   windows: {
-    *[Symbol.iterator]() {
+    * [Symbol.iterator]() {
       for (let [window, ] of gBuildWindows)
         yield window;
     }
