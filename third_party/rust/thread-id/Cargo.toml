@@ -1,8 +1,8 @@
 [package]
 name = "thread-id"
-version = "3.0.0"
+version = "3.1.0"
 authors = ["Ruud van Asseldonk <dev@veniogames.com>"]
-license = "Apache-2.0"
+license = "MIT/Apache-2.0"
 readme = "readme.md"
 keywords = ["thread", "pthread", "getcurrentthreadid"]
 description = "Get a unique thread ID"

@@ -1,7 +1,7 @@
 [package]
 
 name = "libz-sys"
-version = "1.0.12"
+version = "1.0.16"
 authors = ["Alex Crichton <alex@alexcrichton.com>"]
 links = "z"
 build = "build.rs"
@@ -13,9 +13,15 @@ Bindings to the system libz library (also known as zlib).
 """
 categories = ["external-ffi-bindings"]
 
+[workspace]
+members = ["systest"]
+
 [dependencies]
 libc = "0.2"
 
 [build-dependencies]
 pkg-config = "0.3"
 gcc = "0.3.17"
+
+[target.'cfg(target_env = "msvc")'.build-dependencies]
+vcpkg = "0.2"
