@@ -1,0 +1,156 @@
+<!DOCTYPE HTML>
+<html>
+<!--
+https://bugzilla.mozilla.org/show_bug.cgi?id=1369072
+-->
+<head>
+  <title>Test for Bug 1369072</title>
+  <script type="application/javascript" src="/tests/SimpleTest/SimpleTest.js"></script>
+  <script type="application/javascript" src="/tests/SimpleTest/EventUtils.js"></script>
+  <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css"/>
+</head>
+<body>
+<a target="_blank" href="https://bugzilla.mozilla.org/show_bug.cgi?id=1369072">Mozilla Bug 1369072</a>
+<div id="display">
+<iframe id="iframe" srcdoc="<a id='anchor' href='about:home'>anchor text</a><div id='div'></div>" style="width: 300px; height: 300px;"></iframe>
+<!-- make <body> contents overflow -->
+<div style="width: 1000px; height: 1000px;"></div>
+</div>
+<div id="content" style="display: none">
+</div>
+<pre id="test">
+<script type="application/javascript">
+
+SimpleTest.waitForExplicitFinish();
+SimpleTest.waitForFocus(runTests, window);
+
+function ok()
+{
+  window.opener.ok.apply(window.opener, arguments);
+}
+
+function is()
+{
+  window.opener.is.apply(window.opener, arguments);
+}
+
+async function runTests()
+{
+  var iframe = document.getElementById("iframe");
+  var anchor = iframe.contentDocument.getElementById("anchor");
+  var div = iframe.contentDocument.getElementById("div");
+
+  function resetScroll()
+  {
+    return new Promise(resolve => {
+      var scrollParent = document.documentElement.scrollTop || document.documentElement.scrollLeft;
+      var scrollChild = iframe.contentDocument.documentElement.scrollTop || iframe.contentDocument.documentElement.scrollLeft;
+      if (scrollParent) {
+        window.addEventListener("scroll", () => {
+          scrollParent = false;
+          if (!scrollChild) {
+            SimpleTest.executeSoon(resolve);
+          }
+        }, { once: true });
+      }
+      if (scrollChild) {
+        iframe.contentWindow.addEventListener("scroll", () => {
+          scrollChild = false;
+          if (!scrollParent) {
+            SimpleTest.executeSoon(resolve);
+          }
+        }, { once: true });
+      }
+      document.documentElement.scrollTop = 0;
+      document.documentElement.scrollLeft = 0;
+      iframe.contentDocument.documentElement.scrollTop = 0;
+      iframe.contentDocument.documentElement.scrollLeft = 0;
+      if (!scrollParent && !scrollChild) {
+        SimpleTest.executeSoon(resolve);
+      }
+    });
+  }
+
+  async function tryToScrollWithKey(aVertical)
+  {
+    await resetScroll();
+
+    return new Promise(resolve => {
+      // Wait scroll event
+      function onScroll() {
+        SimpleTest.executeSoon(resolve);
+      }
+      window.addEventListener("scroll", onScroll, { once: true });
+      iframe.contentWindow.addEventListener("scroll", onScroll, { once: true });
+
+      if (aVertical) {
+        synthesizeKey("KEY_ArrowDown", { code: "ArrowDown" });
+      } else {
+        synthesizeKey("KEY_ArrowRight", { code: "ArrowRight" });
+      }
+    });
+  }
+
+  // When iframe element has focus and the iframe document isn't scrollable, the parent document should be scrolled instead.
+  document.body.focus();
+  iframe.focus();
+  await tryToScrollWithKey(true);
+  ok(document.documentElement.scrollTop > 0, "ArrowDown keydown event at the iframe whose content is not scrollable should cause scrolling the parent document");
+  await tryToScrollWithKey(false);
+  ok(document.documentElement.scrollLeft > 0, "ArrowRight keydown event at the iframe whose content is not scrollable should cause scrolling the parent document");
+  await resetScroll();
+
+  // When iframe element has focus and the iframe document scrollable, the parent document shouldn't be scrolled.
+  document.body.focus();
+  div.style.height = "1000px";
+  div.style.width = "1000px";
+  iframe.focus();
+  await tryToScrollWithKey(true);
+  is(document.documentElement.scrollTop, 0, "ArrowDown keydown event at the iframe whose content is scrollable shouldn't cause scrolling the parent document");
+  ok(iframe.contentDocument.documentElement.scrollTop > 0, "ArrowDown keydown event at the iframe whose content is scrollable should cause scrolling the iframe document");
+  await tryToScrollWithKey(false);
+  is(document.documentElement.scrollLeft, 0, "ArrowRight keydown event at the iframe whose content is scrollable shouldn't cause scrolling the parent document");
+  ok(iframe.contentDocument.documentElement.scrollLeft > 0, "ArrowRight keydown event at the iframe whose content is scrollable should cause scrolling the iframe document");
+  await resetScroll();
+
+  // If iframe document cannot scroll to specific direction, parent document should be scrolled instead.
+  div.style.height = "1px";
+  div.style.width = "1000px";
+  iframe.focus();
+  await tryToScrollWithKey(true);
+  ok(document.documentElement.scrollTop > 0, "ArrowDown keydown event at the iframe whose content is scrollable only horizontally should cause scrolling the parent document");
+  await tryToScrollWithKey(false);
+  is(document.documentElement.scrollLeft, 0, "ArrowRight keydown event at the iframe whose content is scrollable only horizontally shouldn't cause scrolling the parent document");
+  ok(iframe.contentDocument.documentElement.scrollLeft > 0, "ArrowRight keydown event at the iframe whose content is scrollable only horizontally should cause scrolling the iframe document");
+  await resetScroll();
+
+  div.style.height = "1000px";
+  div.style.width = "1px";
+  iframe.focus();
+  await tryToScrollWithKey(true);
+  is(document.documentElement.scrollTop, 0, "ArrowDown keydown event at the iframe whose content is scrollable only vertically shouldn't cause scrolling the parent document");
+  ok(iframe.contentDocument.documentElement.scrollTop > 0, "ArrowDown keydown event at the iframe whose content is scrollable only vertically should cause scrolling the iframe document");
+  await tryToScrollWithKey(false);
+  ok(document.documentElement.scrollLeft > 0, "ArrowRight keydown event at the iframe whose content is scrollable only vertically should cause scrolling the parent document");
+  await resetScroll();
+
+  // Hidden iframe shouldn't consume keyboard events if it was not scrollable.
+  document.body.focus();
+  anchor.focus();
+  iframe.style.display = "none";
+  await tryToScrollWithKey(true);
+  ok(document.documentElement.scrollTop > 0, "ArrowDown keydown event after hiding the iframe should cause scrolling the parent document");
+  await tryToScrollWithKey(false);
+  ok(document.documentElement.scrollLeft > 0, "ArrowRight keydown event after hiding the iframe should cause scrolling the parent document");
+  await resetScroll();
+
+  // Make sure the result visible in the viewport.
+  document.documentElement.scrollTop = 0;
+  document.documentElement.scrollLeft = 0;
+  window.opener.finish();
+}
+
+</script>
+</pre>
+</body>
+</html>
