@@ -9976,39 +9976,26 @@ nsDocShell::InternalLoad(nsIURI* aURI,
 
   // If there's no targetDocShell, that means we are about to create a new
   // window (or aWindowTarget is empty). Perform a content policy check before
-  // creating the window.
-  if (!targetDocShell) {
-    nsCOMPtr<Element> requestingElement;
+  // creating the window. Please note for all other docshell loads
+  // content policy checks are performed within the contentSecurityManager
+  // when the channel is about to be openend.
+  if (!targetDocShell && !aWindowTarget.IsEmpty()) {
+    MOZ_ASSERT(contentType == nsIContentPolicy::TYPE_DOCUMENT,
+               "opening a new window requires type to be TYPE_DOCUMENT");
+
     nsISupports* requestingContext = nullptr;
-
-    if (contentType == nsIContentPolicy::TYPE_DOCUMENT) {
-      if (XRE_IsContentProcess()) {
-        // In e10s the child process doesn't have access to the element that
-        // contains the browsing context (because that element is in the chrome
-        // process). So we just pass mScriptGlobal.
-        requestingContext = ToSupports(mScriptGlobal);
-      } else {
-        // This is for loading non-e10s tabs and toplevel windows of various
-        // sorts.
-        // For the toplevel window cases, requestingElement will be null.
-        requestingElement = mScriptGlobal->AsOuter()->GetFrameElementInternal();
-        requestingContext = requestingElement;
-      }
+    if (XRE_IsContentProcess()) {
+      // In e10s the child process doesn't have access to the element that
+      // contains the browsing context (because that element is in the chrome
+      // process). So we just pass mScriptGlobal.
+      requestingContext = ToSupports(mScriptGlobal);
     } else {
-      requestingElement = mScriptGlobal->AsOuter()->GetFrameElementInternal();
+      // This is for loading non-e10s tabs and toplevel windows of various
+      // sorts.
+      // For the toplevel window cases, requestingElement will be null.
+      nsCOMPtr<Element> requestingElement =
+        mScriptGlobal->AsOuter()->GetFrameElementInternal();
       requestingContext = requestingElement;
-
-#ifdef DEBUG
-      if (requestingElement) {
-        // Get the docshell type for requestingElement.
-        nsCOMPtr<nsIDocument> requestingDoc = requestingElement->OwnerDoc();
-        nsCOMPtr<nsIDocShell> elementDocShell = requestingDoc->GetDocShell();
-
-        // requestingElement docshell type = current docshell type.
-        MOZ_ASSERT(mItemType == elementDocShell->ItemType(),
-                  "subframes should have the same docshell type as their parent");
-      }
-#endif
     }
 
     // Since Content Policy checks are performed within docShell as well as
@@ -11094,17 +11081,40 @@ nsDocShell::DoURILoad(nsIURI* aURI,
   nsCOMPtr<nsINode> loadingNode;
   nsCOMPtr<nsPIDOMWindowOuter> loadingWindow;
   nsCOMPtr<nsIPrincipal> loadingPrincipal;
+  nsCOMPtr<nsISupports> topLevelLoadingContext;
 
   if (aContentPolicyType == nsIContentPolicy::TYPE_DOCUMENT) {
     loadingNode = nullptr;
     loadingPrincipal = nullptr;
     loadingWindow = mScriptGlobal->AsOuter();
+    if (XRE_IsContentProcess()) {
+      // In e10s the child process doesn't have access to the element that
+      // contains the browsing context (because that element is in the chrome
+      // process).
+      nsCOMPtr<nsITabChild> tabChild = GetTabChild();
+      topLevelLoadingContext = ToSupports(tabChild);
+    } else {
+      // This is for loading non-e10s tabs and toplevel windows of various
+      // sorts.
+      // For the toplevel window cases, requestingElement will be null.
+      nsCOMPtr<Element> requestingElement =
+        loadingWindow->GetFrameElementInternal();
+      topLevelLoadingContext = requestingElement;
+    }
   } else {
     loadingWindow = nullptr;
     loadingNode = mScriptGlobal->AsOuter()->GetFrameElementInternal();
     if (loadingNode) {
       // If we have a loading node, then use that as our loadingPrincipal.
       loadingPrincipal = loadingNode->NodePrincipal();
+#ifdef DEBUG
+      // Get the docshell type for requestingElement.
+      nsCOMPtr<nsIDocument> requestingDoc = loadingNode->OwnerDoc();
+      nsCOMPtr<nsIDocShell> elementDocShell = requestingDoc->GetDocShell();
+      // requestingElement docshell type = current docshell type.
+      MOZ_ASSERT(mItemType == elementDocShell->ItemType(),
+                "subframes should have the same docshell type as their parent");
+#endif
     } else {
       // If this isn't a top-level load and mScriptGlobal's frame element is
       // null, then the element got removed from the DOM while we were trying
@@ -11165,7 +11175,7 @@ nsDocShell::DoURILoad(nsIURI* aURI,
 
   nsCOMPtr<nsILoadInfo> loadInfo =
     (aContentPolicyType == nsIContentPolicy::TYPE_DOCUMENT) ?
-      new LoadInfo(loadingWindow, aTriggeringPrincipal,
+      new LoadInfo(loadingWindow, aTriggeringPrincipal, topLevelLoadingContext,
                    securityFlags) :
       new LoadInfo(loadingPrincipal, aTriggeringPrincipal, loadingNode,
                    securityFlags, aContentPolicyType);
