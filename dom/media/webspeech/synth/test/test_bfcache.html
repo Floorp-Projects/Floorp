@@ -13,9 +13,8 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=1230533
 <body>
 <a target="_blank" href="https://bugzilla.mozilla.org/show_bug.cgi?id=1230533">Mozilla Bug 1230533</a>
 <p id="display"></p>
-<iframe id="testFrame"></iframe>
 <div id="content" style="display: none">
-  
+
 </div>
 <pre id="test">
 <script type="application/javascript">
@@ -23,20 +22,22 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=1230533
 /** Test for Bug 525444 **/
 
 SimpleTest.waitForExplicitFinish();
-
-var iframe;
+let testWin;
 
 function onDone() {
+  testWin.close();
   SimpleTest.finish();
 }
 
 SpecialPowers.pushPrefEnv({ set: [
   ['media.webspeech.synth.enabled', true],
-  ['media.webspeech.synth.force_global_queue', true],
-  ['browser.sessionhistory.cache_subframes', true],
-  ['browser.sessionhistory.max_total_viewers', 10]] },
+  ['media.webspeech.synth.force_global_queue', true]] },
   function() {
-    loadSpeechTest("file_bfcache_frame.html");
+    testWin = window.open("about:blank", "testWin");
+    testWin.onload = function(e) {
+      waitForVoices(testWin)
+        .then(() => testWin.location = "file_bfcache_page1.html")
+    };
   });
 
 </script>
