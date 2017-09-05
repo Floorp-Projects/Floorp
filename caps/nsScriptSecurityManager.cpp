@@ -769,13 +769,8 @@ nsScriptSecurityManager::CheckLoadURIWithPrincipal(nsIPrincipal* aPrincipal,
                              &hasFlags);
     NS_ENSURE_SUCCESS(rv, rv);
 
-    if (hasFlags) {
-      nsString addonId;
-      aPrincipal->GetAddonId(addonId);
-
-      if (!addonId.IsEmpty()) {
-        return NS_OK;
-      }
+    if (hasFlags && BasePrincipal::Cast(aPrincipal)->AddonPolicy()) {
+      return NS_OK;
     }
 
     // If we get here, check all the schemes can link to each other, from the top down:

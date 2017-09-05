@@ -30,6 +30,7 @@
 #include "mozilla/dom/nsCSPContext.h"
 #include "mozilla/dom/ScriptSettings.h"
 #include "mozilla/ClearOnShutdown.h"
+#include "mozilla/ExtensionPolicyService.h"
 #include "mozilla/Preferences.h"
 #include "mozilla/HashFunctions.h"
 
@@ -47,17 +48,10 @@ static bool URIIsImmutable(nsIURI* aURI)
     !isMutable;
 }
 
-static nsIAddonPolicyService*
-GetAddonPolicyService(nsresult* aRv)
+static inline ExtensionPolicyService&
+EPS()
 {
-  static nsCOMPtr<nsIAddonPolicyService> addonPolicyService;
-
-  *aRv = NS_OK;
-  if (!addonPolicyService) {
-    addonPolicyService = do_GetService("@mozilla.org/addons/policy-service;1", aRv);
-    ClearOnShutdown(&addonPolicyService);
-  }
-  return addonPolicyService;
+  return ExtensionPolicyService::GetSingleton();
 }
 
 NS_IMPL_CLASSINFO(ContentPrincipal, nullptr, nsIClassInfo::MAIN_THREAD_ONLY,
@@ -425,34 +419,34 @@ ContentPrincipal::GetBaseDomain(nsACString& aBaseDomain)
   return NS_OK;
 }
 
+WebExtensionPolicy*
+ContentPrincipal::AddonPolicy()
+{
+  if (!mAddon.isSome()) {
+    NS_ENSURE_TRUE(mCodebase, nullptr);
+
+    bool isMozExt;
+    if (NS_SUCCEEDED(mCodebase->SchemeIs("moz-extension", &isMozExt)) && isMozExt) {
+      mAddon.emplace(EPS().GetByURL(mCodebase.get()));
+    } else {
+      mAddon.emplace(nullptr);
+    }
+  }
+
+  return mAddon.value();
+}
+
 NS_IMETHODIMP
 ContentPrincipal::GetAddonId(nsAString& aAddonId)
 {
-  if (mAddonIdCache.isSome()) {
-    aAddonId.Assign(mAddonIdCache.ref());
-    return NS_OK;
-  }
-
-  NS_ENSURE_TRUE(mCodebase, NS_ERROR_FAILURE);
-
-  nsresult rv;
-  bool isMozExt;
-  if (NS_SUCCEEDED(mCodebase->SchemeIs("moz-extension", &isMozExt)) && isMozExt) {
-    nsIAddonPolicyService* addonPolicyService = GetAddonPolicyService(&rv);
-    NS_ENSURE_SUCCESS(rv, rv);
-
-    nsAutoString addonId;
-    rv = addonPolicyService->ExtensionURIToAddonId(mCodebase, addonId);
-    NS_ENSURE_SUCCESS(rv, rv);
-
-    mAddonIdCache.emplace(addonId);
+  auto policy = AddonPolicy();
+  if (policy) {
+    policy->GetId(aAddonId);
   } else {
-    mAddonIdCache.emplace();
+    aAddonId.Truncate();
   }
-
-  aAddonId.Assign(mAddonIdCache.ref());
   return NS_OK;
-};
+}
 
 NS_IMETHODIMP
 ContentPrincipal::Read(nsIObjectInputStream* aStream)
