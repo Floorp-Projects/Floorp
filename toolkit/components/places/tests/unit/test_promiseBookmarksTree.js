@@ -57,6 +57,7 @@ async function compareToNode(aItem, aNode, aIsRootItem, aExcludedGuids = []) {
   switch (aNode.type) {
     case Ci.nsINavHistoryResultNode.RESULT_TYPE_FOLDER:
       Assert.equal(aItem.type, PlacesUtils.TYPE_X_MOZ_PLACE_CONTAINER);
+      Assert.equal(aItem.typeCode, PlacesUtils.bookmarks.TYPE_FOLDER);
       compare_prop("title", "title", true);
       check_unset(...BOOKMARK_ONLY_PROPS);
 
@@ -95,10 +96,12 @@ async function compareToNode(aItem, aNode, aIsRootItem, aExcludedGuids = []) {
       break;
     case Ci.nsINavHistoryResultNode.RESULT_TYPE_SEPARATOR:
       Assert.equal(aItem.type, PlacesUtils.TYPE_X_MOZ_PLACE_SEPARATOR);
+      Assert.equal(aItem.typeCode, PlacesUtils.bookmarks.TYPE_SEPARATOR);
       check_unset(...BOOKMARK_ONLY_PROPS, ...FOLDER_ONLY_PROPS);
       break;
     default:
       Assert.equal(aItem.type, PlacesUtils.TYPE_X_MOZ_PLACE);
+      Assert.equal(aItem.typeCode, PlacesUtils.bookmarks.TYPE_BOOKMARK);
       compare_prop("uri");
       // node.tags's format is "a, b" whilst promiseBoookmarksTree is "a,b"
       if (aNode.tags === null)

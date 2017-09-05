@@ -1,4 +1,4 @@
-use common::{Date, Nullable, WindowState};
+use common::{Date, Nullable};
 use cookie;
 use rustc_serialize::json::{self, Json, ToJson};
 use std::collections::BTreeMap;
@@ -159,9 +159,6 @@ pub struct WindowRectResponse {
     /// any browser chrome and externally drawn window decorations in CSS
     /// reference pixels.
     pub height: f64,
-
-    /// The top-level browsing context’s window state.
-    pub state: WindowState,
 }
 
 impl ToJson for WindowRectResponse {
@@ -171,7 +168,6 @@ impl ToJson for WindowRectResponse {
         body.insert("y".to_owned(), self.y.to_json());
         body.insert("width".to_owned(), self.width.to_json());
         body.insert("height".to_owned(), self.height.to_json());
-        body.insert("state".to_owned(), self.state.to_json());
         Json::Object(body)
     }
 }
@@ -225,7 +221,6 @@ mod tests {
     use super::{CloseWindowResponse, Cookie, CookieResponse, CookiesResponse, ElementRectResponse,
                 NewSessionResponse, Nullable, TimeoutsResponse, ValueResponse, WebDriverResponse,
                 WindowRectResponse};
-    use common::WindowState;
     use rustc_serialize::json::Json;
     use std::collections::BTreeMap;
 
@@ -300,10 +295,9 @@ mod tests {
             y: 1f64,
             width: 2f64,
             height: 3f64,
-            state: WindowState::Normal,
         };
         let resp = WebDriverResponse::WindowRect(rect);
-        let expected = r#"{"value": {"x": 0.0, "y": 1.0, "width": 2.0, "height": 3.0, "state": "normal"}}"#;
+        let expected = r#"{"value": {"x": 0.0, "y": 1.0, "width": 2.0, "height": 3.0}}"#;
         test(resp, expected);
     }
 

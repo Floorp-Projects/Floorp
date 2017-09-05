@@ -218,6 +218,10 @@ ServoStyleSheet::ParseSheet(css::Loader* aLoader,
                                                       aReusableSheets)
                          .Consume();
 
+  nsString sourceMapURL;
+  Servo_StyleSheet_GetSourceMapURL(Inner()->mContents, &sourceMapURL);
+  SetSourceMapURLFromComment(sourceMapURL);
+
   Inner()->mURLData = extraData.forget();
   return NS_OK;
 }

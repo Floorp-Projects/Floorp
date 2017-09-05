@@ -180,7 +180,7 @@
     <vbox class="main-content" flex="1" align="start">
       <vbox class="pane-container">
         <hbox class="search-container" pack="end">
-          <textbox type="search" id="searchInput" hidden="true" clickSelectsAll="true"/>
+          <textbox type="search" id="searchInput" style="width: &searchField.width;" hidden="true" clickSelectsAll="true"/>
         </hbox>
         <prefpane id="mainPrefPane">
 #include searchResults.xul

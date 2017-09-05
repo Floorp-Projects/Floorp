@@ -598,55 +598,6 @@ input[type="checkbox"]:disabled:hover:active {
   cursor: inherit;
 }
 
-%if defined(MOZ_WIDGET_ANDROID)
-/*
- * These platforms doesn't have any theming support and thus -moz-appearance:none
- * is the same as any other appearance value.
- * XXX This is not web-compatible and should be fixed.
- */
-input[type="radio"] {
-  border-radius: 100%;
-}
-
-input[type="checkbox"] {
-  border-radius: 0;
-}
-
-/* NOTE: The width, height, border-width, and padding here must all
-   add up the way nsFormControlFrame::GetIntrinsic(Width|Height)
-   expects them to, or they will not come out with total width equal
-   to total height on sites that set their 'width' or 'height' to 'auto'.
-   (Should we maybe set !important on width and height, then?)  */
-input[type="radio"],
-input[type="checkbox"] {
-  inline-size: 13px;
-  block-size: 13px;
-  color: -moz-FieldText;
-  border: 2px inset ThreeDLightShadow;
-  background-repeat: no-repeat;
-  background-position: center;
-}
-
-input[type="radio"]:disabled,
-input[type="radio"]:disabled:active,
-input[type="radio"]:disabled:hover,
-input[type="radio"]:disabled:hover:active,
-input[type="checkbox"]:disabled,
-input[type="checkbox"]:disabled:active,
-input[type="checkbox"]:disabled:hover,
-input[type="checkbox"]:disabled:hover:active {
-  padding: 1px;
-  border: 1px inset ThreeDShadow;
-}
-
-input[type="checkbox"]:hover:active,
-input[type="radio"]:hover:active {
-  background-color: ThreeDFace ! important;
-  border-style: inset !important;
-}
-
-%endif /* defined(MOZ_WIDGET_ANDROID) */
-
 % On Mac, the native theme takes care of this.
 % See nsNativeThemeCocoa::ThemeDrawsFocusForWidget.
 %ifndef XP_MACOSX

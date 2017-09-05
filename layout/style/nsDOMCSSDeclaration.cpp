@@ -33,12 +33,9 @@ nsDOMCSSDeclaration::WrapObject(JSContext* aCx, JS::Handle<JSObject*> aGivenProt
   return dom::CSS2PropertiesBinding::Wrap(aCx, this, aGivenProto);
 }
 
-NS_INTERFACE_TABLE_HEAD(nsDOMCSSDeclaration)
-  NS_INTERFACE_TABLE(nsDOMCSSDeclaration,
-                     nsICSSDeclaration,
-                     nsIDOMCSSStyleDeclaration)
-  NS_INTERFACE_TABLE_TO_MAP_SEGUE
-NS_INTERFACE_MAP_END
+NS_IMPL_QUERY_INTERFACE(nsDOMCSSDeclaration,
+                        nsICSSDeclaration,
+                        nsIDOMCSSStyleDeclaration)
 
 NS_IMETHODIMP
 nsDOMCSSDeclaration::GetPropertyValue(const nsCSSPropertyID aPropID,

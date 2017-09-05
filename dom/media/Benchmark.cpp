@@ -197,8 +197,8 @@ BenchmarkPlayback::DemuxNextSample()
     Thread(), __func__,
     [this, ref](RefPtr<MediaTrackDemuxer::SamplesHolder> aHolder) {
       mSamples.AppendElements(Move(aHolder->mSamples));
-      if (ref->mParameters.mStopAtFrame
-          && mSamples.Length() == (size_t)ref->mParameters.mStopAtFrame.ref()) {
+      if (ref->mParameters.mStopAtFrame &&
+          mSamples.Length() == (size_t)ref->mParameters.mStopAtFrame.ref()) {
         InitDecoder(Move(*mTrackDemuxer->GetInfo()));
       } else {
         Dispatch(NS_NewRunnableFunction("BenchmarkPlayback::DemuxNextSample",
@@ -291,10 +291,9 @@ BenchmarkPlayback::Output(const MediaDataDecoder::DecodedData& aResults)
   TimeStamp now = TimeStamp::Now();
   int32_t frames = mFrameCount - ref->mParameters.mStartupFrame;
   TimeDuration elapsedTime = now - mDecodeStartTime.refOr(now);
-  if (!mFinished
-      && (((frames == ref->mParameters.mFramesToMeasure) && frames > 0)
-          || elapsedTime >= ref->mParameters.mTimeout
-          || mDrained)) {
+  if (!mFinished &&
+      (((frames == ref->mParameters.mFramesToMeasure) && frames > 0) ||
+       elapsedTime >= ref->mParameters.mTimeout || mDrained)) {
     uint32_t decodeFps = frames / elapsedTime.ToSeconds();
     MainThreadShutdown();
     ref->Dispatch(

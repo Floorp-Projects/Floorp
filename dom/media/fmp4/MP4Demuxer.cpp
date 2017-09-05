@@ -365,16 +365,15 @@ MP4TrackDemuxer::MP4TrackDemuxer(MP4Demuxer* aParent,
 
   VideoInfo* videoInfo = mInfo->GetAsVideoInfo();
   // Collect telemetry from h264 AVCC SPS.
-  if (videoInfo
-      && (mInfo->mMimeType.EqualsLiteral("video/mp4")
-          || mInfo->mMimeType.EqualsLiteral("video/avc"))) {
+  if (videoInfo && (mInfo->mMimeType.EqualsLiteral("video/mp4") ||
+                    mInfo->mMimeType.EqualsLiteral("video/avc"))) {
     mIsH264 = true;
     RefPtr<MediaByteBuffer> extraData = videoInfo->mExtraData;
     mNeedSPSForTelemetry = AccumulateSPSTelemetry(extraData);
     mp4_demuxer::SPSData spsdata;
-    if (mp4_demuxer::H264::DecodeSPSFromExtraData(extraData, spsdata)
-        && spsdata.pic_width > 0 && spsdata.pic_height > 0
-        && mp4_demuxer::H264::EnsureSPSIsSane(spsdata)) {
+    if (mp4_demuxer::H264::DecodeSPSFromExtraData(extraData, spsdata) &&
+        spsdata.pic_width > 0 && spsdata.pic_height > 0 &&
+        mp4_demuxer::H264::EnsureSPSIsSane(spsdata)) {
       videoInfo->mImage.width = spsdata.pic_width;
       videoInfo->mImage.height = spsdata.pic_height;
       videoInfo->mDisplay.width = spsdata.display_width;
@@ -532,9 +531,8 @@ MP4TrackDemuxer::GetSamples(int32_t aNumSamples)
     }
   }
 
-  if (mNextKeyframeTime.isNothing()
-      || samples->mSamples.LastElement()->mTime
-      >= mNextKeyframeTime.value()) {
+  if (mNextKeyframeTime.isNothing() ||
+      samples->mSamples.LastElement()->mTime >= mNextKeyframeTime.value()) {
     SetNextKeyFrameTime();
   }
   return SamplesPromise::CreateAndResolve(samples, __func__);

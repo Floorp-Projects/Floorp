@@ -28,17 +28,17 @@ def test_handle_user_prompt(session):
 
 
 def test_minimize(session):
-    assert session.window.state == "normal"
+    assert not session.execute_script("return document.hidden")
 
     # step 4
     response = minimize(session)
     assert_success(response)
 
-    assert session.window.state == "minimized"
+    assert session.execute_script("return document.hidden")
 
 
 def test_payload(session):
-    assert session.window.state == "normal"
+    assert not session.execute_script("return document.hidden")
 
     response = minimize(session)
 
@@ -51,23 +51,21 @@ def test_payload(session):
     assert "height" in value
     assert "x" in value
     assert "y" in value
-    assert "state" in value
     assert isinstance(value["width"], (int, float))
     assert isinstance(value["height"], (int, float))
     assert isinstance(value["x"], (int, float))
     assert isinstance(value["y"], (int, float))
-    assert isinstance(value["state"], basestring)
 
-    assert session.window.state == "minimized"
+    assert session.execute_script("return document.hidden")
 
 
 def test_minimize_twice_is_idempotent(session):
-    assert session.execute_script("return document.hidden") is False
+    assert not session.execute_script("return document.hidden")
 
     first_response = minimize(session)
     assert_success(first_response)
-    assert session.execute_script("return document.hidden") is True
+    assert session.execute_script("return document.hidden")
 
     second_response = minimize(session)
     assert_success(second_response)
-    assert session.execute_script("return document.hidden") is True
+    assert session.execute_script("return document.hidden")

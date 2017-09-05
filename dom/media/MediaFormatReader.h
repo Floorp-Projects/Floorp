@@ -468,8 +468,8 @@ private:
       if (mError.ref() == NS_ERROR_DOM_MEDIA_DECODE_ERR) {
         // Allow decode errors to be non-fatal, but give up
         // if we have too many, or if warnings should be treated as errors.
-        return mNumOfConsecutiveError > mMaxConsecutiveError
-               || MediaPrefs::MediaWarningsAsErrors();
+        return mNumOfConsecutiveError > mMaxConsecutiveError ||
+               MediaPrefs::MediaWarningsAsErrors();
       } else if (mError.ref() == NS_ERROR_DOM_MEDIA_NEED_NEW_DECODER) {
         // If the caller asked for a new decoder we shouldn't treat
         // it as fatal.

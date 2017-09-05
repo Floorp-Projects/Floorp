@@ -383,7 +383,7 @@ fuzzy-if(Android&&isDebugBuild,229,45) == 315920-13b.html 315920-13-ref.html # b
 == 315920-14.html 315920-14-ref.html
 == 315920-15.html 315920-15-ref.html
 == 315920-16.html 315920-16-ref.html
-== 315920-17.html 315920-17-ref.html
+fuzzy-if(Android,2,18) == 315920-17.html 315920-17-ref.html
 == 315920-18a.html 315920-18-ref.html
 == 315920-18b.html 315920-18-ref.html
 == 315920-18c.html 315920-18-ref.html
@@ -656,10 +656,10 @@ fails-if(Android&&!asyncPan) == 371561-1.html 371561-1-ref.html
 == 372768-1.html 372768-1-ref.html
 == 373295-1.html 373295-1-ref.html
 == 373298-1.html 373298-1-ref.html
-fails-if(Android) == 373381-1.html 373381-1-ref.html
-fails-if(Android) fuzzy-if(skiaContent&&!Android,2,40) == 373381-2.html 373381-2-ref.html
-fails-if(Android) random-if(d2d) == 373381-3.html 373381-3-ref.html
-fails-if(Android) == 373381-4.html 373381-4-ref.html
+== 373381-1.html 373381-1-ref.html
+fuzzy-if(skiaContent&&!Android,2,40) == 373381-2.html 373381-2-ref.html
+random-if(d2d) == 373381-3.html 373381-3-ref.html
+== 373381-4.html 373381-4-ref.html
 == 373383-1.html 373383-1-ref.html
 == 373433-1.html 373433-1-ref.html
 == 373533-1.xhtml about:blank
@@ -1940,7 +1940,7 @@ skip-if(!Android) fails-if(Android) == 1133905-6-vh-rtl.html 1133905-ref-vh-rtl.
 fuzzy-if(skiaContent,7,84) fails-if(webrender) == 1156129-1.html 1156129-1-ref.html
 pref(dom.use_xbl_scopes_for_remote_xul,true) HTTP(..) == 1157127-1.html 1157127-1-ref.html
 fuzzy-if(Android,6,6) == 1169331-1.html 1169331-1-ref.html
-fuzzy(1,74) fails-if(gtkWidget&&!styloVsGecko) == 1174332-1.html 1174332-1-ref.html # bug 1312658
+fuzzy(1,74) fails-if(Android||(gtkWidget&&!styloVsGecko)) == 1174332-1.html 1174332-1-ref.html # bug 1312658
 == 1179078-1.html 1179078-1-ref.html
 == 1179288-1.html 1179288-1-ref.html
 == 1190635-1.html 1190635-1-ref.html

@@ -170,8 +170,8 @@ MediaEncoder::CreateEncoder(const nsAString& aMIMEType, uint32_t aAudioBitrate,
   else if (MediaEncoder::IsWebMEncoderEnabled() &&
           (aMIMEType.EqualsLiteral(VIDEO_WEBM) ||
           (aTrackTypes & ContainerWriter::CREATE_VIDEO_TRACK))) {
-    if (aTrackTypes & ContainerWriter::CREATE_AUDIO_TRACK
-        && MediaDecoder::IsOpusEnabled()) {
+    if (aTrackTypes & ContainerWriter::CREATE_AUDIO_TRACK &&
+        MediaDecoder::IsOpusEnabled()) {
       audioEncoder = new OpusTrackEncoder();
       NS_ENSURE_TRUE(audioEncoder, nullptr);
     }
