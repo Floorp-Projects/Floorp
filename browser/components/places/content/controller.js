@@ -282,7 +282,7 @@ PlacesController.prototype = {
       this.showBookmarkPropertiesForSelection();
       break;
     case "placesCmd_moveBookmarks":
-      this.moveSelectedBookmarks();
+      this.moveSelectedBookmarks().catch(Components.utils.reportError);
       break;
     case "placesCmd_reload":
       this.reloadSelectedLivemark();
@@ -778,10 +778,38 @@ PlacesController.prototype = {
   /**
    * Opens a dialog for moving the selected nodes.
    */
-  moveSelectedBookmarks: function PC_moveBookmarks() {
+  async moveSelectedBookmarks() {
+    let args = {
+      // The guid of the folder to move bookmarks to. This will only be
+      // set in the useAsyncTransactions case.
+      moveToGuid: null,
+      // nodes is passed to support !useAsyncTransactions.
+      nodes: this._view.selectedNodes,
+    };
     window.openDialog("chrome://browser/content/places/moveBookmarks.xul",
                       "", "chrome, modal",
-                      this._view.selectedNodes);
+                      args);
+
+    if (!args.moveToGuid) {
+      return;
+    }
+
+    let transactions = [];
+
+    for (let node of this._view.selectedNodes) {
+      // Nothing to do if the node is already under the selected folder.
+      if (node.parent.bookmarkGuid == args.moveToGuid) {
+        continue;
+      }
+      transactions.push(PlacesTransactions.Move({
+        guid: node.bookmarkGuid,
+        newParentGuid: args.moveToGuid,
+      }));
+    }
+
+    if (transactions.length) {
+      await PlacesTransactions.batch(transactions);
+    }
   },
 
   /**
