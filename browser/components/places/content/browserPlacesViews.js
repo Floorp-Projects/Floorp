@@ -283,12 +283,11 @@ PlacesViewBase.prototype = {
     let cc = resultNode.childCount;
     if (cc > 0) {
       this._setEmptyPopupStatus(aPopup, false);
-      let fragment = document.createDocumentFragment();
+
       for (let i = 0; i < cc; ++i) {
         let child = resultNode.getChild(i);
-        this._insertNewItemToPopup(child, fragment);
+        this._insertNewItemToPopup(child, aPopup, null);
       }
-      aPopup.insertBefore(fragment, aPopup._endMarker);
     } else {
       this._setEmptyPopupStatus(aPopup, true);
     }
@@ -405,15 +404,16 @@ PlacesViewBase.prototype = {
   },
 
   _insertNewItemToPopup:
-  function PVB__insertNewItemToPopup(aNewChild, aInsertionNode, aBefore = null) {
+  function PVB__insertNewItemToPopup(aNewChild, aPopup, aBefore) {
     let element = this._createDOMNodeForPlacesNode(aNewChild);
+    let before = aBefore || aPopup._endMarker;
 
     if (element.localName == "menuitem" || element.localName == "menu") {
       if (typeof this.options.extraClasses.entry == "string")
         element.classList.add(this.options.extraClasses.entry);
     }
 
-    aInsertionNode.insertBefore(element, aBefore);
+    aPopup.insertBefore(element, before);
     return element;
   },
 
@@ -635,7 +635,7 @@ PlacesViewBase.prototype = {
     let index = Array.prototype.indexOf.call(parentElt.childNodes, parentElt._startMarker) +
                 aIndex + 1;
     this._insertNewItemToPopup(aPlacesNode, parentElt,
-                               parentElt.childNodes[index] || parentElt._endMarker);
+                               parentElt.childNodes[index]);
     this._setEmptyPopupStatus(parentElt, false);
   },
 
@@ -1036,12 +1036,10 @@ PlacesToolbar.prototype = {
       this._rootElt.firstChild.remove();
     }
 
-    let fragment = document.createDocumentFragment();
     let cc = this._resultNode.childCount;
     for (let i = 0; i < cc; ++i) {
-      this._insertNewItem(this._resultNode.getChild(i), fragment);
+      this._insertNewItem(this._resultNode.getChild(i), null);
     }
-    this._rootElt.appendChild(fragment);
 
     if (this._chevronPopup.hasAttribute("type")) {
       // Chevron has already been initialized, but since we are forcing
@@ -1052,7 +1050,7 @@ PlacesToolbar.prototype = {
   },
 
   _insertNewItem:
-  function PT__insertNewItem(aChild, aInsertionNode, aBefore = null) {
+  function PT__insertNewItem(aChild, aBefore) {
     this._domNodes.delete(aChild);
 
     let type = aChild.type;
@@ -1101,9 +1099,9 @@ PlacesToolbar.prototype = {
       this._domNodes.set(aChild, button);
 
     if (aBefore)
-      aInsertionNode.insertBefore(button, aBefore);
+      this._rootElt.insertBefore(button, aBefore);
     else
-      aInsertionNode.appendChild(button);
+      this._rootElt.appendChild(button);
   },
 
   _updateChevronPopupNodesVisibility:
@@ -1255,7 +1253,7 @@ PlacesToolbar.prototype = {
     let parentElt = this._getDOMNodeForPlacesNode(aParentPlacesNode);
     if (parentElt == this._rootElt) {
       let children = this._rootElt.childNodes;
-      this._insertNewItem(aPlacesNode, this._rootElt,
+      this._insertNewItem(aPlacesNode,
         aIndex < children.length ? children[aIndex] : null);
       this.updateChevron();
       return;
@@ -1879,7 +1877,7 @@ PlacesPanelMenuView.prototype = {
   },
 
   _insertNewItem:
-  function PAMV__insertNewItem(aChild, aInsertionNode, aBefore = null) {
+  function PAMV__insertNewItem(aChild, aBefore) {
     this._domNodes.delete(aChild);
 
     let type = aChild.type;
@@ -1921,7 +1919,7 @@ PlacesPanelMenuView.prototype = {
     if (!this._domNodes.has(aChild))
       this._domNodes.set(aChild, button);
 
-    aInsertionNode.insertBefore(button, aBefore);
+    this._rootElt.insertBefore(button, aBefore);
   },
 
   nodeInserted:
@@ -1931,7 +1929,7 @@ PlacesPanelMenuView.prototype = {
       return;
 
     let children = this._rootElt.childNodes;
-    this._insertNewItem(aPlacesNode, this._rootElt,
+    this._insertNewItem(aPlacesNode,
       aIndex < children.length ? children[aIndex] : null);
   },
 
@@ -2000,11 +1998,9 @@ PlacesPanelMenuView.prototype = {
       this._rootElt.firstChild.remove();
     }
 
-    let fragment = document.createDocumentFragment();
     for (let i = 0; i < this._resultNode.childCount; ++i) {
-      this._insertNewItem(this._resultNode.getChild(i), fragment);
+      this._insertNewItem(this._resultNode.getChild(i), null);
     }
-    this._rootElt.appendChild(fragment);
   }
 };
 
