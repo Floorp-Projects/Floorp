@@ -26,7 +26,16 @@ addLoadEvent(function() {
 
   w.onmessage = function(e) {
     if (e.data.type === 'ready') {
-      doTest();
+      // XXX Important trick here.
+      //
+      // Setting iosvc.offline would trigger a sync notifyObservers call, and if
+      // there exists a preloaded about:newtab (see tabbrowser._handleNewTab),
+      // that tab will be notified.
+      //
+      // This implies a sync call across different tabGroups, and will hit the
+      // assertion in SchedulerGroup::ValidateAccess(). So use executeSoon to
+      // re-dispatch an unlabeled runnable to the event queue.
+      SpecialPowers.executeSoon(doTest);
     } else if (e.data.type === 'ok') {
       ok(e.data.test, e.data.message);
     } else if (e.data.type === 'finished') {
