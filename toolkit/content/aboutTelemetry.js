@@ -662,6 +662,9 @@ var EnvironmentData = {
   },
 
   createAddonSection(dataDiv, ping) {
+    if (!ping || !("environment" in ping) || !("addons" in ping.environment)) {
+      return;
+    }
     let addonSection = document.createElement("div");
     addonSection.setAttribute("class", "subsection-data subdata");
     let addons = ping.environment.addons;
@@ -1399,7 +1402,7 @@ var Search = {
       let subsections = section.querySelectorAll(".sub-section");
       for (let section of subsections) {
         let datas = section.querySelector("table").rows
-        keyedSubSections.push({section, datas});
+        keyedSubSections.push({key: section, datas});
       }
       noSearchResults = this.filterKeyedElements(keyedSubSections, text);
     } else {
