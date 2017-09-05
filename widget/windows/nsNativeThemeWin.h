@@ -132,6 +132,8 @@ protected:
                                       uint8_t aWidgetType, int32_t aPart, int32_t aState,
                                       THEMESIZE aSizeReq, mozilla::LayoutDeviceIntSize* aResult);
 
+  SIZE GetCachedGutterSize(HANDLE theme);
+
 private:
   TimeStamp mProgressDeterminateTimeStamp;
   TimeStamp mProgressIndeterminateTimeStamp;
@@ -149,6 +151,9 @@ private:
   // the caches should come to about 18KB.
   uint8_t mMinimumWidgetSizeCacheValid[(eUXNumClasses * THEME_PART_DISTINCT_VALUE_COUNT + 7) / 8];
   mozilla::LayoutDeviceIntSize mMinimumWidgetSizeCache[eUXNumClasses * THEME_PART_DISTINCT_VALUE_COUNT];
+
+  bool mGutterSizeCacheValid;
+  SIZE mGutterSizeCache;
 };
 
 #endif
