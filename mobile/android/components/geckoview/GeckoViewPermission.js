@@ -4,11 +4,12 @@
 
 const {classes: Cc, interfaces: Ci, utils: Cu, results: Cr} = Components;
 
-Cu.import("resource://gre/modules/Services.jsm");
 Cu.import("resource://gre/modules/XPCOMUtils.jsm");
 
-XPCOMUtils.defineLazyModuleGetter(this, "EventDispatcher",
-                                  "resource://gre/modules/Messaging.jsm");
+XPCOMUtils.defineLazyModuleGetters(this, {
+  EventDispatcher: "resource://gre/modules/Messaging.jsm",
+  Services: "resource://gre/modules/Services.jsm",
+});
 
 // See: http://developer.android.com/reference/android/Manifest.permission.html
 const PERM_ACCESS_FINE_LOCATION = "android.permission.ACCESS_FINE_LOCATION";
@@ -16,6 +17,7 @@ const PERM_CAMERA = "android.permission.CAMERA";
 const PERM_RECORD_AUDIO = "android.permission.RECORD_AUDIO";
 
 function GeckoViewPermission() {
+  this.wrappedJSObject = this;
 }
 
 GeckoViewPermission.prototype = {
@@ -29,12 +31,6 @@ GeckoViewPermission.prototype = {
   /* ----------  nsIObserver  ---------- */
   observe: function(aSubject, aTopic, aData) {
     switch (aTopic) {
-      case "app-startup": {
-        Services.obs.addObserver(this, "getUserMedia:ask-device-permission");
-        Services.obs.addObserver(this, "getUserMedia:request");
-        Services.obs.addObserver(this, "PeerConnection:request");
-        break;
-      }
       case "getUserMedia:ask-device-permission": {
         this.handleMediaAskDevicePermission(aData, aSubject);
         break;
