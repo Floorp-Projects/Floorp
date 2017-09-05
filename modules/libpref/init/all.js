@@ -4175,9 +4175,6 @@ pref("font.name-list.cursive.zh-HK", "Kaiti TC");
 
 // XP_MACOSX changes to default font sizes
 pref("font.minimum-size.th", 10);
-pref("font.size.variable.zh-CN", 15);
-pref("font.size.variable.zh-HK", 15);
-pref("font.size.variable.zh-TW", 15);
 
 // Apple's Symbol is Unicode so use it
 pref("font.name-list.serif.x-math", "Latin Modern Math, STIX Two Math, XITS Math, Cambria Math, Libertinus Math, DejaVu Math TeX Gyre, TeX Gyre Bonum Math, TeX Gyre Pagella Math, TeX Gyre Schola, TeX Gyre Termes Math, STIX Math, Asana Math, STIXGeneral, DejaVu Serif, DejaVu Sans, Symbol, Times");
