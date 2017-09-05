@@ -7,8 +7,12 @@ const {classes: Cc, interfaces: Ci, utils: Cu, results: Cr} = Components;
 
 Cu.import("resource://gre/modules/XPCOMUtils.jsm");
 
+XPCOMUtils.defineLazyModuleGetter(this, "BrowserUtils",
+                                  "resource://gre/modules/BrowserUtils.jsm");
 XPCOMUtils.defineLazyModuleGetter(this, "clearTimeout",
                                   "resource://gre/modules/Timer.jsm");
+XPCOMUtils.defineLazyModuleGetter(this, "E10SUtils",
+                                  "resource:///modules/E10SUtils.jsm");
 XPCOMUtils.defineLazyModuleGetter(this, "ExtensionCommon",
                                   "resource://gre/modules/ExtensionCommon.jsm");
 XPCOMUtils.defineLazyModuleGetter(this, "NetUtil",
@@ -292,3 +296,38 @@ const BrowserListener = {
 
 addMessageListener("Extension:InitBrowser", BrowserListener);
 addMessageListener("Extension:UnblockParser", BrowserListener);
+
+var WebBrowserChrome = {
+  onBeforeLinkTraversal(originalTarget, linkURI, linkNode, isAppTab) {
+    // isAppTab is the value for the docShell that received the click.  We're
+    // handling this in the top-level frame and want traversal behavior to
+    // match the value for this frame rather than any subframe, so we pass
+    // through the docShell.isAppTab value rather than what we were handed.
+    return BrowserUtils.onBeforeLinkTraversal(originalTarget, linkURI, linkNode, docShell.isAppTab);
+  },
+
+  shouldLoadURI(docShell, URI, referrer, hasPostData, triggeringPrincipal) {
+    return true;
+  },
+
+  shouldLoadURIInThisProcess(URI) {
+    return E10SUtils.shouldLoadURIInThisProcess(URI);
+  },
+
+  reloadInFreshProcess(docShell, URI, referrer, triggeringPrincipal, loadFlags) {
+    return false;
+  },
+
+  startPrerenderingDocument(href, referrer, triggeringPrincipal) {
+  },
+
+  shouldSwitchToPrerenderedDocument(href, referrer, success, failure) {
+    return false;
+  },
+};
+
+if (Services.appinfo.processType == Services.appinfo.PROCESS_TYPE_CONTENT) {
+  let tabchild = docShell.QueryInterface(Ci.nsIInterfaceRequestor)
+                         .getInterface(Ci.nsITabChild);
+  tabchild.webBrowserChrome = WebBrowserChrome;
+}
