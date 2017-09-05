@@ -515,33 +515,27 @@ ChannelMediaResource::OnDataAvailable(nsIRequest* aRequest,
   return NS_OK;
 }
 
-nsresult ChannelMediaResource::Open(nsIStreamListener **aStreamListener)
+nsresult
+ChannelMediaResource::Open(nsIStreamListener** aStreamListener)
 {
   NS_ASSERTION(NS_IsMainThread(), "Only call on main thread");
+  MOZ_ASSERT(aStreamListener);
+  MOZ_ASSERT(mChannel);
 
   int64_t cl = -1;
-  if (mChannel) {
-    nsCOMPtr<nsIHttpChannel> hc = do_QueryInterface(mChannel);
-    if (hc && !IsPayloadCompressed(hc)) {
-      if (NS_FAILED(hc->GetContentLength(&cl))) {
-        cl = -1;
-      }
+  nsCOMPtr<nsIHttpChannel> hc = do_QueryInterface(mChannel);
+  if (hc && !IsPayloadCompressed(hc)) {
+    if (NS_FAILED(hc->GetContentLength(&cl))) {
+      cl = -1;
     }
   }
 
   nsresult rv = mCacheStream.Init(cl);
-  if (NS_FAILED(rv))
+  if (NS_FAILED(rv)) {
     return rv;
-  NS_ASSERTION(mOffset == 0, "Who set mOffset already?");
-
-  if (!mChannel) {
-    // When we're a clone, the decoder might ask us to Open even though
-    // we haven't established an mChannel (because we might not need one)
-    NS_ASSERTION(!aStreamListener,
-                 "Should have already been given a channel if we're to return a stream listener");
-    return NS_OK;
   }
 
+  MOZ_ASSERT(mOffset == 0, "Who set mOffset already?");
   return OpenChannel(aStreamListener);
 }
 

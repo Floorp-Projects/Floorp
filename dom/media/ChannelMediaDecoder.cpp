@@ -227,22 +227,13 @@ ChannelMediaDecoder::Shutdown()
 }
 
 nsresult
-ChannelMediaDecoder::OpenResource(nsIStreamListener** aStreamListener)
-{
-  MOZ_ASSERT(NS_IsMainThread());
-  if (aStreamListener) {
-    *aStreamListener = nullptr;
-  }
-  return mResource->Open(aStreamListener);
-}
-
-nsresult
 ChannelMediaDecoder::Load(nsIChannel* aChannel,
                           bool aIsPrivateBrowsing,
                           nsIStreamListener** aStreamListener)
 {
   MOZ_ASSERT(NS_IsMainThread());
   MOZ_ASSERT(!mResource);
+  MOZ_ASSERT(aStreamListener);
 
   mResource =
     BaseMediaResource::Create(mResourceCallback, aChannel, aIsPrivateBrowsing);
@@ -255,7 +246,7 @@ ChannelMediaDecoder::Load(nsIChannel* aChannel,
     return rv;
   }
 
-  rv = OpenResource(aStreamListener);
+  rv = mResource->Open(aStreamListener);
   NS_ENSURE_SUCCESS(rv, rv);
 
   // Set mode to METADATA since we are about to read metadata.
