@@ -1258,8 +1258,7 @@ TimeoutManager::BudgetThrottlingEnabled(bool aIsBackground) const
   }
 
   // Check if we have active GetUserMedia
-  if (MediaManager::Exists() &&
-      MediaManager::Get()->IsWindowStillActive(mWindow.WindowID())) {
+  if (mWindow.AsInner()->HasActiveUserMedia()) {
     return false;
   }
 

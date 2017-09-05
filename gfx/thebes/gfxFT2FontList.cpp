@@ -228,6 +228,19 @@ FT2FontEntry::~FT2FontEntry()
 #endif
 }
 
+gfxFontEntry*
+FT2FontEntry::Clone() const
+{
+    MOZ_ASSERT(!IsUserFont(), "we can only clone installed fonts!");
+    FT2FontEntry* fe = new FT2FontEntry(Name());
+    fe->mFilename = mFilename;
+    fe->mFTFontIndex = mFTFontIndex;
+    fe->mWeight = mWeight;
+    fe->mStretch = mStretch;
+    fe->mStyle = mStyle;
+    return fe;
+}
+
 gfxFont*
 FT2FontEntry::CreateFontInstance(const gfxFontStyle *aFontStyle, bool aNeedsBold)
 {
@@ -1494,6 +1507,12 @@ gfxFT2FontList::GetFontFamilyList(nsTArray<RefPtr<gfxFontFamily> >& aFamilyArray
         RefPtr<gfxFontFamily>& family = iter.Data();
         aFamilyArray.AppendElement(family);
     }
+}
+
+gfxFontFamily*
+gfxFT2FontList::CreateFontFamily(const nsAString& aName) const
+{
+    return new FT2FontFamily(aName);
 }
 
 void

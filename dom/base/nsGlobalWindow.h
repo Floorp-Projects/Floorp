@@ -405,9 +405,6 @@ public:
   void Thaw();
   virtual bool IsFrozen() const override;
   void SyncStateFromParentWindow();
-  void AddPeerConnection();
-  void RemovePeerConnection();
-  bool HasActivePeerConnections();
 
   virtual nsresult FireDelayedDOMEvents() override;
 

@@ -4259,7 +4259,7 @@ BaseCompiler::emitQuotientI64()
             Label positive;
             masm.branchTest64(Assembler::NotSigned, r, r, Register::Invalid(),
                               &positive);
-            masm.add64(Imm32(c-1), r);
+            masm.add64(Imm64(c-1), r);
             masm.bind(&positive);
 
             masm.rshift64Arithmetic(Imm32(power & 63), r);

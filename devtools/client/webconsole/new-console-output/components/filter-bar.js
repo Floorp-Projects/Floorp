@@ -221,6 +221,9 @@ const FilterBar = createClass({
           title: l10n.getStr("webconsole.clearButton.tooltip"),
           onClick: this.onClickMessagesClear
         }),
+        dom.div({
+          className: "devtools-separator",
+        }),
         dom.button({
           className: "devtools-button devtools-filter-icon" + (
             filterBarVisible ? " checked" : ""),

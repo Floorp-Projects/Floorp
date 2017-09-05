@@ -64,6 +64,9 @@ add_task(async function testWindowTitle() {
 
   let extension = ExtensionTestUtils.loadExtension({
     background,
+    manifest: {
+      permissions: ["tabs"],
+    },
   });
 
   await extension.startup();
@@ -137,6 +140,57 @@ add_task(async function testWindowTitle() {
   await updateWindow({titlePreface: PREFACE2}, apiWin, expected);
 
   await extension.unload();
+});
+
+// Test that the window title is only available with the correct tab
+// permissions.
+add_task(async function testWindowTitlePermissions() {
+  let tab = await BrowserTestUtils.openNewForegroundTab(window.gBrowser, "http://example.com/");
+
+  let extension = ExtensionTestUtils.loadExtension({
+    async background() {
+      function awaitMessage(name) {
+        return new Promise(resolve => {
+          browser.test.onMessage.addListener(function listener(...msg) {
+            if (msg[0] === name) {
+              browser.test.onMessage.removeListener(listener);
+              resolve(msg[1]);
+            }
+          });
+        });
+      }
+
+      let window = await browser.windows.getCurrent();
+
+      browser.test.assertEq(undefined, window.title,
+                            "Window title should be null without tab permission");
+
+      browser.test.sendMessage("grant-activeTab");
+      let expectedTitle = await awaitMessage("title");
+
+      window = await browser.windows.getCurrent();
+      browser.test.assertEq(expectedTitle, window.title,
+                            "Window should have the expected title with tab permission granted");
+
+      await browser.test.notifyPass("window-title-permissions");
+    },
+    manifest: {
+      permissions: ["activeTab"],
+      browser_action: {},
+    },
+  });
+
+  await extension.startup();
+
+  await extension.awaitMessage("grant-activeTab");
+  await clickBrowserAction(extension);
+  extension.sendMessage("title", document.title);
+
+  await extension.awaitFinish("window-title-permissions");
+
+  await extension.unload();
+
+  await BrowserTestUtils.removeTab(tab);
 });
 
 add_task(async function testInvalidWindowId() {

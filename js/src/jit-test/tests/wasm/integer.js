@@ -184,6 +184,7 @@ assertEq(testTrunc(13.37), 1);
     testBinary64('div_s', 40, 7, 5);
     testBinary64('div_s', "0x1234567887654321", 2, "0x91a2b3c43b2a190");
     testBinary64('div_s', "0x1234567887654321", "0x1000000000", "0x1234567");
+    testBinary64('div_s', -1, "0x100000000", 0);
     testBinary64('div_u', -40, 2, "0x7fffffffffffffec");
     testBinary64('div_u', "0x1234567887654321", 9, "0x205d0b80f0b4059");
     testBinary64('div_u', 40, 2, 20);
