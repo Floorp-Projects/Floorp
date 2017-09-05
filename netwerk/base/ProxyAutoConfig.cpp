@@ -872,6 +872,7 @@ ProxyAutoConfig::GC()
 ProxyAutoConfig::~ProxyAutoConfig()
 {
   MOZ_COUNT_DTOR(ProxyAutoConfig);
+  MOZ_ASSERT(mShutdown, "Shutdown must be called before dtor.");
   NS_ASSERTION(!mJSContext,
                "~ProxyAutoConfig leaking JS context that "
                "should have been deleted on pac thread");
@@ -882,8 +883,9 @@ ProxyAutoConfig::Shutdown()
 {
   MOZ_ASSERT(!NS_IsMainThread(), "wrong thread for shutdown");
 
-  if (GetRunning() || mShutdown)
+  if (NS_WARN_IF(GetRunning()) || mShutdown) {
     return;
+  }
 
   mShutdown = true;
   delete mJSContext;

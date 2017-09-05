@@ -94,7 +94,11 @@ async function setupFormHistory() {
 add_task(async function testFormData() {
   function background() {
     browser.test.onMessage.addListener(async (msg, options) => {
-      await browser.browsingData.removeFormData(options);
+      if (msg == "removeFormData") {
+        await browser.browsingData.removeFormData(options);
+      } else {
+        await browser.browsingData.remove(options, {formData: true});
+      }
       browser.test.sendMessage("formDataRemoved");
     });
   }
@@ -138,6 +142,7 @@ add_task(async function testFormData() {
   await extension.startup();
 
   await testRemovalMethod("removeFormData");
+  await testRemovalMethod("remove");
 
   await extension.unload();
 });

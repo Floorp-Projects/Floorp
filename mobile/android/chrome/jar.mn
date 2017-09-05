@@ -66,3 +66,34 @@ chrome.jar:
 % override chrome://global/content/config.xul chrome://browser/content/config.xhtml
 % override chrome://global/content/netError.xhtml chrome://browser/content/netError.xhtml
 % override chrome://mozapps/content/extensions/extensions.xul chrome://browser/content/aboutAddons.xhtml
+
+# L10n resource overrides.
+% override chrome://global/locale/about.dtd chrome://browser/locale/overrides/about.dtd
+% override chrome://global/locale/aboutAbout.dtd chrome://browser/locale/overrides/aboutAbout.dtd
+% override chrome://global/locale/aboutReader.properties chrome://browser/locale/overrides/aboutReader.properties
+% override chrome://global/locale/aboutRights.dtd chrome://browser/locale/overrides/aboutRights.dtd
+% override chrome://global/locale/charsetMenu.properties chrome://browser/locale/overrides/charsetMenu.properties
+% override chrome://global/locale/commonDialogs.properties chrome://browser/locale/overrides/commonDialogs.properties
+% override chrome://global/locale/intl.properties chrome://browser/locale/overrides/intl.properties
+% override chrome://global/locale/intl.css chrome://browser/locale/overrides/intl.css
+% override chrome://global/locale/search/search.properties chrome://browser/locale/overrides/search/search.properties
+% override chrome://pluginproblem/locale/pluginproblem.dtd chrome://browser/locale/overrides/plugins/pluginproblem.dtd
+% override chrome://global/locale/aboutSupport.dtd chrome://browser/locale/overrides/global/aboutSupport.dtd
+% override chrome://global/locale/aboutSupport.properties chrome://browser/locale/overrides/global/aboutSupport.properties
+% override chrome://global/locale/crashes.dtd chrome://browser/locale/overrides/crashreporter/crashes.dtd
+% override chrome://global/locale/crashes.properties chrome://browser/locale/overrides/crashreporter/crashes.properties
+% override chrome://global/locale/mozilla.dtd chrome://browser/locale/overrides/global/mozilla.dtd
+% override chrome://global/locale/aboutTelemetry.dtd chrome://browser/locale/overrides/global/aboutTelemetry.dtd
+% override chrome://global/locale/aboutTelemetry.properties chrome://browser/locale/overrides/global/aboutTelemetry.properties
+% override chrome://global/locale/aboutWebrtc.properties chrome://browser/locale/overrides/global/aboutWebrtc.properties
+
+# overrides for dom l10n, also for en-US
+# keep this file list in sync with filter.py
+% override chrome://global/locale/global.dtd chrome://browser/locale/overrides/global.dtd
+% override chrome://global/locale/AccessFu.properties chrome://browser/locale/overrides/AccessFu.properties
+% override chrome://global/locale/dom/dom.properties chrome://browser/locale/overrides/dom/dom.properties
+% override chrome://global/locale/plugins.properties chrome://browser/locale/overrides/plugins.properties
+
+# mobile/locales/jar.mn overrides
+% override chrome://global/locale/netError.dtd    chrome://browser/locale/netError.dtd
+% override chrome://global/locale/appstrings.properties chrome://browser/locale/appstrings.properties
