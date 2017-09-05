@@ -118,19 +118,20 @@ ReverbConvolver::ReverbConvolver(const float* impulseResponseData,
 
         stageOffset += stageSize;
 
-        if (hasRealtimeConstraint && !isBackgroundStage
-            && fftSize > MaxRealtimeFFTSize) {
-            fftSize = MaxRealtimeFFTSize;
-            // Custom phase positions for all but the first of the realtime
-            // stages of largest size.  These spread out the work of the
-            // larger realtime stages.  None of the FFTs of size 1024, 2048 or
-            // 4096 are performed when processing the same block.  The first
-            // MaxRealtimeFFTSize = 4096 stage, at the end of the doubling,
-            // performs its FFT at block 7.  The FFTs of size 2048 are
-            // performed in blocks 3 + 8 * n and size 1024 at 1 + 4 * n.
-            const uint32_t phaseLookup[] = { 14, 0, 10, 4 };
-            stagePhase = WEBAUDIO_BLOCK_SIZE *
-                phaseLookup[m_stages.Length() % ArrayLength(phaseLookup)];
+        if (hasRealtimeConstraint && !isBackgroundStage &&
+            fftSize > MaxRealtimeFFTSize) {
+          fftSize = MaxRealtimeFFTSize;
+          // Custom phase positions for all but the first of the realtime
+          // stages of largest size.  These spread out the work of the
+          // larger realtime stages.  None of the FFTs of size 1024, 2048 or
+          // 4096 are performed when processing the same block.  The first
+          // MaxRealtimeFFTSize = 4096 stage, at the end of the doubling,
+          // performs its FFT at block 7.  The FFTs of size 2048 are
+          // performed in blocks 3 + 8 * n and size 1024 at 1 + 4 * n.
+          const uint32_t phaseLookup[] = { 14, 0, 10, 4 };
+          stagePhase =
+            WEBAUDIO_BLOCK_SIZE *
+            phaseLookup[m_stages.Length() % ArrayLength(phaseLookup)];
         } else if (fftSize > maxFFTSize) {
             fftSize = maxFFTSize;
             // A prime offset spreads out FFTs in a way that all

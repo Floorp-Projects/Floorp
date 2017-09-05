@@ -831,30 +831,6 @@ BrowserGlue.prototype = {
                           nb.PRIORITY_WARNING_MEDIUM, buttons);
   },
 
-  _notifyDisabledNonMpc() {
-    let win = RecentWindow.getMostRecentBrowserWindow();
-    if (!win)
-      return;
-
-    // This is only going to be on Nightly and only for the 55 and 56
-    // cycles, and it points to a wiki page that is not localized, so
-    // no need to localize the message here...
-    let message = "Due to performance testing, we have disabled some of your add-ons. They can be re-enabled in your browser settings.";
-    let buttons = [
-      {
-        label: "Manage Add-Ons",
-        accessKey: "M",
-        callback() {
-          win.BrowserOpenAddonsMgr("addons://list/extension");
-        }
-      },
-    ];
-
-    let nb = win.document.getElementById("high-priority-global-notificationbox");
-    nb.appendNotification(message, "non-mpc-addons-disabled", "",
-                          nb.PRIORITY_WARNING_MEDIUM, buttons);
-  },
-
   _firstWindowTelemetry(aWindow) {
     let scaling = aWindow.devicePixelRatio * 100;
     try {
@@ -1050,10 +1026,6 @@ BrowserGlue.prototype = {
           }
         }
       });
-    }
-
-    if (AddonManager.nonMpcDisabled) {
-      this._notifyDisabledNonMpc();
     }
 
     if (AppConstants.MOZ_CRASHREPORTER) {

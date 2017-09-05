@@ -30,12 +30,6 @@
   color: currentColor;
 }
 
-#mainPrefPane groupbox,
-#mainPrefPane deck,
-#mainPrefPane description {
-  font-size: 1.36rem;
-}
-
 groupbox + groupbox {
   margin-top: 16px;
 }
@@ -47,12 +41,6 @@ groupbox + vbox groupbox > .groupbox-body {
 
 .groupbox-title {
   margin-top: 16px;
-}
-
-input,
-description.indent,
-.indent > description {
-  font-size: 1.18rem !important;
 }
 
 description.indent,
@@ -119,11 +107,6 @@ separator.thin:not([orient="vertical"]) {
   border-top: 1px solid rgba(12, 12, 13, 0.15);
 }
 
-.header-name {
-  font-size: 2rem;
-  font-weight: 300;
-}
-
 /* Category List */
 
 #category-general > .category-icon {
@@ -154,6 +137,11 @@ separator.thin:not([orient="vertical"]) {
 }
 
 /* General Pane */
+
+#isDefaultLabel {
+  font-weight: 600;
+}
+
 #startupPageBox {
   padding-top: 32px;
 }
@@ -173,11 +161,6 @@ separator.thin:not([orient="vertical"]) {
 
 #getStarted {
   font-size: 90%;
-}
-
-#isNotDefaultLabel,
-#signedOutAccountBoxTitle {
-  font-weight: 600;
 }
 
 #downloadFolder {
@@ -503,7 +486,6 @@ separator.thin:not([orient="vertical"]) {
 }
 
 #noFxaCaption {
-  font-weight: bold;
   line-height: 30px;
   margin-top: 0;
   margin-bottom: 4px;
@@ -531,10 +513,6 @@ separator.thin:not([orient="vertical"]) {
   margin-bottom: 32px;
 }
 
-#signedOutAccountBoxTitle {
-  font-weight: bold;
-}
-
 .openLink {
   line-height: 30px;
   cursor: pointer;
@@ -545,7 +523,6 @@ separator.thin:not([orient="vertical"]) {
 }
 
 #fxaDisplayName {
-  font-weight: bold;
   margin-inline-end: 10px !important;
 }
 
@@ -610,7 +587,6 @@ separator.thin:not([orient="vertical"]) {
   background-image: url("chrome://global/skin/icons/help.svg");
   -moz-context-properties: fill, fill-opacity;
   fill: currentColor;
-  font-size: 13px;
   line-height: 36px;
   height: 36px;
   width: 168px;
@@ -665,7 +641,6 @@ separator.thin:not([orient="vertical"]) {
 }
 
 #searchInput {
-  width: 250px;
   margin: 20px 0 30px 0;
 }
 

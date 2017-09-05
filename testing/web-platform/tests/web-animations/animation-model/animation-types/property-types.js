@@ -1890,6 +1890,71 @@ const fontStretchType = {
   },
 }
 
+const fontVariationSettingsType = {
+  testInterpolation: (property, setup) => {
+    test(t => {
+      const idlName = propertyToIDL(property);
+      const target = createTestElement(t, setup);
+      const animation =
+        target.animate({ [idlName]: ['"wght" 1.1', '"wght" 1.5'] },
+                       { duration: 1000, fill: 'both' });
+      testAnimationSamples(animation, idlName,
+                           [{ time: 0,  expected: '"wght" 1.1' },
+                            { time: 250,  expected: '"wght" 1.2' },
+                            { time: 750,  expected: '"wght" 1.4' } ]);
+    }, `${property} supports animation as float`);
+
+    test(t => {
+      const idlName = propertyToIDL(property);
+      const target = createTestElement(t, setup);
+      const animation =
+        target.animate({ [idlName]: ['"wdth" 1, "wght" 1.1',
+                                     '"wght" 1.5, "wdth" 5'] },
+                       { duration: 1000, fill: 'both' });
+      testAnimationSamplesWithAnyOrder(
+        animation, idlName,
+        [{ time: 0, expected: '"wdth" 1, "wght" 1.1' },
+         { time: 250, expected: '"wdth" 2, "wght" 1.2' },
+         { time: 750, expected: '"wdth" 4, "wght" 1.4' } ]);
+    }, `${property} supports animation as float with multiple tags`);
+
+    test(t => {
+      const idlName = propertyToIDL(property);
+      const target = createTestElement(t, setup);
+      const animation =
+        target.animate({ [idlName]: ['"wdth" 1, "wght" 1.1',
+                                     '"wght" 10, "wdth" 5, "wght" 1.5'] },
+                       { duration: 1000, fill: 'both' });
+      testAnimationSamplesWithAnyOrder(
+        animation, idlName,
+        [{ time: 250, expected: '"wdth" 2, "wght" 1.2' },
+         { time: 750, expected: '"wdth" 4, "wght" 1.4' } ]);
+    }, `${property} supports animation as float with multiple duplicate tags`);
+  },
+
+  testAdditionOrAccumulation: (property, setup, composite) => {
+    test(t => {
+      const idlName = propertyToIDL(property);
+      const target = createTestElement(t, setup);
+      target.style[idlName] = '"wght" 1';
+      const animation =
+        target.animate({ [idlName]: ['"wght" 1.1', '"wght" 1.5'] },
+                       { duration: 1000, composite: composite });
+      testAnimationSamples(animation, idlName,
+                           [{ time: 250,  expected: '"wght" 2.2' },
+                            { time: 750,  expected: '"wght" 2.4' } ]);
+    }, `${property} with composite type ${composite}`);
+  },
+
+  testAddition: function(property, setup) {
+    this.testAdditionOrAccumulation(property, setup, 'add');
+  },
+
+  testAccumulation: function(property, setup) {
+    this.testAdditionOrAccumulation(property, setup, 'accumulate');
+  },
+}
+
 const types = {
   color: colorType,
   discrete: discreteType,
@@ -1910,5 +1975,5 @@ const types = {
   position: positionType,
   dasharray: dasharrayType,
   fontStretch: fontStretchType,
+  fontVariationSettings: fontVariationSettingsType,
 };
-

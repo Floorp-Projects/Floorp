@@ -22,7 +22,6 @@ module.exports = {
     "eqeqeq": "off",
     "func-names": "off",
     "func-style": "off",
-    "generator-star-spacing": "off",
     "handle-callback-err": ["error", "er"],
     "indent": ["error", 2, {"SwitchCase": 1}],
     "max-nested-callbacks": ["error", 4],

@@ -16,14 +16,14 @@ WaveDecoder::IsSupportedType(const MediaContainerType& aContainerType)
   if (!MediaDecoder::IsWaveEnabled()) {
     return false;
   }
-  if (aContainerType.Type() == MEDIAMIMETYPE("audio/wave")
-      || aContainerType.Type() == MEDIAMIMETYPE("audio/x-wav")
-      || aContainerType.Type() == MEDIAMIMETYPE("audio/wav")
-      || aContainerType.Type() == MEDIAMIMETYPE("audio/x-pn-wav")) {
-    return (aContainerType.ExtendedType().Codecs().IsEmpty()
-            || aContainerType.ExtendedType().Codecs() == "1"
-            || aContainerType.ExtendedType().Codecs() == "6"
-            || aContainerType.ExtendedType().Codecs() == "7");
+  if (aContainerType.Type() == MEDIAMIMETYPE("audio/wave") ||
+      aContainerType.Type() == MEDIAMIMETYPE("audio/x-wav") ||
+      aContainerType.Type() == MEDIAMIMETYPE("audio/wav") ||
+      aContainerType.Type() == MEDIAMIMETYPE("audio/x-pn-wav")) {
+    return (aContainerType.ExtendedType().Codecs().IsEmpty() ||
+            aContainerType.ExtendedType().Codecs() == "1" ||
+            aContainerType.ExtendedType().Codecs() == "6" ||
+            aContainerType.ExtendedType().Codecs() == "7");
   }
 
   return false;

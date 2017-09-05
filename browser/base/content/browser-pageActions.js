@@ -47,10 +47,31 @@ var BrowserPageActions = {
    * Inits.  Call to init.
    */
   init() {
+    this.placeAllActions();
+  },
+
+  /**
+   * Places all registered actions.
+   */
+  placeAllActions() {
+    // Place actions in the panel.  Notify of onBeforePlacedInWindow too.
     for (let action of PageActions.actions) {
-      this.placeAction(action,
-                       PageActions.insertBeforeActionIDInPanel(action),
-                       PageActions.insertBeforeActionIDInUrlbar(action));
+      action.onBeforePlacedInWindow(window);
+      this.placeActionInPanel(action);
+    }
+
+    // Place actions in the urlbar.  Do this in reverse order.  The reason is
+    // subtle.  If there were no urlbar nodes already in markup (like the
+    // bookmark star button), then doing this in forward order would be fine.
+    // Forward order means that the insert-before relationship is always broken:
+    // there's never a next-sibling node before which to insert a new node, so
+    // node.insertBefore() is always passed null, and nodes are always appended.
+    // That will break the position of nodes that should be inserted before
+    // nodes that are in markup, which in turn can break other nodes.
+    let actionsInUrlbar = PageActions.actionsInUrlbar;
+    for (let i = actionsInUrlbar.length - 1; i >= 0; i--) {
+      let action = actionsInUrlbar[i];
+      this.placeActionInUrlbar(action);
     }
   },
 
@@ -59,17 +80,11 @@ var BrowserPageActions = {
    *
    * @param  action (PageActions.Action, required)
    *         The action to place.
-   * @param  panelInsertBeforeID (string, required)
-   *         The ID of the action in the panel before which the given action
-   *         action should be inserted.
-   * @param  urlbarInsertBeforeID (string, required)
-   *         If the action is shown in the urlbar, then this is ID of the action
-   *         in the urlbar before which the given action should be inserted.
    */
-  placeAction(action, panelInsertBeforeID, urlbarInsertBeforeID) {
+  placeAction(action) {
     action.onBeforePlacedInWindow(window);
-    this.placeActionInPanel(action, panelInsertBeforeID);
-    this.placeActionInUrlbar(action, urlbarInsertBeforeID);
+    this.placeActionInPanel(action);
+    this.placeActionInUrlbar(action);
   },
 
   /**
@@ -77,11 +92,9 @@ var BrowserPageActions = {
    *
    * @param  action (PageActions.Action, required)
    *         The action to place.
-   * @param  insertBeforeID (string, required)
-   *         The ID of the action in the panel before which the given action
-   *         action should be inserted.  Pass null to append.
    */
-  placeActionInPanel(action, insertBeforeID) {
+  placeActionInPanel(action) {
+    let insertBeforeID = PageActions.nextActionID(action, PageActions.actions);
     let id = this._panelButtonNodeIDForActionID(action.id);
     let node = document.getElementById(id);
     if (!node) {
@@ -285,11 +298,10 @@ var BrowserPageActions = {
    *
    * @param  action (PageActions.Action, required)
    *         The action to place.
-   * @param  insertBeforeID (string, required)
-   *         If the action is shown in the urlbar, then this is ID of the action
-   *         in the urlbar before which the given action should be inserted.
    */
-  placeActionInUrlbar(action, insertBeforeID) {
+  placeActionInUrlbar(action) {
+    let insertBeforeID =
+      PageActions.nextActionID(action, PageActions.actionsInUrlbar);
     let id = this._urlbarButtonNodeIDForActionID(action.id);
     let node = document.getElementById(id);
 

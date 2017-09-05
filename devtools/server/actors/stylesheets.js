@@ -548,41 +548,39 @@ var StyleSheetActor = protocol.ActorClassWithSpec(styleSheetSpec, {
   _fetchSourceMap: function () {
     let deferred = defer();
 
-    this._getText().then(sheetContent => {
-      let url = this._extractSourceMapUrl(sheetContent);
-      if (!url) {
-        // no source map for this stylesheet
-        deferred.resolve(null);
-        return;
+    let url = this.rawSheet.sourceMapURL;
+    if (!url) {
+      // no source map for this stylesheet
+      deferred.resolve(null);
+      return deferred.promise;
+    }
+
+    url = normalize(url, this.safeHref);
+    let options = {
+      loadFromCache: false,
+      policy: Ci.nsIContentPolicy.TYPE_INTERNAL_STYLESHEET,
+      window: this.window
+    };
+
+    let map = fetch(url, options).then(({content}) => {
+      // Fetching the source map might have failed with a 404 or other. When
+      // this happens, SourceMapConsumer may fail with a JSON.parse error.
+      let consumer;
+      try {
+        consumer = new SourceMapConsumer(content);
+      } catch (e) {
+        deferred.reject(new Error(
+          `Source map at ${url} not found or invalid`));
+        return null;
       }
+      this._setSourceMapRoot(consumer, url, this.safeHref);
+      this._sourceMap = promise.resolve(consumer);
 
-      url = normalize(url, this.safeHref);
-      let options = {
-        loadFromCache: false,
-        policy: Ci.nsIContentPolicy.TYPE_INTERNAL_STYLESHEET,
-        window: this.window
-      };
-
-      let map = fetch(url, options).then(({content}) => {
-        // Fetching the source map might have failed with a 404 or other. When
-        // this happens, SourceMapConsumer may fail with a JSON.parse error.
-        let consumer;
-        try {
-          consumer = new SourceMapConsumer(content);
-        } catch (e) {
-          deferred.reject(new Error(
-            `Source map at ${url} not found or invalid`));
-          return null;
-        }
-        this._setSourceMapRoot(consumer, url, this.safeHref);
-        this._sourceMap = promise.resolve(consumer);
-
-        deferred.resolve(consumer);
-        return consumer;
-      }, deferred.reject);
-
-      this._sourceMap = map;
+      deferred.resolve(consumer);
+      return consumer;
     }, deferred.reject);
+
+    this._sourceMap = map;
 
     return deferred.promise;
   },
@@ -611,26 +609,6 @@ var StyleSheetActor = protocol.ActorClassWithSpec(styleSheetSpec, {
     sourceMap.sourceRoot = sourceMap.sourceRoot
       ? normalize(sourceMap.sourceRoot, base)
       : base;
-  },
-
-  /**
-   * Get the source map url specified in the text of a stylesheet.
-   *
-   * @param  {string} content
-   *         The text of the style sheet.
-   * @return {string}
-   *         Url of source map.
-   */
-  _extractSourceMapUrl: function (content) {
-    // If a SourceMap response header was saved on the style sheet, use it.
-    if (this.rawSheet.sourceMapURL) {
-      return this.rawSheet.sourceMapURL;
-    }
-    let matches = /sourceMappingURL\=([^\s\*]*)/.exec(content);
-    if (matches) {
-      return matches[1];
-    }
-    return null;
   },
 
   /**

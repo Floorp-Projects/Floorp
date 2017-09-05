@@ -17,32 +17,10 @@
  *  - intermittentShown: An array of platforms where this image is
  *                       intermittently shown, contrary to what our
  *                       whitelist says.
- *  - photon: If true, this entry only applies for builds with the Photon theme.
- *            If false, this entry only applies for builds without the Photon theme.
- *            If undefined, this entry applies for both Photon and non-Photon builds.
  *
  * Please don't add items to this list. Please remove items from this list.
  */
 const whitelist = [
-  // Photon-only entries
-  {
-    file: "chrome://browser/skin/stop.svg",
-    platforms: ["linux", "win", "macosx"],
-  },
-  {
-    file: "chrome://browser/skin/bookmark-hollow.svg",
-    platforms: ["linux", "win", "macosx"],
-  },
-  {
-    file: "chrome://browser/skin/page-action.svg",
-    platforms: ["linux", "win", "macosx"],
-  },
-  {
-    file: "chrome://pocket-shared/skin/pocket.svg",
-    platforms: ["linux", "win", "macosx"],
-  },
-
-  // Shared entries
   {
     file: "chrome://browser/skin/arrow-left.svg",
     platforms: ["linux", "win", "macosx"],

@@ -40,7 +40,7 @@
             android:background="@null"
             android:lineSpacingMultiplier="1.1"
             android:textColor="@color/two_line_page_row_title"
-            android:textSize="14sp"
+            android:textSize="15sp"
             gecko:fadeWidth="90dp"
             tools:text="This is a long test title"/>
 
@@ -71,4 +71,8 @@
         android:visibility="gone"
         tools:visibility="visible"/>
 
+    <View
+        android:id="@+id/padding_end"
+        android:layout_width="@dimen/page_row_edge_padding"
+        android:layout_height="1dp"/>
 </merge>

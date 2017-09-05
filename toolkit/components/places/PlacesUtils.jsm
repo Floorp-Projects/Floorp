@@ -1695,6 +1695,8 @@ this.PlacesUtils = {
    *  - [deprecated] id (number): the item's id. This is only if
    *    aOptions.includeItemIds is set.
    *  - type (string):  the item's type.  @see PlacesUtils.TYPE_X_*
+   *  - typeCode (number):  the item's type in numeric format.
+   *    @see PlacesUtils.bookmarks.TYPE_*
    *  - title (string): the item's title. If it has no title, this property
    *    isn't set.
    *  - dateAdded (number, microseconds from the epoch): the date-added value of
@@ -1753,6 +1755,7 @@ this.PlacesUtils = {
       GuidHelper.updateCache(itemId, item.guid);
 
       let type = aRow.getResultByName("type");
+      item.typeCode = type;
       if (type == Ci.nsINavBookmarksService.TYPE_BOOKMARK)
         copyProps("charset", "tags", "iconuri");
 

@@ -77,7 +77,6 @@ xul|*.numberbox-input-box {
 }
 
 xul|description {
-  font-size: 1.25rem;
   line-height: 22px;
 }
 
@@ -130,3 +129,25 @@ xul|textbox[type="search"]:not([searchbutton]) > .textbox-input-box > .textbox-s
   margin-inline-end: 5px;
 }
 
+html|html *,
+xul|page *,
+xul|window * {
+  font-size: 1.36rem;
+}
+
+*|*.header-name {
+  font-size: 2rem;
+}
+
+*|*.category-name {
+  font-size: 1.45rem;
+}
+
+xul|caption > xul|label {
+  font-size: 1.55rem;
+}
+
+.tip-caption,
+.help-button {
+  font-size: 1.18rem;
+}

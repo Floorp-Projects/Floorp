@@ -51,24 +51,34 @@ const METADATA_STATE_DIRTY = 8;
  */
 this.DownloadHistory = {
   /**
-   * Retrieves the main DownloadHistoryList object which provides a view on
-   * downloads from previous browsing sessions, as well as downloads from this
-   * session that were not started from a private browsing window.
+   * Retrieves the main DownloadHistoryList object which provides a unified view
+   * on downloads from both previous browsing sessions and this session.
+   *
+   * @param type
+   *        Determines which type of downloads from this session should be
+   *        included in the list. This is Downloads.PUBLIC by default, but can
+   *        also be Downloads.PRIVATE or Downloads.ALL.
    *
    * @return {Promise}
    * @resolves The requested DownloadHistoryList object.
    * @rejects JavaScript exception.
    */
-  getList() {
-    if (!this._promiseList) {
-      this._promiseList = Downloads.getList(Downloads.PUBLIC).then(list => {
+  getList({type = Downloads.PUBLIC} = {}) {
+    if (!this._listPromises[type]) {
+      this._listPromises[type] = Downloads.getList(type).then(list => {
         return new DownloadHistoryList(list, HISTORY_PLACES_QUERY);
       });
     }
 
-    return this._promiseList;
+    return this._listPromises[type];
   },
-  _promiseList: null,
+
+  /**
+   * This object is populated with one key for each type of download list that
+   * can be returned by the getList method. The values are promises that resolve
+   * to DownloadHistoryList objects.
+   */
+  _listPromises: {},
 
   /**
    * Stores new detailed metadata for the given download in history. This is

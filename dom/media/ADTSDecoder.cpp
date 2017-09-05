@@ -21,13 +21,11 @@ ADTSDecoder::IsEnabled()
 /* static */ bool
 ADTSDecoder::IsSupportedType(const MediaContainerType& aContainerType)
 {
-  if (aContainerType.Type() == MEDIAMIMETYPE("audio/aac")
-      || aContainerType.Type() == MEDIAMIMETYPE("audio/aacp")
-      || aContainerType.Type() == MEDIAMIMETYPE("audio/x-aac")) {
-    return
-      IsEnabled()
-      && (aContainerType.ExtendedType().Codecs().IsEmpty()
-          || aContainerType.ExtendedType().Codecs() == "aac");
+  if (aContainerType.Type() == MEDIAMIMETYPE("audio/aac") ||
+      aContainerType.Type() == MEDIAMIMETYPE("audio/aacp") ||
+      aContainerType.Type() == MEDIAMIMETYPE("audio/x-aac")) {
+    return IsEnabled() && (aContainerType.ExtendedType().Codecs().IsEmpty() ||
+                           aContainerType.ExtendedType().Codecs() == "aac");
   }
 
   return false;

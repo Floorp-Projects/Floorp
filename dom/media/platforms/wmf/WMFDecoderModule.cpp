@@ -234,8 +234,7 @@ WMFDecoderModule::Supports(const TrackInfo& aTrackInfo,
        WMFDecoderModule::HasAAC()) {
     return true;
   }
-  if (MP4Decoder::IsH264(aTrackInfo.mMimeType)
-      && WMFDecoderModule::HasH264()) {
+  if (MP4Decoder::IsH264(aTrackInfo.mMimeType) && WMFDecoderModule::HasH264()) {
     if (!MediaPrefs::PDMWMFAllowUnsupportedResolutions()) {
       const VideoInfo* videoInfo = aTrackInfo.GetAsVideoInfo();
       MOZ_ASSERT(videoInfo);
@@ -244,14 +243,12 @@ WMFDecoderModule::Supports(const TrackInfo& aTrackInfo,
       if (IsWin8OrLater() || IsWin7H264Decoder4KCapable()) {
         // Windows >7, and Win7 with recent-enough decoder, support at most
         // 4096x2304.
-        if (videoInfo->mImage.width > 4096
-            || videoInfo->mImage.height > 2304) {
+        if (videoInfo->mImage.width > 4096 || videoInfo->mImage.height > 2304) {
           return false;
         }
       } else {
         // Windows <=7 (with original decoder) supports at most 1920x1088.
-        if (videoInfo->mImage.width > 1920
-            || videoInfo->mImage.height > 1088) {
+        if (videoInfo->mImage.width > 1920 || videoInfo->mImage.height > 1088) {
           return false;
         }
       }

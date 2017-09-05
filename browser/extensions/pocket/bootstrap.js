@@ -99,6 +99,7 @@ var PocketPageAction = {
         urlbarIDOverride: "pocket-button-box",
         anchorIDOverride: "pocket-button",
         _insertBeforeActionID: PageActions.ACTION_ID_BOOKMARK_SEPARATOR,
+        _urlbarInsertBeforeActionID: PageActions.ACTION_ID_BOOKMARK,
         _urlbarNodeInMarkup: true,
         onBeforePlacedInWindow(window) {
           let doc = window.document;
@@ -164,7 +165,7 @@ var PocketPageAction = {
         },
         onIframeHiding(iframe, panel) {
           if (iframe.getAttribute("itemAdded") == "true") {
-            PocketPageAction.startLibraryAnimation(iframe.ownerDocument);
+            iframe.ownerGlobal.LibraryUI.triggerLibraryAnimation("pocket");
           }
         },
         onIframeHidden(iframe, panel) {
@@ -195,54 +196,6 @@ var PocketPageAction = {
 
     this.pageAction.remove();
     this.pageAction = null;
-  },
-
-  startLibraryAnimation(doc) {
-    let libraryButton = doc.getElementById("library-button");
-    if (!Services.prefs.getBoolPref("toolkit.cosmeticAnimations.enabled") ||
-        !libraryButton ||
-        libraryButton.getAttribute("cui-areatype") == "menu-panel" ||
-        libraryButton.getAttribute("overflowedItem") == "true" ||
-        !libraryButton.closest("#nav-bar")) {
-      return;
-    }
-
-    let animatableBox = doc.getElementById("library-animatable-box");
-    let navBar = doc.getElementById("nav-bar");
-    let libraryIcon = doc.getAnonymousElementByAttribute(libraryButton, "class", "toolbarbutton-icon");
-    let dwu = doc.defaultView.getInterface(Ci.nsIDOMWindowUtils);
-    let iconBounds = dwu.getBoundsWithoutFlushing(libraryIcon);
-    let libraryBounds = dwu.getBoundsWithoutFlushing(libraryButton);
-
-    animatableBox.style.setProperty("--library-button-y", libraryBounds.y + "px");
-    animatableBox.style.setProperty("--library-button-height", libraryBounds.height + "px");
-    animatableBox.style.setProperty("--library-icon-x", iconBounds.x + "px");
-    if (navBar.hasAttribute("brighttext")) {
-      animatableBox.setAttribute("brighttext", "true");
-    } else {
-      animatableBox.removeAttribute("brighttext");
-    }
-    animatableBox.removeAttribute("fade");
-    doc.defaultView.gNavToolbox.setAttribute("animate", "pocket");
-    libraryButton.setAttribute("animate", "pocket");
-    animatableBox.setAttribute("animate", "pocket");
-    animatableBox.addEventListener("animationend", PocketPageAction.onLibraryButtonAnimationEnd);
-  },
-
-  onLibraryButtonAnimationEnd(event) {
-    let doc = event.target.ownerDocument;
-    let libraryButton = doc.getElementById("library-button");
-    let animatableBox = doc.getElementById("library-animatable-box");
-    if (event.animationName.startsWith("library-pocket-animation")) {
-      animatableBox.setAttribute("fade", "true");
-    } else if (event.animationName == "library-pocket-fade") {
-      animatableBox.removeEventListener("animationend", PocketPageAction.onLibraryButtonAnimationEnd);
-      // Put the 'fill' back in the normal icon.
-      libraryButton.removeAttribute("animate");
-      animatableBox.removeAttribute("animate");
-      animatableBox.removeAttribute("fade");
-      event.target.ownerGlobal.gNavToolbox.removeAttribute("animate");
-    }
   },
 };
 
