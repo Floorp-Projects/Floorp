@@ -12,7 +12,6 @@ import android.os.Bundle;
 import android.os.Environment;
 import android.preference.PreferenceManager;
 import android.support.annotation.NonNull;
-import android.support.annotation.Nullable;
 import android.support.annotation.VisibleForTesting;
 import android.util.AttributeSet;
 import android.util.Log;
@@ -38,14 +37,14 @@ import org.mozilla.focus.web.Download;
 import org.mozilla.focus.web.IWebView;
 import org.mozilla.focus.web.WebViewProvider;
 
-public class WebkitView extends NestedWebView implements IWebView, SharedPreferences.OnSharedPreferenceChangeListener {
+public class SystemWebView extends NestedWebView implements IWebView, SharedPreferences.OnSharedPreferenceChangeListener {
     private static final String TAG = "WebkitView";
 
     private Callback callback;
     private FocusWebViewClient client;
     private final LinkHandler linkHandler;
 
-    public WebkitView(Context context, AttributeSet attrs) {
+    public SystemWebView(Context context, AttributeSet attrs) {
         super(context, attrs);
 
         client = new FocusWebViewClient(getContext().getApplicationContext());

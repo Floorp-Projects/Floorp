@@ -19,7 +19,7 @@ import android.webkit.WebView;
 import org.mozilla.focus.R;
 import org.mozilla.focus.utils.Settings;
 import org.mozilla.focus.webkit.TrackingProtectionWebViewClient;
-import org.mozilla.focus.webkit.WebkitView;
+import org.mozilla.focus.webkit.SystemWebView;
 
 /**
  * WebViewProvider for creating a WebKit based IWebVIew implementation.
@@ -35,11 +35,11 @@ public class WebViewProvider {
     }
 
     public static void performCleanup(final Context context) {
-        WebkitView.deleteContentFromKnownLocations(context);
+        SystemWebView.deleteContentFromKnownLocations(context);
     }
 
     public static View create(Context context, AttributeSet attrs) {
-        final WebkitView webkitView = new WebkitView(context, attrs);
+        final SystemWebView webkitView = new SystemWebView(context, attrs);
         final WebSettings settings = webkitView.getSettings();
 
         setupView(webkitView);
