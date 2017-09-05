@@ -812,15 +812,16 @@ class Onboarding {
     return this._firstSession;
   }
 
-  _muteNotificationOnFirstSession() {
+  _getLastTourChangeTime() {
+    return 1000 * Services.prefs.getIntPref("browser.onboarding.notification.last-time-of-changing-tour-sec", 0);
+  }
+
+  _muteNotificationOnFirstSession(lastTourChangeTime) {
     if (!this._isFirstSession) {
       return false;
     }
 
-    // Reuse the `last-time-of-changing-tour-sec` to save the time that
-    // we try to prompt on the 1st session.
-    let lastTime = 1000 * Services.prefs.getIntPref("browser.onboarding.notification.last-time-of-changing-tour-sec", 0);
-    if (lastTime <= 0) {
+    if (lastTourChangeTime <= 0) {
       sendMessageToChrome("set-prefs", [{
         name: "browser.onboarding.notification.last-time-of-changing-tour-sec",
         value: Math.floor(Date.now() / 1000)
@@ -828,19 +829,18 @@ class Onboarding {
       return true;
     }
     let muteDuration = Services.prefs.getIntPref("browser.onboarding.notification.mute-duration-on-first-session-ms");
-    return Date.now() - lastTime <= muteDuration;
+    return Date.now() - lastTourChangeTime <= muteDuration;
   }
 
-  _isTimeForNextTourNotification() {
+  _isTimeForNextTourNotification(lastTourChangeTime) {
     let promptCount = Services.prefs.getIntPref("browser.onboarding.notification.prompt-count", 0);
     let maxCount = Services.prefs.getIntPref("browser.onboarding.notification.max-prompt-count-per-tour");
     if (promptCount >= maxCount) {
       return true;
     }
 
-    let lastTime = 1000 * Services.prefs.getIntPref("browser.onboarding.notification.last-time-of-changing-tour-sec", 0);
     let maxTime = Services.prefs.getIntPref("browser.onboarding.notification.max-life-time-per-tour-ms");
-    if (lastTime && Date.now() - lastTime >= maxTime) {
+    if (lastTourChangeTime && Date.now() - lastTourChangeTime >= maxTime) {
       return true;
     }
 
@@ -892,7 +892,8 @@ class Onboarding {
       return;
     }
 
-    if (this._muteNotificationOnFirstSession()) {
+    let lastTime = this._getLastTourChangeTime();
+    if (this._muteNotificationOnFirstSession(lastTime)) {
       return;
     }
     // After the notification mute on the 1st session,
@@ -900,9 +901,16 @@ class Onboarding {
     this._overlayIcon.classList.remove("onboarding-speech-bubble");
 
     let queue = this._getNotificationQueue();
+    let totalMaxTime = Services.prefs.getIntPref("browser.onboarding.notification.max-life-time-all-tours-ms");
+    if (lastTime && Date.now() - lastTime >= totalMaxTime) {
+      // Reach total max life time for all tour notifications.
+      // Clear the queue so that we would finish tour notifications below
+      queue = [];
+    }
+
     let startQueueLength = queue.length;
     // See if need to move on to the next tour
-    if (queue.length > 0 && this._isTimeForNextTourNotification()) {
+    if (queue.length > 0 && this._isTimeForNextTourNotification(lastTime)) {
       queue.shift();
     }
     // We don't want to prompt completed tour.

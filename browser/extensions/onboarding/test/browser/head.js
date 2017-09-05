@@ -33,6 +33,7 @@ function resetOnboardingDefaultState() {
   Preferences.set("browser.onboarding.notification.finished", false);
   Preferences.set("browser.onboarding.notification.mute-duration-on-first-session-ms", 300000);
   Preferences.set("browser.onboarding.notification.max-life-time-per-tour-ms", 432000000);
+  Preferences.set("browser.onboarding.notification.max-life-time-all-tours-ms", 1209600000);
   Preferences.set("browser.onboarding.notification.max-prompt-count-per-tour", 8);
   Preferences.reset("browser.onboarding.notification.last-time-of-changing-tour-sec");
   Preferences.reset("browser.onboarding.notification.prompt-count");
