@@ -174,7 +174,9 @@ RendererOGL::Render()
     mSyncObject->Synchronize();
   }
 
-  wr_renderer_render(mRenderer, size.width, size.height);
+  if (!wr_renderer_render(mRenderer, size.width, size.height)) {
+    NotifyWebRenderError(WebRenderError::RENDER);
+  }
 
   mGL->SwapBuffers();
   mWidget->PostRender(&widgetContext);

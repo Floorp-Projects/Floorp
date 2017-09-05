@@ -4,15 +4,12 @@
 //! functions and use types defined in the header.
 //!
 //! See the [`Builder`](./struct.Builder.html) struct for usage.
-
 #![deny(missing_docs)]
 #![deny(warnings)]
 #![deny(unused_extern_crates)]
-
 // We internally use the deprecated BindgenOptions all over the place. Once we
 // remove its `pub` declaration, we can un-deprecate it and remove this pragma.
 #![allow(deprecated)]
-
 // To avoid rather annoying warnings when matching with CXCursor_xxx as a
 // constant.
 #![allow(non_upper_case_globals)]
@@ -29,6 +26,7 @@ extern crate peeking_take_while;
 extern crate regex;
 #[macro_use]
 extern crate lazy_static;
+extern crate which;
 
 #[cfg(feature = "logging")]
 #[macro_use]
@@ -62,10 +60,10 @@ macro_rules! doc_mod {
 }
 
 mod clang;
+mod features;
 mod ir;
 mod parse;
 mod regex_set;
-mod uses;
 
 pub mod callbacks;
 
@@ -73,23 +71,25 @@ pub mod callbacks;
 mod codegen;
 
 doc_mod!(clang, clang_docs);
+doc_mod!(features, features_docs);
 doc_mod!(ir, ir_docs);
 doc_mod!(parse, parse_docs);
 doc_mod!(regex_set, regex_set_docs);
-doc_mod!(uses, uses_docs);
 
 mod codegen {
     include!(concat!(env!("OUT_DIR"), "/codegen.rs"));
 }
 
+pub use features::{LATEST_STABLE_RUST, RUST_TARGET_STRINGS, RustTarget};
+use features::RustFeatures;
 use ir::context::{BindgenContext, ItemId};
 use ir::item::Item;
 use parse::{ClangItemParser, ParseError};
 use regex_set::RegexSet;
 
 use std::fs::{File, OpenOptions};
-use std::iter;
 use std::io::{self, Write};
+use std::iter;
 use std::path::{Path, PathBuf};
 use std::process::{Command, Stdio};
 use std::sync::Arc;
@@ -181,7 +181,7 @@ pub fn builder() -> Builder {
 }
 
 impl Builder {
-     /// Generates the command line flags use for creating `Builder`.
+    /// Generates the command line flags use for creating `Builder`.
     pub fn command_line_flags(&self) -> Vec<String> {
         let mut output_vector: Vec<String> = Vec::new();
 
@@ -190,14 +190,20 @@ impl Builder {
             output_vector.push(header);
         }
 
+        output_vector.push(self.options.rust_target.into());
+
         self.options
             .bitfield_enums
             .get_items()
             .iter()
             .map(|item| {
-                     output_vector.push("--bitfield-enum".into());
-                     output_vector.push(item.trim_left_matches("^").trim_right_matches("$").into());
-                 })
+                output_vector.push("--bitfield-enum".into());
+                output_vector.push(
+                    item.trim_left_matches("^")
+                        .trim_right_matches("$")
+                        .into(),
+                );
+            })
             .count();
 
         self.options
@@ -205,9 +211,13 @@ impl Builder {
             .get_items()
             .iter()
             .map(|item| {
-                     output_vector.push("--constified-enum".into());
-                     output_vector.push(item.trim_left_matches("^").trim_right_matches("$").into());
-                 })
+                output_vector.push("--constified-enum".into());
+                output_vector.push(
+                    item.trim_left_matches("^")
+                        .trim_right_matches("$")
+                        .into(),
+                );
+            })
             .count();
 
         self.options
@@ -215,9 +225,13 @@ impl Builder {
             .get_items()
             .iter()
             .map(|item| {
-                     output_vector.push("--constified-enum-module".into());
-                     output_vector.push(item.trim_left_matches("^").trim_right_matches("$").into());
-                 })
+                output_vector.push("--constified-enum-module".into());
+                output_vector.push(
+                    item.trim_left_matches("^")
+                        .trim_right_matches("$")
+                        .into(),
+                );
+            })
             .count();
 
         self.options
@@ -225,9 +239,13 @@ impl Builder {
             .get_items()
             .iter()
             .map(|item| {
-                     output_vector.push("--blacklist-type".into());
-                     output_vector.push(item.trim_left_matches("^").trim_right_matches("$").into());
-                 })
+                output_vector.push("--blacklist-type".into());
+                output_vector.push(
+                    item.trim_left_matches("^")
+                        .trim_right_matches("$")
+                        .into(),
+                );
+            })
             .count();
 
         if !self.options.layout_tests {
@@ -238,10 +256,26 @@ impl Builder {
             output_vector.push("--no-derive-debug".into());
         }
 
+        if !self.options.impl_debug {
+            output_vector.push("--impl-debug".into());
+        }
+
         if !self.options.derive_default {
             output_vector.push("--no-derive-default".into());
         } else {
             output_vector.push("--with-derive-default".into());
+        }
+
+        if self.options.derive_hash {
+            output_vector.push("--with-derive-hash".into());
+        }
+
+        if self.options.derive_partialeq {
+            output_vector.push("--with-derive-partialeq".into());
+        }
+
+        if self.options.derive_eq {
+            output_vector.push("--with-derive-eq".into());
         }
 
         if !self.options.generate_comments {
@@ -263,11 +297,6 @@ impl Builder {
         if let Some(ref prefix) = self.options.ctypes_prefix {
             output_vector.push("--ctypes-prefix".into());
             output_vector.push(prefix.clone());
-        }
-
-        if let Some(ref dummy) = self.options.dummy_uses {
-            output_vector.push("--dummy-uses".into());
-            output_vector.push(dummy.clone());
         }
 
         if self.options.emit_ast {
@@ -292,9 +321,13 @@ impl Builder {
             .links
             .iter()
             .map(|&(ref item, _)| {
-                     output_vector.push("--framework".into());
-                     output_vector.push(item.trim_left_matches("^").trim_right_matches("$").into());
-                 })
+                output_vector.push("--framework".into());
+                output_vector.push(
+                    item.trim_left_matches("^")
+                        .trim_right_matches("$")
+                        .into(),
+                );
+            })
             .count();
 
         if !self.options.codegen_config.functions {
@@ -304,7 +337,7 @@ impl Builder {
         output_vector.push("--generate".into());
 
         //Temporary placeholder for below 4 options
-        let mut options:Vec<String> = Vec::new();
+        let mut options: Vec<String> = Vec::new();
         if self.options.codegen_config.functions {
             options.push("function".into());
         }
@@ -334,9 +367,13 @@ impl Builder {
             .links
             .iter()
             .map(|&(ref item, _)| {
-                     output_vector.push("--clang-args".into());
-                     output_vector.push(item.trim_left_matches("^").trim_right_matches("$").into());
-                 })
+                output_vector.push("--clang-args".into());
+                output_vector.push(
+                    item.trim_left_matches("^")
+                        .trim_right_matches("$")
+                        .into(),
+                );
+            })
             .count();
 
         if !self.options.convert_floats {
@@ -347,36 +384,44 @@ impl Builder {
             output_vector.push("--no-prepend-enum-name".into());
         }
 
-        if !self.options.unstable_rust {
-            output_vector.push("--unstable-rust".into());
-        }
-
         self.options
             .opaque_types
             .get_items()
             .iter()
             .map(|item| {
-                     output_vector.push("--opaque-type".into());
-                     output_vector.push(item.trim_left_matches("^").trim_right_matches("$").into());
-                 })
+                output_vector.push("--opaque-type".into());
+                output_vector.push(
+                    item.trim_left_matches("^")
+                        .trim_right_matches("$")
+                        .into(),
+                );
+            })
             .count();
 
         self.options
             .raw_lines
             .iter()
             .map(|item| {
-                     output_vector.push("--raw-line".into());
-                     output_vector.push(item.trim_left_matches("^").trim_right_matches("$").into());
-                 })
+                output_vector.push("--raw-line".into());
+                output_vector.push(
+                    item.trim_left_matches("^")
+                        .trim_right_matches("$")
+                        .into(),
+                );
+            })
             .count();
 
         self.options
             .links
             .iter()
             .map(|&(ref item, _)| {
-                     output_vector.push("--static".into());
-                     output_vector.push(item.trim_left_matches("^").trim_right_matches("$").into());
-                 })
+                output_vector.push("--static".into());
+                output_vector.push(
+                    item.trim_left_matches("^")
+                        .trim_right_matches("$")
+                        .into(),
+                );
+            })
             .count();
 
         if self.options.use_core {
@@ -392,9 +437,13 @@ impl Builder {
             .get_items()
             .iter()
             .map(|item| {
-                     output_vector.push("--whitelist-function".into());
-                     output_vector.push(item.trim_left_matches("^").trim_right_matches("$").into());
-                 })
+                output_vector.push("--whitelist-function".into());
+                output_vector.push(
+                    item.trim_left_matches("^")
+                        .trim_right_matches("$")
+                        .into(),
+                );
+            })
             .count();
 
         self.options
@@ -402,9 +451,13 @@ impl Builder {
             .get_items()
             .iter()
             .map(|item| {
-                     output_vector.push("--whitelist-type".into());
-                     output_vector.push(item.trim_left_matches("^").trim_right_matches("$").into());
-                 })
+                output_vector.push("--whitelist-type".into());
+                output_vector.push(
+                    item.trim_left_matches("^")
+                        .trim_right_matches("$")
+                        .into(),
+                );
+            })
             .count();
 
         self.options
@@ -412,24 +465,40 @@ impl Builder {
             .get_items()
             .iter()
             .map(|item| {
-                     output_vector.push("--whitelist-var".into());
-                     output_vector.push(item.trim_left_matches("^").trim_right_matches("$").into());
-                 })
+                output_vector.push("--whitelist-var".into());
+                output_vector.push(
+                    item.trim_left_matches("^")
+                        .trim_right_matches("$")
+                        .into(),
+                );
+            })
             .count();
 
         output_vector.push("--".into());
 
         if !self.options.clang_args.is_empty() {
-            output_vector.extend(
-                self.options
-                    .clang_args
-                    .iter()
-                    .cloned()
-            );
+            output_vector.extend(self.options.clang_args.iter().cloned());
         }
 
         if self.input_headers.len() > 1 {
-            output_vector.extend(self.input_headers[..self.input_headers.len() - 1].iter().cloned());
+            output_vector.extend(
+                self.input_headers[..self.input_headers.len() - 1]
+                    .iter()
+                    .cloned(),
+            );
+        }
+
+        if !self.options.rustfmt_bindings {
+            output_vector.push("--rustfmt-bindings".into());
+        }
+
+        if let Some(path) = self.options
+            .rustfmt_configuration_file
+            .as_ref()
+            .and_then(|f| f.to_str())
+        {
+            output_vector.push("--rustfmt-configuration-file".into());
+            output_vector.push(path.into());
         }
 
         output_vector
@@ -466,7 +535,17 @@ impl Builder {
     ///
     /// The file `name` will be added to the clang arguments.
     pub fn header_contents(mut self, name: &str, contents: &str) -> Builder {
-        self.input_header_contents.push((name.into(), contents.into()));
+        self.input_header_contents.push(
+            (name.into(), contents.into()),
+        );
+        self
+    }
+
+    /// Specify the rust target
+    ///
+    /// The default is the latest stable Rust version
+    pub fn rust_target(mut self, rust_target: RustTarget) -> Self {
+        self.options.set_rust_target(rust_target);
         self
     }
 
@@ -516,13 +595,6 @@ impl Builder {
     /// [1]: https://github.com/rust-lang-nursery/rust-bindgen/issues/528
     pub fn trust_clang_mangling(mut self, doit: bool) -> Self {
         self.options.enable_mangling = doit;
-        self
-    }
-
-    /// Generate a C/C++ file that includes the header and has dummy uses of
-    /// every type defined in the header.
-    pub fn dummy_uses<T: Into<String>>(mut self, dummy_uses: T) -> Builder {
-        self.options.dummy_uses = Some(dummy_uses.into());
         self
     }
 
@@ -609,8 +681,10 @@ impl Builder {
 
     /// Add arguments to be passed straight through to clang.
     pub fn clang_args<I>(mut self, iter: I) -> Builder
-        where I: IntoIterator,
-              I::Item: AsRef<str> {
+    where
+        I: IntoIterator,
+        I::Item: AsRef<str>,
+    {
         for arg in iter {
             self = self.clang_arg(arg.as_ref())
         }
@@ -631,7 +705,9 @@ impl Builder {
 
     /// Make the generated bindings link the given framework.
     pub fn link_framework<T: Into<String>>(mut self, library: T) -> Builder {
-        self.options.links.push((library.into(), LinkType::Framework));
+        self.options.links.push(
+            (library.into(), LinkType::Framework),
+        );
         self
     }
 
@@ -660,9 +736,41 @@ impl Builder {
         self
     }
 
+    /// Set whether `Debug` should be implemented, if it can not be derived automatically.
+    pub fn impl_debug(mut self, doit: bool) -> Self {
+        self.options.impl_debug = doit;
+        self
+    }
+
     /// Set whether `Default` should be derived by default.
     pub fn derive_default(mut self, doit: bool) -> Self {
         self.options.derive_default = doit;
+        self
+    }
+
+    /// Set whether `Hash` should be derived by default.
+    pub fn derive_hash(mut self, doit: bool) -> Self {
+        self.options.derive_hash = doit;
+        self
+    }
+
+    /// Set whether `PartialEq` should be derived by default.
+    /// If we don't compute partialeq, we also cannot compute
+    /// eq. Set the derive_eq to `false` when doit is `false`.
+    pub fn derive_partialeq(mut self, doit: bool) -> Self {
+        self.options.derive_partialeq = doit;
+        if !doit {
+            self.options.derive_eq = false;
+        }
+        self
+    }
+
+    /// Set whether `Eq` should be derived by default.
+    /// We can't compute Eq without computing PartialEq, so
+    /// we set the same option to derive_partialeq.
+    pub fn derive_eq(mut self, doit: bool) -> Self {
+        self.options.derive_eq = doit;
+        self.options.derive_partialeq = doit;
         self
     }
 
@@ -758,9 +866,14 @@ impl Builder {
     }
 
     /// Avoid generating any unstable Rust, such as Rust unions, in the generated bindings.
-    pub fn unstable_rust(mut self, doit: bool) -> Self {
-        self.options.unstable_rust = doit;
-        self
+    #[deprecated(note = "please use `rust_target` instead")]
+    pub fn unstable_rust(self, doit: bool) -> Self {
+        let rust_target = if doit {
+            RustTarget::Nightly
+        } else {
+            LATEST_STABLE_RUST
+        };
+        self.rust_target(rust_target)
     }
 
     /// Use core instead of libstd in the generated bindings.
@@ -777,7 +890,10 @@ impl Builder {
 
     /// Allows configuring types in different situations, see the
     /// [`ParseCallbacks`](./callbacks/trait.ParseCallbacks.html) documentation.
-    pub fn parse_callbacks(mut self, cb: Box<callbacks::ParseCallbacks>) -> Self {
+    pub fn parse_callbacks(
+        mut self,
+        cb: Box<callbacks::ParseCallbacks>,
+    ) -> Self {
         self.options.parse_callbacks = Some(cb);
         self
     }
@@ -795,6 +911,20 @@ impl Builder {
         self
     }
 
+    /// Set whether rustfmt should format the generated bindings.
+    pub fn rustfmt_bindings(mut self, doit: bool) -> Self {
+        self.options.rustfmt_bindings = doit;
+        self
+    }
+
+    /// Set the absolute path to the rustfmt configuration file, if None, the standard rustfmt
+    /// options are used.
+    pub fn rustfmt_configuration_file(mut self, path: Option<PathBuf>) -> Self {
+        self = self.rustfmt_bindings(true);
+        self.options.rustfmt_configuration_file = path;
+        self
+    }
+
     /// Generate the Rust bindings using the options built up thus far.
     pub fn generate<'ctx>(mut self) -> Result<Bindings<'ctx>, ()> {
         self.options.input_header = self.input_headers.pop();
@@ -802,15 +932,14 @@ impl Builder {
             self.input_headers
                 .drain(..)
                 .flat_map(|header| {
-                    iter::once("-include".into())
-                        .chain(iter::once(header))
-                })
+                    iter::once("-include".into()).chain(iter::once(header))
+                }),
         );
 
         self.options.input_unsaved_files.extend(
-            self.input_header_contents
-                .drain(..)
-                .map(|(name, contents)| clang::UnsavedFile::new(&name, &contents))
+            self.input_header_contents.drain(..).map(|(name, contents)| {
+                clang::UnsavedFile::new(&name, &contents)
+            }),
         );
 
         Bindings::generate(self.options, None)
@@ -822,9 +951,9 @@ impl Builder {
     /// issues. The resulting file will be named something like `__bindgen.i` or
     /// `__bindgen.ii`
     pub fn dump_preprocessed_input(&self) -> io::Result<()> {
-        let clang = clang_sys::support::Clang::find(None, &[])
-            .ok_or_else(|| io::Error::new(io::ErrorKind::Other,
-                                          "Cannot find clang executable"))?;
+        let clang = clang_sys::support::Clang::find(None, &[]).ok_or_else(|| {
+            io::Error::new(io::ErrorKind::Other, "Cannot find clang executable")
+        })?;
 
         // The contents of a wrapper file that includes all the input header
         // files.
@@ -893,8 +1022,10 @@ impl Builder {
         if child.wait()?.success() {
             Ok(())
         } else {
-            Err(io::Error::new(io::ErrorKind::Other,
-                               "clang exited with non-zero status"))
+            Err(io::Error::new(
+                io::ErrorKind::Other,
+                "clang exited with non-zero status",
+            ))
         }
     }
 }
@@ -965,13 +1096,25 @@ pub struct BindgenOptions {
     /// and types.
     pub derive_debug: bool,
 
+    /// True if we should implement the Debug trait for C/C++ structures and types
+    /// that do not support automatically deriving Debug.
+    pub impl_debug: bool,
+
     /// True if we should derive Default trait implementations for C/C++ structures
     /// and types.
     pub derive_default: bool,
 
-    /// True if we can use unstable Rust code in the bindings, false if we
-    /// cannot.
-    pub unstable_rust: bool,
+    /// True if we should derive Hash trait implementations for C/C++ structures
+    /// and types.
+    pub derive_hash: bool,
+
+    /// True if we should derive PartialEq trait implementations for C/C++ structures
+    /// and types.
+    pub derive_partialeq: bool,
+
+    /// True if we should derive Eq trait implementations for C/C++ structures
+    /// and types.
+    pub derive_eq: bool,
 
     /// True if we should avoid using libstd to use libcore instead.
     pub use_core: bool,
@@ -1000,10 +1143,6 @@ pub struct BindgenOptions {
 
     /// Unsaved files for input.
     pub input_unsaved_files: Vec<clang::UnsavedFile>,
-
-    /// Generate a dummy C/C++ file that includes the header and has dummy uses
-    /// of all types defined therein. See the `uses` module for more.
-    pub dummy_uses: Option<String>,
 
     /// A user-provided visitor to allow customizing different kinds of
     /// situations.
@@ -1043,6 +1182,19 @@ pub struct BindgenOptions {
 
     /// Whether to prepend the enum name to bitfield or constant variants.
     pub prepend_enum_name: bool,
+
+    /// Version of the Rust compiler to target
+    rust_target: RustTarget,
+
+    /// Features to enable, derived from `rust_target`
+    rust_features: RustFeatures,
+
+    /// Whether rustfmt should format the generated bindings.
+    pub rustfmt_bindings: bool,
+
+    /// The absolute path to the rustfmt configuration file, if None, the standard rustfmt
+    /// options are used.
+    pub rustfmt_configuration_file: Option<PathBuf>,
 }
 
 /// TODO(emilio): This is sort of a lie (see the error message that results from
@@ -1061,11 +1213,33 @@ impl BindgenOptions {
         self.constified_enum_modules.build();
         self.constified_enums.build();
     }
+
+    /// Update rust target version
+    pub fn set_rust_target(&mut self, rust_target: RustTarget) {
+        self.rust_target = rust_target;
+
+        // Keep rust_features synced with rust_target
+        self.rust_features = rust_target.into();
+    }
+
+    /// Get target Rust version
+    pub fn rust_target(&self) -> RustTarget {
+        self.rust_target
+    }
+
+    /// Get features supported by target Rust version
+    pub fn rust_features(&self) -> RustFeatures {
+        self.rust_features
+    }
 }
 
 impl Default for BindgenOptions {
     fn default() -> BindgenOptions {
+        let rust_target = RustTarget::default();
+
         BindgenOptions {
+            rust_target: rust_target,
+            rust_features: rust_target.into(),
             hidden_types: Default::default(),
             opaque_types: Default::default(),
             whitelisted_types: Default::default(),
@@ -1081,10 +1255,13 @@ impl Default for BindgenOptions {
             emit_ir_graphviz: None,
             layout_tests: true,
             derive_debug: true,
+            impl_debug: false,
             derive_default: false,
+            derive_hash: false,
+            derive_partialeq: false,
+            derive_eq: false,
             enable_cxx_namespaces: false,
             disable_name_namespacing: false,
-            unstable_rust: false,
             use_core: false,
             ctypes_prefix: None,
             namespaced_constants: true,
@@ -1094,7 +1271,6 @@ impl Default for BindgenOptions {
             clang_args: vec![],
             input_header: None,
             input_unsaved_files: vec![],
-            dummy_uses: None,
             parse_callbacks: None,
             codegen_config: CodegenConfig::all(),
             conservative_inline_namespaces: false,
@@ -1104,6 +1280,8 @@ impl Default for BindgenOptions {
             objc_extern_crate: false,
             enable_mangling: true,
             prepend_enum_name: true,
+            rustfmt_bindings: false,
+            rustfmt_configuration_file: None,
         }
     }
 }
@@ -1154,9 +1332,10 @@ impl<'ctx> Bindings<'ctx> {
     ///
     /// Deprecated - use a `Builder` instead
     #[deprecated]
-    pub fn generate(mut options: BindgenOptions,
-                    span: Option<Span>)
-                    -> Result<Bindings<'ctx>, ()> {
+    pub fn generate(
+        mut options: BindgenOptions,
+        span: Option<Span>,
+    ) -> Result<Bindings<'ctx>, ()> {
         let span = span.unwrap_or(DUMMY_SP);
         ensure_libclang_is_loaded();
 
@@ -1190,10 +1369,15 @@ impl<'ctx> Bindings<'ctx> {
         };
 
         // TODO: Make this path fixup configurable?
-        if let Some(clang) = clang_sys::support::Clang::find(None, &clang_args_for_clang_sys) {
+        if let Some(clang) = clang_sys::support::Clang::find(
+            None,
+            &clang_args_for_clang_sys,
+        )
+        {
             // If --target is specified, assume caller knows what they're doing
             // and don't mess with include paths for them
-            let has_target_arg = options.clang_args
+            let has_target_arg = options
+                .clang_args
                 .iter()
                 .rposition(|arg| arg.starts_with("--target"))
                 .is_some();
@@ -1243,25 +1427,34 @@ impl<'ctx> Bindings<'ctx> {
         let mut mod_str = vec![];
         {
             let ref_writer = Box::new(mod_str.by_ref()) as Box<Write>;
-            self.write(ref_writer).expect("Could not write bindings to string");
+            self.write(ref_writer).expect(
+                "Could not write bindings to string",
+            );
         }
         String::from_utf8(mod_str).unwrap()
     }
 
     /// Write these bindings as source text to a file.
     pub fn write_to_file<P: AsRef<Path>>(&self, path: P) -> io::Result<()> {
-        let file = try!(OpenOptions::new()
-            .write(true)
-            .truncate(true)
-            .create(true)
-            .open(path));
-        self.write(Box::new(file))
+        {
+            let file = try!(
+                OpenOptions::new()
+                    .write(true)
+                    .truncate(true)
+                    .create(true)
+                    .open(path.as_ref())
+            );
+            self.write(Box::new(file))?;
+        }
+
+        self.rustfmt_generated_file(path.as_ref())
     }
 
     /// Write these bindings as source text to the given `Write`able.
     pub fn write<'a>(&self, mut writer: Box<Write + 'a>) -> io::Result<()> {
-        try!(writer.write("/* automatically generated by rust-bindgen */\n\n"
-            .as_bytes()));
+        try!(writer.write(
+            "/* automatically generated by rust-bindgen */\n\n".as_bytes(),
+        ));
 
         for line in self.context.options().raw_lines.iter() {
             try!(writer.write(line.as_bytes()));
@@ -1278,27 +1471,61 @@ impl<'ctx> Bindings<'ctx> {
         ps.s.out.flush()
     }
 
-    /// Generate and write dummy uses of all the types we parsed, if we've been
-    /// requested to do so in the options.
-    ///
-    /// See the `uses` module for more information.
-    pub fn write_dummy_uses(&mut self) -> io::Result<()> {
-        let file = if let Some(ref dummy_path) =
-            self.context.options().dummy_uses {
-            Some(try!(OpenOptions::new()
-                .write(true)
-                .truncate(true)
-                .create(true)
-                .open(dummy_path)))
-        } else {
-            None
-        };
-
-        if let Some(file) = file {
-            try!(uses::generate_dummy_uses(&mut self.context, file));
+    /// Checks if rustfmt_bindings is set and runs rustfmt on the file
+    fn rustfmt_generated_file(&self, file: &Path) -> io::Result<()> {
+        if !self.context.options().rustfmt_bindings {
+            return Ok(());
         }
 
-        Ok(())
+        let rustfmt = if let Ok(rustfmt) = which::which("rustfmt") {
+            rustfmt
+        } else {
+            return Err(io::Error::new(
+                io::ErrorKind::Other,
+                "Rustfmt activated, but it could not be found in global path.",
+            ));
+        };
+
+        let mut cmd = Command::new(rustfmt);
+
+        if let Some(path) = self.context
+            .options()
+            .rustfmt_configuration_file
+            .as_ref()
+            .and_then(|f| f.to_str())
+        {
+            cmd.args(&["--config-path", path]);
+        }
+
+        if let Ok(output) = cmd.arg(file).output() {
+            if !output.status.success() {
+                let stderr = String::from_utf8_lossy(&output.stderr);
+                match output.status.code() {
+                    Some(2) => Err(io::Error::new(
+                        io::ErrorKind::Other,
+                        format!("Rustfmt parsing errors:\n{}", stderr),
+                    )),
+                    Some(3) => {
+                        warn!(
+                            "Rustfmt could not format some lines:\n{}",
+                            stderr
+                        );
+                        Ok(())
+                    }
+                    _ => Err(io::Error::new(
+                        io::ErrorKind::Other,
+                        format!("Internal rustfmt error:\n{}", stderr),
+                    )),
+                }
+            } else {
+                Ok(())
+            }
+        } else {
+            Err(io::Error::new(
+                io::ErrorKind::Other,
+                "Error executing rustfmt!",
+            ))
+        }
     }
 }
 
@@ -1309,10 +1536,11 @@ fn filter_builtins(ctx: &BindgenContext, cursor: &clang::Cursor) -> bool {
 }
 
 /// Parse one `Item` from the Clang cursor.
-pub fn parse_one(ctx: &mut BindgenContext,
-                 cursor: clang::Cursor,
-                 parent: Option<ItemId>)
-                 -> clang_sys::CXChildVisitResult {
+pub fn parse_one(
+    ctx: &mut BindgenContext,
+    cursor: clang::Cursor,
+    parent: Option<ItemId>,
+) -> clang_sys::CXChildVisitResult {
     if !filter_builtins(ctx, &cursor) {
         return CXChildVisit_Continue;
     }
@@ -1363,8 +1591,10 @@ fn parse(context: &mut BindgenContext) -> Result<(), ()> {
         cursor.visit(|cursor| parse_one(context, cursor, None))
     });
 
-    assert!(context.current_module() == context.root_module(),
-            "How did this happen?");
+    assert!(
+        context.current_module() == context.root_module(),
+        "How did this happen?"
+    );
     Ok(())
 }
 
@@ -1385,9 +1615,9 @@ pub fn clang_version() -> ClangVersion {
     }
 
     let raw_v: String = clang::extract_clang_version();
-    let split_v: Option<Vec<&str>> = raw_v.split_whitespace()
-        .nth(2)
-        .map(|v| v.split('.').collect());
+    let split_v: Option<Vec<&str>> = raw_v.split_whitespace().nth(2).map(|v| {
+        v.split('.').collect()
+    });
     match split_v {
         Some(v) => {
             if v.len() >= 2 {
@@ -1419,30 +1649,41 @@ fn commandline_flag_unit_test_function() {
     let bindings = ::builder();
     let command_line_flags = bindings.command_line_flags();
 
-    let test_cases = vec!["--no-derive-default",
-                          "--generate", "function,types,vars,methods,constructors,destructors"]
-                    .iter()
-                    .map(|&x| x.into())
-                    .collect::<Vec<String>>();
+    let test_cases = vec![
+        "--no-derive-default",
+        "--generate",
+        "function,types,vars,methods,constructors,destructors",
+    ].iter()
+        .map(|&x| x.into())
+        .collect::<Vec<String>>();
 
-    assert!(test_cases.iter().all(|ref x| command_line_flags.contains(x)) );
+    assert!(test_cases.iter().all(
+        |ref x| command_line_flags.contains(x),
+    ));
 
     //Test 2
-    let bindings = ::builder().header("input_header")
-                              .whitelisted_type("Distinct_Type")
-                              .whitelisted_function("safe_function");
+    let bindings = ::builder()
+        .header("input_header")
+        .whitelisted_type("Distinct_Type")
+        .whitelisted_function("safe_function");
 
     let command_line_flags = bindings.command_line_flags();
-    let test_cases = vec!["input_header",
-                          "--no-derive-default",
-                          "--generate", "function,types,vars,methods,constructors,destructors",
-                          "--whitelist-type", "Distinct_Type",
-                          "--whitelist-function", "safe_function"]
-                    .iter()
-                    .map(|&x| x.into())
-                    .collect::<Vec<String>>();
+    let test_cases = vec![
+        "input_header",
+        "--no-derive-default",
+        "--generate",
+        "function,types,vars,methods,constructors,destructors",
+        "--whitelist-type",
+        "Distinct_Type",
+        "--whitelist-function",
+        "safe_function",
+    ].iter()
+        .map(|&x| x.into())
+        .collect::<Vec<String>>();
     println!("{:?}", command_line_flags);
 
-    assert!(test_cases.iter().all(|ref x| command_line_flags.contains(x)) );
+    assert!(test_cases.iter().all(
+        |ref x| command_line_flags.contains(x),
+    ));
 
 }

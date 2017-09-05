@@ -1,0 +1,16 @@
+[package]
+name = "thread-id"
+version = "3.0.0"
+authors = ["Ruud van Asseldonk <dev@veniogames.com>"]
+license = "Apache-2.0"
+readme = "readme.md"
+keywords = ["thread", "pthread", "getcurrentthreadid"]
+description = "Get a unique thread ID"
+repository = "https://github.com/ruuda/thread-id"
+documentation = "https://docs.rs/thread-id"
+
+[target.'cfg(unix)'.dependencies]
+libc = "0.2.6"
+
+[target.'cfg(windows)'.dependencies]
+kernel32-sys = "0.2.1"

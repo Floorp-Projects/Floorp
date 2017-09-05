@@ -302,18 +302,16 @@ RotatedContentBuffer::BorrowDrawTargetForQuadrantUpdate(const IntRect& aBounds,
   IntRect quadrantRect = GetQuadrantRectangle(sideX, sideY);
   NS_ASSERTION(quadrantRect.Contains(bounds), "Messed up quadrants");
 
-  mLoanedTransform = mLoanedDrawTarget->GetTransform();
-
-  Matrix transform = Matrix(mLoanedTransform)
-                          .PreTranslate(-quadrantRect.x,
-                                        -quadrantRect.y);
-
   if (aSetTransform) {
+    mLoanedTransform = mLoanedDrawTarget->GetTransform();
+    Matrix transform = Matrix(mLoanedTransform)
+                            .PreTranslate(-quadrantRect.x,
+                                          -quadrantRect.y);
     mLoanedDrawTarget->SetTransform(transform);
     mSetTransform = true;
   } else {
     MOZ_ASSERT(aOutMatrix);
-    *aOutMatrix = transform;
+    *aOutMatrix = Matrix::Translation(-quadrantRect.x, -quadrantRect.y);
     mSetTransform = false;
   }
 

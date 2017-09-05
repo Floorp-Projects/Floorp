@@ -529,6 +529,13 @@ VectorImage::GetNativeSizes(nsTArray<IntSize>& aNativeSizes) const
 }
 
 //******************************************************************************
+size_t
+VectorImage::GetNativeSizesLength() const
+{
+  return 0;
+}
+
+//******************************************************************************
 NS_IMETHODIMP_(void)
 VectorImage::RequestRefresh(const TimeStamp& aTime)
 {

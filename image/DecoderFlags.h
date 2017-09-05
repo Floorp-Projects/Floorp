@@ -23,7 +23,15 @@ enum class DecoderFlags : uint8_t
   FIRST_FRAME_ONLY               = 1 << 0,
   IS_REDECODE                    = 1 << 1,
   IMAGE_IS_TRANSIENT             = 1 << 2,
-  ASYNC_NOTIFY                   = 1 << 3
+  ASYNC_NOTIFY                   = 1 << 3,
+
+  /**
+   * By default, a surface is considered substitutable. That means callers are
+   * willing to accept a less than ideal match to display. If a caller requires
+   * a specific size and won't accept alternatives, then this flag should be
+   * set.
+   */
+  CANNOT_SUBSTITUTE              = 1 << 4
 };
 MOZ_MAKE_ENUM_CLASS_BITWISE_OPERATORS(DecoderFlags)
 
