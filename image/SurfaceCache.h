@@ -134,6 +134,10 @@ VectorSurfaceKey(const gfx::IntSize& aSize,
  * changes), an ISurfaceProvider which starts as a placeholder can only reveal
  * the fact that it now has a surface available via a call to
  * SurfaceCache::SurfaceAvailable().
+ *
+ * It also tracks whether or not there are "explicit" users of this surface
+ * which will not accept substitutes. This is used by SurfaceCache when pruning
+ * unnecessary surfaces from the cache.
  */
 class AvailabilityState
 {
@@ -143,15 +147,22 @@ public:
 
   bool IsAvailable() const { return mIsAvailable; }
   bool IsPlaceholder() const { return !mIsAvailable; }
+  bool CannotSubstitute() const { return mCannotSubstitute; }
+
+  void SetCannotSubstitute() { mCannotSubstitute = true; }
 
 private:
   friend class SurfaceCacheImpl;
 
-  explicit AvailabilityState(bool aIsAvailable) : mIsAvailable(aIsAvailable) { }
+  explicit AvailabilityState(bool aIsAvailable)
+    : mIsAvailable(aIsAvailable)
+    , mCannotSubstitute(false)
+  { }
 
   void SetAvailable() { mIsAvailable = true; }
 
-  bool mIsAvailable;
+  bool mIsAvailable : 1;
+  bool mCannotSubstitute : 1;
 };
 
 enum class InsertOutcome : uint8_t {
