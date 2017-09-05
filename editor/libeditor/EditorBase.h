@@ -972,16 +972,7 @@ public:
   /**
    * Fast non-refcounting editor root element accessor
    */
-  Element* GetRoot()
-  {
-    if (!mRootElement) {
-      // Let GetRootElement() do the work
-      nsCOMPtr<nsIDOMElement> root;
-      GetRootElement(getter_AddRefs(root));
-    }
-
-    return mRootElement;
-  }
+  Element* GetRoot() const { return mRootElement; }
 
   /**
    * Likewise, but gets the editor's root instead, which is different for HTML
