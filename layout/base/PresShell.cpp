@@ -6528,12 +6528,11 @@ nsIPresShell::GetPointerCaptureInfo(uint32_t aPointerId)
 /* static */ void
 nsIPresShell::ReleasePointerCapturingContent(uint32_t aPointerId)
 {
-  if (nsIDOMMouseEvent::MOZ_SOURCE_MOUSE == GetPointerType(aPointerId)) {
-    SetCapturingContent(nullptr, CAPTURE_PREVENTDRAG);
-  }
-
   PointerCaptureInfo* pointerCaptureInfo = GetPointerCaptureInfo(aPointerId);
-  if (pointerCaptureInfo) {
+  if (pointerCaptureInfo && pointerCaptureInfo->mPendingContent) {
+    if (nsIDOMMouseEvent::MOZ_SOURCE_MOUSE == GetPointerType(aPointerId)) {
+      SetCapturingContent(nullptr, CAPTURE_PREVENTDRAG);
+    }
     pointerCaptureInfo->mPendingContent = nullptr;
   }
 }
