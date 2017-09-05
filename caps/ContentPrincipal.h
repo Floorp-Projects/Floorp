@@ -14,6 +14,7 @@
 #include "nsNetUtil.h"
 #include "nsScriptSecurityManager.h"
 #include "mozilla/BasePrincipal.h"
+#include "mozilla/extensions/WebExtensionPolicy.h"
 
 class ContentPrincipal final : public mozilla::BasePrincipal
 {
@@ -47,6 +48,8 @@ public:
   static nsresult
   GenerateOriginNoSuffixFromURI(nsIURI* aURI, nsACString& aOrigin);
 
+  mozilla::extensions::WebExtensionPolicy* AddonPolicy();
+
   nsCOMPtr<nsIURI> mDomain;
   nsCOMPtr<nsIURI> mCodebase;
   // If mCodebaseImmutable is true, mCodebase is non-null and immutable
@@ -61,7 +64,7 @@ protected:
   bool MayLoadInternal(nsIURI* aURI) override;
 
 private:
-  mozilla::Maybe<nsString> mAddonIdCache;
+  mozilla::Maybe<mozilla::WeakPtr<mozilla::extensions::WebExtensionPolicy>> mAddon;
 };
 
 #define NS_PRINCIPAL_CONTRACTID "@mozilla.org/principal;1"

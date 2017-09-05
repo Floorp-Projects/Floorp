@@ -209,7 +209,6 @@
 #include "imgRequestProxy.h"
 #include "nsWrapperCacheInlines.h"
 #include "nsSandboxFlags.h"
-#include "nsIAddonPolicyService.h"
 #include "mozilla/dom/AnimatableBinding.h"
 #include "mozilla/dom/AnonymousContent.h"
 #include "mozilla/dom/BindingUtils.h"
@@ -227,6 +226,7 @@
 #include "mozilla/dom/CustomElementRegistryBinding.h"
 #include "mozilla/dom/CustomElementRegistry.h"
 #include "mozilla/dom/TimeoutManager.h"
+#include "mozilla/ExtensionPolicyService.h"
 #include "nsFrame.h"
 #include "nsDOMCaretPosition.h"
 #include "nsIDOMHTMLTextAreaElement.h"
@@ -2940,10 +2940,8 @@ nsDocument::InitCSP(nsIChannel* aChannel)
   NS_ConvertASCIItoUTF16 cspROHeaderValue(tCspROHeaderValue);
 
   // Check if this is a document from a WebExtension.
-  nsString addonId;
   nsCOMPtr<nsIPrincipal> principal = NodePrincipal();
-  principal->GetAddonId(addonId);
-  bool applyAddonCSP = !addonId.IsEmpty();
+  auto addonPolicy = BasePrincipal::Cast(principal)->AddonPolicy();
 
   // Check if this is a signed content to apply default CSP.
   bool applySignedContentCSP = false;
@@ -2953,7 +2951,7 @@ nsDocument::InitCSP(nsIChannel* aChannel)
   }
 
   // If there's no CSP to apply, go ahead and return early
-  if (!applyAddonCSP &&
+  if (!addonPolicy &&
       !applySignedContentCSP &&
       cspHeaderValue.IsEmpty() &&
       cspROHeaderValue.IsEmpty()) {
@@ -2977,19 +2975,14 @@ nsDocument::InitCSP(nsIChannel* aChannel)
   NS_ENSURE_SUCCESS(rv, rv);
 
   // ----- if the doc is an addon, apply its CSP.
-  if (applyAddonCSP) {
+  if (addonPolicy) {
     nsCOMPtr<nsIAddonPolicyService> aps = do_GetService("@mozilla.org/addons/policy-service;1");
 
     nsAutoString addonCSP;
-    rv = aps->GetBaseCSP(addonCSP);
-    if (NS_SUCCEEDED(rv)) {
-      csp->AppendPolicy(addonCSP, false, false);
-    }
+    Unused << ExtensionPolicyService::GetSingleton().GetBaseCSP(addonCSP);
+    csp->AppendPolicy(addonCSP, false, false);
 
-    rv = aps->GetAddonCSP(addonId, addonCSP);
-    if (NS_SUCCEEDED(rv)) {
-      csp->AppendPolicy(addonCSP, false, false);
-    }
+    csp->AppendPolicy(addonPolicy->ContentSecurityPolicy(), false, false);
   }
 
   // ----- if the doc is a signed content, apply the default CSP.

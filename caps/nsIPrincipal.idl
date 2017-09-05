@@ -274,6 +274,8 @@ interface nsIPrincipal : nsISerializable
      */
     readonly attribute AString addonId;
 
+    readonly attribute nsISupports addonPolicy;
+
     /**
      * Gets the id of the user context this principal is inside.  If this
      * principal is inside the default userContext, this returns
