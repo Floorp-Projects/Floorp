@@ -21,7 +21,9 @@ var video = document.getElementById("video");
 
 let onLoaded = event => {
   SpecialPowers.pushPrefEnv(
-    {"set": [["full-screen-api.allow-trusted-requests-only", false]]},
+    {"set": [["full-screen-api.allow-trusted-requests-only", false],
+             ["full-screen-api.unprefix.enabled", true],
+             ["media.videocontrols.lock-video-orientation", true]]},
     startMediaLoad);
 }
 window.addEventListener("load", onLoaded);

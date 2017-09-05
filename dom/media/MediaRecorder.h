@@ -140,6 +140,13 @@ protected:
   // available at the time the error event is fired. Note, depending on when
   // this is called there may not be a JS stack to capture.
   void InitializeDomExceptions();
+  // Set the recorder state to inactive. This is needed to handle error states
+  // in the recorder where state must transition to inactive before full
+  // stoppage can be reached.
+  void ForceInactive();
+  // Stop the recorder and its internal session. This should be used by
+  // sessions that are in the process of being destroyed.
+  void StopForSessionDestruction();
   // DOM wrapper for source media stream. Will be null when input is audio node.
   RefPtr<DOMMediaStream> mDOMStream;
   // Source audio node. Will be null when input is a media stream.

@@ -334,8 +334,6 @@ async function loadManifestFromWebManifest(aUri) {
     throw new Error("Extension is invalid");
   }
 
-  let theme = Boolean(manifest.theme);
-
   let bss = (manifest.browser_specific_settings && manifest.browser_specific_settings.gecko)
       || (manifest.applications && manifest.applications.gecko) || {};
   if (manifest.browser_specific_settings && manifest.applications) {
@@ -350,7 +348,8 @@ async function loadManifestFromWebManifest(aUri) {
   let addon = new AddonInternal();
   addon.id = bss.id;
   addon.version = manifest.version;
-  addon.type = "webextension" + (theme ? "-theme" : "");
+  addon.type = extension.type === "extension" ?
+               "webextension" : `webextension-${extension.type}`;
   addon.unpack = false;
   addon.strictCompatibility = true;
   addon.bootstrap = true;
@@ -435,7 +434,7 @@ async function loadManifestFromWebManifest(aUri) {
 
   addon.targetPlatforms = [];
   // Themes are disabled by default, except when they're installed from a web page.
-  addon.userDisabled = theme;
+  addon.userDisabled = (extension.type === "theme");
   addon.softDisabled = addon.blocklistState == nsIBlocklistService.STATE_SOFTBLOCKED;
 
   return addon;

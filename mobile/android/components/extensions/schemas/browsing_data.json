@@ -162,7 +162,6 @@
         "description": "Clears various types of browsing data stored in a user's profile.",
         "type": "function",
         "async": "callback",
-        "unsupported": true,
         "parameters": [
           {
             "$ref": "RemovalOptions",

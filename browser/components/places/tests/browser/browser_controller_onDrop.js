@@ -46,6 +46,11 @@ add_task(async function setup() {
 
 async function run_drag_test(startBookmarkIndex, insertionIndex,
                              realInsertionIndex, expectTransactionCreated = true) {
+  if (!PlacesUIUtils.useAsyncTransactions) {
+    Assert.ok(true, "Skipping test as async transactions are turned off");
+    return;
+  }
+
   // Reset the stubs so that previous test runs don't count against us.
   PlacesUIUtils.getTransactionForData.reset();
   PlacesTransactions.batch.reset();

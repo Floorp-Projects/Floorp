@@ -2668,9 +2668,9 @@ Toolbox.prototype = {
    * necessary because of the WebConsole's `profile` and `profileEnd` methods.
    */
   initPerformance: Task.async(function* () {
-    // If target does not have profiler actor (addons), do not
+    // If target does not have performance actor (addons), do not
     // even register the shared performance connection.
-    if (!this.target.hasActor("profiler")) {
+    if (!this.target.hasActor("performance")) {
       return promise.resolve();
     }
 

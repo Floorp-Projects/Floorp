@@ -7,7 +7,7 @@
 
 const {Ci, Cu} = require("chrome");
 const protocol = require("devtools/shared/protocol");
-const {serializeStack, parseStack} = require("toolkit/loader");
+const {serializeStack, parseStack} = Cu.import("resource://devtools/shared/base-loader.js", {});
 
 const { functionCallSpec, callWatcherSpec } = require("devtools/shared/specs/call-watcher");
 const { CallWatcherFront } = require("devtools/shared/fronts/call-watcher");

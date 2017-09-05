@@ -66,6 +66,7 @@ PerformanceObserverEntryList::GetEntries(
 
     aRetval.AppendElement(entry);
   }
+  aRetval.Sort(PerformanceEntryComparator());
 }
 
 void
@@ -79,6 +80,7 @@ PerformanceObserverEntryList::GetEntriesByType(
       aRetval.AppendElement(entry);
     }
   }
+  aRetval.Sort(PerformanceEntryComparator());
 }
 
 void
@@ -88,9 +90,18 @@ PerformanceObserverEntryList::GetEntriesByName(
   nsTArray<RefPtr<PerformanceEntry>>& aRetval)
 {
   aRetval.Clear();
+  const bool typePassed = aEntryType.WasPassed();
   for (const RefPtr<PerformanceEntry>& entry : mEntries) {
-    if (entry->GetName().Equals(aName)) {
-      aRetval.AppendElement(entry);
+    if (!entry->GetName().Equals(aName)) {
+      continue;
     }
+
+    if (typePassed &&
+        !entry->GetEntryType().Equals(aEntryType.Value())) {
+      continue;
+    }
+
+    aRetval.AppendElement(entry);
   }
+  aRetval.Sort(PerformanceEntryComparator());
 }
