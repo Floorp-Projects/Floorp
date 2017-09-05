@@ -81,12 +81,12 @@ public:
   URLExtraData* GetContentURLData() const { return mContentURLData; }
 
 protected:
-  class SourceReference : public nsReferencedElement {
+  class SourceReference : public mozilla::dom::IDTracker {
   public:
     explicit SourceReference(SVGUseElement* aContainer) : mContainer(aContainer) {}
   protected:
     virtual void ElementChanged(Element* aFrom, Element* aTo) override {
-      nsReferencedElement::ElementChanged(aFrom, aTo);
+      IDTracker::ElementChanged(aFrom, aTo);
       if (aFrom) {
         aFrom->RemoveMutationObserver(mContainer);
       }
