@@ -819,7 +819,7 @@ fn repeat_range_literals<F: FnMut(&Expr, &mut Literals)>(
             let n = cmp::min(lits.limit_size, min as usize);
             let es = iter::repeat(e.clone()).take(n).collect();
             f(&Concat(es), lits);
-            if n < min as usize {
+            if n < min as usize || lits.contains_empty() {
                 lits.cut();
             }
         }
@@ -1156,8 +1156,9 @@ mod tests {
 
     // Test regexes with empty assertions.
     test_lit!(pfx_empty1, prefixes, "^a", M("a"));
-    test_lit!(pfx_empty2, prefixes, "^abc", M("abc"));
-    test_lit!(pfx_empty3, prefixes, "(?:^abc)|(?:^z)", M("abc"), M("z"));
+    test_lit!(pfx_empty2, prefixes, "a${2}", C("a"));
+    test_lit!(pfx_empty3, prefixes, "^abc", M("abc"));
+    test_lit!(pfx_empty4, prefixes, "(?:^abc)|(?:^z)", M("abc"), M("z"));
 
     // Make sure some curious regexes have no prefixes.
     test_lit!(pfx_nothing1, prefixes, ".");
@@ -1306,6 +1307,7 @@ mod tests {
 
     // Test regexes with empty assertions.
     test_lit!(sfx_empty1, suffixes, "a$", M("a"));
+    test_lit!(sfx_empty2, suffixes, "${2}a", C("a"));
 
     // Make sure some curious regexes have no suffixes.
     test_lit!(sfx_nothing1, suffixes, ".");

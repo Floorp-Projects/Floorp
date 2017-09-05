@@ -443,8 +443,20 @@ pub extern "C" fn wr_renderer_update(renderer: &mut Renderer) {
 #[no_mangle]
 pub extern "C" fn wr_renderer_render(renderer: &mut Renderer,
                                      width: u32,
-                                     height: u32) {
-    renderer.render(DeviceUintSize::new(width, height));
+                                     height: u32) -> bool {
+    match renderer.render(DeviceUintSize::new(width, height)) {
+        Ok(()) => true,
+        Err(errors) => {
+            for e in errors {
+                println!(" Failed to render: {:?}", e);
+                let msg = CString::new(format!("wr_renderer_render: {:?}", e)).unwrap();
+                unsafe {
+                    gfx_critical_note(msg.as_ptr());
+               }
+            }
+            false
+        },
+    }
 }
 
 // Call wr_renderer_render() before calling this function.

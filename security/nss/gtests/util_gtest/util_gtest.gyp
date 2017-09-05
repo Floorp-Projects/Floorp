@@ -14,6 +14,8 @@
         'util_utf8_unittest.cc',
         'util_b64_unittest.cc',
         'util_pkcs11uri_unittest.cc',
+        'util_aligned_malloc_unittest.cc',
+        'util_memcmpzero_unittest.cc',
         '<(DEPTH)/gtests/common/gtests.cc',
       ],
       'dependencies': [

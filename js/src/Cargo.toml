@@ -18,4 +18,4 @@ num_cpus = "1.1.0"
 
 [dependencies]
 libc = "0.2"
-libz-sys = "1.0"
+libz-sys = "1.0.16"

@@ -1,4 +1,5 @@
 use std::mem::size_of;
+use std::num::Wrapping;
 
 use identities::Zero;
 use bounds::Bounded;
@@ -385,6 +386,17 @@ impl_from_primitive!(u64,   to_u64);
 impl_from_primitive!(f32,   to_f32);
 impl_from_primitive!(f64,   to_f64);
 
+
+impl<T: ToPrimitive> ToPrimitive for Wrapping<T> {
+    fn to_i64(&self) -> Option<i64> { self.0.to_i64() }
+    fn to_u64(&self) -> Option<u64> { self.0.to_u64() }
+}
+impl<T: FromPrimitive> FromPrimitive for Wrapping<T> {
+    fn from_u64(n: u64) -> Option<Self> { T::from_u64(n).map(Wrapping) }
+    fn from_i64(n: i64) -> Option<Self> { T::from_i64(n).map(Wrapping) }
+}
+
+
 /// Cast from one machine scalar to another.
 ///
 /// # Examples
@@ -434,6 +446,11 @@ impl_num_cast!(isize, to_isize);
 impl_num_cast!(f32,   to_f32);
 impl_num_cast!(f64,   to_f64);
 
+impl<T: NumCast> NumCast for Wrapping<T> {
+    fn from<U: ToPrimitive>(n: U) -> Option<Self> {
+        T::from(n).map(Wrapping)
+    }
+}
 
 #[test]
 fn to_primitive_float() {
@@ -447,4 +464,48 @@ fn to_primitive_float() {
     assert_eq!(f64::INFINITY.to_f32(), Some(f32::INFINITY));
     assert_eq!((f64::NEG_INFINITY).to_f32(), Some(f32::NEG_INFINITY));
     assert!((f64::NAN).to_f32().map_or(false, |f| f.is_nan()));
+}
+
+macro_rules! test_wrapping_to_primitive {
+    ($($t:ty)+) => {
+        $({
+            let i: $t = 0;
+            let w = Wrapping(i);
+            assert_eq!(i.to_u8(),    w.to_u8());
+            assert_eq!(i.to_u16(),   w.to_u16());
+            assert_eq!(i.to_u32(),   w.to_u32());
+            assert_eq!(i.to_u64(),   w.to_u64());
+            assert_eq!(i.to_usize(), w.to_usize());
+            assert_eq!(i.to_i8(),    w.to_i8());
+            assert_eq!(i.to_i16(),   w.to_i16());
+            assert_eq!(i.to_i32(),   w.to_i32());
+            assert_eq!(i.to_i64(),   w.to_i64());
+            assert_eq!(i.to_isize(), w.to_isize());
+            assert_eq!(i.to_f32(),   w.to_f32());
+            assert_eq!(i.to_f64(),   w.to_f64());
+        })+   
+    };
+}
+
+#[test]
+fn wrapping_to_primitive() {
+    test_wrapping_to_primitive!(usize u8 u16 u32 u64 isize i8 i16 i32 i64);
+}
+
+#[test]
+fn wrapping_is_toprimitive() {
+    fn require_toprimitive<T: ToPrimitive>(_: &T) {}
+    require_toprimitive(&Wrapping(42));
+}
+
+#[test]
+fn wrapping_is_fromprimitive() {
+    fn require_fromprimitive<T: FromPrimitive>(_: &T) {}
+    require_fromprimitive(&Wrapping(42));
+}
+
+#[test]
+fn wrapping_is_numcast() {
+    fn require_numcast<T: NumCast>(_: &T) {}
+    require_numcast(&Wrapping(42));
 }

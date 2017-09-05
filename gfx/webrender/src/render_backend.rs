@@ -176,7 +176,7 @@ impl RenderBackend {
     }
 
     fn process_document(&mut self, document_id: DocumentId, message: DocumentMsg,
-                        frame_counter: u32, mut profile_counters: &mut BackendProfileCounters)
+                        frame_counter: u32, profile_counters: &mut BackendProfileCounters)
                         -> DocumentOp
     {
         let doc = self.documents.get_mut(&document_id).expect("No document?");

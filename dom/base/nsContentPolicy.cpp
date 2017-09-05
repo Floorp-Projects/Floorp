@@ -20,6 +20,7 @@
 #include "nsIDOMElement.h"
 #include "nsIDOMNode.h"
 #include "nsIDOMWindow.h"
+#include "nsITabChild.h"
 #include "nsIContent.h"
 #include "nsIImageLoadingContent.h"
 #include "nsILoadContext.h"
@@ -93,8 +94,9 @@ nsContentPolicy::CheckPolicy(CPMethod          policyMethod,
     {
         nsCOMPtr<nsIDOMNode> node(do_QueryInterface(requestingContext));
         nsCOMPtr<nsIDOMWindow> window(do_QueryInterface(requestingContext));
-        NS_ASSERTION(!requestingContext || node || window,
-                     "Context should be a DOM node or a DOM window!");
+        nsCOMPtr<nsITabChild> tabChild(do_QueryInterface(requestingContext));
+        NS_ASSERTION(!requestingContext || node || window || tabChild,
+                     "Context should be a DOM node, DOM window or a tabChild!");
     }
 #endif
 
