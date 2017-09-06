@@ -121,8 +121,7 @@ nsWindowMemoryReporter::Init()
                     /* weakRef = */ true);
   }
 
-  RegisterStrongMemoryReporter(new GhostWindowsReporter());
-  RegisterGhostWindowsDistinguishedAmount(GhostWindowsReporter::DistinguishedAmount);
+  RegisterGhostWindowsDistinguishedAmount(GhostWindowsDistinguishedAmount);
 }
 
 /* static */ nsWindowMemoryReporter*
@@ -629,6 +628,17 @@ nsWindowMemoryReporter::CollectReports(nsIHandleReportCallback* aHandleReport,
       aData);
   }
 
+  MOZ_COLLECT_REPORT(
+    "ghost-windows", KIND_OTHER, UNITS_COUNT, ghostWindows.Count(),
+"The number of ghost windows present (the number of nodes underneath "
+"explicit/window-objects/top(none)/ghost, modulo race conditions).  A ghost "
+"window is not shown in any tab, does not share a domain with any non-detached "
+"windows, and has met these criteria for at least "
+"memory.ghost_window_timeout_seconds, or has survived a round of "
+"about:memory's minimize memory usage button.\n\n"
+"Ghost windows can happen legitimately, but they are often indicative of "
+"leaks in the browser or add-ons.");
+
   WindowPaths windowPaths;
   WindowPaths topWindowPaths;
 
@@ -1011,11 +1021,8 @@ nsWindowMemoryReporter::CheckForGhostWindows(
   }
 }
 
-NS_IMPL_ISUPPORTS(nsWindowMemoryReporter::GhostWindowsReporter,
-                  nsIMemoryReporter)
-
 /* static */ int64_t
-nsWindowMemoryReporter::GhostWindowsReporter::DistinguishedAmount()
+nsWindowMemoryReporter::GhostWindowsDistinguishedAmount()
 {
   return sWindowReporter->mGhostWindowCount;
 }
