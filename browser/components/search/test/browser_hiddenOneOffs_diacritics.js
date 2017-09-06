@@ -3,18 +3,26 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 // Tests that keyboard navigation in the search panel works as designed.
 
-const searchbar = document.getElementById("searchbar");
-const textbox = searchbar._textbox;
 const searchPopup = document.getElementById("PopupSearchAutoComplete");
-const searchIcon = document.getAnonymousElementByAttribute(searchbar, "anonid",
-                                                           "searchbar-search-button");
 
 const diacritic_engine = "Foo \u2661";
 
 var Preferences =
   Cu.import("resource://gre/modules/Preferences.jsm", {}).Preferences;
 
+let searchbar;
+let searchIcon;
+
 add_task(async function init() {
+  await SpecialPowers.pushPrefEnv({ set: [
+    ["browser.search.widget.inNavBar", true],
+  ]});
+
+  searchbar = document.getElementById("searchbar");
+  searchIcon = document.getAnonymousElementByAttribute(
+    searchbar, "anonid", "searchbar-search-button"
+  );
+
   let currentEngine = Services.search.currentEngine;
   await promiseNewEngine("testEngine_diacritics.xml", {setAsCurrent: false});
   registerCleanupFunction(() => {

@@ -1,6 +1,9 @@
 /* Any copyright is dedicated to the Public Domain.
    http://creativecommons.org/publicdomain/zero/1.0/ */
 
+// This is the same value used by CustomizableUI tests.
+const kForceOverflowWidthPx = 200;
+
 registerCleanupFunction(async function() {
   // Clean up when the test finishes.
   await task_resetState();
@@ -24,16 +27,14 @@ add_task(async function test_overflow_anchor() {
                              .forWindow(window);
   ok(!button.overflowed, "Downloads button should not be overflowed.");
 
-  // Hack - we lock the size of the default flex-y items in the nav-bar,
-  // namely, the URL and search inputs. That way we can resize the
-  // window without worrying about them flexing.
-  const kFlexyItems = ["urlbar-container", "search-container"];
+  // Hack - we lock the size of the default flex-y items in the nav-bar, namely,
+  // the URL input. That way we can resize the window without worrying about it
+  // flexing.
+  const kFlexyItems = ["urlbar-container"];
   registerCleanupFunction(() => unlockWidth(kFlexyItems));
   lockWidth(kFlexyItems);
 
-  // Resize the window to half of its original size. That should
-  // be enough to overflow the downloads button.
-  window.resizeTo(oldWidth / 2, window.outerHeight);
+  window.resizeTo(kForceOverflowWidthPx, window.outerHeight);
   await waitForOverflowed(button, true);
 
   let promise = promisePanelOpened();
