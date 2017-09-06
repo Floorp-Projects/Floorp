@@ -25,6 +25,8 @@ import org.mozilla.gecko.sync.repositories.NonPersistentRepositoryStateProvider;
 import org.mozilla.gecko.sync.repositories.Server15Repository;
 import org.mozilla.gecko.sync.repositories.Server15RepositorySession;
 import org.mozilla.gecko.sync.repositories.delegates.RepositorySessionStoreDelegate;
+import org.mozilla.gecko.sync.repositories.domain.BookmarkRecord;
+import org.mozilla.gecko.sync.repositories.domain.Record;
 
 import java.net.URISyntaxException;
 import java.util.ArrayList;
@@ -390,6 +392,7 @@ public class BatchingUploaderTest {
         assertEquals(1, ((MockExecutorService) workQueue).commitPayloads);
     }
 
+
     @Test
     public void testRandomPayloadSizesBatching() {
         BatchingUploader uploader = makeConstrainedUploader(2, 4);
@@ -441,17 +444,38 @@ public class BatchingUploaderTest {
         uploader.process(new MockRecord(Utils.generateGuid(), null, 0, false, 10));
         assertEquals(0, ((MockStoreDelegate) storeDelegate).storeFailed);
 
+        // Check that we don't complain when we're configured not to abort
         uploader.process(new MockRecord(Utils.generateGuid(), null, 0, false, 11));
-        assertEquals(1, ((MockStoreDelegate) storeDelegate).storeFailed);
-        assertTrue(((MockStoreDelegate) storeDelegate).lastRecordStoreFailedException instanceof BatchingUploader.PayloadTooLargeToUpload);
+        assertEquals(0, ((MockStoreDelegate) storeDelegate).storeFailed);
 
         uploader.process(new MockRecord(Utils.generateGuid(), null, 0, false, 1000));
-        assertEquals(2, ((MockStoreDelegate) storeDelegate).storeFailed);
-        assertTrue(((MockStoreDelegate) storeDelegate).lastRecordStoreFailedException instanceof BatchingUploader.PayloadTooLargeToUpload);
+        assertEquals(0, ((MockStoreDelegate) storeDelegate).storeFailed);
 
         uploader.process(new MockRecord(Utils.generateGuid(), null, 0, false, 9));
-        assertEquals(2, ((MockStoreDelegate) storeDelegate).storeFailed);
+        assertEquals(0, ((MockStoreDelegate) storeDelegate).storeFailed);
+
     }
+
+    @Test
+    public void testFailAbortsBatch() {
+        BatchingUploader uploader = makeConstrainedUploader(2, 4, 10, false, true);
+        uploader.process(new MockRecord(Utils.generateGuid(), null, 0, false, 10));
+        uploader.process(new MockRecord(Utils.generateGuid(), null, 0, false, 10));
+        assertEquals(0, ((MockStoreDelegate) storeDelegate).storeFailed);
+        assertEquals(1, ((MockExecutorService) workQueue).totalPayloads);
+        assertEquals(((MockStoreDelegate) storeDelegate).lastStoreFailedException, null);
+
+        uploader.process(new MockRecord(Utils.generateGuid(), null, 0, false, 11));
+        assertTrue(((MockStoreDelegate) storeDelegate).lastStoreFailedException instanceof BatchingUploader.PayloadTooLargeToUpload);
+
+        // Ensure that further calls to process do nothing.
+        for (int i = 0; i < 5; ++i) {
+            uploader.process(new MockRecord(Utils.generateGuid(), null, 0, false, 1));
+        }
+
+        assertEquals(1, ((MockExecutorService) workQueue).totalPayloads);
+    }
+
 
     @Test
     public void testNoMoreRecordsAfterPayloadPost() {
@@ -549,6 +573,10 @@ public class BatchingUploaderTest {
     }
 
     private BatchingUploader makeConstrainedUploader(long maxPostRecords, long maxTotalRecords, long maxPayloadBytes, boolean firstSync) {
+        return makeConstrainedUploader(maxPostRecords, maxTotalRecords, maxPayloadBytes, firstSync, false);
+    }
+
+    private BatchingUploader makeConstrainedUploader(long maxPostRecords, long maxTotalRecords, long maxPayloadBytes, boolean firstSync, boolean abortOnRecordFail) {
         ExtendedJSONObject infoConfigurationJSON = new ExtendedJSONObject();
         infoConfigurationJSON.put(InfoConfiguration.MAX_TOTAL_BYTES, 4096L);
         infoConfigurationJSON.put(InfoConfiguration.MAX_TOTAL_RECORDS, maxTotalRecords);
@@ -563,8 +591,9 @@ public class BatchingUploaderTest {
         server15RepositorySession.setStoreDelegate(storeDelegate);
         return new MockUploader(
                 server15RepositorySession, workQueue, storeDelegate, Uri.EMPTY, 0L,
-                new InfoConfiguration(infoConfigurationJSON), null);
+                new InfoConfiguration(infoConfigurationJSON), null, abortOnRecordFail);
     }
+
 
     class MockPayloadDispatcher extends PayloadDispatcher {
         MockPayloadDispatcher(final Executor workQueue, final BatchingUploader uploader, Long lastModified) {
@@ -582,17 +611,24 @@ public class BatchingUploaderTest {
     }
 
     class MockUploader extends BatchingUploader {
+        boolean abortOnRecordFail;
         MockUploader(final RepositorySession repositorySession, final ExecutorService workQueue,
                      final RepositorySessionStoreDelegate sessionStoreDelegate, final Uri baseCollectionUri,
                      final Long localCollectionLastModified, final InfoConfiguration infoConfiguration,
-                     final AuthHeaderProvider authHeaderProvider) {
+                     final AuthHeaderProvider authHeaderProvider, final boolean abortOnRecordFail) {
             super(repositorySession, workQueue, sessionStoreDelegate, baseCollectionUri,
                     localCollectionLastModified, infoConfiguration, authHeaderProvider);
+            this.abortOnRecordFail = abortOnRecordFail;
         }
 
         @Override
         PayloadDispatcher createPayloadDispatcher(ExecutorService workQueue, Long localCollectionLastModified) {
             return new MockPayloadDispatcher(workQueue, this, localCollectionLastModified);
+        }
+
+        @Override
+        boolean shouldFailBatchOnFailure(Record r) {
+            return abortOnRecordFail;
         }
     }
 
