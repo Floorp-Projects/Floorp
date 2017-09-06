@@ -3,7 +3,11 @@
 # file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
 version: 0
+allowPullRequests: public
 tasks:
+###############################################################################
+# Task: Pull requests
+###############################################################################
   - provisionerId: '{{ taskcluster.docker.provisionerId }}'
     workerType: '{{ taskcluster.docker.workerType }}'
     extra:
@@ -29,5 +33,34 @@ tasks:
     metadata:
       name: Focus for Android - Build - Pull Request
       description: Building Focus for Android (via Gradle) - triggered by a pull request.
+      owner: '{{ event.head.user.email }}'
+      source: '{{ event.head.repo.url }}'
+###############################################################################
+# Task: Master builds
+###############################################################################
+  - provisionerId: '{{ taskcluster.docker.provisionerId }}'
+    workerType: '{{ taskcluster.docker.workerType }}'
+    extra:
+      github:
+        events:
+          - push
+        branches:
+          - master
+    payload:
+      maxRunTime: 3600
+      deadline: "{{ '30 minutes' | $fromNow }}"
+      image: 'mozillamobile/focus-android'
+      command:
+        - /bin/bash
+        - '--login'
+        - '-c'
+        - >-
+          git fetch origin
+          && git config advice.detachedHead false
+          && git checkout {{event.head.sha}}
+          && ./gradlew assemble
+    metadata:
+      name: Focus for Android - Build - Master
+      description: Building Focus for Android (via Gradle) - Master
       owner: '{{ event.head.user.email }}'
       source: '{{ event.head.repo.url }}'
