@@ -118,7 +118,7 @@ def run_tests(config, browser_config):
         browser_config['extra_args'] = '--no-remote'
 
     # with addon signing for production talos, we want to develop without it
-    if browser_config['develop'] or browser_config['branch_name'] == 'Try':
+    if browser_config['develop'] or 'try' in str.lower(browser_config['branch_name']):
         browser_config['preferences']['xpinstall.signatures.required'] = False
 
     browser_config['preferences']['extensions.allow-non-mpc-extensions'] = True
