@@ -27,6 +27,8 @@ from taskgraph.transforms.job.common import (
     support_vcs_checkout,
 )
 
+COALESCE_KEY = 'builds.{project}.{name}'
+
 mozharness_run_schema = Schema({
     Required('using'): 'mozharness',
 
