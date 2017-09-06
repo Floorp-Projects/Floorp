@@ -437,9 +437,9 @@
            position="bottomcenter topright"
            tabspecific="true"
            noautofocus="true"
-           copyURL-title="&copyLinkCmd.label;"
+           copyURL-title="&copyURLCmd.label;"
            emailLink-title="&emailPageCmd.label;"
-           sendToDevice-title="&sendTabToDevice.label;"
+           sendToDevice-title="&sendToDevice.label3;"
            sendToDevice-notReadyTitle="&sendToDevice.syncNotReady.label;">
       <photonpanelmultiview id="pageActionPanelMultiView"
                             mainViewId="pageActionPanelMainView"
