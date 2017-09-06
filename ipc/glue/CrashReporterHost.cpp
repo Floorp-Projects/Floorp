@@ -259,7 +259,7 @@ CrashReporterHost::NotifyCrashService(GeckoProcessType aProcessType,
       telemetryKey.AssignLiteral("plugin");
       nsAutoCString val;
       if (aNotes->Get(NS_LITERAL_CSTRING("PluginHang"), &val) &&
-        val.Equals(NS_LITERAL_CSTRING("1"))) {
+        val.EqualsLiteral("1")) {
         crashType = nsICrashService::CRASH_TYPE_HANG;
         telemetryKey.AssignLiteral("pluginhang");
       }
