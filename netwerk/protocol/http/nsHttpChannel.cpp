@@ -3904,7 +3904,7 @@ nsHttpChannel::OpenCacheEntry(bool isHttps)
             MOZ_ASSERT(NS_IsMainThread(), "Should be called on the main thread");
             mCacheAsyncOpenCalled = true;
             if (mNetworkTriggered) {
-                mRaceCacheWithNetwork = true;
+                mRaceCacheWithNetwork = sRCWNEnabled;
             }
             rv = cacheStorage->AsyncOpenURI(openURI, extension, cacheEntryOpenFlags, this);
         } else {
@@ -9190,7 +9190,7 @@ nsHttpChannel::TriggerNetwork(int32_t aTimeout)
         }
 
         if (mCacheAsyncOpenCalled && !mOnCacheAvailableCalled) {
-            mRaceCacheWithNetwork = true;
+            mRaceCacheWithNetwork = sRCWNEnabled;
         }
 
         LOG(("  triggering network\n"));
