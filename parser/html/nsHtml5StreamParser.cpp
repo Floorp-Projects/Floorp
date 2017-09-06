@@ -18,6 +18,7 @@
 #include "nsHtml5StreamParserPtr.h"
 #include "nsIScriptError.h"
 #include "mozilla/Preferences.h"
+#include "mozilla/SystemGroup.h"
 #include "mozilla/UniquePtrExtensions.h"
 #include "nsHtml5Highlighter.h"
 #include "expat_config.h"
@@ -30,6 +31,7 @@
 #include "nsNetUtil.h"
 #include "nsXULAppAPI.h"
 #include "mozilla/SchedulerGroup.h"
+#include "nsJSEnvironment.h"
 
 using namespace mozilla;
 
@@ -866,6 +868,24 @@ nsHtml5StreamParser::WriteStreamBytes(const uint8_t* aFromSegment,
   }
 }
 
+class MaybeRunCollector : public Runnable
+{
+public:
+  explicit MaybeRunCollector(nsIDocShell* aDocShell)
+    : Runnable("MaybeRunCollector")
+    , mDocShell(aDocShell)
+  {
+  }
+
+  NS_IMETHOD Run()
+  {
+    nsJSContext::MaybeRunNextCollectorSlice(mDocShell, JS::gcreason::HTML_PARSER);
+    return NS_OK;
+  }
+
+  nsCOMPtr<nsIDocShell> mDocShell;
+};
+
 nsresult
 nsHtml5StreamParser::OnStartRequest(nsIRequest* aRequest, nsISupports* aContext)
 {
@@ -971,6 +991,16 @@ nsHtml5StreamParser::OnStartRequest(nsIRequest* aRequest, nsISupports* aContext)
     do_QueryInterface(mRequest, &rv);
   if (threadRetargetableRequest) {
     rv = threadRetargetableRequest->RetargetDeliveryTo(mEventTarget);
+    if (NS_SUCCEEDED(rv)) {
+      // Parser thread should be now ready to get data from necko and parse it
+      // and main thread might have a chance to process a collector slice.
+      // We need to do this asynchronously so that necko may continue processing
+      // the request.
+      nsCOMPtr<nsIRunnable> runnable =
+        new MaybeRunCollector(mExecutor->GetDocument()->GetDocShell());
+      mozilla::SystemGroup::Dispatch(mozilla::TaskCategory::GarbageCollection,
+                                     runnable.forget());
+    }
   }
 
   if (NS_FAILED(rv)) {
