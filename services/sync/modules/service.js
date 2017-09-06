@@ -1049,7 +1049,10 @@ Sync11Service.prototype = {
    */
   _checkSync: function _checkSync(ignore) {
     let reason = "";
-    if (!this.enabled)
+    // Ideally we'd call _checkSetup() here but that has too many side-effects.
+    if (Status.service == CLIENT_NOT_CONFIGURED)
+      reason = kSyncNotConfigured;
+    else if (Status.service == STATUS_DISABLED || !this.enabled)
       reason = kSyncWeaveDisabled;
     else if (Services.io.offline)
       reason = kSyncNetworkOffline;

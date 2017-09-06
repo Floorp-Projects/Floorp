@@ -42,7 +42,8 @@ body {
 .heading {
   display: flex;
   flex-direction: column;
-  font-size: 18px;
+  font-size: 17px;
+  font-weight: 600;
   pointer-events: none;
   padding: 12px 8px;
 }

@@ -119,7 +119,7 @@
 
 @keyframes library-pocket-animation-rtl {
   from {
-    transform: scaleX(-1) translateX(0);
+    transform: translateX(1056px);
     fill: inherit;
   }
   25% {
@@ -129,7 +129,7 @@
     fill: #ef4056;
   }
   to {
-    transform: scaleX(-1) translateX(-1056px);
+    transform: translateX(0);
     fill: #ef4056;
   }
 }
@@ -157,7 +157,6 @@
 
 .toolbarbutton-animatable-box[animate="pocket"]:-moz-locale-dir(rtl) > .toolbarbutton-animatable-image {
   animation-name: library-pocket-animation-rtl;
-  transform: scaleX(-1);
 }
 
 .toolbarbutton-animatable-box[animate="pocket"][fade] > .toolbarbutton-animatable-image {

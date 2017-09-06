@@ -101,7 +101,7 @@ case $cmd in
     cp -pPR ${TOPSRCDIR}/.cargo/config.in ${tgtpath}/.cargo
 
     # generate configure files to avoid build dependency on autoconf-2.13
-    cp -pPR ${TOPSRCDIR}/js/src/configure.in ${tgtpath}/js/src/configure
+    cp -PR ${TOPSRCDIR}/js/src/configure.in ${tgtpath}/js/src/configure
     chmod a+x ${tgtpath}/js/src/configure
     ${AUTOCONF} --localdir=${TOPSRCDIR}/js/src \
         ${TOPSRCDIR}/js/src/old-configure.in >${tgtpath}/js/src/old-configure

@@ -10,6 +10,10 @@ XPCOMUtils.defineLazyPreferenceGetter(this, "containersEnabled",
 
 Cu.import("resource://gre/modules/ExtensionPreferencesManager.jsm");
 
+var {
+  ExtensionError,
+} = ExtensionUtils;
+
 const CONTAINER_PREF_INSTALL_DEFAULTS = {
   "privacy.userContext.enabled": true,
   "privacy.userContext.longPressBehavior": 2,
@@ -19,11 +23,53 @@ const CONTAINER_PREF_INSTALL_DEFAULTS = {
 
 const CONTAINERS_ENABLED_SETTING_NAME = "privacy.containers";
 
+const CONTAINER_COLORS = new Map([
+  ["blue", "#37adff"],
+  ["turquoise", "#00c79a"],
+  ["green", "#51cd00"],
+  ["yellow", "#ffcb00"],
+  ["orange", "#ff9f00"],
+  ["red", "#ff613d"],
+  ["pink", "#ff4bda"],
+  ["purple", "#af51f5"],
+]);
+
+const CONTAINER_ICONS = new Set([
+  "briefcase",
+  "cart",
+  "circle",
+  "dollar",
+  "fingerprint",
+  "gift",
+  "vacation",
+  "food",
+  "fruit",
+  "pet",
+  "tree",
+  "chill",
+]);
+
+function getContainerIcon(iconName) {
+  if (!CONTAINER_ICONS.has(iconName)) {
+    throw new ExtensionError(`Invalid icon ${iconName} for container`);
+  }
+  return `resource://usercontext-content/${iconName}.svg`;
+}
+
+function getContainerColor(colorName) {
+  if (!CONTAINER_COLORS.has(colorName)) {
+    throw new ExtensionError(`Invalid color name ${colorName} for container`);
+  }
+  return CONTAINER_COLORS.get(colorName);
+}
+
 const convertIdentity = identity => {
   let result = {
     name: ContextualIdentityService.getUserContextLabel(identity.userContextId),
     icon: identity.icon,
+    iconUrl: getContainerIcon(identity.icon),
     color: identity.color,
+    colorCode: getContainerColor(identity.color),
     cookieStoreId: getCookieStoreIdForContainer(identity.userContextId),
   };
 
@@ -32,10 +78,20 @@ const convertIdentity = identity => {
 
 const convertIdentityFromObserver = wrappedIdentity => {
   let identity = wrappedIdentity.wrappedJSObject;
+  let iconUrl, colorCode;
+  try {
+    iconUrl = getContainerIcon(identity.icon);
+    colorCode = getContainerColor(identity.color);
+  } catch (e) {
+    return null;
+  }
+
   let result = {
     name: identity.name,
     icon: identity.icon,
+    iconUrl,
     color: identity.color,
+    colorCode,
     cookieStoreId: getCookieStoreIdForContainer(identity.userContextId),
   };
 
@@ -70,7 +126,7 @@ this.contextualIdentities = class extends ExtensionAPI {
   getAPI(context) {
     let self = {
       contextualIdentities: {
-        get(cookieStoreId) {
+        async get(cookieStoreId) {
           let containerId = getContainerForCookieStoreId(cookieStoreId);
           if (!containerId) {
             return Promise.reject({
@@ -79,10 +135,10 @@ this.contextualIdentities = class extends ExtensionAPI {
           }
 
           let identity = ContextualIdentityService.getPublicIdentityFromId(containerId);
-          return Promise.resolve(convertIdentity(identity));
+          return convertIdentity(identity);
         },
 
-        query(details) {
+        async query(details) {
           let identities = [];
           ContextualIdentityService.getPublicIdentities().forEach(identity => {
             if (details.name &&
@@ -93,14 +149,18 @@ this.contextualIdentities = class extends ExtensionAPI {
             identities.push(convertIdentity(identity));
           });
 
-          return Promise.resolve(identities);
+          return identities;
         },
 
-        create(details) {
+        async create(details) {
+          // Lets prevent making containers that are not valid
+          getContainerIcon(details.icon);
+          getContainerColor(details.color);
+
           let identity = ContextualIdentityService.create(details.name,
                                                           details.icon,
                                                           details.color);
-          return Promise.resolve(convertIdentity(identity));
+          return convertIdentity(identity);
         },
 
         update(cookieStoreId, details) {
@@ -138,10 +198,10 @@ this.contextualIdentities = class extends ExtensionAPI {
             });
           }
 
-          return Promise.resolve(convertIdentity(identity));
+          return convertIdentity(identity);
         },
 
-        remove(cookieStoreId) {
+        async remove(cookieStoreId) {
           let containerId = getContainerForCookieStoreId(cookieStoreId);
           if (!containerId) {
             return Promise.reject({
@@ -165,12 +225,15 @@ this.contextualIdentities = class extends ExtensionAPI {
             });
           }
 
-          return Promise.resolve(convertedIdentity);
+          return convertedIdentity;
         },
 
         onCreated: new EventManager(context, "contextualIdentities.onCreated", fire => {
           let observer = (subject, topic) => {
-            fire.async({contextualIdentity: convertIdentityFromObserver(subject)});
+            let convertedIdentity = convertIdentityFromObserver(subject);
+            if (convertedIdentity) {
+              fire.async({contextualIdentity: convertedIdentity});
+            }
           };
 
           Services.obs.addObserver(observer, "contextual-identity-created");
@@ -181,7 +244,10 @@ this.contextualIdentities = class extends ExtensionAPI {
 
         onUpdated: new EventManager(context, "contextualIdentities.onUpdated", fire => {
           let observer = (subject, topic) => {
-            fire.async({contextualIdentity: convertIdentityFromObserver(subject)});
+            let convertedIdentity = convertIdentityFromObserver(subject);
+            if (convertedIdentity) {
+              fire.async({contextualIdentity: convertedIdentity});
+            }
           };
 
           Services.obs.addObserver(observer, "contextual-identity-updated");
@@ -192,7 +258,10 @@ this.contextualIdentities = class extends ExtensionAPI {
 
         onRemoved: new EventManager(context, "contextualIdentities.onRemoved", fire => {
           let observer = (subject, topic) => {
-            fire.async({contextualIdentity: convertIdentityFromObserver(subject)});
+            let convertedIdentity = convertIdentityFromObserver(subject);
+            if (convertedIdentity) {
+              fire.async({contextualIdentity: convertedIdentity});
+            }
           };
 
           Services.obs.addObserver(observer, "contextual-identity-deleted");
