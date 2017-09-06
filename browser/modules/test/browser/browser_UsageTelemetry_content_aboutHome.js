@@ -40,14 +40,13 @@ add_task(async function setup() {
     Services.search.removeEngine(engineOneOff);
     await PlacesTestUtils.clearHistory();
     Services.telemetry.setEventRecordingEnabled("navigation", false);
+    Services.prefs.clearUserPref("browser.newtabpage.activity-stream.aboutHome.enabled");
   });
 });
 
 add_task(async function test_abouthome_simpleQuery() {
   // Make sure Activity Stream about:home is disabled.
-  await SpecialPowers.pushPrefEnv({set: [
-    ["browser.newtabpage.activity-stream.aboutHome.enabled", false]
-  ]});
+  Services.prefs.setBoolPref("browser.newtabpage.activity-stream.aboutHome.enabled", false);
 
   // Let's reset the counts.
   Services.telemetry.clearScalars();
@@ -68,6 +67,11 @@ add_task(async function test_abouthome_simpleQuery() {
   tab.linkedBrowser.loadURI("about:home");
   info("Wait for AboutHomeLoadSnippetsCompleted.");
   await promiseAboutHomeLoaded;
+
+  info("Wait for ContentSearchUI search provider to initialize.");
+  await ContentTask.spawn(tab.linkedBrowser, null, async function() {
+    await ContentTaskUtils.waitForCondition(() => content.wrappedJSObject.gContentSearchController.defaultEngine);
+  });
 
   info("Trigger a simple serch, just test + enter.");
   let p = BrowserTestUtils.browserLoaded(tab.linkedBrowser);
@@ -94,9 +98,7 @@ add_task(async function test_abouthome_simpleQuery() {
 
 add_task(async function test_abouthome_activitystream_simpleQuery() {
   // Make sure Activity Stream about:home is enabled.
-  await SpecialPowers.pushPrefEnv({set: [
-    ["browser.newtabpage.activity-stream.aboutHome.enabled", true]
-  ]});
+  Services.prefs.setBoolPref("browser.newtabpage.activity-stream.aboutHome.enabled", true);
 
   // Let's reset the counts.
   Services.telemetry.clearScalars();
@@ -109,7 +111,7 @@ add_task(async function test_abouthome_activitystream_simpleQuery() {
   let promiseAboutHomeSearchLoaded = new Promise(resolve => {
     tab.linkedBrowser.addEventListener("ContentSearchClient", function loadListener(event) {
       tab.linkedBrowser.removeEventListener("ContentSearchClient", loadListener, true);
-      resolve();
+      executeSoon(resolve);
     }, true, true);
   });
 
@@ -117,6 +119,11 @@ add_task(async function test_abouthome_activitystream_simpleQuery() {
   tab.linkedBrowser.loadURI("about:home");
   info("Wait for ActivityStream search input.");
   await promiseAboutHomeSearchLoaded;
+
+  info("Wait for ContentSearchUI search provider to initialize.");
+  await ContentTask.spawn(tab.linkedBrowser, null, async function() {
+    await ContentTaskUtils.waitForCondition(() => content.wrappedJSObject.gContentSearchController.defaultEngine);
+  });
 
   info("Trigger a simple serch, just test + enter.");
   let p = BrowserTestUtils.browserLoaded(tab.linkedBrowser);
