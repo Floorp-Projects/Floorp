@@ -64,7 +64,6 @@ ModuleGenerator::ModuleGenerator(const CompileArgs& args, ModuleEnvironment* env
     outstanding_(0),
     currentTask_(nullptr),
     batchedBytecode_(0),
-    activeFuncDef_(nullptr),
     startedFuncDefs_(false),
     finishedFuncDefs_(false),
     numFinishedFuncDefs_(0)
@@ -432,12 +431,10 @@ ModuleGenerator::finishTask(CompileTask* task)
     }
 
     uint32_t offsetInWhole = masm_.size();
-    for (const FuncCompileUnit& unit : task->units()) {
-        const FuncBytes& func = unit.func();
-
+    for (const FuncCompileUnit& func : task->units()) {
         // Offset the recorded FuncOffsets by the offset of the function in the
         // whole module's code segment.
-        FuncOffsets offsets = unit.offsets();
+        FuncOffsets offsets = func.offsets();
         offsets.offsetBy(offsetInWhole);
 
         // Add the CodeRange for this function.
@@ -455,7 +452,7 @@ ModuleGenerator::finishTask(CompileTask* task)
         return false;
     MOZ_ASSERT(masm_.size() == offsetInWhole + task->masm().size());
 
-    if (!task->reset(&freeFuncBytes_))
+    if (!task->reset())
         return false;
 
     freeTasks_.infallibleAppend(task);
@@ -886,34 +883,6 @@ ModuleGenerator::startFuncDefs()
 }
 
 bool
-ModuleGenerator::startFuncDef(uint32_t lineOrBytecode, FunctionGenerator* fg)
-{
-    MOZ_ASSERT(startedFuncDefs_);
-    MOZ_ASSERT(!activeFuncDef_);
-    MOZ_ASSERT(!finishedFuncDefs_);
-
-    if (!freeFuncBytes_.empty()) {
-        fg->funcBytes_ = Move(freeFuncBytes_.back());
-        freeFuncBytes_.popBack();
-    } else {
-        fg->funcBytes_ = js::MakeUnique<FuncBytes>();
-        if (!fg->funcBytes_)
-            return false;
-    }
-
-    if (!currentTask_) {
-        if (freeTasks_.empty() && !finishOutstandingTask())
-            return false;
-        currentTask_ = freeTasks_.popCopy();
-    }
-
-    fg->funcBytes_->setLineOrBytecode(lineOrBytecode);
-    fg->m_ = this;
-    activeFuncDef_ = fg;
-    return true;
-}
-
-bool
 ModuleGenerator::launchBatchCompile()
 {
     MOZ_ASSERT(currentTask_);
@@ -943,15 +912,24 @@ ModuleGenerator::launchBatchCompile()
 }
 
 bool
-ModuleGenerator::finishFuncDef(uint32_t funcIndex, FunctionGenerator* fg)
+ModuleGenerator::compileFuncDef(uint32_t funcIndex, uint32_t lineOrBytecode,
+                                Bytes&& bytes, const uint8_t* begin, const uint8_t* end,
+                                Uint32Vector&& lineNums)
 {
-    MOZ_ASSERT(activeFuncDef_ == fg);
+    MOZ_ASSERT(startedFuncDefs_);
+    MOZ_ASSERT(!finishedFuncDefs_);
     MOZ_ASSERT_IF(mode() == CompileMode::Tier1, funcIndex < env_->numFuncs());
 
-    UniqueFuncBytes func = Move(fg->funcBytes_);
-    func->setFunc(funcIndex, &funcSig(funcIndex));
-    uint32_t funcBytecodeLength = func->bytes().length();
-    if (!currentTask_->units().emplaceBack(Move(func)))
+    if (!currentTask_) {
+        if (freeTasks_.empty() && !finishOutstandingTask())
+            return false;
+        currentTask_ = freeTasks_.popCopy();
+    }
+
+    uint32_t funcBytecodeLength = end - begin;
+
+    FuncCompileUnitVector& units = currentTask_->units();
+    if (!units.emplaceBack(funcIndex, lineOrBytecode, Move(bytes), begin, end, Move(lineNums)))
         return false;
 
     uint32_t threshold;
@@ -963,19 +941,27 @@ ModuleGenerator::finishFuncDef(uint32_t funcIndex, FunctionGenerator* fg)
 
     batchedBytecode_ += funcBytecodeLength;
     MOZ_ASSERT(batchedBytecode_ <= MaxModuleBytes);
-    if (batchedBytecode_ > threshold && !launchBatchCompile())
-        return false;
+    return batchedBytecode_ <= threshold || launchBatchCompile();
+}
 
-    fg->m_ = nullptr;
-    activeFuncDef_ = nullptr;
-    return true;
+bool
+ModuleGenerator::compileFuncDef(uint32_t funcIndex, uint32_t lineOrBytecode,
+                                const uint8_t* begin, const uint8_t* end)
+{
+    return compileFuncDef(funcIndex, lineOrBytecode, Bytes(), begin, end, Uint32Vector());
+}
+
+bool
+ModuleGenerator::compileFuncDef(uint32_t funcIndex, uint32_t lineOrBytecode,
+                                Bytes&& bytes, Uint32Vector&& lineNums)
+{
+    return compileFuncDef(funcIndex, lineOrBytecode, Move(bytes), bytes.begin(), bytes.end(), Move(lineNums));
 }
 
 bool
 ModuleGenerator::finishFuncDefs()
 {
     MOZ_ASSERT(startedFuncDefs_);
-    MOZ_ASSERT(!activeFuncDef_);
     MOZ_ASSERT(!finishedFuncDefs_);
 
     if (currentTask_ && !launchBatchCompile())
@@ -1155,7 +1141,6 @@ ModuleGenerator::finishMetadata(const ShareableBytes& bytecode)
 UniqueConstCodeSegment
 ModuleGenerator::finishCodeSegment(const ShareableBytes& bytecode)
 {
-    MOZ_ASSERT(!activeFuncDef_);
     MOZ_ASSERT(finishedFuncDefs_);
 
     if (!finishFuncExports())

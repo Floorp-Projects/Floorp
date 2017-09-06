@@ -42,21 +42,12 @@ DecodeFunctionBody(Decoder& d, ModuleGenerator& mg, uint32_t funcIndex)
 
     const size_t offsetInModule = d.currentOffset();
 
-    // Skip over the function body; we'll validate it later.
+    // Skip over the function body; it will be validated by the compilation thread.
     const uint8_t* bodyBegin;
     if (!d.readBytes(bodySize, &bodyBegin))
         return d.fail("function body length too big");
 
-    FunctionGenerator fg;
-    if (!mg.startFuncDef(offsetInModule, &fg))
-        return false;
-
-    if (!fg.bytes().resize(bodySize))
-        return false;
-
-    memcpy(fg.bytes().begin(), bodyBegin, bodySize);
-
-    return mg.finishFuncDef(funcIndex, &fg);
+    return mg.compileFuncDef(funcIndex, offsetInModule, bodyBegin, bodyBegin + bodySize);
 }
 
 static bool
