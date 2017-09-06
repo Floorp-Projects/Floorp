@@ -570,6 +570,18 @@ IonBuilder::analyzeNewLoopTypes(const CFGBlock* loopEntryBlock)
             return abort(AbortReason::Alloc);
     }
 
+    if (loopEntry->isForIn()) {
+        // The backedge will have MIteratorMore with MIRType::Value. This slot
+        // is initialized to MIRType::Undefined before the loop. Add
+        // MIRType::Value to avoid unnecessary loop restarts.
+
+        MPhi* phi = entry->getSlot(entry->stackDepth() - 1)->toPhi();
+        MOZ_ASSERT(phi->getOperand(0)->type() == MIRType::Undefined);
+
+        if (!phi->addBackedgeType(alloc(), MIRType::Value, nullptr))
+            return abort(AbortReason::Alloc);
+    }
+
     // Get the start and end pc of this loop.
     jsbytecode* start = loopEntryBlock->stopPc();
     start += GetBytecodeLength(start);
