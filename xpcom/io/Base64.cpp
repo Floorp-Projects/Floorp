@@ -364,28 +364,7 @@ Base64Encode(const nsACString& aBinary, nsACString& aBase64)
 nsresult
 Base64Encode(const nsAString& aBinary, nsAString& aBase64)
 {
-  auto truncater = mozilla::MakeScopeExit([&]() { aBase64.Truncate(); });
-
-  // XXX We should really consider decoding directly from the string, rather
-  // than making a separate copy here.
-  nsAutoCString binary;
-  if (!binary.SetCapacity(aBinary.Length(), mozilla::fallible)) {
-    return NS_ERROR_OUT_OF_MEMORY;
-  }
-  LossyCopyUTF16toASCII(aBinary, binary);
-
-  nsAutoCString base64;
-
-  nsresult rv = Base64Encode(binary, base64);
-  NS_ENSURE_SUCCESS(rv, rv);
-
-  if (!CopyASCIItoUTF16(base64, aBase64, mozilla::fallible)) {
-    return NS_ERROR_OUT_OF_MEMORY;
-  }
-
-  truncater.release();
-
-  return rv;
+  return Base64EncodeHelper(aBinary, aBase64);
 }
 
 static nsresult
