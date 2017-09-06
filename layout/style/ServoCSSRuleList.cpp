@@ -223,7 +223,7 @@ ServoCSSRuleList::DeleteRule(uint32_t aIndex)
 }
 
 uint16_t
-ServoCSSRuleList::GetRuleType(uint32_t aIndex) const
+ServoCSSRuleList::GetDOMCSSRuleType(uint32_t aIndex) const
 {
   uintptr_t rule = mRules[aIndex];
   if (rule <= kMaxRuleType) {
