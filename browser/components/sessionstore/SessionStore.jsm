@@ -4087,7 +4087,7 @@ var SessionStoreInternal = {
       }
       var sidebar = aWindow.document.getElementById("sidebar-box");
       if (sidebar.getAttribute("sidebarcommand") != aSidebar) {
-        aWindow.SidebarUI.show(aSidebar);
+        aWindow.SidebarUI.showInitially(aSidebar);
       }
       // since resizing/moving a window brings it to the foreground,
       // we might want to re-focus the last focused window
