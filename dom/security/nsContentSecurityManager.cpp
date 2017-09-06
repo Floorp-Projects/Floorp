@@ -46,13 +46,17 @@ nsContentSecurityManager::AllowTopLevelNavigationToDataURI(
   if (!isDataURI) {
     return true;
   }
+  // Whitelist data: images as long as they are not SVGs
+  nsAutoCString filePath;
+  aURI->GetFilePath(filePath);
+  if (StringBeginsWith(filePath, NS_LITERAL_CSTRING("image/")) &&
+      !StringBeginsWith(filePath, NS_LITERAL_CSTRING("image/svg+xml"))) {
+    return true;
+  }
   if (!aLoadFromExternal &&
       nsContentUtils::IsSystemPrincipal(aTriggeringPrincipal)) {
     return true;
   }
-
-  nsAutoCString spec;
-  aURI->GetSpec(spec);
   NS_ConvertUTF8toUTF16 specUTF16(aURI->GetSpecOrDefault());
   if (specUTF16.Length() > 50) {
     specUTF16.Truncate(50);
