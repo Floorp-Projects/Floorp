@@ -6,6 +6,7 @@
 
 #include "Base64.h"
 
+#include "mozilla/ArrayUtils.h"
 #include "mozilla/ScopeExit.h"
 #include "mozilla/UniquePtrExtensions.h"
 #include "nsIInputStream.h"
@@ -239,6 +240,49 @@ EncodeInputStream(nsIInputStream* aInputStream,
   }
 
   return NS_OK;
+}
+
+// Maps an encoded character to a value in the Base64 alphabet, per
+// RFC 4648, Table 1. Invalid input characters map to UINT8_MAX.
+static const uint8_t kBase64DecodeTable[] = {
+  /* 0 */  255, 255, 255, 255, 255, 255, 255, 255,
+  /* 8 */  255, 255, 255, 255, 255, 255, 255, 255,
+  /* 16 */ 255, 255, 255, 255, 255, 255, 255, 255,
+  /* 24 */ 255, 255, 255, 255, 255, 255, 255, 255,
+  /* 32 */ 255, 255, 255, 255, 255, 255, 255, 255,
+  /* 40 */ 255, 255, 255,
+  62 /* + */,
+  255, 255, 255,
+  63 /* / */,
+
+  /* 48 */ /* 0 - 9 */ 52, 53, 54, 55, 56, 57, 58, 59,
+  /* 56 */ 60, 61, 255, 255, 255, 255, 255, 255,
+
+  /* 64 */ 255, /* A - Z */ 0, 1, 2, 3, 4, 5, 6,
+  /* 72 */ 7, 8, 9, 10, 11, 12, 13, 14,
+  /* 80 */ 15, 16, 17, 18, 19, 20, 21, 22,
+  /* 88 */ 23, 24, 25, 255, 255, 255, 255, 255,
+  /* 96 */ 255, /* a - z */ 26, 27, 28, 29, 30, 31, 32,
+  /* 104 */ 33, 34, 35, 36, 37, 38, 39, 40,
+  /* 112 */ 41, 42, 43, 44, 45, 46, 47, 48,
+  /* 120 */ 49, 50, 51, 255, 255, 255, 255, 255,
+};
+
+template<typename T>
+MOZ_MUST_USE bool
+Base64CharToValue(T aChar, uint8_t* aValue)
+{
+  static const size_t mask = 0x7f;
+  static_assert((mask + 1) == sizeof(kBase64DecodeTable)/sizeof(kBase64DecodeTable[0]),
+                "wrong mask");
+  size_t index = static_cast<uint8_t>(aChar);
+
+  if (index & ~mask) {
+    return false;
+  }
+  *aValue = kBase64DecodeTable[index & mask];
+
+  return *aValue != 255;
 }
 
 static const char kBase64URLAlphabet[] =
