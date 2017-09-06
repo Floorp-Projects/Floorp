@@ -49,6 +49,15 @@ ProxyStream::ProxyStream(REFIID aIID, const BYTE* aInitBuf,
   NS_NAMED_LITERAL_CSTRING(kCrashReportKey, "ProxyStreamUnmarshalStatus");
 #endif
 
+  if (!aInitBufSize) {
+#if defined(MOZ_CRASHREPORTER)
+    CrashReporter::AnnotateCrashReport(kCrashReportKey,
+                                       NS_LITERAL_CSTRING("!aInitBufSize"));
+#endif // defined(MOZ_CRASHREPORTER)
+    // We marshaled a nullptr. Nothing else to do here.
+    return;
+  }
+
   HRESULT createStreamResult = CreateStream(aInitBuf, aInitBufSize,
                                             getter_AddRefs(mStream));
   if (FAILED(createStreamResult)) {
@@ -59,14 +68,6 @@ ProxyStream::ProxyStream(REFIID aIID, const BYTE* aInitBuf,
     return;
   }
 
-  if (!aInitBufSize) {
-#if defined(MOZ_CRASHREPORTER)
-    CrashReporter::AnnotateCrashReport(kCrashReportKey,
-                                       NS_LITERAL_CSTRING("!aInitBufSize"));
-#endif // defined(MOZ_CRASHREPORTER)
-    // We marshaled a nullptr. Nothing else to do here.
-    return;
-  }
   // NB: We can't check for a null mStream until after we have checked for
   // the zero aInitBufSize above. This is because InitStream will also fail
   // in that case, even though marshaling a nullptr is allowable.
