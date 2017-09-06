@@ -1079,6 +1079,8 @@ js::Nursery::sweepDictionaryModeObjects()
     for (auto obj : dictionaryModeObjects_) {
         if (!IsForwarded(obj))
             obj->sweepDictionaryListPointer();
+        else
+            Forwarded(obj)->updateDictionaryListPointerAfterMinorGC(obj);
     }
     dictionaryModeObjects_.clear();
 }
