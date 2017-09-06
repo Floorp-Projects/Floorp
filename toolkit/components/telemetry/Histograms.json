@@ -12883,14 +12883,6 @@
     "n_buckets": 100,
     "description": "Time in milliseconds from the first non-blank paint to the creation time of the next click, key, mouse or scroll event per top-level content browsing context."
   },
-  "DOCUMENT_WITH_EXPANDED_PRINCIPAL": {
-    "record_in_processes": ["main", "content"],
-    "alert_emails": ["dev-platform@lists.mozilla.org"],
-    "bug_numbers": [1301123],
-    "expires_in_version": "58",
-    "kind": "count",
-    "description": "Number of documents encountered using an expanded principal."
-  },
   "CONTENT_PAINT_TIME": {
     "record_in_processes": ["main", "content"],
     "alert_emails": ["danderson@mozilla.com","gfx-telemetry-alerts@mozilla.com"],
