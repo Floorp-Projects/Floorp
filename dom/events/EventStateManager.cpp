@@ -262,7 +262,6 @@ NS_INTERFACE_MAP_END
 /******************************************************************/
 
 static uint32_t sESMInstanceCount = 0;
-static bool sPointerEventEnabled = false;
 
 uint64_t EventStateManager::sUserInputCounter = 0;
 int32_t EventStateManager::sUserInputEventDepth = 0;
@@ -310,13 +309,6 @@ EventStateManager::EventStateManager()
     UpdateUserActivityTimer();
   }
   ++sESMInstanceCount;
-
-  static bool sAddedPointerEventEnabled = false;
-  if (!sAddedPointerEventEnabled) {
-    Preferences::AddBoolVarCache(&sPointerEventEnabled,
-                                 "dom.w3c_pointer_events.enabled", false);
-    sAddedPointerEventEnabled = true;
-  }
   WheelTransaction::InitializeStatics();
 }
 
@@ -708,10 +700,8 @@ EventStateManager::PreHandleEvent(nsPresContext* aPresContext,
       mouseEvent->mReason = WidgetMouseEvent::eSynthesized;
       // then fall through...
     } else {
-      if (sPointerEventEnabled) {
-        // We should synthetize corresponding pointer events
-        GeneratePointerEnterExit(ePointerLeave, mouseEvent);
-      }
+      // We should synthetize corresponding pointer events
+      GeneratePointerEnterExit(ePointerLeave, mouseEvent);
       GenerateMouseEnterExit(mouseEvent);
       //This is a window level mouse exit event and should stop here
       aEvent->mMessage = eVoidEvent;
@@ -4263,6 +4253,9 @@ void
 EventStateManager::GeneratePointerEnterExit(EventMessage aMessage,
                                             WidgetMouseEvent* aEvent)
 {
+  if (!PointerEventHandler::IsPointerEventEnabled()) {
+    return;
+  }
   WidgetPointerEvent pointerEvent(*aEvent);
   pointerEvent.mMessage = aMessage;
   GenerateMouseEnterExit(&pointerEvent);

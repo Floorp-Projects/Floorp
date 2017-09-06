@@ -46,19 +46,15 @@ static nsClassHashtable<nsUint32HashKey, PointerInfo>* sActivePointersIds;
 /* static */ void
 PointerEventHandler::Initialize()
 {
-  static bool addedPointerEventEnabled = false;
-  if (!addedPointerEventEnabled) {
-    Preferences::AddBoolVarCache(&sPointerEventEnabled,
-                                 "dom.w3c_pointer_events.enabled", true);
-    addedPointerEventEnabled = true;
+  static bool initialized = false;
+  if (initialized) {
+    return;
   }
-  static bool addedPointerEventImplicitCapture = false;
-  if (!addedPointerEventImplicitCapture) {
-    Preferences::AddBoolVarCache(&sPointerEventImplicitCapture,
-                                 "dom.w3c_pointer_events.implicit_capture",
-                                 true);
-    addedPointerEventImplicitCapture = true;
-  }
+  initialized = true;
+  Preferences::AddBoolVarCache(&sPointerEventEnabled,
+                               "dom.w3c_pointer_events.enabled", true);
+  Preferences::AddBoolVarCache(&sPointerEventImplicitCapture,
+                               "dom.w3c_pointer_events.implicit_capture", true);
 }
 
 /* static */ void
@@ -232,6 +228,35 @@ PointerEventHandler::GetPointerCapturingContent(uint32_t aPointerId)
   return nullptr;
 }
 
+/* static */ nsIFrame*
+PointerEventHandler::GetPointerCapturingFrame(nsIFrame* aFrameUnderCursor,
+                                              WidgetGUIEvent* aEvent)
+{
+  if (!IsPointerEventEnabled() || (aEvent->mClass != ePointerEventClass &&
+                                   aEvent->mClass != eMouseEventClass) ||
+      aEvent->mMessage == ePointerDown || aEvent->mMessage == eMouseDown) {
+    // Pointer capture should only be applied to all pointer events and mouse
+    // events except ePointerDown and eMouseDown;
+    return aFrameUnderCursor;
+  }
+
+  WidgetMouseEvent* mouseEvent = aEvent->AsMouseEvent();
+  if (!mouseEvent) {
+    return aFrameUnderCursor;
+  }
+
+  // Find the content which captures the pointer.
+  nsIContent* capturingContent =
+    GetPointerCapturingContent(mouseEvent->pointerId);
+
+  if (!capturingContent) {
+    return aFrameUnderCursor;
+  }
+  // Return the content's primary frame as the target frame.
+  nsIFrame* capturingFrame = capturingContent->GetPrimaryFrame();
+  return capturingFrame ? capturingFrame : aFrameUnderCursor;
+}
+
 /* static */ void
 PointerEventHandler::ReleaseIfCaptureByDescendant(nsIContent* aContent)
 {
@@ -302,7 +327,7 @@ PointerEventHandler::PostHandlePointerEventsPreventDefault(
   pointerInfo->mPreventMouseEventByContent = true;
 }
 
-/* static */ nsresult
+/* static */ void
 PointerEventHandler::DispatchPointerFromMouseOrTouch(
                        PresShell* aShell,
                        nsIFrame* aFrame,
@@ -311,6 +336,10 @@ PointerEventHandler::DispatchPointerFromMouseOrTouch(
                        nsEventStatus* aStatus,
                        nsIContent** aTargetContent)
 {
+  MOZ_ASSERT(IsPointerEventEnabled());
+  MOZ_ASSERT(aFrame);
+  MOZ_ASSERT(aEvent);
+
   EventMessage pointerMessage = eVoidEvent;
   if (aEvent->mClass == eMouseEventClass) {
     WidgetMouseEvent* mouseEvent = aEvent->AsMouseEvent();
@@ -319,7 +348,7 @@ PointerEventHandler::DispatchPointerFromMouseOrTouch(
     //    dispatched to DOM.
     if (!mouseEvent->convertToPointer ||
         !aEvent->IsAllowedToDispatchDOMEvent()) {
-      return NS_OK;
+      return;
     }
     int16_t button = mouseEvent->button;
     switch (mouseEvent->mMessage) {
@@ -336,7 +365,7 @@ PointerEventHandler::DispatchPointerFromMouseOrTouch(
         ePointerMove : ePointerDown;
       break;
     default:
-      return NS_OK;
+      return;
     }
 
     WidgetPointerEvent event(*mouseEvent);
@@ -377,7 +406,7 @@ PointerEventHandler::DispatchPointerFromMouseOrTouch(
       pointerMessage = ePointerCancel;
       break;
     default:
-      return NS_OK;
+      return;
     }
 
     RefPtr<PresShell> shell(aShell);
@@ -410,7 +439,6 @@ PointerEventHandler::DispatchPointerFromMouseOrTouch(
       PostHandlePointerEventsPreventDefault(&event, aEvent);
     }
   }
-  return NS_OK;
 }
 
 /* static */ uint16_t
