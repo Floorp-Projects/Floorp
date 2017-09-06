@@ -130,6 +130,9 @@
       var dt = e.dataTransfer;
       dragenterFired++;
 
+      // NOTE: This test is run with chrome privileges.
+      // For back-compat reasons, protected mode acts like readonly mode for
+      // chrome documents.
       readOnly(e);
     }
 
