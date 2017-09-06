@@ -17,9 +17,7 @@
 #test::before,
 #test::after,
 #contents::before,
-#contents::after,
-#flex::before,
-#flex::after {
+#contents::after {
   content: " ";
   width: 50%;
   height: 10px;
@@ -32,18 +30,10 @@
 #none::after {
   content: "Foo";
 }
-#flex {
-  display: flex;
-}
-#flex-no-pseudo {
-  display: flex;
-}
 </style>
 <div id="test">
   <div id="contents"></div>
   <div id="none"></div>
-  <div id="flex"></div>
-  <div id="flex-no-pseudo"></div>
 </div>
 <script>
 test(function() {
@@ -74,18 +64,4 @@ test(function() {
                   "Pseudo-styles of display: none elements should be correct");
   });
 }, "Resolution of pseudo-element styles in display: none elements");
-test(function() {
-  var flex = document.getElementById('flex');
-  [":before", ":after"].forEach(function(pseudo) {
-    assert_equals(getComputedStyle(flex, pseudo).display, "block",
-                  "Pseudo-styles of display: flex elements should get blockified");
-  });
-}, "Item-based blockification of pseudo-elements");
-test(function() {
-  var flexNoPseudo = document.getElementById('flex-no-pseudo');
-  [":before", ":after"].forEach(function(pseudo) {
-    assert_equals(getComputedStyle(flexNoPseudo, pseudo).display, "block",
-                  "Pseudo-styles of display: flex elements should get blockified");
-  });
-}, "Item-based blockification of nonexistent pseudo-elements");
 </script>
