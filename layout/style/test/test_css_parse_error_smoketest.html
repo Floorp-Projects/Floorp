@@ -14,6 +14,9 @@
 
     { css: "x { color: invalid; }", error: "Expected color but found ‘invalid’.  Error in parsing value for ‘color’.  Declaration dropped." },
 
+    { css: "x { filter: alpha(foo); }", error: "Expected ‘none’, URL, or filter function but found ‘alpha(’.  Error in parsing value for ‘filter’.  Declaration dropped." },
+    { css: "x { filter: 5; }", error: "Expected ‘none’, URL, or filter function but found ‘5’.  Error in parsing value for ‘filter’.  Declaration dropped." },
+
     { css: "::unknown {}", error: "Unknown pseudo-class or pseudo-element ‘unknown’.  Ruleset ignored due to bad selector." },
     { css: ":unknown {}", error: "Unknown pseudo-class or pseudo-element ‘unknown’.  Ruleset ignored due to bad selector." },
     { css: "::5 {}", error: "Expected identifier for pseudo-class or pseudo-element but found ‘5’.  Ruleset ignored due to bad selector." },
