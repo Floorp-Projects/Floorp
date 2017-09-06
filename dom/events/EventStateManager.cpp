@@ -1772,6 +1772,12 @@ EventStateManager::GenerateDragGesture(nsPresContext* aPresContext,
 
       RefPtr<DataTransfer> dataTransfer =
         new DataTransfer(window, eDragStart, false, -1);
+      auto protectDataTransfer = MakeScopeExit([&] {
+        if (dataTransfer) {
+          dataTransfer->SetMode(DataTransfer::Mode::Protected);
+          dataTransfer->ClearAll();
+        }
+      });
 
       nsCOMPtr<nsISelection> selection;
       nsCOMPtr<nsIContent> eventContent, targetContent;
@@ -1838,11 +1844,6 @@ EventStateManager::GenerateDragGesture(nsPresContext* aPresContext,
                                          "on-datatransfer-available",
                                          nullptr);
       }
-
-      // now that the dataTransfer has been updated in the dragstart and
-      // draggesture events, make it read only so that the data doesn't
-      // change during the drag.
-      dataTransfer->SetMode(DataTransfer::Mode::ReadOnly);
 
       if (status != nsEventStatus_eConsumeNoDefault) {
         bool dragStarted = DoDefaultDragStart(aPresContext, event, dataTransfer,
@@ -2006,6 +2007,18 @@ EventStateManager::DoDefaultDragStart(nsPresContext* aPresContext,
   if (!transArray)
     return false;
 
+  // After this function returns, the DataTransfer will be cleared so it appears
+  // empty to content. We need to pass a DataTransfer into the Drag Session, so
+  // we need to make a copy.
+  RefPtr<DataTransfer> dataTransfer;
+  aDataTransfer->Clone(aDragTarget, eDrop, aDataTransfer->MozUserCancelled(),
+                       false, getter_AddRefs(dataTransfer));
+
+  // Copy over the drop effect, as Clone doesn't copy it for us.
+  uint32_t dropEffect;
+  aDataTransfer->GetDropEffectInt(&dropEffect);
+  dataTransfer->SetDropEffectInt(dropEffect);
+
   // XXXndeakin don't really want to create a new drag DOM event
   // here, but we need something to pass to the InvokeDragSession
   // methods.
@@ -2018,7 +2031,7 @@ EventStateManager::DoDefaultDragStart(nsPresContext* aPresContext,
   // other than a selection is being dragged.
   if (!dragImage && aSelection) {
     dragService->InvokeDragSessionWithSelection(aSelection, transArray,
-                                                action, event, aDataTransfer);
+                                                action, event, dataTransfer);
   }
   else {
     // if dragging within a XUL tree and no custom drag image was
@@ -2045,7 +2058,7 @@ EventStateManager::DoDefaultDragStart(nsPresContext* aPresContext,
                                             dragImage ? dragImage->AsDOMNode() :
                                                         nullptr,
                                             imageX, imageY, event,
-                                            aDataTransfer);
+                                            dataTransfer);
   }
 
   return true;
