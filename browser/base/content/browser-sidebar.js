@@ -329,6 +329,8 @@ var SidebarUI = {
       if (triggerNode) {
         updateToggleControlLabel(triggerNode);
       }
+
+      this._fireFocusedEvent();
       BrowserUITelemetry.countSidebarEvent(commandID, "show");
     });
   },
@@ -384,20 +386,16 @@ var SidebarUI = {
 
       if (this.browser.contentDocument.location.href != url) {
         this.browser.addEventListener("load", event => {
-
           // We're handling the 'load' event before it bubbles up to the usual
-          // (non-capturing) event handlers. Let it bubble up before firing the
-          // SidebarFocused event.
-          setTimeout(() => this._fireFocusedEvent(), 0);
+          // (non-capturing) event handlers. Let it bubble up before resolving.
+          setTimeout(() => {
+            resolve();
 
-          resolve();
-
-          // Now that the currentId is updated, fire a show event.
-          this._fireShowEvent();
+            // Now that the currentId is updated, fire a show event.
+            this._fireShowEvent();
+          }, 0);
         }, {capture: true, once: true});
       } else {
-        // Older code handled this case, so we do it too.
-        this._fireFocusedEvent();
         resolve();
 
         // Now that the currentId is updated, fire a show event.
