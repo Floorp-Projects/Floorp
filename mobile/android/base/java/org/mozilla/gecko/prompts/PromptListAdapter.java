@@ -121,12 +121,9 @@ public class PromptListAdapter extends ArrayAdapter<PromptListItem> {
             if (icon instanceof BitmapDrawable) {
                 Bitmap bitmap = ((BitmapDrawable) icon).getBitmap();
                 d = new BitmapDrawable(res, Bitmap.createScaledBitmap(bitmap, mIconSize, mIconSize, true));
-            } else if (icon instanceof VectorDrawable) {
-                // If it's a VectorDrawable, we don't need to scale it.
-                d = icon;
             } else {
-                // Other than that, we just use blank.
-                d = getBlankDrawable(res);
+                // FIXME: Fix scale issue for AdaptiveIconDrawable in bug 1397174
+                d = icon;
             }
 
         } else if (item.inGroup) {
