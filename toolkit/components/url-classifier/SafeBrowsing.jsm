@@ -126,6 +126,16 @@ this.SafeBrowsing = {
     }
   },
 
+  unregisterTables(obsoleteLists) {
+    let listManager = Cc["@mozilla.org/url-classifier/listmanager;1"].
+      getService(Ci.nsIUrlListManager);
+
+    for (let i = 0; i < obsoleteLists.length; ++i) {
+      for (let j = 0; j < obsoleteLists[i].length; ++j) {
+        listManager.unregisterTable(obsoleteLists[i][j]);
+      }
+    }
+  },
 
   initialized:          false,
   phishingEnabled:      false,
@@ -218,6 +228,20 @@ this.SafeBrowsing = {
         flashExceptTable, flashSubDocTable,
         flashSubDocExceptTable;
 
+    let obsoleteLists;
+    // Make a copy of the original lists before we re-read the prefs.
+    if (this.initialized) {
+      obsoleteLists = [this.phishingLists,
+                       this.malwareLists,
+                       this.downloadBlockLists,
+                       this.downloadAllowLists,
+                       this.trackingProtectionLists,
+                       this.trackingProtectionWhitelists,
+                       this.blockedLists,
+                       this.flashLists,
+                       this.flashInfobarLists];
+    }
+
     [this.phishingLists,
      this.malwareLists,
      this.downloadBlockLists,
@@ -239,8 +263,28 @@ this.SafeBrowsing = {
                                              flashSubDocTable,
                                              flashSubDocExceptTable)
 
+    if (obsoleteLists) {
+      let newLists = [this.phishingLists,
+                      this.malwareLists,
+                      this.downloadBlockLists,
+                      this.downloadAllowLists,
+                      this.trackingProtectionLists,
+                      this.trackingProtectionWhitelists,
+                      this.blockedLists,
+                      this.flashLists,
+                      this.flashInfobarLists];
+
+      for (let i = 0; i < obsoleteLists.length; ++i) {
+        obsoleteLists[i] = obsoleteLists[i]
+          .filter(list => newLists[i].indexOf(list) == -1);
+      }
+    }
+
     this.updateProviderURLs();
     this.registerTables();
+    if (obsoleteLists) {
+      this.unregisterTables(obsoleteLists);
+    }
 
     // XXX The listManager backend gets confused if this is called before the
     // lists are registered. So only call it here when a pref changes, and not
