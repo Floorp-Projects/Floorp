@@ -46,7 +46,7 @@ function defineCohort() {
     return;
   }
 
-  let cohort = Services.prefs.getStringPref(PREF_COHORT_NAME);
+  let cohort = Services.prefs.getStringPref(PREF_COHORT_NAME, undefined);
 
   if (!cohort) {
     // The cohort has not been defined yet: this is the first
