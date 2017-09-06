@@ -6,11 +6,13 @@
 .theme-light {
   --rule-highlight-background-color: #ffee99;
   --rule-overridden-item-border-color: var(--theme-content-color3);
+  --rule-header-background-color: var(--theme-toolbar-background);
 }
 
 .theme-dark {
   --rule-highlight-background-color: #594724;
   --rule-overridden-item-border-color: var(--theme-content-color1);
+  --rule-header-background-color: #141416;
 }
 
 .theme-firebug {
@@ -18,6 +20,7 @@
   --rule-property-name: darkgreen;
   --rule-property-value: darkblue;
   --rule-overridden-item-border-color: var(--theme-content-color2);
+  --rule-header-background-color: var(--theme-header-background);
 }
 
 /* Rule View Tabpanel */
@@ -219,7 +222,7 @@
 }
 
 .ruleview-header {
-  background-color: var(--theme-toolbar-background);
+  background-color: var(--rule-header-background-color);
   border-bottom: 1px solid var(--theme-splitter-color);
   font-size: 12px;
   padding: 4px;
@@ -239,7 +242,6 @@
   padding: 3px 4px 2px 4px;
   line-height: inherit;
   min-height: 0;
-  background: var(--theme-header-background);
 }
 
 :root[platform="win"] .ruleview-header,
