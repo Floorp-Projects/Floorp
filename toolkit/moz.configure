@@ -739,10 +739,19 @@ with only_when(building_stylo_bindgen):
             # but not have other packages installed.  Since the user is trying
             # to use their system packages, we can't be more specific about what
             # they need.
+            clang_resolved = find_program(clang_path)
+            if not clang_resolved:
+                die(dedent('''\
+                The file {} returned by `llvm-config {}` does not exist.
+                clang is required to build Stylo.  Please install the necessary packages,
+                run `mach bootstrap`, or add --disable-stylo to your mozconfig.
+                '''.format(clang_path, '--bindir')))
+
             if not os.path.exists(libclang_path):
                 die(dedent('''\
                 The directory {} returned by `llvm-config {}` does not exist.
-                Please check your system configuration.
+                clang is required to build Stylo.  Please install the necessary packages,
+                run `mach bootstrap`, or add --disable-stylo to your mozconfig.
                 '''.format(libclang_path, libclang_arg)))
 
             (found, searched) = search_for_libclang(libclang_path)
@@ -750,15 +759,9 @@ with only_when(building_stylo_bindgen):
                 die(dedent('''\
                 Could not find the clang shared library in the path {}
                 returned by `llvm-config {}` (searched for files {}).
-                Please check your system configuration.
+                clang is required to build Stylo.  Please install the necessary packages,
+                run `mach bootstrap`, or add --disable-stylo to your mozconfig.
                 '''.format(libclang_path, libclang_arg, searched)))
-
-            clang_resolved = find_program(clang_path)
-            if not clang_resolved:
-                die(dedent('''\
-                The file {} returned by `llvm-config {}` does not exist.
-                Please check your system configuration.
-                '''.format(clang_path, '--bindir')))
 
             return namespace(
                 libclang_path=libclang_path,
