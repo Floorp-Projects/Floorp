@@ -734,9 +734,6 @@ protected:
   virtual void PausePainting() override;
   virtual void ResumePainting() override;
 
-  void UpdateActivePointerState(mozilla::WidgetGUIEvent* aEvent);
-
-
   //////////////////////////////////////////////////////////////////////////////
   // Approximate frame visibility tracking implementation.
   //////////////////////////////////////////////////////////////////////////////
