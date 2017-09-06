@@ -1712,7 +1712,7 @@ BrowserGlue.prototype = {
 
   // eslint-disable-next-line complexity
   _migrateUI: function BG__migrateUI() {
-    const UI_VERSION = 52;
+    const UI_VERSION = 53;
     const BROWSER_DOCURL = "chrome://browser/content/browser.xul";
 
     let currentUIVersion;
@@ -2087,6 +2087,19 @@ BrowserGlue.prototype = {
       // webconsole prefs (bug 1307881).
       if (Services.prefs.getBoolPref("devtools.webconsole.persistlog", false)) {
         Services.prefs.setBoolPref("devtools.netmonitor.persistlog", true);
+      }
+    }
+
+    // Update user customizations that will interfere with the Safe Browsing V2
+    // to V4 migration (bug 1395419).
+    if (currentUIVersion < 53) {
+      const MALWARE_PREF = "urlclassifier.malwareTable";
+      if (Services.prefs.prefHasUserValue(MALWARE_PREF)) {
+        let malwareList = Services.prefs.getCharPref(MALWARE_PREF);
+        if (malwareList.indexOf("goog-malware-shavar") != -1) {
+          malwareList.replace("goog-malware-shavar", "goog-malware-proto");
+          Services.prefs.setCharPref(MALWARE_PREF, malwareList);
+        }
       }
     }
 
