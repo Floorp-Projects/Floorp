@@ -409,11 +409,8 @@ pref("browser.search.context.loadInBackground", false);
 // comma seperated list of of engines to hide in the search panel.
 pref("browser.search.hiddenOneOffs", "");
 
-// Mirrors whether the search-container widget is in the navigation toolbar. The
-// default value of this preference must match the DEFAULT_AREA_PLACEMENTS of
-// UITelemetry.jsm, the navbarPlacements of CustomizableUI.jsm, and the
-// position and attributes of the search-container element in browser.xul.
-pref("browser.search.widget.inNavBar", true);
+// Mirrors whether the search-container widget is in the navigation toolbar.
+pref("browser.search.widget.inNavBar", false);
 
 #ifndef RELEASE_OR_BETA
 pref("browser.search.reset.enabled", true);

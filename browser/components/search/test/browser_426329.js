@@ -131,6 +131,12 @@ async function prepareTest() {
   await focusPromise;
 }
 
+add_task(async function testSetup() {
+  await SpecialPowers.pushPrefEnv({ set: [
+    ["browser.search.widget.inNavBar", true],
+  ]});
+});
+
 add_task(async function testSetupEngine() {
   await promiseSetEngine();
 });

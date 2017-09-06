@@ -4,13 +4,18 @@
 // popup shows a submenu that lists them instead of showing them in the popup
 // itself.
 
-const searchbar = document.getElementById("searchbar");
 const searchPopup = document.getElementById("PopupSearchAutoComplete");
 const oneOffsContainer =
   document.getAnonymousElementByAttribute(searchPopup, "anonid",
                                           "search-one-off-buttons");
 
 add_task(async function test() {
+  await SpecialPowers.pushPrefEnv({ set: [
+    ["browser.search.widget.inNavBar", true],
+  ]});
+
+  let searchbar = document.getElementById("searchbar");
+
   let rootDir = getRootDirectory(gTestPath);
   let url = rootDir + "tooManyEnginesOffered.html";
   await BrowserTestUtils.openNewForegroundTab(gBrowser, url);

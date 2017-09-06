@@ -931,13 +931,6 @@
             </textbox>
         </toolbaritem>
 
-        <toolbaritem id="search-container" title="&searchItem.title;"
-                     align="center" class="chromeclass-toolbar-additional panel-wide-item"
-                     cui-areatype="toolbar"
-                     flex="100" persist="width" removable="true">
-          <searchbar id="searchbar" flex="1"/>
-        </toolbaritem>
-
         <!-- This is a placeholder for the Downloads Indicator.  It is visible
              during the customization of the toolbar, in the palette, and before
              the Downloads Indicator overlay is loaded. -->
@@ -1087,7 +1080,6 @@
 
       <toolbarbutton id="bookmarks-menu-button"
                      class="toolbarbutton-1 chromeclass-toolbar-additional"
-                     removable="true"
                      type="menu"
                      label="&bookmarksMenuButton2.label;"
                      tooltip="dynamic-shortcut-tooltip"
@@ -1096,7 +1088,6 @@
                      ondragover="PlacesMenuDNDHandler.onDragOver(event);"
                      ondragleave="PlacesMenuDNDHandler.onDragLeave(event);"
                      ondrop="PlacesMenuDNDHandler.onDrop(event);"
-                     cui-areatype="toolbar"
                      oncommand="BookmarkingUI.onCommand(event);">
         <observes element="bookmarkThisPageBroadcaster" attribute="starred"/>
         <observes element="bookmarkThisPageBroadcaster" attribute="buttontooltiptext"/>
@@ -1182,6 +1173,15 @@
                     key="manBookmarkKb"/>
         </menupopup>
       </toolbarbutton>
+
+      <toolbaritem id="search-container"
+                   class="chromeclass-toolbar-additional panel-wide-item"
+                   title="&searchItem.title;"
+                   align="center"
+                   flex="100"
+                   persist="width">
+        <searchbar id="searchbar" flex="1"/>
+      </toolbaritem>
     </toolbarpalette>
     <box id="library-animatable-box" class="toolbarbutton-animatable-box">
       <image class="toolbarbutton-animatable-image"/>
