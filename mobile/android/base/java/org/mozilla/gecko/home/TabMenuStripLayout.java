@@ -70,7 +70,7 @@ class TabMenuStripLayout extends ThemedLinearLayout
         a.recycle();
 
         if (stripResId != -1) {
-            strip = getResources().getDrawable(stripResId);
+            strip = ResourcesCompat.getDrawable(getResources(), stripResId, null);
 
             if (stripColor != null) {
                 final int backgroundTintColor = stripColor.getColorForState(getDrawableState(), Color.TRANSPARENT);
@@ -297,6 +297,7 @@ class TabMenuStripLayout extends ThemedLinearLayout
         super.setPrivateMode(isPrivate);
 
         if (modeChanged && stripColor != null) {
+            strip = DrawableCompat.wrap(strip);
             final int backgroundTintColor = stripColor.getColorForState(getDrawableState(), Color.TRANSPARENT);
             DrawableCompat.setTint(strip, backgroundTintColor);
         }
