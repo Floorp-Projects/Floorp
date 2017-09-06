@@ -43,7 +43,7 @@ public:
       MOZ_CRASH();
     }
 
-    void* m = moz_xmalloc(size.value());
+    void* m = operator new(size.value());
     RefPtr<AudioBlockBuffer> p = new (m) AudioBlockBuffer();
     NS_ASSERTION((reinterpret_cast<char*>(p.get() + 1) - reinterpret_cast<char*>(p.get())) % 4 == 0,
                  "AudioBlockBuffers should be at least 4-byte aligned");

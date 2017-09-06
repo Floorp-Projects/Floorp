@@ -432,12 +432,12 @@ RestyleManager::ChangeHintToString(nsChangeHint aHint)
     "ReflowChangesSizeOrPosition", "UpdateComputedBSize",
     "UpdateUsesOpacity", "UpdateBackgroundPosition",
     "AddOrRemoveTransform", "CSSOverflowChange",
-    "UpdateWidgetProperties"
+    "UpdateWidgetProperties", "UpdateTableCellSpans"
   };
-  static_assert(nsChangeHint_AllHints == (1 << ArrayLength(names)) - 1,
+  static_assert(nsChangeHint_AllHints == (1u << ArrayLength(names)) - 1,
                 "Name list doesn't match change hints.");
-  uint32_t hint = aHint & ((1 << ArrayLength(names)) - 1);
-  uint32_t rest = aHint & ~((1 << ArrayLength(names)) - 1);
+  uint32_t hint = aHint & ((1u << ArrayLength(names)) - 1);
+  uint32_t rest = aHint & ~((1u << ArrayLength(names)) - 1);
   if ((hint & NS_STYLE_HINT_REFLOW) == NS_STYLE_HINT_REFLOW) {
     result.AppendLiteral("NS_STYLE_HINT_REFLOW");
     hint = hint & ~NS_STYLE_HINT_REFLOW;
@@ -1696,6 +1696,9 @@ RestyleManager::ProcessRestyledFrames(nsStyleChangeList& aChangeList)
       }
       if (hint & nsChangeHint_UpdateWidgetProperties) {
         frame->UpdateWidgetProperties();
+      }
+      if (hint & nsChangeHint_UpdateTableCellSpans) {
+        frameConstructor->UpdateTableCellSpans(content);
       }
     }
   }

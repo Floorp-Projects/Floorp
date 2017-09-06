@@ -914,6 +914,10 @@ extern "C" {
     pub fn Gecko_nsFont_Destroy(dst: *mut nsFont);
 }
 extern "C" {
+    pub fn Gecko_ConstructFontFeatureValueSet()
+     -> *mut gfxFontFeatureValueSet;
+}
+extern "C" {
     pub fn Gecko_AppendFeatureValueHashEntry(value_set:
                                                  *mut gfxFontFeatureValueSet,
                                              family: *mut nsIAtom,
@@ -2047,10 +2051,8 @@ extern "C" {
 }
 extern "C" {
     pub fn Servo_StyleSet_BuildFontFeatureValueSet(set:
-                                                       RawServoStyleSetBorrowed,
-                                                   list:
-                                                       *mut gfxFontFeatureValueSet)
-     -> bool;
+                                                       RawServoStyleSetBorrowed)
+     -> *mut gfxFontFeatureValueSet;
 }
 extern "C" {
     pub fn Servo_StyleSet_ResolveForDeclarations(set:
@@ -2063,6 +2065,8 @@ extern "C" {
 }
 extern "C" {
     pub fn Servo_StyleSet_AddSizeOfExcludingThis(malloc_size_of: MallocSizeOf,
+                                                 malloc_enclosing_size_of:
+                                                     MallocSizeOf,
                                                  sizes:
                                                      *mut ServoStyleSetSizes,
                                                  set:

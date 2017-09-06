@@ -3117,7 +3117,7 @@ MediaFormatReader::GetImageContainer()
 void
 MediaFormatReader::GetMozDebugReaderData(nsACString& aString)
 {
-  nsAutoCString result;
+  nsCString result;
   nsAutoCString audioDecoderName("unavailable");
   nsAutoCString videoDecoderName = audioDecoderName;
   nsAutoCString audioType("none");

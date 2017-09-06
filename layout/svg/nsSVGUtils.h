@@ -389,8 +389,12 @@ public:
 
   enum BBoxFlags {
     eBBoxIncludeFill           = 1 << 0,
+    // Include the geometry of the fill even when the fill does not
+    // actually render (e.g. when fill="none" or fill-opacity="0")
     eBBoxIncludeFillGeometry   = 1 << 1,
     eBBoxIncludeStroke         = 1 << 2,
+    // Include the geometry of the stroke even when the stroke does not
+    // actually render (e.g. when stroke="none" or stroke-opacity="0")
     eBBoxIncludeStrokeGeometry = 1 << 3,
     eBBoxIncludeMarkers        = 1 << 4,
     eBBoxIncludeClipped        = 1 << 5,

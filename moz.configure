@@ -371,7 +371,8 @@ tup = check_prog('TUP', tup_progs)
 option(env='WATCHMAN', nargs=1, help='Path to the watchman program')
 
 @depends('WATCHMAN')
-def watchman_info(prog):
+@checking('for watchman', callback=lambda w: w.path if w else 'not found')
+def watchman(prog):
     if not prog:
         prog = find_program('watchman')
 
@@ -388,17 +389,12 @@ def watchman_info(prog):
 
     return namespace(path=prog, version=Version(out.strip()))
 
-@depends_if(watchman_info)
-@checking('for watchman')
-def watchman(w):
-    return w.path
-
-@depends_if(watchman_info)
+@depends_if(watchman)
 @checking('for watchman version')
 def watchman_version(w):
     return w.version
 
-set_config('WATCHMAN', watchman)
+set_config('WATCHMAN', watchman.path)
 
 @depends_all(hg_version, hg_config, watchman)
 @checking('for watchman Mercurial integration')

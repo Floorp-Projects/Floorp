@@ -1437,7 +1437,10 @@ Function CheckInstall
   ${EndIf}
 
   ${If} $ProgressCompleted < ${PROGRESS_BAR_INSTALL_END_STEP}
-    IntOp $ProgressCompleted $ProgressCompleted + 1
+    IntOp $0 ${PROGRESS_BAR_INSTALL_END_STEP} - ${PROGRESS_BAR_DOWNLOAD_END_STEP}
+    IntOp $0 $InstallCounterStep * $0
+    IntOp $0 $0 / $InstallTotalSteps
+    IntOp $ProgressCompleted ${PROGRESS_BAR_DOWNLOAD_END_STEP} + $0
     Call SetProgressBars
   ${EndIf}
 

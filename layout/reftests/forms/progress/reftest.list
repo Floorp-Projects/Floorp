@@ -2,7 +2,7 @@
 == values-rtl.html values-rtl-ref.html
 == margin-padding.html margin-padding-ref.html
 == margin-padding-rtl.html margin-padding-rtl-ref.html
-random-if(styloVsGecko) == bar-pseudo-element.html bar-pseudo-element-ref.html
+== bar-pseudo-element.html bar-pseudo-element-ref.html
 == bar-pseudo-element-rtl.html bar-pseudo-element-rtl-ref.html
 == indeterminate-style-width.html indeterminate-style-width-ref.html
 

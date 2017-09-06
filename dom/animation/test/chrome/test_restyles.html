@@ -1008,16 +1008,16 @@ waitForAllPaints(function() {
   });
 
   add_task_if_omta_enabled(
-    function* no_restyling_for_compositor_animation_on_unrelated_style_change() {
+    async function no_restyling_for_compositor_animation_on_unrelated_style_change() {
       var div = addDiv(null);
       var animation = div.animate({ opacity: [0, 1] }, 100 * MS_PER_SEC);
 
-      yield animation.ready;
+      await animation.ready;
       ok(animation.isRunningOnCompositor,
          'The opacity animation is running on the compositor');
 
       div.style.setProperty('color', 'blue', '');
-      var markers = yield observeStyling(5);
+      var markers = await observeStyling(5);
       if (isServo) {
         is(markers.length, 0,
            'The opacity animation keeps running on the compositor when ' +
@@ -1027,7 +1027,7 @@ waitForAllPaints(function() {
                 'Bug 1307341 The opacity animation keeps running on the ' +
                 'compositor when color style is changed');
       }
-      yield ensureElementRemoval(div);
+      await ensureElementRemoval(div);
     }
   );
 });
