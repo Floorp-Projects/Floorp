@@ -45,6 +45,12 @@ ChannelMediaDecoder::ResourceCallback::Disconnect()
   }
 }
 
+AbstractThread*
+ChannelMediaDecoder::ResourceCallback::AbstractMainThread() const
+{
+  return mAbstractMainThread;
+}
+
 MediaDecoderOwner*
 ChannelMediaDecoder::ResourceCallback::GetMediaOwner() const
 {
