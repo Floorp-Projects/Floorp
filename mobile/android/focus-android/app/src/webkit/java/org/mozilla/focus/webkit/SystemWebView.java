@@ -103,6 +103,8 @@ public class SystemWebView extends NestedWebView implements IWebView, SharedPref
                 : null;
 
         final String desiredURL = session.getUrl().getValue();
+
+        client.restoreState(stateData);
         client.notifyCurrentURL(desiredURL);
 
         // Pages are only added to the back/forward list when loading finishes. If a new page is
@@ -130,7 +132,9 @@ public class SystemWebView extends NestedWebView implements IWebView, SharedPref
         // browsing session is active. The data that WebView stores in this bundle is too large for
         // Android to save and restore as part of the state bundle.
         final Bundle stateData = new Bundle();
+
         super.saveState(stateData);
+        client.saveState(this, stateData);
 
         session.saveWebViewState(stateData);
     }
