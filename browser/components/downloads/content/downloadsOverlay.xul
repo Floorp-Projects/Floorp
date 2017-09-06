@@ -104,6 +104,9 @@
         <menuitem command="downloadsCmd_clearList"
                   label="&cmd.clearList2.label;"
                   accesskey="&cmd.clearList2.accesskey;"/>
+        <menuitem command="downloadsCmd_clearDownloads"
+                  hidden="true"
+                  label="&cmd.clearDownloads.label;"/>
       </menupopup>
 
       <photonpanelmultiview id="downloadsPanel-multiView"
@@ -179,6 +182,28 @@
                     default="true"
                     flex="1"/>
           </hbox>
+        </panelview>
+
+        <panelview id="PanelUI-downloads" class="PanelUI-subView">
+          <vbox class="panel-subview-body">
+            <toolbarbutton id="appMenu-library-downloads-show-button"
+                           class="subviewbutton subviewbutton-iconic"
+                           label="&cmd.showDownloads.label;"
+                           closemenu="none"
+                           oncommand="DownloadsSubview.onShowDownloads(this);"/>
+            <toolbarseparator/>
+            <toolbaritem id="panelMenu_downloadsMenu"
+                         orient="vertical"
+                         smoothscroll="false"
+                         flatList="true"
+                         tooltip="bhTooltip">
+              <!-- downloads menu items will go here -->
+            </toolbaritem>
+          </vbox>
+          <toolbarbutton id="PanelUI-downloadsMore"
+                         class="panel-subview-footer subviewbutton"
+                         label="&downloadsHistory.label;"
+                         oncommand="BrowserDownloadsUI(); CustomizableUI.hidePanelForNode(this);"/>
         </panelview>
 
       </photonpanelmultiview>

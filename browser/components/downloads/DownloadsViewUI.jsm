@@ -23,10 +23,14 @@ XPCOMUtils.defineLazyModuleGetter(this, "DownloadUtils",
                                   "resource://gre/modules/DownloadUtils.jsm");
 XPCOMUtils.defineLazyModuleGetter(this, "DownloadsCommon",
                                   "resource:///modules/DownloadsCommon.jsm");
+XPCOMUtils.defineLazyModuleGetter(this, "FileUtils",
+                                  "resource://gre/modules/FileUtils.jsm");
 XPCOMUtils.defineLazyModuleGetter(this, "OS",
                                   "resource://gre/modules/osfile.jsm");
 XPCOMUtils.defineLazyModuleGetter(this, "PlacesUtils",
                                   "resource://gre/modules/PlacesUtils.jsm");
+XPCOMUtils.defineLazyModuleGetter(this, "RecentWindow",
+                                  "resource:///modules/RecentWindow.jsm");
 
 this.DownloadsViewUI = {
   /**
@@ -36,6 +40,23 @@ this.DownloadsViewUI = {
   isCommandName(name) {
     return name.startsWith("cmd_") || name.startsWith("downloadsCmd_");
   },
+};
+
+this.DownloadsViewUI.BaseView = class {
+  canClearDownloads(nodeContainer) {
+    // Downloads can be cleared if there's at least one removable download in
+    // the list (either a history download or a completed session download).
+    // Because history downloads are always removable and are listed after the
+    // session downloads, check from bottom to top.
+    for (let elt = nodeContainer.lastChild; elt; elt = elt.previousSibling) {
+      // Stopped, paused, and failed downloads with partial data are removed.
+      let download = elt._shell.download;
+      if (download.stopped && !(download.canceled && download.hasPartialData)) {
+        return true;
+      }
+    }
+    return false;
+  }
 };
 
 /**
@@ -88,6 +109,10 @@ this.DownloadsViewUI.DownloadElementShell.prototype = {
       return this.download.source.url;
     }
     return OS.Path.basename(this.download.target.path);
+  },
+
+  get browserWindow() {
+    return RecentWindow.getMostRecentBrowserWindow();
   },
 
   /**
@@ -368,8 +393,31 @@ this.DownloadsViewUI.DownloadElementShell.prototype = {
         return this.download.hasBlockedData;
       case "downloadsCmd_cancel":
         return this.download.hasPartialData || !this.download.stopped;
+      case "downloadsCmd_open":
+        // This property is false if the download did not succeed.
+        return this.download.target.exists;
+      case "downloadsCmd_show":
+        // TODO: Bug 827010 - Handle part-file asynchronously.
+        if (this.download.target.partFilePath) {
+          let partFile = new FileUtils.File(this.download.target.partFilePath);
+          if (partFile.exists()) {
+            return true;
+          }
+        }
+
+        // This property is false if the download did not succeed.
+        return this.download.target.exists;
+      case "cmd_delete":
+        // We don't want in-progress downloads to be removed accidentally.
+        return this.download.stopped;
     }
-    return false;
+    return DownloadsViewUI.isCommandName(aCommand) && !!this[aCommand];
+  },
+
+  doCommand(aCommand) {
+    if (DownloadsViewUI.isCommandName(aCommand)) {
+      this[aCommand]();
+    }
   },
 
   downloadsCmd_cancel() {
@@ -378,9 +426,17 @@ this.DownloadsViewUI.DownloadElementShell.prototype = {
     this.download.removePartialData().catch(Cu.reportError);
   },
 
-  downloadsCmd_retry() {
-    // Errors when retrying are already reported as download failures.
-    this.download.start().catch(() => {});
+  downloadsCmd_confirmBlock() {
+    this.download.confirmBlock().catch(Cu.reportError);
+  },
+
+  downloadsCmd_open() {
+    let file = new FileUtils.File(this.download.target.path);
+    DownloadsCommon.openDownloadedFile(file, null, this.element.ownerGlobal);
+  },
+
+  downloadsCmd_openReferrer() {
+    this.element.ownerGlobal.openURL(this.download.source.referrer);
   },
 
   downloadsCmd_pauseResume() {
@@ -391,8 +447,25 @@ this.DownloadsViewUI.DownloadElementShell.prototype = {
     }
   },
 
-  downloadsCmd_confirmBlock() {
-    this.download.confirmBlock().catch(Cu.reportError);
+  downloadsCmd_show() {
+    let file = new FileUtils.File(this.download.target.path);
+    DownloadsCommon.showDownloadedFile(file);
+  },
+
+  downloadsCmd_retry() {
+    if (this.download.start) {
+      // Errors when retrying are already reported as download failures.
+      this.download.start().catch(() => {});
+      return;
+    }
+
+    let window = this.browserWindow || this.element.ownerGlobal;
+    let document = window.document;
+
+    // Do not suggest a file name if we don't know the original target.
+    let targetPath = this.download.target.path ?
+                     OS.Path.basename(this.download.target.path) : null;
+    window.DownloadURL(this.download.source.url, targetPath, document);
   },
 
   cmd_delete() {

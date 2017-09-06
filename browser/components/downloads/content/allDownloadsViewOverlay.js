@@ -120,63 +120,8 @@ HistoryDownloadElementShell.prototype = {
     if (!this.active && aCommand != "cmd_delete") {
       return false;
     }
-    switch (aCommand) {
-      case "downloadsCmd_open":
-        // This property is false if the download did not succeed.
-        return this.download.target.exists;
-      case "downloadsCmd_show":
-        // TODO: Bug 827010 - Handle part-file asynchronously.
-        if (this.download.target.partFilePath) {
-          let partFile = new FileUtils.File(this.download.target.partFilePath);
-          if (partFile.exists()) {
-            return true;
-          }
-        }
-
-        // This property is false if the download did not succeed.
-        return this.download.target.exists;
-      case "cmd_delete":
-        // We don't want in-progress downloads to be removed accidentally.
-        return this.download.stopped;
-    }
     return DownloadsViewUI.DownloadElementShell.prototype
                           .isCommandEnabled.call(this, aCommand);
-  },
-
-  doCommand(aCommand) {
-    if (DownloadsViewUI.isCommandName(aCommand)) {
-      this[aCommand]();
-    }
-  },
-
-  downloadsCmd_retry() {
-    if (this.download.start) {
-      DownloadsViewUI.DownloadElementShell.prototype
-                     .downloadsCmd_retry.call(this);
-      return;
-    }
-
-    let browserWin = RecentWindow.getMostRecentBrowserWindow();
-    let initiatingDoc = browserWin ? browserWin.document : document;
-
-    // Do not suggest a file name if we don't know the original target.
-    let targetPath = this.download.target.path ?
-                     OS.Path.basename(this.download.target.path) : null;
-    DownloadURL(this.download.source.url, targetPath, initiatingDoc);
-  },
-
-  downloadsCmd_open() {
-    let file = new FileUtils.File(this.download.target.path);
-    DownloadsCommon.openDownloadedFile(file, null, window);
-  },
-
-  downloadsCmd_show() {
-    let file = new FileUtils.File(this.download.target.path);
-    DownloadsCommon.showDownloadedFile(file);
-  },
-
-  downloadsCmd_openReferrer() {
-    openURL(this.download.source.referrer);
   },
 
   downloadsCmd_unblock() {
@@ -298,6 +243,8 @@ function DownloadsPlacesView(aRichListBox, aActive = true) {
 }
 
 DownloadsPlacesView.prototype = {
+  __proto__: DownloadsViewUI.BaseView.prototype,
+
   get associatedElement() {
     return this._richlistbox;
   },
@@ -576,26 +523,11 @@ DownloadsPlacesView.prototype = {
       case "cmd_paste":
         return this._canDownloadClipboardURL();
       case "downloadsCmd_clearDownloads":
-        return this._canClearDownloads();
+        return this.canClearDownloads(this._richlistbox);
       default:
         return Array.every(this._richlistbox.selectedItems,
                            element => element._shell.isCommandEnabled(aCommand));
     }
-  },
-
-  _canClearDownloads() {
-    // Downloads can be cleared if there's at least one removable download in
-    // the list (either a history download or a completed session download).
-    // Because history downloads are always removable and are listed after the
-    // session downloads, check from bottom to top.
-    for (let elt = this._richlistbox.lastChild; elt; elt = elt.previousSibling) {
-      // Stopped, paused, and failed downloads with partial data are removed.
-      let download = elt._shell.download;
-      if (download.stopped && !(download.canceled && download.hasPartialData)) {
-        return true;
-      }
-    }
-    return false;
   },
 
   _copySelectedDownloadsToClipboard() {
