@@ -622,6 +622,7 @@ struct Zone : public JS::shadow::Zone,
         MOZ_ASSERT(!IsInsideNursery(tgt));
         MOZ_ASSERT(CurrentThreadCanAccessRuntime(runtimeFromActiveCooperatingThread()));
         MOZ_ASSERT(js::CurrentThreadCanAccessZone(this));
+        MOZ_ASSERT(!uniqueIds().has(tgt));
         uniqueIds().rekeyIfMoved(src, tgt);
     }
 
