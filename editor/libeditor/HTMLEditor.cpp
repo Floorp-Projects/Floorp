@@ -3193,12 +3193,9 @@ void
 HTMLEditor::DoContentInserted(nsIDocument* aDocument,
                               nsIContent* aContainer,
                               nsIContent* aChild,
-                              int32_t /* aIndexInContainer */,
+                              int32_t aIndexInContainer,
                               InsertedOrAppended aInsertedOrAppended)
 {
-  MOZ_DIAGNOSTIC_ASSERT(aContainer);
-  MOZ_DIAGNOSTIC_ASSERT(aChild);
-
   if (!IsInObservedSubtree(aDocument, aContainer, aChild)) {
     return;
   }
@@ -3228,13 +3225,20 @@ HTMLEditor::DoContentInserted(nsIDocument* aDocument,
     // Update spellcheck for only the newly-inserted node (bug 743819)
     if (mInlineSpellChecker) {
       RefPtr<nsRange> range = new nsRange(aChild);
-      nsIContent* endContent = aChild;
+      int32_t endIndex = aIndexInContainer + 1;
       if (aInsertedOrAppended == eAppended) {
-        // Maybe more than 1 child was appended.
-        endContent = aContainer->GetLastChild();
+        // Count all the appended nodes
+        nsIContent* sibling = aChild->GetNextSibling();
+        while (sibling) {
+          endIndex++;
+          sibling = sibling->GetNextSibling();
+        }
       }
-      range->SelectNodesInContainer(aContainer, aChild, endContent);
-      mInlineSpellChecker->SpellCheckRange(range);
+      nsresult rv = range->SetStartAndEnd(aContainer, aIndexInContainer,
+                                          aContainer, endIndex);
+      if (NS_SUCCEEDED(rv)) {
+        mInlineSpellChecker->SpellCheckRange(range);
+      }
     }
   }
 }
