@@ -9,9 +9,7 @@
 
 #include "nsIScriptSecurityManager.h"
 
-#include "nsIAddonPolicyService.h"
 #include "mozilla/Maybe.h"
-#include "nsIAddonPolicyService.h"
 #include "nsIPrincipal.h"
 #include "nsCOMPtr.h"
 #include "nsIObserver.h"
@@ -135,17 +133,6 @@ private:
     // This machinery controls new-style domain policies. The old-style
     // policy machinery will be removed soon.
     nsCOMPtr<nsIDomainPolicy> mDomainPolicy;
-
-    // Cached addon policy service. We can't generate this in Init() because
-    // that's too early to get a service.
-    mozilla::Maybe<nsCOMPtr<nsIAddonPolicyService>> mAddonPolicyService;
-    nsIAddonPolicyService* GetAddonPolicyService()
-    {
-        if (mAddonPolicyService.isNothing()) {
-            mAddonPolicyService.emplace(do_GetService("@mozilla.org/addons/policy-service;1"));
-        }
-        return mAddonPolicyService.ref();
-    }
 
     static bool sStrictFileOriginPolicy;
 

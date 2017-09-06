@@ -2069,6 +2069,11 @@ GK_ATOM(mozinputrangeignorepreventdefault, "mozinputrangeignorepreventdefault")
 // WebExtensions
 GK_ATOM(moz_extension, "moz-extension")
 GK_ATOM(all_urlsPermission, "<all_urls>")
+GK_ATOM(clipboardRead, "clipboardRead")
+GK_ATOM(clipboardWrite, "clipboardWrite")
+GK_ATOM(debugger, "debugger")
+GK_ATOM(tabs, "tabs")
+GK_ATOM(webRequestBlocking, "webRequestBlocking")
 GK_ATOM(http, "http")
 GK_ATOM(https, "https")
 

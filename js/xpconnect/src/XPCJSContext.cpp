@@ -559,8 +559,7 @@ XPCJSContext::ActivityCallback(void* arg, bool active)
 static inline bool
 IsWebExtensionPrincipal(nsIPrincipal* principal, nsAString& addonId)
 {
-    return (NS_SUCCEEDED(principal->GetAddonId(addonId)) &&
-            !addonId.IsEmpty());
+    return BasePrincipal::Cast(principal)->AddonPolicy();
 }
 
 static bool

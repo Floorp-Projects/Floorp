@@ -22,7 +22,6 @@ var video = document.getElementById("video");
 let onLoaded = event => {
   SpecialPowers.pushPrefEnv(
     {"set": [["full-screen-api.allow-trusted-requests-only", false],
-             ["full-screen-api.unprefix.enabled", true],
              ["media.videocontrols.lock-video-orientation", true]]},
     startMediaLoad);
 }
@@ -35,14 +34,14 @@ let startMediaLoad = () => {
 }
 
 function runTest() {
-  is(document.fullscreenElement, null, "should not be in fullscreen initially");
+  is(document.mozFullScreenElement, null, "should not be in fullscreen initially");
   isnot(window.screen.orientation.type, "landscape-primary", "should not be in landscape");
   isnot(window.screen.orientation.type, "landscape-secondary", "should not be in landscape");
 
   let originalOnChange = window.screen.orientation.onchange;
 
   window.screen.orientation.onchange = () => {
-    is(document.fullscreenElement, video);
+    is(document.mozFullScreenElement, video, "should be in fullscreen");
     ok(window.screen.orientation.type === "landscape-primary" ||
        window.screen.orientation.type === "landscape-secondary", "should be in landscape");
 

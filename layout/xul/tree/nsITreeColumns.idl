@@ -6,7 +6,6 @@
 
 interface nsITreeColumns;
 interface nsIDOMElement;
-interface nsIAtom;
 
 [scriptable, uuid(ae835ecf-6b32-4660-9b43-8a270df56e02)]
 interface nsITreeColumn : nsISupports
@@ -20,7 +19,6 @@ interface nsITreeColumn : nsISupports
 
   readonly attribute AString id;
   [noscript] void getIdConst([shared] out wstring idConst);
-  [noscript] readonly attribute nsIAtom atom;
 
   readonly attribute long index;
 
