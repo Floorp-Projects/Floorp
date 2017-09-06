@@ -696,8 +696,7 @@ static bool I420toNV12(uint8_t* dstY, uint16_t* dstUV, const webrtc::VideoFrame&
 
 // Encoder.
 WebrtcMediaCodecVP8VideoEncoder::WebrtcMediaCodecVP8VideoEncoder()
-  : mTimestamp(0)
-  , mCallback(nullptr)
+  : mCallback(nullptr)
   , mMediaCodecEncoder(nullptr) {
   CSFLogDebug(logTag,  "%s ", __FUNCTION__);
 
