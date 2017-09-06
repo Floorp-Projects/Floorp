@@ -171,14 +171,6 @@ public:
                             mozilla::CSSPseudoElementType aType,
                             nsStyleContext* aParentContext,
                             TreeMatchContext* aTreeMatchContext);
-    inline nsRestyleHint HasStateDependentStyle(dom::Element* aElement,
-                                                EventStates aStateMask);
-    inline nsRestyleHint HasStateDependentStyle(
-        dom::Element* aElement,
-        mozilla::CSSPseudoElementType aPseudoType,
-        dom::Element* aPseudoElement,
-        EventStates aStateMask);
-
     inline void RootStyleContextAdded();
     inline void RootStyleContextRemoved();
 
