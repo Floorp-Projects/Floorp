@@ -226,7 +226,7 @@ class Module : public JS::WasmModule
 
     void startTier2(const CompileArgs& args);
     void finishTier2(UniqueLinkDataTier linkData2, UniqueMetadataTier metadata2,
-                     UniqueConstCodeSegment code2, UniqueModuleEnvironment env2);
+                     UniqueConstCodeSegment code2, ModuleEnvironment* env2);
 
     // Wait until Ion-compiled code is available, which will be true either
     // immediately (first-level compile was Ion and is already done), not at all

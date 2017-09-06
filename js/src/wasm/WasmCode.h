@@ -378,7 +378,8 @@ class Metadata : public ShareableBase<Metadata>, public MetadataCacheablePod
   public:
     explicit Metadata(UniqueMetadataTier tier, ModuleKind kind = ModuleKind::Wasm)
       : MetadataCacheablePod(kind),
-        metadata1_(Move(tier))
+        metadata1_(Move(tier)),
+        debugEnabled(false)
     {}
     virtual ~Metadata() {}
 
