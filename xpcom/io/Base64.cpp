@@ -461,21 +461,58 @@ Base64DecodeHelper(const char* aBase64, uint32_t aBase64Len, char* aBinary,
                    uint32_t* aBinaryLen)
 {
   MOZ_ASSERT(aBinary);
-  if (!PL_Base64Decode(aBase64, aBase64Len, aBinary)) {
-    return NS_ERROR_INVALID_ARG;
-  }
 
-  // PL_Base64Decode doesn't null terminate the buffer for us when we pass
-  // the buffer in. Do that manually, taking into account the number of '='
-  // characters we were passed.
-  if (aBase64Len != 0 && aBase64[aBase64Len - 1] == '=') {
-    if (aBase64Len > 1 && aBase64[aBase64Len - 2] == '=') {
-      *aBinaryLen -= 2;
-    } else {
-      *aBinaryLen -= 1;
+  const char* input = aBase64;
+  uint32_t inputLength = aBase64Len;
+  char* binary = aBinary;
+  uint32_t binaryLength = 0;
+
+  // Handle trailing '=' characters.
+  if (inputLength && (inputLength % 4 == 0)) {
+    if (aBase64[inputLength - 1] == '=') {
+      if (aBase64[inputLength - 2] == '=') {
+        inputLength -= 2;
+      } else {
+        inputLength -= 1;
+      }
     }
   }
-  aBinary[*aBinaryLen] = '\0';
+
+  while (inputLength >= 4) {
+    if (!Decode4to3(input, binary, Base64CharToValue<char>)) {
+      return NS_ERROR_INVALID_ARG;
+    }
+
+    input += 4;
+    inputLength -= 4;
+    binary += 3;
+    binaryLength += 3;
+  }
+
+  switch (inputLength) {
+  case 3:
+    if (!Decode3to2(input, binary, Base64CharToValue<char>)) {
+      return NS_ERROR_INVALID_ARG;
+    }
+    binaryLength += 2;
+    break;
+  case 2:
+    if (!Decode2to1(input, binary, Base64CharToValue<char>)) {
+      return NS_ERROR_INVALID_ARG;
+    }
+    binaryLength += 1;
+    break;
+  case 1:
+    return NS_ERROR_INVALID_ARG;
+  case 0:
+    break;
+  default:
+    MOZ_CRASH("Too many characters leftover");
+  }
+
+  aBinary[binaryLength] = '\0';
+  *aBinaryLen = binaryLength;
+
   return NS_OK;
 }
 
