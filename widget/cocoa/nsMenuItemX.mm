@@ -250,7 +250,7 @@ void nsMenuItemX::SetKeyEquiv()
           keyChar.Assign(charCode);
         }
         else {
-          keyChar.Assign(NS_LITERAL_STRING(" "));
+          keyChar.AssignLiteral(u" ");
         }
       }
 
