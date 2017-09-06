@@ -422,9 +422,9 @@ Decode4to3(const T* aSrc, U* aDest, Decoder aToVal)
       !aToVal(aSrc[3], &z)) {
     return false;
   }
-  aDest[0] = U(w << 2 | x >> 4);
-  aDest[1] = U(x << 4 | y >> 2);
-  aDest[2] = U(y << 6 | z);
+  aDest[0] = U(uint8_t(w << 2 | x >> 4));
+  aDest[1] = U(uint8_t(x << 4 | y >> 2));
+  aDest[2] = U(uint8_t(y << 6 | z));
   return true;
 }
 
@@ -438,8 +438,8 @@ Decode3to2(const T* aSrc, U* aDest, Decoder aToVal)
       !aToVal(aSrc[2], &y)) {
     return false;
   }
-  aDest[0] = U(w << 2 | x >> 4);
-  aDest[1] = U(x << 4 | y >> 2);
+  aDest[0] = U(uint8_t(w << 2 | x >> 4));
+  aDest[1] = U(uint8_t(x << 4 | y >> 2));
   return true;
 }
 
@@ -452,7 +452,7 @@ Decode2to1(const T* aSrc, U* aDest, Decoder aToVal)
       !aToVal(aSrc[1], &x)) {
     return false;
   }
-  aDest[0] = U(w << 2 | x >> 4);
+  aDest[0] = U(uint8_t(w << 2 | x >> 4));
   return true;
 }
 
