@@ -1832,7 +1832,7 @@ pref("network.http.enforce-framing.soft", true);
 pref("network.http.max_response_header_size", 393216);
 
 // If we should attempt to race the cache and network
-pref("network.http.rcwn.enabled", false);
+pref("network.http.rcwn.enabled", true);
 pref("network.http.rcwn.cache_queue_normal_threshold", 8);
 pref("network.http.rcwn.cache_queue_priority_threshold", 2);
 // We might attempt to race the cache with the network only if a resource
