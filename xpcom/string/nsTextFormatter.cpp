@@ -454,6 +454,10 @@ int
 nsTextFormatter::cvt_s(nsTextFormatter::SprintfStateStr* aState, const char* aStr, int aWidth,
                        int aPrec, int aFlags)
 {
+  // Be sure to handle null the same way as %S.
+  if (aStr == nullptr) {
+    return cvt_S(aState, nullptr, aWidth, aPrec, aFlags);
+  }
   NS_ConvertUTF8toUTF16 utf16Val(aStr);
   return cvt_S(aState, utf16Val.get(), aWidth, aPrec, aFlags);
 }
