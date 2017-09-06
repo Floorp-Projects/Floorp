@@ -22,7 +22,16 @@ const unsigned char* base =
                   "abcdefghijklmnopqrstuvwxyz"
                   "0123456789+/";
 
+// The Base64 encoder assumes all characters are less than 256; for 16-bit
+// strings, that means assuming that all characters are within range, and
+// masking off high bits if necessary.
 template<typename T>
+uint8_t
+CharTo8Bit(T aChar)
+{
+  return uint8_t(aChar);
+}
+
 template<typename SrcT, typename DestT>
 static void
 Encode3to4(const SrcT* aSrc, DestT* aDest)
@@ -32,7 +41,7 @@ Encode3to4(const SrcT* aSrc, DestT* aDest)
 
   for (i = 0; i < 3; ++i) {
     b32 <<= 8;
-    b32 |= (uint32_t)aSrc[i];
+    b32 |= CharTo8Bit(aSrc[i]);
   }
 
   for (i = 0; i < 4; ++i) {
@@ -45,9 +54,11 @@ template<typename SrcT, typename DestT>
 static void
 Encode2to4(const SrcT* aSrc, DestT* aDest)
 {
-  aDest[0] = base[(uint32_t)((aSrc[0] >> 2) & 0x3F)];
-  aDest[1] = base[(uint32_t)(((aSrc[0] & 0x03) << 4) | ((aSrc[1] >> 4) & 0x0F))];
-  aDest[2] = base[(uint32_t)((aSrc[1] & 0x0F) << 2)];
+  uint8_t src0 = CharTo8Bit(aSrc[0]);
+  uint8_t src1 = CharTo8Bit(aSrc[1]);
+  aDest[0] = base[(uint32_t)((src0 >> 2) & 0x3F)];
+  aDest[1] = base[(uint32_t)(((src0 & 0x03) << 4) | ((src1 >> 4) & 0x0F))];
+  aDest[2] = base[(uint32_t)((src1 & 0x0F) << 2)];
   aDest[3] = DestT('=');
 }
 
@@ -55,8 +66,9 @@ template<typename SrcT, typename DestT>
 static void
 Encode1to4(const SrcT* aSrc, DestT* aDest)
 {
-  aDest[0] = base[(uint32_t)((aSrc[0] >> 2) & 0x3F)];
-  aDest[1] = base[(uint32_t)((aSrc[0] & 0x03) << 4)];
+  uint8_t src0 = CharTo8Bit(aSrc[0]);
+  aDest[0] = base[(uint32_t)((src0 >> 2) & 0x3F)];
+  aDest[1] = base[(uint32_t)((src0 & 0x03) << 4)];
   aDest[2] = DestT('=');
   aDest[3] = DestT('=');
 }
