@@ -76,6 +76,7 @@ protected:
 
   // this constructor is used only by the Clone method to copy the fields as
   // needed to a new data transfer.
+  // NOTE: Do not call this method directly.
   DataTransfer(nsISupports* aParent,
                EventMessage aEventMessage,
                const uint32_t aEffectAllowed,
@@ -298,6 +299,12 @@ public:
     return mDragImage;
   }
 
+  // This method makes a copy of the DataTransfer object, with a few properties
+  // changed, and the mode updated to reflect the correct mode for the given
+  // event. This method is used during the drag operation to generate the
+  // DataTransfer objects for each event after `dragstart`. Event objects will
+  // lazily clone the DataTransfer stored in the DragSession (which is a clone
+  // of the DataTransfer used in the `dragstart` event) when requested.
   nsresult Clone(nsISupports* aParent, EventMessage aEventMessage,
                  bool aUserCancelled, bool aIsCrossDomainSubFrameDrop,
                  DataTransfer** aResult);
