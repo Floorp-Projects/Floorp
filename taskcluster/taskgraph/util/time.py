@@ -5,6 +5,8 @@
 # Python port of the ms.js node module this is not a direct port some things are
 # more complicated or less precise and we lean on time delta here.
 
+from __future__ import absolute_import, print_function, unicode_literals
+
 import re
 import datetime
 
