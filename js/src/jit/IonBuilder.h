@@ -1080,9 +1080,6 @@ class IonBuilder
     // an outer script.
     bool failedLexicalCheck_;
 
-    // Has an iterator other than 'for in'.
-    bool nonStringIteration_;
-
 #ifdef DEBUG
     // If this script uses the lazy arguments object.
     bool hasLazyArguments_;
