@@ -102,6 +102,9 @@ public class BatchingUploader {
     // maintain this limit for a single sanity check.
     private final long maxPayloadFieldBytes;
 
+    // Set if this channel should ignore further calls to process.
+    private volatile boolean aborted = false;
+
     public BatchingUploader(
             final RepositorySession repositorySession, final ExecutorService workQueue,
             final RepositorySessionStoreDelegate sessionStoreDelegate, final Uri baseCollectionUri,
@@ -129,7 +132,7 @@ public class BatchingUploader {
         final String guid = record.guid;
 
         // If store failed entirely, just bail out. We've already told our delegate that we failed.
-        if (payloadDispatcher.storeFailed.get()) {
+        if (payloadDispatcher.storeFailed.get() || aborted) {
             return;
         }
 
@@ -137,9 +140,7 @@ public class BatchingUploader {
 
         final String payloadField = (String) recordJSON.get(CryptoRecord.KEY_PAYLOAD);
         if (payloadField == null) {
-            sessionStoreDelegate.deferredStoreDelegate(executor).onRecordStoreFailed(
-                    new IllegalRecordException(), guid
-            );
+            failRecordStore(new IllegalRecordException(), record, false);
             return;
         }
 
@@ -147,17 +148,13 @@ public class BatchingUploader {
         // UTF-8 uses 1 byte per character for the ASCII range. Contents of the payloadField are
         // base64 and hex encoded, so character count is sufficient.
         if (payloadField.length() > this.maxPayloadFieldBytes) {
-            sessionStoreDelegate.deferredStoreDelegate(executor).onRecordStoreFailed(
-                    new PayloadTooLargeToUpload(), guid
-            );
+            failRecordStore(new PayloadTooLargeToUpload(), record, true);
             return;
         }
 
         final byte[] recordBytes = Record.stringToJSONBytes(recordJSON.toJSONString());
         if (recordBytes == null) {
-            sessionStoreDelegate.deferredStoreDelegate(executor).onRecordStoreFailed(
-                    new IllegalRecordException(), guid
-            );
+            failRecordStore(new IllegalRecordException(), record, false);
             return;
         }
 
@@ -166,9 +163,7 @@ public class BatchingUploader {
 
         // We can't upload individual records which exceed our payload total byte limit.
         if ((recordDeltaByteCount + PER_PAYLOAD_OVERHEAD_BYTE_COUNT) > payload.maxBytes) {
-            sessionStoreDelegate.deferredStoreDelegate(executor).onRecordStoreFailed(
-                    new RecordTooLargeToUpload(), guid
-            );
+            failRecordStore(new RecordTooLargeToUpload(), record, true);
             return;
         }
 
@@ -181,7 +176,7 @@ public class BatchingUploader {
                 Logger.debug(LOG_TAG, "Record fits into the current batch and payload");
                 addAndFlushIfNecessary(recordDeltaByteCount, recordBytes, guid);
 
-            // Payload won't fit the record.
+                // Payload won't fit the record.
             } else if (canFitRecordIntoBatch) {
                 Logger.debug(LOG_TAG, "Current payload won't fit incoming record, uploading payload.");
                 flush(false, false);
@@ -191,7 +186,7 @@ public class BatchingUploader {
                 // Keep track of the overflow record.
                 addAndFlushIfNecessary(recordDeltaByteCount, recordBytes, guid);
 
-            // Batch won't fit the record.
+                // Batch won't fit the record.
             } else {
                 Logger.debug(LOG_TAG, "Current batch won't fit incoming record, committing batch.");
                 flush(true, false);
@@ -238,12 +233,48 @@ public class BatchingUploader {
         });
     }
 
+    // We fail the batch for bookmark records because uploading only a subset of bookmark records is
+    // very likely to cause corruption (e.g. uploading a parent without its children or vice versa).
+    @VisibleForTesting
+    /* package-local */ boolean shouldFailBatchOnFailure(Record record) {
+        return record instanceof BookmarkRecord;
+    }
+
     /* package-local */ void setLastStoreTimestamp(AtomicLong lastModifiedTimestamp) {
         repositorySession.setLastStoreTimestamp(lastModifiedTimestamp.get());
     }
 
     /* package-local */ void finished() {
         sessionStoreDelegate.deferredStoreDelegate(executor).onStoreCompleted();
+    }
+
+    // Common handling for marking a record failure and calling our delegate's onRecordStoreFailed.
+    private void failRecordStore(final Exception e, final Record record, boolean sizeOverflow) {
+        // There are three cases we're handling here. See bug 1362206 for some rationale here.
+        // 1. If `record` is not a bookmark and it failed sanity checks for reasons other than
+        //    "it's too large" (say, `record`'s json is 0 bytes),
+        //     - Then mark record's store as 'failed' and continue uploading
+        // 2. If `record` is not a bookmark and it failed sanity checks because it's too large,
+        //     - Continue uploading, and don't fail synchronization because of this one.
+        // 3. If `record` *is* a bookmark, and it failed for any reason
+        //     - Stop uploading.
+        if (shouldFailBatchOnFailure(record)) {
+            // case 3
+            Logger.debug(LOG_TAG, "Batch failed with exception: " + e.toString());
+            // Start ignoring records, and send off to our delegate that we failed.
+            aborted = true;
+            executor.execute(new PayloadDispatcher.NonPayloadContextRunnable() {
+                @Override
+                public void run() {
+                    sessionStoreDelegate.onRecordStoreFailed(e, record.guid);
+                    payloadDispatcher.doStoreFailed(e);
+                }
+            });
+        } else if (!sizeOverflow) {
+            // case 1
+            sessionStoreDelegate.deferredStoreDelegate(executor).onRecordStoreFailed(e, record.guid);
+        }
+        // case 2 is an implicit empty else {} here.
     }
 
     // Will be called from a thread dispatched by PayloadDispatcher.
