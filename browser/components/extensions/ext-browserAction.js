@@ -105,6 +105,7 @@ this.browserAction = class extends ExtensionAPI {
       extension, ["browserAction", "default_icon"],
       () => IconDetails.normalize({
         path: options.default_icon,
+        iconType: "browserAction",
         themeIcons: options.theme_icons,
       }, extension));
 
@@ -621,6 +622,8 @@ this.browserAction = class extends ExtensionAPI {
 
         setIcon: function(details) {
           let tab = getTab(details.tabId);
+
+          details.iconType = "browserAction";
 
           let icon = IconDetails.normalize(details, extension, context);
           browserAction.setProperty(tab, "icon", icon);

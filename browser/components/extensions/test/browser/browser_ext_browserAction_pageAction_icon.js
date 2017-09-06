@@ -297,3 +297,75 @@ add_task(async function testDetailsObjects() {
 
   await extension.unload();
 });
+
+// NOTE: The current goal of this test is ensuring that Bug 1397196 has been fixed,
+// and so this test extension manifest has a browser action which specify
+// a theme based icon and a pageAction, both the pageAction and the browserAction
+// have a common default_icon.
+//
+// Once Bug 1398156 will be fixed, this test should be converted into testing that
+// the browserAction and pageAction themed icons (as well as any other cached icon,
+// e.g. the sidebar and devtools panel icons) can be specified in the same extension
+// and do not conflict with each other.
+//
+// This test currently fails without the related fix, but only if the browserAction
+// API has been already loaded before the pageAction, otherwise the icons will be cached
+// in the opposite order and the test is not able to reproduce the issue anymore.
+add_task(async function testPageActionIconLoadingOnBrowserActionThemedIcon() {
+  async function background() {
+    const tabs = await browser.tabs.query({active: true});
+    await browser.pageAction.show(tabs[0].id);
+
+    browser.test.sendMessage("ready");
+  }
+
+  const extension = ExtensionTestUtils.loadExtension({
+    background,
+    manifest: {
+      "name": "Foo Extension",
+
+      "browser_action": {
+        "default_icon": "common_cached_icon.png",
+        "default_popup": "default_popup.html",
+        "default_title": "BrowserAction title",
+        "theme_icons": [
+          {
+            "dark": "1.png",
+            "light": "2.png",
+            "size": 16
+          }
+        ],
+      },
+
+      "page_action": {
+        "default_icon": "common_cached_icon.png",
+        "default_popup": "default_popup.html",
+        "default_title": "PageAction title",
+      },
+
+      "permissions": ["tabs"],
+    },
+
+    "files": {
+      "common_cached_icon.png": imageBuffer,
+      "1.png": imageBuffer,
+      "2.png": imageBuffer,
+      "default_popup.html": "<!DOCTYPE html><html><body>popup</body></html>",
+    },
+  });
+
+  await extension.startup();
+
+  await extension.awaitMessage("ready");
+
+  await promiseAnimationFrame();
+
+  let pageActionId = `${makeWidgetId(extension.id)}-page-action`;
+  let pageActionImage = document.getElementById(pageActionId);
+
+  const iconURL = new URL(getListStyleImage(pageActionImage));
+
+  is(iconURL.pathname, "/common_cached_icon.png", "Got the expected pageAction icon url");
+
+  await extension.unload();
+});
