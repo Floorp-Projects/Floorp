@@ -2892,10 +2892,9 @@ class MOZ_STACK_CLASS FunctionValidator
 
     ModuleValidator&  m_;
     ParseNode*        fn_;
-
-    FunctionGenerator fg_;
-    Maybe<Encoder>    encoder_;
-
+    Bytes             bytes_;
+    Encoder           encoder_;
+    Uint32Vector      callSiteLineNums_;
     LocalMap          locals_;
 
     // Labels
@@ -2912,6 +2911,7 @@ class MOZ_STACK_CLASS FunctionValidator
     FunctionValidator(ModuleValidator& m, ParseNode* fn)
       : m_(m),
         fn_(fn),
+        encoder_(bytes_),
         locals_(m.cx()),
         breakLabels_(m.cx()),
         continueLabels_(m.cx()),
@@ -2924,24 +2924,19 @@ class MOZ_STACK_CLASS FunctionValidator
     JSContext* cx() const             { return m_.cx(); }
     ParseNode* fn() const             { return fn_; }
 
-    bool init(PropertyName* name, unsigned line) {
-        if (!locals_.init() || !breakLabels_.init() || !continueLabels_.init())
-            return false;
-
-        if (!m_.mg().startFuncDef(line, &fg_))
-            return false;
-
-        encoder_.emplace(fg_.bytes());
-        return true;
+    bool init() {
+        return locals_.init() &&
+               breakLabels_.init() &&
+               continueLabels_.init();
     }
 
-    bool finish(uint32_t funcIndex) {
+    bool finish(uint32_t funcIndex, unsigned line) {
         MOZ_ASSERT(!blockDepth_);
         MOZ_ASSERT(breakableStack_.empty());
         MOZ_ASSERT(continuableStack_.empty());
         MOZ_ASSERT(breakLabels_.empty());
         MOZ_ASSERT(continueLabels_.empty());
-        return m_.mg().finishFuncDef(funcIndex, &fg_);
+        return m_.mg().compileFuncDef(funcIndex, line, Move(bytes_), Move(callSiteLineNums_));
     }
 
     bool fail(ParseNode* pn, const char* str) {
@@ -3136,7 +3131,7 @@ class MOZ_STACK_CLASS FunctionValidator
 
     /**************************************************** Encoding interface */
 
-    Encoder& encoder() { return *encoder_; }
+    Encoder& encoder() { return encoder_; }
 
     MOZ_MUST_USE bool writeInt32Lit(int32_t i32) {
         return encoder().writeOp(Op::I32Const) &&
@@ -3188,14 +3183,14 @@ class MOZ_STACK_CLASS FunctionValidator
     }
     MOZ_MUST_USE bool writeCall(ParseNode* pn, Op op) {
         return encoder().writeOp(op) &&
-               fg_.addCallSiteLineNum(m().tokenStream().srcCoords.lineNum(pn->pn_pos.begin));
+               callSiteLineNums_.append(m().tokenStream().srcCoords.lineNum(pn->pn_pos.begin));
     }
     MOZ_MUST_USE bool writeCall(ParseNode* pn, MozOp op) {
         return encoder().writeOp(op) &&
-               fg_.addCallSiteLineNum(m().tokenStream().srcCoords.lineNum(pn->pn_pos.begin));
+               callSiteLineNums_.append(m().tokenStream().srcCoords.lineNum(pn->pn_pos.begin));
     }
     MOZ_MUST_USE bool prepareCall(ParseNode* pn) {
-        return fg_.addCallSiteLineNum(m().tokenStream().srcCoords.lineNum(pn->pn_pos.begin));
+        return callSiteLineNums_.append(m().tokenStream().srcCoords.lineNum(pn->pn_pos.begin));
     }
     MOZ_MUST_USE bool writeSimdOp(SimdType simdType, SimdOperation simdOp) {
         MozOp op = SimdToOp(simdType, simdOp);
@@ -7104,7 +7099,7 @@ CheckFunction(ModuleValidator& m)
         return false;
 
     FunctionValidator f(m, fn);
-    if (!f.init(FunctionName(fn), line))
+    if (!f.init())
         return m.fail(fn, "internal compiler failure (probably out of memory)");
 
     ParseNode* stmtIter = ListHead(FunctionStatementList(fn));
@@ -7138,7 +7133,7 @@ CheckFunction(ModuleValidator& m)
 
     func->define(fn);
 
-    if (!f.finish(func->index()))
+    if (!f.finish(func->index(), line))
         return m.fail(fn, "internal compiler failure (probably out of memory)");
 
     // Release the parser's lifo memory only after the last use of a parse node.
