@@ -1842,7 +1842,7 @@ EventStateManager::GenerateDragGesture(nsPresContext* aPresContext,
       // now that the dataTransfer has been updated in the dragstart and
       // draggesture events, make it read only so that the data doesn't
       // change during the drag.
-      dataTransfer->SetReadOnly();
+      dataTransfer->SetMode(DataTransfer::Mode::ReadOnly);
 
       if (status != nsEventStatus_eConsumeNoDefault) {
         bool dragStarted = DoDefaultDragStart(aPresContext, event, dataTransfer,
