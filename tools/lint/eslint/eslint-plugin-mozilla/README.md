@@ -29,7 +29,7 @@ $ npm install eslint-plugin-mozilla --save-dev
 
 ## Documentation
 
-For details about the rules, please see the [gecko documentation page](http://gecko.readthedocs.io/en/latest/tools/lint/linters/eslint-plugin-mozilla.html).
+For details about the rules, please see the [firefox documentation page](http://firefox-source-docs.mozilla.org/tools/lint/linters/eslint-plugin-mozilla.html).
 
 ## Source Code
 

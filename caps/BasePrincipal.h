@@ -12,6 +12,7 @@
 #include "mozilla/Attributes.h"
 #include "mozilla/OriginAttributes.h"
 
+class nsIAtom;
 class nsIContentSecurityPolicy;
 class nsIObjectOutputStream;
 class nsIObjectInputStream;
@@ -20,6 +21,9 @@ class nsIURI;
 class ExpandedPrincipal;
 
 namespace mozilla {
+namespace extensions {
+  class WebExtensionPolicy;
+}
 
 /*
  * Base class from which all nsIPrincipal implementations inherit. Use this for
@@ -64,6 +68,7 @@ public:
   NS_IMETHOD SubsumesConsideringDomain(nsIPrincipal* other, bool* _retval) final;
   NS_IMETHOD SubsumesConsideringDomainIgnoringFPD(nsIPrincipal* other, bool* _retval) final;
   NS_IMETHOD CheckMayLoad(nsIURI* uri, bool report, bool allowIfInheritsPrincipal) final;
+  NS_IMETHOD GetAddonPolicy(nsISupports** aResult) final;
   NS_IMETHOD GetCsp(nsIContentSecurityPolicy** aCsp) override;
   NS_IMETHOD SetCsp(nsIContentSecurityPolicy* aCsp) override;
   NS_IMETHOD EnsureCSP(nsIDOMDocument* aDocument, nsIContentSecurityPolicy** aCSP) override;
@@ -81,7 +86,7 @@ public:
   NS_IMETHOD GetUserContextId(uint32_t* aUserContextId) final;
   NS_IMETHOD GetPrivateBrowsingId(uint32_t* aPrivateBrowsingId) final;
 
-  virtual bool AddonHasPermission(const nsAString& aPerm);
+  virtual bool AddonHasPermission(const nsIAtom* aPerm);
 
   virtual bool IsCodebasePrincipal() const { return false; };
 
@@ -99,6 +104,7 @@ public:
 
   const OriginAttributes& OriginAttributesRef() final { return mOriginAttributes; }
   uint32_t AppId() const { return mOriginAttributes.mAppId; }
+  extensions::WebExtensionPolicy* AddonPolicy();
   uint32_t UserContextId() const { return mOriginAttributes.mUserContextId; }
   uint32_t PrivateBrowsingId() const { return mOriginAttributes.mPrivateBrowsingId; }
   bool IsInIsolatedMozBrowserElement() const { return mOriginAttributes.mInIsolatedMozBrowser; }

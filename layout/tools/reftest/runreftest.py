@@ -7,6 +7,7 @@ Runs the reftest test harness.
 """
 
 import collections
+import copy
 import itertools
 import json
 import multiprocessing
@@ -18,6 +19,7 @@ import signal
 import subprocess
 import sys
 import threading
+from datetime import datetime, timedelta
 
 SCRIPT_DIRECTORY = os.path.abspath(
     os.path.realpath(os.path.dirname(__file__)))
@@ -415,6 +417,79 @@ class RefTest(object):
         if profileDir:
             shutil.rmtree(profileDir, True)
 
+    def verifyTests(self, tests, options):
+        """
+        Support --verify mode: Run test(s) many times in a variety of
+        configurations/environments in an effort to find intermittent
+        failures.
+        """
+
+        self._populate_logger(options)
+
+        # Number of times to repeat test(s) when running with --repeat
+        VERIFY_REPEAT = 20
+        # Number of times to repeat test(s) when running test in separate browser
+        VERIFY_REPEAT_SINGLE_BROWSER = 10
+
+        def step1():
+            stepOptions = copy.deepcopy(options)
+            stepOptions.repeat = VERIFY_REPEAT
+            stepOptions.runUntilFailure = True
+            result = self.runTests(tests, stepOptions)
+            return result
+
+        def step2():
+            stepOptions = copy.deepcopy(options)
+            for i in xrange(VERIFY_REPEAT_SINGLE_BROWSER):
+                result = self.runTests(tests, stepOptions)
+                if result != 0:
+                    break
+            return result
+
+        steps = [
+            ("1. Run each test %d times in one browser." % VERIFY_REPEAT,
+             step1),
+            ("2. Run each test %d times in a new browser each time." %
+             VERIFY_REPEAT_SINGLE_BROWSER,
+             step2),
+        ]
+
+        stepResults = {}
+        for (descr, step) in steps:
+            stepResults[descr] = "not run / incomplete"
+
+        startTime = datetime.now()
+        maxTime = timedelta(seconds=options.verify_max_time)
+        finalResult = "PASSED"
+        for (descr, step) in steps:
+            if (datetime.now() - startTime) > maxTime:
+                self.log.info("::: Test verification is taking too long: Giving up!")
+                self.log.info("::: So far, all checks passed, but not all checks were run.")
+                break
+            self.log.info(':::')
+            self.log.info('::: Running test verification step "%s"...' % descr)
+            self.log.info(':::')
+            result = step()
+            if result != 0:
+                stepResults[descr] = "FAIL"
+                finalResult = "FAILED!"
+                break
+            stepResults[descr] = "Pass"
+
+        self.log.info(':::')
+        self.log.info('::: Test verification summary for:')
+        self.log.info(':::')
+        for test in tests:
+            self.log.info('::: '+test)
+        self.log.info(':::')
+        for descr in sorted(stepResults.keys()):
+            self.log.info('::: %s : %s' % (descr, stepResults[descr]))
+        self.log.info(':::')
+        self.log.info('::: Test verification %s' % finalResult)
+        self.log.info(':::')
+
+        return result
+
     def runTests(self, tests, options, cmdargs=None):
         cmdargs = cmdargs or []
         self._populate_logger(options)
@@ -763,7 +838,12 @@ def run_test_harness(parser, options):
     if options.xrePath is None:
         options.xrePath = os.path.dirname(options.app)
 
-    return reftest.runTests(options.tests, options)
+    if options.verify:
+        result = reftest.verifyTests(options.tests, options)
+    else:
+        result = reftest.runTests(options.tests, options)
+
+    return result
 
 
 if __name__ == "__main__":

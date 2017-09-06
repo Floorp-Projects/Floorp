@@ -40,7 +40,7 @@ public:
 
   CookieServiceChild();
 
-  static CookieServiceChild* GetSingleton();
+  static already_AddRefed<CookieServiceChild> GetSingleton();
 
   void
   TrackCookieLoad(nsIChannel *aChannel);
