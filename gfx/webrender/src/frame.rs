@@ -9,12 +9,12 @@ use api::{LayerVector2D, LayoutSize, LayoutTransform, LocalClip, MixBlendMode, P
 use api::{PropertyBinding, ScrollClamping, ScrollEventPhase, ScrollLayerState, ScrollLocation};
 use api::{ScrollPolicy, ScrollSensitivity, SpecificDisplayItem, StackingContext, TileOffset};
 use api::{TransformStyle, WorldPoint};
+use clip::ClipRegion;
 use clip_scroll_tree::{ClipScrollTree, ScrollStates};
 use euclid::rect;
 use gpu_cache::GpuCache;
 use internal_types::{FastHashMap, RendererFrame};
 use frame_builder::{FrameBuilder, FrameBuilderConfig};
-use mask_cache::ClipRegion;
 use profiler::{GpuCacheProfileCounters, TextureCacheProfileCounters};
 use resource_cache::{ResourceCache, TiledImageMap};
 use scene::{Scene, SceneProperties};

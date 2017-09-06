@@ -11,10 +11,10 @@ use api::{LayerToScrollTransform, LayerVector2D, LayoutVector2D, LineOrientation
 use api::{LocalClip, PipelineId, RepeatMode, ScrollSensitivity, SubpixelDirection, TextShadow};
 use api::{TileOffset, TransformStyle, WorldPixel, YuvColorSpace, YuvData};
 use app_units::Au;
+use clip::{ClipMode, ClipRegion, ClipSource, ClipSources};
 use frame::FrameId;
 use gpu_cache::GpuCache;
 use internal_types::{FastHashMap, HardwareCompositeOp};
-use mask_cache::{ClipMode, ClipRegion, ClipSource, MaskCacheInfo};
 use plane_split::{BspSplitter, Polygon, Splitter};
 use prim_store::{GradientPrimitiveCpu, ImagePrimitiveCpu, LinePrimitive, PrimitiveKind};
 use prim_store::{PrimitiveContainer, PrimitiveIndex};
@@ -207,16 +207,11 @@ impl FrameBuilder {
             clip_sources.push(ClipSource::Region(ClipRegion::create_for_local_clip(local_clip)))
         }
 
-        let clip_info = if !clip_sources.is_empty() {
-            Some(MaskCacheInfo::new(&clip_sources))
-        } else {
-            None
-        };
+        let clip_sources = ClipSources::new(clip_sources);
 
         let prim_index = self.prim_store.add_primitive(rect,
                                                        &local_clip.clip_rect(),
                                                        clip_sources,
-                                                       clip_info,
                                                        container);
 
         prim_index
@@ -1374,7 +1369,7 @@ impl FrameBuilder {
         // The stacking contexts that fall into this category are
         //  - ones with `ContextIsolation::Items`, for their actual items to be backed
         //  - immediate children of `ContextIsolation::Items`
-        let mut preserve_3d_map: FastHashMap<StackingContextIndex, RenderTaskId> = FastHashMap::default();
+        let mut preserve_3d_map_stack: Vec<FastHashMap<StackingContextIndex, RenderTaskId>> = Vec::new();
         // The plane splitter stack, using a simple BSP tree.
         let mut splitter_stack = Vec::new();
 
@@ -1406,6 +1401,7 @@ impl FrameBuilder {
                        stacking_context.isolation == ContextIsolation::Items {
                         if parent_isolation != Some(ContextIsolation::Items) {
                             splitter_stack.push(BspSplitter::new());
+                            preserve_3d_map_stack.push(FastHashMap::default());
                         }
                         alpha_task_stack.push(current_task);
                         current_task = RenderTask::new_dynamic_alpha_batch(stacking_context_rect);
@@ -1490,7 +1486,7 @@ impl FrameBuilder {
                         // when we are out of the `preserve-3d` branch (see the code below),
                         // since this is only where the parent task is known.
                         let current_task_id = render_tasks.add(current_task);
-                        preserve_3d_map.insert(stacking_context_index, current_task_id);
+                        preserve_3d_map_stack.last_mut().unwrap().insert(stacking_context_index, current_task_id);
                         current_task = alpha_task_stack.pop().unwrap();
                     }
 
@@ -1500,11 +1496,11 @@ impl FrameBuilder {
                         let mut splitter = splitter_stack.pop().unwrap();
                         // Flush the accumulated plane splits onto the task tree.
                         // Notice how this is done before splitting in order to avoid duplicate tasks.
-                        current_task.children.extend(preserve_3d_map.values().cloned());
+                        current_task.children.extend(preserve_3d_map_stack.last().unwrap().values().cloned());
                         // Z axis is directed at the screen, `sort` is ascending, and we need back-to-front order.
                         for poly in splitter.sort(vec3(0.0, 0.0, 1.0)) {
                             let sc_index = StackingContextIndex(poly.anchor);
-                            let task_id = preserve_3d_map[&sc_index];
+                            let task_id = preserve_3d_map_stack.last().unwrap()[&sc_index];
                             debug!("\t\tproduce {:?} -> {:?} for {:?}", sc_index, poly, task_id);
                             let pp = &poly.points;
                             let gpu_blocks = [
@@ -1516,7 +1512,7 @@ impl FrameBuilder {
                             let item = AlphaRenderItem::SplitComposite(sc_index, task_id, handle, next_z);
                             current_task.as_alpha_batch_mut().items.push(item);
                         }
-                        preserve_3d_map.clear();
+                        preserve_3d_map_stack.pop();
                         next_z += 1;
                     }
                 }
@@ -1558,7 +1554,7 @@ impl FrameBuilder {
         }
 
         debug_assert!(alpha_task_stack.is_empty());
-        debug_assert!(preserve_3d_map.is_empty());
+        debug_assert!(preserve_3d_map_stack.is_empty());
         render_tasks.add(current_task)
     }
 
@@ -1767,31 +1763,10 @@ impl<'a> LayerRectCalculationAndCullingPass<'a> {
                 None
             };
 
-            let inner_rect = match node_clip_info.screen_bounding_rect {
-                Some((_, rect)) => rect,
-                None => DeviceIntRect::zero(),
-            };
-            node_clip_info.screen_inner_rect = inner_rect;
-
-            let bounds = node_clip_info.mask_cache_info.update(&node_clip_info.clip_sources,
-                                                               &transform,
-                                                               self.gpu_cache,
-                                                               self.device_pixel_ratio);
-
-            node_clip_info.screen_inner_rect = bounds.inner.as_ref()
-               .and_then(|inner| inner.device_rect.intersection(&inner_rect))
-               .unwrap_or(DeviceIntRect::zero());
-
-            for clip_source in &node_clip_info.clip_sources {
-                if let Some(mask) = clip_source.image_mask() {
-                    // We don't add the image mask for resolution, because
-                    // layer masks are resolved later.
-                    self.resource_cache.request_image(mask.image,
-                                                      ImageRendering::Auto,
-                                                      None,
-                                                      self.gpu_cache);
-                }
-            }
+            node_clip_info.clip_sources.update(&transform,
+                                               self.gpu_cache,
+                                               self.resource_cache,
+                                               self.device_pixel_ratio);
         }
     }
 
@@ -1900,7 +1875,7 @@ impl<'a> LayerRectCalculationAndCullingPass<'a> {
                     next_node_needs_region_mask |= !info.transform.preserves_2d_axis_alignment();
                     continue
                 },
-                NodeType::Clip(ref clip) if clip.mask_cache_info.is_masking() => clip,
+                NodeType::Clip(ref clip) if clip.clip_sources.is_masking() => clip,
                 _ => continue,
             };
 
@@ -1913,11 +1888,7 @@ impl<'a> LayerRectCalculationAndCullingPass<'a> {
                 }
             }
 
-            let clip_info = if next_node_needs_region_mask {
-                clip.mask_cache_info.clone()
-            } else {
-                clip.mask_cache_info.strip_aligned()
-            };
+            let clip_info = clip.clip_sources.clone_mask_cache_info(next_node_needs_region_mask);
 
             // apply the outer device bounds of the clip stack
             if let Some(ref outer) = clip_info.bounds.outer {
@@ -2006,43 +1977,46 @@ impl<'a> LayerRectCalculationAndCullingPass<'a> {
             stacking_context.isolated_items_bounds = stacking_context.isolated_items_bounds.union(&prim_local_rect);
 
             // Try to create a mask if we may need to.
-            if !self.current_clip_stack.is_empty() || prim_metadata.clip_cache_info.is_some() {
+            let clip_task = if prim_metadata.clips.is_masking() {
+                let info = prim_metadata.clips.clone_mask_cache_info(false);
+
+                // Take into account the actual clip info of the primitive, and
+                // mutate the current bounds accordingly.
+                let mask_rect = match info.bounds.outer {
+                    Some(ref outer) => {
+                        match prim_screen_rect.intersection(&outer.device_rect) {
+                            Some(rect) => rect,
+                            None => continue,
+                        }
+                    }
+                    _ => prim_screen_rect,
+                };
+
+                let extra = (packed_layer_index, info);
+
+                RenderTask::new_mask(None,
+                                     mask_rect,
+                                     &self.current_clip_stack,
+                                     Some(extra),
+                                     prim_screen_rect)
+            } else if !self.current_clip_stack.is_empty() {
                 // If the primitive doesn't have a specific clip, key the task ID off the
                 // stacking context. This means that two primitives which are only clipped
                 // by the stacking context stack can share clip masks during render task
                 // assignment to targets.
-                let (cache_key, mask_rect, extra) = match prim_metadata.clip_cache_info {
-                    Some(ref info) => {
-                        // Take into account the actual clip info of the primitive, and
-                        // mutate the current bounds accordingly.
-                        let mask_rect = match info.bounds.outer {
-                            Some(ref outer) => {
-                                match prim_screen_rect.intersection(&outer.device_rect) {
-                                    Some(rect) => rect,
-                                    None => continue,
-                                }
-                            }
-                            _ => prim_screen_rect,
-                        };
-                        (None,
-                         mask_rect,
-                         Some((packed_layer_index, info.strip_aligned())))
-                    }
-                    None => {
-                        (Some(clip_and_scroll.clip_node_id()),
-                         clip_bounds,
-                         None)
-                    }
-                };
-                let clip_task = RenderTask::new_mask(cache_key,
-                                                     mask_rect,
-                                                     &self.current_clip_stack,
-                                                     extra);
-                let render_tasks = &mut self.render_tasks;
-                prim_metadata.clip_task_id = clip_task.map(|clip_task| {
-                    render_tasks.add(clip_task)
-                });
-            }
+                RenderTask::new_mask(Some(clip_and_scroll.clip_node_id()),
+                                     clip_bounds,
+                                     &self.current_clip_stack,
+                                     None,
+                                     prim_screen_rect)
+            } else {
+                None
+            };
+
+            let render_tasks = &mut self.render_tasks;
+            prim_metadata.clip_task_id = clip_task.map(|clip_task| {
+                render_tasks.add(clip_task)
+            });
 
             self.profile_counters.visible_primitives.inc();
         }
