@@ -23,8 +23,9 @@ const unsigned char* base =
                   "0123456789+/";
 
 template<typename T>
+template<typename SrcT, typename DestT>
 static void
-Encode3to4(const unsigned char* aSrc, T* aDest)
+Encode3to4(const SrcT* aSrc, DestT* aDest)
 {
   uint32_t b32 = (uint32_t)0;
   int i, j = 18;
@@ -40,29 +41,29 @@ Encode3to4(const unsigned char* aSrc, T* aDest)
   }
 }
 
-template<typename T>
+template<typename SrcT, typename DestT>
 static void
-Encode2to4(const unsigned char* aSrc, T* aDest)
+Encode2to4(const SrcT* aSrc, DestT* aDest)
 {
   aDest[0] = base[(uint32_t)((aSrc[0] >> 2) & 0x3F)];
   aDest[1] = base[(uint32_t)(((aSrc[0] & 0x03) << 4) | ((aSrc[1] >> 4) & 0x0F))];
   aDest[2] = base[(uint32_t)((aSrc[1] & 0x0F) << 2)];
-  aDest[3] = (unsigned char)'=';
+  aDest[3] = DestT('=');
 }
 
-template<typename T>
+template<typename SrcT, typename DestT>
 static void
-Encode1to4(const unsigned char* aSrc, T* aDest)
+Encode1to4(const SrcT* aSrc, DestT* aDest)
 {
   aDest[0] = base[(uint32_t)((aSrc[0] >> 2) & 0x3F)];
   aDest[1] = base[(uint32_t)((aSrc[0] & 0x03) << 4)];
-  aDest[2] = (unsigned char)'=';
-  aDest[3] = (unsigned char)'=';
+  aDest[2] = DestT('=');
+  aDest[3] = DestT('=');
 }
 
-template<typename T>
+template<typename SrcT, typename DestT>
 static void
-Encode(const unsigned char* aSrc, uint32_t aSrcLen, T* aDest)
+Encode(const SrcT* aSrc, uint32_t aSrcLen, DestT* aDest)
 {
   while (aSrcLen >= 3) {
     Encode3to4(aSrc, aDest);
