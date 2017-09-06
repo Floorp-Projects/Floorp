@@ -4962,7 +4962,6 @@ public:
   virtual void HitTest(nsDisplayListBuilder* aBuilder, const nsRect& aRect,
                        HitTestState* aState,
                        nsTArray<nsIFrame*> *aOutFrames) override {
-    MOZ_ASSERT(mMergedFrames.IsEmpty());
     if (nsRect(ToReferenceFrame(), mFrame->GetSize()).Intersects(aRect)) {
       aOutFrames->AppendElement(mFrame);
     }
@@ -5048,51 +5047,12 @@ public:
     int32_t totalContentLength;
     f->ToCString(buf, &totalContentLength);
 
-    for (nsTextFrame* f : mMergedFrames) {
-      f->ToCString(buf, &totalContentLength);
-    }
     aStream << buf.get() << "\")";
 #endif
   }
 
-  void GetMergedFrames(nsTArray<nsIFrame*>* aFrames) override
-  {
-    aFrames->AppendElements(mMergedFrames);
-  }
-
-  bool TryMerge(nsDisplayItem* aItem) override {
-    if (aItem->GetType() != DisplayItemType::TYPE_TEXT) {
-      return false;
-    }
-
-    if (aItem->GetClipChain() != GetClipChain()) {
-      return false;
-    }
-
-    nsDisplayText* other = static_cast<nsDisplayText*>(aItem);
-    if (!mTextDrawer || !other->mTextDrawer) {
-      return false;
-    }
-
-    if (mOpacity != other->mOpacity) {
-      return false;
-    }
-
-    if (!mTextDrawer->TryMerge(*other->mTextDrawer)) {
-      return false;
-    }
-
-    mBounds.UnionRect(mBounds, other->mBounds);
-    mVisibleRect.UnionRect(mVisibleRect, other->mVisibleRect);
-    mMergedFrames.AppendElement(static_cast<nsTextFrame*>(other->mFrame));
-    mMergedFrames.AppendElements(mozilla::Move(other->mMergedFrames));
-
-    return true;
-}
-
   RefPtr<TextDrawTarget> mTextDrawer;
 
-  nsTArray<nsTextFrame*> mMergedFrames;
   nsRect mBounds;
 
   float mOpacity;
@@ -5234,8 +5194,6 @@ void
 nsDisplayText::Paint(nsDisplayListBuilder* aBuilder,
                      gfxContext* aCtx) {
   AUTO_PROFILER_LABEL("nsDisplayText::Paint", GRAPHICS);
-
-  MOZ_ASSERT(mMergedFrames.IsEmpty());
 
   DrawTargetAutoDisableSubpixelAntialiasing disable(aCtx->GetDrawTarget(),
                                                     mDisableSubpixelAA);
