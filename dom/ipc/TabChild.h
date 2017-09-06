@@ -757,10 +757,11 @@ public:
     return sActiveTabs && !sActiveTabs->IsEmpty();
   }
 
-  // Returns whichever TabChild is currently in the foreground. If there are
-  // multiple TabChilds in the foreground (due to multiple windows being open),
-  // this returns null. This should only be called if HasActiveTabs() returns
-  // true.
+  // Returns the set of TabChilds that are currently in the foreground. There
+  // can be multiple foreground TabChilds if Firefox has multiple windows
+  // open. There can also be zero foreground TabChilds if the foreground tab is
+  // in a different content process. Note that this function should only be
+  // called if HasActiveTabs() returns true.
   static const nsTArray<TabChild*>& GetActiveTabs()
   {
     MOZ_ASSERT(HasActiveTabs());
