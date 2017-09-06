@@ -411,6 +411,51 @@ Base64Encode(const nsAString& aBinary, nsAString& aBase64)
   return Base64EncodeHelper(aBinary, aBase64);
 }
 
+template<typename Decoder>
+static bool
+Decode4to3(const char* aSrc, uint8_t* aDest, Decoder aToVal)
+{
+  uint8_t w, x, y, z;
+  if (!aToVal(aSrc[0], &w) ||
+      !aToVal(aSrc[1], &x) ||
+      !aToVal(aSrc[2], &y) ||
+      !aToVal(aSrc[3], &z)) {
+    return false;
+  }
+  aDest[0] = w << 2 | x >> 4;
+  aDest[1] = x << 4 | y >> 2;
+  aDest[2] = y << 6 | z;
+  return true;
+}
+
+template<typename Decoder>
+static bool
+Decode3to2(const char* aSrc, uint8_t* aDest, Decoder aToVal)
+{
+  uint8_t w, x, y;
+  if (!aToVal(aSrc[0], &w) ||
+      !aToVal(aSrc[1], &x) ||
+      !aToVal(aSrc[2], &y)) {
+    return false;
+  }
+  aDest[0] = w << 2 | x >> 4;
+  aDest[1] = x << 4 | y >> 2;
+  return true;
+}
+
+template<typename Decoder>
+static bool
+Decode2to1(const char* aSrc, uint8_t* aDest, Decoder aToVal)
+{
+  uint8_t w, x;
+  if (!aToVal(aSrc[0], &w) ||
+      !aToVal(aSrc[1], &x)) {
+    return false;
+  }
+  aDest[0] = w << 2 | x >> 4;
+  return true;
+}
+
 static nsresult
 Base64DecodeHelper(const char* aBase64, uint32_t aBase64Len, char* aBinary,
                    uint32_t* aBinaryLen)
@@ -589,34 +634,23 @@ Base64URLDecode(const nsACString& aBase64,
   uint8_t* binary = aBinary.Elements();
 
   for (; base64Len >= 4; base64Len -= 4) {
-    uint8_t w, x, y, z;
-    if (!Base64URLCharToValue(*base64++, &w) ||
-        !Base64URLCharToValue(*base64++, &x) ||
-        !Base64URLCharToValue(*base64++, &y) ||
-        !Base64URLCharToValue(*base64++, &z)) {
+    if (!Decode4to3(base64, binary, Base64URLCharToValue)) {
       return NS_ERROR_INVALID_ARG;
     }
-    *binary++ = w << 2 | x >> 4;
-    *binary++ = x << 4 | y >> 2;
-    *binary++ = y << 6 | z;
+    base64 += 4;
+    binary += 3;
   }
 
   if (base64Len == 3) {
-    uint8_t w, x, y;
-    if (!Base64URLCharToValue(*base64++, &w) ||
-        !Base64URLCharToValue(*base64++, &x) ||
-        !Base64URLCharToValue(*base64++, &y)) {
+    if (!Decode3to2(base64, binary, Base64URLCharToValue)) {
       return NS_ERROR_INVALID_ARG;
     }
-    *binary++ = w << 2 | x >> 4;
-    *binary++ = x << 4 | y >> 2;
+    binary += 2;
   } else if (base64Len == 2) {
-    uint8_t w, x;
-    if (!Base64URLCharToValue(*base64++, &w) ||
-        !Base64URLCharToValue(*base64++, &x)) {
+    if (!Decode2to1(base64, binary, Base64URLCharToValue)) {
       return NS_ERROR_INVALID_ARG;
     }
-    *binary++ = w << 2 | x >> 4;
+    binary += 1;
   } else if (base64Len) {
     return NS_ERROR_INVALID_ARG;
   }
