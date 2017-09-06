@@ -315,6 +315,11 @@ public:
   // GetTypes being added or removed or changing item kinds.
   void TypesListMayHaveChanged();
 
+  // Testing method used to emulate internal DataTransfer management.
+  // NOTE: Please don't use this. See the comments in the webidl for more.
+  already_AddRefed<DataTransfer> MozCloneForEvent(const nsAString& aEvent,
+                                                  ErrorResult& aRv);
+
 protected:
 
   // caches text and uri-list data formats that exist in the drag service or
