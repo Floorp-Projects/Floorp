@@ -44,10 +44,16 @@
   <string name="preference_category_mozilla">மொசில்லா</string>
   <string name="preference_mozilla_telemetry">பெயரற்ற பயனளவு தரவை அனுப்பு</string>
   <string name="preference_mozilla_telemetry_summary">மேலும் அறிய</string>
+  <string name="preference_mozilla_telemetry_summary2">அனைவருக்கும் %1$s வழங்க மற்றும் மேம்படுத்த தேவையானதை மட்டும் சேகரிக்க மொசில்லா உறுதிபூண்டுள்ளது.</string>
+  <string name="preference_privacy_notice">தனியுரிமை கொள்கை</string>
   <string name="preference_about">%1$s பற்றி</string>
   <string name="content_description_clear_input">துள்ளிய உள்ளீடு</string>
   <string name="content_description_dismiss_input">நிராகரி</string>
   <string name="content_description_erase">உலாவல் வரலாற்றை அகற்று</string>
+  <string name="content_description_fab_expand">விரி</string>
+  <string name="content_description_tab_counter">திறந்த கீற்றுகள்: %1$s</string>
+  <string name="content_description_open_tab">கீற்றைத் திற</string>
+  <string name="content_description_close_tab">கீற்றை மூடு</string>
   <string name="content_description_lock">பாதுகாப்பான இணைப்பு</string>
   <string name="accessibility_announcement_loading">ஏற்றுகிறது</string>
   <string name="accessibility_announcement_loading_finished">வலையத்தளம் ஏற்றப்பட்டது</string>
@@ -93,6 +99,7 @@
   <string name="contextmenu_image_share">பகிர்</string>
   <string name="contextmenu_image_copy">முகவரியை நகலெடு</string>
   <string name="contextmenu_image_save">சேமி</string>
+  <string name="contextmenu_open_in_new_tab">இணைப்பைப் புதிய கீற்றில் திற</string>
   <string name="contextmenu_image_warning"><![CDATA["%1$s வரலாற்றை அகற்றும் போது சேமித்த பகிர்ந்த படங்கள் "<b xmlns:xliff="urn:oasis:names:tc:xliff:document:1.2">&#2949;&#2996;&#3007;&#2965;&#3021;&#2965;&#2986;&#3021;&#2986;&#2975;&#3006;&#2980;&#3009;</b>.]]></string>
   <string name="firstrun_defaultbrowser_title">தனியுரிமையைத் துரிதப்படுத்துங்கள்</string>
   <string name="firstrun_close_button">சரி, புரிந்தது!</string>

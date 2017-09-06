@@ -44,11 +44,14 @@
   <string name="preference_category_mozilla">موزيلا</string>
   <string name="preference_mozilla_telemetry">أرسل بيانات استخدام مجهّلة</string>
   <string name="preference_mozilla_telemetry_summary">اطّلع على المزيد</string>
+  <string name="preference_mozilla_telemetry_summary2">تحاول موزيلا ألا تجمع أكثر مما تحتاجه لإتاحة %1$s و تحسينه للجميع.</string>
+  <string name="preference_privacy_notice">تنويه الخصوصية</string>
   <string name="preference_about">عن %1$s</string>
   <string name="content_description_clear_input">امسح الإدخال</string>
   <string name="content_description_dismiss_input">غادِر</string>
   <string name="content_description_erase">امسح تأريخ التصفح</string>
   <string name="content_description_fab_expand">وسِّع</string>
+  <string name="content_description_tab_counter">الألسنة المفتوحة: %1$s</string>
   <string name="content_description_open_tab">افتح لسانا</string>
   <string name="content_description_close_tab">أغلق اللسان</string>
   <string name="content_description_lock">اتصال آمن</string>
@@ -113,6 +116,10 @@
   <string name="dialog_addtohomescreen_title">أضِف إلى شاشة البداية</string>
   <string name="dialog_addtohomescreen_action_add">أضِف</string>
   <string name="dialog_addtohomescreen_action_cancel">ألغِ</string>
+  <string name="dialog_addtohomescreen_tracking_protection">سيُفتح الاختصار مع تعطيل الحماية من التعقب</string>
   <string name="dialog_opentab_title">افتح الرابط في اللسان المحدّد</string>
   <string name="dialog_opentab_action_open">افتح</string>
+  <string name="notification_browsing_session_channel_name">جلسة تصفح الخاص</string>
+  <string name="notification_browsing_session_channel_description">تتيح لك التنبيهات مسح جلسة %1$s بضغطة واحدة. لا تحتاج إلى فتح التطبيق أو رؤية ما المعروض فيه.</string>
+  <string name="tabs_tray_action_erase">امسح تأريخ التصفح</string>
 </resources>
