@@ -47,9 +47,9 @@ bool ContainNonWordCharacter(const nsAString& aStr)
 void GetPrefix(const nsINode* aNode, nsAString& aResult)
 {
   if (aNode->IsXULElement()) {
-    aResult.Assign(NS_LITERAL_STRING("xul"));
+    aResult.AssignLiteral(u"xul");
   } else if (aNode->IsHTMLElement()) {
-    aResult.Assign(NS_LITERAL_STRING("xhtml"));
+    aResult.AssignLiteral(u"xhtml");
   }
 }
 
@@ -187,7 +187,7 @@ void XPathGenerator::Generate(const nsINode* aNode, nsAString& aResult)
     namePart.Assign(NS_LITERAL_STRING("[@name=") + quotedArgument + NS_LITERAL_STRING("]"));
   }
   if (count != 1) {
-    countPart.Assign(NS_LITERAL_STRING("["));
+    countPart.AssignLiteral(u"[");
     countPart.AppendInt(count);
     countPart.Append(NS_LITERAL_STRING("]"));
   }
