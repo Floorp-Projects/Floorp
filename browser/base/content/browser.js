@@ -3964,7 +3964,8 @@ const BrowserSearch = {
       return engine.identifier;
     }
 
-    if (!engine || (engine.name === undefined))
+    if (!engine || (engine.name === undefined) ||
+        !Services.prefs.getBoolPref("toolkit.telemetry.enabled"))
       return "other";
 
     return "other-" + engine.name;
