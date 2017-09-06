@@ -456,21 +456,22 @@ Decode2to1(const T* aSrc, U* aDest, Decoder aToVal)
   return true;
 }
 
+template<typename SrcT, typename DestT>
 static nsresult
-Base64DecodeHelper(const char* aBase64, uint32_t aBase64Len, char* aBinary,
+Base64DecodeHelper(const SrcT* aBase64, uint32_t aBase64Len, DestT* aBinary,
                    uint32_t* aBinaryLen)
 {
   MOZ_ASSERT(aBinary);
 
-  const char* input = aBase64;
+  const SrcT* input = aBase64;
   uint32_t inputLength = aBase64Len;
-  char* binary = aBinary;
+  DestT* binary = aBinary;
   uint32_t binaryLength = 0;
 
   // Handle trailing '=' characters.
   if (inputLength && (inputLength % 4 == 0)) {
-    if (aBase64[inputLength - 1] == '=') {
-      if (aBase64[inputLength - 2] == '=') {
+    if (aBase64[inputLength - 1] == SrcT('=')) {
+      if (aBase64[inputLength - 2] == SrcT('=')) {
         inputLength -= 2;
       } else {
         inputLength -= 1;
@@ -479,7 +480,7 @@ Base64DecodeHelper(const char* aBase64, uint32_t aBase64Len, char* aBinary,
   }
 
   while (inputLength >= 4) {
-    if (!Decode4to3(input, binary, Base64CharToValue<char>)) {
+    if (!Decode4to3(input, binary, Base64CharToValue<SrcT>)) {
       return NS_ERROR_INVALID_ARG;
     }
 
@@ -491,13 +492,13 @@ Base64DecodeHelper(const char* aBase64, uint32_t aBase64Len, char* aBinary,
 
   switch (inputLength) {
   case 3:
-    if (!Decode3to2(input, binary, Base64CharToValue<char>)) {
+    if (!Decode3to2(input, binary, Base64CharToValue<SrcT>)) {
       return NS_ERROR_INVALID_ARG;
     }
     binaryLength += 2;
     break;
   case 2:
-    if (!Decode2to1(input, binary, Base64CharToValue<char>)) {
+    if (!Decode2to1(input, binary, Base64CharToValue<SrcT>)) {
       return NS_ERROR_INVALID_ARG;
     }
     binaryLength += 1;
@@ -510,7 +511,7 @@ Base64DecodeHelper(const char* aBase64, uint32_t aBase64Len, char* aBinary,
     MOZ_CRASH("Too many characters leftover");
   }
 
-  aBinary[binaryLength] = '\0';
+  aBinary[binaryLength] = DestT('\0');
   *aBinaryLen = binaryLength;
 
   return NS_OK;
