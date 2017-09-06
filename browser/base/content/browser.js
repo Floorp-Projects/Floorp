@@ -108,7 +108,6 @@ XPCOMUtils.defineLazyScriptGetter(this, ["setContextMenuContentData",
                                   "chrome://browser/content/nsContextMenu.js");
 XPCOMUtils.defineLazyScriptGetter(this, ["DownloadsPanel",
                                          "DownloadsOverlayLoader",
-                                         "DownloadsSubview",
                                          "DownloadsView", "DownloadsViewUI",
                                          "DownloadsViewController",
                                          "DownloadsSummary", "DownloadsFooter",
