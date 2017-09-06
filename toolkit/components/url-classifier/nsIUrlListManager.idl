@@ -40,6 +40,11 @@ interface nsIUrlListManager : nsISupports
                           in ACString gethashUrl);
 
     /**
+     * Unregister table from the list
+     */
+    void unregisterTable(in ACString tableName);
+
+    /**
      * Turn on update checking for a table. I.e., during the next server
      * check, download updates for this table.
      */
