@@ -526,6 +526,7 @@
 @BINPATH@/components/GeckoView.manifest
 @BINPATH@/components/GeckoViewPrompt.js
 @BINPATH@/components/GeckoViewPermission.js
+@BINPATH@/components/GeckoViewStartup.js
 #else
 @BINPATH@/chrome/chrome@JAREXT@
 @BINPATH@/chrome/chrome.manifest
