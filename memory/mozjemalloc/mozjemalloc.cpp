@@ -112,7 +112,6 @@
 #include "mozilla/Sprintf.h"
 #include "mozilla/Likely.h"
 #include "mozilla/MacroArgs.h"
-#include "mozilla/DoublyLinkedList.h"
 
 #ifdef ANDROID
 #define NO_TLS
@@ -253,6 +252,7 @@ typedef long ssize_t;
 #endif
 
 #include "mozjemalloc_types.h"
+#include "linkedlist.h"
 
 /* Some tools, such as /dev/dsp wrappers, LD_PRELOAD libraries that
  * happen to override mmap() and call dlsym() from their overridden
@@ -627,7 +627,7 @@ struct arena_chunk_t {
 	 *
 	 * We're currently lazy and don't remove a chunk from this list when
 	 * all its madvised pages are recommitted. */
-	mozilla::DoublyLinkedListElement<arena_chunk_t> chunks_madvised_elem;
+	LinkedList	chunks_madvised_elem;
 #endif
 
 	/* Number of dirty pages. */
@@ -637,17 +637,6 @@ struct arena_chunk_t {
 	arena_chunk_map_t map[1]; /* Dynamically sized. */
 };
 typedef rb_tree(arena_chunk_t) arena_chunk_tree_t;
-
-#ifdef MALLOC_DOUBLE_PURGE
-template<>
-struct mozilla::GetDoublyLinkedListElement<arena_chunk_t>
-{
-  static mozilla::DoublyLinkedListElement<arena_chunk_t>& Get(arena_chunk_t* aThis)
-  {
-    return aThis->chunks_madvised_elem;
-  }
-};
-#endif
 
 struct arena_run_t {
 #if defined(MOZ_DEBUG) || defined(MOZ_DIAGNOSTIC_ASSERT_ENABLED)
@@ -720,7 +709,7 @@ struct arena_t {
 #ifdef MALLOC_DOUBLE_PURGE
 	/* Head of a linked list of MADV_FREE'd-page-containing chunks this
 	 * arena manages. */
-	mozilla::DoublyLinkedList<arena_chunk_t> chunks_madvised;
+	LinkedList		chunks_madvised;
 #endif
 
 	/*
@@ -2710,7 +2699,7 @@ arena_chunk_init(arena_t *arena, arena_chunk_t *chunk, bool zeroed)
 	    &chunk->map[arena_chunk_header_npages]);
 
 #ifdef MALLOC_DOUBLE_PURGE
-	new (&chunk->chunks_madvised_elem) mozilla::DoublyLinkedListElement<arena_chunk_t>();
+	LinkedList_Init(&chunk->chunks_madvised_elem);
 #endif
 }
 
@@ -2727,9 +2716,8 @@ arena_chunk_dealloc(arena_t *arena, arena_chunk_t *chunk)
 		}
 
 #ifdef MALLOC_DOUBLE_PURGE
-		if (arena->chunks_madvised.ElementProbablyInList(arena->spare)) {
-			arena->chunks_madvised.remove(arena->spare);
-		}
+		/* This is safe to do even if arena->spare is not in the list. */
+		LinkedList_Remove(&arena->spare->chunks_madvised_elem);
 #endif
 
 		chunk_dealloc((void *)arena->spare, chunksize, ARENA_CHUNK);
@@ -2890,10 +2878,8 @@ arena_purge(arena_t *arena, bool all)
 		if (madvised) {
 			/* The chunk might already be in the list, but this
 			 * makes sure it's at the front. */
-			if (arena->chunks_madvised.ElementProbablyInList(chunk)) {
-				arena->chunks_madvised.remove(chunk);
-			}
-			arena->chunks_madvised.pushFront(chunk);
+			LinkedList_Remove(&chunk->chunks_madvised_elem);
+			LinkedList_InsertHead(&arena->chunks_madvised, &chunk->chunks_madvised_elem);
 		}
 #endif
 	}
@@ -4037,7 +4023,7 @@ arena_new(arena_t *arena)
 	/* Initialize chunks. */
 	arena_chunk_tree_dirty_new(&arena->chunks_dirty);
 #ifdef MALLOC_DOUBLE_PURGE
-	new (&arena->chunks_madvised) mozilla::DoublyLinkedList<arena_chunk_t>();
+	LinkedList_Init(&arena->chunks_madvised);
 #endif
 	arena->spare = nullptr;
 
@@ -5092,9 +5078,12 @@ hard_purge_arena(arena_t *arena)
 {
 	malloc_spin_lock(&arena->lock);
 
-	while (!arena->chunks_madvised.isEmpty()) {
-		arena_chunk_t *chunk = arena->chunks_madvised.popFront();
+	while (!LinkedList_IsEmpty(&arena->chunks_madvised)) {
+		arena_chunk_t *chunk =
+			LinkedList_Get(arena->chunks_madvised.next,
+				       arena_chunk_t, chunks_madvised_elem);
 		hard_purge_chunk(chunk);
+		LinkedList_Remove(&chunk->chunks_madvised_elem);
 	}
 
 	malloc_spin_unlock(&arena->lock);
