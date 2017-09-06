@@ -4,6 +4,7 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
 #include "mozilla/Attributes.h"
+#include "mozilla/Base64.h"
 #include "nsIScriptableBase64Encoder.h"
 #include "nsIInputStream.h"
 #include "nsString.h"
@@ -265,7 +266,7 @@ FakeInputStream::CheckTest(nsAString& aResult)
     "Expected: " << mTest->mResult;
 }
 
-TEST(Base64, Test)
+TEST(Base64, StreamEncoder)
 {
   nsCOMPtr<nsIScriptableBase64Encoder> encoder =
     do_CreateInstance("@mozilla.org/scriptablebase64encoder;1");
@@ -289,3 +290,203 @@ TEST(Base64, Test)
     stream->CheckTest(string);
   } while (stream->NextTest());
 }
+
+struct EncodeDecodeTestCase
+{
+    const char* mInput;
+    const char* mOutput;
+};
+
+static EncodeDecodeTestCase sRFC4648TestCases[] = {
+   { "", "" },
+   { "f", "Zg==" },
+   { "fo", "Zm8=" },
+   { "foo", "Zm9v" },
+   { "foob", "Zm9vYg==" },
+   { "fooba", "Zm9vYmE=" },
+   { "foobar", "Zm9vYmFy" },
+};
+
+TEST(Base64, RFC4648Encoding)
+{
+    for (auto& testcase : sRFC4648TestCases) {
+        nsDependentCString in(testcase.mInput);
+        nsAutoCString out;
+        nsresult rv = mozilla::Base64Encode(in, out);
+        ASSERT_TRUE(NS_SUCCEEDED(rv));
+        ASSERT_TRUE(out.EqualsASCII(testcase.mOutput));
+    }
+
+    for (auto& testcase : sRFC4648TestCases) {
+        NS_ConvertUTF8toUTF16 in(testcase.mInput);
+        nsAutoString out;
+        nsresult rv = mozilla::Base64Encode(in, out);
+        ASSERT_TRUE(NS_SUCCEEDED(rv));
+        ASSERT_TRUE(out.EqualsASCII(testcase.mOutput));
+    }
+}
+
+TEST(Base64, RFC4648Decoding)
+{
+    for (auto& testcase : sRFC4648TestCases) {
+        nsDependentCString out(testcase.mOutput);
+        nsAutoCString in;
+        nsresult rv = mozilla::Base64Decode(out, in);
+        ASSERT_TRUE(NS_SUCCEEDED(rv));
+        ASSERT_TRUE(in.EqualsASCII(testcase.mInput));
+    }
+
+    for (auto& testcase : sRFC4648TestCases) {
+        NS_ConvertUTF8toUTF16 out(testcase.mOutput);
+        nsAutoString in;
+        nsresult rv = mozilla::Base64Decode(out, in);
+        ASSERT_TRUE(NS_SUCCEEDED(rv));
+        ASSERT_TRUE(in.EqualsASCII(testcase.mInput));
+    }
+}
+
+TEST(Base64, RFC4648DecodingRawPointers)
+{
+    for (auto& testcase : sRFC4648TestCases) {
+        size_t outputLength = strlen(testcase.mOutput);
+        size_t inputLength = strlen(testcase.mInput);
+
+        // This will be allocated by Base64Decode.
+        char* buffer = nullptr;
+
+        uint32_t binaryLength = 0;
+        nsresult rv = mozilla::Base64Decode(testcase.mOutput, outputLength,
+                                            &buffer, &binaryLength);
+        ASSERT_TRUE(NS_SUCCEEDED(rv));
+        ASSERT_EQ(binaryLength, inputLength);
+        ASSERT_STREQ(testcase.mInput, buffer);
+        free(buffer);
+    }
+}
+
+static EncodeDecodeTestCase sNonASCIITestCases[] = {
+    { "\x80", "gA==" },
+    { "\xff", "/w==" },
+    { "\x80\x80", "gIA=" },
+    { "\x80\x81", "gIE=" },
+    { "\xff\xff", "//8=" },
+    { "\x80\x80\x80", "gICA" },
+    { "\xff\xff\xff", "////" },
+    { "\x80\x80\x80\x80", "gICAgA==" },
+    { "\xff\xff\xff\xff", "/////w==" },
+};
+
+TEST(Base64, NonASCIIEncoding)
+{
+    for (auto& testcase : sNonASCIITestCases) {
+        nsDependentCString in(testcase.mInput);
+        nsAutoCString out;
+        nsresult rv = mozilla::Base64Encode(in, out);
+        ASSERT_TRUE(NS_SUCCEEDED(rv));
+        ASSERT_TRUE(out.EqualsASCII(testcase.mOutput));
+    }
+}
+
+TEST(Base64, NonASCIIEncodingWideString)
+{
+    for (auto& testcase : sNonASCIITestCases) {
+        nsAutoString in, out;
+        // XXX Handles Latin1 despite the name
+        AppendASCIItoUTF16(nsDependentCString(testcase.mInput), in);
+        nsresult rv = mozilla::Base64Encode(in, out);
+        ASSERT_TRUE(NS_SUCCEEDED(rv));
+        ASSERT_TRUE(out.EqualsASCII(testcase.mOutput));
+    }
+}
+
+TEST(Base64, NonASCIIDecoding)
+{
+    for (auto& testcase : sNonASCIITestCases) {
+        nsDependentCString out(testcase.mOutput);
+        nsAutoCString in;
+        nsresult rv = mozilla::Base64Decode(out, in);
+        ASSERT_TRUE(NS_SUCCEEDED(rv));
+        ASSERT_TRUE(in.Equals(testcase.mInput));
+    }
+}
+
+TEST(Base64, NonASCIIDecodingWideString)
+{
+    for (auto& testcase : sNonASCIITestCases) {
+        nsAutoString in, out;
+        // XXX Handles Latin1 despite the name
+        AppendASCIItoUTF16(nsDependentCString(testcase.mOutput), out);
+        nsresult rv = mozilla::Base64Decode(out, in);
+        ASSERT_TRUE(NS_SUCCEEDED(rv));
+        // Can't use EqualsASCII, because our comparison string isn't ASCII.
+        for (size_t i = 0; i < in.Length(); ++i) {
+            ASSERT_TRUE(((unsigned int)in[i] & 0xff00) == 0);
+            ASSERT_EQ((unsigned char)in[i], (unsigned char)testcase.mInput[i]);
+        }
+        ASSERT_TRUE(strlen(testcase.mInput) == in.Length());
+    }
+}
+
+// For historical reasons, our wide string base64 encode routines mask off
+// the high bits of non-latin1 wide strings.
+TEST(Base64, EncodeNon8BitWideString)
+{
+    {
+        const nsAutoString non8Bit(u"\x1ff");
+        nsAutoString out;
+        nsresult rv = mozilla::Base64Encode(non8Bit, out);
+        ASSERT_TRUE(NS_SUCCEEDED(rv));
+        ASSERT_TRUE(out.EqualsLiteral("/w=="));
+    }
+    {
+        const nsAutoString non8Bit(u"\xfff");
+        nsAutoString out;
+        nsresult rv = mozilla::Base64Encode(non8Bit, out);
+        ASSERT_TRUE(NS_SUCCEEDED(rv));
+        ASSERT_TRUE(out.EqualsLiteral("/w=="));
+    }
+}
+
+// For historical reasons, our wide string base64 decode routines mask off
+// the high bits of non-latin1 wide strings.
+TEST(Base64, DecodeNon8BitWideString)
+{
+    {
+        // This would be "/w==" in a nsCString
+        const nsAutoString non8Bit(u"\x12f\x177==");
+        const nsAutoString expectedOutput(u"\xff");
+        ASSERT_EQ(non8Bit.Length(), 4u);
+        nsAutoString out;
+        nsresult rv = mozilla::Base64Decode(non8Bit, out);
+        ASSERT_TRUE(NS_SUCCEEDED(rv));
+        ASSERT_TRUE(out.Equals(expectedOutput));
+    }
+    {
+        const nsAutoString non8Bit(u"\xf2f\xf77==");
+        const nsAutoString expectedOutput(u"\xff");
+        nsAutoString out;
+        nsresult rv = mozilla::Base64Decode(non8Bit, out);
+        ASSERT_TRUE(NS_SUCCEEDED(rv));
+        ASSERT_TRUE(out.Equals(expectedOutput));
+    }
+}
+
+TEST(Base64, TruncateOnInvalidDecodeCString)
+{
+    NS_NAMED_LITERAL_CSTRING(invalid, "@@==");
+    nsAutoCString out("I should be truncated!");
+    nsresult rv = mozilla::Base64Decode(invalid, out);
+    ASSERT_TRUE(NS_FAILED(rv));
+    ASSERT_EQ(out.Length(), 0u);
+}
+
+TEST(Base64, TruncateOnInvalidDecodeWideString)
+{
+    NS_NAMED_LITERAL_STRING(invalid, "@@==");
+    nsAutoString out(u"I should be truncated!");
+    nsresult rv = mozilla::Base64Decode(invalid, out);
+    ASSERT_TRUE(NS_FAILED(rv));
+    ASSERT_EQ(out.Length(), 0u);
+}
+
+// TODO: Add tests for OOM handling.
