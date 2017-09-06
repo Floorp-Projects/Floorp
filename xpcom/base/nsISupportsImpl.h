@@ -357,7 +357,7 @@ public:
       // acquire semantics to synchronize with the memory released by
       // the last release on other threads, that is, to ensure that
       // writes prior to that release are now visible on this thread.
-      std::atomic_thread_fence(std::memory_order_acquire);
+      result = mValue.load(std::memory_order_acquire);
     }
     return result;
   }
