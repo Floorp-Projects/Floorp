@@ -3,6 +3,7 @@
 This script patches tooltool manifests in the firefox source
 tree to update them to a new set of rust packages.
 '''
+from __future__ import absolute_import, print_function
 
 import json
 import os.path
