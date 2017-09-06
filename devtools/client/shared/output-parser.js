@@ -4,17 +4,21 @@
 
 "use strict";
 
+loader.lazyRequireGetter(this, "ANGLE_TAKING_FUNCTIONS",
+  "devtools/shared/css/properties-db", true);
+loader.lazyRequireGetter(this, "BASIC_SHAPE_FUNCTIONS",
+  "devtools/shared/css/properties-db", true);
+loader.lazyRequireGetter(this, "BEZIER_KEYWORDS",
+  "devtools/shared/css/properties-db", true);
+loader.lazyRequireGetter(this, "COLOR_TAKING_FUNCTIONS",
+  "devtools/shared/css/properties-db", true);
+loader.lazyRequireGetter(this, "CSS_TYPES",
+  "devtools/shared/css/properties-db", true);
+
 const {angleUtils} = require("devtools/client/shared/css-angle");
 const {colorUtils} = require("devtools/shared/css/color");
 const {getCSSLexer} = require("devtools/shared/css/lexer");
 const EventEmitter = require("devtools/shared/old-event-emitter");
-const {
-  ANGLE_TAKING_FUNCTIONS,
-  BASIC_SHAPE_FUNCTIONS,
-  BEZIER_KEYWORDS,
-  COLOR_TAKING_FUNCTIONS,
-  CSS_TYPES
-} = require("devtools/shared/css/properties-db");
 const {appendText} = require("devtools/client/inspector/shared/utils");
 const Services = require("Services");
 

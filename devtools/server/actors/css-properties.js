@@ -4,16 +4,14 @@
 
 "use strict";
 
-const { Cc, Ci } = require("chrome");
-
-loader.lazyGetter(this, "DOMUtils", () => {
-  return Cc["@mozilla.org/inspector/dom-utils;1"].getService(Ci.inIDOMUtils);
-});
+loader.lazyServiceGetter(this, "DOMUtils",
+  "@mozilla.org/inspector/dom-utils;1", "inIDOMUtils");
+loader.lazyRequireGetter(this, "CSS_TYPES",
+  "devtools/shared/css/properties-db", true);
 
 const protocol = require("devtools/shared/protocol");
 const { ActorClassWithSpec, Actor } = protocol;
 const { cssPropertiesSpec } = require("devtools/shared/specs/css-properties");
-const { CSS_TYPES } = require("devtools/shared/css/properties-db");
 const { cssColors } = require("devtools/shared/css/color-db");
 
 exports.CssPropertiesActor = ActorClassWithSpec(cssPropertiesSpec, {
