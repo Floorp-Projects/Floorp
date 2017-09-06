@@ -38,12 +38,19 @@ HTMLFieldSetElement::~HTMLFieldSetElement()
   }
 }
 
+// nsISupports
+
 NS_IMPL_CYCLE_COLLECTION_INHERITED(HTMLFieldSetElement, nsGenericHTMLFormElement,
                                    mValidity, mElements)
 
-NS_IMPL_ISUPPORTS_CYCLE_COLLECTION_INHERITED(HTMLFieldSetElement,
-                                             nsGenericHTMLFormElement,
-                                             nsIConstraintValidation)
+NS_IMPL_ADDREF_INHERITED(HTMLFieldSetElement, Element)
+NS_IMPL_RELEASE_INHERITED(HTMLFieldSetElement, Element)
+
+// QueryInterface implementation for HTMLFieldSetElement
+NS_INTERFACE_TABLE_HEAD_CYCLE_COLLECTION_INHERITED(HTMLFieldSetElement)
+  NS_INTERFACE_TABLE_INHERITED(HTMLFieldSetElement,
+                               nsIConstraintValidation)
+NS_INTERFACE_TABLE_TAIL_INHERITING(nsGenericHTMLFormElement)
 
 NS_IMPL_ELEMENT_CLONE(HTMLFieldSetElement)
 
