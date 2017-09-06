@@ -53,6 +53,7 @@ ModuleGenerator::ModuleGenerator(const CompileArgs& args, ModuleEnvironment* env
     env_(env),
     linkDataTier_(nullptr),
     metadataTier_(nullptr),
+    taskState_(mutexid::WasmCompileTaskState),
     numSigs_(0),
     numTables_(0),
     lifo_(GENERATOR_LIFO_DEFAULT_CHUNK_SIZE),
@@ -73,39 +74,47 @@ ModuleGenerator::ModuleGenerator(const CompileArgs& args, ModuleEnvironment* env
 
 ModuleGenerator::~ModuleGenerator()
 {
+    MOZ_ASSERT_IF(finishedFuncDefs_, !batchedBytecode_);
+    MOZ_ASSERT_IF(finishedFuncDefs_, !currentTask_);
+
     if (parallel_) {
-        // Wait for any outstanding jobs to fail or complete.
         if (outstanding_) {
-            AutoLockHelperThreadState lock;
-            while (true) {
+            // Remove any pending compilation tasks from the worklist.
+            {
+                AutoLockHelperThreadState lock;
                 CompileTaskPtrVector& worklist = HelperThreadState().wasmWorklist(lock, mode());
-                MOZ_ASSERT(outstanding_ >= worklist.length());
-                outstanding_ -= worklist.length();
-                worklist.clear();
+                auto pred = [this](CompileTask* task) { return &task->state() == &taskState_; };
+                size_t removed = EraseIf(worklist, pred);
+                MOZ_ASSERT(outstanding_ >= removed);
+                outstanding_ -= removed;
+            }
 
-                CompileTaskPtrVector& finished = HelperThreadState().wasmFinishedList(lock, mode());
-                MOZ_ASSERT(outstanding_ >= finished.length());
-                outstanding_ -= finished.length();
-                finished.clear();
+            // Wait until all active compilation tasks have finished.
+            {
+                auto taskState = taskState_.lock();
+                while (true) {
+                    MOZ_ASSERT(outstanding_ >= taskState->finished.length());
+                    outstanding_ -= taskState->finished.length();
+                    taskState->finished.clear();
 
-                uint32_t numFailed = HelperThreadState().harvestFailedWasmJobs(lock, mode());
-                MOZ_ASSERT(outstanding_ >= numFailed);
-                outstanding_ -= numFailed;
+                    MOZ_ASSERT(outstanding_ >= taskState->numFailed);
+                    outstanding_ -= taskState->numFailed;
+                    taskState->numFailed = 0;
 
-                if (!outstanding_)
-                    break;
+                    if (!outstanding_)
+                        break;
 
-                HelperThreadState().wait(lock, GlobalHelperThreadState::CONSUMER);
+                    taskState.wait(taskState->failedOrFinished);
+                }
             }
         }
-
-        MOZ_ASSERT(HelperThreadState().wasmCompilationInProgress(mode()));
-        HelperThreadState().wasmCompilationInProgress(mode()) = false;
     } else {
         MOZ_ASSERT(!outstanding_);
     }
-    MOZ_ASSERT_IF(finishedFuncDefs_, !batchedBytecode_);
-    MOZ_ASSERT_IF(finishedFuncDefs_, !currentTask_);
+
+    // Propagate error state.
+    if (error_ && !*error_)
+        *error_ = Move(taskState_.lock()->errorMessage);
 }
 
 bool
@@ -235,38 +244,6 @@ ModuleGenerator::init(Metadata* maybeAsmJSMetadata)
     }
 
     return true;
-}
-
-bool
-ModuleGenerator::finishOutstandingTask()
-{
-    MOZ_ASSERT(parallel_);
-
-    CompileTask* task = nullptr;
-    {
-        AutoLockHelperThreadState lock;
-        while (true) {
-            MOZ_ASSERT(outstanding_ > 0);
-
-            if (HelperThreadState().wasmFailed(lock, mode())) {
-                if (error_) {
-                    MOZ_ASSERT(!*error_, "Should have stopped earlier");
-                    *error_ = Move(HelperThreadState().harvestWasmError(lock, mode()));
-                }
-                return false;
-            }
-
-            if (!HelperThreadState().wasmFinishedList(lock, mode()).empty()) {
-                outstanding_--;
-                task = HelperThreadState().wasmFinishedList(lock, mode()).popCopy();
-                break;
-            }
-
-            HelperThreadState().wait(lock, GlobalHelperThreadState::CONSUMER);
-        }
-    }
-
-    return finishTask(task);
 }
 
 bool
@@ -834,33 +811,11 @@ ModuleGenerator::startFuncDefs()
     MOZ_ASSERT(!startedFuncDefs_);
     MOZ_ASSERT(!finishedFuncDefs_);
 
-    // The wasmCompilationInProgress atomic ensures that there is only one
-    // parallel compilation in progress at a time. In the special case of
-    // asm.js, where the ModuleGenerator itself can be on a helper thread, this
-    // avoids the possibility of deadlock since at most 1 helper thread will be
-    // blocking on other helper threads and there are always >1 helper threads.
-    // With wasm, this restriction could be relaxed by moving the worklist state
-    // out of HelperThreadState since each independent compilation needs its own
-    // worklist pair. Alternatively, the deadlock could be avoided by having the
-    // ModuleGenerator thread make progress (on compile tasks) instead of
-    // blocking.
-
     GlobalHelperThreadState& threads = HelperThreadState();
     MOZ_ASSERT(threads.threadCount > 1);
 
     uint32_t numTasks;
-    if (CanUseExtraThreads() &&
-        threads.cpuCount > 1 &&
-        threads.wasmCompilationInProgress(mode()).compareExchange(false, true))
-    {
-#ifdef DEBUG
-        {
-            AutoLockHelperThreadState lock;
-            MOZ_ASSERT(!HelperThreadState().wasmFailed(lock, mode()));
-            MOZ_ASSERT(HelperThreadState().wasmWorklist(lock, mode()).empty());
-            MOZ_ASSERT(HelperThreadState().wasmFinishedList(lock, mode()).empty());
-        }
-#endif
+    if (CanUseExtraThreads() && threads.cpuCount > 1) {
         parallel_ = true;
         numTasks = 2 * threads.maxWasmCompilationThreads();
     } else {
@@ -870,7 +825,7 @@ ModuleGenerator::startFuncDefs()
     if (!tasks_.initCapacity(numTasks))
         return false;
     for (size_t i = 0; i < numTasks; i++)
-        tasks_.infallibleEmplaceBack(*env_, COMPILATION_LIFO_DEFAULT_CHUNK_SIZE);
+        tasks_.infallibleEmplaceBack(*env_, taskState_, COMPILATION_LIFO_DEFAULT_CHUNK_SIZE);
 
     if (!freeTasks_.reserve(numTasks))
         return false;
@@ -880,6 +835,46 @@ ModuleGenerator::startFuncDefs()
     startedFuncDefs_ = true;
     MOZ_ASSERT(!finishedFuncDefs_);
     return true;
+}
+
+static bool
+ExecuteCompileTask(CompileTask* task, UniqueChars* error)
+{
+    switch (task->tier()) {
+      case Tier::Ion:
+        for (FuncCompileUnit& unit : task->units()) {
+            if (!IonCompileFunction(task, &unit, error))
+                return false;
+        }
+        break;
+      case Tier::Baseline:
+        for (FuncCompileUnit& unit : task->units()) {
+            if (!BaselineCompileFunction(task, &unit, error))
+                return false;
+        }
+        break;
+    }
+    return true;
+}
+
+void
+wasm::ExecuteCompileTaskFromHelperThread(CompileTask* task)
+{
+    TraceLoggerThread* logger = TraceLoggerForCurrentThread();
+    AutoTraceLog logCompile(logger, TraceLogger_WasmCompilation);
+
+    UniqueChars error;
+    bool ok = ExecuteCompileTask(task, &error);
+
+    auto taskState = task->state().lock();
+
+    if (!ok || !taskState->finished.append(task)) {
+        taskState->numFailed++;
+        if (!taskState->errorMessage)
+            taskState->errorMessage = Move(error);
+    }
+
+    taskState->failedOrFinished.notify_one();
 }
 
 bool
@@ -898,7 +893,7 @@ ModuleGenerator::launchBatchCompile()
             return false;
         outstanding_++;
     } else {
-        if (!CompileFunction(currentTask_, error_))
+        if (!ExecuteCompileTask(currentTask_, error_))
             return false;
         if (!finishTask(currentTask_))
             return false;
@@ -909,6 +904,34 @@ ModuleGenerator::launchBatchCompile()
 
     numFinishedFuncDefs_ += numBatchedFuncs;
     return true;
+}
+
+bool
+ModuleGenerator::finishOutstandingTask()
+{
+    MOZ_ASSERT(parallel_);
+
+    CompileTask* task = nullptr;
+    {
+        auto taskState = taskState_.lock();
+        while (true) {
+            MOZ_ASSERT(outstanding_ > 0);
+
+            if (taskState->numFailed > 0)
+                return false;
+
+            if (!taskState->finished.empty()) {
+                outstanding_--;
+                task = taskState->finished.popCopy();
+                break;
+            }
+
+            taskState.wait(taskState->failedOrFinished);
+        }
+    }
+
+    // Call outside of the compilation lock.
+    return finishTask(task);
 }
 
 bool
@@ -1264,31 +1287,5 @@ ModuleGenerator::finishTier2(Module& module)
                        metadata_->takeMetadata(tier()),
                        Move(codeSegment),
                        env_);
-    return true;
-}
-
-bool
-wasm::CompileFunction(CompileTask* task, UniqueChars* error)
-{
-    TraceLoggerThread* logger = TraceLoggerForCurrentThread();
-    AutoTraceLog logCompile(logger, TraceLogger_WasmCompilation);
-
-    switch (task->tier()) {
-      case Tier::Ion:
-        for (FuncCompileUnit& unit : task->units()) {
-            if (!IonCompileFunction(task, &unit, error))
-                return false;
-        }
-        break;
-      case Tier::Baseline:
-        for (FuncCompileUnit& unit : task->units()) {
-            if (!BaselineCompileFunction(task, &unit, error))
-                return false;
-        }
-        break;
-      default:
-        MOZ_CRASH("Invalid tier value");
-    }
-
     return true;
 }

@@ -77,6 +77,24 @@ class FuncCompileUnit
 
 typedef Vector<FuncCompileUnit, 8, SystemAllocPolicy> FuncCompileUnitVector;
 
+// The CompileTaskState of a ModuleGenerator contains the mutable state shared
+// between helper threads executing CompileTasks. Each CompileTask started on a
+// helper thread eventually either ends up in the 'finished' list or increments
+// 'numFailed'.
+
+struct CompileTaskState
+{
+    ConditionVariable    failedOrFinished;
+    CompileTaskPtrVector finished;
+    uint32_t             numFailed;
+    UniqueChars          errorMessage;
+
+    CompileTaskState() : numFailed(0) {}
+    ~CompileTaskState() { MOZ_ASSERT(finished.empty()); MOZ_ASSERT(!numFailed); }
+};
+
+typedef ExclusiveData<CompileTaskState> ExclusiveCompileTaskState;
+
 // A CompileTask represents the task of compiling a batch of functions. It is
 // filled with a certain number of function's bodies that are sent off to a
 // compilation helper thread, which fills in the resulting code offsets, and
@@ -85,6 +103,7 @@ typedef Vector<FuncCompileUnit, 8, SystemAllocPolicy> FuncCompileUnitVector;
 class CompileTask
 {
     const ModuleEnvironment&   env_;
+    ExclusiveCompileTaskState& state_;
     LifoAlloc                  lifo_;
     Maybe<jit::TempAllocator>  alloc_;
     Maybe<jit::MacroAssembler> masm_;
@@ -99,8 +118,9 @@ class CompileTask
     }
 
   public:
-    CompileTask(const ModuleEnvironment& env, size_t defaultChunkSize)
+    CompileTask(const ModuleEnvironment& env, ExclusiveCompileTaskState& state, size_t defaultChunkSize)
       : env_(env),
+        state_(state),
         lifo_(defaultChunkSize)
     {
         init();
@@ -113,6 +133,9 @@ class CompileTask
     }
     const ModuleEnvironment& env() const {
         return env_;
+    }
+    const ExclusiveCompileTaskState& state() const {
+        return state_;
     }
     jit::MacroAssembler& masm() {
         return *masm_;
@@ -138,8 +161,6 @@ class CompileTask
         return true;
     }
 };
-
-struct Tier2GeneratorTask;
 
 // A ModuleGenerator encapsulates the creation of a wasm module. During the
 // lifetime of a ModuleGenerator, a sequence of FunctionGenerators are created
@@ -169,6 +190,7 @@ class MOZ_STACK_CLASS ModuleGenerator
     UniqueJumpTable                 jumpTable_;
 
     // Data scoped to the ModuleGenerator's lifetime
+    ExclusiveCompileTaskState       taskState_;
     uint32_t                        numSigs_;
     uint32_t                        numTables_;
     LifoAlloc                       lifo_;
