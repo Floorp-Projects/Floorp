@@ -20,7 +20,7 @@ xul|richlistitem[originaltype="autofill-insecureWarning"] {
 }
 
 .autofill-item-box {
-  --item-padding-vertical: 6px;
+  --item-padding-vertical: 7px;
   --item-padding-horizontal: 10px;
   --col-spacer: 7px;
   --item-width: calc(50% - (var(--col-spacer) / 2));
@@ -45,6 +45,7 @@ xul|richlistitem[originaltype="autofill-insecureWarning"] {
 }
 
 .autofill-item-box:not([ac-image=""]) {
+  --item-padding-vertical: 6.5px;
   --comment-font-size: 11;
 }
 
@@ -127,6 +128,7 @@ xul|richlistitem[originaltype="autofill-insecureWarning"] {
 }
 
 .autofill-footer {
+  padding: 0;
   flex-direction: column;
 }
 
