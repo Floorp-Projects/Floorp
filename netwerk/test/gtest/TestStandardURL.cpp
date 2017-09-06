@@ -216,6 +216,8 @@ MOZ_GTEST_BENCH(TestStandardURL, NormalizePerf, [] {
     }
 });
 
+// Bug 1394785 - ignore unstable test on OSX
+#ifndef XP_MACOSX
 // Note the five calls in the loop, so divide by 100k
 MOZ_GTEST_BENCH(TestStandardURL, NormalizePerfFails, [] {
     nsAutoCString result;
@@ -232,3 +234,4 @@ MOZ_GTEST_BENCH(TestStandardURL, NormalizePerfFails, [] {
       ASSERT_EQ(NS_ERROR_FAILURE, Test_NormalizeIPv4(encHost5, result));
     }
 });
+#endif
