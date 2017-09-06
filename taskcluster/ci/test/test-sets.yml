@@ -71,8 +71,8 @@ talos:
 awsy:
     - awsy
 
-awsy-stylo:
-    - awsy-stylo
+awsy-stylo-disabled:
+    - awsy-stylo-disabled
 
 awsy-stylo-sequential:
     - awsy-stylo-sequential
@@ -80,11 +80,10 @@ awsy-stylo-sequential:
 ##
 # Limited test sets for specific platforms
 
-stylo-tests:
+stylo-disabled-tests:
     - cppunit
     - crashtest
     - reftest
-    - reftest-stylo
     - web-platform-tests
     - web-platform-tests-reftests
     - mochitest
@@ -97,10 +96,8 @@ stylo-tests:
     - mochitest-media
     - mochitest-webgl
 
-stylo-sequential-tests:
-    - crashtest
+reftest-stylo:
     - reftest-stylo
-    - mochitest
 
 qr-talos:
     - talos-chrome
@@ -134,6 +131,20 @@ jsdcov-code-coverage-tests:
     - mochitest-browser-chrome
     - mochitest-devtools-chrome
     - xpcshell
+
+linux-talos-stylo-disabled:
+    - talos-chrome-stylo-disabled
+    - talos-dromaeojs-stylo-disabled
+    - talos-g1-stylo-disabled
+    - talos-g2-stylo-disabled
+    - talos-g3-stylo-disabled
+    - talos-g4-stylo-disabled
+    - talos-g5-stylo-disabled
+    - talos-other-stylo-disabled
+    - talos-svgr-stylo-disabled
+    - talos-tp5o-stylo-disabled
+    - talos-perf-reftest-stylo-disabled
+    - talos-perf-reftest-singletons-stylo-disabled
 
 windows-tests:
     - cppunit
@@ -176,22 +187,22 @@ windows-talos:
     - talos-tp5o
     - talos-xperf
     - talos-tp6
-
-windows-talos-stylo:
-    - talos-chrome-stylo
-    - talos-dromaeojs-stylo
-    - talos-g1-stylo
-    - talos-g2-stylo
-    - talos-g4-stylo
-    - talos-g5-stylo
-    - talos-other-stylo
-    - talos-perf-reftest-stylo
-    - talos-perf-reftest-singletons-stylo
-    - talos-svgr-stylo
-    - talos-tp5o-stylo
-    - talos-xperf-stylo
-    - talos-tp6-stylo
     - talos-tp6-stylo-threads
+
+windows-talos-stylo-disabled:
+    - talos-chrome-stylo-disabled
+    - talos-dromaeojs-stylo-disabled
+    - talos-g1-stylo-disabled
+    - talos-g2-stylo-disabled
+    - talos-g4-stylo-disabled
+    - talos-g5-stylo-disabled
+    - talos-other-stylo-disabled
+    - talos-perf-reftest-stylo-disabled
+    - talos-perf-reftest-singletons-stylo-disabled
+    - talos-svgr-stylo-disabled
+    - talos-tp5o-stylo-disabled
+    - talos-xperf-stylo-disabled
+    - talos-tp6-stylo-disabled
 
 macosx64-tests:
     - cppunit
@@ -218,7 +229,7 @@ macosx64-tests:
     - web-platform-tests-reftests
     - xpcshell
 
-macosx64-tests-talos:
+macosx64-talos:
     - talos-chrome
     - talos-dromaeojs
     - talos-g1
@@ -231,21 +242,21 @@ macosx64-tests-talos:
     - talos-perf-reftest
     - talos-perf-reftest-singletons
     - talos-tp6
-
-macosx64-tests-talos-stylo:
-    - talos-chrome-stylo
-    - talos-dromaeojs-stylo
-    - talos-g1-stylo
-    - talos-g2-stylo
-    - talos-g4-stylo
-    - talos-g5-stylo
-    - talos-other-stylo
-    - talos-svgr-stylo
-    - talos-tp5o-stylo
-    - talos-perf-reftest-stylo
-    - talos-perf-reftest-singletons-stylo
-    - talos-tp6-stylo
     - talos-tp6-stylo-threads
+
+macosx64-talos-stylo-disabled:
+    - talos-chrome-stylo-disabled
+    - talos-dromaeojs-stylo-disabled
+    - talos-g1-stylo-disabled
+    - talos-g2-stylo-disabled
+    - talos-g4-stylo-disabled
+    - talos-g5-stylo-disabled
+    - talos-other-stylo-disabled
+    - talos-svgr-stylo-disabled
+    - talos-tp5o-stylo-disabled
+    - talos-perf-reftest-stylo-disabled
+    - talos-perf-reftest-singletons-stylo-disabled
+    - talos-tp6-stylo-disabled
 
 linux32-tests:
     - cppunit

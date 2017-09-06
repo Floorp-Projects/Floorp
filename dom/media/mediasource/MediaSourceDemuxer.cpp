@@ -262,7 +262,7 @@ MediaSourceDemuxer::GetMozDebugReaderData(nsACString& aString)
       "\t\tAudio Track Buffer Details: NumSamples=%zu"
       " Size=%u Evictable=%u "
       "NextGetSampleIndex=%u NextInsertionIndex=%d\n",
-      mAudioTrack->mAudioTracks.mInfo->mMimeType.get(),
+      mAudioTrack->mType.Type().AsString().get(),
       mAudioTrack->mAudioTracks.mNextSampleTime.ToSeconds(),
       mAudioTrack->mAudioTracks.mBuffers[0].Length(),
       mAudioTrack->mAudioTracks.mSizeBuffer,
@@ -280,7 +280,7 @@ MediaSourceDemuxer::GetMozDebugReaderData(nsACString& aString)
       "\t\tVideo Track Buffer Details: NumSamples=%zu"
       " Size=%u Evictable=%u "
       "NextGetSampleIndex=%u NextInsertionIndex=%d\n",
-      mVideoTrack->mVideoTracks.mInfo->mMimeType.get(),
+      mVideoTrack->mType.Type().AsString().get(),
       mVideoTrack->mVideoTracks.mNextSampleTime.ToSeconds(),
       mVideoTrack->mVideoTracks.mBuffers[0].Length(),
       mVideoTrack->mVideoTracks.mSizeBuffer,

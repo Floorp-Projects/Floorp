@@ -43,16 +43,10 @@ public:
   virtual nsIFrame* GetFrameForPoint(const gfxPoint& aPoint) override;
 
   // nsSVGContainerFrame methods:
-  virtual gfxMatrix GetCanvasTM() override;
-
   virtual bool HasChildrenOnlyTransform(Matrix *aTransform) const override;
 
   // nsISVGSVGFrame interface:
   virtual void NotifyViewportOrTransformChanged(uint32_t aFlags) override;
-
-protected:
-
-  nsAutoPtr<gfxMatrix> mCanvasTM;
 };
 
 #endif // __NS_SVGVIEWPORTFRAME_H__

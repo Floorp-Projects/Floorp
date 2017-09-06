@@ -553,7 +553,7 @@ These should match what Safari and other Apple applications use on OS X Lion. --
 <!ENTITY bookmarkThisLinkCmd.accesskey  "L">
 <!ENTITY bookmarkThisFrameCmd.label      "Bookmark This Frame">
 <!ENTITY bookmarkThisFrameCmd.accesskey  "m">
-<!ENTITY copyLinkCmd.label             "Copy Link">
+<!ENTITY copyURLCmd.label             "Copy URL">
 <!ENTITY copyURLFeedback.label        "Copied!">
 <!ENTITY emailPageCmd.label           "Email Link…">
 <!ENTITY emailPageCmd.accesskey       "E">
@@ -974,7 +974,7 @@ you can use these alternative items. Otherwise, their values should be empty.  -
 <!ENTITY pageAction.addToUrlbar.label "Add to Address Bar">
 <!ENTITY pageAction.removeFromUrlbar.label "Remove from Address Bar">
 
-<!ENTITY sendTabToDevice.label "Send Tab to Device">
+<!ENTITY sendToDevice.label3 "Send Page to Device">
 <!ENTITY sendToDevice.syncNotReady.label "Syncing Devices…">
 
 <!ENTITY libraryButton.tooltip "View history, saved bookmarks, and more">

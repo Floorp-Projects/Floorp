@@ -1973,6 +1973,7 @@ Toolbox.prototype = {
     front.setBoolPref(DISABLE_AUTOHIDE_PREF, toggledValue);
 
     this.autohideButton.isChecked = toggledValue;
+    this._autohideHasBeenToggled = true;
   }),
 
   _isDisableAutohideEnabled: Task.async(function* () {
@@ -2716,6 +2717,13 @@ Toolbox.prototype = {
     if (!this._preferenceFront) {
       return;
     }
+
+    // Only reset the autohide pref in the Browser Toolbox if it's been toggled
+    // in the UI (don't reset the pref if it was already set before opening)
+    if (this._autohideHasBeenToggled) {
+      yield this._preferenceFront.clearUserPref(DISABLE_AUTOHIDE_PREF);
+    }
+
     this._preferenceFront.destroy();
     this._preferenceFront = null;
   }),

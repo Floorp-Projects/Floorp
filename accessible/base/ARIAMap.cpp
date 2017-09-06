@@ -1215,7 +1215,7 @@ static const EStateRule sWAIUnivStateMap[] = {
   eARIACurrent,
   eARIADisabled,
   eARIAExpanded,  // Currently under spec review but precedent exists
-  eARIAHasPopup,  // Note this is technically a "property"
+  eARIAHasPopup,  // Note this is a tokenised attribute starting in ARIA 1.1
   eARIAInvalid,
   eARIAModal,
   eARIARequired,  // XXX not global, Bug 553117
@@ -1248,7 +1248,7 @@ static const AttrCharacteristics gWAIUnivAttrMap[] = {
   {&nsGkAtoms::aria_expanded,          ATTR_BYPASSOBJ | ATTR_VALTOKEN               },
   {&nsGkAtoms::aria_flowto,            ATTR_BYPASSOBJ                 | ATTR_GLOBAL },
   {&nsGkAtoms::aria_grabbed,                            ATTR_VALTOKEN | ATTR_GLOBAL },
-  {&nsGkAtoms::aria_haspopup,          ATTR_BYPASSOBJ | ATTR_VALTOKEN | ATTR_GLOBAL },
+  {&nsGkAtoms::aria_haspopup,          ATTR_BYPASSOBJ_IF_FALSE | ATTR_VALTOKEN | ATTR_GLOBAL },
   {&nsGkAtoms::aria_hidden,            ATTR_BYPASSOBJ | ATTR_VALTOKEN | ATTR_GLOBAL }, /* handled special way */
   {&nsGkAtoms::aria_invalid,           ATTR_BYPASSOBJ | ATTR_VALTOKEN | ATTR_GLOBAL },
   {&nsGkAtoms::aria_label,             ATTR_BYPASSOBJ                 | ATTR_GLOBAL },

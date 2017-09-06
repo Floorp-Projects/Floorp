@@ -187,8 +187,6 @@ protected:
   // subtree if we were to use a list (see bug 381285 comment 20).
   nsAutoPtr<nsTHashtable<nsPtrHashKey<nsSVGForeignObjectFrame> > > mForeignObjectHash;
 
-  nsAutoPtr<gfxMatrix> mCanvasTM;
-
   nsRegion mInvalidRegion;
 
   float mFullZoom;

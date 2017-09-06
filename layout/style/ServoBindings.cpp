@@ -1334,6 +1334,12 @@ Gecko_nsFont_Destroy(nsFont* aDest)
   aDest->~nsFont();
 }
 
+gfxFontFeatureValueSet*
+Gecko_ConstructFontFeatureValueSet()
+{
+  return new gfxFontFeatureValueSet();
+}
+
 nsTArray<unsigned int>*
 Gecko_AppendFeatureValueHashEntry(gfxFontFeatureValueSet* aFontFeatureValues,
                                   nsIAtom* aFamily, uint32_t aAlternate, nsIAtom* aName)

@@ -125,11 +125,6 @@ nsSVGViewportFrame::NotifySVGChanged(uint32_t aFlags)
     }
   }
 
-  if (aFlags & TRANSFORM_CHANGED) {
-    // make sure our cached transform matrix gets (lazily) updated
-    mCanvasTM = nullptr;
-  }
-
   nsSVGDisplayContainerFrame::NotifySVGChanged(aFlags);
 }
 
@@ -276,22 +271,6 @@ nsSVGViewportFrame::NotifyViewportOrTransformChanged(uint32_t aFlags)
 
 //----------------------------------------------------------------------
 // nsSVGContainerFrame methods:
-
-gfxMatrix
-nsSVGViewportFrame::GetCanvasTM()
-{
-  if (!mCanvasTM) {
-    NS_ASSERTION(GetParent(), "null parent");
-
-    nsSVGContainerFrame *parent = static_cast<nsSVGContainerFrame*>(GetParent());
-    SVGViewportElement *content = static_cast<SVGViewportElement*>(GetContent());
-
-    gfxMatrix tm = content->PrependLocalTransformsTo(parent->GetCanvasTM());
-
-    mCanvasTM = new gfxMatrix(tm);
-  }
-  return *mCanvasTM;
-}
 
 bool
 nsSVGViewportFrame::HasChildrenOnlyTransform(gfx::Matrix *aTransform) const

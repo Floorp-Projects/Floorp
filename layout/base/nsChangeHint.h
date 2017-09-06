@@ -238,6 +238,12 @@ enum nsChangeHint : uint32_t {
    */
   nsChangeHint_UpdateWidgetProperties = 1 << 29,
 
+  /**
+   *  Indicates that there has been a colspan or rowspan attribute change
+   *  on the cells of a table.
+   */
+  nsChangeHint_UpdateTableCellSpans = 1 << 30,
+
   // IMPORTANT NOTE: When adding a new hint, you will need to add it to
   // one of:
   //
@@ -253,7 +259,7 @@ enum nsChangeHint : uint32_t {
   /**
    * Dummy hint value for all hints. It exists for compile time check.
    */
-  nsChangeHint_AllHints = (1 << 30) - 1,
+  nsChangeHint_AllHints = (1u << 31) - 1,
 };
 
 // Redefine these operators to return nothing. This will catch any use
@@ -353,6 +359,7 @@ inline nsChangeHint operator^=(nsChangeHint& aLeft, nsChangeHint aRight)
   nsChangeHint_UpdateOverflow |                            \
   nsChangeHint_UpdateParentOverflow |                      \
   nsChangeHint_UpdatePostTransformOverflow |               \
+  nsChangeHint_UpdateTableCellSpans |                          \
   nsChangeHint_UpdateTransformLayer |                      \
   nsChangeHint_UpdateUsesOpacity |                         \
   nsChangeHint_AddOrRemoveTransform |                      \
