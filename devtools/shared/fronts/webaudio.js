@@ -11,7 +11,8 @@ const {
   NODE_ROUTING_METHODS,
 } = require("devtools/shared/specs/webaudio");
 const protocol = require("devtools/shared/protocol");
-const AUDIO_NODE_DEFINITION = require("devtools/server/actors/utils/audionodes.json");
+loader.lazyRequireGetter(this, "AUDIO_NODE_DEFINITION",
+  "devtools/server/actors/utils/audionodes.json");
 
 /**
  * The corresponding Front object for the AudioNodeActor.
