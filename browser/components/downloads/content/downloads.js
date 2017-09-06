@@ -68,6 +68,8 @@ Cu.import("resource://gre/modules/XPCOMUtils.jsm");
 
 XPCOMUtils.defineLazyModuleGetter(this, "DownloadsViewUI",
                                   "resource:///modules/DownloadsViewUI.jsm");
+XPCOMUtils.defineLazyModuleGetter(this, "DownloadsSubview",
+                                  "resource:///modules/DownloadsSubview.jsm");
 XPCOMUtils.defineLazyModuleGetter(this, "FileUtils",
                                   "resource://gre/modules/FileUtils.jsm");
 XPCOMUtils.defineLazyModuleGetter(this, "NetUtil",
