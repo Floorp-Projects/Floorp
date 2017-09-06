@@ -7,7 +7,6 @@
 "use strict";
 
 const {Task} = require("devtools/shared/task");
-const EventEmitter = require("devtools/shared/old-event-emitter");
 const {createNode, getCssPropertyName} =
   require("devtools/client/animationinspector/utils");
 const {Keyframes} = require("devtools/client/animationinspector/components/keyframes");
@@ -25,8 +24,6 @@ const L10N =
  * @param {Object} serverTraits The list of server-side capabilities.
  */
 function AnimationDetails(serverTraits) {
-  EventEmitter.decorate(this);
-
   this.keyframeComponents = [];
   this.serverTraits = serverTraits;
 }
