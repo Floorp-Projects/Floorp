@@ -1652,6 +1652,7 @@ class MOZ_STACK_CLASS ModuleValidator
     bool                  simdPresent_;
 
     // State used to build the AsmJSModule in finish():
+    ModuleEnvironment     env_;
     ModuleGenerator       mg_;
     MutableAsmJSMetadata  asmJSMetadata_;
 
@@ -1709,7 +1710,8 @@ class MOZ_STACK_CLASS ModuleValidator
     }
 
   public:
-    ModuleValidator(JSContext* cx, AsmJSParser& parser, ParseNode* moduleFunctionNode)
+    ModuleValidator(JSContext* cx, const CompileArgs& args, AsmJSParser& parser,
+                    ParseNode* moduleFunctionNode)
       : cx_(cx),
         parser_(parser),
         moduleFunctionNode_(moduleFunctionNode),
@@ -1730,7 +1732,8 @@ class MOZ_STACK_CLASS ModuleValidator
         arrayViews_(cx),
         atomicsPresent_(false),
         simdPresent_(false),
-        mg_(nullptr, nullptr),
+        env_(CompileMode::Once, Tier::Ion, DebugEnabled::False, ModuleKind::AsmJS),
+        mg_(args, &env_, nullptr, nullptr),
         errorString_(nullptr),
         errorOffset_(UINT32_MAX),
         errorOverRecursed_(false)
@@ -1855,35 +1858,17 @@ class MOZ_STACK_CLASS ModuleValidator
         if (!dummyFunction_)
             return false;
 
-        ScriptedCaller scriptedCaller;
-        if (parser_.ss->filename()) {
-            scriptedCaller.line = scriptedCaller.column = 0;  // unused
-            scriptedCaller.filename = DuplicateString(parser_.ss->filename());
-            if (!scriptedCaller.filename)
-                return false;
-        }
-
-        MutableCompileArgs args = cx_->new_<CompileArgs>();
-        if (!args || !args->initFromContext(cx_, Move(scriptedCaller)))
-            return false;
-
-        auto env = MakeUnique<ModuleEnvironment>(ModuleKind::AsmJS);
-        if (!env ||
-            !env->sigs.resize(AsmJSMaxTypes) ||
-            !env->funcSigs.resize(AsmJSMaxFuncs) ||
-            !env->funcImportGlobalDataOffsets.resize(AsmJSMaxImports) ||
-            !env->tables.resize(AsmJSMaxTables) ||
-            !env->asmJSSigToTableIndex.resize(AsmJSMaxTypes))
+        env_.minMemoryLength = RoundUpToNextValidAsmJSHeapLength(0);
+        if (!env_.sigs.resize(AsmJSMaxTypes) ||
+            !env_.funcSigs.resize(AsmJSMaxFuncs) ||
+            !env_.funcImportGlobalDataOffsets.resize(AsmJSMaxImports) ||
+            !env_.tables.resize(AsmJSMaxTables) ||
+            !env_.asmJSSigToTableIndex.resize(AsmJSMaxTypes))
         {
             return false;
         }
 
-        env->minMemoryLength = RoundUpToNextValidAsmJSHeapLength(0);
-
-        if (!mg_.init(Move(env), *args, CompileMode::Once, asmJSMetadata_.get()))
-            return false;
-
-        return true;
+        return mg_.init(asmJSMetadata_.get());
     }
 
     JSContext* cx() const                    { return cx_; }
@@ -2493,7 +2478,7 @@ IsSimdTuple(ModuleValidator& m, ParseNode* pn, SimdType* type)
 }
 
 static bool
-IsNumericLiteral(ModuleValidator& m, ParseNode* pn, bool* isSimd = nullptr);
+IsNumericLiteral(ModuleValidator& m, ParseNode* pn);
 
 static NumLit
 ExtractNumericLiteral(ModuleValidator& m, ParseNode* pn);
@@ -2544,16 +2529,9 @@ IsSimdLiteral(ModuleValidator& m, ParseNode* pn)
 }
 
 static bool
-IsNumericLiteral(ModuleValidator& m, ParseNode* pn, bool* isSimd)
+IsNumericLiteral(ModuleValidator& m, ParseNode* pn)
 {
-    if (IsNumericNonFloatLiteral(pn) || IsFloatLiteral(m, pn))
-        return true;
-    if (IsSimdLiteral(m, pn)) {
-        if (isSimd)
-            *isSimd = true;
-        return true;
-    }
-    return false;
+    return IsNumericNonFloatLiteral(pn) || IsFloatLiteral(m, pn) || IsSimdLiteral(m, pn);
 }
 
 // The JS grammar treats -42 as -(42) (i.e., with separate grammar
@@ -2963,13 +2941,6 @@ class MOZ_STACK_CLASS FunctionValidator
         MOZ_ASSERT(continuableStack_.empty());
         MOZ_ASSERT(breakLabels_.empty());
         MOZ_ASSERT(continueLabels_.empty());
-        for (auto iter = locals_.all(); !iter.empty(); iter.popFront()) {
-            if (iter.front().value().type.isSimd()) {
-                setUsesSimd();
-                break;
-            }
-        }
-
         return m_.mg().finishFuncDef(funcIndex, &fg_);
     }
 
@@ -2987,16 +2958,6 @@ class MOZ_STACK_CLASS FunctionValidator
 
     bool failName(ParseNode* pn, const char* fmt, PropertyName* name) {
         return m_.failName(pn, fmt, name);
-    }
-
-    /***************************************************** Attributes */
-
-    void setUsesSimd() {
-        fg_.setUsesSimd();
-    }
-
-    void setUsesAtomics() {
-        fg_.setUsesAtomics();
     }
 
     /***************************************************** Local scope setup */
@@ -3894,12 +3855,8 @@ IsLiteralOrConst(FunctionValidator& f, ParseNode* pn, NumLit* lit)
         return true;
     }
 
-    bool isSimd = false;
-    if (!IsNumericLiteral(f.m(), pn, &isSimd))
+    if (!IsNumericLiteral(f.m(), pn))
         return false;
-
-    if (isSimd)
-        f.setUsesSimd();
 
     *lit = ExtractNumericLiteral(f.m(), pn);
     return true;
@@ -4709,8 +4666,6 @@ static bool
 CheckAtomicsBuiltinCall(FunctionValidator& f, ParseNode* callNode, AsmJSAtomicsBuiltinFunction func,
                         Type* type)
 {
-    f.setUsesAtomics();
-
     switch (func) {
       case AsmJSAtomicsBuiltin_compareExchange:
         return CheckAtomicsCompareExchange(f, callNode, type);
@@ -5623,8 +5578,6 @@ static bool
 CheckSimdOperationCall(FunctionValidator& f, ParseNode* call, const ModuleValidator::Global* global,
                        Type* type)
 {
-    f.setUsesSimd();
-
     MOZ_ASSERT(global->isSimdOperation());
 
     SimdType opType = global->simdOperationType();
@@ -5719,8 +5672,6 @@ static bool
 CheckSimdCtorCall(FunctionValidator& f, ParseNode* call, const ModuleValidator::Global* global,
                   Type* type)
 {
-    f.setUsesSimd();
-
     MOZ_ASSERT(call->isKind(PNK_CALL));
 
     SimdType simdType = global->simdCtorType();
@@ -5858,10 +5809,7 @@ CheckCoercedCall(FunctionValidator& f, ParseNode* call, Type ret, Type* type)
     if (!CheckRecursionLimitDontReport(f.cx()))
         return f.m().failOverRecursed();
 
-    bool isSimd = false;
-    if (IsNumericLiteral(f.m(), call, &isSimd)) {
-        if (isSimd)
-            f.setUsesSimd();
+    if (IsNumericLiteral(f.m(), call)) {
         NumLit lit = ExtractNumericLiteral(f.m(), call);
         if (!f.writeConstExpr(lit))
             return false;
@@ -6411,12 +6359,8 @@ CheckExpr(FunctionValidator& f, ParseNode* expr, Type* type)
     if (!CheckRecursionLimitDontReport(f.cx()))
         return f.m().failOverRecursed();
 
-    bool isSimd = false;
-    if (IsNumericLiteral(f.m(), expr, &isSimd)) {
-        if (isSimd)
-            f.setUsesSimd();
+    if (IsNumericLiteral(f.m(), expr))
         return CheckNumericLiteral(f, expr, type);
-    }
 
     switch (expr->getKind()) {
       case PNK_NAME:        return CheckVarRef(f, expr, type);
@@ -7404,7 +7348,19 @@ CheckModule(JSContext* cx, AsmJSParser& parser, ParseNode* stmtList, unsigned* t
     ParseNode* moduleFunctionNode = parser.pc->functionBox()->functionNode;
     MOZ_ASSERT(moduleFunctionNode);
 
-    ModuleValidator m(cx, parser, moduleFunctionNode);
+    ScriptedCaller scriptedCaller;
+    if (parser.ss->filename()) {
+        scriptedCaller.line = scriptedCaller.column = 0;  // unused
+        scriptedCaller.filename = DuplicateString(parser.ss->filename());
+        if (!scriptedCaller.filename)
+            return nullptr;
+    }
+
+    MutableCompileArgs args = cx->new_<CompileArgs>();
+    if (!args || !args->initFromContext(cx, Move(scriptedCaller)))
+        return nullptr;
+
+    ModuleValidator m(cx, *args, parser, moduleFunctionNode);
     if (!m.init())
         return nullptr;
 
