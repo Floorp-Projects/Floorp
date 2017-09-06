@@ -411,9 +411,9 @@ Base64Encode(const nsAString& aBinary, nsAString& aBase64)
   return Base64EncodeHelper(aBinary, aBase64);
 }
 
-template<typename Decoder>
+template<typename T, typename U, typename Decoder>
 static bool
-Decode4to3(const char* aSrc, uint8_t* aDest, Decoder aToVal)
+Decode4to3(const T* aSrc, U* aDest, Decoder aToVal)
 {
   uint8_t w, x, y, z;
   if (!aToVal(aSrc[0], &w) ||
@@ -422,15 +422,15 @@ Decode4to3(const char* aSrc, uint8_t* aDest, Decoder aToVal)
       !aToVal(aSrc[3], &z)) {
     return false;
   }
-  aDest[0] = w << 2 | x >> 4;
-  aDest[1] = x << 4 | y >> 2;
-  aDest[2] = y << 6 | z;
+  aDest[0] = U(w << 2 | x >> 4);
+  aDest[1] = U(x << 4 | y >> 2);
+  aDest[2] = U(y << 6 | z);
   return true;
 }
 
-template<typename Decoder>
+template<typename T, typename U, typename Decoder>
 static bool
-Decode3to2(const char* aSrc, uint8_t* aDest, Decoder aToVal)
+Decode3to2(const T* aSrc, U* aDest, Decoder aToVal)
 {
   uint8_t w, x, y;
   if (!aToVal(aSrc[0], &w) ||
@@ -438,21 +438,21 @@ Decode3to2(const char* aSrc, uint8_t* aDest, Decoder aToVal)
       !aToVal(aSrc[2], &y)) {
     return false;
   }
-  aDest[0] = w << 2 | x >> 4;
-  aDest[1] = x << 4 | y >> 2;
+  aDest[0] = U(w << 2 | x >> 4);
+  aDest[1] = U(x << 4 | y >> 2);
   return true;
 }
 
-template<typename Decoder>
+template<typename T, typename U, typename Decoder>
 static bool
-Decode2to1(const char* aSrc, uint8_t* aDest, Decoder aToVal)
+Decode2to1(const T* aSrc, U* aDest, Decoder aToVal)
 {
   uint8_t w, x;
   if (!aToVal(aSrc[0], &w) ||
       !aToVal(aSrc[1], &x)) {
     return false;
   }
-  aDest[0] = w << 2 | x >> 4;
+  aDest[0] = U(w << 2 | x >> 4);
   return true;
 }
 
