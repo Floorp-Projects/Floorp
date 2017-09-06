@@ -95,7 +95,7 @@ with Files("test/touch/**"):
     BUG_COMPONENT = ("Firefox", "General")
 
 with Files("test/urlbar/**"):
-    BUG_COMPONENT = ("Firefox", "Location Bar")
+    BUG_COMPONENT = ("Firefox", "Address Bar")
 
 with Files("test/webextensions/**"):
     BUG_COMPONENT = ("Toolkit", "WebExtensions: Untriaged")
