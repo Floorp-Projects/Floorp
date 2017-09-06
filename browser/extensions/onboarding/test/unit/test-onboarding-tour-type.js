@@ -16,7 +16,6 @@ add_task(async function() {
     "tourset version should not change");
   do_check_eq(Preferences.get(PREF_SEEN_TOURSET_VERSION), TOURSET_VERSION,
     "seen tourset version should be set as the tourset version");
-  do_check_eq(Preferences.get(PREF_ONBOARDING_HIDDEN), false, "should show the user tour");
 });
 
 add_task(async function() {
@@ -24,7 +23,6 @@ add_task(async function() {
   resetOnboardingDefaultState();
   Preferences.set(PREF_TOUR_TYPE, "new");
   Preferences.set(PREF_SEEN_TOURSET_VERSION, TOURSET_VERSION);
-  Preferences.set(PREF_ONBOARDING_HIDDEN, false);
   OnboardingTourType.check();
 
   do_check_eq(Preferences.get(PREF_TOUR_TYPE), "new", "should show the new user tour");
@@ -32,7 +30,6 @@ add_task(async function() {
     "tourset version should not change";
   do_check_eq(Preferences.get(PREF_SEEN_TOURSET_VERSION), TOURSET_VERSION,
     "seen tourset version should be set as the tourset version");
-  do_check_eq(Preferences.get(PREF_ONBOARDING_HIDDEN), false, "should show the user tour");
 });
 
 add_task(async function() {
@@ -40,7 +37,6 @@ add_task(async function() {
   resetOnboardingDefaultState();
   Preferences.set(PREF_TOUR_TYPE, "new");
   Preferences.set(PREF_SEEN_TOURSET_VERSION, TOURSET_VERSION);
-  Preferences.set(PREF_ONBOARDING_HIDDEN, true);
   OnboardingTourType.check();
 
   do_check_eq(Preferences.get(PREF_TOUR_TYPE), "new", "should show the new user tour");
@@ -48,7 +44,6 @@ add_task(async function() {
     "tourset version should not change";
   do_check_eq(Preferences.get(PREF_SEEN_TOURSET_VERSION), TOURSET_VERSION,
     "seen tourset version should be set as the tourset version");
-  do_check_eq(Preferences.get(PREF_ONBOARDING_HIDDEN), true, "should hide the user tour");
 });
 
 add_task(async function() {
@@ -57,7 +52,6 @@ add_task(async function() {
   Preferences.set(PREF_TOURSET_VERSION, NEXT_TOURSET_VERSION);
   Preferences.set(PREF_TOUR_TYPE, "new");
   Preferences.set(PREF_SEEN_TOURSET_VERSION, TOURSET_VERSION);
-  Preferences.set(PREF_ONBOARDING_HIDDEN, false);
   OnboardingTourType.check();
 
   do_check_eq(Preferences.get(PREF_TOUR_TYPE), "update", "should show the update user tour");
@@ -65,7 +59,6 @@ add_task(async function() {
     "tourset version should not change";
   do_check_eq(Preferences.get(PREF_SEEN_TOURSET_VERSION), NEXT_TOURSET_VERSION,
     "seen tourset version should be set as the tourset version");
-  do_check_eq(Preferences.get(PREF_ONBOARDING_HIDDEN), false, "should show the user tour");
 });
 
 add_task(async function() {
@@ -74,7 +67,6 @@ add_task(async function() {
   Preferences.set(PREF_TOURSET_VERSION, NEXT_TOURSET_VERSION);
   Preferences.set(PREF_TOUR_TYPE, "new");
   Preferences.set(PREF_SEEN_TOURSET_VERSION, TOURSET_VERSION);
-  Preferences.set(PREF_ONBOARDING_HIDDEN, true);
   OnboardingTourType.check();
 
   do_check_eq(Preferences.get(PREF_TOUR_TYPE), "update", "should show the update user tour");
@@ -82,7 +74,6 @@ add_task(async function() {
     "tourset version should not change";
   do_check_eq(Preferences.get(PREF_SEEN_TOURSET_VERSION), NEXT_TOURSET_VERSION,
     "seen tourset version should be set as the tourset version");
-  do_check_eq(Preferences.get(PREF_ONBOARDING_HIDDEN), false, "should show the user tour");
 });
 
 add_task(async function() {
@@ -95,5 +86,4 @@ add_task(async function() {
     "tourset version should not change";
   do_check_eq(Preferences.get(PREF_SEEN_TOURSET_VERSION), TOURSET_VERSION,
     "seen tourset version should be set as the tourset version");
-  do_check_eq(Preferences.get(PREF_ONBOARDING_HIDDEN), false, "should show the user tour");
 });

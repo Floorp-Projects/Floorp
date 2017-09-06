@@ -73,6 +73,11 @@ SourceMapURLService.prototype.destroy = function () {
  * A helper function that is called when a new source is available.
  */
 SourceMapURLService.prototype._onSourceUpdated = function (_, sourceEvent) {
+  // Maybe we were shut down while waiting.
+  if (!this._urls) {
+    return;
+  }
+
   let { source } = sourceEvent;
   let { generatedUrl, url, actor: id, sourceMapURL } = source;
 

@@ -26,9 +26,9 @@ class MozillaBuildBootstrapper(BaseBootstrapper):
         try:
             rustup_init = tempfile.gettempdir() + '/rustup-init.exe'
             self.http_download_and_save(
-                    'https://static.rust-lang.org/rustup/archive/0.2.0/i686-pc-windows-msvc/rustup-init.exe',
+                    'https://static.rust-lang.org/rustup/archive/1.6.0/i686-pc-windows-msvc/rustup-init.exe',
                     rustup_init,
-                    'a45ab7462b567dacddaf6e9e48bb43a1b9c1db4404ba77868f7d6fc685282a46')
+                    '9855b9f0b19fd83c056185e083b6b345982becc2f8c608aac14998a73bcc2937')
             self.run([rustup_init, '--no-modify-path', '--default-host',
                 'x86_64-pc-windows-msvc', '--default-toolchain', 'stable', '-y'])
             mozillabuild_dir = os.environ['MOZILLABUILD']

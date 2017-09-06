@@ -277,14 +277,16 @@ function isToolbarVisible(aToolbar) {
  *        A function to be used to wait for pending work when the dialog is
  *        closing. It is passed the dialog window handle and should return a promise.
  */
-var withBookmarksDialog = async function(autoCancel, openFn, taskFn, closeFn) {
+var withBookmarksDialog = async function(autoCancel, openFn, taskFn, closeFn,
+                                         dialogUrl = "chrome://browser/content/places/bookmarkProperties",
+                                         skipOverlayWait = false) {
   let closed = false;
   let dialogPromise = new Promise(resolve => {
     Services.ww.registerNotification(function winObserver(subject, topic, data) {
       if (topic == "domwindowopened") {
         let win = subject.QueryInterface(Ci.nsIDOMWindow);
         win.addEventListener("load", function() {
-          ok(win.location.href.startsWith("chrome://browser/content/places/bookmarkProperties"),
+          ok(win.location.href.startsWith(dialogUrl),
              "The bookmark properties dialog is open");
           // This is needed for the overlay.
           waitForFocus(() => {
@@ -306,9 +308,11 @@ var withBookmarksDialog = async function(autoCancel, openFn, taskFn, closeFn) {
   let dialogWin = await dialogPromise;
 
   // Ensure overlay is loaded
-  info("waiting for the overlay to be loaded");
-  await waitForCondition(() => dialogWin.gEditItemOverlay.initialized,
-                         "EditItemOverlay should be initialized");
+  if (!skipOverlayWait) {
+    info("waiting for the overlay to be loaded");
+    await waitForCondition(() => dialogWin.gEditItemOverlay.initialized,
+                           "EditItemOverlay should be initialized");
+  }
 
   // Check the first textbox is focused.
   let doc = dialogWin.document;
@@ -329,10 +333,13 @@ var withBookmarksDialog = async function(autoCancel, openFn, taskFn, closeFn) {
   try {
     await taskFn(dialogWin);
   } finally {
+    if (!closed && !autoCancel) {
+      // Give the dialog a little time to close itself in the manually closing
+      // case.
+      await BrowserTestUtils.waitForCondition(() => closed,
+        "The test should have closed the dialog!");
+    }
     if (!closed) {
-      if (!autoCancel) {
-        ok(false, "The test should have closed the dialog!");
-      }
       info("withBookmarksDialog: canceling the dialog");
 
       doc.documentElement.cancelDialog();
