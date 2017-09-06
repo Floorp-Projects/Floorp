@@ -88,6 +88,8 @@ VRDisplayHost::RemoveLayer(VRLayerParent *aLayer)
 void
 VRDisplayHost::StartFrame()
 {
+  AutoProfilerTracing tracing("VR", "GetSensorState");
+
   mLastFrameStart = TimeStamp::Now();
   ++mDisplayInfo.mFrameId;
   mDisplayInfo.mLastSensorState[mDisplayInfo.mFrameId % kVRMaxLatencyFrames] = GetSensorState();
@@ -163,6 +165,8 @@ VRDisplayHost::SubmitFrame(VRLayerParent* aLayer, PTextureParent* aTexture,
                            const gfx::Rect& aLeftEyeRect,
                            const gfx::Rect& aRightEyeRect)
 {
+  AutoProfilerTracing tracing("VR", "SubmitFrameAtVRDisplayHost");
+
   if ((mDisplayInfo.mGroupMask & aLayer->GetGroup()) == 0) {
     // Suppress layers hidden by the group mask
     return;
