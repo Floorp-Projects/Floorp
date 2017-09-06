@@ -298,9 +298,11 @@ Zone::hasMarkedCompartments()
 bool
 Zone::canCollect()
 {
-    // Zones cannot be collected while in use by other threads.
-    if (usedByHelperThread())
+    // Zones that will be or are currently used by other threads cannot be
+    // collected.
+    if (!isAtomsZone() && group()->createdForHelperThread())
         return false;
+
     JSRuntime* rt = runtimeFromAnyThread();
     if (isAtomsZone() && rt->hasHelperThreadZones())
         return false;
