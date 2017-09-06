@@ -102,6 +102,7 @@ StackingContextHelper::StackingContextHelper(const StackingContextHelper& aParen
     mTransform.PostScale(aParentSC.mXScale, aParentSC.mYScale, 1.0);
     mTransform.NudgeToIntegersFixedEpsilon();
 
+    // Calculate the correct scale for current stacking context
     gfx::Size scale = mTransform.As2D().ScaleFactors(true);
 
     // Restore the scale to default if the scale is too small
@@ -112,7 +113,7 @@ StackingContextHelper::StackingContextHelper(const StackingContextHelper& aParen
 
     mTransform.PreScale(1.0f/scale.width, 1.0f/scale.height, 1.0);
 
-    // Store the inherited scale if has
+    // Store the inherited scale for child
     this->mXScale = scale.width;
     this->mYScale = scale.height;
   } else {
