@@ -1080,6 +1080,20 @@ class CGHeaders(CGWrapper):
                     if parent:
                         ancestors.append(parent)
         interfaceDeps.extend(ancestors)
+
+        # Include parent interface headers needed for jsonifier code.
+        jsonInterfaceParents = []
+        for desc in descriptors:
+            if not desc.operations['Jsonifier']:
+                continue
+            parent = desc.interface.parent
+            while parent:
+                parentDesc = desc.getDescriptor(parent.identifier.name)
+                if parentDesc.operations['Jsonifier']:
+                    jsonInterfaceParents.append(parentDesc.interface)
+                parent = parent.parent
+        interfaceDeps.extend(jsonInterfaceParents)
+
         bindingIncludes = set(self.getDeclarationFilename(d) for d in interfaceDeps)
 
         # Grab all the implementation declaration files we need.

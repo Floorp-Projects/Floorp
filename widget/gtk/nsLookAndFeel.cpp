@@ -29,11 +29,9 @@
 
 #include "mozilla/gfx/2D.h"
 
-#if MOZ_WIDGET_GTK != 2
 #include <cairo-gobject.h>
 #include "WidgetStyleCache.h"
 #include "prenv.h"
-#endif
 
 using mozilla::LookAndFeel;
 
@@ -49,9 +47,6 @@ using mozilla::LookAndFeel;
 
 nsLookAndFeel::nsLookAndFeel()
     : nsXPLookAndFeel(),
-#if (MOZ_WIDGET_GTK == 2)
-      mStyle(nullptr),
-#endif
       mDefaultFontCached(false), mButtonFontCached(false),
       mFieldFontCached(false), mMenuFontCached(false),
       mInitialized(false)
@@ -66,12 +61,8 @@ nsLookAndFeel::NativeInit()
 
 nsLookAndFeel::~nsLookAndFeel()
 {
-#if (MOZ_WIDGET_GTK == 2)
-    g_object_unref(mStyle);
-#endif
 }
 
-#if MOZ_WIDGET_GTK != 2
 // Modifies color |*aDest| as if a pattern of color |aSource| was painted with
 // CAIRO_OPERATOR_OVER to a surface with color |*aDest|.
 static void
@@ -228,42 +219,19 @@ GetBorderColors(GtkStyleContext* aContext,
     *aDarkColor = GDK_RGBA_TO_NS_RGBA(darkColor);
     return ret;
 }
-#endif
 
 nsresult
 nsLookAndFeel::NativeGetColor(ColorID aID, nscolor& aColor)
 {
     EnsureInit();
 
-#if (MOZ_WIDGET_GTK == 3)
     GdkRGBA gdk_color;
-#endif
     nsresult res = NS_OK;
 
     switch (aID) {
         // These colors don't seem to be used for anything anymore in Mozilla
         // (except here at least TextSelectBackground and TextSelectForeground)
         // The CSS2 colors below are used.
-#if (MOZ_WIDGET_GTK == 2)
-    case eColorID_WindowBackground:
-        aColor = GDK_COLOR_TO_NS_RGB(mStyle->base[GTK_STATE_NORMAL]);
-        break;
-    case eColorID_WindowForeground:
-        aColor = GDK_COLOR_TO_NS_RGB(mStyle->text[GTK_STATE_NORMAL]);
-        break;
-    case eColorID_WidgetBackground:
-        aColor = GDK_COLOR_TO_NS_RGB(mStyle->bg[GTK_STATE_NORMAL]);
-        break;
-    case eColorID_WidgetForeground:
-        aColor = GDK_COLOR_TO_NS_RGB(mStyle->fg[GTK_STATE_NORMAL]);
-        break;
-    case eColorID_WidgetSelectBackground:
-        aColor = GDK_COLOR_TO_NS_RGB(mStyle->bg[GTK_STATE_SELECTED]);
-        break;
-    case eColorID_WidgetSelectForeground:
-        aColor = GDK_COLOR_TO_NS_RGB(mStyle->fg[GTK_STATE_SELECTED]);
-        break;
-#else
     case eColorID_WindowBackground:
     case eColorID_WidgetBackground:
     case eColorID_TextBackground:
@@ -303,35 +271,12 @@ nsLookAndFeel::NativeGetColor(ColorID aID, nscolor& aColor)
     case eColorID__moz_html_cellhighlighttext:
         aColor = sTextSelectedText;
         break;
-#endif
     case eColorID_Widget3DHighlight:
         aColor = NS_RGB(0xa0,0xa0,0xa0);
         break;
     case eColorID_Widget3DShadow:
         aColor = NS_RGB(0x40,0x40,0x40);
         break;
-#if (MOZ_WIDGET_GTK == 2)
-    case eColorID_TextBackground:
-        // not used?
-        aColor = GDK_COLOR_TO_NS_RGB(mStyle->base[GTK_STATE_NORMAL]);
-        break;
-    case eColorID_TextForeground: 
-        // not used?
-        aColor = GDK_COLOR_TO_NS_RGB(mStyle->text[GTK_STATE_NORMAL]);
-        break;
-    case eColorID_TextSelectBackground:
-    case eColorID_IMESelectedRawTextBackground:
-    case eColorID_IMESelectedConvertedTextBackground:
-        // still used
-        aColor = GDK_COLOR_TO_NS_RGB(mStyle->base[GTK_STATE_SELECTED]);
-        break;
-    case eColorID_TextSelectForeground:
-    case eColorID_IMESelectedRawTextForeground:
-    case eColorID_IMESelectedConvertedTextForeground:
-        // still used
-        aColor = GDK_COLOR_TO_NS_RGB(mStyle->text[GTK_STATE_SELECTED]);
-        break;
-#endif
     case eColorID_IMERawInputBackground:
     case eColorID_IMEConvertedTextBackground:
         aColor = NS_TRANSPARENT;
@@ -352,53 +297,6 @@ nsLookAndFeel::NativeGetColor(ColorID aID, nscolor& aColor)
       aColor = NS_RGB(0xff, 0, 0);
       break;
 
-#if (MOZ_WIDGET_GTK == 2)
-        // css2  http://www.w3.org/TR/REC-CSS2/ui.html#system-colors
-    case eColorID_activeborder:
-        // active window border
-        aColor = GDK_COLOR_TO_NS_RGB(mStyle->bg[GTK_STATE_NORMAL]);
-        break;
-    case eColorID_activecaption:
-        // active window caption background
-        aColor = GDK_COLOR_TO_NS_RGB(mStyle->bg[GTK_STATE_NORMAL]);
-        break;
-    case eColorID_appworkspace:
-        // MDI background color
-        aColor = GDK_COLOR_TO_NS_RGB(mStyle->bg[GTK_STATE_NORMAL]);
-        break;
-    case eColorID_background:
-        // desktop background
-        aColor = GDK_COLOR_TO_NS_RGB(mStyle->bg[GTK_STATE_NORMAL]);
-        break;
-    case eColorID_captiontext:
-        // text in active window caption, size box, and scrollbar arrow box (!)
-        aColor = GDK_COLOR_TO_NS_RGB(mStyle->fg[GTK_STATE_NORMAL]);
-        break;
-    case eColorID_graytext:
-        // disabled text in windows, menus, etc.
-        aColor = GDK_COLOR_TO_NS_RGB(mStyle->fg[GTK_STATE_INSENSITIVE]);
-        break;
-    case eColorID_highlight:
-        // background of selected item
-        aColor = GDK_COLOR_TO_NS_RGB(mStyle->base[GTK_STATE_SELECTED]);
-        break;
-    case eColorID_highlighttext:
-        // text of selected item
-        aColor = GDK_COLOR_TO_NS_RGB(mStyle->text[GTK_STATE_SELECTED]);
-        break;
-    case eColorID_inactiveborder:
-        // inactive window border
-        aColor = GDK_COLOR_TO_NS_RGB(mStyle->bg[GTK_STATE_NORMAL]);
-        break;
-    case eColorID_inactivecaption:
-        // inactive window caption
-        aColor = GDK_COLOR_TO_NS_RGB(mStyle->bg[GTK_STATE_INSENSITIVE]);
-        break;
-    case eColorID_inactivecaptiontext:
-        // text in inactive window caption
-        aColor = GDK_COLOR_TO_NS_RGB(mStyle->fg[GTK_STATE_INSENSITIVE]);
-        break;
-#else
         // css2  http://www.w3.org/TR/REC-CSS2/ui.html#system-colors
     case eColorID_activeborder: {
         // active window border
@@ -433,7 +331,6 @@ nsLookAndFeel::NativeGetColor(ColorID aID, nscolor& aColor)
         ReleaseStyleContext(style);
         break;
     }
-#endif
     case eColorID_infobackground:
         // tooltip background color
         aColor = sInfoBackground;
@@ -452,11 +349,7 @@ nsLookAndFeel::NativeGetColor(ColorID aID, nscolor& aColor)
         break;
     case eColorID_scrollbar:
         // scrollbar gray area
-#if (MOZ_WIDGET_GTK == 2)
-        aColor = GDK_COLOR_TO_NS_RGB(mStyle->bg[GTK_STATE_ACTIVE]);
-#else
         aColor = sMozScrollbar;
-#endif
         break;
 
     case eColorID_threedlightshadow:
@@ -465,11 +358,7 @@ nsLookAndFeel::NativeGetColor(ColorID aID, nscolor& aColor)
     case eColorID_threedface:
     case eColorID_buttonface:
         // 3-D face color
-#if (MOZ_WIDGET_GTK == 3)
         aColor = sMozWindowBackground;
-#else
-        aColor = sButtonBackground;
-#endif
         break;
 
     case eColorID_buttontext:
@@ -491,56 +380,6 @@ nsLookAndFeel::NativeGetColor(ColorID aID, nscolor& aColor)
         aColor = sFrameInnerDarkBorder;
         break;
 
-#if (MOZ_WIDGET_GTK == 2)
-    case eColorID_threeddarkshadow:
-        // 3-D shadow outer edge color
-        aColor = GDK_COLOR_TO_NS_RGB(mStyle->black);
-        break;
-
-    case eColorID_window:
-    case eColorID_windowframe:
-        aColor = GDK_COLOR_TO_NS_RGB(mStyle->bg[GTK_STATE_NORMAL]);
-        break;
-
-    case eColorID_windowtext:
-        aColor = GDK_COLOR_TO_NS_RGB(mStyle->fg[GTK_STATE_NORMAL]);
-        break;
-
-    case eColorID__moz_eventreerow:
-    case eColorID__moz_field:
-        aColor = GDK_COLOR_TO_NS_RGB(mStyle->base[GTK_STATE_NORMAL]);
-        break;
-    case eColorID__moz_fieldtext:
-        aColor = GDK_COLOR_TO_NS_RGB(mStyle->text[GTK_STATE_NORMAL]);
-        break;
-    case eColorID__moz_dialog:
-        aColor = GDK_COLOR_TO_NS_RGB(mStyle->bg[GTK_STATE_NORMAL]);
-        break;
-    case eColorID__moz_dialogtext:
-        aColor = GDK_COLOR_TO_NS_RGB(mStyle->fg[GTK_STATE_NORMAL]);
-        break;
-    case eColorID__moz_dragtargetzone:
-        aColor = GDK_COLOR_TO_NS_RGB(mStyle->bg[GTK_STATE_SELECTED]);
-        break; 
-    case eColorID__moz_buttondefault:
-        // default button border color
-        aColor = GDK_COLOR_TO_NS_RGB(mStyle->black);
-        break;
-    case eColorID__moz_buttonhoverface:
-        aColor = GDK_COLOR_TO_NS_RGB(mStyle->bg[GTK_STATE_PRELIGHT]);
-        break;
-    case eColorID__moz_buttonhovertext:
-        aColor = GDK_COLOR_TO_NS_RGB(mStyle->fg[GTK_STATE_PRELIGHT]);
-        break;
-    case eColorID__moz_cellhighlight:
-    case eColorID__moz_html_cellhighlight:
-        aColor = GDK_COLOR_TO_NS_RGB(mStyle->base[GTK_STATE_ACTIVE]);
-        break;
-    case eColorID__moz_cellhighlighttext:
-    case eColorID__moz_html_cellhighlighttext:
-        aColor = GDK_COLOR_TO_NS_RGB(mStyle->text[GTK_STATE_ACTIVE]);
-        break;
-#else
     case eColorID_threeddarkshadow:
         // Hardcode to black
         aColor = NS_RGB(0x00,0x00,0x00);
@@ -574,7 +413,6 @@ nsLookAndFeel::NativeGetColor(ColorID aID, nscolor& aColor)
     case eColorID__moz_buttonhovertext:
         aColor = sButtonHoverText;
         break;
-#endif
     case eColorID__moz_menuhover:
         aColor = sMenuHover;
         break;
@@ -590,11 +428,6 @@ nsLookAndFeel::NativeGetColor(ColorID aID, nscolor& aColor)
     case eColorID__moz_comboboxtext:
         aColor = sComboBoxText;
         break;
-#if (MOZ_WIDGET_GTK == 2)
-    case eColorID__moz_combobox:
-        aColor = sComboBoxBackground;
-        break;
-#endif
     case eColorID__moz_menubartext:
         aColor = sMenuBarText;
         break;
@@ -602,11 +435,7 @@ nsLookAndFeel::NativeGetColor(ColorID aID, nscolor& aColor)
         aColor = sMenuBarHoverText;
         break;
     case eColorID__moz_gtk_info_bar_text:
-#if (MOZ_WIDGET_GTK == 3)
         aColor = sInfoBarText;
-#else
-        aColor = sInfoText;
-#endif
         break;
     default:
         /* default color is BLACK */
@@ -617,27 +446,6 @@ nsLookAndFeel::NativeGetColor(ColorID aID, nscolor& aColor)
 
     return res;
 }
-
-#if (MOZ_WIDGET_GTK == 2)
-static void darken_gdk_color(GdkColor *src, GdkColor *dest)
-{
-    gdouble red;
-    gdouble green;
-    gdouble blue;
-
-    red = (gdouble) src->red / 65535.0;
-    green = (gdouble) src->green / 65535.0;
-    blue = (gdouble) src->blue / 65535.0;
-
-    red *= 0.93;
-    green *= 0.93;
-    blue *= 0.93;
-
-    dest->red = red * 65535.0;
-    dest->green = green * 65535.0;
-    dest->blue = blue * 65535.0;
-}
-#endif
 
 static int32_t CheckWidgetStyle(GtkWidget* aWidget, const char* aStyle, int32_t aResult) {
     gboolean value = FALSE;
@@ -826,13 +634,7 @@ nsLookAndFeel::GetIntImpl(IntID aID, int32_t &aResult)
         res = NS_ERROR_NOT_IMPLEMENTED;
         break;
     case eIntID_TouchEnabled:
-#if MOZ_WIDGET_GTK == 3
         aResult = mozilla::widget::WidgetUtils::IsTouchDeviceSupportPresent();
-        break;
-#else
-        aResult = 0;
-        res = NS_ERROR_NOT_IMPLEMENTED;
-#endif
         break;
     case eIntID_MacGraphiteTheme:
         aResult = 0;
@@ -905,23 +707,19 @@ nsLookAndFeel::GetFloatImpl(FloatID aID, float &aResult)
 }
 
 static void
-GetSystemFontInfo(GtkWidget *aWidget,
+GetSystemFontInfo(GtkStyleContext *aStyle,
                   nsString *aFontName,
                   gfxFontStyle *aFontStyle)
 {
-    GtkSettings *settings = gtk_widget_get_settings(aWidget);
-
     aFontStyle->style       = NS_FONT_STYLE_NORMAL;
 
-    gchar *fontname;
-    g_object_get(settings, "gtk-font-name", &fontname, nullptr);
-
+    // As in
+    // https://git.gnome.org/browse/gtk+/tree/gtk/gtkwidget.c?h=3.22.19#n10333
     PangoFontDescription *desc;
-    desc = pango_font_description_from_string(fontname);
+    gtk_style_context_get(aStyle, gtk_style_context_get_state(aStyle),
+                          "font", &desc, nullptr);
 
     aFontStyle->systemFont = true;
-
-    g_free(fontname);
 
     NS_NAMED_LITERAL_STRING(quote, "\"");
     NS_ConvertUTF8toUTF16 family(pango_font_description_get_family(desc));
@@ -953,96 +751,28 @@ GetSystemFontInfo(GtkWidget *aWidget,
     pango_font_description_free(desc);
 }
 
-static void
-GetSystemFontInfo(LookAndFeel::FontID aID,
-                  nsString *aFontName,
-                  gfxFontStyle *aFontStyle)
-{
-    if (aID == LookAndFeel::eFont_Widget) {
-        GtkWidget *label = gtk_label_new("M");
-        GtkWidget *parent = gtk_fixed_new();
-        GtkWidget *window = gtk_window_new(GTK_WINDOW_POPUP);
-
-        gtk_container_add(GTK_CONTAINER(parent), label);
-        gtk_container_add(GTK_CONTAINER(window), parent);
-
-        gtk_widget_ensure_style(label);
-        GetSystemFontInfo(label, aFontName, aFontStyle);
-        gtk_widget_destroy(window);  // no unref, windows are different
-
-    } else if (aID == LookAndFeel::eFont_Button) {
-        GtkWidget *label = gtk_label_new("M");
-        GtkWidget *parent = gtk_fixed_new();
-        GtkWidget *button = gtk_button_new();
-        GtkWidget *window = gtk_window_new(GTK_WINDOW_POPUP);
-
-        gtk_container_add(GTK_CONTAINER(button), label);
-        gtk_container_add(GTK_CONTAINER(parent), button);
-        gtk_container_add(GTK_CONTAINER(window), parent);
-
-        gtk_widget_ensure_style(label);
-        GetSystemFontInfo(label, aFontName, aFontStyle);
-        gtk_widget_destroy(window);  // no unref, windows are different
-
-    } else if (aID == LookAndFeel::eFont_Field) {
-        GtkWidget *entry = gtk_entry_new();
-        GtkWidget *parent = gtk_fixed_new();
-        GtkWidget *window = gtk_window_new(GTK_WINDOW_POPUP);
-
-        gtk_container_add(GTK_CONTAINER(parent), entry);
-        gtk_container_add(GTK_CONTAINER(window), parent);
-
-        gtk_widget_ensure_style(entry);
-        GetSystemFontInfo(entry, aFontName, aFontStyle);
-        gtk_widget_destroy(window);  // no unref, windows are different
-
-    } else {
-        MOZ_ASSERT(aID == LookAndFeel::eFont_Menu, "unexpected font ID");
-        GtkWidget *accel_label = gtk_accel_label_new("M");
-        GtkWidget *menuitem = gtk_menu_item_new();
-        GtkWidget *menu = gtk_menu_new();
-        g_object_ref_sink(menu);
-
-        gtk_container_add(GTK_CONTAINER(menuitem), accel_label);
-        gtk_menu_shell_append((GtkMenuShell *)GTK_MENU(menu), menuitem);
-
-        gtk_widget_ensure_style(accel_label);
-        GetSystemFontInfo(accel_label, aFontName, aFontStyle);
-        g_object_unref(menu);
-    }
-}
-
 bool
 nsLookAndFeel::GetFontImpl(FontID aID, nsString& aFontName,
                            gfxFontStyle& aFontStyle,
                            float aDevPixPerCSSPixel)
 {
-  nsString *cachedFontName = nullptr;
-  gfxFontStyle *cachedFontStyle = nullptr;
-  bool *isCached = nullptr;
-
   switch (aID) {
     case eFont_Menu:         // css2
     case eFont_PullDownMenu: // css3
-      cachedFontName = &mMenuFontName;
-      cachedFontStyle = &mMenuFontStyle;
-      isCached = &mMenuFontCached;
-      aID = eFont_Menu;
-      break;
+      aFontName = mMenuFontName;
+      aFontStyle = mMenuFontStyle;
+      return true;
 
     case eFont_Field:        // css3
     case eFont_List:         // css3
-      cachedFontName = &mFieldFontName;
-      cachedFontStyle = &mFieldFontStyle;
-      isCached = &mFieldFontCached;
-      aID = eFont_Field;
-      break;
+      aFontName = mFieldFontName;
+      aFontStyle = mFieldFontStyle;
+      return true;
 
     case eFont_Button:       // css3
-      cachedFontName = &mButtonFontName;
-      cachedFontStyle = &mButtonFontStyle;
-      isCached = &mButtonFontCached;
-      break;
+      aFontName = mButtonFontName;
+      aFontStyle = mButtonFontStyle;
+      return true;
 
     case eFont_Caption:      // css2
     case eFont_Icon:         // css2
@@ -1057,21 +787,11 @@ nsLookAndFeel::GetFontImpl(FontID aID, nsString& aFontName,
     case eFont_Dialog:       // css3
     case eFont_Tooltips:     // moz
     case eFont_Widget:       // moz
-      cachedFontName = &mDefaultFontName;
-      cachedFontStyle = &mDefaultFontStyle;
-      isCached = &mDefaultFontCached;
-      aID = eFont_Widget;
-      break;
+    default:
+      aFontName = mDefaultFontName;
+      aFontStyle = mDefaultFontStyle;
+      return true;
   }
-
-  if (!*isCached) {
-    GetSystemFontInfo(aID, cachedFontName, cachedFontStyle);
-    *isCached = true;
-  }
-
-  aFontName = *cachedFontName;
-  aFontStyle = *cachedFontStyle;
-  return true;
 }
 
 void
@@ -1087,70 +807,6 @@ nsLookAndFeel::EnsureInit()
     // gtk does non threadsafe refcounting
     MOZ_ASSERT(NS_IsMainThread());
 
-#if (MOZ_WIDGET_GTK == 2)
-    NS_ASSERTION(!mStyle, "already initialized");
-    // GtkInvisibles come with a refcount that is not floating
-    // (since their initialization code calls g_object_ref_sink) and
-    // their destroy code releases that reference (which means they
-    // have to be explicitly destroyed, since calling unref enough
-    // to cause destruction would lead to *another* unref).
-    // However, this combination means that it's actually still ok
-    // to use the normal pattern, which is to g_object_ref_sink
-    // after construction, and then destroy *and* unref when we're
-    // done.  (Though we could skip the g_object_ref_sink and the
-    // corresponding g_object_unref, but that's particular to
-    // GtkInvisibles and GtkWindows.)
-    GtkWidget *widget = gtk_invisible_new();
-    g_object_ref_sink(widget); // effectively g_object_ref (see above)
-
-    gtk_widget_ensure_style(widget);
-    mStyle = gtk_style_copy(gtk_widget_get_style(widget));
-
-    gtk_widget_destroy(widget);
-    g_object_unref(widget);
-        
-    // tooltip foreground and background
-    GtkStyle *style = gtk_rc_get_style_by_paths(gtk_settings_get_default(),
-                                                "gtk-tooltips", "GtkWindow",
-                                                GTK_TYPE_WINDOW);
-    if (style) {
-        sInfoBackground = GDK_COLOR_TO_NS_RGB(style->bg[GTK_STATE_NORMAL]);
-        sInfoText = GDK_COLOR_TO_NS_RGB(style->fg[GTK_STATE_NORMAL]);
-    }
-
-    // menu foreground & menu background
-    GtkWidget *accel_label = gtk_accel_label_new("M");
-    GtkWidget *menuitem = gtk_menu_item_new();
-    GtkWidget *menu = gtk_menu_new();
-
-    g_object_ref_sink(menu);
-
-    gtk_container_add(GTK_CONTAINER(menuitem), accel_label);
-    gtk_menu_shell_append(GTK_MENU_SHELL(menu), menuitem);
-
-    gtk_widget_set_style(accel_label, nullptr);
-    gtk_widget_set_style(menu, nullptr);
-    gtk_widget_realize(menu);
-    gtk_widget_realize(accel_label);
-
-    style = gtk_widget_get_style(accel_label);
-    if (style) {
-        sMenuText = GDK_COLOR_TO_NS_RGB(style->fg[GTK_STATE_NORMAL]);
-    }
-
-    style = gtk_widget_get_style(menu);
-    if (style) {
-        sMenuBackground = GDK_COLOR_TO_NS_RGB(style->bg[GTK_STATE_NORMAL]);
-    }
-    
-    style = gtk_widget_get_style(menuitem);
-    if (style) {
-        sMenuHover = GDK_COLOR_TO_NS_RGB(style->bg[GTK_STATE_PRELIGHT]);
-        sMenuHoverText = GDK_COLOR_TO_NS_RGB(style->fg[GTK_STATE_PRELIGHT]);
-    }
-
-    g_object_unref(menu);
-#else
     GdkRGBA color;
     GtkStyleContext *style;
 
@@ -1195,6 +851,12 @@ nsLookAndFeel::EnsureInit()
         }
     }
 
+    // The label is not added to a parent widget, but shared for constructing
+    // different style contexts.  The node hierarchy is constructed only on
+    // the label style context.
+    GtkWidget *labelWidget = gtk_label_new("M");
+    g_object_ref_sink(labelWidget);
+
     // Scrollbar colors
     style = ClaimStyleContext(MOZ_GTK_SCROLLBAR_TROUGH_VERTICAL);
     gtk_style_context_get_background_color(style, GTK_STATE_FLAG_NORMAL, &color);
@@ -1207,6 +869,13 @@ nsLookAndFeel::EnsureInit()
     sMozWindowBackground = GDK_RGBA_TO_NS_RGBA(color);
     gtk_style_context_get_color(style, GTK_STATE_FLAG_NORMAL, &color);
     sMozWindowText = GDK_RGBA_TO_NS_RGBA(color);
+    ReleaseStyleContext(style);
+    style = ClaimStyleContext(MOZ_GTK_WINDOW_CONTAINER);
+    {
+        GtkStyleContext* labelStyle = CreateStyleForWidget(labelWidget, style);
+        GetSystemFontInfo(labelStyle, &mDefaultFontName, &mDefaultFontStyle);
+        g_object_unref(labelStyle);
+    }
     ReleaseStyleContext(style);
 
     // tooltip foreground and background
@@ -1224,6 +893,9 @@ nsLookAndFeel::EnsureInit()
     {
         GtkStyleContext* accelStyle =
             CreateStyleForWidget(gtk_accel_label_new("M"), style);
+
+        GetSystemFontInfo(accelStyle, &mMenuFontName, &mMenuFontStyle);
+
         gtk_style_context_get_color(accelStyle, GTK_STATE_FLAG_NORMAL, &color);
         sMenuText = GDK_RGBA_TO_NS_RGBA(color);
         gtk_style_context_get_color(accelStyle, GTK_STATE_FLAG_INSENSITIVE, &color);
@@ -1243,17 +915,8 @@ nsLookAndFeel::EnsureInit()
     gtk_style_context_get_color(style, GTK_STATE_FLAG_PRELIGHT, &color);
     sMenuHoverText = GDK_RGBA_TO_NS_RGBA(color);
     ReleaseStyleContext(style);
-#endif
 
-    // button styles
     GtkWidget *parent = gtk_fixed_new();
-    GtkWidget *button = gtk_button_new();
-    GtkWidget *label = gtk_label_new("M");
-#if (MOZ_WIDGET_GTK == 2)
-    GtkWidget *combobox = gtk_combo_box_new();
-    GtkWidget *comboboxLabel = gtk_label_new("M");
-    gtk_container_add(GTK_CONTAINER(combobox), comboboxLabel);
-#endif
     GtkWidget *window = gtk_window_new(GTK_WINDOW_POPUP);
     GtkWidget *treeView = gtk_tree_view_new();
     GtkWidget *linkButton = gtk_link_button_new("http://example.com/");
@@ -1262,94 +925,14 @@ nsLookAndFeel::EnsureInit()
     GtkWidget *entry = gtk_entry_new();
     GtkWidget *textView = gtk_text_view_new();
 
-    gtk_container_add(GTK_CONTAINER(button), label);
-    gtk_container_add(GTK_CONTAINER(parent), button);
     gtk_container_add(GTK_CONTAINER(parent), treeView);
     gtk_container_add(GTK_CONTAINER(parent), linkButton);
-#if (MOZ_WIDGET_GTK == 2)
-    gtk_container_add(GTK_CONTAINER(parent), combobox);
-#endif
     gtk_container_add(GTK_CONTAINER(parent), menuBar);
     gtk_menu_shell_append(GTK_MENU_SHELL(menuBar), menuBarItem);
     gtk_container_add(GTK_CONTAINER(window), parent);
     gtk_container_add(GTK_CONTAINER(parent), entry);
     gtk_container_add(GTK_CONTAINER(parent), textView);
     
-#if (MOZ_WIDGET_GTK == 2)
-    gtk_widget_set_style(button, nullptr);
-    gtk_widget_set_style(label, nullptr);
-    gtk_widget_set_style(treeView, nullptr);
-    gtk_widget_set_style(linkButton, nullptr);
-    gtk_widget_set_style(combobox, nullptr);
-    gtk_widget_set_style(comboboxLabel, nullptr);
-    gtk_widget_set_style(menuBar, nullptr);
-    gtk_widget_set_style(entry, nullptr);
-
-    gtk_widget_realize(button);
-    gtk_widget_realize(label);
-    gtk_widget_realize(treeView);
-    gtk_widget_realize(linkButton);
-    gtk_widget_realize(combobox);
-    gtk_widget_realize(comboboxLabel);
-    gtk_widget_realize(menuBar);
-    gtk_widget_realize(entry);
-
-    style = gtk_widget_get_style(label);
-    if (style) {
-        sButtonText = GDK_COLOR_TO_NS_RGB(style->fg[GTK_STATE_NORMAL]);
-    }
-
-    style = gtk_widget_get_style(comboboxLabel);
-    if (style) {
-        sComboBoxText = GDK_COLOR_TO_NS_RGB(style->fg[GTK_STATE_NORMAL]);
-    }
-    style = gtk_widget_get_style(combobox);
-    if (style) {
-        sComboBoxBackground = GDK_COLOR_TO_NS_RGB(style->bg[GTK_STATE_NORMAL]);
-    }
-
-    style = gtk_widget_get_style(menuBar);
-    if (style) {
-        sMenuBarText = GDK_COLOR_TO_NS_RGB(style->fg[GTK_STATE_NORMAL]);
-        sMenuBarHoverText = GDK_COLOR_TO_NS_RGB(style->fg[GTK_STATE_SELECTED]);
-    }
-
-    // GTK's guide to fancy odd row background colors:
-    // 1) Check if a theme explicitly defines an odd row color
-    // 2) If not, check if it defines an even row color, and darken it
-    //    slightly by a hardcoded value (gtkstyle.c)
-    // 3) If neither are defined, take the base background color and
-    //    darken that by a hardcoded value
-    colorValuePtr = nullptr;
-    gtk_widget_style_get(treeView,
-                         "odd-row-color", &colorValuePtr,
-                         nullptr);
-
-    if (colorValuePtr) {
-        colorValue = *colorValuePtr;
-    } else {
-        gtk_widget_style_get(treeView,
-                             "even-row-color", &colorValuePtr,
-                             nullptr);
-        if (colorValuePtr)
-            darken_gdk_color(colorValuePtr, &colorValue);
-        else
-            darken_gdk_color(&treeView->style->base[GTK_STATE_NORMAL], &colorValue);
-    }
-
-    sOddCellBackground = GDK_COLOR_TO_NS_RGB(colorValue);
-    if (colorValuePtr)
-        gdk_color_free(colorValuePtr);
-
-    style = gtk_widget_get_style(button);
-    if (style) {
-        sButtonBackground = GDK_COLOR_TO_NS_RGB(style->bg[GTK_STATE_NORMAL]);
-        sFrameOuterLightBorder =
-            GDK_COLOR_TO_NS_RGB(style->light[GTK_STATE_NORMAL]);
-        sFrameInnerDarkBorder =
-            GDK_COLOR_TO_NS_RGB(style->dark[GTK_STATE_NORMAL]);
-    }
-#else
     // Text colors
     GdkRGBA bgColor;
     // If the text window background is translucent, then the background of
@@ -1381,8 +964,10 @@ nsLookAndFeel::EnsureInit()
     // Button text color
     style = ClaimStyleContext(MOZ_GTK_BUTTON);
     {
-        GtkStyleContext* labelStyle =
-            CreateStyleForWidget(gtk_label_new("M"), style);
+        GtkStyleContext* labelStyle = CreateStyleForWidget(labelWidget, style);
+
+        GetSystemFontInfo(labelStyle, &mButtonFontName, &mButtonFontStyle);
+
         gtk_style_context_get_color(labelStyle, GTK_STATE_FLAG_NORMAL, &color);
         sButtonText = GDK_RGBA_TO_NS_RGBA(color);
         gtk_style_context_get_color(labelStyle, GTK_STATE_FLAG_PRELIGHT, &color);
@@ -1446,7 +1031,6 @@ nsLookAndFeel::EnsureInit()
     gtk_style_context_add_class(style, GTK_STYLE_CLASS_INFO);
     gtk_style_context_get_color(style, GTK_STATE_FLAG_NORMAL, &color);
     sInfoBarText = GDK_RGBA_TO_NS_RGBA(color);
-#endif
     // Some themes have a unified menu bar, and support window dragging on it
     gboolean supports_menubar_drag = FALSE;
     GParamSpec *param_spec =
@@ -1461,7 +1045,6 @@ nsLookAndFeel::EnsureInit()
     }
     sMenuSupportsDrag = supports_menubar_drag;
 
-#if (MOZ_WIDGET_GTK == 3)
     if (gtk_check_version(3, 12, 0) == nullptr) {
         // TODO: It returns wrong color for themes which
         // sets link color for GtkLabel only as we query
@@ -1469,9 +1052,7 @@ nsLookAndFeel::EnsureInit()
         style = gtk_widget_get_style_context(linkButton);
         gtk_style_context_get_color(style, GTK_STATE_FLAG_LINK, &color);
         sNativeHyperLinkText = GDK_RGBA_TO_NS_RGBA(color);
-    } else
-#endif
-    {
+    } else {
         colorValuePtr = nullptr;
         gtk_widget_style_get(linkButton, "link-color", &colorValuePtr, nullptr);
         if (colorValuePtr) {
@@ -1493,7 +1074,11 @@ nsLookAndFeel::EnsureInit()
                          "cursor-aspect-ratio", &sCaretRatio,
                          nullptr);
 
+    GetSystemFontInfo(gtk_widget_get_style_context(entry),
+                      &mFieldFontName, &mFieldFontStyle);
+
     gtk_widget_destroy(window);
+    g_object_unref(labelWidget);
 }
 
 // virtual
@@ -1514,11 +1099,6 @@ nsLookAndFeel::RefreshImpl()
     mButtonFontCached = false;
     mFieldFontCached = false;
     mMenuFontCached = false;
-
-#if (MOZ_WIDGET_GTK == 2)
-    g_object_unref(mStyle);
-    mStyle = nullptr;
-#endif
 
     mInitialized = false;
 }

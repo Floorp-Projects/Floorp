@@ -310,10 +310,10 @@ add_test(function test_Capabilities_ctor() {
 
   ok(caps.has("rotatable"));
 
-  equal(0, caps.get("specificationLevel"));
+  equal(false, caps.get("moz:accessibilityChecks"));
   ok(caps.has("moz:processID"));
   ok(caps.has("moz:profile"));
-  equal(false, caps.get("moz:accessibilityChecks"));
+  equal(false, caps.get("moz:webdriverClick"));
 
   run_next_test();
 });
@@ -339,10 +339,10 @@ add_test(function test_Capabilities_toJSON() {
 
   equal(caps.get("rotatable"), json.rotatable);
 
-  equal(caps.get("specificationLevel"), json.specificationLevel);
+  equal(caps.get("moz:accessibilityChecks"), json["moz:accessibilityChecks"]);
   equal(caps.get("moz:processID"), json["moz:processID"]);
   equal(caps.get("moz:profile"), json["moz:profile"]);
-  equal(caps.get("moz:accessibilityChecks"), json["moz:accessibilityChecks"]);
+  equal(caps.get("moz:webdriverClick"), json["moz:webdriverClick"]);
 
   run_next_test();
 });
@@ -381,11 +381,11 @@ add_test(function test_Capabilities_fromJSON() {
   caps = fromJSON({timeouts: timeoutsConfig});
   equal(123, caps.get("timeouts").implicit);
 
-  equal(0, caps.get("specificationLevel"));
-  caps = fromJSON({specificationLevel: 123});
-  equal(123, caps.get("specificationLevel"));
-  Assert.throws(() => fromJSON({specificationLevel: "foo"}));
-  Assert.throws(() => fromJSON({specificationLevel: -1}));
+  equal(false, caps.get("moz:webdriverClick"));
+  caps = fromJSON({"moz:webdriverClick": true});
+  equal(true, caps.get("moz:webdriverClick"));
+  Assert.throws(() => fromJSON({"moz:webdriverClick": "foo"}));
+  Assert.throws(() => fromJSON({"moz:webdriverClick": 1}));
 
   caps = fromJSON({"moz:accessibilityChecks": true});
   equal(true, caps.get("moz:accessibilityChecks"));

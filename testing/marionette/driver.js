@@ -673,12 +673,11 @@ GeckoDriver.prototype.listeningPromise = function() {
  *  <dt><code>proxy</code> (Proxy object)
  *  <dd>Defines the proxy configuration.
  *
- *  <dt><code>specificationLevel</code> (number)
- *  <dd>If set to 1, a WebDriver conforming <i>WebDriver::ElementClick</i>
- *   implementation will be used.
- *
  *  <dt><code>moz:accessibilityChecks</code> (boolean)
  *  <dd>Run a11y checks when clicking elements.
+ *
+ *  <dt><code>moz:webdriverClick</code> (boolean)
+ *  <dd>Use a WebDriver conforming <i>WebDriver::ElementClick</i>.
  * </dl>
  *
  * <h4>Timeouts object</h4>

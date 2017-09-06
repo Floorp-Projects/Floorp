@@ -144,11 +144,6 @@ nsPrintOptionsX::SerializeToPrintData(nsIPrintSettings* aSettings,
   data->fileNameExtensionHidden() =
     [[dict objectForKey: NSPrintJobSavingFileNameExtensionHidden] boolValue];
 
-  bool printSelectionOnly = [[dict objectForKey: NSPrintSelectionOnly] boolValue];
-  aSettings->SetPrintOptions(nsIPrintSettings::kEnableSelectionRB,
-                             printSelectionOnly);
-  aSettings->GetPrintOptionsBits(&data->optionFlags());
-
   return NS_OK;
 }
 

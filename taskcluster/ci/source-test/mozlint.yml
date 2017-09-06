@@ -1,4 +1,4 @@
-mozlint-eslint:
+eslint:
     description: JS lint check
     platform: lint/opt
     treeherder:
@@ -36,7 +36,27 @@ mozlint-eslint:
             - 'python/mozlint/**'
             - 'tools/lint/**'
 
-mozlint-py-flake8:
+py-compat:
+    description: lint for python 2/3 compatibility issues
+    platform: lint/opt
+    treeherder:
+        symbol: py-compat
+        kind: test
+        tier: 1
+    worker-type: aws-provisioner-v1/gecko-t-linux-xlarge
+    worker:
+        docker-image: {in-tree: "lint"}
+        max-run-time: 1800
+    run:
+        using: mach
+        mach: lint -l py2 -l py3 -f treeherder
+    when:
+        files-changed:
+            - '**/*.py'
+            - 'python/mozlint/**'
+            - 'tools/lint/**'
+
+py-flake8:
     description: flake8 run over the gecko codebase
     platform: lint/opt
     treeherder:
@@ -54,48 +74,6 @@ mozlint-py-flake8:
         files-changed:
             - '**/*.py'
             - '**/.flake8'
-            - 'python/mozlint/**'
-            - 'tools/lint/**'
-
-mozlint-yaml:
-    description: yamllint run over the gecko codebase
-    platform: lint/opt
-    treeherder:
-        symbol: yaml
-        kind: test
-        tier: 1
-    worker-type: aws-provisioner-v1/gecko-t-linux-xlarge
-    worker:
-        docker-image: {in-tree: "lint"}
-        max-run-time: 1800
-    run:
-        using: mach
-        mach: lint -l yaml -f treeherder
-    when:
-        files-changed:
-            - '**/*.yml'
-            - '**/*.yaml'
-            - '**/.ymllint'
-            - 'python/mozlint/**'
-            - 'tools/lint/**'
-
-mozlint-py-compat:
-    description: lint for python 2/3 compatibility issues
-    platform: lint/opt
-    treeherder:
-        symbol: py-compat
-        kind: test
-        tier: 1
-    worker-type: aws-provisioner-v1/gecko-t-linux-xlarge
-    worker:
-        docker-image: {in-tree: "lint"}
-        max-run-time: 1800
-    run:
-        using: mach
-        mach: lint -l py2 -l py3 -f treeherder
-    when:
-        files-changed:
-            - '**/*.py'
             - 'python/mozlint/**'
             - 'tools/lint/**'
 
@@ -119,5 +97,27 @@ wptlint-gecko:
             - 'testing/web-platform/mozilla/tests/**'
             - 'testing/web-platform/meta/MANIFEST.json'
             - 'testing/web-platform/mozilla/meta/MANIFEST.json'
+            - 'python/mozlint/**'
+            - 'tools/lint/**'
+
+yaml:
+    description: yamllint run over the gecko codebase
+    platform: lint/opt
+    treeherder:
+        symbol: yaml
+        kind: test
+        tier: 1
+    worker-type: aws-provisioner-v1/gecko-t-linux-xlarge
+    worker:
+        docker-image: {in-tree: "lint"}
+        max-run-time: 1800
+    run:
+        using: mach
+        mach: lint -l yaml -f treeherder
+    when:
+        files-changed:
+            - '**/*.yml'
+            - '**/*.yaml'
+            - '**/.ymllint'
             - 'python/mozlint/**'
             - 'tools/lint/**'

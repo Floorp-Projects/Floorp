@@ -8,7 +8,6 @@ Open `about:config` page and filter with `onboarding` keyword. Then set followin
 
 ```
 browser.onboarding.disabled = false
-browser.onboarding.hidden = false
 browser.onboarding.tour-set = "new" // for new user tour, or "update" for update user tour
 ```
 And make sure the value of `browser.onboarding.tourset-verion` and `browser.onboarding.seen-tourset-verion` are the same.

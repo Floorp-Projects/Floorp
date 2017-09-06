@@ -23,7 +23,7 @@ with Files('browser/*bug92473*'):
     BUG_COMPONENT = ('Core', 'Internationalization')
 
 with Files('browser/*loadDisallowInherit*'):
-    BUG_COMPONENT = ('Firefox', 'Location Bar')
+    BUG_COMPONENT = ('Firefox', 'Address Bar')
 
 with Files('browser/*tab_touch_events*'):
     BUG_COMPONENT = ('Core', 'DOM: Events')
