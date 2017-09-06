@@ -67,7 +67,7 @@ define(function (require, exports, module) {
 
     updateInputEnabled: function (evt) {
       this.setState(Object.assign({}, this.state, {
-        inputEnabled: evt.target.nodeName !== "input",
+        inputEnabled: evt.target.nodeName.toLowerCase() !== "input",
       }));
     },
 
