@@ -162,30 +162,22 @@ grid_test_cases = grid_template_test_cases.concat([
     },
     {
         gridAutoFlow: "row",
-        gridRowGap: "0px",
+        shorthand: "none / none",
+    },
+    // Test that grid-gap properties don't affect serialization.
+    {
+        gridRowGap: "1px",
         shorthand: "none / none",
     },
     {
-        gridAutoFlow: "row",
-        gridRowGap: "1px",
-        shorthand: "",
-    },
-    {
-        gridAutoFlow: "row",
         gridColumnGap: "1px",
-        shorthand: "",
+        shorthand: "none / none",
     },
 ]);
 
 var grid_important_test_cases = [
     {
         "grid-auto-flow": "row",
-        "grid-row-gap": "0px",
-        shorthand: "",
-    },
-    {
-        "grid-auto-flow": "row",
-        "grid-column-gap": "1px",
         shorthand: "",
     },
 ];
@@ -225,11 +217,11 @@ run_tests(grid_template_test_cases, "gridTemplate", [
 
 run_tests(grid_test_cases, "grid", [
     "gridTemplateAreas", "gridTemplateColumns", "gridTemplateRows",
-    "gridAutoFlow", "gridAutoColumns", "gridAutoRows", "gridColumnGap", "gridRowGap"]);
+    "gridAutoFlow", "gridAutoColumns", "gridAutoRows"]);
 
 run_important_tests(grid_important_test_cases, "grid", [
     "grid-template-areas", "grid-template-columns", "grid-template-rows",
-    "grid-auto-flow", "grid-auto-columns", "grid-auto-rows", "grid-column-gap", "grid-row-gap"]);
+    "grid-auto-flow", "grid-auto-columns", "grid-auto-rows"]);
 
 </script>
 </body>
