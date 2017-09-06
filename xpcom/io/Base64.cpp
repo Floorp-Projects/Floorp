@@ -326,8 +326,9 @@ Base64Encode(const char* aBinary, uint32_t aBinaryLen, char** aBase64)
   return NS_OK;
 }
 
-nsresult
-Base64Encode(const nsACString& aBinary, nsACString& aBase64)
+template<typename T>
+static nsresult
+Base64EncodeHelper(const T& aBinary, T& aBase64)
 {
   // Check for overflow.
   if (aBinary.Length() > (UINT32_MAX / 4) * 3) {
@@ -346,12 +347,18 @@ Base64Encode(const nsACString& aBinary, nsACString& aBase64)
     return NS_ERROR_OUT_OF_MEMORY;
   }
 
-  char* base64 = aBase64.BeginWriting();
+  typename T::char_type* base64 = aBase64.BeginWriting();
   Encode(aBinary.BeginReading(), aBinary.Length(), base64);
   base64[base64Len] = '\0';
 
   aBase64.SetLength(base64Len);
   return NS_OK;
+}
+
+nsresult
+Base64Encode(const nsACString& aBinary, nsACString& aBase64)
+{
+  return Base64EncodeHelper(aBinary, aBase64);
 }
 
 nsresult
