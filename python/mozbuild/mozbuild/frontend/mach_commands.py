@@ -159,18 +159,8 @@ class MozbuildFileCommands(MachCommandBase):
             return 1
 
 
-    def _get_reader(self, finder):
-        from mozbuild.frontend.reader import (
-            BuildReader,
-            EmptyConfig,
-        )
-
-        config = EmptyConfig(self.topsrcdir)
-        return BuildReader(config, finder=finder)
-
     def _get_files_info(self, paths, rev=None):
-        from mozbuild.frontend.reader import default_finder
-        from mozpack.files import FileFinder, MercurialRevisionFinder
+        reader = self.mozbuild_reader(config_mode='empty', vcs_revision=rev)
 
         # Normalize to relative from topsrcdir.
         relpaths = []
@@ -180,24 +170,6 @@ class MozbuildFileCommands(MachCommandBase):
                 raise InvalidPathException('path is outside topsrcdir: %s' % p)
 
             relpaths.append(mozpath.relpath(a, self.topsrcdir))
-
-        repo = None
-        if rev:
-            hg_path = os.path.join(self.topsrcdir, '.hg')
-            if not os.path.exists(hg_path):
-                raise InvalidPathException('a Mercurial repo is required '
-                        'when specifying a revision')
-
-            repo = self.topsrcdir
-
-        # We need two finders because the reader's finder operates on
-        # absolute paths.
-        finder = FileFinder(self.topsrcdir)
-        if repo:
-            reader_finder = MercurialRevisionFinder(repo, rev=rev,
-                                                    recognize_repo_paths=True)
-        else:
-            reader_finder = default_finder
 
         # Expand wildcards.
         # One variable is for ordering. The other for membership tests.
@@ -211,13 +183,12 @@ class MozbuildFileCommands(MachCommandBase):
                     allpaths.append(p)
                 continue
 
-            if repo:
+            if rev:
                 raise InvalidPathException('cannot use wildcard in version control mode')
 
-            for path, f in finder.find(p):
+            for path, f in reader.finder.find(p):
                 if path not in all_paths_set:
                     all_paths_set.add(path)
                     allpaths.append(path)
 
-        reader = self._get_reader(finder=reader_finder)
         return reader.files_info(allpaths)
