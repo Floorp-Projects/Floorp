@@ -369,7 +369,7 @@ function PromptDelegate(aDomWin) {
                      .rootTreeItem.QueryInterface(Ci.nsIInterfaceRequestor)
                      .getInterface(Ci.nsIDOMWindow);
   try {
-    this._dispatcher = EventDispatcher.for(gvWin);
+    this._dispatcher = gvWin.WindowEventDispatcher || EventDispatcher.for(gvWin);
   } catch (e) {
     // Use global dispatcher.
   }
