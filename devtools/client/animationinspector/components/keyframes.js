@@ -6,7 +6,6 @@
 
 "use strict";
 
-const EventEmitter = require("devtools/shared/old-event-emitter");
 const {createNode, createSVGNode} =
   require("devtools/client/animationinspector/utils");
 const {ProgressGraphHelper, getPreferredKeyframesProgressThreshold} =
@@ -19,9 +18,7 @@ let LINEAR_GRADIENT_ID_COUNTER = 0;
  * UI component responsible for displaying a list of keyframes.
  * Also, shows a graphical graph for the animation progress of one iteration.
  */
-function Keyframes() {
-  EventEmitter.decorate(this);
-}
+function Keyframes() {}
 
 exports.Keyframes = Keyframes;
 
