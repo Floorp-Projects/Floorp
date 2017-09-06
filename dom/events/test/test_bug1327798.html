@@ -34,8 +34,8 @@ SimpleTest.waitForFocus(() => {
      "clipboard contains html text");
 
   window.addEventListener("paste", (e) => {
-    ok(e.clipboardData.types.indexOf('text/html'), -1, "clipboardData shouldn't have text/html");
-    ok(e.clipboardData.getData('text/plain'), "Formatted Text",  "getData(text/plain) should return plain text");
+    is(e.clipboardData.types.indexOf('text/html'), -1, "clipboardData shouldn't have text/html");
+    is(e.clipboardData.getData('text/plain'), "Formatted Text",  "getData(text/plain) should return plain text");
     SimpleTest.finish();
   });
 
