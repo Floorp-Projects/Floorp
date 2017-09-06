@@ -332,13 +332,11 @@ decorate_task(
     ],
   }),
   withStub(RecipeRunner, "run"),
-  withStub(CleanupManager, "addCleanupHandler"),
-  withStub(RecipeRunner, "updateRunInterval"),
-  async function testInitDevMode(runStub, addCleanupHandlerStub, updateRunIntervalStub) {
-    RecipeRunner.init();
+  withStub(RecipeRunner, "registerTimer"),
+  async function testInitDevMode(runStub, registerTimerStub, updateRunIntervalStub) {
+    await RecipeRunner.init();
     ok(runStub.called, "RecipeRunner.run is called immediately when in dev mode");
-    ok(addCleanupHandlerStub.called, "A cleanup function is registered when in dev mode");
-    ok(updateRunIntervalStub.called, "A timer is registered when in dev mode");
+    ok(registerTimerStub.called, "RecipeRunner.init registers a timer");
   }
 );
 
@@ -350,13 +348,11 @@ decorate_task(
     ],
   }),
   withStub(RecipeRunner, "run"),
-  withStub(CleanupManager, "addCleanupHandler"),
-  withStub(RecipeRunner, "updateRunInterval"),
-  async function testInit(runStub, addCleanupHandlerStub, updateRunIntervalStub) {
-    RecipeRunner.init();
-    ok(!runStub.called, "RecipeRunner.run is not called immediately when not in dev mode");
-    ok(addCleanupHandlerStub.called, "A cleanup function is registered when not in dev mode");
-    ok(updateRunIntervalStub.called, "A timer is registered when not in dev mode");
+  withStub(RecipeRunner, "registerTimer"),
+  async function testInit(runStub, registerTimerStub) {
+    await RecipeRunner.init();
+    ok(!runStub.called, "RecipeRunner.run is called immediately when not in dev mode or first run");
+    ok(registerTimerStub.called, "RecipeRunner.init registers a timer");
   }
 );
 
@@ -369,20 +365,13 @@ decorate_task(
   }),
   withStub(RecipeRunner, "run"),
   withStub(RecipeRunner, "registerTimer"),
-  withStub(CleanupManager, "addCleanupHandler"),
-  withStub(RecipeRunner, "updateRunInterval"),
   async function testInitFirstRun(runStub, registerTimerStub) {
-    RecipeRunner.init();
-    ok(!runStub.called, "RecipeRunner.run is not called immediately");
-    ok(!registerTimerStub.called, "RecipeRunner.registerTimer is not called immediately");
-
-    Services.obs.notifyObservers(null, "sessionstore-windows-restored");
-    await TestUtils.topicObserved("shield-init-complete");
-    ok(runStub.called, "RecipeRunner.run is called after the UI is available");
-    ok(registerTimerStub.called, "RecipeRunner.registerTimer is called after the UI is available");
+    await RecipeRunner.init();
+    ok(runStub.called, "RecipeRunner.run is called immediately on first run");
     ok(
       !Services.prefs.getBoolPref("extensions.shield-recipe-client.first_run"),
-      "On first run, the first run pref is set to false after the UI is available"
+      "On first run, the first run pref is set to false"
     );
+    ok(registerTimerStub.called, "RecipeRunner.registerTimer registers a timer");
   }
 );

@@ -11,6 +11,9 @@ XPCOMUtils.defineLazyModuleGetter(
   this, "AppConstants", "resource://gre/modules/AppConstants.jsm"
 );
 XPCOMUtils.defineLazyModuleGetter(
+  this, "AddonStudies", "resource://shield-recipe-client/lib/AddonStudies.jsm"
+);
+XPCOMUtils.defineLazyModuleGetter(
   this, "CleanupManager", "resource://shield-recipe-client/lib/CleanupManager.jsm"
 );
 
@@ -37,6 +40,12 @@ this.ShieldPreferences = {
       Services.prefs.removeObserver(FHR_UPLOAD_ENABLED_PREF, this);
     });
 
+    // Watch for changes to the Opt-out pref
+    Services.prefs.addObserver(OPT_OUT_STUDIES_ENABLED_PREF, this);
+    CleanupManager.addCleanupHandler(() => {
+      Services.prefs.removeObserver(OPT_OUT_STUDIES_ENABLED_PREF, this);
+    });
+
     // Disabled outside of en-* locales temporarily (bug 1377192).
     // Disabled when MOZ_DATA_REPORTING is false since the FHR UI is also hidden
     // when data reporting is false.
@@ -56,11 +65,30 @@ this.ShieldPreferences = {
           this.injectOptOutStudyCheckbox(subject.document);
         }
         break;
-      // If the FHR pref changes, set the opt-out-study pref to the value it is changing to.
       case NS_PREFBRANCH_PREFCHANGE_TOPIC_ID:
-        if (data === FHR_UPLOAD_ENABLED_PREF) {
-          const fhrUploadEnabled = Services.prefs.getBoolPref(FHR_UPLOAD_ENABLED_PREF);
-          Services.prefs.setBoolPref(OPT_OUT_STUDIES_ENABLED_PREF, fhrUploadEnabled);
+        this.observePrefChange(data);
+        break;
+    }
+  },
+
+  async observePrefChange(prefName) {
+    let prefValue;
+    switch (prefName) {
+      // If the FHR pref changes, set the opt-out-study pref to the value it is changing to.
+      case FHR_UPLOAD_ENABLED_PREF:
+        prefValue = Services.prefs.getBoolPref(FHR_UPLOAD_ENABLED_PREF);
+        Services.prefs.setBoolPref(OPT_OUT_STUDIES_ENABLED_PREF, prefValue);
+        break;
+
+      // If the opt-out pref changes to be false, disable all current studies.
+      case OPT_OUT_STUDIES_ENABLED_PREF:
+        prefValue = Services.prefs.getBoolPref(OPT_OUT_STUDIES_ENABLED_PREF);
+        if (!prefValue) {
+          for (const study of await AddonStudies.getAll()) {
+            if (study.active) {
+              await AddonStudies.stop(study.recipeId);
+            }
+          }
         }
         break;
     }
