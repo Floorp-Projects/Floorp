@@ -57,6 +57,7 @@ class imgRequestProxy;
 class nsAutoScriptBlockerSuppressNodeRemoved;
 class nsCacheableFuncStringHTMLCollection;
 class nsHtml5StringParser;
+class nsIAtom;
 class nsIChannel;
 class nsIConsoleService;
 class nsIContent;
@@ -590,10 +591,10 @@ public:
   static bool CanCallerAccess(nsPIDOMWindowInner* aWindow);
 
   // Check if the principal is chrome or an addon with the permission.
-  static bool PrincipalHasPermission(nsIPrincipal* aPrincipal, const nsAString& aPerm);
+  static bool PrincipalHasPermission(nsIPrincipal* aPrincipal, const nsIAtom* aPerm);
 
   // Check if the JS caller is chrome or an addon with the permission.
-  static bool CallerHasPermission(JSContext* aCx, const nsAString& aPerm);
+  static bool CallerHasPermission(JSContext* aCx, const nsIAtom* aPerm);
 
   /**
    * GetDocumentFromCaller gets its document by looking at the last called

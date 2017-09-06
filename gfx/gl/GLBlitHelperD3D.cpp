@@ -24,6 +24,12 @@ StreamFromD3DTexture(ID3D11Texture2D* const texD3D,
                      const EGLAttrib* const postAttribs)
 {
     auto& egl = sEGLLibrary;
+    if (!egl.IsExtensionSupported(GLLibraryEGL::NV_stream_consumer_gltexture_yuv) ||
+        !egl.IsExtensionSupported(GLLibraryEGL::ANGLE_stream_producer_d3d_texture_nv12))
+    {
+        return 0;
+    }
+
     const auto& display = egl.Display();
     const auto stream = egl.fCreateStreamKHR(display, nullptr);
     MOZ_ASSERT(stream);

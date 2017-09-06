@@ -250,10 +250,7 @@ ExtensionPolicyService::CheckDocument(nsIDocument* aDocument)
 
     nsIPrincipal* principal = aDocument->NodePrincipal();
 
-    nsAutoString addonId;
-    Unused << principal->GetAddonId(addonId);
-
-    RefPtr<WebExtensionPolicy> policy = GetByID(addonId);
+    RefPtr<WebExtensionPolicy> policy = BasePrincipal::Cast(principal)->AddonPolicy();
     if (policy) {
       nsCOMPtr<nsIDOMDocument> doc = do_QueryInterface(aDocument);
       ProcessScript().InitExtensionDocument(policy, doc);

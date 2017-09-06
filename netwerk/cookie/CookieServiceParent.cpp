@@ -70,8 +70,7 @@ CookieServiceParent::CookieServiceParent()
   nsCOMPtr<nsICookieService> cs = do_GetService(NS_COOKIESERVICE_CONTRACTID);
 
   // Get the nsCookieService instance directly, so we can call internal methods.
-  mCookieService =
-    already_AddRefed<nsCookieService>(nsCookieService::GetSingleton());
+  mCookieService = nsCookieService::GetSingleton();
   NS_ASSERTION(mCookieService, "couldn't get nsICookieService");
 }
 
