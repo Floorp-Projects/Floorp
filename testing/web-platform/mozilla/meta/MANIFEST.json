@@ -58,6 +58,16 @@
      {}
     ]
    ],
+   "html/semantics/scripting-1/the-script-element/support/mixed_import.js": [
+    [
+     {}
+    ]
+   ],
+   "html/semantics/scripting-1/the-script-element/support/mixed_import2.js": [
+    [
+     {}
+    ]
+   ],
    "html/semantics/scripting-1/the-script-element/support/module.js": [
     [
      {}
@@ -507,6 +517,12 @@
    "html/semantics/scripting-1/the-script-element/create-module-script.html": [
     [
      "/_mozilla/html/semantics/scripting-1/the-script-element/create-module-script.html",
+     {}
+    ]
+   ],
+   "html/semantics/scripting-1/the-script-element/mixed-content-import.https.html": [
+    [
+     "/_mozilla/html/semantics/scripting-1/the-script-element/mixed-content-import.https.html",
      {}
     ]
    ],
@@ -983,6 +999,10 @@
    "3214bced5d81e8001a321aea4c80675b6603b11d",
    "testharness"
   ],
+  "html/semantics/scripting-1/the-script-element/mixed-content-import.https.html": [
+   "7815d81c7ad8ac1367aaca5aa3fa9cd89d7e56d9",
+   "testharness"
+  ],
   "html/semantics/scripting-1/the-script-element/module-error-reporting.html": [
    "5e3027bb28cfa54faee31015fbe2b5c920d52c18",
    "testharness"
@@ -1021,6 +1041,14 @@
   ],
   "html/semantics/scripting-1/the-script-element/support/missing_indirect_export.js": [
    "f125b760ddd301e23ad154312200f70b88f90875",
+   "support"
+  ],
+  "html/semantics/scripting-1/the-script-element/support/mixed_import.js": [
+   "d4b9fed8c6a0036f19ea0c0a9282c59496c55616",
+   "support"
+  ],
+  "html/semantics/scripting-1/the-script-element/support/mixed_import2.js": [
+   "7954815a724e8a98ccd0c39f667ea62defaa18df",
    "support"
   ],
   "html/semantics/scripting-1/the-script-element/support/module.js": [
