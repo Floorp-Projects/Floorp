@@ -3,17 +3,28 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
 /**
- * This file should not be modified and is a duplicate from the debugger.html project.
- * Any changes to this file should be imported from the upstream debugger.html project.
+ * This file is a duplicate from the debugger.html project and has diverged in terms of
+ * some of styles that are kept. Any changes to the styles in this file should be synced
+ * back to the appropriate styles in the debugger.html project.
+ * Create a pull request at https://github.com/devtools-html/debugger.html to sync
+ * any changes to the existing styles.
  */
 
+:root {
+  --accordion-header-background: var(--theme-toolbar-background);
+}
+
+:root.theme-dark {
+  --accordion-header-background: #141416;
+}
+
 .accordion {
-  background-color: var(--theme-body-background);
+  background-color: var(--theme-sidebar-background);
   width: 100%;
 }
 
 .accordion ._header {
-  background-color: var(--theme-toolbar-background);
+  background-color: var(--accordion-header-background);
   border-bottom: 1px solid var(--theme-splitter-color);
   cursor: pointer;
   font-size: 12px;
