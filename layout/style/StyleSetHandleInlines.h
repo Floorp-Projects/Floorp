@@ -292,23 +292,6 @@ StyleSetHandle::Ptr::ProbePseudoElementStyle(dom::Element* aParentElement,
   return AsServo()->ProbePseudoElementStyle(aParentElement, aType, parent);
 }
 
-nsRestyleHint
-StyleSetHandle::Ptr::HasStateDependentStyle(dom::Element* aElement,
-                                            EventStates aStateMask)
-{
-  FORWARD(HasStateDependentStyle, (aElement, aStateMask));
-}
-
-nsRestyleHint
-StyleSetHandle::Ptr::HasStateDependentStyle(dom::Element* aElement,
-                                            CSSPseudoElementType aPseudoType,
-                                            dom::Element* aPseudoElement,
-                                            EventStates aStateMask)
-{
-  FORWARD(HasStateDependentStyle, (aElement, aPseudoType, aPseudoElement,
-                                   aStateMask));
-}
-
 void
 StyleSetHandle::Ptr::RootStyleContextAdded()
 {
