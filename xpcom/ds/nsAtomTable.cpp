@@ -67,7 +67,14 @@ class CheckStaticAtomSizes
 
 //----------------------------------------------------------------------
 
-static Atomic<uint32_t, ReleaseAcquire> gUnusedAtomCount(0);
+// gUnusedAtomCount is incremented when an atom loses its last reference
+// (and thus turned into unused state), and decremented when an unused
+// atom gets a reference again. The atom table relies on this value to
+// schedule GC. This value can temporarily go below zero when multiple
+// threads are operating the same atom, so it has to be signed so that
+// we wouldn't use overflow value for comparison.
+// See Atom::DynamicAddRef and Atom::DynamicRelease.
+static Atomic<int32_t, ReleaseAcquire> gUnusedAtomCount(0);
 
 #if defined(NS_BUILD_REFCNT_LOGGING)
 // nsFakeStringBuffers don't really use the refcounting system, but we
@@ -406,7 +413,7 @@ Atom::GCAtomTableLocked(const MutexAutoLock& aProofOfLock, GCKind aKind)
     sRecentlyUsedMainThreadAtoms[i] = nullptr;
   }
 
-  uint32_t removedCount = 0; // Use a non-atomic temporary for cheaper increments.
+  int32_t removedCount = 0; // Use a non-atomic temporary for cheaper increments.
   nsAutoCString nonZeroRefcountAtoms;
   uint32_t nonZeroRefcountAtomsCount = 0;
   for (auto i = gAtomTable->Iter(); !i.Done(); i.Next()) {
@@ -480,9 +487,9 @@ Atom::DynamicAddRef()
 #ifdef DEBUG
 // We set a lower GC threshold for atoms in debug builds so that we exercise
 // the GC machinery more often.
-static const uint32_t kAtomGCThreshold = 20;
+static const int32_t kAtomGCThreshold = 20;
 #else
-static const uint32_t kAtomGCThreshold = 10000;
+static const int32_t kAtomGCThreshold = 10000;
 #endif
 
 MozExternalRefCountType
@@ -796,7 +803,7 @@ NS_GetNumberOfAtoms(void)
   return gAtomTable->EntryCount();
 }
 
-uint32_t
+int32_t
 NS_GetUnusedAtomCount(void)
 {
   return gUnusedAtomCount;
