@@ -27,14 +27,8 @@
 namespace js {
 namespace wasm {
 
-struct ModuleEnvironment;
-
-typedef Vector<jit::MIRType, 8, SystemAllocPolicy> MIRTypeVector;
-typedef jit::ABIArgIter<MIRTypeVector> ABIArgMIRTypeIter;
-typedef jit::ABIArgIter<ValTypeVector> ABIArgValTypeIter;
-
 struct CompileArgs;
-
+struct ModuleEnvironment;
 class FunctionGenerator;
 
 // The FuncBytes class represents a single, concurrently-compilable function.
@@ -132,13 +126,10 @@ typedef Vector<FuncCompileUnit, 8, SystemAllocPolicy> FuncCompileUnitVector;
 class CompileTask
 {
     const ModuleEnvironment&   env_;
-    Tier                       tier_;
-    CompileMode                mode_;
     LifoAlloc                  lifo_;
     Maybe<jit::TempAllocator>  alloc_;
     Maybe<jit::MacroAssembler> masm_;
     FuncCompileUnitVector      units_;
-    bool                       debugEnabled_;
 
     CompileTask(const CompileTask&) = delete;
     CompileTask& operator=(const CompileTask&) = delete;
@@ -146,14 +137,11 @@ class CompileTask
     void init() {
         alloc_.emplace(&lifo_);
         masm_.emplace(jit::MacroAssembler::WasmToken(), *alloc_);
-        debugEnabled_ = false;
     }
 
   public:
-    CompileTask(const ModuleEnvironment& env, Tier tier, CompileMode mode, size_t defaultChunkSize)
+    CompileTask(const ModuleEnvironment& env, size_t defaultChunkSize)
       : env_(env),
-        tier_(tier),
-        mode_(mode),
         lifo_(defaultChunkSize)
     {
         init();
@@ -174,16 +162,13 @@ class CompileTask
         return units_;
     }
     Tier tier() const {
-        return tier_;
+        return env_.tier;
     }
     CompileMode mode() const {
-        return mode_;
+        return env_.mode;
     }
     bool debugEnabled() const {
-        return debugEnabled_;
-    }
-    void setDebugEnabled(bool enabled) {
-        debugEnabled_ = enabled;
+        return env_.debug == DebugEnabled::True;
     }
     bool reset(UniqueFuncBytesVector* freeFuncBytes) {
         for (FuncCompileUnit& unit : units_) {
@@ -217,11 +202,10 @@ class MOZ_STACK_CLASS ModuleGenerator
     typedef EnumeratedArray<Trap, Trap::Limit, CallableOffsets> TrapExitOffsetArray;
 
     // Constant parameters
-    SharedCompileArgs               compileArgs_;
-    CompileMode                     compileMode_;
-    Tier                            tier_;
-    UniqueChars*                    error_;
-    Atomic<bool>*                   cancelled_;
+    SharedCompileArgs const         compileArgs_;
+    UniqueChars* const              error_;
+    Atomic<bool>* const             cancelled_;
+    ModuleEnvironment* const        env_;
 
     // Data that is moved into the result of finish()
     Assumptions                     assumptions_;
@@ -232,7 +216,6 @@ class MOZ_STACK_CLASS ModuleGenerator
     UniqueJumpTable                 jumpTable_;
 
     // Data scoped to the ModuleGenerator's lifetime
-    UniqueModuleEnvironment         env_;
     uint32_t                        numSigs_;
     uint32_t                        numTables_;
     LifoAlloc                       lifo_;
@@ -244,8 +227,6 @@ class MOZ_STACK_CLASS ModuleGenerator
     uint32_t                        lastPatchedCallsite_;
     uint32_t                        startOfUnpatchedCallsites_;
     Uint32Vector                    debugTrapFarJumps_;
-    FuncArgTypesVector              debugFuncArgTypes_;
-    FuncReturnTypesVector           debugFuncReturnTypes_;
 
     // Parallel compilation
     bool                            parallel_;
@@ -283,46 +264,31 @@ class MOZ_STACK_CLASS ModuleGenerator
     MOZ_MUST_USE bool launchBatchCompile();
 
     MOZ_MUST_USE bool initAsmJS(Metadata* asmJSMetadata);
-    MOZ_MUST_USE bool initWasm(const CompileArgs& args);
+    MOZ_MUST_USE bool initWasm();
+
+    bool isAsmJS() const { return env_->isAsmJS(); }
+    Tier tier() const { return env_->tier; }
+    CompileMode mode() const { return env_->mode; }
+    bool debugEnabled() const { return env_->debugEnabled(); }
 
   public:
-    explicit ModuleGenerator(UniqueChars* error, Atomic<bool>* cancelled);
+    ModuleGenerator(const CompileArgs& args, ModuleEnvironment* env,
+                    Atomic<bool>* cancelled, UniqueChars* error);
     ~ModuleGenerator();
 
-    MOZ_MUST_USE bool init(UniqueModuleEnvironment env, const CompileArgs& args,
-                           CompileMode compileMode = CompileMode::Once,
-                           Metadata* maybeAsmJSMetadata = nullptr);
-
-    const ModuleEnvironment& env() const { return *env_; }
-    ModuleEnvironment& mutableEnv();
-
-    bool isAsmJS() const { return metadata_->kind == ModuleKind::AsmJS; }
-    CompileMode mode() const { return compileMode_; }
-    Tier tier() const { return tier_; }
-    jit::MacroAssembler& masm() { return masm_; }
-
-    // Memory:
-    bool usesMemory() const { return env_->usesMemory(); }
-    uint32_t minMemoryLength() const { return env_->minMemoryLength; }
-
-    // Tables:
-    uint32_t numTables() const { return numTables_; }
-    const TableDescVector& tables() const { return env_->tables; }
-
-    // Signatures:
-    uint32_t numSigs() const { return numSigs_; }
-    const SigWithId& sig(uint32_t sigIndex) const;
-    const SigWithId& funcSig(uint32_t funcIndex) const;
-    const SigWithIdPtrVector& funcSigs() const { return env_->funcSigs; }
-
-    // Globals:
-    const GlobalDescVector& globals() const { return env_->globals; }
+    MOZ_MUST_USE bool init(Metadata* maybeAsmJSMetadata = nullptr);
 
     // Function definitions:
     MOZ_MUST_USE bool startFuncDefs();
     MOZ_MUST_USE bool startFuncDef(uint32_t lineOrBytecode, FunctionGenerator* fg);
     MOZ_MUST_USE bool finishFuncDef(uint32_t funcIndex, FunctionGenerator* fg);
     MOZ_MUST_USE bool finishFuncDefs();
+
+    // asm.js accessors:
+    uint32_t minMemoryLength() const { return env_->minMemoryLength; }
+    uint32_t numSigs() const { return numSigs_; }
+    const SigWithId& sig(uint32_t sigIndex) const;
+    const SigWithId& funcSig(uint32_t funcIndex) const;
 
     // asm.js lazy initialization:
     void initSig(uint32_t sigIndex, Sig&& sig);
@@ -355,33 +321,12 @@ class MOZ_STACK_CLASS FunctionGenerator
     friend class ModuleGenerator;
 
     ModuleGenerator* m_;
-    bool             usesSimd_;
-    bool             usesAtomics_;
-
     UniqueFuncBytes  funcBytes_;
 
   public:
     FunctionGenerator()
-      : m_(nullptr), usesSimd_(false), usesAtomics_(false), funcBytes_(nullptr)
+      : m_(nullptr), funcBytes_(nullptr)
     {}
-
-    bool usesSimd() const {
-        return usesSimd_;
-    }
-    void setUsesSimd() {
-        usesSimd_ = true;
-    }
-
-    bool usesAtomics() const {
-        return usesAtomics_;
-    }
-    void setUsesAtomics() {
-        usesAtomics_ = true;
-    }
-
-    bool isAsmJS() const {
-      return m_->isAsmJS();
-    }
 
     Bytes& bytes() {
         return funcBytes_->bytes();

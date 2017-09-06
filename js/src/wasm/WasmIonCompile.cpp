@@ -191,7 +191,7 @@ class FunctionCompiler
         if (!newBlock(/* prev */ nullptr, &curBlock_))
             return false;
 
-        for (ABIArgValTypeIter i(args); !i.done(); i++) {
+        for (ABIArgIter<ValTypeVector> i(args); !i.done(); i++) {
             MWasmParameter* ins = MWasmParameter::New(alloc(), *i, i.mirType());
             curBlock_->add(ins);
             curBlock_->initSlot(info().localSlot(i.index()), ins);
