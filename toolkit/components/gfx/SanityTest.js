@@ -106,6 +106,8 @@ function takeWindowSnapshot(win, ctx) {
 // different colours. The top left of the video is 8,72
 // and we test a pixel 33,33 into each quadrant to avoid
 // blending differences at the edges.
+// If those values are ever changed, make sure to update
+// WMFVideoMFTManager::CanUseDXVA accordingly.
 //
 // We allow massive amounts of fuzz for the colours since
 // it can depend hugely on the yuv -> rgb conversion, and
