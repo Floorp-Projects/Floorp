@@ -718,6 +718,11 @@
                        label="&appMenuRemoteTabs.label;"
                        closemenu="none"
                        oncommand="PanelUI.showSubView('PanelUI-remotetabs', this)"/>
+        <toolbarbutton id="appMenu-library-downloads-button"
+                       class="subviewbutton subviewbutton-iconic subviewbutton-nav"
+                       label="&libraryDownloads.label;"
+                       closemenu="none"
+                       oncommand="DownloadsSubview.show(this);"/>
       </vbox>
     </panelview>
 
