@@ -42,16 +42,26 @@ decorate_task(
 decorate_task(
   withAboutStudies,
   async function testUpdatePreferencesNewOrganization(browser) {
-    ContentTask.spawn(browser, null, () => {
-      content.document.getElementById("shield-studies-update-preferences").click();
+    // We have to use gBrowser instead of browser in most spots since we're
+    // dealing with a new tab outside of the about:studies tab.
+    const tab = await BrowserTestUtils.switchTab(gBrowser, () => {
+      ContentTask.spawn(browser, null, () => {
+        content.document.getElementById("shield-studies-update-preferences").click();
+      });
     });
-    await BrowserTestUtils.waitForLocationChange(gBrowser);
 
+    if (gBrowser.contentDocument.readyState !== "complete") {
+      await BrowserTestUtils.waitForEvent(gBrowser.contentWindow, "load");
+    }
+
+    const location = gBrowser.contentWindow.location.href;
     is(
-      browser.currentURI.spec,
-      "about:preferences#privacy-reports",
-      "Clicking Update Preferences opens the privacy section of the new about:prefernces.",
+      location,
+      "about:preferences#privacy",
+      "Clicking Update Preferences opens the privacy section of the new about:preferences.",
     );
+
+    await BrowserTestUtils.removeTab(tab);
   }
 );
 

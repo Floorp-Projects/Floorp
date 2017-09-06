@@ -19,11 +19,13 @@ function withStubInits(testFunction) {
 decorate_task(
   withStubInits,
   async function testStartup() {
+    const initObserved = TestUtils.topicObserved("shield-init-complete");
     await ShieldRecipeClient.startup();
     ok(AboutPages.init.called, "startup calls AboutPages.init");
     ok(AddonStudies.init.called, "startup calls AddonStudies.init");
     ok(PreferenceExperiments.init.called, "startup calls PreferenceExperiments.init");
     ok(RecipeRunner.init.called, "startup calls RecipeRunner.init");
+    await initObserved;
   }
 );
 

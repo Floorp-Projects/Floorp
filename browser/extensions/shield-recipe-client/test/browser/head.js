@@ -3,6 +3,7 @@ const {classes: Cc, interfaces: Ci, utils: Cu} = Components;
 
 Cu.import("resource://gre/modules/Preferences.jsm", this);
 Cu.import("resource://testing-common/AddonTestUtils.jsm", this);
+Cu.import("resource://testing-common/TestUtils.jsm", this);
 Cu.import("resource://shield-recipe-client/lib/Addons.jsm", this);
 Cu.import("resource://shield-recipe-client/lib/SandboxManager.jsm", this);
 Cu.import("resource://shield-recipe-client/lib/NormandyDriver.jsm", this);
@@ -275,4 +276,24 @@ this.withStub = function(...stubArgs) {
       }
     };
   };
+};
+
+this.withSpy = function(...spyArgs) {
+  return function wrapper(testFunction) {
+    return async function wrappedTestFunction(...args) {
+      const spy = sinon.spy(...spyArgs);
+      try {
+        await testFunction(...args, spy);
+      } finally {
+        spy.restore();
+      }
+    };
+  };
+};
+
+this.studyEndObserved = function(recipeId) {
+  return TestUtils.topicObserved(
+    "shield-study-ended",
+    (subject, endedRecipeId) => Number.parseInt(endedRecipeId) === recipeId,
+  );
 };
