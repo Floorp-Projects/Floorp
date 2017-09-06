@@ -629,8 +629,7 @@ URLWorker::Init(const nsAString& aURL, const Optional<nsAString>& aBase,
     }
   }
 
-  if (scheme.Equals(NS_LITERAL_CSTRING("http")) ||
-      scheme.Equals(NS_LITERAL_CSTRING("https"))) {
+  if (scheme.EqualsLiteral("http") || scheme.EqualsLiteral("https")) {
     RefPtr<nsStandardURL> baseURL;
     if (aBase.WasPassed()) {
       baseURL = new nsStandardURL();
@@ -707,8 +706,7 @@ URLWorker::SetHref(const nsAString& aHref, ErrorResult& aRv)
     return;
   }
 
-  if (scheme.Equals(NS_LITERAL_CSTRING("http")) ||
-      scheme.Equals(NS_LITERAL_CSTRING("https"))) {
+  if (scheme.EqualsLiteral("http") || scheme.EqualsLiteral("https")) {
     mStdURL = new nsStandardURL();
     aRv = mStdURL->SetSpec(NS_ConvertUTF16toUTF8(aHref));
     if (mURLProxy) {
