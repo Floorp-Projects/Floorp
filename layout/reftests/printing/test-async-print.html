@@ -1,0 +1,16 @@
+<!DOCTYPE html>
+<html class="reftest-wait">
+<head>
+  <meta charset="utf-8">
+  <link href="print.css" rel="stylesheet">
+  <script>
+    window.addEventListener("MozReftestInvalidate", function() {
+        document.getElementById("page1").innerText = 'This text should appear on page 1';
+        document.documentElement.className = "";
+    });
+  </script>
+</head>
+<body>
+  <p id="page1"></p>
+</body>
+</html>
