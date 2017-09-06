@@ -1,0 +1,44 @@
+// This Source Code Form is subject to the terms of the Mozilla Public
+// License, v. 2.0. If a copy of the MPL was not distributed with this
+// file, You can obtain one at http://mozilla.org/MPL/2.0/.
+
+import java.text.SimpleDateFormat
+
+// This gradle scripts generates a "unique" version code for our release versions.
+//
+// The result of the version code depends on the timezone. We assume that this script will only be used
+// for release versions and running on our build servers with a fixed timezone.
+//
+// The version code is composed like: yDDDHHmm
+//  * y   = Double digit year, with 16 substracted: 2017 -> 17 -> 1
+//  * DDD = Day of the year, pad with zeros if needed: September 6th -> 249
+//  * HH  = Hour in day (00-23)
+//  * mm  = Minute in hour 
+//
+// For September 6th, 2017, 9:41 am this will generate the versionCode: 12490941 (1-249-09-41).
+//
+// Note that we only use this generated version code for builds we want to distribute. For local
+// debug builds we use a fixed versionCode to not mess with the caching mechanism of the build
+// system.
+
+ext {
+    def today = new Date()
+
+    // We use the current year (double digit) and substract 16. We first released Focus in
+    // 2017 so this value will start counting at 1 and increment by one every year.
+    def year = String.valueOf((new SimpleDateFormat("yy").format(today) as int) - 16)
+
+    // We use the day in the Year (e.g. 248) as opposed to month + day (0510) because it's one digit shorter.
+    // If needed we pad with zeros (e.g. 25 -> 025)
+    def day = String.format("%03d", (new SimpleDateFormat("D").format(today) as int))
+ 
+    // We append the hour in day (24h) and minute in hour (7:26 pm -> 1926). We do not append
+    // seconds. This assumes that we do not need to build multiple release(!) builds the same
+    // minute.
+    def time = new SimpleDateFormat("HHmm").format(today)
+
+    generatedVersionCode = (year + day + time) as int
+
+    println("Generated versionCode: $generatedVersionCode")
+    println()
+}

@@ -5,6 +5,8 @@ apply plugin: 'jacoco-android'
 apply plugin: 'pmd'
 apply plugin: 'checkstyle'
 
+apply from: "$project.rootDir/tools/gradle/versionCode.gradle"
+
 android {
     compileSdkVersion 26
     buildToolsVersion "26.0.1"
@@ -12,7 +14,8 @@ android {
         applicationId "org.mozilla"
         minSdkVersion 21
         targetSdkVersion 26
-        versionCode 11
+        versionCode 11 // This versionCode is "frozen" for local builds. For "release" builds we
+                       // override this with a generated versionCode at build time.
         versionName "2.0"
         testInstrumentationRunner "android.support.test.runner.AndroidJUnitRunner"
 
@@ -34,7 +37,6 @@ android {
         }
         beta {
             initWith debug
-
             minifyEnabled true
             shrinkResources true
             proguardFiles getDefaultProguardFile('proguard-android.txt'), 'proguard-rules.pro'
@@ -183,28 +185,18 @@ dependencies {
 }
 
 // -------------------------------------------------------------------------------------------------
-// Replace placeholders in shortcuts.xml (Android requires a hard-coded package name. But we use
-// different packages based on flavor.
-// Code based on workaround (comment 16): https://issuetracker.google.com/issues/37124066
+//  Dynamically set versionCode (See tools/build/versionCode.gradle
 // -------------------------------------------------------------------------------------------------
 
-def replacePlaceholdersInFile(basePath, fileName, placeholders) {
-    def file = new File(basePath, fileName);
+android.applicationVariants.all { variant ->
+    def buildType = variant.buildType.name
+    def isBetaOrRelease = buildType == "release" || buildType == "beta"
 
-    if (!file.exists()) {
-        throw new GradleException("Unable to replace placeholders in " + file.toString() + ". File cannot be found.")
+    if (isBetaOrRelease) {
+        variant.mergedFlavor.versionCode = generatedVersionCode
     }
 
-    logger.debug("Replacing placeholders in " + file.toString())
-    logger.debug("Placeholders: " + placeholders.toString())
-
-    def content = file.getText('UTF-8')
-
-    placeholders.each { entry ->
-        content = content.replaceAll("\\\$\\{${entry.key}\\}", entry.value)
-    }
-
-    file.write(content, 'UTF-8')
+    println("Build type: " + buildType + " (versionCode = " + variant.mergedFlavor.versionCode + ")")
 }
 
 // -------------------------------------------------------------------------------------------------
@@ -241,23 +233,23 @@ tasks.whenTaskAdded { task ->
 // -------------------------------------------------------------------------------------------------
 
 android.applicationVariants.all { variant ->
-    def variantName = variant.getName();
+    def variantName = variant.getName()
 
-    print(variantName + ": ")
+    print("Adjust token (" + variantName + "): ")
 
     if (variantName.contains("Release") && variantName.contains("focus")) {
         def token = System.getenv("ADJUST_TOKEN_FOCUS") ?: null
 
         if (token != null) {
             buildConfigField 'String', 'ADJUST_TOKEN', '"' + token + '"'
-            println "Added adjust token set from environment variable"
+            println "(Added from environment variable)"
         } else {
             buildConfigField 'String', 'ADJUST_TOKEN', 'null'
-            println("Not setting adjust token (environment variable not set)")
+            println("X_X")
         }
     } else {
         buildConfigField 'String', 'ADJUST_TOKEN', 'null'
-        println("Not setting adjust token (Not a focus release build)")
+        println("--")
     }
 }
 
