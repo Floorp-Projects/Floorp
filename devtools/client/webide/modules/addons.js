@@ -13,10 +13,8 @@ const ADDONS_URL = "devtools.webide.addonsURL";
 
 var SIMULATOR_LINK = Services.prefs.getCharPref("devtools.webide.simulatorAddonsURL");
 var ADB_LINK = Services.prefs.getCharPref("devtools.webide.adbAddonURL");
-var ADAPTERS_LINK = Services.prefs.getCharPref("devtools.webide.adaptersAddonURL");
 var SIMULATOR_ADDON_ID = Services.prefs.getCharPref("devtools.webide.simulatorAddonID");
 var ADB_ADDON_ID = Services.prefs.getCharPref("devtools.webide.adbAddonID");
-var ADAPTERS_ADDON_ID = Services.prefs.getCharPref("devtools.webide.adaptersAddonID");
 
 var platform = Services.appShell.hiddenDOMWindow.navigator.platform;
 var OS = "";
@@ -38,7 +36,7 @@ addonsListener.onDisabled =
 addonsListener.onInstalled =
 addonsListener.onUninstalled = (updatedAddon) => {
   GetAvailableAddons().then(addons => {
-    for (let a of [...addons.simulators, addons.adb, addons.adapters]) {
+    for (let a of [...addons.simulators, addons.adb]) {
       if (a.addonID == updatedAddon.id) {
         a.updateInstallStatus();
       }
@@ -62,7 +60,6 @@ var GetAvailableAddons = exports.GetAvailableAddons = function () {
           }
         }
         addons.adb = new ADBAddon();
-        addons.adapters = new AdaptersAddon();
         resolve(addons);
       }, e => {
         GetAvailableAddons_promise = null;
@@ -186,11 +183,3 @@ function ADBAddon() {
   this.updateInstallStatus();
 }
 ADBAddon.prototype = Object.create(Addon.prototype);
-
-function AdaptersAddon() {
-  EventEmitter.decorate(this);
-  this.xpiLink = ADAPTERS_LINK.replace(/#OS#/g, OS);
-  this.addonID = ADAPTERS_ADDON_ID;
-  this.updateInstallStatus();
-}
-AdaptersAddon.prototype = Object.create(Addon.prototype);
