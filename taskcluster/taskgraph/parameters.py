@@ -21,16 +21,20 @@ PARAMETER_NAMES = set([
     'include_nightly',
     'level',
     'message',
+    'morph_templates',
     'moz_build_date',
     'optimize_target_tasks',
     'owner',
     'project',
     'pushdate',
     'pushlog_id',
+    'target_task_labels',
     'target_tasks_method',
-    'try_mode',
-    'try_options',
-    'try_task_config',
+])
+
+TRY_ONLY_PARAMETERS = set([
+    'morph_templates',
+    'target_task_labels',
 ])
 
 
@@ -40,7 +44,7 @@ class Parameters(ReadOnlyDict):
         names = set(self)
         msg = []
 
-        missing = PARAMETER_NAMES - names
+        missing = PARAMETER_NAMES - TRY_ONLY_PARAMETERS - names
         if missing:
             msg.append("missing parameters: " + ", ".join(missing))
 

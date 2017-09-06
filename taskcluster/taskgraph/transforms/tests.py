@@ -754,11 +754,8 @@ def set_retry_exit_status(config, tests):
 @transforms.add
 def set_profile(config, tests):
     """Set profiling mode for tests."""
-    profile = None
-    if config.params['try_mode'] == 'try_option_syntax':
-        profile = config.params['try_options']['profile']
     for test in tests:
-        if profile and test['suite'] == 'talos':
+        if config.config['args'].profile and test['suite'] == 'talos':
             test['mozharness']['extra-options'].append('--geckoProfile')
         yield test
 
@@ -766,10 +763,8 @@ def set_profile(config, tests):
 @transforms.add
 def set_tag(config, tests):
     """Set test for a specific tag."""
-    tag = None
-    if config.params['try_mode'] == 'try_option_syntax':
-        tag = config.params['try_options']['tag']
     for test in tests:
+        tag = config.config['args'].tag
         if tag:
             test['mozharness']['extra-options'].extend(['--tag', tag])
         yield test
@@ -821,7 +816,6 @@ def set_worker_type(config, tests):
         # during the taskcluster migration, this is a bit tortured, but it
         # will get simpler eventually!
         test_platform = test['test-platform']
-        try_options = config.params['try_options'] if config.params['try_options'] else {}
         if test.get('worker-type'):
             # This test already has its worker type defined, so just use that (yields below)
             pass
@@ -836,7 +830,7 @@ def set_worker_type(config, tests):
                     WINDOWS_WORKER_TYPES[test_platform.split('/')[0]][test['virtualization']]
         elif test_platform.startswith('linux') or test_platform.startswith('android'):
             if test.get('suite', '') == 'talos' and test['build-platform'] != 'linux64-ccov/opt':
-                if try_options.get('taskcluster_worker'):
+                if config.config['args'].taskcluster_worker:
                     test['worker-type'] = 'releng-hardware/gecko-t-linux-talos'
                 else:
                     test['worker-type'] = 'buildbot-bridge/buildbot-bridge'
