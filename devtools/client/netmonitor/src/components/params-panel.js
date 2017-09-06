@@ -34,7 +34,10 @@ const SECTION_NAMES = [
  * Params panel component
  * Displays the GET parameters and POST data of a request
  */
-function ParamsPanel({ request }) {
+function ParamsPanel({
+  openLink,
+  request,
+}) {
   let {
     formDataSections,
     mimeType,
@@ -92,6 +95,7 @@ function ParamsPanel({ request }) {
         object,
         filterPlaceHolder: PARAMS_FILTER_TEXT,
         sectionNames: SECTION_NAMES,
+        openLink,
       })
     )
   );
@@ -101,6 +105,7 @@ ParamsPanel.displayName = "ParamsPanel";
 
 ParamsPanel.propTypes = {
   request: PropTypes.object.isRequired,
+  openLink: PropTypes.func,
 };
 
 /**

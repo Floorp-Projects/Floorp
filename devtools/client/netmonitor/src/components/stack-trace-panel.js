@@ -16,7 +16,11 @@ const { div } = DOM;
 // Components
 const StackTrace = createFactory(require("devtools/client/shared/components/stack-trace"));
 
-function StackTracePanel({ request, sourceMapService }) {
+function StackTracePanel({
+  openLink,
+  request,
+  sourceMapService,
+}) {
   let { stacktrace } = request.cause;
 
   return (
@@ -25,6 +29,7 @@ function StackTracePanel({ request, sourceMapService }) {
         stacktrace,
         onViewSourceInDebugger: ({ url, line }) => viewSourceInDebugger(url, line),
         sourceMapService,
+        openLink,
       }),
     )
   );
@@ -36,6 +41,7 @@ StackTracePanel.propTypes = {
   request: PropTypes.object.isRequired,
   // Service to enable the source map feature.
   sourceMapService: PropTypes.object,
+  openLink: PropTypes.func,
 };
 
 module.exports = StackTracePanel;

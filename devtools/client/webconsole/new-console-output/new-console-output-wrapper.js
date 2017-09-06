@@ -80,7 +80,9 @@ NewConsoleOutputWrapper.prototype = {
         }]));
       },
       hudProxyClient: this.jsterm.hud.proxy.client,
-      openLink: url => this.jsterm.hud.owner.openLink(url),
+      openLink: url => {
+        this.jsterm.hud.owner.openLink(url);
+      },
       createElement: nodename => {
         return this.document.createElementNS("http://www.w3.org/1999/xhtml", nodename);
       },

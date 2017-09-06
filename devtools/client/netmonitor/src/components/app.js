@@ -21,10 +21,14 @@ const { div } = DOM;
  * App component
  * The top level component for representing main panel
  */
-function App({ statisticsOpen, sourceMapService }) {
+function App({
+  openLink,
+  sourceMapService,
+  statisticsOpen,
+}) {
   return (
     div({ className: "network-monitor" },
-      !statisticsOpen ? MonitorPanel({sourceMapService}) : StatisticsPanel()
+      !statisticsOpen ? MonitorPanel({ openLink, sourceMapService }) : StatisticsPanel()
     )
   );
 }
@@ -32,9 +36,10 @@ function App({ statisticsOpen, sourceMapService }) {
 App.displayName = "App";
 
 App.propTypes = {
-  statisticsOpen: PropTypes.bool.isRequired,
+  openLink: PropTypes.func,
   // Service to enable the source map feature.
   sourceMapService: PropTypes.object,
+  statisticsOpen: PropTypes.bool.isRequired,
 };
 
 module.exports = connect(

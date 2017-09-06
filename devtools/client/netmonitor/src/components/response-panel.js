@@ -33,6 +33,7 @@ const ResponsePanel = createClass({
 
   propTypes: {
     request: PropTypes.object.isRequired,
+    openLink: PropTypes.func,
   },
 
   getInitialState() {
@@ -110,7 +111,8 @@ const ResponsePanel = createClass({
   },
 
   render() {
-    let { responseContent, url } = this.props.request;
+    let { openLink, request } = this.props;
+    let { responseContent, url } = request;
 
     if (!responseContent || typeof responseContent.content.text !== "string") {
       return null;
@@ -175,6 +177,7 @@ const ResponsePanel = createClass({
           object,
           filterPlaceHolder: JSON_FILTER_TEXT,
           sectionNames: Object.keys(object),
+          openLink,
         }),
       )
     );

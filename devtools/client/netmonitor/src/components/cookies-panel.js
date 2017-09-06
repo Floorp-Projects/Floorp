@@ -31,6 +31,7 @@ const SECTION_NAMES = [
  */
 function CookiesPanel({
   request,
+  openLink,
 }) {
   let {
     requestCookies = { cookies: [] },
@@ -62,6 +63,7 @@ function CookiesPanel({
         object,
         filterPlaceHolder: COOKIES_FILTER_TEXT,
         sectionNames: SECTION_NAMES,
+        openLink,
       })
     )
   );
@@ -71,6 +73,7 @@ CookiesPanel.displayName = "CookiesPanel";
 
 CookiesPanel.propTypes = {
   request: PropTypes.object.isRequired,
+  openLink: PropTypes.func,
 };
 
 /**
