@@ -78,6 +78,21 @@ public:
   // should be fired.
   static void CheckPointerCaptureState(WidgetPointerEvent* aEvent);
 
+  /**
+   * GetPointerCapturingFrame returns a target frame of aEvent. If the event is
+   * a mouse or pointer event (except mousedown and pointerdown), the pointer
+   * may be captured by a content. This method returns the capturing content's
+   * primary frame. Otherwise, aFrameUnderCursor.
+   *
+   * @param aFrameUnderCursor    A frame under cursor.
+   * @param aEvent               A mouse event or pointer event which may be
+   *                             captured.
+   *
+   * @return                     Target frame for aEvent.
+   */
+  static nsIFrame* GetPointerCapturingFrame(nsIFrame* aFrameUnderCursor,
+                                            WidgetGUIEvent* aEvent);
+
   static nsIContent* GetPointerCapturingContent(uint32_t aPointerId);
 
   // Release pointer capture if captured by the specified content or it's
@@ -116,12 +131,12 @@ public:
                 WidgetPointerEvent* aPointerEvent,
                 WidgetGUIEvent* aMouseOrTouchEvent);
 
-  static nsresult DispatchPointerFromMouseOrTouch(PresShell* aShell,
-                                                  nsIFrame* aFrame,
-                                                  WidgetGUIEvent* aEvent,
-                                                  bool aDontRetargetEvents,
-                                                  nsEventStatus* aStatus,
-                                                  nsIContent** aTargetContent);
+  static void DispatchPointerFromMouseOrTouch(PresShell* aShell,
+                                              nsIFrame* aFrame,
+                                              WidgetGUIEvent* aEvent,
+                                              bool aDontRetargetEvents,
+                                              nsEventStatus* aStatus,
+                                              nsIContent** aTargetContent);
 
 private:
   // GetPointerType returns pointer type like mouse, pen or touch for pointer
