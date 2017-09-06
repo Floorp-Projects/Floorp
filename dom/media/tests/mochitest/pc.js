@@ -1531,44 +1531,49 @@ PeerConnectionWrapper.prototype = {
    * @returns {Promise}
    *        A promise that resolves when we're receiving the tone from |from|.
    */
-  checkReceivingToneFrom : function(audiocontext, from) {
-    var inputElem = from.localMediaElements[0];
+  checkReceivingToneFrom : async function(audiocontext, from,
+      cancel = wait(60000, new Error("Tone not detected"))) {
+    let inputElem = from.localMediaElements[0];
 
     // As input we use the stream of |from|'s first available audio sender.
-    var inputSenderTracks = from._pc.getSenders().map(sn => sn.track);
-    var inputAudioStream = from._pc.getLocalStreams()
+    let inputSenderTracks = from._pc.getSenders().map(sn => sn.track);
+    let inputAudioStream = from._pc.getLocalStreams()
       .find(s => inputSenderTracks.some(t => t.kind == "audio" && s.getTrackById(t.id)));
-    var inputAnalyser = new AudioStreamAnalyser(audiocontext, inputAudioStream);
+    let inputAnalyser = new AudioStreamAnalyser(audiocontext, inputAudioStream);
 
     // It would have been nice to have a working getReceivers() here, but until
     // we do, let's use what remote streams we have.
-    var outputAudioStream = this._pc.getRemoteStreams()
+    let outputAudioStream = this._pc.getRemoteStreams()
       .find(s => s.getAudioTracks().length > 0);
-    var outputAnalyser = new AudioStreamAnalyser(audiocontext, outputAudioStream);
+    let outputAnalyser = new AudioStreamAnalyser(audiocontext, outputAudioStream);
 
-    var maxWithIndex = (a, b, i) => (b >= a.value) ? { value: b, index: i } : a;
-    var initial = { value: -1, index: -1 };
+    let error = null;
+    cancel.then(e => error = e);
 
-    return new Promise((resolve, reject) => inputElem.ontimeupdate = () => {
-      var inputData = inputAnalyser.getByteFrequencyData();
-      var outputData = outputAnalyser.getByteFrequencyData();
+    let indexOfMax = data => 
+      data.reduce((max, val, i) => (val >= data[max]) ? i : max, 0);
 
-      var inputMax = inputData.reduce(maxWithIndex, initial);
-      var outputMax = outputData.reduce(maxWithIndex, initial);
-      info("Comparing maxima; input[" + inputMax.index + "] = " + inputMax.value +
-           ", output[" + outputMax.index + "] = " + outputMax.value);
-      if (!inputMax.value || !outputMax.value) {
-        return;
+    await outputAnalyser.waitForAnalysisSuccess(() => {
+      if (error) {
+        throw error;
       }
 
-      // When the input and output maxima are within reasonable distance
-      // from each other, we can be sure that the input tone has made it
-      // through the peer connection.
-      if (Math.abs(inputMax.index - outputMax.index) < 10) {
-        ok(true, "input and output audio data matches");
-        inputElem.ontimeupdate = null;
-        resolve();
+      let inputData = inputAnalyser.getByteFrequencyData();
+      let outputData = outputAnalyser.getByteFrequencyData();
+
+      let inputMax = indexOfMax(inputData);
+      let outputMax = indexOfMax(outputData);
+      info(`Comparing maxima; input[${inputMax}] = ${inputData[inputMax]},`
+        + ` output[${outputMax}] = ${outputData[outputMax]}`);
+      if (!inputData[inputMax] || !outputData[outputMax]) {
+        return false;
       }
+
+      // When the input and output maxima are within reasonable distance (2% of
+      // total length, which means ~10 for length 512) from each other, we can
+      // be sure that the input tone has made it through the peer connection.
+      info(`input data length: ${inputData.length}`);
+      return Math.abs(inputMax - outputMax) < (inputData.length * 0.02);
     });
   },
 
