@@ -124,20 +124,4 @@
                  xbl:inherits="xbl:text=label,accesskey,wrap"/>
     </content>
   </binding>
-
-  <binding id="download-subview-toolbarbutton"
-           extends="chrome://global/content/bindings/button.xml#menu-button-base">
-    <content>
-      <children includes="observes|template|menupopup|panel|tooltip"/>
-      <xul:image class="toolbarbutton-icon" xbl:inherits="validate,src=image,label,consumeanchor"/>
-      <xul:vbox class="toolbarbutton-text" flex="1">
-        <xul:label crop="end" xbl:inherits="value=label,accesskey,crop,wrap"/>
-        <xul:label class="status-text status-full" crop="end" xbl:inherits="value=fullStatus"/>
-        <xul:label class="status-text status-open" crop="end" xbl:inherits="value=openLabel"/>
-        <xul:label class="status-text status-retry" crop="end" xbl:inherits="value=retryLabel"/>
-        <xul:label class="status-text status-show" crop="end" xbl:inherits="value=showLabel"/>
-      </xul:vbox>
-      <xul:toolbarbutton anonid="button" class="action-button"/>
-    </content>
-  </binding>
 </bindings>
