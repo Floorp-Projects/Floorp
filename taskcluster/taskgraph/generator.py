@@ -66,7 +66,7 @@ class Kind(object):
                       label=task_dict['label'],
                       attributes=task_dict['attributes'],
                       task=task_dict['task'],
-                      optimization=task_dict.get('optimization'),
+                      optimizations=task_dict.get('optimizations'),
                       dependencies=task_dict.get('dependencies'))
                  for task_dict in transforms(trans_config, inputs)]
         return tasks

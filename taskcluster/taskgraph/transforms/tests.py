@@ -896,6 +896,7 @@ def make_job_description(config, tests):
         jobdesc['name'] = name
         jobdesc['label'] = label
         jobdesc['description'] = test['description']
+        jobdesc['when'] = test.get('when', {})
         jobdesc['attributes'] = attributes
         jobdesc['dependencies'] = {'build': build_label}
 
@@ -925,11 +926,9 @@ def make_job_description(config, tests):
         }
 
         # run SETA unless this is a try push
-        if config.params['project'] == 'try':
-            jobdesc['when'] = test.get('when', {})
-        else:
-            # when SETA is enabled, the 'when' does not apply (optimizations don't mix)
-            jobdesc['optimization'] = {'seta': None}
+        jobdesc['optimizations'] = optimizations = []
+        if config.params['project'] != 'try':
+            optimizations.append(['seta'])
 
         run = jobdesc['run'] = {}
         run['using'] = 'mozharness-test'
