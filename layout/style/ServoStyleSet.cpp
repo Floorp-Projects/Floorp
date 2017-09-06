@@ -614,6 +614,10 @@ ServoStyleSet::ResolveInheritingAnonymousBoxStyle(nsIAtom* aPseudoTag,
 {
   MOZ_ASSERT(nsCSSAnonBoxes::IsAnonBox(aPseudoTag) &&
              !nsCSSAnonBoxes::IsNonInheritingAnonBox(aPseudoTag));
+  MOZ_ASSERT_IF(aParentContext, !StylistNeedsUpdate());
+
+  UpdateStylistIfNeeded();
+
   RefPtr<ServoStyleContext> style = nullptr;
 
   if (aParentContext) {
@@ -621,13 +625,6 @@ ServoStyleSet::ResolveInheritingAnonymousBoxStyle(nsIAtom* aPseudoTag,
   }
 
   if (!style) {
-    // People like to call into here from random attribute notifications (see
-    // bug 1388234, and bug 1389029).
-    //
-    // We may get a wrong cached style if the stylist needs an update, but we'll
-    // have a whole restyle scheduled anyway.
-    UpdateStylistIfNeeded();
-
     style =
       Servo_ComputedValues_GetForAnonymousBox(aParentContext,
                                               aPseudoTag,
