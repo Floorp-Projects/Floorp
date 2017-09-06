@@ -165,11 +165,13 @@ ImageDocument::~ImageDocument()
 NS_IMPL_CYCLE_COLLECTION_INHERITED(ImageDocument, MediaDocument,
                                    mImageContent)
 
-NS_IMPL_ISUPPORTS_CYCLE_COLLECTION_INHERITED(ImageDocument,
-                                             MediaDocument,
-                                             nsIImageDocument,
-                                             imgINotificationObserver,
-                                             nsIDOMEventListener)
+NS_IMPL_ADDREF_INHERITED(ImageDocument, MediaDocument)
+NS_IMPL_RELEASE_INHERITED(ImageDocument, MediaDocument)
+
+NS_INTERFACE_TABLE_HEAD_CYCLE_COLLECTION_INHERITED(ImageDocument)
+  NS_INTERFACE_TABLE_INHERITED(ImageDocument, nsIImageDocument,
+                               imgINotificationObserver, nsIDOMEventListener)
+NS_INTERFACE_TABLE_TAIL_INHERITING(MediaDocument)
 
 
 nsresult

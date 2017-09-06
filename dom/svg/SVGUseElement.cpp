@@ -64,9 +64,12 @@ NS_IMPL_CYCLE_COLLECTION_TRAVERSE_BEGIN_INHERITED(SVGUseElement,
   tmp->mSource.Traverse(&cb);
 NS_IMPL_CYCLE_COLLECTION_TRAVERSE_END
 
-NS_IMPL_ISUPPORTS_CYCLE_COLLECTION_INHERITED(SVGUseElement,
-                                             SVGUseElementBase,
-                                             nsIMutationObserver)
+NS_IMPL_ADDREF_INHERITED(SVGUseElement,SVGUseElementBase)
+NS_IMPL_RELEASE_INHERITED(SVGUseElement,SVGUseElementBase)
+
+NS_INTERFACE_TABLE_HEAD_CYCLE_COLLECTION_INHERITED(SVGUseElement)
+  NS_INTERFACE_TABLE_INHERITED(SVGUseElement, nsIMutationObserver)
+NS_INTERFACE_TABLE_TAIL_INHERITING(SVGUseElementBase)
 
 //----------------------------------------------------------------------
 // Implementation

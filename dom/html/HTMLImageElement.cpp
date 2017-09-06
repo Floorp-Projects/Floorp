@@ -132,16 +132,22 @@ HTMLImageElement::~HTMLImageElement()
 }
 
 
+NS_IMPL_ADDREF_INHERITED(HTMLImageElement, Element)
+NS_IMPL_RELEASE_INHERITED(HTMLImageElement, Element)
+
 NS_IMPL_CYCLE_COLLECTION_INHERITED(HTMLImageElement,
                                    nsGenericHTMLElement,
                                    mResponsiveSelector)
 
-NS_IMPL_ISUPPORTS_CYCLE_COLLECTION_INHERITED(HTMLImageElement,
-                                             nsGenericHTMLElement,
-                                             nsIDOMHTMLImageElement,
-                                             nsIImageLoadingContent,
-                                             imgIOnloadBlocker,
-                                             imgINotificationObserver)
+// QueryInterface implementation for HTMLImageElement
+NS_INTERFACE_TABLE_HEAD_CYCLE_COLLECTION_INHERITED(HTMLImageElement)
+  NS_INTERFACE_TABLE_INHERITED(HTMLImageElement,
+                               nsIDOMHTMLImageElement,
+                               nsIImageLoadingContent,
+                               imgIOnloadBlocker,
+                               imgINotificationObserver)
+NS_INTERFACE_TABLE_TAIL_INHERITING(nsGenericHTMLElement)
+
 
 NS_IMPL_ELEMENT_CLONE(HTMLImageElement)
 
