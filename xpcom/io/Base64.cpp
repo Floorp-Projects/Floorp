@@ -553,15 +553,16 @@ Base64Decode(const char* aBase64, uint32_t aBase64Len, char** aBinary,
   return NS_OK;
 }
 
-nsresult
-Base64Decode(const nsACString& aBase64, nsACString& aBinary)
+template<typename T>
+static nsresult
+Base64DecodeString(const T& aBase64, T& aBinary)
 {
   // Check for overflow.
   if (aBase64.Length() > UINT32_MAX / 3) {
     return NS_ERROR_FAILURE;
   }
 
-  // Don't ask PR_Base64Decode to decode the empty string
+  // Don't decode the empty string
   if (aBase64.IsEmpty()) {
     aBinary.Truncate();
     return NS_OK;
@@ -574,7 +575,7 @@ Base64Decode(const nsACString& aBase64, nsACString& aBinary)
     return NS_ERROR_OUT_OF_MEMORY;
   }
 
-  char* binary = aBinary.BeginWriting();
+  typename T::char_type* binary = aBinary.BeginWriting();
   nsresult rv = Base64DecodeHelper(aBase64.BeginReading(), aBase64.Length(),
                                    binary, &binaryLen);
   if (NS_FAILED(rv)) {
@@ -584,6 +585,12 @@ Base64Decode(const nsACString& aBase64, nsACString& aBinary)
 
   aBinary.SetLength(binaryLen);
   return NS_OK;
+}
+
+nsresult
+Base64Decode(const nsACString& aBase64, nsACString& aBinary)
+{
+  return Base64DecodeString(aBase64, aBinary);
 }
 
 nsresult
