@@ -259,7 +259,7 @@ class Debugger : private mozilla::LinkedListElement<Debugger>
 {
     friend class Breakpoint;
     friend class DebuggerMemory;
-    friend struct JSRuntime::GlobalObjectWatchersLinkAccess<Debugger>;
+    friend struct JSRuntime::GlobalObjectWatchersSiblingAccess<Debugger>;
     friend class SavedStacks;
     friend class ScriptedOnStepHandler;
     friend class ScriptedOnPopHandler;
@@ -389,17 +389,26 @@ class Debugger : private mozilla::LinkedListElement<Debugger>
     // Whether to enable code coverage on the Debuggee.
     bool collectCoverageInfo;
 
-    template <typename T>
-    struct DebuggerLinkAccess {
-      static mozilla::DoublyLinkedListElement<T>& Get(T* aThis) {
-        return aThis->debuggerLink;
+    template<typename T>
+    struct DebuggerSiblingAccess {
+      static T* GetNext(T* elm) {
+        return elm->debuggerLink.mNext;
+      }
+      static void SetNext(T* elm, T* next) {
+        elm->debuggerLink.mNext = next;
+      }
+      static T* GetPrev(T* elm) {
+        return elm->debuggerLink.mPrev;
+      }
+      static void SetPrev(T* elm, T* prev) {
+        elm->debuggerLink.mPrev = prev;
       }
     };
 
     // List of all js::Breakpoints in this debugger.
     using BreakpointList =
         mozilla::DoublyLinkedList<js::Breakpoint,
-                                  DebuggerLinkAccess<js::Breakpoint>>;
+                                  DebuggerSiblingAccess<js::Breakpoint>>;
     BreakpointList breakpoints;
 
     // The set of GC numbers for which one or more of this Debugger's observed
@@ -1586,17 +1595,26 @@ class BreakpointSite {
   private:
     Type type_;
 
-    template <typename T>
-    struct SiteLinkAccess {
-      static mozilla::DoublyLinkedListElement<T>& Get(T* aThis) {
-        return aThis->siteLink;
+    template<typename T>
+    struct SiteSiblingAccess {
+      static T* GetNext(T* elm) {
+        return elm->siteLink.mNext;
+      }
+      static void SetNext(T* elm, T* next) {
+        elm->siteLink.mNext = next;
+      }
+      static T* GetPrev(T* elm) {
+        return elm->siteLink.mPrev;
+      }
+      static void SetPrev(T* elm, T* prev) {
+        elm->siteLink.mPrev = prev;
       }
     };
 
     // List of all js::Breakpoints at this instruction.
     using BreakpointList =
         mozilla::DoublyLinkedList<js::Breakpoint,
-                                  SiteLinkAccess<js::Breakpoint>>;
+                                  SiteSiblingAccess<js::Breakpoint>>;
     BreakpointList breakpoints;
     size_t enabledCount;  /* number of breakpoints in the list that are enabled */
 
