@@ -25,6 +25,7 @@ push_apk_breakpoint_description_schema = Schema({
     Required('name'): basestring,
     Required('label'): basestring,
     Required('description'): basestring,
+    Required('job-from'): basestring,
     Required('attributes'): object,
     Required('worker-type'): None,
     Required('worker'): object,

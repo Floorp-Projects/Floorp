@@ -1020,6 +1020,7 @@ ChannelMediaResource::GetLength()
 bool
 ChannelSuspendAgent::Suspend()
 {
+  MOZ_ASSERT(NS_IsMainThread());
   SuspendInternal();
   return (++mSuspendCount == 1);
 }
@@ -1027,6 +1028,7 @@ ChannelSuspendAgent::Suspend()
 void
 ChannelSuspendAgent::SuspendInternal()
 {
+  MOZ_ASSERT(NS_IsMainThread());
   if (mChannel) {
     bool isPending = false;
     nsresult rv = mChannel->IsPending(&isPending);
@@ -1040,6 +1042,7 @@ ChannelSuspendAgent::SuspendInternal()
 bool
 ChannelSuspendAgent::Resume()
 {
+  MOZ_ASSERT(NS_IsMainThread());
   MOZ_ASSERT(IsSuspended(), "Resume without suspend!");
   --mSuspendCount;
 
@@ -1056,6 +1059,7 @@ ChannelSuspendAgent::Resume()
 void
 ChannelSuspendAgent::UpdateSuspendedStatusIfNeeded()
 {
+  MOZ_ASSERT(NS_IsMainThread());
   if (!mIsChannelSuspended && IsSuspended()) {
     SuspendInternal();
   }
@@ -1064,6 +1068,7 @@ ChannelSuspendAgent::UpdateSuspendedStatusIfNeeded()
 void
 ChannelSuspendAgent::NotifyChannelOpened(nsIChannel* aChannel)
 {
+  MOZ_ASSERT(NS_IsMainThread());
   MOZ_ASSERT(aChannel);
   mChannel = aChannel;
 }
@@ -1071,6 +1076,7 @@ ChannelSuspendAgent::NotifyChannelOpened(nsIChannel* aChannel)
 void
 ChannelSuspendAgent::NotifyChannelClosing()
 {
+  MOZ_ASSERT(NS_IsMainThread());
   MOZ_ASSERT(mChannel);
   // Before close the channel, it need to be resumed to make sure its internal
   // state is correct. Besides, We need to suspend the channel after recreating.
@@ -1084,6 +1090,7 @@ ChannelSuspendAgent::NotifyChannelClosing()
 bool
 ChannelSuspendAgent::IsSuspended()
 {
+  MOZ_ASSERT(NS_IsMainThread());
   return (mSuspendCount > 0);
 }
 

@@ -351,11 +351,11 @@ session.Capabilities = class extends Map {
       ["rotatable", appinfo.name == "B2G"],
 
       // proprietary
-      ["specificationLevel", 0],
-      ["moz:processID", Services.appinfo.processID],
-      ["moz:profile", maybeProfile()],
       ["moz:accessibilityChecks", false],
       ["moz:headless", Cc["@mozilla.org/gfx/info;1"].getService(Ci.nsIGfxInfo).isHeadless],
+      ["moz:processID", Services.appinfo.processID],
+      ["moz:profile", maybeProfile()],
+      ["moz:webdriverClick", false],
     ]);
   }
 
@@ -442,9 +442,9 @@ session.Capabilities = class extends Map {
           matched.set("timeouts", timeouts);
           break;
 
-        case "specificationLevel":
-          assert.positiveInteger(v);
-          matched.set("specificationLevel", v);
+        case "moz:webdriverClick":
+          assert.boolean(v);
+          matched.set("moz:webdriverClick", v);
           break;
 
         case "moz:accessibilityChecks":

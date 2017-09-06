@@ -50,10 +50,6 @@ nICEr_non_unified_sources = [
     'nICEr/src/util/ice_util.c',
 ]
 
-# This file cannot be built in unified mode because it breaks Linux ASAN builds
-nICEr_non_unified_sources += [
-    'nICEr/src/util/mbslen.c',
-]
 nrappkit_non_unified_sources = [
     'nrappkit/src/log/r_log.c',
     'nrappkit/src/util/byteorder.c',
