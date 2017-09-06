@@ -345,6 +345,7 @@
   width: 18px;
   background-image: url(chrome://browser/skin/tabbrowser/tab-overflow-indicator.png);
   background-size: 17px 100%;
+  background-repeat: no-repeat;
   border-left: 1px solid;
   border-image: linear-gradient(rgba(255,255,255,.2),
                                 rgba(255,255,255,.2) calc(100% - 1px - var(--tab-toolbar-navbar-overlap)),
