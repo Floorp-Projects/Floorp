@@ -3420,7 +3420,9 @@ AutoFlushICache::AutoFlushICache(const char* nonce, bool inhibit)
 #if defined(JS_CODEGEN_ARM) || defined(JS_CODEGEN_ARM64) || defined(JS_CODEGEN_MIPS32) || defined(JS_CODEGEN_MIPS64)
   : start_(0),
     stop_(0),
+#ifdef JS_JITSPEW
     name_(nonce),
+#endif
     inhibit_(inhibit)
 #endif
 {
