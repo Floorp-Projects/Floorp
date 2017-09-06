@@ -675,6 +675,25 @@ DataTransfer::TypesListMayHaveChanged()
   DataTransferBinding::ClearCachedTypesValue(this);
 }
 
+already_AddRefed<DataTransfer>
+DataTransfer::MozCloneForEvent(const nsAString& aEvent, ErrorResult& aRv)
+{
+  nsCOMPtr<nsIAtom> atomEvt = NS_Atomize(aEvent);
+  if (!atomEvt) {
+    aRv.Throw(NS_ERROR_OUT_OF_MEMORY);
+    return nullptr;
+  }
+  EventMessage eventMessage = nsContentUtils::GetEventMessage(atomEvt);
+
+  RefPtr<DataTransfer> dt;
+  nsresult rv = Clone(mParent, eventMessage, false, false, getter_AddRefs(dt));
+  if (NS_FAILED(rv)) {
+    aRv.Throw(rv);
+    return nullptr;
+  }
+  return dt.forget();
+}
+
 nsresult
 DataTransfer::SetDataAtInternal(const nsAString& aFormat, nsIVariant* aData,
                                 uint32_t aIndex,
