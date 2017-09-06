@@ -10,12 +10,12 @@ tasks:
       github:
         events:
           - pull_request.opened
-          - pull_request.closed
+          - pull_request.edited
           - pull_request.synchronize
           - pull_request.reopened
-          - push
     payload:
       maxRunTime: 3600
+      deadline: "{{ '30 minutes' | $fromNow }}"
       image: 'mozillamobile/focus-android'
       command:
         - /bin/bash
@@ -27,7 +27,7 @@ tasks:
           && git checkout {{event.head.sha}}
           && ./gradlew assemble
     metadata:
-      name: FocusAndroidBuild
-      description: Building Focus for Android (via Gradle)
+      name: Focus for Android - Build - Pull Request
+      description: Building Focus for Android (via Gradle) - triggered by a pull request.
       owner: '{{ event.head.user.email }}'
       source: '{{ event.head.repo.url }}'
