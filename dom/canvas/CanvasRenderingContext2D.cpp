@@ -5687,7 +5687,7 @@ CanvasRenderingContext2D::GetImageData(JSContext* aCx, double aSx,
       // JSContext, and we're at least _somewhat_ perf-sensitive (so may not
       // want to compute the caller type in the common non-write-only case), so
       // let's just use what we have.
-      !nsContentUtils::CallerHasPermission(aCx, NS_LITERAL_STRING("<all_urls>")))
+      !nsContentUtils::CallerHasPermission(aCx, nsGkAtoms::all_urlsPermission))
   {
     // XXX ERRMSG we need to report an error to developers here! (bug 329026)
     aError.Throw(NS_ERROR_DOM_SECURITY_ERR);

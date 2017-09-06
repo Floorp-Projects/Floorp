@@ -38,7 +38,7 @@ import java.util.Set;
 /**
  * Receives and processes telemetry broadcasts from background services, namely Sync.
  * Nomenclature:
- * - Bundled Sync Ping: a Sync Ping as documented at http://gecko.readthedocs.io/en/latest/toolkit/components/telemetry/telemetry/data/sync-ping.html
+ * - Bundled Sync Ping: a Sync Ping as documented at https://firefox-source-docs.mozilla.org/toolkit/components/telemetry/telemetry/data/sync-ping.html
  *   as of commit https://github.com/mozilla-services/docs/commit/7eb4b412d3ab5ec46b280eff312ace32e7cf27e6
  * - Telemetry data: incoming background telemetry, of two types: "sync" and "sync event"
  * - Local Sync Ping: a persistable representation of incoming telemetry data. Not intended for upload.

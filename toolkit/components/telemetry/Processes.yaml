@@ -1,7 +1,7 @@
 # This lists the known child processes we collect Telemetry for.
 # The entries are keyed with the names used in Telemetry internally, the same name that is used
 # in the main pings payload, i.e. "payload/processes/<process name>". See:
-# https://gecko.readthedocs.io/en/latest/toolkit/components/telemetry/telemetry/data/main-ping.html#processes
+# https://firefox-source-docs.mozilla.org/toolkit/components/telemetry/telemetry/data/main-ping.html#processes
 #
 # For now this is only used to inform the data pipeline about new processes, but will be used to
 # generate headers with C++ data later (enums, strings, ...).

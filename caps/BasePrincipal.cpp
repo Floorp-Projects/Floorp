@@ -7,7 +7,6 @@
 #include "mozilla/BasePrincipal.h"
 
 #include "nsDocShell.h"
-#include "nsIAddonPolicyService.h"
 #include "nsIContentSecurityPolicy.h"
 #include "nsIObjectInputStream.h"
 #include "nsIObjectOutputStream.h"
@@ -331,24 +330,29 @@ BasePrincipal::GetIsInIsolatedMozBrowserElement(bool* aIsInIsolatedMozBrowserEle
   return NS_OK;
 }
 
-bool
-BasePrincipal::AddonHasPermission(const nsAString& aPerm)
+nsresult
+BasePrincipal::GetAddonPolicy(nsISupports** aResult)
 {
-  nsAutoString addonId;
-  NS_ENSURE_SUCCESS(GetAddonId(addonId), false);
+  *aResult = AddonPolicy();
+  return NS_OK;
+}
 
-  if (addonId.IsEmpty()) {
-    return false;
+extensions::WebExtensionPolicy*
+BasePrincipal::AddonPolicy()
+{
+  if (Is<ContentPrincipal>()) {
+    return As<ContentPrincipal>()->AddonPolicy();
   }
+  return nullptr;
+}
 
-  nsCOMPtr<nsIAddonPolicyService> aps =
-    do_GetService("@mozilla.org/addons/policy-service;1");
-  NS_ENSURE_TRUE(aps, false);
-
-  bool retval = false;
-  nsresult rv = aps->AddonHasPermission(addonId, aPerm, &retval);
-  NS_ENSURE_SUCCESS(rv, false);
-  return retval;
+bool
+BasePrincipal::AddonHasPermission(const nsIAtom* aPerm)
+{
+  if (auto policy = AddonPolicy()) {
+    return policy->HasPermission(aPerm);
+  }
+  return false;
 }
 
 already_AddRefed<BasePrincipal>
@@ -448,19 +452,10 @@ BasePrincipal::CloneStrippingUserContextIdAndFirstPartyDomain()
 bool
 BasePrincipal::AddonAllowsLoad(nsIURI* aURI, bool aExplicit /* = false */)
 {
-  nsAutoString addonId;
-  NS_ENSURE_SUCCESS(GetAddonId(addonId), false);
-
-  if (addonId.IsEmpty()) {
-    return false;
+  if (auto policy = AddonPolicy()) {
+    return policy->CanAccessURI(aURI, aExplicit);
   }
-
-  nsCOMPtr<nsIAddonPolicyService> aps = do_GetService("@mozilla.org/addons/policy-service;1");
-  NS_ENSURE_TRUE(aps, false);
-
-  bool allowed = false;
-  nsresult rv = aps->AddonMayLoadURI(addonId, aURI, aExplicit, &allowed);
-  return NS_SUCCEEDED(rv) && allowed;
+  return false;
 }
 
 void
