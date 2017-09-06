@@ -245,9 +245,11 @@ HTMLEditRules::~HTMLEditRules()
   }
 }
 
-NS_IMPL_ISUPPORTS_CYCLE_COLLECTION_INHERITED(HTMLEditRules,
-                                             TextEditRules,
-                                             nsIEditActionListener)
+NS_IMPL_ADDREF_INHERITED(HTMLEditRules, TextEditRules)
+NS_IMPL_RELEASE_INHERITED(HTMLEditRules, TextEditRules)
+NS_INTERFACE_TABLE_HEAD_CYCLE_COLLECTION_INHERITED(HTMLEditRules)
+  NS_INTERFACE_TABLE_INHERITED(HTMLEditRules, nsIEditActionListener)
+NS_INTERFACE_TABLE_TAIL_INHERITING(TextEditRules)
 
 NS_IMPL_CYCLE_COLLECTION_INHERITED(HTMLEditRules, TextEditRules,
                                    mDocChangeRange, mUtilRange, mNewBlock,
