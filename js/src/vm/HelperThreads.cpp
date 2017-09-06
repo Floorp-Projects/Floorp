@@ -972,11 +972,7 @@ GlobalHelperThreadState::GlobalHelperThreadState()
  : cpuCount(0),
    threadCount(0),
    threads(nullptr),
-   wasmCompilationInProgress_tier1(false),
-   wasmCompilationInProgress_tier2(false),
    wasmTier2GeneratorsFinished_(0),
-   numWasmFailedJobs_tier1(0),
-   numWasmFailedJobs_tier2(0),
    helperLock(mutexid::GlobalHelperThreadState)
 {
     cpuCount = GetCPUCount();
@@ -1227,8 +1223,7 @@ bool
 GlobalHelperThreadState::canStartWasmCompile(const AutoLockHelperThreadState& lock,
                                              wasm::CompileMode mode)
 {
-    // Don't execute a wasm job if an earlier one failed.
-    if (wasmWorklist(lock, mode).empty() || wasmFailed(lock, mode))
+    if (wasmWorklist(lock, mode).empty())
         return false;
 
     // For Tier1 and Once compilation, honor the maximum allowed threads to
@@ -1884,27 +1879,14 @@ HelperThread::handleWasmWorkload(AutoLockHelperThreadState& locked, wasm::Compil
     MOZ_ASSERT(idle());
 
     currentTask.emplace(HelperThreadState().wasmWorklist(locked, mode).popCopy());
-    bool success = false;
-    UniqueChars error;
 
     wasm::CompileTask* task = wasmTask();
     {
         AutoUnlockHelperThreadState unlock(locked);
-        success = wasm::CompileFunction(task, &error);
+        wasm::ExecuteCompileTaskFromHelperThread(task);
     }
 
-    // On success, try to move work to the finished list.
-    if (success)
-        success = HelperThreadState().wasmFinishedList(locked, mode).append(task);
-
-    // On failure, note the failure for harvesting by the parent.
-    if (!success) {
-        HelperThreadState().noteWasmFailure(locked, mode);
-        HelperThreadState().setWasmError(locked, mode, Move(error));
-    }
-
-    // Notify the active thread in case it's waiting.
-    HelperThreadState().notifyAll(GlobalHelperThreadState::CONSUMER, locked);
+    // No active thread should be waiting on the CONSUMER mutex.
     currentTask.reset();
 }
 

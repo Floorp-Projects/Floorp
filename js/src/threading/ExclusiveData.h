@@ -11,6 +11,7 @@
 #include "mozilla/Maybe.h"
 #include "mozilla/Move.h"
 
+#include "threading/ConditionVariable.h"
 #include "threading/Mutex.h"
 
 namespace js {
@@ -176,6 +177,10 @@ class ExclusiveData
         const ExclusiveData<T>* parent() const {
             MOZ_ASSERT(parent_);
             return parent_;
+        }
+
+        void wait(ConditionVariable& cond) {
+            cond.impl_.wait(parent_->lock_);
         }
 
         ~Guard() {
