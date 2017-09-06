@@ -578,8 +578,6 @@ this.worker = new WorkerDebuggerLoader({
   },
   paths: {
     // ⚠ DISCUSSION ON DEV-DEVELOPER-TOOLS REQUIRED BEFORE MODIFYING ⚠
-    "": "resource://gre/modules/commonjs/",
-    // ⚠ DISCUSSION ON DEV-DEVELOPER-TOOLS REQUIRED BEFORE MODIFYING ⚠
     // Modules here are intended to have one implementation for
     // chrome, and a separate implementation for content.  Here we
     // map the directory to the chrome subdirectory, but the content
