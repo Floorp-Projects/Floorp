@@ -36,7 +36,7 @@ import java.util.concurrent.TimeUnit;
 /**
  * Builds a {@link TelemetryOutgoingPing} representing a core ping.
  *
- * See https://gecko.readthedocs.org/en/latest/toolkit/components/telemetry/telemetry/core-ping.html
+ * See https://firefox-source-docs.mozilla.org/toolkit/components/telemetry/telemetry/data/core-ping.html
  * for details on the core ping.
  */
 public class TelemetryCorePingBuilder extends TelemetryPingBuilder {

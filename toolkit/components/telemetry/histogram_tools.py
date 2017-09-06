@@ -35,7 +35,7 @@ ALWAYS_ALLOWED_KEYS = [
     'record_in_processes',
 ]
 
-BASE_DOC_URL = ("https://gecko.readthedocs.io/en/latest/toolkit/components/"
+BASE_DOC_URL = ("https://firefox-source-docs.mozilla.org/toolkit/components/"
                 "telemetry/telemetry/")
 HISTOGRAMS_DOC_URL = (BASE_DOC_URL + "collection/histograms.html")
 SCALARS_DOC_URL = (BASE_DOC_URL + "collection/scalars.html")

@@ -7570,9 +7570,8 @@ HTMLMediaElement::MarkAsTainted()
 bool
 HasDebuggerOrTabsPrivilege(JSContext* aCx, JSObject* aObj)
 {
-  return nsContentUtils::CallerHasPermission(aCx,
-                                             NS_LITERAL_STRING("debugger")) ||
-         nsContentUtils::CallerHasPermission(aCx, NS_LITERAL_STRING("tabs"));
+  return nsContentUtils::CallerHasPermission(aCx, nsGkAtoms::debugger) ||
+         nsContentUtils::CallerHasPermission(aCx, nsGkAtoms::tabs);
  }
 
 void

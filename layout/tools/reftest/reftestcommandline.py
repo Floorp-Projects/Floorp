@@ -251,6 +251,16 @@ class ReftestArgumentsParser(argparse.ArgumentParser):
                           dest="objPath",
                           help="Path to the base dir of all object files.")
 
+        self.add_argument("--verify",
+                          action="store_true",
+                          default=False,
+                          help="Test verification mode.")
+
+        self.add_argument("--verify-max-time",
+                          type=int,
+                          default=3600,
+                          help="Maximum time, in seconds, to run in --verify mode..")
+
         mozlog.commandline.add_logging_group(self)
 
     def get_ip(self):

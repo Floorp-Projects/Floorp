@@ -5,7 +5,7 @@
 
 #include "domstubs.idl"
 
-interface nsIAtom;
+interface nsIAtom;  // used in [noscript] methods only
 interface nsIArray;
 interface nsISimpleEnumerator;
 interface nsIXULTemplateResult;
@@ -162,10 +162,10 @@ interface nsIXULTemplateQueryProcessor : nsISupports
    *
    * @returns a compiled query object
    */
-  nsISupports compileQuery(in nsIXULTemplateBuilder aBuilder,
-                           in nsIDOMNode aQuery,
-                           in nsIAtom aRefVariable,
-                           in nsIAtom aMemberVariable);
+  [noscript] nsISupports compileQuery(in nsIXULTemplateBuilder aBuilder,
+                                      in nsIDOMNode aQuery,
+                                      in nsIAtom aRefVariable,
+                                      in nsIAtom aMemberVariable);
 
   /**
    * Generate the results of a query and return them in an enumerator. The
@@ -222,10 +222,10 @@ interface nsIXULTemplateQueryProcessor : nsISupports
    * @param aRef variable that holds reference value
    * @param aExpr expression used to compute the value to assign
    */
-  void addBinding(in nsIDOMNode aRuleNode,
-                  in nsIAtom aVar,
-                  in nsIAtom aRef,
-                  in AString aExpr);
+  [noscript] void addBinding(in nsIDOMNode aRuleNode,
+                             in nsIAtom aVar,
+                             in nsIAtom aRef,
+                             in AString aExpr);
 
   /**
    * Translate a ref attribute string into a result. This is used as the
@@ -269,8 +269,8 @@ interface nsIXULTemplateQueryProcessor : nsISupports
    *
    * @param returns -1 if less, 0 if equal, or 1 if greater
    */
-   int32_t compareResults(in nsIXULTemplateResult aLeft,
-                          in nsIXULTemplateResult aRight,
-                          in nsIAtom aVar,
-                          in unsigned long aSortHints);
+   [noscript] int32_t compareResults(in nsIXULTemplateResult aLeft,
+                                     in nsIXULTemplateResult aRight,
+                                     in nsIAtom aVar,
+                                     in unsigned long aSortHints);
 };

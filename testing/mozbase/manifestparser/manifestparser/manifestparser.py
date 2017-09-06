@@ -65,7 +65,7 @@ class ManifestParser(object):
         :param finder: If provided, this finder object will be used for filesystem
                        interactions. Finder objects are part of the mozpack package,
                        documented at
-                       http://gecko.readthedocs.org/en/latest/python/mozpack.html#module-mozpack.files
+                       http://firefox-source-docs.mozilla.org/python/mozpack.html#module-mozpack.files
         :param handle_defaults: If not set, do not propagate manifest defaults to individual
                                 test objects. Callers are expected to manage per-manifest
                                 defaults themselves via the manifest_defaults member

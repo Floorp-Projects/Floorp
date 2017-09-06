@@ -67,6 +67,26 @@ nsQueryReferent::operator()(const nsIID& aIID, void** aAnswer) const
   return status;
 }
 
+nsIWeakReference*
+NS_GetWeakReference(nsISupportsWeakReference* aInstancePtr, nsresult* aErrorPtr)
+{
+  nsresult status;
+
+  nsIWeakReference* result = nullptr;
+
+  if (aInstancePtr) {
+    status = aInstancePtr->GetWeakReference(&result);
+  } else {
+    status = NS_ERROR_NULL_POINTER;
+  }
+
+  if (aErrorPtr) {
+    *aErrorPtr = status;
+  }
+
+  return result;
+}
+
 nsIWeakReference*  // or else |already_AddRefed<nsIWeakReference>|
 NS_GetWeakReference(nsISupports* aInstancePtr, nsresult* aErrorPtr)
 {

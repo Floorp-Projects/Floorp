@@ -7,6 +7,7 @@
 #include "mozilla/net/NeckoChannelParams.h"
 #include "mozilla/LoadInfo.h"
 #include "mozilla/BasePrincipal.h"
+#include "mozilla/ClearOnShutdown.h"
 #include "mozilla/dom/ContentChild.h"
 #include "mozilla/ipc/URIUtils.h"
 #include "mozilla/net/NeckoChild.h"
@@ -36,16 +37,17 @@ static const char kPrefThirdPartySession[] =
 static const char kPrefCookieIPCSync[] = "network.cookie.ipc.sync";
 static const char kCookieLeaveSecurityAlone[] = "network.cookie.leave-secure-alone";
 
-static CookieServiceChild *gCookieService;
+static StaticRefPtr<CookieServiceChild> gCookieService;
 
-CookieServiceChild*
+already_AddRefed<CookieServiceChild>
 CookieServiceChild::GetSingleton()
 {
-  if (!gCookieService)
+  if (!gCookieService) {
     gCookieService = new CookieServiceChild();
+    ClearOnShutdown(&gCookieService);
+  }
 
-  NS_ADDREF(gCookieService);
-  return gCookieService;
+  return do_AddRef(gCookieService);
 }
 
 NS_IMPL_ISUPPORTS(CookieServiceChild,
