@@ -196,20 +196,20 @@ DispatcherDelegate.prototype = {
   _requestHandler: {
     listeners: {},
 
-    onEvent: Task.async(function* (event, data, callback) {
-      try {
-        let response = yield this.listeners[event](data.data);
+    onEvent: function(event, data, callback) {
+      let self = this;
+      Task.spawn(function* () {
+        return yield self.listeners[event](data.data);
+      }).then(response => {
         callback.onSuccess(response);
-
-      } catch (e) {
+      }, error => {
         Cu.reportError("Error in Messaging handler for " + event + ": " + e);
-
         callback.onError({
           message: e.message || (e && e.toString()),
           stack: e.stack || Components.stack.formattedStack,
         });
-      }
-    }),
+      });
+    },
   },
 };
 
