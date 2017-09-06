@@ -81,6 +81,27 @@ enum CustomClipboardTypeId {
   eCustomClipboardTypeId_String
 };
 
+static DataTransfer::Mode
+ModeForEvent(EventMessage aEventMessage)
+{
+  switch (aEventMessage) {
+  case eCut:
+  case eCopy:
+  case eDragStart:
+    // For these events, we want to be able to add data to the data transfer,
+    // Otherwise, the data is already present.
+    return DataTransfer::Mode::ReadWrite;
+  case eDrop:
+  case ePaste:
+  case ePasteNoFormatting:
+    // For these events we want to be able to read the data which is stored in
+    // the DataTransfer, rather than just the type information.
+    return DataTransfer::Mode::ReadOnly;
+  default:
+    return DataTransfer::Mode::Protected;
+  }
+}
+
 DataTransfer::DataTransfer(nsISupports* aParent, EventMessage aEventMessage,
                            bool aIsExternal, int32_t aClipboardType)
   : mParent(aParent)
@@ -88,7 +109,7 @@ DataTransfer::DataTransfer(nsISupports* aParent, EventMessage aEventMessage,
   , mEffectAllowed(nsIDragService::DRAGDROP_ACTION_UNINITIALIZED)
   , mEventMessage(aEventMessage)
   , mCursorState(false)
-  , mReadOnly(true)
+  , mMode(ModeForEvent(aEventMessage))
   , mIsExternal(aIsExternal)
   , mUserCancelled(false)
   , mIsCrossDomainSubFrameDrop(false)
@@ -97,14 +118,9 @@ DataTransfer::DataTransfer(nsISupports* aParent, EventMessage aEventMessage,
   , mDragImageY(0)
 {
   mItems = new DataTransferItemList(this, aIsExternal);
-  // For these events, we want to be able to add data to the data transfer, so
-  // clear the readonly state. Otherwise, the data is already present. For
-  // external usage, cache the data from the native clipboard or drag.
-  if (aEventMessage == eCut ||
-      aEventMessage == eCopy ||
-      aEventMessage == eDragStart) {
-    mReadOnly = false;
-  } else if (mIsExternal) {
+
+  // For external usage, cache the data from the native clipboard or drag.
+  if (mIsExternal && mMode != Mode::ReadWrite) {
     if (aEventMessage == ePasteNoFormatting) {
       mEventMessage = ePaste;
       CacheExternalClipboardFormats(true);
@@ -134,7 +150,7 @@ DataTransfer::DataTransfer(nsISupports* aParent,
   , mEffectAllowed(aEffectAllowed)
   , mEventMessage(aEventMessage)
   , mCursorState(aCursorState)
-  , mReadOnly(true)
+  , mMode(ModeForEvent(aEventMessage))
   , mIsExternal(aIsExternal)
   , mUserCancelled(aUserCancelled)
   , mIsCrossDomainSubFrameDrop(aIsCrossDomainSubFrameDrop)
@@ -429,7 +445,7 @@ DataTransfer::ClearData(const Optional<nsAString>& aFormat,
                         nsIPrincipal& aSubjectPrincipal,
                         ErrorResult& aRv)
 {
-  if (mReadOnly) {
+  if (IsReadOnly()) {
     aRv.Throw(NS_ERROR_DOM_NO_MODIFICATION_ALLOWED_ERR);
     return;
   }
@@ -668,7 +684,7 @@ DataTransfer::SetDataAtInternal(const nsAString& aFormat, nsIVariant* aData,
     return NS_OK;
   }
 
-  if (mReadOnly) {
+  if (IsReadOnly()) {
     return NS_ERROR_DOM_NO_MODIFICATION_ALLOWED_ERR;
   }
 
@@ -716,7 +732,7 @@ DataTransfer::MozClearDataAt(const nsAString& aFormat, uint32_t aIndex,
                              nsIPrincipal& aSubjectPrincipal,
                              ErrorResult& aRv)
 {
-  if (mReadOnly) {
+  if (IsReadOnly()) {
     aRv.Throw(NS_ERROR_DOM_NO_MODIFICATION_ALLOWED_ERR);
     return;
   }
@@ -753,7 +769,7 @@ DataTransfer::MozClearDataAtHelper(const nsAString& aFormat, uint32_t aIndex,
                                    nsIPrincipal& aSubjectPrincipal,
                                    ErrorResult& aRv)
 {
-  MOZ_ASSERT(!mReadOnly);
+  MOZ_ASSERT(!IsReadOnly());
   MOZ_ASSERT(aIndex < MozItemCount());
   MOZ_ASSERT(aIndex == 0 ||
              (mEventMessage != eCut && mEventMessage != eCopy &&
@@ -768,7 +784,7 @@ DataTransfer::MozClearDataAtHelper(const nsAString& aFormat, uint32_t aIndex,
 void
 DataTransfer::SetDragImage(Element& aImage, int32_t aX, int32_t aY)
 {
-  if (!mReadOnly) {
+  if (!IsReadOnly()) {
     mDragImage = &aImage;
     mDragImageX = aX;
     mDragImageY = aY;
@@ -848,7 +864,7 @@ DataTransfer::GetFiles(bool aRecursiveFlag,
 void
 DataTransfer::AddElement(Element& aElement, ErrorResult& aRv)
 {
-  if (mReadOnly) {
+  if (IsReadOnly()) {
     aRv.Throw(NS_ERROR_DOM_NO_MODIFICATION_ALLOWED_ERR);
     return;
   }

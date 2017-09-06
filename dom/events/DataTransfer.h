@@ -61,6 +61,14 @@ public:
     return static_cast<DataTransfer*>(aArg);
   }
 
+  /// An enum which represents which "Drag Data Store Mode" the DataTransfer is
+  /// in according to the spec.
+  enum class Mode : uint8_t {
+    ReadWrite,
+    ReadOnly,
+    Protected,
+  };
+
 protected:
 
   // hide the default constructor
@@ -214,13 +222,25 @@ public:
     return mItems;
   }
 
-  // a readonly dataTransfer cannot have new data added or existing data
-  // removed. Only the dropEffect and effectAllowed may be modified.
-  bool IsReadOnly() const {
-    return mReadOnly;
+  // Returns the current "Drag Data Store Mode" of the DataTransfer. This
+  // determines what modifications may be performed on the DataTransfer, and
+  // what data may be read from it.
+  Mode GetMode() const {
+    return mMode;
   }
-  void SetReadOnly() {
-    mReadOnly = true;
+  void SetMode(Mode aMode) {
+    mMode = aMode;
+  }
+
+  // Helper method. Is true if the DataTransfer's mode is ReadOnly or Protected,
+  // which means that the DataTransfer cannot be modified.
+  bool IsReadOnly() const {
+    return mMode != Mode::ReadWrite;
+  }
+  // Helper method. Is true if the DataTransfer's mode is Protected, which means
+  // that DataTransfer type information may be read, but data may not be.
+  bool IsProtected() const {
+    return mMode == Mode::Protected;
   }
 
   int32_t ClipboardType() const {
@@ -343,9 +363,8 @@ protected:
   // Indicates the behavior of the cursor during drag operations
   bool mCursorState;
 
-  // readonly data transfers may not be modified except the drop effect and
-  // effect allowed.
-  bool mReadOnly;
+  // The current "Drag Data Store Mode" which the DataTransfer is in.
+  Mode mMode;
 
   // true for drags started without a data transfer, for example, those from
   // another application.

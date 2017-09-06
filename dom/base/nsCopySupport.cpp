@@ -848,7 +848,7 @@ nsCopySupport::FireClipboardEvent(EventMessage aEventMessage,
     // from reading the clipboard contents after the paste event has fired.
     if (clipboardData) {
       clipboardData->ClearAll();
-      clipboardData->SetReadOnly();
+      clipboardData->SetMode(DataTransfer::Mode::Protected);
     }
 
     if (aActionTaken) {
