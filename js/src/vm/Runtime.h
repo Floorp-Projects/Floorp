@@ -624,7 +624,7 @@ struct JSRuntime : public js::MallocProvider<JSRuntime>
 #endif
 
     /* Number of zones which may be operated on by non-cooperating helper threads. */
-    js::UnprotectedData<size_t> numHelperThreadZones;
+    js::UnprotectedData<size_t> numActiveHelperThreadZones;
 
     friend class js::AutoLockForExclusiveAccess;
 
@@ -633,7 +633,7 @@ struct JSRuntime : public js::MallocProvider<JSRuntime>
     void clearUsedByHelperThread(JS::Zone* zone);
 
     bool hasHelperThreadZones() const {
-        return numHelperThreadZones > 0;
+        return numActiveHelperThreadZones > 0;
     }
 
 #ifdef DEBUG
