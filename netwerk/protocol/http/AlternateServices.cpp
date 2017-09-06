@@ -228,7 +228,7 @@ AltSvcMapping::MakeHashKey(nsCString &outKey,
   outKey.Truncate();
 
   if (originPort == -1) {
-    bool isHttps = originScheme.Equals("https");
+    bool isHttps = originScheme.EqualsLiteral("https");
     originPort = isHttps ? NS_HTTPS_DEFAULT_PORT : NS_HTTP_DEFAULT_PORT;
   }
 
