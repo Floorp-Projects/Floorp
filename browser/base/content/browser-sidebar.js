@@ -194,7 +194,7 @@ var SidebarUI = {
     }
 
     this._box.setAttribute("width", sourceUI._box.boxObject.width);
-    this._show(commandID);
+    this.showInitially(commandID);
 
     return true;
   },
@@ -229,7 +229,7 @@ var SidebarUI = {
     }
 
     if (document.getElementById(commandID)) {
-      this._show(commandID);
+      this.showInitially(commandID);
     } else {
       // Remove the |sidebarcommand| attribute, because the element it
       // refers to no longer exists, so we should assume this sidebar
@@ -334,6 +334,17 @@ var SidebarUI = {
       BrowserUITelemetry.countSidebarEvent(commandID, "show");
     });
   },
+
+  /**
+   * Show the sidebar, without firing the focused event or logging telemetry.
+   * This is intended to be used when the sidebar is opened automatically
+   * when a window opens (not triggered by user interaction).
+   *
+   * @param {string} commandID ID of the xul:broadcaster element to use.
+   */
+   showInitially(commandID) {
+     return this._show(commandID);
+   },
 
   /**
    * Implementation for show. Also used internally for sidebars that are shown
