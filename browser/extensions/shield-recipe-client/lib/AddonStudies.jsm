@@ -97,7 +97,7 @@ async function markAsEnded(db, study) {
   study.active = false;
   study.studyEndDate = new Date();
   await getStore(db).put(study);
-  Services.obs.notifyObservers(study, STUDY_ENDED_TOPIC);
+  Services.obs.notifyObservers(study, STUDY_ENDED_TOPIC, `${study.recipeId}`);
 }
 
 this.AddonStudies = {
