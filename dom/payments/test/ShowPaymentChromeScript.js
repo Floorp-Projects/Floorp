@@ -220,7 +220,7 @@ addMessageListener("set-reject-ui-service", function() {
 
 addMessageListener("set-update-with-error-ui-service", function() {
   paymentSrv.setTestingUIService(ErrorUIService.QueryInterface(Ci.nsIPaymentUIService));
-})
+});
 
 addMessageListener("test-init-data-and-response", testInitDataAndResponse);
 
