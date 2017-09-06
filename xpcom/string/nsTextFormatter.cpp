@@ -478,7 +478,6 @@ nsTextFormatter::dosprintf(SprintfStateStr* aState, const char16_t* aFmt,
   int flags, width, prec, radix;
 
   const char16_t* hexp;
-  int rv;
 
   // Next argument for non-numbered arguments.
   size_t nextNaturalArg = 0;
@@ -486,6 +485,8 @@ nsTextFormatter::dosprintf(SprintfStateStr* aState, const char16_t* aFmt,
   bool sawNumberedArg = false;
 
   while ((c = *aFmt++) != 0) {
+    int rv;
+
     if (c != '%') {
       rv = (*aState->stuff)(aState, aFmt - 1, 1);
       if (rv < 0) {
@@ -828,12 +829,7 @@ nsTextFormatter::dosprintf(SprintfStateStr* aState, const char16_t* aFmt,
     }
   }
 
-  /* Stuff trailing NUL */
-  char16_t null = '\0';
-
-  rv = (*aState->stuff)(aState, &null, 1);
-
-  return rv;
+  return 0;
 }
 
 /************************************************************************/
@@ -842,10 +838,6 @@ int
 nsTextFormatter::StringStuff(nsTextFormatter::SprintfStateStr* aState, const char16_t* aStr,
                              uint32_t aLen)
 {
-  if (*aStr == '\0') {
-    return 0;
-  }
-
   ptrdiff_t off = aState->cur - aState->base;
 
   nsAString* str = static_cast<nsAString*>(aState->stuffclosure);
@@ -895,7 +887,6 @@ nsTextFormatter::vsnprintf(char16_t* aOut, uint32_t aOutLen,
                            const char16_t* aFmt, mozilla::Span<BoxedValue> aValues)
 {
   SprintfStateStr ss;
-  uint32_t n;
 
   MOZ_ASSERT((int32_t)aOutLen > 0);
   if ((int32_t)aOutLen <= 0) {
@@ -908,15 +899,22 @@ nsTextFormatter::vsnprintf(char16_t* aOut, uint32_t aOutLen,
   ss.maxlen = aOutLen;
   int result = dosprintf(&ss, aFmt, aValues);
 
-  /* If we added chars, and we didn't append a null, do it now. */
-  if ((ss.cur != ss.base) && (*(ss.cur - 1) != '\0')) {
-    *(--ss.cur) = '\0';
+  if (ss.cur == ss.base) {
+    return 0;
   }
 
+  // Append a NUL.  However, be sure not to count it in the returned
+  // length.
+  if (ss.cur - ss.base >= ptrdiff_t(ss.maxlen)) {
+    --ss.cur;
+  }
+  *ss.cur = '\0';
+
+  // Check the result now, so that an unterminated string can't
+  // possibly escape.
   if (result < 0) {
     return -1;
   }
 
-  n = ss.cur - ss.base;
-  return n ? n - 1 : n;
+  return ss.cur - ss.base;
 }

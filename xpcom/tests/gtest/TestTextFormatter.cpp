@@ -216,3 +216,17 @@ TEST(TextFormatterTestMismatch, format_c)
   EXPECT_EQ(1u, out.Length());
   EXPECT_EQ(u'c', out.CharAt(0));
 }
+
+TEST(TextFormatterTestResults, Tests)
+{
+  char16_t buf[10];
+
+  EXPECT_EQ(nsTextFormatter::snprintf(buf, 10, u"%s", "more than 10 characters"), 9u);
+  EXPECT_EQ(buf[9], '\0');
+  EXPECT_STREQ("more than", NS_ConvertUTF16toUTF8(buf).get());
+
+  nsString out;
+  nsTextFormatter::ssprintf(out, u"%s", "more than 10 characters");
+  // The \0 isn't written here.
+  EXPECT_EQ(out.Length(), 23u);
+}
