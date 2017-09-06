@@ -11,8 +11,6 @@ const {classes: Cc, interfaces: Ci, utils: Cu} = Components;
 Cu.import("resource://gre/modules/XPCOMUtils.jsm");
 XPCOMUtils.defineLazyModuleGetter(this, "AppConstants",
   "resource://gre/modules/AppConstants.jsm");
-XPCOMUtils.defineLazyModuleGetter(this, "BrowserUtils",
-  "resource://gre/modules/BrowserUtils.jsm");
 XPCOMUtils.defineLazyModuleGetter(this, "CustomizableUI",
   "resource:///modules/CustomizableUI.jsm");
 
@@ -735,9 +733,9 @@ this.PanelMultiView = class {
     let oldSibling = viewNode.nextSibling || null;
     this._offscreenViewStack.appendChild(viewNode);
 
-    BrowserUtils.promiseLayoutFlushed(this.document, "layout", () => {
-      return this._dwu.getBoundsWithoutFlushing(viewNode);
-    }).then(viewRect => {
+    this.window.addEventListener("MozAfterPaint", () => {
+      let viewRect = this._dwu.getBoundsWithoutFlushing(viewNode);
+
       try {
         this._viewStack.insertBefore(viewNode, oldSibling);
       } catch (ex) {
@@ -745,7 +743,7 @@ this.PanelMultiView = class {
       }
 
       callback(viewRect);
-    });
+    }, { once: true });
   }
 
   /**
