@@ -12,8 +12,8 @@ Cu.import("resource://gre/modules/XPCOMUtils.jsm");
 const XUL_NS = "http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul";
 const FRAME_SCRIPT_URL = "chrome://gfxsanity/content/gfxFrameScript.js";
 
-const PAGE_WIDTH = 92;
-const PAGE_HEIGHT = 166;
+const PAGE_WIDTH = 160;
+const PAGE_HEIGHT = 234;
 const DRIVER_PREF = "sanity-test.driver-version";
 const DEVICE_PREF = "sanity-test.device-id";
 const VERSION_PREF = "sanity-test.version";
@@ -102,19 +102,19 @@ function takeWindowSnapshot(win, ctx) {
 // render as expected (with a tolerance of 64 to allow for
 // yuv->rgb differences between platforms).
 //
-// The video is 64x64, and is split into quadrants of
+// The video is 132*132, and is split into quadrants of
 // different colours. The top left of the video is 8,72
-// and we test a pixel 10,10 into each quadrant to avoid
+// and we test a pixel 33,33 into each quadrant to avoid
 // blending differences at the edges.
 //
 // We allow massive amounts of fuzz for the colours since
 // it can depend hugely on the yuv -> rgb conversion, and
 // we don't want to fail unnecessarily.
 function verifyVideoRendering(ctx) {
-  return testPixel(ctx, 18, 82, 255, 255, 255, 255, 64) &&
-    testPixel(ctx, 50, 82, 0, 255, 0, 255, 64) &&
-    testPixel(ctx, 18, 114, 0, 0, 255, 255, 64) &&
-    testPixel(ctx, 50, 114, 255, 0, 0, 255, 64);
+  return testPixel(ctx, 41, 105, 255, 255, 255, 255, 64) &&
+    testPixel(ctx, 107, 105, 0, 255, 0, 255, 64) &&
+    testPixel(ctx, 41, 171, 0, 0, 255, 255, 64) &&
+    testPixel(ctx, 107, 171, 255, 0, 0, 255, 64);
 }
 
 // Verify that the middle of the layers test is the color we expect.
