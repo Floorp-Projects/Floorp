@@ -805,7 +805,8 @@ toolbaritem[cui-areatype="menu-panel"][sdkstylewidget="true"]:not(.panel-wide-it
   to { transform: rotate(360deg); }
 }
 
-#appMenu-fxa-icon[syncstatus="active"] > .toolbarbutton-icon {
+#appMenu-fxa-icon[syncstatus="active"] > .toolbarbutton-icon,
+#PanelUI-remotetabs-syncnow[syncstatus="active"] > .toolbarbutton-icon {
   animation: syncRotate 0.8s linear infinite;
   fill: #0a84ff;
 }

@@ -57,6 +57,18 @@ function setup() {
   return server;
 }
 
+add_task(async function test_not_logged_in() {
+  let server = setup();
+  try {
+    await Service.login();
+    do_check_false(Service.isLoggedIn, "no user configured, so can't be logged in");
+    do_check_eq(Service._checkSync(), kSyncNotConfigured);
+  } finally {
+    Svc.Prefs.resetBranch("");
+    await promiseStopServer(server);
+  }
+});
+
 add_task(async function test_login_logout() {
   enableValidationPrefs();
 

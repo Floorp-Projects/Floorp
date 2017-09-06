@@ -40,6 +40,10 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=558036
       testAttrs("haspopupTrue", { "haspopup": "true" }, true);
       testAbsentAttrs("haspopupFalse", { "haspopup": "false" });
       testAbsentAttrs("haspopupEmpty", { "haspopup": "" });
+      testAttrs("haspopupDialog", { "haspopup": "dialog" }, true);
+      testAttrs("haspopupListbox", { "haspopup": "listbox" }, true);
+      testAttrs("haspopupMenu", { "haspopup": "menu" }, true);
+      testAttrs("haspopupTree", { "haspopup": "tree" }, true);
       testAttrs("hidden", {"hidden": "true"}, true);
       testAbsentAttrs("hidden_false", { "hidden": "false" });
       testAbsentAttrs("modal", {"modal": "true"});
@@ -218,6 +222,10 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=558036
   <div id="haspopupTrue" aria-haspopup="true"></div>
   <div id="haspopupFalse" aria-haspopup="false"></div>
   <div id="haspopupEmpty" aria-haspopup=""></div>
+  <div id="haspopupDialog" aria-haspopup="dialog"></div>
+  <div id="haspopupListbox" aria-haspopup="listbox"></div>
+  <div id="haspopupMenu" aria-haspopup="menu"></div>
+  <div id="haspopupTree" aria-haspopup="tree"></div>
   <div id="hidden" aria-hidden="true"></div>
   <div id="hidden_false" aria-hidden="false"></div>
   <div id="modal" aria-modal="true"></div>
