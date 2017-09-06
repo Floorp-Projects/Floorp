@@ -435,8 +435,8 @@ public:
   // if this stream didn't read any data, since another stream might have
   // received data for the same resource.
   void CacheClientNotifyDataEnded(nsresult aStatus);
-  // Notified by the cache to update the principal of the resource.
-  void CacheClientUpdatePrincipal();
+  // Notify that the principal for the cached resource changed.
+  void CacheClientNotifyPrincipalChanged();
   // Notify the decoder that the cache suspended status changed.
   void CacheClientNotifySuspendedStatusChanged();
 
@@ -547,8 +547,6 @@ protected:
   nsresult SetupChannelHeaders();
   // Closes the channel. Main thread only.
   void CloseChannel();
-  // Update the principal for the resource. Main thread only.
-  void UpdatePrincipal();
 
   // Parses 'Content-Range' header and returns results via parameters.
   // Returns error if header is not available, values are not parse-able or
@@ -559,13 +557,14 @@ protected:
                                    int64_t& aRangeTotal);
 
   static nsresult CopySegmentToCache(nsIInputStream* aInStream,
-                                     void* aResource,
+                                     void* aClosure,
                                      const char* aFromSegment,
                                      uint32_t aToOffset,
                                      uint32_t aCount,
                                      uint32_t* aWriteCount);
 
-  nsresult CopySegmentToCache(const char* aFromSegment,
+  nsresult CopySegmentToCache(nsIPrincipal* aPrincipal,
+                              const char* aFromSegment,
                               uint32_t aCount,
                               uint32_t* aWriteCount);
 

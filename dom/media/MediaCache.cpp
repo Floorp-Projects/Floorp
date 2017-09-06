@@ -234,9 +234,6 @@ public:
       , mResourceID(aResourceID)
       , mNext(0)
     {
-      MOZ_ASSERT(
-        NS_IsMainThread() ||
-        (aMediaCache->GetReentrantMonitor().AssertCurrentThreadIn(), true));
     }
     MediaCacheStream* Next()
     {
@@ -1879,21 +1876,27 @@ MediaCacheStream::UpdatePrincipal(nsIPrincipal* aPrincipal)
 }
 
 void
-MediaCacheStream::NotifyDataReceived(int64_t aSize, const char* aData)
+MediaCacheStream::NotifyDataReceived(int64_t aSize, const char* aData,
+    nsIPrincipal* aPrincipal)
 {
   // This might happen off the main thread.
   MOZ_DIAGNOSTIC_ASSERT(!mClosed);
 
-  ReentrantMonitorAutoEnter mon(mMediaCache->GetReentrantMonitor());
+  // Update principals before putting the data in the cache. This is important,
+  // we want to make sure all principals are updated before any consumer
+  // can see the new data.
+  // We do this without holding the cache monitor, in case the client wants
+  // to do something that takes a lock.
   {
-    // Need to acquire the monitor because this code might run
-    // off the main thread.
     MediaCache::ResourceStreamIterator iter(mMediaCache, mResourceID);
     while (MediaCacheStream* stream = iter.Next()) {
-      stream->mClient->CacheClientUpdatePrincipal();
+      if (stream->UpdatePrincipal(aPrincipal)) {
+        stream->mClient->CacheClientNotifyPrincipalChanged();
+      }
     }
   }
 
+  ReentrantMonitorAutoEnter mon(mMediaCache->GetReentrantMonitor());
   int64_t size = aSize;
   const char* data = aData;
 
