@@ -27,6 +27,6 @@ TEST(Intl_Locale_LocaleService, Negotiate) {
       requestedLocales, availableLocales, defaultLocale, strategy, supportedLocales);
 
   ASSERT_TRUE(supportedLocales.Length() == 2);
-  ASSERT_TRUE(supportedLocales[0].Equals("sr-Cyrl"));
-  ASSERT_TRUE(supportedLocales[1].Equals("en-US"));
+  ASSERT_TRUE(supportedLocales[0].EqualsLiteral("sr-Cyrl"));
+  ASSERT_TRUE(supportedLocales[1].EqualsLiteral("en-US"));
 }

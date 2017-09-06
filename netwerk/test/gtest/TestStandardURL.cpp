@@ -162,7 +162,7 @@ TEST(TestStandardURL, From_test_standardurldotjs)
     for (uint32_t i = 0; i < sizeof(localIPv4s)/sizeof(localIPv4s[0]); i ++) {
         nsCString encHost(localIPv4s[i]);
         ASSERT_EQ(NS_OK, Test_NormalizeIPv4(encHost, result));
-        ASSERT_TRUE(result.Equals("127.0.0.1"));
+        ASSERT_TRUE(result.EqualsLiteral("127.0.0.1"));
     }
 
     const char* nonIPv4s[] = {"0xfffffffff", "0x100000000", "4294967296", "1.2.0x10000",

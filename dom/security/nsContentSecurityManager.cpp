@@ -808,9 +808,9 @@ nsContentSecurityManager::IsOriginPotentiallyTrustworthy(nsIPrincipal* aPrincipa
     return NS_OK;
   }
 
-  if (host.Equals("127.0.0.1") ||
-      host.Equals("localhost") ||
-      host.Equals("::1")) {
+  if (host.EqualsLiteral("127.0.0.1") ||
+      host.EqualsLiteral("localhost") ||
+      host.EqualsLiteral("::1")) {
     *aIsTrustWorthy = true;
     return NS_OK;
   }
