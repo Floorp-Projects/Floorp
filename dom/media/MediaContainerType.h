@@ -37,7 +37,7 @@ public:
 
   // Original string. Note that "type/subtype" may not be lowercase,
   // use Type().AsString() instead to get the normalized "type/subtype".
-  const nsACString& OriginalString() const { return mExtendedMIMEType.OriginalString(); }
+  const nsCString& OriginalString() const { return mExtendedMIMEType.OriginalString(); }
 
   size_t SizeOfExcludingThis(mozilla::MallocSizeOf aMallocSizeOf) const;
 

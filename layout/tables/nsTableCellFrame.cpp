@@ -230,8 +230,12 @@ nsTableCellFrame::AttributeChanged(int32_t         aNameSpaceID,
     PresContext()->PresShell()->
       FrameNeedsReflow(this, nsIPresShell::eTreeChange, NS_FRAME_IS_DIRTY);
   }
-  // let the table frame decide what to do
-  GetTableFrame()->AttributeChangedFor(this, mContent, aAttribute);
+
+  if (aAttribute == nsGkAtoms::rowspan || aAttribute == nsGkAtoms::colspan) {
+    nsLayoutUtils::PostRestyleEvent(mContent->AsElement(),
+                                    nsRestyleHint(0),
+                                    nsChangeHint_UpdateTableCellSpans);
+  }
   return NS_OK;
 }
 

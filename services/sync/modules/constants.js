@@ -150,6 +150,7 @@ kSyncWeaveDisabled:                    "Weave is disabled",
 kSyncNetworkOffline:                   "Network is offline",
 kSyncBackoffNotMet:                    "Trying to sync before the server said it's okay",
 kFirstSyncChoiceNotMade:               "User has not selected an action for first sync",
+kSyncNotConfigured:                    "Sync is not configured",
 
 DEVICE_TYPE_DESKTOP:                   "desktop",
 DEVICE_TYPE_MOBILE:                    "mobile",

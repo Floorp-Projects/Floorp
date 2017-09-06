@@ -580,13 +580,15 @@ def stylo_config(value, _, target):
     build_stylo = None
     enable_stylo = None
 
-    # If nothing is specified, default to building stylo where possible.
+    # If nothing is specified, default to building and enabling Stylo where it
+    # is known to work.
     if value.origin == 'default':
         if target.os == 'Android':
             # Stylo on Android is happening Later(tm).
             pass
         else:
             build_stylo = True
+            enable_stylo = True
     elif len(value) and value[0] == 'build':
         # Build but disable by request.
         build_stylo = True

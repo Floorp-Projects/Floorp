@@ -28,7 +28,7 @@ var sleep = utils.sleep;
 // For Mozmill 1.5 backward compatibility
 var windowMap = windows.map;
 
-waitForEvents = function () {
+var waitForEvents = function () {
 }
 
 waitForEvents.prototype = {

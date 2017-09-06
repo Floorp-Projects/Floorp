@@ -292,7 +292,11 @@ addMessageListener("Extension:UnblockParser", BrowserListener);
 
 var WebBrowserChrome = {
   onBeforeLinkTraversal(originalTarget, linkURI, linkNode, isAppTab) {
-    return BrowserUtils.onBeforeLinkTraversal(originalTarget, linkURI, linkNode, isAppTab);
+    // isAppTab is the value for the docShell that received the click.  We're
+    // handling this in the top-level frame and want traversal behavior to
+    // match the value for this frame rather than any subframe, so we pass
+    // through the docShell.isAppTab value rather than what we were handed.
+    return BrowserUtils.onBeforeLinkTraversal(originalTarget, linkURI, linkNode, docShell.isAppTab);
   },
 
   shouldLoadURI(docShell, URI, referrer, hasPostData, triggeringPrincipal) {

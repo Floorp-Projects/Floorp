@@ -816,9 +816,10 @@ private:
   {
     MOZ_ASSERT(NS_IsMainThread());
     CleanupStreams();
-
-    NS_DispatchToMainThread(
-      new DispatchStartEventRunnable(this, NS_LITERAL_STRING("start")));
+    if (!mIsStartEventFired) {
+      NS_DispatchToMainThread(
+        new DispatchStartEventRunnable(this, NS_LITERAL_STRING("start")));
+    }
 
     if (NS_FAILED(rv)) {
       mRecorder->ForceInactive();
