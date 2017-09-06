@@ -456,7 +456,8 @@ ChannelMediaResource::OnChannelRedirect(nsIChannel* aOld, nsIChannel* aNew,
 }
 
 nsresult
-ChannelMediaResource::CopySegmentToCache(const char* aFromSegment,
+ChannelMediaResource::CopySegmentToCache(nsIPrincipal* aPrincipal,
+                                         const char* aFromSegment,
                                          uint32_t aCount,
                                          uint32_t* aWriteCount)
 {
@@ -465,21 +466,28 @@ ChannelMediaResource::CopySegmentToCache(const char* aFromSegment,
       "[%d] bytes for decoder[%p]",
       mOffset, aCount, mCallback.get());
   mOffset += aCount;
-  mCacheStream.NotifyDataReceived(aCount, aFromSegment);
+  mCacheStream.NotifyDataReceived(aCount, aFromSegment, aPrincipal);
   *aWriteCount = aCount;
   return NS_OK;
 }
 
+
+struct CopySegmentClosure {
+  nsCOMPtr<nsIPrincipal> mPrincipal;
+  ChannelMediaResource*  mResource;
+};
+
 nsresult
 ChannelMediaResource::CopySegmentToCache(nsIInputStream* aInStream,
-                                         void* aResource,
+                                         void* aClosure,
                                          const char* aFromSegment,
                                          uint32_t aToOffset,
                                          uint32_t aCount,
                                          uint32_t* aWriteCount)
 {
-  ChannelMediaResource* res = static_cast<ChannelMediaResource*>(aResource);
-  return res->CopySegmentToCache(aFromSegment, aCount, aWriteCount);
+  CopySegmentClosure* closure = static_cast<CopySegmentClosure*>(aClosure);
+  return closure->mResource->CopySegmentToCache(
+    closure->mPrincipal, aFromSegment, aCount, aWriteCount);
 }
 
 nsresult
@@ -494,10 +502,18 @@ ChannelMediaResource::OnDataAvailable(nsIRequest* aRequest,
     mChannelStatistics.AddBytes(aCount);
   }
 
+  CopySegmentClosure closure;
+  nsIScriptSecurityManager* secMan = nsContentUtils::GetSecurityManager();
+  if (secMan && mChannel) {
+    secMan->GetChannelResultPrincipal(mChannel, getter_AddRefs(closure.mPrincipal));
+  }
+  closure.mResource = this;
+
   uint32_t count = aCount;
   while (count > 0) {
     uint32_t read;
-    nsresult rv = aStream->ReadSegments(CopySegmentToCache, this, count, &read);
+    nsresult rv = aStream->ReadSegments(CopySegmentToCache, &closure, count,
+                                        &read);
     if (NS_FAILED(rv))
       return rv;
     NS_ASSERTION(read > 0, "Read 0 bytes while data was available?");
@@ -621,8 +637,7 @@ nsresult ChannelMediaResource::Close()
   return NS_OK;
 }
 
-already_AddRefed<nsIPrincipal>
-ChannelMediaResource::GetCurrentPrincipal()
+already_AddRefed<nsIPrincipal> ChannelMediaResource::GetCurrentPrincipal()
 {
   NS_ASSERTION(NS_IsMainThread(), "Only call on main thread");
 
@@ -873,27 +888,11 @@ ChannelMediaResource::CacheClientNotifyDataEnded(nsresult aStatus)
 }
 
 void
-ChannelMediaResource::UpdatePrincipal()
+ChannelMediaResource::CacheClientNotifyPrincipalChanged()
 {
-  MOZ_ASSERT(NS_IsMainThread());
-  nsCOMPtr<nsIPrincipal> principal;
-  nsIScriptSecurityManager* secMan = nsContentUtils::GetSecurityManager();
-  if (secMan && mChannel) {
-    secMan->GetChannelResultPrincipal(mChannel, getter_AddRefs(principal));
-  }
-  if (mCacheStream.UpdatePrincipal(principal)) {
-    mCallback->NotifyPrincipalChanged();
-  }
-}
+  NS_ASSERTION(NS_IsMainThread(), "Don't call on non-main thread");
 
-void
-ChannelMediaResource::CacheClientUpdatePrincipal()
-{
-  SystemGroup::Dispatch(
-    TaskCategory::Other,
-    NewRunnableMethod("ChannelMediaResource::UpdatePrincipal",
-                      this,
-                      &ChannelMediaResource::UpdatePrincipal));
+  mCallback->NotifyPrincipalChanged();
 }
 
 void
