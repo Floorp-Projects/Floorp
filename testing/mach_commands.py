@@ -269,12 +269,7 @@ class Test(MachCommandBase):
                 print("Tests will be run based on modifications to the "
                       "following files:\n\t%s" % "\n\t".join(changed_files))
 
-            from mozbuild.frontend.reader import (
-                BuildReader,
-                EmptyConfig,
-            )
-            config = EmptyConfig(self.topsrcdir)
-            reader = BuildReader(config)
+            reader = self.mozbuild_reader(config_mode='empty')
             files_info = reader.files_info(changed_files)
 
             paths, tags, flavors = set(), set(), set()
