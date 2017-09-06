@@ -15992,8 +15992,6 @@ const features = new PrefsHelper("devtools.debugger.features", {
 /* harmony export (immutable) */ __webpack_exports__["features"] = features;
 
 
-debugger;
-
 if (prefs.debuggerPrefsSchemaVersion !== prefsSchemaVersion) {
   // clear pending Breakpoints
   prefs.pendingBreakpoints = {};
