@@ -2852,6 +2852,24 @@ function UpdateUrlbarSearchSplitterState() {
     return;
   }
 
+  // Ensure the URL bar and search bar's width attributes are set.
+  // Otherwise, their sizes could change and cause them to "jump"
+  // when switching tabs depending on the sizes of their content.
+  // See bugs 1370401 and 965772.
+  // This function is called repeatedly while resizing the window,
+  // so we only get the DOMWindowUtils object if we're sure we'll
+  // use it in order to avoid jank from QueryInterface.
+  if ((urlbar && !urlbar.width) || (searchbar && !searchbar.width)) {
+    let windowUtils = window.QueryInterface(Ci.nsIInterfaceRequestor)
+                            .getInterface(Ci.nsIDOMWindowUtils);
+    if (urlbar) {
+      urlbar.width = windowUtils.getBoundsWithoutFlushing(urlbar).width;
+    }
+    if (searchbar) {
+      searchbar.width = windowUtils.getBoundsWithoutFlushing(searchbar).width;
+    }
+  }
+
   // If the splitter is already in the right place, we don't need to do anything:
   if (splitter &&
       ((splitter.nextSibling == searchbar && splitter.previousSibling == urlbar) ||
