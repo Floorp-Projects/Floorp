@@ -134,7 +134,7 @@ enum BailoutKind
 
     // Like NonStringInput, but should cause immediate invalidation.
     // Used for jsop_iternext.
-    Bailout_NonStringInputInvalidate,
+    Bailout_IterNextNonString,
 
     // Used for integer division, multiplication and modulo.
     // If there's a remainder, bails to return a double.
@@ -229,8 +229,8 @@ BailoutKindString(BailoutKind kind)
       // Bailouts caused by invalid assumptions.
       case Bailout_OverflowInvalidate:
         return "Bailout_OverflowInvalidate";
-      case Bailout_NonStringInputInvalidate:
-        return "Bailout_NonStringInputInvalidate";
+      case Bailout_IterNextNonString:
+        return "Bailout_IterNextNonString";
       case Bailout_DoubleOutput:
         return "Bailout_DoubleOutput";
 
