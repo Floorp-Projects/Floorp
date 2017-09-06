@@ -374,6 +374,9 @@ public:
   GetGroupUsageAndLimit(const nsACString& aGroup,
                         UsageInfo* aUsageInfo);
 
+  void
+  NotifyStoragePressure(uint64_t aUsage);
+
   static void
   GetStorageId(PersistenceType aPersistenceType,
                const nsACString& aOrigin,
