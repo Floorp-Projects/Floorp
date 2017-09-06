@@ -11767,7 +11767,7 @@
   },
   "READER_MODE_PARSE_RESULT" : {
     "record_in_processes": ["main", "content"],
-    "expires_in_version": "58",
+    "expires_in_version": "never",
     "alert_emails": ["firefox-dev@mozilla.org", "gijs@mozilla.com"],
     "kind": "enumerated",
     "n_values": 5,
@@ -11775,7 +11775,7 @@
   },
   "READER_MODE_DOWNLOAD_RESULT" : {
     "record_in_processes": ["main", "content"],
-    "expires_in_version": "58",
+    "expires_in_version": "never",
     "alert_emails": ["firefox-dev@mozilla.org", "gijs@mozilla.com"],
     "kind": "enumerated",
     "n_values": 5,
