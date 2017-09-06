@@ -8,4 +8,5 @@ EXTRA_COMPONENTS += [
     'GeckoView.manifest',
     'GeckoViewPermission.js',
     'GeckoViewPrompt.js',
+    'GeckoViewStartup.js',
 ]

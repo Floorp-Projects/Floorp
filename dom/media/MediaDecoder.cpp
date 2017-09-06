@@ -1560,6 +1560,8 @@ MediaDecoder::RequestDebugInfo()
 void
 MediaDecoder::GetMozDebugReaderData(nsACString& aString)
 {
+  aString += nsPrintfCString("Container Type: %s\n",
+                             ContainerType().Type().AsString().get());
   if (mReader) {
     mReader->GetMozDebugReaderData(aString);
   }

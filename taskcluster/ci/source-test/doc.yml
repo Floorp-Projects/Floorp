@@ -18,6 +18,7 @@ doc-generate:
         command: >
             cd /builds/worker/checkouts/gecko &&
             ./mach doc --outdir docs-out --no-open --archive
+        sparse-profile: sphinx-docs
     when:
         files-changed:
             - '**/*.py'
@@ -40,6 +41,7 @@ doc-upload:
     run:
         using: run-task
         command: cd /builds/worker/checkouts/gecko && ./mach doc --upload --no-open
+        sparse-profile: sphinx-docs
     scopes:
         - secrets:get:project/releng/gecko/build/level-{level}/gecko-docs-upload
     when:

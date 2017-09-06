@@ -44,14 +44,6 @@ public:
     return MakeFrameName(NS_LITERAL_STRING("SVGA"), aResult);
   }
 #endif
-  // nsSVGDisplayableFrame interface:
-  virtual void NotifySVGChanged(uint32_t aFlags) override;
-
-  // nsSVGContainerFrame methods:
-  virtual gfxMatrix GetCanvasTM() override;
-
-private:
-  nsAutoPtr<gfxMatrix> mCanvasTM;
 };
 
 //----------------------------------------------------------------------
@@ -111,41 +103,4 @@ nsSVGAFrame::AttributeChanged(int32_t         aNameSpaceID,
   }
 
  return NS_OK;
-}
-
-//----------------------------------------------------------------------
-// nsSVGDisplayableFrame methods
-
-void
-nsSVGAFrame::NotifySVGChanged(uint32_t aFlags)
-{
-  MOZ_ASSERT(aFlags & (TRANSFORM_CHANGED | COORD_CONTEXT_CHANGED),
-             "Invalidation logic may need adjusting");
-
-  if (aFlags & TRANSFORM_CHANGED) {
-    // make sure our cached transform matrix gets (lazily) updated
-    mCanvasTM = nullptr;
-  }
-
-  nsSVGDisplayContainerFrame::NotifySVGChanged(aFlags);
-}
-
-//----------------------------------------------------------------------
-// nsSVGContainerFrame methods:
-
-gfxMatrix
-nsSVGAFrame::GetCanvasTM()
-{
-  if (!mCanvasTM) {
-    NS_ASSERTION(GetParent(), "null parent");
-
-    nsSVGContainerFrame *parent = static_cast<nsSVGContainerFrame*>(GetParent());
-    dom::SVGAElement *content = static_cast<dom::SVGAElement*>(GetContent());
-
-    gfxMatrix tm = content->PrependLocalTransformsTo(parent->GetCanvasTM());
-
-    mCanvasTM = new gfxMatrix(tm);
-  }
-
-  return *mCanvasTM;
 }

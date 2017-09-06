@@ -51,16 +51,22 @@ add_task(async function test_contextualIdentity_events() {
     }
 
     function assertExpected(expected, container) {
+      // Number of keys that are added by the APIs
+      const createdCount = 2;
       for (let key of Object.keys(container)) {
         browser.test.assertTrue(key in expected, `found property ${key}`);
         browser.test.assertEq(expected[key], container[key], `property value for ${key} is correct`);
       }
-      browser.test.assertEq(Object.keys(expected).length, Object.keys(container).length, "all expected properties found");
+      const hexMatch = /^#[0-9a-f]{6}$/;
+      browser.test.assertTrue(hexMatch.test(expected.colorCode), "Color code property was expected Hex shape");
+      const iconMatch = /^resource:\/\/usercontext-content\/[a-z]+[.]svg$/;
+      browser.test.assertTrue(iconMatch.test(expected.iconUrl), "Icon url property was expected shape");
+      browser.test.assertEq(Object.keys(expected).length, Object.keys(container).length + createdCount, "all expected properties found");
     }
 
     let onCreatePromise = createOneTimeListener("onCreated");
 
-    let containerObj = {name: "foobar", color: "red", icon: "icon"};
+    let containerObj = {name: "foobar", color: "red", icon: "circle"};
     let ci = await browser.contextualIdentities.create(containerObj);
     browser.test.assertTrue(!!ci, "We have an identity");
     const onCreateListenerResponse = await onCreatePromise;
@@ -68,7 +74,7 @@ add_task(async function test_contextualIdentity_events() {
     assertExpected(onCreateListenerResponse.contextualIdentity, Object.assign(containerObj, {cookieStoreId}));
 
     let onUpdatedPromise = createOneTimeListener("onUpdated");
-    let updateContainerObj = {name: "testing", color: "blue", icon: "thing"};
+    let updateContainerObj = {name: "testing", color: "blue", icon: "dollar"};
     ci = await browser.contextualIdentities.update(cookieStoreId, updateContainerObj);
     browser.test.assertTrue(!!ci, "We have an update identity");
     const onUpdatedListenerResponse = await onUpdatedPromise;
@@ -130,39 +136,54 @@ add_task(async function test_contextualIdentity_with_permissions() {
     cis = await browser.contextualIdentities.query({name: "foobar"});
     browser.test.assertEq(0, cis.length, "by default we should have 0 container called foobar");
 
-    ci = await browser.contextualIdentities.create({name: "foobar", color: "red", icon: "icon"});
+    ci = await browser.contextualIdentities.create({name: "foobar", color: "red", icon: "gift"});
     browser.test.assertTrue(!!ci, "We have an identity");
     browser.test.assertEq("foobar", ci.name, "identity.name is correct");
     browser.test.assertEq("red", ci.color, "identity.color is correct");
-    browser.test.assertEq("icon", ci.icon, "identity.icon is correct");
+    browser.test.assertEq("gift", ci.icon, "identity.icon is correct");
     browser.test.assertTrue(!!ci.cookieStoreId, "identity.cookieStoreId is correct");
+
+    browser.test.assertRejects(
+      browser.contextualIdentities.create({name: "foobar", color: "red", icon: "firefox"}),
+      "Invalid icon firefox for container",
+      "Create container called with an invalid icon"
+    );
+
+    browser.test.assertRejects(
+      browser.contextualIdentities.create({name: "foobar", color: "firefox-orange", icon: "gift"}),
+      "Invalid color name firefox-orange for container",
+      "Create container called with an invalid color"
+    );
+
+    cis = await browser.contextualIdentities.query({});
+    browser.test.assertEq(5, cis.length, "we should still have have 5 containers");
 
     ci = await browser.contextualIdentities.get(ci.cookieStoreId);
     browser.test.assertTrue(!!ci, "We have an identity");
     browser.test.assertEq("foobar", ci.name, "identity.name is correct");
     browser.test.assertEq("red", ci.color, "identity.color is correct");
-    browser.test.assertEq("icon", ci.icon, "identity.icon is correct");
+    browser.test.assertEq("gift", ci.icon, "identity.icon is correct");
 
     cis = await browser.contextualIdentities.query({});
     browser.test.assertEq(5, cis.length, "now we have 5 identities");
 
-    ci = await browser.contextualIdentities.update(ci.cookieStoreId, {name: "barfoo", color: "blue", icon: "icon icon"});
+    ci = await browser.contextualIdentities.update(ci.cookieStoreId, {name: "barfoo", color: "blue", icon: "cart"});
     browser.test.assertTrue(!!ci, "We have an identity");
     browser.test.assertEq("barfoo", ci.name, "identity.name is correct");
     browser.test.assertEq("blue", ci.color, "identity.color is correct");
-    browser.test.assertEq("icon icon", ci.icon, "identity.icon is correct");
+    browser.test.assertEq("cart", ci.icon, "identity.icon is correct");
 
     ci = await browser.contextualIdentities.get(ci.cookieStoreId);
     browser.test.assertTrue(!!ci, "We have an identity");
     browser.test.assertEq("barfoo", ci.name, "identity.name is correct");
     browser.test.assertEq("blue", ci.color, "identity.color is correct");
-    browser.test.assertEq("icon icon", ci.icon, "identity.icon is correct");
+    browser.test.assertEq("cart", ci.icon, "identity.icon is correct");
 
     ci = await browser.contextualIdentities.remove(ci.cookieStoreId);
     browser.test.assertTrue(!!ci, "We have an identity");
     browser.test.assertEq("barfoo", ci.name, "identity.name is correct");
     browser.test.assertEq("blue", ci.color, "identity.color is correct");
-    browser.test.assertEq("icon icon", ci.icon, "identity.icon is correct");
+    browser.test.assertEq("cart", ci.icon, "identity.icon is correct");
 
     cis = await browser.contextualIdentities.query({});
     browser.test.assertEq(4, cis.length, "we are back to 4 identities");

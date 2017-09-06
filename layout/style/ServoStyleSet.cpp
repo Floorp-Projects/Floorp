@@ -249,6 +249,7 @@ ServoStyleSet::MediumFeaturesChangedRules(bool* aViewportUnitsUsed)
 }
 
 MOZ_DEFINE_MALLOC_SIZE_OF(ServoStyleSetMallocSizeOf)
+MOZ_DEFINE_MALLOC_ENCLOSING_SIZE_OF(ServoStyleSetMallocEnclosingSizeOf)
 
 void
 ServoStyleSet::AddSizeOfIncludingThis(nsWindowSizes& aSizes) const
@@ -263,10 +264,23 @@ ServoStyleSet::AddSizeOfIncludingThis(nsWindowSizes& aSizes) const
     // Measure mRawSet. We use ServoStyleSetMallocSizeOf rather than
     // aMallocSizeOf to distinguish in DMD's output the memory measured within
     // Servo code.
-    Servo_StyleSet_AddSizeOfExcludingThis(ServoStyleSetMallocSizeOf, &sizes,
-                                          mRawSet.get());
-    aSizes.mLayoutServoStyleSetsStylistRuleTree += sizes.mStylistRuleTree;
-    aSizes.mLayoutServoStyleSetsOther += sizes.mOther;
+    Servo_StyleSet_AddSizeOfExcludingThis(ServoStyleSetMallocSizeOf,
+                                          ServoStyleSetMallocEnclosingSizeOf,
+                                          &sizes, mRawSet.get());
+    aSizes.mLayoutServoStyleSetsStylistRuleTree +=
+      sizes.mStylistRuleTree;
+    aSizes.mLayoutServoStyleSetsStylistPrecomputedPseudos +=
+      sizes.mStylistPrecomputedPseudos;
+    aSizes.mLayoutServoStyleSetsStylistElementAndPseudosMaps +=
+      sizes.mStylistElementAndPseudosMaps;
+    aSizes.mLayoutServoStyleSetsStylistInvalidationMap +=
+      sizes.mStylistInvalidationMap;
+    aSizes.mLayoutServoStyleSetsStylistRevalidationSelectors +=
+      sizes.mStylistRevalidationSelectors;
+    aSizes.mLayoutServoStyleSetsStylistOther +=
+      sizes.mStylistOther;
+    aSizes.mLayoutServoStyleSetsOther +=
+      sizes.mOther;
   }
 
   if (mStyleRuleMap) {
@@ -1406,11 +1420,8 @@ already_AddRefed<gfxFontFeatureValueSet>
 ServoStyleSet::BuildFontFeatureValueSet()
 {
   UpdateStylistIfNeeded();
-  RefPtr<gfxFontFeatureValueSet> set = new gfxFontFeatureValueSet();
-  bool setHasAnyRules = Servo_StyleSet_BuildFontFeatureValueSet(mRawSet.get(), set.get());
-  if (!setHasAnyRules) {
-    return nullptr;
-  }
+  RefPtr<gfxFontFeatureValueSet> set =
+    Servo_StyleSet_BuildFontFeatureValueSet(mRawSet.get());
   return set.forget();
 }
 

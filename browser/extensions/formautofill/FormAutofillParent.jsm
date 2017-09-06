@@ -370,7 +370,7 @@ FormAutofillParent.prototype = {
               break;
             case "update":
               if (!changedGUIDs.length) {
-                this.profileStorage.addresses.update(address.guid, address.record);
+                this.profileStorage.addresses.update(address.guid, address.record, true);
                 changedGUIDs.push(address.guid);
               } else {
                 this.profileStorage.addresses.remove(address.guid);

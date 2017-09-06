@@ -30,10 +30,10 @@ awsy:
                 default:
                     - awsy/linux_config.py
 
-awsy-stylo:
-    description: "Are we slim yet for Stylo parallel"
+awsy-stylo-disabled:
+    description: "Are we slim yet for Stylo disabled"
     suite: awsy
-    treeherder-symbol: tc-SY-stylo(sy)
+    treeherder-symbol: tc-SYsd(sy)
     max-run-time: 7200
     instance-size: xlarge
     allow-software-gl-layers: false
@@ -53,12 +53,12 @@ awsy-stylo:
                 linux.*:
                     - awsy/linux_config.py
         extra-options:
-            - --enable-stylo
+            - --disable-stylo
 
 awsy-stylo-sequential:
     description: "Are we slim yet for Stylo sequential"
     suite: awsy
-    treeherder-symbol: tc-SY-stylo-seq(sy)
+    treeherder-symbol: tc-SYss(sy)
     max-run-time: 7200
     instance-size: xlarge
     allow-software-gl-layers: false
@@ -75,7 +75,6 @@ awsy-stylo-sequential:
                 linux.*:
                     - awsy/linux_config.py
         extra-options:
-            - --enable-stylo
             - --single-stylo-traversal
 
 cppunit:
@@ -460,7 +459,7 @@ mochitest:
             macosx.*: 5
             windows.*: 5
             linux32/debug: 16
-            linux32-stylo/debug: 16
+            linux32-stylo-disabled/debug: 16
             linux.*: 10
     e10s:
         by-test-platform:
@@ -476,12 +475,11 @@ mochitest:
     run-on-projects:
         by-test-platform:
             linux.*-stylo.*: ['autoland', 'mozilla-central', 'try']
-            macosx64-stylo/.*: ['mozilla-central', 'try']
+            macosx64-stylo.*: ['mozilla-central', 'try']
             windows7-32-stylo.*: ['autoland', 'mozilla-central', 'try']
             default: built-projects
     tier:
         by-test-platform:
-            macosx64-stylo/.*: 2
             windows10-64-asan.*: 3
             default: default
     mozharness:
@@ -525,7 +523,7 @@ mochitest-a11y:
         by-test-platform:
             linux64-qr/.*: ['mozilla-central', 'try']
             linux.*-stylo.*: ['autoland', 'mozilla-central', 'try']
-            macosx64-stylo/.*: ['mozilla-central', 'try']
+            macosx64-stylo.*: ['mozilla-central', 'try']
             windows7-32-stylo.*: ['autoland', 'mozilla-central', 'try']
             default: built-projects
     mozharness:
@@ -561,11 +559,11 @@ mochitest-browser-chrome:
     chunks:
         by-test-platform:
             linux64/debug: 16
-            linux64-stylo/debug: 16
+            linux64-stylo-disabled/debug: 16
             linux64-asan/opt: 16
             linux64-jsdcov/opt: 35
             linux32/debug: 16
-            linux32-stylo/debug: 16
+            linux32-stylo-disabled/debug: 16
             default: 7
     e10s:
         by-test-platform:
@@ -577,9 +575,9 @@ mochitest-browser-chrome:
             linux64-jsdcov/opt: 7200
             linux64-ccov/opt: 7200
             linux64/debug: 5400
-            linux64-stylo/debug: 5400
+            linux64-stylo-disabled/debug: 5400
             linux32/debug: 5400
-            linux32-stylo/debug: 5400
+            linux32-stylo-disabled/debug: 5400
             default: 3600
     run-on-projects:
         by-test-platform:
@@ -588,7 +586,7 @@ mochitest-browser-chrome:
             windows8-64-devedition/opt: built-projects  # No dev edition outside of supported branches
             windows10.*: []
             linux.*-stylo.*: ['autoland', 'mozilla-central', 'try']
-            macosx64-stylo/.*: ['mozilla-central', 'try']
+            macosx64-stylo.*: ['mozilla-central', 'try']
             windows7-32-stylo.*: ['autoland', 'mozilla-central', 'try']
             default: built-projects
     worker-type:
@@ -680,7 +678,7 @@ mochitest-chrome:
         by-test-platform:
             windows7-32.*: ['try']
             linux.*-stylo.*: ['autoland', 'mozilla-central', 'try']
-            macosx64-stylo/.*: ['mozilla-central', 'try']
+            macosx64-stylo.*: ['mozilla-central', 'try']
             default: built-projects
     worker-type:
         by-test-platform:
@@ -721,7 +719,6 @@ mochitest-chrome:
     tier:
         by-test-platform:
             windows7-32.*: 2
-            macosx64-stylo/.*: 2
             default: default
 
 mochitest-clipboard:
@@ -734,7 +731,7 @@ mochitest-clipboard:
     run-on-projects:
         by-test-platform:
             linux.*-stylo.*: ['autoland', 'mozilla-central', 'try']
-            macosx64-stylo/.*: ['mozilla-central', 'try']
+            macosx64-stylo.*: ['mozilla-central', 'try']
             default: built-projects
     worker-type:
         by-test-platform:
@@ -773,10 +770,6 @@ mochitest-clipboard:
                             - remove_executables.py
                 extra-options:
                     - --mochitest-suite=plain-clipboard,chrome-clipboard,browser-chrome-clipboard
-    tier:
-        by-test-platform:
-            macosx64-stylo/.*: 2
-            default: default
 
 mochitest-devtools-chrome:
     description: "Mochitest devtools-chrome run"
@@ -795,7 +788,7 @@ mochitest-devtools-chrome:
     run-on-projects:
         by-test-platform:
             linux.*-stylo.*: ['autoland', 'mozilla-central', 'try']
-            macosx64-stylo/.*: ['mozilla-central', 'try']
+            macosx64-stylo.*: ['mozilla-central', 'try']
             windows7-32-stylo.*: ['autoland', 'mozilla-central', 'try']
             default: built-projects
     e10s:
@@ -848,7 +841,7 @@ mochitest-gpu:
             windows8-64-devedition/opt: built-projects  # No dev edition outside of supported branches
             windows10.*: []
             linux.*-stylo.*: ['autoland', 'mozilla-central', 'try']
-            macosx64-stylo/.*: ['mozilla-central', 'try']
+            macosx64-stylo.*: ['mozilla-central', 'try']
             windows7-32-stylo.*: ['autoland', 'mozilla-central', 'try']
             default: built-projects
     worker-type:
@@ -889,7 +882,6 @@ mochitest-gpu:
     tier:
         by-test-platform:
             linux64-qr/.*: 1
-            macosx64-stylo/.*: 2
             windows10-64-asan.*: 3
             default: default
 
@@ -944,7 +936,7 @@ mochitest-media:
             windows8-64-devedition/opt: built-projects  # No dev edition outside of supported branches
             windows10.*: []
             linux.*-stylo.*: ['autoland', 'mozilla-central', 'try']
-            macosx64-stylo/.*: ['mozilla-central', 'try']
+            macosx64-stylo.*: ['mozilla-central', 'try']
             windows7-32-stylo.*: ['autoland', 'mozilla-central', 'try']
             default: built-projects
     worker-type:
@@ -984,7 +976,6 @@ mochitest-media:
     tier:
         by-test-platform:
             linux64-qr/.*: 1
-            macosx64-stylo/.*: 2
             windows10-64-asan.*: 3
             default: default
 
@@ -1030,7 +1021,7 @@ mochitest-webgl:
             windows8-64-devedition/opt: built-projects  # No dev edition outside of supported branches
             windows10.*: []
             linux.*-stylo.*: ['autoland', 'mozilla-central', 'try']
-            macosx64-stylo/.*: ['mozilla-central', 'try']
+            macosx64-stylo.*: ['mozilla-central', 'try']
             windows7-32-stylo.*: ['autoland', 'mozilla-central', 'try']
             default: built-projects
     worker-type:
@@ -1086,7 +1077,6 @@ mochitest-webgl:
     tier:
         by-test-platform:
             linux64-qr/.*: 1
-            macosx64-stylo/.*: 2
             windows10-64-asan.*: 3
             default: default
 
@@ -1250,16 +1240,12 @@ reftest-no-accel:
             default: default
 
 reftest-stylo:
-    description: "Reftest run for Stylo"
+    description: "Reftest run in Stylo vs. Gecko mode"
     suite: reftest/reftest-stylo
     treeherder-symbol: tc-R(Rs)
     virtualization: virtual-with-gpu
     chunks: 8
-    run-on-projects:
-        by-test-platform:
-            windows10.*: []
-            macosx.*: []
-            default: ['autoland', 'mozilla-central', 'try']
+    run-on-projects: ['autoland', 'mozilla-central', 'try']
     mozharness:
         script: desktop_unittest.py
         no-read-buildbot-config: true
@@ -1323,17 +1309,13 @@ talos-chrome:
             - --add-option
             - --webServer,localhost
 
-talos-chrome-stylo:
-    description: "Talos Stylo chrome"
+talos-chrome-stylo-disabled:
+    description: "Talos Stylo disabled chrome"
     suite: talos
-    try-name: chromez-stylo
-    treeherder-symbol: tc-Ts(c)
+    try-name: chromez-stylo-disabled
+    treeherder-symbol: tc-Tsd(c)
     virtualization: hardware
-    run-on-projects:
-        by-test-platform:
-            windows.*: ['mozilla-central', 'try']
-            macosx.*: ['mozilla-central', 'try']
-            default: []
+    run-on-projects: ['mozilla-central', 'try']
     max-run-time: 3600
     mozharness:
         script: talos_script.py
@@ -1347,7 +1329,7 @@ talos-chrome-stylo:
                 default:
                     - talos/linux_config.py
         extra-options:
-            - --suite=chromez-stylo
+            - --suite=chromez-stylo-disabled
             - --add-option
             - --webServer,localhost
 
@@ -1379,17 +1361,13 @@ talos-dromaeojs:
             - --add-option
             - --webServer,localhost
 
-talos-dromaeojs-stylo:
-    description: "Talos Stylo dromaeojs"
+talos-dromaeojs-stylo-disabled:
+    description: "Talos Stylo disabled dromaeojs"
     suite: talos
-    try-name: dromaeojs-stylo
-    treeherder-symbol: tc-Ts(d)
+    try-name: dromaeojs-stylo-disabled
+    treeherder-symbol: tc-Tsd(d)
     virtualization: hardware
-    run-on-projects:
-        by-test-platform:
-            windows.*: ['mozilla-central', 'try']
-            macosx.*: ['mozilla-central', 'try']
-            default: []
+    run-on-projects: ['mozilla-central', 'try']
     max-run-time: 3600
     mozharness:
         script: talos_script.py
@@ -1403,7 +1381,7 @@ talos-dromaeojs-stylo:
                 default:
                     - talos/linux_config.py
         extra-options:
-            - --suite=dromaeojs-stylo
+            - --suite=dromaeojs-stylo-disabled
             - --add-option
             - --webServer,localhost
 
@@ -1435,17 +1413,13 @@ talos-g1:
             - --add-option
             - --webServer,localhost
 
-talos-g1-stylo:
-    description: "Talos Stylo g1"
+talos-g1-stylo-disabled:
+    description: "Talos Stylo disabled g1"
     suite: talos
-    try-name: g1-stylo
-    treeherder-symbol: tc-Ts(g1)
+    try-name: g1-stylo-disabled
+    treeherder-symbol: tc-Tsd(g1)
     virtualization: hardware
-    run-on-projects:
-        by-test-platform:
-            windows.*: ['mozilla-central', 'try']
-            macosx.*: ['mozilla-central', 'try']
-            default: []
+    run-on-projects: ['mozilla-central', 'try']
     max-run-time: 7200
     mozharness:
         script: talos_script.py
@@ -1459,7 +1433,7 @@ talos-g1-stylo:
                 default:
                     - talos/linux_config.py
         extra-options:
-            - --suite=g1-stylo
+            - --suite=g1-stylo-disabled
             - --add-option
             - --webServer,localhost
 
@@ -1491,18 +1465,14 @@ talos-g2:
             - --add-option
             - --webServer,localhost
 
-talos-g2-stylo:
-    description: "Talos Stylo g2"
+talos-g2-stylo-disabled:
+    description: "Talos Stylo disabled g2"
     suite: talos
-    try-name: g2-stylo
-    treeherder-symbol: tc-Ts(g2)
+    try-name: g2-stylo-disabled
+    treeherder-symbol: tc-Tsd(g2)
     virtualization: hardware
     max-run-time: 7200
-    run-on-projects:
-        by-test-platform:
-            windows.*: ['mozilla-central', 'try']
-            macosx.*: ['mozilla-central', 'try']
-            default: []
+    run-on-projects: ['mozilla-central', 'try']
     mozharness:
         script: talos_script.py
         no-read-buildbot-config: true
@@ -1515,7 +1485,7 @@ talos-g2-stylo:
                 default:
                     - talos/linux_config.py
         extra-options:
-            - --suite=g2-stylo
+            - --suite=g2-stylo-disabled
             - --add-option
             - --webServer,localhost
 
@@ -1547,6 +1517,30 @@ talos-g3:
             - --add-option
             - --webServer,localhost
 
+talos-g3-stylo-disabled:
+    description: "Talos Stylo disabled g3"
+    suite: talos
+    try-name: g3-stylo-disabled
+    treeherder-symbol: tc-Tsd(g3)
+    virtualization: hardware
+    run-on-projects: ['mozilla-central', 'try']
+    max-run-time: 3600
+    mozharness:
+        script: talos_script.py
+        no-read-buildbot-config: true
+        config:
+            by-test-platform:
+                macosx.*:
+                    - talos/mac_config.py
+                windows.*:
+                    - talos/windows_config.py
+                default:
+                    - talos/linux_config.py
+        extra-options:
+            - --suite=g3-stylo-disabled
+            - --add-option
+            - --webServer,localhost
+
 talos-g4:
     description: "Talos g4"
     suite: talos
@@ -1575,17 +1569,13 @@ talos-g4:
             - --add-option
             - --webServer,localhost
 
-talos-g4-stylo:
-    description: "Talos Stylo g4"
+talos-g4-stylo-disabled:
+    description: "Talos Stylo disabled g4"
     suite: talos
-    try-name: g4-stylo
-    treeherder-symbol: tc-Ts(g4)
+    try-name: g4-stylo-disabled
+    treeherder-symbol: tc-Tsd(g4)
     virtualization: hardware
-    run-on-projects:
-        by-test-platform:
-            windows.*: ['mozilla-central', 'try']
-            macosx.*: ['mozilla-central', 'try']
-            default: []
+    run-on-projects: ['mozilla-central', 'try']
     max-run-time: 3600
     mozharness:
         script: talos_script.py
@@ -1599,7 +1589,7 @@ talos-g4-stylo:
                 default:
                     - talos/linux_config.py
         extra-options:
-            - --suite=g4-stylo
+            - --suite=g4-stylo-disabled
             - --add-option
             - --webServer,localhost
 
@@ -1632,17 +1622,13 @@ talos-g5:
             - --add-option
             - --webServer,localhost
 
-talos-g5-stylo:
-    description: "Talos Stylo g5"
+talos-g5-stylo-disabled:
+    description: "Talos Stylo disabled g5"
     suite: talos
-    try-name: g5-stylo
-    treeherder-symbol: tc-Ts(g5)
+    try-name: g5-stylo-disabled
+    treeherder-symbol: tc-Tsd(g5)
     virtualization: hardware
-    run-on-projects:
-        by-test-platform:
-            windows.*: ['mozilla-central', 'try']
-            macosx.*: ['mozilla-central', 'try']
-            default: []
+    run-on-projects: ['mozilla-central', 'try']
     max-run-time: 3600
     mozharness:
         script: talos_script.py
@@ -1657,7 +1643,7 @@ talos-g5-stylo:
                     - talos/linux_config.py
                     - remove_executables.py
         extra-options:
-            - --suite=g5-stylo
+            - --suite=g5-stylo-disabled
             - --add-option
             - --webServer,localhost
 
@@ -1689,17 +1675,13 @@ talos-other:
             - --add-option
             - --webServer,localhost
 
-talos-other-stylo:
-    description: "Talos Stylo other"
+talos-other-stylo-disabled:
+    description: "Talos Stylo disabled other"
     suite: talos
-    try-name: other-stylo
-    treeherder-symbol: tc-Ts(o)
+    try-name: other-stylo-disabled
+    treeherder-symbol: tc-Tsd(o)
     virtualization: hardware
-    run-on-projects:
-        by-test-platform:
-            windows.*: ['mozilla-central', 'try']
-            macosx.*: ['mozilla-central', 'try']
-            default: []
+    run-on-projects: ['mozilla-central', 'try']
     max-run-time: 3600
     mozharness:
         script: talos_script.py
@@ -1713,7 +1695,7 @@ talos-other-stylo:
                 default:
                     - talos/linux_config.py
         extra-options:
-            - --suite=other-stylo
+            - --suite=other-stylo-disabled
             - --add-option
             - --webServer,localhost
 
@@ -1767,17 +1749,13 @@ talos-perf-reftest-singletons:
         extra-options:
             - --suite=perf-reftest-singletons
 
-talos-perf-reftest-singletons-stylo:
-    description: "Talos Stylo perf-reftest singletons"
+talos-perf-reftest-singletons-stylo-disabled:
+    description: "Talos Stylo disabled perf-reftest singletons"
     suite: talos
-    try-name: perf-reftest-singletons-stylo
-    treeherder-symbol: tc-Ts(ps)
+    try-name: perf-reftest-singletons-stylo-disabled
+    treeherder-symbol: tc-Tsd(ps)
     virtualization: hardware
-    run-on-projects:
-        by-test-platform:
-            windows.*: ['mozilla-central', 'try']
-            macosx.*: ['mozilla-central', 'try']
-            default: []
+    run-on-projects: ['mozilla-central', 'try']
     max-run-time: 3600
     mozharness:
         script: talos_script.py
@@ -1791,19 +1769,15 @@ talos-perf-reftest-singletons-stylo:
                 default:
                     - talos/linux_config.py
         extra-options:
-            - --suite=perf-reftest-singletons-stylo
+            - --suite=perf-reftest-singletons-stylo-disabled
 
-talos-perf-reftest-stylo:
-    description: "Talos Stylo perf-reftest"
+talos-perf-reftest-stylo-disabled:
+    description: "Talos Stylo disabled perf-reftest"
     suite: talos
-    try-name: perf-reftest-stylo
-    treeherder-symbol: tc-Ts(p)
+    try-name: perf-reftest-stylo-disabled
+    treeherder-symbol: tc-Tsd(p)
     virtualization: hardware
-    run-on-projects:
-        by-test-platform:
-            windows.*: ['mozilla-central', 'try']
-            macosx.*: ['mozilla-central', 'try']
-            default: []
+    run-on-projects: ['mozilla-central', 'try']
     max-run-time: 3600
     mozharness:
         script: talos_script.py
@@ -1815,7 +1789,7 @@ talos-perf-reftest-stylo:
                 default:
                     - talos/linux_config.py
         extra-options:
-            - --suite=perf-reftest-stylo
+            - --suite=perf-reftest-stylo-disabled
 
 talos-svgr:
     description: "Talos svgr"
@@ -1845,17 +1819,13 @@ talos-svgr:
             - --add-option
             - --webServer,localhost
 
-talos-svgr-stylo:
-    description: "Talos Stylo svgr"
+talos-svgr-stylo-disabled:
+    description: "Talos Stylo disabled svgr"
     suite: talos
-    try-name: svgr-stylo
-    treeherder-symbol: tc-Ts(s)
+    try-name: svgr-stylo-disabled
+    treeherder-symbol: tc-Tsd(s)
     virtualization: hardware
-    run-on-projects:
-        by-test-platform:
-            windows.*: ['mozilla-central', 'try']
-            macosx.*: ['mozilla-central', 'try']
-            default: []
+    run-on-projects: ['mozilla-central', 'try']
     max-run-time: 3600
     mozharness:
         script: talos_script.py
@@ -1869,7 +1839,7 @@ talos-svgr-stylo:
                 default:
                     - talos/linux_config.py
         extra-options:
-            - --suite=svgr-stylo
+            - --suite=svgr-stylo-disabled
             - --add-option
             - --webServer,localhost
 
@@ -1901,17 +1871,13 @@ talos-tp5o:
             - --add-option
             - --webServer,localhost
 
-talos-tp5o-stylo:
-    description: "Talos Stylo tp5o"
+talos-tp5o-stylo-disabled:
+    description: "Talos Stylo disabled tp5o"
     suite: talos
-    try-name: tp5o-stylo
-    treeherder-symbol: tc-Ts(tp)
+    try-name: tp5o-stylo-disabled
+    treeherder-symbol: tc-Tsd(tp)
     virtualization: hardware
-    run-on-projects:
-        by-test-platform:
-            windows.*: ['mozilla-central', 'try']
-            macosx.*: ['mozilla-central', 'try']
-            default: []
+    run-on-projects: ['mozilla-central', 'try']
     max-run-time: 3600
     mozharness:
         script: talos_script.py
@@ -1925,7 +1891,7 @@ talos-tp5o-stylo:
                 default:
                     - talos/linux_config.py
         extra-options:
-            - --suite=tp5o-stylo
+            - --suite=tp5o-stylo-disabled
             - --add-option
             - --webServer,localhost
 
@@ -1956,11 +1922,11 @@ talos-tp6:
             - --add-option
             - --webServer,localhost
 
-talos-tp6-stylo:
-    description: "Talos Stylo Tp6"
+talos-tp6-stylo-disabled:
+    description: "Talos Stylo disabled Tp6"
     suite: talos
-    try-name: tp6-stylo
-    treeherder-symbol: tc-Ts(tp6s)
+    try-name: tp6-stylo-disabled
+    treeherder-symbol: tc-Tsd(tp6)
     virtualization: hardware
     run-on-projects:
         by-test-platform:
@@ -1980,13 +1946,13 @@ talos-tp6-stylo:
                 default:
                     - talos/linux_config.py
         extra-options:
-            - --suite=tp6-stylo
+            - --suite=tp6-stylo-disabled
 
 talos-tp6-stylo-threads:
-    description: "Talos Stylo Threads Tp6"
+    description: "Talos Stylo sequential Tp6"
     suite: talos
     try-name: tp6-stylo-threads
-    treeherder-symbol: tc-Ts(tp6st)
+    treeherder-symbol: tc-Tss(tp6)
     virtualization: hardware
     run-on-projects:
         by-test-platform:
@@ -2035,11 +2001,11 @@ talos-xperf:
             - --add-option
             - --webServer,localhost
 
-talos-xperf-stylo:
-    description: "Talos Stylo xperf"
+talos-xperf-stylo-disabled:
+    description: "Talos Stylo disabled xperf"
     suite: talos
-    try-name: xperf-stylo
-    treeherder-symbol: tc-Ts(x)
+    try-name: xperf-stylo-disabled
+    treeherder-symbol: tc-Tsd(x)
     run-on-projects:
         by-test-platform:
             windows7-32.*: ['mozilla-central', 'try']
@@ -2057,7 +2023,7 @@ talos-xperf-stylo:
                 default:
                     - talos/linux_config.py
         extra-options:
-            - --suite=xperf-stylo
+            - --suite=xperf-stylo-disabled
             - --add-option
             - --webServer,localhost
 

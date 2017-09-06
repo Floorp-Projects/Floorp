@@ -180,12 +180,12 @@ public:
                                             nsIFrame* aDestructRoot);
 
   nsPoint GetFirstSectionOrigin(const ReflowInput& aReflowInput) const;
+
   /*
-   * Notification that aAttribute has changed for content inside a table (cell, row, etc)
+   * Notification that rowspan or colspan has changed for content inside a
+   * table cell
    */
-  void AttributeChangedFor(nsIFrame*       aFrame,
-                           nsIContent*     aContent,
-                           nsIAtom*        aAttribute);
+  void RowOrColSpanChanged(nsTableCellFrame* aCellFrame);
 
   /** @see nsIFrame::DestroyFrom */
   virtual void DestroyFrom(nsIFrame* aDestructRoot) override;

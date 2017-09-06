@@ -202,10 +202,20 @@ class ServoStyleSetSizes
 {
 public:
   size_t mStylistRuleTree;
+  size_t mStylistPrecomputedPseudos;
+  size_t mStylistElementAndPseudosMaps;
+  size_t mStylistInvalidationMap;
+  size_t mStylistRevalidationSelectors;
+  size_t mStylistOther;
   size_t mOther;
 
   ServoStyleSetSizes()
     : mStylistRuleTree(0)
+    , mStylistPrecomputedPseudos(0)
+    , mStylistElementAndPseudosMaps(0)
+    , mStylistInvalidationMap(0)
+    , mStylistRevalidationSelectors(0)
+    , mStylistOther(0)
     , mOther(0)
   {}
 };

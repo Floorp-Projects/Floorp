@@ -3,90 +3,94 @@
         "chromez-e10s": {
             "tests": ["tresize", "tcanvasmark"]
         },
-        "chromez-stylo-e10s": {
-            "talos_options": ["--enable-stylo"],
+        "chromez-stylo-disabled-e10s": {
+            "talos_options": ["--disable-stylo"],
             "tests": ["tresize", "tcanvasmark"]
         },
         "dromaeojs-e10s": {
             "tests": ["dromaeo_css", "kraken"]
         },
-        "dromaeojs-stylo-e10s": {
-            "talos_options": ["--enable-stylo"],
+        "dromaeojs-stylo-disabled-e10s": {
+            "talos_options": ["--disable-stylo"],
             "tests": ["dromaeo_css", "kraken"]
         },
         "other-e10s": {
             "tests": ["a11yr", "ts_paint", "tpaint", "sessionrestore", "sessionrestore_many_windows", "sessionrestore_no_auto_restore", "tabpaint"]
         },
-        "other-stylo-e10s": {
-            "talos_options": ["--enable-stylo"],
+        "other-stylo-disabled-e10s": {
+            "talos_options": ["--disable-stylo"],
             "tests": ["a11yr", "ts_paint", "tpaint", "sessionrestore", "sessionrestore_many_windows", "sessionrestore_no_auto_restore", "tabpaint"]
         },
         "g1-e10s": {
             "tests": ["tp5o_scroll", "glterrain"],
             "pagesets_name": "tp5n.zip"
         },
-        "g1-stylo-e10s": {
+        "g1-stylo-disabled-e10s": {
             "tests": ["tp5o_scroll", "glterrain"],
-            "talos_options": ["--enable-stylo"],
+            "talos_options": ["--disable-stylo"],
             "pagesets_name": "tp5n.zip"
         },
         "g2-e10s": {
             "tests": ["damp", "tps"],
             "pagesets_name": "tp5n.zip"
         },
-        "g2-stylo-e10s": {
+        "g2-stylo-disabled-e10s": {
             "tests": ["damp", "tps"],
-            "talos_options": ["--enable-stylo"],
+            "talos_options": ["--disable-stylo"],
             "pagesets_name": "tp5n.zip"
         },
         "g3-e10s": {
             "tests": ["dromaeo_dom"]
         },
+        "g3-stylo-disabled-e10s": {
+            "tests": ["dromaeo_dom"],
+            "talos_options": ["--disable-stylo"]
+        },
         "g4-e10s": {
             "tests": ["basic_compositor_video", "glvideo"]
         },
-        "g4-stylo-e10s": {
+        "g4-stylo-disabled-e10s": {
             "tests": ["basic_compositor_video", "glvideo"],
-            "talos_options": ["--enable-stylo"]
+            "talos_options": ["--disable-stylo"]
         },
         "g5-e10s": {
             "tests": ["ts_paint_webext", "tp5o_webext"],
             "pagesets_name": "tp5n.zip"
         },
-        "g5-stylo-e10s": {
+        "g5-stylo-disabled-e10s": {
             "tests": ["ts_paint_webext", "tp5o_webext"],
-            "talos_options": ["--enable-stylo"],
+            "talos_options": ["--disable-stylo"],
             "pagesets_name": "tp5n.zip"
         },
         "svgr-e10s": {
             "tests": ["tsvgx", "tsvgr_opacity", "tart", "tscrollx", "tsvg_static"]
         },
-        "svgr-stylo-e10s": {
+        "svgr-stylo-disabled-e10s": {
             "tests": ["tsvgx", "tsvgr_opacity", "tart", "tscrollx", "tsvg_static"],
-            "talos_options": ["--enable-stylo"]
+            "talos_options": ["--disable-stylo"]
         },
         "perf-reftest-e10s": {
             "tests": ["bloom_basic"]
         },
-        "perf-reftest-stylo-e10s": {
+        "perf-reftest-stylo-disabled-e10s": {
             "tests": ["bloom_basic"],
-            "talos_options": ["--enable-stylo"]
+            "talos_options": ["--disable-stylo"]
         },
         "perf-reftest-singletons-e10s": {
             "tests": ["bloom_basic_singleton"]
         },
-        "perf-reftest-singletons-stylo-e10s": {
+        "perf-reftest-singletons-stylo-disabled-e10s": {
             "tests": ["bloom_basic_singleton"],
-            "talos_options": ["--enable-stylo"]
+            "talos_options": ["--disable-stylo"]
         },
         "tp5o-e10s": {
             "tests": ["tp5o"],
             "pagesets_name": "tp5n.zip"
         },
-        "tp5o-stylo-e10s": {
+        "tp5o-stylo-disabled-e10s": {
             "tests": ["tp5o"],
             "pagesets_name": "tp5n.zip",
-            "talos_options": ["--enable-stylo"]
+            "talos_options": ["--disable-stylo"]
         },
         "xperf-e10s": {
             "tests": ["tp5n"],
@@ -96,11 +100,11 @@
                 "\"c:/Program Files/Microsoft Windows Performance Toolkit/xperf.exe\""
             ]
         },
-        "xperf-stylo-e10s": {
+        "xperf-stylo-disabled-e10s": {
             "tests": ["tp5n"],
             "pagesets_name": "tp5n.zip",
             "talos_options": [
-                "--enable-stylo",
+                "--disable-stylo",
                 "--xperf_path",
                 "\"c:/Program Files/Microsoft Windows Performance Toolkit/xperf.exe\""
             ]
@@ -114,11 +118,11 @@
                 "--firstNonBlankPaint"
             ]
         },
-        "tp6-stylo-e10s": {
+        "tp6-stylo-disabled-e10s": {
             "tests": ["tp6_google", "tp6_youtube", "tp6_amazon", "tp6_facebook"],
             "mitmproxy_recording_set": "mitmproxy-recording-set-win10.zip",
             "talos_options": [
-                "--enable-stylo",
+                "--disable-stylo",
                 "--mitmproxy",
                 "mitmproxy-recording-google.mp mitmproxy-recording-youtube.mp mitmproxy-recording-amazon.mp mitmproxy-recording-facebook.mp",
                 "--firstNonBlankPaint"
@@ -128,7 +132,6 @@
             "tests": ["tp6_google", "tp6_youtube", "tp6_amazon", "tp6_facebook"],
             "mitmproxy_recording_set": "mitmproxy-recording-set-win10.zip",
             "talos_options": [
-                "--enable-stylo",
                 "--stylo-threads=1",
                 "--mitmproxy",
                 "mitmproxy-recording-google.mp mitmproxy-recording-youtube.mp mitmproxy-recording-amazon.mp mitmproxy-recording-facebook.mp",

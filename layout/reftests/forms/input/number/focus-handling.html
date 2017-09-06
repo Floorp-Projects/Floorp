@@ -9,7 +9,9 @@
     <script>
 
 function begin() {
-  document.getElementsByTagName('input')[1].focus();
+  setTimeout(function() {
+    document.getElementsByTagName('input')[1].focus();
+  }, 0);
 }
 
 function end() {

@@ -5719,7 +5719,7 @@
     "kind": "enumerated",
     "n_values": 50,
     "releaseChannelCollection": "opt-out",
-    "description": "Update: complete patch download result code"
+    "description": "Update: partial patch download result code"
   },
   "UPDATE_STATE_CODE_COMPLETE_STARTUP": {
     "record_in_processes": ["main", "content"],

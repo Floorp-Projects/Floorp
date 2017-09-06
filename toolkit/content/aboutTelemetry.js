@@ -166,49 +166,6 @@ function removeAllChildNodes(node) {
   }
 }
 
-/**
- * Pad a number to two digits with leading "0".
- */
-function padToTwoDigits(n) {
-  return String(n).padStart(2, "0");
-}
-
-/**
- * Return yesterdays date with the same time.
- */
-function yesterday(date) {
-  let d = new Date(date);
-  d.setDate(d.getDate() - 1);
-  return d;
-}
-
-/**
- * Return tomorrow's date with the same time.
- */
-function tomorrow(date) {
-  let d = new Date(date);
-  d.setDate(d.getDate() + 1);
-  return d;
-}
-
-/**
- * This returns a short date string of the form YYYY/MM/DD.
- */
-function shortDateString(date) {
-  return date.getFullYear()
-         + "/" + padToTwoDigits(date.getMonth() + 1)
-         + "/" + padToTwoDigits(date.getDate());
-}
-
-/**
- * This returns a short time string of the form hh:mm:ss.
- */
-function shortTimeString(date) {
-  return padToTwoDigits(date.getHours())
-         + ":" + padToTwoDigits(date.getMinutes())
-         + ":" + padToTwoDigits(date.getSeconds());
-}
-
 var Settings = {
   SETTINGS: [
     // data upload
@@ -455,24 +412,32 @@ var PingPicker = {
 
     let pingTypes = new Set();
     pingTypes.add(this.TYPE_ALL);
-    let todayString =  (new Date()).toDateString();
-    let yesterdayString = yesterday(new Date()).toDateString();
+
+    const today = new Date();
+    today.setHours(0, 0, 0, 0);
+    const yesterday = new Date(today);
+    yesterday.setDate(today.getDate() - 1);
+
     for (let p of this._archivedPings) {
       pingTypes.add(p.type);
-      let date = new Date(p.timestampCreated);
-      let datetext = date.toLocaleDateString() + " " + shortTimeString(date);
-      let text = datetext + ", " + p.type;
+      const pingDate = new Date(p.timestampCreated);
+      const datetimeText = Services.intl.createDateTimeFormat(undefined, {
+          dateStyle: "short",
+          timeStyle: "medium"
+        }).format(pingDate);
+      const pingName = `${datetimeText}, ${p.type}`;
 
       let option = document.createElement("option");
-      let content = document.createTextNode(text);
+      let content = document.createTextNode(pingName);
       option.appendChild(content);
       option.setAttribute("value", p.id);
       option.dataset.type = p.type;
-      option.dataset.date = datetext;
+      option.dataset.date = datetimeText;
 
-      if (date.toDateString() == todayString) {
+      pingDate.setHours(0, 0, 0, 0);
+      if (pingDate.getTime() === today.getTime()) {
         pingSelector.children[0].appendChild(option);
-      } else if (date.toDateString() == yesterdayString) {
+      } else if (pingDate.getTime() === yesterday.getTime()) {
         pingSelector.children[1].appendChild(option);
       } else {
         pingSelector.children[2].appendChild(option);

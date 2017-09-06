@@ -47,6 +47,7 @@ use style::gecko_bindings::bindings::{ServoCssRulesBorrowed, ServoCssRulesStrong
 use style::gecko_bindings::bindings::{nsACString, nsAString, nsCSSPropertyIDSetBorrowedMut};
 use style::gecko_bindings::bindings::Gecko_AddPropertyToSet;
 use style::gecko_bindings::bindings::Gecko_AppendPropertyValuePair;
+use style::gecko_bindings::bindings::Gecko_ConstructFontFeatureValueSet;
 use style::gecko_bindings::bindings::Gecko_GetOrCreateFinalKeyframe;
 use style::gecko_bindings::bindings::Gecko_GetOrCreateInitialKeyframe;
 use style::gecko_bindings::bindings::Gecko_GetOrCreateKeyframeAtStart;
@@ -118,8 +119,9 @@ use style::shared_lock::{SharedRwLockReadGuard, StylesheetGuards, ToCssWithGuard
 use style::string_cache::Atom;
 use style::style_adjuster::StyleAdjuster;
 use style::stylesheets::{CssRule, CssRules, CssRuleType, CssRulesHelpers, DocumentRule};
-use style::stylesheets::{FontFeatureValuesRule, ImportRule, KeyframesRule, MallocSizeOfWithGuard};
-use style::stylesheets::{MediaRule, NamespaceRule, Origin, OriginSet, PageRule, SizeOfState, StyleRule};
+use style::stylesheets::{FontFeatureValuesRule, ImportRule, KeyframesRule, MallocEnclosingSizeOfFn};
+use style::stylesheets::{MallocSizeOfFn, MallocSizeOfWithGuard, MediaRule};
+use style::stylesheets::{NamespaceRule, Origin, OriginSet, PageRule, SizeOfState, StyleRule};
 use style::stylesheets::{StylesheetContents, SupportsRule};
 use style::stylesheets::StylesheetLoader as StyleStylesheetLoader;
 use style::stylesheets::keyframes_rule::{Keyframe, KeyframeSelector, KeyframesStepValue};
@@ -775,7 +777,7 @@ pub extern "C" fn Servo_Element_ClearData(element: RawGeckoElementBorrowed) {
 pub extern "C" fn Servo_Element_SizeOfExcludingThisAndCVs(malloc_size_of: GeckoMallocSizeOf,
                                                           seen_ptrs: *mut SeenPtrs,
                                                           element: RawGeckoElementBorrowed) -> usize {
-    let malloc_size_of = malloc_size_of.unwrap();
+    let malloc_size_of = MallocSizeOfFn(malloc_size_of.unwrap());
     let element = GeckoElement(element);
     let borrow = element.borrow_data();
     if let Some(data) = borrow {
@@ -1083,9 +1085,8 @@ pub extern "C" fn Servo_StyleSheet_SizeOfIncludingThis(
 ) -> usize {
     let global_style_data = &*GLOBAL_STYLE_DATA;
     let guard = global_style_data.shared_lock.read();
-    let malloc_size_of = malloc_size_of.unwrap();
-    StylesheetContents::as_arc(&sheet)
-        .malloc_size_of_children(&guard, malloc_size_of)
+    let malloc_size_of = MallocSizeOfFn(malloc_size_of.unwrap());
+    StylesheetContents::as_arc(&sheet).malloc_size_of_children(&guard, malloc_size_of)
 }
 
 #[no_mangle]
@@ -1121,6 +1122,20 @@ fn read_locked_arc<T, R, F>(raw: &<Locked<T> as HasFFI>::FFIType, func: F) -> R
     let global_style_data = &*GLOBAL_STYLE_DATA;
     let guard = global_style_data.shared_lock.read();
     func(Locked::<T>::as_arc(&raw).read_with(&guard))
+}
+
+#[cfg(debug_assertions)]
+unsafe fn read_locked_arc_unchecked<T, R, F>(raw: &<Locked<T> as HasFFI>::FFIType, func: F) -> R
+    where Locked<T>: HasArcFFI, F: FnOnce(&T) -> R
+{
+    read_locked_arc(raw, func)
+}
+
+#[cfg(not(debug_assertions))]
+unsafe fn read_locked_arc_unchecked<T, R, F>(raw: &<Locked<T> as HasFFI>::FFIType, func: F) -> R
+    where Locked<T>: HasArcFFI, F: FnOnce(&T) -> R
+{
+    func(Locked::<T>::as_arc(&raw).read_unchecked())
 }
 
 fn write_locked_arc<T, R, F>(raw: &<Locked<T> as HasFFI>::FFIType, func: F) -> R
@@ -2262,9 +2277,14 @@ macro_rules! get_property_id_from_property {
 
 fn get_property_value(declarations: RawServoDeclarationBlockBorrowed,
                       property_id: PropertyId, value: *mut nsAString) {
-    read_locked_arc(declarations, |decls: &PropertyDeclarationBlock| {
-        decls.property_value_to_css(&property_id, unsafe { value.as_mut().unwrap() }).unwrap();
-    })
+    // This callsite is hot enough that the lock acquisition shows up in profiles.
+    // Using an unchecked read here improves our performance by ~10% on the
+    // microbenchmark in bug 1355599.
+    unsafe {
+        read_locked_arc_unchecked(declarations, |decls: &PropertyDeclarationBlock| {
+            decls.property_value_to_css(&property_id, value.as_mut().unwrap()).unwrap();
+        })
+    }
 }
 
 #[no_mangle]
@@ -3560,26 +3580,30 @@ pub extern "C" fn Servo_StyleSet_GetCounterStyleRule(raw_data: RawServoStyleSetB
 
 #[no_mangle]
 pub extern "C" fn Servo_StyleSet_BuildFontFeatureValueSet(
-  raw_data: RawServoStyleSetBorrowed,
-  set: *mut gfxFontFeatureValueSet
-) -> bool {
+  raw_data: RawServoStyleSetBorrowed) -> *mut gfxFontFeatureValueSet {
     let data = PerDocumentStyleData::from_ffi(raw_data).borrow();
 
     let global_style_data = &*GLOBAL_STYLE_DATA;
     let guard = global_style_data.shared_lock.read();
 
+    let has_rule = data.extra_style_data
+                  .iter_origins()
+                  .any(|(d, _)| !d.font_feature_values.is_empty());
+
+    if !has_rule {
+      return ptr::null_mut();
+    }
+
     let font_feature_values_iter = data.extra_style_data
         .iter_origins_rev()
         .flat_map(|(d, _)| d.font_feature_values.iter());
 
-    let mut any_rule = false;
+    let set = unsafe { Gecko_ConstructFontFeatureValueSet() };
     for src in font_feature_values_iter {
-        any_rule = true;
         let rule = src.read_with(&guard);
         rule.set_at_rules(set);
     }
-
-    any_rule
+    set
 }
 
 #[no_mangle]
@@ -3610,13 +3634,15 @@ pub extern "C" fn Servo_StyleSet_ResolveForDeclarations(
 #[no_mangle]
 pub extern "C" fn Servo_StyleSet_AddSizeOfExcludingThis(
     malloc_size_of: GeckoMallocSizeOf,
+    malloc_enclosing_size_of: GeckoMallocSizeOf,
     sizes: *mut ServoStyleSetSizes,
     raw_data: RawServoStyleSetBorrowed
 ) {
     let data = PerDocumentStyleData::from_ffi(raw_data).borrow_mut();
-    let malloc_size_of = malloc_size_of.unwrap();
+    let malloc_size_of = MallocSizeOfFn(malloc_size_of.unwrap());
+    let malloc_enclosing_size_of = MallocEnclosingSizeOfFn(malloc_enclosing_size_of.unwrap());
     let sizes = unsafe { sizes.as_mut() }.unwrap();
-    data.malloc_add_size_of_children(malloc_size_of, sizes);
+    data.malloc_add_size_of_children(malloc_size_of, malloc_enclosing_size_of, sizes);
 }
 
 #[no_mangle]
@@ -3743,6 +3769,17 @@ pub extern "C" fn Servo_ProcessInvalidations(set: RawServoStyleSetBorrowed,
     let mut data = data.as_mut().map(|d| &mut **d);
 
     if let Some(ref mut data) = data {
-        data.invalidate_style_if_needed(element, &shared_style_context, None);
+        let result = data.invalidate_style_if_needed(element, &shared_style_context, None);
+        if result.has_invalidated_siblings() {
+            let parent = element.traversal_parent().expect("How could we invalidate siblings without a common parent?");
+            unsafe {
+                parent.set_dirty_descendants();
+                bindings::Gecko_NoteDirtySubtreeForInvalidation(parent.0);
+            }
+        } else if result.has_invalidated_descendants() {
+            unsafe { bindings::Gecko_NoteDirtySubtreeForInvalidation(element.0) };
+        } else if result.has_invalidated_self() {
+            unsafe { bindings::Gecko_NoteDirtyElement(element.0) };
+        }
     }
 }

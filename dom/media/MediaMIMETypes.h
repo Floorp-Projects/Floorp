@@ -56,7 +56,7 @@ public:
   }
 
   // MIME "type/subtype", always lowercase.
-  const nsACString& AsString() const { return mMIMEType; }
+  const nsCString& AsString() const { return mMIMEType; }
 
   // Comparison with DependentMediaMIMEType.
   // Useful to compare to MEDIAMIMETYPE literals.
@@ -118,7 +118,7 @@ public:
   }
 
   bool IsEmpty() const { return mCodecs.IsEmpty(); }
-  const nsAString& AsString() const { return mCodecs; }
+  const nsString& AsString() const { return mCodecs; }
 
   using RangeType =
     const StringListRange<nsString, StringListRangeEmptyItems::ProcessEmptyItems>;
@@ -180,7 +180,7 @@ public:
 
   // Original string. Note that "type/subtype" may not be lowercase,
   // use Type().AsString() instead to get the normalized "type/subtype".
-  const nsACString& OriginalString() const { return mOriginalString; }
+  const nsCString& OriginalString() const { return mOriginalString; }
 
   size_t SizeOfExcludingThis(mozilla::MallocSizeOf aMallocSizeOf) const;
 
