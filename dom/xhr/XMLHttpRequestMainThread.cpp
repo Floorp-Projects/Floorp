@@ -1971,7 +1971,7 @@ XMLHttpRequestMainThread::OnStartRequest(nsIRequest *request, nsISupports *ctxt)
   // Fallback to 'application/octet-stream'
   nsAutoCString type;
   channel->GetContentType(type);
-  if (type.Equals(UNKNOWN_CONTENT_TYPE)) {
+  if (type.EqualsLiteral(UNKNOWN_CONTENT_TYPE)) {
     channel->SetContentType(NS_LITERAL_CSTRING(APPLICATION_OCTET_STREAM));
   }
 
@@ -2713,7 +2713,7 @@ XMLHttpRequestMainThread::InitiateFetch(nsIInputStream* aUploadStream,
   nsAutoCString contentType;
   if (NS_FAILED(mChannel->GetContentType(contentType)) ||
       contentType.IsEmpty() ||
-      contentType.Equals(UNKNOWN_CONTENT_TYPE)) {
+      contentType.EqualsLiteral(UNKNOWN_CONTENT_TYPE)) {
     mChannel->SetContentType(NS_LITERAL_CSTRING("text/xml"));
   }
 
