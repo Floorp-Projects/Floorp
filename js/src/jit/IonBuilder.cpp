@@ -156,7 +156,6 @@ IonBuilder::IonBuilder(JSContext* analysisContext, CompileCompartment* comp,
     failedBoundsCheck_(info->script()->failedBoundsCheck()),
     failedShapeGuard_(info->script()->failedShapeGuard()),
     failedLexicalCheck_(info->script()->failedLexicalCheck()),
-    nonStringIteration_(false),
 #ifdef DEBUG
     hasLazyArguments_(false),
 #endif
@@ -12575,9 +12574,6 @@ IonBuilder::jsop_toid()
 AbortReasonOr<Ok>
 IonBuilder::jsop_iter(uint8_t flags)
 {
-    if (flags != JSITER_ENUMERATE)
-        nonStringIteration_ = true;
-
     MDefinition* obj = current->pop();
     MInstruction* ins = MGetIteratorCache::New(alloc(), obj);
 
