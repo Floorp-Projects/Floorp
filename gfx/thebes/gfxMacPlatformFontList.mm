@@ -1552,6 +1552,9 @@ gfxMacPlatformFontList::ActivateFontsFromDir(nsIFile* aDir)
         return;
     }
 
+    CFMutableArrayRef urls =
+        ::CFArrayCreateMutable(kCFAllocatorDefault, 0, &kCFTypeArrayCallBacks);
+
     bool hasMore;
     while (NS_SUCCEEDED(e->HasMoreElements(&hasMore)) && hasMore) {
         nsCOMPtr<nsISupports> entry;
@@ -1572,13 +1575,15 @@ gfxMacPlatformFontList::ActivateFontsFromDir(nsIFile* aDir)
                                                       path.Length(),
                                                       false);
         if (fontURL) {
-            CFErrorRef error = nullptr;
-            ::CTFontManagerRegisterFontsForURL(fontURL,
-                                               kCTFontManagerScopeProcess,
-                                               &error);
+            ::CFArrayAppendValue(urls, fontURL);
             ::CFRelease(fontURL);
         }
     }
+
+    ::CTFontManagerRegisterFontsForURLs(urls,
+                                        kCTFontManagerScopeProcess,
+                                        nullptr);
+    ::CFRelease(urls);
 }
 
 #ifdef MOZ_BUNDLED_FONTS
