@@ -533,7 +533,7 @@ struct Zone : public JS::shadow::Zone,
     js::ZoneGroupData<bool> isSystem;
 
     bool usedByHelperThread() {
-        return !isAtomsZone() && group()->usedByHelperThread;
+        return !isAtomsZone() && group()->usedByHelperThread();
     }
 
 #ifdef DEBUG
@@ -693,7 +693,7 @@ class ZoneGroupsIter
         it = rt->gc.groups().begin();
         end = rt->gc.groups().end();
 
-        if (!done() && (*it)->usedByHelperThread)
+        if (!done() && (*it)->createdForHelperThread())
             next();
     }
 
@@ -703,7 +703,7 @@ class ZoneGroupsIter
         MOZ_ASSERT(!done());
         do {
             it++;
-        } while (!done() && (*it)->usedByHelperThread);
+        } while (!done() && (*it)->createdForHelperThread());
     }
 
     ZoneGroup* get() const {

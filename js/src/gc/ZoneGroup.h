@@ -59,8 +59,37 @@ class ZoneGroup
   public:
     ZoneVector& zones() { return zones_.ref(); }
 
-    // Whether a zone in this group is in use by a helper thread.
-    mozilla::Atomic<bool> usedByHelperThread;
+  private:
+    enum class HelperThreadUse : uint32_t
+    {
+        None,
+        Pending,
+        Active
+    };
+
+    mozilla::Atomic<HelperThreadUse> helperThreadUse;
+
+  public:
+    // Whether a zone in this group was created for use by a helper thread.
+    bool createdForHelperThread() const {
+        return helperThreadUse != HelperThreadUse::None;
+    }
+    // Whether a zone in this group is currently in use by a helper thread.
+    bool usedByHelperThread() const {
+        return helperThreadUse == HelperThreadUse::Active;
+    }
+    void setCreatedForHelperThread() {
+        MOZ_ASSERT(helperThreadUse == HelperThreadUse::None);
+        helperThreadUse = HelperThreadUse::Pending;
+    }
+    void setUsedByHelperThread() {
+        MOZ_ASSERT(helperThreadUse == HelperThreadUse::Pending);
+        helperThreadUse = HelperThreadUse::Active;
+    }
+    void clearUsedByHelperThread() {
+        MOZ_ASSERT(helperThreadUse != HelperThreadUse::None);
+        helperThreadUse = HelperThreadUse::None;
+    }
 
     explicit ZoneGroup(JSRuntime* runtime);
     ~ZoneGroup();
