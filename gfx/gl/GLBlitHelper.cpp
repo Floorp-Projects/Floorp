@@ -185,27 +185,6 @@ public:
 
 // --
 
-class ScopedBindVAO final
-{
-    GLContext& mGL;
-    const GLuint mOldVAO;
-
-public:
-    ScopedBindVAO(GLContext* const gl, const GLuint vao)
-        : mGL(*gl)
-        , mOldVAO(mGL.GetIntAs<GLuint>(LOCAL_GL_VERTEX_ARRAY_BINDING))
-    {
-        mGL.fBindVertexArray(vao);
-    }
-
-    ~ScopedBindVAO()
-    {
-        mGL.fBindVertexArray(mOldVAO);
-    }
-};
-
-// --
-
 class ScopedShader final
 {
     GLContext& mGL;
@@ -367,8 +346,43 @@ DrawBlitProg::Draw(const BaseArgs& args, const YUVArgs* const argsYUV) const
     // --
 
     const ScopedDrawBlitState drawState(gl, args.destSize);
-    const ScopedBindVAO bindVAO(gl, mParent.mQuadVAO);
+
+    GLuint oldVAO;
+    GLint vaa0Enabled;
+    GLint vaa0Size;
+    GLenum vaa0Type;
+    GLint vaa0Normalized;
+    GLsizei vaa0Stride;
+    GLvoid* vaa0Pointer;
+    if (mParent.mQuadVAO) {
+        oldVAO = gl->GetIntAs<GLuint>(LOCAL_GL_VERTEX_ARRAY_BINDING);
+        gl->fBindVertexArray(mParent.mQuadVAO);
+    } else {
+        gl->fGetVertexAttribiv(0, LOCAL_GL_VERTEX_ATTRIB_ARRAY_ENABLED, &vaa0Enabled);
+        gl->fGetVertexAttribiv(0, LOCAL_GL_VERTEX_ATTRIB_ARRAY_SIZE, &vaa0Size);
+        gl->fGetVertexAttribiv(0, LOCAL_GL_VERTEX_ATTRIB_ARRAY_TYPE, (GLint*)&vaa0Type);
+        gl->fGetVertexAttribiv(0, LOCAL_GL_VERTEX_ATTRIB_ARRAY_NORMALIZED, &vaa0Normalized);
+        gl->fGetVertexAttribiv(0, LOCAL_GL_VERTEX_ATTRIB_ARRAY_STRIDE, (GLint*)&vaa0Stride);
+        gl->fGetVertexAttribPointerv(0, LOCAL_GL_VERTEX_ATTRIB_ARRAY_POINTER, &vaa0Pointer);
+
+        gl->fEnableVertexAttribArray(0);
+        const ScopedBindArrayBuffer bindVBO(gl, mParent.mQuadVBO);
+        gl->fVertexAttribPointer(0, 2, LOCAL_GL_FLOAT, false, 0, 0);
+    }
+
     gl->fDrawArrays(LOCAL_GL_TRIANGLE_STRIP, 0, 4);
+
+    if (mParent.mQuadVAO) {
+        gl->fBindVertexArray(oldVAO);
+    } else {
+        if (vaa0Enabled) {
+            gl->fEnableVertexAttribArray(0);
+        } else {
+            gl->fDisableVertexAttribArray(0);
+        }
+        gl->fVertexAttribPointer(0, vaa0Size, vaa0Type, bool(vaa0Normalized), vaa0Stride,
+                                 vaa0Pointer);
+    }
 }
 
 // --
@@ -376,6 +390,7 @@ DrawBlitProg::Draw(const BaseArgs& args, const YUVArgs* const argsYUV) const
 GLBlitHelper::GLBlitHelper(GLContext* const gl)
     : mGL(gl)
     , mQuadVAO(0)
+    , mQuadVBO(0)
     , mDrawBlitProg_VertShader(mGL->fCreateShader(LOCAL_GL_VERTEX_SHADER))
     , mYuvUploads{0}
     , mYuvUploads_YSize(0, 0)
@@ -386,10 +401,9 @@ GLBlitHelper::GLBlitHelper(GLContext* const gl)
         return;
     }
 
-    GLuint vbo = 0;
-    mGL->fGenBuffers(1, &vbo);
+    mGL->fGenBuffers(1, &mQuadVBO);
     {
-        const ScopedBindArrayBuffer bindVBO(mGL, vbo);
+        const ScopedBindArrayBuffer bindVBO(mGL, mQuadVBO);
 
         const float quadData[] = {
             0, 0,
@@ -401,12 +415,17 @@ GLBlitHelper::GLBlitHelper(GLContext* const gl)
         mGL->fBufferData(LOCAL_GL_ARRAY_BUFFER, heapQuadData.ByteLength(),
                          heapQuadData.Data(), LOCAL_GL_STATIC_DRAW);
 
-        mGL->fGenVertexArrays(1, &mQuadVAO);
-        const ScopedBindVAO bindVAO(mGL, mQuadVAO);
-        mGL->fEnableVertexAttribArray(0);
-        mGL->fVertexAttribPointer(0, 2, LOCAL_GL_FLOAT, false, 0, 0);
+        if (mGL->IsSupported(GLFeature::vertex_array_object)) {
+            const auto prev = mGL->GetIntAs<GLuint>(LOCAL_GL_VERTEX_ARRAY_BINDING);
+
+            mGL->fGenVertexArrays(1, &mQuadVAO);
+            mGL->fBindVertexArray(mQuadVAO);
+            mGL->fEnableVertexAttribArray(0);
+            mGL->fVertexAttribPointer(0, 2, LOCAL_GL_FLOAT, false, 0, 0);
+
+            mGL->fBindVertexArray(prev);
+        }
     }
-    mGL->fDeleteBuffers(1, &vbo);
 
     // --
 
@@ -471,7 +490,11 @@ GLBlitHelper::~GLBlitHelper()
         return;
 
     mGL->fDeleteShader(mDrawBlitProg_VertShader);
-    mGL->fDeleteVertexArrays(1, &mQuadVAO);
+    mGL->fDeleteBuffers(1, &mQuadVBO);
+
+    if (mQuadVAO) {
+        mGL->fDeleteVertexArrays(1, &mQuadVAO);
+    }
 }
 
 // --
