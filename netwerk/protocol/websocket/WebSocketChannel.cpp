@@ -2563,7 +2563,7 @@ ParseWebSocketExtension(const nsACString& aExtension,
   nsCCharSeparatedTokenizer tokens(aExtension, ';');
 
   if (!tokens.hasMoreTokens() ||
-      !tokens.nextToken().Equals(NS_LITERAL_CSTRING("permessage-deflate"))) {
+      !tokens.nextToken().EqualsLiteral("permessage-deflate")) {
     LOG(("WebSocketChannel::ParseWebSocketExtension: "
          "HTTP Sec-WebSocket-Extensions negotiated unknown value %s\n",
          PromiseFlatCString(aExtension).get()));
