@@ -23,6 +23,46 @@ const TESTCASES = [
     },
   },
   {
+    description: "\"country\" using @autocomplete shouldn't be identified aggressively",
+    document: `<form>
+                <input id="given-name" autocomplete="given-name">
+                <input id="family-name" autocomplete="family-name">
+                <input id="country" autocomplete="country">
+               </form>`,
+    formValue: {
+      "given-name": "John",
+      "family-name": "Doe",
+      country: "United States",
+    },
+    expectedRecord: {
+      address: {
+        "given-name": "John",
+        "family-name": "Doe",
+        country: "United States",
+      },
+    },
+  },
+  {
+    description: "\"country\" using heuristics should be identified aggressively",
+    document: `<form>
+                <input id="given-name" autocomplete="given-name">
+                <input id="family-name" autocomplete="family-name">
+                <input id="country" name="country">
+               </form>`,
+    formValue: {
+      "given-name": "John",
+      "family-name": "Doe",
+      country: "United States",
+    },
+    expectedRecord: {
+      address: {
+        "given-name": "John",
+        "family-name": "Doe",
+        country: "US",
+      },
+    },
+  },
+  {
     description: "\"tel\" related fields should be concatenated",
     document: `<form>
                 <input id="given-name" autocomplete="given-name">
