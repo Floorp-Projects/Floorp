@@ -39,6 +39,7 @@ const REASONS = {
 };
 const PREF_DEV_MODE = "extensions.shield-recipe-client.dev_mode";
 const PREF_LOGGING_LEVEL = "extensions.shield-recipe-client.logging.level";
+const SHIELD_INIT_NOTIFICATION = "shield-init-complete";
 
 let log = null;
 
@@ -69,8 +70,6 @@ this.ShieldRecipeClient = {
       log.error("Failed to initialize addon studies:", err);
     }
 
-    // Initialize experiments first to avoid a race between initializing prefs
-    // and recipes rolling back pref changes when experiments end.
     try {
       await PreferenceExperiments.init();
     } catch (err) {
@@ -84,9 +83,10 @@ this.ShieldRecipeClient = {
     }
 
     await RecipeRunner.init();
+    Services.obs.notifyObservers(null, SHIELD_INIT_NOTIFICATION);
   },
 
-  shutdown(reason) {
-    CleanupManager.cleanup();
+  async shutdown(reason) {
+    await CleanupManager.cleanup();
   },
 };

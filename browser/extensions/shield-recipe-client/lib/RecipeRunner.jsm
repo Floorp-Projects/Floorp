@@ -43,39 +43,21 @@ const prefs = Services.prefs.getBranch("extensions.shield-recipe-client.");
 const TIMER_NAME = "recipe-client-addon-run";
 const RUN_INTERVAL_PREF = "run_interval_seconds";
 const FIRST_RUN_PREF = "first_run";
-const UI_AVAILABLE_NOTIFICATION = "sessionstore-windows-restored";
-const SHIELD_INIT_NOTIFICATION = "shield-init-complete";
+const PREF_CHANGED_TOPIC = "nsPref:changed";
 
 this.RecipeRunner = {
-  init() {
+  async init() {
     if (!this.checkPrefs()) {
       return;
     }
 
-    if (prefs.getBoolPref("dev_mode")) {
-      // Run right now in dev mode
-      this.run();
+    // Run immediately on first run, or if dev mode is enabled.
+    if (prefs.getBoolPref(FIRST_RUN_PREF) || prefs.getBoolPref("dev_mode")) {
+      await this.run();
+      prefs.setBoolPref(FIRST_RUN_PREF, false);
     }
 
-    if (prefs.getBoolPref(FIRST_RUN_PREF)) {
-      // Run once immediately after the UI is available. Do this before adding the
-      // timer so we can't end up racing it.
-      const observer = {
-        observe: async (subject, topic, data) => {
-          Services.obs.removeObserver(observer, UI_AVAILABLE_NOTIFICATION);
-
-          await this.run();
-          this.registerTimer();
-          prefs.setBoolPref(FIRST_RUN_PREF, false);
-
-          Services.obs.notifyObservers(null, SHIELD_INIT_NOTIFICATION);
-        },
-      };
-      Services.obs.addObserver(observer, UI_AVAILABLE_NOTIFICATION);
-      CleanupManager.addCleanupHandler(() => Services.obs.removeObserver(observer, UI_AVAILABLE_NOTIFICATION));
-    } else {
-      this.registerTimer();
-    }
+    this.registerTimer();
   },
 
   registerTimer() {
@@ -108,14 +90,22 @@ this.RecipeRunner = {
     return true;
   },
 
+  observe(subject, topic, data) {
+    switch (topic) {
+      case PREF_CHANGED_TOPIC:
+        this.observePrefChange(data);
+        break;
+    }
+  },
+
   /**
    * Watch for preference changes from Services.pref.addObserver.
    */
-  observe(changedPrefBranch, action, changedPref) {
-    if (action === "nsPref:changed" && changedPref === RUN_INTERVAL_PREF) {
+  observePrefChange(prefName) {
+    if (prefName === RUN_INTERVAL_PREF) {
       this.updateRunInterval();
     } else {
-      log.debug(`Observer fired with unexpected pref change: ${action} ${changedPref}`);
+      log.debug(`Observer fired with unexpected pref change: ${prefName}`);
     }
   },
 
