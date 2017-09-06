@@ -695,6 +695,7 @@ BytecodeParser::simulateOp(JSOp op, uint32_t offset, OffsetAndDefIndex* offsetSt
       case JSOP_THROWSETCONST:
       case JSOP_INITALIASEDLEXICAL:
       case JSOP_INITIALYIELD:
+      case JSOP_ITERNEXT:
         // Keep the top value.
         MOZ_ASSERT(nuses == 1);
         MOZ_ASSERT(ndefs == 1);

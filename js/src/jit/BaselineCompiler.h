@@ -33,6 +33,7 @@ namespace jit {
     _(JSOP_NOP)                \
     _(JSOP_NOP_DESTRUCTURING)  \
     _(JSOP_LABEL)              \
+    _(JSOP_ITERNEXT)           \
     _(JSOP_POP)                \
     _(JSOP_POPN)               \
     _(JSOP_DUPAT)              \

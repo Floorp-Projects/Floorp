@@ -1022,7 +1022,6 @@ BaselineCompiler::emitBody()
             // Intentionally not implemented.
           case JSOP_SETINTRINSIC:
             // Run-once opcode during self-hosting initialization.
-          case JSOP_UNUSED222:
           case JSOP_UNUSED223:
           case JSOP_LIMIT:
             // === !! WARNING WARNING WARNING !! ===
@@ -1065,6 +1064,12 @@ OPCODE_LIST(EMIT_OP)
 
 bool
 BaselineCompiler::emit_JSOP_NOP()
+{
+    return true;
+}
+
+bool
+BaselineCompiler::emit_JSOP_ITERNEXT()
 {
     return true;
 }
