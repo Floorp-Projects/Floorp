@@ -14,3 +14,51 @@ flat varying vec2 vTileSize;
 flat varying vec2 vTileRepeat;
 
 varying vec2 vPos;
+
+#ifdef WR_VERTEX_SHADER
+void main(void) {
+    Primitive prim = load_primitive();
+    Gradient gradient = fetch_gradient(prim.specific_prim_address);
+
+    VertexInfo vi = write_vertex(prim.local_rect,
+                                 prim.local_clip_rect,
+                                 prim.z,
+                                 prim.layer,
+                                 prim.task,
+                                 prim.local_rect);
+
+    vPos = vi.local_pos - prim.local_rect.p0;
+
+    vec2 start_point = gradient.start_end_point.xy;
+    vec2 end_point = gradient.start_end_point.zw;
+    vec2 dir = end_point - start_point;
+
+    vStartPoint = start_point;
+    vScaledDir = dir / dot(dir, dir);
+
+    vTileSize = gradient.tile_size_repeat.xy;
+    vTileRepeat = gradient.tile_size_repeat.zw;
+
+    vGradientAddress = prim.specific_prim_address + VECS_PER_GRADIENT;
+
+    // Whether to repeat the gradient instead of clamping.
+    vGradientRepeat = float(int(gradient.extend_mode.x) == EXTEND_MODE_REPEAT);
+}
+#endif
+
+#ifdef WR_FRAGMENT_SHADER
+void main(void) {
+    vec2 pos = mod(vPos, vTileRepeat);
+
+    if (pos.x >= vTileSize.x ||
+        pos.y >= vTileSize.y) {
+        discard;
+    }
+
+    float offset = dot(pos - vStartPoint, vScaledDir);
+
+    oFragColor = sample_gradient(vGradientAddress,
+                                 offset,
+                                 vGradientRepeat);
+}
+#endif
