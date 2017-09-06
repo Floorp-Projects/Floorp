@@ -46,12 +46,14 @@ add_task(async function test_notification() {
 });
 
 add_task(async function test_notification_events() {
-  async function background() {
+  function background() {
     let opts = {
       type: "basic",
       title: "Testing Notification",
       message: "Carry on",
     };
+
+    let createdId = "98";
 
     // Test an ignored listener.
     browser.notifications.onButtonClicked.addListener(function() {});
@@ -60,15 +62,22 @@ add_task(async function test_notification_events() {
     // but we can attempt to add a listener.
     browser.notifications.onClicked.addListener(function() {});
 
-    // Test onClosed listener.
-    browser.notifications.onClosed.addListener(id => {
-      browser.test.sendMessage("closed", id);
-      browser.test.notifyPass("background test passed");
+    browser.notifications.onShown.addListener(async function listener(id) {
+      browser.notifications.onShown.removeListener(listener);
+      browser.test.assertEq(createdId, id, "onShown received the expected id.");
+      let newId = await browser.notifications.create(id, opts);
+      browser.test.assertEq(createdId, newId, "create returned the expected id.");
+      browser.test.sendMessage("created");
     });
 
-    await browser.notifications.create("5", opts);
-    let id = await browser.notifications.create("5", opts);
-    browser.test.sendMessage("running", id);
+    // Test onClosed listener.
+    browser.notifications.onClosed.addListener(function listener(id) {
+      browser.notifications.onClosed.removeListener(listener);
+      browser.test.assertEq(createdId, id, "onClosed received the expected id.");
+      browser.test.sendMessage("closed");
+    });
+
+    browser.notifications.create(createdId, opts);
   }
 
   let extension = ExtensionTestUtils.loadExtension({
@@ -78,11 +87,8 @@ add_task(async function test_notification_events() {
     background,
   });
   await extension.startup();
-  let x = await extension.awaitMessage("closed");
-  is(x, "5", "got correct id from onClosed listener");
-  x = await extension.awaitMessage("running");
-  is(x, "5", "got correct id from notifications.create");
-  await extension.awaitFinish();
+  await extension.awaitMessage("closed");
+  await extension.awaitMessage("created");
   await extension.unload();
 });
 
