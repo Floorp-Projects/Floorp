@@ -6,13 +6,9 @@ const SEARCHBAR_BASE_ID = "searchbar-engine-one-off-item-";
 const URLBAR_BASE_ID = "urlbar-engine-one-off-item-";
 const ONEOFF_URLBAR_PREF = "browser.urlbar.oneOffSearches";
 
-const searchbar = document.getElementById("searchbar");
 const urlbar = document.getElementById("urlbar");
 const searchPopup = document.getElementById("PopupSearchAutoComplete");
 const urlbarPopup = document.getElementById("PopupAutoCompleteRichResult");
-const searchIcon = document.getAnonymousElementByAttribute(
-  searchbar, "anonid", "searchbar-search-button"
-);
 const searchOneOffBinding = document.getAnonymousElementByAttribute(
   searchPopup, "anonid", "search-one-off-buttons"
 );
@@ -28,7 +24,19 @@ function resetEngine() {
 
 registerCleanupFunction(resetEngine);
 
+let searchbar;
+let searchIcon;
+
 add_task(async function init() {
+  await SpecialPowers.pushPrefEnv({ set: [
+    ["browser.search.widget.inNavBar", true],
+  ]});
+
+  searchbar = document.getElementById("searchbar");
+  searchIcon = document.getAnonymousElementByAttribute(
+    searchbar, "anonid", "searchbar-search-button"
+  );
+
   await promiseNewEngine(TEST_ENGINE_BASENAME, {
     setAsCurrent: false,
   });

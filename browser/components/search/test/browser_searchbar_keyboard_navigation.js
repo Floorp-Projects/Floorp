@@ -1,7 +1,5 @@
 // Tests that keyboard navigation in the search panel works as designed.
 
-const searchbar = document.getElementById("searchbar");
-const textbox = searchbar._textbox;
 const searchPopup = document.getElementById("PopupSearchAutoComplete");
 const oneOffsContainer =
   document.getAnonymousElementByAttribute(searchPopup, "anonid",
@@ -22,7 +20,17 @@ function getOpenSearchItems() {
   return os;
 }
 
+let searchbar;
+let textbox;
+
 add_task(async function init() {
+  await SpecialPowers.pushPrefEnv({ set: [
+    ["browser.search.widget.inNavBar", true],
+  ]});
+
+  searchbar = document.getElementById("searchbar");
+  textbox = searchbar._textbox;
+
   await promiseNewEngine("testEngine.xml");
 
   // First cleanup the form history in case other tests left things there.

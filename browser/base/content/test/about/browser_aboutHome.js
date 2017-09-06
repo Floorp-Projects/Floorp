@@ -483,6 +483,8 @@ add_task(async function() {
 add_task(async function() {
   info("Cmd+k should focus the search box in the toolbar when it's present");
 
+  Services.prefs.setBoolPref("browser.search.widget.inNavBar", true);
+
   await BrowserTestUtils.withNewTab({ gBrowser, url: "about:home" }, async function(browser) {
     await BrowserTestUtils.synthesizeMouseAtCenter("#brandLogo", {}, browser);
 
@@ -494,6 +496,8 @@ add_task(async function() {
     await promiseWaitForCondition(() => doc.activeElement === searchInput);
     is(searchInput, doc.activeElement, "Search bar should be the active element.");
   });
+
+  Services.prefs.clearUserPref("browser.search.widget.inNavBar");
 });
 
 add_task(async function() {

@@ -193,7 +193,6 @@ var CustomizableUIInternal = {
       "home-button",
       "spring",
       "urlbar-container",
-      "search-container",
       "spring",
       "downloads-button",
       "library-button",

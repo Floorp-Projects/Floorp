@@ -5,11 +5,7 @@
 
 const isMac = ("nsILocalFileMac" in Ci);
 
-const searchbar = document.getElementById("searchbar");
-const textbox = searchbar._textbox;
 const searchPopup = document.getElementById("PopupSearchAutoComplete");
-const searchIcon = document.getAnonymousElementByAttribute(searchbar, "anonid",
-                                                           "searchbar-search-button");
 
 const oneOffsContainer =
   document.getAnonymousElementByAttribute(searchPopup, "anonid",
@@ -55,8 +51,19 @@ function synthesizeNativeMouseMove(aElement) {
   });
 }
 
+let searchbar;
+let searchIcon;
 
 add_task(async function init() {
+  await SpecialPowers.pushPrefEnv({ set: [
+    ["browser.search.widget.inNavBar", true],
+  ]});
+
+  searchbar = document.getElementById("searchbar");
+  searchIcon = document.getAnonymousElementByAttribute(
+    searchbar, "anonid", "searchbar-search-button"
+  );
+
   await promiseNewEngine("testEngine.xml");
 });
 
@@ -92,9 +99,9 @@ add_task(async function test_notext() {
 });
 
 add_task(async function test_text() {
-  textbox.value = "foo";
+  searchbar._textbox.value = "foo";
   registerCleanupFunction(() => {
-    textbox.value = "";
+    searchbar._textbox.value = "";
   });
 
   let promise = promiseEvent(searchPopup, "popupshown");
@@ -133,7 +140,8 @@ add_task(async function test_text() {
     EventUtils.synthesizeMouseAtCenter(searchbarEngine, {});
   });
 
-  let url = Services.search.currentEngine.getSubmission(textbox.value).uri.spec;
+  let url = Services.search.currentEngine
+                           .getSubmission(searchbar._textbox.value).uri.spec;
   await promiseTabLoadEvent(gBrowser.selectedTab, url);
 
   // Move the cursor out of the panel area to avoid messing with other tests.
