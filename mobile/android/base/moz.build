@@ -628,7 +628,6 @@ gbjar.sources += ['java/org/mozilla/gecko/' + x for x in [
     'DynamicToolbar.java',
     'EditBookmarkDialog.java',
     'Experiments.java',
-    'extensions/ExtensionPermissionsHelper.java',
     'FilePicker.java',
     'FilePickerResultHandler.java',
     'FindInPageBar.java',
