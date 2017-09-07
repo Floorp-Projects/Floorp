@@ -26,7 +26,7 @@ from .util.taskcluster import find_task_id
 from .util.parameterization import resolve_task_references
 from mozbuild.util import memoize
 from slugid import nice as slugid
-from mozbuild.frontend import reader
+from mozbuild.base import MozbuildObject
 
 logger = logging.getLogger(__name__)
 
@@ -358,8 +358,12 @@ class SkipUnlessSchedules(OptimizationStrategy):
     def scheduled_by_push(self, repository, revision):
         changed_files = files_changed.get_changed_files(repository, revision)
 
-        config = reader.EmptyConfig(TOPSRCDIR)
-        rdr = reader.BuildReader(config)
+        mbo = MozbuildObject.from_environment()
+        # the decision task has a sparse checkout, so, mozbuild_reader will use
+        # a MercurialRevisionFinder with revision '.', which should be the same
+        # as `revision`; in other circumstances, it will use a default reader
+        rdr = mbo.mozbuild_reader(config_mode='empty')
+
         components = set()
         for p, m in rdr.files_info(changed_files).items():
             components |= set(m['SCHEDULES'].components)
