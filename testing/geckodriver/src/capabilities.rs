@@ -159,6 +159,13 @@ impl<'a> BrowserCapabilities for FirefoxCapabilities<'a> {
             return Ok(())
         }
         match name {
+            "moz:webdriverClick" => {
+                if !value.is_boolean() {
+                    return Err(WebDriverError::new(
+                        ErrorStatus::InvalidArgument,
+                        "moz:webdriverClick is not a boolean"));
+                }
+            }
             "moz:firefoxOptions" => {
                 let data = try_opt!(value.as_object(),
                                     ErrorStatus::InvalidArgument,

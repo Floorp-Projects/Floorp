@@ -155,10 +155,10 @@ add_task(async function sendMessageResponseGC() {
             browser.test.log(`Got response: ${response}`);
             browser.test.sendMessage(response);
           }
-        }, error => {
-          browser.test.assertEq(error.message,
-            "Response handle went out of scope",
-            "The promise rejected with the correct error");
+        }, ({message}) => {
+          browser.test.assertTrue(
+            /at background@moz-extension:\/\/[\w-]+\/%7B[\w-]+%7D\.js:4:\d went out/.test(message),
+            `Promise rejected with the correct error message: ${message}`);
           browser.test.sendMessage("rejected");
         }
       );

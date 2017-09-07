@@ -17,6 +17,8 @@
 #include "nsDisplayList.h"
 #include "nsIReflowCallback.h"
 #include "Units.h"
+#include "mozilla/layers/StackingContextHelper.h"
+#include "mozilla/webrender/WebRenderAPI.h"
 
 #ifdef XP_WIN
 #include <windows.h> // For HWND :(
@@ -60,6 +62,9 @@ public:
   typedef mozilla::layers::Layer Layer;
   typedef mozilla::layers::LayerManager LayerManager;
   typedef mozilla::layers::ImageContainer ImageContainer;
+  typedef mozilla::layers::StackingContextHelper StackingContextHelper;
+  typedef mozilla::layers::WebRenderLayerManager WebRenderLayerManager;
+  typedef mozilla::layers::WebRenderParentCommand WebRenderParentCommand;
   typedef mozilla::ContainerLayerParameters ContainerLayerParameters;
 
   NS_DECL_FRAMEARENA_HELPERS(nsPluginFrame)
@@ -221,6 +226,11 @@ public:
    */
   bool WantsToHandleWheelEventAsDefaultAction() const;
 
+  bool CreateWebRenderCommands(nsDisplayItem* aItem,
+                               mozilla::wr::DisplayListBuilder& aBuilder,
+                               const StackingContextHelper& aSc,
+                               mozilla::layers::WebRenderLayerManager* aManager,
+                               nsDisplayListBuilder* aDisplayListBuilder);
 protected:
   explicit nsPluginFrame(nsStyleContext* aContext);
   virtual ~nsPluginFrame();
@@ -267,6 +277,7 @@ protected:
 
   nsView* GetViewInternal() const override { return mOuterView; }
   void SetViewInternal(nsView* aView) override { mOuterView = aView; }
+  bool GetBounds(nsDisplayItem* aItem, mozilla::gfx::IntSize& aSize, gfxRect& aRect);
 
 private:
   // Registers the plugin for a geometry update, and requests a geometry
@@ -377,6 +388,12 @@ public:
     return static_cast<nsPluginFrame*>(mFrame)->GetLayerState(aBuilder,
                                                               aManager);
   }
+
+  virtual bool CreateWebRenderCommands(mozilla::wr::DisplayListBuilder& aBuilder,
+                                       const StackingContextHelper& aSc,
+                                       nsTArray<WebRenderParentCommand>& aParentCommands,
+                                       mozilla::layers::WebRenderLayerManager* aManager,
+                                       nsDisplayListBuilder* aDisplayListBuilder) override;
 };
 
 #endif /* nsPluginFrame_h___ */

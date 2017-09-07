@@ -119,8 +119,6 @@
                 "./src/util/cb_args.h",
                 "./src/util/ice_util.c",
                 "./src/util/ice_util.h",
-                "./src/util/mbslen.c",
-                "./src/util/mbslen.h",
 
 
           ],

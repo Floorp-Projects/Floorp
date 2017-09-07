@@ -1,4 +1,4 @@
-webidl-test:
+test:
     description: WebIDL parser tests
     platform: lint/opt
     treeherder:

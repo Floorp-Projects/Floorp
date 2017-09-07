@@ -1368,7 +1368,7 @@ function clickElement(msg) {
       return interaction.clickElement(
           seenEls.get(id),
           capabilities.get("moz:accessibilityChecks"),
-          capabilities.get("specificationLevel") >= 1
+          capabilities.get("moz:webdriverClick")
       );
     }, commandID, pageTimeout, loadEventExpected, true);
 
