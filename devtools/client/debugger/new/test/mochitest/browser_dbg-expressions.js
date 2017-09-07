@@ -53,32 +53,32 @@ async function editExpression(dbg, input) {
   await waitForDispatch(dbg, "EVALUATE_EXPRESSION");
 }
 
-add_task(function*() {
-  const dbg = yield initDebugger("doc-script-switching.html");
+add_task(async function() {
+  const dbg = await initDebugger("doc-script-switching.html");
 
   invokeInTab("firstCall");
-  yield waitForPaused(dbg);
+  await waitForPaused(dbg);
 
-  yield addExpression(dbg, "f");
+  await addExpression(dbg, "f");
   is(getLabel(dbg, 1), "f");
   is(getValue(dbg, 1), "(unavailable)");
 
-  yield editExpression(dbg, "oo");
+  await editExpression(dbg, "oo");
   is(getLabel(dbg, 1), "foo()");
 
   // There is no "value" element for functions.
   assertEmptyValue(dbg, 1);
 
-  yield addExpression(dbg, "location");
+  await addExpression(dbg, "location");
   is(getLabel(dbg, 2), "location");
   ok(getValue(dbg, 2).includes("Location"), "has a value");
 
   // can expand an expression
   toggleExpression(dbg, 2);
-  yield waitForDispatch(dbg, "LOAD_OBJECT_PROPERTIES");
+  await waitForDispatch(dbg, "LOAD_OBJECT_PROPERTIES");
 
-  yield deleteExpression(dbg, "foo");
-  yield deleteExpression(dbg, "location");
+  await deleteExpression(dbg, "foo");
+  await deleteExpression(dbg, "location");
 
   is(findAllElements(dbg, "expressionNodes").length, 0);
 });

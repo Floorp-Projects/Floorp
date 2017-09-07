@@ -12,30 +12,30 @@ function getFocusedEl(dbg) {
   return doc.activeElement;
 }
 
-add_task(function*() {
-  const dbg = yield initDebugger("doc-scripts.html");
+add_task(async function() {
+  const dbg = await initDebugger("doc-scripts.html");
   const {
     selectors: { getBreakpoints, getBreakpoint, getActiveSearch },
     getState
   } = dbg;
   const source = findSource(dbg, "simple1.js");
 
-  yield selectSource(dbg, source.url);
+  await selectSource(dbg, source.url);
 
   const cm = getCM(dbg);
   pressKey(dbg, "fileSearch");
-  is(dbg.selectors.getActiveSearchState(dbg.getState()), "file");
+  is(dbg.selectors.getActiveSearch(dbg.getState()), "file");
 
   // test closing and re-opening
   pressKey(dbg, "Escape");
-  is(dbg.selectors.getActiveSearchState(dbg.getState()), null);
+  is(dbg.selectors.getActiveSearch(dbg.getState()), null);
 
   pressKey(dbg, "fileSearch");
 
   const el = getFocusedEl(dbg);
 
   type(dbg, "con");
-  yield waitForSearchState(dbg);
+  await waitForSearchState(dbg);
 
   const state = cm.state.search;
 
@@ -55,7 +55,7 @@ add_task(function*() {
   is(state.posFrom.line, 4);
 
   // selecting another source keeps search open
-  yield selectSource(dbg, "simple2");
+  await selectSource(dbg, "simple2");
   pressKey(dbg, "Enter");
   is(state.posFrom.line, 0);
 });

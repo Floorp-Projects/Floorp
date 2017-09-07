@@ -317,7 +317,7 @@ function ignoreWhiteSpace(str) {
 
 
 function wholeMatch(query, wholeWord) {
-  if (query == "" || !wholeWord) {
+  if (query === "" || !wholeWord) {
     return query;
   }
 
@@ -350,7 +350,7 @@ function buildQuery(originalQuery, modifiers, _ref) {
       wholeWord = modifiers.wholeWord;
 
 
-  if (originalQuery == "") {
+  if (originalQuery === "") {
     return new RegExp(originalQuery);
   }
 
@@ -443,8 +443,6 @@ var _buildQuery2 = _interopRequireDefault(_buildQuery);
 
 function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { default: obj }; }
 
-var MAX_LENGTH = 100000;
-
 function getMatches(query, text, modifiers) {
   if (!query || !text || !modifiers) {
     return [];
@@ -457,12 +455,8 @@ function getMatches(query, text, modifiers) {
   for (var i = 0; i < lines.length; i++) {
     var singleMatch = void 0;
     var line = lines[i];
-    if (line.length <= MAX_LENGTH) {
-      while ((singleMatch = regexQuery.exec(line)) !== null) {
-        matchedLocations.push({ line: i, ch: singleMatch.index });
-      }
-    } else {
-      return [];
+    while ((singleMatch = regexQuery.exec(line)) !== null) {
+      matchedLocations.push({ line: i, ch: singleMatch.index });
     }
   }
   return matchedLocations;
@@ -873,11 +867,18 @@ function getSourceLineCount(source) {
 function getMode(source) {
   var contentType = source.contentType,
       text = source.text,
-      isWasm = source.isWasm;
+      isWasm = source.isWasm,
+      url = source.url;
 
 
   if (!text || isWasm) {
     return { name: "text" };
+  }
+
+  // if the url ends with .marko we set the name to Javascript so
+  // syntax highlighting works for marko too
+  if (url && url.match(/\.marko$/i)) {
+    return { name: "javascript" };
   }
 
   // Use HTML mode for files in which the first non whitespace
