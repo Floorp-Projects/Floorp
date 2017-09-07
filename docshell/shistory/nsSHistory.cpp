@@ -588,7 +588,7 @@ nsSHistory::GetEntryAtIndex(int32_t aIndex, bool aModifyIndex,
 }
 
 /* Get the transaction at a given index */
-nsresult
+NS_IMETHODIMP
 nsSHistory::GetTransactionAtIndex(int32_t aIndex, nsISHTransaction** aResult)
 {
   nsresult rv;
@@ -1703,7 +1703,7 @@ nsSHistory::LoadNextPossibleEntry(int32_t aNewIndex, long aLoadType,
   return NS_ERROR_FAILURE;
 }
 
-nsresult
+NS_IMETHODIMP
 nsSHistory::LoadEntry(int32_t aIndex, long aLoadType, uint32_t aHistCmd)
 {
   if (!mRootDocShell) {
