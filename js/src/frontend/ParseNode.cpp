@@ -623,221 +623,228 @@ static const char * const parseNodeNames[] = {
 };
 
 void
-frontend::DumpParseTree(ParseNode* pn, int indent)
+frontend::DumpParseTree(ParseNode* pn, GenericPrinter& out, int indent)
 {
     if (pn == nullptr)
-        fprintf(stderr, "#NULL");
+        out.put("#NULL");
     else
-        pn->dump(indent);
+        pn->dump(out, indent);
 }
 
 static void
-IndentNewLine(int indent)
+IndentNewLine(GenericPrinter& out, int indent)
 {
-    fputc('\n', stderr);
+    out.putChar('\n');
     for (int i = 0; i < indent; ++i)
-        fputc(' ', stderr);
+        out.putChar(' ');
+}
+
+void
+ParseNode::dump(GenericPrinter& out)
+{
+    dump(out, 0);
+    out.putChar('\n');
 }
 
 void
 ParseNode::dump()
 {
-    dump(0);
-    fputc('\n', stderr);
+    js::Fprinter out(stderr);
+    dump(out);
 }
 
 void
-ParseNode::dump(int indent)
+ParseNode::dump(GenericPrinter& out, int indent)
 {
     switch (pn_arity) {
       case PN_NULLARY:
-        ((NullaryNode*) this)->dump();
+        ((NullaryNode*) this)->dump(out);
         break;
       case PN_UNARY:
-        ((UnaryNode*) this)->dump(indent);
+        ((UnaryNode*) this)->dump(out, indent);
         break;
       case PN_BINARY:
-        ((BinaryNode*) this)->dump(indent);
+        ((BinaryNode*) this)->dump(out, indent);
         break;
       case PN_TERNARY:
-        ((TernaryNode*) this)->dump(indent);
+        ((TernaryNode*) this)->dump(out, indent);
         break;
       case PN_CODE:
-        ((CodeNode*) this)->dump(indent);
+        ((CodeNode*) this)->dump(out, indent);
         break;
       case PN_LIST:
-        ((ListNode*) this)->dump(indent);
+        ((ListNode*) this)->dump(out, indent);
         break;
       case PN_NAME:
-        ((NameNode*) this)->dump(indent);
+        ((NameNode*) this)->dump(out, indent);
         break;
       case PN_SCOPE:
-        ((LexicalScopeNode*) this)->dump(indent);
+        ((LexicalScopeNode*) this)->dump(out, indent);
         break;
       default:
-        fprintf(stderr, "#<BAD NODE %p, kind=%u, arity=%u>",
+        out.printf("#<BAD NODE %p, kind=%u, arity=%u>",
                 (void*) this, unsigned(getKind()), unsigned(pn_arity));
         break;
     }
 }
 
 void
-NullaryNode::dump()
+NullaryNode::dump(GenericPrinter& out)
 {
     switch (getKind()) {
-      case PNK_TRUE:  fprintf(stderr, "#true");  break;
-      case PNK_FALSE: fprintf(stderr, "#false"); break;
-      case PNK_NULL:  fprintf(stderr, "#null");  break;
-      case PNK_RAW_UNDEFINED: fprintf(stderr, "#undefined"); break;
+      case PNK_TRUE:  out.put("#true");  break;
+      case PNK_FALSE: out.put("#false"); break;
+      case PNK_NULL:  out.put("#null");  break;
+      case PNK_RAW_UNDEFINED: out.put("#undefined"); break;
 
       case PNK_NUMBER: {
         ToCStringBuf cbuf;
         const char* cstr = NumberToCString(nullptr, &cbuf, pn_dval);
         if (!IsFinite(pn_dval))
-            fputc('#', stderr);
+            out.put("#");
         if (cstr)
-            fprintf(stderr, "%s", cstr);
+            out.printf("%s", cstr);
         else
-            fprintf(stderr, "%g", pn_dval);
+            out.printf("%g", pn_dval);
         break;
       }
 
       case PNK_STRING:
-        pn_atom->dumpCharsNoNewline();
+        pn_atom->dumpCharsNoNewline(out);
         break;
 
       default:
-        fprintf(stderr, "(%s)", parseNodeNames[getKind()]);
+        out.printf("(%s)", parseNodeNames[getKind()]);
     }
 }
 
 void
-UnaryNode::dump(int indent)
+UnaryNode::dump(GenericPrinter& out, int indent)
 {
     const char* name = parseNodeNames[getKind()];
-    fprintf(stderr, "(%s ", name);
+    out.printf("(%s ", name);
     indent += strlen(name) + 2;
-    DumpParseTree(pn_kid, indent);
-    fprintf(stderr, ")");
+    DumpParseTree(pn_kid, out, indent);
+    out.printf(")");
 }
 
 void
-BinaryNode::dump(int indent)
+BinaryNode::dump(GenericPrinter& out, int indent)
 {
     const char* name = parseNodeNames[getKind()];
-    fprintf(stderr, "(%s ", name);
+    out.printf("(%s ", name);
     indent += strlen(name) + 2;
-    DumpParseTree(pn_left, indent);
-    IndentNewLine(indent);
-    DumpParseTree(pn_right, indent);
-    fprintf(stderr, ")");
+    DumpParseTree(pn_left, out, indent);
+    IndentNewLine(out, indent);
+    DumpParseTree(pn_right, out, indent);
+    out.printf(")");
 }
 
 void
-TernaryNode::dump(int indent)
+TernaryNode::dump(GenericPrinter& out, int indent)
 {
     const char* name = parseNodeNames[getKind()];
-    fprintf(stderr, "(%s ", name);
+    out.printf("(%s ", name);
     indent += strlen(name) + 2;
-    DumpParseTree(pn_kid1, indent);
-    IndentNewLine(indent);
-    DumpParseTree(pn_kid2, indent);
-    IndentNewLine(indent);
-    DumpParseTree(pn_kid3, indent);
-    fprintf(stderr, ")");
+    DumpParseTree(pn_kid1, out, indent);
+    IndentNewLine(out, indent);
+    DumpParseTree(pn_kid2, out, indent);
+    IndentNewLine(out, indent);
+    DumpParseTree(pn_kid3, out, indent);
+    out.printf(")");
 }
 
 void
-CodeNode::dump(int indent)
+CodeNode::dump(GenericPrinter& out, int indent)
 {
     const char* name = parseNodeNames[getKind()];
-    fprintf(stderr, "(%s ", name);
+    out.printf("(%s ", name);
     indent += strlen(name) + 2;
-    DumpParseTree(pn_body, indent);
-    fprintf(stderr, ")");
+    DumpParseTree(pn_body, out, indent);
+    out.printf(")");
 }
 
 void
-ListNode::dump(int indent)
+ListNode::dump(GenericPrinter& out, int indent)
 {
     const char* name = parseNodeNames[getKind()];
-    fprintf(stderr, "(%s [", name);
+    out.printf("(%s [", name);
     if (pn_head != nullptr) {
         indent += strlen(name) + 3;
-        DumpParseTree(pn_head, indent);
+        DumpParseTree(pn_head, out, indent);
         ParseNode* pn = pn_head->pn_next;
         while (pn != nullptr) {
-            IndentNewLine(indent);
-            DumpParseTree(pn, indent);
+            IndentNewLine(out, indent);
+            DumpParseTree(pn, out, indent);
             pn = pn->pn_next;
         }
     }
-    fprintf(stderr, "])");
+    out.printf("])");
 }
 
 template <typename CharT>
 static void
-DumpName(const CharT* s, size_t len)
+DumpName(GenericPrinter& out, const CharT* s, size_t len)
 {
     if (len == 0)
-        fprintf(stderr, "#<zero-length name>");
+        out.put("#<zero-length name>");
 
     for (size_t i = 0; i < len; i++) {
         char16_t c = s[i];
         if (c > 32 && c < 127)
             fputc(c, stderr);
         else if (c <= 255)
-            fprintf(stderr, "\\x%02x", unsigned(c));
+            out.printf("\\x%02x", unsigned(c));
         else
-            fprintf(stderr, "\\u%04x", unsigned(c));
+            out.printf("\\u%04x", unsigned(c));
     }
 }
 
 void
-NameNode::dump(int indent)
+NameNode::dump(GenericPrinter& out, int indent)
 {
     if (isKind(PNK_NAME) || isKind(PNK_DOT)) {
         if (isKind(PNK_DOT))
-            fprintf(stderr, "(.");
+            out.put("(.");
 
         if (!pn_atom) {
-            fprintf(stderr, "#<null name>");
+            out.put("#<null name>");
         } else if (getOp() == JSOP_GETARG && pn_atom->length() == 0) {
             // Dump destructuring parameter.
-            fprintf(stderr, "(#<zero-length name> ");
-            DumpParseTree(expr(), indent + 21);
-            fputc(')', stderr);
+            out.put("(#<zero-length name> ");
+            DumpParseTree(expr(), out, indent + 21);
+            out.printf(")");
         } else {
             JS::AutoCheckCannotGC nogc;
             if (pn_atom->hasLatin1Chars())
-                DumpName(pn_atom->latin1Chars(nogc), pn_atom->length());
+                DumpName(out, pn_atom->latin1Chars(nogc), pn_atom->length());
             else
-                DumpName(pn_atom->twoByteChars(nogc), pn_atom->length());
+                DumpName(out, pn_atom->twoByteChars(nogc), pn_atom->length());
         }
 
         if (isKind(PNK_DOT)) {
-            fputc(' ', stderr);
+            out.putChar(' ');
             if (as<PropertyAccess>().isSuper())
-                fprintf(stderr, "super");
+                out.put("super");
             else
-                DumpParseTree(expr(), indent + 2);
-            fputc(')', stderr);
+                DumpParseTree(expr(), out, indent + 2);
+            out.printf(")");
         }
         return;
     }
 
     const char* name = parseNodeNames[getKind()];
-    fprintf(stderr, "(%s ", name);
+    out.printf("(%s ", name);
     indent += strlen(name) + 2;
-    DumpParseTree(expr(), indent);
-    fprintf(stderr, ")");
+    DumpParseTree(expr(), out, indent);
+    out.printf(")");
 }
 
 void
-LexicalScopeNode::dump(int indent)
+LexicalScopeNode::dump(GenericPrinter& out, int indent)
 {
     const char* name = parseNodeNames[getKind()];
-    fprintf(stderr, "(%s [", name);
+    out.printf("(%s [", name);
     int nameIndent = indent + strlen(name) + 3;
     if (!isEmptyScope()) {
         LexicalScope::Data* bindings = scopeBindings();
@@ -845,18 +852,18 @@ LexicalScopeNode::dump(int indent)
             JSAtom* name = bindings->names[i].name();
             JS::AutoCheckCannotGC nogc;
             if (name->hasLatin1Chars())
-                DumpName(name->latin1Chars(nogc), name->length());
+                DumpName(out, name->latin1Chars(nogc), name->length());
             else
-                DumpName(name->twoByteChars(nogc), name->length());
+                DumpName(out, name->twoByteChars(nogc), name->length());
             if (i < bindings->length - 1)
-                IndentNewLine(nameIndent);
+                IndentNewLine(out, nameIndent);
         }
     }
-    fprintf(stderr, "]");
+    out.putChar(']');
     indent += 2;
-    IndentNewLine(indent);
-    DumpParseTree(scopeBody(), indent);
-    fprintf(stderr, ")");
+    IndentNewLine(out, indent);
+    DumpParseTree(scopeBody(), out, indent);
+    out.printf(")");
 }
 #endif
 
