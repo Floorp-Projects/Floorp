@@ -791,9 +791,21 @@ public:
         .Else(InvalidSyscall());
     }
 
+      // PulseAudio calls umask, even though it's unsafe in
+      // multithreaded applications.  But, allowing it here doesn't
+      // really do anything one way or the other, now that file
+      // accesses are brokered to another process.
     case __NR_umask:
-    case __NR_kill:
       return Allow();
+
+    case __NR_kill: {
+      Arg<int> sig(1);
+      // PulseAudio uses kill(pid, 0) to check if purported owners of
+      // shared memory files are still alive; see bug 1397753 for more
+      // details.
+      return If(sig == 0, Error(EPERM))
+        .Else(InvalidSyscall());
+    }
 
     case __NR_wait4:
 #ifdef __NR_waitpid
