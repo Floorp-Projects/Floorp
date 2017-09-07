@@ -162,7 +162,7 @@ add_task(async function test_submit_reduced_fields() {
       });
 
       await promiseShown;
-      await clickDoorhangerButton(MAIN_BUTTON);
+      await clickDoorhangerButton(MAIN_BUTTON_INDEX);
     }
   );
 
