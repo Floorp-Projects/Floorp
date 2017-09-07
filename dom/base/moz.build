@@ -140,6 +140,7 @@ EXPORTS.mozilla += [
     'CORSMode.h',
     'FeedWriterEnabled.h',
     'FlushType.h',
+    'RangeBoundary.h',
     'TextInputProcessor.h',
     'UseCounter.h',
 ]
