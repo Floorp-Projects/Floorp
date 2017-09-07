@@ -24,6 +24,14 @@
       ["browserSettings"]
     ]
   },
+  "clipboard": {
+    "url": "chrome://extensions/content/ext-clipboard.js",
+    "schema": "chrome://extensions/content/schemas/clipboard.json",
+    "scopes": ["addon_parent"],
+    "paths": [
+      ["clipboard"]
+    ]
+  },
   "contextualIdentities": {
     "url": "chrome://extensions/content/ext-contextualIdentities.js",
     "schema": "chrome://extensions/content/schemas/contextual_identities.json",

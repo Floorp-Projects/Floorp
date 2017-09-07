@@ -27,6 +27,7 @@ push_apk_description_schema = Schema({
     Required('name'): basestring,
     Required('label'): basestring,
     Required('description'): basestring,
+    Required('job-from'): basestring,
     Required('attributes'): object,
     Required('treeherder'): object,
     Required('run-on-projects'): list,

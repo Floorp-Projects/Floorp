@@ -1736,13 +1736,13 @@ pref("browser.suppress_first_window_animation", true);
 pref("browser.onboarding.enabled", true);
 // Mark this as an upgraded profile so we don't offer the initial new user onboarding tour.
 pref("browser.onboarding.tourset-version", 2);
-pref("browser.onboarding.hidden", false);
 // On the Activity-Stream page, the snippet's position overlaps with our notification.
 // So use `browser.onboarding.notification.finished` to let the AS page know
 // if our notification is finished and safe to show their snippet.
 pref("browser.onboarding.notification.finished", false);
 pref("browser.onboarding.notification.mute-duration-on-first-session-ms", 300000); // 5 mins
 pref("browser.onboarding.notification.max-life-time-per-tour-ms", 432000000); // 5 days
+pref("browser.onboarding.notification.max-life-time-all-tours-ms", 1209600000); // 14 days
 pref("browser.onboarding.notification.max-prompt-count-per-tour", 8);
 pref("browser.onboarding.newtour", "performance,private,screenshots,addons,customize,default");
 pref("browser.onboarding.updatetour", "performance,library,screenshots,singlesearch,customize,sync");

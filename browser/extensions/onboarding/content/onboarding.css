@@ -90,6 +90,10 @@
   box-shadow: -2px 0 5px 0 rgba(74, 74, 79, 0.25);
 }
 
+#onboarding-overlay-button:dir(rtl)::after {
+  box-shadow: 2px 0 5px 0 rgba(74, 74, 79, 0.25);
+}
+
 #onboarding-overlay-dialog,
 .onboarding-hidden,
 #onboarding-tour-sync-page[data-login-state=logged-in] .show-on-logged-out,
@@ -161,14 +165,13 @@
 }
 
 #onboarding-overlay-dialog > footer {
-  grid-row: footer-start;
   grid-column: dialog-start / tour-end;
   font-size: 13px;
 }
 
-#onboarding-tour-hidden-checkbox {
+#onboarding-skip-tour-button {
   margin-inline-start: 27px;
-  margin-inline-end: 10px;
+  margin-bottom: 27px;
 }
 
 /* Onboarding tour list */
@@ -320,6 +323,8 @@
 }
 
 .onboarding-tour-button-container {
+  /* Get higher z-index in order to ensure buttons within container are selectable */
+  z-index: 2;
   grid-row: tour-button-start / tour-page-end;
   grid-column: tour-content-start / tour-page-end;
 }
@@ -346,14 +351,14 @@
 }
 
 /* Remove default dotted outline around buttons' text */
-.onboarding-tour-action-button::-moz-focus-inner,
+#onboarding-overlay button::-moz-focus-inner,
 #onboarding-overlay-button::-moz-focus-inner {
   border: 0;
 }
 
 /* Keyboard focus specific outline */
-.onboarding-tour-action-button:-moz-focusring,
-#onboarding-notification-action-btn:-moz-focusring,
+#onboarding-overlay button:-moz-focusring,
+.onboarding-action-button:-moz-focusring,
 #onboarding-tour-list .onboarding-tour-item:focus {
   outline: 2px solid rgba(0,149,221,0.5);
   outline-offset: 1px;
@@ -552,7 +557,7 @@ a#onboarding-tour-screenshots-button:visited {
   background-image: url("chrome://branding/content/icon64.png");
 }
 
-#onboarding-notification-action-btn {
+.onboarding-action-button {
   background: #fbfbfb;
   /* With 1px border, could see a border in the high-constrast mode */
   border: 1px solid #c1c1c1;
@@ -565,12 +570,12 @@ a#onboarding-tour-screenshots-button:visited {
   min-width: 130px;
 }
 
-#onboarding-notification-action-btn:hover {
+.onboarding-action-button:hover {
   background-color: #ebebeb;
   cursor: pointer;
 }
 
-#onboarding-notification-action-btn:active {
+.onboarding-action-button:active {
   background-color: #dadada;
 }
 
