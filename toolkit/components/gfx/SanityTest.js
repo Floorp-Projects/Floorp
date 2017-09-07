@@ -345,6 +345,9 @@ SanityTest.prototype = {
     // There's no clean way to have an invisible window and ensure it's always painted.
     // Instead, move the window far offscreen so it doesn't show up during launch.
     sanityTest.moveTo(100000000, 1000000000);
+    // In multi-screens with different dpi setup, the window may have been
+    // incorrectly resized.
+    sanityTest.resizeTo(PAGE_WIDTH, PAGE_HEIGHT);
     tester.scheduleTest(sanityTest);
   },
 };
