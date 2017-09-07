@@ -87,6 +87,18 @@ hide-types = [
     "nsString",
     ".*char_traits",
     ".*incompatible_char_type",
+    # JS::Value uses alignas(8) which bindgen can't represent correctly on Linux
+    # 32-bit.  See https://github.com/rust-lang-nursery/rust-bindgen/issues/917.
+    # It's also not used by Stylo.  The following types are also hidden for
+    # making use of it and being similarly unused by Stylo.
+    "JS::Value",
+    "mozilla::binding_danger::TErrorResult.*",
+    "mozilla::ErrorResult.*", # Causes JSWhyMagic to be included & handled incorrectly.
+    "mozilla::dom::CallbackFunction",
+    "mozilla::dom::CallbackObject.*",
+    "nsINode_ErrorResult",
+    "nsDOMAttributeMap_ErrorResult",
+    # End of JS::Value related types
 ]
 bitfield-enums = [
     "nsChangeHint",
@@ -325,9 +337,10 @@ opaque-types = [
     "mozilla::Maybe",
     "gfxSize",  # <- union { struct { T width; T height; }; T components[2] };
     "gfxSize_Super",  # Ditto.
-    "mozilla::ErrorResult",  # Causes JSWhyMagic to be included & handled incorrectly.
     "mozilla::StyleAnimationValue",
     "StyleAnimationValue", # pulls in a whole bunch of stuff we don't need in the bindings
+    "mozilla::dom::.*Callback", # Pulls in ErrorResult and other things that
+                                # don't align properly on Linux 32-bit
 ]
 mapped-generic-types = [
     { generic = true, gecko = "mozilla::ServoUnsafeCell", servo = "::std::cell::UnsafeCell" },
