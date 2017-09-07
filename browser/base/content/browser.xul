@@ -914,7 +914,6 @@
                 <hbox id="star-button-box"
                       hidden="true"
                       class="urlbar-icon-wrapper urlbar-page-action"
-                      role="button"
                       context="pageActionPanelContextMenu"
                       oncontextmenu="BrowserPageActions.onContextMenu(event);"
                       onclick="BrowserPageActions.bookmark.onUrlbarNodeClicked(event);">
@@ -924,7 +923,7 @@
                          observes="bookmarkThisPageBroadcaster"/>
                   <hbox id="star-button-animatable-box">
                     <image id="star-button-animatable-image"
-                           role="button"
+                           role="presentation"
                            observes="bookmarkThisPageBroadcaster"/>
                   </hbox>
                 </hbox>
