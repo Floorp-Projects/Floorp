@@ -1749,7 +1749,7 @@ fuzzy-if(true,17,5886) fuzzy-if(skiaContent,9,5894) == 759036-2.html 759036-2-re
 == 776443-2.html 776443-2-ref.html
 == 786254-1.html 786254-1-ref.html
 == 787947-1.html 787947-1-ref.html
-== 796847-1.svg 796847-1-ref.svg
+pref(gfx.webrender.layers-free,true) == 796847-1.svg 796847-1-ref.svg
 fuzzy(40,875) fuzzy-if(skiaContent,1,2500) == 797797-1.html 797797-1-ref.html # 'opacity:N' and rgba(,,,N) text don't match precisely
 fuzzy(40,850) fuzzy-if(skiaContent,2,2310) == 797797-2.html 797797-2-ref.html # 'opacity:N' and rgba(,,,N) text don't match precisely
 == 801994-1.html 801994-1-ref.html
