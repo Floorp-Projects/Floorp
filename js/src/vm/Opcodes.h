@@ -1626,8 +1626,14 @@
     macro(JSOP_STRICTSETGNAME, 156, "strict-setgname",  NULL,       5,  2,  1, JOF_ATOM|JOF_NAME|JOF_PROPSET|JOF_DETECTING|JOF_GNAME|JOF_CHECKSTRICT) \
     /*
      * Pushes the implicit 'this' value for calls to the associated name onto
-     * the stack; only used when we know this implicit this will be our first
-     * non-syntactic scope.
+     * the stack; only used when the implicit this might be derived from a
+     * non-syntactic scope (instead of the global itself).
+     *
+     * Note that code evaluated via the Debugger API uses DebugEnvironmentProxy
+     * objects on its scope chain, which are non-syntactic environments that
+     * refer to syntactic environments. As a result, the binding we want may be
+     * held by a syntactic environments such as CallObject or
+     * VarEnvrionmentObject.
      *
      *   Category: Variables and Scopes
      *   Type: This
