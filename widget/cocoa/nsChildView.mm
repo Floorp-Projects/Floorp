@@ -2083,9 +2083,7 @@ nsChildView::AddWindowOverlayWebRenderCommands(layers::WebRenderBridgeChild* aWr
 {
   PrepareWindowEffects();
 
-  LayoutDeviceIntRegion updatedTitlebarRegion;
-  updatedTitlebarRegion.And(mUpdatedTitlebarRegion, mTitlebarRect);
-  updatedTitlebarRegion.MoveBy(-mTitlebarRect.TopLeft());
+  bool needUpdate = mUpdatedTitlebarRegion.Intersects(mTitlebarRect);
   mUpdatedTitlebarRegion.SetEmpty();
 
   if (mTitlebarCGContext) {
@@ -2111,10 +2109,10 @@ nsChildView::AddWindowOverlayWebRenderCommands(layers::WebRenderBridgeChild* aWr
       wr::ImageDescriptor descriptor(size, stride, format);
       aBuilder.Resources().AddImage(*mTitlebarImageKey, descriptor, buffer);
       mTitlebarImageSize = size;
-      updatedTitlebarRegion.SetEmpty();
+      needUpdate = false;
     }
 
-    if (!updatedTitlebarRegion.IsEmpty()) {
+    if (needUpdate) {
       wr::ImageDescriptor descriptor(size, stride, format);
       aBuilder.Resources().UpdateImageBuffer(*mTitlebarImageKey, descriptor, buffer);
     }
