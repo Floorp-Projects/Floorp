@@ -1044,61 +1044,8 @@ APZCTreeManager::ReceiveInputEvent(InputData& aEvent,
         // If we're starting an async scrollbar drag
         if (apzDragEnabled && startsDrag && hitScrollbarNode &&
             hitScrollbarNode->IsScrollThumbNode() &&
-            hitScrollbarNode->GetScrollThumbData().mIsAsyncDraggable &&
-            mInputQueue->GetCurrentDragBlock()) {
-          DragBlockState* dragBlock = mInputQueue->GetCurrentDragBlock();
-          const ScrollThumbData& thumbData = hitScrollbarNode->GetScrollThumbData();
-
-          // Record the thumb's position at the start of the drag.
-          // We snap back to this position if, during the drag, the mouse
-          // gets sufficiently far away from the scrollbar.
-          dragBlock->SetInitialThumbPos(thumbData.mThumbStart);
-
-          // Under some conditions, we can confirm the drag block right away.
-          // Otherwise, we have to wait for a main-thread confirmation.
-          if (gfxPrefs::APZDragInitiationEnabled() &&
-              // check that the scrollbar's target scroll frame is layerized
-              hitScrollbarNode->GetScrollTargetId() == apzc->GetGuid().mScrollId &&
-              !apzc->IsScrollInfoLayer()) {
-            uint64_t dragBlockId = dragBlock->GetBlockId();
-            // AsyncPanZoomController::HandleInputEvent() will call
-            // TransformToLocal() on the event, but we need its mLocalOrigin now
-            // to compute a drag start offset for the AsyncDragMetrics.
-            mouseInput.TransformToLocal(apzc->GetTransformToThis());
-            CSSCoord dragStart = apzc->ConvertScrollbarPoint(
-                mouseInput.mLocalOrigin, thumbData);
-            // ConvertScrollbarPoint() got the drag start offset relative to
-            // the scroll track. Now get it relative to the thumb.
-            // ScrollThumbData::mThumbStart stores the offset of the thumb
-            // relative to the scroll track at the time of the last paint.
-            // Since that paint, the thumb may have acquired an async transform
-            // due to async scrolling, so look that up and apply it.
-            LayerToParentLayerMatrix4x4 thumbTransform;
-            {
-              MutexAutoLock lock(mTreeLock);
-              thumbTransform = ComputeTransformForNode(hitScrollbarNode);
-            }
-            // Only consider the translation, since we do not support both
-            // zooming and scrollbar dragging on any platform.
-            CSSCoord thumbStart = thumbData.mThumbStart
-                                + ((thumbData.mDirection == ScrollDirection::HORIZONTAL)
-                                   ? thumbTransform._41 : thumbTransform._42);
-            dragStart -= thumbStart;
-
-            // Content can't prevent scrollbar dragging with preventDefault(),
-            // so we don't need to wait for a content response. It's important
-            // to do this before calling ConfirmDragBlock() since that can
-            // potentially process and consume the block.
-            dragBlock->SetContentResponse(false);
-
-            mInputQueue->ConfirmDragBlock(
-                dragBlockId, apzc,
-                AsyncDragMetrics(apzc->GetGuid().mScrollId,
-                                 apzc->GetGuid().mPresShellId,
-                                 dragBlockId,
-                                 dragStart,
-                                 thumbData.mDirection));
-          }
+            hitScrollbarNode->GetScrollThumbData().mIsAsyncDraggable) {
+          SetupScrollbarDrag(mouseInput, hitScrollbarNode.get(), apzc.get());
         }
 
         if (result == nsEventStatus_eConsumeDoDefault) {
@@ -1543,6 +1490,70 @@ APZCTreeManager::ProcessTouchInput(MultiTouchInput& aInput,
   }
 
   return result;
+}
+
+void
+APZCTreeManager::SetupScrollbarDrag(MouseInput& aMouseInput,
+                                    const HitTestingTreeNode* aScrollThumbNode,
+                                    AsyncPanZoomController* aApzc)
+{
+  DragBlockState* dragBlock = mInputQueue->GetCurrentDragBlock();
+  if (!dragBlock) {
+    return;
+  }
+
+  const ScrollThumbData& thumbData = aScrollThumbNode->GetScrollThumbData();
+
+  // Record the thumb's position at the start of the drag.
+  // We snap back to this position if, during the drag, the mouse
+  // gets sufficiently far away from the scrollbar.
+  dragBlock->SetInitialThumbPos(thumbData.mThumbStart);
+
+  // Under some conditions, we can confirm the drag block right away.
+  // Otherwise, we have to wait for a main-thread confirmation.
+  if (gfxPrefs::APZDragInitiationEnabled() &&
+      // check that the scrollbar's target scroll frame is layerized
+      aScrollThumbNode->GetScrollTargetId() == aApzc->GetGuid().mScrollId &&
+      !aApzc->IsScrollInfoLayer()) {
+    uint64_t dragBlockId = dragBlock->GetBlockId();
+    // AsyncPanZoomController::HandleInputEvent() will call
+    // TransformToLocal() on the event, but we need its mLocalOrigin now
+    // to compute a drag start offset for the AsyncDragMetrics.
+    aMouseInput.TransformToLocal(aApzc->GetTransformToThis());
+    CSSCoord dragStart = aApzc->ConvertScrollbarPoint(
+        aMouseInput.mLocalOrigin, thumbData);
+    // ConvertScrollbarPoint() got the drag start offset relative to
+    // the scroll track. Now get it relative to the thumb.
+    // ScrollThumbData::mThumbStart stores the offset of the thumb
+    // relative to the scroll track at the time of the last paint.
+    // Since that paint, the thumb may have acquired an async transform
+    // due to async scrolling, so look that up and apply it.
+    LayerToParentLayerMatrix4x4 thumbTransform;
+    {
+      MutexAutoLock lock(mTreeLock);
+      thumbTransform = ComputeTransformForNode(aScrollThumbNode);
+    }
+    // Only consider the translation, since we do not support both
+    // zooming and scrollbar dragging on any platform.
+    CSSCoord thumbStart = thumbData.mThumbStart
+                        + ((thumbData.mDirection == ScrollDirection::HORIZONTAL)
+                           ? thumbTransform._41 : thumbTransform._42);
+    dragStart -= thumbStart;
+
+    // Content can't prevent scrollbar dragging with preventDefault(),
+    // so we don't need to wait for a content response. It's important
+    // to do this before calling ConfirmDragBlock() since that can
+    // potentially process and consume the block.
+    dragBlock->SetContentResponse(false);
+
+    mInputQueue->ConfirmDragBlock(
+        dragBlockId, aApzc,
+        AsyncDragMetrics(aApzc->GetGuid().mScrollId,
+                         aApzc->GetGuid().mPresShellId,
+                         dragBlockId,
+                         dragStart,
+                         thumbData.mDirection));
+  }
 }
 
 void

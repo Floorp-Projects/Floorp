@@ -533,6 +533,22 @@ private:
   nsEventStatus ProcessTouchInput(MultiTouchInput& aInput,
                                   ScrollableLayerGuid* aOutTargetGuid,
                                   uint64_t* aOutInputBlockId);
+  /**
+   * Given a mouse-down event that hit a scroll thumb node, set up APZ
+   * dragging of the scroll thumb.
+   *
+   * Must be called after the mouse event has been sent to InputQueue.
+   *
+   * @param aMouseInput The mouse-down event.
+   * @param aScrollThumbNode Tthe scroll thumb node that was hit.
+   * @param aApzc
+   *     The APZC for the scroll frame scrolled by the scroll thumb, if that
+   *     scroll frame is layerized. (A thumb can be layerized without its
+   *     target scroll frame being layerized.) Otherwise, an enclosing APZC.
+   */
+  void SetupScrollbarDrag(MouseInput& aMouseInput,
+                          const HitTestingTreeNode* aScrollThumbNode,
+                          AsyncPanZoomController* aApzc);
   void FlushRepaintsToClearScreenToGeckoTransform();
 
   already_AddRefed<HitTestingTreeNode> RecycleOrCreateNode(TreeBuildingState& aState,
