@@ -23,7 +23,6 @@ add_task(async function test_browser_settings() {
     "browser.cache.disk.enable": true,
     "browser.cache.memory.enable": true,
     "dom.popup_allowed_events": Preferences.get("dom.popup_allowed_events"),
-    "image.animation_mode": "none",
   };
 
   async function background() {
@@ -88,12 +87,6 @@ add_task(async function test_browser_settings() {
   await testSetting(
     "allowPopupsForUserEvents", true,
     {"dom.popup_allowed_events": PREFS["dom.popup_allowed_events"]});
-
-  for (let value of ["normal", "none", "once"]) {
-    await testSetting(
-      "imageAnimationBehavior", value,
-      {"image.animation_mode": value});
-  }
 
   await extension.unload();
 

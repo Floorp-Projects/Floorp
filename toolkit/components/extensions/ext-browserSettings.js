@@ -72,16 +72,6 @@ ExtensionPreferencesManager.addSetting("cacheEnabled", {
   },
 });
 
-ExtensionPreferencesManager.addSetting("imageAnimationBehavior", {
-  prefNames: [
-    "image.animation_mode",
-  ],
-
-  setCallback(value) {
-    return {[this.prefNames[0]]: value};
-  },
-});
-
 this.browserSettings = class extends ExtensionAPI {
   getAPI(context) {
     let {extension} = context;
@@ -104,11 +94,6 @@ this.browserSettings = class extends ExtensionAPI {
             return Services.prefs.getComplexValue(
               HOMEPAGE_URL_PREF, Ci.nsIPrefLocalizedString).data;
           }, undefined, true),
-        imageAnimationBehavior: getSettingsAPI(extension,
-          "imageAnimationBehavior",
-          () => {
-            return Preferences.get("image.animation_mode");
-          }),
         newTabPageOverride: getSettingsAPI(extension,
           NEW_TAB_OVERRIDE_SETTING,
           () => {
