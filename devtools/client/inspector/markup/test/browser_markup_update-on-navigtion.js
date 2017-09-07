@@ -5,9 +5,8 @@
 
 // Test that markup view handles page navigation correctly.
 
-const SCHEMA = "data:text/html;charset=UTF-8,";
-const URL_1 = SCHEMA + "<div id='one' style='color:red;'>ONE</div>";
-const URL_2 = SCHEMA + "<div id='two' style='color:green;'>TWO</div>";
+const URL_1 = URL_ROOT + "doc_markup_update-on-navigtion_1.html";
+const URL_2 = URL_ROOT + "doc_markup_update-on-navigtion_2.html";
 
 add_task(function* () {
   let {inspector, testActor} = yield openInspectorForURL(URL_1);
