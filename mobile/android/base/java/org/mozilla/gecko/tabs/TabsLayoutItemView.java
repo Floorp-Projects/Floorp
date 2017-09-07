@@ -21,7 +21,6 @@ import android.util.AttributeSet;
 import android.util.TypedValue;
 import android.view.MotionEvent;
 import android.view.View;
-import android.view.ViewTreeObserver;
 import android.widget.Checkable;
 import android.widget.ImageView;
 import android.widget.LinearLayout;
@@ -104,21 +103,17 @@ public class TabsLayoutItemView extends LinearLayout
     }
 
     private void growCloseButtonHitArea() {
-        getViewTreeObserver().addOnPreDrawListener(new ViewTreeObserver.OnPreDrawListener() {
+        addOnLayoutChangeListener(new OnLayoutChangeListener() {
             @Override
-            public boolean onPreDraw() {
-                getViewTreeObserver().removeOnPreDrawListener(this);
-
+            public void onLayoutChange(View v, int left, int top, int right, int bottom, int oldLeft, int oldTop, int oldRight, int oldBottom) {
                 // Ideally we want the close button hit area to be 40x40dp but we are constrained by the height of the parent, so
                 // we make it as tall as the parent view and 40dp across.
-                final int targetHitArea = (int) TypedValue.applyDimension(TypedValue.COMPLEX_UNIT_DIP, 40, getResources().getDisplayMetrics());;
+                final int targetHitArea = (int) TypedValue.applyDimension(TypedValue.COMPLEX_UNIT_DIP, 40, getResources().getDisplayMetrics());
 
                 final Rect hitRect = getHitRectRelatively(targetHitArea);
 
                 setTouchDelegate(new TouchDelegateWithReset(hitRect, mCloseButton));
                 setHoverDelegate(new HoverDelegateWithReset(hitRect, mCloseButton));
-
-                return true;
             }
         });
     }
