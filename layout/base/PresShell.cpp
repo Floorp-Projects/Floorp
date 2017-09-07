@@ -1814,7 +1814,8 @@ PresShell::Initialize(nscoord aWidth, nscoord aHeight)
 
       // Have the style sheet processor construct frame for the root
       // content object down
-      mFrameConstructor->ContentInserted(nullptr, root, nullptr, false);
+      mFrameConstructor->ContentInserted(
+          nullptr, root, nullptr, nsCSSFrameConstructor::LazyConstructionAllowed::No);
       VERIFY_STYLE_TREE;
 
       // Something in mFrameConstructor->ContentInserted may have caused
@@ -4425,7 +4426,10 @@ PresShell::ContentAppended(nsIDocument *aDocument,
   // frame reconstruction.
   mPresContext->RestyleManager()->ContentAppended(aContainer, aFirstNewContent);
 
-  mFrameConstructor->ContentAppended(aContainer, aFirstNewContent, true);
+  mFrameConstructor->ContentAppended(
+      aContainer,
+      aFirstNewContent,
+      nsCSSFrameConstructor::LazyConstructionAllowed::Yes);
 
   VERIFY_STYLE_TREE;
 }
@@ -4451,7 +4455,11 @@ PresShell::ContentInserted(nsIDocument* aDocument,
   // frame reconstruction.
   mPresContext->RestyleManager()->ContentInserted(container, aChild);
 
-  mFrameConstructor->ContentInserted(aMaybeContainer, aChild, nullptr, true);
+  mFrameConstructor->ContentInserted(
+      aMaybeContainer,
+      aChild,
+      nullptr,
+      nsCSSFrameConstructor::LazyConstructionAllowed::Yes);
 
   if (aChild->NodeType() == nsIDOMNode::DOCUMENT_TYPE_NODE) {
     MOZ_ASSERT(container == aDocument);
