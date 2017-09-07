@@ -1784,12 +1784,20 @@ InterSliceGCRunnerFired(TimeStamp aDeadline, void* aData)
 {
   nsJSContext::KillInterSliceGCRunner();
   MOZ_ASSERT(sActiveIntersliceGCBudget > 0);
-  // We use longer budgets when timer runs since that means
-  // there hasn't been idle time recently and we may have significant amount
-  // garbage to collect.
-  int64_t budget = sActiveIntersliceGCBudget * 2;
-  if (!aDeadline.IsNull()) {
-    budget = int64_t((aDeadline - TimeStamp::Now()).ToMilliseconds());
+  // We use longer budgets when the CC has been locked out but the CC has tried
+  // to run since that means we may have significant amount garbage to collect
+  // and better to GC in several longer slices than in a very long one.
+  int64_t budget = aDeadline.IsNull() ?
+    int64_t(sActiveIntersliceGCBudget) :
+    int64_t((aDeadline - TimeStamp::Now()).ToMilliseconds());
+  if (sCCLockedOut && sCCLockedOutTime) {
+    int64_t lockedTime = PR_Now() - sCCLockedOutTime;
+    int32_t maxSliceGCBudget = sActiveIntersliceGCBudget * 10;
+    double percentOfLockedTime =
+      std::min((double)lockedTime / NS_MAX_CC_LOCKEDOUT_TIME, 1.0);
+    budget =
+      static_cast<int64_t>(
+        std::max((double)budget, percentOfLockedTime * maxSliceGCBudget));
   }
 
   TimeStamp startTimeStamp = TimeStamp::Now();
