@@ -2877,7 +2877,9 @@ EventStateManager::PostHandleKeyboardEvent(WidgetKeyboardEvent* aKeyboardEvent,
     // dispatched to a content process (non-e10s or no content process
     // running), we need to short-circuit here. Otherwise, we need to wait for
     // the content process to handle the event.
-    aKeyboardEvent->mWidget->PostHandleKeyEvent(aKeyboardEvent);
+    if (aKeyboardEvent->mWidget) {
+      aKeyboardEvent->mWidget->PostHandleKeyEvent(aKeyboardEvent);
+    }
     if (aKeyboardEvent->DefaultPrevented()) {
       aStatus = nsEventStatus_eConsumeNoDefault;
       return;

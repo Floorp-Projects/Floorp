@@ -1,0 +1,11 @@
+<!DOCTYPE html>
+<script>
+  let code = "x".charCodeAt(0);
+  let e = new KeyboardEvent("keypress", {
+    keyCode: code,
+    charCode: code,
+    bubbles: true
+  });
+  let utils = SpecialPowers.getDOMWindowUtils(window);
+  utils.dispatchDOMEventViaPresShell(document.documentElement, e, false);
+</script>
