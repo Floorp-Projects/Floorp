@@ -69,8 +69,7 @@ template<typename T>
 inline T
 js::jit::AtomicOperations::loadSeqCst(T* addr)
 {
-    static_assert(sizeof(T) <= 8, "atomics supported up to 8 bytes only");
-    MOZ_ASSERT_IF(sizeof(T) == 8, isLockfree8());
+    MOZ_ASSERT(tier1Constraints(addr));
     T v;
     __atomic_load(addr, &v, __ATOMIC_SEQ_CST);
     return v;
@@ -80,8 +79,7 @@ template<typename T>
 inline void
 js::jit::AtomicOperations::storeSeqCst(T* addr, T val)
 {
-    static_assert(sizeof(T) <= 8, "atomics supported up to 8 bytes only");
-    MOZ_ASSERT_IF(sizeof(T) == 8, isLockfree8());
+    MOZ_ASSERT(tier1Constraints(addr));
     __atomic_store(addr, &val, __ATOMIC_SEQ_CST);
 }
 
@@ -89,8 +87,7 @@ template<typename T>
 inline T
 js::jit::AtomicOperations::exchangeSeqCst(T* addr, T val)
 {
-    static_assert(sizeof(T) <= 8, "atomics supported up to 8 bytes only");
-    MOZ_ASSERT_IF(sizeof(T) == 8, isLockfree8());
+    MOZ_ASSERT(tier1Constraints(addr));
     T v;
     __atomic_exchange(addr, &val, &v, __ATOMIC_SEQ_CST);
     return v;
@@ -100,8 +97,7 @@ template<typename T>
 inline T
 js::jit::AtomicOperations::compareExchangeSeqCst(T* addr, T oldval, T newval)
 {
-    static_assert(sizeof(T) <= 8, "atomics supported up to 8 bytes only");
-    MOZ_ASSERT_IF(sizeof(T) == 8, isLockfree8());
+    MOZ_ASSERT(tier1Constraints(addr));
     __atomic_compare_exchange(addr, &oldval, &newval, false, __ATOMIC_SEQ_CST, __ATOMIC_SEQ_CST);
     return oldval;
 }
@@ -110,8 +106,7 @@ template<typename T>
 inline T
 js::jit::AtomicOperations::fetchAddSeqCst(T* addr, T val)
 {
-    static_assert(sizeof(T) <= 8, "atomics supported up to 8 bytes only");
-    MOZ_ASSERT_IF(sizeof(T) == 8, isLockfree8());
+    MOZ_ASSERT(tier1Constraints(addr));
     return __atomic_fetch_add(addr, val, __ATOMIC_SEQ_CST);
 }
 
@@ -119,8 +114,7 @@ template<typename T>
 inline T
 js::jit::AtomicOperations::fetchSubSeqCst(T* addr, T val)
 {
-    static_assert(sizeof(T) <= 8, "atomics supported up to 8 bytes only");
-    MOZ_ASSERT_IF(sizeof(T) == 8, isLockfree8());
+    MOZ_ASSERT(tier1Constraints(addr));
     return __atomic_fetch_sub(addr, val, __ATOMIC_SEQ_CST);
 }
 
@@ -128,8 +122,7 @@ template<typename T>
 inline T
 js::jit::AtomicOperations::fetchAndSeqCst(T* addr, T val)
 {
-    static_assert(sizeof(T) <= 8, "atomics supported up to 8 bytes only");
-    MOZ_ASSERT_IF(sizeof(T) == 8, isLockfree8());
+    MOZ_ASSERT(tier1Constraints(addr));
     return __atomic_fetch_and(addr, val, __ATOMIC_SEQ_CST);
 }
 
@@ -137,8 +130,7 @@ template<typename T>
 inline T
 js::jit::AtomicOperations::fetchOrSeqCst(T* addr, T val)
 {
-    static_assert(sizeof(T) <= 8, "atomics supported up to 8 bytes only");
-    MOZ_ASSERT_IF(sizeof(T) == 8, isLockfree8());
+    MOZ_ASSERT(tier1Constraints(addr));
     return __atomic_fetch_or(addr, val, __ATOMIC_SEQ_CST);
 }
 
@@ -146,8 +138,7 @@ template<typename T>
 inline T
 js::jit::AtomicOperations::fetchXorSeqCst(T* addr, T val)
 {
-    static_assert(sizeof(T) <= 8, "atomics supported up to 8 bytes only");
-    MOZ_ASSERT_IF(sizeof(T) == 8, isLockfree8());
+    MOZ_ASSERT(tier1Constraints(addr));
     return __atomic_fetch_xor(addr, val, __ATOMIC_SEQ_CST);
 }
 
@@ -155,8 +146,7 @@ template<typename T>
 inline T
 js::jit::AtomicOperations::loadSafeWhenRacy(T* addr)
 {
-    static_assert(sizeof(T) <= 8, "atomics supported up to 8 bytes only");
-    MOZ_ASSERT_IF(sizeof(T) == 8, isLockfree8());
+    MOZ_ASSERT(tier1Constraints(addr));
     T v;
     __atomic_load(addr, &v, __ATOMIC_RELAXED);
     return v;
@@ -166,8 +156,7 @@ template<typename T>
 inline void
 js::jit::AtomicOperations::storeSafeWhenRacy(T* addr, T val)
 {
-    static_assert(sizeof(T) <= 8, "atomics supported up to 8 bytes only");
-    MOZ_ASSERT_IF(sizeof(T) == 8, isLockfree8());
+    MOZ_ASSERT(tier1Constraints(addr));
     __atomic_store(addr, &val, __ATOMIC_RELAXED);
 }
 

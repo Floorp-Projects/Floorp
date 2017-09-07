@@ -432,6 +432,7 @@ WEBIDL_FILES = [
     'CDATASection.webidl',
     'ChannelMergerNode.webidl',
     'ChannelSplitterNode.webidl',
+    'ChannelWrapper.webidl',
     'CharacterData.webidl',
     'CheckerboardReportService.webidl',
     'ChildNode.webidl',

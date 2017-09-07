@@ -24,7 +24,10 @@ const { div, input, span } = DOM;
  * This contains details about the secure connection used including the protocol,
  * the cipher suite, and certificate details
  */
-function SecurityPanel({ request }) {
+function SecurityPanel({
+  openLink,
+  request,
+}) {
   const { securityInfo, url } = request;
 
   if (!securityInfo || !url) {
@@ -101,6 +104,7 @@ function SecurityPanel({ request }) {
       renderValue: (props) => renderValue(props, securityInfo.weaknessReasons),
       enableFilter: false,
       expandedNodes: TreeViewClass.getExpandedNodes(object),
+      openLink,
     })
   );
 }
@@ -109,6 +113,7 @@ SecurityPanel.displayName = "SecurityPanel";
 
 SecurityPanel.propTypes = {
   request: PropTypes.object.isRequired,
+  openLink: PropTypes.func,
 };
 
 function renderValue(props, weaknessReasons = []) {

@@ -2965,9 +2965,6 @@ js::TenuringTracer::moveObjectToTenured(JSObject* dst, JSObject* src, AllocKind 
     MOZ_ASSERT(OffsetToChunkEnd(src) >= ptrdiff_t(srcSize));
     js_memcpy(dst, src, srcSize);
 
-    // Move any hash code attached to the object.
-    src->zone()->transferUniqueId(dst, src);
-
     // Move the slots and elements, if we need to.
     if (src->isNative()) {
         NativeObject* ndst = &dst->as<NativeObject>();
@@ -2975,12 +2972,8 @@ js::TenuringTracer::moveObjectToTenured(JSObject* dst, JSObject* src, AllocKind 
         tenuredSize += moveSlotsToTenured(ndst, nsrc, dstKind);
         tenuredSize += moveElementsToTenured(ndst, nsrc, dstKind);
 
-        // The shape's list head may point into the old object. This can only
-        // happen for dictionaries, which are native objects.
-        if (&nsrc->shape_ == ndst->shape_->listp) {
-            MOZ_ASSERT(nsrc->shape_->inDictionary());
-            ndst->shape_->listp = &ndst->shape_;
-        }
+        // There is a pointer into a dictionary mode object from the head of its
+        // shape list. This is updated in Nursery::sweepDictionaryModeObjects().
     }
 
     if (src->is<InlineTypedObject>()) {

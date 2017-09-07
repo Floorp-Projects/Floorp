@@ -17,16 +17,16 @@ GeckoViewStartup.prototype = {
 
   QueryInterface: XPCOMUtils.generateQI([Ci.nsIObserver]),
 
-  addLazyGetter: function(aOptions) {
-    let {name, script, service, module, observers, ppmm, mm} = aOptions;
+  addLazyGetter: function({name, script, service, module,
+                           observers, ppmm, mm, init, once}) {
     if (script) {
       XPCOMUtils.defineLazyScriptGetter(this, name, script);
     } else if (module) {
       XPCOMUtils.defineLazyGetter(this, name, _ => {
         let sandbox = {};
         Cu.import(module, sandbox);
-        if (aOptions.init) {
-          aOptions.init.call(this, sandbox[name]);
+        if (init) {
+          init.call(this, sandbox[name]);
         }
         return sandbox[name];
       });
@@ -38,7 +38,7 @@ GeckoViewStartup.prototype = {
     if (observers) {
       let observer = (subject, topic, data) => {
         Services.obs.removeObserver(observer, topic);
-        if (!aOptions.once) {
+        if (!once) {
           Services.obs.addObserver(this[name], topic);
         }
         this[name].observe(subject, topic, data); // Explicitly notify new observer
@@ -50,7 +50,7 @@ GeckoViewStartup.prototype = {
       let target = ppmm ? Services.ppmm : Services.mm;
       let listener = msg => {
         target.removeMessageListener(msg.name, listener);
-        if (!aOptions.once) {
+        if (!once) {
           target.addMessageListener(msg.name, this[name]);
         }
         this[name].receiveMessage(msg);
@@ -59,8 +59,7 @@ GeckoViewStartup.prototype = {
     }
   },
 
-  addLazyEventListener: function(aOptions) {
-    let {name, target, events, options} = aOptions;
+  addLazyEventListener: function({name, target, events, options}) {
     let listener = event => {
       if (!options || !options.once) {
         target.removeEventListener(event.type, listener, options);

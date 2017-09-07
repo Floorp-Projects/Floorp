@@ -207,7 +207,15 @@ class MatchPattern final : public nsISupports
               const MatchPatternOptions& aOptions,
               ErrorResult& aRv);
 
+  bool Matches(const nsAString& aURL, bool aExplicit, ErrorResult& aRv) const;
+
   bool Matches(const URLInfo& aURL, bool aExplicit = false) const;
+
+  bool Matches(const URLInfo& aURL, bool aExplicit, ErrorResult& aRv) const
+  {
+    return Matches(aURL, aExplicit);
+  }
+
 
   bool MatchesCookie(const CookieInfo& aCookie) const;
 
@@ -284,7 +292,15 @@ class MatchPatternSet final : public nsISupports
               ErrorResult& aRv);
 
 
+  bool Matches(const nsAString& aURL, bool aExplicit, ErrorResult& aRv) const;
+
   bool Matches(const URLInfo& aURL, bool aExplicit = false) const;
+
+  bool Matches(const URLInfo& aURL, bool aExplicit, ErrorResult& aRv) const
+  {
+    return Matches(aURL, aExplicit);
+  }
+
 
   bool MatchesCookie(const CookieInfo& aCookie) const;
 

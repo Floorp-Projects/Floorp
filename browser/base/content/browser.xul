@@ -437,9 +437,9 @@
            position="bottomcenter topright"
            tabspecific="true"
            noautofocus="true"
-           copyURL-title="&copyURLCmd.label;"
+           copyURL-title="&pageAction.copyLink.label;"
            emailLink-title="&emailPageCmd.label;"
-           sendToDevice-title="&sendToDevice.label3;"
+           sendToDevice-title="&pageAction.sendTabToDevice.label;"
            sendToDevice-notReadyTitle="&sendToDevice.syncNotReady.label;">
       <photonpanelmultiview id="pageActionPanelMultiView"
                             mainViewId="pageActionPanelMainView"
@@ -910,7 +910,7 @@
                        class="urlbar-icon urlbar-page-action"
                        role="button"
                        tooltiptext="&pageActionButton.tooltip;"
-                       onclick="BrowserPageActions.mainButtonClicked(event);"/>
+                       onmousedown="BrowserPageActions.mainButtonClicked(event);"/>
                 <hbox id="star-button-box"
                       hidden="true"
                       class="urlbar-icon-wrapper urlbar-page-action"
@@ -932,12 +932,6 @@
             </textbox>
         </toolbaritem>
 
-        <toolbaritem id="search-container" title="&searchItem.title;"
-                     align="center" class="chromeclass-toolbar-additional panel-wide-item"
-                     cui-areatype="toolbar"
-                     flex="100" persist="width" removable="true">
-          <searchbar id="searchbar" flex="1"/>
-        </toolbaritem>
         <toolbarspring cui-areatype="toolbar" class="chromeclass-toolbar-additional"/>
 
         <!-- This is a placeholder for the Downloads Indicator.  It is visible
@@ -946,7 +940,7 @@
         <toolbarbutton id="downloads-button"
                        class="toolbarbutton-1 chromeclass-toolbar-additional badged-button"
                        key="key_openDownloads"
-                       oncommand="DownloadsIndicatorView.onCommand(event);"
+                       onmousedown="DownloadsIndicatorView.onCommand(event);"
                        ondrop="DownloadsIndicatorView.onDrop(event);"
                        ondragover="DownloadsIndicatorView.onDragOver(event);"
                        ondragenter="DownloadsIndicatorView.onDragOver(event);"
@@ -957,7 +951,7 @@
 
         <toolbarbutton id="library-button" class="toolbarbutton-1 chromeclass-toolbar-additional"
                        removable="true"
-                       oncommand="PanelUI.showSubView('appMenu-libraryView', this, null, event);"
+                       onmousedown="PanelUI.showSubView('appMenu-libraryView', this, null, event);"
                        closemenu="none"
                        cui-areatype="toolbar"
                        tooltiptext="&libraryButton.tooltip;"
@@ -1089,7 +1083,6 @@
 
       <toolbarbutton id="bookmarks-menu-button"
                      class="toolbarbutton-1 chromeclass-toolbar-additional"
-                     removable="true"
                      type="menu"
                      label="&bookmarksMenuButton2.label;"
                      tooltip="dynamic-shortcut-tooltip"
@@ -1098,7 +1091,6 @@
                      ondragover="PlacesMenuDNDHandler.onDragOver(event);"
                      ondragleave="PlacesMenuDNDHandler.onDragLeave(event);"
                      ondrop="PlacesMenuDNDHandler.onDrop(event);"
-                     cui-areatype="toolbar"
                      oncommand="BookmarkingUI.onCommand(event);">
         <observes element="bookmarkThisPageBroadcaster" attribute="starred"/>
         <observes element="bookmarkThisPageBroadcaster" attribute="buttontooltiptext"/>
@@ -1184,6 +1176,15 @@
                     key="manBookmarkKb"/>
         </menupopup>
       </toolbarbutton>
+
+      <toolbaritem id="search-container"
+                   class="chromeclass-toolbar-additional panel-wide-item"
+                   title="&searchItem.title;"
+                   align="center"
+                   flex="100"
+                   persist="width">
+        <searchbar id="searchbar" flex="1"/>
+      </toolbaritem>
     </toolbarpalette>
     <box id="library-animatable-box" class="toolbarbutton-animatable-box">
       <image class="toolbarbutton-animatable-image"/>

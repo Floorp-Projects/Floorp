@@ -12732,7 +12732,7 @@
   "UNIQUE_CONTAINERS_OPENED": {
     "record_in_processes": ["main", "content"],
     "alert_emails": ["amarchesini@mozilla.com"],
-    "expires_in_version": "58",
+    "expires_in_version": "59",
     "bug_numbers": [1276006],
     "kind": "count",
     "description": "Tracking the unique number of opened Containers."
@@ -12740,7 +12740,7 @@
   "TOTAL_CONTAINERS_OPENED": {
     "record_in_processes": ["main", "content"],
     "alert_emails": ["amarchesini@mozilla.com"],
-    "expires_in_version": "58",
+    "expires_in_version": "59",
     "bug_numbers": [1276006],
     "kind": "count",
     "description": "Tracking the total number of opened Containers."
@@ -12806,18 +12806,10 @@
     "description": "Both the main session file and its backup could not be read and and the first run pref is false.",
     "cpp_guard": "ANDROID"
   },
-  "SHARED_WORKER_COUNT": {
-    "record_in_processes": ["main", "content"],
-    "alert_emails": ["amarchesini@mozilla.com"],
-    "expires_in_version": "58",
-    "kind": "count",
-    "bug_numbers": [1295980],
-    "description": "Number of the use of SharedWorkers."
-  },
   "NUMBER_OF_PROFILES": {
     "record_in_processes": ["main", "content"],
     "alert_emails": ["amarchesini@mozilla.com"],
-    "expires_in_version": "58",
+    "expires_in_version": "59",
     "bug_numbers": [1296606],
     "kind": "count",
     "description": "Number of named browser profiles for the current user, as reported by the profile service at startup."
@@ -12890,14 +12882,6 @@
     "high": 50000,
     "n_buckets": 100,
     "description": "Time in milliseconds from the first non-blank paint to the creation time of the next click, key, mouse or scroll event per top-level content browsing context."
-  },
-  "DOCUMENT_WITH_EXPANDED_PRINCIPAL": {
-    "record_in_processes": ["main", "content"],
-    "alert_emails": ["dev-platform@lists.mozilla.org"],
-    "bug_numbers": [1301123],
-    "expires_in_version": "58",
-    "kind": "count",
-    "description": "Number of documents encountered using an expanded principal."
   },
   "CONTENT_PAINT_TIME": {
     "record_in_processes": ["main", "content"],

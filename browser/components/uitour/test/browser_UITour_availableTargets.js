@@ -29,8 +29,6 @@ function getExpectedTargets() {
     "privateWindow",
       ...(hasQuit ? ["quit"] : []),
     "readerMode-urlBar",
-    "search",
-    "searchIcon",
     "trackingProtection",
     "urlbar",
   ];
@@ -62,17 +60,16 @@ add_UITour_task(async function test_availableTargets_changeWidgets() {
      "Targets should not be cached after reset");
 });
 
-add_UITour_task(async function test_availableTargets_exceptionFromGetTarget() {
-  // The query function for the "search" target will throw if it's not found.
-  // Make sure the callback still fires with the other available targets.
-  CustomizableUI.removeWidgetFromArea("search-container");
-  let data = await getConfigurationPromise("availableTargets");
-  let expecteds = getExpectedTargets();
-  // Default minus "search" and "searchIcon"
-  expecteds = expecteds.filter(target => target != "search" && target != "searchIcon");
-  ok_targets(data, expecteds);
-
-  CustomizableUI.reset();
+add_UITour_task(async function test_availableTargets_search() {
+  Services.prefs.setBoolPref("browser.search.widget.inNavBar", true);
+  try {
+    let data = await getConfigurationPromise("availableTargets");
+    let expecteds = getExpectedTargets();
+    expecteds = ["search", "searchIcon", ...expecteds];
+    ok_targets(data, expecteds);
+  } finally {
+    Services.prefs.clearUserPref("browser.search.widget.inNavBar");
+  }
 });
 
 add_UITour_task(async function test_availableTargets_removeUrlbarPageActionsAll() {

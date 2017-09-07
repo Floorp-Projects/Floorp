@@ -93,7 +93,7 @@
 
 :root.theme-dark {
   --theme-body-background: var(--grey-80);
-  --theme-sidebar-background: var(--grey-80);
+  --theme-sidebar-background: var(--grey-90);
   --theme-contrast-background: #ffb35b;
 
   /* Toolbar */

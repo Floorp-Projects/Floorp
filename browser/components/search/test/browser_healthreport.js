@@ -9,7 +9,9 @@ function test() {
   waitForExplicitFinish();
   resetPreferences();
 
+  let calledTestTelemetry = false;
   function testTelemetry() {
+    calledTestTelemetry = true;
     // Find the right bucket for the "Foo" engine.
     let engine = Services.search.getEngineByName("Foo");
     let histogramKey = (engine.identifier || "other-Foo") + ".searchbar";
@@ -58,8 +60,11 @@ function test() {
         break;
 
       case "engine-current":
-        is(Services.search.currentEngine.name, "Foo", "Current engine is Foo");
-        testTelemetry();
+        // We may be called again when resetting the engine at the end.
+        if (!calledTestTelemetry) {
+          is(Services.search.currentEngine.name, "Foo", "Current engine is Foo");
+          testTelemetry();
+        }
         break;
 
       case "engine-removed":
@@ -70,7 +75,10 @@ function test() {
   }
 
   Services.obs.addObserver(observer, "browser-search-engine-modified");
-  SpecialPowers.pushPrefEnv({set: [["toolkit.telemetry.enabled", true]]}).then(function() {
+  SpecialPowers.pushPrefEnv({set: [
+    ["toolkit.telemetry.enabled", true],
+    ["browser.search.widget.inNavBar", true],
+  ]}).then(function() {
     Services.search.addEngine("http://mochi.test:8888/browser/browser/components/search/test/testEngine.xml",
                               null, "data:image/x-icon,%00", false);
   });

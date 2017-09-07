@@ -55,7 +55,6 @@ XPCOMUtils.defineLazyGetter(this, "DEFAULT_AREA_PLACEMENTS", function() {
       "stop-reload-button",
       "home-button",
       "urlbar-container",
-      "search-container",
       "downloads-button",
       "library-button",
       "sidebar-button",
@@ -88,6 +87,7 @@ XPCOMUtils.defineLazyGetter(this, "DEFAULT_AREAS", function() {
 XPCOMUtils.defineLazyGetter(this, "PALETTE_ITEMS", function() {
   let result = [
     "bookmarks-menu-button",
+    "search-container",
     "open-file-button",
     "developer-button",
     "feed-button",

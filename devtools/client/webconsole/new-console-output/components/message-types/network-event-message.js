@@ -107,6 +107,7 @@ function NetworkEventMessage({
       activeTabId: networkMessageActiveTabId,
       request: networkMessageUpdate,
       sourceMapService: serviceContainer.sourceMapService,
+      openLink: serviceContainer.openLink,
       selectTab: (tabId) => {
         dispatch(actions.selectNetworkMessageTab(tabId));
       },

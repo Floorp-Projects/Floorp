@@ -372,6 +372,7 @@ function parseFormData(stream, channel, lenient = false) {
       stream = stream.data;
     }
 
+    channel.QueryInterface(Ci.nsIHttpChannel);
     let contentType = channel.getRequestHeader("Content-Type");
 
     switch (Headers.getParam(contentType, "")) {

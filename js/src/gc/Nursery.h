@@ -40,11 +40,11 @@
     _(ClearNewObjectCache,      "clrNOC")                                     \
     _(CollectToFP,              "collct")                                     \
     _(ObjectsTenuredCallback,   "tenCB")                                      \
-    _(SweepArrayBufferViewList, "swpABO")                                     \
+    _(Sweep,                    "sweep")                                      \
     _(UpdateJitActivations,     "updtIn")                                     \
     _(FreeMallocedBuffers,      "frSlts")                                     \
     _(ClearStoreBuffer,         "clrSB")                                      \
-    _(Sweep,                    "sweep")                                      \
+    _(ClearNursery,             "clear")                                      \
     _(Resize,                   "resize")                                     \
     _(Pretenure,                "pretnr")
 
@@ -474,10 +474,16 @@ class Nursery
     void freeMallocedBuffers();
 
     /*
+     * Updates pointers to nursery objects that have been tenured and discards
+     * pointers to objects that have been freed.
+     */
+    void sweep(JSTracer* trc);
+
+    /*
      * Frees all non-live nursery-allocated things at the end of a minor
      * collection.
      */
-    void sweep();
+    void clear();
 
     void sweepDictionaryModeObjects();
 

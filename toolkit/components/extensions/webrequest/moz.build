@@ -12,6 +12,7 @@ XPIDL_SOURCES += [
 XPIDL_MODULE = 'webextensions'
 
 UNIFIED_SOURCES += [
+    'ChannelWrapper.cpp',
     'nsWebRequestListener.cpp',
     'StreamFilter.cpp',
     'StreamFilterChild.cpp',
@@ -33,11 +34,16 @@ EXPORTS.mozilla += [
 ]
 
 EXPORTS.mozilla.extensions += [
+    'ChannelWrapper.h',
     'StreamFilter.h',
     'StreamFilterBase.h',
     'StreamFilterChild.h',
     'StreamFilterEvents.h',
     'StreamFilterParent.h',
+]
+
+LOCAL_INCLUDES += [
+    '/caps',
 ]
 
 include('/ipc/chromium/chromium-config.mozbuild')

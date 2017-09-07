@@ -54,6 +54,7 @@ PaymentRequestUpdateEvent::PaymentRequestUpdateEvent(EventTarget* aOwner)
 void
 PaymentRequestUpdateEvent::ResolvedCallback(JSContext* aCx, JS::Handle<JS::Value> aValue)
 {
+  MOZ_ASSERT(aCx);
   MOZ_ASSERT(mRequest);
 
   if (NS_WARN_IF(!aValue.isObject()) || !mWaitForUpdate) {
@@ -67,8 +68,9 @@ PaymentRequestUpdateEvent::ResolvedCallback(JSContext* aCx, JS::Handle<JS::Value
   }
 
   // Validate and canonicalize the details
-  if (!mRequest->IsValidDetailsUpdate(details)) {
-    mRequest->AbortUpdate(NS_ERROR_TYPE_ERR);
+  nsresult rv = mRequest->IsValidDetailsUpdate(details);
+  if (NS_FAILED(rv)) {
+    mRequest->AbortUpdate(rv);
     return;
   }
 
@@ -78,7 +80,7 @@ PaymentRequestUpdateEvent::ResolvedCallback(JSContext* aCx, JS::Handle<JS::Value
   // null if it is not.
 
   // Update the PaymentRequest with the new details
-  if (NS_FAILED(mRequest->UpdatePayment(details))) {
+  if (NS_FAILED(mRequest->UpdatePayment(aCx, details))) {
     mRequest->AbortUpdate(NS_ERROR_DOM_ABORT_ERR);
     return;
   }

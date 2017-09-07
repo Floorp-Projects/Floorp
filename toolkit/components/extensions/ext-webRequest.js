@@ -25,13 +25,13 @@ function WebRequestEventManager(context, eventName) {
 
       // Check hosts permissions for both the resource being requested,
       const hosts = context.extension.whiteListedHosts;
-      if (!hosts.matches(Services.io.newURI(data.url))) {
+      if (!hosts.matches(data.URI)) {
         return;
       }
       // and the origin that is loading the resource.
       const origin = data.documentUrl;
       const own = origin && origin.startsWith(context.extension.getURL());
-      if (origin && !own && !hosts.matches(Services.io.newURI(origin))) {
+      if (origin && !own && !hosts.matches(data.documentURI)) {
         return;
       }
 

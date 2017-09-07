@@ -35,7 +35,7 @@ add_task(async function addOverflowingToolbar() {
 
   isnot(oldChildCount, 0, "Toolbar should have non-overflowing widgets");
 
-  window.resizeTo(400, window.outerHeight);
+  window.resizeTo(kForceOverflowWidthPx, window.outerHeight);
   await waitForCondition(() => toolbarNode.hasAttribute("overflowing"));
   ok(toolbarNode.hasAttribute("overflowing"), "Should have an overflowing toolbar.");
   ok(toolbarNode.customizationTarget.childElementCount < oldChildCount, "Should have fewer children.");
