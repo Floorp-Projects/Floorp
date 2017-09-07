@@ -2921,8 +2921,7 @@ HTMLEditor::GetCellFromRange(nsRange* aRange,
 
   uint32_t startOffset = aRange->StartOffset();
 
-  nsCOMPtr<nsINode> childNode =
-    startContainer->GetChildAt(static_cast<int32_t>(startOffset));
+  nsCOMPtr<nsINode> childNode = aRange->GetChildAtStartOffset();
   // This means selection is probably at a text node (or end of doc?)
   if (!childNode) {
     return NS_ERROR_FAILURE;
@@ -3202,8 +3201,7 @@ HTMLEditor::GetSelectedOrParentTableElement(nsAString& aTagName,
 
     // Get child of anchor node, if exists
     if (anchorNode->HasChildNodes()) {
-      int32_t anchorOffset = selection->AnchorOffset();
-      nsINode* selectedNode = anchorNode->GetChildAt(anchorOffset);
+      nsINode* selectedNode = selection->GetChildAtAnchorOffset();
       if (!selectedNode) {
         selectedNode = anchorNode;
         // If anchor doesn't have a child, we can't be selecting a table element,

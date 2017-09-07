@@ -82,25 +82,18 @@
    */
   promise_test(t => {
     const pc = new RTCPeerConnection();
-    const promise = awaitNegotiation(pc);
-    pc.createDataChannel('test');
-    return promise;
-  }, 'Creating first data channel should fire negotiationneeded event');
+    const negotiated = awaitNegotiation(pc);
 
-  promise_test(t => {
-    const pc = new RTCPeerConnection();
     pc.createDataChannel('test');
-    // Attaching the event handler after the negotiation-needed steps
-    // are performed should still receive the event, because the event
-    // firing is queued as a task
-    return awaitNegotiation(pc);
-  }, 'task for negotiationneeded event should be enqueued for next tick');
+    return negotiated;
+  }, 'Creating first data channel should fire negotiationneeded event');
 
   test_never_resolve(t => {
     const pc = new RTCPeerConnection();
-    pc.createDataChannel('foo');
+    const negotiated = awaitNegotiation(pc);
 
-    return awaitNegotiation(pc)
+    pc.createDataChannel('foo');
+    return negotiated
       .then(({nextPromise}) => {
       pc.createDataChannel('bar');
       return nextPromise;
@@ -121,8 +114,10 @@
    */
   promise_test(t => {
     const pc = new RTCPeerConnection();
+    const negotiated = awaitNegotiation(pc);
+
     pc.addTransceiver('audio');
-    return awaitNegotiation(pc);
+    return negotiated;
   }, 'addTransceiver() should fire negotiationneeded event');
 
   /*
@@ -132,8 +127,10 @@
    */
   test_never_resolve(t => {
     const pc = new RTCPeerConnection();
+    const negotiated = awaitNegotiation(pc);
+
     pc.addTransceiver('audio');
-    return awaitNegotiation(pc)
+    return negotiated
     .then(({nextPromise}) => {
       pc.addTransceiver('video');
       return nextPromise;
@@ -147,8 +144,10 @@
    */
   test_never_resolve(t => {
     const pc = new RTCPeerConnection();
+    const negotiated = awaitNegotiation(pc);
+
     pc.createDataChannel('test');
-    return awaitNegotiation(pc)
+    return negotiated
     .then(({nextPromise}) => {
       pc.addTransceiver('video');
       return nextPromise;
@@ -162,19 +161,20 @@
    */
   test_never_resolve(t => {
     const pc = new RTCPeerConnection();
-    const promise = awaitNegotiation(pc);
+    const negotiated = awaitNegotiation(pc);
 
-    return pc.createOffer()
+    return pc.createOffer({ offerToReceiveAudio: true })
     .then(offer => pc.setLocalDescription(offer))
-    .then(() => {
+    .then(() => negotiated)
+    .then(({nextPromise}) => {
       assert_equals(pc.signalingState, 'have-local-offer');
       pc.createDataChannel('test');
-      return promise;
+      return nextPromise;
     });
   }, 'negotiationneeded event should not fire if signaling state is not stable');
 
   /*
-    4.3.1.6.  Set the RTCSessionSessionDescription
+    4.4.1.6.  Set the RTCSessionSessionDescription
       2.2.10. If connection's signaling state is now stable, update the negotiation-needed
               flag. If connection's [[NegotiationNeeded]] slot was true both before and after
               this update, queue a task that runs the following steps:
@@ -186,7 +186,7 @@
 
     return assert_first_promise_fulfill_after_second(
       awaitNegotiation(pc),
-      pc.createOffer()
+      pc.createOffer({ offerToReceiveAudio: true })
       .then(offer =>
         pc.setLocalDescription(offer)
         .then(() => {

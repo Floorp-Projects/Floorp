@@ -37,6 +37,7 @@ BUILDER_NAME_PREFIX = {
     'android-4.3-arm7-api-16-gradle': 'Android 4.3 armv7 api-16+',
     'windows10-64': 'Windows 10 64-bit',
     'windows10-64-nightly': 'Windows 10 64-bit',
+    'windows10-64-devedition': 'Windows 10 64-bit DevEdition',
     'windows10-64-pgo': 'Windows 10 64-bit',
     'windows10-64-asan': 'Windows 10 64-bit',
     'windows10-64-stylo-disabled': 'Windows 10 64-bit',

@@ -1,9 +1,7 @@
 # Feature Policy Guide
 ## How to Test a New Feature with Feature Policy
 
-This directory contains a framework to test features with feature policy. Please
-refer to `/content/common/feature_policy/README.md` for more details on feature
-policy.
+This directory contains a framework to test features with feature policy.
 
 When adding a new feature to feature policy, the following cases should be tested:
 * feature enabled by header policy [HTTP tests]

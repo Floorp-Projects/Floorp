@@ -171,6 +171,8 @@ public:
   nsINode*     GetFocusNode();
   uint32_t     FocusOffset();
 
+  nsIContent*  GetChildAtAnchorOffset();
+
   /*
    * IsCollapsed -- is the whole selection just one point, or unset?
    */

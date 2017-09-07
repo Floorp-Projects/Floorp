@@ -87,7 +87,7 @@
 
   test(() => {
     const pc = new RTCPeerConnection({ rtcpMuxPolicy: 'require' });
-    assert_own_property(pc, 'setConfiguration');
+    assert_idl_attribute(pc, 'setConfiguration');
     assert_throws('InvalidModificationError', () =>
       pc.setConfiguration({ rtcpMuxPolicy: 'negotiate' }));
 
@@ -107,7 +107,7 @@
       }
     }
 
-    assert_own_property(pc, 'setConfiguration');
+    assert_idl_attribute(pc, 'setConfiguration');
     assert_throws('InvalidModificationError', () =>
       pc.setConfiguration({ rtcpMuxPolicy: 'require' }));
 
@@ -127,7 +127,7 @@
       }
     }
 
-    assert_own_property(pc, 'setConfiguration');
+    assert_idl_attribute(pc, 'setConfiguration');
     // default value for rtcpMuxPolicy is require
     assert_throws('InvalidModificationError', () =>
       pc.setConfiguration({}));

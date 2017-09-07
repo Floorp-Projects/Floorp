@@ -891,7 +891,8 @@ static inline bool match_backtrack (hb_apply_context_t *c,
 				    unsigned int count,
 				    const USHORT backtrack[],
 				    match_func_t match_func,
-				    const void *match_data)
+				    const void *match_data,
+				    unsigned int *match_start)
 {
   TRACE_APPLY (NULL);
 
@@ -903,6 +904,8 @@ static inline bool match_backtrack (hb_apply_context_t *c,
     if (!skippy_iter.prev ())
       return_trace (false);
 
+  *match_start = skippy_iter.idx;
+
   return_trace (true);
 }
 
@@ -911,7 +914,8 @@ static inline bool match_lookahead (hb_apply_context_t *c,
 				    const USHORT lookahead[],
 				    match_func_t match_func,
 				    const void *match_data,
-				    unsigned int offset)
+				    unsigned int offset,
+				    unsigned int *end_index)
 {
   TRACE_APPLY (NULL);
 
@@ -922,6 +926,8 @@ static inline bool match_lookahead (hb_apply_context_t *c,
   for (unsigned int i = 0; i < count; i++)
     if (!skippy_iter.next ())
       return_trace (false);
+
+  *end_index = skippy_iter.idx + 1;
 
   return_trace (true);
 }
@@ -1145,10 +1151,11 @@ static inline bool context_apply_lookup (hb_apply_context_t *c,
 		      inputCount, input,
 		      lookup_context.funcs.match, lookup_context.match_data,
 		      &match_length, match_positions)
-      && apply_lookup (c,
+      && (c->buffer->unsafe_to_break (c->buffer->idx, c->buffer->idx + match_length),
+	  apply_lookup (c,
 		       inputCount, match_positions,
 		       lookupCount, lookupRecord,
-		       match_length);
+		       match_length));
 }
 
 struct Rule
@@ -1666,7 +1673,7 @@ static inline bool chain_context_apply_lookup (hb_apply_context_t *c,
 					       const LookupRecord lookupRecord[],
 					       ChainContextApplyLookupContext &lookup_context)
 {
-  unsigned int match_length = 0;
+  unsigned int start_index = 0, match_length = 0, end_index = 0;
   unsigned int match_positions[HB_MAX_CONTEXT_LENGTH];
   return match_input (c,
 		      inputCount, input,
@@ -1674,15 +1681,17 @@ static inline bool chain_context_apply_lookup (hb_apply_context_t *c,
 		      &match_length, match_positions)
       && match_backtrack (c,
 			  backtrackCount, backtrack,
-			  lookup_context.funcs.match, lookup_context.match_data[0])
+			  lookup_context.funcs.match, lookup_context.match_data[0],
+			  &start_index)
       && match_lookahead (c,
 			  lookaheadCount, lookahead,
 			  lookup_context.funcs.match, lookup_context.match_data[2],
-			  match_length)
-      && apply_lookup (c,
+			  match_length, &end_index)
+      && (c->buffer->unsafe_to_break_from_outbuffer (start_index, end_index),
+          apply_lookup (c,
 		       inputCount, match_positions,
 		       lookupCount, lookupRecord,
-		       match_length);
+		       match_length));
 }
 
 struct ChainRule

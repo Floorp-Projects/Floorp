@@ -9,6 +9,7 @@
 #include "mozilla/dom/cache/Connection.h"
 #include "mozilla/dom/cache/DBSchema.h"
 #include "mozilla/dom/cache/FileUtils.h"
+#include "mozilla/dom/cache/QuotaClient.h"
 #include "mozilla/dom/quota/PersistenceType.h"
 #include "mozilla/net/nsFileProtocolHandler.h"
 #include "mozIStorageConnection.h"
@@ -23,8 +24,36 @@ namespace mozilla {
 namespace dom {
 namespace cache {
 
+using mozilla::dom::quota::AssertIsOnIOThread;
 using mozilla::dom::quota::PERSISTENCE_TYPE_DEFAULT;
 using mozilla::dom::quota::PersistenceType;
+
+namespace {
+
+nsresult
+WipeDatabase(const QuotaInfo& aQuotaInfo, nsIFile* aDBFile,
+             nsIFile* aDBDir)
+{
+  MOZ_DIAGNOSTIC_ASSERT(aDBFile);
+  MOZ_DIAGNOSTIC_ASSERT(aDBDir);
+
+  nsresult rv = RemoveNsIFile(aQuotaInfo, aDBFile);
+  if (NS_WARN_IF(NS_FAILED(rv))) { return rv; }
+
+  // Note, the -wal journal file will be automatically deleted by sqlite when
+  // the new database is created.  No need to explicitly delete it here.
+
+  // Delete the morgue as well.
+  rv = BodyDeleteDir(aQuotaInfo, aDBDir);
+  if (NS_WARN_IF(NS_FAILED(rv))) { return rv; }
+
+  rv = WipePaddingFile(aQuotaInfo, aDBDir);
+  if (NS_WARN_IF(NS_FAILED(rv))) { return rv; }
+
+  return rv;
+}
+
+}
 
 DBAction::DBAction(Mode aMode)
   : mMode(aMode)
@@ -100,8 +129,6 @@ DBAction::OpenConnection(const QuotaInfo& aQuotaInfo, nsIFile* aDBDir,
   MOZ_DIAGNOSTIC_ASSERT(aDBDir);
   MOZ_DIAGNOSTIC_ASSERT(aConnOut);
 
-  nsCOMPtr<mozIStorageConnection> conn;
-
   bool exists;
   nsresult rv = aDBDir->Exists(&exists);
   if (NS_WARN_IF(NS_FAILED(rv))) { return rv; }
@@ -112,13 +139,53 @@ DBAction::OpenConnection(const QuotaInfo& aQuotaInfo, nsIFile* aDBDir,
     if (NS_WARN_IF(NS_FAILED(rv))) { return rv; }
   }
 
+  rv = OpenDBConnection(aQuotaInfo, aDBDir, aConnOut);
+
+  return rv;
+}
+
+SyncDBAction::SyncDBAction(Mode aMode)
+  : DBAction(aMode)
+{
+}
+
+SyncDBAction::~SyncDBAction()
+{
+}
+
+void
+SyncDBAction::RunWithDBOnTarget(Resolver* aResolver,
+                                const QuotaInfo& aQuotaInfo, nsIFile* aDBDir,
+                                mozIStorageConnection* aConn)
+{
+  MOZ_ASSERT(!NS_IsMainThread());
+  MOZ_DIAGNOSTIC_ASSERT(aResolver);
+  MOZ_DIAGNOSTIC_ASSERT(aDBDir);
+  MOZ_DIAGNOSTIC_ASSERT(aConn);
+
+  nsresult rv = RunSyncWithDBOnTarget(aQuotaInfo, aDBDir, aConn);
+  aResolver->Resolve(rv);
+}
+
+// static
+nsresult
+OpenDBConnection(const QuotaInfo& aQuotaInfo, nsIFile* aDBDir,
+                 mozIStorageConnection** aConnOut)
+{
+  MOZ_ASSERT(!NS_IsMainThread());
+  MOZ_DIAGNOSTIC_ASSERT(aDBDir);
+  MOZ_DIAGNOSTIC_ASSERT(aConnOut);
+
+  nsCOMPtr<mozIStorageConnection> conn;
+
   nsCOMPtr<nsIFile> dbFile;
-  rv = aDBDir->Clone(getter_AddRefs(dbFile));
+  nsresult rv = aDBDir->Clone(getter_AddRefs(dbFile));
   if (NS_WARN_IF(NS_FAILED(rv))) { return rv; }
 
   rv = dbFile->Append(NS_LITERAL_STRING("caches.sqlite"));
   if (NS_WARN_IF(NS_FAILED(rv))) { return rv; }
 
+  bool exists = false;
   rv = dbFile->Exists(&exists);
   if (NS_WARN_IF(NS_FAILED(rv))) { return rv; }
 
@@ -185,49 +252,6 @@ DBAction::OpenConnection(const QuotaInfo& aQuotaInfo, nsIFile* aDBDir,
   conn.forget(aConnOut);
 
   return rv;
-}
-
-nsresult
-DBAction::WipeDatabase(const QuotaInfo& aQuotaInfo, nsIFile* aDBFile,
-                       nsIFile* aDBDir)
-{
-  MOZ_DIAGNOSTIC_ASSERT(aDBFile);
-  MOZ_DIAGNOSTIC_ASSERT(aDBDir);
-
-  nsresult rv = RemoveNsIFile(aQuotaInfo, aDBFile);
-  if (NS_WARN_IF(NS_FAILED(rv))) { return rv; }
-
-  // Note, the -wal journal file will be automatically deleted by sqlite when
-  // the new database is created.  No need to explicitly delete it here.
-
-  // Delete the morgue as well.
-  rv = BodyDeleteDir(aQuotaInfo, aDBDir);
-  if (NS_WARN_IF(NS_FAILED(rv))) { return rv; }
-
-  return rv;
-}
-
-SyncDBAction::SyncDBAction(Mode aMode)
-  : DBAction(aMode)
-{
-}
-
-SyncDBAction::~SyncDBAction()
-{
-}
-
-void
-SyncDBAction::RunWithDBOnTarget(Resolver* aResolver,
-                                const QuotaInfo& aQuotaInfo, nsIFile* aDBDir,
-                                mozIStorageConnection* aConn)
-{
-  MOZ_ASSERT(!NS_IsMainThread());
-  MOZ_DIAGNOSTIC_ASSERT(aResolver);
-  MOZ_DIAGNOSTIC_ASSERT(aDBDir);
-  MOZ_DIAGNOSTIC_ASSERT(aConn);
-
-  nsresult rv = RunSyncWithDBOnTarget(aQuotaInfo, aDBDir, aConn);
-  aResolver->Resolve(rv);
 }
 
 } // namespace cache

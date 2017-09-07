@@ -16,7 +16,7 @@ function config_test(test_func, desc) {
   test(() => {
     test_func(config => {
       const pc = new RTCPeerConnection();
-      assert_own_property(pc, 'setConfiguration');
+      assert_idl_attribute(pc, 'setConfiguration');
       pc.setConfiguration(config);
       return pc;
     })

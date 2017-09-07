@@ -825,11 +825,8 @@ intl_availableLocales(JSContext* cx, CountAvailable countAvailable,
         a = Atomize(cx, lang.get(), strlen(lang.get()));
         if (!a)
             return false;
-        if (!DefineProperty(cx, locales, a->asPropertyName(), TrueHandleValue, nullptr, nullptr,
-                            JSPROP_ENUMERATE))
-        {
+        if (!DefineDataProperty(cx, locales, a->asPropertyName(), TrueHandleValue))
             return false;
-        }
     }
 #endif
     result.setObject(*locales);
@@ -1070,7 +1067,7 @@ CreateCollatorPrototype(JSContext* cx, HandleObject Intl, Handle<GlobalObject*> 
 
     // 8.1
     RootedValue ctorValue(cx, ObjectValue(*ctor));
-    if (!DefineProperty(cx, Intl, cx->names().Collator, ctorValue, nullptr, nullptr, 0))
+    if (!DefineDataProperty(cx, Intl, cx->names().Collator, ctorValue, 0))
         return nullptr;
 
     return proto;
@@ -1121,7 +1118,7 @@ js::intl_availableCollations(JSContext* cx, unsigned argc, Value* vp)
 
     // The first element of the collations array must be |null| per
     // ES2017 Intl, 10.2.3 Internal Slots.
-    if (!DefineElement(cx, collations, index++, NullHandleValue))
+    if (!DefineDataElement(cx, collations, index++, NullHandleValue))
         return false;
 
     RootedValue element(cx);
@@ -1144,7 +1141,7 @@ js::intl_availableCollations(JSContext* cx, unsigned argc, Value* vp)
         if (!jscollation)
             return false;
         element = StringValue(jscollation);
-        if (!DefineElement(cx, collations, index++, element))
+        if (!DefineDataElement(cx, collations, index++, element))
             return false;
     }
 
@@ -1649,13 +1646,13 @@ CreateNumberFormatPrototype(JSContext* cx, HandleObject Intl, Handle<GlobalObjec
             return nullptr;
         }
 
-        if (!DefineProperty(cx, proto, cx->names().formatToParts, ftp, nullptr, nullptr, 0))
+        if (!DefineDataProperty(cx, proto, cx->names().formatToParts, ftp, 0))
             return nullptr;
     }
 
     // 8.1
     RootedValue ctorValue(cx, ObjectValue(*ctor));
-    if (!DefineProperty(cx, Intl, cx->names().NumberFormat, ctorValue, nullptr, nullptr, 0))
+    if (!DefineDataProperty(cx, Intl, cx->names().NumberFormat, ctorValue, 0))
         return nullptr;
 
     constructor.set(ctor);
@@ -2308,7 +2305,7 @@ intl_FormatNumberToParts(JSContext* cx, UNumberFormat* nf, double x, MutableHand
             return false;
 
         propVal.setString(cx->names().*type);
-        if (!DefineProperty(cx, singlePart, cx->names().type, propVal))
+        if (!DefineDataProperty(cx, singlePart, cx->names().type, propVal))
             return false;
 
         JSLinearString* partSubstr =
@@ -2317,11 +2314,11 @@ intl_FormatNumberToParts(JSContext* cx, UNumberFormat* nf, double x, MutableHand
             return false;
 
         propVal.setString(partSubstr);
-        if (!DefineProperty(cx, singlePart, cx->names().value, propVal))
+        if (!DefineDataProperty(cx, singlePart, cx->names().value, propVal))
             return false;
 
         propVal.setObject(*singlePart);
-        if (!DefineElement(cx, partsArray, partIndex, propVal))
+        if (!DefineDataElement(cx, partsArray, partIndex, propVal))
             return false;
 
         lastEndIndex = endIndex;
@@ -2529,7 +2526,7 @@ CreateDateTimeFormatPrototype(JSContext* cx, HandleObject Intl, Handle<GlobalObj
 
     // 8.1
     RootedValue ctorValue(cx, ObjectValue(*ctor));
-    if (!DefineProperty(cx, Intl, cx->names().DateTimeFormat, ctorValue, nullptr, nullptr, 0))
+    if (!DefineDataProperty(cx, Intl, cx->names().DateTimeFormat, ctorValue, 0))
         return nullptr;
 
     constructor.set(ctor);
@@ -2616,7 +2613,7 @@ js::intl_availableCalendars(JSContext* cx, unsigned argc, Value* vp)
     if (!DefaultCalendar(cx, locale, &element))
         return false;
 
-    if (!DefineElement(cx, calendars, index++, element))
+    if (!DefineDataElement(cx, calendars, index++, element))
         return false;
 
     // Now get the calendars that "would make a difference", i.e., not the default.
@@ -2648,7 +2645,7 @@ js::intl_availableCalendars(JSContext* cx, unsigned argc, Value* vp)
         if (!jscalendar)
             return false;
         element = StringValue(jscalendar);
-        if (!DefineElement(cx, calendars, index++, element))
+        if (!DefineDataElement(cx, calendars, index++, element))
             return false;
 
         // ICU doesn't return calendar aliases, append them here.
@@ -2658,7 +2655,7 @@ js::intl_availableCalendars(JSContext* cx, unsigned argc, Value* vp)
                 if (!jscalendar)
                     return false;
                 element = StringValue(jscalendar);
-                if (!DefineElement(cx, calendars, index++, element))
+                if (!DefineDataElement(cx, calendars, index++, element))
                     return false;
             }
         }
@@ -3385,7 +3382,7 @@ intl_FormatToPartsDateTime(JSContext* cx, UDateFormat* df, double x, MutableHand
             return false;
 
         partType = StringValue(cx->names().*type);
-        if (!DefineProperty(cx, singlePart, cx->names().type, partType))
+        if (!DefineDataProperty(cx, singlePart, cx->names().type, partType))
             return false;
 
         JSLinearString* partSubstr =
@@ -3394,11 +3391,11 @@ intl_FormatToPartsDateTime(JSContext* cx, UDateFormat* df, double x, MutableHand
             return false;
 
         val = StringValue(partSubstr);
-        if (!DefineProperty(cx, singlePart, cx->names().value, val))
+        if (!DefineDataProperty(cx, singlePart, cx->names().value, val))
             return false;
 
         val = ObjectValue(*singlePart);
-        if (!DefineElement(cx, partsArray, partIndex, val))
+        if (!DefineDataElement(cx, partsArray, partIndex, val))
             return false;
 
         lastEndIndex = endIndex;
@@ -3593,7 +3590,7 @@ CreatePluralRulesPrototype(JSContext* cx, HandleObject Intl, Handle<GlobalObject
         return nullptr;
 
     RootedValue ctorValue(cx, ObjectValue(*ctor));
-    if (!DefineProperty(cx, Intl, cx->names().PluralRules, ctorValue, nullptr, nullptr, 0))
+    if (!DefineDataProperty(cx, Intl, cx->names().PluralRules, ctorValue, 0))
         return nullptr;
 
     return proto;
@@ -3766,7 +3763,7 @@ js::intl_GetPluralCategories(JSContext* cx, unsigned argc, Value* vp)
             return false;
 
         element.setString(str);
-        if (!DefineElement(cx, res, i++, element))
+        if (!DefineDataElement(cx, res, i++, element))
             return false;
     } while (true);
 
@@ -3926,12 +3923,12 @@ js::intl_GetCalendarInfo(JSContext* cx, unsigned argc, Value* vp)
     int32_t firstDayOfWeek = ucal_getAttribute(cal, UCAL_FIRST_DAY_OF_WEEK);
     v.setInt32(firstDayOfWeek);
 
-    if (!DefineProperty(cx, info, cx->names().firstDayOfWeek, v))
+    if (!DefineDataProperty(cx, info, cx->names().firstDayOfWeek, v))
         return false;
 
     int32_t minDays = ucal_getAttribute(cal, UCAL_MINIMAL_DAYS_IN_FIRST_WEEK);
     v.setInt32(minDays);
-    if (!DefineProperty(cx, info, cx->names().minDays, v))
+    if (!DefineDataProperty(cx, info, cx->names().minDays, v))
         return false;
 
     UCalendarWeekdayType prevDayType = ucal_getDayOfWeekType(cal, UCAL_SATURDAY, &status);
@@ -3979,10 +3976,10 @@ js::intl_GetCalendarInfo(JSContext* cx, unsigned argc, Value* vp)
     MOZ_ASSERT(weekendStart.isInt32());
     MOZ_ASSERT(weekendEnd.isInt32());
 
-    if (!DefineProperty(cx, info, cx->names().weekendStart, weekendStart))
+    if (!DefineDataProperty(cx, info, cx->names().weekendStart, weekendStart))
         return false;
 
-    if (!DefineProperty(cx, info, cx->names().weekendEnd, weekendEnd))
+    if (!DefineDataProperty(cx, info, cx->names().weekendEnd, weekendEnd))
         return false;
 
     args.rval().setObject(*info);
@@ -4306,7 +4303,7 @@ js::intl_ComputeDisplayNames(JSContext* cx, unsigned argc, Value* vp)
 
         // 5.b. Append the result string to result.
         v.setString(displayName);
-        if (!DefineElement(cx, result, i, v))
+        if (!DefineDataElement(cx, result, i, v))
             return false;
     }
 
@@ -4329,14 +4326,14 @@ js::intl_GetLocaleInfo(JSContext* cx, unsigned argc, Value* vp)
     if (!info)
         return false;
 
-    if (!DefineProperty(cx, info, cx->names().locale, args[0]))
+    if (!DefineDataProperty(cx, info, cx->names().locale, args[0]))
         return false;
 
     bool rtl = uloc_isRightToLeft(icuLocale(locale.ptr()));
 
     RootedValue dir(cx, StringValue(rtl ? cx->names().rtl : cx->names().ltr));
 
-    if (!DefineProperty(cx, info, cx->names().direction, dir))
+    if (!DefineDataProperty(cx, info, cx->names().direction, dir))
         return false;
 
     args.rval().setObject(*info);
@@ -4403,11 +4400,8 @@ GlobalObject::initIntlObject(JSContext* cx, Handle<GlobalObject*> global)
 
     // The |Intl| object is fully set up now, so define the global property.
     RootedValue intlValue(cx, ObjectValue(*intl));
-    if (!DefineProperty(cx, global, cx->names().Intl, intlValue, nullptr, nullptr,
-                        JSPROP_RESOLVING))
-    {
+    if (!DefineDataProperty(cx, global, cx->names().Intl, intlValue, JSPROP_RESOLVING))
         return false;
-    }
 
     // Now that the |Intl| object is successfully added, we can OOM-safely fill
     // in all relevant reserved global slots.
