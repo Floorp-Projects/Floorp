@@ -1,7 +1,7 @@
-/* -*- Mode: Java; c-basic-offset: 4; tab-width: 4; indent-tabs-mode: nil; -*-
- * This Source Code Form is subject to the terms of the Mozilla Public
+/* This Source Code Form is subject to the terms of the Mozilla Public
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
+
 package org.mozilla.focus.fragment;
 
 import android.os.Bundle;
@@ -35,11 +35,9 @@ public class InfoFragment extends WebFragment {
 
     @NonNull
     @Override
-    public View inflateLayout(LayoutInflater inflater, @Nullable ViewGroup container,
-                              @Nullable Bundle savedInstanceState) {
-
+    public View inflateLayout(LayoutInflater inflater, @Nullable ViewGroup container, @Nullable Bundle savedInstanceState) {
         final View view = inflater.inflate(R.layout.fragment_info, container, false);
-        progressView = (ProgressBar) view.findViewById(R.id.progress);
+        progressView = view.findViewById(R.id.progress);
         webView = view.findViewById(R.id.webview);
 
         final String url = getInitialUrl();
@@ -86,8 +84,7 @@ public class InfoFragment extends WebFragment {
             }
 
             @Override
-            public void onDownloadStart(Download download) {
-            }
+            public void onDownloadStart(Download download) {}
 
             @Override
             public void onLongPress(IWebView.HitTarget hitTarget) {}

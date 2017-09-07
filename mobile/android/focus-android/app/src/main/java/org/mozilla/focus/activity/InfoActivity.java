@@ -10,12 +10,14 @@ import android.content.Intent;
 import android.content.res.Resources;
 import android.os.Bundle;
 import android.support.annotation.Nullable;
+import android.support.v7.app.ActionBar;
 import android.support.v7.app.AppCompatActivity;
 import android.support.v7.widget.Toolbar;
 import android.util.AttributeSet;
 import android.view.View;
 
 import org.mozilla.focus.R;
+import org.mozilla.focus.browser.LocalizedContent;
 import org.mozilla.focus.fragment.InfoFragment;
 import org.mozilla.focus.locale.Locales;
 import org.mozilla.focus.utils.AppConstants;
@@ -34,7 +36,7 @@ public class InfoActivity extends AppCompatActivity {
     private static final String EXTRA_URL = "extra_url";
     private static final String EXTRA_TITLE = "extra_title";
 
-    public static final Intent getIntentFor(final Context context, final String url, final String title) {
+    public static Intent getIntentFor(final Context context, final String url, final String title) {
         final Intent intent = new Intent(context, InfoActivity.class);
 
         intent.putExtra(EXTRA_URL, url);
@@ -43,30 +45,27 @@ public class InfoActivity extends AppCompatActivity {
         return intent;
     }
 
-    public static final Intent getAboutIntent(final Context context) {
+    public static Intent getAboutIntent(final Context context) {
         final Resources resources = Locales.getLocalizedResources(context);
-
-        // We can't use "about:" because webview silently swallows about: pages, hence we use
-        // a custom scheme.
-        return getIntentFor(context, "focusabout:", resources.getString(R.string.menu_about));
+        return getIntentFor(context, LocalizedContent.URL_ABOUT, resources.getString(R.string.menu_about));
     }
 
-    public static final Intent getRightsIntent(final Context context) {
+    public static Intent getRightsIntent(final Context context) {
         final Resources resources = Locales.getLocalizedResources(context);
-        return getIntentFor(context, "file:///android_asset/rights-focus.html", resources.getString(R.string.menu_rights));
+        return getIntentFor(context, LocalizedContent.URL_RIGHTS, resources.getString(R.string.menu_rights));
     }
 
-    public static final Intent getHelpIntent(final Context context) {
+    public static Intent getHelpIntent(final Context context) {
         final Resources resources = Locales.getLocalizedResources(context);
         return getIntentFor(context, SupportUtils.HELP_URL, resources.getString(R.string.menu_help));
     }
 
-    public static final Intent getPrivacyNoticeIntent(final Context context) {
+    public static Intent getPrivacyNoticeIntent(final Context context) {
         final Resources resources = Locales.getLocalizedResources(context);
         return getIntentFor(context, AppConstants.isKlarBuild() ? PRIVACY_NOTICE_KLAR_URL : PRIVACY_NOTICE_URL, resources.getString(R.string.preference_privacy_notice));
     }
 
-    public static final Intent getTrackerHelpIntent(final Context context) {
+    public static Intent getTrackerHelpIntent(final Context context) {
         final Resources resources = Locales.getLocalizedResources(context);
         return getIntentFor(context, SupportUtils.getSumoURLForTopic(context, "trackers"), resources.getString(R.string.menu_help));
     }
@@ -84,13 +83,16 @@ public class InfoActivity extends AppCompatActivity {
                 .replace(R.id.infofragment, InfoFragment.create(url))
                 .commit();
 
-        final Toolbar toolbar = (Toolbar) findViewById(R.id.toolbar);
+        final Toolbar toolbar = findViewById(R.id.toolbar);
         toolbar.setTitle(title);
 
         setSupportActionBar(toolbar);
 
-        getSupportActionBar().setDisplayHomeAsUpEnabled(true);
-        getSupportActionBar().setDisplayShowHomeEnabled(true);
+        final ActionBar actionBar = getSupportActionBar();
+        if (actionBar != null) {
+            actionBar.setDisplayHomeAsUpEnabled(true);
+            actionBar.setDisplayShowHomeEnabled(true);
+        }
 
         toolbar.setNavigationOnClickListener(new View.OnClickListener() {
             @Override

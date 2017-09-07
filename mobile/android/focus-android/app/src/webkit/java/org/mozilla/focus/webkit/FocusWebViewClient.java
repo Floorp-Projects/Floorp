@@ -24,6 +24,7 @@ import android.webkit.WebView;
 import android.webkit.WebViewClient;
 
 import org.mozilla.focus.R;
+import org.mozilla.focus.browser.LocalizedContent;
 import org.mozilla.focus.locale.Locales;
 import org.mozilla.focus.utils.HtmlLoader;
 import org.mozilla.focus.utils.IntentUtils;
@@ -223,8 +224,8 @@ import java.util.Map;
 
     @Override
     public boolean shouldOverrideUrlLoading(WebView view, String url) {
-        if (url.equals("focusabout:")) {
-            loadAbout(view);
+        // If this is an internal URL like focus:about then we load the content ourselves here.
+        if (LocalizedContent.handleInternalContent(url, view)) {
             return true;
         }
 
@@ -272,8 +273,7 @@ import java.util.Map;
     }
 
     @Override
-    public void onReceivedError(final WebView webView, int errorCode,
-                                final String description, String failingUrl) {
+    public void onReceivedError(final WebView webView, int errorCode, final String description, String failingUrl) {
         errorReceived = true;
 
         // This is a hack: onReceivedError(WebView, WebResourceRequest, WebResourceError) is API 23+ only,
@@ -317,47 +317,4 @@ import java.util.Map;
 
         super.onReceivedError(webView, errorCode, description, failingUrl);
     }
-
-    private void loadAbout(final WebView webView) {
-        final Resources resources = Locales.getLocalizedResources(webView.getContext());
-
-        final Map<String, String> substitutionMap = new ArrayMap<>();
-        final String appName = webView.getContext().getResources().getString(R.string.app_name);
-        final String learnMoreURL = SupportUtils.getManifestoURL();
-
-        String aboutVersion = "";
-        try {
-            final PackageInfo packageInfo = context.getPackageManager().getPackageInfo(context.getPackageName(), 0);
-            aboutVersion = String.format("%s (Build #%s)", packageInfo.versionName, packageInfo.versionCode);
-        } catch (PackageManager.NameNotFoundException e) {
-            // Nothing to do if we can't find the package name.
-        }
-        substitutionMap.put("%about-version%", aboutVersion);
-
-        final String aboutContent = resources.getString(R.string.about_content, appName, learnMoreURL);
-        substitutionMap.put("%about-content%", aboutContent);
-
-        final String wordmark = HtmlLoader.loadPngAsDataURI(webView.getContext(), R.drawable.wordmark);
-        substitutionMap.put("%wordmark%", wordmark);
-
-        ViewCompat.setLayoutDirection(webView, View.LAYOUT_DIRECTION_LOCALE);
-        final int layoutDirection = ViewCompat.getLayoutDirection(webView);
-
-        final String direction;
-
-        if (layoutDirection == View.LAYOUT_DIRECTION_LTR) {
-            direction = "ltr";
-        } else if (layoutDirection == View.LAYOUT_DIRECTION_RTL) {
-            direction = "rtl";
-        } else {
-            direction = "auto";
-        }
-        substitutionMap.put("%dir%", direction);
-
-        final String data = HtmlLoader.loadResourceFile(webView.getContext(), R.raw.about, substitutionMap);
-        // We use a file:/// base URL so that we have the right origin to load file:/// css and
-        // image resources.
-        webView.loadDataWithBaseURL("file:///android_res/raw/about.html", data, "text/html", "UTF-8", null);
-    }
-
 }
