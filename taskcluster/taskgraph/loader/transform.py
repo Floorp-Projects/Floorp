@@ -5,7 +5,6 @@
 from __future__ import absolute_import, print_function, unicode_literals
 
 import logging
-import itertools
 
 from ..util.templates import merge
 from ..util.yaml import load_yaml
@@ -33,14 +32,18 @@ def loader(kind, path, config, params, loaded_tasks):
     """
     def jobs():
         defaults = config.get('job-defaults')
-        jobs = config.get('jobs', {}).iteritems()
-        jobs_from = itertools.chain.from_iterable(
-            load_yaml(path, filename).iteritems()
-            for filename in config.get('jobs-from', {}))
-        for name, job in itertools.chain(jobs, jobs_from):
+        for name, job in config.get('jobs', {}).iteritems():
             if defaults:
                 job = merge(defaults, job)
+            job['job-from'] = 'kind.yml'
             yield name, job
+
+        for filename in config.get('jobs-from', []):
+            for name, job in load_yaml(path, filename).iteritems():
+                if defaults:
+                    job = merge(defaults, job)
+                job['job-from'] = filename
+                yield name, job
 
     for name, job in jobs():
         job['name'] = name

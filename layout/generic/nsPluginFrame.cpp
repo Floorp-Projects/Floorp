@@ -57,6 +57,7 @@
 #include "Layers.h"
 #include "ReadbackLayer.h"
 #include "ImageContainer.h"
+#include "mozilla/layers/WebRenderLayerManager.h"
 
 // accessibility support
 #ifdef ACCESSIBILITY
@@ -1042,6 +1043,20 @@ nsDisplayPlugin::GetOpaqueRegion(nsDisplayListBuilder* aBuilder,
   return result;
 }
 
+bool
+nsDisplayPlugin::CreateWebRenderCommands(mozilla::wr::DisplayListBuilder& aBuilder,
+                                         const StackingContextHelper& aSc,
+                                         nsTArray<WebRenderParentCommand>& aParentCommands,
+                                         mozilla::layers::WebRenderLayerManager* aManager,
+                                         nsDisplayListBuilder* aDisplayListBuilder)
+{
+  return static_cast<nsPluginFrame*>(mFrame)->CreateWebRenderCommands(this,
+                                                                      aBuilder,
+                                                                      aSc,
+                                                                      aManager,
+                                                                      aDisplayListBuilder);
+}
+
 nsresult
 nsPluginFrame::PluginEventNotifier::Run() {
   nsCOMPtr<nsIObserverService> obsSvc =
@@ -1355,22 +1370,19 @@ private:
   RefPtr<LayerManager> mLayerManager;
 };
 
-already_AddRefed<Layer>
-nsPluginFrame::BuildLayer(nsDisplayListBuilder* aBuilder,
-                          LayerManager* aManager,
-                          nsDisplayItem* aItem,
-                          const ContainerLayerParameters& aContainerParameters)
+bool
+nsPluginFrame::GetBounds(nsDisplayItem* aItem, IntSize& aSize, gfxRect& aRect)
 {
   if (!mInstanceOwner)
-    return nullptr;
+    return false;
 
   NPWindow* window = nullptr;
   mInstanceOwner->GetWindow(window);
   if (!window)
-    return nullptr;
+    return false;
 
   if (window->width <= 0 || window->height <= 0)
-    return nullptr;
+    return false;
 
 #if defined(XP_MACOSX)
   // window is in "display pixels", but size needs to be in device pixels
@@ -1385,12 +1397,68 @@ nsPluginFrame::BuildLayer(nsDisplayListBuilder* aBuilder,
   size_t intScaleFactor = 1;
 #endif
 
-  IntSize size(window->width * intScaleFactor, window->height * intScaleFactor);
+  aSize = IntSize(window->width * intScaleFactor, window->height * intScaleFactor);
 
   nsRect area = GetContentRectRelativeToSelf() + aItem->ToReferenceFrame();
-  gfxRect r = nsLayoutUtils::RectToGfxRect(area, PresContext()->AppUnitsPerDevPixel());
+  aRect = nsLayoutUtils::RectToGfxRect(area, PresContext()->AppUnitsPerDevPixel());
   // to provide crisper and faster drawing.
-  r.Round();
+  aRect.Round();
+
+  return true;
+}
+
+bool
+nsPluginFrame::CreateWebRenderCommands(nsDisplayItem* aItem,
+                                       mozilla::wr::DisplayListBuilder& aBuilder,
+                                       const StackingContextHelper& aSc,
+                                       mozilla::layers::WebRenderLayerManager* aManager,
+                                       nsDisplayListBuilder* aDisplayListBuilder)
+{
+  IntSize size;
+  gfxRect r;
+  if (!GetBounds(aItem, size, r)) {
+    return true;
+  }
+
+  RefPtr<ImageContainer> container;
+  // Image for Windowed plugins that support window capturing for scroll
+  // operations or async windowless rendering.
+  container = mInstanceOwner->GetImageContainer();
+  if (!container) {
+    // This can occur if our instance is gone or if the current plugin
+    // configuration does not require a backing image layer.
+    return true;
+  }
+
+#ifdef XP_MACOSX
+  if (!mInstanceOwner->UseAsyncRendering()) {
+    mInstanceOwner->DoCocoaEventDrawRect(r, nullptr);
+  }
+#endif
+
+  RefPtr<LayerManager> lm = aDisplayListBuilder->GetWidgetLayerManager();
+  if (!mDidCompositeObserver || !mDidCompositeObserver->IsValid(lm)) {
+    mDidCompositeObserver = MakeUnique<PluginFrameDidCompositeObserver>(mInstanceOwner, lm);
+  }
+  lm->AddDidCompositeObserver(mDidCompositeObserver.get());
+
+  LayerRect dest(r.x, r.y, size.width, size.height);
+  return aManager->PushImage(aItem, container, aBuilder, aSc, dest);
+}
+
+
+already_AddRefed<Layer>
+nsPluginFrame::BuildLayer(nsDisplayListBuilder* aBuilder,
+                          LayerManager* aManager,
+                          nsDisplayItem* aItem,
+                          const ContainerLayerParameters& aContainerParameters)
+{
+  IntSize size;
+  gfxRect r;
+  if (!GetBounds(aItem, size, r)) {
+    return nullptr;
+  }
+
   RefPtr<Layer> layer =
     (aManager->GetLayerBuilder()->GetLeafLayerFor(aBuilder, aItem));
 

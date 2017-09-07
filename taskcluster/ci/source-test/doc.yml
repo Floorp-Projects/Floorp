@@ -1,4 +1,4 @@
-doc-generate:
+generate:
     description: Generate the Sphinx documentation
     platform: lint/opt
     treeherder:
@@ -25,7 +25,7 @@ doc-generate:
             - '**/*.rst'
             - 'tools/docs/**'
 
-doc-upload:
+upload:
     description: Generate and upload the Sphinx documentation
     platform: lint/opt
     treeherder:

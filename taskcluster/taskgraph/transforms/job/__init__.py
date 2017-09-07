@@ -48,6 +48,7 @@ job_description_schema = Schema({
     # taskcluster/taskgraph/transforms/task.py for the schema details.
     Required('description'): task_description_schema['description'],
     Optional('attributes'): task_description_schema['attributes'],
+    Optional('job-from'): task_description_schema['job-from'],
     Optional('dependencies'): task_description_schema['dependencies'],
     Optional('expires-after'): task_description_schema['expires-after'],
     Optional('routes'): task_description_schema['routes'],

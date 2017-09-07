@@ -52,7 +52,6 @@ static char *RCSSTRING __UNUSED__="$Id: stun_codec.c,v 1.2 2008/04/28 18:21:30 e
 #include "byteorder.h"
 #include "r_crc32.h"
 #include "nr_crypto.h"
-#include "mbslen.h"
 
 #define NR_STUN_IPV4_FAMILY  0x01
 #define NR_STUN_IPV6_FAMILY  0x02
@@ -212,6 +211,31 @@ nr_stun_decode(int length, UCHAR *buf, int buflen, int *offset, UCHAR *data)
    return 0;
 }
 
+/**
+ * The argument must be a non-null pointer to a zero-terminated string.
+ *
+ * If the argument is valid UTF-8, returns the number of code points in the
+ * string excluding the zero-terminator.
+ *
+ * If the argument is invalid UTF-8, returns a lower bound for the number of
+ * code points in the string. (If UTF-8 error handling was performed on the
+ * string, new REPLACEMENT CHARACTER code points could be introduced in
+ * a way that would increase the total number of code points compared to
+ * what this function counts.)
+ */
+size_t
+nr_count_utf8_code_points_without_validation(const char *s) {
+    size_t nchars = 0;
+    char c;
+    while ((c = *s)) {
+        if ((c & 0xC0) != 0x80) {
+            ++nchars;
+        }
+        ++s;
+    }
+    return nchars;
+}
+
 int
 nr_stun_attr_string_illegal(nr_stun_attr_info *attr_info, int len, void *data, int max_bytes, int max_chars)
 {
@@ -225,10 +249,8 @@ nr_stun_attr_string_illegal(nr_stun_attr_info *attr_info, int len, void *data, i
     }
 
     if (max_chars >= 0) {
-        if (mbslen(s, &nchars)) {
-            /* who knows what to do, just assume everything is working ok */
-        }
-        else if (nchars > max_chars) {
+        nchars = nr_count_utf8_code_points_without_validation(s);
+        if (nchars > max_chars) {
             r_log(NR_LOG_STUN, LOG_WARNING, "%s is too large: %zd characters", attr_info->name, nchars);
             ABORT(R_FAILED);
         }
