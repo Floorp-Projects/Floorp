@@ -3338,7 +3338,7 @@ pref("dom.ipc.processCount.file", 1);
 pref("dom.ipc.processCount.extension", 1);
 
 // Don't use a native event loop in the content process.
-pref("dom.ipc.useNativeEventProcessing.content", false);
+pref("dom.ipc.useNativeEventProcessing.content", true);
 
 // Quantum DOM scheduling:
 pref("dom.ipc.scheduler", false);
