@@ -790,30 +790,26 @@ public class BrowserFragment extends WebFragment implements View.OnClickListener
                 intent.setPackage(defaultBrowser.packageName);
                 startActivity(intent);
 
-                TelemetryWrapper.openDefaultAppEvent();
-                break;
-            }
-
-            case R.id.open_firefox: {
-                final Browsers browsers = new Browsers(getContext(), getUrl());
-
-                if (browsers.hasFirefoxBrandedBrowserInstalled()) {
-                    final Intent intent = new Intent(Intent.ACTION_VIEW, Uri.parse(getUrl()));
-                    intent.setPackage(browsers.getFirefoxBrandedBrowser().packageName);
-                    startActivity(intent);
+                if (browsers.isFirefoxDefaultBrowser()) {
+                    TelemetryWrapper.openFirefoxEvent();
                 } else {
-                    InstallFirefoxActivity.open(getContext());
+                    TelemetryWrapper.openDefaultAppEvent();
                 }
-
-                TelemetryWrapper.openFirefoxEvent();
                 break;
             }
 
             case R.id.open_select_browser: {
                 final Browsers browsers = new Browsers(getContext(), getUrl());
 
+                final ActivityInfo[] apps = browsers.getInstalledBrowsers();
+                final ActivityInfo store = browsers.hasFirefoxBrandedBrowserInstalled()
+                        ? null
+                        : InstallFirefoxActivity.resolveAppStore(getContext());
+
                 final OpenWithFragment fragment = OpenWithFragment.newInstance(
-                        browsers.getInstalledBrowsers(), getUrl());
+                        apps,
+                        getUrl(),
+                        store);
                 fragment.show(getFragmentManager(), OpenWithFragment.FRAGMENT_TAG);
 
                 TelemetryWrapper.openSelectionEvent();

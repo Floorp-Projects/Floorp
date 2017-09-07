@@ -1,0 +1,17 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- This Source Code Form is subject to the terms of the Mozilla Public
+   - License, v. 2.0. If a copy of the MPL was not distributed with this
+   - file, You can obtain one at http://mozilla.org/MPL/2.0/. -->
+<resources>
+    <!-- http://design.firefox.com/photon/visual/color.html -->
+
+    <!--
+        Magenta
+        Firefox Magenta is one of our primary colors. We currently have no common usage for it.
+    -->
+    <color name="photonMagenta50">#ffff1ad9</color>
+    <color name="photonMagenta60">#ffed00b5</color>
+    <color name="photonMagenta70">#ffb5007f</color>
+    <color name="photonMagenta80">#ff7d004f</color>
+    <color name="photonMagenta90">#ff440027</color>
+</resources>

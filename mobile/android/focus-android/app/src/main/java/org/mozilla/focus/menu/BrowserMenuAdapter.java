@@ -68,15 +68,6 @@ public class BrowserMenuAdapter extends RecyclerView.Adapter<BrowserMenuViewHold
             items.add(new MenuItem(R.id.share, resources.getString(R.string.menu_share)));
         }
 
-        if (browsers.hasFirefoxBrandedBrowserInstalled()) {
-            items.add(new MenuItem(R.id.open_firefox, resources.getString(
-                    R.string.menu_open_with_default_browser, browsers.getFirefoxBrandedBrowser()
-                            .loadLabel(context.getPackageManager()))));
-        } else {
-            items.add(new MenuItem(R.id.open_firefox, resources.getString(
-                    R.string.menu_open_with_default_browser, "Firefox")));
-        }
-
         if (browsers.hasThirdPartyDefaultBrowser(context)) {
             items.add(new MenuItem(R.id.open_default, resources.getString(
                     R.string.menu_open_with_default_browser, browsers.getDefaultBrowser().loadLabel(

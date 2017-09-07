@@ -8,11 +8,14 @@ package org.mozilla.focus.activity;
 import android.app.Activity;
 import android.content.Context;
 import android.content.Intent;
+import android.content.pm.ActivityInfo;
+import android.content.pm.ResolveInfo;
 import android.net.Uri;
 import android.os.Bundle;
 import android.support.annotation.Nullable;
 import android.webkit.WebView;
 
+import org.mozilla.focus.telemetry.TelemetryWrapper;
 import org.mozilla.focus.utils.AppConstants;
 import org.mozilla.focus.utils.Browsers;
 
@@ -24,17 +27,38 @@ public class InstallFirefoxActivity extends Activity {
 
     private WebView webView;
 
+    public static ActivityInfo resolveAppStore(Context context) {
+        final ResolveInfo resolveInfo = context.getPackageManager()
+                .resolveActivity(createStoreIntent(), 0);
+
+        if (resolveInfo == null || resolveInfo.activityInfo == null) {
+            return null;
+        }
+
+        if (!resolveInfo.activityInfo.exported) {
+            // We are not allowed to launch this activity.
+            return null;
+        }
+
+        return resolveInfo.activityInfo;
+    }
+
+    private static Intent createStoreIntent() {
+        return new Intent(Intent.ACTION_VIEW,
+                Uri.parse("market://details?id=" + Browsers.KnownBrowser.FIREFOX.packageName));
+    }
+
     public static void open(Context context) {
         if (AppConstants.isKlarBuild()) {
             // Redirect to Google Play directly
-            final Intent intent = new Intent(Intent.ACTION_VIEW,
-                    Uri.parse("market://details?id=" + Browsers.KnownBrowser.FIREFOX.packageName));
-            context.startActivity(intent);
+            context.startActivity(createStoreIntent());
         } else {
             // Start this activity to load the redirect URL in a WebView.
             final Intent intent = new Intent(context, InstallFirefoxActivity.class);
             context.startActivity(intent);
         }
+
+        TelemetryWrapper.installFirefoxEvent();
     }
 
     @Override

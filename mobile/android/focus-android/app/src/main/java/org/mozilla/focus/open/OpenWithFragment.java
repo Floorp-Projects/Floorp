@@ -23,6 +23,7 @@ import android.view.ContextThemeWrapper;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
+import android.view.Window;
 
 import org.mozilla.focus.R;
 
@@ -31,11 +32,13 @@ public class OpenWithFragment extends AppCompatDialogFragment implements AppAdap
 
     private static final String ARGUMENT_KEY_APPS = "apps";
     private static final String ARGUMENT_URL = "url";
+    private static final String ARGUMENT_STORE = "store";
 
-    public static OpenWithFragment newInstance(ActivityInfo[] apps, String url) {
+    public static OpenWithFragment newInstance(ActivityInfo[] apps, String url, ActivityInfo store) {
         final Bundle arguments = new Bundle();
         arguments.putParcelableArray(ARGUMENT_KEY_APPS, apps);
         arguments.putString(ARGUMENT_URL, url);
+        arguments.putParcelable(ARGUMENT_STORE, store);
 
         final OpenWithFragment fragment = new OpenWithFragment();
         fragment.setArguments(arguments);
@@ -53,6 +56,7 @@ public class OpenWithFragment extends AppCompatDialogFragment implements AppAdap
         super.onPause();
     }
 
+    @NonNull
     @Override
     public Dialog onCreateDialog(Bundle savedInstanceState) {
         ContextThemeWrapper wrapper = new ContextThemeWrapper(getContext(), android.R.style.Theme_Material_Light);
@@ -63,10 +67,13 @@ public class OpenWithFragment extends AppCompatDialogFragment implements AppAdap
         final Dialog dialog = new CustomWidthBottomSheetDialog(wrapper);
         dialog.setContentView(view);
 
-        final RecyclerView appList = (RecyclerView) view.findViewById(R.id.apps);
+        final RecyclerView appList = view.findViewById(R.id.apps);
         appList.setLayoutManager(new LinearLayoutManager(wrapper, LinearLayoutManager.VERTICAL, false));
 
-        AppAdapter adapter = new AppAdapter(wrapper, (ActivityInfo[]) getArguments().getParcelableArray(ARGUMENT_KEY_APPS));
+        AppAdapter adapter = new AppAdapter(
+                wrapper,
+                (ActivityInfo[]) getArguments().getParcelableArray(ARGUMENT_KEY_APPS),
+                (ActivityInfo) getArguments().getParcelable(ARGUMENT_STORE));
         adapter.setOnAppSelectedListener(this);
         appList.setAdapter(adapter);
 
@@ -76,7 +83,7 @@ public class OpenWithFragment extends AppCompatDialogFragment implements AppAdap
     static class CustomWidthBottomSheetDialog extends BottomSheetDialog {
         private View contentView;
 
-        public CustomWidthBottomSheetDialog(@NonNull Context context) {
+        private CustomWidthBottomSheetDialog(@NonNull Context context) {
             super(context);
         }
 
@@ -88,7 +95,10 @@ public class OpenWithFragment extends AppCompatDialogFragment implements AppAdap
             // keyline). On tablets, the system bottom sheets use a narrower width - lets do that too:
             if (getContext().getResources().getBoolean(R.bool.is_tablet)) {
                 int width = getContext().getResources().getDimensionPixelSize(R.dimen.tablet_bottom_sheet_width);
-                getWindow().setLayout(width, ViewGroup.LayoutParams.MATCH_PARENT);
+                final Window window = getWindow();
+                if (window != null) {
+                    window.setLayout(width, ViewGroup.LayoutParams.MATCH_PARENT);
+                }
             }
         }
 

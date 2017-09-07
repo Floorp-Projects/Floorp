@@ -185,6 +185,20 @@ public class Browsers {
                 && !defaultBrowser.packageName.equals(context.getPackageName());
     }
 
+    /**
+     * Is (regular) the default browser of the user?
+     */
+    public boolean isFirefoxDefaultBrowser() {
+        if (defaultBrowser == null) {
+            return false;
+        }
+
+        return defaultBrowser.packageName.equals(KnownBrowser.FIREFOX.packageName)
+                || defaultBrowser.packageName.equals(KnownBrowser.FIREFOX_BETA.packageName)
+                || defaultBrowser.packageName.equals(KnownBrowser.FIREFOX_AURORA.packageName)
+                || defaultBrowser.packageName.equals(KnownBrowser.FIREFOX_NIGHTLY.packageName);
+    }
+
     public @Nullable ActivityInfo getDefaultBrowser() {
         return defaultBrowser;
     }

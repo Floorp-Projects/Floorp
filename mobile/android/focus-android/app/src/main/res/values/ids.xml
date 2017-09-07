@@ -5,7 +5,6 @@
 <resources>
     <item name="share" type="id" />
     <item name="settings" type="id" />
-    <item name="open_firefox" type="id" />
     <item name="open_default" type="id" />
     <item name="open_select_browser" type="id" />
     <item name="custom_tab_menu_item" type="id" />

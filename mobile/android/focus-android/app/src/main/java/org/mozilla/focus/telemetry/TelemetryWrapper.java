@@ -61,6 +61,7 @@ public final class TelemetryWrapper {
         private static final String SAVE = "save";
         private static final String COPY = "copy";
         private static final String OPEN = "open";
+        private static final String INSTALL = "install";
         private static final String INTENT_URL = "intent_url";
         private static final String INTENT_CUSTOM_TAB = "intent_custom_tab";
         private static final String TEXT_SELECTION_INTENT = "text_selection_intent";
@@ -429,6 +430,10 @@ public final class TelemetryWrapper {
 
     public static void openFirefoxEvent() {
         TelemetryEvent.create(Category.ACTION, Method.OPEN, Object.MENU, Value.FIREFOX).queue();
+    }
+
+    public static void installFirefoxEvent() {
+        TelemetryEvent.create(Category.ACTION, Method.INSTALL, Object.APP, Value.FIREFOX).queue();
     }
 
     public static void openSelectionEvent() {
