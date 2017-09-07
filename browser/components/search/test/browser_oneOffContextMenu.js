@@ -3,11 +3,7 @@
 const TEST_ENGINE_NAME = "Foo";
 const TEST_ENGINE_BASENAME = "testEngine.xml";
 
-const searchbar = document.getElementById("searchbar");
 const searchPopup = document.getElementById("PopupSearchAutoComplete");
-const searchIcon = document.getAnonymousElementByAttribute(
-  searchbar, "anonid", "searchbar-search-button"
-);
 const oneOffBinding = document.getAnonymousElementByAttribute(
   searchPopup, "anonid", "search-one-off-buttons"
 );
@@ -21,7 +17,19 @@ const searchInNewTabMenuItem = document.getAnonymousElementByAttribute(
   oneOffBinding, "anonid", "search-one-offs-context-open-in-new-tab"
 );
 
+let searchbar;
+let searchIcon;
+
 add_task(async function init() {
+  await SpecialPowers.pushPrefEnv({ set: [
+    ["browser.search.widget.inNavBar", true],
+  ]});
+
+  searchbar = document.getElementById("searchbar");
+  searchIcon = document.getAnonymousElementByAttribute(
+    searchbar, "anonid", "searchbar-search-button"
+  );
+
   await promiseNewEngine(TEST_ENGINE_BASENAME, {
     setAsCurrent: false,
   });

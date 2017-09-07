@@ -43,6 +43,8 @@ public:
 
   // nsISupports
   NS_DECL_ISUPPORTS_INHERITED
+  NS_DECL_CYCLE_COLLECTION_CLASS_INHERITED(DocumentFragment,
+                                           FragmentOrElement)
 
   // interface nsIDOMNode
   NS_FORWARD_NSIDOMNODE_TO_NSINODE
@@ -120,12 +122,12 @@ public:
     return nullptr;
   }
 
-  nsIContent* GetHost() const
+  Element* GetHost() const
   {
     return mHost;
   }
 
-  void SetHost(nsIContent* aHost)
+  void SetHost(Element* aHost)
   {
     mHost = aHost;
   }
@@ -145,7 +147,7 @@ protected:
 
   nsresult Clone(mozilla::dom::NodeInfo *aNodeInfo, nsINode **aResult,
                  bool aPreallocateChildren) const override;
-  nsIContent* mHost; // Weak
+  nsCOMPtr<Element> mHost;
 };
 
 } // namespace dom

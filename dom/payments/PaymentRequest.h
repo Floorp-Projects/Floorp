@@ -36,27 +36,38 @@ public:
 
   static bool PrefEnabled(JSContext* aCx, JSObject* aObj);
 
-  static bool IsValidMethodData(JSContext* aCx,
-                                const Sequence<PaymentMethodData>& aMethodData,
-                                nsAString& aErrorMsg);
+  static nsresult IsValidMethodData(JSContext* aCx,
+                                    const Sequence<PaymentMethodData>& aMethodData,
+                                    nsAString& aErrorMsg);
 
-  static bool
+  static nsresult
   IsValidNumber(const nsAString& aItem,
                 const nsAString& aStr,
                 nsAString& aErrorMsg);
-  static bool
+  static nsresult
   IsNonNegativeNumber(const nsAString& aItem,
                       const nsAString& aStr,
                       nsAString& aErrorMsg);
 
-  static bool
+  static nsresult
+  IsValidCurrencyAmount(const nsAString& aItem,
+                        const PaymentCurrencyAmount& aAmount,
+                        const bool aIsTotalItem,
+                        nsAString& aErrorMsg);
+
+  static nsresult
+  IsValidCurrency(const nsAString& aItem,
+                  const nsAString& aCurrency,
+                  nsAString& aErrorMsg);
+
+  static nsresult
   IsValidDetailsInit(const PaymentDetailsInit& aDetails,
                      nsAString& aErrorMsg);
 
-  static bool
+  static nsresult
   IsValidDetailsUpdate(const PaymentDetailsUpdate& aDetails);
 
-  static bool
+  static nsresult
   IsValidDetailsBase(const PaymentDetailsBase& aDetails,
                      nsAString& aErrorMsg);
 
@@ -111,7 +122,7 @@ public:
   void GetShippingOption(nsAString& aRetVal) const;
   nsresult UpdateShippingOption(const nsAString& aShippingOption);
 
-  nsresult UpdatePayment(const PaymentDetailsUpdate& aDetails);
+  nsresult UpdatePayment(JSContext* aCx, const PaymentDetailsUpdate& aDetails);
   void AbortUpdate(nsresult aRv);
 
   void SetShippingType(const Nullable<PaymentShippingType>& aShippingType);

@@ -52,17 +52,23 @@ addTest(function testMatchedStyles() {
     is(matched[0].rule.href, gInspectee.defaultView.location.href,
        "Node style comes from this document");
 
-    is(matched[1].sourceText, ".inheritable-rule", "Second match comes from a rule");
-    is(matched[1].selector, ".inheritable-rule", "Second style has a selector");
-    is(matched[1].value, "15px", "Second match has the expected value");
+    is(matched[1].sourceText, ".column-rule",
+      "Second match comes from a rule");
+    is(matched[1].selector, ".column-rule",
+      "Second match comes from highest line number");
+    is(matched[1].value, "25px", "Second match comes from highest column");
     is(matched[1].status, CssLogic.STATUS.PARENT_MATCH,
-       "Second match is from the parent");
+      "Second match is from the parent");
     is(matched[1].rule.parentStyleSheet.href, null,
-       "Inline stylesheet shouldn't have an href");
+      "Inline stylesheet shouldn't have an href");
     is(matched[1].rule.parentStyleSheet.nodeHref, gInspectee.defaultView.location.href,
-       "Inline stylesheet's nodeHref should match the current document");
+      "Inline stylesheet's nodeHref should match the current document");
     ok(!matched[1].rule.parentStyleSheet.system,
-       "Inline stylesheet shouldn't be a system stylesheet.");
+      "Inline stylesheet shouldn't be a system stylesheet.");
+
+    // matched[2] is only there to test matched[1]; do not need to test
+
+    is(matched[3].value, "15px", "Third match has the expected value");
   }).then(runNextTest));
 });
 

@@ -42,35 +42,26 @@ DecodeFunctionBody(Decoder& d, ModuleGenerator& mg, uint32_t funcIndex)
 
     const size_t offsetInModule = d.currentOffset();
 
-    // Skip over the function body; we'll validate it later.
+    // Skip over the function body; it will be validated by the compilation thread.
     const uint8_t* bodyBegin;
     if (!d.readBytes(bodySize, &bodyBegin))
         return d.fail("function body length too big");
 
-    FunctionGenerator fg;
-    if (!mg.startFuncDef(offsetInModule, &fg))
-        return false;
-
-    if (!fg.bytes().resize(bodySize))
-        return false;
-
-    memcpy(fg.bytes().begin(), bodyBegin, bodySize);
-
-    return mg.finishFuncDef(funcIndex, &fg);
+    return mg.compileFuncDef(funcIndex, offsetInModule, bodyBegin, bodyBegin + bodySize);
 }
 
 static bool
-DecodeCodeSection(Decoder& d, ModuleGenerator& mg)
+DecodeCodeSection(Decoder& d, ModuleGenerator& mg, ModuleEnvironment* env)
 {
     uint32_t sectionStart, sectionSize;
-    if (!d.startSection(SectionId::Code, &mg.mutableEnv(), &sectionStart, &sectionSize, "code"))
+    if (!d.startSection(SectionId::Code, env, &sectionStart, &sectionSize, "code"))
         return false;
 
     if (!mg.startFuncDefs())
         return false;
 
     if (sectionStart == Decoder::NotStarted) {
-        if (mg.env().numFuncDefs() != 0)
+        if (env->numFuncDefs() != 0)
             return d.fail("expected function bodies");
 
         return mg.finishFuncDefs();
@@ -80,11 +71,11 @@ DecodeCodeSection(Decoder& d, ModuleGenerator& mg)
     if (!d.readVarU32(&numFuncDefs))
         return d.fail("expected function body count");
 
-    if (numFuncDefs != mg.env().numFuncDefs())
+    if (numFuncDefs != env->numFuncDefs())
         return d.fail("function body count does not match function signature count");
 
     for (uint32_t funcDefIndex = 0; funcDefIndex < numFuncDefs; funcDefIndex++) {
-        if (!DecodeFunctionBody(d, mg, mg.env().numFuncImports() + funcDefIndex))
+        if (!DecodeFunctionBody(d, mg, env->numFuncImports() + funcDefIndex))
             return false;
     }
 
@@ -112,107 +103,48 @@ CompileArgs::initFromContext(JSContext* cx, ScriptedCaller&& scriptedCaller)
     return assumptions.initBuildIdFromContext(cx);
 }
 
-static void
-CompilerAvailability(ModuleKind kind, const CompileArgs& args, bool* baselineEnabled,
-                     bool* debugEnabled, bool* ionEnabled)
-{
-    bool baselinePossible = kind == ModuleKind::Wasm && BaselineCanCompile();
-    *baselineEnabled = baselinePossible && args.baselineEnabled;
-    *debugEnabled = baselinePossible && args.debugEnabled;
-    *ionEnabled = args.ionEnabled;
-
-    // Default to Ion if necessary: We will never get to this point on platforms
-    // that don't have Ion at all, so this can happen if the user has disabled
-    // both compilers or if she has disabled Ion but baseline can't compile the
-    // code.
-
-    if (!(*baselineEnabled || *ionEnabled))
-        *ionEnabled = true;
-}
-
 static bool
 BackgroundWorkPossible()
 {
     return CanUseExtraThreads() && HelperThreadState().cpuCount > 1;
 }
 
-bool
-wasm::GetDebugEnabled(const CompileArgs& args, ModuleKind kind)
-{
-    bool baselineEnabled, debugEnabled, ionEnabled;
-    CompilerAvailability(kind, args, &baselineEnabled, &debugEnabled, &ionEnabled);
-
-    return debugEnabled;
-}
-
-wasm::CompileMode
-wasm::GetInitialCompileMode(const CompileArgs& args, ModuleKind kind)
-{
-    bool baselineEnabled, debugEnabled, ionEnabled;
-    CompilerAvailability(kind, args, &baselineEnabled, &debugEnabled, &ionEnabled);
-
-    return BackgroundWorkPossible() && baselineEnabled && ionEnabled && !debugEnabled
-           ? CompileMode::Tier1
-           : CompileMode::Once;
-}
-
-wasm::Tier
-wasm::GetTier(const CompileArgs& args, CompileMode compileMode, ModuleKind kind)
-{
-    bool baselineEnabled, debugEnabled, ionEnabled;
-    CompilerAvailability(kind, args, &baselineEnabled, &debugEnabled, &ionEnabled);
-
-    switch (compileMode) {
-      case CompileMode::Tier1:
-        MOZ_ASSERT(baselineEnabled);
-        return Tier::Baseline;
-
-      case CompileMode::Tier2:
-        MOZ_ASSERT(ionEnabled);
-        return Tier::Ion;
-
-      case CompileMode::Once:
-        return (debugEnabled || !ionEnabled) ? Tier::Baseline : Tier::Ion;
-
-      default:
-        MOZ_CRASH("Bad mode");
-    }
-}
-
-static bool
-Compile(ModuleGenerator& mg, const ShareableBytes& bytecode, const CompileArgs& args,
-        UniqueChars* error, CompileMode compileMode)
-{
-    MOZ_RELEASE_ASSERT(wasm::HaveSignalHandlers());
-
-    auto env = js::MakeUnique<ModuleEnvironment>();
-    if (!env)
-        return false;
-
-    Decoder d(bytecode.bytes, error);
-    if (!DecodeModuleEnvironment(d, env.get()))
-        return false;
-
-    if (!mg.init(Move(env), args, compileMode))
-        return false;
-
-    if (!DecodeCodeSection(d, mg))
-        return false;
-
-    if (!DecodeModuleTail(d, &mg.mutableEnv()))
-        return false;
-
-    MOZ_ASSERT(!*error, "unreported error");
-    return true;
-}
-
 SharedModule
 wasm::CompileInitialTier(const ShareableBytes& bytecode, const CompileArgs& args, UniqueChars* error)
 {
-    ModuleGenerator mg(error, nullptr);
+    MOZ_RELEASE_ASSERT(wasm::HaveSignalHandlers());
 
-    CompileMode mode = GetInitialCompileMode(args);
-    if (!Compile(mg, bytecode, args, error, mode))
+    bool baselineEnabled = BaselineCanCompile() && args.baselineEnabled;
+    bool debugEnabled = BaselineCanCompile() && args.debugEnabled;
+    bool ionEnabled = args.ionEnabled || !baselineEnabled;
+
+    CompileMode mode;
+    Tier tier;
+    DebugEnabled debug;
+    if (BackgroundWorkPossible() && baselineEnabled && ionEnabled && !debugEnabled) {
+        mode = CompileMode::Tier1;
+        tier = Tier::Baseline;
+        debug = DebugEnabled::False;
+    } else {
+        mode = CompileMode::Once;
+        tier = debugEnabled || !ionEnabled ? Tier::Baseline : Tier::Ion;
+        debug = debugEnabled ? DebugEnabled::True : DebugEnabled::False;
+    }
+
+    ModuleEnvironment env(mode, tier, debug);
+
+    Decoder d(bytecode.bytes, error);
+    if (!DecodeModuleEnvironment(d, &env))
+        return nullptr;
+
+    ModuleGenerator mg(args, &env, nullptr, error);
+    if (!mg.init())
+        return nullptr;
+
+    if (!DecodeCodeSection(d, mg, &env))
+        return nullptr;
+
+    if (!DecodeModuleTail(d, &env))
         return nullptr;
 
     return mg.finishModule(bytecode);
@@ -221,10 +153,23 @@ wasm::CompileInitialTier(const ShareableBytes& bytecode, const CompileArgs& args
 bool
 wasm::CompileTier2(Module& module, const CompileArgs& args, Atomic<bool>* cancelled)
 {
-    UniqueChars error;
-    ModuleGenerator mg(&error, cancelled);
+    MOZ_RELEASE_ASSERT(wasm::HaveSignalHandlers());
 
-    if (!Compile(mg, module.bytecode(), args, &error, CompileMode::Tier2))
+    UniqueChars error;
+    Decoder d(module.bytecode().bytes, &error);
+
+    ModuleEnvironment env(CompileMode::Tier2, Tier::Ion, DebugEnabled::False);
+    if (!DecodeModuleEnvironment(d, &env))
+        return false;
+
+    ModuleGenerator mg(args, &env, cancelled, &error);
+    if (!mg.init())
+        return false;
+
+    if (!DecodeCodeSection(d, mg, &env))
+        return false;
+
+    if (!DecodeModuleTail(d, &env))
         return false;
 
     return mg.finishTier2(module);

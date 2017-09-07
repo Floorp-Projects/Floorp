@@ -1446,6 +1446,7 @@ NS_IMPL_CYCLE_COLLECTION_TRAVERSE_BEGIN_INHERITED(HTMLMediaElement, nsGenericHTM
   NS_IMPL_CYCLE_COLLECTION_TRAVERSE(mSrcMediaSource)
   NS_IMPL_CYCLE_COLLECTION_TRAVERSE(mSrcStream)
   NS_IMPL_CYCLE_COLLECTION_TRAVERSE(mSrcAttrStream)
+  NS_IMPL_CYCLE_COLLECTION_TRAVERSE(mSourcePointer)
   NS_IMPL_CYCLE_COLLECTION_TRAVERSE(mLoadBlockedDoc)
   NS_IMPL_CYCLE_COLLECTION_TRAVERSE(mSourceLoadCandidate)
   NS_IMPL_CYCLE_COLLECTION_TRAVERSE(mAudioChannelWrapper)
@@ -1473,6 +1474,7 @@ NS_IMPL_CYCLE_COLLECTION_UNLINK_BEGIN_INHERITED(HTMLMediaElement, nsGenericHTMLE
   NS_IMPL_CYCLE_COLLECTION_UNLINK(mSrcAttrStream)
   NS_IMPL_CYCLE_COLLECTION_UNLINK(mMediaSource)
   NS_IMPL_CYCLE_COLLECTION_UNLINK(mSrcMediaSource)
+  NS_IMPL_CYCLE_COLLECTION_UNLINK(mSourcePointer)
   NS_IMPL_CYCLE_COLLECTION_UNLINK(mLoadBlockedDoc)
   NS_IMPL_CYCLE_COLLECTION_UNLINK(mSourceLoadCandidate)
   if (tmp->mAudioChannelWrapper) {
@@ -1506,32 +1508,15 @@ NS_IMPL_BOOL_ATTR(HTMLMediaElement, DefaultMuted, muted)
 NS_IMPL_ENUM_ATTR_DEFAULT_VALUE(HTMLMediaElement, Preload, preload, nullptr)
 
 void
-HTMLMediaElement::ContentInserted(nsIDocument* aDocument,
-                                  nsIContent*  aContainer,
-                                  nsIContent*  aChild,
-                                  int32_t      aIndexInContainer)
-{
-  if (aContainer != this ||
-      aIndexInContainer >= int32_t(mSourcePointer) ||
-      aIndexInContainer < 0) {
-    return;
-  }
-  ++mSourcePointer;
-}
-
-void
 HTMLMediaElement::ContentRemoved(nsIDocument* aDocument,
                                  nsIContent*  aContainer,
                                  nsIContent*  aChild,
-                                 int32_t      aIndexInContainer,
+                                 int32_t /* aIndexInContainer */,
                                  nsIContent*  aPreviousSibling)
 {
-  if (aContainer != this ||
-      aIndexInContainer >= int32_t(mSourcePointer) ||
-      aIndexInContainer < 0) {
-    return;
+  if (aChild == mSourcePointer) {
+    mSourcePointer = aPreviousSibling;
   }
-  --mSourcePointer;
 }
 
 NS_IMETHODIMP_(bool)
@@ -1812,7 +1797,7 @@ void HTMLMediaElement::AbortExistingLoads()
   mIsEncrypted = false;
   mPendingEncryptedInitData.Reset();
   mWaitingForKey = NOT_WAITING_FOR_KEY;
-  mSourcePointer = 0;
+  mSourcePointer = nullptr;
 
   mTags = nullptr;
 
@@ -3831,10 +3816,10 @@ HTMLMediaElement::HTMLMediaElement(already_AddRefed<mozilla::dom::NodeInfo>& aNo
     mSrcStreamTracksAvailable(false),
     mSrcStreamPausedCurrentTime(-1),
     mShutdownObserver(new ShutdownObserver),
-    mCurrentLoadID(0),
-    mSourcePointer(0),
+    mSourcePointer(nullptr),
     mNetworkState(nsIDOMHTMLMediaElement::NETWORK_EMPTY),
     mReadyState(nsIDOMHTMLMediaElement::HAVE_NOTHING, "HTMLMediaElement::mReadyState"),
+    mCurrentLoadID(0),
     mLoadWaitStatus(NOT_WAITING),
     mVolume(1.0),
     mIsAudioTrackAudible(false),
@@ -6459,13 +6444,16 @@ nsIContent* HTMLMediaElement::GetNextSource()
   mSourceLoadCandidate = nullptr;
 
   while (true) {
-    if (mSourcePointer >= GetChildCount())
-      return nullptr; // No more children.
+    if (mSourcePointer == nsINode::GetLastChild()) {
+      return nullptr; // no more children
+    }
 
-    nsIContent* child = GetChildAt(mSourcePointer);
-
-    // Advance to the next child.
-    ++mSourcePointer;
+    if (!mSourcePointer) {
+      mSourcePointer = nsINode::GetFirstChild();
+    } else {
+      mSourcePointer = mSourcePointer->GetNextSibling();
+    }
+    nsIContent* child = mSourcePointer;
 
     // If child is a <source> element, it is the next candidate.
     if (child && child->IsHTMLElement(nsGkAtoms::source)) {

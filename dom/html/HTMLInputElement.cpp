@@ -3567,13 +3567,17 @@ HTMLInputElement::NeedToInitializeEditorForEvent(
   // are lazily initialized.  We don't need to initialize the control for
   // certain types of events, because we know that those events are safe to be
   // handled without the editor being initialized.  These events include:
-  // mousein/move/out, overflow/underflow, and DOM mutation events.
+  // mousein/move/out, overflow/underflow, DOM mutation, and void events. Void
+  // events are dispatched frequently by async keyboard scrolling to focused
+  // elements, so it's important to handle them to prevent excessive DOM
+  // mutations.
   if (!IsSingleLineTextControl(false) ||
       aVisitor.mEvent->mClass == eMutationEventClass) {
     return false;
   }
 
   switch (aVisitor.mEvent->mMessage) {
+  case eVoidEvent:
   case eMouseMove:
   case eMouseEnterIntoWidget:
   case eMouseExitFromWidget:

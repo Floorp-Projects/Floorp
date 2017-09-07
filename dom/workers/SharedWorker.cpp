@@ -77,8 +77,6 @@ SharedWorker::Constructor(const GlobalObject& aGlobal,
     return nullptr;
   }
 
-  Telemetry::Accumulate(Telemetry::SHARED_WORKER_COUNT, 1);
-
   return sharedWorker.forget();
 }
 
