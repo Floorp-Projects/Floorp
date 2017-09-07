@@ -559,7 +559,7 @@ FormAutofillHandler.prototype = {
       });
     });
 
-    this.normalizeAddress(data.address);
+    this._normalizeAddress(data.address);
 
     if (data.address &&
         Object.values(data.address.record).filter(v => v).length <
@@ -579,9 +579,22 @@ FormAutofillHandler.prototype = {
     return data;
   },
 
-  normalizeAddress(address) {
+  _normalizeAddress(address) {
     if (!address) {
       return;
+    }
+
+    // Normalize Country
+    if (address.record.country) {
+      let detail = this.getFieldDetailByName("country");
+      // Try identifying country field aggressively if it doesn't come from
+      // @autocomplete.
+      if (detail._reason != "autocomplete") {
+        let countryCode = FormAutofillUtils.identifyCountryCode(address.record.country);
+        if (countryCode) {
+          address.record.country = countryCode;
+        }
+      }
     }
 
     // Normalize Tel

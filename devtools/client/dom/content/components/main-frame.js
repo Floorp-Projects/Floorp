@@ -3,6 +3,8 @@
 /* This Source Code Form is subject to the terms of the Mozilla Public
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
+ /* globals DomProvider */
+
 "use strict";
 
 // React & Redux
@@ -18,22 +20,27 @@ const { div } = React.DOM;
 const PropTypes = React.PropTypes;
 
 /**
- * Renders basic layout of the DOM panel. The DOM panel cotent consists
+ * Renders basic layout of the DOM panel. The DOM panel content consists
  * from two main parts: toolbar and tree.
  */
 var MainFrame = React.createClass({
   displayName: "MainFrame",
 
   propTypes: {
-    object: PropTypes.any,
-    filter: PropTypes.string,
     dispatch: PropTypes.func.isRequired,
+    filter: PropTypes.string,
+    object: PropTypes.any,
   },
 
   /**
    * Render DOM panel content
    */
   render: function () {
+    let {
+      filter,
+      object,
+    } = this.props;
+
     return (
       div({className: "mainFrame"},
         MainToolbar({
@@ -42,8 +49,9 @@ var MainFrame = React.createClass({
         }),
         div({className: "treeTableBox"},
           DomTree({
-            object: this.props.object,
-            filter: this.props.filter,
+            filter,
+            object,
+            openLink: url => DomProvider.openLink(url),
           })
         )
       )

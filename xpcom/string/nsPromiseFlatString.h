@@ -9,14 +9,6 @@
 
 #include "nsString.h"
 
-// declare nsPromiseFlatString
-#include "string-template-def-unichar.h"
 #include "nsTPromiseFlatString.h"
-#include "string-template-undef.h"
-
-// declare nsPromiseFlatCString
-#include "string-template-def-char.h"
-#include "nsTPromiseFlatString.h"
-#include "string-template-undef.h"
 
 #endif /* !defined(nsPromiseFlatString_h___) */
