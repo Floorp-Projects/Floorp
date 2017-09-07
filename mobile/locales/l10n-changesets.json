@@ -252,7 +252,7 @@
             "android-api-15", 
             "android-multilocale"
         ], 
-        "revision": "43946a8846d3"
+        "revision": "5442947be711"
     }, 
     "ga-IE": {
         "platforms": [
@@ -468,7 +468,7 @@
             "android-api-15", 
             "android-multilocale"
         ], 
-        "revision": "914ba4c10c9b"
+        "revision": "32dc3b2892c7"
     }, 
     "my": {
         "platforms": [
@@ -563,7 +563,7 @@
             "android-api-15", 
             "android-multilocale"
         ], 
-        "revision": "feadb219c763"
+        "revision": "646687e76e79"
     }, 
     "ru": {
         "platforms": [
