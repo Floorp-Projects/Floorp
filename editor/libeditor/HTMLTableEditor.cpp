@@ -3201,8 +3201,7 @@ HTMLEditor::GetSelectedOrParentTableElement(nsAString& aTagName,
 
     // Get child of anchor node, if exists
     if (anchorNode->HasChildNodes()) {
-      int32_t anchorOffset = selection->AnchorOffset();
-      nsINode* selectedNode = anchorNode->GetChildAt(anchorOffset);
+      nsINode* selectedNode = selection->GetChildAtAnchorOffset();
       if (!selectedNode) {
         selectedNode = anchorNode;
         // If anchor doesn't have a child, we can't be selecting a table element,
