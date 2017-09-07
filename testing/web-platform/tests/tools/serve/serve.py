@@ -40,6 +40,8 @@ class WrapperHandler(object):
 
     __meta__ = abc.ABCMeta
 
+    headers = []
+
     def __init__(self, base_path=None, url_base="/"):
         self.base_path = base_path
         self.url_base = url_base
@@ -49,6 +51,9 @@ class WrapperHandler(object):
         self.handler(request, response)
 
     def handle_request(self, request, response):
+        for header_name, header_value in self.headers:
+            response.headers.set(header_name, header_value)
+
         path = self._get_path(request.url_parts.path, True)
         meta = "\n".join(self._get_meta(request))
         response.content = self.wrapper % {"meta": meta, "path": path}
@@ -169,6 +174,7 @@ self.GLOBAL = {
 
 
 class AnyWorkerHandler(WrapperHandler):
+    headers = [('Content-Type', 'text/javascript')]
     path_replace = [(".any.worker.js", ".any.js")]
     wrapper = """%(meta)s
 self.GLOBAL = {

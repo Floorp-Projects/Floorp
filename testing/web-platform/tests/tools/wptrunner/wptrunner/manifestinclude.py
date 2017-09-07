@@ -21,7 +21,6 @@ class IncludeManifest(ManifestItem):
         :param node: AST Node corresponding to this Node.
         """
         ManifestItem.__init__(self, node)
-        self.set("skip", "False")
         self.child_map = {}
 
     @classmethod
@@ -29,6 +28,10 @@ class IncludeManifest(ManifestItem):
         """Create an empty IncludeManifest tree"""
         node = DataNode(None)
         return cls(node)
+
+    def set_defaults(self):
+        if not self.has_key("skip"):
+            self.set("skip", "False")
 
     def append(self, child):
         ManifestItem.append(self, child)

@@ -69,7 +69,7 @@ function assert_is_session_description(sessionDesc) {
   assert_true(typeof(sessionDesc.type) === 'string',
     'Expect sessionDescription.type to be a string');
 
-  assert_true(typeof(sessionDesc.type) === 'string',
+  assert_true(typeof(sessionDesc.sdp) === 'string',
     'Expect sessionDescription.sdp to be a string');
 }
 
@@ -361,7 +361,7 @@ function assert_equals_array_buffer(buffer1, buffer2) {
 function generateMediaStreamTrack(kind) {
   const pc = new RTCPeerConnection();
 
-  assert_own_property(pc, 'addTransceiver',
+  assert_idl_attribute(pc, 'addTransceiver',
     'Expect pc to have addTransceiver() method');
 
   const transceiver = pc.addTransceiver(kind);

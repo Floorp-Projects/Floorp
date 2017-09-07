@@ -14,7 +14,7 @@
     let reg = await navigator.serviceWorker.getRegistration(scope);
     if (reg) await reg.unregister();
 
-    reg = await navigator.serviceWorker.register('general.js', {scope});
+    reg = await navigator.serviceWorker.register('general.any.worker.js', {scope});
 
     fetch_tests_from_worker(reg.installing);
   })();

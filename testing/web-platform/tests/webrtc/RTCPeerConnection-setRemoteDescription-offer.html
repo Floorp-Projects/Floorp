@@ -58,7 +58,7 @@
     return generateOffer({ data: true })
     .then(offer =>
       pc.setRemoteDescription(offer)
-      .then(offer => {
+      .then(() => {
         assert_equals(pc.signalingState, 'have-remote-offer');
         assert_session_desc_equals(pc.remoteDescription, offer);
         assert_session_desc_equals(pc.pendingRemoteDescription, offer);
@@ -127,9 +127,9 @@
     return pc.createOffer()
     .then(offer => pc.setLocalDescription(offer))
     .then(() => generateOffer())
-    .then(offer =>
+    .then(offer2 =>
       promise_rejects(t, 'InvalidStateError',
-        pc.setRemoteDescription(offer)));
+        pc.setRemoteDescription(offer2)));
   }, 'Calling setRemoteDescription(offer) from have-local-offer state should reject with InvalidStateError');
 
 </script>

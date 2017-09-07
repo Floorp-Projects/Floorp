@@ -28,7 +28,7 @@ function test_feature_availability(
   frame.src = src;
 
   if (typeof feature_name !== 'undefined') {
-    frame.allow.add(feature_name);
+    frame.allow = frame.allow.concat(";" + feature_name);
   }
 
   if (typeof allow_attribute !== 'undefined') {

@@ -105,7 +105,7 @@
    */
   test(() => {
     const pc = new RTCPeerConnection({ bundlePolicy: 'max-bundle' });
-    assert_own_property(pc, 'setConfiguration');
+    assert_idl_attribute(pc, 'setConfiguration');
 
     assert_throws('InvalidModificationError', () =>
       pc.setConfiguration({ bundlePolicy: 'max-compat' }));
@@ -113,7 +113,7 @@
 
   test(() => {
     const pc = new RTCPeerConnection({ bundlePolicy: 'max-bundle' });
-    assert_own_property(pc, 'setConfiguration');
+    assert_idl_attribute(pc, 'setConfiguration');
 
     // the default value for bundlePolicy is balanced
     assert_throws('InvalidModificationError', () =>

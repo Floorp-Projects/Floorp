@@ -1,15 +1,9 @@
-import hashlib
-import httplib
 import os
 import socket
 import threading
-import time
 import traceback
 import urlparse
 import uuid
-from collections import defaultdict
-
-from ..wpttest import WdspecResult, WdspecSubtestResult
 
 errors = None
 marionette = None
@@ -23,16 +17,17 @@ from .base import (ExecutorException,
                    RefTestImplementation,
                    TestExecutor,
                    TestharnessExecutor,
+                   WdspecExecutor,
+                   WdspecRun,
+                   WebDriverProtocol,
+                   extra_timeout,
                    testharness_result_converter,
                    reftest_result_converter,
-                   strip_server,
-                   WdspecExecutor)
+                   strip_server)
+
 from ..testrunner import Stop
 from ..webdriver_server import GeckoDriverServer
 
-# Extra timeout to use after internal test timeout at which the harness
-# should force a timeout
-extra_timeout = 5 # seconds
 
 
 def do_delayed_imports():
@@ -285,57 +280,6 @@ class MarionetteProtocol(Protocol):
             """ % url
         with self.marionette.using_context(self.marionette.CONTEXT_CHROME):
             self.marionette.execute_script(script)
-
-
-class RemoteMarionetteProtocol(Protocol):
-    def __init__(self, executor, browser):
-        do_delayed_imports()
-        Protocol.__init__(self, executor, browser)
-        self.webdriver_binary = executor.webdriver_binary
-        self.webdriver_args = executor.webdriver_args
-        self.capabilities = self.executor.capabilities
-        self.session_config = None
-        self.server = None
-
-    def setup(self, runner):
-        """Connect to browser via the Marionette HTTP server."""
-        try:
-            self.server = GeckoDriverServer(
-                self.logger,
-                binary=self.webdriver_binary,
-                args=self.webdriver_args)
-            self.server.start(block=False)
-            self.logger.info(
-                "WebDriver HTTP server listening at %s" % self.server.url)
-            self.session_config = {"host": self.server.host,
-                                   "port": self.server.port,
-                                   "capabilities": self.capabilities}
-        except Exception:
-            self.logger.error(traceback.format_exc())
-            self.executor.runner.send_message("init_failed")
-        else:
-            self.executor.runner.send_message("init_succeeded")
-
-    def teardown(self):
-        if self.server is not None and self.server.is_alive:
-            self.server.stop()
-
-    @property
-    def is_alive(self):
-        """Test that the Marionette connection is still alive.
-
-        Because the remote communication happens over HTTP we need to
-        make an explicit request to the remote.  It is allowed for
-        WebDriver spec tests to not have a WebDriver session, since this
-        may be what is tested.
-
-        An HTTP request to an invalid path that results in a 404 is
-        proof enough to us that the server is alive and kicking.
-        """
-        conn = httplib.HTTPConnection(self.server.host, self.server.port)
-        conn.request("HEAD", self.server.base_path + "invalid")
-        res = conn.getresponse()
-        return res.status == 404
 
 
 class ExecuteAsyncScriptRun(object):
@@ -615,86 +559,10 @@ class InternalRefTestImplementation(object):
             self.logger.warning(traceback.traceback.format_exc(e))
 
 
-class WdspecRun(object):
-    def __init__(self, func, session, path, timeout):
-        self.func = func
-        self.result = (None, None)
-        self.session = session
-        self.path = path
-        self.timeout = timeout
-        self.result_flag = threading.Event()
 
-    def run(self):
-        """Runs function in a thread and interrupts it if it exceeds the
-        given timeout.  Returns (True, (Result, [SubtestResult ...])) in
-        case of success, or (False, (status, extra information)) in the
-        event of failure.
-        """
-
-        executor = threading.Thread(target=self._run)
-        executor.start()
-
-        flag = self.result_flag.wait(self.timeout)
-        if self.result[1] is None:
-            self.result = False, ("EXTERNAL-TIMEOUT", None)
-
-        return self.result
-
-    def _run(self):
-        try:
-            self.result = True, self.func(self.session, self.path, self.timeout)
-        except (socket.timeout, IOError):
-            self.result = False, ("CRASH", None)
-        except Exception as e:
-            message = getattr(e, "message")
-            if message:
-                message += "\n"
-            message += traceback.format_exc(e)
-            self.result = False, ("ERROR", message)
-        finally:
-            self.result_flag.set()
+class GeckoDriverProtocol(WebDriverProtocol):
+    server_cls = GeckoDriverServer
 
 
 class MarionetteWdspecExecutor(WdspecExecutor):
-    def __init__(self, browser, server_config, webdriver_binary,
-                 timeout_multiplier=1, close_after_done=True, debug_info=None,
-                 capabilities=None, webdriver_args=None, binary=None, **kwargs):
-        self.do_delayed_imports()
-        WdspecExecutor.__init__(self, browser, server_config,
-                                timeout_multiplier=timeout_multiplier,
-                                debug_info=debug_info)
-        self.webdriver_binary = webdriver_binary
-        self.webdriver_args = webdriver_args + ["--binary", binary]
-        self.capabilities = capabilities
-        self.protocol = RemoteMarionetteProtocol(self, browser)
-
-    def is_alive(self):
-        return self.protocol.is_alive
-
-    def on_environment_change(self, new_environment):
-        pass
-
-    def do_test(self, test):
-        timeout = test.timeout * self.timeout_multiplier + extra_timeout
-
-        success, data = WdspecRun(self.do_wdspec,
-                                  self.protocol.session_config,
-                                  test.abs_path,
-                                  timeout).run()
-
-        if success:
-            return self.convert_result(test, data)
-
-        return (test.result_cls(*data), [])
-
-    def do_wdspec(self, session_config, path, timeout):
-        harness_result = ("OK", None)
-        subtest_results = pytestrunner.run(path,
-                                           self.server_config,
-                                           session_config,
-                                           timeout=timeout)
-        return (harness_result, subtest_results)
-
-    def do_delayed_imports(self):
-        global pytestrunner
-        from . import pytestrunner
+    protocol_cls = GeckoDriverProtocol
