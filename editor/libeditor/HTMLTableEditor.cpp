@@ -2921,8 +2921,7 @@ HTMLEditor::GetCellFromRange(nsRange* aRange,
 
   uint32_t startOffset = aRange->StartOffset();
 
-  nsCOMPtr<nsINode> childNode =
-    startContainer->GetChildAt(static_cast<int32_t>(startOffset));
+  nsCOMPtr<nsINode> childNode = aRange->GetChildAtStartOffset();
   // This means selection is probably at a text node (or end of doc?)
   if (!childNode) {
     return NS_ERROR_FAILURE;
