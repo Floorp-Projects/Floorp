@@ -22,14 +22,14 @@ createAppInfo("xpcshell@tests.mozilla.org", "XPCShell", "1", "42");
 
 const ITEMS = {
   key1: [
-    {key: "key1", value: "val1"},
-    {key: "key1", value: "val2"},
-    {key: "key1", value: "val3"},
+    {key: "key1", value: "val1", id: "@first"},
+    {key: "key1", value: "val2", id: "@second"},
+    {key: "key1", value: "val3", id: "@third"},
   ],
   key2: [
-    {key: "key2", value: "val1-2"},
-    {key: "key2", value: "val2-2"},
-    {key: "key2", value: "val3-2"},
+    {key: "key2", value: "val1-2", id: "@first"},
+    {key: "key2", value: "val2-2", id: "@second"},
+    {key: "key2", value: "val3-2", id: "@third"},
   ],
 };
 const KEY_LIST = Object.keys(ITEMS);
@@ -49,15 +49,21 @@ add_task(async function test_settings_store() {
   let testExtensions = [
     ExtensionTestUtils.loadExtension({
       useAddonManager: "temporary",
-      manifest: {},
+      manifest: {
+        applications: {gecko: {id: "@first"}},
+      },
     }),
     ExtensionTestUtils.loadExtension({
       useAddonManager: "temporary",
-      manifest: {},
+      manifest: {
+        applications: {gecko: {id: "@second"}},
+      },
     }),
     ExtensionTestUtils.loadExtension({
       useAddonManager: "temporary",
-      manifest: {},
+      manifest: {
+        applications: {gecko: {id: "@third"}},
+      },
     }),
   ];
 
@@ -301,7 +307,7 @@ add_task(async function test_settings_store() {
       "getLevelOfControl returns correct levelOfControl after removal of top item.");
 
     // Add a setting for the current top item.
-    let itemToAdd = {key, value: `new-${key}`};
+    let itemToAdd = {key, value: `new-${key}`, id: "@second"};
     item = await ExtensionSettingsStore.addSetting(
       extensions[1], TEST_TYPE, itemToAdd.key, itemToAdd.value, initialValue);
     equal(callbackCount,
