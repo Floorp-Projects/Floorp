@@ -172,11 +172,6 @@ class WidgetRenderingContext;
 
   // Simple gestures support
   //
-  // mGestureState is used to detect when Cocoa has called both
-  // magnifyWithEvent and rotateWithEvent within the same
-  // beginGestureWithEvent and endGestureWithEvent sequence. We
-  // discard the spurious gesture event so as not to confuse Gecko.
-  //
   // mCumulativeMagnification keeps track of the total amount of
   // magnification peformed during a magnify gesture so that we can
   // send that value with the final MozMagnifyGesture event.
@@ -187,7 +182,6 @@ class WidgetRenderingContext;
   enum {
     eGestureState_None,
     eGestureState_StartGesture,
-    eGestureState_MagnifyGesture,
     eGestureState_RotateGesture
   } mGestureState;
   float mCumulativeMagnification;
@@ -244,7 +238,7 @@ class WidgetRenderingContext;
 
 // Simple gestures support
 //
-// XXX - The swipeWithEvent, beginGestureWithEvent, magnifyWithEvent,
+// XXX - The swipeWithEvent, beginGestureWithEvent,
 // rotateWithEvent, and endGestureWithEvent methods are part of a
 // PRIVATE interface exported by nsResponder and reverse-engineering
 // was necessary to obtain the methods' prototypes. Thus, Apple may
@@ -254,7 +248,6 @@ class WidgetRenderingContext;
 // http://cocoadex.com/2008/02/nsevent-modifications-swipe-ro.html
 - (void)swipeWithEvent:(NSEvent *)anEvent;
 - (void)beginGestureWithEvent:(NSEvent *)anEvent;
-- (void)magnifyWithEvent:(NSEvent *)anEvent;
 - (void)smartMagnifyWithEvent:(NSEvent *)anEvent;
 - (void)rotateWithEvent:(NSEvent *)anEvent;
 - (void)endGestureWithEvent:(NSEvent *)anEvent;
