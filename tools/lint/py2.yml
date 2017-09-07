@@ -32,7 +32,6 @@ py2:
         - python/mach
         - python/mozboot
         - python/mozbuild
-        - python/mozlint
         - python/mozversioncontrol
         - security
         - services/common/tests/mach_commands.py
