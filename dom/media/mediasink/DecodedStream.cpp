@@ -412,7 +412,7 @@ DecodedStream::DestroyData(UniquePtr<DecodedStreamData> aData)
   data->Forget();
   nsCOMPtr<nsIRunnable> r = NS_NewRunnableFunction("DecodedStream::DestroyData",
                                                    [=]() { delete data; });
-  mAbstractMainThread->Dispatch(r.forget());
+  NS_DispatchToMainThread(r.forget());
 }
 
 void
