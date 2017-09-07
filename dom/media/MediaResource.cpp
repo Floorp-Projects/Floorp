@@ -545,9 +545,9 @@ ChannelMediaResource::Open(nsIStreamListener** aStreamListener)
 nsresult
 ChannelMediaResource::OpenChannel()
 {
-  NS_ASSERTION(NS_IsMainThread(), "Only call on main thread");
-  NS_ENSURE_TRUE(mChannel, NS_ERROR_NULL_POINTER);
-  NS_ASSERTION(!mListener, "Listener should have been removed by now");
+  MOZ_ASSERT(NS_IsMainThread());
+  MOZ_ASSERT(mChannel);
+  MOZ_ASSERT(!mListener, "Listener should have been removed by now");
 
   // Set the content length, if it's available as an HTTP header.
   // This ensures that MediaResource wrapping objects for platform libraries
