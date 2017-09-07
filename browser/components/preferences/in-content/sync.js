@@ -262,6 +262,10 @@ var gSyncPane = {
     this._showLoadPage(service);
 
     fxAccounts.getSignedInUser().then(data => {
+      return fxAccounts.hasLocalSession().then(hasLocalSession => {
+        return [data, hasLocalSession];
+      });
+    }).then(([data, hasLocalSession]) => {
       if (!data) {
         this.page = FXA_PAGE_LOGGED_OUT;
         return false;
@@ -271,8 +275,12 @@ var gSyncPane = {
       // server rejected our credentials (eg, password changed on the server)
       let fxaLoginStatus = document.getElementById("fxaLoginStatus");
       let syncReady;
-      // Not Verfied implies login error state, so check that first.
-      if (!data.verified) {
+      // We need to check error states that need a re-authenticate to resolve
+      // themselves first.
+      if (!hasLocalSession || Weave.Status.login == Weave.LOGIN_FAILED_LOGIN_REJECTED) {
+        fxaLoginStatus.selectedIndex = FXA_LOGIN_FAILED;
+        syncReady = false;
+      } else if (!data.verified) {
         fxaLoginStatus.selectedIndex = FXA_LOGIN_UNVERIFIED;
         syncReady = false;
         // So we think we are logged in, so login problems are next.
@@ -281,12 +289,9 @@ var gSyncPane = {
         // LOGIN_FAILED_LOGIN_REJECTED explicitly means "you must log back in".
         // All other login failures are assumed to be transient and should go
         // away by themselves, so aren't reflected here.
-      } else if (Weave.Status.login == Weave.LOGIN_FAILED_LOGIN_REJECTED) {
-        fxaLoginStatus.selectedIndex = FXA_LOGIN_FAILED;
-        syncReady = false;
-        // Else we must be golden (or in an error state we expect to magically
-        // resolve itself)
       } else {
+        // We must be golden (or in an error state we expect to magically
+        // resolve itself)
         fxaLoginStatus.selectedIndex = FXA_LOGIN_VERIFIED;
         syncReady = true;
       }
