@@ -794,9 +794,6 @@ protected:
 
   virtual mozilla::ipc::IPCResult RecvStopIMEStateManagement() override;
 
-  virtual mozilla::ipc::IPCResult RecvMenuKeyboardListenerInstalled(
-    const bool& aInstalled) override;
-
   virtual mozilla::ipc::IPCResult RecvNotifyAttachGroupedSHistory(const uint32_t& aOffset) override;
 
   virtual mozilla::ipc::IPCResult RecvNotifyPartialSHistoryActive(const uint32_t& aGlobalLength,
