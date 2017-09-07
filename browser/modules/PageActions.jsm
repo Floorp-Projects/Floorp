@@ -30,6 +30,7 @@ const ACTION_ID_BOOKMARK_SEPARATOR = "bookmarkSeparator";
 const ACTION_ID_BUILT_IN_SEPARATOR = "builtInSeparator";
 
 const PREF_PERSISTED_ACTIONS = "browser.pageActions.persistedActions";
+const PERSISTED_ACTIONS_CURRENT_VERSION = 1
 
 
 this.PageActions = {
@@ -110,11 +111,6 @@ this.PageActions = {
    * appear there.  Not live.  (array of Action objects)
    */
   get actionsInUrlbar() {
-    if (!this._persistedActions) {
-      // This is the case before init is called.  No one should be calling us
-      // then, but return something sensible.
-      return [];
-    }
     // Remember that IDs in idsInUrlbar may belong to actions that aren't
     // currently registered.
     return this._persistedActions.idsInUrlbar.reduce((actions, id) => {
@@ -219,7 +215,7 @@ this.PageActions = {
       this._nonBuiltInActions.splice(index, 0, action);
     }
 
-    if (this._persistedActions.ids[action.id]) {
+    if (this._persistedActions.ids.includes(action.id)) {
       // The action has been seen before.  Override its shownInUrlbar value
       // with the persisted value.  Set the private version of that property
       // so that onActionToggledShownInUrlbar isn't called, which happens when
@@ -228,27 +224,63 @@ this.PageActions = {
         this._persistedActions.idsInUrlbar.includes(action.id);
     } else {
       // The action is new.  Store it in the persisted actions.
-      this._persistedActions.ids[action.id] = true;
-      if (action.shownInUrlbar) {
-        // Also store it in idsInUrlbar.
-        let index =
-          !action.__urlbarInsertBeforeActionID ? -1 :
-          this._persistedActions.idsInUrlbar.indexOf(
-            action.__urlbarInsertBeforeActionID
-          );
-        if (index < 0) {
-          // Append the action.
-          index = this._persistedActions.idsInUrlbar.length;
-        }
-        this._persistedActions.idsInUrlbar.splice(index, 0, action.id);
-      }
-      this._storePersistedActions();
+      this._updateIDsInUrlbarForAction(action);
     }
+  },
+
+  _updateIDsInUrlbarForAction(action) {
+    let index = this._persistedActions.idsInUrlbar.indexOf(action.id);
+    if (action.shownInUrlbar) {
+      if (index < 0) {
+        let nextID = this.nextActionIDInUrlbar(action.id);
+        let nextIndex =
+          nextID ? this._persistedActions.idsInUrlbar.indexOf(nextID) : -1;
+        if (nextIndex < 0) {
+          nextIndex = this._persistedActions.idsInUrlbar.length;
+        }
+        this._persistedActions.idsInUrlbar.splice(nextIndex, 0, action.id);
+      }
+    } else if (index >= 0) {
+      this._persistedActions.idsInUrlbar.splice(index, 1);
+    }
+    this._storePersistedActions();
   },
 
   _builtInActions: [],
   _nonBuiltInActions: [],
   _actionsByID: new Map(),
+
+  /**
+   * Returns the ID of the action before which the given action should be
+   * inserted in the urlbar.
+   *
+   * @param  action (Action object, required)
+   *         The action you're inserting.
+   * @return The ID of the reference action, or null if your action should be
+   *         appended.
+   */
+  nextActionIDInUrlbar(action) {
+    // Actions in the urlbar are always inserted before the bookmark action,
+    // which always comes last if it's present.
+    if (action.id == ACTION_ID_BOOKMARK) {
+      return null;
+    }
+    let id = this._nextActionID(action, this.actionsInUrlbar);
+    return id || ACTION_ID_BOOKMARK;
+  },
+
+  /**
+   * Returns the ID of the action before which the given action should be
+   * inserted in the panel.
+   *
+   * @param  action (Action object, required)
+   *         The action you're inserting.
+   * @return The ID of the reference action, or null if your action should be
+   *         appended.
+   */
+  nextActionIDInPanel(action) {
+    return this._nextActionID(action, this.actions);
+  },
 
   /**
    * The DOM nodes of actions should be ordered properly, both in the panel and
@@ -269,7 +301,7 @@ this.PageActions = {
    *         inserted.  If the given action should be inserted last, returns
    *         null.
    */
-  nextActionID(action, actionArray) {
+  _nextActionID(action, actionArray) {
     let index = actionArray.findIndex(a => a.id == action.id);
     if (index < 0) {
       return null;
@@ -303,10 +335,12 @@ this.PageActions = {
     }
 
     // Remove the action from persisted storage.
-    delete this._persistedActions.ids[action.id];
-    let index = this._persistedActions.idsInUrlbar.indexOf(action.id);
-    if (index >= 0) {
-      this._persistedActions.idsInUrlbar.splice(index, 1);
+    for (let name of ["ids", "idsInUrlbar"]) {
+      let array = this._persistedActions[name];
+      let index = array.indexOf(action.id);
+      if (index >= 0) {
+        array.splice(index, 1);
+      }
     }
     this._storePersistedActions();
 
@@ -358,18 +392,7 @@ this.PageActions = {
       // This may be called before the action has been added.
       return;
     }
-
-    // Update persisted storage.
-    let index = this._persistedActions.idsInUrlbar.indexOf(action.id);
-    if (action.shownInUrlbar) {
-      if (index < 0) {
-        this._persistedActions.idsInUrlbar.push(action.id);
-      }
-    } else if (index >= 0) {
-      this._persistedActions.idsInUrlbar.splice(index, 1);
-    }
-    this._storePersistedActions();
-
+    this._updateIDsInUrlbarForAction(action);
     for (let bpa of allBrowserPageActions()) {
       bpa.placeActionInUrlbar(action);
     }
@@ -383,13 +406,47 @@ this.PageActions = {
   _loadPersistedActions() {
     try {
       let json = Services.prefs.getStringPref(PREF_PERSISTED_ACTIONS);
-      this._persistedActions = JSON.parse(json);
+      this._persistedActions = this._migratePersistedActions(JSON.parse(json));
     } catch (ex) {}
   },
 
+  _migratePersistedActions(actions) {
+    // Start with actions.version and migrate one version at a time, all the way
+    // up to the current version.
+    for (let version = actions.version || 0;
+         version < PERSISTED_ACTIONS_CURRENT_VERSION;
+         version++) {
+      let methodName = `_migratePersistedActionsTo${version + 1}`;
+      actions = this[methodName](actions);
+      actions.version = version + 1;
+    }
+    return actions;
+  },
+
+  _migratePersistedActionsTo1(actions) {
+    // The `ids` object is a mapping: action ID => true.  Convert it to an array
+    // to save space in the prefs.
+    let ids = [];
+    for (let id in actions.ids) {
+      ids.push(id);
+    }
+    // Move the bookmark ID to the end of idsInUrlbar.  The bookmark action
+    // should always remain at the end of the urlbar, if present.
+    let bookmarkIndex = actions.idsInUrlbar.indexOf(ACTION_ID_BOOKMARK);
+    if (bookmarkIndex >= 0) {
+      actions.idsInUrlbar.splice(bookmarkIndex, 1);
+      actions.idsInUrlbar.push(ACTION_ID_BOOKMARK);
+    }
+    return {
+      ids,
+      idsInUrlbar: actions.idsInUrlbar,
+    };
+  },
+
   _persistedActions: {
-    // action ID => true, for actions that have ever been seen and not removed
-    ids: {},
+    version: PERSISTED_ACTIONS_CURRENT_VERSION,
+    // action IDs that have ever been seen and not removed, order not important
+    ids: [],
     // action IDs ordered by position in urlbar
     idsInUrlbar: [],
   },
@@ -501,11 +558,6 @@ function Action(options) {
     // The ID of another action before which to insert this new action in the
     // panel.
     _insertBeforeActionID: false,
-
-    // (string, optional)
-    // The ID of another action before which to insert this new action in the
-    // urlbar.
-    _urlbarInsertBeforeActionID: false,
 
     // (bool, optional)
     // True if this isn't really an action but a separator to be shown in the
@@ -897,6 +949,7 @@ this.PageActions.Button = Button;
 // These are only necessary so that Pocket and the test can use them.
 this.PageActions.ACTION_ID_BOOKMARK = ACTION_ID_BOOKMARK;
 this.PageActions.ACTION_ID_BOOKMARK_SEPARATOR = ACTION_ID_BOOKMARK_SEPARATOR;
+this.PageActions.PREF_PERSISTED_ACTIONS = PREF_PERSISTED_ACTIONS;
 
 // This is only necessary so that the test can access it.
 this.PageActions.ACTION_ID_BUILT_IN_SEPARATOR = ACTION_ID_BUILT_IN_SEPARATOR;
