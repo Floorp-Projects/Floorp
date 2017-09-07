@@ -279,6 +279,18 @@ public:
 
     RefPtr<CachedSurface> surface;
     mSurfaces.Remove(aSurface->GetSurfaceKey(), getter_AddRefs(surface));
+
+    if (IsEmpty() && mFactor2Mode) {
+      // The last surface for this cache was removed. This can happen if the
+      // surface was stored in a volatile buffer and got purged, or the surface
+      // expired from the cache. If the cache itself lingers for some reason
+      // (e.g. in the process of performing a lookup, the cache itself is
+      // locked), then we need to reset the factor of 2 state because it
+      // requires at least one surface present to get the native size
+      // information from the image.
+      mFactor2Mode = mFactor2Pruned = false;
+    }
+
     return surface.forget();
   }
 
@@ -534,6 +546,8 @@ public:
       return aSize;
     }
 
+    // We cannot enter factor of 2 mode unless we have a minimum number of
+    // surfaces, and we should have left it if the cache was emptied.
     MOZ_ASSERT(!IsEmpty());
 
     // This bit of awkwardness gets the largest native size of the image.
@@ -758,7 +772,7 @@ public:
     return InsertOutcome::SUCCESS;
   }
 
-  bool Remove(NotNull<CachedSurface*> aSurface,
+  void Remove(NotNull<CachedSurface*> aSurface,
               const StaticMutexAutoLock& aAutoLock)
   {
     ImageKey imageKey = aSurface->GetImageKey();
@@ -782,10 +796,7 @@ public:
     // have been removed, so it is safe to free while holding the lock.
     if (cache->IsEmpty() && !cache->IsLocked()) {
       mImageCaches.Remove(imageKey);
-      return true;
     }
-
-    return false;
   }
 
   void StartTracking(NotNull<CachedSurface*> aSurface,
@@ -911,9 +922,7 @@ public:
 
       // The surface was released by the operating system. Remove the cache
       // entry as well.
-      if (Remove(WrapNotNull(surface), aAutoLock)) {
-        break;
-      }
+      Remove(WrapNotNull(surface), aAutoLock);
     }
 
     MOZ_ASSERT_IF(matchType == MatchType::EXACT,
