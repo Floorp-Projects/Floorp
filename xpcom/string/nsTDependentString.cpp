@@ -4,22 +4,24 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-nsTDependentString_CharT::nsTDependentString_CharT(const char_type* aStart,
-                                                   const char_type* aEnd)
+template <typename T>
+nsTDependentString<T>::nsTDependentString(const char_type* aStart,
+                                          const char_type* aEnd)
   : string_type(const_cast<char_type*>(aStart), uint32_t(aEnd - aStart),
                 DataFlags::TERMINATED, ClassFlags(0))
 {
   MOZ_RELEASE_ASSERT(aStart <= aEnd, "Overflow!");
-  AssertValidDependentString();
+  this->AssertValidDependentString();
 }
 
+template <typename T>
 void
-nsTDependentString_CharT::Rebind(const string_type& str, uint32_t startPos)
+nsTDependentString<T>::Rebind(const string_type& str, uint32_t startPos)
 {
   MOZ_ASSERT(str.GetDataFlags() & DataFlags::TERMINATED, "Unterminated flat string");
 
   // If we currently own a buffer, release it.
-  Finalize();
+  this->Finalize();
 
   size_type strLength = str.Length();
 
@@ -31,12 +33,13 @@ nsTDependentString_CharT::Rebind(const string_type& str, uint32_t startPos)
     const_cast<char_type*>(static_cast<const char_type*>(str.Data())) + startPos;
   size_type newLen = strLength - startPos;
   DataFlags newDataFlags = str.GetDataFlags() & (DataFlags::TERMINATED | DataFlags::LITERAL);
-  SetData(newData, newLen, newDataFlags);
+  this->SetData(newData, newLen, newDataFlags);
 }
 
+template <typename T>
 void
-nsTDependentString_CharT::Rebind(const char_type* aStart, const char_type* aEnd)
+nsTDependentString<T>::Rebind(const char_type* aStart, const char_type* aEnd)
 {
   MOZ_RELEASE_ASSERT(aStart <= aEnd, "Overflow!");
-  Rebind(aStart, uint32_t(aEnd - aStart));
+  this->Rebind(aStart, uint32_t(aEnd - aStart));
 }

@@ -61,5 +61,5 @@ DomView.prototype = {
 };
 
 // Construct DOM panel view object and expose it to tests.
-// Tests can access it throught: |panel.panelWin.view|
+// Tests can access it through: |panel.panelWin.view|
 window.view = new DomView(store);

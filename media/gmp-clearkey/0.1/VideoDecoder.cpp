@@ -38,12 +38,7 @@ VideoDecoder::VideoDecoder(Host_8 *aHost)
 
   mDecoder = new WMFH264Decoder();
 
-  // MinGW Does not support std::thread (See #1349912)
-#ifdef __MINGW32__
-  uint32_t cores = 1u;
-#else
   uint32_t cores = std::max(1u, std::thread::hardware_concurrency());
-#endif
 
   HRESULT hr = mDecoder->Init(cores);
 }

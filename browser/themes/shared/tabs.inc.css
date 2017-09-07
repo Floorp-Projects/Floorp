@@ -26,6 +26,7 @@
 }
 
 #tabbrowser-tabs,
+#tabbrowser-tabs > .tabbrowser-arrowscrollbox,
 .tabbrowser-tabs[positionpinnedtabs] > .tabbrowser-tab[pinned] {
   min-height: var(--tab-min-height);
 }
@@ -229,9 +230,14 @@
   width: 16px;
   height: 16px;
   margin-top: -8px;
+  margin-inline-start: -15px;
+  margin-inline-end: -1px;
+  position: relative;
+}
+
+.tab-icon-overlay[pinned] {
   margin-inline-start: -6px;
   margin-inline-end: -10px;
-  position: relative;
 }
 
 .tab-icon-overlay[crashed] {

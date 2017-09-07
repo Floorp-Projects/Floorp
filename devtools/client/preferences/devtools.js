@@ -303,11 +303,7 @@ pref("devtools.webconsole.timestampMessages", false);
 pref("devtools.webconsole.autoMultiline", true);
 
 // Enable the new webconsole frontend
-#if defined(NIGHTLY_BUILD) || defined(MOZ_DEV_EDITION)
 pref("devtools.webconsole.new-frontend-enabled", true);
-#else
-pref("devtools.webconsole.new-frontend-enabled", false);
-#endif
 
 // Enable client-side mapping service for source maps
 pref("devtools.source-map.client-service.enabled", true);

@@ -10,15 +10,7 @@
 #include "nscore.h"
 #include "nsString.h"
 
-// declare nsLiteralString
-#include "string-template-def-unichar.h"
 #include "nsTLiteralString.h"
-#include "string-template-undef.h"
-
-// declare nsLiteralCString
-#include "string-template-def-char.h"
-#include "nsTLiteralString.h"
-#include "string-template-undef.h"
 
 #include "mozilla/Char16.h"
 

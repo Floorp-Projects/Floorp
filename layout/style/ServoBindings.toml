@@ -343,7 +343,8 @@ mapped-generic-types = [
     { generic = false, gecko = "ServoStyleContextStrong", servo = "::gecko_bindings::sugar::ownership::Strong<::properties::ComputedValues>" },
 ]
 fixups = [
-    { pat = "root::nsString", rep = "::nsstring::nsStringRepr" },
+    { pat = "\\broot::nsString\\b", rep = "::nsstring::nsStringRepr" },
+    { pat = "\\broot::nsTString<u16>", rep = "::nsstring::nsStringRepr" },
 ]
 
 [bindings]
@@ -541,6 +542,8 @@ servo-borrow-types = [
     "RawGeckoStyleChildrenIterator",
 ]
 fixups = [
+    # Remap the templated string type to the helper type
+    { pat = "\\bnsTString<u16>", rep = "nsString" },
     # hack for gecko-owned string
-    { pat = "<nsString", rep = "<nsStringRepr" },
+    { pat = "\\b<nsString\\b", rep = "<nsStringRepr" },
 ]

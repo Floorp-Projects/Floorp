@@ -67,8 +67,10 @@ DomPanel.prototype = {
     this.target.on("navigate", this.onTabNavigated);
     this._toolbox.on("select", this.onPanelVisibilityChange);
 
+    // Export provider object with useful API for DOM panel.
     let provider = {
-      getPrototypeAndProperties: this.getPrototypeAndProperties.bind(this)
+      getPrototypeAndProperties: this.getPrototypeAndProperties.bind(this),
+      openLink: this.openLink.bind(this),
     };
 
     exportIntoContentScope(this.panelWin, provider, "DomProvider");
@@ -116,7 +118,7 @@ DomPanel.prototype = {
 
   /**
    * Make sure the panel is refreshed when the page is reloaded.
-   * The panel is refreshed immediatelly if it's currently selected
+   * The panel is refreshed immediately if it's currently selected
    * or lazily  when the user actually selects it.
    */
   onTabNavigated: function () {
@@ -175,6 +177,13 @@ DomPanel.prototype = {
     this.pendingRequests.set(grip.actor, deferred.promise);
 
     return deferred.promise;
+  },
+
+  openLink: function (url) {
+    let parentDoc = this._toolbox.doc;
+    let iframe = parentDoc.getElementById("this._toolbox");
+    let top = iframe.ownerDocument.defaultView.top;
+    top.openUILinkIn(url, "tab");
   },
 
   getRootGrip: function () {

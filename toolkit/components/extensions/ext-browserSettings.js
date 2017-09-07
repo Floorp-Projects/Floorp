@@ -4,12 +4,17 @@
 
 XPCOMUtils.defineLazyModuleGetter(this, "ExtensionSettingsStore",
                                   "resource://gre/modules/ExtensionSettingsStore.jsm");
-XPCOMUtils.defineLazyModuleGetter(this, "Preferences",
-                                  "resource://gre/modules/Preferences.jsm");
+XPCOMUtils.defineLazyModuleGetter(this, "Services",
+                                  "resource://gre/modules/Services.jsm");
+
+XPCOMUtils.defineLazyServiceGetter(this, "aboutNewTabService",
+                                   "@mozilla.org/browser/aboutnewtab-service;1",
+                                   "nsIAboutNewTabService");
 
 Cu.import("resource://gre/modules/ExtensionPreferencesManager.jsm");
 
 const HOMEPAGE_OVERRIDE_SETTING = "homepage_override";
+const HOMEPAGE_URL_PREF = "browser.startup.homepage";
 const URL_STORE_TYPE = "url_overrides";
 const NEW_TAB_OVERRIDE_SETTING = "newTabURL";
 
@@ -75,32 +80,24 @@ this.browserSettings = class extends ExtensionAPI {
         allowPopupsForUserEvents: getSettingsAPI(extension,
           "allowPopupsForUserEvents",
           () => {
-            return Preferences.get("dom.popup_allowed_events") != "";
+            return Services.prefs.getCharPref("dom.popup_allowed_events") != "";
           }),
         cacheEnabled: getSettingsAPI(extension,
           "cacheEnabled",
           () => {
-            return Preferences.get("browser.cache.disk.enable") &&
-              Preferences.get("browser.cache.memory.enable");
+            return Services.prefs.getBoolPref("browser.cache.disk.enable") &&
+              Services.prefs.getBoolPref("browser.cache.memory.enable");
           }),
         homepageOverride: getSettingsAPI(extension,
           HOMEPAGE_OVERRIDE_SETTING,
-          async () => {
-            let homepageSetting = await ExtensionPreferencesManager.getSetting(HOMEPAGE_OVERRIDE_SETTING);
-            if (homepageSetting) {
-              return homepageSetting.value;
-            }
-            return null;
+          () => {
+            return Services.prefs.getComplexValue(
+              HOMEPAGE_URL_PREF, Ci.nsIPrefLocalizedString).data;
           }, undefined, true),
         newTabPageOverride: getSettingsAPI(extension,
           NEW_TAB_OVERRIDE_SETTING,
-          async () => {
-            await ExtensionSettingsStore.initialize();
-            let newTabPageSetting = ExtensionSettingsStore.getSetting(URL_STORE_TYPE, NEW_TAB_OVERRIDE_SETTING);
-            if (newTabPageSetting) {
-              return newTabPageSetting.value;
-            }
-            return null;
+          () => {
+            return aboutNewTabService.newTabURL;
           }, URL_STORE_TYPE, true),
       },
     };

@@ -7,7 +7,8 @@
 const l10n = require("gcli/l10n");
 const {gDevTools} = require("devtools/client/framework/devtools");
 /* eslint-disable mozilla/reject-some-requires */
-const {EyeDropper, HighlighterEnvironment} = require("devtools/server/actors/highlighters");
+const {HighlighterEnvironment} = require("devtools/server/actors/highlighters");
+const {EyeDropper} = require("devtools/server/actors/highlighters/eye-dropper");
 /* eslint-enable mozilla/reject-some-requires */
 const Telemetry = require("devtools/client/shared/telemetry");
 

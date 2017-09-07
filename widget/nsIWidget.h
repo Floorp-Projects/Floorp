@@ -1415,6 +1415,7 @@ class nsIWidget : public nsISupports
      * Enables the dropping of files to a widget.
      */
     virtual void EnableDragDrop(bool aEnable) = 0;
+    virtual nsresult AsyncEnableDragDrop(bool aEnable) = 0;
 
     /**
      * Enables/Disables system mouse capture.

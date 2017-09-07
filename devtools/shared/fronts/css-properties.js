@@ -6,10 +6,12 @@
 loader.lazyRequireGetter(this, "CSS_PROPERTIES_DB",
   "devtools/shared/css/properties-db", true);
 
+loader.lazyRequireGetter(this, "cssColors",
+  "devtools/shared/css/color-db", true);
+
 const { FrontClassWithSpec, Front } = require("devtools/shared/protocol");
 const { cssPropertiesSpec } = require("devtools/shared/specs/css-properties");
 const { Task } = require("devtools/shared/task");
-const { cssColors } = require("devtools/shared/css/color-db");
 
 /**
  * Build up a regular expression that matches a CSS variable token. This is an
