@@ -105,7 +105,7 @@ const char16_t JS::ubi::Concrete<JSString>::concreteTypeName[] = u"JSString";
 
 template <typename CharT>
 /*static */ void
-JSString::dumpChars(const CharT* s, size_t n, FILE* fp)
+JSString::dumpChars(const CharT* s, size_t n, js::GenericPrinter& out)
 {
     if (n == SIZE_MAX) {
         n = 0;
@@ -113,118 +113,114 @@ JSString::dumpChars(const CharT* s, size_t n, FILE* fp)
             n++;
     }
 
-    fputc('"', fp);
+    out.put("\"");
     for (size_t i = 0; i < n; i++) {
         char16_t c = s[i];
         if (c == '\n')
-            fprintf(fp, "\\n");
+            out.put("\\n");
         else if (c == '\t')
-            fprintf(fp, "\\t");
+            out.put("\\t");
         else if (c >= 32 && c < 127)
-            fputc(s[i], fp);
+            out.putChar((char)s[i]);
         else if (c <= 255)
-            fprintf(fp, "\\x%02x", unsigned(c));
+            out.printf("\\x%02x", unsigned(c));
         else
-            fprintf(fp, "\\u%04x", unsigned(c));
+            out.printf("\\u%04x", unsigned(c));
     }
-    fputc('"', fp);
+    out.putChar('"');
 }
 
 template void
-JSString::dumpChars(const Latin1Char* s, size_t n, FILE* fp);
+JSString::dumpChars(const Latin1Char* s, size_t n, js::GenericPrinter& out);
 
 template void
-JSString::dumpChars(const char16_t* s, size_t n, FILE* fp);
+JSString::dumpChars(const char16_t* s, size_t n, js::GenericPrinter& out);
 
 void
-JSString::dumpCharsNoNewline(FILE* fp)
+JSString::dumpCharsNoNewline(js::GenericPrinter& out)
 {
     if (JSLinearString* linear = ensureLinear(nullptr)) {
         AutoCheckCannotGC nogc;
         if (hasLatin1Chars())
-            dumpChars(linear->latin1Chars(nogc), length(), fp);
+            dumpChars(linear->latin1Chars(nogc), length(), out);
         else
-            dumpChars(linear->twoByteChars(nogc), length(), fp);
+            dumpChars(linear->twoByteChars(nogc), length(), out);
     } else {
-        fprintf(fp, "(oom in JSString::dumpCharsNoNewline)");
+        out.put("(oom in JSString::dumpCharsNoNewline)");
     }
-}
-
-void
-JSString::dump(FILE* fp)
-{
-    if (JSLinearString* linear = ensureLinear(nullptr)) {
-        AutoCheckCannotGC nogc;
-        if (hasLatin1Chars()) {
-            const Latin1Char* chars = linear->latin1Chars(nogc);
-            fprintf(fp, "JSString* (%p) = Latin1Char * (%p) = ", (void*) this,
-                    (void*) chars);
-            dumpChars(chars, length(), fp);
-        } else {
-            const char16_t* chars = linear->twoByteChars(nogc);
-            fprintf(fp, "JSString* (%p) = char16_t * (%p) = ", (void*) this,
-                    (void*) chars);
-            dumpChars(chars, length(), fp);
-        }
-    } else {
-        fprintf(fp, "(oom in JSString::dump)");
-    }
-    fputc('\n', fp);
-}
-
-void
-JSString::dumpCharsNoNewline()
-{
-    dumpCharsNoNewline(stderr);
 }
 
 void
 JSString::dump()
 {
-    dump(stderr);
+    js::Fprinter out(stderr);
+    dump(out);
 }
 
 void
-JSString::dumpRepresentation(FILE* fp, int indent) const
+JSString::dump(js::GenericPrinter& out)
 {
-    if      (isRope())          asRope()        .dumpRepresentation(fp, indent);
-    else if (isDependent())     asDependent()   .dumpRepresentation(fp, indent);
-    else if (isExternal())      asExternal()    .dumpRepresentation(fp, indent);
-    else if (isExtensible())    asExtensible()  .dumpRepresentation(fp, indent);
-    else if (isInline())        asInline()      .dumpRepresentation(fp, indent);
-    else if (isFlat())          asFlat()        .dumpRepresentation(fp, indent);
+    if (JSLinearString* linear = ensureLinear(nullptr)) {
+        AutoCheckCannotGC nogc;
+        if (hasLatin1Chars()) {
+            const Latin1Char* chars = linear->latin1Chars(nogc);
+            out.printf("JSString* (%p) = Latin1Char * (%p) = ", (void*) this,
+                    (void*) chars);
+            dumpChars(chars, length(), out);
+        } else {
+            const char16_t* chars = linear->twoByteChars(nogc);
+            out.printf("JSString* (%p) = char16_t * (%p) = ", (void*) this,
+                    (void*) chars);
+            dumpChars(chars, length(), out);
+        }
+    } else {
+        out.put("(oom in JSString::dump)");
+    }
+    out.putChar('\n');
+}
+
+
+void
+JSString::dumpRepresentation(js::GenericPrinter& out, int indent) const
+{
+    if      (isRope())          asRope()        .dumpRepresentation(out, indent);
+    else if (isDependent())     asDependent()   .dumpRepresentation(out, indent);
+    else if (isExternal())      asExternal()    .dumpRepresentation(out, indent);
+    else if (isExtensible())    asExtensible()  .dumpRepresentation(out, indent);
+    else if (isInline())        asInline()      .dumpRepresentation(out, indent);
+    else if (isFlat())          asFlat()        .dumpRepresentation(out, indent);
     else
         MOZ_CRASH("Unexpected JSString representation");
 }
 
 void
-JSString::dumpRepresentationHeader(FILE* fp, int indent, const char* subclass) const
+JSString::dumpRepresentationHeader(js::GenericPrinter& out, int indent, const char* subclass) const
 {
     uint32_t flags = d.u1.flags;
     // Print the string's address as an actual C++ expression, to facilitate
     // copy-and-paste into a debugger.
-    fprintf(fp, "((%s*) %p) length: %zu  flags: 0x%x", subclass, this, length(), flags);
-    if (flags & FLAT_BIT)               fputs(" FLAT", fp);
-    if (flags & HAS_BASE_BIT)           fputs(" HAS_BASE", fp);
-    if (flags & INLINE_CHARS_BIT)       fputs(" INLINE_CHARS", fp);
-    if (flags & ATOM_BIT)               fputs(" ATOM", fp);
-    if (isPermanentAtom())              fputs(" PERMANENT", fp);
-    if (flags & LATIN1_CHARS_BIT)       fputs(" LATIN1", fp);
-    if (flags & INDEX_VALUE_BIT)        fprintf(fp, " INDEX_VALUE(%u)", getIndexValue());
-    fputc('\n', fp);
+    out.printf("((%s*) %p) length: %zu  flags: 0x%x", subclass, this, length(), flags);
+    if (flags & FLAT_BIT)               out.put(" FLAT");
+    if (flags & HAS_BASE_BIT)           out.put(" HAS_BASE");
+    if (flags & INLINE_CHARS_BIT)       out.put(" INLINE_CHARS");
+    if (flags & ATOM_BIT)               out.put(" ATOM");
+    if (isPermanentAtom())              out.put(" PERMANENT");
+    if (flags & LATIN1_CHARS_BIT)       out.put(" LATIN1");
+    if (flags & INDEX_VALUE_BIT)        out.put(" INDEX_VALUE(%u)", getIndexValue());
+    out.putChar('\n');
 }
 
 void
-JSLinearString::dumpRepresentationChars(FILE* fp, int indent) const
+JSLinearString::dumpRepresentationChars(js::GenericPrinter& out, int indent) const
 {
     if (hasLatin1Chars()) {
-        fprintf(fp, "%*schars: ((Latin1Char*) %p) ", indent, "", rawLatin1Chars());
-        dumpChars(rawLatin1Chars(), length());
+        out.printf("%*schars: ((Latin1Char*) %p) ", indent, "", rawLatin1Chars());
+        dumpChars(rawLatin1Chars(), length(), out);
     } else {
-        fprintf(fp, "%*schars: ((char16_t*) %p) ", indent, "", rawTwoByteChars());
-        dumpChars(rawTwoByteChars(), length());
+        out.printf("%*schars: ((char16_t*) %p) ", indent, "", rawTwoByteChars());
+        dumpChars(rawTwoByteChars(), length(), out);
     }
-    fputc('\n', fp);
+    out.putChar('\n');
 }
 
 bool
@@ -337,16 +333,16 @@ JSRope::copyCharsInternal(JSContext* cx, ScopedJSFreePtr<CharT>& out,
 
 #ifdef DEBUG
 void
-JSRope::dumpRepresentation(FILE* fp, int indent) const
+JSRope::dumpRepresentation(js::GenericPrinter& out, int indent) const
 {
-    dumpRepresentationHeader(fp, indent, "JSRope");
+    dumpRepresentationHeader(out, indent, "JSRope");
     indent += 2;
 
-    fprintf(fp, "%*sleft:  ", indent, "");
-    leftChild()->dumpRepresentation(fp, indent);
+    out.printf("%*sleft:  ", indent, "");
+    leftChild()->dumpRepresentation(out, indent);
 
-    fprintf(fp, "%*sright: ", indent, "");
-    rightChild()->dumpRepresentation(fp, indent);
+    out.printf("%*sright: ", indent, "");
+    rightChild()->dumpRepresentation(out, indent);
 }
 #endif
 
@@ -715,16 +711,16 @@ JSDependentString::undepend(JSContext* cx)
 
 #ifdef DEBUG
 void
-JSDependentString::dumpRepresentation(FILE* fp, int indent) const
+JSDependentString::dumpRepresentation(js::GenericPrinter& out, int indent) const
 {
-    dumpRepresentationHeader(fp, indent, "JSDependentString");
+    dumpRepresentationHeader(out, indent, "JSDependentString");
     indent += 2;
 
     if (mozilla::Maybe<size_t> offset = baseOffset())
-        fprintf(fp, "%*soffset: %zu\n", indent, "", *offset);
+        out.printf("%*soffset: %zu\n", indent, "", *offset);
 
-    fprintf(fp, "%*sbase: ", indent, "");
-    base()->dumpRepresentation(fp, indent);
+    out.printf("%*sbase: ", indent, "");
+    base()->dumpRepresentation(out, indent);
 }
 #endif
 
@@ -1108,26 +1104,27 @@ JSExternalString::ensureFlat(JSContext* cx)
 
 #ifdef DEBUG
 void
-JSAtom::dump(FILE* fp)
+JSAtom::dump(js::GenericPrinter& out)
 {
-    fprintf(fp, "JSAtom* (%p) = ", (void*) this);
-    this->JSString::dump(fp);
+    out.printf("JSAtom* (%p) = ", (void*) this);
+    this->JSString::dump(out);
 }
 
 void
 JSAtom::dump()
 {
-    dump(stderr);
+    Fprinter out(stderr);
+    dump(out);
 }
 
 void
-JSExternalString::dumpRepresentation(FILE* fp, int indent) const
+JSExternalString::dumpRepresentation(js::GenericPrinter& out, int indent) const
 {
-    dumpRepresentationHeader(fp, indent, "JSExternalString");
+    dumpRepresentationHeader(out, indent, "JSExternalString");
     indent += 2;
 
-    fprintf(fp, "%*sfinalizer: ((JSStringFinalizer*) %p)\n", indent, "", externalFinalizer());
-    dumpRepresentationChars(fp, indent);
+    out.printf("%*sfinalizer: ((JSStringFinalizer*) %p)\n", indent, "", externalFinalizer());
+    dumpRepresentationChars(out, indent);
 }
 #endif /* DEBUG */
 
@@ -1489,32 +1486,32 @@ NewMaybeExternalString(JSContext* cx, const char16_t* s, size_t n, const JSStrin
 
 #ifdef DEBUG
 void
-JSExtensibleString::dumpRepresentation(FILE* fp, int indent) const
+JSExtensibleString::dumpRepresentation(js::GenericPrinter& out, int indent) const
 {
-    dumpRepresentationHeader(fp, indent, "JSExtensibleString");
+    dumpRepresentationHeader(out, indent, "JSExtensibleString");
     indent += 2;
 
-    fprintf(fp, "%*scapacity: %zu\n", indent, "", capacity());
-    dumpRepresentationChars(fp, indent);
+    out.printf("%*scapacity: %zu\n", indent, "", capacity());
+    dumpRepresentationChars(out, indent);
 }
 
 void
-JSInlineString::dumpRepresentation(FILE* fp, int indent) const
+JSInlineString::dumpRepresentation(js::GenericPrinter& out, int indent) const
 {
-    dumpRepresentationHeader(fp, indent,
+    dumpRepresentationHeader(out, indent,
                              isFatInline() ? "JSFatInlineString" : "JSThinInlineString");
     indent += 2;
 
-    dumpRepresentationChars(fp, indent);
+    dumpRepresentationChars(out, indent);
 }
 
 void
-JSFlatString::dumpRepresentation(FILE* fp, int indent) const
+JSFlatString::dumpRepresentation(js::GenericPrinter& out, int indent) const
 {
-    dumpRepresentationHeader(fp, indent, "JSFlatString");
+    dumpRepresentationHeader(out, indent, "JSFlatString");
     indent += 2;
 
-    dumpRepresentationChars(fp, indent);
+    dumpRepresentationChars(out, indent);
 }
 #endif
 

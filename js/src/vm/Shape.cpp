@@ -1776,33 +1776,33 @@ KidsPointer::checkConsistency(Shape* aKid) const
 }
 
 void
-Shape::dump(FILE* fp) const
+Shape::dump(js::GenericPrinter& out) const
 {
     jsid propid = this->propid();
 
     MOZ_ASSERT(!JSID_IS_VOID(propid));
 
     if (JSID_IS_INT(propid)) {
-        fprintf(fp, "[%ld]", (long) JSID_TO_INT(propid));
+        out.printf("[%ld]", (long) JSID_TO_INT(propid));
     } else if (JSID_IS_ATOM(propid)) {
         if (JSLinearString* str = JSID_TO_ATOM(propid))
-            FileEscapedString(fp, str, '"');
+            EscapedStringPrinter(out, str, '"');
         else
-            fputs("<error>", fp);
+            out.put("<error>");
     } else {
         MOZ_ASSERT(JSID_IS_SYMBOL(propid));
-        JSID_TO_SYMBOL(propid)->dump(fp);
+        JSID_TO_SYMBOL(propid)->dump(out);
     }
 
-    fprintf(fp, " g/s %p/%p slot %d attrs %x ",
-            JS_FUNC_TO_DATA_PTR(void*, getter()),
-            JS_FUNC_TO_DATA_PTR(void*, setter()),
-            hasSlot() ? slot() : -1, attrs);
+    out.printf(" g/s %p/%p slot %d attrs %x ",
+               JS_FUNC_TO_DATA_PTR(void*, getter()),
+               JS_FUNC_TO_DATA_PTR(void*, setter()),
+               hasSlot() ? slot() : -1, attrs);
 
     if (attrs) {
         int first = 1;
-        fputs("(", fp);
-#define DUMP_ATTR(name, display) if (attrs & JSPROP_##name) fputs(&(" " #display)[first], fp), first = 0
+        out.putChar('(');
+#define DUMP_ATTR(name, display) if (attrs & JSPROP_##name) out.put(&(" " #display)[first]), first = 0
         DUMP_ATTR(ENUMERATE, enumerate);
         DUMP_ATTR(READONLY, readonly);
         DUMP_ATTR(PERMANENT, permanent);
@@ -1810,30 +1810,30 @@ Shape::dump(FILE* fp) const
         DUMP_ATTR(SETTER, setter);
         DUMP_ATTR(SHARED, shared);
 #undef  DUMP_ATTR
-        fputs(") ", fp);
+        out.putChar(')');
     }
 
-    fprintf(fp, "flags %x ", flags);
+    out.printf("flags %x ", flags);
     if (flags) {
         int first = 1;
-        fputs("(", fp);
-#define DUMP_FLAG(name, display) if (flags & name) fputs(&(" " #display)[first], fp), first = 0
+        out.putChar('(');
+#define DUMP_FLAG(name, display) if (flags & name) out.put(&(" " #display)[first]), first = 0
         DUMP_FLAG(IN_DICTIONARY, in_dictionary);
 #undef  DUMP_FLAG
-        fputs(") ", fp);
+        out.putChar(')');
     }
 }
 
 void
-Shape::dumpSubtree(int level, FILE* fp) const
+Shape::dumpSubtree(int level, js::GenericPrinter& out) const
 {
     if (!parent) {
         MOZ_ASSERT(level == 0);
         MOZ_ASSERT(JSID_IS_EMPTY(propid_));
-        fprintf(fp, "class %s emptyShape\n", getObjectClass()->name);
+        out.printf("class %s emptyShape\n", getObjectClass()->name);
     } else {
-        fprintf(fp, "%*sid ", level, "");
-        dump(fp);
+        out.printf("%*sid ", level, "");
+        dump(out);
     }
 
     if (!kids.isNull()) {
@@ -1841,14 +1841,14 @@ Shape::dumpSubtree(int level, FILE* fp) const
         if (kids.isShape()) {
             Shape* kid = kids.toShape();
             MOZ_ASSERT(kid->parent == this);
-            kid->dumpSubtree(level, fp);
+            kid->dumpSubtree(level, out);
         } else {
             const KidsHash& hash = *kids.toHash();
             for (KidsHash::Range range = hash.all(); !range.empty(); range.popFront()) {
                 Shape* kid = range.front();
 
                 MOZ_ASSERT(kid->parent == this);
-                kid->dumpSubtree(level, fp);
+                kid->dumpSubtree(level, out);
             }
         }
     }
