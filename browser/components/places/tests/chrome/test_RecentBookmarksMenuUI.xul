@@ -235,6 +235,37 @@
       simulateHideMenu();
     });
 
+    add_task(async function test_remove_with_recently_bookmarked_hidden() {
+      RecentBookmarksMenuUI.init(document.getElementById("fakeRecentBookmarks"));
+      RecentBookmarksMenuUI.visible = false;
+
+      is(bmMenu.children.length, 3,
+         "There should only be the original 3 items in the menu");
+
+      let bmToRemove = await PlacesUtils.bookmarks.fetch({url: `${BASE_URL}bookmark_dummy_6.html`});
+
+      sandbox.stub(RecentBookmarksMenuUI, "_clearExistingItems");
+      sandbox.stub(RecentBookmarksMenuUI, "_insertRecentMenuItems");
+
+      const clock = sandbox.useFakeTimers();
+
+      await PlacesUtils.bookmarks.remove(bmToRemove);
+
+      // Move the clock past the timeout to ensure any update happen.
+      clock.tick(RecentBookmarksMenuUI.ITEM_REMOVED_TIMEOUT + 1);
+      clock.restore();
+
+      is(bmMenu.children.length, 3,
+         "There should only be the original 3 items in the menu");
+      is(RecentBookmarksMenuUI._clearExistingItems.notCalled, true,
+         "Should not have cleared the existing items when recently bookmarked are hidden.");
+      is(RecentBookmarksMenuUI._insertRecentMenuItems.notCalled, true,
+         "Should not have inserted new menu items when recently bookmarked are hidden.");
+
+      sandbox.restore();
+      simulateHideMenu();
+    });
+
     add_task(async function test_show_recently_bookmarked() {
       RecentBookmarksMenuUI.init(document.getElementById("fakeRecentBookmarks"));
 
