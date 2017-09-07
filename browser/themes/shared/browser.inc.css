@@ -56,9 +56,9 @@
   min-height: 22px;
 }
 
-/* Library animation */
+/* Required for Library animation */
 
-#navigator-toolbox[animate] {
+#navigator-toolbox {
   position: relative;
 }
 
