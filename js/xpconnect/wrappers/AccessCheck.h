@@ -109,7 +109,7 @@ struct CrossOriginAccessiblePropertiesOnly : public Policy {
 // Opaque wrapper, with the exception that it fails silently for GET,
 // ENUMERATE, and GET_PROPERTY_DESCRIPTOR. This is done for backwards
 // compatibility. See bug 1397513.
-struct ExposedPropertiesOnly : public Policy {
+struct OpaqueWithSilentFailing : public Policy {
     static bool check(JSContext* cx, JS::HandleObject wrapper, JS::HandleId id, js::Wrapper::Action act) {
         return false;
     }
