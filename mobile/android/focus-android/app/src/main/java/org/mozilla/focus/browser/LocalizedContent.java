@@ -88,8 +88,20 @@ public class LocalizedContent {
         final String trackingProtectionUrl = "https://wiki.mozilla.org/Security/Tracking_protection#Lists";
         final String licensesUrl = "licenses.html";
 
-        final String content = resources.getString(R.string.your_rights_content, appName, mplUrl, trademarkPolicyUrl, gplUrl, trackingProtectionUrl, licensesUrl);
-        substitutionMap.put("%your-rights-content%", content);
+        final String content1 = resources.getString(R.string.your_rights_content1, appName);
+        substitutionMap.put("%your-rights-content1%", content1);
+
+        final String content2 = resources.getString(R.string.your_rights_content2, appName, mplUrl);
+        substitutionMap.put("%your-rights-content2%", content2);
+
+        final String content3 = resources.getString(R.string.your_rights_content3, appName, trademarkPolicyUrl);
+        substitutionMap.put("%your-rights-content3%", content3);
+
+        final String content4 = resources.getString(R.string.your_rights_content4, appName, licensesUrl);
+        substitutionMap.put("%your-rights-content4%", content4);
+
+        final String content5 = resources.getString(R.string.your_rights_content5, appName, gplUrl, trackingProtectionUrl);
+        substitutionMap.put("%your-rights-content5%", content5);
 
         putLayoutDirectionIntoMap(webView, substitutionMap);
 

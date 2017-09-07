@@ -402,18 +402,27 @@ be temporary, and you can try again later.</li>
     <string name="download_firefox">Download Firefox</string>
 
     <!-- Text shown in the "Your rights" screen.
-           %1$s will be replaced with the name of the app (e.g. Firefox Focus)
-           %2$s will be replaced with a URL linking to the MPL (e.g. https://www.mozilla.org/en-US/MPL/)
-           %3$s will be replaced with a URL linking to the trademark policy (e.g. https://www.mozilla.org/foundation/trademarks/policy/)
-           %4$s will be replaced with a URL linking to the GPL
-           %5$s will be replaced with a URL linking to the tracking protection wiki page (e.g. https://wiki.mozilla.org/Security/Tracking_protection#Lists)
-           %6§s will be replaced with a URL linking to the list of licenses used by the dependencies.
-    -->
-    <string name="your_rights_content"><![CDATA[
-<p>%1$s is free and open source software made by Mozilla and other contributors.</p>
-<p>%1$s is made available to you under the terms of the <a href="%2$s">Mozilla Public License</a> and other open source licenses.</p>
-<p>You are not granted any rights or licenses to the trademarks of the Mozilla Foundation or any party, including the Mozilla, Firefox or %1$s names or logos. Additional information may be found <a href="%3$s">here</a>.</p>
-<p>Additional source code for %1$s is available under various other free and open source <a href="%6$s">licenses</a>.</p>
-<p>%1$s also uses blocklists provided by Disconnect, Inc. as separate and independent works under the <a href="%4$s">GNU General Public License v3</a>, and available <a href="%5$s">here</a>.</p>
-    ]]></string>
+    %1$s will be replaced with the name of the app (e.g. Firefox Focus)-->
+    <string name="your_rights_content1"><![CDATA[%1$s is free and open source software made by Mozilla and other contributors.]]></string>
+
+    <!-- Text shown in the "Your rights" screen.
+    %1$s will be replaced with the name of the app (e.g. Firefox Focus)
+    %2$s will be replaced with a URL linking to the MPL (e.g. https://www.mozilla.org/en-US/MPL/) -->
+    <string name="your_rights_content2"><![CDATA[%1$s is made available to you under the terms of the <a href="%2$s">Mozilla Public License</a> and other open source licenses.]]></string>
+
+    <!-- Text shown in the "Your rights" screen.
+    %1$s will be replaced with the name of the app (e.g. Firefox Focus)
+    %2$s will be replaced with a URL linking to the trademark policy (e.g. https://www.mozilla.org/foundation/trademarks/policy/) -->
+    <string name="your_rights_content3"><![CDATA[You are not granted any rights or licenses to the trademarks of the Mozilla Foundation or any party, including the Mozilla, Firefox or %1$s names or logos. Additional information may be found <a href="%2$s">here</a>.]]></string>
+
+    <!-- Text shown in the "Your rights" screen.
+    %1$s will be replaced with the name of the app (e.g. Firefox Focus)
+    %2$s will be replaced with a URL linking to the list of licenses used by the dependencies.-->
+    <string name="your_rights_content4"><![CDATA[Additional source code for %1$s is available under various other free and open source <a href="%2$s">licenses</a>.]]></string>
+
+    <!-- Text shown in the "Your rights" screen.
+    %1$s will be replaced with the name of the app (e.g. Firefox Focus)
+    %2$s will be replaced with a URL linking to the GPL
+    %3$s will be replaced with a URL linking to the tracking protection wiki page (e.g. https://wiki.mozilla.org/Security/Tracking_protection#Lists) -->
+    <string name="your_rights_content5"><![CDATA[%1$s also uses blocklists provided by Disconnect, Inc. as separate and independent works under the <a href="%2$s">GNU General Public License v3</a>, and available <a href="%3$s">here</a>.]]></string>
 </resources>
