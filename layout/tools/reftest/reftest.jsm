@@ -1217,23 +1217,7 @@ function ReadManifest(aURL, inherited_status, aFilter)
             if (gCompareStyloToGecko) {
                 type = TYPE_REFTEST_EQUAL;
                 refURI = testURI;
-
-                // We expect twice as many assertion failures when running in
-                // styloVsGecko mode because we run each test twice: once in
-                // Stylo mode and once in Gecko mode.
-                minAsserts *= 2;
-                maxAsserts *= 2;
-
-                // Skip the test if it is expected to fail in both Stylo and
-                // Gecko modes. It would unexpectedly "pass" in styloVsGecko
-                // mode when comparing the two failures, which is not a useful
-                // result.
-                if (expected_status === EXPECTED_FAIL ||
-                    expected_status === EXPECTED_RANDOM) {
-                    expected_status = EXPECTED_DEATH;
-                }
             }
-
             AddTestItem({ type: type,
                           expected: expected_status,
                           allowSilentFail: allow_silent_fail,
