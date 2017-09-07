@@ -80,7 +80,7 @@
         <org.mozilla.focus.widget.DefaultBrowserPreference
             android:layout="@layout/focus_preference"
             android:key="@string/pref_key_default_browser"
-            android:title="@string/preference_default_browser" />
+            android:title="@string/preference_default_browser2" />
 
         <org.mozilla.focus.widget.TelemetrySwitchPreference
             android:layout="@layout/focus_preference"

@@ -129,9 +129,10 @@
     <string name="preference_performance_block_images">Block images</string>
 
     <!-- This preference does not set Focus as the default browser but instead links to Android's
-     "default apps" screen or if not supported by this Android version to a SUMO page describing
-     how to set Focus as a default browser -->
-    <string name="preference_default_browser">Make default browser</string>
+     "default apps" settings screen or if not supported by this Android version to a SUMO page describing
+     how to set Focus as a default browser.
+      %1$s will be replaced by the app name (e.g. Firefox Focus) -->
+    <string name="preference_default_browser2">Make %1$s default browser</string>
 
     <string name="preference_category_mozilla">Mozilla</string>
     <string name="preference_mozilla_telemetry2">Send usage data</string>
