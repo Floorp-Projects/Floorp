@@ -24,7 +24,7 @@ addLoadEvent(function() {
 });
 
 function nextTest() {
-  var win = window.open("file_bug966552.html", "", "test-966552");
+  var win = window.open("data:text/html,<body onload=\"document.designMode='on'\">test</body>", "", "test-966552");
   win.addEventListener("load", function() {
     runTest(win);
   }, {once: true});

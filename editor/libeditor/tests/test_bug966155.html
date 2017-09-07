@@ -24,7 +24,7 @@ addLoadEvent(function() {
 });
 
 function nextTest() {
-  var win = window.open("file_bug966155.html", "", "test-966155");
+  var win = window.open("data:text/html,<input><iframe onload=\"contentDocument.designMode = 'on';\">", "", "test-966155");
   win.addEventListener("load", function() {
     runTest(win);
   }, {once: true});
