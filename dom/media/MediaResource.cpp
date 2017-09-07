@@ -549,18 +549,6 @@ ChannelMediaResource::OpenChannel()
   MOZ_ASSERT(mChannel);
   MOZ_ASSERT(!mListener, "Listener should have been removed by now");
 
-  // Set the content length, if it's available as an HTTP header.
-  // This ensures that MediaResource wrapping objects for platform libraries
-  // that expect to know the length of a resource can get it before
-  // OnStartRequest() fires.
-  nsCOMPtr<nsIHttpChannel> hc = do_QueryInterface(mChannel);
-  if (hc && !IsPayloadCompressed(hc)) {
-    int64_t cl = -1;
-    if (NS_SUCCEEDED(hc->GetContentLength(&cl)) && cl != -1) {
-      mCacheStream.NotifyDataLength(cl);
-    }
-  }
-
   mListener = new Listener(this);
   nsresult rv = mChannel->SetNotificationCallbacks(mListener.get());
   NS_ENSURE_SUCCESS(rv, rv);
