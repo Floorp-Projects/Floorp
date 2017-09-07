@@ -3413,114 +3413,130 @@ GetObjectSlotNameFunctor::operator()(JS::CallbackTracer* trc, char* buf, size_t 
  */
 
 static void
-dumpValue(const Value& v, FILE* fp)
+dumpValue(const Value& v, js::GenericPrinter& out)
 {
     if (v.isNull())
-        fprintf(fp, "null");
+        out.put("null");
     else if (v.isUndefined())
-        fprintf(fp, "undefined");
+        out.put("undefined");
     else if (v.isInt32())
-        fprintf(fp, "%d", v.toInt32());
+        out.printf("%d", v.toInt32());
     else if (v.isDouble())
-        fprintf(fp, "%g", v.toDouble());
+        out.printf("%g", v.toDouble());
     else if (v.isString())
-        v.toString()->dump(fp);
+        v.toString()->dump(out);
     else if (v.isSymbol())
-        v.toSymbol()->dump(fp);
+        v.toSymbol()->dump(out);
     else if (v.isObject() && v.toObject().is<JSFunction>()) {
         JSFunction* fun = &v.toObject().as<JSFunction>();
         if (fun->displayAtom()) {
-            fputs("<function ", fp);
-            FileEscapedString(fp, fun->displayAtom(), 0);
+            out.put("<function ");
+            EscapedStringPrinter(out, fun->displayAtom(), 0);
         } else {
-            fputs("<unnamed function", fp);
+            out.put("<unnamed function");
         }
         if (fun->hasScript()) {
             JSScript* script = fun->nonLazyScript();
-            fprintf(fp, " (%s:%zu)",
+            out.printf(" (%s:%zu)",
                     script->filename() ? script->filename() : "", script->lineno());
         }
-        fprintf(fp, " at %p>", (void*) fun);
+        out.printf(" at %p>", (void*) fun);
     } else if (v.isObject()) {
         JSObject* obj = &v.toObject();
         const Class* clasp = obj->getClass();
-        fprintf(fp, "<%s%s at %p>",
+        out.printf("<%s%s at %p>",
                 clasp->name,
                 (clasp == &PlainObject::class_) ? "" : " object",
                 (void*) obj);
     } else if (v.isBoolean()) {
         if (v.toBoolean())
-            fprintf(fp, "true");
+            out.put("true");
         else
-            fprintf(fp, "false");
+            out.put("false");
     } else if (v.isMagic()) {
-        fprintf(fp, "<invalid");
+        out.put("<invalid");
 #ifdef DEBUG
         switch (v.whyMagic()) {
-          case JS_ELEMENTS_HOLE:     fprintf(fp, " elements hole");      break;
-          case JS_NO_ITER_VALUE:     fprintf(fp, " no iter value");      break;
-          case JS_GENERATOR_CLOSING: fprintf(fp, " generator closing");  break;
-          case JS_OPTIMIZED_OUT:     fprintf(fp, " optimized out");      break;
-          default:                   fprintf(fp, " ?!");                 break;
+          case JS_ELEMENTS_HOLE:     out.put(" elements hole");      break;
+          case JS_NO_ITER_VALUE:     out.put(" no iter value");      break;
+          case JS_GENERATOR_CLOSING: out.put(" generator closing");  break;
+          case JS_OPTIMIZED_OUT:     out.put(" optimized out");      break;
+          default:                   out.put(" ?!");                 break;
         }
 #endif
-        fprintf(fp, ">");
+        out.putChar('>');
     } else {
-        fprintf(fp, "unexpected value");
+        out.put("unexpected value");
     }
 }
 
+namespace js {
+
+// We don't want jsfriendapi.h to depend on GenericPrinter,
+// so these functions are declared directly in the cpp.
+
 JS_FRIEND_API(void)
-js::DumpValue(const Value& val, FILE* fp)
+DumpValue(const JS::Value& val, js::GenericPrinter& out);
+
+JS_FRIEND_API(void)
+DumpId(jsid id, js::GenericPrinter& out);
+
+JS_FRIEND_API(void)
+DumpInterpreterFrame(JSContext* cx, js::GenericPrinter& out, InterpreterFrame* start = nullptr);
+
+} // namespace js
+
+JS_FRIEND_API(void)
+js::DumpValue(const Value& val, js::GenericPrinter& out)
 {
-    dumpValue(val, fp);
-    fputc('\n', fp);
+    dumpValue(val, out);
+    out.putChar('\n');
 }
 
 JS_FRIEND_API(void)
-js::DumpId(jsid id, FILE* fp)
+js::DumpId(jsid id, js::GenericPrinter& out)
 {
-    fprintf(fp, "jsid %p = ", (void*) JSID_BITS(id));
-    dumpValue(IdToValue(id), fp);
-    fputc('\n', fp);
+    out.printf("jsid %p = ", (void*) JSID_BITS(id));
+    dumpValue(IdToValue(id), out);
+    out.putChar('\n');
 }
 
 static void
-DumpProperty(const NativeObject* obj, Shape& shape, FILE* fp)
+DumpProperty(const NativeObject* obj, Shape& shape, js::GenericPrinter& out)
 {
     jsid id = shape.propid();
     uint8_t attrs = shape.attributes();
 
-    fprintf(fp, "    ((js::Shape*) %p) ", (void*) &shape);
-    if (attrs & JSPROP_ENUMERATE) fprintf(fp, "enumerate ");
-    if (attrs & JSPROP_READONLY) fprintf(fp, "readonly ");
-    if (attrs & JSPROP_PERMANENT) fprintf(fp, "permanent ");
-    if (attrs & JSPROP_SHARED) fprintf(fp, "shared ");
+    out.printf("    ((js::Shape*) %p) ", (void*) &shape);
+    if (attrs & JSPROP_ENUMERATE) out.put("enumerate ");
+    if (attrs & JSPROP_READONLY) out.put("readonly ");
+    if (attrs & JSPROP_PERMANENT) out.put("permanent ");
+    if (attrs & JSPROP_SHARED) out.put("shared ");
 
     if (shape.hasGetterValue())
-        fprintf(fp, "getterValue=%p ", (void*) shape.getterObject());
+        out.printf("getterValue=%p ", (void*) shape.getterObject());
     else if (!shape.hasDefaultGetter())
-        fprintf(fp, "getterOp=%p ", JS_FUNC_TO_DATA_PTR(void*, shape.getterOp()));
+        out.printf("getterOp=%p ", JS_FUNC_TO_DATA_PTR(void*, shape.getterOp()));
 
     if (shape.hasSetterValue())
-        fprintf(fp, "setterValue=%p ", (void*) shape.setterObject());
+        out.printf("setterValue=%p ", (void*) shape.setterObject());
     else if (!shape.hasDefaultSetter())
-        fprintf(fp, "setterOp=%p ", JS_FUNC_TO_DATA_PTR(void*, shape.setterOp()));
+        out.printf("setterOp=%p ", JS_FUNC_TO_DATA_PTR(void*, shape.setterOp()));
 
     if (JSID_IS_ATOM(id) || JSID_IS_INT(id) || JSID_IS_SYMBOL(id))
-        dumpValue(js::IdToValue(id), fp);
+        dumpValue(js::IdToValue(id), out);
     else
-        fprintf(fp, "unknown jsid %p", (void*) JSID_BITS(id));
+        out.printf("unknown jsid %p", (void*) JSID_BITS(id));
 
     uint32_t slot = shape.hasSlot() ? shape.maybeSlot() : SHAPE_INVALID_SLOT;
-    fprintf(fp, ": slot %d", slot);
+    out.printf(": slot %d", slot);
     if (shape.hasSlot()) {
-        fprintf(fp, " = ");
-        dumpValue(obj->getSlot(slot), fp);
+        out.put(" = ");
+        dumpValue(obj->getSlot(slot), out);
     } else if (slot != SHAPE_INVALID_SLOT) {
-        fprintf(fp, " (INVALID!)");
+        out.printf(" (INVALID!)");
     }
-    fprintf(fp, "\n");
+    out.putChar('\n');
 }
 
 bool
@@ -3536,143 +3552,144 @@ JSObject::uninlinedNonProxyIsExtensible() const
 }
 
 void
-JSObject::dump(FILE* fp) const
+JSObject::dump(js::GenericPrinter& out) const
 {
     const JSObject* obj = this;
     JSObject* globalObj = &global();
-    fprintf(fp, "object %p from global %p [%s]\n", (void*) obj,
+    out.printf("object %p from global %p [%s]\n", (void*) obj,
             (void*) globalObj, globalObj->getClass()->name);
     const Class* clasp = obj->getClass();
-    fprintf(fp, "class %p %s\n", (const void*)clasp, clasp->name);
+    out.printf("class %p %s\n", (const void*)clasp, clasp->name);
 
     if (obj->hasLazyGroup()) {
-        fprintf(fp, "lazy group\n");
+        out.put("lazy group\n");
     } else {
         const ObjectGroup* group = obj->group();
-        fprintf(fp, "group %p\n", (const void*)group);
+        out.printf("group %p\n", (const void*)group);
     }
 
-    fprintf(fp, "flags:");
-    if (obj->isDelegate()) fprintf(fp, " delegate");
-    if (!obj->is<ProxyObject>() && !obj->nonProxyIsExtensible()) fprintf(fp, " not_extensible");
-    if (obj->isIndexed()) fprintf(fp, " indexed");
-    if (obj->maybeHasInterestingSymbolProperty()) fprintf(fp, " maybe_has_interesting_symbol");
-    if (obj->isBoundFunction()) fprintf(fp, " bound_function");
-    if (obj->isQualifiedVarObj()) fprintf(fp, " varobj");
-    if (obj->isUnqualifiedVarObj()) fprintf(fp, " unqualified_varobj");
-    if (obj->watched()) fprintf(fp, " watched");
-    if (obj->isIteratedSingleton()) fprintf(fp, " iterated_singleton");
-    if (obj->isNewGroupUnknown()) fprintf(fp, " new_type_unknown");
-    if (obj->hasUncacheableProto()) fprintf(fp, " has_uncacheable_proto");
-    if (obj->hadElementsAccess()) fprintf(fp, " had_elements_access");
-    if (obj->wasNewScriptCleared()) fprintf(fp, " new_script_cleared");
+    out.put("flags:");
+    if (obj->isDelegate()) out.put(" delegate");
+    if (!obj->is<ProxyObject>() && !obj->nonProxyIsExtensible()) out.put(" not_extensible");
+    if (obj->isIndexed()) out.put(" indexed");
+    if (obj->maybeHasInterestingSymbolProperty()) out.put(" maybe_has_interesting_symbol");
+    if (obj->isBoundFunction()) out.put(" bound_function");
+    if (obj->isQualifiedVarObj()) out.put(" varobj");
+    if (obj->isUnqualifiedVarObj()) out.put(" unqualified_varobj");
+    if (obj->watched()) out.put(" watched");
+    if (obj->isIteratedSingleton()) out.put(" iterated_singleton");
+    if (obj->isNewGroupUnknown()) out.put(" new_type_unknown");
+    if (obj->hasUncacheableProto()) out.put(" has_uncacheable_proto");
+    if (obj->hadElementsAccess()) out.put(" had_elements_access");
+    if (obj->wasNewScriptCleared()) out.put(" new_script_cleared");
     if (obj->hasStaticPrototype() && obj->staticPrototypeIsImmutable())
-        fprintf(fp, " immutable_prototype");
+        out.put(" immutable_prototype");
 
     if (obj->isNative()) {
         const NativeObject* nobj = &obj->as<NativeObject>();
         if (nobj->inDictionaryMode())
-            fprintf(fp, " inDictionaryMode");
+            out.put(" inDictionaryMode");
         if (nobj->hasShapeTable())
-            fprintf(fp, " hasShapeTable");
+            out.put(" hasShapeTable");
     }
-    fprintf(fp, "\n");
+    out.putChar('\n');
 
     if (obj->isNative()) {
         const NativeObject* nobj = &obj->as<NativeObject>();
         uint32_t slots = nobj->getDenseInitializedLength();
         if (slots) {
-            fprintf(fp, "elements\n");
+            out.put("elements\n");
             for (uint32_t i = 0; i < slots; i++) {
-                fprintf(fp, " %3d: ", i);
-                dumpValue(nobj->getDenseElement(i), fp);
-                fprintf(fp, "\n");
-                fflush(fp);
+                out.printf(" %3d: ", i);
+                dumpValue(nobj->getDenseElement(i), out);
+                out.putChar('\n');
+                out.flush();
             }
         }
     }
 
-    fprintf(fp, "proto ");
+    out.put("proto ");
     TaggedProto proto = obj->taggedProto();
     if (proto.isDynamic())
-        fprintf(fp, "<dynamic>");
+        out.put("<dynamic>");
     else
-        dumpValue(ObjectOrNullValue(proto.toObjectOrNull()), fp);
-    fputc('\n', fp);
+        dumpValue(ObjectOrNullValue(proto.toObjectOrNull()), out);
+    out.putChar('\n');
 
     if (clasp->flags & JSCLASS_HAS_PRIVATE)
-        fprintf(fp, "private %p\n", obj->as<NativeObject>().getPrivate());
+        out.printf("private %p\n", obj->as<NativeObject>().getPrivate());
 
     if (!obj->isNative())
-        fprintf(fp, "not native\n");
+        out.put("not native\n");
 
     uint32_t reservedEnd = JSCLASS_RESERVED_SLOTS(clasp);
     uint32_t slots = obj->isNative() ? obj->as<NativeObject>().slotSpan() : 0;
     uint32_t stop = obj->isNative() ? reservedEnd : slots;
     if (stop > 0)
-        fprintf(fp, obj->isNative() ? "reserved slots:\n" : "slots:\n");
+        out.printf(obj->isNative() ? "reserved slots:\n" : "slots:\n");
     for (uint32_t i = 0; i < stop; i++) {
-        fprintf(fp, " %3d ", i);
+        out.printf(" %3d ", i);
         if (i < reservedEnd)
-            fprintf(fp, "(reserved) ");
-        fprintf(fp, "= ");
-        dumpValue(obj->as<NativeObject>().getSlot(i), fp);
-        fputc('\n', fp);
+            out.printf("(reserved) ");
+        out.put("= ");
+        dumpValue(obj->as<NativeObject>().getSlot(i), out);
+        out.putChar('\n');
     }
 
     if (obj->isNative()) {
-        fprintf(fp, "properties:\n");
+        out.put("properties:\n");
         Vector<Shape*, 8, SystemAllocPolicy> props;
         for (Shape::Range<NoGC> r(obj->as<NativeObject>().lastProperty()); !r.empty(); r.popFront()) {
             if (!props.append(&r.front())) {
-                fprintf(fp, "(OOM while appending properties)\n");
+                out.printf("(OOM while appending properties)\n");
                 break;
             }
         }
         for (size_t i = props.length(); i-- != 0;)
-            DumpProperty(&obj->as<NativeObject>(), *props[i], fp);
+            DumpProperty(&obj->as<NativeObject>(), *props[i], out);
     }
-    fputc('\n', fp);
+    out.putChar('\n');
 }
 
 // For debuggers.
 void
 JSObject::dump() const
 {
-    dump(stderr);
+    Fprinter out(stderr);
+    dump(out);
 }
 
 static void
-MaybeDumpScope(Scope* scope, FILE* fp)
+MaybeDumpScope(Scope* scope, js::GenericPrinter& out)
 {
     if (scope) {
-        fprintf(fp, "  scope: %s\n", ScopeKindString(scope->kind()));
+        out.printf("  scope: %s\n", ScopeKindString(scope->kind()));
         for (BindingIter bi(scope); bi; bi++) {
-            fprintf(fp, "    ");
-            dumpValue(StringValue(bi.name()), fp);
-            fputc('\n', fp);
+            out.put("    ");
+            dumpValue(StringValue(bi.name()), out);
+            out.putChar('\n');
         }
     }
 }
 
 static void
-MaybeDumpValue(const char* name, const Value& v, FILE* fp)
+MaybeDumpValue(const char* name, const Value& v, js::GenericPrinter& out)
 {
     if (!v.isNull()) {
-        fprintf(fp, "  %s: ", name);
-        dumpValue(v, fp);
-        fputc('\n', fp);
+        out.printf("  %s: ", name);
+        dumpValue(v, out);
+        out.putChar('\n');
     }
 }
 
 JS_FRIEND_API(void)
-js::DumpInterpreterFrame(JSContext* cx, FILE* fp, InterpreterFrame* start)
+js::DumpInterpreterFrame(JSContext* cx, js::GenericPrinter& out, InterpreterFrame* start)
 {
     /* This should only called during live debugging. */
     ScriptFrameIter i(cx);
     if (!start) {
         if (i.done()) {
-            fprintf(fp, "no stack for cx = %p\n", (void*) cx);
+            out.printf("no stack for cx = %p\n", (void*) cx);
             return;
         }
     } else {
@@ -3680,7 +3697,7 @@ js::DumpInterpreterFrame(JSContext* cx, FILE* fp, InterpreterFrame* start)
             ++i;
 
         if (i.done()) {
-            fprintf(fp, "fp = %p not found in cx = %p\n",
+            out.printf("fp = %p not found in cx = %p\n",
                     (void*)start, (void*)cx);
             return;
         }
@@ -3688,60 +3705,77 @@ js::DumpInterpreterFrame(JSContext* cx, FILE* fp, InterpreterFrame* start)
 
     for (; !i.done(); ++i) {
         if (i.isJSJit())
-            fprintf(fp, "JIT frame\n");
+            out.put("JIT frame\n");
         else
-            fprintf(fp, "InterpreterFrame at %p\n", (void*) i.interpFrame());
+            out.printf("InterpreterFrame at %p\n", (void*) i.interpFrame());
 
         if (i.isFunctionFrame()) {
-            fprintf(fp, "callee fun: ");
+            out.put("callee fun: ");
             RootedValue v(cx);
             JSObject* fun = i.callee(cx);
             v.setObject(*fun);
-            dumpValue(v, fp);
+            dumpValue(v, out);
         } else {
-            fprintf(fp, "global or eval frame, no callee");
+            out.put("global or eval frame, no callee");
         }
-        fputc('\n', fp);
+        out.putChar('\n');
 
-        fprintf(fp, "file %s line %zu\n",
+        out.printf("file %s line %zu\n",
                 i.script()->filename(), i.script()->lineno());
 
         if (jsbytecode* pc = i.pc()) {
-            fprintf(fp, "  pc = %p\n", pc);
-            fprintf(fp, "  current op: %s\n", CodeName[*pc]);
-            MaybeDumpScope(i.script()->lookupScope(pc), fp);
+            out.printf("  pc = %p\n", pc);
+            out.printf("  current op: %s\n", CodeName[*pc]);
+            MaybeDumpScope(i.script()->lookupScope(pc), out);
         }
         if (i.isFunctionFrame())
-            MaybeDumpValue("this", i.thisArgument(cx), fp);
+            MaybeDumpValue("this", i.thisArgument(cx), out);
         if (!i.isJSJit()) {
-            fprintf(fp, "  rval: ");
-            dumpValue(i.interpFrame()->returnValue(), fp);
-            fputc('\n', fp);
+            out.put("  rval: ");
+            dumpValue(i.interpFrame()->returnValue(), out);
+            out.putChar('\n');
         }
 
-        fprintf(fp, "  flags:");
+        out.put("  flags:");
         if (i.isConstructing())
-            fprintf(fp, " constructing");
+            out.put(" constructing");
         if (!i.isJSJit() && i.interpFrame()->isDebuggerEvalFrame())
-            fprintf(fp, " debugger eval");
+            out.put(" debugger eval");
         if (i.isEvalFrame())
-            fprintf(fp, " eval");
-        fputc('\n', fp);
+            out.put(" eval");
+        out.putChar('\n');
 
-        fprintf(fp, "  envChain: (JSObject*) %p\n", (void*) i.environmentChain(cx));
+        out.printf("  envChain: (JSObject*) %p\n", (void*) i.environmentChain(cx));
 
-        fputc('\n', fp);
+        out.putChar('\n');
     }
 }
 
 #endif /* DEBUG */
 
+namespace js {
+
+// We don't want jsfriendapi.h to depend on GenericPrinter,
+// so these functions are declared directly in the cpp.
+
+JS_FRIEND_API(void)
+DumpBacktrace(JSContext* cx, js::GenericPrinter& out);
+
+}
+
 JS_FRIEND_API(void)
 js::DumpBacktrace(JSContext* cx, FILE* fp)
 {
+    Fprinter out(fp);
+    js::DumpBacktrace(cx, out);
+}
+
+JS_FRIEND_API(void)
+js::DumpBacktrace(JSContext* cx, js::GenericPrinter& out)
+{
     Sprinter sprinter(cx, false);
     if (!sprinter.init()) {
-        fprintf(fp, "js::DumpBacktrace: OOM\n");
+        out.put("js::DumpBacktrace: OOM\n");
         return;
     }
     size_t depth = 0;
@@ -3772,7 +3806,7 @@ js::DumpBacktrace(JSContext* cx, FILE* fp)
             sprinter.printf(" (%p)\n", i.pc());
         }
     }
-    fprintf(fp, "%s", sprinter.string());
+    out.printf("%s", sprinter.string());
 #ifdef XP_WIN32
     if (IsDebuggerPresent())
         OutputDebugStringA(sprinter.string());

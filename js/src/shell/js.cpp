@@ -93,6 +93,7 @@
 #include "vm/HelperThreads.h"
 #include "vm/Monitor.h"
 #include "vm/MutexIDs.h"
+#include "vm/Printer.h"
 #include "vm/Shape.h"
 #include "vm/SharedArrayObject.h"
 #include "vm/StringBuffer.h"
@@ -4310,8 +4311,9 @@ Parse(JSContext* cx, unsigned argc, Value* vp)
     if (!pn)
         return false;
 #ifdef DEBUG
-    DumpParseTree(pn);
-    fputc('\n', stderr);
+    js::Fprinter out(stderr);
+    DumpParseTree(pn, out);
+    out.putChar('\n');
 #endif
     args.rval().setUndefined();
     return true;
