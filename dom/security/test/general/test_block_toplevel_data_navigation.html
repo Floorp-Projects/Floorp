@@ -65,7 +65,19 @@ function test4() {
     // loaded, hence we rather rely on document.body than document.location
     is(win4.document.body.innerHTML, "",
       "navigating to a data: URI using window.open() should be blocked");
-    win4.close();
+    test5();
+  }, 1000);
+}
+
+function test5() {
+  // navigating to a URI which redirects to a data: URI using window.open() should be blocked
+  let win5 = window.open("file_block_toplevel_data_redirect.sjs");
+  setTimeout(function () {
+    // Please note that the data: URI will be displayed in the URL-Bar but not
+    // loaded, hence we rather rely on document.body than document.location
+    is(SpecialPowers.wrap(win5).document.body.innerHTML, "",
+      "navigating to URI which redirects to a data: URI using window.open() should be blocked");
+    win5.close();
     SimpleTest.finish();
   }, 1000);
 }

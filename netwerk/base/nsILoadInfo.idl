@@ -507,15 +507,17 @@ interface nsILoadInfo : nsISupports
   /**
    * These are the window IDs of the window in which the element being
    * loaded lives. parentOuterWindowID is the window ID of this window's
-   * parent.
+   * parent. topOuterWindowID is the ID of the top-level window of the same
+   * docShell type.
    *
    * Note that these window IDs can be 0 if the window is not
-   * available. parentOuterWindowID will be the same as outerWindowID if the
-   * window has no parent.
+   * available. parentOuterWindowID and topOuterWindowID will be the same as
+   * outerWindowID if the window has no parent.
    */
   [infallible] readonly attribute unsigned long long innerWindowID;
   [infallible] readonly attribute unsigned long long outerWindowID;
   [infallible] readonly attribute unsigned long long parentOuterWindowID;
+  [infallible] readonly attribute unsigned long long topOuterWindowID;
 
   /**
    * Only when the element being loaded is <frame src="foo.html">

@@ -193,7 +193,6 @@ var CustomizableUIInternal = {
       "home-button",
       "spring",
       "urlbar-container",
-      "search-container",
       "spring",
       "downloads-button",
       "library-button",
@@ -4181,7 +4180,7 @@ OverflowableToolbar.prototype = {
 
     let chevronId = this._toolbar.getAttribute("overflowbutton");
     this._chevron = doc.getElementById(chevronId);
-    this._chevron.addEventListener("command", this);
+    this._chevron.addEventListener("mousedown", this);
     this._chevron.addEventListener("dragover", this);
     this._chevron.addEventListener("dragend", this);
 
@@ -4230,7 +4229,7 @@ OverflowableToolbar.prototype = {
       case "aftercustomization":
         this._enable();
         break;
-      case "command":
+      case "mousedown":
         if (aEvent.target == this._chevron) {
           this._onClickChevron(aEvent);
         } else {

@@ -497,10 +497,10 @@ TEST(RtpPacketTest, RawExtensionFunctionsAcceptZeroIdAndReturnFalse) {
   ASSERT_TRUE(packet.Parse(kPacket, sizeof(kPacket)));
 
   EXPECT_FALSE(packet.HasRawExtension(kInvalidId));
-  EXPECT_THAT(packet.GetRawExtension(kInvalidId), IsEmpty());
+  EXPECT_THAT(packet.GetRawExtension(kInvalidId), testing::IsEmpty());
   const uint8_t kExtension[] = {'e', 'x', 't'};
   EXPECT_FALSE(packet.SetRawExtension(kInvalidId, kExtension));
-  EXPECT_THAT(packet.AllocateRawExtension(kInvalidId, 3), IsEmpty());
+  EXPECT_THAT(packet.AllocateRawExtension(kInvalidId, 3), testing::IsEmpty());
 }
 
 }  // namespace webrtc

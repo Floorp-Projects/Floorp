@@ -41,7 +41,8 @@ enum pref_initPhase {
 #endif
 
 namespace mozilla {
-
+struct Ok;
+template <typename V, typename E> class Result;
 namespace dom {
 class PrefSetting;
 } // namespace dom
@@ -61,7 +62,7 @@ public:
 
   Preferences();
 
-  nsresult Init();
+  mozilla::Result<Ok, const char*> Init();
 
   /**
    * Returns true if the Preferences service is available, false otherwise.

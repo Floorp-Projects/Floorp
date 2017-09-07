@@ -941,6 +941,9 @@ ControlFlowGenerator::processWhileOrForInLoop(jssrcnote* sn)
     if (LoopEntryCanIonOsr(loopEntry))
         ins->setCanOsr();
 
+    if (SN_TYPE(sn) == SRC_FOR_IN)
+        ins->setIsForIn();
+
     current->setStopIns(ins);
     current->setStopPc(pc);
 

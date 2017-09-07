@@ -10,7 +10,7 @@ add_task(async function() {
   let navbar = document.getElementById(CustomizableUI.AREA_NAVBAR);
   ok(!navbar.hasAttribute("overflowing"), "Should start with a non-overflowing toolbar.");
   let oldChildCount = navbar.customizationTarget.childElementCount;
-  window.resizeTo(400, window.outerHeight);
+  window.resizeTo(kForceOverflowWidthPx, window.outerHeight);
   await waitForCondition(() => navbar.hasAttribute("overflowing"));
   ok(navbar.hasAttribute("overflowing"), "Should have an overflowing toolbar.");
 

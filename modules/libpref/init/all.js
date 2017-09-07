@@ -5077,13 +5077,10 @@ pref("dom.battery.enabled", true);
 pref("dom.streams.enabled", false);
 
 // Abort API
-#ifdef NIGHTLY_BUILD
 pref("dom.abortController.enabled", true);
+
+// Fetch + Abort API
 pref("dom.abortController.fetch.enabled", true);
-#else
-pref("dom.abortController.enabled", false);
-pref("dom.abortController.fetch.enabled", false);
-#endif
 
 // Push
 

@@ -38,7 +38,11 @@ interface MatchPattern {
    * If explicit is true, only explicit domain matches, without wildcards, are
    * considered.
    */
+  [Throws]
   boolean matches(URI uri, optional boolean explicit = false);
+
+  [Throws]
+  boolean matches(DOMString url, optional boolean explicit = false);
 
   /**
    * Returns true if a URL exists which a) would be able to access the given
@@ -78,7 +82,11 @@ interface MatchPatternSet {
    * If explicit is true, only explicit domain matches, without wildcards, are
    * considered.
    */
+  [Throws]
   boolean matches(URI uri, optional boolean explicit = false);
+
+  [Throws]
+  boolean matches(DOMString url, optional boolean explicit = false);
 
   /**
    * Returns true if any sub-pattern matches the given cookie.

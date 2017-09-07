@@ -106,6 +106,12 @@ function promiseContentSearchReady(browser) {
   });
 }
 
+add_task(async function() {
+  await SpecialPowers.pushPrefEnv({ set: [
+    ["browser.search.widget.inNavBar", true],
+  ]});
+});
+
 for (let engine of SEARCH_ENGINE_DETAILS) {
   add_task(async function() {
     let previouslySelectedEngine = Services.search.currentEngine;

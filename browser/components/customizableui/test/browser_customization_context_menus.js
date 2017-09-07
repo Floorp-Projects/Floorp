@@ -145,6 +145,11 @@ add_task(async function urlbar_context() {
 // Right-click on the searchbar and moving it to the menu
 // and back should move the search-container instead.
 add_task(async function searchbar_context_move_to_panel_and_back() {
+  // This is specifically testing the addToPanel function for the search bar, so
+  // we have to move it to its correct position in the navigation toolbar first.
+  // The preference will be restored when the customizations are reset later.
+  Services.prefs.setBoolPref("browser.search.widget.inNavBar", true);
+
   let searchbar = document.getElementById("searchbar");
   gCustomizeMode.addToPanel(searchbar);
   let placement = CustomizableUI.getPlacementOfWidget("search-container");
@@ -167,7 +172,7 @@ add_task(async function searchbar_context_move_to_panel_and_back() {
   is(placement, null, "Should be in palette");
   CustomizableUI.reset();
   placement = CustomizableUI.getPlacementOfWidget("search-container");
-  is(placement.area, CustomizableUI.AREA_NAVBAR, "Should be in navbar");
+  is(placement, null, "Should be in palette");
 });
 
 // Right-click on an item within the panel should

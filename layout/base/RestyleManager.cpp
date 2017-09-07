@@ -1504,9 +1504,7 @@ RestyleManager::ProcessRestyledFrames(nsStyleChangeList& aChangeList)
       // on elements whose frames are reconstructed, since we depend on
       // the reconstruction happening synchronously.
       frameConstructor->RecreateFramesForContent(
-        content,
-        nsCSSFrameConstructor::InsertionKind::Sync,
-        nsCSSFrameConstructor::REMOVE_FOR_RECONSTRUCTION);
+        content, nsCSSFrameConstructor::InsertionKind::Sync);
     } else {
       NS_ASSERTION(frame, "This shouldn't happen");
 

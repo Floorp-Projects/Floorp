@@ -552,19 +552,23 @@ class CFGBackEdge : public CFGUnaryControlInstruction
 class CFGLoopEntry : public CFGUnaryControlInstruction
 {
     bool canOsr_;
+    bool isForIn_;
     size_t stackPhiCount_;
     jsbytecode* loopStopPc_;
 
     CFGLoopEntry(CFGBlock* block, size_t stackPhiCount)
       : CFGUnaryControlInstruction(block),
         canOsr_(false),
+        isForIn_(false),
         stackPhiCount_(stackPhiCount),
         loopStopPc_(nullptr)
     {}
 
-    CFGLoopEntry(CFGBlock* block, bool canOsr, size_t stackPhiCount, jsbytecode* loopStopPc)
+    CFGLoopEntry(CFGBlock* block, bool canOsr, bool isForIn, size_t stackPhiCount,
+                 jsbytecode* loopStopPc)
       : CFGUnaryControlInstruction(block),
         canOsr_(canOsr),
+        isForIn_(isForIn),
         stackPhiCount_(stackPhiCount),
         loopStopPc_(loopStopPc)
     {}
@@ -576,8 +580,8 @@ class CFGLoopEntry : public CFGUnaryControlInstruction
     static CFGLoopEntry* CopyWithNewTargets(TempAllocator& alloc, CFGLoopEntry* old,
                                             CFGBlock* loopEntry)
     {
-        return new(alloc) CFGLoopEntry(loopEntry, old->canOsr(), old->stackPhiCount(),
-                                       old->loopStopPc());
+        return new(alloc) CFGLoopEntry(loopEntry, old->canOsr(), old->isForIn(),
+                                       old->stackPhiCount(), old->loopStopPc());
     }
 
     void setCanOsr() {
@@ -586,6 +590,13 @@ class CFGLoopEntry : public CFGUnaryControlInstruction
 
     bool canOsr() const {
         return canOsr_;
+    }
+
+    void setIsForIn() {
+        isForIn_ = true;
+    }
+    bool isForIn() const {
+        return isForIn_;
     }
 
     size_t stackPhiCount() const {

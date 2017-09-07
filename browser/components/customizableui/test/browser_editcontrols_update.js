@@ -128,7 +128,7 @@ add_task(async function test_panelui_customize_to_toolbar() {
     CustomizableUI.reset();
   });
 
-  window.resizeTo(400, window.outerHeight);
+  window.resizeTo(kForceOverflowWidthPx, window.outerHeight);
   await waitForCondition(() => navbar.hasAttribute("overflowing"));
 
   // Mac will update the enabled state even when the buttons are overflowing,

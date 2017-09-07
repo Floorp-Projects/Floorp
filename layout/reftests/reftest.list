@@ -296,7 +296,10 @@ include ../../dom/plugins/test/reftest/reftest.list
 include position-dynamic-changes/reftest.list
 
 # printing
-include printing/reftest.list
+# SkiaPDF is required for printing tests to control printing to PDF files.
+skip-if(!skiaPdf||styloVsGecko) include printing/reftest.list
+
+# pagination
 include pagination/reftest.list
 
 # <style scoped>

@@ -27,6 +27,8 @@ var {synthesizeDragStart, synthesizeDrop} = EventUtils;
 const kNSXUL = "http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul";
 const kTabEventFailureTimeoutInMs = 20000;
 
+const kForceOverflowWidthPx = 300;
+
 function createDummyXULButton(id, label, win = window) {
   let btn = document.createElementNS(kNSXUL, "toolbarbutton");
   btn.id = id;

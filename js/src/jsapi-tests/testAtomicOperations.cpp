@@ -227,4 +227,81 @@ BEGIN_TEST(testAtomicOperationsI64)
 }
 END_TEST(testAtomicOperationsI64)
 
+// T is the primitive float type we're testing, and A and B are references to
+// constant bindings holding values of that type.
+//
+// Stay away from 0, NaN, infinities, and denormals.
+
+#define ATOMIC_FLOAT_TESTS(T, A, B) \
+    T* q = (T*)hidePointerValue((void*)atomicMem);                      \
+    *q = A;                                                             \
+    SharedMem<T*> p = SharedMem<T*>::shared((T*)hidePointerValue((T*)atomicMem)); \
+    CHECK(*q == A);                                                     \
+    CHECK(jit::AtomicOperations::loadSafeWhenRacy(p) == A);             \
+    jit::AtomicOperations::storeSafeWhenRacy(p, B);                     \
+    CHECK(*q == B);                                                     \
+    T* q2 = (T*)hidePointerValue((void*)atomicMem2);                    \
+    SharedMem<T*> p2 = SharedMem<T*>::shared((T*)hidePointerValue((void*)atomicMem2)); \
+    *q = A;                                                             \
+    *q2 = B;                                                            \
+    jit::AtomicOperations::memcpySafeWhenRacy(p2, p, sizeof(T));        \
+    CHECK(*q2 == A);                                                    \
+    *q = A;                                                             \
+    *q2 = B;                                                            \
+    jit::AtomicOperations::memcpySafeWhenRacy(p2, p.unwrap(), sizeof(T));\
+    CHECK(*q2 == A);                                                    \
+    *q = A;                                                             \
+    *q2 = B;                                                            \
+    jit::AtomicOperations::memcpySafeWhenRacy(p2.unwrap(), p, sizeof(T));\
+    CHECK(*q2 == A);                                                    \
+    *q = A;                                                             \
+    *q2 = B;                                                            \
+    jit::AtomicOperations::memmoveSafeWhenRacy(p2, p, sizeof(T));       \
+    CHECK(*q2 == A);                                                    \
+    *q = A;                                                             \
+    *q2 = B;                                                            \
+    jit::AtomicOperations::podCopySafeWhenRacy(p2, p, 1);               \
+    CHECK(*q2 == A);                                                    \
+    *q = A;                                                             \
+    *q2 = B;                                                            \
+    jit::AtomicOperations::podMoveSafeWhenRacy(p2, p, 1);               \
+    CHECK(*q2 == A);                                                    \
+    return true
+
+BEGIN_TEST(testAtomicOperationsF32)
+{
+    const float A(123.25);
+    const float B(-987.75);
+    ATOMIC_FLOAT_TESTS(float, A, B);
+}
+END_TEST(testAtomicOperationsF32)
+
+BEGIN_TEST(testAtomicOperationsF64)
+{
+    const double A(123.25);
+    const double B(-987.75);
+    ATOMIC_FLOAT_TESTS(double, A, B);
+}
+END_TEST(testAtomicOperationsF64)
+
+#define ATOMIC_CLAMPED_TESTS(T, A, B) \
+    T* q = (T*)hidePointerValue((void*)atomicMem);                      \
+    *q = A;                                                             \
+    SharedMem<T*> p = SharedMem<T*>::shared((T*)hidePointerValue((T*)atomicMem)); \
+    CHECK(*q == A);                                                     \
+    CHECK(jit::AtomicOperations::loadSafeWhenRacy(p) == A);             \
+    jit::AtomicOperations::storeSafeWhenRacy(p, B);                     \
+    CHECK(*q == B);                                                     \
+    return true
+
+BEGIN_TEST(testAtomicOperationsU8Clamped)
+{
+    const uint8_clamped A(0xab);
+    const uint8_clamped B(0x37);
+    ATOMIC_CLAMPED_TESTS(uint8_clamped, A, B);
+}
+END_TEST(testAtomicOperationsU8Clamped)
+
 #undef ATOMIC_TESTS
+#undef ATOMIC_FLOAT_TESTS
+#undef ATOMIC_CLAMPED_TESTS

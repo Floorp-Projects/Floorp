@@ -4,9 +4,10 @@
 // the background color and the color of the navbar text fields are applied properly.
 
 add_task(async function setup() {
-  await SpecialPowers.pushPrefEnv({
-    set: [["extensions.webextensions.themes.enabled", true]],
-  });
+  await SpecialPowers.pushPrefEnv({set: [
+    ["extensions.webextensions.themes.enabled", true],
+    ["browser.search.widget.inNavBar", true],
+  ]});
 });
 
 add_task(async function test_support_toolbar_field_properties() {

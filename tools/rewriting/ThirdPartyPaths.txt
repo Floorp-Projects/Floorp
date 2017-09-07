@@ -42,7 +42,6 @@ media/libvpx/
 media/libyuv/
 media/mtransport/third_party/
 media/openmax_dl/
-media/pocketsphinx/
 media/sphinxbase/
 media/webrtc/signaling/src/sdp/sipcc/
 media/webrtc/trunk/

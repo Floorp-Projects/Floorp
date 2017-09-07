@@ -40,6 +40,7 @@ const MonitorPanel = createClass({
     request: PropTypes.object,
     // Service to enable the source map feature.
     sourceMapService: PropTypes.object,
+    openLink: PropTypes.func,
     updateRequest: PropTypes.func.isRequired,
   },
 
@@ -104,7 +105,13 @@ const MonitorPanel = createClass({
   },
 
   render() {
-    let { isEmpty, networkDetailsOpen, sourceMapService } = this.props;
+    let {
+      isEmpty,
+      networkDetailsOpen,
+      sourceMapService,
+      openLink
+    } = this.props;
+
     let initialWidth = Services.prefs.getIntPref(
         "devtools.netmonitor.panes-network-details-width");
     let initialHeight = Services.prefs.getIntPref(
@@ -123,6 +130,7 @@ const MonitorPanel = createClass({
           endPanel: networkDetailsOpen && NetworkDetailsPanel({
             ref: "endPanel",
             sourceMapService,
+            openLink,
           }),
           endPanelCollapsed: !networkDetailsOpen,
           endPanelControl: true,

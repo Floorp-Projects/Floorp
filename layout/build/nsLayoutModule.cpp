@@ -93,9 +93,6 @@
 #ifdef MOZ_WEBSPEECH_TEST_BACKEND
 #include "mozilla/dom/FakeSpeechRecognitionService.h"
 #endif
-#ifdef MOZ_WEBSPEECH_POCKETSPHINX
-#include "mozilla/dom/PocketSphinxSpeechRecognitionService.h"
-#endif
 #ifdef MOZ_WEBSPEECH
 #include "mozilla/dom/nsSynthVoiceRegistry.h"
 #endif
@@ -528,9 +525,6 @@ NS_GENERIC_FACTORY_SINGLETON_CONSTRUCTOR(FlyWebService, FlyWebService::GetOrCrea
 #ifdef MOZ_WEBSPEECH_TEST_BACKEND
 NS_GENERIC_FACTORY_CONSTRUCTOR(FakeSpeechRecognitionService)
 #endif
-#ifdef MOZ_WEBSPEECH_POCKETSPHINX
-NS_GENERIC_FACTORY_CONSTRUCTOR(PocketSphinxSpeechRecognitionService)
-#endif
 
 NS_GENERIC_FACTORY_CONSTRUCTOR(nsContentSecurityManager)
 NS_GENERIC_FACTORY_CONSTRUCTOR(nsCSPContext)
@@ -684,9 +678,6 @@ NS_DEFINE_NAMED_CID(NS_TIMESERVICE_CID);
 NS_DEFINE_NAMED_CID(NS_MEDIAMANAGERSERVICE_CID);
 #ifdef MOZ_WEBSPEECH_TEST_BACKEND
 NS_DEFINE_NAMED_CID(NS_FAKE_SPEECH_RECOGNITION_SERVICE_CID);
-#endif
-#ifdef MOZ_WEBSPEECH_POCKETSPHINX
-NS_DEFINE_NAMED_CID(NS_POCKETSPHINX_SPEECH_RECOGNITION_SERVICE_CID);
 #endif
 #ifdef MOZ_WEBSPEECH
 NS_DEFINE_NAMED_CID(NS_SYNTHVOICEREGISTRY_CID);
@@ -925,9 +916,6 @@ static const mozilla::Module::CIDEntry kLayoutCIDs[] = {
 #ifdef MOZ_WEBSPEECH_TEST_BACKEND
   { &kNS_FAKE_SPEECH_RECOGNITION_SERVICE_CID, false, nullptr, FakeSpeechRecognitionServiceConstructor },
 #endif
-#ifdef MOZ_WEBSPEECH_POCKETSPHINX
-  { &kNS_POCKETSPHINX_SPEECH_RECOGNITION_SERVICE_CID, false, nullptr, PocketSphinxSpeechRecognitionServiceConstructor },
-#endif
 #ifdef MOZ_WEBSPEECH
   { &kNS_SYNTHVOICEREGISTRY_CID, true, nullptr, nsSynthVoiceRegistryConstructor },
 #endif
@@ -1053,9 +1041,6 @@ static const mozilla::Module::ContractIDEntry kLayoutContracts[] = {
   { "@mozilla.org/focus-manager;1", &kNS_FOCUSMANAGER_CID },
 #ifdef MOZ_WEBSPEECH_TEST_BACKEND
   { NS_SPEECH_RECOGNITION_SERVICE_CONTRACTID_PREFIX "fake", &kNS_FAKE_SPEECH_RECOGNITION_SERVICE_CID },
-#endif
-#ifdef MOZ_WEBSPEECH_POCKETSPHINX
-  { NS_SPEECH_RECOGNITION_SERVICE_CONTRACTID_PREFIX "pocketsphinx-en-US", &kNS_POCKETSPHINX_SPEECH_RECOGNITION_SERVICE_CID },
 #endif
 #ifdef MOZ_WEBSPEECH
   { NS_SYNTHVOICEREGISTRY_CONTRACTID, &kNS_SYNTHVOICEREGISTRY_CID },
