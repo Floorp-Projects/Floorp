@@ -202,12 +202,6 @@
   transform: scaleX(-1);
 }
 
-.urlbar-go-button:hover,
-.search-go-button:hover {
-  fill: #058b00;
-  fill-opacity: 1;
-}
-
 .urlbar-history-dropmarker {
   -moz-appearance: none;
   list-style-image: url(chrome://global/skin/icons/arrow-dropdown-16.svg);
