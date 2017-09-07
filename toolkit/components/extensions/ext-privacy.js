@@ -138,6 +138,16 @@ ExtensionPreferencesManager.addSetting("websites.referrersEnabled", {
   },
 });
 
+ExtensionPreferencesManager.addSetting("websites.resistFingerprinting", {
+  prefNames: [
+    "privacy.resistFingerprinting",
+  ],
+
+  setCallback(value) {
+    return {[this.prefNames[0]]: value};
+  },
+});
+
 ExtensionPreferencesManager.addSetting("websites.trackingProtectionMode", {
   prefNames: [
     "privacy.trackingprotection.enabled",
@@ -225,6 +235,11 @@ this.privacy = class extends ExtensionAPI {
             "websites.referrersEnabled",
             () => {
               return Preferences.get("network.http.sendRefererHeader") !== 0;
+            }),
+          resistFingerprinting: getPrivacyAPI(extension,
+            "websites.resistFingerprinting",
+            () => {
+              return Preferences.get("privacy.resistFingerprinting");
             }),
           trackingProtectionMode: getPrivacyAPI(extension,
             "websites.trackingProtectionMode",
