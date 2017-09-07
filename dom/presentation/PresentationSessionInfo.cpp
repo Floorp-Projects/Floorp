@@ -645,6 +645,10 @@ PresentationControllingInfo::Shutdown(nsresult aReason)
 nsresult
 PresentationControllingInfo::GetAddress()
 {
+  if (nsContentUtils::ShouldResistFingerprinting()) {
+    return NS_ERROR_FAILURE;
+  }
+
 #if defined(MOZ_WIDGET_ANDROID)
   RefPtr<PresentationNetworkHelper> networkHelper =
     new PresentationNetworkHelper(this,

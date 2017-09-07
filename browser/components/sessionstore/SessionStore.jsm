@@ -158,7 +158,6 @@ Cu.import("resource://gre/modules/TelemetryStopwatch.jsm", this);
 Cu.import("resource://gre/modules/TelemetryTimestamps.jsm", this);
 Cu.import("resource://gre/modules/Timer.jsm", this);
 Cu.import("resource://gre/modules/XPCOMUtils.jsm", this);
-Cu.import("resource://gre/modules/debug.js", this);
 Cu.import("resource://gre/modules/osfile.jsm", this);
 
 XPCOMUtils.defineLazyServiceGetters(this, {
@@ -2158,9 +2157,6 @@ var SessionStoreInternal = {
    *        The <xul:browser> that is now in the crashed state.
    */
   onBrowserCrashed(aBrowser) {
-    NS_ASSERT(aBrowser.isRemoteBrowser,
-              "Only remote browsers should be able to crash");
-
     this.enterCrashedState(aBrowser);
     // The browser crashed so we might never receive flush responses.
     // Resolve all pending flush requests for the crashed browser.
@@ -2896,7 +2892,12 @@ var SessionStoreInternal = {
    */
   navigateAndRestore(tab, loadArguments, historyIndex) {
     let window = tab.ownerGlobal;
-    NS_ASSERT(window.__SSi, "tab's window must be tracked");
+
+    if (!window.__SSi) {
+      Cu.reportError("Tab's window must be tracked.");
+      return;
+    }
+
     let browser = tab.linkedBrowser;
 
     // Were we already waiting for a flush from a previous call to
@@ -3644,11 +3645,14 @@ var SessionStoreInternal = {
 
   // Restores the given tab state for a given tab.
   restoreTab(tab, tabData, options = {}) {
-    NS_ASSERT(!tab.linkedBrowser.__SS_restoreState,
-              "must reset tab before calling restoreTab()");
+    let browser = tab.linkedBrowser;
+
+    if (browser.__SS_restoreState) {
+      Cu.reportError("Must reset tab before calling restoreTab.");
+      return;
+    }
 
     let loadArguments = options.loadArguments;
-    let browser = tab.linkedBrowser;
     let window = tab.ownerGlobal;
     let tabbrowser = window.gBrowser;
     let forceOnDemand = options.forceOnDemand;
@@ -4682,13 +4686,15 @@ var SessionStoreInternal = {
    *        The tab that will be "reset"
    */
   _resetLocalTabRestoringState(aTab) {
-    NS_ASSERT(aTab.linkedBrowser.__SS_restoreState,
-              "given tab is not restoring");
-
     let browser = aTab.linkedBrowser;
 
     // Keep the tab's previous state for later in this method
     let previousState = browser.__SS_restoreState;
+
+    if (!previousState) {
+      Cu.reportError("Given tab is not restoring.");
+      return;
+    }
 
     // The browser is no longer in any sort of restoring state.
     delete browser.__SS_restoreState;
@@ -4707,10 +4713,13 @@ var SessionStoreInternal = {
   },
 
   _resetTabRestoringState(tab) {
-    NS_ASSERT(tab.linkedBrowser.__SS_restoreState,
-              "given tab is not restoring");
-
     let browser = tab.linkedBrowser;
+
+    if (!browser.__SS_restoreState) {
+      Cu.reportError("Given tab is not restoring.");
+      return;
+    }
+
     browser.messageManager.sendAsyncMessage("SessionStore:resetRestore", {});
     this._resetLocalTabRestoringState(tab);
   },

@@ -1155,7 +1155,7 @@ MarkupView.prototype = {
    */
   expandNode: function (node) {
     let container = this.getContainer(node);
-    this._expandContainer(container);
+    return this._expandContainer(container);
   },
 
   /**
@@ -1648,7 +1648,7 @@ MarkupView.prototype = {
         // If children are dirty, we got a change notification for this node
         // while the request was in progress, we need to do it again.
         if (container.childrenDirty) {
-          return this._updateChildren(container, {expand: centered});
+          return this._updateChildren(container, {expand: centered || expand});
         }
 
         let fragment = this.doc.createDocumentFragment();

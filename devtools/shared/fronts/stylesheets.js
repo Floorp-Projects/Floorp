@@ -5,10 +5,6 @@
 
 const { Front, FrontClassWithSpec } = require("devtools/shared/protocol");
 const {
-  getIndentationFromPrefs,
-  getIndentationFromString
-} = require("devtools/shared/indentation");
-const {
   originalSourceSpec,
   mediaRuleSpec,
   styleSheetSpec,
@@ -16,6 +12,11 @@ const {
 } = require("devtools/shared/specs/stylesheets");
 const promise = require("promise");
 const { Task } = require("devtools/shared/task");
+
+loader.lazyRequireGetter(this, "getIndentationFromPrefs",
+  "devtools/shared/indentation", true);
+loader.lazyRequireGetter(this, "getIndentationFromString",
+  "devtools/shared/indentation", true);
 
 /**
  * The client-side counterpart for an OriginalSourceActor.

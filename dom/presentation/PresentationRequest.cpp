@@ -172,6 +172,11 @@ PresentationRequest::StartWithDevice(const nsAString& aDeviceId,
     return nullptr;
   }
 
+  if (nsContentUtils::ShouldResistFingerprinting()) {
+    promise->MaybeReject(NS_ERROR_DOM_SECURITY_ERR);
+    return promise.forget();
+  }
+
   if (IsProhibitMixedSecurityContexts(doc) &&
       !IsAllURLAuthenticated()) {
     promise->MaybeReject(NS_ERROR_DOM_SECURITY_ERR);
@@ -269,6 +274,11 @@ PresentationRequest::Reconnect(const nsAString& aPresentationId,
   RefPtr<Promise> promise = Promise::Create(global, aRv);
   if (NS_WARN_IF(aRv.Failed())) {
     return nullptr;
+  }
+
+  if (nsContentUtils::ShouldResistFingerprinting()) {
+    promise->MaybeReject(NS_ERROR_DOM_SECURITY_ERR);
+    return promise.forget();
   }
 
   if (IsProhibitMixedSecurityContexts(doc) &&
@@ -384,6 +394,11 @@ PresentationRequest::GetAvailability(ErrorResult& aRv)
     return nullptr;
   }
 
+  if (nsContentUtils::ShouldResistFingerprinting()) {
+    promise->MaybeReject(NS_ERROR_DOM_SECURITY_ERR);
+    return promise.forget();
+  }
+
   if (IsProhibitMixedSecurityContexts(doc) &&
       !IsAllURLAuthenticated()) {
     promise->MaybeReject(NS_ERROR_DOM_SECURITY_ERR);
@@ -443,6 +458,10 @@ PresentationRequest::FindOrCreatePresentationAvailability(RefPtr<Promise>& aProm
 nsresult
 PresentationRequest::DispatchConnectionAvailableEvent(PresentationConnection* aConnection)
 {
+  if (nsContentUtils::ShouldResistFingerprinting()) {
+    return NS_OK;
+  }
+
   PresentationConnectionAvailableEventInit init;
   init.mConnection = aConnection;
 

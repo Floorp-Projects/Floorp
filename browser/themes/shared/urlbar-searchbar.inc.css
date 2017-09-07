@@ -202,12 +202,6 @@
   transform: scaleX(-1);
 }
 
-.urlbar-go-button:hover,
-.search-go-button:hover {
-  fill: #058b00;
-  fill-opacity: 1;
-}
-
 .urlbar-history-dropmarker {
   -moz-appearance: none;
   list-style-image: url(chrome://global/skin/icons/arrow-dropdown-16.svg);
@@ -274,6 +268,16 @@
   max-width: 33px;
   min-height: 33px;
   max-height: 33px;
+}
+
+:root[uidensity=compact] #star-button-box[animationsenabled] > #star-button[starred][animate] + #star-button-animatable-box {
+  /* .urlbar-icon has width 24px in this case */
+  margin-inline-start: -4.5px;
+}
+
+:root[uidensity=touch] #star-button-box[animationsenabled] > #star-button[starred][animate] + #star-button-animatable-box {
+  /* .urlbar-icon has width 30px in this case */
+  margin-inline-start: -1.5px;
 }
 
 #star-button-box[animationsenabled] > #star-button[starred][animate] + #star-button-animatable-box > #star-button-animatable-image {
