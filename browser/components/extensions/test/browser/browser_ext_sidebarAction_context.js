@@ -375,6 +375,15 @@ add_task(async function testDefaultTitle() {
           await expectDefaults(details[3]);
           expect(details[3]);
         },
+        async expect => {
+          browser.test.assertRejects(
+            browser.sidebarAction.setPanel({panel: "about:addons"}),
+            /Access denied for URL about:addons/,
+            "unable to set panel to about:addons");
+
+          await expectDefaults(details[3]);
+          expect(details[3]);
+        },
       ];
     },
   });
