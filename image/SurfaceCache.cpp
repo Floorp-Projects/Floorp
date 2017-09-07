@@ -729,7 +729,7 @@ public:
     while (cost > mAvailableCost) {
       MOZ_ASSERT(!mCosts.IsEmpty(),
                  "Removed everything and it still won't fit");
-      Remove(mCosts.LastElement().Surface(), aAutoLock);
+      Remove(mCosts.LastElement().Surface(), /* aStopTracking */ true, aAutoLock);
     }
 
     // Locate the appropriate per-image cache. If there's not an existing cache
@@ -768,11 +768,17 @@ public:
       return InsertOutcome::FAILURE;
     }
 
-    StartTracking(surface, aAutoLock);
+    if (MOZ_UNLIKELY(!StartTracking(surface, aAutoLock))) {
+      MOZ_ASSERT(!mustLock);
+      Remove(surface, /* aStopTracking */ false, aAutoLock);
+      return InsertOutcome::FAILURE;
+    }
+
     return InsertOutcome::SUCCESS;
   }
 
   void Remove(NotNull<CachedSurface*> aSurface,
+              bool aStopTracking,
               const StaticMutexAutoLock& aAutoLock)
   {
     ImageKey imageKey = aSurface->GetImageKey();
@@ -785,7 +791,10 @@ public:
       static_cast<Image*>(imageKey)->OnSurfaceDiscarded(aSurface->GetSurfaceKey());
     }
 
-    StopTracking(aSurface, aAutoLock);
+    // If we failed during StartTracking, we can skip this step.
+    if (aStopTracking) {
+      StopTracking(aSurface, /* aIsTracked */ true, aAutoLock);
+    }
 
     // Individual surfaces must be freed outside the lock.
     mCachedSurfacesDiscard.AppendElement(cache->Remove(aSurface));
@@ -799,27 +808,37 @@ public:
     }
   }
 
-  void StartTracking(NotNull<CachedSurface*> aSurface,
+  bool StartTracking(NotNull<CachedSurface*> aSurface,
                      const StaticMutexAutoLock& aAutoLock)
   {
     CostEntry costEntry = aSurface->GetCostEntry();
     MOZ_ASSERT(costEntry.GetCost() <= mAvailableCost,
                "Cost too large and the caller didn't catch it");
 
-    mAvailableCost -= costEntry.GetCost();
-
     if (aSurface->IsLocked()) {
       mLockedCost += costEntry.GetCost();
       MOZ_ASSERT(mLockedCost <= mMaxCost, "Locked more than we can hold?");
     } else {
-      mCosts.InsertElementSorted(costEntry);
+      if (NS_WARN_IF(!mCosts.InsertElementSorted(costEntry, fallible))) {
+        return false;
+      }
+
       // This may fail during XPCOM shutdown, so we need to ensure the object is
       // tracked before calling RemoveObject in StopTracking.
-      mExpirationTracker.AddObjectLocked(aSurface, aAutoLock);
+      nsresult rv = mExpirationTracker.AddObjectLocked(aSurface, aAutoLock);
+      if (NS_WARN_IF(NS_FAILED(rv))) {
+        DebugOnly<bool> foundInCosts = mCosts.RemoveElementSorted(costEntry);
+        MOZ_ASSERT(foundInCosts, "Lost track of costs for this surface");
+        return false;
+      }
     }
+
+    mAvailableCost -= costEntry.GetCost();
+    return true;
   }
 
   void StopTracking(NotNull<CachedSurface*> aSurface,
+                    bool aIsTracked,
                     const StaticMutexAutoLock& aAutoLock)
   {
     CostEntry costEntry = aSurface->GetCostEntry();
@@ -832,12 +851,12 @@ public:
                  "Shouldn't have a cost entry for a locked surface");
     } else {
       if (MOZ_LIKELY(aSurface->GetExpirationState()->IsTracked())) {
+        MOZ_ASSERT(aIsTracked, "Expiration-tracking a surface unexpectedly!");
         mExpirationTracker.RemoveObjectLocked(aSurface, aAutoLock);
       } else {
         // Our call to AddObject must have failed in StartTracking; most likely
         // we're in XPCOM shutdown right now.
-        NS_ASSERTION(ShutdownTracker::ShutdownHasStarted(),
-                     "Not expiration-tracking an unlocked surface!");
+        MOZ_ASSERT(!aIsTracked, "Not expiration-tracking an unlocked surface!");
       }
 
       DebugOnly<bool> foundInCosts = mCosts.RemoveElementSorted(costEntry);
@@ -874,12 +893,14 @@ public:
     if (!drawableSurface) {
       // The surface was released by the operating system. Remove the cache
       // entry as well.
-      Remove(WrapNotNull(surface), aAutoLock);
+      Remove(WrapNotNull(surface), /* aStopTracking */ true, aAutoLock);
       return LookupResult(MatchType::NOT_FOUND);
     }
 
-    if (aMarkUsed) {
-      MarkUsed(WrapNotNull(surface), WrapNotNull(cache), aAutoLock);
+    if (aMarkUsed &&
+        !MarkUsed(WrapNotNull(surface), WrapNotNull(cache), aAutoLock)) {
+      Remove(WrapNotNull(surface), /* aStopTracking */ false, aAutoLock);
+      return LookupResult(MatchType::NOT_FOUND);
     }
 
     MOZ_ASSERT(surface->GetSurfaceKey() == aSurfaceKey,
@@ -922,7 +943,7 @@ public:
 
       // The surface was released by the operating system. Remove the cache
       // entry as well.
-      Remove(WrapNotNull(surface), aAutoLock);
+      Remove(WrapNotNull(surface), /* aStopTracking */ true, aAutoLock);
     }
 
     MOZ_ASSERT_IF(matchType == MatchType::EXACT,
@@ -935,7 +956,9 @@ public:
 
     if (matchType == MatchType::EXACT ||
         matchType == MatchType::SUBSTITUTE_BECAUSE_BEST) {
-      MarkUsed(WrapNotNull(surface), WrapNotNull(cache), aAutoLock);
+      if (!MarkUsed(WrapNotNull(surface), WrapNotNull(cache), aAutoLock)) {
+        Remove(WrapNotNull(surface), /* aStopTracking */ false, aAutoLock);
+      }
     }
 
     // When the caller may choose to decode at an uncached size because there is
@@ -1028,7 +1051,8 @@ public:
     // small, performance should be good, but if usage patterns change we should
     // change the data structure used for mCosts.
     for (auto iter = cache->ConstIter(); !iter.Done(); iter.Next()) {
-      StopTracking(WrapNotNull(iter.UserData()), aAutoLock);
+      StopTracking(WrapNotNull(iter.UserData()),
+                   /* aIsTracked */ true, aAutoLock);
     }
 
     // The per-image cache isn't needed anymore, so remove it as well.
@@ -1048,7 +1072,7 @@ public:
     }
 
     cache->Prune([this, &aAutoLock](NotNull<CachedSurface*> aSurface) -> void {
-      StopTracking(aSurface, aAutoLock);
+      StopTracking(aSurface, /* aIsTracked */ true, aAutoLock);
     });
   }
 
@@ -1058,7 +1082,7 @@ public:
     // structures are all hash tables. Note that locked surfaces are not
     // removed, since they aren't present in mCosts.
     while (!mCosts.IsEmpty()) {
-      Remove(mCosts.LastElement().Surface(), aAutoLock);
+      Remove(mCosts.LastElement().Surface(), /* aStopTracking */ true, aAutoLock);
     }
   }
 
@@ -1084,7 +1108,7 @@ public:
     // Discard surfaces until we've reduced our cost to our target cost.
     while (mAvailableCost < targetCost) {
       MOZ_ASSERT(!mCosts.IsEmpty(), "Removed everything and still not done");
-      Remove(mCosts.LastElement().Surface(), aAutoLock);
+      Remove(mCosts.LastElement().Surface(), /* aStopTracking */ true, aAutoLock);
     }
   }
 
@@ -1102,11 +1126,12 @@ public:
       return;
     }
 
-    StopTracking(aSurface, aAutoLock);
+    StopTracking(aSurface, /* aIsTracked */ true, aAutoLock);
 
     // Lock the surface. This can fail.
     aSurface->SetLocked(true);
-    StartTracking(aSurface, aAutoLock);
+    DebugOnly<bool> tracking = StartTracking(aSurface, aAutoLock);
+    MOZ_ASSERT(tracking);
   }
 
   NS_IMETHOD
@@ -1169,20 +1194,31 @@ private:
     return aCost <= mMaxCost - mLockedCost;
   }
 
-  void MarkUsed(NotNull<CachedSurface*> aSurface,
+  bool MarkUsed(NotNull<CachedSurface*> aSurface,
                 NotNull<ImageSurfaceCache*> aCache,
                 const StaticMutexAutoLock& aAutoLock)
   {
     if (aCache->IsLocked()) {
       LockSurface(aSurface, aAutoLock);
-    } else {
-      mExpirationTracker.MarkUsedLocked(aSurface, aAutoLock);
+      return true;
     }
+
+    nsresult rv = mExpirationTracker.MarkUsedLocked(aSurface, aAutoLock);
+    if (NS_WARN_IF(NS_FAILED(rv))) {
+      // If mark used fails, it is because it failed to reinsert the surface
+      // after removing it from the tracker. Thus we need to update our
+      // own accounting but otherwise expect it to be untracked.
+      StopTracking(aSurface, /* aIsTracked */ false, aAutoLock);
+      return false;
+    }
+    return true;
   }
 
   void DoUnlockSurfaces(NotNull<ImageSurfaceCache*> aCache, bool aStaticOnly,
                         const StaticMutexAutoLock& aAutoLock)
   {
+    AutoTArray<NotNull<CachedSurface*>, 8> discard;
+
     // Unlock all the surfaces the per-image cache is holding.
     for (auto iter = aCache->ConstIter(); !iter.Done(); iter.Next()) {
       NotNull<CachedSurface*> surface = WrapNotNull(iter.UserData());
@@ -1192,9 +1228,16 @@ private:
       if (aStaticOnly && surface->GetSurfaceKey().Playback() != PlaybackType::eStatic) {
         continue;
       }
-      StopTracking(surface, aAutoLock);
+      StopTracking(surface, /* aIsTracked */ true, aAutoLock);
       surface->SetLocked(false);
-      StartTracking(surface, aAutoLock);
+      if (MOZ_UNLIKELY(!StartTracking(surface, aAutoLock))) {
+        discard.AppendElement(surface);
+      }
+    }
+
+    // Discard any that we failed to track.
+    for (auto iter = discard.begin(); iter != discard.end(); ++iter) {
+      Remove(*iter, /* aStopTracking */ false, aAutoLock);
     }
   }
 
@@ -1213,7 +1256,7 @@ private:
       return;  // Lookup in the per-image cache missed.
     }
 
-    Remove(WrapNotNull(surface), aAutoLock);
+    Remove(WrapNotNull(surface), /* aStopTracking */ true, aAutoLock);
   }
 
   class SurfaceTracker final :
@@ -1233,7 +1276,7 @@ private:
     void NotifyExpiredLocked(CachedSurface* aSurface,
                              const StaticMutexAutoLock& aAutoLock) override
     {
-      sInstance->Remove(WrapNotNull(aSurface), aAutoLock);
+      sInstance->Remove(WrapNotNull(aSurface), /* aStopTracking */ true, aAutoLock);
     }
 
     void NotifyHandlerEndLocked(const StaticMutexAutoLock& aAutoLock) override
