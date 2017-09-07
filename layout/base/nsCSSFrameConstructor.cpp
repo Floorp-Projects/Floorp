@@ -6413,14 +6413,14 @@ IsRootBoxFrame(nsIFrame *aFrame)
 }
 
 void
-nsCSSFrameConstructor::ReconstructDocElementHierarchy()
+nsCSSFrameConstructor::ReconstructDocElementHierarchy(InsertionKind aInsertionKind)
 {
   Element* rootElement = mDocument->GetRootElement();
   if (!rootElement) {
     /* nothing to do */
     return;
   }
-  RecreateFramesForContent(rootElement, InsertionKind::Sync);
+  RecreateFramesForContent(rootElement, aInsertionKind);
 }
 
 nsContainerFrame*
@@ -8971,7 +8971,7 @@ nsCSSFrameConstructor::EnsureFrameForTextNode(nsGenericDOMDataNode* aContent)
     mAlwaysCreateFramesForIgnorableWhitespace = true;
     nsAutoScriptBlocker blocker;
     BeginUpdate();
-    ReconstructDocElementHierarchy();
+    ReconstructDocElementHierarchy(InsertionKind::Sync);
     EndUpdate();
   }
   return aContent->GetPrimaryFrame();
@@ -9882,7 +9882,7 @@ nsCSSFrameConstructor::MaybeRecreateContainerForFrameRemoval(
   if (aFrame->IsPopupSetFrame()) {
     nsIRootBox* rootBox = nsIRootBox::GetRootBox(mPresShell);
     if (rootBox && rootBox->GetPopupSetFrame() == aFrame) {
-      ReconstructDocElementHierarchy();
+      ReconstructDocElementHierarchy(aInsertionKind);
       return true;
     }
   }

@@ -74,12 +74,25 @@ private:
   nsCSSFrameConstructor& operator=(const nsCSSFrameConstructor& aCopy) = delete;
 
 public:
+  /**
+   * Whether insertion should be done synchronously or asynchronously.
+   *
+   * Generally, insertion is synchronous if we're reconstructing something from
+   * frame construction/reconstruction, and async if we're removing stuff, like
+   * from ContentRemoved.
+   */
+  enum class InsertionKind
+  {
+    Sync,
+    Async,
+  };
+
   mozilla::RestyleManager* RestyleManager() const
     { return mPresShell->GetPresContext()->RestyleManager(); }
 
   nsIFrame* ConstructRootFrame();
 
-  void ReconstructDocElementHierarchy();
+  void ReconstructDocElementHierarchy(InsertionKind);
 
   // Create frames for content nodes that are marked as needing frames. This
   // should be called before ProcessPendingRestyles.
@@ -299,19 +312,6 @@ private:
                             TreeMatchContext* aProvidedTreeMatchContext);
 
 public:
-  /**
-   * Whether insertion should be done synchronously or asynchronously.
-   *
-   * Generally, insertion is synchronous if we're reconstructing something from
-   * frame construction/reconstruction, and async if we're removing stuff, like
-   * from ContentRemoved.
-   */
-  enum class InsertionKind
-  {
-    Sync,
-    Async,
-  };
-
   enum RemoveFlags {
     REMOVE_CONTENT,
     REMOVE_FOR_RECONSTRUCTION,
