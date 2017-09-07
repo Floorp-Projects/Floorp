@@ -417,6 +417,9 @@ this.sidebarAction = class extends ExtensionAPI {
             url = null;
           } else if (details.panel !== "") {
             url = context.uri.resolve(details.panel);
+            if (!context.checkLoadURL(url)) {
+              return Promise.reject({message: `Access denied for URL ${url}`});
+            }
           } else {
             throw new ExtensionError("Invalid url for sidebar panel.");
           }
