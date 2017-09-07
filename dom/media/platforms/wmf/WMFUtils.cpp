@@ -15,6 +15,7 @@
 #include "nsWindowsHelpers.h"
 #include <initguid.h>
 #include <stdint.h>
+#include "mozilla/WindowsVersion.h"
 
 #ifdef WMF_MUST_DEFINE_AAC_MFT_CLSID
 // Some SDK versions don't define the AAC decoder CLSID.
@@ -210,6 +211,16 @@ LoadDLLs()
 HRESULT
 MFStartup()
 {
+  if (IsWin7AndPre2000Compatible()) {
+    /*
+     * Specific exclude the usage of WMF on Win 7 with compatibility mode
+     * prior to Win 2000 as we may crash while trying to startup WMF.
+     * Using GetVersionEx API which takes compatibility mode into account.
+     * See Bug 1279171.
+     */
+    return E_FAIL;
+  }
+
   HRESULT hr = LoadDLLs();
   if (FAILED(hr)) {
     return hr;
