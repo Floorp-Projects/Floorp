@@ -438,7 +438,7 @@ class NodeBuilder
 
         /* Represent "no node" as null and ensure users are not exposed to magic values. */
         RootedValue optVal(cx, val.isMagic(JS_SERIALIZE_NO_NODE) ? NullValue() : val);
-        return DefineProperty(cx, obj, atom->asPropertyName(), optVal);
+        return DefineDataProperty(cx, obj, atom->asPropertyName(), optVal);
     }
 
     MOZ_MUST_USE bool newNodeLoc(TokenPos* pos, MutableHandleValue dst);
@@ -679,7 +679,7 @@ NodeBuilder::newArray(NodeVector& elts, MutableHandleValue dst)
         if (val.isMagic(JS_SERIALIZE_NO_NODE))
             continue;
 
-        if (!DefineElement(cx, array, i, val))
+        if (!DefineDataElement(cx, array, i, val))
             return false;
     }
 

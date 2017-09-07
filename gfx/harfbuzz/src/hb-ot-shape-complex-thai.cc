@@ -244,6 +244,7 @@ do_thai_pua_shaping (const hb_ot_shape_plan_t *plan HB_UNUSED,
     /* At least one of the above/below actions is NOP. */
     thai_action_t action = above_edge.action != NOP ? above_edge.action : below_edge.action;
 
+    buffer->unsafe_to_break (base, i);
     if (action == RD)
       info[base].codepoint = thai_pua_shape (info[base].codepoint, action, font);
     else

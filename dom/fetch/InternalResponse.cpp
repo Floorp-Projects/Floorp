@@ -11,11 +11,20 @@
 #include "mozilla/dom/cache/CacheTypes.h"
 #include "mozilla/ipc/PBackgroundSharedTypes.h"
 #include "mozilla/ipc/IPCStreamUtils.h"
+#include "nsIRandomGenerator.h"
 #include "nsIURI.h"
 #include "nsStreamUtils.h"
 
 namespace mozilla {
 namespace dom {
+
+namespace {
+
+// Const variable for generate padding size
+// XXX This will be tweaked to something more meaningful in Bug 1383656.
+const uint32_t kMaxRandomNumber = 102400;
+
+} // namespace
 
 InternalResponse::InternalResponse(uint16_t aStatus, const nsACString& aStatusText)
   : mType(ResponseType::Default)
@@ -23,6 +32,7 @@ InternalResponse::InternalResponse(uint16_t aStatus, const nsACString& aStatusTe
   , mStatusText(aStatusText)
   , mHeaders(new InternalHeaders(HeadersGuardEnum::Response))
   , mBodySize(UNKNOWN_BODY_SIZE)
+  , mPaddingSize(UNKNOWN_PADDING_SIZE)
 {
 }
 
@@ -142,6 +152,11 @@ InternalResponse::Clone(CloneType aCloneType)
   RefPtr<InternalResponse> clone = CreateIncompleteCopy();
 
   clone->mHeaders = new InternalHeaders(*mHeaders);
+
+  // Make sure the clone response will have the same padding size.
+  clone->mPaddingInfo = mPaddingInfo;
+  clone->mPaddingSize = mPaddingSize;
+
   if (mWrappedResponse) {
     clone->mWrappedResponse = mWrappedResponse->Clone(aCloneType);
     MOZ_ASSERT(!mBody);
@@ -187,6 +202,79 @@ InternalResponse::CORSResponse()
   cors->mHeaders = InternalHeaders::CORSHeaders(Headers());
   cors->mWrappedResponse = this;
   return cors.forget();
+}
+
+uint32_t
+InternalResponse::GetPaddingInfo()
+{
+  // If it's an opaque response, the paddingInfo should be generated only when
+  // paddingSize is unknown size.
+  // If it's not, the paddingInfo should be nothing and the paddingSize should
+  // be unknown size.
+  MOZ_DIAGNOSTIC_ASSERT((mType == ResponseType::Opaque &&
+                         mPaddingSize == UNKNOWN_PADDING_SIZE &&
+                         mPaddingInfo.isSome()) ||
+                        (mType == ResponseType::Opaque &&
+                         mPaddingSize != UNKNOWN_PADDING_SIZE &&
+                         mPaddingInfo.isNothing()) ||
+                        (mType != ResponseType::Opaque &&
+                         mPaddingSize == UNKNOWN_PADDING_SIZE &&
+                         mPaddingInfo.isNothing()));
+  return mPaddingInfo.isSome() ? mPaddingInfo.ref() : 0;
+}
+
+nsresult
+InternalResponse::GeneratePaddingInfo()
+{
+  MOZ_DIAGNOSTIC_ASSERT(mType == ResponseType::Opaque);
+  MOZ_DIAGNOSTIC_ASSERT(mPaddingSize == UNKNOWN_PADDING_SIZE);
+
+  // Utilize random generator to generator a random number
+  nsresult rv;
+  uint32_t randomNumber = 0;
+  nsCOMPtr<nsIRandomGenerator> randomGenerator =
+    do_GetService("@mozilla.org/security/random-generator;1", &rv);
+  if (NS_WARN_IF(NS_FAILED(rv))) { return rv; }
+
+  MOZ_DIAGNOSTIC_ASSERT(randomGenerator);
+
+  uint8_t* buffer;
+  rv = randomGenerator->GenerateRandomBytes(sizeof(randomNumber), &buffer);
+  if (NS_WARN_IF(NS_FAILED(rv))) { return rv; }
+
+  memcpy(&randomNumber, buffer, sizeof(randomNumber));
+  free(buffer);
+
+  mPaddingInfo.emplace(randomNumber % kMaxRandomNumber);
+
+  return rv;
+}
+
+int64_t
+InternalResponse::GetPaddingSize()
+{
+  // We initialize padding size to an unknown size (-1). After cached, we only
+  // pad opaque response. Opaque response's padding size might be unknown before
+  // cached.
+  MOZ_DIAGNOSTIC_ASSERT(mType == ResponseType::Opaque ||
+                        mPaddingSize == UNKNOWN_PADDING_SIZE);
+  MOZ_DIAGNOSTIC_ASSERT(mPaddingSize == UNKNOWN_PADDING_SIZE ||
+                        mPaddingSize >= 0);
+
+  return mPaddingSize;
+}
+
+void
+InternalResponse::SetPaddingSize(int64_t aPaddingSize)
+{
+  // We should only pad the opaque response.
+  MOZ_DIAGNOSTIC_ASSERT((mType == ResponseType::Opaque) !=
+                        (aPaddingSize ==
+                         InternalResponse::UNKNOWN_PADDING_SIZE));
+  MOZ_DIAGNOSTIC_ASSERT(aPaddingSize == UNKNOWN_PADDING_SIZE ||
+                        aPaddingSize >= 0);
+
+  mPaddingSize = aPaddingSize;
 }
 
 void

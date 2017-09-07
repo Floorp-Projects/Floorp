@@ -2396,6 +2396,7 @@ NS_IMPL_CYCLE_COLLECTION_UNLINK_BEGIN(nsGlobalWindow)
     NS_IMPL_CYCLE_COLLECTION_UNLINK(mListenerManager)
   }
 
+  tmp->UpdateTopInnerWindow();
   NS_IMPL_CYCLE_COLLECTION_UNLINK(mTopInnerWindow)
 
   NS_IMPL_CYCLE_COLLECTION_UNLINK(mLocation)
@@ -2627,7 +2628,10 @@ nsGlobalWindow::SetInitialPrincipalToSubject()
   }
 
   GetDocShell()->CreateAboutBlankContentViewer(newWindowPrincipal);
-  mDoc->SetIsInitialDocument(true);
+
+  if (mDoc) {
+    mDoc->SetIsInitialDocument(true);
+  }
 
   nsCOMPtr<nsIPresShell> shell = GetDocShell()->GetPresShell();
 
@@ -4381,6 +4385,17 @@ nsPIDOMWindowInner::SyncStateFromParentWindow()
 }
 
 void
+nsGlobalWindow::UpdateTopInnerWindow()
+{
+  if (!IsInnerWindow() || AsInner()->IsTopInnerWindow()) {
+    return;
+  }
+
+  AsInner()->UpdateWebSocketCount(-(int32_t)mNumOfOpenWebSockets);
+  AsInner()->UpdateUserMediaCount(-(int32_t)mNumOfActiveUserMedia);
+}
+
+void
 nsPIDOMWindowInner::AddPeerConnection()
 {
   MOZ_ASSERT(NS_IsMainThread());
@@ -4519,12 +4534,14 @@ nsPIDOMWindowInner::UpdateWebSocketCount(int32_t aDelta)
     return;
   }
 
-  uint32_t& counter = mTopInnerWindow ? mTopInnerWindow->mNumOfOpenWebSockets
-                                      : mNumOfOpenWebSockets;
+  if (!IsTopInnerWindow()) {
+    mTopInnerWindow->UpdateWebSocketCount(aDelta);
+  }
 
-  MOZ_DIAGNOSTIC_ASSERT(aDelta > 0 || ((aDelta + counter) < counter));
+  MOZ_DIAGNOSTIC_ASSERT(
+    aDelta > 0 || ((aDelta + mNumOfOpenWebSockets) < mNumOfOpenWebSockets));
 
-  counter += aDelta;
+  mNumOfOpenWebSockets += aDelta;
 }
 
 bool
@@ -4532,8 +4549,8 @@ nsPIDOMWindowInner::HasOpenWebSockets() const
 {
   MOZ_ASSERT(NS_IsMainThread());
 
-  return (mTopInnerWindow ? mTopInnerWindow->mNumOfOpenWebSockets
-                          : mNumOfOpenWebSockets) > 0;
+  return mNumOfOpenWebSockets ||
+         (mTopInnerWindow && mTopInnerWindow->mNumOfOpenWebSockets);
 }
 
 void
@@ -4545,12 +4562,14 @@ nsPIDOMWindowInner::UpdateUserMediaCount(int32_t aDelta)
     return;
   }
 
-  uint32_t& counter = mTopInnerWindow ? mTopInnerWindow->mNumOfActiveUserMedia
-                                      : mNumOfActiveUserMedia;
+  if (!IsTopInnerWindow()) {
+    mTopInnerWindow->UpdateUserMediaCount(aDelta);
+  }
 
-  MOZ_DIAGNOSTIC_ASSERT(aDelta > 0 || ((aDelta + counter) < counter));
+  MOZ_DIAGNOSTIC_ASSERT(
+    aDelta > 0 || ((aDelta + mNumOfActiveUserMedia) < mNumOfActiveUserMedia));
 
-  counter += aDelta;
+  mNumOfActiveUserMedia += aDelta;
 }
 
 bool

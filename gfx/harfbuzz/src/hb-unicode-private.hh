@@ -105,6 +105,10 @@ HB_UNICODE_FUNCS_IMPLEMENT_CALLBACKS_SIMPLE
   inline unsigned int
   modified_combining_class (hb_codepoint_t unicode)
   {
+    /* XXX This hack belongs to the Arabic shaper:
+     * Put HAMZA ABOVE in the same class as SHADDA. */
+    if (unlikely (unicode == 0x0654u)) unicode = 0x0651u;
+
     /* XXX This hack belongs to the Myanmar shaper. */
     if (unlikely (unicode == 0x1037u)) unicode = 0x103Au;
 

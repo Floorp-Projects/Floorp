@@ -19,6 +19,12 @@ namespace mozilla {
 namespace dom {
 namespace cache {
 
+enum DirPaddingFile
+{
+  FILE,
+  TMP_FILE
+};
+
 nsresult
 BodyCreateDir(nsIFile* aBaseDir);
 
@@ -48,6 +54,10 @@ BodyOpen(const QuotaInfo& aQuotaInfo, nsIFile* aBaseDir, const nsID& aId,
          nsIInputStream** aStreamOut);
 
 nsresult
+BodyMaybeUpdatePaddingSize(const QuotaInfo& aQuotaInfo, nsIFile* aBaseDir,
+                           const nsID& aId, int64_t* aPaddingSizeOut);
+
+nsresult
 BodyDeleteFiles(const QuotaInfo& aQuotaInfo, nsIFile* aBaseDir,
                 const nsTArray<nsID>& aIdList);
 
@@ -70,6 +80,52 @@ RemoveNsIFileRecursively(const QuotaInfo& aQuotaInfo, nsIFile* aFile);
 nsresult
 RemoveNsIFile(const QuotaInfo& aQuotaInfo, nsIFile* aFile);
 
+void
+DecreaseUsageForQuotaInfo(const QuotaInfo& aQuotaInfo,
+                          const int64_t& aUpdatingSize);
+
+/**
+ * This function is used to check if the directory padding file is existed.
+ */
+
+bool
+DirectoryPaddingFileExists(nsIFile* aBaseDir, DirPaddingFile aPaddingFileType);
+
+/**
+ *
+ * The functions below are used to read/write/delete the directory padding file
+ * after acquiring the mutex lock. The mutex lock is held by
+ * CacheQuotaClient to prevent multi-thread accessing issue. To avoid deadlock,
+ * these functions should only access by static functions in
+ * dom/cache/QuotaClient.cpp.
+ *
+ */
+
+nsresult
+LockedDirectoryPaddingGet(nsIFile* aBaseDir, int64_t* aPaddingSizeOut);
+
+nsresult
+LockedDirectoryPaddingInit(nsIFile* aBaseDir);
+
+nsresult
+LockedUpdateDirectoryPaddingFile(nsIFile* aBaseDir,
+                                 mozIStorageConnection* aConn,
+                                 const int64_t aIncreaseSize,
+                                 const int64_t aDecreaseSize,
+                                 const bool aTemporaryFileExist);
+
+nsresult
+LockedDirectoryPaddingTemporaryWrite(nsIFile* aBaseDir, int64_t aPaddingSize);
+
+nsresult
+LockedDirectoryPaddingFinalizeWrite(nsIFile* aBaseDir);
+
+nsresult
+LockedDirectoryPaddingRestore(nsIFile* aBaseDir, mozIStorageConnection* aConn);
+
+nsresult
+LockedDirectoryPaddingDeleteFile(nsIFile* aBaseDir,
+                                 DirPaddingFile aPaddingFileType);
 } // namespace cache
 } // namespace dom
 } // namespace mozilla

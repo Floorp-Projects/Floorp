@@ -197,8 +197,7 @@ _hb_ot_layout_destroy (hb_ot_layout_t *layout);
 #define syllable()		var1.u8[3] /* GSUB/GPOS shaping boundaries */
 
 
-/* loop over syllables */
-
+/* Loop over syllables. Based on foreach_cluster(). */
 #define foreach_syllable(buffer, start, end) \
   for (unsigned int \
        _count = buffer->len, \

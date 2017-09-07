@@ -226,7 +226,7 @@ GlobalObject::resolveConstructor(JSContext* cx, Handle<GlobalObject*> global, JS
     if (isObjectOrFunction) {
         if (clasp->specShouldDefineConstructor()) {
             RootedValue ctorValue(cx, ObjectValue(*ctor));
-            if (!DefineProperty(cx, global, id, ctorValue, nullptr, nullptr, JSPROP_RESOLVING))
+            if (!DefineDataProperty(cx, global, id, ctorValue, JSPROP_RESOLVING))
                 return false;
         }
 
@@ -271,7 +271,7 @@ GlobalObject::resolveConstructor(JSContext* cx, Handle<GlobalObject*> global, JS
         // Fallible operation that modifies the global object.
         if (clasp->specShouldDefineConstructor()) {
             RootedValue ctorValue(cx, ObjectValue(*ctor));
-            if (!DefineProperty(cx, global, id, ctorValue, nullptr, nullptr, JSPROP_RESOLVING))
+            if (!DefineDataProperty(cx, global, id, ctorValue, JSPROP_RESOLVING))
                 return false;
         }
 
@@ -297,7 +297,7 @@ GlobalObject::initBuiltinConstructor(JSContext* cx, Handle<GlobalObject*> global
     MOZ_ASSERT(!global->lookup(cx, id));
 
     RootedValue ctorValue(cx, ObjectValue(*ctor));
-    if (!DefineProperty(cx, global, id, ctorValue, nullptr, nullptr, JSPROP_RESOLVING))
+    if (!DefineDataProperty(cx, global, id, ctorValue, JSPROP_RESOLVING))
         return false;
 
     global->setConstructor(key, ObjectValue(*ctor));
@@ -405,8 +405,8 @@ GlobalObject::valueIsEval(const Value& val)
 GlobalObject::initStandardClasses(JSContext* cx, Handle<GlobalObject*> global)
 {
     /* Define a top-level property 'undefined' with the undefined value. */
-    if (!DefineProperty(cx, global, cx->names().undefined, UndefinedHandleValue,
-                        nullptr, nullptr, JSPROP_PERMANENT | JSPROP_READONLY | JSPROP_RESOLVING))
+    if (!DefineDataProperty(cx, global, cx->names().undefined, UndefinedHandleValue,
+                            JSPROP_PERMANENT | JSPROP_READONLY | JSPROP_RESOLVING))
     {
         return false;
     }
@@ -452,8 +452,8 @@ GlobalObject::initSelfHostingBuiltins(JSContext* cx, Handle<GlobalObject*> globa
                                       const JSFunctionSpec* builtins)
 {
     // Define a top-level property 'undefined' with the undefined value.
-    if (!DefineProperty(cx, global, cx->names().undefined, UndefinedHandleValue,
-                        nullptr, nullptr, JSPROP_PERMANENT | JSPROP_READONLY))
+    if (!DefineDataProperty(cx, global, cx->names().undefined, UndefinedHandleValue,
+                            JSPROP_PERMANENT | JSPROP_READONLY))
     {
         return false;
     }
@@ -596,10 +596,8 @@ js::LinkConstructorAndPrototype(JSContext* cx, JSObject* ctor_, JSObject* proto_
     RootedValue protoVal(cx, ObjectValue(*proto));
     RootedValue ctorVal(cx, ObjectValue(*ctor));
 
-    return DefineProperty(cx, ctor, cx->names().prototype, protoVal, nullptr, nullptr,
-                          prototypeAttrs) &&
-           DefineProperty(cx, proto, cx->names().constructor, ctorVal, nullptr, nullptr,
-                          constructorAttrs);
+    return DefineDataProperty(cx, ctor, cx->names().prototype, protoVal, prototypeAttrs) &&
+           DefineDataProperty(cx, proto, cx->names().constructor, ctorVal, constructorAttrs);
 }
 
 bool
@@ -618,7 +616,7 @@ js::DefineToStringTag(JSContext* cx, HandleObject obj, JSAtom* tag)
 {
     RootedId toStringTagId(cx, SYMBOL_TO_JSID(cx->wellKnownSymbols().toStringTag));
     RootedValue tagString(cx, StringValue(tag));
-    return DefineProperty(cx, obj, toStringTagId, tagString, nullptr, nullptr, JSPROP_READONLY);
+    return DefineDataProperty(cx, obj, toStringTagId, tagString, JSPROP_READONLY);
 }
 
 static void
@@ -745,8 +743,8 @@ GlobalObject::getIntrinsicsHolder(JSContext* cx, Handle<GlobalObject*> global)
 
     /* Define a property 'global' with the current global as its value. */
     RootedValue globalValue(cx, ObjectValue(*global));
-    if (!DefineProperty(cx, intrinsicsHolder, cx->names().global, globalValue,
-                        nullptr, nullptr, JSPROP_PERMANENT | JSPROP_READONLY))
+    if (!DefineDataProperty(cx, intrinsicsHolder, cx->names().global, globalValue,
+                            JSPROP_PERMANENT | JSPROP_READONLY))
     {
         return nullptr;
     }

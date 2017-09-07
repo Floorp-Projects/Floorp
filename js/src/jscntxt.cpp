@@ -1056,7 +1056,7 @@ js::CreateErrorNotesArray(JSContext* cx, JSErrorReport* report)
         if (!messageStr)
             return nullptr;
         RootedValue messageVal(cx, StringValue(messageStr));
-        if (!DefineProperty(cx, noteObj, cx->names().message, messageVal))
+        if (!DefineDataProperty(cx, noteObj, cx->names().message, messageVal))
             return nullptr;
 
         RootedValue filenameVal(cx);
@@ -1066,14 +1066,14 @@ js::CreateErrorNotesArray(JSContext* cx, JSErrorReport* report)
                 return nullptr;
             filenameVal = StringValue(filenameStr);
         }
-        if (!DefineProperty(cx, noteObj, cx->names().fileName, filenameVal))
+        if (!DefineDataProperty(cx, noteObj, cx->names().fileName, filenameVal))
             return nullptr;
 
         RootedValue linenoVal(cx, Int32Value(note->lineno));
-        if (!DefineProperty(cx, noteObj, cx->names().lineNumber, linenoVal))
+        if (!DefineDataProperty(cx, noteObj, cx->names().lineNumber, linenoVal))
             return nullptr;
         RootedValue columnVal(cx, Int32Value(note->column));
-        if (!DefineProperty(cx, noteObj, cx->names().columnNumber, columnVal))
+        if (!DefineDataProperty(cx, noteObj, cx->names().columnNumber, columnVal))
             return nullptr;
 
         if (!NewbornArrayPush(cx, notesArray, ObjectValue(*noteObj)))

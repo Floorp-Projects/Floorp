@@ -923,6 +923,19 @@ Selection::FocusOffset()
   return mAnchorFocusRange->StartOffset();
 }
 
+nsIContent*
+Selection::GetChildAtAnchorOffset()
+{
+  if (!mAnchorFocusRange)
+    return nullptr;
+
+  if (GetDirection() == eDirNext) {
+    return mAnchorFocusRange->GetChildAtStartOffset();
+  }
+
+  return mAnchorFocusRange->GetChildAtEndOffset();
+}
+
 static nsresult
 CompareToRangeStart(nsINode* aCompareNode, int32_t aCompareOffset,
                     nsRange* aRange, int32_t* aCmp)

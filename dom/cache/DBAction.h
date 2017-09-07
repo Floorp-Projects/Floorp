@@ -18,6 +18,10 @@ namespace mozilla {
 namespace dom {
 namespace cache {
 
+nsresult
+OpenDBConnection(const QuotaInfo& aQuotaInfo, nsIFile* aDBDir,
+                 mozIStorageConnection** aConnOut);
+
 class DBAction : public Action
 {
 protected:
@@ -48,9 +52,6 @@ private:
 
   nsresult OpenConnection(const QuotaInfo& aQuotaInfo, nsIFile* aQuotaDir,
                           mozIStorageConnection** aConnOut);
-
-  nsresult WipeDatabase(const QuotaInfo& aQuotaInfo, nsIFile* aDBFile,
-                        nsIFile* aDBDir);
 
   const Mode mMode;
 };

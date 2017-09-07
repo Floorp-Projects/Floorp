@@ -1647,7 +1647,8 @@ var gPrivacyPane = {
 
   _initA11yString() {
     let a11yLearnMoreLink =
-      Services.urlFormatter.formatURLPref("accessibility.support.url");
+      Services.urlFormatter.formatURLPref("app.support.baseURL") +
+      "accessibility";
     document.getElementById("a11yLearnMoreLink")
       .setAttribute("href", a11yLearnMoreLink);
   },
