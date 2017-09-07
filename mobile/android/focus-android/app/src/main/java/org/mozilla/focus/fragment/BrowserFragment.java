@@ -1,5 +1,4 @@
-/* -*- Mode: Java; c-basic-offset: 4; tab-width: 4; indent-tabs-mode: nil; -*-
- * This Source Code Form is subject to the terms of the Mozilla Public
+/* This Source Code Form is subject to the terms of the Mozilla Public
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
@@ -204,44 +203,12 @@ public class BrowserFragment extends WebFragment implements View.OnClickListener
 
         urlView = (TextView) view.findViewById(R.id.display_url);
 
+        progressView = (AnimatedProgressBar) view.findViewById(R.id.progress);
+
         session.getUrl().observe(this, new Observer<String>() {
             @Override
             public void onChanged(@Nullable String url) {
                 urlView.setText(UrlUtils.stripUserInfo(url));
-            }
-        });
-
-        final View toolbarContent = view.findViewById(R.id.toolbar_content);
-
-        final AppBarLayout appBarLayout = (AppBarLayout) view.findViewById(R.id.appbar);
-        appBarLayout.addOnOffsetChangedListener(new AppBarLayout.OnOffsetChangedListener() {
-            @Override
-            public void onOffsetChanged(AppBarLayout appBarLayout, int verticalOffset) {
-                // When scrolling the toolbar away we want to fade out the content on the toolbar
-                // with an alpha animation. This will avoid that the text clashes with the status bar.
-
-                final int totalScrollRange = appBarLayout.getTotalScrollRange();
-                if (verticalOffset == 0 || Math.abs(verticalOffset) == totalScrollRange) {
-                    // If the app bar is completely expanded or collapsed we want full opacity. We
-                    // even want full opacity for a collapsed app bar because while loading a website
-                    // the toolbar sometimes pops out when the URL changes. Without setting it to
-                    // opaque the toolbar content might be invisible in this case (See issue #1126)
-                    toolbarContent.setAlpha(1f);
-                    return;
-                }
-
-                // The toolbar content should have 100% alpha when the AppBarLayout is expanded and
-                // should have 0 alpha when the toolbar is collapsed 50% or more.
-                float alpha = -1 * (((100f / (totalScrollRange * 0.5f)) * verticalOffset) / 100);
-
-                // We never want to go lower than 0 or higher than 1.
-                alpha = Math.max(0, alpha);
-                alpha = Math.min(1, alpha);
-
-                // The calculated value is reversed and we need to invert it (e.g. 0.8 -> 0.2)
-                alpha = 1 - alpha;
-
-                toolbarContent.setAlpha(alpha);
             }
         });
 
@@ -258,6 +225,7 @@ public class BrowserFragment extends WebFragment implements View.OnClickListener
                 } else {
                     backgroundTransitionGroup.startTransition(ANIMATION_DURATION);
 
+                    progressView.setProgress(progressView.getMax());
                     progressView.setVisibility(View.GONE);
                 }
 
@@ -301,7 +269,6 @@ public class BrowserFragment extends WebFragment implements View.OnClickListener
             }
         });
 
-        progressView = (AnimatedProgressBar) view.findViewById(R.id.progress);
         session.getProgress().observe(this, new Observer<Integer>() {
             @Override
             public void onChanged(Integer progress) {
