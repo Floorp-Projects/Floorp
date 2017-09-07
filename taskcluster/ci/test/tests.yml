@@ -676,14 +676,13 @@ mochitest-chrome:
     e10s: false
     run-on-projects:
         by-test-platform:
-            windows7-32.*: ['try']
             linux.*-stylo.*: ['autoland', 'mozilla-central', 'try']
             macosx64-stylo.*: ['mozilla-central', 'try']
             default: built-projects
     worker-type:
         by-test-platform:
             windows7-32.*: buildbot-bridge/buildbot-bridge
-            windows8-64.*: buildbot-bridge/buildbot-bridge
+            windows10-64.*: buildbot-bridge/buildbot-bridge
             default: null
     mozharness:
         by-test-platform:
@@ -716,10 +715,7 @@ mochitest-chrome:
                             - remove_executables.py
                 extra-options:
                     - --mochitest-suite=chrome
-    tier:
-        by-test-platform:
-            windows7-32.*: 2
-            default: default
+
 
 mochitest-clipboard:
     description: "Mochitest clipboard run"
@@ -736,7 +732,7 @@ mochitest-clipboard:
     worker-type:
         by-test-platform:
             windows7-32.*: buildbot-bridge/buildbot-bridge
-            windows8-64.*: buildbot-bridge/buildbot-bridge
+            windows10-64.*: buildbot-bridge/buildbot-bridge
             default: null
     e10s:
         by-test-platform:
@@ -836,17 +832,13 @@ mochitest-gpu:
     virtualization: virtual-with-gpu
     run-on-projects:
         by-test-platform:
-            # Deactivate try on Buildbot, by default. We don't have enough machines
-            windows8-64.*: ['mozilla-release', 'mozilla-beta', 'mozilla-central', 'mozilla-inbound', 'autoland']
-            windows8-64-devedition/opt: built-projects  # No dev edition outside of supported branches
-            windows10.*: []
             linux.*-stylo.*: ['autoland', 'mozilla-central', 'try']
             macosx64-stylo.*: ['mozilla-central', 'try']
             windows7-32-stylo.*: ['autoland', 'mozilla-central', 'try']
             default: built-projects
     worker-type:
         by-test-platform:
-            windows8-64.*: buildbot-bridge/buildbot-bridge
+            windows10-64.*: buildbot-bridge/buildbot-bridge
             default: null
     e10s:
         by-test-platform:
