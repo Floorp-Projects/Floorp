@@ -683,6 +683,11 @@ public class GeckoHlsPlayer implements BaseHlsPlayer, ExoPlayer.EventListener {
     // Called on HLSDemuxer's TaskQueue
     @Override
     public synchronized boolean seek(long positionUs) {
+        if (mPlayer == null) {
+            Log.d(LOGTAG, "Seek operation won't be performed as no player exists!");
+            return false;
+        }
+
         // Need to temporarily resume Exoplayer to download the chunks for getting the demuxed
         // keyframe sample when HTMLMediaElement is paused. Suspend Exoplayer when collecting enough
         // samples in onLoadingChanged.
