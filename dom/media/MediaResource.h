@@ -581,12 +581,6 @@ protected:
   MediaCacheStream mCacheStream;
 
   MediaChannelStatistics mChannelStatistics;
-
-  // True if we couldn't suspend the stream and we therefore don't want
-  // to resume later. This is usually due to the channel not being in the
-  // isPending state at the time of the suspend request.
-  bool mIgnoreResume;
-
   ChannelSuspendAgent mSuspendAgent;
 };
 
