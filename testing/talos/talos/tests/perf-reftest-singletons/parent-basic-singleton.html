@@ -4,8 +4,8 @@
     <script src="util.js"></script>
     <script>
 window.onload = function() {
-  document.head.appendChild(build_rule("caption div, caption span", 20000, "{ color: blue; } "));
-  let dom = build_dom(5000, "div");
+  document.head.appendChild(build_rule("body > .foo > .foo > .foo", 1000, "{ color: blue; } "));
+  let dom = build_dom(5000, "div", { attributes: {"class": "foo" } });
 
   flush_style();
   perf_start();
