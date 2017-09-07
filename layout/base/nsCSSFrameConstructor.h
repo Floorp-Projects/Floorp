@@ -127,8 +127,7 @@ private:
   void IssueSingleInsertNofications(nsIContent* aContainer,
                                     nsIContent* aStartChild,
                                     nsIContent* aEndChild,
-                                    InsertionKind,
-                                    bool aForReconstruction);
+                                    InsertionKind);
 
   /**
    * Data that represents an insertion point for some child content.
@@ -171,8 +170,7 @@ private:
   InsertionPoint GetRangeInsertionPoint(nsIContent* aContainer,
                                         nsIContent* aStartChild,
                                         nsIContent* aEndChild,
-                                        InsertionKind,
-                                        bool aForReconstruction);
+                                        InsertionKind);
 
   // Returns true if parent was recreated due to frameset child, false otherwise.
   bool MaybeRecreateForFrameset(nsIFrame* aParentFrame,
@@ -255,11 +253,7 @@ public:
   void ContentAppended(nsIContent* aContainer,
                        nsIContent* aFirstNewContent,
                        InsertionKind aInsertionKind,
-                       TreeMatchContext* aProvidedTreeMatchContext = nullptr)
-  {
-    ContentAppended(aContainer, aFirstNewContent, aInsertionKind, false,
-                    aProvidedTreeMatchContext);
-  }
+                       TreeMatchContext* aProvidedTreeMatchContext = nullptr);
 
   // If aInsertionkind is Async then frame construction of the new child
   // can be done lazily.
@@ -284,36 +278,8 @@ public:
                             nsIContent* aEndChild,
                             nsILayoutHistoryState* aFrameState,
                             InsertionKind aInsertionKind,
-                            TreeMatchContext* aProvidedTreeMatchContext = nullptr)
-  {
-    ContentRangeInserted(aContainer, aStartChild, aEndChild, aFrameState,
-                         aInsertionKind, false,
-                         aProvidedTreeMatchContext);
-  }
+                            TreeMatchContext* aProvidedTreeMatchContext = nullptr);
 
-private:
-  // Helpers for the public ContentAppended, ContentInserted and
-  // ContentRangeInserted functions above.
-  //
-  // aForReconstruction indicates whether this call is for frame reconstruction
-  // via RecreateFramesFor or lazy frame construction via CreateNeededFrames.
-  // (This latter case admittedly isn't always for "reconstruction" per se, but
-  // the important thing is that aForReconstruction is false for real content
-  // insertions, and true for other cases.)
-  void ContentAppended(nsIContent* aContainer,
-                       nsIContent* aFirstNewContent,
-                       InsertionKind aInsertionKind,
-                       bool aForReconstruction,
-                       TreeMatchContext* aProvidedTreeMatchContext);
-  void ContentRangeInserted(nsIContent* aContainer,
-                            nsIContent* aStartChild,
-                            nsIContent* aEndChild,
-                            nsILayoutHistoryState* aFrameState,
-                            InsertionKind aInsertionKind,
-                            bool aForReconstruction,
-                            TreeMatchContext* aProvidedTreeMatchContext);
-
-public:
   enum RemoveFlags {
     REMOVE_CONTENT,
     REMOVE_FOR_RECONSTRUCTION,
