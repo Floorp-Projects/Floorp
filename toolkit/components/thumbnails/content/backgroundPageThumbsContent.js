@@ -78,6 +78,7 @@ const backgroundPageThumbsContent = {
     this._nextCapture = {
       id: msg.data.id,
       url: msg.data.url,
+      isImage: msg.data.isImage
     };
     if (this._currentCapture) {
       if (this._state == STATE_LOADING) {
@@ -163,7 +164,7 @@ const backgroundPageThumbsContent = {
   _captureCurrentPage() {
     let win = docShell.QueryInterface(Ci.nsIInterfaceRequestor)
                       .getInterface(Ci.nsIDOMWindow);
-    win.requestIdleCallback(() => {
+    win.requestIdleCallback(async () => {
       let capture = this._currentCapture;
       capture.finalURL = this._webNav.currentURI.spec;
       capture.pageLoadTime = new Date() - capture.pageLoadStartDate;
@@ -171,7 +172,14 @@ const backgroundPageThumbsContent = {
       let canvasDrawDate = new Date();
 
       docShell.isActive = true;
-      let finalCanvas = PageThumbUtils.createSnapshotThumbnail(content, null);
+
+      let finalCanvas;
+      if (capture.isImage || content.document instanceof content.ImageDocument) {
+        finalCanvas = await PageThumbUtils.createImageThumbnailCanvas(content, capture.url);
+      } else {
+        finalCanvas = PageThumbUtils.createSnapshotThumbnail(content, null);
+      }
+
       docShell.isActive = false;
       capture.canvasDrawTime = new Date() - canvasDrawDate;
 
