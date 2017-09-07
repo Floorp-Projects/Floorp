@@ -498,9 +498,15 @@ public:
   explicit D3D11MTAutoEnter(already_AddRefed<ID3D10Multithread> aMT)
     : mMT(aMT)
   {
-    mMT->Enter();
+    if (mMT) {
+      mMT->Enter();
+    }
   }
-  ~D3D11MTAutoEnter() { mMT->Leave(); }
+  ~D3D11MTAutoEnter() {
+    if (mMT) {
+      mMT->Leave();
+    }
+  }
 
 private:
   RefPtr<ID3D10Multithread> mMT;

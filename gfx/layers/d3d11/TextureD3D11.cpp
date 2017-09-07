@@ -459,6 +459,12 @@ D3D11TextureData::Create(IntSize aSize, SurfaceFormat aFormat, SourceSurface* aS
     uploadDataPtr = &uploadData;
   }
 
+  // See bug 1397040
+  RefPtr<ID3D10Multithread> mt;
+  device->QueryInterface((ID3D10Multithread**)getter_AddRefs(mt));
+
+  D3D11MTAutoEnter lock(mt.forget());
+
   RefPtr<ID3D11Texture2D> texture11;
   HRESULT hr = device->CreateTexture2D(&newDesc, uploadDataPtr, getter_AddRefs(texture11));
 
