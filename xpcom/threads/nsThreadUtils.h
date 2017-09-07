@@ -842,8 +842,8 @@ struct IsParameterStorageClass : public mozilla::FalseType {};
 template<typename T>
 struct StoreCopyPassByValue
 {
-  typedef T stored_type;
-  typedef T passed_type;
+  typedef typename mozilla::Decay<T>::Type stored_type;
+  typedef stored_type passed_type;
   stored_type m;
   template <typename A>
   MOZ_IMPLICIT StoreCopyPassByValue(A&& a) : m(mozilla::Forward<A>(a)) {}
@@ -856,8 +856,8 @@ struct IsParameterStorageClass<StoreCopyPassByValue<S>>
 template<typename T>
 struct StoreCopyPassByConstLRef
 {
-  typedef T stored_type;
-  typedef const T& passed_type;
+  typedef typename mozilla::Decay<T>::Type stored_type;
+  typedef const stored_type& passed_type;
   stored_type m;
   template <typename A>
   MOZ_IMPLICIT StoreCopyPassByConstLRef(A&& a) : m(mozilla::Forward<A>(a)) {}
@@ -870,8 +870,8 @@ struct IsParameterStorageClass<StoreCopyPassByConstLRef<S>>
 template<typename T>
 struct StoreCopyPassByLRef
 {
-  typedef T stored_type;
-  typedef T& passed_type;
+  typedef typename mozilla::Decay<T>::Type stored_type;
+  typedef stored_type& passed_type;
   stored_type m;
   template <typename A>
   MOZ_IMPLICIT StoreCopyPassByLRef(A&& a) : m(mozilla::Forward<A>(a)) {}
@@ -884,8 +884,8 @@ struct IsParameterStorageClass<StoreCopyPassByLRef<S>>
 template<typename T>
 struct StoreCopyPassByRRef
 {
-  typedef T stored_type;
-  typedef T&& passed_type;
+  typedef typename mozilla::Decay<T>::Type stored_type;
+  typedef stored_type&& passed_type;
   stored_type m;
   template <typename A>
   MOZ_IMPLICIT StoreCopyPassByRRef(A&& a) : m(mozilla::Forward<A>(a)) {}
