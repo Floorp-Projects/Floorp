@@ -120,6 +120,7 @@ CompositorBridgeChild::AfterDestroy()
   // destroyed, e.g. the compositor process crashed.
   if (!mActorDestroyed) {
     Send__delete__(this);
+    mActorDestroyed = true;
   }
 
   if (sCompositorBridge == this) {
@@ -133,7 +134,18 @@ CompositorBridgeChild::Destroy()
   // This must not be called from the destructor!
   mTexturesWaitingRecycled.Clear();
 
+  // Destroying the layer manager may cause all sorts of things to happen, so
+  // let's make sure there is still a reference to keep this alive whatever
+  // happens.
+  RefPtr<CompositorBridgeChild> selfRef = this;
+
   if (!mCanSend) {
+    // We may have already called destroy but still have lingering references
+    // or CompositorBridgeChild::ActorDestroy was called. Ensure that we do our
+    // post destroy clean up no matter what. It is safe to call multiple times.
+    MessageLoop::current()->PostTask(NewRunnableMethod(
+      "CompositorBridgeChild::AfterDestroy",
+      selfRef, &CompositorBridgeChild::AfterDestroy));
     return;
   }
 
@@ -145,11 +157,6 @@ CompositorBridgeChild::Destroy()
     delete mSectionAllocator;
     mSectionAllocator = nullptr;
   }
-
-  // Destroying the layer manager may cause all sorts of things to happen, so
-  // let's make sure there is still a reference to keep this alive whatever
-  // happens.
-  RefPtr<CompositorBridgeChild> selfRef = this;
 
   if (mLayerManager) {
     mLayerManager->Destroy();
