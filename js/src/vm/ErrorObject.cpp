@@ -279,5 +279,5 @@ js::ErrorObject::setStack_impl(JSContext* cx, const CallArgs& args)
         return false;
     RootedValue val(cx, args[0]);
 
-    return DefineProperty(cx, thisObj, cx->names().stack, val);
+    return DefineDataProperty(cx, thisObj, cx->names().stack, val);
 }

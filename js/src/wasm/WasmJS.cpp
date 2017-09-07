@@ -2201,7 +2201,7 @@ InitConstructor(JSContext* cx, HandleObject wasm, const char* name, MutableHandl
 
     RootedId id(cx, AtomToId(className));
     RootedValue ctorValue(cx, ObjectValue(*ctor));
-    return DefineProperty(cx, wasm, id, ctorValue, nullptr, nullptr, 0);
+    return DefineDataProperty(cx, wasm, id, ctorValue, 0);
 }
 
 static bool
@@ -2218,7 +2218,7 @@ InitErrorClass(JSContext* cx, HandleObject wasm, const char* name, JSExnType exn
 
     RootedId id(cx, AtomToId(className));
     RootedValue ctorValue(cx, global->getConstructor(GetExceptionProtoKey(exn)));
-    return DefineProperty(cx, wasm, id, ctorValue, nullptr, nullptr, 0);
+    return DefineDataProperty(cx, wasm, id, ctorValue, 0);
 }
 
 JSObject*

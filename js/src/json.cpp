@@ -872,7 +872,7 @@ Revive(JSContext* cx, HandleValue reviver, MutableHandleValue vp)
     if (!obj)
         return false;
 
-    if (!DefineProperty(cx, obj, cx->names().empty, vp))
+    if (!DefineDataProperty(cx, obj, cx->names().empty, vp))
         return false;
 
     Rooted<jsid> id(cx, NameToId(cx->names().empty));

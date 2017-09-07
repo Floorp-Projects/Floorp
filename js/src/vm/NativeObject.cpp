@@ -2570,7 +2570,7 @@ js::SetPropertyByDefining(JSContext* cx, HandleId id, HandleValue v, HandleValue
         existing
         ? JSPROP_IGNORE_ENUMERATE | JSPROP_IGNORE_READONLY | JSPROP_IGNORE_PERMANENT
         : JSPROP_ENUMERATE;
-    return DefineProperty(cx, receiver, id, v, nullptr, nullptr, attrs, result);
+    return DefineDataProperty(cx, receiver, id, v, attrs, result);
 }
 
 // When setting |id| for |receiver| and |obj| has no property for id, continue
