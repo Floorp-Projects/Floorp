@@ -40,7 +40,6 @@
   <string name="preference_performance_block_webfonts">Weblettertypen blokkearje</string>
   <string name="preference_performance_block_webfonts_summary">Kin ta ûntbrekkende piktogrammen of ôfbyldingen liede</string>
   <string name="preference_performance_block_images">Ofbyldingen blokkearje</string>
-  <string name="preference_default_browser">Standertbrowser meitsje</string>
   <string name="preference_category_mozilla">Mozilla</string>
   <string name="preference_mozilla_telemetry_summary">Mear ynfo</string>
   <string name="preference_mozilla_telemetry_summary2">Mozilla stribbet dernei allinnich te sammeljen wat nedich is om %1$s foar elkenien oan te bieden en te ferbetterjen.</string>

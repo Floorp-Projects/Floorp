@@ -35,7 +35,6 @@
   <string name="preference_performance_block_webfonts">Blloko shkronja Web</string>
   <string name="preference_performance_block_webfonts_summary">Mund të sjellë në mungesë ikonash ose figurash</string>
   <string name="preference_performance_block_images">Blloko figura</string>
-  <string name="preference_default_browser">Bëje shfletuesin parazgjedhje</string>
   <string name="preference_category_mozilla">Mozilla</string>
   <string name="preference_mozilla_telemetry_summary">Mësoni më tepër</string>
   <string name="preference_about">Mbi %1$s-in</string>

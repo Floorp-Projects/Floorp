@@ -40,7 +40,6 @@
   <string name="preference_performance_block_webfonts">Web-Schriftarten blockieren</string>
   <string name="preference_performance_block_webfonts_summary">Kann zu fehlenden Symbolen oder Grafiken führen</string>
   <string name="preference_performance_block_images">Grafiken blockieren</string>
-  <string name="preference_default_browser">Als Standardbrowser verwenden</string>
   <string name="preference_category_mozilla">Mozilla</string>
   <string name="preference_mozilla_telemetry_summary">Mehr erfahren</string>
   <string name="preference_mozilla_telemetry_summary2">Mozilla ist bestrebt, nur die Informationen zu sammeln, mit denen wir %1$s anbieten und für alle Nutzer verbessern können.</string>

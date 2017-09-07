@@ -40,7 +40,6 @@
   <string name="preference_performance_block_webfonts">封鎖網路字型</string>
   <string name="preference_performance_block_webfonts_summary">可能會造成網頁當中的圖示或圖片消失</string>
   <string name="preference_performance_block_images">封鎖圖片</string>
-  <string name="preference_default_browser">設為預設瀏覽器</string>
   <string name="preference_category_mozilla">Mozilla</string>
   <string name="preference_mozilla_telemetry_summary">了解更多</string>
   <string name="preference_mozilla_telemetry_summary2">Mozilla 致力於只收集用來為眾人改善 %1$s 所需的必要資料。</string>

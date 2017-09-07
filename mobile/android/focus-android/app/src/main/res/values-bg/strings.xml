@@ -40,7 +40,6 @@
   <string name="preference_performance_block_webfonts">Спиране на уебшрифтовете</string>
   <string name="preference_performance_block_webfonts_summary">Може да доведе до липсващи икони или изображения</string>
   <string name="preference_performance_block_images">Спиране на изображенията</string>
-  <string name="preference_default_browser">Избиране като стандартен четец</string>
   <string name="preference_category_mozilla">Mozilla</string>
   <string name="preference_mozilla_telemetry_summary">Научете повече</string>
   <string name="preference_about">Относно %1$s</string>

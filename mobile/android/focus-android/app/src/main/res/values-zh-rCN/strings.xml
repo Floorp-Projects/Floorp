@@ -40,7 +40,6 @@
   <string name="preference_performance_block_webfonts">拦截网络字体</string>
   <string name="preference_performance_block_webfonts_summary">可能造成图标或图像缺失</string>
   <string name="preference_performance_block_images">拦截图像</string>
-  <string name="preference_default_browser">设为默认浏览器</string>
   <string name="preference_category_mozilla">Mozilla</string>
   <string name="preference_mozilla_telemetry_summary">详细了解</string>
   <string name="preference_mozilla_telemetry_summary2">Mozilla 仅收集必要的信息用以改进 %1$s 以适合大众。</string>

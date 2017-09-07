@@ -36,7 +36,6 @@
   <string name="preference_performance_block_webfonts">ဝဘ်ဖောင့်များကို ပိတ်ပင်ပါ</string>
   <string name="preference_performance_block_webfonts_summary">အိုင်ကွန်များ သို့မဟုတ် ရုပ်ပုံများမပေါ်ခြင်း ဖြစ်စေနိုင်သည်</string>
   <string name="preference_performance_block_images">ရုပ်ပုံများကို မပြပါနှင့်</string>
-  <string name="preference_default_browser">ပုံသေအသုံးပြုမည့် ဘရောင်ဇာအဖြစ် သတ်မှတ်ပါ</string>
   <string name="preference_category_mozilla">Mozilla</string>
   <string name="preference_mozilla_telemetry_summary">ပိုမိုလေ့လာရန်</string>
   <string name="preference_about">%1$s အကြောင်း</string>

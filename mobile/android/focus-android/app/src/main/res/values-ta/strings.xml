@@ -40,7 +40,6 @@
   <string name="preference_performance_block_webfonts">இணைய எழுத்துருக்களைத் தடு</string>
   <string name="preference_performance_block_webfonts_summary">சின்னம் (அ) படங்கள் காணாமல் போகலாம்</string>
   <string name="preference_performance_block_images">படங்களைத் தடு</string>
-  <string name="preference_default_browser">முன்னிருப்பு</string>
   <string name="preference_category_mozilla">மொசில்லா</string>
   <string name="preference_mozilla_telemetry_summary">மேலும் அறிய</string>
   <string name="preference_mozilla_telemetry_summary2">அனைவருக்கும் %1$s வழங்க மற்றும் மேம்படுத்த தேவையானதை மட்டும் சேகரிக்க மொசில்லா உறுதிபூண்டுள்ளது.</string>

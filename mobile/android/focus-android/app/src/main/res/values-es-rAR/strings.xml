@@ -40,7 +40,6 @@
   <string name="preference_performance_block_webfonts">Bloquear tipografía web</string>
   <string name="preference_performance_block_webfonts_summary">Puede resultar en que falten iconos o imágenes</string>
   <string name="preference_performance_block_images">Bloquear imágenes</string>
-  <string name="preference_default_browser">Establecer navegador predeterminado</string>
   <string name="preference_category_mozilla">Mozilla</string>
   <string name="preference_mozilla_telemetry_summary">Conocer más</string>
   <string name="preference_mozilla_telemetry_summary2">Mozilla lucha por recolectar solo lo necesario para brindar y mejorar %1$s para todos.</string>

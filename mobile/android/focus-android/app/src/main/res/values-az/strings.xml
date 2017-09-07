@@ -40,7 +40,6 @@
   <string name="preference_performance_block_webfonts">Web şriftlərini əngəllə</string>
   <string name="preference_performance_block_webfonts_summary">Əksik icon və şəkillərə səbəb ola bilər</string>
   <string name="preference_performance_block_images">Şəkilləri əngəllə</string>
-  <string name="preference_default_browser">Əsas səyyah et</string>
   <string name="preference_category_mozilla">Mozilla</string>
   <string name="preference_mozilla_telemetry_summary">Ətraflı öyrən</string>
   <string name="preference_mozilla_telemetry_summary2">Mozilla ancaq %1$s səyyahını hamı üçün yaxşılaşdırmağa lazım olan məlumatları yığır.</string>

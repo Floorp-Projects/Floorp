@@ -34,7 +34,6 @@
   <string name="preference_category_performance">Rindimientu</string>
   <string name="preference_performance_block_webfonts">Bloquiar fontes web</string>
   <string name="preference_performance_block_images">Bloquiar imáxenes</string>
-  <string name="preference_default_browser">Predeterminar restolador</string>
   <string name="preference_category_mozilla">Mozilla</string>
   <string name="preference_mozilla_telemetry_summary">Deprendi más</string>
   <string name="preference_about">Tocante a %1$s</string>

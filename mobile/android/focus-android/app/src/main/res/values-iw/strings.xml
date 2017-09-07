@@ -40,7 +40,6 @@
   <string name="preference_performance_block_webfonts">חסימת גופני רשת</string>
   <string name="preference_performance_block_webfonts_summary">עשוי לגרום לסמלים או תמונות חסרים</string>
   <string name="preference_performance_block_images">חסימת תמונות</string>
-  <string name="preference_default_browser">הפיכה לדפדפן בררת המחדל</string>
   <string name="preference_category_mozilla">Mozilla</string>
   <string name="preference_mozilla_telemetry_summary">מידע נוסף</string>
   <string name="preference_about">על אודות %1$s</string>

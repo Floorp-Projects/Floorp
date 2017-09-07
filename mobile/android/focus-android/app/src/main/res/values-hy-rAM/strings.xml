@@ -40,7 +40,6 @@
   <string name="preference_performance_block_webfonts">Արգելափակել վեբ տառատեսակները</string>
   <string name="preference_performance_block_webfonts_summary">Կարող է հանգեցնել պատկերակների և պատկերների բացակայության</string>
   <string name="preference_performance_block_images">Արգելափակել պատկերները</string>
-  <string name="preference_default_browser">Դարձնել լռելյան դիտարկիչ</string>
   <string name="preference_category_mozilla">Mozilla</string>
   <string name="preference_mozilla_telemetry_summary">Իմանալ ավելին</string>
   <string name="preference_mozilla_telemetry_summary2">Mozilla-ն ձգտում է հավաքել միայն այն, ինչ պետք է՝ %1$s-ը լավարկելու համար:</string>

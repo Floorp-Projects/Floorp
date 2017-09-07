@@ -40,7 +40,6 @@
   <string name="preference_performance_block_webfonts">مسدود کردن قلم‌های وب</string>
   <string name="preference_performance_block_webfonts_summary">ممکن است باعث بارگیری نشدن برخی از شمایل‌ها و تصاویر بشود</string>
   <string name="preference_performance_block_images">مسدود کردن تصاویر</string>
-  <string name="preference_default_browser">تبدیل به مرورگر پیش‌فرض</string>
   <string name="preference_category_mozilla">موزیلا</string>
   <string name="preference_mozilla_telemetry_summary">اطلاعات بیشتر</string>
   <string name="preference_mozilla_telemetry_summary2">موزیلا تلاش می‌کند تنها اطلاعاتی که برای بهینه‌سازی %1$s برای همه به آنها نیاز دارد را جمع‌آوری کند.</string>

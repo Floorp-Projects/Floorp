@@ -40,7 +40,6 @@
   <string name="preference_performance_block_webfonts">Zavračaj spletne pisave</string>
   <string name="preference_performance_block_webfonts_summary">Lahko povzroči izginotje ikon ali slik</string>
   <string name="preference_performance_block_images">Zavračaj slike</string>
-  <string name="preference_default_browser">Nastavi kot privzet brskalnik</string>
   <string name="preference_category_mozilla">Mozilla</string>
   <string name="preference_mozilla_telemetry_summary">Več o tem</string>
   <string name="preference_mozilla_telemetry_summary2">Mozilla se trudi, da zbira samo podatke, ki jih potrebuje za razvoj in izboljševanje %1$sa.</string>

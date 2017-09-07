@@ -40,7 +40,6 @@
   <string name="preference_performance_block_webfonts">वेब लिपियों को अवरुद्ध करें</string>
   <string name="preference_performance_block_webfonts_summary">अनुपस्थित प्रतीकों या छवियों के रूप में परिणाम हो सकता है</string>
   <string name="preference_performance_block_images">चित्रों को बाधित करें</string>
-  <string name="preference_default_browser">तयशुदा ब्राउज़र बनाएँ</string>
   <string name="preference_category_mozilla">Mozilla</string>
   <string name="preference_mozilla_telemetry_summary">और अधिक जानें</string>
   <string name="preference_about">%1$s के बारे में</string>

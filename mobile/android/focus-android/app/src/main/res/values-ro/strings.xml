@@ -36,7 +36,6 @@
   <string name="preference_performance_block_webfonts">Blochează fonturile web</string>
   <string name="preference_performance_block_webfonts_summary">Poate duce la pictograme și imagini lipsă</string>
   <string name="preference_performance_block_images">Blochează imaginile</string>
-  <string name="preference_default_browser">Desemnează ca browser implicit</string>
   <string name="preference_category_mozilla">Mozilla</string>
   <string name="preference_mozilla_telemetry_summary">Află mai multe</string>
   <string name="preference_about">Despre %1$s</string>

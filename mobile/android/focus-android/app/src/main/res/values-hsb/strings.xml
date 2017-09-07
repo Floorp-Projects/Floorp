@@ -40,7 +40,6 @@
   <string name="preference_performance_block_webfonts">Webpisma blokować</string>
   <string name="preference_performance_block_webfonts_summary">Móže k tomu wjesć, zo symbole abo wobrazy faluja</string>
   <string name="preference_performance_block_images">Wobrazy blokować</string>
-  <string name="preference_default_browser">Jako standardny wobhladowak nastajić</string>
   <string name="preference_category_mozilla">Mozilla</string>
   <string name="preference_mozilla_telemetry_summary">Dalše informacije</string>
   <string name="preference_mozilla_telemetry_summary2">Mozilla so prócuje, jenož informacije hromadźić, z kotrymiž móžemy %1$s za kóždeho poskićić a polěpšić.</string>

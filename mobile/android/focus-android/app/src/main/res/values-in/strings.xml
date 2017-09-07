@@ -40,7 +40,6 @@
   <string name="preference_performance_block_webfonts">Blokir fon Web</string>
   <string name="preference_performance_block_webfonts_summary">Dapat menyebabkan hilangnya ikon atau gambar</string>
   <string name="preference_performance_block_images">Blokir gambar</string>
-  <string name="preference_default_browser">Jadikan peramban utama</string>
   <string name="preference_category_mozilla">Mozilla</string>
   <string name="preference_mozilla_telemetry_summary">Pelajari lebih lanjut</string>
   <string name="preference_mozilla_telemetry_summary2">Mozilla berusaha untuk mengumpulkan hanya apa yang kami perlu untuk sediakan dan meningkatkan %1$s untuk setiap orang.</string>

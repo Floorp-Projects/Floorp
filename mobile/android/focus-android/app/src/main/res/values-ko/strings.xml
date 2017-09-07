@@ -37,7 +37,6 @@
   <string name="preference_performance_block_webfonts">웹 폰트 차단</string>
   <string name="preference_performance_block_webfonts_summary">아이콘 또는 이미지가 누락될 수 있음</string>
   <string name="preference_performance_block_images">이미지 차단</string>
-  <string name="preference_default_browser">기본 브라우저로 설정</string>
   <string name="preference_category_mozilla">Mozilla</string>
   <string name="preference_mozilla_telemetry_summary">상세정보</string>
   <string name="preference_about">%1$s에 대한 정보</string>

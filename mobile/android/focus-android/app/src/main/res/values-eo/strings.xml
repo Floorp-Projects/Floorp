@@ -40,7 +40,6 @@
   <string name="preference_performance_block_webfonts">Bloki retajn tiparojn</string>
   <string name="preference_performance_block_webfonts_summary">Tio povus malaperigi emblemojn aŭ bildojn</string>
   <string name="preference_performance_block_images">Bloki bildojn</string>
-  <string name="preference_default_browser">Igi ĉefa retumilo</string>
   <string name="preference_category_mozilla">Mozilla</string>
   <string name="preference_mozilla_telemetry_summary">Pli da informo</string>
   <string name="preference_mozilla_telemetry_summary2">Mozilla penas kolekti nur la datumojn nepre bezonatajn por provizi kaj plibonigi %1$s por ĉiuj.</string>

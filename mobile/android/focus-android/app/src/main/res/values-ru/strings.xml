@@ -40,7 +40,6 @@
   <string name="preference_performance_block_webfonts">Блокировать веб-шрифты</string>
   <string name="preference_performance_block_webfonts_summary">Может привести к отсутствию значков или изображений</string>
   <string name="preference_performance_block_images">Блокировать изображения</string>
-  <string name="preference_default_browser">Сделать браузером по умолчанию</string>
   <string name="preference_category_mozilla">Mozilla</string>
   <string name="preference_mozilla_telemetry_summary">Подробнее</string>
   <string name="preference_mozilla_telemetry_summary2">Mozilla обязуется собирать только ту информацию, которая необходима для работы %1$s и его улучшения в будущем.</string>

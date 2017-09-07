@@ -40,7 +40,6 @@
   <string name="preference_performance_block_webfonts">Cuir cosc ar chlónna Gréasáin</string>
   <string name="preference_performance_block_webfonts_summary">D\'fhéadfadh go mbeadh deilbhíní nó íomhánna ar iarraidh</string>
   <string name="preference_performance_block_images">Cuir cosc ar íomhánna</string>
-  <string name="preference_default_browser">Déan brabhsálaí réamhshocraithe de</string>
   <string name="preference_category_mozilla">Mozilla</string>
   <string name="preference_mozilla_telemetry_summary">Tuilleadh eolais</string>
   <string name="preference_about">Maidir le %1$s</string>

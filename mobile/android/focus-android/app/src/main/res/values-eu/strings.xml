@@ -40,7 +40,6 @@
   <string name="preference_performance_block_webfonts">Blokeatu webeko letra-tipoak</string>
   <string name="preference_performance_block_webfonts_summary">Ikonoak edo irudiak ez bistaratzea eragin lezake</string>
   <string name="preference_performance_block_images">Blokeatu irudiak</string>
-  <string name="preference_default_browser">Egin nabigatzaile lehenetsia</string>
   <string name="preference_category_mozilla">Mozilla</string>
   <string name="preference_mozilla_telemetry_summary">Argibide gehiago</string>
   <string name="preference_mozilla_telemetry_summary2">%1$s denontzat eskaini eta hobetzeko beharrezkoa dena soilik biltzen ahalegintzen da Mozilla.</string>

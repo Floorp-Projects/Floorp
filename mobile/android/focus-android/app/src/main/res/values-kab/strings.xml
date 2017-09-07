@@ -40,7 +40,6 @@
   <string name="preference_performance_block_webfonts">Sewḥel tisefsiyin Web</string>
   <string name="preference_performance_block_webfonts_summary">Ahat yekka-d seg tigitin neγ tugniwin yettwattun</string>
   <string name="preference_performance_block_images">Sewḥel tugniwin</string>
-  <string name="preference_default_browser">Err-it d iminig amezwer</string>
   <string name="preference_category_mozilla">Mozilla</string>
   <string name="preference_mozilla_telemetry_summary">Issin ugar</string>
   <string name="preference_mozilla_telemetry_summary2">Mozilla tettennaɣ akken ad telqeḍ kan ayen tesra i usnulfu d usnernu n %1$s i yal uiwen.</string>

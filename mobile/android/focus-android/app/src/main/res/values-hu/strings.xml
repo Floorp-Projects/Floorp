@@ -40,7 +40,6 @@
   <string name="preference_performance_block_webfonts">Webes betűkészletek blokkolása</string>
   <string name="preference_performance_block_webfonts_summary">Hiányzó ikonokat és képeket eredményezhet</string>
   <string name="preference_performance_block_images">Képek blokkolása</string>
-  <string name="preference_default_browser">Alapértelmezett böngészővé tétel</string>
   <string name="preference_category_mozilla">Mozilla</string>
   <string name="preference_mozilla_telemetry_summary">Tudjon meg többet</string>
   <string name="preference_mozilla_telemetry_summary2">A Mozilla arra törekszik, hogy csak azt gyűjtse, ami a %1$s fejlesztéséhez és támogatásához szükséges.</string>

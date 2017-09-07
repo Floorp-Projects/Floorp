@@ -40,7 +40,6 @@
   <string name="preference_performance_block_webfonts">Rhwystro ffontiau Gwe</string>
   <string name="preference_performance_block_webfonts_summary">Gall olygu colli eiconau neu ddelweddau</string>
   <string name="preference_performance_block_images">Rhwystro delweddau</string>
-  <string name="preference_default_browser">Gwneud yn borwr rhagosodedig</string>
   <string name="preference_category_mozilla">Mozilla</string>
   <string name="preference_mozilla_telemetry_summary">Dysgu rhagor</string>
   <string name="preference_mozilla_telemetry_summary2">Mae Mozilla\'n ceisio casglu dim ond yr hyn sydd ei angen arnom i ddarparu a gwella %1$s ar gyfer pawb.</string>

@@ -40,7 +40,6 @@
   <string name="preference_performance_block_webfonts">ปิดกั้นแบบอักษรเว็บ</string>
   <string name="preference_performance_block_webfonts_summary">อาจส่งผลให้ไอคอนหรือภาพขาดหายไป</string>
   <string name="preference_performance_block_images">ปิดกั้นภาพ</string>
-  <string name="preference_default_browser">ทำให้เป็นเบราว์เซอร์เริ่มต้น</string>
   <string name="preference_category_mozilla">Mozilla</string>
   <string name="preference_mozilla_telemetry_summary">เรียนรู้เพิ่มเติม</string>
   <string name="preference_mozilla_telemetry_summary2">Mozilla มุ่งมั่นที่จะเก็บรวบรวมเฉพาะสิ่งที่เราจำเป็นต้องจัดหาและปรับปรุง %1$s สำหรับทุกคน</string>

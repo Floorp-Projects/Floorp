@@ -40,7 +40,6 @@
   <string name="preference_performance_block_webfonts">Bloquer les polices web</string>
   <string name="preference_performance_block_webfonts_summary">Peut empêcher certaines icônes ou images de s’afficher</string>
   <string name="preference_performance_block_images">Bloquer les images</string>
-  <string name="preference_default_browser">Définir comme navigateur par défaut</string>
   <string name="preference_category_mozilla">Mozilla</string>
   <string name="preference_mozilla_telemetry_summary">En savoir plus</string>
   <string name="preference_mozilla_telemetry_summary2">Mozilla veille à collecter uniquement les données nécessaires afin d’offrir et d’améliorer %1$s pour tout le monde.</string>

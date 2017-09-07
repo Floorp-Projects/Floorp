@@ -40,7 +40,6 @@
   <string name="preference_performance_block_webfonts">Блокувати веб-шрифти</string>
   <string name="preference_performance_block_webfonts_summary">Може призвести до втрати піктограм чи зображень</string>
   <string name="preference_performance_block_images">Блокувати зображення</string>
-  <string name="preference_default_browser">Зробити типовим браузером</string>
   <string name="preference_category_mozilla">Mozilla</string>
   <string name="preference_mozilla_telemetry_summary">Докладніше</string>
   <string name="preference_mozilla_telemetry_summary2">Mozilla намагається збирати лише дані, що необхідні для роботи і вдосконалення %1$s для кожного.</string>

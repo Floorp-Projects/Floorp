@@ -40,7 +40,6 @@
   <string name="preference_performance_block_webfonts">ບັອກຕົວອັກສອນເວັບ</string>
   <string name="preference_performance_block_webfonts_summary">ອາດຈະສົ່ງຜົນເຮັດໃຫ້ໄອຄອນ ຫລື ຮູບພາບຂາດຫາຍໄປ</string>
   <string name="preference_performance_block_images">ບັອກຮູບພາບ</string>
-  <string name="preference_default_browser">ຕັ້ງໃຫ້ເປັນເວັບບຣາວເຊີຫລັກ</string>
   <string name="preference_category_mozilla">Mozilla</string>
   <string name="preference_mozilla_telemetry_summary">ຮຽນຮູ້ເພີ່ມເຕີມ</string>
   <string name="preference_about">ກ່ຽວກັບ %1$s</string>

@@ -40,7 +40,6 @@
   <string name="preference_performance_block_webfonts">జాల ఖతులను (వెబ్ ఫాంట్లను) నిరోధించు</string>
   <string name="preference_performance_block_webfonts_summary">దీనివల్ల ప్రతీకాలు లేదా బొమ్మలు కనబడకపోవచ్చు</string>
   <string name="preference_performance_block_images">బొమ్మలను నిరోధించు</string>
-  <string name="preference_default_browser">అప్రమేయ విహరిణిగా చేయి</string>
   <string name="preference_category_mozilla">Mozilla</string>
   <string name="preference_mozilla_telemetry_summary">ఇంకా తెలుసుకోండి</string>
   <string name="preference_about">%1$s గురించి</string>

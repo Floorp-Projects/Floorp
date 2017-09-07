@@ -40,7 +40,6 @@
   <string name="preference_performance_block_webfonts">Blokovať webové písma</string>
   <string name="preference_performance_block_webfonts_summary">Niektoré ikony alebo obrázky sa nemusia zobrazovať</string>
   <string name="preference_performance_block_images">Blokovať obrázky</string>
-  <string name="preference_default_browser">Nastaviť ako predvolený prehliadač</string>
   <string name="preference_category_mozilla">Mozilla</string>
   <string name="preference_mozilla_telemetry_summary">Ďalšie informácie</string>
   <string name="preference_mozilla_telemetry_summary2">Mozilla sa usiluje zbierať len údaje, ktoré potrebujeme na vylepšenie aplikácie %1$s pre všetkých.</string>

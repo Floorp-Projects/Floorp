@@ -40,7 +40,6 @@
   <string name="preference_performance_block_webfonts">Bloquear fontes Web</string>
   <string name="preference_performance_block_webfonts_summary">Pode resultar em falta de ícones ou imagens</string>
   <string name="preference_performance_block_images">Bloquear imagens</string>
-  <string name="preference_default_browser">Definir como navegador padrão</string>
   <string name="preference_category_mozilla">Mozilla</string>
   <string name="preference_mozilla_telemetry_summary">Saiba mais</string>
   <string name="preference_mozilla_telemetry_summary2">A Mozilla se empenha para coletar somente o que é necessário para melhorar o %1$s para todos.</string>

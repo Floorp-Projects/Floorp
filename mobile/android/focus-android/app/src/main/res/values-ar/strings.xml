@@ -40,7 +40,6 @@
   <string name="preference_performance_block_webfonts">احجب خطوط الوب</string>
   <string name="preference_performance_block_webfonts_summary">قد يسبب اختفاء بعض الأيقونات أو الصور</string>
   <string name="preference_performance_block_images">احجب الصور</string>
-  <string name="preference_default_browser">اجعله المتصفح المبدئي</string>
   <string name="preference_category_mozilla">موزيلا</string>
   <string name="preference_mozilla_telemetry_summary">اطّلع على المزيد</string>
   <string name="preference_mozilla_telemetry_summary2">تحاول موزيلا ألا تجمع أكثر مما تحتاجه لإتاحة %1$s و تحسينه للجميع.</string>

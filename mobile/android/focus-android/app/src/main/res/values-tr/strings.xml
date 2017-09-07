@@ -40,7 +40,6 @@
   <string name="preference_performance_block_webfonts">Web fontlarını engelle</string>
   <string name="preference_performance_block_webfonts_summary">Simge ve resimlerin görünmemesine yol açabilir</string>
   <string name="preference_performance_block_images">Resimleri engelle</string>
-  <string name="preference_default_browser">Varsayılan tarayıcı yap</string>
   <string name="preference_category_mozilla">Mozilla</string>
   <string name="preference_mozilla_telemetry_summary">Daha fazla bilgi al</string>
   <string name="preference_mozilla_telemetry_summary2">Mozilla, yalnızca %1$s’u daha da geliştirmek için ihtiyaç duyduğumuz verileri toplar.</string>

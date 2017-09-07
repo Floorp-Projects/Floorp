@@ -40,7 +40,6 @@
   <string name="preference_performance_block_webfonts">Φραγή γραμματοσειρών ιστού</string>
   <string name="preference_performance_block_webfonts_summary">Ενδέχεται να οδηγήσει σε απώλεια εικονιδίων ή εικόνων</string>
   <string name="preference_performance_block_images">Φραγή εικόνων</string>
-  <string name="preference_default_browser">Ορισμός ως προεπιλεγμένο πρόγραμμα περιήγησης</string>
   <string name="preference_category_mozilla">Mozilla</string>
   <string name="preference_mozilla_telemetry_summary">Μάθετε περισσότερα</string>
   <string name="preference_mozilla_telemetry_summary2">Η Mozilla αγωνίζεται για να συλλέγει μόνο ό,τι χρειάζεται για να παρέχει και να βελτιώνει το %1$s για όλους.</string>

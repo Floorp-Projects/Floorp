@@ -40,7 +40,6 @@
   <string name="preference_performance_block_webfonts">ওয়েব ফন্টকে অবরুদ্ধ করুন</string>
   <string name="preference_performance_block_webfonts_summary">ছবি অথবা আইকন দৃশ্যমান নাও হতে পারে</string>
   <string name="preference_performance_block_images">ছবি অবরুদ্ধ করুন</string>
-  <string name="preference_default_browser">ডিফল্ট ব্রাউজার বানান</string>
   <string name="preference_category_mozilla">Mozilla</string>
   <string name="preference_mozilla_telemetry_summary">আরও জানুন</string>
   <string name="preference_about">%1$s সম্বন্ধে</string>

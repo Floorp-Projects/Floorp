@@ -40,7 +40,6 @@
   <string name="preference_performance_block_webfonts">საიტის შრიფტების შეზღუდვა</string>
   <string name="preference_performance_block_webfonts_summary">შესაძლოა ხატულების და სურათების ნაწილი გაქრეს</string>
   <string name="preference_performance_block_images">სურათების შეზღუდვა</string>
-  <string name="preference_default_browser">ნაგულისხმევ ბრაუზერად დაყენება</string>
   <string name="preference_category_mozilla">Mozilla</string>
   <string name="preference_mozilla_telemetry_summary">შეიტყვეთ მეტი</string>
   <string name="preference_mozilla_telemetry_summary2">Mozill აღრიცხავს მხოლოდ იმ მონაცემებს, რაც საჭიროა %1$s-ის გასაუმჯობესებლად.</string>

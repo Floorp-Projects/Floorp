@@ -40,7 +40,6 @@
   <string name="preference_performance_block_webfonts">Blokker nettfontar</string>
   <string name="preference_performance_block_webfonts_summary">Kan resultere i at ikon eller bilde manglar</string>
   <string name="preference_performance_block_images">Blokker bilde</string>
-  <string name="preference_default_browser">Vel som standard nettlesar</string>
   <string name="preference_category_mozilla">Mozilla</string>
   <string name="preference_mozilla_telemetry_summary">Les meir</string>
   <string name="preference_mozilla_telemetry_summary2">Mozilla strevar etter å berre samle inn det vi treng for å tilby og forbetre %1$s for alle.</string>

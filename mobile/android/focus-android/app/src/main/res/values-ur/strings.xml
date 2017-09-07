@@ -40,7 +40,6 @@
   <string name="preference_performance_block_webfonts">ویب فونٹس بلاک کریں</string>
   <string name="preference_performance_block_webfonts_summary">نتیجتن اسکی شاید آئیکن یا تصاویر گایب ہو سکتی ہے</string>
   <string name="preference_performance_block_images">نقوش بلاک کریں</string>
-  <string name="preference_default_browser">طےشدہ براؤزر بنائیں</string>
   <string name="preference_category_mozilla">Mozilla</string>
   <string name="preference_mozilla_telemetry_summary">مزید سیکھیں</string>
   <string name="preference_about">کے بارے میں%1$s</string>
