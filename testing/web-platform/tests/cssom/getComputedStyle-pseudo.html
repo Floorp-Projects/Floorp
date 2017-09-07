@@ -65,6 +65,9 @@ test(function() {
     assert_equals(getComputedStyle(has_no_pseudos, pseudo).position, "static",
                   "Nonexistent " + pseudo + " pseudo-element shouldn't claim to have " +
                   "the same style as the originating element");
+    assert_equals(getComputedStyle(has_no_pseudos, pseudo).width, "auto",
+                  "Nonexistent " + pseudo + " pseudo-element shouldn't claim to have " +
+                  "definite size");
   });
 }, "Resolution of nonexistent pseudo-element styles");
 test(function() {

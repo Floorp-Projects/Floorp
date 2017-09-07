@@ -117,13 +117,13 @@ struct hb_font_t {
   hb_destroy_func_t  destroy;
 
   enum dirty_t {
-    NOTHING	= 0x0000,
-    FACE	= 0x0001,
-    PARENT	= 0x0002,
-    FUNCS	= 0x0004,
-    SCALE	= 0x0008,
-    PPEM	= 0x0010,
-    VARIATIONS	= 0x0020,
+    DIRTY_NOTHING	= 0x0000,
+    DIRTY_FACE		= 0x0001,
+    DIRTY_PARENT	= 0x0002,
+    DIRTY_FUNCS		= 0x0004,
+    DIRTY_SCALE		= 0x0008,
+    DIRTY_PPEM		= 0x0010,
+    DIRTY_VARIATIONS	= 0x0020,
   } dirty;
 
   struct hb_shaper_data_t shaper_data;

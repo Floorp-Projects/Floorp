@@ -322,10 +322,7 @@ windows8-tests:
     - mochitest-media
     - reftest
     - reftest-no-accel
-    - mochitest-gpu
     - mochitest-webgl
-    - mochitest-clipboard
-    - mochitest-chrome
 
 devtools-tests:
     - mochitest-devtools-chrome

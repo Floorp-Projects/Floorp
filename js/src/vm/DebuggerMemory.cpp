@@ -203,34 +203,34 @@ DebuggerMemory::drainAllocationsLog(JSContext* cx, unsigned argc, Value* vp)
         Debugger::AllocationsLogEntry& entry = dbg->allocationsLog.front();
 
         RootedValue frame(cx, ObjectOrNullValue(entry.frame));
-        if (!DefineProperty(cx, obj, cx->names().frame, frame))
+        if (!DefineDataProperty(cx, obj, cx->names().frame, frame))
             return false;
 
         double when = (entry.when -
                        mozilla::TimeStamp::ProcessCreation()).ToMilliseconds();
         RootedValue timestampValue(cx, NumberValue(when));
-        if (!DefineProperty(cx, obj, cx->names().timestamp, timestampValue))
+        if (!DefineDataProperty(cx, obj, cx->names().timestamp, timestampValue))
             return false;
 
         RootedString className(cx, Atomize(cx, entry.className, strlen(entry.className)));
         if (!className)
             return false;
         RootedValue classNameValue(cx, StringValue(className));
-        if (!DefineProperty(cx, obj, cx->names().class_, classNameValue))
+        if (!DefineDataProperty(cx, obj, cx->names().class_, classNameValue))
             return false;
 
         RootedValue ctorName(cx, NullValue());
         if (entry.ctorName)
             ctorName.setString(entry.ctorName);
-        if (!DefineProperty(cx, obj, cx->names().constructor, ctorName))
+        if (!DefineDataProperty(cx, obj, cx->names().constructor, ctorName))
             return false;
 
         RootedValue size(cx, NumberValue(entry.size));
-        if (!DefineProperty(cx, obj, cx->names().size, size))
+        if (!DefineDataProperty(cx, obj, cx->names().size, size))
             return false;
 
         RootedValue inNursery(cx, BooleanValue(entry.inNursery));
-        if (!DefineProperty(cx, obj, cx->names().inNursery, inNursery))
+        if (!DefineDataProperty(cx, obj, cx->names().inNursery, inNursery))
             return false;
 
         result->setDenseElement(i, ObjectValue(*obj));

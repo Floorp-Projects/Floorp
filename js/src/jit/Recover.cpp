@@ -1688,6 +1688,38 @@ RArrayState::recover(JSContext* cx, SnapshotIterator& iter) const
 }
 
 bool
+MSetArrayLength::writeRecoverData(CompactBufferWriter& writer) const
+{
+    MOZ_ASSERT(canRecoverOnBailout());
+    // For simplicity, we capture directly the object instead of the elements
+    // pointer.
+    MOZ_ASSERT(elements()->type() != MIRType::Elements);
+    writer.writeUnsigned(uint32_t(RInstruction::Recover_SetArrayLength));
+    return true;
+}
+
+RSetArrayLength::RSetArrayLength(CompactBufferReader& reader)
+{
+}
+
+bool
+RSetArrayLength::recover(JSContext* cx, SnapshotIterator& iter) const
+{
+    RootedValue result(cx);
+    RootedArrayObject obj(cx, &iter.read().toObject().as<ArrayObject>());
+    RootedValue len(cx, iter.read());
+
+    RootedId id(cx, NameToId(cx->names().length));
+    ObjectOpResult error;
+    if (!ArraySetLength(cx, obj, id, JSPROP_PERMANENT, len, error))
+        return false;
+
+    result.setObject(*obj);
+    iter.storeInstructionResult(result);
+    return true;
+}
+
+bool
 MAssertRecoveredOnBailout::writeRecoverData(CompactBufferWriter& writer) const
 {
     MOZ_ASSERT(canRecoverOnBailout());

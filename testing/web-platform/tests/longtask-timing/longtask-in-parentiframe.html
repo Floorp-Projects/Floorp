@@ -7,17 +7,17 @@
 <script src="/resources/testharnessreport.js"></script>
 
 <script>
-  var t = async_test(t => {
-    window.addEventListener("message", t.step_func(e => {
-      assert_equals(e.data, "longtask+same-origin-ancestor+script");
+  const t = async_test(t => {
+    window.addEventListener('message', t.step_func(e => {
+      assert_equals(e.data, 'longtask+same-origin-ancestor+script+++');
       t.done();
     }));
-  }, "Performance longtask entries in parent are observable in child iframe");
+  }, 'Performance longtask entries in parent are observable in child iframe.');
 
-  var iframe = document.createElement('iframe');
+  const iframe = document.createElement('iframe');
   iframe.onload = function() {
     t.step_timeout(function(){
-      var begin = window.performance.now();
+      const begin = window.performance.now();
       while (window.performance.now() < begin + 51);
     }, 50);
   }
@@ -25,7 +25,6 @@
   iframe.name = 'child-iframe-name';
   document.body.appendChild(iframe);
   iframe.src = 'resources/subframe-observing-longtask.html';
-
 </script>
 
 </body>

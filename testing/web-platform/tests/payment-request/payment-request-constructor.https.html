@@ -89,36 +89,6 @@ test(() => {
 
 test(() => {
   smokeTest();
-  const invalidMethods = [
-    {
-      supportedMethods: "http://username:password@example.com/pay",
-    },
-    {
-      supportedMethods: "http://foo.com:100000000/pay",
-    },
-    {
-      supportedMethods: "basic-💳",
-    },
-    {
-      supportedMethods: "https://wpt.fyi/payment-request",
-    },
-    {
-      supportedMethods: "¡basic-*-card!",
-    },
-  ];
-  for (const invalidMethod of invalidMethods) {
-    try {
-      new PaymentRequest([invalidMethod], defaultDetails);
-    } catch (err) {
-      assert_unreached(
-        `Unexpected error processing invalid PMI "${invalidMethod}". ${err.message}`
-      );
-    }
-  }
-}, "ignore invalid payment method URLs");
-
-test(() => {
-  smokeTest();
   const JSONSerializables = [[], { object: {} }];
   for (const data of JSONSerializables) {
     try {
@@ -557,17 +527,6 @@ test(() => {
     ],
   });
   assert_throws(new TypeError(), () => {
-    new PaymentRequest(defaultMethods, modifiedDetails);
-  });
-  assert_throws(new TypeError(), () => {
-    const modifiedDetails = Object.assign({}, defaultDetails, {
-      modifiers: [
-        {
-          supportedMethods: "https://wpt.fyi/payment-request",
-          data: function() {},
-        },
-      ],
-    });
     new PaymentRequest(defaultMethods, modifiedDetails);
   });
 }, "Rethrow any exceptions of JSON-serializing modifier.data");
