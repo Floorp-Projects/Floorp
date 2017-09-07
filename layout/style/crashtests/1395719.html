@@ -1,0 +1,19 @@
+<script>
+o = []
+window.onload = () => {
+  a = document.createElement("body");
+  b = document.createElementNS("http://www.w3.org/1998/Math/MathML", "math");
+  b.setAttributeNS(null, "display", "block");
+  c = document.createElementNS("http://www.w3.org/1998/Math/MathML", "munderover");
+  d = document.createTextNode("\n          ");
+  c.appendChild(d);
+  c.appendChild(document.createElementNS("http://www.w3.org/1998/Math/MathML", "mo"));
+  b.appendChild(c);
+  a.appendChild(b);
+  document.documentElement.appendChild(a);
+  a.style.display = "inline";
+  setTimeout(() => {
+    d.data = "\u934F" + d.data;
+  }, 100)
+}
+</script>
