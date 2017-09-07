@@ -633,12 +633,6 @@ child:
     async StopIMEStateManagement();
 
     /**
-     * MenuKeyboardListenerInstalled() is called when menu keyboard listener
-     * is installed in the parent process.
-     */
-    async MenuKeyboardListenerInstalled(bool aInstalled);
-
-    /**
      * @see nsIDOMWindowUtils sendMouseEvent.
      */
     async MouseEvent(nsString aType,
