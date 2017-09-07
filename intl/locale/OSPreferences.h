@@ -128,6 +128,19 @@ public:
   static bool GetDateTimeConnectorPattern(const nsACString& aLocale,
                                           nsAString& aRetVal);
 
+  /**
+   * Triggers a refresh of retrieving data from host environment.
+   *
+   * If the result differs from the previous list, it will additionally
+   * trigger global events for changed values:
+   *
+   *  * SystemLocales: "intl:system-locales-changed"
+   *
+   * This method should not be called from anywhere except of per-platform
+   * hooks into OS events.
+   */
+  void Refresh();
+
 protected:
   nsTArray<nsCString> mSystemLocales;
   nsTArray<nsCString> mRegionalPrefsLocales;
@@ -187,19 +200,6 @@ private:
                            DateTimeFormatStyle aTimeFormatStyle,
                            const nsACString& aLocale,
                            nsAString& aRetVal);
-
-  /**
-   * Triggers a refresh of retrieving data from host environment.
-   *
-   * If the result differs from the previous list, it will additionally
-   * trigger global events for changed values:
-   *
-   *  * SystemLocales: "intl:system-locales-changed"
-   *
-   * This method should not be called from anywhere except of per-platform
-   * hooks into OS events.
-   */
-  void Refresh();
 };
 
 } // intl
