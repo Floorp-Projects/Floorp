@@ -540,7 +540,7 @@ protected:
 
   // Opens the channel, using an HTTP byte range request to start at mOffset
   // if possible. Main thread only.
-  nsresult OpenChannel(nsIStreamListener** aStreamListener);
+  nsresult OpenChannel();
   nsresult RecreateChannel();
   // Add headers to HTTP request. Main thread only.
   nsresult SetupChannelHeaders();
