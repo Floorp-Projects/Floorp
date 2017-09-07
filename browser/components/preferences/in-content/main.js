@@ -6,6 +6,11 @@
 /* import-globals-from ../../../../toolkit/mozapps/preferences/fontbuilder.js */
 /* import-globals-from ../../../base/content/aboutDialog-appUpdater.js */
 
+XPCOMUtils.defineLazyModuleGetter(this, "ExtensionPreferencesManager",
+                                  "resource://gre/modules/ExtensionPreferencesManager.jsm");
+XPCOMUtils.defineLazyModuleGetter(this, "AddonManager",
+                                  "resource://gre/modules/AddonManager.jsm");
+
 Components.utils.import("resource://gre/modules/Services.jsm");
 Components.utils.import("resource://gre/modules/Downloads.jsm");
 Components.utils.import("resource://gre/modules/FileUtils.jsm");
@@ -236,6 +241,8 @@ var gMainPane = {
       gMainPane.setHomePageToBookmark);
     setEventListener("restoreDefaultHomePage", "command",
       gMainPane.restoreDefaultHomePage);
+    setEventListener("disableHomePageExtension", "command",
+                     gMainPane.makeDisableControllingExtension("homepage_override"));
     setEventListener("chooseLanguage", "command",
       gMainPane.showLanguages);
     setEventListener("translationAttributionImage", "click",
@@ -620,6 +627,19 @@ var gMainPane = {
   syncFromHomePref() {
     let homePref = document.getElementById("browser.startup.homepage");
 
+    // Set the "Use Current Page(s)" button's text and enabled state.
+    this._updateUseCurrentButton();
+
+    // This is an async task.
+    handleControllingExtension("homepage_override")
+      .then((isControlled) => {
+        // Disable or enable the inputs based on if this is controlled by an extension.
+        document.querySelectorAll("#browserHomePage, .homepage-button")
+          .forEach((button) => {
+            button.disabled = isControlled;
+          });
+      });
+
     // If the pref is set to about:home or about:newtab, set the value to ""
     // to show the placeholder text (about:home title) rather than
     // exposing those URLs to users.
@@ -695,16 +715,20 @@ var gMainPane = {
    * Switches the "Use Current Page" button between its singular and plural
    * forms.
    */
-  _updateUseCurrentButton() {
+  async _updateUseCurrentButton() {
     let useCurrent = document.getElementById("useCurrent");
-
-
     let tabs = this._getTabsForHomePage();
 
     if (tabs.length > 1)
       useCurrent.label = useCurrent.getAttribute("label2");
     else
       useCurrent.label = useCurrent.getAttribute("label1");
+
+    // If the homepage is controlled by an extension then you can't use this.
+    if (await getControllingExtensionId("homepage_override")) {
+      useCurrent.disabled = true;
+      return;
+    }
 
     // In this case, the button's disabled state is set by preferences.xml.
     let prefName = "pref.browser.homepage.disable_button.current_page";
@@ -747,6 +771,14 @@ var gMainPane = {
   restoreDefaultHomePage() {
     var homePage = document.getElementById("browser.startup.homepage");
     homePage.value = homePage.defaultValue;
+  },
+
+  makeDisableControllingExtension(pref) {
+    return async function disableExtension() {
+      let id = await getControllingExtensionId(pref);
+      let addon = await AddonManager.getAddonByID(id);
+      addon.userDisabled = true;
+    };
   },
 
   /**
@@ -2569,6 +2601,66 @@ function getLocalHandlerApp(aFile) {
   localHandlerApp.executable = aFile;
 
   return localHandlerApp;
+}
+
+let extensionControlledContentIds = {
+  "homepage_override": "browserHomePageExtensionContent",
+};
+
+/**
+  * Check if a pref is being managed by an extension.
+  */
+function getControllingExtensionId(settingName) {
+  return ExtensionPreferencesManager.getControllingExtensionId(settingName);
+}
+
+function getControllingExtensionEl(settingName) {
+  return document.getElementById(extensionControlledContentIds[settingName]);
+}
+
+async function handleControllingExtension(prefName) {
+  let controllingExtensionId = await getControllingExtensionId(prefName);
+
+  if (controllingExtensionId) {
+    showControllingExtension(prefName, controllingExtensionId);
+  } else {
+    hideControllingExtension(prefName);
+  }
+
+  return !!controllingExtensionId;
+}
+
+async function showControllingExtension(settingName, extensionId) {
+  let extensionControlledContent = getControllingExtensionEl(settingName);
+  // Tell the user what extension is controlling the homepage.
+  let addon = await AddonManager.getAddonByID(extensionId);
+  const defaultIcon = "chrome://mozapps/skin/extensions/extensionGeneric.svg";
+  let stringParts = document
+    .getElementById("bundlePreferences")
+    .getString(`extensionControlled.${settingName}`)
+    .split("%S");
+  let description = extensionControlledContent.querySelector("description");
+
+  // Remove the old content from the description.
+  while (description.firstChild) {
+    description.firstChild.remove();
+  }
+
+  // Populate the description.
+  description.appendChild(document.createTextNode(stringParts[0]));
+  let image = document.createElement("image");
+  image.setAttribute("src", addon.iconURL || defaultIcon);
+  image.classList.add("extension-controlled-icon");
+  description.appendChild(image);
+  description.appendChild(document.createTextNode(` ${addon.name}`));
+  description.appendChild(document.createTextNode(stringParts[1]));
+
+  // Show the controlling extension row and hide the old label.
+  extensionControlledContent.hidden = false;
+}
+
+function hideControllingExtension(settingName) {
+  getControllingExtensionEl(settingName).hidden = true;
 }
 
 /**
