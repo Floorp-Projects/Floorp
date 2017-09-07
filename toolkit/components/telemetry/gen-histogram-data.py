@@ -171,7 +171,10 @@ def write_exponential_histogram_ranges(output, histograms):
                 print(','.join(map(str, ranges)), ',', file=output)
     print("};", file=output)
 
-    print("const int gExponentialBucketLowerBoundIndex[] = {", file=output)
+    if offset > 32767:
+        raise Exception('Histogram offsets exceeded maximum value for an int16_t.')
+
+    print("const int16_t gExponentialBucketLowerBoundIndex[] = {", file=output)
     for histogram in histograms:
         cpp_guard = histogram.cpp_guard()
         if cpp_guard:
