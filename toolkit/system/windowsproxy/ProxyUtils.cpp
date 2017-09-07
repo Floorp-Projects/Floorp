@@ -158,7 +158,7 @@ IsMatchWildcard(const nsACString& aHost, const nsACString& aOverride)
         tokenEnd = overrideLength; // no '*' char, match rest of string
       }
       nsAutoCString token(Substring(override, tokenStart, tokenEnd - tokenStart));
-      offset = host.Find(token, /* aIgnoreCase = */ false, offset);
+      offset = host.Find(token, offset);
       if (offset == -1 || (!star && offset)) {
         return false;
       }

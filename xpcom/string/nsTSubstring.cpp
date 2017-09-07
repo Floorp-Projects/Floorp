@@ -12,25 +12,23 @@
 
 using double_conversion::DoubleToStringConverter;
 
-template <typename T>
-const typename nsTSubstring<T>::size_type nsTSubstring<T>::kMaxCapacity =
-    (nsTSubstring<T>::size_type(-1) /
+const nsTSubstring_CharT::size_type nsTSubstring_CharT::kMaxCapacity =
+    (nsTSubstring_CharT::size_type(-1) /
         2 - sizeof(nsStringBuffer)) /
-    sizeof(nsTSubstring<T>::char_type) - 2;
+    sizeof(nsTSubstring_CharT::char_type) - 2;
 
 #ifdef XPCOM_STRING_CONSTRUCTOR_OUT_OF_LINE
-template <typename T>
-nsTSubstring<T>::nsTSubstring(char_type* aData, size_type aLength,
-                              DataFlags aDataFlags,
-                              ClassFlags aClassFlags)
-  : ::mozilla::detail::nsTStringRepr<T>(aData, aLength, aDataFlags, aClassFlags)
+nsTSubstring_CharT::nsTSubstring_CharT(char_type* aData, size_type aLength,
+                                       DataFlags aDataFlags,
+                                       ClassFlags aClassFlags)
+  : nsTStringRepr_CharT(aData, aLength, aDataFlags, aClassFlags)
 {
   AssertValid();
   MOZ_RELEASE_ASSERT(CheckCapacity(aLength), "String is too large.");
 
   if (aDataFlags & DataFlags::OWNED) {
     STRING_STAT_INCREMENT(Adopt);
-    MOZ_LOG_CTOR(this->mData, "StringAdopt", 1);
+    MOZ_LOG_CTOR(mData, "StringAdopt", 1);
   }
 }
 #endif /* XPCOM_STRING_CONSTRUCTOR_OUT_OF_LINE */
@@ -38,11 +36,10 @@ nsTSubstring<T>::nsTSubstring(char_type* aData, size_type aLength,
 /**
  * helper function for down-casting a nsTSubstring to a nsTFixedString.
  */
-template <typename T>
-inline const nsTFixedString<T>*
-AsFixedString(const nsTSubstring<T>* aStr)
+inline const nsTFixedString_CharT*
+AsFixedString(const nsTSubstring_CharT* aStr)
 {
-  return static_cast<const nsTFixedString<T>*>(aStr);
+  return static_cast<const nsTFixedString_CharT*>(aStr);
 }
 
 /**
@@ -52,10 +49,9 @@ AsFixedString(const nsTSubstring<T>* aStr)
  * returns the old data and old flags members if mData is newly allocated.
  * the old data must be released by the caller.
  */
-template <typename T>
 bool
-nsTSubstring<T>::MutatePrep(size_type aCapacity, char_type** aOldData,
-                            DataFlags* aOldDataFlags)
+nsTSubstring_CharT::MutatePrep(size_type aCapacity, char_type** aOldData,
+                               DataFlags* aOldDataFlags)
 {
   // initialize to no old data
   *aOldData = nullptr;
@@ -78,7 +74,7 @@ nsTSubstring<T>::MutatePrep(size_type aCapacity, char_type** aOldData,
 
   if (curCapacity != 0) {
     if (aCapacity <= curCapacity) {
-      this->mDataFlags &= ~DataFlags::VOIDED;  // mutation clears voided flag
+      mDataFlags &= ~DataFlags::VOIDED;  // mutation clears voided flag
       return true;
     }
   }
@@ -119,9 +115,9 @@ nsTSubstring<T>::MutatePrep(size_type aCapacity, char_type** aOldData,
   //
   // several cases:
   //
-  //  (1) we have a shared buffer (this->mDataFlags & DataFlags::SHARED)
-  //  (2) we have an owned buffer (this->mDataFlags & DataFlags::OWNED)
-  //  (3) we have a fixed buffer (this->mDataFlags & DataFlags::FIXED)
+  //  (1) we have a shared buffer (mDataFlags & DataFlags::SHARED)
+  //  (2) we have an owned buffer (mDataFlags & DataFlags::OWNED)
+  //  (3) we have a fixed buffer (mDataFlags & DataFlags::FIXED)
   //  (4) we have a readonly buffer
   //
   // requiring that we in some cases preserve the data before creating
@@ -131,8 +127,8 @@ nsTSubstring<T>::MutatePrep(size_type aCapacity, char_type** aOldData,
   size_type storageSize = (aCapacity + 1) * sizeof(char_type);
 
   // case #1
-  if (this->mDataFlags & DataFlags::SHARED) {
-    nsStringBuffer* hdr = nsStringBuffer::FromData(this->mData);
+  if (mDataFlags & DataFlags::SHARED) {
+    nsStringBuffer* hdr = nsStringBuffer::FromData(mData);
     if (!hdr->IsReadonly()) {
       nsStringBuffer* newHdr = nsStringBuffer::Realloc(hdr, storageSize);
       if (!newHdr) {
@@ -140,8 +136,8 @@ nsTSubstring<T>::MutatePrep(size_type aCapacity, char_type** aOldData,
       }
 
       hdr = newHdr;
-      this->mData = (char_type*)hdr->Data();
-      this->mDataFlags &= ~DataFlags::VOIDED;  // mutation clears voided flag
+      mData = (char_type*)hdr->Data();
+      mDataFlags &= ~DataFlags::VOIDED;  // mutation clears voided flag
       return true;
     }
   }
@@ -151,7 +147,7 @@ nsTSubstring<T>::MutatePrep(size_type aCapacity, char_type** aOldData,
 
   // if we have a fixed buffer of sufficient size, then use it.  this helps
   // avoid heap allocations.
-  if ((this->mClassFlags & ClassFlags::FIXED) &&
+  if ((mClassFlags & ClassFlags::FIXED) &&
       (aCapacity < AsFixedString(this)->mFixedCapacity)) {
     newData = AsFixedString(this)->mFixedBuf;
     newDataFlags = DataFlags::TERMINATED | DataFlags::FIXED;
@@ -171,11 +167,11 @@ nsTSubstring<T>::MutatePrep(size_type aCapacity, char_type** aOldData,
   }
 
   // save old data and flags
-  *aOldData = this->mData;
-  *aOldDataFlags = this->mDataFlags;
+  *aOldData = mData;
+  *aOldDataFlags = mDataFlags;
 
-  // this->mLength does not change
-  SetData(newData, this->mLength, newDataFlags);
+  // mLength does not change
+  SetData(newData, mLength, newDataFlags);
 
   // though we are not necessarily terminated at the moment, now is probably
   // still the best time to set DataFlags::TERMINATED.
@@ -183,33 +179,31 @@ nsTSubstring<T>::MutatePrep(size_type aCapacity, char_type** aOldData,
   return true;
 }
 
-template <typename T>
 void
-nsTSubstring<T>::Finalize()
+nsTSubstring_CharT::Finalize()
 {
-  ::ReleaseData(this->mData, this->mDataFlags);
-  // this->mData, this->mLength, and this->mDataFlags are purposefully left dangling
+  ::ReleaseData(mData, mDataFlags);
+  // mData, mLength, and mDataFlags are purposefully left dangling
 }
 
-template <typename T>
 bool
-nsTSubstring<T>::ReplacePrep(index_type aCutStart,
-                             size_type aCutLength,
-                             size_type aNewLength)
+nsTSubstring_CharT::ReplacePrep(index_type aCutStart,
+                                size_type aCutLength,
+                                size_type aNewLength)
 {
-  aCutLength = XPCOM_MIN(aCutLength, this->mLength - aCutStart);
+  aCutLength = XPCOM_MIN(aCutLength, mLength - aCutStart);
 
-  mozilla::CheckedInt<size_type> newTotalLen = this->mLength;
+  mozilla::CheckedInt<size_type> newTotalLen = mLength;
   newTotalLen += aNewLength;
   newTotalLen -= aCutLength;
   if (!newTotalLen.isValid()) {
     return false;
   }
 
-  if (aCutStart == this->mLength && Capacity() > newTotalLen.value()) {
-    this->mDataFlags &= ~DataFlags::VOIDED;
-    this->mData[newTotalLen.value()] = char_type(0);
-    this->mLength = newTotalLen.value();
+  if (aCutStart == mLength && Capacity() > newTotalLen.value()) {
+    mDataFlags &= ~DataFlags::VOIDED;
+    mData[newTotalLen.value()] = char_type(0);
+    mLength = newTotalLen.value();
     return true;
   }
 
@@ -217,10 +211,9 @@ nsTSubstring<T>::ReplacePrep(index_type aCutStart,
                              newTotalLen.value());
 }
 
-template <typename T>
 bool
-nsTSubstring<T>::ReplacePrepInternal(index_type aCutStart, size_type aCutLen,
-                                     size_type aFragLen, size_type aNewLen)
+nsTSubstring_CharT::ReplacePrepInternal(index_type aCutStart, size_type aCutLen,
+                                        size_type aFragLen, size_type aNewLen)
 {
   char_type* oldData;
   DataFlags oldFlags;
@@ -234,15 +227,15 @@ nsTSubstring<T>::ReplacePrepInternal(index_type aCutStart, size_type aCutLen,
 
     if (aCutStart > 0) {
       // copy prefix from old string
-      char_traits::copy(this->mData, oldData, aCutStart);
+      char_traits::copy(mData, oldData, aCutStart);
     }
 
-    if (aCutStart + aCutLen < this->mLength) {
+    if (aCutStart + aCutLen < mLength) {
       // copy suffix from old string to new offset
       size_type from = aCutStart + aCutLen;
-      size_type fromLen = this->mLength - from;
+      size_type fromLen = mLength - from;
       uint32_t to = aCutStart + aFragLen;
-      char_traits::copy(this->mData + to, oldData + from, fromLen);
+      char_traits::copy(mData + to, oldData + from, fromLen);
     }
 
     ::ReleaseData(oldData, oldFlags);
@@ -251,45 +244,44 @@ nsTSubstring<T>::ReplacePrepInternal(index_type aCutStart, size_type aCutLen,
 
     // determine whether or not we need to move part of the existing string
     // to make room for the requested hole.
-    if (aFragLen != aCutLen && aCutStart + aCutLen < this->mLength) {
+    if (aFragLen != aCutLen && aCutStart + aCutLen < mLength) {
       uint32_t from = aCutStart + aCutLen;
-      uint32_t fromLen = this->mLength - from;
+      uint32_t fromLen = mLength - from;
       uint32_t to = aCutStart + aFragLen;
-      char_traits::move(this->mData + to, this->mData + from, fromLen);
+      char_traits::move(mData + to, mData + from, fromLen);
     }
   }
 
-  // add null terminator (mutable this->mData always has room for the null-
+  // add null terminator (mutable mData always has room for the null-
   // terminator).
-  this->mData[aNewLen] = char_type(0);
-  this->mLength = aNewLen;
+  mData[aNewLen] = char_type(0);
+  mLength = aNewLen;
 
   return true;
 }
 
-template <typename T>
-typename nsTSubstring<T>::size_type
-nsTSubstring<T>::Capacity() const
+nsTSubstring_CharT::size_type
+nsTSubstring_CharT::Capacity() const
 {
   // return 0 to indicate an immutable or 0-sized buffer
 
   size_type capacity;
-  if (this->mDataFlags & DataFlags::SHARED) {
+  if (mDataFlags & DataFlags::SHARED) {
     // if the string is readonly, then we pretend that it has no capacity.
-    nsStringBuffer* hdr = nsStringBuffer::FromData(this->mData);
+    nsStringBuffer* hdr = nsStringBuffer::FromData(mData);
     if (hdr->IsReadonly()) {
       capacity = 0;
     } else {
       capacity = (hdr->StorageSize() / sizeof(char_type)) - 1;
     }
-  } else if (this->mDataFlags & DataFlags::FIXED) {
+  } else if (mDataFlags & DataFlags::FIXED) {
     capacity = AsFixedString(this)->mFixedCapacity;
-  } else if (this->mDataFlags & DataFlags::OWNED) {
+  } else if (mDataFlags & DataFlags::OWNED) {
     // we don't store the capacity of an adopted buffer because that would
     // require an additional member field.  the best we can do is base the
     // capacity on our length.  remains to be seen if this is the right
     // trade-off.
-    capacity = this->mLength;
+    capacity = mLength;
   } else {
     capacity = 0;
   }
@@ -297,20 +289,19 @@ nsTSubstring<T>::Capacity() const
   return capacity;
 }
 
-template <typename T>
 bool
-nsTSubstring<T>::EnsureMutable(size_type aNewLen)
+nsTSubstring_CharT::EnsureMutable(size_type aNewLen)
 {
-  if (aNewLen == size_type(-1) || aNewLen == this->mLength) {
-    if (this->mDataFlags & (DataFlags::FIXED | DataFlags::OWNED)) {
+  if (aNewLen == size_type(-1) || aNewLen == mLength) {
+    if (mDataFlags & (DataFlags::FIXED | DataFlags::OWNED)) {
       return true;
     }
-    if ((this->mDataFlags & DataFlags::SHARED) &&
-        !nsStringBuffer::FromData(this->mData)->IsReadonly()) {
+    if ((mDataFlags & DataFlags::SHARED) &&
+        !nsStringBuffer::FromData(mData)->IsReadonly()) {
       return true;
     }
 
-    aNewLen = this->mLength;
+    aNewLen = mLength;
   }
   return SetLength(aNewLen, mozilla::fallible);
 }
@@ -318,48 +309,43 @@ nsTSubstring<T>::EnsureMutable(size_type aNewLen)
 // ---------------------------------------------------------------------------
 
 // This version of Assign is optimized for single-character assignment.
-template <typename T>
 void
-nsTSubstring<T>::Assign(char_type aChar)
+nsTSubstring_CharT::Assign(char_type aChar)
 {
-  if (!ReplacePrep(0, this->mLength, 1)) {
-    AllocFailed(this->mLength);
+  if (!ReplacePrep(0, mLength, 1)) {
+    AllocFailed(mLength);
   }
 
-  *this->mData = aChar;
+  *mData = aChar;
 }
 
-template <typename T>
 bool
-nsTSubstring<T>::Assign(char_type aChar, const fallible_t&)
+nsTSubstring_CharT::Assign(char_type aChar, const fallible_t&)
 {
-  if (!ReplacePrep(0, this->mLength, 1)) {
+  if (!ReplacePrep(0, mLength, 1)) {
     return false;
   }
 
-  *this->mData = aChar;
+  *mData = aChar;
   return true;
 }
 
-template <typename T>
 void
-nsTSubstring<T>::Assign(const char_type* aData)
+nsTSubstring_CharT::Assign(const char_type* aData)
 {
   if (!Assign(aData, mozilla::fallible)) {
     AllocFailed(char_traits::length(aData));
   }
 }
 
-template <typename T>
 bool
-nsTSubstring<T>::Assign(const char_type* aData, const fallible_t&)
+nsTSubstring_CharT::Assign(const char_type* aData, const fallible_t&)
 {
   return Assign(aData, size_type(-1), mozilla::fallible);
 }
 
-template <typename T>
 void
-nsTSubstring<T>::Assign(const char_type* aData, size_type aLength)
+nsTSubstring_CharT::Assign(const char_type* aData, size_type aLength)
 {
   if (!Assign(aData, aLength, mozilla::fallible)) {
     AllocFailed(aLength == size_type(-1) ? char_traits::length(aData)
@@ -367,10 +353,9 @@ nsTSubstring<T>::Assign(const char_type* aData, size_type aLength)
   }
 }
 
-template <typename T>
 bool
-nsTSubstring<T>::Assign(const char_type* aData, size_type aLength,
-                        const fallible_t& aFallible)
+nsTSubstring_CharT::Assign(const char_type* aData, size_type aLength,
+                           const fallible_t& aFallible)
 {
   if (!aData || aLength == 0) {
     Truncate();
@@ -381,69 +366,64 @@ nsTSubstring<T>::Assign(const char_type* aData, size_type aLength,
     aLength = char_traits::length(aData);
   }
 
-  if (this->IsDependentOn(aData, aData + aLength)) {
+  if (IsDependentOn(aData, aData + aLength)) {
     return Assign(string_type(aData, aLength), aFallible);
   }
 
-  if (!ReplacePrep(0, this->mLength, aLength)) {
+  if (!ReplacePrep(0, mLength, aLength)) {
     return false;
   }
 
-  char_traits::copy(this->mData, aData, aLength);
+  char_traits::copy(mData, aData, aLength);
   return true;
 }
 
-template <typename T>
 void
-nsTSubstring<T>::AssignASCII(const char* aData, size_type aLength)
+nsTSubstring_CharT::AssignASCII(const char* aData, size_type aLength)
 {
   if (!AssignASCII(aData, aLength, mozilla::fallible)) {
     AllocFailed(aLength);
   }
 }
 
-template <typename T>
 bool
-nsTSubstring<T>::AssignASCII(const char* aData, size_type aLength,
+nsTSubstring_CharT::AssignASCII(const char* aData, size_type aLength,
                                 const fallible_t& aFallible)
 {
   // A Unicode string can't depend on an ASCII string buffer,
   // so this dependence check only applies to CStrings.
 #ifdef CharT_is_char
-  if (this->IsDependentOn(aData, aData + aLength)) {
+  if (IsDependentOn(aData, aData + aLength)) {
     return Assign(string_type(aData, aLength), aFallible);
   }
 #endif
 
-  if (!ReplacePrep(0, this->mLength, aLength)) {
+  if (!ReplacePrep(0, mLength, aLength)) {
     return false;
   }
 
-  char_traits::copyASCII(this->mData, aData, aLength);
+  char_traits::copyASCII(mData, aData, aLength);
   return true;
 }
 
-template <typename T>
 void
-nsTSubstring<T>::AssignLiteral(const char_type* aData, size_type aLength)
+nsTSubstring_CharT::AssignLiteral(const char_type* aData, size_type aLength)
 {
-  ::ReleaseData(this->mData, this->mDataFlags);
+  ::ReleaseData(mData, mDataFlags);
   SetData(const_cast<char_type*>(aData), aLength,
           DataFlags::TERMINATED | DataFlags::LITERAL);
 }
 
-template <typename T>
 void
-nsTSubstring<T>::Assign(const self_type& aStr)
+nsTSubstring_CharT::Assign(const self_type& aStr)
 {
   if (!Assign(aStr, mozilla::fallible)) {
     AllocFailed(aStr.Length());
   }
 }
 
-template <typename T>
 bool
-nsTSubstring<T>::Assign(const self_type& aStr, const fallible_t& aFallible)
+nsTSubstring_CharT::Assign(const self_type& aStr, const fallible_t& aFallible)
 {
   // |aStr| could be sharable. We need to check its flags to know how to
   // deal with it.
@@ -454,7 +434,7 @@ nsTSubstring<T>::Assign(const self_type& aStr, const fallible_t& aFallible)
 
   if (!aStr.mLength) {
     Truncate();
-    this->mDataFlags |= aStr.mDataFlags & DataFlags::VOIDED;
+    mDataFlags |= aStr.mDataFlags & DataFlags::VOIDED;
     return true;
   }
 
@@ -464,13 +444,13 @@ nsTSubstring<T>::Assign(const self_type& aStr, const fallible_t& aFallible)
     // |aStr| should be null-terminated
     NS_ASSERTION(aStr.mDataFlags & DataFlags::TERMINATED, "shared, but not terminated");
 
-    ::ReleaseData(this->mData, this->mDataFlags);
+    ::ReleaseData(mData, mDataFlags);
 
     SetData(aStr.mData, aStr.mLength,
             DataFlags::TERMINATED | DataFlags::SHARED);
 
-    // get an owning reference to the this->mData
-    nsStringBuffer::FromData(this->mData)->AddRef();
+    // get an owning reference to the mData
+    nsStringBuffer::FromData(mData)->AddRef();
     return true;
   } else if (aStr.mDataFlags & DataFlags::LITERAL) {
     MOZ_ASSERT(aStr.mDataFlags & DataFlags::TERMINATED, "Unterminated literal");
@@ -483,21 +463,19 @@ nsTSubstring<T>::Assign(const self_type& aStr, const fallible_t& aFallible)
   return Assign(aStr.Data(), aStr.Length(), aFallible);
 }
 
-template <typename T>
 void
-nsTSubstring<T>::Assign(const substring_tuple_type& aTuple)
+nsTSubstring_CharT::Assign(const substring_tuple_type& aTuple)
 {
   if (!Assign(aTuple, mozilla::fallible)) {
     AllocFailed(aTuple.Length());
   }
 }
 
-template <typename T>
 bool
-nsTSubstring<T>::Assign(const substring_tuple_type& aTuple,
-                        const fallible_t& aFallible)
+nsTSubstring_CharT::Assign(const substring_tuple_type& aTuple,
+                           const fallible_t& aFallible)
 {
-  if (aTuple.IsDependentOn(this->mData, this->mData + this->mLength)) {
+  if (aTuple.IsDependentOn(mData, mData + mLength)) {
     // take advantage of sharing here...
     return Assign(string_type(aTuple), aFallible);
   }
@@ -515,18 +493,17 @@ nsTSubstring<T>::Assign(const substring_tuple_type& aTuple,
     ::ReleaseData(oldData, oldFlags);
   }
 
-  aTuple.WriteTo(this->mData, length);
-  this->mData[length] = 0;
-  this->mLength = length;
+  aTuple.WriteTo(mData, length);
+  mData[length] = 0;
+  mLength = length;
   return true;
 }
 
-template <typename T>
 void
-nsTSubstring<T>::Adopt(char_type* aData, size_type aLength)
+nsTSubstring_CharT::Adopt(char_type* aData, size_type aLength)
 {
   if (aData) {
-    ::ReleaseData(this->mData, this->mDataFlags);
+    ::ReleaseData(mData, mDataFlags);
 
     if (aLength == size_type(-1)) {
       aLength = char_traits::length(aData);
@@ -539,7 +516,7 @@ nsTSubstring<T>::Adopt(char_type* aData, size_type aLength)
     STRING_STAT_INCREMENT(Adopt);
     // Treat this as construction of a "StringAdopt" object for leak
     // tracking purposes.
-    MOZ_LOG_CTOR(this->mData, "StringAdopt", 1);
+    MOZ_LOG_CTOR(mData, "StringAdopt", 1);
   } else {
     SetIsVoid(true);
   }
@@ -547,51 +524,47 @@ nsTSubstring<T>::Adopt(char_type* aData, size_type aLength)
 
 
 // This version of Replace is optimized for single-character replacement.
-template <typename T>
 void
-nsTSubstring<T>::Replace(index_type aCutStart, size_type aCutLength,
-                         char_type aChar)
+nsTSubstring_CharT::Replace(index_type aCutStart, size_type aCutLength,
+                            char_type aChar)
 {
-  aCutStart = XPCOM_MIN(aCutStart, this->Length());
+  aCutStart = XPCOM_MIN(aCutStart, Length());
 
   if (ReplacePrep(aCutStart, aCutLength, 1)) {
-    this->mData[aCutStart] = aChar;
+    mData[aCutStart] = aChar;
   }
 }
 
-template <typename T>
 bool
-nsTSubstring<T>::Replace(index_type aCutStart, size_type aCutLength,
-                         char_type aChar,
-                         const fallible_t&)
+nsTSubstring_CharT::Replace(index_type aCutStart, size_type aCutLength,
+                            char_type aChar,
+                            const fallible_t&)
 {
-  aCutStart = XPCOM_MIN(aCutStart, this->Length());
+  aCutStart = XPCOM_MIN(aCutStart, Length());
 
   if (!ReplacePrep(aCutStart, aCutLength, 1)) {
     return false;
   }
 
-  this->mData[aCutStart] = aChar;
+  mData[aCutStart] = aChar;
 
   return true;
 }
 
-template <typename T>
 void
-nsTSubstring<T>::Replace(index_type aCutStart, size_type aCutLength,
-                         const char_type* aData, size_type aLength)
+nsTSubstring_CharT::Replace(index_type aCutStart, size_type aCutLength,
+                            const char_type* aData, size_type aLength)
 {
   if (!Replace(aCutStart, aCutLength, aData, aLength,
                mozilla::fallible)) {
-    AllocFailed(this->Length() - aCutLength + 1);
+    AllocFailed(Length() - aCutLength + 1);
   }
 }
 
-template <typename T>
 bool
-nsTSubstring<T>::Replace(index_type aCutStart, size_type aCutLength,
-                         const char_type* aData, size_type aLength,
-                         const fallible_t& aFallible)
+nsTSubstring_CharT::Replace(index_type aCutStart, size_type aCutLength,
+                            const char_type* aData, size_type aLength,
+                            const fallible_t& aFallible)
 {
   // unfortunately, some callers pass null :-(
   if (!aData) {
@@ -601,13 +574,13 @@ nsTSubstring<T>::Replace(index_type aCutStart, size_type aCutLength,
       aLength = char_traits::length(aData);
     }
 
-    if (this->IsDependentOn(aData, aData + aLength)) {
-      nsTAutoString<T> temp(aData, aLength);
+    if (IsDependentOn(aData, aData + aLength)) {
+      nsTAutoString_CharT temp(aData, aLength);
       return Replace(aCutStart, aCutLength, temp, aFallible);
     }
   }
 
-  aCutStart = XPCOM_MIN(aCutStart, this->Length());
+  aCutStart = XPCOM_MIN(aCutStart, Length());
 
   bool ok = ReplacePrep(aCutStart, aCutLength, aLength);
   if (!ok) {
@@ -615,27 +588,25 @@ nsTSubstring<T>::Replace(index_type aCutStart, size_type aCutLength,
   }
 
   if (aLength > 0) {
-    char_traits::copy(this->mData + aCutStart, aData, aLength);
+    char_traits::copy(mData + aCutStart, aData, aLength);
   }
 
   return true;
 }
 
-template <typename T>
 void
-nsTSubstring<T>::ReplaceASCII(index_type aCutStart, size_type aCutLength,
-                              const char* aData, size_type aLength)
+nsTSubstring_CharT::ReplaceASCII(index_type aCutStart, size_type aCutLength,
+                                 const char* aData, size_type aLength)
 {
   if (!ReplaceASCII(aCutStart, aCutLength, aData, aLength, mozilla::fallible)) {
-    AllocFailed(this->Length() - aCutLength + 1);
+    AllocFailed(Length() - aCutLength + 1);
   }
 }
 
-template <typename T>
 bool
-nsTSubstring<T>::ReplaceASCII(index_type aCutStart, size_type aCutLength,
-                              const char* aData, size_type aLength,
-                              const fallible_t& aFallible)
+nsTSubstring_CharT::ReplaceASCII(index_type aCutStart, size_type aCutLength,
+                                 const char* aData, size_type aLength,
+                                 const fallible_t& aFallible)
 {
   if (aLength == size_type(-1)) {
     aLength = strlen(aData);
@@ -644,13 +615,13 @@ nsTSubstring<T>::ReplaceASCII(index_type aCutStart, size_type aCutLength,
   // A Unicode string can't depend on an ASCII string buffer,
   // so this dependence check only applies to CStrings.
 #ifdef CharT_is_char
-  if (this->IsDependentOn(aData, aData + aLength)) {
+  if (IsDependentOn(aData, aData + aLength)) {
     nsTAutoString_CharT temp(aData, aLength);
     return Replace(aCutStart, aCutLength, temp, aFallible);
   }
 #endif
 
-  aCutStart = XPCOM_MIN(aCutStart, this->Length());
+  aCutStart = XPCOM_MIN(aCutStart, Length());
 
   bool ok = ReplacePrep(aCutStart, aCutLength, aLength);
   if (!ok) {
@@ -658,64 +629,60 @@ nsTSubstring<T>::ReplaceASCII(index_type aCutStart, size_type aCutLength,
   }
 
   if (aLength > 0) {
-    char_traits::copyASCII(this->mData + aCutStart, aData, aLength);
+    char_traits::copyASCII(mData + aCutStart, aData, aLength);
   }
 
   return true;
 }
 
-template <typename T>
 void
-nsTSubstring<T>::Replace(index_type aCutStart, size_type aCutLength,
-                         const substring_tuple_type& aTuple)
+nsTSubstring_CharT::Replace(index_type aCutStart, size_type aCutLength,
+                            const substring_tuple_type& aTuple)
 {
-  if (aTuple.IsDependentOn(this->mData, this->mData + this->mLength)) {
-    nsTAutoString<T> temp(aTuple);
+  if (aTuple.IsDependentOn(mData, mData + mLength)) {
+    nsTAutoString_CharT temp(aTuple);
     Replace(aCutStart, aCutLength, temp);
     return;
   }
 
   size_type length = aTuple.Length();
 
-  aCutStart = XPCOM_MIN(aCutStart, this->Length());
+  aCutStart = XPCOM_MIN(aCutStart, Length());
 
   if (ReplacePrep(aCutStart, aCutLength, length) && length > 0) {
-    aTuple.WriteTo(this->mData + aCutStart, length);
+    aTuple.WriteTo(mData + aCutStart, length);
   }
 }
 
-template <typename T>
 void
-nsTSubstring<T>::ReplaceLiteral(index_type aCutStart, size_type aCutLength,
-                                const char_type* aData, size_type aLength)
+nsTSubstring_CharT::ReplaceLiteral(index_type aCutStart, size_type aCutLength,
+                                   const char_type* aData, size_type aLength)
 {
-  aCutStart = XPCOM_MIN(aCutStart, this->Length());
+  aCutStart = XPCOM_MIN(aCutStart, Length());
 
-  if (!aCutStart && aCutLength == this->Length()) {
+  if (!aCutStart && aCutLength == Length()) {
     AssignLiteral(aData, aLength);
   } else if (ReplacePrep(aCutStart, aCutLength, aLength) && aLength > 0) {
-    char_traits::copy(this->mData + aCutStart, aData, aLength);
+    char_traits::copy(mData + aCutStart, aData, aLength);
   }
 }
 
-template <typename T>
 void
-nsTSubstring<T>::SetCapacity(size_type aCapacity)
+nsTSubstring_CharT::SetCapacity(size_type aCapacity)
 {
   if (!SetCapacity(aCapacity, mozilla::fallible)) {
     AllocFailed(aCapacity);
   }
 }
 
-template <typename T>
 bool
-nsTSubstring<T>::SetCapacity(size_type aCapacity, const fallible_t&)
+nsTSubstring_CharT::SetCapacity(size_type aCapacity, const fallible_t&)
 {
   // capacity does not include room for the terminating null char
 
   // if our capacity is reduced to zero, then free our buffer.
   if (aCapacity == 0) {
-    ::ReleaseData(this->mData, this->mDataFlags);
+    ::ReleaseData(mData, mDataFlags);
     SetToEmptyBuffer();
     return true;
   }
@@ -727,196 +694,179 @@ nsTSubstring<T>::SetCapacity(size_type aCapacity, const fallible_t&)
   }
 
   // compute new string length
-  size_type newLen = XPCOM_MIN(this->mLength, aCapacity);
+  size_type newLen = XPCOM_MIN(mLength, aCapacity);
 
   if (oldData) {
     // preserve old data
-    if (this->mLength > 0) {
-      char_traits::copy(this->mData, oldData, newLen);
+    if (mLength > 0) {
+      char_traits::copy(mData, oldData, newLen);
     }
 
     ::ReleaseData(oldData, oldFlags);
   }
 
-  // adjust this->mLength if our buffer shrunk down in size
-  if (newLen < this->mLength) {
-    this->mLength = newLen;
+  // adjust mLength if our buffer shrunk down in size
+  if (newLen < mLength) {
+    mLength = newLen;
   }
 
   // always null-terminate here, even if the buffer got longer.  this is
   // for backwards compat with the old string implementation.
-  this->mData[aCapacity] = char_type(0);
+  mData[aCapacity] = char_type(0);
 
   return true;
 }
 
-template <typename T>
 void
-nsTSubstring<T>::SetLength(size_type aLength)
+nsTSubstring_CharT::SetLength(size_type aLength)
 {
   SetCapacity(aLength);
-  this->mLength = aLength;
+  mLength = aLength;
 }
 
-template <typename T>
 bool
-nsTSubstring<T>::SetLength(size_type aLength, const fallible_t& aFallible)
+nsTSubstring_CharT::SetLength(size_type aLength, const fallible_t& aFallible)
 {
   if (!SetCapacity(aLength, aFallible)) {
     return false;
   }
 
-  this->mLength = aLength;
+  mLength = aLength;
   return true;
 }
 
-template <typename T>
 void
-nsTSubstring<T>::SetIsVoid(bool aVal)
+nsTSubstring_CharT::SetIsVoid(bool aVal)
 {
   if (aVal) {
     Truncate();
-    this->mDataFlags |= DataFlags::VOIDED;
+    mDataFlags |= DataFlags::VOIDED;
   } else {
-    this->mDataFlags &= ~DataFlags::VOIDED;
+    mDataFlags &= ~DataFlags::VOIDED;
   }
 }
 
 namespace mozilla {
 namespace detail {
 
-template <typename T>
-typename nsTStringRepr<T>::char_type
-nsTStringRepr<T>::First() const
+nsTStringRepr_CharT::char_type
+nsTStringRepr_CharT::First() const
 {
-  MOZ_RELEASE_ASSERT(this->mLength > 0, "|First()| called on an empty string");
-  return this->mData[0];
+  MOZ_RELEASE_ASSERT(mLength > 0, "|First()| called on an empty string");
+  return mData[0];
 }
 
-template <typename T>
-typename nsTStringRepr<T>::char_type
-nsTStringRepr<T>::Last() const
+nsTStringRepr_CharT::char_type
+nsTStringRepr_CharT::Last() const
 {
-  MOZ_RELEASE_ASSERT(this->mLength > 0, "|Last()| called on an empty string");
-  return this->mData[this->mLength - 1];
+  MOZ_RELEASE_ASSERT(mLength > 0, "|Last()| called on an empty string");
+  return mData[mLength - 1];
 }
 
-template <typename T>
 bool
-nsTStringRepr<T>::Equals(const self_type& aStr) const
+nsTStringRepr_CharT::Equals(const self_type& aStr) const
 {
-  return this->mLength == aStr.mLength &&
-         char_traits::compare(this->mData, aStr.mData, this->mLength) == 0;
+  return mLength == aStr.mLength &&
+         char_traits::compare(mData, aStr.mData, mLength) == 0;
 }
 
-template <typename T>
 bool
-nsTStringRepr<T>::Equals(const self_type& aStr,
-                         const comparator_type& aComp) const
+nsTStringRepr_CharT::Equals(const self_type& aStr,
+                            const comparator_type& aComp) const
 {
-  return this->mLength == aStr.mLength &&
-         aComp(this->mData, aStr.mData, this->mLength, aStr.mLength) == 0;
+  return mLength == aStr.mLength &&
+         aComp(mData, aStr.mData, mLength, aStr.mLength) == 0;
 }
 
-template <typename T>
 bool
-nsTStringRepr<T>::Equals(const substring_tuple_type& aTuple) const
+nsTStringRepr_CharT::Equals(const substring_tuple_type& aTuple) const
 {
   return Equals(substring_type(aTuple));
 }
 
-template <typename T>
 bool
-nsTStringRepr<T>::Equals(const substring_tuple_type& aTuple,
-                         const comparator_type& aComp) const
+nsTStringRepr_CharT::Equals(const substring_tuple_type& aTuple,
+                            const comparator_type& aComp) const
 {
   return Equals(substring_type(aTuple), aComp);
 }
 
-template <typename T>
 bool
-nsTStringRepr<T>::Equals(const char_type* aData) const
+nsTStringRepr_CharT::Equals(const char_type* aData) const
 {
   // unfortunately, some callers pass null :-(
   if (!aData) {
     NS_NOTREACHED("null data pointer");
-    return this->mLength == 0;
+    return mLength == 0;
   }
 
   // XXX avoid length calculation?
   size_type length = char_traits::length(aData);
-  return this->mLength == length &&
-         char_traits::compare(this->mData, aData, this->mLength) == 0;
+  return mLength == length &&
+         char_traits::compare(mData, aData, mLength) == 0;
 }
 
-template <typename T>
 bool
-nsTStringRepr<T>::Equals(const char_type* aData,
-                         const comparator_type& aComp) const
+nsTStringRepr_CharT::Equals(const char_type* aData,
+                            const comparator_type& aComp) const
 {
   // unfortunately, some callers pass null :-(
   if (!aData) {
     NS_NOTREACHED("null data pointer");
-    return this->mLength == 0;
+    return mLength == 0;
   }
 
   // XXX avoid length calculation?
   size_type length = char_traits::length(aData);
-  return this->mLength == length && aComp(this->mData, aData, this->mLength, length) == 0;
+  return mLength == length && aComp(mData, aData, mLength, length) == 0;
 }
 
-template <typename T>
 bool
-nsTStringRepr<T>::EqualsASCII(const char* aData, size_type aLen) const
+nsTStringRepr_CharT::EqualsASCII(const char* aData, size_type aLen) const
 {
-  return this->mLength == aLen &&
-         char_traits::compareASCII(this->mData, aData, aLen) == 0;
+  return mLength == aLen &&
+         char_traits::compareASCII(mData, aData, aLen) == 0;
 }
 
-template <typename T>
 bool
-nsTStringRepr<T>::EqualsASCII(const char* aData) const
+nsTStringRepr_CharT::EqualsASCII(const char* aData) const
 {
-  return char_traits::compareASCIINullTerminated(this->mData, this->mLength, aData) == 0;
+  return char_traits::compareASCIINullTerminated(mData, mLength, aData) == 0;
 }
 
-template <typename T>
 bool
-nsTStringRepr<T>::LowerCaseEqualsASCII(const char* aData,
-                                       size_type aLen) const
+nsTStringRepr_CharT::LowerCaseEqualsASCII(const char* aData,
+                                          size_type aLen) const
 {
-  return this->mLength == aLen &&
-         char_traits::compareLowerCaseToASCII(this->mData, aData, aLen) == 0;
+  return mLength == aLen &&
+         char_traits::compareLowerCaseToASCII(mData, aData, aLen) == 0;
 }
 
-template <typename T>
 bool
-nsTStringRepr<T>::LowerCaseEqualsASCII(const char* aData) const
+nsTStringRepr_CharT::LowerCaseEqualsASCII(const char* aData) const
 {
-  return char_traits::compareLowerCaseToASCIINullTerminated(this->mData,
-                                                            this->mLength,
+  return char_traits::compareLowerCaseToASCIINullTerminated(mData,
+                                                            mLength,
                                                             aData) == 0;
 }
 
-template <typename T>
-typename nsTStringRepr<T>::size_type
-nsTStringRepr<T>::CountChar(char_type aChar) const
+nsTStringRepr_CharT::size_type
+nsTStringRepr_CharT::CountChar(char_type aChar) const
 {
-  const char_type* start = this->mData;
-  const char_type* end   = this->mData + this->mLength;
+  const char_type* start = mData;
+  const char_type* end   = mData + mLength;
 
   return NS_COUNT(start, end, aChar);
 }
 
-template <typename T>
 int32_t
-nsTStringRepr<T>::FindChar(char_type aChar, index_type aOffset) const
+nsTStringRepr_CharT::FindChar(char_type aChar, index_type aOffset) const
 {
-  if (aOffset < this->mLength) {
-    const char_type* result = char_traits::find(this->mData + aOffset,
-                                                this->mLength - aOffset, aChar);
+  if (aOffset < mLength) {
+    const char_type* result = char_traits::find(mData + aOffset,
+                                                mLength - aOffset, aChar);
     if (result) {
-      return result - this->mData;
+      return result - mData;
     }
   }
   return -1;
@@ -925,23 +875,22 @@ nsTStringRepr<T>::FindChar(char_type aChar, index_type aOffset) const
 } // namespace detail
 } // namespace mozilla
 
-template <typename T>
 void
-nsTSubstring<T>::StripChar(char_type aChar)
+nsTSubstring_CharT::StripChar(char_type aChar)
 {
-  if (this->mLength == 0) {
+  if (mLength == 0) {
     return;
   }
 
   if (!EnsureMutable()) { // XXX do this lazily?
-    AllocFailed(this->mLength);
+    AllocFailed(mLength);
   }
 
   // XXX(darin): this code should defer writing until necessary.
 
-  char_type* to   = this->mData;
-  char_type* from = this->mData;
-  char_type* end  = this->mData + this->mLength;
+  char_type* to   = mData;
+  char_type* from = mData;
+  char_type* end  = mData + mLength;
 
   while (from < end) {
     char_type theChar = *from++;
@@ -950,26 +899,25 @@ nsTSubstring<T>::StripChar(char_type aChar)
     }
   }
   *to = char_type(0); // add the null
-  this->mLength = to - this->mData;
+  mLength = to - mData;
 }
 
-template <typename T>
 void
-nsTSubstring<T>::StripChars(const char_type* aChars)
+nsTSubstring_CharT::StripChars(const char_type* aChars)
 {
-  if (this->mLength == 0) {
+  if (mLength == 0) {
     return;
   }
 
   if (!EnsureMutable()) { // XXX do this lazily?
-    AllocFailed(this->mLength);
+    AllocFailed(mLength);
   }
 
   // XXX(darin): this code should defer writing until necessary.
 
-  char_type* to   = this->mData;
-  char_type* from = this->mData;
-  char_type* end  = this->mData + this->mLength;
+  char_type* to   = mData;
+  char_type* from = mData;
+  char_type* end  = mData + mLength;
 
   while (from < end) {
     char_type theChar = *from++;
@@ -983,24 +931,23 @@ nsTSubstring<T>::StripChars(const char_type* aChars)
     }
   }
   *to = char_type(0); // add the null
-  this->mLength = to - this->mData;
+  mLength = to - mData;
 }
 
-template <typename T>
 void
-nsTSubstring<T>::StripTaggedASCII(const ASCIIMaskArray& aToStrip)
+nsTSubstring_CharT::StripTaggedASCII(const ASCIIMaskArray& aToStrip)
 {
-  if (this->mLength == 0) {
+  if (mLength == 0) {
     return;
   }
 
   if (!EnsureMutable()) {
-    AllocFailed(this->mLength);
+    AllocFailed(mLength);
   }
 
-  char_type* to   = this->mData;
-  char_type* from = this->mData;
-  char_type* end  = this->mData + this->mLength;
+  char_type* to   = mData;
+  char_type* from = mData;
+  char_type* end  = mData + mLength;
 
   while (from < end) {
     uint32_t theChar = (uint32_t)*from++;
@@ -1012,12 +959,11 @@ nsTSubstring<T>::StripTaggedASCII(const ASCIIMaskArray& aToStrip)
     }
   }
   *to = char_type(0); // add the null
-  this->mLength = to - this->mData;
+  mLength = to - mData;
 }
 
-template <typename T>
 void
-nsTSubstring<T>::StripCRLF()
+nsTSubstring_CharT::StripCRLF()
 {
   // Expanding this call to copy the code from StripTaggedASCII
   // instead of just calling it does somewhat help with performance
@@ -1025,10 +971,9 @@ nsTSubstring<T>::StripCRLF()
   StripTaggedASCII(mozilla::ASCIIMask::MaskCRLF());
 }
 
-template <typename T>
-struct MOZ_STACK_CLASS PrintfAppend : public mozilla::PrintfTarget
+struct MOZ_STACK_CLASS PrintfAppend_CharT : public mozilla::PrintfTarget
 {
-  explicit PrintfAppend(nsTSubstring<T>* aString)
+  explicit PrintfAppend_CharT(nsTSubstring_CharT* aString)
     : mString(aString)
   {
   }
@@ -1044,14 +989,13 @@ struct MOZ_STACK_CLASS PrintfAppend : public mozilla::PrintfTarget
 
 private:
 
-  nsTSubstring<T>* mString;
+  nsTSubstring_CharT* mString;
 };
 
-template <typename T>
 void
-nsTSubstring<T>::AppendPrintf(const char* aFormat, ...)
+nsTSubstring_CharT::AppendPrintf(const char* aFormat, ...)
 {
-  PrintfAppend<T> appender(this);
+  PrintfAppend_CharT appender(this);
   va_list ap;
   va_start(ap, aFormat);
   bool r = appender.vprint(aFormat, ap);
@@ -1061,17 +1005,18 @@ nsTSubstring<T>::AppendPrintf(const char* aFormat, ...)
   va_end(ap);
 }
 
-template <typename T>
 void
-nsTSubstring<T>::AppendPrintf(const char* aFormat, va_list aAp)
+nsTSubstring_CharT::AppendPrintf(const char* aFormat, va_list aAp)
 {
-  PrintfAppend<T> appender(this);
+  PrintfAppend_CharT appender(this);
   bool r = appender.vprint(aFormat, aAp);
   if (!r) {
     MOZ_CRASH("Allocation or other failure in PrintfTarget::print");
   }
 }
 
+/* hack to make sure we define FormatWithoutTrailingZeros only once */
+#ifdef CharT_is_PRUnichar
 // Returns the length of the formatted aDouble in aBuf.
 static int
 FormatWithoutTrailingZeros(char (&aBuf)[40], double aDouble,
@@ -1142,86 +1087,80 @@ FormatWithoutTrailingZeros(char (&aBuf)[40], double aDouble,
 
   return length;
 }
+#endif /* CharT_is_PRUnichar */
 
-template <typename T>
 void
-nsTSubstring<T>::AppendFloat(float aFloat)
+nsTSubstring_CharT::AppendFloat(float aFloat)
 {
   char buf[40];
   int length = FormatWithoutTrailingZeros(buf, aFloat, 6);
   AppendASCII(buf, length);
 }
 
-template <typename T>
 void
-nsTSubstring<T>::AppendFloat(double aFloat)
+nsTSubstring_CharT::AppendFloat(double aFloat)
 {
   char buf[40];
   int length = FormatWithoutTrailingZeros(buf, aFloat, 15);
   AppendASCII(buf, length);
 }
 
-template <typename T>
 size_t
-nsTSubstring<T>::SizeOfExcludingThisIfUnshared(
+nsTSubstring_CharT::SizeOfExcludingThisIfUnshared(
     mozilla::MallocSizeOf aMallocSizeOf) const
 {
-  if (this->mDataFlags & DataFlags::SHARED) {
-    return nsStringBuffer::FromData(this->mData)->
+  if (mDataFlags & DataFlags::SHARED) {
+    return nsStringBuffer::FromData(mData)->
       SizeOfIncludingThisIfUnshared(aMallocSizeOf);
   }
-  if (this->mDataFlags & DataFlags::OWNED) {
-    return aMallocSizeOf(this->mData);
+  if (mDataFlags & DataFlags::OWNED) {
+    return aMallocSizeOf(mData);
   }
 
   // If we reach here, exactly one of the following must be true:
-  // - DataFlags::VOIDED is set, and this->mData points to sEmptyBuffer;
-  // - DataFlags::FIXED is set, and this->mData points to a buffer within a string
+  // - DataFlags::VOIDED is set, and mData points to sEmptyBuffer;
+  // - DataFlags::FIXED is set, and mData points to a buffer within a string
   //   object (e.g. nsAutoString);
-  // - None of DataFlags::SHARED, DataFlags::OWNED, DataFlags::FIXED is set, and this->mData points to a buffer
+  // - None of DataFlags::SHARED, DataFlags::OWNED, DataFlags::FIXED is set, and mData points to a buffer
   //   owned by something else.
   //
   // In all three cases, we don't measure it.
   return 0;
 }
 
-template <typename T>
 size_t
-nsTSubstring<T>::SizeOfExcludingThisEvenIfShared(
+nsTSubstring_CharT::SizeOfExcludingThisEvenIfShared(
     mozilla::MallocSizeOf aMallocSizeOf) const
 {
   // This is identical to SizeOfExcludingThisIfUnshared except for the
   // DataFlags::SHARED case.
-  if (this->mDataFlags & DataFlags::SHARED) {
-    return nsStringBuffer::FromData(this->mData)->
+  if (mDataFlags & DataFlags::SHARED) {
+    return nsStringBuffer::FromData(mData)->
       SizeOfIncludingThisEvenIfShared(aMallocSizeOf);
   }
-  if (this->mDataFlags & DataFlags::OWNED) {
-    return aMallocSizeOf(this->mData);
+  if (mDataFlags & DataFlags::OWNED) {
+    return aMallocSizeOf(mData);
   }
   return 0;
 }
 
-template <typename T>
 size_t
-nsTSubstring<T>::SizeOfIncludingThisIfUnshared(
+nsTSubstring_CharT::SizeOfIncludingThisIfUnshared(
     mozilla::MallocSizeOf aMallocSizeOf) const
 {
   return aMallocSizeOf(this) + SizeOfExcludingThisIfUnshared(aMallocSizeOf);
 }
 
-template <typename T>
 size_t
-nsTSubstring<T>::SizeOfIncludingThisEvenIfShared(
+nsTSubstring_CharT::SizeOfIncludingThisEvenIfShared(
     mozilla::MallocSizeOf aMallocSizeOf) const
 {
   return aMallocSizeOf(this) + SizeOfExcludingThisEvenIfShared(aMallocSizeOf);
 }
 
-template <typename T>
 inline
-nsTSubstringSplitter<T>::nsTSubstringSplitter(
-    const nsTSubstring<T>* aStr, char_type aDelim)
+nsTSubstringSplitter_CharT::nsTSubstringSplitter_CharT(
+    const nsTSubstring_CharT* aStr, char_type aDelim)
   : mStr(aStr)
   , mArray(nullptr)
   , mDelim(aDelim)
@@ -1233,7 +1172,7 @@ nsTSubstringSplitter<T>::nsTSubstringSplitter(
 
   size_type delimCount = mStr->CountChar(aDelim);
   mArraySize = delimCount + 1;
-  mArray.reset(new nsTDependentSubstring<T>[mArraySize]);
+  mArray.reset(new nsTDependentSubstring_CharT[mArraySize]);
 
   size_t seenParts = 0;
   size_type start = 0;
@@ -1252,16 +1191,14 @@ nsTSubstringSplitter<T>::nsTSubstringSplitter(
   } while (start < mStr->Length());
 }
 
-template <typename T>
-nsTSubstringSplitter<T>
-nsTSubstring<T>::Split(const char_type aChar) const
+nsTSubstringSplitter_CharT
+nsTSubstring_CharT::Split(const char_type aChar) const
 {
-  return nsTSubstringSplitter<T>(this, aChar);
+  return nsTSubstringSplitter_CharT(this, aChar);
 }
 
-template <typename T>
-const nsTDependentSubstring<T>&
-nsTSubstringSplitter<T>::nsTSubstringSplit_Iter::operator* () const
+const nsTDependentSubstring_CharT&
+nsTSubstringSplitter_CharT::nsTSubstringSplit_Iter::operator* () const
 {
    return mObj.Get(mPos);
 }
