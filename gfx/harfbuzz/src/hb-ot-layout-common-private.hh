@@ -941,7 +941,7 @@ struct Coverage
   }
 
   struct Iter {
-    Iter (void) : format (0) {};
+    Iter (void) : format (0), u () {};
     inline void init (const Coverage &c_) {
       format = c_.u.format;
       switch (format) {
@@ -982,8 +982,8 @@ struct Coverage
     private:
     unsigned int format;
     union {
+    CoverageFormat2::Iter	format2; /* Put this one first since it's larger; helps shut up compiler. */
     CoverageFormat1::Iter	format1;
-    CoverageFormat2::Iter	format2;
     } u;
   };
 
