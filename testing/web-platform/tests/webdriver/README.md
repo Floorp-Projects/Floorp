@@ -5,7 +5,7 @@ for the W3C web browser automation specification
 known as [WebDriver](http://w3c.github.io/webdriver/webdriver-spec.html).
 The purpose of these tests is determine implementation compliance
 so that different driver implementations can determine
-whether they meet the recognised standard.
+whether they meet the recognized standard.
 
 ## Chapters of the Spec that still need tests
 
@@ -13,5 +13,5 @@ We are using a [tracking spreadsheet](https://docs.google.com/spreadsheets/d/1GU
 to coordinate work on these tests. Please look there to see who
 is working on what, and which areas are currently under-tested.
 
-The spec contrubutors and editors can frequently be found on the W3C
+The spec contributors and editors can frequently be found on the W3C
 #webdriver IRC channel.

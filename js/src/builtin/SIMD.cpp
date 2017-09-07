@@ -561,11 +561,8 @@ GlobalObject::initSimdObject(JSContext* cx, Handle<GlobalObject*> global)
         return false;
 
     RootedValue globalSimdValue(cx, ObjectValue(*globalSimdObject));
-    if (!DefineProperty(cx, global, cx->names().SIMD, globalSimdValue, nullptr, nullptr,
-                        JSPROP_RESOLVING))
-    {
+    if (!DefineDataProperty(cx, global, cx->names().SIMD, globalSimdValue, JSPROP_RESOLVING))
         return false;
-    }
 
     global->setConstructor(JSProto_SIMD, globalSimdValue);
     return true;
@@ -621,8 +618,8 @@ CreateSimdType(JSContext* cx, Handle<GlobalObject*> global, HandlePropertyName s
 
     RootedValue typeValue(cx, ObjectValue(*typeDescr));
     if (!JS_DefineFunctions(cx, typeDescr, methods) ||
-        !DefineProperty(cx, globalSimdObject, stringRepr, typeValue, nullptr, nullptr,
-                        JSPROP_READONLY | JSPROP_PERMANENT | JSPROP_RESOLVING))
+        !DefineDataProperty(cx, globalSimdObject, stringRepr, typeValue,
+                            JSPROP_READONLY | JSPROP_PERMANENT | JSPROP_RESOLVING))
     {
         return false;
     }

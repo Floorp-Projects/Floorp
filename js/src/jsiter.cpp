@@ -589,7 +589,7 @@ NewPropertyIteratorObject(JSContext* cx, unsigned flags)
             return nullptr;
 
         RootedValue value(cx, ObjectValue(*next));
-        if (!DefineProperty(cx, res, cx->names().next, value))
+        if (!DefineDataProperty(cx, res, cx->names().next, value))
             return nullptr;
     }
 
@@ -993,12 +993,12 @@ js::CreateIterResultObject(JSContext* cx, HandleValue value, bool done)
         return nullptr;
 
     // Step 3.
-    if (!DefineProperty(cx, resultObj, cx->names().value, value))
+    if (!DefineDataProperty(cx, resultObj, cx->names().value, value))
         return nullptr;
 
     // Step 4.
-    if (!DefineProperty(cx, resultObj, cx->names().done,
-                        done ? TrueHandleValue : FalseHandleValue))
+    if (!DefineDataProperty(cx, resultObj, cx->names().done,
+                            done ? TrueHandleValue : FalseHandleValue))
     {
         return nullptr;
     }

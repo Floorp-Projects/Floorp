@@ -240,7 +240,7 @@ js::InitReflect(JSContext* cx, HandleObject obj)
         return nullptr;
 
     RootedValue value(cx, ObjectValue(*reflect));
-    if (!DefineProperty(cx, obj, cx->names().Reflect, value, nullptr, nullptr, JSPROP_RESOLVING))
+    if (!DefineDataProperty(cx, obj, cx->names().Reflect, value, JSPROP_RESOLVING))
         return nullptr;
 
     obj->as<GlobalObject>().setConstructor(JSProto_Reflect, value);

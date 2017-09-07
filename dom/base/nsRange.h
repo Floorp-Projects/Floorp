@@ -102,6 +102,16 @@ public:
     return static_cast<uint32_t>(mEnd.Offset());
   }
 
+  nsIContent* GetChildAtStartOffset() const
+  {
+    return mStart.GetChildAtOffset();
+  }
+
+  nsIContent* GetChildAtEndOffset() const
+  {
+    return mEnd.GetChildAtOffset();
+  }
+
   bool IsPositioned() const
   {
     return mIsPositioned;
