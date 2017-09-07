@@ -352,7 +352,14 @@ nsStringBuffer::SizeOfIncludingThisEvenIfShared(mozilla::MallocSizeOf aMallocSiz
 // ---------------------------------------------------------------------------
 
 // define nsAString
+#include "string-template-def-unichar.h"
 #include "nsTSubstring.cpp"
+#include "string-template-undef.h"
+
+// define nsACString
+#include "string-template-def-char.h"
+#include "nsTSubstring.cpp"
+#include "string-template-undef.h"
 
 // Provide rust bindings to the nsA[C]String types
 extern "C" {

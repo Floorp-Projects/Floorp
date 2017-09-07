@@ -19,7 +19,6 @@ EXPORTS += [
     'nsReadableUtils.h',
     'nsString.h',
     'nsStringBuffer.h',
-    'nsStringFlags.h',
     'nsStringFwd.h',
     'nsStringIterator.h',
     'nsSubstring.h',
@@ -30,10 +29,12 @@ EXPORTS += [
     'nsTLiteralString.h',
     'nsTPromiseFlatString.h',
     'nsTString.h',
-    'nsTStringRepr.h',
     'nsTSubstring.h',
     'nsTSubstringTuple.h',
     'nsUTF8Utils.h',
+    'string-template-def-char.h',
+    'string-template-def-unichar.h',
+    'string-template-undef.h',
 ]
 
 UNIFIED_SOURCES += [
@@ -48,7 +49,6 @@ UNIFIED_SOURCES += [
     'nsSubstring.cpp',
     'nsSubstringTuple.cpp',
     'nsTextFormatter.cpp',
-    'precompiled_templates.cpp',
 ]
 
 # Are we targeting x86 or x86-64?  If so, compile the SSE2 functions for

@@ -5,13 +5,8 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 // IWYU pragma: private, include "nsString.h"
 
-#ifndef nsTSubstringTuple_h
-#define nsTSubstringTuple_h
-
-#include "nsTStringRepr.h"
-
 /**
- * nsTSubstringTuple
+ * nsTSubstringTuple_CharT
  *
  * Represents a tuple of string fragments.  Built as a recursive binary tree.
  * It is used to implement the concatenation of two or more string objects.
@@ -19,30 +14,29 @@
  * NOTE: This class is a private implementation detail and should never be
  * referenced outside the string code.
  */
-template <typename T>
-class nsTSubstringTuple
+class nsTSubstringTuple_CharT
 {
 public:
 
-  typedef T char_type;
-  typedef nsCharTraits<char_type> char_traits;
+  typedef CharT                                 char_type;
+  typedef nsCharTraits<char_type>               char_traits;
 
-  typedef nsTSubstringTuple<T> self_type;
-  typedef mozilla::detail::nsTStringRepr<char_type> base_string_type;
-  typedef uint32_t size_type;
+  typedef nsTSubstringTuple_CharT               self_type;
+  typedef mozilla::detail::nsTStringRepr_CharT  base_string_type;
+  typedef uint32_t                              size_type;
 
 public:
 
-  nsTSubstringTuple(const base_string_type* aStrA,
-                    const base_string_type* aStrB)
+  nsTSubstringTuple_CharT(const base_string_type* aStrA,
+                          const base_string_type* aStrB)
     : mHead(nullptr)
     , mFragA(aStrA)
     , mFragB(aStrB)
   {
   }
 
-  nsTSubstringTuple(const self_type& aHead,
-                    const base_string_type* aStrB)
+  nsTSubstringTuple_CharT(const self_type& aHead,
+                          const base_string_type* aStrB)
     : mHead(&aHead)
     , mFragA(nullptr) // this fragment is ignored when aHead != nullptr
     , mFragB(aStrB)
@@ -74,20 +68,16 @@ private:
   const base_string_type* const mFragB;
 };
 
-template <typename T>
-inline const nsTSubstringTuple<T>
-operator+(const mozilla::detail::nsTStringRepr<T>& aStrA,
-          const mozilla::detail::nsTStringRepr<T>& aStrB)
+inline const nsTSubstringTuple_CharT
+operator+(const nsTSubstringTuple_CharT::base_string_type& aStrA,
+          const nsTSubstringTuple_CharT::base_string_type& aStrB)
 {
-  return nsTSubstringTuple<T>(&aStrA, &aStrB);
+  return nsTSubstringTuple_CharT(&aStrA, &aStrB);
 }
 
-template <typename T>
-inline const nsTSubstringTuple<T>
-operator+(const nsTSubstringTuple<T>& aHead,
-          const mozilla::detail::nsTStringRepr<T>& aStrB)
+inline const nsTSubstringTuple_CharT
+operator+(const nsTSubstringTuple_CharT& aHead,
+          const nsTSubstringTuple_CharT::base_string_type& aStrB)
 {
-  return nsTSubstringTuple<T>(aHead, &aStrB);
+  return nsTSubstringTuple_CharT(aHead, &aStrB);
 }
-
-#endif

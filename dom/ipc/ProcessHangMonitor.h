@@ -11,11 +11,11 @@
 #include "mozilla/Atomics.h"
 #include "nsCOMPtr.h"
 #include "nsIObserver.h"
-#include "nsStringFwd.h"
 
 class nsIRunnable;
 class nsITabChild;
 class nsIThread;
+class nsString;
 
 namespace mozilla {
 
