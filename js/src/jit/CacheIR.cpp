@@ -2712,22 +2712,33 @@ EmitStoreSlotAndReturn(CacheIRWriter& writer, ObjOperandId objId, NativeObject* 
 }
 
 static Shape*
-LookupShapeForSetSlot(NativeObject* obj, jsid id)
+LookupShapeForSetSlot(JSOp op, NativeObject* obj, jsid id)
 {
     Shape* shape = obj->lookupPure(id);
-    if (shape && shape->hasSlot() && shape->hasDefaultSetter() && shape->writable())
-        return shape;
-    return nullptr;
+    if (!shape || !shape->hasSlot() || !shape->hasDefaultSetter() || !shape->writable())
+        return nullptr;
+
+    // If this is an op like JSOP_INITELEM / [[DefineOwnProperty]], the
+    // property's attributes may have to be changed too, so make sure it's a
+    // simple data property.
+    if (IsPropertyInitOp(op) && (!shape->configurable() ||
+                                 !shape->enumerable() ||
+                                 !shape->hasDefaultGetter()))
+    {
+        return nullptr;
+    }
+
+    return shape;
 }
 
 static bool
-CanAttachNativeSetSlot(JSContext* cx, HandleObject obj, HandleId id,
+CanAttachNativeSetSlot(JSContext* cx, JSOp op, HandleObject obj, HandleId id,
                        bool* isTemporarilyUnoptimizable, MutableHandleShape propShape)
 {
     if (!obj->isNative())
         return false;
 
-    propShape.set(LookupShapeForSetSlot(&obj->as<NativeObject>(), id));
+    propShape.set(LookupShapeForSetSlot(op, &obj->as<NativeObject>(), id));
     if (!propShape)
         return false;
 
@@ -2755,7 +2766,7 @@ SetPropIRGenerator::tryAttachNativeSetSlot(HandleObject obj, ObjOperandId objId,
                                            ValOperandId rhsId)
 {
     RootedShape propShape(cx_);
-    if (!CanAttachNativeSetSlot(cx_, obj, id, isTemporarilyUnoptimizable_, &propShape))
+    if (!CanAttachNativeSetSlot(cx_, JSOp(*pc_), obj, id, isTemporarilyUnoptimizable_, &propShape))
         return false;
 
     if (mode_ == ICState::Mode::Megamorphic && cacheKind_ == CacheKind::SetProp) {
@@ -2799,7 +2810,7 @@ SetPropIRGenerator::tryAttachUnboxedExpandoSetSlot(HandleObject obj, ObjOperandI
     if (!expando)
         return false;
 
-    Shape* propShape = LookupShapeForSetSlot(expando, id);
+    Shape* propShape = LookupShapeForSetSlot(JSOp(*pc_), expando, id);
     if (!propShape)
         return false;
 
@@ -3480,7 +3491,9 @@ SetPropIRGenerator::tryAttachDOMProxyExpando(HandleObject obj, ObjOperandId objI
     }
 
     RootedShape propShape(cx_);
-    if (CanAttachNativeSetSlot(cx_, expandoObj, id, isTemporarilyUnoptimizable_, &propShape)) {
+    if (CanAttachNativeSetSlot(cx_, JSOp(*pc_), expandoObj, id, isTemporarilyUnoptimizable_,
+                               &propShape))
+    {
         maybeEmitIdGuard(id);
         ObjOperandId expandoObjId =
             guardDOMProxyExpandoObjectAndShape(obj, objId, expandoVal, expandoObj);
@@ -3621,8 +3634,11 @@ SetPropIRGenerator::tryAttachWindowProxy(HandleObject obj, ObjOperandId objId, H
     Handle<GlobalObject*> windowObj = cx_->global();
 
     RootedShape propShape(cx_);
-    if (!CanAttachNativeSetSlot(cx_, windowObj, id, isTemporarilyUnoptimizable_, &propShape))
+    if (!CanAttachNativeSetSlot(cx_, JSOp(*pc_), windowObj, id, isTemporarilyUnoptimizable_,
+                                &propShape))
+    {
         return false;
+    }
 
     maybeEmitIdGuard(id);
 
