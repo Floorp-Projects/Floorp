@@ -354,9 +354,10 @@ CollectWindowReports(nsGlobalWindow *aWindow,
               "other 'dom/' numbers.");
   aWindowTotalSizes->mDOMOtherSize += windowSizes.mDOMOtherSize;
 
-  REPORT_SIZE("/style-sheets", windowSizes.mStyleSheetsSize,
+  REPORT_SIZE("/layout/style-sheets", windowSizes.mLayoutStyleSheetsSize,
               "Memory used by style sheets within a window.");
-  aWindowTotalSizes->mStyleSheetsSize += windowSizes.mStyleSheetsSize;
+  aWindowTotalSizes->mLayoutStyleSheetsSize +=
+    windowSizes.mLayoutStyleSheetsSize;
 
   REPORT_SIZE("/layout/pres-shell", windowSizes.mLayoutPresShellSize,
               "Memory used by layout's PresShell, along with any structures "
@@ -691,8 +692,9 @@ nsWindowMemoryReporter::CollectReports(nsIHandleReportCallback* aHandleReport,
   REPORT("window-objects/dom/other", windowTotalSizes.mDOMOtherSize,
          "This is the sum of all windows' 'dom/other' numbers.");
 
-  REPORT("window-objects/style-sheets", windowTotalSizes.mStyleSheetsSize,
-         "This is the sum of all windows' 'style-sheets' numbers.");
+  REPORT("window-objects/layout/style-sheets",
+         windowTotalSizes.mLayoutStyleSheetsSize,
+         "This is the sum of all windows' 'layout/style-sheets' numbers.");
 
   REPORT("window-objects/layout/pres-shell",
          windowTotalSizes.mLayoutPresShellSize,
