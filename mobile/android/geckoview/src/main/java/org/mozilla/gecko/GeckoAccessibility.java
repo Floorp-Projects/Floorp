@@ -8,6 +8,7 @@ package org.mozilla.gecko;
 import org.json.JSONException;
 import org.json.JSONObject;
 import org.mozilla.gecko.EventDispatcher;
+import org.mozilla.gecko.gfx.LayerView;
 import org.mozilla.gecko.util.GeckoBundle;
 import org.mozilla.gecko.util.ThreadUtils;
 
@@ -147,7 +148,7 @@ public class GeckoAccessibility {
         } else {
             // In Jelly Bean we populate an AccessibilityNodeInfo with the minimal amount of data to have
             // it work with TalkBack.
-            final View view = GeckoAppShell.getLayerView();
+            final LayerView view = GeckoAppShell.getLayerView();
             if (view == null)
                 return;
 
@@ -178,6 +179,7 @@ public class GeckoAccessibility {
                 sVirtualCursorNode.setBoundsInParent(relativeBounds);
                 int[] locationOnScreen = new int[2];
                 view.getLocationOnScreen(locationOnScreen);
+                locationOnScreen[1] += view.getCurrentToolbarHeight();
                 Rect screenBounds = new Rect(relativeBounds);
                 screenBounds.offset(locationOnScreen[0], locationOnScreen[1]);
                 sVirtualCursorNode.setBoundsInScreen(screenBounds);
