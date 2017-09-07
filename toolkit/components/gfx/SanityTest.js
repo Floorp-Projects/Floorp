@@ -18,6 +18,10 @@ const LEFT_EDGE = 8;
 const TOP_EDGE = 8;
 const CANVAS_WIDTH = 32;
 const CANVAS_HEIGHT = 64;
+// If those values are ever changed, make sure to update
+// WMFVideoMFTManager::CanUseDXVA accordingly.
+const VIDEO_WIDTH = 132;
+const VIDEO_HEIGHT = 132;
 const DRIVER_PREF = "sanity-test.driver-version";
 const DEVICE_PREF = "sanity-test.device-id";
 const VERSION_PREF = "sanity-test.version";
@@ -106,21 +110,19 @@ function takeWindowSnapshot(win, ctx) {
 // render as expected (with a tolerance of 64 to allow for
 // yuv->rgb differences between platforms).
 //
-// The video is 132*132, and is split into quadrants of
-// different colours. The top left of the video is 8,72
-// and we test a pixel 33,33 into each quadrant to avoid
+// The video is VIDEO_WIDTH*VIDEO_HEIGHT, and is split into quadrants of
+// different colours. The top left of the video is LEFT_EDGE,TOP_EDGE+CANVAS_HEIGHT
+// and we test a pixel into the middle of each quadrant to avoid
 // blending differences at the edges.
-// If those values are ever changed, make sure to update
-// WMFVideoMFTManager::CanUseDXVA accordingly.
 //
 // We allow massive amounts of fuzz for the colours since
 // it can depend hugely on the yuv -> rgb conversion, and
 // we don't want to fail unnecessarily.
 function verifyVideoRendering(ctx) {
-  return testPixel(ctx, 41, 105, 255, 255, 255, 255, 64) &&
-    testPixel(ctx, 107, 105, 0, 255, 0, 255, 64) &&
-    testPixel(ctx, 41, 171, 0, 0, 255, 255, 64) &&
-    testPixel(ctx, 107, 171, 255, 0, 0, 255, 64);
+  return testPixel(ctx, LEFT_EDGE + VIDEO_WIDTH / 4, TOP_EDGE + CANVAS_HEIGHT + VIDEO_HEIGHT / 4, 255, 255, 255, 255, 64) &&
+    testPixel(ctx, LEFT_EDGE + 3 * VIDEO_WIDTH / 4, TOP_EDGE + CANVAS_HEIGHT + VIDEO_HEIGHT / 4, 0, 255, 0, 255, 64) &&
+    testPixel(ctx, LEFT_EDGE + VIDEO_WIDTH / 4, TOP_EDGE + CANVAS_HEIGHT + 3 * VIDEO_HEIGHT / 4, 0, 0, 255, 255, 64) &&
+    testPixel(ctx, LEFT_EDGE + 3 * VIDEO_WIDTH / 4, TOP_EDGE + CANVAS_HEIGHT + 3 * VIDEO_HEIGHT / 4, 255, 0, 0, 255, 64);
 }
 
 // Verify that the middle of the layers test is the color we expect.
