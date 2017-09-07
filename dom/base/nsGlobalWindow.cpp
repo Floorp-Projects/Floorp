@@ -4391,8 +4391,8 @@ nsGlobalWindow::UpdateTopInnerWindow()
     return;
   }
 
-  AsInner()->UpdateWebSocketCount(-mNumOfOpenWebSockets);
-  AsInner()->UpdateUserMediaCount(-mNumOfActiveUserMedia);
+  AsInner()->UpdateWebSocketCount(-(int32_t)mNumOfOpenWebSockets);
+  AsInner()->UpdateUserMediaCount(-(int32_t)mNumOfActiveUserMedia);
 }
 
 void
