@@ -661,9 +661,11 @@
             label="&enableSafeBrowsing.label;"
             accesskey="&enableSafeBrowsing.accesskey;" />
   <vbox class="indent">
+#ifdef MOZILLA_OFFICIAL
     <checkbox id="blockDownloads"
               label="&blockDownloads.label;"
               accesskey="&blockDownloads.accesskey;" />
+#endif
     <checkbox id="blockUncommonUnwanted"
               label="&blockUncommonAndUnwanted.label;"
               accesskey="&blockUncommonAndUnwanted.accesskey;" />
