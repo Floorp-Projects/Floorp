@@ -21,14 +21,6 @@
     "namespace": "browserSettings",
     "description": "Use the <code>browser.browserSettings</code> API to control global settings of the browser.",
     "permissions": ["browserSettings"],
-    "types": [
-      {
-        "id": "ImageAnimationBehavior",
-        "type": "string",
-        "enum": ["normal", "none", "once"],
-        "description": "How images should be animated in the browser."
-      }
-    ],
     "properties": {
       "allowPopupsForUserEvents": {
         "$ref": "types.Setting",
@@ -41,10 +33,6 @@
       "homepageOverride": {
         "$ref": "types.Setting",
         "description": "Returns the value of the overridden home page. Read-only."
-      },
-      "imageAnimationBehavior": {
-        "$ref": "types.Setting",
-        "description": "Controls the behaviour of image animation in the browser. This setting's value is of type ImageAnimationBehavior, defaulting to <code>normal</code>."
       },
       "newTabPageOverride": {
         "$ref": "types.Setting",
