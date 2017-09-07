@@ -145,10 +145,16 @@ _hb_buffer_serialize_glyphs_json (hb_buffer_t *buffer,
 
     if (!(flags & HB_BUFFER_SERIALIZE_FLAG_NO_POSITIONS))
     {
-      p += snprintf (p, ARRAY_LENGTH (b) - (p - b), ",\"dx\":%d,\"dy\":%d",
-		     pos[i].x_offset, pos[i].y_offset);
-      p += snprintf (p, ARRAY_LENGTH (b) - (p - b), ",\"ax\":%d,\"ay\":%d",
-		     pos[i].x_advance, pos[i].y_advance);
+      p += MAX (0, snprintf (p, ARRAY_LENGTH (b) - (p - b), ",\"dx\":%d,\"dy\":%d",
+			     pos[i].x_offset, pos[i].y_offset));
+      p += MAX (0, snprintf (p, ARRAY_LENGTH (b) - (p - b), ",\"ax\":%d,\"ay\":%d",
+			     pos[i].x_advance, pos[i].y_advance));
+    }
+
+    if (flags & HB_BUFFER_SERIALIZE_FLAG_GLYPH_FLAGS)
+    {
+      if (info[i].mask & HB_GLYPH_FLAG_DEFINED)
+	p += MAX (0, snprintf (p, ARRAY_LENGTH (b) - (p - b), ",\"fl\":%u", info[i].mask & HB_GLYPH_FLAG_DEFINED));
     }
 
     if (flags & HB_BUFFER_SERIALIZE_FLAG_GLYPH_EXTENTS)
@@ -156,9 +162,9 @@ _hb_buffer_serialize_glyphs_json (hb_buffer_t *buffer,
       hb_glyph_extents_t extents;
       hb_font_get_glyph_extents(font, info[i].codepoint, &extents);
       p += MAX (0, snprintf (p, ARRAY_LENGTH (b) - (p - b), ",\"xb\":%d,\"yb\":%d",
-        extents.x_bearing, extents.y_bearing));
+		extents.x_bearing, extents.y_bearing));
       p += MAX (0, snprintf (p, ARRAY_LENGTH (b) - (p - b), ",\"w\":%d,\"h\":%d",
-        extents.width, extents.height));
+		extents.width, extents.height));
     }
 
     *p++ = '}';
@@ -224,6 +230,12 @@ _hb_buffer_serialize_glyphs_text (hb_buffer_t *buffer,
       p += MAX (0, snprintf (p, ARRAY_LENGTH (b) - (p - b), "%d", pos[i].x_advance));
       if (pos[i].y_advance)
 	p += MAX (0, snprintf (p, ARRAY_LENGTH (b) - (p - b), ",%d", pos[i].y_advance));
+    }
+
+    if (flags & HB_BUFFER_SERIALIZE_FLAG_GLYPH_FLAGS)
+    {
+      if (info[i].mask &HB_GLYPH_FLAG_DEFINED)
+	p += MAX (0, snprintf (p, ARRAY_LENGTH (b) - (p - b), "#%X", info[i].mask &HB_GLYPH_FLAG_DEFINED));
     }
 
     if (flags & HB_BUFFER_SERIALIZE_FLAG_GLYPH_EXTENTS)

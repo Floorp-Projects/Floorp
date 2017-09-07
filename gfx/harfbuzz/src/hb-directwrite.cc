@@ -880,6 +880,8 @@ retry_getglyphs:
     pos->x_offset =
       x_mult * (isRightToLeft ? -info->var1.i32 : info->var1.i32);
     pos->y_offset = y_mult * info->var2.i32;
+
+    info->mask = HB_GLYPH_FLAG_UNSAFE_TO_BREAK;
   }
 
   if (isRightToLeft)

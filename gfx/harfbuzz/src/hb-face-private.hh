@@ -55,10 +55,10 @@ struct hb_face_t {
   mutable unsigned int num_glyphs;	/* Number of glyphs. */
 
   enum dirty_t {
-    NOTHING	= 0x0000,
-    INDEX	= 0x0001,
-    UPEM	= 0x0002,
-    NUM_GLYPHS	= 0x0004,
+    DIRTY_NOTHING	= 0x0000,
+    DIRTY_INDEX		= 0x0001,
+    DIRTY_UPEM		= 0x0002,
+    DIRTY_NUM_GLYPHS	= 0x0004,
   } dirty;
 
   struct hb_shaper_data_t shaper_data;	/* Various shaper data. */
