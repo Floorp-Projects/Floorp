@@ -107,6 +107,7 @@ public:
   void CreateNeededFrames();
 
 private:
+
   void CreateNeededFrames(nsIContent* aContent,
                           TreeMatchContext& aTreeMatchContext);
 
@@ -182,7 +183,8 @@ private:
   // Returns true if parent was recreated due to frameset child, false otherwise.
   bool MaybeRecreateForFrameset(nsIFrame* aParentFrame,
                                 nsIContent* aStartChild,
-                                nsIContent* aEndChild);
+                                nsIContent* aEndChild,
+                                InsertionKind);
 
   /**
    * For each child in the aStartChild/aEndChild range, calls
@@ -1939,11 +1941,12 @@ private:
   // @return true if we reconstructed the containing block, false
   // otherwise
   bool WipeContainingBlock(nsFrameConstructorState& aState,
-                             nsIFrame*                aContainingBlock,
-                             nsIFrame*                aFrame,
-                             FrameConstructionItemList& aItems,
-                             bool                     aIsAppend,
-                             nsIFrame*                aPrevSibling);
+                           nsIFrame* aContainingBlock,
+                           nsIFrame* aFrame,
+                           FrameConstructionItemList& aItems,
+                           bool aIsAppend,
+                           nsIFrame* aPrevSibling,
+                           InsertionKind);
 
   void ReframeContainingBlock(nsIFrame* aFrame, InsertionKind aInsertionKind);
 
