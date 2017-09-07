@@ -7927,8 +7927,7 @@ nsCSSFrameConstructor::ContentAppended(nsIContent* aContainer,
 #endif
 
 #ifdef ACCESSIBILITY
-  nsAccessibilityService* accService = nsIPresShell::AccService();
-  if (accService) {
+  if (nsAccessibilityService* accService = nsIPresShell::AccService()) {
     accService->ContentRangeInserted(mPresShell, aContainer,
                                      aFirstNewContent, nullptr);
   }
