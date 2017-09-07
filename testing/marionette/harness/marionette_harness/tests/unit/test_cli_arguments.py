@@ -34,3 +34,18 @@ class TestCommandLineArguments(MarionetteTestCase):
             """)
 
             self.assertTrue(safe_mode, "Safe Mode has not been enabled")
+
+    def test_startup_timeout(self):
+        startup_timeout = self.marionette.startup_timeout
+
+        # Use a timeout which always cause an IOError
+        self.marionette.startup_timeout = 1
+        msg = "Process killed after {}s".format(self.marionette.startup_timeout)
+
+        try:
+            self.marionette.quit()
+            with self.assertRaisesRegexp(IOError, msg):
+                self.marionette.start_session()
+        finally:
+            self.marionette.startup_timeout = startup_timeout
+            self.marionette.start_session()
