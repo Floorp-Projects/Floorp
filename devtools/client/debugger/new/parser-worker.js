@@ -4126,45 +4126,7 @@ module.exports = baseCreate;
 
 
 /***/ }),
-/* 404 */
-/***/ (function(module, exports, __webpack_require__) {
-
-var isArrayLike = __webpack_require__(220),
-    isObjectLike = __webpack_require__(14);
-
-/**
- * This method is like `_.isArrayLike` except that it also checks if `value`
- * is an object.
- *
- * @static
- * @memberOf _
- * @since 4.0.0
- * @category Lang
- * @param {*} value The value to check.
- * @returns {boolean} Returns `true` if `value` is an array-like object,
- *  else `false`.
- * @example
- *
- * _.isArrayLikeObject([1, 2, 3]);
- * // => true
- *
- * _.isArrayLikeObject(document.body.children);
- * // => true
- *
- * _.isArrayLikeObject('abc');
- * // => false
- *
- * _.isArrayLikeObject(_.noop);
- * // => false
- */
-function isArrayLikeObject(value) {
-  return isObjectLike(value) && isArrayLike(value);
-}
-
-module.exports = isArrayLikeObject;
-
-
-/***/ }),
+/* 404 */,
 /* 405 */,
 /* 406 */
 /***/ (function(module, exports, __webpack_require__) {
@@ -28517,6 +28479,9 @@ module.exports = basePropertyDeep;
 Object.defineProperty(exports, "__esModule", {
   value: true
 });
+
+var _extends = Object.assign || function (target) { for (var i = 1; i < arguments.length; i++) { var source = arguments[i]; for (var key in source) { if (Object.prototype.hasOwnProperty.call(source, key)) { target[key] = source[key]; } } } return target; };
+
 exports.getNextStep = getNextStep;
 
 var _debuggerHtml = __webpack_require__(843);
@@ -28525,45 +28490,40 @@ var _types = __webpack_require__(844);
 
 var _closest = __webpack_require__(1055);
 
-var _contains = __webpack_require__(1127);
-
 var _helpers = __webpack_require__(1052);
 
-function getNextStep(source, stepType, pausedPosition) {
+function getNextStep(source, pausedPosition) {
+  var awaitExpression = getAwaitExpression(source, pausedPosition);
+  if (!awaitExpression) {
+    return null;
+  }
+  var awaitStatement = awaitExpression.getStatementParent();
+  return getLocationAfterAwaitExpression(awaitStatement, pausedPosition);
+}
+
+function getAwaitExpression(source, pausedPosition) {
   var closestPath = (0, _closest.getClosestPath)(source, pausedPosition);
+
   if (!closestPath) {
-    return { nextStepType: stepType };
+    return null;
   }
-  if ((0, _helpers.isAwaitExpression)(closestPath, pausedPosition)) {
-    var nextHiddenBreakpointLocation = getLocationAfterAwaitExpression(closestPath, pausedPosition);
-    return { nextStepType: "resume", nextHiddenBreakpointLocation };
+
+  if ((0, _helpers.isAwaitExpression)(closestPath)) {
+    return closestPath;
   }
-  return { nextStepType: stepType };
+
+  return closestPath.find(p => p.isAwaitExpression());
 }
 
-function getLocationAfterAwaitExpression(path, position) {
-  var children = getFunctionBodyChildren(path);
-  if (!children) {
-    return;
+function getLocationAfterAwaitExpression(statement, position) {
+  var nextStatement = statement.getSibling(statement.key + 1);
+  if (nextStatement.node) {
+    return _extends({}, nextStatement.node.loc.start, {
+      sourceId: position.sourceId
+    });
   }
-  for (var i = 0; i !== children.length; i++) {
-    var child = children[i];
-    if ((0, _contains.containsPosition)(child.loc, position)) {
-      var nextChild = children[++i];
-      var nextLocation = nextChild.loc.start;
-      nextLocation.sourceId = position.sourceId;
-      return nextLocation;
-    }
-  }
-}
 
-function getFunctionBodyChildren(path) {
-  var blockScope = path.scope.block;
-  if (!blockScope) {
-    return;
-  }
-  var children = blockScope.body.body;
-  return children;
+  return null;
 }
 
 /***/ }),
@@ -28937,6 +28897,8 @@ var _getSymbols = __webpack_require__(1050);
 
 var _getSymbols2 = _interopRequireDefault(_getSymbols);
 
+var _ast = __webpack_require__(1051);
+
 var _getOutOfScopeLocations = __webpack_require__(1072);
 
 var _getOutOfScopeLocations2 = _interopRequireDefault(_getOutOfScopeLocations);
@@ -28959,6 +28921,7 @@ self.onmessage = workerHandler({
   getOutOfScopeLocations: _getOutOfScopeLocations2.default,
   getSymbols: _getSymbols2.default,
   clearSymbols: _getSymbols.clearSymbols,
+  clearASTs: _ast.clearASTs,
   getVariablesInScope: _scopes.getVariablesInScope,
   getNextStep: _steps.getNextStep,
   getEmptyLines: _getEmptyLines2.default
@@ -29745,6 +29708,7 @@ Object.defineProperty(exports, "__esModule", {
   value: true
 });
 exports.getAst = getAst;
+exports.clearASTs = clearASTs;
 exports.traverseAst = traverseAst;
 
 var _parseScriptTags = __webpack_require__(1023);
@@ -29820,6 +29784,10 @@ function getAst(source) {
 
   ASTs.set(source.id, ast);
   return ast;
+}
+
+function clearASTs() {
+  ASTs = new Map();
 }
 
 function traverseAst(source, visitor) {
@@ -32842,6 +32810,7 @@ function containsPosition(a, b) {
 
   return startsBefore && endsAfter;
 }
+
 function containsLocation(a, b) {
   return containsPosition(a, b.start) && containsPosition(a, b.end);
 }
@@ -32858,7 +32827,7 @@ function nodeContainsPosition(node, position) {
 var baseDifference = __webpack_require__(1131),
     baseFlatten = __webpack_require__(707),
     baseRest = __webpack_require__(411),
-    isArrayLikeObject = __webpack_require__(404);
+    isArrayLikeObject = __webpack_require__(1155);
 
 /**
  * Creates an array of `array` values not included in the other given arrays
@@ -32962,6 +32931,68 @@ function baseDifference(array, values, iteratee, comparator) {
 }
 
 module.exports = baseDifference;
+
+
+/***/ }),
+/* 1132 */,
+/* 1133 */,
+/* 1134 */,
+/* 1135 */,
+/* 1136 */,
+/* 1137 */,
+/* 1138 */,
+/* 1139 */,
+/* 1140 */,
+/* 1141 */,
+/* 1142 */,
+/* 1143 */,
+/* 1144 */,
+/* 1145 */,
+/* 1146 */,
+/* 1147 */,
+/* 1148 */,
+/* 1149 */,
+/* 1150 */,
+/* 1151 */,
+/* 1152 */,
+/* 1153 */,
+/* 1154 */,
+/* 1155 */
+/***/ (function(module, exports, __webpack_require__) {
+
+var isArrayLike = __webpack_require__(220),
+    isObjectLike = __webpack_require__(14);
+
+/**
+ * This method is like `_.isArrayLike` except that it also checks if `value`
+ * is an object.
+ *
+ * @static
+ * @memberOf _
+ * @since 4.0.0
+ * @category Lang
+ * @param {*} value The value to check.
+ * @returns {boolean} Returns `true` if `value` is an array-like object,
+ *  else `false`.
+ * @example
+ *
+ * _.isArrayLikeObject([1, 2, 3]);
+ * // => true
+ *
+ * _.isArrayLikeObject(document.body.children);
+ * // => true
+ *
+ * _.isArrayLikeObject('abc');
+ * // => false
+ *
+ * _.isArrayLikeObject(_.noop);
+ * // => false
+ */
+function isArrayLikeObject(value) {
+  return isObjectLike(value) && isArrayLike(value);
+}
+
+module.exports = isArrayLikeObject;
 
 
 /***/ })
