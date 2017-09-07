@@ -41,16 +41,14 @@ Sanitizer.prototype = {
         // Normal call to DownloadFiles remove actual data from storage, but our web-extension consumer
         // deletes only download history. So, for this reason we are passing a flag 'deleteFiles'.
         case "downloadHistory":
-          this._clear("downloadFiles", { startTime, deleteFiles: false });
-          break;
+          return this._clear("downloadFiles", { startTime, deleteFiles: false });
         case "formdata":
-          this._clear(aItemName, { startTime });
-          break;
+          return this._clear(aItemName, { startTime });
         default:
           return Promise.reject({message: `Invalid argument: ${aItemName} does not support startTime argument.`});
       }
     } else {
-      this._clear(aItemName);
+      return this._clear(aItemName);
     }
   },
 
