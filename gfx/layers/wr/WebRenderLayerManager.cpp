@@ -472,7 +472,8 @@ PaintItemByDrawTarget(nsDisplayItem* aItem,
                       const LayerPoint& aOffset,
                       nsDisplayListBuilder* aDisplayListBuilder,
                       RefPtr<BasicLayerManager>& aManager,
-                      WebRenderLayerManager* aWrManager)
+                      WebRenderLayerManager* aWrManager,
+                      const gfx::Size& aScale)
 {
   MOZ_ASSERT(aDT);
 
@@ -480,7 +481,8 @@ PaintItemByDrawTarget(nsDisplayItem* aItem,
   RefPtr<gfxContext> context = gfxContext::CreateOrNull(aDT);
   MOZ_ASSERT(context);
 
-  context->SetMatrix(gfxMatrix::Translation(-aOffset.x, -aOffset.y));
+  context->SetMatrix(context->CurrentMatrix().PreScale(aScale.width, aScale.height).PreTranslate(-aOffset.x, -aOffset.y));
+
   switch (aItem->GetType()) {
   case DisplayItemType::TYPE_MASK:
     static_cast<nsDisplayMask*>(aItem)->PaintMask(aDisplayListBuilder, context);
@@ -548,9 +550,9 @@ already_AddRefed<WebRenderFallbackData>
 WebRenderLayerManager::GenerateFallbackData(nsDisplayItem* aItem,
                                             wr::DisplayListBuilder& aBuilder,
                                             wr::IpcResourceUpdateQueue& aResources,
+                                            const StackingContextHelper& aSc,
                                             nsDisplayListBuilder* aDisplayListBuilder,
-                                            LayerRect& aImageRect,
-                                            LayerPoint& aOffset)
+                                            LayerRect& aImageRect)
 {
   RefPtr<WebRenderFallbackData> fallbackData = CreateOrRecycleWebRenderUserData<WebRenderFallbackData>(aItem);
 
@@ -577,17 +579,17 @@ WebRenderLayerManager::GenerateFallbackData(nsDisplayItem* aItem,
       LayoutDeviceRect::FromAppUnits(clippedBounds, appUnitsPerDevPixel),
       PixelCastJustification::WebRenderHasUnitResolution);
 
-  LayerIntSize imageSize = RoundedToInt(bounds.Size());
-  aImageRect = LayerRect(LayerPoint(0, 0), LayerSize(imageSize));
-  if (imageSize.width == 0 || imageSize.height == 0) {
+  gfx::Size scale = aSc.GetInheritedScale();
+  LayerIntSize paintSize = RoundedToInt(LayerSize(bounds.width * scale.width, bounds.height * scale.height));
+  if (paintSize.width == 0 || paintSize.height == 0) {
     return nullptr;
   }
 
-  aOffset = RoundedToInt(bounds.TopLeft());
-
   bool needPaint = true;
+  LayerIntPoint offset = RoundedToInt(bounds.TopLeft());
+  aImageRect = LayerRect(offset, LayerSize(RoundedToInt(bounds.Size())));
+  LayerRect paintRect = LayerRect(LayerPoint(0, 0), LayerSize(paintSize));
   nsAutoPtr<nsDisplayItemGeometry> geometry = fallbackData->GetGeometry();
-
 
   // nsDisplayFilter is rendered via BasicLayerManager which means the invalidate
   // region is unknown until we traverse the displaylist contained by it.
@@ -624,14 +626,14 @@ WebRenderLayerManager::GenerateFallbackData(nsDisplayItem* aItem,
       RefPtr<gfx::DrawEventRecorderMemory> recorder = MakeAndAddRef<gfx::DrawEventRecorderMemory>();
       RefPtr<gfx::DrawTarget> dummyDt =
         gfx::Factory::CreateDrawTarget(gfx::BackendType::SKIA, gfx::IntSize(1, 1), format);
-      RefPtr<gfx::DrawTarget> dt = gfx::Factory::CreateRecordingDrawTarget(recorder, dummyDt, imageSize.ToUnknownSize());
-      PaintItemByDrawTarget(aItem, dt, aImageRect, aOffset, aDisplayListBuilder,
-                            fallbackData->mBasicLayerManager, this);
+      RefPtr<gfx::DrawTarget> dt = gfx::Factory::CreateRecordingDrawTarget(recorder, dummyDt, paintSize.ToUnknownSize());
+      PaintItemByDrawTarget(aItem, dt, paintRect, offset, aDisplayListBuilder,
+                            fallbackData->mBasicLayerManager, this, scale);
       recorder->Finish();
 
       Range<uint8_t> bytes((uint8_t*)recorder->mOutputStream.mData, recorder->mOutputStream.mLength);
       wr::ImageKey key = WrBridge()->GetNextImageKey();
-      wr::ImageDescriptor descriptor(imageSize.ToUnknownSize(), 0, dt->GetFormat(), isOpaque);
+      wr::ImageDescriptor descriptor(paintSize.ToUnknownSize(), 0, dt->GetFormat(), isOpaque);
       aResources.AddBlobImage(key, descriptor, bytes);
       fallbackData->SetKey(key);
     } else {
@@ -640,15 +642,15 @@ WebRenderLayerManager::GenerateFallbackData(nsDisplayItem* aItem,
       RefPtr<ImageContainer> imageContainer = LayerManager::CreateImageContainer();
 
       {
-        UpdateImageHelper helper(imageContainer, imageClient, imageSize.ToUnknownSize(), format);
+        UpdateImageHelper helper(imageContainer, imageClient, paintSize.ToUnknownSize(), format);
         {
           RefPtr<gfx::DrawTarget> dt = helper.GetDrawTarget();
           if (!dt) {
             return nullptr;
           }
-          PaintItemByDrawTarget(aItem, dt, aImageRect, aOffset,
+          PaintItemByDrawTarget(aItem, dt, paintRect, offset,
                                 aDisplayListBuilder,
-                                fallbackData->mBasicLayerManager, this);
+                                fallbackData->mBasicLayerManager, this, scale);
         }
         if (!helper.UpdateImage()) {
           return nullptr;
@@ -685,10 +687,9 @@ WebRenderLayerManager::BuildWrMaskImage(nsDisplayItem* aItem,
                                         const LayerRect& aBounds)
 {
   LayerRect imageRect;
-  LayerPoint offset;
   RefPtr<WebRenderFallbackData> fallbackData = GenerateFallbackData(aItem, aBuilder, aResources,
-                                                                    aDisplayListBuilder,
-                                                                    imageRect, offset);
+                                                                    aSc, aDisplayListBuilder,
+                                                                    imageRect);
   if (!fallbackData) {
     return Nothing();
   }
@@ -708,15 +709,14 @@ WebRenderLayerManager::PushItemAsImage(nsDisplayItem* aItem,
                                        nsDisplayListBuilder* aDisplayListBuilder)
 {
   LayerRect imageRect;
-  LayerPoint offset;
   RefPtr<WebRenderFallbackData> fallbackData = GenerateFallbackData(aItem, aBuilder, aResources,
-                                                                    aDisplayListBuilder,
-                                                                    imageRect, offset);
+                                                                    aSc, aDisplayListBuilder,
+                                                                    imageRect);
   if (!fallbackData) {
     return false;
   }
 
-  wr::LayoutRect dest = aSc.ToRelativeLayoutRect(imageRect + offset);
+  wr::LayoutRect dest = aSc.ToRelativeLayoutRect(imageRect);
   SamplingFilter sampleFilter = nsLayoutUtils::GetSamplingFilterForFrame(aItem->Frame());
   aBuilder.PushImage(dest,
                      dest,
