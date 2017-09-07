@@ -4,22 +4,30 @@
 
 "use strict";
 
-const {Cc, Ci} = require("chrome");
+const {Ci} = require("chrome");
 const promise = require("promise");
 const protocol = require("devtools/shared/protocol");
 const {LongStringActor} = require("devtools/server/actors/string");
-const {getDefinedGeometryProperties} = require("devtools/server/actors/highlighters/geometry-editor");
-const {parseNamedDeclarations} = require("devtools/shared/css/parsing-utils");
-const {isCssPropertyKnown} = require("devtools/server/actors/css-properties");
 const {Task} = require("devtools/shared/task");
 
 // This will also add the "stylesheet" actor type for protocol.js to recognize
-const {UPDATE_PRESERVING_RULES, UPDATE_GENERAL} = require("devtools/server/actors/stylesheets");
+
 const {pageStyleSpec, styleRuleSpec, ELEMENT_STYLE} = require("devtools/shared/specs/styles");
 
-loader.lazyGetter(this, "CssLogic", () => require("devtools/server/css-logic").CssLogic);
-loader.lazyGetter(this, "SharedCssLogic", () => require("devtools/shared/inspector/css-logic"));
-loader.lazyGetter(this, "DOMUtils", () => Cc["@mozilla.org/inspector/dom-utils;1"].getService(Ci.inIDOMUtils));
+loader.lazyRequireGetter(this, "CssLogic", "devtools/server/css-logic", true);
+loader.lazyRequireGetter(this, "SharedCssLogic", "devtools/shared/inspector/css-logic");
+loader.lazyRequireGetter(this, "getDefinedGeometryProperties",
+  "devtools/server/actors/highlighters/geometry-editor", true);
+loader.lazyRequireGetter(this, "isCssPropertyKnown",
+  "devtools/server/actors/css-properties", true);
+loader.lazyRequireGetter(this, "parseNamedDeclarations",
+  "devtools/shared/css/parsing-utils", true);
+loader.lazyRequireGetter(this, "UPDATE_PRESERVING_RULES",
+  "devtools/server/actors/stylesheets", true);
+loader.lazyRequireGetter(this, "UPDATE_GENERAL",
+  "devtools/server/actors/stylesheets", true);
+
+loader.lazyServiceGetter(this, "DOMUtils", "@mozilla.org/inspector/dom-utils;1", "inIDOMUtils");
 
 loader.lazyGetter(this, "PSEUDO_ELEMENTS", () => {
   return DOMUtils.getCSSPseudoElementNames();

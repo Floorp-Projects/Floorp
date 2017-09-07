@@ -10,8 +10,9 @@
  * computes the aggregate string length
  */
 
-nsTSubstringTuple_CharT::size_type
-nsTSubstringTuple_CharT::Length() const
+template <typename T>
+typename nsTSubstringTuple<T>::size_type
+nsTSubstringTuple<T>::Length() const
 {
   mozilla::CheckedInt<size_type> len;
   if (mHead) {
@@ -32,8 +33,9 @@ nsTSubstringTuple_CharT::Length() const
  * method.  the string written to |aBuf| is not null-terminated.
  */
 
+template <typename T>
 void
-nsTSubstringTuple_CharT::WriteTo(char_type* aBuf, uint32_t aBufLen) const
+nsTSubstringTuple<T>::WriteTo(char_type* aBuf, uint32_t aBufLen) const
 {
   MOZ_RELEASE_ASSERT(aBufLen >= mFragB->Length(), "buffer too small");
   uint32_t headLen = aBufLen - mFragB->Length();
@@ -53,9 +55,10 @@ nsTSubstringTuple_CharT::WriteTo(char_type* aBuf, uint32_t aBufLen) const
  * the given char sequence.
  */
 
+template <typename T>
 bool
-nsTSubstringTuple_CharT::IsDependentOn(const char_type* aStart,
-                                       const char_type* aEnd) const
+nsTSubstringTuple<T>::IsDependentOn(const char_type* aStart,
+                                    const char_type* aEnd) const
 {
   // we aStart with the right-most fragment since it is faster to check.
 

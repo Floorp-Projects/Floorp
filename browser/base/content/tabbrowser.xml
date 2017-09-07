@@ -6695,6 +6695,7 @@
 
           if (this.getAttribute("movingtab") != "true") {
             this.setAttribute("movingtab", "true");
+            this.parentNode.setAttribute("movingtab", "true");
             this.selectedItem = draggedTab;
           }
 
@@ -6798,6 +6799,7 @@
             tab.style.transform = "";
 
           this.removeAttribute("movingtab");
+          this.parentNode.removeAttribute("movingtab");
 
           this._handleTabSelect();
         ]]></body>

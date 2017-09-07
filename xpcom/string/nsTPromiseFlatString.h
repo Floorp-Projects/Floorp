@@ -4,6 +4,10 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
+#ifndef nsTPromiseFlatString_h
+#define nsTPromiseFlatString_h
+
+#include "nsTString.h"
 
 /**
  * NOTE:
@@ -64,11 +68,22 @@
  * string (e.g., |nsTString|), the right thing happens.
  */
 
-class nsTPromiseFlatString_CharT : public nsTString_CharT
+template <typename T>
+class nsTPromiseFlatString : public nsTString<T>
 {
 public:
 
-  typedef nsTPromiseFlatString_CharT self_type;
+  typedef nsTPromiseFlatString<T> self_type;
+  typedef nsTString<T> base_string_type;
+  typedef typename base_string_type::substring_type substring_type;
+  typedef typename base_string_type::string_type string_type;
+  typedef typename base_string_type::substring_tuple_type substring_tuple_type;
+  typedef typename base_string_type::char_type char_type;
+  typedef typename base_string_type::size_type size_type;
+
+  // These are only for internal use within the string classes:
+  typedef typename base_string_type::DataFlags DataFlags;
+  typedef typename base_string_type::ClassFlags ClassFlags;
 
 private:
 
@@ -78,35 +93,55 @@ private:
   void operator=(const self_type&) = delete;
 
   // NOT TO BE IMPLEMENTED
-  nsTPromiseFlatString_CharT() = delete;
+  nsTPromiseFlatString() = delete;
 
   // NOT TO BE IMPLEMENTED
-  nsTPromiseFlatString_CharT(const string_type& aStr) = delete;
+  nsTPromiseFlatString(const string_type& aStr) = delete;
 
 public:
 
   explicit
-  nsTPromiseFlatString_CharT(const substring_type& aStr)
+  nsTPromiseFlatString(const substring_type& aStr)
     : string_type()
   {
     Init(aStr);
   }
 
   explicit
-  nsTPromiseFlatString_CharT(const substring_tuple_type& aTuple)
+  nsTPromiseFlatString(const substring_tuple_type& aTuple)
     : string_type()
   {
     // nothing else to do here except assign the value of the tuple
     // into ourselves.
-    Assign(aTuple);
+    this->Assign(aTuple);
   }
 };
+
+extern template class nsTPromiseFlatString<char>;
+extern template class nsTPromiseFlatString<char16_t>;
 
 // We template this so that the constructor is chosen based on the type of the
 // parameter. This allows us to reject attempts to promise a flat flat string.
 template<class T>
-const nsTPromiseFlatString_CharT
-TPromiseFlatString_CharT(const T& aString)
+const nsTPromiseFlatString<T>
+TPromiseFlatString(const typename nsTPromiseFlatString<T>::substring_type& aString)
 {
-  return nsTPromiseFlatString_CharT(aString);
+  return nsTPromiseFlatString<T>(aString);
 }
+
+template<class T>
+const nsTPromiseFlatString<T>
+TPromiseFlatString(const typename nsTPromiseFlatString<T>::substring_tuple_type& aString)
+{
+  return nsTPromiseFlatString<T>(aString);
+}
+
+#ifndef PromiseFlatCString
+#define PromiseFlatCString TPromiseFlatString<char>
+#endif
+
+#ifndef PromiseFlatString
+#define PromiseFlatString TPromiseFlatString<char16_t>
+#endif
+
+#endif

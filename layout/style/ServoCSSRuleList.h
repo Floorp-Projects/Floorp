@@ -49,7 +49,7 @@ public:
   nsresult InsertRule(const nsAString& aRule, uint32_t aIndex);
   nsresult DeleteRule(uint32_t aIndex);
 
-  uint16_t GetRuleType(uint32_t aIndex) const;
+  uint16_t GetDOMCSSRuleType(uint32_t aIndex) const;
 
 private:
   virtual ~ServoCSSRuleList();
