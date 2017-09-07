@@ -43,29 +43,21 @@ const prefs = Services.prefs.getBranch("extensions.shield-recipe-client.");
 const TIMER_NAME = "recipe-client-addon-run";
 const RUN_INTERVAL_PREF = "run_interval_seconds";
 const FIRST_RUN_PREF = "first_run";
-const UI_AVAILABLE_TOPIC = "sessionstore-windows-restored";
-const SHIELD_INIT_TOPIC = "shield-init-complete";
 const PREF_CHANGED_TOPIC = "nsPref:changed";
 
 this.RecipeRunner = {
-  init() {
+  async init() {
     if (!this.checkPrefs()) {
       return;
     }
 
-    if (prefs.getBoolPref("dev_mode")) {
-      // Run right now in dev mode
-      this.run();
+    // Run immediately on first run, or if dev mode is enabled.
+    if (prefs.getBoolPref(FIRST_RUN_PREF) || prefs.getBoolPref("dev_mode")) {
+      await this.run();
+      prefs.setBoolPref(FIRST_RUN_PREF, false);
     }
 
-    if (prefs.getBoolPref(FIRST_RUN_PREF)) {
-      // Run once immediately after the UI is available. Do this before adding the
-      // timer so we can't end up racing it.
-      Services.obs.addObserver(this, UI_AVAILABLE_TOPIC);
-      CleanupManager.addCleanupHandler(() => Services.obs.removeObserver(this, UI_AVAILABLE_TOPIC));
-    } else {
-      this.registerTimer();
-    }
+    this.registerTimer();
   },
 
   registerTimer() {
@@ -103,9 +95,6 @@ this.RecipeRunner = {
       case PREF_CHANGED_TOPIC:
         this.observePrefChange(data);
         break;
-      case UI_AVAILABLE_TOPIC:
-        this.observeUIAvailable().catch(err => Cu.reportError(err));
-        break;
     }
   },
 
@@ -118,16 +107,6 @@ this.RecipeRunner = {
     } else {
       log.debug(`Observer fired with unexpected pref change: ${prefName}`);
     }
-  },
-
-  async observeUIAvailable() {
-    Services.obs.removeObserver(this, UI_AVAILABLE_TOPIC);
-
-    await this.run();
-    this.registerTimer();
-    prefs.setBoolPref(FIRST_RUN_PREF, false);
-
-    Services.obs.notifyObservers(null, SHIELD_INIT_TOPIC);
   },
 
   updateRunInterval() {

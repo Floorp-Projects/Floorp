@@ -168,7 +168,13 @@ ElementHasActiveStyle(dom::Element* aElement)
   if (!pc) {
     return false;
   }
-  StyleSetHandle styleSet = pc->StyleSet();
+  nsStyleSet* styleSet = pc->StyleSet()->GetAsGecko();
+  if (!styleSet) {
+    // Bug 1397434 tracks making this optimization work for stylo.
+    AEM_LOG("Element %p uses Servo style backend, assuming dependence on active state\n", aElement);
+    return true;
+  }
+
   for (dom::Element* e = aElement; e; e = e->GetParentElement()) {
     if (styleSet->HasStateDependentStyle(e, NS_EVENT_STATE_ACTIVE)) {
       AEM_LOG("Element %p's style is dependent on the active state\n", e);

@@ -311,6 +311,25 @@ struct VRControllerInfo
   }
 };
 
+struct VRTelemetry
+{
+  VRTelemetry()
+   : mLastDroppedFrameCount(-1)
+  {}
+
+  void Clear() {
+    mPresentationStart = TimeStamp();
+    mLastDroppedFrameCount = -1;
+  }
+
+  bool IsLastDroppedFrameValid() {
+    return (mLastDroppedFrameCount != -1);
+  }
+
+  TimeStamp mPresentationStart;
+  int32_t mLastDroppedFrameCount;
+};
+
 class VRSystemManager {
 public:
   static uint32_t AllocateDisplayID();

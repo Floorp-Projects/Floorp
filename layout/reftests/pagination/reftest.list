@@ -74,7 +74,7 @@ fuzzy-if(skiaContent,1,23) == resize-reflow-001.html resize-reflow-001.ref.html
 # == table-caption-splitaftercaption-10.html blank.html # bug 672654
 # == table-caption-splitaftercaption-11.html blank.html # bug 672654
 == column-balancing-break-inside-avoid-2.html column-balancing-break-inside-avoid-2-ref.html
-fails-if(styloVsGecko||stylo) == combobox-page-break-inside.html combobox-page-break-inside-ref.html
+== combobox-page-break-inside.html combobox-page-break-inside-ref.html
 == table-nested-1308876-1.xhtml table-nested-1308876-1-ref.html
 
 # Bugs
@@ -99,7 +99,7 @@ fails-if(styloVsGecko||stylo) == combobox-page-break-inside.html combobox-page-b
 == 626395-2c.html 626395-2-ref.html
 == 626395-2d.html 626395-2-ref.html
 == 652178-1.html 652178-1-ref.html
-fails-if(styloVsGecko||stylo) == 115199-1.html 115199-1-ref.html
+== 115199-1.html 115199-1-ref.html
 == 115199-2a.html 115199-2-ref.html
 == 115199-2b.html 115199-2-ref.html
 == 652178-1.html 652178-1-ref2.html

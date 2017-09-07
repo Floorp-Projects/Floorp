@@ -9,15 +9,15 @@ import shared_telemetry_utils as utils
 from shared_telemetry_utils import ParserError
 
 # The map of containing the allowed scalar types and their mapping to
-# nsITelemetry::SCALAR_* type constants.
+# nsITelemetry::SCALAR_TYPE_* type constants.
 
 BASE_DOC_URL = 'https://firefox-source-docs.mozilla.org/toolkit/components/' + \
                'telemetry/telemetry/collection/scalars.html'
 
 SCALAR_TYPES_MAP = {
-    'uint': 'nsITelemetry::SCALAR_COUNT',
-    'string': 'nsITelemetry::SCALAR_STRING',
-    'boolean': 'nsITelemetry::SCALAR_BOOLEAN'
+    'uint': 'nsITelemetry::SCALAR_TYPE_COUNT',
+    'string': 'nsITelemetry::SCALAR_TYPE_STRING',
+    'boolean': 'nsITelemetry::SCALAR_TYPE_BOOLEAN'
 }
 
 

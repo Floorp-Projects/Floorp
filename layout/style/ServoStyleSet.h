@@ -263,13 +263,6 @@ public:
                           mozilla::CSSPseudoElementType aType,
                           ServoStyleContext* aParentContext);
 
-  // Test if style is dependent on content state
-  nsRestyleHint HasStateDependentStyle(dom::Element* aElement,
-                                       EventStates aStateMask);
-  nsRestyleHint HasStateDependentStyle(
-    dom::Element* aElement, mozilla::CSSPseudoElementType aPseudoType,
-    dom::Element* aPseudoElement, EventStates aStateMask);
-
   /**
    * Performs a Servo traversal to compute style for all dirty nodes in the
    * document.

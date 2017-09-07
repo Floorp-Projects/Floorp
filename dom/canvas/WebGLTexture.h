@@ -273,11 +273,12 @@ protected:
 public:
     void CompressedTexImage(const char* funcName, TexImageTarget target, GLint level,
                             GLenum internalFormat, GLsizei width, GLsizei height,
-                            GLsizei depth, GLint border, const TexImageSource& src);
+                            GLsizei depth, GLint border, const TexImageSource& src,
+                            const Maybe<GLsizei>& expectedImageSize);
     void CompressedTexSubImage(const char* funcName, TexImageTarget target, GLint level,
                                GLint xOffset, GLint yOffset, GLint zOffset, GLsizei width,
                                GLsizei height, GLsizei depth, GLenum sizedUnpackFormat,
-                               const TexImageSource& src);
+                               const TexImageSource& src, const Maybe<GLsizei>& expectedImageSize);
 
     void CopyTexImage2D(TexImageTarget target, GLint level, GLenum internalFormat,
                         GLint x, GLint y, GLsizei width, GLsizei height, GLint border);

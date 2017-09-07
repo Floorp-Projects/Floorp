@@ -927,24 +927,6 @@ ServoStyleSet::ProbePseudoElementStyle(Element* aOriginatingElement,
   return computedValues.forget();
 }
 
-nsRestyleHint
-ServoStyleSet::HasStateDependentStyle(dom::Element* aElement,
-                                      EventStates aStateMask)
-{
-  NS_WARNING("stylo: HasStateDependentStyle always returns zero!");
-  return nsRestyleHint(0);
-}
-
-nsRestyleHint
-ServoStyleSet::HasStateDependentStyle(dom::Element* aElement,
-                                      CSSPseudoElementType aPseudoType,
-                                      dom::Element* aPseudoElement,
-                                      EventStates aStateMask)
-{
-  NS_WARNING("stylo: HasStateDependentStyle always returns zero!");
-  return nsRestyleHint(0);
-}
-
 bool
 ServoStyleSet::StyleDocument(ServoTraversalFlags aFlags)
 {

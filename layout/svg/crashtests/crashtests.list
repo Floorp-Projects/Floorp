@@ -36,7 +36,7 @@ load 348982-1.xhtml
 load 354777-1.xhtml
 load 359516-1.svg
 load 361015-1.svg
-asserts-if(stylo,0-2) load 361587-1.svg # bug 1324677
+load 361587-1.svg
 load 363611-1.xhtml
 load 364688-1.svg
 load 366956-1.svg

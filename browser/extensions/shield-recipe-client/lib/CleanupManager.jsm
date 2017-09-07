@@ -5,26 +5,48 @@
 "use strict";
 
 const {utils: Cu} = Components;
+Cu.import("resource://gre/modules/XPCOMUtils.jsm");
+
+XPCOMUtils.defineLazyModuleGetter(this, "AsyncShutdown", "resource://gre/modules/AsyncShutdown.jsm");
+
 this.EXPORTED_SYMBOLS = ["CleanupManager"];
 
-const cleanupHandlers = new Set();
+class CleanupManagerClass {
+  constructor() {
+    this.handlers = new Set();
+    this.cleanupPromise = null;
+  }
 
-this.CleanupManager = {
   addCleanupHandler(handler) {
-    cleanupHandlers.add(handler);
-  },
+    this.handlers.add(handler);
+  }
 
   removeCleanupHandler(handler) {
-    cleanupHandlers.delete(handler);
-  },
+    this.handlers.delete(handler);
+  }
 
-  cleanup() {
-    for (const handler of cleanupHandlers) {
-      try {
-        handler();
-      } catch (ex) {
-        Cu.reportError(ex);
-      }
+  async cleanup() {
+    if (this.cleanupPromise === null) {
+      this.cleanupPromise = (async () => {
+        for (const handler of this.handlers) {
+          try {
+            await handler();
+          } catch (ex) {
+            Cu.reportError(ex);
+          }
+        }
+      })();
+
+      // Block shutdown to ensure any cleanup tasks that write data are
+      // finished.
+      AsyncShutdown.profileBeforeChange.addBlocker(
+        "ShieldRecipeClient: Cleaning up",
+        this.cleanupPromise,
+      );
     }
-  },
-};
+
+    return this.cleanupPromise;
+  }
+}
+
+this.CleanupManager = new CleanupManagerClass();

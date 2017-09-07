@@ -37,8 +37,6 @@ py2:
         - security
         - services/common/tests/mach_commands.py
         - servo
-        - taskcluster/docker
-        - taskcluster/taskgraph
         - testing/awsy
         - testing/firefox-ui
         - testing/geckodriver

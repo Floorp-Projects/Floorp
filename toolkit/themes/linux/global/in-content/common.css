@@ -131,7 +131,7 @@ xul|window * {
   font-size: 1.19rem;
 }
 
-xul|caption > xul|label {
+xul|caption > xul|label:not(.dialogTitle) {
   font-size: 1.27rem;
 }
 

@@ -3,15 +3,55 @@
   http://creativecommons.org/publicdomain/zero/1.0/
 -->
 <!DOCTYPE html>
+<html>
+<head>
 <meta charset=utf-8>
 <title>Test for performance observer</title>
 <script src="/resources/testharness.js"></script>
 <script src="/resources/testharnessreport.js"></script>
-<div id=log></div>
+</head>
+<body>
+<div id="log"></div>
+<script src="test_performance_observer.js"></script>
 <script>
-'use strict';
-SpecialPowers.pushPrefEnv({"set": [["dom.enable_performance_observer", true]]},
-                          function() {
-                            window.open("performance_observer.html");
-                          });
+function makeXHR(aUrl) {
+  var xmlhttp = new XMLHttpRequest();
+  xmlhttp.open("get", aUrl, true);
+  xmlhttp.send();
+}
+
+promise_test(t => {
+  var promise = new Promise(resolve => {
+    performance.clearResourceTimings();
+
+    var observer = new PerformanceObserver(list => resolve(list));
+    observer.observe({entryTypes: ['resource']});
+    t.add_cleanup(() => observer.disconnect());
+  });
+
+  makeXHR("test-data.json");
+
+  return promise.then(list => {
+    assert_equals(list.getEntries().length, 1);
+    assert_array_equals(list.getEntries(),
+                        performance.getEntriesByType("resource"),
+                        "Observed 'resource' entries should equal to entries obtained by getEntriesByType.");
+
+    // getEntries filtering tests
+    assert_array_equals(list.getEntries({name: "http://mochi.test:8888/tests/dom/base/test/test-data.json"}),
+                        performance.getEntriesByName("http://mochi.test:8888/tests/dom/base/test/test-data.json"),
+                        "getEntries with name filter should return correct results.");
+    assert_array_equals(list.getEntries({entryType: "resource"}),
+                        performance.getEntriesByType("resource"),
+                        "getEntries with entryType filter should return correct results.");
+    assert_array_equals(list.getEntries({initiatorType: "xmlhttprequest"}),
+                        performance.getEntriesByType("resource"),
+                        "getEntries with initiatorType filter should return correct results.");
+    assert_array_equals(list.getEntries({initiatorType: "link"}),
+                        [],
+                        "getEntries with non-existent initiatorType filter should return an empty array.");
+  });
+}, "resource-timing test");
+
 </script>
+</body>

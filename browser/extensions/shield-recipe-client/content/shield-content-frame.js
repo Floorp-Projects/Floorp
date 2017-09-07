@@ -57,7 +57,7 @@ class ShieldFrameListener {
         );
         break;
       case "NavigateToDataPreferences":
-        this.navigateToDataPreferences();
+        sendAsyncMessage("Shield:OpenDataPreferences");
         break;
     }
   }
@@ -109,10 +109,6 @@ class ShieldFrameListener {
     removeMessageListener("Shield:SendStudyList", this);
     removeMessageListener("Shield:ShuttingDown", this);
     removeEventListener("Shield", this);
-  }
-
-  navigateToDataPreferences() {
-    content.location = "about:preferences#privacy-reports";
   }
 }
 

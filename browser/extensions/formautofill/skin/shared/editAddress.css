@@ -43,6 +43,7 @@ select {
 }
 
 #country-warning-message {
+  font-size: 1rem;
   flex: 1 0 auto;
   align-items: center;
   text-align: start;
