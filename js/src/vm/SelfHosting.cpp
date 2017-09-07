@@ -457,9 +457,8 @@ intrinsic_MakeConstructible(JSContext* cx, unsigned argc, Value* vp)
     // Normal .prototype properties aren't enumerable.  But for this to clone
     // correctly, it must be enumerable.
     RootedObject ctor(cx, &args[0].toObject());
-    if (!DefineProperty(cx, ctor, cx->names().prototype, args[1],
-                        nullptr, nullptr,
-                        JSPROP_READONLY | JSPROP_ENUMERATE | JSPROP_PERMANENT))
+    if (!DefineDataProperty(cx, ctor, cx->names().prototype, args[1],
+                            JSPROP_READONLY | JSPROP_ENUMERATE | JSPROP_PERMANENT))
     {
         return false;
     }

@@ -1263,7 +1263,7 @@ js::InitNumberClass(JSContext* cx, HandleObject obj)
     if (!parseInt)
         return nullptr;
     RootedValue parseIntValue(cx, ObjectValue(*parseInt));
-    if (!DefineProperty(cx, ctor, parseIntId, parseIntValue, nullptr, nullptr, 0))
+    if (!DefineDataProperty(cx, ctor, parseIntId, parseIntValue, 0))
         return nullptr;
 
     /* Number.parseFloat should be the same function object as global parseFloat. */
@@ -1273,7 +1273,7 @@ js::InitNumberClass(JSContext* cx, HandleObject obj)
     if (!parseFloat)
         return nullptr;
     RootedValue parseFloatValue(cx, ObjectValue(*parseFloat));
-    if (!DefineProperty(cx, ctor, parseFloatId, parseFloatValue, nullptr, nullptr, 0))
+    if (!DefineDataProperty(cx, ctor, parseFloatId, parseFloatValue, 0))
         return nullptr;
 
     RootedValue valueNaN(cx, cx->runtime()->NaNValue);

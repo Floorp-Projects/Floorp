@@ -223,7 +223,7 @@ js::SetPropertyIgnoringNamedGetter(JSContext* cx, HandleObject obj, HandleId id,
             ? JSPROP_IGNORE_ENUMERATE | JSPROP_IGNORE_READONLY | JSPROP_IGNORE_PERMANENT
             : JSPROP_ENUMERATE;
 
-        return DefineProperty(cx, receiverObj, id, v, nullptr, nullptr, attrs, result);
+        return DefineDataProperty(cx, receiverObj, id, v, attrs, result);
     }
 
     // Step 6.
