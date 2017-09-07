@@ -94,7 +94,7 @@ var BrowserPageActions = {
    *         The action to place.
    */
   placeActionInPanel(action) {
-    let insertBeforeID = PageActions.nextActionID(action, PageActions.actions);
+    let insertBeforeID = PageActions.nextActionIDInPanel(action);
     let id = this._panelButtonNodeIDForActionID(action.id);
     let node = document.getElementById(id);
     if (!node) {
@@ -113,7 +113,6 @@ var BrowserPageActions = {
         action.subview.onPlaced(panelViewNode);
       }
     }
-    return node;
   },
 
   _makePanelButtonNodeForAction(action) {
@@ -300,8 +299,7 @@ var BrowserPageActions = {
    *         The action to place.
    */
   placeActionInUrlbar(action) {
-    let insertBeforeID =
-      PageActions.nextActionID(action, PageActions.actionsInUrlbar);
+    let insertBeforeID = PageActions.nextActionIDInUrlbar(action);
     let id = this._urlbarButtonNodeIDForActionID(action.id);
     let node = document.getElementById(id);
 
@@ -313,7 +311,7 @@ var BrowserPageActions = {
           node.remove();
         }
       }
-      return null;
+      return;
     }
 
     let newlyPlaced = false;
@@ -349,8 +347,6 @@ var BrowserPageActions = {
         }
       }
     }
-
-    return node;
   },
 
   _makeUrlbarButtonNode(action) {
