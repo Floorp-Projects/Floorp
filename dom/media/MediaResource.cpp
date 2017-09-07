@@ -84,7 +84,6 @@ ChannelMediaResource::ChannelMediaResource(MediaResourceCallback* aCallback,
   , mReopenOnError(false)
   , mIgnoreClose(false)
   , mCacheStream(this, aIsPrivateBrowsing)
-  , mIgnoreResume(false)
   , mSuspendAgent(mChannel)
 {
 }
@@ -100,7 +99,6 @@ ChannelMediaResource::ChannelMediaResource(
   , mIgnoreClose(false)
   , mCacheStream(this, /* aIsPrivateBrowsing = */ false)
   , mChannelStatistics(aStatistics)
-  , mIgnoreResume(false)
   , mSuspendAgent(mChannel)
 {
 }
