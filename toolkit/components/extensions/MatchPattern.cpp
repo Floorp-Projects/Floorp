@@ -377,6 +377,19 @@ MatchPattern::MatchesDomain(const nsACString& aDomain) const
 }
 
 bool
+MatchPattern::Matches(const nsAString& aURL, bool aExplicit, ErrorResult& aRv) const
+{
+  nsCOMPtr<nsIURI> uri;
+  nsresult rv = NS_NewURI(getter_AddRefs(uri), aURL, nullptr, nullptr);
+  if (NS_FAILED(rv)) {
+    aRv.Throw(rv);
+    return false;
+  }
+
+  return Matches(uri.get(), aExplicit);
+}
+
+bool
 MatchPattern::Matches(const URLInfo& aURL, bool aExplicit) const
 {
   if (aExplicit && mMatchSubdomain) {
@@ -510,6 +523,19 @@ MatchPatternSet::Constructor(dom::GlobalObject& aGlobal,
   return patternSet.forget();
 }
 
+
+bool
+MatchPatternSet::Matches(const nsAString& aURL, bool aExplicit, ErrorResult& aRv) const
+{
+  nsCOMPtr<nsIURI> uri;
+  nsresult rv = NS_NewURI(getter_AddRefs(uri), aURL, nullptr, nullptr);
+  if (NS_FAILED(rv)) {
+    aRv.Throw(rv);
+    return false;
+  }
+
+  return Matches(uri.get(), aExplicit);
+}
 
 bool
 MatchPatternSet::Matches(const URLInfo& aURL, bool aExplicit) const
