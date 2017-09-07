@@ -10,10 +10,12 @@ const { XPCOMUtils } = require("resource://gre/modules/XPCOMUtils.jsm");
 const EventEmitter = require("devtools/shared/old-event-emitter");
 const protocol = require("devtools/shared/protocol");
 const Services = require("Services");
-const { isWindowIncluded } = require("devtools/shared/layout/utils");
 const { highlighterSpec, customHighlighterSpec } = require("devtools/shared/specs/highlighters");
-const { isXUL } = require("./highlighters/utils/markup");
-const { SimpleOutlineHighlighter } = require("./highlighters/simple-outline");
+
+loader.lazyRequireGetter(this, "isWindowIncluded", "devtools/shared/layout/utils", true);
+loader.lazyRequireGetter(this, "isXUL", "devtools/server/actors/highlighters/utils/markup", true);
+loader.lazyRequireGetter(this, "SimpleOutlineHighlighter", "devtools/server/actors/highlighters/simple-outline", true);
+loader.lazyRequireGetter(this, "BoxModelHighlighter", "devtools/server/actors/highlighters/box-model", true);
 
 const HIGHLIGHTER_PICKED_TIMER = 1000;
 const IS_OSX = Services.appinfo.OS === "Darwin";
@@ -41,16 +43,12 @@ exports.isTypeRegistered = isTypeRegistered;
  * If no `typeName` is provided, the `typeName` property on the constructor's prototype
  * is used, if one is found, otherwise the name of the constructor function is used.
  */
-const register = (constructor, typeName) => {
-  if (!typeName) {
-    typeName = constructor.prototype.typeName || constructor.name;
-  }
-
+const register = (typeName, modulePath) => {
   if (highlighterTypes.has(typeName)) {
     throw Error(`${typeName} is already registered.`);
   }
 
-  highlighterTypes.set(typeName, constructor);
+  highlighterTypes.set(typeName, modulePath);
 };
 exports.register = register;
 
@@ -445,8 +443,8 @@ exports.CustomHighlighterActor = protocol.ActorClassWithSpec(customHighlighterSp
 
     this._inspector = inspector;
 
-    let constructor = highlighterTypes.get(typeName);
-    if (!constructor) {
+    let modulePath = highlighterTypes.get(typeName);
+    if (!modulePath) {
       let list = [...highlighterTypes.keys()];
 
       throw new Error(`${typeName} isn't a valid highlighter class (${list})`);
@@ -457,6 +455,7 @@ exports.CustomHighlighterActor = protocol.ActorClassWithSpec(customHighlighterSp
     if (!isXUL(this._inspector.tabActor.window)) {
       this._highlighterEnv = new HighlighterEnvironment();
       this._highlighterEnv.initFromTabActor(inspector.tabActor);
+      let constructor = require("./highlighters/" + modulePath)[typeName];
       this._highlighter = new constructor(this._highlighterEnv);
       if (this._highlighter.on) {
         this._highlighter.on("highlighter-event", this._onHighlighterEvent.bind(this));
@@ -705,42 +704,13 @@ HighlighterEnvironment.prototype = {
   }
 };
 
-const { BoxModelHighlighter } = require("./highlighters/box-model");
-register(BoxModelHighlighter);
-exports.BoxModelHighlighter = BoxModelHighlighter;
-
-const { CssGridHighlighter } = require("./highlighters/css-grid");
-register(CssGridHighlighter);
-exports.CssGridHighlighter = CssGridHighlighter;
-
-const { CssTransformHighlighter } = require("./highlighters/css-transform");
-register(CssTransformHighlighter);
-exports.CssTransformHighlighter = CssTransformHighlighter;
-
-const { SelectorHighlighter } = require("./highlighters/selector");
-register(SelectorHighlighter);
-exports.SelectorHighlighter = SelectorHighlighter;
-
-const { GeometryEditorHighlighter } = require("./highlighters/geometry-editor");
-register(GeometryEditorHighlighter);
-exports.GeometryEditorHighlighter = GeometryEditorHighlighter;
-
-const { RulersHighlighter } = require("./highlighters/rulers");
-register(RulersHighlighter);
-exports.RulersHighlighter = RulersHighlighter;
-
-const { MeasuringToolHighlighter } = require("./highlighters/measuring-tool");
-register(MeasuringToolHighlighter);
-exports.MeasuringToolHighlighter = MeasuringToolHighlighter;
-
-const { EyeDropper } = require("./highlighters/eye-dropper");
-register(EyeDropper);
-exports.EyeDropper = EyeDropper;
-
-const { PausedDebuggerOverlay } = require("./highlighters/paused-debugger");
-register(PausedDebuggerOverlay);
-exports.PausedDebuggerOverlay = PausedDebuggerOverlay;
-
-const { ShapesHighlighter } = require("./highlighters/shapes");
-register(ShapesHighlighter);
-exports.ShapesHighlighter = ShapesHighlighter;
+register("BoxModelHighlighter", "box-model");
+register("CssGridHighlighter", "css-grid");
+register("CssTransformHighlighter", "css-transform");
+register("SelectorHighlighter", "selector");
+register("GeometryEditorHighlighter", "geometry-editor");
+register("RulersHighlighter", "rulers");
+register("MeasuringToolHighlighter", "measuring-tool");
+register("EyeDropper", "eye-dropper");
+register("PausedDebuggerOverlay", "paused-debugger");
+register("ShapesHighlighter", "shapes");

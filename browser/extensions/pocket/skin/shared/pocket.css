@@ -59,6 +59,16 @@
   margin-inline-start: 4px;
 }
 
+:root[uidensity=compact] #pocket-button-box[animate="true"] > #pocket-animatable-box {
+  /* .urlbar-icon has width 24px in this case */
+  margin-inline-start: 2px;
+}
+
+:root[uidensity=touch] #star-button-box[animationsenabled] > #star-button[starred][animate] + #star-button-animatable-box {
+  /* .urlbar-icon has width 30px in this case */
+  margin-inline-start: 5px;
+}
+
 #pocket-button-box[animate="true"] > #pocket-animatable-box > #pocket-animatable-image,
 #pocket-button > .toolbarbutton-animatable-box > .toolbarbutton-animatable-image {
   height: var(--toolbarbutton-height); /* Height must be equal to height of toolbarbutton padding-box */

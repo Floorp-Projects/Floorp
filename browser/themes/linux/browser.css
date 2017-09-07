@@ -587,7 +587,11 @@ html|span.ac-emphasize-text-url {
 }
 
 .sidebar-splitter {
-  border-color: ThreeDShadow;
+  -moz-appearance: none;
+  width: 6px;
+  background-color: -moz-dialog;
+  border: 1px ThreeDShadow;
+  border-style: none solid;
 }
 
 .browserContainer > findbar {

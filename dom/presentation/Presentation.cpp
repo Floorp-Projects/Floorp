@@ -63,6 +63,10 @@ Presentation::WrapObject(JSContext* aCx,
 void
 Presentation::SetDefaultRequest(PresentationRequest* aRequest)
 {
+  if (nsContentUtils::ShouldResistFingerprinting()) {
+    return;
+  }
+
   nsCOMPtr<nsIDocument> doc = mWindow ? mWindow->GetExtantDoc() : nullptr;
   if (NS_WARN_IF(!doc)) {
     return;
@@ -78,6 +82,10 @@ Presentation::SetDefaultRequest(PresentationRequest* aRequest)
 already_AddRefed<PresentationRequest>
 Presentation::GetDefaultRequest() const
 {
+  if (nsContentUtils::ShouldResistFingerprinting()) {
+    return nullptr;
+  }
+
   RefPtr<PresentationRequest> request = mDefaultRequest;
   return request.forget();
 }
@@ -85,6 +93,10 @@ Presentation::GetDefaultRequest() const
 already_AddRefed<PresentationReceiver>
 Presentation::GetReceiver()
 {
+  if (nsContentUtils::ShouldResistFingerprinting()) {
+    return nullptr;
+  }
+
   // return the same receiver if already created
   if (mReceiver) {
     RefPtr<PresentationReceiver> receiver = mReceiver;

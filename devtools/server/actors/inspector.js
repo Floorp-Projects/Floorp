@@ -53,35 +53,47 @@
 const {Cc, Ci, Cu} = require("chrome");
 const Services = require("Services");
 const protocol = require("devtools/shared/protocol");
-const {LayoutActor} = require("devtools/server/actors/layout");
 const {LongStringActor} = require("devtools/server/actors/string");
 const promise = require("promise");
 const defer = require("devtools/shared/defer");
 const {Task} = require("devtools/shared/task");
 const EventEmitter = require("devtools/shared/event-emitter");
-const {WalkerSearch} = require("devtools/server/actors/utils/walker-search");
-const {PageStyleActor, getFontPreviewData} = require("devtools/server/actors/styles");
-const {
-  HighlighterActor,
-  CustomHighlighterActor,
-  isTypeRegistered,
-  HighlighterEnvironment
-} = require("devtools/server/actors/highlighters");
-const {EyeDropper} = require("devtools/server/actors/highlighters/eye-dropper");
-const {
-  isAnonymous,
-  isNativeAnonymous,
-  isXBLAnonymous,
-  isShadowAnonymous,
-  getFrameElement,
-  loadSheet
-} = require("devtools/shared/layout/utils");
-const {getLayoutChangesObserver, releaseLayoutChangesObserver} = require("devtools/server/actors/reflow");
-const nodeFilterConstants = require("devtools/shared/dom-node-filter-constants");
-const {colorUtils} = require("devtools/shared/css/color");
 
-const {EventParsers} = require("devtools/server/event-parsers");
 const {nodeSpec, nodeListSpec, walkerSpec, inspectorSpec} = require("devtools/shared/specs/inspector");
+
+loader.lazyRequireGetter(this, "DevToolsUtils", "devtools/shared/DevToolsUtils");
+loader.lazyRequireGetter(this, "AsyncUtils", "devtools/shared/async-utils");
+loader.lazyRequireGetter(this, "CssLogic", "devtools/server/css-logic", true);
+loader.lazyRequireGetter(this, "findCssSelector", "devtools/shared/inspector/css-logic", true);
+loader.lazyRequireGetter(this, "getCssPath", "devtools/shared/inspector/css-logic", true);
+loader.lazyRequireGetter(this, "getXPath", "devtools/shared/inspector/css-logic", true);
+loader.lazyRequireGetter(this, "colorUtils", "devtools/shared/css/color", true);
+loader.lazyRequireGetter(this, "EyeDropper", "devtools/server/actors/highlighters/eye-dropper", true);
+loader.lazyRequireGetter(this, "WalkerSearch", "devtools/server/actors/utils/walker-search", true);
+loader.lazyRequireGetter(this, "PageStyleActor", "devtools/server/actors/styles", true);
+loader.lazyRequireGetter(this, "getFontPreviewData", "devtools/server/actors/styles", true);
+loader.lazyRequireGetter(this, "flags", "devtools/shared/flags");
+loader.lazyRequireGetter(this, "LayoutActor", "devtools/server/actors/layout", true);
+loader.lazyRequireGetter(this, "HighlighterActor", "devtools/server/actors/highlighters", true);
+loader.lazyRequireGetter(this, "CustomHighlighterActor", "devtools/server/actors/highlighters", true);
+loader.lazyRequireGetter(this, "isTypeRegistered", "devtools/server/actors/highlighters", true);
+loader.lazyRequireGetter(this, "HighlighterEnvironment", "devtools/server/actors/highlighters", true);
+loader.lazyRequireGetter(this, "EventParsers", "devtools/server/event-parsers", true);
+loader.lazyRequireGetter(this, "isAnonymous", "devtools/shared/layout/utils", true);
+loader.lazyRequireGetter(this, "isNativeAnonymous", "devtools/shared/layout/utils", true);
+loader.lazyRequireGetter(this, "isXBLAnonymous", "devtools/shared/layout/utils", true);
+loader.lazyRequireGetter(this, "isShadowAnonymous", "devtools/shared/layout/utils", true);
+loader.lazyRequireGetter(this, "getFrameElement", "devtools/shared/layout/utils", true);
+loader.lazyRequireGetter(this, "loadSheet", "devtools/shared/layout/utils", true);
+loader.lazyRequireGetter(this, "getLayoutChangesObserver", "devtools/server/actors/reflow", true);
+loader.lazyRequireGetter(this, "releaseLayoutChangesObserver", "devtools/server/actors/reflow", true);
+loader.lazyRequireGetter(this, "nodeFilterConstants", "devtools/shared/dom-node-filter-constants");
+
+loader.lazyServiceGetter(this, "DOMParser",
+  "@mozilla.org/xmlextras/domparser;1", "nsIDOMParser");
+
+loader.lazyServiceGetter(this, "eventListenerService",
+  "@mozilla.org/eventlistenerservice;1", "nsIEventListenerService");
 
 const FONT_FAMILY_PREVIEW_TEXT = "The quick brown fox jumps over the lazy dog";
 const FONT_FAMILY_PREVIEW_TEXT_SIZE = 20;
@@ -139,28 +151,6 @@ var HELPER_SHEET = "data:text/css;charset=utf-8," + encodeURIComponent(`
     outline-offset: -2px !important;
   }
 `);
-
-const flags = require("devtools/shared/flags");
-
-loader.lazyRequireGetter(this, "DevToolsUtils",
-                         "devtools/shared/DevToolsUtils");
-
-loader.lazyRequireGetter(this, "AsyncUtils", "devtools/shared/async-utils");
-
-loader.lazyGetter(this, "DOMParser", function () {
-  return Cc["@mozilla.org/xmlextras/domparser;1"]
-           .createInstance(Ci.nsIDOMParser);
-});
-
-loader.lazyGetter(this, "eventListenerService", function () {
-  return Cc["@mozilla.org/eventlistenerservice;1"]
-           .getService(Ci.nsIEventListenerService);
-});
-
-loader.lazyRequireGetter(this, "CssLogic", "devtools/server/css-logic", true);
-loader.lazyRequireGetter(this, "findCssSelector", "devtools/shared/inspector/css-logic", true);
-loader.lazyRequireGetter(this, "getCssPath", "devtools/shared/inspector/css-logic", true);
-loader.lazyRequireGetter(this, "getXPath", "devtools/shared/inspector/css-logic", true);
 
 /**
  * We only send nodeValue up to a certain size by default.  This stuff

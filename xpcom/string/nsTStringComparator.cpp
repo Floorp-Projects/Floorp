@@ -4,18 +4,20 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
+template <typename T>
 int NS_FASTCALL
-Compare(const nsTSubstring_CharT::base_string_type& aLhs,
-        const nsTSubstring_CharT::base_string_type& aRhs,
-        const nsTStringComparator_CharT& comp)
+Compare(const mozilla::detail::nsTStringRepr<T>& aLhs,
+        const mozilla::detail::nsTStringRepr<T>& aRhs,
+        const nsTStringComparator<T>& comp)
 {
-  typedef nsTSubstring_CharT::size_type size_type;
+  typedef typename nsTSubstring<T>::size_type size_type;
+  typedef typename nsTSubstring<T>::const_iterator const_iterator;
 
   if (&aLhs == &aRhs) {
     return 0;
   }
 
-  nsTSubstring_CharT::const_iterator leftIter, rightIter;
+  const_iterator leftIter, rightIter;
   aLhs.BeginReading(leftIter);
   aRhs.BeginReading(rightIter);
 
@@ -38,13 +40,14 @@ Compare(const nsTSubstring_CharT::base_string_type& aLhs,
   return result;
 }
 
+template <typename T>
 int
-nsTDefaultStringComparator_CharT::operator()(const char_type* aLhs,
-                                             const char_type* aRhs,
-                                             uint32_t aLLength,
-                                             uint32_t aRLength) const
+nsTDefaultStringComparator<T>::operator()(const char_type* aLhs,
+                                          const char_type* aRhs,
+                                          uint32_t aLLength,
+                                          uint32_t aRLength) const
 {
   return
-    aLLength == aRLength ? nsCharTraits<CharT>::compare(aLhs, aRhs, aLLength) :
+    aLLength == aRLength ? nsCharTraits<T>::compare(aLhs, aRhs, aLLength) :
                             (aLLength > aRLength) ? 1 : -1;
 }

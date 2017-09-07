@@ -1,0 +1,10 @@
+<!DOCTYPE html>
+<meta charset="utf-8">
+<script>
+function testReceiver() {
+  alert(!!navigator.presentation.receiver);
+}
+
+testReceiver();
+window.addEventListener('hashchange', testReceiver);
+</script>

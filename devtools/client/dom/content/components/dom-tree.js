@@ -30,10 +30,11 @@ var DomTree = React.createClass({
   displayName: "DomTree",
 
   propTypes: {
-    object: PropTypes.any,
-    filter: PropTypes.string,
     dispatch: PropTypes.func.isRequired,
+    filter: PropTypes.string,
     grips: PropTypes.object,
+    object: PropTypes.any,
+    openLink: PropTypes.func,
   },
 
   /**
@@ -52,6 +53,13 @@ var DomTree = React.createClass({
    * Render DOM panel content
    */
   render: function () {
+    let {
+      dispatch,
+      grips,
+      object,
+      openLink,
+    } = this.props;
+
     let columns = [{
       "id": "value"
     }];
@@ -68,13 +76,14 @@ var DomTree = React.createClass({
 
     return (
       TreeView({
-        object: this.props.object,
-        provider: new GripProvider(this.props.grips, this.props.dispatch),
+        columns,
         decorator: new DomDecorator(),
         mode: MODE.SHORT,
-        columns: columns,
-        renderValue: renderValue,
-        onFilter: this.onFilter
+        object,
+        onFilter: this.onFilter,
+        openLink,
+        provider: new GripProvider(grips, dispatch),
+        renderValue,
       })
     );
   }

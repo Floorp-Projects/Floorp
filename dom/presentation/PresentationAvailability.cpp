@@ -9,6 +9,7 @@
 #include "mozilla/dom/PresentationAvailabilityBinding.h"
 #include "mozilla/dom/Promise.h"
 #include "mozilla/Unused.h"
+#include "nsContentUtils.h"
 #include "nsCycleCollectionParticipant.h"
 #include "nsIPresentationDeviceManager.h"
 #include "nsIPresentationService.h"
@@ -157,6 +158,10 @@ PresentationAvailability::EnqueuePromise(RefPtr<Promise>& aPromise)
 bool
 PresentationAvailability::Value() const
 {
+  if (nsContentUtils::ShouldResistFingerprinting()) {
+    return false;
+  }
+
   return mIsAvailable;
 }
 
@@ -191,12 +196,21 @@ PresentationAvailability::UpdateAvailabilityAndDispatchEvent(bool aIsAvailable)
     // Use the first availability change notification to resolve promise.
     do {
       nsTArray<RefPtr<Promise>> promises = Move(mPromises);
+
+      if (nsContentUtils::ShouldResistFingerprinting()) {
+        continue;
+      }
+
       for (auto& promise : promises) {
         promise->MaybeResolve(this);
       }
       // more promises may have been added to mPromises, at least in theory
     } while (!mPromises.IsEmpty());
 
+    return;
+  }
+
+  if (nsContentUtils::ShouldResistFingerprinting()) {
     return;
   }
 

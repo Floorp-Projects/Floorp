@@ -62,8 +62,6 @@
 Components.utils.import("resource://gre/modules/XPCOMUtils.jsm");
 XPCOMUtils.defineLazyModuleGetter(this, "PrivateBrowsingUtils",
                                   "resource://gre/modules/PrivateBrowsingUtils.jsm");
-XPCOMUtils.defineLazyModuleGetter(this, "PromiseUtils",
-                                  "resource://gre/modules/PromiseUtils.jsm");
 
 const BOOKMARK_ITEM = 0;
 const BOOKMARK_FOLDER = 1;
@@ -381,13 +379,7 @@ var BookmarkPropertiesPanel = {
   _beginBatch() {
     if (this._batching)
       return;
-    if (PlacesUIUtils.useAsyncTransactions) {
-      this._topUndoEntry = PlacesTransactions.topUndoEntry;
-      this._batchBlockingDeferred = PromiseUtils.defer();
-      PlacesTransactions.batch(async () => {
-        await this._batchBlockingDeferred.promise;
-      });
-    } else {
+    if (!PlacesUIUtils.useAsyncTransactions) {
       PlacesUtils.transactionManager.beginBatch(null);
     }
     this._batching = true;
@@ -395,18 +387,12 @@ var BookmarkPropertiesPanel = {
 
   _endBatch() {
     if (!this._batching)
-      return false;
+      return;
 
-    if (PlacesUIUtils.useAsyncTransactions) {
-      this._batchBlockingDeferred.resolve();
-      this._batchBlockingDeferred = null;
-    } else {
+    if (!PlacesUIUtils.useAsyncTransactions) {
       PlacesUtils.transactionManager.endBatch(false);
     }
     this._batching = false;
-    let changed = this._topUndoEntry != PlacesTransactions.topUndoEntry;
-    delete this._topUndoEntry;
-    return changed;
   },
 
   // nsISupports
@@ -450,12 +436,8 @@ var BookmarkPropertiesPanel = {
     // changes done as part of Undo may change the panel contents and by
     // that force it to commit more transactions.
     gEditItemOverlay.uninitPanel(true);
-    let changed = this._endBatch();
-    if (PlacesUIUtils.useAsyncTransactions) {
-      if (changed) {
-        PlacesTransactions.undo().catch(Components.utils.reportError);
-      }
-    } else {
+    this._endBatch();
+    if (!PlacesUIUtils.useAsyncTransactions) {
       PlacesUtils.transactionManager.undoTransaction();
     }
     window.arguments[0].performed = false;

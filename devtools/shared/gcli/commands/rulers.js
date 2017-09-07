@@ -11,8 +11,10 @@ loader.lazyRequireGetter(this, "CommandState",
 
 const l10n = require("gcli/l10n");
 require("devtools/server/actors/inspector");
-const { RulersHighlighter, HighlighterEnvironment } =
+const { HighlighterEnvironment } =
   require("devtools/server/actors/highlighters");
+const { RulersHighlighter } =
+  require("devtools/server/actors/highlighters/rulers");
 
 const highlighters = new WeakMap();
 

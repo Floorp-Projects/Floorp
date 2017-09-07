@@ -67,7 +67,8 @@ GdkErrorHandler(const gchar *log_domain, GLogLevelFlags log_level,
       NS_RUNTIMEABORT(message);
 
     NS_NAMED_LITERAL_CSTRING(minorCodeString, " minor_code ");
-    start = buffer.Find(minorCodeString, endptr - buffer.BeginReading());
+    start = buffer.Find(minorCodeString, /* aIgnoreCase = */ false,
+                        endptr - buffer.BeginReading());
     if (!start)
       NS_RUNTIMEABORT(message);
 
