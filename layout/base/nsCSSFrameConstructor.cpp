@@ -9008,20 +9008,15 @@ nsCSSFrameConstructor::CharacterDataChanged(nsIContent* aContent,
                  "Bit should never be set on generated content");
 #endif
     LAYOUT_PHASE_TEMP_EXIT();
-    RecreateFramesForContent(aContent, InsertionKind::Sync);
+    RecreateFramesForContent(aContent, InsertionKind::Async);
     LAYOUT_PHASE_TEMP_REENTER();
     return;
   }
 
-  // Find the child frame
-  nsIFrame* frame = aContent->GetPrimaryFrame();
-
-  // Notify the first frame that maps the content. It will generate a reflow
-  // command
 
   // It's possible the frame whose content changed isn't inserted into the
   // frame hierarchy yet, or that there is no frame that maps the content
-  if (nullptr != frame) {
+  if (nsIFrame* frame = aContent->GetPrimaryFrame()) {
 #if 0
     NS_FRAME_LOG(NS_FRAME_TRACE_CALLS,
        ("nsCSSFrameConstructor::CharacterDataChanged: content=%p[%s] subcontent=%p frame=%p",
@@ -9052,6 +9047,8 @@ nsCSSFrameConstructor::CharacterDataChanged(nsIContent* aContent,
       }
     }
 
+    // Notify the first frame that maps the content. It will generate a reflow
+    // command
     frame->CharacterDataChanged(aInfo);
 
     if (haveFirstLetterStyle) {
@@ -9968,7 +9965,6 @@ void
 nsCSSFrameConstructor::RecreateFramesForContent(nsIContent* aContent,
                                                 InsertionKind aInsertionKind)
 {
-  MOZ_ASSERT(aInsertionKind != InsertionKind::Async || aContent->IsElement());
   MOZ_ASSERT(aContent);
 
   // If there is no document, we don't want to recreate frames for it.  (You
@@ -10053,9 +10049,7 @@ nsCSSFrameConstructor::RecreateFramesForContent(nsIContent* aContent,
 
     // Need the nsIContent parent, which might be null here, since we need to
     // pass it to ContentInserted and ContentRemoved.
-    //
-    // FIXME(emilio): Do we need a strong ref here?
-    nsCOMPtr<nsIContent> container = aContent->GetParent();
+    nsIContent* container = aContent->GetParent();
 
     // Remove the frames associated with the content object.
     nsIContent* nextSibling = aContent->IsRootOfAnonymousSubtree() ?
@@ -10065,10 +10059,14 @@ nsCSSFrameConstructor::RecreateFramesForContent(nsIContent* aContent,
                      REMOVE_FOR_RECONSTRUCTION);
 
     if (!didReconstruct) {
-      if (aInsertionKind == InsertionKind::Async) {
+      if (aInsertionKind == InsertionKind::Async && aContent->IsElement()) {
         // FIXME(emilio, bug 1397239): There's nothing removing the frame state
         // for elements that go away before we come back to the frame
         // constructor.
+        //
+        // Also, it'd be nice to just use the `ContentRangeInserted` path for
+        // both elements and non-elements, but we need to make lazy frame
+        // construction to apply to all elements first.
         RestyleManager()->PostRestyleEvent(aContent->AsElement(),
                                            nsRestyleHint(0),
                                            nsChangeHint_ReconstructFrame);
@@ -10076,9 +10074,14 @@ nsCSSFrameConstructor::RecreateFramesForContent(nsIContent* aContent,
         // Now, recreate the frames associated with this content object. If
         // ContentRemoved triggered reconstruction, then we don't need to do this
         // because the frames will already have been built.
+        auto lazyFrameConstructionAllowed =
+          aInsertionKind == InsertionKind::Async
+            ? LazyConstructionAllowed::Yes
+            : LazyConstructionAllowed::No;
+
         ContentRangeInserted(container, aContent, aContent->GetNextSibling(),
                              mTempFrameTreeState,
-                             LazyConstructionAllowed::No,
+                             lazyFrameConstructionAllowed,
                              true,  // aForReconstruction
                              nullptr);
       }
