@@ -20,6 +20,7 @@ import org.mozilla.gecko.TelemetryContract;
 import org.mozilla.gecko.activitystream.ActivityStreamTelemetry;
 import org.mozilla.gecko.activitystream.homepanel.menu.ActivityStreamContextMenu;
 import org.mozilla.gecko.activitystream.homepanel.model.TopSite;
+import org.mozilla.gecko.db.BrowserDB;
 import org.mozilla.gecko.home.HomePager;
 import org.mozilla.gecko.icons.IconCallback;
 import org.mozilla.gecko.icons.IconResponse;
@@ -122,13 +123,19 @@ import java.util.concurrent.Future;
             wasException = true;
         }
 
-        // At a high level, the logic is: if the path empty, use "subdomain.domain", otherwise use the
-        // page title. From a UX perspective, people refer to domains by their name ("it's on wikipedia")
-        // and it's a clean look. However, if a url has a path, it will not fit on the screen with the domain
-        // so we need an alternative: the page title is an easy win (though not always perfect, e.g. when SEO
-        // keywords are added). If we ever want better titles, we could create a heuristic to pull the title
-        // from parts of the URL, page title, etc.
-        if (wasException || !URIUtils.isPathEmpty(topSiteURI)) {
+        final boolean isSiteSuggestedFromDistribution = BrowserDB.from(itemView.getContext()).getSuggestedSites()
+                .containsSiteAndSiteIsFromDistribution(topSite.getUrl());
+
+        // At a high level, the logic is: if the path non-empty or the site is suggested by a distribution, use the page
+        // title, otherwise use "subdomain.domain". From a UX perspective, people refer to domains by their name ("it's
+        // on wikipedia") and it's a clean look. However, if a url has a path, it will not fit on the screen with the
+        // domain so we need an alternative: the page title is an easy win (though not always perfect, e.g. when SEO
+        // keywords are added). We use page titles with distributions because that's what those distributions expect to
+        // be shown. If we ever want better top site titles, we could create a heuristic to pull the title from parts
+        // of the URL, page title, etc.
+        if (wasException ||
+                isSiteSuggestedFromDistribution ||
+                !URIUtils.isPathEmpty(topSiteURI)) {
             // See comment below regarding setCenteredText.
             final String pageTitle = topSite.getTitle();
             final String updateText = !TextUtils.isEmpty(pageTitle) ? pageTitle : topSite.getUrl();
