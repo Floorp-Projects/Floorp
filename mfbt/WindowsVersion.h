@@ -158,6 +158,41 @@ IsNotWin7PreRTM()
   return IsWin7SP1OrLater() || IsWindowsBuildOrLater(7600);
 }
 
+MOZ_ALWAYS_INLINE bool
+IsWin7AndPre2000Compatible() {
+  /*
+   * See Bug 1279171.
+   * We'd like to avoid using WMF on specific OS version when compatibility
+   * mode is in effect. The purpose of this function is to check if FF runs on
+   * Win7 OS with application compatibility mode being set to 95/98/ME.
+   * Those compatibility mode options (95/98/ME) can only display and
+   * be selected for 32-bit application.
+   * If the compatibility mode is in effect, the GetVersionEx function will
+   * report the OS as it identifies itself, which may not be the OS that is
+   * installed.
+   * Note : 1) We only target for Win7 build number greater than 7600.
+   *        2) GetVersionEx may be altered or unavailable for release after
+   *           Win8.1. Set pragma to avoid build warning as error.
+   */
+  bool isWin7 = IsNotWin7PreRTM() && !IsWin8OrLater();
+  if (!isWin7) {
+    return false;
+  }
+
+  OSVERSIONINFOEX info;
+  ZeroMemory(&info, sizeof(OSVERSIONINFOEX));
+
+  info.dwOSVersionInfoSize = sizeof(OSVERSIONINFOEX);
+#pragma warning(push)
+#pragma warning(disable:4996)
+  bool success = GetVersionEx((LPOSVERSIONINFO) &info);
+#pragma warning(pop)
+  if (!success) {
+    return false;
+  }
+  return info.dwMajorVersion < 5;
+}
+
 } // namespace mozilla
 
 #endif /* mozilla_WindowsVersion_h */
