@@ -89,6 +89,7 @@ public final class TelemetryWrapper {
         private static final String ADD_TO_HOMESCREEN_DIALOG = "add_to_homescreen_dialog";
         private static final String HOMESCREEN_SHORTCUT = "homescreen_shortcut";
         private static final String TABS_TRAY = "tabs_tray";
+        private static final String RECENT_APPS = "recent_apps";
     }
 
     private static class Value {
@@ -371,6 +372,11 @@ public final class TelemetryWrapper {
 
     public static void eraseShortcutEvent() {
         withSessionCounts(TelemetryEvent.create(Category.ACTION, Method.CLICK, Object.SHORTCUT, Value.ERASE))
+                .queue();
+    }
+
+    public static void eraseTaskRemoved() {
+        withSessionCounts(TelemetryEvent.create(Category.ACTION, Method.CLICK, Object.RECENT_APPS, Value.ERASE))
                 .queue();
     }
 

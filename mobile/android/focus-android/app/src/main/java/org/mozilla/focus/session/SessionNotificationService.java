@@ -79,6 +79,8 @@ public class SessionNotificationService extends Service {
 
     @Override
     public void onTaskRemoved(Intent rootIntent) {
+        TelemetryWrapper.eraseTaskRemoved();
+
         SessionManager.getInstance().removeAllSessions();
 
         stopForeground(true);
