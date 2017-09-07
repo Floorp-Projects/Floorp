@@ -43,8 +43,10 @@ public:
 
   virtual nsPIDOMWindowOuter* GetWindow() override;
 
-  virtual nsresult GetControllers(nsIControllers** aResult) override;
+  virtual nsresult GetControllers(bool aForVisibleWindow,
+                                  nsIControllers** aResult) override;
   virtual nsresult GetControllerForCommand(const char * aCommand,
+                                           bool aForVisibleWindow,
                                            nsIController** _retval) override;
 
   virtual void GetEnabledDisabledCommands(nsTArray<nsCString>& aEnabledCommands,
