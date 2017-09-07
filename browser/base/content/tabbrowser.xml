@@ -1022,6 +1022,20 @@
         </body>
       </method>
 
+      <method name="setPageInfo">
+        <parameter name="aURL"/>
+        <parameter name="aDescription"/>
+        <parameter name="aPreviewImage"/>
+        <body>
+          <![CDATA[
+            if (aURL) {
+              let pageInfo = {url: aURL, description: aDescription, previewImageURL: aPreviewImage}
+              PlacesUtils.history.update(pageInfo).catch(Components.utils.reportError);
+            }
+          ]]>
+        </body>
+      </method>
+
       <method name="shouldLoadFavIcon">
         <parameter name="aURI"/>
         <body>
