@@ -2654,7 +2654,10 @@ nsGlobalWindow::SetInitialPrincipalToSubject()
   }
 
   GetDocShell()->CreateAboutBlankContentViewer(newWindowPrincipal);
-  mDoc->SetIsInitialDocument(true);
+
+  if (mDoc) {
+    mDoc->SetIsInitialDocument(true);
+  }
 
   nsCOMPtr<nsIPresShell> shell = GetDocShell()->GetPresShell();
 
