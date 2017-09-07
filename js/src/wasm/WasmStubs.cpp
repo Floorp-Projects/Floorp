@@ -31,6 +31,10 @@ using namespace js::wasm;
 
 using mozilla::ArrayLength;
 
+typedef Vector<jit::MIRType, 8, SystemAllocPolicy> MIRTypeVector;
+typedef jit::ABIArgIter<MIRTypeVector> ABIArgMIRTypeIter;
+typedef jit::ABIArgIter<ValTypeVector> ABIArgValTypeIter;
+
 static void
 FinishOffsets(MacroAssembler& masm, Offsets* offsets)
 {

@@ -779,11 +779,11 @@ js::Nursery::doCollection(JS::gcreason::Reason reason,
     collectToFixedPoint(mover, tenureCounts);
     endProfile(ProfileKey::CollectToFP);
 
-    // Sweep compartments to update the array buffer object's view lists.
-    startProfile(ProfileKey::SweepArrayBufferViewList);
-    for (CompartmentsIter c(rt, SkipAtoms); !c.done(); c.next())
-        c->sweepAfterMinorGC(&mover);
-    endProfile(ProfileKey::SweepArrayBufferViewList);
+    // Sweep to update any pointers to nursery objects that have now been
+    // tenured.
+    startProfile(ProfileKey::Sweep);
+    sweep(&mover);
+    endProfile(ProfileKey::Sweep);
 
     // Update any slot or element pointers whose destination has been tenured.
     startProfile(ProfileKey::UpdateJitActivations);
@@ -800,9 +800,9 @@ js::Nursery::doCollection(JS::gcreason::Reason reason,
     freeMallocedBuffers();
     endProfile(ProfileKey::FreeMallocedBuffers);
 
-    startProfile(ProfileKey::Sweep);
-    sweep();
-    endProfile(ProfileKey::Sweep);
+    startProfile(ProfileKey::ClearNursery);
+    clear();
+    endProfile(ProfileKey::ClearNursery);
 
     startProfile(ProfileKey::ClearStoreBuffer);
     runtime()->gc.storeBuffer().clear();
@@ -873,20 +873,30 @@ js::Nursery::waitBackgroundFreeEnd()
 }
 
 void
-js::Nursery::sweep()
+js::Nursery::sweep(JSTracer* trc)
 {
-    /* Sweep unique id's in all in-use chunks. */
+    // Sweep unique IDs first before we sweep any tables that may be keyed based
+    // on them.
     for (Cell* cell : cellsWithUid_) {
         JSObject* obj = static_cast<JSObject*>(cell);
-        if (!IsForwarded(obj))
+        if (!IsForwarded(obj)) {
             obj->zone()->removeUniqueId(obj);
-        else
-            MOZ_ASSERT(Forwarded(obj)->zone()->hasUniqueId(Forwarded(obj)));
+        } else {
+            JSObject* dst = Forwarded(obj);
+            dst->zone()->transferUniqueId(dst, obj);
+        }
     }
     cellsWithUid_.clear();
 
-    sweepDictionaryModeObjects();
+    for (CompartmentsIter c(runtime(), SkipAtoms); !c.done(); c.next())
+        c->sweepAfterMinorGC(trc);
 
+    sweepDictionaryModeObjects();
+}
+
+void
+js::Nursery::clear()
+{
 #ifdef JS_GC_ZEAL
     /* Poison the nursery contents so touching a freed object will crash. */
     for (unsigned i = 0; i < numChunks(); i++)
@@ -1079,6 +1089,8 @@ js::Nursery::sweepDictionaryModeObjects()
     for (auto obj : dictionaryModeObjects_) {
         if (!IsForwarded(obj))
             obj->sweepDictionaryListPointer();
+        else
+            Forwarded(obj)->updateDictionaryListPointerAfterMinorGC(obj);
     }
     dictionaryModeObjects_.clear();
 }

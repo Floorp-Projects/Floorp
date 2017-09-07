@@ -12771,23 +12771,23 @@ nsDocument::DocAddSizeOfExcludingThis(nsWindowSizes& aWindowSizes) const
   // PresShell, which contains the frame tree.
   nsIDocument::DocAddSizeOfExcludingThis(aWindowSizes);
 
-  aWindowSizes.mStyleSheetsSize +=
+  aWindowSizes.mLayoutStyleSheetsSize +=
     SizeOfOwnedSheetArrayExcludingThis(mStyleSheets,
                                        aWindowSizes.mState.mMallocSizeOf);
   // Note that we do not own the sheets pointed to by mOnDemandBuiltInUASheets
   // (the nsLayoutStyleSheetCache singleton does).
-  aWindowSizes.mStyleSheetsSize +=
+  aWindowSizes.mLayoutStyleSheetsSize +=
     mOnDemandBuiltInUASheets.ShallowSizeOfExcludingThis(
       aWindowSizes.mState.mMallocSizeOf);
   for (auto& sheetArray : mAdditionalSheets) {
-    aWindowSizes.mStyleSheetsSize +=
+    aWindowSizes.mLayoutStyleSheetsSize +=
       SizeOfOwnedSheetArrayExcludingThis(sheetArray,
                                          aWindowSizes.mState.mMallocSizeOf);
   }
   // Lumping in the loader with the style-sheets size is not ideal,
   // but most of the things in there are in fact stylesheets, so it
   // doesn't seem worthwhile to separate it out.
-  aWindowSizes.mStyleSheetsSize +=
+  aWindowSizes.mLayoutStyleSheetsSize +=
     CSSLoader()->SizeOfIncludingThis(aWindowSizes.mState.mMallocSizeOf);
 
   aWindowSizes.mDOMOtherSize += mAttrStyleSheet

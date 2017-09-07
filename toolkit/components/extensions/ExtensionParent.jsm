@@ -416,10 +416,10 @@ class ProxyContextParent extends BaseContext {
     return this.sandbox;
   }
 
-  runSafe(...args) {
+  applySafe(callback, args) {
     // There's no need to clone when calling listeners for a proxied
     // context.
-    return this.runSafeWithoutClone(...args);
+    return this.applySafeWithoutClone(callback, args);
   }
 
   get xulBrowser() {

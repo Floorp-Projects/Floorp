@@ -89,12 +89,12 @@ function checkDetails(details) {
   let expect = expected[filename];
   is(expect.type, details.type, `${details.type} type matches`);
   if (expect.toplevel) {
-    is(0, details.frameId, "expect load at top level");
-    is(-1, details.parentFrameId, "expect top level frame to have no parent");
+    is(details.frameId, 0, "expect load at top level");
+    is(details.parentFrameId, -1, "expect top level frame to have no parent");
   } else if (details.type == "sub_frame") {
     ok(details.frameId > 0, "expect sub_frame to load into a new frame");
     if (expect.toplevelParent) {
-      is(0, details.parentFrameId, "expect sub_frame to have top level parent");
+      is(details.parentFrameId, 0, "expect sub_frame to have top level parent");
     } else {
       ok(details.parentFrameId > 0, "expect sub_frame to have parent");
     }

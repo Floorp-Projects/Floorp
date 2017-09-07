@@ -361,7 +361,7 @@ enum class Tier
     Baseline,
     Debug = Baseline,
     Ion,
-    Serialized = Ion,
+    Serialized = Ion
 };
 
 // The CompileMode controls how compilation of a module is performed (notably,
@@ -372,6 +372,14 @@ enum class CompileMode
     Once,
     Tier1,
     Tier2
+};
+
+// Typed enum for whether debugging is enabled.
+
+enum class DebugEnabled
+{
+    False,
+    True
 };
 
 // Iterator over tiers present in a tiered data structure.

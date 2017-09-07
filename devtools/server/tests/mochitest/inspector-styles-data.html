@@ -10,6 +10,8 @@
   .inheritable-rule {
     font-size: 15px;
   }
+  /* Has to be on one line, is such for test */
+  .column-rule { font-size: 20px; } .column-rule { font-size: 25px; }
   .uninheritable-rule {
     background-color: #f06;
   }
@@ -62,7 +64,7 @@
   </div>
 
   <!-- Matched checks -->
-  <div id="matched-parent" class="external-rule inheritable-rule uninheritable-rule" style="color: red;">
+  <div id="matched-parent" class="external-rule inheritable-rule column-rule uninheritable-rule" style="color: red;">
     <div id="matched-test-node" style="font-size: 10px" class="external-rule">
       Here is the test node.
     </div>

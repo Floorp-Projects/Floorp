@@ -273,11 +273,18 @@ var tests = [
     is(icon.src, "", "Popup should have no icon");
     is(buttons.hasChildNodes(), false, "Popup should have no buttons");
 
+    // Place the search bar in the navigation toolbar temporarily.
+    await SpecialPowers.pushPrefEnv({ set: [
+      ["browser.search.widget.inNavBar", true],
+    ]});
+
     await showInfoPromise("search", "search title", "search text");
 
     is(popup.popupBoxObject.anchorNode, document.getElementById("searchbar"), "Popup should be anchored to the searchbar");
     is(title.textContent, "search title", "Popup should have correct title");
     is(desc.textContent, "search text", "Popup should have correct description text");
+
+    await SpecialPowers.popPrefEnv();
   }),
   function test_getConfigurationVersion(done) {
     function callback(result) {

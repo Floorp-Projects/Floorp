@@ -48,23 +48,9 @@ nsHtml5Atom::QueryInterface(REFNSIID aIID, void** aInstancePtr)
 }
 
 NS_IMETHODIMP
-nsHtml5Atom::ScriptableToString(nsAString& aBuf)
-{
-  NS_NOTREACHED("Should not call ScriptableToString.");
-  return NS_ERROR_NOT_IMPLEMENTED;
-}
-
-NS_IMETHODIMP
 nsHtml5Atom::ToUTF8String(nsACString& aReturn)
 {
   NS_NOTREACHED("Should not attempt to convert to an UTF-8 string.");
-  return NS_ERROR_NOT_IMPLEMENTED;
-}
-
-NS_IMETHODIMP
-nsHtml5Atom::ScriptableEquals(const nsAString& aString, bool* aResult)
-{
-  NS_NOTREACHED("Should not call ScriptableEquals.");
   return NS_ERROR_NOT_IMPLEMENTED;
 }
 

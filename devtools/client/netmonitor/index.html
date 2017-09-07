@@ -9,7 +9,7 @@
     <link rel="stylesheet" href="chrome://devtools/content/netmonitor/src/assets/styles/netmonitor.css"/>
     <script src="chrome://devtools/content/shared/theme-switching.js"></script>
   </head>
-  <body class="theme-sidebar" role="application">
+  <body class="theme-body" role="application">
     <div id="mount"></div>
     <script>
       "use strict";
@@ -38,25 +38,36 @@
       window.Netmonitor = {
         bootstrap({ toolbox }) {
           this.mount = document.querySelector("#mount");
+
           const connection = {
             tabConnection: {
               tabTarget: toolbox.target,
             },
             toolbox,
           };
+
+          const openLink = (link) => {
+            let parentDoc = toolbox.doc;
+            let iframe = parentDoc.getElementById("toolbox-panel-iframe-netmonitor");
+            let top = iframe.ownerDocument.defaultView.top;
+            top.openUILinkIn(link, "tab");
+          };
+
           const App = createFactory(require("./src/components/app"));
           const sourceMapService = toolbox.sourceMapURLService;
-          render(Provider({ store }, App({ sourceMapService })), this.mount);
+          const app = App({ sourceMapService, openLink });
+          render(Provider({ store }, app), this.mount);
           return onFirefoxConnect(connection, actions, store.getState);
         },
 
         destroy() {
           unmountComponentAtNode(this.mount);
           return onDisconnect();
-        }
+        },
       };
 
-      // Implement support for chrome://devtools/content/netmonitor/index.html?type=tab&id=1234 URLs
+      // Implement support for:
+      // chrome://devtools/content/netmonitor/index.html?type=tab&id=1234 URLs
       // where 1234 is the tab id, you can retrieve from about:debugging#tabs links.
       // Simply copy the id from about:devtools-toolbox?type=tab&id=1234 URLs.
 
@@ -64,7 +75,8 @@
       let href = window.location.href.replace(/chrome:/, "http://");
       let url = new window.URL(href);
 
-      // If query parameters are given in a chrome tab, the inspector is running in standalone.
+      // If query parameters are given in a chrome tab, the inspector
+      // is running in standalone.
       if (window.location.protocol === "chrome:" && url.search.length > 1) {
         const { targetFromURL } = require("devtools/client/framework/target-from-url");
 
@@ -83,7 +95,8 @@
           };
           window.Netmonitor.bootstrap({ toolbox });
         })().catch(e => {
-          window.alert("Unable to start the network monitor:" + e.message + "\n" + e.stack);
+          window.alert("Unable to start the network monitor:" +
+            e.message + "\n" + e.stack);
         });
       }
     </script>

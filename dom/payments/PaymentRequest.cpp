@@ -52,21 +52,21 @@ PaymentRequest::PrefEnabled(JSContext* aCx, JSObject* aObj)
   return Preferences::GetBool("dom.payments.request.enabled");
 }
 
-bool
+nsresult
 PaymentRequest::IsValidMethodData(JSContext* aCx,
                                   const Sequence<PaymentMethodData>& aMethodData,
                                   nsAString& aErrorMsg)
 {
   if (!aMethodData.Length()) {
     aErrorMsg.AssignLiteral("At least one payment method is required.");
-    return false;
+    return NS_ERROR_TYPE_ERR;
   }
 
   for (const PaymentMethodData& methodData : aMethodData) {
     if (methodData.mSupportedMethods.IsEmpty()) {
       aErrorMsg.AssignLiteral(
         "Payment method identifier is required.");
-      return false;
+      return NS_ERROR_TYPE_ERR;
     }
     RefPtr<BasicCardService> service = BasicCardService::GetService();
     MOZ_ASSERT(service);
@@ -78,15 +78,15 @@ PaymentRequest::IsValidMethodData(JSContext* aCx,
       if (!service->IsValidBasicCardRequest(aCx,
                                             methodData.mData.Value(),
                                             aErrorMsg)) {
-        return false;
+        return NS_ERROR_TYPE_ERR;
       }
     }
   }
 
-  return true;
+  return NS_OK;
 }
 
-bool
+nsresult
 PaymentRequest::IsValidNumber(const nsAString& aItem,
                               const nsAString& aStr,
                               nsAString& aErrorMsg)
@@ -120,12 +120,12 @@ PaymentRequest::IsValidNumber(const nsAString& aItem,
     aErrorMsg.AppendLiteral("\"(");
     aErrorMsg.Append(aStr);
     aErrorMsg.AppendLiteral(") must be a valid decimal monetary value.");
-    return false;
+    return NS_ERROR_TYPE_ERR;
   }
-  return true;
+  return NS_OK;
 }
 
-bool
+nsresult
 PaymentRequest::IsNonNegativeNumber(const nsAString& aItem,
                                     const nsAString& aStr,
                                     nsAString& aErrorMsg)
@@ -149,47 +149,126 @@ PaymentRequest::IsNonNegativeNumber(const nsAString& aItem,
     aErrorMsg.Append(aItem);
     aErrorMsg.AppendLiteral("\"(");
     aErrorMsg.Append(aStr);
-    aErrorMsg.AppendLiteral(") must be a valid and non-negative decimal monetaryvalue.");
-    return false;
+    aErrorMsg.AppendLiteral(") must be a valid and non-negative decimal monetary value.");
+    return NS_ERROR_TYPE_ERR;
   }
-  return true;
+  return NS_OK;
 }
 
-bool
+nsresult
+PaymentRequest::IsValidCurrency(const nsAString& aItem,
+                                const nsAString& aCurrency,
+                                nsAString& aErrorMsg)
+{
+   /*
+    *  According to spec in https://w3c.github.io/payment-request/#validity-checkers,
+    *  perform currency validation with following criteria
+    *  1. The currency length must be 3.
+    *  2. The currency contains any character that must be in the range "A" to "Z"
+    *     (U+0041 to U+005A) or the range "a" to "z" (U+0061 to U+007A)
+    */
+   if (aCurrency.Length() != 3) {
+     aErrorMsg.AssignLiteral("The length amount.currency of \"");
+     aErrorMsg.Append(aItem);
+     aErrorMsg.AppendLiteral("\"(");
+     aErrorMsg.Append(aCurrency);
+     aErrorMsg.AppendLiteral(") must be 3.");
+     return NS_ERROR_RANGE_ERR;
+   }
+   // Don't use nsUnicharUtils::ToUpperCase, it converts the invalid "ınr" PMI to
+   // to the valid one "INR".
+   for (uint32_t idx = 0; idx < aCurrency.Length(); ++idx) {
+     if ((aCurrency.CharAt(idx) >= 'A' && aCurrency.CharAt(idx) <= 'Z') ||
+         (aCurrency.CharAt(idx) >= 'a' && aCurrency.CharAt(idx) <= 'z')) {
+       continue;
+     }
+     aErrorMsg.AssignLiteral("The character amount.currency of \"");
+     aErrorMsg.Append(aItem);
+     aErrorMsg.AppendLiteral("\"(");
+     aErrorMsg.Append(aCurrency);
+     aErrorMsg.AppendLiteral(") must be in the range 'A' to 'Z'(U+0041 to U+005A) or 'a' to 'z'(U+0061 to U+007A).");
+     return NS_ERROR_RANGE_ERR;
+   }
+   return NS_OK;
+}
+
+nsresult
+PaymentRequest::IsValidCurrencyAmount(const nsAString& aItem,
+                                      const PaymentCurrencyAmount& aAmount,
+                                      const bool aIsTotalItem,
+                                      nsAString& aErrorMsg)
+{
+  nsresult rv;
+  if (aIsTotalItem) {
+    rv = IsNonNegativeNumber(aItem, aAmount.mValue, aErrorMsg);
+    if (NS_FAILED(rv)) {
+      return rv;
+    }
+  } else {
+    rv = IsValidNumber(aItem, aAmount.mValue, aErrorMsg);
+    if (NS_FAILED(rv)) {
+      return rv;
+    }
+  }
+  // currencySystem must equal urn:iso:std:iso:4217
+  if (!aAmount.mCurrencySystem.EqualsASCII("urn:iso:std:iso:4217")) {
+    aErrorMsg.AssignLiteral("The amount.currencySystem of \"");
+    aErrorMsg.Append(aItem);
+    aErrorMsg.AppendLiteral("\"(");
+    aErrorMsg.Append(aAmount.mCurrencySystem);
+    aErrorMsg.AppendLiteral(") must equal urn:iso:std:iso:4217.");
+    return NS_ERROR_RANGE_ERR;
+  }
+  rv = IsValidCurrency(aItem, aAmount.mCurrency, aErrorMsg);
+  if (NS_FAILED(rv)) {
+    return rv;
+  }
+  return NS_OK;
+}
+
+nsresult
 PaymentRequest::IsValidDetailsInit(const PaymentDetailsInit& aDetails, nsAString& aErrorMsg)
 {
-  // Check the amount.value of detail.total
-  if (!IsNonNegativeNumber(NS_LITERAL_STRING("details.total"),
-                           aDetails.mTotal.mAmount.mValue, aErrorMsg)) {
-    return false;
+  // Check the amount.value and amount.currency of detail.total
+  nsresult rv = IsValidCurrencyAmount(NS_LITERAL_STRING("details.total"),
+                                      aDetails.mTotal.mAmount,
+                                      true, // isTotalItem
+                                      aErrorMsg);
+  if (NS_FAILED(rv)) {
+    return rv;
   }
-
   return IsValidDetailsBase(aDetails, aErrorMsg);
 }
 
-bool
+nsresult
 PaymentRequest::IsValidDetailsUpdate(const PaymentDetailsUpdate& aDetails)
 {
   nsAutoString message;
-  // Check the amount.value of detail.total
-  if (!IsNonNegativeNumber(NS_LITERAL_STRING("details.total"),
-                           aDetails.mTotal.mAmount.mValue, message)) {
-    return false;
+  // Check the amount.value and amount.currency of detail.total
+  nsresult rv = IsValidCurrencyAmount(NS_LITERAL_STRING("details.total"),
+                                      aDetails.mTotal.mAmount,
+                                      true, // isTotalItem
+                                      message);
+  if (NS_FAILED(rv)) {
+    return rv;
   }
-
   return IsValidDetailsBase(aDetails, message);
 }
 
-bool
+nsresult
 PaymentRequest::IsValidDetailsBase(const PaymentDetailsBase& aDetails, nsAString& aErrorMsg)
 {
+  nsresult rv;
   // Check the amount.value of each item in the display items
   if (aDetails.mDisplayItems.WasPassed()) {
     const Sequence<PaymentItem>& displayItems = aDetails.mDisplayItems.Value();
     for (const PaymentItem& displayItem : displayItems) {
-      if (!IsValidNumber(displayItem.mLabel,
-                         displayItem.mAmount.mValue, aErrorMsg)) {
-        return false;
+      rv = IsValidCurrencyAmount(displayItem.mLabel,
+                                 displayItem.mAmount,
+                                 false,  // isTotalItem
+                                 aErrorMsg);
+      if (NS_FAILED(rv)) {
+        return rv;
       }
     }
   }
@@ -198,9 +277,12 @@ PaymentRequest::IsValidDetailsBase(const PaymentDetailsBase& aDetails, nsAString
   if (aDetails.mShippingOptions.WasPassed()) {
     const Sequence<PaymentShippingOption>& shippingOptions = aDetails.mShippingOptions.Value();
     for (const PaymentShippingOption& shippingOption : shippingOptions) {
-      if (!IsValidNumber(NS_LITERAL_STRING("details.shippingOptions"),
-                         shippingOption.mAmount.mValue, aErrorMsg)) {
-        return false;
+      rv = IsValidCurrencyAmount(NS_LITERAL_STRING("details.shippingOptions"),
+                                 shippingOption.mAmount,
+                                 false,  // isTotalItem
+                                 aErrorMsg);
+      if (NS_FAILED(rv)) {
+        return rv;
       }
     }
   }
@@ -209,23 +291,29 @@ PaymentRequest::IsValidDetailsBase(const PaymentDetailsBase& aDetails, nsAString
   if (aDetails.mModifiers.WasPassed()) {
     const Sequence<PaymentDetailsModifier>& modifiers = aDetails.mModifiers.Value();
     for (const PaymentDetailsModifier& modifier : modifiers) {
-      if (!IsNonNegativeNumber(NS_LITERAL_STRING("details.modifiers.total"),
-                               modifier.mTotal.mAmount.mValue, aErrorMsg)) {
-        return false;
+      rv = IsValidCurrencyAmount(NS_LITERAL_STRING("details.modifiers.total"),
+                                 modifier.mTotal.mAmount,
+                                 true, // isTotalItem
+                                 aErrorMsg);
+      if (NS_FAILED(rv)) {
+        return rv;
       }
       if (modifier.mAdditionalDisplayItems.WasPassed()) {
         const Sequence<PaymentItem>& displayItems = modifier.mAdditionalDisplayItems.Value();
         for (const PaymentItem& displayItem : displayItems) {
-          if (!IsValidNumber(displayItem.mLabel,
-                             displayItem.mAmount.mValue, aErrorMsg)) {
-            return false;
+          rv = IsValidCurrencyAmount(displayItem.mLabel,
+                                     displayItem.mAmount,
+                                     false,  // isTotalItem
+                                     aErrorMsg);
+          if (NS_FAILED(rv)) {
+            return rv;
           }
         }
       }
     }
   }
 
-  return true;
+  return NS_OK;
 }
 
 already_AddRefed<PaymentRequest>
@@ -277,11 +365,20 @@ PaymentRequest::Constructor(const GlobalObject& aGlobal,
 
   // Check payment methods and details
   nsAutoString message;
-  if (!IsValidMethodData(nsContentUtils::GetCurrentJSContext(),
-                         aMethodData,
-                         message) ||
-      !IsValidDetailsInit(aDetails, message)) {
-    aRv.ThrowTypeError<MSG_ILLEGAL_PR_CONSTRUCTOR>(message);
+  nsresult rv = IsValidMethodData(aGlobal.Context(),
+                                  aMethodData,
+                                  message);
+  if (NS_FAILED(rv)) {
+    aRv.ThrowTypeError<MSG_ILLEGAL_TYPE_PR_CONSTRUCTOR>(message);
+    return nullptr;
+  }
+  rv = IsValidDetailsInit(aDetails, message);
+  if (NS_FAILED(rv)) {
+    if (rv == NS_ERROR_TYPE_ERR) {
+      aRv.ThrowTypeError<MSG_ILLEGAL_TYPE_PR_CONSTRUCTOR>(message);
+    } else if (rv == NS_ERROR_RANGE_ERR) {
+      aRv.ThrowRangeError<MSG_ILLEGAL_RANGE_PR_CONSTRUCTOR>(message);
+    }
     return nullptr;
   }
 
@@ -292,8 +389,8 @@ PaymentRequest::Constructor(const GlobalObject& aGlobal,
 
   // Create PaymentRequest and set its |mId|
   RefPtr<PaymentRequest> request;
-  nsresult rv = manager->CreatePayment(window, topLevelPrincipal, aMethodData,
-                                       aDetails, aOptions, getter_AddRefs(request));
+  rv = manager->CreatePayment(aGlobal.Context(), window, topLevelPrincipal, aMethodData,
+                              aDetails, aOptions, getter_AddRefs(request));
   if (NS_WARN_IF(NS_FAILED(rv))) {
     aRv.Throw(NS_ERROR_DOM_TYPE_ERR);
     return nullptr;
@@ -513,6 +610,8 @@ PaymentRequest::RespondAbortPayment(bool aSuccess)
   // - Otherwise, we are handling |Abort| method call from merchant.
   //   => Resolve/Reject |mAbortPromise| based on |aSuccess|.
   if (NS_FAILED(mUpdateError)) {
+    // Respond show with mUpdateError, set mUpdating to false.
+    mUpdating = false;
     RespondShowPayment(EmptyString(), EmptyString(), EmptyString(),
                        EmptyString(), EmptyString(), mUpdateError);
     mUpdateError = NS_OK;
@@ -533,13 +632,14 @@ PaymentRequest::RespondAbortPayment(bool aSuccess)
 }
 
 nsresult
-PaymentRequest::UpdatePayment(const PaymentDetailsUpdate& aDetails)
+PaymentRequest::UpdatePayment(JSContext* aCx, const PaymentDetailsUpdate& aDetails)
 {
+  NS_ENSURE_ARG_POINTER(aCx);
   RefPtr<PaymentRequestManager> manager = PaymentRequestManager::GetSingleton();
   if (NS_WARN_IF(!manager)) {
     return NS_ERROR_FAILURE;
   }
-  nsresult rv = manager->UpdatePayment(mInternalId, aDetails);
+  nsresult rv = manager->UpdatePayment(aCx, mInternalId, aDetails);
   if (NS_WARN_IF(NS_FAILED(rv))) {
     return rv;
   }

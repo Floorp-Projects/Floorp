@@ -107,6 +107,7 @@ private:
            uint64_t aInnerWindowID,
            uint64_t aOuterWindowID,
            uint64_t aParentOuterWindowID,
+           uint64_t aTopOuterWindowID,
            uint64_t aFrameOuterWindowID,
            bool aEnforceSecurity,
            bool aInitialSecurityCheckDone,
@@ -159,6 +160,7 @@ private:
   uint64_t                         mInnerWindowID;
   uint64_t                         mOuterWindowID;
   uint64_t                         mParentOuterWindowID;
+  uint64_t                         mTopOuterWindowID;
   uint64_t                         mFrameOuterWindowID;
   bool                             mEnforceSecurity;
   bool                             mInitialSecurityCheckDone;

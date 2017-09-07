@@ -69,14 +69,14 @@ add_task(async function menu_button_popup() {
 });
 
 add_task(async function searchbar_in_panel() {
-  let searchbar = document.getElementById("searchbar");
-  gCustomizeMode.addToPanel(searchbar);
-  let placement = CustomizableUI.getPlacementOfWidget("search-container");
-  is(placement.area, CustomizableUI.AREA_FIXED_OVERFLOW_PANEL, "Should be in panel");
+  CustomizableUI.addWidgetToArea("search-container",
+                                 CustomizableUI.AREA_FIXED_OVERFLOW_PANEL);
 
   await waitForOverflowButtonShown();
 
   await document.getElementById("nav-bar").overflowable.show();
+
+  let searchbar = document.getElementById("searchbar");
   await waitForCondition(() => "value" in searchbar && searchbar.value === "");
 
   // Focusing a non-empty searchbox will cause us to open the

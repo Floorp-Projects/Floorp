@@ -49,6 +49,7 @@ const PropertiesView = createClass({
     expandableStrings: PropTypes.bool,
     filterPlaceHolder: PropTypes.string,
     sectionNames: PropTypes.array,
+    openLink: PropTypes.func,
   },
 
   getDefaultProps() {
@@ -148,6 +149,7 @@ const PropertiesView = createClass({
       renderRow,
       renderValue,
       sectionNames,
+      openLink,
     } = this.props;
 
     return (
@@ -181,6 +183,7 @@ const PropertiesView = createClass({
             onFilter: (props) => this.onFilter(props, sectionNames),
             renderRow: renderRow || this.renderRowWithEditor,
             renderValue: renderValue || this.renderValueWithRep,
+            openLink,
           }),
         ),
       )

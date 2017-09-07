@@ -17,7 +17,7 @@ interface nsIArray;
 interface nsIEventListenerChange : nsISupports
 {
   readonly attribute nsIDOMEventTarget target;
-  readonly attribute nsIArray changedListenerNames;
+  [noscript] readonly attribute nsIArray changedListenerNames;
 };
 
 [scriptable, function, uuid(aa7c95f6-d3b5-44b3-9597-1d9f19b9c5f2)]

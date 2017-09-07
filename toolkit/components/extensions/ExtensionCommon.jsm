@@ -1566,13 +1566,13 @@ EventManager.prototype = {
     let fire = {
       sync: (...args) => {
         if (shouldFire()) {
-          return this.context.runSafe(callback, ...args);
+          return this.context.applySafe(callback, args);
         }
       },
       async: (...args) => {
         return Promise.resolve().then(() => {
           if (shouldFire()) {
-            return this.context.runSafe(callback, ...args);
+            return this.context.applySafe(callback, args);
           }
         });
       },
@@ -1580,12 +1580,12 @@ EventManager.prototype = {
         if (!shouldFire()) {
           throw new Error("Called raw() on unloaded/inactive context");
         }
-        return callback(...args);
+        return Reflect.apply(callback, null, args);
       },
       asyncWithoutClone: (...args) => {
         return Promise.resolve().then(() => {
           if (shouldFire()) {
-            return this.context.runSafeWithoutClone(callback, ...args);
+            return this.context.applySafeWithoutClone(callback, args);
           }
         });
       },

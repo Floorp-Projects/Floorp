@@ -1487,6 +1487,27 @@ nsRange::SetEnd(nsINode* aContainer, uint32_t aOffset)
   return NS_OK;
 }
 
+void
+nsRange::SelectNodesInContainer(nsINode* aContainer,
+                                nsIContent* aStartContent,
+                                nsIContent* aEndContent)
+{
+  MOZ_ASSERT(aContainer);
+  MOZ_ASSERT(aContainer->IndexOf(aStartContent) <= aContainer->IndexOf(aEndContent));
+  MOZ_ASSERT(aStartContent && aContainer->IndexOf(aStartContent) != -1);
+  MOZ_ASSERT(aEndContent && aContainer->IndexOf(aEndContent) != -1);
+
+  nsINode* newRoot = ComputeRootNode(aContainer, mMaySpanAnonymousSubtrees);
+  MOZ_ASSERT(newRoot);
+  if (!newRoot) {
+    return;
+  }
+
+  RawRangeBoundary start(aContainer, aStartContent->GetPreviousSibling());
+  RawRangeBoundary end(aContainer, aEndContent);
+  DoSetRange(start, end, newRoot);
+}
+
 nsresult
 nsRange::SetStartAndEnd(nsINode* aStartContainer, uint32_t aStartOffset,
                         nsINode* aEndContainer, uint32_t aEndOffset)
