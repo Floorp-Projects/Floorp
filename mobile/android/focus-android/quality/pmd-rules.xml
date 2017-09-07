@@ -7,7 +7,6 @@
 
     <description>Focus Android Ruleset</description>
 
-
     <rule ref="rulesets/java/basic.xml"/>
     <rule ref="rulesets/java/braces.xml"/>
     <rule ref="rulesets/java/clone.xml"/>
@@ -19,6 +18,7 @@
     <!-- Here's some rules we'll specify one at a time -->
     <rule ref="rulesets/java/unusedcode.xml/UnusedLocalVariable"/>
     <rule ref="rulesets/java/unusedcode.xml/UnusedPrivateField"/>
+    <rule ref="rulesets/java/unusedcode.xml/UnusedPrivateMethod"/>
     <rule ref="rulesets/java/imports.xml/DuplicateImports"/>
     <rule ref="rulesets/java/unnecessary.xml/UnnecessaryConversionTemporary"/>
 
