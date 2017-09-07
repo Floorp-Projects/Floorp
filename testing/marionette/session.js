@@ -175,7 +175,7 @@ session.Proxy = class {
           }
         }
 
-        if (this.noProxy && this.noProxy.length > 0) {
+        if (this.noProxy) {
           Preferences.set("network.proxy.no_proxies_on", this.noProxy.join(", "));
         }
         return true;
