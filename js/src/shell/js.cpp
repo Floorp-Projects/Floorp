@@ -6945,22 +6945,22 @@ CreateLastWarningObject(JSContext* cx, JSErrorReport* report)
     if (!nameStr)
         return false;
     RootedValue nameVal(cx, StringValue(nameStr));
-    if (!DefineProperty(cx, warningObj, cx->names().name, nameVal))
+    if (!DefineDataProperty(cx, warningObj, cx->names().name, nameVal))
         return false;
 
     RootedString messageStr(cx, report->newMessageString(cx));
     if (!messageStr)
         return false;
     RootedValue messageVal(cx, StringValue(messageStr));
-    if (!DefineProperty(cx, warningObj, cx->names().message, messageVal))
+    if (!DefineDataProperty(cx, warningObj, cx->names().message, messageVal))
         return false;
 
     RootedValue linenoVal(cx, Int32Value(report->lineno));
-    if (!DefineProperty(cx, warningObj, cx->names().lineNumber, linenoVal))
+    if (!DefineDataProperty(cx, warningObj, cx->names().lineNumber, linenoVal))
         return false;
 
     RootedValue columnVal(cx, Int32Value(report->column));
-    if (!DefineProperty(cx, warningObj, cx->names().columnNumber, columnVal))
+    if (!DefineDataProperty(cx, warningObj, cx->names().columnNumber, columnVal))
         return false;
 
     RootedObject notesArray(cx, CreateErrorNotesArray(cx, report));
@@ -6968,7 +6968,7 @@ CreateLastWarningObject(JSContext* cx, JSErrorReport* report)
         return false;
 
     RootedValue notesArrayVal(cx, ObjectValue(*notesArray));
-    if (!DefineProperty(cx, warningObj, cx->names().notes, notesArrayVal))
+    if (!DefineDataProperty(cx, warningObj, cx->names().notes, notesArrayVal))
         return false;
 
     GetShellContext(cx)->lastWarning.setObject(*warningObj);

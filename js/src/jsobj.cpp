@@ -161,7 +161,7 @@ js::FromPropertyDescriptorToObject(JSContext* cx, Handle<PropertyDescriptor> des
 
     // Step 4.
     if (desc.hasValue()) {
-        if (!DefineProperty(cx, obj, names.value, desc.value()))
+        if (!DefineDataProperty(cx, obj, names.value, desc.value()))
             return false;
     }
 
@@ -169,7 +169,7 @@ js::FromPropertyDescriptorToObject(JSContext* cx, Handle<PropertyDescriptor> des
     RootedValue v(cx);
     if (desc.hasWritable()) {
         v.setBoolean(desc.writable());
-        if (!DefineProperty(cx, obj, names.writable, v))
+        if (!DefineDataProperty(cx, obj, names.writable, v))
             return false;
     }
 
@@ -179,7 +179,7 @@ js::FromPropertyDescriptorToObject(JSContext* cx, Handle<PropertyDescriptor> des
             v.setObject(*get);
         else
             v.setUndefined();
-        if (!DefineProperty(cx, obj, names.get, v))
+        if (!DefineDataProperty(cx, obj, names.get, v))
             return false;
     }
 
@@ -189,21 +189,21 @@ js::FromPropertyDescriptorToObject(JSContext* cx, Handle<PropertyDescriptor> des
             v.setObject(*set);
         else
             v.setUndefined();
-        if (!DefineProperty(cx, obj, names.set, v))
+        if (!DefineDataProperty(cx, obj, names.set, v))
             return false;
     }
 
     // Step 8.
     if (desc.hasEnumerable()) {
         v.setBoolean(desc.enumerable());
-        if (!DefineProperty(cx, obj, names.enumerable, v))
+        if (!DefineDataProperty(cx, obj, names.enumerable, v))
             return false;
     }
 
     // Step 9.
     if (desc.hasConfigurable()) {
         v.setBoolean(desc.configurable());
-        if (!DefineProperty(cx, obj, names.configurable, v))
+        if (!DefineDataProperty(cx, obj, names.configurable, v))
             return false;
     }
 
@@ -1749,7 +1749,7 @@ DefineStandardSlot(JSContext* cx, HandleObject obj, JSProtoKey key, JSAtom* atom
                    HandleValue v, uint32_t attrs, bool& named)
 {
     RootedId id(cx, AtomToId(atom));
-    named = DefineProperty(cx, obj, id, v, nullptr, nullptr, attrs);
+    named = DefineDataProperty(cx, obj, id, v, attrs);
     return named;
 }
 
@@ -2786,14 +2786,14 @@ js::DefineProperty(JSContext* cx, HandleObject obj, HandleId id, Handle<Property
 }
 
 bool
-js::DefineProperty(JSContext* cx, HandleObject obj, HandleId id, HandleValue value,
-                   JSGetterOp getter, JSSetterOp setter, unsigned attrs,
-                   ObjectOpResult& result)
+js::DefineAccessorProperty(JSContext* cx, HandleObject obj, HandleId id,
+                           JSGetterOp getter, JSSetterOp setter, unsigned attrs,
+                           ObjectOpResult& result)
 {
     MOZ_ASSERT(!(attrs & JSPROP_PROPOP_ACCESSORS));
 
     Rooted<PropertyDescriptor> desc(cx);
-    desc.initFields(nullptr, value, attrs, getter, setter);
+    desc.initFields(nullptr, UndefinedHandleValue, attrs, getter, setter);
     if (DefinePropertyOp op = obj->getOpsDefineProperty()) {
         MOZ_ASSERT(!cx->helperThread());
         return op(cx, obj, id, desc, result);
@@ -2802,31 +2802,62 @@ js::DefineProperty(JSContext* cx, HandleObject obj, HandleId id, HandleValue val
 }
 
 bool
-js::DefineProperty(JSContext* cx, HandleObject obj, PropertyName* name, HandleValue value,
-                   JSGetterOp getter, JSSetterOp setter, unsigned attrs,
-                   ObjectOpResult& result)
+js::DefineDataProperty(JSContext* cx, HandleObject obj, HandleId id, HandleValue value,
+                       unsigned attrs, ObjectOpResult& result)
 {
-    RootedId id(cx, NameToId(name));
-    return DefineProperty(cx, obj, id, value, getter, setter, attrs, result);
+    Rooted<PropertyDescriptor> desc(cx);
+    desc.initFields(nullptr, value, attrs, nullptr, nullptr);
+    if (DefinePropertyOp op = obj->getOpsDefineProperty()) {
+        MOZ_ASSERT(!cx->helperThread());
+        return op(cx, obj, id, desc, result);
+    }
+    return NativeDefineProperty(cx, obj.as<NativeObject>(), id, desc, result);
 }
 
 bool
-js::DefineElement(JSContext* cx, HandleObject obj, uint32_t index, HandleValue value,
-                  JSGetterOp getter, JSSetterOp setter, unsigned attrs,
-                  ObjectOpResult& result)
+js::DefineAccessorProperty(JSContext* cx, HandleObject obj, PropertyName* name,
+                           JSGetterOp getter, JSSetterOp setter, unsigned attrs,
+                           ObjectOpResult& result)
+{
+    RootedId id(cx, NameToId(name));
+    return DefineAccessorProperty(cx, obj, id, getter, setter, attrs, result);
+}
+
+bool
+js::DefineDataProperty(JSContext* cx, HandleObject obj, PropertyName* name, HandleValue value,
+                       unsigned attrs, ObjectOpResult& result)
+{
+    RootedId id(cx, NameToId(name));
+    return DefineDataProperty(cx, obj, id, value, attrs, result);
+}
+
+bool
+js::DefineAccessorElement(JSContext* cx, HandleObject obj, uint32_t index,
+                          JSGetterOp getter, JSSetterOp setter, unsigned attrs,
+                          ObjectOpResult& result)
 {
     RootedId id(cx);
     if (!IndexToId(cx, index, &id))
         return false;
-    return DefineProperty(cx, obj, id, value, getter, setter, attrs, result);
+    return DefineAccessorProperty(cx, obj, id, getter, setter, attrs, result);
 }
 
 bool
-js::DefineProperty(JSContext* cx, HandleObject obj, HandleId id, HandleValue value,
-                   JSGetterOp getter, JSSetterOp setter, unsigned attrs)
+js::DefineDataElement(JSContext* cx, HandleObject obj, uint32_t index, HandleValue value,
+                      unsigned attrs, ObjectOpResult& result)
+{
+    RootedId id(cx);
+    if (!IndexToId(cx, index, &id))
+        return false;
+    return DefineDataProperty(cx, obj, id, value, attrs, result);
+}
+
+bool
+js::DefineAccessorProperty(JSContext* cx, HandleObject obj, HandleId id,
+                           JSGetterOp getter, JSSetterOp setter, unsigned attrs)
 {
     ObjectOpResult result;
-    if (!DefineProperty(cx, obj, id, value, getter, setter, attrs, result))
+    if (!DefineAccessorProperty(cx, obj, id, getter, setter, attrs, result))
         return false;
     if (!result) {
         MOZ_ASSERT(!cx->helperThread());
@@ -2837,23 +2868,55 @@ js::DefineProperty(JSContext* cx, HandleObject obj, HandleId id, HandleValue val
 }
 
 bool
-js::DefineProperty(JSContext* cx, HandleObject obj, PropertyName* name, HandleValue value,
-                   JSGetterOp getter, JSSetterOp setter, unsigned attrs)
+js::DefineDataProperty(JSContext* cx, HandleObject obj, HandleId id, HandleValue value,
+                       unsigned attrs)
 {
-    RootedId id(cx, NameToId(name));
-    return DefineProperty(cx, obj, id, value, getter, setter, attrs);
+    ObjectOpResult result;
+    if (!DefineDataProperty(cx, obj, id, value, attrs, result))
+        return false;
+    if (!result) {
+        MOZ_ASSERT(!cx->helperThread());
+        result.reportError(cx, obj, id);
+        return false;
+    }
+    return true;
 }
 
 bool
-js::DefineElement(JSContext* cx, HandleObject obj, uint32_t index, HandleValue value,
-                  JSGetterOp getter, JSSetterOp setter, unsigned attrs)
+js::DefineAccessorProperty(JSContext* cx, HandleObject obj, PropertyName* name,
+                           JSGetterOp getter, JSSetterOp setter, unsigned attrs)
+{
+    RootedId id(cx, NameToId(name));
+    return DefineAccessorProperty(cx, obj, id, getter, setter, attrs);
+}
+
+bool
+js::DefineDataProperty(JSContext* cx, HandleObject obj, PropertyName* name, HandleValue value,
+                       unsigned attrs)
+{
+    RootedId id(cx, NameToId(name));
+    return DefineDataProperty(cx, obj, id, value, attrs);
+}
+
+bool
+js::DefineAccessorElement(JSContext* cx, HandleObject obj, uint32_t index,
+                          JSGetterOp getter, JSSetterOp setter, unsigned attrs)
 {
     RootedId id(cx);
     if (!IndexToId(cx, index, &id))
         return false;
-    return DefineProperty(cx, obj, id, value, getter, setter, attrs);
+    return DefineAccessorProperty(cx, obj, id, getter, setter, attrs);
 }
 
+bool
+js::DefineDataElement(JSContext* cx, HandleObject obj, uint32_t index, HandleValue value,
+                      unsigned attrs)
+{
+    RootedId id(cx);
+    if (!IndexToId(cx, index, &id))
+        return false;
+    return DefineDataProperty(cx, obj, id, value, attrs);
+}
 
 /*** SpiderMonkey nonstandard internal methods ***************************************************/
 
@@ -2983,7 +3046,7 @@ DefineFunctionFromSpec(JSContext* cx, HandleObject obj, const JSFunctionSpec* fs
         fun->setIsIntrinsic();
 
     RootedValue funVal(cx, ObjectValue(*fun));
-    return DefineProperty(cx, obj, id, funVal, nullptr, nullptr, flags & ~JSFUN_FLAGS_MASK);
+    return DefineDataProperty(cx, obj, id, funVal, flags & ~JSFUN_FLAGS_MASK);
 }
 
 bool
