@@ -59,7 +59,8 @@ HTMLEditor::SetInlineProperty(const nsAString& aProperty,
                               const nsAString& aAttribute,
                               const nsAString& aValue)
 {
-  return SetInlineProperty(NS_Atomize(aProperty).take(), aAttribute, aValue);
+  nsCOMPtr<nsIAtom> property = NS_Atomize(aProperty);
+  return SetInlineProperty(property, aAttribute, aValue);
 }
 
 nsresult
@@ -1078,8 +1079,8 @@ HTMLEditor::GetInlineProperty(const nsAString& aProperty,
                               bool* aAny,
                               bool* aAll)
 {
-  return GetInlineProperty(NS_Atomize(aProperty).take(), aAttribute, aValue,
-                           aFirst, aAny, aAll);
+  nsCOMPtr<nsIAtom> property = NS_Atomize(aProperty);
+  return GetInlineProperty(property, aAttribute, aValue, aFirst, aAny, aAll);
 }
 
 nsresult
@@ -1109,9 +1110,9 @@ HTMLEditor::GetInlinePropertyWithAttrValue(const nsAString& aProperty,
                                            bool* aAll,
                                            nsAString& outValue)
 {
-  return GetInlinePropertyWithAttrValue(NS_Atomize(aProperty).take(),
-                                        aAttribute, aValue, aFirst, aAny,
-                                        aAll, outValue);
+  nsCOMPtr<nsIAtom> property = NS_Atomize(aProperty);
+  return GetInlinePropertyWithAttrValue(property, aAttribute, aValue, aFirst,
+                                        aAny, aAll, outValue);
 }
 
 nsresult
@@ -1149,7 +1150,8 @@ NS_IMETHODIMP
 HTMLEditor::RemoveInlineProperty(const nsAString& aProperty,
                                  const nsAString& aAttribute)
 {
-  return RemoveInlineProperty(NS_Atomize(aProperty).take(), aAttribute);
+  nsCOMPtr<nsIAtom> property = NS_Atomize(aProperty);
+  return RemoveInlineProperty(property, aAttribute);
 }
 
 nsresult
