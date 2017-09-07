@@ -13,6 +13,7 @@ toolbar[brighttext] {
 }
 
 .toolbarbutton-animatable-box[brighttext],
+toolbar[brighttext] .toolbarbutton-animatable-box,
 toolbar[brighttext] .toolbarbutton-1 {
   fill: #fff;
 }

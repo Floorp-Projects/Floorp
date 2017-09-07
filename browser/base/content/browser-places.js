@@ -1162,6 +1162,11 @@ var PlacesToolbarHelper = {
     // call this multiple times.
     CustomizableUI.addListener(this);
 
+    if (!this._isObservingToolbars) {
+      this._isObservingToolbars = true;
+      window.addEventListener("toolbarvisibilitychange", this);
+    }
+
     // If the bookmarks toolbar item is:
     // - not in a toolbar, or;
     // - the toolbar is collapsed, or;
@@ -1170,8 +1175,9 @@ var PlacesToolbarHelper = {
     // customizing, because that will happen when the customization is done.
     let toolbar = this._getParentToolbar(viewElt);
     if (!toolbar || toolbar.collapsed || this._isCustomizing ||
-        getComputedStyle(toolbar, "").display == "none")
+        getComputedStyle(toolbar, "").display == "none") {
       return;
+    }
 
     new PlacesToolbar(this._place);
     if (forceToolbarOverflowCheck) {
@@ -1179,7 +1185,20 @@ var PlacesToolbarHelper = {
     }
   },
 
+  handleEvent(event) {
+    switch (event.type) {
+      case "toolbarvisibilitychange":
+        if (event.target == this._viewElt.parentNode.parentNode)
+          this._resetView();
+        break;
+    }
+  },
+
   uninit: function PTH_uninit() {
+    if (this._isObservingToolbars) {
+      delete this._isObservingToolbars;
+      window.removeEventListener("toolbarvisibilitychange", this);
+    }
     CustomizableUI.removeListener(this);
   },
 
@@ -1473,12 +1492,13 @@ var RecentBookmarksMenuUI = {
    * Handles onItemRemoved notifications from the bookmarks service.
    */
   onItemRemoved(itemId, parentId, index, itemType, uri, guid) {
+    if (!this.visible) {
+      return;
+    }
     // Update the menu when a bookmark has been removed.
     // The native menubar on Mac doesn't support live update, so this is
     // unlikely to be called there.
-    if (this._recentGuids.size == 0 ||
-        (guid && this._recentGuids.has(guid))) {
-
+    if (guid && this._recentGuids.has(guid)) {
       if (this._itemRemovedTimer) {
         clearTimeout(this._itemRemovedTimer);
       }
@@ -1535,7 +1555,6 @@ var LibraryUI = {
       animatableBox.removeAttribute("brighttext");
     }
     animatableBox.removeAttribute("fade");
-    gNavToolbox.setAttribute("animate", animation);
     libraryButton.setAttribute("animate", animation);
     animatableBox.setAttribute("animate", animation);
     if (!this._libraryButtonAnimationEndListeners[animation]) {
@@ -1558,7 +1577,6 @@ var LibraryUI = {
       let libraryButton = document.getElementById("library-button");
       // Put the 'fill' back in the normal icon.
       libraryButton.removeAttribute("animate");
-      gNavToolbox.removeAttribute("animate");
     }
   },
 };

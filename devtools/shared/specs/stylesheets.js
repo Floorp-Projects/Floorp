@@ -105,6 +105,14 @@ exports.styleSheetSpec = styleSheetSpec;
 const styleSheetsSpec = generateActorSpec({
   typeName: "stylesheets",
 
+  events: {
+    "stylesheet-added": {
+      type: "stylesheetAdded",
+      sheet: Arg(0, "stylesheet"),
+      isNew: Arg(1, "boolean")
+    },
+  },
+
   methods: {
     getStyleSheets: {
       request: {},

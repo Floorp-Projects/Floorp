@@ -68,14 +68,14 @@ add_task(async function test_cancel_with_no_changes() {
       }
     );
 
-    Assert.ok(PlacesTransactions.undo.notCalled, "undo should not have been called");
-
     // Check the bookmark is still removed.
     Assert.ok(!(await PlacesUtils.bookmarks.fetch(bookmarks[0].guid)),
       "The originally removed bookmark should not exist.");
 
     Assert.ok(await PlacesUtils.bookmarks.fetch(bookmarks[1].guid),
       "The second bookmark should still exist");
+
+    Assert.ok(PlacesTransactions.undo.notCalled, "undo should not have been called");
   });
 });
 
@@ -112,7 +112,7 @@ add_task(async function test_cancel_with_changes() {
       }
     );
 
-    Assert.ok(PlacesTransactions.undo.calledOnce,
+    await BrowserTestUtils.waitForCondition(() => PlacesTransactions.undo.calledOnce,
       "undo should have been called once.");
   });
 });

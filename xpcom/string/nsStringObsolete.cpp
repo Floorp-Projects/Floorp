@@ -849,78 +849,86 @@ RFind_ComputeSearchRange( uint32_t bigLen, uint32_t littleLen, int32_t& offset, 
 
 //-----------------------------------------------------------------------------
 
-// define nsString obsolete methods
-#include "string-template-def-unichar.h"
 #include "nsTStringObsolete.cpp"
-#include "string-template-undef.h"
-
-// define nsCString obsolete methods
-#include "string-template-def-char.h"
-#include "nsTStringObsolete.cpp"
-#include "string-template-undef.h"
 
 //-----------------------------------------------------------------------------
 
 // specialized methods:
 
+template <typename T>
+template <typename EnableIfChar16>
 int32_t
-nsString::Find( const nsString& aString, int32_t aOffset, int32_t aCount ) const
+nsTString<T>::Find(const self_type& aString, int32_t aOffset, int32_t aCount) const
 {
   // this method changes the meaning of aOffset and aCount:
-  Find_ComputeSearchRange(mLength, aString.Length(), aOffset, aCount);
+  Find_ComputeSearchRange(this->mLength, aString.Length(), aOffset, aCount);
 
-  int32_t result = FindSubstring(mData + aOffset, aCount, static_cast<const char16_t*>(aString.get()), aString.Length(), false);
+  // Capture the raw buffer locally to help msvc deduce the type.
+  const char_type* str = aString.get();
+  int32_t result = FindSubstring(this->mData + aOffset, aCount, str, aString.Length(), false);
   if (result != kNotFound)
     result += aOffset;
   return result;
 }
 
+template <typename T>
+template <typename EnableIfChar16>
 int32_t
-nsString::Find( const char16_t* aString, int32_t aOffset, int32_t aCount ) const
+nsTString<T>::Find(const char_type* aString, int32_t aOffset, int32_t aCount) const
 {
-  return Find(nsDependentString(aString), aOffset, aCount);
+  return Find(nsTDependentString<T>(aString), aOffset, aCount);
 }
 
+template <typename T>
+template <typename EnableIfChar16>
 int32_t
-nsString::RFind( const nsString& aString, int32_t aOffset, int32_t aCount ) const
+nsTString<T>::RFind(const self_type& aString, int32_t aOffset, int32_t aCount) const
 {
   // this method changes the meaning of aOffset and aCount:
-  RFind_ComputeSearchRange(mLength, aString.Length(), aOffset, aCount);
+  RFind_ComputeSearchRange(this->mLength, aString.Length(), aOffset, aCount);
 
-  int32_t result = RFindSubstring(mData + aOffset, aCount, static_cast<const char16_t*>(aString.get()), aString.Length(), false);
+  // Capture the raw buffer locally to help msvc deduce the type.
+  const char_type* str = aString.get();
+  int32_t result = RFindSubstring(this->mData + aOffset, aCount, str, aString.Length(), false);
   if (result != kNotFound)
     result += aOffset;
   return result;
 }
 
+template <typename T>
+template <typename EnableIfChar16>
 int32_t
-nsString::RFind( const char16_t* aString, int32_t aOffset, int32_t aCount ) const
+nsTString<T>::RFind(const char_type* aString, int32_t aOffset, int32_t aCount) const
 {
-  return RFind(nsDependentString(aString), aOffset, aCount);
+  return RFind(nsTDependentString<T>(aString), aOffset, aCount);
 }
 
+template <typename T>
+template <typename EnableIfChar16>
 int32_t
-nsString::FindCharInSet( const char16_t* aSet, int32_t aOffset ) const
+nsTString<T>::FindCharInSet(const char* aSet, int32_t aOffset) const
 {
   if (aOffset < 0)
     aOffset = 0;
-  else if (aOffset >= int32_t(mLength))
+  else if (aOffset >= int32_t(this->mLength))
     return kNotFound;
 
-  int32_t result = ::FindCharInSet(mData + aOffset, mLength - aOffset, aSet);
+  int32_t result = ::FindCharInSet(this->mData + aOffset, this->mLength - aOffset, aSet);
   if (result != kNotFound)
     result += aOffset;
   return result;
 }
 
+template <typename T>
+template <typename EnableIfChar16>
 void
-nsString::ReplaceChar( const char16_t* aSet, char16_t aNewChar )
+nsTString<T>::ReplaceChar(const char* aSet, char16_t aNewChar)
 {
-  if (!EnsureMutable()) // XXX do this lazily?
-    AllocFailed(mLength);
+  if (!this->EnsureMutable()) // XXX do this lazily?
+    this->AllocFailed(this->mLength);
 
-  char16_t* data = mData;
-  uint32_t lenRemaining = mLength;
+  char16_t* data = this->mData;
+  uint32_t lenRemaining = this->mLength;
 
   while (lenRemaining)
   {
@@ -939,12 +947,14 @@ nsString::ReplaceChar( const char16_t* aSet, char16_t aNewChar )
  * nsTString::Compare,CompareWithConversion,etc.
  */
 
+template <typename T>
+template <typename EnableIfChar>
 int32_t
-nsCString::Compare( const char* aString, bool aIgnoreCase, int32_t aCount ) const
+nsTString<T>::Compare(const char_type* aString, bool aIgnoreCase, int32_t aCount) const
 {
   uint32_t strLen = char_traits::length(aString);
 
-  int32_t maxCount = int32_t(XPCOM_MIN(mLength, strLen));
+  int32_t maxCount = int32_t(XPCOM_MIN(this->mLength, strLen));
 
   int32_t compareCount;
   if (aCount < 0 || aCount > maxCount)
@@ -953,27 +963,29 @@ nsCString::Compare( const char* aString, bool aIgnoreCase, int32_t aCount ) cons
     compareCount = aCount;
 
   int32_t result =
-    nsBufferRoutines<char>::compare(mData, aString, compareCount, aIgnoreCase);
+    nsBufferRoutines<T>::compare(this->mData, aString, compareCount, aIgnoreCase);
 
   if (result == 0 &&
-      (aCount < 0 || strLen < uint32_t(aCount) || mLength < uint32_t(aCount)))
+      (aCount < 0 || strLen < uint32_t(aCount) || this->mLength < uint32_t(aCount)))
   {
     // Since the caller didn't give us a length to test, or strings shorter
     // than aCount, and compareCount characters matched, we have to assume
     // that the longer string is greater.
 
-    if (mLength != strLen)
-      result = (mLength < strLen) ? -1 : 1;
+    if (this->mLength != strLen)
+      result = (this->mLength < strLen) ? -1 : 1;
   }
   return result;
 }
 
+template <typename T>
+template <typename EnableIfChar16>
 bool
-nsString::EqualsIgnoreCase( const char* aString, int32_t aCount ) const
+nsTString<T>::EqualsIgnoreCase(const incompatible_char_type* aString, int32_t aCount) const
 {
   uint32_t strLen = nsCharTraits<char>::length(aString);
 
-  int32_t maxCount = int32_t(XPCOM_MIN(mLength, strLen));
+  int32_t maxCount = int32_t(XPCOM_MIN(this->mLength, strLen));
 
   int32_t compareCount;
   if (aCount < 0 || aCount > maxCount)
@@ -982,16 +994,16 @@ nsString::EqualsIgnoreCase( const char* aString, int32_t aCount ) const
     compareCount = aCount;
 
   int32_t result =
-    nsBufferRoutines<char16_t>::compare(mData, aString, compareCount, true);
+    nsBufferRoutines<T>::compare(this->mData, aString, compareCount, true);
 
   if (result == 0 &&
-      (aCount < 0 || strLen < uint32_t(aCount) || mLength < uint32_t(aCount)))
+      (aCount < 0 || strLen < uint32_t(aCount) || this->mLength < uint32_t(aCount)))
   {
     // Since the caller didn't give us a length to test, or strings shorter
     // than aCount, and compareCount characters matched, we have to assume
     // that the longer string is greater.
 
-    if (mLength != strLen)
+    if (this->mLength != strLen)
       result = 1; // Arbitrarily using any number != 0
   }
   return result == 0;
@@ -1002,17 +1014,18 @@ nsString::EqualsIgnoreCase( const char* aString, int32_t aCount ) const
  * nsTString::ToDouble
  */
 
+template <>
 double
-nsCString::ToDouble(nsresult* aErrorCode) const
+nsTString<char>::ToDouble(nsresult* aErrorCode) const
 {
   double res = 0.0;
-  if (mLength > 0)
+  if (this->mLength > 0)
   {
     char *conv_stopped;
-    const char *str = mData;
+    const char *str = this->mData;
     // Use PR_strtod, not strtod, since we don't want locale involved.
     res = PR_strtod(str, &conv_stopped);
-    if (conv_stopped == str+mLength)
+    if (conv_stopped == str+this->mLength)
       *aErrorCode = NS_OK;
     else // Not all the string was scanned
       *aErrorCode = NS_ERROR_ILLEGAL_VALUE;
@@ -1025,10 +1038,21 @@ nsCString::ToDouble(nsresult* aErrorCode) const
   return res;
 }
 
+template <>
 double
-nsString::ToDouble(nsresult* aErrorCode) const
+nsTString<char16_t>::ToDouble(nsresult* aErrorCode) const
 {
   return NS_LossyConvertUTF16toASCII(*this).ToDouble(aErrorCode);
 }
+
+template <typename T>
+float
+nsTString<T>::ToFloat(nsresult* aErrorCode) const
+{
+  return (float)ToDouble(aErrorCode);
+}
+
+template class nsTString<char>;
+template class nsTString<char16_t>;
 
 #endif // !MOZ_STRING_WITH_OBSOLETE_API

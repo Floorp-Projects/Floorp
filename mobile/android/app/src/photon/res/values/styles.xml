@@ -3,7 +3,10 @@
    - License, v. 2.0. If a copy of the MPL was not distributed with this
    - file, You can obtain one at http://mozilla.org/MPL/2.0/. -->
 
-<resources xmlns:android="http://schemas.android.com/apk/res/android" xmlns:tools="http://schemas.android.com/tools">
+<resources
+        xmlns:android="http://schemas.android.com/apk/res/android"
+        xmlns:tools="http://schemas.android.com/tools"
+        xmlns:gecko="http://schemas.android.com/apk/res-auto">
 
     <!--
         Base application styles. This could be overridden in other res/values-XXX/themes.xml.
@@ -822,6 +825,15 @@
     <style name="ActivityStreamButton" parent="Widget.AppCompat.Button.Colored">
         <item name="colorButtonNormal">@color/link_blue</item>
         <item name="android:textColor">@android:color/white</item>
+    </style>
+
+    <!-- centerInside will downscale larger icons to fit or center smaller favicons and allow us to draw a colored
+         border around them. When changing these values, consider favicons downloaded from the internet and
+         those provided by suggested sites, including suggested sites from distributions. -->
+    <style name="ActivityStreamFaviconView">
+        <item name="enableRoundCorners">false</item>
+        <item name="overrideScaleType">false</item>
+        <item name="android:scaleType">centerInside</item>
     </style>
 
     <!-- URL bar - Site identity -->

@@ -5,17 +5,12 @@
 <merge xmlns:android="http://schemas.android.com/apk/res/android"
        xmlns:gecko="http://schemas.android.com/tools">
 
-    <!-- The default visibilities are set in code.
-
-         centerInside will center smaller favicons and draw a colored border around them. -->
+    <!-- The default visibilities are set in code. -->
     <org.mozilla.gecko.widget.FaviconView
             android:id="@+id/favicon_view"
+            style="@style/ActivityStreamFaviconView"
             android:layout_width="match_parent"
-            android:layout_height="match_parent"
-            gecko:enableRoundCorners="false"
-            gecko:overrideScaleType="false"
-            android:scaleType="centerInside"
-            />
+            android:layout_height="match_parent"/>
 
     <ImageView
             android:id="@+id/image_view"

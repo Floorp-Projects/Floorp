@@ -1,21 +1,17 @@
 <?xml version="1.0" encoding="utf-8"?>
 <FrameLayout
     xmlns:android="http://schemas.android.com/apk/res/android"
-    xmlns:gecko="http://schemas.android.com/apk/res-auto"
     xmlns:tools="http://schemas.android.com/tools"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
     android:layout_marginBottom="@dimen/activity_stream_base_margin">
 
-    <!-- centerInside will center smaller favicons and draw a colored border around them. -->
     <org.mozilla.gecko.widget.FaviconView
         android:id="@+id/favicon"
+        style="@style/ActivityStreamFaviconView"
         android:layout_width="match_parent"
         android:layout_height="match_parent"
-        gecko:enableRoundCorners="false"
-        tools:background="@drawable/favicon_globe"
-        android:scaleType="centerInside"
-        gecko:overrideScaleType="false" />
+        tools:background="@drawable/favicon_globe"/>
 
     <!-- scrollHorizontally=false allows drags on the TextView to scroll the ViewPager.
          See https://stackoverflow.com/a/18171834/2219998 -->

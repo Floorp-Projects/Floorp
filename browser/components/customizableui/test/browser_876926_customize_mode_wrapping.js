@@ -15,15 +15,30 @@ function checkWrapper(id) {
   is(document.querySelectorAll("#wrapper-" + id).length, 1, "There should be exactly 1 wrapper for " + id + " in the customizing window.");
 }
 
+async function ensureVisibleIfInPalette(node) {
+    if (node.parentNode.parentNode == gNavToolbox.palette) {
+      node.scrollIntoView();
+      window.QueryInterface(Ci.nsIInterfaceRequestor);
+      let dwu = window.getInterface(Ci.nsIDOMWindowUtils);
+      await BrowserTestUtils.waitForCondition(() => {
+        let nodeBounds = dwu.getBoundsWithoutFlushing(node);
+        let paletteBounds = dwu.getBoundsWithoutFlushing(gNavToolbox.palette);
+        return nodeBounds.top >= paletteBounds.top && nodeBounds.bottom <= paletteBounds.bottom;
+      });
+    }
+}
+
 var move = {
-  "drag": function(id, target) {
+  "drag": async function(id, target) {
     let targetNode = document.getElementById(target);
     if (targetNode.customizationTarget) {
       targetNode = targetNode.customizationTarget;
     }
-    simulateItemDrag(document.getElementById(id), targetNode);
+    let nodeToMove = document.getElementById(id);
+    await ensureVisibleIfInPalette(nodeToMove);
+    simulateItemDrag(nodeToMove, targetNode);
   },
-  "dragToItem": function(id, target) {
+  "dragToItem": async function(id, target) {
     let targetNode = document.getElementById(target);
     if (targetNode.customizationTarget) {
       targetNode = targetNode.customizationTarget;
@@ -34,7 +49,9 @@ var move = {
     } else {
       targetNode = items[0];
     }
-    simulateItemDrag(document.getElementById(id), targetNode);
+    let nodeToMove = document.getElementById(id);
+    await ensureVisibleIfInPalette(nodeToMove);
+    simulateItemDrag(nodeToMove, targetNode);
   },
   "API": function(id, target) {
     if (target == kVisiblePalette) {
@@ -90,10 +107,10 @@ function isFirst(containerId, defaultPlacements, id) {
      "Widget " + id + " should be in " + containerId + " in other window.");
 }
 
-function checkToolbar(id, method) {
+async function checkToolbar(id, method) {
   // Place at start of the toolbar:
   let toolbarPlacements = getAreaWidgetIds(kToolbar);
-  move[method](id, kToolbar);
+  await move[method](id, kToolbar);
   if (method == "dragToItem") {
     isFirst(kToolbar, toolbarPlacements, id);
   } else if (method == "drag") {
@@ -104,9 +121,9 @@ function checkToolbar(id, method) {
   checkWrapper(id);
 }
 
-function checkPanel(id, method) {
+async function checkPanel(id, method) {
   let panelPlacements = getAreaWidgetIds(kPanel);
-  move[method](id, kPanel);
+  await move[method](id, kPanel);
   let children = document.getElementById(kPanel).querySelectorAll("toolbarpaletteitem:not(." + kPlaceholderClass + ")");
   let otherChildren = otherWin.document.getElementById(kPanel).children;
   let newPlacements = panelPlacements.concat([id]);
@@ -128,9 +145,9 @@ function checkPanel(id, method) {
   checkWrapper(id);
 }
 
-function checkPalette(id, method) {
+async function checkPalette(id, method) {
   // Move back to palette:
-  move[method](id, kVisiblePalette);
+  await move[method](id, kVisiblePalette);
   ok(CustomizableUI.inDefaultState, "Should end in default state");
   let visibleChildren = gCustomizeMode.visiblePalette.children;
   let expectedChild = method == "dragToItem" ? visibleChildren[0] : visibleChildren[visibleChildren.length - 1];
@@ -170,19 +187,19 @@ add_task(async function MoveWidgetsInTwoWindows() {
   for (let widgetId of [kXULWidgetId, kAPIWidgetId]) {
     for (let method of ["API", "drag", "dragToItem"]) {
       info("Moving widget " + widgetId + " using " + method);
-      checkToolbar(widgetId, method);
+      await checkToolbar(widgetId, method);
       // We add an item to the panel because otherwise we can't test dragging
       // to items that are already there. We remove it because
       // 'checkPalette' checks that we leave the browser in the default state.
       CustomizableUI.addWidgetToArea("cui-mode-wrapping-some-panel-item", CustomizableUI.AREA_FIXED_OVERFLOW_PANEL);
-      checkPanel(widgetId, method);
+      await checkPanel(widgetId, method);
       CustomizableUI.removeWidgetFromArea("cui-mode-wrapping-some-panel-item");
-      checkPalette(widgetId, method);
+      await checkPalette(widgetId, method);
       CustomizableUI.addWidgetToArea("cui-mode-wrapping-some-panel-item", CustomizableUI.AREA_FIXED_OVERFLOW_PANEL);
-      checkPanel(widgetId, method);
-      checkToolbar(widgetId, method);
+      await checkPanel(widgetId, method);
+      await checkToolbar(widgetId, method);
       CustomizableUI.removeWidgetFromArea("cui-mode-wrapping-some-panel-item");
-      checkPalette(widgetId, method);
+      await checkPalette(widgetId, method);
     }
   }
   await promiseWindowClosed(otherWin);
