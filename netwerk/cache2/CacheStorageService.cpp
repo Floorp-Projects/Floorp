@@ -2035,7 +2035,10 @@ CacheStorageService::GetCacheEntryInfo(CacheEntry* aEntry,
 uint32_t CacheStorageService::CacheQueueSize(bool highPriority)
 {
   RefPtr<CacheIOThread> thread = CacheFileIOManager::IOThread();
-  MOZ_ASSERT(thread);
+  // The thread will be null at shutdown.
+  if (!thread) {
+    return 0;
+  }
   return thread->QueueSize(highPriority);
 }
 

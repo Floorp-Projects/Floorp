@@ -1,8 +1,12 @@
+import json
 import urlparse
 
 import error
 import transport
 
+from mozlog import get_default_logger
+
+logger = get_default_logger()
 
 element_key = "element-6066-11e4-a52e-4f735466cecf"
 
@@ -424,7 +428,12 @@ class Session(object):
             an error.
         """
         response = self.transport.send(method, url, body)
-        value = response.body["value"]
+
+        if "value" in response.body:
+            value = response.body["value"]
+        else:
+            raise error.UnknownErrorException("No 'value' key in response body:\n%s" %
+                                              json.dumps(response.body))
 
         if response.status != 200:
             cls = error.get(value.get("error"))

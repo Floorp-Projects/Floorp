@@ -790,18 +790,21 @@ IonBuilder::inlineArrayJoin(CallInfo& callInfo)
 IonBuilder::InliningResult
 IonBuilder::inlineArrayPush(CallInfo& callInfo)
 {
-    if (callInfo.argc() != 1 || callInfo.constructing()) {
+    const uint32_t inlineArgsLimit = 10;
+    if (callInfo.argc() < 1 || callInfo.argc() > inlineArgsLimit || callInfo.constructing()) {
         trackOptimizationOutcome(TrackedOutcome::CantInlineNativeBadForm);
         return InliningStatus_NotInlined;
     }
 
     MDefinition* obj = convertUnboxedObjects(callInfo.thisArg());
-    MDefinition* value = callInfo.getArg(0);
-    if (PropertyWriteNeedsTypeBarrier(alloc(), constraints(), current,
-                                      &obj, nullptr, &value, /* canModify = */ false))
-    {
-        trackOptimizationOutcome(TrackedOutcome::NeedsTypeBarrier);
-        return InliningStatus_NotInlined;
+    for (uint32_t i = 0; i < callInfo.argc(); i++) {
+        MDefinition* value = callInfo.getArg(i);
+        if (PropertyWriteNeedsTypeBarrier(alloc(), constraints(), current,
+                                          &obj, nullptr, &value, /* canModify = */ false))
+        {
+            trackOptimizationOutcome(TrackedOutcome::NeedsTypeBarrier);
+            return InliningStatus_NotInlined;
+        }
     }
 
     if (getInlineReturnType() != MIRType::Int32)
@@ -845,23 +848,72 @@ IonBuilder::inlineArrayPush(CallInfo& callInfo)
 
     callInfo.setImplicitlyUsedUnchecked();
 
-    if (conversion == TemporaryTypeSet::AlwaysConvertToDoubles ||
-        conversion == TemporaryTypeSet::MaybeConvertToDoubles)
-    {
-        MInstruction* valueDouble = MToDouble::New(alloc(), value);
-        current->add(valueDouble);
-        value = valueDouble;
-    }
+    bool toDouble =
+        conversion == TemporaryTypeSet::AlwaysConvertToDoubles ||
+        conversion == TemporaryTypeSet::MaybeConvertToDoubles;
 
     if (unboxedType == JSVAL_TYPE_MAGIC)
         obj = addMaybeCopyElementsForWrite(obj, /* checkNative = */ false);
 
-    if (needsPostBarrier(value))
-        current->add(MPostWriteBarrier::New(alloc(), obj, value));
+    // If we have more than one argument, we are splitting the function into
+    // multiple inlined calls to Array.push.
+    //
+    // Still, in case of bailouts, we have to keep the atomicity of the call, as
+    // we cannot resume within Array.push function. To do so, we register a
+    // resume point which would be captured by the upcoming MArrayPush
+    // instructions, and this resume point contains an instruction which
+    // truncates the length of the Array, to its original length in case of
+    // bailouts, and resume before the Array.push call.
+    MResumePoint* lastRp = nullptr;
+    MInstruction* truncate = nullptr;
+    if (callInfo.argc() > 1) {
+        MInstruction* elements = MElements::New(alloc(), obj);
+        MInstruction* length = MArrayLength::New(alloc(), elements);
+        truncate = MSetArrayLength::New(alloc(), obj, length);
+        truncate->setRecoveredOnBailout();
 
-    MArrayPush* ins = MArrayPush::New(alloc(), obj, value, unboxedType);
-    current->add(ins);
+        current->add(elements);
+        current->add(length);
+        current->add(truncate);
+
+        // Restore the stack, such that resume points are created with the stack
+        // as it was before the call.
+        callInfo.pushFormals(current);
+    }
+
+    MInstruction* ins = nullptr;
+    for (uint32_t i = 0; i < callInfo.argc(); i++) {
+        MDefinition* value = callInfo.getArg(i);
+        if (toDouble) {
+            MInstruction* valueDouble = MToDouble::New(alloc(), value);
+            current->add(valueDouble);
+            value = valueDouble;
+        }
+
+        if (needsPostBarrier(value))
+            current->add(MPostWriteBarrier::New(alloc(), obj, value));
+
+        ins = MArrayPush::New(alloc(), obj, value, unboxedType);
+        current->add(ins);
+
+        if (callInfo.argc() > 1) {
+            // Restore that call stack and the array length.
+            MOZ_TRY(resumeAt(ins, pc));
+            ins->resumePoint()->addStore(alloc(), truncate, lastRp);
+            lastRp = ins->resumePoint();
+        }
+    }
+
+    if (callInfo.argc() > 1) {
+        // Fix the stack to represent the state after the call execution.
+        callInfo.popFormals(current);
+    }
     current->push(ins);
+
+    if (callInfo.argc() > 1) {
+        ins = MNop::New(alloc());
+        current->add(ins);
+    }
 
     MOZ_TRY(resumeAfter(ins));
     return InliningStatus_Inlined;

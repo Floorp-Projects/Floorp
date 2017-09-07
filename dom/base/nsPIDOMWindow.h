@@ -786,6 +786,9 @@ public:
   // keep the same document active but create a new window.
   inline bool HasActiveDocument();
 
+  // Returns true if this window is the same as mTopInnerWindow
+  inline bool IsTopInnerWindow() const;
+
   bool AddAudioContext(mozilla::dom::AudioContext* aAudioContext);
   void RemoveAudioContext(mozilla::dom::AudioContext* aAudioContext);
   void MuteAudioContexts();

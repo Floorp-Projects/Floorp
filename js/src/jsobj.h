@@ -770,16 +770,31 @@ DefineProperty(JSContext* cx, HandleObject obj, HandleId id,
                Handle<JS::PropertyDescriptor> desc, ObjectOpResult& result);
 
 extern bool
-DefineProperty(JSContext* cx, HandleObject obj, HandleId id, HandleValue value,
-               JSGetterOp getter, JSSetterOp setter, unsigned attrs, ObjectOpResult& result);
+DefineAccessorProperty(JSContext* cx, HandleObject obj, HandleId id,
+                       JSGetterOp getter, JSSetterOp setter, unsigned attrs,
+                       ObjectOpResult& result);
 
 extern bool
-DefineProperty(JSContext* cx, HandleObject obj, PropertyName* name, HandleValue value,
-               JSGetterOp getter, JSSetterOp setter, unsigned attrs, ObjectOpResult& result);
+DefineDataProperty(JSContext* cx, HandleObject obj, HandleId id, HandleValue value,
+                   unsigned attrs, ObjectOpResult& result);
 
 extern bool
-DefineElement(JSContext* cx, HandleObject obj, uint32_t index, HandleValue value,
-              JSGetterOp getter, JSSetterOp setter, unsigned attrs, ObjectOpResult& result);
+DefineAccessorProperty(JSContext* cx, HandleObject obj, PropertyName* name,
+                       JSGetterOp getter, JSSetterOp setter, unsigned attrs,
+                       ObjectOpResult& result);
+
+extern bool
+DefineDataProperty(JSContext* cx, HandleObject obj, PropertyName* name, HandleValue value,
+                   unsigned attrs, ObjectOpResult& result);
+
+extern bool
+DefineAccessorElement(JSContext* cx, HandleObject obj, uint32_t index,
+                      JSGetterOp getter, JSSetterOp setter, unsigned attrs,
+                      ObjectOpResult& result);
+
+extern bool
+DefineDataElement(JSContext* cx, HandleObject obj, uint32_t index, HandleValue value,
+                  unsigned attrs, ObjectOpResult& result);
 
 /*
  * When the 'result' out-param is omitted, the behavior is the same as above, except
@@ -789,22 +804,28 @@ extern bool
 DefineProperty(JSContext* cx, HandleObject obj, HandleId id, Handle<JS::PropertyDescriptor> desc);
 
 extern bool
-DefineProperty(JSContext* cx, HandleObject obj, HandleId id, HandleValue value,
-               JSGetterOp getter = nullptr,
-               JSSetterOp setter = nullptr,
-               unsigned attrs = JSPROP_ENUMERATE);
+DefineAccessorProperty(JSContext* cx, HandleObject obj, HandleId id,
+                       JSGetterOp getter, JSSetterOp setter, unsigned attrs = JSPROP_ENUMERATE);
 
 extern bool
-DefineProperty(JSContext* cx, HandleObject obj, PropertyName* name, HandleValue value,
-               JSGetterOp getter = nullptr,
-               JSSetterOp setter = nullptr,
-               unsigned attrs = JSPROP_ENUMERATE);
+DefineDataProperty(JSContext* cx, HandleObject obj, HandleId id, HandleValue value,
+                   unsigned attrs = JSPROP_ENUMERATE);
 
 extern bool
-DefineElement(JSContext* cx, HandleObject obj, uint32_t index, HandleValue value,
-              JSGetterOp getter = nullptr,
-              JSSetterOp setter = nullptr,
-              unsigned attrs = JSPROP_ENUMERATE);
+DefineAccessorProperty(JSContext* cx, HandleObject obj, PropertyName* name,
+                       JSGetterOp getter, JSSetterOp setter, unsigned attrs = JSPROP_ENUMERATE);
+
+extern bool
+DefineDataProperty(JSContext* cx, HandleObject obj, PropertyName* name, HandleValue value,
+                   unsigned attrs = JSPROP_ENUMERATE);
+
+extern bool
+DefineAccessorElement(JSContext* cx, HandleObject obj, uint32_t index,
+                      JSGetterOp getter, JSSetterOp setter, unsigned attrs = JSPROP_ENUMERATE);
+
+extern bool
+DefineDataElement(JSContext* cx, HandleObject obj, uint32_t index, HandleValue value,
+                  unsigned attrs = JSPROP_ENUMERATE);
 
 /*
  * ES6 [[Has]]. Set *foundp to true if `id in obj` (that is, if obj has an own

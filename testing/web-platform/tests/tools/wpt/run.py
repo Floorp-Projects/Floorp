@@ -65,7 +65,17 @@ def args_general(kwargs):
     kwargs.set_if_none("metadata_root", wpt_root)
     kwargs.set_if_none("manifest_update", True)
 
-    if kwargs["ssl_type"] == "openssl":
+    if kwargs["ssl_type"] in (None, "pregenerated"):
+        cert_root = os.path.join(wpt_root, "tools", "certs")
+        if kwargs["ca_cert_path"] is None:
+            kwargs["ca_cert_path"] = os.path.join(cert_root, "cacert.pem")
+
+        if kwargs["host_key_path"] is None:
+            kwargs["host_key_path"] = os.path.join(cert_root, "web-platform.test.key")
+
+        if kwargs["host_cert_path"] is None:
+            kwargs["host_cert_path"] = os.path.join(cert_root, "web-platform.test.pem")
+    elif kwargs["ssl_type"] == "openssl":
         if not find_executable(kwargs["openssl_binary"]):
             if os.uname()[0] == "Windows":
                 raise WptrunError("""OpenSSL binary not found. If you need HTTPS tests, install OpenSSL from
@@ -254,6 +264,27 @@ https://developer.microsoft.com/en-us/microsoft-edge/tools/webdriver/
             kwargs["webdriver_binary"] = webdriver_binary
 
 
+class InternetExplorer(BrowserSetup):
+    name = "ie"
+    browser_cls = browser.InternetExplorer
+
+    def install(self, venv):
+        raise NotImplementedError
+
+    def setup_kwargs(self, kwargs):
+        if kwargs["webdriver_binary"] is None:
+            webdriver_binary = self.browser.find_webdriver()
+
+            if webdriver_binary is None:
+                raise WptrunError("""Unable to find WebDriver and we aren't yet clever enough to work out which
+version to download. Please go to the following URL and install the driver for Internet Explorer
+somewhere on the %PATH%:
+
+https://selenium-release.storage.googleapis.com/index.html
+""")
+            kwargs["webdriver_binary"] = webdriver_binary
+
+
 class Sauce(BrowserSetup):
     name = "sauce"
     browser_cls = browser.Sauce
@@ -287,6 +318,7 @@ product_setup = {
     "firefox": Firefox,
     "chrome": Chrome,
     "edge": Edge,
+    "ie": InternetExplorer,
     "servo": Servo,
     "sauce": Sauce,
 }

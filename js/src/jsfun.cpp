@@ -438,15 +438,14 @@ ResolveInterpretedFunctionPrototype(JSContext* cx, HandleFunction fun, HandleId 
     // back with a .constructor.
     if (!isStarGenerator && !isAsyncGenerator) {
         RootedValue objVal(cx, ObjectValue(*fun));
-        if (!DefineProperty(cx, proto, cx->names().constructor, objVal, nullptr, nullptr, 0))
+        if (!DefineDataProperty(cx, proto, cx->names().constructor, objVal, 0))
             return false;
     }
 
     // Per ES5 15.3.5.2 a user-defined function's .prototype property is
     // initially non-configurable, non-enumerable, and writable.
     RootedValue protoVal(cx, ObjectValue(*proto));
-    return DefineProperty(cx, fun, id, protoVal, nullptr, nullptr,
-                          JSPROP_PERMANENT | JSPROP_RESOLVING);
+    return DefineDataProperty(cx, fun, id, protoVal, JSPROP_PERMANENT | JSPROP_RESOLVING);
 }
 
 bool
@@ -2441,7 +2440,7 @@ js::DefineFunction(JSContext* cx, HandleObject obj, HandleId id, Native native,
         return nullptr;
 
     RootedValue funVal(cx, ObjectValue(*fun));
-    if (!DefineProperty(cx, obj, id, funVal, nullptr, nullptr, flags & ~JSFUN_FLAGS_MASK))
+    if (!DefineDataProperty(cx, obj, id, funVal, flags & ~JSFUN_FLAGS_MASK))
         return nullptr;
 
     return fun;

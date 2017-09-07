@@ -202,6 +202,7 @@ preprocess_text_hangul (const hb_ot_shape_plan_t *plan,
       if (start < end && end == buffer->out_len)
       {
 	/* Tone mark follows a valid syllable; move it in front, unless it's zero width. */
+        buffer->unsafe_to_break_from_outbuffer (start, buffer->idx);
 	buffer->next_glyph ();
 	if (!is_zero_width_char (font, u))
 	{
@@ -258,6 +259,7 @@ preprocess_text_hangul (const hb_ot_shape_plan_t *plan,
 	  else
 	    t = 0; /* The next character was not a trailing jamo. */
 	}
+	buffer->unsafe_to_break (buffer->idx, buffer->idx + (t ? 3 : 2));
 
 	/* We've got a syllable <L,V,T?>; see if it can potentially be composed. */
 	if (isCombiningL (l) && isCombiningV (v) && (t == 0 || isCombiningT (t)))
@@ -322,6 +324,8 @@ preprocess_text_hangul (const hb_ot_shape_plan_t *plan,
 	  end = start + 1;
 	  continue;
 	}
+	else
+	  buffer->unsafe_to_break (buffer->idx, buffer->idx + 2); /* Mark unsafe between LV and T. */
       }
 
       /* Otherwise, decompose if font doesn't support <LV> or <LVT>,
@@ -368,6 +372,8 @@ preprocess_text_hangul (const hb_ot_shape_plan_t *plan,
 	    buffer->merge_out_clusters (start, end);
 	  continue;
 	}
+	else if ((!tindex && buffer->idx + 1 < count && isT (buffer->cur(+1).codepoint)))
+	  buffer->unsafe_to_break (buffer->idx, buffer->idx + 2); /* Mark unsafe between LV and T. */
       }
 
       if (has_glyph)

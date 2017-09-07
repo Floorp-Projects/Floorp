@@ -224,7 +224,7 @@ struct hb_ot_face_cbdt_accelerator_t
   const OT::CBDT *cbdt;
 
   unsigned int cbdt_len;
-  float upem;
+  unsigned int upem;
 
   inline void init (hb_face_t *face)
   {
@@ -254,11 +254,11 @@ struct hb_ot_face_cbdt_accelerator_t
   {
     unsigned int x_ppem = upem, y_ppem = upem; /* TODO Use font ppem if available. */
 
-    if (cblc == NULL)
+    if (!cblc)
       return false;  // Not a color bitmap font.
 
     const OT::IndexSubtableRecord *subtable_record = this->cblc->find_table(glyph, &x_ppem, &y_ppem);
-    if (subtable_record == NULL)
+    if (!subtable_record || !x_ppem || !y_ppem)
       return false;
 
     if (subtable_record->get_extents (extents))

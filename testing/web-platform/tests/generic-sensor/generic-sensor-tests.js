@@ -36,7 +36,6 @@ function reading_to_array(sensor) {
 }
 
 function runGenericSensorTests(sensorType) {
-  const prefix = sensorType.name + ": ";
   async_test(t => {
     let sensor = new sensorType();
     sensor.onreading = t.step_func_done(() => {
@@ -46,7 +45,7 @@ function runGenericSensorTests(sensorType) {
     });
     sensor.onerror = t.step_func_done(unreached);
     sensor.start();
-  }, prefix + "Test that 'onreading' is called and sensor reading is valid");
+  }, `${sensorType.name}: Test that 'onreading' is called and sensor reading is valid`);
 
   async_test(t => {
     let sensor1 = new sensorType();
@@ -68,7 +67,7 @@ function runGenericSensorTests(sensorType) {
     sensor2.onerror = t.step_func_done(unreached);
     sensor1.start();
     sensor2.start();
-  }, prefix + "sensor reading is correct");
+  }, `${sensorType.name}: sensor reading is correct`);
 
   async_test(t => {
     let sensor = new sensorType();
@@ -86,7 +85,7 @@ function runGenericSensorTests(sensorType) {
         sensor.stop();
       });
     }, 1000);
-  }, prefix + "sensor timestamp is updated when time passes");
+  }, `${sensorType.name}: sensor timestamp is updated when time passes`);
 
   async_test(t => {
     let sensor = new sensorType();
@@ -99,7 +98,7 @@ function runGenericSensorTests(sensorType) {
     });
     sensor.start();
     assert_false(sensor.activated);
-  }, prefix + "Test that sensor can be successfully created and its states are correct.");
+  }, `${sensorType.name}: Test that sensor can be successfully created and its states are correct.`);
 
   test(() => {
     let sensor, start_return;
@@ -108,7 +107,7 @@ function runGenericSensorTests(sensorType) {
     start_return = sensor.start();
     assert_equals(start_return, undefined);
     sensor.stop();
-  }, prefix + "sensor.start() returns undefined");
+  }, `${sensorType.name}: sensor.start() returns undefined`);
 
   test(() => {
     try {
@@ -121,7 +120,7 @@ function runGenericSensorTests(sensorType) {
     } catch (e) {
        assert_unreached(e.name + ": " + e.message);
     }
-  }, prefix + "no exception is thrown when calling start() on already started sensor");
+  }, `${sensorType.name}: no exception is thrown when calling start() on already started sensor`);
 
   test(() => {
     let sensor, stop_return;
@@ -130,7 +129,7 @@ function runGenericSensorTests(sensorType) {
     sensor.start();
     stop_return = sensor.stop();
     assert_equals(stop_return, undefined);
-  }, prefix + "sensor.stop() returns undefined");
+  }, `${sensorType.name}: sensor.stop() returns undefined`);
 
   test(() => {
     try {
@@ -143,7 +142,7 @@ function runGenericSensorTests(sensorType) {
     } catch (e) {
        assert_unreached(e.name + ": " + e.message);
     }
-  }, prefix + "no exception is thrown when calling stop() on already stopped sensor");
+  }, `${sensorType.name}: no exception is thrown when calling stop() on already stopped sensor`);
 
   promise_test(() => {
     return new Promise((resolve,reject) => {
@@ -170,7 +169,7 @@ function runGenericSensorTests(sensorType) {
         }
       }
     });
-  }, prefix + "throw a 'SecurityError' when constructing sensor object within iframe");
+  }, `${sensorType.name}: throw a 'SecurityError' when constructing sensor object within iframe`);
 
   async_test(t => {
     let sensor = new sensorType();
@@ -188,18 +187,16 @@ function runGenericSensorTests(sensorType) {
     });
     sensor.onerror = t.step_func_done(unreached);
     sensor.start();
-  }, prefix + "sensor readings can not be fired on the background tab");
+  }, `${sensorType.name}: sensor readings can not be fired on the background tab`);
 }
 
 function runGenericSensorInsecureContext(sensorType) {
-  const prefix = sensorType.name + ": ";
   test(() => {
     assert_throws('SecurityError', () => { new sensorType(); });
-  }, prefix + "throw a 'SecurityError' when construct sensor in an insecure context");
+  }, `${sensorType.name}: throw a 'SecurityError' when construct sensor in an insecure context`);
 }
 
 function runGenericSensorOnerror(sensorType) {
-  const prefix = sensorType.name + ": ";
   async_test(t => {
     let sensor = new sensorType();
     sensor.onactivate = t.step_func_done(assert_unreached);
@@ -208,5 +205,5 @@ function runGenericSensorOnerror(sensorType) {
       assert_equals(event.error.name, 'NotReadableError');
     });
     sensor.start();
-  }, prefix + "'onerror' event is fired when sensor is not supported");
+  }, `${sensorType.name}: 'onerror' event is fired when sensor is not supported`);
 }

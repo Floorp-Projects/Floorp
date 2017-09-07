@@ -195,11 +195,6 @@ NS_IMETHODIMP JumpListShortcut::GetApp(nsILocalHandlerApp **aApp)
 NS_IMETHODIMP JumpListShortcut::SetApp(nsILocalHandlerApp *aApp)
 {
   mHandlerApp = aApp;
-
-  // Confirm the app is present on the system
-  if (!ExecutableExists(mHandlerApp))
-    return NS_ERROR_FILE_NOT_FOUND;
-
   return NS_OK;
 }
 
@@ -613,24 +608,6 @@ nsresult JumpListLink::GetJumpListLink(IShellItem *pItem, nsCOMPtr<nsIJumpListLi
   }
 
   return NS_OK;
-}
-
-// Confirm the app is on the system
-bool JumpListShortcut::ExecutableExists(nsCOMPtr<nsILocalHandlerApp>& handlerApp)
-{
-  nsresult rv;
-
-  if (!handlerApp)
-    return false;
-
-  nsCOMPtr<nsIFile> executable;
-  rv = handlerApp->GetExecutable(getter_AddRefs(executable));
-  if (NS_SUCCEEDED(rv) && executable) {
-    bool exists;
-    executable->Exists(&exists);
-    return exists;
-  }
-  return false;
 }
 
 } // namespace widget
