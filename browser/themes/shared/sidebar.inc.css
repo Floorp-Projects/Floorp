@@ -11,15 +11,18 @@
   padding: 8px;
 }
 
+%ifndef MOZ_WIDGET_GTK
+% We don't let the splitter overlap the sidebar on Linux since the sidebar's
+% scrollbar is too narrow on Linux.
 .sidebar-splitter {
   -moz-appearance: none;
   border: 0 solid;
   border-inline-end-width: 1px;
   min-width: 1px;
-  width: 8px;
+  width: 4px;
   background-image: none !important;
   background-color: transparent;
-  margin-inline-start: -8px;
+  margin-inline-start: -4px;
   position: relative;
 }
 
@@ -27,8 +30,9 @@
   border-inline-end-width: 0;
   border-inline-start-width: 1px;
   margin-inline-start: 0;
-  margin-inline-end: -8px;
+  margin-inline-end: -4px;
 }
+%endif
 
 #sidebar-throbber[loading="true"] {
   list-style-image: url("chrome://global/skin/icons/loading.png");
