@@ -89,7 +89,6 @@ import org.mozilla.gecko.delegates.ScreenshotDelegate;
 import org.mozilla.gecko.distribution.Distribution;
 import org.mozilla.gecko.distribution.DistributionStoreCallback;
 import org.mozilla.gecko.dlc.DownloadContentService;
-import org.mozilla.gecko.extensions.ExtensionPermissionsHelper;
 import org.mozilla.gecko.firstrun.FirstrunAnimationContainer;
 import org.mozilla.gecko.gfx.DynamicToolbarAnimator;
 import org.mozilla.gecko.gfx.DynamicToolbarAnimator.PinReason;
@@ -315,8 +314,6 @@ public class BrowserApp extends GeckoApp
     private ReadingListHelper mReadingListHelper;
 
     private AccountsHelper mAccountsHelper;
-
-    private ExtensionPermissionsHelper mExtensionPermissionsHelper;
 
     // The tab to be selected on editing mode exit.
     private Integer mTargetTabForEditingMode;
@@ -821,7 +818,6 @@ public class BrowserApp extends GeckoApp
         mSharedPreferencesHelper = new SharedPreferencesHelper(appContext);
         mReadingListHelper = new ReadingListHelper(appContext, profile);
         mAccountsHelper = new AccountsHelper(appContext, profile);
-        mExtensionPermissionsHelper = new ExtensionPermissionsHelper(this);
 
         if (AppConstants.MOZ_ANDROID_BEAM) {
             NfcAdapter nfc = NfcAdapter.getDefaultAdapter(this);
@@ -1538,11 +1534,6 @@ public class BrowserApp extends GeckoApp
         if (mAccountsHelper != null) {
             mAccountsHelper.uninit();
             mAccountsHelper = null;
-        }
-
-        if (mExtensionPermissionsHelper != null) {
-            mExtensionPermissionsHelper.uninit();
-            mExtensionPermissionsHelper = null;
         }
 
         mSearchEngineManager.unregisterListeners();
