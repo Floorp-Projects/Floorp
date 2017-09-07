@@ -393,10 +393,6 @@
         </service>
 
         <receiver
-            android:name="org.mozilla.gecko.feeds.FeedAlarmReceiver"
-            android:exported="false" />
-
-        <receiver
             android:name="org.mozilla.gecko.PackageReplacedReceiver"
             android:exported="false">
             <intent-filter>
