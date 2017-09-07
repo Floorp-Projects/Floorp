@@ -110,7 +110,10 @@ nsXULCommandDispatcher::GetRootFocusedContentAndWindow(nsPIDOMWindowOuter** aWin
 
   if (nsCOMPtr<nsPIDOMWindowOuter> win = mDocument->GetWindow()) {
     if (nsCOMPtr<nsPIDOMWindowOuter> rootWindow = win->GetPrivateRoot()) {
-      return nsFocusManager::GetFocusedDescendant(rootWindow, true, aWindow);
+      return nsFocusManager::GetFocusedDescendant(
+                               rootWindow,
+                               nsFocusManager::eIncludeAllDescendants,
+                               aWindow);
     }
   }
 
@@ -438,7 +441,7 @@ nsXULCommandDispatcher::GetControllers(nsIControllers** aResult)
   nsCOMPtr<nsPIWindowRoot> root = GetWindowRoot();
   NS_ENSURE_TRUE(root, NS_ERROR_FAILURE);
 
-  return root->GetControllers(aResult);
+  return root->GetControllers(false /* for any window */, aResult);
 }
 
 NS_IMETHODIMP
@@ -447,7 +450,8 @@ nsXULCommandDispatcher::GetControllerForCommand(const char *aCommand, nsIControl
   nsCOMPtr<nsPIWindowRoot> root = GetWindowRoot();
   NS_ENSURE_TRUE(root, NS_ERROR_FAILURE);
 
-  return root->GetControllerForCommand(aCommand, _retval);
+  return root->GetControllerForCommand(aCommand, false /* for any window */,
+                                       _retval);
 }
 
 NS_IMETHODIMP
