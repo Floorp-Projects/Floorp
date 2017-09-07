@@ -45,7 +45,6 @@ function ok(condition, message) {
   dump('condition: ' + condition  + ', ' + message + '\n');
   if (!condition) {
     sendAsyncMessage("cpows:fail", { message: message });
-    throw 'failed check: ' + message;
   }
 }
 

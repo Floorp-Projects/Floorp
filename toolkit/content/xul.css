@@ -451,7 +451,7 @@ panel[type="arrow"] {
    lot faster. In fact, Gecko no longer triggers shadow shape recomputations
    for repaints.
    These properties are not implemented on other platforms. */
-panel[type="arrow"]:not([animate="false"]) {
+panel[type="arrow"][side]:not([animate="false"]) {
   -moz-window-opacity: 0;
   -moz-window-transform: translateY(-70px);
   transition-property: -moz-window-transform, -moz-window-opacity;
@@ -472,13 +472,13 @@ panel[type="arrow"][side][animate="open"] {
     var(--animation-easing-function), ease-in-out;
 }
 
-panel[type="arrow"][animate="cancel"] {
+panel[type="arrow"][side][animate="cancel"] {
   -moz-window-transform: none;
 }
 
 %elifndef MOZ_WIDGET_GTK
 
-panel[type="arrow"]:not([animate="false"]) {
+panel[type="arrow"][side]:not([animate="false"]) {
   opacity: 0;
   transform: translateY(-70px);
   transition-property: transform, opacity;
@@ -499,7 +499,7 @@ panel[type="arrow"][side][animate="open"] {
     var(--animation-easing-function), ease-in-out;
 }
 
-panel[type="arrow"][animate="cancel"] {
+panel[type="arrow"][side][animate="cancel"] {
   transform: none;
 }
 

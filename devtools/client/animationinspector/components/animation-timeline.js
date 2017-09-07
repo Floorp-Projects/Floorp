@@ -7,7 +7,7 @@
 "use strict";
 
 const {Task} = require("devtools/shared/task");
-const EventEmitter = require("devtools/shared/old-event-emitter");
+const EventEmitter = require("devtools/shared/event-emitter");
 const {
   createNode,
   findOptimalTimeInterval,
@@ -314,7 +314,7 @@ AnimationsTimeline.prototype = {
     }, TIMELINE_BACKGROUND_RESIZE_DEBOUNCE_TIMER);
   },
 
-  onAnimationSelected: Task.async(function* (e, animation) {
+  onAnimationSelected: Task.async(function* (animation) {
     let index = this.animations.indexOf(animation);
     if (index === -1) {
       return;
@@ -353,7 +353,7 @@ AnimationsTimeline.prototype = {
       yield this.details.render(animation, this.tracksMap.get(animation));
       this.animationAnimationNameEl.textContent = getFormattedAnimationTitle(animation);
     }
-    this.onTimelineDataChanged(null, { time: this.currentTime || 0 });
+    this.onTimelineDataChanged({ time: this.currentTime || 0 });
     this.emit("animation-selected", animation);
   }),
 
@@ -521,12 +521,12 @@ AnimationsTimeline.prototype = {
     if (this.animations.length === 1) {
       // Display animation's detail if there is only one animation,
       // even if the detail pane is closing.
-      yield this.onAnimationSelected(null, this.animations[0]);
+      yield this.onAnimationSelected(this.animations[0]);
     } else if (this.animationRootEl.classList.contains("animation-detail-visible") &&
                this.animations.indexOf(this.selectedAnimation) >= 0) {
       // animation's detail displays in case of the previously displayed animation is
       // included in timeline list and the detail pane is not closing.
-      yield this.onAnimationSelected(null, this.selectedAnimation);
+      yield this.onAnimationSelected(this.selectedAnimation);
     } else {
       // Otherwise, close detail pane.
       this.onDetailCloseButtonClick();
@@ -643,7 +643,7 @@ AnimationsTimeline.prototype = {
     }
   },
 
-  onTimelineDataChanged: function (e, { time }) {
+  onTimelineDataChanged: function ({ time }) {
     this.currentTime = time;
     const indicateTime =
       TimeScale.minStartTime === Infinity ? 0 : this.currentTime + TimeScale.minStartTime;

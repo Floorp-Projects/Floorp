@@ -4,6 +4,7 @@
 """
 Common functions for both push-apk and push-apk-breakpoint.
 """
+from __future__ import absolute_import, print_function, unicode_literals
 
 import re
 

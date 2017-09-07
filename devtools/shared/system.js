@@ -9,7 +9,6 @@ const { Task } = require("devtools/shared/task");
 loader.lazyRequireGetter(this, "Services");
 loader.lazyRequireGetter(this, "promise");
 loader.lazyRequireGetter(this, "defer", "devtools/shared/defer");
-loader.lazyRequireGetter(this, "OS", "resource://gre/modules/commonjs/node/os.js");
 loader.lazyRequireGetter(this, "DebuggerServer", "devtools/server/main", true);
 loader.lazyRequireGetter(this, "AppConstants",
   "resource://gre/modules/AppConstants.jsm", true);
@@ -19,6 +18,21 @@ loader.lazyGetter(this, "screenManager", () => {
 loader.lazyGetter(this, "oscpu", () => {
   return Cc["@mozilla.org/network/protocol;1?name=http"]
            .getService(Ci.nsIHttpProtocolHandler).oscpu;
+});
+loader.lazyGetter(this, "hostname", () => {
+  try {
+    // On some platforms (Linux according to try), this service does not exist and fails.
+    return Cc["@mozilla.org/network/dns-service;1"]
+              .getService(Ci.nsIDNSService).myHostName;
+  } catch (e) {
+    return "";
+  }
+});
+loader.lazyGetter(this, "endianness", () => {
+  if ((new Uint32Array((new Uint8Array([1, 2, 3, 4])).buffer))[0] === 0x04030201) {
+    return "LE";
+  }
+  return "BE";
 });
 
 const APP_MAP = {
@@ -139,10 +153,10 @@ function* getSystemInfo() {
      */
 
     // Returns the endianness of the architecture: either "LE" or "BE"
-    endianness: OS.endianness(),
+    endianness: endianness,
 
     // Returns the hostname of the machine
-    hostname: OS.hostname(),
+    hostname: hostname,
 
     // Name of the OS type. Typically the same as `uname -s`. Possible values:
     // https://developer.mozilla.org/en/OS_TARGET

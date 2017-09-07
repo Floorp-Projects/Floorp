@@ -386,13 +386,11 @@ Gecko_GetImplementedPseudo(RawGeckoElementBorrowed aElement)
 uint32_t
 Gecko_CalcStyleDifference(ServoStyleContextBorrowed aOldStyle,
                           ServoStyleContextBorrowed aNewStyle,
-                          uint64_t aOldStyleBits,
-                          bool* aAnyStyleChanged)
+                          bool* aAnyStyleChanged,
+                          bool* aOnlyResetStructsChanged)
 {
   MOZ_ASSERT(aOldStyle);
   MOZ_ASSERT(aNewStyle);
-
-  uint32_t relevantStructs = aOldStyleBits & NS_STYLE_INHERIT_MASK;
 
   uint32_t equalStructs;
   uint32_t samePointerStructs;  // unused
@@ -401,8 +399,16 @@ Gecko_CalcStyleDifference(ServoStyleContextBorrowed aOldStyle,
       const_cast<ServoStyleContext*>(aNewStyle),
       &equalStructs,
       &samePointerStructs,
-      relevantStructs);
+      NS_STYLE_INHERIT_MASK);
+
   *aAnyStyleChanged = equalStructs != NS_STYLE_INHERIT_MASK;
+
+  const uint32_t kInheritStructsMask =
+    NS_STYLE_INHERIT_MASK & ~NS_STYLE_RESET_STRUCT_MASK;
+
+  *aOnlyResetStructsChanged =
+    (equalStructs & kInheritStructsMask) == kInheritStructsMask;
+
   return result;
 }
 

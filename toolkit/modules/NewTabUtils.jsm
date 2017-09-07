@@ -53,11 +53,14 @@ const LINKS_GET_LINKS_LIMIT = 100;
 // The gather telemetry topic.
 const TOPIC_GATHER_TELEMETRY = "gather-telemetry";
 
-// The number of top sites to display on Activity Stream page
-const TOP_SITES_LENGTH = 6;
+// Some default frecency threshold for Activity Stream requests
+const ACTIVITY_STREAM_DEFAULT_FRECENCY = 150;
 
-// Use double the number to allow for immediate display when blocking sites
-const TOP_SITES_LIMIT = TOP_SITES_LENGTH * 2;
+// Some default query limit for Activity Stream requests
+const ACTIVITY_STREAM_DEFAULT_LIMIT = 12;
+
+// Some default seconds ago for Activity Stream recent requests
+const ACTIVITY_STREAM_DEFAULT_RECENT = 5 * 24 * 60 * 60;
 
 /**
  * Calculate the MD5 hash for a string.
@@ -824,19 +827,78 @@ var PlacesProvider = {
  * history changes.
  */
 var ActivityStreamProvider = {
+  /**
+   * Shared adjustment for selecting potentially blocked links.
+   */
+  _adjustLimitForBlocked({ignoreBlocked, numItems}) {
+    // Just use the usual number if blocked links won't be filtered out
+    if (ignoreBlocked) {
+      return numItems;
+    }
+    // Additionally select the number of blocked links in case they're removed
+    return Object.keys(BlockedLinks.links).length + numItems;
+  },
 
   /**
-   * Process links after getting them from the database.
-   *
-   * @param {Array} aLinks
-   *          an array containing link objects
-   *
-   * @returns {Array} an array of checked links with favicons and eTLDs added
+   * Shared sub-SELECT to get the guid of a bookmark of the current url while
+   * avoiding LEFT JOINs on moz_bookmarks. This avoids gettings tags. The guid
+   * could be one of multiple possible guids. Assumes `moz_places h` is in FROM.
    */
-  _processLinks(aLinks) {
-    let links_ = aLinks.filter(link => LinkChecker.checkLoadURI(link.url));
-    links_ = this._faviconBytesToDataURI(links_);
-    return this._addETLD(links_);
+  _commonBookmarkGuidSelect: `(
+    SELECT guid
+    FROM moz_bookmarks b
+    WHERE fk = h.id
+      AND type = :bookmarkType
+      AND (
+        SELECT id
+        FROM moz_bookmarks p
+        WHERE p.id = b.parent
+          AND p.parent <> :tagsFolderId
+      ) NOTNULL
+    ) AS bookmarkGuid`,
+
+  /**
+   * Shared WHERE expression filtering out undesired pages, e.g., hidden,
+   * unvisited, and non-http/s urls. Assumes moz_places is in FROM / JOIN.
+   */
+  _commonPlacesWhere: `
+    AND hidden = 0
+    AND last_visit_date > 0
+    AND (SUBSTR(url, 1, 6) == "https:"
+      OR SUBSTR(url, 1, 5) == "http:")
+  `,
+
+  /**
+   * Shared parameters for getting correct bookmarks and LIMITed queries.
+   */
+  _getCommonParams(aOptions, aParams = {}) {
+    return Object.assign({
+      bookmarkType: PlacesUtils.bookmarks.TYPE_BOOKMARK,
+      limit: this._adjustLimitForBlocked(aOptions),
+      tagsFolderId: PlacesUtils.tagsFolderId
+    }, aParams);
+  },
+
+  /**
+   * Shared columns for Highlights related queries.
+   */
+  _highlightsColumns: ["bookmarkGuid", "description", "guid",
+    "preview_image_url", "title", "url"],
+
+  /**
+   * Shared post-processing of Highlights links.
+   */
+  _processHighlights(aLinks, aOptions, aType) {
+    // Filter out blocked if necessary
+    if (!aOptions.ignoreBlocked) {
+      aLinks = aLinks.filter(link => !BlockedLinks.isBlocked(link));
+    }
+
+    // Limit the results to the requested number and set a type corresponding to
+    // which query selected it
+    return aLinks.slice(0, aOptions.numItems).map(item => Object.assign(item, {
+      type: aType
+    }));
   },
 
   /**
@@ -906,57 +968,124 @@ var ActivityStreamProvider = {
   },
 
   /**
-   * Add the eTLD to each link in the array of links.
+   * Get most-recently-created visited bookmarks for Activity Stream.
    *
-   * @param {Array} aLinks
-   *          an array containing objects with urls
-   *
-   * @returns {Array} an array of links with eTLDs added
+   * @param {Object} aOptions
+   *   {num}  bookmarkSecondsAgo: Maximum age of added bookmark.
+   *   {bool} ignoreBlocked: Do not filter out blocked links.
+   *   {int}  numItems: Maximum number of items to return.
    */
-  _addETLD(aLinks) {
-    return aLinks.map(link => {
-      try {
-        link.eTLD = Services.eTLD.getPublicSuffix(Services.io.newURI(link.url));
-      } catch (e) {
-        link.eTLD = "";
-      }
-      return link;
-    });
+  async getRecentBookmarks(aOptions) {
+    const options = Object.assign({
+      bookmarkSecondsAgo: ACTIVITY_STREAM_DEFAULT_RECENT,
+      ignoreBlocked: false,
+      numItems: ACTIVITY_STREAM_DEFAULT_LIMIT
+    }, aOptions || {});
+
+    const sqlQuery = `
+      SELECT
+        b.guid AS bookmarkGuid,
+        description,
+        h.guid,
+        preview_image_url,
+        b.title,
+        url
+      FROM moz_bookmarks b
+      JOIN moz_bookmarks p
+        ON p.id = b.parent
+      JOIN moz_places h
+        ON h.id = b.fk
+      WHERE b.dateAdded >= :dateAddedThreshold
+        AND b.title NOTNULL
+        AND b.type = :bookmarkType
+        AND p.parent <> :tagsFolderId
+        ${this._commonPlacesWhere}
+      ORDER BY b.dateAdded DESC
+      LIMIT :limit
+    `;
+
+    return this._processHighlights(await this.executePlacesQuery(sqlQuery, {
+      columns: this._highlightsColumns,
+      params: this._getCommonParams(options, {
+        dateAddedThreshold: (Date.now() - options.bookmarkSecondsAgo * 1000) * 1000
+      })
+    }), options, "bookmark");
+  },
+
+  /**
+   * Get most-recently-visited history with metadata for Activity Stream.
+   *
+   * @param {Object} aOptions
+   *   {bool} ignoreBlocked: Do not filter out blocked links.
+   *   {int}  numItems: Maximum number of items to return.
+   */
+  async getRecentHistory(aOptions) {
+    const options = Object.assign({
+      ignoreBlocked: false,
+      numItems: ACTIVITY_STREAM_DEFAULT_LIMIT,
+    }, aOptions || {});
+
+    const sqlQuery = `
+      SELECT
+        ${this._commonBookmarkGuidSelect},
+        description,
+        guid,
+        preview_image_url,
+        title,
+        url
+      FROM moz_places h
+      WHERE description NOTNULL
+        AND preview_image_url NOTNULL
+        ${this._commonPlacesWhere}
+      ORDER BY last_visit_date DESC
+      LIMIT :limit
+    `;
+
+    return this._processHighlights(await this.executePlacesQuery(sqlQuery, {
+      columns: this._highlightsColumns,
+      params: this._getCommonParams(options)
+    }), options, "history");
   },
 
   /*
    * Gets the top frecent sites for Activity Stream.
    *
    * @param {Object} aOptions
-   *          options.ignoreBlocked: Do not filter out blocked links .
+   *   {bool} ignoreBlocked: Do not filter out blocked links.
+   *   {int}  numItems: Maximum number of items to return.
+   *   {int}  topsiteFrecency: Minimum amount of frecency for a site.
    *
    * @returns {Promise} Returns a promise with the array of links as payload.
    */
-  async getTopFrecentSites(aOptions = {}) {
-    let {ignoreBlocked} = aOptions;
+  async getTopFrecentSites(aOptions) {
+    const options = Object.assign({
+      ignoreBlocked: false,
+      numItems: ACTIVITY_STREAM_DEFAULT_LIMIT,
+      topsiteFrecency: ACTIVITY_STREAM_DEFAULT_FRECENCY
+    }, aOptions || {});
 
-    // Get extra links in case they're blocked and double the usual limit in
-    // case the host is deduped between with www or not-www (i.e., 2 hosts) as
-    // well as an extra buffer for multiple pages from the same exact host.
-    const limit = Object.keys(BlockedLinks.links).length + TOP_SITES_LIMIT * 2 * 10;
+    // Double the item count in case the host is deduped between with www or
+    // not-www (i.e., 2 hosts) and an extra buffer for multiple pages per host.
+    const origNumItems = options.numItems;
+    options.numItems *= 2 * 10;
 
     // Keep this query fast with frecency-indexed lookups (even with excess
     // rows) and shift the more complex logic to post-processing afterwards
-    const sqlQuery = `SELECT
-                        moz_bookmarks.guid AS bookmarkGuid,
-                        frecency,
-                        moz_places.guid,
-                        last_visit_date / 1000 AS lastVisitDate,
-                        rev_host,
-                        moz_places.title,
-                        url
-                      FROM moz_places
-                      LEFT JOIN moz_bookmarks
-                      ON moz_places.id = moz_bookmarks.fk
-                      WHERE hidden = 0 AND last_visit_date NOTNULL
-                      AND (SUBSTR(moz_places.url, 1, 6) == "https:" OR SUBSTR(moz_places.url, 1, 5) == "http:")
-                      ORDER BY frecency DESC
-                      LIMIT ${limit}`;
+    const sqlQuery = `
+      SELECT
+        ${this._commonBookmarkGuidSelect},
+        frecency,
+        guid,
+        last_visit_date / 1000 AS lastVisitDate,
+        rev_host,
+        title,
+        url
+      FROM moz_places h
+      WHERE frecency >= :frecencyThreshold
+        ${this._commonPlacesWhere}
+      ORDER BY frecency DESC
+      LIMIT :limit
+    `;
 
     let links = await this.executePlacesQuery(sqlQuery, {
       columns: [
@@ -966,7 +1095,10 @@ var ActivityStreamProvider = {
         "lastVisitDate",
         "title",
         "url"
-      ]
+      ],
+      params: this._getCommonParams(options, {
+        frecencyThreshold: options.topsiteFrecency
+      })
     });
 
     // Determine if the other link is "better" (larger frecency, more recent,
@@ -993,7 +1125,7 @@ var ActivityStreamProvider = {
     // Clean up the returned links by removing blocked, deduping, etc.
     const exactHosts = new Map();
     for (const link of links) {
-      if (!ignoreBlocked && BlockedLinks.isBlocked(link)) {
+      if (!options.ignoreBlocked && BlockedLinks.isBlocked(link)) {
         continue;
       }
 
@@ -1014,10 +1146,10 @@ var ActivityStreamProvider = {
     }
 
     // Pick out the top links using the same comparer as before
-    links = [...hosts.values()].sort(isOtherBetter).slice(0, TOP_SITES_LIMIT);
+    links = [...hosts.values()].sort(isOtherBetter).slice(0, origNumItems);
 
-    links = await this._addFavicons(links);
-    return this._processLinks(links);
+    // Get the favicons as data URI for now (until we use the favicon protocol)
+    return this._faviconBytesToDataURI(await this._addFavicons(links));
   },
 
   /**
@@ -1036,31 +1168,6 @@ var ActivityStreamProvider = {
     result.bookmarkTitle = bookmark.title;
     result.lastModified = bookmark.lastModified.getTime();
     result.url = bookmark.url.href;
-    return result;
-  },
-
-  /**
-   * Gets History size
-   *
-   * @returns {Promise} Returns a promise with the count of moz_places records
-   */
-  async getHistorySize() {
-    let sqlQuery = `SELECT count(*) FROM moz_places
-                    WHERE hidden = 0 AND last_visit_date NOT NULL`;
-
-    let result = await this.executePlacesQuery(sqlQuery);
-    return result;
-  },
-
-  /**
-   * Gets Bookmarks count
-   *
-   * @returns {Promise} Returns a promise with the count of bookmarks
-   */
-  async getBookmarksSize() {
-    let sqlQuery = `SELECT count(*) FROM moz_bookmarks WHERE type = :type`;
-
-    let result = await this.executePlacesQuery(sqlQuery, {params: {type: PlacesUtils.bookmarks.TYPE_BOOKMARK}});
     return result;
   },
 
@@ -1176,6 +1283,47 @@ var ActivityStreamLinks = {
     const url = aUrl;
     PinnedLinks.unpin({url});
     return PlacesUtils.history.remove(url);
+  },
+
+  /**
+   * Get the Highlights links to show on Activity Stream
+   *
+   * @param {Object} aOptions
+   *   {bool} excludeBookmarks: Don't add bookmark items.
+   *   {bool} excludeHistory: Don't add history items.
+   *   {int}  numItems: Maximum number of (bookmark or history) items to return.
+   *
+   * @return {Promise} Returns a promise with the array of links as the payload
+   */
+  async getHighlights(aOptions = {}) {
+    aOptions.numItems = aOptions.numItems || ACTIVITY_STREAM_DEFAULT_LIMIT;
+    const results = [];
+
+    // First get bookmarks if we want them
+    if (!aOptions.excludeBookmarks) {
+      results.push(...await ActivityStreamProvider.getRecentBookmarks(aOptions));
+    }
+
+    // Add in history if we need more and want them
+    if (aOptions.numItems - results.length > 0 && !aOptions.excludeHistory) {
+      // Use the same numItems as bookmarks above in case we remove duplicates
+      const history = await ActivityStreamProvider.getRecentHistory(aOptions);
+
+      // Only include a url once in the result preferring the bookmark
+      const bookmarkUrls = new Set(results.map(({url}) => url));
+      for (const page of history) {
+        if (!bookmarkUrls.has(page.url)) {
+          results.push(page);
+
+          // Stop adding pages once we reach the desired maximum
+          if (results.length === aOptions.numItems) {
+            break;
+          }
+        }
+      }
+    }
+
+    return results;
   },
 
   /**

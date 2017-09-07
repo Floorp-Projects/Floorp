@@ -344,8 +344,8 @@ var _byAttrib = function (parent, attributes) {
 
   for (var i in nodes) {
     var n = nodes[i];
-    requirementPass = 0;
-    requirementLength = 0;
+    let requirementPass = 0;
+    let requirementLength = 0;
 
     for (var a in attributes) {
       requirementLength++;

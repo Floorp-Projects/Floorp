@@ -778,6 +778,7 @@
                        onclick="BrowserGoHome(event);"
                        cui-areatype="toolbar"
                        aboutHomeOverrideTooltip="&abouthome.pageTitle;"/>
+        <toolbarspring cui-areatype="toolbar" class="chromeclass-toolbar-additional"/>
         <toolbaritem id="urlbar-container" flex="400" persist="width"
                      removable="false"
                      class="chromeclass-location" overflows="false">
@@ -924,6 +925,8 @@
               </hbox>
             </textbox>
         </toolbaritem>
+
+        <toolbarspring cui-areatype="toolbar" class="chromeclass-toolbar-additional"/>
 
         <!-- This is a placeholder for the Downloads Indicator.  It is visible
              during the customization of the toolbar, in the palette, and before

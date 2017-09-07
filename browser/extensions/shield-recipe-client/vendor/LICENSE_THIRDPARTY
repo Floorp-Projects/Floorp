@@ -1,4 +1,4 @@
-fbjs@0.8.14 BSD-3-Clause
+fbjs@0.8.12 BSD-3-Clause
 BSD License
 
 For fbjs software
@@ -66,7 +66,7 @@ ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT
 SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 
-object-assign@4.1.1 MIT
+object-assign@4.1.0 MIT
 The MIT License (MIT)
 
 Copyright (c) Sindre Sorhus <sindresorhus@gmail.com> (sindresorhus.com)

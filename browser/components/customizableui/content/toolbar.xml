@@ -197,7 +197,7 @@
             }
           }
           let orderedPlacements = CustomizableUI.getWidgetIdsInArea(this.id);
-          return orderedPlacements.filter((x) => currentWidgets.has(x)).join(",");
+          return orderedPlacements.filter(w => currentWidgets.has(w)).join(",");
         ]]></getter>
         <setter><![CDATA[
           // Get list of new and old ids:

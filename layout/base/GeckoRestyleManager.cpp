@@ -301,7 +301,7 @@ GeckoRestyleManager::ContentStateChanged(nsIContent* aContent,
     pseudoType = primaryFrame->StyleContext()->GetPseudoType();
   }
 
-  StyleSetHandle styleSet = PresContext()->StyleSet();
+  nsStyleSet* styleSet = PresContext()->StyleSet()->AsGecko();
   MOZ_ASSERT(styleSet);
 
   nsRestyleHint restyleHint;

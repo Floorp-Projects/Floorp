@@ -5,6 +5,8 @@ with the necessary tool and target support for the Firefox
 build environment.
 '''
 
+from __future__ import absolute_import, print_function
+
 import argparse
 import os.path
 import sys
