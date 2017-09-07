@@ -96,12 +96,13 @@ public:
   }
 
   bool IsBackfaceVisible() const { return mTransform.IsBackfaceVisible(); }
+  bool HasPerspectiveTransform() const { return mHasPerspectiveTransform; }
 
 private:
   wr::DisplayListBuilder* mBuilder;
   LayerPoint mOrigin;
   gfx::Matrix4x4 mTransform;
-
+  bool mHasPerspectiveTransform;
   float mXScale;
   float mYScale;
 };
