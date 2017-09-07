@@ -119,7 +119,7 @@ var PocketPageAction = {
           animatableBox.id = "pocket-animatable-box";
           let animatableImage = doc.createElement("image");
           animatableImage.id = "pocket-animatable-image";
-          animatableImage.setAttribute("role", "button");
+          animatableImage.setAttribute("role", "presentation");
           let tooltip =
             gPocketBundle.GetStringFromName("pocket-button.tooltiptext");
           animatableImage.setAttribute("tooltiptext", tooltip);
