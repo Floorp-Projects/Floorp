@@ -1,1 +1,1 @@
-Feature-Policy: {"payment": []}
+Feature-Policy: payment 'none'

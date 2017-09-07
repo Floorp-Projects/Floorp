@@ -43,9 +43,9 @@
     assert_array_equals(trackEvent.streams, []);
     assert_equals(trackEvent.transceiver, transceiver);
 
-    assert_equals(event.type, 'track');
-    assert_false(event.bubbles);
-    assert_false(event.cancelable);
+    assert_equals(trackEvent.type, 'track');
+    assert_false(trackEvent.bubbles);
+    assert_false(trackEvent.cancelable);
 
   }, `new RTCTrackEvent() with valid receiver, track, transceiver should succeed`);
 
