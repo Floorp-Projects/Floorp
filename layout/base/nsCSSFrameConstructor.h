@@ -87,12 +87,6 @@ public:
     Async,
   };
 
-  enum class LazyConstructionAllowed
-  {
-    No = 0,
-    Yes,
-  };
-
   mozilla::RestyleManager* RestyleManager() const
     { return mPresShell->GetPresContext()->RestyleManager(); }
 
@@ -133,7 +127,7 @@ private:
   void IssueSingleInsertNofications(nsIContent* aContainer,
                                     nsIContent* aStartChild,
                                     nsIContent* aEndChild,
-                                    LazyConstructionAllowed,
+                                    InsertionKind,
                                     bool aForReconstruction);
 
   /**
@@ -177,7 +171,7 @@ private:
   InsertionPoint GetRangeInsertionPoint(nsIContent* aContainer,
                                         nsIContent* aStartChild,
                                         nsIContent* aEndChild,
-                                        LazyConstructionAllowed,
+                                        InsertionKind,
                                         bool aForReconstruction);
 
   // Returns true if parent was recreated due to frameset child, false otherwise.
@@ -208,14 +202,15 @@ private:
 
 public:
   /**
-   * Lazy frame construction is controlled by the aAllowLazyConstruction bool
-   * parameter of nsCSSFrameConstructor::ContentAppended/Inserted. It is true
-   * for all inserts/appends as passed from the presshell, except for the
-   * insert of the root element, which is always non-lazy. Even if the
-   * aAllowLazyConstruction passed to ContentAppended/Inserted is true we still
-   * may not be able to construct lazily, so we call MaybeConstructLazily.
-   * MaybeConstructLazily does not allow lazy construction if any of the
-   * following are true:
+   * Lazy frame construction is controlled by the InsertionKind parameter of
+   * nsCSSFrameConstructor::ContentAppended/Inserted. It is true for all
+   * inserts/appends as passed from the presshell, except for the insert of the
+   * root element, which is always non-lazy.
+   *
+   * Even if the aInsertionKind passed to ContentAppended/Inserted is
+   * Async we still may not be able to construct lazily, so we call
+   * MaybeConstructLazily.  MaybeConstructLazily does not allow lazy
+   * construction if any of the following are true:
    *  -we are in chrome
    *  -the container is in a native anonymous subtree
    *  -the container is XUL
@@ -224,8 +219,7 @@ public:
    *   must not be called with anonymous children.
    * The XUL and chrome checks are because XBL bindings only get applied at
    * frame construction time and some things depend on the bindings getting
-   * attached synchronously. The editable checks are because the editor seems
-   * to expect frames to be constructed synchronously.
+   * attached synchronously.
    *
    * If MaybeConstructLazily returns false we construct as usual, but if it
    * returns true then it adds NODE_NEEDS_FRAME bits to the newly
@@ -251,8 +245,8 @@ public:
    * set.)
    */
 
-  // If aAllowLazyConstruction is true then frame construction of the new
-  // children can be done lazily.
+  // If aInsertionKind is Async then frame construction of the new children can
+  // be done lazily.
   //
   // When constructing frames lazily, we can keep the tree match context in a
   // much easier way than nsFrameConstructorState, and thus, we're allowed to
@@ -260,28 +254,28 @@ public:
   // in the DOM.
   void ContentAppended(nsIContent* aContainer,
                        nsIContent* aFirstNewContent,
-                       LazyConstructionAllowed aLazyConstructionAllowed,
+                       InsertionKind aInsertionKind,
                        TreeMatchContext* aProvidedTreeMatchContext = nullptr)
   {
-    ContentAppended(aContainer, aFirstNewContent, aLazyConstructionAllowed, false,
+    ContentAppended(aContainer, aFirstNewContent, aInsertionKind, false,
                     aProvidedTreeMatchContext);
   }
 
-  // If aAllowLazyConstruction is true then frame construction of the new child
+  // If aInsertionkind is Async then frame construction of the new child
   // can be done lazily.
   void ContentInserted(nsIContent* aContainer,
                        nsIContent* aChild,
                        nsILayoutHistoryState* aFrameState,
-                       LazyConstructionAllowed aLazyConstructionAllowed);
+                       InsertionKind aInsertionKind);
 
   // Like ContentInserted but handles inserting the children of aContainer in
   // the range [aStartChild, aEndChild).  aStartChild must be non-null.
   // aEndChild may be null to indicate the range includes all kids after
   // aStartChild.
   //
-  // If aAllowLazyConstruction is true then frame construction of
-  // the new children can be done lazily. It is only allowed to be true when
-  // inserting a single node.
+  // If aInsertionKind is Async then frame construction of the new children can
+  // be done lazily. It is only allowed to be Async when inserting a single
+  // node.
   //
   // See ContentAppended to see why we allow passing an already initialized
   // TreeMatchContext.
@@ -289,11 +283,11 @@ public:
                             nsIContent* aStartChild,
                             nsIContent* aEndChild,
                             nsILayoutHistoryState* aFrameState,
-                            LazyConstructionAllowed aLazyConstructionAllowed,
+                            InsertionKind aInsertionKind,
                             TreeMatchContext* aProvidedTreeMatchContext = nullptr)
   {
     ContentRangeInserted(aContainer, aStartChild, aEndChild, aFrameState,
-                         aLazyConstructionAllowed, false,
+                         aInsertionKind, false,
                          aProvidedTreeMatchContext);
   }
 
@@ -308,14 +302,14 @@ private:
   // insertions, and true for other cases.)
   void ContentAppended(nsIContent* aContainer,
                        nsIContent* aFirstNewContent,
-                       LazyConstructionAllowed aLazyConstructionAllowed,
+                       InsertionKind aInsertionKind,
                        bool aForReconstruction,
                        TreeMatchContext* aProvidedTreeMatchContext);
   void ContentRangeInserted(nsIContent* aContainer,
                             nsIContent* aStartChild,
                             nsIContent* aEndChild,
                             nsILayoutHistoryState* aFrameState,
-                            LazyConstructionAllowed aLazyConstructionAllowed,
+                            InsertionKind aInsertionKind,
                             bool aForReconstruction,
                             TreeMatchContext* aProvidedTreeMatchContext);
 

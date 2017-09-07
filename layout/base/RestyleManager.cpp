@@ -1404,14 +1404,14 @@ RestyleManager::ProcessRestyledFrames(nsStyleChangeList& aChangeList)
         frameConstructor->ContentAppended(
             container,
             start,
-            nsCSSFrameConstructor::LazyConstructionAllowed::No);
+            nsCSSFrameConstructor::InsertionKind::Sync);
       } else {
         frameConstructor->ContentRangeInserted(
             container,
             start,
             end,
             nullptr,
-            nsCSSFrameConstructor::LazyConstructionAllowed::No);
+            nsCSSFrameConstructor::InsertionKind::Sync);
       }
     }
     for (size_t j = lazyRangeStart; j < i; ++j) {
