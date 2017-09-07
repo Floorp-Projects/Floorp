@@ -1,0 +1,72 @@
+<?xml version="1.0"?>
+<?xml-stylesheet href="chrome://global/skin"
+                 type="text/css"?>
+<?xml-stylesheet href="chrome://mochikit/content/tests/SimpleTest/test.css"
+                 type="text/css"?>
+<!--
+https://bugzilla.mozilla.org/show_bug.cgi?id=1397412
+-->
+<window xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul"
+        title="Mozilla Bug 1397412" onload="runTest();">
+  <script type="application/javascript"
+          src="chrome://mochikit/content/tests/SimpleTest/EventUtils.js"/>
+  <script type="application/javascript"
+          src="chrome://mochikit/content/tests/SimpleTest/SimpleTest.js"/>
+
+  <body xmlns="http://www.w3.org/1999/xhtml">
+  <a href="https://bugzilla.mozilla.org/show_bug.cgi?id=1397412"
+     target="_blank">Mozilla Bug 1397412</a>
+  <p/>
+  <editor xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul"
+          id="editor"
+          type="content"
+          editortype="textmail"
+          style="width: 400px; height: 200px;"/>
+  <p/>
+  <pre id="test">
+  </pre>
+  </body>
+  <script class="testbody" type="application/javascript">
+  <![CDATA[
+  var Cc = Components.classes;
+  var Ci = Components.interfaces;
+
+function runTest() {
+  var initialHTML1 = "xx<br><br>";
+  var expectedHTML1 = "xx<br>t<br>";
+  var initialHTML2 = "xx<br><br>yy<br>";
+  var expectedHTML2 = "xx<br>t<br>yy<br>";
+  window.QueryInterface(Components.interfaces.nsIInterfaceRequestor)
+     .getInterface(Components.interfaces.nsIWebNavigation)
+     .QueryInterface(Components.interfaces.nsIDocShellTreeItem)
+     .rootTreeItem
+     .QueryInterface(Components.interfaces.nsIDocShell)
+     .appType = Components.interfaces.nsIDocShell.APP_TYPE_EDITOR;
+  var e = document.getElementById("editor");
+  var doc = e.contentDocument;
+  doc.designMode = "on";
+  doc.defaultView.focus();
+  var selection = doc.defaultView.getSelection();
+  var body = doc.body;
+
+  // Test 1.
+  body.innerHTML = initialHTML1;
+  selection.collapse(body, 2);
+  synthesizeKey("t", { code: "KeyT" });
+  var actualHTML = body.innerHTML;
+  is(actualHTML, expectedHTML1, "'t' should be inserted between <br>s");
+
+  // Test 2.
+  body.innerHTML = initialHTML2;
+  selection.collapse(body, 2);
+  synthesizeKey("t", { code: "KeyT" });
+  actualHTML = body.innerHTML;
+  is(actualHTML, expectedHTML2, "'t' should be inserted between <br>s");
+
+  SimpleTest.finish();
+}
+
+SimpleTest.waitForExplicitFinish();
+]]>
+</script>
+</window>
