@@ -9,7 +9,7 @@ textbox,
 description,
 .tab-text,
 caption > label {
-  font-size: 1.2rem;
+  font-size: 1.11rem;
 }
 
 /* Create a separate rule to unset these styles on .tree-input instead of
