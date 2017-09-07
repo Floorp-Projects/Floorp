@@ -1492,12 +1492,13 @@ var RecentBookmarksMenuUI = {
    * Handles onItemRemoved notifications from the bookmarks service.
    */
   onItemRemoved(itemId, parentId, index, itemType, uri, guid) {
+    if (!this.visible) {
+      return;
+    }
     // Update the menu when a bookmark has been removed.
     // The native menubar on Mac doesn't support live update, so this is
     // unlikely to be called there.
-    if (this._recentGuids.size == 0 ||
-        (guid && this._recentGuids.has(guid))) {
-
+    if (guid && this._recentGuids.has(guid)) {
       if (this._itemRemovedTimer) {
         clearTimeout(this._itemRemovedTimer);
       }
