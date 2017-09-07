@@ -1042,8 +1042,8 @@ JS_ResolveStandardClass(JSContext* cx, HandleObject obj, HandleId id, bool* reso
     JSAtom* undefinedAtom = cx->names().undefined;
     if (idAtom == undefinedAtom) {
         *resolved = true;
-        return DefineProperty(cx, global, id, UndefinedHandleValue, nullptr, nullptr,
-                              JSPROP_PERMANENT | JSPROP_READONLY | JSPROP_RESOLVING);
+        return DefineDataProperty(cx, global, id, UndefinedHandleValue,
+                                  JSPROP_PERMANENT | JSPROP_READONLY | JSPROP_RESOLVING);
     }
 
     /* Try for class constructors/prototypes named by well-known atoms. */
@@ -2133,8 +2133,7 @@ DefinePropertyByDescriptor(JSContext* cx, HandleObject obj, HandleId id,
     AssertHeapIsIdle();
     CHECK_REQUEST(cx);
     assertSameCompartment(cx, obj, id, desc);
-    return DefineProperty(cx, obj, id, desc.value(), desc.getter(), desc.setter(),
-                          desc.attributes(), result);
+    return DefineProperty(cx, obj, id, desc, result);
 }
 
 JS_PUBLIC_API(bool)
@@ -2221,7 +2220,7 @@ DefineAccessorPropertyById(JSContext* cx, HandleObject obj, HandleId id,
                           ? JS_FUNC_TO_DATA_PTR(JSObject*, setter)
                           : nullptr);
 
-    return DefineProperty(cx, obj, id, UndefinedHandleValue, getter, setter, attrs);
+    return js::DefineAccessorProperty(cx, obj, id, getter, setter, attrs);
 }
 
 static bool
@@ -2234,7 +2233,7 @@ DefineDataPropertyById(JSContext* cx, HandleObject obj, HandleId id, HandleValue
     CHECK_REQUEST(cx);
     assertSameCompartment(cx, obj, id, value);
 
-    return DefineProperty(cx, obj, id, value, nullptr, nullptr, attrs);
+    return js::DefineDataProperty(cx, obj, id, value, attrs);
 }
 
 /*
@@ -2531,7 +2530,7 @@ JS_PUBLIC_API(bool)
 JS_DefineElement(JSContext* cx, HandleObject obj, uint32_t index, HandleValue value,
                  unsigned attrs)
 {
-    return DefineDataElement(cx, obj, index, value, attrs);
+    return ::DefineDataElement(cx, obj, index, value, attrs);
 }
 
 JS_PUBLIC_API(bool)
@@ -2546,7 +2545,7 @@ JS_DefineElement(JSContext* cx, HandleObject obj, uint32_t index, HandleObject v
                  unsigned attrs)
 {
     RootedValue value(cx, ObjectValue(*valueArg));
-    return DefineDataElement(cx, obj, index, value, attrs);
+    return ::DefineDataElement(cx, obj, index, value, attrs);
 }
 
 JS_PUBLIC_API(bool)
@@ -2554,7 +2553,7 @@ JS_DefineElement(JSContext* cx, HandleObject obj, uint32_t index, HandleString v
                  unsigned attrs)
 {
     RootedValue value(cx, StringValue(valueArg));
-    return DefineDataElement(cx, obj, index, value, attrs);
+    return ::DefineDataElement(cx, obj, index, value, attrs);
 }
 
 JS_PUBLIC_API(bool)
@@ -2562,7 +2561,7 @@ JS_DefineElement(JSContext* cx, HandleObject obj, uint32_t index, int32_t valueA
                  unsigned attrs)
 {
     Value value = Int32Value(valueArg);
-    return DefineDataElement(cx, obj, index, HandleValue::fromMarkedLocation(&value), attrs);
+    return ::DefineDataElement(cx, obj, index, HandleValue::fromMarkedLocation(&value), attrs);
 }
 
 JS_PUBLIC_API(bool)
@@ -2570,7 +2569,7 @@ JS_DefineElement(JSContext* cx, HandleObject obj, uint32_t index, uint32_t value
                  unsigned attrs)
 {
     Value value = NumberValue(valueArg);
-    return DefineDataElement(cx, obj, index, HandleValue::fromMarkedLocation(&value), attrs);
+    return ::DefineDataElement(cx, obj, index, HandleValue::fromMarkedLocation(&value), attrs);
 }
 
 JS_PUBLIC_API(bool)
@@ -2578,7 +2577,7 @@ JS_DefineElement(JSContext* cx, HandleObject obj, uint32_t index, double valueAr
                  unsigned attrs)
 {
     Value value = NumberValue(valueArg);
-    return DefineDataElement(cx, obj, index, HandleValue::fromMarkedLocation(&value), attrs);
+    return ::DefineDataElement(cx, obj, index, HandleValue::fromMarkedLocation(&value), attrs);
 }
 
 JS_PUBLIC_API(bool)

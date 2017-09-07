@@ -528,11 +528,8 @@ str_enumerate(JSContext* cx, HandleObject obj)
         if (!str1)
             return false;
         value.setString(str1);
-        if (!DefineElement(cx, obj, i, value, nullptr, nullptr,
-                           STRING_ELEMENT_ATTRS | JSPROP_RESOLVING))
-        {
+        if (!DefineDataElement(cx, obj, i, value, STRING_ELEMENT_ATTRS | JSPROP_RESOLVING))
             return false;
-        }
     }
 
     return true;
@@ -559,8 +556,8 @@ str_resolve(JSContext* cx, HandleObject obj, HandleId id, bool* resolvedp)
         if (!str1)
             return false;
         RootedValue value(cx, StringValue(str1));
-        if (!DefineElement(cx, obj, uint32_t(slot), value, nullptr, nullptr,
-                           STRING_ELEMENT_ATTRS | JSPROP_RESOLVING))
+        if (!DefineDataElement(cx, obj, uint32_t(slot), value,
+                               STRING_ELEMENT_ATTRS | JSPROP_RESOLVING))
         {
             return false;
         }

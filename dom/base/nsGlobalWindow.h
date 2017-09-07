@@ -1319,6 +1319,8 @@ public:
 
   mozilla::dom::Performance* GetPerformance();
 
+  void UpdateTopInnerWindow();
+
 protected:
   // Web IDL helpers
 
