@@ -111,16 +111,6 @@ public class SuggestedSites {
             validate();
         }
 
-        public Site(String url, String title, String imageUrl, String bgColor) {
-            this.url = url;
-            this.title = title;
-            this.imageUrl = imageUrl;
-            this.bgColor = bgColor;
-            this.restricted = false;
-
-            validate();
-        }
-
         private void validate() {
             // Site instances must have non-empty values for all properties except IDs.
             if (TextUtils.isEmpty(url) ||
