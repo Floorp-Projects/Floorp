@@ -53,6 +53,7 @@ var publicProperties = [
   "getSignedInUserProfile",
   "handleDeviceDisconnection",
   "handleAccountDestroyed",
+  "hasLocalSession",
   "invalidateCertificate",
   "loadAndPoll",
   "localtimeOffsetMsec",
@@ -868,6 +869,24 @@ FxAccountsInternal.prototype = {
       }
       return this.fxAccountsClient.sessionStatus(data.sessionToken);
     });
+  },
+
+  /**
+   * Checks if we have a valid local session state for the current account.
+   *
+   * @return Promise
+   *        Resolves with a boolean, with true indicating that we appear to
+   *        have a valid local session, or false if we need to reauthenticate
+   *        with the content server to obtain one.
+   *        Note that this doesn't check with the server - it really just tells
+   *        us if we are even able to perform that server check. To fully check
+   *        the account status, you should first call this method, and if this
+   *        returns true, you should then call sessionStatus() to check with
+   *        the server.
+   */
+  async hasLocalSession() {
+    let data = await this.getSignedInUser();
+    return data && data.sessionToken;
   },
 
   /**
