@@ -7,9 +7,6 @@
 
 %include ../../../../toolkit/themes/osx/global/shared.inc
 
-@namespace url("http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul");
-@namespace html url("http://www.w3.org/1999/xhtml");
-
 .windowDialog {
   padding: 12px;
   font: -moz-dialog;
@@ -17,9 +14,6 @@
 
 /* ----- APPLICATIONS PREFPANE ----- */
 description {
-  font: small-caption;
-  font-weight: normal;
-  line-height: 1.3em;
   margin-bottom: 4px !important;
 }
 
