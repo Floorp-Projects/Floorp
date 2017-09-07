@@ -159,6 +159,10 @@ public:
 
   void GetDocumentURL(nsCString& aRetVal) const;
 
+  already_AddRefed<nsIURI> GetOriginURI() const;
+
+  already_AddRefed<nsIURI> GetDocumentURI() const;
+
 
   already_AddRefed<nsILoadContext> GetLoadContext() const;
 

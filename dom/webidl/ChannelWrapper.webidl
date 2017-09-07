@@ -112,6 +112,12 @@ interface ChannelWrapper {
   [Cached, Pure]
   readonly attribute ByteString? documentURL;
 
+  [Pure]
+  readonly attribute URI? originURI;
+
+  [Pure]
+  readonly attribute URI? documentURI;
+
 
   [Cached, GetterThrows, Pure]
   readonly attribute boolean canModify;
