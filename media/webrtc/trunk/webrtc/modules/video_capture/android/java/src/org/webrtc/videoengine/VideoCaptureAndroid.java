@@ -190,6 +190,13 @@ public class VideoCaptureAndroid implements PreviewCallback, Callback {
       if (parameters.isVideoStabilizationSupported()) {
         parameters.setVideoStabilization(true);
       }
+
+      List<String> focusModes = parameters.getSupportedFocusModes();
+      if (focusModes.contains(android.hardware.Camera.Parameters.FOCUS_MODE_CONTINUOUS_VIDEO)) {
+        Log.d(TAG, "Enable continuous auto focus mode.");
+        parameters.setFocusMode(android.hardware.Camera.Parameters.FOCUS_MODE_CONTINUOUS_VIDEO);
+      }
+
       parameters.setPictureSize(width, height);
       parameters.setPreviewSize(width, height);
 
