@@ -796,6 +796,12 @@ NS_GetNumberOfAtoms(void)
   return gAtomTable->EntryCount();
 }
 
+uint32_t
+NS_GetUnusedAtomCount(void)
+{
+  return gUnusedAtomCount;
+}
+
 nsIAtom*
 NS_GetStaticAtom(const nsAString& aUTF16String)
 {
