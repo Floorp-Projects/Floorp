@@ -5360,7 +5360,11 @@ pref("browser.safebrowsing.phishing.enabled", true);
 // Enable malware protection
 pref("browser.safebrowsing.malware.enabled", true);
 
+#ifdef MOZILLA_OFFICIAL
 pref("browser.safebrowsing.downloads.enabled", true);
+#else
+pref("browser.safebrowsing.downloads.enabled", false);
+#endif
 pref("browser.safebrowsing.downloads.remote.enabled", true);
 pref("browser.safebrowsing.downloads.remote.timeout_ms", 10000);
 pref("browser.safebrowsing.downloads.remote.url", "https://sb-ssl.google.com/safebrowsing/clientreport/download?key=%GOOGLE_API_KEY%");
