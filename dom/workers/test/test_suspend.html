@@ -14,12 +14,13 @@
 <p id="display"></p>
 <div id="content" style="display: none"></div>
 <pre id="test">
+<iframe id="workerFrame" src="suspend_iframe.html" onload="subframeLoaded();">
+</iframe>
 <script class="testbody" type="text/javascript">
 
   SimpleTest.waitForExplicitFinish();
 
-  const BLANK_URI = location.href.replace("test_suspend.html", "blank.html");
-
+  var iframe;
   var lastCount;
 
   var suspended = false;
@@ -30,39 +31,29 @@
   var oldMessageCount;
   var waitCount = 0;
 
-  var testWin = window.open("suspend_window.html", "testWin");
-  testWin.onload = testWinLoaded;
-
-  window.addEventListener("message", msg => {
-    if (suspended) {
-      badOnloadCallback();
-    } else {
-      suspendCallback();
-    }
-  })
-
   function finishTest() {
     if (finished) {
       return;
     }
     finished = true;
-    testWin.terminateWorker();
-    testWin.close();
-    SimpleTest.finish();
+    SpecialPowers.flushPrefEnv(function () {
+      iframe.terminateWorker();
+      SimpleTest.finish();
+    });
   }
 
   function waitInterval() {
     if (finished) {
       return;
     }
-    is(testWin.location.href, BLANK_URI, "Wrong url!");
+    is(String(iframe.location), "about:blank", "Wrong url!");
     is(suspended, true, "Not suspended?");
     is(resumed, false, "Already resumed?!");
     is(lastCount, oldMessageCount, "Received a message while suspended!");
     if (++waitCount == 5) {
       clearInterval(interval);
       resumed = true;
-      testWin.history.back();
+      iframe.history.back();
     }
   }
 
@@ -70,7 +61,7 @@
     if (finished) {
       return;
     }
-    ok(false, "We don't want suspend_window.html to fire a new load event, we want it to come out of the bfcache!");
+    ok(false, "We don't want suspend_iframe.html to fire a new load event, we want it to come out of the bfcache!");
     finishTest();
   }
 
@@ -78,12 +69,16 @@
     if (finished) {
       return;
     }
-    is(testWin.location.href, BLANK_URI, "Wrong url!");
+    is(String(iframe.location), "about:blank", "Wrong url!");
     is(suspended, false, "Already suspended?");
     is(resumed, false, "Already resumed?");
-    suspended = true;
-    oldMessageCount = lastCount;
-    interval = setInterval(waitInterval, 1000);
+    SpecialPowers.popPrefEnv(function () {
+      suspended = true;
+      var iframeElement = document.getElementById("workerFrame");
+      iframeElement.onload = badOnloadCallback;
+      oldMessageCount = lastCount;
+      interval = setInterval(waitInterval, 1000);
+    });
   }
 
   function messageCallback(data) {
@@ -96,18 +91,21 @@
          "Got good data, lastCount = " + lastCount + ", data = " + data);
       lastCount = data;
       if (lastCount == 25) {
-        testWin.location = "blank.html";
-        // We want suspend_window.html to go into bfcache, so we need to flush
-        // out all pending notifications. Otherwise, if they're flushed too
-        // late, they could kick us out of the bfcache again.
-        testWin.document.body.offsetTop;
+        SpecialPowers.pushPrefEnv({"set": [["browser.sessionhistory.cache_subframes", true]]}, function () {
+          iframe.location = "about:blank";
+          // We want suspend_iframe.html to go into bfcache, so we need to flush
+          // out all pending notifications. Otherwise, if they're flushed too
+          // late, they could kick us out of the bfcache again.
+          iframe.document.body.offsetTop;
+        });
       }
       return;
     }
 
-    var newLocation = location.href.replace("test_suspend.html",
-                                            "suspend_window.html");
-    is(testWin.location.href, newLocation, "Wrong url!");
+    var newLocation =
+      window.location.toString().replace("test_suspend.html",
+                                         "suspend_iframe.html");
+    is(newLocation.indexOf(iframe.location.toString()), 0, "Wrong url!");
     is(resumed, true, "Got message before resumed!");
     is(lastCount, data - 1, "Missed a message, suspend failed!");
     finishTest();
@@ -117,15 +115,21 @@
     if (finished) {
       return;
     }
-    ok(false, "testWin had an error: '" + data + "'");
+    ok(false, "Iframe had an error: '" + data + "'");
     finishTest();
   }
 
-  function testWinLoaded() {
+  function subframeLoaded() {
     if (finished) {
       return;
     }
-    testWin.startWorker(messageCallback, errorCallback);
+    var iframeElement = document.getElementById("workerFrame");
+    iframeElement.onload = suspendCallback;
+
+    iframe = iframeElement.contentWindow;
+    ok(iframe, "No iframe?!");
+
+    iframe.startWorker(messageCallback, errorCallback);
   }
 
 </script>
