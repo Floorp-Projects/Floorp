@@ -724,18 +724,6 @@ ValueFromStringHelper(nsCSSPropertyID aPropID,
                                                           aTargetElement,
                                                           aStyleContext->AsServo(),
                                                           result);
-  if (result.IsEmpty()) {
-    return result;
-  }
-
-  if (aPropID == eCSSProperty_font_size) {
-    // FIXME (bug 1357296): Divide out text-zoom, since SVG is supposed to
-    // ignore it.
-    if (aPresContext->EffectiveTextZoom() != 1.0) {
-      NS_WARNING("stylo: Dividing out text-zoom not yet supported"
-                 " (bug 1357296)");
-    }
-  }
 
   return result;
 }
