@@ -99,9 +99,6 @@ with Files("tests/annotation-vocab/**"):
 with Files("tests/apng/**"):
     BUG_COMPONENT = ("Core", "ImageLib")
 
-with Files("tests/app-uri/**"):
-    BUG_COMPONENT = ("Core", "Networking: JAR")
-
 with Files("tests/assumptions/**"):
     BUG_COMPONENT = ("Testing", "web-platform-tests")
 
@@ -176,9 +173,6 @@ with Files("tests/css-timing/**"):
     BUG_COMPONENT = ("Core", "Layout")
 
 with Files("tests/css-typed-om/**"):
-    BUG_COMPONENT = ("Core", "DOM: CSS Object Model")
-
-with Files("tests/css-values/**"):
     BUG_COMPONENT = ("Core", "DOM: CSS Object Model")
 
 with Files("tests/cssom/**"):
@@ -271,9 +265,6 @@ with Files("tests/html-media-capture/**"):
 
 with Files("tests/http/**"):
     BUG_COMPONENT = ("Core", "DOM")
-
-with Files("tests/image-decodes/**"):
-    BUG_COMPONENT = ("Core", "ImageLib")
 
 with Files("tests/imagebitmap-renderingcontext/**"):
     BUG_COMPONENT = ("Core", "Canvas: 2D")
