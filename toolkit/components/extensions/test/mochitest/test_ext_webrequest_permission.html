@@ -17,7 +17,7 @@ add_task(async function test_permissions() {
     browser.webRequest.onBeforeRequest.addListener(details => {
       if (details.url.includes("_original")) {
         let redirectUrl = details.url
-                                 .replace("mochi.test:8888", "example.com")
+                                 .replace("example.org", "example.com")
                                  .replace("_original", "_redirected");
         return {redirectUrl};
       }
@@ -47,7 +47,7 @@ add_task(async function test_permissions() {
       window.addEventListener("message", listener);
     });
 
-    iframe.setAttribute("src", "http://example.com/tests/toolkit/components/extensions/test/mochitest/file_WebRequest_permission_original.html");
+    iframe.setAttribute("src", "https://example.com/tests/toolkit/components/extensions/test/mochitest/file_WebRequest_permission_original.html");
     let result = await promise;
     document.body.removeChild(iframe);
     return result;
