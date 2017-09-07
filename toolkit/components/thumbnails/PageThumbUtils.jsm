@@ -114,47 +114,6 @@ this.PageThumbUtils = {
     return [width, height];
   },
 
-  /**
-   * Renders an image onto a new canvas of a given width and proportional
-   * height. Uses an image that exists in the window and is loaded, or falls
-   * back to loading the url into a new image element.
-   */
-  async createImageThumbnailCanvas(window, url, targetWidth = 448) {
-    // 224px is the width of cards in ActivityStream; capture thumbnails at 2x
-    const doc = (window || Services.appShell.hiddenDOMWindow).document;
-
-    let image = doc.querySelector("img");
-    if (!image || image.src !== url) {
-      image = doc.createElementNS(this.HTML_NAMESPACE, "img");
-    }
-    if (!image.complete) {
-      await new Promise(resolve => {
-        image.onload = () => resolve();
-        image.onerror = () => { throw new Error("Image failed to load"); }
-        image.src = url;
-      });
-    }
-
-    // <img src="*.svg"> has width/height but not naturalWidth/naturalHeight
-    const imageWidth = image.naturalWidth || image.width;
-    const imageHeight = image.naturalHeight || image.height;
-    if (imageWidth === 0 || imageHeight === 0) {
-      throw new error("Image has zero dimension");
-    }
-    const width = Math.min(targetWidth, imageWidth);
-    const height = imageHeight * width / imageWidth;
-
-    // As we're setting the width and maintaining the aspect ratio, if an image
-    // is very tall we might get a very large thumbnail. Restricting the canvas
-    // size to {width}x{width} solves this problem. Here we choose to clip the
-    // image at the bottom rather than centre it vertically, based on an
-    // estimate that the focus of a tall image is most likely to be near the top
-    // (e.g., the face of a person).
-    const canvas = this.createCanvas(window, width, Math.min(height, width));
-    canvas.getContext("2d").drawImage(image, 0, 0, width, height);
-    return canvas;
-  },
-
   /** *
    * Given a browser window, this creates a snapshot of the content
    * and returns a canvas with the resulting snapshot of the content
