@@ -530,9 +530,14 @@ LocaleService::Observe(nsISupports *aSubject, const char *aTopic,
 {
   MOZ_ASSERT(mIsServer, "This should only be called in the server mode.");
 
+  NS_ConvertUTF16toUTF8 pref(aData);
+
+  // This is a temporary solution until we get bug 1337078 landed.
+  if (pref.EqualsLiteral(ANDROID_OS_LOCALE_PREF)) {
+    OSPreferences::GetInstance()->Refresh();
+  }
   // At the moment the only thing we're observing are settings indicating
   // user requested locales.
-  NS_ConvertUTF16toUTF8 pref(aData);
   if (pref.EqualsLiteral(MATCH_OS_LOCALE_PREF) ||
       pref.EqualsLiteral(SELECTED_LOCALE_PREF) ||
       pref.EqualsLiteral(ANDROID_OS_LOCALE_PREF)) {
