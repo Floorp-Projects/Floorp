@@ -121,31 +121,32 @@ TestDoublyLinkedList()
   MOZ_RELEASE_ASSERT(++list.begin() == list.find(four));
 }
 
-struct InTwoLists {
-  explicit InTwoLists(unsigned int aValue) : mValue(aValue) {}
-  DoublyLinkedListElement<InTwoLists> mListOne;
-  DoublyLinkedListElement<InTwoLists> mListTwo;
-  unsigned int mValue;
-
-  struct GetListOneTrait {
-    static DoublyLinkedListElement<InTwoLists>& Get(InTwoLists *aThis) { return aThis->mListOne; }
-  };
-};
-
-namespace mozilla {
-
-template<>
-struct GetDoublyLinkedListElement<InTwoLists> {
-  static DoublyLinkedListElement<InTwoLists>& Get(InTwoLists* aThis) { return aThis->mListTwo; }
-};
-
-}
-
 static void
 TestCustomAccessor()
 {
-  DoublyLinkedList<InTwoLists, InTwoLists::GetListOneTrait> listOne;
-  DoublyLinkedList<InTwoLists> listTwo;
+  struct InTwoLists {
+    explicit InTwoLists(unsigned int aValue) : mValue(aValue) {}
+    DoublyLinkedListElement<InTwoLists> mListOne;
+    DoublyLinkedListElement<InTwoLists> mListTwo;
+    unsigned int mValue;
+  };
+
+  struct ListOneSiblingAccess {
+    static void SetNext(InTwoLists* aElm, InTwoLists* aNext) { aElm->mListOne.mNext = aNext; }
+    static InTwoLists* GetNext(InTwoLists* aElm) { return aElm->mListOne.mNext; }
+    static void SetPrev(InTwoLists* aElm, InTwoLists* aPrev) { aElm->mListOne.mPrev = aPrev; }
+    static InTwoLists* GetPrev(InTwoLists* aElm) { return aElm->mListOne.mPrev; }
+  };
+
+  struct ListTwoSiblingAccess {
+    static void SetNext(InTwoLists* aElm, InTwoLists* aNext) { aElm->mListTwo.mNext = aNext; }
+    static InTwoLists* GetNext(InTwoLists* aElm) { return aElm->mListTwo.mNext; }
+    static void SetPrev(InTwoLists* aElm, InTwoLists* aPrev) { aElm->mListTwo.mPrev = aPrev; }
+    static InTwoLists* GetPrev(InTwoLists* aElm) { return aElm->mListTwo.mPrev; }
+  };
+
+  DoublyLinkedList<InTwoLists, ListOneSiblingAccess> listOne;
+  DoublyLinkedList<InTwoLists, ListTwoSiblingAccess> listTwo;
 
   InTwoLists one(1);
   InTwoLists two(2);
