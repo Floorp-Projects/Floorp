@@ -310,8 +310,8 @@ AccessCheck::reportCrossOriginDenial(JSContext* cx, JS::HandleId id,
 }
 
 bool
-ExposedPropertiesOnly::deny(JSContext* cx, js::Wrapper::Action act, HandleId id,
-                            bool mayThrow)
+OpaqueWithSilentFailing::deny(JSContext* cx, js::Wrapper::Action act, HandleId id,
+                              bool mayThrow)
 {
     // Fail silently for GET, ENUMERATE, and GET_PROPERTY_DESCRIPTOR.
     if (act == js::Wrapper::GET || act == js::Wrapper::ENUMERATE ||
