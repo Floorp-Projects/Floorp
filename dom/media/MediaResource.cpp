@@ -542,15 +542,12 @@ ChannelMediaResource::Open(nsIStreamListener** aStreamListener)
   return NS_OK;
 }
 
-nsresult ChannelMediaResource::OpenChannel(nsIStreamListener** aStreamListener)
+nsresult
+ChannelMediaResource::OpenChannel()
 {
   NS_ASSERTION(NS_IsMainThread(), "Only call on main thread");
   NS_ENSURE_TRUE(mChannel, NS_ERROR_NULL_POINTER);
   NS_ASSERTION(!mListener, "Listener should have been removed by now");
-
-  if (aStreamListener) {
-    *aStreamListener = nullptr;
-  }
 
   // Set the content length, if it's available as an HTTP header.
   // This ensures that MediaResource wrapping objects for platform libraries
@@ -565,25 +562,20 @@ nsresult ChannelMediaResource::OpenChannel(nsIStreamListener** aStreamListener)
   }
 
   mListener = new Listener(this);
-  if (aStreamListener) {
-    *aStreamListener = mListener;
-    NS_ADDREF(*aStreamListener);
-  } else {
-    nsresult rv = mChannel->SetNotificationCallbacks(mListener.get());
-    NS_ENSURE_SUCCESS(rv, rv);
+  nsresult rv = mChannel->SetNotificationCallbacks(mListener.get());
+  NS_ENSURE_SUCCESS(rv, rv);
 
-    rv = SetupChannelHeaders();
-    NS_ENSURE_SUCCESS(rv, rv);
+  rv = SetupChannelHeaders();
+  NS_ENSURE_SUCCESS(rv, rv);
 
-    rv = mChannel->AsyncOpen2(mListener);
-    NS_ENSURE_SUCCESS(rv, rv);
+  rv = mChannel->AsyncOpen2(mListener);
+  NS_ENSURE_SUCCESS(rv, rv);
 
-    // Tell the media element that we are fetching data from a channel.
-    MediaDecoderOwner* owner = mCallback->GetMediaOwner();
-    NS_ENSURE_TRUE(owner, NS_ERROR_FAILURE);
-    dom::HTMLMediaElement* element = owner->GetMediaElement();
-    element->DownloadResumed(true);
-  }
+  // Tell the media element that we are fetching data from a channel.
+  MediaDecoderOwner* owner = mCallback->GetMediaOwner();
+  NS_ENSURE_TRUE(owner, NS_ERROR_FAILURE);
+  dom::HTMLMediaElement* element = owner->GetMediaElement();
+  element->DownloadResumed(true);
 
   return NS_OK;
 }
@@ -911,7 +903,7 @@ ChannelMediaResource::CacheClientSeek(int64_t aOffset, bool aResume)
   nsresult rv = RecreateChannel();
   NS_ENSURE_SUCCESS(rv, rv);
 
-  return OpenChannel(nullptr);
+  return OpenChannel();
 }
 
 nsresult
