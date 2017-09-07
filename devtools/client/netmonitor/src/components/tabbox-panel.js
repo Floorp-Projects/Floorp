@@ -41,6 +41,7 @@ function TabboxPanel({
   request,
   selectTab,
   sourceMapService,
+  openLink,
 }) {
   if (!request) {
     return null;
@@ -58,25 +59,25 @@ function TabboxPanel({
         id: PANELS.HEADERS,
         title: HEADERS_TITLE,
       },
-        HeadersPanel({ request, cloneSelectedRequest }),
+        HeadersPanel({ request, cloneSelectedRequest, openLink }),
       ),
       TabPanel({
         id: PANELS.COOKIES,
         title: COOKIES_TITLE,
       },
-        CookiesPanel({ request }),
+        CookiesPanel({ request, openLink }),
       ),
       TabPanel({
         id: PANELS.PARAMS,
         title: PARAMS_TITLE,
       },
-        ParamsPanel({ request }),
+        ParamsPanel({ request, openLink }),
       ),
       TabPanel({
         id: PANELS.RESPONSE,
         title: RESPONSE_TITLE,
       },
-        ResponsePanel({ request }),
+        ResponsePanel({ request, openLink }),
       ),
       TabPanel({
         id: PANELS.TIMINGS,
@@ -89,14 +90,14 @@ function TabboxPanel({
         id: PANELS.STACK_TRACE,
         title: STACK_TRACE_TITLE,
       },
-        StackTracePanel({ request, sourceMapService }),
+        StackTracePanel({ request, sourceMapService, openLink }),
       ),
       request.securityState && request.securityState !== "insecure" &&
       TabPanel({
         id: PANELS.SECURITY,
         title: SECURITY_TITLE,
       },
-        SecurityPanel({ request }),
+        SecurityPanel({ request, openLink }),
       ),
     )
   );
@@ -111,6 +112,7 @@ TabboxPanel.propTypes = {
   selectTab: PropTypes.func.isRequired,
   // Service to enable the source map feature.
   sourceMapService: PropTypes.object,
+  openLink: PropTypes.func,
 };
 
 module.exports = connect()(TabboxPanel);

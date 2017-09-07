@@ -1,6 +1,7 @@
 function test() {
   waitForExplicitFinish();
 
+  Services.prefs.setBoolPref("browser.search.widget.inNavBar", true);
   let searchBar = BrowserSearch.searchBar;
   searchBar.focus();
 
@@ -21,6 +22,7 @@ function test() {
           EventUtils.synthesizeKey("VK_ESCAPE", {});
           is(DOMWindowUtils.IMEStatus, DOMWindowUtils.IME_STATUS_ENABLED,
              "IME should be available after focus is back to the searchbar");
+          Services.prefs.clearUserPref("browser.search.widget.inNavBar");
           finish();
         }, 0);
       }, {once: true});

@@ -167,11 +167,9 @@ public:
 
   RemoteVideoDecoder(const VideoInfo& aConfig,
                      MediaFormat::Param aFormat,
-                     layers::ImageContainer* aImageContainer,
                      const nsString& aDrmStubId, TaskQueue* aTaskQueue)
     : RemoteDataDecoder(MediaData::Type::VIDEO_DATA, aConfig.mMimeType,
                         aFormat, aDrmStubId, aTaskQueue)
-    , mImageContainer(aImageContainer)
     , mConfig(aConfig)
   {
   }
@@ -238,7 +236,6 @@ public:
   }
 
 private:
-  layers::ImageContainer* mImageContainer;
   const VideoInfo mConfig;
   GeckoSurface::GlobalRef mSurface;
   AndroidSurfaceTextureHandle mSurfaceHandle;
@@ -423,7 +420,7 @@ RemoteDataDecoder::CreateVideoDecoder(const CreateDecoderParams& aParams,
     nullptr);
 
   RefPtr<MediaDataDecoder> decoder = new RemoteVideoDecoder(
-    config, format, aParams.mImageContainer, aDrmStubId, aParams.mTaskQueue);
+    config, format, aDrmStubId, aParams.mTaskQueue);
   if (aProxy) {
     decoder = new EMEMediaDataDecoderProxy(aParams, decoder.forget(), aProxy);
   }

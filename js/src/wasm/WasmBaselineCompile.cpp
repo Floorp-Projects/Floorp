@@ -364,6 +364,7 @@ class BaseCompiler
 #endif
 
     typedef Vector<NonAssertingLabel, 8, SystemAllocPolicy> LabelVector;
+    typedef Vector<MIRType, 8, SystemAllocPolicy> MIRTypeVector;
 
     // The strongly typed register wrappers have saved my bacon a few
     // times; though they are largely redundant they stay, for now.
@@ -569,7 +570,7 @@ class BaseCompiler
 
     const ModuleEnvironment&    env_;
     BaseOpIter                  iter_;
-    const FuncBytes&            func_;
+    const FuncCompileUnit&      func_;
     size_t                      lastReadCallSite_;
     TempAllocator&              alloc_;
     const ValTypeVector&        locals_;         // Types of parameters and locals
@@ -644,7 +645,7 @@ class BaseCompiler
   public:
     BaseCompiler(const ModuleEnvironment& env,
                  Decoder& decoder,
-                 const FuncBytes& func,
+                 const FuncCompileUnit& func,
                  const ValTypeVector& locals,
                  bool debugEnabled,
                  TempAllocator* alloc,
@@ -657,6 +658,8 @@ class BaseCompiler
 
     MOZ_MUST_USE bool emitFunction();
     void emitInitStackLocals();
+
+    const SigWithId& sig() const { return *env_.funcSigs[func_.index()]; }
 
     // Used by some of the ScratchRegister implementations.
     operator MacroAssembler&() const { return masm; }
@@ -2235,7 +2238,7 @@ class BaseCompiler
 
         // Copy arguments from registers to stack.
 
-        const ValTypeVector& args = func_.sig().args();
+        const ValTypeVector& args = sig().args();
 
         for (ABIArgIter<const ValTypeVector> i(args); !i.done(); i++) {
             Local& l = localInfo_[i.index()];
@@ -2272,7 +2275,7 @@ class BaseCompiler
         MOZ_ASSERT(debugEnabled_);
         size_t debugFrameOffset = masm.framePushed() - DebugFrame::offsetOfFrame();
         Address resultsAddress(StackPointer, debugFrameOffset + DebugFrame::offsetOfResults());
-        switch (func_.sig().ret()) {
+        switch (sig().ret()) {
           case ExprType::Void:
             break;
           case ExprType::I32:
@@ -2297,7 +2300,7 @@ class BaseCompiler
         MOZ_ASSERT(debugEnabled_);
         size_t debugFrameOffset = masm.framePushed() - DebugFrame::offsetOfFrame();
         Address resultsAddress(StackPointer, debugFrameOffset + DebugFrame::offsetOfResults());
-        switch (func_.sig().ret()) {
+        switch (sig().ret()) {
           case ExprType::Void:
             break;
           case ExprType::I32:
@@ -5821,7 +5824,7 @@ BaseCompiler::emitReturn()
     if (deadCode_)
         return true;
 
-    doReturn(func_.sig().ret(), PopStack(true));
+    doReturn(sig().ret(), PopStack(true));
     deadCode_ = true;
 
     return true;
@@ -6890,7 +6893,7 @@ BaseCompiler::emitCurrentMemory()
 bool
 BaseCompiler::emitBody()
 {
-    if (!iter_.readFunctionStart(func_.sig().ret()))
+    if (!iter_.readFunctionStart(sig().ret()))
         return false;
 
     initControl(controlItem());
@@ -6972,7 +6975,7 @@ BaseCompiler::emitBody()
 
             if (iter_.controlStackEmpty()) {
                 if (!deadCode_)
-                    doReturn(func_.sig().ret(), PopStack(false));
+                    doReturn(sig().ret(), PopStack(false));
                 return iter_.readFunctionEnd(iter_.end());
             }
             NEXT();
@@ -7583,7 +7586,7 @@ BaseCompiler::emitInitStackLocals()
 
 BaseCompiler::BaseCompiler(const ModuleEnvironment& env,
                            Decoder& decoder,
-                           const FuncBytes& func,
+                           const FuncCompileUnit& func,
                            const ValTypeVector& locals,
                            bool debugEnabled,
                            TempAllocator* alloc,
@@ -7672,11 +7675,10 @@ BaseCompiler::init()
     if (!SigI64I64_.append(ValType::I64) || !SigI64I64_.append(ValType::I64))
         return false;
 
-    const ValTypeVector& args = func_.sig().args();
-
     if (!localInfo_.resize(locals_.length()))
         return false;
 
+    const ValTypeVector& args = sig().args();
     BaseLocalIter i(locals_, args.length(), debugEnabled_);
     varLow_ = i.reservedSize();
     for (; !i.done() && i.index() < args.length(); i++) {
@@ -7741,19 +7743,17 @@ js::wasm::BaselineCanCompile()
 }
 
 bool
-js::wasm::BaselineCompileFunction(CompileTask* task, FuncCompileUnit* unit, UniqueChars *error)
+js::wasm::BaselineCompileFunction(CompileTask* task, FuncCompileUnit* func, UniqueChars* error)
 {
     MOZ_ASSERT(task->tier() == Tier::Baseline);
     MOZ_ASSERT(task->env().kind == ModuleKind::Wasm);
 
-    const FuncBytes& func = unit->func();
-
-    Decoder d(func.bytes().begin(), func.bytes().end(), func.lineOrBytecode(), error);
+    Decoder d(func->begin(), func->end(), func->lineOrBytecode(), error);
 
     // Build the local types vector.
 
     ValTypeVector locals;
-    if (!locals.appendAll(func.sig().args()))
+    if (!locals.appendAll(task->env().funcSigs[func->index()]->args()))
         return false;
     if (!DecodeLocalEntries(d, task->env().kind, &locals))
         return false;
@@ -7764,7 +7764,7 @@ js::wasm::BaselineCompileFunction(CompileTask* task, FuncCompileUnit* unit, Uniq
 
     // One-pass baseline compilation.
 
-    BaseCompiler f(task->env(), d, func, locals, task->debugEnabled(), &task->alloc(),
+    BaseCompiler f(task->env(), d, *func, locals, task->debugEnabled(), &task->alloc(),
                    &task->masm(), task->mode());
     if (!f.init())
         return false;
@@ -7772,7 +7772,7 @@ js::wasm::BaselineCompileFunction(CompileTask* task, FuncCompileUnit* unit, Uniq
     if (!f.emitFunction())
         return false;
 
-    unit->finish(f.finish());
+    func->finish(f.finish());
     return true;
 }
 

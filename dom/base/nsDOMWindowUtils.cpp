@@ -1438,7 +1438,7 @@ nsDOMWindowUtils::CycleCollect(nsICycleCollectorListener *aListener)
 NS_IMETHODIMP
 nsDOMWindowUtils::RunNextCollectorTimer()
 {
-  nsJSContext::RunNextCollectorTimer();
+  nsJSContext::RunNextCollectorTimer(JS::gcreason::DOM_WINDOW_UTILS);
 
   return NS_OK;
 }

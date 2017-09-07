@@ -7509,6 +7509,11 @@ BytecodeEmitter::emitForIn(ParseNode* forInLoop, EmitterScope* headLexicalEmitte
 #endif
         MOZ_ASSERT(loopDepth >= 2);
 
+        if (iflags == JSITER_ENUMERATE) {
+            if (!emit1(JSOP_ITERNEXT))                    // ITER ITERVAL
+                return false;
+        }
+
         if (!emitInitializeForInOrOfTarget(forInHead))    // ITER ITERVAL
             return false;
 

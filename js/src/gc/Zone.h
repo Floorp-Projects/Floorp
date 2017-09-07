@@ -533,7 +533,7 @@ struct Zone : public JS::shadow::Zone,
     js::ZoneGroupData<bool> isSystem;
 
     bool usedByHelperThread() {
-        return !isAtomsZone() && group()->usedByHelperThread;
+        return !isAtomsZone() && group()->usedByHelperThread();
     }
 
 #ifdef DEBUG
@@ -622,6 +622,7 @@ struct Zone : public JS::shadow::Zone,
         MOZ_ASSERT(!IsInsideNursery(tgt));
         MOZ_ASSERT(CurrentThreadCanAccessRuntime(runtimeFromActiveCooperatingThread()));
         MOZ_ASSERT(js::CurrentThreadCanAccessZone(this));
+        MOZ_ASSERT(!uniqueIds().has(tgt));
         uniqueIds().rekeyIfMoved(src, tgt);
     }
 
@@ -693,7 +694,7 @@ class ZoneGroupsIter
         it = rt->gc.groups().begin();
         end = rt->gc.groups().end();
 
-        if (!done() && (*it)->usedByHelperThread)
+        if (!done() && (*it)->createdForHelperThread())
             next();
     }
 
@@ -703,7 +704,7 @@ class ZoneGroupsIter
         MOZ_ASSERT(!done());
         do {
             it++;
-        } while (!done() && (*it)->usedByHelperThread);
+        } while (!done() && (*it)->createdForHelperThread());
     }
 
     ZoneGroup* get() const {

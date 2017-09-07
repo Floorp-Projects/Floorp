@@ -3,6 +3,7 @@
 #include "nsIHttpChannelInternal.h"
 #include "nsIStreamListener.h"
 #include "nsILoadInfo.h"
+#include "nsIOService.h"
 #include "nsContentUtils.h"
 #include "nsCORSListenerProxy.h"
 #include "nsIStreamListener.h"
@@ -11,12 +12,66 @@
 #include "nsCDefaultURIFixup.h"
 #include "nsIURIFixup.h"
 #include "nsIImageLoadingContent.h"
+#include "NullPrincipal.h"
 
 #include "mozilla/dom/Element.h"
 
 NS_IMPL_ISUPPORTS(nsContentSecurityManager,
                   nsIContentSecurityManager,
                   nsIChannelEventSink)
+
+/* static */ bool
+nsContentSecurityManager::AllowTopLevelNavigationToDataURI(
+  nsIURI* aURI,
+  nsContentPolicyType aContentPolicyType,
+  nsIPrincipal* aTriggeringPrincipal,
+  bool aLoadFromExternal)
+{
+  // Let's block all toplevel document navigations to a data: URI.
+  // In all cases where the toplevel document is navigated to a
+  // data: URI the triggeringPrincipal is a codeBasePrincipal, or
+  // a NullPrincipal. In other cases, e.g. typing a data: URL into
+  // the URL-Bar, the triggeringPrincipal is a SystemPrincipal;
+  // we don't want to block those loads. Only exception, loads coming
+  // from an external applicaton (e.g. Thunderbird) don't load
+  // using a codeBasePrincipal, but we want to block those loads.
+  if (!mozilla::net::nsIOService::BlockToplevelDataUriNavigations()) {
+    return true;
+  }
+  if (aContentPolicyType != nsIContentPolicy::TYPE_DOCUMENT) {
+    return true;
+  }
+  bool isDataURI =
+    (NS_SUCCEEDED(aURI->SchemeIs("data", &isDataURI)) && isDataURI);
+  if (!isDataURI) {
+    return true;
+  }
+  // Whitelist data: images as long as they are not SVGs
+  nsAutoCString filePath;
+  aURI->GetFilePath(filePath);
+  if (StringBeginsWith(filePath, NS_LITERAL_CSTRING("image/")) &&
+      !StringBeginsWith(filePath, NS_LITERAL_CSTRING("image/svg+xml"))) {
+    return true;
+  }
+  if (!aLoadFromExternal &&
+      nsContentUtils::IsSystemPrincipal(aTriggeringPrincipal)) {
+    return true;
+  }
+  NS_ConvertUTF8toUTF16 specUTF16(aURI->GetSpecOrDefault());
+  if (specUTF16.Length() > 50) {
+    specUTF16.Truncate(50);
+    specUTF16.AppendLiteral("...");
+  }
+  const char16_t* params[] = { specUTF16.get() };
+  nsContentUtils::ReportToConsole(nsIScriptError::warningFlag,
+                                  NS_LITERAL_CSTRING("DATA_URI_BLOCKED"),
+                                  // no doc available, log to browser console
+                                  nullptr,
+                                  nsContentUtils::eSECURITY_PROPERTIES,
+                                  "BlockTopLevelDataURINavigation",
+                                  params, ArrayLength(params));
+  return false;
+}
 
 static nsresult
 ValidateSecurityFlags(nsILoadInfo* aLoadInfo)
@@ -521,6 +576,27 @@ nsContentSecurityManager::AsyncOnChannelRedirect(nsIChannel* aOldChannel,
     if (NS_FAILED(rv)) {
       aOldChannel->Cancel(rv);
       return rv;
+    }
+  }
+
+  // Redirecting to a toplevel data: URI is not allowed, hence we pass
+  // a NullPrincipal as the TriggeringPrincipal to
+  // AllowTopLevelNavigationToDataURI() which definitely blocks any
+  // data: URI load.
+  nsCOMPtr<nsILoadInfo> newLoadInfo = aNewChannel->GetLoadInfo();
+  if (newLoadInfo) {
+    nsCOMPtr<nsIURI> uri;
+    nsresult rv = NS_GetFinalChannelURI(aNewChannel, getter_AddRefs(uri));
+    NS_ENSURE_SUCCESS(rv, rv);
+    nsCOMPtr<nsIPrincipal> nullTriggeringPrincipal = NullPrincipal::Create();
+    if (!nsContentSecurityManager::AllowTopLevelNavigationToDataURI(
+          uri,
+          newLoadInfo->GetExternalContentPolicyType(),
+          nullTriggeringPrincipal,
+          false)) {
+        // logging to console happens within AllowTopLevelNavigationToDataURI
+      aOldChannel->Cancel(NS_ERROR_DOM_BAD_URI);
+      return NS_ERROR_DOM_BAD_URI;
     }
   }
 

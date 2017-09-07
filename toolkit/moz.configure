@@ -120,7 +120,6 @@ option('--enable-default-toolkit', nargs=1,
 def toolkit(value, target, _):
     # Define possible choices for each platform. The default is the first one
     # listed when there are several.
-    os = target.os
     if target.os == 'WINNT':
         platform_choices = ('cairo-windows',)
     elif target.os == 'OSX':
@@ -128,19 +127,15 @@ def toolkit(value, target, _):
     elif target.os == 'iOS':
         platform_choices = ('cairo-uikit',)
     elif target.os == 'Android':
-        if value.origin == 'implied':
-            # Trust values coming from imply_option() (used in
-            # b2g/moz.configure).
-            platform_choices = tuple(value)
-        else:
-            platform_choices = ('cairo-android',)
+        platform_choices = ('cairo-android',)
     else:
         platform_choices = ('cairo-gtk3', 'cairo-gtk3-wayland')
 
     if value:
         if value[0] not in platform_choices:
             die('`%s` is not a valid value for --enable-default-toolkit on %s\n'
-                'Valid values: %s', value[0], os, ', '.join(platform_choices))
+                'Valid values: %s', value[0], target.os,
+                ', '.join(platform_choices))
         return value[0]
 
     return platform_choices[0]
@@ -744,10 +739,19 @@ with only_when(building_stylo_bindgen):
             # but not have other packages installed.  Since the user is trying
             # to use their system packages, we can't be more specific about what
             # they need.
+            clang_resolved = find_program(clang_path)
+            if not clang_resolved:
+                die(dedent('''\
+                The file {} returned by `llvm-config {}` does not exist.
+                clang is required to build Stylo.  Please install the necessary packages,
+                run `mach bootstrap`, or add --disable-stylo to your mozconfig.
+                '''.format(clang_path, '--bindir')))
+
             if not os.path.exists(libclang_path):
                 die(dedent('''\
                 The directory {} returned by `llvm-config {}` does not exist.
-                Please check your system configuration.
+                clang is required to build Stylo.  Please install the necessary packages,
+                run `mach bootstrap`, or add --disable-stylo to your mozconfig.
                 '''.format(libclang_path, libclang_arg)))
 
             (found, searched) = search_for_libclang(libclang_path)
@@ -755,15 +759,9 @@ with only_when(building_stylo_bindgen):
                 die(dedent('''\
                 Could not find the clang shared library in the path {}
                 returned by `llvm-config {}` (searched for files {}).
-                Please check your system configuration.
+                clang is required to build Stylo.  Please install the necessary packages,
+                run `mach bootstrap`, or add --disable-stylo to your mozconfig.
                 '''.format(libclang_path, libclang_arg, searched)))
-
-            clang_resolved = find_program(clang_path)
-            if not clang_resolved:
-                die(dedent('''\
-                The file {} returned by `llvm-config {}` does not exist.
-                Please check your system configuration.
-                '''.format(clang_path, '--bindir')))
 
             return namespace(
                 libclang_path=libclang_path,
@@ -915,26 +913,6 @@ def webspeech(value, _):
 set_config('MOZ_WEBSPEECH', webspeech)
 set_define('MOZ_WEBSPEECH', webspeech)
 add_old_configure_assignment('MOZ_WEBSPEECH', webspeech)
-
-# Speech API pocketsphinx backend
-# ==============================================================
-@depends(build_project, milestone, webspeech)
-def webspeech_pocketsphinx(build_project, milestone, webspeech):
-    if webspeech and milestone.is_nightly and build_project == 'b2g':
-        return True
-
-set_config('MOZ_WEBSPEECH_POCKETSPHINX', webspeech_pocketsphinx)
-set_define('MOZ_WEBSPEECH_POCKETSPHINX', webspeech_pocketsphinx)
-
-# Speech API models
-# ==============================================================
-@depends(build_project, milestone, webspeech)
-def webspeech_models(build_project, milestone, webspeech):
-    if webspeech and milestone.is_nightly and build_project == 'b2g':
-        return True
-
-set_config('MOZ_WEBSPEECH_MODELS', webspeech_models)
-set_define('MOZ_WEBSPEECH_MODELS', webspeech_models)
 
 # Speech API test backend
 # ==============================================================

@@ -22,20 +22,10 @@ namespace base {
 
 MessagePumpForUI::MessagePumpForUI()
   : state_(NULL)
-  , pump(*this)
 {
 }
 
 MessagePumpForUI::~MessagePumpForUI() {
-}
-
-MessagePumpAndroid::MessagePumpAndroid(MessagePumpForUI &aPump)
-  : pump(aPump)
-{
-}
-
-MessagePumpAndroid::~MessagePumpAndroid()
-{
 }
 
 void MessagePumpForUI::Run(Delegate* delegate) {

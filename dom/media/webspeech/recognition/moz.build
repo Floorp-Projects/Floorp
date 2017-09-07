@@ -26,11 +26,6 @@ if CONFIG['MOZ_WEBSPEECH_TEST_BACKEND']:
         'test/FakeSpeechRecognitionService.h',
     ]
 
-if CONFIG['MOZ_WEBSPEECH_POCKETSPHINX']:
-    EXPORTS.mozilla.dom += [
-        'PocketSphinxSpeechRecognitionService.h',
-    ]
-
 UNIFIED_SOURCES += [
     'endpointer.cc',
     'energy_endpointer.cc',
@@ -49,36 +44,10 @@ if CONFIG['MOZ_WEBSPEECH_TEST_BACKEND']:
         'test/FakeSpeechRecognitionService.cpp',
     ]
 
-if CONFIG['MOZ_WEBSPEECH_POCKETSPHINX']:
-    UNIFIED_SOURCES += [
-        'PocketSphinxSpeechRecognitionService.cpp',
-    ]
-
 LOCAL_INCLUDES += [
     '/dom/base',
     '/media/sphinxbase',
 ]
-
-if CONFIG['MOZ_WEBSPEECH_POCKETSPHINX']:
-    LOCAL_INCLUDES += [
-        '/media/pocketsphinx',
-    ]
-
-if CONFIG['MOZ_WEBSPEECH_MODELS']:
-    FINAL_TARGET_FILES.models.dict += [
-        'models/dict/en-US.dic',
-        'models/dict/en-US.dic.dmp',
-    ]
-    FINAL_TARGET_FILES.models['en-US'] += [
-		'models/en-US/feat.params',
-		'models/en-US/mdef',
-		'models/en-US/means',
-		'models/en-US/mixture_weights',
-		'models/en-US/noisedict',
-		'models/en-US/sendump',
-		'models/en-US/transition_matrices',
-		'models/en-US/variances',
-    ]
 
 include('/ipc/chromium/chromium-config.mozbuild')
 

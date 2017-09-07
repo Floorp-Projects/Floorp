@@ -108,22 +108,7 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=524674
         var expected = expectedEventChanges[i];
 
         if (current.target == expected.target) {
-          // expected.target.listeners should be a subset of
-          // current.changedListenerNames if all expected listener changes were
-          // sent. We may get random other event listener changes here too, not
-          // just the one from the test.
           is(current.target, expected.target, current.target + " = " + expected.target);
-
-          var eNames = current.changedListenerNames.enumerate();
-          var listeners = [];
-          while (eNames.hasMoreElements()) {
-            var listenerName = eNames.getNext().QueryInterface(Ci.nsIAtom).toString();
-            listeners.push(listenerName);
-          }
-          var matchAll = expected.listeners.every(function(val)
-                                                { return listeners.indexOf(val) >= 0; });
-          if (!matchAll)
-            return;
           ++i;
         }
       } catch(ex) {

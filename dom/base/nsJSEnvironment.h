@@ -21,6 +21,7 @@
 
 class nsICycleCollectorListener;
 class nsScriptNameSpaceManager;
+class nsIDocShell;
 
 namespace JS {
 class AutoValueVector;
@@ -101,7 +102,14 @@ public:
   static uint32_t GetMaxCCSliceTimeSinceClear();
   static void ClearMaxCCSliceTime();
 
-  static void RunNextCollectorTimer();
+  // If there is some pending CC or GC timer/runner, this will run it.
+  static void RunNextCollectorTimer(JS::gcreason::Reason aReason,
+                                    mozilla::TimeStamp aDeadline = mozilla::TimeStamp());
+  // If user has been idle and aDocShell is for an iframe being loaded in an
+  // already loaded top level docshell, this will run a CC or GC
+  // timer/runner if there is such pending.
+  static void MaybeRunNextCollectorSlice(nsIDocShell* aDocShell,
+                                         JS::gcreason::Reason aReason);
 
   // The GC should probably run soon, in the zone of object aObj (if given).
   static void PokeGC(JS::gcreason::Reason aReason, JSObject* aObj, int aDelay = 0);

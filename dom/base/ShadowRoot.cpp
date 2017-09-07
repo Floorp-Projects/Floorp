@@ -59,14 +59,14 @@ NS_INTERFACE_MAP_END_INHERITING(DocumentFragment)
 NS_IMPL_ADDREF_INHERITED(ShadowRoot, DocumentFragment)
 NS_IMPL_RELEASE_INHERITED(ShadowRoot, DocumentFragment)
 
-ShadowRoot::ShadowRoot(nsIContent* aContent,
+ShadowRoot::ShadowRoot(Element* aElement,
                        already_AddRefed<mozilla::dom::NodeInfo>&& aNodeInfo,
                        nsXBLPrototypeBinding* aProtoBinding)
-  : DocumentFragment(aNodeInfo), mPoolHost(aContent),
+  : DocumentFragment(aNodeInfo), mPoolHost(aElement),
     mProtoBinding(aProtoBinding), mShadowElement(nullptr),
     mInsertionPointChanged(false), mIsComposedDocParticipant(false)
 {
-  SetHost(aContent);
+  SetHost(aElement);
 
   // Nodes in a shadow tree should never store a value
   // in the subtree root pointer, nodes in the shadow tree
@@ -75,7 +75,7 @@ ShadowRoot::ShadowRoot(nsIContent* aContent,
 
   SetFlags(NODE_IS_IN_SHADOW_TREE);
 
-  ExtendedDOMSlots()->mBindingParent = aContent;
+  ExtendedDOMSlots()->mBindingParent = aElement;
   ExtendedDOMSlots()->mContainingShadow = this;
 
   // Add the ShadowRoot as a mutation observer on the host to watch

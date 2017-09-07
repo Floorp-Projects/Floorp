@@ -4,10 +4,10 @@
 
 use api::{BorderSide, BorderStyle, BorderWidths, ClipAndScrollInfo, ColorF, LayerPoint, LayerRect};
 use api::{LayerSize, LocalClip, NormalBorder};
+use clip::ClipSource;
 use ellipse::Ellipse;
 use gpu_cache::GpuDataRequest;
 use frame_builder::FrameBuilder;
-use mask_cache::ClipSource;
 use prim_store::{BorderPrimitiveCpu, PrimitiveContainer};
 use tiling::PrimitiveFlags;
 use util::{lerp, pack_as_float};

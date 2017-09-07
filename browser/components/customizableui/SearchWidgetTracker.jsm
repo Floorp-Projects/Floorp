@@ -36,6 +36,10 @@ const SearchWidgetTracker = {
     CustomizableUI.addListener(this);
     Services.prefs.addObserver(PREF_NAME,
                                () => this.syncWidgetWithPreference());
+
+    // The placement of the widget always takes priority, and the preference
+    // should always match the actual placement when the browser starts up.
+    this.syncPreferenceWithWidget();
   },
 
   onCustomizeEnd() {

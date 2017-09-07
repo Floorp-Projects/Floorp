@@ -110,7 +110,9 @@ namespace JS {
     D(SHUTDOWN_CC)                              \
     D(UNUSED2)                                  \
     D(USER_INACTIVE)                            \
-    D(XPCONNECT_SHUTDOWN)
+    D(XPCONNECT_SHUTDOWN)                       \
+    D(DOCSHELL)                                 \
+    D(HTML_PARSER)
 
 namespace gcreason {
 

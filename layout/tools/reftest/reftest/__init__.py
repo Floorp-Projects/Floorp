@@ -116,7 +116,7 @@ class ReftestManifest(object):
                     tests.append(items[i+1])
                     break
 
-                if item == '==' or item == '!=':
+                if item == '==' or item == '!=' or item == 'print':
                     tests.extend(items[i+1:i+3])
                     break
 

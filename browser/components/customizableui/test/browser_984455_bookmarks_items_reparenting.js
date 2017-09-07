@@ -10,7 +10,6 @@ var gOverflowList = document.getElementById(gNavBar.getAttribute("overflowtarget
 const kBookmarksButton = "bookmarks-menu-button";
 const kBookmarksItems = "personal-bookmarks";
 const kOriginalWindowWidth = window.outerWidth;
-const kSmallWidth = 400;
 
 /**
  * Helper function that opens the bookmarks menu, and returns a Promise that
@@ -141,7 +140,7 @@ function checkBookmarksItemsChevronContextMenu() {
  */
 function overflowEverything() {
   info("Waiting for overflow");
-  window.resizeTo(kSmallWidth, window.outerHeight);
+  window.resizeTo(kForceOverflowWidthPx, window.outerHeight);
   return waitForCondition(() => gNavBar.hasAttribute("overflowing"));
 }
 
