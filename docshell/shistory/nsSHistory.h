@@ -96,12 +96,6 @@ private:
   nsresult PrintHistory();
 #endif
 
-  // Find the transaction for a given bfcache entry. It only looks up between
-  // the range where alive viewers may exist (i.e nsISHistory::VIEWER_WINDOW).
-  nsresult FindTransactionForBFCache(nsIBFCacheEntry* aEntry,
-                                     nsISHTransaction** aResult,
-                                     int32_t* aResultIndex);
-
   // Evict content viewers in this window which don't lie in the "safe" range
   // around aIndex.
   void EvictOutOfRangeWindowContentViewers(int32_t aIndex);
