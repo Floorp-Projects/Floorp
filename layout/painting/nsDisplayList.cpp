@@ -7841,6 +7841,7 @@ nsDisplayTransform::CreateWebRenderCommands(mozilla::wr::DisplayListBuilder& aBu
         TransformData& transformData = animation.data().get_TransformData();
         transformData.inheritedXScale() = scale.width;
         transformData.inheritedYScale() = scale.height;
+        transformData.hasPerspectiveParent() = aSc.HasPerspectiveTransform();
       }
     }
 

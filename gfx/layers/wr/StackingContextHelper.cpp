@@ -14,6 +14,7 @@ namespace layers {
 
 StackingContextHelper::StackingContextHelper()
   : mBuilder(nullptr)
+  , mHasPerspectiveTransform(false)
   , mXScale(1.0f)
   , mYScale(1.0f)
 {
@@ -26,6 +27,7 @@ StackingContextHelper::StackingContextHelper(const StackingContextHelper& aParen
                                              const Maybe<gfx::Matrix4x4>& aTransform,
                                              const nsTArray<wr::WrFilterOp>& aFilters)
   : mBuilder(&aBuilder)
+  , mHasPerspectiveTransform(false)
   , mXScale(1.0f)
   , mYScale(1.0f)
 {
@@ -51,6 +53,7 @@ StackingContextHelper::StackingContextHelper(const StackingContextHelper& aParen
                                              gfx::Matrix4x4* aTransformPtr,
                                              const nsTArray<wr::WrFilterOp>& aFilters)
   : mBuilder(&aBuilder)
+  , mHasPerspectiveTransform(false)
   , mXScale(1.0f)
   , mYScale(1.0f)
 {
@@ -83,6 +86,7 @@ StackingContextHelper::StackingContextHelper(const StackingContextHelper& aParen
                                              const nsTArray<wr::WrFilterOp>& aFilters,
                                              const gfx::CompositionOp& aMixBlendMode)
   : mBuilder(&aBuilder)
+  , mHasPerspectiveTransform(false)
   , mXScale(1.0f)
   , mYScale(1.0f)
 {
@@ -90,6 +94,10 @@ StackingContextHelper::StackingContextHelper(const StackingContextHelper& aParen
 
   if (aTransformPtr) {
     mTransform = *aTransformPtr;
+  }
+
+  if (aPerspectivePtr) {
+    mHasPerspectiveTransform = true;
   }
 
   bool is2d = !aTransformPtr || (aTransformPtr->Is2D() && !aPerspectivePtr);
