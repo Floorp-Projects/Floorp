@@ -1016,6 +1016,7 @@ impl RenderTarget for ColorRenderTarget {
 
                                     let mut font = text.font.clone();
                                     font.size = font.size.scale_by(ctx.device_pixel_ratio);
+                                    font.render_mode = text.shadow_render_mode;
 
                                     let texture_id = ctx.resource_cache.get_glyphs(font,
                                                                                    &text.glyph_keys,
