@@ -301,6 +301,29 @@ class Edge(Browser):
         raise NotImplementedError
 
 
+class InternetExplorer(Browser):
+    """Internet Explorer-specific interface.
+
+    Includes installation, webdriver installation, and wptrunner setup methods.
+    """
+
+    product = "ie"
+    requirements = "requirements_ie.txt"
+
+    def install(self, dest=None):
+        raise NotImplementedError
+
+    def find_webdriver(self):
+        return find_executable("IEDriverServer.exe")
+
+    def install_webdriver(self, dest=None):
+        """Install latest Webdriver."""
+        raise NotImplementedError
+
+    def version(self):
+        raise NotImplementedError
+
+
 class Servo(Browser):
     """Servo-specific interface.
 
