@@ -394,7 +394,9 @@ this.ExtensionData = class {
       } catch (e) {
         // Always return a list, even if the directory does not exist (or is
         // not a directory) for symmetry with the ZipReader behavior.
-        Cu.reportError(e);
+        if (!e.becauseNoSuchFile) {
+          Cu.reportError(e);
+        }
       }
       iter.close();
 
