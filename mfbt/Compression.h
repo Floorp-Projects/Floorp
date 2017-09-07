@@ -96,6 +96,29 @@ public:
   decompress(const char* aSource, size_t aInputSize, char* aDest,
              size_t aMaxOutputSize, size_t* aOutputSize);
 
+  /**
+   * If the source stream is malformed, the function will stop decoding
+   * and return false.
+   *
+   * This function never writes beyond aDest + aMaxOutputSize, and is
+   * therefore protected against malicious data packets. It also ignores
+   * unconsumed input upon reaching aMaxOutputSize and can therefore be used
+   * for partial decompression.
+   *
+   * Note: Destination buffer must be already allocated.  This version is
+   *       slightly slower than the decompress without the aMaxOutputSize.
+   *
+   * @param aInputSize is the length of the input compressed data
+   * @param aMaxOutputSize is the size of the destination buffer (which must be
+   *   already allocated)
+   * @param aOutputSize the actual number of bytes decoded in the destination
+   *   buffer (necessarily <= aMaxOutputSize)
+   * @return true on success, false on failure
+   */
+  static MFBT_API MOZ_MUST_USE bool
+  decompressPartial(const char* aSource, size_t aInputSize, char* aDest,
+                    size_t aMaxOutputSize, size_t* aOutputSize);
+
   /*
    * Provides the maximum size that LZ4 may output in a "worst case"
    * scenario (input data not compressible) primarily useful for memory
