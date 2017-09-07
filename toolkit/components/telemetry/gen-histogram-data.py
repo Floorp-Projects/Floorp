@@ -159,22 +159,27 @@ def write_exponential_histogram_ranges(output, histograms):
     # would see much speedup since calculating their buckets is fairly trivial,
     # and grabbing them from static data would likely incur a CPU cache miss.
     print("const int gExponentialBucketLowerBounds[] = {", file=output)
+
+    offset = 0
+    ranges_offsets = {}
     for histogram in histograms:
         if histogram.kind() == 'exponential':
-            ranges = histogram.ranges()
-            print(','.join(map(str, ranges)), ',', file=output)
+            ranges = tuple(histogram.ranges())
+            if ranges not in ranges_offsets:
+                ranges_offsets[ranges] = offset
+                offset += histogram.n_buckets()
+                print(','.join(map(str, ranges)), ',', file=output)
     print("};", file=output)
 
     print("const int gExponentialBucketLowerBoundIndex[] = {", file=output)
-    offset = 0
     for histogram in histograms:
         cpp_guard = histogram.cpp_guard()
         if cpp_guard:
             print("#if defined(%s)" % cpp_guard, file=output)
 
         if histogram.kind() == 'exponential':
-            print("%d," % offset, file=output)
-            offset += histogram.n_buckets()
+            our_offset = ranges_offsets[tuple(histogram.ranges())]
+            print("%d," % our_offset, file=output)
         else:
             print("-1,", file=output)
 
