@@ -9,8 +9,6 @@
 
 #include "mozilla/Attributes.h"
 
-#include "nsStringFwd.h"
-
 #include "nsSubstring.h"
 #include "nsDependentSubstring.h"
 #include "nsReadableUtils.h"
@@ -29,7 +27,16 @@
 #define kAutoDetect     (100)
 #endif
 
+
+// declare nsString, et. al.
+#include "string-template-def-unichar.h"
 #include "nsTString.h"
+#include "string-template-undef.h"
+
+// declare nsCString, et. al.
+#include "string-template-def-char.h"
+#include "nsTString.h"
+#include "string-template-undef.h"
 
 static_assert(sizeof(char16_t) == 2, "size of char16_t must be 2");
 static_assert(sizeof(nsString::char_type) == 2,
@@ -38,14 +45,6 @@ static_assert(nsString::char_type(-1) > nsString::char_type(0),
               "nsString::char_type must be unsigned");
 static_assert(sizeof(nsCString::char_type) == 1,
               "size of nsCString::char_type must be 1");
-
-static_assert(sizeof(nsTLiteralString<char>) == sizeof(nsTString<char>),
-              "nsLiteralCString can masquerade as nsCString, "
-              "so they must have identical layout");
-
-static_assert(sizeof(nsTLiteralString<char16_t>) == sizeof(nsTString<char16_t>),
-              "nsTLiteralString can masquerade as nsString, "
-              "so they must have identical layout");
 
 
 /**
@@ -61,7 +60,7 @@ public:
 
   NS_LossyConvertUTF16toASCII(const char16ptr_t aString, uint32_t aLength)
   {
-    LossyAppendUTF16toASCII(Substring(static_cast<const char16_t*>(aString), aLength), *this);
+    LossyAppendUTF16toASCII(Substring(aString, aLength), *this);
   }
 
   explicit NS_LossyConvertUTF16toASCII(const nsAString& aString)
@@ -112,7 +111,7 @@ public:
 
   NS_ConvertUTF16toUTF8(const char16ptr_t aString, uint32_t aLength)
   {
-    AppendUTF16toUTF8(Substring(static_cast<const char16_t*>(aString), aLength), *this);
+    AppendUTF16toUTF8(Substring(aString, aLength), *this);
   }
 
   explicit NS_ConvertUTF16toUTF8(const nsAString& aString)

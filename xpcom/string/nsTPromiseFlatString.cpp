@@ -4,9 +4,8 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-template <typename T>
 void
-nsTPromiseFlatString<T>::Init(const substring_type& str)
+nsTPromiseFlatString_CharT::Init(const substring_type& str)
 {
   if (str.IsTerminated()) {
     char_type* newData =
@@ -16,8 +15,8 @@ nsTPromiseFlatString<T>::Init(const substring_type& str)
       str.GetDataFlags() & (DataFlags::TERMINATED | DataFlags::LITERAL);
     // does not promote DataFlags::VOIDED
 
-    this->SetData(newData, newLength, newDataFlags);
+    SetData(newData, newLength, newDataFlags);
   } else {
-    this->Assign(str);
+    Assign(str);
   }
 }
