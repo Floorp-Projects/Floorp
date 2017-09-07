@@ -12,7 +12,7 @@ asserts-if(Android,0-8) HTTP(..) == download-3-ref.html download-3.html # same b
 asserts-if(Android,0-8) HTTP(..) == fallback-to-system-1.html fallback-to-system-1-ref.html # just delayed assertions from above tests
 HTTP(..) == name-override-simple-1.html name-override-simple-1-ref.html
 HTTP(..) != name-override-simple-1.html download-1-notref.html
-fails HTTP(..) == name-override-1.html name-override-1-ref.html
+fails-if(!styloVsGecko) HTTP(..) == name-override-1.html name-override-1-ref.html
 HTTP(..) == multiple-descriptor-1.html multiple-descriptor-1-ref.html
 HTTP(..) != multiple-descriptor-1.html multiple-descriptor-1-notref.html
 HTTP(..) == src-list-1.html src-list-1-ref.html
@@ -86,8 +86,8 @@ random-if(cocoaWidget) HTTP(..) == sheet-set-switch-1.html sheet-set-switch-1-re
 HTTP(..) == insert-rule-1a.html insert-rule-1-ref.html
 HTTP(..) == insert-rule-1b.html insert-rule-1-ref.html
 HTTP(..) == delete-rule-1.html delete-rule-1-ref.html
-skip-if(styloVsGecko) HTTP(..) == media-query-add-1.html media-query-add-1-ref.html # skip styloVsGecko for imperceptible pixel rounding differences between Stylo and Gecko
-skip-if(styloVsGecko) HTTP(..) == media-query-remove-1.html media-query-remove-1-ref.html # skip styloVsGecko for imperceptible pixel rounding differences between Stylo and Gecko
+random-if(styloVsGecko) HTTP(..) == media-query-add-1.html media-query-add-1-ref.html
+random-if(styloVsGecko) HTTP(..) == media-query-remove-1.html media-query-remove-1-ref.html
 HTTP(..) != media-query-add-1-ref.html media-query-remove-1-ref.html
 
 HTTP(..) == ahem-metrics-1.html ahem-metrics-1-ref.html
@@ -133,7 +133,7 @@ HTTP(..) != 507960-1-woff-bad-hint.html 507960-1-ref.html
 # Tests for bug 523717
 HTTP(..) == underline-offset-change-1.html underline-offset-change-1-ref.html
 HTTP(..) == underline-offset-change-2.html underline-offset-change-2-ref.html
-fails-if(cocoaWidget||winWidget) HTTP(..) != underline-offset-change-1-ref.html underline-offset-change-2-ref.html # Bug 534132
+fails-if(cocoaWidget&&!styloVsGecko) fails-if(winWidget&&!styloVsGecko) HTTP(..) != underline-offset-change-1-ref.html underline-offset-change-2-ref.html # Bug 534132
 
 HTTP(..) != 534352-1-extra-cmap-sentinel.html 534352-1-extra-cmap-sentinel-ref.html
 HTTP(..) == bug533251.html bug533251-ref.html
