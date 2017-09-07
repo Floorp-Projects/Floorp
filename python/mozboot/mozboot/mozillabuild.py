@@ -20,37 +20,7 @@ class MozillaBuildBootstrapper(BaseBootstrapper):
         return BaseBootstrapper.which(self, name + '.exe')
 
     def install_system_packages(self):
-        self.install_rustup()
-
-    def install_rustup(self):
-        try:
-            rustup_init = tempfile.gettempdir() + '/rustup-init.exe'
-            self.http_download_and_save(
-                    'https://static.rust-lang.org/rustup/archive/1.6.0/i686-pc-windows-msvc/rustup-init.exe',
-                    rustup_init,
-                    '9855b9f0b19fd83c056185e083b6b345982becc2f8c608aac14998a73bcc2937')
-            self.run([rustup_init, '--no-modify-path', '--default-host',
-                'x86_64-pc-windows-msvc', '--default-toolchain', 'stable', '-y'])
-            mozillabuild_dir = os.environ['MOZILLABUILD']
-
-            with open(mozillabuild_dir + 'msys/etc/profile.d/profile-rustup.sh', 'wb') as f:
-                f.write('#!/bash/sh\n')
-                f.write('if test -n "$MOZILLABUILD"; then\n')
-                f.write('    WIN_HOME=$(command cd "$HOME" && pwd)\n')
-                f.write('    PATH="$WIN_HOME/.cargo/bin:$PATH"\n')
-                f.write('    export PATH\n')
-                f.write('fi')
-            _, cargo_bin = self.cargo_home()
-            rustup = os.path.join(cargo_bin, 'rustup')
-            self.run([rustup, 'target', 'add', 'i686-pc-windows-msvc'])
-        finally:
-            try:
-                os.remove(rustup_init)
-            except OSError as e:
-                if e.errno == errno.ENOENT:
-                    pass
-                else:
-                    raise
+        pass
 
     def ensure_mercurial_modern(self):
         # Overrides default implementation to always run pip because.
