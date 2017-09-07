@@ -384,31 +384,48 @@ ChannelWrapper::GetCanModify(ErrorResult& aRv) const
   return true;
 }
 
+already_AddRefed<nsIURI>
+ChannelWrapper::GetOriginURI() const
+{
+  nsCOMPtr<nsIURI> uri;
+  if (nsCOMPtr<nsILoadInfo> loadInfo = GetLoadInfo()) {
+    if (nsIPrincipal* prin = loadInfo->TriggeringPrincipal()) {
+      if (prin->GetIsCodebasePrincipal()) {
+        Unused << prin->GetURI(getter_AddRefs(uri));
+      }
+    }
+  }
+  return uri.forget();
+}
+
+already_AddRefed<nsIURI>
+ChannelWrapper::GetDocumentURI() const
+{
+  nsCOMPtr<nsIURI> uri;
+  if (nsCOMPtr<nsILoadInfo> loadInfo = GetLoadInfo()) {
+    if (nsIPrincipal* prin = loadInfo->LoadingPrincipal()) {
+      if (prin->GetIsCodebasePrincipal()) {
+        Unused << prin->GetURI(getter_AddRefs(uri));
+      }
+    }
+  }
+  return uri.forget();
+}
+
+
 void
 ChannelWrapper::GetOriginURL(nsCString& aRetVal) const
 {
-  if (nsCOMPtr<nsILoadInfo> loadInfo = GetLoadInfo()) {
-    if (nsIPrincipal* prin = loadInfo->TriggeringPrincipal()) {
-      nsCOMPtr<nsIURI> uri;
-      if (prin->GetIsCodebasePrincipal() &&
-          NS_SUCCEEDED(prin->GetURI(getter_AddRefs(uri)))) {
-        Unused << uri->GetSpec(aRetVal);
-      }
-    }
+  if (nsCOMPtr<nsIURI> uri = GetOriginURI()) {
+    Unused << uri->GetSpec(aRetVal);
   }
 }
 
 void
 ChannelWrapper::GetDocumentURL(nsCString& aRetVal) const
 {
-  if (nsCOMPtr<nsILoadInfo> loadInfo = GetLoadInfo()) {
-    if (nsIPrincipal* prin = loadInfo->LoadingPrincipal()) {
-      nsCOMPtr<nsIURI> uri;
-      if (prin->GetIsCodebasePrincipal() &&
-          NS_SUCCEEDED(prin->GetURI(getter_AddRefs(uri)))) {
-        Unused << uri->GetSpec(aRetVal);
-      }
-    }
+  if (nsCOMPtr<nsIURI> uri = GetDocumentURI()) {
+    Unused << uri->GetSpec(aRetVal);
   }
 }
 
