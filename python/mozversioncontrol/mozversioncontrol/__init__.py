@@ -121,6 +121,18 @@ class Repository(object):
     def get_files_in_working_directory(self):
         """Obtain a list of managed files in the working directory."""
 
+    @abc.abstractmethod
+    def working_directory_clean(self, untracked=False, ignored=False):
+        """Determine if the working directory is free of modifications.
+
+        Returns True if the working directory does not have any file
+        modifications. False otherwise.
+
+        By default, untracked and ignored files are not considered. If
+        ``untracked`` or ``ignored`` are set, they influence the clean check
+        to factor these file classes into consideration.
+        """
+
 
 class HgRepository(Repository):
     '''An implementation of `Repository` for Mercurial repositories.'''
@@ -207,6 +219,18 @@ class HgRepository(Repository):
                     self._run_in_client([b'files', b'-0']).split(b'\0')
                     if p)
 
+    def working_directory_clean(self, untracked=False, ignored=False):
+        args = [b'status', b'\0', b'--modified', b'--added', b'--removed',
+                b'--deleted']
+        if untracked:
+            args.append(b'--unknown')
+        if ignored:
+            args.append(b'--ignored')
+
+        # If output is empty, there are no entries of requested status, which
+        # means we are clean.
+        return not len(self._run_in_client(args).strip())
+
 
 class GitRepository(Repository):
     '''An implementation of `Repository` for Git repositories.'''
@@ -235,6 +259,15 @@ class GitRepository(Repository):
 
     def get_files_in_working_directory(self):
         return self._run('ls-files', '-z').split(b'\0')
+
+    def working_directory_clean(self, untracked=False, ignored=False):
+        args = ['status', '--porcelain']
+        if untracked:
+            args.append('--untracked-files')
+        if ignored:
+            args.append('--ignored')
+
+        return not len(self._run(*args).strip())
 
 
 class InvalidRepoPath(Exception):

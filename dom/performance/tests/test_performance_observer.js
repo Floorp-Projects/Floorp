@@ -1,5 +1,3 @@
-setup({ explicit_done: true });
-
 test(t => {
   assert_throws({name: "TypeError"}, function() {
     new PerformanceObserver();

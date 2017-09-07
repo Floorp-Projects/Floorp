@@ -156,16 +156,16 @@ ParamTraits<mozilla::Telemetry::ScalarAction>
     }
 
     if (aParam.mData->is<uint32_t>()) {
-      // That's a nsITelemetry::SCALAR_COUNT.
-      WriteParam(aMsg, static_cast<uint32_t>(nsITelemetry::SCALAR_COUNT));
+      // That's a nsITelemetry::SCALAR_TYPE_COUNT.
+      WriteParam(aMsg, static_cast<uint32_t>(nsITelemetry::SCALAR_TYPE_COUNT));
       WriteParam(aMsg, aParam.mData->as<uint32_t>());
     } else if (aParam.mData->is<nsString>()) {
-      // That's a nsITelemetry::SCALAR_STRING.
-      WriteParam(aMsg, static_cast<uint32_t>(nsITelemetry::SCALAR_STRING));
+      // That's a nsITelemetry::SCALAR_TYPE_STRING.
+      WriteParam(aMsg, static_cast<uint32_t>(nsITelemetry::SCALAR_TYPE_STRING));
       WriteParam(aMsg, aParam.mData->as<nsString>());
     } else if (aParam.mData->is<bool>()) {
-      // That's a nsITelemetry::SCALAR_BOOLEAN.
-      WriteParam(aMsg, static_cast<uint32_t>(nsITelemetry::SCALAR_BOOLEAN));
+      // That's a nsITelemetry::SCALAR_TYPE_BOOLEAN.
+      WriteParam(aMsg, static_cast<uint32_t>(nsITelemetry::SCALAR_TYPE_BOOLEAN));
       WriteParam(aMsg, aParam.mData->as<bool>());
     } else {
       MOZ_CRASH("Unknown scalar type.");
@@ -185,7 +185,7 @@ ParamTraits<mozilla::Telemetry::ScalarAction>
     // De-serialize the data based on the scalar type.
     switch (scalarType)
     {
-      case nsITelemetry::SCALAR_COUNT:
+      case nsITelemetry::SCALAR_TYPE_COUNT:
         {
           uint32_t data = 0;
           // De-serialize the data.
@@ -195,7 +195,7 @@ ParamTraits<mozilla::Telemetry::ScalarAction>
           aResult->mData = mozilla::Some(mozilla::AsVariant(data));
           break;
         }
-      case nsITelemetry::SCALAR_STRING:
+      case nsITelemetry::SCALAR_TYPE_STRING:
         {
           nsString data;
           // De-serialize the data.
@@ -205,7 +205,7 @@ ParamTraits<mozilla::Telemetry::ScalarAction>
           aResult->mData = mozilla::Some(mozilla::AsVariant(data));
           break;
         }
-      case nsITelemetry::SCALAR_BOOLEAN:
+      case nsITelemetry::SCALAR_TYPE_BOOLEAN:
         {
           bool data = false;
           // De-serialize the data.
@@ -246,16 +246,16 @@ ParamTraits<mozilla::Telemetry::KeyedScalarAction>
     }
 
     if (aParam.mData->is<uint32_t>()) {
-      // That's a nsITelemetry::SCALAR_COUNT.
-      WriteParam(aMsg, static_cast<uint32_t>(nsITelemetry::SCALAR_COUNT));
+      // That's a nsITelemetry::SCALAR_TYPE_COUNT.
+      WriteParam(aMsg, static_cast<uint32_t>(nsITelemetry::SCALAR_TYPE_COUNT));
       WriteParam(aMsg, aParam.mData->as<uint32_t>());
     } else if (aParam.mData->is<nsString>()) {
-      // That's a nsITelemetry::SCALAR_STRING.
+      // That's a nsITelemetry::SCALAR_TYPE_STRING.
       // Keyed string scalars are not supported.
       MOZ_ASSERT(false, "Keyed String Scalar unable to be write from child process. Not supported.");
     } else if (aParam.mData->is<bool>()) {
-      // That's a nsITelemetry::SCALAR_BOOLEAN.
-      WriteParam(aMsg, static_cast<uint32_t>(nsITelemetry::SCALAR_BOOLEAN));
+      // That's a nsITelemetry::SCALAR_TYPE_BOOLEAN.
+      WriteParam(aMsg, static_cast<uint32_t>(nsITelemetry::SCALAR_TYPE_BOOLEAN));
       WriteParam(aMsg, aParam.mData->as<bool>());
     } else {
       MOZ_CRASH("Unknown keyed scalar type.");
@@ -276,7 +276,7 @@ ParamTraits<mozilla::Telemetry::KeyedScalarAction>
     // De-serialize the data based on the scalar type.
     switch (scalarType)
     {
-      case nsITelemetry::SCALAR_COUNT:
+      case nsITelemetry::SCALAR_TYPE_COUNT:
         {
           uint32_t data = 0;
           // De-serialize the data.
@@ -286,13 +286,13 @@ ParamTraits<mozilla::Telemetry::KeyedScalarAction>
           aResult->mData = mozilla::Some(mozilla::AsVariant(data));
           break;
         }
-      case nsITelemetry::SCALAR_STRING:
+      case nsITelemetry::SCALAR_TYPE_STRING:
         {
           // Keyed string scalars are not supported.
           MOZ_ASSERT(false, "Keyed String Scalar unable to be read from child process. Not supported.");
           return false;
         }
-      case nsITelemetry::SCALAR_BOOLEAN:
+      case nsITelemetry::SCALAR_TYPE_BOOLEAN:
         {
           bool data = false;
           // De-serialize the data.

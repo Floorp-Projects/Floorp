@@ -10,7 +10,6 @@ form > label,
 form > div {
   flex: 1 0 100%;
   align-self: center;
-  font-size: 1.3em;
   margin: 0 0 0.5em !important;
 }
 

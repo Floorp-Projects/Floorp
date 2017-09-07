@@ -123,8 +123,19 @@ UNITTEST_ALIASES = {
 #
 # Note that the test platforms here are only the prefix up to the `/`.
 UNITTEST_PLATFORM_PRETTY_NAMES = {
-    'Ubuntu': ['linux32', 'linux64', 'linux64-asan', 'linux64-stylo', 'linux64-stylo-sequential'],
-    'x64': ['linux64', 'linux64-asan', 'linux64-stylo', 'linux64-stylo-sequential'],
+    'Ubuntu': [
+        'linux32',
+        'linux64',
+        'linux64-asan',
+        'linux64-stylo-disabled',
+        'linux64-stylo-sequential'
+    ],
+    'x64': [
+        'linux64',
+        'linux64-asan',
+        'linux64-stylo-disabled',
+        'linux64-stylo-sequential'
+    ],
     'Android 4.3': ['android-4.3-arm7-api-16'],
     '10.10': ['macosx64'],
     # other commonly-used substrings for platforms not yet supported with

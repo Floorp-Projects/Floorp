@@ -14,7 +14,8 @@
 
 "use strict";
 
-const {CSS_ANGLEUNIT} = require("devtools/shared/css/properties-db");
+loader.lazyRequireGetter(this, "CSS_ANGLEUNIT",
+  "devtools/shared/css/properties-db", true);
 
 const promise = require("promise");
 const {getCSSLexer} = require("devtools/shared/css/lexer");

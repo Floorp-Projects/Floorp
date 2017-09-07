@@ -1250,20 +1250,15 @@ NS_IMPL_CYCLE_COLLECTION_UNLINK_BEGIN_INHERITED(HTMLInputElement,
   //XXX should unlink more?
 NS_IMPL_CYCLE_COLLECTION_UNLINK_END
 
-NS_IMPL_ADDREF_INHERITED(HTMLInputElement, Element)
-NS_IMPL_RELEASE_INHERITED(HTMLInputElement, Element)
-
-// QueryInterface implementation for HTMLInputElement
-NS_INTERFACE_TABLE_HEAD_CYCLE_COLLECTION_INHERITED(HTMLInputElement)
-  NS_INTERFACE_TABLE_INHERITED(HTMLInputElement,
-                               nsIDOMHTMLInputElement,
-                               nsITextControlElement,
-                               imgINotificationObserver,
-                               nsIImageLoadingContent,
-                               imgIOnloadBlocker,
-                               nsIDOMNSEditableElement,
-                               nsIConstraintValidation)
-NS_INTERFACE_TABLE_TAIL_INHERITING(nsGenericHTMLFormElementWithState)
+NS_IMPL_ISUPPORTS_CYCLE_COLLECTION_INHERITED(HTMLInputElement,
+                                             nsGenericHTMLFormElementWithState,
+                                             nsIDOMHTMLInputElement,
+                                             nsITextControlElement,
+                                             imgINotificationObserver,
+                                             nsIImageLoadingContent,
+                                             imgIOnloadBlocker,
+                                             nsIDOMNSEditableElement,
+                                             nsIConstraintValidation)
 
 // nsIDOMNode
 

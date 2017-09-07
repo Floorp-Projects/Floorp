@@ -110,12 +110,9 @@ PluginDocument::~PluginDocument() = default;
 NS_IMPL_CYCLE_COLLECTION_INHERITED(PluginDocument, MediaDocument,
                                    mPluginContent)
 
-NS_IMPL_ADDREF_INHERITED(PluginDocument, MediaDocument)
-NS_IMPL_RELEASE_INHERITED(PluginDocument, MediaDocument)
-
-NS_INTERFACE_TABLE_HEAD_CYCLE_COLLECTION_INHERITED(PluginDocument)
-  NS_INTERFACE_TABLE_INHERITED(PluginDocument, nsIPluginDocument)
-NS_INTERFACE_TABLE_TAIL_INHERITING(MediaDocument)
+NS_IMPL_ISUPPORTS_CYCLE_COLLECTION_INHERITED(PluginDocument,
+                                             MediaDocument,
+                                             nsIPluginDocument)
 
 void
 PluginDocument::SetScriptGlobalObject(nsIScriptGlobalObject* aScriptGlobalObject)

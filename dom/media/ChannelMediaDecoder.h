@@ -36,6 +36,7 @@ class ChannelMediaDecoder : public MediaDecoder
 
   private:
     /* MediaResourceCallback functions */
+    AbstractThread* AbstractMainThread() const override;
     MediaDecoderOwner* GetMediaOwner() const override;
     void NotifyNetworkError() override;
     void NotifyDataArrived() override;

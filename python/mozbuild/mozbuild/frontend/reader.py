@@ -850,7 +850,7 @@ class BuildReader(object):
         self._log = logging.getLogger(__name__)
         self._read_files = set()
         self._execution_stack = []
-        self._finder = finder
+        self.finder = finder
 
         # Finder patterns to ignore when searching for moz.build files.
         ignores = {
@@ -1114,9 +1114,9 @@ class BuildReader(object):
             config.topobjdir = topobjdir
             config.external_source_dir = None
 
-        context = Context(VARIABLES, config, self._finder)
+        context = Context(VARIABLES, config, self.finder)
         sandbox = MozbuildSandbox(context, metadata=metadata,
-                                  finder=self._finder)
+                                  finder=self.finder)
         sandbox.exec_file(path)
         self._execution_time += time.time() - time_start
         self._file_count += len(context.all_paths)
@@ -1147,7 +1147,7 @@ class BuildReader(object):
             non_unified_sources = set()
             for s in gyp_dir.non_unified_sources:
                 source = SourcePath(context, s)
-                if not self._finder.get(source.full_path):
+                if not self.finder.get(source.full_path):
                     raise SandboxValidationError('Cannot find %s.' % source,
                         context)
                 non_unified_sources.add(source)

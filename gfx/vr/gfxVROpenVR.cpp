@@ -268,7 +268,12 @@ VRDisplayOpenVR::StartPresentation()
     return;
   }
   mIsPresenting = true;
-  mPresentationStart = TimeStamp::Now();
+  mTelemetry.Clear();
+  mTelemetry.mPresentationStart = TimeStamp::Now();
+
+  ::vr::Compositor_CumulativeStats stats;
+  mVRCompositor->GetCumulativeStats(&stats, sizeof(::vr::Compositor_CumulativeStats));
+  mTelemetry.mLastDroppedFrameCount = stats.m_nNumReprojectedFrames;
 }
 
 void
@@ -281,9 +286,16 @@ VRDisplayOpenVR::StopPresentation()
   mVRCompositor->ClearLastSubmittedFrame();
 
   mIsPresenting = false;
+  const TimeDuration duration = TimeStamp::Now() - mTelemetry.mPresentationStart;
   Telemetry::Accumulate(Telemetry::WEBVR_USERS_VIEW_IN, 2);
-  Telemetry::AccumulateTimeDelta(Telemetry::WEBVR_TIME_SPENT_VIEWING_IN_OPENVR,
-                                 mPresentationStart);
+  Telemetry::Accumulate(Telemetry::WEBVR_TIME_SPENT_VIEWING_IN_OPENVR,
+                        duration.ToMilliseconds());
+
+  ::vr::Compositor_CumulativeStats stats;
+  mVRCompositor->GetCumulativeStats(&stats, sizeof(::vr::Compositor_CumulativeStats));
+  const uint32_t droppedFramesPerSec = (stats.m_nNumReprojectedFrames -
+                                        mTelemetry.mLastDroppedFrameCount) / duration.ToSeconds();
+  Telemetry::Accumulate(Telemetry::WEBVR_DROPPED_FRAMES_IN_OPENVR, droppedFramesPerSec);
 }
 
 bool

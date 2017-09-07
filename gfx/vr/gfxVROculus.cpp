@@ -233,7 +233,15 @@ VROculusSession::StartPresentation(const IntSize& aSize)
     mPresenting = true;
     mPresentationSize = aSize;
     Refresh();
-    mPresentationStart = TimeStamp::Now();
+    mTelemetry.Clear();
+    mTelemetry.mPresentationStart = TimeStamp::Now();
+
+    ovrPerfStats perfStats;
+    if (ovr_GetPerfStats(mSession, &perfStats) == ovrSuccess) {
+      if (perfStats.FrameStatsCount) {
+        mTelemetry.mLastDroppedFrameCount = perfStats.FrameStats[0].AppDroppedFrameCount;
+      }
+    }
   }
 }
 
@@ -243,9 +251,22 @@ VROculusSession::StopPresentation()
   if (mPresenting) {
     mLastPresentationEnd = TimeStamp::Now();
     mPresenting = false;
+
+    const TimeDuration duration = mLastPresentationEnd - mTelemetry.mPresentationStart;
     Telemetry::Accumulate(Telemetry::WEBVR_USERS_VIEW_IN, 1);
-    Telemetry::AccumulateTimeDelta(Telemetry::WEBVR_TIME_SPENT_VIEWING_IN_OCULUS,
-                                   mPresentationStart);
+    Telemetry::Accumulate(Telemetry::WEBVR_TIME_SPENT_VIEWING_IN_OCULUS,
+                          duration.ToMilliseconds());
+
+    if (mTelemetry.IsLastDroppedFrameValid() && duration.ToSeconds()) {
+      ovrPerfStats perfStats;
+      if (ovr_GetPerfStats(mSession, &perfStats) == ovrSuccess) {
+        if (perfStats.FrameStatsCount) {
+          const uint32_t droppedFramesPerSec = (perfStats.FrameStats[0].AppDroppedFrameCount -
+                                                mTelemetry.mLastDroppedFrameCount) / duration.ToSeconds();
+          Telemetry::Accumulate(Telemetry::WEBVR_DROPPED_FRAMES_IN_OCULUS, droppedFramesPerSec);
+        }
+      }
+    }
     Refresh();
   }
 }

@@ -57,7 +57,7 @@ toolbar[brighttext] {
 
 .toolbarbutton-1 > .toolbarbutton-icon,
 .toolbarbutton-1 > .toolbarbutton-badge-stack > .toolbarbutton-icon {
-  max-width: 16px;
+  width: 16px;
 }
 
 #TabsToolbar .toolbarbutton-1,
@@ -118,7 +118,7 @@ toolbar .toolbarbutton-1 > .toolbarbutton-badge-stack {
 
 toolbar .toolbarbutton-1 > .toolbarbutton-icon {
   /* horizontal padding + actual icon width */
-  max-width: calc(2 * var(--toolbarbutton-inner-padding) + 16px);
+  width: calc(2 * var(--toolbarbutton-inner-padding) + 16px);
 }
 
 .bookmark-item > .toolbarbutton-menu-dropmarker,
@@ -214,7 +214,7 @@ toolbar .toolbarbutton-1[checked]:not(:active):hover > .toolbarbutton-icon {
   background-clip: padding-box;
   border: 1px solid var(--backbutton-border-color);
   border-radius: 10000px;
-  max-width: 32px;
+  width: 32px;
   padding: 7px;
 }
 
@@ -224,7 +224,7 @@ toolbar .toolbarbutton-1[checked]:not(:active):hover > .toolbarbutton-icon {
 }
 
 :root[uidensity=touch] #back-button > .toolbarbutton-icon {
-  max-width: 38px;
+  width: 38px;
   padding: 10px;
 }
 
