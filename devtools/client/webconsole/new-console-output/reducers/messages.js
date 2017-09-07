@@ -38,16 +38,6 @@ const MessageState = Immutable.Record({
   // Map of the form {messageId : tableData}, which represent the data passed
   // as an argument in console.table calls.
   messagesTableDataById: Immutable.Map(),
-  // Map of the form {messageId : {[actor]: properties}}, where `properties` is
-  // a RDP packet containing the properties of the ${actor} grip.
-  // This map is consumed by the ObjectInspector so we only load properties once,
-  // when needed (when an ObjectInspector node is expanded), and then caches them.
-  messagesObjectPropertiesById: Immutable.Map(),
-  // Map of the form {messageId : {[actor]: entries}}, where `entries` is
-  // a RDP packet containing the entries of the ${actor} grip.
-  // This map is consumed by the ObjectInspector so we only load entries once,
-  // when needed (when an ObjectInspector node is expanded), and then caches them.
-  messagesObjectEntriesById: Immutable.Map(),
   // Map of the form {groupMessageId : groupArray},
   // where groupArray is the list of of all the parent groups' ids of the groupMessageId.
   groupsById: Immutable.Map(),
@@ -69,8 +59,6 @@ function messages(state = new MessageState(), action, filtersState, prefsState) 
     messagesById,
     messagesUiById,
     messagesTableDataById,
-    messagesObjectPropertiesById,
-    messagesObjectEntriesById,
     networkMessagesUpdateById,
     groupsById,
     currentGroup,
@@ -241,27 +229,6 @@ function messages(state = new MessageState(), action, filtersState, prefsState) 
     case constants.MESSAGE_TABLE_RECEIVE:
       const {id, data} = action;
       return state.set("messagesTableDataById", messagesTableDataById.set(id, data));
-
-    case constants.MESSAGE_OBJECT_PROPERTIES_RECEIVE:
-      return state.set(
-        "messagesObjectPropertiesById",
-        messagesObjectPropertiesById.set(
-          action.id,
-          Object.assign({
-            [action.actor]: action.properties
-          }, messagesObjectPropertiesById.get(action.id))
-        )
-      );
-    case constants.MESSAGE_OBJECT_ENTRIES_RECEIVE:
-      return state.set(
-        "messagesObjectEntriesById",
-        messagesObjectEntriesById.set(
-          action.id,
-          Object.assign({
-            [action.actor]: action.entries
-          }, messagesObjectEntriesById.get(action.id))
-        )
-      );
 
     case constants.NETWORK_MESSAGE_UPDATE:
       return state.set(
@@ -457,14 +424,6 @@ function limitTopLevelMessageCount(state, record, logLimit) {
   if (mapHasRemovedIdKey(record.groupsById)) {
     record.set("groupsById", record.groupsById.withMutations(cleanUpCollection));
   }
-  if (mapHasRemovedIdKey(record.messagesObjectPropertiesById)) {
-    record.set("messagesObjectPropertiesById",
-      record.messagesObjectPropertiesById.withMutations(cleanUpCollection));
-  }
-  if (mapHasRemovedIdKey(record.messagesObjectEntriesById)) {
-    record.set("messagesObjectEntriesById",
-      record.messagesObjectEntriesById.withMutations(cleanUpCollection));
-  }
   if (objectHasRemovedIdKey(record.repeatById)) {
     record.set("repeatById", cleanUpObject(record.repeatById));
   }
@@ -479,8 +438,6 @@ function limitTopLevelMessageCount(state, record, logLimit) {
 
 /**
  * Get an array of all the actors logged in a specific message.
- * This could be directly the actors representing the arguments of a console.log call
- * as well as all the properties that where expanded using the object inspector.
  *
  * @param {Message} message: The message to get actors from.
  * @param {Record} state: The redux state.
@@ -498,16 +455,6 @@ function getAllActorsInMessage(message, state) {
     }
     return res;
   }, [])];
-
-  const loadedProperties = state.messagesObjectPropertiesById.get(message.id);
-  if (loadedProperties) {
-    actors.push(...Object.keys(loadedProperties));
-  }
-
-  const loadedEntries = state.messagesObjectEntriesById.get(message.id);
-  if (loadedEntries) {
-    actors.push(...Object.keys(loadedEntries));
-  }
 
   return actors;
 }
