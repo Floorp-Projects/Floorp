@@ -23,7 +23,7 @@ add_task(async function() {
   ok(!navbar.hasAttribute("overflowing"), "Should start with a non-overflowing toolbar.");
   ok(CustomizableUI.inDefaultState, "Should start in default state.");
 
-  window.resizeTo(400, window.outerHeight);
+  window.resizeTo(kForceOverflowWidthPx, window.outerHeight);
   await waitForCondition(() => navbar.hasAttribute("overflowing"));
   ok(navbar.hasAttribute("overflowing"), "Should have an overflowing toolbar.");
   ok(!navbar.querySelector("#" + kSidebarBtn), "Sidebar button should no longer be in the navbar");
@@ -65,7 +65,7 @@ add_task(async function() {
   CustomizableUI.addWidgetToArea(kTestBtn2, navbar.id);
   ok(!navbar.hasAttribute("overflowing"), "Should still have a non-overflowing toolbar.");
 
-  window.resizeTo(400, window.outerHeight);
+  window.resizeTo(kForceOverflowWidthPx, window.outerHeight);
   await waitForCondition(() => navbar.hasAttribute("overflowing"));
   ok(navbar.hasAttribute("overflowing"), "Should have an overflowing toolbar.");
   ok(!navbar.querySelector("#" + kTestBtn2), "Test button should not be in the navbar");
@@ -94,7 +94,7 @@ add_task(async function() {
   ok(!navbar.hasAttribute("overflowing"), "Should start with a non-overflowing toolbar.");
   ok(CustomizableUI.inDefaultState, "Should start in default state.");
 
-  window.resizeTo(400, window.outerHeight);
+  window.resizeTo(kForceOverflowWidthPx, window.outerHeight);
   await waitForCondition(() => navbar.hasAttribute("overflowing"));
   ok(navbar.hasAttribute("overflowing"), "Should have an overflowing toolbar.");
   ok(!navbar.querySelector("#" + kSidebarBtn), "Sidebar button should no longer be in the navbar");

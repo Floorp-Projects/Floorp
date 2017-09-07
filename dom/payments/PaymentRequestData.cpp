@@ -6,6 +6,7 @@
 #include "nsArrayUtils.h"
 #include "nsIMutableArray.h"
 #include "nsISupportsPrimitives.h"
+#include "nsUnicharUtils.h"
 #include "PaymentRequestData.h"
 #include "PaymentRequestUtils.h"
 
@@ -64,9 +65,14 @@ NS_IMPL_ISUPPORTS(PaymentCurrencyAmount,
 
 PaymentCurrencyAmount::PaymentCurrencyAmount(const nsAString& aCurrency,
                                              const nsAString& aValue)
-  : mCurrency(aCurrency)
-  , mValue(aValue)
+  : mValue(aValue)
 {
+  /*
+   *  According to the spec
+   *  https://w3c.github.io/payment-request/#validity-checkers
+   *  Set amount.currency to the result of ASCII uppercasing amount.currency.
+   */
+  ToUpperCase(aCurrency, mCurrency);
 }
 
 nsresult

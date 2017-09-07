@@ -299,31 +299,45 @@ private:
                             TreeMatchContext* aProvidedTreeMatchContext);
 
 public:
-  // FIXME(emilio): How important is it to keep the frame tree state around for
-  // REMOVE_DESTROY_FRAMES?
-  //
-  // Seems like otherwise we could just remove it.
+  /**
+   * Whether insertion should be done synchronously or asynchronously.
+   *
+   * Generally, insertion is synchronous if we're reconstructing something from
+   * frame construction/reconstruction, and async if we're removing stuff, like
+   * from ContentRemoved.
+   */
+  enum class InsertionKind
+  {
+    Sync,
+    Async,
+  };
+
   enum RemoveFlags {
-    REMOVE_CONTENT, REMOVE_FOR_RECONSTRUCTION, REMOVE_DESTROY_FRAMES };
+    REMOVE_CONTENT,
+    REMOVE_FOR_RECONSTRUCTION,
+  };
+
   /**
    * Recreate or destroy frames for aChild in aContainer.
+   *
    * aFlags == REMOVE_CONTENT means aChild has been removed from the document.
    * aFlags == REMOVE_FOR_RECONSTRUCTION means the caller will reconstruct the
-   *   frames later.
+   * frames later.
+   *
    * In both the above cases, this method will in some cases try to reconstruct
-   * the frames (and true will be returned in that case), it's just that in the
-   * former case aChild isn't in the document so no frames will be created for
-   * it.  Ancestors may have been reframed though.
-   * aFlags == REMOVE_DESTROY_FRAMES is the same as REMOVE_FOR_RECONSTRUCTION
-   * except it will never try to reconstruct frames.  Instead, the caller is
-   * responsible for doing that, on the content returned in aDestroyedFramesFor.
-   * The layout frame state is guarranted to be captured for the removed frames
-   * only when aFlags == REMOVE_DESTROY_FRAMES, otherwise it will only be
-   * captured if we reconstructed frames for an ancestor.
+   * frames on some ancestor of aChild.  This can happen regardless of the value
+   * of aFlags.
+   *
+   * The return value indicates whether this "reconstruct an ancestor" action
+   * took place.  If true is returned, that means that the frame subtree rooted
+   * at some ancestor of aChild's frame was destroyed and either has been
+   * reconstructed or will be reconstructed async, depending on the value of
+   * aInsertionKind.
    */
   bool ContentRemoved(nsIContent* aContainer,
                       nsIContent* aChild,
                       nsIContent* aOldNextSibling,
+                      InsertionKind aInsertionKind,
                       RemoveFlags aFlags);
 
   void CharacterDataChanged(nsIContent* aContent,
@@ -1782,26 +1796,12 @@ private:
   nsStyleContext* MaybeRecreateFramesForElement(Element* aElement);
 
   /**
-   * Whether insertion should be done synchronously or asynchronously.
-   *
-   * Generally, insertion is synchronous if we're reconstructing something from
-   * frame construction/reconstruction, and async if we're removing stuff, like
-   * from ContentRemoved.
-   */
-  enum class InsertionKind
-  {
-    Sync,
-    Async,
-  };
-
-  /**
    * Recreate frames for aContent.
    * @param aContent the content to recreate frames for
    * @param aFlags normally you want to pass REMOVE_FOR_RECONSTRUCTION here
    */
   void RecreateFramesForContent(nsIContent*   aContent,
-                                InsertionKind aInsertionKind,
-                                RemoveFlags   aFlags);
+                                InsertionKind aInsertionKind);
 
   /**
    *  Handles change of rowspan and colspan attributes on table cells.
@@ -1815,8 +1815,7 @@ private:
   // GetPrimaryFrame() call on a content node (which means its parent is also
   // not null).
   bool MaybeRecreateContainerForFrameRemoval(nsIFrame*     aFrame,
-                                             InsertionKind aInsertionKind,
-                                             RemoveFlags   aFlags);
+                                             InsertionKind aInsertionKind);
 
   nsIFrame* CreateContinuingOuterTableFrame(nsIPresShell*     aPresShell,
                                             nsPresContext*    aPresContext,
@@ -1940,9 +1939,7 @@ private:
                              bool                     aIsAppend,
                              nsIFrame*                aPrevSibling);
 
-  void ReframeContainingBlock(nsIFrame*     aFrame,
-                              InsertionKind aInsertionKind,
-                              RemoveFlags   aFlags);
+  void ReframeContainingBlock(nsIFrame* aFrame, InsertionKind aInsertionKind);
 
   //----------------------------------------
 

@@ -7,7 +7,6 @@
 XPIDL_SOURCES += [
     'nsIArray.idl',
     'nsIArrayExtensions.idl',
-    'nsIAtom.idl',
     'nsIHashable.idl',
     'nsIINIParser.idl',
     'nsIMutableArray.idl',
@@ -55,6 +54,7 @@ EXPORTS += [
     'nsExpirationTracker.h',
     'nsHashKeys.h',
     'nsHashPropertyBag.h',
+    'nsIAtom.h',
     'nsInterfaceHashtable.h',
     'nsJSThingHashtable.h',
     'nsMathUtils.h',

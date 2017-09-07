@@ -140,10 +140,10 @@ class AtomicOperations
     template<typename T>
     static inline void storeSafeWhenRacy(T* addr, T val);
 
-    // Replacement for memcpy().
+    // Replacement for memcpy().  No access-atomicity guarantees.
     static inline void memcpySafeWhenRacy(void* dest, const void* src, size_t nbytes);
 
-    // Replacement for memmove().
+    // Replacement for memmove().  No access-atomicity guarantees.
     static inline void memmoveSafeWhenRacy(void* dest, const void* src, size_t nbytes);
 
   public:
@@ -266,12 +266,30 @@ class AtomicOperations
     static void podMoveSafeWhenRacy(SharedMem<T*> dest, SharedMem<T*> src, size_t nelem) {
         memmoveSafeWhenRacy(dest, src, nelem * sizeof(T));
     }
+
+#ifdef DEBUG
+    // Constraints that must hold for atomic operations on all tier-1 platforms:
+    //
+    // - atomic cells can be 1, 2, 4, or 8 bytes
+    // - all atomic operations are lock-free, including 8-byte operations
+    // - atomic operations can only be performed on naturally aligned cells
+    //
+    // (Tier-2 and tier-3 platforms need not support 8-byte atomics, and if they
+    // do, they need not be lock-free.)
+
+    template<typename T>
+    static bool
+    tier1Constraints(const T* addr) {
+        static_assert(sizeof(T) <= 8, "atomics supported up to 8 bytes only");
+        return (sizeof(T) < 8 || (hasAtomic8() && isLockfree8())) &&
+               !(uintptr_t(addr) & (sizeof(T) - 1));
+    }
+#endif
 };
 
-/* A data type representing a lock on some region of a
- * SharedArrayRawBuffer's memory, to be used only when the hardware
- * does not provide necessary atomicity (eg, float64 access on ARMv6
- * and some ARMv7 systems).
+/* A data type representing a lock on some region of a SharedArrayRawBuffer's
+ * memory, to be used only when the hardware does not provide necessary
+ * atomicity.
  */
 class RegionLock
 {
@@ -280,7 +298,7 @@ class RegionLock
 
     /* Addr is the address to be locked, nbytes the number of bytes we
      * need to lock.  The lock that is taken may cover a larger range
-     * of bytes.
+     * of bytes, indeed it may cover all of memory.
      */
     template<size_t nbytes>
     void acquire(void* addr);

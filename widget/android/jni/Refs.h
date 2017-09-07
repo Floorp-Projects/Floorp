@@ -351,6 +351,28 @@ public:
     {}
 };
 
+template<> const char ObjectBase<Object, jobject>::name[];
+template<> const char ObjectBase<TypedObject<jstring>, jstring>::name[];
+template<> const char ObjectBase<TypedObject<jclass>, jclass>::name[];
+template<> const char ObjectBase<TypedObject<jthrowable>, jthrowable>::name[];
+template<> const char ObjectBase<BoxedObject<jboolean>, jobject>::name[];
+template<> const char ObjectBase<BoxedObject<jbyte>, jobject>::name[];
+template<> const char ObjectBase<BoxedObject<jchar>, jobject>::name[];
+template<> const char ObjectBase<BoxedObject<jshort>, jobject>::name[];
+template<> const char ObjectBase<BoxedObject<jint>, jobject>::name[];
+template<> const char ObjectBase<BoxedObject<jlong>, jobject>::name[];
+template<> const char ObjectBase<BoxedObject<jfloat>, jobject>::name[];
+template<> const char ObjectBase<BoxedObject<jdouble>, jobject>::name[];
+template<> const char ObjectBase<TypedObject<jbooleanArray>, jbooleanArray>::name[];
+template<> const char ObjectBase<TypedObject<jbyteArray>, jbyteArray>::name[];
+template<> const char ObjectBase<TypedObject<jcharArray>, jcharArray>::name[];
+template<> const char ObjectBase<TypedObject<jshortArray>, jshortArray>::name[];
+template<> const char ObjectBase<TypedObject<jintArray>, jintArray>::name[];
+template<> const char ObjectBase<TypedObject<jlongArray>, jlongArray>::name[];
+template<> const char ObjectBase<TypedObject<jfloatArray>, jfloatArray>::name[];
+template<> const char ObjectBase<TypedObject<jdoubleArray>, jdoubleArray>::name[];
+template<> const char ObjectBase<TypedObject<jobjectArray>, jobjectArray>::name[];
+
 // Define bindings for built-in types.
 using String = TypedObject<jstring>;
 using Class = TypedObject<jclass>;
@@ -940,6 +962,7 @@ public:
     }
 };
 
+template<> const char ObjectBase<ByteBuffer, jobject>::name[];
 
 template<>
 class TypedObject<jobjectArray>

@@ -123,13 +123,15 @@ async function testSearchEngine(engineDetails) {
       name: "search bar search",
       searchURL: base + engineDetails.codes.submission,
       run() {
+        Services.prefs.setBoolPref("browser.search.widget.inNavBar", true);
         let sb = BrowserSearch.searchBar;
         sb.focus();
         sb.value = "foo";
-        registerCleanupFunction(function() {
-          sb.value = "";
-        });
         EventUtils.synthesizeKey("VK_RETURN", {});
+      },
+      postTest() {
+        BrowserSearch.searchBar.value = "";
+        Services.prefs.setBoolPref("browser.search.widget.inNavBar", false);
       }
     },
     {
@@ -169,6 +171,10 @@ async function testSearchEngine(engineDetails) {
     let receivedURI = await stateChangePromise;
 
     Assert.equal(receivedURI, test.searchURL);
+
+    if (test.postTest) {
+      await test.postTest(tab);
+    }
   }
 
   engine.alias = undefined;

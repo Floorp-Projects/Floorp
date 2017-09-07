@@ -60,7 +60,6 @@ private:
   bool ResetOutputBuffers();
 
   size_t mMaxPayloadSize;
-  uint32_t mTimestamp;
   webrtc::EncodedImage mEncodedImage;
   webrtc::EncodedImageCallback* mCallback;
   uint32_t mFrameWidth;

@@ -82,8 +82,21 @@ impl Example for App {
             builder.push_rect((-1000, -1000).to(5000, 5000), None, ColorF::new(0.5, 0.5, 0.5, 1.0));
 
             // add a teal square to visualize the scrolling/clipping behaviour
-            // as you scroll the nested scrollbox with WASD keys
-            builder.push_rect((0, 100).to(50, 150), None, ColorF::new(0.0, 1.0, 1.0, 1.0));
+            // as you scroll the nested scrollbox
+            builder.push_rect((0, 200).to(50, 250), None, ColorF::new(0.0, 1.0, 1.0, 1.0));
+
+            // Add a sticky frame. It will "stick" at a margin of 10px from the top, until
+            // the scrollframe scrolls another 60px, at which point it will "unstick". This lines
+            // it up with the above teal square as it scrolls out of the visible area of the
+            // scrollframe
+            let sticky_id = builder.define_sticky_frame(
+                None,
+                (50, 140).to(100, 190),
+                StickyFrameInfo::new(Some(StickySideConstraint{ margin: 10.0, max_offset: 60.0 }),
+                                     None, None, None));
+            builder.push_clip_id(sticky_id);
+            builder.push_rect((50, 140).to(100, 190), None, ColorF::new(0.5, 0.5, 1.0, 1.0));
+            builder.pop_clip_id(); // sticky_id
 
             // just for good measure add another teal square in the bottom-right
             // corner of the nested scrollframe content, which can be scrolled into

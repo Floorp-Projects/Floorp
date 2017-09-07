@@ -130,7 +130,7 @@ Preferences::DirtyCallback()
 
 // Prototypes
 static nsresult openPrefFile(nsIFile* aFile);
-static nsresult pref_InitInitialObjects(void);
+static Result<Ok, const char*> pref_InitInitialObjects();
 static nsresult pref_LoadPrefsInDirList(const char *listId);
 static nsresult ReadExtensionPrefs(nsIFile *aFile);
 
@@ -407,6 +407,9 @@ struct CacheData {
   };
 };
 
+// gCacheDataDesc holds information about prefs startup. It's being used for
+// diagnosing prefs startup problems in bug 1276488.
+static const char* gCacheDataDesc = "untouched";
 static nsTArray<nsAutoPtr<CacheData> >* gCacheData = nullptr;
 static nsRefPtrHashtable<ValueObserverHashKey,
                          ValueObserver>* gObserverTable = nullptr;
@@ -610,7 +613,10 @@ Preferences::GetInstanceForService()
     return sPreferences;
   }
 
-  NS_ENSURE_TRUE(!sShutdown, nullptr);
+  if (sShutdown) {
+    gCacheDataDesc = "shutting down in GetInstanceForService()";
+    return nullptr;
+  }
 
   sRootBranch = new nsPrefBranch("", false);
   NS_ADDREF(sRootBranch);
@@ -620,13 +626,16 @@ Preferences::GetInstanceForService()
   sPreferences = new Preferences();
   NS_ADDREF(sPreferences);
 
-  if (NS_FAILED(sPreferences->Init())) {
+  Result<Ok, const char*> res = sPreferences->Init();
+  if (res.isErr()) {
     // The singleton instance will delete sRootBranch and sDefaultRootBranch.
+    gCacheDataDesc = res.unwrapErr();
     NS_RELEASE(sPreferences);
     return nullptr;
   }
 
   gCacheData = new nsTArray<nsAutoPtr<CacheData> >();
+  gCacheDataDesc = "set by GetInstanceForService()";
 
   gObserverTable = new nsRefPtrHashtable<ValueObserverHashKey, ValueObserver>();
 
@@ -736,16 +745,13 @@ Preferences::SetInitPreferences(nsTArray<PrefSetting>* aPrefs) {
   gInitPrefs = new InfallibleTArray<PrefSetting>(mozilla::Move(*aPrefs));
 }
 
-nsresult
+Result<Ok, const char*>
 Preferences::Init()
 {
-  nsresult rv;
-
   PREF_SetDirtyCallback(&DirtyCallback);
   PREF_Init();
 
-  rv = pref_InitInitialObjects();
-  NS_ENSURE_SUCCESS(rv, rv);
+  MOZ_TRY(pref_InitInitialObjects());
 
   if (XRE_IsContentProcess()) {
     MOZ_ASSERT(gInitPrefs);
@@ -754,7 +760,7 @@ Preferences::Init()
     }
     delete gInitPrefs;
     gInitPrefs = nullptr;
-    return NS_OK;
+    return Ok();
   }
 
   nsCString lockFileName;
@@ -766,7 +772,8 @@ Preferences::Init()
    * category which will do the rest.
    */
 
-  rv = PREF_CopyCharPref("general.config.filename", getter_Copies(lockFileName), false);
+  nsresult rv = PREF_CopyCharPref("general.config.filename",
+                                  getter_Copies(lockFileName), false);
   if (NS_SUCCEEDED(rv))
     NS_CreateServicesFromCategory("pref-config-startup",
                                   static_cast<nsISupports *>(static_cast<void *>(this)),
@@ -774,8 +781,9 @@ Preferences::Init()
 
   nsCOMPtr<nsIObserverService> observerService =
     mozilla::services::GetObserverService();
-  if (!observerService)
-    return NS_ERROR_FAILURE;
+  if (!observerService) {
+    return Err("GetObserverService() failed (1)");
+  }
 
   observerService->AddObserver(this, "profile-before-change-telemetry", true);
   rv = observerService->AddObserver(this, "profile-before-change", true);
@@ -783,7 +791,11 @@ Preferences::Init()
   observerService->AddObserver(this, "load-extension-defaults", true);
   observerService->AddObserver(this, "suspend_process_notification", true);
 
-  return(rv);
+  if (NS_FAILED(rv)) {
+    return Err("AddObserver(\"profile-before-change\") failed");
+  }
+
+  return Ok();
 }
 
 // static
@@ -841,7 +853,7 @@ Preferences::Observe(nsISupports *aSubject, const char *aTopic,
     pref_LoadPrefsInDirList(NS_EXT_PREFS_DEFAULTS_DIR_LIST);
   } else if (!nsCRT::strcmp(aTopic, "reload-default-prefs")) {
     // Reload the default prefs from file.
-    pref_InitInitialObjects();
+    Unused << pref_InitInitialObjects();
   } else if (!nsCRT::strcmp(aTopic, "suspend_process_notification")) {
     // Our process is being suspended. The OS may wake our process later,
     // or it may kill the process. In case our process is going to be killed
@@ -881,7 +893,7 @@ Preferences::ResetPrefs()
 
   PREF_Init();
 
-  return pref_InitInitialObjects();
+  return pref_InitInitialObjects().isOk() ? NS_OK : NS_ERROR_FAILURE;
 }
 
 NS_IMETHODIMP
@@ -1453,7 +1465,8 @@ static nsresult pref_ReadPrefFromJar(nsZipArchive* jarReader, const char *name)
 // Initialize default preference JavaScript buffers from
 // appropriate TEXT resources
 //----------------------------------------------------------------------------------------
-static nsresult pref_InitInitialObjects()
+static Result<Ok, const char*>
+pref_InitInitialObjects()
 {
   nsresult rv;
 
@@ -1490,11 +1503,11 @@ static nsresult pref_InitInitialObjects()
   if (jarReader) {
     // Load jar:$gre/omni.jar!/greprefs.js
     rv = pref_ReadPrefFromJar(jarReader, "greprefs.js");
-    NS_ENSURE_SUCCESS(rv, rv);
+    NS_ENSURE_SUCCESS(rv, Err("pref_ReadPrefFromJar() failed"));
 
     // Load jar:$gre/omni.jar!/defaults/pref/*.js
     rv = jarReader->FindInit("defaults/pref/*.js$", &findPtr);
-    NS_ENSURE_SUCCESS(rv, rv);
+    NS_ENSURE_SUCCESS(rv, Err("jarReader->FindInit() failed"));
 
     find = findPtr;
     while (NS_SUCCEEDED(find->FindNext(&entryName, &entryNameLen))) {
@@ -1511,10 +1524,10 @@ static nsresult pref_InitInitialObjects()
     // Load $gre/greprefs.js
     nsCOMPtr<nsIFile> greprefsFile;
     rv = NS_GetSpecialDirectory(NS_GRE_DIR, getter_AddRefs(greprefsFile));
-    NS_ENSURE_SUCCESS(rv, rv);
+    NS_ENSURE_SUCCESS(rv, Err("NS_GetSpecialDirectory(NS_GRE_DIR) failed"));
 
     rv = greprefsFile->AppendNative(NS_LITERAL_CSTRING("greprefs.js"));
-    NS_ENSURE_SUCCESS(rv, rv);
+    NS_ENSURE_SUCCESS(rv, Err("greprefsFile->AppendNative() failed"));
 
     rv = openPrefFile(greprefsFile);
     if (NS_FAILED(rv))
@@ -1525,7 +1538,8 @@ static nsresult pref_InitInitialObjects()
   nsCOMPtr<nsIFile> defaultPrefDir;
 
   rv = NS_GetSpecialDirectory(NS_APP_PREF_DEFAULTS_50_DIR, getter_AddRefs(defaultPrefDir));
-  NS_ENSURE_SUCCESS(rv, rv);
+  NS_ENSURE_SUCCESS(
+    rv, Err("NS_GetSpecialDirectory(NS_APP_PREF_DEFAULTS_50_DIR) failed"));
 
   /* these pref file names should not be used: we process them after all other application pref files for backwards compatibility */
   static const char* specialFiles[] = {
@@ -1556,7 +1570,7 @@ static nsresult pref_InitInitialObjects()
     appJarReader = mozilla::Omnijar::GetReader(mozilla::Omnijar::GRE);
   if (appJarReader) {
     rv = appJarReader->FindInit("defaults/preferences/*.js$", &findPtr);
-    NS_ENSURE_SUCCESS(rv, rv);
+    NS_ENSURE_SUCCESS(rv, Err("appJarReader->FindInit() failed"));
     find = findPtr;
     prefEntries.Clear();
     while (NS_SUCCEEDED(find->FindNext(&entryName, &entryNameLen))) {
@@ -1571,7 +1585,8 @@ static nsresult pref_InitInitialObjects()
   }
 
   rv = pref_LoadPrefsInDirList(NS_APP_PREFS_DEFAULTS_DIR_LIST);
-  NS_ENSURE_SUCCESS(rv, rv);
+  NS_ENSURE_SUCCESS(
+    rv, Err("pref_LoadPrefsInDirList(NS_APP_PREFS_DEFAULTS_DIR_LIST) failed"));
 
   // Set up the correct default for toolkit.telemetry.enabled.
   // If this build has MOZ_TELEMETRY_ON_BY_DEFAULT *or* we're on the beta
@@ -1597,12 +1612,15 @@ static nsresult pref_InitInitialObjects()
 
   nsCOMPtr<nsIObserverService> observerService =
     mozilla::services::GetObserverService();
-  if (!observerService)
-    return NS_ERROR_FAILURE;
+  NS_ENSURE_SUCCESS(rv, Err("GetObserverService() failed (2)"));
 
   observerService->NotifyObservers(nullptr, NS_PREFSERVICE_APPDEFAULTS_TOPIC_ID, nullptr);
 
-  return pref_LoadPrefsInDirList(NS_EXT_PREFS_DEFAULTS_DIR_LIST);
+  rv = pref_LoadPrefsInDirList(NS_EXT_PREFS_DEFAULTS_DIR_LIST);
+  NS_ENSURE_SUCCESS(
+    rv, Err("pref_LoadPrefsInDirList(NS_EXT_PREFS_DEFAULTS_DIR_LIST) failed"));
+
+  return Ok();
 }
 
 
@@ -1981,6 +1999,15 @@ static void BoolVarChanged(const char* aPref, void* aClosure)
     Preferences::GetBool(aPref, cache->defaultValueBool);
 }
 
+static void
+CacheDataAppendElement(CacheData* aData)
+{
+  if (!gCacheData) {
+    MOZ_CRASH_UNSAFE_PRINTF("!gCacheData: %s", gCacheDataDesc);
+  }
+  gCacheData->AppendElement(aData);
+}
+
 // static
 nsresult
 Preferences::AddBoolVarCache(bool* aCache,
@@ -1996,7 +2023,7 @@ Preferences::AddBoolVarCache(bool* aCache,
   CacheData* data = new CacheData();
   data->cacheLocation = aCache;
   data->defaultValueBool = aDefault;
-  gCacheData->AppendElement(data);
+  CacheDataAppendElement(data);
   RegisterPriorityCallback(BoolVarChanged, aPref, data);
   return NS_OK;
 }
@@ -2023,7 +2050,7 @@ Preferences::AddIntVarCache(int32_t* aCache,
   CacheData* data = new CacheData();
   data->cacheLocation = aCache;
   data->defaultValueInt = aDefault;
-  gCacheData->AppendElement(data);
+  CacheDataAppendElement(data);
   RegisterPriorityCallback(IntVarChanged, aPref, data);
   return NS_OK;
 }
@@ -2050,7 +2077,7 @@ Preferences::AddUintVarCache(uint32_t* aCache,
   CacheData* data = new CacheData();
   data->cacheLocation = aCache;
   data->defaultValueUint = aDefault;
-  gCacheData->AppendElement(data);
+  CacheDataAppendElement(data);
   RegisterPriorityCallback(UintVarChanged, aPref, data);
   return NS_OK;
 }
@@ -2079,7 +2106,7 @@ Preferences::AddAtomicUintVarCache(Atomic<uint32_t, Order>* aCache,
   CacheData* data = new CacheData();
   data->cacheLocation = aCache;
   data->defaultValueUint = aDefault;
-  gCacheData->AppendElement(data);
+  CacheDataAppendElement(data);
   RegisterPriorityCallback(AtomicUintVarChanged<Order>, aPref, data);
   return NS_OK;
 }
@@ -2113,7 +2140,7 @@ Preferences::AddFloatVarCache(float* aCache,
   CacheData* data = new CacheData();
   data->cacheLocation = aCache;
   data->defaultValueFloat = aDefault;
-  gCacheData->AppendElement(data);
+  CacheDataAppendElement(data);
   RegisterPriorityCallback(FloatVarChanged, aPref, data);
   return NS_OK;
 }
