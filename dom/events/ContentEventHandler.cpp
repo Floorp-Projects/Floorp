@@ -47,69 +47,56 @@ void
 ContentEventHandler::RawRange::AssertStartIsBeforeOrEqualToEnd()
 {
   MOZ_ASSERT(
-    nsContentUtils::ComparePoints(mStartContainer,
-                                  static_cast<int32_t>(mStartOffset),
-                                  mEndContainer,
-                                  static_cast<int32_t>(mEndOffset)) <= 0);
-}
-
-bool
-ContentEventHandler::RawRange::IsValidOffset(nsINode* aContainer,
-                                             uint32_t aOffset) const
-{
-  return aContainer && aOffset <= aContainer->Length();
+    nsContentUtils::ComparePoints(mStart.Container(),
+                                  static_cast<int32_t>(mStart.Offset()),
+                                  mEnd.Container(),
+                                  static_cast<int32_t>(mEnd.Offset())) <= 0);
 }
 
 nsresult
-ContentEventHandler::RawRange::SetStart(nsINode* aStartContainer,
-                                        uint32_t aStartOffset)
+ContentEventHandler::RawRange::SetStart(const RawRangeBoundary& aStart)
 {
-  nsINode* newRoot = nsRange::ComputeRootNode(aStartContainer);
+  nsINode* newRoot = nsRange::ComputeRootNode(aStart.Container());
   if (!newRoot) {
     return NS_ERROR_DOM_INVALID_NODE_TYPE_ERR;
   }
 
-  if (!IsValidOffset(aStartContainer, aStartOffset)) {
+  if (!aStart.IsSetAndValid()) {
     return NS_ERROR_DOM_INDEX_SIZE_ERR;
   }
 
   // Collapse if not positioned yet, or if positioned in another document.
   if (!IsPositioned() || newRoot != mRoot) {
     mRoot = newRoot;
-    mStartContainer = mEndContainer = aStartContainer;
-    mStartOffset = mEndOffset = aStartOffset;
+    mStart = mEnd = aStart;
     return NS_OK;
   }
 
-  mStartContainer = aStartContainer;
-  mStartOffset = aStartOffset;
+  mStart = aStart;
   AssertStartIsBeforeOrEqualToEnd();
   return NS_OK;
 }
 
 nsresult
-ContentEventHandler::RawRange::SetEnd(nsINode* aEndContainer,
-                                      uint32_t aEndOffset)
+ContentEventHandler::RawRange::SetEnd(const RawRangeBoundary& aEnd)
 {
-  nsINode* newRoot = nsRange::ComputeRootNode(aEndContainer);
+  nsINode* newRoot = nsRange::ComputeRootNode(aEnd.Container());
   if (!newRoot) {
     return NS_ERROR_DOM_INVALID_NODE_TYPE_ERR;
   }
 
-  if (!IsValidOffset(aEndContainer, aEndOffset)) {
+  if (!aEnd.IsSetAndValid()) {
     return NS_ERROR_DOM_INDEX_SIZE_ERR;
   }
 
   // Collapse if not positioned yet, or if positioned in another document.
   if (!IsPositioned() || newRoot != mRoot) {
     mRoot = newRoot;
-    mStartContainer = mEndContainer = aEndContainer;
-    mStartOffset = mEndOffset = aEndOffset;
+    mStart = mEnd = aEnd;
     return NS_OK;
   }
 
-  mEndContainer = aEndContainer;
-  mEndOffset = aEndOffset;
+  mEnd = aEnd;
   AssertStartIsBeforeOrEqualToEnd();
   return NS_OK;
 }
@@ -126,61 +113,53 @@ ContentEventHandler::RawRange::SetEndAfter(nsINode* aEndContainer)
 void
 ContentEventHandler::RawRange::SetStartAndEnd(const nsRange* aRange)
 {
-  DebugOnly<nsresult> rv = SetStartAndEnd(aRange->GetStartContainer(),
-                                          aRange->StartOffset(),
-                                          aRange->GetEndContainer(),
-                                          aRange->EndOffset());
+  DebugOnly<nsresult> rv = SetStartAndEnd(aRange->StartRef().AsRaw(),
+                                          aRange->EndRef().AsRaw());
   MOZ_ASSERT(!aRange->IsPositioned() || NS_SUCCEEDED(rv));
 }
 
 nsresult
-ContentEventHandler::RawRange::SetStartAndEnd(nsINode* aStartContainer,
-                                              uint32_t aStartOffset,
-                                              nsINode* aEndContainer,
-                                              uint32_t aEndOffset)
+ContentEventHandler::RawRange::SetStartAndEnd(const RawRangeBoundary& aStart,
+                                              const RawRangeBoundary& aEnd)
 {
-  nsINode* newStartRoot = nsRange::ComputeRootNode(aStartContainer);
+  nsINode* newStartRoot = nsRange::ComputeRootNode(aStart.Container());
   if (!newStartRoot) {
     return NS_ERROR_DOM_INVALID_NODE_TYPE_ERR;
   }
-  if (!IsValidOffset(aStartContainer, aStartOffset)) {
+  if (!aStart.IsSetAndValid()) {
     return NS_ERROR_DOM_INDEX_SIZE_ERR;
   }
 
-  if (aStartContainer == aEndContainer) {
-    if (!IsValidOffset(aEndContainer, aEndOffset)) {
+  if (aStart.Container() == aEnd.Container()) {
+    if (!aEnd.IsSetAndValid()) {
       return NS_ERROR_DOM_INDEX_SIZE_ERR;
     }
-    MOZ_ASSERT(aStartOffset <= aEndOffset);
+    MOZ_ASSERT(aStart.Offset() <= aEnd.Offset());
     mRoot = newStartRoot;
-    mStartContainer = mEndContainer = aStartContainer;
-    mStartOffset = aStartOffset;
-    mEndOffset = aEndOffset;
+    mStart = aStart;
+    mEnd = aEnd;
     return NS_OK;
   }
 
-  nsINode* newEndRoot = nsRange::ComputeRootNode(aEndContainer);
+  nsINode* newEndRoot = nsRange::ComputeRootNode(aEnd.Container());
   if (!newEndRoot) {
     return NS_ERROR_DOM_INVALID_NODE_TYPE_ERR;
   }
-  if (!IsValidOffset(aEndContainer, aEndOffset)) {
+  if (!aEnd.IsSetAndValid()) {
     return NS_ERROR_DOM_INDEX_SIZE_ERR;
   }
 
   // If they have different root, this should be collapsed at the end point.
   if (newStartRoot != newEndRoot) {
     mRoot = newEndRoot;
-    mStartContainer = mEndContainer = aEndContainer;
-    mStartOffset = mEndOffset = aEndOffset;
+    mStart = mEnd = aEnd;
     return NS_OK;
   }
 
   // Otherwise, set the range as specified.
   mRoot = newStartRoot;
-  mStartContainer = aStartContainer;
-  mStartOffset = aStartOffset;
-  mEndContainer = aEndContainer;
-  mEndOffset = aEndOffset;
+  mStart = aStart;
+  mEnd = aEnd;
   AssertStartIsBeforeOrEqualToEnd();
   return NS_OK;
 }
@@ -194,9 +173,9 @@ ContentEventHandler::RawRange::SelectNodeContents(
     return NS_ERROR_DOM_INVALID_NODE_TYPE_ERR;
   }
   mRoot = newRoot;
-  mStartContainer = mEndContainer = aNodeToSelectContents;
-  mStartOffset = 0;
-  mEndOffset = aNodeToSelectContents->Length();
+  mStart = RawRangeBoundary(aNodeToSelectContents, nullptr);
+  mEnd = RawRangeBoundary(aNodeToSelectContents,
+                          aNodeToSelectContents->GetLastChild());
   return NS_OK;
 }
 
@@ -416,7 +395,7 @@ ContentEventHandler::InitCommon(SelectionType aSelectionType)
 
   // But otherwise, we need to assume that there is a selection range at the
   // beginning of the root content if aSelectionType is eNormal.
-  rv = mFirstSelectedRawRange.CollapseTo(mRootContent, 0);
+  rv = mFirstSelectedRawRange.CollapseTo(RawRangeBoundary(mRootContent, 0));
   if (NS_WARN_IF(NS_FAILED(rv))) {
     return NS_ERROR_UNEXPECTED;
   }
@@ -1160,7 +1139,7 @@ ContentEventHandler::SetRawRangeFromFlatTextOffset(
 
   // Special case like <br contenteditable>
   if (!mRootContent->HasChildren()) {
-    nsresult rv = aRawRange->CollapseTo(mRootContent, 0);
+    nsresult rv = aRawRange->CollapseTo(RawRangeBoundary(mRootContent, 0));
     if (NS_WARN_IF(NS_FAILED(rv))) {
       return rv;
     }
@@ -2917,8 +2896,7 @@ ContentEventHandler::GetFlatTextLengthInRange(
   } else {
     RawRange prevRawRange;
     nsresult rv =
-      prevRawRange.SetStart(aStartPosition.Container(),
-                            aStartPosition.Offset());
+      prevRawRange.SetStart(aStartPosition.AsRaw());
     if (NS_WARN_IF(NS_FAILED(rv))) {
       return rv;
     }
@@ -2951,7 +2929,7 @@ ContentEventHandler::GetFlatTextLengthInRange(
 
     if (endPosition.IsSetAndValid()) {
       // Offset is within node's length; set end of range to that offset
-      rv = prevRawRange.SetEnd(endPosition.Container(), endPosition.Offset());
+      rv = prevRawRange.SetEnd(endPosition.AsRaw());
       if (NS_WARN_IF(NS_FAILED(rv))) {
         return rv;
       }
@@ -2999,6 +2977,8 @@ ContentEventHandler::GetFlatTextLengthInRange(
     if (node->IsNodeOfType(nsINode::eTEXT)) {
       // Note: our range always starts from offset 0
       if (node == endPosition.Container()) {
+        // NOTE: We should have an offset here, as endPosition.Container() is a
+        // nsINode::eTEXT, which always has an offset.
         *aLength += GetTextLength(content, aLineBreakType,
                                   endPosition.Offset());
       } else {
@@ -3099,7 +3079,8 @@ ContentEventHandler::AdjustCollapsedRangeMaybeIntoTextNode(RawRange& aRawRange)
     return NS_OK;
   }
 
-  nsresult rv = aRawRange.CollapseTo(childNode, offsetInChildNode);
+  nsresult rv =
+    aRawRange.CollapseTo(RawRangeBoundary(childNode, offsetInChildNode));
   if (NS_WARN_IF(NS_FAILED(rv))) {
     return rv;
   }

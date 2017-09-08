@@ -85,9 +85,19 @@ public:
     return mRoot;
   }
 
+  const RangeBoundary& StartRef() const
+  {
+    return mStart;
+  }
+
   nsINode* GetStartContainer() const
   {
     return mStart.Container();
+  }
+
+  const RangeBoundary& EndRef() const
+  {
+    return mEnd;
   }
 
   nsINode* GetEndContainer() const
