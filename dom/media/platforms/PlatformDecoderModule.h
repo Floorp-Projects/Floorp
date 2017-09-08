@@ -52,6 +52,13 @@ struct MOZ_STACK_CLASS CreateDecoderParams final
   };
   using OptionSet = EnumSet<Option>;
 
+  struct UseNullDecoder
+  {
+    UseNullDecoder() = default;
+    explicit UseNullDecoder(bool aUseNullDecoder) : mUse(aUseNullDecoder) { }
+    bool mUse = false;
+  };
+
   template <typename T1, typename... Ts>
   CreateDecoderParams(const TrackInfo& aConfig, T1&& a1, Ts&&... args)
     : mConfig(aConfig)
@@ -86,7 +93,7 @@ struct MOZ_STACK_CLASS CreateDecoderParams final
   MediaResult* mError = nullptr;
   RefPtr<layers::KnowsCompositor> mKnowsCompositor;
   RefPtr<GMPCrashHelper> mCrashHelper;
-  bool mUseNullDecoder = false;
+  UseNullDecoder mUseNullDecoder;
   TrackInfo::TrackType mType = TrackInfo::kUndefinedTrack;
   MediaEventProducer<TrackInfo::TrackType>* mOnWaitingForKeyEvent = nullptr;
   OptionSet mOptions = OptionSet(Option::Default);
@@ -103,7 +110,7 @@ private:
   }
   void Set(MediaResult* aError) { mError = aError; }
   void Set(GMPCrashHelper* aCrashHelper) { mCrashHelper = aCrashHelper; }
-  void Set(bool aUseNullDecoder) { mUseNullDecoder = aUseNullDecoder; }
+  void Set(UseNullDecoder aUseNullDecoder) { mUseNullDecoder = aUseNullDecoder; }
   void Set(OptionSet aOptions) { mOptions = aOptions; }
   void Set(layers::KnowsCompositor* aKnowsCompositor)
   {
