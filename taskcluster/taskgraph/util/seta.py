@@ -81,9 +81,6 @@ class SETA(object):
             # ensure no build tasks slipped in, we never want to optimize out those
             low_value_tasks = [x for x in low_value_tasks if 'build' not in x.lower()]
 
-            # Bug 1340065, temporarily disable SETA for linux64-stylo
-            low_value_tasks = [x for x in low_value_tasks if x.find('linux64-stylo') == -1]
-
         # In the event of request times out, requests will raise a TimeoutError.
         except exceptions.Timeout:
             logger.warning("SETA timeout, we will treat all test tasks as high value.")
