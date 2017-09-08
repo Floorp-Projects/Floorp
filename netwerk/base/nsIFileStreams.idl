@@ -6,7 +6,9 @@
 #include "nsIInputStream.idl"
 #include "nsIOutputStream.idl"
 
+interface nsIEventTarget;
 interface nsIFile;
+interface nsIFileMetadataCallback;
 
 %{C++
 struct PRFileDesc;
@@ -182,13 +184,22 @@ interface nsIFileStream : nsISupports
 
 /**
  * An interface that allows you to get some metadata like file size and
- * file last modified time.
+ * file last modified time. These methods and attributes can throw
+ * NS_BASE_STREAM_WOULD_BLOCK in case the informations are not available yet.
+ * If this happens, consider the use of nsIAsyncFileMetadata.
+ *
+ * If using nsIAsyncFileMetadata, you should retrieve any data via this
+ * interface before taking any action that might consume the underlying stream.
+ * For example, once Available(), Read(), or nsIAsyncInputStream::AsyncWait()
+ * are invoked, these methods may return NS_BASE_STREAM_CLOSED.  This will
+ * happen when using IPCBlobInputStream with an underlying file stream, for
+ * example.
  */
 [scriptable, uuid(07f679e4-9601-4bd1-b510-cd3852edb881)]
 interface nsIFileMetadata : nsISupports
 {
     /**
-     * File size in bytes;
+     * File size in bytes.
      */
     readonly attribute long long size;
 
@@ -200,7 +211,30 @@ interface nsIFileMetadata : nsISupports
 
     /**
      * The internal file descriptor. It can be used for memory mapping of the
-     * underlying file. Please use carefully!
+     * underlying file. Please use carefully! If this returns
+     * NS_BASE_STREAM_WOULD_BLOCK, consider the use of nsIAsyncFileMetadata.
      */
     [noscript] PRFileDescPtr getFileDescriptor();
+};
+
+[scriptable, uuid(de15b80b-29ba-4b7f-9220-a3d75b17ae8c)]
+interface nsIAsyncFileMetadata : nsIFileMetadata
+{
+    /**
+     * Asynchronously wait for the object to be ready.
+     */
+    void asyncWait(in nsIFileMetadataCallback aCallback,
+                   in nsIEventTarget aEventTarget);
+};
+
+/**
+ * This is a companion interface for nsIAsyncFileMetadata::asyncWait.
+ */
+[function, scriptable, uuid(d01c7ead-7ba3-4726-b399-618ec8ec7057)]
+interface nsIFileMetadataCallback : nsISupports
+{
+    /**
+     * Called to indicate that the nsIFileMetadata object is ready.
+     */
+    void onFileMetadataReady(in nsIAsyncFileMetadata aObject);
 };
