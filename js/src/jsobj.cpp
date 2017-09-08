@@ -3323,18 +3323,30 @@ js::GetThisValue(JSObject* obj)
         return ObjectValue(*ToWindowProxyIfWindow(obj));
 
     if (obj->is<LexicalEnvironmentObject>()) {
-        if (!obj->as<LexicalEnvironmentObject>().isExtensible())
-            return UndefinedValue();
-        return obj->as<LexicalEnvironmentObject>().thisValue();
+        MOZ_ASSERT(!obj->as<LexicalEnvironmentObject>().isExtensible());
+        return UndefinedValue();
     }
 
     if (obj->is<ModuleEnvironmentObject>())
         return UndefinedValue();
 
-    if (obj->is<WithEnvironmentObject>())
-        return ObjectValue(*obj->as<WithEnvironmentObject>().withThis());
+    MOZ_ASSERT(!obj->is<WithEnvironmentObject>());
 
     return ObjectValue(*obj);
+}
+
+Value
+js::GetThisValueOfLexical(JSObject* env)
+{
+    MOZ_ASSERT(IsExtensibleLexicalEnvironment(env));
+    return env->as<LexicalEnvironmentObject>().thisValue();
+}
+
+Value
+js::GetThisValueOfWith(JSObject* env)
+{
+    MOZ_ASSERT(env->is<WithEnvironmentObject>());
+    return GetThisValue(env->as<WithEnvironmentObject>().withThis());
 }
 
 class GetObjectSlotNameFunctor : public JS::CallbackTracer::ContextFunctor

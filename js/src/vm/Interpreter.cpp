@@ -132,13 +132,14 @@ js::GetFunctionThis(JSContext* cx, AbstractFramePtr frame, MutableHandleValue re
     // global |this|. This gives a consistent definition of global lexical
     // |this| between function and global contexts.
     //
-    // NOTE: If only non-syntactic WithEnvironments are on the chain, we use
-    // the global lexical |this| value.
+    // NOTE: If only non-syntactic WithEnvironments are on the chain, we use the
+    // global lexical |this| value. This is for compatibility with the Subscript
+    // Loader.
     if (frame.script()->hasNonSyntacticScope() && thisv.isNullOrUndefined()) {
         RootedObject env(cx, frame.environmentChain());
         while (true) {
             if (IsNSVOLexicalEnvironment(env) || IsGlobalLexicalEnvironment(env)) {
-                res.set(GetThisValue(env));
+                res.set(GetThisValueOfLexical(env));
                 return true;
             }
             if (!env->enclosingEnvironment()) {
@@ -161,7 +162,7 @@ js::GetNonSyntacticGlobalThis(JSContext* cx, HandleObject envChain, MutableHandl
     RootedObject env(cx, envChain);
     while (true) {
         if (IsExtensibleLexicalEnvironment(env)) {
-            res.set(env->as<LexicalEnvironmentObject>().thisValue());
+            res.set(GetThisValueOfLexical(env));
             return;
         }
         if (!env->enclosingEnvironment()) {
@@ -1494,6 +1495,9 @@ ComputeImplicitThis(JSObject* obj)
 
     if (obj->is<NonSyntacticVariablesObject>())
         return UndefinedValue();
+
+    if (obj->is<WithEnvironmentObject>())
+        return GetThisValueOfWith(obj);
 
     if (IsCacheableEnvironment(obj))
         return UndefinedValue();
