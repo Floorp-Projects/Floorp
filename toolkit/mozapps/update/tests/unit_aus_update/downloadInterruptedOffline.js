@@ -11,8 +11,6 @@ function run_test() {
   Services.prefs.setBoolPref(PREF_APP_UPDATE_STAGING_ENABLED, false);
   start_httpserver();
   setUpdateURL(gURLData + gHTTPHandlerPath);
-  initMockIncrementalDownload();
-  gIncrementalDownloadErrorType = 4;
   let patches = getRemotePatchString({});
   let updates = getRemoteUpdateString({}, patches);
   gResponseBody = getRemoteUpdatesXMLString(updates);
@@ -28,6 +26,7 @@ function updateCheckCompleted() {
   Assert.equal(gUpdateCount, 1,
                "the update count" + MSG_SHOULD_EQUAL);
   let bestUpdate = gAUS.selectUpdate(gUpdates, gUpdateCount);
+  Services.io.offline = true;
   let state = gAUS.downloadUpdate(bestUpdate, false);
   if (state == STATE_NONE || state == STATE_FAILED) {
     do_throw("nsIApplicationUpdateService:downloadUpdate returned " + state);
