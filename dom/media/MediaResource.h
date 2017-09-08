@@ -538,14 +538,16 @@ protected:
                            uint32_t aCount);
   nsresult OnChannelRedirect(nsIChannel* aOld, nsIChannel* aNew, uint32_t aFlags);
 
-  // Opens the channel, using an HTTP byte range request to start at mOffset
+  // Opens the channel, using an HTTP byte range request to start at aOffset
   // if possible. Main thread only.
-  nsresult OpenChannel();
+  nsresult OpenChannel(int64_t aOffset);
   nsresult RecreateChannel();
   // Add headers to HTTP request. Main thread only.
-  nsresult SetupChannelHeaders();
+  nsresult SetupChannelHeaders(int64_t aOffset);
   // Closes the channel. Main thread only.
   void CloseChannel();
+
+  int64_t GetOffset() const;
 
   // Parses 'Content-Range' header and returns results via parameters.
   // Returns error if header is not available, values are not parse-able or
@@ -568,7 +570,6 @@ protected:
                               uint32_t* aWriteCount);
 
   // Main thread access only
-  int64_t            mOffset;
   RefPtr<Listener> mListener;
   // When this flag is set, if we get a network error we should silently
   // reopen the stream.
