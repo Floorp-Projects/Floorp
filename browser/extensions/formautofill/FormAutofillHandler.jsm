@@ -121,11 +121,6 @@ FormAutofillHandler.prototype = {
   },
 
   /**
-   * Time in milliseconds since epoch when a user started filling in the form.
-   */
-  timeStartedFillingMS: null,
-
-  /**
    * Set fieldDetails from the form about fields that can be autofilled.
    *
    * @param {boolean} allowDuplicates
@@ -158,17 +153,9 @@ FormAutofillHandler.prototype = {
       log.debug("Ignoring credit card related fields since it's without credit card number field");
       this.creditCard.fieldDetails = [];
     }
-    let validDetails = Array.of(...(this.address.fieldDetails),
-                                ...(this.creditCard.fieldDetails));
-    for (let detail of validDetails) {
-      let input = detail.elementWeakRef.get();
-      if (!input) {
-        continue;
-      }
-      input.addEventListener("input", this);
-    }
 
-    return validDetails;
+    return Array.of(...(this.address.fieldDetails),
+                    ...(this.creditCard.fieldDetails));
   },
 
   getFieldDetailByName(fieldName) {
@@ -645,23 +632,4 @@ FormAutofillHandler.prototype = {
       Services.cpmm.sendAsyncMessage("FormAutofill:GetDecryptedString", {cipherText, reauth});
     });
   },
-
-  handleEvent(event) {
-    switch (event.type) {
-      case "input":
-        if (!event.isTrusted) {
-          return;
-        }
-
-        for (let detail of this.fieldDetails) {
-          let input = detail.elementWeakRef.get();
-          if (!input) {
-            continue;
-          }
-          input.removeEventListener("input", this);
-        }
-        this.timeStartedFillingMS = Date.now();
-        break;
-    }
-  }
 };
