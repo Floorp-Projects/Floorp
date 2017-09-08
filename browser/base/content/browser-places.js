@@ -479,23 +479,17 @@ var PlacesCommandHook = {
     if (!aShowEditUI)
       return;
 
-    // Try to dock the panel to:
-    // 1. the bookmarks menu button
-    // 2. the identity icon
-    // 3. the content area
-    if (BookmarkingUI.anchor && isVisible(BookmarkingUI.anchor)) {
-      await StarUI.showEditBookmarkPopup(itemId, BookmarkingUI.anchor,
-                                        "bottomcenter topright", isNewBookmark, uri);
+    let anchor = BookmarkingUI.anchor;
+    if (anchor) {
+      await StarUI.showEditBookmarkPopup(itemId, anchor,
+                                         "bottomcenter topright", isNewBookmark,
+                                         uri);
       return;
     }
 
-    let identityIcon = document.getElementById("identity-icon");
-    if (isVisible(identityIcon)) {
-      await StarUI.showEditBookmarkPopup(itemId, identityIcon,
-                                        "bottomcenter topright", isNewBookmark, uri);
-    } else {
-      await StarUI.showEditBookmarkPopup(itemId, aBrowser, "overlap", isNewBookmark, uri);
-    }
+    // Fall back to showing the panel over the content area.
+    await StarUI.showEditBookmarkPopup(itemId, aBrowser, "overlap",
+                                       isNewBookmark, uri);
   },
 
   // TODO: Replace bookmarkPage code with this function once legacy
@@ -561,23 +555,16 @@ var PlacesCommandHook = {
 
     let node = await PlacesUIUtils.promiseNodeLikeFromFetchInfo(info);
 
-    // Try to dock the panel to:
-    // 1. the bookmarks menu button
-    // 2. the identity icon
-    // 3. the content area
-    if (BookmarkingUI.anchor && isVisible(BookmarkingUI.anchor)) {
-      await StarUI.showEditBookmarkPopup(node, BookmarkingUI.anchor,
-                                   "bottomcenter topright", isNewBookmark, url);
+    let anchor = BookmarkingUI.anchor;
+    if (anchor) {
+      await StarUI.showEditBookmarkPopup(node, anchor, "bottomcenter topright",
+                                         isNewBookmark, url);
       return;
     }
 
-    let identityIcon = document.getElementById("identity-icon");
-    if (isVisible(identityIcon)) {
-      await StarUI.showEditBookmarkPopup(node, identityIcon,
-                                   "bottomcenter topright", isNewBookmark, url);
-    } else {
-      await StarUI.showEditBookmarkPopup(node, aBrowser, "overlap", isNewBookmark, url);
-    }
+    // Fall back to showing the panel over the content area.
+    await StarUI.showEditBookmarkPopup(node, aBrowser, "overlap", isNewBookmark,
+                                       url);
   },
 
   _getPageDetails(browser) {
@@ -1587,6 +1574,7 @@ var LibraryUI = {
 
 var BookmarkingUI = {
   STAR_ID: "star-button",
+  STAR_BOX_ID: "star-button-box",
   BOOKMARK_BUTTON_ID: "bookmarks-menu-button",
   BOOKMARK_BUTTON_SHORTCUT: "addBookmarkAsKb",
   get button() {
@@ -1600,8 +1588,24 @@ var BookmarkingUI = {
     return this.star = document.getElementById(this.STAR_ID);
   },
 
+  get starBox() {
+    delete this.starBox;
+    return this.starBox = document.getElementById(this.STAR_BOX_ID);
+  },
+
   get anchor() {
-    return this.star;
+    // Try to anchor the panel to:
+    // 1. The bookmarks star box (using the star itself is trickier because it
+    //    can be hidden while the star animation is visible)
+    // 2. The identity icon
+    if (this.starBox && isVisible(this.starBox)) {
+      return this.starBox;
+    }
+    let identityIcon = document.getElementById("identity-icon");
+    if (identityIcon && isVisible(identityIcon)) {
+      return identityIcon;
+    }
+    return null;
   },
 
   get notifier() {
