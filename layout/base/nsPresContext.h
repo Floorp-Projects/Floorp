@@ -317,7 +317,6 @@ public:
    * Access the image animation mode for this context
    */
   uint16_t     ImageAnimationMode() const { return mImageAnimationMode; }
-  virtual void SetImageAnimationModeExternal(uint16_t aMode);
   void SetImageAnimationModeInternal(uint16_t aMode);
   void SetImageAnimationMode(uint16_t aMode)
   { SetImageAnimationModeInternal(aMode); }
@@ -422,7 +421,6 @@ public:
 
   void SetContainer(nsIDocShell* aContainer);
 
-  virtual nsISupports* GetContainerWeakExternal() const;
   nsISupports* GetContainerWeakInternal() const;
   nsISupports* GetContainerWeak() const
   { return GetContainerWeakInternal(); }
@@ -769,7 +767,6 @@ public:
    *  @lina 07/12/2000
    */
   bool BidiEnabled() const { return BidiEnabledInternal(); }
-  virtual bool BidiEnabledExternal() const;
   bool BidiEnabledInternal() const;
 
   /**

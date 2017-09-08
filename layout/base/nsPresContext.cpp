@@ -1340,12 +1340,6 @@ nsPresContext::SetImageAnimationModeInternal(uint16_t aMode)
   mImageAnimationMode = aMode;
 }
 
-void
-nsPresContext::SetImageAnimationModeExternal(uint16_t aMode)
-{
-  SetImageAnimationModeInternal(aMode);
-}
-
 already_AddRefed<nsIAtom>
 nsPresContext::GetContentLanguage() const
 {
@@ -1611,12 +1605,6 @@ nsPresContext::GetContainerWeakInternal() const
   return static_cast<nsIDocShell*>(mContainer);
 }
 
-nsISupports*
-nsPresContext::GetContainerWeakExternal() const
-{
-  return GetContainerWeakInternal();
-}
-
 nsIDocShell*
 nsPresContext::GetDocShell() const
 {
@@ -1628,12 +1616,6 @@ nsPresContext::Detach()
 {
   SetContainer(nullptr);
   SetLinkHandler(nullptr);
-}
-
-bool
-nsPresContext::BidiEnabledExternal() const
-{
-  return BidiEnabledInternal();
 }
 
 bool

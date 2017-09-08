@@ -388,7 +388,6 @@ public:
   /**
    * This calls through to the frame manager to get the root frame.
    */
-  virtual nsIFrame* GetRootFrameExternal() const;
   nsIFrame* GetRootFrame() const {
     return mFrameManager->GetRootFrame();
   }
@@ -1155,9 +1154,7 @@ public:
                   uint32_t aFlags) = 0;
 
   void AddAutoWeakFrameInternal(AutoWeakFrame* aWeakFrame);
-  virtual void AddAutoWeakFrameExternal(AutoWeakFrame* aWeakFrame);
   void AddWeakFrameInternal(WeakFrame* aWeakFrame);
-  virtual void AddWeakFrameExternal(WeakFrame* aWeakFrame);
 
   void AddAutoWeakFrame(AutoWeakFrame* aWeakFrame)
   {
@@ -1169,9 +1166,7 @@ public:
   }
 
   void RemoveAutoWeakFrameInternal(AutoWeakFrame* aWeakFrame);
-  virtual void RemoveAutoWeakFrameExternal(AutoWeakFrame* aWeakFrame);
   void RemoveWeakFrameInternal(WeakFrame* aWeakFrame);
-  virtual void RemoveWeakFrameExternal(WeakFrame* aWeakFrame);
 
   void RemoveAutoWeakFrame(AutoWeakFrame* aWeakFrame)
   {
@@ -1655,12 +1650,8 @@ public:
    * Refresh observer management.
    */
 protected:
-  virtual bool AddRefreshObserverExternal(nsARefreshObserver* aObserver,
-                                          mozilla::FlushType aFlushType);
   bool AddRefreshObserverInternal(nsARefreshObserver* aObserver,
                                   mozilla::FlushType aFlushType);
-  virtual bool RemoveRefreshObserverExternal(nsARefreshObserver* aObserver,
-                                             mozilla::FlushType aFlushType);
   bool RemoveRefreshObserverInternal(nsARefreshObserver* aObserver,
                                      mozilla::FlushType aFlushType);
 

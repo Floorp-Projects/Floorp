@@ -656,12 +656,6 @@ nsIPresShell::SetVerifyReflowEnable(bool aEnabled)
   gVerifyReflowEnabled = aEnabled;
 }
 
-/* virtual */ void
-nsIPresShell::AddAutoWeakFrameExternal(AutoWeakFrame* aWeakFrame)
-{
-  AddAutoWeakFrameInternal(aWeakFrame);
-}
-
 void
 nsIPresShell::AddAutoWeakFrameInternal(AutoWeakFrame* aWeakFrame)
 {
@@ -672,12 +666,6 @@ nsIPresShell::AddAutoWeakFrameInternal(AutoWeakFrame* aWeakFrame)
   mAutoWeakFrames = aWeakFrame;
 }
 
-/* virtual */ void
-nsIPresShell::AddWeakFrameExternal(WeakFrame* aWeakFrame)
-{
-  AddWeakFrameInternal(aWeakFrame);
-}
-
 void
 nsIPresShell::AddWeakFrameInternal(WeakFrame* aWeakFrame)
 {
@@ -686,12 +674,6 @@ nsIPresShell::AddWeakFrameInternal(WeakFrame* aWeakFrame)
   }
   MOZ_ASSERT(!mWeakFrames.GetEntry(aWeakFrame));
   mWeakFrames.PutEntry(aWeakFrame);
-}
-
-/* virtual */ void
-nsIPresShell::RemoveAutoWeakFrameExternal(AutoWeakFrame* aWeakFrame)
-{
-  RemoveAutoWeakFrameInternal(aWeakFrame);
 }
 
 void
@@ -708,12 +690,6 @@ nsIPresShell::RemoveAutoWeakFrameInternal(AutoWeakFrame* aWeakFrame)
   if (nextWeak) {
     nextWeak->SetPreviousWeakFrame(aWeakFrame->GetPreviousWeakFrame());
   }
-}
-
-/* virtual */ void
-nsIPresShell::RemoveWeakFrameExternal(WeakFrame* aWeakFrame)
-{
-  RemoveWeakFrameInternal(aWeakFrame);
 }
 
 void
@@ -2474,12 +2450,6 @@ PresShell::CheckVisibilityContent(nsIContent* aNode, int16_t aStartOffset,
 }
 
 //end implementations nsISelectionController
-
-nsIFrame*
-nsIPresShell::GetRootFrameExternal() const
-{
-  return mFrameConstructor->GetRootFrame();
-}
 
 nsIFrame*
 nsIPresShell::GetRootScrollFrame() const
@@ -9832,13 +9802,6 @@ nsIPresShell::AddRefreshObserverInternal(nsARefreshObserver* aObserver,
       presContext->RefreshDriver()->AddRefreshObserver(aObserver, aFlushType);
 }
 
-/* virtual */ bool
-nsIPresShell::AddRefreshObserverExternal(nsARefreshObserver* aObserver,
-                                         FlushType aFlushType)
-{
-  return AddRefreshObserverInternal(aObserver, aFlushType);
-}
-
 bool
 nsIPresShell::RemoveRefreshObserverInternal(nsARefreshObserver* aObserver,
                                             FlushType aFlushType)
@@ -9846,13 +9809,6 @@ nsIPresShell::RemoveRefreshObserverInternal(nsARefreshObserver* aObserver,
   nsPresContext* presContext = GetPresContext();
   return presContext &&
       presContext->RefreshDriver()->RemoveRefreshObserver(aObserver, aFlushType);
-}
-
-/* virtual */ bool
-nsIPresShell::RemoveRefreshObserverExternal(nsARefreshObserver* aObserver,
-                                            FlushType aFlushType)
-{
-  return RemoveRefreshObserverInternal(aObserver, aFlushType);
 }
 
 /* virtual */ bool
