@@ -57,6 +57,9 @@ const BackgroundPageThumbs = {
    * @opt timeout    The capture will time out after this many milliseconds have
    *                 elapsed after the capture has progressed to the head of
    *                 the queue and started.  Defaults to 30000 (30 seconds).
+   * @opt isImage    If true, backgroundPageThumbsContent will attempt to render
+   *                 the url directly to canvas. Note that images will mostly get
+   *                 detected and rendered as such anyway, but this will ensure it.
    */
   capture(url, options = {}) {
     if (!PageThumbs._prefEnabled()) {
@@ -404,7 +407,7 @@ Capture.prototype = {
     // didCapture registration
     this._msgMan = messageManager;
     this._msgMan.sendAsyncMessage("BackgroundPageThumbs:capture",
-                                  { id: this.id, url: this.url });
+                                  { id: this.id, url: this.url, isImage: this.options.isImage });
     this._msgMan.addMessageListener("BackgroundPageThumbs:didCapture", this);
   },
 
