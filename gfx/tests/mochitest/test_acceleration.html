@@ -104,7 +104,7 @@ switch(osName)
     var advancedLayersEnabled = false;
     var advancedLayersEnabledOnWin7 = false;
     try {
-      advancedLayersEnabled = SpecialPowers.getBoolPref("layers.mlgpu.dev-enabled");
+      advancedLayersEnabled = SpecialPowers.getBoolPref("layers.mlgpu.enabled");
       advancedLayersEnabledOnWin7 = SpecialPowers.getBoolPref("layers.mlgpu.enable-on-windows7");
     } catch (e) {}
     var shouldGetAL = advancedLayersEnabled;
