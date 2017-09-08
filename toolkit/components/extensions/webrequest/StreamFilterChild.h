@@ -92,8 +92,9 @@ public:
 
   StreamFilterStatus Status() const;
 
+  void  RecvInitialized(bool aSuccess);
+
 protected:
-  virtual IPCResult RecvInitialized(const bool& aSuccess) override;
 
   virtual IPCResult RecvStartRequest() override;
   virtual IPCResult RecvData(Data&& data) override;
@@ -104,7 +105,7 @@ protected:
   virtual IPCResult RecvResumed() override;
   virtual IPCResult RecvFlushData() override;
 
-  virtual IPCResult Recv__delete__() override { return IPC_OK(); }
+  virtual void DeallocPStreamFilterChild() override;
 
   void
   SetStreamFilter(StreamFilter* aStreamFilter)
