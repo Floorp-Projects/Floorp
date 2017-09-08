@@ -775,18 +775,23 @@ xdb.open("src_body.xdb");
 
 var minStream = xdb.min_data_stream();
 var maxStream = xdb.max_data_stream();
-
 var roots = [];
-for (var bodyIndex = minStream; bodyIndex <= maxStream; bodyIndex++) {
-    var key = xdb.read_key(bodyIndex);
-    var name = key.readString();
-    if (/^Gecko_/.test(name)) {
-        var data = xdb.read_entry(key);
-        if (/ServoBindings.cpp/.test(data.readString()))
-            roots.push(name);
-        xdb.free_string(data);
+
+var [flag, arg] = scriptArgs;
+if (flag && (flag == '-f' || flag == '--function')) {
+    roots = [arg];
+} else {
+    for (var bodyIndex = minStream; bodyIndex <= maxStream; bodyIndex++) {
+        var key = xdb.read_key(bodyIndex);
+        var name = key.readString();
+        if (/^Gecko_/.test(name)) {
+            var data = xdb.read_entry(key);
+            if (/ServoBindings.cpp/.test(data.readString()))
+                roots.push(name);
+            xdb.free_string(data);
+        }
+        xdb.free_string(key);
     }
-    xdb.free_string(key);
 }
 
 print(elapsedTime() + "Found " + roots.length + " roots.");
