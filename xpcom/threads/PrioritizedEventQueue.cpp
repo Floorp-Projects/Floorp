@@ -122,7 +122,7 @@ PrioritizedEventQueue<InnerQueueT>::SelectQueue(bool aUpdateState,
   bool normalPending = !mNormalQueue->IsEmpty(aProofOfLock);
   size_t inputCount = mInputQueue->Count(aProofOfLock);
 
-  if (aUpdateState && mInputQueueState == STATE_ENABLED &&
+  if (mInputQueueState == STATE_ENABLED &&
       mInputHandlingStartTime.IsNull() && inputCount > 0) {
     mInputHandlingStartTime =
       InputEventStatistics::Get()
@@ -274,7 +274,7 @@ PrioritizedEventQueue<InnerQueueT>::HasReadyEvent(const MutexAutoLock& aProofOfL
   if (queue == EventPriority::High) {
     return mHighQueue->HasReadyEvent(aProofOfLock);
   } else if (queue == EventPriority::Input) {
-    return mIdleQueue->HasReadyEvent(aProofOfLock);
+    return mInputQueue->HasReadyEvent(aProofOfLock);
   } else if (queue == EventPriority::Normal) {
     return mNormalQueue->HasReadyEvent(aProofOfLock);
   }
