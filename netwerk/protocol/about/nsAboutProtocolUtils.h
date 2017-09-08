@@ -47,7 +47,7 @@ NS_GetAboutModule(nsIURI *aAboutURI, nsIAboutModule** aModule)
   if (NS_FAILED(rv)) return rv;
 
   // look up a handler to deal with "what"
-  contractID.Insert(NS_LITERAL_CSTRING(NS_ABOUT_MODULE_CONTRACTID_PREFIX), 0);
+  contractID.InsertLiteral(NS_ABOUT_MODULE_CONTRACTID_PREFIX, 0);
 
   return CallGetService(contractID.get(), aModule);
 }
@@ -66,6 +66,5 @@ inline void PrintTimeString(char *buf, uint32_t bufsize, uint32_t t_sec)
     PR_ExplodeTime(t_usec, PR_LocalTimeParameters, &et);
     PR_FormatTime(buf, bufsize, "%Y-%m-%d %H:%M:%S", &et);
 }
-
 
 #endif
