@@ -23,12 +23,4 @@
 
 #include "vm/TypedArrayObject.h"
 
-namespace js {
-namespace jit {
-
-void* GetReturnAddressToIonCode(JSContext* cx);
-
-} // namespace jit
-} // namespace js
-
 #endif /* jit_IonCaches_h */

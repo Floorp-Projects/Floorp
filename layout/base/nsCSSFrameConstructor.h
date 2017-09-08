@@ -74,12 +74,25 @@ private:
   nsCSSFrameConstructor& operator=(const nsCSSFrameConstructor& aCopy) = delete;
 
 public:
+  /**
+   * Whether insertion should be done synchronously or asynchronously.
+   *
+   * Generally, insertion is synchronous if we're reconstructing something from
+   * frame construction/reconstruction, and async if we're removing stuff, like
+   * from ContentRemoved.
+   */
+  enum class InsertionKind
+  {
+    Sync,
+    Async,
+  };
+
   mozilla::RestyleManager* RestyleManager() const
     { return mPresShell->GetPresContext()->RestyleManager(); }
 
   nsIFrame* ConstructRootFrame();
 
-  void ReconstructDocElementHierarchy();
+  void ReconstructDocElementHierarchy(InsertionKind);
 
   // Create frames for content nodes that are marked as needing frames. This
   // should be called before ProcessPendingRestyles.
@@ -88,6 +101,7 @@ public:
   void CreateNeededFrames();
 
 private:
+
   void CreateNeededFrames(nsIContent* aContent,
                           TreeMatchContext& aTreeMatchContext);
 
@@ -113,8 +127,7 @@ private:
   void IssueSingleInsertNofications(nsIContent* aContainer,
                                     nsIContent* aStartChild,
                                     nsIContent* aEndChild,
-                                    bool aAllowLazyConstruction,
-                                    bool aForReconstruction);
+                                    InsertionKind);
 
   /**
    * Data that represents an insertion point for some child content.
@@ -157,13 +170,13 @@ private:
   InsertionPoint GetRangeInsertionPoint(nsIContent* aContainer,
                                         nsIContent* aStartChild,
                                         nsIContent* aEndChild,
-                                        bool aAllowLazyConstruction,
-                                        bool aForReconstruction);
+                                        InsertionKind);
 
   // Returns true if parent was recreated due to frameset child, false otherwise.
   bool MaybeRecreateForFrameset(nsIFrame* aParentFrame,
                                 nsIContent* aStartChild,
-                                nsIContent* aEndChild);
+                                nsIContent* aEndChild,
+                                InsertionKind);
 
   /**
    * For each child in the aStartChild/aEndChild range, calls
@@ -187,14 +200,15 @@ private:
 
 public:
   /**
-   * Lazy frame construction is controlled by the aAllowLazyConstruction bool
-   * parameter of nsCSSFrameConstructor::ContentAppended/Inserted. It is true
-   * for all inserts/appends as passed from the presshell, except for the
-   * insert of the root element, which is always non-lazy. Even if the
-   * aAllowLazyConstruction passed to ContentAppended/Inserted is true we still
-   * may not be able to construct lazily, so we call MaybeConstructLazily.
-   * MaybeConstructLazily does not allow lazy construction if any of the
-   * following are true:
+   * Lazy frame construction is controlled by the InsertionKind parameter of
+   * nsCSSFrameConstructor::ContentAppended/Inserted. It is true for all
+   * inserts/appends as passed from the presshell, except for the insert of the
+   * root element, which is always non-lazy.
+   *
+   * Even if the aInsertionKind passed to ContentAppended/Inserted is
+   * Async we still may not be able to construct lazily, so we call
+   * MaybeConstructLazily.  MaybeConstructLazily does not allow lazy
+   * construction if any of the following are true:
    *  -we are in chrome
    *  -the container is in a native anonymous subtree
    *  -the container is XUL
@@ -203,8 +217,7 @@ public:
    *   must not be called with anonymous children.
    * The XUL and chrome checks are because XBL bindings only get applied at
    * frame construction time and some things depend on the bindings getting
-   * attached synchronously. The editable checks are because the editor seems
-   * to expect frames to be constructed synchronously.
+   * attached synchronously.
    *
    * If MaybeConstructLazily returns false we construct as usual, but if it
    * returns true then it adds NODE_NEEDS_FRAME bits to the newly
@@ -230,8 +243,8 @@ public:
    * set.)
    */
 
-  // If aAllowLazyConstruction is true then frame construction of the new
-  // children can be done lazily.
+  // If aInsertionKind is Async then frame construction of the new children can
+  // be done lazily.
   //
   // When constructing frames lazily, we can keep the tree match context in a
   // much easier way than nsFrameConstructorState, and thus, we're allowed to
@@ -239,28 +252,24 @@ public:
   // in the DOM.
   void ContentAppended(nsIContent* aContainer,
                        nsIContent* aFirstNewContent,
-                       bool aAllowLazyConstruction,
-                       TreeMatchContext* aProvidedTreeMatchContext = nullptr)
-  {
-    ContentAppended(aContainer, aFirstNewContent, aAllowLazyConstruction, false,
-                    aProvidedTreeMatchContext);
-  }
+                       InsertionKind aInsertionKind,
+                       TreeMatchContext* aProvidedTreeMatchContext = nullptr);
 
-  // If aAllowLazyConstruction is true then frame construction of the new child
+  // If aInsertionkind is Async then frame construction of the new child
   // can be done lazily.
   void ContentInserted(nsIContent* aContainer,
                        nsIContent* aChild,
                        nsILayoutHistoryState* aFrameState,
-                       bool aAllowLazyConstruction);
+                       InsertionKind aInsertionKind);
 
   // Like ContentInserted but handles inserting the children of aContainer in
   // the range [aStartChild, aEndChild).  aStartChild must be non-null.
   // aEndChild may be null to indicate the range includes all kids after
   // aStartChild.
   //
-  // If aAllowLazyConstruction is true then frame construction of
-  // the new children can be done lazily. It is only allowed to be true when
-  // inserting a single node.
+  // If aInsertionKind is Async then frame construction of the new children can
+  // be done lazily. It is only allowed to be Async when inserting a single
+  // node.
   //
   // See ContentAppended to see why we allow passing an already initialized
   // TreeMatchContext.
@@ -268,49 +277,8 @@ public:
                             nsIContent* aStartChild,
                             nsIContent* aEndChild,
                             nsILayoutHistoryState* aFrameState,
-                            bool aAllowLazyConstruction,
-                            TreeMatchContext* aProvidedTreeMatchContext = nullptr)
-  {
-    ContentRangeInserted(aContainer, aStartChild, aEndChild, aFrameState,
-                         aAllowLazyConstruction, false,
-                         aProvidedTreeMatchContext);
-  }
-
-private:
-  // Helpers for the public ContentAppended, ContentInserted and
-  // ContentRangeInserted functions above.
-  //
-  // aForReconstruction indicates whether this call is for frame reconstruction
-  // via RecreateFramesFor or lazy frame construction via CreateNeededFrames.
-  // (This latter case admittedly isn't always for "reconstruction" per se, but
-  // the important thing is that aForReconstruction is false for real content
-  // insertions, and true for other cases.)
-  void ContentAppended(nsIContent* aContainer,
-                       nsIContent* aFirstNewContent,
-                       bool aAllowLazyConstruction,
-                       bool aForReconstruction,
-                       TreeMatchContext* aProvidedTreeMatchContext);
-  void ContentRangeInserted(nsIContent* aContainer,
-                            nsIContent* aStartChild,
-                            nsIContent* aEndChild,
-                            nsILayoutHistoryState* aFrameState,
-                            bool aAllowLazyConstruction,
-                            bool aForReconstruction,
-                            TreeMatchContext* aProvidedTreeMatchContext);
-
-public:
-  /**
-   * Whether insertion should be done synchronously or asynchronously.
-   *
-   * Generally, insertion is synchronous if we're reconstructing something from
-   * frame construction/reconstruction, and async if we're removing stuff, like
-   * from ContentRemoved.
-   */
-  enum class InsertionKind
-  {
-    Sync,
-    Async,
-  };
+                            InsertionKind aInsertionKind,
+                            TreeMatchContext* aProvidedTreeMatchContext = nullptr);
 
   enum RemoveFlags {
     REMOVE_CONTENT,
@@ -1933,11 +1901,12 @@ private:
   // @return true if we reconstructed the containing block, false
   // otherwise
   bool WipeContainingBlock(nsFrameConstructorState& aState,
-                             nsIFrame*                aContainingBlock,
-                             nsIFrame*                aFrame,
-                             FrameConstructionItemList& aItems,
-                             bool                     aIsAppend,
-                             nsIFrame*                aPrevSibling);
+                           nsIFrame* aContainingBlock,
+                           nsIFrame* aFrame,
+                           FrameConstructionItemList& aItems,
+                           bool aIsAppend,
+                           nsIFrame* aPrevSibling,
+                           InsertionKind);
 
   void ReframeContainingBlock(nsIFrame* aFrame, InsertionKind aInsertionKind);
 

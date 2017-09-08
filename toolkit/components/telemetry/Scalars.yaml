@@ -371,7 +371,7 @@ storage.sync.api.usage:
       This includes extensions that have not used the storage.sync API this session.
       This includes items that were not stored this session.
       This scalar is collected after every sync.
-    expires: "58"
+    expires: "64"
     kind: uint
     keyed: false
     notification_emails:
@@ -387,7 +387,7 @@ storage.sync.api.usage:
       This includes extensions that have not used the storage.sync API this session.
       This includes items that were not stored this session.
       This scalar is collected after every sync.
-    expires: "58"
+    expires: "64"
     kind: uint
     keyed: true
     notification_emails:
@@ -403,7 +403,7 @@ storage.sync.api.usage:
       This includes extensions that have not used the storage.sync API this session.
       This includes items that were not stored this session.
       This scalar is collected after every sync.
-    expires: "58"
+    expires: "64"
     kind: uint
     keyed: true
     notification_emails:

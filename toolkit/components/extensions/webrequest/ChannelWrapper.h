@@ -51,7 +51,7 @@ namespace detail {
       , mWeakChannel(aChannel)
     {}
 
-    bool HaveChannel() const { return mChannel->IsAlive(); }
+    bool HaveChannel() const { return mChannel && mChannel->IsAlive(); }
 
     void SetChannel(nsIChannel* aChannel)
     {
@@ -62,7 +62,7 @@ namespace detail {
 
     already_AddRefed<nsIChannel> MaybeChannel() const
     {
-      if (!mChannel->IsAlive()) {
+      if (!HaveChannel()) {
         mWeakChannel = nullptr;
       }
       return do_AddRef(mWeakChannel);
@@ -75,7 +75,7 @@ namespace detail {
         mWeakHttpChannel.emplace(chan.get());
       }
 
-      if (!mChannel->IsAlive()) {
+      if (!HaveChannel()) {
         mWeakHttpChannel.ref() = nullptr;
       }
       return do_AddRef(mWeakHttpChannel.value());

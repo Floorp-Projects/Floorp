@@ -57,6 +57,7 @@
 #include "mozilla/BinarySearch.h"
 #include "mozilla/DebugOnly.h"
 #include "mozilla/Move.h"
+#include "mozilla/net/PartiallySeekableInputStream.h"
 #include "nsIHttpHeaderVisitor.h"
 #include "nsIMIMEInputStream.h"
 #include "nsIXULRuntime.h"
@@ -212,6 +213,8 @@ HttpBaseChannel::HttpBaseChannel()
   , mForceMainDocumentChannel(false)
   , mIsTrackingResource(false)
   , mLastRedirectFlags(0)
+  , mReqContentLength(0U)
+  , mReqContentLengthDetermined(false)
 {
   LOG(("Creating HttpBaseChannel @%p\n", this));
 
@@ -1012,10 +1015,10 @@ HttpBaseChannel::CloneUploadStream(nsIInputStream** aClonedStream)
 
 NS_IMETHODIMP
 HttpBaseChannel::ExplicitSetUploadStream(nsIInputStream *aStream,
-                                       const nsACString &aContentType,
-                                       int64_t aContentLength,
-                                       const nsACString &aMethod,
-                                       bool aStreamHasHeaders)
+                                         const nsACString &aContentType,
+                                         int64_t aContentLength,
+                                         const nsACString &aMethod,
+                                         bool aStreamHasHeaders)
 {
   // Ensure stream is set and method is valid
   NS_ENSURE_TRUE(aStream, NS_ERROR_FAILURE);
@@ -1055,6 +1058,18 @@ HttpBaseChannel::ExplicitSetUploadStream(nsIInputStream *aStream,
   }
 
   mUploadStreamHasHeaders = aStreamHasHeaders;
+
+  // We already have the content length. We don't need to determinate it.
+  if (aContentLength > 0) {
+    mReqContentLength = aContentLength;
+    mReqContentLengthDetermined = true;
+  }
+
+  nsCOMPtr<nsISeekableStream> seekable = do_QueryInterface(aStream);
+  if (!seekable) {
+    aStream = new PartiallySeekableInputStream(aStream);
+  }
+
   mUploadStream = aStream;
   return NS_OK;
 }
@@ -3411,8 +3426,9 @@ HttpBaseChannel::SetupReplacementChannel(nsIURI       *newURI,
     if (mUploadStream && (uploadChannel2 || uploadChannel)) {
       // rewind upload stream
       nsCOMPtr<nsISeekableStream> seekable = do_QueryInterface(mUploadStream);
-      if (seekable)
-        seekable->Seek(nsISeekableStream::NS_SEEK_SET, 0);
+      MOZ_ASSERT(seekable);
+
+      seekable->Seek(nsISeekableStream::NS_SEEK_SET, 0);
 
       // replicate original call to SetUploadStream...
       if (uploadChannel2) {

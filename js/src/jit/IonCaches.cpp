@@ -26,7 +26,6 @@
 #include "vm/Shape.h"
 #include "vm/Stack.h"
 
-#include "jit/JitFrames-inl.h"
 #include "jit/MacroAssembler-inl.h"
 #include "jit/shared/Lowering-shared-inl.h"
 #include "vm/Interpreter-inl.h"
@@ -84,19 +83,4 @@ CodeOffsetJump::fixup(MacroAssembler* masm)
 #ifdef JS_SMALL_BRANCH
      jumpTableIndex_ = masm->actualIndex(jumpTableIndex_);
 #endif
-}
-
-void*
-jit::GetReturnAddressToIonCode(JSContext* cx)
-{
-    JSJitFrameIter frame(cx);
-    MOZ_ASSERT(frame.type() == JitFrame_Exit,
-               "An exit frame is expected as update functions are called with a VMFunction.");
-
-    void* returnAddr = frame.returnAddress();
-#ifdef DEBUG
-    ++frame;
-    MOZ_ASSERT(frame.isIonJS());
-#endif
-    return returnAddr;
 }
