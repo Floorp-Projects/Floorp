@@ -94,8 +94,6 @@ if CONFIG['MOZ_XUL']:
 if CONFIG['MOZ_XUL']:
     DIRS += ['tree', 'grid']
 
-include('/ipc/chromium/chromium-config.mozbuild')
-
 FINAL_LIBRARY = 'xul'
 LOCAL_INCLUDES += [
     '../base',
