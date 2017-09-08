@@ -368,6 +368,10 @@ pref("browser.download.animateNotifications", true);
 // This records whether or not the panel has been shown at least once.
 pref("browser.download.panel.shown", false);
 
+// This controls whether the button is automatically shown/hidden depending
+// on whether there are downloads to show.
+pref("browser.download.autohideButton", true);
+
 #ifndef XP_MACOSX
 pref("browser.helperApps.deleteTempFileOnExit", true);
 #endif

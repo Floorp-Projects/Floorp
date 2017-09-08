@@ -12,8 +12,10 @@ registerCleanupFunction(async function() {
 });
 
 add_task(async function test_indicatorDrop() {
+  await SpecialPowers.pushPrefEnv({set: [["browser.download.autohideButton", false]]});
   let downloadButton = document.getElementById("downloads-button");
   ok(downloadButton, "download button present");
+  await promiseButtonShown(downloadButton.id);
 
   let scriptLoader = Cc["@mozilla.org/moz/jssubscript-loader;1"].
       getService(Ci.mozIJSSubScriptLoader);

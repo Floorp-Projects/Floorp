@@ -74,7 +74,7 @@ async function expectFocusOnF6(backward, expectedDocument, expectedElement, onCo
   }
 
   is(fm.focusedWindow.document.documentElement.id, expectedDocument, desc + " document matches");
-  is(fm.focusedElement, expectedElement, desc + " element matches");
+  is(fm.focusedElement, expectedElement, desc + " element matches (wanted: " + expectedElement.id + " got: " + fm.focusedElement.id + ")");
 
   if (onContent) {
     window.messageManager.removeMessageListener("BrowserTest:FocusChanged", focusChangedListener);
@@ -171,8 +171,9 @@ add_task(async function() {
 });
 
 // Navigate when the downloads panel is open
-add_task(async function() {
-  await pushPrefs(["accessibility.tabfocus", 7]);
+add_task(async function test_download_focus() {
+  await pushPrefs(["accessibility.tabfocus", 7], ["browser.download.autohideButton", false]);
+  await promiseButtonShown("downloads-button");
 
   let popupShownPromise = BrowserTestUtils.waitForEvent(document, "popupshown", true);
   EventUtils.synthesizeMouseAtCenter(document.getElementById("downloads-button"), { });
@@ -253,3 +254,12 @@ add_task(async function() {
 });
 
 // XXXndeakin add tests for browsers inside of panels
+
+function promiseButtonShown(id) {
+  let dwu = window.QueryInterface(Ci.nsIInterfaceRequestor).getInterface(Ci.nsIDOMWindowUtils);
+  return BrowserTestUtils.waitForCondition(() => {
+    let target = document.getElementById(id);
+    let bounds = dwu.getBoundsWithoutFlushing(target);
+    return bounds.width > 0 && bounds.height > 0;
+  }, `Waiting for button ${id} to have non-0 size`);
+}

@@ -223,6 +223,9 @@ var DownloadsPanel = {
       return;
     }
 
+    // As a belt-and-suspenders check, ensure the button is not hidden.
+    DownloadsButton.unhide();
+
     this.initialize(() => {
       // Delay displaying the panel because this function will sometimes be
       // called while another window is closing (like the window for selecting

@@ -8,11 +8,11 @@
 add_task(async function() {
   await startCustomizing();
   let devButton = document.getElementById("developer-button");
-  let downloadsButton = document.getElementById("downloads-button");
+  let libraryButton = document.getElementById("library-button");
   let homeButton = document.getElementById("home-button");
   let palette = document.getElementById("customization-palette");
-  ok(devButton && downloadsButton && homeButton && palette, "Stuff should exist");
-  simulateItemDrag(devButton, downloadsButton);
+  ok(devButton && libraryButton && homeButton && palette, "Stuff should exist");
+  simulateItemDrag(devButton, libraryButton);
   simulateItemDrag(homeButton, palette);
   await gCustomizeMode.reset();
   ok(CustomizableUI.inDefaultState, "Should be back in default state");

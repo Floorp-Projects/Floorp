@@ -939,7 +939,9 @@
                        ondragenter="DownloadsIndicatorView.onDragOver(event);"
                        label="&downloads.label;"
                        removable="true"
+                       overflows="false"
                        cui-areatype="toolbar"
+                       hidden="true"
                        tooltip="dynamic-shortcut-tooltip"/>
 
         <toolbarbutton id="library-button" class="toolbarbutton-1 chromeclass-toolbar-additional"
