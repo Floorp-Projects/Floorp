@@ -209,8 +209,14 @@ FileReaderSync::ReadAsText(Blob& aBlob,
     return;
   }
 
+  uint64_t blobSize = aBlob.GetSize(aRv);
+  if (NS_WARN_IF(aRv.Failed())){
+    return;
+  }
+
   nsCOMPtr<nsIInputStream> syncStream;
-  aRv = ConvertAsyncToSyncStream(stream, getter_AddRefs(syncStream));
+  aRv = ConvertAsyncToSyncStream(blobSize - sniffBuf.Length(), stream,
+                                 getter_AddRefs(syncStream));
   if (NS_WARN_IF(aRv.Failed())) {
     return;
   }
@@ -255,8 +261,13 @@ FileReaderSync::ReadAsDataURL(Blob& aBlob, nsAString& aResult,
     return;
   }
 
+  uint64_t blobSize = aBlob.GetSize(aRv);
+  if (NS_WARN_IF(aRv.Failed())){
+    return;
+  }
+
   nsCOMPtr<nsIInputStream> syncStream;
-  aRv = ConvertAsyncToSyncStream(stream, getter_AddRefs(syncStream));
+  aRv = ConvertAsyncToSyncStream(blobSize, stream, getter_AddRefs(syncStream));
   if (NS_WARN_IF(aRv.Failed())) {
     return;
   }
@@ -266,11 +277,6 @@ FileReaderSync::ReadAsDataURL(Blob& aBlob, nsAString& aResult,
   uint64_t size;
   aRv = syncStream->Available(&size);
   if (NS_WARN_IF(aRv.Failed())) {
-    return;
-  }
-
-  uint64_t blobSize = aBlob.GetSize(aRv);
-  if (NS_WARN_IF(aRv.Failed())){
     return;
   }
 
@@ -466,7 +472,8 @@ FileReaderSync::SyncRead(nsIInputStream* aStream, char* aBuffer,
 }
 
 nsresult
-FileReaderSync::ConvertAsyncToSyncStream(nsIInputStream* aAsyncStream,
+FileReaderSync::ConvertAsyncToSyncStream(uint64_t aStreamSize,
+                                         nsIInputStream* aAsyncStream,
                                          nsIInputStream** aSyncStream)
 {
   // If the stream is not async, we just need it to be bufferable.
@@ -475,30 +482,19 @@ FileReaderSync::ConvertAsyncToSyncStream(nsIInputStream* aAsyncStream,
     return NS_NewBufferedInputStream(aSyncStream, aAsyncStream, 4096);
   }
 
-  uint64_t length;
-  nsresult rv = aAsyncStream->Available(&length);
-  if (rv == NS_BASE_STREAM_CLOSED) {
-    // The stream has already been closed. Nothing to do.
-    *aSyncStream = nullptr;
-    return NS_OK;
-  }
-
-  if (NS_WARN_IF(NS_FAILED(rv))) {
-    return rv;
-  }
-
   nsAutoCString buffer;
-  if (!buffer.SetLength(length, fallible)) {
+  if (!buffer.SetLength(aStreamSize, fallible)) {
     return NS_ERROR_OUT_OF_MEMORY;
   }
 
   uint32_t read;
-  rv = SyncRead(aAsyncStream, buffer.BeginWriting(), length, &read);
+  nsresult rv =
+    SyncRead(aAsyncStream, buffer.BeginWriting(), aStreamSize, &read);
   if (NS_WARN_IF(NS_FAILED(rv))) {
     return rv;
   }
 
-  if (read != length) {
+  if (read != aStreamSize) {
     return NS_ERROR_FAILURE;
   }
 
