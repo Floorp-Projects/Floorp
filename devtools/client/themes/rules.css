@@ -222,7 +222,7 @@
 }
 
 .ruleview-header {
-  background-color: var(--rule-header-background-color);
+  background: var(--rule-header-background-color);
   border-bottom: 1px solid var(--theme-splitter-color);
   font-size: 12px;
   padding: 4px;
