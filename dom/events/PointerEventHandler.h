@@ -59,7 +59,7 @@ public:
 
   // Called in ESM::PreHandleEvent to update current active pointers in a hash
   // table.
-  static void UpdateActivePointerState(WidgetGUIEvent* aEvent);
+  static void UpdateActivePointerState(WidgetMouseEvent* aEvent);
 
   // Got/release pointer capture of the specified pointer by the content.
   static void SetPointerCaptureById(uint32_t aPointerId, nsIContent* aContent);
@@ -77,6 +77,10 @@ public:
   // CheckPointerCaptureState checks cases, when got/lostpointercapture events
   // should be fired.
   static void CheckPointerCaptureState(WidgetPointerEvent* aEvent);
+
+  // Implicitly get and release capture of current pointer for touch.
+  static void ImplicitlyCapturePointer(nsIFrame* aFrame, WidgetEvent* aEvent);
+  static void ImplicitlyReleasePointerCapture(WidgetEvent* aEvent);
 
   /**
    * GetPointerCapturingFrame returns a target frame of aEvent. If the event is
