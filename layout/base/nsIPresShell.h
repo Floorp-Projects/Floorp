@@ -1153,29 +1153,11 @@ public:
                   mozilla::LayoutDeviceIntRect* aScreenRect,
                   uint32_t aFlags) = 0;
 
-  void AddAutoWeakFrameInternal(AutoWeakFrame* aWeakFrame);
-  void AddWeakFrameInternal(WeakFrame* aWeakFrame);
+  void AddAutoWeakFrame(AutoWeakFrame* aWeakFrame);
+  void AddWeakFrame(WeakFrame* aWeakFrame);
 
-  void AddAutoWeakFrame(AutoWeakFrame* aWeakFrame)
-  {
-    AddAutoWeakFrameInternal(aWeakFrame);
-  }
-  void AddWeakFrame(WeakFrame* aWeakFrame)
-  {
-    AddWeakFrameInternal(aWeakFrame);
-  }
-
-  void RemoveAutoWeakFrameInternal(AutoWeakFrame* aWeakFrame);
-  void RemoveWeakFrameInternal(WeakFrame* aWeakFrame);
-
-  void RemoveAutoWeakFrame(AutoWeakFrame* aWeakFrame)
-  {
-    RemoveAutoWeakFrameInternal(aWeakFrame);
-  }
-  void RemoveWeakFrame(WeakFrame* aWeakFrame)
-  {
-    RemoveWeakFrameInternal(aWeakFrame);
-  }
+  void RemoveAutoWeakFrame(AutoWeakFrame* aWeakFrame);
+  void RemoveWeakFrame(WeakFrame* aWeakFrame);
 
 #ifdef DEBUG
   nsIFrame* GetDrawEventTargetFrame() { return mDrawEventTargetFrame; }
@@ -1650,11 +1632,6 @@ public:
    * Refresh observer management.
    */
 protected:
-  bool AddRefreshObserverInternal(nsARefreshObserver* aObserver,
-                                  mozilla::FlushType aFlushType);
-  bool RemoveRefreshObserverInternal(nsARefreshObserver* aObserver,
-                                     mozilla::FlushType aFlushType);
-
   void DoObserveStyleFlushes();
   void DoObserveLayoutFlushes();
 
@@ -1692,14 +1669,9 @@ protected:
 
 public:
   bool AddRefreshObserver(nsARefreshObserver* aObserver,
-                          mozilla::FlushType aFlushType) {
-    return AddRefreshObserverInternal(aObserver, aFlushType);
-  }
-
+                          mozilla::FlushType aFlushType);
   bool RemoveRefreshObserver(nsARefreshObserver* aObserver,
-                             mozilla::FlushType aFlushType) {
-    return RemoveRefreshObserverInternal(aObserver, aFlushType);
-  }
+                             mozilla::FlushType aFlushType);
 
   virtual bool AddPostRefreshObserver(nsAPostRefreshObserver* aObserver);
   virtual bool RemovePostRefreshObserver(nsAPostRefreshObserver* aObserver);

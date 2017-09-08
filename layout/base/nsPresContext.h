@@ -317,9 +317,7 @@ public:
    * Access the image animation mode for this context
    */
   uint16_t     ImageAnimationMode() const { return mImageAnimationMode; }
-  void SetImageAnimationModeInternal(uint16_t aMode);
-  void SetImageAnimationMode(uint16_t aMode)
-  { SetImageAnimationModeInternal(aMode); }
+  void SetImageAnimationMode(uint16_t aMode);
 
   /**
    * Get medium of presentation
@@ -421,9 +419,7 @@ public:
 
   void SetContainer(nsIDocShell* aContainer);
 
-  nsISupports* GetContainerWeakInternal() const;
-  nsISupports* GetContainerWeak() const
-  { return GetContainerWeakInternal(); }
+  nsISupports* GetContainerWeak() const;
 
   nsIDocShell* GetDocShell() const;
 
@@ -766,8 +762,7 @@ public:
    *
    *  @lina 07/12/2000
    */
-  bool BidiEnabled() const { return BidiEnabledInternal(); }
-  bool BidiEnabledInternal() const;
+  bool BidiEnabled() const;
 
   /**
    *  Set bidi enabled. This means we should apply the Unicode Bidi Algorithm
