@@ -224,6 +224,7 @@
 .ruleview-header {
   background: var(--rule-header-background-color);
   border-bottom: 1px solid var(--theme-splitter-color);
+  color: var(--theme-toolbar-color);
   font-size: 12px;
   padding: 4px;
   width: 100%;
