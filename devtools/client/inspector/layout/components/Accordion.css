@@ -26,6 +26,7 @@
 .accordion ._header {
   background-color: var(--accordion-header-background);
   border-bottom: 1px solid var(--theme-splitter-color);
+  color: var(--theme-toolbar-color);
   cursor: pointer;
   font-size: 12px;
   padding: 4px;

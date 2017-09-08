@@ -11,7 +11,6 @@
 #include "nsICloneableInputStream.h"
 #include "nsIFileStreams.h"
 #include "nsIIPCSerializableInputStream.h"
-#include "nsISeekableStream.h"
 #include "nsCOMPtr.h"
 
 namespace mozilla {
@@ -23,8 +22,7 @@ class IPCBlobInputStream final : public nsIAsyncInputStream
                                , public nsIInputStreamCallback
                                , public nsICloneableInputStream
                                , public nsIIPCSerializableInputStream
-                               , public nsISeekableStream
-                               , public nsIFileMetadata
+                               , public nsIAsyncFileMetadata
 {
 public:
   NS_DECL_THREADSAFE_ISUPPORTS
@@ -33,8 +31,8 @@ public:
   NS_DECL_NSIINPUTSTREAMCALLBACK
   NS_DECL_NSICLONEABLEINPUTSTREAM
   NS_DECL_NSIIPCSERIALIZABLEINPUTSTREAM
-  NS_DECL_NSISEEKABLESTREAM
   NS_DECL_NSIFILEMETADATA
+  NS_DECL_NSIASYNCFILEMETADATA
 
   explicit IPCBlobInputStream(IPCBlobInputStreamChild* aActor);
 
@@ -45,14 +43,11 @@ private:
   ~IPCBlobInputStream();
 
   nsresult
-  MaybeExecuteCallback(nsIInputStreamCallback* aCallback,
-                       nsIEventTarget* aEventTarget);
+  MaybeExecuteInputStreamCallback(nsIInputStreamCallback* aCallback,
+                                  nsIEventTarget* aEventTarget);
 
-  bool
-  IsSeekableStream() const;
-
-  bool
-  IsFileMetadata() const;
+  nsresult
+  EnsureAsyncRemoteStream();
 
   RefPtr<IPCBlobInputStreamChild> mActor;
 
@@ -78,10 +73,15 @@ private:
   } mState;
 
   nsCOMPtr<nsIInputStream> mRemoteStream;
+  nsCOMPtr<nsIAsyncInputStream> mAsyncRemoteStream;
 
   // These 2 values are set only if mState is ePending.
-  nsCOMPtr<nsIInputStreamCallback> mCallback;
-  nsCOMPtr<nsIEventTarget> mCallbackEventTarget;
+  nsCOMPtr<nsIInputStreamCallback> mInputStreamCallback;
+  nsCOMPtr<nsIEventTarget> mInputStreamCallbackEventTarget;
+
+  // These 2 values are set only if mState is ePending.
+  nsCOMPtr<nsIFileMetadataCallback> mFileMetadataCallback;
+  nsCOMPtr<nsIEventTarget> mFileMetadataCallbackEventTarget;
 };
 
 } // namespace dom

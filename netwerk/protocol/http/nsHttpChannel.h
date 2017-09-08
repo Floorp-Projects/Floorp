@@ -661,10 +661,6 @@ private:
     // the next authentication request can be sent on a whole new connection
     uint32_t                          mAuthConnectionRestartable : 1;
 
-    uint32_t                          mReqContentLengthDetermined : 1;
-
-    uint64_t                          mReqContentLength;
-
     nsTArray<nsContinueRedirectionFunc> mRedirectFuncStack;
 
     // Needed for accurate DNS timing

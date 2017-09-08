@@ -840,17 +840,20 @@ nsCopySupport::FireClipboardEvent(EventMessage aEventMessage,
     doDefault = (status != nsEventStatus_eConsumeNoDefault);
   }
 
+  // When this function exits, the event dispatch is over. We want to disconnect
+  // our DataTransfer, which means setting its mode to `Protected` and clearing
+  // all stored data, before we return.
+  auto clearAfter = MakeScopeExit([&] {
+    if (clipboardData) {
+      clipboardData->SetMode(DataTransfer::Mode::Protected);
+      clipboardData->ClearAll();
+    }
+  });
+
   // No need to do anything special during a paste. Either an event listener
   // took care of it and cancelled the event, or the caller will handle it.
   // Return true to indicate that the event wasn't cancelled.
   if (originalEventMessage == ePaste) {
-    // Clear and mark the clipboardData as readonly. This prevents someone
-    // from reading the clipboard contents after the paste event has fired.
-    if (clipboardData) {
-      clipboardData->ClearAll();
-      clipboardData->SetReadOnly();
-    }
-
     if (aActionTaken) {
       *aActionTaken = true;
     }

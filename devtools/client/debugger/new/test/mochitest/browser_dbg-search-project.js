@@ -5,23 +5,21 @@ function openProjectSearch(dbg) {
   synthesizeKeyShortcut("CmdOrCtrl+Shift+F");
   return waitForState(
     dbg,
-    state => dbg.selectors.getActiveSearchState(state) === "project"
+    state => dbg.selectors.getActiveSearch(state) === "project"
   );
 }
 
 function closeProjectSearch(dbg) {
   pressKey(dbg, "Escape");
-  return waitForState(dbg, state => !dbg.selectors.getActiveSearchState(state));
-}
-
-function getResult(dbg) {
-  return findElementWithSelector(dbg, ".managed-tree .result");
+  return waitForState(dbg, state => !dbg.selectors.getActiveSearch(state));
 }
 
 async function selectResult(dbg) {
-  const item = getResult(dbg);
-  const select = waitForDispatch(dbg, "SELECT_SOURCE");
-  item.click();
+  const select = waitForState(
+    dbg,
+    () => !dbg.selectors.getActiveSearch(dbg.getState())
+  );
+  await clickElement(dbg, "fileMatch");
   return select;
 }
 
@@ -36,28 +34,29 @@ function getResultsCount(dbg) {
 }
 
 // Testing project search
-add_task(function*() {
+add_task(async function() {
   Services.prefs.setBoolPref(
     "devtools.debugger.project-text-search-enabled",
     true
   );
 
-  const dbg = yield initDebugger("doc-script-switching.html", "switching-01");
+  const dbg = await initDebugger("doc-script-switching.html", "switching-01");
 
-  yield selectSource(dbg, "switching-01");
+  await selectSource(dbg, "switching-01");
 
   // test opening and closing
-  yield openProjectSearch(dbg);
-  yield closeProjectSearch(dbg);
+  await openProjectSearch(dbg);
+  await closeProjectSearch(dbg);
 
-  yield openProjectSearch(dbg);
+  await openProjectSearch(dbg);
   type(dbg, "first");
   pressKey(dbg, "Enter");
 
-  yield waitForState(dbg, () => getResultsCount(dbg) === 1);
+  await waitForState(dbg, () => getResultsCount(dbg) === 1);
 
-  yield selectResult(dbg);
-  is(dbg.selectors.getActiveSearchState(dbg.getState()), null);
+  await selectResult(dbg);
+
+  is(dbg.selectors.getActiveSearch(dbg.getState()), null);
 
   const selectedSource = dbg.selectors.getSelectedSource(dbg.getState());
   ok(selectedSource.get("url").includes("switching-01"));
