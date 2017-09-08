@@ -500,9 +500,9 @@ nsAboutCache::Channel::OnCacheEntryInfo(nsIURI *aURI, const nsACString & aIdEnha
     // Pinning
     mBuffer.AppendLiteral("    <td>");
     if (aPinned) {
-      mBuffer.Append(NS_LITERAL_CSTRING("Pinned"));
+      mBuffer.AppendLiteral("Pinned");
     } else {
-      mBuffer.Append(NS_LITERAL_CSTRING("&nbsp;"));
+      mBuffer.AppendLiteral("&nbsp;");
     }
     mBuffer.AppendLiteral("</td>\n");
 

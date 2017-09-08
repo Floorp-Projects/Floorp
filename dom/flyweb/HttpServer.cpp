@@ -924,7 +924,7 @@ HttpServer::Connection::QueueResponse(InternalResponse* aResponse)
                 NS_LITERAL_CSTRING("\r\n"));
   }
 
-  head.Append(NS_LITERAL_CSTRING("\r\n"));
+  head.AppendLiteral("\r\n");
 
   mOutputBuffers.AppendElement()->mString = head;
   if (body) {
