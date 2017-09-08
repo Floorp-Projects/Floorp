@@ -25,6 +25,7 @@ function checkExternalFunction(entry)
         "fmod",
         "floor",
         "ceil",
+        "atof",
         /memchr/,
         "strlen",
         /Servo_DeclarationBlock_GetCssText/,
