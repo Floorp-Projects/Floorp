@@ -1132,8 +1132,9 @@ nsTextControlFrame::SetInitialChildList(ChildListID     aListID,
 void
 nsTextControlFrame::SetValueChanged(bool aValueChanged)
 {
-  nsCOMPtr<nsITextControlElement> txtCtrl = do_QueryInterface(GetContent());
-  NS_ASSERTION(txtCtrl, "Content not a text control element");
+  nsCOMPtr<nsITextControlElement> txtCtrl =
+    GetContent()->GetAsTextControlElement();
+  MOZ_ASSERT(txtCtrl, "Content not a text control element");
 
   if (mUsePlaceholder) {
     AutoWeakFrame weakFrame(this);

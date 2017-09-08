@@ -2,22 +2,22 @@
  * http://creativecommons.org/publicdomain/zero/1.0/ */
 
 // Testing source search
-add_task(function*() {
-  const dbg = yield initDebugger("doc-script-switching.html");
+add_task(async function() {
+  const dbg = await initDebugger("doc-script-switching.html");
 
   // test opening and closing
   pressKey(dbg, "sourceSearch");
-  is(dbg.selectors.getActiveSearchState(dbg.getState()), "source");
+  is(dbg.selectors.getActiveSearch(dbg.getState()), "source");
   pressKey(dbg, "Escape");
-  is(dbg.selectors.getActiveSearchState(dbg.getState()), null);
+  is(dbg.selectors.getActiveSearch(dbg.getState()), null);
 
   pressKey(dbg, "sourceSearch");
-  yield waitForElement(dbg, "input");
+  await waitForElement(dbg, "input");
   findElementWithSelector(dbg, "input").focus();
   type(dbg, "sw");
   pressKey(dbg, "Enter");
 
-  yield waitForDispatch(dbg, "LOAD_SOURCE_TEXT");
+  await waitForDispatch(dbg, "LOAD_SOURCE_TEXT");
   let source = dbg.selectors.getSelectedSource(dbg.getState());
   ok(source.get("url").match(/switching-01/), "first source is selected");
 
@@ -28,7 +28,7 @@ add_task(function*() {
   pressKey(dbg, "Down");
   pressKey(dbg, "Enter");
 
-  yield waitForDispatch(dbg, "LOAD_SOURCE_TEXT");
+  await waitForDispatch(dbg, "LOAD_SOURCE_TEXT");
   source = dbg.selectors.getSelectedSource(dbg.getState());
   ok(source.get("url").match(/switching-02/), "second source is selected");
 });

@@ -369,12 +369,15 @@ FetchDriver::HttpFetch()
     MOZ_ASSERT_IF(!hasContentTypeHeader, contentType.IsVoid());
 #endif // DEBUG
 
+    int64_t bodyLength;
     nsCOMPtr<nsIInputStream> bodyStream;
-    mRequest->GetBody(getter_AddRefs(bodyStream));
+    mRequest->GetBody(getter_AddRefs(bodyStream), &bodyLength);
     if (bodyStream) {
       nsAutoCString method;
       mRequest->GetMethod(method);
-      rv = uploadChan->ExplicitSetUploadStream(bodyStream, contentType, -1, method, false /* aStreamHasHeaders */);
+      rv = uploadChan->ExplicitSetUploadStream(bodyStream, contentType,
+                                               bodyLength, method,
+                                               false /* aStreamHasHeaders */);
       NS_ENSURE_SUCCESS(rv, rv);
     }
   }

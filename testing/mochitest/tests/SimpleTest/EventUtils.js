@@ -80,6 +80,16 @@ function _EU_isWin(aWindow = window) {
   return navigator.platform.indexOf("Win") > -1;
 }
 
+function _EU_maybeWrap(o) {
+  var c = Object.getOwnPropertyDescriptor(window, 'Components');
+  return c.value && !c.writable ? o : SpecialPowers.wrap(o);
+}
+
+function _EU_maybeUnwrap(o) {
+  var c = Object.getOwnPropertyDescriptor(window, 'Components');
+  return c.value && !c.writable ? o : SpecialPowers.unwrap(o);
+}
+
 /**
  * Send a mouse event to the node aTarget (aTarget can be an id, or an
  * actual node) . The "event" passed in to aEvent is just a JavaScript
@@ -2107,10 +2117,21 @@ function createDragEventObject(aType, aDestElement, aDestWindow, aDataTransfer,
   if ("clientY" in aDragEvent && !("screenY" in aDragEvent)) {
     aDragEvent.screenY = aDestWindow.mozInnerScreenY + aDragEvent.clientY;
   }
-  return Object.assign({ type: aType,
-                         screenX: destScreenX, screenY: destScreenY,
-                         clientX: destClientX, clientY: destClientY,
-                         dataTransfer: aDataTransfer }, aDragEvent);
+
+  // Wrap only in plain mochitests
+  let dataTransfer = _EU_maybeUnwrap(_EU_maybeWrap(aDataTransfer).mozCloneForEvent(aType));
+
+  // Copy over the drop effect. This isn't copied over by Clone, as it uses more
+  // complex logic in the actual implementation (see
+  // nsContentUtils::SetDataTransferInEvent for actual impl).
+  dataTransfer.dropEffect = aDataTransfer.dropEffect;
+
+  return Object.assign({
+    type: aType,
+    screenX: destScreenX, screenY: destScreenY,
+    clientX: destClientX, clientY: destClientY,
+    dataTransfer: dataTransfer,
+  }, aDragEvent);
 }
 
 /**
@@ -2144,23 +2165,35 @@ function synthesizeDragOver(aSrcElement, aDestElement, aDragData, aDropEffect, a
     aDestWindow = aWindow;
   }
 
-  var dataTransfer;
-  var trapDrag = function(event) {
-    dataTransfer = event.dataTransfer;
+  const obs = _EU_Cc["@mozilla.org/observer-service;1"].getService(_EU_Ci.nsIObserverService);
+  const ds = _EU_Cc["@mozilla.org/widget/dragservice;1"].getService(_EU_Ci.nsIDragService);
+  var sess = ds.getCurrentSession();
+
+  // This method runs before other callbacks, and acts as a way to inject the
+  // initial drag data into the DataTransfer.
+  function fillDrag(event) {
     if (aDragData) {
       for (var i = 0; i < aDragData.length; i++) {
         var item = aDragData[i];
         for (var j = 0; j < item.length; j++) {
-          dataTransfer.mozSetDataAt(item[j].type, item[j].data, i);
+          event.dataTransfer.mozSetDataAt(item[j].type, item[j].data, i);
         }
       }
     }
-    dataTransfer.dropEffect = aDropEffect || "move";
+    event.dataTransfer.dropEffect = aDropEffect || "move";
     event.preventDefault();
-  };
+  }
+
+  function trapDrag(subject, topic) {
+    if (topic == "on-datatransfer-available") {
+      sess.dataTransfer = _EU_maybeUnwrap(_EU_maybeWrap(subject).mozCloneForEvent("drop"));
+      sess.dataTransfer.dropEffect = subject.dropEffect;
+    }
+  }
 
   // need to use real mouse action
-  aWindow.addEventListener("dragstart", trapDrag, true);
+  aWindow.addEventListener("dragstart", fillDrag, true);
+  obs.addObserver(trapDrag, "on-datatransfer-available");
   synthesizeMouseAtCenter(aSrcElement, { type: "mousedown" }, aWindow);
 
   var rect = aSrcElement.getBoundingClientRect();
@@ -2168,14 +2201,14 @@ function synthesizeDragOver(aSrcElement, aDestElement, aDragData, aDropEffect, a
   var y = rect.height / 2;
   synthesizeMouse(aSrcElement, x, y, { type: "mousemove" }, aWindow);
   synthesizeMouse(aSrcElement, x+10, y+10, { type: "mousemove" }, aWindow);
-  aWindow.removeEventListener("dragstart", trapDrag, true);
+  aWindow.removeEventListener("dragstart", fillDrag, true);
+  obs.removeObserver(trapDrag, "on-datatransfer-available");
 
-  var event = createDragEventObject("dragenter", aDestElement, aDestWindow,
+  var dataTransfer = sess.dataTransfer;
+
+  // The EventStateManager will fire our dragenter event if it needs to.
+  var event = createDragEventObject("dragover", aDestElement, aDestWindow,
                                     dataTransfer, aDragEvent);
-  sendDragEvent(event, aDestElement, aDestWindow);
-
-  event = createDragEventObject("dragover", aDestElement, aDestWindow,
-                                dataTransfer, aDragEvent);
   var result = sendDragEvent(event, aDestElement, aDestWindow);
 
   return [result, dataTransfer];

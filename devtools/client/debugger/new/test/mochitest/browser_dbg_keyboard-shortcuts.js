@@ -25,22 +25,22 @@ function pressStepOut(dbg) {
   return waitForPaused(dbg);
 }
 
-add_task(function*() {
-  const dbg = yield initDebugger("doc-debugger-statements.html");
+add_task(async function() {
+  const dbg = await initDebugger("doc-debugger-statements.html");
 
-  yield reload(dbg);
-  yield waitForPaused(dbg);
+  await reload(dbg);
+  await waitForPaused(dbg);
   assertPausedLocation(dbg);
 
-  yield pressResume(dbg);
+  await pressResume(dbg);
   assertPausedLocation(dbg);
 
-  yield pressStepIn(dbg);
+  await pressStepIn(dbg);
   assertPausedLocation(dbg);
 
-  yield pressStepOut(dbg);
+  await pressStepOut(dbg);
   assertPausedLocation(dbg);
 
-  yield pressStepOver(dbg);
+  await pressStepOver(dbg);
   assertPausedLocation(dbg);
 });

@@ -140,12 +140,8 @@
   -moz-box-flex: initial;
 }
 
-.theme-dark .devtools-tab {
-  color: var(--theme-body-color-alt);
-}
-
-.theme-light .devtools-tab {
-  color: var(--theme-body-color);
+.devtools-tab {
+  color: var(--theme-toolbar-color);
 }
 
 .theme-dark .devtools-tab:hover {
