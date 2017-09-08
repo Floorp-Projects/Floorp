@@ -24,6 +24,8 @@ class EventQueue;
 template<typename InnerQueueT>
 class PrioritizedEventQueue;
 
+class LabeledEventQueue;
+
 class ThreadEventTarget;
 
 // A ThreadEventQueue implements normal monitor-style synchronization over the
@@ -115,6 +117,7 @@ private:
 
 extern template class ThreadEventQueue<EventQueue>;
 extern template class ThreadEventQueue<PrioritizedEventQueue<EventQueue>>;
+extern template class ThreadEventQueue<PrioritizedEventQueue<LabeledEventQueue>>;
 
 }; // namespace mozilla
 

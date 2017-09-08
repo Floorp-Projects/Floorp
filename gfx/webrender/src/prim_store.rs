@@ -162,7 +162,7 @@ impl PrimitiveMetadata {
     }
 }
 
-#[derive(Debug, Clone)]
+#[derive(Debug)]
 #[repr(C)]
 pub struct RectanglePrimitive {
     pub color: ColorF,
@@ -226,7 +226,7 @@ impl ToGpuBlocks for YuvImagePrimitiveCpu {
     }
 }
 
-#[derive(Debug, Clone)]
+#[derive(Debug)]
 pub struct BorderPrimitiveCpu {
     pub corner_instances: [BorderCornerInstance; 4],
     pub gpu_blocks: [GpuBlockData; 8],
@@ -246,7 +246,7 @@ pub struct BoxShadowPrimitiveCacheKey {
     pub inverted: bool,
 }
 
-#[derive(Debug, Clone)]
+#[derive(Debug)]
 pub struct BoxShadowPrimitiveCpu {
     // todo(gw): generate on demand
     // gpu data
@@ -327,7 +327,7 @@ pub const GRADIENT_DATA_TABLE_SIZE: usize = 128;
 // The number of entries in a gradient data: GRADIENT_DATA_TABLE_SIZE + first stop entry + last stop entry
 pub const GRADIENT_DATA_SIZE: usize = GRADIENT_DATA_TABLE_SIZE + 2;
 
-#[derive(Debug, Clone, Copy)]
+#[derive(Debug)]
 #[repr(C)]
 // An entry in a gradient data table representing a segment of the gradient color space.
 pub struct GradientDataEntry {
@@ -489,13 +489,7 @@ impl RadialGradientPrimitiveCpu {
     }
 }
 
-#[derive(Debug, Clone)]
-pub struct TextDecoration {
-    pub local_rect: LayerRect,
-    pub prim: RectanglePrimitive,
-}
-
-#[derive(Debug, Clone)]
+#[derive(Debug)]
 pub struct TextShadowPrimitiveCpu {
     pub shadow: TextShadow,
     pub primitives: Vec<PrimitiveIndex>,
@@ -593,21 +587,14 @@ impl TextRunPrimitiveCpu {
     }
 }
 
-#[derive(Debug, Clone)]
-#[repr(C)]
-struct GlyphPrimitive {
-    offset: LayerPoint,
-    padding: LayerPoint,
-}
-
-#[derive(Debug, Clone)]
+#[derive(Debug)]
 #[repr(C)]
 struct ClipRect {
     rect: LayerRect,
     mode: f32,
 }
 
-#[derive(Debug, Clone)]
+#[derive(Debug)]
 #[repr(C)]
 struct ClipCorner {
     rect: LayerRect,
@@ -642,7 +629,7 @@ impl ClipCorner {
     }
 }
 
-#[derive(Debug, Clone)]
+#[derive(Debug)]
 #[repr(C)]
 pub struct ImageMaskData {
     pub local_rect: LayerRect,
@@ -654,7 +641,7 @@ impl ToGpuBlocks for ImageMaskData {
     }
 }
 
-#[derive(Debug, Clone)]
+#[derive(Debug)]
 pub struct ClipData {
     rect: ClipRect,
     top_left: ClipCorner,

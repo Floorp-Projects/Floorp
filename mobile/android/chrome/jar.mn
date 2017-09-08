@@ -60,6 +60,7 @@ chrome.jar:
 #ifndef RELEASE_OR_BETA
   content/WebcompatReporter.js         (content/WebcompatReporter.js)
 #endif
+  content/ExtensionPermissions.js      (content/ExtensionPermissions.js)
 
 % content branding %content/branding/
 

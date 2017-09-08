@@ -9,6 +9,7 @@
 #include "jsfriendapi.h"
 #include "LabeledEventQueue.h"
 #include "LeakRefPtr.h"
+#include "MainThreadQueue.h"
 #include "mozilla/CooperativeThreadPool.h"
 #include "mozilla/dom/ScriptSettings.h"
 #include "mozilla/ipc/BackgroundChild.h"
@@ -90,9 +91,6 @@ class mozilla::SchedulerImpl
 {
 public:
   explicit SchedulerImpl(SchedulerEventQueue* aQueue);
-
-  static already_AddRefed<SchedulerEventQueue>
-  CreateQueue(nsIIdlePeriod* aIdlePeriod, nsThread** aThread);
 
   void Start();
   void Shutdown();
@@ -442,49 +440,6 @@ SchedulerImpl::SwitcherThread(void* aData)
   static_cast<SchedulerImpl*>(aData)->Switcher();
 }
 
-/* static */ already_AddRefed<SchedulerEventQueue>
-SchedulerImpl::CreateQueue(nsIIdlePeriod* aIdlePeriod, nsThread** aThread)
-{
-  UniquePtr<AbstractEventQueue> queue;
-  RefPtr<nsThread> mainThread;
-
-  if (sPrefUseMultipleQueues) {
-    using MainThreadQueueT = PrioritizedEventQueue<LabeledEventQueue>;
-
-    queue = MakeUnique<MainThreadQueueT>(
-      MakeUnique<LabeledEventQueue>(),
-      MakeUnique<LabeledEventQueue>(),
-      MakeUnique<LabeledEventQueue>(),
-      MakeUnique<LabeledEventQueue>(),
-      do_AddRef(aIdlePeriod));
-  } else {
-    using MainThreadQueueT = PrioritizedEventQueue<EventQueue>;
-
-    queue = MakeUnique<MainThreadQueueT>(
-      MakeUnique<EventQueue>(),
-      MakeUnique<EventQueue>(),
-      MakeUnique<EventQueue>(),
-      MakeUnique<EventQueue>(),
-      do_AddRef(aIdlePeriod));
-  }
-
-  auto prioritized = static_cast<PrioritizedEventQueue<AbstractEventQueue>*>(queue.get());
-
-  RefPtr<SchedulerEventQueue> synchronizedQueue = new SchedulerEventQueue(Move(queue));
-
-  prioritized->SetMutexRef(synchronizedQueue->MutexRef());
-
-  // Setup "main" thread
-  mainThread = new nsThread(WrapNotNull(synchronizedQueue), nsThread::MAIN_THREAD, 0);
-
-#ifndef RELEASE_OR_BETA
-  prioritized->SetNextIdleDeadlineRef(mainThread->NextIdleDeadlineRef());
-#endif
-
-  mainThread.forget(aThread);
-  return synchronizedQueue.forget();
-}
-
 void
 SchedulerImpl::Start()
 {
@@ -738,8 +693,14 @@ Scheduler::Init(nsIIdlePeriod* aIdlePeriod)
 {
   MOZ_ASSERT(!sScheduler);
 
+  RefPtr<SchedulerEventQueue> queue;
   RefPtr<nsThread> mainThread;
-  RefPtr<SchedulerEventQueue> queue = SchedulerImpl::CreateQueue(aIdlePeriod, getter_AddRefs(mainThread));
+  if (Scheduler::UseMultipleQueues()) {
+    mainThread = CreateMainThread<SchedulerEventQueue, LabeledEventQueue>(aIdlePeriod, getter_AddRefs(queue));
+  } else {
+    mainThread = CreateMainThread<SchedulerEventQueue, EventQueue>(aIdlePeriod, getter_AddRefs(queue));
+  }
+
   sScheduler = MakeUnique<SchedulerImpl>(queue);
   return mainThread.forget();
 }
@@ -804,6 +765,12 @@ Scheduler::SetPrefs(const char* aPrefs)
 Scheduler::IsSchedulerEnabled()
 {
   return SchedulerImpl::sPrefScheduler;
+}
+
+/* static */ bool
+Scheduler::UseMultipleQueues()
+{
+  return SchedulerImpl::sPrefUseMultipleQueues;
 }
 
 /* static */ bool

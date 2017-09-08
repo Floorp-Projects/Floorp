@@ -36,7 +36,7 @@ const PARTS = [
     </html>`,
 ].map(part => `${part}\n`);
 
-const TIMEOUT = AppConstants.DEBUG ? 2000 : 500;
+const TIMEOUT = AppConstants.DEBUG ? 4000 : 800;
 const TASKS = [
   {
     url: "slow_response.sjs",
@@ -280,7 +280,6 @@ const TASKS = [
       is(response, PARTS.slice(0, 3).join(""), "Got expected final HTML");
     },
   },
-/*
   {
     url: "lorem.html.gz",
     task(filter, resolve, num) {
@@ -322,7 +321,6 @@ const TASKS = [
       is(response, PARTS.join(""), "Got expected final HTML");
     },
   },
-*/
 ];
 
 function serializeTest(test, num) {
