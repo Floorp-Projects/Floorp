@@ -216,3 +216,20 @@ function loadTypes(type_xdb_filename) {
         xdb.free_string(data);
     }
 }
+
+function loadTypesWithCache(type_xdb_filename, cache_filename) {
+    try {
+        const cacheAB = os.file.readFile(cache_filename, "binary");
+        const cb = serialize();
+        cb.clonebuffer = cacheAB.buffer;
+        const cacheData = deserialize(cb);
+        subclasses = cacheData.subclasses;
+        superclasses = cacheData.superclasses;
+        classFunctions = cacheData.classFunctions;
+    } catch (e) {
+        loadTypes(type_xdb_filename);
+        const cb = serialize({subclasses, superclasses, classFunctions});
+        os.file.writeTypedArrayToFile(cache_filename,
+                                      new Uint8Array(cb.arraybuffer));
+    }
+}
