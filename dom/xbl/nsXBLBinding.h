@@ -108,7 +108,8 @@ public:
   void BindAnonymousContent(nsIContent* aAnonParent, nsIContent* aElement,
                             bool aNativeAnon);
   static void UnbindAnonymousContent(nsIDocument* aDocument,
-                                     nsIContent* aAnonParent);
+                                     nsIContent* aAnonParent,
+                                     bool aNullParent = true);
   void InstallEventHandlers();
   nsresult InstallImplementation();
 

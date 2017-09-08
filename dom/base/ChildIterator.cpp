@@ -168,11 +168,9 @@ FlattenedChildIterator::Init(bool aIgnoreXBL)
     mParent->OwnerDoc()->BindingManager()->GetBindingWithContent(mParent);
 
   if (binding) {
-    nsIContent* anon = binding->GetAnonymousContent();
-    if (anon) {
-      mParent = anon;
-      mXBLInvolved = true;
-    }
+    MOZ_ASSERT(binding->GetAnonymousContent());
+    mParent = binding->GetAnonymousContent();
+    mXBLInvolved = true;
   }
 
   // We set mXBLInvolved to true if either:
