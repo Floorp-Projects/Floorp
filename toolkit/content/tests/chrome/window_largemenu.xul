@@ -324,7 +324,7 @@ function testPopupMovement()
   [screenX, screenY] = getScreenXY(popup);
 
   var expectedx = 1, expectedy = 1;
-  if (!overlapOSChrome) {
+  if (!isPanelTest && !overlapOSChrome) {
     if (screen.availLeft >= 1) expectedx = screen.availLeft;
     if (screen.availTop >= 1) expectedy = screen.availTop;
   }
