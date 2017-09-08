@@ -479,6 +479,10 @@ impl RenderBackend {
                             let json = self.get_docs_for_debugger();
                             ResultMsg::DebugOutput(DebugOutput::FetchDocuments(json))
                         }
+                        DebugCommand::FetchClipScrollTree => {
+                            let json = self.get_clip_scroll_tree_for_debugger();
+                            ResultMsg::DebugOutput(DebugOutput::FetchClipScrollTree(json))
+                        }
                         _ => {
                             ResultMsg::DebugCommand(option)
                         }
@@ -595,6 +599,26 @@ impl RenderBackend {
         }
 
         serde_json::to_string(&docs).unwrap()
+    }
+
+    #[cfg(not(feature = "debugger"))]
+    fn get_clip_scroll_tree_for_debugger(&self) -> String {
+        String::new()
+    }
+
+    #[cfg(feature = "debugger")]
+    fn get_clip_scroll_tree_for_debugger(&self) -> String {
+        let mut debug_root = debug_server::ClipScrollTreeList::new();
+
+        for (_, doc) in &self.documents {
+            let debug_node = debug_server::TreeNode::new("document clip_scroll tree");
+            let mut builder = debug_server::TreeNodeBuilder::new(debug_node);
+            doc.frame.clip_scroll_tree.print_with(&mut builder);
+
+            debug_root.add(builder.build());            
+        }
+
+        serde_json::to_string(&debug_root).unwrap()
     }
 }
 

@@ -189,6 +189,46 @@ pub struct Frame {
     frame_builder: Option<FrameBuilder>,
 }
 
+trait FilterOpHelpers {
+    fn resolve(self, properties: &SceneProperties) -> FilterOp;
+    fn is_noop(&self) -> bool;
+}
+
+impl FilterOpHelpers for FilterOp {
+    fn resolve(self, properties: &SceneProperties) -> FilterOp {
+        match self {
+            FilterOp::Opacity(ref value) => {
+                let amount = properties.resolve_float(value, 1.0);
+                FilterOp::Opacity(PropertyBinding::Value(amount))
+            }
+            _ => self
+        }
+    }
+
+    fn is_noop(&self) -> bool {
+        match *self {
+            FilterOp::Blur(length) => length == 0.0,
+            FilterOp::Brightness(amount) => amount == 1.0,
+            FilterOp::Contrast(amount) => amount == 1.0,
+            FilterOp::Grayscale(amount) => amount == 0.0,
+            FilterOp::HueRotate(amount) => amount == 0.0,
+            FilterOp::Invert(amount) => amount == 0.0,
+            FilterOp::Opacity(value) => {
+                match value {
+                    PropertyBinding::Value(amount) => {
+                        amount == 1.0
+                    }
+                    PropertyBinding::Binding(..) => {
+                        panic!("bug: binding value should be resolved");
+                    }
+                }
+            }
+            FilterOp::Saturate(amount) => amount == 1.0,
+            FilterOp::Sepia(amount) => amount == 0.0,
+        }
+    }
+}
+
 trait StackingContextHelpers {
     fn mix_blend_mode_for_compositing(&self) -> Option<MixBlendMode>;
     fn filter_ops_for_compositing(&self,
@@ -211,15 +251,11 @@ impl StackingContextHelpers for StackingContext {
                                   properties: &SceneProperties) -> Vec<FilterOp> {
         let mut filters = vec![];
         for filter in display_list.get(input_filters) {
+            let filter = filter.resolve(properties);
             if filter.is_noop() {
                 continue;
             }
-            if let FilterOp::Opacity(ref value) = filter {
-                let amount = properties.resolve_float(value, 1.0);
-                filters.push(FilterOp::Opacity(PropertyBinding::Value(amount)));
-            } else {
-                filters.push(filter);
-            }
+            filters.push(filter);
         }
         filters
     }
@@ -567,16 +603,22 @@ impl Frame {
                                               info.image_rendering);
             }
             SpecificDisplayItem::Text(ref text_info) => {
-                let instance = context.resource_cache.get_font_instance(text_info.font_key).unwrap();
-                context.builder.add_text(clip_and_scroll,
-                                         reference_frame_relative_offset,
-                                         item_rect_with_offset,
-                                         &clip_with_offset,
-                                         instance,
-                                         &text_info.color,
-                                         item.glyphs(),
-                                         item.display_list().get(item.glyphs()).count(),
-                                         text_info.glyph_options);
+                match context.resource_cache.get_font_instance(text_info.font_key) {
+                    Some(instance) => {
+                        context.builder.add_text(clip_and_scroll,
+                                                 reference_frame_relative_offset,
+                                                 item_rect_with_offset,
+                                                 &clip_with_offset,
+                                                 instance,
+                                                 &text_info.color,
+                                                 item.glyphs(),
+                                                 item.display_list().get(item.glyphs()).count(),
+                                                 text_info.glyph_options);
+                    }
+                    None => {
+                        warn!("Unknown font instance key: {:?}", text_info.font_key);
+                    }
+                }
             }
             SpecificDisplayItem::Rectangle(ref info) => {
                 if !self.try_to_add_rectangle_splitting_on_clip(context,

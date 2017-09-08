@@ -4,7 +4,7 @@
 
 use clip_scroll_node::{ClipScrollNode, NodeType, ScrollingState};
 use internal_types::{FastHashSet, FastHashMap};
-use print_tree::PrintTree;
+use print_tree::{PrintTree, PrintTreePrinter};
 use api::{ClipId, LayerPoint, LayerRect, LayerToScrollTransform, LayerToWorldTransform};
 use api::{LayerVector2D, PipelineId, ScrollClamping, ScrollEventPhase, ScrollLayerState};
 use api::{ScrollLocation, StickyFrameInfo, WorldPoint};
@@ -370,7 +370,7 @@ impl ClipScrollTree {
         }
     }
 
-    fn print_node(&self, id: &ClipId, pt: &mut PrintTree) {
+    fn print_node<T: PrintTreePrinter>(&self, id: &ClipId, pt: &mut T) {
         let node = self.nodes.get(id).unwrap();
 
         match node.node_type {
@@ -416,7 +416,13 @@ impl ClipScrollTree {
     pub fn print(&self) {
         if !self.nodes.is_empty() {
             let mut pt = PrintTree::new("clip_scroll tree");
-            self.print_node(&self.root_reference_frame_id, &mut pt);
+            self.print_with(&mut pt);
+        }
+    }
+
+    pub fn print_with<T: PrintTreePrinter>(&self, pt: &mut T) {
+        if !self.nodes.is_empty() {
+            self.print_node(&self.root_reference_frame_id, pt);
         }
     }
 }

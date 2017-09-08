@@ -8,6 +8,7 @@ use std::sync::mpsc::{channel, Receiver};
 use std::thread;
 use std::sync::mpsc::Sender;
 
+use print_tree::PrintTreePrinter;
 use ws;
 
 // Messages that are sent from the render backend to the renderer
@@ -64,6 +65,9 @@ impl ws::Handler for Server {
                     }
                     "fetch_documents" => {
                         DebugCommand::FetchDocuments
+                    }
+                    "fetch_clipscrolltree" => {
+                        DebugCommand::FetchClipScrollTree
                     }
                     msg => {
                         println!("unknown msg {}", msg);
@@ -279,5 +283,68 @@ impl DocumentList {
 
     pub fn add(&mut self, item: TreeNode) {
         self.root.add_child(item);
+    }
+}
+
+// A serializable list of debug information about clip-scroll trees
+// that can be sent to the client
+
+#[derive(Serialize)]
+pub struct ClipScrollTreeList {
+    kind: &'static str,
+    root: TreeNode,
+}
+
+impl ClipScrollTreeList {
+    pub fn new() -> ClipScrollTreeList {
+        ClipScrollTreeList {
+            kind: "clipscrolltree",
+            root: TreeNode::new("root"),
+        }
+    }
+
+    pub fn add(&mut self, item: TreeNode) {
+        self.root.add_child(item);
+    }
+}
+
+// A TreeNode-based PrintTreePrinter to serialize pretty-printed
+// trees as json
+pub struct TreeNodeBuilder {
+    levels: Vec<TreeNode>,
+}
+
+impl TreeNodeBuilder {
+    pub fn new(root: TreeNode) -> TreeNodeBuilder {
+        TreeNodeBuilder {
+            levels: vec![root]
+        }
+    }
+
+    fn current_level_mut(&mut self) -> &mut TreeNode {
+        assert!(!self.levels.is_empty());
+        self.levels.last_mut().unwrap()
+    }
+
+    pub fn build(mut self) -> TreeNode {
+        assert!(self.levels.len() == 1);
+        self.levels.pop().unwrap()
+    }
+}
+
+impl PrintTreePrinter for TreeNodeBuilder {
+    fn new_level(&mut self, title: String) {
+         let level = TreeNode::new(&title);
+         self.levels.push(level);
+    }
+
+    fn end_level(&mut self) {
+         assert!(!self.levels.is_empty());
+         let last_level = self.levels.pop().unwrap();
+         self.current_level_mut().add_child(last_level);
+    }
+
+    fn add_item(&mut self, text: String) {
+         self.current_level_mut().add_item(&text);
     }
 }

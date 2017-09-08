@@ -158,6 +158,7 @@ impl RendererFrame {
 
 pub enum DebugOutput {
     FetchDocuments(String),
+    FetchClipScrollTree(String),
 }
 
 pub enum ResultMsg {

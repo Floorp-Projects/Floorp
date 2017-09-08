@@ -398,6 +398,17 @@ impl Texture {
     pub fn get_layer_count(&self) -> i32 {
         self.layer_count
     }
+
+    pub fn get_bpp(&self) -> u32 {
+        match self.format {
+            ImageFormat::A8 => 1,
+            ImageFormat::RGB8 => 3,
+            ImageFormat::BGRA8 => 4,
+            ImageFormat::RG8 => 2,
+            ImageFormat::RGBAF32 => 16,
+            ImageFormat::Invalid => unreachable!(),
+        }
+    }
 }
 
 impl Drop for Texture {
@@ -433,6 +444,16 @@ impl Drop for VAO {
     }
 }
 
+pub struct PBO {
+    id: gl::GLuint,
+}
+
+impl Drop for PBO {
+    fn drop(&mut self) {
+        debug_assert!(thread::panicking() || self.id == 0, "renderer::deinit not called");
+    }
+}
+
 #[derive(PartialEq, Eq, Hash, Debug, Copy, Clone)]
 pub struct FBOId(gl::GLuint);
 
@@ -444,9 +465,6 @@ pub struct VBOId(gl::GLuint);
 
 #[derive(PartialEq, Eq, Hash, Debug, Copy, Clone)]
 struct IBOId(gl::GLuint);
-
-#[derive(PartialEq, Eq, Hash, Debug, Copy, Clone)]
-pub struct PBOId(gl::GLuint);
 
 const MAX_TIMERS_PER_FRAME: usize = 256;
 const MAX_SAMPLERS_PER_FRAME: usize = 16;
@@ -759,7 +777,7 @@ pub struct Device {
     bound_textures: [gl::GLuint; 16],
     bound_program: gl::GLuint,
     bound_vao: gl::GLuint,
-    bound_pbo: PBOId,
+    bound_pbo: gl::GLuint,
     bound_read_fbo: FBOId,
     bound_draw_fbo: FBOId,
     default_read_fbo: gl::GLuint,
@@ -803,7 +821,7 @@ impl Device {
             bound_textures: [0; 16],
             bound_program: 0,
             bound_vao: 0,
-            bound_pbo: PBOId(0),
+            bound_pbo: 0,
             bound_read_fbo: FBOId(0),
             bound_draw_fbo: FBOId(0),
             default_read_fbo: 0,
@@ -833,7 +851,7 @@ impl Device {
     pub fn reset_state(&mut self) {
         self.bound_textures = [0; 16];
         self.bound_vao = 0;
-        self.bound_pbo = PBOId(0);
+        self.bound_pbo = 0;
         self.bound_read_fbo = FBOId(0);
         self.bound_draw_fbo = FBOId(0);
     }
@@ -891,7 +909,7 @@ impl Device {
 
         // Pixel op state
         self.gl.pixel_store_i(gl::UNPACK_ALIGNMENT, 1);
-        self.bound_pbo = PBOId(0);
+        self.bound_pbo = 0;
         self.gl.bind_buffer(gl::PIXEL_UNPACK_BUFFER, 0);
 
         // Default is sampler 0, always
@@ -1176,7 +1194,7 @@ impl Device {
 
     pub fn free_texture_storage(&mut self, texture: &mut Texture) {
         debug_assert!(self.inside_frame);
-        debug_assert_eq!(self.bound_pbo, PBOId(0));
+        debug_assert_eq!(self.bound_pbo, 0);
 
         if texture.format == ImageFormat::Invalid {
             return;
@@ -1352,29 +1370,32 @@ impl Device {
         self.gl.uniform_1f(program.u_device_pixel_ratio, self.device_pixel_ratio);
     }
 
-    pub fn create_pbo(&mut self) -> PBOId {
+    pub fn create_pbo(&mut self) -> PBO {
         let id = self.gl.gen_buffers(1)[0];
-        PBOId(id)
+        PBO {
+            id
+        }
     }
 
-    pub fn destroy_pbo(&mut self, id: PBOId) {
-        self.gl.delete_buffers(&[id.0]);
+    pub fn delete_pbo(&mut self, mut pbo: PBO) {
+        self.gl.delete_buffers(&[pbo.id]);
+        pbo.id = 0;
     }
 
-    pub fn bind_pbo(&mut self, pbo_id: Option<PBOId>) {
+    pub fn bind_pbo(&mut self, pbo: Option<&PBO>) {
         debug_assert!(self.inside_frame);
-        let pbo_id = pbo_id.unwrap_or(PBOId(0));
+        let pbo_id = pbo.map_or(0, |pbo| pbo.id);
 
         if self.bound_pbo != pbo_id {
             self.bound_pbo = pbo_id;
 
-            self.gl.bind_buffer(gl::PIXEL_UNPACK_BUFFER, pbo_id.0);
+            self.gl.bind_buffer(gl::PIXEL_UNPACK_BUFFER, pbo_id);
         }
     }
 
     pub fn update_pbo_data<T>(&mut self, data: &[T]) {
         debug_assert!(self.inside_frame);
-        debug_assert_ne!(self.bound_pbo, PBOId(0));
+        debug_assert_ne!(self.bound_pbo, 0);
 
         gl::buffer_data(&*self.gl,
                         gl::PIXEL_UNPACK_BUFFER,
@@ -1384,7 +1405,7 @@ impl Device {
 
     pub fn orphan_pbo(&mut self, new_size: usize) {
         debug_assert!(self.inside_frame);
-        debug_assert_ne!(self.bound_pbo, PBOId(0));
+        debug_assert_ne!(self.bound_pbo, 0);
 
         self.gl.buffer_data_untyped(gl::PIXEL_UNPACK_BUFFER,
                                     new_size as isize,

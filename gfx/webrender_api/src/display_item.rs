@@ -384,23 +384,6 @@ pub enum FilterOp {
     Sepia(f32),
 }
 
-impl FilterOp {
-    pub fn is_noop(&self) -> bool {
-        match *self {
-            FilterOp::Blur(length) if length == 0.0 => true,
-            FilterOp::Brightness(amount) if amount == 1.0 => true,
-            FilterOp::Contrast(amount) if amount == 1.0 => true,
-            FilterOp::Grayscale(amount) if amount == 0.0 => true,
-            FilterOp::HueRotate(amount) if amount == 0.0 => true,
-            FilterOp::Invert(amount) if amount == 0.0 => true,
-            FilterOp::Opacity(amount) if amount == PropertyBinding::Value(1.0) => true,
-            FilterOp::Saturate(amount) if amount == 1.0 => true,
-            FilterOp::Sepia(amount) if amount == 0.0 => true,
-            _ => false,
-        }
-    }
-}
-
 #[derive(Clone, Copy, Debug, Deserialize, PartialEq, Serialize)]
 pub struct IframeDisplayItem {
     pub pipeline_id: PipelineId,
