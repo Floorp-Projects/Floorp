@@ -450,7 +450,6 @@ MediaCacheStream::MediaCacheStream(ChannelMediaResource* aClient,
                                    bool aIsPrivateBrowsing)
   : mMediaCache(nullptr)
   , mClient(aClient)
-  , mHasHadUpdate(false)
   , mClosed(false)
   , mDidNotifyDataEnded(false)
   , mResourceID(0)
@@ -1426,7 +1425,6 @@ MediaCache::Update()
     default:
       break;
     }
-    stream->mHasHadUpdate = true;
   }
 
   for (uint32_t i = 0; i < mStreams.Length(); ++i) {

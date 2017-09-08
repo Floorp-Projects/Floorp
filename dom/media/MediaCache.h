@@ -434,9 +434,6 @@ private:
   // These fields are main-thread-only.
   ChannelMediaResource*  mClient;
   nsCOMPtr<nsIPrincipal> mPrincipal;
-  // Set to true when MediaCache::Update() has finished while this stream
-  // was present.
-  bool                   mHasHadUpdate;
   // Set to true when the stream has been closed either explicitly or
   // due to an internal cache error
   bool                   mClosed;
