@@ -1078,17 +1078,13 @@ reftest:
     treeherder-symbol: tc-R(R)
     run-on-projects:
         by-test-platform:
-            # Deactivate try on Buildbot, by default. We don't have enough machines
-            windows8-64.*: ['mozilla-release', 'mozilla-beta', 'mozilla-central', 'mozilla-inbound', 'autoland']
-            windows8-64-devedition/opt: built-projects  # No dev edition outside of supported branches
-            windows10.*: []
             linux.*-stylo.*: ['autoland', 'mozilla-central', 'try']
             macosx64-stylo.*: ['autoland', 'mozilla-central', 'try']
             windows7-32-stylo.*: ['autoland', 'mozilla-central', 'try']
             default: built-projects
     worker-type:
         by-test-platform:
-            windows8-64.*: buildbot-bridge/buildbot-bridge
+            windows10-64.*: buildbot-bridge/buildbot-bridge
             default: null
     instance-size:
         by-test-platform:
@@ -1101,8 +1097,8 @@ reftest:
             android.*: 16
             macosx64.*/opt: 1
             macosx64.*/debug: 2
-            windows8-64.*/opt: 1
-            windows8-64.*/debug: 2
+            windows10-64.*/opt: 1
+            windows10-64.*/debug: 2
             default: 8
     e10s:
         by-test-platform:
@@ -1127,8 +1123,8 @@ reftest:
                 chunked:
                   by-test-platform:
                     macosx64/opt: false
-                    windows8-64.*/opt: false
-                    windows8-64.*/debug: true
+                    windows10-64.*/opt: false
+                    windows10-64.*/debug: true
                     default: true
                 config:
                     by-test-platform:
