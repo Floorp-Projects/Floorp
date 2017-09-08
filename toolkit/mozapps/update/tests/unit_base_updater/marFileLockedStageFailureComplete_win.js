@@ -54,11 +54,18 @@ function runUpdateFinished() {
  */
 function waitForHelperExitFinished() {
   standardInit();
-  checkUpdateManager(STATE_PENDING, true, STATE_PENDING, WRITE_ERROR, 0);
   checkPostUpdateRunningFile(false);
   checkFilesAfterUpdateFailure(getApplyDirFile);
   checkUpdateLogContains(ERR_RENAME_FILE);
   checkUpdateLogContains(ERR_BACKUP_CREATE_7);
   checkUpdateLogContains(STATE_FAILED_WRITE_ERROR + "\n" + CALL_QUIT);
+  do_execute_soon(() => waitForUpdateXMLFiles(true, false));
+}
+
+/**
+ * Called after the call to waitForUpdateXMLFiles finishes.
+ */
+function waitForUpdateXMLFilesFinished() {
+  checkUpdateManager(STATE_PENDING, true, STATE_PENDING, WRITE_ERROR, 0);
   checkCallbackLog();
 }
