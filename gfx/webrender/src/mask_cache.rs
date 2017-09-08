@@ -2,13 +2,13 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-use api::{BorderRadius, ComplexClipRegion, DeviceIntRect, ImageMask, LayerPoint, LayerRect};
+use api::{DeviceIntRect, ImageMask, LayerPoint, LayerRect};
 use api::{LayerSize, LayerToWorldTransform};
 use border::BorderCornerClipSource;
 use clip::{ClipMode, ClipSource};
 use gpu_cache::{GpuCache, GpuCacheHandle, ToGpuBlocks};
 use prim_store::{CLIP_DATA_GPU_BLOCKS, ClipData, ImageMaskData};
-use util::{ComplexClipRegionHelpers, TransformedRect};
+use util::{extract_inner_rect_safe, TransformedRect};
 
 const MAX_CLIP: f32 = 1000000.0;
 
@@ -114,16 +114,15 @@ impl MaskCacheInfo {
         // and if we have an image mask.
         for clip in clips {
             match *clip {
-                ClipSource::Complex(..) => {
+                ClipSource::RoundedRectangle(..) => {
                     complex_clip_count += 1;
                 }
-                ClipSource::Region(ref region) => {
-                    if let Some(info) = region.image_mask {
-                        debug_assert!(image.is_none());     // TODO(gw): Support >1 image mask!
-                        image = Some((info, GpuCacheHandle::new()));
-                    }
-                    complex_clip_count += region.complex_clips.len();
+                ClipSource::Rectangle(..) => {
                     layer_clip_count += 1;
+                }
+                ClipSource::Image(image_mask) => {
+                    debug_assert!(image.is_none());     // TODO(gw): Support >1 image mask!
+                    image = Some((image_mask, GpuCacheHandle::new()));
                 }
                 ClipSource::BorderCorner(ref source) => {
                     border_corners.push((source.clone(), GpuCacheHandle::new()));
@@ -149,46 +148,39 @@ impl MaskCacheInfo {
                   gpu_cache: &mut GpuCache,
                   device_pixel_ratio: f32)
                   -> &MaskBounds {
-
         // Step[1] - compute the local bounds
         //TODO: move to initialization stage?
         if self.bounds.inner.is_none() {
             let mut local_rect = Some(LayerRect::new(LayerPoint::new(-MAX_CLIP, -MAX_CLIP),
                                                      LayerSize::new(2.0 * MAX_CLIP, 2.0 * MAX_CLIP)));
-            let mut local_inner: Option<LayerRect> = None;
+            let mut local_inner = local_rect;
             let mut has_clip_out = false;
             let has_border_clip = !self.border_corners.is_empty();
 
             for source in sources {
                 match *source {
-                    ClipSource::Complex(rect, radius, mode) => {
+                    ClipSource::Image(ref mask) => {
+                        if !mask.repeat {
+                            local_rect = local_rect.and_then(|r| r.intersection(&mask.rect));
+                        }
+                        local_inner = None;
+                    }
+                    ClipSource::Rectangle(rect) => {
+                        local_rect = local_rect.and_then(|r| r.intersection(&rect));
+                        local_inner = local_inner.and_then(|r| r.intersection(&rect));
+                    }
+                    ClipSource::RoundedRectangle(ref rect, ref radius, mode) => {
                         // Once we encounter a clip-out, we just assume the worst
                         // case clip mask size, for now.
                         if mode == ClipMode::ClipOut {
                             has_clip_out = true;
                             break;
                         }
-                        local_rect = local_rect.and_then(|r| r.intersection(&rect));
-                        local_inner = ComplexClipRegion::new(rect, BorderRadius::uniform(radius))
-                                                        .get_inner_rect_safe();
-                    }
-                    ClipSource::Region(ref region) => {
-                        local_rect = local_rect.and_then(|r| r.intersection(&region.main));
-                        local_inner = match region.image_mask {
-                            Some(ref mask) => {
-                                if !mask.repeat {
-                                    local_rect = local_rect.and_then(|r| r.intersection(&mask.rect));
-                                }
-                                None
-                            },
-                            None => local_rect,
-                        };
 
-                        for clip in &region.complex_clips {
-                            local_rect = local_rect.and_then(|r| r.intersection(&clip.rect));
-                            local_inner = local_inner.and_then(|r| clip.get_inner_rect_safe()
-                                                                       .and_then(|ref inner| r.intersection(inner)));
-                        }
+                        local_rect = local_rect.and_then(|r| r.intersection(rect));
+
+                        let inner_rect = extract_inner_rect_safe(rect, radius);
+                        local_inner = local_inner.and_then(|r| inner_rect.and_then(|ref inner| r.intersection(inner)));
                     }
                     ClipSource::BorderCorner{..} => {}
                 }
@@ -203,13 +195,6 @@ impl MaskCacheInfo {
                     inner: Some(LayerRect::zero().into()),
                 }
             } else {
-                // TODO(gw): local inner is only valid if there's a single clip (for now).
-                // This can be improved in the future, with some proper
-                // rectangle region handling.
-                if sources.len() > 1 {
-                    local_inner = None;
-                }
-
                 MaskBounds {
                     outer: Some(local_rect.unwrap_or(LayerRect::zero()).into()),
                     inner: Some(local_inner.unwrap_or(LayerRect::zero()).into()),
@@ -222,18 +207,9 @@ impl MaskCacheInfo {
         if let Some(block_count) = self.complex_clip_range.get_block_count() {
             if let Some(mut request) = gpu_cache.request(&mut self.complex_clip_range.location) {
                 for source in sources {
-                    match *source {
-                        ClipSource::Complex(rect, radius, mode) => {
-                            let data = ClipData::uniform(rect, radius, mode);
-                            data.write(&mut request);
-                        }
-                        ClipSource::Region(ref region) => {
-                            for clip in &region.complex_clips {
-                                let data = ClipData::from_clip_region(&clip);
-                                data.write(&mut request);
-                            }
-                        }
-                        ClipSource::BorderCorner{..} => {}
+                    if let ClipSource::RoundedRectangle(ref rect, ref radius, mode) = *source {
+                        let data = ClipData::rounded_rect(rect, radius, mode);
+                        data.write(&mut request);
                     }
                 }
                 assert_eq!(request.close(), block_count);
@@ -243,8 +219,8 @@ impl MaskCacheInfo {
         if let Some(block_count) = self.layer_clip_range.get_block_count() {
             if let Some(mut request) = gpu_cache.request(&mut self.layer_clip_range.location) {
                 for source in sources {
-                    if let ClipSource::Region(ref region) = *source {
-                        let data = ClipData::uniform(region.main, 0.0, ClipMode::Clip);
+                    if let ClipSource::Rectangle(rect) = *source {
+                        let data = ClipData::uniform(rect, 0.0, ClipMode::Clip);
                         data.write(&mut request);
                     }
                 }
