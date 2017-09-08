@@ -61,8 +61,7 @@ addAsyncAnimTest(async function() {
 
   await waitForPaintsFlushed();
 
-  // Bug 1352336: The following should be RunningOn.MainThread
-  omta_is(div, "transform", { tx: 3 }, RunningOn.Either,
+  omta_is(div, "transform", { tx: 3 }, RunningOn.MainThread,
           "animation with zero playback rate should stay in the " +
           "same position and be running on the main thread");
 
