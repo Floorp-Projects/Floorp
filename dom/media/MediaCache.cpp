@@ -2157,6 +2157,13 @@ MediaCacheStream::GetLength()
 }
 
 int64_t
+MediaCacheStream::GetOffset() const
+{
+  MOZ_ASSERT(NS_IsMainThread());
+  return mChannelOffset;
+}
+
+int64_t
 MediaCacheStream::GetNextCachedData(int64_t aOffset)
 {
   ReentrantMonitorAutoEnter mon(mMediaCache->GetReentrantMonitor());
