@@ -30,7 +30,6 @@
 #include "mozilla/dom/ipc/PendingIPCBlobParent.h"
 #include "mozilla/dom/quota/ActorsParent.h"
 #include "mozilla/dom/StorageIPC.h"
-#include "mozilla/extensions/StreamFilterParent.h"
 #include "mozilla/ipc/BackgroundParent.h"
 #include "mozilla/ipc/BackgroundUtils.h"
 #include "mozilla/ipc/IPCStreamAlloc.h"
@@ -69,7 +68,6 @@ using mozilla::dom::MessagePortParent;
 using mozilla::dom::PMessagePortParent;
 using mozilla::dom::UDPSocketParent;
 using mozilla::dom::WebAuthnTransactionParent;
-using mozilla::extensions::StreamFilterParent;
 
 namespace {
 
@@ -714,44 +712,6 @@ bool
 BackgroundParentImpl::DeallocPCacheStreamControlParent(PCacheStreamControlParent* aActor)
 {
   dom::cache::DeallocPCacheStreamControlParent(aActor);
-  return true;
-}
-
-PStreamFilterParent*
-BackgroundParentImpl::AllocPStreamFilterParent(const uint64_t& aChannelId, const nsString& aAddonId)
-{
-  AssertIsInMainProcess();
-  AssertIsOnBackgroundThread();
-
-  return StreamFilterParent::Create(aChannelId, aAddonId).take();
-}
-
-mozilla::ipc::IPCResult
-BackgroundParentImpl::RecvPStreamFilterConstructor(PStreamFilterParent* aActor,
-                                                   const uint64_t& aChannelId,
-                                                   const nsString& aAddonId)
-{
-  AssertIsInMainProcess();
-  AssertIsOnBackgroundThread();
-
-  StreamFilterParent* filter = static_cast<StreamFilterParent*>(aActor);
-
-  RefPtr<ContentParent> parent = BackgroundParent::GetContentParent(this);
-
-  filter->Init(parent.forget());
-
-  return IPC_OK();
-}
-
-bool
-BackgroundParentImpl::DeallocPStreamFilterParent(PStreamFilterParent* aActor)
-{
-  AssertIsInMainProcess();
-  AssertIsOnBackgroundThread();
-  MOZ_ASSERT(aActor);
-
-  RefPtr<StreamFilterParent> filter = dont_AddRef(
-      static_cast<StreamFilterParent*>(aActor));
   return true;
 }
 

@@ -9,12 +9,13 @@
 #include "jsapi.h"
 #include "jsfriendapi.h"
 
+#include "mozilla/AbstractThread.h"
 #include "mozilla/HoldDropJSObjects.h"
 #include "mozilla/SystemGroup.h"
 #include "mozilla/extensions/StreamFilterChild.h"
 #include "mozilla/extensions/StreamFilterEvents.h"
-#include "mozilla/ipc/BackgroundChild.h"
-#include "mozilla/ipc/PBackgroundChild.h"
+#include "mozilla/extensions/StreamFilterParent.h"
+#include "mozilla/dom/ContentChild.h"
 #include "nsContentUtils.h"
 #include "nsCycleCollectionParticipant.h"
 #include "nsLiteralString.h"
@@ -23,9 +24,6 @@
 
 using namespace JS;
 using namespace mozilla::dom;
-
-using mozilla::ipc::BackgroundChild;
-using mozilla::ipc::PBackgroundChild;
 
 namespace mozilla {
 namespace extensions {
@@ -43,7 +41,7 @@ StreamFilter::StreamFilter(nsIGlobalObject* aParent,
 {
   MOZ_ASSERT(aParent);
 
-  ConnectToPBackground();
+  Connect();
 };
 
 StreamFilter::~StreamFilter()
@@ -76,37 +74,55 @@ StreamFilter::Create(GlobalObject& aGlobal, uint64_t aRequestId, const nsAString
  *****************************************************************************/
 
 void
-StreamFilter::ConnectToPBackground()
+StreamFilter::Connect()
 {
-  PBackgroundChild* background = BackgroundChild::GetForCurrentThread();
-  if (background) {
-    ActorCreated(background);
-  } else {
-    bool ok = BackgroundChild::GetOrCreateForCurrentThread(this);
-    MOZ_RELEASE_ASSERT(ok);
-  }
-}
-
-void
-StreamFilter::ActorFailed()
-{
-  MOZ_CRASH("Failed to create a PBackgroundChild actor");
-}
-
-void
-StreamFilter::ActorCreated(PBackgroundChild* aBackground)
-{
-  MOZ_ASSERT(aBackground);
   MOZ_ASSERT(!mActor);
+
+  mActor = new StreamFilterChild();
+  mActor->SetStreamFilter(this);
 
   nsAutoString addonId;
   mAddonId->ToString(addonId);
 
-  PStreamFilterChild* actor = aBackground->SendPStreamFilterConstructor(mChannelId, addonId);
-  MOZ_ASSERT(actor);
+  ContentChild* cc = ContentChild::GetSingleton();
+  if (cc) {
+    RefPtr<StreamFilter> self(this);
 
-  mActor = static_cast<StreamFilterChild*>(actor);
-  mActor->SetStreamFilter(this);
+    cc->SendInitStreamFilter(mChannelId, addonId)->Then(
+      GetCurrentThreadSerialEventTarget(),
+      __func__,
+      [=] (mozilla::ipc::Endpoint<PStreamFilterChild>&& aEndpoint) {
+        self->FinishConnect(Move(aEndpoint));
+      },
+      [=] (mozilla::ipc::PromiseRejectReason aReason) {
+        self->mActor->RecvInitialized(false);
+      });
+  } else {
+    mozilla::ipc::Endpoint<PStreamFilterChild> endpoint;
+    Unused << StreamFilterParent::Create(nullptr, mChannelId, addonId, &endpoint);
+
+    // Always dispatch asynchronously so JS callers have a chance to attach
+    // event listeners before we dispatch events.
+    NS_DispatchToCurrentThread(
+      NewRunnableMethod<mozilla::ipc::Endpoint<PStreamFilterChild>&&>(
+        "StreamFilter::FinishConnect",
+        this, &StreamFilter::FinishConnect,
+        Move(endpoint)));
+  }
+}
+
+void
+StreamFilter::FinishConnect(mozilla::ipc::Endpoint<PStreamFilterChild>&& aEndpoint)
+{
+  if (aEndpoint.IsValid()) {
+    MOZ_RELEASE_ASSERT(aEndpoint.Bind(mActor));
+    mActor->RecvInitialized(true);
+
+    // IPC now owns this reference.
+    Unused << do_AddRef(mActor);
+  } else {
+    mActor->RecvInitialized(false);
+  }
 }
 
 /*****************************************************************************
@@ -273,7 +289,6 @@ StreamFilter::WrapObject(JSContext* aCx, HandleObject aGivenProto)
 NS_IMPL_CYCLE_COLLECTION_CLASS(StreamFilter)
 
 NS_INTERFACE_MAP_BEGIN_CYCLE_COLLECTION(StreamFilter)
-  NS_INTERFACE_MAP_ENTRY(nsIIPCBackgroundChildCreateCallback)
 NS_INTERFACE_MAP_END_INHERITING(DOMEventTargetHelper)
 
 NS_IMPL_CYCLE_COLLECTION_UNLINK_BEGIN_INHERITED(StreamFilter, DOMEventTargetHelper)
