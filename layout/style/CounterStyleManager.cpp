@@ -492,7 +492,7 @@ EthiopicToText(CounterValue aOrdinal, nsAString& aResult)
   // If we didn't add the leading "0", decrement asciiStringLength so
   // it will be equivalent to a zero-based index in both cases.
   if (asciiStringLength & 1) {
-    asciiNumberString.Insert(NS_LITERAL_STRING("0"), 0);
+    asciiNumberString.InsertLiteral(u"0", 0);
   } else {
     asciiStringLength--;
   }
