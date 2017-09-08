@@ -15,7 +15,7 @@ const FAKE_SCREENSHOT = "data123";
 
 function FakeTippyTopProvider() {}
 FakeTippyTopProvider.prototype = {
-  async init() {},
+  async init() { this.initialized = true; },
   processSite(site) { return site; }
 };
 
@@ -247,6 +247,11 @@ describe("Top Sites Feed", () => {
     });
   });
   describe("#refresh", () => {
+    it("should initialise _tippyTopProvider if it's not already initialised", async () => {
+      feed._tippyTopProvider.initialized = false;
+      await feed.refresh(action);
+      assert.ok(feed._tippyTopProvider.initialized);
+    });
     it("should dispatch an action with the links returned", async () => {
       sandbox.stub(feed, "getScreenshot");
       await feed.refresh(action);
