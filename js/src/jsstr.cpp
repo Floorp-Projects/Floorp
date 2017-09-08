@@ -522,9 +522,11 @@ static bool
 str_enumerate(JSContext* cx, HandleObject obj)
 {
     RootedString str(cx, obj->as<StringObject>().unbox());
+    js::StaticStrings& staticStrings = cx->staticStrings();
+
     RootedValue value(cx);
     for (size_t i = 0, length = str->length(); i < length; i++) {
-        JSString* str1 = NewDependentString(cx, str, i, 1);
+        JSString* str1 = staticStrings.getUnitStringForElement(cx, str, i);
         if (!str1)
             return false;
         value.setString(str1);
