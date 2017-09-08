@@ -4534,7 +4534,7 @@ nsPIDOMWindowInner::UpdateWebSocketCount(int32_t aDelta)
     return;
   }
 
-  if (!IsTopInnerWindow()) {
+  if (mTopInnerWindow && !IsTopInnerWindow()) {
     mTopInnerWindow->UpdateWebSocketCount(aDelta);
   }
 
@@ -4562,7 +4562,7 @@ nsPIDOMWindowInner::UpdateUserMediaCount(int32_t aDelta)
     return;
   }
 
-  if (!IsTopInnerWindow()) {
+  if (mTopInnerWindow && !IsTopInnerWindow()) {
     mTopInnerWindow->UpdateUserMediaCount(aDelta);
   }
 
