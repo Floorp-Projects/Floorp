@@ -6,6 +6,7 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
 include protocol PNecko;
+include protocol PStreamFilter;
 include InputStreamParams;
 include URIParams;
 include PBackgroundSharedTypes;
@@ -145,6 +146,8 @@ child:
   // correct window ID, so send the message to the child for logging to the web
   // console.
   async LogBlockedCORSRequest(nsString message);
+
+  async AttachStreamFilter(Endpoint<PStreamFilterParent> aEndpoint);
 
 both:
   // After receiving this message, the parent also calls

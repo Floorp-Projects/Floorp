@@ -177,6 +177,7 @@
       {
         "name": "setPopup",
         "type": "function",
+        "async": true,
         "description": "Sets the html document to be opened as a popup when the user clicks on the page action's icon.",
         "parameters": [
           {

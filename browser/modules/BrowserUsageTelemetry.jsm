@@ -112,12 +112,7 @@ function getSearchEngineId(engine) {
     if (engine.identifier) {
       return engine.identifier;
     }
-    // Due to bug 1222070, we can't directly check Services.telemetry.canRecordExtended
-    // here.
-    const extendedTelemetry = Services.prefs.getBoolPref("toolkit.telemetry.enabled");
-    if (engine.name && extendedTelemetry) {
-      // If it's a custom search engine only report the engine name
-      // if extended Telemetry is enabled.
+    if (engine.name) {
       return "other-" + engine.name;
     }
   }

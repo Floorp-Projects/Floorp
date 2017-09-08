@@ -226,7 +226,6 @@ class RobocopTestRunner(MochitestDesktop):
         self.options.extraPrefs.append('layout.css.devPixelsPerPx=1.0')
         self.options.extraPrefs.append('browser.chrome.dynamictoolbar=false')
         self.options.extraPrefs.append('browser.snippets.enabled=false')
-        self.options.extraPrefs.append('browser.casting.enabled=true')
         self.options.extraPrefs.append('extensions.autoupdate.enabled=false')
 
         # Override the telemetry init delay for integration testing.

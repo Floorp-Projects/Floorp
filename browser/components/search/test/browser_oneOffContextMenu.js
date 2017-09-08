@@ -35,14 +35,7 @@ add_task(async function init() {
   });
 });
 
-add_task(async function extendedTelemetryDisabled() {
-  await SpecialPowers.pushPrefEnv({set: [["toolkit.telemetry.enabled", false]]});
-  await doTest();
-  checkTelemetry("other");
-});
-
-add_task(async function extendedTelemetryEnabled() {
-  await SpecialPowers.pushPrefEnv({set: [["toolkit.telemetry.enabled", true]]});
+add_task(async function telemetry() {
   await doTest();
   checkTelemetry("other-" + TEST_ENGINE_NAME);
 });

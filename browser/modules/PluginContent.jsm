@@ -25,7 +25,7 @@ XPCOMUtils.defineLazyModuleGetter(this, "AppConstants",
 
 this.PluginContent = function(global) {
   this.init(global);
-}
+};
 
 const FLASH_MIME_TYPE = "application/x-shockwave-flash";
 const REPLACEMENT_STYLE_SHEET = Services.io.newURI("chrome://pluginproblem/content/pluginReplaceBinding.css");
@@ -98,12 +98,14 @@ PluginContent.prototype = {
         setTimeout(() => this.updateNotificationUI(), 0);
         break;
       case "BrowserPlugins:ContextMenuCommand":
+        let contextMenu = this.global.contextMenu;
+
         switch (msg.data.command) {
           case "play":
-            this._showClickToPlayNotification(msg.objects.plugin, true);
+            this._showClickToPlayNotification(contextMenu.getTarget(msg, "plugin"), true);
             break;
           case "hide":
-            this.hideClickToPlayOverlay(msg.objects.plugin);
+            this.hideClickToPlayOverlay(contextMenu.getTarget(msg, "plugin"));
             break;
         }
         break;

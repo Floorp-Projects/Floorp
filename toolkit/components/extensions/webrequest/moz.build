@@ -48,6 +48,12 @@ LOCAL_INCLUDES += [
 
 include('/ipc/chromium/chromium-config.mozbuild')
 
+LOCAL_INCLUDES += [
+    # For nsHttpChannel.h
+    '/netwerk/base',
+    '/netwerk/protocol/http',
+]
+
 FINAL_LIBRARY = 'xul'
 
 with Files("**"):
