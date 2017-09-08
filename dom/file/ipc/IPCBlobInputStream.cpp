@@ -69,7 +69,6 @@ NS_INTERFACE_MAP_BEGIN(IPCBlobInputStream)
   NS_INTERFACE_MAP_ENTRY(nsIInputStreamCallback)
   NS_INTERFACE_MAP_ENTRY(nsICloneableInputStream)
   NS_INTERFACE_MAP_ENTRY(nsIIPCSerializableInputStream)
-  NS_INTERFACE_MAP_ENTRY_CONDITIONAL(nsISeekableStream, IsSeekableStream())
   NS_INTERFACE_MAP_ENTRY_CONDITIONAL(nsIFileMetadata, IsFileMetadata())
   NS_INTERFACE_MAP_ENTRY_AMBIGUOUS(nsISupports, nsIInputStream)
 NS_INTERFACE_MAP_END
@@ -413,46 +412,6 @@ IPCBlobInputStream::GetFileDescriptor(PRFileDesc** aRetval)
   }
 
   return fileMetadata->GetFileDescriptor(aRetval);
-}
-
-// nsISeekableStream
-
-bool
-IPCBlobInputStream::IsSeekableStream() const
-{
-  // We are nsISeekableStream only if we have the remote stream and that is a
-  // nsISeekableStream.
-  nsCOMPtr<nsISeekableStream> seekableStream = do_QueryInterface(mRemoteStream);
-  return !!seekableStream;
-}
-
-NS_IMETHODIMP
-IPCBlobInputStream::Seek(int32_t aWhence, int64_t aOffset)
-{
-  nsCOMPtr<nsISeekableStream> seekableStream = do_QueryInterface(mRemoteStream);
-  if (!seekableStream) {
-    return mState == eClosed ? NS_BASE_STREAM_CLOSED : NS_ERROR_FAILURE;
-  }
-
-  return seekableStream->Seek(aWhence, aOffset);
-}
-
-NS_IMETHODIMP
-IPCBlobInputStream::Tell(int64_t *aResult)
-{
-  nsCOMPtr<nsISeekableStream> seekableStream = do_QueryInterface(mRemoteStream);
-  if (!seekableStream) {
-    return mState == eClosed ? NS_BASE_STREAM_CLOSED : NS_ERROR_FAILURE;
-  }
-
-  return seekableStream->Tell(aResult);
-}
-
-NS_IMETHODIMP
-IPCBlobInputStream::SetEOF()
-{
-  // This is a read-only stream.
-  return NS_ERROR_FAILURE;
 }
 
 } // namespace dom
