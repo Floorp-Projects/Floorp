@@ -3694,8 +3694,8 @@ BytecodeEmitter::iteratorResultShape(unsigned* shape)
     if (!obj)
         return false;
 
-    Rooted<jsid> value_id(cx, AtomToId(cx->names().value));
-    Rooted<jsid> done_id(cx, AtomToId(cx->names().done));
+    Rooted<jsid> value_id(cx, NameToId(cx->names().value));
+    Rooted<jsid> done_id(cx, NameToId(cx->names().done));
     if (!NativeDefineProperty(cx, obj, value_id, UndefinedHandleValue, nullptr, nullptr,
                               JSPROP_ENUMERATE))
     {

@@ -47,6 +47,10 @@ AtomToId(JSAtom* atom)
     return JSID_FROM_BITS(size_t(atom));
 }
 
+// Use the NameToId method instead!
+inline jsid
+AtomToId(PropertyName* name) = delete;
+
 inline bool
 ValueToIdPure(const Value& v, jsid* id)
 {
