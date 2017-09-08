@@ -1742,6 +1742,9 @@ var BrowserApp = {
         let appLocale = this.getUALocalePref();
 
         this.computeAcceptLanguages(languageTag, appLocale);
+
+        // Rebuild strings, in case we're mirroring OS locale.
+        Strings.flush();
         break;
       }
 
@@ -1751,6 +1754,11 @@ var BrowserApp = {
         } else {
           Services.locale.setRequestedLocales([]);
         }
+
+        console.log("Gecko display locale: " + this.getUALocalePref());
+
+        // Rebuild strings to reflect the new locale.
+        Strings.flush();
 
         // Make sure we use the right Accept-Language header.
         let osLocale;

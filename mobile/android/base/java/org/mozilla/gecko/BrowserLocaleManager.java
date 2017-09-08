@@ -106,6 +106,10 @@ public class BrowserLocaleManager implements LocaleManager {
                 systemLocaleDidChange = true;
 
                 Log.d(LOG_TAG, "System locale changed from " + current + " to " + systemLocale);
+
+                // If the OS locale changed, we need to tell Gecko.
+                final SharedPreferences prefs = GeckoSharedPrefs.forProfile(context);
+                BrowserLocaleManager.storeAndNotifyOSLocale(prefs, systemLocale);
             }
         };
         context.registerReceiver(receiver, new IntentFilter(Intent.ACTION_LOCALE_CHANGED));
@@ -208,6 +212,7 @@ public class BrowserLocaleManager implements LocaleManager {
         final String osLocaleString = osLocale.toString();
 
         if (osLocaleString.equals(lastOSLocale)) {
+            Log.d(LOG_TAG, "Previous locale " + lastOSLocale + " same as new. Doing nothing.");
             return;
         }
 
@@ -218,6 +223,7 @@ public class BrowserLocaleManager implements LocaleManager {
         // a Java locale string.
         final GeckoBundle data = new GeckoBundle(1);
         data.putString("languageTag", Locales.getLanguageTag(osLocale));
+
         EventDispatcher.getInstance().dispatch("Locale:OS", data);
     }
 
@@ -304,6 +310,10 @@ public class BrowserLocaleManager implements LocaleManager {
     }
 
     private SharedPreferences getSharedPreferences(Context context) {
+        // We should be using per-profile prefs here, because we're tracking against
+        // a Gecko pref. The same applies to the locale switcher!
+        // Bug 940575, Bug 873166 are relevant, and see Bug 1378501 for the commit
+        // that added this comment.
         return GeckoSharedPrefs.forApp(context);
     }
 
