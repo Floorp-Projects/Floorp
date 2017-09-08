@@ -401,11 +401,6 @@ impl Frame {
                 stacking_context.mix_blend_mode_for_compositing())
         };
 
-        if composition_operations.will_make_invisible() {
-            traversal.skip_current_stacking_context();
-            return;
-        }
-
         if stacking_context.scroll_policy == ScrollPolicy::Fixed {
             context.replacements.push((context_scroll_node_id,
                                        context.builder.current_reference_frame_id()));
