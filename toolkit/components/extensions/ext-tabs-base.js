@@ -420,6 +420,28 @@ class TabBase {
   }
 
   /**
+   * @property {boolean} isArticle
+   *        Returns true if the document in the tab can be rendered in reader
+   *        mode.
+   *        @readonly
+   *        @abstract
+   */
+  get isArticle() {
+    throw new Error("Not implemented");
+  }
+
+  /**
+   * @property {boolean} isInReaderMode
+   *        Returns true if the document in the tab is being rendered in reader
+   *        mode.
+   *        @readonly
+   *        @abstract
+   */
+  get isInReaderMode() {
+    throw new Error("Not implemented");
+  }
+
+  /**
    * Returns true if this tab matches the the given query info object. Omitted
    * or null have no effect on the match.
    *
@@ -498,6 +520,8 @@ class TabBase {
       lastAccessed: this.lastAccessed,
       audible: this.audible,
       mutedInfo: this.mutedInfo,
+      isArticle: this.isArticle,
+      isInReaderMode: this.isInReaderMode,
     };
 
     // If the tab has not been fully layed-out yet, fallback to the geometry
