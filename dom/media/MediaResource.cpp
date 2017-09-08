@@ -82,7 +82,6 @@ ChannelMediaResource::ChannelMediaResource(MediaResourceCallback* aCallback,
   : BaseMediaResource(aCallback, aChannel, aURI)
   , mOffset(0)
   , mReopenOnError(false)
-  , mIgnoreClose(false)
   , mCacheStream(this, aIsPrivateBrowsing)
   , mSuspendAgent(mChannel)
 {
@@ -96,7 +95,6 @@ ChannelMediaResource::ChannelMediaResource(
   : BaseMediaResource(aCallback, aChannel, aURI)
   , mOffset(0)
   , mReopenOnError(false)
-  , mIgnoreClose(false)
   , mCacheStream(this, /* aIsPrivateBrowsing = */ false)
   , mChannelStatistics(aStatistics)
   , mSuspendAgent(mChannel)
@@ -321,7 +319,6 @@ ChannelMediaResource::OnStartRequest(nsIRequest* aRequest)
   mCacheStream.SetTransportSeekable(seekable);
   mChannelStatistics.Start();
   mReopenOnError = false;
-  mIgnoreClose = false;
 
   mSuspendAgent.UpdateSuspendedStatusIfNeeded();
 
@@ -416,19 +413,17 @@ ChannelMediaResource::OnStopRequest(nsIRequest* aRequest, nsresult aStatus)
     // error as fatal.
   }
 
-  if (!mIgnoreClose) {
-    mCacheStream.NotifyDataEnded(aStatus);
+  mCacheStream.NotifyDataEnded(aStatus);
 
-    // Move this request back into the foreground.  This is necessary for
-    // requests owned by video documents to ensure the load group fires
-    // OnStopRequest when restoring from session history.
-    nsLoadFlags loadFlags;
-    DebugOnly<nsresult> rv = mChannel->GetLoadFlags(&loadFlags);
-    NS_ASSERTION(NS_SUCCEEDED(rv), "GetLoadFlags() failed!");
+  // Move this request back into the foreground.  This is necessary for
+  // requests owned by video documents to ensure the load group fires
+  // OnStopRequest when restoring from session history.
+  nsLoadFlags loadFlags;
+  DebugOnly<nsresult> rv = mChannel->GetLoadFlags(&loadFlags);
+  NS_ASSERTION(NS_SUCCEEDED(rv), "GetLoadFlags() failed!");
 
-    if (loadFlags & nsIRequest::LOAD_BACKGROUND) {
-      ModifyLoadFlags(loadFlags & ~nsIRequest::LOAD_BACKGROUND);
-    }
+  if (loadFlags & nsIRequest::LOAD_BACKGROUND) {
+    ModifyLoadFlags(loadFlags & ~nsIRequest::LOAD_BACKGROUND);
   }
 
   return NS_OK;
@@ -717,8 +712,6 @@ void ChannelMediaResource::Suspend(bool aCloseImmediately)
   }
 
   if (mChannel && aCloseImmediately && mCacheStream.IsTransportSeekable()) {
-    // Kill off our channel right now, but don't tell anyone about it.
-    mIgnoreClose = true;
     CloseChannel();
     element->DownloadSuspended();
   }
@@ -871,10 +864,6 @@ ChannelMediaResource::CacheClientSeek(int64_t aOffset, bool aResume)
   CloseChannel();
 
   mOffset = aOffset;
-
-  // Don't report close of the channel because the channel is not closed for
-  // download ended, but for internal changes in the read position.
-  mIgnoreClose = true;
 
   if (aResume) {
     mSuspendAgent.Resume();
