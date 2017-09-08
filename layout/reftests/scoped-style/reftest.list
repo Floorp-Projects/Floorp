@@ -35,17 +35,17 @@ fails-if(styloVsGecko||stylo) == scoped-style-dynamic-001.html scoped-style-dyna
 fails-if(styloVsGecko||stylo) == scoped-style-dynamic-002.html scoped-style-dynamic-002-ref.html
 fails-if(styloVsGecko||stylo) == scoped-style-dynamic-003.html scoped-style-dynamic-003-ref.html
 fails-if(styloVsGecko||stylo) == scoped-style-dynamic-004.html scoped-style-dynamic-004-ref.html
-asserts-if(styloVsGecko,1) asserts-if(stylo,1) == scoped-style-dynamic-005.html scoped-style-dynamic-005-ref.html
+asserts-if(styloVsGecko,0-1) asserts-if(stylo,1) == scoped-style-dynamic-005.html scoped-style-dynamic-005-ref.html # bug 1394603: 0-1 styloVsGecko asserts because there are 0 Gecko asserts and 1 Stylo assert.
 skip-if(styloVsGecko) asserts-if(stylo,1) fails-if(stylo) == scoped-style-dynamic-006.html scoped-style-dynamic-006-ref.html
 fails-if(styloVsGecko||stylo) == scoped-style-dynamic-007.html scoped-style-dynamic-007-ref.html
 fails-if(styloVsGecko||stylo) == scoped-style-dynamic-008.html scoped-style-dynamic-008-ref.html
 skip-if(styloVsGecko) asserts-if(stylo,1) fails-if(stylo) == scoped-style-dynamic-009.html scoped-style-dynamic-009-ref.html
-asserts-if(styloVsGecko,1) asserts-if(stylo,1) == scoped-style-dynamic-010.html scoped-style-dynamic-010-ref.html
+asserts-if(styloVsGecko,0-1) asserts-if(stylo,1) == scoped-style-dynamic-010.html scoped-style-dynamic-010-ref.html # bug 1394603: 0-1 styloVsGecko asserts because there are 0 Gecko asserts and 1 Stylo assert.
 fails-if(styloVsGecko||stylo) == scoped-style-dynamic-011.html scoped-style-dynamic-011-ref.html
-asserts-if(styloVsGecko,1) asserts-if(stylo,1) == scoped-style-dynamic-012.svg scoped-style-dynamic-012-ref.svg
-fails-if(styloVsGecko) asserts-if(styloVsGecko,1) asserts-if(stylo,1) fails-if(stylo) == scoped-style-dynamic-013.svg scoped-style-dynamic-013-ref.svg
-asserts-if(styloVsGecko,1) asserts-if(stylo,1) == scoped-style-dynamic-014.svg scoped-style-dynamic-014-ref.svg
-fails-if(styloVsGecko) asserts-if(styloVsGecko,1) asserts-if(stylo,1) fails-if(stylo) == scoped-style-dynamic-015.svg scoped-style-dynamic-015-ref.svg
+asserts-if(styloVsGecko,0-1) asserts-if(stylo,1) == scoped-style-dynamic-012.svg scoped-style-dynamic-012-ref.svg # bug 1394603: 0-1 styloVsGecko asserts because there are 0 Gecko asserts and 1 Stylo assert.
+fails-if(styloVsGecko) asserts-if(styloVsGecko,1) asserts-if(stylo,1) fails-if(stylo) == scoped-style-dynamic-013.svg scoped-style-dynamic-013-ref.svg # bug 1394603: 0-1 styloVsGecko asserts because there are 0 Gecko asserts and 1 Stylo assert.
+asserts-if(styloVsGecko,0-1) asserts-if(stylo,1) == scoped-style-dynamic-014.svg scoped-style-dynamic-014-ref.svg # bug 1394603: 0-1 styloVsGecko asserts because there are 0 Gecko asserts and 1 Stylo assert.
+fails-if(styloVsGecko) asserts-if(styloVsGecko,0-1) asserts-if(stylo,1) fails-if(stylo) == scoped-style-dynamic-015.svg scoped-style-dynamic-015-ref.svg # bug 1394603: 0-1 styloVsGecko asserts because there are 0 Gecko asserts and 1 Stylo assert.
 fails-if(styloVsGecko||stylo) == scoped-style-import.html scoped-style-import-ref.html
 fails-if(styloVsGecko||stylo) == scoped-style-media.html scoped-style-media-ref.html
 fails-if(styloVsGecko||stylo) == scoped-style-namespace.html scoped-style-namespace-ref.html

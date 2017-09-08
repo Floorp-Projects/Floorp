@@ -54,7 +54,6 @@ DevToolsModules(
     'source.js',
     'storage.js',
     'string.js',
-    'styleeditor.js',
     'styles.js',
     'stylesheets.js',
     'tab.js',
@@ -101,7 +100,7 @@ with Files('source.js'):
 with Files('storage.js'):
     BUG_COMPONENT = ('Firefox', 'Developer Tools: Storage Inspector')
 
-with Files('styleeditor.js'):
+with Files('stylesheets.js'):
     BUG_COMPONENT = ('Firefox', 'Developer Tools: Style Editor')
 
 with Files('webaudio.js'):

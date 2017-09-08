@@ -42,6 +42,7 @@ add_task(async function() {
   }
 
   ss.setWindowState(win2, JSON.stringify(winState), true);
+  await promiseWindowRestored(win2);
 
   for (let i = 0; i < 4; i++) {
     let browser = win2.gBrowser.tabs[i].linkedBrowser;
@@ -102,6 +103,7 @@ add_task(async function() {
   await TabStateFlusher.flush(win2.gBrowser.tabs[0].linkedBrowser);
 
   ss.setWindowState(win2, JSON.stringify(winState), true);
+  await promiseWindowRestored(win2);
 
   for (let i = 0; i < 2; i++) {
     let browser = win2.gBrowser.tabs[i].linkedBrowser;

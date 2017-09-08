@@ -97,7 +97,7 @@ fuzzy-if(skiaContent,1,365) == anim-css-fillopacity-3-clamp-small.svg   anim-css
 == anim-css-fontsize-2-from-by-em-em.svg    anim-css-fontsize-2-ref.svg
 
 # 'stroke-dasharray' property, from/to with pixel values only
-skip-if(!styloVsGecko) == anim-css-strokedasharray-1.svg anim-css-strokedasharray-1-ref.svg
+fails == anim-css-strokedasharray-1.svg anim-css-strokedasharray-1-ref.svg # bug 474049
 
 # 'stroke-width' property, from/by/to with pixel values only
 == anim-css-strokewidth-1-by-px-px.svg        anim-css-strokewidth-1-ref.svg
@@ -117,17 +117,17 @@ skip-if(!styloVsGecko) == anim-css-strokedasharray-1.svg anim-css-strokedasharra
 # support calc() for stroke-width & other SVG-specific properties. (Bug 1258270
 # for gecko, Bug 1386967 for stylo)
 == anim-css-strokewidth-1-by-pct-pct.svg      anim-css-strokewidth-1-ref.svg
-fails-if(!styloVsGecko) == anim-css-strokewidth-1-by-pct-px.svg       anim-css-strokewidth-1-ref.svg
-fails-if(!styloVsGecko) == anim-css-strokewidth-1-by-px-pct.svg       anim-css-strokewidth-1-ref.svg
+fails == anim-css-strokewidth-1-by-pct-px.svg       anim-css-strokewidth-1-ref.svg
+fails == anim-css-strokewidth-1-by-px-pct.svg       anim-css-strokewidth-1-ref.svg
 == anim-css-strokewidth-1-from-by-pct-pct.svg anim-css-strokewidth-1-ref.svg
-fails-if(!styloVsGecko) == anim-css-strokewidth-1-from-by-pct-px.svg  anim-css-strokewidth-1-ref.svg
-fails-if(!styloVsGecko) == anim-css-strokewidth-1-from-by-px-pct.svg  anim-css-strokewidth-1-ref.svg
+fails == anim-css-strokewidth-1-from-by-pct-px.svg  anim-css-strokewidth-1-ref.svg
+fails == anim-css-strokewidth-1-from-by-px-pct.svg  anim-css-strokewidth-1-ref.svg
 == anim-css-strokewidth-1-from-to-pct-pct.svg anim-css-strokewidth-1-ref.svg
-fails-if(!styloVsGecko) == anim-css-strokewidth-1-from-to-pct-px.svg  anim-css-strokewidth-1-ref.svg
-fails-if(!styloVsGecko) == anim-css-strokewidth-1-from-to-px-pct.svg  anim-css-strokewidth-1-ref.svg
+fails == anim-css-strokewidth-1-from-to-pct-px.svg  anim-css-strokewidth-1-ref.svg
+fails == anim-css-strokewidth-1-from-to-px-pct.svg  anim-css-strokewidth-1-ref.svg
 == anim-css-strokewidth-1-to-pct-pct.svg      anim-css-strokewidth-1-ref.svg
-fails-if(!styloVsGecko) == anim-css-strokewidth-1-to-pct-px.svg       anim-css-strokewidth-1-ref.svg
-fails-if(!styloVsGecko) == anim-css-strokewidth-1-to-px-pct.svg       anim-css-strokewidth-1-ref.svg
+fails == anim-css-strokewidth-1-to-pct-px.svg       anim-css-strokewidth-1-ref.svg
+fails == anim-css-strokewidth-1-to-px-pct.svg       anim-css-strokewidth-1-ref.svg
 
 # 'stroke-width' property, from/by/to with em values
 == anim-css-strokewidth-1-by-px-em.svg        anim-css-strokewidth-1-ref.svg

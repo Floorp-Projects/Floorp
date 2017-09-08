@@ -29,7 +29,6 @@ Services.prefs.setBoolPref("devtools.webide.enableLocalRuntime", true);
 Services.prefs.setCharPref("devtools.webide.addonsURL", TEST_BASE + "addons/simulators.json");
 Services.prefs.setCharPref("devtools.webide.simulatorAddonsURL", TEST_BASE + "addons/fxos_#SLASHED_VERSION#_simulator-#OS#.xpi");
 Services.prefs.setCharPref("devtools.webide.adbAddonURL", TEST_BASE + "addons/adbhelper-#OS#.xpi");
-Services.prefs.setCharPref("devtools.webide.adaptersAddonURL", TEST_BASE + "addons/fxdt-adapters-#OS#.xpi");
 Services.prefs.setCharPref("devtools.webide.templatesURL", TEST_BASE + "templates.json");
 Services.prefs.setCharPref("devtools.devices.url", TEST_BASE + "browser_devices.json");
 
@@ -40,7 +39,6 @@ registerCleanupFunction(() => {
   Services.prefs.clearUserPref("devtools.webide.enabled");
   Services.prefs.clearUserPref("devtools.webide.enableLocalRuntime");
   Services.prefs.clearUserPref("devtools.webide.autoinstallADBHelper");
-  Services.prefs.clearUserPref("devtools.webide.autoinstallFxdtAdapters");
   Services.prefs.clearUserPref("devtools.webide.busyTimeout");
   Services.prefs.clearUserPref("devtools.webide.lastSelectedProject");
   Services.prefs.clearUserPref("devtools.webide.lastConnectedRuntime");
@@ -50,7 +48,6 @@ var openWebIDE = Task.async(function* (autoInstallAddons) {
   info("opening WebIDE");
 
   Services.prefs.setBoolPref("devtools.webide.autoinstallADBHelper", !!autoInstallAddons);
-  Services.prefs.setBoolPref("devtools.webide.autoinstallFxdtAdapters", !!autoInstallAddons);
 
   let ww = Cc["@mozilla.org/embedcomp/window-watcher;1"].getService(Ci.nsIWindowWatcher);
   let win = ww.openWindow(null, "chrome://webide/content/", "webide", "chrome,centerscreen,resizable", null);

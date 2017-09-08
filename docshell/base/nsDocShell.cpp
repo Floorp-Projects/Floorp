@@ -13678,7 +13678,8 @@ nsDocShell::EnsureFind()
   // default to our window
   nsCOMPtr<nsPIDOMWindowOuter> ourWindow = do_QueryInterface(scriptGO);
   nsCOMPtr<nsPIDOMWindowOuter> windowToSearch;
-  nsFocusManager::GetFocusedDescendant(ourWindow, true,
+  nsFocusManager::GetFocusedDescendant(ourWindow,
+                                       nsFocusManager::eIncludeAllDescendants,
                                        getter_AddRefs(windowToSearch));
 
   nsCOMPtr<nsIWebBrowserFindInFrames> findInFrames = do_QueryInterface(mFind);
@@ -13993,7 +13994,8 @@ nsDocShell::GetControllerForCommand(const char* aCommand,
   nsCOMPtr<nsPIWindowRoot> root = mScriptGlobal->GetTopWindowRoot();
   NS_ENSURE_TRUE(root, NS_ERROR_FAILURE);
 
-  return root->GetControllerForCommand(aCommand, aResult);
+  return root->GetControllerForCommand(aCommand, false /* for any window */,
+                                       aResult);
 }
 
 NS_IMETHODIMP

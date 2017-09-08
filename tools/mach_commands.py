@@ -179,8 +179,8 @@ class FormatProvider(MachCommandBase):
         import urllib2
 
         plat = platform.system()
-        fmt = plat.lower() + "/clang-format-5.0~svn297730"
-        fmt_diff = "clang-format-diff-5.0~svn297730"
+        fmt = plat.lower() + "/clang-format-5.0"
+        fmt_diff = "clang-format-diff-5.0"
 
         # We are currently using an unmodified snapshot of upstream clang-format.
         # This is a temporary work around until clang 5.0 has been released with our changes.
@@ -219,10 +219,10 @@ class FormatProvider(MachCommandBase):
         import urllib2
         import hashlib
         bin_sha = {
-            "Windows": "0cbfc306df48f01bfe804e5e89cef73b3abe8f884fb7a5208f8895897f19ec45c13760787298192bd37de057d0ded091640c7d504438e06ec880f071a38db89c",  # noqa: E501
-            "Linux": "e6da4f6df074bfb15caefcf7767eb5670c02bb4768ba86ae4ab6b35235b53db012900a4f9e9a950ee140158a19532a71f21b986f511826bebc16f2ef83984e57",  # noqa: E501
-            "Darwin": "18000940a11e5ab0c1fe950d4360292216c8e963dd708679c4c5fb8cc845f5919cef3f58a7e092555b8ea6b8d8a809d66153ea6d1e7c226a2c4f2b0b7ad1b2f3",  # noqa: E501
-            "python_script": "34b6934a48a263ea3f88d48c2981d61ae6698823cfa689b9b0c8a607c224437ca0b9fdd434d260bd790d52a98455e2c2e2c745490d327ba84b4e22b7bb55b757",  # noqa: E501
+            "Windows": "5b6a236425abde1a04ff09e74d8fd0fee1d49e5a35e228b24d77366cab03e1141b8073eec1b36c43e265a80bee707baaa7f96856b4820cbb02069775e58a3f9d",  # noqa: E501
+            "Linux": "64444efd9b6895447359a9f70d6781251e74d7881f993b5d81a19f8e6a8503f798d42506061fb9eb48729b7327c42a9d273c80dde18816a350fdbc020ebfa783", # noqa: E501
+            "Darwin": "d9b08e21c233426628e39dd49bbb9b4e43cccb9aeb78d043dec2bdf6b1eacafddd13488558d38dfa0a0d39946b03b72c58933f1f79d638c045353cf3f4ae0fa4",  # noqa: E501
+            "python_script": "051b8c8932085616a775ef8b7b1384687db8f37660938f94e9389bf6dba6f6e244d2dc63d23e1d2bf8ab96c9bd5244faefc5218a1f90d5ec692698f0094a3238", # noqa: E501
         }
 
         target = os.path.join(self._mach_context.state_dir, os.path.basename(root))

@@ -462,7 +462,7 @@ class MarionetteRefTestExecutor(RefTestExecutor):
             super(self.__class__, self).teardown()
         except Exception as e:
             # Ignore errors during teardown
-            self.logger.warning(traceback.traceback.format_exc(e))
+            self.logger.warning(traceback.format_exc(e))
 
     def is_alive(self):
         return self.protocol.is_alive

@@ -36,9 +36,20 @@ public:
   virtual nsIDOMNode* GetPopupNode() = 0;
   virtual void SetPopupNode(nsIDOMNode* aNode) = 0;
 
+  /**
+   * @param aForVisibleWindow   true if caller needs controller which is
+   *                            associated with visible window.
+   */
   virtual nsresult GetControllerForCommand(const char *aCommand,
+                                           bool aForVisibleWindow,
                                            nsIController** aResult) = 0;
-  virtual nsresult GetControllers(nsIControllers** aResult) = 0;
+
+  /**
+   * @param aForVisibleWindow   true if caller needs controllers which are
+   *                            associated with visible window.
+   */
+  virtual nsresult GetControllers(bool aForVisibleWindow,
+                                  nsIControllers** aResult) = 0;
 
   virtual void GetEnabledDisabledCommands(nsTArray<nsCString>& aEnabledCommands,
                                           nsTArray<nsCString>& aDisabledCommands) = 0;

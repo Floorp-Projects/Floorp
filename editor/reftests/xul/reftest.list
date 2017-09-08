@@ -2,8 +2,8 @@ fails-if(Android) skip-if(browserIsRemote&&winWidget) == empty-1.xul empty-ref.x
 != empty-2.xul empty-ref.xul
 # There is no way to simulate an autocomplete textbox in windows XP/Vista/7/8/10 default theme using CSS.
 # Therefore, the equlity tests below should be marked as failing.
-fails-if(Android) fails-if(windowsDefaultTheme&&/^Windows\x20NT\x20(5\.[12]|6\.[012]|10\.0)/.test(http.oscpu)&&!styloVsGecko) == autocomplete-1.xul autocomplete-ref.xul # bug 783658
-fails-if(Android) fails-if(windowsDefaultTheme&&/^Windows\x20NT\x20(5\.[12]|6\.[012]|10\.0)/.test(http.oscpu)&&!styloVsGecko) == emptyautocomplete-1.xul emptyautocomplete-ref.xul # bug 783658
+fails-if(Android) fails-if(windowsDefaultTheme&&/^Windows\x20NT\x20(5\.[12]|6\.[012]|10\.0)/.test(http.oscpu)) == autocomplete-1.xul autocomplete-ref.xul # bug 783658
+fails-if(Android) fails-if(windowsDefaultTheme&&/^Windows\x20NT\x20(5\.[12]|6\.[012]|10\.0)/.test(http.oscpu)) == emptyautocomplete-1.xul emptyautocomplete-ref.xul # bug 783658
 != emptymultiline-1.xul emptymultiline-ref.xul
 fails-if(Android) == emptymultiline-2.xul emptymultiline-ref.xul # bug 783658
 fails-if(Android) skip-if(browserIsRemote&&winWidget) == emptytextbox-1.xul emptytextbox-ref.xul # Windows: bug 1239170
@@ -15,10 +15,10 @@ fails-if(Android) skip-if(browserIsRemote&&winWidget) == emptytextbox-5.xul empt
 # Therefore, the equlity tests below should be marked as failing.
 != number-1.xul number-ref.xul
 != number-2.xul number-ref.xul
-fails-if(Android) fails-if(windowsDefaultTheme&&/^Windows\x20NT\x20(5\.[12]|6\.[012]|10\.0)/.test(http.oscpu)&&!styloVsGecko) == number-3.xul number-ref.xul # bug 783658
+fails-if(Android) fails-if(windowsDefaultTheme&&/^Windows\x20NT\x20(5\.[12]|6\.[012]|10\.0)/.test(http.oscpu)) == number-3.xul number-ref.xul # bug 783658
 != number-4.xul number-ref.xul
-fails-if(Android) fails-if(windowsDefaultTheme&&/^Windows\x20NT\x20(5\.[12]|6\.[012]|10\.0)/.test(http.oscpu)&&!styloVsGecko) == number-5.xul number-ref.xul # bug 783658
-fails-if(Android) fails-if(windowsDefaultTheme&&/^Windows\x20NT\x20(5\.[12]|6\.[012]|10\.0)/.test(http.oscpu)&&!styloVsGecko) == numberwithvalue-1.xul numberwithvalue-ref.xul # bug 783658
+fails-if(Android) fails-if(windowsDefaultTheme&&/^Windows\x20NT\x20(5\.[12]|6\.[012]|10\.0)/.test(http.oscpu)) == number-5.xul number-ref.xul # bug 783658
+fails-if(Android) fails-if(windowsDefaultTheme&&/^Windows\x20NT\x20(5\.[12]|6\.[012]|10\.0)/.test(http.oscpu)) == numberwithvalue-1.xul numberwithvalue-ref.xul # bug 783658
 fails-if(Android) skip-if(browserIsRemote&&winWidget) == passwd-1.xul passwd-ref.xul # Windows: bug 1239170
 fails-if(Android) skip-if(browserIsRemote&&winWidget) == passwd-2.xul passwd-ref.xul # Windows: bug 1239170
 != passwd-3.xul passwd-ref.xul

@@ -11,6 +11,8 @@ XPCOMUtils.defineLazyModuleGetter(this, "AppConstants",
   "resource://gre/modules/AppConstants.jsm");
 XPCOMUtils.defineLazyModuleGetter(this, "ClientID",
   "resource://gre/modules/ClientID.jsm");
+XPCOMUtils.defineLazyModuleGetter(this, "TelemetryEnvironment",
+  "resource://gre/modules/TelemetryEnvironment.jsm");
 
 const PREF_BRANCH = "browser.ping-centre.";
 
@@ -36,6 +38,7 @@ class PingCentre {
     }
 
     this._topic = options.topic;
+    this._filter = options.filter;
     this._prefs = Services.prefs.getBranch("");
 
     this._setPingEndpoint(options.topic, options.overrideEndpointPref);
@@ -89,7 +92,23 @@ class PingCentre {
     this._fhrEnabled = this._prefs.getBoolPref(prefKey);
   }
 
+  _createExperimentsString(activeExperiments) {
+    let experimentsString = "";
+    for (let experimentID in activeExperiments) {
+      if (!activeExperiments[experimentID] ||
+          !activeExperiments[experimentID].branch ||
+          (this._filter && !experimentID.includes(this._filter))) {
+        continue;
+      }
+      let expString = `${experimentID}:${activeExperiments[experimentID].branch}`;
+      experimentsString = experimentsString.concat(`${expString};`);
+    }
+    return experimentsString;
+  }
+
   async sendPing(data) {
+    let experiments = TelemetryEnvironment.getActiveExperiments();
+    let experimentsString = this._createExperimentsString(experiments);
     if (!this.enabled) {
       return Promise.resolve();
     }
@@ -98,6 +117,7 @@ class PingCentre {
     const payload = Object.assign({
       topic: this._topic,
       client_id: clientID,
+      shield_id: experimentsString,
       release_channel: AppConstants.MOZ_UPDATE_CHANNEL
     }, data);
 
