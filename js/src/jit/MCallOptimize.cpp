@@ -1059,10 +1059,8 @@ IonBuilder::inlineBoolean(CallInfo& callInfo)
 IonBuilder::InliningResult
 IonBuilder::inlineNewIterator(CallInfo& callInfo, MNewIterator::Type type)
 {
-    if (callInfo.argc() != 0 || callInfo.constructing()) {
-        trackOptimizationOutcome(TrackedOutcome::CantInlineNativeBadForm);
-        return InliningStatus_NotInlined;
-    }
+    MOZ_ASSERT(!callInfo.constructing());
+    MOZ_ASSERT(callInfo.argc() == 0);
 
     JSObject* templateObject = nullptr;
     switch (type) {
@@ -1698,10 +1696,8 @@ IonBuilder::inlineConstantStringSplitString(CallInfo& callInfo)
 IonBuilder::InliningResult
 IonBuilder::inlineStringSplitString(CallInfo& callInfo)
 {
-    if (callInfo.argc() != 2 || callInfo.constructing()) {
-        trackOptimizationOutcome(TrackedOutcome::CantInlineNativeBadForm);
-        return InliningStatus_NotInlined;
-    }
+    MOZ_ASSERT(!callInfo.constructing());
+    MOZ_ASSERT(callInfo.argc() == 2);
 
     MDefinition* strArg = callInfo.getArg(0);
     MDefinition* sepArg = callInfo.getArg(1);
@@ -1748,10 +1744,8 @@ IonBuilder::inlineStringSplitString(CallInfo& callInfo)
 IonBuilder::InliningResult
 IonBuilder::inlineObjectHasPrototype(CallInfo& callInfo)
 {
-    if (callInfo.argc() != 2 || callInfo.constructing()) {
-        trackOptimizationOutcome(TrackedOutcome::CantInlineNativeBadForm);
-        return InliningStatus_NotInlined;
-    }
+    MOZ_ASSERT(!callInfo.constructing());
+    MOZ_ASSERT(callInfo.argc() == 2);
 
     MDefinition* objArg = callInfo.getArg(0);
     MDefinition* protoArg = callInfo.getArg(1);
@@ -2070,10 +2064,8 @@ IonBuilder::inlineRegExpMatcher(CallInfo& callInfo)
     // This is called from Self-hosted JS, after testing each argument,
     // most of following tests should be passed.
 
-    if (callInfo.argc() != 3 || callInfo.constructing()) {
-        trackOptimizationOutcome(TrackedOutcome::CantInlineNativeBadForm);
-        return InliningStatus_NotInlined;
-    }
+    MOZ_ASSERT(!callInfo.constructing());
+    MOZ_ASSERT(callInfo.argc() == 3);
 
     MDefinition* rxArg = callInfo.getArg(0);
     MDefinition* strArg = callInfo.getArg(1);
@@ -2116,10 +2108,8 @@ IonBuilder::inlineRegExpSearcher(CallInfo& callInfo)
     // This is called from Self-hosted JS, after testing each argument,
     // most of following tests should be passed.
 
-    if (callInfo.argc() != 3 || callInfo.constructing()) {
-        trackOptimizationOutcome(TrackedOutcome::CantInlineNativeBadForm);
-        return InliningStatus_NotInlined;
-    }
+    MOZ_ASSERT(!callInfo.constructing());
+    MOZ_ASSERT(callInfo.argc() == 3);
 
     MDefinition* rxArg = callInfo.getArg(0);
     MDefinition* strArg = callInfo.getArg(1);
@@ -2162,10 +2152,8 @@ IonBuilder::inlineRegExpTester(CallInfo& callInfo)
     // This is called from Self-hosted JS, after testing each argument,
     // most of following tests should be passed.
 
-    if (callInfo.argc() != 3 || callInfo.constructing()) {
-        trackOptimizationOutcome(TrackedOutcome::CantInlineNativeBadForm);
-        return InliningStatus_NotInlined;
-    }
+    MOZ_ASSERT(!callInfo.constructing());
+    MOZ_ASSERT(callInfo.argc() == 3);
 
     MDefinition* rxArg = callInfo.getArg(0);
     MDefinition* strArg = callInfo.getArg(1);
@@ -2204,10 +2192,8 @@ IonBuilder::inlineRegExpTester(CallInfo& callInfo)
 IonBuilder::InliningResult
 IonBuilder::inlineIsRegExpObject(CallInfo& callInfo)
 {
-    if (callInfo.constructing() || callInfo.argc() != 1) {
-        trackOptimizationOutcome(TrackedOutcome::CantInlineNativeBadForm);
-        return InliningStatus_NotInlined;
-    }
+    MOZ_ASSERT(!callInfo.constructing());
+    MOZ_ASSERT(callInfo.argc() == 1);
 
     if (getInlineReturnType() != MIRType::Boolean)
         return InliningStatus_NotInlined;
@@ -2238,10 +2224,8 @@ IonBuilder::inlineIsRegExpObject(CallInfo& callInfo)
 IonBuilder::InliningResult
 IonBuilder::inlineRegExpPrototypeOptimizable(CallInfo& callInfo)
 {
-    if (callInfo.argc() != 1 || callInfo.constructing()) {
-        trackOptimizationOutcome(TrackedOutcome::CantInlineNativeBadForm);
-        return InliningStatus_NotInlined;
-    }
+    MOZ_ASSERT(!callInfo.constructing());
+    MOZ_ASSERT(callInfo.argc() == 1);
 
     MDefinition* protoArg = callInfo.getArg(0);
 
@@ -2263,10 +2247,8 @@ IonBuilder::inlineRegExpPrototypeOptimizable(CallInfo& callInfo)
 IonBuilder::InliningResult
 IonBuilder::inlineRegExpInstanceOptimizable(CallInfo& callInfo)
 {
-    if (callInfo.argc() != 2 || callInfo.constructing()) {
-        trackOptimizationOutcome(TrackedOutcome::CantInlineNativeBadForm);
-        return InliningStatus_NotInlined;
-    }
+    MOZ_ASSERT(!callInfo.constructing());
+    MOZ_ASSERT(callInfo.argc() == 2);
 
     MDefinition* rxArg = callInfo.getArg(0);
     MDefinition* protoArg = callInfo.getArg(1);
@@ -2292,10 +2274,8 @@ IonBuilder::inlineRegExpInstanceOptimizable(CallInfo& callInfo)
 IonBuilder::InliningResult
 IonBuilder::inlineGetFirstDollarIndex(CallInfo& callInfo)
 {
-    if (callInfo.argc() != 1 || callInfo.constructing()) {
-        trackOptimizationOutcome(TrackedOutcome::CantInlineNativeBadForm);
-        return InliningStatus_NotInlined;
-    }
+    MOZ_ASSERT(!callInfo.constructing());
+    MOZ_ASSERT(callInfo.argc() == 1);
 
     MDefinition* strArg = callInfo.getArg(0);
 
@@ -2317,10 +2297,8 @@ IonBuilder::inlineGetFirstDollarIndex(CallInfo& callInfo)
 IonBuilder::InliningResult
 IonBuilder::inlineStringReplaceString(CallInfo& callInfo)
 {
-    if (callInfo.argc() != 3 || callInfo.constructing()) {
-        trackOptimizationOutcome(TrackedOutcome::CantInlineNativeBadForm);
-        return InliningStatus_NotInlined;
-    }
+    MOZ_ASSERT(!callInfo.constructing());
+    MOZ_ASSERT(callInfo.argc() == 3);
 
     if (getInlineReturnType() != MIRType::String)
         return InliningStatus_NotInlined;
@@ -2351,8 +2329,8 @@ IonBuilder::inlineStringReplaceString(CallInfo& callInfo)
 IonBuilder::InliningResult
 IonBuilder::inlineSubstringKernel(CallInfo& callInfo)
 {
-    MOZ_ASSERT(callInfo.argc() == 3);
     MOZ_ASSERT(!callInfo.constructing());
+    MOZ_ASSERT(callInfo.argc() == 3);
 
     // Return: String.
     if (getInlineReturnType() != MIRType::String)
@@ -2499,10 +2477,8 @@ IonBuilder::inlineHasClass(CallInfo& callInfo,
                            const Class* clasp1, const Class* clasp2,
                            const Class* clasp3, const Class* clasp4)
 {
-    if (callInfo.constructing() || callInfo.argc() != 1) {
-        trackOptimizationOutcome(TrackedOutcome::CantInlineNativeBadForm);
-        return InliningStatus_NotInlined;
-    }
+    MOZ_ASSERT(!callInfo.constructing());
+    MOZ_ASSERT(callInfo.argc() == 1);
 
     if (callInfo.getArg(0)->type() != MIRType::Object)
         return InliningStatus_NotInlined;
@@ -2546,10 +2522,8 @@ IonBuilder::inlineHasClass(CallInfo& callInfo,
 IonBuilder::InliningResult
 IonBuilder::inlineGetNextEntryForIterator(CallInfo& callInfo, MGetNextEntryForIterator::Mode mode)
 {
-    if (callInfo.argc() != 2 || callInfo.constructing()) {
-        trackOptimizationOutcome(TrackedOutcome::CantInlineNativeBadForm);
-        return InliningStatus_NotInlined;
-    }
+    MOZ_ASSERT(!callInfo.constructing());
+    MOZ_ASSERT(callInfo.argc() == 2);
 
     MDefinition* iterArg = callInfo.getArg(0);
     MDefinition* resultArg = callInfo.getArg(1);
@@ -2875,10 +2849,8 @@ IonBuilder::inlineSetDisjointTypedElements(CallInfo& callInfo)
 IonBuilder::InliningResult
 IonBuilder::inlineObjectIsTypeDescr(CallInfo& callInfo)
 {
-    if (callInfo.constructing() || callInfo.argc() != 1) {
-        trackOptimizationOutcome(TrackedOutcome::CantInlineNativeBadForm);
-        return InliningStatus_NotInlined;
-    }
+    MOZ_ASSERT(!callInfo.constructing());
+    MOZ_ASSERT(callInfo.argc() == 1);
 
     if (callInfo.getArg(0)->type() != MIRType::Object)
         return InliningStatus_NotInlined;
@@ -2914,10 +2886,8 @@ IonBuilder::inlineObjectIsTypeDescr(CallInfo& callInfo)
 IonBuilder::InliningResult
 IonBuilder::inlineSetTypedObjectOffset(CallInfo& callInfo)
 {
-    if (callInfo.argc() != 2 || callInfo.constructing()) {
-        trackOptimizationOutcome(TrackedOutcome::CantInlineNativeBadForm);
-        return InliningStatus_NotInlined;
-    }
+    MOZ_ASSERT(!callInfo.constructing());
+    MOZ_ASSERT(callInfo.argc() == 2);
 
     MDefinition* typedObj = callInfo.getArg(0);
     MDefinition* offset = callInfo.getArg(1);
@@ -2958,10 +2928,9 @@ IonBuilder::inlineSetTypedObjectOffset(CallInfo& callInfo)
 IonBuilder::InliningResult
 IonBuilder::inlineUnsafeSetReservedSlot(CallInfo& callInfo)
 {
-    if (callInfo.argc() != 3 || callInfo.constructing()) {
-        trackOptimizationOutcome(TrackedOutcome::CantInlineNativeBadForm);
-        return InliningStatus_NotInlined;
-    }
+    MOZ_ASSERT(!callInfo.constructing());
+    MOZ_ASSERT(callInfo.argc() == 3);
+
     if (getInlineReturnType() != MIRType::Undefined)
         return InliningStatus_NotInlined;
 
@@ -2998,10 +2967,8 @@ IonBuilder::inlineUnsafeSetReservedSlot(CallInfo& callInfo)
 IonBuilder::InliningResult
 IonBuilder::inlineUnsafeGetReservedSlot(CallInfo& callInfo, MIRType knownValueType)
 {
-    if (callInfo.argc() != 2 || callInfo.constructing()) {
-        trackOptimizationOutcome(TrackedOutcome::CantInlineNativeBadForm);
-        return InliningStatus_NotInlined;
-    }
+    MOZ_ASSERT(!callInfo.constructing());
+    MOZ_ASSERT(callInfo.argc() == 2);
 
     MDefinition* obj = callInfo.getArg(0);
     if (obj->type() != MIRType::Object && obj->type() != MIRType::Value)
@@ -3045,10 +3012,8 @@ IonBuilder::inlineUnsafeGetReservedSlot(CallInfo& callInfo, MIRType knownValueTy
 IonBuilder::InliningResult
 IonBuilder::inlineIsCallable(CallInfo& callInfo)
 {
-    if (callInfo.argc() != 1 || callInfo.constructing()) {
-        trackOptimizationOutcome(TrackedOutcome::CantInlineNativeBadForm);
-        return InliningStatus_NotInlined;
-    }
+    MOZ_ASSERT(!callInfo.constructing());
+    MOZ_ASSERT(callInfo.argc() == 1);
 
     if (getInlineReturnType() != MIRType::Boolean)
         return InliningStatus_NotInlined;
@@ -3113,10 +3078,9 @@ IonBuilder::inlineIsConstructor(CallInfo& callInfo)
 IonBuilder::InliningResult
 IonBuilder::inlineIsObject(CallInfo& callInfo)
 {
-    if (callInfo.argc() != 1 || callInfo.constructing()) {
-        trackOptimizationOutcome(TrackedOutcome::CantInlineNativeBadForm);
-        return InliningStatus_NotInlined;
-    }
+    MOZ_ASSERT(!callInfo.constructing());
+    MOZ_ASSERT(callInfo.argc() == 1);
+
     if (getInlineReturnType() != MIRType::Boolean)
         return InliningStatus_NotInlined;
 
@@ -3134,10 +3098,8 @@ IonBuilder::inlineIsObject(CallInfo& callInfo)
 IonBuilder::InliningResult
 IonBuilder::inlineToObject(CallInfo& callInfo)
 {
-    if (callInfo.argc() != 1 || callInfo.constructing()) {
-        trackOptimizationOutcome(TrackedOutcome::CantInlineNativeBadForm);
-        return InliningStatus_NotInlined;
-    }
+    MOZ_ASSERT(!callInfo.constructing());
+    MOZ_ASSERT(callInfo.argc() == 1);
 
     if (getInlineReturnType() != MIRType::Object)
         return InliningStatus_NotInlined;
@@ -3165,10 +3127,8 @@ IonBuilder::inlineToObject(CallInfo& callInfo)
 IonBuilder::InliningResult
 IonBuilder::inlineIsWrappedArrayConstructor(CallInfo& callInfo)
 {
-    if (callInfo.constructing() || callInfo.argc() != 1) {
-        trackOptimizationOutcome(TrackedOutcome::CantInlineNativeBadForm);
-        return InliningStatus_NotInlined;
-    }
+    MOZ_ASSERT(!callInfo.constructing());
+    MOZ_ASSERT(callInfo.argc() == 1);
 
     if (getInlineReturnType() != MIRType::Boolean)
         return InliningStatus_NotInlined;
@@ -3196,10 +3156,8 @@ IonBuilder::inlineIsWrappedArrayConstructor(CallInfo& callInfo)
 IonBuilder::InliningResult
 IonBuilder::inlineToInteger(CallInfo& callInfo)
 {
-    if (callInfo.argc() != 1 || callInfo.constructing()) {
-        trackOptimizationOutcome(TrackedOutcome::CantInlineNativeBadForm);
-        return InliningStatus_NotInlined;
-    }
+    MOZ_ASSERT(!callInfo.constructing());
+    MOZ_ASSERT(callInfo.argc() == 1);
 
     MDefinition* input = callInfo.getArg(0);
 
@@ -3231,8 +3189,8 @@ IonBuilder::inlineToInteger(CallInfo& callInfo)
 IonBuilder::InliningResult
 IonBuilder::inlineToString(CallInfo& callInfo)
 {
-    if (callInfo.argc() != 1 || callInfo.constructing())
-        return InliningStatus_NotInlined;
+    MOZ_ASSERT(!callInfo.constructing());
+    MOZ_ASSERT(callInfo.argc() == 1);
 
     if (getInlineReturnType() != MIRType::String)
         return InliningStatus_NotInlined;
