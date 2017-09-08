@@ -1153,6 +1153,18 @@ function isSafeVariable(entry, variable)
         return false;
     var name = variableName(variable);
 
+    if (!entry.safeLocals)
+        entry.safeLocals = new Map;
+    if (entry.safeLocals.has(name))
+        return entry.safeLocals.get(name);
+
+    const safe = isSafeLocalVariable(entry, name);
+    entry.safeLocals.set(name, safe);
+    return safe;
+}
+
+function isSafeLocalVariable(entry, name)
+{
     // If there is a single place where this variable has been assigned on
     // edges we are considering, look at that edge.
     var edge = singleAssignment(name);
