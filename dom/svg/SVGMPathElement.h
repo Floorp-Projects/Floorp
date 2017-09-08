@@ -7,10 +7,10 @@
 #ifndef mozilla_dom_SVGMPathElement_h
 #define mozilla_dom_SVGMPathElement_h
 
+#include "mozilla/dom/IDTracker.h"
 #include "nsSVGElement.h"
 #include "nsStubMutationObserver.h"
 #include "nsSVGString.h"
-#include "nsReferencedElement.h"
 
 nsresult NS_NewSVGMPathElement(nsIContent **aResult,
                                already_AddRefed<mozilla::dom::NodeInfo>&& aNodeInfo);
