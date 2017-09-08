@@ -63,7 +63,9 @@ FormAutofillPreferences.prototype = {
   createPreferenceGroup(document) {
     let formAutofillGroup = document.createElementNS(XUL_NS, "vbox");
     let addressAutofill = document.createElementNS(XUL_NS, "hbox");
+    let addressAutofillCheckboxGroup = document.createElementNS(XUL_NS, "description");
     let addressAutofillCheckbox = document.createElementNS(XUL_NS, "checkbox");
+    let addressAutofillLearnMore = document.createElementNS(XUL_NS, "label");
     let savedAddressesBtn = document.createElementNS(XUL_NS, "button");
     let creditCardAutofill = document.createElementNS(XUL_NS, "hbox");
     let creditCardAutofillCheckbox = document.createElementNS(XUL_NS, "checkbox");
@@ -71,6 +73,7 @@ FormAutofillPreferences.prototype = {
 
     savedAddressesBtn.className = "accessory-button";
     savedCreditCardsBtn.className = "accessory-button";
+    addressAutofillLearnMore.className = "learnMore text-link";
 
     this.refs = {
       formAutofillGroup,
@@ -82,11 +85,17 @@ FormAutofillPreferences.prototype = {
 
     formAutofillGroup.id = "formAutofillGroup";
     addressAutofill.id = "addressAutofill";
+    addressAutofillLearnMore.id = "addressAutofillLearnMore";
+
+    addressAutofillLearnMore.setAttribute("value", this.bundle.GetStringFromName("learnMore"));
     addressAutofillCheckbox.setAttribute("label", this.bundle.GetStringFromName("enableAddressAutofill"));
     savedAddressesBtn.setAttribute("label", this.bundle.GetStringFromName("savedAddresses"));
     creditCardAutofill.id = "creditCardAutofill";
     creditCardAutofillCheckbox.setAttribute("label", this.bundle.GetStringFromName("enableCreditCardAutofill"));
     savedCreditCardsBtn.setAttribute("label", this.bundle.GetStringFromName("savedCreditCards"));
+
+    let learnMoreURL = Services.urlFormatter.formatURLPref("app.support.baseURL") + "autofill-card-address";
+    addressAutofillLearnMore.setAttribute("href", learnMoreURL);
 
     // Manually set the checked state
     if (FormAutofillUtils.isAutofillAddressesEnabled) {
@@ -96,11 +105,13 @@ FormAutofillPreferences.prototype = {
       creditCardAutofillCheckbox.setAttribute("checked", true);
     }
 
-    addressAutofillCheckbox.flex = 1;
+    addressAutofillCheckboxGroup.flex = 1;
     creditCardAutofillCheckbox.flex = 1;
 
     formAutofillGroup.appendChild(addressAutofill);
-    addressAutofill.appendChild(addressAutofillCheckbox);
+    addressAutofill.appendChild(addressAutofillCheckboxGroup);
+    addressAutofillCheckboxGroup.appendChild(addressAutofillCheckbox);
+    addressAutofillCheckboxGroup.appendChild(addressAutofillLearnMore);
     addressAutofill.appendChild(savedAddressesBtn);
     formAutofillGroup.appendChild(creditCardAutofill);
     creditCardAutofill.appendChild(creditCardAutofillCheckbox);
