@@ -45,13 +45,13 @@ file, You can obtain one at http://mozilla.org/MPL/2.0/.
                      class="urlbar-go-button urlbar-icon"
                      onclick="gURLBar.handleCommand(event);"
                      tooltiptext="&goEndCap.tooltip;"
-                     xbl:inherits="pageproxystate,parentfocused=focused"/>
+                     xbl:inherits="pageproxystate,parentfocused=focused,usertyping"/>
         </xul:hbox>
         <xul:dropmarker anonid="historydropmarker"
                         class="autocomplete-history-dropmarker urlbar-history-dropmarker urlbar-icon"
                         tooltiptext="&urlbar.openHistoryPopup.tooltip;"
                         allowevents="true"
-                        xbl:inherits="open,enablehistory,parentfocused=focused"/>
+                        xbl:inherits="open,enablehistory,parentfocused=focused,usertyping"/>
         <children includes="hbox"/>
       </xul:hbox>
       <xul:popupset anonid="popupset"
