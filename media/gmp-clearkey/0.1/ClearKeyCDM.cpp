@@ -193,4 +193,5 @@ ClearKeyCDM::Destroy()
     mVideoDecoder->DecodingComplete();
   }
 #endif
+  delete this;
 }
