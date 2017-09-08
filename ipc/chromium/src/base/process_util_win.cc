@@ -401,10 +401,6 @@ bool DidProcessCrash(bool* child_exited, ProcessHandle handle) {
   return true;
 }
 
-void SetCurrentProcessPrivileges(ChildPrivileges privs) {
-
-}
-
 ///////////////////////////////////////////////////////////////////////////////
 // ProcesMetrics
 
