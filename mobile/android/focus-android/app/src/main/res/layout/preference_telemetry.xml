@@ -10,7 +10,8 @@
     android:gravity="center_vertical"
     android:baselineAligned="false"
     android:paddingStart="?android:attr/listPreferredItemPaddingStart"
-    android:paddingEnd="?android:attr/listPreferredItemPaddingEnd">
+    android:paddingEnd="?android:attr/listPreferredItemPaddingEnd"
+    android:orientation="horizontal">
 
     <RelativeLayout
         android:layout_width="0dp"
@@ -38,7 +39,7 @@
         <TextView
             android:id="@+id/link"
             android:layout_below="@android:id/summary"
-            android:layout_width="match_parent"
+            android:layout_width="wrap_content"
             android:layout_height="wrap_content"
             android:layout_alignStart="@android:id/title"
             android:text="@string/preference_mozilla_telemetry_summary"
@@ -48,8 +49,7 @@
 
     </RelativeLayout>
 
-    <!-- Preference should place its actual preference widget here. -->
-    <LinearLayout android:id="@android:id/widget_frame"
+    <LinearLayout
         android:layout_width="wrap_content"
         android:layout_height="match_parent"
         android:minWidth="58dip"
@@ -63,7 +63,7 @@
             android:gravity="center_vertical"
             android:orientation="vertical"
             android:clickable="false"
-            android:focusable="false"/>
+            android:focusable="false" />
 
     </LinearLayout>
 
