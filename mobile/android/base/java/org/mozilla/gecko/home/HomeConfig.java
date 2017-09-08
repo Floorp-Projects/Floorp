@@ -1124,6 +1124,7 @@ public final class HomeConfig {
         /**
          * Creates an {@code Editor} for this state.
          */
+        @RobocopTarget
         public Editor edit() {
             return new Editor(mHomeConfig, this);
         }
@@ -1273,6 +1274,7 @@ public final class HomeConfig {
         /**
          * Gets the ID of the current default panel.
          */
+        @RobocopTarget
         public String getDefaultPanelId() {
             ThreadUtils.assertOnThread(mOriginalThread);
 
@@ -1288,6 +1290,7 @@ public final class HomeConfig {
          *
          * @param panelId the ID of the new default panel.
          */
+        @RobocopTarget
         public void setDefault(String panelId) {
             ThreadUtils.assertOnThread(mOriginalThread);
 
@@ -1483,6 +1486,7 @@ public final class HomeConfig {
          *
          * @return the resulting {@code State} instance.
          */
+        @RobocopTarget
         public State apply() {
             ThreadUtils.assertOnThread(mOriginalThread);
 
@@ -1617,6 +1621,7 @@ public final class HomeConfig {
         mBackend = backend;
     }
 
+    @RobocopTarget
     public State load() {
         final State configState = mBackend.load();
         configState.setHomeConfig(this);
@@ -1660,6 +1665,7 @@ public final class HomeConfig {
         }
     }
 
+    @RobocopTarget
     public static String getIdForBuiltinPanelType(PanelType panelType) {
         switch (panelType) {
         case TOP_SITES:
@@ -1695,6 +1701,7 @@ public final class HomeConfig {
         return new PanelConfig(panelType, context.getString(titleId), id, flags);
     }
 
+    @RobocopTarget
     public static HomeConfig getDefault(Context context) {
         return new HomeConfig(new HomeConfigPrefsBackend(context));
     }

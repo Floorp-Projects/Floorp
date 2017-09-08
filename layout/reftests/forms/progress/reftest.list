@@ -27,7 +27,7 @@
 
 # Tests for block and inline orientation in combination with writing-mode
 != progress-orient-horizontal.html progress-orient-vertical.html
-fails-if((!cocoaWidget||OSX==1010)&&!styloVsGecko) != progress-orient-vertical.html progress-orient-vertical-rtl.html # only OS X currently has direction-dependent rendering here
+fails-if(!cocoaWidget||OSX==1010) != progress-orient-vertical.html progress-orient-vertical-rtl.html # only OS X currently has direction-dependent rendering here
 == progress-orient-block.html progress-orient-vertical.html
 == progress-orient-inline.html progress-orient-horizontal.html
 == progress-vlr.html progress-orient-vertical.html

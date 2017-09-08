@@ -1153,7 +1153,7 @@ var PlacesToolbarHelper = {
     return document.getElementById("PlacesToolbar");
   },
 
-  init: function PTH_init(forceToolbarOverflowCheck) {
+  init: function PTH_init() {
     let viewElt = this._viewElt;
     if (!viewElt || viewElt._placesView)
       return;
@@ -1180,15 +1180,12 @@ var PlacesToolbarHelper = {
     }
 
     new PlacesToolbar(this._place);
-    if (forceToolbarOverflowCheck) {
-      viewElt._placesView.updateOverflowStatus();
-    }
   },
 
   handleEvent(event) {
     switch (event.type) {
       case "toolbarvisibilitychange":
-        if (event.target == this._viewElt.parentNode.parentNode)
+        if (event.target == this._getParentToolbar(this._viewElt))
           this._resetView();
         break;
     }
@@ -1214,7 +1211,7 @@ var PlacesToolbarHelper = {
 
   customizeDone: function PTH_customizeDone() {
     this._isCustomizing = false;
-    this.init(true);
+    this.init();
   },
 
   onPlaceholderCommand() {
@@ -1265,7 +1262,7 @@ var PlacesToolbarHelper = {
       if (this._viewElt._placesView) {
         this._viewElt._placesView.uninit();
       }
-      this.init(true);
+      this.init();
     }
   },
 };

@@ -24,7 +24,7 @@ fuzzy-if(azureSkia,255,2700) == 1090168-3.html 1090168-3-ref.html # bug 1230357 
 == 1094914-1b.html 1094914-1-ref.html
 == 1096224-1a.html 1096224-1-ref.html
 == 1096224-1b.html 1096224-1-ref.html
-fails-if(!styloVsGecko) == 1102175-1a.html 1102175-1-ref.html
+fails == 1102175-1a.html 1102175-1-ref.html
 == 1102175-1b.html 1102175-1-ref.html
 == 1103613-1.html 1103613-1-ref.html
 == 1105268-1-min-max-dimensions.html 1105268-1-min-max-dimensions-ref.html

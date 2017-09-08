@@ -87,22 +87,16 @@ var UI = {
       this.reportError("error_appProjectsLoadFailed");
     });
 
-    // Auto install the ADB Addon Helper and Tools Adapters. Only once.
+    // Auto install the ADB Addon Helper. Only once.
     // If the user decides to uninstall any of this addon, we won't install it again.
     let autoinstallADBHelper = Services.prefs.getBoolPref("devtools.webide.autoinstallADBHelper");
-    let autoinstallFxdtAdapters = Services.prefs.getBoolPref("devtools.webide.autoinstallFxdtAdapters");
     if (autoinstallADBHelper) {
       GetAvailableAddons().then(addons => {
         addons.adb.install();
       }, console.error);
     }
-    if (autoinstallFxdtAdapters) {
-      GetAvailableAddons().then(addons => {
-        addons.adapters.install();
-      }, console.error);
-    }
+
     Services.prefs.setBoolPref("devtools.webide.autoinstallADBHelper", false);
-    Services.prefs.setBoolPref("devtools.webide.autoinstallFxdtAdapters", false);
 
     this.setupDeck();
 

@@ -1202,6 +1202,12 @@ ServoRestyleManager::ProcessAllPendingAttributeAndStateInvalidations()
   ClearSnapshots();
 }
 
+bool
+ServoRestyleManager::HasPendingRestyleAncestor(Element* aElement) const
+{
+  return Servo_HasPendingRestyleAncestor(aElement);
+}
+
 void
 ServoRestyleManager::UpdateOnlyAnimationStyles()
 {

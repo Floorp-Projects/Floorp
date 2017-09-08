@@ -5206,8 +5206,9 @@ pref("memory.low_memory_notification_interval_ms", 10000);
 // window to be collected via the GC/CC.
 pref("memory.ghost_window_timeout_seconds", 60);
 
-// Disable freeing dirty pages when minimizing memory.
-pref("memory.free_dirty_pages", false);
+// On memory pressure, release dirty but unused pages held by jemalloc
+// back to the system.
+pref("memory.free_dirty_pages", true);
 
 // Disable the Linux-specific, system-wide memory reporter.
 #ifdef XP_LINUX

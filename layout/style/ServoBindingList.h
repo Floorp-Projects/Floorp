@@ -646,6 +646,10 @@ SERVO_BINDING_FUNC(Servo_ProcessInvalidations, void,
                    const mozilla::ServoElementSnapshotTable* snapshots)
 
 
+SERVO_BINDING_FUNC(Servo_HasPendingRestyleAncestor, bool,
+                   RawGeckoElementBorrowed element)
+
+
 // AddRef / Release functions
 #define SERVO_ARC_TYPE(name_, type_)                                \
   SERVO_BINDING_FUNC(Servo_##name_##_AddRef, void, type_##Borrowed) \

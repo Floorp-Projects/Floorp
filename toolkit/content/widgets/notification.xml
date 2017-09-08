@@ -549,7 +549,7 @@
                     default="true"
                     label="&defaultButton.label;"
                     accesskey="&defaultButton.accesskey;"
-                    xbl:inherits="oncommand=buttoncommand,label=buttonlabel,accesskey=buttonaccesskey,disabled=mainactiondisabled"/>
+                    xbl:inherits="oncommand=buttoncommand,label=buttonlabel,accesskey=buttonaccesskey,highlight=buttonhighlight,disabled=mainactiondisabled"/>
       </xul:hbox>
     </content>
     <resources>

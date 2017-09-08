@@ -132,13 +132,14 @@ js::GetFunctionThis(JSContext* cx, AbstractFramePtr frame, MutableHandleValue re
     // global |this|. This gives a consistent definition of global lexical
     // |this| between function and global contexts.
     //
-    // NOTE: If only non-syntactic WithEnvironments are on the chain, we use
-    // the global lexical |this| value.
+    // NOTE: If only non-syntactic WithEnvironments are on the chain, we use the
+    // global lexical |this| value. This is for compatibility with the Subscript
+    // Loader.
     if (frame.script()->hasNonSyntacticScope() && thisv.isNullOrUndefined()) {
         RootedObject env(cx, frame.environmentChain());
         while (true) {
             if (IsNSVOLexicalEnvironment(env) || IsGlobalLexicalEnvironment(env)) {
-                res.set(GetThisValue(env));
+                res.set(GetThisValueOfLexical(env));
                 return true;
             }
             if (!env->enclosingEnvironment()) {
@@ -161,7 +162,7 @@ js::GetNonSyntacticGlobalThis(JSContext* cx, HandleObject envChain, MutableHandl
     RootedObject env(cx, envChain);
     while (true) {
         if (IsExtensibleLexicalEnvironment(env)) {
-            res.set(env->as<LexicalEnvironmentObject>().thisValue());
+            res.set(GetThisValueOfLexical(env));
             return;
         }
         if (!env->enclosingEnvironment()) {
@@ -1464,47 +1465,37 @@ JS_STATIC_ASSERT(JSOP_IFNE_LENGTH == JSOP_IFEQ_LENGTH);
 JS_STATIC_ASSERT(JSOP_IFNE == JSOP_IFEQ + 1);
 
 /*
- * Compute the implicit |this| parameter for a call expression where the callee
- * funval was resolved from an unqualified name reference to a property on obj
- * (an object on the env chain).
+ * Compute the implicit |this| value used by a call expression with an
+ * unqualified name reference. The environment the binding was found on is
+ * passed as argument, env.
  *
- * We can avoid computing |this| eagerly and push the implicit callee-coerced
- * |this| value, undefined, if either of these conditions hold:
+ * The implicit |this| is |undefined| for all environment types except
+ * WithEnvironmentObject. This is the case for |with(...) {...}| expressions or
+ * if the embedding uses a non-syntactic WithEnvironmentObject.
  *
- * 1. The nominal |this|, obj, is a global object.
- *
- * 2. The nominal |this|, obj, has one of LexicalEnvironment or Call class (this
- *    is what IsCacheableEnvironment tests). Such objects-as-envs must be
- *    censored with undefined.
- *
- * Otherwise, we bind |this| to the result of GetThisValue(). Only names inside
- * |with| statements and embedding-specific environment objects fall into this
- * category.
- *
- * If the callee is a strict mode function, then code implementing JSOP_THIS
- * in the interpreter and JITs will leave undefined as |this|. If funval is a
- * function not in strict mode, JSOP_THIS code replaces undefined with funval's
- * global.
+ * NOTE: A non-syntactic WithEnvironmentObject may have a corresponding
+ * extensible LexicalEnviornmentObject, but it will not be considered as an
+ * implicit |this|. This is for compatibility with the Gecko subscript loader.
  */
 static inline Value
-ComputeImplicitThis(JSObject* obj)
+ComputeImplicitThis(JSObject* env)
 {
-    if (obj->is<GlobalObject>())
+    // Fast-path for GlobalObject
+    if (env->is<GlobalObject>())
         return UndefinedValue();
 
-    if (obj->is<NonSyntacticVariablesObject>())
-        return UndefinedValue();
-
-    if (IsCacheableEnvironment(obj))
-        return UndefinedValue();
+    // WithEnvironmentObjects have an actual implicit |this|
+    if (env->is<WithEnvironmentObject>())
+        return GetThisValueOfWith(env);
 
     // Debugger environments need special casing, as despite being
     // non-syntactic, they wrap syntactic environments and should not be
     // treated like other embedding-specific non-syntactic environments.
-    if (obj->is<DebugEnvironmentProxy>())
-        return ComputeImplicitThis(&obj->as<DebugEnvironmentProxy>().environment());
+    if (env->is<DebugEnvironmentProxy>())
+        return ComputeImplicitThis(&env->as<DebugEnvironmentProxy>().environment());
 
-    return GetThisValue(obj);
+    MOZ_ASSERT(env->is<EnvironmentObject>());
+    return UndefinedValue();
 }
 
 static MOZ_ALWAYS_INLINE bool
