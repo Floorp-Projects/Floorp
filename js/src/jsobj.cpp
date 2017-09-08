@@ -3319,22 +3319,30 @@ js::ToObjectSlow(JSContext* cx, JS::HandleValue val, bool reportScanStack)
 Value
 js::GetThisValue(JSObject* obj)
 {
+    // Use the WindowProxy if the global is a Window, as Window must never be
+    // exposed to script.
     if (obj->is<GlobalObject>())
         return ObjectValue(*ToWindowProxyIfWindow(obj));
 
-    if (obj->is<LexicalEnvironmentObject>()) {
-        if (!obj->as<LexicalEnvironmentObject>().isExtensible())
-            return UndefinedValue();
-        return obj->as<LexicalEnvironmentObject>().thisValue();
-    }
-
-    if (obj->is<ModuleEnvironmentObject>())
-        return UndefinedValue();
-
-    if (obj->is<WithEnvironmentObject>())
-        return ObjectValue(*obj->as<WithEnvironmentObject>().withThis());
+    // We should not expose any environments except NSVOs to script. The NSVO is
+    // pretending to be the global object in this case.
+    MOZ_ASSERT(obj->is<NonSyntacticVariablesObject>() || !obj->is<EnvironmentObject>());
 
     return ObjectValue(*obj);
+}
+
+Value
+js::GetThisValueOfLexical(JSObject* env)
+{
+    MOZ_ASSERT(IsExtensibleLexicalEnvironment(env));
+    return env->as<LexicalEnvironmentObject>().thisValue();
+}
+
+Value
+js::GetThisValueOfWith(JSObject* env)
+{
+    MOZ_ASSERT(env->is<WithEnvironmentObject>());
+    return GetThisValue(env->as<WithEnvironmentObject>().withThis());
 }
 
 class GetObjectSlotNameFunctor : public JS::CallbackTracer::ContextFunctor

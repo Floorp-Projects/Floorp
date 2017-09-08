@@ -72,7 +72,7 @@ random-if(winWidget) == filter-in-mask.svg pass.svg # bug 1356139
 == filter-inner-svg-01.svg pass.svg
 == filter-inner-svg-02.svg pass.svg
 == filter-inner-svg-03.svg pass.svg
-fails-if(!styloVsGecko) == filter-marked-line-01.svg pass.svg # bug 477704
+fails == filter-marked-line-01.svg pass.svg # bug 477704
 == filter-kernelUnitLength-01.svg filter-kernelUnitLength-01-ref.svg
 == filter-marked-line-02.svg pass.svg
 == filter-marked-line-03.svg pass.svg

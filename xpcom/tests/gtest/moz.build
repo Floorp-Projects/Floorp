@@ -10,6 +10,7 @@ UNIFIED_SOURCES += [
     'TestAtoms.cpp',
     'TestAutoPtr.cpp',
     'TestAutoRef.cpp',
+    'TestAutoRefCnt.cpp',
     'TestBase64.cpp',
     'TestCallTemplates.cpp',
     'TestCloneInputStream.cpp',

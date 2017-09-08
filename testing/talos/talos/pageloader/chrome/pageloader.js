@@ -52,6 +52,8 @@ var gDisableE10S = false;
 var gUseE10S = false;
 var profilingInfo = false;
 
+var isIdleCallbackPending = false;
+
 // when TEST_DOES_OWN_TIMING, we need to store the time from the page as MozAfterPaint can be slower than pageload
 var gTime = -1;
 var gStartTime = -1;
@@ -267,6 +269,17 @@ function plInit() {
         let contentScript = "data:,function _contentLoadHandler(e) { " +
           "  if (e.originalTarget.defaultView == content) { " +
           "    content.wrappedJSObject.tpRecordTime = function(t, s, n) { sendAsyncMessage('PageLoader:RecordTime', { time: t, startTime: s, testName: n }); }; ";
+        // setup idle-callback
+        contentScript += "" +
+        "var idleCallbackHandle; " +
+        "function _idleCallbackHandler() { " +
+        "  content.window.cancelIdleCallback(idleCallbackHandle); " +
+        "  sendAsyncMessage('PageLoader:IdleCallbackReceived', {}); " +
+        "}; " +
+        "function _setIdleCallback() { " +
+        "  idleCallbackHandle = content.window.requestIdleCallback(_idleCallbackHandler); " +
+        "  sendAsyncMessage('PageLoader:IdleCallbackSet', {}); " +
+        "}; ";
         if (useFNBPaint) {
           contentScript += "" +
           "var gRetryCounter = 0; " +
@@ -307,6 +320,7 @@ function plInit() {
           contentScript += "    sendAsyncMessage('PageLoader:LoadEvent', {}); ";
         }
         contentScript += "" +
+          "  content.setTimeout(_setIdleCallback, 0); " +
           "  }" +
           "} " +
           "addEventListener('load', _contentLoadHandler, true); ";
@@ -340,6 +354,8 @@ var ContentListener = {
       case "PageLoader:LoadEvent": return plLoadHandlerMessage(message);
       case "PageLoader:FNBPaintError": return plFNBPaintErrorMessage(message);
       case "PageLoader:RecordTime": return plRecordTimeMessage(message);
+      case "PageLoader:IdleCallbackSet": return plIdleCallbackSet();
+      case "PageLoader:IdleCallbackReceived": return plIdleCallbackReceived();
     }
     return undefined;
   },
@@ -369,6 +385,8 @@ function plLoadPage() {
   let mm = content.selectedBrowser.messageManager;
   mm.addMessageListener("PageLoader:LoadEvent", ContentListener);
   mm.addMessageListener("PageLoader:RecordTime", ContentListener);
+  mm.addMessageListener("PageLoader:IdleCallbackSet", ContentListener);
+  mm.addMessageListener("PageLoader:IdleCallbackReceived", ContentListener);
   if (useFNBPaint) {
     mm.addMessageListener("PageLoader:FNBPaintError", ContentListener);
   }
@@ -376,6 +394,8 @@ function plLoadPage() {
   removeLastAddedMsgListener = function() {
     mm.removeMessageListener("PageLoader:LoadEvent", ContentListener);
     mm.removeMessageListener("PageLoader:RecordTime", ContentListener);
+    mm.removeMessageListener("PageLoader:IdleCallbackSet", ContentListener);
+    mm.removeMessageListener("PageLoader:IdleCallbackReceived", ContentListener);
     if (useFNBPaint) {
       mm.removeMessageListener("PageLoader:FNBPaintError", ContentListener);
     }
@@ -459,6 +479,12 @@ function loadFail() {
 var plNextPage = async function() {
   var doNextPage = false;
 
+  // ensure we've receive idle-callback before proceeding
+  if (isIdleCallbackPending) {
+    dumpLine("Waiting for idle-callback");
+    await waitForIdleCallback();
+  }
+
   if (profilingInfo) {
     await TalosParentProfiler.finishTest();
   }
@@ -494,6 +520,29 @@ var plNextPage = async function() {
     plStop(false);
   }
 };
+
+function waitForIdleCallback() {
+  return new Promise(resolve => {
+    function checkForIdleCallback() {
+      if (!isIdleCallbackPending) {
+        resolve();
+      } else {
+        setTimeout(checkForIdleCallback, 5);
+      }
+    }
+    checkForIdleCallback();
+  });
+}
+
+function plIdleCallbackSet() {
+  if (!scrollTest) {
+    isIdleCallbackPending = true;
+  }
+}
+
+function plIdleCallbackReceived() {
+  isIdleCallbackPending = false;
+}
 
 function forceContentGC() {
   return new Promise((resolve) => {
@@ -807,6 +856,11 @@ function plStopAll(force) {
 
     if (useFNBPaint) {
       mm.removeMessageListener("PageLoader:FNBPaintError", ContentListener);
+    }
+
+    if (isIdleCallbackPending) {
+      mm.removeMessageListener("PageLoader:IdleCallbackSet", ContentListener);
+      mm.removeMessageListener("PageLoader:IdleCallbackReceived", ContentListener);
     }
 
     mm.loadFrameScript("data:,removeEventListener('load', _contentLoadHandler, true);", false, true);

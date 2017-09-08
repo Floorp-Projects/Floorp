@@ -1,0 +1,37 @@
+<!DOCTYPE HTML>
+<html>
+<!--
+https://bugzilla.mozilla.org/show_bug.cgi?id=1369072
+-->
+<head>
+  <title>Test for Bug 1369072</title>
+  <script type="text/javascript" src="/MochiKit/MochiKit.js"></script>
+  <script type="text/javascript" src="/tests/SimpleTest/SimpleTest.js"></script>
+  <script type="text/javascript" src="/tests/SimpleTest/EventUtils.js"></script>
+  <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css" />
+</head>
+<body>
+<a target="_blank" href="https://bugzilla.mozilla.org/show_bug.cgi?id=1369072">Mozilla Bug 1369072</a>
+<p id="display"></p>
+<div id="content" style="display: none">
+</div>
+<pre id="test">
+<script class="testbody" type="text/javascript">
+
+/** Test for Bug 1369072 **/
+
+SimpleTest.waitForExplicitFinish();
+
+var subWin = window.open("window_bug1369072.html", "_blank",
+                         "width=500,height=500");
+
+function finish()
+{
+  subWin.close();
+  SimpleTest.finish();
+}
+
+</script>
+</pre>
+</body>
+</html>

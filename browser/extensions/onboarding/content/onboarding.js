@@ -22,7 +22,7 @@ const BRAND_SHORT_NAME = Services.strings
 const PROMPT_COUNT_PREF = "browser.onboarding.notification.prompt-count";
 const ONBOARDING_DIALOG_ID = "onboarding-overlay-dialog";
 const ONBOARDING_MIN_WIDTH_PX = 960;
-const SPEECH_BUBBLE_MIN_WIDTH_PX = 1150;
+const SPEECH_BUBBLE_MIN_WIDTH_PX = 1130;
 
 /**
  * Add any number of tours, key is the tourId, value should follow the format below

@@ -78,6 +78,8 @@ input {
     background-image: url("chrome://browser/skin/check.svg"); }
   .icon.icon-webextension {
     background-image: url("assets/glyph-webextension-16.svg"); }
+  .icon.icon-highlights {
+    background-image: url("assets/glyph-highlights-16.svg"); }
 
 html,
 body,
@@ -656,8 +658,6 @@ main {
       background-image: url("chrome://browser/skin/forward.svg");
       fill: #FFF;
       -moz-context-properties: fill; }
-    .search-wrapper input[aria-expanded="true"] {
-      border-radius: 4px 4px 0 0; }
   .search-wrapper .search-label {
     background: url("assets/glyph-search-16.svg") no-repeat center center/20px;
     fill: rgba(12, 12, 13, 0.6);
@@ -687,7 +687,6 @@ main {
       transform: scaleX(-1); }
   .search-wrapper .contentSearchSuggestionTable {
     border: 0;
-    box-shadow: 0 0 0 2px #0060DF;
     transform: translateY(2px); }
 
 .context-menu {
@@ -802,8 +801,9 @@ main {
         margin: 0; }
   .prefs-pane .actions {
     background-color: #F9F9FA;
+    border-left: 1px solid #D7D7DB;
     bottom: 0;
-    offset-inline-end: -1px;
+    offset-inline-end: 0;
     padding: 20px;
     position: fixed;
     width: 400px; }

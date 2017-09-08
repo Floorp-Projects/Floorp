@@ -3,7 +3,7 @@ const {HistoryObserver, BookmarksObserver} = PlacesFeed;
 const {GlobalOverrider} = require("test/unit/utils");
 const {actionTypes: at} = require("common/Actions.jsm");
 
-const FAKE_BOOKMARK = {bookmarkGuid: "xi31", bookmarkTitle: "Foo", lastModified: 123214232, url: "foo.com"};
+const FAKE_BOOKMARK = {bookmarkGuid: "xi31", bookmarkTitle: "Foo", dateAdded: 123214232, url: "foo.com"};
 const TYPE_BOOKMARK = 0; // This is fake, for testing
 
 const BLOCKED_EVENT = "newtab-linkBlocked"; // The event dispatched in NewTabUtils when a link is blocked;
@@ -210,27 +210,17 @@ describe("PlacesFeed", () => {
     });
     describe("#onItemAdded", () => {
       beforeEach(() => {
-        // Make sure getBookmark returns our fake bookmark if it is called with the expected guid
-        sandbox.stub(global.NewTabUtils.activityStreamProvider, "getBookmark")
-          .withArgs(FAKE_BOOKMARK.guid).returns(Promise.resolve(FAKE_BOOKMARK));
       });
       it("should dispatch a PLACES_BOOKMARK_ADDED action with the bookmark data", async () => {
         // Yes, onItemAdded has at least 8 arguments. See function definition for docs.
-        const args = [null, null, null, TYPE_BOOKMARK, null, null, null, FAKE_BOOKMARK.guid];
+        const args = [null, null, null, TYPE_BOOKMARK,
+          {spec: FAKE_BOOKMARK.url}, FAKE_BOOKMARK.bookmarkTitle,
+          FAKE_BOOKMARK.dateAdded,
+          FAKE_BOOKMARK.bookmarkGuid
+        ];
         await observer.onItemAdded(...args);
 
         assert.calledWith(dispatch, {type: at.PLACES_BOOKMARK_ADDED, data: FAKE_BOOKMARK});
-      });
-      it("should catch errors gracefully", async () => {
-        const e = new Error("test error");
-        global.NewTabUtils.activityStreamProvider.getBookmark.restore();
-        sandbox.stub(global.NewTabUtils.activityStreamProvider, "getBookmark")
-          .returns(Promise.reject(e));
-
-        const args = [null, null, null, TYPE_BOOKMARK, null, null, null, FAKE_BOOKMARK.guid];
-        await observer.onItemAdded(...args);
-
-        assert.calledWith(global.Components.utils.reportError, e);
       });
       it("should ignore events that are not of TYPE_BOOKMARK", async () => {
         const args = [null, null, null, "nottypebookmark"];

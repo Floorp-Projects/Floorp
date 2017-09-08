@@ -346,6 +346,8 @@ PopupNotifications.prototype = {
    *              - checkboxChecked: (boolean) If the optional checkbox is checked.
    *          - [optional] dismiss (boolean): If this is true, the notification
    *            will be dismissed instead of removed after running the callback.
+   *          - [optional] disableHighlight (boolean): If this is true, the button
+   *            will not apply the default highlight style.
    *        If null, the notification will have a default "OK" action button
    *        that can be used to dismiss the popup and secondaryActions will be ignored.
    * @param secondaryActions
@@ -777,6 +779,7 @@ PopupNotifications.prototype = {
       if (n.mainAction) {
         popupnotification.setAttribute("buttonlabel", n.mainAction.label);
         popupnotification.setAttribute("buttonaccesskey", n.mainAction.accessKey);
+        popupnotification.setAttribute("buttonhighlight", !n.mainAction.disableHighlight);
         popupnotification.setAttribute("buttoncommand", "PopupNotifications._onButtonEvent(event, 'buttoncommand');");
         popupnotification.setAttribute("dropmarkerpopupshown", "PopupNotifications._onButtonEvent(event, 'dropmarkerpopupshown');");
         popupnotification.setAttribute("learnmoreclick", "PopupNotifications._onButtonEvent(event, 'learnmoreclick');");

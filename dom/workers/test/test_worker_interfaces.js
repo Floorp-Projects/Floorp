@@ -80,9 +80,9 @@ var ecmaGlobals =
 var interfaceNamesInGlobalScope =
   [
 // IMPORTANT: Do not change this list without review from a DOM peer!
-    { name: "AbortController", nightly: true },
+    "AbortController",
 // IMPORTANT: Do not change this list without review from a DOM peer!
-    { name: "AbortSignal", nightly: true },
+    "AbortSignal",
 // IMPORTANT: Do not change this list without review from a DOM peer!
     "Blob",
 // IMPORTANT: Do not change this list without review from a DOM peer!
@@ -180,9 +180,9 @@ var interfaceNamesInGlobalScope =
 // IMPORTANT: Do not change this list without review from a DOM peer!
     "PerformanceMeasure",
 // IMPORTANT: Do not change this list without review from a DOM peer!
-    { name: "PerformanceObserver", nightly: true },
+    "PerformanceObserver",
 // IMPORTANT: Do not change this list without review from a DOM peer!
-    { name: "PerformanceObserverEntryList", nightly: true },
+    "PerformanceObserverEntryList",
 // IMPORTANT: Do not change this list without review from a DOM peer!
     "ProgressEvent",
 // IMPORTANT: Do not change this list without review from a DOM peer!
