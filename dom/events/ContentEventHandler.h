@@ -46,56 +46,62 @@ private:
   class MOZ_STACK_CLASS RawRange final
   {
   public:
-    RawRange()
-      : mStartOffset(0)
-      , mEndOffset(0)
-    {
-    }
+    RawRange() {}
 
     void Clear()
     {
-      mRoot = mStartContainer = mEndContainer = nullptr;
-      mStartOffset = mEndOffset = 0;
+      mRoot = nullptr;
+      mStart = RangeBoundary();
+      mEnd = RangeBoundary();
     }
 
     bool IsPositioned() const
     {
-      return mStartContainer && mEndContainer;
+      return mStart.IsSet() && mEnd.IsSet();
     }
     bool Collapsed() const
     {
-      return mStartContainer == mEndContainer &&
-             mStartOffset == mEndOffset &&
-             IsPositioned();
+      return mStart == mEnd && IsPositioned();
     }
-    nsINode* GetStartContainer() const { return mStartContainer; }
-    nsINode* GetEndContainer() const { return mEndContainer; }
-    uint32_t StartOffset() const { return mStartOffset; }
-    uint32_t EndOffset() const { return mEndOffset; }
+    nsINode* GetStartContainer() const { return mStart.Container(); }
+    nsINode* GetEndContainer() const { return mEnd.Container(); }
+    uint32_t StartOffset() const { return mStart.Offset(); }
+    uint32_t EndOffset() const { return mEnd.Offset(); }
+    nsIContent* StartRef() const { return mStart.Ref(); }
+    nsIContent* EndRef() const { return mEnd.Ref(); }
 
-    nsresult CollapseTo(nsINode* aContainer, uint32_t aOffset)
+    // XXX: Make these use RangeBoundaries...
+    nsresult CollapseTo(const RawRangeBoundary& aBoundary)
     {
-      return SetStartAndEnd(aContainer, aOffset, aContainer, aOffset);
+      return SetStartAndEnd(aBoundary, aBoundary);
     }
-    nsresult SetStart(nsINode* aStartContainer, uint32_t aStartOffset);
-    nsresult SetEnd(nsINode* aEndContainer, uint32_t aEndOffset);
+    nsresult SetStart(const RawRangeBoundary& aStart);
+    nsresult SetEnd(const RawRangeBoundary& aEnd);
+
+    // NOTE: These helpers can hide performance problems, as they perform a
+    // search to find aStartOffset in aStartContainer.
+    nsresult SetStart(nsINode* aStartContainer, uint32_t aStartOffset) {
+      return SetStart(RawRangeBoundary(aStartContainer, aStartOffset));
+    }
+    nsresult SetEnd(nsINode* aEndContainer, uint32_t aEndOffset) {
+      return SetEnd(RawRangeBoundary(aEndContainer, aEndOffset));
+    }
+
     nsresult SetEndAfter(nsINode* aEndContainer);
     void SetStartAndEnd(const nsRange* aRange);
-    nsresult SetStartAndEnd(nsINode* aStartContainer, uint32_t aStartOffset,
-                            nsINode* aEndContainer, uint32_t aEndOffset);
+    nsresult SetStartAndEnd(const RawRangeBoundary& aStart,
+                            const RawRangeBoundary& aEnd);
 
     nsresult SelectNodeContents(nsINode* aNodeToSelectContents);
 
   private:
-    bool IsValidOffset(nsINode* aContainer, uint32_t aOffset) const;
     nsINode* IsValidBoundary(nsINode* aNode) const;
     inline void AssertStartIsBeforeOrEqualToEnd();
 
     nsCOMPtr<nsINode> mRoot;
-    nsCOMPtr<nsINode> mStartContainer;
-    nsCOMPtr<nsINode> mEndContainer;
-    uint32_t mStartOffset;
-    uint32_t mEndOffset;
+
+    RangeBoundary mStart;
+    RangeBoundary mEnd;
   };
 
 public:
