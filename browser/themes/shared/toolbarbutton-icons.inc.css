@@ -467,8 +467,9 @@ toolbar[brighttext] .toolbarbutton-1 {
   overflow: hidden;
   /* Position the sprite at the y-position of the library-button, then adjust
      based on the size difference between half of the button height and half
-     of the sprite height. */
-  top: calc(var(--library-button-y) + var(--library-button-height) / 2 - 27px);
+     of the sprite height. The titlebar may have padding from -moz-appearance
+     that needs to be accounted for. */
+  top: calc(var(--library-button-y) + var(--library-button-height) / 2 - 27px - var(--toolbox-y));
   /* Set a margin relative to the difference in widths of the .toolbarbutton-icon
      and the .toolbar-animatable-box. This is correct even in RTL because the item
      is positioned using `left`. */

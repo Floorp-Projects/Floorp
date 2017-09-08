@@ -53,6 +53,7 @@ var publicProperties = [
   "getSignedInUserProfile",
   "handleDeviceDisconnection",
   "handleAccountDestroyed",
+  "hasLocalSession",
   "invalidateCertificate",
   "loadAndPoll",
   "localtimeOffsetMsec",
@@ -871,6 +872,24 @@ FxAccountsInternal.prototype = {
   },
 
   /**
+   * Checks if we have a valid local session state for the current account.
+   *
+   * @return Promise
+   *        Resolves with a boolean, with true indicating that we appear to
+   *        have a valid local session, or false if we need to reauthenticate
+   *        with the content server to obtain one.
+   *        Note that this doesn't check with the server - it really just tells
+   *        us if we are even able to perform that server check. To fully check
+   *        the account status, you should first call this method, and if this
+   *        returns true, you should then call sessionStatus() to check with
+   *        the server.
+   */
+  async hasLocalSession() {
+    let data = await this.getSignedInUser();
+    return data && data.sessionToken;
+  },
+
+  /**
    * Fetch encryption keys for the signed-in-user from the FxA API server.
    *
    * Not for user consumption.  Exists to cause the keys to be fetch.
@@ -1211,6 +1230,9 @@ FxAccountsInternal.prototype = {
       if (error && error.retryAfter) {
         // If the server told us to back off, back off the requested amount.
         nextPollMs = (error.retryAfter + 3) * 1000;
+        log.warn(`the server rejected our email status check and told us to try again in ${nextPollMs}ms`);
+      } else {
+        log.error(`checkEmailStatus failed to poll`, error);
       }
     }
     if (why == "push") {

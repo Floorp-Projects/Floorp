@@ -10,7 +10,6 @@ const {Loader, Require} =
 
 const loader = new Loader({
   paths: {
-    "": "resource://gre/modules/commonjs/",
     "devtools": "resource://devtools",
   },
   globals: {},
