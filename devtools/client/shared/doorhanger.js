@@ -7,7 +7,6 @@
 const Services = require("Services");
 const { DOMHelpers } = require("resource://devtools/client/shared/DOMHelpers.jsm");
 const { Task } = require("devtools/shared/task");
-const defer = require("devtools/shared/defer");
 
 const XULNS = "http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul";
 const DEV_EDITION_PROMO_URL = "chrome://devtools/content/framework/dev-edition-promo/dev-edition-promo.xul";
@@ -132,20 +131,18 @@ function setDoorhangerStyle(panel, frame) {
 }
 
 function onFrameLoad(frame) {
-  let { resolve, promise } = defer();
-
-  if (frame.contentWindow) {
-    let domHelper = new DOMHelpers(frame.contentWindow);
-    domHelper.onceDOMReady(resolve);
-  } else {
-    let callback = () => {
-      frame.removeEventListener("DOMContentLoaded", callback);
-      resolve();
-    };
-    frame.addEventListener("DOMContentLoaded", callback);
-  }
-
-  return promise;
+  return new Promise((resolve, reject) => {
+    if (frame.contentWindow) {
+      let domHelper = new DOMHelpers(frame.contentWindow);
+      domHelper.onceDOMReady(resolve);
+    } else {
+      let callback = () => {
+        frame.removeEventListener("DOMContentLoaded", callback);
+        resolve();
+      };
+      frame.addEventListener("DOMContentLoaded", callback);
+    }
+  });
 }
 
 function getGBrowser() {
@@ -153,7 +150,7 @@ function getGBrowser() {
 }
 
 function wait(n) {
-  let { resolve, promise } = defer();
-  setTimeout(resolve, n);
-  return promise;
+  return new Promise((resolve, reject) => {
+    setTimeout(resolve, n);
+  });
 }
