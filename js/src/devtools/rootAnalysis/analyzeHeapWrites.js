@@ -723,7 +723,10 @@ if (options.verbose) {
 }
 
 print(elapsedTime() + "Loading types...");
-loadTypes('src_comp.xdb');
+if (os.getenv("TYPECACHE"))
+    loadTypesWithCache('src_comp.xdb', os.getenv("TYPECACHE"));
+else
+    loadTypes('src_comp.xdb');
 print(elapsedTime() + "Starting analysis...");
 
 var reachable = {};
