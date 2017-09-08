@@ -417,9 +417,9 @@ public class CustomTabsActivity extends AppCompatActivity
      * @param progress The current loading progress; must be between 0 and 100
      */
     private void updateProgress(final int progress) {
+        mProgressView.setProgress(progress);
         if (mCanStop) {
             mProgressView.setVisibility(View.VISIBLE);
-            mProgressView.setProgress(progress);
         } else {
             mProgressView.setVisibility(View.GONE);
         }
