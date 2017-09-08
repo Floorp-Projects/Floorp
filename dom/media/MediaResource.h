@@ -510,7 +510,10 @@ public:
   {
     ~Listener() {}
   public:
-    explicit Listener(ChannelMediaResource* aResource) : mResource(aResource) {}
+    Listener(ChannelMediaResource* aResource, int64_t aOffset)
+      : mResource(aResource)
+      , mOffset(aOffset)
+    {}
 
     NS_DECL_ISUPPORTS
     NS_DECL_NSIREQUESTOBSERVER
@@ -523,6 +526,7 @@ public:
 
   private:
     RefPtr<ChannelMediaResource> mResource;
+    const int64_t mOffset;
   };
   friend class Listener;
 
@@ -536,7 +540,10 @@ protected:
   nsresult OnDataAvailable(nsIRequest* aRequest,
                            nsIInputStream* aStream,
                            uint32_t aCount);
-  nsresult OnChannelRedirect(nsIChannel* aOld, nsIChannel* aNew, uint32_t aFlags);
+  nsresult OnChannelRedirect(nsIChannel* aOld,
+                             nsIChannel* aNew,
+                             uint32_t aFlags,
+                             int64_t aOffset);
 
   // Opens the channel, using an HTTP byte range request to start at aOffset
   // if possible. Main thread only.
