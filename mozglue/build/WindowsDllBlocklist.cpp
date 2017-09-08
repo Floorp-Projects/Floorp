@@ -73,6 +73,7 @@ struct DllBlockInfo {
   enum {
     FLAGS_DEFAULT = 0,
     BLOCK_WIN8PLUS_ONLY = 1,
+    BLOCK_WIN8_ONLY = 2,
     USE_TIMESTAMP = 4,
     CHILD_PROCESSES_ONLY = 8
   } flags;
@@ -697,6 +698,11 @@ patched_LdrLoadDll (PWCHAR filePath, PULONG flags, PUNICODE_STRING moduleFileNam
 
     if ((info->flags & DllBlockInfo::BLOCK_WIN8PLUS_ONLY) &&
         !IsWin8OrLater()) {
+      goto continue_loading;
+    }
+
+    if ((info->flags & DllBlockInfo::BLOCK_WIN8_ONLY) &&
+        (!IsWin8OrLater() || IsWin8Point1OrLater())) {
       goto continue_loading;
     }
 
