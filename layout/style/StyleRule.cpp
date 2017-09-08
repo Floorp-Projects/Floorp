@@ -873,7 +873,7 @@ nsCSSSelector::AppendToStringWithoutCombinatorsOrNegations
 
         if (list->mValueCaseSensitivity ==
               nsAttrSelector::ValueCaseSensitivity::CaseInsensitive) {
-          aString.Append(NS_LITERAL_STRING(" i"));
+          aString.AppendLiteral(u" i");
         }
       }
 

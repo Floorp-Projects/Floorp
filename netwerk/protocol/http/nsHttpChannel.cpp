@@ -6429,15 +6429,15 @@ nsHttpChannel::BeginConnect()
         if (consoleService) {
             nsAutoString message(NS_LITERAL_STRING("Alternate Service Mapping found: "));
             AppendASCIItoUTF16(scheme.get(), message);
-            message.Append(NS_LITERAL_STRING("://"));
+            message.AppendLiteral(u"://");
             AppendASCIItoUTF16(host.get(), message);
-            message.Append(NS_LITERAL_STRING(":"));
+            message.AppendLiteral(u":");
             message.AppendInt(port);
-            message.Append(NS_LITERAL_STRING(" to "));
+            message.AppendLiteral(u" to ");
             AppendASCIItoUTF16(scheme.get(), message);
-            message.Append(NS_LITERAL_STRING("://"));
+            message.AppendLiteral(u"://");
             AppendASCIItoUTF16(mapping->AlternateHost().get(), message);
-            message.Append(NS_LITERAL_STRING(":"));
+            message.AppendLiteral(u":");
             message.AppendInt(mapping->AlternatePort());
             consoleService->LogStringMessage(message.get());
         }
