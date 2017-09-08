@@ -655,7 +655,6 @@ nsWindow::nsWindow(bool aIsChildWindow)
 #if defined(ACCESSIBILITY)
     mozilla::TIPMessageHandler::Initialize();
 #endif // defined(ACCESSIBILITY)
-    IMEHandler::Initialize();
     if (SUCCEEDED(::OleInitialize(nullptr))) {
       sIsOleInitialized = TRUE;
     }
