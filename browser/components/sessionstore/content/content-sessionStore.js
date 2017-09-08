@@ -51,8 +51,6 @@ const DOM_STORAGE_LIMIT_PREF = "browser.sessionstore.dom_storage_limit";
 // or not, and should only be used for tests or debugging.
 const TIMEOUT_DISABLED_PREF = "browser.sessionstore.debug.no_auto_updates";
 
-const PREF_INTERVAL = "browser.sessionstore.interval";
-
 const kNoIndex = Number.MAX_SAFE_INTEGER;
 const kLastIndex = Number.MAX_SAFE_INTEGER - 1;
 
@@ -735,17 +733,6 @@ var MessageQueue = {
   BATCH_DELAY_MS: 1000,
 
   /**
-   * The minimum idle period (in ms) we need for sending data to chrome process.
-   */
-  NEEDED_IDLE_PERIOD_MS: 5,
-
-  /**
-   * Timeout for waiting an idle period to send data. We will set this from
-   * the pref "browser.sessionstore.interval".
-   */
-  _timeoutWaitIdlePeriodMs: null,
-
-  /**
    * The current timeout ID, null if there is no queue data. We use timeouts
    * to damp a flood of data changes and send lots of changes as one batch.
    */
@@ -784,11 +771,8 @@ var MessageQueue = {
   init() {
     this.timeoutDisabled =
       Services.prefs.getBoolPref(TIMEOUT_DISABLED_PREF);
-    this._timeoutWaitIdlePeriodMs =
-      Services.prefs.getIntPref(PREF_INTERVAL);
 
     Services.prefs.addObserver(TIMEOUT_DISABLED_PREF, this);
-    Services.prefs.addObserver(PREF_INTERVAL, this);
   },
 
   uninit() {
@@ -796,20 +780,9 @@ var MessageQueue = {
   },
 
   observe(subject, topic, data) {
-    if (topic == "nsPref:changed") {
-      switch (data) {
-        case TIMEOUT_DISABLED_PREF:
-          this.timeoutDisabled =
-            Services.prefs.getBoolPref(TIMEOUT_DISABLED_PREF);
-          break;
-        case PREF_INTERVAL:
-          this._timeoutWaitIdlePeriodMs =
-            Services.prefs.getIntPref(PREF_INTERVAL);
-          break;
-        default:
-          debug("received unknown message '" + data + "'");
-          break;
-      }
+    if (topic == "nsPref:changed" && data == TIMEOUT_DISABLED_PREF) {
+      this.timeoutDisabled =
+        Services.prefs.getBoolPref(TIMEOUT_DISABLED_PREF);
     }
   },
 
@@ -830,27 +803,9 @@ var MessageQueue = {
     if (!this._timeout && !this._timeoutDisabled) {
       // Wait a little before sending the message to batch multiple changes.
       this._timeout = setTimeoutWithTarget(
-        () => this.sendWhenIdle(), this.BATCH_DELAY_MS, tabEventTarget);
+        () => this.send(), this.BATCH_DELAY_MS, tabEventTarget);
     }
   },
-
-  /**
-   * Sends queued data when the remaining idle time is enough or waiting too
-   * long; otherwise, request an idle time again. If the |deadline| is not
-   * given, this function is going to schedule the first request.
-   *
-   * @param deadline (object)
-   *        An IdleDeadline object passed by requestIdleCallback().
-   */
-  sendWhenIdle(deadline) {
-    if (deadline) {
-      if (deadline.didTimeout || deadline.timeRemaining() > MessageQueue.NEEDED_IDLE_PERIOD_MS) {
-        MessageQueue.send();
-        return;
-      }
-    }
-    content.requestIdleCallback(MessageQueue.sendWhenIdle, {timeout: MessageQueue._timeoutWaitIdlePeriodMs});
-   },
 
   /**
    * Sends queued data to the chrome process.
