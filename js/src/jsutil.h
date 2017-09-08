@@ -48,44 +48,6 @@ js_memcpy(void* dst_, const void* src_, size_t len)
 namespace js {
 
 template <class T>
-class AlignedPtrAndFlag
-{
-    uintptr_t bits;
-
-  public:
-    AlignedPtrAndFlag(T* t, bool aFlag) {
-        MOZ_ASSERT((uintptr_t(t) & 1) == 0);
-        bits = uintptr_t(t) | uintptr_t(aFlag);
-    }
-
-    T* ptr() const {
-        return (T*)(bits & ~uintptr_t(1));
-    }
-
-    bool flag() const {
-        return (bits & 1) != 0;
-    }
-
-    void setPtr(T* t) {
-        MOZ_ASSERT((uintptr_t(t) & 1) == 0);
-        bits = uintptr_t(t) | uintptr_t(flag());
-    }
-
-    void setFlag() {
-        bits |= 1;
-    }
-
-    void unsetFlag() {
-        bits &= ~uintptr_t(1);
-    }
-
-    void set(T* t, bool aFlag) {
-        MOZ_ASSERT((uintptr_t(t) & 1) == 0);
-        bits = uintptr_t(t) | aFlag;
-    }
-};
-
-template <class T>
 static inline void
 Reverse(T* beg, T* end)
 {
@@ -181,22 +143,6 @@ static inline T
 Max(T t1, T t2)
 {
     return t1 > t2 ? t1 : t2;
-}
-
-/* Allows a const variable to be initialized after its declaration. */
-template <class T>
-static T&
-InitConst(const T& t)
-{
-    return const_cast<T&>(t);
-}
-
-template <class T, class U>
-MOZ_ALWAYS_INLINE T&
-ImplicitCast(U& u)
-{
-    T& t = u;
-    return t;
 }
 
 template<typename T>

@@ -265,26 +265,10 @@ js::Throw(JSContext* cx, jsid id, unsigned errorNumber, const char* details)
     if (details) {
         JS_ReportErrorNumberLatin1(cx, GetErrorMessage, nullptr, errorNumber, bytes.ptr(),
                                    details);
-    }
-    else {
+    } else {
         JS_ReportErrorNumberLatin1(cx, GetErrorMessage, nullptr, errorNumber, bytes.ptr());
     }
 
-    return false;
-}
-
-bool
-js::Throw(JSContext* cx, JSObject* obj, unsigned errorNumber)
-{
-    if (js_ErrorFormatString[errorNumber].argCount == 1) {
-        RootedValue val(cx, ObjectValue(*obj));
-        ReportValueErrorFlags(cx, JSREPORT_ERROR, errorNumber,
-                              JSDVG_IGNORE_STACK, val, nullptr,
-                              nullptr, nullptr);
-    } else {
-        MOZ_ASSERT(js_ErrorFormatString[errorNumber].argCount == 0);
-        JS_ReportErrorNumberASCII(cx, GetErrorMessage, nullptr, errorNumber);
-    }
     return false;
 }
 
@@ -1949,9 +1933,9 @@ JSObject::fixupAfterMovingGC()
     }
 }
 
-bool
-js::SetClassAndProto(JSContext* cx, HandleObject obj,
-                     const Class* clasp, Handle<js::TaggedProto> proto)
+static bool
+SetClassAndProto(JSContext* cx, HandleObject obj,
+                 const Class* clasp, Handle<js::TaggedProto> proto)
 {
     // Regenerate the object's shape. If the object is a proto (isDelegate()),
     // we also need to regenerate shapes for all of the objects along the old
