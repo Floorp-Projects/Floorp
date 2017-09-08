@@ -89,19 +89,16 @@ PointerEventHandler::IsPointerEventImplicitCaptureForTouchEnabled()
 }
 
 /* static */ void
-PointerEventHandler::UpdateActivePointerState(WidgetGUIEvent* aEvent)
+PointerEventHandler::UpdateActivePointerState(WidgetMouseEvent* aEvent)
 {
-  if (!IsPointerEventEnabled()) {
+  if (!IsPointerEventEnabled() || !aEvent) {
     return;
   }
   switch (aEvent->mMessage) {
   case eMouseEnterIntoWidget:
     // In this case we have to know information about available mouse pointers
-    if (WidgetMouseEvent* mouseEvent = aEvent->AsMouseEvent()) {
-      sActivePointersIds->Put(mouseEvent->pointerId,
-                              new PointerInfo(false, mouseEvent->inputSource,
-                                              true));
-    }
+    sActivePointersIds->Put(aEvent->pointerId,
+                            new PointerInfo(false, aEvent->inputSource, true));
     break;
   case ePointerDown:
     // In this case we switch pointer to active state
@@ -127,9 +124,7 @@ PointerEventHandler::UpdateActivePointerState(WidgetGUIEvent* aEvent)
   case eMouseExitFromWidget:
     // In this case we have to remove information about disappeared mouse
     // pointers
-    if (WidgetMouseEvent* mouseEvent = aEvent->AsMouseEvent()) {
-      sActivePointersIds->Remove(mouseEvent->pointerId);
-    }
+    sActivePointersIds->Remove(aEvent->pointerId);
     break;
   default:
     break;
@@ -216,6 +211,45 @@ PointerEventHandler::CheckPointerCaptureState(WidgetPointerEvent* aEvent)
       sPointerCaptureList->Remove(aEvent->pointerId);
     }
   }
+}
+
+/* static */ void
+PointerEventHandler::ImplicitlyCapturePointer(nsIFrame* aFrame,
+                                              WidgetEvent* aEvent)
+{
+  MOZ_ASSERT(aEvent->mMessage == ePointerDown);
+  if (!aFrame || !IsPointerEventEnabled() ||
+      !IsPointerEventImplicitCaptureForTouchEnabled()) {
+    return;
+  }
+  WidgetPointerEvent* pointerEvent = aEvent->AsPointerEvent();
+  NS_WARNING_ASSERTION(pointerEvent,
+                       "Call ImplicitlyCapturePointer with non-pointer event");
+  if (pointerEvent->inputSource != nsIDOMMouseEvent::MOZ_SOURCE_TOUCH) {
+    // We only implicitly capture the pointer for touch device.
+    return;
+  }
+  nsCOMPtr<nsIContent> target;
+  aFrame->GetContentForEvent(aEvent, getter_AddRefs(target));
+  while (target && !target->IsElement()) {
+    target = target->GetParent();
+  }
+  if (NS_WARN_IF(!target)) {
+    return;
+  }
+  SetPointerCaptureById(pointerEvent->pointerId, target);
+}
+
+/* static */ void
+PointerEventHandler::ImplicitlyReleasePointerCapture(WidgetEvent* aEvent)
+{
+  MOZ_ASSERT(aEvent);
+  if (aEvent->mMessage != ePointerUp && aEvent->mMessage != ePointerCancel) {
+    return;
+  }
+  WidgetPointerEvent* pointerEvent = aEvent->AsPointerEvent();
+  ReleasePointerCaptureById(pointerEvent->pointerId);
+  CheckPointerCaptureState(pointerEvent);
 }
 
 /* static */ nsIContent*

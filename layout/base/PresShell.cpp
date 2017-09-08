@@ -4438,7 +4438,8 @@ PresShell::ContentRemoved(nsIDocument *aDocument,
   //            precondition check that mDocument == aDocument ensures that
   //            aDocument will not be null (since mDocument can't be null unless
   //            we're still intializing).
-  mPresContext->EventStateManager()->ContentRemoved(aDocument, aChild);
+  mPresContext->EventStateManager()
+    ->ContentRemoved(aDocument, aMaybeContainer, aChild);
 
   nsAutoCauseReflowNotifier crNotifier(this);
 
@@ -4456,8 +4457,6 @@ PresShell::ContentRemoved(nsIDocument *aDocument,
       mPointerEventTarget = aMaybeContainer;
     }
   }
-
-  PointerEventHandler::ReleaseIfCaptureByDescendant(aChild);
 
   mFrameConstructor->ContentRemoved(aMaybeContainer, aChild, oldNextSibling,
                                     nsCSSFrameConstructor::REMOVE_CONTENT);
@@ -6841,8 +6840,6 @@ PresShell::HandleEvent(nsIFrame* aFrame,
     }
   }
 
-  PointerEventHandler::UpdateActivePointerState(aEvent);
-
   if (!nsContentUtils::IsSafeToRunScript() &&
       aEvent->IsAllowedToDispatchDOMEvent()) {
     if (aEvent->mClass == eCompositionEventClass) {
@@ -7181,31 +7178,14 @@ PresShell::HandleEvent(nsIFrame* aFrame,
       }
     }
 
-    if (WidgetPointerEvent* pointerEvent = aEvent->AsPointerEvent()) {
-      // Try to keep frame for following check, because
-      // frame can be damaged during CheckPointerCaptureState.
+    // Try to keep frame for following check, because frame can be damaged
+    // during CheckPointerCaptureState.
+    {
       AutoWeakFrame frameKeeper(frame);
-      // Handle pending pointer capture before any pointer events except
-      // gotpointercapture / lostpointercapture.
-      PointerEventHandler::CheckPointerCaptureState(pointerEvent);
+      PointerEventHandler::CheckPointerCaptureState(aEvent->AsPointerEvent());
       // Prevent application crashes, in case damaged frame.
       if (!frameKeeper.IsAlive()) {
         frame = nullptr;
-      }
-      // Implicit pointer capture for touch
-      if (frame &&
-          PointerEventHandler::IsPointerEventImplicitCaptureForTouchEnabled() &&
-          pointerEvent->mMessage == ePointerDown &&
-          pointerEvent->inputSource == nsIDOMMouseEvent::MOZ_SOURCE_TOUCH) {
-        nsCOMPtr<nsIContent> targetContent;
-        frame->GetContentForEvent(aEvent, getter_AddRefs(targetContent));
-        while (targetContent && !targetContent->IsElement()) {
-          targetContent = targetContent->GetParent();
-        }
-        if (targetContent) {
-          PointerEventHandler::SetPointerCaptureById(pointerEvent->pointerId,
-                                                     targetContent);
-        }
       }
     }
 

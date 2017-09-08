@@ -616,6 +616,8 @@ EventStateManager::PreHandleEvent(nsPresContext* aPresContext,
     }
   }
 
+  PointerEventHandler::UpdateActivePointerState(mouseEvent);
+
   switch (aEvent->mMessage) {
   case eContextMenu:
     if (sIsPointerLocked) {
@@ -710,6 +712,10 @@ EventStateManager::PreHandleEvent(nsPresContext* aPresContext,
     MOZ_FALLTHROUGH;
   case eMouseMove:
   case ePointerDown:
+    if (aEvent->mMessage == ePointerDown) {
+      PointerEventHandler::ImplicitlyCapturePointer(aTargetFrame, aEvent);
+    }
+    MOZ_FALLTHROUGH;
   case ePointerMove: {
     // on the Mac, GenerateDragGesture() may not return until the drag
     // has completed and so |aTargetFrame| may have been deleted (moving
@@ -3197,15 +3203,28 @@ EventStateManager::PostHandleEvent(nsPresContext* aPresContext,
     }
     break;
   case ePointerCancel: {
-    if(WidgetMouseEvent* mouseEvent = aEvent->AsMouseEvent()) {
-      GenerateMouseEnterExit(mouseEvent);
+    if(WidgetMouseEvent* pointerEvent = aEvent->AsPointerEvent()) {
+      // Implicitly releasing capture for given pointer. ePointerLostCapture
+      // should be send after ePointerUp or ePointerCancel.
+      PointerEventHandler::ImplicitlyReleasePointerCapture(pointerEvent);
+      GenerateMouseEnterExit(pointerEvent);
+      // After UP/Cancel Touch pointers become invalid so we can remove relevant
+      // helper from Table. Mouse/Pen pointers are valid all the time (not only
+      // between down/up)
+      if (pointerEvent->inputSource == nsIDOMMouseEvent::MOZ_SOURCE_TOUCH) {
+        mPointersEnterLeaveHelper.Remove(pointerEvent->pointerId);
+        GenerateMouseEnterExit(pointerEvent);
+      }
     }
-    // After firing the pointercancel event, a user agent must also fire a
-    // pointerout event followed by a pointerleave event.
-    MOZ_FALLTHROUGH;
+    break;
   }
   case ePointerUp: {
     WidgetPointerEvent* pointerEvent = aEvent->AsPointerEvent();
+
+    // Implicitly releasing capture for given pointer. ePointerLostCapture
+    // should be send after ePointerUp or ePointerCancel.
+    PointerEventHandler::ImplicitlyReleasePointerCapture(pointerEvent);
+
     // After UP/Cancel Touch pointers become invalid so we can remove relevant helper from Table
     // Mouse/Pen pointers are valid all the time (not only between down/up)
     if (pointerEvent->inputSource == nsIDOMMouseEvent::MOZ_SOURCE_TOUCH) {
@@ -5061,7 +5080,9 @@ EventStateManager::ResetLastOverForContent(
 }
 
 void
-EventStateManager::ContentRemoved(nsIDocument* aDocument, nsIContent* aContent)
+EventStateManager::ContentRemoved(nsIDocument* aDocument,
+                                  nsIContent* aMaybeContainer,
+                                  nsIContent* aContent)
 {
   /*
    * Anchor and area elements when focused or hovered might make the UI to show
@@ -5103,6 +5124,8 @@ EventStateManager::ContentRemoved(nsIDocument* aDocument, nsIContent* aContent)
       nsContentUtils::ContentIsDescendantOf(sDragOverContent, aContent)) {
     sDragOverContent = nullptr;
   }
+
+  PointerEventHandler::ReleaseIfCaptureByDescendant(aContent);
 
   // See bug 292146 for why we want to null this out
   ResetLastOverForContent(0, mMouseEnterLeaveHelper, aContent);
