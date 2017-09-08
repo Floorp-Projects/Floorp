@@ -6494,8 +6494,15 @@ nsTextFrame::PaintOneShadow(const PaintShadowParams& aParams,
   if (!shadowContext)
     return;
 
-  nscolor shadowColor = aShadowDetails->mHasColor ? aShadowDetails->mColor
-                                                  : aParams.foregroundColor;
+  nscolor shadowColor;
+  const nscolor* decorationOverrideColor;
+  if (aShadowDetails->mHasColor) {
+    shadowColor = aShadowDetails->mColor;
+    decorationOverrideColor = &shadowColor;
+  } else {
+    shadowColor = aParams.foregroundColor;
+    decorationOverrideColor = nullptr;
+  }
 
   if (aParams.textDrawer) {
     wr::TextShadow wrShadow;
@@ -6531,8 +6538,7 @@ nsTextFrame::PaintOneShadow(const PaintShadowParams& aParams,
     aParams.context == shadowContext ? shadowColor : NS_RGB(0, 0, 0);
   params.clipEdges = aParams.clipEdges;
   params.drawSoftHyphen = (GetStateBits() & TEXT_HYPHEN_BREAK) != 0;
-  // Multi-color shadow is not allowed, so we use the same color of the text color.
-  params.decorationOverrideColor = &params.textColor;
+  params.decorationOverrideColor = decorationOverrideColor;
   DrawText(aParams.range, aParams.textBaselinePt + shadowOffset, params);
 
   contextBoxBlur.DoPaint();
