@@ -234,3 +234,6 @@ XPC_MSG_DEF(NS_ERROR_TRACKING_URI                     , "The URI is tracking")
 XPC_MSG_DEF(NS_ERROR_UNWANTED_URI                     , "The URI is unwanted")
 XPC_MSG_DEF(NS_ERROR_BLOCKED_URI                      , "The URI is blocked")
 XPC_MSG_DEF(NS_ERROR_HARMFUL_URI                      , "The URI is harmful")
+
+/* nsISocketTransport status codes */
+XPC_MSG_DEF(NS_NET_STATUS_WAITING_FOR                 , "Waiting for response")
