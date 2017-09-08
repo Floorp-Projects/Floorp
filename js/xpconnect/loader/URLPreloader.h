@@ -303,6 +303,9 @@ private:
     bool mStartupFinished = false;
     bool mReaderInitialized = false;
 
+    // Only to be accessed from the cache write thread.
+    bool mCacheWritten = false;
+
     // The prefix URLs for files in the GRE and App omni jar archives.
     nsCString mGREPrefix;
     nsCString mAppPrefix;
