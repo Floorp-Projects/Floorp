@@ -2476,12 +2476,6 @@ nsIPresShell::GetRootScrollFrameAsScrollable() const
   return scrollableFrame;
 }
 
-nsIScrollableFrame*
-nsIPresShell::GetRootScrollFrameAsScrollableExternal() const
-{
-  return GetRootScrollFrameAsScrollable();
-}
-
 nsIPageSequenceFrame*
 PresShell::GetPageSequenceFrame() const
 {
