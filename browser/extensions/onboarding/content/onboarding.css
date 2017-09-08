@@ -527,7 +527,7 @@ a#onboarding-tour-screenshots-button:visited {
 
 #onboarding-notification-body * {
   font-size: 12px;
-  font-weight: 200;
+  font-weight: normal;
   margin-top: 5px;
 }
 
