@@ -1385,7 +1385,8 @@ nsObjectLoadingContent::MaybeRewriteYoutubeEmbed(nsIURI* aURI, nsIURI* aBaseURI,
   }
 
   // See if URL is referencing youtube
-  if (!currentBaseDomain.EqualsLiteral("youtube.com")) {
+  if (!currentBaseDomain.EqualsLiteral("youtube.com") &&
+      !currentBaseDomain.EqualsLiteral("youtube-nocookie.com")) {
     return;
   }
 
