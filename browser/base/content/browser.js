@@ -1242,34 +1242,22 @@ var gBrowserInit = {
     let isRemote = gMultiProcessBrowser;
     let remoteType;
     let sameProcessAsFrameLoader;
-    if (window.arguments) {
-      let argToLoad = window.arguments[0];
-      if (argToLoad instanceof XULElement) {
-        // The window's first argument is a tab if and only if we are swapping tabs.
-        // We must set the browser's usercontextid before updateBrowserRemoteness(),
-        // so that the newly created remote tab child has the correct usercontextid.
-        if (argToLoad.hasAttribute("usercontextid")) {
-          initBrowser.setAttribute("usercontextid",
-                                   argToLoad.getAttribute("usercontextid"));
-        }
 
-        let linkedBrowser = argToLoad.linkedBrowser;
-        if (linkedBrowser) {
-          remoteType = linkedBrowser.remoteType;
-          isRemote = remoteType != E10SUtils.NOT_REMOTE;
-          sameProcessAsFrameLoader = linkedBrowser.frameLoader;
-        }
-      } else if (argToLoad instanceof String) {
-        // argToLoad is String, so should be a URL.
-        remoteType = E10SUtils.getRemoteTypeForURI(argToLoad, gMultiProcessBrowser);
+    let tabArgument = window.arguments && window.arguments[0];
+    if (tabArgument instanceof XULElement) {
+      // The window's first argument is a tab if and only if we are swapping tabs.
+      // We must set the browser's usercontextid before updateBrowserRemoteness(),
+      // so that the newly created remote tab child has the correct usercontextid.
+      if (tabArgument.hasAttribute("usercontextid")) {
+        initBrowser.setAttribute("usercontextid",
+                                 tabArgument.getAttribute("usercontextid"));
+      }
+
+      let linkedBrowser = tabArgument.linkedBrowser;
+      if (linkedBrowser) {
+        remoteType = linkedBrowser.remoteType;
         isRemote = remoteType != E10SUtils.NOT_REMOTE;
-      } else if (argToLoad instanceof Ci.nsIArray) {
-        // argToLoad is nsIArray, so should be an array of URLs, set the remote
-        // type for the initial browser to match the first one.
-        let urisstring = argToLoad.queryElementAt(0, Ci.nsISupportsString);
-        remoteType = E10SUtils.getRemoteTypeForURI(urisstring.data,
-                                                   gMultiProcessBrowser);
-        isRemote = remoteType != E10SUtils.NOT_REMOTE;
+        sameProcessAsFrameLoader = linkedBrowser.frameLoader;
       }
     }
 
