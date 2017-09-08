@@ -2158,7 +2158,9 @@ Element::ShouldBlur(nsIContent *aContent)
 
   nsCOMPtr<nsPIDOMWindowOuter> focusedFrame;
   nsIContent* contentToBlur =
-    nsFocusManager::GetFocusedDescendant(window, false, getter_AddRefs(focusedFrame));
+    nsFocusManager::GetFocusedDescendant(window,
+                                         nsFocusManager::eOnlyCurrentWindow,
+                                         getter_AddRefs(focusedFrame));
   if (contentToBlur == aContent)
     return true;
 

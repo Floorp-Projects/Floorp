@@ -29,6 +29,8 @@
 
 #include "base/histogram.h"
 
+#include <limits>
+
 using base::Histogram;
 using base::BooleanHistogram;
 using base::CountHistogram;
@@ -196,10 +198,10 @@ bool gCanRecordExtended = false;
 
 // The storage for actual Histogram instances.
 // We use separate ones for plain and keyed histograms.
-Histogram* gHistogramStorage[HistogramCount][uint32_t(ProcessID::Count)][uint32_t(SessionType::Count)] = {};
+Histogram** gHistogramStorage;
 // Keyed histograms internally map string keys to individual Histogram instances.
 // KeyedHistogram keeps track of session & subsession histograms internally.
-KeyedHistogram* gKeyedHistogramStorage[HistogramCount][uint32_t(ProcessID::Count)] = {};
+KeyedHistogram** gKeyedHistogramStorage;
 
 // Cache of histogram name to a histogram id.
 StringToHistogramIdMap gNameToHistogramIDMap(HistogramCount);
@@ -243,6 +245,69 @@ const HistogramID kRecordingInitiallyDisabledIDs[] = {
 
 namespace {
 
+size_t internal_KeyedHistogramStorageIndex(HistogramID aHistogramId,
+                                           ProcessID aProcessId)
+{
+  return aHistogramId * size_t(ProcessID::Count) + size_t(aProcessId);
+}
+
+size_t internal_HistogramStorageIndex(HistogramID aHistogramId,
+                                      ProcessID aProcessId,
+                                      SessionType aSessionType)
+{
+  static_assert(
+    HistogramCount <
+      std::numeric_limits<size_t>::max() / size_t(ProcessID::Count) / size_t(SessionType::Count),
+        "Too many histograms, processes, and session types to store in a 1D "
+        "array.");
+
+  return aHistogramId * size_t(ProcessID::Count) * size_t(SessionType::Count) +
+         size_t(aProcessId) * size_t(SessionType::Count) +
+         size_t(aSessionType);
+}
+
+Histogram* internal_GetHistogramFromStorage(HistogramID aHistogramId,
+                                            ProcessID aProcessId,
+                                            SessionType aSessionType)
+{
+  size_t index = internal_HistogramStorageIndex(aHistogramId, aProcessId, aSessionType);
+  return gHistogramStorage[index];
+}
+
+void internal_SetHistogramInStorage(HistogramID aHistogramId,
+                                    ProcessID aProcessId,
+                                    SessionType aSessionType,
+                                    Histogram* aHistogram)
+{
+  MOZ_ASSERT(XRE_IsParentProcess(),
+    "Histograms are stored only in the parent process.");
+
+  size_t index = internal_HistogramStorageIndex(aHistogramId, aProcessId, aSessionType);
+  MOZ_ASSERT(!gHistogramStorage[index],
+    "Mustn't overwrite storage without clearing it first.");
+  gHistogramStorage[index] = aHistogram;
+}
+
+KeyedHistogram* internal_GetKeyedHistogramFromStorage(HistogramID aHistogramId,
+                                                      ProcessID aProcessId)
+{
+  size_t index = internal_KeyedHistogramStorageIndex(aHistogramId, aProcessId);
+  return gKeyedHistogramStorage[index];
+}
+
+void internal_SetKeyedHistogramInStorage(HistogramID aHistogramId,
+                                         ProcessID aProcessId,
+                                         KeyedHistogram* aKeyedHistogram)
+{
+  MOZ_ASSERT(XRE_IsParentProcess(),
+    "Keyed Histograms are stored only in the parent process.");
+
+  size_t index = internal_KeyedHistogramStorageIndex(aHistogramId, aProcessId);
+  MOZ_ASSERT(!gKeyedHistogramStorage[index],
+    "Mustn't overwrite storage without clearing it first");
+  gKeyedHistogramStorage[index] = aKeyedHistogram;
+}
+
 // Factory function for histogram instances.
 Histogram*
 internal_CreateHistogramInstance(const HistogramInfo& info, int bucketsOffset);
@@ -264,7 +329,9 @@ internal_GetHistogramById(HistogramID histogramId, ProcessID processId, SessionT
   MOZ_ASSERT(processId < ProcessID::Count);
   MOZ_ASSERT(sessionType < SessionType::Count);
 
-  Histogram* h = gHistogramStorage[histogramId][uint32_t(processId)][uint32_t(sessionType)];
+  Histogram* h = internal_GetHistogramFromStorage(histogramId,
+                                                  processId,
+                                                  sessionType);
   if (h || !instantiate) {
     return h;
   }
@@ -273,7 +340,7 @@ internal_GetHistogramById(HistogramID histogramId, ProcessID processId, SessionT
   const int bucketsOffset = gExponentialBucketLowerBoundIndex[histogramId];
   h = internal_CreateHistogramInstance(info, bucketsOffset);
   MOZ_ASSERT(h);
-  gHistogramStorage[histogramId][uint32_t(processId)][uint32_t(sessionType)] = h;
+  internal_SetHistogramInStorage(histogramId, processId, sessionType, h);
   return h;
 }
 
@@ -286,14 +353,15 @@ internal_GetKeyedHistogramById(HistogramID histogramId, ProcessID processId,
   MOZ_ASSERT(gHistogramInfos[histogramId].keyed);
   MOZ_ASSERT(processId < ProcessID::Count);
 
-  KeyedHistogram* kh = gKeyedHistogramStorage[histogramId][uint32_t(processId)];
+  KeyedHistogram* kh = internal_GetKeyedHistogramFromStorage(histogramId,
+                                                             processId);
   if (kh || !instantiate) {
     return kh;
   }
 
   const HistogramInfo& info = gHistogramInfos[histogramId];
   kh = new KeyedHistogram(histogramId, info);
-  gKeyedHistogramStorage[histogramId][uint32_t(processId)] = kh;
+  internal_SetKeyedHistogramInStorage(histogramId, processId, kh);
 
   return kh;
 }
@@ -314,8 +382,9 @@ internal_GetHistogramIdByName(const nsACString& name, HistogramID* id)
 void
 internal_ClearHistogramById(HistogramID histogramId, ProcessID processId, SessionType sessionType)
 {
-  delete gHistogramStorage[histogramId][uint32_t(processId)][uint32_t(sessionType)];
-  gHistogramStorage[histogramId][uint32_t(processId)][uint32_t(sessionType)] = nullptr;
+  size_t index = internal_HistogramStorageIndex(histogramId, processId, sessionType);
+  delete gHistogramStorage[index];
+  gHistogramStorage[index] = nullptr;
 }
 
 }
@@ -1631,6 +1700,13 @@ void TelemetryHistogram::InitializeGlobalState(bool canRecordBase,
   gCanRecordBase = canRecordBase;
   gCanRecordExtended = canRecordExtended;
 
+  if (XRE_IsParentProcess()) {
+    gHistogramStorage =
+      new Histogram*[HistogramCount * size_t(ProcessID::Count) * size_t(SessionType::Count)] {};
+    gKeyedHistogramStorage =
+      new KeyedHistogram*[HistogramCount * size_t(ProcessID::Count)] {};
+  }
+
   // gNameToHistogramIDMap should have been pre-sized correctly at the
   // declaration point further up in this file.
 
@@ -1677,19 +1753,17 @@ void TelemetryHistogram::DeInitializeGlobalState()
   gInitDone = false;
 
   // FactoryGet `new`s Histograms for us, but requires us to manually delete.
-  for (size_t i = 0; i < HistogramCount; ++i) {
-    for (uint32_t process = 0; process < static_cast<uint32_t>(ProcessID::Count); ++process) {
-      delete gKeyedHistogramStorage[i][process];
-      gKeyedHistogramStorage[i][process] = nullptr;
-      for (uint32_t session = 0; session <
-        static_cast<uint32_t>(SessionType::Count); ++session) {
-        if (gHistogramStorage[i][process][session] == gExpiredHistogram) {
-          continue;
-        }
-        delete gHistogramStorage[i][process][session];
-        gHistogramStorage[i][process][session] = nullptr;
+  if (XRE_IsParentProcess()) {
+    for (size_t i = 0; i < HistogramCount * size_t(ProcessID::Count) * size_t(SessionType::Count); ++i) {
+      if (i < HistogramCount * size_t(ProcessID::Count)) {
+        delete gKeyedHistogramStorage[i];
+      }
+      if (gHistogramStorage[i] != gExpiredHistogram) {
+        delete gHistogramStorage[i];
       }
     }
+    delete[] gHistogramStorage;
+    delete[] gKeyedHistogramStorage;
   }
   delete gExpiredHistogram;
   gExpiredHistogram = nullptr;

@@ -88,19 +88,24 @@ class BookmarksObserver extends Observer {
    * @param  {int} dateAdded
    * @param  {str} guid      The unique id of the bookmark
    */
-  async onItemAdded(...args) {
+  onItemAdded(...args) {
     const type = args[3];
-    const guid = args[7];
     if (type !== PlacesUtils.bookmarks.TYPE_BOOKMARK) {
       return;
     }
-    try {
-      // bookmark: {bookmarkGuid, bookmarkTitle, lastModified, url}
-      const bookmark = await NewTabUtils.activityStreamProvider.getBookmark(guid);
-      this.dispatch({type: at.PLACES_BOOKMARK_ADDED, data: bookmark});
-    } catch (e) {
-      Cu.reportError(e);
-    }
+    const uri = args[4];
+    const bookmarkTitle = args[5];
+    const dateAdded = args[6];
+    const bookmarkGuid = args[7];
+    this.dispatch({
+      type: at.PLACES_BOOKMARK_ADDED,
+      data: {
+        bookmarkGuid,
+        bookmarkTitle,
+        dateAdded,
+        url: uri.spec
+      }
+    });
   }
 
   /**

@@ -44,9 +44,9 @@ HTTP(..) == filter-2.xhtml filter-2-ref.xhtml
 == zoom-invalidation.html zoom-invalidation-ref.html # bug 773482
 
 # test that xulRuntime.OS works
-fails-if(xulRuntime.OS!="Linux"&&!Android&&!styloVsGecko) == data:text/html,<body>Linux data:text/html,<script>document.write(navigator.platform.substr(0,5))</script>
-fails-if(xulRuntime.OS!="WINNT"&&!styloVsGecko) == data:text/html,<body>Win data:text/html,<script>document.write(navigator.platform.substr(0,3))</script>
-fails-if(xulRuntime.OS!="Darwin"&&!styloVsGecko) == data:text/html,<body>Mac data:text/html,<script>document.write(navigator.platform.substr(0,3))</script>
+fails-if(xulRuntime.OS!="Linux"&&!Android) == data:text/html,<body>Linux data:text/html,<script>document.write(navigator.platform.substr(0,5))</script>
+fails-if(xulRuntime.OS!="WINNT") == data:text/html,<body>Win data:text/html,<script>document.write(navigator.platform.substr(0,3))</script>
+fails-if(xulRuntime.OS!="Darwin") == data:text/html,<body>Mac data:text/html,<script>document.write(navigator.platform.substr(0,3))</script>
 
 # test parsing of asserts() expressions
 asserts(0) load about:blank
@@ -86,7 +86,7 @@ include default-preferences-tests.list
 needs-focus load needs-focus.html
 
 # Bug 632636
-fails-if(!styloVsGecko) == data:text/plain,HELLO about:blank
+fails == data:text/plain,HELLO about:blank
 needs-focus == data:text/plain, about:blank
 
 # Sanity check of viewport+displayport overrides
@@ -113,17 +113,17 @@ require-or(true&&true,fails) script scripttest-pass.html
 # a boolean pref
 pref(gfx.downloadable_fonts.enabled,true) skip-if(styloVsGecko) HTTP(..) != font-download.html font-default.html
 pref(gfx.downloadable_fonts.enabled,false) skip-if(styloVsGecko) HTTP(..) == font-download.html font-default.html
-fails-if(!styloVsGecko) pref(gfx.downloadable_fonts.enabled,0) skip-if(styloVsGecko) HTTP(..) == font-download.html font-default.html
-fails-if(!styloVsGecko) pref(gfx.downloadable_fonts.enabled,"foo") skip-if(styloVsGecko) HTTP(..) == font-download.html font-default.html
+fails pref(gfx.downloadable_fonts.enabled,0) HTTP(..) == font-download.html font-default.html
+fails pref(gfx.downloadable_fonts.enabled,"foo") HTTP(..) == font-download.html font-default.html
 # a non-existent pref
-fails-if(!styloVsGecko) pref(not.a.real.pref.name,1) skip-if(styloVsGecko) == font-download.html font-default.html
+fails pref(not.a.real.pref.name,1) == font-download.html font-default.html
 # an integer pref
 pref(font.size.variable.x-western,16) == font-size-16.html font-default.html
 pref(font.size.variable.x-western,16) != font-size-24.html font-default.html
 pref(font.size.variable.x-western,24) == font-size-24.html font-default.html
 pref(font.size.variable.x-western,24) != font-size-16.html font-default.html
-fails-if(!styloVsGecko) pref(font.size.variable.x-western,false) skip-if(styloVsGecko) == font-size-16.html font-default.html
-fails-if(!styloVsGecko) pref(font.size.variable.x-western,"foo") skip-if(styloVsGecko) == font-size-16.html font-default.html
+fails pref(font.size.variable.x-western,false) == font-size-16.html font-default.html
+fails pref(font.size.variable.x-western,"foo") == font-size-16.html font-default.html
 # a string pref
 pref(font.default.x-western,"serif") == font-serif.html font-default.html
 pref(font.default.x-western,"serif") != font-sans-serif.html font-default.html
@@ -136,8 +136,8 @@ ref-pref(font.size.variable.x-western,16) skip-if(styloVsGecko) == font-size-16.
 ref-pref(font.size.variable.x-western,16) skip-if(styloVsGecko) != font-size-24.html font-default.html
 ref-pref(font.size.variable.x-western,24) skip-if(styloVsGecko) == font-size-24.html font-default.html
 ref-pref(font.size.variable.x-western,24) skip-if(styloVsGecko) != font-size-16.html font-default.html
-fails-if(!styloVsGecko) ref-pref(font.size.variable.x-western,false) skip-if(styloVsGecko) == font-size-16.html font-default.html
-fails-if(!styloVsGecko) ref-pref(font.size.variable.x-western,"foo") skip-if(styloVsGecko) == font-size-16.html font-default.html
+fails ref-pref(font.size.variable.x-western,false) == font-size-16.html font-default.html
+fails ref-pref(font.size.variable.x-western,"foo") == font-size-16.html font-default.html
 test-pref(font.size.variable.x-western,16) == font-default.html font-size-16.html
 test-pref(font.size.variable.x-western,16) != font-default.html font-size-24.html
 test-pref(font.size.variable.x-western,24) == font-default.html font-size-24.html
@@ -163,7 +163,7 @@ fuzzy(1,0-2) skip-if(styloVsGecko) != fuzzy.html fuzzy-ref.html
 # fuzzy(1,250001-250002) == fuzzy.html fuzzy-ref.html
 #
 # When using 565 fuzzy.html and fuzzy-ref.html will compare as equal
-fails-if(!styloVsGecko) fuzzy-if(false,2,1) random-if(Android) == fuzzy.html fuzzy-ref.html
+fails fuzzy-if(false,2,1) random-if(Android) == fuzzy.html fuzzy-ref.html
 
 # Test that reftest-no-paint fails correctly.
 # Since this is a "layers"-specific test, we allow any non-crash result with WebRender.
@@ -192,20 +192,20 @@ fails random-if(webrender) == reftest-opaque-layer-fail.html reftest-opaque-laye
 # Since this is a "layers"-specific test, we allow any non-crash result with WebRender.
 fails random-if(webrender) != reftest-opaque-layer-fail.html reftest-opaque-layer-fail.html
 fails random-if(webrender) == reftest-opaque-layer-fail.html about:blank
-fails-if(!styloVsGecko) random-if(webrender) == about:blank reftest-opaque-layer-fail.html
+fails random-if(webrender) == about:blank reftest-opaque-layer-fail.html
 fails random-if(webrender) != reftest-opaque-layer-fail.html about:blank
-fails-if(!styloVsGecko) random-if(webrender) != about:blank reftest-opaque-layer-fail.html
+fails random-if(webrender) != about:blank reftest-opaque-layer-fail.html
 
 # reftest-opaque-layer and reftest-wait
 # Since this is a "layers"-specific test, we allow any non-crash result with WebRender.
 random-if(webrender) == reftest-opaque-layer-wait-pass.html reftest-opaque-layer-pass.html
 random-if(webrender) != reftest-opaque-layer-wait-pass.html about:blank
-fails fails-if(styloVsGecko) random-if(webrender) == reftest-opaque-layer-wait-fail.html reftest-opaque-layer-fail.html
-fails-if(!styloVsGecko) fails-if(styloVsGecko) random-if(webrender) != reftest-opaque-layer-wait-fail.html about:blank
+fails random-if(webrender) == reftest-opaque-layer-wait-fail.html reftest-opaque-layer-fail.html
+fails random-if(webrender) != reftest-opaque-layer-wait-fail.html about:blank
 
 # reftest-assigned-layer
 random-if(webrender) != reftest-assigned-layer-pass.html about:blank
-fails-if(!styloVsGecko) fails-if(styloVsGecko) random-if(webrender) != reftest-assigned-layer-fail-1.html about:blank
-fails-if(!styloVsGecko) fails-if(styloVsGecko) random-if(webrender) != reftest-assigned-layer-fail-2.html about:blank
-fails-if(!styloVsGecko) fails-if(styloVsGecko) random-if(webrender) != reftest-assigned-layer-fail-3.html about:blank
-fails-if(!styloVsGecko) fails-if(styloVsGecko) random-if(webrender) != reftest-assigned-layer-fail-4.html about:blank
+fails random-if(webrender) != reftest-assigned-layer-fail-1.html about:blank
+fails random-if(webrender) != reftest-assigned-layer-fail-2.html about:blank
+fails random-if(webrender) != reftest-assigned-layer-fail-3.html about:blank
+fails random-if(webrender) != reftest-assigned-layer-fail-4.html about:blank

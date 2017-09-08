@@ -3193,7 +3193,8 @@ nsPrintEngine::FindFocusedDOMWindow()
   NS_ENSURE_TRUE(rootWindow, nullptr);
 
   nsCOMPtr<nsPIDOMWindowOuter> focusedWindow;
-  nsFocusManager::GetFocusedDescendant(rootWindow, true,
+  nsFocusManager::GetFocusedDescendant(rootWindow,
+                                       nsFocusManager::eIncludeAllDescendants,
                                        getter_AddRefs(focusedWindow));
   NS_ENSURE_TRUE(focusedWindow, nullptr);
 

@@ -24,6 +24,7 @@ function getPath(url) {
 this.TippyTopProvider = class TippyTopProvider {
   constructor() {
     this._sitesByDomain = new Map();
+    this.initialized = false;
   }
   async init() {
     // Load the Tippy Top sites from the json manifest.
@@ -35,6 +36,7 @@ this.TippyTopProvider = class TippyTopProvider {
           this._sitesByDomain.set(getDomain(url), site);
         }
       }
+      this.initialized = true;
     } catch (error) {
       Cu.reportError("Failed to load tippy top manifest.");
     }

@@ -1800,7 +1800,9 @@ nsUrlClassifierDBService::AsyncClassifyLocalWithTables(nsIURI *aURI,
     using namespace mozilla::ipc;
 
     ContentChild* content = ContentChild::GetSingleton();
-    MOZ_ASSERT(content);
+    if (NS_WARN_IF(!content || content->IsShuttingDown())) {
+      return NS_ERROR_FAILURE;
+    }
 
     auto actor = new URLClassifierLocalChild();
 

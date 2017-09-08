@@ -257,6 +257,12 @@ this.UITour = {
         return aDocument.getElementById("pageAction-urlbar-sendToDevice") ||
                aDocument.getElementById("pageAction-panel-sendToDevice");
       },
+    }],
+    ["screenshots", {
+      query: (aDocument) => {
+        return aDocument.getElementById("pageAction-urlbar-screenshots") ||
+               aDocument.getElementById("pageAction-panel-screenshots");
+      },
     }]
   ]),
 

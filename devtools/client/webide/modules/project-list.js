@@ -166,7 +166,7 @@ ProjectList.prototype = {
       try {
         url = new URL(tab.url);
       } catch (e) {
-        // Don't try to handle invalid URLs, especially from Valence.
+        // Don't try to handle invalid URLs
         continue;
       }
       // Wanted to use nsIFaviconService here, but it only works for visited

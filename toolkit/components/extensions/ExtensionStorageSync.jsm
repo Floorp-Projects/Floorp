@@ -71,12 +71,13 @@ XPCOMUtils.defineLazyGetter(this, "WeaveCrypto", function() {
 });
 
 const {
+  DefaultMap,
   runSafeSyncWithoutClone,
 } = ExtensionUtils;
 
 // Map of Extensions to Set<Contexts> to track contexts that are still
 // "live" and use storage.sync.
-const extensionContexts = new Map();
+const extensionContexts = new DefaultMap(() => new Set());
 // Borrow logger from Sync.
 const log = Log.repository.getLogger("Sync.Engine.Extension-Storage");
 
@@ -664,9 +665,6 @@ global.CollectionKeyEncryptionRemoteTransformer = CollectionKeyEncryptionRemoteT
  */
 function cleanUpForContext(extension, context) {
   const contexts = extensionContexts.get(extension);
-  if (!contexts) {
-    Cu.reportError(new Error(`Internal error: cannot find any contexts for extension ${extension.id}`));
-  }
   contexts.delete(context);
   if (contexts.size === 0) {
     // Nobody else is using this collection. Clean up.
@@ -1085,6 +1083,19 @@ class ExtensionStorageSync {
     }
   }
 
+  registerInUse(extension, context) {
+    // Register that the extension and context are in use.
+    const contexts = extensionContexts.get(extension);
+    if (!contexts.has(context)) {
+      // New context. Register it and make sure it cleans itself up
+      // when it closes.
+      contexts.add(context);
+      context.callOnClose({
+        close: () => cleanUpForContext(extension, context),
+      });
+    }
+  }
+
   /**
    * Get the collection for an extension, and register the extension
    * as being "in use".
@@ -1101,20 +1112,7 @@ class ExtensionStorageSync {
     if (prefPermitsStorageSync !== true) {
       return Promise.reject({message: `Please set ${STORAGE_SYNC_ENABLED_PREF} to true in about:config`});
     }
-    // Register that the extension and context are in use.
-    if (!extensionContexts.has(extension)) {
-      extensionContexts.set(extension, new Set());
-    }
-    const contexts = extensionContexts.get(extension);
-    if (!contexts.has(context)) {
-      // New context. Register it and make sure it cleans itself up
-      // when it closes.
-      contexts.add(context);
-      context.callOnClose({
-        close: () => cleanUpForContext(extension, context),
-      });
-    }
-
+    this.registerInUse(extension, context);
     return openCollection(this.cryptoCollection, extension, context);
   }
 
@@ -1223,18 +1221,7 @@ class ExtensionStorageSync {
     listeners.add(listener);
     this.listeners.set(extension, listeners);
 
-    // Force opening the collection so that we will sync for this extension.
-    // This happens asynchronously, even though the surface API is synchronous.
-    return this.getCollection(extension, context)
-      .catch((e) => {
-        // We can ignore failures that happen during shutdown here. First, we
-        // can't report in any way. And second, a failure to open the collection
-        // does not matter, because there won't be any message to listen to.
-        // See Bug 1395215.
-        if (!(/Kinto storage adapter connection closing/.test(e.message))) {
-          throw e;
-        }
-      });
+    this.registerInUse(extension, context);
   }
 
   removeOnChangedListener(extension, listener) {

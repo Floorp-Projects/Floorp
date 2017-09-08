@@ -81,6 +81,10 @@ this.TopSitesFeed = class TopSitesFeed {
     return pinned.slice(0, TOP_SITES_SHOWMORE_LENGTH);
   }
   async refresh(target = null) {
+    if (!this._tippyTopProvider.initialized) {
+      await this._tippyTopProvider.init();
+    }
+
     const links = await this.getLinksWithDefaults();
 
     // First, cache existing screenshots in case we need to reuse them
@@ -165,7 +169,6 @@ this.TopSitesFeed = class TopSitesFeed {
   async onAction(action) {
     switch (action.type) {
       case at.INIT:
-        await this._tippyTopProvider.init();
         this.refresh();
         break;
       case at.NEW_TAB_LOAD:

@@ -6744,8 +6744,6 @@ if (IsCSSPropertyPrefEnabled("layout.css.grid.enabled")) {
       "grid-auto-flow",
       "grid-auto-rows",
       "grid-auto-columns",
-      "grid-column-gap",
-      "grid-row-gap",
     ],
     initial_values: [
       "none",

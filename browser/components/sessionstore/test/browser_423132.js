@@ -37,6 +37,7 @@ add_task(async function() {
 
   // restore the window state
   ss.setBrowserState(state);
+  await promiseWindowRestored(window);
 
   // at this point, the cookie should be restored...
   enumerator = Services.cookies.enumerator;
