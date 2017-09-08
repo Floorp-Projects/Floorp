@@ -528,13 +528,6 @@ BrowserGlue.prototype = {
 
     this._flashHangCount = 0;
     this._firstWindowReady = new Promise(resolve => this._firstWindowLoaded = resolve);
-
-    if (AppConstants.platform == "macosx" ||
-        (AppConstants.platform == "win" && AppConstants.RELEASE_OR_BETA)) {
-      // Handles prompting to inform about incompatibilites when accessibility
-      // and e10s are active together.
-      E10SAccessibilityCheck.init();
-    }
   },
 
   // cleanup (called on application shutdown)
@@ -1009,10 +1002,7 @@ BrowserGlue.prototype = {
     }
 
     this._sanitizer.onStartup();
-    E10SAccessibilityCheck.onWindowsRestored();
-
     this._scheduleStartupIdleTasks();
-
     this._lateTasksIdleObserver = (idleService, topic, data) => {
       if (topic == "idle") {
         idleService.removeIdleObserver(this._lateTasksIdleObserver,
@@ -2787,131 +2777,8 @@ var DefaultBrowserCheck = {
   },
 };
 
-var E10SAccessibilityCheck = {
-  // tracks when an a11y init observer fires prior to the
-  // first window being opening.
-  _wantsPrompt: false,
-
-  init() {
-    Services.obs.addObserver(this, "a11y-init-or-shutdown", true);
-    Services.obs.addObserver(this, "quit-application-granted", true);
-  },
-
-  QueryInterface: XPCOMUtils.generateQI([Ci.nsIObserver, Ci.nsISupportsWeakReference]),
-
-  get forcedOn() {
-    try {
-      return Services.prefs.getBoolPref("browser.tabs.remote.force-enable");
-    } catch (e) {}
-    return false;
-  },
-
-  observe(subject, topic, data) {
-    switch (topic) {
-      case "quit-application-granted":
-        // Tag the profile with a11y load state. We use this in nsAppRunner
-        // checks on the next start.
-        Services.prefs.setBoolPref("accessibility.loadedInLastSession",
-                                   Services.appinfo.accessibilityEnabled);
-        break;
-      case "a11y-init-or-shutdown":
-        if (data == "1") {
-          // Update this so users can check this while still running
-          Services.prefs.setBoolPref("accessibility.loadedInLastSession", true);
-          this._showE10sAccessibilityWarning();
-        }
-        break;
-    }
-  },
-
-  onWindowsRestored() {
-    if (this._wantsPrompt) {
-      this._wantsPrompt = false;
-      this._showE10sAccessibilityWarning();
-    }
-  },
-
-  _warnedAboutAccessibility: false,
-
-  _showE10sAccessibilityWarning() {
-    // We don't prompt about a11y incompat if e10s is off.
-    if (!Services.appinfo.browserTabsRemoteAutostart) {
-      return;
-    }
-
-    // If the user set the forced pref and it's true, ignore a11y init.
-    // If the pref doesn't exist or if it's false, prompt.
-    if (this.forcedOn) {
-      return;
-    }
-
-    // Only prompt once per session
-    if (this._warnedAboutAccessibility) {
-      return;
-    }
-    this._warnedAboutAccessibility = true;
-
-    let win = RecentWindow.getMostRecentBrowserWindow();
-    if (!win || !win.gBrowser || !win.gBrowser.selectedBrowser) {
-      Services.console.logStringMessage(
-          "Accessibility support is partially disabled due to compatibility issues with new features.");
-      this._wantsPrompt = true;
-      this._warnedAboutAccessibility = false;
-      return;
-    }
-    let browser = win.gBrowser.selectedBrowser;
-
-    // We disable a11y for content and prompt on the chrome side letting
-    // a11y users know they need to disable e10s and restart.
-    let promptMessage = win.gNavigatorBundle.getFormattedString(
-                          "e10s.accessibilityNotice.mainMessage2",
-                          [gBrandBundle.GetStringFromName("brandShortName")]
-                        );
-    let notification;
-    let restartCallback  = function() {
-      let cancelQuit = Cc["@mozilla.org/supports-PRBool;1"].createInstance(Ci.nsISupportsPRBool);
-      Services.obs.notifyObservers(cancelQuit, "quit-application-requested", "restart");
-      if (cancelQuit.data) {
-        return; // somebody canceled our quit request
-      }
-      // Restart the browser
-      Services.startup.quit(Services.startup.eAttemptQuit | Services.startup.eRestart);
-    };
-    // main option: an Ok button, keeps running with content accessibility disabled
-    let mainAction = {
-      label: win.gNavigatorBundle.getString("e10s.accessibilityNotice.acceptButton.label"),
-      accessKey: win.gNavigatorBundle.getString("e10s.accessibilityNotice.acceptButton.accesskey"),
-      callback() {
-        // If the user invoked the button option remove the notification,
-        // otherwise keep the alert icon around in the address bar.
-        notification.remove();
-      },
-      dismiss: true
-    };
-    // secondary option: a restart now button. When we restart e10s will be disabled due to
-    // accessibility having been loaded in the previous session.
-    let secondaryActions = [{
-      label: win.gNavigatorBundle.getString("e10s.accessibilityNotice.enableAndRestart.label"),
-      accessKey: win.gNavigatorBundle.getString("e10s.accessibilityNotice.enableAndRestart.accesskey"),
-      callback: restartCallback,
-    }];
-    let options = {
-      popupIconURL: "chrome://browser/skin/e10s-64@2x.png",
-      learnMoreURL: Services.urlFormatter.formatURLPref("app.support.e10sAccessibilityUrl"),
-      persistent: true,
-      persistWhileVisible: true,
-    };
-
-    notification =
-      win.PopupNotifications.show(browser, "a11y_enabled_with_e10s",
-                                  promptMessage, null, mainAction,
-                                  secondaryActions, options);
-  },
-};
-
 var components = [BrowserGlue, ContentPermissionPrompt];
 this.NSGetFactory = XPCOMUtils.generateNSGetFactory(components);
-
 
 // Listen for UITour messages.
 // Do it here instead of the UITour module itself so that the UITour module is lazy loaded
