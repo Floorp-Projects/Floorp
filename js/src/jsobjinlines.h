@@ -252,12 +252,6 @@ js::GetElementNoGC(JSContext* cx, JSObject* obj, const Value& receiver, uint32_t
 }
 
 inline bool
-js::GetElementNoGC(JSContext* cx, JSObject* obj, JSObject* receiver, uint32_t index, Value* vp)
-{
-    return GetElementNoGC(cx, obj, ObjectValue(*receiver), index, vp);
-}
-
-inline bool
 js::DeleteProperty(JSContext* cx, HandleObject obj, HandleId id, ObjectOpResult& result)
 {
     MarkTypePropertyNonData(cx, obj, id);
