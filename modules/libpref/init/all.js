@@ -5331,8 +5331,8 @@ pref("urlclassifier.phishTable", "googpub-phish-shavar,test-phish-simple");
 #endif
 
 // Tables for application reputation.
-pref("urlclassifier.downloadAllowTable", "goog-downloadwhite-proto");
-pref("urlclassifier.downloadBlockTable", "goog-badbinurl-proto");
+pref("urlclassifier.downloadAllowTable", "goog-downloadwhite-digest256");
+pref("urlclassifier.downloadBlockTable", "goog-badbinurl-shavar");
 
 pref("urlclassifier.disallow_completions", "test-malware-simple,test-phish-simple,test-unwanted-simple,test-track-simple,test-trackwhite-simple,test-block-simple,goog-downloadwhite-digest256,base-track-digest256,mozstd-trackwhite-digest256,content-track-digest256,mozplugin-block-digest256,mozplugin2-block-digest256,block-flash-digest256,except-flash-digest256,allow-flashallow-digest256,except-flashallow-digest256,block-flashsubdoc-digest256,except-flashsubdoc-digest256,except-flashinfobar-digest256");
 
