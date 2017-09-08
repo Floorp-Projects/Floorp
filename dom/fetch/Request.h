@@ -126,13 +126,19 @@ public:
 
   Headers* Headers_();
 
-  void
-  GetBody(nsIInputStream** aStream) { return mRequest->GetBody(aStream); }
-
   using FetchBody::GetBody;
 
   void
-  SetBody(nsIInputStream* aStream) { return mRequest->SetBody(aStream); }
+  GetBody(nsIInputStream** aStream, int64_t* aBodyLength = nullptr)
+  {
+    mRequest->GetBody(aStream, aBodyLength);
+  }
+
+  void
+  SetBody(nsIInputStream* aStream, int64_t aBodyLength)
+  {
+    mRequest->SetBody(aStream, aBodyLength);
+  }
 
   static already_AddRefed<Request>
   Constructor(const GlobalObject& aGlobal, const RequestOrUSVString& aInput,
