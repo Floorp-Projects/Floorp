@@ -8,6 +8,7 @@ const SELECTORS = {
   creditCardAutofillCheckbox: "#creditCardAutofill checkbox",
   savedAddressesBtn: "#addressAutofill button",
   savedCreditCardsBtn: "#creditCardAutofill button",
+  addressAutofillLearnMore: "#addressAutofillLearnMore",
 };
 
 // Visibility of form autofill group should be hidden when opening
@@ -36,6 +37,8 @@ add_task(async function test_aboutPreferencesPrivacy() {
         "Autofill addresses checkbox should be checked");
       is(content.document.querySelector(selectors.creditCardAutofillCheckbox).checked, true,
         "Autofill credit cards checkbox should be checked");
+      ok(content.document.querySelector(selectors.addressAutofillLearnMore).href.includes("autofill-card-address"),
+        "Autofill addresses learn more link should contain autofill-card-address");
     });
   });
 });
