@@ -8,7 +8,6 @@
 
 # UITour
 origin	uitour	1	https://www.mozilla.org
-origin	uitour	1	https://screenshots.firefox.com
 origin	uitour	1	https://support.mozilla.org
 origin	uitour	1	https://addons.mozilla.org
 origin	uitour	1	https://discovery.addons.mozilla.org
