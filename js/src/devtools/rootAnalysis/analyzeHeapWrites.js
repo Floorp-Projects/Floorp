@@ -245,6 +245,36 @@ function treatAsSafeArgument(entry, varName, csuName)
     return false;
 }
 
+function isSafeAssignment(entry, edge, variable)
+{
+    if (edge.Kind != 'Assign')
+        return false;
+
+    var [mangled, unmangled] = splitFunction(entry.name);
+
+    // The assignment
+    //
+    //   nsFont* font = fontTypes[eType];
+    //
+    // ends up with 'font' pointing to a member of 'this', so it should inherit
+    // the safety of 'this'.
+    if (unmangled.includes("mozilla::LangGroupFontPrefs::Initialize") &&
+        variable == 'font')
+    {
+        const [lhs, rhs] = edge.Exp;
+        const {Kind, Exp: [{Kind: indexKind, Exp: [collection, index]}]} = rhs;
+        if (Kind == 'Drf' &&
+            indexKind == 'Index' &&
+            collection.Kind == 'Var' &&
+            collection.Variable.Name[0] == 'fontTypes')
+        {
+            return entry.isSafeArgument(0); // 'this'
+        }
+    }
+
+    return false;
+}
+
 function checkFieldWrite(entry, location, fields)
 {
     var name = entry.name;
@@ -1180,6 +1210,9 @@ function isSafeVariable(entry, variable)
                 return true;
             }
         }
+
+        if (isSafeAssignment(entry, edge, name))
+            return true;
 
         // Watch out for variables which were assigned arguments.
         var rhsVariable = variableAssignRhs(edge);
