@@ -337,7 +337,7 @@ internal_GetHistogramById(HistogramID histogramId, ProcessID processId, SessionT
   }
 
   const HistogramInfo& info = gHistogramInfos[histogramId];
-  const int bucketsOffset = gExponentialBucketLowerBoundIndex[histogramId];
+  const int bucketsOffset = gHistogramBucketLowerBoundIndex[histogramId];
   h = internal_CreateHistogramInstance(info, bucketsOffset);
   MOZ_ASSERT(h);
   internal_SetHistogramInStorage(histogramId, processId, sessionType, h);
@@ -541,12 +541,16 @@ internal_CreateHistogramInstance(const HistogramInfo& passedInfo, int bucketsOff
   // We create that instance lazily when needed.
   const bool isExpired = IsExpiredVersion(passedInfo.expiration());
   HistogramInfo info = passedInfo;
+  const int* buckets = &gHistogramBucketLowerBounds[bucketsOffset];
 
   if (isExpired) {
     if (gExpiredHistogram) {
       return gExpiredHistogram;
     }
 
+    // The first values in gHistogramBucketLowerBounds are reserved for
+    // expired histograms.
+    buckets = gHistogramBucketLowerBounds;
     info.min = 1;
     info.max = 2;
     info.bucketCount = 3;
@@ -557,21 +561,20 @@ internal_CreateHistogramInstance(const HistogramInfo& passedInfo, int bucketsOff
   Histogram* h = nullptr;
   switch (info.histogramType) {
   case nsITelemetry::HISTOGRAM_EXPONENTIAL:
-    h = Histogram::FactoryGet(info.min, info.max, info.bucketCount, flags,
-                              &gExponentialBucketLowerBounds[bucketsOffset]);
+    h = Histogram::FactoryGet(info.min, info.max, info.bucketCount, flags, buckets);
     break;
   case nsITelemetry::HISTOGRAM_LINEAR:
   case nsITelemetry::HISTOGRAM_CATEGORICAL:
-    h = LinearHistogram::FactoryGet(info.min, info.max, info.bucketCount, flags);
+    h = LinearHistogram::FactoryGet(info.min, info.max, info.bucketCount, flags, buckets);
     break;
   case nsITelemetry::HISTOGRAM_BOOLEAN:
-    h = BooleanHistogram::FactoryGet(flags);
+    h = BooleanHistogram::FactoryGet(flags, buckets);
     break;
   case nsITelemetry::HISTOGRAM_FLAG:
-    h = FlagHistogram::FactoryGet(flags);
+    h = FlagHistogram::FactoryGet(flags, buckets);
     break;
   case nsITelemetry::HISTOGRAM_COUNT:
-    h = CountHistogram::FactoryGet(flags);
+    h = CountHistogram::FactoryGet(flags, buckets);
     break;
   default:
     MOZ_ASSERT(false, "Invalid histogram type");
@@ -754,7 +757,7 @@ KeyedHistogram::GetHistogram(const nsCString& key, Histogram** histogram,
     return NS_OK;
   }
 
-  int bucketsOffset = gExponentialBucketLowerBoundIndex[mId];
+  int bucketsOffset = gHistogramBucketLowerBoundIndex[mId];
   Histogram* h = internal_CreateHistogramInstance(mHistogramInfo, bucketsOffset);
   if (!h) {
     return NS_ERROR_FAILURE;
