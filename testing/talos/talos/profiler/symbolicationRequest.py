@@ -1,12 +1,13 @@
 # This Source Code Form is subject to the terms of the Mozilla Public
 # License, v. 2.0. If a copy of the MPL was not distributed with this
 # file, You can obtain one at http://mozilla.org/MPL/2.0/.
+from __future__ import absolute_import
 
-from symLogging import LogTrace, LogError
-
-import re
 import json
+import re
 import urllib2
+
+from .symLogging import LogTrace, LogError
 
 # Precompiled regex for validating lib names
 # Empty lib name means client couldn't associate frame with any lib

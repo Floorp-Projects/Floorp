@@ -4,18 +4,19 @@
 # Altered features:
 # * --kill returns 404 rather than dropping the whole HTTP/2 connection on the floor
 # * best-match response handling is used to improve success rates
+from __future__ import absolute_import, print_function
 
 import hashlib
-import urllib
 import sys
+import urllib
 from collections import defaultdict
-from typing import Any  # noqa
-from typing import List  # noqa
 
 from mitmproxy import ctx
 from mitmproxy import exceptions
-from mitmproxy import io
 from mitmproxy import http
+from mitmproxy import io
+from typing import Any  # noqa
+from typing import List  # noqa
 
 
 class ServerPlayback:

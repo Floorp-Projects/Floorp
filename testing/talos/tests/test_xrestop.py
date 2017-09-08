@@ -3,10 +3,12 @@
 """
 Tests for talos.xrestop
 """
+from __future__ import absolute_import
 
 import os
 import subprocess
 import unittest
+
 from talos.cmanager_linux import xrestop
 
 here = os.path.dirname(os.path.abspath(__file__))
