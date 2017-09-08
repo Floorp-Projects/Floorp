@@ -2200,22 +2200,32 @@ IonBuilder::inlineIsRegExpObject(CallInfo& callInfo)
 
     MDefinition* arg = callInfo.getArg(0);
 
-    bool isRegExpObject;
+    bool isRegExpObjectKnown = false;
+    bool isRegExpObjectConstant;
     if (!arg->mightBeType(MIRType::Object)) {
-        isRegExpObject = false;
+        // NB: This case only happens when Phi-nodes flow into IsRegExpObject.
+        // IsRegExpObject itself will never be called with a non-Object value.
+        isRegExpObjectConstant = false;
+        isRegExpObjectKnown = true;
     } else {
         if (arg->type() != MIRType::Object)
             return InliningStatus_NotInlined;
 
         TemporaryTypeSet* types = arg->resultTypeSet();
         const Class* clasp = types ? types->getKnownClass(constraints()) : nullptr;
-        if (!clasp || clasp->isProxy())
-            return InliningStatus_NotInlined;
-
-        isRegExpObject = (clasp == &RegExpObject::class_);
+        if (clasp) {
+            isRegExpObjectConstant = (clasp == &RegExpObject::class_);
+            isRegExpObjectKnown = true;
+        }
     }
 
-    pushConstant(BooleanValue(isRegExpObject));
+    if (isRegExpObjectKnown) {
+        pushConstant(BooleanValue(isRegExpObjectConstant));
+    } else {
+        MHasClass* hasClass = MHasClass::New(alloc(), arg, &RegExpObject::class_);
+        current->add(hasClass);
+        current->push(hasClass);
+    }
 
     callInfo.setImplicitlyUsedUnchecked();
     return InliningStatus_Inlined;
