@@ -584,7 +584,7 @@ public class BrowserFragment extends WebFragment implements View.OnClickListener
             return;
         }
 
-        final AddToHomescreenDialogFragment addToHomescreenDialogFragment = AddToHomescreenDialogFragment.newInstance(url, title);
+        final AddToHomescreenDialogFragment addToHomescreenDialogFragment = AddToHomescreenDialogFragment.newInstance(url, title, session.isBlockingEnabled());
         addToHomescreenDialogFragment.setTargetFragment(BrowserFragment.this, 300);
 
         try {

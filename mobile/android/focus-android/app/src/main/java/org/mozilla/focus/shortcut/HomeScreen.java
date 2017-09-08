@@ -23,19 +23,19 @@ import org.mozilla.focus.utils.UrlUtils;
 public class HomeScreen {
     private static final String BROADCAST_INSTALL_SHORTCUT = "com.android.launcher.action.INSTALL_SHORTCUT";
     public static final String ADD_TO_HOMESCREEN_TAG = "add_to_homescreen";
+    public static final String BLOCKING_ENABLED = "blocking_enabled";
 
     /**
      * Create a shortcut for the given website on the device's home screen.
      */
-    public static void installShortCut(Context context, Bitmap icon, String url, String title) {
+    public static void installShortCut(Context context, Bitmap icon, String url, String title, boolean blockingEnabled) {
         if (TextUtils.isEmpty(title.trim())) {
             title = generateTitleFromUrl(url);
         }
-
         if (Build.VERSION.SDK_INT <= Build.VERSION_CODES.N_MR1) {
-            installShortCutViaBroadcast(context, icon, url, title);
+            installShortCutViaBroadcast(context, icon, url, title, blockingEnabled);
         } else {
-            installShortCutViaManager(context, icon, url, title);
+            installShortCutViaManager(context, icon, url, title, blockingEnabled);
         }
     }
 
@@ -44,8 +44,8 @@ public class HomeScreen {
      *
      * This works for Android versions up to 7.
      */
-    private static void installShortCutViaBroadcast(Context context, Bitmap bitmap, String url, String title) {
-        final Intent shortcutIntent = createShortcutIntent(context, url);
+    private static void installShortCutViaBroadcast(Context context, Bitmap bitmap, String url, String title, boolean blockingEnabled) {
+        final Intent shortcutIntent = createShortcutIntent(context, url, blockingEnabled);
 
         final Intent addIntent = new Intent();
         addIntent.putExtra(Intent.EXTRA_SHORTCUT_INTENT, shortcutIntent);
@@ -65,7 +65,7 @@ public class HomeScreen {
      * The user will have the ability to add the shortcut manually or let the system place it automatically.
      */
     @TargetApi(26)
-    private static void installShortCutViaManager(Context context, Bitmap bitmap, String url, String title) {
+    private static void installShortCutViaManager(Context context, Bitmap bitmap, String url, String title, boolean blockingEnabled) {
         final ShortcutManager shortcutManager = context.getSystemService(ShortcutManager.class);
         if (shortcutManager == null) {
             return;
@@ -76,16 +76,17 @@ public class HomeScreen {
                     .setShortLabel(title)
                     .setLongLabel(title)
                     .setIcon(Icon.createWithBitmap(bitmap))
-                    .setIntent(createShortcutIntent(context, url))
+                    .setIntent(createShortcutIntent(context, url, blockingEnabled))
                     .build();
             shortcutManager.requestPinShortcut(shortcut, null);
         }
     }
 
-    private static Intent createShortcutIntent(Context context, String url) {
+    private static Intent createShortcutIntent(Context context, String url, boolean blockingEnabled) {
         final Intent shortcutIntent = new Intent(context, MainActivity.class);
         shortcutIntent.setAction(Intent.ACTION_VIEW);
         shortcutIntent.setData(Uri.parse(url));
+        shortcutIntent.putExtra(BLOCKING_ENABLED, blockingEnabled);
         shortcutIntent.putExtra(ADD_TO_HOMESCREEN_TAG, ADD_TO_HOMESCREEN_TAG);
         return shortcutIntent;
     }

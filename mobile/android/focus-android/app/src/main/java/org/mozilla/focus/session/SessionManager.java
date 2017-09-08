@@ -71,11 +71,15 @@ public class SessionManager {
         final String action = intent.getAction();
 
         if (Intent.ACTION_VIEW.equals(action)) {
-            final Source source = intent.hasExtra(HomeScreen.ADD_TO_HOMESCREEN_TAG)
-                    ? Source.HOME_SCREEN
-                    : Source.VIEW;
-
-            createSession(context, source, intent, intent.getDataString());
+            final Source source;
+            if (intent.hasExtra(HomeScreen.ADD_TO_HOMESCREEN_TAG)) {
+                source = Source.HOME_SCREEN;
+                boolean blockingEnabled = intent.getBooleanExtra(HomeScreen.BLOCKING_ENABLED, true);
+                createSession(context, source, intent, intent.getDataString(), blockingEnabled);
+            } else {
+                source = Source.VIEW;
+                createSession(context, source, intent, intent.getDataString());
+            }
         } else if (Intent.ACTION_SEND.equals(action)) {
             final String dataString = intent.getStringExtra(Intent.EXTRA_TEXT);
             if (!TextUtils.isEmpty(dataString)) {
@@ -177,6 +181,14 @@ public class SessionManager {
         final Session session = CustomTabConfig.isCustomTabIntent(intent)
                 ? new Session(url, CustomTabConfig.parseCustomTabIntent(context, intent))
                 : new Session(source, url);
+        addSession(session);
+    }
+
+    private void createSession(Context context, Source source, SafeIntent intent, String url, boolean blockingEnabled) {
+        final Session session = CustomTabConfig.isCustomTabIntent(intent)
+                ? new Session(url, CustomTabConfig.parseCustomTabIntent(context, intent))
+                : new Session(source, url);
+        session.setBlockingEnabled(blockingEnabled);
         addSession(session);
     }
 

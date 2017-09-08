@@ -1,33 +1,102 @@
-<?xml version="1.0" encoding="utf-8"?>
-<!-- This Source Code Form is subject to the terms of the Mozilla Public
+<?xml version="1.0" encoding="utf-8"?><!-- This Source Code Form is subject to the terms of the Mozilla Public
    - License, v. 2.0. If a copy of the MPL was not distributed with this
    - file, You can obtain one at http://mozilla.org/MPL/2.0/. -->
 <LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    style="@style/DialogStyle"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
-    android:orientation="horizontal"
-    android:paddingTop="16dp"
-    android:paddingEnd="20dp"
-    android:paddingStart="20dp">
+    android:gravity="center_horizontal"
+    android:orientation="vertical">
 
-    <ImageView
-        android:id="@+id/homescreen_icon"
-        android:layout_width="36dp"
-        android:layout_height="36dp"
-        android:layout_gravity="center_vertical" />
-
-    <EditText
-        android:id="@+id/edit_title"
+    <LinearLayout
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:layout_gravity="center_vertical"
-        android:backgroundTint="@color/add_to_homescreen_button_text"
-        android:inputType="text"
-        android:paddingEnd="8dp"
-        android:paddingStart="8dp"
-        android:textAppearance="?android:attr/textAppearanceMedium"
-        android:textColorHighlight="@color/colorAccent"
-        android:textColor="@color/add_to_homescreen_text"
-        android:textColorHint="@color/add_to_homescreen_text"
-        android:textCursorDrawable="@null" />
+        android:orientation="horizontal"
+        android:padding="16dp">
+
+        <ImageView
+            android:id="@+id/homescreen_icon"
+            android:layout_width="36dp"
+            android:layout_height="36dp"
+            android:layout_gravity="center_vertical" />
+
+        <EditText
+            android:id="@+id/edit_title"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_gravity="center_vertical"
+            android:backgroundTint="@color/add_to_homescreen_button_text"
+            android:inputType="text"
+            android:paddingEnd="8dp"
+            android:paddingStart="8dp"
+            android:textAppearance="?android:attr/textAppearanceMedium"
+            android:textColor="@color/add_to_homescreen_text"
+            android:textColorHighlight="@color/colorAccent"
+            android:textColorHint="@color/add_to_homescreen_text"
+            android:textCursorDrawable="@null" />
+
+    </LinearLayout>
+
+    <LinearLayout
+        style="?android:attr/buttonBarStyle"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:measureWithLargestChild="true"
+        android:orientation="horizontal"
+        android:paddingEnd="12dp"
+        android:paddingStart="12dp">
+
+        <TextView
+            android:layout_width="0dp"
+            android:layout_height="wrap_content"
+            android:layout_weight="2" />
+
+        <Button
+            android:id="@+id/addtohomescreen_dialog_cancel"
+            style="?android:attr/buttonBarButtonStyle"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:textAllCaps="true"
+            android:textColor="@color/download_dialog_text" />
+
+        <Button
+            android:id="@+id/addtohomescreen_dialog_add"
+            style="?android:attr/buttonBarButtonStyle"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_gravity="end"
+            android:textAllCaps="true"
+            android:textColor="@color/download_dialog_text" />
+    </LinearLayout>
+
+
+    <LinearLayout
+        android:id="@+id/homescreen_dialog_warning_layout"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:background="#ff262626"
+        android:orientation="horizontal"
+        android:paddingBottom="16dp"
+        android:paddingEnd="24dp"
+        android:paddingStart="24dp"
+        android:paddingTop="16dp"
+        android:visibility="gone">
+
+        <ImageView
+            android:id="@+id/homescreen_dialog_block_icon"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content" />
+
+        <TextView
+            android:id="@+id/homescreen_dialog_warning"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_gravity="center_vertical"
+            android:background="#ff262626"
+            android:paddingStart="10dp"
+            android:text="@string/dialog_addtohomescreen_tracking_protection"
+            android:textColor="#ff8b8b8b"
+            android:textSize="12sp" />
+    </LinearLayout>
+
 </LinearLayout>
