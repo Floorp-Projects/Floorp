@@ -3319,18 +3319,14 @@ js::ToObjectSlow(JSContext* cx, JS::HandleValue val, bool reportScanStack)
 Value
 js::GetThisValue(JSObject* obj)
 {
+    // Use the WindowProxy if the global is a Window, as Window must never be
+    // exposed to script.
     if (obj->is<GlobalObject>())
         return ObjectValue(*ToWindowProxyIfWindow(obj));
 
-    if (obj->is<LexicalEnvironmentObject>()) {
-        MOZ_ASSERT(!obj->as<LexicalEnvironmentObject>().isExtensible());
-        return UndefinedValue();
-    }
-
-    if (obj->is<ModuleEnvironmentObject>())
-        return UndefinedValue();
-
-    MOZ_ASSERT(!obj->is<WithEnvironmentObject>());
+    // We should not expose any environments except NSVOs to script. The NSVO is
+    // pretending to be the global object in this case.
+    MOZ_ASSERT(obj->is<NonSyntacticVariablesObject>() || !obj->is<EnvironmentObject>());
 
     return ObjectValue(*obj);
 }
