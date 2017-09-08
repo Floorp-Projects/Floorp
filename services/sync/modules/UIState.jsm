@@ -130,7 +130,7 @@ const UIStateInternal = {
 
   async _refreshFxAState(newState) {
     let userData = await this._getUserData();
-    this._populateWithUserData(newState, userData);
+    await this._populateWithUserData(newState, userData);
     if (newState.status != STATUS_SIGNED_IN) {
       return;
     }
@@ -141,12 +141,13 @@ const UIStateInternal = {
     this._populateWithProfile(newState, profile);
   },
 
-  _populateWithUserData(state, userData) {
+  async _populateWithUserData(state, userData) {
     let status;
     if (!userData) {
       status = STATUS_NOT_CONFIGURED;
     } else {
-      if (this._loginFailed()) {
+      let loginFailed = await this._loginFailed();
+      if (loginFailed) {
         status = STATUS_LOGIN_FAILED;
       } else if (!userData.verified) {
         status = STATUS_NOT_VERIFIED;
@@ -198,7 +199,16 @@ const UIStateInternal = {
     }
   },
 
-  _loginFailed() {
+  async _loginFailed() {
+    // First ask FxA if it thinks the user needs re-authentication. In practice,
+    // this check is probably canonical (ie, we probably don't really need
+    // the check below at all as we drop local session info on the first sign
+    // of a problem) - but we keep it for now to keep the risk down.
+    let hasLocalSession = await this.fxAccounts.hasLocalSession();
+    if (!hasLocalSession) {
+      return true;
+    }
+
     // Referencing Weave.Service will implicitly initialize sync, and we don't
     // want to force that - so first check if it is ready.
     let service = Cc["@mozilla.org/weave/service;1"]

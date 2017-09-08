@@ -10,6 +10,7 @@ complexities of worker implementations, scopes, and treeherder annotations.
 
 from __future__ import absolute_import, print_function, unicode_literals
 
+import hashlib
 import json
 import os
 import re
@@ -703,7 +704,17 @@ def build_docker_worker_payload(config, task, task_def):
             }
         payload['artifacts'] = artifacts
 
-    run_task = payload.get('command', [''])[0].endswith('run-task')
+    if isinstance(worker.get('docker-image'), basestring):
+        out_of_tree_image = worker['docker-image']
+    else:
+        out_of_tree_image = None
+
+    run_task = any([
+        payload.get('command', [''])[0].endswith('run-task'),
+        # image_builder is special and doesn't get detected like other tasks.
+        # It uses run-task so it needs our cache manipulations.
+        (out_of_tree_image or '').startswith('taskcluster/image_builder'),
+    ])
 
     if 'caches' in worker:
         caches = {}
@@ -715,9 +726,26 @@ def build_docker_worker_payload(config, task, task_def):
         # So, any time run-task changes, we should get a fresh set of caches.
         # This means run-task can make changes to cache interaction at any time
         # without regards for backwards or future compatibility.
-
+        #
+        # But this mechanism only works for in-tree Docker images that are built
+        # with the current run-task! For out-of-tree Docker images, we have no
+        # way of knowing their content of run-task. So, in addition to varying
+        # cache names by the contents of run-task, we also take the Docker image
+        # name into consideration. This means that different Docker images will
+        # never share the same cache. This is a bit unfortunate. But it is the
+        # safest thing to do. Fortunately, most images are defined in-tree.
+        #
+        # For out-of-tree Docker images, we don't strictly need to incorporate
+        # the run-task content into the cache name. However, doing so preserves
+        # the mechanism whereby changing run-task results in new caches
+        # everywhere.
         if run_task:
             suffix = '-%s' % _run_task_suffix()
+
+            if out_of_tree_image:
+                name_hash = hashlib.sha256(out_of_tree_image).hexdigest()
+                suffix += name_hash[0:12]
+
         else:
             suffix = ''
 

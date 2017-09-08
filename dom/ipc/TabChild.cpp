@@ -1524,13 +1524,6 @@ TabChild::RecvStopIMEStateManagement()
 }
 
 mozilla::ipc::IPCResult
-TabChild::RecvMenuKeyboardListenerInstalled(const bool& aInstalled)
-{
-  IMEStateManager::OnInstalledMenuKeyboardListener(aInstalled);
-  return IPC_OK();
-}
-
-mozilla::ipc::IPCResult
 TabChild::RecvNotifyAttachGroupedSHistory(const uint32_t& aOffset)
 {
   // nsISHistory uses int32_t
