@@ -96,8 +96,10 @@ function test() {
     is(placements[0], testWidgetNew.id, "Should have our test widget to be placed in nav-bar");
   }
 
-  // Now test that the builtin photon migrations work:
+  // Reset kVersion
   CustomizableUIBSPass.kVersion--;
+
+  // Now test that the builtin photon migrations work:
 
   CustomizableUIBSPass.gSavedState = {
     currentVersion: 6,
@@ -116,12 +118,60 @@ function test() {
   is(navbarPlacements[2], "stop-reload-button", "Stop/reload button is in the right place.");
   is(navbarPlacements[3], "home-button", "Home button is in the right place.");
   is(navbarPlacements[4], "urlbar-container", "URL bar is in the right place.");
-  is(navbarPlacements[5], "library-button", "Library button is in the right place.");
-  is(navbarPlacements[6], "sidebar-button", "Sidebar button is in the right place.");
-  is(navbarPlacements.length, 7, "Should have 7 items");
+  is(navbarPlacements[5], "downloads-button", "Downloads button is in the right place.");
+  is(navbarPlacements[6], "library-button", "Library button is in the right place.");
+  is(navbarPlacements[7], "sidebar-button", "Sidebar button is in the right place.");
+  is(navbarPlacements.length, 8, "Should have 8 items");
 
   let overflowPlacements = CustomizableUIBSPass.gSavedState.placements["widget-overflow-fixed-list"];
   Assert.deepEqual(overflowPlacements, ["panic-button"]);
+
+  // Finally test that the downloads migration works:
+  let oldNavbarPlacements = [
+    "urlbar-container", "customizableui-special-spring3", "search-container",
+  ];
+  CustomizableUIBSPass.gSavedState = {
+    currentVersion: 10,
+    placements: {
+      "nav-bar": Array.from(oldNavbarPlacements),
+      "widget-overflow-fixed-list": ["downloads-button"],
+    },
+  };
+  CustomizableUIInternal._updateForNewVersion();
+  navbarPlacements = CustomizableUIBSPass.gSavedState.placements["nav-bar"];
+  Assert.deepEqual(navbarPlacements, oldNavbarPlacements.concat(["downloads-button"]),
+                   "Downloads button inserted in navbar");
+  Assert.deepEqual(CustomizableUIBSPass.gSavedState.placements["widget-overflow-fixed-list"], [],
+                   "Overflow panel is empty");
+
+  CustomizableUIBSPass.gSavedState = {
+    currentVersion: 10,
+    placements: {
+      "nav-bar": ["downloads-button"].concat(oldNavbarPlacements),
+    },
+  };
+  CustomizableUIInternal._updateForNewVersion();
+  navbarPlacements = CustomizableUIBSPass.gSavedState.placements["nav-bar"];
+  Assert.deepEqual(navbarPlacements, oldNavbarPlacements.concat(["downloads-button"]),
+                   "Downloads button reinserted in navbar");
+
+  oldNavbarPlacements = [
+    "urlbar-container", "customizableui-special-spring3", "search-container", "other-widget",
+  ];
+  CustomizableUIBSPass.gSavedState = {
+    currentVersion: 10,
+    placements: {
+      "nav-bar": Array.from(oldNavbarPlacements),
+    },
+  };
+  CustomizableUIInternal._updateForNewVersion();
+  navbarPlacements = CustomizableUIBSPass.gSavedState.placements["nav-bar"];
+  let expectedNavbarPlacements = [
+    "urlbar-container", "customizableui-special-spring3", "search-container",
+    "downloads-button", "other-widget",
+  ];
+  Assert.deepEqual(navbarPlacements, expectedNavbarPlacements,
+                   "Downloads button inserted in navbar before other widgets");
 
   gFuturePlacements.delete(CustomizableUI.AREA_NAVBAR);
   gPalette.delete(testWidgetNew.id);

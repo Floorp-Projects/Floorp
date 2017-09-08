@@ -58,7 +58,7 @@ const kSubviewEvents = [
  * The current version. We can use this to auto-add new default widgets as necessary.
  * (would be const but isn't because of testing purposes)
  */
-var kVersion = 10;
+var kVersion = 11;
 
 /**
  * Buttons removed from built-ins by version they were removed. kVersion must be
@@ -318,7 +318,7 @@ var CustomizableUIInternal = {
       CustomizableUI.removeWidgetFromArea("loop-button-throttled");
     }
 
-    if (currentVersion < 7 && gSavedState && gSavedState.placements &&
+    if (currentVersion < 7 && gSavedState.placements &&
         gSavedState.placements[CustomizableUI.AREA_NAVBAR]) {
       let placements = gSavedState.placements[CustomizableUI.AREA_NAVBAR];
       let newPlacements = ["back-button", "forward-button", "stop-reload-button", "home-button"];
@@ -408,12 +408,43 @@ var CustomizableUIInternal = {
       }
     }
 
-    if (currentVersion < 10 && gSavedState && gSavedState.placements) {
+    if (currentVersion < 10 && gSavedState.placements) {
       for (let placements of Object.values(gSavedState.placements)) {
         if (placements.includes("webcompat-reporter-button")) {
           placements.splice(placements.indexOf("webcompat-reporter-button"), 1);
           break;
         }
+      }
+    }
+
+    // Move the downloads button to the default position in the navbar if it's
+    // not there already.
+    if (currentVersion < 11 && gSavedState.placements) {
+      let navbarPlacements = gSavedState.placements[CustomizableUI.AREA_NAVBAR];
+      // First remove from wherever it currently lives, if anywhere:
+      for (let placements of Object.values(gSavedState.placements)) {
+        let existingIndex = placements.indexOf("downloads-button");
+        if (existingIndex != -1) {
+          placements.splice(existingIndex, 1);
+          break; // It can only be in 1 place, so no point looking elsewhere.
+        }
+      }
+
+      // Now put the button in the navbar in the correct spot:
+      if (navbarPlacements) {
+        let insertionPoint = navbarPlacements.indexOf("urlbar-container");
+        // Deliberately iterate to 1 past the end of the array to insert at the
+        // end if need be.
+        while (++insertionPoint < navbarPlacements.length) {
+          let widget = navbarPlacements[insertionPoint];
+          // If we find a non-searchbar, non-spacer node, break out of the loop:
+          if (widget != "search-container" && !this.matchingSpecials(widget, "spring")) {
+            break;
+          }
+        }
+        // We either found the right spot, or reached the end of the
+        // placements, so insert here:
+        navbarPlacements.splice(insertionPoint, 0, "downloads-button");
       }
     }
   },
