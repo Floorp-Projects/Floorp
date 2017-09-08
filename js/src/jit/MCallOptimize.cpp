@@ -2262,7 +2262,7 @@ IonBuilder::inlineRegExpInstanceOptimizable(CallInfo& callInfo)
     MDefinition* rxArg = callInfo.getArg(0);
     MDefinition* protoArg = callInfo.getArg(1);
 
-    if (rxArg->type() != MIRType::Object)
+    if (rxArg->type() != MIRType::Object && rxArg->type() != MIRType::Value)
         return InliningStatus_NotInlined;
 
     if (protoArg->type() != MIRType::Object)
