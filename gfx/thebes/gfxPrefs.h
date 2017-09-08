@@ -591,7 +591,7 @@ private:
   DECL_GFX_PREF(Live, "layers.low-precision-opacity",          LowPrecisionOpacity, float, 1.0f);
   DECL_GFX_PREF(Live, "layers.low-precision-resolution",       LowPrecisionResolution, float, 0.25f);
   DECL_GFX_PREF(Live, "layers.max-active",                     MaxActiveLayers, int32_t, -1);
-  DECL_GFX_PREF(Once, "layers.mlgpu.dev-enabled",              AdvancedLayersEnabledDoNotUseDirectly, bool, false);
+  DECL_GFX_PREF(Once, "layers.mlgpu.enabled",                  AdvancedLayersEnabledDoNotUseDirectly, bool, false);
   DECL_GFX_PREF(Once, "layers.mlgpu.enable-buffer-cache",      AdvancedLayersEnableBufferCache, bool, true);
   DECL_GFX_PREF(Once, "layers.mlgpu.enable-buffer-sharing",    AdvancedLayersEnableBufferSharing, bool, true);
   DECL_GFX_PREF(Once, "layers.mlgpu.enable-clear-view",        AdvancedLayersEnableClearView, bool, true);
