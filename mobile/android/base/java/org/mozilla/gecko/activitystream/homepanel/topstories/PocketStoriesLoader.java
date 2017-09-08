@@ -65,7 +65,7 @@ public class PocketStoriesLoader extends AsyncTaskLoader<List<TopStory>> {
     private static final int DEFAULT_COUNT = 3;
     private static final String PARAM_LOCALE = "locale_lang";
 
-    private static final long REFRESH_INTERVAL_MILLIS = TimeUnit.HOURS.toMillis(3);
+    private static final long REFRESH_INTERVAL_MILLIS = TimeUnit.HOURS.toMillis(1);
 
     private static final int BUFFER_SIZE = 2048;
     private static final int CONNECT_TIMEOUT = (int) TimeUnit.SECONDS.toMillis(15);
