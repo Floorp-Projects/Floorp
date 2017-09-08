@@ -1192,11 +1192,11 @@ function isSafeLocalVariable(entry, name)
                 return true;
             }
 
-            // Watch for the coerced result of a getter_AddRefs call.
+            // Watch for the coerced result of a getter_AddRefs or getter_Copies call.
             if (isDirectCall(edge, /operator /)) {
                 var otherEdge = expressionValueEdge(edge.PEdgeCallInstance.Exp);
                 if (otherEdge &&
-                    isDirectCall(otherEdge, /getter_AddRefs/) &&
+                    isDirectCall(otherEdge, /getter_(?:AddRefs|Copies)/) &&
                     isEdgeSafeArgument(entry, otherEdge.PEdgeCallArguments.Exp[0]))
                 {
                     return true;
