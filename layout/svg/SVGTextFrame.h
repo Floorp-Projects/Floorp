@@ -390,6 +390,11 @@ private:
   };
 
   /**
+   * Resolves Bidi for the anonymous block child if it needs it.
+   */
+  void MaybeResolveBidiForAnonymousBlockChild();
+
+  /**
    * Reflows the anonymous block child if it is dirty or has dirty
    * children, or if the SVGTextFrame itself is dirty.
    */

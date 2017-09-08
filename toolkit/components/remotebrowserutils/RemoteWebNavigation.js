@@ -78,23 +78,23 @@ RemoteWebNavigation.prototype = {
     // connection before the content process asks.
     // Note that we might have already setup the speculative connection in some
     // cases, especially when the url is from location bar or its popup menu.
-    if (aURI.startsWith("http")) {
-      let uri = makeURI(aURI);
-      let principal = aTriggeringPrincipal;
-      // We usually have a aTriggeringPrincipal assigned, but in case we don't
-      // have one, create it with OA inferred from the current context.
-      if (!principal) {
-        let attrs = {
-          userContextId: this._browser.getAttribute("usercontextid") || 0,
-          privateBrowsingId: PrivateBrowsingUtils.isBrowserPrivate(this._browser) ? 1 : 0
-        };
-        principal = Services.scriptSecurityManager.createCodebasePrincipal(uri, attrs);
-      }
+    if (aURI.startsWith("http:") || aURI.startsWith("https:")) {
       try {
+        let uri = makeURI(aURI);
+        let principal = aTriggeringPrincipal;
+        // We usually have a aTriggeringPrincipal assigned, but in case we don't
+        // have one, create it with OA inferred from the current context.
+        if (!principal) {
+          let attrs = {
+            userContextId: this._browser.getAttribute("usercontextid") || 0,
+            privateBrowsingId: PrivateBrowsingUtils.isBrowserPrivate(this._browser) ? 1 : 0
+          };
+          principal = Services.scriptSecurityManager.createCodebasePrincipal(uri, attrs);
+        }
         Services.io.speculativeConnect2(uri, principal, null);
       } catch (ex) {
         // Can't setup speculative connection for this uri string for some
-        // reason, just ignore it.
+        // reason (such as failing to parse the URI), just ignore it.
       }
     }
     this._sendMessage("WebNavigation:LoadURI", {

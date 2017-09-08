@@ -11,8 +11,8 @@ const XHTML_DTD = '<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.1//EN" "http://www
 
 const PAGECONTENT =
   "<html xmlns='http://www.w3.org/1999/xhtml'>" +
-  "<body onload='gChangeEvents = 0;gInputEvents = 0; gClickEvents = 0; document.body.firstChild.focus()'>" +
-  "<select oninput='gInputEvents++' onchange='gChangeEvents++' onclick='if (event.target == this) gClickEvents++'>" +
+  "<body onload='gChangeEvents = 0;gInputEvents = 0; gClickEvents = 0; document.getElementById(\"select\").focus();'>" +
+  "<select id='select' oninput='gInputEvents++' onchange='gChangeEvents++' onclick='if (event.target == this) gClickEvents++'>" +
   "  <optgroup label='First Group'>" +
   "    <option value='One'>One</option>" +
   "    <option value='Two'>Two</option>" +
@@ -28,6 +28,17 @@ const PAGECONTENT =
   "    <option value='Eight'>&nbsp;&nbsp;Eight&nbsp;&nbsp;</option>" +
   "  </optgroup></select><input />Text" +
   "</body></html>";
+
+const PAGECONTENT_XSLT =
+  "<?xml-stylesheet type='text/xml' href='#style1'?>" +
+  "<xsl:stylesheet id='style1'" +
+  "                version='1.0'" +
+  "                xmlns:xsl='http://www.w3.org/1999/XSL/Transform'" +
+  "                xmlns:html='http://www.w3.org/1999/xhtml'>" +
+  "<xsl:template match='xsl:stylesheet'>" +
+  PAGECONTENT +
+  "</xsl:template>" +
+  "</xsl:stylesheet>";
 
 const PAGECONTENT_SMALL =
   "<html>" +
@@ -116,8 +127,8 @@ function getClickEvents() {
   });
 }
 
-async function doSelectTests(contentType, dtd) {
-  const pageUrl = "data:" + contentType + "," + escape(dtd + "\n" + PAGECONTENT);
+async function doSelectTests(contentType, content) {
+  const pageUrl = "data:" + contentType + "," + encodeURIComponent(content);
   let tab = await BrowserTestUtils.openNewForegroundTab(gBrowser, pageUrl);
 
   let menulist = document.getElementById("ContentSelectDropdown");
@@ -221,11 +232,15 @@ add_task(async function setup() {
 });
 
 add_task(async function() {
-  await doSelectTests("text/html", "");
+  await doSelectTests("text/html", PAGECONTENT);
 });
 
 add_task(async function() {
-  await doSelectTests("application/xhtml+xml", XHTML_DTD);
+  await doSelectTests("application/xhtml+xml", XHTML_DTD + "\n" + PAGECONTENT);
+});
+
+add_task(async function() {
+  await doSelectTests("application/xml", XHTML_DTD + "\n" + PAGECONTENT_XSLT);
 });
 
 // This test opens a select popup and removes the content node of a popup while

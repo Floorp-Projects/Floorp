@@ -16,8 +16,8 @@ XPCOMUtils.defineLazyModuleGetter(this, "AddonManagerPrivate",
                                   "resource://gre/modules/AddonManager.jsm");
 XPCOMUtils.defineLazyModuleGetter(this, "AppMenuNotifications",
                                   "resource://gre/modules/AppMenuNotifications.jsm");
-XPCOMUtils.defineLazyModuleGetter(this, "PluralForm",
-                                  "resource://gre/modules/PluralForm.jsm");
+XPCOMUtils.defineLazyModuleGetter(this, "ExtensionData",
+                                  "resource://gre/modules/Extension.jsm");
 XPCOMUtils.defineLazyModuleGetter(this, "RecentWindow",
                                   "resource:///modules/RecentWindow.jsm");
 XPCOMUtils.defineLazyModuleGetter(this, "Services",
@@ -252,127 +252,15 @@ this.ExtensionsUI = {
 
   // Create a set of formatted strings for a permission prompt
   _buildStrings(info) {
-    let result = {};
-
     let bundle = Services.strings.createBundle(BROWSER_PROPERTIES);
 
-    let perms = info.permissions || {origins: [], permissions: []};
+    let brandBundle = Services.strings.createBundle(BRAND_PROPERTIES);
+    let appName = brandBundle.GetStringFromName("brandShortName");
+    let addonName = `<span class="addon-webext-name">${this._sanitizeName(info.addon.name)}</span>`;
 
-    // First classify our host permissions
-    let allUrls = false, wildcards = [], sites = [];
-    for (let permission of perms.origins) {
-      if (permission == "<all_urls>") {
-        allUrls = true;
-        break;
-      }
-      let match = /^[htps*]+:\/\/([^/]+)\//.exec(permission);
-      if (!match) {
-        Cu.reportError(`Unparseable host permission ${permission}`);
-        continue;
-      }
-      if (match[1] == "*") {
-        allUrls = true;
-      } else if (match[1].startsWith("*.")) {
-        wildcards.push(match[1].slice(2));
-      } else {
-        sites.push(match[1]);
-      }
-    }
+    let info2 = Object.assign({appName, addonName}, info);
 
-    // Format the host permissions.  If we have a wildcard for all urls,
-    // a single string will suffice.  Otherwise, show domain wildcards
-    // first, then individual host permissions.
-    result.msgs = [];
-    if (allUrls) {
-      result.msgs.push(bundle.GetStringFromName("webextPerms.hostDescription.allUrls"));
-    } else {
-      // Formats a list of host permissions.  If we have 4 or fewer, display
-      // them all, otherwise display the first 3 followed by an item that
-      // says "...plus N others"
-      function format(list, itemKey, moreKey) {
-        function formatItems(items) {
-          result.msgs.push(...items.map(item => bundle.formatStringFromName(itemKey, [item], 1)));
-        }
-        if (list.length < 5) {
-          formatItems(list);
-        } else {
-          formatItems(list.slice(0, 3));
-
-          let remaining = list.length - 3;
-          result.msgs.push(PluralForm.get(remaining, bundle.GetStringFromName(moreKey))
-                                     .replace("#1", remaining));
-        }
-      }
-
-      format(wildcards, "webextPerms.hostDescription.wildcard",
-             "webextPerms.hostDescription.tooManyWildcards");
-      format(sites, "webextPerms.hostDescription.oneSite",
-             "webextPerms.hostDescription.tooManySites");
-    }
-
-    let permissionKey = perm => `webextPerms.description.${perm}`;
-
-    // Next, show the native messaging permission if it is present.
-    const NATIVE_MSG_PERM = "nativeMessaging";
-    if (perms.permissions.includes(NATIVE_MSG_PERM)) {
-      let brandBundle = Services.strings.createBundle(BRAND_PROPERTIES);
-      let appName = brandBundle.GetStringFromName("brandShortName");
-      result.msgs.push(bundle.formatStringFromName(permissionKey(NATIVE_MSG_PERM), [appName], 1));
-    }
-
-    // Finally, show remaining permissions, in any order.
-    for (let permission of perms.permissions) {
-      // Handled above
-      if (permission == "nativeMessaging") {
-        continue;
-      }
-      try {
-        result.msgs.push(bundle.GetStringFromName(permissionKey(permission)));
-      } catch (err) {
-        // We deliberately do not include all permissions in the prompt.
-        // So if we don't find one then just skip it.
-      }
-    }
-
-    // Now figure out all the rest of the notification text.
-    let name = this._sanitizeName(info.addon.name);
-    let addonName = `<span class="addon-webext-name">${name}</span>`;
-
-    result.header = bundle.formatStringFromName("webextPerms.header", [addonName], 1);
-    result.text = info.unsigned ?
-                  bundle.GetStringFromName("webextPerms.unsignedWarning") : "";
-    result.listIntro = bundle.GetStringFromName("webextPerms.listIntro");
-
-    result.acceptText = bundle.GetStringFromName("webextPerms.add.label");
-    result.acceptKey = bundle.GetStringFromName("webextPerms.add.accessKey");
-    result.cancelText = bundle.GetStringFromName("webextPerms.cancel.label");
-    result.cancelKey = bundle.GetStringFromName("webextPerms.cancel.accessKey");
-
-    if (info.type == "sideload") {
-      result.header = bundle.formatStringFromName("webextPerms.sideloadHeader", [addonName], 1);
-      let key = result.msgs.length == 0 ?
-                "webextPerms.sideloadTextNoPerms" : "webextPerms.sideloadText2";
-      result.text = bundle.GetStringFromName(key);
-      result.acceptText = bundle.GetStringFromName("webextPerms.sideloadEnable.label");
-      result.acceptKey = bundle.GetStringFromName("webextPerms.sideloadEnable.accessKey");
-      result.cancelText = bundle.GetStringFromName("webextPerms.sideloadCancel.label");
-      result.cancelKey = bundle.GetStringFromName("webextPerms.sideloadCancel.accessKey");
-    } else if (info.type == "update") {
-      result.header = "";
-      result.text = bundle.formatStringFromName("webextPerms.updateText", [addonName], 1);
-      result.acceptText = bundle.GetStringFromName("webextPerms.updateAccept.label");
-      result.acceptKey = bundle.GetStringFromName("webextPerms.updateAccept.accessKey");
-    } else if (info.type == "optional") {
-      result.header = bundle.formatStringFromName("webextPerms.optionalPermsHeader", [addonName], 1);
-      result.text = "";
-      result.listIntro = bundle.GetStringFromName("webextPerms.optionalPermsListIntro");
-      result.acceptText = bundle.GetStringFromName("webextPerms.optionalPermsAllow.label");
-      result.acceptKey = bundle.GetStringFromName("webextPerms.optionalPermsAllow.accessKey");
-      result.cancelText = bundle.GetStringFromName("webextPerms.optionalPermsDeny.label");
-      result.cancelKey = bundle.GetStringFromName("webextPerms.optionalPermsDeny.accessKey");
-    }
-
-    return result;
+    return ExtensionData.formatPermissionStrings(info2, bundle);
   },
 
   showPermissionsPrompt(browser, strings, icon, histkey) {
