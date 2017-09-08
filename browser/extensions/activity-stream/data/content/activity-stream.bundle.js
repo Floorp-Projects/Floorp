@@ -459,9 +459,9 @@ function TopSites() {
           var _action$data2 = action.data;
           const bookmarkGuid = _action$data2.bookmarkGuid,
                 bookmarkTitle = _action$data2.bookmarkTitle,
-                lastModified = _action$data2.lastModified;
+                dateAdded = _action$data2.dateAdded;
 
-          return Object.assign({}, site, { bookmarkGuid, bookmarkTitle, bookmarkDateCreated: lastModified });
+          return Object.assign({}, site, { bookmarkGuid, bookmarkTitle, bookmarkDateCreated: dateAdded });
         }
         return site;
       });
@@ -558,12 +558,16 @@ function Sections() {
         let order;
         let index;
         if (prevState.length > 0) {
-          order = action.data.order || prevState[0].order - 1;
+          order = action.data.order !== undefined ? action.data.order : prevState[0].order - 1;
           index = newState.findIndex(section => section.order >= order);
+          if (index === -1) {
+            index = newState.length;
+          }
         } else {
-          order = action.data.order || 1;
+          order = action.data.order !== undefined ? action.data.order : 0;
           index = 0;
         }
+
         const section = Object.assign({ title: "", rows: [], order, enabled: false }, action.data, { initialized });
         newState.splice(index, 0, section);
       }
@@ -589,9 +593,12 @@ function Sections() {
             var _action$data3 = action.data;
             const bookmarkGuid = _action$data3.bookmarkGuid,
                   bookmarkTitle = _action$data3.bookmarkTitle,
-                  lastModified = _action$data3.lastModified;
+                  dateAdded = _action$data3.dateAdded;
 
-            Object.assign(item, { bookmarkGuid, bookmarkTitle, bookmarkDateCreated: lastModified });
+            Object.assign(item, { bookmarkGuid, bookmarkTitle, bookmarkDateCreated: dateAdded });
+            if (!item.type || item.type === "history") {
+              item.type = "bookmark";
+            }
           }
           return item;
         })
@@ -608,6 +615,9 @@ function Sections() {
             delete newSite.bookmarkGuid;
             delete newSite.bookmarkTitle;
             delete newSite.bookmarkDateCreated;
+            if (!newSite.type || newSite.type === "bookmark") {
+              newSite.type = "history";
+            }
             return newSite;
           }
           return item;
@@ -2985,7 +2995,7 @@ module.exports = {
   },
   bookmark: {
     intlID: "type_label_bookmarked",
-    icon: "bookmark"
+    icon: "bookmark-added"
   },
   trending: {
     intlID: "type_label_recommended",

@@ -34,7 +34,26 @@ const BUILT_IN_SECTIONS = {
     emptyState: {
       message: {id: "topstories_empty_state", values: {provider: options.provider_name}},
       icon: "check"
-    }
+    },
+    order: 0
+  }),
+  "feeds.section.highlights": options => ({
+    id: "highlights",
+    pref: {
+      titleString: {id: "settings_pane_highlights_header"},
+      descString: {id: "settings_pane_highlights_body2"}
+    },
+    shouldHidePref:  false,
+    eventSource: "HIGHLIGHTS",
+    icon: "highlights",
+    title: {id: "header_highlights"},
+    maxRows: 3,
+    availableContextMenuOptions: ["CheckBookmark", "SaveToPocket", "Separator", "OpenInNewWindow", "OpenInPrivateWindow", "Separator", "BlockUrl"],
+    emptyState: {
+      message: {id: "highlights_empty_state"},
+      icon: "highlights"
+    },
+    order: 1
   })
 };
 
