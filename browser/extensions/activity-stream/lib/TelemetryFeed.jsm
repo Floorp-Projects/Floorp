@@ -159,10 +159,12 @@ this.TelemetryFeed = class TelemetryFeed {
    * Lazily initialize PingCentre to send pings
    */
   get pingCentre() {
+    const ACTIVITY_STREAM_ID = "activity-stream";
     Object.defineProperty(this, "pingCentre",
       {
         value: new PingCentre({
-          topic: "activity-stream",
+          topic: ACTIVITY_STREAM_ID,
+          filter: ACTIVITY_STREAM_ID,
           overrideEndpointPref: ACTIVITY_STREAM_ENDPOINT_PREF
         })
       });
