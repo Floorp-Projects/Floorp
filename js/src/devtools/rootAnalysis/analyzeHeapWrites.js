@@ -399,6 +399,7 @@ function ignoreContents(entry)
         "abort",
         /MOZ_ReportAssertionFailure/,
         /MOZ_ReportCrash/,
+        /MOZ_CrashPrintf/,
         /AnnotateMozCrashReason/,
         /InvalidArrayIndex_CRASH/,
         /NS_ABORT_OOM/,
