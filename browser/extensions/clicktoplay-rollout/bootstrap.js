@@ -14,8 +14,8 @@ Cu.import("resource://gre/modules/TelemetryEnvironment.jsm");
 
 // The amount of people to be part of the rollout
 const TEST_THRESHOLD = {
-  "beta": 0.5,  // 50%
-  "release": 0.05,  // 5%
+  "beta": 1.0,  // 100%
+  "release": 0.25,  // 25%
 };
 
 if (AppConstants.RELEASE_OR_BETA) {
@@ -73,6 +73,7 @@ function defineCohort() {
     case undefined:
     case "test":
     case "control":
+    case "excluded":
     {
       // If it's either test/control, the cohort might have changed
       // if the desired sampling has been changed.
