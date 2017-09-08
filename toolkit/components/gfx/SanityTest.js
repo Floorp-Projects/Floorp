@@ -22,7 +22,7 @@ const DISABLE_VIDEO_PREF = "media.hardware-video-decoding.failed";
 const RUNNING_PREF = "sanity-test.running";
 const TIMEOUT_SEC = 20;
 
-const AL_ENABLED_PREF = "layers.mlgpu.dev-enabled";
+const AL_ENABLED_PREF = "layers.mlgpu.enabled";
 const AL_TEST_FAILED_PREF = "layers.mlgpu.sanity-test-failed";
 
 // GRAPHICS_SANITY_TEST histogram enumeration values
