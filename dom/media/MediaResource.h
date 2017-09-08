@@ -462,8 +462,6 @@ public:
   void     Suspend(bool aCloseImmediately) override;
   void     Resume() override;
   already_AddRefed<nsIPrincipal> GetCurrentPrincipal() override;
-  // Return true if the stream has been closed.
-  bool     IsClosed() const { return mCacheStream.IsClosed(); }
   bool     CanClone() override;
   already_AddRefed<BaseMediaResource> CloneData(
     MediaResourceCallback* aDecoder) override;
