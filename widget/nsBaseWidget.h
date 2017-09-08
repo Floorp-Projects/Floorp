@@ -696,9 +696,6 @@ protected:
   bool              mUseAttachedEvents;
   bool              mIMEHasFocus;
   bool              mIsFullyOccluded;
-#if defined(XP_WIN) || defined(XP_MACOSX) || defined(MOZ_WIDGET_GTK)
-  bool              mAccessibilityInUseFlag;
-#endif
   static nsIRollupListener* gRollupListener;
 
   struct InitialZoomConstraints {

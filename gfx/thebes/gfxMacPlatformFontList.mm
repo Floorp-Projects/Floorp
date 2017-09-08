@@ -183,14 +183,17 @@ MacOSFontEntry::ReadCMAP(FontInfoData *aFontInfoData)
         // characters it supports, so only check/clear the
         // complex-script ranges for non-Graphite fonts
 
-        // for layout support, check for the presence of mort/morx and/or
+        // for layout support, check for the presence of mort/morx/kerx and/or
         // opentype layout tables
         bool hasAATLayout = HasFontTable(TRUETYPE_TAG('m','o','r','x')) ||
                             HasFontTable(TRUETYPE_TAG('m','o','r','t'));
+        bool hasAppleKerning = HasFontTable(TRUETYPE_TAG('k','e','r','x'));
         bool hasGSUB = HasFontTable(TRUETYPE_TAG('G','S','U','B'));
         bool hasGPOS = HasFontTable(TRUETYPE_TAG('G','P','O','S'));
-        if (hasAATLayout && !(hasGSUB || hasGPOS)) {
-            mRequiresAAT = true; // prefer CoreText if font has no OTL tables
+        if ((hasAATLayout && !(hasGSUB || hasGPOS)) || hasAppleKerning) {
+            mRequiresAAT = true; // prefer CoreText if font has no OTL tables,
+                                 // or if it uses the Apple-specific 'kerx'
+                                 // variant of kerning table
         }
 
         for (const ScriptRange* sr = gfxPlatformFontList::sComplexScriptRanges;

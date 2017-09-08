@@ -23,14 +23,14 @@ function onLoadObjectProperties(dbg) {
   return waitForDispatch(dbg, "LOAD_OBJECT_PROPERTIES");
 }
 
-add_task(function*() {
-  const dbg = yield initDebugger("doc-script-mutate.html");
+add_task(async function() {
+  const dbg = await initDebugger("doc-script-mutate.html");
 
   toggleScopes(dbg);
 
   let onPaused = waitForPaused(dbg);
   invokeInTab("mutate");
-  yield onPaused;
+  await onPaused;
 
   is(
     getScopeNodeLabel(dbg, 2),
@@ -44,7 +44,7 @@ add_task(function*() {
   );
 
   info("Expand `phonebook`");
-  yield expandNode(dbg, 3);
+  await expandNode(dbg, 3);
   is(
     getScopeNodeLabel(dbg, 4),
     "S",
@@ -52,7 +52,7 @@ add_task(function*() {
   );
 
   info("Expand `S`");
-  yield expandNode(dbg, 4);
+  await expandNode(dbg, 4);
   is(
     getScopeNodeLabel(dbg, 5),
     "sarah",
@@ -65,7 +65,7 @@ add_task(function*() {
   );
 
   info("Expand `sarah`");
-  yield expandNode(dbg, 5);
+  await expandNode(dbg, 5);
   is(
     getScopeNodeLabel(dbg, 6),
     "lastName",
@@ -79,8 +79,8 @@ add_task(function*() {
 
   info("Resuming");
   onPaused = waitForPaused(dbg);
-  yield resume(dbg);
-  yield onPaused;
+  await resume(dbg);
+  await onPaused;
 
   is(
     getScopeNodeLabel(dbg, 2),

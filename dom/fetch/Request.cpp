@@ -580,11 +580,11 @@ Request::Constructor(const GlobalObject& aGlobal,
       const fetch::OwningBodyInit& bodyInit = bodyInitNullable.Value();
       nsCOMPtr<nsIInputStream> stream;
       nsAutoCString contentTypeWithCharset;
-      uint64_t contentLengthUnused;
+      uint64_t contentLength = 0;
       aRv = ExtractByteStreamFromBody(bodyInit,
                                       getter_AddRefs(stream),
                                       contentTypeWithCharset,
-                                      contentLengthUnused);
+                                      contentLength);
       if (NS_WARN_IF(aRv.Failed())) {
         return nullptr;
       }
@@ -604,10 +604,10 @@ Request::Constructor(const GlobalObject& aGlobal,
       request->ClearCreatedByFetchEvent();
 
       if (hasCopiedBody) {
-        request->SetBody(nullptr);
+        request->SetBody(nullptr, 0);
       }
 
-      request->SetBody(temporaryBody);
+      request->SetBody(temporaryBody, contentLength);
     }
   }
 
@@ -619,7 +619,7 @@ Request::Constructor(const GlobalObject& aGlobal,
     nsCOMPtr<nsIInputStream> body;
     inputReq->GetBody(getter_AddRefs(body));
     if (body) {
-      inputReq->SetBody(nullptr);
+      inputReq->SetBody(nullptr, 0);
       inputReq->SetBodyUsed(aGlobal.Context(), aRv);
       if (NS_WARN_IF(aRv.Failed())) {
         return nullptr;

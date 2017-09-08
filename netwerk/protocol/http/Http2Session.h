@@ -12,6 +12,7 @@
 #include "ASpdySession.h"
 #include "mozilla/Attributes.h"
 #include "mozilla/UniquePtr.h"
+#include "mozilla/WeakPtr.h"
 #include "nsAHttpConnection.h"
 #include "nsClassHashtable.h"
 #include "nsDataHashtable.h"
