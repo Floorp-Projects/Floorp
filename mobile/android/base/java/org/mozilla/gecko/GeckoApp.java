@@ -153,6 +153,9 @@ public abstract class GeckoApp extends GeckoActivity
     public static final String PREFS_CRASHED_COUNT         = "crashedCount";
     public static final String PREFS_CLEANUP_TEMP_FILES    = "cleanupTempFiles";
 
+    // Used with SharedPreferences, per profile, to determine if this is the first run of
+    // the application. When accessing SharedPreferences, the default value of true should be used.
+    //
     // Originally, this was only used for the telemetry core ping logic. To avoid
     // having to write custom migration logic, we just keep the original pref key.
     public static final String PREFS_IS_FIRST_RUN = "telemetry-isFirstRun";
