@@ -16,6 +16,7 @@ Cu.import("resource://gre/modules/Services.jsm");
 XPCOMUtils.defineLazyModuleGetters(this, {
   BrowserUtils: "resource://gre/modules/BrowserUtils.jsm",
   ContentLinkHandler: "resource:///modules/ContentLinkHandler.jsm",
+  ContentMetaHandler: "resource:///modules/ContentMetaHandler.jsm",
   ContentWebRTC: "resource:///modules/ContentWebRTC.jsm",
   InlineSpellCheckerContent: "resource://gre/modules/InlineSpellCheckerContent.jsm",
   LoginManagerContent: "resource://gre/modules/LoginManagerContent.jsm",
@@ -596,6 +597,7 @@ var ClickEventHandler = {
 ClickEventHandler.init();
 
 ContentLinkHandler.init(this);
+ContentMetaHandler.init(this);
 
 // TODO: Load this lazily so the JSM is run only if a relevant event/message fires.
 var pluginContent = new PluginContent(global);

@@ -53,7 +53,8 @@ add_task(async function test_refreshState_signedin() {
 
   UIStateInternal.fxAccounts = {
     getSignedInUser: () => Promise.resolve({ verified: true, email: "foo@bar.com" }),
-    getSignedInUserProfile: () => Promise.resolve({ displayName: "Foo Bar", avatar: "https://foo/bar", email: "foo@bar.com" })
+    getSignedInUserProfile: () => Promise.resolve({ displayName: "Foo Bar", avatar: "https://foo/bar", email: "foo@bar.com" }),
+    hasLocalSession: () => Promise.resolve(true),
   }
 
   let state = await UIState.refresh();
@@ -78,7 +79,8 @@ add_task(async function test_refreshState_preferProfileEmail() {
 
   UIStateInternal.fxAccounts = {
     getSignedInUser: () => Promise.resolve({ verified: true, email: "foo@bar.com" }),
-    getSignedInUserProfile: () => Promise.resolve({ displayName: "Foo Bar", avatar: "https://foo/bar", email: "bar@foo.com" })
+    getSignedInUserProfile: () => Promise.resolve({ displayName: "Foo Bar", avatar: "https://foo/bar", email: "bar@foo.com" }),
+    hasLocalSession: () => Promise.resolve(true),
   }
 
   let state = await UIState.refresh();
@@ -103,7 +105,8 @@ add_task(async function test_refreshState_signedin_profile_unavailable() {
 
   UIStateInternal.fxAccounts = {
     getSignedInUser: () => Promise.resolve({ verified: true, email: "foo@bar.com" }),
-    getSignedInUserProfile: () => Promise.reject(new Error("Profile unavailable"))
+    getSignedInUserProfile: () => Promise.reject(new Error("Profile unavailable")),
+    hasLocalSession: () => Promise.resolve(true),
   }
 
   let state = await UIState.refresh();
@@ -148,12 +151,38 @@ add_task(async function test_refreshState_unverified() {
   let getSignedInUserProfile = sinon.spy();
   UIStateInternal.fxAccounts = {
     getSignedInUser: () => Promise.resolve({ verified: false, email: "foo@bar.com" }),
-    getSignedInUserProfile
+    getSignedInUserProfile,
+    hasLocalSession: () => Promise.resolve(true),
   }
 
   let state = await UIState.refresh();
 
   equal(state.status, UIState.STATUS_NOT_VERIFIED);
+  equal(state.email, "foo@bar.com");
+  equal(state.displayName, undefined);
+  equal(state.avatarURL, undefined);
+  equal(state.lastSync, undefined);
+
+  ok(!getSignedInUserProfile.called);
+
+  UIStateInternal.fxAccounts = fxAccountsOrig;
+});
+
+add_task(async function test_refreshState_unverified_nosession() {
+  UIState.reset();
+  const fxAccountsOrig = UIStateInternal.fxAccounts;
+
+  let getSignedInUserProfile = sinon.spy();
+  UIStateInternal.fxAccounts = {
+    getSignedInUser: () => Promise.resolve({ verified: false, email: "foo@bar.com" }),
+    getSignedInUserProfile,
+    hasLocalSession: () => Promise.resolve(false),
+  }
+
+  let state = await UIState.refresh();
+
+  // No session should "win" over the unverified state.
+  equal(state.status, UIState.STATUS_LOGIN_FAILED);
   equal(state.email, "foo@bar.com");
   equal(state.displayName, undefined);
   equal(state.avatarURL, undefined);
@@ -220,7 +249,8 @@ async function configureUIState(syncing, lastSync = new Date()) {
 
   UIStateInternal.fxAccounts = {
     getSignedInUser: () => Promise.resolve({ verified: true, email: "foo@bar.com" }),
-    getSignedInUserProfile: () => Promise.resolve({ displayName: "Foo Bar", avatar: "https://foo/bar" })
+    getSignedInUserProfile: () => Promise.resolve({ displayName: "Foo Bar", avatar: "https://foo/bar" }),
+    hasLocalSession: () => Promise.resolve(true),
   }
   await UIState.refresh();
   UIStateInternal.fxAccounts = fxAccountsOrig;

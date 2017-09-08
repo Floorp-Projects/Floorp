@@ -133,6 +133,17 @@ public:
   static nsresult OnChangeFocus(nsPresContext* aPresContext,
                                 nsIContent* aContent,
                                 InputContextAction::Cause aCause);
+
+  /**
+   * OnInstalledMenuKeyboardListener() is called when menu keyboard listener
+   * is installed or uninstalled in the process.  So, even if menu keyboard
+   * listener was installed in chrome process, this won't be called in content
+   * processes.
+   *
+   * @param aInstalling     true if menu keyboard listener is installed.
+   *                        Otherwise, i.e., menu keyboard listener is
+   *                        uninstalled, false.
+   */
   static void OnInstalledMenuKeyboardListener(bool aInstalling);
 
   // These two methods manage focus and selection/text observers.
@@ -292,6 +303,19 @@ protected:
    */
   static bool CanHandleWith(nsPresContext* aPresContext);
 
+  /**
+   * ResetActiveChildInputContext() resets sActiveChildInputContext.
+   * So, HasActiveChildSetInputContext() will return false until a remote
+   * process gets focus and set input context.
+   */
+  static void ResetActiveChildInputContext();
+
+  /**
+   * HasActiveChildSetInputContext() returns true if a remote tab has focus
+   * and it has already set input context.  Otherwise, returns false.
+   */
+  static bool HasActiveChildSetInputContext();
+
   // sContent and sPresContext are the focused content and PresContext.  If a
   // document has focus but there is no focused element, sContent may be
   // nullptr.
@@ -324,10 +348,20 @@ protected:
   // Origin type of current process.
   static InputContext::Origin sOrigin;
 
-  static bool           sInstalledMenuKeyboardListener;
-  static bool           sIsGettingNewIMEState;
-  static bool           sCheckForIMEUnawareWebApps;
-  static bool           sInputModeSupported;
+  // sActiveChildInputContext is valid only when sActiveTabParent is not
+  // nullptr.  This stores last information of input context in the remote
+  // process of sActiveTabParent.  I.e., they are set when
+  // SetInputContextForChildProcess() is called.  This is necessary for
+  // restoring IME state when menu keyboard listener is uninstalled.
+  static InputContext sActiveChildInputContext;
+
+  // sInstalledMenuKeyboardListener is true if menu keyboard listener is
+  // installed in the process.
+  static bool sInstalledMenuKeyboardListener;
+
+  static bool sIsGettingNewIMEState;
+  static bool sCheckForIMEUnawareWebApps;
+  static bool sInputModeSupported;
 
   class MOZ_STACK_CLASS GettingNewIMEStateBlocker final
   {

@@ -1220,8 +1220,8 @@ ResetWidgetCache(void)
 }
 
 GtkStyleContext*
-ClaimStyleContext(WidgetNodeType aNodeType, GtkTextDirection aDirection,
-                  GtkStateFlags aStateFlags, StyleFlags aFlags)
+GetStyleContext(WidgetNodeType aNodeType, GtkTextDirection aDirection,
+                GtkStateFlags aStateFlags, StyleFlags aFlags)
 {
   GtkStyleContext* style;
   if (gtk_check_version(3, 20, 0) != nullptr) {
@@ -1275,9 +1275,4 @@ ClaimStyleContext(WidgetNodeType aNodeType, GtkTextDirection aDirection,
     gtk_style_context_invalidate(style);
   }
   return style;
-}
-
-void
-ReleaseStyleContext(GtkStyleContext* aStyleContext)
-{
 }
