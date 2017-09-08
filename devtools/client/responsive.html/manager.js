@@ -496,6 +496,8 @@ ResponsiveUI.prototype = {
   onChangeTouchSimulation(event) {
     let { enabled } = event.data;
     this.updateTouchSimulation(enabled);
+    // Used by tests
+    this.emit("touch-simulation-changed");
   },
 
   onContentResize(event) {
@@ -550,13 +552,14 @@ ResponsiveUI.prototype = {
   }),
 
   updateTouchSimulation: Task.async(function* (enabled) {
-    if (!enabled) {
-      yield this.emulationFront.clearTouchEventsOverride();
-      return;
+    let reloadNeeded;
+    if (enabled) {
+      reloadNeeded = yield this.emulationFront.setTouchEventsOverride(
+        Ci.nsIDocShell.TOUCHEVENTS_OVERRIDE_ENABLED
+      );
+    } else {
+      reloadNeeded = yield this.emulationFront.clearTouchEventsOverride();
     }
-    let reloadNeeded = yield this.emulationFront.setTouchEventsOverride(
-      Ci.nsIDocShell.TOUCHEVENTS_OVERRIDE_ENABLED
-    );
     if (reloadNeeded) {
       this.getViewportBrowser().reload();
     }
