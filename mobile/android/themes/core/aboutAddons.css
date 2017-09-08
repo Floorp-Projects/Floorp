@@ -79,6 +79,18 @@ a:active {
   display: none;
 }
 
+.update-indicator {
+  position: absolute;
+  right: var(--icon-margin);
+  top: var(--icon-margin);
+  width: var(--icon-size);
+  height: var(--icon-size);
+}
+
+.addon-item[hasUpdate="false"] > .update-indicator {
+  display: none;
+}
+
 #addons-details > .list-item {
   margin-bottom: 42px;
   border-bottom: none;
@@ -91,8 +103,7 @@ a:active {
 /* Buttons */
 
 .buttons {
-  display: flex;
-  flex-direction: row;
+  display: grid;
   width: 100%;
   position: fixed;
   bottom: 0px;
@@ -111,9 +122,17 @@ a:active {
   border-top-color: var(--color_about_item_border);
   border-inline-start-color: var(--color_about_item_border);
   background-color: var(--color_about_item);
-  flex: 1;
   padding: 0.75em 0.5em;
   border-radius: 0;
+}
+
+button#update-btn {
+  grid-row: 1;
+  grid-column: span 2;
+}
+
+button:not(#update-btn) {
+  grid-row: 2;
 }
 
 .buttons > button:active {
