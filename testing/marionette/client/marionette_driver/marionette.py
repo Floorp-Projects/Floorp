@@ -563,7 +563,7 @@ class Marionette(object):
     DEFAULT_SOCKET_TIMEOUT = 360
 
     def __init__(self, host="localhost", port=2828, app=None, bin=None,
-                 baseurl=None, socket_timeout=None,
+                 baseurl=None, socket_timeout=DEFAULT_SOCKET_TIMEOUT,
                  startup_timeout=None, **instance_args):
         """Construct a holder for the Marionette connection.
 
@@ -600,15 +600,10 @@ class Marionette(object):
         self.chrome_window = None
         self.baseurl = baseurl
         self._test_name = None
-        self.crashed = 0
         self.socket_timeout = socket_timeout
-        self.startup_timeout = startup_timeout
+        self.crashed = 0
 
-        if self.socket_timeout is None:
-            self.socket_timeout = self.DEFAULT_SOCKET_TIMEOUT
-        if self.startup_timeout is None:
-            self.startup_timeout = self.DEFAULT_STARTUP_TIMEOUT
-
+        self.startup_timeout = int(startup_timeout or self.DEFAULT_STARTUP_TIMEOUT)
         if self.bin:
             if not Marionette.is_port_available(self.port, host=self.host):
                 ex_msg = "{0}:{1} is unavailable.".format(self.host, self.port)
