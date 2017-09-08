@@ -549,6 +549,8 @@ SERVO_BINDING_FUNC(Servo_ComputedValues_GetStyleRuleList, void,
 // Initialize Servo components. Should be called exactly once at startup.
 SERVO_BINDING_FUNC(Servo_Initialize, void,
                    RawGeckoURLExtraData* dummy_url_data)
+// Initialize Servo on a cooperative Quantum DOM thread.
+SERVO_BINDING_FUNC(Servo_InitializeCooperativeThread, void);
 // Shut down Servo components. Should be called exactly once at shutdown.
 SERVO_BINDING_FUNC(Servo_Shutdown, void)
 
