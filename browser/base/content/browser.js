@@ -7494,20 +7494,20 @@ var gIdentityHandler = {
     }
 
     // Push the appropriate strings out to the UI
-    this._connectionIcon.tooltipText = tooltip;
+    this._connectionIcon.setAttribute("tooltiptext", tooltip);
 
     if (this._isExtensionPage) {
       let extensionName = extensionNameFromURI(this._uri);
-      this._extensionIcon.tooltipText = gNavigatorBundle.getFormattedString(
-        "identity.extension.tooltip", [extensionName]);
+      this._extensionIcon.setAttribute("tooltiptext",
+        gNavigatorBundle.getFormattedString("identity.extension.tooltip", [extensionName]));
     }
 
-    this._identityIconLabels.tooltipText = tooltip;
-    this._identityIcon.tooltipText = gNavigatorBundle.getString("identity.icon.tooltip");
-    this._identityIconLabel.value = icon_label;
-    this._identityIconCountryLabel.value = icon_country_label;
+    this._identityIconLabels.setAttribute("tooltiptext", tooltip);
+    this._identityIcon.setAttribute("tooltiptext", gNavigatorBundle.getString("identity.icon.tooltip"));
+    this._identityIconLabel.setAttribute("value", icon_label);
+    this._identityIconCountryLabel.setAttribute("value", icon_country_label);
     // Set cropping and direction
-    this._identityIconLabel.crop = icon_country_label ? "end" : "center";
+    this._identityIconLabel.setAttribute("crop", icon_country_label ? "end" : "center");
     this._identityIconLabel.parentNode.style.direction = icon_labels_dir;
     // Hide completely if the organization label is empty
     this._identityIconLabel.parentNode.collapsed = !icon_label;

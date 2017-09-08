@@ -249,6 +249,15 @@ add_task(async function test_DownloadHistory() {
   await view.waitForExpected();
   await allView.waitForExpected();
 
+  // Now test the maxHistoryResults parameter.
+  let allHistoryList2 = await DownloadHistory.getList({ type: Downloads.ALL,
+    maxHistoryResults: 3 });
+  // Prepare the set of downloads to contain fewer history downloads by removing
+  // the oldest ones.
+  let allView2 = new TestView(allView.expected.slice(3));
+  await allHistoryList2.addView(allView2);
+  await allView2.waitForExpected();
+
   // Clear history and check that session downloads with partial data remain.
   // Private downloads are also not cleared when clearing history.
   view.expected = view.expected.filter(d => d.hasPartialData);

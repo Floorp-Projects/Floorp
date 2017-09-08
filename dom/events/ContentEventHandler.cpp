@@ -515,8 +515,10 @@ ContentEventHandler::GetFocusedContent()
   }
   nsCOMPtr<nsPIDOMWindowOuter> window = doc->GetWindow();
   nsCOMPtr<nsPIDOMWindowOuter> focusedWindow;
-  return nsFocusManager::GetFocusedDescendant(window, true,
-                                              getter_AddRefs(focusedWindow));
+  return nsFocusManager::GetFocusedDescendant(
+                           window,
+                           nsFocusManager::eIncludeAllDescendants,
+                           getter_AddRefs(focusedWindow));
 }
 
 bool

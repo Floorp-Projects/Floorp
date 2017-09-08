@@ -33,7 +33,7 @@ XPCOMUtils.defineLazyModuleGetter(this, "PlacesUtils",
 // Places query used to retrieve all history downloads for the related list.
 const HISTORY_PLACES_QUERY =
       "place:transition=" + Ci.nsINavHistoryService.TRANSITION_DOWNLOAD +
-      "&sort=" + Ci.nsINavHistoryQueryOptions.SORT_BY_DATE_ASCENDING;
+      "&sort=" + Ci.nsINavHistoryQueryOptions.SORT_BY_DATE_DESCENDING;
 
 const DESTINATIONFILEURI_ANNO = "downloads/destinationFileURI";
 const METADATA_ANNO = "downloads/metaData";
@@ -58,19 +58,27 @@ this.DownloadHistory = {
    *        Determines which type of downloads from this session should be
    *        included in the list. This is Downloads.PUBLIC by default, but can
    *        also be Downloads.PRIVATE or Downloads.ALL.
+   * @param maxHistoryResults
+   *        Optional number that limits the amount of results the history query
+   *        may return.
    *
    * @return {Promise}
    * @resolves The requested DownloadHistoryList object.
    * @rejects JavaScript exception.
    */
-  getList({type = Downloads.PUBLIC} = {}) {
-    if (!this._listPromises[type]) {
-      this._listPromises[type] = Downloads.getList(type).then(list => {
-        return new DownloadHistoryList(list, HISTORY_PLACES_QUERY);
+  getList({type = Downloads.PUBLIC, maxHistoryResults} = {}) {
+    let key = `${type}|${maxHistoryResults ? maxHistoryResults : -1}`;
+    if (!this._listPromises[key]) {
+      this._listPromises[key] = Downloads.getList(type).then(list => {
+        // When the amount of history downloads is capped, we request the list in
+        // descending order, to make sure that the list can apply the limit.
+        let query = HISTORY_PLACES_QUERY +
+          (maxHistoryResults ? "&maxResults=" + maxHistoryResults : "");
+        return new DownloadHistoryList(list, query);
       });
     }
 
-    return this._listPromises[type];
+    return this._listPromises[key];
   },
 
   /**
@@ -558,7 +566,7 @@ this.DownloadHistoryList.prototype = {
     }
 
     // Add new slots or reuse existing ones for history downloads.
-    for (let index = 0; index < container.childCount; index++) {
+    for (let index = container.childCount - 1; index >= 0; --index) {
       try {
         this._insertPlacesNode(container.getChild(index));
       } catch (ex) {

@@ -114,8 +114,8 @@ function TopSites(prevState = INITIAL_STATE.TopSites, action) {
       }
       newRows = prevState.rows.map(site => {
         if (site && site.url === action.data.url) {
-          const {bookmarkGuid, bookmarkTitle, lastModified} = action.data;
-          return Object.assign({}, site, {bookmarkGuid, bookmarkTitle, bookmarkDateCreated: lastModified});
+          const {bookmarkGuid, bookmarkTitle, dateAdded} = action.data;
+          return Object.assign({}, site, {bookmarkGuid, bookmarkTitle, bookmarkDateCreated: dateAdded});
         }
         return site;
       });
@@ -203,12 +203,16 @@ function Sections(prevState = INITIAL_STATE.Sections, action) {
         let order;
         let index;
         if (prevState.length > 0) {
-          order = action.data.order || prevState[0].order - 1;
+          order = action.data.order !== undefined ? action.data.order : prevState[0].order - 1;
           index = newState.findIndex(section => section.order >= order);
+          if (index === -1) {
+            index = newState.length;
+          }
         } else {
-          order = action.data.order || 1;
+          order = action.data.order !== undefined ? action.data.order : 0;
           index = 0;
         }
+
         const section = Object.assign({title: "", rows: [], order, enabled: false}, action.data, {initialized});
         newState.splice(index, 0, section);
       }
@@ -231,8 +235,11 @@ function Sections(prevState = INITIAL_STATE.Sections, action) {
         rows: section.rows.map(item => {
           // find the item within the rows that is attempted to be bookmarked
           if (item.url === action.data.url) {
-            const {bookmarkGuid, bookmarkTitle, lastModified} = action.data;
-            Object.assign(item, {bookmarkGuid, bookmarkTitle, bookmarkDateCreated: lastModified});
+            const {bookmarkGuid, bookmarkTitle, dateAdded} = action.data;
+            Object.assign(item, {bookmarkGuid, bookmarkTitle, bookmarkDateCreated: dateAdded});
+            if (!item.type || item.type === "history") {
+              item.type = "bookmark";
+            }
           }
           return item;
         })
@@ -249,6 +256,9 @@ function Sections(prevState = INITIAL_STATE.Sections, action) {
             delete newSite.bookmarkGuid;
             delete newSite.bookmarkTitle;
             delete newSite.bookmarkDateCreated;
+            if (!newSite.type || newSite.type === "bookmark") {
+              newSite.type = "history";
+            }
             return newSite;
           }
           return item;

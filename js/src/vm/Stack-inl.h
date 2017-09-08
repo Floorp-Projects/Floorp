@@ -28,20 +28,6 @@
 
 namespace js {
 
-/*
- * We cache name lookup results only for the global object or for native
- * non-global objects without prototype or with prototype that never mutates,
- * see bug 462734 and bug 487039.
- */
-static inline bool
-IsCacheableEnvironment(JSObject* obj)
-{
-    bool cacheable = obj->is<CallObject>() || obj->is<LexicalEnvironmentObject>();
-
-    MOZ_ASSERT_IF(cacheable, !obj->getOpsLookupProperty());
-    return cacheable;
-}
-
 inline HandleObject
 InterpreterFrame::environmentChain() const
 {

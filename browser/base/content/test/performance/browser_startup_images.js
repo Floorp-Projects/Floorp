@@ -42,7 +42,13 @@ const whitelist = [
   {
     file: "chrome://browser/skin/tabbrowser/tabDragIndicator.png",
     hidpi: "chrome://browser/skin/tabbrowser/tabDragIndicator@2x.png",
-    platforms: ["linux", "win", "macosx"],
+    platforms: ["macosx"],
+  },
+
+  {
+    file: "chrome://browser/skin/tabbrowser/tabDragIndicator.png",
+    hidpi: "<not loaded>",
+    platforms: ["linux", "win"],
   },
 
   {
@@ -68,6 +74,10 @@ const whitelist = [
 ];
 
 add_task(async function() {
+  if (!AppConstants.DEBUG) {
+    ok(false, "You need to run this test on a debug build.");
+  }
+
   let startupRecorder = Cc["@mozilla.org/test/startuprecorder;1"].getService().wrappedJSObject;
   await startupRecorder.done;
 

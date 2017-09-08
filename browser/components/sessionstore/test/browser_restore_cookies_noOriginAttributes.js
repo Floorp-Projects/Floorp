@@ -135,6 +135,7 @@ add_task(async function run_test() {
 
   // Restore window with session cookies that have no originAttributes.
   ss.setWindowState(win, SESSION_DATA, true);
+  await promiseWindowRestored(win);
 
   let enumerator = Services.cookies.getCookiesFromHost(TEST_HOST, {});
   let cookie;
@@ -155,6 +156,7 @@ add_task(async function run_test() {
 
   // Restore window with session cookies that have originAttributes within.
   ss.setWindowState(win, SESSION_DATA_OA, true);
+  await promiseWindowRestored(win);
 
   enumerator = Services.cookies.getCookiesFromHost(TEST_HOST, {});
   cookieCount = 0;

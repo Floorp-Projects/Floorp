@@ -3,11 +3,11 @@
 == menuitem-key.xul menuitem-key-ref.xul
 # these random-if(Android) are due to differences between Android Native & Xul, see bug 732569
 random-if(Android) == menulist-shrinkwrap-1.xul menulist-shrinkwrap-1-ref.xul
-random-if(Android) fails-if(winWidget&&!styloVsGecko) == menulist-shrinkwrap-2.xul menulist-shrinkwrap-2-ref.xul
+random-if(Android) fails-if(winWidget) == menulist-shrinkwrap-2.xul menulist-shrinkwrap-2-ref.xul
 == textbox-overflow-1.xul textbox-overflow-1-ref.xul # for bug 749658
 # accesskeys are not normally displayed on Mac, so skip this test
 skip-if(cocoaWidget) == accesskey.xul accesskey-ref.xul
-fails-if(cocoaWidget&&!styloVsGecko) fuzzy-if(xulRuntime.widgetToolkit=="gtk3",1,11) == tree-row-outline-1.xul tree-row-outline-1-ref.xul # win8: bug 1254832
+fails-if(cocoaWidget) fuzzy-if(xulRuntime.widgetToolkit=="gtk3",1,11) == tree-row-outline-1.xul tree-row-outline-1-ref.xul # win8: bug 1254832
 skip-if(!cocoaWidget) == mac-tab-toolbar.xul mac-tab-toolbar-ref.xul
 != tree-row-outline-1.xul tree-row-outline-1-notref.xul
 == text-crop.xul text-crop-ref.xul
@@ -41,8 +41,8 @@ fuzzy-if(skiaContent,1,60) fuzzy-if(cocoaWidget&&browserIsRemote&&!skiaContent,1
 == object-fit-fill-svg-002.xul object-fit-fill-svg-002-ref.html
 == object-fit-fill-svg-003.xul object-fit-fill-svg-003-ref.html
 == object-fit-fill-svg-004.xul object-fit-fill-svg-004-ref.html
-fails-if(!styloVsGecko) == object-fit-fill-svg-005.xul object-fit-fill-svg-005-ref.html # bug 1092436
-fails-if(!styloVsGecko) == object-fit-fill-svg-006.xul object-fit-fill-svg-006-ref.html # bug 1092436
+fails == object-fit-fill-svg-005.xul object-fit-fill-svg-005-ref.html # bug 1092436
+fails == object-fit-fill-svg-006.xul object-fit-fill-svg-006-ref.html # bug 1092436
 == object-fit-none-png-001.xul object-fit-none-png-001-ref.html
 == object-fit-none-png-002.xul object-fit-none-png-002-ref.html
 == object-fit-none-svg-001.xul object-fit-none-svg-001-ref.html

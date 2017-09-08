@@ -332,7 +332,7 @@
        position="bottomcenter topright"
        photon="true"
        hidden="true">
-  <photonpanelmultiview mainViewId="widget-overflow-mainView">
+  <photonpanelmultiview mainViewId="widget-overflow-mainView" disablekeynav="true">
     <panelview id="widget-overflow-mainView"
                context="toolbar-context-menu">
       <vbox class="panel-subview-body">

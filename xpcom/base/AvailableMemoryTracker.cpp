@@ -333,7 +333,7 @@ private:
 
 NS_IMPL_ISUPPORTS(nsMemoryPressureWatcher, nsIObserver)
 
-bool nsMemoryPressureWatcher::sFreeDirtyPages = false;
+bool nsMemoryPressureWatcher::sFreeDirtyPages = true;
 
 /**
  * Initialize and subscribe to the memory-pressure events. We subscribe to the
@@ -350,7 +350,7 @@ nsMemoryPressureWatcher::Init()
   }
 
   Preferences::AddBoolVarCache(&sFreeDirtyPages, "memory.free_dirty_pages",
-                               false);
+                               true);
 }
 
 /**

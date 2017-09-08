@@ -24,11 +24,11 @@
 }
 
 #onboarding-overlay-button {
-  padding: 0;
+  padding: 10px 0 0 0;
   position: absolute;
   cursor: pointer;
-  top: 34px;
-  offset-inline-start: 34px;
+  top: 4px;
+  offset-inline-start: 12px;
   border: none;
   /* Set to none so no grey contrast background in the high-contrast mode */
   background: none;

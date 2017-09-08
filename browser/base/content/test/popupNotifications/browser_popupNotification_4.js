@@ -213,5 +213,19 @@ var tests = [
       notification.remove();
       goNext();
     }
-  }
+  },
+  // the main action button should apply non-default(no highlight) style.
+  { id: "Test#11",
+    run() {
+      this.notifyObj = new BasicNotification(this.id);
+      this.notifyObj.mainAction.disableHighlight = true;
+      this.notifyObj.secondaryActions = undefined;
+      this.notification = showNotification(this.notifyObj);
+    },
+    onShown(popup) {
+      checkPopup(popup, this.notifyObj);
+      dismissNotification(popup);
+    },
+    onHidden() { }
+  },
 ];

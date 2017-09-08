@@ -516,10 +516,14 @@ nsXBLPrototypeHandler::DispatchXBLCommand(EventTarget* aTarget, nsIDOMEvent* aEv
   }
 
   NS_LossyConvertUTF16toASCII command(mHandlerText);
-  if (windowRoot)
-    windowRoot->GetControllerForCommand(command.get(), getter_AddRefs(controller));
-  else
+  if (windowRoot) {
+    // If user tries to do something, user must try to do it in visible window.
+    // So, let's retrieve controller of visible window.
+    windowRoot->GetControllerForCommand(command.get(), true,
+                                        getter_AddRefs(controller));
+  } else {
     controller = GetController(aTarget); // We're attached to the receiver possibly.
+  }
 
   // We are the default action for this command.
   // Stop any other default action from executing.
@@ -541,7 +545,10 @@ nsXBLPrototypeHandler::DispatchXBLCommand(EventTarget* aTarget, nsIDOMEvent* aEv
     if (windowToCheck) {
       nsCOMPtr<nsPIDOMWindowOuter> focusedWindow;
       focusedContent =
-        nsFocusManager::GetFocusedDescendant(windowToCheck, true, getter_AddRefs(focusedWindow));
+        nsFocusManager::GetFocusedDescendant(
+                          windowToCheck,
+                          nsFocusManager::eIncludeAllDescendants,
+                          getter_AddRefs(focusedWindow));
     }
 
     // If the focus is in an editable region, don't scroll.

@@ -11,7 +11,9 @@
 #include "nsThreadUtils.h"
 #include "gtest/gtest.h"
 
-using mozilla::Runnable;
+#include <functional>
+
+using namespace mozilla;
 
 class TestEvent final : public Runnable, nsIRunnablePriority
 {

@@ -28,7 +28,7 @@ random-if(cocoaWidget) == subpixel-1.html about:blank # see bug 1192616, re-enab
 == text-rtl-alignment-test.html text-rtl-alignment-ref.html
 
 == text-horzline-with-bottom.html text-horzline.html
-fails-if(azureSkia&&OSX&&!styloVsGecko) == text-horzline-with-top.html text-horzline.html
+fails-if(azureSkia&&OSX) == text-horzline-with-top.html text-horzline.html
 
 != text-big-stroke.html text-blank.html
 != text-big-stroke.html text-big-fill.html
@@ -63,10 +63,10 @@ random != text-emoji.html text-emoji-notref.html
 # azure quartz uses CGDrawLinearGradient instead of DrawShading
 # so we have less control over degenerate behaviour as tested by this
 # test
-fails-if((azureSkia&&!azureSkiaGL&&!styloVsGecko)||(azureSkiaGL&&Android)) == linear-gradient-1a.html linear-gradient-1-ref.html
+fails-if((azureSkia&&!azureSkiaGL)||(azureSkiaGL&&Android)) == linear-gradient-1a.html linear-gradient-1-ref.html
 
 # this passes with cairo on 10.7 and 10.8 but not with azure for reasons unknown
-fails-if((azureSkia&&!azureSkiaGL&&!styloVsGecko)||(azureSkiaGL&&Android)) == linear-gradient-1b.html linear-gradient-1-ref.html
+fails-if((azureSkia&&!azureSkiaGL)||(azureSkiaGL&&Android)) == linear-gradient-1b.html linear-gradient-1-ref.html
 
 == zero-dimensions.html zero-dimensions-ref.html
 

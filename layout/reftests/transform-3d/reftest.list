@@ -61,7 +61,7 @@ fails-if(webrender) == transform-style-flat-1a.html transform-style-flat-1-ref.h
 != willchange-containing-block.html?willchange willchange-containing-block.html?noblock
 fuzzy-if(winWidget&&!layersGPUAccelerated,1,606) == scroll-perspective-1.html scroll-perspective-1-ref.html
 # Bugs
-fails-if(!layersGPUAccelerated&&!styloVsGecko) fails-if(webrender) == 1035611-1.html 1035611-1-ref.html # Bug 1072898 for !layersGPUAccelerated failures
+fails-if(!layersGPUAccelerated) fails-if(webrender) == 1035611-1.html 1035611-1-ref.html # Bug 1072898 for !layersGPUAccelerated failures
 != 1157984-1.html about:blank # Bug 1157984
 fuzzy(3,99) == animate-cube-radians.html animate-cube-radians-ref.html # subpixel AA
 fuzzy(3,99) fuzzy-if(/^Windows\x20NT\x206\.1/.test(http.oscpu)&&!layersGPUAccelerated,16,6) == animate-cube-radians-zoom.html animate-cube-radians-zoom-ref.html
