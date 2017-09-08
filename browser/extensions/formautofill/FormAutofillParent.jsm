@@ -203,7 +203,12 @@ FormAutofillParent.prototype = {
         break;
       }
       case "FormAutofill:SaveCreditCard": {
-        await this.profileStorage.creditCards.normalizeCCNumberFields(data.creditcard);
+        // TODO: "MasterPassword.ensureLoggedIn" can be removed after the storage
+        // APIs are refactored to be async functions (bug 1399367).
+        if (!await MasterPassword.ensureLoggedIn()) {
+          log.warn("User canceled master password entry");
+          return;
+        }
         this.profileStorage.creditCards.add(data.creditcard);
         break;
       }
@@ -454,15 +459,14 @@ FormAutofillParent.prototype = {
       return;
     }
 
-    try {
-      await this.profileStorage.creditCards.normalizeCCNumberFields(creditCard.record);
-      this.profileStorage.creditCards.add(creditCard.record);
-    } catch (e) {
-      if (e.result != Cr.NS_ERROR_ABORT) {
-        throw e;
-      }
+    // TODO: "MasterPassword.ensureLoggedIn" can be removed after the storage
+    // APIs are refactored to be async functions (bug 1399367).
+    if (!await MasterPassword.ensureLoggedIn()) {
       log.warn("User canceled master password entry");
+      return;
     }
+
+    this.profileStorage.creditCards.add(creditCard.record);
   },
 
   _onFormSubmit(data, target) {
