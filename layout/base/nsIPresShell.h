@@ -275,7 +275,6 @@ public:
   }
 #endif
 
-#ifdef MOZILLA_INTERNAL_API
   mozilla::StyleSetHandle StyleSet() const { return mStyleSet; }
 
   nsCSSFrameConstructor* FrameConstructor() const { return mFrameConstructor; }
@@ -286,8 +285,6 @@ public:
     return reinterpret_cast<nsFrameManager*>
                            (const_cast<nsIPresShell*>(this)->mFrameManager);
   }
-
-#endif
 
   /* Enable/disable author style level. Disabling author style disables the entire
    * author level of the cascade, including the HTML preshint level.
@@ -393,11 +390,7 @@ public:
    */
   virtual nsIFrame* GetRootFrameExternal() const;
   nsIFrame* GetRootFrame() const {
-#ifdef MOZILLA_INTERNAL_API
     return mFrameManager->GetRootFrame();
-#else
-    return GetRootFrameExternal();
-#endif
   }
 
   /*
@@ -1168,19 +1161,11 @@ public:
 
   void AddAutoWeakFrame(AutoWeakFrame* aWeakFrame)
   {
-#ifdef MOZILLA_INTERNAL_API
     AddAutoWeakFrameInternal(aWeakFrame);
-#else
-    AddAutoWeakFrameExternal(aWeakFrame);
-#endif
   }
   void AddWeakFrame(WeakFrame* aWeakFrame)
   {
-#ifdef MOZILLA_INTERNAL_API
     AddWeakFrameInternal(aWeakFrame);
-#else
-    AddWeakFrameExternal(aWeakFrame);
-#endif
   }
 
   void RemoveAutoWeakFrameInternal(AutoWeakFrame* aWeakFrame);
@@ -1190,19 +1175,11 @@ public:
 
   void RemoveAutoWeakFrame(AutoWeakFrame* aWeakFrame)
   {
-#ifdef MOZILLA_INTERNAL_API
     RemoveAutoWeakFrameInternal(aWeakFrame);
-#else
-    RemoveAutoWeakFrameExternal(aWeakFrame);
-#endif
   }
   void RemoveWeakFrame(WeakFrame* aWeakFrame)
   {
-#ifdef MOZILLA_INTERNAL_API
     RemoveWeakFrameInternal(aWeakFrame);
-#else
-    RemoveWeakFrameExternal(aWeakFrame);
-#endif
   }
 
 #ifdef DEBUG
@@ -1725,20 +1702,12 @@ protected:
 public:
   bool AddRefreshObserver(nsARefreshObserver* aObserver,
                           mozilla::FlushType aFlushType) {
-#ifdef MOZILLA_INTERNAL_API
     return AddRefreshObserverInternal(aObserver, aFlushType);
-#else
-    return AddRefreshObserverExternal(aObserver, aFlushType);
-#endif
   }
 
   bool RemoveRefreshObserver(nsARefreshObserver* aObserver,
                              mozilla::FlushType aFlushType) {
-#ifdef MOZILLA_INTERNAL_API
     return RemoveRefreshObserverInternal(aObserver, aFlushType);
-#else
-    return RemoveRefreshObserverExternal(aObserver, aFlushType);
-#endif
   }
 
   virtual bool AddPostRefreshObserver(nsAPostRefreshObserver* aObserver);
