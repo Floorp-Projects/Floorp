@@ -1375,6 +1375,9 @@ var Search = {
       let sectionId = document.querySelector(".category.selected").getAttribute("value");
       section = document.getElementById(sectionId);
     }
+    if (Search.blacklist.includes(section.id)) {
+      return;
+    }
     let noSearchResults = true;
     if (section.id === "home-section") {
       return this.homeSearch(text);
@@ -1869,6 +1872,7 @@ function refreshSearch() {
 function adjustSearchState() {
   let selectedSection = document.querySelector(".category.selected").getAttribute("value");
   let search = document.getElementById("search");
+  search.value = "";
   search.hidden = Search.blacklist.includes(selectedSection);
   document.getElementById("no-search-results").classList.add("hidden");
   Search.search(""); // reinitialize search state.
