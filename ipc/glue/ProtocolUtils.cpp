@@ -826,13 +826,6 @@ IToplevelProtocol::ShmemDestroyed(const Message& aMsg)
 already_AddRefed<nsIEventTarget>
 IToplevelProtocol::GetMessageEventTarget(const Message& aMsg)
 {
-  if (IsMainThreadProtocol() && SystemGroup::Initialized()) {
-    if (aMsg.type() == SHMEM_CREATED_MESSAGE_TYPE ||
-        aMsg.type() == SHMEM_DESTROYED_MESSAGE_TYPE) {
-      return do_AddRef(SystemGroup::EventTargetFor(TaskCategory::Other));
-    }
-  }
-
   int32_t route = aMsg.routing_id();
 
   Maybe<MutexAutoLock> lock;

@@ -21,6 +21,7 @@ include protocol PImageBridge;
 include protocol PIPCBlobInputStream;
 include protocol PMedia;
 include protocol PNecko;
+include protocol PStreamFilter;
 include protocol PGMPContent;
 include protocol PGMPService;
 include protocol PPluginModule;
@@ -674,6 +675,9 @@ parent:
         returns (Endpoint<PContentBridgeParent> endpoint);
 
     async CreateGMPService();
+
+    async InitStreamFilter(uint64_t channelId, nsString addonId)
+        returns (Endpoint<PStreamFilterChild> aEndpoint);
 
     /**
      * This call connects the content process to a plugin process. This call

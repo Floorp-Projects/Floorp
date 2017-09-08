@@ -19,7 +19,7 @@ Bug 1201597 - Sanity test that we can take a heap snapshot in an e10s child proc
 
     SimpleTest.waitForExplicitFinish();
 
-    var childFrameURL = "data:text/html,<!DOCTYPE HTML><html><body></body></html>";
+    var childFrameURL = "file_saveHeapSnapshot_e10s_01.html";
 
     // This function is stringified and loaded in the child process as a frame
     // script.

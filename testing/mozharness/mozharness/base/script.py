@@ -1550,6 +1550,7 @@ class ScriptMixin(PlatformMixin):
         shell = True
         if isinstance(command, list):
             shell = False
+
         p = subprocess.Popen(command, shell=shell, stdout=tmp_stdout,
                              cwd=cwd, stderr=tmp_stderr, env=env)
         # XXX: changed from self.debug to self.log due to this error:

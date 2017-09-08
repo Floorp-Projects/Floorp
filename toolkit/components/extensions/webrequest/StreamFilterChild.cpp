@@ -278,8 +278,8 @@ StreamFilterChild::MaybeStopRequest()
  * State change acknowledgment callbacks
  *****************************************************************************/
 
-IPCResult
-StreamFilterChild::RecvInitialized(const bool& aSuccess)
+void
+StreamFilterChild::RecvInitialized(bool aSuccess)
 {
   MOZ_ASSERT(mState == State::Uninitialized);
 
@@ -292,7 +292,6 @@ StreamFilterChild::RecvInitialized(const bool& aSuccess)
       mStreamFilter = nullptr;
     }
   }
-  return IPC_OK();
 }
 
 IPCResult
@@ -512,6 +511,12 @@ void
 StreamFilterChild::ActorDestroy(ActorDestroyReason aWhy)
 {
   mStreamFilter = nullptr;
+}
+
+void
+StreamFilterChild::DeallocPStreamFilterChild()
+{
+  RefPtr<StreamFilterChild> self = dont_AddRef(this);
 }
 
 } // namespace extensions

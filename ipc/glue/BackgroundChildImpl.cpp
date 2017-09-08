@@ -32,7 +32,6 @@
 #include "mozilla/dom/MessagePortChild.h"
 #include "mozilla/dom/TabChild.h"
 #include "mozilla/dom/TabGroup.h"
-#include "mozilla/extensions/StreamFilterChild.h"
 #include "mozilla/ipc/IPCStreamAlloc.h"
 #include "mozilla/ipc/PBackgroundTestChild.h"
 #include "mozilla/ipc/PChildToParentStreamChild.h"
@@ -424,26 +423,6 @@ bool
 BackgroundChildImpl::DeallocPCacheStreamControlChild(PCacheStreamControlChild* aActor)
 {
   dom::cache::DeallocPCacheStreamControlChild(aActor);
-  return true;
-}
-
-// -----------------------------------------------------------------------------
-// StreamFilter API
-// -----------------------------------------------------------------------------
-
-extensions::PStreamFilterChild*
-BackgroundChildImpl::AllocPStreamFilterChild(const uint64_t& aChannelId, const nsString& aAddonId)
-{
-  RefPtr<extensions::StreamFilterChild> agent = new extensions::StreamFilterChild();
-  return agent.forget().take();
-}
-
-bool
-BackgroundChildImpl::DeallocPStreamFilterChild(PStreamFilterChild* aActor)
-{
-  RefPtr<extensions::StreamFilterChild> child =
-    dont_AddRef(static_cast<extensions::StreamFilterChild*>(aActor));
-  MOZ_ASSERT(child);
   return true;
 }
 

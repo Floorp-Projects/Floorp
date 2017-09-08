@@ -1788,7 +1788,7 @@ InterSliceGCRunnerFired(TimeStamp aDeadline, void* aData)
   // to run since that means we may have significant amount garbage to collect
   // and better to GC in several longer slices than in a very long one.
   int64_t budget = aDeadline.IsNull() ?
-    int64_t(sActiveIntersliceGCBudget) :
+    int64_t(sActiveIntersliceGCBudget * 2) :
     int64_t((aDeadline - TimeStamp::Now()).ToMilliseconds());
   if (sCCLockedOut && sCCLockedOutTime) {
     int64_t lockedTime = PR_Now() - sCCLockedOutTime;

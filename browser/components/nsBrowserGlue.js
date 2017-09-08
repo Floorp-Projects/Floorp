@@ -966,28 +966,6 @@ BrowserGlue.prototype = {
     DateTimePickerHelper.uninit();
   },
 
-  _initServiceDiscovery() {
-    if (!Services.prefs.getBoolPref("browser.casting.enabled")) {
-      return;
-    }
-    var rokuDevice = {
-      id: "roku:ecp",
-      target: "roku:ecp",
-      factory(aService) {
-        Cu.import("resource://gre/modules/RokuApp.jsm");
-        return new RokuApp(aService);
-      },
-      types: ["video/mp4"],
-      extensions: ["mp4"]
-    };
-
-    // Register targets
-    SimpleServiceDiscovery.registerDevice(rokuDevice);
-
-    // Search for devices continuously every 120 seconds
-    SimpleServiceDiscovery.search(120 * 1000);
-  },
-
   // All initial windows have opened.
   _onWindowsRestored: function BG__onWindowsRestored() {
     if (this._windowsWereRestored) {
@@ -997,8 +975,6 @@ BrowserGlue.prototype = {
 
     BrowserUsageTelemetry.init();
     BrowserUITelemetry.init();
-
-    this._initServiceDiscovery();
 
     // Show update notification, if needed.
     if (Services.prefs.prefHasUserValue("app.update.postupdate"))

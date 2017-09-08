@@ -27,7 +27,10 @@
 
 namespace mozilla {
 namespace dom {
-  class nsIContentParent;
+  class ContentParent;
+}
+namespace net {
+  class nsHttpChannel;
 }
 
 namespace extensions {
@@ -47,7 +50,15 @@ public:
   NS_DECL_NSIREQUESTOBSERVER
   NS_DECL_NSITHREADRETARGETABLESTREAMLISTENER
 
-  explicit StreamFilterParent(uint64_t aChannelId, const nsAString& aAddonId);
+  StreamFilterParent();
+
+  using ParentEndpoint = mozilla::ipc::Endpoint<PStreamFilterParent>;
+
+  static bool Create(ContentParent* aContentParent,
+                     uint64_t aChannelId, const nsAString& aAddonId,
+                     mozilla::ipc::Endpoint<PStreamFilterChild>* aEndpoint);
+
+  static void Attach(nsIChannel* aChannel, ParentEndpoint&& aEndpoint);
 
   enum class State
   {
@@ -72,15 +83,6 @@ public:
     Disconnected,
   };
 
-  static already_AddRefed<StreamFilterParent>
-  Create(uint64_t aChannelId, const nsAString& aAddonId)
-  {
-    RefPtr<StreamFilterParent> filter = new StreamFilterParent(aChannelId, aAddonId);
-    return filter.forget();
-  }
-
-  void Init(already_AddRefed<nsIContentParent> aContentParent);
-
 protected:
   virtual ~StreamFilterParent();
 
@@ -91,6 +93,8 @@ protected:
   virtual IPCResult RecvClose() override;
   virtual IPCResult RecvDisconnect() override;
 
+  virtual void DeallocPStreamFilterParent() override;
+
 private:
   bool IPCActive()
   {
@@ -99,7 +103,11 @@ private:
             mState != State::Disconnected);
   }
 
-  void DoInit(already_AddRefed<nsIContentParent>&& aContentParent);
+  void Init(nsIChannel* aChannel);
+
+  void Bind(ParentEndpoint&& aEndpoint);
+
+  void Destroy();
 
   nsresult FlushBufferedData();
 
@@ -123,19 +131,17 @@ private:
     }
   }
 
-  void
-  AssertIsPBackgroundThread()
-  {
-    MOZ_ASSERT(NS_GetCurrentThread() == mPBackgroundThread);
-  }
+  inline nsIEventTarget* ActorThread();
 
-  void
-  AssertIsIOThread()
-  {
-    MOZ_ASSERT(NS_GetCurrentThread() == mIOThread);
-  }
+  inline nsIEventTarget* IOThread();
 
-  void
+  inline bool IsIOThread();
+
+  inline void AssertIsActorThread();
+
+  inline void AssertIsIOThread();
+
+  static void
   AssertIsMainThread()
   {
     MOZ_ASSERT(NS_IsMainThread());
@@ -145,34 +151,21 @@ private:
   void
   RunOnMainThread(const char* aName, Function&& aFunc)
   {
-    SystemGroup::Dispatch(TaskCategory::Network,
-                          Move(NS_NewRunnableFunction(aName, aFunc)));
+    mMainThread->Dispatch(Move(NS_NewRunnableFunction(aName, aFunc)),
+                          NS_DISPATCH_NORMAL);
   }
 
   template<typename Function>
-  void
-  RunOnPBackgroundThread(const char* aName, Function&& aFunc)
-  {
-    mPBackgroundThread->Dispatch(Move(NS_NewRunnableFunction(aName, aFunc)),
-                                 NS_DISPATCH_NORMAL);
-  }
+  void RunOnActorThread(const char* aName, Function&& aFunc);
 
   template<typename Function>
-  void
-  RunOnIOThread(const char* aName, Function&& aFunc)
-  {
-    mIOThread->Dispatch(Move(NS_NewRunnableFunction(aName, aFunc)),
-                        NS_DISPATCH_NORMAL);
-  }
-
-  const uint64_t mChannelId;
-  const nsCOMPtr<nsIAtom> mAddonId;
+  void RunOnIOThread(const char* aName, Function&& aFunc);
 
   nsCOMPtr<nsIChannel> mChannel;
   nsCOMPtr<nsIStreamListener> mOrigListener;
 
-  nsCOMPtr<nsIThread> mPBackgroundThread;
-  nsCOMPtr<nsIThread> mIOThread;
+  nsCOMPtr<nsIEventTarget> mMainThread;
+  nsCOMPtr<nsIEventTarget> mIOThread;
 
   Mutex mBufferMutex;
 
