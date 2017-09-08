@@ -120,7 +120,6 @@ if (typeof Mozilla == "undefined") {
    * <li>privateWindow
    * <li>quit
    * <li>readerMode-urlBar
-   * <li>screenshots
    * <li>search
    * <li>searchIcon
    * <li>searchPrefsLink
