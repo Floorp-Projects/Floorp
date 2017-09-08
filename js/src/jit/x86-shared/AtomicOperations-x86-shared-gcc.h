@@ -172,6 +172,26 @@ js::jit::AtomicOperations::loadSafeWhenRacy(T* addr)
 
 namespace js { namespace jit {
 
+#define GCC_RACYLOADOP(T)                                       \
+    template<>                                                  \
+    inline T                                                    \
+    js::jit::AtomicOperations::loadSafeWhenRacy(T* addr) {      \
+        return *addr;                                           \
+    }
+
+// On 32-bit platforms, loadSafeWhenRacy need not be access-atomic for 64-bit
+// data, so just use regular accesses instead of the expensive __atomic_load
+// solution which must use CMPXCHG8B.
+#ifndef JS_64BIT
+GCC_RACYLOADOP(int64_t)
+GCC_RACYLOADOP(uint64_t)
+#endif
+
+// Float and double accesses are not access-atomic.
+GCC_RACYLOADOP(float)
+GCC_RACYLOADOP(double)
+
+// Clang requires a specialization for uint8_clamped.
 template<>
 inline uint8_clamped
 js::jit::AtomicOperations::loadSafeWhenRacy(uint8_clamped* addr)
@@ -180,6 +200,8 @@ js::jit::AtomicOperations::loadSafeWhenRacy(uint8_clamped* addr)
     __atomic_load(&addr->val, &v, __ATOMIC_RELAXED);
     return uint8_clamped(v);
 }
+
+#undef GCC_RACYLOADOP
 
 } }
 
@@ -193,12 +215,34 @@ js::jit::AtomicOperations::storeSafeWhenRacy(T* addr, T val)
 
 namespace js { namespace jit {
 
+#define GCC_RACYSTOREOP(T)                                         \
+    template<>                                                     \
+    inline void                                                    \
+    js::jit::AtomicOperations::storeSafeWhenRacy(T* addr, T val) { \
+        *addr = val;                                               \
+    }
+
+// On 32-bit platforms, storeSafeWhenRacy need not be access-atomic for 64-bit
+// data, so just use regular accesses instead of the expensive __atomic_store
+// solution which must use CMPXCHG8B.
+#ifndef JS_64BIT
+GCC_RACYSTOREOP(int64_t)
+GCC_RACYSTOREOP(uint64_t)
+#endif
+
+// Float and double accesses are not access-atomic.
+GCC_RACYSTOREOP(float)
+GCC_RACYSTOREOP(double)
+
+// Clang requires a specialization for uint8_clamped.
 template<>
 inline void
 js::jit::AtomicOperations::storeSafeWhenRacy(uint8_clamped* addr, uint8_clamped val)
 {
     __atomic_store(&addr->val, &val.val, __ATOMIC_RELAXED);
 }
+
+#undef GCC_RACYSTOREOP
 
 } }
 
