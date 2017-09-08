@@ -29,8 +29,9 @@ describe("SectionsManager", () => {
       SectionsManager.sections.clear();
       SectionsManager.initialized = false;
       SectionsManager.init();
-      assert.equal(SectionsManager.sections.size, 1);
+      assert.equal(SectionsManager.sections.size, 2);
       assert.ok(SectionsManager.sections.has("topstories"));
+      assert.ok(SectionsManager.sections.has("highlights"));
     });
     it("should set .initialized to true", () => {
       SectionsManager.sections.clear();
@@ -215,11 +216,14 @@ describe("SectionsFeed", () => {
     it("should call onAddSection for any already added sections in SectionsManager", () => {
       SectionsManager.init();
       assert.ok(SectionsManager.sections.has("topstories"));
+      assert.ok(SectionsManager.sections.has("highlights"));
       const topstories = SectionsManager.sections.get("topstories");
+      const highlights = SectionsManager.sections.get("highlights");
       sinon.spy(feed, "onAddSection");
       feed.init();
-      assert.calledOnce(feed.onAddSection);
+      assert.calledTwice(feed.onAddSection);
       assert.calledWith(feed.onAddSection, SectionsManager.ADD_SECTION, "topstories", topstories);
+      assert.calledWith(feed.onAddSection, SectionsManager.ADD_SECTION, "highlights", highlights);
     });
   });
   describe("#uninit", () => {

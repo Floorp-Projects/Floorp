@@ -449,6 +449,15 @@ public:
   nsIScrollableFrame* GetScrollableFrameToScroll(ScrollDirection aDirection);
 
   /**
+   * Gets nearest ancestor scrollable frame from aFrame.  The frame is
+   * scrollable with overflow:scroll or overflow:auto in some direction when
+   * aDirection is eEither.  Otherwise, this returns a nearest frame that is
+   * scrollable in the specified direction.
+   */
+  nsIScrollableFrame* GetNearestScrollableFrame(nsIFrame* aFrame,
+                                                ScrollDirection aDirection);
+
+  /**
    * Returns the page sequence frame associated with the frame hierarchy.
    * Returns nullptr if not a paginated view.
    */

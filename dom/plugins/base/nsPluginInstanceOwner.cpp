@@ -1826,7 +1826,10 @@ ContentIsFocusedWithinWindow(nsIContent* aContent)
   }
 
   nsCOMPtr<nsPIDOMWindowOuter> focusedFrame;
-  nsCOMPtr<nsIContent> focusedContent = fm->GetFocusedDescendant(rootWindow, true, getter_AddRefs(focusedFrame));
+  nsCOMPtr<nsIContent> focusedContent =
+    nsFocusManager::GetFocusedDescendant(rootWindow,
+                                         nsFocusManager::eIncludeAllDescendants,
+                                         getter_AddRefs(focusedFrame));
   return (focusedContent.get() == aContent);
 }
 

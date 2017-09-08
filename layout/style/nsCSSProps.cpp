@@ -2877,8 +2877,6 @@ static const nsCSSPropertyID gGridSubpropTable[] = {
   eCSSProperty_grid_auto_flow,
   eCSSProperty_grid_auto_rows,
   eCSSProperty_grid_auto_columns,
-  eCSSProperty_grid_row_gap, // can only be reset, not get/set
-  eCSSProperty_grid_column_gap, // can only be reset, not get/set
   eCSSProperty_UNKNOWN
 };
 

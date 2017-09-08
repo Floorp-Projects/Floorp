@@ -11,10 +11,13 @@
 #include "UTFStrings.h"
 #include "nsIServiceManager.h"
 #include "nsStaticAtom.h"
+#include "nsThreadUtils.h"
 
 #include "gtest/gtest.h"
 
 using namespace mozilla;
+
+uint32_t NS_GetUnusedAtomCount(void);
 
 namespace TestAtoms {
 
@@ -148,6 +151,43 @@ TEST(Atoms, Table)
 
   EXPECT_TRUE(thirdDynamic);
   EXPECT_EQ(NS_GetNumberOfAtoms(), count + 1);
+}
+
+class nsAtomRunner final : public nsIRunnable
+{
+public:
+  NS_DECL_THREADSAFE_ISUPPORTS
+
+  NS_IMETHOD Run() final
+  {
+    for (int i = 0; i < 10000; i++) {
+      nsCOMPtr<nsIAtom> atom = NS_Atomize(u"A Testing Atom");
+    }
+    return NS_OK;
+  }
+
+private:
+  ~nsAtomRunner() {}
+};
+
+NS_IMPL_ISUPPORTS(nsAtomRunner, nsIRunnable)
+
+TEST(Atoms, ConcurrentAccessing)
+{
+  static const size_t kThreadCount = 4;
+  // Force a GC before so that we don't have any unused atom.
+  NS_GetNumberOfAtoms();
+  EXPECT_EQ(NS_GetUnusedAtomCount(), uint32_t(0));
+  nsCOMPtr<nsIThread> threads[kThreadCount];
+  for (size_t i = 0; i < kThreadCount; i++) {
+    nsresult rv = NS_NewThread(getter_AddRefs(threads[i]), new nsAtomRunner);
+    EXPECT_TRUE(NS_SUCCEEDED(rv));
+  }
+  for (size_t i = 0; i < kThreadCount; i++) {
+    threads[i]->Shutdown();
+  }
+  // We should have one unused atom from this test.
+  EXPECT_EQ(NS_GetUnusedAtomCount(), uint32_t(1));
 }
 
 }

@@ -24,7 +24,7 @@ HTTP(..) load ligature-with-space-1.html
 == line-editing-1c.html line-editing-1-ref.html
 == line-editing-1d.html line-editing-1-ref.html
 == line-editing-1e.html line-editing-1-ref.html
-fails-if((cocoaWidget||(winWidget&&dwrite))&&!styloVsGecko) HTTP(..) == lineheight-metrics-1.html lineheight-metrics-1-ref.html # bug 657864
+fails-if(cocoaWidget||(winWidget&&dwrite)) HTTP(..) == lineheight-metrics-1.html lineheight-metrics-1-ref.html # bug 657864
 HTTP(..) == lineheight-metrics-2a.html lineheight-metrics-2-ref.html
 HTTP(..) == lineheight-metrics-2b.html lineheight-metrics-2-ref.html
 == lineheight-percentage-1.html lineheight-percentage-1-ref.html
@@ -117,9 +117,9 @@ HTTP(..) == variation-selector-unsupported-1.html variation-selector-unsupported
 skip-if(Android) == wordbreak-4a.html wordbreak-4a-ref.html
 == wordbreak-4b.html wordbreak-4b-ref.html
 == wordbreak-5.html wordbreak-5-ref.html
-fails-if(/^Windows\x20NT\x2010\.0/.test(http.oscpu)&&!styloVsGecko) == wordbreak-6.html wordbreak-6-ref.html # Bug 1258239
+fails-if(/^Windows\x20NT\x2010\.0/.test(http.oscpu)) == wordbreak-6.html wordbreak-6-ref.html # Bug 1258239
 HTTP(..) == wordbreak-7a.html wordbreak-7a-ref.html
-fails-if(!styloVsGecko) HTTP(..) == wordbreak-7b.html wordbreak-7b-ref.html # bug 479829
+fails HTTP(..) == wordbreak-7b.html wordbreak-7b-ref.html # bug 479829
 == wordbreak-8.html wordbreak-8-ref.html
 pref(gfx.font_rendering.graphite.enabled,true) HTTP(..) == wordbreak-9.html wordbreak-9-ref.html
 == wordbreak-dynamic-1.html wordbreak-dynamic-1-ref.html
@@ -169,10 +169,10 @@ random-if(!winWidget) == arial-bold-lam-alef-1.html arial-bold-lam-alef-1-ref.ht
 # Fallback (presentation-forms) shaping with a font that lacks GSUB/GPOS
 # These tests are not valid with Mac or FT2 font backends because our masking of complex-script ranges
 # in the 'cmap' will prevent the test font (without GSUB) being used.
-fails-if((cocoaWidget||Android)&&!styloVsGecko) HTTP(..) == arabic-fallback-1.html arabic-fallback-1-ref.html
-fails-if((cocoaWidget||Android)&&!styloVsGecko) HTTP(..) == arabic-fallback-2.html arabic-fallback-2-ref.html
-fails-if((cocoaWidget||Android)&&!styloVsGecko) HTTP(..) == arabic-fallback-3.html arabic-fallback-3-ref.html
-fails-if(!cocoaWidget&&!Android&&!styloVsGecko) HTTP(..) != arabic-fallback-4.html arabic-fallback-4-notref.html
+fails-if(cocoaWidget||Android) HTTP(..) == arabic-fallback-1.html arabic-fallback-1-ref.html
+fails-if(cocoaWidget||Android) HTTP(..) == arabic-fallback-2.html arabic-fallback-2-ref.html
+fails-if(cocoaWidget||Android) HTTP(..) == arabic-fallback-3.html arabic-fallback-3-ref.html
+fails-if(!cocoaWidget&&!Android) HTTP(..) != arabic-fallback-4.html arabic-fallback-4-notref.html
 == arabic-marks-1.html arabic-marks-1-ref.html
 == arabic-final-ligature-spacing.html arabic-final-ligature-spacing-ref.html
 # harfbuzz fallback mark stacking in the absence of GPOS:
@@ -185,7 +185,7 @@ HTTP(..) != fallback-mark-stacking-1.html fallback-mark-stacking-1-notref.html
 == 745555-2.html 745555-2-ref.html
 == 820255.html 820255-ref.html
 HTTP(..) != 1170688.html 1170688-ref.html
-fails-if(/^Windows\x20NT\x206\.1/.test(http.oscpu)&&!styloVsGecko) == 1320665-cmap-format-13.html 1320665-cmap-format-13-ref.html # see bug 1320665 comments 8-9
+fails-if(/^Windows\x20NT\x206\.1/.test(http.oscpu)) == 1320665-cmap-format-13.html 1320665-cmap-format-13-ref.html # see bug 1320665 comments 8-9
 HTTP(..) == 1331339-script-extensions-shaping-1.html 1331339-script-extensions-shaping-1-ref.html
 skip-if(!cocoaWidget) != 1349308-1.html 1349308-notref.html # macOS-specific test for -apple-system glyph metrics
 
@@ -322,8 +322,8 @@ HTTP(..) == graphite-surrogate-selection.html graphite-surrogate-selection-ref.h
 == hyphenation-control-3.html hyphenation-control-3-ref.html
 
 # osx-font-smoothing - with and without subpixel AA, only under OSX
-fails-if(!cocoaWidget&&!styloVsGecko) != osx-font-smoothing.html osx-font-smoothing-ref.html
-fails-if(!cocoaWidget&&!styloVsGecko) != osx-font-smoothing-2.html osx-font-smoothing-2-notref.html
+fails-if(!cocoaWidget) != osx-font-smoothing.html osx-font-smoothing-ref.html
+fails-if(!cocoaWidget) != osx-font-smoothing-2.html osx-font-smoothing-2-notref.html
 == osx-font-smoothing-2.html osx-font-smoothing-2-ref.html
 
 pref(layout.css.text-align-unsafe-value.enabled,true) fails-if(styloVsGecko||stylo) == text-align-unsafe.html text-align-unsafe-ref.html

@@ -85,35 +85,38 @@ function test() {
                             test_state._closedWindows.length);
     ss.setWindowState(newWin, JSON.stringify(test_state), true);
 
-    let closedWindows = JSON.parse(ss.getClosedWindowData());
-    is(closedWindows.length, test_state._closedWindows.length,
-       "Closed window list has the expected length");
-    is(countByTitle(closedWindows, FORGET),
-       test_state._closedWindows.length - remember_count,
-       "The correct amount of windows are to be forgotten");
-    is(countByTitle(closedWindows, REMEMBER), remember_count,
-       "Everything is set up.");
+    promiseWindowRestored(newWin).then(() => {
+      let closedWindows = JSON.parse(ss.getClosedWindowData());
+      is(closedWindows.length, test_state._closedWindows.length,
+        "Closed window list has the expected length");
+      is(countByTitle(closedWindows, FORGET),
+        test_state._closedWindows.length - remember_count,
+        "The correct amount of windows are to be forgotten");
+      is(countByTitle(closedWindows, REMEMBER), remember_count,
+        "Everything is set up.");
 
-    // all of the following calls with illegal arguments should throw NS_ERROR_ILLEGAL_VALUE
-    ok(testForError(() => ss.forgetClosedWindow(-1)),
-       "Invalid window for forgetClosedWindow throws");
-    ok(testForError(() => ss.forgetClosedWindow(test_state._closedWindows.length + 1)),
-       "Invalid window for forgetClosedWindow throws");
+      // all of the following calls with illegal arguments should throw NS_ERROR_ILLEGAL_VALUE
+      ok(testForError(() => ss.forgetClosedWindow(-1)),
+        "Invalid window for forgetClosedWindow throws");
+      ok(testForError(() => ss.forgetClosedWindow(test_state._closedWindows.length + 1)),
+        "Invalid window for forgetClosedWindow throws");
 
-    // Remove third window, then first window
-    ss.forgetClosedWindow(2);
-    ss.forgetClosedWindow(null);
+      // Remove third window, then first window
+      ss.forgetClosedWindow(2);
+      ss.forgetClosedWindow(null);
 
-    closedWindows = JSON.parse(ss.getClosedWindowData());
-    is(closedWindows.length, remember_count,
-       "The correct amount of windows were removed");
-    is(countByTitle(closedWindows, FORGET), 0,
-       "All windows specifically forgotten were indeed removed");
-    is(countByTitle(closedWindows, REMEMBER), remember_count,
-       "... and windows not specifically forgetten weren't.");
+      closedWindows = JSON.parse(ss.getClosedWindowData());
+      is(closedWindows.length, remember_count,
+        "The correct amount of windows were removed");
+      is(countByTitle(closedWindows, FORGET), 0,
+        "All windows specifically forgotten were indeed removed");
+      is(countByTitle(closedWindows, REMEMBER), remember_count,
+        "... and windows not specifically forgetten weren't.");
 
-    // clean up
-    gPrefService.clearUserPref("browser.sessionstore.max_windows_undo");
-    BrowserTestUtils.closeWindow(newWin).then(finish);
+      // clean up
+      gPrefService.clearUserPref("browser.sessionstore.max_windows_undo");
+      BrowserTestUtils.closeWindow(newWin).then(finish);
+    });
   });
 }
+

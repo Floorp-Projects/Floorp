@@ -603,8 +603,16 @@ WMFVideoMFTManager::Init()
 bool
 WMFVideoMFTManager::InitInternal()
 {
+  // The H264 SanityTest uses a 132x132 videos to determine if DXVA can be used.
+  // so we want to use the software decoder for videos with lower resolutions.
+  static const int MIN_H264_HW_WIDTH = 132;
+  static const int MIN_H264_HW_HEIGHT = 132;
+
   mUseHwAccel = false; // default value; changed if D3D setup succeeds.
-  bool useDxva = InitializeDXVA();
+  bool useDxva = (mStreamType != H264 ||
+                  (mVideoInfo.ImageRect().width > MIN_H264_HW_WIDTH &&
+                   mVideoInfo.ImageRect().height > MIN_H264_HW_HEIGHT)) &&
+                 InitializeDXVA();
 
   RefPtr<MFTDecoder> decoder;
 

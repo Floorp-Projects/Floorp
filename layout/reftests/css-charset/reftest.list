@@ -3,8 +3,8 @@
 == test-charset-leading-space.html pass.html
 == test-charset-trailing-space.html pass.html
 == test-charset-utf-16-le-no-bom.html pass.html
-fails-if(!styloVsGecko) == test-charset-utf-16-le-bom.html pass.html
+fails == test-charset-utf-16-le-bom.html pass.html
 == test-charset-utf-16-bom-le.html pass.html
 == test-charset-utf-16-be-no-bom.html pass.html
-fails-if(!styloVsGecko) == test-charset-utf-16-be-bom.html pass.html
+fails == test-charset-utf-16-be-bom.html pass.html
 == test-charset-utf-16-bom-be.html pass.html

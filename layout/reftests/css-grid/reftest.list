@@ -1,7 +1,7 @@
 default-preferences pref(layout.css.grid.enabled,true)
 
-fails-if(!styloVsGecko) == grid-whitespace-handling-1a.xhtml grid-whitespace-handling-1-ref.xhtml
-fails-if(!styloVsGecko) skip-if(styloVsGecko) == grid-whitespace-handling-1b.xhtml grid-whitespace-handling-1-ref.xhtml
+fails == grid-whitespace-handling-1a.xhtml grid-whitespace-handling-1-ref.xhtml
+fails == grid-whitespace-handling-1b.xhtml grid-whitespace-handling-1-ref.xhtml
 == grid-whitespace-handling-2.xhtml  grid-whitespace-handling-2-ref.xhtml
 == grid-placement-definite-001.html grid-placement-definite-001-ref.html
 == grid-placement-definite-002.html grid-placement-definite-002-ref.html
@@ -138,7 +138,7 @@ random-if(http.oscpu!="Linux\u0020i686") == grid-item-content-baseline-002.html 
 random-if(http.oscpu!="Linux\u0020i686") == grid-item-mixed-baseline-001.html grid-item-mixed-baseline-001-ref.html # ditto
 random-if(http.oscpu!="Linux\u0020i686") == grid-item-mixed-baseline-002.html grid-item-mixed-baseline-002-ref.html # ditto
 random-if(http.oscpu!="Linux\u0020i686") == grid-item-mixed-baseline-003.html grid-item-mixed-baseline-003-ref.html # ditto
-skip-if(!gtkWidget) == grid-item-mixed-baseline-004.html grid-item-mixed-baseline-004-ref.html # ditto
+skip-if(!gtkWidget) fails-if(styloVsGecko) == grid-item-mixed-baseline-004.html grid-item-mixed-baseline-004-ref.html # ditto. Also stylo bug 1396977.
 == grid-align-content-001.html grid-align-content-001-ref.html
 == grid-justify-content-001.html grid-justify-content-001-ref.html
 skip-if(Android&&isDebugBuild) == grid-justify-content-002.html grid-justify-content-002-ref.html # Bug 1245884 - slow
