@@ -74,7 +74,7 @@ function runTests()
 
   SpecialPowers.addChromeEventListener("drop", chromeListener, true, false);
   var targetNotHandling = document.getElementById("nothandling_target");
-  fireDrop(targetNotHandling, true, true);
+  fireDrop(targetNotHandling, false, true);
   SpecialPowers.removeChromeEventListener("drop", chromeListener, true);
   ok(chromeGotEvent, "Chrome should have got drop event!");
   is(gGotHandlingDrop, false, "Didn't get drop on accepting element (2)");

@@ -10,13 +10,14 @@
 #include "jit/CacheIRCompiler.h"
 #include "jit/IonCaches.h"
 #include "jit/IonIC.h"
-
+#include "jit/JSJitFrameIter.h"
 #include "jit/Linker.h"
 #include "jit/SharedICHelpers.h"
 #include "proxy/Proxy.h"
 
 #include "jscompartmentinlines.h"
 
+#include "jit/JSJitFrameIter-inl.h"
 #include "jit/MacroAssembler-inl.h"
 #include "vm/TypeInference-inl.h"
 
@@ -322,6 +323,21 @@ CacheRegisterAllocator::restoreIonLiveRegisters(MacroAssembler& masm, LiveRegist
 
     availableRegs_.set() = GeneralRegisterSet();
     availableRegsAfterSpill_.set() = GeneralRegisterSet::All();
+}
+
+static void*
+GetReturnAddressToIonCode(JSContext* cx)
+{
+    JSJitFrameIter frame(cx);
+    MOZ_ASSERT(frame.type() == JitFrame_Exit,
+               "An exit frame is expected as update functions are called with a VMFunction.");
+
+    void* returnAddr = frame.returnAddress();
+#ifdef DEBUG
+    ++frame;
+    MOZ_ASSERT(frame.isIonJS());
+#endif
+    return returnAddr;
 }
 
 void

@@ -659,22 +659,19 @@ function checkCachedDataTransfer(cd, eventtype)
   setClipboardText("Some Clipboard Text");
 
   var oldtext = cd.getData("text/plain");
-  ok(oldtext != "Some Clipboard Text", "clipboard get using " + testprefix);
+  ok(!oldtext, "clipboard get using " + testprefix);
 
-  var exh = false;
-  try { cd.mozSetDataAt("text/plain", "Test Cache Data", 0); } catch (ex) { exh = true; }
-  ok(eventtype == "paste" ? exh : !exh, "exception occured setting " + testprefix);
-
-  var newtext = (eventtype == "paste") ? cd.getData("text/plain") :
-                                         cd.mozGetDataAt("text/plain", 0);
-  is(newtext, (eventtype == "paste") ? oldtext : "Test Cache Data",
-     " clipboardData not changed using " + testprefix);
+  try {
+    cd.mozSetDataAt("text/plain", "Test Cache Data", 0);
+  } catch (ex) {}
+  ok(!cd.getData("text/plain"), "clipboard set using " + testprefix);
 
   is(getClipboardText(), "Some Clipboard Text", "clipboard not changed using " + testprefix);
 
-  var exh = false;
-  try { cd.mozClearDataAt("text/plain", 0); } catch (ex) { exh = true; }
-  ok(eventtype == "paste" ? exh : !exh, "exception occured clearing " + testprefix);
+  try {
+    cd.mozClearDataAt("text/plain", 0);
+  } catch (ex) {}
+  ok(!cd.getData("text/plain"), "clipboard clear using " + testprefix);
 
   is(getClipboardText(), "Some Clipboard Text", "clipboard not changed using " + testprefix);
 }

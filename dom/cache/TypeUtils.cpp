@@ -343,7 +343,7 @@ TypeUtils::ToInternalRequest(const CacheRequest& aIn)
 
   nsCOMPtr<nsIInputStream> stream = ReadStream::Create(aIn.body());
 
-  internalRequest->SetBody(stream);
+  internalRequest->SetBody(stream, -1);
 
   return internalRequest.forget();
 }

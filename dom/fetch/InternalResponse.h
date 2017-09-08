@@ -212,7 +212,7 @@ public:
       return;
     }
 
-    return GetUnfilteredBody(aStream, aBodySize);
+    GetUnfilteredBody(aStream, aBodySize);
   }
 
   void

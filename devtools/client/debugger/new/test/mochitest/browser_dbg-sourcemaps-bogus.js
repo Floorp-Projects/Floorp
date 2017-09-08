@@ -4,20 +4,20 @@
 // Test that an error while loading a sourcemap does not break
 // debugging.
 
-add_task(function*() {
+add_task(async function() {
   // NOTE: the CORS call makes the test run times inconsistent
   requestLongerTimeout(2);
 
-  const dbg = yield initDebugger("doc-sourcemap-bogus.html");
+  const dbg = await initDebugger("doc-sourcemap-bogus.html");
   const { selectors: { getSources }, getState } = dbg;
 
-  yield selectSource(dbg, "bogus-map.js");
+  await selectSource(dbg, "bogus-map.js");
 
   // We should still be able to set breakpoints and pause in the
   // generated source.
-  yield addBreakpoint(dbg, "bogus-map.js", 4);
+  await addBreakpoint(dbg, "bogus-map.js", 4);
   invokeInTab("runCode");
-  yield waitForPaused(dbg);
+  await waitForPaused(dbg);
   assertPausedLocation(dbg);
 
   // Make sure that only the single generated source exists. The

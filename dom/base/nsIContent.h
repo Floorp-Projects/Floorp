@@ -21,6 +21,7 @@ class nsAttrName;
 class nsTextFragment;
 class nsIFrame;
 class nsXBLBinding;
+class nsITextControlElement;
 
 namespace mozilla {
 class EventChainPreVisitor;
@@ -979,6 +980,11 @@ public:
   virtual void RemovePurple() = 0;
 
   virtual bool OwnedOnlyByTheDOMTree() { return false; }
+
+  virtual already_AddRefed<nsITextControlElement> GetAsTextControlElement()
+  {
+    return nullptr;
+  }
 
 protected:
   /**
