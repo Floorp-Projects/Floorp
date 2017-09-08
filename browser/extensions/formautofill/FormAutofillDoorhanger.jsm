@@ -123,6 +123,26 @@ const CONTENT = {
       persistWhileVisible: true,
       popupIconURL: "chrome://formautofill/content/icon-credit-card.svg",
       hideClose: true,
+      checkbox: {
+        get checked() {
+          return Services.prefs.getBoolPref("services.sync.engine.creditcards");
+        },
+        get label() {
+          // Only set the label when sync account is set and credit card sync is disabled,
+          // otherwise return null label to hide checkbox.
+          return Services.prefs.prefHasUserValue("services.sync.username") &&
+            !Services.prefs.getBoolPref("services.sync.engine.creditcards") ?
+            GetStringFromName("creditCardsSyncCheckbox") : null;
+        },
+        callback(event) {
+          let {secondaryButton, menubutton} = event.target.parentNode.parentNode.parentNode;
+          let checked = event.target.checked;
+          Services.prefs.setBoolPref("services.sync.engine.creditcards", checked);
+          secondaryButton.disabled = checked;
+          menubutton.disabled = checked;
+          log.debug("Set creditCard sync to", checked);
+        },
+      },
     },
   },
 };
@@ -165,6 +185,11 @@ let FormAutofillDoorhanger = {
     }
 
     return [mainAction, secondaryActions];
+  },
+  _getNotificationElm(browser, id) {
+    let notificationId = id + "-notification";
+    let chromeDoc = browser.ownerDocument;
+    return chromeDoc.getElementById(notificationId);
   },
   /**
    * Append the link label element to the popupnotificationcontent.
@@ -225,26 +250,20 @@ let FormAutofillDoorhanger = {
     if (!options.checkbox) {
       return;
     }
-    let id = notificationId + "-notification";
-    let chromeDoc = browser.ownerDocument;
-    let notification = chromeDoc.getElementById(id);
-    let cb = notification.checkbox;
+    let {checkbox} = this._getNotificationElm(browser, notificationId);
 
-    if (cb) {
-      cb.addEventListener("command", options.checkbox.callback);
+    if (checkbox && !checkbox.hidden) {
+      checkbox.addEventListener("command", options.checkbox.callback);
     }
   },
   _removeCheckboxListener(browser, {notificationId, options}) {
     if (!options.checkbox) {
       return;
     }
-    let id = notificationId + "-notification";
-    let chromeDoc = browser.ownerDocument;
-    let notification = chromeDoc.getElementById(id);
-    let cb = notification.checkbox;
+    let {checkbox} = this._getNotificationElm(browser, notificationId);
 
-    if (cb) {
-      cb.removeEventListener("command", options.checkbox.callback);
+    if (checkbox && !checkbox.hidden) {
+      checkbox.removeEventListener("command", options.checkbox.callback);
     }
   },
   /**
