@@ -220,7 +220,6 @@ public:
       return mDocument;
   }
 
-#ifdef MOZILLA_INTERNAL_API
   mozilla::StyleSetHandle StyleSet() const { return GetPresShell()->StyleSet(); }
 
   nsFrameManager* FrameManager()
@@ -243,7 +242,6 @@ public:
   mozilla::CounterStyleManager* CounterStyleManager() const {
     return mCounterStyleManager;
   }
-#endif
 
   /**
    * Rebuilds all style data by throwing out the old rule tree and
@@ -321,13 +319,8 @@ public:
   uint16_t     ImageAnimationMode() const { return mImageAnimationMode; }
   virtual void SetImageAnimationModeExternal(uint16_t aMode);
   void SetImageAnimationModeInternal(uint16_t aMode);
-#ifdef MOZILLA_INTERNAL_API
   void SetImageAnimationMode(uint16_t aMode)
   { SetImageAnimationModeInternal(aMode); }
-#else
-  void SetImageAnimationMode(uint16_t aMode)
-  { SetImageAnimationModeExternal(aMode); }
-#endif
 
   /**
    * Get medium of presentation
@@ -431,13 +424,8 @@ public:
 
   virtual nsISupports* GetContainerWeakExternal() const;
   nsISupports* GetContainerWeakInternal() const;
-#ifdef MOZILLA_INTERNAL_API
   nsISupports* GetContainerWeak() const
   { return GetContainerWeakInternal(); }
-#else
-  nsISupports* GetContainerWeak() const
-  { return GetContainerWeakExternal(); }
-#endif
 
   nsIDocShell* GetDocShell() const;
 
@@ -780,11 +768,7 @@ public:
    *
    *  @lina 07/12/2000
    */
-#ifdef MOZILLA_INTERNAL_API
   bool BidiEnabled() const { return BidiEnabledInternal(); }
-#else
-  bool BidiEnabled() const { return BidiEnabledExternal(); }
-#endif
   virtual bool BidiEnabledExternal() const;
   bool BidiEnabledInternal() const;
 
