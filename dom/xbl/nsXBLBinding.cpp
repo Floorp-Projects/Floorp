@@ -239,7 +239,8 @@ nsXBLBinding::BindAnonymousContent(nsIContent* aAnonParent,
 
 void
 nsXBLBinding::UnbindAnonymousContent(nsIDocument* aDocument,
-                                     nsIContent* aAnonParent)
+                                     nsIContent* aAnonParent,
+                                     bool aNullParent)
 {
   nsAutoScriptBlocker scriptBlocker;
   // Hold a strong ref while doing this, just in case.
@@ -251,7 +252,7 @@ nsXBLBinding::UnbindAnonymousContent(nsIDocument* aDocument,
   for (nsIContent* child = aAnonParent->GetFirstChild();
        child;
        child = child->GetNextSibling()) {
-    child->UnbindFromTree();
+    child->UnbindFromTree(true, aNullParent);
 #ifdef MOZ_XUL
     if (xuldoc) {
       xuldoc->RemoveSubtreeFromDocument(child);
