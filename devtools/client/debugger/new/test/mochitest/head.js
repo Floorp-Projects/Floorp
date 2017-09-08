@@ -211,8 +211,9 @@ function waitForSource(dbg, url) {
   });
 }
 
-function waitForElement(dbg, selector) {
-  return waitUntil(() => findElementWithSelector(dbg, selector));
+async function waitForElement(dbg, selector) {
+  await waitUntil(() => findElementWithSelector(dbg, selector));
+  return findElementWithSelector(dbg, selector);
 }
 
 function waitForSelectedSource(dbg, sourceId) {
@@ -290,7 +291,9 @@ function assertHighlightLocation(dbg, source, line) {
     "Highlighted line is visible"
   );
   ok(
-    getCM(dbg).lineInfo(line - 1).wrapClass.includes("highlight-line"),
+    getCM(dbg)
+      .lineInfo(line - 1)
+      .wrapClass.includes("highlight-line"),
     "Line is highlighted"
   );
 }
@@ -730,7 +733,8 @@ const selectors = {
   sourceNode: i => `.sources-list .tree-node:nth-child(${i})`,
   sourceNodes: ".sources-list .tree-node",
   sourceArrow: i => `.sources-list .tree-node:nth-child(${i}) .arrow`,
-  resultItems: `.result-list .result-item`
+  resultItems: `.result-list .result-item`,
+  fileMatch: `.managed-tree .result`
 };
 
 function getSelector(elementName, ...args) {
@@ -770,12 +774,17 @@ function findAllElements(dbg, elementName, ...args) {
  * @return {Promise}
  * @static
  */
-function clickElement(dbg, elementName, ...args) {
+async function clickElement(dbg, elementName, ...args) {
   const selector = getSelector(elementName, ...args);
-  const el = findElement(dbg, elementName, ...args);
+  const el = await waitForElement(dbg, selector);
+
   el.scrollIntoView();
 
-  return EventUtils.synthesizeMouseAtCenter(
+  return clickElementWithSelector(dbg, selector);
+}
+
+function clickElementWithSelector(dbg, selector) {
+  EventUtils.synthesizeMouseAtCenter(
     findElementWithSelector(dbg, selector),
     {},
     dbg.win

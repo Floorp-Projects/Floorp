@@ -9,6 +9,8 @@
 
 #include "jit/arm/Architecture-arm.h"
 
+#include "vm/ArrayBufferObject.h"
+
 // For documentation, see jit/AtomicOperations.h
 
 // NOTE, this file is *not* used with the ARM simulator, only when compiling for
@@ -152,6 +154,19 @@ js::jit::AtomicOperations::loadSafeWhenRacy(T* addr)
     return v;
 }
 
+namespace js { namespace jit {
+
+template<>
+inline uint8_clamped
+js::jit::AtomicOperations::loadSafeWhenRacy(uint8_clamped* addr)
+{
+    uint8_t v;
+    __atomic_load(&addr->val, &v, __ATOMIC_RELAXED);
+    return uint8_clamped(v);
+}
+
+} }
+
 template<typename T>
 inline void
 js::jit::AtomicOperations::storeSafeWhenRacy(T* addr, T val)
@@ -159,6 +174,17 @@ js::jit::AtomicOperations::storeSafeWhenRacy(T* addr, T val)
     MOZ_ASSERT(tier1Constraints(addr));
     __atomic_store(addr, &val, __ATOMIC_RELAXED);
 }
+
+namespace js { namespace jit {
+
+template<>
+inline void
+js::jit::AtomicOperations::storeSafeWhenRacy(uint8_clamped* addr, uint8_clamped val)
+{
+    __atomic_store(&addr->val, &val.val, __ATOMIC_RELAXED);
+}
+
+} }
 
 inline void
 js::jit::AtomicOperations::memcpySafeWhenRacy(void* dest, const void* src, size_t nbytes)

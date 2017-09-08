@@ -57,14 +57,13 @@
 
 .customizationmode-button {
   border: 1px solid #b1b1b1;
-  margin: 6px 10px;
-  padding: 2px 5px;
   background-color: #fcfcfd;
-  color: rgb(71,71,71);
   -moz-appearance: none;
 }
 
-.customizationmode-checkbox {
+.customizationmode-checkbox,
+.customizationmode-button {
+  color: rgb(71, 71, 71);
   margin: 6px 10px;
   padding: 2px 5px;
 }

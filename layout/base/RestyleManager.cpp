@@ -1401,9 +1401,17 @@ RestyleManager::ProcessRestyledFrames(nsStyleChangeList& aChangeList)
       nsIContent* container = start->GetParent();
       MOZ_ASSERT(container);
       if (!end) {
-        frameConstructor->ContentAppended(container, start, false);
+        frameConstructor->ContentAppended(
+            container,
+            start,
+            nsCSSFrameConstructor::InsertionKind::Sync);
       } else {
-        frameConstructor->ContentRangeInserted(container, start, end, nullptr, false);
+        frameConstructor->ContentRangeInserted(
+            container,
+            start,
+            end,
+            nullptr,
+            nsCSSFrameConstructor::InsertionKind::Sync);
       }
     }
     for (size_t j = lazyRangeStart; j < i; ++j) {

@@ -974,8 +974,13 @@ js::Nursery::maybeResizeNursery(JS::gcreason::Reason reason)
         return;
 #endif
 
-    bool canUsePromotionRate;
-    const float promotionRate = calcPromotionRate(&canUsePromotionRate);
+    /*
+     * This incorrect promotion rate results in better nursery sizing
+     * decisions, however we should to better tuning based on the real
+     * promotion rate in the future.
+     */
+    const float promotionRate =
+        float(previousGC.tenuredBytes) / float(previousGC.nurseryCapacity);
 
     newMaxNurseryChunks = runtime()->gc.tunables.gcMaxNurseryBytes() >> ChunkShift;
     if (newMaxNurseryChunks != maxNurseryChunks_) {
@@ -986,14 +991,10 @@ js::Nursery::maybeResizeNursery(JS::gcreason::Reason reason)
             /* We need to shrink the nursery */
             shrinkAllocableSpace(extraChunks);
 
-            if (canUsePromotionRate)
-                previousPromotionRate_ = promotionRate;
+            previousPromotionRate_ = promotionRate;
             return;
         }
     }
-
-    if (!canUsePromotionRate)
-        return;
 
     if (promotionRate > GrowThreshold)
         growAllocableSpace();

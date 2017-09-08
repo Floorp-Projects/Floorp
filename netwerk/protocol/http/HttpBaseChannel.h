@@ -656,6 +656,9 @@ protected:
   // method.
   uint32_t mLastRedirectFlags;
 
+  uint64_t mReqContentLength;
+  bool mReqContentLengthDetermined;
+
   nsString mIntegrityMetadata;
 
   // Classified channel's matched information

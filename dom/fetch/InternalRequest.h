@@ -462,20 +462,25 @@ public:
   }
 
   void
-  SetBody(nsIInputStream* aStream)
+  SetBody(nsIInputStream* aStream, int64_t aBodyLength)
   {
     // A request's body may not be reset once set.
     MOZ_ASSERT_IF(aStream, !mBodyStream);
     mBodyStream = aStream;
+    mBodyLength = aBodyLength;
   }
 
   // Will return the original stream!
   // Use a tee or copy if you don't want to erase the original.
   void
-  GetBody(nsIInputStream** aStream)
+  GetBody(nsIInputStream** aStream, int64_t* aBodyLength = nullptr)
   {
     nsCOMPtr<nsIInputStream> s = mBodyStream;
     s.forget(aStream);
+
+    if (aBodyLength) {
+      *aBodyLength = mBodyLength;
+    }
   }
 
   // The global is used as the client for the new object.
@@ -554,6 +559,7 @@ private:
   nsTArray<nsCString> mURLList;
   RefPtr<InternalHeaders> mHeaders;
   nsCOMPtr<nsIInputStream> mBodyStream;
+  int64_t mBodyLength;
 
   nsContentPolicyType mContentPolicyType;
 

@@ -268,11 +268,6 @@
 
 static NS_DEFINE_CID(kCClipboardCID, NS_CLIPBOARD_CID);
 
-#if defined(XP_WIN)
-// e10s forced enable pref, defined in nsAppRunner.cpp
-extern const char* kForceEnableE10sPref;
-#endif
-
 using base::ChildPrivileges;
 using base::KillProcess;
 
@@ -1311,13 +1306,8 @@ ContentParent::Init()
   // process.
   if (nsIPresShell::IsAccessibilityActive()) {
 #if defined(XP_WIN)
-#if defined(RELEASE_OR_BETA)
-    // On Windows we currently only enable a11y in the content process
-    // for testing purposes.
-    if (Preferences::GetBool(kForceEnableE10sPref, false))
-#endif
-      Unused << SendActivateA11y(::GetCurrentThreadId(),
-                                 a11y::AccessibleWrap::GetContentProcessIdFor(ChildID()));
+    Unused << SendActivateA11y(::GetCurrentThreadId(),
+                                a11y::AccessibleWrap::GetContentProcessIdFor(ChildID()));
 #else
     Unused << SendActivateA11y(0, 0);
 #endif
@@ -2851,13 +2841,8 @@ ContentParent::Observe(nsISupports* aSubject,
       // Make sure accessibility is running in content process when
       // accessibility gets initiated in chrome process.
 #if defined(XP_WIN)
-#if defined(RELEASE_OR_BETA)
-      // On Windows we currently only enable a11y in the content process
-      // for testing purposes.
-      if (Preferences::GetBool(kForceEnableE10sPref, false))
-#endif
-        Unused << SendActivateA11y(::GetCurrentThreadId(),
-                                   a11y::AccessibleWrap::GetContentProcessIdFor(ChildID()));
+      Unused << SendActivateA11y(::GetCurrentThreadId(),
+                                  a11y::AccessibleWrap::GetContentProcessIdFor(ChildID()));
 #else
       Unused << SendActivateA11y(0, 0);
 #endif

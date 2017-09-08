@@ -1,10 +1,7 @@
 /* Any copyright is dedicated to the Public Domain.
  * http://creativecommons.org/publicdomain/zero/1.0/ */
 
-// Tests async stepping will:
-// 1. step over await statements
-// 2. step into async functions
-// 3. step out of async functions
+// Tests async stepping will step over await statements
 add_task(async function test() {
   Services.prefs.setBoolPref("devtools.debugger.features.async-stepping", true);
   const dbg = await initDebugger("doc-async.html", "async");

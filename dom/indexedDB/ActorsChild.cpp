@@ -1477,6 +1477,7 @@ DispatchFileHandleSuccessEvent(FileHandleResultHelper* aResultHelper)
 class BackgroundRequestChild::PreprocessHelper final
   : public CancelableRunnable
   , public nsIInputStreamCallback
+  , public nsIFileMetadataCallback
 {
   typedef std::pair<nsCOMPtr<nsIInputStream>,
                     nsCOMPtr<nsIInputStream>> StreamPair;
@@ -1560,9 +1561,13 @@ private:
   void
   ContinueWithStatus(nsresult aStatus);
 
+  nsresult
+  DataIsReady(nsIInputStream* aInputStream);
+
   NS_DECL_ISUPPORTS_INHERITED
   NS_DECL_NSIRUNNABLE
   NS_DECL_NSIINPUTSTREAMCALLBACK
+  NS_DECL_NSIFILEMETADATACALLBACK
 
   virtual nsresult
   Cancel() override;
@@ -3518,6 +3523,17 @@ PreprocessHelper::WaitForStreamReady(nsIInputStream* aInputStream)
   MOZ_ASSERT(!IsOnOwningThread());
   MOZ_ASSERT(aInputStream);
 
+  nsCOMPtr<nsIAsyncFileMetadata> asyncFileMetadata =
+    do_QueryInterface(aInputStream);
+  if (asyncFileMetadata) {
+    nsresult rv = asyncFileMetadata->AsyncWait(this, mTaskQueueEventTarget);
+    if (NS_WARN_IF(NS_FAILED(rv))) {
+      return rv;
+    }
+
+    return NS_OK;
+  }
+
   nsCOMPtr<nsIAsyncInputStream> asyncStream = do_QueryInterface(aInputStream);
   if (!asyncStream) {
     return NS_ERROR_NO_INTERFACE;
@@ -3564,7 +3580,8 @@ PreprocessHelper::ContinueWithStatus(nsresult aStatus)
 }
 
 NS_IMPL_ISUPPORTS_INHERITED(BackgroundRequestChild::PreprocessHelper,
-                            CancelableRunnable, nsIInputStreamCallback)
+                            CancelableRunnable, nsIInputStreamCallback,
+                            nsIFileMetadataCallback)
 
 NS_IMETHODIMP
 BackgroundRequestChild::
@@ -3582,6 +3599,23 @@ PreprocessHelper::Run()
 NS_IMETHODIMP
 BackgroundRequestChild::
 PreprocessHelper::OnInputStreamReady(nsIAsyncInputStream* aStream)
+{
+  return DataIsReady(aStream);
+}
+
+NS_IMETHODIMP
+BackgroundRequestChild::
+PreprocessHelper::OnFileMetadataReady(nsIAsyncFileMetadata* aObject)
+{
+  nsCOMPtr<nsIInputStream> stream = do_QueryInterface(aObject);
+  MOZ_ASSERT(stream, "It was a stream before!");
+
+  return DataIsReady(stream);
+}
+
+nsresult
+BackgroundRequestChild::
+PreprocessHelper::DataIsReady(nsIInputStream* aStream)
 {
   MOZ_ASSERT(!IsOnOwningThread());
   MOZ_ASSERT(aStream);

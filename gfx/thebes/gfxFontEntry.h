@@ -646,6 +646,8 @@ public:
         }
         aFontEntry->mSkipDefaultFeatureSpaceCheck = mSkipDefaultFeatureSpaceCheck;
         mAvailableFonts.AppendElement(aFontEntry);
+        mIsSimpleFamily = false; // CheckForSimpleFamily may set this later,
+                                 // but at this point we're not sure
     }
 
     // note that the styles for this family have been added
