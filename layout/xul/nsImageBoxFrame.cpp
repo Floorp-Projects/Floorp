@@ -341,53 +341,32 @@ nsImageBoxFrame::BuildDisplayList(nsDisplayListBuilder*   aBuilder,
   aLists.Content()->AppendToTop(&list);
 }
 
-already_AddRefed<imgIContainer>
-nsImageBoxFrame::GetImageContainerForPainting(const nsPoint& aPt,
-                                              DrawResult& aDrawResult,
-                                              Maybe<nsPoint>& aAnchorPoint,
-                                              nsRect& aDest)
+DrawResult
+nsImageBoxFrame::PaintImage(gfxContext& aRenderingContext,
+                            const nsRect& aDirtyRect, nsPoint aPt,
+                            uint32_t aFlags)
 {
   if (!mImageRequest) {
     // This probably means we're drawn by a native theme.
-    aDrawResult = DrawResult::SUCCESS;
-    return nullptr;
+    return DrawResult::SUCCESS;
   }
 
   // Don't draw if the image's size isn't available.
   uint32_t imgStatus;
   if (!NS_SUCCEEDED(mImageRequest->GetImageStatus(&imgStatus)) ||
       !(imgStatus & imgIRequest::STATUS_SIZE_AVAILABLE)) {
-    aDrawResult = DrawResult::NOT_READY;
-    return nullptr;
+    return DrawResult::NOT_READY;
   }
 
   nsCOMPtr<imgIContainer> imgCon;
   mImageRequest->GetImage(getter_AddRefs(imgCon));
 
   if (!imgCon) {
-    aDrawResult = DrawResult::NOT_READY;
-    return nullptr;
+    return DrawResult::NOT_READY;
   }
 
-  aDest = GetDestRect(aPt, aAnchorPoint);
-  aDrawResult = DrawResult::SUCCESS;
-  return imgCon.forget();
-}
-
-DrawResult
-nsImageBoxFrame::PaintImage(gfxContext& aRenderingContext,
-                            const nsRect& aDirtyRect, nsPoint aPt,
-                            uint32_t aFlags)
-{
-  DrawResult result;
   Maybe<nsPoint> anchorPoint;
-  nsRect dest;
-  nsCOMPtr<imgIContainer> imgCon = GetImageContainerForPainting(aPt, result,
-                                                                anchorPoint,
-                                                                dest);
-  if (!imgCon) {
-    return result;
-  }
+  nsRect dest = GetDestRect(aPt, anchorPoint);
 
   // don't draw if the image is not dirty
   // XXX(seth): Can this actually happen anymore?
