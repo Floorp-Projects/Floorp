@@ -247,6 +247,9 @@ static const DllBlockInfo sWindowsDllBlocklist[] = {
   // Nahimic is causing crashes, bug 1233556
   { "nahimicmsiosd.dll", ALL_VERSIONS },
 
+  // Bug 1268470 - crashes with Kaspersky Lab on Windows 8
+  { "klsihk64.dll", ALL_VERSIONS, DllBlockInfo::BLOCK_WIN8_ONLY },
+
   { nullptr, 0 }
 };
 
