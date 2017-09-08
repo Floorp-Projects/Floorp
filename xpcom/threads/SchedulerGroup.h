@@ -8,6 +8,7 @@
 #define mozilla_SchedulerGroup_h
 
 #include "mozilla/AlreadyAddRefed.h"
+#include "mozilla/LinkedList.h"
 #include "mozilla/TaskCategory.h"
 #include "mozilla/ThreadLocal.h"
 #include "mozilla/TimeStamp.h"
@@ -40,7 +41,7 @@ class TabGroup;
 // only functionality offered by a SchedulerGroup is the ability to dispatch
 // runnables to the group. TabGroup, DocGroup, and SystemGroup are the concrete
 // implementations of SchedulerGroup.
-class SchedulerGroup
+class SchedulerGroup : public LinkedListElement<SchedulerGroup>
 {
 public:
   SchedulerGroup();

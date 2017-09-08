@@ -7,10 +7,8 @@ include protocol PBackground;
 namespace mozilla {
 namespace extensions {
 
-protocol PStreamFilter
+async protocol PStreamFilter
 {
-  manager PBackground;
-
 parent:
   async Write(uint8_t[] data);
 
@@ -22,7 +20,6 @@ parent:
   async Disconnect();
 
 child:
-  async Initialized(bool aSuccess);
   async Resumed();
   async Suspended();
   async Closed();
@@ -32,8 +29,6 @@ child:
   async StartRequest();
   async Data(uint8_t[] data);
   async StopRequest(nsresult aStatus);
-
-  async __delete__();
 };
 
 } // namespace extensions

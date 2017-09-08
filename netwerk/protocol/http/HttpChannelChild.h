@@ -164,6 +164,8 @@ protected:
 
   mozilla::ipc::IPCResult RecvSetPriority(const int16_t& aPriority) override;
 
+  mozilla::ipc::IPCResult RecvAttachStreamFilter(Endpoint<extensions::PStreamFilterParent>&& aEndpoint) override;
+
   virtual void ActorDestroy(ActorDestroyReason aWhy) override;
 
   MOZ_MUST_USE bool

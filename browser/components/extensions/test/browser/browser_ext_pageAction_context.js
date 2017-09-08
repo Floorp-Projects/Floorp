@@ -170,6 +170,14 @@ add_task(async function testTabSwitchContext() {
           await browser.pageAction.hide(tabs[0]);
           expect(null);
         },
+        async expect => {
+          browser.test.assertRejects(
+            browser.pageAction.setPopup({tabId: tabs[0], popup: "about:addons"}),
+            /Access denied for URL about:addons/,
+            "unable to set popup to about:addons");
+
+          expect(null);
+        },
       ];
     },
   });
