@@ -36,16 +36,6 @@ interface nsISelectionPrivate : nsISelection
     attribute boolean interlinePosition;
     [noscript] attribute nsIContent ancestorLimiter;
 
-    /* startBatchChanges
-       match this up with endbatchChanges. will stop ui updates while multiple selection methods are called
-    */
-    [noscript] void startBatchChanges();
-
-    /* endBatchChanges
-       match this up with startBatchChanges
-    */
-    [noscript] void endBatchChanges();
-
     DOMString  toStringWithFormat(in string formatType, in unsigned long flags, in int32_t wrapColumn);
     void  addSelectionListener(in nsISelectionListener newListener);
     void  removeSelectionListener(in nsISelectionListener listenerToRemove);
