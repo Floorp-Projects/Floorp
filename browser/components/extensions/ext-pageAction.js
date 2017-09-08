@@ -329,6 +329,9 @@ this.pageAction = class extends ExtensionAPI {
           // For internal consistency, we currently resolve both relative to the
           // calling context.
           let url = details.popup && context.uri.resolve(details.popup);
+          if (url && !context.checkLoadURL(url)) {
+            return Promise.reject({message: `Access denied for URL ${url}`});
+          }
           pageAction.setProperty(tab, "popup", url);
         },
 

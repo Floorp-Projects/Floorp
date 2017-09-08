@@ -226,18 +226,13 @@ const DESC_CACHE_BOX_SHADOW: VertexDescriptor = VertexDescriptor {
     ]
 };
 
+#[derive(Debug, Copy, Clone)]
 enum VertexArrayKind {
     Primitive,
     Blur,
     Clip,
 
     CacheBoxShadow,
-}
-
-#[derive(Copy, Clone, Debug, PartialEq, Eq)]
-pub enum VertexFormat {
-    PrimitiveInstances,
-    Blur,
 }
 
 #[derive(Clone, Debug, PartialEq)]
@@ -707,7 +702,7 @@ const CLIP_FEATURE: &str = "CLIP";
 
 enum ShaderKind {
     Primitive,
-    Cache(VertexFormat),
+    Cache(VertexArrayKind),
     ClipCache,
 }
 
@@ -758,7 +753,7 @@ impl LazilyCompiledShader {
                         create_prim_shader(self.name,
                                            device,
                                            &self.features,
-                                           VertexFormat::PrimitiveInstances)
+                                           VertexArrayKind::Primitive)
                     }
                     ShaderKind::Cache(format) => {
                         create_prim_shader(self.name,
@@ -852,7 +847,7 @@ impl PrimitiveShader {
 fn create_prim_shader(name: &'static str,
                       device: &mut Device,
                       features: &[&'static str],
-                      vertex_format: VertexFormat) -> Result<Program, ShaderError> {
+                      vertex_format: VertexArrayKind) -> Result<Program, ShaderError> {
     let mut prefix = format!("#define WR_MAX_VERTEX_TEXTURE_WIDTH {}\n",
                               MAX_VERTEX_TEXTURE_WIDTH);
 
@@ -863,8 +858,10 @@ fn create_prim_shader(name: &'static str,
     debug!("PrimShader {}", name);
 
     let vertex_descriptor = match vertex_format {
-        VertexFormat::PrimitiveInstances => DESC_PRIM_INSTANCES,
-        VertexFormat::Blur => DESC_BLUR,
+        VertexArrayKind::Primitive => DESC_PRIM_INSTANCES,
+        VertexArrayKind::Blur => DESC_BLUR,
+        VertexArrayKind::Clip => DESC_CLIP,
+        VertexArrayKind::CacheBoxShadow => DESC_CACHE_BOX_SHADOW,
     };
 
     let program = device.create_program(name,
@@ -1095,7 +1092,7 @@ impl Renderer {
         device.begin_frame(1.0);
 
         let cs_box_shadow = try!{
-            LazilyCompiledShader::new(ShaderKind::Cache(VertexFormat::PrimitiveInstances),
+            LazilyCompiledShader::new(ShaderKind::Cache(VertexArrayKind::CacheBoxShadow),
                                       "cs_box_shadow",
                                       &[],
                                       &mut device,
@@ -1103,7 +1100,7 @@ impl Renderer {
         };
 
         let cs_text_run = try!{
-            LazilyCompiledShader::new(ShaderKind::Cache(VertexFormat::PrimitiveInstances),
+            LazilyCompiledShader::new(ShaderKind::Cache(VertexArrayKind::Primitive),
                                       "cs_text_run",
                                       &[],
                                       &mut device,
@@ -1111,7 +1108,7 @@ impl Renderer {
         };
 
         let cs_line = try!{
-            LazilyCompiledShader::new(ShaderKind::Cache(VertexFormat::PrimitiveInstances),
+            LazilyCompiledShader::new(ShaderKind::Cache(VertexArrayKind::Primitive),
                                       "ps_line",
                                       &["CACHE"],
                                       &mut device,
@@ -1119,7 +1116,7 @@ impl Renderer {
         };
 
         let cs_blur = try!{
-            LazilyCompiledShader::new(ShaderKind::Cache(VertexFormat::Blur),
+            LazilyCompiledShader::new(ShaderKind::Cache(VertexArrayKind::Blur),
                                      "cs_blur",
                                       &[],
                                       &mut device,

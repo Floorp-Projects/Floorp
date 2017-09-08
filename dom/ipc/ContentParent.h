@@ -432,6 +432,11 @@ public:
   already_AddRefed<embedding::PrintingParent> GetPrintingParent();
 #endif
 
+  virtual mozilla::ipc::IPCResult
+  RecvInitStreamFilter(const uint64_t& aChannelId,
+                       const nsString& aAddonId,
+                       InitStreamFilterResolver&& aResolver) override;
+
   virtual PChildToParentStreamParent* AllocPChildToParentStreamParent() override;
   virtual bool
   DeallocPChildToParentStreamParent(PChildToParentStreamParent* aActor) override;
