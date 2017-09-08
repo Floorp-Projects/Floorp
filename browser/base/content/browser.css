@@ -518,10 +518,9 @@ toolbar:not(#TabsToolbar) > #personal-bookmarks {
 
 /* ::::: location bar & search bar ::::: */
 
-#urlbar-container {
-  min-width: 50ch;
-}
-
+/* url bar min-width is defined further down, together with the maximum size
+ * of the identity icon block, for different window sizes.
+ */
 #search-container {
   min-width: 25ch;
 }
@@ -701,39 +700,67 @@ html|input.urlbar-input[textoverflow]:not([focused]) {
   -moz-user-focus: ignore;
 }
 
+
+/* We leave 49ch plus whatever space the download button will need when it
+ * appears. Normally this should be 16px for the icon, plus 2 * 2px padding
+ * plus the toolbarbutton-inner-padding. We're adding 4px to ensure things
+ * like rounding on hidpi don't accidentally result in the button going
+ * into overflow.
+ */
+#urlbar-container {
+  min-width: calc(49ch + 24px + 2 * var(--toolbarbutton-inner-padding));
+}
+
+#nav-bar[downloadsbuttonshown] #urlbar-container {
+  min-width: 49ch;
+}
+
 #identity-icon-labels {
-  max-width: 18em;
+  max-width: 17em;
 }
 @media (max-width: 700px) {
   #urlbar-container {
-    min-width: 45ch;
+    min-width: calc(44ch + 24px + 2 * var(--toolbarbutton-inner-padding));
   }
-  #identity-icon-labels {
-    max-width: 70px;
+  #nav-bar[downloadsbuttonshown] #urlbar-container {
+    min-width: 44ch;
   }
-}
-@media (max-width: 600px) {
-  #urlbar-container {
-    min-width: 40ch;
-  }
+
   #identity-icon-labels {
     max-width: 60px;
   }
 }
-@media (max-width: 500px) {
+@media (max-width: 600px) {
   #urlbar-container {
-    min-width: 35ch;
+    min-width: calc(39ch + 24px + 2 * var(--toolbarbutton-inner-padding));
+  }
+  #nav-bar[downloadsbuttonshown] #urlbar-container {
+    min-width: 39ch;
   }
   #identity-icon-labels {
     max-width: 50px;
   }
 }
-@media (max-width: 400px) {
+@media (max-width: 500px) {
   #urlbar-container {
-    min-width: 28ch;
+    min-width: calc(34ch + 24px + 2 * var(--toolbarbutton-inner-padding));
+  }
+  #nav-bar[downloadsbuttonshown] #urlbar-container {
+    min-width: 34ch;
   }
   #identity-icon-labels {
     max-width: 40px;
+  }
+}
+@media (max-width: 400px) {
+  #urlbar-container {
+    min-width: calc(27ch + 24px + 2 * var(--toolbarbutton-inner-padding));
+  }
+  #nav-bar[downloadsbuttonshown] #urlbar-container {
+    min-width: 27ch;
+  }
+  #identity-icon-labels {
+    max-width: 30px;
   }
 }
 

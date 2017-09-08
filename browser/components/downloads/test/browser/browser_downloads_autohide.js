@@ -1,0 +1,252 @@
+/* -*- indent-tabs-mode: nil; js-indent-level: 2 -*- */
+/* vim: set ts=2 et sw=2 tw=80: */
+/* Any copyright is dedicated to the Public Domain.
+   http://creativecommons.org/publicdomain/zero/1.0/ */
+
+"use strict";
+
+const kDownloadAutoHidePref = "browser.download.autohideButton";
+
+registerCleanupFunction(async function() {
+  Services.prefs.clearUserPref(kDownloadAutoHidePref);
+  if (document.documentElement.hasAttribute("customizing")) {
+    await gCustomizeMode.reset();
+    await promiseCustomizeEnd();
+  } else {
+    CustomizableUI.reset();
+  }
+});
+
+add_task(async function checkStateDuringPrefFlips() {
+  ok(Services.prefs.getBoolPref(kDownloadAutoHidePref),
+     "Should be autohiding the button by default");
+  ok(!DownloadsIndicatorView.hasDownloads,
+     "Should be no downloads when starting the test");
+  let downloadsButton = document.getElementById("downloads-button");
+  ok(downloadsButton.hasAttribute("hidden"),
+     "Button should be hidden in the toolbar");
+  gCustomizeMode.addToPanel(downloadsButton);
+  ok(!downloadsButton.hasAttribute("hidden"),
+     "Button shouldn't be hidden in the panel");
+  gCustomizeMode.addToToolbar(downloadsButton);
+  ok(downloadsButton.hasAttribute("hidden"),
+     "Button should be hidden again in the toolbar");
+  Services.prefs.setBoolPref(kDownloadAutoHidePref, false);
+  ok(!downloadsButton.hasAttribute("hidden"),
+     "Button shouldn't be hidden with autohide turned off");
+  gCustomizeMode.addToPanel(downloadsButton);
+  ok(!downloadsButton.hasAttribute("hidden"),
+     "Button shouldn't be hidden with autohide turned off " +
+     "after moving it to the panel");
+  gCustomizeMode.addToToolbar(downloadsButton);
+  ok(!downloadsButton.hasAttribute("hidden"),
+     "Button shouldn't be hidden with autohide turned off " +
+     "after moving it back to the toolbar");
+  gCustomizeMode.addToPanel(downloadsButton);
+  Services.prefs.setBoolPref(kDownloadAutoHidePref, true);
+  ok(!downloadsButton.hasAttribute("hidden"),
+     "Button should still not be hidden with autohide turned back on " +
+     "because it's in the panel");
+  gCustomizeMode.addToToolbar(downloadsButton);
+  ok(downloadsButton.hasAttribute("hidden"),
+     "Button should be hidden again in the toolbar");
+  gCustomizeMode.removeFromArea(downloadsButton);
+  Services.prefs.setBoolPref(kDownloadAutoHidePref, false);
+  // Can't use gCustomizeMode.addToToolbar here because it doesn't work for
+  // palette items if the window isn't in customize mode:
+  CustomizableUI.addWidgetToArea(downloadsButton.id, CustomizableUI.AREA_NAVBAR);
+  ok(!downloadsButton.hasAttribute("hidden"),
+     "Button should be unhidden again in the toolbar " +
+     "even if the pref was flipped while the button was in the palette");
+  Services.prefs.setBoolPref(kDownloadAutoHidePref, true);
+});
+
+add_task(async function checkStateInCustomizeMode() {
+  ok(Services.prefs.getBoolPref("browser.download.autohideButton"),
+     "Should be autohiding the button");
+  let downloadsButton = document.getElementById("downloads-button");
+  await promiseCustomizeStart();
+  ok(!downloadsButton.hasAttribute("hidden"),
+     "Button should be shown in customize mode.");
+  gCustomizeMode.addToPanel(downloadsButton);
+  ok(!downloadsButton.hasAttribute("hidden"),
+     "Button should be shown in customize mode when moved to the panel");
+  gCustomizeMode.addToToolbar(downloadsButton);
+  ok(!downloadsButton.hasAttribute("hidden"),
+     "Button should be shown in customize mode when moved back to the toolbar");
+  gCustomizeMode.removeFromArea(downloadsButton);
+  ok(!downloadsButton.hasAttribute("hidden"),
+     "Button should be shown in customize mode when in the palette");
+  Services.prefs.setBoolPref(kDownloadAutoHidePref, false);
+  Services.prefs.setBoolPref(kDownloadAutoHidePref, true);
+  ok(!downloadsButton.hasAttribute("hidden"),
+     "Button should be shown in customize mode " +
+     "even when flipping the autohide pref");
+  gCustomizeMode.addToPanel(downloadsButton);
+  await promiseCustomizeEnd();
+  ok(!downloadsButton.hasAttribute("hidden"),
+     "Button should be shown after customize mode when moved to the panel");
+  await promiseCustomizeStart();
+  gCustomizeMode.addToToolbar(downloadsButton);
+  await promiseCustomizeEnd();
+  ok(downloadsButton.hasAttribute("hidden"),
+     "Button should be hidden if it's in the toolbar after customize mode.");
+  await promiseCustomizeStart();
+  await gCustomizeMode.reset();
+  ok(!downloadsButton.hasAttribute("hidden"),
+     "Button should be shown in the toolbar in customize mode after a reset.");
+  await gCustomizeMode.undoReset();
+  ok(!downloadsButton.hasAttribute("hidden"),
+     "Button should be shown in the toolbar in customize mode " +
+     "when undoing the reset.");
+  gCustomizeMode.addToPanel(downloadsButton);
+  await gCustomizeMode.reset();
+  ok(!downloadsButton.hasAttribute("hidden"),
+     "Button should be shown in the toolbar in customize mode " +
+     "after a reset moved it.");
+  await gCustomizeMode.undoReset();
+  ok(!downloadsButton.hasAttribute("hidden"),
+     "Button should be shown in the panel in customize mode " +
+     "when undoing the reset.");
+  await gCustomizeMode.reset();
+  await promiseCustomizeEnd();
+});
+
+add_task(async function checkStateInCustomizeModeMultipleWindows() {
+  ok(Services.prefs.getBoolPref("browser.download.autohideButton"),
+     "Should be autohiding the button");
+  let downloadsButton = document.getElementById("downloads-button");
+  await promiseCustomizeStart();
+  ok(!downloadsButton.hasAttribute("hidden"),
+     "Button should be shown in customize mode.");
+  let otherWin = await BrowserTestUtils.openNewBrowserWindow();
+  let otherDownloadsButton = otherWin.document.getElementById("downloads-button");
+  ok(otherDownloadsButton.hasAttribute("hidden"),
+     "Button should be hidden in the other window.");
+
+  gCustomizeMode.addToPanel(downloadsButton);
+  ok(!downloadsButton.hasAttribute("hidden"),
+     "Button should still be shown in customize mode.");
+  ok(!otherDownloadsButton.hasAttribute("hidden"),
+     "Button should be shown in the other window too because it's in a panel.");
+
+  gCustomizeMode.addToToolbar(downloadsButton);
+  ok(!downloadsButton.hasAttribute("hidden"),
+     "Button should still be shown in customize mode.");
+  ok(otherDownloadsButton.hasAttribute("hidden"),
+     "Button should be hidden again in the other window.");
+
+  Services.prefs.setBoolPref(kDownloadAutoHidePref, false);
+  ok(!downloadsButton.hasAttribute("hidden"),
+     "Button should be shown in customize mode");
+  ok(!otherDownloadsButton.hasAttribute("hidden"),
+     "Button should be shown in the other window with the pref flipped");
+
+  Services.prefs.setBoolPref(kDownloadAutoHidePref, true);
+  ok(!downloadsButton.hasAttribute("hidden"),
+     "Button should be shown in customize mode " +
+     "even when flipping the autohide pref");
+  ok(otherDownloadsButton.hasAttribute("hidden"),
+     "Button should be hidden in the other window with the pref flipped again");
+
+  gCustomizeMode.addToPanel(downloadsButton);
+  ok(!downloadsButton.hasAttribute("hidden"),
+     "Button should still be shown in customize mode.");
+  ok(!otherDownloadsButton.hasAttribute("hidden"),
+     "Button should be shown in the other window too because it's in a panel.");
+
+  gCustomizeMode.removeFromArea(downloadsButton);
+  ok(!downloadsButton.hasAttribute("hidden"),
+     "Button should still be shown in customize mode.");
+  // Don't need to assert in the other window - button is gone there.
+
+  await gCustomizeMode.reset();
+  ok(Services.prefs.getBoolPref(kDownloadAutoHidePref),
+     "Autohide pref reset by reset()");
+  ok(!downloadsButton.hasAttribute("hidden"),
+     "Button should still be shown in customize mode.");
+  ok(otherDownloadsButton.hasAttribute("hidden"),
+     "Button should be hidden in the other window.");
+  ok(otherDownloadsButton.closest("#nav-bar"),
+     "Button should be back in the nav bar in the other window.");
+
+  await promiseCustomizeEnd();
+  ok(downloadsButton.hasAttribute("hidden"),
+     "Button should be hidden again outside of customize mode");
+  await BrowserTestUtils.closeWindow(otherWin);
+});
+
+add_task(async function checkStateForDownloads() {
+  ok(Services.prefs.getBoolPref("browser.download.autohideButton"),
+     "Should be autohiding the button");
+  let downloadsButton = document.getElementById("downloads-button");
+  ok(downloadsButton.hasAttribute("hidden"),
+     "Button should be hidden when there are no downloads.");
+
+  await task_addDownloads([
+    { state: DownloadsCommon.DOWNLOAD_DOWNLOADING },
+  ]);
+  ok(!downloadsButton.hasAttribute("hidden"),
+     "Button should be unhidden when there are downloads.");
+  let publicList = await Downloads.getList(Downloads.PUBLIC);
+  let downloads = await publicList.getAll();
+  for (let download of downloads) {
+    publicList.remove(download);
+  }
+  ok(downloadsButton.hasAttribute("hidden"),
+     "Button should be hidden when the download is removed");
+  await task_addDownloads([
+    { state: DownloadsCommon.DOWNLOAD_DOWNLOADING },
+  ]);
+  ok(!downloadsButton.hasAttribute("hidden"),
+     "Button should be unhidden when there are downloads.");
+
+  Services.prefs.setBoolPref(kDownloadAutoHidePref, false);
+  ok(!downloadsButton.hasAttribute("hidden"),
+     "Button should still be unhidden.");
+
+  downloads = await publicList.getAll();
+  for (let download of downloads) {
+    publicList.remove(download);
+  }
+  ok(!downloadsButton.hasAttribute("hidden"),
+     "Button should still be unhidden because the pref was flipped.");
+  Services.prefs.setBoolPref(kDownloadAutoHidePref, true);
+  ok(downloadsButton.hasAttribute("hidden"),
+     "Button should be hidden now that the pref flipped back " +
+     "because there were already no downloads.");
+
+  gCustomizeMode.addToPanel(downloadsButton);
+  ok(!downloadsButton.hasAttribute("hidden"),
+     "Button should not be hidden in the panel.");
+
+  await task_addDownloads([
+    { state: DownloadsCommon.DOWNLOAD_DOWNLOADING },
+  ]);
+
+  downloads = await publicList.getAll();
+  for (let download of downloads) {
+    publicList.remove(download);
+  }
+
+  ok(!downloadsButton.hasAttribute("hidden"),
+     "Button should still not be hidden in the panel " +
+     "when downloads count reaches 0 after being non-0.");
+});
+
+function promiseCustomizeStart(aWindow = window) {
+  return new Promise(resolve => {
+    aWindow.gNavToolbox.addEventListener("customizationready", resolve,
+                                         {once: true});
+    aWindow.gCustomizeMode.enter();
+  });
+}
+
+function promiseCustomizeEnd(aWindow = window) {
+  return new Promise(resolve => {
+    aWindow.gNavToolbox.addEventListener("aftercustomization", resolve,
+                                         {once: true});
+    aWindow.gCustomizeMode.exit();
+  });
+}
+
