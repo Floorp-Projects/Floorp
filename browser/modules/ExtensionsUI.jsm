@@ -46,6 +46,7 @@ this.ExtensionsUI = {
     Services.obs.addObserver(this, "webextension-update-permissions");
     Services.obs.addObserver(this, "webextension-install-notify");
     Services.obs.addObserver(this, "webextension-optional-permission-prompt");
+    Services.obs.addObserver(this, "webextension-defaultsearch-prompt");
 
     await Services.wm.getMostRecentWindow("navigator:browser").delayedStartupPromise;
 
@@ -237,8 +238,21 @@ this.ExtensionsUI = {
         resolve(true);
         return;
       }
-
       resolve(this.showPermissionsPrompt(browser, strings, icon));
+    } else if (topic == "webextension-defaultsearch-prompt") {
+      let {browser, name, icon, resolve, currentEngine, newEngine} = subject.wrappedJSObject;
+
+      let bundle = Services.strings.createBundle(BROWSER_PROPERTIES);
+
+      let strings = {};
+      strings.acceptText = bundle.GetStringFromName("webext.defaultSearchYes.label");
+      strings.acceptKey = bundle.GetStringFromName("webext.defaultSearchYes.accessKey");
+      strings.cancelText = bundle.GetStringFromName("webext.defaultSearchNo.label");
+      strings.cancelKey = bundle.GetStringFromName("webext.defaultSearchNo.accessKey");
+      let addonName = `<span class="addon-webext-name">${this._sanitizeName(name)}</span>`;
+      strings.text = bundle.formatStringFromName("webext.defaultSearch.description",
+                                               [addonName, currentEngine, newEngine], 3);
+      resolve(this.showDefaultSearchPrompt(browser, strings, icon));
     }
   },
 
@@ -327,7 +341,52 @@ this.ExtensionsUI = {
       ];
 
       win.PopupNotifications.show(browser, "addon-webext-permissions", "",
-      // eslint-disable-next-line no-unsanitized/property
+                                  "addons-notification-icon",
+                                  action, secondaryActions, popupOptions);
+    });
+  },
+
+  showDefaultSearchPrompt(browser, strings, icon) {
+//    const kDefaultSearchHistKey = "defaultSearch";
+    return new Promise(resolve => {
+      let popupOptions = {
+        hideClose: true,
+        popupIconURL: icon || DEFAULT_EXTENSION_ICON,
+        persistent: false,
+        removeOnDismissal: true,
+        eventCallback(topic) {
+          if (topic == "showing") {
+            let doc = this.browser.ownerDocument;
+            // eslint-disable-next-line no-unsanitized/property
+            doc.getElementById("addon-webext-defaultsearch-text").innerHTML = strings.text;
+          } else if (topic == "removed") {
+            resolve(false);
+          }
+        }
+      };
+
+      let action = {
+        label: strings.acceptText,
+        accessKey: strings.acceptKey,
+        disableHighlight: true,
+        callback: () => {
+//          this.histogram.add(kDefaultSearchHistKey + "Accepted");
+          resolve(true);
+        },
+      };
+      let secondaryActions = [
+        {
+          label: strings.cancelText,
+          accessKey: strings.cancelKey,
+          callback: () => {
+//            this.histogram.add(kDefaultSearchHistKey + "Rejected");
+            resolve(false);
+          },
+        },
+      ];
+
+      let win = browser.ownerGlobal;
+      win.PopupNotifications.show(browser, "addon-webext-defaultsearch", "",
                                   "addons-notification-icon",
                                   action, secondaryActions, popupOptions);
     });
