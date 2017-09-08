@@ -35,6 +35,7 @@ add_task(async function setup() {
       await promiseSetToolbarVisibility(gToolbar, false);
     }
     await PlacesUtils.bookmarks.eraseEverything();
+    await PlacesUtils.history.clear();
   });
 });
 
@@ -65,6 +66,36 @@ add_task(async function() {
   await test_move_index("Move node from fist visible to first non built",
                         0, gToolbarContent.childNodes.length,
                         "visible", undefined);
+});
+
+add_task(async function test_newWindow_noOverflow() {
+  info("Check toolbar in a new widow when it was already visible and not overflowed");
+  await PlacesUtils.bookmarks.eraseEverything();
+  // Add a single bookmark.
+  await PlacesUtils.bookmarks.insert({
+    parentGuid: PlacesUtils.bookmarks.toolbarGuid,
+    url: "http://toolbar.overflow/",
+    title: "Example"
+  });
+  // Add a favicon for the bookmark.
+  let favicon =  "data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAA" +
+                 "AAAA6fptVAAAACklEQVQI12NgAAAAAgAB4iG8MwAAAABJRU5ErkJggg==";
+  await PlacesTestUtils.addFavicons(new Map([["http://toolbar.overflow/", favicon]]));
+
+  let win = await BrowserTestUtils.openNewBrowserWindow();
+  try {
+    let toolbar = win.document.getElementById("PersonalToolbar");
+    Assert.ok(!toolbar.collapsed, "The toolbar is not collapsed");
+    let content = win.document.getElementById("PlacesToolbarItems");
+    await BrowserTestUtils.waitForCondition(() => {
+      return content.childNodes.length == 1 &&
+             content.childNodes[0].hasAttribute("image");
+    });
+    let chevron = win.document.getElementById("PlacesChevron");
+    Assert.ok(chevron.collapsed, "The chevron should be collapsed");
+  } finally {
+    await BrowserTestUtils.closeWindow(win);
+  }
 });
 
 async function test_index(desc, index, expected) {
