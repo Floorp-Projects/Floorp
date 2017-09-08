@@ -1312,7 +1312,7 @@ nsPresContext::SetSMILAnimations(nsIDocument *aDoc, uint16_t aNewMode,
 }
 
 void
-nsPresContext::SetImageAnimationModeInternal(uint16_t aMode)
+nsPresContext::SetImageAnimationMode(uint16_t aMode)
 {
   NS_ASSERTION(aMode == imgIContainer::kNormalAnimMode ||
                aMode == imgIContainer::kDontAnimMode ||
@@ -1600,7 +1600,7 @@ nsPresContext::SetContainer(nsIDocShell* aDocShell)
 }
 
 nsISupports*
-nsPresContext::GetContainerWeakInternal() const
+nsPresContext::GetContainerWeak() const
 {
   return static_cast<nsIDocShell*>(mContainer);
 }
@@ -1619,7 +1619,7 @@ nsPresContext::Detach()
 }
 
 bool
-nsPresContext::BidiEnabledInternal() const
+nsPresContext::BidiEnabled() const
 {
   return Document()->GetBidiEnabled();
 }
